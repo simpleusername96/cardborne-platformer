@@ -1,0 +1,179 @@
+{
+  "schema": "cardborne.first_slice.economy_tables.v0",
+  "notes": [
+    "Seed design data only. Balance values are placeholders for first playable implementation.",
+    "XP and coins are run-local. Materials are intended to become persistent once a lightweight local profile exists."
+  ],
+  "currencies": [
+    {
+      "id": "xp",
+      "display_name": "XP",
+      "scope": "run",
+      "purpose": "Advance run level and trigger micro-upgrade choices."
+    },
+    {
+      "id": "coin",
+      "display_name": "Coin",
+      "scope": "run",
+      "purpose": "Buy healing, card rerolls, temporary upgrades, or shop items during the current run."
+    },
+    {
+      "id": "slime_residue",
+      "display_name": "Slime Residue",
+      "scope": "material",
+      "purpose": "Common upgrade/crafting material from slime enemies and boss-related content."
+    },
+    {
+      "id": "rusted_scrap",
+      "display_name": "Rusted Scrap",
+      "scope": "material",
+      "purpose": "Material from ruin objects, chests, and armored hazards."
+    },
+    {
+      "id": "sky_thread",
+      "display_name": "Sky Thread",
+      "scope": "material",
+      "purpose": "Mobility-themed material from high-route rewards and moving-platform challenges."
+    },
+    {
+      "id": "boss_core",
+      "display_name": "Boss Core",
+      "scope": "material",
+      "purpose": "Rare boss material used for later weapon, relic, or permanent upgrade unlocks."
+    }
+  ],
+  "run_level_curve": [
+    { "level": 1, "xp_required_total": 0, "reward": "starting_level" },
+    { "level": 2, "xp_required_total": 20, "reward": "choose_micro_upgrade" },
+    { "level": 3, "xp_required_total": 55, "reward": "choose_micro_upgrade" },
+    { "level": 4, "xp_required_total": 105, "reward": "choose_micro_upgrade" },
+    { "level": 5, "xp_required_total": 170, "reward": "choose_micro_upgrade" },
+    { "level": 6, "xp_required_total": 250, "reward": "choose_micro_upgrade" }
+  ],
+  "drop_tables": [
+    {
+      "id": "drop_walker_basic",
+      "source_type": "enemy",
+      "guaranteed": [
+        { "currency": "xp", "amount": 6 }
+      ],
+      "rolls": [
+        { "currency": "coin", "amount_min": 1, "amount_max": 3, "chance": 0.85 },
+        { "currency": "rusted_scrap", "amount_min": 1, "amount_max": 1, "chance": 0.15 }
+      ]
+    },
+    {
+      "id": "drop_charger_basic",
+      "source_type": "enemy",
+      "guaranteed": [
+        { "currency": "xp", "amount": 12 },
+        { "currency": "coin", "amount": 3 }
+      ],
+      "rolls": [
+        { "currency": "rusted_scrap", "amount_min": 1, "amount_max": 2, "chance": 0.35 }
+      ]
+    },
+    {
+      "id": "drop_shooter_basic",
+      "source_type": "enemy",
+      "guaranteed": [
+        { "currency": "xp", "amount": 10 },
+        { "currency": "coin", "amount": 2 }
+      ],
+      "rolls": [
+        { "currency": "sky_thread", "amount_min": 1, "amount_max": 1, "chance": 0.2 }
+      ]
+    },
+    {
+      "id": "drop_small_slime",
+      "source_type": "enemy",
+      "guaranteed": [
+        { "currency": "xp", "amount": 4 }
+      ],
+      "rolls": [
+        { "currency": "coin", "amount_min": 1, "amount_max": 2, "chance": 0.6 },
+        { "currency": "slime_residue", "amount_min": 1, "amount_max": 1, "chance": 0.25 }
+      ]
+    },
+    {
+      "id": "drop_material_node_common",
+      "source_type": "gimmick",
+      "guaranteed": [
+        { "currency": "coin", "amount": 2 }
+      ],
+      "rolls": [
+        { "currency": "rusted_scrap", "amount_min": 1, "amount_max": 2, "chance": 0.55 },
+        { "currency": "sky_thread", "amount_min": 1, "amount_max": 1, "chance": 0.2 }
+      ]
+    },
+    {
+      "id": "drop_boss_slime_king",
+      "source_type": "boss",
+      "guaranteed": [
+        { "currency": "xp", "amount": 80 },
+        { "currency": "coin", "amount": 30 },
+        { "currency": "slime_residue", "amount": 8 },
+        { "currency": "boss_core", "amount": 1 }
+      ],
+      "rolls": [
+        { "currency": "sky_thread", "amount_min": 1, "amount_max": 2, "chance": 0.5 }
+      ]
+    }
+  ],
+  "stage_clear_rewards": [
+    {
+      "stage_id": "stage_01",
+      "rewards": [
+        { "currency": "xp", "amount": 12 },
+        { "currency": "coin", "amount": 8 },
+        { "reward": "card_choice", "choices": 3 }
+      ]
+    },
+    {
+      "stage_id": "stage_02",
+      "rewards": [
+        { "currency": "xp", "amount": 18 },
+        { "currency": "coin", "amount": 12 },
+        { "currency": "rusted_scrap", "amount": 1 },
+        { "reward": "card_choice", "choices": 3 }
+      ]
+    },
+    {
+      "stage_id": "stage_03",
+      "rewards": [
+        { "currency": "xp", "amount": 24 },
+        { "currency": "coin", "amount": 16 },
+        { "currency": "sky_thread", "amount": 1 },
+        { "reward": "card_choice", "choices": 3 }
+      ]
+    },
+    {
+      "stage_id": "boss_stage_01",
+      "rewards": [
+        { "currency": "coin", "amount": 40 },
+        { "currency": "boss_core", "amount": 1 },
+        { "reward": "boss_card_choice", "choices": 3 }
+      ]
+    }
+  ],
+  "shop_seed": [
+    {
+      "id": "shop_heal_small",
+      "display_name": "Field Bandage",
+      "cost": [{ "currency": "coin", "amount": 8 }],
+      "effect": { "type": "heal_now", "value": 2 }
+    },
+    {
+      "id": "shop_card_reroll",
+      "display_name": "Card Reroll",
+      "cost": [{ "currency": "coin", "amount": 12 }],
+      "effect": { "type": "reroll_current_card_choices", "value": 1 }
+    },
+    {
+      "id": "shop_temporary_attack",
+      "display_name": "Sharpened Edge Oil",
+      "cost": [{ "currency": "coin", "amount": 15 }],
+      "effect": { "type": "add_attack_damage_until_stage_clear", "value": 1 }
+    }
+  ]
+}

@@ -1,0 +1,231 @@
+{
+  "schema": "cardborne.first_slice.player_progression.v0",
+  "base_character": {
+    "id": "base_adventurer",
+    "display_name": "Base Adventurer",
+    "role": "First playable character",
+    "base_stats": {
+      "max_health": 5,
+      "attack_damage": 1,
+      "attack_cooldown": 0.35,
+      "move_speed": 220,
+      "acceleration": 1800,
+      "deceleration": 2200,
+      "air_acceleration": 1200,
+      "gravity": 1200,
+      "max_fall_speed": 700,
+      "jump_velocity": -420,
+      "jump_cut_multiplier": 0.45,
+      "coyote_time": 0.1,
+      "jump_buffer_time": 0.12,
+      "dash_speed": 520,
+      "dash_duration": 0.13,
+      "dash_cooldown": 0.45,
+      "dash_charges": 1,
+      "post_hit_invulnerability": 1.0,
+      "damage_knockback_x": 220,
+      "damage_knockback_y": -220
+    },
+    "input_actions": [
+      { "id": "move_left", "keyboard": ["A", "Left Arrow"] },
+      { "id": "move_right", "keyboard": ["D", "Right Arrow"] },
+      { "id": "jump", "keyboard": ["Space"] },
+      { "id": "attack", "keyboard": ["J", "Left Mouse"] },
+      { "id": "dash", "keyboard": ["K", "Shift"] },
+      { "id": "crouch", "keyboard": ["S", "Down Arrow"] },
+      { "id": "drop_through", "keyboard": ["Down + Jump"] },
+      { "id": "interact", "keyboard": ["E", "Enter"] },
+      { "id": "open_build_panel", "keyboard": ["Tab"] },
+      { "id": "pause", "keyboard": ["Esc"] }
+    ],
+    "starting_equipment": {
+      "weapon": "training_sword",
+      "armor": "traveler_jacket",
+      "charm_1": null,
+      "charm_2": null,
+      "relic": null,
+      "consumable": "small_potion"
+    }
+  },
+  "micro_upgrade_pool": [
+    {
+      "id": "micro_power",
+      "display_name": "Power",
+      "source": "level_up",
+      "effect": { "type": "add_attack_damage", "value": 1 },
+      "max_stacks": 3
+    },
+    {
+      "id": "micro_vitality",
+      "display_name": "Vitality",
+      "source": "level_up",
+      "effect": { "type": "add_max_health", "value": 1 },
+      "max_stacks": 3
+    },
+    {
+      "id": "micro_quick_step",
+      "display_name": "Quick Step",
+      "source": "level_up",
+      "effect": { "type": "reduce_dash_cooldown", "value": 0.05 },
+      "max_stacks": 4
+    },
+    {
+      "id": "micro_light_foot",
+      "display_name": "Light Foot",
+      "source": "level_up",
+      "effect": { "type": "add_move_speed", "value": 10 },
+      "max_stacks": 4
+    },
+    {
+      "id": "micro_steady_hands",
+      "display_name": "Steady Hands",
+      "source": "level_up",
+      "effect": { "type": "multiply_attack_speed", "value": 0.95 },
+      "max_stacks": 4
+    }
+  ],
+  "skill_branches": [
+    {
+      "id": "combat",
+      "display_name": "Combat",
+      "nodes": [
+        {
+          "id": "combat_edge_training",
+          "display_name": "Edge Training",
+          "tier": 1,
+          "scope": "persistent_candidate",
+          "cost": [{ "currency": "rusted_scrap", "amount": 3 }],
+          "effect": { "type": "add_starting_attack_damage", "value": 1 }
+        },
+        {
+          "id": "combat_boss_focus",
+          "display_name": "Boss Focus",
+          "tier": 2,
+          "scope": "persistent_candidate",
+          "cost": [{ "currency": "boss_core", "amount": 1 }],
+          "effect": { "type": "add_boss_damage_bonus_percent", "value": 10 }
+        },
+        {
+          "id": "combat_heavy_attack_unlock",
+          "display_name": "Heavy Attack",
+          "tier": 3,
+          "scope": "future_hook",
+          "cost": [{ "currency": "rusted_scrap", "amount": 8 }],
+          "effect": { "type": "unlock_heavy_attack", "value": 1 }
+        }
+      ]
+    },
+    {
+      "id": "mobility",
+      "display_name": "Mobility",
+      "nodes": [
+        {
+          "id": "mobility_dash_tuning",
+          "display_name": "Dash Tuning",
+          "tier": 1,
+          "scope": "persistent_candidate",
+          "cost": [{ "currency": "sky_thread", "amount": 2 }],
+          "effect": { "type": "reduce_starting_dash_cooldown", "value": 0.05 }
+        },
+        {
+          "id": "mobility_air_step",
+          "display_name": "Air Step",
+          "tier": 2,
+          "scope": "persistent_candidate",
+          "cost": [{ "currency": "sky_thread", "amount": 5 }],
+          "effect": { "type": "add_starting_dash_charge", "value": 1 }
+        },
+        {
+          "id": "mobility_wall_jump_unlock",
+          "display_name": "Wall Jump",
+          "tier": 3,
+          "scope": "future_hook",
+          "cost": [{ "currency": "sky_thread", "amount": 10 }],
+          "effect": { "type": "unlock_wall_jump", "value": 1 }
+        }
+      ]
+    },
+    {
+      "id": "survival",
+      "display_name": "Survival",
+      "nodes": [
+        {
+          "id": "survival_tough_start",
+          "display_name": "Tough Start",
+          "tier": 1,
+          "scope": "persistent_candidate",
+          "cost": [{ "currency": "slime_residue", "amount": 4 }],
+          "effect": { "type": "add_starting_max_health", "value": 1 }
+        },
+        {
+          "id": "survival_recovery_training",
+          "display_name": "Recovery Training",
+          "tier": 2,
+          "scope": "persistent_candidate",
+          "cost": [{ "currency": "slime_residue", "amount": 6 }],
+          "effect": { "type": "add_healing_received_percent", "value": 10 }
+        },
+        {
+          "id": "survival_iron_nerve",
+          "display_name": "Iron Nerve",
+          "tier": 3,
+          "scope": "persistent_candidate",
+          "cost": [{ "currency": "boss_core", "amount": 1 }],
+          "effect": { "type": "add_starting_invulnerability_time", "value": 0.15 }
+        }
+      ]
+    },
+    {
+      "id": "card",
+      "display_name": "Card",
+      "nodes": [
+        {
+          "id": "card_first_reroll",
+          "display_name": "First Reroll",
+          "tier": 1,
+          "scope": "future_hook",
+          "cost": [{ "currency": "slime_residue", "amount": 5 }],
+          "effect": { "type": "add_card_reroll_per_run", "value": 1 }
+        },
+        {
+          "id": "card_wider_choice",
+          "display_name": "Wider Choice",
+          "tier": 2,
+          "scope": "future_hook",
+          "cost": [{ "currency": "boss_core", "amount": 1 }],
+          "effect": { "type": "add_card_choice", "value": 1 }
+        }
+      ]
+    },
+    {
+      "id": "economy",
+      "display_name": "Economy",
+      "nodes": [
+        {
+          "id": "economy_coin_pouch",
+          "display_name": "Coin Pouch",
+          "tier": 1,
+          "scope": "persistent_candidate",
+          "cost": [{ "currency": "rusted_scrap", "amount": 3 }],
+          "effect": { "type": "multiply_coin_gain", "value": 1.1 }
+        },
+        {
+          "id": "economy_salvager",
+          "display_name": "Salvager",
+          "tier": 2,
+          "scope": "persistent_candidate",
+          "cost": [{ "currency": "rusted_scrap", "amount": 6 }],
+          "effect": { "type": "multiply_material_gain", "value": 1.1 }
+        },
+        {
+          "id": "economy_shop_contact",
+          "display_name": "Shop Contact",
+          "tier": 3,
+          "scope": "future_hook",
+          "cost": [{ "currency": "boss_core", "amount": 1 }],
+          "effect": { "type": "shop_discount_percent", "value": 10 }
+        }
+      ]
+    }
+  ]
+}

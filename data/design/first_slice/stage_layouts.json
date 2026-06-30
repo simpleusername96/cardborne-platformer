@@ -1,0 +1,167 @@
+{
+  "schema": "cardborne.first_slice.stage_layouts.v0",
+  "tile_size": 24,
+  "legend": {
+    "S": "player_spawn",
+    "E": "exit_portal",
+    "B": "boss_spawn",
+    "#": "solid",
+    "=": "one_way_platform",
+    "P": "moving_platform",
+    "^": "spike_row",
+    "~": "poison_floor",
+    "!": "warning_zone",
+    "W": "walker",
+    "C": "charger",
+    "R": "shooter",
+    "m": "small_slime",
+    "$": "coin_cluster",
+    "M": "material_node",
+    "T": "chest",
+    "K": "key",
+    "G": "gate",
+    ".": "empty_marker",
+    " ": "empty"
+  },
+  "stages": [
+    {
+      "id": "stage_01",
+      "display_name": "Stage 01 - Training Ruins",
+      "purpose": "Teach basic movement, melee combat, coin pickup, and a simple optional reward.",
+      "teaching_goals": [
+        "Move and jump over a small gap.",
+        "Defeat Walker enemies.",
+        "Collect coins and open a visible chest.",
+        "Reach the exit portal."
+      ],
+      "critical_path": "Spawn, cross flat combat space, jump the small hazard gap, climb one ledge, reach exit.",
+      "optional_rewards": [
+        "Chest above the ledge with coins and a chance for rusted_scrap."
+      ],
+      "soft_lock_checks": [
+        "Player can always return to the main route after collecting the chest.",
+        "Gap is short enough for base jump without upgrades."
+      ],
+      "layout": [
+        "                                                                                ",
+        "                                                                                ",
+        "                                                                                ",
+        "                                                                                ",
+        "                                               T                                ",
+        "                                           ========                             ",
+        "                                                                                ",
+        "                                                                                ",
+        "      S        $        W             W                                         ",
+        "####################   ############   ###############        E                  ",
+        "                   #   #          #   #             #   ########################",
+        "                   #^^^#          #   #             #   #                      #",
+        "####################   ############   ###############   ########################"
+      ]
+    },
+    {
+      "id": "stage_02",
+      "display_name": "Stage 02 - Lift And Spikes",
+      "purpose": "Introduce traps, moving platforms, material nodes, and the Shooter enemy.",
+      "teaching_goals": [
+        "Jump over spike rows.",
+        "Ride a moving platform.",
+        "Dodge Shooter projectiles.",
+        "Collect a material node from an optional route."
+      ],
+      "critical_path": "Spawn, cross spikes, ride moving platform, defeat or bypass Shooter, reach exit.",
+      "optional_rewards": [
+        "Material node on upper platform.",
+        "Chest behind a short spike challenge."
+      ],
+      "soft_lock_checks": [
+        "Moving platform returns to a reachable start point.",
+        "Optional material route is not required for exit."
+      ],
+      "layout": [
+        "                                                                                ",
+        "                                                                                ",
+        "                         M                                                      ",
+        "                     =========                                                  ",
+        "                                                                                ",
+        "                                                    R                           ",
+        "                                                #########                       ",
+        "                                                                                ",
+        "      S        W             ^^^           P                 T             E    ",
+        "######################   ###########     #######       ############   ##########",
+        "                     #   #         #                   #          #   #        #",
+        "                     #^^^#         ####################          #^^^#         #",
+        "######################   #######################################################"
+      ]
+    },
+    {
+      "id": "stage_03",
+      "display_name": "Stage 03 - Gate Before The King",
+      "purpose": "Combine Charger, Shooter, hazards, key/gate routing, and a riskier material reward.",
+      "teaching_goals": [
+        "React to Charger telegraph.",
+        "Fight while under projectile pressure.",
+        "Use key/gate route logic.",
+        "Choose whether to risk a material reward path."
+      ],
+      "critical_path": "Spawn, defeat or dodge Charger, collect key, pass gate, handle Shooter pressure, reach exit.",
+      "optional_rewards": [
+        "Sky Thread material node above the gate route."
+      ],
+      "soft_lock_checks": [
+        "Key must be reachable with base movement.",
+        "Gate opens permanently once key is collected.",
+        "Hazard gap has a safe retry anchor."
+      ],
+      "layout": [
+        "                                                                                ",
+        "                                                                                ",
+        "                                      M                                         ",
+        "                                  =========                                     ",
+        "                                                                                ",
+        "                         K                                                      ",
+        "                     =========                              R                   ",
+        "                                                        ########                ",
+        "      S      C          $            G          ^^^                 E           ",
+        "###################   ###########   ####     ###########       #################",
+        "                  #   #         #   #  #     #         #       #               #",
+        "                  #^^^#         #   #  #     #         #########               #",
+        "###################   ###########   ####     ###################################"
+      ]
+    },
+    {
+      "id": "boss_stage_01",
+      "display_name": "Boss Stage 01 - Slime King Arena",
+      "purpose": "Readable two-phase boss arena with safe zones, warning zones, and summon pressure.",
+      "teaching_goals": [
+        "Read boss warning zones.",
+        "Jump shockwaves.",
+        "Move out of poison floor warnings.",
+        "Manage small slime summons in phase 2."
+      ],
+      "critical_path": "Fight Slime King until defeat. Exit appears after boss death in implementation.",
+      "optional_rewards": [
+        "Boss core and boss card choice after clear."
+      ],
+      "soft_lock_checks": [
+        "Arena walls prevent boss from leaving the fight space.",
+        "Safe floor exists during poison patterns.",
+        "Summon cap prevents overwhelming the player."
+      ],
+      "layout": [
+        "                                                                                ",
+        "                                                                                ",
+        "                                                                                ",
+        "                                                                                ",
+        "                                                                                ",
+        "                  ========                              ========                ",
+        "                                                                                ",
+        "                                                                                ",
+        "      S                         !      B      !                         E       ",
+        "################################################################################",
+        "#                                                                              #",
+        "#                 ~~~~~~                         ~~~~~~                        #",
+        "################################################################################"
+      ]
+    }
+  ]
+}

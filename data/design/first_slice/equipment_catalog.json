@@ -1,0 +1,143 @@
+{
+  "schema": "cardborne.first_slice.equipment_catalog.v0",
+  "slots": [
+    { "id": "weapon", "display_name": "Weapon", "max_equipped": 1 },
+    { "id": "armor", "display_name": "Armor", "max_equipped": 1 },
+    { "id": "charm_1", "display_name": "Charm 1", "max_equipped": 1 },
+    { "id": "charm_2", "display_name": "Charm 2", "max_equipped": 1, "unlock": "future_hook" },
+    { "id": "relic", "display_name": "Relic", "max_equipped": 1 },
+    { "id": "consumable", "display_name": "Consumable", "max_equipped": 1 }
+  ],
+  "items": [
+    {
+      "id": "training_sword",
+      "display_name": "Training Sword",
+      "slot": "weapon",
+      "rarity": "common",
+      "source": "starting_equipment",
+      "effects": [
+        { "type": "add_attack_damage", "value": 0 }
+      ],
+      "notes": "Baseline weapon. Keeps first implementation simple."
+    },
+    {
+      "id": "heavy_cleaver",
+      "display_name": "Heavy Cleaver",
+      "slot": "weapon",
+      "rarity": "rare",
+      "source": "chest_or_shop",
+      "effects": [
+        { "type": "add_attack_damage", "value": 2 },
+        { "type": "multiply_attack_speed", "value": 1.15 }
+      ],
+      "notes": "Higher damage with slower attacks."
+    },
+    {
+      "id": "swift_dagger",
+      "display_name": "Swift Dagger",
+      "slot": "weapon",
+      "rarity": "rare",
+      "source": "shop_or_optional_reward",
+      "effects": [
+        { "type": "add_attack_damage", "value": -0.25 },
+        { "type": "multiply_attack_speed", "value": 0.8 }
+      ],
+      "notes": "Fast weapon for attack-speed builds. Implementation can clamp visible damage to safe values."
+    },
+    {
+      "id": "traveler_jacket",
+      "display_name": "Traveler Jacket",
+      "slot": "armor",
+      "rarity": "common",
+      "source": "starting_equipment",
+      "effects": [
+        { "type": "add_max_health", "value": 0 }
+      ]
+    },
+    {
+      "id": "patched_mail",
+      "display_name": "Patched Mail",
+      "slot": "armor",
+      "rarity": "common",
+      "source": "chest",
+      "effects": [
+        { "type": "add_max_health", "value": 1 },
+        { "type": "add_move_speed", "value": -8 }
+      ]
+    },
+    {
+      "id": "runner_cloak",
+      "display_name": "Runner Cloak",
+      "slot": "armor",
+      "rarity": "rare",
+      "source": "high_route_chest",
+      "effects": [
+        { "type": "add_move_speed", "value": 18 }
+      ]
+    },
+    {
+      "id": "copper_charm",
+      "display_name": "Copper Charm",
+      "slot": "charm_1",
+      "rarity": "common",
+      "source": "shop",
+      "effects": [
+        { "type": "multiply_coin_gain", "value": 1.1 }
+      ]
+    },
+    {
+      "id": "spring_charm",
+      "display_name": "Spring Charm",
+      "slot": "charm_1",
+      "rarity": "rare",
+      "source": "stage_02_optional_reward",
+      "effects": [
+        { "type": "add_jump_power", "value": -20 }
+      ]
+    },
+    {
+      "id": "slime_relic",
+      "display_name": "Slime Relic",
+      "slot": "relic",
+      "rarity": "legendary",
+      "source": "boss_reward",
+      "effects": [
+        { "type": "add_invulnerability_time", "value": 0.25 },
+        { "type": "add_max_health", "value": 1 }
+      ]
+    },
+    {
+      "id": "small_potion",
+      "display_name": "Small Potion",
+      "slot": "consumable",
+      "rarity": "common",
+      "source": "starting_equipment_or_shop",
+      "effects": [
+        { "type": "heal_now", "value": 2 }
+      ],
+      "charges": 1
+    },
+    {
+      "id": "dash_tonic",
+      "display_name": "Dash Tonic",
+      "slot": "consumable",
+      "rarity": "rare",
+      "source": "shop",
+      "effects": [
+        { "type": "reduce_dash_cooldown_until_stage_clear", "value": 0.15 }
+      ],
+      "charges": 1
+    },
+    {
+      "id": "salvage_kit",
+      "display_name": "Salvage Kit",
+      "slot": "consumable",
+      "rarity": "common",
+      "source": "shop",
+      "effects": [
+        { "type": "bonus_material_from_next_node", "value": 1 }
+      ],
+      "charges": 1
+    }
+  ]
+}
