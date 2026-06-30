@@ -1,0 +1,23 @@
+.godot/
+.import/
+.mono/
+.codex-runtime/
+
+# Godot/editor local state
+*.tmp
+*.translation
+export_presets.cfg
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.vscode/
+.idea/
+
+# Runtime logs and local artifacts
+*.log
+dist/
+exports/
+build/
