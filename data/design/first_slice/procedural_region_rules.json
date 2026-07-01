@@ -1,0 +1,178 @@
+{
+  "schema": "cardborne.first_slice.procedural_region_rules.v0",
+  "notes": [
+    "Seed design data only. This controls procedural region graph generation before Godot runtime implementation.",
+    "The generator varies room graph, side paths, local danger, and reward placement while preserving mission outcome and difficulty band."
+  ],
+  "generation_model": {
+    "approach": "mission_graph_then_region_graph",
+    "determinism": "same seed and profile must produce the same output",
+    "runtime_status": "prototype_python_first_port_to_gdscript_later"
+  },
+  "profiles": [
+    {
+      "id": "lower_ruins_first_slice",
+      "display_name": "Lower Ruins First Slice",
+      "biome": "ruined_training_field",
+      "target_room_count": {
+        "min": 10,
+        "max": 13
+      },
+      "critical_path_length": {
+        "min": 6,
+        "max": 8
+      },
+      "vertical_span": {
+        "min": 4,
+        "max": 6
+      },
+      "difficulty_budget": {
+        "min": 18,
+        "max": 35
+      },
+      "reward_budget": {
+        "min": 12,
+        "max": 22
+      },
+      "required_roles": [
+        "entrance",
+        "combat_intro",
+        "vertical_traversal",
+        "key_room",
+        "locked_gate",
+        "safe_shop",
+        "shortcut",
+        "boss_approach",
+        "boss"
+      ],
+      "optional_roles": [
+        "reward_room",
+        "material_cache",
+        "hazard_challenge",
+        "lore_or_map_room"
+      ],
+      "gates": [
+        {
+          "id": "lower_gate_key",
+          "type": "key_lock",
+          "key_role": "key_room",
+          "gate_role": "locked_gate",
+          "must_be_reachable_before_gate": true
+        }
+      ],
+      "shortcut_rules": [
+        {
+          "id": "shaft_return_shortcut",
+          "from_progress": "after_locked_gate",
+          "to_role": "vertical_traversal",
+          "opens_from_far_side": true
+        }
+      ],
+      "room_role_weights": {
+        "combat_intro": 1,
+        "combat": 5,
+        "vertical_traversal": 3,
+        "hazard_challenge": 2,
+        "reward_room": 3,
+        "material_cache": 2,
+        "lore_or_map_room": 1
+      }
+    }
+  ],
+  "room_role_contracts": [
+    {
+      "role": "entrance",
+      "purpose": "Start room and return anchor.",
+      "danger": 0,
+      "reward": 0,
+      "required": true
+    },
+    {
+      "role": "combat_intro",
+      "purpose": "Teach baseline enemy pressure.",
+      "danger_range": [1, 2],
+      "reward_range": [1, 2]
+    },
+    {
+      "role": "combat",
+      "purpose": "Main enemy room.",
+      "danger_range": [2, 4],
+      "reward_range": [1, 3]
+    },
+    {
+      "role": "vertical_traversal",
+      "purpose": "Multi-level movement room and routing hub.",
+      "danger_range": [1, 3],
+      "reward_range": [0, 2],
+      "vertical_bias": 2
+    },
+    {
+      "role": "key_room",
+      "purpose": "Contains key or unlock equivalent.",
+      "danger_range": [2, 3],
+      "reward_range": [2, 3],
+      "grants": ["lower_gate_key"]
+    },
+    {
+      "role": "locked_gate",
+      "purpose": "Blocks boss path until key is collected.",
+      "requires": ["lower_gate_key"],
+      "danger_range": [1, 3],
+      "reward_range": [0, 1]
+    },
+    {
+      "role": "safe_shop",
+      "purpose": "Rest, buy/sell, heal, and spend coins/materials safely.",
+      "danger": 0,
+      "reward": 0,
+      "safe": true
+    },
+    {
+      "role": "shortcut",
+      "purpose": "Reconnects later progress to a hub or earlier room.",
+      "danger_range": [0, 1],
+      "reward_range": [0, 1],
+      "opens_from_far_side": true
+    },
+    {
+      "role": "reward_room",
+      "purpose": "Optional chest/card/material reward.",
+      "danger_range": [0, 2],
+      "reward_range": [2, 4]
+    },
+    {
+      "role": "material_cache",
+      "purpose": "Optional material reward with minor traversal cost.",
+      "danger_range": [0, 2],
+      "reward_range": [2, 3]
+    },
+    {
+      "role": "hazard_challenge",
+      "purpose": "Optional or required hazard timing room.",
+      "danger_range": [2, 4],
+      "reward_range": [1, 3]
+    },
+    {
+      "role": "boss_approach",
+      "purpose": "Pre-boss pressure and staging room.",
+      "danger_range": [3, 4],
+      "reward_range": [1, 2]
+    },
+    {
+      "role": "boss",
+      "purpose": "Boss arena. Clear condition is boss defeat.",
+      "danger": 5,
+      "reward": 4,
+      "required": true
+    }
+  ],
+  "validation_rules": [
+    "all_rooms_reachable_from_entrance",
+    "key_room_reachable_before_locked_gate",
+    "boss_reachable_only_after_required_gate",
+    "at_least_one_shortcut_reconnects_to_hub",
+    "safe_shop_has_no_enemy_or_trap_budget",
+    "difficulty_budget_inside_profile_range",
+    "reward_budget_inside_profile_range"
+  ]
+}

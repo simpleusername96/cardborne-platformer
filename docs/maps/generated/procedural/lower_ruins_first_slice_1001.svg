@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1670" height="640" viewBox="0 0 1670 640">
+<rect width="100%" height="100%" fill="#f8f9fb"/>
+<text x="24" y="34" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#111827">Lower Ruins First Slice Seed 1001</text>
+<text x="24" y="58" font-family="Arial, sans-serif" font-size="13" fill="#4b5563">rooms 11, danger 24, reward 19</text>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#4b5563"/></marker></defs>
+<line x1="132" y1="496" x2="472" y2="386" stroke="#4b5563" stroke-width="2" marker-end="url(#arrow)"/>
+<line x1="472" y1="386" x2="812" y2="276" stroke="#4b5563" stroke-width="2" marker-end="url(#arrow)"/>
+<line x1="812" y1="276" x2="982" y2="386" stroke="#4b5563" stroke-width="2" marker-end="url(#arrow)"/>
+<line x1="982" y1="386" x2="1152" y2="496" stroke="#273746" stroke-width="4" marker-end="url(#arrow)"/>
+<line x1="1152" y1="496" x2="1322" y2="386" stroke="#4b5563" stroke-width="2" marker-end="url(#arrow)"/>
+<line x1="1322" y1="386" x2="1492" y2="276" stroke="#4b5563" stroke-width="2" marker-end="url(#arrow)"/>
+<line x1="812" y1="276" x2="982" y2="166" stroke="#b7791f" stroke-width="2" marker-end="url(#arrow)"/>
+<line x1="982" y1="166" x2="812" y2="276" stroke="#4b5563" stroke-width="2" marker-end="url(#arrow)"/>
+<line x1="812" y1="276" x2="642" y2="386" stroke="#4b5563" stroke-width="2" marker-end="url(#arrow)"/>
+<line x1="982" y1="386" x2="1152" y2="496" stroke="#16a085" stroke-width="3" stroke-dasharray="8 6" marker-end="url(#arrow)"/>
+<line x1="1152" y1="496" x2="812" y2="276" stroke="#16a085" stroke-width="3" stroke-dasharray="8 6" marker-end="url(#arrow)"/>
+<line x1="472" y1="386" x2="132" y2="276" stroke="#4b5563" stroke-width="2" marker-end="url(#arrow)"/>
+<line x1="132" y1="276" x2="472" y2="386" stroke="#4b5563" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="70" y="460" width="124" height="72" rx="8" fill="#2f80ed" stroke="#111827" stroke-width="2"/>
+<text x="82" y="486" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#111827">START</text>
+<text x="82" y="506" font-family="Arial, sans-serif" font-size="11" fill="#111827">D0 R0</text>
+<rect x="410" y="350" width="124" height="72" rx="8" fill="#d77a35" stroke="#111827" stroke-width="2"/>
+<text x="422" y="376" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#111827">FIGHT</text>
+<text x="422" y="396" font-family="Arial, sans-serif" font-size="11" fill="#111827">D2 R2</text>
+<rect x="750" y="240" width="124" height="72" rx="8" fill="#7f8c8d" stroke="#111827" stroke-width="2"/>
+<text x="762" y="266" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#111827">SHAFT</text>
+<text x="762" y="286" font-family="Arial, sans-serif" font-size="11" fill="#111827">D3 R0</text>
+<rect x="920" y="350" width="124" height="72" rx="8" fill="#273746" stroke="#111827" stroke-width="2"/>
+<text x="932" y="376" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#111827">GATE</text>
+<text x="932" y="396" font-family="Arial, sans-serif" font-size="11" fill="#111827">D3 R1</text>
+<text x="932" y="412" font-family="Arial, sans-serif" font-size="10" fill="#111827">req lower_gate_key</text>
+<rect x="1090" y="460" width="124" height="72" rx="8" fill="#b95f45" stroke="#111827" stroke-width="2"/>
+<text x="1102" y="486" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#111827">FIGHT</text>
+<text x="1102" y="506" font-family="Arial, sans-serif" font-size="11" fill="#111827">D4 R3</text>
+<rect x="1260" y="350" width="124" height="72" rx="8" fill="#9b59b6" stroke="#111827" stroke-width="2"/>
+<text x="1272" y="376" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#111827">APPROACH</text>
+<text x="1272" y="396" font-family="Arial, sans-serif" font-size="11" fill="#111827">D3 R2</text>
+<rect x="1430" y="240" width="124" height="72" rx="8" fill="#8e44ad" stroke="#111827" stroke-width="2"/>
+<text x="1442" y="266" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#111827">BOSS</text>
+<text x="1442" y="286" font-family="Arial, sans-serif" font-size="11" fill="#111827">D5 R4</text>
+<rect x="920" y="130" width="124" height="72" rx="8" fill="#f2c94c" stroke="#6b7280" stroke-width="2"/>
+<text x="932" y="156" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#111827">KEY</text>
+<text x="932" y="176" font-family="Arial, sans-serif" font-size="11" fill="#111827">D3 R2</text>
+<rect x="580" y="350" width="124" height="72" rx="8" fill="#27ae60" stroke="#6b7280" stroke-width="2"/>
+<text x="592" y="376" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#111827">SHOP</text>
+<text x="592" y="396" font-family="Arial, sans-serif" font-size="11" fill="#111827">D0 R0</text>
+<rect x="1090" y="460" width="124" height="72" rx="8" fill="#16a085" stroke="#6b7280" stroke-width="2"/>
+<text x="1102" y="486" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#111827">SHORT</text>
+<text x="1102" y="506" font-family="Arial, sans-serif" font-size="11" fill="#111827">D1 R1</text>
+<rect x="70" y="240" width="124" height="72" rx="8" fill="#d68f18" stroke="#6b7280" stroke-width="2"/>
+<text x="82" y="266" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#111827">CHEST</text>
+<text x="82" y="286" font-family="Arial, sans-serif" font-size="11" fill="#111827">D0 R4</text>
+</svg>

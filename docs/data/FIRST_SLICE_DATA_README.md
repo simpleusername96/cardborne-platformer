@@ -23,6 +23,7 @@ The seed data lives under `data/design/first_slice/` and covers:
 - Stage layout and visual preview data.
 - UI/UX screen skeletons and generated wireframe targets.
 - Reference/source candidates for future code and asset review.
+- Procedural region generation rules and generated region graph examples.
 
 ## Requirements
 
@@ -44,6 +45,8 @@ The seed data lives under `data/design/first_slice/` and covers:
 | `stage_layouts.json` | script-readable authored map layouts and preview metadata |
 | `ui_screen_skeletons.json` | screen-level UI/UX composition targets for generated wireframes |
 | `reference_asset_candidates.json` | researched source, code, and asset candidates; evidence only |
+| `procedural_region_rules.json` | seeded procedural region graph rules, budgets, roles, gates, and validation contracts |
+| `generated/*.json` | generated procedural region examples for fixed seeds |
 
 ## Acceptance Criteria
 

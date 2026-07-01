@@ -9,6 +9,7 @@
 - First-slice expansion docs and seed data now define XP, coins, materials, map previews, player skill/equipment guidance, and enemies/traps/gimmicks before gameplay code generation.
 - UI/UX screen skeletons are defined as data and generated to SVG previews before any image-model polish or Godot UI scene work.
 - Reference and asset candidates are cataloged, but no third-party assets have been imported yet.
+- Procedural region generation is now modeled as seeded mission/region graph generation before any random tile placement.
 
 ## Durable Decisions
 - Use Godot 4.x with GDScript for MVP work.
@@ -21,6 +22,7 @@
 - Treat generated map SVGs under `docs/maps/generated/` as visual planning aids until Godot scenes exist.
 - Treat generated UI/UX SVGs under `docs/uiux/generated/` as screen composition targets until Godot UI scenes exist.
 - Treat `docs/references/GENRE_REFERENCES_AND_ASSETS.md` as evidence only; verify licenses again before importing assets.
+- Treat `data/design/first_slice/procedural_region_rules.json` as the first procedural map-generation contract.
 
 ## Key Discoveries
 - The PRD is detailed enough for Codex to start implementation without inventing core requirements.
@@ -37,4 +39,5 @@
 - Headless project check: `.\tools\godot.ps1 --path . --headless --import`
 - Generate map previews: `python tools/generate_map_previews.py`
 - Generate UI/UX wireframes: `python tools/generate_uiux_wireframes.py`
+- Generate procedural region examples: `python tools/generate_region_graph.py`
 - Git status: `git status --short`

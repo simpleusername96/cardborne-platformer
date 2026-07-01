@@ -62,3 +62,9 @@ Generate UI/UX skeleton wireframes with:
 ```powershell
 python tools/generate_uiux_wireframes.py
 ```
+
+Generate procedural region graph examples with:
+
+```powershell
+python tools/generate_region_graph.py
+```

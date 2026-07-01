@@ -37,6 +37,19 @@ Collect implementation references, UI/UX standards, code examples, and asset can
 - [KidsCanCode Godot 4 platform character recipe](https://kidscancode.org/godot_recipes/4.x/2d/platform_character/index.html)
   - Useful for controller fundamentals, acceleration/friction, and `CharacterBody2D` setup.
 
+### Procedural Generation References
+
+- [Procedural Content Generation in Games](https://books.google.com/books/about/Procedural_Content_Generation_in_Games.html?id=-IdJDQAAQBAJ)
+  - Useful taxonomy for PCG methods including grammar-based, search-based, constraint-based, dungeon, and level generation.
+- [Adventures in Level Design: Generating Missions and Spaces for Action Adventure Games](https://dl.acm.org/doi/pdf/10.1145/1814256.1814257)
+  - Useful for separating mission structure from spatial layout in action-adventure levels.
+- [Constructive Generation Methods for Dungeons and Levels](https://antoniosliapis.com/articles/pcgbook_dungeons.php)
+  - Useful summary of graph grammar approaches that first generate mission graphs, then generate spaces.
+- [Graph-based Generation of Action-Adventure Dungeon Levels using Answer Set Programming](https://www.pcgworkshop.com/archive/smith2018graphbased.pdf)
+  - Useful for lock/key graph constraints and validating action-adventure dungeon progression.
+- [Building the Level Design of a Procedurally Generated Metroidvania](https://www.gamedeveloper.com/design/building-the-level-design-of-a-procedurally-generated-metroidvania-a-hybrid-approach-)
+  - Useful production discussion of using graph instructions to control level length, biome character, labyrinthine density, and exits.
+
 ### Asset Candidates
 
 Preferred source for first imports: Kenney CC0 packs. They have clear licensing, consistent style, and enough UI/platformer coverage for a prototype.
@@ -65,6 +78,8 @@ Preferred source for first imports: Kenney CC0 packs. They have clear licensing,
 
 - Godot official docs support the current plan to use `CharacterBody2D`, `move_and_slide`, Input Map actions, `Control` focus, and `TileMapLayer` for Godot 4.7.
 - The official Godot 2D Platformer demo overlaps strongly with this project: player controller, enemies, moving platforms, coins, pause menu, camera bounds, keyboard/gamepad controls.
+- Procedural metroidvania-style generation should start with mission/room graph constraints, not raw random tile placement.
+- Lock/key, shortcut, and boss access constraints must be validated after generation so the map is always winnable.
 - Kenney CC0 packs are the safest first asset source because they cover platformer tiles, UI, prompts, icons, and character placeholders without attribution requirements.
 - OpenGameArt is useful as a broader search pool, but each asset needs individual license verification before import.
 - The first slice should keep imported assets as placeholders until a durable art direction is chosen.
