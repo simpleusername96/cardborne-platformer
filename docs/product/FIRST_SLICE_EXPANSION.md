@@ -27,12 +27,25 @@ The first slice should still be a compact Godot 4.x GDScript vertical slice, but
 
 The active PRD remains the baseline for movement, combat, card rewards, stage count, boss requirements, and Godot structure. This document expands the first-version content model and authoring guidance.
 
+## Implementation Scope Guardrails
+
+The expansion should make the first playable version easier to implement, not turn it into a full RPG or crafting game.
+
+- XP must have immediate run-local value through the run level curve and micro-upgrade pool.
+- Coins are run-local spending money. A shop/rest point may be implemented as a simple menu, but the first slice does not require a full shop scene.
+- Materials need named sources and intended sinks, but the first playable build may collect and display them before local profile persistence or crafting UI exists.
+- Cards remain stage-clear and boss-clear reward choices. Seed card data should mirror the PRD card list without replacing later Godot `CardData` resources.
+- Equipment can start as equipped item IDs plus simple stat modifiers. Do not build a grid inventory, item comparison screen, or large loot table for the first slice.
+- Skill branches may include persistent-candidate and future-hook nodes, but the first playable build should only activate the small subset needed to test collection and effective stats.
+- Authored stage layouts remain planning data until Godot scenes exist; they should not become a mandatory runtime map loader unless a later implementation explicitly promotes them.
+
 ## Requirements
 
 - Include XP drops from enemy defeats and selected breakable or reward objects.
 - Include coin drops from enemies, chests, destructibles, and stage clear rewards.
 - Include materials as named resources with clear sources and intended sinks.
 - Keep card rewards after normal stage clears; cards remain one of the primary run-build systems.
+- Seed the first-slice card catalog in JSON so implementation agents do not need to re-copy the PRD card list.
 - Add an in-run level curve so XP has immediate player-facing value.
 - Add a simple economy distinction:
   - **XP** is run-local growth.
@@ -47,12 +60,14 @@ The active PRD remains the baseline for movement, combat, card rewards, stage co
 
 ## Acceptance Criteria
 
-- Future implementation can create the first playable build without inventing core currencies, reward sources, equipment slots, or map notation.
+- Future implementation can create the first playable build without inventing core currencies, reward sources, equipment slots, card examples, or map notation.
 - A designer or agent can inspect `data/design/first_slice/stage_layouts.json` and understand each stage's high-level shape.
 - Running the map preview generator produces readable SVG map previews from the stage layout data.
 - Player growth systems are separated by purpose: XP for run level, coins for in-run purchases, materials for upgrade/crafting sinks.
 - Enemy, trap, and gimmick entries each state their gameplay purpose and reward interaction.
 - Equipment examples are data-shaped and do not require a full inventory system to understand their role.
+- Normal stages include a reachable exit portal, while the boss stage is cleared by defeating the boss rather than by a pre-placed exit.
+- Data IDs are lowercase snake_case and can be read as future Godot resource IDs.
 
 ## Non-Goals
 
