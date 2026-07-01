@@ -8,6 +8,103 @@
     { "id": "relic", "display_name": "Relic", "max_equipped": 1 },
     { "id": "consumable", "display_name": "Consumable", "max_equipped": 1 }
   ],
+  "upgrade_system": {
+    "notes": [
+      "First-slice data contract for forge/enchant UI and balance discussion.",
+      "Forge/enchant can randomly increase one eligible stat. Each equipment profile controls probability, range, and cost.",
+      "The first implementation should avoid downgrade or item destruction until the core loop is playable."
+    ],
+    "max_forge_level": 5,
+    "failure_behavior": "no_stat_change_no_downgrade",
+    "stat_labels": {
+      "attack_damage": "Attack Damage",
+      "attack_speed": "Attack Speed",
+      "move_speed": "Move Speed",
+      "max_health": "Max Health",
+      "dash_cooldown": "Dash Cooldown",
+      "coin_gain": "Coin Gain",
+      "material_gain": "Material Gain",
+      "invulnerability_time": "Invulnerability Time"
+    },
+    "enchant_profiles": [
+      {
+        "id": "blade_balanced",
+        "display_name": "Balanced Blade",
+        "applies_to_slots": ["weapon"],
+        "rolls": [
+          { "stat": "attack_damage", "chance": 0.45, "amount_min": 1, "amount_max": 2 },
+          { "stat": "attack_speed", "chance": 0.25, "amount_min": -0.05, "amount_max": -0.03 },
+          { "stat": "dash_cooldown", "chance": 0.15, "amount_min": -0.04, "amount_max": -0.02 },
+          { "stat": "no_change", "chance": 0.15, "amount_min": 0, "amount_max": 0 }
+        ]
+      },
+      {
+        "id": "heavy_weapon",
+        "display_name": "Heavy Weapon",
+        "applies_to_slots": ["weapon"],
+        "rolls": [
+          { "stat": "attack_damage", "chance": 0.55, "amount_min": 1, "amount_max": 3 },
+          { "stat": "max_health", "chance": 0.15, "amount_min": 1, "amount_max": 1 },
+          { "stat": "attack_speed", "chance": 0.15, "amount_min": -0.04, "amount_max": -0.02 },
+          { "stat": "no_change", "chance": 0.15, "amount_min": 0, "amount_max": 0 }
+        ]
+      },
+      {
+        "id": "agile_gear",
+        "display_name": "Agile Gear",
+        "applies_to_slots": ["weapon", "armor", "charm_1"],
+        "rolls": [
+          { "stat": "move_speed", "chance": 0.35, "amount_min": 4, "amount_max": 10 },
+          { "stat": "dash_cooldown", "chance": 0.3, "amount_min": -0.05, "amount_max": -0.02 },
+          { "stat": "attack_speed", "chance": 0.2, "amount_min": -0.05, "amount_max": -0.02 },
+          { "stat": "no_change", "chance": 0.15, "amount_min": 0, "amount_max": 0 }
+        ]
+      },
+      {
+        "id": "utility_charm",
+        "display_name": "Utility Charm",
+        "applies_to_slots": ["charm_1", "charm_2", "relic"],
+        "rolls": [
+          { "stat": "coin_gain", "chance": 0.35, "amount_min": 0.05, "amount_max": 0.12 },
+          { "stat": "material_gain", "chance": 0.25, "amount_min": 0.05, "amount_max": 0.1 },
+          { "stat": "invulnerability_time", "chance": 0.15, "amount_min": 0.05, "amount_max": 0.1 },
+          { "stat": "no_change", "chance": 0.25, "amount_min": 0, "amount_max": 0 }
+        ]
+      }
+    ],
+    "item_upgrade_profiles": [
+      {
+        "item_id": "training_sword",
+        "enchant_profile": "blade_balanced",
+        "base_cost": [{ "currency": "coin", "amount": 8 }, { "currency": "rusted_scrap", "amount": 1 }]
+      },
+      {
+        "item_id": "heavy_cleaver",
+        "enchant_profile": "heavy_weapon",
+        "base_cost": [{ "currency": "coin", "amount": 16 }, { "currency": "rusted_scrap", "amount": 2 }]
+      },
+      {
+        "item_id": "swift_dagger",
+        "enchant_profile": "agile_gear",
+        "base_cost": [{ "currency": "coin", "amount": 14 }, { "currency": "sky_thread", "amount": 1 }]
+      },
+      {
+        "item_id": "patched_mail",
+        "enchant_profile": "heavy_weapon",
+        "base_cost": [{ "currency": "coin", "amount": 12 }, { "currency": "rusted_scrap", "amount": 2 }]
+      },
+      {
+        "item_id": "runner_cloak",
+        "enchant_profile": "agile_gear",
+        "base_cost": [{ "currency": "coin", "amount": 18 }, { "currency": "sky_thread", "amount": 1 }]
+      },
+      {
+        "item_id": "copper_charm",
+        "enchant_profile": "utility_charm",
+        "base_cost": [{ "currency": "coin", "amount": 10 }, { "currency": "rusted_scrap", "amount": 1 }]
+      }
+    ]
+  },
   "items": [
     {
       "id": "training_sword",

@@ -8,6 +8,7 @@
 - Remote repository was created at `https://github.com/simpleusername96/cardborne-platformer` and `master` tracks `origin/master`.
 - First-slice expansion docs and seed data now define XP, coins, materials, map previews, player skill/equipment guidance, and enemies/traps/gimmicks before gameplay code generation.
 - UI/UX screen skeletons are defined as data and generated to SVG previews before any image-model polish or Godot UI scene work.
+- A standalone HTML/CSS/JS code mockup under `docs/uiux/code_mockup/` now covers the first-slice screen flow, seeded landscape preview, and forge/enchant equipment roll UI.
 - Reference and asset candidates are cataloged, but no third-party assets have been imported yet.
 - Procedural region generation is now modeled as seeded mission/region graph generation before any random tile placement.
 
@@ -21,6 +22,7 @@
 - Treat `data/design/first_slice/` JSON as seed design data, not final runtime schema.
 - Treat generated map SVGs under `docs/maps/generated/` as visual planning aids until Godot scenes exist.
 - Treat generated UI/UX SVGs under `docs/uiux/generated/` as screen composition targets until Godot UI scenes exist.
+- Treat `docs/uiux/code_mockup/` as a reviewable UI prototype, not runtime Godot scene code.
 - Treat `docs/references/GENRE_REFERENCES_AND_ASSETS.md` as evidence only; verify licenses again before importing assets.
 - Treat `data/design/first_slice/procedural_region_rules.json` as the first procedural map-generation contract.
 

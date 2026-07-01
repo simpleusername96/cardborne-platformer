@@ -40,7 +40,7 @@ The seed data lives under `data/design/first_slice/` and covers:
 |---|---|
 | `economy_tables.json` | XP, coin, material, drop, shop, and clear reward seed values |
 | `player_progression.json` | controls, base stats, run level curve, skill branches, unlock examples |
-| `equipment_catalog.json` | first-slice equipment slots and sample item data |
+| `equipment_catalog.json` | first-slice equipment slots, sample item data, and forge/enchant roll profiles |
 | `enemy_trap_gimmick_catalog.json` | enemies, boss, traps, gimmicks, and reward hooks |
 | `stage_layouts.json` | script-readable authored map layouts and preview metadata |
 | `ui_screen_skeletons.json` | screen-level UI/UX composition targets for generated wireframes |
