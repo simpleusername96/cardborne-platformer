@@ -10,4 +10,4 @@ python tools/generate_map_previews.py
 
 Generated previews are written to `docs/maps/generated/`.
 
-These previews are design aids. Godot `.tscn` scenes become the runtime source once stages are implemented.
+The generator validates row widths, symbol legend coverage, and normal-versus-boss required markers before writing previews. These previews are design aids. Godot `.tscn` scenes become the runtime source once stages are implemented.
