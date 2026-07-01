@@ -28,6 +28,7 @@ Each stage should have a readable grid layout, legend, objective, teaching goals
 - Store first-slice stage layout data in `data/design/first_slice/stage_layouts.json`.
 - Keep the layout as rows of fixed-width text so it can be reviewed in git and converted to simple previews.
 - Use a shared legend for common stage symbols.
+- Keep the JSON legend values aligned with catalog IDs where a symbol represents an enemy, trap, or gimmick.
 - Include per-stage notes for:
   - purpose,
   - teaching goals,
@@ -44,14 +45,14 @@ Each stage should have a readable grid layout, legend, objective, teaching goals
 | Symbol | Meaning |
 |---|---|
 | `S` | Player spawn |
-| `E` | Exit portal |
+| `E` | Exit portal for normal stages |
 | `B` | Boss spawn |
 | `#` | Solid ground or wall |
 | `=` | One-way platform |
 | `P` | Moving platform route or platform anchor |
 | `^` | Spike or immediate-contact trap |
 | `~` | Poison or damage floor |
-| `!` | Telegraph/warning zone |
+| `!` | Boss warning/telegraph zone |
 | `W` | Walker enemy |
 | `C` | Charger enemy |
 | `R` | Shooter enemy |
@@ -59,8 +60,8 @@ Each stage should have a readable grid layout, legend, objective, teaching goals
 | `$` | Coin cluster |
 | `M` | Material node |
 | `T` | Chest or reward container |
-| `K` | Key or unlock pickup |
-| `G` | Gate or locked blocker |
+| `K` | Key pickup |
+| `G` | Locked gate or blocker |
 | `.` | Traversable empty space marker |
 | space | Empty space |
 
@@ -70,10 +71,13 @@ The preview generator should:
 
 - Read `stage_layouts.json`.
 - Validate that each row in a stage has the same width.
+- Validate that every used symbol appears in the JSON legend.
+- Validate that normal stages include a player spawn and exit portal.
+- Validate that boss stages include a player spawn and boss spawn, and do not pre-place an exit portal.
 - Render each symbol as a tile-colored SVG rectangle.
 - Add labels for major objects.
 - Write one SVG per stage plus an index file.
-- Fail clearly when JSON is malformed or row widths are inconsistent.
+- Fail clearly when JSON is malformed, row widths are inconsistent, or layout symbols are not documented.
 
 ## Acceptance Criteria
 
@@ -81,6 +85,7 @@ The preview generator should:
 - A future agent can compare stage intent and generated SVG before creating or changing `.tscn` files.
 - Map data includes reward and encounter intent, not just collision tiles.
 - Layouts avoid unreachable exits, hidden required collectibles, and route blockers that can soft-lock the first slice.
+- The boss-stage preview matches the PRD clear condition: the boss is defeated first, then clear/reward flow appears.
 
 ## Related
 

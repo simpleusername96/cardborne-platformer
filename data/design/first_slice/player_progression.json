@@ -1,5 +1,41 @@
 {
   "schema": "cardborne.first_slice.player_progression.v0",
+  "notes": [
+    "Seed design data only. Player code should read effective stats after all sources are combined.",
+    "Run levels use economy_tables.run_level_curve; this file owns controls, base stats, micro-upgrade choices, and skill branch examples."
+  ],
+  "growth_source_contract": [
+    {
+      "id": "xp_level",
+      "data_owner": "economy_tables.run_level_curve + player_progression.micro_upgrade_pool",
+      "reset_behavior": "run",
+      "implementation_limit": "Offer a small level-up choice; do not build a full permanent skill tree UI first."
+    },
+    {
+      "id": "card",
+      "data_owner": "card_catalog.cards",
+      "reset_behavior": "run",
+      "implementation_limit": "Stage-clear and boss-clear reward choices only."
+    },
+    {
+      "id": "coin_purchase",
+      "data_owner": "economy_tables.shop_seed",
+      "reset_behavior": "run",
+      "implementation_limit": "Optional shop/rest purchases; no online economy."
+    },
+    {
+      "id": "material_upgrade",
+      "data_owner": "skill_branches persistent_candidate nodes",
+      "reset_behavior": "profile_candidate",
+      "implementation_limit": "Collect and display first; persistence can wait for a lightweight local profile."
+    },
+    {
+      "id": "equipment",
+      "data_owner": "equipment_catalog.items",
+      "reset_behavior": "implementation_defined",
+      "implementation_limit": "Simple equipped slot IDs; no grid inventory."
+    }
+  ],
   "base_character": {
     "id": "base_adventurer",
     "display_name": "Base Adventurer",
@@ -22,21 +58,84 @@
       "dash_duration": 0.13,
       "dash_cooldown": 0.45,
       "dash_charges": 1,
+      "fast_fall_gravity_multiplier": 1.35,
       "post_hit_invulnerability": 1.0,
       "damage_knockback_x": 220,
       "damage_knockback_y": -220
     },
     "input_actions": [
-      { "id": "move_left", "keyboard": ["A", "Left Arrow"] },
-      { "id": "move_right", "keyboard": ["D", "Right Arrow"] },
-      { "id": "jump", "keyboard": ["Space"] },
-      { "id": "attack", "keyboard": ["J", "Left Mouse"] },
-      { "id": "dash", "keyboard": ["K", "Shift"] },
-      { "id": "crouch", "keyboard": ["S", "Down Arrow"] },
-      { "id": "drop_through", "keyboard": ["Down + Jump"] },
-      { "id": "interact", "keyboard": ["E", "Enter"] },
-      { "id": "open_build_panel", "keyboard": ["Tab"] },
-      { "id": "pause", "keyboard": ["Esc"] }
+      {
+        "id": "move_left",
+        "keyboard": [
+          "A",
+          "Left Arrow"
+        ]
+      },
+      {
+        "id": "move_right",
+        "keyboard": [
+          "D",
+          "Right Arrow"
+        ]
+      },
+      {
+        "id": "jump",
+        "keyboard": [
+          "Space"
+        ]
+      },
+      {
+        "id": "attack",
+        "keyboard": [
+          "J",
+          "Left Mouse"
+        ]
+      },
+      {
+        "id": "dash",
+        "keyboard": [
+          "K",
+          "Shift"
+        ]
+      },
+      {
+        "id": "crouch",
+        "keyboard": [
+          "S",
+          "Down Arrow"
+        ]
+      },
+      {
+        "id": "fast_fall",
+        "keyboard": [
+          "Hold Down in air"
+        ]
+      },
+      {
+        "id": "drop_through",
+        "keyboard": [
+          "Down + Jump"
+        ]
+      },
+      {
+        "id": "interact",
+        "keyboard": [
+          "E",
+          "Enter"
+        ]
+      },
+      {
+        "id": "open_build_panel",
+        "keyboard": [
+          "Tab"
+        ]
+      },
+      {
+        "id": "pause",
+        "keyboard": [
+          "Esc"
+        ]
+      }
     ],
     "starting_equipment": {
       "weapon": "training_sword",
@@ -52,35 +151,50 @@
       "id": "micro_power",
       "display_name": "Power",
       "source": "level_up",
-      "effect": { "type": "add_attack_damage", "value": 1 },
+      "effect": {
+        "type": "add_attack_damage",
+        "value": 1
+      },
       "max_stacks": 3
     },
     {
       "id": "micro_vitality",
       "display_name": "Vitality",
       "source": "level_up",
-      "effect": { "type": "add_max_health", "value": 1 },
+      "effect": {
+        "type": "add_max_health",
+        "value": 1
+      },
       "max_stacks": 3
     },
     {
       "id": "micro_quick_step",
       "display_name": "Quick Step",
       "source": "level_up",
-      "effect": { "type": "reduce_dash_cooldown", "value": 0.05 },
+      "effect": {
+        "type": "reduce_dash_cooldown",
+        "value": 0.05
+      },
       "max_stacks": 4
     },
     {
       "id": "micro_light_foot",
       "display_name": "Light Foot",
       "source": "level_up",
-      "effect": { "type": "add_move_speed", "value": 10 },
+      "effect": {
+        "type": "add_move_speed",
+        "value": 10
+      },
       "max_stacks": 4
     },
     {
       "id": "micro_steady_hands",
       "display_name": "Steady Hands",
       "source": "level_up",
-      "effect": { "type": "multiply_attack_speed", "value": 0.95 },
+      "effect": {
+        "type": "multiply_attack_speed",
+        "value": 0.95
+      },
       "max_stacks": 4
     }
   ],
@@ -94,24 +208,48 @@
           "display_name": "Edge Training",
           "tier": 1,
           "scope": "persistent_candidate",
-          "cost": [{ "currency": "rusted_scrap", "amount": 3 }],
-          "effect": { "type": "add_starting_attack_damage", "value": 1 }
+          "cost": [
+            {
+              "currency": "rusted_scrap",
+              "amount": 3
+            }
+          ],
+          "effect": {
+            "type": "add_starting_attack_damage",
+            "value": 1
+          }
         },
         {
           "id": "combat_boss_focus",
           "display_name": "Boss Focus",
           "tier": 2,
           "scope": "persistent_candidate",
-          "cost": [{ "currency": "boss_core", "amount": 1 }],
-          "effect": { "type": "add_boss_damage_bonus_percent", "value": 10 }
+          "cost": [
+            {
+              "currency": "boss_core",
+              "amount": 1
+            }
+          ],
+          "effect": {
+            "type": "add_boss_damage_bonus_percent",
+            "value": 10
+          }
         },
         {
           "id": "combat_heavy_attack_unlock",
           "display_name": "Heavy Attack",
           "tier": 3,
           "scope": "future_hook",
-          "cost": [{ "currency": "rusted_scrap", "amount": 8 }],
-          "effect": { "type": "unlock_heavy_attack", "value": 1 }
+          "cost": [
+            {
+              "currency": "rusted_scrap",
+              "amount": 8
+            }
+          ],
+          "effect": {
+            "type": "unlock_heavy_attack",
+            "value": 1
+          }
         }
       ]
     },
@@ -124,24 +262,48 @@
           "display_name": "Dash Tuning",
           "tier": 1,
           "scope": "persistent_candidate",
-          "cost": [{ "currency": "sky_thread", "amount": 2 }],
-          "effect": { "type": "reduce_starting_dash_cooldown", "value": 0.05 }
+          "cost": [
+            {
+              "currency": "sky_thread",
+              "amount": 2
+            }
+          ],
+          "effect": {
+            "type": "reduce_starting_dash_cooldown",
+            "value": 0.05
+          }
         },
         {
           "id": "mobility_air_step",
           "display_name": "Air Step",
           "tier": 2,
           "scope": "persistent_candidate",
-          "cost": [{ "currency": "sky_thread", "amount": 5 }],
-          "effect": { "type": "add_starting_dash_charge", "value": 1 }
+          "cost": [
+            {
+              "currency": "sky_thread",
+              "amount": 5
+            }
+          ],
+          "effect": {
+            "type": "add_starting_dash_charge",
+            "value": 1
+          }
         },
         {
           "id": "mobility_wall_jump_unlock",
           "display_name": "Wall Jump",
           "tier": 3,
           "scope": "future_hook",
-          "cost": [{ "currency": "sky_thread", "amount": 10 }],
-          "effect": { "type": "unlock_wall_jump", "value": 1 }
+          "cost": [
+            {
+              "currency": "sky_thread",
+              "amount": 10
+            }
+          ],
+          "effect": {
+            "type": "unlock_wall_jump",
+            "value": 1
+          }
         }
       ]
     },
@@ -154,24 +316,48 @@
           "display_name": "Tough Start",
           "tier": 1,
           "scope": "persistent_candidate",
-          "cost": [{ "currency": "slime_residue", "amount": 4 }],
-          "effect": { "type": "add_starting_max_health", "value": 1 }
+          "cost": [
+            {
+              "currency": "slime_residue",
+              "amount": 4
+            }
+          ],
+          "effect": {
+            "type": "add_starting_max_health",
+            "value": 1
+          }
         },
         {
           "id": "survival_recovery_training",
           "display_name": "Recovery Training",
           "tier": 2,
           "scope": "persistent_candidate",
-          "cost": [{ "currency": "slime_residue", "amount": 6 }],
-          "effect": { "type": "add_healing_received_percent", "value": 10 }
+          "cost": [
+            {
+              "currency": "slime_residue",
+              "amount": 6
+            }
+          ],
+          "effect": {
+            "type": "add_healing_received_percent",
+            "value": 10
+          }
         },
         {
           "id": "survival_iron_nerve",
           "display_name": "Iron Nerve",
           "tier": 3,
           "scope": "persistent_candidate",
-          "cost": [{ "currency": "boss_core", "amount": 1 }],
-          "effect": { "type": "add_starting_invulnerability_time", "value": 0.15 }
+          "cost": [
+            {
+              "currency": "boss_core",
+              "amount": 1
+            }
+          ],
+          "effect": {
+            "type": "add_starting_invulnerability_time",
+            "value": 0.15
+          }
         }
       ]
     },
@@ -184,16 +370,32 @@
           "display_name": "First Reroll",
           "tier": 1,
           "scope": "future_hook",
-          "cost": [{ "currency": "slime_residue", "amount": 5 }],
-          "effect": { "type": "add_card_reroll_per_run", "value": 1 }
+          "cost": [
+            {
+              "currency": "slime_residue",
+              "amount": 5
+            }
+          ],
+          "effect": {
+            "type": "add_card_reroll_per_run",
+            "value": 1
+          }
         },
         {
           "id": "card_wider_choice",
           "display_name": "Wider Choice",
           "tier": 2,
           "scope": "future_hook",
-          "cost": [{ "currency": "boss_core", "amount": 1 }],
-          "effect": { "type": "add_card_choice", "value": 1 }
+          "cost": [
+            {
+              "currency": "boss_core",
+              "amount": 1
+            }
+          ],
+          "effect": {
+            "type": "add_card_choice",
+            "value": 1
+          }
         }
       ]
     },
@@ -206,24 +408,48 @@
           "display_name": "Coin Pouch",
           "tier": 1,
           "scope": "persistent_candidate",
-          "cost": [{ "currency": "rusted_scrap", "amount": 3 }],
-          "effect": { "type": "multiply_coin_gain", "value": 1.1 }
+          "cost": [
+            {
+              "currency": "rusted_scrap",
+              "amount": 3
+            }
+          ],
+          "effect": {
+            "type": "multiply_coin_gain",
+            "value": 1.1
+          }
         },
         {
           "id": "economy_salvager",
           "display_name": "Salvager",
           "tier": 2,
           "scope": "persistent_candidate",
-          "cost": [{ "currency": "rusted_scrap", "amount": 6 }],
-          "effect": { "type": "multiply_material_gain", "value": 1.1 }
+          "cost": [
+            {
+              "currency": "rusted_scrap",
+              "amount": 6
+            }
+          ],
+          "effect": {
+            "type": "multiply_material_gain",
+            "value": 1.1
+          }
         },
         {
           "id": "economy_shop_contact",
           "display_name": "Shop Contact",
           "tier": 3,
           "scope": "future_hook",
-          "cost": [{ "currency": "boss_core", "amount": 1 }],
-          "effect": { "type": "shop_discount_percent", "value": 10 }
+          "cost": [
+            {
+              "currency": "boss_core",
+              "amount": 1
+            }
+          ],
+          "effect": {
+            "type": "shop_discount_percent",
+            "value": 10
+          }
         }
       ]
     }

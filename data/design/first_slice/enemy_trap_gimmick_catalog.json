@@ -1,5 +1,9 @@
 {
   "schema": "cardborne.first_slice.enemy_trap_gimmick_catalog.v0",
+  "notes": [
+    "Seed design data only. IDs are referenced by stage layout legend values and reward tables.",
+    "Traps intentionally have no direct rewards; reward-bearing map objects are modeled as gimmicks."
+  ],
   "enemies": [
     {
       "id": "walker",
@@ -9,6 +13,7 @@
       "contact_damage": 1,
       "move_speed": 60,
       "drop_table": "drop_walker_basic",
+      "reward_interaction": "Grants defeat drops through drop_walker_basic.",
       "telegraph": "None required beyond visible movement."
     },
     {
@@ -21,6 +26,7 @@
       "telegraph_time": 0.45,
       "recovery_time": 0.7,
       "drop_table": "drop_charger_basic",
+      "reward_interaction": "Grants defeat drops through drop_charger_basic.",
       "telegraph": "Flash or warning marker before charge."
     },
     {
@@ -33,6 +39,7 @@
       "projectile_speed": 220,
       "fire_interval": 1.6,
       "drop_table": "drop_shooter_basic",
+      "reward_interaction": "Grants defeat drops through drop_shooter_basic.",
       "telegraph": "Brief aim pose before firing."
     },
     {
@@ -43,6 +50,7 @@
       "contact_damage": 1,
       "move_speed": 45,
       "drop_table": "drop_small_slime",
+      "reward_interaction": "Grants small defeat drops when used outside boss summon caps.",
       "telegraph": "Spawn puff or drop marker before becoming active."
     }
   ],
@@ -54,6 +62,7 @@
       "contact_damage": 1,
       "phase_2_threshold_percent": 50,
       "drop_table": "drop_boss_slime_king",
+      "reward_interaction": "Boss defeat grants drop_boss_slime_king; boss-stage clear reward is defined separately in economy_tables.stage_clear_rewards.",
       "patterns": [
         {
           "id": "jump_slam",
@@ -93,6 +102,7 @@
       "damage": 1,
       "lesson": "Basic jump spacing and hazard respect.",
       "warning": "Visible spikes. No delayed telegraph required.",
+      "reward_interaction": "No direct reward; may guard optional pickups.",
       "reset_behavior": "Knock player back or respawn at checkpoint depending on implementation."
     },
     {
@@ -101,6 +111,7 @@
       "damage": 1,
       "lesson": "Leave warned floor zones quickly.",
       "warning": "Warning rectangle before active poison.",
+      "reward_interaction": "No direct reward; may create route pressure.",
       "tick_interval": 0.75
     },
     {
@@ -109,6 +120,7 @@
       "damage": 1,
       "lesson": "Commit to jumps and recover from missed platforms.",
       "warning": "Visible gap.",
+      "reward_interaction": "No direct reward; may separate safe and risky routes.",
       "reset_behavior": "Respawn at nearest safe anchor."
     },
     {
@@ -117,6 +129,7 @@
       "damage": 1,
       "lesson": "Read repeating timing windows.",
       "warning": "Shadow or warning line before falling.",
+      "reward_interaction": "No direct reward; future optional challenge pressure.",
       "implementation_scope": "future_hook"
     }
   ],
@@ -125,47 +138,71 @@
       "id": "one_way_platform",
       "display_name": "One-Way Platform",
       "purpose": "Support drop-through routing and vertical map movement.",
+      "reward_interaction": "May provide access to optional rewards but grants none directly.",
       "risk": "Drop-through must not strand player below required route."
     },
     {
       "id": "moving_platform",
       "display_name": "Moving Platform",
       "purpose": "Teach timing and horizontal/vertical traversal.",
+      "reward_interaction": "May provide access to optional rewards but grants none directly.",
       "risk": "Must have safe start/end positions and predictable cycle."
+    },
+    {
+      "id": "coin_cluster",
+      "display_name": "Coin Cluster",
+      "purpose": "Teach direct pickup collection without requiring a chest or enemy defeat.",
+      "drop_table": "pickup_coin_cluster",
+      "reward_interaction": "Directly grants a small coin pickup."
+    },
+    {
+      "id": "key_pickup",
+      "display_name": "Key Pickup",
+      "purpose": "Unlock a nearby locked gate in a simple route lesson.",
+      "paired_with": "locked_gate",
+      "reward_interaction": "No direct currency reward; unlocks route access.",
+      "risk": "Required keys must be reachable with base movement."
     },
     {
       "id": "locked_gate",
       "display_name": "Locked Gate",
       "purpose": "Gate optional reward or simple route objective.",
+      "paired_with": "key_pickup",
+      "reward_interaction": "May guard an optional reward or critical path, but grants none directly.",
       "risk": "Required keys must be reachable without soft lock."
     },
     {
       "id": "breakable_wall",
       "display_name": "Breakable Wall",
       "purpose": "Hide optional coin/material reward.",
+      "reward_interaction": "May reveal a coin cluster, material node, or chest.",
       "risk": "Should be readable enough for first-slice testing."
     },
     {
       "id": "chest",
       "display_name": "Chest",
       "purpose": "Deliver visible reward.",
-      "reward_source": "stage_chest"
+      "drop_table": "drop_stage_chest_basic",
+      "reward_interaction": "Grants chest reward drops when opened."
     },
     {
       "id": "material_node",
       "display_name": "Material Node",
       "purpose": "Teach resource gathering without complex crafting UI.",
-      "drop_table": "drop_material_node_common"
+      "drop_table": "drop_material_node_common",
+      "reward_interaction": "Grants material node drops when collected, broken, or interacted with."
     },
     {
       "id": "exit_portal",
       "display_name": "Exit Portal",
-      "purpose": "Normal stage clear trigger."
+      "purpose": "Normal stage clear trigger.",
+      "reward_interaction": "Triggers the stage clear reward table and card choice."
     },
     {
       "id": "boss_warning_zone",
       "display_name": "Boss Warning Zone",
-      "purpose": "Telegraph boss attacks before damage."
+      "purpose": "Telegraph boss attacks before damage.",
+      "reward_interaction": "No direct reward; preserves readable boss combat."
     }
   ]
 }

@@ -10,7 +10,7 @@
     "P": "moving_platform",
     "^": "spike_row",
     "~": "poison_floor",
-    "!": "warning_zone",
+    "!": "boss_warning_zone",
     "W": "walker",
     "C": "charger",
     "R": "shooter",
@@ -18,8 +18,8 @@
     "$": "coin_cluster",
     "M": "material_node",
     "T": "chest",
-    "K": "key",
-    "G": "gate",
+    "K": "key_pickup",
+    "G": "locked_gate",
     ".": "empty_marker",
     " ": "empty"
   },
@@ -27,6 +27,8 @@
     {
       "id": "stage_01",
       "display_name": "Stage 01 - Training Ruins",
+      "stage_type": "normal",
+      "clear_condition": "reach_exit_portal",
       "purpose": "Teach basic movement, melee combat, coin pickup, and a simple optional reward.",
       "teaching_goals": [
         "Move and jump over a small gap.",
@@ -61,6 +63,8 @@
     {
       "id": "stage_02",
       "display_name": "Stage 02 - Lift And Spikes",
+      "stage_type": "normal",
+      "clear_condition": "reach_exit_portal",
       "purpose": "Introduce traps, moving platforms, material nodes, and the Shooter enemy.",
       "teaching_goals": [
         "Jump over spike rows.",
@@ -96,6 +100,8 @@
     {
       "id": "stage_03",
       "display_name": "Stage 03 - Gate Before The King",
+      "stage_type": "normal",
+      "clear_condition": "reach_exit_portal",
       "purpose": "Combine Charger, Shooter, hazards, key/gate routing, and a riskier material reward.",
       "teaching_goals": [
         "React to Charger telegraph.",
@@ -131,6 +137,9 @@
     {
       "id": "boss_stage_01",
       "display_name": "Boss Stage 01 - Slime King Arena",
+      "stage_type": "boss",
+      "clear_condition": "defeat_boss",
+      "boss_id": "slime_king",
       "purpose": "Readable two-phase boss arena with safe zones, warning zones, and summon pressure.",
       "teaching_goals": [
         "Read boss warning zones.",
@@ -138,14 +147,15 @@
         "Move out of poison floor warnings.",
         "Manage small slime summons in phase 2."
       ],
-      "critical_path": "Fight Slime King until defeat. Exit appears after boss death in implementation.",
+      "critical_path": "Fight Slime King until defeat. No exit portal is active until boss death.",
       "optional_rewards": [
         "Boss core and boss card choice after clear."
       ],
       "soft_lock_checks": [
         "Arena walls prevent boss from leaving the fight space.",
         "Safe floor exists during poison patterns.",
-        "Summon cap prevents overwhelming the player."
+        "Summon cap prevents overwhelming the player.",
+        "Clear flow is driven by boss defeat rather than a pre-placed exit portal."
       ],
       "layout": [
         "                                                                                ",
@@ -156,7 +166,7 @@
         "                  ========                              ========                ",
         "                                                                                ",
         "                                                                                ",
-        "      S                         !      B      !                         E       ",
+        "      S                         !      B      !                                 ",
         "################################################################################",
         "#                                                                              #",
         "#                 ~~~~~~                         ~~~~~~                        #",

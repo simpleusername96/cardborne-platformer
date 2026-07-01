@@ -33,6 +33,7 @@ This guide covers normal enemies, boss-related actors, traps, and map gimmicks p
 - Repeating traps need consistent timing.
 - Trap placement should teach before combining with enemy pressure.
 - Boss and major stage hazards must have a warning/startup phase before active damage.
+- Traps do not need their own rewards, but the data should state whether they guard or pressure reward access.
 
 ### Gimmick Design Rules
 
@@ -40,6 +41,7 @@ This guide covers normal enemies, boss-related actors, traps, and map gimmicks p
 - A gimmick must not permanently block stage completion unless it is a deliberate key/gate challenge.
 - Optional reward paths may be riskier than the main route.
 - Moving platforms must have stable timing and safe boarding space.
+- Reward-bearing gimmicks should point to a drop table or clear reward trigger instead of duplicating amounts in stage layouts.
 
 ## First-Slice Content
 
@@ -65,6 +67,8 @@ This guide covers normal enemies, boss-related actors, traps, and map gimmicks p
 
 - One-way platform: supports drop-through movement.
 - Moving platform: teaches timing and patience.
+- Coin cluster: direct pickup reward for teaching currency collection.
+- Key pickup: route unlock object paired with a locked gate.
 - Locked gate/key: optional route or simple required routing.
 - Breakable wall: optional reward access.
 - Chest: visible reward container.
@@ -78,6 +82,7 @@ This guide covers normal enemies, boss-related actors, traps, and map gimmicks p
 - Stage layout data references only documented encounter/gimmick concepts.
 - Future implementation can place content from the guide without redefining its teaching purpose.
 - Boss attacks preserve the PRD rule: visible startup warning, active damage window, and recovery.
+- Reward-bearing enemies and gimmicks reference economy data rather than embedding reward quantities in stage layout rows.
 
 ## Related
 

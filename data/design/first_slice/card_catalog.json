@@ -1,0 +1,244 @@
+{
+  "schema": "cardborne.first_slice.card_catalog.v0",
+  "notes": [
+    "Seed design data only. Mirrors the PRD MVP card list so implementation can later generate Godot CardData resources.",
+    "Cards are run-local reward choices and remain separate from XP micro-upgrades, coin purchases, material sinks, skill nodes, and equipment."
+  ],
+  "reward_rules": {
+    "normal_stage_choices": 3,
+    "boss_reward_choices": 3,
+    "stacking_default": true,
+    "rarity_weights": [
+      {
+        "reward_type": "normal_stage",
+        "weights": {
+          "common": 70,
+          "rare": 25,
+          "legendary": 5
+        }
+      },
+      {
+        "reward_type": "boss_clear",
+        "weights": {
+          "common": 40,
+          "rare": 45,
+          "legendary": 15
+        }
+      }
+    ]
+  },
+  "cards": [
+    {
+      "id": "sharp_edge",
+      "display_name": "Sharp Edge",
+      "rarity": "common",
+      "effect": {
+        "type": "add_attack_damage",
+        "value": 1
+      },
+      "max_stacks": 99,
+      "tags": [
+        "combat"
+      ],
+      "description": "Basic attacks deal +1 damage."
+    },
+    {
+      "id": "light_boots",
+      "display_name": "Light Boots",
+      "rarity": "common",
+      "effect": {
+        "type": "add_move_speed",
+        "value": 20
+      },
+      "max_stacks": 99,
+      "tags": [
+        "mobility"
+      ],
+      "description": "Move slightly faster."
+    },
+    {
+      "id": "spring_legs",
+      "display_name": "Spring Legs",
+      "rarity": "common",
+      "effect": {
+        "type": "add_jump_power",
+        "value": -25
+      },
+      "max_stacks": 99,
+      "tags": [
+        "mobility"
+      ],
+      "description": "Jump slightly higher."
+    },
+    {
+      "id": "first_aid",
+      "display_name": "First Aid",
+      "rarity": "common",
+      "effect": {
+        "type": "heal_now",
+        "value": 2
+      },
+      "max_stacks": 99,
+      "tags": [
+        "survival",
+        "instant"
+      ],
+      "description": "Heal 2 health."
+    },
+    {
+      "id": "tough_skin",
+      "display_name": "Tough Skin",
+      "rarity": "common",
+      "effect": {
+        "type": "add_max_health",
+        "value": 1
+      },
+      "max_stacks": 99,
+      "tags": [
+        "survival"
+      ],
+      "description": "Gain +1 max health and heal 1."
+    },
+    {
+      "id": "quick_hands",
+      "display_name": "Quick Hands",
+      "rarity": "rare",
+      "effect": {
+        "type": "multiply_attack_speed",
+        "value": 0.9
+      },
+      "max_stacks": 99,
+      "tags": [
+        "combat"
+      ],
+      "description": "Attack cooldown reduced by 10%."
+    },
+    {
+      "id": "dash_tuning",
+      "display_name": "Dash Tuning",
+      "rarity": "rare",
+      "effect": {
+        "type": "reduce_dash_cooldown",
+        "value": 0.1
+      },
+      "max_stacks": 99,
+      "tags": [
+        "mobility"
+      ],
+      "description": "Dash cooldown reduced by 0.10 seconds."
+    },
+    {
+      "id": "iron_nerve",
+      "display_name": "Iron Nerve",
+      "rarity": "rare",
+      "effect": {
+        "type": "add_invulnerability_time",
+        "value": 0.25
+      },
+      "max_stacks": 99,
+      "tags": [
+        "survival"
+      ],
+      "description": "After being hit, stay invulnerable slightly longer."
+    },
+    {
+      "id": "double_step",
+      "display_name": "Double Step",
+      "rarity": "rare",
+      "effect": {
+        "type": "add_dash_charge",
+        "value": 1
+      },
+      "max_stacks": 99,
+      "tags": [
+        "mobility"
+      ],
+      "description": "Gain one additional dash charge."
+    },
+    {
+      "id": "boss_breaker",
+      "display_name": "Boss Breaker",
+      "rarity": "rare",
+      "effect": {
+        "type": "add_attack_damage",
+        "value": 2
+      },
+      "max_stacks": 99,
+      "tags": [
+        "combat",
+        "boss_focused"
+      ],
+      "description": "Attacks deal +2 damage."
+    },
+    {
+      "id": "glass_blade",
+      "display_name": "Glass Blade",
+      "rarity": "legendary",
+      "effect": {
+        "type": "add_attack_damage",
+        "value": 4
+      },
+      "max_stacks": 99,
+      "tags": [
+        "combat"
+      ],
+      "description": "Greatly increase attack damage. Future version may reduce max health."
+    },
+    {
+      "id": "blink_rhythm",
+      "display_name": "Blink Rhythm",
+      "rarity": "legendary",
+      "effect": {
+        "type": "reduce_dash_cooldown",
+        "value": 0.25
+      },
+      "max_stacks": 99,
+      "tags": [
+        "mobility"
+      ],
+      "description": "Greatly reduce dash cooldown."
+    },
+    {
+      "id": "giant_heart",
+      "display_name": "Giant Heart",
+      "rarity": "legendary",
+      "effect": {
+        "type": "add_max_health",
+        "value": 3
+      },
+      "max_stacks": 99,
+      "tags": [
+        "survival"
+      ],
+      "description": "Gain +3 max health and heal 3."
+    },
+    {
+      "id": "air_master",
+      "display_name": "Air Master",
+      "rarity": "legendary",
+      "effect": {
+        "type": "add_dash_charge",
+        "value": 2
+      },
+      "max_stacks": 99,
+      "tags": [
+        "mobility"
+      ],
+      "description": "Gain two additional dash charges."
+    },
+    {
+      "id": "relentless",
+      "display_name": "Relentless",
+      "rarity": "legendary",
+      "effect": {
+        "type": "multiply_attack_speed",
+        "value": 0.75
+      },
+      "max_stacks": 99,
+      "tags": [
+        "combat"
+      ],
+      "description": "Attack cooldown reduced by 25%."
+    }
+  ]
+}

@@ -55,7 +55,7 @@ def load_data() -> dict:
         return json.load(f)
 
 
-def validate_layout(stage: dict) -> tuple[int, int]:
+def validate_layout(stage: dict, legend: dict) -> tuple[int, int]:
     rows = stage["layout"]
     if not rows:
         raise ValueError(f"{stage['id']} has no layout rows")
@@ -66,11 +66,35 @@ def validate_layout(stage: dict) -> tuple[int, int]:
             raise ValueError(
                 f"{stage['id']} row {index} width {len(row)} does not match {width}"
             )
+
+    allowed_symbols = set(legend)
+    used_symbols = {symbol for row in rows for symbol in row}
+    unknown_symbols = sorted(used_symbols - allowed_symbols)
+    if unknown_symbols:
+        joined = ", ".join(repr(symbol) for symbol in unknown_symbols)
+        raise ValueError(f"{stage['id']} uses symbols not declared in legend: {joined}")
+
+    stage_type = stage.get("stage_type")
+    missing_symbols = []
+    if "S" not in used_symbols:
+        missing_symbols.append("S player spawn")
+    if stage_type == "normal" and "E" not in used_symbols:
+        missing_symbols.append("E exit portal")
+    if stage_type == "boss" and "B" not in used_symbols:
+        missing_symbols.append("B boss spawn")
+    if missing_symbols:
+        raise ValueError(f"{stage['id']} is missing required symbols: {', '.join(missing_symbols)}")
+
+    if stage_type == "boss" and "E" in used_symbols:
+        raise ValueError(
+            f"{stage['id']} should not pre-place an exit portal; boss clear flow spawns or shows it after defeat"
+        )
+
     return width, len(rows)
 
 
 def render_stage_svg(stage: dict, tile_size: int, legend: dict) -> str:
-    width, height = validate_layout(stage)
+    width, height = validate_layout(stage, legend)
     canvas_width = width * tile_size
     canvas_height = height * tile_size
     title = html.escape(stage["display_name"])
@@ -133,6 +157,8 @@ def main() -> None:
     tile_size = int(data.get("tile_size", 24))
     legend = data.get("legend", {})
     stages = data.get("stages", [])
+    if not legend:
+        raise ValueError("No legend found")
     if not stages:
         raise ValueError("No stages found")
 

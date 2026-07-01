@@ -1,12 +1,47 @@
 {
   "schema": "cardborne.first_slice.equipment_catalog.v0",
+  "notes": [
+    "Seed examples only. The first implementation can represent equipment as equipped item IDs and does not need a grid inventory.",
+    "Equipment modifies the same effective stat path used by cards, XP micro-upgrades, and skill nodes."
+  ],
+  "effect_semantics": [
+    {
+      "type": "multiply_attack_speed",
+      "implementation_note": "Matches the PRD card effect name. Treat the value as an attack cooldown multiplier: below 1 is faster, above 1 is slower."
+    }
+  ],
   "slots": [
-    { "id": "weapon", "display_name": "Weapon", "max_equipped": 1 },
-    { "id": "armor", "display_name": "Armor", "max_equipped": 1 },
-    { "id": "charm_1", "display_name": "Charm 1", "max_equipped": 1 },
-    { "id": "charm_2", "display_name": "Charm 2", "max_equipped": 1, "unlock": "future_hook" },
-    { "id": "relic", "display_name": "Relic", "max_equipped": 1 },
-    { "id": "consumable", "display_name": "Consumable", "max_equipped": 1 }
+    {
+      "id": "weapon",
+      "display_name": "Weapon",
+      "max_equipped": 1
+    },
+    {
+      "id": "armor",
+      "display_name": "Armor",
+      "max_equipped": 1
+    },
+    {
+      "id": "charm_1",
+      "display_name": "Charm 1",
+      "max_equipped": 1
+    },
+    {
+      "id": "charm_2",
+      "display_name": "Charm 2",
+      "max_equipped": 1,
+      "unlock": "future_hook"
+    },
+    {
+      "id": "relic",
+      "display_name": "Relic",
+      "max_equipped": 1
+    },
+    {
+      "id": "consumable",
+      "display_name": "Consumable",
+      "max_equipped": 1
+    }
   ],
   "items": [
     {
@@ -16,7 +51,10 @@
       "rarity": "common",
       "source": "starting_equipment",
       "effects": [
-        { "type": "add_attack_damage", "value": 0 }
+        {
+          "type": "add_attack_damage",
+          "value": 0
+        }
       ],
       "notes": "Baseline weapon. Keeps first implementation simple."
     },
@@ -27,8 +65,14 @@
       "rarity": "rare",
       "source": "chest_or_shop",
       "effects": [
-        { "type": "add_attack_damage", "value": 2 },
-        { "type": "multiply_attack_speed", "value": 1.15 }
+        {
+          "type": "add_attack_damage",
+          "value": 2
+        },
+        {
+          "type": "multiply_attack_speed",
+          "value": 1.15
+        }
       ],
       "notes": "Higher damage with slower attacks."
     },
@@ -39,10 +83,16 @@
       "rarity": "rare",
       "source": "shop_or_optional_reward",
       "effects": [
-        { "type": "add_attack_damage", "value": -0.25 },
-        { "type": "multiply_attack_speed", "value": 0.8 }
+        {
+          "type": "add_attack_damage",
+          "value": 0
+        },
+        {
+          "type": "multiply_attack_speed",
+          "value": 0.8
+        }
       ],
-      "notes": "Fast weapon for attack-speed builds. Implementation can clamp visible damage to safe values."
+      "notes": "Fast weapon for attack-speed builds without requiring fractional or negative first-slice damage."
     },
     {
       "id": "traveler_jacket",
@@ -51,7 +101,10 @@
       "rarity": "common",
       "source": "starting_equipment",
       "effects": [
-        { "type": "add_max_health", "value": 0 }
+        {
+          "type": "add_max_health",
+          "value": 0
+        }
       ]
     },
     {
@@ -61,8 +114,14 @@
       "rarity": "common",
       "source": "chest",
       "effects": [
-        { "type": "add_max_health", "value": 1 },
-        { "type": "add_move_speed", "value": -8 }
+        {
+          "type": "add_max_health",
+          "value": 1
+        },
+        {
+          "type": "add_move_speed",
+          "value": -8
+        }
       ]
     },
     {
@@ -72,7 +131,10 @@
       "rarity": "rare",
       "source": "high_route_chest",
       "effects": [
-        { "type": "add_move_speed", "value": 18 }
+        {
+          "type": "add_move_speed",
+          "value": 18
+        }
       ]
     },
     {
@@ -82,7 +144,10 @@
       "rarity": "common",
       "source": "shop",
       "effects": [
-        { "type": "multiply_coin_gain", "value": 1.1 }
+        {
+          "type": "multiply_coin_gain",
+          "value": 1.1
+        }
       ]
     },
     {
@@ -92,7 +157,10 @@
       "rarity": "rare",
       "source": "stage_02_optional_reward",
       "effects": [
-        { "type": "add_jump_power", "value": -20 }
+        {
+          "type": "add_jump_power",
+          "value": -20
+        }
       ]
     },
     {
@@ -102,8 +170,14 @@
       "rarity": "legendary",
       "source": "boss_reward",
       "effects": [
-        { "type": "add_invulnerability_time", "value": 0.25 },
-        { "type": "add_max_health", "value": 1 }
+        {
+          "type": "add_invulnerability_time",
+          "value": 0.25
+        },
+        {
+          "type": "add_max_health",
+          "value": 1
+        }
       ]
     },
     {
@@ -113,7 +187,10 @@
       "rarity": "common",
       "source": "starting_equipment_or_shop",
       "effects": [
-        { "type": "heal_now", "value": 2 }
+        {
+          "type": "heal_now",
+          "value": 2
+        }
       ],
       "charges": 1
     },
@@ -124,7 +201,10 @@
       "rarity": "rare",
       "source": "shop",
       "effects": [
-        { "type": "reduce_dash_cooldown_until_stage_clear", "value": 0.15 }
+        {
+          "type": "reduce_dash_cooldown_until_stage_clear",
+          "value": 0.15
+        }
       ],
       "charges": 1
     },
@@ -135,7 +215,10 @@
       "rarity": "common",
       "source": "shop",
       "effects": [
-        { "type": "bonus_material_from_next_node", "value": 1 }
+        {
+          "type": "bonus_material_from_next_node",
+          "value": 1
+        }
       ],
       "charges": 1
     }
