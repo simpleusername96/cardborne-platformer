@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="684" height="952" viewBox="0 0 684 952">
+<rect width="100%" height="100%" fill="#0f141a"/>
+<text x="32.00" y="44.00" font-family="Arial, sans-serif" font-size="18" font-weight="700" fill="#f4efe3">Start Page</text>
+<rect x="30.00" y="56.00" width="298.40" height="169.60" fill="none" stroke="#485561" stroke-width="2"/>
+<rect x="32.00" y="58.00" width="294.40" height="165.60" rx="1.38" fill="#1d2730" fill-opacity="1" stroke="#27323b" stroke-width="0.75"/>
+<rect x="52.70" y="79.16" width="119.60" height="20.24" rx="1.38" fill="#f4efe3" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="55.92" y="85.14" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">CARDBORNE PLATFORMER</text>
+<rect x="52.70" y="110.90" width="75.90" height="80.50" rx="1.38" fill="#202a33" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="55.92" y="116.88000000000001" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">Main menu</text>
+<rect x="60.98" y="120.10" width="59.80" height="12.42" rx="1.38" fill="#2b6c76" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="64.2" y="126.08" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#111827">New Run</text>
+<rect x="60.98" y="136.20" width="59.80" height="12.42" rx="1.38" fill="#2b6c76" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="64.2" y="142.17999999999998" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#111827">Continue</text>
+<rect x="60.98" y="152.30" width="59.80" height="12.42" rx="1.38" fill="#2b6c76" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="64.2" y="158.28" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#111827">Settings</text>
+<rect x="60.98" y="168.40" width="59.80" height="12.42" rx="1.38" fill="#2b6c76" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="64.2" y="174.38" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#111827">Quit</text>
+<rect x="212.78" y="156.90" width="75.90" height="27.60" rx="1.38" fill="#202a33" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="216.0" y="162.88" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">Last run</text>
+<text x="216.0" y="174.88" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">summary: Stage</text>
+<text x="216.0" y="186.88" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">2, Archer, 312</text>
+<text x="216.0" y="198.88" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">coins</text>
+<text x="358.40" y="44.00" font-family="Arial, sans-serif" font-size="18" font-weight="700" fill="#f4efe3">Settings Popup</text>
+<rect x="356.40" y="56.00" width="298.40" height="169.60" fill="none" stroke="#485561" stroke-width="2"/>
+<rect x="358.40" y="58.00" width="294.40" height="165.60" rx="1.38" fill="#1d2730" fill-opacity="1" stroke="#27323b" stroke-width="0.75"/>
+<rect x="415.90" y="76.40" width="179.40" height="128.80" rx="1.38" fill="#202a33" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="419.12000000000006" y="82.38000000000001" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">Settings</text>
+<rect x="425.10" y="90.20" width="36.80" height="10.58" rx="1.38" fill="#2b6c76" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="428.32000000000005" y="96.18" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#111827">Audio</text>
+<rect x="466.50" y="90.20" width="36.80" height="10.58" rx="1.38" fill="#2b6c76" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="469.7200000000001" y="96.18" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#111827">Display</text>
+<rect x="507.90" y="90.20" width="36.80" height="10.58" rx="1.38" fill="#2b6c76" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="511.12000000000006" y="96.18" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#111827">Controls</text>
+<rect x="434.30" y="114.35" width="119.60" height="7.36" rx="1.38" fill="#d7a441" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<rect x="436.14" y="118.40" width="78.94" height="4.00" rx="0.46" fill="#f1c75b"/>
+<text x="437.5200000000001" y="120.33" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#111827">Master volume</text>
+<rect x="434.30" y="130.45" width="119.60" height="7.36" rx="1.38" fill="#d7a441" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<rect x="436.14" y="134.50" width="78.94" height="4.00" rx="0.46" fill="#f1c75b"/>
+<text x="437.5200000000001" y="136.42999999999998" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#111827">Music volume</text>
+<rect x="434.30" y="146.55" width="119.60" height="7.36" rx="1.38" fill="#d7a441" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<rect x="436.14" y="150.60" width="78.94" height="4.00" rx="0.46" fill="#f1c75b"/>
+<text x="437.5200000000001" y="152.53" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#111827">SFX volume</text>
+<rect x="434.30" y="163.80" width="48.30" height="11.50" rx="1.38" fill="#34414c" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="437.5200000000001" y="169.78" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">Screen</text>
+<text x="437.5200000000001" y="181.78" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">shake: On</text>
+<rect x="489.50" y="163.80" width="48.30" height="11.50" rx="1.38" fill="#34414c" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="492.72" y="169.78" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">Damage</text>
+<text x="492.72" y="181.78" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">flash: On</text>
+<rect x="526.30" y="185.65" width="48.30" height="12.42" rx="1.38" fill="#2b6c76" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="529.5200000000001" y="191.63" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#111827">Apply</text>
+<text x="32.00" y="267.60" font-family="Arial, sans-serif" font-size="18" font-weight="700" fill="#f4efe3">Character Select</text>
+<rect x="30.00" y="279.60" width="298.40" height="169.60" fill="none" stroke="#485561" stroke-width="2"/>
+<rect x="32.00" y="281.60" width="294.40" height="165.60" rx="1.38" fill="#1d2730" fill-opacity="1" stroke="#27323b" stroke-width="0.75"/>
+<rect x="48.10" y="293.10" width="115.00" height="13.80" rx="1.38" fill="#f4efe3" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="51.32" y="299.08000000000004" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">Choose Starter Class</text>
+<rect x="48.10" y="313.80" width="75.90" height="101.20" rx="1.38" fill="#28313a" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="51.32" y="319.78000000000003" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">Warrior - heavy</text>
+<text x="51.32" y="331.78000000000003" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">melee, guard,</text>
+<text x="51.32" y="343.78000000000003" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">high health</text>
+<rect x="72.94" y="327.60" width="25.30" height="34.50" rx="1.38" fill="#4fb6a8" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<circle cx="85.59" cy="336.92" r="4.05" fill="#d8f3ec"/>
+<rect x="79.01" y="342.09" width="13.16" height="14.49" rx="0.92" fill="#d8f3ec"/>
+<text x="76.16" y="333.58000000000004" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">Warrior</text>
+<rect x="57.30" y="371.30" width="57.50" height="6.44" rx="1.38" fill="#d7a441" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<rect x="59.14" y="374.84" width="37.95" height="4.00" rx="0.46" fill="#f1c75b"/>
+<text x="60.519999999999996" y="377.28000000000003" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#111827">Power high</text>
+<rect x="57.30" y="380.50" width="48.30" height="6.44" rx="1.38" fill="#d7a441" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<rect x="59.14" y="384.04" width="31.88" height="4.00" rx="0.46" fill="#f1c75b"/>
+<text x="60.519999999999996" y="386.48" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#111827">Speed low</text>
+<rect x="141.25" y="313.80" width="75.90" height="101.20" rx="1.38" fill="#28313a" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="144.47" y="319.78000000000003" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">Archer - ranged</text>
+<text x="144.47" y="331.78000000000003" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">shots, charge,</text>
+<text x="144.47" y="343.78000000000003" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">spacing</text>
+<rect x="166.32" y="327.60" width="25.30" height="34.50" rx="1.38" fill="#4fb6a8" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<circle cx="178.97" cy="336.92" r="4.05" fill="#d8f3ec"/>
+<rect x="172.39" y="342.09" width="13.16" height="14.49" rx="0.92" fill="#d8f3ec"/>
+<text x="169.54" y="333.58000000000004" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">Archer</text>
+<rect x="150.45" y="371.30" width="52.90" height="6.44" rx="1.38" fill="#d7a441" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<rect x="152.29" y="374.84" width="34.91" height="4.00" rx="0.46" fill="#f1c75b"/>
+<text x="153.67" y="377.28000000000003" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#111827">Range high</text>
+<rect x="150.45" y="380.50" width="50.60" height="6.44" rx="1.38" fill="#d7a441" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<rect x="152.29" y="384.04" width="33.40" height="4.00" rx="0.46" fill="#f1c75b"/>
+<text x="153.67" y="386.48" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#111827">Health mid</text>
+<rect x="234.40" y="313.80" width="75.90" height="101.20" rx="1.38" fill="#28313a" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="237.62" y="319.78000000000003" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">Assassin - dash,</text>
+<text x="237.62" y="331.78000000000003" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">crit, burst risk</text>
+<rect x="259.24" y="327.60" width="25.30" height="34.50" rx="1.38" fill="#4fb6a8" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<circle cx="271.89" cy="336.92" r="4.05" fill="#d8f3ec"/>
+<rect x="265.31" y="342.09" width="13.16" height="14.49" rx="0.92" fill="#d8f3ec"/>
+<text x="262.46000000000004" y="333.58000000000004" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">Assassin</text>
+<rect x="243.60" y="371.30" width="57.50" height="6.44" rx="1.38" fill="#d7a441" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<rect x="245.44" y="374.84" width="37.95" height="4.00" rx="0.46" fill="#f1c75b"/>
+<text x="246.82000000000002" y="377.28000000000003" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#111827">Speed high</text>
+<rect x="150.45" y="421.90" width="57.50" height="13.34" rx="1.38" fill="#2b6c76" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="153.67" y="427.88000000000005" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#111827">Start Run</text>
+<text x="358.40" y="267.60" font-family="Arial, sans-serif" font-size="18" font-weight="700" fill="#f4efe3">Normal Stage HUD</text>
+<rect x="356.40" y="279.60" width="298.40" height="169.60" fill="none" stroke="#485561" stroke-width="2"/>
+<rect x="358.40" y="281.60" width="294.40" height="165.60" rx="1.38" fill="#1d2730" fill-opacity="1" stroke="#27323b" stroke-width="0.75"/>
+<rect x="363.92" y="286.20" width="98.90" height="19.78" rx="1.38" fill="#202a33" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="367.14000000000004" y="292.18000000000006" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">Health 5/5, XP, level</text>
+<rect x="368.98" y="297.70" width="82.80" height="4.14" rx="1.38" fill="#d7a441" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<rect x="370.82" y="299.98" width="54.65" height="4.00" rx="0.46" fill="#f1c75b"/>
+<text x="372.20000000000005" y="303.68000000000006" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#111827">XP to level 3</text>
+<rect x="547.00" y="286.20" width="98.90" height="16.56" rx="1.38" fill="#202a33" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="550.22" y="292.18000000000006" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">Coins 42, Scrap 3, Sky</text>
+<text x="550.22" y="304.18000000000006" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">Thread 1</text>
+<rect x="363.92" y="419.60" width="82.80" height="19.78" rx="1.38" fill="#202a33" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="367.14000000000004" y="425.58000000000004" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">Cards and skill</text>
+<text x="367.14000000000004" y="437.58000000000004" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">slots</text>
+<rect x="368.75" y="428.80" width="14.26" height="8.28" rx="1.38" fill="#34414c" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="371.9700000000001" y="434.7800000000001" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">1</text>
+<rect x="386.00" y="428.80" width="14.26" height="8.28" rx="1.38" fill="#34414c" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="389.2200000000001" y="434.7800000000001" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">2</text>
+<rect x="403.25" y="428.80" width="14.26" height="8.28" rx="1.38" fill="#34414c" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="406.4700000000001" y="434.7800000000001" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">3</text>
+<rect x="599.90" y="306.90" width="43.70" height="9.66" rx="1.38" fill="#f4efe3" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="603.1200000000001" y="312.88000000000005" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">Reach</text>
+<text x="603.1200000000001" y="324.88000000000005" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">exit</text>
+<rect x="374.50" y="407.64" width="87.40" height="8.28" rx="1.38" fill="#63707a" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="377.7200000000001" y="413.62000000000006" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">ground</text>
+<rect x="478.00" y="386.25" width="62.10" height="6.44" rx="1.38" fill="#63707a" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="481.2200000000001" y="392.23" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">one-way</text>
+<rect x="399.80" y="386.94" width="13.34" height="20.24" rx="1.38" fill="#4fb6a8" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<circle cx="406.47" cy="392.40" r="2.13" fill="#d8f3ec"/>
+<rect x="403.00" y="395.44" width="6.94" height="8.50" rx="0.92" fill="#d8f3ec"/>
+<text x="403.02000000000004" y="392.9200000000001" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">Player</text>
+<rect x="496.40" y="370.15" width="14.26" height="15.18" rx="1.38" fill="#b95f45" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<ellipse cx="503.53" cy="378.50" rx="5.13" ry="4.25" fill="#f0c0a8"/>
+<text x="499.62000000000006" y="376.13000000000005" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">Shooter</text>
+<rect x="551.60" y="407.64" width="25.30" height="8.28" rx="1.38" fill="#d05b4f" fill-opacity="0.78" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="554.82" y="413.62000000000006" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#111827">Spikes</text>
+<text x="32.00" y="491.20" font-family="Arial, sans-serif" font-size="18" font-weight="700" fill="#f4efe3">Card Reward</text>
+<rect x="30.00" y="503.20" width="298.40" height="169.60" fill="none" stroke="#485561" stroke-width="2"/>
+<rect x="32.00" y="505.20" width="294.40" height="165.60" rx="1.38" fill="#1d2730" fill-opacity="1" stroke="#27323b" stroke-width="0.75"/>
+<rect x="130.90" y="516.70" width="103.50" height="13.80" rx="1.38" fill="#f4efe3" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="134.12" y="522.6800000000001" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">Choose 1 Card</text>
+<rect x="59.60" y="538.55" width="66.70" height="96.60" rx="1.38" fill="#28313a" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="62.82" y="544.53" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">Sharp Edge -</text>
+<text x="62.82" y="556.53" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">attacks +1</text>
+<text x="62.82" y="568.53" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">damage</text>
+<rect x="145.85" y="538.55" width="66.70" height="96.60" rx="1.38" fill="#28313a" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="149.07000000000002" y="544.53" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">Light Boots -</text>
+<text x="149.07000000000002" y="556.53" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">move speed +20</text>
+<rect x="232.10" y="538.55" width="66.70" height="96.60" rx="1.38" fill="#28313a" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="235.32000000000002" y="544.53" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">Dash Tuning -</text>
+<text x="235.32000000000002" y="556.53" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">cooldown -0.10</text>
+<rect x="150.45" y="645.50" width="57.50" height="13.34" rx="1.38" fill="#2b6c76" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="153.67" y="651.48" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#111827">Confirm</text>
+<text x="358.40" y="491.20" font-family="Arial, sans-serif" font-size="18" font-weight="700" fill="#f4efe3">Rest and Shop Map</text>
+<rect x="356.40" y="503.20" width="298.40" height="169.60" fill="none" stroke="#485561" stroke-width="2"/>
+<rect x="358.40" y="505.20" width="294.40" height="165.60" rx="1.38" fill="#1d2730" fill-opacity="1" stroke="#27323b" stroke-width="0.75"/>
+<rect x="363.92" y="509.80" width="98.90" height="16.56" rx="1.38" fill="#202a33" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="367.14000000000004" y="515.78" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">Coins 64, Slime 5,</text>
+<text x="367.14000000000004" y="527.78" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">Scrap 3, Core 0</text>
+<rect x="383.70" y="637.45" width="243.80" height="8.74" rx="1.38" fill="#63707a" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="386.9200000000001" y="643.4300000000001" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">camp floor</text>
+<rect x="400.95" y="613.30" width="14.26" height="22.54" rx="1.38" fill="#4fb6a8" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<circle cx="408.08" cy="619.39" r="2.28" fill="#d8f3ec"/>
+<rect x="404.37" y="622.77" width="7.42" height="9.47" rx="0.92" fill="#d8f3ec"/>
+<text x="404.1700000000001" y="619.28" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">Player</text>
+<rect x="448.10" y="607.55" width="23.00" height="27.60" rx="1.38" fill="#a87943" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="451.32000000000005" y="613.53" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">Merchant</text>
+<rect x="501.00" y="607.55" width="23.00" height="27.60" rx="1.38" fill="#a87943" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="504.22" y="613.53" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">Healer</text>
+<rect x="553.90" y="607.55" width="23.00" height="27.60" rx="1.38" fill="#a87943" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="557.1200000000001" y="613.53" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">Forge</text>
+<rect x="552.98" y="527.28" width="89.70" height="52.90" rx="1.38" fill="#202a33" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="556.2" y="533.26" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">Interactions: Buy,</text>
+<text x="556.2" y="545.26" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">Heal, Upgrade, Next</text>
+<text x="556.2" y="557.26" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">Stage</text>
+<rect x="560.80" y="565.00" width="69.00" height="10.58" rx="1.38" fill="#2b6c76" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="564.0200000000001" y="570.98" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#111827">Enter Stage 03</text>
+<text x="32.00" y="714.80" font-family="Arial, sans-serif" font-size="18" font-weight="700" fill="#f4efe3">Shop and Equipment Popup</text>
+<rect x="30.00" y="726.80" width="298.40" height="169.60" fill="none" stroke="#485561" stroke-width="2"/>
+<rect x="32.00" y="728.80" width="294.40" height="165.60" rx="1.38" fill="#1d2730" fill-opacity="1" stroke="#27323b" stroke-width="0.75"/>
+<rect x="48.10" y="742.60" width="262.20" height="138.00" rx="1.38" fill="#202a33" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="51.32" y="748.5799999999999" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">Merchant inventory and equipment</text>
+<rect x="57.30" y="755.25" width="33.35" height="10.12" rx="1.38" fill="#2b6c76" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="60.519999999999996" y="761.23" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#111827">Buy</text>
+<rect x="94.10" y="755.25" width="33.35" height="10.12" rx="1.38" fill="#2b6c76" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="97.32" y="761.23" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#111827">Sell</text>
+<rect x="130.90" y="755.25" width="33.35" height="10.12" rx="1.38" fill="#2b6c76" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="134.12" y="761.23" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#111827">Forge</text>
+<rect x="57.30" y="771.35" width="108.10" height="89.70" rx="1.38" fill="#202a33" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="60.519999999999996" y="777.3299999999999" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">Item list: potion,</text>
+<text x="60.519999999999996" y="789.3299999999999" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">dagger, armor, charm</text>
+<rect x="181.50" y="772.50" width="43.70" height="13.34" rx="1.38" fill="#34414c" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="184.72" y="778.48" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">Weapon</text>
+<rect x="181.50" y="789.75" width="43.70" height="13.34" rx="1.38" fill="#34414c" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="184.72" y="795.73" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">Armor</text>
+<rect x="181.50" y="807.00" width="43.70" height="13.34" rx="1.38" fill="#34414c" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="184.72" y="812.98" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">Charm 1</text>
+<rect x="181.50" y="824.25" width="43.70" height="13.34" rx="1.38" fill="#34414c" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="184.72" y="830.23" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">Relic</text>
+<rect x="236.70" y="772.50" width="62.10" height="55.20" rx="1.38" fill="#202a33" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="239.92000000000002" y="778.48" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">Cost: 15</text>
+<text x="239.92000000000002" y="790.48" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">coins, 2</text>
+<text x="239.92000000000002" y="802.48" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">scrap. Effect</text>
+<text x="239.92000000000002" y="814.48" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">preview.</text>
+<rect x="241.30" y="848.40" width="50.60" height="12.42" rx="1.38" fill="#2b6c76" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="244.52" y="854.38" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#111827">Purchase</text>
+<text x="358.40" y="714.80" font-family="Arial, sans-serif" font-size="18" font-weight="700" fill="#f4efe3">Boss Stage HUD</text>
+<rect x="356.40" y="726.80" width="298.40" height="169.60" fill="none" stroke="#485561" stroke-width="2"/>
+<rect x="358.40" y="728.80" width="294.40" height="165.60" rx="1.38" fill="#1d2730" fill-opacity="1" stroke="#27323b" stroke-width="0.75"/>
+<rect x="390.60" y="732.94" width="230.00" height="16.56" rx="1.38" fill="#202a33" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="393.82000000000005" y="738.92" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">Giant Slime King - Phase 2</text>
+<rect x="402.10" y="742.14" width="207.00" height="4.14" rx="1.38" fill="#d7a441" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<rect x="403.94" y="744.42" width="136.62" height="4.00" rx="0.46" fill="#f1c75b"/>
+<text x="405.32000000000005" y="748.12" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#111827">Boss HP 38/80</text>
+<rect x="363.92" y="733.40" width="62.10" height="16.56" rx="1.38" fill="#202a33" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="367.14000000000004" y="739.38" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">Player HP,</text>
+<text x="367.14000000000004" y="751.38" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">dash</text>
+<rect x="379.10" y="863.35" width="253.00" height="8.74" rx="1.38" fill="#63707a" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="382.32000000000005" y="869.3299999999999" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">arena floor</text>
+<rect x="418.20" y="825.40" width="48.30" height="5.98" rx="1.38" fill="#63707a" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="421.4200000000001" y="831.38" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">safe</text>
+<text x="421.4200000000001" y="843.38" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">platform</text>
+<rect x="542.40" y="825.40" width="48.30" height="5.98" rx="1.38" fill="#63707a" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="545.6200000000001" y="831.38" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">safe</text>
+<text x="545.6200000000001" y="843.38" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">platform</text>
+<rect x="415.90" y="841.04" width="13.34" height="20.70" rx="1.38" fill="#4fb6a8" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<circle cx="422.57" cy="846.63" r="2.13" fill="#d8f3ec"/>
+<rect x="419.10" y="849.73" width="6.94" height="8.69" rx="0.92" fill="#d8f3ec"/>
+<text x="419.12000000000006" y="847.02" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">Player</text>
+<rect x="487.20" y="810.45" width="41.40" height="48.30" rx="1.38" fill="#b95f45" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<ellipse cx="507.90" cy="837.01" rx="14.90" ry="13.52" fill="#f0c0a8"/>
+<text x="490.4200000000001" y="816.43" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">Boss</text>
+<rect x="444.65" y="863.35" width="39.10" height="8.74" rx="1.38" fill="#d05b4f" fill-opacity="0.78" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="447.87000000000006" y="869.3299999999999" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#111827">Poison</text>
+<text x="447.87000000000006" y="881.3299999999999" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#111827">warning</text>
+<rect x="533.20" y="863.35" width="39.10" height="8.74" rx="1.38" fill="#d05b4f" fill-opacity="0.78" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="536.4200000000001" y="869.3299999999999" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#111827">Poison</text>
+<text x="536.4200000000001" y="881.3299999999999" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#111827">warning</text>
+<rect x="570.00" y="755.25" width="57.50" height="9.66" rx="1.38" fill="#f4efe3" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="0.75"/>
+<text x="573.22" y="761.23" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">Pattern:</text>
+<text x="573.22" y="773.23" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#f4efe3">Floor Poison</text>
+</svg>

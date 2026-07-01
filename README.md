@@ -56,3 +56,9 @@ First-slice seed data lives in `data/design/first_slice/`. Generate map previews
 ```powershell
 python tools/generate_map_previews.py
 ```
+
+Generate UI/UX skeleton wireframes with:
+
+```powershell
+python tools/generate_uiux_wireframes.py
+```

@@ -21,6 +21,8 @@ The seed data lives under `data/design/first_slice/` and covers:
 - Equipment examples.
 - Enemy, trap, and gimmick catalog.
 - Stage layout and visual preview data.
+- UI/UX screen skeletons and generated wireframe targets.
+- Reference/source candidates for future code and asset review.
 
 ## Requirements
 
@@ -40,6 +42,8 @@ The seed data lives under `data/design/first_slice/` and covers:
 | `equipment_catalog.json` | first-slice equipment slots and sample item data |
 | `enemy_trap_gimmick_catalog.json` | enemies, boss, traps, gimmicks, and reward hooks |
 | `stage_layouts.json` | script-readable authored map layouts and preview metadata |
+| `ui_screen_skeletons.json` | screen-level UI/UX composition targets for generated wireframes |
+| `reference_asset_candidates.json` | researched source, code, and asset candidates; evidence only |
 
 ## Acceptance Criteria
 

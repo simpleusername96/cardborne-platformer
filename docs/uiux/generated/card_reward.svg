@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+<rect width="1280" height="720" fill="#101419"/>
+<rect x="0.00" y="0.00" width="1280.00" height="720.00" rx="6.00" fill="#1d2730" fill-opacity="1" stroke="#27323b" stroke-width="1.40"/>
+<rect x="430.00" y="50.00" width="450.00" height="60.00" rx="6.00" fill="#f4efe3" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="1.40"/>
+<text x="444.0" y="76.0" font-family="Arial, sans-serif" font-size="16" font-weight="600" fill="#f4efe3">Choose 1 Card</text>
+<rect x="120.00" y="145.00" width="290.00" height="420.00" rx="6.00" fill="#28313a" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="1.40"/>
+<text x="134.0" y="171.0" font-family="Arial, sans-serif" font-size="16" font-weight="600" fill="#f4efe3">Sharp Edge - attacks +1 damage</text>
+<rect x="495.00" y="145.00" width="290.00" height="420.00" rx="6.00" fill="#28313a" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="1.40"/>
+<text x="509.0" y="171.0" font-family="Arial, sans-serif" font-size="16" font-weight="600" fill="#f4efe3">Light Boots - move speed +20</text>
+<rect x="870.00" y="145.00" width="290.00" height="420.00" rx="6.00" fill="#28313a" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="1.40"/>
+<text x="884.0" y="171.0" font-family="Arial, sans-serif" font-size="16" font-weight="600" fill="#f4efe3">Dash Tuning - cooldown -0.10</text>
+<rect x="515.00" y="610.00" width="250.00" height="58.00" rx="6.00" fill="#2b6c76" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="1.40"/>
+<text x="529.0" y="636.0" font-family="Arial, sans-serif" font-size="16" font-weight="600" fill="#111827">Confirm</text>
+</svg>

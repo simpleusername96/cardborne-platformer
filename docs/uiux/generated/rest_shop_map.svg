@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+<rect width="1280" height="720" fill="#101419"/>
+<rect x="0.00" y="0.00" width="1280.00" height="720.00" rx="6.00" fill="#1d2730" fill-opacity="1" stroke="#27323b" stroke-width="1.40"/>
+<rect x="24.00" y="20.00" width="430.00" height="72.00" rx="6.00" fill="#202a33" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="1.40"/>
+<text x="38.0" y="46.0" font-family="Arial, sans-serif" font-size="16" font-weight="600" fill="#f4efe3">Coins 64, Slime 5, Scrap 3, Core 0</text>
+<rect x="110.00" y="575.00" width="1060.00" height="38.00" rx="6.00" fill="#63707a" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="1.40"/>
+<text x="124.0" y="601.0" font-family="Arial, sans-serif" font-size="16" font-weight="600" fill="#f4efe3">camp floor</text>
+<rect x="185.00" y="470.00" width="62.00" height="98.00" rx="6.00" fill="#4fb6a8" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="1.40"/>
+<circle cx="216.00" cy="496.46" r="9.92" fill="#d8f3ec"/>
+<rect x="199.88" y="511.16" width="32.24" height="41.16" rx="4.00" fill="#d8f3ec"/>
+<text x="199.0" y="496.0" font-family="Arial, sans-serif" font-size="16" font-weight="600" fill="#f4efe3">Player</text>
+<rect x="390.00" y="445.00" width="100.00" height="120.00" rx="6.00" fill="#a87943" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="1.40"/>
+<text x="404.0" y="471.0" font-family="Arial, sans-serif" font-size="16" font-weight="600" fill="#f4efe3">Merchant</text>
+<rect x="620.00" y="445.00" width="100.00" height="120.00" rx="6.00" fill="#a87943" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="1.40"/>
+<text x="634.0" y="471.0" font-family="Arial, sans-serif" font-size="16" font-weight="600" fill="#f4efe3">Healer</text>
+<rect x="850.00" y="445.00" width="100.00" height="120.00" rx="6.00" fill="#a87943" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="1.40"/>
+<text x="864.0" y="471.0" font-family="Arial, sans-serif" font-size="16" font-weight="600" fill="#f4efe3">Forge</text>
+<rect x="846.00" y="96.00" width="390.00" height="230.00" rx="6.00" fill="#202a33" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="1.40"/>
+<text x="860.0" y="122.0" font-family="Arial, sans-serif" font-size="16" font-weight="600" fill="#f4efe3">Interactions: Buy, Heal, Upgrade, Next</text>
+<text x="860.0" y="142.0" font-family="Arial, sans-serif" font-size="16" font-weight="600" fill="#f4efe3">Stage</text>
+<rect x="880.00" y="260.00" width="300.00" height="46.00" rx="6.00" fill="#2b6c76" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="1.40"/>
+<text x="894.0" y="286.0" font-family="Arial, sans-serif" font-size="16" font-weight="600" fill="#111827">Enter Stage 03</text>
+</svg>

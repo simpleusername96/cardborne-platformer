@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+<rect width="1280" height="720" fill="#101419"/>
+<rect x="0.00" y="0.00" width="1280.00" height="720.00" rx="6.00" fill="#1d2730" fill-opacity="1" stroke="#27323b" stroke-width="1.40"/>
+<rect x="250.00" y="80.00" width="780.00" height="560.00" rx="6.00" fill="#202a33" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="1.40"/>
+<text x="264.0" y="106.0" font-family="Arial, sans-serif" font-size="16" font-weight="600" fill="#f4efe3">Settings</text>
+<rect x="290.00" y="140.00" width="160.00" height="46.00" rx="6.00" fill="#2b6c76" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="1.40"/>
+<text x="304.0" y="166.0" font-family="Arial, sans-serif" font-size="16" font-weight="600" fill="#111827">Audio</text>
+<rect x="470.00" y="140.00" width="160.00" height="46.00" rx="6.00" fill="#2b6c76" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="1.40"/>
+<text x="484.0" y="166.0" font-family="Arial, sans-serif" font-size="16" font-weight="600" fill="#111827">Display</text>
+<rect x="650.00" y="140.00" width="160.00" height="46.00" rx="6.00" fill="#2b6c76" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="1.40"/>
+<text x="664.0" y="166.0" font-family="Arial, sans-serif" font-size="16" font-weight="600" fill="#111827">Controls</text>
+<rect x="330.00" y="245.00" width="520.00" height="32.00" rx="6.00" fill="#d7a441" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="1.40"/>
+<rect x="338.00" y="262.60" width="343.20" height="7.04" rx="2.00" fill="#f1c75b"/>
+<text x="344.0" y="271.0" font-family="Arial, sans-serif" font-size="16" font-weight="600" fill="#111827">Master volume</text>
+<rect x="330.00" y="315.00" width="520.00" height="32.00" rx="6.00" fill="#d7a441" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="1.40"/>
+<rect x="338.00" y="332.60" width="343.20" height="7.04" rx="2.00" fill="#f1c75b"/>
+<text x="344.0" y="341.0" font-family="Arial, sans-serif" font-size="16" font-weight="600" fill="#111827">Music volume</text>
+<rect x="330.00" y="385.00" width="520.00" height="32.00" rx="6.00" fill="#d7a441" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="1.40"/>
+<rect x="338.00" y="402.60" width="343.20" height="7.04" rx="2.00" fill="#f1c75b"/>
+<text x="344.0" y="411.0" font-family="Arial, sans-serif" font-size="16" font-weight="600" fill="#111827">SFX volume</text>
+<rect x="330.00" y="460.00" width="210.00" height="50.00" rx="6.00" fill="#34414c" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="1.40"/>
+<text x="344.0" y="486.0" font-family="Arial, sans-serif" font-size="16" font-weight="600" fill="#f4efe3">Screen shake: On</text>
+<rect x="570.00" y="460.00" width="210.00" height="50.00" rx="6.00" fill="#34414c" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="1.40"/>
+<text x="584.0" y="486.0" font-family="Arial, sans-serif" font-size="16" font-weight="600" fill="#f4efe3">Damage flash: On</text>
+<rect x="730.00" y="555.00" width="210.00" height="54.00" rx="6.00" fill="#2b6c76" fill-opacity="0.92" stroke="#d7d0bd" stroke-width="1.40"/>
+<text x="744.0" y="581.0" font-family="Arial, sans-serif" font-size="16" font-weight="600" fill="#111827">Apply</text>
+</svg>

@@ -7,6 +7,8 @@
 - No gameplay implementation has started yet.
 - Remote repository was created at `https://github.com/simpleusername96/cardborne-platformer` and `master` tracks `origin/master`.
 - First-slice expansion docs and seed data now define XP, coins, materials, map previews, player skill/equipment guidance, and enemies/traps/gimmicks before gameplay code generation.
+- UI/UX screen skeletons are defined as data and generated to SVG previews before any image-model polish or Godot UI scene work.
+- Reference and asset candidates are cataloged, but no third-party assets have been imported yet.
 
 ## Durable Decisions
 - Use Godot 4.x with GDScript for MVP work.
@@ -17,6 +19,8 @@
 - Treat `docs/product/FIRST_SLICE_EXPANSION.md` as the active first-slice product delta on top of the PRD.
 - Treat `data/design/first_slice/` JSON as seed design data, not final runtime schema.
 - Treat generated map SVGs under `docs/maps/generated/` as visual planning aids until Godot scenes exist.
+- Treat generated UI/UX SVGs under `docs/uiux/generated/` as screen composition targets until Godot UI scenes exist.
+- Treat `docs/references/GENRE_REFERENCES_AND_ASSETS.md` as evidence only; verify licenses again before importing assets.
 
 ## Key Discoveries
 - The PRD is detailed enough for Codex to start implementation without inventing core requirements.
@@ -32,4 +36,5 @@
 - Open editor: `.\tools\godot.ps1 --path . --editor`
 - Headless project check: `.\tools\godot.ps1 --path . --headless --import`
 - Generate map previews: `python tools/generate_map_previews.py`
+- Generate UI/UX wireframes: `python tools/generate_uiux_wireframes.py`
 - Git status: `git status --short`
