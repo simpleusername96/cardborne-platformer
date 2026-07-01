@@ -94,7 +94,7 @@ def render_stage_svg(stage: dict, tile_size: int, legend: dict) -> str:
             label = LABELS.get(symbol)
             tile_x = x * tile_size
             tile_y = y * tile_size
-            if symbol == " ":
+            if symbol in {" ", "."}:
                 continue
 
             title_text = html.escape(legend.get(symbol, "unknown"))

@@ -27,6 +27,7 @@ Each stage should have a readable grid layout, legend, objective, teaching goals
 
 - Store first-slice stage layout data in `data/design/first_slice/stage_layouts.json`.
 - Keep the layout as rows of fixed-width text so it can be reviewed in git and converted to simple previews.
+- Prefer `.` as visible empty-space filler inside large maps so horizontal and vertical structure remains readable in source control.
 - Use a shared legend for common stage symbols.
 - Include per-stage notes for:
   - purpose,
@@ -61,7 +62,7 @@ Each stage should have a readable grid layout, legend, objective, teaching goals
 | `T` | Chest or reward container |
 | `K` | Key or unlock pickup |
 | `G` | Gate or locked blocker |
-| `.` | Traversable empty space marker |
+| `.` | Empty layout filler rendered as open space |
 | space | Empty space |
 
 ## Visual Preview Contract
@@ -80,6 +81,7 @@ The preview generator should:
 - `python tools/generate_map_previews.py` produces SVG files for all stages in the seed data.
 - A future agent can compare stage intent and generated SVG before creating or changing `.tscn` files.
 - Map data includes reward and encounter intent, not just collision tiles.
+- Layouts include meaningful horizontal and vertical volume, not only a single flat route.
 - Layouts avoid unreachable exits, hidden required collectibles, and route blockers that can soft-lock the first slice.
 
 ## Related
