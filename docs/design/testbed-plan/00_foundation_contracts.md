@@ -35,7 +35,7 @@ Still open:
 - [ ] Godot launch baseline and known warnings are not recorded for this implementation pass.
 - [ ] Movement metrics are not computed by a reusable helper.
 - [ ] Required route limits are not derived from the least-mobile profile.
-- [ ] Testbed ability flags such as double jump or extra dash are not represented.
+- [ ] Testbed ability flags such as double jump, extra dash, rope climb, wall climb, wall slide, or wall jump are not represented.
 - [ ] HUD does not show metrics or ability flags.
 - [ ] Debug shortcuts are not clearly labeled as debug-only.
 
@@ -64,12 +64,13 @@ Source owners touched: `scripts/player/CharacterProfile.gd`, a new metric helper
 
 - [ ] **1.1** Add one movement metric helper that computes apex height, airtime, single-jump reach, dash reach, and jump+dash reach from an effective stat dictionary.
 - [ ] **1.2** Add conservative required-route limits for gap width and ledge height derived from the least-mobile required profile.
-- [ ] **1.3** Add testbed ability flags such as `double_jump_enabled`, `extra_dash_enabled`, and `air_dash_enabled`.
+- [ ] **1.3** Add testbed ability flags such as `double_jump_enabled`, `extra_dash_enabled`, `air_dash_enabled`, `rope_climb_enabled`, `wall_climb_enabled`, `wall_slide_enabled`, and `wall_jump_enabled`.
 - [ ] **1.4** Keep ability flag ownership narrow: prefer `RunState` or a small player-build adapter, not duplicated fields across stage/UI/player scripts.
 - [ ] **1.5** Emit a signal when metrics or ability flags change.
 - [ ] **1.6** Add HUD/debug display for active profile, ability flags, jump height, jump reach, dash reach, and jump+dash reach.
 - [ ] **1.7** Label profile cycle and ability toggles as debug-only until real character select or card/skill systems own them.
 - [ ] **1.8** Add a short note in code or debug UI identifying the current least-mobile required profile.
+- [ ] **1.9** Define whether climb traversal uses existing movement actions or new canonical input actions before UI work starts.
 
 Accept:
 
@@ -86,6 +87,7 @@ Guard:
 
 - [ ] Godot smoke command succeeds after script changes.
 - [ ] Manual launch shows profile, metrics, and ability flags in the HUD/debug UI.
+- [ ] Manual launch shows climb-related ability flags when they are enabled or explicitly deferred.
 - [ ] `rg` confirms movement formulas are not duplicated in multiple owners.
 - [ ] `git diff --check` passes before committing.
 

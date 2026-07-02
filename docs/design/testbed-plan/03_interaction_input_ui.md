@@ -32,6 +32,7 @@ Still open:
 - [ ] HUD control text is not generated from the actual `InputMap`.
 - [ ] Settings popup does not list bindings.
 - [ ] Keyboard remapping is not implemented or explicitly deferred in UI.
+- [ ] Climb traversal inputs are not displayed or explicitly deferred.
 - [ ] Debug shortcuts are not labeled clearly enough.
 
 ## Tasks
@@ -67,7 +68,8 @@ Source owners touched: `Game.gd`, `SettingsPopup.gd`, `HUD.gd`, `SignalBus.gd`, 
 - [ ] **7.5** Implement keyboard remap for at least one action, or clearly label remapping as deferred while preserving the architecture.
 - [ ] **7.6** Detect or prevent duplicate bindings if remapping is implemented.
 - [ ] **7.7** Label debug actions such as profile cycle and ability toggles as debug-only.
-- [ ] **7.8** Ensure settings UI does not cover critical gameplay when closed and pauses predictably when open.
+- [ ] **7.8** Add climb traversal actions to the binding list if rope climb, wall climb, wall slide, or wall jump are enabled; otherwise label them as deferred.
+- [ ] **7.9** Ensure settings UI does not cover critical gameplay when closed and pauses predictably when open.
 
 Accept:
 
@@ -85,6 +87,7 @@ Guard:
 - [ ] Manual interaction prompt appears and hides correctly.
 - [ ] Manual interaction triggers visible result and does not lock movement.
 - [ ] Binding guide matches actual controls.
+- [ ] Binding guide includes climb-related controls when those abilities are enabled.
 - [ ] Settings controls section is readable at 1280x720.
 - [ ] `rg` checks for duplicated hard-coded action display strings.
 - [ ] `git diff --check` before commit.

@@ -15,7 +15,7 @@ related:
 
 ## Purpose
 
-Make combat and damage observable, repeatable, and contract-driven. The testbed must prove a real enemy, player attack timing, contact damage, hazard damage, knockback, invulnerability, death, and reset behavior.
+Make combat and damage observable, repeatable, and contract-driven. The testbed must prove a real enemy, player attack timing, attack-destructible obstacles, contact damage, hazard damage, knockback, invulnerability, death, and reset behavior.
 
 ## Progress
 
@@ -31,6 +31,7 @@ Still open:
 
 - [ ] Attack startup, active window, recovery, cooldown, and hit confirm are not readable enough.
 - [ ] The combat lane lacks a real enemy with behavior and contact damage.
+- [ ] Breakable walls, crates, barriers, or other attack-destructible obstacles are not validated.
 - [ ] Hazard behavior is scene-local rather than a named reusable stage contract.
 - [ ] Damage recovery and no-chain-hit behavior are not explicitly validated.
 
@@ -77,6 +78,25 @@ Guard:
 
 - [ ] Enemy AI must not directly edit UI or player health outside the shared damage path.
 
+### Phase 4B - Destructible Obstacle Baseline
+
+Source owners touched: new `scripts/stages/DestructibleObstacle.gd` or equivalent, `scripts/combat/DamageInfo.gd`, `Hitbox.gd`, `MotionTestStage.tscn`, `HUD.gd`.
+
+- [ ] **4B.1** Add a destructible obstacle with health, hurtbox, hit reaction, and destroyed state.
+- [ ] **4B.2** Route player attacks into destructibles through `DamageInfo` or a documented equivalent.
+- [ ] **4B.3** Make destruction visibly remove or change collision.
+- [ ] **4B.4** Use the destroyed obstacle to open a shortcut, reveal a small reward, or clear a blocked route.
+- [ ] **4B.5** Add reset behavior so the destructible test can be repeated.
+
+Accept:
+
+- [ ] Player can destroy an obstacle by attacking it.
+- [ ] Destroying the obstacle visibly changes traversal.
+
+Guard:
+
+- [ ] Do not hard-code destructible behavior into the player attack script.
+
 ### Phase 5 - Hazards And Damage Recovery
 
 Source owners touched: new or revised `scripts/stages/Hazard.gd`, `MotionTestStage.tscn`, `PlayerController.gd`, `HUD.gd`.
@@ -101,6 +121,7 @@ Guard:
 
 - [ ] Manual attack test: miss, hit, cooldown, facing change.
 - [ ] Manual enemy test: contact damage, player attack damage, enemy death/reset.
+- [ ] Manual destructible test: attack damage, visual break, collision removal/change, route change, reset.
 - [ ] Manual hazard test: damage, knockback, invulnerability, recovery.
 - [ ] Manual death/reload test.
 - [ ] `rg` confirms `DamageDummy` is not the only combat lane proof.
@@ -109,6 +130,7 @@ Guard:
 ## Risks
 
 - Enemy and hazard damage can diverge if they bypass `DamageInfo`.
+- Destructibles can become one-off scene hacks if they bypass the shared damage vocabulary.
 - Attack VFX can drift from actual hitbox timing.
 - Hazards can create soft locks if recovery space is not tested.
 

@@ -27,10 +27,13 @@ The test bed must validate:
 - Per-character movement reach.
 - Ground jump, variable jump, jump buffering, coyote time, dash, crouch, fast fall, and one-way drop.
 - Optional or unlockable two-step movement such as double jump or extra dash, when that mechanic exists.
+- Climb traversal such as rope climbing, ladder-like climbing, wall climb, or wall slide/jump when those mechanics exist.
 - Attack startup, active hitbox, recovery, facing direction, hit confirmation, cooldown, and enemy damage.
+- Attack-driven destruction for breakable walls, crates, barriers, or other removable obstacles.
 - Enemy contact damage and simple enemy behavior.
 - NPC or object interaction through the shared `Interactable` contract.
 - Input discoverability and user-adjustable or at least consistently mapped actions.
+- Camera-followed multi-screen map traversal where the whole playable map is not visible at once.
 - Seeded random landscape generation that produces a small playable route.
 - A miniature run loop that can combine generated terrain, enemies, hazards, interactions, and exit conditions.
 - Stage completion through an exit portal only after the player can traverse the intended route.
@@ -39,12 +42,12 @@ The test bed must validate:
 
 - Request interpretation: the current motion scene is too shallow; it does not prove the player can move through map geometry designed around character stats, does not prove combat against real enemies, does not prove NPC-style interaction or keybinding usability, and does not simulate generated landscape gameplay.
 - Likely bounded context or scope: player movement calibration, test-bed level design, procedural landscape generation, combat validation, interaction validation, input/UI feedback, and miniature run flow.
-- Canonical terms: **test bed** means a deliberately structured validation scene; **miniature game** means a small playable loop inside the test bed; **movement metric** means calculated reach from player stats; **lane** means a labeled test section inside the scene; **generated landscape** means runtime-created playable terrain segments, not only a graph preview; **clear route** means the required path to the exit; **optional challenge route** means a route that proves advanced movement or unlock behavior.
+- Canonical terms: **test bed** means a deliberately structured validation scene; **miniature game** means a small playable loop inside the test bed; **movement metric** means calculated reach from player stats; **lane** means a labeled test section inside the scene; **viewport route** means a playable route larger than the camera view; **climbable** means a rope, ladder-like surface, wall-climb surface, or wall-slide surface with explicit traversal rules; **destructible** means a world object removed or changed by attack damage; **generated landscape** means runtime-created playable terrain segments, not only a graph preview; **clear route** means the required path to the exit; **optional challenge route** means a route that proves advanced movement or unlock behavior.
 - Ambiguous or overloaded terms: **character** in this test bed means a profile using the shared controller until the project explicitly implements separate character controllers; **double jump** means a testable movement ability only if the player controller exposes that ability or a debug profile enables it.
-- Ownership boundaries: player scripts own movement behavior; stage/test-bed design owns authored validation lanes; procedural generation owns seeded terrain/encounter assembly; combat scripts own hit/damage delivery; enemy scripts own enemy response; UI/input scripts own command visibility and remapping surfaces.
-- Public interfaces: the test bed should consume player effective stats, ask a landscape generator for a reproducible terrain plan, place interactables through `Interactable`, route damage through `DamageInfo`, and place enemy actors through shared enemy scenes.
+- Ownership boundaries: player scripts own movement and climb behavior; stage/test-bed design owns authored validation lanes and camera bounds; procedural generation owns seeded terrain/encounter assembly; combat scripts own hit/damage delivery; enemy scripts own enemy response; destructible world objects own their own damage response; UI/input scripts own command visibility and remapping surfaces.
+- Public interfaces: the test bed should consume player effective stats, ask a landscape generator for a reproducible terrain plan, place interactables through `Interactable`, route damage and destructible object hits through `DamageInfo`, and place enemy actors through shared enemy scenes.
 - Hidden implementation decisions: exact placeholder art, tile implementation, scene hierarchy, generator algorithm, room-template format, and editor tooling can change as long as the measurable validation contract remains true.
-- Invariants or policies that must hold: generated and authored geometry must be derived from movement metrics; every generated critical path must be passable by the intended profile/ability set; optional generated branches must be marked as optional; combat validation requires an enemy that can take and deal damage; interaction validation requires an NPC or object prompt and result; every generated seed must be reproducible.
+- Invariants or policies that must hold: generated and authored geometry must be derived from movement metrics; the playable route must exceed one viewport so camera follow and camera bounds are tested; every generated critical path must be passable by the intended profile/ability set; optional generated branches must be marked as optional; combat validation requires an enemy that can take and deal damage; destructible validation requires an attack-removable obstacle that changes traversal; interaction validation requires an NPC or object prompt and result; every generated seed must be reproducible.
 - State transitions: spawn -> select mode/profile/seed -> movement calibration -> combat test -> hazard/damage test -> NPC/object interaction -> miniature generated run -> exit portal -> stage clear.
 - Facts confirmed from code/docs/tests: current profiles expose movement stats; current test bed has a dummy and hazard but no true enemy, no NPC, no keybinding screen, no measured jump/dash lanes, no double-jump or advanced movement lane, and no runtime random landscape generator.
 - Inference: the next implementation should replace the current freeform layout with labeled sections and measured platform distances, then add a miniature generated-run mode before adding normal-stage content.
@@ -73,14 +76,17 @@ The scene must be divided into labeled lanes in this order:
    - Must include one-way platform drop-through with clear ground recovery below.
 
 4. **Advanced Movement Lane**
-   - Tests double jump, extra dash, air dash, or other unlockable movement only when those mechanics exist.
+   - Tests double jump, extra dash, air dash, rope climb, wall climb, wall slide, wall jump, or other unlockable movement only when those mechanics exist.
    - If double jump is not implemented, this lane must be visibly blocked or labeled as unavailable, not silently impossible.
    - When double jump exists, include one route passable only with double jump and one route passable without it.
+   - When climb traversal exists, include at least one rope or ladder-like climb route and one wall-based climb or wall-jump route.
+   - Climb routes must include clear entry, exit, drop/cancel behavior, and a safe recovery space below.
 
 5. **Combat Lane**
    - Contains at least one real enemy actor with health, hurtbox, contact damage, knockback response, death/reset, and a visible damage reaction.
    - Contains a stationary target only as a secondary measurement tool, not as the only attack test.
    - Must make attack startup, active hitbox, recovery, facing, cooldown, and hit confirmation readable.
+   - Contains at least one destructible obstacle that can be removed by player attack and then changes the route, opens a shortcut, or reveals a small reward.
 
 6. **Enemy Behavior Lane**
    - Contains a basic walker enemy first.
@@ -173,7 +179,19 @@ Use conservative dimensions until hand testing proves otherwise:
 
 These values should be updated whenever movement stats change.
 
-### 5. Seeded Landscape Generation Rules
+### 5. Camera, Viewport, And Route Scale Rules
+
+The test bed must prove that the player moves through a map, not that the whole map is a single static screen.
+
+- The full playable map must not be visible at once in the default 1280x720 viewport.
+- The camera must follow the player through authored lanes and generated landscapes.
+- The stage must define camera bounds so the camera does not show empty void outside the intended map.
+- A debug overview is allowed only as an explicit debug mode; it must not be the default gameplay camera.
+- Lane labels, HUD, and prompts must remain readable while the camera moves.
+- Offscreen route continuation must be visually discoverable through platform placement, path framing, lighting, or small in-world markers.
+- Generated landscapes must also produce a route larger than the viewport once the generator is enabled.
+
+### 6. Seeded Landscape Generation Rules
 
 The test bed must include a miniature landscape generator. This is different from the existing Python region graph prototype:
 
@@ -188,9 +206,12 @@ Minimum generated landscape features:
 - Spawn area.
 - Critical route made from terrain segments.
 - At least one jump gap or vertical step derived from movement metrics.
+- At least one camera scroll segment once generated routes are enabled.
+- At least one climbable segment when climb traversal is enabled.
 - At least one enemy placement when using combat or mixed profiles.
 - At least one hazard placement when using hazard or mixed profiles.
 - At least one non-exit interactable placement when using interaction or mixed profiles.
+- At least one destructible placement when using combat, mixed, or obstacle profiles.
 - Exit portal or clear trigger.
 - Generated route summary in UI or debug text.
 
@@ -202,7 +223,10 @@ The generator must not produce arbitrary tile noise. It should assemble tested s
 - near-limit jump segment,
 - jump+dash segment,
 - vertical one-way-platform segment,
+- rope or ladder-like climb segment,
+- wall climb or wall-jump segment,
 - optional advanced-movement branch,
+- destructible barrier or breakable wall segment,
 - combat pocket,
 - hazard pocket,
 - NPC/object interaction pocket,
@@ -217,9 +241,11 @@ Each segment template must declare:
 - enemy budget,
 - hazard budget,
 - interactable budget,
+- destructible budget,
+- camera scroll length or viewport span,
 - whether it can appear on the critical path or only as an optional branch.
 
-### 6. Generated Miniature Game Loop
+### 7. Generated Miniature Game Loop
 
 The test bed must support a miniature game mode, separate from static validation lanes.
 
@@ -245,6 +271,8 @@ The miniature game loop must track:
 - enemy count,
 - hazards placed,
 - interactables placed,
+- destructibles placed,
+- viewport spans traversed,
 - route length,
 - whether critical path validation passed,
 - clear time or basic completion status.
@@ -256,10 +284,11 @@ Failure cases must be visible:
 - missing required segment type,
 - enemy/hazard budget overflow,
 - no safe landing after a required jump.
+- route shorter than the minimum viewport-traversal requirement.
 
 Invalid generated layouts must be rejected and regenerated, not silently spawned.
 
-### 7. Combat Validation Rules
+### 8. Combat And Destructible Validation Rules
 
 The combat area must answer these questions without relying on debug logs:
 
@@ -273,6 +302,8 @@ The combat area must answer these questions without relying on debug logs:
 - Does the player receive knockback and temporary invulnerability?
 - Can the player kill the enemy?
 - Does the enemy reset or respawn so the test can be repeated?
+- Can the player destroy a breakable obstacle through the same attack/damage vocabulary?
+- Does the destroyed obstacle visibly change traversal, open a shortcut, or reveal a small reward?
 
 Minimum visible feedback:
 
@@ -281,8 +312,10 @@ Minimum visible feedback:
 - Enemy health marker or compact label.
 - Player health change in HUD.
 - Contact damage feedback.
+- Destructible damage flash, crack state, or destruction frame.
+- Route change after destruction.
 
-### 8. Interaction Validation Rules
+### 9. Interaction Validation Rules
 
 The interaction area must include an NPC or object that is not the exit.
 
@@ -302,7 +335,7 @@ Acceptable first result:
 - Upgrade station toggles a movement debug ability such as double jump.
 - Door opens or closes a nearby gate.
 
-### 9. Input And Keybinding Rules
+### 10. Input And Keybinding Rules
 
 Input must be treated as a test-bed feature, not an afterthought.
 
@@ -319,6 +352,7 @@ Required immediately:
   - `interact`
   - `pause`
   - `open_build_panel` or a renamed debug-only action
+- Climb traversal must either reuse documented movement actions or add canonical actions such as `climb_up`, `climb_down`, `climb_cancel`, or `drop_from_climb`.
 - Debug-only actions must be labeled as debug-only in the HUD or settings.
 
 Required before content stages:
@@ -329,7 +363,7 @@ Required before content stages:
 
 The current `Tab` profile cycle is acceptable only as a debug shortcut. It should move behind a character-select screen or debug panel before normal stage work.
 
-### 10. UI Requirements
+### 11. UI Requirements
 
 The test bed UI must include:
 
@@ -342,39 +376,45 @@ The test bed UI must include:
 - Compact combat feedback when hitting or being hit.
 - Active generator mode and seed when in miniature game mode.
 - Generated route status such as `Valid`, `Regenerating`, or `Invalid`.
+- Current camera/area objective when the route extends beyond one screen.
+- Current climb ability state if rope climb, wall climb, wall slide, or wall jump is enabled.
 
 The UI must not cover the character or combat lane in the default 1280x720 viewport.
 
-### 11. Test Bed Authoring Order
+### 12. Test Bed Authoring Order
 
 Future implementation should proceed in this order:
 
 1. Calculate movement metrics from the current profile data and expose them in debug UI or generated notes.
 2. Rebuild the test bed as labeled lanes with safe recovery paths.
-3. Implement or explicitly defer double jump, then add the advanced movement lane accordingly.
-4. Replace the damage dummy-only combat check with a minimal real enemy.
-5. Add attack active-frame visualization and hit feedback.
-6. Add NPC/object interaction that is separate from the exit portal.
-7. Add input settings or a binding-list screen backed by the actual input map.
-8. Add deterministic generated landscape assembly from segment templates.
-9. Add miniature game mode: seed, regenerate, replay, clear/fail summary.
-10. Add exit and stage-clear validation after the required test route.
-11. Only then create Stage01/Stage02/Stage03 from the same movement metric constraints.
+3. Add camera-followed route scale and camera bounds so the whole map is not visible at once.
+4. Implement or explicitly defer double jump, rope climb, wall climb, wall slide, and wall jump, then add the advanced movement lane accordingly.
+5. Replace the damage dummy-only combat check with a minimal real enemy.
+6. Add attack active-frame visualization, hit feedback, and destructible obstacles.
+7. Add NPC/object interaction that is separate from the exit portal.
+8. Add input settings or a binding-list screen backed by the actual input map, including climb actions if they exist.
+9. Add deterministic generated landscape assembly from segment templates.
+10. Add miniature game mode: seed, regenerate, replay, clear/fail summary.
+11. Add exit and stage-clear validation after the required test route.
+12. Only then create Stage01/Stage02/Stage03 from the same movement metric constraints.
 
 ## Acceptance Criteria
 
 - A new player can understand the test bed controls without reading chat or README instructions.
 - Every required movement obstacle is passable by the least-mobile required profile.
 - At least one optional obstacle clearly requires an advanced movement ability or faster profile, and it does not block stage clear.
+- The default gameplay camera follows the player through a route larger than one viewport; the full playable map is not visible at once.
 - The test bed includes visible markers or labels for movement metrics.
-- The player can verify jump height, jump distance, dash distance, jump+dash distance, coyote time, jump buffering, crouch, fast fall, and one-way drop.
+- The player can verify jump height, jump distance, dash distance, jump+dash distance, coyote time, jump buffering, crouch, fast fall, one-way drop, rope/ladder-like climb, and wall-based climb behavior when those mechanics are enabled.
 - The player can attack a real enemy, see hit feedback, take enemy damage, kill or reset the enemy, and repeat the test.
+- The player can destroy at least one breakable obstacle with attacks and see the route change.
 - The player can interact with a non-exit NPC or object and see a visible result.
 - The player can inspect current bindings in-game.
 - The player can generate a miniature random landscape from a seed and replay the same seed.
 - Generated critical paths are validated against the selected profile and enabled abilities before play starts.
 - Generated optional branches can require stronger abilities, but generated critical paths cannot.
 - Generated landscapes can place enemies, hazards, interactables, and an exit through the same contracts used by authored content.
+- Generated landscapes can include climbable segments and destructible obstacles when those generator profiles or ability flags are enabled.
 - Invalid generated landscapes are rejected with a visible reason or regenerated.
 - The exit route cannot be cleared without passing the required movement/combat/interaction path.
 - The scene has no required route soft lock.
@@ -386,6 +426,7 @@ Future implementation should proceed in this order:
 - Multiple independent character controllers are not required unless a later accepted design explicitly needs them.
 - Full keybinding persistence is not required for the first correction pass, but the input architecture must not block it.
 - Full production procedural world generation is not required. The test bed generator can be small and segment-template based as long as it creates playable seeded miniature routes.
+- Final camera polish is not required, but the default camera must still follow the player through a route larger than one viewport.
 
 ## Current Implementation Gap
 
@@ -396,8 +437,11 @@ Known gaps:
 - Platforms are not derived from character movement metrics.
 - No labeled movement lanes exist.
 - No double-jump or advanced movement lane exists.
+- No rope climb, wall climb, wall slide, or wall-jump validation exists.
+- The current map fits mostly in one static viewport and does not prove camera-followed traversal.
 - Combat uses a dummy, not a real enemy.
 - Attack has no readable animation or active-frame visualization beyond hitbox behavior.
+- No attack-destructible wall, crate, barrier, or obstacle exists.
 - No NPC or separate object interaction exists.
 - Interaction is only proven through the exit portal.
 - Keybinding is not user-configurable.

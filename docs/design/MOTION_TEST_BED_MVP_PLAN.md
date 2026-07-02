@@ -41,8 +41,9 @@ Already true:
 Still open at the index level:
 
 - [ ] Movement metrics and ability flags are not a shared contract yet.
-- [ ] Authored lanes are not character-aware.
-- [ ] Combat lacks a real enemy baseline and readable attack timing.
+- [ ] Authored lanes are not character-aware and do not yet prove camera-followed multi-screen traversal.
+- [ ] Rope climb, wall climb, wall slide, wall jump, and similar climb traversal are not planned deeply enough in implementation tasks.
+- [ ] Combat lacks a real enemy baseline, readable attack timing, and attack-destructible obstacles.
 - [ ] NPC/object interaction and input binding UI are incomplete.
 - [ ] Runtime seeded landscape generation is missing.
 - [ ] Miniature run replay, clear/fail summary, and final QA matrix are missing.
@@ -54,8 +55,8 @@ Execute these documents in order:
 | Order | Plan doc | Main output | Stop after |
 | --- | --- | --- | --- |
 | 0 | `testbed-plan/00_foundation_contracts.md` | Baseline launch path, movement metrics, ability flags, shared state/UI signals. | Metrics and ability flags are visible in-game. |
-| 1 | `testbed-plan/01_authored_lanes.md` | Character-aware authored movement/test lanes with safe recovery and route gating. | Least-mobile profile can clear the required authored route. |
-| 2 | `testbed-plan/02_combat_damage.md` | Readable attack timing, real enemy, hazard damage, recovery behavior. | Player can fight, take damage, recover, and retest. |
+| 1 | `testbed-plan/01_authored_lanes.md` | Character-aware authored movement/test lanes, camera-followed route scale, climb traversal, safe recovery, and route gating. | Least-mobile profile can clear the required authored route without seeing the whole map at once. |
+| 2 | `testbed-plan/02_combat_damage.md` | Readable attack timing, real enemy, destructible obstacles, hazard damage, recovery behavior. | Player can fight, break an obstacle, take damage, recover, and retest. |
 | 3 | `testbed-plan/03_interaction_input_ui.md` | Non-exit interaction, actual binding guide, settings/input surface. | Tester can discover controls and interact with a non-exit object. |
 | 4 | `testbed-plan/04_generated_landscape.md` | Segment-template generator, route validation, generated lane, seed replay. | Same seed/profile/mode reproduces a playable route. |
 | 5 | `testbed-plan/05_qa_and_handoff.md` | Final clear gate, manual QA matrix, handoff criteria. | Testbed can be launched, understood, cleared, and replayed by seed. |
@@ -77,6 +78,7 @@ Execute these documents in order:
 - Keep this file as an index, not a giant implementation checklist.
 - Put phase-specific tasks, acceptance checks, and risks in `docs/design/testbed-plan/`.
 - Do not add production stages to compensate for unfinished testbed contracts.
+- Do not make the default gameplay camera show the entire playable map at once; overview is debug-only.
 - Do not promote the generated landscape work into full procedural region generation in this pass.
 - Use commit/test evidence for implementation slices; create new evidence docs only when a reusable boundary or decision is discovered.
 
@@ -93,6 +95,7 @@ Complete the full goal when:
 
 - [ ] The testbed can be launched and understood from in-game UI.
 - [ ] Authored lanes validate movement, combat, damage, interaction, and controls.
+- [ ] The default camera follows the player through a route larger than one viewport.
 - [ ] Generated landscape mode can generate, validate, play, replay, and regenerate seeded routes.
 - [ ] The final QA matrix in `05_qa_and_handoff.md` is complete or explicitly deferred with reasons.
 
