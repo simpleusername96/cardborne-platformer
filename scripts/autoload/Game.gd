@@ -106,7 +106,7 @@ func get_input_binding_lines() -> Array[String]:
 		["open_build_panel", "profile debug"],
 		["regenerate_landscape", "random seed"],
 		["replay_landscape", "replay seed"],
-		["reset_testbed", "reset player"],
+		["reset_testbed", "checkpoint reset"],
 		["pause", "settings"],
 	]
 	var lines: Array[String] = []
@@ -161,9 +161,17 @@ func _bind_mouse_buttons(action_name: String, buttons: Array[int]) -> void:
 
 func _on_player_died() -> void:
 	SignalBus.status_message_changed.emit("Player defeated")
-	call_deferred("_reload_after_death")
+	call_deferred("_recover_after_death")
 
 
-func _reload_after_death() -> void:
-	await get_tree().create_timer(0.7).timeout
+func _recover_after_death() -> void:
+	await get_tree().create_timer(0.45).timeout
+	if RunState.current_health > 0:
+		return
+
+	var active_stage := get_tree().get_first_node_in_group("active_stage")
+	if active_stage != null and active_stage.has_method("respawn_player_after_defeat"):
+		active_stage.respawn_player_after_defeat()
+		return
+
 	reload_current_stage()

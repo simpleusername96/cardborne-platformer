@@ -27,6 +27,7 @@ func _ready() -> void:
 	_set_player_spawn(Vector2(120.0, GROUND_TOP - PLAYER_FOOT_OFFSET))
 	_build_authored_route()
 	_build_generated_route(active_seed, false)
+	_rebuild_fall_reset_zone()
 	super._ready()
 	_configure_spawned_player()
 	_publish_testbed_context("Clear authored lanes, then finish the generated seed route.")
@@ -42,7 +43,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		_build_generated_route(active_seed, true)
 	elif event.is_action_pressed("reset_testbed"):
 		get_viewport().set_input_as_handled()
-		_reset_player_to(player_spawn.global_position if player_spawn != null else Vector2(120.0, GROUND_TOP - PLAYER_FOOT_OFFSET))
+		respawn_player("manual reset")
 
 
 func complete_stage() -> void:
@@ -99,6 +100,7 @@ func _build_authored_route() -> void:
 		Vector2(70.0, 545.0),
 		300.0
 	)
+	_add_checkpoint(test_objects, "CheckpointStart", Vector2(120.0, GROUND_TOP - PLAYER_FOOT_OFFSET), "start")
 	_add_label(
 		world,
 		"Metrics\nLeast mobile: %s\nRequired gate: %.0fpx gap / %.0fpx ledge" % [least_name, required_gap, required_ledge],
@@ -113,15 +115,18 @@ func _build_authored_route() -> void:
 	_add_platform(world, "CoyoteLedge", Vector2(1320.0, 592.0), Vector2(230.0, 26.0), Color(0.28, 0.38, 0.50, 1.0))
 	_add_platform(world, "JumpBufferOneWay", Vector2(1600.0, 528.0), Vector2(250.0, 22.0), Color(0.25, 0.48, 0.58, 1.0), true)
 	_add_platform(world, "DropRecovery", Vector2(1720.0, GROUND_Y), Vector2(430.0, 40.0), Color(0.24, 0.28, 0.33, 1.0))
+	_add_checkpoint(test_objects, "CheckpointTiming", Vector2(1750.0, GROUND_TOP - PLAYER_FOOT_OFFSET), "timing")
 	_add_label(world, "TIMING\nCoyote ledge, jump buffer, one-way drop to recovery.", Vector2(1380.0, 465.0), 420.0)
 
 	_add_platform(world, "DashPrep", Vector2(2180.0, 622.0), Vector2(300.0, 28.0), Color(0.31, 0.36, 0.42, 1.0))
 	_add_platform(world, "DashLanding", Vector2(2580.0, 582.0), Vector2(280.0, 28.0), Color(0.36, 0.38, 0.48, 1.0))
+	_add_checkpoint(test_objects, "CheckpointDash", Vector2(2180.0, 602.0), "dash")
 	_add_label(world, "DASH GAP\nUse jump + dash. Sized from shared metrics.", Vector2(2080.0, 505.0), 430.0)
 
 	_add_platform(world, "ClimbLower", Vector2(2920.0, GROUND_Y), Vector2(420.0, 40.0), Color(0.24, 0.28, 0.33, 1.0))
 	_add_climbable(test_objects, "RopeClimb", Vector2(3060.0, 526.0), Vector2(44.0, 270.0))
 	_add_platform(world, "ClimbUpper", Vector2(3240.0, 400.0), Vector2(330.0, 28.0), Color(0.31, 0.36, 0.42, 1.0))
+	_add_checkpoint(test_objects, "CheckpointClimb", Vector2(2920.0, GROUND_TOP - PLAYER_FOOT_OFFSET), "climb")
 	_add_label(world, "ROPE / LADDER\nW/S or Up/Down to climb. Space dismount.", Vector2(2850.0, 355.0), 420.0)
 
 	_add_platform(world, "DoubleJumpBranch", Vector2(3580.0, 318.0), Vector2(260.0, 26.0), Color(0.42, 0.35, 0.52, 1.0))
@@ -131,6 +136,7 @@ func _build_authored_route() -> void:
 
 	_add_platform(world, "CombatGround", Vector2(4170.0, GROUND_Y), Vector2(940.0, 40.0), Color(0.24, 0.28, 0.33, 1.0))
 	_add_label(world, "COMBAT CONTRACTS\nWalker enemy, hazard, destructible, NPC interaction.", Vector2(3820.0, 545.0), 500.0)
+	_add_checkpoint(test_objects, "CheckpointCombat", Vector2(3740.0, GROUND_TOP - PLAYER_FOOT_OFFSET), "combat")
 	_add_walker(test_objects, "AuthoredWalker", Vector2(3840.0, GROUND_TOP), 115.0)
 	_add_destructible(test_objects, "BreakableGate", Vector2(4230.0, GROUND_TOP), 3)
 	_add_hazard(test_objects, "SpikeStrip", Vector2(4445.0, GROUND_TOP - 8.0), Vector2(160.0, 22.0), Vector2(-240.0, -220.0))
@@ -156,6 +162,7 @@ func _build_generated_route(seed: int, move_player_to_generated_start: bool) -> 
 	var y := GROUND_Y
 
 	generated_spawn = Vector2(start_x - 145.0, GROUND_TOP - PLAYER_FOOT_OFFSET)
+	_add_checkpoint(generated_root, "CheckpointGeneratedStart", generated_spawn, "generated_start")
 	_add_label(
 		generated_root,
 		"GENERATED MINI ROUTE\nSeed %d | R random | T replay same seed" % seed,
@@ -208,11 +215,13 @@ func _build_generated_route(seed: int, move_player_to_generated_start: bool) -> 
 		"failure_reason": "" if valid else "route fits inside one viewport",
 	}
 	route_bounds = Rect2(0.0, 0.0, maxf(x + 700.0, 7200.0), 780.0)
+	_rebuild_fall_reset_zone()
 	_configure_spawned_player()
 	SignalBus.testbed_route_status_changed.emit(_route_status_text("ready" if valid else "invalid"))
 
 	if move_player_to_generated_start:
-		_reset_player_to(generated_spawn)
+		set_checkpoint("generated_start", generated_spawn, false)
+		respawn_player("generated seed")
 		SignalBus.status_message_changed.emit("Generated seed %d ready" % seed)
 
 
@@ -223,19 +232,29 @@ func _publish_testbed_context(objective: String) -> void:
 	SignalBus.testbed_route_status_changed.emit(_route_status_text("ready"))
 
 
+func _after_player_respawned() -> void:
+	_configure_spawned_player()
+
+
 func _configure_spawned_player() -> void:
 	if player != null and is_instance_valid(player):
 		player.set_camera_limits(route_bounds)
 
 
-func _reset_player_to(position: Vector2) -> void:
-	if player == null or not is_instance_valid(player):
+func _rebuild_fall_reset_zone() -> void:
+	if test_objects == null:
 		return
 
-	player.global_position = position
-	player.velocity = Vector2.ZERO
-	if player.has_method("set_camera_limits"):
-		player.set_camera_limits(route_bounds)
+	var existing := test_objects.get_node_or_null("FallResetZone")
+	if existing != null:
+		test_objects.remove_child(existing)
+		existing.free()
+
+	var zone := FallResetZone.new()
+	zone.name = "FallResetZone"
+	zone.position = Vector2(route_bounds.position.x + route_bounds.size.x * 0.5, route_bounds.position.y + route_bounds.size.y + 80.0)
+	zone.zone_size = Vector2(route_bounds.size.x + 800.0, 170.0)
+	test_objects.add_child(zone)
 
 
 func _route_status_text(state: String) -> String:
@@ -317,6 +336,15 @@ func _add_climbable(parent: Node, object_name: String, center: Vector2, size: Ve
 	climbable.climbable_size = size
 	parent.add_child(climbable)
 	return climbable
+
+
+func _add_checkpoint(parent: Node, object_name: String, respawn_position: Vector2, checkpoint_id: String) -> StageCheckpoint:
+	var checkpoint := StageCheckpoint.new()
+	checkpoint.name = object_name
+	checkpoint.position = respawn_position
+	checkpoint.checkpoint_id = checkpoint_id
+	parent.add_child(checkpoint)
+	return checkpoint
 
 
 func _add_hazard(parent: Node, object_name: String, center: Vector2, size: Vector2, knockback: Vector2) -> Hazard:

@@ -157,6 +157,11 @@ func heal_player(amount: int) -> void:
 	SignalBus.player_health_changed.emit(current_health, max_health)
 
 
+func revive_player() -> void:
+	current_health = max_health
+	SignalBus.player_health_changed.emit(current_health, max_health)
+
+
 func set_setting(setting_name: String, value: Variant) -> void:
 	if not settings.has(setting_name):
 		push_warning("Unknown setting: %s" % setting_name)

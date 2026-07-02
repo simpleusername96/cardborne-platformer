@@ -276,6 +276,27 @@ func set_camera_limits(bounds: Rect2) -> void:
 	camera.make_current()
 
 
+func respawn_at(respawn_position: Vector2, invulnerability_time: float) -> void:
+	global_position = respawn_position
+	velocity = Vector2.ZERO
+	coyote_timer = 0.0
+	jump_buffer_timer = 0.0
+	dash_timer = 0.0
+	dash_cooldown_timer = 0.0
+	attack_cooldown_timer = 0.0
+	attack_timer = 0.0
+	one_way_drop_timer = 0.0
+	is_dashing = false
+	is_climbing = false
+	climbable_count = 0
+	invulnerability_timer = invulnerability_time
+	set_collision_mask_value(2, true)
+	attack_hitbox.set_active(false, false)
+	attack_hitbox.visible = false
+	dash_charges_left = _max_dash_charges()
+	extra_jumps_left = _max_extra_jumps()
+
+
 func _apply_run_state() -> void:
 	stats = RunState.get_effective_stats()
 	var profile := RunState.selected_profile
