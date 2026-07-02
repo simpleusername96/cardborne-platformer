@@ -1,6 +1,8 @@
 class_name Hitbox
 extends Area2D
 
+signal target_hit(area: Area2D, damage_info: DamageInfo)
+
 @export var damage_amount: int = 1
 @export var knockback: Vector2 = Vector2.ZERO
 @export var tags: Array[String] = []
@@ -39,3 +41,4 @@ func _on_area_entered(area: Area2D) -> void:
 		_hit_targets[target_id] = true
 	var damage_info := DamageInfo.new(damage_amount, self, knockback, tags)
 	area.receive_damage(damage_info)
+	target_hit.emit(area, damage_info)

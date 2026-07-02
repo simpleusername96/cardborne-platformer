@@ -3,8 +3,12 @@ extends Control
 var health_label: Label
 var profile_label: Label
 var stage_label: Label
+var metrics_label: Label
 var counters_label: Label
 var controls_label: Label
+var flags_label: Label
+var objective_label: Label
+var route_label: Label
 var prompt_label: Label
 var status_label: Label
 var health_panel: PanelContainer
@@ -47,25 +51,47 @@ func _build_ui() -> void:
 	stage_label.text = "Stage"
 	top_left_box.add_child(stage_label)
 
-	var top_right := _make_panel(Vector2(890, 16), Vector2(374, 54))
+	metrics_label = Label.new()
+	metrics_label.text = "Metrics"
+	metrics_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	metrics_label.add_theme_font_size_override("font_size", 13)
+	top_left_box.add_child(metrics_label)
+
+	var top_right := _make_panel(Vector2(854, 16), Vector2(410, 54))
 	counters_panel = top_right.get_parent() as PanelContainer
 	counters_label = Label.new()
 	counters_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	top_right.add_child(counters_label)
 
-	var controls := _make_panel(Vector2(890, 82), Vector2(374, 116))
+	var controls := _make_panel(Vector2(854, 82), Vector2(410, 212))
 	controls_panel = controls.get_parent() as PanelContainer
+	var controls_box := VBoxContainer.new()
+	controls_box.add_theme_constant_override("separation", 5)
+	controls.add_child(controls_box)
+
+	objective_label = Label.new()
+	objective_label.text = "Objective"
+	objective_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	objective_label.add_theme_font_size_override("font_size", 13)
+	controls_box.add_child(objective_label)
+
 	controls_label = Label.new()
-	controls_label.text = (
-		"Controls\n"
-		+"Move A/D or Arrows\n"
-		+"Jump Space   Dash K/Shift\n"
-		+"Attack J/Click   Interact E/Enter\n"
-		+"Profile Tab   Settings Esc"
-	)
+	controls_label.text = Game.get_input_guide_text()
 	controls_label.clip_text = true
-	controls_label.add_theme_font_size_override("font_size", 14)
-	controls.add_child(controls_label)
+	controls_label.add_theme_font_size_override("font_size", 13)
+	controls_box.add_child(controls_label)
+
+	flags_label = Label.new()
+	flags_label.text = "Flags"
+	flags_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	flags_label.add_theme_font_size_override("font_size", 13)
+	controls_box.add_child(flags_label)
+
+	route_label = Label.new()
+	route_label.text = "Route"
+	route_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	route_label.add_theme_font_size_override("font_size", 13)
+	controls_box.add_child(route_label)
 
 	var bottom_left := _make_panel(Vector2(16, 628), Vector2(360, 52))
 	status_panel = bottom_left.get_parent() as PanelContainer
@@ -91,6 +117,10 @@ func _connect_signals() -> void:
 	SignalBus.stage_cleared.connect(_on_stage_cleared)
 	SignalBus.interaction_prompt_changed.connect(_on_interaction_prompt_changed)
 	SignalBus.status_message_changed.connect(_on_status_message_changed)
+	SignalBus.testbed_metrics_changed.connect(_on_testbed_metrics_changed)
+	SignalBus.testbed_flags_changed.connect(_on_testbed_flags_changed)
+	SignalBus.testbed_objective_changed.connect(_on_testbed_objective_changed)
+	SignalBus.testbed_route_status_changed.connect(_on_testbed_route_status_changed)
 
 
 func _sync_from_state() -> void:
@@ -102,6 +132,9 @@ func _sync_from_state() -> void:
 			RunState.selected_profile.visual_color
 		)
 	counters_label.text = "Lv %d  XP %d  Coins %d" % [RunState.run_level, RunState.current_xp, RunState.coins]
+	_on_testbed_metrics_changed(RunState.get_testbed_metrics_snapshot())
+	_on_testbed_flags_changed(RunState.get_testbed_ability_flags())
+	controls_label.text = Game.get_input_guide_text()
 
 
 func _layout_panels() -> void:
@@ -109,15 +142,15 @@ func _layout_panels() -> void:
 	var horizontal_margin := 16.0
 	var compact_width := minf(360.0, viewport_size.x - horizontal_margin * 2.0)
 
-	_set_panel_rect(health_panel, Vector2(horizontal_margin, 16.0), Vector2(compact_width, 94.0))
+	_set_panel_rect(health_panel, Vector2(horizontal_margin, 16.0), Vector2(compact_width, 132.0))
 
 	if viewport_size.x < 760.0:
-		_set_panel_rect(counters_panel, Vector2(horizontal_margin, 122.0), Vector2(compact_width, 54.0))
-		_set_panel_rect(controls_panel, Vector2(horizontal_margin, 188.0), Vector2(compact_width, 132.0))
+		_set_panel_rect(counters_panel, Vector2(horizontal_margin, 160.0), Vector2(compact_width, 54.0))
+		_set_panel_rect(controls_panel, Vector2(horizontal_margin, 226.0), Vector2(compact_width, 230.0))
 		counters_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	else:
-		_set_panel_rect(counters_panel, Vector2(viewport_size.x - 390.0, 16.0), Vector2(374.0, 54.0))
-		_set_panel_rect(controls_panel, Vector2(viewport_size.x - 390.0, 82.0), Vector2(374.0, 116.0))
+		_set_panel_rect(counters_panel, Vector2(viewport_size.x - 426.0, 16.0), Vector2(410.0, 54.0))
+		_set_panel_rect(controls_panel, Vector2(viewport_size.x - 426.0, 82.0), Vector2(410.0, 212.0))
 		counters_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 
 	var bottom_y := maxf(16.0, viewport_size.y - 92.0)
@@ -133,15 +166,22 @@ func _layout_panels() -> void:
 
 
 func _set_panel_rect(panel: PanelContainer, panel_position: Vector2, panel_size: Vector2) -> void:
-	panel.position = panel_position
 	panel.custom_minimum_size = panel_size
-	panel.size = panel_size
+	panel.set_anchors_preset(Control.PRESET_TOP_LEFT, false)
+	panel.offset_left = panel_position.x
+	panel.offset_top = panel_position.y
+	panel.offset_right = panel_position.x + panel_size.x
+	panel.offset_bottom = panel_position.y + panel_size.y
 
 
 func _make_panel(panel_position: Vector2, min_size: Vector2) -> MarginContainer:
 	var panel := PanelContainer.new()
-	panel.position = panel_position
 	panel.custom_minimum_size = min_size
+	panel.set_anchors_preset(Control.PRESET_TOP_LEFT, false)
+	panel.offset_left = panel_position.x
+	panel.offset_top = panel_position.y
+	panel.offset_right = panel_position.x + min_size.x
+	panel.offset_bottom = panel_position.y + min_size.y
 	panel.add_theme_stylebox_override("panel", _panel_style())
 	add_child(panel)
 
@@ -189,10 +229,41 @@ func _on_stage_cleared(stage_id: String) -> void:
 
 
 func _on_interaction_prompt_changed(prompt_text: String, active: bool) -> void:
-	prompt_label.text = "E / Enter: %s" % prompt_text if active else ""
+	if active:
+		prompt_label.text = prompt_text if prompt_text.contains(":") else "E / Enter: %s" % prompt_text
+	else:
+		prompt_label.text = ""
 	prompt_panel.visible = active
 
 
 func _on_status_message_changed(message: String) -> void:
 	status_label.text = message
 	status_panel.visible = not message.is_empty()
+
+
+func _on_testbed_metrics_changed(metrics: Dictionary) -> void:
+	var active: Dictionary = metrics.get("active", {})
+	var limits: Dictionary = metrics.get("route_limits", {})
+	metrics_label.text = "Jump %.0fpx | reach %.0fpx | dash %.0fpx\nGate %.0fpx gap / %.0fpx ledge (%s)" % [
+		float(active.get("jump_height", 0.0)),
+		float(active.get("single_jump_reach", 0.0)),
+		float(active.get("dash_reach", 0.0)),
+		float(limits.get("max_required_gap", 0.0)),
+		float(limits.get("max_required_ledge", 0.0)),
+		str(limits.get("least_mobile_profile_name", "?")),
+	]
+
+
+func _on_testbed_flags_changed(flags: Dictionary) -> void:
+	flags_label.text = "Flags: double %s | rope %s | wall deferred" % [
+		"ON" if bool(flags.get("double_jump_enabled", false)) else "OFF",
+		"ON" if bool(flags.get("rope_climb_enabled", false)) else "OFF",
+	]
+
+
+func _on_testbed_objective_changed(objective: String) -> void:
+	objective_label.text = "Objective: %s" % objective
+
+
+func _on_testbed_route_status_changed(status: String) -> void:
+	route_label.text = status

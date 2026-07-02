@@ -4,10 +4,12 @@ extends CharacterBody2D
 @export var attack_active_time: float = 0.12
 @export var crouch_speed_multiplier: float = 0.55
 @export var one_way_drop_time: float = 0.18
+@export var climb_speed: float = 165.0
 
 @onready var visual: Node2D = $Visual
 @onready var body_polygon: Polygon2D = $Visual/Body
 @onready var attack_hitbox: Hitbox = $AttackHitbox
+@onready var camera: Camera2D = get_node_or_null("Camera2D")
 
 var stats: Dictionary = {}
 var facing: int = 1
@@ -21,14 +23,20 @@ var attack_timer: float = 0.0
 var invulnerability_timer: float = 0.0
 var one_way_drop_timer: float = 0.0
 var is_dashing: bool = false
+var is_climbing: bool = false
+var climbable_count: int = 0
+var extra_jumps_left: int = 0
 
 
 func _ready() -> void:
 	add_to_group("player")
 	_apply_run_state()
 	attack_hitbox.set_active(false)
+	attack_hitbox.visible = false
+	attack_hitbox.target_hit.connect(_on_attack_hit_confirmed)
 	SignalBus.selected_profile_changed.connect(_on_selected_profile_changed)
 	SignalBus.player_stats_changed.connect(_on_player_stats_changed)
+	SignalBus.testbed_flags_changed.connect(_on_testbed_flags_changed)
 
 
 func _physics_process(delta: float) -> void:
@@ -42,6 +50,11 @@ func _physics_process(delta: float) -> void:
 		facing = int(sign(input_axis))
 
 	_update_jump_buffer()
+	_update_climb_state(input_axis, delta)
+	if is_climbing:
+		move_and_slide()
+		return
+
 	_update_dash(input_axis, delta)
 	if is_dashing:
 		move_and_slide()
@@ -85,10 +98,12 @@ func _update_timers(delta: float) -> void:
 			set_collision_mask_value(2, true)
 
 	if is_on_floor():
-		dash_charges_left = int(stats.get("dash_charges", 1))
+		dash_charges_left = _max_dash_charges()
+		extra_jumps_left = _max_extra_jumps()
 
 	if attack_timer <= 0.0:
 		attack_hitbox.set_active(false, false)
+		attack_hitbox.visible = false
 
 	visual.modulate.a = 0.45 if invulnerability_timer > 0.0 and int(Time.get_ticks_msec() / 80) % 2 == 0 else 1.0
 
@@ -129,6 +144,9 @@ func _update_dash(input_axis: float, delta: float) -> void:
 
 
 func _update_gravity(delta: float) -> void:
+	if is_climbing:
+		return
+
 	if is_on_floor():
 		return
 
@@ -154,12 +172,16 @@ func _update_horizontal_motion(input_axis: float, delta: float) -> void:
 
 
 func _try_jump() -> void:
-	if jump_buffer_timer <= 0.0 or coyote_timer <= 0.0:
+	if jump_buffer_timer <= 0.0:
 		return
 
-	velocity.y = float(stats.get("jump_velocity", -420.0))
-	jump_buffer_timer = 0.0
-	coyote_timer = 0.0
+	if coyote_timer > 0.0:
+		_perform_jump()
+		return
+
+	if extra_jumps_left > 0:
+		extra_jumps_left -= 1
+		_perform_jump()
 
 
 func _update_attack() -> void:
@@ -170,6 +192,8 @@ func _update_attack() -> void:
 		attack_hitbox.damage_amount = int(stats.get("attack_damage", 1))
 		attack_hitbox.knockback = Vector2(160.0 * float(facing), -80.0)
 		attack_hitbox.set_active(true)
+		attack_hitbox.visible = true
+		SignalBus.status_message_changed.emit("Attack active")
 
 
 func _update_visual_state(delta: float) -> void:
@@ -178,12 +202,87 @@ func _update_visual_state(delta: float) -> void:
 	visual.scale.y = move_toward(visual.scale.y, crouch_scale, delta * 12.0)
 
 
+func _update_climb_state(input_axis: float, _delta: float) -> void:
+	if is_climbing:
+		if climbable_count <= 0 or Input.is_action_just_pressed("climb_cancel") or Input.is_action_just_pressed("dash"):
+			_set_climbing(false)
+			return
+		if Input.is_action_just_pressed("jump"):
+			_set_climbing(false)
+			jump_buffer_timer = float(stats.get("jump_buffer_time", 0.12))
+			_perform_jump()
+			return
+
+		var vertical_axis := Input.get_axis("climb_up", "climb_down")
+		velocity = Vector2(input_axis * float(stats.get("move_speed", 220.0)) * 0.35, vertical_axis * climb_speed)
+		coyote_timer = 0.0
+		dash_charges_left = _max_dash_charges()
+		extra_jumps_left = _max_extra_jumps()
+		return
+
+	if climbable_count <= 0:
+		return
+
+	if Input.is_action_pressed("climb_up") or Input.is_action_pressed("climb_down"):
+		_set_climbing(true)
+
+
+func _set_climbing(enabled: bool) -> void:
+	is_climbing = enabled and RunState.is_testbed_ability_enabled("rope_climb_enabled")
+	if is_climbing:
+		velocity = Vector2.ZERO
+		is_dashing = false
+		dash_timer = 0.0
+		SignalBus.status_message_changed.emit("Climb mode")
+
+
+func _perform_jump() -> void:
+	velocity.y = float(stats.get("jump_velocity", -420.0))
+	jump_buffer_timer = 0.0
+	coyote_timer = 0.0
+	is_climbing = false
+
+
+func _max_dash_charges() -> int:
+	var charges := int(stats.get("dash_charges", 1))
+	if RunState.is_testbed_ability_enabled("extra_dash_enabled"):
+		charges += 1
+	return charges
+
+
+func _max_extra_jumps() -> int:
+	return 1 if RunState.is_testbed_ability_enabled("double_jump_enabled") else 0
+
+
+func enter_climbable(_climbable: Area2D) -> void:
+	climbable_count += 1
+	SignalBus.status_message_changed.emit("Climbable: W/S or Up/Down, Space dismount")
+
+
+func exit_climbable(_climbable: Area2D) -> void:
+	climbable_count = maxi(climbable_count - 1, 0)
+	if climbable_count <= 0:
+		_set_climbing(false)
+
+
+func set_camera_limits(bounds: Rect2) -> void:
+	if camera == null:
+		return
+
+	camera.limit_left = int(bounds.position.x)
+	camera.limit_top = int(bounds.position.y)
+	camera.limit_right = int(bounds.position.x + bounds.size.x)
+	camera.limit_bottom = int(bounds.position.y + bounds.size.y)
+	camera.make_current()
+
+
 func _apply_run_state() -> void:
 	stats = RunState.get_effective_stats()
 	var profile := RunState.selected_profile
 	if profile != null:
 		body_polygon.color = profile.visual_color
-	dash_charges_left = int(stats.get("dash_charges", 1))
+	dash_charges_left = _max_dash_charges()
+	extra_jumps_left = _max_extra_jumps()
 
 
 func _on_selected_profile_changed(_profile_id: String, _display_name: String, color: Color) -> void:
@@ -192,4 +291,14 @@ func _on_selected_profile_changed(_profile_id: String, _display_name: String, co
 
 func _on_player_stats_changed(new_stats: Dictionary) -> void:
 	stats = new_stats.duplicate()
-	dash_charges_left = int(stats.get("dash_charges", 1))
+	dash_charges_left = _max_dash_charges()
+	extra_jumps_left = _max_extra_jumps()
+
+
+func _on_testbed_flags_changed(_flags: Dictionary) -> void:
+	dash_charges_left = _max_dash_charges()
+	extra_jumps_left = _max_extra_jumps()
+
+
+func _on_attack_hit_confirmed(_area: Area2D, _damage_info: DamageInfo) -> void:
+	SignalBus.status_message_changed.emit("Hit confirmed")

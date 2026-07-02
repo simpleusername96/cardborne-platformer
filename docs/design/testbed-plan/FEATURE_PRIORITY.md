@@ -30,11 +30,11 @@ Already decided:
 - [x] Generated landscape must be segment-template based, not arbitrary tile noise.
 - [x] Placeholder shapes and simple sprites are acceptable.
 
-Still open:
+Resolved in the 2026-07-02 immediate implementation pass:
 
-- [ ] Exact control defaults for climb traversal.
-- [ ] Whether double jump is a debug-only test ability or first-slice unlock.
-- [ ] Whether keyboard remapping is in-memory only or persistent.
+- [x] Climb traversal uses `climb_up`, `climb_down`, and `climb_cancel`, currently bound to W/Up, S/Down, and C.
+- [x] Double jump is a debug testbed ability flag for this pass.
+- [x] Keyboard remapping persistence is deferred; the settings popup lists actual `InputMap` bindings and says remap is deferred.
 
 ## Tasks
 
@@ -80,18 +80,18 @@ Still open:
 
 The next implementation pass should include:
 
-- [ ] Runtime baseline check.
-- [ ] Movement metrics and ability flags.
-- [ ] Camera-followed authored route larger than one viewport.
-- [ ] Basic authored movement lanes.
-- [ ] Simplified rope/ladder climb if low-risk; otherwise visible deferral.
-- [ ] Debug double jump or extra dash route.
-- [ ] One real enemy.
-- [ ] One hazard.
-- [ ] One destructible obstacle.
-- [ ] One non-exit interactable.
-- [ ] Input binding list from actual `InputMap`.
-- [ ] Minimal generated route plan, assembly, seed replay, and clear/fail summary.
+- [x] Runtime baseline check.
+- [x] Movement metrics and ability flags.
+- [x] Camera-followed authored route larger than one viewport.
+- [x] Basic authored movement lanes.
+- [x] Simplified rope/ladder climb if low-risk; otherwise visible deferral.
+- [x] Debug double jump or extra dash route.
+- [x] One real enemy.
+- [x] One hazard.
+- [x] One destructible obstacle.
+- [x] One non-exit interactable.
+- [x] Input binding list from actual `InputMap`.
+- [x] Minimal generated route plan, assembly, seed replay, and clear/fail summary.
 
 ### Deferred Boundary
 

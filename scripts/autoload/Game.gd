@@ -63,15 +63,76 @@ func toggle_settings_popup() -> void:
 func ensure_input_map() -> void:
 	_bind_keys("move_left", [KEY_A, KEY_LEFT])
 	_bind_keys("move_right", [KEY_D, KEY_RIGHT])
+	_bind_keys("climb_up", [KEY_W, KEY_UP])
+	_bind_keys("climb_down", [KEY_S, KEY_DOWN])
 	_bind_keys("jump", [KEY_SPACE])
 	_bind_keys("attack", [KEY_J])
 	_bind_mouse_buttons("attack", [MOUSE_BUTTON_LEFT])
 	_bind_keys("dash", [KEY_K, KEY_SHIFT])
 	_bind_keys("crouch", [KEY_S, KEY_DOWN])
+	_bind_keys("climb_cancel", [KEY_C])
 	_ensure_action("drop_through")
 	_bind_keys("interact", [KEY_E, KEY_ENTER])
 	_bind_keys("open_build_panel", [KEY_TAB])
+	_bind_keys("regenerate_landscape", [KEY_R])
+	_bind_keys("replay_landscape", [KEY_T])
+	_bind_keys("reset_testbed", [KEY_BACKSPACE])
 	_bind_keys("pause", [KEY_ESCAPE])
+
+
+func get_input_guide_text() -> String:
+	return "\n".join([
+		"Controls",
+		"Move %s | Crouch/drop %s" % [_binding_text("move_left", "A/Left") + "/" + _binding_text("move_right", "D/Right"), _binding_text("crouch", "S/Down")],
+		"Jump %s | Dash %s | Attack %s" % [_binding_text("jump", "Space"), _binding_text("dash", "K/Shift"), _binding_text("attack", "J/Mouse1")],
+		"Climb %s/%s | Dismount %s" % [_binding_text("climb_up", "W/Up"), _binding_text("climb_down", "S/Down"), _binding_text("climb_cancel", "C")],
+		"Interact %s | Profile %s" % [_binding_text("interact", "E/Enter"), _binding_text("open_build_panel", "Tab")],
+		"Seed random %s | Replay %s | Settings %s" % [_binding_text("regenerate_landscape", "R"), _binding_text("replay_landscape", "T"), _binding_text("pause", "Esc")],
+	])
+
+
+func get_input_binding_lines() -> Array[String]:
+	var actions: Array[Array] = [
+		["move_left", "move left"],
+		["move_right", "move right"],
+		["jump", "jump"],
+		["dash", "dash"],
+		["attack", "attack"],
+		["climb_up", "climb up"],
+		["climb_down", "climb down"],
+		["climb_cancel", "dismount"],
+		["crouch", "crouch/drop"],
+		["interact", "interact"],
+		["open_build_panel", "profile debug"],
+		["regenerate_landscape", "random seed"],
+		["replay_landscape", "replay seed"],
+		["reset_testbed", "reset player"],
+		["pause", "settings"],
+	]
+	var lines: Array[String] = []
+	for action in actions:
+		var action_name := str(action[0])
+		lines.append("%s: %s" % [str(action[1]), _binding_text(action_name, "unbound")])
+	return lines
+
+
+func _binding_text(action_name: String, fallback: String) -> String:
+	if not InputMap.has_action(action_name):
+		return fallback
+
+	var labels: Array[String] = []
+	for event in InputMap.action_get_events(action_name):
+		if event is InputEventKey:
+			var key_event := event as InputEventKey
+			var keycode := key_event.physical_keycode if key_event.physical_keycode != KEY_NONE else key_event.keycode
+			labels.append(OS.get_keycode_string(keycode))
+		elif event is InputEventMouseButton:
+			var mouse_event := event as InputEventMouseButton
+			labels.append("Mouse%d" % mouse_event.button_index)
+
+	if labels.is_empty():
+		return fallback
+	return "/".join(labels)
 
 
 func _ensure_action(action_name: String) -> void:

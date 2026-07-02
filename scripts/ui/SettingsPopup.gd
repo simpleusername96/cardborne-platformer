@@ -2,6 +2,7 @@ extends Control
 
 var panel: PanelContainer
 var close_button: Button
+var binding_list_label: Label
 
 
 func _ready() -> void:
@@ -42,7 +43,7 @@ func _build_ui() -> void:
 	panel.add_child(margin)
 
 	var root_box := VBoxContainer.new()
-	root_box.add_theme_constant_override("separation", 14)
+	root_box.add_theme_constant_override("separation", 8)
 	margin.add_child(root_box)
 
 	var header := HBoxContainer.new()
@@ -70,15 +71,16 @@ func _build_ui() -> void:
 	toggle_row.add_child(_make_check_box("Screen shake", "screen_shake"))
 	toggle_row.add_child(_make_check_box("Damage flash", "damage_flash"))
 
-	var action_row := HBoxContainer.new()
-	action_row.alignment = BoxContainer.ALIGNMENT_END
-	root_box.add_child(action_row)
+	var bindings_title := Label.new()
+	bindings_title.text = "Input bindings (remap deferred)"
+	bindings_title.add_theme_font_size_override("font_size", 15)
+	root_box.add_child(bindings_title)
 
-	var apply_button := Button.new()
-	apply_button.text = "Apply"
-	apply_button.custom_minimum_size = Vector2(96, 42)
-	apply_button.pressed.connect(func() -> void: Game.set_settings_open(false))
-	action_row.add_child(apply_button)
+	binding_list_label = Label.new()
+	binding_list_label.text = _binding_list_text()
+	binding_list_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	binding_list_label.add_theme_font_size_override("font_size", 12)
+	root_box.add_child(binding_list_label)
 
 	_layout_panel()
 
@@ -119,9 +121,13 @@ func _make_check_box(label_text: String, setting_name: String) -> CheckBox:
 
 func _layout_panel() -> void:
 	var viewport_size := get_viewport_rect().size
-	var panel_size := Vector2(minf(520.0, viewport_size.x - 32.0), minf(360.0, viewport_size.y - 32.0))
-	panel.position = (viewport_size - panel_size) * 0.5
-	panel.size = panel_size
+	var panel_size := Vector2(minf(620.0, viewport_size.x - 32.0), minf(560.0, viewport_size.y - 32.0))
+	var panel_position := (viewport_size - panel_size) * 0.5
+	panel.set_anchors_preset(Control.PRESET_TOP_LEFT, false)
+	panel.offset_left = panel_position.x
+	panel.offset_top = panel_position.y
+	panel.offset_right = panel_position.x + panel_size.x
+	panel.offset_bottom = panel_position.y + panel_size.y
 
 
 func _panel_style() -> StyleBoxFlat:
@@ -141,5 +147,11 @@ func _panel_style() -> StyleBoxFlat:
 
 func _on_settings_visibility_changed(is_visible: bool) -> void:
 	visible = is_visible
+	if visible and binding_list_label != null:
+		binding_list_label.text = _binding_list_text()
 	if visible and close_button != null:
 		close_button.grab_focus()
+
+
+func _binding_list_text() -> String:
+	return "\n".join(Game.get_input_binding_lines())
