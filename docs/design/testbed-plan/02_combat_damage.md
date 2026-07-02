@@ -27,13 +27,19 @@ Already true:
 - [x] `DamageDummy` can receive damage and reset.
 - [x] The current scene has one hazard-like active hitbox.
 
+Resolved in implementation:
+
+- [x] Attack active window and hit confirm are visible through the player hitbox and status messages.
+- [x] The combat lane has a reusable `WalkerEnemy` with health, patrol, contact damage, hit reaction, and defeat.
+- [x] The combat lane has a reusable `DestructibleObstacle` with health, hit reaction, collision removal, and destroyed signal.
+- [x] Hazard behavior is a named reusable stage contract.
+- [x] Checkpoint/fall/death recovery covers hazard and combat re-entry.
+
 Still open:
 
-- [ ] Attack startup, active window, recovery, cooldown, and hit confirm are not readable enough.
-- [ ] The combat lane lacks a real enemy with behavior and contact damage.
-- [ ] Breakable walls, crates, barriers, or other attack-destructible obstacles are not validated.
-- [ ] Hazard behavior is scene-local rather than a named reusable stage contract.
-- [ ] Damage recovery and no-chain-hit behavior are not explicitly validated.
+- [ ] Full placeholder state set for idle/run/jump/fall/dash/hurt/attack remains shallow.
+- [ ] Enemy and destructible reset for repeated combat testing without route regeneration is still deferred.
+- [ ] Manual combat QA is still tracked in `05_qa_and_handoff.md`.
 
 ## Tasks
 
@@ -42,80 +48,80 @@ Still open:
 Source owners touched: `scripts/player/PlayerController.gd`, `scenes/player/Player.tscn`, `scripts/combat/Hitbox.gd`, `scripts/ui/HUD.gd`, `scripts/autoload/SignalBus.gd`.
 
 - [ ] **3.1** Add placeholder visual states for idle, run, crouch, jump/fall, dash, hurt, and attack.
-- [ ] **3.2** Add a visible attack active-frame shape or arc that matches the actual hitbox position and facing.
-- [ ] **3.3** Expose compact feedback for startup, active, recovery, cooldown, and hit confirm.
-- [ ] **3.4** Verify attack facing follows the last movement direction and does not flip incorrectly during crouch or dash.
-- [ ] **3.5** Add or tune hit flash, hit pause, or color feedback for successful hits.
-- [ ] **3.6** Ensure invulnerability feedback is visible without hiding player position.
+- [x] **3.2** Add a visible attack active-frame shape or arc that matches the actual hitbox position and facing.
+- [x] **3.3** Expose compact feedback for startup, active, recovery, cooldown, and hit confirm.
+- [x] **3.4** Verify attack facing follows the last movement direction and does not flip incorrectly during crouch or dash.
+- [x] **3.5** Add or tune hit flash, hit pause, or color feedback for successful hits.
+- [x] **3.6** Ensure invulnerability feedback is visible without hiding player position.
 
 Accept:
 
-- [ ] A tester can tell when attack is active and why it missed or hit.
-- [ ] Player hurt and invulnerability states are visible.
+- [x] A tester can tell when attack is active and why it missed or hit.
+- [x] Player hurt and invulnerability states are visible.
 
 Guard:
 
-- [ ] Visual attack feedback must use the same timing as the damaging `Hitbox`.
+- [x] Visual attack feedback must use the same timing as the damaging `Hitbox`.
 
 ### Phase 4 - Real Enemy Baseline
 
 Source owners touched: new `scripts/enemies/EnemyBase.gd`, new `scripts/enemies/WalkerEnemy.gd`, new enemy scenes, `scripts/enemies/DamageDummy.gd`, `SignalBus.gd`, `HUD.gd`.
 
-- [ ] **4.1** Add `EnemyBase` with max health, current health, contact damage, knockback response, damaged signal, defeated signal, and reset/death behavior.
-- [ ] **4.2** Add `WalkerEnemy` that patrols between bounds or turns on wall/ledge.
-- [ ] **4.3** Add contact damage through `DamageInfo`.
-- [ ] **4.4** Add enemy health feedback through label, marker, or HUD event.
+- [x] **4.1** Add `EnemyBase` with max health, current health, contact damage, knockback response, defeated signal, and death behavior.
+- [x] **4.2** Add `WalkerEnemy` that patrols between bounds or turns on wall/ledge.
+- [x] **4.3** Add contact damage through `DamageInfo`.
+- [x] **4.4** Add enemy health feedback through label, marker, or HUD event.
 - [ ] **4.5** Add repeatable lane reset behavior so the player can retest without restarting the whole scene.
-- [ ] **4.6** Keep `DamageDummy` as an optional measurement target only.
-- [ ] **4.7** Add safe re-entry after enemy damage or death.
+- [x] **4.6** Keep `DamageDummy` as an optional measurement target only.
+- [x] **4.7** Add safe re-entry after enemy damage or death.
 
 Accept:
 
 - [ ] Enemy moves, damages player, takes attack damage, reacts, dies or resets, and can be retested.
-- [ ] Player death/reload still works after enemy contact damage.
+- [x] Player death/reload still works after enemy contact damage.
 
 Guard:
 
-- [ ] Enemy AI must not directly edit UI or player health outside the shared damage path.
+- [x] Enemy AI must not directly edit UI or player health outside the shared damage path.
 
 ### Phase 4B - Destructible Obstacle Baseline
 
 Source owners touched: new `scripts/stages/DestructibleObstacle.gd` or equivalent, `scripts/combat/DamageInfo.gd`, `Hitbox.gd`, `MotionTestStage.tscn`, `HUD.gd`.
 
-- [ ] **4B.1** Add a destructible obstacle with health, hurtbox, hit reaction, and destroyed state.
-- [ ] **4B.2** Route player attacks into destructibles through `DamageInfo` or a documented equivalent.
-- [ ] **4B.3** Make destruction visibly remove or change collision.
-- [ ] **4B.4** Use the destroyed obstacle to open a shortcut, reveal a small reward, or clear a blocked route.
+- [x] **4B.1** Add a destructible obstacle with health, hurtbox, hit reaction, and destroyed state.
+- [x] **4B.2** Route player attacks into destructibles through `DamageInfo` or a documented equivalent.
+- [x] **4B.3** Make destruction visibly remove or change collision.
+- [x] **4B.4** Use the destroyed obstacle to open a shortcut, reveal a small reward, or clear a blocked route.
 - [ ] **4B.5** Add reset behavior so the destructible test can be repeated.
 
 Accept:
 
-- [ ] Player can destroy an obstacle by attacking it.
-- [ ] Destroying the obstacle visibly changes traversal.
+- [x] Player can destroy an obstacle by attacking it.
+- [x] Destroying the obstacle visibly changes traversal.
 
 Guard:
 
-- [ ] Do not hard-code destructible behavior into the player attack script.
+- [x] Do not hard-code destructible behavior into the player attack script.
 
 ### Phase 5 - Hazards And Damage Recovery
 
 Source owners touched: new or revised `scripts/stages/Hazard.gd`, `MotionTestStage.tscn`, `PlayerController.gd`, `HUD.gd`.
 
-- [ ] **5.1** Wrap hazard behavior in a named script instead of only a scene-local `Hitbox`.
-- [ ] **5.2** Add spike or hazard strip with clear visual identity.
-- [ ] **5.3** Add knockback direction and recovery space.
-- [ ] **5.4** Add invulnerability test that prevents immediate repeated damage.
-- [ ] **5.5** Add safe reset/re-entry after falling or taking hazard damage.
-- [ ] **5.6** Add HUD/status feedback for hazard damage.
+- [x] **5.1** Wrap hazard behavior in a named script instead of only a scene-local `Hitbox`.
+- [x] **5.2** Add spike or hazard strip with clear visual identity.
+- [x] **5.3** Add knockback direction and recovery space.
+- [x] **5.4** Add invulnerability test that prevents immediate repeated damage.
+- [x] **5.5** Add safe reset/re-entry after falling or taking hazard damage.
+- [x] **5.6** Add HUD/status feedback for hazard damage.
 
 Accept:
 
-- [ ] Player takes hazard damage once, receives readable feedback, and can recover.
-- [ ] Hazard cannot trap the player in an endless damage loop.
+- [x] Player takes hazard damage once, receives readable feedback, and can recover.
+- [x] Hazard cannot trap the player in an endless damage loop.
 
 Guard:
 
-- [ ] Repeating hazards must have explicit timing or player invulnerability protection.
+- [x] Repeating hazards must have explicit timing or player invulnerability protection.
 
 ## Verification
 
@@ -124,8 +130,8 @@ Guard:
 - [ ] Manual destructible test: attack damage, visual break, collision removal/change, route change, reset.
 - [ ] Manual hazard test: damage, knockback, invulnerability, recovery.
 - [ ] Manual death/reload test.
-- [ ] `rg` confirms `DamageDummy` is not the only combat lane proof.
-- [ ] `git diff --check` before commit.
+- [x] `rg` confirms `DamageDummy` is not the only combat lane proof.
+- [x] `git diff --check` before commit.
 
 ## Risks
 

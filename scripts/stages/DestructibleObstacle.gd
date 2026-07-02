@@ -1,6 +1,8 @@
 class_name DestructibleObstacle
 extends Node2D
 
+signal destroyed(obstacle: Node)
+
 @export var max_health: int = 3
 @export var obstacle_size: Vector2 = Vector2(54.0, 86.0)
 
@@ -79,6 +81,7 @@ func _ensure_hurtbox() -> void:
 
 
 func _destroy() -> void:
+	destroyed.emit(self)
 	SignalBus.status_message_changed.emit("%s destroyed: route opened" % name)
 	if _solid != null:
 		_solid.collision_layer = 0

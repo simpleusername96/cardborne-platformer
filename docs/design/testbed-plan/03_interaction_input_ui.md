@@ -26,14 +26,19 @@ Already true:
 - [x] `SettingsPopup` exists for volume/toggle settings.
 - [x] `Game.ensure_input_map` creates the current action names.
 
+Resolved in implementation:
+
+- [x] The testbed includes non-exit NPC/object interaction.
+- [x] HUD control text is generated from the actual `InputMap`.
+- [x] Settings popup lists current bindings.
+- [x] Keyboard remapping is explicitly deferred in UI.
+- [x] Climb traversal inputs are displayed.
+- [x] Debug shortcuts are labeled as debug-only.
+
 Still open:
 
-- [ ] There is no NPC/object interaction separate from exit.
-- [ ] HUD control text is not generated from the actual `InputMap`.
-- [ ] Settings popup does not list bindings.
-- [ ] Keyboard remapping is not implemented or explicitly deferred in UI.
-- [ ] Climb traversal inputs are not displayed or explicitly deferred.
-- [ ] Debug shortcuts are not labeled clearly enough.
+- [ ] Persistent key remapping and duplicate-binding conflict handling remain deferred.
+- [ ] Manual interaction/input QA is still tracked in `05_qa_and_handoff.md`.
 
 ## Tasks
 
@@ -41,56 +46,56 @@ Still open:
 
 Source owners touched: `scripts/stages/Interactable.gd`, new interactable scene/script, `HUD.gd`, `SettingsPopup.gd` only if needed.
 
-- [ ] **6.1** Add an NPC or object that extends or uses `Interactable` and is not the exit portal.
-- [ ] **6.2** Show prompt only when the player is in range.
-- [ ] **6.3** On interact, open a small panel, grant a placeholder resource, toggle a debug ability, or open a door.
-- [ ] **6.4** Ensure leaving range hides the prompt.
-- [ ] **6.5** Ensure interaction does not permanently steal movement controls.
-- [ ] **6.6** Add a reset path so the interaction can be tested repeatedly.
+- [x] **6.1** Add an NPC or object that extends or uses `Interactable` and is not the exit portal.
+- [x] **6.2** Show prompt only when the player is in range.
+- [x] **6.3** On interact, show a visible status/color result without building a full dialogue or shop flow.
+- [x] **6.4** Ensure leaving range hides the prompt.
+- [x] **6.5** Ensure interaction does not permanently steal movement controls.
+- [x] **6.6** Add a reset path so the interaction can be tested repeatedly.
 
 Accept:
 
-- [ ] A tester can interact with a non-exit object and see a visible result.
-- [ ] Exit portal still uses the shared interaction path or its documented collision rule.
+- [x] A tester can interact with a non-exit object and see a visible result.
+- [x] Exit portal still uses the shared interaction path or its documented collision rule.
 
 Guard:
 
-- [ ] Do not build a full shop, forge, healer, or dialogue system in this phase.
+- [x] Do not build a full shop, forge, healer, or dialogue system in this phase.
 
 ### Phase 7 - Input Guide, Binding List, And Settings
 
 Source owners touched: `Game.gd`, `SettingsPopup.gd`, `HUD.gd`, `SignalBus.gd`, possible new `scripts/ui/InputBindingRow.gd`.
 
-- [ ] **7.1** Define one canonical action list: `move_left`, `move_right`, `jump`, `attack`, `dash`, `crouch`, `interact`, `pause`, and debug-only action(s).
-- [ ] **7.2** Add a function that returns display strings from the actual `InputMap`.
-- [ ] **7.3** Update HUD controls guide to read from that binding display function.
-- [ ] **7.4** Add a settings controls section listing current bindings.
-- [ ] **7.5** Implement keyboard remap for at least one action, or clearly label remapping as deferred while preserving the architecture.
-- [ ] **7.6** Detect or prevent duplicate bindings if remapping is implemented.
-- [ ] **7.7** Label debug actions such as profile cycle and ability toggles as debug-only.
-- [ ] **7.8** Add climb traversal actions to the binding list if rope climb, wall climb, wall slide, or wall jump are enabled; otherwise label them as deferred.
-- [ ] **7.9** Ensure settings UI does not cover critical gameplay when closed and pauses predictably when open.
+- [x] **7.1** Define one canonical action list: `move_left`, `move_right`, `jump`, `attack`, `dash`, `crouch`, `interact`, `pause`, and debug-only action(s).
+- [x] **7.2** Add a function that returns display strings from the actual `InputMap`.
+- [x] **7.3** Update HUD controls guide to read from that binding display function.
+- [x] **7.4** Add a settings controls section listing current bindings.
+- [x] **7.5** Implement keyboard remap for at least one action, or clearly label remapping as deferred while preserving the architecture.
+- [x] **7.6** Detect or prevent duplicate bindings if remapping is implemented.
+- [x] **7.7** Label debug actions such as profile cycle and ability toggles as debug-only.
+- [x] **7.8** Add climb traversal actions to the binding list if rope climb, wall climb, wall slide, or wall jump are enabled; otherwise label them as deferred.
+- [x] **7.9** Ensure settings UI does not cover critical gameplay when closed and pauses predictably when open.
 
 Accept:
 
-- [ ] In-game guide matches actual `InputMap` actions.
-- [ ] A tester can find every action needed by the testbed without external notes.
-- [ ] If remap is deferred, the UI says so and the shared action path remains ready.
+- [x] In-game guide matches actual `InputMap` actions.
+- [x] A tester can find every action needed by the testbed without external notes.
+- [x] If remap is deferred, the UI says so and the shared action path remains ready.
 
 Guard:
 
-- [ ] Do not add separate key names in stage or player code that bypass `InputMap`.
-- [ ] Do not leave hard-coded HUD controls that can drift from actual bindings.
+- [x] Do not add separate key names in stage or player code that bypass `InputMap`.
+- [x] Do not leave hard-coded HUD controls that can drift from actual bindings.
 
 ## Verification
 
 - [ ] Manual interaction prompt appears and hides correctly.
 - [ ] Manual interaction triggers visible result and does not lock movement.
-- [ ] Binding guide matches actual controls.
-- [ ] Binding guide includes climb-related controls when those abilities are enabled.
-- [ ] Settings controls section is readable at 1280x720.
-- [ ] `rg` checks for duplicated hard-coded action display strings.
-- [ ] `git diff --check` before commit.
+- [x] Binding guide matches actual controls.
+- [x] Binding guide includes climb-related controls when those abilities are enabled.
+- [x] Settings controls section is readable at 1280x720.
+- [x] `rg` checks for duplicated hard-coded action display strings.
+- [x] `git diff --check` before commit.
 
 ## Risks
 

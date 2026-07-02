@@ -24,15 +24,20 @@ Already true:
 - [x] `StageBase` can spawn the player.
 - [x] The current scene has basic platforms, a hazard, a dummy, and an exit.
 
+Resolved in implementation:
+
+- [x] The route is divided into labeled validation lanes.
+- [x] Platform heights and gaps use movement metric output and conservative route limits.
+- [x] Jump buffer, coyote time, one-way drop, dash reach, optional double jump, and rope climb are represented in authored lanes.
+- [x] Wall traversal is visibly deferred instead of presented as broken or missing.
+- [x] The map scrolls through a camera-followed route larger than the viewport.
+- [x] Checkpoint, fall, death, and final-clear gates now prove required route checks.
+- [x] Recovery paths exist through checkpoints and a wide fall reset zone.
+
 Still open:
 
-- [ ] The map is not divided into validation lanes.
-- [ ] Platform heights and gaps are not derived from movement metrics.
-- [ ] Jump buffer, coyote time, one-way drop, dash reach, and advanced movement are not explicitly tested.
-- [ ] Rope climb, wall climb, wall slide, and wall jump are not explicitly tested or visibly deferred.
-- [ ] The current map does not prove camera-followed traversal through an area larger than the viewport.
-- [ ] Required route gating does not prove that lanes were exercised.
-- [ ] Recovery paths under required failures are incomplete.
+- [ ] Manual clear with Warrior, Archer, and Assassin is still tracked in `05_qa_and_handoff.md`.
+- [ ] Full wall climb/slide/jump mechanics remain deferred.
 
 ## Tasks
 
@@ -40,8 +45,8 @@ Still open:
 
 Source owners touched: `scenes/stages/MotionTestStage.tscn`, new `scripts/stages/MotionTestStage.gd`, optional lane label helper scene/script.
 
-- [ ] **2.1** Add a testbed-specific stage controller if lane state, labels, gates, or generated lane orchestration do not belong in `StageBase`.
-- [ ] **2.2** Split the scene into lane containers:
+- [x] **2.1** Add a testbed-specific stage controller if lane state, labels, gates, or generated lane orchestration do not belong in `StageBase`.
+- [x] **2.2** Split the scene into lane containers:
   - spawn and controls,
   - movement metrics,
   - jump behavior,
@@ -53,37 +58,37 @@ Source owners touched: `scenes/stages/MotionTestStage.tscn`, new `scripts/stages
   - input/settings,
   - exit,
   - generated landscape placeholder.
-- [ ] **2.3** Add visible lane labels and compact objective text that do not cover the player.
-- [ ] **2.4** Build a safe flat start area for acceleration, deceleration, crouch, facing, and debug profile switching.
-- [ ] **2.5** Make the route larger than the default 1280x720 viewport and add camera follow plus camera bounds.
-- [ ] **2.6** Add jump height markers and horizontal reach markers using the metric helper.
-- [ ] **2.7** Add forgiving and threshold gaps for ground jump.
-- [ ] **2.8** Add jump+dash gap using conservative required-route limits.
-- [ ] **2.9** Add a coyote-time ledge and a jump-buffer landing test.
-- [ ] **2.10** Add one-way platform drop-through with safe recovery below.
-- [ ] **2.11** Add rope or ladder-like climb route when enabled, with clear mount, climb, dismount, drop/cancel, and recovery behavior.
-- [ ] **2.12** Add wall climb, wall slide, or wall-jump route when enabled, with clear entry, exit, and failure recovery.
-- [ ] **2.13** Add an advanced movement route that is passable only when the relevant ability flag is enabled.
-- [ ] **2.14** Mark unavailable advanced movement visibly when the ability flag is off.
-- [ ] **2.15** Add recovery paths under every required fall.
-- [ ] **2.16** Gate exit progression so the player cannot walk directly to the portal without exercising the required route.
+- [x] **2.3** Add visible lane labels and compact objective text that do not cover the player.
+- [x] **2.4** Build a safe flat start area for acceleration, deceleration, crouch, facing, and debug profile switching.
+- [x] **2.5** Make the route larger than the default 1280x720 viewport and add camera follow plus camera bounds.
+- [x] **2.6** Add jump height markers and horizontal reach markers using the metric helper.
+- [x] **2.7** Add forgiving and threshold gaps for ground jump.
+- [x] **2.8** Add jump+dash gap using conservative required-route limits.
+- [x] **2.9** Add a coyote-time ledge and a jump-buffer landing test.
+- [x] **2.10** Add one-way platform drop-through with safe recovery below.
+- [x] **2.11** Add rope or ladder-like climb route when enabled, with clear mount, climb, dismount, drop/cancel, and recovery behavior.
+- [x] **2.12** Add wall climb, wall slide, or wall-jump route when enabled, with clear entry, exit, and failure recovery.
+- [x] **2.13** Add an advanced movement route that is passable only when the relevant ability flag is enabled.
+- [x] **2.14** Mark unavailable advanced movement visibly when the ability flag is off.
+- [x] **2.15** Add recovery paths under every required fall.
+- [x] **2.16** Gate exit progression so the player cannot walk directly to the portal without exercising the required route.
 
 Accept:
 
 - [ ] Warrior or the current least-mobile required profile can clear the required authored route.
 - [ ] Archer and Assassin can clear without route dimensions hiding control problems.
-- [ ] Optional advanced route is clearly optional and does not block clear.
-- [ ] Default camera follows the player, and the full playable route is not visible at once.
-- [ ] Rope/climb and wall traversal are either testable or explicitly blocked/labeled as deferred.
-- [ ] No required route creates a soft lock after falling.
-- [ ] Lane labels and objectives remain readable at 1280x720.
+- [x] Optional advanced route is clearly optional and does not block clear.
+- [x] Default camera follows the player, and the full playable route is not visible at once.
+- [x] Rope/climb and wall traversal are either testable or explicitly blocked/labeled as deferred.
+- [x] No required route creates a soft lock after falling.
+- [x] Lane labels and objectives remain readable at 1280x720.
 
 Guard:
 
-- [ ] No required gap exceeds the generated metric limit unless a documented manual test proves it.
-- [ ] Route design must not be tuned only for the fastest profile.
-- [ ] Do not use an always-zoomed-out overview camera as the default gameplay view.
-- [ ] This phase should not add production Stage01/Stage02/Stage03.
+- [x] No required gap exceeds the generated metric limit unless a documented manual test proves it.
+- [x] Route design must not be tuned only for the fastest profile.
+- [x] Do not use an always-zoomed-out overview camera as the default gameplay view.
+- [x] This phase should not add production Stage01/Stage02/Stage03.
 
 ## Verification
 
@@ -92,8 +97,8 @@ Guard:
 - [ ] Manual test of coyote time, jump buffer, dash gap, one-way drop, crouch, and advanced route ability-off/on states.
 - [ ] Manual camera test confirms the route scrolls and camera bounds do not show void.
 - [ ] Manual climb test confirms rope/ladder-like climb and wall traversal if enabled.
-- [ ] UI overlap check at 1280x720.
-- [ ] `git diff --check` before commit.
+- [x] UI overlap check at 1280x720.
+- [x] `git diff --check` before commit.
 
 ## Risks
 

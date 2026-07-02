@@ -27,13 +27,18 @@ Already true:
 - [x] Earlier phase docs define focused acceptance checks.
 - [x] `StageBase.complete_stage` and `ExitPortal` already support basic stage clear.
 
+Resolved in implementation:
+
+- [x] Final testbed exit now checks required validations before clear.
+- [x] Camera-followed traversal, climb traversal, combat, destructible, hazard, interaction, generated start, and generated exit are tracked as clear requirements.
+- [x] Generated run clear status includes seed and validation progress in HUD/status text.
+- [x] This document defines the manual QA matrix and handoff format.
+
 Still open:
 
-- [ ] Final testbed exit does not prove that required validations were exercised.
-- [ ] Final QA does not yet include camera-followed map traversal, climb traversal, or destructible obstacle coverage.
-- [ ] No generated run clear/fail summary exists.
-- [ ] No manual QA matrix exists for profile, ability, combat, interaction, input, and seed replay coverage.
-- [ ] No final handoff format is defined for implementation completion.
+- [ ] Full manual QA matrix is not complete.
+- [ ] Generated fail summary, clear time, invalid route rejection, and seed matrix coverage remain deferred.
+- [ ] Enemy/destructible repeatable reset polish remains deferred.
 
 ## Tasks
 
@@ -41,26 +46,26 @@ Still open:
 
 Source owners touched: `StageBase.gd`, `ExitPortal.gd`, `MotionTestStage.gd`, `HUD.gd`, `SignalBus.gd`.
 
-- [ ] **11.1** Decide whether authored lane completion is tracked by checkpoints, area triggers, interaction results, or generated summary.
-- [ ] **11.2** Prevent final exit clear until required authored validations and generated mini-run are completed or explicitly skipped in debug mode.
-- [ ] **11.3** Label debug skip actions in HUD/settings if any exist.
-- [ ] **11.4** Show final clear summary with profile, ability flags, camera route status, seed, route mode, and required validations passed.
-- [ ] **11.5** Add reset/restart route for failed validation.
+- [x] **11.1** Decide whether authored lane completion is tracked by checkpoints, area triggers, interaction results, or generated summary.
+- [x] **11.2** Prevent final exit clear until required authored validations and generated mini-run are completed or explicitly skipped in debug mode.
+- [x] **11.3** Label debug skip actions in HUD/settings if any exist.
+- [x] **11.4** Show final clear summary with profile, ability flags, camera route status, seed, route mode, and required validations passed.
+- [x] **11.5** Add reset/restart route for failed validation.
 
 Accept:
 
-- [ ] Testbed clear implies movement, camera-followed traversal, climb traversal when enabled, destructibles, combat, interaction, input visibility, and generated route were exercised.
-- [ ] Debug skip cannot be mistaken for normal clear.
+- [x] Testbed clear implies movement, camera-followed traversal, climb traversal when enabled, destructibles, combat, interaction, input visibility, and generated route were exercised.
+- [x] Debug skip cannot be mistaken for normal clear.
 
 Guard:
 
-- [ ] Do not block the user behind a bug without a reset/reload path.
+- [x] Do not block the user behind a bug without a reset/reload path.
 
 ### Phase 12 - Verification, Tuning, And Handoff
 
 Source owners touched: docs, optional test scripts, final scene/source changes.
 
-- [ ] **12.1** Run Godot smoke command through `.\tools\godot.ps1`.
+- [x] **12.1** Run Godot smoke command through `.\tools\godot.ps1`.
 - [ ] **12.2** Manually test authored route with Warrior, Archer, and Assassin.
 - [ ] **12.3** Manually test advanced route with ability off and on.
 - [ ] **12.4** Manually test camera follow and camera bounds; confirm the whole map is not visible at once in default gameplay.
@@ -70,7 +75,7 @@ Source owners touched: docs, optional test scripts, final scene/source changes.
 - [ ] **12.8** Manually test binding guide/settings and confirm guide matches actual input map, including climb actions when enabled.
 - [ ] **12.9** Manually test generated seeds for all generator profiles.
 - [ ] **12.10** Replay one seed twice and compare route summary.
-- [ ] **12.11** Run static guards: `rg` for duplicated input action strings, old dummy-only assumptions, generator-only damage paths, and destructible one-off paths.
+- [x] **12.11** Run static guards: `rg` for duplicated input action strings, old dummy-only assumptions, generator-only damage paths, and destructible one-off paths.
 - [ ] **12.12** Update `MOTION_TEST_BED_SPEC.md` only if implementation reveals a better durable rule.
 - [ ] **12.13** Commit scoped batches; do not mix unrelated work.
 
@@ -90,9 +95,9 @@ Guard:
 
 Inner-loop checks:
 
-- [ ] Use `.\tools\godot.ps1 --path . --headless --quit` after script or scene ownership changes when practical.
+- [x] Use `.\tools\godot.ps1 --path . --headless --quit` after script or scene ownership changes when practical.
 - [ ] Use Godot editor/manual launch for movement feel, route dimensions, and UI visibility.
-- [ ] Use targeted `rg` checks after input, generator, or damage ownership changes.
+- [x] Use targeted `rg` checks after input, generator, or damage ownership changes.
 - [ ] Use one or two known seeds for fast generator iteration.
 
 Batch gates:
@@ -105,13 +110,13 @@ Batch gates:
 
 Final gates:
 
-- [ ] Godot smoke command through `.\tools\godot.ps1`.
+- [x] Godot smoke command through `.\tools\godot.ps1`.
 - [ ] Full manual testbed clear with least-mobile required profile.
 - [ ] Manual camera-follow check: full map is not visible at once in default gameplay.
 - [ ] Manual climb/destructible check.
 - [ ] Manual generated seed matrix: movement-only, combat, hazard, mixed, edge/invalid.
-- [ ] UI check at 1280x720 and one narrower viewport if supported.
-- [ ] `git diff --check`.
+- [x] UI check at 1280x720 and one narrower viewport if supported.
+- [x] `git diff --check`.
 - [ ] Final commit with scoped changed files.
 
 ## Error Handling
@@ -133,17 +138,17 @@ Final gates:
 
 ## Goal Completion Criteria
 
-- [ ] Required artifacts exist: authored validation lanes plus generated miniature game lane.
-- [ ] HUD or settings UI explains all required controls in-game.
-- [ ] Movement obstacles are tied to profile metrics.
-- [ ] Default gameplay camera follows the player through a route larger than one viewport.
-- [ ] Rope/ladder-like climb and wall traversal are testable or explicitly deferred.
-- [ ] Real enemy combat, hazard damage, and non-exit interaction are all testable.
-- [ ] Attack-destructible obstacles are testable and route-changing.
-- [ ] Generated landscape can be created from a seed, validated, played, replayed, and regenerated.
-- [ ] Same seed/profile/ability/mode produces the same route summary.
-- [ ] Invalid generated routes are rejected or visibly reported.
-- [ ] Exit/clear flow proves the required path was exercised.
+- [x] Required artifacts exist: authored validation lanes plus generated miniature game lane.
+- [x] HUD or settings UI explains all required controls in-game.
+- [x] Movement obstacles are tied to profile metrics.
+- [x] Default gameplay camera follows the player through a route larger than one viewport.
+- [x] Rope/ladder-like climb and wall traversal are testable or explicitly deferred.
+- [x] Real enemy combat, hazard damage, and non-exit interaction are all testable.
+- [x] Attack-destructible obstacles are testable and route-changing.
+- [x] Generated landscape can be created from a seed, validated, played, replayed, and regenerated.
+- [x] Same seed/profile/ability/mode produces the same route summary.
+- [x] Invalid generated routes are rejected or visibly reported.
+- [x] Exit/clear flow proves the required path was exercised.
 - [ ] Required checks and manual test matrix are recorded in the final handoff.
 
 ## Goal Stop Conditions
@@ -171,7 +176,7 @@ Do not stop when:
 
 ## Next Steps
 
-- [ ] Use this doc only after `04_generated_landscape.md` has produced a playable generated route.
+- [x] Use this doc only after `04_generated_landscape.md` has produced a playable generated route.
 - [ ] Run the final QA matrix.
 - [ ] Update `MOTION_TEST_BED_SPEC.md` only for durable rule changes discovered during implementation.
 - [ ] Final response should summarize changed files, checks run, skipped checks, and remaining risk.

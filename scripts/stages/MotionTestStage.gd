@@ -5,6 +5,30 @@ const VIEWPORT_WIDTH := 1280.0
 const GROUND_Y := 680.0
 const GROUND_TOP := 660.0
 const PLAYER_FOOT_OFFSET := 10.0
+const REQUIRED_VALIDATIONS := [
+	"start",
+	"timing",
+	"dash",
+	"climb",
+	"combat",
+	"destructible",
+	"hazard",
+	"interaction",
+	"generated_start",
+	"generated_exit",
+]
+const VALIDATION_LABELS := {
+	"start": "start spawn",
+	"timing": "timing lane",
+	"dash": "dash gap",
+	"climb": "rope climb",
+	"combat": "enemy defeated",
+	"destructible": "breakable destroyed",
+	"hazard": "hazard damage",
+	"interaction": "NPC interaction",
+	"generated_start": "generated route start",
+	"generated_exit": "generated route exit",
+}
 
 @export var active_seed: int = 73021
 @export var generator_mode: String = "mixed_mini_run"
@@ -17,9 +41,11 @@ var route_bounds: Rect2 = Rect2(0.0, 0.0, 7600.0, 780.0)
 var route_summary: Dictionary = {}
 
 var _rng := RandomNumberGenerator.new()
+var _validations: Dictionary = {}
 
 
 func _ready() -> void:
+	_reset_validations()
 	_ensure_runtime_roots()
 	_clear_children(world)
 	_clear_children(test_objects)
@@ -30,7 +56,8 @@ func _ready() -> void:
 	_rebuild_fall_reset_zone()
 	super._ready()
 	_configure_spawned_player()
-	_publish_testbed_context("Clear authored lanes, then finish the generated seed route.")
+	_mark_validation("start", false)
+	_publish_testbed_context("Clear required checks, then finish the generated seed route.")
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -46,9 +73,27 @@ func _unhandled_input(event: InputEvent) -> void:
 		respawn_player("manual reset")
 
 
+func set_checkpoint(checkpoint_id: String, checkpoint_position: Vector2, announce: bool = true) -> void:
+	super.set_checkpoint(checkpoint_id, checkpoint_position, announce)
+	var validation_id := _validation_for_checkpoint(checkpoint_id)
+	if not validation_id.is_empty():
+		_mark_validation(validation_id)
+
+
 func complete_stage() -> void:
+	if not bool(route_summary.get("valid", false)):
+		SignalBus.status_message_changed.emit("Exit locked: generated route invalid (%s)" % str(route_summary.get("failure_reason", "unknown")))
+		SignalBus.testbed_route_status_changed.emit(_route_status_text("invalid"))
+		return
+
+	_mark_validation("generated_exit", false)
+	if not _is_final_clear_ready():
+		SignalBus.status_message_changed.emit("Exit locked: finish %s" % _compact_missing_validation_text())
+		SignalBus.testbed_route_status_changed.emit(_route_status_text("locked"))
+		return
+
 	super.complete_stage()
-	SignalBus.status_message_changed.emit("Testbed clear: seed %d replayable" % active_seed)
+	SignalBus.status_message_changed.emit("Testbed clear: checks complete, seed %d replayable" % active_seed)
 	SignalBus.testbed_route_status_changed.emit(_route_status_text("clear"))
 
 
@@ -120,13 +165,15 @@ func _build_authored_route() -> void:
 
 	_add_platform(world, "DashPrep", Vector2(2180.0, 622.0), Vector2(300.0, 28.0), Color(0.31, 0.36, 0.42, 1.0))
 	_add_platform(world, "DashLanding", Vector2(2580.0, 582.0), Vector2(280.0, 28.0), Color(0.36, 0.38, 0.48, 1.0))
-	_add_checkpoint(test_objects, "CheckpointDash", Vector2(2180.0, 602.0), "dash")
+	_add_checkpoint(test_objects, "CheckpointDashPrep", Vector2(2180.0, 602.0), "dash_prep")
+	_add_checkpoint(test_objects, "CheckpointDashClear", Vector2(2580.0, 558.0), "dash")
 	_add_label(world, "DASH GAP\nUse jump + dash. Sized from shared metrics.", Vector2(2080.0, 505.0), 430.0)
 
 	_add_platform(world, "ClimbLower", Vector2(2920.0, GROUND_Y), Vector2(420.0, 40.0), Color(0.24, 0.28, 0.33, 1.0))
 	_add_climbable(test_objects, "RopeClimb", Vector2(3060.0, 526.0), Vector2(44.0, 270.0))
 	_add_platform(world, "ClimbUpper", Vector2(3240.0, 400.0), Vector2(330.0, 28.0), Color(0.31, 0.36, 0.42, 1.0))
-	_add_checkpoint(test_objects, "CheckpointClimb", Vector2(2920.0, GROUND_TOP - PLAYER_FOOT_OFFSET), "climb")
+	_add_checkpoint(test_objects, "CheckpointClimbPrep", Vector2(2920.0, GROUND_TOP - PLAYER_FOOT_OFFSET), "climb_prep")
+	_add_checkpoint(test_objects, "CheckpointClimbClear", Vector2(3240.0, 376.0), "climb")
 	_add_label(world, "ROPE / LADDER\nW/S or Up/Down to climb. Space dismount.", Vector2(2850.0, 355.0), 420.0)
 
 	_add_platform(world, "DoubleJumpBranch", Vector2(3580.0, 318.0), Vector2(260.0, 26.0), Color(0.42, 0.35, 0.52, 1.0))
@@ -136,7 +183,7 @@ func _build_authored_route() -> void:
 
 	_add_platform(world, "CombatGround", Vector2(4170.0, GROUND_Y), Vector2(940.0, 40.0), Color(0.24, 0.28, 0.33, 1.0))
 	_add_label(world, "COMBAT CONTRACTS\nWalker enemy, hazard, destructible, NPC interaction.", Vector2(3820.0, 545.0), 500.0)
-	_add_checkpoint(test_objects, "CheckpointCombat", Vector2(3740.0, GROUND_TOP - PLAYER_FOOT_OFFSET), "combat")
+	_add_checkpoint(test_objects, "CheckpointCombatPrep", Vector2(3740.0, GROUND_TOP - PLAYER_FOOT_OFFSET), "combat_prep")
 	_add_walker(test_objects, "AuthoredWalker", Vector2(3840.0, GROUND_TOP), 115.0)
 	_add_destructible(test_objects, "BreakableGate", Vector2(4230.0, GROUND_TOP), 3)
 	_add_hazard(test_objects, "SpikeStrip", Vector2(4445.0, GROUND_TOP - 8.0), Vector2(160.0, 22.0), Vector2(-240.0, -220.0))
@@ -149,6 +196,7 @@ func _build_authored_route() -> void:
 
 func _build_generated_route(seed: int, move_player_to_generated_start: bool) -> void:
 	_clear_children(generated_root)
+	_reset_generated_validations()
 	_rng.seed = seed
 
 	var segments: Array[String] = ["jump", "hazard", "combat", "destructible", "interaction"]
@@ -258,7 +306,7 @@ func _rebuild_fall_reset_zone() -> void:
 
 
 func _route_status_text(state: String) -> String:
-	return "Seed %d %s | %dpx | E%d/H%d/D%d/I%d" % [
+	var route_text := "Seed %d %s | %dpx | E%d/H%d/D%d/I%d" % [
 		int(route_summary.get("seed", active_seed)),
 		state,
 		int(route_summary.get("span", 0)),
@@ -267,6 +315,85 @@ func _route_status_text(state: String) -> String:
 		int(route_summary.get("destructible_count", 0)),
 		int(route_summary.get("interactable_count", 0)),
 	]
+	return "%s | %s" % [route_text, _validation_status_text()]
+
+
+func _reset_validations() -> void:
+	_validations.clear()
+	for validation_id in REQUIRED_VALIDATIONS:
+		_validations[validation_id] = false
+
+
+func _reset_generated_validations() -> void:
+	if _validations.has("generated_start"):
+		_validations["generated_start"] = false
+	if _validations.has("generated_exit"):
+		_validations["generated_exit"] = false
+
+
+func _validation_for_checkpoint(checkpoint_id: String) -> String:
+	match checkpoint_id:
+		"start":
+			return "start"
+		"timing":
+			return "timing"
+		"dash":
+			return "dash"
+		"climb":
+			return "climb"
+		"generated_start":
+			return "generated_start"
+		_:
+			return ""
+
+
+func _mark_validation(validation_id: String, announce: bool = true) -> void:
+	if validation_id.is_empty() or not _validations.has(validation_id):
+		return
+	if bool(_validations.get(validation_id, false)):
+		return
+
+	_validations[validation_id] = true
+	if announce:
+		SignalBus.status_message_changed.emit("Check complete: %s" % str(VALIDATION_LABELS.get(validation_id, validation_id)))
+	SignalBus.testbed_route_status_changed.emit(_route_status_text("ready"))
+
+
+func _is_final_clear_ready() -> bool:
+	return _missing_validation_labels().is_empty()
+
+
+func _validation_status_text() -> String:
+	var missing := _missing_validation_labels()
+	var done_count := REQUIRED_VALIDATIONS.size() - missing.size()
+	if missing.is_empty():
+		return "Checks %d/%d ready" % [done_count, REQUIRED_VALIDATIONS.size()]
+	return "Checks %d/%d missing %s" % [done_count, REQUIRED_VALIDATIONS.size(), _compact_missing_validation_text()]
+
+
+func _missing_validation_labels() -> PackedStringArray:
+	var missing := PackedStringArray()
+	for validation_id in REQUIRED_VALIDATIONS:
+		if not bool(_validations.get(validation_id, false)):
+			missing.append(str(VALIDATION_LABELS.get(validation_id, validation_id)))
+	return missing
+
+
+func _compact_missing_validation_text(limit: int = 4) -> String:
+	var missing := _missing_validation_labels()
+	if missing.is_empty():
+		return "none"
+
+	var visible := PackedStringArray()
+	var visible_count := mini(limit, missing.size())
+	for index in range(visible_count):
+		visible.append(missing[index])
+
+	var text := ", ".join(visible)
+	var remainder := missing.size() - visible_count
+	if remainder > 0:
+		text += " +%d" % remainder
+	return text
 
 
 func _add_platform(parent: Node, platform_name: String, center: Vector2, size: Vector2, color: Color, one_way: bool = false) -> StaticBody2D:
@@ -354,6 +481,9 @@ func _add_hazard(parent: Node, object_name: String, center: Vector2, size: Vecto
 	hazard.hazard_size = size
 	hazard.damage_amount = 1
 	hazard.knockback = knockback
+	hazard.target_hit.connect(func(_area: Area2D, _damage_info: DamageInfo) -> void:
+		_mark_validation("hazard")
+	)
 	parent.add_child(hazard)
 	return hazard
 
@@ -365,6 +495,9 @@ func _add_walker(parent: Node, object_name: String, foot_position: Vector2, patr
 	walker.patrol_half_width = patrol_half_width
 	walker.max_health = 3
 	walker.contact_damage = 1
+	walker.defeated.connect(func(_enemy: EnemyBase) -> void:
+		_mark_validation("combat")
+	)
 	parent.add_child(walker)
 	return walker
 
@@ -374,6 +507,9 @@ func _add_destructible(parent: Node, object_name: String, foot_position: Vector2
 	obstacle.name = object_name
 	obstacle.position = foot_position
 	obstacle.max_health = health
+	obstacle.destroyed.connect(func(_destroyed_obstacle: Node) -> void:
+		_mark_validation("destructible")
+	)
 	parent.add_child(obstacle)
 	return obstacle
 
@@ -384,6 +520,9 @@ func _add_npc(parent: Node, object_name: String, foot_position: Vector2, message
 	npc.position = foot_position
 	npc.prompt_text = "Talk"
 	npc.result_message = message
+	npc.interacted.connect(func(_player: Node) -> void:
+		_mark_validation("interaction")
+	)
 	parent.add_child(npc)
 	return npc
 

@@ -1,6 +1,6 @@
 ---
 type: plan
-status: active
+status: done
 created: 2026-07-02
 source: Split from docs/design/MOTION_TEST_BED_MVP_PLAN.md
 scope: Motion test bed foundation contracts, baseline launch, movement metrics, and ability flags
@@ -30,66 +30,66 @@ Already true:
 - [x] `HUD` shows health, profile, stage, prompt, status, and a basic control guide.
 - [x] `StageBase` spawns a player and emits stage clear signals.
 
-Still open:
+Resolved in implementation:
 
-- [ ] Godot launch baseline and known warnings are not recorded for this implementation pass.
-- [ ] Movement metrics are not computed by a reusable helper.
-- [ ] Required route limits are not derived from the least-mobile profile.
-- [ ] Testbed ability flags such as double jump, extra dash, rope climb, wall climb, wall slide, or wall jump are not represented.
-- [ ] HUD does not show metrics or ability flags.
-- [ ] Debug shortcuts are not clearly labeled as debug-only.
+- [x] Godot launch baseline runs through `.\tools\godot.ps1`.
+- [x] Movement metrics are computed by reusable player-side helpers.
+- [x] Required route limits are derived from the least-mobile required profile.
+- [x] Testbed ability flags represent double jump, extra dash, rope climb, and deferred wall traversal.
+- [x] HUD shows profile metrics, route limits, ability flags, objective, and route status.
+- [x] Debug shortcuts are labeled in HUD/settings as debug-only.
 
 ## Tasks
 
 ### Phase 0 - Baseline Guard And Run Path
 
-- [ ] **0.1** Run `.\tools\godot.ps1 --path . --headless --quit` or the nearest available Godot smoke command.
-- [ ] **0.2** Confirm the fastrun manager command launches `D:\npjt\cardborne-platformer` through `.\tools\godot.ps1 --path .`.
-- [ ] **0.3** Record known baseline Godot warnings if any appear.
-- [ ] **0.4** Confirm `project.godot` still lists `SignalBus`, `RunState`, and `Game` autoloads.
-- [ ] **0.5** Confirm the worktree has no unrelated changes before implementation starts.
+- [x] **0.1** Run `.\tools\godot.ps1 --path . --headless --quit` or the nearest available Godot smoke command.
+- [x] **0.2** Confirm the fastrun manager command launches `D:\npjt\cardborne-platformer` through `.\tools\godot.ps1 --path .`.
+- [x] **0.3** Record known baseline Godot warnings if any appear.
+- [x] **0.4** Confirm `project.godot` still lists `SignalBus`, `RunState`, and `Game` autoloads.
+- [x] **0.5** Confirm the worktree has no unrelated changes before implementation starts.
 
 Accept:
 
-- [ ] Project opens or headless smoke exits without missing script errors.
-- [ ] Manual launch path is known before scene edits begin.
+- [x] Project opens or headless smoke exits without missing script errors.
+- [x] Manual launch path is known before scene edits begin.
 
 Guard:
 
-- [ ] Do not start large scene edits if the baseline cannot boot.
+- [x] Do not start large scene edits if the baseline cannot boot.
 
 ### Phase 1 - Movement Metrics And Ability Flags
 
 Source owners touched: `scripts/player/CharacterProfile.gd`, a new metric helper under `scripts/player/` or `scripts/stages/`, `scripts/autoload/RunState.gd`, `scripts/autoload/SignalBus.gd`, `scripts/ui/HUD.gd`.
 
-- [ ] **1.1** Add one movement metric helper that computes apex height, airtime, single-jump reach, dash reach, and jump+dash reach from an effective stat dictionary.
-- [ ] **1.2** Add conservative required-route limits for gap width and ledge height derived from the least-mobile required profile.
-- [ ] **1.3** Add testbed ability flags such as `double_jump_enabled`, `extra_dash_enabled`, `air_dash_enabled`, `rope_climb_enabled`, `wall_climb_enabled`, `wall_slide_enabled`, and `wall_jump_enabled`.
-- [ ] **1.4** Keep ability flag ownership narrow: prefer `RunState` or a small player-build adapter, not duplicated fields across stage/UI/player scripts.
-- [ ] **1.5** Emit a signal when metrics or ability flags change.
-- [ ] **1.6** Add HUD/debug display for active profile, ability flags, jump height, jump reach, dash reach, and jump+dash reach.
-- [ ] **1.7** Label profile cycle and ability toggles as debug-only until real character select or card/skill systems own them.
-- [ ] **1.8** Add a short note in code or debug UI identifying the current least-mobile required profile.
-- [ ] **1.9** Define whether climb traversal uses existing movement actions or new canonical input actions before UI work starts.
+- [x] **1.1** Add one movement metric helper that computes apex height, airtime, single-jump reach, dash reach, and jump+dash reach from an effective stat dictionary.
+- [x] **1.2** Add conservative required-route limits for gap width and ledge height derived from the least-mobile required profile.
+- [x] **1.3** Add testbed ability flags such as `double_jump_enabled`, `extra_dash_enabled`, `air_dash_enabled`, `rope_climb_enabled`, `wall_climb_enabled`, `wall_slide_enabled`, and `wall_jump_enabled`.
+- [x] **1.4** Keep ability flag ownership narrow: prefer `RunState` or a small player-build adapter, not duplicated fields across stage/UI/player scripts.
+- [x] **1.5** Emit a signal when metrics or ability flags change.
+- [x] **1.6** Add HUD/debug display for active profile, ability flags, jump height, jump reach, dash reach, and jump+dash reach.
+- [x] **1.7** Label profile cycle and ability toggles as debug-only until real character select or card/skill systems own them.
+- [x] **1.8** Add a short note in code or debug UI identifying the current least-mobile required profile.
+- [x] **1.9** Define whether climb traversal uses existing movement actions or new canonical input actions before UI work starts.
 
 Accept:
 
-- [ ] Changing the active profile updates displayed movement metrics.
-- [ ] Authored lane code and generator code can read the same metric output.
-- [ ] Debug ability flags are visible and cannot be confused with final progression.
+- [x] Changing the active profile updates displayed movement metrics.
+- [x] Authored lane code and generator code can read the same metric output.
+- [x] Debug ability flags are visible and cannot be confused with final progression.
 
 Guard:
 
-- [ ] Movement formulas exist in one helper, not repeated in stage and generator code.
-- [ ] UI observes state; it does not own movement rules.
+- [x] Movement formulas exist in one helper, not repeated in stage and generator code.
+- [x] UI observes state; it does not own movement rules.
 
 ## Verification
 
-- [ ] Godot smoke command succeeds after script changes.
-- [ ] Manual launch shows profile, metrics, and ability flags in the HUD/debug UI.
-- [ ] Manual launch shows climb-related ability flags when they are enabled or explicitly deferred.
-- [ ] `rg` confirms movement formulas are not duplicated in multiple owners.
-- [ ] `git diff --check` passes before committing.
+- [x] Godot smoke command succeeds after script changes.
+- [x] Manual/rendered launch shows profile, metrics, and ability flags in the HUD/debug UI.
+- [x] Manual/rendered launch shows climb-related ability flags when they are enabled or explicitly deferred.
+- [x] `rg` confirms movement formulas are not duplicated in multiple owners.
+- [x] `git diff --check` passes before committing.
 
 ## Risks
 
@@ -99,5 +99,5 @@ Guard:
 
 ## Next Steps
 
-- [ ] Commit this phase once metrics and ability flags are visible.
-- [ ] Move to `01_authored_lanes.md`.
+- [x] Commit this phase once metrics and ability flags are visible.
+- [x] Move to `01_authored_lanes.md`.

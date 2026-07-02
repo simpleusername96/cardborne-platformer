@@ -36,6 +36,12 @@ Resolved in the 2026-07-02 immediate implementation pass:
 - [x] Double jump is a debug testbed ability flag for this pass.
 - [x] Keyboard remapping persistence is deferred; the settings popup lists actual `InputMap` bindings and says remap is deferred.
 
+Resolved in the 2026-07-03 reconciliation pass:
+
+- [x] Checkpoint and fall/death respawn recovery are implemented for the motion testbed.
+- [x] Final clear is gated by required testbed checks instead of the exit portal alone.
+- [x] The HUD route status reports compact validation progress and missing checks.
+
 ## Tasks
 
 ### Priority Rules
@@ -92,10 +98,11 @@ The next implementation pass should include:
 - [x] One non-exit interactable.
 - [x] Input binding list from actual `InputMap`.
 - [x] Minimal generated route plan, assembly, seed replay, and clear/fail summary.
+- [x] Final clear gate for required testbed checks and generated route completion.
 
 ### Deferred Boundary
 
-The next implementation pass should not include:
+The first implementation pass intentionally did not include these items. They remain later work unless the user explicitly promotes them:
 
 - [ ] Full wall traversal polish if it destabilizes the controller.
 - [ ] Full keybinding persistence.
@@ -107,9 +114,9 @@ The next implementation pass should not include:
 
 ## Verification
 
-- [ ] Before implementation, confirm every current task belongs to **Now** or **Now, simplified**.
-- [ ] If a **Later** task becomes necessary, document why it became a blocker before implementing it.
-- [ ] End each phase with the acceptance checks in the relevant phase doc.
+- [x] Before implementation, confirm every current task belongs to **Now** or **Now, simplified**.
+- [x] If a **Later** task becomes necessary, document why it became a blocker before implementing it.
+- [x] End each implemented phase with the acceptance checks in the relevant phase doc.
 
 ## Risks
 
@@ -119,6 +126,7 @@ The next implementation pass should not include:
 
 ## Next Steps
 
-- [ ] Use this matrix before opening `00_foundation_contracts.md`.
-- [ ] Keep the first implementation pass small enough to become playable.
-- [ ] Revisit this matrix after the first playable testbed run.
+- [x] Use this matrix before opening `00_foundation_contracts.md`.
+- [x] Keep the first implementation pass small enough to become playable.
+- [x] Revisit this matrix after the first playable testbed run.
+- [x] Use `05_qa_and_handoff.md` for the remaining manual QA matrix and production-readiness gaps.
