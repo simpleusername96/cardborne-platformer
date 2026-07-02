@@ -6,6 +6,7 @@ source: User request on 2026-07-02; split from the first long MVP-ish testbed pl
 scope: Router/index for the motion test bed miniature game implementation
 related:
   - ./MOTION_TEST_BED_SPEC.md
+  - ./testbed-plan/FEATURE_PRIORITY.md
   - ./testbed-plan/00_foundation_contracts.md
   - ./testbed-plan/01_authored_lanes.md
   - ./testbed-plan/02_combat_damage.md
@@ -18,7 +19,7 @@ related:
 
 # Motion Test Bed MVP Plan Index
 
-This is the router for the MVP-ish motion test bed work. Use it to choose the next small plan document, then work from that focused checklist. The detailed behavioral source of truth remains `MOTION_TEST_BED_SPEC.md`.
+This is the router for the MVP-ish motion test bed work. Use it to choose the next small plan document, then work from that focused checklist. The detailed behavioral source of truth remains `MOTION_TEST_BED_SPEC.md`; the immediate-vs-later implementation boundary is `testbed-plan/FEATURE_PRIORITY.md`.
 
 ## Purpose
 
@@ -54,6 +55,7 @@ Execute these documents in order:
 
 | Order | Plan doc | Main output | Stop after |
 | --- | --- | --- | --- |
+| - | `testbed-plan/FEATURE_PRIORITY.md` | Feature-by-feature Now/Later boundary. | Current implementation pass has a controlled scope. |
 | 0 | `testbed-plan/00_foundation_contracts.md` | Baseline launch path, movement metrics, ability flags, shared state/UI signals. | Metrics and ability flags are visible in-game. |
 | 1 | `testbed-plan/01_authored_lanes.md` | Character-aware authored movement/test lanes, camera-followed route scale, climb traversal, safe recovery, and route gating. | Least-mobile profile can clear the required authored route without seeing the whole map at once. |
 | 2 | `testbed-plan/02_combat_damage.md` | Readable attack timing, real enemy, destructible obstacles, hazard damage, recovery behavior. | Player can fight, break an obstacle, take damage, recover, and retest. |
@@ -68,6 +70,7 @@ Execute these documents in order:
 | `AGENTS.md` | Repo policy | Obey Godot, folder ownership, placeholder asset, and PRD-priority rules. |
 | `.agent/PLANS.md` | Plan policy | Treat this as ExecPlan-sized future work, but use split docs for execution. |
 | `docs/design/MOTION_TEST_BED_SPEC.md` | Active testbed spec | Preserve as the behavior source of truth. |
+| `docs/design/testbed-plan/FEATURE_PRIORITY.md` | Priority boundary | Decide what belongs in the immediate implementation pass before opening phase docs. |
 | `docs/product/2d_platform_action_card_game_prd.md` | Active product spec | Preserve unless the user explicitly supersedes it. |
 | `docs/architecture/FIRST_SLICE_ARCHITECTURE.md` | Ownership guide | Keep player, combat, enemy, stage, UI, and autoload responsibilities separated. |
 | `docs/design/testbed-plan/*.md` | Working checklists | Load only the current phase doc plus this index and the spec. |
@@ -75,6 +78,7 @@ Execute these documents in order:
 ## Operating Rules
 
 - Keep `MOTION_TEST_BED_SPEC.md` as the durable behavior contract.
+- Use `testbed-plan/FEATURE_PRIORITY.md` to avoid pulling later-scope polish into the current implementation pass.
 - Keep this file as an index, not a giant implementation checklist.
 - Put phase-specific tasks, acceptance checks, and risks in `docs/design/testbed-plan/`.
 - Do not add production stages to compensate for unfinished testbed contracts.
@@ -112,6 +116,7 @@ Do not stop merely because:
 
 ## Next Steps
 
-- [ ] Start with `testbed-plan/00_foundation_contracts.md`.
+- [ ] Read `testbed-plan/FEATURE_PRIORITY.md` first.
+- [ ] Start implementation with `testbed-plan/00_foundation_contracts.md`.
 - [ ] Keep each implementation session scoped to one phase doc unless a dependency forces a small cross-file adjustment.
 - [ ] After each phase, update that phase doc's progress before moving to the next one.
