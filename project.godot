@@ -6,12 +6,31 @@ config_version=5
 [application]
 
 config/name="Cardborne Platformer"
+run/main_scene="res://scenes/main/Main.tscn"
 config/features=PackedStringArray("4.7", "Forward Plus")
+
+[autoload]
+
+SignalBus="*res://scripts/autoload/SignalBus.gd"
+RunState="*res://scripts/autoload/RunState.gd"
+Game="*res://scripts/autoload/Game.gd"
 
 [display]
 
 window/size/viewport_width=1280
 window/size/viewport_height=720
+
+[layer_names]
+
+2d_physics/layer_1="World"
+2d_physics/layer_2="OneWayPlatform"
+2d_physics/layer_3="Player"
+2d_physics/layer_4="Enemy"
+2d_physics/layer_5="PlayerHitbox"
+2d_physics/layer_6="EnemyHitbox"
+2d_physics/layer_7="Hazard"
+2d_physics/layer_8="Projectile"
+2d_physics/layer_9="Interactable"
 
 [rendering]
 

@@ -21,3 +21,6 @@ Thumbs.db
 dist/
 exports/
 build/
+
+# Godot import metadata for generated documentation images
+docs/**/*.import

@@ -1,0 +1,29 @@
+[gd_resource type="Resource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/player/CharacterProfile.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "archer"
+display_name = "Archer"
+visual_color = Color(0.32, 0.72, 0.92, 1)
+max_health = 5
+attack_damage = 1
+attack_cooldown = 0.30
+move_speed = 230.0
+acceleration = 1850.0
+deceleration = 2200.0
+air_acceleration = 1280.0
+gravity = 1180.0
+max_fall_speed = 700.0
+jump_velocity = -420.0
+jump_cut_multiplier = 0.45
+coyote_time = 0.11
+jump_buffer_time = 0.12
+dash_speed = 530.0
+dash_duration = 0.13
+dash_cooldown = 0.43
+dash_charges = 1
+post_hit_invulnerability = 1.0
+damage_knockback_x = 220.0
+damage_knockback_y = -220.0

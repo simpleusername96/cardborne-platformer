@@ -1,0 +1,150 @@
+[gd_scene load_steps=13 format=3]
+
+[ext_resource type="Script" path="res://scripts/stages/StageBase.gd" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/DamageDummy.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/stages/ExitPortal.tscn" id="3"]
+[ext_resource type="Script" path="res://scripts/combat/Hitbox.gd" id="4"]
+
+[sub_resource type="RectangleShape2D" id="ground_shape"]
+size = Vector2(1160, 40)
+
+[sub_resource type="RectangleShape2D" id="wall_shape"]
+size = Vector2(40, 720)
+
+[sub_resource type="RectangleShape2D" id="step_shape"]
+size = Vector2(190, 24)
+
+[sub_resource type="RectangleShape2D" id="one_way_shape"]
+size = Vector2(230, 20)
+
+[sub_resource type="RectangleShape2D" id="upper_shape"]
+size = Vector2(270, 24)
+
+[sub_resource type="RectangleShape2D" id="hazard_shape"]
+size = Vector2(130, 22)
+
+[sub_resource type="RectangleShape2D" id="right_step_shape"]
+size = Vector2(210, 24)
+
+[node name="MotionTestStage" type="Node2D"]
+script = ExtResource("1")
+stage_id = "motion_test"
+stage_display_name = "Motion Test"
+
+[node name="World" type="Node2D" parent="."]
+
+[node name="Ground" type="StaticBody2D" parent="World"]
+position = Vector2(640, 670)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="World/Ground"]
+shape = SubResource("ground_shape")
+
+[node name="Visual" type="Polygon2D" parent="World/Ground"]
+color = Color(0.24, 0.28, 0.33, 1)
+polygon = PackedVector2Array(-580, -20, 580, -20, 580, 20, -580, 20)
+
+[node name="LeftWall" type="StaticBody2D" parent="World"]
+position = Vector2(20, 360)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="World/LeftWall"]
+shape = SubResource("wall_shape")
+
+[node name="Visual" type="Polygon2D" parent="World/LeftWall"]
+color = Color(0.18, 0.21, 0.25, 1)
+polygon = PackedVector2Array(-20, -360, 20, -360, 20, 360, -20, 360)
+
+[node name="RightWall" type="StaticBody2D" parent="World"]
+position = Vector2(1260, 360)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="World/RightWall"]
+shape = SubResource("wall_shape")
+
+[node name="Visual" type="Polygon2D" parent="World/RightWall"]
+color = Color(0.18, 0.21, 0.25, 1)
+polygon = PackedVector2Array(-20, -360, 20, -360, 20, 360, -20, 360)
+
+[node name="StepPlatform" type="StaticBody2D" parent="World"]
+position = Vector2(360, 560)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="World/StepPlatform"]
+shape = SubResource("step_shape")
+
+[node name="Visual" type="Polygon2D" parent="World/StepPlatform"]
+color = Color(0.30, 0.35, 0.40, 1)
+polygon = PackedVector2Array(-95, -12, 95, -12, 95, 12, -95, 12)
+
+[node name="OneWayPlatform" type="StaticBody2D" parent="World"]
+position = Vector2(620, 470)
+collision_layer = 2
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="World/OneWayPlatform"]
+shape = SubResource("one_way_shape")
+one_way_collision = true
+
+[node name="Visual" type="Polygon2D" parent="World/OneWayPlatform"]
+color = Color(0.28, 0.43, 0.58, 1)
+polygon = PackedVector2Array(-115, -10, 115, -10, 115, 10, -115, 10)
+
+[node name="UpperPlatform" type="StaticBody2D" parent="World"]
+position = Vector2(900, 380)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="World/UpperPlatform"]
+shape = SubResource("upper_shape")
+
+[node name="Visual" type="Polygon2D" parent="World/UpperPlatform"]
+color = Color(0.30, 0.35, 0.40, 1)
+polygon = PackedVector2Array(-135, -12, 135, -12, 135, 12, -135, 12)
+
+[node name="RightStep" type="StaticBody2D" parent="World"]
+position = Vector2(1080, 610)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="World/RightStep"]
+shape = SubResource("right_step_shape")
+
+[node name="Visual" type="Polygon2D" parent="World/RightStep"]
+color = Color(0.30, 0.35, 0.40, 1)
+polygon = PackedVector2Array(-105, -12, 105, -12, 105, 12, -105, 12)
+
+[node name="PlayerSpawn" type="Marker2D" parent="."]
+position = Vector2(120, 650)
+
+[node name="Actors" type="Node2D" parent="."]
+
+[node name="TestObjects" type="Node2D" parent="."]
+
+[node name="DamageDummy" parent="TestObjects" instance=ExtResource("2")]
+position = Vector2(430, 650)
+
+[node name="HazardStrip" type="Area2D" parent="TestObjects"]
+position = Vector2(700, 640)
+collision_layer = 64
+collision_mask = 4
+script = ExtResource("4")
+damage_amount = 1
+knockback = Vector2(-220, -220)
+tags = Array[String](["hazard"])
+starts_active = true
+repeat_hits = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="TestObjects/HazardStrip"]
+shape = SubResource("hazard_shape")
+
+[node name="Visual" type="Polygon2D" parent="TestObjects/HazardStrip"]
+color = Color(0.95, 0.28, 0.18, 0.88)
+polygon = PackedVector2Array(-65, -11, 65, -11, 65, 11, -65, 11)
+
+[node name="ExitPortal" parent="TestObjects" instance=ExtResource("3")]
+position = Vector2(1160, 610)
