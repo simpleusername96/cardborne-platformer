@@ -4,10 +4,12 @@ var health_label: Label
 var profile_label: Label
 var stage_label: Label
 var counters_label: Label
+var controls_label: Label
 var prompt_label: Label
 var status_label: Label
 var health_panel: PanelContainer
 var counters_panel: PanelContainer
+var controls_panel: PanelContainer
 var status_panel: PanelContainer
 var prompt_panel: PanelContainer
 
@@ -50,6 +52,20 @@ func _build_ui() -> void:
 	counters_label = Label.new()
 	counters_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	top_right.add_child(counters_label)
+
+	var controls := _make_panel(Vector2(890, 82), Vector2(374, 116))
+	controls_panel = controls.get_parent() as PanelContainer
+	controls_label = Label.new()
+	controls_label.text = (
+		"Controls\n"
+		+"Move A/D or Arrows\n"
+		+"Jump Space   Dash K/Shift\n"
+		+"Attack J/Click   Interact E/Enter\n"
+		+"Profile Tab   Settings Esc"
+	)
+	controls_label.clip_text = true
+	controls_label.add_theme_font_size_override("font_size", 14)
+	controls.add_child(controls_label)
 
 	var bottom_left := _make_panel(Vector2(16, 628), Vector2(360, 52))
 	status_panel = bottom_left.get_parent() as PanelContainer
@@ -97,9 +113,11 @@ func _layout_panels() -> void:
 
 	if viewport_size.x < 760.0:
 		_set_panel_rect(counters_panel, Vector2(horizontal_margin, 122.0), Vector2(compact_width, 54.0))
+		_set_panel_rect(controls_panel, Vector2(horizontal_margin, 188.0), Vector2(compact_width, 132.0))
 		counters_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	else:
 		_set_panel_rect(counters_panel, Vector2(viewport_size.x - 390.0, 16.0), Vector2(374.0, 54.0))
+		_set_panel_rect(controls_panel, Vector2(viewport_size.x - 390.0, 82.0), Vector2(374.0, 116.0))
 		counters_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 
 	var bottom_y := maxf(16.0, viewport_size.y - 92.0)
