@@ -206,14 +206,20 @@ func _build_authored_route() -> void:
 	_add_platform(world, "ShooterLedge", Vector2(2250.0, 635.0), Vector2(260.0, 28.0), Color(0.34, 0.36, 0.43, 1.0))
 	_add_label(world, "UPPER COMBAT HALL\nWalker, Charger, Shooter, breakable gate.", Vector2(1960.0, 540.0), 500.0)
 	_add_checkpoint(test_objects, "CheckpointCombatPrep", Vector2(1840.0, UPPER_FLOOR_TOP - PLAYER_FOOT_OFFSET), "combat_prep")
+	_add_leaper(test_objects, "AuthoredLeaper", Vector2(1900.0, UPPER_FLOOR_TOP))
 	_add_walker(test_objects, "AuthoredWalker", Vector2(2020.0, UPPER_FLOOR_TOP), 115.0)
 	_add_charger(test_objects, "AuthoredCharger", Vector2(2200.0, UPPER_FLOOR_TOP), 125.0)
 	_add_shooter(test_objects, "AuthoredShooter", Vector2(2250.0, 621.0))
+	_add_shield_guard(test_objects, "AuthoredShieldGuard", Vector2(2380.0, UPPER_FLOOR_TOP), 80.0)
 	_add_destructible(test_objects, "BreakableGate", Vector2(2460.0, UPPER_FLOOR_TOP), 3)
 
 	_add_platform(world, "DescentOneWay", Vector2(2420.0, 1010.0), Vector2(260.0, 22.0), Color(0.23, 0.48, 0.56, 1.0), true)
+	_add_crumbling_platform(world, "OptionalCrumblingStep", Vector2(2160.0, 1010.0), Vector2(210.0, 26.0))
 	_add_platform(world, "MiddleConnectorFloor", Vector2(2200.0, MID_FLOOR_Y), Vector2(760.0, 40.0), Color(0.23, 0.27, 0.32, 1.0))
 	_add_hazard(test_objects, "SpikeTrench", Vector2(2310.0, MID_FLOOR_TOP - 8.0), Vector2(165.0, 22.0), Vector2(-240.0, -220.0))
+	_add_timed_poison_vent(test_objects, "TimedPoisonVent", Vector2(2425.0, MID_FLOOR_TOP - 8.0), Vector2(135.0, 22.0))
+	_add_summon_node(test_objects, "SummonNode", Vector2(2180.0, MID_FLOOR_TOP))
+	_add_switch_gate(test_objects, "PracticeSwitchGate", Vector2(2545.0, MID_FLOOR_TOP), Vector2(-110.0, 0.0))
 	_add_npc(test_objects, "TestNPC", Vector2(2050.0, MID_FLOOR_TOP), "Lower ruins scout: interaction contract checked")
 	_add_label(world, "MID CONNECTOR\nHazard recovery, scout interaction, seed gate.", Vector2(1970.0, 1085.0), 500.0)
 
@@ -333,13 +339,15 @@ func _build_generated_route(seed: int, move_player_to_generated_start: bool) -> 
 		segment_log.append(segment_id)
 
 		if segment_id == "hazard":
-			_add_hazard(generated_root, "GeneratedHazard", Vector2(center.x, platform_top - 8.0), Vector2(minf(180.0, width - 80.0), 22.0), Vector2(-220.0, -210.0))
+			_add_timed_poison_vent(generated_root, "GeneratedPoisonVent", Vector2(center.x, platform_top - 8.0), Vector2(minf(180.0, width - 80.0), 22.0))
 			hazard_count += 1
 		elif segment_id == "combat":
-			_add_walker(generated_root, "GeneratedWalker", Vector2(center.x, platform_top), 100.0)
-			enemy_count += 1
+			_add_sentry_turret(generated_root, "GeneratedTurret", Vector2(center.x - 95.0, platform_top))
+			_add_leaper(generated_root, "GeneratedLeaper", Vector2(center.x + 95.0, platform_top))
+			enemy_count += 2
 		elif segment_id == "destructible":
 			_add_destructible(generated_root, "GeneratedBreakable", Vector2(center.x + width * 0.18, platform_top), 2)
+			_add_crumbling_platform(generated_root, "GeneratedCrumblingStep", center + Vector2(-width * 0.25, -58.0), Vector2(155.0, 24.0))
 			destructible_count += 1
 		elif segment_id == "interaction":
 			_add_npc(generated_root, "GeneratedNPC", Vector2(center.x, platform_top), "Generated NPC: seed interaction checked")
@@ -697,6 +705,59 @@ func _add_shooter(parent: Node, object_name: String, foot_position: Vector2) -> 
 	return shooter
 
 
+func _add_shield_guard(parent: Node, object_name: String, foot_position: Vector2, patrol_half_width: float) -> ShieldGuardEnemy:
+	var guard := ShieldGuardEnemy.new()
+	guard.name = object_name
+	guard.position = foot_position
+	guard.patrol_half_width = patrol_half_width
+	guard.max_health = 4
+	guard.contact_damage = 1
+	guard.defeated.connect(func(_enemy: EnemyBase) -> void:
+		_mark_validation("combat")
+	)
+	parent.add_child(guard)
+	return guard
+
+
+func _add_leaper(parent: Node, object_name: String, foot_position: Vector2) -> LeaperEnemy:
+	var leaper := LeaperEnemy.new()
+	leaper.name = object_name
+	leaper.position = foot_position
+	leaper.max_health = 3
+	leaper.contact_damage = 1
+	leaper.defeated.connect(func(_enemy: EnemyBase) -> void:
+		_mark_validation("combat")
+	)
+	parent.add_child(leaper)
+	return leaper
+
+
+func _add_sentry_turret(parent: Node, object_name: String, foot_position: Vector2) -> SentryTurretEnemy:
+	var turret := SentryTurretEnemy.new()
+	turret.name = object_name
+	turret.position = foot_position
+	turret.max_health = 3
+	turret.contact_damage = 1
+	turret.defeated.connect(func(_enemy: EnemyBase) -> void:
+		_mark_validation("combat")
+	)
+	parent.add_child(turret)
+	return turret
+
+
+func _add_summon_node(parent: Node, object_name: String, foot_position: Vector2) -> SummonNodeEnemy:
+	var node := SummonNodeEnemy.new()
+	node.name = object_name
+	node.position = foot_position
+	node.max_health = 4
+	node.contact_damage = 1
+	node.defeated.connect(func(_enemy: EnemyBase) -> void:
+		_mark_validation("combat")
+	)
+	parent.add_child(node)
+	return node
+
+
 func _add_destructible(parent: Node, object_name: String, foot_position: Vector2, health: int) -> DestructibleObstacle:
 	var obstacle := DestructibleObstacle.new()
 	obstacle.name = object_name
@@ -707,6 +768,39 @@ func _add_destructible(parent: Node, object_name: String, foot_position: Vector2
 	)
 	parent.add_child(obstacle)
 	return obstacle
+
+
+func _add_crumbling_platform(parent: Node, object_name: String, center: Vector2, size: Vector2) -> CrumblingPlatform:
+	var platform := CrumblingPlatform.new()
+	platform.name = object_name
+	platform.position = center
+	platform.platform_size = size
+	parent.add_child(platform)
+	return platform
+
+
+func _add_timed_poison_vent(parent: Node, object_name: String, center: Vector2, size: Vector2) -> TimedPoisonVent:
+	var vent := TimedPoisonVent.new()
+	vent.name = object_name
+	vent.position = center
+	vent.vent_size = size
+	vent.target_hit.connect(func(_area: Area2D, _damage_info: DamageInfo) -> void:
+		_mark_validation("hazard")
+	)
+	parent.add_child(vent)
+	return vent
+
+
+func _add_switch_gate(parent: Node, object_name: String, foot_position: Vector2, switch_offset: Vector2) -> SwitchGate:
+	var gate := SwitchGate.new()
+	gate.name = object_name
+	gate.position = foot_position
+	gate.switch_offset = switch_offset
+	gate.opened.connect(func(_gate: SwitchGate) -> void:
+		_mark_validation("interaction")
+	)
+	parent.add_child(gate)
+	return gate
 
 
 func _add_npc(parent: Node, object_name: String, foot_position: Vector2, message: String) -> TestbedInteractable:
