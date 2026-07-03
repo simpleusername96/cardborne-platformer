@@ -416,7 +416,10 @@ func _max_dash_charges() -> int:
 
 
 func _max_extra_jumps() -> int:
-	return 1 if RunState.is_testbed_ability_enabled("double_jump_enabled") else 0
+	var profile_extra_jumps := int(stats.get("extra_jumps", 0))
+	if RunState.is_testbed_ability_enabled("double_jump_enabled"):
+		profile_extra_jumps = maxi(profile_extra_jumps, 1)
+	return profile_extra_jumps
 
 
 func enter_climbable(_climbable: Area2D) -> void:

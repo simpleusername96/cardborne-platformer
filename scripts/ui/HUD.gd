@@ -45,6 +45,8 @@ func _build_ui() -> void:
 
 	profile_label = Label.new()
 	profile_label.text = "Profile"
+	profile_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	profile_label.add_theme_font_size_override("font_size", 14)
 	top_left_box.add_child(profile_label)
 
 	stage_label = Label.new()
@@ -142,11 +144,11 @@ func _layout_panels() -> void:
 	var horizontal_margin := 16.0
 	var compact_width := minf(360.0, viewport_size.x - horizontal_margin * 2.0)
 
-	_set_panel_rect(health_panel, Vector2(horizontal_margin, 16.0), Vector2(compact_width, 132.0))
+	_set_panel_rect(health_panel, Vector2(horizontal_margin, 16.0), Vector2(compact_width, 148.0))
 
 	if viewport_size.x < 760.0:
-		_set_panel_rect(counters_panel, Vector2(horizontal_margin, 160.0), Vector2(compact_width, 54.0))
-		_set_panel_rect(controls_panel, Vector2(horizontal_margin, 226.0), Vector2(compact_width, 230.0))
+		_set_panel_rect(counters_panel, Vector2(horizontal_margin, 176.0), Vector2(compact_width, 54.0))
+		_set_panel_rect(controls_panel, Vector2(horizontal_margin, 242.0), Vector2(compact_width, 230.0))
 		counters_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	else:
 		_set_panel_rect(counters_panel, Vector2(viewport_size.x - 426.0, 16.0), Vector2(410.0, 54.0))
@@ -214,7 +216,10 @@ func _on_player_health_changed(current_health: int, max_health: int) -> void:
 
 
 func _on_selected_profile_changed(_profile_id: String, display_name: String, _color: Color) -> void:
-	profile_label.text = "Profile: %s" % display_name
+	var profile_trait_summary := ""
+	if RunState.selected_profile != null:
+		profile_trait_summary = RunState.selected_profile.trait_summary
+	profile_label.text = "Profile: %s\n%s" % [display_name, profile_trait_summary]
 
 
 func _on_stage_started(_stage_id: String, stage_display_name: String) -> void:
@@ -244,10 +249,12 @@ func _on_status_message_changed(message: String) -> void:
 func _on_testbed_metrics_changed(metrics: Dictionary) -> void:
 	var active: Dictionary = metrics.get("active", {})
 	var limits: Dictionary = metrics.get("route_limits", {})
-	metrics_label.text = "Jump %.0fpx | reach %.0fpx | dash %.0fpx\nGate %.0fpx gap / %.0fpx ledge (%s)" % [
+	metrics_label.text = "Jump %.0fpx | reach %.0fpx | dash %.0fpx x%d\nExtra jumps %d | Gate %.0f/%.0fpx %s" % [
 		float(active.get("jump_height", 0.0)),
 		float(active.get("single_jump_reach", 0.0)),
 		float(active.get("dash_reach", 0.0)),
+		int(active.get("dash_charges", 1)),
+		int(active.get("extra_jumps", 0)),
 		float(limits.get("max_required_gap", 0.0)),
 		float(limits.get("max_required_ledge", 0.0)),
 		str(limits.get("least_mobile_profile_name", "?")),
@@ -255,7 +262,7 @@ func _on_testbed_metrics_changed(metrics: Dictionary) -> void:
 
 
 func _on_testbed_flags_changed(flags: Dictionary) -> void:
-	flags_label.text = "Flags: double %s | rope %s | wall deferred" % [
+	flags_label.text = "Debug flags: force double %s | rope %s | wall deferred" % [
 		"ON" if bool(flags.get("double_jump_enabled", false)) else "OFF",
 		"ON" if bool(flags.get("rope_climb_enabled", false)) else "OFF",
 	]

@@ -180,9 +180,9 @@ func _build_authored_route() -> void:
 	_add_label(world, "TIMING CHAMBER\nCoyote ledge, buffered jump, one-way drop.", Vector2(1035.0, 1560.0), 430.0)
 
 	_add_platform(world, "DashPrep", Vector2(1300.0, 1818.0), Vector2(300.0, 28.0), Color(0.32, 0.36, 0.42, 1.0))
-	_add_platform(world, "DashLanding", Vector2(1770.0, 1782.0), Vector2(300.0, 28.0), Color(0.37, 0.38, 0.48, 1.0))
+	_add_platform(world, "DashLanding", Vector2(1740.0, 1782.0), Vector2(330.0, 28.0), Color(0.37, 0.38, 0.48, 1.0))
 	_add_checkpoint(test_objects, "CheckpointDashPrep", Vector2(1300.0, 1794.0), "dash_prep")
-	_add_checkpoint(test_objects, "CheckpointDashClear", Vector2(1770.0, 1758.0), "dash")
+	_add_checkpoint(test_objects, "CheckpointDashClear", Vector2(1740.0, 1758.0), "dash")
 	_add_label(world, "BROKEN BRIDGE\nRequired jump + dash gap folded into lower ruins.", Vector2(1370.0, 1692.0), 480.0)
 
 	_add_platform(world, "ShaftLower", Vector2(1760.0, GROUND_Y), Vector2(520.0, 40.0), Color(0.23, 0.27, 0.32, 1.0))
@@ -199,7 +199,7 @@ func _build_authored_route() -> void:
 
 	_add_platform(world, "HighCacheBranch", Vector2(1080.0, 560.0), Vector2(330.0, 26.0), Color(0.43, 0.35, 0.52, 1.0))
 	_add_platform(world, "HighCacheRejoin", Vector2(1280.0, 690.0), Vector2(220.0, 22.0), Color(0.23, 0.48, 0.56, 1.0), true)
-	_add_label(world, "OPTIONAL HIGH CACHE\nDebug double jump / later upgrade branch.", Vector2(900.0, 455.0), 400.0)
+	_add_label(world, "OPTIONAL HIGH CACHE\nAssassin double jump / later upgrade branch.", Vector2(900.0, 455.0), 400.0)
 	_add_label(world, "WALL TRAVERSAL\nDeferred: not required for this route.", Vector2(1090.0, 705.0), 360.0)
 
 	_add_platform(world, "CombatHallFloor", Vector2(2200.0, UPPER_FLOOR_Y), Vector2(850.0, 40.0), Color(0.23, 0.27, 0.32, 1.0))
@@ -288,9 +288,9 @@ func _build_generated_route(seed: int, move_player_to_generated_start: bool) -> 
 	_rng.seed = seed
 
 	var segments: Array[Dictionary] = [
-		{"id": "jump", "center": Vector2(1760.0, 1295.0), "width": 330.0, "jitter": Vector2(28.0, 10.0)},
-		{"id": "hazard", "center": Vector2(1300.0, 1435.0), "width": 320.0, "jitter": Vector2(24.0, 10.0)},
-		{"id": "combat", "center": Vector2(1740.0, 1575.0), "width": 360.0, "jitter": Vector2(30.0, 12.0)},
+		{"id": "jump", "center": Vector2(1800.0, 1295.0), "width": 360.0, "jitter": Vector2(20.0, 8.0)},
+		{"id": "hazard", "center": Vector2(1360.0, 1435.0), "width": 360.0, "jitter": Vector2(18.0, 8.0)},
+		{"id": "combat", "center": Vector2(1740.0, 1568.0), "width": 380.0, "jitter": Vector2(22.0, 8.0)},
 		{"id": "destructible", "center": Vector2(2200.0, 1710.0), "width": 320.0, "jitter": Vector2(24.0, 10.0)},
 		{"id": "interaction", "center": Vector2(1750.0, 1840.0), "width": 340.0, "jitter": Vector2(26.0, 0.0)},
 	]
@@ -312,6 +312,10 @@ func _build_generated_route(seed: int, move_player_to_generated_start: bool) -> 
 		520.0
 	)
 	_add_platform(generated_root, "GeneratedStart", start_center, Vector2(340.0, 40.0), Color(0.21, 0.31, 0.34, 1.0))
+	_add_climbable(generated_root, "GeneratedPocketRope", Vector2(1580.0, 1570.0), Vector2(52.0, 520.0))
+	_add_platform(generated_root, "GeneratedPocketRecoveryA", Vector2(1570.0, 1505.0), Vector2(220.0, 22.0), Color(0.23, 0.48, 0.56, 1.0), true)
+	_add_platform(generated_root, "GeneratedPocketRecoveryB", Vector2(1585.0, 1378.0), Vector2(220.0, 22.0), Color(0.23, 0.48, 0.56, 1.0), true)
+	_add_label(generated_root, "RECOVERY ROPE\nClimb back if you drop into the lower pocket.", Vector2(1460.0, 1295.0), 360.0)
 
 	for segment in segments:
 		var segment_id := str(segment.get("id", "segment"))

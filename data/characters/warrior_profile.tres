@@ -7,6 +7,7 @@ script = ExtResource("1")
 id = "warrior"
 display_name = "Warrior"
 visual_color = Color(0.9, 0.32, 0.24, 1)
+trait_summary = "Tanky heavy slash, high knockback, base mobility"
 max_health = 6
 attack_damage = 2
 attack_cooldown = 0.46

@@ -7,6 +7,7 @@ script = ExtResource("1")
 id = "archer"
 display_name = "Archer"
 visual_color = Color(0.32, 0.72, 0.92, 1)
+trait_summary = "Ranged projectile, safer spacing, strong air control"
 max_health = 5
 attack_damage = 1
 attack_cooldown = 0.30

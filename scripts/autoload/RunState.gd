@@ -27,7 +27,7 @@ var settings: Dictionary = {
 	"damage_flash": true,
 }
 var testbed_ability_flags: Dictionary = {
-	"double_jump_enabled": true,
+	"double_jump_enabled": false,
 	"extra_dash_enabled": false,
 	"air_dash_enabled": true,
 	"rope_climb_enabled": true,

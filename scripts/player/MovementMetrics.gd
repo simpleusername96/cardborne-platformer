@@ -16,6 +16,9 @@ static func calculate(stats: Dictionary, ability_flags: Dictionary = {}) -> Dict
 	var dash_charges := int(stats.get("dash_charges", 1))
 	if bool(ability_flags.get("extra_dash_enabled", false)):
 		dash_charges += 1
+	var extra_jumps := int(stats.get("extra_jumps", 0))
+	if bool(ability_flags.get("double_jump_enabled", false)):
+		extra_jumps = maxi(extra_jumps, 1)
 
 	var time_to_apex := jump_velocity / gravity
 	var airtime := time_to_apex * 2.0
@@ -26,7 +29,7 @@ static func calculate(stats: Dictionary, ability_flags: Dictionary = {}) -> Dict
 
 	var double_jump_height := jump_height
 	var double_jump_reach := single_jump_reach
-	if bool(ability_flags.get("double_jump_enabled", false)):
+	if extra_jumps > 0:
 		double_jump_height = jump_height * 1.65
 		double_jump_reach = single_jump_reach + move_speed * time_to_apex * 0.70
 
@@ -40,6 +43,7 @@ static func calculate(stats: Dictionary, ability_flags: Dictionary = {}) -> Dict
 		"double_jump_height": double_jump_height,
 		"double_jump_reach": double_jump_reach,
 		"dash_charges": dash_charges,
+		"extra_jumps": extra_jumps,
 	}
 
 
