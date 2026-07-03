@@ -30,7 +30,7 @@ The previous `Stage01 Real Dungeon Map Pass` made the current motion route look 
 
 This document exists to correct that. It translates the user's past session requirements, the active testbed specs, and the first-slice map documents into a detailed, implementation-ready plan for a real Stage01-style dungeon map.
 
-The target is not only a prettier testbed. The target is a playable **side-on platform dungeon map with strong vertical structure**. "Side-on" describes the camera/projection, not a long horizontal strip. The final map silhouette must be a compact rectangle with real vertical layers, not a 4-to-6-screen hallway.
+The target is not only a prettier testbed. The target is a playable **side-on platform dungeon map with strong vertical structure**. "Side-on" describes the camera/projection, not a long horizontal strip. The final map silhouette must be a compact dungeon volume with real vertical layers, not a short hallway.
 
 - the map is larger than the camera view in both route length and vertical structure,
 - the player moves through connected rooms rather than lanes,
@@ -76,7 +76,8 @@ It is not simple CRUD.
 - **Real map**: a playable, camera-followed stage space made from rooms, corridors, shafts, branches, combat pockets, and exits, not a one-screen test lane, a long hallway, or a visual-only backdrop.
 - **Stage01 real dungeon**: the first production-leaning map target based on `Stage 01 - Lower Ruins Ascent`.
 - **Side-on**: the camera/projection is side-view, but the map may be portrait, near-square, or mildly landscape. Side-on must never be interpreted as horizontal-strip layout.
-- **Map aspect ratio**: the overall playable map bounds, measured as width:height. The final target must be one of `3:4`, `4:5`, `4:3`, or `5:4`, or very close to one of them.
+- **Map aspect ratio**: the overall playable map bounds, measured as width:height. Ratios such as `3:4`, `4:5`, `4:3`, and `5:4` are reference proportions, not exact allowed values. The real rule is to avoid a long horizontal strip and to justify any unusually wide or tall bounds.
+- **Viewport-equivalent route length**: an estimate of how much player travel the critical path and major branches contain compared with a 1280x720 screen. This is route path length, not bounding-box width.
 - **Room**: a local gameplay space with a job, such as entrance, movement teaching, combat, shaft, reward, safe interaction, gate, generated pocket, or exit.
 - **Passage**: the connector between rooms. It must communicate continuation and avoid accidental dead ends.
 - **Critical path**: the required route from spawn to exit. It must be clearable by the least-mobile required profile.
@@ -121,7 +122,7 @@ The following choices can change without changing the product intent:
 ### Invariants
 
 - The full playable route must exceed one default 1280x720 viewport.
-- The final map bounds must not be a horizontal strip. Target width:height ratios are `3:4`, `4:5`, `4:3`, or `5:4`.
+- The final map bounds must not be a horizontal strip. Reference width:height ratios are `3:4`, `4:5`, `4:3`, and `5:4`, but these are guardrail examples rather than hard validation constants.
 - The map must be horizontally crafted in route language but vertically substantial in spatial structure.
 - The default camera must follow the player; no full-map overview as gameplay.
 - The critical path must be clearable by Warrior or the least-mobile required profile.
@@ -310,9 +311,9 @@ Use a compact, vertically layered side-on structure. Horizontal craft still matt
 
 This is not a strict coordinate map. It is the shape contract that implementation should satisfy.
 
-### Aspect Ratio Contract
+### Aspect Ratio Guardrail
 
-The final map must use one of these overall playable-bounds ratios, or a near equivalent:
+The final map should use compact playable bounds. The ratios below describe the intended family of shapes, not a strict enum:
 
 | Ratio | Meaning | Use Case |
 | --- | --- | --- |
@@ -323,17 +324,19 @@ The final map must use one of these overall playable-bounds ratios, or a near eq
 
 Rules:
 
-- Width:height must stay roughly between `0.75` and `1.33`.
-- A map wider than `1.5:1` is rejected unless it is only an internal sub-area, not the final map bounds.
+- Prefer width:height roughly in the `0.75` to `1.33` band when it fits the stage.
+- A map outside that band is allowed only with an explicit gameplay reason, such as a special boss arena, a temporary testbed appendix, or a room-specific sub-area.
+- A map wider than roughly `1.5:1` should be treated as a warning sign, not an automatic failure. The implementation must explain why it is not becoming a horizontal strip.
 - Route path length may exceed the bounding box ratio by using switchbacks, stacked floors, loops, and shafts.
 - The first production-leaning Stage01 target should prefer `4:3` or `5:4` if the route needs stronger left/right readability, and `4:5` if the central shaft becomes the main identity.
-- The current long scripted route in `MotionTestStage` does not satisfy this final ratio contract; it is only a foundation/testbed artifact.
+- The current long scripted route in `MotionTestStage` does not satisfy this final compact-shape guardrail; it is only a foundation/testbed artifact.
 
 ### Camera Rules
 
 - Default viewport: 1280x720.
-- Stage bounds must follow the aspect ratio contract above.
-- The route may involve 4 to 6 viewport-worths of travel, but that travel should be folded through vertical rooms, loops, switchbacks, and shafts instead of laid out as one long horizontal strip.
+- Stage bounds should follow the aspect ratio guardrail above or document why a specific exception is justified.
+- The first real Stage01 target should contain roughly 8 viewport-equivalents of meaningful travel across the critical path plus major branches. This travel should be folded through vertical rooms, loops, switchbacks, and shafts instead of laid out as one long horizontal strip.
+- A route shorter than 6 viewport-equivalents is probably too small for the intended real-map pass unless the implementation is explicitly a limited sub-slice.
 - Stage height must be substantial enough for at least three readable layers: lower route, middle route/shaft, and upper route or optional branch.
 - Camera bounds must not reveal large empty void at left, right, bottom, or ceiling.
 - The player should never see every major room at once.
@@ -492,7 +495,8 @@ Tasks:
 - [ ] Define rooms with IDs and roles.
 - [ ] Define room connections.
 - [ ] Define camera bounds per major room or area.
-- [ ] Define total playable map bounds and choose target ratio: `3:4`, `4:5`, `4:3`, or `5:4`.
+- [ ] Define total playable map bounds and choose an aspect-ratio target or justified exception using the compact-shape guardrail.
+- [ ] Define target viewport-equivalent route length, with roughly 8 viewport-equivalents as the first real Stage01 target.
 - [ ] Define critical path order.
 - [ ] Define optional branch metadata.
 - [ ] Define checkpoint locations by room.
@@ -552,7 +556,8 @@ Acceptance:
 
 - [ ] The map reads as rooms connected by passages.
 - [ ] The map is not one long flat line.
-- [ ] The final playable bounds satisfy `3:4`, `4:5`, `4:3`, or `5:4`.
+- [ ] The final playable bounds avoid horizontal-strip structure, using the compact-shape guardrail or a documented exception.
+- [ ] The route has about 8 viewport-equivalents of meaningful travel, or a documented reason for a smaller first slice.
 - [ ] Bottom and sides are never visually empty.
 - [ ] The full route is not visible in one screen.
 - [ ] Every fall either lands safely or triggers checkpoint/fall reset.
@@ -728,7 +733,8 @@ The map is acceptable for this task only when all of the following are true:
 - [ ] "Side-view" is interpreted only as side-on camera/projection, not horizontal-strip map structure.
 - [ ] The whole playable map is not visible at once.
 - [ ] It has a meaningful lower route, upper route, and vertical shaft.
-- [ ] Final playable bounds are `3:4`, `4:5`, `4:3`, or `5:4`, with no horizontal strip fallback.
+- [ ] Final playable bounds avoid horizontal-strip structure; reference ratios are examples, not hard-coded allowed values.
+- [ ] Meaningful route travel targets roughly 8 viewport-equivalents, folded through vertical structure rather than laid out as raw width.
 - [ ] Bottom, sides, and ceiling are intentionally framed.
 - [ ] Critical path is clearable by Warrior.
 - [ ] Optional branch exists and is non-blocking.
