@@ -9,6 +9,8 @@ extends CharacterBody2D
 @onready var visual: Node2D = $Visual
 @onready var body_polygon: Polygon2D = $Visual/Body
 @onready var attack_hitbox: Hitbox = $AttackHitbox
+@onready var attack_shape: CollisionShape2D = $AttackHitbox/CollisionShape2D
+@onready var attack_visual: Polygon2D = $AttackHitbox/AttackVisual
 @onready var camera: Camera2D = get_node_or_null("Camera2D")
 
 var stats: Dictionary = {}
@@ -187,13 +189,23 @@ func _try_jump() -> void:
 func _update_attack() -> void:
 	if Input.is_action_just_pressed("attack") and attack_cooldown_timer <= 0.0:
 		attack_cooldown_timer = float(stats.get("attack_cooldown", 0.35))
-		attack_timer = attack_active_time
-		attack_hitbox.position = Vector2(30.0 * float(facing), -26.0)
+		attack_timer = float(stats.get("attack_active_time", attack_active_time))
+		attack_hitbox.position = Vector2(
+			float(stats.get("attack_offset_x", 30.0)) * float(facing),
+			float(stats.get("attack_offset_y", -26.0))
+		)
+		_configure_attack_geometry(
+			float(stats.get("attack_range", 38.0)),
+			float(stats.get("attack_height", 30.0))
+		)
 		attack_hitbox.damage_amount = int(stats.get("attack_damage", 1))
-		attack_hitbox.knockback = Vector2(160.0 * float(facing), -80.0)
+		attack_hitbox.knockback = Vector2(
+			float(stats.get("attack_knockback_x", 160.0)) * float(facing),
+			float(stats.get("attack_knockback_y", -80.0))
+		)
 		attack_hitbox.set_active(true)
 		attack_hitbox.visible = true
-		SignalBus.status_message_changed.emit("Attack active")
+		SignalBus.status_message_changed.emit("%s active" % str(stats.get("attack_label", "Attack")))
 
 
 func _update_visual_state(delta: float) -> void:
@@ -241,6 +253,27 @@ func _perform_jump() -> void:
 	jump_buffer_timer = 0.0
 	coyote_timer = 0.0
 	is_climbing = false
+
+
+func _configure_attack_geometry(range: float, height: float) -> void:
+	var safe_range := maxf(range, 12.0)
+	var safe_height := maxf(height, 12.0)
+	if attack_shape != null and attack_shape.shape is RectangleShape2D:
+		var rect := attack_shape.shape as RectangleShape2D
+		rect.size = Vector2(safe_range, safe_height)
+
+	if attack_visual == null:
+		return
+
+	var half := Vector2(safe_range, safe_height) * 0.5
+	attack_visual.scale.x = float(facing)
+	attack_visual.polygon = PackedVector2Array([
+		Vector2(-half.x, -half.y),
+		Vector2(half.x, -half.y),
+		Vector2(half.x + 6.0, 0.0),
+		Vector2(half.x, half.y),
+		Vector2(-half.x, half.y),
+	])
 
 
 func _max_dash_charges() -> int:

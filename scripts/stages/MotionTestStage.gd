@@ -182,9 +182,11 @@ func _build_authored_route() -> void:
 	_add_label(world, "WALL TRAVERSAL\nDeferred: wall climb/slide/jump are visible flags, not required lanes.", Vector2(3800.0, 500.0), 420.0)
 
 	_add_platform(world, "CombatGround", Vector2(4170.0, GROUND_Y), Vector2(940.0, 40.0), Color(0.24, 0.28, 0.33, 1.0))
-	_add_label(world, "COMBAT CONTRACTS\nWalker enemy, hazard, destructible, NPC interaction.", Vector2(3820.0, 545.0), 500.0)
+	_add_label(world, "COMBAT CONTRACTS\nWalker, Charger, Shooter, hazard, destructible, NPC.", Vector2(3820.0, 545.0), 520.0)
 	_add_checkpoint(test_objects, "CheckpointCombatPrep", Vector2(3740.0, GROUND_TOP - PLAYER_FOOT_OFFSET), "combat_prep")
 	_add_walker(test_objects, "AuthoredWalker", Vector2(3840.0, GROUND_TOP), 115.0)
+	_add_charger(test_objects, "AuthoredCharger", Vector2(3990.0, GROUND_TOP), 120.0)
+	_add_shooter(test_objects, "AuthoredShooter", Vector2(4135.0, GROUND_TOP))
 	_add_destructible(test_objects, "BreakableGate", Vector2(4230.0, GROUND_TOP), 3)
 	_add_hazard(test_objects, "SpikeStrip", Vector2(4445.0, GROUND_TOP - 8.0), Vector2(160.0, 22.0), Vector2(-240.0, -220.0))
 	_add_npc(test_objects, "TestNPC", Vector2(4650.0, GROUND_TOP), "NPC: interaction contract checked")
@@ -263,6 +265,7 @@ func _build_generated_route(seed: int, move_player_to_generated_start: bool) -> 
 		"failure_reason": "" if valid else "route fits inside one viewport",
 	}
 	route_bounds = Rect2(0.0, 0.0, maxf(x + 700.0, 7200.0), 780.0)
+	_rebuild_dungeon_framing()
 	_rebuild_fall_reset_zone()
 	_configure_spawned_player()
 	SignalBus.testbed_route_status_changed.emit(_route_status_text("ready" if valid else "invalid"))
@@ -303,6 +306,56 @@ func _rebuild_fall_reset_zone() -> void:
 	zone.position = Vector2(route_bounds.position.x + route_bounds.size.x * 0.5, route_bounds.position.y + route_bounds.size.y + 80.0)
 	zone.zone_size = Vector2(route_bounds.size.x + 800.0, 170.0)
 	test_objects.add_child(zone)
+
+
+func _rebuild_dungeon_framing() -> void:
+	if world == null:
+		return
+
+	var existing := world.get_node_or_null("DungeonBackdrop")
+	if existing != null:
+		world.remove_child(existing)
+		existing.free()
+
+	var backdrop := Node2D.new()
+	backdrop.name = "DungeonBackdrop"
+	world.add_child(backdrop)
+	world.move_child(backdrop, 0)
+
+	var width := route_bounds.size.x + 900.0
+	var left := route_bounds.position.x - 360.0
+	var right := left + width
+	_add_backdrop_rect(backdrop, "RearWall", Vector2(left + width * 0.5, 390.0), Vector2(width, 760.0), Color(0.11, 0.12, 0.14, 1.0))
+	_add_backdrop_rect(backdrop, "CeilingMass", Vector2(left + width * 0.5, 54.0), Vector2(width, 108.0), Color(0.06, 0.07, 0.08, 1.0))
+	_add_backdrop_rect(backdrop, "LowerMasonry", Vector2(left + width * 0.5, 748.0), Vector2(width, 140.0), Color(0.07, 0.08, 0.09, 1.0))
+	_add_backdrop_rect(backdrop, "LeftBoundaryWall", Vector2(left + 38.0, 390.0), Vector2(76.0, 780.0), Color(0.07, 0.08, 0.09, 1.0))
+	_add_backdrop_rect(backdrop, "RightBoundaryWall", Vector2(right - 38.0, 390.0), Vector2(76.0, 780.0), Color(0.07, 0.08, 0.09, 1.0))
+
+	var column_x := left + 260.0
+	var column_index := 0
+	while column_x < right - 200.0:
+		var tone := 0.15 if column_index % 2 == 0 else 0.18
+		_add_backdrop_rect(backdrop, "Column%d" % column_index, Vector2(column_x, 430.0), Vector2(54.0, 500.0), Color(tone, tone + 0.01, tone + 0.025, 0.88))
+		_add_backdrop_rect(backdrop, "ColumnCap%d" % column_index, Vector2(column_x, 170.0), Vector2(96.0, 26.0), Color(0.18, 0.19, 0.21, 0.82))
+		_add_backdrop_rect(backdrop, "FloorBlock%d" % column_index, Vector2(column_x + 150.0, 706.0), Vector2(190.0, 34.0), Color(0.12, 0.13, 0.15, 0.95))
+		column_x += 460.0
+		column_index += 1
+
+
+func _add_backdrop_rect(parent: Node, object_name: String, center: Vector2, size: Vector2, color: Color) -> Polygon2D:
+	var visual := Polygon2D.new()
+	visual.name = object_name
+	visual.position = center
+	visual.color = color
+	var half := size * 0.5
+	visual.polygon = PackedVector2Array([
+		Vector2(-half.x, -half.y),
+		Vector2(half.x, -half.y),
+		Vector2(half.x, half.y),
+		Vector2(-half.x, half.y),
+	])
+	parent.add_child(visual)
+	return visual
 
 
 func _route_status_text(state: String) -> String:
@@ -500,6 +553,33 @@ func _add_walker(parent: Node, object_name: String, foot_position: Vector2, patr
 	)
 	parent.add_child(walker)
 	return walker
+
+
+func _add_charger(parent: Node, object_name: String, foot_position: Vector2, patrol_half_width: float) -> ChargerEnemy:
+	var charger := ChargerEnemy.new()
+	charger.name = object_name
+	charger.position = foot_position
+	charger.patrol_half_width = patrol_half_width
+	charger.max_health = 3
+	charger.contact_damage = 1
+	charger.defeated.connect(func(_enemy: EnemyBase) -> void:
+		_mark_validation("combat")
+	)
+	parent.add_child(charger)
+	return charger
+
+
+func _add_shooter(parent: Node, object_name: String, foot_position: Vector2) -> ShooterEnemy:
+	var shooter := ShooterEnemy.new()
+	shooter.name = object_name
+	shooter.position = foot_position
+	shooter.max_health = 2
+	shooter.contact_damage = 1
+	shooter.defeated.connect(func(_enemy: EnemyBase) -> void:
+		_mark_validation("combat")
+	)
+	parent.add_child(shooter)
+	return shooter
 
 
 func _add_destructible(parent: Node, object_name: String, foot_position: Vector2, health: int) -> DestructibleObstacle:

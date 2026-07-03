@@ -66,8 +66,7 @@ func ensure_input_map() -> void:
 	_bind_keys("climb_up", [KEY_W, KEY_UP])
 	_bind_keys("climb_down", [KEY_S, KEY_DOWN])
 	_bind_keys("jump", [KEY_SPACE])
-	_bind_keys("attack", [KEY_J])
-	_bind_mouse_buttons("attack", [MOUSE_BUTTON_LEFT])
+	_replace_keys("attack", [KEY_F])
 	_bind_keys("dash", [KEY_K, KEY_SHIFT])
 	_bind_keys("crouch", [KEY_S, KEY_DOWN])
 	_bind_keys("climb_cancel", [KEY_C])
@@ -84,7 +83,7 @@ func get_input_guide_text() -> String:
 	return "\n".join([
 		"Controls",
 		"Move %s | Crouch/drop %s" % [_binding_text("move_left", "A/Left") + "/" + _binding_text("move_right", "D/Right"), _binding_text("crouch", "S/Down")],
-		"Jump %s | Dash %s | Attack %s" % [_binding_text("jump", "Space"), _binding_text("dash", "K/Shift"), _binding_text("attack", "J/Mouse1")],
+		"Jump %s | Dash %s | Attack %s" % [_binding_text("jump", "Space"), _binding_text("dash", "K/Shift"), _binding_text("attack", "F")],
 		"Climb %s/%s | Dismount %s" % [_binding_text("climb_up", "W/Up"), _binding_text("climb_down", "S/Down"), _binding_text("climb_cancel", "C")],
 		"Interact %s | Profile %s" % [_binding_text("interact", "E/Enter"), _binding_text("open_build_panel", "Tab")],
 		"Seed random %s | Replay %s | Settings %s" % [_binding_text("regenerate_landscape", "R"), _binding_text("replay_landscape", "T"), _binding_text("pause", "Esc")],
@@ -148,6 +147,12 @@ func _bind_keys(action_name: String, keys: Array[int]) -> void:
 		event.physical_keycode = key
 		if not InputMap.action_has_event(action_name, event):
 			InputMap.action_add_event(action_name, event)
+
+
+func _replace_keys(action_name: String, keys: Array[int]) -> void:
+	_ensure_action(action_name)
+	InputMap.action_erase_events(action_name)
+	_bind_keys(action_name, keys)
 
 
 func _bind_mouse_buttons(action_name: String, buttons: Array[int]) -> void:

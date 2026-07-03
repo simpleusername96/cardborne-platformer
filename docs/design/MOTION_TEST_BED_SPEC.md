@@ -25,6 +25,7 @@ This spec applies to the runtime Godot test bed scene currently represented by `
 The test bed must validate:
 
 - Per-character movement reach.
+- Per-profile attack identity through data-driven attack timing, hitbox shape, range, and knockback until separate character controllers exist.
 - Ground jump, variable jump, jump buffering, coyote time, dash, crouch, fast fall, and one-way drop.
 - Optional or unlockable two-step movement such as double jump or extra dash, when that mechanic exists.
 - Climb traversal such as rope climbing, ladder-like climbing, wall climb, or wall slide/jump when those mechanics exist.
@@ -47,11 +48,11 @@ The test bed must validate:
 - Ownership boundaries: player scripts own movement and climb behavior; stage/test-bed design owns authored validation lanes and camera bounds; procedural generation owns seeded terrain/encounter assembly; combat scripts own hit/damage delivery; enemy scripts own enemy response; destructible world objects own their own damage response; UI/input scripts own command visibility and remapping surfaces.
 - Public interfaces: the test bed should consume player effective stats, ask a landscape generator for a reproducible terrain plan, place interactables through `Interactable`, route damage and destructible object hits through `DamageInfo`, and place enemy actors through shared enemy scenes.
 - Hidden implementation decisions: exact placeholder art, tile implementation, scene hierarchy, generator algorithm, room-template format, and editor tooling can change as long as the measurable validation contract remains true.
-- Invariants or policies that must hold: generated and authored geometry must be derived from movement metrics; the playable route must exceed one viewport so camera follow and camera bounds are tested; every generated critical path must be passable by the intended profile/ability set; optional generated branches must be marked as optional; combat validation requires an enemy that can take and deal damage; destructible validation requires an attack-removable obstacle that changes traversal; interaction validation requires an NPC or object prompt and result; every generated seed must be reproducible.
+- Invariants or policies that must hold: generated and authored geometry must be derived from movement metrics; the playable route must exceed one viewport so camera follow and camera bounds are tested; bottom, side, and ceiling voids should be framed as intentional dungeon space rather than empty background; every generated critical path must be passable by the intended profile/ability set; optional generated branches must be marked as optional; combat validation requires enemies that can take and deal damage; destructible validation requires an attack-removable obstacle that changes traversal; interaction validation requires an NPC or object prompt and result; every generated seed must be reproducible.
 - State transitions: spawn -> select mode/profile/seed -> movement calibration -> combat test -> hazard/damage test -> NPC/object interaction -> miniature generated run -> exit portal -> stage clear.
-- Facts confirmed from code/docs/tests: current profiles expose movement stats; current test bed has a dummy and hazard but no true enemy, no NPC, no keybinding screen, no measured jump/dash lanes, no double-jump or advanced movement lane, and no runtime random landscape generator.
+- Facts confirmed from code/docs/tests: current profiles expose movement stats and attack identity stats; the current test bed has measured lanes, checkpoint/fall/death recovery, Walker/Charger/Shooter enemies, destructibles, hazards, NPC interaction, a binding-list settings popup, camera-followed traversal, and runtime seeded landscape generation. Manual QA remains required before treating the test bed as fully proven.
 - Inference: the next implementation should replace the current freeform layout with labeled sections and measured platform distances, then add a miniature generated-run mode before adding normal-stage content.
-- Open questions: whether double jump is a default ability, a debug-only test toggle, or a future card/skill unlock; whether final default keybindings should remain PRD-style or move to a WASD + mouse-first layout.
+- Open questions: whether double jump is a default ability, a debug-only test toggle, or a future card/skill unlock; whether mouse attack should return later as an optional secondary binding after remapping/conflict handling exists.
 - Is this actually simple CRUD?: no.
 
 ## Requirements
@@ -86,11 +87,13 @@ The scene must be divided into labeled lanes in this order:
    - Contains at least one real enemy actor with health, hurtbox, contact damage, knockback response, death/reset, and a visible damage reaction.
    - Contains a stationary target only as a secondary measurement tool, not as the only attack test.
    - Must make attack startup, active hitbox, recovery, facing, cooldown, and hit confirmation readable.
+   - Profile switching must visibly change at least one attack property such as label, active time, hitbox size, range, cooldown, damage, or knockback.
    - Contains at least one destructible obstacle that can be removed by player attack and then changes the route, opens a shortcut, or reveals a small reward.
 
 6. **Enemy Behavior Lane**
    - Contains a basic walker enemy first.
-   - Later lanes can add charger and shooter enemies, but the first test bed must at least prove one enemy can move, damage the player, take damage, and reset.
+   - Contains simple charger and shooter baselines once the walker path is stable, so contact, charge, and projectile patterns can be compared without waiting for production enemy content.
+   - Broader enemy variants can wait, but the first test bed must prove enemies can move, damage the player, take damage, and reset.
    - Enemy placements must allow the player to safely re-enter the test after failure.
 
 7. **Hazard and Damage Response Lane**
@@ -186,6 +189,7 @@ The test bed must prove that the player moves through a map, not that the whole 
 - The full playable map must not be visible at once in the default 1280x720 viewport.
 - The camera must follow the player through authored lanes and generated landscapes.
 - The stage must define camera bounds so the camera does not show empty void outside the intended map.
+- Side walls, lower masonry, ceiling mass, or equivalent placeholder framing should make the map read as a dungeon even before final art exists.
 - A debug overview is allowed only as an explicit debug mode; it must not be the default gameplay camera.
 - Lane labels, HUD, and prompts must remain readable while the camera moves.
 - Offscreen route continuation must be visually discoverable through platform placement, path framing, lighting, or small in-world markers.
@@ -342,6 +346,7 @@ Input must be treated as a test-bed feature, not an afterthought.
 Required immediately:
 
 - In-game binding guide for every action currently usable.
+- Current default keyboard attack binding: `F`.
 - One shared input action list:
   - `move_left`
   - `move_right`
@@ -430,25 +435,18 @@ Future implementation should proceed in this order:
 
 ## Current Implementation Gap
 
-The current `MotionTestStage` should be treated as a placeholder foundation, not a satisfactory test bed.
+The current `MotionTestStage` is now a playable foundation, but it should still be treated as a test bed rather than production stage content.
 
-Known gaps:
+Known remaining gaps:
 
-- Platforms are not derived from character movement metrics.
-- No labeled movement lanes exist.
-- No double-jump or advanced movement lane exists.
-- No rope climb, wall climb, wall slide, or wall-jump validation exists.
-- The current map fits mostly in one static viewport and does not prove camera-followed traversal.
-- Combat uses a dummy, not a real enemy.
-- Attack has no readable animation or active-frame visualization beyond hitbox behavior.
-- No attack-destructible wall, crate, barrier, or obstacle exists.
-- No NPC or separate object interaction exists.
-- Interaction is only proven through the exit portal.
-- Keybinding is not user-configurable.
-- `Tab` profile switching is a debug shortcut but is not labeled as such.
-- No seeded random landscape generation exists.
-- No miniature game mode exists.
-- The route does not force meaningful traversal or combat before stage clear.
+- Full placeholder animation states for idle/run/jump/fall/dash/hurt/attack remain shallow.
+- Full wall traversal polish, including wall climb, wall slide, wall jump tuning, and wall-specific combat, remains deferred.
+- Double jump and extra dash remain debug/testbed ability flags until progression or card systems own them.
+- Destructible obstacles do not yet auto-reset for repeated combat testing without route regeneration.
+- Persistent key remapping and duplicate-binding conflict handling remain deferred.
+- Character selection is still a debug profile cycle, not a production character-select screen.
+- Charger and Shooter are pattern baselines only; final enemy art, tuning, drops, and broad enemy variants remain later work.
+- Full generated seed matrix QA and complete manual profile-route QA remain open.
 
 ## Related
 

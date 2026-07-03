@@ -51,7 +51,7 @@ The first playable character should support:
 | Move left | A / Left Arrow |
 | Move right | D / Right Arrow |
 | Jump | Space |
-| Attack | J / Left Mouse |
+| Attack | F |
 | Dash | K / Shift |
 | Crouch | S / Down Arrow |
 | Fast fall | Hold Down in air |
@@ -61,6 +61,8 @@ The first playable character should support:
 | Pause | Esc |
 
 Gamepad is optional for the first slice, but actions should be named so bindings can be added later.
+
+Current motion-testbed profiles may tune basic attack damage, cooldown, active time, range, hitbox height, offset, and knockback before separate character controllers exist.
 
 ### Growth Sources
 

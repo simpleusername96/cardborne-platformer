@@ -30,7 +30,10 @@ Already true:
 Resolved in implementation:
 
 - [x] Attack active window and hit confirm are visible through the player hitbox and status messages.
+- [x] Attack range, height, active time, knockback, and status label now come from the active character profile.
 - [x] The combat lane has a reusable `WalkerEnemy` with health, patrol, contact damage, hit reaction, and defeat.
+- [x] The combat lane has simple `ChargerEnemy` and `ShooterEnemy` baselines for non-walker attack patterns.
+- [x] Shared enemy damage reaction includes stronger knockback, hit stun, defeat hiding, and auto-reset.
 - [x] The combat lane has a reusable `DestructibleObstacle` with health, hit reaction, collision removal, and destroyed signal.
 - [x] Hazard behavior is a named reusable stage contract.
 - [x] Checkpoint/fall/death recovery covers hazard and combat re-entry.
@@ -38,7 +41,7 @@ Resolved in implementation:
 Still open:
 
 - [ ] Full placeholder state set for idle/run/jump/fall/dash/hurt/attack remains shallow.
-- [ ] Enemy and destructible reset for repeated combat testing without route regeneration is still deferred.
+- [ ] Destructible reset for repeated combat testing without route regeneration is still deferred.
 - [ ] Manual combat QA is still tracked in `05_qa_and_handoff.md`.
 
 ## Tasks
@@ -71,18 +74,36 @@ Source owners touched: new `scripts/enemies/EnemyBase.gd`, new `scripts/enemies/
 - [x] **4.2** Add `WalkerEnemy` that patrols between bounds or turns on wall/ledge.
 - [x] **4.3** Add contact damage through `DamageInfo`.
 - [x] **4.4** Add enemy health feedback through label, marker, or HUD event.
-- [ ] **4.5** Add repeatable lane reset behavior so the player can retest without restarting the whole scene.
+- [x] **4.5** Add repeatable lane reset behavior so the player can retest without restarting the whole scene.
 - [x] **4.6** Keep `DamageDummy` as an optional measurement target only.
 - [x] **4.7** Add safe re-entry after enemy damage or death.
 
 Accept:
 
-- [ ] Enemy moves, damages player, takes attack damage, reacts, dies or resets, and can be retested.
+- [x] Enemy moves, damages player, takes attack damage, reacts, dies or resets, and can be retested.
 - [x] Player death/reload still works after enemy contact damage.
 
 Guard:
 
 - [x] Enemy AI must not directly edit UI or player health outside the shared damage path.
+
+### Phase 4C - Enemy Pattern Baselines
+
+Source owners touched: `scripts/enemies/ChargerEnemy.gd`, `scripts/enemies/ShooterEnemy.gd`, `scripts/enemies/EnemyProjectile.gd`, `scripts/enemies/EnemyBase.gd`, `MotionTestStage.gd`.
+
+- [x] **4C.1** Add a charger enemy with patrol, visible warning, charge, and recovery states.
+- [x] **4C.2** Add a shooter enemy with visible warning and projectile damage.
+- [x] **4C.3** Route both new enemies through `EnemyBase`, `DamageInfo`, `Hitbox`, and `Hurtbox` instead of bespoke player-health edits.
+- [x] **4C.4** Place Walker, Charger, and Shooter in the authored combat lane so profile attacks can be compared against multiple enemy shapes.
+
+Accept:
+
+- [x] A tester can compare basic contact, charge, and projectile patterns in one combat lane.
+- [x] Enemy defeat still marks the shared combat validation instead of adding enemy-specific clear gates.
+
+Guard:
+
+- [x] New enemy patterns stay placeholder-sized and do not become production enemy breadth before movement/combat reliability is tested.
 
 ### Phase 4B - Destructible Obstacle Baseline
 
@@ -126,7 +147,7 @@ Guard:
 ## Verification
 
 - [ ] Manual attack test: miss, hit, cooldown, facing change.
-- [ ] Manual enemy test: contact damage, player attack damage, enemy death/reset.
+- [ ] Manual enemy test: contact damage, player attack damage, Walker/Charger/Shooter pattern readability, enemy death/reset.
 - [ ] Manual destructible test: attack damage, visual break, collision removal/change, route change, reset.
 - [ ] Manual hazard test: damage, knockback, invulnerability, recovery.
 - [ ] Manual death/reload test.

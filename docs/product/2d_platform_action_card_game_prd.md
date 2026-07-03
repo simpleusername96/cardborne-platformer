@@ -108,7 +108,7 @@ Boss stage is cleared when the boss health reaches 0.
 | Move left | A / Left Arrow |
 | Move right | D / Right Arrow |
 | Jump | Space |
-| Attack | J / Left Mouse |
+| Attack | F |
 | Dash | K / Shift |
 | Crouch | S / Down Arrow |
 | Drop through one-way platform | Down + Jump |

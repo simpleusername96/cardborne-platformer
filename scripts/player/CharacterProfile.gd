@@ -9,6 +9,14 @@ extends Resource
 @export var max_health: int = 5
 @export var attack_damage: int = 1
 @export var attack_cooldown: float = 0.35
+@export var attack_label: String = "Strike"
+@export var attack_active_time: float = 0.12
+@export var attack_range: float = 38.0
+@export var attack_height: float = 30.0
+@export var attack_offset_x: float = 30.0
+@export var attack_offset_y: float = -26.0
+@export var attack_knockback_x: float = 160.0
+@export var attack_knockback_y: float = -80.0
 
 @export_group("Movement")
 @export var move_speed: float = 220.0
@@ -37,6 +45,14 @@ func to_stats_dictionary() -> Dictionary:
 		"max_health": max_health,
 		"attack_damage": attack_damage,
 		"attack_cooldown": attack_cooldown,
+		"attack_label": attack_label,
+		"attack_active_time": attack_active_time,
+		"attack_range": attack_range,
+		"attack_height": attack_height,
+		"attack_offset_x": attack_offset_x,
+		"attack_offset_y": attack_offset_y,
+		"attack_knockback_x": attack_knockback_x,
+		"attack_knockback_y": attack_knockback_y,
 		"move_speed": move_speed,
 		"acceleration": acceleration,
 		"deceleration": deceleration,

@@ -31,6 +31,7 @@ Resolved in implementation:
 - [x] The testbed includes non-exit NPC/object interaction.
 - [x] HUD control text is generated from the actual `InputMap`.
 - [x] Settings popup lists current bindings.
+- [x] The default keyboard attack binding is `F`, and stale `J`/mouse default display text has been removed from the active input path.
 - [x] Keyboard remapping is explicitly deferred in UI.
 - [x] Climb traversal inputs are displayed.
 - [x] Debug shortcuts are labeled as debug-only.

@@ -42,6 +42,14 @@ Resolved in the 2026-07-03 reconciliation pass:
 - [x] Final clear is gated by required testbed checks instead of the exit portal alone.
 - [x] The HUD route status reports compact validation progress and missing checks.
 
+Resolved in the 2026-07-03 dungeon/combat identity pass:
+
+- [x] The default keyboard attack binding is `F`, and HUD/settings read it from `InputMap`.
+- [x] Warrior, Archer, and Assassin profiles now expose simple attack identity through attack label, active time, range, hitbox height, offset, and knockback values.
+- [x] The combat lane includes Walker, Charger, and Shooter baselines using shared enemy/damage contracts.
+- [x] Defeated enemies can auto-reset so the combat lane can be retested without regenerating the route.
+- [x] The motion route has visual dungeon framing around ceiling, side, and lower empty space so the map no longer reads as floating platforms in a void.
+
 ## Tasks
 
 ### Priority Rules
@@ -66,7 +74,7 @@ Resolved in the 2026-07-03 reconciliation pass:
 | Camera-followed map | Now: route larger than 1280x720, Camera2D follow, camera bounds, no default overview. | Cinematic camera zones, smoothing polish, room transitions, minimap. | User explicitly corrected this; a one-screen map is a false test. |
 | Authored map lanes | Now: measured lanes, safe recovery, route gating, labels. | Final Stage01/02/03 production maps. | Authored lanes prove the rules before generation. |
 | Combat attack readability | Now: visible active frame, facing, hit confirm, cooldown/status feedback. | Full animation set, combos, charged attacks, cancel windows. | Combat cannot be validated if the hit timing is invisible. |
-| Real enemy | Now: one Walker-like enemy with health, contact damage, hit reaction, death/reset. | Charger, Shooter, projectile system, elite variants, drops. | One real enemy proves shared damage contracts. |
+| Real enemy | Now: Walker, Charger, and Shooter baselines with health, contact damage or projectile damage, hit reaction, death/reset. | Elite variants, drops, final animation, and deeper AI tuning. | Enemy variety must still prove shared damage contracts before becoming content breadth. |
 | Hazard/damage recovery | Now: one clear hazard, knockback, invulnerability, recovery path. | Multiple trap types, timing puzzles, crushing blocks. | Damage response is a high-risk core system. |
 | Destructible obstacle | Now, simplified: breakable wall/crate/barrier with health, hit feedback, collision removal, route change/reset. | Multi-stage debris, loot tables, elemental damage, persistent destruction. | It proves attack can affect world traversal. |
 | NPC/object interaction | Now: one non-exit interactable with prompt and visible result. | Full dialogue, shop, forge, healer, upgrade station flows. | Interaction must be proven separately from the exit portal. |
@@ -110,7 +118,7 @@ The first implementation pass intentionally did not include these items. They re
 - [ ] Stage01/Stage02/Stage03 production content.
 - [ ] Card rewards, shop/rest, boss fight.
 - [ ] Final animation, art, audio, localization.
-- [ ] Complex enemy set beyond the first real enemy.
+- [ ] Full production enemy set beyond the Walker/Charger/Shooter baselines.
 
 ## Verification
 

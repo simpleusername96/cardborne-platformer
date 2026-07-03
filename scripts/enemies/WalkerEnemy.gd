@@ -21,7 +21,8 @@ func _physics_process(delta: float) -> void:
 	if current_health <= 0:
 		return
 
-	velocity.x = float(direction) * move_speed
+	if hit_stun_timer <= 0.0:
+		velocity.x = float(direction) * move_speed
 	super._physics_process(delta)
 
 	if global_position.x <= left_limit:

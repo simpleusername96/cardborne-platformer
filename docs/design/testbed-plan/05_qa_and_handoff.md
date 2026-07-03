@@ -33,12 +33,14 @@ Resolved in implementation:
 - [x] Camera-followed traversal, climb traversal, combat, destructible, hazard, interaction, generated start, and generated exit are tracked as clear requirements.
 - [x] Generated run clear status includes seed and validation progress in HUD/status text.
 - [x] This document defines the manual QA matrix and handoff format.
+- [x] The dungeon/combat identity pass adds `F` attack input, profile-specific attack hitboxes/knockback, Walker/Charger/Shooter baselines, and visual dungeon framing.
 
 Still open:
 
 - [ ] Full manual QA matrix is not complete.
 - [ ] Generated fail summary, clear time, invalid route rejection, and seed matrix coverage remain deferred.
-- [ ] Enemy/destructible repeatable reset polish remains deferred.
+- [ ] Destructible repeatable reset polish remains deferred.
+- [ ] Manual pass for the new profile attack and Charger/Shooter behavior remains open.
 
 ## Tasks
 
@@ -70,7 +72,7 @@ Source owners touched: docs, optional test scripts, final scene/source changes.
 - [ ] **12.3** Manually test advanced route with ability off and on.
 - [ ] **12.4** Manually test camera follow and camera bounds; confirm the whole map is not visible at once in default gameplay.
 - [ ] **12.5** Manually test rope/ladder-like climb and wall traversal when enabled.
-- [ ] **12.6** Manually test enemy contact damage, player attack, enemy defeat/reset, destructible obstacle break/reset, hazard damage, and player death/reload.
+- [ ] **12.6** Manually test enemy contact damage, player attack, Walker/Charger/Shooter readability, enemy defeat/auto-reset, destructible obstacle break/reset, hazard damage, and player death/reload.
 - [ ] **12.7** Manually test NPC/object prompt, interaction result, and prompt hiding.
 - [ ] **12.8** Manually test binding guide/settings and confirm guide matches actual input map, including climb actions when enabled.
 - [ ] **12.9** Manually test generated seeds for all generator profiles.
@@ -103,7 +105,7 @@ Inner-loop checks:
 Batch gates:
 
 - [ ] After authored lanes: manually clear authored movement route with all three profiles.
-- [ ] After combat/damage: manually damage and kill/reset real enemy.
+- [ ] After combat/damage: manually damage and kill/reset Walker, Charger, and Shooter enemies.
 - [ ] After interaction/input: confirm binding guide displays actual input map.
 - [ ] After generated assembly: regenerate the lane three times and confirm old nodes/signals do not remain.
 - [ ] After miniature loop: replay the same seed twice and compare route summary.
