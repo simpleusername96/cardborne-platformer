@@ -10,6 +10,8 @@ extends Resource
 @export var attack_damage: int = 1
 @export var attack_cooldown: float = 0.35
 @export var attack_label: String = "Strike"
+@export_enum("heavy_swing", "quick_slash", "arrow_projectile") var attack_motion_style: String = "heavy_swing"
+@export var attack_visual_color: Color = Color(1.0, 0.86, 0.22, 1.0)
 @export var attack_active_time: float = 0.12
 @export var attack_range: float = 38.0
 @export var attack_height: float = 30.0
@@ -17,6 +19,9 @@ extends Resource
 @export var attack_offset_y: float = -26.0
 @export var attack_knockback_x: float = 160.0
 @export var attack_knockback_y: float = -80.0
+@export var attack_projectile_speed: float = 560.0
+@export var attack_projectile_lifetime: float = 0.65
+@export var attack_projectile_size: Vector2 = Vector2(34.0, 8.0)
 
 @export_group("Movement")
 @export var move_speed: float = 220.0
@@ -46,6 +51,8 @@ func to_stats_dictionary() -> Dictionary:
 		"attack_damage": attack_damage,
 		"attack_cooldown": attack_cooldown,
 		"attack_label": attack_label,
+		"attack_motion_style": attack_motion_style,
+		"attack_visual_color": attack_visual_color,
 		"attack_active_time": attack_active_time,
 		"attack_range": attack_range,
 		"attack_height": attack_height,
@@ -53,6 +60,9 @@ func to_stats_dictionary() -> Dictionary:
 		"attack_offset_y": attack_offset_y,
 		"attack_knockback_x": attack_knockback_x,
 		"attack_knockback_y": attack_knockback_y,
+		"attack_projectile_speed": attack_projectile_speed,
+		"attack_projectile_lifetime": attack_projectile_lifetime,
+		"attack_projectile_size": attack_projectile_size,
 		"move_speed": move_speed,
 		"acceleration": acceleration,
 		"deceleration": deceleration,

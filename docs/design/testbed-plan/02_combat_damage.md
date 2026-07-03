@@ -31,6 +31,8 @@ Resolved in implementation:
 
 - [x] Attack active window and hit confirm are visible through the player hitbox and status messages.
 - [x] Attack range, height, active time, knockback, and status label now come from the active character profile.
+- [x] Warrior and Assassin have visible placeholder melee swing/slash motion during active frames.
+- [x] Archer fires a visible damaging arrow projectile using the shared player attack collision path.
 - [x] The combat lane has a reusable `WalkerEnemy` with health, patrol, contact damage, hit reaction, and defeat.
 - [x] The combat lane has simple `ChargerEnemy` and `ShooterEnemy` baselines for non-walker attack patterns.
 - [x] Shared enemy damage reaction includes stronger knockback, hit stun, defeat hiding, and auto-reset.
@@ -40,7 +42,7 @@ Resolved in implementation:
 
 Still open:
 
-- [ ] Full placeholder state set for idle/run/jump/fall/dash/hurt/attack remains shallow.
+- [ ] Full placeholder state set for idle/run/jump/fall/dash/hurt remains shallow.
 - [ ] Destructible reset for repeated combat testing without route regeneration is still deferred.
 - [ ] Manual combat QA is still tracked in `05_qa_and_handoff.md`.
 
@@ -56,15 +58,18 @@ Source owners touched: `scripts/player/PlayerController.gd`, `scenes/player/Play
 - [x] **3.4** Verify attack facing follows the last movement direction and does not flip incorrectly during crouch or dash.
 - [x] **3.5** Add or tune hit flash, hit pause, or color feedback for successful hits.
 - [x] **3.6** Ensure invulnerability feedback is visible without hiding player position.
+- [x] **3.7** Add profile-specific placeholder attack motion: heavy swing, quick slash, and arrow shot.
 
 Accept:
 
 - [x] A tester can tell when attack is active and why it missed or hit.
+- [x] A tester can distinguish melee swings from Archer projectile shots without reading debug text.
 - [x] Player hurt and invulnerability states are visible.
 
 Guard:
 
 - [x] Visual attack feedback must use the same timing as the damaging `Hitbox`.
+- [x] Projectile attacks must still use the shared `Hitbox`/`DamageInfo` path.
 
 ### Phase 4 - Real Enemy Baseline
 
@@ -146,7 +151,7 @@ Guard:
 
 ## Verification
 
-- [ ] Manual attack test: miss, hit, cooldown, facing change.
+- [ ] Manual attack test: miss, hit, cooldown, facing change, melee swing readability, Archer arrow hit.
 - [ ] Manual enemy test: contact damage, player attack damage, Walker/Charger/Shooter pattern readability, enemy death/reset.
 - [ ] Manual destructible test: attack damage, visual break, collision removal/change, route change, reset.
 - [ ] Manual hazard test: damage, knockback, invulnerability, recovery.

@@ -50,6 +50,13 @@ Resolved in the 2026-07-03 dungeon/combat identity pass:
 - [x] Defeated enemies can auto-reset so the combat lane can be retested without regenerating the route.
 - [x] The motion route has visual dungeon framing around ceiling, side, and lower empty space so the map no longer reads as floating platforms in a void.
 
+Resolved in the 2026-07-03 player attack motion pass:
+
+- [x] Warrior uses a visible heavy up/down melee swing during active frames.
+- [x] Assassin uses a visible quick slash during active frames.
+- [x] Archer fires a real arrow projectile through the shared player `Hitbox`/`DamageInfo` path.
+- [x] Attack motion style and projectile values are profile data, not stage-local hard-coding.
+
 ## Tasks
 
 ### Priority Rules
@@ -73,7 +80,7 @@ Resolved in the 2026-07-03 dungeon/combat identity pass:
 | Wall traversal | Later for full version; now only explicit defer or minimal wall slide/jump if cheap after core lanes. | Wall climb, wall slide, wall jump tuning, wall-specific animation, stamina, wall attack interactions. | It changes player controller feel more deeply than rope climb. Do not block the first playable route on it. |
 | Camera-followed map | Now: route larger than 1280x720, Camera2D follow, camera bounds, no default overview. | Cinematic camera zones, smoothing polish, room transitions, minimap. | User explicitly corrected this; a one-screen map is a false test. |
 | Authored map lanes | Now: measured lanes, safe recovery, route gating, labels. | Final Stage01/02/03 production maps. | Authored lanes prove the rules before generation. |
-| Combat attack readability | Now: visible active frame, facing, hit confirm, cooldown/status feedback. | Full animation set, combos, charged attacks, cancel windows. | Combat cannot be validated if the hit timing is invisible. |
+| Combat attack readability | Now: visible melee swing/projectile, facing, hit confirm, cooldown/status feedback. | Full animation set, combos, charged attacks, cancel windows. | Combat cannot be validated if the hit timing or attack form is invisible. |
 | Real enemy | Now: Walker, Charger, and Shooter baselines with health, contact damage or projectile damage, hit reaction, death/reset. | Elite variants, drops, final animation, and deeper AI tuning. | Enemy variety must still prove shared damage contracts before becoming content breadth. |
 | Hazard/damage recovery | Now: one clear hazard, knockback, invulnerability, recovery path. | Multiple trap types, timing puzzles, crushing blocks. | Damage response is a high-risk core system. |
 | Destructible obstacle | Now, simplified: breakable wall/crate/barrier with health, hit feedback, collision removal, route change/reset. | Multi-stage debris, loot tables, elemental damage, persistent destruction. | It proves attack can affect world traversal. |

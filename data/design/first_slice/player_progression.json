@@ -30,7 +30,7 @@
       { "id": "move_left", "keyboard": ["A", "Left Arrow"] },
       { "id": "move_right", "keyboard": ["D", "Right Arrow"] },
       { "id": "jump", "keyboard": ["Space"] },
-      { "id": "attack", "keyboard": ["J", "Left Mouse"] },
+      { "id": "attack", "keyboard": ["F"] },
       { "id": "dash", "keyboard": ["K", "Shift"] },
       { "id": "crouch", "keyboard": ["S", "Down Arrow"] },
       { "id": "drop_through", "keyboard": ["Down + Jump"] },

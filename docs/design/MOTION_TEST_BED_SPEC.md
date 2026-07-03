@@ -25,7 +25,7 @@ This spec applies to the runtime Godot test bed scene currently represented by `
 The test bed must validate:
 
 - Per-character movement reach.
-- Per-profile attack identity through data-driven attack timing, hitbox shape, range, and knockback until separate character controllers exist.
+- Per-profile attack identity through data-driven attack timing, hitbox shape, range, knockback, visible motion style, and projectile behavior until separate character controllers exist.
 - Ground jump, variable jump, jump buffering, coyote time, dash, crouch, fast fall, and one-way drop.
 - Optional or unlockable two-step movement such as double jump or extra dash, when that mechanic exists.
 - Climb traversal such as rope climbing, ladder-like climbing, wall climb, or wall slide/jump when those mechanics exist.
@@ -87,7 +87,7 @@ The scene must be divided into labeled lanes in this order:
    - Contains at least one real enemy actor with health, hurtbox, contact damage, knockback response, death/reset, and a visible damage reaction.
    - Contains a stationary target only as a secondary measurement tool, not as the only attack test.
    - Must make attack startup, active hitbox, recovery, facing, cooldown, and hit confirmation readable.
-   - Profile switching must visibly change at least one attack property such as label, active time, hitbox size, range, cooldown, damage, or knockback.
+   - Profile switching must visibly change attack behavior such as heavy swing, quick slash, projectile shot, label, active time, hitbox size, range, cooldown, damage, or knockback.
    - Contains at least one destructible obstacle that can be removed by player attack and then changes the route, opens a shortcut, or reveals a small reward.
 
 6. **Enemy Behavior Lane**
@@ -312,6 +312,7 @@ The combat area must answer these questions without relying on debug logs:
 Minimum visible feedback:
 
 - Player attack animation or placeholder arc/rectangle during active frames.
+- Projectile profiles must spawn visible projectile geometry that uses the same damage vocabulary as melee attacks.
 - Enemy damage flash or hit pause.
 - Enemy health marker or compact label.
 - Player health change in HUD.
@@ -439,7 +440,8 @@ The current `MotionTestStage` is now a playable foundation, but it should still 
 
 Known remaining gaps:
 
-- Full placeholder animation states for idle/run/jump/fall/dash/hurt/attack remain shallow.
+- Full placeholder animation states for idle/run/jump/fall/dash/hurt remain shallow.
+- Attack has only placeholder swing/projectile geometry; final character sprites and animation sets remain later work.
 - Full wall traversal polish, including wall climb, wall slide, wall jump tuning, and wall-specific combat, remains deferred.
 - Double jump and extra dash remain debug/testbed ability flags until progression or card systems own them.
 - Destructible obstacles do not yet auto-reset for repeated combat testing without route regeneration.

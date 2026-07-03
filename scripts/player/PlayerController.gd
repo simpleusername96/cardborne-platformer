@@ -10,7 +10,7 @@ extends CharacterBody2D
 @onready var body_polygon: Polygon2D = $Visual/Body
 @onready var attack_hitbox: Hitbox = $AttackHitbox
 @onready var attack_shape: CollisionShape2D = $AttackHitbox/CollisionShape2D
-@onready var attack_visual: Polygon2D = $AttackHitbox/AttackVisual
+@onready var attack_visual: Polygon2D = _ensure_attack_motion_visual()
 @onready var camera: Camera2D = get_node_or_null("Camera2D")
 
 var stats: Dictionary = {}
@@ -22,6 +22,9 @@ var dash_cooldown_timer: float = 0.0
 var dash_charges_left: int = 1
 var attack_cooldown_timer: float = 0.0
 var attack_timer: float = 0.0
+var attack_total_time: float = 0.0
+var active_attack_motion_style: String = "heavy_swing"
+var attack_visual_base_position: Vector2 = Vector2.ZERO
 var invulnerability_timer: float = 0.0
 var one_way_drop_timer: float = 0.0
 var is_dashing: bool = false
@@ -106,6 +109,9 @@ func _update_timers(delta: float) -> void:
 	if attack_timer <= 0.0:
 		attack_hitbox.set_active(false, false)
 		attack_hitbox.visible = false
+		_reset_attack_visual()
+	else:
+		_update_attack_visual_motion()
 
 	visual.modulate.a = 0.45 if invulnerability_timer > 0.0 and int(Time.get_ticks_msec() / 80) % 2 == 0 else 1.0
 
@@ -188,22 +194,29 @@ func _try_jump() -> void:
 
 func _update_attack() -> void:
 	if Input.is_action_just_pressed("attack") and attack_cooldown_timer <= 0.0:
+		active_attack_motion_style = str(stats.get("attack_motion_style", "heavy_swing"))
 		attack_cooldown_timer = float(stats.get("attack_cooldown", 0.35))
-		attack_timer = float(stats.get("attack_active_time", attack_active_time))
+		attack_total_time = maxf(float(stats.get("attack_active_time", attack_active_time)), 0.01)
+		attack_timer = attack_total_time
 		attack_hitbox.position = Vector2(
 			float(stats.get("attack_offset_x", 30.0)) * float(facing),
 			float(stats.get("attack_offset_y", -26.0))
 		)
 		_configure_attack_geometry(
 			float(stats.get("attack_range", 38.0)),
-			float(stats.get("attack_height", 30.0))
+			float(stats.get("attack_height", 30.0)),
+			active_attack_motion_style
 		)
 		attack_hitbox.damage_amount = int(stats.get("attack_damage", 1))
 		attack_hitbox.knockback = Vector2(
 			float(stats.get("attack_knockback_x", 160.0)) * float(facing),
 			float(stats.get("attack_knockback_y", -80.0))
 		)
-		attack_hitbox.set_active(true)
+		if active_attack_motion_style == "arrow_projectile":
+			attack_hitbox.set_active(false)
+			_fire_attack_projectile()
+		else:
+			attack_hitbox.set_active(true)
 		attack_hitbox.visible = true
 		SignalBus.status_message_changed.emit("%s active" % str(stats.get("attack_label", "Attack")))
 
@@ -255,7 +268,7 @@ func _perform_jump() -> void:
 	is_climbing = false
 
 
-func _configure_attack_geometry(range: float, height: float) -> void:
+func _configure_attack_geometry(range: float, height: float, motion_style: String) -> void:
 	var safe_range := maxf(range, 12.0)
 	var safe_height := maxf(height, 12.0)
 	if attack_shape != null and attack_shape.shape is RectangleShape2D:
@@ -265,15 +278,134 @@ func _configure_attack_geometry(range: float, height: float) -> void:
 	if attack_visual == null:
 		return
 
-	var half := Vector2(safe_range, safe_height) * 0.5
-	attack_visual.scale.x = float(facing)
+	attack_hitbox.z_index = 20
+	attack_visual.z_index = 20
+	attack_visual.visible = true
+	attack_visual_base_position = attack_hitbox.position
+	attack_visual.position = attack_visual_base_position
+	attack_visual.rotation = 0.0
+	attack_visual.scale = Vector2(float(facing), 1.0)
+	var color_value: Variant = stats.get("attack_visual_color", Color(1.0, 0.86, 0.22, 0.64))
+	attack_visual.color = color_value if color_value is Color else Color(1.0, 0.86, 0.22, 0.64)
+
+	match motion_style:
+		"arrow_projectile":
+			_configure_bow_flash_visual(safe_range, safe_height)
+		"quick_slash":
+			_configure_quick_slash_visual(safe_range, safe_height)
+		_:
+			_configure_heavy_swing_visual(safe_range, safe_height)
+
+
+func _configure_heavy_swing_visual(range: float, height: float) -> void:
+	var blade_length := maxf(range * 1.18, 42.0)
+	var blade_width := maxf(height * 0.34, 12.0)
 	attack_visual.polygon = PackedVector2Array([
-		Vector2(-half.x, -half.y),
-		Vector2(half.x, -half.y),
-		Vector2(half.x + 6.0, 0.0),
-		Vector2(half.x, half.y),
-		Vector2(-half.x, half.y),
+		Vector2(-6.0, -blade_width),
+		Vector2(blade_length * 0.72, -blade_width),
+		Vector2(blade_length, 0.0),
+		Vector2(blade_length * 0.72, blade_width),
+		Vector2(-6.0, blade_width),
+		Vector2(-12.0, 0.0),
 	])
+
+
+func _configure_quick_slash_visual(range: float, height: float) -> void:
+	var blade_length := maxf(range * 1.2, 36.0)
+	var blade_width := maxf(height * 0.28, 9.0)
+	attack_visual.polygon = PackedVector2Array([
+		Vector2(-8.0, -blade_width),
+		Vector2(blade_length, -blade_width * 0.45),
+		Vector2(blade_length + 7.0, 0.0),
+		Vector2(blade_length, blade_width * 0.45),
+		Vector2(-8.0, blade_width),
+	])
+
+
+func _configure_bow_flash_visual(range: float, height: float) -> void:
+	var bow_height := maxf(height, 28.0)
+	var bow_width := maxf(range * 0.62, 22.0)
+	attack_visual.polygon = PackedVector2Array([
+		Vector2(-bow_width * 0.5, -bow_height * 0.5),
+		Vector2(bow_width * 0.2, -bow_height * 0.36),
+		Vector2(bow_width * 0.52, 0.0),
+		Vector2(bow_width * 0.2, bow_height * 0.36),
+		Vector2(-bow_width * 0.5, bow_height * 0.5),
+		Vector2(-bow_width * 0.12, 0.0),
+	])
+
+
+func _update_attack_visual_motion() -> void:
+	if attack_visual == null:
+		return
+
+	var progress := clampf(1.0 - (attack_timer / maxf(attack_total_time, 0.01)), 0.0, 1.0)
+	var eased := sin(progress * PI * 0.5)
+	attack_visual.scale.x = float(facing)
+	match active_attack_motion_style:
+		"arrow_projectile":
+			attack_visual.rotation = 0.0
+			attack_visual.position = attack_visual_base_position + Vector2(lerpf(-3.0, 5.0, eased) * float(facing), 0.0)
+			attack_visual.modulate.a = lerpf(1.0, 0.45, progress)
+		"quick_slash":
+			attack_visual.rotation = lerpf(-0.42, 0.34, eased)
+			attack_visual.position = attack_visual_base_position + Vector2(0.0, lerpf(-2.0, 2.0, progress))
+			attack_visual.modulate.a = lerpf(1.0, 0.58, progress)
+		_:
+			attack_visual.rotation = lerpf(-1.15, 0.95, eased)
+			attack_visual.position = attack_visual_base_position + Vector2(0.0, lerpf(-6.0, 6.0, progress))
+			attack_visual.modulate.a = lerpf(1.0, 0.68, progress)
+
+
+func _reset_attack_visual() -> void:
+	if attack_visual == null:
+		return
+	attack_visual.visible = false
+	attack_visual.position = Vector2.ZERO
+	attack_visual.rotation = 0.0
+	attack_visual.scale = Vector2.ONE
+	attack_visual.modulate = Color.WHITE
+
+
+func _ensure_attack_motion_visual() -> Polygon2D:
+	var existing := get_node_or_null("AttackMotionVisual") as Polygon2D
+	if existing != null:
+		return existing
+
+	var visual_node := Polygon2D.new()
+	visual_node.name = "AttackMotionVisual"
+	visual_node.visible = false
+	visual_node.z_index = 20
+	add_child(visual_node)
+	return visual_node
+
+
+func _fire_attack_projectile() -> void:
+	var parent_node := get_parent()
+	if parent_node == null:
+		return
+
+	var projectile := PlayerAttackProjectile.new()
+	projectile.name = "PlayerArrow"
+	projectile.damage_amount = int(stats.get("attack_damage", 1))
+	projectile.knockback = Vector2(
+		float(stats.get("attack_knockback_x", 150.0)) * float(facing),
+		float(stats.get("attack_knockback_y", -65.0))
+	)
+	projectile.tags = ["player_projectile", "player_attack"]
+	projectile.direction = facing
+	projectile.velocity = Vector2(float(facing) * float(stats.get("attack_projectile_speed", 560.0)), 0.0)
+	projectile.lifetime = float(stats.get("attack_projectile_lifetime", 0.65))
+	var size_value: Variant = stats.get("attack_projectile_size", Vector2(34.0, 8.0))
+	projectile.projectile_size = size_value if size_value is Vector2 else Vector2(34.0, 8.0)
+	var color_value: Variant = stats.get("attack_visual_color", Color(0.9, 0.95, 1.0, 0.95))
+	projectile.projectile_color = color_value if color_value is Color else Color(0.9, 0.95, 1.0, 0.95)
+	projectile.target_hit.connect(_on_attack_hit_confirmed)
+	parent_node.add_child(projectile)
+	projectile.global_position = global_position + Vector2(
+		float(facing) * maxf(float(stats.get("attack_offset_x", 28.0)), 24.0),
+		float(stats.get("attack_offset_y", -29.0))
+	)
 
 
 func _max_dash_charges() -> int:
@@ -326,6 +458,7 @@ func respawn_at(respawn_position: Vector2, invulnerability_time: float) -> void:
 	set_collision_mask_value(2, true)
 	attack_hitbox.set_active(false, false)
 	attack_hitbox.visible = false
+	_reset_attack_visual()
 	dash_charges_left = _max_dash_charges()
 	extra_jumps_left = _max_extra_jumps()
 
