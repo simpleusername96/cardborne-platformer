@@ -37,7 +37,7 @@ var world: Node2D
 var test_objects: Node2D
 var generated_root: Node2D
 var generated_spawn: Vector2 = Vector2.ZERO
-var route_bounds: Rect2 = Rect2(0.0, 0.0, 7600.0, 780.0)
+var route_bounds: Rect2 = Rect2(0.0, 0.0, 8200.0, 900.0)
 var route_summary: Dictionary = {}
 
 var _rng := RandomNumberGenerator.new()
@@ -139,61 +139,97 @@ func _build_authored_route() -> void:
 	var required_gap := float(route_limits.get("max_required_gap", 210.0))
 	var required_ledge := float(route_limits.get("max_required_ledge", 120.0))
 
+	_build_lower_ruins_room_shells()
+
 	_add_label(
 		world,
-		"START\nMove right. Camera follows.",
-		Vector2(70.0, 545.0),
-		300.0
+		"LOWER RUINS ASCENT\nFind the seed gate through the upper shaft.",
+		Vector2(80.0, 510.0),
+		460.0
 	)
 	_add_checkpoint(test_objects, "CheckpointStart", Vector2(120.0, GROUND_TOP - PLAYER_FOOT_OFFSET), "start")
 	_add_label(
 		world,
-		"Metrics\nLeast mobile: %s\nRequired gate: %.0fpx gap / %.0fpx ledge" % [least_name, required_gap, required_ledge],
-		Vector2(520.0, 545.0),
-		400.0
+		"Route metrics\nLeast mobile: %s\nCritical gates stay <= %.0fpx gap / %.0fpx ledge" % [least_name, required_gap, required_ledge],
+		Vector2(540.0, 512.0),
+		430.0
 	)
 
-	_add_platform(world, "StartFlat", Vector2(420.0, GROUND_Y), Vector2(760.0, 40.0), Color(0.24, 0.28, 0.33, 1.0))
-	_add_platform(world, "JumpLanding", Vector2(1040.0, 638.0), Vector2(260.0, 28.0), Color(0.31, 0.36, 0.42, 1.0))
-	_add_label(world, "JUMP\nForgiving gap + ledge.", Vector2(900.0, 535.0), 260.0)
+	_add_platform(world, "EntranceFloor", Vector2(420.0, GROUND_Y), Vector2(760.0, 40.0), Color(0.23, 0.27, 0.32, 1.0))
+	_add_platform(world, "LowerCorridorFloor", Vector2(1110.0, GROUND_Y), Vector2(560.0, 40.0), Color(0.23, 0.27, 0.32, 1.0))
+	_add_platform(world, "FirstStep", Vector2(950.0, 624.0), Vector2(230.0, 28.0), Color(0.32, 0.36, 0.42, 1.0))
+	_add_label(world, "LOWER CORRIDOR\nShort jumps and recovery floor.", Vector2(870.0, 526.0), 340.0)
 
-	_add_platform(world, "CoyoteLedge", Vector2(1320.0, 592.0), Vector2(230.0, 26.0), Color(0.28, 0.38, 0.50, 1.0))
-	_add_platform(world, "JumpBufferOneWay", Vector2(1600.0, 528.0), Vector2(250.0, 22.0), Color(0.25, 0.48, 0.58, 1.0), true)
-	_add_platform(world, "DropRecovery", Vector2(1720.0, GROUND_Y), Vector2(430.0, 40.0), Color(0.24, 0.28, 0.33, 1.0))
-	_add_checkpoint(test_objects, "CheckpointTiming", Vector2(1750.0, GROUND_TOP - PLAYER_FOOT_OFFSET), "timing")
-	_add_label(world, "TIMING\nCoyote ledge, jump buffer, one-way drop to recovery.", Vector2(1380.0, 465.0), 420.0)
+	_add_platform(world, "CoyoteLedge", Vector2(1360.0, 610.0), Vector2(250.0, 26.0), Color(0.29, 0.39, 0.49, 1.0))
+	_add_platform(world, "JumpBufferOneWay", Vector2(1620.0, 548.0), Vector2(280.0, 22.0), Color(0.22, 0.48, 0.56, 1.0), true)
+	_add_platform(world, "TimingRecovery", Vector2(1780.0, GROUND_Y), Vector2(500.0, 40.0), Color(0.23, 0.27, 0.32, 1.0))
+	_add_checkpoint(test_objects, "CheckpointTiming", Vector2(1780.0, GROUND_TOP - PLAYER_FOOT_OFFSET), "timing")
+	_add_label(world, "TIMING CHAMBER\nCoyote ledge, jump buffer, one-way drop.", Vector2(1370.0, 455.0), 440.0)
 
-	_add_platform(world, "DashPrep", Vector2(2180.0, 622.0), Vector2(300.0, 28.0), Color(0.31, 0.36, 0.42, 1.0))
-	_add_platform(world, "DashLanding", Vector2(2580.0, 582.0), Vector2(280.0, 28.0), Color(0.36, 0.38, 0.48, 1.0))
+	_add_platform(world, "DashPrep", Vector2(2180.0, 624.0), Vector2(310.0, 28.0), Color(0.32, 0.36, 0.42, 1.0))
+	_add_platform(world, "DashLanding", Vector2(2580.0, 584.0), Vector2(290.0, 28.0), Color(0.37, 0.38, 0.48, 1.0))
 	_add_checkpoint(test_objects, "CheckpointDashPrep", Vector2(2180.0, 602.0), "dash_prep")
-	_add_checkpoint(test_objects, "CheckpointDashClear", Vector2(2580.0, 558.0), "dash")
-	_add_label(world, "DASH GAP\nUse jump + dash. Sized from shared metrics.", Vector2(2080.0, 505.0), 430.0)
+	_add_checkpoint(test_objects, "CheckpointDashClear", Vector2(2580.0, 560.0), "dash")
+	_add_label(world, "BROKEN BRIDGE\nRequired jump + dash gap, sized from shared metrics.", Vector2(2070.0, 505.0), 460.0)
 
-	_add_platform(world, "ClimbLower", Vector2(2920.0, GROUND_Y), Vector2(420.0, 40.0), Color(0.24, 0.28, 0.33, 1.0))
-	_add_climbable(test_objects, "RopeClimb", Vector2(3060.0, 526.0), Vector2(44.0, 270.0))
-	_add_platform(world, "ClimbUpper", Vector2(3240.0, 400.0), Vector2(330.0, 28.0), Color(0.31, 0.36, 0.42, 1.0))
+	_add_platform(world, "ShaftLower", Vector2(3010.0, GROUND_Y), Vector2(540.0, 40.0), Color(0.23, 0.27, 0.32, 1.0))
+	_add_climbable(test_objects, "RopeClimb", Vector2(3060.0, 510.0), Vector2(44.0, 330.0))
+	_add_platform(world, "ShaftMidOneWay", Vector2(3210.0, 536.0), Vector2(230.0, 22.0), Color(0.23, 0.48, 0.56, 1.0), true)
+	_add_platform(world, "ClimbUpper", Vector2(3240.0, 410.0), Vector2(340.0, 28.0), Color(0.32, 0.36, 0.42, 1.0))
+	_add_platform(world, "UpperGallery", Vector2(3520.0, 410.0), Vector2(560.0, 28.0), Color(0.31, 0.36, 0.42, 1.0))
 	_add_checkpoint(test_objects, "CheckpointClimbPrep", Vector2(2920.0, GROUND_TOP - PLAYER_FOOT_OFFSET), "climb_prep")
-	_add_checkpoint(test_objects, "CheckpointClimbClear", Vector2(3240.0, 376.0), "climb")
-	_add_label(world, "ROPE / LADDER\nW/S or Up/Down to climb. Space dismount.", Vector2(2850.0, 355.0), 420.0)
+	_add_checkpoint(test_objects, "CheckpointClimbClear", Vector2(3240.0, 386.0), "climb")
+	_add_label(world, "CENTRAL SHAFT\nRope climb opens the upper route.", Vector2(2870.0, 315.0), 420.0)
 
-	_add_platform(world, "DoubleJumpBranch", Vector2(3580.0, 318.0), Vector2(260.0, 26.0), Color(0.42, 0.35, 0.52, 1.0))
-	_add_platform(world, "BranchRecovery", Vector2(3600.0, GROUND_Y), Vector2(600.0, 40.0), Color(0.24, 0.28, 0.33, 1.0))
-	_add_label(world, "DEBUG DOUBLE JUMP\nFlag is ON for optional route calibration.", Vector2(3430.0, 230.0), 360.0)
-	_add_label(world, "WALL TRAVERSAL\nDeferred: wall climb/slide/jump are visible flags, not required lanes.", Vector2(3800.0, 500.0), 420.0)
+	_add_platform(world, "HighCacheBranch", Vector2(3650.0, 304.0), Vector2(260.0, 26.0), Color(0.43, 0.35, 0.52, 1.0))
+	_add_platform(world, "BranchRecovery", Vector2(3650.0, GROUND_Y), Vector2(620.0, 40.0), Color(0.23, 0.27, 0.32, 1.0))
+	_add_label(world, "OPTIONAL HIGH CACHE\nDebug double jump route. Not required for clear.", Vector2(3485.0, 215.0), 400.0)
+	_add_label(world, "WALL TRAVERSAL\nDeferred flag only: wall climb/slide/jump are not required yet.", Vector2(3820.0, 488.0), 430.0)
 
-	_add_platform(world, "CombatGround", Vector2(4170.0, GROUND_Y), Vector2(940.0, 40.0), Color(0.24, 0.28, 0.33, 1.0))
-	_add_label(world, "COMBAT CONTRACTS\nWalker, Charger, Shooter, hazard, destructible, NPC.", Vector2(3820.0, 545.0), 520.0)
+	_add_platform(world, "CombatHallFloor", Vector2(4180.0, GROUND_Y), Vector2(1050.0, 40.0), Color(0.23, 0.27, 0.32, 1.0))
+	_add_platform(world, "ShooterLedge", Vector2(4170.0, 522.0), Vector2(250.0, 28.0), Color(0.34, 0.36, 0.43, 1.0))
+	_add_label(world, "COMBAT HALL\nWalker, Charger, Shooter, breakable gate, hazard, NPC.", Vector2(3820.0, 555.0), 520.0)
 	_add_checkpoint(test_objects, "CheckpointCombatPrep", Vector2(3740.0, GROUND_TOP - PLAYER_FOOT_OFFSET), "combat_prep")
-	_add_walker(test_objects, "AuthoredWalker", Vector2(3840.0, GROUND_TOP), 115.0)
-	_add_charger(test_objects, "AuthoredCharger", Vector2(3990.0, GROUND_TOP), 120.0)
-	_add_shooter(test_objects, "AuthoredShooter", Vector2(4135.0, GROUND_TOP))
-	_add_destructible(test_objects, "BreakableGate", Vector2(4230.0, GROUND_TOP), 3)
-	_add_hazard(test_objects, "SpikeStrip", Vector2(4445.0, GROUND_TOP - 8.0), Vector2(160.0, 22.0), Vector2(-240.0, -220.0))
-	_add_npc(test_objects, "TestNPC", Vector2(4650.0, GROUND_TOP), "NPC: interaction contract checked")
-	_add_platform(world, "GeneratedBridge", Vector2(4810.0, GROUND_Y), Vector2(310.0, 40.0), Color(0.24, 0.28, 0.33, 1.0))
+	_add_walker(test_objects, "AuthoredWalker", Vector2(3860.0, GROUND_TOP), 115.0)
+	_add_charger(test_objects, "AuthoredCharger", Vector2(4020.0, GROUND_TOP), 125.0)
+	_add_shooter(test_objects, "AuthoredShooter", Vector2(4170.0, 508.0))
+	_add_destructible(test_objects, "BreakableGate", Vector2(4360.0, GROUND_TOP), 3)
+	_add_hazard(test_objects, "SpikeTrench", Vector2(4555.0, GROUND_TOP - 8.0), Vector2(170.0, 22.0), Vector2(-240.0, -220.0))
+	_add_npc(test_objects, "TestNPC", Vector2(4745.0, GROUND_TOP), "Lower ruins scout: interaction contract checked")
+	_add_platform(world, "GeneratedBridge", Vector2(4930.0, GROUND_Y), Vector2(360.0, 40.0), Color(0.23, 0.27, 0.32, 1.0))
+	_add_label(world, "SEED GATE\nGenerated miniature route starts next.", Vector2(4760.0, 552.0), 360.0)
 
 	var reach := float(active_metrics.get("single_jump_reach", 0.0))
 	_add_metric_marker(world, Vector2(520.0, 628.0), minf(reach, 340.0), "single jump reach")
+
+
+func _build_lower_ruins_room_shells() -> void:
+	_add_dungeon_room_frame(world, "EntranceRoom", Vector2(520.0, 500.0), Vector2(1040.0, 500.0), Color(0.13, 0.15, 0.18, 0.92))
+	_add_dungeon_room_frame(world, "TimingRoom", Vector2(1550.0, 515.0), Vector2(1040.0, 520.0), Color(0.12, 0.16, 0.19, 0.92))
+	_add_dungeon_room_frame(world, "BridgeRoom", Vector2(2380.0, 505.0), Vector2(820.0, 520.0), Color(0.14, 0.14, 0.18, 0.92))
+	_add_dungeon_room_frame(world, "ShaftRoom", Vector2(3240.0, 495.0), Vector2(900.0, 610.0), Color(0.12, 0.15, 0.18, 0.92))
+	_add_dungeon_room_frame(world, "CombatRoom", Vector2(4300.0, 500.0), Vector2(1230.0, 520.0), Color(0.15, 0.13, 0.16, 0.92))
+	_add_masonry_cluster(world, "EntranceRubble", 170.0, 710.0, 7)
+	_add_masonry_cluster(world, "ShaftRubble", 2860.0, 710.0, 6)
+	_add_masonry_cluster(world, "CombatRubble", 3860.0, 710.0, 9)
+
+
+func _add_dungeon_room_frame(parent: Node, room_name: String, center: Vector2, size: Vector2, color: Color) -> void:
+	var accent := Color(color.r + 0.05, color.g + 0.05, color.b + 0.06, color.a)
+	_add_backdrop_rect(parent, room_name + "Rear", center, size, color)
+	_add_backdrop_rect(parent, room_name + "CeilingLip", center + Vector2(0.0, -size.y * 0.5 + 18.0), Vector2(size.x, 36.0), Color(0.07, 0.08, 0.10, 0.96))
+	_add_backdrop_rect(parent, room_name + "LowerMass", center + Vector2(0.0, size.y * 0.5 - 22.0), Vector2(size.x, 44.0), Color(0.08, 0.09, 0.11, 0.96))
+	_add_backdrop_rect(parent, room_name + "LeftPier", center + Vector2(-size.x * 0.5 + 24.0, 36.0), Vector2(48.0, size.y - 90.0), accent)
+	_add_backdrop_rect(parent, room_name + "RightPier", center + Vector2(size.x * 0.5 - 24.0, 36.0), Vector2(48.0, size.y - 90.0), accent)
+
+
+func _add_masonry_cluster(parent: Node, prefix: String, start_x: float, y: float, count: int) -> void:
+	for index in range(count):
+		var block_width := 58.0 + float(index % 3) * 16.0
+		var block_height := 20.0 + float(index % 2) * 12.0
+		var x := start_x + float(index) * 88.0
+		var tone := 0.12 + float(index % 4) * 0.018
+		_add_backdrop_rect(parent, "%sBlock%d" % [prefix, index], Vector2(x, y - block_height * 0.5), Vector2(block_width, block_height), Color(tone, tone + 0.01, tone + 0.025, 0.92))
 
 
 func _build_generated_route(seed: int, move_player_to_generated_start: bool) -> void:
@@ -264,7 +300,7 @@ func _build_generated_route(seed: int, move_player_to_generated_start: bool) -> 
 		"destructible_count": destructible_count,
 		"failure_reason": "" if valid else "route fits inside one viewport",
 	}
-	route_bounds = Rect2(0.0, 0.0, maxf(x + 700.0, 7200.0), 780.0)
+	route_bounds = Rect2(0.0, 0.0, maxf(x + 700.0, 7200.0), 900.0)
 	_rebuild_dungeon_framing()
 	_rebuild_fall_reset_zone()
 	_configure_spawned_player()
@@ -325,11 +361,12 @@ func _rebuild_dungeon_framing() -> void:
 	var width := route_bounds.size.x + 900.0
 	var left := route_bounds.position.x - 360.0
 	var right := left + width
-	_add_backdrop_rect(backdrop, "RearWall", Vector2(left + width * 0.5, 390.0), Vector2(width, 760.0), Color(0.11, 0.12, 0.14, 1.0))
+	var bottom := route_bounds.position.y + route_bounds.size.y
+	_add_backdrop_rect(backdrop, "RearWall", Vector2(left + width * 0.5, bottom * 0.5), Vector2(width, bottom + 120.0), Color(0.11, 0.12, 0.14, 1.0))
 	_add_backdrop_rect(backdrop, "CeilingMass", Vector2(left + width * 0.5, 54.0), Vector2(width, 108.0), Color(0.06, 0.07, 0.08, 1.0))
-	_add_backdrop_rect(backdrop, "LowerMasonry", Vector2(left + width * 0.5, 748.0), Vector2(width, 140.0), Color(0.07, 0.08, 0.09, 1.0))
-	_add_backdrop_rect(backdrop, "LeftBoundaryWall", Vector2(left + 38.0, 390.0), Vector2(76.0, 780.0), Color(0.07, 0.08, 0.09, 1.0))
-	_add_backdrop_rect(backdrop, "RightBoundaryWall", Vector2(right - 38.0, 390.0), Vector2(76.0, 780.0), Color(0.07, 0.08, 0.09, 1.0))
+	_add_backdrop_rect(backdrop, "LowerMasonry", Vector2(left + width * 0.5, bottom - 46.0), Vector2(width, 190.0), Color(0.07, 0.08, 0.09, 1.0))
+	_add_backdrop_rect(backdrop, "LeftBoundaryWall", Vector2(left + 38.0, bottom * 0.5), Vector2(76.0, bottom + 120.0), Color(0.07, 0.08, 0.09, 1.0))
+	_add_backdrop_rect(backdrop, "RightBoundaryWall", Vector2(right - 38.0, bottom * 0.5), Vector2(76.0, bottom + 120.0), Color(0.07, 0.08, 0.09, 1.0))
 
 	var column_x := left + 260.0
 	var column_index := 0
