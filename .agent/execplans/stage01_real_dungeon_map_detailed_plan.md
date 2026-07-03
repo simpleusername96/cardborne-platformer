@@ -482,8 +482,8 @@ Do not build full region generation in the next code pass. Instead:
 
 - [x] Accept that the previous pass was too coarse.
 - [x] Create this detailed plan.
-- [ ] Do not continue broad implementation until this plan is reviewed or accepted by the user.
-- [ ] Treat the existing `stage01_real_dungeon_map_pass.md` as historical record, not the active implementation guide.
+- [x] Do not continue broad implementation until this plan is reviewed or accepted by the user.
+- [x] Treat the existing `stage01_real_dungeon_map_pass.md` as historical record, not the active implementation guide.
 
 ### Phase 1 - Authoring Contract Extraction
 
@@ -491,16 +491,16 @@ Goal: separate "what the map is" from low-level node creation.
 
 Tasks:
 
-- [ ] Create a small Stage01 route plan data shape in GDScript or JSON.
-- [ ] Define rooms with IDs and roles.
-- [ ] Define room connections.
+- [x] Create a small Stage01 route plan data shape in GDScript or JSON.
+- [x] Define rooms with IDs and roles.
+- [x] Define room connections.
 - [ ] Define camera bounds per major room or area.
-- [ ] Define total playable map bounds and choose an aspect-ratio target or justified exception using the compact-shape guardrail.
-- [ ] Define target viewport-equivalent route length, with roughly 8 viewport-equivalents as the first real Stage01 target.
-- [ ] Define critical path order.
+- [x] Define total playable map bounds and choose an aspect-ratio target or justified exception using the compact-shape guardrail.
+- [x] Define target viewport-equivalent route length, with roughly 8 viewport-equivalents as the first real Stage01 target.
+- [x] Define critical path order.
 - [ ] Define optional branch metadata.
-- [ ] Define checkpoint locations by room.
-- [ ] Define fall recovery zones.
+- [x] Define checkpoint locations by room.
+- [x] Define fall recovery zones.
 - [ ] Define required validation checks per room.
 
 Acceptance:
@@ -529,7 +529,7 @@ Acceptance:
 
 Fallback:
 
-- If scene split is too risky, create a `RealMapRoot` or `Stage01PreviewRoot` inside `MotionTestStage`, but keep code isolated so it can move later.
+- [x] If scene split is too risky, create a `RealMapRoot` or `Stage01PreviewRoot` inside `MotionTestStage`, but keep code isolated so it can move later.
 
 ### Phase 3 - Room Geometry
 
@@ -537,20 +537,20 @@ Goal: build real dungeon space before adding more content.
 
 Tasks:
 
-- [ ] Entrance room with safe spawn.
-- [ ] Lower corridor with thick floor and side mass.
-- [ ] Timing traversal room.
-- [ ] Broken bridge gap with recovery floor.
-- [ ] Central vertical shaft with rope/ladder.
-- [ ] Upper route/galleries.
-- [ ] Middle-layer connector or switchback that prevents the route from becoming a horizontal strip.
-- [ ] Optional high cache branch.
-- [ ] Combat hall with floor, ceiling, side walls, ledges.
-- [ ] Breakable gate/side room.
-- [ ] Hazard trench.
-- [ ] Interaction room.
-- [ ] Generated pocket entrance.
-- [ ] Exit room.
+- [x] Entrance room with safe spawn.
+- [x] Lower corridor with thick floor and side mass.
+- [x] Timing traversal room.
+- [x] Broken bridge gap with recovery floor.
+- [x] Central vertical shaft with rope/ladder.
+- [x] Upper route/galleries.
+- [x] Middle-layer connector or switchback that prevents the route from becoming a horizontal strip.
+- [x] Optional high cache branch.
+- [x] Combat hall with floor, ceiling, side walls, ledges.
+- [x] Breakable gate/side room.
+- [x] Hazard trench.
+- [x] Interaction room.
+- [x] Generated pocket entrance.
+- [x] Exit room.
 
 Acceptance:
 
@@ -568,14 +568,14 @@ Goal: make the map playable through normal camera view.
 
 Tasks:
 
-- [ ] Define stage-wide camera bounds.
+- [x] Define stage-wide camera bounds.
 - [ ] Add room-level camera hints only if needed.
-- [ ] Verify left/right/upper/lower voids are not visible.
+- [x] Verify left/right/upper/lower voids are not visible.
 - [ ] Verify camera movement supports both horizontal route flow and vertical room transitions.
 - [ ] Add route markers through geometry instead of text where possible.
 - [ ] Keep labels minimal and testbed-only.
-- [ ] Add visual hint for optional branch vs critical path.
-- [ ] Add visual hint for generated pocket/seed gate.
+- [x] Add visual hint for optional branch vs critical path.
+- [x] Add visual hint for generated pocket/seed gate.
 
 Acceptance:
 
@@ -592,10 +592,10 @@ Tasks:
 - [ ] Encode or annotate critical gaps with required ability.
 - [ ] Confirm single jumps are within Warrior-safe bounds.
 - [ ] Confirm dash gap is within conservative jump+dash bounds.
-- [ ] Rope/ladder climb must have entry, exit, cancel/drop behavior, and recovery.
-- [ ] One-way platforms must have safe lower landing.
-- [ ] Optional high branch must be visibly optional.
-- [ ] Wall traversal remains blocked/labeled unless implemented.
+- [x] Rope/ladder climb must have entry, exit, cancel/drop behavior, and recovery.
+- [x] One-way platforms must have safe lower landing.
+- [x] Optional high branch must be visibly optional.
+- [x] Wall traversal remains blocked/labeled unless implemented.
 
 Acceptance:
 
@@ -610,14 +610,14 @@ Goal: enemy placement should be part of room design.
 
 Tasks:
 
-- [ ] Place Walker in first combat intro room.
-- [ ] Place Charger where its windup and burst have readable distance.
-- [ ] Place Shooter on a ledge or shelf that creates ranged pressure.
+- [x] Place Walker in first combat intro room.
+- [x] Place Charger where its windup and burst have readable distance.
+- [x] Place Shooter on a ledge or shelf that creates ranged pressure.
 - [ ] Ensure Warrior melee can reach enemies in intended cases.
 - [ ] Ensure Archer projectile has a useful sightline.
 - [ ] Ensure Assassin quick slash feels distinct in close quarters.
-- [ ] Add retreat/re-entry space after damage.
-- [ ] Avoid unavoidable contact damage at room entrances.
+- [x] Add retreat/re-entry space after damage.
+- [x] Avoid unavoidable contact damage at room entrances.
 
 Acceptance:
 
@@ -633,12 +633,12 @@ Goal: make world objects alter the route meaningfully.
 
 Tasks:
 
-- [ ] Place a breakable wall/gate that opens a reward nook, shortcut, or safer route.
-- [ ] Place hazard trench where it teaches timing, not random punishment.
-- [ ] Add checkpoint before high-risk section.
-- [ ] Place NPC/cache/chest-like interactable in a safe alcove.
-- [ ] Make interaction result visible.
-- [ ] Keep exit portal interaction separate.
+- [x] Place a breakable wall/gate that opens a reward nook, shortcut, or safer route.
+- [x] Place hazard trench where it teaches timing, not random punishment.
+- [x] Add checkpoint before high-risk section.
+- [x] Place NPC/cache/chest-like interactable in a safe alcove.
+- [x] Make interaction result visible.
+- [x] Keep exit portal interaction separate.
 
 Acceptance:
 
@@ -653,11 +653,11 @@ Goal: turn current generated sequence into a miniature controlled generation fea
 
 Tasks:
 
-- [ ] Create segment/template metadata for current generated pieces.
+- [x] Create segment/template metadata for current generated pieces.
 - [ ] Move hard-coded generated segment list out of the middle of stage construction.
 - [ ] Add generator mode field with at least `mixed_mini_run`.
-- [ ] Add deterministic route summary.
-- [ ] Validate route span > viewport.
+- [x] Add deterministic route summary.
+- [x] Validate route span > viewport.
 - [ ] Validate critical path does not require disabled abilities.
 - [ ] Validate landing/recovery areas.
 - [ ] Add visible failure reason before play if invalid.
@@ -796,3 +796,30 @@ Avoid:
 - This document is the active plan for the next real-map work.
 - The next code pass should prioritize map structure and passability over visual polish.
 - The correct implementation direction is room/route structure first, then reusable room/segment contracts, then production Stage01 split, then richer procedural generation.
+
+## Implementation Update - 2026-07-03
+
+The current `MotionTestStage` route has been reshaped from a long `8200x900` horizontal strip into a compact `2680x2100` side-on dungeon bounds, roughly within the intended `5:4` guardrail family. It now uses a small in-code Stage01 route plan with room IDs, roles, critical path order, map bounds, and target route scale.
+
+Implemented runtime structure:
+
+- Lower entrance/corridor with safe spawn, first movement ledges, and first Walker.
+- Timing chamber with coyote ledge, jump-buffer one-way platform, and recovery floor.
+- Broken bridge jump+dash gap with recovery floor.
+- Central rope shaft with stacked one-way/solid recovery platforms and upper exit.
+- Optional high-cache branch labeled as debug double-jump/later-upgrade content.
+- Upper combat hall with Walker, Charger, Shooter, shooter ledge, and breakable gate.
+- Mid connector with hazard trench, NPC interaction, and seed-pocket entry.
+- Deterministic generated seed pocket folded inside the dungeon instead of appended as a long horizontal route.
+- Lower exit room after generated pocket completion.
+- Dynamic dungeon backdrop/framing scaled to the new vertical bounds.
+
+Still not done:
+
+- Production `Stage01.tscn`/`Stage01.gd` scene split.
+- Room-level camera zones.
+- Full route data extraction to JSON or reusable room-template resources.
+- Manual Warrior/Archer/Assassin full-clear QA.
+- Wall climb/slide/jump implementation.
+- Reward placeholders for high cache and lower detour.
+- Full generated-route passability validation beyond deterministic route length and boot checks.
