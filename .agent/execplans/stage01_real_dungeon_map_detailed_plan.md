@@ -3,7 +3,7 @@ type: plan
 status: active
 created: 2026-07-03
 source: User correction that the previous real-map pass did not fully capture the intended map
-scope: Detailed implementation plan for a real Stage01-style dungeon map and future map-generation contract
+scope: Detailed implementation plan for a real Stage01-style vertical side-on dungeon map and future map-generation contract
 related:
   - ../../AGENTS.md
   - ../PLANS.md
@@ -30,9 +30,9 @@ The previous `Stage01 Real Dungeon Map Pass` made the current motion route look 
 
 This document exists to correct that. It translates the user's past session requirements, the active testbed specs, and the first-slice map documents into a detailed, implementation-ready plan for a real Stage01-style dungeon map.
 
-The target is not only a prettier testbed. The target is a playable side-view dungeon map that proves:
+The target is not only a prettier testbed. The target is a playable **side-on platform dungeon map with strong vertical structure**. "Side-on" describes the camera/projection, not a long horizontal strip. The final map silhouette must be a compact rectangle with real vertical layers, not a 4-to-6-screen hallway.
 
-- the map is larger than the camera view,
+- the map is larger than the camera view in both route length and vertical structure,
 - the player moves through connected rooms rather than lanes,
 - bottom, side, and ceiling space read as intentional dungeon mass,
 - geometry is sized around character movement metrics,
@@ -45,12 +45,12 @@ The target is not only a prettier testbed. The target is a playable side-view du
 
 ### Request Interpretation
 
-The user is not asking for only a larger rectangle, decorative walls, or a linear sequence of validation platforms. The user wants a map that feels like a miniature game stage: a side-view dungeon where the player moves from room to room, climbs, fights, breaks objects, falls and respawns, discovers branches, and reaches a meaningful exit.
+The user is not asking for only a larger rectangle, decorative walls, or a linear sequence of validation platforms. The user wants a map that feels like a miniature game stage: a side-on platform dungeon where the player moves from room to room, climbs between floors, fights, breaks objects, falls and respawns, discovers branches, and reaches a meaningful exit.
 
 The user's references to Silksong, Hollow Knight-like structure, and Maple-like structure are binding as structural inspiration, not art copying. They imply:
 
-- side-view platform-action readability,
-- vertical shafts and layered platforms,
+- side-on platform-action readability,
+- vertical shafts, stacked rooms, switchbacks, and layered platforms,
 - local rooms connected by passages,
 - map space beyond the current camera,
 - traversal verbs such as rope/ladder climb and later wall traversal,
@@ -73,8 +73,10 @@ It is not simple CRUD.
 
 ### Canonical Terms
 
-- **Real map**: a playable, camera-followed stage space made from rooms, corridors, shafts, branches, combat pockets, and exits, not a one-screen test lane or a visual-only backdrop.
+- **Real map**: a playable, camera-followed stage space made from rooms, corridors, shafts, branches, combat pockets, and exits, not a one-screen test lane, a long hallway, or a visual-only backdrop.
 - **Stage01 real dungeon**: the first production-leaning map target based on `Stage 01 - Lower Ruins Ascent`.
+- **Side-on**: the camera/projection is side-view, but the map may be portrait, near-square, or mildly landscape. Side-on must never be interpreted as horizontal-strip layout.
+- **Map aspect ratio**: the overall playable map bounds, measured as width:height. The final target must be one of `3:4`, `4:5`, `4:3`, or `5:4`, or very close to one of them.
 - **Room**: a local gameplay space with a job, such as entrance, movement teaching, combat, shaft, reward, safe interaction, gate, generated pocket, or exit.
 - **Passage**: the connector between rooms. It must communicate continuation and avoid accidental dead ends.
 - **Critical path**: the required route from spawn to exit. It must be clearable by the least-mobile required profile.
@@ -89,7 +91,7 @@ It is not simple CRUD.
 ### Ambiguous Or Overloaded Terms
 
 - **Map** can mean visual preview data, Godot scene geometry, generated region graph, or runtime stage. In this plan, "map" means a playable Godot stage route unless otherwise specified.
-- **Dungeon** means enclosed side-view platform space, not necessarily final gothic art.
+- **Dungeon** means enclosed side-on platform space with vertical room stacking, not necessarily final gothic art.
 - **Character** currently means a profile on the shared `PlayerController`, not separate production character controllers.
 - **Random landscape** means controlled seed/template assembly, not arbitrary tile noise.
 - **Wall traversal** is still deferred unless explicitly promoted; rope/ladder climb is currently in scope.
@@ -119,6 +121,8 @@ The following choices can change without changing the product intent:
 ### Invariants
 
 - The full playable route must exceed one default 1280x720 viewport.
+- The final map bounds must not be a horizontal strip. Target width:height ratios are `3:4`, `4:5`, `4:3`, or `5:4`.
+- The map must be horizontally crafted in route language but vertically substantial in spatial structure.
 - The default camera must follow the player; no full-map overview as gameplay.
 - The critical path must be clearable by Warrior or the least-mobile required profile.
 - Optional branches must never be required for stage clear.
@@ -290,35 +294,47 @@ The stage should include these rooms in this order or an equivalent connected la
 
 ### High-Level Shape
 
-Use a wide, vertically layered structure:
+Use a compact, vertically layered side-on structure. Horizontal craft still matters: the player should read left/right route flow, entrances, exits, combat spacing, and passages. But the overall map should stack rooms and shafts so it reads as a dungeon volume, not a horizontal lane.
 
 ```text
-            [optional high cache]
-                    |
-      [upper shaft exit] -> [combat hall upper ledge]
-                    |
-[spawn] -> [lower corridor] -> [timing room] -> [broken bridge]
-                    |                         |
-              [recovery floor]          [central shaft bottom]
-                    |                         |
-              [lower detour] -----------[main route]
-                                              |
-                                      [combat hall]
-                                              |
-                                [breakable/hazard/NPC]
-                                              |
-                                  [generated pocket]
-                                              |
-                                           [exit]
+                [optional high cache] ---- [upper combat ledge]
+                         |                         |
+                [upper shaft exit] ---- [combat hall / gate]
+                         |                         |
+        [timing room] -- [central shaft] -- [hazard / NPC]
+              |          /        |                |
+        [lower detour] -/  [broken bridge] -- [generated pocket]
+              |                   |                |
+           [spawn] -------- [lower corridor] ---- [exit route]
 ```
 
 This is not a strict coordinate map. It is the shape contract that implementation should satisfy.
 
+### Aspect Ratio Contract
+
+The final map must use one of these overall playable-bounds ratios, or a near equivalent:
+
+| Ratio | Meaning | Use Case |
+| --- | --- | --- |
+| `3:4` | portrait | vertical dungeon shaft with horizontal rooms wrapping around it |
+| `4:5` | mild portrait | vertical map with enough horizontal combat and passage room |
+| `4:3` | mild landscape | horizontally readable stage with strong vertical layers |
+| `5:4` | compact landscape | widest acceptable target before it risks becoming a strip |
+
+Rules:
+
+- Width:height must stay roughly between `0.75` and `1.33`.
+- A map wider than `1.5:1` is rejected unless it is only an internal sub-area, not the final map bounds.
+- Route path length may exceed the bounding box ratio by using switchbacks, stacked floors, loops, and shafts.
+- The first production-leaning Stage01 target should prefer `4:3` or `5:4` if the route needs stronger left/right readability, and `4:5` if the central shaft becomes the main identity.
+- The current long scripted route in `MotionTestStage` does not satisfy this final ratio contract; it is only a foundation/testbed artifact.
+
 ### Camera Rules
 
 - Default viewport: 1280x720.
-- Stage width target for first real-map pass: at least 4 to 6 viewport widths.
-- Stage height target: at least 1.2 to 1.7 viewport heights if vertical shaft is meaningful.
+- Stage bounds must follow the aspect ratio contract above.
+- The route may involve 4 to 6 viewport-worths of travel, but that travel should be folded through vertical rooms, loops, switchbacks, and shafts instead of laid out as one long horizontal strip.
+- Stage height must be substantial enough for at least three readable layers: lower route, middle route/shaft, and upper route or optional branch.
 - Camera bounds must not reveal large empty void at left, right, bottom, or ceiling.
 - The player should never see every major room at once.
 - Offscreen route continuation should be readable through:
@@ -476,6 +492,7 @@ Tasks:
 - [ ] Define rooms with IDs and roles.
 - [ ] Define room connections.
 - [ ] Define camera bounds per major room or area.
+- [ ] Define total playable map bounds and choose target ratio: `3:4`, `4:5`, `4:3`, or `5:4`.
 - [ ] Define critical path order.
 - [ ] Define optional branch metadata.
 - [ ] Define checkpoint locations by room.
@@ -522,6 +539,7 @@ Tasks:
 - [ ] Broken bridge gap with recovery floor.
 - [ ] Central vertical shaft with rope/ladder.
 - [ ] Upper route/galleries.
+- [ ] Middle-layer connector or switchback that prevents the route from becoming a horizontal strip.
 - [ ] Optional high cache branch.
 - [ ] Combat hall with floor, ceiling, side walls, ledges.
 - [ ] Breakable gate/side room.
@@ -534,6 +552,7 @@ Acceptance:
 
 - [ ] The map reads as rooms connected by passages.
 - [ ] The map is not one long flat line.
+- [ ] The final playable bounds satisfy `3:4`, `4:5`, `4:3`, or `5:4`.
 - [ ] Bottom and sides are never visually empty.
 - [ ] The full route is not visible in one screen.
 - [ ] Every fall either lands safely or triggers checkpoint/fall reset.
@@ -547,6 +566,7 @@ Tasks:
 - [ ] Define stage-wide camera bounds.
 - [ ] Add room-level camera hints only if needed.
 - [ ] Verify left/right/upper/lower voids are not visible.
+- [ ] Verify camera movement supports both horizontal route flow and vertical room transitions.
 - [ ] Add route markers through geometry instead of text where possible.
 - [ ] Keep labels minimal and testbed-only.
 - [ ] Add visual hint for optional branch vs critical path.
@@ -704,9 +724,11 @@ Automated/smoke checks:
 
 The map is acceptable for this task only when all of the following are true:
 
-- [ ] It is a multi-room side-view dungeon, not a linear test lane.
+- [ ] It is a multi-room side-on platform dungeon, not a linear test lane.
+- [ ] "Side-view" is interpreted only as side-on camera/projection, not horizontal-strip map structure.
 - [ ] The whole playable map is not visible at once.
 - [ ] It has a meaningful lower route, upper route, and vertical shaft.
+- [ ] Final playable bounds are `3:4`, `4:5`, `4:3`, or `5:4`, with no horizontal strip fallback.
 - [ ] Bottom, sides, and ceiling are intentionally framed.
 - [ ] Critical path is clearable by Warrior.
 - [ ] Optional branch exists and is non-blocking.
