@@ -36,7 +36,7 @@ Resolved in the 2026-07-02 immediate implementation pass:
 
 - [x] Climb traversal uses `climb_up`, `climb_down`, and `climb_cancel`, currently bound to W/Up, S/Down, and C.
 - [x] Double jump is a debug testbed ability flag for this pass.
-- [x] Keyboard remapping persistence is deferred; the settings popup lists actual `InputMap` bindings and says remap is deferred.
+- [x] Keyboard remapping persistence was deferred in that pass; the settings popup listed actual `InputMap` bindings.
 
 Resolved in the 2026-07-03 reconciliation pass:
 
@@ -64,6 +64,13 @@ Resolved in the 2026-07-05 external foundation planning pass:
 - [x] External codebase deep-dive findings were converted into `06_external_foundation_replacement.md`.
 - [x] The recommended direction is staged partial replacement: map pipeline first, persistent remap second, local movement/combat refinement third, generated pockets after authored imported rooms work.
 
+Resolved in the 2026-07-05 input remap foundation pass:
+
+- [x] `InputBindings` owns canonical input defaults, saved keyboard bindings, duplicate-key checks, and restore-default behavior.
+- [x] Settings popup can remap keyboard actions, blocks duplicate tracked bindings, and restores one action or all defaults.
+- [x] HUD controls and interaction prompts update from the active `InputMap` after remap.
+- [x] Mouse, gamepad, and chord remapping remain explicitly deferred.
+
 ## Tasks
 
 ### Priority Rules
@@ -78,7 +85,7 @@ Resolved in the 2026-07-05 external foundation planning pass:
 | Feature | Now | Later | Reason |
 | --- | --- | --- | --- |
 | Godot launch/run baseline | Confirm Godot launch, fastrun command, autoloads, no missing scripts. | Automated launch dashboard or broader CI. | Work should not start from an unknown runtime state. |
-| Shared input actions | Keep one canonical action list and make HUD/settings read from it. | Full persistent keybinding profile and gamepad remap UI. | Input drift caused early confusion; visible controls are immediately valuable. |
+| Shared input actions | Keep one canonical action list and make HUD/settings read from it; persistent keyboard remap now exists. | Mouse/gamepad remap UI, input glyphs, and chord polish. | Input drift caused early confusion; visible controls are immediately valuable. |
 | Movement metrics | Compute jump height, jump reach, dash reach, and route limits from active profile. | Perfect physics simulation of every edge case. | Map dimensions must stop being placed by eye. |
 | Profile switching | Keep debug profile cycle or simple selector clearly labeled debug. | Character-select screen, separate character controllers, profile unlocks. | Three profiles are useful for calibration now; production flow can wait. |
 | Basic movement | Tune/run/jump/variable jump/coyote/buffer/dash/crouch/fast fall/drop-through in authored lanes. | Wall-perfect feel polish, animation polish, advanced cancel rules. | These are the core controller proof. |
@@ -93,7 +100,7 @@ Resolved in the 2026-07-05 external foundation planning pass:
 | Destructible obstacle | Now, simplified: breakable wall/crate/barrier with health, hit feedback, collision removal, route change/reset. | Multi-stage debris, loot tables, elemental damage, persistent destruction. | It proves attack can affect world traversal. |
 | NPC/object interaction | Now: one non-exit interactable with prompt and visible result. | Full dialogue, shop, forge, healer, upgrade station flows. | Interaction must be proven separately from the exit portal. |
 | HUD guide | Now: controls, profile, health, lane/objective, prompt, metrics, debug labels. | Final UI design, icons, animation, localization. | Testers need in-game guidance immediately. |
-| Settings popup | Now: binding list from actual input map and clear remap-deferred message if needed. | Full persistent settings, gamepad rebinding, conflict-resolution polish. | A binding list is enough for the immediate pass; full remap can wait. |
+| Settings popup | Now: keyboard remap, duplicate warnings, actual binding list, and restore defaults. | Full gamepad rebinding, input glyphs, and broader conflict-resolution polish. | A persistent attack-key remap is now a concrete testbed requirement; broader device polish can wait. |
 | Generated landscape route plan | Now: deterministic route plan from seed/profile/mode, simple validation, route summary. | Full procedural region graph runtime with key/gate/shortcut mission graph. | Seed replay is part of the testbed, but full region gen is not. |
 | Segment templates | Now: flat, jump, jump+dash, vertical, combat, hazard, interaction, exit, destructible, optional branch. | Large room library, biome variants, weighted difficulty curves. | Small templates are enough to test generation contracts. |
 | Generated terrain assembly | Now, simplified: instantiate placeholder platforms, enemies, hazards, interactables, destructibles, exit. | Tile art, room transitions, streaming, decorative dressing. | Playable generation matters more than visual finish. |
@@ -127,7 +134,7 @@ The next implementation pass should include:
 The first implementation pass intentionally did not include these items. They remain later work unless the user explicitly promotes them:
 
 - [ ] Full wall traversal polish if it destabilizes the controller.
-- [ ] Full keybinding persistence.
+- [ ] Mouse/gamepad keybinding persistence and input glyph polish.
 - [ ] Full production procedural region graph.
 - [ ] Stage01/Stage02/Stage03 production content.
 - [ ] Card rewards, shop/rest, boss fight.

@@ -80,11 +80,11 @@ Not done yet:
 
 - [ ] No LDtk importer is installed in this repo.
 - [ ] No LDtk map source exists in this repo.
-- [ ] No map authoring schema exists for LDtk entities and fields.
+- [x] Map authoring schema exists in `docs/design/MAP_AUTHORING_PIPELINE_CONTRACT.md`.
 - [ ] No marker resolver exists.
 - [ ] No imported dungeon route is playable.
-- [ ] No persistent input remap exists.
-- [ ] No third-party adoption ledger exists.
+- [x] Persistent keyboard input remap exists through local `InputBindings`.
+- [x] Third-party adoption ledger exists in `docs/research/third_party_adoption_ledger.md`.
 - [ ] No generated route uses imported authored room/template descriptors.
 
 ## Strategy
@@ -129,22 +129,22 @@ Replace or add these slices first:
 
 Goal: start from a known runtime and avoid confusing prototype regressions with importer problems.
 
-- [ ] **0.1** Confirm the working tree is clean or identify unrelated user changes.
-- [ ] **0.2** Record current commit hash before external changes.
-- [ ] **0.3** Run Godot version check with `.\tools\godot.ps1 --version`.
-- [ ] **0.4** Run baseline headless import with `.\tools\godot.ps1 --path . --headless --import`.
-- [ ] **0.5** Run current project boot check with the existing fastrun command or `.\tools\godot.ps1 --path .`.
-- [ ] **0.6** Save baseline result notes in the phase commit message or a short verification note.
-- [ ] **0.7** Confirm current `MotionTestStage` remains runnable before replacing map flow.
-- [ ] **0.8** Confirm the current HUD shows controls, profile, seed, and validation state.
-- [ ] **0.9** Confirm the current attack key binding is visible and still defaults to `F` unless remapped.
-- [ ] **0.10** Confirm no Godot/editor process remains running before package import.
+- [x] **0.1** Confirm the working tree is clean or identify unrelated user changes.
+- [x] **0.2** Record current commit hash before external changes.
+- [x] **0.3** Run Godot version check with `.\tools\godot.ps1 --version`.
+- [x] **0.4** Run baseline headless import with `.\tools\godot.ps1 --path . --headless --import`.
+- [x] **0.5** Run current project boot check with the existing fastrun command or `.\tools\godot.ps1 --path .`.
+- [x] **0.6** Save baseline result notes in the phase commit message or a short verification note.
+- [x] **0.7** Confirm current `MotionTestStage` remains runnable before replacing map flow.
+- [x] **0.8** Confirm the current HUD shows controls, profile, seed, and validation state.
+- [x] **0.9** Confirm the current attack key binding is visible and still defaults to `F` unless remapped.
+- [x] **0.10** Confirm no Godot/editor process remains running before package import.
 
 Accept:
 
-- [ ] Baseline project imports without missing scripts.
-- [ ] Baseline stage can still be launched.
-- [ ] Existing testbed can remain as fallback during map pipeline work.
+- [x] Baseline project imports without missing scripts.
+- [x] Baseline stage can still be launched.
+- [x] Existing testbed can remain as fallback during map pipeline work.
 
 Stop if:
 
@@ -160,18 +160,18 @@ Source owners likely touched:
 - `docs/research/`
 - optionally `docs/architecture/`
 
-- [ ] **1.1** Create `docs/research/third_party_adoption_ledger.md` as `type: evidence`, `status: active`.
-- [ ] **1.2** Add an entry template with package name, purpose, source URL, commit/release, license, copied paths, local modifications, validation commands, attribution needs, and adoption status.
-- [ ] **1.3** Add Godot LDtk Importer candidate entry from the deep dive.
-- [ ] **1.4** Add KoBeWi ControlsRemap candidate entry from the deep dive.
-- [ ] **1.5** Add reference-only entries for GDQuest procedural demos, Ultimate Platformer Controller, and LimboAI demo components.
-- [ ] **1.6** Mark Maaack Game Template, Maaack Input Remapping, Metroidvania System, YATI, and Dialogic as deferred candidates.
-- [ ] **1.7** For any copied package, update the ledger in the same commit that copies the package.
+- [x] **1.1** Create `docs/research/third_party_adoption_ledger.md` as `type: evidence`, `status: active`.
+- [x] **1.2** Add an entry template with package name, purpose, source URL, commit/release, license, copied paths, local modifications, validation commands, attribution needs, and adoption status.
+- [x] **1.3** Add Godot LDtk Importer candidate entry from the deep dive.
+- [x] **1.4** Add KoBeWi ControlsRemap candidate entry from the deep dive.
+- [x] **1.5** Add reference-only entries for GDQuest procedural demos, Ultimate Platformer Controller, and LimboAI demo components.
+- [x] **1.6** Mark Maaack Game Template, Maaack Input Remapping, Metroidvania System, YATI, and Dialogic as deferred candidates.
+- [x] **1.7** For any copied package, update the ledger in the same commit that copies the package.
 
 Accept:
 
-- [ ] A future agent can tell which external code was copied, which was only inspected, and which was only reference material.
-- [ ] License and attribution requirements are visible without reopening chat history.
+- [x] A future agent can tell which external code was copied, which was only inspected, and which was only reference material.
+- [x] License and attribution requirements are visible without reopening chat history.
 
 Stop if:
 
@@ -187,79 +187,79 @@ Source owners likely touched:
 - new `docs/design/MAP_AUTHORING_PIPELINE_CONTRACT.md`
 - optional links from this plan and `TESTBED_REIMPLEMENTATION_CONTRACT.md`
 
-- [ ] **2.1** Create a map authoring pipeline contract as `type: spec`, `status: active`.
-- [ ] **2.2** Define the selected editor for the first spike: LDtk.
-- [ ] **2.3** Define fallback editor policy: YATI/Tiled is only evaluated if LDtk spike fails.
-- [ ] **2.4** Define map scale in pixels per tile and tile size.
-- [ ] **2.5** Define room bounds as ratios and viewport spans, not hard-coded absolute map sizes.
-- [ ] **2.6** Define supported room roles:
-  - [ ] `start`
-  - [ ] `movement`
-  - [ ] `vertical`
-  - [ ] `combat`
-  - [ ] `hazard`
-  - [ ] `interaction`
-  - [ ] `destructible`
-  - [ ] `generated_socket`
-  - [ ] `exit`
-- [ ] **2.7** Define required LDtk layers:
-  - [ ] `Terrain`
-  - [ ] `OneWay`
-  - [ ] `Hazards`
-  - [ ] `Decor`
-  - [ ] `Entities`
-  - [ ] optional `Debug`
-- [ ] **2.8** Define collision layer expectations for imported terrain, one-way platforms, hazards, interactables, enemies, player, and projectiles.
-- [ ] **2.9** Define required entity names:
-  - [ ] `PlayerSpawn`
-  - [ ] `Checkpoint`
-  - [ ] `CameraBounds`
-  - [ ] `RoomBounds`
-  - [ ] `EnemySpawn`
-  - [ ] `HazardSpawn`
-  - [ ] `DestructibleSpawn`
-  - [ ] `InteractableSpawn`
-  - [ ] `Climbable`
-  - [ ] `OneWayPlatformMarker`
-  - [ ] `ExitPortal`
-  - [ ] `GeneratedSocket`
-  - [ ] `ValidationGate`
-- [ ] **2.10** Define required fields per entity.
-- [ ] **2.11** Define field value enums for enemy type, hazard type, interactable type, destructible type, climbable type, required ability, room role, route role, and validation gate id.
-- [ ] **2.12** Define socket vocabulary:
-  - [ ] `left`
-  - [ ] `right`
-  - [ ] `up`
-  - [ ] `down`
-  - [ ] `branch`
-  - [ ] `return`
-  - [ ] `generated_entry`
-  - [ ] `generated_exit`
-- [ ] **2.13** Define passability rules:
-  - [ ] least-mobile profile can clear critical path,
-  - [ ] optional routes may require advanced ability flags,
-  - [ ] every fall has recovery or checkpoint,
-  - [ ] every room has camera bounds,
-  - [ ] no required route shows the entire map at once.
-- [ ] **2.14** Define marker validation output fields:
-  - [ ] missing required marker,
-  - [ ] unknown entity type,
-  - [ ] missing field,
-  - [ ] invalid enum,
-  - [ ] impossible route,
-  - [ ] duplicate id,
-  - [ ] spawn cap violation.
-- [ ] **2.15** Define what remains hidden behind the resolver:
-  - [ ] raw LDtk dictionaries,
-  - [ ] importer-specific nodes,
-  - [ ] external field naming quirks,
-  - [ ] tile editor metadata.
+- [x] **2.1** Create a map authoring pipeline contract as `type: spec`, `status: active`.
+- [x] **2.2** Define the selected editor for the first spike: LDtk.
+- [x] **2.3** Define fallback editor policy: YATI/Tiled is only evaluated if LDtk spike fails.
+- [x] **2.4** Define map scale in pixels per tile and tile size.
+- [x] **2.5** Define room bounds as ratios and viewport spans, not hard-coded absolute map sizes.
+- [x] **2.6** Define supported room roles:
+  - [x] `start`
+  - [x] `movement`
+  - [x] `vertical`
+  - [x] `combat`
+  - [x] `hazard`
+  - [x] `interaction`
+  - [x] `destructible`
+  - [x] `generated_socket`
+  - [x] `exit`
+- [x] **2.7** Define required LDtk layers:
+  - [x] `Terrain`
+  - [x] `OneWay`
+  - [x] `Hazards`
+  - [x] `Decor`
+  - [x] `Entities`
+  - [x] optional `Debug`
+- [x] **2.8** Define collision layer expectations for imported terrain, one-way platforms, hazards, interactables, enemies, player, and projectiles.
+- [x] **2.9** Define required entity names:
+  - [x] `PlayerSpawn`
+  - [x] `Checkpoint`
+  - [x] `CameraBounds`
+  - [x] `RoomBounds`
+  - [x] `EnemySpawn`
+  - [x] `HazardSpawn`
+  - [x] `DestructibleSpawn`
+  - [x] `InteractableSpawn`
+  - [x] `Climbable`
+  - [x] `OneWayPlatformMarker`
+  - [x] `ExitPortal`
+  - [x] `GeneratedSocket`
+  - [x] `ValidationGate`
+- [x] **2.10** Define required fields per entity.
+- [x] **2.11** Define field value enums for enemy type, hazard type, interactable type, destructible type, climbable type, required ability, room role, route role, and validation gate id.
+- [x] **2.12** Define socket vocabulary:
+  - [x] `left`
+  - [x] `right`
+  - [x] `up`
+  - [x] `down`
+  - [x] `branch`
+  - [x] `return`
+  - [x] `generated_entry`
+  - [x] `generated_exit`
+- [x] **2.13** Define passability rules:
+  - [x] least-mobile profile can clear critical path,
+  - [x] optional routes may require advanced ability flags,
+  - [x] every fall has recovery or checkpoint,
+  - [x] every room has camera bounds,
+  - [x] no required route shows the entire map at once.
+- [x] **2.14** Define marker validation output fields:
+  - [x] missing required marker,
+  - [x] unknown entity type,
+  - [x] missing field,
+  - [x] invalid enum,
+  - [x] impossible route,
+  - [x] duplicate id,
+  - [x] spawn cap violation.
+- [x] **2.15** Define what remains hidden behind the resolver:
+  - [x] raw LDtk dictionaries,
+  - [x] importer-specific nodes,
+  - [x] external field naming quirks,
+  - [x] tile editor metadata.
 
 Accept:
 
-- [ ] A future map can be authored from the contract without reading resolver code.
-- [ ] A future resolver can be written from the contract without reading the LDtk file by hand.
-- [ ] Player/combat/enemy scripts do not need to know LDtk internals.
+- [x] A future map can be authored from the contract without reading resolver code.
+- [x] A future resolver can be written from the contract without reading the LDtk file by hand.
+- [x] Player/combat/enemy scripts do not need to know LDtk internals.
 
 Stop if:
 
@@ -479,30 +479,30 @@ Source owners likely touched:
 - `project.godot`,
 - adoption ledger.
 
-- [ ] **8.1** Decide direct adopt vs local reimplementation of KoBeWi ControlsRemap pattern.
-- [ ] **8.2** If copied, record URL, commit, license, and copied paths in the adoption ledger.
-- [ ] **8.3** Define tracked action list from canonical project actions.
-- [ ] **8.4** Load saved remap at boot.
-- [ ] **8.5** Apply remap to `InputMap`.
-- [ ] **8.6** Save only changed bindings or a clear complete binding profile.
-- [ ] **8.7** Add restore default for all actions.
-- [ ] **8.8** Add restore default for one action if cheap.
-- [ ] **8.9** Add duplicate binding detection.
-- [ ] **8.10** Add visible duplicate warning in settings popup.
-- [ ] **8.11** Add visible "press key" capture state.
-- [ ] **8.12** Ensure `attack` can be remapped.
-- [ ] **8.13** Ensure HUD reads current binding after remap.
-- [ ] **8.14** Ensure settings popup reads current binding after remap.
-- [ ] **8.15** Ensure remap persists across project restart.
-- [ ] **8.16** Explicitly document unsupported device types for this pass if mouse/gamepad axes are deferred.
+- [x] **8.1** Decide direct adopt vs local reimplementation of KoBeWi ControlsRemap pattern.
+- [x] **8.2** No package was copied; KoBeWi ControlsRemap is recorded as reference-only in the adoption ledger.
+- [x] **8.3** Define tracked action list from canonical project actions.
+- [x] **8.4** Load saved remap at boot.
+- [x] **8.5** Apply remap to `InputMap`.
+- [x] **8.6** Save only changed bindings or a clear complete binding profile.
+- [x] **8.7** Add restore default for all actions.
+- [x] **8.8** Add restore default for one action if cheap.
+- [x] **8.9** Add duplicate binding detection.
+- [x] **8.10** Add visible duplicate warning in settings popup.
+- [x] **8.11** Add visible "press key" capture state.
+- [x] **8.12** Ensure `attack` can be remapped.
+- [x] **8.13** Ensure HUD reads current binding after remap.
+- [x] **8.14** Ensure settings popup reads current binding after remap.
+- [x] **8.15** Ensure remap persists across project restart.
+- [x] **8.16** Explicitly document unsupported device types for this pass if mouse/gamepad axes are deferred.
 
 Accept:
 
-- [ ] Tester can change attack key from `F` to another key.
-- [ ] HUD updates to show the new attack key.
-- [ ] Restarting the game keeps the remapped key.
-- [ ] Restore defaults works.
-- [ ] Duplicate binding is blocked or clearly warned.
+- [x] Tester can change attack key from `F` to another key.
+- [x] HUD updates to show the new attack key.
+- [x] Restarting the game keeps the remapped key.
+- [x] Restore defaults works.
+- [x] Duplicate binding is blocked or clearly warned.
 
 Stop if:
 
@@ -647,11 +647,11 @@ Source owners likely touched:
 - adoption ledger,
 - phase docs as needed.
 
-- [ ] **12.1** Update this plan's completed checkboxes as each phase lands.
-- [ ] **12.2** Update `FEATURE_PRIORITY.md` progress when persistent remap is implemented.
+- [x] **12.1** Update this plan's completed checkboxes as each phase lands.
+- [x] **12.2** Update `FEATURE_PRIORITY.md` progress when persistent remap is implemented.
 - [ ] **12.3** Update `FEATURE_PRIORITY.md` progress when imported route becomes primary.
 - [ ] **12.4** Update `04_generated_landscape.md` when generated pocket uses template descriptors.
-- [ ] **12.5** Add map authoring contract link to `TESTBED_REIMPLEMENTATION_CONTRACT.md`.
+- [x] **12.5** Add map authoring contract link to `TESTBED_REIMPLEMENTATION_CONTRACT.md`.
 - [ ] **12.6** If legacy map code is retired, document what replaced it.
 - [ ] **12.7** If any external package is removed, update adoption ledger.
 - [ ] **12.8** If any active plan becomes complete, mark it `done` only after the work is actually done.
@@ -749,8 +749,8 @@ Manual QA remains required because the main risks are movement feel, camera fram
 
 Start with these tasks in order:
 
-- [ ] Create `docs/research/third_party_adoption_ledger.md`.
-- [ ] Create `docs/design/MAP_AUTHORING_PIPELINE_CONTRACT.md`.
+- [x] Create `docs/research/third_party_adoption_ledger.md`.
+- [x] Create `docs/design/MAP_AUTHORING_PIPELINE_CONTRACT.md`.
 - [ ] Copy and enable Godot LDtk Importer in an isolated spike.
 - [ ] Build the smallest LDtk source map that contains all required marker categories.
 - [ ] Build marker resolver and import report.

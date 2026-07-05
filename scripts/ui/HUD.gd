@@ -16,6 +16,8 @@ var counters_panel: PanelContainer
 var controls_panel: PanelContainer
 var status_panel: PanelContainer
 var prompt_panel: PanelContainer
+var active_prompt_text: String = ""
+var active_prompt_visible: bool = false
 
 
 func _ready() -> void:
@@ -123,6 +125,7 @@ func _connect_signals() -> void:
 	SignalBus.testbed_flags_changed.connect(_on_testbed_flags_changed)
 	SignalBus.testbed_objective_changed.connect(_on_testbed_objective_changed)
 	SignalBus.testbed_route_status_changed.connect(_on_testbed_route_status_changed)
+	SignalBus.input_bindings_changed.connect(_on_input_bindings_changed)
 
 
 func _sync_from_state() -> void:
@@ -234,16 +237,29 @@ func _on_stage_cleared(stage_id: String) -> void:
 
 
 func _on_interaction_prompt_changed(prompt_text: String, active: bool) -> void:
-	if active:
-		prompt_label.text = prompt_text if prompt_text.contains(":") else "E / Enter: %s" % prompt_text
-	else:
-		prompt_label.text = ""
-	prompt_panel.visible = active
+	active_prompt_text = prompt_text
+	active_prompt_visible = active
+	_refresh_prompt_text()
 
 
 func _on_status_message_changed(message: String) -> void:
 	status_label.text = message
 	status_panel.visible = not message.is_empty()
+
+
+func _on_input_bindings_changed() -> void:
+	controls_label.text = Game.get_input_guide_text()
+	if active_prompt_visible:
+		_refresh_prompt_text()
+
+
+func _refresh_prompt_text() -> void:
+	if active_prompt_visible:
+		var interact_binding := Game.get_action_binding_text("interact", "E/Enter")
+		prompt_label.text = active_prompt_text if active_prompt_text.contains(":") else "%s: %s" % [interact_binding, active_prompt_text]
+	else:
+		prompt_label.text = ""
+	prompt_panel.visible = active_prompt_visible
 
 
 func _on_testbed_metrics_changed(metrics: Dictionary) -> void:

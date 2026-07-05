@@ -9,6 +9,7 @@ signal stage_started(stage_id: String, stage_display_name: String)
 signal stage_cleared(stage_id: String)
 signal interaction_prompt_changed(prompt_text: String, active: bool)
 signal settings_visibility_changed(is_visible: bool)
+signal input_bindings_changed
 signal status_message_changed(message: String)
 signal testbed_metrics_changed(metrics: Dictionary)
 signal testbed_flags_changed(flags: Dictionary)

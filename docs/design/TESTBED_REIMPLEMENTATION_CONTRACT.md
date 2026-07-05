@@ -10,6 +10,7 @@ related:
   - ./MOTION_TEST_BED_SPEC.md
   - ./PLAYER_CHARACTER_SYSTEMS.md
   - ./MAP_DATA_AND_VISUALIZATION.md
+  - ./MAP_AUTHORING_PIPELINE_CONTRACT.md
   - ./PROCEDURAL_REGION_GENERATION.md
   - ./ENEMIES_TRAPS_GIMMICKS.md
   - ./testbed-plan/FEATURE_PRIORITY.md
@@ -787,5 +788,6 @@ The rebuild contract is satisfied when:
 - `docs/research/foundation_resource_survey_2026-07-05.md`
 - `docs/design/MOTION_TEST_BED_SPEC.md`
 - `docs/design/ENEMIES_TRAPS_GIMMICKS.md`
+- `docs/design/MAP_AUTHORING_PIPELINE_CONTRACT.md`
 - `docs/design/PROCEDURAL_REGION_GENERATION.md`
 - `docs/design/testbed-plan/FEATURE_PRIORITY.md`

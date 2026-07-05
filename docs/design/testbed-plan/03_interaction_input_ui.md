@@ -32,13 +32,13 @@ Resolved in implementation:
 - [x] HUD control text is generated from the actual `InputMap`.
 - [x] Settings popup lists current bindings.
 - [x] The default keyboard attack binding is `F`, and stale `J`/mouse default display text has been removed from the active input path.
-- [x] Keyboard remapping is explicitly deferred in UI.
+- [x] Keyboard remapping persists through `InputBindings`, blocks duplicate tracked keys, and supports restore defaults.
 - [x] Climb traversal inputs are displayed.
 - [x] Debug shortcuts are labeled as debug-only.
 
 Still open:
 
-- [ ] Persistent key remapping and duplicate-binding conflict handling remain deferred.
+- [ ] Mouse/gamepad remapping and chord capture remain deferred.
 - [ ] Manual interaction/input QA is still tracked in `05_qa_and_handoff.md`.
 
 ## Tasks
@@ -81,7 +81,7 @@ Accept:
 
 - [x] In-game guide matches actual `InputMap` actions.
 - [x] A tester can find every action needed by the testbed without external notes.
-- [x] If remap is deferred, the UI says so and the shared action path remains ready.
+- [x] Keyboard remap updates actual `InputMap` actions and persists through restart.
 
 Guard:
 
@@ -95,13 +95,15 @@ Guard:
 - [x] Binding guide matches actual controls.
 - [x] Binding guide includes climb-related controls when those abilities are enabled.
 - [x] Settings controls section is readable at 1280x720.
+- [x] Keyboard remap persistence, duplicate blocking, and restore defaults pass `tools/validate_input_remap.gd`.
+- [x] Settings popup render check passes at 1280x720 and 390x720.
 - [x] `rg` checks for duplicated hard-coded action display strings.
 - [x] `git diff --check` before commit.
 
 ## Risks
 
 - A text-only guide can go stale if it does not read from `InputMap`.
-- Remap UI can grow too large for this phase; if so, list bindings and clearly defer remapping.
+- Remap UI can grow too large; keep gamepad, mouse, and chord capture deferred until the keyboard path is stable.
 - Interaction panels can steal input if pause/focus handling is not explicit.
 
 ## Next Steps

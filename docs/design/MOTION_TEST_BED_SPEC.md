@@ -433,7 +433,7 @@ Future implementation should proceed in this order:
 - Final art, final animation, and final sound are not required.
 - Full inventory, shop, card rewards, and boss patterns are not required inside the motion test bed.
 - Multiple independent character controllers are not required unless a later accepted design explicitly needs them.
-- Full keybinding persistence is not required for the first correction pass, but the input architecture must not block it.
+- Full mouse/gamepad remapping and input glyph polish are not required for the first correction pass, but the input architecture must not block them.
 - Full production procedural world generation is not required. The test bed generator can be small and segment-template based as long as it creates playable seeded miniature routes.
 - Final camera polish is not required, but the default camera must still follow the player through a route larger than one viewport.
 

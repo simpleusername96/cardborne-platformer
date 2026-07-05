@@ -10,6 +10,11 @@ var _captures: Array[Dictionary] = [
 		"settings_open": false,
 	},
 	{
+		"name": "desktop_settings_popup",
+		"size": Vector2i(1280, 720),
+		"settings_open": true,
+	},
+	{
 		"name": "narrow_stage_hud",
 		"size": Vector2i(390, 720),
 		"settings_open": false,
