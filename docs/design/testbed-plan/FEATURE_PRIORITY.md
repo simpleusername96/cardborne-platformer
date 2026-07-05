@@ -14,6 +14,7 @@ related:
   - ./03_interaction_input_ui.md
   - ./04_generated_landscape.md
   - ./05_qa_and_handoff.md
+  - ./06_external_foundation_replacement.md
 ---
 
 # Feature Priority Matrix
@@ -57,6 +58,11 @@ Resolved in the 2026-07-03 player attack motion pass:
 - [x] Assassin uses a visible quick slash during active frames.
 - [x] Archer fires a real arrow projectile through the shared player `Hitbox`/`DamageInfo` path.
 - [x] Attack motion style and projectile values are profile data, not stage-local hard-coding.
+
+Resolved in the 2026-07-05 external foundation planning pass:
+
+- [x] External codebase deep-dive findings were converted into `06_external_foundation_replacement.md`.
+- [x] The recommended direction is staged partial replacement: map pipeline first, persistent remap second, local movement/combat refinement third, generated pockets after authored imported rooms work.
 
 ## Tasks
 
