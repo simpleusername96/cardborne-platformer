@@ -7,6 +7,7 @@ scope: Motion test bed feature priority boundary
 related:
   - ../MOTION_TEST_BED_MVP_PLAN.md
   - ../MOTION_TEST_BED_SPEC.md
+  - ../TESTBED_REIMPLEMENTATION_CONTRACT.md
   - ./00_foundation_contracts.md
   - ./01_authored_lanes.md
   - ./02_combat_damage.md

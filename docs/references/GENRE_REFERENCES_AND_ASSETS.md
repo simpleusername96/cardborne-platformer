@@ -4,6 +4,9 @@ status: active
 source: Web research on 2026-07-01
 topic: Godot platformer RPG-lite references and asset candidates
 scope: Preimplementation research for Cardborne Platformer
+related:
+  - ../research/foundation_resource_survey_2026-07-05.md
+  - ../design/TESTBED_REIMPLEMENTATION_CONTRACT.md
 ---
 
 # Genre References And Asset Candidates

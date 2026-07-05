@@ -6,6 +6,7 @@ source: User correction on 2026-07-02
 scope: Godot runtime test bed for movement, combat, interaction, and input validation
 related:
   - ../product/2d_platform_action_card_game_prd.md
+  - ./TESTBED_REIMPLEMENTATION_CONTRACT.md
   - ./PLAYER_CHARACTER_SYSTEMS.md
   - ./MAP_DATA_AND_VISUALIZATION.md
   - ./PROCEDURAL_REGION_GENERATION.md
@@ -17,6 +18,8 @@ related:
 ## Purpose
 
 Define what the first playable test bed must prove before normal stages, shop/rest maps, boss maps, or broader content are implemented. The test bed is not just a scene that boots. It is a calibrated miniature game: a validation space for character movement, attack readability, enemy interaction, NPC interaction, input mapping, basic UI guidance, and seeded random landscape generation.
+
+For code-disposable, full-rebuild detail, use `TESTBED_REIMPLEMENTATION_CONTRACT.md` as the stricter canonical contract.
 
 ## Scope
 
