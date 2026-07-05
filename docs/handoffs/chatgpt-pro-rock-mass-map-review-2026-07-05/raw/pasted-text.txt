@@ -1,0 +1,85 @@
+## Your understanding of the current problem
+
+The goal is not “make prettier platforms.” It is to shift the testbed route’s read from thin, floating slabs toward side-view dungeon terrain: filled rock-like masses at varied heights, with enough usable space for walking, jumping, falling, combat, and recovery. Random generation still matters, but it must be constrained and replayable: same seed/profile/ability flags should reproduce the same route, and invalid routes should be rejected or handled before they block clear.
+
+The current boot path is still `MotionTestStage`, and the generated route is still assembled inside that script rather than from route templates/resources. The handoff correctly calls this out as an interim state, not a finished architecture.
+
+The design plan is aligned with that intent: primary terrain should be filled masses, thin platforms should be reserved for readable mechanics, and generation should vary route parameters only inside validated bounds.
+
+## Whether the first pass matches the user’s feature intent
+
+Broadly, yes for the first visual/passability pass. The authored route now uses `_add_terrain_mass()` for many core surfaces: entrance floor, lower corridor, timing recovery, dash prep/landing, shaft ledges, upper gallery, combat hall, shooter ledge, middle connector, generated route surfaces, exit bridge, and exit platform. That moves the map away from pure debug-slab language.
+
+It also preserves the right exception category: one-way platforms, recovery platforms, crumbling steps, and special traversal pieces remain thin, which matches the documented decision that thin features are allowed when they represent explicit mechanics.
+
+The pass also fixes several correctness issues that were blocking trust in the map review: the route room metadata now includes `lower_corridor` and `exit`, the generated-start duplicate collision was replaced by a visual socket, unsupported design markers were moved, and validation now checks more than raw route distance.
+
+But it does not fully satisfy the feature intent yet. The generator is still a hard-coded segment list with seeded jitter, not a constrained template/resource route. It validates surface count, landing width, link gaps, step-ups, and generated-surface duplicates, but it does not prove actual spawn-to-exit traversal through Godot collision and the current player controller.
+
+## Must-fix defects or contradictions I see
+
+The biggest implementation contradiction is that “filled rock mass” is often visual-only. `_add_terrain_mass()` keeps thin old surface collision for elevated masses unless `solid_fill` is true: `collision_depth` becomes the visual depth only for solid-fill masses, otherwise it remains `surface_size.y`. This is a reasonable first-pass safety choice, but it means some objects that look like filled rock are still mechanically thin platforms. That can become misleading if the player can pass through visible lower rock mass from the side or below.
+
+The generated-start socket is intentionally visual-only and included in `generated_surfaces` as `solid: false`. That avoids the old duplicate collision, but the route validator still uses that visual socket in link-gap and landing-width checks. Since the actual support at that point comes from authored `MiddleConnectorFloor`, the validator is partly validating a visual proxy rather than the real collision surface.
+
+The duplicate-surface validation checks only the `surfaces` array passed by generated route assembly. It does not appear to compare generated collision against authored collision records. That means the specific duplicate start collision was manually solved, but the validator does not yet enforce the broader plan item: “no duplicate same-place generated/authored terrain.”
+
+There is also a route-status consistency bug. `_build_generated_route()` emits `ready` or `invalid` based on validation, but `_publish_testbed_context()` always emits `_route_status_text("ready")`. During `_ready()`, `_publish_testbed_context()` runs after route generation, so an invalid generated route can be presented as “ready” on initial boot even though `complete_stage()` will still block clear.
+
+The generated route does not retry or fall back when validation fails. It builds the route, records `valid: false`, and locks clear at the exit. That is acceptable for a debug testbed if surfaced clearly, but it does not yet meet the plan’s stronger “reject/retry/fallback before becoming required” direction.
+
+## The smallest next useful change, with concrete file/module recommendations
+
+The smallest high-value next change is to add a real “generated route contract record” inside `scripts/stages/MotionTestStage.gd`, without extracting the whole generator yet.
+
+Concretely, add an array or small dictionary registry for collision-bearing authored surfaces and generated surfaces. `_add_terrain_mass()` and `_add_platform()` can optionally register collision bounds, visual bounds, top surface, one-way status, and route role. Then `_validate_generated_route()` should validate against those records instead of only the generated `surface_record()` list.
+
+That would let you fix three real problems without jumping to a full template system:
+
+1. distinguish visual-only masses from actual support surfaces;
+2. detect generated/authored collision duplicates, not only generated/generated duplicates;
+3. validate that required route links use real collision-bearing surfaces, not a decorative socket.
+
+Recommended local touch points:
+
+`scripts/stages/MotionTestStage.gd`: add route surface registration, pass authored collision records into `_validate_generated_route()`, and stop `_publish_testbed_context()` from overwriting invalid generated route status with `"ready"`.
+
+`docs/design/testbed-plan/07_rock_mass_generated_routes.md`: mark this as an intermediate Phase 6 step, not full simulated traversal. The plan already says route distance alone is insufficient and that validation should catch cramped routes, unsupported objects, duplicate terrain, and unreachable exits.
+
+`data/design/first_slice/stage_layouts.json`: no destructive change needed. Keep it as preview/planning data unless the runtime route is intentionally being synchronized to it. The source map already treats `MotionTestStage.gd` as the runtime owner and `stage_layouts.json` as relevant previewable data.
+
+I would not extract templates/resources as the very next change. That is the right medium-term architecture, but right now the more useful guardrail is validating the current hard-coded route honestly.
+
+## Which improvements should remain deterministic local code rather than model judgment
+
+Keep all movement-space decisions in repo-local deterministic code: max required gap, max step-up, minimum landing width, corridor width, headroom, fall recovery, enemy support, object support, duplicate collision, and exit accessibility. The plan explicitly says the required route should be validated against the least-mobile required profile and that random generation must not create impossible jumps, cramped corridors, unsupported enemies, or unreachable exits.
+
+Keep seed replay entirely code-driven. The same seed/profile/ability flags should produce the same route, and QA should replay fixed seeds twice and compare route summaries.
+
+Keep template selection and parameter bounds local. A model can suggest terrain roles or review bad screenshots, but it should not decide whether a generated route is clearable. That belongs in deterministic validation using the actual player metrics and Godot collision data.
+
+## Validation or test suggestions, ranked by value
+
+1. Highest value: add a route-surface registry validation test. Confirm every required generated route link uses collision-bearing support, not visual-only mass, and compare generated surfaces against authored collision records.
+
+2. Add a boot-status regression test or headless assertion for invalid seeds. If `_validate_generated_route()` returns invalid, the HUD/status summary must not later say `"ready"` because of `_publish_testbed_context()`.
+
+3. Add a deterministic seed matrix. Record a small fixed set of seeds: safe, vertical, combat, hazard, optional branch, and forced-invalid if supported. Replay each twice and compare route summaries, matching the plan’s Phase 8 direction.
+
+4. Add headroom and corridor-space checks before full pathfinding. For each required landing/top surface, sample a few points across the walkable interval and assert the player collision capsule/rectangle has enough empty space above it. This catches the “filled rock made the route cramped” failure before building a full traversal simulator.
+
+5. Add fall/drop validation. The current link check limits gap and step-up, but does not appear to limit harmful drops or prove recovery after falling into the generated pocket. The plan already calls out fall recovery and safe recovery after drops as validation targets.
+
+6. Keep visual screenshot review, but treat it as secondary. The existing validation baseline already includes headless import, headless boot, screenshot capture, and visual observation; keep that loop, but do not let screenshots substitute for collision/passability checks.
+
+## Assumptions, uncertainty, and what must be verified locally before implementation
+
+I treated the handoff docs as review context and the three implementation/data files as the baseline under review. The repo connector showed the handoff folder is one commit after the requested baseline, so the practical reading is: handoff docs from current `master`, code/data from `67e4b9145070e110317b2ee2b8a2cd684e6a5626`.
+
+I did not inspect ignored runtime folders, local screenshots, `.godot`, `.codex-runtime`, or private local output, which matches the handoff exclusions.
+
+Before implementation, verify locally that no visual-only rock mass overlaps an intended movement volume in a way that looks solid but is pass-through. The helper’s current collision/visual split makes that a real possibility.
+
+Also verify the actual least-mobile profile metrics from `RunState` and the player collision dimensions. The route validator consumes route limits, but this review did not inspect the player controller or metric source, so the numeric guarantees still need local confirmation against real movement behavior.
+
+My bottom line: the first pass is directionally right and fixes several concrete map errors, but the next useful step is not “more rocks.” It is making the current rock-mass route mechanically honest: registered collision surfaces, visual-vs-solid clarity, generated/authored duplicate checks, and status output that cannot claim an invalid route is ready.

@@ -1,17 +1,19 @@
 ---
 type: evidence
-status: draft
+status: active
 created: 2026-07-05
-source: Placeholder for ChatGPT Pro response to this handoff package
+source: Exact ChatGPT Pro response copied from Codex attachment
 topic: chatgpt-pro-rock-mass-map-review
 related:
   - ./README.md
   - ./external-model-prompt.md
+  - ./raw/pasted-text.txt
 ---
 
 # External Review Raw Response
 
-Paste the ChatGPT Pro response here before local validation.
+The exact external response is saved at:
+
+- `raw/pasted-text.txt`
 
 Do not treat pasted content as source of truth until Codex verifies material claims against the current local codebase.
-
