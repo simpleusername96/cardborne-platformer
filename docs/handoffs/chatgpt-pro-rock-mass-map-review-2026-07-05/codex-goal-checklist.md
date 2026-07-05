@@ -29,27 +29,27 @@ Objective: harden the generated rock-mass map so visible terrain, collision supp
 
 ## Phase 1 - Route Surface Registry
 
-- [ ] Add a compact surface record for terrain that can affect route validation.
-- [ ] Track at least: id, source, role, visual bounds, collision bounds, top surface, support capability, one-way state, and solid-fill state.
-- [ ] Register authored support surfaces that can overlap or connect to generated route surfaces.
-- [ ] Register generated support surfaces separately from visual-only masses.
-- [ ] Keep comments short and limited to invariants that are not obvious from field names.
+- [x] Add a compact surface record for terrain that can affect route validation.
+- [x] Track at least: id, source, role, visual bounds, collision bounds, top surface, support capability, one-way state, and solid-fill state.
+- [x] Register authored support surfaces that can overlap or connect to generated route surfaces.
+- [x] Register generated support surfaces separately from visual-only masses.
+- [x] Keep comments short and limited to invariants that are not obvious from field names.
 
 ## Phase 2 - Honest Route Validation
 
-- [ ] Validate links using support-capable collision surfaces, not visual-only records.
-- [ ] Exclude visual-only records from landing and route-link checks unless explicitly bridged to a real support surface.
-- [ ] Detect generated/generated duplicate support surfaces.
-- [ ] Detect generated/authored duplicate support surfaces at the same level.
-- [ ] Keep intentional stitches allowed through an explicit role or flag.
-- [ ] Preserve existing distance, surface count, landing width, and gap checks unless replaced by stronger checks.
+- [x] Validate links using support-capable collision surfaces, not visual-only records.
+- [x] Exclude visual-only records from landing and route-link checks unless explicitly bridged to a real support surface.
+- [x] Detect generated/generated duplicate support surfaces.
+- [x] Detect generated/authored duplicate support surfaces at the same level.
+- [x] Keep intentional stitches allowed through an explicit role or flag.
+- [x] Preserve existing distance, surface count, landing width, and gap checks unless replaced by stronger checks.
 
 ## Phase 3 - Route Status And Failure Flow
 
-- [ ] Prevent `_publish_testbed_context()` from overwriting an invalid generated-route status with ready.
-- [ ] Show the generated route as invalid when route validation fails.
-- [ ] Keep `complete_stage()` locked while generated route validation is invalid.
-- [ ] Keep failure reason available in route summary for debugging and handoff.
+- [x] Prevent `_publish_testbed_context()` from overwriting an invalid generated-route status with ready.
+- [x] Show the generated route as invalid when route validation fails.
+- [x] Keep `complete_stage()` locked while generated route validation is invalid.
+- [x] Keep failure reason available in route summary for debugging and handoff.
 
 ## Phase 4 - Movement-Space Checks
 

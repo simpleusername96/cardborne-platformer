@@ -220,15 +220,15 @@ Accept:
 Goal: replace distance-only validation with player-space and route validation.
 
 - [ ] **6.1** Validate that the critical path is connected from spawn to exit.
-- [ ] **6.2** Validate required gaps and ledges against the selected profile's movement metrics.
+- [x] **6.2** Validate required gaps and ledges against the selected profile's movement metrics.
 - [ ] **6.3** Validate minimum corridor width and headroom along the route.
-- [ ] **6.4** Validate every required landing zone.
+- [x] **6.4** Validate every required landing zone.
 - [ ] **6.5** Validate every fall has recovery, checkpoint route, or fall reset.
 - [ ] **6.6** Validate hazards do not create unavoidable damage on the required route.
 - [ ] **6.7** Validate enemies and spawners leave safe re-entry space.
 - [ ] **6.8** Validate interactables, chests, gates, and ground enemies are supported by terrain.
 - [ ] **6.9** Validate airborne rewards only when marked intentional.
-- [ ] **6.10** Validate no generated terrain duplicates existing collision at the same place.
+- [x] **6.10** Validate no generated terrain duplicates existing collision at the same place.
 - [ ] **6.11** Validate exit accessibility after required interactions, destructibles, gates, and generated route completion.
 - [ ] **6.12** On validation failure, retry up to a bounded limit, then keep the previous valid route or load a safe fallback.
 

@@ -51,7 +51,6 @@ var route_summary: Dictionary = {}
 
 var _rng := RandomNumberGenerator.new()
 var _validations: Dictionary = {}
-# Route validation reads this registry so decorative fill never counts as support.
 var _route_surfaces: Array[Dictionary] = []
 
 
