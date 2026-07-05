@@ -62,3 +62,11 @@ Local adjustments after ingest:
 - added a compact registry invariant comment near `_route_surfaces`;
 - marked the completed route-validation checklist items in the implementation checklist and design plan;
 - kept headroom, corridor-width, fall recovery, seed matrix, and retry/fallback work open.
+
+Local GitHub handoff:
+
+- implementation branch: `codex/rock-mass-route-contract`
+- implementation commit: `0fb18c8 Harden rock-mass route surface validation`
+- branch push: succeeded
+- manual PR URL: `https://github.com/simpleusername96/cardborne-platformer/pull/new/codex/rock-mass-route-contract`
+- automated PR creation: blocked by GitHub API with `403 Resource not accessible by personal access token`
