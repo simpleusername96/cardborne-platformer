@@ -26,6 +26,10 @@ The generated route still uses a hard-coded list of segment anchors with seeded 
 
 - Generated route assembly is not yet template/resource based.
 - Validation does not yet prove full spawn-to-exit traversal through actual collision and player movement.
+- Some filled rock masses are visual-depth only while their collision remains a thin surface.
+- The generated start socket is visual-only but still participates in some validation checks.
+- Generated-route duplicate checks do not compare generated surfaces against authored terrain.
+- Startup can publish a ready route status after `_build_generated_route()` has emitted invalid.
 - The default narrow viewport HUD covers much of the map; this was observed but not fixed in the map pass.
 - The current route still lives in `MotionTestStage.gd`; production `Stage01` split remains future work.
 
@@ -44,6 +48,8 @@ seed / replay / random input
 
 - `21c4291 Add rock-mass route generation plan`
 - `67e4b91 Refine testbed map rock-mass terrain`
+- `8803796 Add ChatGPT Pro map review handoff`
+- `6433d42 Validate ChatGPT Pro map review`
 
 The first pass:
 
@@ -71,9 +77,12 @@ Visual observation:
 - desktop screenshot shows filled rock-mass terrain in the starting route;
 - narrow screenshot shows the existing HUD obscures much of the world.
 
-## Open Questions
+## Implementation Target
 
-- Should the next change focus on generated route templates, full traversal validation, or splitting `Stage01` out of `MotionTestStage`?
-- How much of the rock-mass shape should become reusable builder code now versus waiting for the map pipeline/importer work?
-- What is the smallest validation improvement that catches real impossible generated maps without overbuilding a full simulation?
+The next change should not be another review. Implement the validated smallest useful change:
 
+- add a route-surface registry or equivalent compact contract;
+- validate support-capable collision surfaces rather than visual-only masses;
+- compare generated terrain against authored terrain for same-level duplicate support;
+- preserve invalid generated-route status instead of publishing ready unconditionally;
+- keep deterministic seed replay and the filled rock-mass visual direction intact.

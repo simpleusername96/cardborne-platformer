@@ -4,7 +4,7 @@ status: active
 created: 2026-07-05
 source: User request to create a ChatGPT Pro handoff folder after rock-mass map refinement
 topic: chatgpt-pro-rock-mass-map-review
-scope: Constraints and decisions for external map review
+scope: Constraints and decisions for external map implementation and PR
 related:
   - ../../design/TESTBED_REIMPLEMENTATION_CONTRACT.md
   - ../../design/testbed-plan/07_rock_mass_generated_routes.md
@@ -47,9 +47,16 @@ related:
 - Keep the first pass inside `MotionTestStage.gd` for speed and safety.
 - Track next steps in `docs/design/testbed-plan/07_rock_mass_generated_routes.md`.
 
+## PR Rules
+
+- Create a feature branch from latest `origin/master`; do not commit directly to `master`.
+- Keep the branch scoped to route-surface validation, status correctness, and tightly related docs/tests.
+- Include a PR summary, validation commands and results, known limitations, and follow-up work.
+- If GitHub credentials or PR creation are unavailable, push the branch if possible and provide the exact branch name, commit hash, diff summary, and blocker.
+- Do not merge the PR.
+
 ## Known Tradeoffs
 
 - The rock-mass helper grew inside `MotionTestStage.gd`; this is acceptable for the first pass but should be extracted if it keeps growing.
 - Current generated validation is better than distance-only but still not a full traversal proof.
 - Narrow HUD readability is a real issue, but it is a UI refinement rather than core terrain generation.
-

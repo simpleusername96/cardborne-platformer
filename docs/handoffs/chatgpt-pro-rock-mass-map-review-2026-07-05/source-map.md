@@ -4,7 +4,7 @@ status: active
 created: 2026-07-05
 source: User request to create a ChatGPT Pro handoff folder after rock-mass map refinement
 topic: chatgpt-pro-rock-mass-map-review
-scope: Source map for external review
+scope: Source map for external implementation
 related:
   - ../../design/testbed-plan/07_rock_mass_generated_routes.md
   - ../../design/TESTBED_REIMPLEMENTATION_CONTRACT.md
@@ -21,9 +21,11 @@ related:
 4. `docs/design/TESTBED_REIMPLEMENTATION_CONTRACT.md`: current testbed behavior contract.
 5. `docs/design/MAP_AUTHORING_PIPELINE_CONTRACT.md`: map authoring and marker expectations.
 6. `docs/design/testbed-plan/07_rock_mass_generated_routes.md`: current plan for rock-mass terrain and constrained random generation.
-7. `scripts/stages/MotionTestStage.gd`: current runtime map and generated route owner.
-8. `data/design/first_slice/stage_layouts.json`: previewable first-slice map data.
-9. `docs/maps/generated/*.svg` and `*.png`: regenerated design previews.
+7. `docs/handoffs/chatgpt-pro-rock-mass-map-review-2026-07-05/external-review-validation.md`: locally validated external findings.
+8. `docs/handoffs/chatgpt-pro-rock-mass-map-review-2026-07-05/codex-goal-checklist.md`: implementation checklist for the next pass.
+9. `scripts/stages/MotionTestStage.gd`: current runtime map and generated route owner.
+10. `data/design/first_slice/stage_layouts.json`: previewable first-slice map data.
+11. `docs/maps/generated/*.svg` and `*.png`: regenerated design previews.
 
 ## Runtime Files To Inspect First
 
@@ -44,11 +46,11 @@ related:
 
 ## Recent Commits
 
+- `6433d42 Validate ChatGPT Pro map review`
+- `8803796 Add ChatGPT Pro map review handoff`
 - `67e4b91 Refine testbed map rock-mass terrain`
 - `21c4291 Add rock-mass route generation plan`
 - `c97f866 Tighten input remap quality checks`
-- `02393fc Add persistent input remap foundation`
-- `c0538ca Add external foundation replacement plan`
 
 ## Local Validation Commands
 
@@ -60,10 +62,11 @@ python tools/generate_map_previews.py
 .\tools\godot.ps1 --path . --script res://tools/capture_ui_screenshots.gd
 ```
 
+If the environment cannot run Windows PowerShell, use the repo's configured Godot runtime equivalent and report the exact substituted command.
+
 ## Excluded From External Review
 
 - `.codex-runtime/`: local runtime/cache and screenshots, not source of truth.
 - `.godot/`: Godot import/cache output.
 - credentials, `.env` files, local account data, raw logs, and unrelated generated exports.
 - full chat history; this package summarizes the relevant intent and state.
-
