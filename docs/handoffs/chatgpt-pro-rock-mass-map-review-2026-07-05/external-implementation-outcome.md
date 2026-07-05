@@ -60,6 +60,8 @@ Local validation completed by Codex:
 Local adjustments after ingest:
 
 - added a compact registry invariant comment near `_route_surfaces`;
+- lowered the first authored route steps so the lower corridor ascent stays within the displayed least-mobile ledge budget;
+- reshaped the generated seed route into a descending rock-stair path with short gaps, then added an exit-prep mass so route span remains valid;
 - marked the completed route-validation checklist items in the implementation checklist and design plan;
 - kept headroom, corridor-width, fall recovery, seed matrix, and retry/fallback work open.
 

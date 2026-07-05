@@ -175,12 +175,12 @@ func _build_authored_route() -> void:
 
 	_add_terrain_mass(world, "EntranceFloor", Vector2(340.0, GROUND_Y), Vector2(600.0, 40.0), 260.0, Color(0.22, 0.25, 0.29, 1.0), true)
 	_add_terrain_mass(world, "LowerCorridorFloor", Vector2(900.0, GROUND_Y), Vector2(520.0, 40.0), 260.0, Color(0.22, 0.25, 0.29, 1.0), true)
-	_add_terrain_mass(world, "FirstStep", Vector2(760.0, 1788.0), Vector2(240.0, 28.0), 78.0, Color(0.30, 0.34, 0.39, 1.0))
+	_add_terrain_mass(world, "FirstStep", Vector2(760.0, 1808.0), Vector2(240.0, 28.0), 78.0, Color(0.30, 0.34, 0.39, 1.0))
 	_add_walker(test_objects, "IntroWalker", Vector2(520.0, GROUND_TOP), 95.0)
 	_add_label(world, "LOWER CORRIDOR\nMovement plus first Walker in real room scale.", Vector2(750.0, 1670.0), 360.0)
 
-	_add_terrain_mass(world, "CoyoteLedge", Vector2(1060.0, 1724.0), Vector2(250.0, 26.0), 92.0, Color(0.28, 0.37, 0.45, 1.0))
-	_add_platform(world, "JumpBufferOneWay", Vector2(1260.0, 1658.0), Vector2(280.0, 22.0), Color(0.22, 0.48, 0.56, 1.0), true)
+	_add_terrain_mass(world, "CoyoteLedge", Vector2(1060.0, 1763.0), Vector2(250.0, 26.0), 92.0, Color(0.28, 0.37, 0.45, 1.0))
+	_add_platform(world, "JumpBufferOneWay", Vector2(1260.0, 1717.0), Vector2(280.0, 22.0), Color(0.22, 0.48, 0.56, 1.0), true)
 	_add_terrain_mass(world, "TimingRecovery", Vector2(1380.0, GROUND_Y), Vector2(440.0, 40.0), 260.0, Color(0.22, 0.25, 0.29, 1.0), true)
 	_add_checkpoint(test_objects, "CheckpointTiming", Vector2(1335.0, GROUND_TOP - PLAYER_FOOT_OFFSET), "timing")
 	_add_label(world, "TIMING CHAMBER\nCoyote ledge, buffered jump, one-way drop.", Vector2(1035.0, 1560.0), 430.0)
@@ -305,11 +305,12 @@ func _build_generated_route(seed: int, move_player_to_generated_start: bool) -> 
 	var route_limits: Dictionary = metrics.get("route_limits", {})
 
 	var segments: Array[Dictionary] = [
-		{"id": "jump", "center": Vector2(1800.0, 1295.0), "width": 360.0, "jitter": Vector2(20.0, 8.0)},
-		{"id": "hazard", "center": Vector2(1360.0, 1435.0), "width": 360.0, "jitter": Vector2(18.0, 8.0)},
-		{"id": "combat", "center": Vector2(1740.0, 1568.0), "width": 380.0, "jitter": Vector2(22.0, 8.0)},
-		{"id": "destructible", "center": Vector2(2200.0, 1710.0), "width": 320.0, "jitter": Vector2(24.0, 10.0)},
-		{"id": "interaction", "center": Vector2(1750.0, 1840.0), "width": 340.0, "jitter": Vector2(26.0, 0.0)},
+		{"id": "jump", "center": Vector2(1840.0, 1288.0), "width": 360.0, "jitter": Vector2(20.0, 8.0)},
+		{"id": "hazard", "center": Vector2(1540.0, 1420.0), "width": 360.0, "jitter": Vector2(18.0, 8.0)},
+		{"id": "combat", "center": Vector2(1810.0, 1490.0), "width": 380.0, "jitter": Vector2(22.0, 8.0)},
+		{"id": "destructible", "center": Vector2(2130.0, 1600.0), "width": 320.0, "jitter": Vector2(24.0, 10.0)},
+		{"id": "interaction", "center": Vector2(1840.0, 1710.0), "width": 340.0, "jitter": Vector2(26.0, 0.0)},
+		{"id": "exit_prep", "center": Vector2(1540.0, 1800.0), "width": 340.0, "jitter": Vector2(20.0, 0.0)},
 	]
 	var segment_log: Array[String] = []
 	var enemy_count := 0
@@ -367,11 +368,11 @@ func _build_generated_route(seed: int, move_player_to_generated_start: bool) -> 
 			_add_npc(generated_root, "GeneratedNPC", Vector2(center.x, platform_top), "Generated NPC: seed interaction checked")
 			interactable_count += 1
 
-	var exit_bridge_center := Vector2(2180.0, GROUND_Y)
+	var exit_bridge_center := Vector2(2020.0, 1824.0)
 	var exit_center := Vector2(2480.0, GROUND_Y)
 	route_distance += previous_center.distance_to(exit_bridge_center)
 	route_distance += exit_bridge_center.distance_to(exit_center)
-	_add_terrain_mass(generated_root, "GeneratedExitBridge", exit_bridge_center, Vector2(300.0, 40.0), 170.0, Color(0.19, 0.28, 0.31, 1.0), false, "exit_bridge")
+	_add_terrain_mass(generated_root, "GeneratedExitBridge", exit_bridge_center, Vector2(440.0, 40.0), 170.0, Color(0.19, 0.28, 0.31, 1.0), false, "exit_bridge")
 	_add_terrain_mass(generated_root, "GeneratedExitPlatform", exit_center, Vector2(320.0, 40.0), 260.0, Color(0.19, 0.28, 0.31, 1.0), true, "exit")
 	route_surface_ids.append("GeneratedExitBridge")
 	route_surface_ids.append("GeneratedExitPlatform")
