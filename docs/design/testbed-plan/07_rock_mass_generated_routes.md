@@ -52,11 +52,26 @@ Already known:
 
 Inspection issues to include:
 
-- [ ] Runtime route metadata is inconsistent: `critical_path` names `lower_corridor` and `exit`, but the room list does not define those IDs.
-- [ ] Runtime generated-start terrain duplicates authored mid-connector geometry.
-- [ ] Generated-route validation only checks route distance, not real passability.
-- [ ] Design map actor/reward markers can float over gaps without declaring whether that is intentional.
-- [ ] Current visual language still leans too much on thin platforms instead of filled dungeon/rock mass.
+- [x] Runtime route metadata is inconsistent: `critical_path` names `lower_corridor` and `exit`, but the room list does not define those IDs.
+- [x] Runtime generated-start terrain duplicates authored mid-connector geometry.
+- [x] Generated-route validation only checks route distance, not real passability.
+- [x] Design map actor/reward markers can float over gaps without declaring whether that is intentional.
+- [x] Current visual language still leans too much on thin platforms instead of filled dungeon/rock mass.
+
+Resolved in the first implementation pass:
+
+- [x] Added filled rock-mass visual treatment to the current runtime route while preserving traversal surfaces.
+- [x] Replaced duplicate generated-start collision with a visual generated socket.
+- [x] Added route metadata room IDs for every `critical_path` entry.
+- [x] Added generated-route validation for surface count, landing width, link gaps, step-ups, and duplicate generated surfaces.
+- [x] Moved unsupported design map markers onto supporting terrain and regenerated map previews.
+
+Still open after the first implementation pass:
+
+- [ ] Full template-based generated route assembly.
+- [ ] Full spawn-to-exit pathfinding or simulated traversal validation.
+- [ ] Manual full-clear QA with the least-mobile profile.
+- [ ] UI/HUD layout refinement for narrow viewport map readability.
 
 ## Feature Principles
 
@@ -141,17 +156,17 @@ Accept:
 
 Goal: fix known map correctness issues before broad random generation work.
 
-- [ ] **3.1** Add or rename route rooms so runtime `critical_path` and room IDs match.
-- [ ] **3.2** Remove, move, or merge the generated-start platform that currently duplicates the authored middle connector floor.
-- [ ] **3.3** Make generated-start terrain read as a proper filled mass or socket, not a second flat body inside existing geometry.
-- [ ] **3.4** Fix unsupported design markers:
-  - [ ] Stage 02 `W` walker over a gap,
-  - [ ] Stage 02 `T` chest over a gap,
-  - [ ] Stage 03 `C` charger over a gap,
-  - [ ] Boss Stage 01 `m` small slimes over gaps.
-- [ ] **3.5** Decide whether Stage 01 `$` coin cluster is intentionally airborne.
-- [ ] **3.6** If airborne pickups are intentional, mark them with an explicit airborne/reward placement rule.
-- [ ] **3.7** Rebuild or refresh map previews after design data changes.
+- [x] **3.1** Add or rename route rooms so runtime `critical_path` and room IDs match.
+- [x] **3.2** Remove, move, or merge the generated-start platform that currently duplicates the authored middle connector floor.
+- [x] **3.3** Make generated-start terrain read as a proper filled mass or socket, not a second flat body inside existing geometry.
+- [x] **3.4** Fix unsupported design markers:
+  - [x] Stage 02 `W` walker over a gap,
+  - [x] Stage 02 `T` chest over a gap,
+  - [x] Stage 03 `C` charger over a gap,
+  - [x] Boss Stage 01 `m` small slimes over gaps.
+- [x] **3.5** Decide whether Stage 01 `$` coin cluster is intentionally airborne.
+- [x] **3.6** If airborne pickups are intentional, mark them with an explicit airborne/reward placement rule; first pass avoided this by moving the Stage 01 coin cluster onto supporting terrain.
+- [x] **3.7** Rebuild or refresh map previews after design data changes.
 
 Accept:
 

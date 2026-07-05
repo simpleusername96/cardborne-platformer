@@ -52,10 +52,10 @@
 <rect x="1998" y="162" width="18" height="18" fill="#4a4f55" stroke="#d0d7de" stroke-width="0.5"><title>solid</title></rect>
 <rect x="0" y="216" width="18" height="18" fill="#4a4f55" stroke="#d0d7de" stroke-width="0.5"><title>solid</title></rect>
 <rect x="1998" y="216" width="18" height="18" fill="#4a4f55" stroke="#d0d7de" stroke-width="0.5"><title>solid</title></rect>
-<rect x="324" y="270" width="18" height="18" fill="#7bed9f" stroke="#d0d7de" stroke-width="0.5"><title>small_slime</title></rect>
-<text x="333.0" y="282.24" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="700" fill="#111827">m</text>
-<rect x="1692" y="270" width="18" height="18" fill="#7bed9f" stroke="#d0d7de" stroke-width="0.5"><title>small_slime</title></rect>
-<text x="1701.0" y="282.24" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="700" fill="#111827">m</text>
+<rect x="504" y="270" width="18" height="18" fill="#7bed9f" stroke="#d0d7de" stroke-width="0.5"><title>small_slime</title></rect>
+<text x="513.0" y="282.24" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="700" fill="#111827">m</text>
+<rect x="1512" y="270" width="18" height="18" fill="#7bed9f" stroke="#d0d7de" stroke-width="0.5"><title>small_slime</title></rect>
+<text x="1521.0" y="282.24" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="700" fill="#111827">m</text>
 <rect x="0" y="288" width="18" height="18" fill="#4a4f55" stroke="#d0d7de" stroke-width="0.5"><title>solid</title></rect>
 <rect x="360" y="288" width="18" height="18" fill="#7f8c8d" stroke="#d0d7de" stroke-width="0.5"><title>one_way_platform</title></rect>
 <rect x="378" y="288" width="18" height="18" fill="#7f8c8d" stroke="#d0d7de" stroke-width="0.5"><title>one_way_platform</title></rect>

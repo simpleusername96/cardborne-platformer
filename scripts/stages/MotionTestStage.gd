@@ -11,6 +11,9 @@ const UPPER_FLOOR_TOP := 770.0
 const MID_FLOOR_Y := 1220.0
 const MID_FLOOR_TOP := 1200.0
 const PLAYER_FOOT_OFFSET := 10.0
+const MIN_GENERATED_LANDING_WIDTH := 220.0
+const GENERATED_GAP_TOLERANCE := 28.0
+const GENERATED_STITCH_OVERLAP := 18.0
 const REQUIRED_VALIDATIONS := [
 	"start",
 	"timing",
@@ -167,43 +170,43 @@ func _build_authored_route() -> void:
 	_add_platform(world, "LeftBoundaryWall", Vector2(20.0, MAP_HEIGHT * 0.5), Vector2(40.0, MAP_HEIGHT), Color(0.08, 0.09, 0.10, 1.0))
 	_add_platform(world, "RightBoundaryWall", Vector2(MAP_WIDTH - 20.0, MAP_HEIGHT * 0.5), Vector2(40.0, MAP_HEIGHT), Color(0.08, 0.09, 0.10, 1.0))
 
-	_add_platform(world, "EntranceFloor", Vector2(420.0, GROUND_Y), Vector2(760.0, 40.0), Color(0.23, 0.27, 0.32, 1.0))
-	_add_platform(world, "LowerCorridorFloor", Vector2(900.0, GROUND_Y), Vector2(520.0, 40.0), Color(0.23, 0.27, 0.32, 1.0))
-	_add_platform(world, "FirstStep", Vector2(760.0, 1788.0), Vector2(240.0, 28.0), Color(0.32, 0.36, 0.42, 1.0))
+	_add_terrain_mass(world, "EntranceFloor", Vector2(340.0, GROUND_Y), Vector2(600.0, 40.0), 260.0, Color(0.22, 0.25, 0.29, 1.0), true)
+	_add_terrain_mass(world, "LowerCorridorFloor", Vector2(900.0, GROUND_Y), Vector2(520.0, 40.0), 260.0, Color(0.22, 0.25, 0.29, 1.0), true)
+	_add_terrain_mass(world, "FirstStep", Vector2(760.0, 1788.0), Vector2(240.0, 28.0), 78.0, Color(0.30, 0.34, 0.39, 1.0))
 	_add_walker(test_objects, "IntroWalker", Vector2(520.0, GROUND_TOP), 95.0)
 	_add_label(world, "LOWER CORRIDOR\nMovement plus first Walker in real room scale.", Vector2(750.0, 1670.0), 360.0)
 
-	_add_platform(world, "CoyoteLedge", Vector2(1060.0, 1724.0), Vector2(250.0, 26.0), Color(0.29, 0.39, 0.49, 1.0))
+	_add_terrain_mass(world, "CoyoteLedge", Vector2(1060.0, 1724.0), Vector2(250.0, 26.0), 92.0, Color(0.28, 0.37, 0.45, 1.0))
 	_add_platform(world, "JumpBufferOneWay", Vector2(1260.0, 1658.0), Vector2(280.0, 22.0), Color(0.22, 0.48, 0.56, 1.0), true)
-	_add_platform(world, "TimingRecovery", Vector2(1335.0, GROUND_Y), Vector2(530.0, 40.0), Color(0.23, 0.27, 0.32, 1.0))
+	_add_terrain_mass(world, "TimingRecovery", Vector2(1380.0, GROUND_Y), Vector2(440.0, 40.0), 260.0, Color(0.22, 0.25, 0.29, 1.0), true)
 	_add_checkpoint(test_objects, "CheckpointTiming", Vector2(1335.0, GROUND_TOP - PLAYER_FOOT_OFFSET), "timing")
 	_add_label(world, "TIMING CHAMBER\nCoyote ledge, buffered jump, one-way drop.", Vector2(1035.0, 1560.0), 430.0)
 
-	_add_platform(world, "DashPrep", Vector2(1300.0, 1818.0), Vector2(300.0, 28.0), Color(0.32, 0.36, 0.42, 1.0))
-	_add_platform(world, "DashLanding", Vector2(1740.0, 1782.0), Vector2(330.0, 28.0), Color(0.37, 0.38, 0.48, 1.0))
+	_add_terrain_mass(world, "DashPrep", Vector2(1300.0, 1818.0), Vector2(300.0, 28.0), 76.0, Color(0.30, 0.34, 0.39, 1.0))
+	_add_terrain_mass(world, "DashLanding", Vector2(1740.0, 1782.0), Vector2(330.0, 28.0), 112.0, Color(0.35, 0.36, 0.45, 1.0))
 	_add_checkpoint(test_objects, "CheckpointDashPrep", Vector2(1300.0, 1794.0), "dash_prep")
 	_add_checkpoint(test_objects, "CheckpointDashClear", Vector2(1740.0, 1758.0), "dash")
 	_add_label(world, "BROKEN BRIDGE\nRequired jump + dash gap folded into lower ruins.", Vector2(1370.0, 1692.0), 480.0)
 
-	_add_platform(world, "ShaftLower", Vector2(1760.0, GROUND_Y), Vector2(520.0, 40.0), Color(0.23, 0.27, 0.32, 1.0))
+	_add_terrain_mass(world, "ShaftLower", Vector2(1810.0, GROUND_Y), Vector2(420.0, 40.0), 260.0, Color(0.22, 0.25, 0.29, 1.0), true)
 	_add_climbable(test_objects, "RopeClimb", Vector2(1660.0, 1300.0), Vector2(44.0, 1050.0))
 	_add_platform(world, "ShaftL1OneWay", Vector2(1500.0, 1635.0), Vector2(260.0, 22.0), Color(0.23, 0.48, 0.56, 1.0), true)
-	_add_platform(world, "ShaftL2", Vector2(1820.0, 1455.0), Vector2(260.0, 28.0), Color(0.32, 0.36, 0.42, 1.0))
+	_add_terrain_mass(world, "ShaftL2", Vector2(1820.0, 1455.0), Vector2(260.0, 28.0), 130.0, Color(0.30, 0.34, 0.39, 1.0))
 	_add_platform(world, "ShaftL3OneWay", Vector2(1500.0, 1245.0), Vector2(260.0, 22.0), Color(0.23, 0.48, 0.56, 1.0), true)
-	_add_platform(world, "ShaftL4", Vector2(1810.0, 1035.0), Vector2(260.0, 28.0), Color(0.32, 0.36, 0.42, 1.0))
-	_add_platform(world, "ClimbUpper", Vector2(1610.0, UPPER_FLOOR_Y), Vector2(420.0, 28.0), Color(0.32, 0.36, 0.42, 1.0))
-	_add_platform(world, "UpperGallery", Vector2(1970.0, UPPER_FLOOR_Y), Vector2(650.0, 28.0), Color(0.31, 0.36, 0.42, 1.0))
+	_add_terrain_mass(world, "ShaftL4", Vector2(1810.0, 1035.0), Vector2(260.0, 28.0), 126.0, Color(0.30, 0.34, 0.39, 1.0))
+	_add_terrain_mass(world, "ClimbUpper", Vector2(1610.0, UPPER_FLOOR_Y), Vector2(420.0, 28.0), 112.0, Color(0.30, 0.34, 0.39, 1.0))
+	_add_terrain_mass(world, "UpperGallery", Vector2(1970.0, UPPER_FLOOR_Y), Vector2(650.0, 28.0), 112.0, Color(0.29, 0.34, 0.39, 1.0))
 	_add_checkpoint(test_objects, "CheckpointClimbPrep", Vector2(1660.0, GROUND_TOP - PLAYER_FOOT_OFFSET), "climb_prep")
 	_add_checkpoint(test_objects, "CheckpointClimbClear", Vector2(1610.0, UPPER_FLOOR_TOP - PLAYER_FOOT_OFFSET), "climb")
 	_add_label(world, "CENTRAL SHAFT\nRope climb, one-way recovery, upper exit.", Vector2(1410.0, 910.0), 430.0)
 
-	_add_platform(world, "HighCacheBranch", Vector2(1080.0, 560.0), Vector2(330.0, 26.0), Color(0.43, 0.35, 0.52, 1.0))
+	_add_terrain_mass(world, "HighCacheBranch", Vector2(1080.0, 560.0), Vector2(330.0, 26.0), 118.0, Color(0.39, 0.31, 0.47, 1.0))
 	_add_platform(world, "HighCacheRejoin", Vector2(1280.0, 690.0), Vector2(220.0, 22.0), Color(0.23, 0.48, 0.56, 1.0), true)
 	_add_label(world, "OPTIONAL HIGH CACHE\nAssassin double jump / later upgrade branch.", Vector2(900.0, 455.0), 400.0)
 	_add_label(world, "WALL TRAVERSAL\nDeferred: not required for this route.", Vector2(1090.0, 705.0), 360.0)
 
-	_add_platform(world, "CombatHallFloor", Vector2(2200.0, UPPER_FLOOR_Y), Vector2(850.0, 40.0), Color(0.23, 0.27, 0.32, 1.0))
-	_add_platform(world, "ShooterLedge", Vector2(2250.0, 635.0), Vector2(260.0, 28.0), Color(0.34, 0.36, 0.43, 1.0))
+	_add_terrain_mass(world, "CombatHallFloor", Vector2(2200.0, UPPER_FLOOR_Y), Vector2(850.0, 40.0), 120.0, Color(0.22, 0.25, 0.29, 1.0))
+	_add_terrain_mass(world, "ShooterLedge", Vector2(2250.0, 635.0), Vector2(260.0, 28.0), 90.0, Color(0.32, 0.34, 0.40, 1.0))
 	_add_label(world, "UPPER COMBAT HALL\nWalker, Charger, Shooter, breakable gate.", Vector2(1960.0, 540.0), 500.0)
 	_add_checkpoint(test_objects, "CheckpointCombatPrep", Vector2(1840.0, UPPER_FLOOR_TOP - PLAYER_FOOT_OFFSET), "combat_prep")
 	_add_leaper(test_objects, "AuthoredLeaper", Vector2(1900.0, UPPER_FLOOR_TOP))
@@ -215,7 +218,7 @@ func _build_authored_route() -> void:
 
 	_add_platform(world, "DescentOneWay", Vector2(2420.0, 1010.0), Vector2(260.0, 22.0), Color(0.23, 0.48, 0.56, 1.0), true)
 	_add_crumbling_platform(world, "OptionalCrumblingStep", Vector2(2160.0, 1010.0), Vector2(210.0, 26.0))
-	_add_platform(world, "MiddleConnectorFloor", Vector2(2200.0, MID_FLOOR_Y), Vector2(760.0, 40.0), Color(0.23, 0.27, 0.32, 1.0))
+	_add_terrain_mass(world, "MiddleConnectorFloor", Vector2(2200.0, MID_FLOOR_Y), Vector2(760.0, 40.0), 180.0, Color(0.22, 0.25, 0.29, 1.0))
 	_add_hazard(test_objects, "SpikeTrench", Vector2(2310.0, MID_FLOOR_TOP - 8.0), Vector2(165.0, 22.0), Vector2(-240.0, -220.0))
 	_add_timed_poison_vent(test_objects, "TimedPoisonVent", Vector2(2425.0, MID_FLOOR_TOP - 8.0), Vector2(135.0, 22.0))
 	_add_summon_node(test_objects, "SummonNode", Vector2(2180.0, MID_FLOOR_TOP))
@@ -244,7 +247,8 @@ func _stage01_route_plan() -> Dictionary:
 			"exit",
 		],
 		"rooms": [
-			{"id": "entrance", "role": "entrance", "bounds": Rect2(60.0, 1320.0, 900.0, 740.0), "color": Color(0.13, 0.15, 0.18, 0.92)},
+			{"id": "entrance", "role": "entrance", "bounds": Rect2(60.0, 1320.0, 760.0, 740.0), "color": Color(0.13, 0.15, 0.18, 0.92)},
+			{"id": "lower_corridor", "role": "movement_combat", "bounds": Rect2(560.0, 1500.0, 740.0, 560.0), "color": Color(0.12, 0.15, 0.18, 0.92)},
 			{"id": "timing_traversal", "role": "timing_traversal", "bounds": Rect2(760.0, 1440.0, 760.0, 620.0), "color": Color(0.12, 0.16, 0.19, 0.92)},
 			{"id": "dash_gap", "role": "dash_gap", "bounds": Rect2(1220.0, 1510.0, 650.0, 520.0), "color": Color(0.14, 0.14, 0.18, 0.92)},
 			{"id": "central_shaft", "role": "vertical_shaft", "bounds": Rect2(1280.0, 500.0, 760.0, 1430.0), "color": Color(0.12, 0.15, 0.18, 0.92)},
@@ -252,6 +256,7 @@ func _stage01_route_plan() -> Dictionary:
 			{"id": "upper_combat", "role": "combat_mixed", "bounds": Rect2(1760.0, 420.0, 860.0, 560.0), "color": Color(0.15, 0.13, 0.16, 0.92)},
 			{"id": "mid_connector", "role": "hazard_interaction", "bounds": Rect2(1830.0, 960.0, 790.0, 520.0), "color": Color(0.13, 0.14, 0.17, 0.92)},
 			{"id": "generated_pocket", "role": "generated_pocket", "bounds": Rect2(1040.0, 1180.0, 1540.0, 820.0), "color": Color(0.11, 0.15, 0.16, 0.92)},
+			{"id": "exit", "role": "exit_room", "bounds": Rect2(2260.0, 1600.0, 360.0, 420.0), "color": Color(0.12, 0.14, 0.16, 0.92)},
 		],
 	}
 
@@ -292,6 +297,8 @@ func _build_generated_route(seed: int, move_player_to_generated_start: bool) -> 
 	_clear_children(generated_root)
 	_reset_generated_validations()
 	_rng.seed = seed
+	var metrics := RunState.get_testbed_metrics_snapshot()
+	var route_limits: Dictionary = metrics.get("route_limits", {})
 
 	var segments: Array[Dictionary] = [
 		{"id": "jump", "center": Vector2(1800.0, 1295.0), "width": 360.0, "jitter": Vector2(20.0, 8.0)},
@@ -308,6 +315,9 @@ func _build_generated_route(seed: int, move_player_to_generated_start: bool) -> 
 	var start_center := Vector2(2260.0, MID_FLOOR_Y)
 	var previous_center := start_center
 	var route_distance := 0.0
+	var generated_surfaces: Array[Dictionary] = [
+		_surface_record("generated_start_socket", start_center, Vector2(340.0, 40.0), "start", false),
+	]
 
 	generated_spawn = Vector2(start_center.x - 120.0, MID_FLOOR_TOP - PLAYER_FOOT_OFFSET)
 	_add_checkpoint(generated_root, "CheckpointGeneratedStart", generated_spawn, "generated_start")
@@ -317,7 +327,7 @@ func _build_generated_route(seed: int, move_player_to_generated_start: bool) -> 
 		Vector2(start_center.x - 290.0, 1085.0),
 		520.0
 	)
-	_add_platform(generated_root, "GeneratedStart", start_center, Vector2(340.0, 40.0), Color(0.21, 0.31, 0.34, 1.0))
+	_add_terrain_visual_mass(generated_root, "GeneratedStartSocket", start_center, Vector2(340.0, 40.0), 126.0, Color(0.19, 0.28, 0.31, 0.92))
 	_add_climbable(generated_root, "GeneratedPocketRope", Vector2(1580.0, 1570.0), Vector2(52.0, 520.0))
 	_add_platform(generated_root, "GeneratedPocketRecoveryA", Vector2(1570.0, 1505.0), Vector2(220.0, 22.0), Color(0.23, 0.48, 0.56, 1.0), true)
 	_add_platform(generated_root, "GeneratedPocketRecoveryB", Vector2(1585.0, 1378.0), Vector2(220.0, 22.0), Color(0.23, 0.48, 0.56, 1.0), true)
@@ -331,12 +341,14 @@ func _build_generated_route(seed: int, move_player_to_generated_start: bool) -> 
 		var width := float(segment.get("width", 320.0)) + _rng.randf_range(-22.0, 22.0)
 		var platform_size := Vector2(width, 36.0)
 		var platform_top := center.y - platform_size.y * 0.5
+		var surface_id := "Generated_%s_%d" % [segment_id, segment_log.size()]
 		route_distance += previous_center.distance_to(center)
 		previous_center = center
 
-		_add_platform(generated_root, "Generated_%s_%d" % [segment_id, segment_log.size()], center, platform_size, Color(0.25, 0.32, 0.36, 1.0))
+		_add_terrain_mass(generated_root, surface_id, center, platform_size, 124.0 + _rng.randf_range(-16.0, 28.0), Color(0.23, 0.30, 0.34, 1.0))
 		_add_label(generated_root, segment_id.to_upper(), Vector2(center.x - width * 0.5, center.y - 105.0), 220.0)
 		segment_log.append(segment_id)
+		generated_surfaces.append(_surface_record(surface_id, center, platform_size, segment_id, true))
 
 		if segment_id == "hazard":
 			_add_timed_poison_vent(generated_root, "GeneratedPoisonVent", Vector2(center.x, platform_top - 8.0), Vector2(minf(180.0, width - 80.0), 22.0))
@@ -357,12 +369,15 @@ func _build_generated_route(seed: int, move_player_to_generated_start: bool) -> 
 	var exit_center := Vector2(2480.0, GROUND_Y)
 	route_distance += previous_center.distance_to(exit_bridge_center)
 	route_distance += exit_bridge_center.distance_to(exit_center)
-	_add_platform(generated_root, "GeneratedExitBridge", exit_bridge_center, Vector2(300.0, 40.0), Color(0.21, 0.31, 0.34, 1.0))
-	_add_platform(generated_root, "GeneratedExitPlatform", exit_center, Vector2(320.0, 40.0), Color(0.21, 0.31, 0.34, 1.0))
+	_add_terrain_mass(generated_root, "GeneratedExitBridge", exit_bridge_center, Vector2(300.0, 40.0), 170.0, Color(0.19, 0.28, 0.31, 1.0))
+	_add_terrain_mass(generated_root, "GeneratedExitPlatform", exit_center, Vector2(320.0, 40.0), 260.0, Color(0.19, 0.28, 0.31, 1.0), true)
+	generated_surfaces.append(_surface_record("GeneratedExitBridge", exit_bridge_center, Vector2(300.0, 40.0), "exit_bridge", true))
+	generated_surfaces.append(_surface_record("GeneratedExitPlatform", exit_center, Vector2(320.0, 40.0), "exit", true))
 	_add_exit(generated_root, Vector2(exit_center.x + 50.0, GROUND_TOP), "Clear generated seed")
 	_add_label(generated_root, "EXIT ROOM\nClear requires generated route completion.", Vector2(exit_center.x - 250.0, 1710.0), 360.0)
 
-	var valid := route_distance > VIEWPORT_WIDTH * 2.0
+	var validation := _validate_generated_route(route_distance, generated_surfaces, route_limits)
+	var valid := bool(validation.get("valid", false))
 	route_summary = {
 		"seed": seed,
 		"mode": generator_mode,
@@ -373,7 +388,8 @@ func _build_generated_route(seed: int, move_player_to_generated_start: bool) -> 
 		"hazard_count": hazard_count,
 		"interactable_count": interactable_count,
 		"destructible_count": destructible_count,
-		"failure_reason": "" if valid else "generated route travel is too short",
+		"failure_reason": str(validation.get("failure_reason", "")),
+		"validation_checks": validation.get("checks", {}),
 	}
 	route_bounds = Rect2(0.0, 0.0, MAP_WIDTH, MAP_HEIGHT)
 	_rebuild_dungeon_framing()
@@ -479,6 +495,161 @@ func _add_backdrop_rect(parent: Node, object_name: String, center: Vector2, size
 	])
 	parent.add_child(visual)
 	return visual
+
+
+# Elevated masses keep old surface collision but render filled depth; ground masses can opt into solid fill.
+func _add_terrain_mass(parent: Node, object_name: String, surface_center: Vector2, surface_size: Vector2, fill_depth: float, color: Color, solid_fill: bool = false) -> StaticBody2D:
+	var surface_top := surface_center.y - surface_size.y * 0.5
+	var visual_depth := maxf(fill_depth, surface_size.y)
+	var collision_depth := visual_depth if solid_fill else surface_size.y
+	var body := StaticBody2D.new()
+	body.name = object_name
+	body.position = Vector2(surface_center.x, surface_top + collision_depth * 0.5)
+	body.collision_layer = 1
+	body.collision_mask = 0
+	parent.add_child(body)
+
+	var shape := CollisionShape2D.new()
+	var rect := RectangleShape2D.new()
+	rect.size = Vector2(surface_size.x, collision_depth)
+	shape.shape = rect
+	body.add_child(shape)
+
+	var visual_center := Vector2(0.0, surface_top + visual_depth * 0.5 - body.position.y)
+	_add_rock_mass_visual(body, "Visual", visual_center, Vector2(surface_size.x, visual_depth), color)
+	return body
+
+
+func _add_terrain_visual_mass(parent: Node, object_name: String, surface_center: Vector2, surface_size: Vector2, fill_depth: float, color: Color) -> Node2D:
+	var surface_top := surface_center.y - surface_size.y * 0.5
+	var visual_depth := maxf(fill_depth, surface_size.y)
+	var root := Node2D.new()
+	root.name = object_name
+	root.position = Vector2(surface_center.x, surface_top + visual_depth * 0.5)
+	parent.add_child(root)
+	_add_rock_mass_visual(root, "Visual", Vector2.ZERO, Vector2(surface_size.x, visual_depth), color)
+	return root
+
+
+func _add_rock_mass_visual(parent: Node, object_name: String, local_center: Vector2, size: Vector2, color: Color) -> Polygon2D:
+	var visual := Polygon2D.new()
+	visual.name = object_name
+	visual.position = local_center
+	visual.color = color
+	var half := size * 0.5
+	visual.polygon = PackedVector2Array([
+		Vector2(-half.x, -half.y + 7.0),
+		Vector2(-half.x * 0.72, -half.y + 2.0),
+		Vector2(-half.x * 0.38, -half.y + 5.0),
+		Vector2(0.0, -half.y + 1.0),
+		Vector2(half.x * 0.42, -half.y + 4.0),
+		Vector2(half.x * 0.74, -half.y + 2.0),
+		Vector2(half.x, -half.y + 7.0),
+		Vector2(half.x, half.y),
+		Vector2(-half.x, half.y),
+	])
+	parent.add_child(visual)
+
+	var top_color := Color(minf(color.r + 0.07, 1.0), minf(color.g + 0.07, 1.0), minf(color.b + 0.07, 1.0), color.a)
+	var shadow_color := Color(maxf(color.r - 0.045, 0.0), maxf(color.g - 0.045, 0.0), maxf(color.b - 0.045, 0.0), color.a)
+	_add_local_rect(parent, object_name + "TopLip", local_center + Vector2(0.0, -half.y + 11.0), Vector2(maxf(size.x - 18.0, 12.0), 10.0), top_color)
+	for index in range(3):
+		var line_y := -half.y + 38.0 + float(index) * maxf(34.0, size.y * 0.22)
+		if line_y < half.y - 14.0:
+			_add_local_rect(parent, "%sStrata%d" % [object_name, index], local_center + Vector2(float(index - 1) * 18.0, line_y), Vector2(size.x * 0.74, 5.0), shadow_color)
+	return visual
+
+
+func _add_local_rect(parent: Node, object_name: String, local_center: Vector2, size: Vector2, color: Color) -> Polygon2D:
+	var visual := Polygon2D.new()
+	visual.name = object_name
+	visual.position = local_center
+	visual.color = color
+	var half := size * 0.5
+	visual.polygon = PackedVector2Array([
+		Vector2(-half.x, -half.y),
+		Vector2(half.x, -half.y),
+		Vector2(half.x, half.y),
+		Vector2(-half.x, half.y),
+	])
+	parent.add_child(visual)
+	return visual
+
+
+func _surface_record(surface_id: String, center: Vector2, size: Vector2, role: String, solid: bool) -> Dictionary:
+	return {
+		"id": surface_id,
+		"center": center,
+		"size": size,
+		"top": center.y - size.y * 0.5,
+		"role": role,
+		"solid": solid,
+	}
+
+
+func _validate_generated_route(route_distance: float, surfaces: Array[Dictionary], route_limits: Dictionary) -> Dictionary:
+	var failures := PackedStringArray()
+	var checks := {
+		"distance": route_distance > VIEWPORT_WIDTH * 2.0,
+		"surface_count": surfaces.size() >= 7,
+		"landing_width": true,
+		"link_gaps": true,
+		"duplicate_surfaces": true,
+	}
+	if not bool(checks["distance"]):
+		failures.append("generated route travel is too short")
+	if not bool(checks["surface_count"]):
+		failures.append("generated route has too few surfaces")
+
+	var max_gap := maxf(float(route_limits.get("max_required_gap", 140.0)) + GENERATED_GAP_TOLERANCE, 150.0)
+	var max_step_up := maxf(float(route_limits.get("max_required_ledge", 96.0)) + 24.0, 96.0)
+	for surface in surfaces:
+		var size: Vector2 = surface.get("size", Vector2.ZERO)
+		if size.x < MIN_GENERATED_LANDING_WIDTH:
+			checks["landing_width"] = false
+			failures.append("%s landing too narrow" % str(surface.get("id", "surface")))
+
+	for index in range(surfaces.size() - 1):
+		var current := surfaces[index]
+		var next := surfaces[index + 1]
+		var current_bounds := _surface_bounds(current)
+		var next_bounds := _surface_bounds(next)
+		var horizontal_gap := maxf(0.0, maxf(next_bounds.position.x - current_bounds.end.x, current_bounds.position.x - next_bounds.end.x))
+		var step_up := float(current.get("top", 0.0)) - float(next.get("top", 0.0))
+		if horizontal_gap > max_gap:
+			checks["link_gaps"] = false
+			failures.append("%s to %s gap %.0fpx exceeds %.0fpx" % [str(current.get("id", "surface")), str(next.get("id", "surface")), horizontal_gap, max_gap])
+		if step_up > max_step_up:
+			checks["link_gaps"] = false
+			failures.append("%s to %s step-up %.0fpx exceeds %.0fpx" % [str(current.get("id", "surface")), str(next.get("id", "surface")), step_up, max_step_up])
+
+	for index in range(surfaces.size()):
+		var current := surfaces[index]
+		if not bool(current.get("solid", true)):
+			continue
+		var current_bounds := _surface_bounds(current)
+		for other_index in range(index + 1, surfaces.size()):
+			var other := surfaces[other_index]
+			if not bool(other.get("solid", true)):
+				continue
+			var other_bounds := _surface_bounds(other)
+			var overlap_x := minf(current_bounds.end.x, other_bounds.end.x) - maxf(current_bounds.position.x, other_bounds.position.x)
+			var same_level := absf(float(current.get("top", 0.0)) - float(other.get("top", 0.0))) < 8.0
+			if same_level and overlap_x > GENERATED_STITCH_OVERLAP:
+				checks["duplicate_surfaces"] = false
+				failures.append("%s overlaps %s by %.0fpx" % [str(current.get("id", "surface")), str(other.get("id", "surface")), overlap_x])
+
+	return {
+		"valid": failures.is_empty(),
+		"failure_reason": "" if failures.is_empty() else "; ".join(failures),
+		"checks": checks,
+	}
+
+
+func _surface_bounds(surface: Dictionary) -> Rect2:
+	var center: Vector2 = surface.get("center", Vector2.ZERO)
+	var size: Vector2 = surface.get("size", Vector2.ZERO)
+	return Rect2(center - size * 0.5, size)
 
 
 func _route_status_text(state: String) -> String:
