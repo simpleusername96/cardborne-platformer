@@ -12,6 +12,7 @@ const MID_FLOOR_Y := 1220.0
 const MID_FLOOR_TOP := 1200.0
 const PLAYER_FOOT_OFFSET := 10.0
 const MIN_GENERATED_LANDING_WIDTH := 220.0
+const MIN_GENERATED_ROUTE_DISTANCE := VIEWPORT_WIDTH * 1.5
 const GENERATED_GAP_TOLERANCE := 28.0
 const GENERATED_STITCH_OVERLAP := 18.0
 const REQUIRED_VALIDATIONS := [
@@ -305,12 +306,12 @@ func _build_generated_route(seed: int, move_player_to_generated_start: bool) -> 
 	var route_limits: Dictionary = metrics.get("route_limits", {})
 
 	var segments: Array[Dictionary] = [
-		{"id": "jump", "center": Vector2(1840.0, 1288.0), "width": 360.0, "jitter": Vector2(20.0, 8.0)},
-		{"id": "hazard", "center": Vector2(1540.0, 1420.0), "width": 360.0, "jitter": Vector2(18.0, 8.0)},
-		{"id": "combat", "center": Vector2(1810.0, 1490.0), "width": 380.0, "jitter": Vector2(22.0, 8.0)},
-		{"id": "destructible", "center": Vector2(2130.0, 1600.0), "width": 320.0, "jitter": Vector2(24.0, 10.0)},
-		{"id": "interaction", "center": Vector2(1840.0, 1710.0), "width": 340.0, "jitter": Vector2(26.0, 0.0)},
-		{"id": "exit_prep", "center": Vector2(1540.0, 1800.0), "width": 340.0, "jitter": Vector2(20.0, 0.0)},
+		{"id": "jump", "center": Vector2(1600.0, 1340.0), "width": 320.0, "jitter": Vector2(12.0, 6.0)},
+		{"id": "hazard", "center": Vector2(1300.0, 1440.0), "width": 320.0, "jitter": Vector2(12.0, 6.0)},
+		{"id": "combat", "center": Vector2(1600.0, 1540.0), "width": 340.0, "jitter": Vector2(12.0, 6.0)},
+		{"id": "destructible", "center": Vector2(1900.0, 1640.0), "width": 340.0, "jitter": Vector2(12.0, 8.0)},
+		{"id": "interaction", "center": Vector2(2200.0, 1740.0), "width": 340.0, "jitter": Vector2(12.0, 8.0)},
+		{"id": "exit_prep", "center": Vector2(2480.0, 1810.0), "width": 340.0, "jitter": Vector2(10.0, 4.0)},
 	]
 	var segment_log: Array[String] = []
 	var enemy_count := 0
@@ -324,17 +325,7 @@ func _build_generated_route(seed: int, move_player_to_generated_start: bool) -> 
 
 	generated_spawn = Vector2(start_center.x - 120.0, MID_FLOOR_TOP - PLAYER_FOOT_OFFSET)
 	_add_checkpoint(generated_root, "CheckpointGeneratedStart", generated_spawn, "generated_start")
-	_add_label(
-		generated_root,
-		"SEED POCKET\nSeed %d | R random | T replay same seed" % seed,
-		Vector2(start_center.x - 290.0, 1085.0),
-		520.0
-	)
 	_add_terrain_visual_mass(generated_root, "GeneratedStartSocket", start_center, Vector2(340.0, 40.0), 126.0, Color(0.19, 0.28, 0.31, 0.92))
-	_add_climbable(generated_root, "GeneratedPocketRope", Vector2(1580.0, 1570.0), Vector2(52.0, 520.0))
-	_add_platform(generated_root, "GeneratedPocketRecoveryA", Vector2(1570.0, 1505.0), Vector2(220.0, 22.0), Color(0.23, 0.48, 0.56, 1.0), true)
-	_add_platform(generated_root, "GeneratedPocketRecoveryB", Vector2(1585.0, 1378.0), Vector2(220.0, 22.0), Color(0.23, 0.48, 0.56, 1.0), true)
-	_add_label(generated_root, "RECOVERY ROPE\nClimb back if you drop into the lower pocket.", Vector2(1460.0, 1295.0), 360.0)
 
 	for segment in segments:
 		var segment_id := str(segment.get("id", "segment"))
@@ -349,7 +340,6 @@ func _build_generated_route(seed: int, move_player_to_generated_start: bool) -> 
 		previous_center = center
 
 		_add_terrain_mass(generated_root, surface_id, center, platform_size, 124.0 + _rng.randf_range(-16.0, 28.0), Color(0.23, 0.30, 0.34, 1.0), false, segment_id)
-		_add_label(generated_root, segment_id.to_upper(), Vector2(center.x - width * 0.5, center.y - 105.0), 220.0)
 		segment_log.append(segment_id)
 		route_surface_ids.append(surface_id)
 
@@ -368,16 +358,15 @@ func _build_generated_route(seed: int, move_player_to_generated_start: bool) -> 
 			_add_npc(generated_root, "GeneratedNPC", Vector2(center.x, platform_top), "Generated NPC: seed interaction checked")
 			interactable_count += 1
 
-	var exit_bridge_center := Vector2(2020.0, 1824.0)
+	var exit_bridge_center := Vector2(2300.0, 1828.0)
 	var exit_center := Vector2(2480.0, GROUND_Y)
 	route_distance += previous_center.distance_to(exit_bridge_center)
 	route_distance += exit_bridge_center.distance_to(exit_center)
-	_add_terrain_mass(generated_root, "GeneratedExitBridge", exit_bridge_center, Vector2(440.0, 40.0), 170.0, Color(0.19, 0.28, 0.31, 1.0), false, "exit_bridge")
+	_add_terrain_mass(generated_root, "GeneratedExitBridge", exit_bridge_center, Vector2(360.0, 40.0), 170.0, Color(0.19, 0.28, 0.31, 1.0), false, "exit_bridge")
 	_add_terrain_mass(generated_root, "GeneratedExitPlatform", exit_center, Vector2(320.0, 40.0), 260.0, Color(0.19, 0.28, 0.31, 1.0), true, "exit")
 	route_surface_ids.append("GeneratedExitBridge")
 	route_surface_ids.append("GeneratedExitPlatform")
 	_add_exit(generated_root, Vector2(exit_center.x + 50.0, GROUND_TOP), "Clear generated seed")
-	_add_label(generated_root, "EXIT ROOM\nClear requires generated route completion.", Vector2(exit_center.x - 250.0, 1710.0), 360.0)
 
 	var validation := _validate_generated_route(route_distance, route_surface_ids, route_limits)
 	var valid := bool(validation.get("valid", false))
@@ -646,7 +635,7 @@ func _validate_generated_route(route_distance: float, route_surface_ids: Array[S
 	var failures := PackedStringArray()
 	var route_surfaces: Array[Dictionary] = []
 	var checks := {
-		"distance": route_distance > VIEWPORT_WIDTH * 2.0,
+		"distance": route_distance > MIN_GENERATED_ROUTE_DISTANCE,
 		"surface_count": true,
 		"landing_width": true,
 		"link_gaps": true,
