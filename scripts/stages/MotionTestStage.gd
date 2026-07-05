@@ -13,6 +13,8 @@ const MID_FLOOR_TOP := 1200.0
 const PLAYER_FOOT_OFFSET := 10.0
 const MIN_GENERATED_LANDING_WIDTH := 220.0
 const MIN_GENERATED_ROUTE_DISTANCE := VIEWPORT_WIDTH * 1.5
+const MIN_GENERATED_BODY_GAP := 40.0
+const MIN_GENERATED_HEADROOM := 72.0
 const GENERATED_GAP_TOLERANCE := 28.0
 const GENERATED_STITCH_OVERLAP := 18.0
 const REQUIRED_VALIDATIONS := [
@@ -306,12 +308,11 @@ func _build_generated_route(seed: int, move_player_to_generated_start: bool) -> 
 	var route_limits: Dictionary = metrics.get("route_limits", {})
 
 	var segments: Array[Dictionary] = [
-		{"id": "jump", "center": Vector2(1600.0, 1340.0), "width": 320.0, "jitter": Vector2(12.0, 6.0)},
-		{"id": "hazard", "center": Vector2(1300.0, 1440.0), "width": 320.0, "jitter": Vector2(12.0, 6.0)},
-		{"id": "combat", "center": Vector2(1600.0, 1540.0), "width": 340.0, "jitter": Vector2(12.0, 6.0)},
-		{"id": "destructible", "center": Vector2(1900.0, 1640.0), "width": 340.0, "jitter": Vector2(12.0, 8.0)},
-		{"id": "interaction", "center": Vector2(2200.0, 1740.0), "width": 340.0, "jitter": Vector2(12.0, 8.0)},
-		{"id": "exit_prep", "center": Vector2(2480.0, 1810.0), "width": 340.0, "jitter": Vector2(10.0, 4.0)},
+		{"id": "jump", "center": Vector2(1580.0, 1350.0), "width": 300.0, "jitter": Vector2(6.0, 5.0), "width_jitter": 10.0, "fill_depth": 82.0, "fill_jitter": 6.0},
+		{"id": "drop", "center": Vector2(1150.0, 1480.0), "width": 320.0, "jitter": Vector2(6.0, 5.0), "width_jitter": 10.0, "fill_depth": 82.0, "fill_jitter": 6.0},
+		{"id": "turnback", "center": Vector2(1580.0, 1605.0), "width": 320.0, "jitter": Vector2(6.0, 5.0), "width_jitter": 10.0, "fill_depth": 82.0, "fill_jitter": 6.0},
+		{"id": "descent", "center": Vector2(1960.0, 1730.0), "width": 320.0, "jitter": Vector2(6.0, 5.0), "width_jitter": 10.0, "fill_depth": 82.0, "fill_jitter": 6.0},
+		{"id": "exit_prep", "center": Vector2(2300.0, 1810.0), "width": 220.0, "jitter": Vector2(2.0, 3.0), "width_jitter": 0.0, "fill_depth": 44.0, "fill_jitter": 2.0},
 	]
 	var segment_log: Array[String] = []
 	var enemy_count := 0
@@ -332,39 +333,22 @@ func _build_generated_route(seed: int, move_player_to_generated_start: bool) -> 
 		var anchor: Vector2 = segment.get("center", start_center)
 		var jitter: Vector2 = segment.get("jitter", Vector2.ZERO)
 		var center := anchor + Vector2(_rng.randf_range(-jitter.x, jitter.x), _rng.randf_range(-jitter.y, jitter.y))
-		var width := float(segment.get("width", 320.0)) + _rng.randf_range(-22.0, 22.0)
+		var width_jitter := float(segment.get("width_jitter", 22.0))
+		var width := float(segment.get("width", 320.0)) + _rng.randf_range(-width_jitter, width_jitter)
 		var platform_size := Vector2(width, 36.0)
-		var platform_top := center.y - platform_size.y * 0.5
+		var fill_jitter := float(segment.get("fill_jitter", 0.0))
+		var fill_depth := float(segment.get("fill_depth", 82.0)) + _rng.randf_range(-fill_jitter, fill_jitter)
 		var surface_id := "Generated_%s_%d" % [segment_id, segment_log.size()]
 		route_distance += previous_center.distance_to(center)
 		previous_center = center
 
-		_add_terrain_mass(generated_root, surface_id, center, platform_size, 124.0 + _rng.randf_range(-16.0, 28.0), Color(0.23, 0.30, 0.34, 1.0), false, segment_id)
+		_add_terrain_mass(generated_root, surface_id, center, platform_size, fill_depth, Color(0.23, 0.30, 0.34, 1.0), false, segment_id)
 		segment_log.append(segment_id)
 		route_surface_ids.append(surface_id)
 
-		if segment_id == "hazard":
-			_add_timed_poison_vent(generated_root, "GeneratedPoisonVent", Vector2(center.x, platform_top - 8.0), Vector2(minf(180.0, width - 80.0), 22.0))
-			hazard_count += 1
-		elif segment_id == "combat":
-			_add_sentry_turret(generated_root, "GeneratedTurret", Vector2(center.x - 95.0, platform_top))
-			_add_leaper(generated_root, "GeneratedLeaper", Vector2(center.x + 95.0, platform_top))
-			enemy_count += 2
-		elif segment_id == "destructible":
-			_add_destructible(generated_root, "GeneratedBreakable", Vector2(center.x + width * 0.18, platform_top), 2)
-			_add_crumbling_platform(generated_root, "GeneratedCrumblingStep", center + Vector2(-width * 0.25, -58.0), Vector2(155.0, 24.0))
-			destructible_count += 1
-		elif segment_id == "interaction":
-			_add_npc(generated_root, "GeneratedNPC", Vector2(center.x, platform_top), "Generated NPC: seed interaction checked")
-			interactable_count += 1
-
-	var exit_bridge_center := Vector2(2300.0, 1828.0)
-	var exit_center := Vector2(2480.0, GROUND_Y)
-	route_distance += previous_center.distance_to(exit_bridge_center)
-	route_distance += exit_bridge_center.distance_to(exit_center)
-	_add_terrain_mass(generated_root, "GeneratedExitBridge", exit_bridge_center, Vector2(360.0, 40.0), 170.0, Color(0.19, 0.28, 0.31, 1.0), false, "exit_bridge")
-	_add_terrain_mass(generated_root, "GeneratedExitPlatform", exit_center, Vector2(320.0, 40.0), 260.0, Color(0.19, 0.28, 0.31, 1.0), true, "exit")
-	route_surface_ids.append("GeneratedExitBridge")
+	var exit_center := Vector2(2570.0, GROUND_Y)
+	route_distance += previous_center.distance_to(exit_center)
+	_add_terrain_mass(generated_root, "GeneratedExitPlatform", exit_center, Vector2(220.0, 40.0), 260.0, Color(0.19, 0.28, 0.31, 1.0), true, "exit")
 	route_surface_ids.append("GeneratedExitPlatform")
 	_add_exit(generated_root, Vector2(exit_center.x + 50.0, GROUND_TOP), "Clear generated seed")
 
@@ -639,6 +623,7 @@ func _validate_generated_route(route_distance: float, route_surface_ids: Array[S
 		"surface_count": true,
 		"landing_width": true,
 		"link_gaps": true,
+		"body_clearance": true,
 		"duplicate_surfaces": true,
 		"support_contract": true,
 	}
@@ -672,12 +657,19 @@ func _validate_generated_route(route_distance: float, route_surface_ids: Array[S
 		var next_bounds: Rect2 = next.get("collision_bounds", Rect2())
 		var horizontal_gap := maxf(0.0, maxf(next_bounds.position.x - current_bounds.end.x, current_bounds.position.x - next_bounds.end.x))
 		var step_up := float(current.get("top", 0.0)) - float(next.get("top", 0.0))
+		var visual_overlap_x := _horizontal_overlap(current.get("visual_bounds", Rect2()), next.get("visual_bounds", Rect2()))
 		if horizontal_gap > max_gap:
 			checks["link_gaps"] = false
 			failures.append("%s to %s gap %.0fpx exceeds %.0fpx" % [str(current.get("id", "surface")), str(next.get("id", "surface")), horizontal_gap, max_gap])
+		if horizontal_gap > 0.0 and horizontal_gap < MIN_GENERATED_BODY_GAP:
+			checks["body_clearance"] = false
+			failures.append("%s to %s body gap %.0fpx is under %.0fpx" % [str(current.get("id", "surface")), str(next.get("id", "surface")), horizontal_gap, MIN_GENERATED_BODY_GAP])
 		if step_up > max_step_up:
 			checks["link_gaps"] = false
 			failures.append("%s to %s step-up %.0fpx exceeds %.0fpx" % [str(current.get("id", "surface")), str(next.get("id", "surface")), step_up, max_step_up])
+		if visual_overlap_x > GENERATED_STITCH_OVERLAP and _vertical_headroom(current, next) < MIN_GENERATED_HEADROOM:
+			checks["body_clearance"] = false
+			failures.append("%s to %s visual clearance is under %.0fpx" % [str(current.get("id", "surface")), str(next.get("id", "surface")), MIN_GENERATED_HEADROOM])
 
 	_validate_duplicate_generated_supports(checks, failures)
 
@@ -686,6 +678,20 @@ func _validate_generated_route(route_distance: float, route_surface_ids: Array[S
 		"failure_reason": "" if failures.is_empty() else "; ".join(failures),
 		"checks": checks,
 	}
+
+
+func _horizontal_overlap(left: Rect2, right: Rect2) -> float:
+	return minf(left.end.x, right.end.x) - maxf(left.position.x, right.position.x)
+
+
+func _vertical_headroom(current: Dictionary, next: Dictionary) -> float:
+	var current_visual: Rect2 = current.get("visual_bounds", Rect2())
+	var next_visual: Rect2 = next.get("visual_bounds", Rect2())
+	var current_top := float(current.get("top", 0.0))
+	var next_top := float(next.get("top", 0.0))
+	if current_top <= next_top:
+		return next_top - current_visual.end.y
+	return current_top - next_visual.end.y
 
 
 func _validate_duplicate_generated_supports(checks: Dictionary, failures: PackedStringArray) -> void:
