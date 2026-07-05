@@ -10,6 +10,7 @@ related:
   - ../references/GENRE_REFERENCES_AND_ASSETS.md
   - ../design/MOTION_TEST_BED_SPEC.md
   - ../design/PROCEDURAL_REGION_GENERATION.md
+  - ./external_codebase_deep_dive_2026-07-05.md
 ---
 
 # Foundation Resource Survey - 2026-07-05
@@ -19,6 +20,8 @@ related:
 Record external resources and local findings that can guide a testbed rebuild. This document is evidence, not binding product scope. Promote only selected findings into specs or implementation after a spike.
 
 The user goal is not to preserve the current codebase. The goal is to make a decent working game. If an external package, template, asset set, or workflow gives a stronger foundation, it should be evaluated seriously.
+
+Follow-up code-level inspection is recorded in `external_codebase_deep_dive_2026-07-05.md`. Treat that later document as the stronger evidence for what to spike first because it inspects cloned source, Godot import/boot logs, and integration risks.
 
 ## Sources
 
