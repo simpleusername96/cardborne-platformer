@@ -1,5 +1,7 @@
 extends Control
 
+const BINDING_HINT := "Keyboard only; mouse/gamepad remap deferred."
+
 var panel: PanelContainer
 var close_button: Button
 var bindings_box: VBoxContainer
@@ -108,7 +110,7 @@ func _build_ui() -> void:
 	bindings_header.add_child(restore_all_button)
 
 	warning_label = Label.new()
-	warning_label.text = "Keyboard only; mouse/gamepad remap deferred."
+	warning_label.text = BINDING_HINT
 	warning_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	warning_label.add_theme_font_size_override("font_size", 12)
 	root_box.add_child(warning_label)
@@ -297,6 +299,7 @@ func _panel_style() -> StyleBoxFlat:
 func _on_settings_visibility_changed(is_visible: bool) -> void:
 	visible = is_visible
 	if visible:
+		warning_label.text = BINDING_HINT
 		_refresh_binding_rows()
 		if close_button != null:
 			close_button.grab_focus()

@@ -754,4 +754,4 @@ Start with these tasks in order:
 - [ ] Copy and enable Godot LDtk Importer in an isolated spike.
 - [ ] Build the smallest LDtk source map that contains all required marker categories.
 - [ ] Build marker resolver and import report.
-- [ ] Make imported dungeon route playable before touching persistent remap or procedural generation.
+- [ ] Make imported dungeon route playable before procedural generation or broad movement/combat refinement.

@@ -170,6 +170,14 @@ func get_conflict_for_key(action_name: String, keycode: int) -> String:
 	return ""
 
 
+func _conflict_for_keycodes(action_name: String, keycodes: Array[int]) -> String:
+	for keycode in keycodes:
+		var conflict := get_conflict_for_key(action_name, keycode)
+		if not conflict.is_empty():
+			return conflict
+	return ""
+
+
 func _index_definitions() -> void:
 	if not _definitions_by_name.is_empty():
 		return
@@ -191,11 +199,17 @@ func _load_saved_bindings() -> void:
 
 	for definition in ACTION_DEFINITIONS:
 		var action_name := str(definition["name"])
-		var saved_value: Variant = config.get_value(KEYBOARD_SECTION, action_name, null)
+		if not config.has_section_key(KEYBOARD_SECTION, action_name):
+			continue
+		var saved_value: Variant = config.get_value(KEYBOARD_SECTION, action_name)
 		if not (saved_value is Array):
 			continue
 		var keycodes := _to_int_array(saved_value)
 		if keycodes.is_empty() and not bool(definition.get("hidden", false)):
+			continue
+		var conflict := _conflict_for_keycodes(action_name, keycodes)
+		if not conflict.is_empty():
+			push_warning("Ignoring saved binding for %s because it conflicts with %s." % [action_name, conflict])
 			continue
 		_apply_keycodes(action_name, keycodes)
 

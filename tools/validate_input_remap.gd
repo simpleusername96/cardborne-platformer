@@ -12,7 +12,9 @@ func _initialize() -> void:
 
 func _run() -> void:
 	_save_path = ProjectSettings.globalize_path("user://input_bindings.cfg")
-	_backup_saved_file()
+	if not _backup_saved_file():
+		_finish(1)
+		return
 
 	var bindings := root.get_node_or_null("/root/InputBindings")
 	if bindings == null:
@@ -37,22 +39,36 @@ func _run() -> void:
 	bindings.ensure_input_map()
 	_expect_binding(bindings, "attack", "G", "saved attack binding should reload")
 
+	_write_saved_attack_key(KEY_SPACE)
+	bindings.ensure_input_map()
+	_expect_binding(bindings, "attack", "F", "conflicting saved attack binding should be ignored")
+
 	bindings.restore_all_defaults()
 	_expect_binding(bindings, "attack", "F", "restore defaults should return attack to F")
 
 	_finish(1 if not _failures.is_empty() else 0)
 
 
-func _backup_saved_file() -> void:
+func _backup_saved_file() -> bool:
 	_saved_file_exists = FileAccess.file_exists(_save_path)
 	if not _saved_file_exists:
-		return
+		return true
 
 	var file := FileAccess.open(_save_path, FileAccess.READ)
 	if file == null:
 		_failures.append("Unable to back up existing input binding file.")
-		return
+		return false
 	_saved_file_bytes = file.get_buffer(file.get_length())
+	return true
+
+
+func _write_saved_attack_key(keycode: int) -> void:
+	var config := ConfigFile.new()
+	config.set_value("meta", "version", 1)
+	config.set_value("keyboard", "attack", [keycode])
+	var error := config.save(_save_path)
+	if error != OK:
+		_failures.append("Unable to write temporary saved input binding: %s" % error_string(error))
 
 
 func _restore_saved_file() -> void:
