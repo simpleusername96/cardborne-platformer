@@ -16,6 +16,7 @@ const MIN_GENERATED_ROUTE_DISTANCE := VIEWPORT_WIDTH * 1.5
 const MIN_GENERATED_BODY_GAP := 40.0
 const MIN_GENERATED_HEADROOM := 72.0
 const GENERATED_GAP_TOLERANCE := 28.0
+const GENERATED_LEDGE_TOLERANCE := 24.0
 const GENERATED_STITCH_OVERLAP := 18.0
 const REQUIRED_VALIDATIONS := [
 	"start",
@@ -368,6 +369,9 @@ func _build_generated_route(seed: int, move_player_to_generated_start: bool) -> 
 		"validation_checks": validation.get("checks", {}),
 		"route_surface_ids": route_surface_ids,
 	}
+	if not valid:
+		_clear_children(generated_root)
+		_clear_generated_route_surfaces()
 	route_bounds = Rect2(0.0, 0.0, MAP_WIDTH, MAP_HEIGHT)
 	_rebuild_dungeon_framing()
 	_rebuild_fall_reset_zone()
@@ -375,9 +379,9 @@ func _build_generated_route(seed: int, move_player_to_generated_start: bool) -> 
 	SignalBus.testbed_route_status_changed.emit(_route_status_text("ready" if valid else "invalid"))
 
 	if move_player_to_generated_start:
-		set_checkpoint("generated_start", generated_spawn, false)
-		respawn_player("generated seed")
 		if valid:
+			set_checkpoint("generated_start", generated_spawn, false)
+			respawn_player("generated seed")
 			SignalBus.status_message_changed.emit("Generated seed %d ready" % seed)
 		else:
 			SignalBus.status_message_changed.emit("Generated seed %d invalid: %s" % [seed, route_summary.get("failure_reason", "unknown")])
@@ -623,6 +627,8 @@ func _validate_generated_route(route_distance: float, route_surface_ids: Array[S
 		"surface_count": true,
 		"landing_width": true,
 		"link_gaps": true,
+		"ability_envelope": true,
+		"headroom": true,
 		"body_clearance": true,
 		"duplicate_surfaces": true,
 		"support_contract": true,
@@ -642,13 +648,14 @@ func _validate_generated_route(route_distance: float, route_surface_ids: Array[S
 	if not bool(checks["surface_count"]):
 		failures.append("generated route has too few support surfaces")
 
-	var max_gap := maxf(float(route_limits.get("max_required_gap", 140.0)) + GENERATED_GAP_TOLERANCE, 150.0)
-	var max_step_up := maxf(float(route_limits.get("max_required_ledge", 96.0)) + 24.0, 96.0)
+	var max_gap := float(route_limits.get("max_required_gap", 140.0)) + GENERATED_GAP_TOLERANCE
+	var max_step_up := float(route_limits.get("max_required_ledge", 96.0)) + GENERATED_LEDGE_TOLERANCE
 	for surface in route_surfaces:
 		var bounds: Rect2 = surface.get("collision_bounds", Rect2())
 		if bounds.size.x < MIN_GENERATED_LANDING_WIDTH:
 			checks["landing_width"] = false
 			failures.append("%s landing too narrow" % str(surface.get("id", "surface")))
+		_validate_surface_headroom(surface, route_surfaces, checks, failures)
 
 	for index in range(route_surfaces.size() - 1):
 		var current := route_surfaces[index]
@@ -660,13 +667,15 @@ func _validate_generated_route(route_distance: float, route_surface_ids: Array[S
 		var visual_overlap_x := _horizontal_overlap(current.get("visual_bounds", Rect2()), next.get("visual_bounds", Rect2()))
 		if horizontal_gap > max_gap:
 			checks["link_gaps"] = false
-			failures.append("%s to %s gap %.0fpx exceeds %.0fpx" % [str(current.get("id", "surface")), str(next.get("id", "surface")), horizontal_gap, max_gap])
+			checks["ability_envelope"] = false
+			failures.append("%s to %s gap %.0fpx exceeds %.0fpx ability reach" % [str(current.get("id", "surface")), str(next.get("id", "surface")), horizontal_gap, max_gap])
 		if horizontal_gap > 0.0 and horizontal_gap < MIN_GENERATED_BODY_GAP:
 			checks["body_clearance"] = false
 			failures.append("%s to %s body gap %.0fpx is under %.0fpx" % [str(current.get("id", "surface")), str(next.get("id", "surface")), horizontal_gap, MIN_GENERATED_BODY_GAP])
 		if step_up > max_step_up:
 			checks["link_gaps"] = false
-			failures.append("%s to %s step-up %.0fpx exceeds %.0fpx" % [str(current.get("id", "surface")), str(next.get("id", "surface")), step_up, max_step_up])
+			checks["ability_envelope"] = false
+			failures.append("%s to %s step-up %.0fpx exceeds %.0fpx ability ledge" % [str(current.get("id", "surface")), str(next.get("id", "surface")), step_up, max_step_up])
 		if visual_overlap_x > GENERATED_STITCH_OVERLAP and _vertical_headroom(current, next) < MIN_GENERATED_HEADROOM:
 			checks["body_clearance"] = false
 			failures.append("%s to %s visual clearance is under %.0fpx" % [str(current.get("id", "surface")), str(next.get("id", "surface")), MIN_GENERATED_HEADROOM])
@@ -682,6 +691,25 @@ func _validate_generated_route(route_distance: float, route_surface_ids: Array[S
 
 func _horizontal_overlap(left: Rect2, right: Rect2) -> float:
 	return minf(left.end.x, right.end.x) - maxf(left.position.x, right.position.x)
+
+
+func _validate_surface_headroom(surface: Dictionary, route_surfaces: Array[Dictionary], checks: Dictionary, failures: PackedStringArray) -> void:
+	var bounds: Rect2 = surface.get("collision_bounds", Rect2())
+	if bounds == Rect2():
+		return
+	for overhead in route_surfaces:
+		if str(overhead.get("id", "")) == str(surface.get("id", "")):
+			continue
+		var overhead_bounds: Rect2 = overhead.get("visual_bounds", Rect2())
+		if overhead_bounds == Rect2() or overhead_bounds.end.y > bounds.position.y:
+			continue
+		if _horizontal_overlap(bounds, overhead_bounds) <= GENERATED_STITCH_OVERLAP:
+			continue
+		var clearance := bounds.position.y - overhead_bounds.end.y
+		if clearance < MIN_GENERATED_HEADROOM:
+			checks["headroom"] = false
+			checks["body_clearance"] = false
+			failures.append("%s headroom %.0fpx is under %.0fpx full-height clearance" % [str(surface.get("id", "surface")), clearance, MIN_GENERATED_HEADROOM])
 
 
 func _vertical_headroom(current: Dictionary, next: Dictionary) -> float:

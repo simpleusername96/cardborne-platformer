@@ -5,6 +5,7 @@ const CONSERVATIVE_AIR_REACH := 0.82
 const CONSERVATIVE_DASH_REACH := 0.85
 const REQUIRED_GAP_FACTOR := 0.68
 const REQUIRED_LEDGE_FACTOR := 0.72
+const MAX_ROUTE_DASH_CHAIN := 2
 
 
 static func calculate(stats: Dictionary, ability_flags: Dictionary = {}) -> Dictionary:
@@ -25,6 +26,7 @@ static func calculate(stats: Dictionary, ability_flags: Dictionary = {}) -> Dict
 	var jump_height := (jump_velocity * jump_velocity) / (2.0 * gravity)
 	var single_jump_reach := move_speed * airtime * CONSERVATIVE_AIR_REACH
 	var dash_reach := dash_speed * dash_duration
+	var dash_chain_reach := dash_reach * float(mini(maxi(dash_charges, 1), MAX_ROUTE_DASH_CHAIN)) * CONSERVATIVE_DASH_REACH
 	var jump_dash_reach := single_jump_reach + dash_reach * CONSERVATIVE_DASH_REACH
 
 	var double_jump_height := jump_height
@@ -32,6 +34,12 @@ static func calculate(stats: Dictionary, ability_flags: Dictionary = {}) -> Dict
 	if extra_jumps > 0:
 		double_jump_height = jump_height * 1.65
 		double_jump_reach = single_jump_reach + move_speed * time_to_apex * 0.70
+	var double_jump_dash_reach := double_jump_reach + dash_chain_reach
+	var route_reach := maxf(single_jump_reach, jump_dash_reach)
+	var route_ledge_height := jump_height
+	if extra_jumps > 0:
+		route_reach = maxf(route_reach, double_jump_dash_reach)
+		route_ledge_height = maxf(route_ledge_height, double_jump_height)
 
 	return {
 		"jump_height": jump_height,
@@ -39,9 +47,13 @@ static func calculate(stats: Dictionary, ability_flags: Dictionary = {}) -> Dict
 		"airtime": airtime,
 		"single_jump_reach": single_jump_reach,
 		"dash_reach": dash_reach,
+		"dash_chain_reach": dash_chain_reach,
 		"jump_dash_reach": jump_dash_reach,
 		"double_jump_height": double_jump_height,
 		"double_jump_reach": double_jump_reach,
+		"double_jump_dash_reach": double_jump_dash_reach,
+		"route_reach": route_reach,
+		"route_ledge_height": route_ledge_height,
 		"dash_charges": dash_charges,
 		"extra_jumps": extra_jumps,
 	}
@@ -66,7 +78,7 @@ static func route_limits_for_profiles(profiles: Array, ability_flags: Dictionary
 		if not profile is CharacterProfile:
 			continue
 		var metrics := calculate_for_profile(profile, ability_flags)
-		var score := float(metrics.get("jump_dash_reach", 0.0)) + float(metrics.get("jump_height", 0.0)) * 0.25
+		var score := float(metrics.get("route_reach", 0.0)) + float(metrics.get("route_ledge_height", 0.0)) * 0.25
 		if score < lowest_score:
 			lowest_score = score
 			least_profile = profile
@@ -78,7 +90,7 @@ static func route_limits_for_profiles(profiles: Array, ability_flags: Dictionary
 	return {
 		"least_mobile_profile_id": least_profile.id,
 		"least_mobile_profile_name": least_profile.display_name,
-		"max_required_gap": floorf(float(least_metrics.get("jump_dash_reach", 0.0)) * REQUIRED_GAP_FACTOR),
-		"max_required_ledge": floorf(float(least_metrics.get("jump_height", 0.0)) * REQUIRED_LEDGE_FACTOR),
+		"max_required_gap": floorf(float(least_metrics.get("route_reach", 0.0)) * REQUIRED_GAP_FACTOR),
+		"max_required_ledge": floorf(float(least_metrics.get("route_ledge_height", 0.0)) * REQUIRED_LEDGE_FACTOR),
 		"least_metrics": least_metrics,
 	}
