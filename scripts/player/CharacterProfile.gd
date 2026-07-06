@@ -35,7 +35,7 @@ extends Resource
 @export var jump_cut_multiplier: float = 0.45
 @export var coyote_time: float = 0.10
 @export var jump_buffer_time: float = 0.12
-@export var extra_jumps: int = 0
+@export var extra_jumps: int = 1
 
 @export_group("Dash And Damage Response")
 @export var dash_speed: float = 520.0

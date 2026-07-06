@@ -278,8 +278,8 @@ func _on_testbed_metrics_changed(metrics: Dictionary) -> void:
 
 
 func _on_testbed_flags_changed(flags: Dictionary) -> void:
-	flags_label.text = "Debug flags: force double %s | rope %s | wall deferred" % [
-		"ON" if bool(flags.get("double_jump_enabled", false)) else "OFF",
+	flags_label.text = "Debug flags: double jump base%s | rope %s | wall deferred" % [
+		" +force" if bool(flags.get("double_jump_enabled", false)) else "",
 		"ON" if bool(flags.get("rope_climb_enabled", false)) else "OFF",
 	]
 
