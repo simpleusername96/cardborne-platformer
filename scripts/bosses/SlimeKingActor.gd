@@ -11,6 +11,7 @@ signal defeated(reward_table_id: StringName, snapshot: Dictionary)
 
 const REVIEWED_STAGGER_CAPACITY := 100
 const PHASE_TRANSITION_DURATION := 0.75
+const DEFEAT_PRESENTATION_DURATION := 0.55
 const DEFEAT_REWARD_TABLE_ID := &"boss_clear_slime_king"
 const DEFAULT_SCHEDULER_SEED := 804018
 const PATTERN_PATHS: Array[String] = [
@@ -62,6 +63,7 @@ var _external_clock: bool = false
 var _phase_transition_remaining: float = 0.0
 var _phase_transition_pending: bool = false
 var _defeat_emitted: bool = false
+var _settlement_emitted: bool = false
 var _scheduler_seed: int = DEFAULT_SCHEDULER_SEED
 var _flash_serial: int = 0
 var _base_body_color := Color(0.42, 0.82, 0.28, 1.0)
@@ -176,6 +178,7 @@ func receive_damage(damage_info: DamageInfo) -> void:
 		return
 	current_health = health_model.health
 	_flash(damage_info.critical)
+	_request_damage_feedback(damage_info)
 	if bool(result.get("phase_changed", false)):
 		_phase_transition_pending = true
 		phase_changed.emit(health_model.phase, get_runtime_snapshot())
@@ -296,6 +299,7 @@ func get_runtime_snapshot() -> Dictionary:
 		"scheduler_history": get_scheduler_history(),
 		"pattern": pattern_runtime.snapshot() if pattern_runtime != null else {},
 		"defeat_emitted": _defeat_emitted,
+		"settlement_emitted": _settlement_emitted,
 	}
 
 
@@ -442,11 +446,27 @@ func _handle_defeat() -> void:
 	body_visual.color = Color(0.30, 0.38, 0.24, 0.78)
 	crown_visual.color = Color(0.48, 0.42, 0.28, 0.82)
 	var final_snapshot := get_runtime_snapshot()
+	SignalBus.gameplay_feedback_requested.emit({
+		"cue_id": &"enemy_defeat",
+		"strength": 1.8,
+		"world_position": global_position + Vector2(0.0, -48.0),
+		"burst_radius": 40.0,
+		"burst_color": Color(0.67, 0.94, 0.44),
+		"context": {"source": "slime_king_collapse"},
+	})
 	defeated.emit(DEFEAT_REWARD_TABLE_ID, final_snapshot)
+	snapshot_changed.emit(final_snapshot)
+	_publish_settlement_after_defeat_pose()
+
+
+func _publish_settlement_after_defeat_pose() -> void:
+	await get_tree().create_timer(DEFEAT_PRESENTATION_DURATION).timeout
+	if _settlement_emitted or _actor_state != ACTOR_DEFEATED:
+		return
+	_settlement_emitted = true
 	var bus := get_node_or_null("/root/SignalBus")
 	if bus != null:
 		bus.boss_defeated.emit(DEFEAT_REWARD_TABLE_ID)
-	snapshot_changed.emit(final_snapshot)
 
 
 func _set_hurtbox_enabled(enabled: bool) -> void:
@@ -465,6 +485,11 @@ func _on_player_died() -> void:
 
 
 func _on_runtime_pattern_started(pattern_id: StringName, _snapshot: Dictionary) -> void:
+	SignalBus.gameplay_feedback_requested.emit({
+		"cue_id": &"boss_warning",
+		"strength": 0.85 if health_model.phase <= 1 else 1.0,
+		"context": {"source": "slime_king", "pattern_id": String(pattern_id)},
+	})
 	pattern_started.emit(pattern_id, get_runtime_snapshot())
 	_publish_snapshot()
 
@@ -504,3 +529,16 @@ func _flash(critical: bool) -> void:
 	await get_tree().create_timer(0.12 if critical else 0.07).timeout
 	if is_instance_valid(self) and active_serial == _flash_serial:
 		visual.modulate = Color.WHITE
+
+
+func _request_damage_feedback(damage_info: DamageInfo) -> void:
+	SignalBus.gameplay_feedback_requested.emit({
+		"cue_id": &"critical_hit" if damage_info.critical else &"enemy_hit",
+		"strength": clampf(0.8 + float(damage_info.amount) * 0.12, 0.8, 1.6),
+		"world_position": global_position + Vector2(0.0, -48.0),
+		"context": {
+			"source": "slime_king",
+			"damage": damage_info.amount,
+			"phase": health_model.phase,
+		},
+	})

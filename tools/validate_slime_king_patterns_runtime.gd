@@ -13,6 +13,7 @@ const STAGE_PATH := "res://scenes/stages/boss/SlimeCourt.tscn"
 const EPSILON := 0.0001
 const INTRO_DURATION := 0.90
 const PHASE_TRANSITION_DURATION := 0.75
+const DEFEAT_PRESENTATION_DURATION := 0.55
 const GROUND_Y := 640.0
 const EXPECTED_TIMINGS := {
 	&"jump_slam": Vector3(0.80, 0.18, 1.00),
@@ -321,10 +322,12 @@ func _validate_defeat_cleanup_and_exactly_once_signal() -> void:
 	_expect(cleared["active_zone_count"] == 0, "defeat should clear landing and shockwave actors")
 	_expect(cleared["active_add_count"] == 0, "defeat should clear every Small Slime add")
 	_expect((cleared["queued_pattern_ids"] as Array).is_empty(), "defeat should clear queued pattern execution")
-	_expect(signal_result["count"] == 1, "boss defeat should emit exactly one SignalBus fact")
-	_expect(signal_result["reward_id"] == &"boss_clear_slime_king", "boss defeat should emit the exact settlement reward table ID")
+	_expect(signal_result["count"] == 0, "boss settlement should wait for the readable defeat pose")
 	boss.receive_damage(DamageInfo.new(80, stage.player))
+	await create_timer(DEFEAT_PRESENTATION_DURATION + 0.05).timeout
 	_expect(signal_result["count"] == 1, "repeated defeat hits should not emit a second SignalBus fact")
+	_expect(signal_result["reward_id"] == &"boss_clear_slime_king", "boss defeat should emit the exact settlement reward table ID")
+	_expect(bool(boss.get_runtime_snapshot()["settlement_emitted"]), "defeat pose should publish settlement after its authored hold")
 	if bus.boss_defeated.is_connected(callback):
 		bus.boss_defeated.disconnect(callback)
 	stage.queue_free()

@@ -121,6 +121,7 @@ func receive_damage(damage_info: DamageInfo) -> void:
 			"attack_id": damage_info.attack_id,
 			"tags": damage_info.tags.duplicate(),
 		})
+		_request_gameplay_feedback(&"player_hurt", 1.0, true)
 	var knockback := damage_info.knockback
 	if knockback == Vector2.ZERO:
 		knockback = Vector2(
@@ -200,6 +201,7 @@ func _update_dash(input_axis: float, delta: float) -> void:
 	is_dashing = true
 	_dash_start_position = global_position
 	velocity = Vector2(float(facing) * float(stats.get("dash_speed", 520.0)), 0.0)
+	_request_gameplay_feedback(&"dash", 0.8, false)
 
 
 func _update_gravity(delta: float) -> void:
@@ -335,6 +337,21 @@ func _perform_jump() -> void:
 	jump_buffer_timer = 0.0
 	coyote_timer = 0.0
 	is_climbing = false
+	_request_gameplay_feedback(&"jump", 0.65, false)
+
+
+func _request_gameplay_feedback(
+	cue_id: StringName,
+	strength: float,
+	burst: bool
+) -> void:
+	SignalBus.gameplay_feedback_requested.emit({
+		"cue_id": cue_id,
+		"strength": strength,
+		"world_position": global_position + Vector2(0.0, -26.0),
+		"burst": burst,
+		"context": {"source": "player", "profile_id": String(RunState.selected_profile.id)},
+	})
 
 
 func _max_dash_charges() -> int:

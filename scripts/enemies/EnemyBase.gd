@@ -74,6 +74,7 @@ func receive_damage(damage_info: DamageInfo) -> void:
 	velocity.y = minf(velocity.y, damage_info.knockback.y * 0.55)
 	SignalBus.status_message_changed.emit("%s HP %d / %d" % [name, current_health, max_health])
 	_flash(damage_info.critical)
+	_request_damage_feedback(damage_info, current_health <= 0)
 	if current_health <= 0:
 		_defeat()
 
@@ -422,6 +423,24 @@ func _flash(critical: bool = false) -> void:
 	await get_tree().create_timer(0.12 if critical else 0.08).timeout
 	if is_instance_valid(_visual) and current_health > 0:
 		_refresh_visual_color()
+
+
+func _request_damage_feedback(damage_info: DamageInfo, defeated_now: bool) -> void:
+	var cue_id := &"enemy_defeat" if defeated_now else (
+		&"critical_hit" if damage_info.critical else &"enemy_hit"
+	)
+	var strength := clampf(0.7 + float(damage_info.amount) * 0.16, 0.7, 1.5)
+	SignalBus.gameplay_feedback_requested.emit({
+		"cue_id": cue_id,
+		"strength": strength,
+		"world_position": global_position + Vector2(0.0, -22.0),
+		"context": {
+			"source": "enemy",
+			"archetype_id": String(archetype_id),
+			"variant_id": String(variant_id),
+			"damage": damage_info.amount,
+		},
+	})
 
 
 func _update_delayed_damage(delta: float) -> void:
