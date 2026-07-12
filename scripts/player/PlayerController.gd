@@ -111,6 +111,15 @@ func receive_damage(damage_info: DamageInfo) -> void:
 	combat_controller.notify_health_changed(previous_health, RunState.current_health)
 	combat_controller.notify_player_damaged(resolved_damage)
 	invulnerability_timer = float(stats.get("post_hit_invulnerability", 1.0))
+	var committed_damage := maxi(previous_health - RunState.current_health, 0)
+	if committed_damage > 0:
+		combat_controller.notify_player_health_damage({
+			"amount": committed_damage,
+			"previous_health": previous_health,
+			"current_health": RunState.current_health,
+			"attack_id": damage_info.attack_id,
+			"tags": damage_info.tags.duplicate(),
+		})
 	var knockback := damage_info.knockback
 	if knockback == Vector2.ZERO:
 		knockback = Vector2(
@@ -118,6 +127,14 @@ func receive_damage(damage_info: DamageInfo) -> void:
 			float(stats.get("damage_knockback_y", -220.0))
 		)
 	velocity = knockback * float(defense.get("knockback_scale", 1.0))
+
+
+func heal_player(amount: int) -> int:
+	if amount <= 0:
+		return 0
+	var previous_health := RunState.current_health
+	RunState.heal_player(amount)
+	return maxi(RunState.current_health - previous_health, 0)
 
 
 func _try_use_consumable() -> void:

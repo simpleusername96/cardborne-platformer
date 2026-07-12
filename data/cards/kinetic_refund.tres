@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="CardDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/cards/CardDefinition.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/cards/CardEffectDefinition.gd" id="2"]
+
+[sub_resource type="Resource" id="CooldownRefund"]
+script = ExtResource("2")
+effect_type = &"reduce_all_skill_cooldowns"
+seconds = 1.0
+
+[resource]
+script = ExtResource("1")
+id = &"kinetic_refund"
+display_name = "Kinetic Refund"
+description = "A Heavy or skill hitting two distinct targets trims every active skill cooldown by 1 second."
+rarity = &"common"
+compatibility = Array[StringName]([&"shared"])
+trigger = &"heavy_or_skill_multi_target_completed"
+effects = Array[ExtResource("2")]([SubResource("CooldownRefund")])
+max_stacks = 1
+internal_cooldown = 3.0

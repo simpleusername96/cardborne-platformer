@@ -14,11 +14,50 @@ var _internal_cooldowns: Dictionary = {}
 var _next_heavy_timer: float = 0.0
 var _next_heavy_startup_scale: float = 1.0
 var _next_heavy_uninterruptible: bool = false
+var _stage_index: int = -1
+var _positive_damage_serial: int = 0
+var _last_required_clear_damage_serial: int = 0
+var _required_room_damage_baselines: Dictionary = {}
+var _cleared_required_rooms: Dictionary = {}
+var _resolved_action_triggers: Dictionary = {}
+var _treasure_request_ids: Dictionary = {}
+var _last_stand_used: bool = false
 
 
 func _ready() -> void:
 	player.extra_jump_performed.connect(_on_extra_jump_performed)
 	player.dash_completed.connect(_on_dash_completed)
+	SignalBus.required_room_encounter_started.connect(_on_required_room_encounter_started)
+	SignalBus.required_room_encounter_cleared.connect(_on_required_room_encounter_cleared)
+	SignalBus.optional_route_chest_claimed.connect(notify_optional_route_chest_claimed)
+
+
+func _exit_tree() -> void:
+	if SignalBus.required_room_encounter_started.is_connected(_on_required_room_encounter_started):
+		SignalBus.required_room_encounter_started.disconnect(_on_required_room_encounter_started)
+	if SignalBus.required_room_encounter_cleared.is_connected(_on_required_room_encounter_cleared):
+		SignalBus.required_room_encounter_cleared.disconnect(_on_required_room_encounter_cleared)
+	if SignalBus.optional_route_chest_claimed.is_connected(notify_optional_route_chest_claimed):
+		SignalBus.optional_route_chest_claimed.disconnect(notify_optional_route_chest_claimed)
+
+
+func begin_stage() -> void:
+	_stage_index = RunState.current_stage_index
+	_positive_damage_serial = 0
+	_last_required_clear_damage_serial = 0
+	_required_room_damage_baselines.clear()
+	_cleared_required_rooms.clear()
+	_resolved_action_triggers.clear()
+	_treasure_request_ids.clear()
+	_last_stand_used = false
+	_internal_cooldowns.clear()
+	reset_transient_state()
+
+
+func reset_transient_state() -> void:
+	_aerial_attack_ready = false
+	_internal_cooldowns.clear()
+	_clear_next_heavy()
 
 
 func _process(delta: float) -> void:
@@ -96,7 +135,98 @@ func get_state_snapshot() -> Dictionary:
 		"next_heavy_time": _next_heavy_timer,
 		"next_heavy_startup_scale": _next_heavy_startup_scale,
 		"next_heavy_uninterruptible": _next_heavy_uninterruptible,
+		"internal_cooldowns": _internal_cooldowns.duplicate(true),
+		"stage_index": _stage_index,
+		"positive_damage_serial": _positive_damage_serial,
+		"required_room_damage_baselines": _required_room_damage_baselines.duplicate(true),
+		"cleared_required_rooms": _sorted_keys(_cleared_required_rooms),
+		"resolved_action_trigger_count": _resolved_action_triggers.size(),
+		"treasure_request_ids": _sorted_keys(_treasure_request_ids),
+		"last_stand_used": _last_stand_used,
 	}
+
+
+func notify_attack_completed(event: Dictionary) -> void:
+	var definition := event.get("definition") as AttackDefinition
+	if (
+		definition == null
+		or StringName(event.get("reason", &"completed")) != &"completed"
+		or int(event.get("target_count", 0)) < 2
+		or not (definition.tags.has(&"heavy") or definition.tags.has(&"skill"))
+	):
+		return
+	var action_serial := int(event.get("action_serial", 0))
+	for context in _card_contexts(&"heavy_or_skill_multi_target_completed"):
+		var card := context.get("definition") as CardDefinition
+		if card == null:
+			continue
+		var action_key := "%s:%d" % [card.id, action_serial]
+		if action_serial > 0 and _resolved_action_triggers.has(action_key):
+			continue
+		if action_serial > 0:
+			_resolved_action_triggers[action_key] = true
+		if not _is_card_ready(card):
+			continue
+		for effect in card.effects:
+			if effect.effect_type == &"reduce_all_skill_cooldowns":
+				combat_controller.reduce_all_skill_cooldowns(effect.seconds)
+		if card.internal_cooldown > 0.0:
+			_internal_cooldowns[String(card.id)] = card.internal_cooldown
+		_emit_status("%s reduced active skill cooldowns" % card.display_name)
+
+
+func notify_player_health_damage(event: Dictionary) -> void:
+	var amount := int(event.get("amount", 0))
+	var previous_health := int(event.get("previous_health", 0))
+	var current_health := int(event.get("current_health", previous_health))
+	if amount <= 0 or current_health >= previous_health:
+		return
+	_positive_damage_serial += 1
+	if current_health != 1 or previous_health <= 1 or _last_stand_used:
+		return
+	for context in _card_contexts(&"damage_left_one_health"):
+		var card := context.get("definition") as CardDefinition
+		if card == null:
+			continue
+		_last_stand_used = true
+		for effect in card.effects:
+			match effect.effect_type:
+				&"grant_invulnerability":
+					player.grant_invulnerability(effect.seconds)
+				&"reset_skill_slot":
+					combat_controller.reset_skill_slot(effect.skill_slot)
+		_emit_status("%s triggered" % card.display_name)
+		break
+
+
+func notify_optional_route_chest_claimed(context: Dictionary) -> Dictionary:
+	if not bool(context.get("optional_route", false)):
+		return {}
+	var request_id := String(context.get("request_id", "")).strip_edges()
+	if request_id.is_empty() or _treasure_request_ids.has(request_id):
+		return {}
+	for card_context in _card_contexts(&"optional_route_chest_claimed"):
+		var card := card_context.get("definition") as CardDefinition
+		if card == null:
+			continue
+		for effect in card.effects:
+			if effect.effect_type != &"request_reward_preview_replacement":
+				continue
+			var request := {
+				"request_id": StringName(request_id),
+				"stage_index": int(context.get("stage_index", _stage_index)),
+				"room_id": StringName(context.get("room_id", &"")),
+				"source_id": StringName(context.get("source_id", &"")),
+				"card_id": card.id,
+				"selection_policy": &"replace_normal_reward",
+				"choice_pool": effect.reward_pool,
+				"additional_choice_count": effect.choice_count,
+			}
+			_treasure_request_ids[request_id] = true
+			SignalBus.reward_preview_replacement_requested.emit(request.duplicate(true))
+			_emit_status("%s found an extra preview" % card.display_name)
+			return request
+	return {}
 
 
 func prepare_target_hit(
@@ -265,6 +395,43 @@ func _on_dash_completed(start_position: Vector2, end_position: Vector2) -> void:
 			_internal_cooldowns[String(card.id)] = card.internal_cooldown
 
 
+func _on_required_room_encounter_started(context: Dictionary) -> void:
+	if not _matches_current_stage(context):
+		return
+	var room_id := String(context.get("room_id", "")).strip_edges()
+	if room_id.is_empty() or _cleared_required_rooms.has(room_id):
+		return
+	if not _required_room_damage_baselines.has(room_id):
+		_required_room_damage_baselines[room_id] = _positive_damage_serial
+
+
+func _on_required_room_encounter_cleared(context: Dictionary) -> void:
+	if not _matches_current_stage(context):
+		return
+	var room_id := String(context.get("room_id", "")).strip_edges()
+	if room_id.is_empty() or _cleared_required_rooms.has(room_id):
+		return
+	var damage_baseline := int(_required_room_damage_baselines.get(
+		room_id,
+		_last_required_clear_damage_serial
+	))
+	var cleared_without_damage := damage_baseline == _positive_damage_serial
+	_cleared_required_rooms[room_id] = true
+	_required_room_damage_baselines.erase(room_id)
+	_last_required_clear_damage_serial = _positive_damage_serial
+	if not cleared_without_damage:
+		return
+	for card_context in _card_contexts(&"required_room_encounter_cleared_without_damage"):
+		var card := card_context.get("definition") as CardDefinition
+		if card == null:
+			continue
+		for effect in card.effects:
+			if effect.effect_type == &"heal_player":
+				player.heal_player(effect.health)
+		_emit_status("%s restored health" % card.display_name)
+		break
+
+
 func _spawn_dash_trail(
 	card: CardDefinition,
 	effect: CardEffectDefinition,
@@ -344,6 +511,18 @@ func _clear_next_heavy() -> void:
 	_next_heavy_timer = 0.0
 	_next_heavy_startup_scale = 1.0
 	_next_heavy_uninterruptible = false
+
+
+func _matches_current_stage(context: Dictionary) -> bool:
+	return int(context.get("stage_index", _stage_index)) == _stage_index
+
+
+func _sorted_keys(source: Dictionary) -> Array[String]:
+	var keys: Array[String] = []
+	for key in source:
+		keys.append(String(key))
+	keys.sort()
+	return keys
 
 
 func _card_contexts(trigger: StringName) -> Array:

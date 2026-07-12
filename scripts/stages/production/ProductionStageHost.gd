@@ -34,6 +34,10 @@ var _all_enemies: Array[EnemyBase] = []
 var _required_enemies: Array[EnemyBase] = []
 var _defeated_required_ids: Dictionary = {}
 var _settled_enemy_ids: Dictionary = {}
+var _required_encounter_room_ids: Dictionary = {}
+var _required_room_encounter_ids: Dictionary = {}
+var _started_required_rooms: Dictionary = {}
+var _cleared_required_rooms: Dictionary = {}
 var _exit_portal: ExitPortal
 var _world_bounds := Rect2()
 
@@ -48,6 +52,11 @@ func _ready() -> void:
 		_abort_setup("Production stage player spawn failed.")
 		return
 	_publish_encounter_state()
+
+
+func _physics_process(_delta: float) -> void:
+	if _setup_succeeded and player != null:
+		_publish_required_room_start_if_entered()
 
 
 func is_setup_complete() -> bool:
@@ -155,6 +164,7 @@ func _setup_generated_stage() -> bool:
 			_publish_errors("Stage generation", _report_messages(_generation_report))
 		return false
 	_stage_plan = generation.plan
+	_index_required_room_encounters()
 	_assembly_result = StageAssembler.assemble(_stage_plan, _room_catalog, rooms_root)
 	if not _assembly_result.success:
 		_publish_errors("Stage assembly", _assembly_result.get_errors())
@@ -247,6 +257,10 @@ func _abort_setup(message: String) -> void:
 	_required_enemies.clear()
 	_defeated_required_ids.clear()
 	_settled_enemy_ids.clear()
+	_required_encounter_room_ids.clear()
+	_required_room_encounter_ids.clear()
+	_started_required_rooms.clear()
+	_cleared_required_rooms.clear()
 	_exit_portal = null
 
 
@@ -256,8 +270,11 @@ func _on_enemy_defeated(enemy: EnemyBase) -> void:
 		return
 	_settled_enemy_ids[encounter_id] = true
 	_settle_enemy_reward(enemy, StringName(encounter_id))
-	if bool(enemy.get_meta("required_route", false)):
+	if _required_encounter_room_ids.has(encounter_id):
 		_defeated_required_ids[encounter_id] = true
+		_publish_required_room_clear_if_complete(
+			StringName(_required_encounter_room_ids[encounter_id])
+		)
 		if get_remaining_enemy_count() == 0:
 			_set_exit_enabled(true)
 	_publish_encounter_state()
@@ -302,6 +319,77 @@ func _publish_encounter_state() -> void:
 		"objective": "enter_gate" if remaining == 0 else "defeat_enemies",
 		"exit_enabled": is_exit_enabled(),
 	})
+
+
+func _index_required_room_encounters() -> void:
+	_required_encounter_room_ids.clear()
+	_required_room_encounter_ids.clear()
+	_started_required_rooms.clear()
+	_cleared_required_rooms.clear()
+	if _stage_plan == null:
+		return
+	for encounter in _stage_plan.get_encounters():
+		var room := _stage_plan.get_room(encounter.room_id)
+		if room == null or not room.required_route:
+			continue
+		var room_key := String(encounter.room_id)
+		var encounter_key := String(encounter.id)
+		var room_encounters: Dictionary = _required_room_encounter_ids.get(room_key, {})
+		room_encounters[encounter_key] = true
+		_required_room_encounter_ids[room_key] = room_encounters
+		_required_encounter_room_ids[encounter_key] = room_key
+
+
+func _publish_required_room_start_if_entered() -> void:
+	var room_ids := _required_room_encounter_ids.keys()
+	room_ids.sort()
+	for room_value in room_ids:
+		var room_key := String(room_value)
+		if _started_required_rooms.has(room_key) or _cleared_required_rooms.has(room_key):
+			continue
+		var host := get_room_host(StringName(room_key))
+		if host == null or host.template_data == null:
+			continue
+		var room_bounds := Rect2(
+			host.global_position + host.template_data.bounds.position,
+			host.template_data.bounds.size
+		)
+		if not room_bounds.has_point(player.global_position):
+			continue
+		_started_required_rooms[room_key] = true
+		SignalBus.required_room_encounter_started.emit(
+			_required_room_event_context(StringName(room_key))
+		)
+
+
+func _publish_required_room_clear_if_complete(room_id: StringName) -> void:
+	var room_key := String(room_id)
+	if room_key.is_empty() or _cleared_required_rooms.has(room_key):
+		return
+	var encounter_ids := _required_room_encounter_ids.get(room_key, {}) as Dictionary
+	if encounter_ids.is_empty():
+		return
+	for encounter_id in encounter_ids:
+		if not _defeated_required_ids.has(String(encounter_id)):
+			return
+	_cleared_required_rooms[room_key] = true
+	SignalBus.required_room_encounter_cleared.emit(
+		_required_room_event_context(room_id)
+	)
+
+
+func _required_room_event_context(room_id: StringName) -> Dictionary:
+	var encounter_ids: Array[String] = []
+	for encounter_id in (_required_room_encounter_ids.get(String(room_id), {}) as Dictionary):
+		encounter_ids.append(String(encounter_id))
+	encounter_ids.sort()
+	return {
+		"stage_id": StringName(stage_id),
+		"stage_index": RunState.current_stage_index,
+		"room_id": room_id,
+		"required_encounter_ids": encounter_ids,
+		"required_encounter_count": encounter_ids.size(),
+	}
 
 
 func _after_player_respawned() -> void:

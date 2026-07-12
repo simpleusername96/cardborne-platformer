@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="CardDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/cards/CardDefinition.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/cards/CardEffectDefinition.gd" id="2"]
+
+[sub_resource type="Resource" id="PreviewReplacement"]
+script = ExtResource("2")
+effect_type = &"request_reward_preview_replacement"
+choice_count = 1
+reward_pool = &"compatible_equipment_or_forge"
+
+[resource]
+script = ExtResource("1")
+id = &"treasure_instinct"
+display_name = "Treasure Instinct"
+description = "An optional-route chest adds one compatible equipment or forge preview that replaces its normal reward when chosen."
+rarity = &"common"
+compatibility = Array[StringName]([&"shared"])
+trigger = &"optional_route_chest_claimed"
+effects = Array[ExtResource("2")]([SubResource("PreviewReplacement")])
+max_stacks = 1

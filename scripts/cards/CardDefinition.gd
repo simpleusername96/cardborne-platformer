@@ -14,6 +14,10 @@ const SUPPORTED_TRIGGERS: Array[StringName] = [
 	&"archer_mark_consumed",
 	&"assassin_shadow_lunge_completed",
 	&"assassin_flow_consumed",
+	&"heavy_or_skill_multi_target_completed",
+	&"required_room_encounter_cleared_without_damage",
+	&"damage_left_one_health",
+	&"optional_route_chest_claimed",
 ]
 
 @export var id: StringName

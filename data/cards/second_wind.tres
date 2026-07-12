@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="CardDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/cards/CardDefinition.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/cards/CardEffectDefinition.gd" id="2"]
+
+[sub_resource type="Resource" id="RoomHeal"]
+script = ExtResource("2")
+effect_type = &"heal_player"
+health = 1
+
+[resource]
+script = ExtResource("1")
+id = &"second_wind"
+display_name = "Second Wind"
+description = "Clearing a required room encounter without taking health damage restores 1 health once in that room."
+rarity = &"common"
+compatibility = Array[StringName]([&"shared"])
+trigger = &"required_room_encounter_cleared_without_damage"
+effects = Array[ExtResource("2")]([SubResource("RoomHeal")])
+max_stacks = 1

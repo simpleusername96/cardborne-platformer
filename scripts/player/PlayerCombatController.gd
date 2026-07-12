@@ -38,6 +38,7 @@ var character_runtime: CharacterCombatRuntime
 var _cooldowns: Dictionary = {}
 var _fallback_basic: AttackDefinition
 var _active_target_count: int = 0
+var _active_target_ids: Dictionary = {}
 var _active_attack_modifiers: Dictionary = {}
 var _progression_effects: Array[ProgressionBehaviorEffect] = []
 # Hitbox applies damage before target_hit, so the confirmed event reuses this context.
@@ -95,6 +96,8 @@ func configure(
 
 func begin_stage() -> void:
 	_last_bastion_used = false
+	if card_runtime != null:
+		card_runtime.begin_stage()
 	if character_runtime != null:
 		character_runtime.begin_stage()
 	_publish_state()
@@ -299,6 +302,8 @@ func reset_combat_state() -> void:
 	guarded_timer = 0.0
 	guarded_rearm_timer = 0.0
 	_cooldowns.clear()
+	_active_target_count = 0
+	_active_target_ids.clear()
 	_active_attack_modifiers.clear()
 	_pending_hit_contexts.clear()
 	_clear_rally_empowerment()
@@ -308,6 +313,8 @@ func reset_combat_state() -> void:
 	_action_hit_wall = false
 	if character_runtime != null:
 		character_runtime.reset()
+	if card_runtime != null:
+		card_runtime.reset_transient_state()
 	attack_hitbox.clear_damage_info_provider()
 	attack_hitbox.set_active(false)
 	attack_hitbox.visible = false
@@ -340,6 +347,8 @@ func get_state_snapshot() -> Dictionary:
 	}
 	if character_runtime != null:
 		snapshot.merge(character_runtime.get_state_snapshot(), true)
+	if card_runtime != null:
+		snapshot["card_state"] = card_runtime.get_state_snapshot()
 	return snapshot
 
 
@@ -374,6 +383,29 @@ func reduce_longest_skill_cooldown(seconds: float) -> StringName:
 	return longest_id
 
 
+func reduce_all_skill_cooldowns(seconds: float) -> Array[StringName]:
+	var reduced: Array[StringName] = []
+	if seconds <= 0.0 or kit == null:
+		return reduced
+	for skill in kit.skills:
+		if skill == null:
+			continue
+		var key := String(skill.id)
+		var remaining := float(_cooldowns.get(key, 0.0))
+		if remaining <= 0.0:
+			continue
+		var next_remaining := maxf(remaining - seconds, 0.0)
+		if next_remaining <= 0.0:
+			_cooldowns.erase(key)
+		else:
+			_cooldowns[key] = next_remaining
+		reduced.append(skill.id)
+	reduced.sort()
+	if not reduced.is_empty():
+		_publish_state()
+	return reduced
+
+
 func get_charge_fraction() -> float:
 	return _charge_fraction
 
@@ -393,6 +425,18 @@ func reset_cooldown(definition_id: StringName) -> bool:
 	_cooldowns.erase(key)
 	_publish_state()
 	return true
+
+
+func reset_skill_slot(slot: int) -> bool:
+	if kit == null or slot <= 0:
+		return false
+	var skill := kit.get_skill_by_slot(slot)
+	return reset_cooldown(skill.id) if skill != null else false
+
+
+func notify_player_health_damage(event: Dictionary) -> void:
+	if card_runtime != null:
+		card_runtime.notify_player_health_damage(event)
 
 
 func get_progression_effects() -> Array[ProgressionBehaviorEffect]:
@@ -516,6 +560,7 @@ func _begin_attack(definition: AttackDefinition) -> bool:
 	phase = Phase.STARTUP
 	action_elapsed = 0.0
 	_active_target_count = 0
+	_active_target_ids.clear()
 	_rally_echo_spawned = false
 	_charge_fraction = 0.0
 	_action_serial += 1
@@ -631,6 +676,8 @@ func _finish_attack() -> void:
 	attack_presenter.reset()
 	if character_runtime != null:
 		character_runtime.notify_attack_finished(event)
+	if card_runtime != null:
+		card_runtime.notify_attack_completed(event)
 
 
 func _cancel_current_attack() -> void:
@@ -897,8 +944,16 @@ func _confirm_target_hit(event: Dictionary, damage_info: DamageInfo) -> void:
 	else:
 		event["resolved_health_damage"] = damage_info.amount
 	event["defeated"] = _target_is_defeated(event.get("target") as Node)
-	_active_target_count += 1
 	var target := event.get("target") as Node
+	if (
+		not damage_info.secondary_hit
+		and target != null
+		and int(event.get("action_serial", _action_serial)) == _action_serial
+	):
+		var target_id := target.get_instance_id()
+		if not _active_target_ids.has(target_id):
+			_active_target_ids[target_id] = true
+			_active_target_count = _active_target_ids.size()
 	if bool(event.get("consume_fracture", false)) and target != null:
 		if target.has_method("consume_fractured"):
 			target.call("consume_fractured")

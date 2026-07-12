@@ -14,6 +14,11 @@ const SUPPORTED_TYPES: Array[StringName] = [
 	&"delayed_target_strike",
 	&"repeat_attack_path",
 	&"detonation_mark",
+	&"reduce_all_skill_cooldowns",
+	&"heal_player",
+	&"grant_invulnerability",
+	&"reset_skill_slot",
+	&"request_reward_preview_replacement",
 ]
 
 @export var effect_type: StringName
@@ -32,6 +37,10 @@ const SUPPORTED_TYPES: Array[StringName] = [
 @export_range(1, 16, 1) var projectile_count: int = 1
 @export_range(0.0, 90.0, 1.0) var angle_degrees: float = 0.0
 @export_range(0, 8, 1) var required_distinct_verbs: int = 0
+@export_range(0, 99, 1) var health: int = 0
+@export_range(0, 3, 1) var skill_slot: int = 0
+@export_range(1, 8, 1) var choice_count: int = 1
+@export var reward_pool: StringName
 @export var proc_effects: bool = false
 @export var exclude_primary_target: bool = false
 @export var uninterruptible_startup: bool = false
@@ -92,4 +101,19 @@ func validate_definition() -> PackedStringArray:
 		&"detonation_mark":
 			if damage <= 0 or duration <= 0.0 or distance <= 0.0 or required_distinct_verbs <= 0:
 				errors.append("Detonation mark needs damage, duration, radius, and verb count.")
+		&"reduce_all_skill_cooldowns":
+			if seconds <= 0.0:
+				errors.append("All-skill cooldown reduction needs positive seconds.")
+		&"heal_player":
+			if health <= 0:
+				errors.append("Player heal needs positive health.")
+		&"grant_invulnerability":
+			if seconds <= 0.0:
+				errors.append("Invulnerability needs positive seconds.")
+		&"reset_skill_slot":
+			if skill_slot <= 0:
+				errors.append("Skill reset needs a positive slot.")
+		&"request_reward_preview_replacement":
+			if reward_pool == &"" or choice_count <= 0:
+				errors.append("Reward replacement needs a pool and positive choice count.")
 	return errors
