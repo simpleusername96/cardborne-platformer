@@ -1,6 +1,7 @@
-[gd_resource type="Resource" load_steps=2 format=3]
+[gd_resource type="Resource" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/player/CharacterProfile.gd" id="1"]
+[ext_resource type="Resource" path="res://data/characters/assassin_kit.tres" id="2"]
 
 [resource]
 script = ExtResource("1")
@@ -8,6 +9,7 @@ id = "assassin"
 display_name = "Assassin"
 visual_color = Color(0.68, 0.48, 0.95, 1)
 trait_summary = "Double jump, 2 dashes, fastest quick slash, low HP"
+combat_kit = ExtResource("2")
 max_health = 4
 attack_damage = 1
 attack_cooldown = 0.18

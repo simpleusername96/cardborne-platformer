@@ -139,8 +139,8 @@ required_distinct_verbs = 3
 
 [resource]
 script = ExtResource("1_kit")
-id = &"assassin_first_run"
-display_name = "Assassin"
+id = &"assassin_kit"
+display_name = "Assassin Combat Kit"
 content_version = 1
 profile_id = &"assassin"
 passive_id = &"assassin_flow"

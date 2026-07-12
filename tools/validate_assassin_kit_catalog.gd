@@ -20,6 +20,7 @@ func _initialize() -> void:
 
 func _validate_kit() -> void:
 	_expect(KIT.validate_definition().is_empty(), "Assassin kit should validate")
+	_expect(KIT.id == &"assassin_kit", "Assassin kit ID should be canonical")
 	_expect(KIT.runtime_script != null, "Assassin kit should declare its runtime")
 	_expect(KIT.passive_id == &"assassin_flow", "Assassin kit should declare Flow")
 	_expect(_is_timing(KIT.basic_attack, 0.07, 0.30, 0.12, 0.49), "Twin Cut should use the exact 0.49 second chain")

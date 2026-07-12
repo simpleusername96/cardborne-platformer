@@ -733,6 +733,33 @@ func apply_runtime_hit(
 	return damage_info
 
 
+func apply_fixed_secondary_hit(
+	target: Node,
+	damage: int,
+	stagger: int,
+	source_id: StringName,
+	tags: Array[StringName] = [],
+	knockback: Vector2 = Vector2.ZERO
+) -> DamageInfo:
+	if target == null or damage < 0 or stagger < 0 or not target.has_method("receive_damage"):
+		return null
+	var resolved_tags := _string_tags(tags)
+	if not resolved_tags.has("secondary"):
+		resolved_tags.append("secondary")
+	var damage_info := DamageInfo.new(
+		damage,
+		player,
+		knockback,
+		resolved_tags,
+		source_id,
+		stagger,
+		false,
+		true
+	)
+	target.call("receive_damage", damage_info)
+	return damage_info
+
+
 func _build_hit(
 	target: Node,
 	target_state: Dictionary,
@@ -819,6 +846,7 @@ func _build_hit(
 		"definition": definition,
 		"target": target,
 		"target_state": target_state,
+		"target_health_before": _target_health(target),
 		"action_serial": int(event_context.get("action_serial", _action_serial)),
 		"verb_id": StringName(event_context.get("verb_id", definition.id)),
 		"activations": card_hit_context.get("activations", []),
@@ -858,6 +886,16 @@ func _confirm_target_hit(event: Dictionary, damage_info: DamageInfo) -> void:
 		return
 	event["definition"] = definition
 	event["damage_info"] = damage_info
+	var health_before: Variant = event.get("target_health_before")
+	var health_after: Variant = _target_health(event.get("target") as Node)
+	if (health_before is int or health_before is float) and (health_after is int or health_after is float):
+		event["resolved_health_damage"] = (
+			maxi(int(health_before) - int(health_after), 0)
+			if float(health_after) <= float(health_before)
+			else damage_info.amount
+		)
+	else:
+		event["resolved_health_damage"] = damage_info.amount
 	event["defeated"] = _target_is_defeated(event.get("target") as Node)
 	_active_target_count += 1
 	var target := event.get("target") as Node
@@ -1202,6 +1240,13 @@ func _target_is_defeated(target: Node) -> bool:
 	return (health is int or health is float) and float(health) <= 0.0
 
 
+func _target_health(target: Node) -> Variant:
+	if target == null or not is_instance_valid(target):
+		return null
+	var health: Variant = target.get("current_health")
+	return health if health is int or health is float else null
+
+
 func _target_is_active(target: Node) -> bool:
 	if target == null or not is_instance_valid(target) or not target.has_method("receive_damage"):
 		return false
@@ -1366,16 +1411,21 @@ func spawn_projectile(
 			float(modifiers.get("direct_damage_multiplier", 1.0))
 			* float(options["damage_scale"])
 		)
-	projectile.set_damage_info_provider(
-		_resolve_damage_info.bind(
-			definition,
-			direction,
-			bool(options.get("secondary_hit", false)),
-			modifiers,
-			options.get("event_context", {})
+	if bool(options.get("fixed_secondary_damage", false)):
+		projectile.set_damage_info_provider(
+			_fixed_projectile_damage.bind(definition, direction)
 		)
-	)
-	projectile.target_hit.connect(_on_target_hit)
+	else:
+		projectile.set_damage_info_provider(
+			_resolve_damage_info.bind(
+				definition,
+				direction,
+				bool(options.get("secondary_hit", false)),
+				modifiers,
+				options.get("event_context", {})
+			)
+		)
+		projectile.target_hit.connect(_on_target_hit)
 	projectile.terminated.connect(_on_projectile_terminated.bind(
 		definition,
 		options.get("event_context", {}).duplicate(true)
@@ -1386,6 +1436,26 @@ func spawn_projectile(
 		definition.hitbox_offset.y
 	))
 	return projectile
+
+
+func _fixed_projectile_damage(
+	_area: Area2D,
+	definition: AttackDefinition,
+	direction: int
+) -> DamageInfo:
+	var tags := _string_tags(definition.tags)
+	if not tags.has("secondary"):
+		tags.append("secondary")
+	return DamageInfo.new(
+		definition.base_damage,
+		player,
+		Vector2(absf(definition.knockback.x) * float(direction), definition.knockback.y),
+		tags,
+		definition.id,
+		definition.stagger,
+		false,
+		true
+	)
 
 
 func _on_projectile_terminated(

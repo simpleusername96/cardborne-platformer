@@ -26,7 +26,7 @@ func _validate_catalog_and_offer() -> void:
 	if catalog == null:
 		return
 	_expect(catalog.validate_catalog().is_empty(), "first card catalog should validate")
-	_expect(catalog.cards.size() == 7, "M5 should preserve five cards and add two Warrior cards")
+	_expect(catalog.cards.size() == 11, "M6 should register shared and all character cards")
 	var first := CardOfferService.build_offer(catalog, &"warrior", {}, 93117, 0, 0)
 	var repeat := CardOfferService.build_offer(catalog, &"warrior", {}, 93117, 0, 0)
 	_expect(first == repeat, "identical card offer inputs should reproduce exactly")
@@ -45,9 +45,19 @@ func _validate_catalog_and_offer() -> void:
 			triggers
 		)
 		_expect(profile_offer.size() == 3, "%s should receive a complete live offer" % profile.id)
+		var has_shared := false
+		var has_character_card := false
 		for card_id in profile_offer:
 			var card := catalog.get_card(card_id)
 			_expect(card != null and triggers.has(card.trigger), "%s cannot receive a dead card" % profile.id)
+			if card != null:
+				has_shared = has_shared or card.compatibility.has(&"shared")
+				has_character_card = has_character_card or (
+					card.compatibility.has(StringName(profile.id))
+					and not card.compatibility.has(&"shared")
+				)
+		_expect(has_shared, "%s offer should contain a shared card" % profile.id)
+		_expect(has_character_card, "%s offer should contain a character card" % profile.id)
 
 
 func _validate_reroll_and_commit() -> void:
@@ -118,17 +128,17 @@ func _validate_offer_reproduction() -> void:
 	_expect(original == repeated_original, "initial stage offer should reproduce after restart")
 	_expect(rerolled == repeated_reroll, "rerolled stage offer should reproduce after restart")
 
-	_expect(_run_state.call("start_new_run", 1, 77), "fallback-kit profile run should start")
+	_expect(_run_state.call("start_new_run", 1, 77), "Archer card run should start")
 	RewardService.apply(
 		RewardTransaction.new(&"fallback_reroll_coins", &"fixture", {"coin": 20}),
 		_run_state
 	)
 	_run_state.call("begin_stage_card_reward")
-	var fallback_coins := int(_run_state.get("coins"))
-	_expect(not _run_state.call("can_reroll_card_offer"), "three remaining live cards should disable reroll")
-	var unavailable: Dictionary = _run_state.call("reroll_card_offer")
-	_expect(not bool(unavailable.get("ok", false)), "same-choice-set reroll should fail")
-	_expect(int(_run_state.get("coins")) == fallback_coins, "unavailable reroll must not spend coins")
+	var archer_coins := int(_run_state.get("coins"))
+	_expect(_run_state.call("can_reroll_card_offer"), "Archer should have enough live cards to reroll")
+	var archer_reroll: Dictionary = _run_state.call("reroll_card_offer")
+	_expect(bool(archer_reroll.get("ok", false)), "Archer reroll should succeed")
+	_expect(int(_run_state.get("coins")) == archer_coins - 12, "Archer reroll should spend exact cost")
 
 
 func _all_unique(values: Array[StringName]) -> bool:

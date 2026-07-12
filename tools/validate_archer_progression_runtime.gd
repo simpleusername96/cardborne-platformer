@@ -159,6 +159,33 @@ class FakeController:
 		return info
 
 
+	func apply_fixed_secondary_hit(
+		target: Node,
+		damage: int,
+		stagger: int,
+		source_id: StringName,
+		tags: Array[StringName] = [],
+		knockback: Vector2 = Vector2.ZERO
+	) -> DamageInfo:
+		var string_tags: Array[String] = []
+		for tag in tags:
+			string_tags.append(String(tag))
+		if not string_tags.has("secondary"):
+			string_tags.append("secondary")
+		var info := DamageInfo.new(
+			damage,
+			self,
+			knockback,
+			string_tags,
+			source_id,
+			stagger,
+			false,
+			true
+		)
+		target.call("receive_damage", info)
+		return info
+
+
 	func find_targets_in_radius(
 		origin: Vector2,
 		radius: float,

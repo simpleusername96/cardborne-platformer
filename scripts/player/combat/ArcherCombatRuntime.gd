@@ -395,10 +395,7 @@ func _execute_delayed_strike(scheduled: Dictionary) -> void:
 	if target == null or definition == null or not _is_target_active(target):
 		return
 	_spawn_strike_visual(_target_position(target), Color(0.52, 0.86, 1.0, 0.9))
-	_apply_runtime_hit(target, definition, {}, true, {
-		"verb_id": definition.id,
-		"delayed_target_strike": true,
-	})
+	_apply_fixed_hit(target, definition)
 
 
 func _execute_rain_strike(field: Dictionary, strike_index: int) -> void:
@@ -441,10 +438,7 @@ func _consume_mark(target: Node) -> void:
 	_spawn_circle_visual(position + Vector2(0.0, -22.0), MARK_BURST_RADIUS, Color(0.3, 0.86, 1.0, 0.36), 0.22)
 	var burst := _secondary_definition(&"archer_hunters_mark_burst", 1, 0)
 	for candidate in _find_targets(position, MARK_BURST_RADIUS, 16, [target]):
-		_apply_runtime_hit(candidate, burst, {}, true, {
-			"verb_id": burst.id,
-			"hunter_mark_burst": true,
-		})
+		_apply_fixed_hit(candidate, burst)
 	_transfer_consumed_mark(target, position)
 	_apply_clean_release()
 	_schedule_storm_mark(target)
@@ -518,6 +512,7 @@ func _trigger_split_shaft(action_serial: int, origin: Vector2) -> void:
 					"lifetime": _projectile_lifetime(620.0, 420.0),
 					"origin": origin,
 					"secondary_hit": true,
+					"fixed_secondary_damage": true,
 					"event_context": {
 						"action_serial": action_serial,
 						"verb_id": card.id,
@@ -678,6 +673,18 @@ func _apply_runtime_hit(
 		modifiers,
 		secondary_hit,
 		event_context
+	) as DamageInfo
+
+
+func _apply_fixed_hit(target: Node, definition: AttackDefinition) -> DamageInfo:
+	return controller.call(
+		"apply_fixed_secondary_hit",
+		target,
+		definition.base_damage,
+		definition.stagger,
+		definition.id,
+		definition.tags,
+		definition.knockback
 	) as DamageInfo
 
 

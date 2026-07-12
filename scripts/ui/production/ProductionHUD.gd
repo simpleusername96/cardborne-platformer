@@ -77,7 +77,7 @@ func _build_ui() -> void:
 	combat_panel.offset_left = 20.0
 	combat_panel.offset_top = 104.0
 	combat_panel.offset_right = 370.0
-	combat_panel.offset_bottom = 220.0
+	combat_panel.offset_bottom = 264.0
 	add_child(combat_panel)
 
 	combat_label = Label.new()
@@ -181,6 +181,20 @@ func _refresh_combat_state() -> void:
 		lines.append("Resolve Guard   %.1fs" % guarded_time)
 	elif rearm_time > 0.0:
 		lines.append("Resolve Guard   %.1fs" % rearm_time)
+	var charge_fraction := float(_combat_state.get("charge_fraction", 0.0))
+	if charge_fraction > 0.0:
+		lines.append("Charge   %d%%" % int(floor(charge_fraction * 100.0 + 0.5)))
+	if _combat_state.has("hunter_mark_count"):
+		var mark_count := int(_combat_state.get("hunter_mark_count", 0))
+		if mark_count > 0:
+			lines.append("Hunter's Mark   %d" % mark_count)
+	if _combat_state.has("flow_stacks"):
+		var flow_stacks := int(_combat_state.get("flow_stacks", 0))
+		var flow_time := float(_combat_state.get("flow_time", 0.0))
+		lines.append("Flow   %d / 3   %.1fs" % [flow_stacks, flow_time])
+	var death_mark_count := int(_combat_state.get("death_mark_count", 0))
+	if death_mark_count > 0:
+		lines.append("Death Mark   %d" % death_mark_count)
 	combat_label.text = "\n".join(lines)
 
 

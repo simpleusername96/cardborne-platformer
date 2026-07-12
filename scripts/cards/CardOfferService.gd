@@ -31,12 +31,7 @@ static func build_offer(
 		var held := eligible[index]
 		eligible[index] = eligible[swap_index]
 		eligible[swap_index] = held
-	var offer: Array[StringName] = []
-	for card_id in eligible:
-		if offer.size() >= CHOICE_COUNT:
-			break
-		offer.append(card_id)
-	return offer
+	return _compose_offer(catalog, profile_id, eligible)
 
 
 static func eligible_ids(
@@ -76,4 +71,52 @@ static func supported_triggers_for_profile(profile: CharacterProfile) -> Array[S
 		triggers.append(&"guard_consumed")
 	if not profile.combat_kit.skills.is_empty():
 		triggers.append(&"skill_kill")
+	# Character-only cards remain filtered by compatibility; the offer service only
+	# declares which runtime-owned trigger families a complete kit can publish.
+	triggers.append_array([
+		&"archer_power_shot_terminated",
+		&"archer_mark_consumed",
+		&"assassin_shadow_lunge_completed",
+		&"assassin_flow_consumed",
+	])
 	return triggers
+
+
+static func _compose_offer(
+	catalog: CardCatalog,
+	profile_id: StringName,
+	eligible: Array[StringName]
+) -> Array[StringName]:
+	var selected: Array[StringName] = []
+	var character_card := _first_matching_card(catalog, profile_id, eligible, false)
+	var shared_card := _first_matching_card(catalog, profile_id, eligible, true)
+	if not character_card.is_empty():
+		selected.append(character_card)
+	if not shared_card.is_empty() and not selected.has(shared_card):
+		selected.append(shared_card)
+	for card_id in eligible:
+		if selected.size() >= CHOICE_COUNT:
+			break
+		if not selected.has(card_id):
+			selected.append(card_id)
+	var offer: Array[StringName] = []
+	for card_id in eligible:
+		if selected.has(card_id):
+			offer.append(card_id)
+	return offer
+
+
+static func _first_matching_card(
+	catalog: CardCatalog,
+	profile_id: StringName,
+	eligible: Array[StringName],
+	wants_shared: bool
+) -> StringName:
+	for card_id in eligible:
+		var card := catalog.get_card(card_id)
+		if card == null:
+			continue
+		var is_shared := card.compatibility.has(&"shared")
+		if is_shared == wants_shared and (is_shared or card.compatibility.has(profile_id)):
+			return card_id
+	return &""

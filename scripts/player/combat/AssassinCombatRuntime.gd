@@ -203,21 +203,27 @@ func notify_target_hit(event: Dictionary) -> void:
 	var definition := event.get("definition") as AttackDefinition
 	var damage_info := event.get("damage_info") as DamageInfo
 	var target := event.get("target") as Node
+	var resolved_damage := int(event.get("resolved_health_damage", damage_info.amount if damage_info != null else 0))
 	if (
 		definition == null
 		or damage_info == null
 		or target == null
 		or damage_info.secondary_hit
-		or damage_info.amount <= 0
+		or resolved_damage <= 0
 		or bool(event.get("runtime_rejected", false))
 	):
+		if (
+			bool(event.get("flow_should_consume", false))
+			and _flow_pending_action_serial == int(event.get("action_serial", -1))
+		):
+			_flow_pending_action_serial = -1
 		return
 
 	var verb := StringName(event.get("verb_id", definition.id))
 	if definition.id == KUNAI_FAN_ID:
 		_record_kunai_hit(target, event)
 	if definition.id == SHADOW_LUNGE_ID:
-		_record_lunge_hit(target, damage_info)
+		_record_lunge_hit(target, damage_info, resolved_damage)
 
 	if bool(event.get("flow_should_consume", false)):
 		_consume_flow(target, verb, int(event.get("action_serial", _action_serial())))
@@ -450,13 +456,17 @@ func _pulse_lunge_targets() -> void:
 			_motion_hit_wall = true
 
 
-func _record_lunge_hit(target: Node, damage_info: DamageInfo) -> void:
+func _record_lunge_hit(
+	target: Node,
+	damage_info: DamageInfo,
+	resolved_damage: int
+) -> void:
 	for record in _lunge_hit_records:
 		if record.get("target") == target:
 			return
 	_lunge_hit_records.append({
 		"target": target,
-		"damage": damage_info.amount,
+		"damage": resolved_damage,
 		"stagger": damage_info.stagger,
 	})
 
@@ -857,25 +867,15 @@ func _apply_fixed_hit(
 ) -> void:
 	if not _target_is_active(target):
 		return
-	var definition := AttackDefinition.new()
-	definition.id = source_id
-	definition.display_name = String(source_id).replace("_", " ").capitalize()
-	definition.input_action = &"runtime_secondary"
-	definition.tags = tags
-	definition.startup_time = 0.0
-	definition.active_time = 0.01
-	definition.recovery_time = 0.0
-	definition.cooldown = 0.01
-	definition.base_damage = damage
-	definition.stagger = stagger
-	definition.knockback = Vector2.ZERO
-	definition.hitbox_size = Vector2.ONE
-	definition.hitbox_offset = Vector2.ZERO
-	controller.call("apply_runtime_hit", target, definition, {}, true, {
-		"action_serial": _action_serial(),
-		"verb_id": source_id,
-		"runtime_secondary": true,
-	})
+	controller.call(
+		"apply_fixed_secondary_hit",
+		target,
+		damage,
+		stagger,
+		source_id,
+		tags,
+		Vector2.ZERO
+	)
 
 
 func _attach_marker(

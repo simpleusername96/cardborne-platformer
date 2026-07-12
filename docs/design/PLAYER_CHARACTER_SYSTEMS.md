@@ -177,11 +177,11 @@ area control.
 
 | Verb | ID | Behavior | Startup / active / recovery | Cooldown |
 | --- | --- | --- | --- | ---: |
-| Passive | `archer_hunters_mark` | Skill hits mark a target for 6 s. A full-charge Heavy consumes the mark, becomes critical, and creates a small radial burst. One mark per target. | Triggered on hit. | None. |
+| Passive | `archer_hunters_mark` | Skill hits mark a target for 6 s. A full-charge Heavy consumes the mark, becomes critical, and creates a 90 px, 1-damage radial burst. One mark per target. | Triggered on hit. | None. |
 | Basic | `archer_quick_shot` | Fast arrow, 1 damage, 640 px/s, 800 px range. Air use preserves horizontal control. | 0.09 / projectile / 0.21 s | 0.30 s total cycle. |
 | Heavy | `archer_power_shot` | Charge up to 0.8 s; piercing arrow deals 2-4 damage and stronger knockback. Minimum charge still fires. | 0.28-0.80 / projectile / 0.32 s | 1.10 s from release. |
 | Skill 1 | `archer_vault_shot` | Hop 120 px away from aim direction and fire three low-damage arrows in a narrow fan. Marks first target hit. | 0.12 / 0.30 / 0.20 s | 5 s |
-| Skill 2 | `archer_rain_field` | Warn a 220 px area for 0.45 s, then six arrows strike over 1.2 s. Each target can be hit three times. | 0.30 / 1.20 / 0.30 s | 9 s |
+| Skill 2 | `archer_rain_field` | Warn a 220 px-diameter area for 0.45 s, then six arrows strike over 1.2 s. Each target can be hit three times. | 0.30 / 1.20 / 0.30 s | 9 s |
 | Skill 3 | `archer_threadline` | Fire a tether arrow. On terrain, pull 160 px toward it without granting route access beyond shared movement; on enemy, pull light target and mark it. | 0.22 / 0.35 / 0.34 s | 12 s |
 
 ### Intended decisions
@@ -213,11 +213,23 @@ counterattack. Repeating one safe attack should be weaker than alternating tools
 | Verb | ID | Behavior | Startup / active / recovery | Cooldown |
 | --- | --- | --- | --- | ---: |
 | Passive | `assassin_flow` | Hitting with a different verb category than the previous hit grants one Flow stack for 3 s, max 3. At 3 stacks the next Heavy or skill deals +2 damage and consumes Flow. | Triggered on hit. | None. |
-| Basic | `assassin_twin_cut` | Two short slashes; each deals 1 damage. Second hit requires the button to remain held through the first recovery. | 0.07 / 0.07 / 0.08, then 0.08 / 0.07 / 0.12 s | 0.42 s full chain. |
+| Basic | `assassin_twin_cut` | Two short slashes; each deals 1 damage. Second hit requires the button to remain held through the first recovery. | 0.07 / 0.07 / 0.08, then 0.08 / 0.07 / 0.12 s | 0.49 s full chain. |
 | Heavy | `assassin_shadow_lunge` | Travel 150 px through light enemies, 3 damage; critical from behind. Stops before solid wall and cannot cross closed gates. | 0.24 / 0.20 / 0.34 s | 0.90 s total cycle. |
 | Skill 1 | `assassin_smoke_step` | 120 px invulnerable step through an enemy; leaves a decoy that draws aim for 0.8 s. No damage. | 0.08 / 0.18 / 0.18 s | 5 s |
 | Skill 2 | `assassin_kunai_fan` | Five short-range projectiles, 1 damage each; one target can take at most three hits. | 0.18 / projectile / 0.25 s | 7 s |
 | Skill 3 | `assassin_death_mark` | Mark one enemy for 5 s. The third distinct verb that hits detonates for 4 damage and 40 stagger. | 0.24 / instant / 0.28 s | 13 s |
+
+### Locked execution details
+
+- Flow uses one shared 3 s window. A qualifying hit refreshes it; expiry removes
+  all stacks. A verb is the attack or skill definition ID, so one multi-hit action
+  remains one verb.
+- Rear hits are evaluated at contact from target facing and source position.
+- Smoke Step's Lingering Smoke slow is x0.65 for 0.6 s. The decoy attracts aimed
+  attacks but does not alter encounter activation.
+- Kunai Fan uses five arrows at -24, -12, 0, 12, and 24 degrees, 560 px/s, and
+  360 px range. The three-hit cap is shared by the full activation.
+- Death Mark targets the nearest valid forward enemy within 320 px.
 
 ### Intended decisions
 

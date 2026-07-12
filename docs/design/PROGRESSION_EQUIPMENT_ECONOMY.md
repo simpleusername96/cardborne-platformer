@@ -136,7 +136,7 @@ Offers exclude capped choices. If fewer than three remain, fill from a bounded
 | ID / rarity | Trigger | Effect | Stacks |
 | --- | --- | --- | ---: |
 | `assassin_afterimage` / rare | Shadow Lunge completes without hitting a wall. | Afterimage repeats the lunge hit at 50% damage without moving the player. | 1 |
-| `assassin_red_sequence` / legendary | Consume three Flow stacks. | Apply a 4 s mark; the next distinct verb detonates it for 3 area damage. | 1 |
+| `assassin_red_sequence` / legendary | Consume three Flow stacks. | Apply a 4 s mark; the next distinct verb detonates it for 3 damage in a 90 px area. | 1 |
 
 ## Currency And Material Catalog
 

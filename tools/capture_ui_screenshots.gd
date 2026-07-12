@@ -47,6 +47,26 @@ var _captures: Array[Dictionary] = [
 		"state": "production_stage",
 	},
 	{
+		"name": "desktop_archer_combat",
+		"size": Vector2i(1280, 720),
+		"state": "production_archer",
+	},
+	{
+		"name": "compact_archer_combat",
+		"size": Vector2i(960, 540),
+		"state": "production_archer",
+	},
+	{
+		"name": "desktop_assassin_combat",
+		"size": Vector2i(1280, 720),
+		"state": "production_assassin",
+	},
+	{
+		"name": "compact_assassin_combat",
+		"size": Vector2i(960, 540),
+		"state": "production_assassin",
+	},
+	{
 		"name": "desktop_charge_lane",
 		"size": Vector2i(1280, 720),
 		"state": "production_charge_lane",
@@ -169,6 +189,19 @@ func _capture(capture: Dictionary) -> void:
 				run_director.current_screen.call("_toggle_mode")
 		"production_stage":
 			run_director.start_production_run(0)
+		"production_archer":
+			run_director.start_production_run(1)
+			await _inject_combat_capture(run_director, game, {
+				"charge_fraction": 0.84,
+				"hunter_mark_count": 2,
+			})
+		"production_assassin":
+			run_director.start_production_run(2)
+			await _inject_combat_capture(run_director, game, {
+				"flow_stacks": 3,
+				"flow_time": 2.4,
+				"death_mark_count": 1,
+			})
 		"production_charge_lane":
 			run_director.start_production_run(0)
 			await process_frame
@@ -227,6 +260,7 @@ func _capture(capture: Dictionary) -> void:
 			game.set_settings_open(true)
 	for _frame in 4:
 		await process_frame
+	await RenderingServer.frame_post_draw
 
 	var viewport_texture := root.get_texture()
 	if viewport_texture == null:
@@ -250,6 +284,23 @@ func _capture(capture: Dictionary) -> void:
 	game.unload_current_stage()
 	main_instance.queue_free()
 	await process_frame
+
+
+func _inject_combat_capture(
+	run_director: Node,
+	game: Node,
+	overrides: Dictionary
+) -> void:
+	await process_frame
+	var stage: Variant = game.current_stage
+	if stage == null or stage.player == null or run_director.current_hud == null:
+		push_error("Combat HUD fixture is unavailable.")
+		_failed = true
+		return
+	stage.player.set_physics_process(false)
+	var state: Dictionary = stage.player.combat_controller.get_state_snapshot()
+	state.merge(overrides, true)
+	run_director.current_hud.call("_on_combat_state_changed", state)
 
 
 func _load_flooded_capture(

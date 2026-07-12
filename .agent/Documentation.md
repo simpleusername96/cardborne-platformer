@@ -8,9 +8,10 @@
 - The integrated `MotionTestStage`, debug HUD, testbed inputs/flags, historical
   handoff package, fixed-grid maps, and generated wireframe prototype were retired
   on 2026-07-12. Git history preserves them if a focused investigation needs them.
-- Warrior has Basic, Heavy, three skills, six mastery effects, two character cards,
-  and its current equipment behavior set. Flooded Works adds exact Walker,
-  Charger, Shooter, and Leaper variants plus poison/crumble/rope content.
+- Warrior, Archer, and Assassin each have a typed Basic, Heavy, three skills, six
+  mastery effects, two character cards, and character-compatible weapon behavior.
+  Flooded Works adds exact Walker, Charger, Shooter, and Leaper variants plus
+  poison/crumble/rope content.
 - Persistent profile v1, twelve equipment items, eighteen mastery nodes, material
   settlement, loadouts, save recovery, temporary forge, and scoped consumables are
   active production systems.
@@ -64,9 +65,9 @@ Read in this order:
 
 ## Current Risks
 
-- `PlayerCombatController` now owns too much Warrior-specific execution; split its
-  character mechanics before adding Archer and Assassin.
-- Archer and Assassin still lack complete typed kits and runtime behavior.
+- Archer and Assassin rules are isolated behind character combat runtimes. The
+  shared controller still retains legacy Warrior helper implementation and should
+  shed it during the final structural quality pass rather than absorb new rules.
 - Broken Sanctum, remaining normal content, the boss, and end-to-end settlement do
   not exist yet.
 - Flooded Works has deterministic geometry/runtime coverage, but complete-run
@@ -84,6 +85,7 @@ Read in this order:
 - Flooded runtime: `./tools/godot.ps1 --path . --headless --script res://tools/validate_flooded_stage_runtime.gd`
 - Warrior combat: `./tools/godot.ps1 --path . --headless --script res://tools/validate_warrior_combat_runtime.gd`
 - Complete Warrior: `./tools/godot.ps1 --path . --headless --script res://tools/validate_warrior_m5_runtime.gd`
+- Roster matrix: `./tools/godot.ps1 --path . --headless --script res://tools/validate_roster_stage_matrix.gd`
 - Enemy catalog: `./tools/godot.ps1 --path . --headless --script res://tools/validate_enemy_catalog.gd`
 - Design catalogs: `./tools/godot.ps1 --path . --headless --script res://tools/validate_design_catalogs.gd`
 - Focused validators: `Get-ChildItem tools/validate_*.gd`
@@ -91,7 +93,7 @@ Read in this order:
 
 ## Next Implementation Entry
 
-Start Milestone 6 by extracting character-specific combat execution from the shared
-controller, then implement Archer and Assassin as complete typed kits against the
-same Stage 1-2 seeds. Preserve the accepted Warrior and generation fixtures while
-doing so; do not introduce character-ID branches into shared movement or combat.
+Start Milestone 7 by generalizing normal-stage planning for an 8+2 Broken Sanctum
+graph, then land Sanctum enemies, special actors, moving platforms, reward sources,
+rooms, remaining shared cards, and the Stage 3-to-boss loading seam. Keep aggregate
+catalog and run-flow edits under one integration owner.

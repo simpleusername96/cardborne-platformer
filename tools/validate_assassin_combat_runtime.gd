@@ -2,6 +2,7 @@ extends SceneTree
 
 const PLAYER_SCENE_PATH := "res://scenes/player/Player.tscn"
 const ENEMY_SCRIPT_PATH := "res://scripts/enemies/EnemyBase.gd"
+const SHIELD_SCRIPT_PATH := "res://scripts/enemies/ShieldGuardEnemy.gd"
 const ASSASSIN_PROFILE := preload("res://data/characters/assassin_profile.tres")
 const ASSASSIN_KIT := preload("res://data/characters/assassin_kit.tres")
 const MASTERY_CATALOG := preload("res://data/mastery/mastery_catalog.tres")
@@ -78,8 +79,29 @@ func _validate_flow_contract() -> void:
 	_direct_primary_hit(combat, enemy, ASSASSIN_KIT.get_skill_by_slot(2))
 	_expect(_flow_stacks(combat) == 3, "three distinct primary verbs should cap Flow at three")
 
+	var shield: Variant = _spawn_shield(Vector2(110.0, 100.0), 20)
+	var shield_health := int(shield.current_health)
+	combat._action_serial += 1
+	combat.apply_runtime_hit(shield, ASSASSIN_KIT.heavy_attack, {}, false, {
+		"action_serial": combat._action_serial,
+		"verb_id": ASSASSIN_KIT.heavy_attack.id,
+		"attack_direction": _player.facing,
+	})
+	_expect(shield.current_health == shield_health, "frontal shield guard should block health damage")
+	_expect(_flow_stacks(combat) == 3, "blocked damage should not consume Flow")
+
 	var health_before := int(enemy.current_health)
-	var consumed: DamageInfo = _direct_primary_hit(combat, enemy, ASSASSIN_KIT.heavy_attack)
+	var consumed: DamageInfo = combat.apply_runtime_hit(
+		enemy,
+		ASSASSIN_KIT.heavy_attack,
+		{},
+		false,
+		{
+			"action_serial": combat._action_serial,
+			"verb_id": ASSASSIN_KIT.heavy_attack.id,
+			"attack_direction": _player.facing,
+		}
+	)
 	_expect(consumed != null and consumed.amount == 5, "the consuming noncritical Heavy should gain exactly 2 damage")
 	_expect(enemy.current_health == health_before - 5, "Flow bonus should resolve through the primary damage path")
 	_expect(_flow_stacks(combat) == 0, "the first confirmed damaging Heavy should consume all Flow")
@@ -243,6 +265,25 @@ func _spawn_enemy(position: Vector2, health: int, lightweight: bool) -> Variant:
 	if contact != null:
 		contact.set_active(false)
 	return enemy
+
+
+func _spawn_shield(position: Vector2, health: int) -> Variant:
+	var shield_script := load(SHIELD_SCRIPT_PATH) as Script
+	_expect(shield_script != null, "Assassin fixture should load ShieldGuardEnemy")
+	if shield_script == null:
+		return null
+	var shield: Variant = shield_script.new()
+	shield.position = position
+	shield.max_health = health
+	shield.stagger_capacity = 999
+	shield.hit_knockback_multiplier = 0.0
+	shield.auto_reset_on_defeat = false
+	_world.add_child(shield)
+	shield.direction = -1
+	var contact := shield.get_node_or_null("ContactHitbox") as Hitbox
+	if contact != null:
+		contact.set_active(false)
+	return shield
 
 
 func _direct_primary_hit(

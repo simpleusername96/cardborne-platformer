@@ -354,16 +354,25 @@ show no clipping or overlap.
 **Visible result:** character selection creates three genuinely different combat
 loops across the same Stage 1-2 seeds.
 
-- [ ] **6.1 Implement Archer passive/basic/heavy/three skills.**
-- [ ] **6.2 Implement Archer cards, weapons, and six mastery nodes.**
-- [ ] **6.3 Implement Assassin passive/basic/heavy/three skills.**
-- [ ] **6.4 Implement Assassin cards, weapons, and six mastery nodes.**
-- [ ] **6.5 Add all-kit timing, mark/guard/Flow, cooldown, and hit-policy tests.**
-- [ ] **6.6 Run all-character, curated-seed, base/equipment/card matrix.**
-- [ ] **6.7 Fun gate:** each character produces a distinct dominant decision and no
+- [x] **6.1 Implement Archer passive/basic/heavy/three skills.**
+- [x] **6.2 Implement Archer cards, weapons, and six mastery nodes.**
+- [x] **6.3 Implement Assassin passive/basic/heavy/three skills.**
+- [x] **6.4 Implement Assassin cards, weapons, and six mastery nodes.**
+- [x] **6.5 Add all-kit timing, mark/guard/Flow, cooldown, and hit-policy tests.**
+- [x] **6.6 Run all-character, curated-seed, base/equipment/card matrix.**
+- [x] **6.7 Fun gate:** each character produces a distinct dominant decision and no
   character trivializes or loses required route access.
 
 *Milestone gate:* all roster content is complete before Stage 3 complexity grows.
+
+Gate evidence: all three profiles now require typed five-action kits and isolated
+character runtimes. Focused Archer/Assassin kit, combat, progression, equipment,
+mastery, and card validators pass; blocked damage cannot advance Flow; fixed
+secondary damage remains exact. The roster matrix assembled Stage 1-2 for all
+three characters across two curated seeds and proved identical plans per seed.
+Rendered 1280x720 and 960x540 captures show complete action/state HUDs without
+clipping. The automated fun proxy confirms three different dominant loops:
+Warrior guard/stagger, Archer mark/charge control, and Assassin verb/Flow chaining.
 
 #### Milestone 7 - Stage 3 and complete normal content
 
