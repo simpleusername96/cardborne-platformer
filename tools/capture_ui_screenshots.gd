@@ -18,6 +18,11 @@ var _captures: Array[Dictionary] = [
 		"state": "main_menu",
 	},
 	{
+		"name": "hd_main_menu",
+		"size": Vector2i(1920, 1080),
+		"state": "main_menu",
+	},
+	{
 		"name": "desktop_character_select",
 		"size": Vector2i(1280, 720),
 		"state": "character_select",
@@ -25,6 +30,11 @@ var _captures: Array[Dictionary] = [
 	{
 		"name": "compact_character_select",
 		"size": Vector2i(960, 540),
+		"state": "character_select",
+	},
+	{
+		"name": "hd_character_select",
+		"size": Vector2i(1920, 1080),
 		"state": "character_select",
 	},
 	{
@@ -45,6 +55,11 @@ var _captures: Array[Dictionary] = [
 	{
 		"name": "compact_production_stage",
 		"size": Vector2i(960, 540),
+		"state": "production_stage",
+	},
+	{
+		"name": "hd_production_stage",
+		"size": Vector2i(1920, 1080),
 		"state": "production_stage",
 	},
 	{
@@ -98,6 +113,11 @@ var _captures: Array[Dictionary] = [
 		"state": "card_reward",
 	},
 	{
+		"name": "hd_card_reward",
+		"size": Vector2i(1920, 1080),
+		"state": "card_reward",
+	},
+	{
 		"name": "desktop_rest_forge",
 		"size": Vector2i(1280, 720),
 		"state": "rest_forge",
@@ -105,6 +125,11 @@ var _captures: Array[Dictionary] = [
 	{
 		"name": "compact_rest_forge",
 		"size": Vector2i(960, 540),
+		"state": "rest_forge",
+	},
+	{
+		"name": "hd_rest_forge",
+		"size": Vector2i(1920, 1080),
 		"state": "rest_forge",
 	},
 	{
@@ -133,8 +158,18 @@ var _captures: Array[Dictionary] = [
 		"state": "run_result",
 	},
 	{
+		"name": "hd_run_result",
+		"size": Vector2i(1920, 1080),
+		"state": "run_result",
+	},
+	{
 		"name": "compact_settings_popup",
 		"size": Vector2i(960, 540),
+		"state": "settings",
+	},
+	{
+		"name": "hd_settings_popup",
+		"size": Vector2i(1920, 1080),
 		"state": "settings",
 	},
 	{
@@ -146,6 +181,11 @@ var _captures: Array[Dictionary] = [
 		"name": "compact_pause_confirmation",
 		"size": Vector2i(960, 540),
 		"state": "pause_confirmation",
+	},
+	{
+		"name": "hd_pause_menu",
+		"size": Vector2i(1920, 1080),
+		"state": "pause_menu",
 	},
 ]
 var _failed: bool = false

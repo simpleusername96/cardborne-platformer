@@ -59,6 +59,17 @@ Track which external packages are copied into the repo, which are only reference
 | YATI | Tiled importer fallback if LDtk spike fails. | `https://github.com/Kiamo2/YATI` | `72a3716` from local deep dive | MIT | none | none | Source inspection only. | none known | deferred |
 | Dialogic 2 | Later dialogue/NPC/shop content candidate. | `https://github.com/dialogic-godot/dialogic` | `e127f85` from local deep dive | MIT; some bundled assets/fonts have separate notices | none | none | Source inspection only. | Verify bundled asset/font notices before copying. | deferred |
 
+## Project-Original Presentation Set
+
+The first release candidate uses one local procedural presentation family instead
+of importing a third-party prototype pack. This set was accepted through the
+owner-authorized Milestone 9 implementation and may be replaced later without
+changing collision, combat, or content IDs.
+
+| Set | Purpose | Owned paths | Rights and attribution | Validation | Status |
+| --- | --- | --- | --- | --- | --- |
+| Cardborne procedural prototype family | Distinct player/enemy silhouettes, regional terrain, hit feedback, and ten gameplay audio cues. | `scripts/visuals/PlayerVisualOverlay.gd`; `scripts/visuals/EnemyDetailOverlay.gd`; `scripts/visuals/TerrainPresentationStyler.gd`; `scripts/presentation/FeedbackCueSynthesizer.gd`; `scripts/presentation/FeedbackHitBurst.gd`; `scripts/presentation/FeedbackDirector.gd` | Created in this repository from vector drawing primitives and deterministic PCM synthesis. No copied art/audio and no attribution requirement. | `validate_actor_presentation.gd`; `validate_terrain_presentation.gd`; `validate_feedback_cues.gd`; `validate_feedback_director.gd`; rendered 960x540, 1280x720, and 1920x1080 inspection. | accepted for first release candidate |
+
 ## Recommendations
 
 - Do not copy any external package until this ledger has source URL, commit or release, license, copied paths, local modifications, and validation commands ready for that package.
@@ -68,5 +79,7 @@ Track which external packages are copied into the repo, which are only reference
 ## Limitations
 
 - No external package files are copied into this repo in this ledger pass.
+- The accepted procedural family is production-readable prototype presentation,
+  not a claim that final commercial art direction is complete.
 - Commit hashes come from the local deep-dive evidence and should be re-verified before copying from upstream.
 - Mouse, gamepad, and axis remapping remain deferred in the local input implementation.
