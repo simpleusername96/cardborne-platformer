@@ -47,15 +47,12 @@ extends Resource
 @export var damage_knockback_y: float = -220.0
 
 
-func to_stats_dictionary() -> Dictionary:
+func to_base_stats_dictionary() -> Dictionary:
+	# Presentation and non-scalar attack shape stay outside scalar stat resolution.
 	return {
 		"max_health": max_health,
-		"trait_summary": trait_summary,
 		"attack_damage": attack_damage,
 		"attack_cooldown": attack_cooldown,
-		"attack_label": attack_label,
-		"attack_motion_style": attack_motion_style,
-		"attack_visual_color": attack_visual_color,
 		"attack_active_time": attack_active_time,
 		"attack_range": attack_range,
 		"attack_height": attack_height,
@@ -65,7 +62,6 @@ func to_stats_dictionary() -> Dictionary:
 		"attack_knockback_y": attack_knockback_y,
 		"attack_projectile_speed": attack_projectile_speed,
 		"attack_projectile_lifetime": attack_projectile_lifetime,
-		"attack_projectile_size": attack_projectile_size,
 		"move_speed": move_speed,
 		"acceleration": acceleration,
 		"deceleration": deceleration,
@@ -85,3 +81,15 @@ func to_stats_dictionary() -> Dictionary:
 		"damage_knockback_x": damage_knockback_x,
 		"damage_knockback_y": damage_knockback_y,
 	}
+
+
+func to_stats_dictionary() -> Dictionary:
+	var stats := to_base_stats_dictionary()
+	stats.merge({
+		"trait_summary": trait_summary,
+		"attack_label": attack_label,
+		"attack_motion_style": attack_motion_style,
+		"attack_visual_color": attack_visual_color,
+		"attack_projectile_size": attack_projectile_size,
+	})
+	return stats

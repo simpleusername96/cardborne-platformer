@@ -12,6 +12,7 @@ config/features=PackedStringArray("4.7", "Forward Plus")
 [autoload]
 
 SignalBus="*res://scripts/autoload/SignalBus.gd"
+ProfileState="*res://scripts/autoload/ProfileState.gd"
 RunState="*res://scripts/autoload/RunState.gd"
 InputBindings="*res://scripts/autoload/InputBindings.gd"
 Game="*res://scripts/autoload/Game.gd"
