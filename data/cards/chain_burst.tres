@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="CardDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/cards/CardDefinition.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/cards/CardEffectDefinition.gd" id="2"]
+
+[sub_resource type="Resource" id="AreaDamage"]
+script = ExtResource("2")
+effect_type = &"area_damage"
+damage = 2
+radius_by_stack = PackedFloat32Array(90, 125)
+exclude_primary_target = true
+
+[resource]
+script = ExtResource("1")
+id = &"chain_burst"
+display_name = "Chain Burst"
+description = "Skill kills burst for 2 damage around the defeated target."
+rarity = &"rare"
+compatibility = Array[StringName]([&"shared"])
+trigger = &"skill_kill"
+effects = Array[ExtResource("2")]([SubResource("AreaDamage")])
+max_stacks = 2

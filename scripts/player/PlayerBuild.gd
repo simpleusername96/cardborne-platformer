@@ -21,6 +21,8 @@ const STAT_RULES: Dictionary = {
 	"attack_knockback_y": {"minimum": -5000.0, "maximum": 5000.0, "integer": false},
 	"attack_projectile_speed": {"minimum": 0.0, "maximum": 5000.0, "integer": false},
 	"attack_projectile_lifetime": {"minimum": 0.01, "maximum": 60.0, "integer": false},
+	"direct_damage_multiplier": {"minimum": 0.1, "maximum": 10.0, "integer": false},
+	"skill_cooldown_multiplier": {"minimum": 0.1, "maximum": 2.0, "integer": false},
 	"move_speed": {"minimum": 1.0, "maximum": 2000.0, "integer": false},
 	"acceleration": {"minimum": 1.0, "maximum": 20000.0, "integer": false},
 	"deceleration": {"minimum": 1.0, "maximum": 20000.0, "integer": false},

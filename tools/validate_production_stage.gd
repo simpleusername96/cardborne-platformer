@@ -50,7 +50,7 @@ func _run() -> void:
 	_validate_surfaces(stage, run_state)
 	_validate_required_enemies(stage)
 	await _validate_hud(run_director, game)
-	await _validate_exit_flow(stage, run_director, game)
+	await _validate_exit_flow(stage, run_director, game, run_state)
 
 	run_director.show_main_menu()
 	main_instance.queue_free()
@@ -177,7 +177,12 @@ func _validate_hud(run_director: Node, game: Node) -> void:
 	bus.emit_signal("interaction_prompt_changed", "", false)
 
 
-func _validate_exit_flow(stage: Variant, run_director: Node, game: Node) -> void:
+func _validate_exit_flow(
+	stage: Variant,
+	run_director: Node,
+	game: Node,
+	run_state: Node
+) -> void:
 	var charge_room: Variant = stage.get_room_host(&"lr_charge_lane")
 	var exit: Variant = charge_room.get_exit_portal() if charge_room != null else null
 	_expect(exit != null, "charge room needs its authored exit portal")
@@ -186,7 +191,7 @@ func _validate_exit_flow(stage: Variant, run_director: Node, game: Node) -> void
 		return
 	exit.interact(stage.player)
 	await process_frame
-	_expect(run_director.get_phase_name() == "run_active", "locked exit cannot complete the run")
+	_expect(run_director.get_phase_name() == "stage_active", "locked exit cannot complete the run")
 
 	for enemy in stage.get_required_enemies():
 		enemy.receive_damage(DamageInfo.new(enemy.current_health, stage.player))
@@ -197,8 +202,49 @@ func _validate_exit_flow(stage: Variant, run_director: Node, game: Node) -> void
 	exit.interact(stage.player)
 	await process_frame
 	await process_frame
-	_expect(run_director.get_phase_name() == "run_result", "unlocked exit should complete the run")
-	_expect(game.current_stage == null, "completed production run should unload its stage")
+	_expect(run_director.get_phase_name() == "level_reward", "stage clear should open level reward")
+	_expect(game.current_stage == null, "level reward should unload gameplay")
+	var level_offer: Array[StringName] = run_state.call("get_pending_level_offer")
+	_expect(level_offer.size() == 3, "level reward should render a complete offer")
+	if level_offer.is_empty():
+		return
+	run_director.call("_on_level_choice_requested", level_offer[0])
+	await process_frame
+	_expect(run_director.get_phase_name() == "stage_card_reward", "level choice should open card reward")
+	var card_screen: Control = run_director.get("current_screen") as Control
+	_expect(card_screen != null and card_screen.name == "CardReward", "card reward screen should mount")
+	var card_offer: Array[StringName] = run_state.call("get_pending_card_offer")
+	_expect(card_offer.size() == 3, "card reward should render three choices")
+	if card_offer.is_empty():
+		return
+
+	run_director.call("_on_card_continue_requested")
+	_expect(run_director.get_phase_name() == "stage_card_reward", "continue should stay locked before a card commit")
+	if int(run_state.get("coins")) < 12:
+		RewardService.apply(
+			RewardTransaction.new(&"production_flow_reroll", &"fixture", {"coin": 12}),
+			run_state
+		)
+	var coins_before := int(run_state.get("coins"))
+	var original_offer: Array[StringName] = card_offer.duplicate()
+	run_director.call("_on_card_reroll_requested")
+	await process_frame
+	card_offer = run_state.call("get_pending_card_offer")
+	_expect(card_offer.size() == 3 and card_offer != original_offer, "card reroll should refresh the visible offer")
+	_expect(int(run_state.get("coins")) == coins_before - 12, "card reroll should spend 12 coins once")
+
+	var selected_card: StringName = card_offer[0]
+	run_director.call("_on_card_choice_requested", selected_card)
+	await process_frame
+	_expect(int(run_state.call("get_card_stack", selected_card)) == 1, "card choice should commit one stack")
+	var continue_button := card_screen.get("_continue_button") as Button
+	_expect(continue_button != null and continue_button.visible, "committed card should reveal Continue")
+	run_director.call("_on_card_continue_requested")
+	await process_frame
+	await process_frame
+	_expect(run_director.get_phase_name() == "stage_active", "card Continue should load the next stage")
+	_expect(game.current_stage != null, "next stage should instantiate after card reward")
+	_expect(int(run_state.get("current_stage_index")) == 1, "next stage should advance the run index")
 
 
 func _support_top_at(world_x: float, surfaces: Array) -> float:

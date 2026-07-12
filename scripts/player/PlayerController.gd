@@ -1,6 +1,9 @@
 class_name PlayerController
 extends CharacterBody2D
 
+signal extra_jump_performed
+signal dash_completed(start_position: Vector2, end_position: Vector2)
+
 @export var crouch_speed_multiplier: float = 0.55
 @export var crouch_height: float = 34.0
 @export var one_way_drop_time: float = 0.18
@@ -30,6 +33,7 @@ var extra_jumps_left: int = 0
 
 var _standing_body_size: Vector2
 var _standing_hurtbox_size: Vector2
+var _dash_start_position: Vector2
 
 
 func _ready() -> void:
@@ -38,6 +42,13 @@ func _ready() -> void:
 	_apply_run_state()
 	SignalBus.selected_profile_changed.connect(_on_selected_profile_changed)
 	SignalBus.player_stats_changed.connect(_on_player_stats_changed)
+
+
+func _exit_tree() -> void:
+	if SignalBus.selected_profile_changed.is_connected(_on_selected_profile_changed):
+		SignalBus.selected_profile_changed.disconnect(_on_selected_profile_changed)
+	if SignalBus.player_stats_changed.is_connected(_on_player_stats_changed):
+		SignalBus.player_stats_changed.disconnect(_on_player_stats_changed)
 
 
 func _prepare_collision_shapes() -> void:
@@ -135,9 +146,12 @@ func _update_jump_buffer() -> void:
 
 func _update_dash(input_axis: float, delta: float) -> void:
 	if dash_timer > 0.0:
+		var was_dashing := is_dashing
 		dash_timer = maxf(dash_timer - delta, 0.0)
 		velocity = Vector2(float(facing) * float(stats.get("dash_speed", 520.0)), 0.0)
 		is_dashing = dash_timer > 0.0
+		if was_dashing and not is_dashing:
+			dash_completed.emit(_dash_start_position, global_position)
 		return
 
 	if not Input.is_action_just_pressed("dash"):
@@ -153,6 +167,7 @@ func _update_dash(input_axis: float, delta: float) -> void:
 	dash_timer = float(stats.get("dash_duration", 0.13))
 	dash_cooldown_timer = float(stats.get("dash_cooldown", 0.45))
 	is_dashing = true
+	_dash_start_position = global_position
 	velocity = Vector2(float(facing) * float(stats.get("dash_speed", 520.0)), 0.0)
 
 
@@ -199,6 +214,7 @@ func _try_jump() -> void:
 	if extra_jumps_left > 0:
 		extra_jumps_left -= 1
 		_perform_jump()
+		extra_jump_performed.emit()
 
 
 func _update_visual_state(delta: float) -> void:
@@ -329,6 +345,7 @@ func respawn_at(respawn_position: Vector2, invulnerability_time: float) -> void:
 	dash_cooldown_timer = 0.0
 	one_way_drop_timer = 0.0
 	is_dashing = false
+	_dash_start_position = respawn_position
 	is_climbing = false
 	_set_crouching(false)
 	climbable_count = 0

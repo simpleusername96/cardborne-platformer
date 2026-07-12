@@ -113,6 +113,9 @@ func _spawn_required_enemy(
 		push_error("Enemy scene for '%s/%s' is invalid." % [room_id, anchor_id])
 		return false
 	enemy.position = actors_container.to_local(anchor.global_position)
+	enemy.set_meta("reward_room_id", String(room_id))
+	enemy.set_meta("reward_anchor_id", String(anchor_id).to_snake_case())
+	enemy.set_meta("reward_sequence", _required_enemies.size())
 	actors_container.add_child(enemy)
 	if enemy.resolved_spec == null:
 		push_error("Enemy scene for '%s/%s' did not resolve its typed specification." % [room_id, anchor_id])
@@ -154,9 +157,34 @@ func _on_required_enemy_defeated(enemy: EnemyBase) -> void:
 	if _defeated_enemy_ids.has(instance_id):
 		return
 	_defeated_enemy_ids[instance_id] = true
+	_settle_enemy_reward(enemy)
 	if get_remaining_enemy_count() == 0:
 		_set_exit_enabled(true)
 	_publish_encounter_state()
+
+
+func _settle_enemy_reward(enemy: EnemyBase) -> void:
+	if enemy.resolved_spec == null or RunState.reward_catalog == null:
+		push_error("Enemy '%s' cannot settle a reward without typed data." % enemy.name)
+		return
+	var table := RunState.reward_catalog.get_table(enemy.resolved_spec.drop_source_id)
+	if table == null:
+		push_error(
+			"Enemy '%s' references missing reward table '%s'."
+			% [enemy.name, enemy.resolved_spec.drop_source_id]
+		)
+		return
+	var transaction_id := StringName("%d:%d:%s:%s:%d" % [
+		RunState.run_seed,
+		RunState.current_stage_index,
+		String(enemy.get_meta("reward_room_id", "room")),
+		String(enemy.get_meta("reward_anchor_id", "enemy")),
+		int(enemy.get_meta("reward_sequence", 0)),
+	])
+	var transaction := RewardService.resolve(table, transaction_id, RunState.run_seed)
+	var result := RewardService.apply(transaction, RunState)
+	if not result.applied and not result.duplicate:
+		push_error("Enemy reward '%s' failed: %s" % [transaction_id, result.message])
 
 
 func _set_exit_enabled(enabled: bool) -> void:

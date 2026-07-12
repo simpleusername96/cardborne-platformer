@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="RewardCatalog" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/progression/RewardCatalog.gd" id="1"]
+[ext_resource type="Resource" path="res://data/rewards/drop_walker.tres" id="2"]
+[ext_resource type="Resource" path="res://data/rewards/drop_charger.tres" id="3"]
+[ext_resource type="Resource" path="res://data/rewards/stage_clear_ruin_approach.tres" id="4"]
+
+[resource]
+script = ExtResource("1")
+id = &"first_run_rewards"
+display_name = "First Run Rewards"
+content_version = 1
+tables = Array[ExtResource("2")]([ExtResource("2"), ExtResource("3"), ExtResource("4")])

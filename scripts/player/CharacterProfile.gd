@@ -24,6 +24,8 @@ extends Resource
 @export var attack_projectile_speed: float = 560.0
 @export var attack_projectile_lifetime: float = 0.65
 @export var attack_projectile_size: Vector2 = Vector2(34.0, 8.0)
+@export var direct_damage_multiplier: float = 1.0
+@export var skill_cooldown_multiplier: float = 1.0
 
 @export_group("Movement")
 @export var move_speed: float = 220.0
@@ -63,6 +65,8 @@ func to_base_stats_dictionary() -> Dictionary:
 		"attack_knockback_y": attack_knockback_y,
 		"attack_projectile_speed": attack_projectile_speed,
 		"attack_projectile_lifetime": attack_projectile_lifetime,
+		"direct_damage_multiplier": direct_damage_multiplier,
+		"skill_cooldown_multiplier": skill_cooldown_multiplier,
 		"move_speed": move_speed,
 		"acceleration": acceleration,
 		"deceleration": deceleration,

@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="MicroUpgradeDefinition" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/progression/MicroUpgradeDefinition.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/player/EffectDefinition.gd" id="2"]
+
+[sub_resource type="Resource" id="MoveSpeed"]
+script = ExtResource("2")
+stat_id = &"move_speed"
+operation = "add"
+value = 8.0
+stacking = "stack"
+source_id = &"micro_light_foot"
+source_scope = "run_level"
+
+[sub_resource type="Resource" id="AirControl"]
+script = ExtResource("2")
+stat_id = &"air_acceleration"
+operation = "multiply"
+value = 1.04
+stacking = "stack"
+source_id = &"micro_light_foot"
+source_scope = "run_level"
+
+[resource]
+script = ExtResource("1")
+id = &"micro_light_foot"
+display_name = "Light Foot"
+description = "+8 move speed and air control x1.04"
+max_stacks = 4
+effects = Array[ExtResource("2")]([SubResource("MoveSpeed"), SubResource("AirControl")])

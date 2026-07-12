@@ -1,10 +1,11 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scripts/player/PlayerController.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/combat/Hitbox.gd" id="2"]
 [ext_resource type="Script" path="res://scripts/combat/Hurtbox.gd" id="3"]
 [ext_resource type="Script" path="res://scripts/player/PlayerCombatController.gd" id="4"]
 [ext_resource type="Script" path="res://scripts/player/PlayerAttackPresenter.gd" id="5"]
+[ext_resource type="Script" path="res://scripts/cards/PlayerCardRuntime.gd" id="6"]
 
 [sub_resource type="RectangleShape2D" id="body_shape"]
 size = Vector2(28, 52)
@@ -49,6 +50,9 @@ script = ExtResource("5")
 
 [node name="CombatController" type="Node" parent="."]
 script = ExtResource("4")
+
+[node name="CardRuntime" type="Node" parent="."]
+script = ExtResource("6")
 
 [node name="AttackHitbox" type="Area2D" parent="."]
 position = Vector2(30, -26)

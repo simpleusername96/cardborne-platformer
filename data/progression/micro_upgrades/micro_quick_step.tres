@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="MicroUpgradeDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/progression/MicroUpgradeDefinition.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/player/EffectDefinition.gd" id="2"]
+
+[sub_resource type="Resource" id="DashCooldown"]
+script = ExtResource("2")
+stat_id = &"dash_cooldown"
+operation = "add"
+value = -0.04
+stacking = "stack"
+source_id = &"micro_quick_step"
+source_scope = "run_level"
+
+[resource]
+script = ExtResource("1")
+id = &"micro_quick_step"
+display_name = "Quick Step"
+description = "Dash cooldown  -0.04 s"
+max_stacks = 4
+effects = Array[ExtResource("2")]([SubResource("DashCooldown")])

@@ -183,6 +183,8 @@ Additional invariants:
 - [x] Runtime fixtures for movement, Warrior attack/stagger/guard behavior, enemy
   catalogs, room traversal contracts, encounter completion, and exit unlock.
 - [x] Canonical fun-focused blueprint and implementation-ready linked specs/catalogs.
+- [x] Idempotent enemy/stage rewards, overflow-safe run levels, micro-upgrade
+  choices, five typed cards with working event effects, card reroll, and replay.
 
 ### Not credited as finished gameplay
 
@@ -236,7 +238,7 @@ and exit.
   - Patrol Gallery owns Walker teaching space; Charge Lane owns the required 520 px
     lane and two escape ledges for Charger counterplay.
   - Accept: Warrior can clear both from menu without debug narration.
-- [ ] **1.8 Fun gate.**
+- [x] **1.8 Fun gate.**
   - Five focused play passes: movement-only, Walker, Charger, Heavy punish,
     Shield Rush spacing; staggered Breaker critical must feel earned and legible.
   - Rework if best strategy is repeated damage trading or attack spam.
@@ -250,15 +252,15 @@ repeat and proves the typed kit/enemy/room boundaries.
 three upgrades, clear room, choose one of three working cards, replay with changed
 combat behavior.
 
-- [ ] **2.1 Implement run phases/snapshots and legal transitions.**
-- [ ] **2.2 Implement EffectDefinition/stack resolver extensions.**
-- [ ] **2.3 Implement RewardTable, RewardTransaction, RewardService.**
-- [ ] **2.4 Wire Walker/Charger defeat to one idempotent reward path.**
-- [ ] **2.5 Implement XP curve and five micro choices.**
-- [ ] **2.6 Migrate first five shared cards to typed Resources.**
-- [ ] **2.7 Implement level/card choice UI with focus, reroll state, and commit errors.**
-- [ ] **2.8 Add focused reward replay, overflow XP, capped offer, and build tests.**
-- [ ] **2.9 Fun gate:** selected card must visibly change the next encounter.
+- [x] **2.1 Implement run phases/snapshots and legal transitions.**
+- [x] **2.2 Implement EffectDefinition/stack resolver extensions.**
+- [x] **2.3 Implement RewardTable, RewardTransaction, RewardService.**
+- [x] **2.4 Wire Walker/Charger defeat to one idempotent reward path.**
+- [x] **2.5 Implement XP curve and five micro choices.**
+- [x] **2.6 Migrate first five shared cards to typed Resources.**
+- [x] **2.7 Implement level/card choice UI with focus, reroll state, and commit errors.**
+- [x] **2.8 Add focused reward replay, overflow XP, capped offer, and build tests.**
+- [x] **2.9 Fun gate:** selected card must visibly change the next encounter.
 
 *Milestone gate:* one short production loop has combat -> reward -> changed combat.
 
@@ -425,6 +427,30 @@ known environment warnings instead of rediscovering them.
 
 ## Fun Evidence
 
+### Milestone 1
+
+- Movement-only: shared double jump, dash, crouch, climb, and collision recovery
+  passed the runtime movement fixture without debug-only assistance.
+- Walker: Cleave pressure and two-hit stagger setup passed the live enemy fixture.
+- Charger: warning, charge, brown recovery tell, and +20 recovery stagger window
+  completed one deterministic behavior cycle.
+- Heavy punish: staggered Breaker dealt the earned 1.5x critical and outperformed
+  uninterrupted Cleave damage per committed action time.
+- Shield Rush: crossed 180 px, blocked frontal contact during active frames, and
+  retained a cooldown that prevents it replacing normal spacing decisions.
+
+### Milestone 2
+
+- Seed `93117`, Warrior: three-card initial and rerolled offers reproduced exactly;
+  reroll spent 12 coins only after a different complete offer was available.
+- All first five cards changed runtime behavior in focused fixtures: delayed Heavy
+  echo, one-hit dash trail, consumed extra-jump opener, recovery damage/cooldown
+  punish, and skill-kill area burst.
+- The visible path completed stage clear -> level choice -> card choice -> Continue
+  -> next stage with the selected card stack retained.
+- Level/Card Reward screens passed rendered inspection at 1280x720 and 960x540
+  with keyboard focus, disabled/error states, and no clipping or overlap.
+
 For each playable milestone, record seed/character/build, selected enemy archetype
 and variant IDs, critical trigger/result, duration, damage sources, room/encounter
 duration, reward offers/selections, unused verbs, spending, death reason, and tester
@@ -517,6 +543,9 @@ not block implementation.
 - 2026-07-12: Milestone 1 uses linked Patrol Gallery and Charge Lane rooms because
   Walker occupancy and Charger's 520 px lane/two-escape contract need distinct
   teaching geometry.
+- 2026-07-12: Milestone 2 closes one production combat-to-build loop before stage
+  generation grows; cards execute generic trigger/effect types rather than ID
+  branches in shared player code.
 
 ## Success Criteria
 
@@ -537,11 +566,11 @@ boss, settle/reload persistent rewards, and begin another run.
 
 ## Next Steps
 
-1. Run Milestone 1.8's five manual play passes and tune spam/trading failures.
-2. Keep automated movement, combat, enemy, room, and production-flow fixtures green.
-3. Begin Milestone 2 with explicit run phases before adding reward transactions.
-4. Update this plan's Progress after each scoped commit; revise specs only when
-   implementation/playtest evidence changes an accepted contract.
+1. Implement Milestone 3's typed room catalog, stage plan, planner, and validators.
+2. Expand the authored Lower Ruins room set around decisions and recovery promises.
+3. Add Shooter, hazards, deterministic allocation, fallback, and seed/property gates.
+4. Keep the complete combat -> level -> card -> replay path green while replacing
+   the temporary repeated two-room route with generated Stage 1.
 
 ## Handoff Summary
 

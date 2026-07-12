@@ -45,6 +45,26 @@ var _captures: Array[Dictionary] = [
 		"state": "production_charge_lane",
 	},
 	{
+		"name": "desktop_level_reward",
+		"size": Vector2i(1280, 720),
+		"state": "level_reward",
+	},
+	{
+		"name": "compact_level_reward",
+		"size": Vector2i(960, 540),
+		"state": "level_reward",
+	},
+	{
+		"name": "desktop_card_reward",
+		"size": Vector2i(1280, 720),
+		"state": "card_reward",
+	},
+	{
+		"name": "compact_card_reward",
+		"size": Vector2i(960, 540),
+		"state": "card_reward",
+	},
+	{
 		"name": "desktop_run_result",
 		"size": Vector2i(1280, 720),
 		"state": "run_result",
@@ -88,7 +108,8 @@ func _capture(capture: Dictionary) -> void:
 
 	var game := root.get_node_or_null("Game")
 	var run_director := root.get_node_or_null("RunDirector")
-	if game == null or run_director == null:
+	var run_state := root.get_node_or_null("RunState")
+	if game == null or run_director == null or run_state == null:
 		push_error("Production autoloads are unavailable; cannot capture UI state.")
 		_failed = true
 		return
@@ -106,6 +127,24 @@ func _capture(capture: Dictionary) -> void:
 				stage.player.global_position = Vector2(1800.0, 600.0)
 				if stage.player.camera != null:
 					stage.player.camera.reset_smoothing()
+		"level_reward":
+			run_director.start_production_run(0)
+			RewardService.apply(
+				RewardTransaction.new(&"capture_level_reward", &"fixture", {"xp": 20}),
+				run_state
+			)
+			game.unload_current_stage()
+			run_director.call("_clear_hud")
+			run_director.call("_show_level_reward")
+		"card_reward":
+			run_director.start_production_run(0)
+			RewardService.apply(
+				RewardTransaction.new(&"capture_card_reward", &"fixture", {"coin": 20}),
+				run_state
+			)
+			game.unload_current_stage()
+			run_director.call("_clear_hud")
+			run_director.call("_show_card_reward")
 		"run_result":
 			run_director.start_production_run(1)
 			run_director.show_run_result(true)

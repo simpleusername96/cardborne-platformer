@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="MicroUpgradeDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/progression/MicroUpgradeDefinition.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/player/EffectDefinition.gd" id="2"]
+
+[sub_resource type="Resource" id="SkillCooldown"]
+script = ExtResource("2")
+stat_id = &"skill_cooldown_multiplier"
+operation = "multiply"
+value = 0.94
+stacking = "stack"
+source_id = &"micro_skill_tempo"
+source_scope = "run_level"
+
+[resource]
+script = ExtResource("1")
+id = &"micro_skill_tempo"
+display_name = "Skill Tempo"
+description = "All skill cooldowns  x0.94"
+max_stacks = 4
+effects = Array[ExtResource("2")]([SubResource("SkillCooldown")])

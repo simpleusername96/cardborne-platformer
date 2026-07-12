@@ -54,14 +54,14 @@ func _run() -> void:
 	_expect(run_director.start_production_run(0), "valid Warrior build should start a production run")
 	await process_frame
 	await process_frame
-	_expect(run_director.get_phase_name() == "run_active", "production run should become active")
+	_expect(run_director.get_phase_name() == "stage_active", "production stage should become active")
 	_expect(game.current_stage_path == PRODUCTION_STAGE_PATH, "run should load only the production stage host")
 	_expect(game.current_stage != null, "production stage should instantiate")
 	_expect(_has_child_named(hud_root, "ProductionHUD"), "production HUD should replace debug HUD")
 
 	run_director.show_run_result(true)
 	await process_frame
-	_expect(run_director.get_phase_name() == "run_result", "stage completion should show the run result")
+	_expect(run_director.get_phase_name() == "run_clear", "victory result should use run-clear phase")
 	_expect(game.current_stage == null, "run result should unload gameplay")
 	_expect(_has_child_named(screen_root, "RunResult"), "run result screen should be mounted")
 

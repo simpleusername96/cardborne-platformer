@@ -17,11 +17,14 @@ func _validate_state_scopes() -> void:
 		return
 
 	profile_state.reset_to_defaults()
-	_expect(profile_state.grant_material("stone", 4), "persistent material grant should succeed")
-	_expect(run_state.grant_unsettled_material("stone", 2), "run material grant should succeed")
+	_expect(profile_state.grant_material("rusted_scrap", 4), "persistent material grant should succeed")
+	_expect(run_state.grant_unsettled_material("rusted_scrap", 2), "run material grant should succeed")
 	for profile_index in run_state.profiles.size():
 		_expect(run_state.start_new_run(profile_index), "valid character build should start a run")
-		_expect(profile_state.get_material_count("stone") == 4, "new run must preserve profile materials")
+		_expect(
+			profile_state.get_material_count("rusted_scrap") == 4,
+			"new run must preserve profile materials"
+		)
 		_expect(run_state.get_unsettled_materials().is_empty(), "new run must clear unsettled materials")
 		_expect(run_state.selected_profile != null, "new run must select a character profile")
 		_expect(run_state.get_effective_build_snapshot() != null, "new run must resolve a build snapshot")

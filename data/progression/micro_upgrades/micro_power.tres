@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="MicroUpgradeDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/progression/MicroUpgradeDefinition.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/player/EffectDefinition.gd" id="2"]
+
+[sub_resource type="Resource" id="DamageMultiplier"]
+script = ExtResource("2")
+stat_id = &"direct_damage_multiplier"
+operation = "multiply"
+value = 1.08
+stacking = "stack"
+source_id = &"micro_power"
+source_scope = "run_level"
+
+[resource]
+script = ExtResource("1")
+id = &"micro_power"
+display_name = "Measured Force"
+description = "Direct damage multiplier  x1.08"
+max_stacks = 3
+effects = Array[ExtResource("2")]([SubResource("DamageMultiplier")])

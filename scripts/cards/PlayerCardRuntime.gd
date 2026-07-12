@@ -1,0 +1,311 @@
+class_name PlayerCardRuntime
+extends Node
+
+# Interprets generic card triggers/effects so shared player code never branches on card IDs.
+
+@export var player_path: NodePath = NodePath("..")
+@export var combat_controller_path: NodePath = NodePath("../CombatController")
+
+@onready var player: Variant = get_node(player_path)
+@onready var combat_controller: Variant = get_node(combat_controller_path)
+
+var _aerial_attack_ready: bool = false
+var _internal_cooldowns: Dictionary = {}
+
+
+func _ready() -> void:
+	player.extra_jump_performed.connect(_on_extra_jump_performed)
+	player.dash_completed.connect(_on_dash_completed)
+
+
+func _process(delta: float) -> void:
+	for card_id in _internal_cooldowns.keys():
+		var remaining := maxf(float(_internal_cooldowns[card_id]) - delta, 0.0)
+		if remaining <= 0.0:
+			_internal_cooldowns.erase(card_id)
+		else:
+			_internal_cooldowns[card_id] = remaining
+
+
+func prepare_attack(_definition: AttackDefinition) -> Dictionary:
+	var modifiers: Dictionary = {}
+	if not _aerial_attack_ready:
+		return modifiers
+	var contexts := _card_contexts(&"first_attack_after_extra_jump")
+	if contexts.is_empty():
+		return modifiers
+	for context in contexts:
+		_apply_modifier_effects(context, modifiers)
+	_aerial_attack_ready = false
+	_emit_status("Aerial Opener ready")
+	return modifiers
+
+
+func prepare_target_hit(
+	_definition: AttackDefinition,
+	target_state: Dictionary
+) -> Dictionary:
+	var modifiers: Dictionary = {}
+	var activations: Array[StringName] = []
+	if not bool(target_state.get("recovery", false)):
+		return {"modifiers": modifiers, "activations": activations}
+	for context in _card_contexts(&"hit_target_in_recovery"):
+		var card := context.get("definition") as CardDefinition
+		if card == null or not _is_card_ready(card):
+			continue
+		_apply_modifier_effects(context, modifiers)
+		activations.append(card.id)
+	return {"modifiers": modifiers, "activations": activations}
+
+
+func notify_attack_hit(event: Dictionary) -> void:
+	var definition := event.get("definition") as AttackDefinition
+	var damage_info := event.get("damage_info") as DamageInfo
+	if definition == null or damage_info == null or damage_info.secondary_hit:
+		return
+	var activations: Array[StringName] = []
+	for activation_id in event.get("activations", []):
+		activations.append(StringName(activation_id))
+	for trigger in [
+		&"heavy_hit_confirmed",
+		&"hit_target_in_recovery",
+		&"skill_kill",
+	]:
+		for context in _card_contexts(trigger):
+			var card := context.get("definition") as CardDefinition
+			if card == null or not _event_matches(card, definition, event, activations):
+				continue
+			if not _is_card_ready(card):
+				continue
+			_apply_confirmed_effects(card, int(context.get("stack", 1)), event)
+			if card.internal_cooldown > 0.0:
+				_internal_cooldowns[String(card.id)] = card.internal_cooldown
+
+
+func _apply_modifier_effects(context: Dictionary, modifiers: Dictionary) -> void:
+	var card := context.get("definition") as CardDefinition
+	if card == null:
+		return
+	var stack := int(context.get("stack", 1))
+	for effect in card.effects:
+		match effect.effect_type:
+			&"add_damage":
+				_add_modifier(modifiers, "direct_damage_additive", effect.damage * stack)
+			&"add_stagger":
+				_add_modifier(modifiers, "stagger_additive", effect.stagger * stack)
+
+
+func _apply_confirmed_effects(
+	card: CardDefinition,
+	stack: int,
+	event: Dictionary
+) -> void:
+	for effect in card.effects:
+		match effect.effect_type:
+			&"repeat_hit":
+				_schedule_repeat_hit(card, effect, event)
+			&"reduce_longest_skill_cooldown":
+				combat_controller.reduce_longest_skill_cooldown(effect.seconds)
+			&"area_damage":
+				_apply_area_damage(card, effect, stack, event)
+
+
+func _event_matches(
+	card: CardDefinition,
+	definition: AttackDefinition,
+	event: Dictionary,
+	activations: Array[StringName]
+) -> bool:
+	match card.trigger:
+		&"heavy_hit_confirmed":
+			return definition.tags.has(&"heavy")
+		&"hit_target_in_recovery":
+			return activations.has(card.id) and bool(
+				event.get("target_state", {}).get("recovery", false)
+			)
+		&"skill_kill":
+			return definition.tags.has(&"skill") and bool(event.get("defeated", false))
+	return false
+
+
+func _schedule_repeat_hit(
+	card: CardDefinition,
+	effect: CardEffectDefinition,
+	event: Dictionary
+) -> void:
+	var target := event.get("target") as Node
+	var original := event.get("damage_info") as DamageInfo
+	if target == null or original == null:
+		return
+	await get_tree().create_timer(effect.delay).timeout
+	if not _is_target_active(target):
+		return
+	var damage := maxi(int(floor(float(original.amount) * effect.damage_scale + 0.5)), 1)
+	var stagger := maxi(int(floor(float(original.stagger) * effect.stagger_scale + 0.5)), 0)
+	target.call("receive_damage", DamageInfo.new(
+		damage,
+		player,
+		original.knockback * 0.35,
+		["player_card", "echo", "secondary"],
+		card.id,
+		stagger,
+		false,
+		true
+	))
+	_emit_status("%s echoed for %d" % [card.display_name, damage])
+
+
+func _apply_area_damage(
+	card: CardDefinition,
+	effect: CardEffectDefinition,
+	stack: int,
+	event: Dictionary
+) -> void:
+	var target := event.get("target") as Node2D
+	if target == null:
+		return
+	var radius_index := clampi(stack - 1, 0, effect.radius_by_stack.size() - 1)
+	var radius := effect.radius_by_stack[radius_index]
+	_spawn_pulse_visual(target.global_position, radius)
+	for candidate in get_tree().get_nodes_in_group("enemies"):
+		if not candidate is Node2D or not candidate.has_method("receive_damage"):
+			continue
+		if effect.exclude_primary_target and candidate == target:
+			continue
+		if (candidate as Node2D).global_position.distance_to(target.global_position) > radius:
+			continue
+		if not _is_target_active(candidate):
+			continue
+		candidate.call("receive_damage", DamageInfo.new(
+			effect.damage,
+			player,
+			Vector2.ZERO,
+			["player_card", "area", "secondary"],
+			card.id,
+			0,
+			false,
+			true
+		))
+	_emit_status("%s burst" % card.display_name)
+
+
+func _on_extra_jump_performed() -> void:
+	if not _card_contexts(&"first_attack_after_extra_jump").is_empty():
+		_aerial_attack_ready = true
+
+
+func _on_dash_completed(start_position: Vector2, end_position: Vector2) -> void:
+	for context in _card_contexts(&"dash_completed"):
+		var card := context.get("definition") as CardDefinition
+		var stack := int(context.get("stack", 1))
+		if card == null or not _is_card_ready(card):
+			continue
+		for effect in card.effects:
+			if effect.effect_type == &"spawn_damage_trail":
+				_spawn_dash_trail(card, effect, stack, start_position, end_position)
+		if card.internal_cooldown > 0.0:
+			_internal_cooldowns[String(card.id)] = card.internal_cooldown
+
+
+func _spawn_dash_trail(
+	card: CardDefinition,
+	effect: CardEffectDefinition,
+	stack: int,
+	start_position: Vector2,
+	end_position: Vector2
+) -> void:
+	var world := player.get_parent() as Node
+	if world == null:
+		return
+	var stack_index := clampi(stack - 1, 0, effect.damage_by_stack.size() - 1)
+	var damage := effect.damage_by_stack[stack_index]
+	var width := maxf(absf(end_position.x - start_position.x) + 42.0, 56.0)
+	var trail := Hitbox.new()
+	trail.name = "%sTrail" % card.display_name.replace(" ", "")
+	trail.collision_layer = 16
+	trail.collision_mask = 8
+	trail.starts_active = true
+	trail.repeat_hits = false
+	trail.tags = ["player_card", "dash_trail", "secondary"]
+	trail.set_damage_info_provider(func(_area: Area2D) -> DamageInfo:
+		return DamageInfo.new(
+			damage,
+			player,
+			Vector2.ZERO,
+			trail.tags,
+			card.id,
+			0,
+			false,
+			true
+		)
+	)
+	var shape := CollisionShape2D.new()
+	var rectangle := RectangleShape2D.new()
+	rectangle.size = Vector2(width, 44.0)
+	shape.shape = rectangle
+	trail.add_child(shape)
+	var visual := Polygon2D.new()
+	visual.color = Color(0.22, 0.86, 0.9, 0.35)
+	visual.polygon = PackedVector2Array([
+		Vector2(-width * 0.5, -22.0),
+		Vector2(width * 0.5, -22.0),
+		Vector2(width * 0.5, 22.0),
+		Vector2(-width * 0.5, 22.0),
+	])
+	trail.add_child(visual)
+	world.add_child(trail)
+	trail.global_position = (start_position + end_position) * 0.5 + Vector2(0.0, -22.0)
+	get_tree().create_timer(effect.duration).timeout.connect(trail.queue_free)
+
+
+func _spawn_pulse_visual(position: Vector2, radius: float) -> void:
+	var world := player.get_parent() as Node
+	if world == null:
+		return
+	var pulse := Polygon2D.new()
+	pulse.name = "CardBurst"
+	pulse.z_index = 18
+	pulse.color = Color(1.0, 0.72, 0.18, 0.42)
+	var points := PackedVector2Array()
+	for index in 20:
+		var angle := TAU * float(index) / 20.0
+		points.append(Vector2(cos(angle), sin(angle)) * radius)
+	pulse.polygon = points
+	world.add_child(pulse)
+	pulse.global_position = position + Vector2(0.0, -22.0)
+	var tween := pulse.create_tween()
+	tween.tween_property(pulse, "modulate:a", 0.0, 0.22)
+	tween.finished.connect(pulse.queue_free)
+
+
+func _add_modifier(modifiers: Dictionary, key: String, amount: float) -> void:
+	modifiers[key] = float(modifiers.get(key, 0.0)) + amount
+
+
+func _card_contexts(trigger: StringName) -> Array:
+	if not is_inside_tree():
+		return []
+	var run_state := get_node_or_null("/root/RunState")
+	if run_state == null or not run_state.has_method("get_card_effect_contexts"):
+		return []
+	var contexts: Variant = run_state.call("get_card_effect_contexts", trigger)
+	return contexts if contexts is Array else []
+
+
+func _is_card_ready(card: CardDefinition) -> bool:
+	return float(_internal_cooldowns.get(String(card.id), 0.0)) <= 0.0
+
+
+func _is_target_active(target: Node) -> bool:
+	if not is_instance_valid(target) or not target.has_method("receive_damage"):
+		return false
+	var health: Variant = target.get("current_health")
+	return not (health is int or health is float) or float(health) > 0.0
+
+
+func _emit_status(message: String) -> void:
+	if not is_inside_tree():
+		return
+	var bus := get_node_or_null("/root/SignalBus")
+	if bus != null:
+		bus.emit_signal("status_message_changed", message)

@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="RewardTable" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/progression/RewardTable.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/progression/RewardEntry.gd" id="2"]
+
+[sub_resource type="Resource" id="XP"]
+script = ExtResource("2")
+content_id = &"xp"
+minimum_amount = 12
+maximum_amount = 12
+
+[sub_resource type="Resource" id="Coin"]
+script = ExtResource("2")
+content_id = &"coin"
+minimum_amount = 3
+maximum_amount = 3
+
+[sub_resource type="Resource" id="Scrap"]
+script = ExtResource("2")
+content_id = &"rusted_scrap"
+minimum_amount = 1
+maximum_amount = 2
+chance = 0.35
+
+[resource]
+script = ExtResource("1")
+id = &"drop_charger"
+display_name = "Charger Drop"
+entries = Array[ExtResource("2")]([SubResource("XP"), SubResource("Coin"), SubResource("Scrap")])

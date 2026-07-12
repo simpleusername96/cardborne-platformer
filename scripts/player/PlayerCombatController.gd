@@ -12,11 +12,13 @@ enum Phase {
 @export var hitbox_path: NodePath = NodePath("../AttackHitbox")
 @export var hitbox_shape_path: NodePath = NodePath("../AttackHitbox/CollisionShape2D")
 @export var presenter_path: NodePath = NodePath("../AttackPresenter")
+@export var card_runtime_path: NodePath = NodePath("../CardRuntime")
 
 @onready var player: Variant = get_node(player_path)
 @onready var attack_hitbox: Hitbox = get_node(hitbox_path) as Hitbox
 @onready var attack_shape: CollisionShape2D = get_node(hitbox_shape_path) as CollisionShape2D
 @onready var attack_presenter: PlayerAttackPresenter = get_node(presenter_path) as PlayerAttackPresenter
+@onready var card_runtime: Variant = get_node_or_null(card_runtime_path)
 
 var kit: CharacterKit
 var stats: Dictionary = {}
@@ -31,6 +33,9 @@ var guarded_rearm_timer: float = 0.0
 var _cooldowns: Dictionary = {}
 var _fallback_basic: AttackDefinition
 var _active_target_count: int = 0
+var _active_attack_modifiers: Dictionary = {}
+# Hitbox applies damage before emitting target_hit, so retain the pre-hit target facts here.
+var _pending_hit_contexts: Dictionary = {}
 
 
 func _ready() -> void:
@@ -158,6 +163,8 @@ func reset_combat_state() -> void:
 	guarded_timer = 0.0
 	guarded_rearm_timer = 0.0
 	_cooldowns.clear()
+	_active_attack_modifiers.clear()
+	_pending_hit_contexts.clear()
 	attack_hitbox.clear_damage_info_provider()
 	attack_hitbox.set_active(false)
 	attack_hitbox.visible = false
@@ -210,7 +217,15 @@ func _begin_attack(definition: AttackDefinition) -> bool:
 	phase_timer = definition.startup_time
 	action_elapsed = 0.0
 	_active_target_count = 0
-	_cooldowns[String(definition.id)] = definition.cooldown
+	_active_attack_modifiers = (
+		card_runtime.prepare_attack(definition) if card_runtime != null else {}
+	)
+	var cooldown_multiplier := (
+		float(stats.get("skill_cooldown_multiplier", 1.0))
+		if definition is SkillDefinition
+		else 1.0
+	)
+	_cooldowns[String(definition.id)] = definition.cooldown * cooldown_multiplier
 	_configure_attack_geometry(definition)
 	attack_presenter.begin(definition, attack_direction, attack_hitbox.position)
 	if phase_timer <= 0.0:
@@ -254,39 +269,62 @@ func _finish_attack() -> void:
 	phase = Phase.IDLE
 	phase_timer = 0.0
 	action_elapsed = 0.0
+	_active_attack_modifiers.clear()
 	attack_presenter.reset()
 
 
 func _damage_info_for_current_target(area: Area2D) -> DamageInfo:
-	return _resolve_damage_info(area, current_attack, attack_direction, false)
+	return _resolve_damage_info(
+		area,
+		current_attack,
+		attack_direction,
+		false,
+		_active_attack_modifiers
+	)
 
 
 func _damage_info_for_projectile_target(
 	area: Area2D,
 	definition: AttackDefinition,
-	direction: int
+	direction: int,
+	attack_modifiers: Dictionary
 ) -> DamageInfo:
-	return _resolve_damage_info(area, definition, direction, false)
+	return _resolve_damage_info(area, definition, direction, false, attack_modifiers)
 
 
 func _resolve_damage_info(
 	area: Area2D,
 	definition: AttackDefinition,
 	direction: int,
-	secondary_hit: bool
+	secondary_hit: bool,
+	attack_modifiers: Dictionary
 ) -> DamageInfo:
 	var target_state := _target_state(area)
+	var receiver := _receiver_for_area(area)
 	var hit_context := {
 		"secondary_hit": secondary_hit,
 		"attack_direction": direction,
 		"source_position": player.global_position,
 	}
-	var result := DamageResolver.resolve_attack(definition, target_state, hit_context)
+	var source_modifiers := {
+		"direct_damage_multiplier": float(stats.get("direct_damage_multiplier", 1.0)),
+	}
+	_merge_numeric_modifiers(source_modifiers, attack_modifiers)
+	var card_hit_context := {"modifiers": {}, "activations": []}
+	if card_runtime != null:
+		card_hit_context = card_runtime.prepare_target_hit(definition, target_state)
+	_merge_numeric_modifiers(source_modifiers, card_hit_context.get("modifiers", {}))
+	var result := DamageResolver.resolve_attack(
+		definition,
+		target_state,
+		hit_context,
+		source_modifiers
+	)
 	var resolved_knockback := Vector2(
 		absf(result.knockback.x) * float(direction),
 		result.knockback.y
 	)
-	return DamageInfo.new(
+	var damage_info := DamageInfo.new(
 		result.final_damage,
 		player,
 		resolved_knockback,
@@ -296,6 +334,13 @@ func _resolve_damage_info(
 		result.critical,
 		secondary_hit
 	)
+	_pending_hit_contexts[area.get_instance_id()] = {
+		"definition": definition,
+		"target": receiver,
+		"target_state": target_state,
+		"activations": card_hit_context.get("activations", []),
+	}
+	return damage_info
 
 
 func _target_state(area: Area2D) -> Dictionary:
@@ -309,10 +354,18 @@ func _target_state(area: Area2D) -> Dictionary:
 	return {}
 
 
-func _on_target_hit(_area: Area2D, damage_info: DamageInfo) -> void:
+func _on_target_hit(area: Area2D, damage_info: DamageInfo) -> void:
+	var event: Dictionary = _pending_hit_contexts.get(area.get_instance_id(), {})
+	_pending_hit_contexts.erase(area.get_instance_id())
+	var definition := event.get("definition") as AttackDefinition
+	if definition == null:
+		definition = current_attack
+	event["definition"] = definition
+	event["damage_info"] = damage_info
+	event["defeated"] = _target_is_defeated(event.get("target") as Node)
 	_active_target_count += 1
-	if current_attack is SkillDefinition:
-		var skill := current_attack as SkillDefinition
+	if definition is SkillDefinition:
+		var skill := definition as SkillDefinition
 		if _active_target_count >= skill.max_targets:
 			attack_hitbox.set_active(false, false)
 	if (
@@ -324,7 +377,28 @@ func _on_target_hit(_area: Area2D, damage_info: DamageInfo) -> void:
 		guarded_timer = kit.guarded_duration
 	if damage_info.critical:
 		_emit_status("Critical %d" % damage_info.amount)
+	if card_runtime != null:
+		card_runtime.notify_attack_hit(event)
 	_publish_state()
+
+
+func reduce_longest_skill_cooldown(seconds: float) -> StringName:
+	if seconds <= 0.0 or kit == null:
+		return &""
+	var longest_id: StringName
+	var longest_remaining := 0.0
+	for skill in kit.skills:
+		if skill == null:
+			continue
+		var remaining := float(_cooldowns.get(String(skill.id), 0.0))
+		if remaining > longest_remaining:
+			longest_remaining = remaining
+			longest_id = skill.id
+	if longest_id == &"":
+		return &""
+	_cooldowns[String(longest_id)] = maxf(longest_remaining - seconds, 0.0)
+	_publish_state()
+	return longest_id
 
 
 func _update_cooldowns(delta: float) -> void:
@@ -343,6 +417,27 @@ func _is_frontal_source(source: Node) -> bool:
 	if is_zero_approx(delta_x):
 		return true
 	return int(sign(delta_x)) == attack_direction
+
+
+func _receiver_for_area(area: Area2D) -> Node:
+	if area is Hurtbox and (area as Hurtbox).receiver != null:
+		return (area as Hurtbox).receiver
+	return area
+
+
+func _target_is_defeated(target: Node) -> bool:
+	if target == null or not is_instance_valid(target):
+		return true
+	var health: Variant = target.get("current_health")
+	return (health is int or health is float) and float(health) <= 0.0
+
+
+func _merge_numeric_modifiers(destination: Dictionary, source: Dictionary) -> void:
+	for key in source:
+		var value: Variant = source[key]
+		if not (value is int or value is float):
+			continue
+		destination[key] = float(destination.get(key, 0.0)) + float(value)
 
 
 func _configure_attack_geometry(definition: AttackDefinition) -> void:
@@ -389,7 +484,11 @@ func _fire_projectile(definition: AttackDefinition, direction: int) -> void:
 	projectile.projectile_size = size_value if size_value is Vector2 else Vector2(34.0, 8.0)
 	projectile.projectile_color = definition.visual_color
 	projectile.set_damage_info_provider(
-		_damage_info_for_projectile_target.bind(definition, direction)
+		_damage_info_for_projectile_target.bind(
+			definition,
+			direction,
+			_active_attack_modifiers.duplicate(true)
+		)
 	)
 	projectile.target_hit.connect(_on_target_hit)
 	parent_node.add_child(projectile)
@@ -436,6 +535,8 @@ func _string_tags(source: Array[StringName]) -> Array[String]:
 
 
 func _publish_state() -> void:
+	if not is_inside_tree():
+		return
 	var bus := get_node_or_null("/root/SignalBus")
 	if bus != null:
 		bus.emit_signal("combat_state_changed", get_state_snapshot())
