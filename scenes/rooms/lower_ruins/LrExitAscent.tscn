@@ -138,7 +138,7 @@ position = Vector2(1120, 470)
 
 [node name="Enemy" type="Node2D" parent="Anchors"]
 [node name="WalkerA" type="Marker2D" parent="Anchors/Enemy"]
-position = Vector2(430, 590)
+position = Vector2(690, 530)
 script = ExtResource("3")
 anchor_id = &"walker_a"
 anchor_type = &"enemy"
@@ -156,7 +156,7 @@ metadata/patrol_width = 200.0
 metadata/ceiling = 300.0
 metadata/line_of_sight = false
 [node name="WalkerB" type="Marker2D" parent="Anchors/Enemy"]
-position = Vector2(690, 530)
+position = Vector2(970, 470)
 script = ExtResource("3")
 anchor_id = &"walker_b"
 anchor_type = &"enemy"
@@ -185,7 +185,7 @@ metadata/safe_radius = 240.0
 metadata/camera_id = &"exit_ascent_camera"
 
 [node name="FinalEncounter" type="Marker2D" parent="Anchors/Objective"]
-position = Vector2(560, 590)
+position = Vector2(830, 500)
 metadata/anchor_count = 2
 
 [node name="ExitGate" type="Area2D" parent="Anchors/Objective"]
@@ -223,7 +223,7 @@ safe_radius = 240.0
 required = true
 metadata/safe_radius = 240.0
 [node name="AscentRecovery" type="Marker2D" parent="Anchors/Recovery"]
-position = Vector2(690, 530)
+position = Vector2(430, 590)
 script = ExtResource("3")
 anchor_id = &"ascent_recovery"
 anchor_type = &"recovery"

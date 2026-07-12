@@ -105,6 +105,7 @@ func _validate_scene_contract(data: RoomTemplateData, errors: PackedStringArray)
 	_validate_hazard_anchor_contracts(data, errors)
 	_validate_reward_anchor_contracts(data, errors)
 	_validate_moving_platform_contracts(data, errors)
+	_validate_safe_objective_clearance(data, errors)
 
 
 func _validate_socket_markers(data: RoomTemplateData, errors: PackedStringArray) -> void:
@@ -126,6 +127,52 @@ func _validate_socket_markers(data: RoomTemplateData, errors: PackedStringArray)
 				"Room '%s' socket '%s' has no authored marker at %s."
 				% [room_id, socket.id, socket.local_position]
 			)
+
+
+func _validate_safe_objective_clearance(
+	data: RoomTemplateData,
+	errors: PackedStringArray
+) -> void:
+	var objective_root := get_node_or_null("Anchors/Objective") as Node2D
+	if objective_root == null:
+		return
+	var safe_origins: Array[Node2D] = []
+	for child in objective_root.get_children():
+		if child is RoomAnchor:
+			var anchor := child as RoomAnchor
+			if anchor.anchor_type == &"player_spawn" and anchor.safe_radius > 0.0:
+				safe_origins.append(anchor)
+		elif child is Marker2D and child.has_meta("safe_radius"):
+			safe_origins.append(child as Marker2D)
+	if data.role == &"start" and safe_origins.is_empty():
+		errors.append("Start room '%s' needs a safe player spawn." % room_id)
+	if data.role == &"exit":
+		var checkpoint := get_anchor(&"Objective", &"Checkpoint")
+		if checkpoint == null or float(checkpoint.get_meta("safe_radius", 0.0)) <= 0.0:
+			errors.append("Exit room '%s' needs a checkpoint with a safe radius." % room_id)
+	for safe_origin in safe_origins:
+		var safe_radius: float
+		if safe_origin is RoomAnchor:
+			safe_radius = (safe_origin as RoomAnchor).safe_radius
+		else:
+			safe_radius = float(safe_origin.get_meta("safe_radius", 0.0))
+		if safe_radius <= 0.0:
+			errors.append("Room '%s' objective '%s' needs a positive safe radius." % [room_id, safe_origin.name])
+			continue
+		var origin_position := to_local(safe_origin.global_position)
+		for enemy_anchor in get_typed_anchors(&"Enemy"):
+			var enemy_position := to_local(enemy_anchor.global_position)
+			# Clearance reaches the nearest point of the authored horizontal patrol lane.
+			var patrol_half_width := enemy_anchor.patrol_width * 0.5
+			var nearest_position := Vector2(
+				clampf(origin_position.x, enemy_position.x - patrol_half_width, enemy_position.x + patrol_half_width),
+				enemy_position.y
+			)
+			if origin_position.distance_to(nearest_position) + 0.001 < safe_radius:
+				errors.append(
+					"Room '%s' enemy anchor '%s' patrol enters safe objective '%s'."
+					% [room_id, enemy_anchor.anchor_id, safe_origin.name]
+				)
 
 
 func _validate_declared_anchor_ids(data: RoomTemplateData, errors: PackedStringArray) -> void:

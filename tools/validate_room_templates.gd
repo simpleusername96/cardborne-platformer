@@ -54,6 +54,16 @@ func _validate_room(data: RoomTemplateData) -> void:
 				_anchor_has_support(anchor, surfaces),
 				"%s anchor %s must sit on authored support" % [data.id, anchor.anchor_id]
 			)
+	if data.role == &"exit" and not room.get_typed_anchors(&"Enemy").is_empty():
+		var checkpoint := room.get_anchor(&"Objective", &"Checkpoint")
+		var enemy_anchor := room.get_typed_anchors(&"Enemy")[0]
+		var original_position := enemy_anchor.position
+		enemy_anchor.position = checkpoint.position
+		_expect(
+			_has_error(room.configure(data), "patrol enters safe objective"),
+			"%s should reject enemy patrol inside its terminal checkpoint" % data.id
+		)
+		enemy_anchor.position = original_position
 	room.queue_free()
 	await process_frame
 
@@ -65,6 +75,13 @@ func _anchor_has_support(anchor: RoomAnchor, surfaces: Array) -> bool:
 		if anchor.position.x < start or anchor.position.x > end:
 			continue
 		if absf(anchor.position.y - float(surface["top"])) <= 1.0:
+			return true
+	return false
+
+
+func _has_error(errors: PackedStringArray, fragment: String) -> bool:
+	for error in errors:
+		if error.contains(fragment):
 			return true
 	return false
 

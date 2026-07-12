@@ -165,7 +165,7 @@ metadata/support_id = &"gallery_exit_floor"
 [node name="Reward" type="Node2D" parent="Anchors"]
 [node name="Objective" type="Node2D" parent="Anchors"]
 [node name="SafeEntry" type="Marker2D" parent="Anchors/Objective"]
-position = Vector2(120, 620)
+position = Vector2(40, 620)
 metadata/safe_radius = 240.0
 [node name="ChargeEscapeWest" type="Marker2D" parent="Anchors/Objective"]
 position = Vector2(280, 620)
@@ -174,7 +174,7 @@ position = Vector2(1000, 620)
 
 [node name="Recovery" type="Node2D" parent="Anchors"]
 [node name="GalleryEntryRecovery" type="Marker2D" parent="Anchors/Recovery"]
-position = Vector2(120, 620)
+position = Vector2(40, 620)
 script = ExtResource("2")
 anchor_id = &"gallery_entry_recovery"
 anchor_type = &"recovery"
