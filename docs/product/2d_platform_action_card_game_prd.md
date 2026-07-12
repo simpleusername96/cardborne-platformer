@@ -1,3 +1,14 @@
+---
+type: spec
+status: active
+canonical_for: baseline Cardborne product behavior where not overridden by an active scope delta
+source: Original project brief
+scope: Original MVP baseline
+related:
+  - ./FIRST_COMPLETE_RUN_SCOPE_DELTA.md
+  - ./FIRST_SLICE_EXPANSION.md
+---
+
 # PRD: 2D Platform Action + Random Upgrade Card Game
 
 **Working title:** Cardborne Platformer  
@@ -5,6 +16,10 @@
 **Primary language:** GDScript  
 **Target platform for MVP:** Desktop keyboard controls  
 **Document purpose:** Give Codex enough product, gameplay, and technical direction to start building a real playable prototype without inventing core requirements.
+
+> Authority notice: `FIRST_COMPLETE_RUN_SCOPE_DELTA.md` overrides the named MVP
+> restrictions for the first complete run. All other compatible behavior in this
+> PRD remains active.
 
 ---
 

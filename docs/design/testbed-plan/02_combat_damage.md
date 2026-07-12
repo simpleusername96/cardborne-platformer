@@ -1,6 +1,7 @@
 ---
 type: plan
-status: active
+status: superseded
+superseded_by: ../../../.agent/execplans/2026-07-12-actual-game-production-roadmap.md
 created: 2026-07-02
 source: Split from docs/design/MOTION_TEST_BED_MVP_PLAN.md
 scope: Attack readability, real enemy baseline, hazards, damage recovery

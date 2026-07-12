@@ -1,7 +1,6 @@
 ---
 type: spec
-status: active
-canonical_for: full motion/combat/dungeon testbed rebuild and disposable-code implementation contract
+status: archived
 created: 2026-07-05
 source: User request on 2026-07-05 to preserve strict specs so the codebase can be erased and rebuilt
 scope: Rebuild-level requirements for the playable testbed suite and miniature dungeon game
@@ -15,6 +14,7 @@ related:
   - ./ENEMIES_TRAPS_GIMMICKS.md
   - ./testbed-plan/FEATURE_PRIORITY.md
   - ../research/foundation_resource_survey_2026-07-05.md
+  - ../../.agent/execplans/2026-07-12-actual-game-production-roadmap.md
 ---
 
 # Testbed Reimplementation Contract

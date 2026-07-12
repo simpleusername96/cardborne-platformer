@@ -1,7 +1,6 @@
 ---
 type: spec
-status: active
-canonical_for: first-slice architecture before implementation
+status: draft
 source: docs/product/FIRST_SLICE_EXPANSION.md
 scope: Godot 4.x GDScript first playable slice
 ---

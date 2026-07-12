@@ -93,6 +93,19 @@ before the affected milestone without invalidating earlier completed work.
 
 ## Progress
 
+### Started 2026-07-12
+
+- Product authority now routes through
+  `docs/product/FIRST_COMPLETE_RUN_SCOPE_DELTA.md`; compatible PRD and first-slice
+  behavior remains active.
+- Obsolete testbed execution plans are superseded or archived while
+  `MotionTestStage` remains an opt-in diagnostic.
+- Current official-source package review recommends an approval-gated LDtk/importer
+  and Kenney spike, references State Charts and Maaack components, and defers
+  GdUnit4 and Phantom Camera.
+- The first package-independent Milestone 1 batch covers character catalog,
+  deterministic build resolution, and profile/run state separation.
+
 ### Landed / already true
 
 - Godot 4.7 project imports and boots headlessly.
@@ -172,12 +185,13 @@ Additional rules:
 
 ### Source priority
 
-1. Current user decisions and this active plan.
+1. Current explicit user decisions.
 2. Root and nearest `AGENTS.md` files.
-3. Active product and architecture specs after Milestone 0 reconciliation.
-4. Current runtime code and tests.
-5. Active evidence documents and external references.
-6. Old testbed plans and handoffs only as historical evidence.
+3. `docs/product/README.md` and the active product specifications it routes.
+4. This active plan for execution order and planning defaults.
+5. Current runtime code and tests as implementation evidence.
+6. Active evidence documents and external references.
+7. Superseded testbed plans and consumed handoffs only as historical evidence.
 
 ### Evidence requirements
 
@@ -678,7 +692,7 @@ responsibility boundary and update this plan or the accepted architecture spec.
 **Goal:** Remove contradictory guidance and make high-cost dependency decisions
 before production code depends on them.
 
-- [ ] **0.1 Reconcile active specs and indexes.**
+- [x] **0.1 Reconcile active specs and indexes.**
   - As-is: PRD and first-slice docs still defer multiple characters, procedural
     stages, permanent trees, and complex equipment.
   - To-be: write an accepted product delta for the scope in this plan; update

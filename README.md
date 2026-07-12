@@ -1,10 +1,12 @@
 # Cardborne Platformer
 
-Godot 4.x GDScript prototype for a 2D side-view action platformer with random upgrade cards.
+Godot 4.7 GDScript production project for a 2D side-view action platform
+roguelite/RPG-lite with constrained generated stages and random build upgrades.
 
-The product source of truth is `docs/product/2d_platform_action_card_game_prd.md`.
-
-The current first-slice expansion is documented in `docs/product/FIRST_SLICE_EXPANSION.md`. It adds XP drops, coin economy, materials, map design data, player skill/equipment guidance, and enemy/trap/gimmick catalogs before gameplay code generation.
+Current product scope is routed through `docs/product/README.md`. The canonical
+first-complete-run delta is
+`docs/product/FIRST_COMPLETE_RUN_SCOPE_DELTA.md`; the original PRD remains the
+baseline where that delta does not override it.
 
 ## Requirements
 
@@ -40,14 +42,19 @@ If the local runtime is missing, install it with:
 .\tools\setup-godot.ps1
 ```
 
-## Implementation Order
+## Active Implementation
 
-Start with Milestone 1 and Milestone 2 from the PRD:
+Follow `.agent/execplans/2026-07-12-actual-game-production-roadmap.md` in
+milestone-sized batches. The current sequence is:
 
-1. Project skeleton: main menu, Stage01, HUD, Player scene.
-2. Player controller: movement, jump features, dash, crouch, fast fall, health, damage, death.
+1. Reconcile product scope and production foundation decisions.
+2. Separate profile, run, character-catalog, and effective-build ownership.
+3. Replace the default testbed boot with a player-facing production shell.
+4. Build constrained authored-room generation, encounters, progression, character
+   kits, and the boss as complete playable workflows.
 
-Do not build permanent progression, procedural generation, multiple characters, or extra content before the MVP vertical slice works.
+`MotionTestStage` remains an opt-in diagnostic until focused production tests cover
+its useful movement and combat checks.
 
 ## Design Data
 

@@ -1,7 +1,7 @@
 ---
 type: spec
 status: active
-canonical_for: motion test bed requirements before stage/content implementation
+canonical_for: opt-in diagnostic testbed behavior retained during production replacement
 source: User correction on 2026-07-02
 scope: Godot runtime test bed for movement, combat, interaction, and input validation
 related:
@@ -19,7 +19,8 @@ related:
 
 Define what the first playable test bed must prove before normal stages, shop/rest maps, boss maps, or broader content are implemented. The test bed is not just a scene that boots. It is a calibrated miniature game: a validation space for character movement, attack readability, enemy interaction, NPC interaction, input mapping, basic UI guidance, and seeded random landscape generation.
 
-For code-disposable, full-rebuild detail, use `TESTBED_REIMPLEMENTATION_CONTRACT.md` as the stricter canonical contract.
+`TESTBED_REIMPLEMENTATION_CONTRACT.md` is archived rebuild evidence. New production
+work follows the first-complete-run scope delta and active production roadmap.
 
 ## Scope
 

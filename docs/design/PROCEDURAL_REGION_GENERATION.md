@@ -1,7 +1,6 @@
 ---
 type: spec
-status: active
-canonical_for: first-slice seeded procedural region generation
+status: draft
 source: User request on 2026-07-01; docs/design/MAP_DATA_AND_VISUALIZATION.md
 scope: Preimplementation procedural region graph generation
 ---

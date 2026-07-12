@@ -1,6 +1,7 @@
 ---
 type: plan
-status: active
+status: superseded
+superseded_by: ../../../.agent/execplans/2026-07-12-actual-game-production-roadmap.md
 created: 2026-07-05
 source: User map feedback and inspection findings from 2026-07-05
 scope: Rock-mass terrain, movement-space guarantees, and constrained random route generation for the testbed map

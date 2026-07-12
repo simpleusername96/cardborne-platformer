@@ -1,6 +1,7 @@
 ---
 type: plan
-status: active
+status: superseded
+superseded_by: ../../../.agent/execplans/2026-07-12-actual-game-production-roadmap.md
 created: 2026-07-05
 source: User request on 2026-07-05 to convert external codebase deep-dive findings into a detailed implementation checklist
 scope: Step-by-step partial replacement plan for the testbed foundation using selected external sources

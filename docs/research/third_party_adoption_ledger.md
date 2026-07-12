@@ -2,13 +2,15 @@
 type: evidence
 status: active
 created: 2026-07-05
-source: docs/research/external_codebase_deep_dive_2026-07-05.md and docs/design/testbed-plan/06_external_foundation_replacement.md
+last_reviewed: 2026-07-12
+source: Local deep-dive evidence plus current official upstream release and compatibility documentation
 topic: Third-party package adoption and reference tracking
-scope: External code, plugins, examples, and assets considered for the Godot testbed foundation
+scope: External code, plugins, examples, and assets considered for the production foundation
 related:
   - ./external_codebase_deep_dive_2026-07-05.md
   - ./foundation_resource_survey_2026-07-05.md
   - ../design/testbed-plan/06_external_foundation_replacement.md
+  - ../../.agent/execplans/2026-07-12-actual-game-production-roadmap.md
 ---
 
 # Third-Party Adoption Ledger
@@ -42,12 +44,16 @@ Track which external packages are copied into the repo, which are only reference
 
 | Package | Purpose | Source URL | Commit or release | License | Copied paths | Local modifications | Validation commands | Attribution needs | Adoption status |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Godot LDtk Importer | Primary candidate for authored map import and typed entity markers. | `https://github.com/heygleeson/godot-ldtk-importer` | `0ecab8d` from local deep dive | MIT | none | none | Deep dive reported importer import/boot OK in external clone; not yet validated inside this repo. | none known | candidate |
+| LDtk + Godot LDtk Importer | Primary candidate for authored room geometry and typed markers behind a local resolver. | `https://github.com/deepnight/ldtk`; `https://github.com/heygleeson/godot-ldtk-importer` | LDtk `v1.5.3` (`72c75f1`); importer release `2.0.1` (`92803cc`); use locally reviewed importer `0ecab8d` for the isolated spike | MIT | none | none | Importer `0ecab8d` imported and booted in an external Godot 4.7 clone; repository-local typed-marker/reimport spike and approval remain required. | none known | candidate |
 | KoBeWi ControlsRemap | Candidate/reference for small persistent input remap core. | `https://github.com/KoBeWi/Godot-Input-Remap` | `0d7204b` from local deep dive | MIT | none | Local implementation in `scripts/autoload/InputBindings.gd` follows the small resource-pattern idea without copying files. | `.\tools\godot.ps1 --path . --headless --import`; `.\tools\godot.ps1 --path . --headless --script res://tools/validate_input_remap.gd`; rendered settings popup at 1280x720 and 390x720. | none known | reference-only |
 | GDQuest Godot 4 Procedural Generation | Reference for deterministic path-first room/chunk generation. | `https://github.com/gdquest-demos/godot-4-procedural-generation` | `19c98ce` from local deep dive | Source MIT; assets CC-BY 4.0 | none | none | Deep dive source inspection only for this repo. | CC-BY attribution required if assets are copied; no assets copied. | reference-only |
 | Ultimate Platformer Controller 2D | Movement feature checklist and formulas. | `https://github.com/Noah-Erz/ultimate-platformer-controller-2d` | `9ce6580` from local deep dive | MIT | none | none | Source inspection only. | none known | reference-only |
 | LimboAI demo components | Combat/enemy component reference for health, hitbox, hurtbox, knockback, and AI interruption. | `https://github.com/limbonaut/limboai` | `f94763e` from local deep dive | MIT source; demo art has attribution requirements | none | none | Source inspection only; full plugin not adopted. | Demo art attribution required if copied; no assets copied. | reference-only |
-| Maaack Godot Game Template | Full shell/menu/options template candidate after map/controller blockers. | `https://github.com/Maaack/Godot-Game-Template` | `1953b35` from local deep dive | MIT | none | none | Deep dive import OK; boot reported example scene parse error in external clone. | none known | deferred |
+| Godot State Charts | Reference for explicit enemy or boss warning/active/recovery state ownership. | `https://github.com/derkork/godot-statecharts` | `v0.22.5` (`76d226a`) | MIT | none | none | Official changelog states Godot 4.7 compatibility fix; compare one actor against a local typed-state implementation before any adoption. | none known | reference-only |
+| GdUnit4 | Candidate test framework after a stable Godot 4.7-compatible release. | `https://github.com/godot-gdunit-labs/gdUnit4` | stable `v6.1.3` (`1579130`) | MIT | none | none | Stable compatibility currently ends at Godot 4.6.3; defer until `v6.2` or another tagged 4.7-compatible release is verified locally. | none known | deferred |
+| Phantom Camera | Possible later camera rig if built-in `Camera2D` cannot satisfy room transitions and boss framing. | `https://github.com/ramokz/phantom-camera` | `v0.11.0.2` (`e468862`) | MIT | none | none | Upstream documents Godot 4.3 minimum but no explicit 4.7 certification; current project camera already supports smoothing and limits. | none known | deferred |
+| Maaack Godot Game Template | Reference for SceneLoader, pause, settings, and production-shell comparison; do not adopt the whole template. | `https://github.com/Maaack/Godot-Game-Template` | `v1.4.7` (`93e66a0`) | MIT | none | none | Upstream identifies Godot 4.7 support. Prior `v1.4.6` external clone imported but an example scene had a parse error; `v1.4.7` is not locally retested. | none known | reference-only |
+| Kenney Pixel Platformer | Coherent prototype art family candidate for one-room readability and integer-scale evaluation. | `https://kenney.nl/assets/pixel-platformer` | `1.2` | CC0 | none | none | No files imported. One-room 18 px versus 36 px integer-scale spike and explicit asset approval remain required. | none known | candidate |
 | Maaack Input Remapping | Rich input-remapping UI candidate if local settings popup becomes insufficient. | `https://github.com/Maaack/Godot-Input-Remapping` | `736bb20` from local deep dive | MIT | none | none | Deep dive import OK; headless display-server warnings in external clone. | none known | deferred |
 | Metroidvania System | Later minimap/world-map/exploration-state candidate. | `https://github.com/KoBeWi/Metroidvania-System` | `d9e456d` from local deep dive | MIT | none | none | Deep dive import ran with plugin warning/leak signals in external clone. | none known | deferred |
 | YATI | Tiled importer fallback if LDtk spike fails. | `https://github.com/Kiamo2/YATI` | `72a3716` from local deep dive | MIT | none | none | Source inspection only. | none known | deferred |

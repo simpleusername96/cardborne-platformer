@@ -4,6 +4,9 @@ status: active
 canonical_for: first-slice RPG-lite scope expansion
 source: User request on 2026-06-30; docs/product/2d_platform_action_card_game_prd.md
 scope: First playable version before gameplay code generation
+related:
+  - ./FIRST_COMPLETE_RUN_SCOPE_DELTA.md
+  - ./2d_platform_action_card_game_prd.md
 ---
 
 # First Slice Expansion
@@ -12,11 +15,16 @@ scope: First playable version before gameplay code generation
 
 Define the expanded first playable slice before gameplay code is generated. This document is a product delta on top of `docs/product/2d_platform_action_card_game_prd.md`; it does not discard the original PRD. It adds first-version expectations for XP, coin, materials, map design data, player build systems, equipment, enemies, traps, and map gimmicks.
 
+For the first complete run, `FIRST_COMPLETE_RUN_SCOPE_DELTA.md` overrides this
+document's old single-character, fixed-stage, and non-persistent sequencing limits.
+The currency, reward, equipment, and encounter vocabulary below remains active
+where compatible with that delta.
+
 ## Scope
 
 The first slice should still be a compact Godot 4.x GDScript vertical slice, but it is no longer only a card-reward platformer. It should feel like a 2D action-platform RPG-lite loop:
 
-1. Enter an authored stage.
+1. Enter a stage assembled from authored room templates or an authored boss arena.
 2. Traverse platforming sections and map gimmicks.
 3. Fight enemies and avoid traps.
 4. Collect XP, coins, and materials from drops, chests, and clear rewards.
@@ -43,7 +51,9 @@ The active PRD remains the baseline for movement, combat, card rewards, stage co
 - Define what the initial playable character can do: controls, movement verbs, combat verbs, stats, level-up hooks, skill tree branches, and equipment slots.
 - Define first-slice equipment examples before implementing inventory UI.
 - Define first-slice enemies, traps, and map gimmicks with teaching purpose, damage rules, and reward/drop hooks.
-- Preserve authored stages for the MVP. Do not replace them with procedural generation in the first slice.
+- Preserve authored platforming intent through validated room templates. Normal
+  stages may use constrained, seeded room assembly; arbitrary tile noise remains
+  excluded.
 
 ## Acceptance Criteria
 
@@ -59,9 +69,10 @@ The active PRD remains the baseline for movement, combat, card rewards, stage co
 - No online economy.
 - No player trading.
 - No complex inventory grid.
-- No procedural map generation for the first slice.
+- No unconstrained per-tile procedural map generation.
 - No large crafting tree before the player controller, combat, and boss loop are playable.
-- No multiple playable characters in the first implementation. The first slice defines one base character plus future archetype hooks.
+- The first complete run supports three playable archetypes while preserving one
+  shared critical-path movement envelope.
 - No cloud save. If material persistence is implemented, start with a small local profile only.
 
 ## Canonical First-Slice Terms

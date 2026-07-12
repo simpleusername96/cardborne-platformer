@@ -1,6 +1,7 @@
 ---
 type: plan
-status: active
+status: superseded
+superseded_by: ../../.agent/execplans/2026-07-12-actual-game-production-roadmap.md
 created: 2026-07-02
 source: User request on 2026-07-02; split from the first long MVP-ish testbed plan
 scope: Router/index for the motion test bed miniature game implementation

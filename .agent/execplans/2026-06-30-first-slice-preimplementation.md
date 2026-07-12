@@ -1,6 +1,7 @@
 ---
 type: plan
-status: active
+status: superseded
+superseded_by: ./2026-07-12-actual-game-production-roadmap.md
 created: 2026-06-30
 related:
   - docs/product/FIRST_SLICE_EXPANSION.md

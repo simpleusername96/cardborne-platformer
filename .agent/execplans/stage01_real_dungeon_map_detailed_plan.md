@@ -1,6 +1,7 @@
 ---
 type: plan
-status: active
+status: superseded
+superseded_by: ./2026-07-12-actual-game-production-roadmap.md
 created: 2026-07-03
 source: User correction that the previous real-map pass did not fully capture the intended map
 scope: Detailed implementation plan for a real Stage01-style vertical side-on dungeon map and future map-generation contract

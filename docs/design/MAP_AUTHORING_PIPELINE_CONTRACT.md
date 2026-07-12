@@ -1,8 +1,7 @@
 ---
 type: spec
-status: active
+status: draft
 created: 2026-07-05
-canonical_for: map authoring pipeline, imported stage marker schema, and resolver boundary for the testbed foundation
 source: docs/design/testbed-plan/06_external_foundation_replacement.md
 scope: First imported side-view dungeon route and future generated-pocket socket descriptors
 related:

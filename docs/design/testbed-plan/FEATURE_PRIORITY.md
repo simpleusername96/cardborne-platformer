@@ -1,6 +1,7 @@
 ---
 type: plan
-status: active
+status: superseded
+superseded_by: ../../../.agent/execplans/2026-07-12-actual-game-production-roadmap.md
 created: 2026-07-02
 source: User request on 2026-07-02 to distinguish immediate vs later features
 scope: Motion test bed feature priority boundary

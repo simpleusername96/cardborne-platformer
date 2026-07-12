@@ -1,7 +1,6 @@
 ---
 type: spec
-status: active
-canonical_for: first-slice player character controls, skills, and equipment
+status: draft
 source: docs/product/FIRST_SLICE_EXPANSION.md
 scope: First playable character and progression model
 ---
