@@ -23,7 +23,7 @@ related:
 
 Define the game that current code and future implementation must build. This is
 the product source of truth. Linked design specifications own detailed content and
-the active roadmap owns implementation order.
+a new active plan, when one exists, owns implementation order.
 
 Cardborne is not a mechanics testbed and not a collection of independent RPG
 systems. It is a compact 2D action-platform roguelite where readable movement and
@@ -321,7 +321,7 @@ The first complete run is done when a fresh player can:
 
 The release candidate additionally passes the all-character seed matrix, economy
 bounds, save round trip, boss scheduler simulation, keyboard/gamepad path, and
-1280x720/1920x1080 rendered review.
+960x540/1280x720/1920x1080 rendered review.
 
 ## Non-Goals
 

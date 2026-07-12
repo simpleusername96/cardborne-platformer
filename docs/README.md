@@ -15,11 +15,13 @@ game specifications.
 | 6 | `design/PROGRESSION_EQUIPMENT_ECONOMY.md` | Levels, cards, equipment, currencies, and settlement. |
 | 7 | `design/PLAYER_FACING_FLOW.md` | Navigation, HUD, choices, rest, settings, and result behavior. |
 | 8 | `architecture/FIRST_SLICE_ARCHITECTURE.md` | Runtime ownership and implementation contracts. |
-| 9 | `.agent/execplans/2026-07-12-actual-game-production-roadmap.md` | Active checklist and execution order. |
+| 9 | `.agent/execplans/2026-07-12-actual-game-production-roadmap.md` | Completed first-run implementation record. |
 
 ## Supporting Material
 
 - `data/RUNTIME_CATALOG_INDEX.md` maps gameplay domains to typed runtime owners.
+- `release/FIRST_COMPLETE_RUN_RC1.md` records the playable release candidate and
+  its player/operator verification paths.
 - `research/third_party_adoption_ledger.md` is the active external adoption record.
 - Dated surveys/deep dives are archived evidence; `references/` contains advisory
   candidates. Neither is product authority.
@@ -27,6 +29,7 @@ game specifications.
 
 ## Lifecycle Rule
 
-Active specs define what to build. The active plan defines what to do next.
-Evidence supports decisions but is not obeyed directly. Deleted prototype material
-is historical and should be recovered from Git only for a specific investigation.
+Active specs define released behavior. An active plan defines what to do next only
+when one exists. Evidence supports decisions but is not obeyed directly. Deleted
+prototype material is historical and should be recovered from Git only for a
+specific investigation.

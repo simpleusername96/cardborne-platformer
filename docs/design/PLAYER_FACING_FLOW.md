@@ -154,6 +154,21 @@ review size without clipping or overlap.
   enables Continue.
 - There is no card reward after the boss.
 
+## Optional Chest Replacement
+
+When `Treasure Instinct` is active, opening an optional-route chest pauses gameplay
+and presents the resolved normal reward beside one deterministic replacement.
+
+- The replacement is an unseen compatible equipment item, or a free compatible
+  forge affix when no unseen stage-cache equipment remains.
+- Choosing the replacement discards the normal currencies, materials, and
+  equipment; both options share one chest transaction ID and cannot both settle.
+- The preview names duplicate-equipment salvage and an affix replacement before
+  commitment. Replacement or modal failure falls back to the normal reward; if
+  that transaction cannot settle, cancellation reopens the chest for retry.
+- The modal has no skip path, owns keyboard/gamepad focus, and resumes gameplay
+  only after one successful commit.
+
 ## Rest, Shop, And Forge
 
 After the final Stage 2 encounter, its terminal safe room presents the stage card

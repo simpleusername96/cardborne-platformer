@@ -197,10 +197,14 @@ details. A validation failure cannot be converted into a warning and loaded.
 ```text
 RewardService.resolve(source_id, context, rng_stream) -> RewardTransaction
 RewardService.apply(transaction, run_state, profile_state) -> RewardResult
+TreasureChoiceService.build_choice(transaction, card_effect, context) -> two previews
+RunState.commit_optional_chest_choice(request_id, choice_id) -> one RewardResult
 ```
 
 Transactions carry a unique ID and applied state. UI presents choices but calls
-the service to commit one result.
+the service to commit one result. An optional-chest replacement and its normal
+reward deliberately share the chest transaction ID, so the ledger cannot apply
+both branches.
 
 ## Target Code And Data Ownership
 
@@ -229,7 +233,8 @@ the service to commit one result.
 
 - `scripts/cards/CardDefinition.gd`, `CardCatalog.gd`, `CardEffectApplier.gd`
 - `scripts/progression/EffectDefinition.gd`, `EquipmentDefinition.gd`
-- `scripts/progression/RewardService.gd`, `RewardTransaction.gd`
+- `scripts/progression/RewardService.gd`, `RewardTransaction.gd`,
+  `TreasureChoiceService.gd`
 - `scripts/progression/EquipmentCatalog.gd`, `MasteryCatalog.gd`
 - `data/cards/`, `data/equipment/`, `data/rewards/`, `data/mastery/`
 
@@ -307,7 +312,8 @@ presentation references, and `validate_definition()`.
 
 ## Implementation Sequence
 
-The active roadmap owns detailed checklists. Architecture dependency order is:
+The completed first-run roadmap records the detailed checklists. The architecture
+dependency order used for RC1 was:
 
 1. Lock typed content/effect contracts and state scopes.
 2. Complete deterministic damage/earned critical resolution and Warrior

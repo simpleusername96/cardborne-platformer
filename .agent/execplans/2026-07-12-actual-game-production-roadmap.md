@@ -1,6 +1,6 @@
 ---
 type: plan
-status: active
+status: done
 owner: BK
 created: 2026-07-12
 last_reviewed: 2026-07-12
@@ -81,13 +81,13 @@ existing foundations and accepted design catalogs into one complete run.
 ### Assumptions
 
 - Godot 4.7 stable and GDScript remain the engine/language.
-- Current rectangles/colors remain legal short-lived placeholders while gameplay
-  timing is built. Presentation milestone must replace them coherently.
-- Existing attack/profile values are tuning seeds, not balanced final values.
-- The 13 initial enemy Variant values are reviewable tuning seeds; their IDs,
-  archetype ownership, safety bounds, and no-random-instance rule are contracts.
-- JSON design catalogs are migrated to typed Resources per milestone and are never
-  loaded beside those Resources as a second runtime owner.
+- Project-original procedural vectors and synthesized cues are the accepted RC1
+  presentation family; they remain replaceable by final commercial assets.
+- Attack/profile values are accepted RC1 tuning and stay reviewable through the
+  focused combat and complete-run balance matrices.
+- The 13 enemy Variant values, IDs, archetype ownership, safety bounds, and
+  no-random-instance rule are accepted runtime contracts.
+- Typed Resources are the sole catalog owners; provisional design JSON is retired.
 
 ### Implementation Invariant
 
@@ -112,16 +112,16 @@ Additional invariants:
 
 | Concern | As-is owner/evidence | Gap | Target handling |
 | --- | --- | --- | --- |
-| Boot/flow | `RunDirector`, `Game`, production UI | Three stages, rewards, boss, death, settlement, and restart are complete. | Run final release matrix and polish failure messaging. |
-| Character data | Three complete typed profiles/kits and character runtimes | Complete-run balance remains. | Tune identities without changing shared traversal. |
-| Movement | `PlayerController`, `MovementMetrics`, generated-route validators | Shared double jump, dash, crouch, climb, and authored limits are active. | Preserve the common traversal envelope through final tuning. |
-| Combat | Deterministic resolver/result and complete Warrior/Archer/Assassin fixtures | Presentation and complete-run tuning remain. | Keep earned criticals and deterministic hit ownership intact. |
-| Enemies | Six normal archetypes, 13 exact variants, Summon Node, and Small Slime are typed and validated. | Complete-run balance remains. | Preserve archetype/variant bounds while tuning combinations. |
-| Stages | Three deterministic authored/generated stages plus authored Slime Court. | Multi-resolution and complete-run pacing review remain. | Keep the boss separate from normal-stage generation. |
-| Progression | Transaction-safe rewards, levels, 15 cards, rest/shop/forge, scoped consumables | Complete-run balance remains. | Tune without adding a second stat or currency owner. |
-| Persistence | Profile schema v1, recovery, wallet, loadouts, mastery, and exactly-once terminal settlement. | Final save/restart matrix remains. | Preserve `ProfileState` as the only public profile facade. |
-| Boss | Authored court, four exact patterns, two phases, HUD, cleanup, and settlement. | Final feel and balance pass remain. | Tune only through reviewed pattern and scheduler contracts. |
-| UI/feel | Complete production flow, boss/result states, keyboard remap, and fixed gamepad prompts. | Procedural feedback, presentation, and final robustness remain. | Finish only states backed by working systems. |
+| Boot/flow | `RunDirector`, `Game`, production UI | Closed for RC1. | Preserve with production boot, settlement, and restart validators. |
+| Character data | Three complete typed profiles/kits and character runtimes | Closed for RC1. | Preserve identities without changing shared traversal. |
+| Movement | `PlayerController`, `MovementMetrics`, generated-route validators | Closed for RC1. | Preserve the least-mobile common traversal envelope. |
+| Combat | Deterministic resolver/result and complete Warrior/Archer/Assassin fixtures | Closed for RC1. | Keep earned criticals and deterministic hit ownership intact. |
+| Enemies | Six normal archetypes, 13 exact variants, Summon Node, and Small Slime | Closed for RC1. | Preserve archetype/variant bounds in new combinations. |
+| Stages | Three deterministic authored/generated stages plus authored Slime Court | Closed for RC1. | Keep boss geometry separate from normal-stage generation. |
+| Progression | Transaction-safe rewards, levels, 15 cards, rest/shop/forge, consumables | Closed for RC1. | Avoid a second stat or currency owner during expansion. |
+| Persistence | Profile v1, recovery, wallet, loadouts, mastery, exactly-once settlement | Closed for RC1. | Preserve `ProfileState` as the public profile facade. |
+| Boss | Authored court, four exact patterns, two phases, HUD, cleanup, settlement | Closed for RC1. | Tune only through reviewed pattern and scheduler contracts. |
+| UI/feel | Complete flow, pause/settings, prompts, procedural feedback/presentation | Final commercial assets are outside RC1. | Preserve readability at all three validated resolutions. |
 
 ## As-Is / To-Be Delta Checklist
 
@@ -191,6 +191,16 @@ Additional invariants:
   loadouts, material settlement, backup recovery/migration, and loadout/mastery UI.
 - [x] Complete Warrior kit, deterministic Flooded Works, four exact Flooded enemy
   variants, poison/crumble/rope content, and the Rest & Forge economy transition.
+- [x] Complete Archer and Assassin kits, cards, equipment, mastery, and all-character
+  generated-stage matrices.
+- [x] Deterministic Broken Sanctum, complete normal enemy roster, moving platform,
+  switch gate, equipment discoveries, and final 15-card runtime catalog.
+- [x] Authored two-phase Slime King encounter, warned patterns, boss HUD, death,
+  victory, exactly-once settlement, and replay flow.
+- [x] Coherent procedural actor/terrain/feedback family, pause/settings flow,
+  keyboard/gamepad prompts, complete-run tuning, and multi-resolution QA.
+- [x] Typed-catalog reconciliation, retired design JSON, and 75-validator release
+  candidate matrix.
 
 ### Not credited as finished gameplay
 
@@ -336,8 +346,8 @@ decision, and Warrior uses all three skills through two stage cards.
 - [x] **5.9 Fun gate:** hazards teach alone before mixed pressure and never create waiting-heavy play.
   - Evidence: poison/crumble rooms have zero encounter budget and authored recovery;
     deterministic timing fixtures and rendered hazard/rope/safe-room captures show
-    readable windows without blocking the critical route. Full-run tuning remains
-    part of Milestone 9.
+    readable windows without blocking the critical route. Milestone 9's complete-run
+    matrix later confirmed the accepted pacing and economy bands.
 
 *Milestone gate:* a Warrior run through Stages 1-2 has combat, cards, economy,
 equipment, persistent rewards, and meaningful spending.
@@ -402,7 +412,9 @@ all six archetypes with complete plan/assembly validation. Production runtime
 setup, typed content spawning, and exit unlock passed for all three characters.
 Rendered 1280x720 and 960x540 captures showed coherent traversal space without HUD
 overlap. The complete 15-card catalog and Stage 3 reward sources pass focused and
-existing progression regressions.
+existing progression regressions. `Treasure Instinct` is production-reachable
+through optional chests: its modal commits either the resolved cache or one
+compatible equipment/free-forge replacement under the same transaction ID.
 
 #### Milestone 8 - Giant Slime King and complete run
 
@@ -434,20 +446,33 @@ tests pass with the real Slime Court and registered clear reward.
 
 #### Milestone 9 - Presentation, accessibility, tuning, release candidate
 
-- [ ] **9.1 Approve and import one coherent prototype asset/audio family** through
+- [x] **9.1 Approve and import one coherent prototype asset/audio family** through
   the dependency/asset ledger, or create a separately approved original set.
-- [ ] **9.2 Replace placeholder actors/terrain while preserving collision readability.**
-- [ ] **9.3 Add animation-state timing, hit pause, bounded shake, particles, and
+- [x] **9.2 Replace placeholder actors/terrain while preserving collision readability.**
+- [x] **9.3 Add animation-state timing, hit pause, bounded shake, particles, and
   distinct audio cues with intensity settings.**
-- [ ] **9.4 Complete production UI states and keyboard/gamepad prompt switching.**
-- [ ] **9.5 Run 1280x720, 1920x1080, and 960x540 robustness inspection.**
-- [ ] **9.6 Run economy/card/equipment/mastery balance review over complete runs.**
-- [ ] **9.7 Run final seed, save, boss, death, clear, restart, keyboard/gamepad matrix.**
-- [ ] **9.8 Reconcile runtime IDs/values with specs and retire migrated design JSON.**
-- [ ] **9.9 Produce release notes and one concise player/operator test path.**
+- [x] **9.4 Complete production UI states and keyboard/gamepad prompt switching.**
+- [x] **9.5 Run 1280x720, 1920x1080, and 960x540 robustness inspection.**
+- [x] **9.6 Run economy/card/equipment/mastery balance review over complete runs.**
+- [x] **9.7 Run final seed, save, boss, death, clear, restart, keyboard/gamepad matrix.**
+- [x] **9.8 Reconcile runtime IDs/values with specs and retire migrated design JSON.**
+- [x] **9.9 Produce release notes and one concise player/operator test path.**
 
 *Milestone gate:* a fresh user can understand, enjoy, complete, fail, and replay
 the run without debug narration or avoidable confusion.
+
+Gate evidence: one repository-original procedural family now owns player/enemy
+silhouettes, regional terrain, hit feedback, and ten synthesized cues; the adoption
+ledger records its origin and validation. Production flow includes pause, abandon
+confirmation, settings return, keyboard remapping, fixed gamepad controls, and
+automatic prompt switching. Rendered 960x540, 1280x720, and 1920x1080 captures show
+no clipping or incoherent overlap, including the exclusive optional-chest reward
+modal and three reviewed safe-entry rooms. Fifty-four deterministic complete-run
+scenarios
+cover three characters, six seeds, and three play styles; all finish at level 5-6,
+exercise meaningful spending, and leave equipment/mastery progress. The final
+matrix passes all 75 focused validators, including 1,000 generated seeds with zero
+fallbacks, save recovery, boss victory/death, settlement, restart, and input paths.
 
 ## Test Plan
 
@@ -522,19 +547,20 @@ Rework before widening content when:
 
 ## Guard Checks
 
-- [ ] No references to retired testbed scenes, inputs, flags, docs, or handoffs.
-- [ ] No active Markdown links to deleted files.
-- [ ] No character/card/equipment ID branch in shared movement.
-- [ ] No UI writes gameplay/save dictionaries.
-- [ ] No enemy embeds reward quantities.
-- [ ] No room embeds economy or final enemy selection.
-- [ ] No generated required transition bypasses movement validation.
-- [ ] No checkpoint/entry/exit starts under active pressure.
-- [ ] No card offer is incompatible, capped, or dead.
-- [ ] No persistent operation destroys the only valid save.
-- [ ] No boss pattern/chain bypasses legality and cleanup.
-- [ ] No package/asset enters without approval, pin, license, wrapper, and ledger.
-- [ ] No milestone is marked complete from docs/JSON alone.
+- [x] No production runtime dependency on retired testbed scenes, inputs, flags,
+  docs, or handoffs; historical retirement records remain explicit.
+- [x] No active Markdown links to deleted files.
+- [x] No character/card/equipment ID branch in shared movement.
+- [x] No UI writes gameplay/save dictionaries.
+- [x] No enemy embeds reward quantities.
+- [x] No room embeds economy or final enemy selection.
+- [x] No generated required transition bypasses movement validation.
+- [x] No checkpoint/entry/exit starts under active pressure.
+- [x] No card offer is incompatible, capped, or dead.
+- [x] No persistent operation destroys the only valid save.
+- [x] No boss pattern/chain bypasses legality and cleanup.
+- [x] No package/asset enters without approval, pin, license, wrapper, and ledger.
+- [x] No milestone is marked complete from docs/JSON alone.
 
 ## Rollback / Safety
 
@@ -568,16 +594,15 @@ Rework before widening content when:
 | Three-character multiplication | Content/test matrix explodes. | Warrior proves contracts; roster breadth only at M6. |
 | Progression layers overlap | Rewards feel like invisible stat noise. | Distinct responsibilities and behavior-first cards/equipment/mastery. |
 | Persistent power creates grind | Base game feels unfair. | Base-loadout gates and bounded option unlocks. |
-| Placeholder presentation hides timing | Combat cannot be judged. | Readable tells now; cohesive asset/animation pass after loop works. |
+| Placeholder presentation hides timing | Combat cannot be judged. | Coherent procedural tells, effects, and cues passed rendered/runtime checks. |
 | External framework captures architecture | Slow integration/removal. | Approval-gated isolated spikes only. |
-| Docs drift from runtime | Agents implement conflicting game. | Catalog validators and M9 reconciliation; specs updated only for accepted changes. |
+| Docs drift from runtime | Agents implement conflicting game. | Typed catalog validators and RC1 reconciliation keep one runtime owner. |
 
 ## Open Questions
 
-No unresolved product decision blocks Milestone 1. New questions should be added
-here only when they change product scope, save compatibility, dependency adoption,
-or a durable content contract. Tuning questions belong to playtest evidence and do
-not block implementation.
+No unresolved product decision blocks RC1. Future questions belong to a new plan
+when they change product scope, save compatibility, dependency adoption, or a
+durable content contract. Tuning questions belong to owner playtest evidence.
 
 ## Decision Notes
 
@@ -615,18 +640,16 @@ boss, settle/reload persistent rewards, and begin another run.
 - Mark blocked only after the same external condition prevents progress for three
   consecutive turns and no unaffected task remains.
 
-## Next Steps
+## Post-RC Opportunities
 
-1. Implement Milestone 3's typed room catalog, stage plan, planner, and validators.
-2. Expand the authored Lower Ruins room set around decisions and recovery promises.
-3. Add Shooter, hazards, deterministic allocation, fallback, and seed/property gates.
-4. Keep the complete combat -> level -> card -> replay path green while replacing
-   the temporary repeated two-room route with generated Stage 1.
+This plan has no remaining required work. Future work should begin from owner
+playtest feedback and a new scoped plan. Likely directions are final commercial
+art/audio, onboarding improvements, broader content, and deeper feel/balance tuning;
+none is part of this completed first-run roadmap.
 
 ## Handoff Summary
 
-Read `docs/README.md`, the Game Blueprint, Player Character Systems, encounter spec,
-map authoring/generation specs, progression/economy spec, and architecture before
-coding. Finish the Milestone 1 fun gate on the playable two-room Warrior route,
-then implement Milestone 2 through the same production path; do not produce another
-planning-only or menu-only batch.
+The first complete-run roadmap is finished. Read `docs/README.md`, the canonical
+specs, and `docs/release/FIRST_COMPLETE_RUN_RC1.md` before changing released
+behavior. Use `tools/validate_release_candidate.ps1` for the core gate and add
+`-Full` before a new release handoff.

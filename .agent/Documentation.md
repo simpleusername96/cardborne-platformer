@@ -16,10 +16,17 @@
 - Persistent profile v1, twelve equipment items, eighteen mastery nodes, material
   settlement, loadouts, save recovery, temporary forge, and scoped consumables are
   active production systems.
+- All fifteen cards are production-reachable. `Treasure Instinct` pauses an
+  optional chest on an exclusive normal-versus-equipment/free-forge choice whose
+  single transaction ID prevents duplicate settlement.
 - Slime Court completes the run with four exact warned patterns, two phases,
   stagger, two capped adds, boss HUD, exactly-once Boss Core settlement, and a
   final build/material summary. Fixed gamepad controls and automatic prompt
   switching are active alongside keyboard remapping.
+- A project-original procedural presentation family supplies distinct actor
+  silhouettes, regional terrain, hit feedback, bounded camera response, and ten
+  synthesized gameplay cues. Pause, settings return, and abandon confirmation are
+  complete production states.
 - `docs/product/2d_platform_action_card_game_prd.md` is the canonical product and
   first-complete-run blueprint.
 - Active content specs under `docs/design/` define characters, progression,
@@ -27,10 +34,10 @@
   player-facing flow.
 - `docs/architecture/FIRST_SLICE_ARCHITECTURE.md` defines runtime ownership and
   implementation boundaries.
-- `.agent/execplans/2026-07-12-actual-game-production-roadmap.md` is the only active
-  ExecPlan.
-- JSON under `data/design/first_slice/` is accepted migration input for future typed
-  Godot Resources, not a runtime schema.
+- `.agent/execplans/2026-07-12-actual-game-production-roadmap.md` is the completed
+  implementation record; there is no active ExecPlan.
+- Provisional design JSON was retired after all runtime owners moved to typed Godot
+  Resources. Git history remains the archive.
 
 ## Authority
 
@@ -40,7 +47,7 @@ Read in this order:
 2. `docs/README.md`.
 3. Canonical product blueprint.
 4. Active design and architecture specs.
-5. Active production roadmap for execution order.
+5. A new active ExecPlan, when one exists, for execution order.
 6. Current code/tests as implementation evidence.
 7. Research/reference documents as advisory evidence.
 
@@ -70,14 +77,12 @@ Read in this order:
 
 ## Current Risks
 
-- Archer and Assassin rules are isolated behind character combat runtimes. The
-  shared controller still retains legacy Warrior helper implementation and should
-  shed it during the final structural quality pass rather than absorb new rules.
-- The three normal stages, 15-card catalog, authored boss, and terminal settlement
-  are complete. Procedural presentation, accessibility, and final tuning remain.
-- Flooded Works has deterministic geometry/runtime coverage, but complete-run
-  difficulty and pacing still need Milestone 9 playtest tuning.
-- JSON design catalogs remain migration inputs until all typed runtime content lands.
+- Presentation is a coherent project-original prototype family, not final
+  commercial art or recorded audio.
+- Automated balance covers deterministic complete-run simulations; human feel and
+  onboarding feedback should drive the next tuning plan.
+- Broadening room, enemy, card, or boss content will expand the seed and roster
+  matrices and must preserve the current least-mobile traversal contract.
 
 ## Run / Verify
 
@@ -97,11 +102,14 @@ Read in this order:
 - Boss roster: `./tools/godot.ps1 --path . --headless --script res://tools/validate_boss_roster_matrix.gd`
 - Enemy catalog: `./tools/godot.ps1 --path . --headless --script res://tools/validate_enemy_catalog.gd`
 - Design catalogs: `./tools/godot.ps1 --path . --headless --script res://tools/validate_design_catalogs.gd`
+- Remaining card runtime: `./tools/godot.ps1 --path . --headless --script res://tools/validate_remaining_cards_runtime.gd`
+- Release candidate core matrix: `./tools/validate_release_candidate.ps1`
+- Full focused regression matrix: `./tools/validate_release_candidate.ps1 -Full`
 - Focused validators: `Get-ChildItem tools/validate_*.gd`
 - Git status: `git status --short`
 
 ## Next Implementation Entry
 
-Continue Milestone 9: integrate procedural feedback/audio, finish presentation and
-robustness, run complete-run balance/save/input matrices, reconcile catalogs, and
-produce the release-candidate handoff.
+The first complete-run roadmap is done. Start the next implementation only from
+owner playtest findings or an explicitly scoped expansion plan; do not reopen the
+retired testbed or parallel JSON catalogs.

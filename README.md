@@ -42,14 +42,18 @@ If the local runtime is missing, install it with:
 .\tools\setup-godot.ps1
 ```
 
-## Active Implementation
+## Release Candidate
 
-Follow the active roadmap in milestone-sized batches. The production sequence is:
+The first complete run is implemented: choose Warrior, Archer, or Assassin; clear
+three constrained seeded stages; make level, card, shop, forge, equipment, and
+mastery decisions; then defeat or lose to the two-phase Slime King. The run settles
+persistent materials and equipment before replay or return to the main menu.
+Optional chests also support the `Treasure Instinct` exclusive reward choice,
+replacing rather than duplicating the resolved cache reward.
 
-1. Finish a typed Warrior combat room and reward/build loop.
-2. Assemble the first generated stage from validated authored rooms.
-3. Add persistence, equipment, mastery, Stage 2, and the complete Warrior kit.
-4. Complete Archer and Assassin, Stage 3, the boss, and full-run polish.
+See `docs/release/FIRST_COMPLETE_RUN_RC1.md` for the player path, known limitation,
+and release validation evidence. The completed roadmap remains an implementation
+record rather than an active checklist.
 
 ## Runtime Catalogs
 
@@ -66,4 +70,11 @@ Validate production boot and the current playable stage with:
 ```powershell
 .\tools\godot.ps1 --path . --headless --script res://tools/validate_production_boot.gd
 .\tools\godot.ps1 --path . --headless --script res://tools/validate_production_stage.gd
+```
+
+Run the release gate with:
+
+```powershell
+.\tools\validate_release_candidate.ps1
+.\tools\validate_release_candidate.ps1 -Full
 ```
