@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="BossPatternDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/bosses/BossPatternDefinition.gd" id="1_definition"]
+
+[resource]
+script = ExtResource("1_definition")
+id = &"small_slime_summon"
+display_name = "Small Slime Summon"
+content_version = 1
+tags = Array[StringName]([&"boss_pattern", &"summon", &"adds"])
+presentation_key = &"slime_king_small_slime_summon"
+eligible_phases = Array[int]([1, 2])
+startup_time = 0.7
+active_time = 0.0
+recovery_time = 1.0
+neutral_time = 0.0
+active_semantics = &"summon_activation"
+startup_warning = "Show two safe spawn markers before any Small Slime activates."
+response_contract = "Clear active adds or use the boss recovery; markers never appear on the player."
+punish_contract = "The boss remains punishable while newly activated adds can be read and prioritized."
+counterplay_tags = Array[StringName]([&"clear_adds", &"use_boss_recovery", &"markers_avoid_player"])
+legality_tags = Array[StringName]([&"active_add_cap_two", &"requires_safe_spawn_zones"])
+required_context_tags = Array[StringName]([&"summon_spawn_zones_safe"])
+blocked_context_tags = Array[StringName]([&"active_add_cap_reached"])
+maximum_spawned_adds = 2
+active_add_cap = 2
+spawn_markers_avoid_player = true
+cleanup_owner = &"slime_king"

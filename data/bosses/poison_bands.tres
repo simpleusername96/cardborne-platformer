@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="BossPatternDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/bosses/BossPatternDefinition.gd" id="1_definition"]
+[ext_resource type="Resource" path="res://data/bosses/small_slime_summon.tres" id="2_followup"]
+
+[resource]
+script = ExtResource("1_definition")
+id = &"poison_bands"
+display_name = "Poison Bands"
+content_version = 1
+tags = Array[StringName]([&"boss_pattern", &"persistent_zone", &"floor_control"])
+presentation_key = &"slime_king_poison_bands"
+eligible_phases = Array[int]([1, 2])
+startup_time = 0.9
+active_time = 2.2
+recovery_time = 0.8
+neutral_time = 0.0
+active_semantics = &"persistent_zone_window"
+startup_warning = "Warn every alternating floor band before poison becomes active."
+response_contract = "Move to the guaranteed safe floor or platform area, which remains at least 35 percent."
+punish_contract = "Use stable safe space and the cleanup recovery without entering an active band."
+counterplay_tags = Array[StringName]([&"move_to_safe_floor", &"use_platform", &"punish_cleanup"])
+legality_tags = Array[StringName]([&"requires_safe_floor", &"alternating_bands"])
+minimum_safe_floor_fraction = 0.35
+cleanup_owner = &"slime_king"
+reviewed_phase_two_followup = ExtResource("2_followup")
+reviewed_followup_neutral_time = 0.0
+reviewed_followup_required_context_tags = Array[StringName]([&"summon_spawn_zones_safe", &"poison_summon_zones_non_overlapping"])
+reviewed_followup_blocked_context_tags = Array[StringName]([&"active_add_cap_reached"])
