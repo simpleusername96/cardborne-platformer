@@ -104,6 +104,7 @@ func _validate_scene_contract(data: RoomTemplateData, errors: PackedStringArray)
 	_validate_enemy_anchor_contracts(data, errors)
 	_validate_hazard_anchor_contracts(data, errors)
 	_validate_reward_anchor_contracts(data, errors)
+	_validate_moving_platform_contracts(data, errors)
 
 
 func _validate_socket_markers(data: RoomTemplateData, errors: PackedStringArray) -> void:
@@ -224,3 +225,132 @@ func _validate_reward_anchor_contracts(
 					"Room '%s' reward anchor '%s' role does not match its data contract."
 					% [room_id, contract.id]
 				)
+
+
+func _validate_moving_platform_contracts(
+	data: RoomTemplateData,
+	errors: PackedStringArray
+) -> void:
+	var platforms: Array[MovingPlatform] = []
+	_collect_moving_platforms(self, platforms)
+	for platform in platforms:
+		for platform_error in platform.validate_configuration():
+			errors.append("Room '%s': %s" % [room_id, platform_error])
+		if data.get_moving_platform_anchor_by_path_id(platform.path_id) == null:
+			errors.append(
+				"Room '%s' has undeclared moving platform path '%s'."
+				% [room_id, platform.path_id]
+			)
+
+	for contract in data.moving_platform_anchors:
+		if contract == null:
+			continue
+		var platform := _find_moving_platform(platforms, contract.path_id)
+		if platform == null:
+			errors.append(
+				"Room '%s' declares missing moving platform path '%s'."
+				% [room_id, contract.path_id]
+			)
+			continue
+		_validate_moving_platform_geometry(contract, platform, errors)
+
+
+func _validate_moving_platform_geometry(
+	contract: RoomMovingPlatformAnchorData,
+	platform: MovingPlatform,
+	errors: PackedStringArray
+) -> void:
+	var parent := platform.get_parent() as Node2D
+	if parent == null:
+		errors.append("Room '%s' moving platform '%s' needs a Node2D parent." % [room_id, contract.path_id])
+		return
+	var start := to_local(parent.to_global(platform.get_authored_start_position()))
+	var end := to_local(parent.to_global(platform.get_authored_end_position()))
+	if not start.is_equal_approx(contract.start_position) or not end.is_equal_approx(contract.end_position):
+		errors.append(
+			"Room '%s' moving platform '%s' endpoints do not match its data contract."
+			% [room_id, contract.path_id]
+		)
+	if (
+		not is_equal_approx(platform.travel_time, contract.travel_time)
+		or not is_equal_approx(platform.start_wait_time, contract.start_wait_time)
+		or not is_equal_approx(platform.end_wait_time, contract.end_wait_time)
+	):
+		errors.append(
+			"Room '%s' moving platform '%s' timing does not match its data contract."
+			% [room_id, contract.path_id]
+		)
+
+	var endpoints := [start, end]
+	for index in contract.wait_pad_ids.size():
+		var wait_pad := _get_objective_anchor_by_id(contract.wait_pad_ids[index])
+		if wait_pad == null or wait_pad.safe_radius <= 0.0:
+			errors.append(
+				"Room '%s' moving platform '%s' wait pad '%s' is missing or unsafe."
+				% [room_id, contract.path_id, contract.wait_pad_ids[index]]
+			)
+			continue
+		var pad_position := to_local(wait_pad.global_position)
+		var boarding_distance := wait_pad.safe_radius + platform.platform_size.x * 0.5
+		if pad_position.distance_to(endpoints[index]) > boarding_distance:
+			errors.append(
+				"Room '%s' moving platform '%s' wait pad '%s' cannot reach its endpoint."
+				% [room_id, contract.path_id, contract.wait_pad_ids[index]]
+			)
+
+	var recovery := get_anchor_by_id(&"Recovery", contract.fall_recovery_id)
+	if recovery == null or recovery.safe_radius < contract.checkpoint_safe_radius:
+		errors.append(
+			"Room '%s' moving platform '%s' has no matching checkpoint-safe recovery."
+			% [room_id, contract.path_id]
+		)
+		return
+	var recovery_position := to_local(recovery.global_position)
+	var platform_radius := platform.platform_size.length() * 0.5
+	if _distance_to_segment(recovery_position, start, end) < contract.checkpoint_safe_radius + platform_radius:
+		errors.append(
+			"Room '%s' moving platform '%s' enters its recovery safe radius."
+			% [room_id, contract.path_id]
+		)
+
+
+func _collect_moving_platforms(node: Node, result: Array[MovingPlatform]) -> void:
+	for child in node.get_children():
+		if child is MovingPlatform:
+			result.append(child)
+		_collect_moving_platforms(child, result)
+
+
+func _find_moving_platform(
+	platforms: Array[MovingPlatform],
+	path_id: StringName
+) -> MovingPlatform:
+	for platform in platforms:
+		if platform.path_id == path_id:
+			return platform
+	return null
+
+
+func _get_objective_anchor_by_id(anchor_id: StringName) -> RoomAnchor:
+	var objective := get_node_or_null("Anchors/Objective")
+	if objective == null:
+		return null
+	return _find_room_anchor(objective, anchor_id)
+
+
+func _find_room_anchor(node: Node, anchor_id: StringName) -> RoomAnchor:
+	for child in node.get_children():
+		if child is RoomAnchor and child.anchor_id == anchor_id:
+			return child
+		var nested := _find_room_anchor(child, anchor_id)
+		if nested != null:
+			return nested
+	return null
+
+
+func _distance_to_segment(point: Vector2, start: Vector2, end: Vector2) -> float:
+	var segment := end - start
+	if segment.length_squared() <= 0.000001:
+		return point.distance_to(start)
+	var weight := clampf((point - start).dot(segment) / segment.length_squared(), 0.0, 1.0)
+	return point.distance_to(start + segment * weight)

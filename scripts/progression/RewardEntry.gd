@@ -2,6 +2,8 @@ class_name RewardEntry
 extends Resource
 
 const TYPE_CURRENCY := &"currency"
+const TYPE_EQUIPMENT_DISCOVERY := &"equipment_discovery"
+const TYPES: Array[StringName] = [TYPE_CURRENCY, TYPE_EQUIPMENT_DISCOVERY]
 
 @export var reward_type: StringName = TYPE_CURRENCY
 @export var content_id: StringName
@@ -12,11 +14,13 @@ const TYPE_CURRENCY := &"currency"
 
 func validate_definition() -> PackedStringArray:
 	var errors := PackedStringArray()
-	if reward_type != TYPE_CURRENCY:
+	if not TYPES.has(reward_type):
 		errors.append("Reward entry uses unsupported type '%s'." % reward_type)
 	ContentId.validate(errors, "Reward content ID", content_id)
 	if minimum_amount <= 0 or maximum_amount < minimum_amount:
 		errors.append("Reward '%s' amount range is invalid." % content_id)
+	if reward_type == TYPE_EQUIPMENT_DISCOVERY and (minimum_amount != 1 or maximum_amount != 1):
+		errors.append("Equipment discovery '%s' must resolve exactly once." % content_id)
 	if not is_finite(chance) or chance < 0.0 or chance > 1.0:
 		errors.append("Reward '%s' chance must be between zero and one." % content_id)
 	return errors

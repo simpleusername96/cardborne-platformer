@@ -1,6 +1,10 @@
 class_name StageRuntimeContentSpawner
 extends RefCounted
 
+const GENERIC_REWARD_SCENE := preload("res://scenes/stages/components/StageRewardInteractable.tscn")
+const CHEST_REWARD_SCENE := preload("res://scenes/stages/components/ChestInteractable.tscn")
+const MATERIAL_REWARD_SCENE := preload("res://scenes/stages/components/MaterialNode.tscn")
+
 
 static func spawn(
 	plan: StagePlan,
@@ -79,14 +83,16 @@ static func spawn(
 			if anchor == null:
 				errors.append("Reward placement '%s' cannot resolve its anchor." % placement.id)
 				break
-			var reward := StageRewardInteractable.new()
+			var reward := instantiate_reward_source(placement.reward_role)
+			if reward == null:
+				errors.append("Reward placement '%s' has no valid source scene." % placement.id)
+				break
 			reward.name = String(placement.id).to_pascal_case()
-			reward.reward_table_id = placement.reward_table_id
-			reward.transaction_id = StringName("%d:%d:%s" % [
-				plan.run_seed,
-				plan.stage_index,
-				placement.id,
-			])
+			reward.configure_reward(
+				placement.reward_role,
+				placement.reward_table_id,
+				StringName("%d:%d:%s" % [plan.run_seed, plan.stage_index, placement.id])
+			)
 			reward.position = actors_root.to_local(anchor.global_position)
 			actors_root.add_child(reward)
 			spawned_nodes.append(reward)
@@ -132,6 +138,22 @@ static func spawn(
 		fall_reset,
 		errors
 	)
+
+
+static func instantiate_reward_source(reward_role: StringName) -> StageRewardInteractable:
+	var scene: PackedScene
+	match reward_role:
+		&"cache_reward", &"optional_route":
+			scene = CHEST_REWARD_SCENE
+		&"material_node":
+			scene = MATERIAL_REWARD_SCENE
+		_:
+			scene = GENERIC_REWARD_SCENE
+	var source := scene.instantiate() as StageRewardInteractable
+	if source != null:
+		source.reward_role = reward_role
+		source.set_meta("reward_role", reward_role)
+	return source
 
 
 static func _terminal_host(

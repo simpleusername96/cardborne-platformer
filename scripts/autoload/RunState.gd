@@ -243,26 +243,26 @@ func apply_reward_transaction(transaction: RewardTransaction) -> RewardResult:
 			"Reward transaction was already applied."
 		)
 	var grants := transaction.get_grants()
+	var equipment_ids := transaction.get_equipment_discoveries()
+	var validation_error := _validate_reward_contents(grants, equipment_ids)
+	if not validation_error.is_empty():
+		return RewardResult.new(
+			false,
+			false,
+			transaction.id,
+			{},
+			validation_error
+		)
+	var equipment_settlement := _settle_equipment_discoveries(transaction.id, equipment_ids)
+	if not bool(equipment_settlement.get("ok", false)):
+		return RewardResult.new(
+			false,
+			false,
+			transaction.id,
+			{},
+			String(equipment_settlement.get("message", "Equipment discovery failed."))
+		)
 	var consumable_salvage_eligible := _is_material_node_reward(transaction)
-	for currency_id in grants:
-		var amount_value: Variant = grants[currency_id]
-		if (
-			not (amount_value is int or amount_value is float)
-			or not is_equal_approx(float(amount_value), round(float(amount_value)))
-			or int(amount_value) <= 0
-			or (
-				not RUN_CURRENCIES.has(String(currency_id))
-				and not MATERIAL_CURRENCIES.has(String(currency_id))
-			)
-		):
-			return RewardResult.new(
-				false,
-				false,
-				transaction.id,
-				{},
-				"Reward transaction contains an invalid grant."
-			)
-
 	for currency_id in grants:
 		var amount := int(grants[currency_id])
 		if (
@@ -301,7 +301,8 @@ func apply_reward_transaction(transaction: RewardTransaction) -> RewardResult:
 		false,
 		transaction.id,
 		grants,
-		"Reward applied."
+		"Reward applied.",
+		equipment_settlement["results"]
 	)
 	_publish_snapshot()
 	SignalBus.reward_applied.emit(result.to_dictionary())
@@ -312,6 +313,59 @@ func apply_reward_transaction(transaction: RewardTransaction) -> RewardResult:
 
 func has_applied_reward(transaction_id: StringName) -> bool:
 	return _applied_reward_ids.has(String(transaction_id))
+
+
+func _validate_reward_contents(
+	grants: Dictionary,
+	equipment_ids: Array[StringName]
+) -> String:
+	for currency_id in grants:
+		var amount_value: Variant = grants[currency_id]
+		if (
+			not (amount_value is int or amount_value is float)
+			or not is_equal_approx(float(amount_value), round(float(amount_value)))
+			or int(amount_value) <= 0
+			or (
+				not RUN_CURRENCIES.has(String(currency_id))
+				and not MATERIAL_CURRENCIES.has(String(currency_id))
+			)
+		):
+			return "Reward transaction contains an invalid grant."
+	var seen_equipment: Dictionary = {}
+	for item_id in equipment_ids:
+		if item_id == &"" or seen_equipment.has(item_id) or not ProfileState.has_equipment_definition(item_id):
+			return "Reward transaction contains invalid equipment discovery."
+		seen_equipment[item_id] = true
+	return ""
+
+
+func _settle_equipment_discoveries(
+	transaction_id: StringName,
+	equipment_ids: Array[StringName]
+) -> Dictionary:
+	var results: Array[Dictionary] = []
+	for index in equipment_ids.size():
+		var item_id := equipment_ids[index]
+		var profile_transaction_id := StringName(
+			"reward:%s:equipment:%02d:%s" % [transaction_id, index, item_id]
+		)
+		var discovery: Dictionary = ProfileState.discover_equipment(
+			item_id,
+			profile_transaction_id
+		)
+		if not bool(discovery.get("ok", false)):
+			return {
+				"ok": false,
+				"message": discovery.get("message", "Equipment discovery failed."),
+			}
+		results.append({
+			"item_id": String(item_id),
+			"profile_transaction_id": String(profile_transaction_id),
+			"duplicate": bool(discovery.get("duplicate", false)),
+			"persisted": bool(discovery.get("persisted", true)),
+			"payload": discovery.get("payload", {}).duplicate(true),
+		})
+	return {"ok": true, "results": results}
 
 
 func get_pending_level_choice_count() -> int:

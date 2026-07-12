@@ -12,15 +12,21 @@ static func resolve(
 	var rng := RandomNumberGenerator.new()
 	rng.seed = stable_seed(run_seed, String(transaction_id))
 	var grants: Dictionary = {}
+	var equipment_discoveries: Array[StringName] = []
 	for entry in table.entries:
 		if entry == null:
 			continue
 		var amount := entry.resolve_amount(rng)
 		if amount <= 0:
 			continue
-		var content_key := String(entry.content_id)
-		grants[content_key] = int(grants.get(content_key, 0)) + amount
-	return RewardTransaction.new(transaction_id, table.id, grants)
+		match entry.reward_type:
+			RewardEntry.TYPE_CURRENCY:
+				var content_key := String(entry.content_id)
+				grants[content_key] = int(grants.get(content_key, 0)) + amount
+			RewardEntry.TYPE_EQUIPMENT_DISCOVERY:
+				for _discovery in amount:
+					equipment_discoveries.append(entry.content_id)
+	return RewardTransaction.new(transaction_id, table.id, grants, equipment_discoveries)
 
 
 static func apply(transaction: RewardTransaction, run_state: Node) -> RewardResult:

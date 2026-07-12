@@ -117,6 +117,11 @@ func owns_equipment(item_id: String) -> bool:
 	return _data.owned_equipment.has(item_id)
 
 
+func has_equipment_definition(item_id: StringName) -> bool:
+	_ensure_initialized()
+	return equipment_catalog != null and equipment_catalog.has_item(item_id)
+
+
 func discover_equipment(item_id: StringName, transaction_id: StringName) -> Dictionary:
 	_ensure_initialized()
 	return _commit(

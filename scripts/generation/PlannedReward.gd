@@ -5,6 +5,7 @@ var _id: StringName
 var _room_id: StringName
 var _anchor_id: StringName
 var _reward_table_id: StringName
+var _reward_role: StringName
 var _content_version: int
 var _budget_cost: int
 
@@ -20,6 +21,9 @@ var anchor_id: StringName:
 var reward_table_id: StringName:
 	get:
 		return _reward_table_id
+var reward_role: StringName:
+	get:
+		return _reward_role
 var content_version: int:
 	get:
 		return _content_version
@@ -34,12 +38,14 @@ func _init(
 	placement_anchor_id: StringName = &"",
 	table_id: StringName = &"",
 	table_content_version: int = 0,
-	exact_budget_cost: int = 0
+	exact_budget_cost: int = 0,
+	placement_reward_role: StringName = &""
 ) -> void:
 	_id = placement_id
 	_room_id = placement_room_id
 	_anchor_id = placement_anchor_id
 	_reward_table_id = table_id
+	_reward_role = placement_reward_role
 	_content_version = table_content_version
 	_budget_cost = exact_budget_cost
 
@@ -50,6 +56,7 @@ func to_dictionary() -> Dictionary:
 		"room_id": String(_room_id),
 		"anchor_id": String(_anchor_id),
 		"reward_table_id": String(_reward_table_id),
+		"reward_role": String(_reward_role),
 		"content_version": _content_version,
 		"budget_cost": _budget_cost,
 	}
@@ -62,5 +69,6 @@ static func from_dictionary(data: Dictionary) -> PlannedReward:
 		StringName(str(data.get("anchor_id", ""))),
 		StringName(str(data.get("reward_table_id", ""))),
 		int(data.get("content_version", 0)),
-		int(data.get("budget_cost", 0))
+		int(data.get("budget_cost", 0)),
+		StringName(str(data.get("reward_role", "")))
 	)

@@ -24,6 +24,7 @@ const ROLES: Array[StringName] = [
 @export var enemy_anchors: Array[RoomEnemyAnchorData] = []
 @export var hazard_anchors: Array[RoomHazardAnchorData] = []
 @export var reward_anchors: Array[RoomRewardAnchorData] = []
+@export var moving_platform_anchors: Array[RoomMovingPlatformAnchorData] = []
 @export var recovery_anchor_ids: Array[StringName] = []
 @export var estimated_seconds: Vector2i = Vector2i(20, 60)
 @export var variant_group: StringName
@@ -59,6 +60,7 @@ func validate_definition() -> PackedStringArray:
 	_validate_enemy_anchors(errors)
 	_validate_hazard_anchors(errors)
 	_validate_reward_anchors(errors)
+	_validate_moving_platform_anchors(errors)
 	for anchor_contract in [
 		["recovery", recovery_anchor_ids],
 	]:
@@ -144,6 +146,15 @@ func get_reward_anchor_ids() -> Array[StringName]:
 	return ids
 
 
+func get_moving_platform_anchor_by_path_id(
+	path_id: StringName
+) -> RoomMovingPlatformAnchorData:
+	for anchor in moving_platform_anchors:
+		if anchor != null and anchor.path_id == path_id:
+			return anchor
+	return null
+
+
 func _validate_enemy_anchors(errors: PackedStringArray) -> void:
 	var seen_ids: Dictionary = {}
 	var covered_roles: Dictionary = {}
@@ -196,6 +207,20 @@ func _validate_reward_anchors(errors: PackedStringArray) -> void:
 		if seen_ids.has(anchor.id):
 			errors.append("Room template '%s' repeats reward anchor '%s'." % [id, anchor.id])
 		seen_ids[anchor.id] = true
+		for anchor_error in anchor.validate_definition():
+			errors.append("Room template '%s': %s" % [id, anchor_error])
+
+
+func _validate_moving_platform_anchors(errors: PackedStringArray) -> void:
+	var seen_paths: Dictionary = {}
+	for anchor_index in moving_platform_anchors.size():
+		var anchor := moving_platform_anchors[anchor_index]
+		if anchor == null:
+			errors.append("Room template '%s' moving platform anchor %d is null." % [id, anchor_index])
+			continue
+		if seen_paths.has(anchor.path_id):
+			errors.append("Room template '%s' repeats moving platform path '%s'." % [id, anchor.path_id])
+		seen_paths[anchor.path_id] = true
 		for anchor_error in anchor.validate_definition():
 			errors.append("Room template '%s': %s" % [id, anchor_error])
 
