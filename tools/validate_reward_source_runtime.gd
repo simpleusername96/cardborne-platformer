@@ -35,6 +35,7 @@ func _run() -> void:
 	await _validate_single_claim_and_replay()
 	_validate_material_node_scope()
 	_validate_equipment_discovery()
+	_validate_production_equipment_pools()
 	_finish()
 
 
@@ -205,6 +206,75 @@ func _validate_equipment_discovery() -> void:
 	malformed.content_id = &"bell_hammer"
 	malformed.maximum_amount = 2
 	_expect(not malformed.validate_definition().is_empty(), "equipment discovery amount ranges should reject")
+
+
+func _validate_production_equipment_pools() -> void:
+	_profile_state.initialize_for_tests(EQUIPMENT_CATALOG, MASTERY_CATALOG)
+	_expect(_run_state.start_new_run(0, 8401), "production equipment fixture should start")
+	var cache := REWARD_CATALOG.get_table(&"optional_cache_ruin")
+	_expect(
+		cache != null
+		and cache.equipment_pool_id == RewardTable.EQUIPMENT_POOL_STAGE_CACHE
+		and is_equal_approx(cache.equipment_pool_chance, 1.0),
+		"optional cache should expose one guaranteed typed stage-cache policy"
+	)
+	var first := RewardService.resolve_with_context(
+		cache,
+		&"8401:0:cache:first",
+		8401,
+		_run_state.get_reward_resolution_context()
+	)
+	var first_ids := first.get_equipment_discoveries()
+	_expect(first_ids.size() == 1, "first stage cache should discover one compatible item")
+	if first_ids.size() == 1:
+		var item := EQUIPMENT_CATALOG.get_item(first_ids[0])
+		_expect(item != null and item.is_compatible(&"warrior"), "cache item should fit Warrior")
+		_expect(RewardService.apply(first, _run_state).applied, "stage cache discovery should apply")
+
+	var second := RewardService.resolve_with_context(
+		cache,
+		&"8401:0:cache:second",
+		8401,
+		_run_state.get_reward_resolution_context()
+	)
+	_expect(
+		second.get_equipment_discoveries().is_empty(),
+		"later cache rewards in the same stage should not add a second item"
+	)
+
+	_run_state.current_stage_index = 1
+	var stage_two := RewardService.resolve_with_context(
+		cache,
+		&"8401:1:cache:first",
+		8401,
+		_run_state.get_reward_resolution_context()
+	)
+	_expect(
+		stage_two.get_equipment_discoveries() == [&"spring_charm"],
+		"Stage 2 cache should resolve the authored shared Spring Charm"
+	)
+
+	var sentry := REWARD_CATALOG.get_table(&"drop_sentry")
+	_expect(
+		sentry != null
+		and sentry.equipment_pool_id == RewardTable.EQUIPMENT_POOL_COMPATIBLE_NON_BOSS
+		and is_equal_approx(sentry.equipment_pool_chance, 0.1),
+		"Sentry should expose the typed ten-percent equipment policy"
+	)
+	var sentry_hits := 0
+	for seed in 1000:
+		var transaction := RewardService.resolve_with_context(
+			sentry,
+			StringName("sentry:fixture:%04d" % seed),
+			seed,
+			_run_state.get_reward_resolution_context()
+		)
+		if not transaction.get_equipment_discoveries().is_empty():
+			sentry_hits += 1
+	_expect(
+		sentry_hits >= 70 and sentry_hits <= 130,
+		"Sentry equipment policy should remain near ten percent across deterministic seeds"
+	)
 
 
 func _instantiate_reward_source(reward_role: StringName) -> StageRewardInteractable:

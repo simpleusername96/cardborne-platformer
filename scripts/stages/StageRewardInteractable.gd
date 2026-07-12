@@ -34,10 +34,14 @@ func interact(player: Node) -> void:
 	var table := catalog.get_table(reward_table_id) if catalog != null else null
 	if reward_target == null or table == null or transaction_id == &"":
 		return
-	var transaction := RewardService.resolve(
+	var context: Dictionary = {}
+	if reward_target.has_method("get_reward_resolution_context"):
+		context = reward_target.call("get_reward_resolution_context")
+	var transaction := RewardService.resolve_with_context(
 		table,
 		transaction_id,
-		int(reward_target.get("run_seed"))
+		int(reward_target.get("run_seed")),
+		context
 	)
 	var result := RewardService.apply(transaction, reward_target)
 	if not result.applied and not result.duplicate:

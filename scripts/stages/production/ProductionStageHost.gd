@@ -309,7 +309,12 @@ func _settle_enemy_reward(enemy: EnemyBase, encounter_id: StringName) -> void:
 		RunState.current_stage_index,
 		encounter_id,
 	])
-	var transaction := RewardService.resolve(table, transaction_id, RunState.run_seed)
+	var transaction := RewardService.resolve_with_context(
+		table,
+		transaction_id,
+		RunState.run_seed,
+		RunState.get_reward_resolution_context()
+	)
 	var result := RewardService.apply(transaction, RunState)
 	if not result.applied and not result.duplicate:
 		push_error("Enemy reward '%s' failed: %s" % [transaction_id, result.message])

@@ -29,6 +29,28 @@ static func resolve(
 	return RewardTransaction.new(transaction_id, table.id, grants, equipment_discoveries)
 
 
+static func resolve_with_context(
+	table: RewardTable,
+	transaction_id: StringName,
+	run_seed: int,
+	context: Dictionary
+) -> RewardTransaction:
+	var transaction := resolve(table, transaction_id, run_seed)
+	if transaction == null:
+		return null
+	var equipment_discoveries := transaction.get_equipment_discoveries()
+	var discovery_seed := stable_seed(run_seed, "equipment:%s" % transaction_id)
+	for item_id in EquipmentDiscoveryService.resolve(table, discovery_seed, context):
+		if not equipment_discoveries.has(item_id):
+			equipment_discoveries.append(item_id)
+	return RewardTransaction.new(
+		transaction.id,
+		transaction.source_id,
+		transaction.get_grants(),
+		equipment_discoveries
+	)
+
+
 static func apply(transaction: RewardTransaction, run_state: Node) -> RewardResult:
 	if transaction == null or run_state == null or not run_state.has_method("apply_reward_transaction"):
 		return RewardResult.new(false, false, &"", {}, "Reward target is unavailable.")

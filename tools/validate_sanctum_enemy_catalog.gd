@@ -212,8 +212,14 @@ func _validate_drop_tables() -> void:
 		&"xp": [20, 20, 1.0], &"coin": [5, 5, 1.0], &"rusted_scrap": [1, 1, 1.0],
 	})
 	if sentry != null:
-		_expect(sentry.get_meta("equipment_pool_id", &"") == &"compatible_non_boss_equipment", "Sentry equipment pool ID should be exact")
-		_expect(is_equal_approx(float(sentry.get_meta("equipment_pool_chance", 0.0)), 0.1), "Sentry equipment pool chance should be exact")
+		_expect(
+			sentry.equipment_pool_id == RewardTable.EQUIPMENT_POOL_COMPATIBLE_NON_BOSS,
+			"Sentry equipment pool ID should be exact"
+		)
+		_expect(
+			is_equal_approx(sentry.equipment_pool_chance, 0.1),
+			"Sentry equipment pool chance should be exact"
+		)
 	_validate_drop("res://data/rewards/drop_summon_node.tres", &"drop_summon_node", {
 		&"xp": [20, 20, 1.0], &"coin": [4, 4, 1.0], &"slime_residue": [1, 2, 0.5],
 	})
