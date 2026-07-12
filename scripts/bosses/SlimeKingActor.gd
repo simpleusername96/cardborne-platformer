@@ -193,29 +193,25 @@ func receive_damage(damage_info: DamageInfo) -> void:
 		_publish_snapshot()
 
 
-func execute_pattern(pattern_id: StringName, spawn_count: int = -1) -> bool:
-	var pattern := get_pattern_definition(pattern_id)
-	if pattern == null or not _can_begin_authored_schedule():
+func _execute_pattern_for_validation(pattern_id: StringName, spawn_count: int = -1) -> bool:
+	# Deterministic injection is available only after production scheduling is disabled.
+	if _scheduler_enabled or not _can_begin_authored_schedule():
 		return false
-	var resolved_spawn_count := spawn_count
-	if resolved_spawn_count < 0:
-		resolved_spawn_count = (
-			maxi(2 - pattern_runtime.get_active_add_count(), 0)
-			if pattern.active_semantics == BossPatternDefinition.ACTIVE_SUMMON_ACTIVATION
-			else 0
-		)
-	return execute_schedule(BossPatternSchedule.new(
-		[pattern],
-		0.0,
-		0.0,
-		PackedInt32Array([resolved_spawn_count])
-	))
+	var context := _current_pattern_context()
+	var schedule := scheduler.build_single(pattern_id, context, spawn_count)
+	return _begin_validated_schedule(schedule, context)
 
 
-func execute_schedule(schedule: BossPatternSchedule) -> bool:
-	if not _can_begin_authored_schedule() or schedule == null:
+func _begin_validated_schedule(
+	schedule: BossPatternSchedule,
+	context: BossPatternContext
+) -> bool:
+	if (
+		not _can_begin_authored_schedule()
+		or not _schedule_is_legal(schedule, context)
+	):
 		return false
-	return pattern_runtime.begin_schedule(schedule)
+	return pattern_runtime.begin_validated_schedule(schedule)
 
 
 func set_scheduler_enabled(enabled: bool) -> void:
@@ -381,9 +377,16 @@ func _schedule_next_if_ready() -> void:
 		or not pattern_runtime.is_idle()
 	):
 		return
+	var context := _current_pattern_context()
+	var schedule := scheduler.choose_next(context)
+	if schedule != null:
+		_begin_validated_schedule(schedule, context)
+
+
+func _current_pattern_context() -> BossPatternContext:
 	var add_count := pattern_runtime.get_active_add_count()
 	var side_response_open := add_count < 2
-	var context := BossPatternContext.new(
+	return BossPatternContext.new(
 		health_model.phase,
 		add_count,
 		2,
@@ -395,9 +398,78 @@ func _schedule_next_if_ready() -> void:
 		summon_spawn_candidates.size() >= 2,
 		false
 	)
-	var schedule := scheduler.choose_next(context)
-	if schedule != null:
-		pattern_runtime.begin_schedule(schedule)
+
+
+func _schedule_is_legal(
+	schedule: BossPatternSchedule,
+	context: BossPatternContext
+) -> bool:
+	if (
+		schedule == null
+		or context == null
+		or not context.validate_context().is_empty()
+		or schedule.patterns.is_empty()
+		or schedule.patterns.size() > 2
+		or schedule.spawned_add_counts.size() != schedule.patterns.size()
+		or not is_finite(schedule.neutral_between_patterns)
+		or not is_finite(schedule.neutral_after)
+		or schedule.neutral_between_patterns < 0.0
+		or schedule.neutral_after < 0.0
+	):
+		return false
+	var available_tags := context.available_tags()
+	var active_constraints := context.active_constraint_tags()
+	var first := schedule.patterns[0]
+	if (
+		first == null
+		or _patterns_by_id.get(first.id) != first
+		or not first.is_legal_for_context(
+			context.phase,
+			available_tags,
+			active_constraints,
+			context.safe_floor_fraction
+		)
+	):
+		return false
+	if schedule.is_chain():
+		var followup := schedule.patterns[1]
+		if (
+			followup == null
+			or _patterns_by_id.get(followup.id) != followup
+			or first.reviewed_phase_two_followup != followup
+			or not first.reviewed_followup_is_legal(
+				context.phase,
+				available_tags,
+				active_constraints,
+				context.safe_floor_fraction
+			)
+			or not is_equal_approx(
+				schedule.neutral_between_patterns,
+				first.reviewed_followup_neutral_time
+			)
+		):
+			return false
+	elif not is_zero_approx(schedule.neutral_between_patterns):
+		return false
+	var projected_add_count := context.active_add_count
+	for pattern_index in schedule.patterns.size():
+		var pattern := schedule.patterns[pattern_index]
+		if pattern == null or _patterns_by_id.get(pattern.id) != pattern:
+			return false
+		var spawn_count := schedule.spawned_add_count_for(pattern_index)
+		if pattern.active_semantics != BossPatternDefinition.ACTIVE_SUMMON_ACTIVATION:
+			if spawn_count != 0:
+				return false
+			continue
+		var effective_cap := mini(pattern.active_add_cap, context.active_add_cap)
+		var available_count := mini(
+			pattern.maximum_spawned_adds,
+			effective_cap - projected_add_count
+		)
+		if spawn_count <= 0 or spawn_count > available_count:
+			return false
+		projected_add_count += spawn_count
+	return true
 
 
 func _can_begin_authored_schedule() -> bool:
@@ -405,6 +477,7 @@ func _can_begin_authored_schedule() -> bool:
 		_encounter_active
 		and _actor_state == ACTOR_ACTIVE
 		and health_model.state == BossBase.STATE_ACTIVE
+		and pattern_runtime.is_idle()
 	)
 
 

@@ -77,6 +77,11 @@ func _validate_one_pattern(stage: Variant, pattern_id: StringName) -> void:
 	var boss: Variant = stage.get_boss()
 	var runtime: Variant = boss.pattern_runtime
 	var timing: Vector3 = EXPECTED_TIMINGS[pattern_id]
+	var spawn_count := 2 if pattern_id == &"small_slime_summon" else -1
+	_expect(
+		not boss.call("_execute_pattern_for_validation", pattern_id, spawn_count),
+		"%s direct injection should reject while production scheduling is enabled" % pattern_id
+	)
 	boss.set_scheduler_enabled(false)
 	if pattern_id == &"body_bump":
 		stage.player.global_position.x = boss.global_position.x - 300.0
@@ -84,7 +89,7 @@ func _validate_one_pattern(stage: Variant, pattern_id: StringName) -> void:
 		stage.player.global_position.x = 520.0
 	elif pattern_id == &"small_slime_summon":
 		stage.player.global_position.x = 400.0
-	_expect(boss.execute_pattern(pattern_id, 2), "%s should begin from the real actor" % pattern_id)
+	_expect(boss.call("_execute_pattern_for_validation", pattern_id, spawn_count), "%s should begin from the real actor" % pattern_id)
 	var startup := _pattern_snapshot(boss)
 	_expect(startup["state"] == &"startup", "%s should begin in startup" % pattern_id)
 	_expect(_near(float(startup["state_duration"]), timing.x), "%s startup should be exact" % pattern_id)
@@ -198,8 +203,8 @@ func _validate_summon_activation(
 	_expect(_pattern_snapshot(boss)["state"] == &"recovery", "Summon should retain its full recovery")
 	stage.advance_runtime(0.01)
 	_expect(_pattern_snapshot(boss)["state"] == &"idle", "Summon should finish after exact recovery")
-	_expect(boss.execute_pattern(&"small_slime_summon", 2), "direct Summon replay should remain bounded")
-	stage.advance_runtime(timing.x)
+	_expect(not boss.call("_execute_pattern_for_validation", &"small_slime_summon", 2), "direct Summon replay should reject the active-add cap")
+	_expect(not boss.call("_execute_pattern_for_validation", &"body_bump"), "direct Body Bump should reject two blocked side responses")
 	_expect(_pattern_snapshot(boss)["active_add_count"] == 2, "Summon replay should never exceed the two-add cap")
 
 
@@ -224,7 +229,10 @@ func _validate_phase_two_chains_and_stagger() -> void:
 	if body_chain != null:
 		_expect(_near(body_chain.neutral_between_patterns, 0.50), "Body Bump chain neutral should be exactly 0.50 s")
 		_expect(body_chain.neutral_after + EPSILON >= 0.75, "reviewed chain should end with at least 0.75 s neutral")
-		_expect(boss.execute_schedule(body_chain), "actor should execute the scheduler's reviewed Body chain")
+		_expect(
+			boss.call("_begin_validated_schedule", body_chain, boss.call("_current_pattern_context")),
+			"actor should validate and execute the scheduler's reviewed Body chain"
+		)
 		stage.advance_runtime(0.55 + 0.45 + 0.80)
 		var chain_neutral := _pattern_snapshot(boss)
 		_expect(chain_neutral["state"] == &"neutral", "Body chain should enter its authored neutral window")
@@ -262,7 +270,10 @@ func _validate_poison_chain_and_scheduler_guards() -> void:
 	_expect(poison_chain != null and poison_chain.pattern_ids() == [&"poison_bands", &"small_slime_summon"], "phase-2 scheduler should produce only the reviewed Poison to Summon chain")
 	if poison_chain != null:
 		_expect(is_zero_approx(poison_chain.neutral_between_patterns), "Poison chain should use zero inter-pattern neutral after cleanup")
-		_expect(boss.execute_schedule(poison_chain), "actor should execute the scheduler's reviewed Poison chain")
+		_expect(
+			boss.call("_begin_validated_schedule", poison_chain, boss.call("_current_pattern_context")),
+			"actor should validate and execute the scheduler's reviewed Poison chain"
+		)
 		stage.advance_runtime(0.90 + 2.20 + 0.80)
 		var summon_startup := _pattern_snapshot(boss)
 		_expect(summon_startup["pattern_id"] == &"small_slime_summon" and summon_startup["state"] == &"startup", "Summon should begin immediately after Poison cleanup")
@@ -300,10 +311,10 @@ func _validate_defeat_cleanup_and_exactly_once_signal() -> void:
 		return
 	var boss: Variant = stage.get_boss()
 	boss.set_scheduler_enabled(false)
-	_expect(boss.execute_pattern(&"small_slime_summon", 2), "defeat fixture should spawn adds")
+	_expect(boss.call("_execute_pattern_for_validation", &"small_slime_summon", 2), "defeat fixture should spawn adds")
 	stage.advance_runtime(0.70)
 	stage.advance_runtime(1.00)
-	_expect(boss.execute_pattern(&"jump_slam"), "defeat fixture should open an active damage window")
+	_expect(boss.call("_execute_pattern_for_validation", &"jump_slam"), "defeat fixture should open an active damage window")
 	stage.advance_runtime(0.80)
 	var before := _pattern_snapshot(boss)
 	_expect(before["active_add_count"] == 2 and before["active_zone_count"] == 3, "defeat fixture should own adds and shockwaves before cleanup")

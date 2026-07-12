@@ -73,7 +73,8 @@ func configure(
 	prepare_for_schedule()
 
 
-func begin_schedule(schedule: BossPatternSchedule) -> bool:
+func begin_validated_schedule(schedule: BossPatternSchedule) -> bool:
+	# SlimeKingActor owns context legality; this node only executes accepted schedules.
 	if _shutdown or _actor == null or schedule == null or schedule.patterns.is_empty():
 		return false
 	cancel_execution(false, STATE_IDLE)

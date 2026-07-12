@@ -85,6 +85,41 @@ func choose_next(context: BossPatternContext) -> BossPatternSchedule:
 	)
 
 
+func build_single(
+	pattern_id: StringName,
+	context: BossPatternContext,
+	requested_spawn_count: int = -1
+) -> BossPatternSchedule:
+	if context == null or not _configuration_errors.is_empty():
+		return null
+	if not context.validate_context().is_empty():
+		return null
+	var pattern := _get_pattern(pattern_id)
+	if pattern == null or not pattern.is_legal_for_context(
+		context.phase,
+		context.available_tags(),
+		context.active_constraint_tags(),
+		context.safe_floor_fraction
+	):
+		return null
+	var available_spawn_count := _spawn_count_for(pattern, context)
+	if available_spawn_count < 0:
+		return null
+	var spawn_count := 0
+	if pattern.active_semantics == BossPatternDefinition.ACTIVE_SUMMON_ACTIVATION:
+		spawn_count = available_spawn_count if requested_spawn_count < 0 else requested_spawn_count
+		if spawn_count <= 0 or spawn_count > available_spawn_count:
+			return null
+	elif requested_spawn_count > 0:
+		return null
+	return BossPatternSchedule.new(
+		[pattern],
+		0.0,
+		0.0,
+		PackedInt32Array([spawn_count])
+	)
+
+
 func validate_configuration() -> PackedStringArray:
 	return _configuration_errors.duplicate()
 
@@ -103,6 +138,13 @@ func get_choice_count() -> int:
 
 func get_seed() -> int:
 	return _seed
+
+
+func _get_pattern(pattern_id: StringName) -> BossPatternDefinition:
+	for pattern in _patterns:
+		if pattern != null and pattern.id == pattern_id:
+			return pattern
+	return null
 
 
 func _reviewed_chain_is_legal(

@@ -22,6 +22,7 @@ func _initialize() -> void:
 	var contexts := _simulation_contexts()
 	_validate_determinism_and_general_legality(contexts)
 	_validate_explicit_context_guards()
+	_validate_direct_schedule_builder()
 	_validate_reviewed_chains()
 	_validate_fail_closed_context()
 	_expect(_simulated_choices >= 5000, "scheduler validator should simulate thousands of choices")
@@ -130,6 +131,32 @@ func _validate_explicit_context_guards() -> void:
 						"one occupied add slot should permit exactly one new add"
 					)
 	_expect(summon_seen, "one-open-slot simulation should exercise Summon")
+
+
+func _validate_direct_schedule_builder() -> void:
+	var safe := _context(1, 0, 1.0, true, false, true, true, true, false)
+	var scheduler := BossPatternScheduler.new(_patterns, 7)
+	var jump := scheduler.build_single(&"jump_slam", safe)
+	_expect(jump != null and jump.pattern_ids() == [&"jump_slam"], "legal direct pattern should build")
+	_expect(
+		scheduler.build_single(&"jump_slam", safe, 2) == null,
+		"non-summon direct pattern should reject add counts"
+	)
+	var one_add := _context(2, 1, 1.0, true, false, true, true, true, false)
+	var summon := scheduler.build_single(&"small_slime_summon", one_add)
+	_expect(
+		summon != null and summon.spawned_add_count_for(0) == 1,
+		"direct Summon should fill only the available add slot"
+	)
+	_expect(
+		scheduler.build_single(&"small_slime_summon", one_add, 2) == null,
+		"direct Summon should reject a requested count above the active cap"
+	)
+	var blocked := _context(2, 2, 1.0, true, false, false, false, true, false)
+	_expect(
+		scheduler.build_single(&"body_bump", blocked) == null,
+		"direct pattern should honor active context constraints"
+	)
 
 
 func _validate_reviewed_chains() -> void:

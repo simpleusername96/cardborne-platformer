@@ -142,7 +142,7 @@ func _validate_camera_framing(stage: Variant) -> void:
 func _validate_player_death_cleanup(stage: Variant) -> void:
 	var boss: Variant = stage.get_boss()
 	boss.set_scheduler_enabled(false)
-	_expect(boss.execute_pattern(&"small_slime_summon", 2), "death fixture should start Summon")
+	_expect(boss.call("_execute_pattern_for_validation", &"small_slime_summon", 2), "death fixture should start Summon")
 	stage.advance_runtime(0.70)
 	var summoned: Dictionary = boss.get_runtime_snapshot()
 	_expect((summoned["pattern"] as Dictionary)["active_add_count"] == 2, "death fixture should own two active adds")
@@ -163,10 +163,10 @@ func _validate_scene_exit_cleanup() -> void:
 	stage.advance_runtime(INTRO_DURATION)
 	var boss: Variant = stage.get_boss()
 	boss.set_scheduler_enabled(false)
-	_expect(boss.execute_pattern(&"small_slime_summon", 2), "exit fixture should start Summon")
+	_expect(boss.call("_execute_pattern_for_validation", &"small_slime_summon", 2), "exit fixture should start Summon")
 	stage.advance_runtime(0.70)
 	stage.advance_runtime(1.00)
-	_expect(boss.execute_pattern(&"jump_slam"), "exit fixture should start Jump Slam")
+	_expect(boss.call("_execute_pattern_for_validation", &"jump_slam"), "exit fixture should start Jump Slam")
 	stage.advance_runtime(0.80)
 	var runtime: Variant = boss.pattern_runtime
 	var actor_refs: Array[WeakRef] = []

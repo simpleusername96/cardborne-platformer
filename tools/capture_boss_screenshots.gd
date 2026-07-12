@@ -70,7 +70,8 @@ func _capture(capture: Dictionary) -> void:
 	stage.advance_runtime(INTRO_DURATION)
 	var boss: Variant = stage.get_boss()
 	boss.set_scheduler_enabled(false)
-	boss.execute_pattern(capture["pattern"], 2)
+	var spawn_count := 2 if capture["pattern"] == &"small_slime_summon" else -1
+	boss.call("_execute_pattern_for_validation", capture["pattern"], spawn_count)
 	stage.advance_runtime(float(capture["elapsed"]))
 	for _frame in 4:
 		await process_frame
