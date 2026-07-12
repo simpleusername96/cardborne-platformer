@@ -35,6 +35,11 @@ func _validate_damage_resolution(kit: CharacterKit) -> void:
 	_expect(cleave_result.final_damage == 2, "cleave should deal 2 damage")
 	_expect(cleave_result.stagger == 20, "cleave should deal 20 stagger")
 	_expect(not cleave_result.critical, "cleave should not critical")
+	var recovery_cleave := DamageResolver.resolve_attack(
+		kit.basic_attack,
+		{"recovery": true, "incoming_stagger_additive": 20}
+	)
+	_expect(recovery_cleave.stagger == 40, "recovery Cleave should gain 20 stagger")
 
 	var normal_breaker := DamageResolver.resolve_attack(kit.heavy_attack, {"staggered": false})
 	var critical_breaker := DamageResolver.resolve_attack(kit.heavy_attack, {"staggered": true})

@@ -100,6 +100,8 @@ func _update_visual() -> void:
 		_visual.color = Color(1.0, 0.86, 0.26, 1.0)
 	elif _state == "charge":
 		_visual.color = Color(1.0, 0.22, 0.16, 1.0)
+	elif _state == "recovery":
+		_visual.color = Color(0.58, 0.42, 0.26, 1.0)
 	else:
 		_visual.color = _base_visual_color
 	if _lane_warning != null:
@@ -110,6 +112,7 @@ func _update_visual() -> void:
 func get_combat_snapshot() -> Dictionary:
 	var snapshot := super.get_combat_snapshot()
 	snapshot["recovery"] = _state == "recovery"
+	snapshot["incoming_stagger_additive"] = 20 if _state == "recovery" else 0
 	return snapshot
 
 

@@ -20,7 +20,14 @@ static func resolve_attack(
 	var additive := float(source_modifiers.get("direct_damage_additive", 0.0))
 	var multiplier := float(source_modifiers.get("direct_damage_multiplier", 1.0))
 	var mitigation := float(target_state.get("mitigation", 0.0))
-	if not is_finite(base_damage + additive + multiplier + mitigation) or multiplier < 0.0:
+	var stagger_additive := (
+		float(source_modifiers.get("stagger_additive", 0.0))
+		+ float(target_state.get("incoming_stagger_additive", 0.0))
+	)
+	if (
+		not is_finite(base_damage + additive + multiplier + mitigation + stagger_additive)
+		or multiplier < 0.0
+	):
 		errors.append("Damage resolution received invalid numeric modifiers.")
 		return HitResult.new(0, false, 0, attack.knockback, _string_tags(attack.tags), errors)
 
@@ -48,10 +55,11 @@ static func resolve_attack(
 	resolved *= critical_multiplier
 	resolved = maxf(resolved - mitigation, 0.0)
 	var final_damage := maxi(int(floor(resolved + 0.5)), 0)
+	var final_stagger := maxi(int(floor(float(attack.stagger) + stagger_additive + 0.5)), 0)
 	var tags := _string_tags(attack.tags)
 	if critical and not tags.has("critical"):
 		tags.append("critical")
-	return HitResult.new(final_damage, critical, attack.stagger, attack.knockback, tags, errors)
+	return HitResult.new(final_damage, critical, final_stagger, attack.knockback, tags, errors)
 
 
 static func _string_tags(source: Array[StringName]) -> Array[String]:
