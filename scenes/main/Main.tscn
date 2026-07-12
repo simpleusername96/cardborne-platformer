@@ -1,6 +1,7 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/main/Main.gd" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/ui/PauseMenu.tscn" id="2"]
 [ext_resource type="PackedScene" path="res://scenes/ui/SettingsPopup.tscn" id="3"]
 
 [node name="Main" type="Node"]
@@ -28,5 +29,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
+
+[node name="PauseMenu" parent="UILayer" instance=ExtResource("2")]
 
 [node name="SettingsPopup" parent="UILayer" instance=ExtResource("3")]

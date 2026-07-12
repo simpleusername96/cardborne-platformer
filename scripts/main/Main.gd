@@ -11,7 +11,13 @@ func _ready() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if not event.is_action_pressed("pause"):
 		return
+	if Game.settings_open:
+		return
+	if Game.pause_menu_open:
+		get_viewport().set_input_as_handled()
+		Game.set_pause_menu_open(false)
+		return
 	if RunDirector.phase not in [RunPhase.Value.STAGE_ACTIVE, RunPhase.Value.BOSS_ACTIVE]:
 		return
 	get_viewport().set_input_as_handled()
-	Game.toggle_settings_popup()
+	Game.set_pause_menu_open(true)

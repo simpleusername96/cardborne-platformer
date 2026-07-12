@@ -4,6 +4,7 @@ var stage_root: Node
 var ui_root: CanvasLayer
 var current_stage: Node
 var current_stage_path: String = ""
+var pause_menu_open: bool = false
 var settings_open: bool = false
 
 
@@ -51,13 +52,43 @@ func reload_current_stage() -> bool:
 
 
 func set_settings_open(is_open: bool) -> void:
+	if settings_open == is_open:
+		return
 	settings_open = is_open
-	get_tree().paused = settings_open
+	_sync_pause_state()
 	SignalBus.settings_visibility_changed.emit(settings_open)
 
 
 func toggle_settings_popup() -> void:
 	set_settings_open(not settings_open)
+
+
+func set_pause_menu_open(is_open: bool) -> void:
+	if pause_menu_open == is_open and not (not is_open and settings_open):
+		return
+	pause_menu_open = is_open
+	if not is_open and settings_open:
+		settings_open = false
+		SignalBus.settings_visibility_changed.emit(false)
+	_sync_pause_state()
+	SignalBus.pause_visibility_changed.emit(pause_menu_open)
+
+
+func close_overlays() -> void:
+	var settings_was_open := settings_open
+	var pause_was_open := pause_menu_open
+	settings_open = false
+	pause_menu_open = false
+	_sync_pause_state()
+	if settings_was_open:
+		SignalBus.settings_visibility_changed.emit(false)
+	if pause_was_open:
+		SignalBus.pause_visibility_changed.emit(false)
+
+
+func _sync_pause_state() -> void:
+	# Either overlay keeps gameplay paused while its always-processing UI owns input.
+	get_tree().paused = pause_menu_open or settings_open
 
 
 func ensure_input_map() -> void:

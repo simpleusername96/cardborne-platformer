@@ -22,6 +22,7 @@ signal stage_cleared(stage_id: String)
 signal boss_defeated(reward_table_id: StringName)
 signal run_settled(settlement: Dictionary)
 signal interaction_prompt_changed(prompt_text: String, active: bool)
+signal pause_visibility_changed(is_visible: bool)
 signal settings_visibility_changed(is_visible: bool)
 signal input_bindings_changed
 signal status_message_changed(message: String)

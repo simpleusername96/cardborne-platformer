@@ -309,6 +309,7 @@ func _panel_style() -> StyleBoxFlat:
 func _on_settings_visibility_changed(is_visible: bool) -> void:
 	visible = is_visible
 	if visible:
+		close_button.text = "Back" if Game.pause_menu_open else "Close"
 		warning_label.text = BINDING_HINT
 		_refresh_binding_rows()
 		if close_button != null:

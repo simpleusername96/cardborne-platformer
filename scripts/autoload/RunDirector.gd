@@ -97,7 +97,7 @@ func start_production_run(profile_reference: Variant) -> bool:
 	if profile_index < 0:
 		_report_start_error("Character is unavailable.")
 		return false
-	Game.set_settings_open(false)
+	Game.close_overlays()
 	if not RunState.start_new_run(profile_index):
 		_report_start_error("Loadout is invalid. Check the highlighted slot.")
 		return false
@@ -272,7 +272,7 @@ func get_phase_name() -> String:
 func _prepare_non_gameplay_phase() -> void:
 	if not _roots_are_ready():
 		return
-	Game.set_settings_open(false)
+	Game.close_overlays()
 	Game.unload_current_stage()
 	_clear_hud()
 

@@ -137,6 +137,16 @@ var _captures: Array[Dictionary] = [
 		"size": Vector2i(960, 540),
 		"state": "settings",
 	},
+	{
+		"name": "desktop_pause_menu",
+		"size": Vector2i(1280, 720),
+		"state": "pause_menu",
+	},
+	{
+		"name": "compact_pause_confirmation",
+		"size": Vector2i(960, 540),
+		"state": "pause_confirmation",
+	},
 ]
 var _failed: bool = false
 
@@ -262,6 +272,13 @@ func _capture(capture: Dictionary) -> void:
 				result.call("configure", true, "Archer", _result_capture_settlement())
 		"settings":
 			game.set_settings_open(true)
+		"pause_menu", "pause_confirmation":
+			run_director.start_production_run(0)
+			game.set_pause_menu_open(true)
+			if String(capture["state"]) == "pause_confirmation":
+				var pause_menu := main_instance.get_node_or_null("UILayer/PauseMenu") as Control
+				if pause_menu != null:
+					pause_menu.call("_show_confirmation")
 	for _frame in 4:
 		await process_frame
 	await RenderingServer.frame_post_draw
@@ -284,7 +301,7 @@ func _capture(capture: Dictionary) -> void:
 		push_error("Unable to save %s (error %d)" % [output_path, save_error])
 		_failed = true
 
-	game.set_settings_open(false)
+	game.close_overlays()
 	game.unload_current_stage()
 	main_instance.queue_free()
 	await process_frame
