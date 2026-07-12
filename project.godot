@@ -17,6 +17,7 @@ RunState="*res://scripts/autoload/RunState.gd"
 InputBindings="*res://scripts/autoload/InputBindings.gd"
 Game="*res://scripts/autoload/Game.gd"
 RunDirector="*res://scripts/autoload/RunDirector.gd"
+FeedbackDirector="*res://scripts/presentation/FeedbackDirector.gd"
 
 [display]
 
