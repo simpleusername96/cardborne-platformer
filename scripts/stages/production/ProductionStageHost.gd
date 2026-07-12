@@ -3,6 +3,7 @@ extends StageBase
 const ENEMY_CATALOG: EnemyCatalog = preload("res://data/enemies/enemy_catalog.tres")
 const ENEMY_SCENES: EnemySceneCatalog = preload("res://data/enemies/enemy_scene_catalog.tres")
 const HAZARD_CATALOG: HazardCatalog = preload("res://data/hazards/hazard_catalog.tres")
+const TERRAIN_STYLER := preload("res://scripts/visuals/TerrainPresentationStyler.gd")
 const STAGE_CONFIGS: Array[Dictionary] = [
 	{
 		"id": &"ruin_approach",
@@ -46,6 +47,7 @@ var _started_required_rooms: Dictionary = {}
 var _cleared_required_rooms: Dictionary = {}
 var _exit_portal: ExitPortal
 var _world_bounds := Rect2()
+var _terrain_presentation: Dictionary = {}
 
 
 func _ready() -> void:
@@ -83,6 +85,10 @@ func get_clear_reward_table_id() -> StringName:
 
 func get_world_bounds() -> Rect2:
 	return _world_bounds
+
+
+func get_terrain_presentation_snapshot() -> Dictionary:
+	return _terrain_presentation.duplicate(true)
 
 
 func get_room_ids() -> Array[StringName]:
@@ -206,6 +212,7 @@ func _setup_generated_stage() -> bool:
 	for enemy in _all_enemies:
 		enemy.defeated.connect(_on_enemy_defeated)
 	_set_exit_enabled(_required_enemies.is_empty())
+	_terrain_presentation = TERRAIN_STYLER.apply(_room_hosts, StringName(stage_id))
 	backdrop.configure(_world_bounds, StringName(stage_id))
 	return true
 
