@@ -4,6 +4,7 @@ const OUTPUT_DIR := "res://.codex-runtime/uiux"
 const MAIN_SCENE := "res://scenes/main/Main.tscn"
 const PRODUCTION_STAGE := "res://scenes/stages/production/ProductionStageHost.tscn"
 const REST_FORGE_SCENE := "res://scenes/ui/production/RestForge.tscn"
+const RUN_RESULT_SCENE := "res://scenes/ui/production/RunResult.tscn"
 
 var _captures: Array[Dictionary] = [
 	{
@@ -254,8 +255,11 @@ func _capture(capture: Dictionary) -> void:
 				run_state
 			)
 		"run_result":
-			run_director.start_production_run(1)
-			run_director.show_run_result(true)
+			game.unload_current_stage()
+			run_director.call("_clear_hud")
+			var result := run_director.call("_show_screen", RUN_RESULT_SCENE) as Control
+			if result != null:
+				result.call("configure", true, "Archer", _result_capture_settlement())
 		"settings":
 			game.set_settings_open(true)
 	for _frame in 4:
@@ -284,6 +288,26 @@ func _capture(capture: Dictionary) -> void:
 	game.unload_current_stage()
 	main_instance.queue_free()
 	await process_frame
+
+
+func _result_capture_settlement() -> Dictionary:
+	return {
+		"victory": true,
+		"terminal_reason": "boss_defeated",
+		"seed": 73021,
+		"stage_reached": 3,
+		"boss_reached": true,
+		"duration_seconds": 845.0,
+		"run_build": {
+			"level": 6,
+			"cards": {"dash_wake": 2, "archer_split_shaft": 1, "steady_hands": 1},
+		},
+		"persistent_material_delta": {
+			"sky_thread": 4,
+			"slime_residue": 8,
+			"boss_core": 1,
+		},
+	}
 
 
 func _inject_combat_capture(

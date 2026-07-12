@@ -239,7 +239,12 @@ func _present_run_result(victory: bool) -> void:
 	var profile_name := "Adventurer"
 	if RunState.selected_profile != null:
 		profile_name = RunState.selected_profile.display_name
-	result.call(&"configure", victory, profile_name)
+	result.call(
+		&"configure",
+		victory,
+		profile_name,
+		RunState.get_terminal_settlement_snapshot()
+	)
 	result.connect(&"menu_requested", show_main_menu)
 	result.connect(&"retry_requested", func() -> void: start_production_run(_last_profile_id))
 

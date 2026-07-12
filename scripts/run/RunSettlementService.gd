@@ -120,6 +120,7 @@ func _build_snapshot(
 		"stage_index": stage_index,
 		"stage_reached": clampi(stage_index + 1, 1, NORMAL_STAGE_COUNT),
 		"boss_reached": stage_index >= NORMAL_STAGE_COUNT,
+		"duration_seconds": maxf(float(run_facts.get("elapsed_seconds", 0.0)), 0.0),
 		"health": int(run_facts.get("health", 0)),
 		"max_health": int(run_facts.get("max_health", 0)),
 		"run_build": {

@@ -69,6 +69,7 @@ var current_consumable_id: StringName = &"small_potion"
 var consumable_charges: int = 1
 var _catalogs_valid: bool = false
 var _settlement_service := RunSettlementService.new()
+var _run_started_at_msec: int = 0
 
 
 func _ready() -> void:
@@ -156,6 +157,7 @@ func start_new_run(profile_index: int = -1, requested_seed: int = -1) -> bool:
 	var profile_loadout := ProfileState.get_loadout(candidate_profile.id)
 	current_consumable_id = StringName(profile_loadout.get("consumable", "small_potion"))
 	consumable_charges = 1
+	_run_started_at_msec = Time.get_ticks_msec()
 	_settlement_service.reset(ProfileState)
 	_publish_state()
 	SignalBus.run_started.emit()
@@ -220,8 +222,15 @@ func get_run_snapshot() -> RunSnapshot:
 		"consumable_id": String(current_consumable_id),
 		"consumable_charges": consumable_charges,
 		"effective_stats": get_effective_stats(),
+		"elapsed_seconds": get_run_elapsed_seconds(),
 		"terminal_settlement": terminal_settlement,
 	})
+
+
+func get_run_elapsed_seconds() -> float:
+	if _run_started_at_msec <= 0:
+		return 0.0
+	return maxf(float(Time.get_ticks_msec() - _run_started_at_msec) / 1000.0, 0.0)
 
 
 func has_terminal_settlement() -> bool:
