@@ -12,7 +12,7 @@
 script = ExtResource("1")
 id = &"first_run_progression"
 display_name = "First Run Progression"
-content_version = 1
-level_xp_totals = PackedInt32Array(0, 20, 55, 105, 170, 250)
+content_version = 2
+level_xp_totals = PackedInt32Array(0, 20, 55, 100, 145, 185)
 micro_upgrades = Array[ExtResource("2")]([ExtResource("2"), ExtResource("3"), ExtResource("4"), ExtResource("5"), ExtResource("6")])
 recovery_choice = ExtResource("7")

@@ -12,8 +12,8 @@ maximum_amount = 20
 [sub_resource type="Resource" id="Coin"]
 script = ExtResource("2")
 content_id = &"coin"
-minimum_amount = 12
-maximum_amount = 12
+minimum_amount = 8
+maximum_amount = 8
 
 [sub_resource type="Resource" id="Thread"]
 script = ExtResource("2")
@@ -25,4 +25,5 @@ maximum_amount = 1
 script = ExtResource("1")
 id = &"stage_clear_flooded_works"
 display_name = "Flooded Works Clear"
+content_version = 2
 entries = Array[ExtResource("2")]([SubResource("XP"), SubResource("Coin"), SubResource("Thread")])

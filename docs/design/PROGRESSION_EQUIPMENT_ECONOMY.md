@@ -69,9 +69,9 @@ UI only observes snapshots and sends commands. It does not write either scope.
 | 1 | 0 | Starting state. |
 | 2 | 20 | Choose one of three micro upgrades. |
 | 3 | 55 | Choose one of three micro upgrades. |
-| 4 | 105 | Choose one of three micro upgrades. |
-| 5 | 170 | Choose one of three micro upgrades. |
-| 6 | 250 | Choose one of three micro upgrades. |
+| 4 | 100 | Choose one of three micro upgrades. |
+| 5 | 145 | Choose one of three micro upgrades. |
+| 6 | 185 | Choose one of three micro upgrades. |
 
 Level-up pauses gameplay only after the current hit/defeat transaction finishes.
 Queued XP can trigger multiple choices sequentially without losing overflow.

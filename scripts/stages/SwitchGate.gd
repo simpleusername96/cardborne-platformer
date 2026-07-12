@@ -32,7 +32,7 @@ func open_gate() -> void:
 	_busy = false
 	_apply_gate_state()
 	opened.emit(self)
-	SignalBus.status_message_changed.emit("%s opened" % name)
+	_publish_status("%s opened" % name)
 
 
 func close_gate() -> void:
@@ -41,7 +41,7 @@ func close_gate() -> void:
 	is_open = false
 	_apply_gate_state()
 	closed.emit(self)
-	SignalBus.status_message_changed.emit("%s closed" % name)
+	_publish_status("%s closed" % name)
 
 
 func reset_gate() -> void:
@@ -117,3 +117,9 @@ func _apply_gate_state() -> void:
 			_gate_visual.scale.y = 1.0
 	if _switch != null:
 		_switch.set_active(is_open)
+
+
+func _publish_status(message: String) -> void:
+	var signal_bus := get_node_or_null("/root/SignalBus")
+	if signal_bus != null:
+		signal_bus.status_message_changed.emit(message)
