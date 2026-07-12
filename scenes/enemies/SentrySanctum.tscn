@@ -1,0 +1,31 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/SentryTurretEnemy.gd" id="1"]
+[ext_resource type="Resource" path="res://data/enemies/enemy_catalog.tres" id="2"]
+
+[node name="SentrySanctum" type="CharacterBody2D"]
+script = ExtResource("1")
+enemy_catalog = ExtResource("2")
+archetype_id = &"sentry"
+variant_id = &"sentry_sanctum"
+stage_id = &"broken_sanctum"
+body_color = Color(0.42, 0.44, 0.62, 1)
+warning_color = Color(1, 0.86, 0.22, 1)
+recovery_color = Color(0.28, 0.3, 0.4, 1)
+projectile_color = Color(1, 0.62, 0.16, 1)
+defeat_below_y = 780.0
+auto_reset_on_defeat = false
+lightweight = false
+
+[node name="Visual" type="Polygon2D" parent="."]
+color = Color(0.42, 0.44, 0.62, 1)
+polygon = PackedVector2Array(-25, -42, 25, -42, 30, -26, 27, 0, -27, 0, -30, -26)
+
+[node name="SanctumMark" type="Polygon2D" parent="Visual"]
+color = Color(0.84, 0.76, 0.58, 1)
+polygon = PackedVector2Array(-26, -31, 26, -31, 29, -22, -29, -22)
+
+[node name="Barrel" type="Polygon2D" parent="."]
+position = Vector2(0, -28)
+color = Color(0.72, 0.82, 0.92, 1)
+polygon = PackedVector2Array(0, -6, 48, -5, 54, 0, 48, 5, 0, 6)

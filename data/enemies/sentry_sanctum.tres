@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="EnemyVariantDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/EnemyVariantDefinition.gd" id="1_variant"]
+
+[resource]
+script = ExtResource("1_variant")
+id = &"sentry_sanctum"
+display_name = "Sanctum Sentry"
+content_version = 1
+tags = Array[StringName]([&"normal_enemy", &"broken_sanctum", &"baseline_crossfire"])
+archetype_id = &"sentry"
+stage_id = &"broken_sanctum"
+tuning_profile_id = &"tuning_broken_sanctum"
+health = 6
+damage = 1
+warning_time = 0.45
+recovery_time = 0.45
+cadence_time = 1.4
+projectile_speed = 300.0
+attack_range = 900.0
+active_projectile_cap = 2
+stagger_capacity = 80
+presentation_key = &"enemy.sentry.sanctum"
+presentation_description = "A fixed barrel and thin cover-readable aim line identify the crossfire role."
+tuning_trait = &"baseline_crossfire"
+budget_cost = 3
+drop_source_id = &"drop_sentry"

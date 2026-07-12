@@ -1,0 +1,27 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/ShooterEnemy.gd" id="1"]
+[ext_resource type="Resource" path="res://data/enemies/enemy_catalog.tres" id="2"]
+
+[node name="ShooterSanctum" type="CharacterBody2D"]
+script = ExtResource("1")
+enemy_catalog = ExtResource("2")
+archetype_id = &"shooter"
+variant_id = &"shooter_sanctum"
+stage_id = &"broken_sanctum"
+body_color = Color(0.42, 0.45, 0.68, 1)
+recovery_color = Color(0.3, 0.3, 0.42, 1)
+warning_color = Color(1, 0.84, 0.22, 1)
+weapon_color = Color(0.86, 0.78, 0.58, 1)
+projectile_color = Color(1, 0.68, 0.16, 1)
+weapon_length = 42.0
+defeat_below_y = 780.0
+auto_reset_on_defeat = false
+
+[node name="Visual" type="Polygon2D" parent="."]
+color = Color(0.42, 0.45, 0.68, 1)
+polygon = PackedVector2Array(-20, -44, 18, -44, 22, -30, 20, 0, -20, 0, -24, -25)
+
+[node name="SanctumMark" type="Polygon2D" parent="Visual"]
+color = Color(0.84, 0.76, 0.58, 1)
+polygon = PackedVector2Array(-22, -31, 20, -31, 23, -23, -25, -23)

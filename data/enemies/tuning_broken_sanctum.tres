@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="EnemyTuningProfile" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/EnemyTuningProfile.gd" id="1_tuning"]
+
+[resource]
+script = ExtResource("1_tuning")
+id = &"tuning_broken_sanctum"
+display_name = "Broken Sanctum Enemy Tuning"
+content_version = 1
+tags = Array[StringName]([&"enemy_tuning", &"broken_sanctum"])
+stage_id = &"broken_sanctum"
+minimum_health_ratio = 1.0
+maximum_health_ratio = 1.7
+minimum_warning_ratio = 0.85
+maximum_warning_ratio = 1.05
+minimum_active_ratio = 1.0
+maximum_active_ratio = 1.15
+minimum_recovery_ratio = 0.85
+maximum_recovery_ratio = 1.05
+minimum_cadence_ratio = 0.85
+maximum_cadence_ratio = 1.05
+minimum_speed_or_range_ratio = 1.0
+maximum_speed_or_range_ratio = 1.25
+maximum_stagger_capacity_ratio = 1.2
+allowed_damage = Array[int]([1])

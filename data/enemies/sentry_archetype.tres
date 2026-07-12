@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="EnemyArchetypeDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/EnemyArchetypeDefinition.gd" id="1_archetype"]
+
+[resource]
+script = ExtResource("1_archetype")
+id = &"sentry"
+display_name = "Sentry"
+content_version = 1
+tags = Array[StringName]([&"normal_enemy", &"stationary", &"telegraphed_ranged"])
+behavior_owner = &"SentryTurretEnemy"
+pressure_roles = Array[StringName]([&"ranged", &"zone"])
+tell_contract = "A rotating aim line locks before one contrasting projectile fires."
+response_contract = "Use authored cover, change level, close distance, or destroy it from range."
+punish_contract = "The final warning cannot retarget and every shot has a fixed recovery."
+reference_health = 6
+reference_damage = 1
+reference_warning_time = 0.45
+reference_recovery_time = 0.45
+reference_cadence_time = 1.4
+reference_projectile_speed = 300.0
+reference_attack_range = 900.0
+reference_active_projectile_cap = 2
+reference_stagger_capacity = 80
+minimum_support_width = 180.0
+requires_escape_route = true
+room_requirement_tags = Array[StringName]([&"stable_support", &"authored_cover", &"line_of_sight_lane", &"no_entry_crossfire"])
+minimum_warning_time = 0.42
+minimum_recovery_time = 0.45
+minimum_cadence_time = 1.4
+maximum_active_projectile_cap = 2
+maximum_damage = 1
