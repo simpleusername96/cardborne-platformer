@@ -237,6 +237,52 @@ func _validate_exit_flow(stage: Variant, run_director: Node, game: Node, run_sta
 	_expect(run_director.get_phase_name() == "stage_active", "card Continue should load the next stage")
 	_expect(game.current_stage != null and game.current_stage.is_setup_complete(), "next generated stage should initialize")
 	_expect(int(run_state.get("current_stage_index")) == 1, "card Continue should advance stage index")
+	if game.current_stage != null and game.current_stage.is_setup_complete():
+		await _validate_flooded_exit_flow(game.current_stage, run_director, game, run_state)
+
+
+func _validate_flooded_exit_flow(
+	stage: Variant,
+	run_director: Node,
+	game: Node,
+	run_state: Node
+) -> void:
+	_expect(stage.stage_id == "flooded_works", "second production stage should be Flooded Works")
+	var terminal: RoomTemplateHost
+	for room in stage.get_stage_plan().get_rooms():
+		if room.role == &"safe":
+			terminal = stage.get_room_host(room.id)
+	var exit := terminal.get_exit_portal() if terminal != null else null
+	_expect(exit != null and not stage.is_exit_enabled(), "Flooded safe-room exit should start locked")
+	if exit == null:
+		return
+	for enemy in stage.get_required_enemies():
+		enemy.receive_damage(DamageInfo.new(enemy.current_health, stage.player))
+	await process_frame
+	_expect(stage.is_exit_enabled(), "Flooded required defeats should unlock the safe-room exit")
+	exit.interact(stage.player)
+	await process_frame
+	await process_frame
+	_expect(game.current_stage == null, "Flooded clear should unload gameplay for rewards")
+	while run_director.get_phase_name() == "level_reward":
+		var level_offer: Array = run_state.call("get_pending_level_offer")
+		_expect(level_offer.size() == 3, "Flooded clear level reward should offer three choices")
+		if level_offer.is_empty():
+			return
+		run_director.call("_on_level_choice_requested", level_offer[0])
+		await process_frame
+	_expect(run_director.get_phase_name() == "stage_card_reward", "Flooded clear should reach card reward")
+	var card_offer: Array = run_state.call("get_pending_card_offer")
+	_expect(card_offer.size() == 3, "Flooded card reward should offer three choices")
+	if card_offer.is_empty():
+		return
+	run_director.call("_on_card_choice_requested", card_offer[0])
+	await process_frame
+	run_director.call("_on_card_continue_requested")
+	await process_frame
+	_expect(run_director.get_phase_name() == "rest_forge", "Stage 2 card Continue should open Rest & Forge")
+	_expect(bool(run_state.call("get_rest_forge_snapshot").get("active", false)), "Rest & Forge session should be active")
+	_expect(int(run_state.get("current_stage_index")) == 2, "Rest & Forge should prepare Stage 3")
 
 
 func _encounter_by_id(plan: StagePlan, encounter_id: StringName) -> PlannedEncounter:

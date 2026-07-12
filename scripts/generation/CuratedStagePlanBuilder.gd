@@ -10,6 +10,26 @@ var last_errors: PackedStringArray:
 		return _last_errors.duplicate()
 
 
+func build(
+	catalog: RoomCatalog,
+	profile: StageProfile,
+	run_seed: int,
+	stage_index: int,
+	movement_limits: Dictionary
+) -> StagePlan:
+	if profile == null:
+		_last_errors = PackedStringArray(["Curated fallback needs a StageProfile."])
+		return null
+	match profile.id:
+		&"ruin_approach":
+			return build_ruin_approach(catalog, profile, run_seed, stage_index, movement_limits)
+		&"flooded_works":
+			return build_flooded_works(catalog, profile, run_seed, stage_index, movement_limits)
+		_:
+			_last_errors = PackedStringArray(["No curated fallback exists for '%s'." % profile.id])
+			return null
+
+
 func build_ruin_approach(
 	catalog: RoomCatalog,
 	profile: StageProfile,
@@ -89,6 +109,61 @@ func build_ruin_approach(
 		profile,
 		movement_limits
 	)
+	return plan if _last_errors.is_empty() else null
+
+
+func build_flooded_works(
+	catalog: RoomCatalog,
+	profile: StageProfile,
+	run_seed: int,
+	stage_index: int,
+	movement_limits: Dictionary
+) -> StagePlan:
+	_last_errors.clear()
+	if catalog == null or profile == null:
+		_last_errors.append("Flooded fallback needs a RoomCatalog and StageProfile.")
+		return null
+	var specs := [
+		[&"fw_flooded_entry", true, 0, 0, 0, 0],
+		[&"fw_rope_shaft", true, 1, 0, 0, 0],
+		[&"fw_poison_timing", true, 2, 0, 2, 0],
+		[&"fw_leaper_basin", true, 3, 2, 0, 0],
+		[&"fw_lower_upper_choice", true, 4, 0, 0, 1],
+		[&"fw_pump_gallery", true, 5, 2, 0, 0],
+		[&"fw_rest_forge", true, 6, 0, 0, 0],
+		[&"fw_sunken_cache", false, 0, 0, 0, 1],
+	]
+	var rooms: Array[PlannedRoom] = []
+	for spec in specs:
+		var template := catalog.get_room_by_id(spec[0])
+		if template == null:
+			_last_errors.append("Flooded fallback is missing room '%s'." % spec[0])
+			continue
+		rooms.append(PlannedRoom.new(
+			template.id, template.id, template.content_version, template.role,
+			bool(spec[1]), int(spec[2]), int(spec[3]), int(spec[4]), int(spec[5])
+		))
+	if not _last_errors.is_empty():
+		return null
+	var connections: Array[PlannedConnection] = [
+		_connection(&"critical_0", &"fw_flooded_entry", &"flooded_entry_out", &"fw_rope_shaft", &"rope_shaft_in", &"critical"),
+		_connection(&"critical_1", &"fw_rope_shaft", &"rope_shaft_out", &"fw_poison_timing", &"poison_timing_in", &"critical"),
+		_connection(&"critical_2", &"fw_poison_timing", &"poison_timing_out", &"fw_leaper_basin", &"leaper_basin_in", &"critical"),
+		_connection(&"critical_3", &"fw_leaper_basin", &"leaper_basin_out", &"fw_lower_upper_choice", &"flooded_choice_in", &"critical"),
+		_connection(&"critical_4", &"fw_lower_upper_choice", &"flooded_choice_out", &"fw_pump_gallery", &"pump_gallery_in", &"critical"),
+		_connection(&"critical_5", &"fw_pump_gallery", &"pump_gallery_out", &"fw_rest_forge", &"rest_forge_in", &"critical"),
+		_connection(&"optional_branch_0", &"fw_lower_upper_choice", &"flooded_choice_branch", &"fw_sunken_cache", &"sunken_cache_branch", &"optional"),
+		_connection(&"optional_return_0", &"fw_sunken_cache", &"sunken_cache_return", &"fw_lower_upper_choice", &"flooded_choice_return", &"return"),
+	]
+	var streams := NamedRngStreams.new(
+		run_seed, stage_index, catalog.content_version, profile.content_version, FALLBACK_ATTEMPT
+	)
+	var plan := StagePlan.new(
+		run_seed, stage_index, profile.id, profile.content_version, catalog.id,
+		catalog.content_version, streams.get_stream_seeds(), rooms, connections, [],
+		StagePlan.CURRENT_SCHEMA_VERSION, FALLBACK_ATTEMPT
+	)
+	_last_errors = StagePlanValidator.validate_plan(plan, catalog, profile, movement_limits)
 	return plan if _last_errors.is_empty() else null
 
 

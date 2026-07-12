@@ -112,16 +112,16 @@ Additional invariants:
 
 | Concern | As-is owner/evidence | Gap | Target handling |
 | --- | --- | --- | --- |
-| Boot/flow | `RunDirector`, `Game`, production UI | One scaffold stage jumps directly to result. | Add explicit phases and full stage/reward/boss transitions. |
-| Character data | Three profiles; typed Warrior kit/attacks/Skill 1 | Archer/Assassin still use compatibility basic attacks; passives and full kits remain. | Typed kits, attacks, skills, passives, mastery references. |
-| Movement | `PlayerController`, `MovementMetrics`, `PlayerCombatController` | Combat execution is extracted; generator does not yet consume limits. | Preserve motion and make generation consume validated limits. |
-| Combat | Deterministic resolver/result, earned critical rules, stagger, Warrior runtime fixture | Shared modifier/effect lifecycle and the other two complete kits remain. | Extend the proven resolver path rather than branching in actors or UI. |
-| Enemies | Typed catalog plus production Ruin Walker/Charger scenes | Remaining archetypes/variants and deterministic allocator are not promoted. | Promote six archetypes, 13 exact variants, and two special actors through typed definitions/fixtures. |
-| Stages | Deterministic Stage 1 planner, validator, assembler, allocator, ten authored rooms, and curated fallback. | Stages 2-3 and boss arena remain. | Reuse the proven generation pipeline with stage-specific catalogs. |
-| Progression | `RunState`, `PlayerBuild`, design JSON | Counters mostly inert; no reward transaction. | One deterministic build/effect/reward path. |
+| Boot/flow | `RunDirector`, `Game`, production UI | Stages 1-2 reach rewards and Rest & Forge; Stage 3/boss transitions remain. | Complete normal-stage, boss, death, and settlement transitions. |
+| Character data | Three profiles; complete typed Warrior kit | Archer/Assassin still use compatibility basic attacks and lack complete kits. | Add typed attacks, skills, passives, and character behavior owners. |
+| Movement | `PlayerController`, `MovementMetrics`, `PlayerCombatController` | Shared movement and generation limits are active; character-specific combat execution needs extraction. | Preserve common traversal while splitting combat responsibilities for M6. |
+| Combat | Deterministic resolver/result, earned critical rules, complete Warrior fixture | Archer and Assassin mechanics remain. | Extend the proven resolver path rather than branching in actors or UI. |
+| Enemies | Ruin/Flooded exact variants for Walker, Charger, Shooter, and Leaper | Shield Guard, Sentry, Summon Node, and Sanctum variants remain. | Promote remaining archetypes/variants through typed definitions and fixtures. |
+| Stages | Deterministic generated Ruin Approach and Flooded Works with authored rooms and fallbacks. | Stage 3 and boss arena remain. | Reuse the accepted pipeline for Broken Sanctum; author the boss arena separately. |
+| Progression | Transaction-safe rewards, levels, seven cards, rest/shop/forge, scoped consumables | Remaining cards, character behavior paths, and complete-run balance remain. | Finish typed content without adding a second stat or currency owner. |
 | Persistence | Profile schema v1, atomic primary/backup recovery, migration, wallet, per-character loadouts, and mastery commands. | Full-run settlement and remaining content activation remain. | Preserve `ProfileState` as the only public profile facade. |
 | Boss | Spec/catalog only | No boss code/scene. | Authored arena, scheduler, patterns, cleanup/settlement. |
-| UI/feel | Menu, character/loadout/mastery, level/card rewards, HUD, result, and settings with compact captures. | Rest/forge, full-skill, boss, and final presentation states remain. | Add only states backed by working systems, then presentation pass. |
+| UI/feel | Menu, character/loadout/mastery, level/card/rest-forge rewards, full Warrior HUD, result, and settings with compact captures. | Roster prompts, boss states, and final presentation remain. | Add only states backed by working systems, then presentation pass. |
 
 ## As-Is / To-Be Delta Checklist
 
@@ -189,6 +189,8 @@ Additional invariants:
   Shooter/hazards/rewards, geometry validation, fallback, and 1,000-seed gate.
 - [x] Persistent profile v1, 12 equipment items, 18 mastery nodes, per-character
   loadouts, material settlement, backup recovery/migration, and loadout/mastery UI.
+- [x] Complete Warrior kit, deterministic Flooded Works, four exact Flooded enemy
+  variants, poison/crumble/rope content, and the Rest & Forge economy transition.
 
 ### Not credited as finished gameplay
 
@@ -320,21 +322,32 @@ requirement or duplicate stat owner.
 **Visible result:** Stage 2 teaches poison/crumble/leap, offers a safe rest/forge
 decision, and Warrior uses all three skills through two stage cards.
 
-- [ ] **5.1 Complete Warrior Ground Splitter and Rally plus all mastery effects.**
-- [ ] **5.2 Migrate Warrior/shared card subset and equipment effects.**
-- [ ] **5.3 Author rope shaft, leaper basin, poison timing, crumble crossing,
+- [x] **5.1 Complete Warrior Ground Splitter and Rally plus all mastery effects.**
+- [x] **5.2 Migrate Warrior/shared card subset and equipment effects.**
+- [x] **5.3 Author rope shaft, leaper basin, poison timing, crumble crossing,
   rest/forge, and relevant variants.**
-- [ ] **5.4 Promote Leaper and Flooded variants:** `walker_flooded`,
+- [x] **5.4 Promote Leaper and Flooded variants:** `walker_flooded`,
   `charger_flooded`, `shooter_flooded`, `leaper_flooded`; add Timed Poison Vent,
   Crumbling Platform, rope recovery.
-- [ ] **5.5 Implement shop heal/consumable/reroll commands.**
-- [ ] **5.6 Implement deterministic three-choice forge and replacement confirmation.**
-- [ ] **5.7 Generate Flooded Works with curated fallback and seed gates.**
-- [ ] **5.8 Economy gate:** ordinary play creates a real heal/forge/reroll tradeoff.
-- [ ] **5.9 Fun gate:** hazards teach alone before mixed pressure and never create waiting-heavy play.
+- [x] **5.5 Implement shop heal/consumable/reroll commands.**
+- [x] **5.6 Implement deterministic three-choice forge and replacement confirmation.**
+- [x] **5.7 Generate Flooded Works with curated fallback and seed gates.**
+- [x] **5.8 Economy gate:** ordinary play creates a real heal/forge/reroll tradeoff.
+- [x] **5.9 Fun gate:** hazards teach alone before mixed pressure and never create waiting-heavy play.
+  - Evidence: poison/crumble rooms have zero encounter budget and authored recovery;
+    deterministic timing fixtures and rendered hazard/rope/safe-room captures show
+    readable windows without blocking the critical route. Full-run tuning remains
+    part of Milestone 9.
 
 *Milestone gate:* a Warrior run through Stages 1-2 has combat, cards, economy,
 equipment, persistent rewards, and meaningful spending.
+
+Gate evidence: all 36 focused validators pass; Flooded Works produces four
+assembled topology signatures and 47 exact encounter signatures over 300 seeds;
+the production-flow fixture clears both stages into Rest & Forge; exact Flooded
+variant scenes, Leaper arc clearance, consumable scope, forge replacement, and
+free-reroll prevention have runtime coverage. The 1280x720 and 960x540 UI captures
+show no clipping or overlap.
 
 #### Milestone 6 - Complete Archer and Assassin
 

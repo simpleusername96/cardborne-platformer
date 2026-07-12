@@ -1,0 +1,62 @@
+[gd_resource type="Resource" script_class="RoomTemplateData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/stages/RoomTemplateData.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/stages/RoomSocketData.gd" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/rooms/flooded_works/FwCrumbleCrossing.tscn" id="3"]
+[ext_resource type="Script" path="res://scripts/stages/RoomHazardAnchorData.gd" id="4"]
+
+[sub_resource type="Resource" id="EntrySocket"]
+script = ExtResource("2")
+id = &"crumble_crossing_in"
+direction = &"left"
+route_role = &"critical"
+local_position = Vector2(0, 620)
+opening_size = Vector2(180, 160)
+support_top = 620.0
+transition_type = &"seam"
+required_ability = &"baseline"
+approach_width = 280.0
+landing_width = 280.0
+headroom = 160.0
+
+[sub_resource type="Resource" id="ExitSocket"]
+script = ExtResource("2")
+id = &"crumble_crossing_out"
+direction = &"right"
+route_role = &"critical"
+local_position = Vector2(1280, 620)
+opening_size = Vector2(180, 160)
+support_top = 620.0
+transition_type = &"seam"
+required_ability = &"baseline"
+approach_width = 280.0
+landing_width = 280.0
+headroom = 160.0
+
+[sub_resource type="Resource" id="CrumblePath"]
+script = ExtResource("4")
+id = &"crumble_path"
+allowed_hazard_ids = Array[StringName]([&"crumbling_platform"])
+warning_space = Vector2(280, 140)
+safe_zone_id = &"crumble_entry_recovery"
+reset_id = &"crumble_lower_recovery"
+
+[resource]
+script = ExtResource("1")
+id = &"fw_crumble_crossing"
+display_name = "Crumble Crossing"
+content_version = 1
+scene = ExtResource("3")
+role = &"hazard"
+stage_tags = Array[StringName]([&"flooded_works"])
+required_route = true
+bounds = Rect2(0, 0, 1280, 720)
+entry_sockets = Array[ExtResource("2")]([SubResource("EntrySocket")])
+exit_sockets = Array[ExtResource("2")]([SubResource("ExitSocket")])
+encounter_budget = Vector2i(0, 0)
+hazard_budget = Vector2i(2, 2)
+reward_budget = Vector2i(0, 0)
+hazard_anchors = Array[ExtResource("4")]([SubResource("CrumblePath")])
+recovery_anchor_ids = Array[StringName]([&"crumble_entry_recovery", &"crumble_lower_recovery", &"crumble_exit_recovery"])
+estimated_seconds = Vector2i(25, 50)
+variant_group = &"flooded_timing_hazard"

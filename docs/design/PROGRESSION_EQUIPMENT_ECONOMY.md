@@ -238,11 +238,11 @@ Initial affixes:
 
 | ID | Eligibility | Effect |
 | --- | --- | --- |
-| `forge_force` | weapon | Direct damage x1.10. |
-| `forge_tempo` | weapon/charm | Relevant attack or skill cooldown x0.92. |
-| `forge_guard` | armor/relic | First damage in next required encounter is reduced by 1. |
-| `forge_stride` | armor/charm | Move speed +10 and air acceleration +5%. |
-| `forge_salvage` | charm/relic | Next two material drops gain +1 common material. |
+| `forge_force` | weapon/charm/relic | Direct damage x1.10. |
+| `forge_tempo` | weapon/armor/charm/relic | Relevant attack or skill cooldown x0.92. |
+| `forge_guard` | weapon/armor/relic | First damage in next required encounter is reduced by 1. |
+| `forge_stride` | weapon/armor/charm/relic | Move speed +10 and air acceleration +5%. |
+| `forge_salvage` | armor/charm/relic | Next two material drops gain +1 common material. |
 
 One item may hold one temporary affix. Reforging replaces it only after explicit
 confirmation. There is no downgrade, destruction, or no-change result.

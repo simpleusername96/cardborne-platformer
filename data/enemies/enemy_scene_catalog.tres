@@ -1,10 +1,14 @@
-[gd_resource type="Resource" script_class="EnemySceneCatalog" load_steps=9 format=3]
+[gd_resource type="Resource" script_class="EnemySceneCatalog" load_steps=17 format=3]
 
 [ext_resource type="Script" path="res://scripts/enemies/EnemySceneCatalog.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/enemies/EnemySceneEntry.gd" id="2"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/WalkerRuin.tscn" id="3"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/ChargerRuin.tscn" id="4"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/ShooterRuin.tscn" id="5"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/WalkerFlooded.tscn" id="6"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/ChargerFlooded.tscn" id="7"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/ShooterFlooded.tscn" id="8"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/LeaperFlooded.tscn" id="9"]
 
 [sub_resource type="Resource" id="Walker"]
 script = ExtResource("2")
@@ -21,8 +25,32 @@ script = ExtResource("2")
 archetype_id = &"shooter"
 scene = ExtResource("5")
 
+[sub_resource type="Resource" id="WalkerFlooded"]
+script = ExtResource("2")
+archetype_id = &"walker"
+variant_id = &"walker_flooded"
+scene = ExtResource("6")
+
+[sub_resource type="Resource" id="ChargerFlooded"]
+script = ExtResource("2")
+archetype_id = &"charger"
+variant_id = &"charger_flooded"
+scene = ExtResource("7")
+
+[sub_resource type="Resource" id="ShooterFlooded"]
+script = ExtResource("2")
+archetype_id = &"shooter"
+variant_id = &"shooter_flooded"
+scene = ExtResource("8")
+
+[sub_resource type="Resource" id="LeaperFlooded"]
+script = ExtResource("2")
+archetype_id = &"leaper"
+variant_id = &"leaper_flooded"
+scene = ExtResource("9")
+
 [resource]
 script = ExtResource("1")
 id = &"first_run_enemy_scenes"
-content_version = 1
-entries = Array[ExtResource("2")]([SubResource("Walker"), SubResource("Charger"), SubResource("Shooter")])
+content_version = 2
+entries = Array[ExtResource("2")]([SubResource("Walker"), SubResource("Charger"), SubResource("Shooter"), SubResource("WalkerFlooded"), SubResource("ChargerFlooded"), SubResource("ShooterFlooded"), SubResource("LeaperFlooded")])

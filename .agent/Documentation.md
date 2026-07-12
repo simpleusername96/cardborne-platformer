@@ -2,14 +2,18 @@
 
 ## Current Status
 
-- Cardborne boots into a production menu, character selection, and a safe authored
-  entry-stage scaffold.
+- Cardborne boots into a production menu, character/loadout/mastery selection,
+  deterministic Ruin Approach and Flooded Works stages, stage rewards, cards, and
+  the Rest & Forge transition that prepares Stage 3.
 - The integrated `MotionTestStage`, debug HUD, testbed inputs/flags, historical
   handoff package, fixed-grid maps, and generated wireframe prototype were retired
   on 2026-07-12. Git history preserves them if a focused investigation needs them.
-- Shared movement, movement metrics, damage, hit/hurt, enemy, checkpoint, hazard,
-  interactable, stage, input-remap, character-profile, and player-build foundations
-  remain available for production work.
+- Warrior has Basic, Heavy, three skills, six mastery effects, two character cards,
+  and its current equipment behavior set. Flooded Works adds exact Walker,
+  Charger, Shooter, and Leaper variants plus poison/crumble/rope content.
+- Persistent profile v1, twelve equipment items, eighteen mastery nodes, material
+  settlement, loadouts, save recovery, temporary forge, and scoped consumables are
+  active production systems.
 - `docs/product/2d_platform_action_card_game_prd.md` is the canonical product and
   first-complete-run blueprint.
 - Active content specs under `docs/design/` define characters, progression,
@@ -60,14 +64,14 @@ Read in this order:
 
 ## Current Risks
 
-- The production entry stage is only a safe scaffold, not credited Stage 1 content.
-- Character profiles have basic-attack seeds but heavy attacks, skills, passives,
-  cards, progression, and persistence are not implemented.
-- Enemy scripts are behavior prototypes; design catalog v2 now defines six
-  archetypes and 13 variants, but typed Resources, production scenes, and allocator
-  integration remain unimplemented.
-- JSON catalogs and docs are implementation-ready inputs but not runtime owners.
-- Fun remains unproven until real room/combat/reward playtests begin.
+- `PlayerCombatController` now owns too much Warrior-specific execution; split its
+  character mechanics before adding Archer and Assassin.
+- Archer and Assassin still lack complete typed kits and runtime behavior.
+- Broken Sanctum, remaining normal content, the boss, and end-to-end settlement do
+  not exist yet.
+- Flooded Works has deterministic geometry/runtime coverage, but complete-run
+  difficulty and pacing still need Milestone 9 playtest tuning.
+- JSON design catalogs remain migration inputs until all typed runtime content lands.
 
 ## Run / Verify
 
@@ -76,7 +80,10 @@ Read in this order:
 - Short boot: `./tools/godot.ps1 --path . --headless --quit-after 2`
 - Production flow: `./tools/godot.ps1 --path . --headless --script res://tools/validate_production_boot.gd`
 - Production stage: `./tools/godot.ps1 --path . --headless --script res://tools/validate_production_stage.gd`
+- Flooded generation: `./tools/godot.ps1 --path . --headless --script res://tools/validate_flooded_generation.gd`
+- Flooded runtime: `./tools/godot.ps1 --path . --headless --script res://tools/validate_flooded_stage_runtime.gd`
 - Warrior combat: `./tools/godot.ps1 --path . --headless --script res://tools/validate_warrior_combat_runtime.gd`
+- Complete Warrior: `./tools/godot.ps1 --path . --headless --script res://tools/validate_warrior_m5_runtime.gd`
 - Enemy catalog: `./tools/godot.ps1 --path . --headless --script res://tools/validate_enemy_catalog.gd`
 - Design catalogs: `./tools/godot.ps1 --path . --headless --script res://tools/validate_design_catalogs.gd`
 - Focused validators: `Get-ChildItem tools/validate_*.gd`
@@ -84,7 +91,7 @@ Read in this order:
 
 ## Next Implementation Entry
 
-Finish Milestone 1's manual fun gate on the linked Patrol Gallery and Charge Lane
-route. Then start Milestone 2 with explicit run phases and transaction-safe enemy
-rewards. Deterministic Warrior combat and Ruin Walker/Charger runtime fixtures are
-already implemented; do not replace them with another testbed or generic layer.
+Start Milestone 6 by extracting character-specific combat execution from the shared
+controller, then implement Archer and Assassin as complete typed kits against the
+same Stage 1-2 seeds. Preserve the accepted Warrior and generation fixtures while
+doing so; do not introduce character-ID branches into shared movement or combat.

@@ -1,0 +1,173 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/stages/RoomTemplateHost.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/stages/RoomAnchor.gd" id="2"]
+
+[sub_resource type="RectangleShape2D" id="LowerMassShape"]
+size = Vector2(840, 100)
+[sub_resource type="RectangleShape2D" id="ShaftCoverShape"]
+size = Vector2(220, 12)
+[sub_resource type="RectangleShape2D" id="UpperLedgeShape"]
+size = Vector2(240, 12)
+
+[node name="FwLowerUpperChoice" type="Node2D"]
+script = ExtResource("1")
+room_id = &"fw_lower_upper_choice"
+
+[node name="Terrain" type="Node2D" parent="."]
+[node name="LowerRouteMass" type="StaticBody2D" parent="Terrain"]
+position = Vector2(640, 620)
+collision_layer = 1
+collision_mask = 0
+metadata/surface_id = &"flooded_choice_lower_route"
+metadata/support_top = 620.0
+metadata/support_width = 840.0
+metadata/critical = true
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/LowerRouteMass"]
+position = Vector2(0, 50)
+shape = SubResource("LowerMassShape")
+[node name="RockVisual" type="Polygon2D" parent="Terrain/LowerRouteMass"]
+color = Color(0.18, 0.25, 0.27, 1)
+polygon = PackedVector2Array(-420, 0, 420, 0, 420, 100, -420, 100)
+[node name="SupportCap" type="Polygon2D" parent="Terrain/LowerRouteMass"]
+color = Color(0.24, 0.58, 0.61, 1)
+polygon = PackedVector2Array(-420, 0, 420, 0, 420, 8, -420, 8)
+
+[node name="BranchShaftCover" type="StaticBody2D" parent="Terrain"]
+position = Vector2(110, 620)
+collision_layer = 2
+collision_mask = 0
+metadata/surface_id = &"flooded_choice_branch_cover"
+metadata/support_top = 620.0
+metadata/support_width = 220.0
+metadata/critical = true
+metadata/one_way = true
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/BranchShaftCover"]
+shape = SubResource("ShaftCoverShape")
+one_way_collision = true
+[node name="Visual" type="Polygon2D" parent="Terrain/BranchShaftCover"]
+color = Color(0.42, 0.58, 0.36, 1)
+polygon = PackedVector2Array(-110, -6, 110, -6, 110, 6, -110, 6)
+
+[node name="ReturnShaftCover" type="StaticBody2D" parent="Terrain"]
+position = Vector2(1170, 620)
+collision_layer = 2
+collision_mask = 0
+metadata/surface_id = &"flooded_choice_return_cover"
+metadata/support_top = 620.0
+metadata/support_width = 220.0
+metadata/critical = true
+metadata/one_way = true
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/ReturnShaftCover"]
+shape = SubResource("ShaftCoverShape")
+one_way_collision = true
+[node name="Visual" type="Polygon2D" parent="Terrain/ReturnShaftCover"]
+color = Color(0.42, 0.58, 0.36, 1)
+polygon = PackedVector2Array(-110, -6, 110, -6, 110, 6, -110, 6)
+
+[node name="OneWay" type="Node2D" parent="."]
+
+[node name="UpperApproach" type="StaticBody2D" parent="OneWay"]
+position = Vector2(360, 540)
+collision_layer = 2
+collision_mask = 0
+metadata/surface_id = &"flooded_choice_upper_approach"
+metadata/support_top = 540.0
+metadata/support_width = 240.0
+metadata/critical = false
+[node name="CollisionShape2D" type="CollisionShape2D" parent="OneWay/UpperApproach"]
+shape = SubResource("UpperLedgeShape")
+one_way_collision = true
+[node name="Visual" type="Polygon2D" parent="OneWay/UpperApproach"]
+color = Color(0.68, 0.43, 0.24, 1)
+polygon = PackedVector2Array(-120, -6, 120, -6, 120, 6, -120, 6)
+
+[node name="UpperRewardLedge" type="StaticBody2D" parent="OneWay"]
+position = Vector2(640, 480)
+collision_layer = 2
+collision_mask = 0
+metadata/surface_id = &"flooded_choice_upper_reward"
+metadata/support_top = 480.0
+metadata/support_width = 240.0
+metadata/critical = false
+[node name="CollisionShape2D" type="CollisionShape2D" parent="OneWay/UpperRewardLedge"]
+shape = SubResource("UpperLedgeShape")
+one_way_collision = true
+[node name="Visual" type="Polygon2D" parent="OneWay/UpperRewardLedge"]
+color = Color(0.24, 0.58, 0.61, 1)
+polygon = PackedVector2Array(-120, -6, 120, -6, 120, 6, -120, 6)
+
+[node name="UpperRejoin" type="StaticBody2D" parent="OneWay"]
+position = Vector2(920, 540)
+collision_layer = 2
+collision_mask = 0
+metadata/surface_id = &"flooded_choice_upper_rejoin"
+metadata/support_top = 540.0
+metadata/support_width = 240.0
+metadata/critical = false
+[node name="CollisionShape2D" type="CollisionShape2D" parent="OneWay/UpperRejoin"]
+shape = SubResource("UpperLedgeShape")
+one_way_collision = true
+[node name="Visual" type="Polygon2D" parent="OneWay/UpperRejoin"]
+color = Color(0.68, 0.43, 0.24, 1)
+polygon = PackedVector2Array(-120, -6, 120, -6, 120, 6, -120, 6)
+
+[node name="Hazards" type="Node2D" parent="."]
+[node name="DecorBack" type="Node2D" parent="."]
+[node name="LowerWater" type="Polygon2D" parent="DecorBack"]
+color = Color(0.12, 0.36, 0.48, 0.34)
+polygon = PackedVector2Array(220, 690, 1060, 690, 1060, 720, 220, 720)
+[node name="DecorFront" type="Node2D" parent="."]
+
+[node name="Anchors" type="Node2D" parent="."]
+[node name="Sockets" type="Node2D" parent="Anchors"]
+[node name="Entry" type="Marker2D" parent="Anchors/Sockets"]
+position = Vector2(0, 620)
+[node name="Branch" type="Marker2D" parent="Anchors/Sockets"]
+position = Vector2(64, 720)
+[node name="Return" type="Marker2D" parent="Anchors/Sockets"]
+position = Vector2(1216, 720)
+[node name="Exit" type="Marker2D" parent="Anchors/Sockets"]
+position = Vector2(1280, 620)
+[node name="Enemy" type="Node2D" parent="Anchors"]
+[node name="Hazard" type="Node2D" parent="Anchors"]
+[node name="Reward" type="Node2D" parent="Anchors"]
+[node name="FloodedUpperReward" type="Marker2D" parent="Anchors/Reward"]
+position = Vector2(640, 480)
+script = ExtResource("2")
+anchor_id = &"flooded_upper_reward"
+anchor_type = &"reward"
+risk_tier = 1
+required = true
+metadata/reward_role = &"route_choice"
+metadata/interaction_space = Vector2(140, 100)
+metadata/support_id = &"flooded_choice_upper_reward"
+[node name="Objective" type="Node2D" parent="Anchors"]
+[node name="SafeEntry" type="Marker2D" parent="Anchors/Objective"]
+position = Vector2(140, 620)
+metadata/safe_radius = 240.0
+[node name="RouteDecision" type="Marker2D" parent="Anchors/Objective"]
+position = Vector2(300, 620)
+metadata/lower_route = &"flooded_choice_lower_route"
+metadata/upper_route = &"flooded_choice_upper_reward"
+
+[node name="Recovery" type="Node2D" parent="Anchors"]
+[node name="ChoiceLowerRecovery" type="Marker2D" parent="Anchors/Recovery"]
+position = Vector2(640, 620)
+script = ExtResource("2")
+anchor_id = &"choice_lower_recovery"
+anchor_type = &"recovery"
+safe_radius = 180.0
+required = true
+metadata/support_id = &"flooded_choice_lower_route"
+
+[node name="CameraBounds" type="Node2D" parent="."]
+metadata/bounds = Rect2(0, 0, 1280, 720)
+[node name="Validation" type="Node2D" parent="."]
+metadata/safe_entry_radius = 240.0
+metadata/minimum_critical_landing = 220.0
+metadata/lower_route_width = 1280.0
+metadata/upper_route_reward_id = &"flooded_upper_reward"
+metadata/branch_socket_id = &"flooded_choice_branch"
+metadata/return_socket_id = &"flooded_choice_return"
+metadata/optional_room_offset = Vector2(0, 720)

@@ -26,7 +26,7 @@ func _validate_catalog_and_offer() -> void:
 	if catalog == null:
 		return
 	_expect(catalog.validate_catalog().is_empty(), "first card catalog should validate")
-	_expect(catalog.cards.size() == 5, "M2 should promote exactly five initial cards")
+	_expect(catalog.cards.size() == 7, "M5 should preserve five cards and add two Warrior cards")
 	var first := CardOfferService.build_offer(catalog, &"warrior", {}, 93117, 0, 0)
 	var repeat := CardOfferService.build_offer(catalog, &"warrior", {}, 93117, 0, 0)
 	_expect(first == repeat, "identical card offer inputs should reproduce exactly")

@@ -29,6 +29,8 @@ func _run() -> void:
 	await _validate_perfect_punish()
 	await _validate_echo_heavy()
 	await _validate_chain_burst()
+	await _validate_warrior_seismic_edge()
+	await _validate_warrior_counterweight()
 	await _validate_rewarded_skill_kill_order()
 	await _validate_dash_wake()
 	_finish()
@@ -117,6 +119,52 @@ func _validate_chain_burst() -> void:
 	_expect(int(nearby.current_health) == 18, "chain burst should damage a nearby secondary enemy")
 	_expect(int(far.current_health) == 20, "chain burst should not damage enemies outside its radius")
 	_expect(int(primary.current_health) == 0, "chain burst should exclude the primary defeated target")
+	await _clear_fixture()
+
+
+func _validate_warrior_seismic_edge() -> void:
+	_expect(_equip_card(&"warrior_seismic_edge"), "Seismic Edge should be obtainable by Warrior")
+	await _create_fixture()
+	var enemy: Variant = _spawn_enemy(Vector2(135.0, 100.0), 20)
+	enemy.stagger_capacity = 999
+	await _physics_steps(2)
+	await _press_action("heavy_attack")
+	await _physics_steps(55)
+	_expect(int(enemy.current_health) == 18, "Seismic Edge should deal one nonrecursive 2-damage hit")
+	_expect(int(enemy.stagger_meter) == 25, "Seismic Edge should add exactly 25 stagger")
+	await _clear_fixture()
+
+
+func _validate_warrior_counterweight() -> void:
+	_expect(_equip_card(&"warrior_counterweight"), "Counterweight should be obtainable by Warrior")
+	await _create_fixture()
+	var combat: Variant = _player.get_node("CombatController")
+	combat.guarded_timer = 1.0
+	var source := Node2D.new()
+	source.position = _player.position + Vector2(80.0, 0.0)
+	_world.add_child(source)
+	_player.receive_damage(DamageInfo.new(2, source, Vector2.ZERO, ["enemy_contact"]))
+	var runtime: Node = _player.get_node("CardRuntime")
+	var armed: Dictionary = runtime.call("get_state_snapshot")
+	_expect(
+		float(armed.get("next_heavy_time", 0.0)) > 3.9,
+		"Counterweight should arm a 4 second Heavy window when Guard is consumed"
+	)
+	combat.call("_begin_attack", _kit.heavy_attack)
+	_expect(
+		is_equal_approx(combat.phase_timer, 0.42 * 0.65),
+		"Counterweight should shorten Heavy startup by 35 percent"
+	)
+	combat.notify_player_damaged(1)
+	_expect(
+		combat.current_attack == _kit.heavy_attack,
+		"Counterweight Heavy should resist startup interruption"
+	)
+	var consumed: Dictionary = runtime.call("get_state_snapshot")
+	_expect(
+		is_zero_approx(float(consumed.get("next_heavy_time", 0.0))),
+		"Counterweight should clear when Heavy starts"
+	)
 	await _clear_fixture()
 
 

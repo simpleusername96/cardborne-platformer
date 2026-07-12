@@ -11,6 +11,9 @@ extends Node
 
 var _aerial_attack_ready: bool = false
 var _internal_cooldowns: Dictionary = {}
+var _next_heavy_timer: float = 0.0
+var _next_heavy_startup_scale: float = 1.0
+var _next_heavy_uninterruptible: bool = false
 
 
 func _ready() -> void:
@@ -19,6 +22,9 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	_next_heavy_timer = maxf(_next_heavy_timer - delta, 0.0)
+	if _next_heavy_timer <= 0.0:
+		_clear_next_heavy()
 	for card_id in _internal_cooldowns.keys():
 		var remaining := maxf(float(_internal_cooldowns[card_id]) - delta, 0.0)
 		if remaining <= 0.0:
@@ -27,18 +33,70 @@ func _process(delta: float) -> void:
 			_internal_cooldowns[card_id] = remaining
 
 
-func prepare_attack(_definition: AttackDefinition) -> Dictionary:
+func prepare_attack(definition: AttackDefinition) -> Dictionary:
 	var modifiers: Dictionary = {}
-	if not _aerial_attack_ready:
-		return modifiers
-	var contexts := _card_contexts(&"first_attack_after_extra_jump")
-	if contexts.is_empty():
-		return modifiers
-	for context in contexts:
-		_apply_modifier_effects(context, modifiers)
-	_aerial_attack_ready = false
-	_emit_status("Aerial Opener ready")
+	if _aerial_attack_ready and definition.base_damage > 0:
+		var contexts := _card_contexts(&"first_attack_after_extra_jump")
+		for context in contexts:
+			_apply_modifier_effects(context, modifiers)
+		if not contexts.is_empty():
+			_emit_status("Aerial Opener ready")
+		_aerial_attack_ready = false
+	if _next_heavy_timer > 0.0 and definition.tags.has(&"heavy"):
+		modifiers["startup_time_scale"] = _next_heavy_startup_scale
+		modifiers["uninterruptible_startup"] = _next_heavy_uninterruptible
+		_clear_next_heavy()
 	return modifiers
+
+
+func notify_attack_activated(definition: AttackDefinition, context: Dictionary) -> void:
+	if definition == null or not definition.tags.has(&"heavy"):
+		return
+	if not bool(context.get("supported_ground", false)):
+		return
+	for card_context in _card_contexts(&"heavy_ground_impact"):
+		var card := card_context.get("definition") as CardDefinition
+		if card == null or not _is_card_ready(card):
+			continue
+		for effect in card.effects:
+			if effect.effect_type == &"ground_shockwave":
+				combat_controller.spawn_secondary_shockwave(
+					effect.damage,
+					effect.stagger,
+					effect.distance,
+					effect.duration,
+					card.id
+				)
+		if card.internal_cooldown > 0.0:
+			_internal_cooldowns[String(card.id)] = card.internal_cooldown
+
+
+func notify_guard_consumed() -> void:
+	for context in _card_contexts(&"guard_consumed"):
+		var card := context.get("definition") as CardDefinition
+		if card == null or not _is_card_ready(card):
+			continue
+		for effect in card.effects:
+			if effect.effect_type != &"arm_next_heavy":
+				continue
+			_next_heavy_timer = maxf(_next_heavy_timer, effect.duration)
+			_next_heavy_startup_scale = minf(
+				_next_heavy_startup_scale,
+				effect.startup_scale
+			)
+			_next_heavy_uninterruptible = (
+				_next_heavy_uninterruptible or effect.uninterruptible_startup
+			)
+		if card.internal_cooldown > 0.0:
+			_internal_cooldowns[String(card.id)] = card.internal_cooldown
+
+
+func get_state_snapshot() -> Dictionary:
+	return {
+		"next_heavy_time": _next_heavy_timer,
+		"next_heavy_startup_scale": _next_heavy_startup_scale,
+		"next_heavy_uninterruptible": _next_heavy_uninterruptible,
+	}
 
 
 func prepare_target_hit(
@@ -280,6 +338,12 @@ func _spawn_pulse_visual(position: Vector2, radius: float) -> void:
 
 func _add_modifier(modifiers: Dictionary, key: String, amount: float) -> void:
 	modifiers[key] = float(modifiers.get(key, 0.0)) + amount
+
+
+func _clear_next_heavy() -> void:
+	_next_heavy_timer = 0.0
+	_next_heavy_startup_scale = 1.0
+	_next_heavy_uninterruptible = false
 
 
 func _card_contexts(trigger: StringName) -> Array:

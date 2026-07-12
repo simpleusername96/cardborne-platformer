@@ -15,6 +15,12 @@ const VIEWPORT_MARGIN := 48.0
 @export var projectile_speed: float = 280.0
 @export var projectile_range: float = 760.0
 @export var max_active_projectiles: int = 2
+@export var body_color: Color = Color(0.34, 0.62, 0.92, 1.0)
+@export var recovery_color: Color = Color(0.42, 0.40, 0.58, 1.0)
+@export var warning_color: Color = Color(1.0, 0.88, 0.24, 1.0)
+@export var weapon_color: Color = Color(0.72, 0.84, 0.96, 1.0)
+@export var projectile_color: Color = Color(1.0, 0.78, 0.18, 1.0)
+@export var weapon_length: float = 28.0
 
 var direction: int = -1
 var _state: StringName = STATE_IDLE
@@ -35,7 +41,7 @@ func _ready() -> void:
 		projectile_speed = resolved_spec.projectile_speed
 		projectile_range = resolved_spec.attack_range
 		max_active_projectiles = resolved_spec.active_projectile_cap
-	_base_visual_color = Color(0.34, 0.62, 0.92, 1.0)
+	_base_visual_color = body_color
 	_aim_warning = _ensure_aim_warning()
 	_weapon_visual = _ensure_weapon_visual()
 	_set_state(STATE_IDLE, INITIAL_AIM_DELAY)
@@ -149,7 +155,7 @@ func _spawn_projectile() -> void:
 	shot.lifetime = lifetime
 	shot.velocity = _locked_aim_direction * projectile_speed
 	shot.projectile_size = Vector2(30.0, 12.0)
-	shot.projectile_color = Color(1.0, 0.78, 0.18, 1.0)
+	shot.projectile_color = projectile_color
 	shot.target_hit.connect(_on_projectile_target_hit.bind(shot))
 	parent_node.add_child(shot)
 	shot.global_position = (
@@ -215,18 +221,18 @@ func _update_visual() -> void:
 		if is_staggered():
 			_visual.color = Color(0.36, 0.88, 0.92, 1.0)
 		elif _state == STATE_AIMING:
-			_visual.color = Color(1.0, 0.88, 0.24, 1.0)
+			_visual.color = warning_color
 		elif _state == STATE_RECOVERY:
-			_visual.color = Color(0.42, 0.40, 0.58, 1.0)
+			_visual.color = recovery_color
 		else:
 			_visual.color = _base_visual_color
 	if _weapon_visual != null:
 		_weapon_visual.position = Vector2(float(direction) * 8.0, -28.0)
 		_weapon_visual.scale.x = float(direction)
 		_weapon_visual.color = (
-			Color(1.0, 0.82, 0.22, 1.0)
+			warning_color
 			if _state == STATE_AIMING
-			else Color(0.72, 0.84, 0.96, 1.0)
+			else weapon_color
 		)
 	if _aim_warning != null:
 		_aim_warning.visible = current_health > 0 and _state == STATE_AIMING
@@ -248,7 +254,7 @@ func _ensure_aim_warning() -> Line2D:
 		line = Line2D.new()
 		line.name = "AimWarning"
 		line.width = 8.0
-		line.default_color = Color(1.0, 0.72, 0.16, 0.78)
+		line.default_color = warning_color
 		line.antialiased = true
 		line.z_index = -1
 		add_child(line)
@@ -263,8 +269,8 @@ func _ensure_weapon_visual() -> Polygon2D:
 		weapon.name = "Weapon"
 		weapon.polygon = PackedVector2Array([
 			Vector2(0.0, -5.0),
-			Vector2(28.0, -5.0),
-			Vector2(28.0, 5.0),
+			Vector2(weapon_length, -5.0),
+			Vector2(weapon_length, 5.0),
 			Vector2(0.0, 5.0),
 		])
 		weapon.z_index = 1

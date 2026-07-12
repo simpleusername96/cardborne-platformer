@@ -80,7 +80,7 @@ func generate(
 		return StageGenerationResult.new(true, completed, report)
 
 	var fallback_builder := CuratedStagePlanBuilder.new()
-	var fallback_topology := fallback_builder.build_ruin_approach(
+	var fallback_topology := fallback_builder.build(
 		room_catalog,
 		profile,
 		run_seed,

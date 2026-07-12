@@ -20,6 +20,7 @@ var _punish_contract: String
 
 var _minimum_support_width: float = 0.0
 var _minimum_lane_width: float = 0.0
+var _minimum_arc_clearance: float = 0.0
 var _requires_patrol_turn_points: bool = false
 var _requires_escape_route: bool = false
 var _allows_wall_stop_lane: bool = false
@@ -192,6 +193,7 @@ func _init(
 
 	_minimum_support_width = archetype.minimum_support_width
 	_minimum_lane_width = archetype.minimum_lane_width
+	_minimum_arc_clearance = archetype.minimum_arc_clearance
 	_requires_patrol_turn_points = archetype.requires_patrol_turn_points
 	_requires_escape_route = archetype.requires_escape_route
 	_allows_wall_stop_lane = archetype.allows_wall_stop_lane
@@ -251,6 +253,7 @@ func get_room_requirements() -> Dictionary:
 	return {
 		"minimum_support_width": _minimum_support_width,
 		"minimum_lane_width": _minimum_lane_width,
+		"minimum_arc_clearance": _minimum_arc_clearance,
 		"requires_patrol_turn_points": _requires_patrol_turn_points,
 		"requires_escape_route": _requires_escape_route,
 		"allows_wall_stop_lane": _allows_wall_stop_lane,

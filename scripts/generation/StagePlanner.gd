@@ -47,8 +47,6 @@ func build_plan(
 		RoomSocketCompatibility.validate_movement_limits(movement_limits),
 		"Movement limits"
 	)
-	if profile.required_roles.size() != 6:
-		preflight_errors.append("Stage planner requires a six-role required route.")
 	if not profile.supports_one_optional_branch():
 		preflight_errors.append("Stage planner requires a profile that allows one optional branch.")
 	if not preflight_errors.is_empty():
@@ -91,7 +89,7 @@ func build_plan(
 	if selection.is_empty():
 		_last_report.record_failure(
 			&"no_compatible_route",
-			"No unique six-room route with a compatible rejoining optional branch exists."
+			"No unique required route with a compatible rejoining optional branch exists."
 		)
 		return null
 

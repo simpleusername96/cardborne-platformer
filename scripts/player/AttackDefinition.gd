@@ -11,7 +11,7 @@ const HIT_POLICY_ONCE := &"once_per_activation"
 
 @export_group("Timing")
 @export_range(0.0, 10.0, 0.01) var startup_time: float = 0.1
-@export_range(0.01, 10.0, 0.01) var active_time: float = 0.1
+@export_range(0.0, 10.0, 0.01) var active_time: float = 0.1
 @export_range(0.0, 10.0, 0.01) var recovery_time: float = 0.2
 @export_range(0.01, 60.0, 0.01) var cooldown: float = 0.4
 @export var movement_lock_delay: float = -1.0
@@ -44,8 +44,10 @@ func validate_definition() -> PackedStringArray:
 		errors.append("Attack '%s' needs a positive content version." % id)
 	if String(input_action).strip_edges().is_empty():
 		errors.append("Attack '%s' needs an input action." % id)
-	if active_time <= 0.0 or cooldown <= 0.0:
-		errors.append("Attack '%s' needs positive active and cooldown timing." % id)
+	if active_time < 0.0 or cooldown <= 0.0:
+		errors.append("Attack '%s' needs non-negative active and positive cooldown timing." % id)
+	if is_zero_approx(active_time) and not tags.has(&"instant"):
+		errors.append("Attack '%s' needs positive active timing unless tagged instant." % id)
 	if cooldown + 0.0001 < total_duration():
 		errors.append("Attack '%s' cooldown cannot be shorter than its action cycle." % id)
 	if base_damage < 0 or stagger < 0:

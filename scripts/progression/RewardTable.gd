@@ -4,6 +4,7 @@ extends Resource
 @export var id: StringName
 @export var display_name: String
 @export var content_version: int = 1
+@export var tags: Array[StringName] = []
 @export var entries: Array[RewardEntry] = []
 
 
@@ -14,6 +15,7 @@ func validate_definition() -> PackedStringArray:
 		errors.append("Reward table '%s' needs a display name." % id)
 	if content_version <= 0:
 		errors.append("Reward table '%s' needs a positive content version." % id)
+	ContentId.validate_list(errors, "Reward table '%s' tag" % id, tags, false)
 	if entries.is_empty():
 		errors.append("Reward table '%s' needs at least one entry." % id)
 	for entry_index in entries.size():

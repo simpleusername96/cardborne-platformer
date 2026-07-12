@@ -8,6 +8,8 @@ const SUPPORTED_TRIGGERS: Array[StringName] = [
 	&"first_attack_after_extra_jump",
 	&"hit_target_in_recovery",
 	&"skill_kill",
+	&"heavy_ground_impact",
+	&"guard_consumed",
 ]
 
 @export var id: StringName

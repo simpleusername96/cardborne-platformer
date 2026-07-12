@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="CardDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/cards/CardDefinition.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/cards/CardEffectDefinition.gd" id="2"]
+
+[sub_resource type="Resource" id="ArmHeavy"]
+script = ExtResource("2")
+effect_type = &"arm_next_heavy"
+duration = 4.0
+startup_scale = 0.65
+uninterruptible_startup = true
+
+[resource]
+script = ExtResource("1")
+id = &"warrior_counterweight"
+display_name = "Counterweight"
+description = "When Guard is consumed, the next Heavy within 4 seconds starts 35% faster and cannot be interrupted during startup."
+content_version = 1
+rarity = &"legendary"
+compatibility = Array[StringName]([&"warrior"])
+trigger = &"guard_consumed"
+effects = Array[ExtResource("2")]([SubResource("ArmHeavy")])
+max_stacks = 1

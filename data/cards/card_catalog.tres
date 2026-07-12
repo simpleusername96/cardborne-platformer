@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="CardCatalog" load_steps=7 format=3]
+[gd_resource type="Resource" script_class="CardCatalog" load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/cards/CardCatalog.gd" id="1"]
 [ext_resource type="Resource" path="res://data/cards/echo_heavy.tres" id="2"]
@@ -6,10 +6,12 @@
 [ext_resource type="Resource" path="res://data/cards/aerial_opener.tres" id="4"]
 [ext_resource type="Resource" path="res://data/cards/perfect_punish.tres" id="5"]
 [ext_resource type="Resource" path="res://data/cards/chain_burst.tres" id="6"]
+[ext_resource type="Resource" path="res://data/cards/warrior_seismic_edge.tres" id="7"]
+[ext_resource type="Resource" path="res://data/cards/warrior_counterweight.tres" id="8"]
 
 [resource]
 script = ExtResource("1")
 id = &"first_run_cards"
 display_name = "First Run Cards"
 content_version = 1
-cards = Array[ExtResource("2")]([ExtResource("2"), ExtResource("3"), ExtResource("4"), ExtResource("5"), ExtResource("6")])
+cards = Array[ExtResource("2")]([ExtResource("2"), ExtResource("3"), ExtResource("4"), ExtResource("5"), ExtResource("6"), ExtResource("7"), ExtResource("8")])

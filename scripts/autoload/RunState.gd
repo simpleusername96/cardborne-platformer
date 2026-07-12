@@ -6,7 +6,15 @@ const CHARACTER_CATALOG_PATH := "res://data/characters/character_catalog.tres"
 const REWARD_CATALOG_PATH := "res://data/rewards/reward_catalog.tres"
 const PROGRESSION_CATALOG_PATH := "res://data/progression/run_progression_catalog.tres"
 const CARD_CATALOG_PATH := "res://data/cards/card_catalog.tres"
+const FORGE_CATALOG_PATH := "res://data/forge/forge_catalog.tres"
 const CARD_REROLL_COST := 12
+const REST_HEAL_COST := 8
+const REST_HEAL_AMOUNT := 2
+const CONSUMABLES: Dictionary = {
+	"small_potion": {"display_name": "Small Potion", "cost": 8, "description": "Heal 2."},
+	"dash_tonic": {"display_name": "Dash Tonic", "cost": 10, "description": "Dash cooldown -0.12 s this stage."},
+	"salvage_kit": {"display_name": "Salvage Kit", "cost": 10, "description": "Next material reward gains +1."},
+}
 
 const RUN_CURRENCIES: PackedStringArray = ["xp", "coin"]
 const MATERIAL_CURRENCIES: PackedStringArray = [
@@ -17,6 +25,7 @@ var character_catalog: CharacterCatalog
 var reward_catalog: RewardCatalog
 var progression_catalog: RunProgressionCatalog
 var card_catalog: CardCatalog
+var forge_catalog: ForgeCatalog
 var profiles: Array[CharacterProfile] = []
 var selected_profile_index: int = 0
 var selected_profile: CharacterProfile
@@ -43,6 +52,20 @@ var _card_offer_sequence: int = 0
 var _card_reroll_used: bool = false
 var _card_reward_stage_index: int = -1
 var _committed_card_id: StringName
+var _rest_active: bool = false
+var _rest_consumable_purchased: bool = false
+var _rest_forge_committed: bool = false
+var _temporary_affixes: Dictionary = {}
+var _forge_offer_item_id: StringName
+var _forge_offer: Array[StringName] = []
+var _forge_guard_remaining: int = 0
+var _forge_guard_value: int = 0
+var _forge_salvage_remaining: int = 0
+var _forge_salvage_value: int = 0
+var _dash_tonic_active: bool = false
+var _consumable_salvage_remaining: int = 0
+var current_consumable_id: StringName = &"small_potion"
+var consumable_charges: int = 1
 var _catalogs_valid: bool = false
 
 
@@ -116,6 +139,21 @@ func start_new_run(profile_index: int = -1, requested_seed: int = -1) -> bool:
 	_card_reroll_used = false
 	_card_reward_stage_index = -1
 	_committed_card_id = &""
+	_rest_active = false
+	_rest_consumable_purchased = false
+	_rest_forge_committed = false
+	_temporary_affixes.clear()
+	_forge_offer_item_id = &""
+	_forge_offer.clear()
+	_forge_guard_remaining = 0
+	_forge_guard_value = 0
+	_forge_salvage_remaining = 0
+	_forge_salvage_value = 0
+	_dash_tonic_active = false
+	_consumable_salvage_remaining = 0
+	var profile_loadout := ProfileState.get_loadout(candidate_profile.id)
+	current_consumable_id = StringName(profile_loadout.get("consumable", "small_potion"))
+	consumable_charges = 1
 	_publish_state()
 	SignalBus.run_started.emit()
 	return true
@@ -174,6 +212,9 @@ func get_run_snapshot() -> RunSnapshot:
 		"card_reward_pending": _card_reward_pending,
 		"card_offer": _string_name_array_to_strings(_pending_card_offer),
 		"card_reroll_used": _card_reroll_used,
+		"temporary_affixes": _temporary_affixes.duplicate(true),
+		"consumable_id": String(current_consumable_id),
+		"consumable_charges": consumable_charges,
 		"effective_stats": get_effective_stats(),
 	})
 
@@ -202,6 +243,7 @@ func apply_reward_transaction(transaction: RewardTransaction) -> RewardResult:
 			"Reward transaction was already applied."
 		)
 	var grants := transaction.get_grants()
+	var consumable_salvage_eligible := _is_material_node_reward(transaction)
 	for currency_id in grants:
 		var amount_value: Variant = grants[currency_id]
 		if (
@@ -223,6 +265,21 @@ func apply_reward_transaction(transaction: RewardTransaction) -> RewardResult:
 
 	for currency_id in grants:
 		var amount := int(grants[currency_id])
+		if (
+			String(currency_id) in ["rusted_scrap", "sky_thread", "slime_residue"]
+			and _forge_salvage_remaining > 0
+		):
+			amount += _forge_salvage_value
+			grants[currency_id] = amount
+			_forge_salvage_remaining -= 1
+		if (
+			String(currency_id) in ["rusted_scrap", "sky_thread", "slime_residue"]
+			and _consumable_salvage_remaining > 0
+			and consumable_salvage_eligible
+		):
+			amount += 1
+			grants[currency_id] = amount
+			_consumable_salvage_remaining -= 1
 		match String(currency_id):
 			"xp":
 				_grant_xp_internal(amount)
@@ -415,7 +472,7 @@ func get_card_effect_contexts(trigger: StringName) -> Array[Dictionary]:
 
 
 func can_reroll_card_offer() -> bool:
-	if not _card_reward_pending or _card_reroll_used or coins < CARD_REROLL_COST:
+	if not _card_reward_pending or _card_reroll_used or coins < get_card_reroll_cost():
 		return false
 	return CardOfferService.eligible_ids(
 		card_catalog,
@@ -431,8 +488,9 @@ func reroll_card_offer() -> Dictionary:
 		return {"ok": false, "message": "No card reward is pending."}
 	if _card_reroll_used:
 		return {"ok": false, "message": "The stage card reroll was already used."}
-	if coins < CARD_REROLL_COST:
-		return {"ok": false, "message": "Reroll needs %d coins." % CARD_REROLL_COST}
+	var reroll_cost := get_card_reroll_cost()
+	if coins < reroll_cost:
+		return {"ok": false, "message": "Reroll needs %d coins." % reroll_cost}
 	if not can_reroll_card_offer():
 		return {"ok": false, "message": "No different card choices are available."}
 
@@ -463,17 +521,24 @@ func reroll_card_offer() -> Dictionary:
 	):
 		return {"ok": false, "message": "No different complete card offer is available."}
 
-	coins -= CARD_REROLL_COST
+	coins -= reroll_cost
 	_card_offer_sequence = candidate_sequence
 	_card_reroll_used = true
 	_pending_card_offer = next_offer
 	_publish_snapshot()
 	return {
 		"ok": true,
-		"cost": CARD_REROLL_COST,
+		"cost": reroll_cost,
 		"coins": coins,
 		"offer": get_pending_card_offer(),
 	}
+
+
+func get_card_reroll_cost() -> int:
+	var discount := PlayerProgressionEffectQuery.first_card_reroll_discount(
+		ProfileState.get_behavior_effects(StringName(selected_profile.id))
+	)
+	return maxi(CARD_REROLL_COST - discount, 0)
 
 
 func choose_card(card_id: StringName) -> Dictionary:
@@ -505,12 +570,227 @@ func choose_card(card_id: StringName) -> Dictionary:
 func advance_stage_after_card_reward() -> bool:
 	if _card_reward_pending or _committed_card_id == &"":
 		return false
+	if _dash_tonic_active:
+		_dash_tonic_active = false
+		if not _rebuild_effective_build():
+			_dash_tonic_active = true
+			_rebuild_effective_build()
+			return false
 	current_stage_index += 1
 	_card_reward_stage_index = -1
 	_card_reroll_used = false
 	_committed_card_id = &""
 	_publish_snapshot()
 	return true
+
+
+func begin_rest_forge() -> Dictionary:
+	if _rest_active:
+		return {"ok": true, "snapshot": get_rest_forge_snapshot()}
+	_rest_active = true
+	_rest_consumable_purchased = false
+	_rest_forge_committed = false
+	_forge_offer_item_id = &""
+	_forge_offer.clear()
+	_publish_snapshot()
+	return {"ok": true, "snapshot": get_rest_forge_snapshot()}
+
+
+func get_rest_forge_snapshot() -> Dictionary:
+	var item_rows: Array[Dictionary] = []
+	var loadout := ProfileState.get_loadout(selected_profile.id)
+	for slot_id in ProfileData.PERSISTENT_SLOTS:
+		var item_id := StringName(loadout.get(slot_id, ""))
+		if item_id == &"":
+			continue
+		var item := ProfileState.equipment_catalog.get_item(item_id)
+		if item == null:
+			continue
+		item_rows.append({
+			"id": String(item.id),
+			"display_name": item.display_name,
+			"slot": String(item.slot),
+			"affix_id": String(_temporary_affixes.get(String(item.id), "")),
+		})
+	var offer_rows: Array[Dictionary] = []
+	for affix_id in _forge_offer:
+		var affix := forge_catalog.get_affix(affix_id) if forge_catalog != null else null
+		if affix != null:
+			offer_rows.append({
+				"id": String(affix.id),
+				"display_name": affix.display_name,
+				"description": affix.mechanical_description,
+			})
+	var consumable_rows: Array[Dictionary] = []
+	for consumable_id in CONSUMABLES:
+		var definition: Dictionary = CONSUMABLES[consumable_id]
+		consumable_rows.append({
+			"id": consumable_id,
+			"display_name": definition["display_name"],
+			"description": definition["description"],
+			"cost": definition["cost"],
+		})
+	consumable_rows.sort_custom(func(left: Dictionary, right: Dictionary) -> bool:
+		return String(left["id"]) < String(right["id"])
+	)
+	return {
+		"active": _rest_active,
+		"health": current_health,
+		"max_health": max_health,
+		"coins": coins,
+		"heal_cost": REST_HEAL_COST,
+		"heal_amount": REST_HEAL_AMOUNT,
+		"can_heal": _rest_active and current_health < max_health and coins >= REST_HEAL_COST,
+		"consumables": consumable_rows,
+		"consumable_purchased": _rest_consumable_purchased,
+		"current_consumable_id": String(current_consumable_id),
+		"items": item_rows,
+		"forge_cost": forge_catalog.coin_cost if forge_catalog != null else 15,
+		"forge_committed": _rest_forge_committed,
+		"forge_item_id": String(_forge_offer_item_id),
+		"forge_offer": offer_rows,
+		"temporary_affixes": _temporary_affixes.duplicate(true),
+	}
+
+
+func buy_rest_heal() -> Dictionary:
+	if not _rest_active:
+		return {"ok": false, "message": "Rest is not active."}
+	if current_health >= max_health:
+		return {"ok": false, "message": "Health is already full."}
+	if not spend_coins(REST_HEAL_COST):
+		return {"ok": false, "message": "Heal needs %d coins." % REST_HEAL_COST}
+	heal_player(REST_HEAL_AMOUNT)
+	return {"ok": true, "message": "Recovered %d health." % REST_HEAL_AMOUNT, "snapshot": get_rest_forge_snapshot()}
+
+
+func buy_rest_consumable(consumable_id: StringName) -> Dictionary:
+	var key := String(consumable_id)
+	if not _rest_active or not CONSUMABLES.has(key):
+		return {"ok": false, "message": "Consumable is unavailable."}
+	if _rest_consumable_purchased:
+		return {"ok": false, "message": "A consumable was already bought here."}
+	var definition: Dictionary = CONSUMABLES[key]
+	var cost := int(definition["cost"])
+	if not spend_coins(cost):
+		return {"ok": false, "message": "%s needs %d coins." % [definition["display_name"], cost]}
+	current_consumable_id = consumable_id
+	consumable_charges = 1
+	_rest_consumable_purchased = true
+	_publish_snapshot()
+	return {"ok": true, "message": "%s equipped." % definition["display_name"], "snapshot": get_rest_forge_snapshot()}
+
+
+func begin_forge_offer(item_id: StringName) -> Dictionary:
+	if not _rest_active or _rest_forge_committed or forge_catalog == null:
+		return {"ok": false, "message": "Forge is unavailable."}
+	var item := ProfileState.equipment_catalog.get_item(item_id)
+	var loadout := ProfileState.get_loadout(selected_profile.id)
+	if item == null or String(loadout.get(String(item.slot), "")) != String(item_id):
+		return {"ok": false, "message": "Choose an equipped item."}
+	if _forge_offer_item_id == item_id and _forge_offer.size() == forge_catalog.offer_size:
+		return {"ok": true, "snapshot": get_rest_forge_snapshot()}
+	var current_affix := StringName(_temporary_affixes.get(String(item_id), ""))
+	_forge_offer = ForgeOfferService.build_offer(
+		forge_catalog,
+		item.slot,
+		run_seed,
+		current_stage_index,
+		item_id,
+		0,
+		current_affix
+	)
+	if _forge_offer.size() != forge_catalog.offer_size:
+		_forge_offer_item_id = &""
+		return {"ok": false, "message": "No complete forge offer is available."}
+	_forge_offer_item_id = item_id
+	return {"ok": true, "message": "Choose one affix.", "snapshot": get_rest_forge_snapshot()}
+
+
+func commit_forge_affix(
+	item_id: StringName,
+	affix_id: StringName,
+	confirm_replace: bool = false
+) -> Dictionary:
+	if not _rest_active or _rest_forge_committed:
+		return {"ok": false, "message": "Forge was already used here."}
+	if item_id != _forge_offer_item_id or not _forge_offer.has(affix_id):
+		return {"ok": false, "message": "Affix is not in the current offer."}
+	if coins < forge_catalog.coin_cost:
+		return {"ok": false, "message": "Forge needs %d coins." % forge_catalog.coin_cost}
+	var previous_affix := StringName(_temporary_affixes.get(String(item_id), ""))
+	if previous_affix != &"" and not confirm_replace:
+		return {
+			"ok": false,
+			"requires_confirmation": true,
+			"message": "Replace the current affix?",
+			"item_id": String(item_id),
+			"affix_id": String(affix_id),
+		}
+	_temporary_affixes[String(item_id)] = String(affix_id)
+	if not _rebuild_effective_build():
+		if previous_affix == &"":
+			_temporary_affixes.erase(String(item_id))
+		else:
+			_temporary_affixes[String(item_id)] = String(previous_affix)
+		_rebuild_effective_build()
+		return {"ok": false, "message": "Affix produced an invalid build."}
+	coins -= forge_catalog.coin_cost
+	_rest_forge_committed = true
+	_forge_offer_item_id = &""
+	_forge_offer.clear()
+	_rebuild_forge_behavior_counters()
+	_publish_state()
+	return {
+		"ok": true,
+		"message": "%s forged." % ProfileState.equipment_catalog.get_item(item_id).display_name,
+		"snapshot": get_rest_forge_snapshot(),
+	}
+
+
+func end_rest_forge() -> bool:
+	if not _rest_active:
+		return false
+	_rest_active = false
+	_forge_offer_item_id = &""
+	_forge_offer.clear()
+	_publish_snapshot()
+	return true
+
+
+func use_consumable() -> Dictionary:
+	if consumable_charges <= 0:
+		return {"ok": false, "message": "No consumable charge remains."}
+	match current_consumable_id:
+		&"small_potion":
+			if current_health >= max_health:
+				return {"ok": false, "message": "Health is already full."}
+			heal_player(2)
+		&"dash_tonic":
+			_dash_tonic_active = true
+			_rebuild_effective_build()
+		&"salvage_kit":
+			_consumable_salvage_remaining = 1
+		_:
+			return {"ok": false, "message": "Consumable is unavailable."}
+	consumable_charges -= 1
+	_publish_state()
+	return {"ok": true, "message": "Consumable used.", "snapshot": get_run_snapshot().to_dictionary()}
+
+
+func reduce_damage_with_forge_guard(amount: int) -> int:
+	if amount <= 0 or _forge_guard_remaining <= 0:
+		return amount
+	_forge_guard_remaining -= 1
+	SignalBus.status_message_changed.emit("Forge Guard reduced damage")
+	return maxi(amount - _forge_guard_value, 0)
+
+
+func _is_material_node_reward(transaction: RewardTransaction) -> bool:
+	if reward_catalog == null or transaction == null:
+		return false
+	var table := reward_catalog.get_table(transaction.source_id)
+	return table != null and table.tags.has(&"material_node")
 
 
 func get_movement_metrics() -> Dictionary:
@@ -629,7 +909,43 @@ func _collect_run_effects(stacks: Dictionary) -> Array:
 func _collect_all_build_effects(stacks: Dictionary) -> Array:
 	var effects: Array = ProfileState.get_build_effects(StringName(selected_profile.id))
 	effects.append_array(_collect_run_effects(stacks))
+	if forge_catalog != null:
+		var item_ids := _temporary_affixes.keys()
+		item_ids.sort()
+		for item_id in item_ids:
+			var affix := forge_catalog.get_affix(StringName(_temporary_affixes[item_id]))
+			if affix != null:
+				for effect in affix.build_effects:
+					effects.append(effect)
+	if _dash_tonic_active:
+		var dash_effect := EffectDefinition.new()
+		dash_effect.stat_id = &"dash_cooldown"
+		dash_effect.operation = EffectDefinition.OPERATION_ADD
+		dash_effect.value = -0.12
+		dash_effect.source_id = &"dash_tonic"
+		dash_effect.source_scope = EffectDefinition.SOURCE_SCOPE_TEMPORARY
+		effects.append(dash_effect)
 	return effects
+
+
+func _rebuild_forge_behavior_counters() -> void:
+	_forge_guard_remaining = 0
+	_forge_guard_value = 0
+	_forge_salvage_remaining = 0
+	_forge_salvage_value = 0
+	if forge_catalog == null:
+		return
+	for item_id in _temporary_affixes:
+		var affix := forge_catalog.get_affix(StringName(_temporary_affixes[item_id]))
+		if affix == null:
+			continue
+		match affix.behavior_type:
+			ForgeAffixDefinition.BEHAVIOR_GUARD:
+				_forge_guard_remaining += affix.trigger_count
+				_forge_guard_value = maxi(_forge_guard_value, affix.behavior_value)
+			ForgeAffixDefinition.BEHAVIOR_SALVAGE:
+				_forge_salvage_remaining += affix.trigger_count
+				_forge_salvage_value = maxi(_forge_salvage_value, affix.behavior_value)
 
 
 func _load_run_catalogs() -> void:
@@ -664,6 +980,16 @@ func _load_run_catalogs() -> void:
 	else:
 		_catalogs_valid = false
 		push_error("Unable to load the card catalog.")
+	var loaded_forge := load(FORGE_CATALOG_PATH)
+	if loaded_forge is ForgeCatalog:
+		forge_catalog = loaded_forge
+		var errors := forge_catalog.validate_catalog()
+		_catalogs_valid = _catalogs_valid and errors.is_empty()
+		for error in errors:
+			push_error("Invalid forge catalog: %s" % error)
+	else:
+		_catalogs_valid = false
+		push_error("Unable to load the forge catalog.")
 
 
 func _build_card_offer(excluded_ids: Array[StringName]) -> Array[StringName]:

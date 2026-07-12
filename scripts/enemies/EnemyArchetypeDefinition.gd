@@ -33,6 +33,7 @@ const FLOAT_TOLERANCE := 0.0001
 @export_group("Room Requirements")
 @export var minimum_support_width: float = 0.0
 @export var minimum_lane_width: float = 0.0
+@export var minimum_arc_clearance: float = 0.0
 @export var requires_patrol_turn_points: bool = false
 @export var requires_escape_route: bool = false
 @export var allows_wall_stop_lane: bool = false
@@ -86,6 +87,7 @@ func validate_definition() -> PackedStringArray:
 
 	_validate_nonnegative_float(errors, "minimum support width", minimum_support_width)
 	_validate_nonnegative_float(errors, "minimum lane width", minimum_lane_width)
+	_validate_nonnegative_float(errors, "minimum arc clearance", minimum_arc_clearance)
 	ContentId.validate_list(
 		errors,
 		"Enemy archetype '%s' room requirement" % id,
@@ -137,6 +139,7 @@ func room_requirements() -> Dictionary:
 	return {
 		"minimum_support_width": minimum_support_width,
 		"minimum_lane_width": minimum_lane_width,
+		"minimum_arc_clearance": minimum_arc_clearance,
 		"requires_patrol_turn_points": requires_patrol_turn_points,
 		"requires_escape_route": requires_escape_route,
 		"allows_wall_stop_lane": allows_wall_stop_lane,
@@ -158,6 +161,7 @@ func _has_room_requirement() -> bool:
 	return (
 		minimum_support_width > 0.0
 		or minimum_lane_width > 0.0
+		or minimum_arc_clearance > 0.0
 		or requires_patrol_turn_points
 		or requires_escape_route
 		or allows_wall_stop_lane

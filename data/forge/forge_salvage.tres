@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ForgeAffixDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/progression/ForgeAffixDefinition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"forge_salvage"
+display_name = "Salvage"
+mechanical_description = "The next two material rewards gain +1 matching material."
+eligible_slots = Array[StringName]([&"armor", &"charm", &"relic"])
+behavior_type = &"bonus_material_drops"
+behavior_value = 1
+trigger_count = 2

@@ -16,6 +16,7 @@ signal damaged(enemy: EnemyBase, damage_info: DamageInfo)
 @export var auto_reset_on_defeat: bool = true
 @export var defeat_reset_delay: float = 2.0
 @export var encounter_bounds: Rect2 = Rect2()
+@export var lightweight: bool = true
 
 @export_group("Resolved Enemy")
 @export var enemy_catalog: EnemyCatalog
@@ -28,7 +29,12 @@ var spawn_position: Vector2
 var hit_stun_timer: float = 0.0
 var stagger_meter: int = 0
 var staggered_timer: float = 0.0
+var fractured_timer: float = 0.0
+var fractured_bonus_damage: int = 0
 var resolved_spec: ResolvedEnemySpec
+
+var _forced_carry_active: bool = false
+var _forced_carry_position: Vector2 = Vector2.ZERO
 
 var _visual: Polygon2D
 var _base_visual_color: Color = Color(0.84, 0.34, 0.28, 1.0)
@@ -69,6 +75,13 @@ func receive_damage(damage_info: DamageInfo) -> void:
 
 func _physics_process(delta: float) -> void:
 	hit_stun_timer = maxf(hit_stun_timer - delta, 0.0)
+	fractured_timer = maxf(fractured_timer - delta, 0.0)
+	if fractured_timer <= 0.0:
+		fractured_bonus_damage = 0
+	if _forced_carry_active:
+		global_position = _forced_carry_position
+		velocity = Vector2.ZERO
+		return
 	var was_staggered := staggered_timer > 0.0
 	staggered_timer = maxf(staggered_timer - delta, 0.0)
 	if staggered_timer > 0.0:
@@ -86,6 +99,7 @@ func _defeat() -> void:
 	if not visible or not is_physics_processing():
 		return
 	current_health = 0
+	_forced_carry_active = false
 	defeated.emit(self)
 	SignalBus.status_message_changed.emit("%s defeated" % name)
 	set_physics_process(false)
@@ -165,6 +179,9 @@ func reset_enemy() -> void:
 	hit_stun_timer = 0.0
 	stagger_meter = 0
 	staggered_timer = 0.0
+	fractured_timer = 0.0
+	fractured_bonus_damage = 0
+	_forced_carry_active = false
 	global_position = spawn_position
 	velocity = Vector2.ZERO
 	visible = true
@@ -209,11 +226,63 @@ func get_combat_snapshot() -> Dictionary:
 	return {
 		"staggered": staggered_timer > 0.0,
 		"mitigation": 0.0,
+		"lightweight": lightweight,
+		"fractured_bonus_damage": fractured_bonus_damage if fractured_timer > 0.0 else 0,
 	}
 
 
 func is_staggered() -> bool:
 	return staggered_timer > 0.0
+
+
+func is_light_target() -> bool:
+	return lightweight
+
+
+func apply_fractured(duration: float, bonus_damage: int) -> void:
+	if current_health <= 0 or duration <= 0.0 or bonus_damage <= 0:
+		return
+	fractured_timer = duration
+	fractured_bonus_damage = bonus_damage
+
+
+func consume_fractured() -> int:
+	if fractured_timer <= 0.0:
+		return 0
+	var bonus := fractured_bonus_damage
+	fractured_timer = 0.0
+	fractured_bonus_damage = 0
+	return bonus
+
+
+func begin_forced_carry() -> void:
+	if lightweight and current_health > 0:
+		_forced_carry_active = true
+
+
+func set_forced_carry_position(position: Vector2) -> void:
+	if _forced_carry_active:
+		_forced_carry_position = position
+
+
+func end_forced_carry() -> void:
+	_forced_carry_active = false
+	velocity = Vector2.ZERO
+
+
+func apply_external_stagger(amount: int, source: Node, source_id: StringName) -> void:
+	if amount <= 0 or current_health <= 0:
+		return
+	receive_damage(DamageInfo.new(
+		0,
+		source,
+		Vector2.ZERO,
+		["player_attack", "wall_impact", "secondary"],
+		source_id,
+		amount,
+		false,
+		true
+	))
 
 
 func is_target_within_encounter(target: Node2D) -> bool:

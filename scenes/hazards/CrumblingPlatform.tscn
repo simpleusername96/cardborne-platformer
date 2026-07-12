@@ -1,0 +1,16 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/stages/CrumblingPlatform.gd" id="1"]
+
+[sub_resource type="RectangleShape2D" id="PlatformCollision"]
+size = Vector2(220, 28)
+
+[node name="CrumblingPlatform" type="StaticBody2D"]
+script = ExtResource("1")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("PlatformCollision")
+
+[node name="Visual" type="Polygon2D" parent="."]
+color = Color(0.38, 0.56, 0.58, 1)
+polygon = PackedVector2Array(-110, -14, 110, -14, 110, 14, -110, 14)

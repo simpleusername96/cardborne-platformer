@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="RewardCatalog" load_steps=8 format=3]
+[gd_resource type="Resource" script_class="RewardCatalog" load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scripts/progression/RewardCatalog.gd" id="1"]
 [ext_resource type="Resource" path="res://data/rewards/drop_walker.tres" id="2"]
@@ -7,10 +7,12 @@
 [ext_resource type="Resource" path="res://data/rewards/optional_cache_ruin.tres" id="5"]
 [ext_resource type="Resource" path="res://data/rewards/material_cavern_ruin.tres" id="6"]
 [ext_resource type="Resource" path="res://data/rewards/drop_shooter.tres" id="7"]
+[ext_resource type="Resource" path="res://data/rewards/drop_leaper.tres" id="8"]
+[ext_resource type="Resource" path="res://data/rewards/stage_clear_flooded_works.tres" id="9"]
 
 [resource]
 script = ExtResource("1")
 id = &"first_run_rewards"
 display_name = "First Run Rewards"
-content_version = 1
-tables = Array[ExtResource("2")]([ExtResource("2"), ExtResource("3"), ExtResource("4"), ExtResource("5"), ExtResource("6"), ExtResource("7")])
+content_version = 3
+tables = Array[ExtResource("2")]([ExtResource("2"), ExtResource("3"), ExtResource("4"), ExtResource("5"), ExtResource("6"), ExtResource("7"), ExtResource("8"), ExtResource("9")])

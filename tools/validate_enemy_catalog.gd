@@ -1,8 +1,16 @@
 extends SceneTree
 
 const CATALOG_PATH := "res://data/enemies/enemy_catalog.tres"
+const SCENE_CATALOG_PATH := "res://data/enemies/enemy_scene_catalog.tres"
+const REWARD_CATALOG_PATH := "res://data/rewards/reward_catalog.tres"
 const WALKER_SCENE := "res://scenes/enemies/WalkerRuin.tscn"
 const CHARGER_SCENE := "res://scenes/enemies/ChargerRuin.tscn"
+const FLOODED_SCENES := {
+	&"walker_flooded": "res://scenes/enemies/WalkerFlooded.tscn",
+	&"charger_flooded": "res://scenes/enemies/ChargerFlooded.tscn",
+	&"shooter_flooded": "res://scenes/enemies/ShooterFlooded.tscn",
+	&"leaper_flooded": "res://scenes/enemies/LeaperFlooded.tscn",
+}
 
 var _failures: Array[String] = []
 
@@ -16,10 +24,20 @@ func _run() -> void:
 	_expect(catalog != null, "typed enemy catalog should load")
 	if catalog != null:
 		_expect(catalog.validate_catalog().is_empty(), "typed enemy catalog should validate")
+		_expect(catalog.archetypes.size() == 4, "catalog should contain four implemented archetypes")
+		_expect(catalog.tuning_profiles.size() == 2, "catalog should contain two stage tuning profiles")
+		_expect(catalog.variants.size() == 7, "catalog should contain Ruin and Flooded variants")
 		_validate_resolution(catalog)
+		_validate_flooded_resolution(catalog)
+		_validate_scene_catalog(catalog)
+		_validate_leaper_drop()
 		_validate_content_ids()
 	await _validate_scene(WALKER_SCENE, &"walker", &"walker_ruin", 3, 40)
 	await _validate_scene(CHARGER_SCENE, &"charger", &"charger_ruin", 5, 60)
+	await _validate_scene(FLOODED_SCENES[&"walker_flooded"], &"walker", &"walker_flooded", 4, 42)
+	await _validate_scene(FLOODED_SCENES[&"charger_flooded"], &"charger", &"charger_flooded", 6, 66)
+	await _validate_scene(FLOODED_SCENES[&"shooter_flooded"], &"shooter", &"shooter_flooded", 5, 44)
+	await _validate_scene(FLOODED_SCENES[&"leaper_flooded"], &"leaper", &"leaper_flooded", 4, 55)
 	_finish()
 
 
@@ -44,6 +62,95 @@ func _validate_resolution(catalog: EnemyCatalog) -> void:
 	_expect(
 		catalog.resolve(&"walker", &"walker_ruin", &"broken_sanctum") == null,
 		"stage-mismatched resolution should fail"
+	)
+
+
+func _validate_flooded_resolution(catalog: EnemyCatalog) -> void:
+	var expected := {
+		&"walker_flooded": [&"walker", 4, 1, 76.0, 0.0, 0.0, 0.0, 42, 1],
+		&"charger_flooded": [&"charger", 6, 1, 0.0, 0.46, 0.55, 0.42, 66, 2],
+		&"shooter_flooded": [&"shooter", 5, 1, 0.0, 0.38, 0.0, 0.45, 44, 2],
+		&"leaper_flooded": [&"leaper", 4, 1, 0.0, 0.38, 0.52, 0.52, 55, 2],
+	}
+	for variant_id: StringName in expected:
+		var row: Array = expected[variant_id]
+		var spec := catalog.resolve(row[0], variant_id, &"flooded_works")
+		_expect(spec != null, "%s should resolve" % variant_id)
+		if spec == null:
+			continue
+		_expect(spec.health == row[1] and spec.damage == row[2], "%s health/damage should be exact" % variant_id)
+		_expect(is_equal_approx(spec.move_speed, row[3]), "%s move speed should be exact" % variant_id)
+		_expect(is_equal_approx(spec.warning_time, row[4]), "%s warning should be exact" % variant_id)
+		_expect(is_equal_approx(spec.active_time, row[5]), "%s active time should be exact" % variant_id)
+		_expect(is_equal_approx(spec.recovery_time, row[6]), "%s recovery should be exact" % variant_id)
+		_expect(spec.stagger_capacity == row[7], "%s stagger should be exact" % variant_id)
+		_expect(spec.budget_cost == row[8], "%s budget should be exact" % variant_id)
+
+	var charger := catalog.resolve(&"charger", &"charger_flooded", &"flooded_works")
+	var shooter := catalog.resolve(&"shooter", &"shooter_flooded", &"flooded_works")
+	var leaper := catalog.resolve(&"leaper", &"leaper_flooded", &"flooded_works")
+	if charger != null:
+		_expect(is_equal_approx(charger.charge_speed, 375.0), "Flooded Charger speed should be exact")
+	if shooter != null:
+		_expect(is_equal_approx(shooter.cadence_time, 1.75), "Flooded Shooter cadence should be exact")
+		_expect(is_equal_approx(shooter.projectile_speed, 290.0), "Flooded Shooter projectile speed should be exact")
+		_expect(is_equal_approx(shooter.attack_range, 820.0), "Flooded Shooter range should be exact")
+	if leaper != null:
+		var room := leaper.room_requirements
+		_expect(is_equal_approx(room["minimum_lane_width"], 420.0), "Leaper needs a 420px lane")
+		_expect(is_equal_approx(room["minimum_arc_clearance"], 180.0), "Leaper needs 180px arc clearance")
+		_expect(is_equal_approx(leaper.safety_bounds["minimum_warning_time"], 0.32), "Leaper warning floor should resolve")
+		_expect(is_equal_approx(leaper.safety_bounds["minimum_recovery_time"], 0.45), "Leaper recovery floor should resolve")
+		var copied := leaper.get_exact_stats()
+		copied["health"] = 999
+		_expect(leaper.health == 4, "Flooded resolved specs must remain immutable")
+		var source := catalog.get_variant_by_id(&"leaper_flooded")
+		var original_warning := source.warning_time
+		source.warning_time = 9.0
+		_expect(is_equal_approx(leaper.warning_time, 0.38), "Resolved values must not follow source mutation")
+		source.warning_time = original_warning
+
+
+func _validate_scene_catalog(catalog: EnemyCatalog) -> void:
+	var scenes := load(SCENE_CATALOG_PATH) as EnemySceneCatalog
+	_expect(scenes != null, "enemy scene catalog should load")
+	if scenes == null:
+		return
+	_expect(scenes.validate_catalog(catalog).is_empty(), "enemy scene catalog should validate")
+	for variant_id: StringName in FLOODED_SCENES:
+		var scene := scenes.get_scene_for_variant(variant_id, catalog)
+		_expect(scene != null, "%s should have a registered scene" % variant_id)
+		if scene != null:
+			_expect(scene.resource_path == FLOODED_SCENES[variant_id], "%s should resolve its exact scene" % variant_id)
+
+
+func _validate_leaper_drop() -> void:
+	var rewards := load(REWARD_CATALOG_PATH) as RewardCatalog
+	_expect(rewards != null and rewards.validate_catalog().is_empty(), "reward catalog should validate")
+	if rewards == null:
+		return
+	var table := rewards.get_table(&"drop_leaper")
+	_expect(table != null, "drop_leaper should be registered")
+	if table == null:
+		return
+	var entries := {}
+	for entry in table.entries:
+		entries[entry.content_id] = entry
+	_expect(entries.size() == 4, "drop_leaper should contain four economy entries")
+	_expect(_entry_matches(entries.get(&"xp"), 12, 12, 1.0), "Leaper XP should be exact")
+	_expect(_entry_matches(entries.get(&"coin"), 2, 2, 1.0), "Leaper coins should be exact")
+	_expect(_entry_matches(entries.get(&"sky_thread"), 1, 1, 0.25), "Leaper thread roll should be exact")
+	_expect(_entry_matches(entries.get(&"slime_residue"), 1, 1, 0.2), "Leaper residue roll should be exact")
+
+
+func _entry_matches(value: Variant, minimum: int, maximum: int, chance: float) -> bool:
+	if not value is RewardEntry:
+		return false
+	var entry := value as RewardEntry
+	return (
+		entry.minimum_amount == minimum
+		and entry.maximum_amount == maximum
+		and is_equal_approx(entry.chance, chance)
 	)
 
 
@@ -82,6 +189,8 @@ func _validate_scene(
 	_expect(enemy.stagger_capacity == expected_stagger, "%s stagger should come from spec" % scene_path)
 	_expect(not enemy.auto_reset_on_defeat, "%s cannot auto-reset in production" % scene_path)
 	enemy.queue_free()
+
+
 func _expect(condition: bool, message: String) -> void:
 	if not condition:
 		_failures.append(message)

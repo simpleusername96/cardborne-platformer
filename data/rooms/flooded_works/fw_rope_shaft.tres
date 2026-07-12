@@ -1,0 +1,51 @@
+[gd_resource type="Resource" script_class="RoomTemplateData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/stages/RoomTemplateData.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/stages/RoomSocketData.gd" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/rooms/flooded_works/FwRopeShaft.tscn" id="3"]
+
+[sub_resource type="Resource" id="EntrySocket"]
+script = ExtResource("2")
+id = &"rope_shaft_in"
+direction = &"left"
+route_role = &"critical"
+local_position = Vector2(0, 620)
+opening_size = Vector2(180, 160)
+support_top = 620.0
+transition_type = &"seam"
+required_ability = &"baseline"
+approach_width = 300.0
+landing_width = 300.0
+headroom = 160.0
+
+[sub_resource type="Resource" id="ExitSocket"]
+script = ExtResource("2")
+id = &"rope_shaft_out"
+direction = &"right"
+route_role = &"critical"
+local_position = Vector2(1280, 500)
+opening_size = Vector2(180, 180)
+support_top = 500.0
+transition_type = &"seam"
+required_ability = &"baseline"
+approach_width = 300.0
+landing_width = 300.0
+headroom = 180.0
+
+[resource]
+script = ExtResource("1")
+id = &"fw_rope_shaft"
+display_name = "Flooded Rope Shaft"
+content_version = 1
+scene = ExtResource("3")
+role = &"traversal"
+stage_tags = Array[StringName]([&"flooded_works"])
+required_route = true
+bounds = Rect2(0, 0, 1280, 720)
+entry_sockets = Array[ExtResource("2")]([SubResource("EntrySocket")])
+exit_sockets = Array[ExtResource("2")]([SubResource("ExitSocket")])
+encounter_budget = Vector2i(0, 0)
+hazard_budget = Vector2i(0, 0)
+reward_budget = Vector2i(0, 0)
+recovery_anchor_ids = Array[StringName]([&"shaft_entry_recovery", &"shaft_lower_recovery", &"shaft_exit_recovery"])
+estimated_seconds = Vector2i(20, 35)

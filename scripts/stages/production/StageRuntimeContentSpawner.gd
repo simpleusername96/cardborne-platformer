@@ -9,7 +9,8 @@ static func spawn(
 	enemy_catalog: EnemyCatalog,
 	enemy_scene_catalog: EnemySceneCatalog,
 	hazard_catalog: HazardCatalog,
-	world_bounds: Rect2
+	world_bounds: Rect2,
+	terminal_room_role: StringName = &"exit"
 ) -> StageRuntimeContentResult:
 	var errors := PackedStringArray()
 	if plan == null or actors_root == null:
@@ -24,7 +25,7 @@ static func spawn(
 	for placement in plan.get_encounters():
 		var host := room_hosts.get(String(placement.room_id)) as RoomTemplateHost
 		var anchor := host.get_anchor_by_id(&"Enemy", placement.anchor_id) if host != null else null
-		var scene := enemy_scene_catalog.get_scene(placement.archetype_id)
+		var scene := enemy_scene_catalog.get_scene(placement.archetype_id, placement.variant_id)
 		if host == null or anchor == null or scene == null:
 			errors.append("Enemy placement '%s' cannot resolve its room, anchor, or scene." % placement.id)
 			break
@@ -93,14 +94,14 @@ static func spawn(
 
 	var checkpoint: StageCheckpoint
 	if errors.is_empty():
-		var terminal_host := _terminal_host(plan, room_hosts)
+		var terminal_host := _terminal_host(plan, room_hosts, terminal_room_role)
 		var marker := terminal_host.get_anchor(&"Objective", &"Checkpoint") if terminal_host != null else null
 		if marker == null:
 			errors.append("Terminal room has no checkpoint marker.")
 		else:
 			checkpoint = StageCheckpoint.new()
 			checkpoint.name = "ExitCheckpoint"
-			checkpoint.checkpoint_id = "exit_ascent"
+			checkpoint.checkpoint_id = "%s_terminal" % plan.profile_id
 			checkpoint.position = actors_root.to_local(marker.global_position)
 			actors_root.add_child(checkpoint)
 			spawned_nodes.append(checkpoint)
@@ -133,9 +134,13 @@ static func spawn(
 	)
 
 
-static func _terminal_host(plan: StagePlan, room_hosts: Dictionary) -> RoomTemplateHost:
+static func _terminal_host(
+	plan: StagePlan,
+	room_hosts: Dictionary,
+	terminal_room_role: StringName
+) -> RoomTemplateHost:
 	for room in plan.get_rooms():
-		if room.role == &"exit":
+		if room.role == terminal_room_role:
 			return room_hosts.get(String(room.id)) as RoomTemplateHost
 	return null
 

@@ -2,6 +2,8 @@ extends SceneTree
 
 const OUTPUT_DIR := "res://.codex-runtime/uiux"
 const MAIN_SCENE := "res://scenes/main/Main.tscn"
+const PRODUCTION_STAGE := "res://scenes/stages/production/ProductionStageHost.tscn"
+const REST_FORGE_SCENE := "res://scenes/ui/production/RestForge.tscn"
 
 var _captures: Array[Dictionary] = [
 	{
@@ -73,6 +75,31 @@ var _captures: Array[Dictionary] = [
 		"name": "compact_card_reward",
 		"size": Vector2i(960, 540),
 		"state": "card_reward",
+	},
+	{
+		"name": "desktop_rest_forge",
+		"size": Vector2i(1280, 720),
+		"state": "rest_forge",
+	},
+	{
+		"name": "compact_rest_forge",
+		"size": Vector2i(960, 540),
+		"state": "rest_forge",
+	},
+	{
+		"name": "desktop_flooded_rope",
+		"size": Vector2i(1280, 720),
+		"state": "flooded_rope",
+	},
+	{
+		"name": "compact_flooded_hazard",
+		"size": Vector2i(960, 540),
+		"state": "flooded_hazard",
+	},
+	{
+		"name": "desktop_flooded_safe",
+		"size": Vector2i(1280, 720),
+		"state": "flooded_safe",
 	},
 	{
 		"name": "desktop_run_result",
@@ -168,13 +195,38 @@ func _capture(capture: Dictionary) -> void:
 			game.unload_current_stage()
 			run_director.call("_clear_hud")
 			run_director.call("_show_card_reward")
+		"rest_forge":
+			run_director.start_production_run(0)
+			RewardService.apply(
+				RewardTransaction.new(&"capture_rest_forge", &"fixture", {"coin": 60}),
+				run_state
+			)
+			run_state.damage_player(2)
+			run_state.begin_rest_forge()
+			var snapshot: Dictionary = run_state.get_rest_forge_snapshot()
+			var items: Array = snapshot.get("items", [])
+			if not items.is_empty():
+				run_state.begin_forge_offer(StringName(items[0]["id"]))
+				snapshot = run_state.get_rest_forge_snapshot()
+			game.unload_current_stage()
+			run_director.call("_clear_hud")
+			var rest_forge := run_director.call("_show_screen", REST_FORGE_SCENE) as Control
+			if rest_forge != null:
+				rest_forge.call("configure", snapshot)
+		"flooded_rope", "flooded_hazard", "flooded_safe":
+			await _load_flooded_capture(
+				String(capture["state"]),
+				run_director,
+				game,
+				run_state
+			)
 		"run_result":
 			run_director.start_production_run(1)
 			run_director.show_run_result(true)
 		"settings":
 			game.set_settings_open(true)
-	await process_frame
-	await process_frame
+	for _frame in 4:
+		await process_frame
 
 	var viewport_texture := root.get_texture()
 	if viewport_texture == null:
@@ -198,3 +250,45 @@ func _capture(capture: Dictionary) -> void:
 	game.unload_current_stage()
 	main_instance.queue_free()
 	await process_frame
+
+
+func _load_flooded_capture(
+	state: String,
+	run_director: Node,
+	game: Node,
+	run_state: Node
+) -> void:
+	run_director.start_production_run(0)
+	await process_frame
+	game.unload_current_stage()
+	run_state.current_stage_index = 1
+	var stage: Variant = game.load_stage(PRODUCTION_STAGE)
+	await process_frame
+	await physics_frame
+	if stage == null or not stage.is_setup_complete():
+		push_error("Flooded stage is unavailable for %s." % state)
+		_failed = true
+		return
+	var target_host: RoomTemplateHost
+	var local_position := Vector2(640.0, 560.0)
+	match state:
+		"flooded_rope":
+			target_host = stage.get_room_host(&"fw_rope_shaft")
+			local_position = Vector2(640.0, 680.0)
+		"flooded_hazard":
+			for room in stage.get_stage_plan().get_rooms():
+				if room.role == &"hazard":
+					target_host = stage.get_room_host(room.id)
+					break
+		"flooded_safe":
+			for room in stage.get_stage_plan().get_rooms():
+				if room.role == &"safe":
+					target_host = stage.get_room_host(room.id)
+					break
+	if target_host == null:
+		push_error("Flooded capture target is unavailable for %s." % state)
+		_failed = true
+		return
+	stage.player.global_position = target_host.global_position + local_position
+	if stage.player.camera != null:
+		stage.player.camera.reset_smoothing()

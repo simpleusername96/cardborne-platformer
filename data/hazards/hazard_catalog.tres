@@ -1,12 +1,14 @@
-[gd_resource type="Resource" script_class="HazardCatalog" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="HazardCatalog" load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/hazards/HazardCatalog.gd" id="1_catalog"]
 [ext_resource type="Resource" path="res://data/hazards/spike_row.tres" id="2_spike"]
 [ext_resource type="Resource" path="res://data/hazards/fall_reset.tres" id="3_reset"]
+[ext_resource type="Resource" path="res://data/hazards/timed_poison_vent.tres" id="4_poison"]
+[ext_resource type="Resource" path="res://data/hazards/crumbling_platform.tres" id="5_crumble"]
 
 [resource]
 script = ExtResource("1_catalog")
 id = &"first_slice_hazard_catalog"
 display_name = "First Slice Hazard Catalog"
-content_version = 1
-definitions = Array[ExtResource("2_spike")]([ExtResource("2_spike"), ExtResource("3_reset")])
+content_version = 2
+definitions = Array[ExtResource("2_spike")]([ExtResource("2_spike"), ExtResource("3_reset"), ExtResource("4_poison"), ExtResource("5_crumble")])

@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="SkillDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/player/SkillDefinition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"warrior_ground_splitter"
+display_name = "Ground Splitter"
+content_version = 1
+input_action = &"skill_2"
+tags = Array[StringName]([&"player_attack", &"skill", &"shockwave"])
+startup_time = 0.34
+active_time = 0.35
+recovery_time = 0.42
+cooldown = 8.0
+movement_lock_delay = 0.0
+base_damage = 3
+stagger = 0
+knockback = Vector2(230, -320)
+hitbox_size = Vector2(48, 20)
+hitbox_offset = Vector2(32, -10)
+motion_style = &"ground_splitter"
+visual_color = Color(1, 0.67, 0.14, 1)
+skill_slot = 2
+max_targets = 4
+execution_mode = &"ground_shockwave"
+effect_distance = 220.0
+ground_probe_depth = 30.0
+launch_light_targets = true

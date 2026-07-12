@@ -9,6 +9,12 @@ extends EnemyBase
 @export var recovery_time: float = 0.42
 @export var detection_range: float = 680.0
 @export var detection_height: float = 96.0
+@export var body_color: Color = Color(0.94, 0.55, 0.22, 1.0)
+@export var warning_color: Color = Color(1.0, 0.86, 0.26, 1.0)
+@export var active_color: Color = Color(1.0, 0.22, 0.16, 1.0)
+@export var recovery_color: Color = Color(0.58, 0.42, 0.26, 1.0)
+@export var lane_warning_color: Color = Color(1.0, 0.72, 0.18, 0.72)
+@export var lane_warning_length: float = 520.0
 
 var direction: int = -1
 var left_limit: float
@@ -27,7 +33,7 @@ func _ready() -> void:
 		recovery_time = resolved_spec.recovery_time
 	left_limit = spawn_position.x - patrol_half_width
 	right_limit = spawn_position.x + patrol_half_width
-	_base_visual_color = Color(0.94, 0.55, 0.22, 1.0)
+	_base_visual_color = body_color
 	if _visual != null:
 		_visual.color = _base_visual_color
 	_lane_warning = _ensure_lane_warning()
@@ -97,11 +103,11 @@ func _update_visual() -> void:
 	if is_staggered():
 		_visual.color = Color(0.36, 0.88, 0.92, 1.0)
 	elif _state == "warning":
-		_visual.color = Color(1.0, 0.86, 0.26, 1.0)
+		_visual.color = warning_color
 	elif _state == "charge":
-		_visual.color = Color(1.0, 0.22, 0.16, 1.0)
+		_visual.color = active_color
 	elif _state == "recovery":
-		_visual.color = Color(0.58, 0.42, 0.26, 1.0)
+		_visual.color = recovery_color
 	else:
 		_visual.color = _base_visual_color
 	if _lane_warning != null:
@@ -139,8 +145,8 @@ func _ensure_lane_warning() -> Line2D:
 	line.name = "LaneWarning"
 	line.position = Vector2(0.0, -14.0)
 	line.width = 6.0
-	line.default_color = Color(1.0, 0.72, 0.18, 0.72)
-	line.points = PackedVector2Array([Vector2.ZERO, Vector2(520.0, 0.0)])
+	line.default_color = lane_warning_color
+	line.points = PackedVector2Array([Vector2.ZERO, Vector2(lane_warning_length, 0.0)])
 	line.visible = false
 	line.z_index = -1
 	add_child(line)

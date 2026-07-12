@@ -63,6 +63,7 @@ func _prepare_collision_shapes() -> void:
 func _physics_process(delta: float) -> void:
 	_update_timers(delta)
 	combat_controller.update_combat(delta)
+	_try_use_consumable()
 
 	var input_axis := Input.get_axis("move_left", "move_right")
 	if not is_zero_approx(input_axis) and not combat_controller.is_movement_locked():
@@ -102,8 +103,13 @@ func receive_damage(damage_info: DamageInfo) -> void:
 	if combat_controller.blocks_incoming_damage(damage_info):
 		return
 
-	var resolved_damage := combat_controller.reduce_incoming_damage(damage_info.amount)
+	var defense := combat_controller.resolve_incoming_damage(damage_info.amount)
+	var resolved_damage := int(defense.get("damage", damage_info.amount))
+	resolved_damage = RunState.reduce_damage_with_forge_guard(resolved_damage)
+	var previous_health: int = RunState.current_health
 	RunState.damage_player(resolved_damage)
+	combat_controller.notify_health_changed(previous_health, RunState.current_health)
+	combat_controller.notify_player_damaged(resolved_damage)
 	invulnerability_timer = float(stats.get("post_hit_invulnerability", 1.0))
 	var knockback := damage_info.knockback
 	if knockback == Vector2.ZERO:
@@ -111,7 +117,14 @@ func receive_damage(damage_info: DamageInfo) -> void:
 			-float(facing) * float(stats.get("damage_knockback_x", 220.0)),
 			float(stats.get("damage_knockback_y", -220.0))
 		)
-	velocity = knockback
+	velocity = knockback * float(defense.get("knockback_scale", 1.0))
+
+
+func _try_use_consumable() -> void:
+	if not Input.is_action_just_pressed("use_consumable"):
+		return
+	var result: Dictionary = RunState.use_consumable()
+	SignalBus.status_message_changed.emit(str(result.get("message", "Consumable unavailable.")))
 
 
 func _update_timers(delta: float) -> void:

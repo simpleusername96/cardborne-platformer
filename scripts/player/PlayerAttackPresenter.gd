@@ -19,6 +19,10 @@ func begin(definition: AttackDefinition, direction: int, origin: Vector2) -> voi
 	match definition.motion_style:
 		&"shield_rush":
 			_configure_shield(definition.hitbox_size)
+		&"ground_splitter":
+			_configure_ground_splitter(definition.hitbox_size)
+		&"rally":
+			_configure_rally(definition.hitbox_size)
 		&"heavy_swing":
 			_configure_heavy(definition.hitbox_size)
 		&"arrow_projectile":
@@ -46,6 +50,8 @@ func update(
 			visual.rotation = (
 				lerpf(-0.32, -0.74, progress)
 				if definition.motion_style == &"heavy_swing"
+				else lerpf(-0.28, 0.12, progress)
+				if definition.motion_style == &"ground_splitter"
 				else 0.0
 			)
 		&"active":
@@ -54,6 +60,10 @@ func update(
 				visual.rotation = lerpf(-0.74, 0.96, progress)
 			elif definition.motion_style == &"shield_rush":
 				visual.position += Vector2(8.0 * float(direction), 0.0)
+			elif definition.motion_style == &"ground_splitter":
+				visual.position.y += lerpf(0.0, 10.0, progress)
+			elif definition.motion_style == &"rally":
+				visual.scale *= lerpf(1.0, 1.16, progress)
 			else:
 				visual.rotation = lerpf(-0.38, 0.34, progress)
 		&"recovery":
@@ -109,3 +119,28 @@ func _configure_bow(size: Vector2) -> void:
 		Vector2(half.x, 0.0), Vector2(half.x * 0.2, half.y * 0.72),
 		Vector2(-half.x, half.y), Vector2(-half.x * 0.24, 0.0),
 	])
+
+
+func _configure_ground_splitter(size: Vector2) -> void:
+	var width := maxf(size.x, 52.0)
+	var height := maxf(size.y, 32.0)
+	visual.polygon = PackedVector2Array([
+		Vector2(-width * 0.18, -height),
+		Vector2(width * 0.18, -height),
+		Vector2(width * 0.18, -height * 0.08),
+		Vector2(width * 0.55, -height * 0.08),
+		Vector2(width * 0.55, height * 0.18),
+		Vector2(-width * 0.55, height * 0.18),
+		Vector2(-width * 0.55, -height * 0.08),
+		Vector2(-width * 0.18, -height * 0.08),
+	])
+
+
+func _configure_rally(size: Vector2) -> void:
+	var radius := maxf(maxf(size.x, size.y) * 0.58, 28.0)
+	var points := PackedVector2Array()
+	for index in 12:
+		var angle := TAU * float(index) / 12.0
+		var scale := 1.0 if index % 2 == 0 else 0.72
+		points.append(Vector2(cos(angle), sin(angle)) * radius * scale)
+	visual.polygon = points

@@ -3,6 +3,7 @@ extends EnemyBase
 
 @export var patrol_half_width: float = 110.0
 @export var move_speed: float = 70.0
+@export var body_color: Color = Color(0.92, 0.38, 0.26, 1.0)
 
 var direction: int = -1
 var left_limit: float
@@ -15,8 +16,9 @@ func _ready() -> void:
 		move_speed = resolved_spec.move_speed
 	left_limit = spawn_position.x - patrol_half_width
 	right_limit = spawn_position.x + patrol_half_width
+	_base_visual_color = body_color
 	if _visual != null:
-		_visual.color = Color(0.92, 0.38, 0.26, 1.0)
+		_visual.color = _base_visual_color
 
 
 func _physics_process(delta: float) -> void:

@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="EnemyCatalog" load_steps=12 format=3]
+[gd_resource type="Resource" script_class="EnemyCatalog" load_steps=18 format=3]
 
 [ext_resource type="Script" path="res://scripts/enemies/EnemyCatalog.gd" id="1_catalog_script"]
 [ext_resource type="Script" path="res://scripts/enemies/EnemyArchetypeDefinition.gd" id="2_archetype_script"]
@@ -11,13 +11,19 @@
 [ext_resource type="Resource" path="res://data/enemies/charger_ruin.tres" id="9_charger_ruin"]
 [ext_resource type="Resource" path="res://data/enemies/shooter_archetype.tres" id="10_shooter_archetype"]
 [ext_resource type="Resource" path="res://data/enemies/shooter_ruin.tres" id="11_shooter_ruin"]
+[ext_resource type="Resource" path="res://data/enemies/leaper_archetype.tres" id="12_leaper_archetype"]
+[ext_resource type="Resource" path="res://data/enemies/tuning_flooded_works.tres" id="13_flooded_tuning"]
+[ext_resource type="Resource" path="res://data/enemies/walker_flooded.tres" id="14_walker_flooded"]
+[ext_resource type="Resource" path="res://data/enemies/charger_flooded.tres" id="15_charger_flooded"]
+[ext_resource type="Resource" path="res://data/enemies/shooter_flooded.tres" id="16_shooter_flooded"]
+[ext_resource type="Resource" path="res://data/enemies/leaper_flooded.tres" id="17_leaper_flooded"]
 
 [resource]
 script = ExtResource("1_catalog_script")
 id = &"first_slice_enemy_catalog"
 display_name = "First Slice Enemy Catalog"
-content_version = 2
-tags = Array[StringName]([&"enemy_catalog", &"first_slice", &"milestone_1"])
-archetypes = Array[ExtResource("2_archetype_script")]([ExtResource("5_walker_archetype"), ExtResource("6_charger_archetype"), ExtResource("10_shooter_archetype")])
-tuning_profiles = Array[ExtResource("3_tuning_script")]([ExtResource("7_ruin_tuning")])
-variants = Array[ExtResource("4_variant_script")]([ExtResource("8_walker_ruin"), ExtResource("9_charger_ruin"), ExtResource("11_shooter_ruin")])
+content_version = 3
+tags = Array[StringName]([&"enemy_catalog", &"first_slice"])
+archetypes = Array[ExtResource("2_archetype_script")]([ExtResource("5_walker_archetype"), ExtResource("6_charger_archetype"), ExtResource("10_shooter_archetype"), ExtResource("12_leaper_archetype")])
+tuning_profiles = Array[ExtResource("3_tuning_script")]([ExtResource("7_ruin_tuning"), ExtResource("13_flooded_tuning")])
+variants = Array[ExtResource("4_variant_script")]([ExtResource("8_walker_ruin"), ExtResource("9_charger_ruin"), ExtResource("11_shooter_ruin"), ExtResource("14_walker_flooded"), ExtResource("15_charger_flooded"), ExtResource("16_shooter_flooded"), ExtResource("17_leaper_flooded")])

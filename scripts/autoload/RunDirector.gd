@@ -8,6 +8,7 @@ const PRODUCTION_HUD_PATH := "res://scenes/ui/production/ProductionHUD.tscn"
 const RUN_RESULT_PATH := "res://scenes/ui/production/RunResult.tscn"
 const LEVEL_REWARD_PATH := "res://scenes/ui/production/LevelReward.tscn"
 const CARD_REWARD_PATH := "res://scenes/ui/production/CardReward.tscn"
+const REST_FORGE_PATH := "res://scenes/ui/production/RestForge.tscn"
 const PRODUCTION_STAGE_PATH := "res://scenes/stages/production/ProductionStageHost.tscn"
 
 var phase: RunPhase.Value = RunPhase.Value.BOOT
@@ -125,6 +126,7 @@ func show_run_result(victory: bool) -> void:
 		RunPhase.Value.STAGE_ACTIVE,
 		RunPhase.Value.LEVEL_REWARD,
 		RunPhase.Value.STAGE_CARD_REWARD,
+		RunPhase.Value.REST_FORGE,
 		RunPhase.Value.BOSS_ACTIVE,
 	]:
 		return
@@ -229,7 +231,14 @@ func _on_player_died() -> void:
 func _settle_stage_clear(stage_id: String) -> void:
 	if phase != RunPhase.Value.STAGE_ACTIVE:
 		return
-	var table := RunState.reward_catalog.get_table(&"stage_clear_ruin_approach")
+	var table_id := StringName("stage_clear_%s" % stage_id)
+	if Game.current_stage != null and Game.current_stage.has_method("get_clear_reward_table_id"):
+		table_id = Game.current_stage.call("get_clear_reward_table_id")
+	var table := RunState.reward_catalog.get_table(table_id)
+	if table == null:
+		push_error("Stage '%s' has no clear reward table '%s'." % [stage_id, table_id])
+		show_run_result(false)
+		return
 	var transaction_id := StringName("%d:%d:%s:stage_clear:0" % [
 		RunState.run_seed,
 		RunState.current_stage_index,
@@ -315,15 +324,70 @@ func _on_card_reroll_requested() -> void:
 func _on_card_continue_requested() -> void:
 	if phase != RunPhase.Value.STAGE_CARD_REWARD:
 		return
+	var completed_stage_index := RunState.current_stage_index
 	if not RunState.advance_stage_after_card_reward():
 		_set_card_reward_error("Choose a card before continuing.")
 		return
-	_load_production_stage()
+	if completed_stage_index == 1:
+		_show_rest_forge()
+	else:
+		_load_production_stage()
 
 
 func _set_card_reward_error(message: String) -> void:
 	if current_screen != null and current_screen.has_method("set_commit_error"):
 		current_screen.call("set_commit_error", message)
+
+
+func _show_rest_forge() -> void:
+	var begin_result := RunState.begin_rest_forge()
+	if not bool(begin_result.get("ok", false)):
+		push_error("Rest/forge failed to initialize.")
+		show_run_result(false)
+		return
+	if not _set_phase(RunPhase.Value.REST_FORGE):
+		return
+	var rest := _show_screen(REST_FORGE_PATH)
+	if rest == null:
+		show_run_result(false)
+		return
+	rest.connect(&"heal_requested", _on_rest_heal_requested)
+	rest.connect(&"consumable_requested", _on_rest_consumable_requested)
+	rest.connect(&"forge_item_requested", _on_forge_item_requested)
+	rest.connect(&"forge_affix_requested", _on_forge_affix_requested)
+	rest.connect(&"leave_requested", _on_rest_leave_requested)
+	rest.call("configure", RunState.get_rest_forge_snapshot())
+
+
+func _on_rest_heal_requested() -> void:
+	_publish_rest_result(RunState.buy_rest_heal())
+
+
+func _on_rest_consumable_requested(consumable_id: StringName) -> void:
+	_publish_rest_result(RunState.buy_rest_consumable(consumable_id))
+
+
+func _on_forge_item_requested(item_id: StringName) -> void:
+	_publish_rest_result(RunState.begin_forge_offer(item_id))
+
+
+func _on_forge_affix_requested(
+	item_id: StringName,
+	affix_id: StringName,
+	confirm_replace: bool
+) -> void:
+	_publish_rest_result(RunState.commit_forge_affix(item_id, affix_id, confirm_replace))
+
+
+func _publish_rest_result(result: Dictionary) -> void:
+	if current_screen != null and current_screen.has_method("configure"):
+		current_screen.call("configure", RunState.get_rest_forge_snapshot(), result)
+
+
+func _on_rest_leave_requested() -> void:
+	if phase != RunPhase.Value.REST_FORGE or not RunState.end_rest_forge():
+		return
+	_load_production_stage()
 
 
 func _profile_index_for_reference(profile_reference: Variant) -> int:

@@ -8,6 +8,8 @@ const SUPPORTED_TYPES: Array[StringName] = [
 	&"add_stagger",
 	&"reduce_longest_skill_cooldown",
 	&"area_damage",
+	&"ground_shockwave",
+	&"arm_next_heavy",
 ]
 
 @export var effect_type: StringName
@@ -18,18 +20,21 @@ const SUPPORTED_TYPES: Array[StringName] = [
 @export_range(0.0, 10.0, 0.01) var delay: float = 0.0
 @export_range(0.0, 10.0, 0.01) var duration: float = 0.0
 @export_range(0.0, 10.0, 0.01) var seconds: float = 0.0
+@export_range(0.0, 1000.0, 1.0) var distance: float = 0.0
+@export_range(0.1, 1.0, 0.01) var startup_scale: float = 1.0
 @export var damage_by_stack: PackedInt32Array = PackedInt32Array()
 @export var radius_by_stack: PackedFloat32Array = PackedFloat32Array()
 @export_range(1, 16, 1) var hits_per_target: int = 1
 @export var proc_effects: bool = false
 @export var exclude_primary_target: bool = false
+@export var uninterruptible_startup: bool = false
 
 
 func validate_definition() -> PackedStringArray:
 	var errors := PackedStringArray()
 	if not SUPPORTED_TYPES.has(effect_type):
 		errors.append("Card effect type '%s' is unsupported." % effect_type)
-	for value in [damage_scale, stagger_scale, delay, duration, seconds]:
+	for value in [damage_scale, stagger_scale, delay, duration, seconds, distance, startup_scale]:
 		if not is_finite(value) or value < 0.0:
 			errors.append("Card effect '%s' has an invalid numeric value." % effect_type)
 			break
@@ -60,4 +65,12 @@ func validate_definition() -> PackedStringArray:
 				if not is_finite(stack_radius) or stack_radius <= 0.0:
 					errors.append("Area-damage stack radius must be positive and finite.")
 					break
+		&"ground_shockwave":
+			if damage <= 0 or stagger <= 0 or distance <= 0.0 or duration <= 0.0:
+				errors.append("Ground shockwave needs damage, stagger, distance, and duration.")
+			if proc_effects:
+				errors.append("Ground shockwave must be non-recursive.")
+		&"arm_next_heavy":
+			if duration <= 0.0 or startup_scale >= 1.0 or not uninterruptible_startup:
+				errors.append("Heavy arm effect needs a window, faster startup, and interruption guard.")
 	return errors

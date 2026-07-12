@@ -43,6 +43,8 @@ func validate_definition() -> PackedStringArray:
 		errors.append("Character kit '%s' needs a profile ID." % id)
 	if basic_attack == null or heavy_attack == null:
 		errors.append("Character kit '%s' needs basic and heavy attacks." % id)
+	if skills.size() != 3:
+		errors.append("Character kit '%s' needs exactly three skill definitions." % id)
 	var seen_ids: Dictionary = {}
 	var seen_slots: Dictionary = {}
 	for attack in _all_attacks():
@@ -59,6 +61,12 @@ func validate_definition() -> PackedStringArray:
 			if seen_slots.has(slot):
 				errors.append("Character kit '%s' repeats skill slot %d." % [id, slot])
 			seen_slots[slot] = true
+			var expected_action := StringName("skill_%d" % slot)
+			if attack.input_action != expected_action:
+				errors.append(
+					"Character kit '%s' skill slot %d must use action '%s'."
+					% [id, slot, expected_action]
+				)
 	return errors
 
 

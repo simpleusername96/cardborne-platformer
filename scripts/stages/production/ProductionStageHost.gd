@@ -1,15 +1,30 @@
 extends StageBase
 
-const ROOM_CATALOG: RoomCatalog = preload("res://data/generation/lower_ruins_room_catalog.tres")
-const STAGE_PROFILE: StageProfile = preload("res://data/generation/ruin_approach_profile.tres")
 const ENEMY_CATALOG: EnemyCatalog = preload("res://data/enemies/enemy_catalog.tres")
 const ENEMY_SCENES: EnemySceneCatalog = preload("res://data/enemies/enemy_scene_catalog.tres")
 const HAZARD_CATALOG: HazardCatalog = preload("res://data/hazards/hazard_catalog.tres")
+const STAGE_CONFIGS: Array[Dictionary] = [
+	{
+		"id": &"ruin_approach",
+		"profile_path": "res://data/generation/ruin_approach_profile.tres",
+		"room_catalog_path": "res://data/generation/lower_ruins_room_catalog.tres",
+		"clear_reward_id": &"stage_clear_ruin_approach",
+	},
+	{
+		"id": &"flooded_works",
+		"profile_path": "res://data/generation/flooded_works_profile.tres",
+		"room_catalog_path": "res://data/generation/flooded_works_room_catalog.tres",
+		"clear_reward_id": &"stage_clear_flooded_works",
+	},
+]
 
 @onready var rooms_root: Node2D = $Rooms
 @onready var backdrop: ProductionStageBackdrop = $Backdrop
 
 var _setup_succeeded: bool = false
+var _room_catalog: RoomCatalog
+var _stage_profile: StageProfile
+var _clear_reward_id: StringName
 var _stage_plan: StagePlan
 var _generation_report: GenerationReport
 var _assembly_result: StageAssemblyResult
@@ -25,12 +40,12 @@ var _world_bounds := Rect2()
 
 func _ready() -> void:
 	if not _setup_generated_stage():
-		_abort_setup("Ruin Approach generation failed.")
+		_abort_setup("Production stage generation failed.")
 		return
 	_setup_succeeded = true
 	super._ready()
 	if player == null:
-		_abort_setup("Ruin Approach player spawn failed.")
+		_abort_setup("Production stage player spawn failed.")
 		return
 	_publish_encounter_state()
 
@@ -45,6 +60,10 @@ func get_stage_plan() -> StagePlan:
 
 func get_generation_report() -> GenerationReport:
 	return _generation_report
+
+
+func get_clear_reward_table_id() -> StringName:
+	return _clear_reward_id
 
 
 func get_world_bounds() -> Rect2:
@@ -114,13 +133,15 @@ func is_exit_enabled() -> bool:
 
 
 func _setup_generated_stage() -> bool:
+	if not _load_stage_configuration():
+		return false
 	var scene_errors := ENEMY_SCENES.validate_catalog(ENEMY_CATALOG)
 	if not scene_errors.is_empty():
 		_publish_errors("Enemy scene catalog", scene_errors)
 		return false
 	var generation := StageGenerationService.new().generate(
-		ROOM_CATALOG,
-		STAGE_PROFILE,
+		_room_catalog,
+		_stage_profile,
 		ENEMY_CATALOG,
 		HAZARD_CATALOG,
 		RunState.reward_catalog,
@@ -134,7 +155,7 @@ func _setup_generated_stage() -> bool:
 			_publish_errors("Stage generation", _report_messages(_generation_report))
 		return false
 	_stage_plan = generation.plan
-	_assembly_result = StageAssembler.assemble(_stage_plan, ROOM_CATALOG, rooms_root)
+	_assembly_result = StageAssembler.assemble(_stage_plan, _room_catalog, rooms_root)
 	if not _assembly_result.success:
 		_publish_errors("Stage assembly", _assembly_result.get_errors())
 		return false
@@ -142,7 +163,7 @@ func _setup_generated_stage() -> bool:
 	_world_bounds = _assembly_result.world_bounds
 	var geometry_errors := StageGeometryValidator.validate_assembly(
 		_stage_plan,
-		ROOM_CATALOG,
+		_room_catalog,
 		_assembly_result,
 		RunState.get_required_route_limits()
 	)
@@ -158,7 +179,8 @@ func _setup_generated_stage() -> bool:
 		ENEMY_CATALOG,
 		ENEMY_SCENES,
 		HAZARD_CATALOG,
-		_world_bounds
+		_world_bounds,
+		_stage_profile.terminal_room_role
 	)
 	if not _runtime_content.success:
 		_publish_errors("Runtime content", _runtime_content.errors)
@@ -168,7 +190,25 @@ func _setup_generated_stage() -> bool:
 	for enemy in _all_enemies:
 		enemy.defeated.connect(_on_enemy_defeated)
 	_set_exit_enabled(_required_enemies.is_empty())
-	backdrop.configure(_world_bounds)
+	backdrop.configure(_world_bounds, StringName(stage_id))
+	return true
+
+
+func _load_stage_configuration() -> bool:
+	if RunState.current_stage_index < 0 or RunState.current_stage_index >= STAGE_CONFIGS.size():
+		push_error("No production stage configuration exists for index %d." % RunState.current_stage_index)
+		return false
+	var config: Dictionary = STAGE_CONFIGS[RunState.current_stage_index]
+	var loaded_profile := load(String(config["profile_path"]))
+	var loaded_rooms := load(String(config["room_catalog_path"]))
+	if not loaded_profile is StageProfile or not loaded_rooms is RoomCatalog:
+		push_error("Production stage '%s' cannot load its profile or room catalog." % config["id"])
+		return false
+	_stage_profile = loaded_profile
+	_room_catalog = loaded_rooms
+	_clear_reward_id = StringName(config["clear_reward_id"])
+	stage_id = String(config["id"])
+	stage_display_name = _stage_profile.display_name
 	return true
 
 
@@ -178,7 +218,7 @@ func _configure_stage_endpoints() -> bool:
 	for room in _stage_plan.get_rooms():
 		if room.role == &"start":
 			start_host = get_room_host(room.id)
-		elif room.role == &"exit":
+		elif room.role == _stage_profile.terminal_room_role:
 			terminal_host = get_room_host(room.id)
 	if start_host == null or terminal_host == null:
 		push_error("Generated stage has no start or terminal room.")

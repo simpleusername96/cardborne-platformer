@@ -19,4 +19,5 @@ maximum_amount = 3
 script = ExtResource("1")
 id = &"material_cavern_ruin"
 display_name = "Material Cavern"
+tags = Array[StringName]([&"material_node"])
 entries = Array[ExtResource("2")]([SubResource("Scrap"), SubResource("Coin")])

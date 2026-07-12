@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ForgeAffixDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/progression/ForgeAffixDefinition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"forge_guard"
+display_name = "Guard"
+mechanical_description = "Reduce the first incoming damage after forging by 1."
+eligible_slots = Array[StringName]([&"weapon", &"armor", &"relic"])
+behavior_type = &"reduce_first_damage"
+behavior_value = 1
+trigger_count = 1

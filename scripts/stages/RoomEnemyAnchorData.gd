@@ -38,6 +38,8 @@ func supports(archetype: EnemyArchetypeDefinition, pressure_role: StringName) ->
 		return false
 	if lane_width < archetype.minimum_lane_width:
 		return false
+	if clearance < archetype.minimum_arc_clearance:
+		return false
 	if archetype.requires_patrol_turn_points and lane_width <= 0.0:
 		return false
 	if archetype.requires_escape_route and not has_escape_route:

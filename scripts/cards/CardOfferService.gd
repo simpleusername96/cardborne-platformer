@@ -71,6 +71,9 @@ static func supported_triggers_for_profile(profile: CharacterProfile) -> Array[S
 		return triggers
 	if profile.combat_kit.heavy_attack != null:
 		triggers.append(&"heavy_hit_confirmed")
+		triggers.append(&"heavy_ground_impact")
+	if profile.combat_kit.guarded_duration > 0.0:
+		triggers.append(&"guard_consumed")
 	if not profile.combat_kit.skills.is_empty():
 		triggers.append(&"skill_kill")
 	return triggers
