@@ -327,6 +327,28 @@ func _max_extra_jumps() -> int:
 	return int(stats.get("extra_jumps", 1))
 
 
+func refund_dash_charge(amount: int = 1) -> int:
+	var previous := dash_charges_left
+	dash_charges_left = mini(dash_charges_left + maxi(amount, 0), _max_dash_charges())
+	return dash_charges_left - previous
+
+
+func grant_invulnerability(duration: float) -> void:
+	invulnerability_timer = maxf(invulnerability_timer, maxf(duration, 0.0))
+
+
+func restore_air_control(fraction: float, direction: int) -> void:
+	if is_on_floor() or fraction <= 0.0:
+		return
+	var move_speed := float(stats.get("move_speed", 220.0))
+	var target := clampf(
+		velocity.x + float(direction) * move_speed * fraction,
+		-move_speed,
+		move_speed
+	)
+	velocity.x = target
+
+
 func enter_climbable(_climbable: Area2D) -> void:
 	climbable_count += 1
 	SignalBus.status_message_changed.emit("Climbable: W/S or Up/Down, Space dismount")

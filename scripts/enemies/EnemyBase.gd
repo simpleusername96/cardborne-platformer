@@ -31,10 +31,13 @@ var stagger_meter: int = 0
 var staggered_timer: float = 0.0
 var fractured_timer: float = 0.0
 var fractured_bonus_damage: int = 0
+var external_slow_timer: float = 0.0
+var external_speed_scale: float = 1.0
 var resolved_spec: ResolvedEnemySpec
 
 var _forced_carry_active: bool = false
 var _forced_carry_position: Vector2 = Vector2.ZERO
+var _delayed_damage: Dictionary = {}
 
 var _visual: Polygon2D
 var _base_visual_color: Color = Color(0.84, 0.34, 0.28, 1.0)
@@ -75,6 +78,10 @@ func receive_damage(damage_info: DamageInfo) -> void:
 
 func _physics_process(delta: float) -> void:
 	hit_stun_timer = maxf(hit_stun_timer - delta, 0.0)
+	external_slow_timer = maxf(external_slow_timer - delta, 0.0)
+	if external_slow_timer <= 0.0:
+		external_speed_scale = 1.0
+	_update_delayed_damage(delta)
 	fractured_timer = maxf(fractured_timer - delta, 0.0)
 	if fractured_timer <= 0.0:
 		fractured_bonus_damage = 0
@@ -181,6 +188,9 @@ func reset_enemy() -> void:
 	staggered_timer = 0.0
 	fractured_timer = 0.0
 	fractured_bonus_damage = 0
+	external_slow_timer = 0.0
+	external_speed_scale = 1.0
+	_delayed_damage.clear()
 	_forced_carry_active = false
 	global_position = spawn_position
 	velocity = Vector2.ZERO
@@ -227,6 +237,8 @@ func get_combat_snapshot() -> Dictionary:
 		"staggered": staggered_timer > 0.0,
 		"mitigation": 0.0,
 		"lightweight": lightweight,
+		"facing_direction": get_facing_direction(),
+		"external_speed_scale": external_speed_scale,
 		"fractured_bonus_damage": fractured_bonus_damage if fractured_timer > 0.0 else 0,
 	}
 
@@ -253,6 +265,61 @@ func consume_fractured() -> int:
 	fractured_timer = 0.0
 	fractured_bonus_damage = 0
 	return bonus
+
+
+func get_facing_direction() -> int:
+	for property in get_property_list():
+		if String(property.get("name", "")) == "direction":
+			var value: Variant = get("direction")
+			if value is int and value != 0:
+				return value
+	if not is_zero_approx(velocity.x):
+		return int(sign(velocity.x))
+	return -1
+
+
+func get_external_speed_scale() -> float:
+	return external_speed_scale
+
+
+func apply_external_slow(duration: float, speed_scale: float) -> void:
+	if current_health <= 0 or duration <= 0.0:
+		return
+	external_slow_timer = maxf(external_slow_timer, duration)
+	external_speed_scale = minf(external_speed_scale, clampf(speed_scale, 0.1, 1.0))
+
+
+func apply_delayed_damage(
+	source_id: StringName,
+	duration: float,
+	damage: int,
+	source: Node
+) -> void:
+	if current_health <= 0 or source_id.is_empty() or duration <= 0.0 or damage <= 0:
+		return
+	_delayed_damage[String(source_id)] = {
+		"remaining": duration,
+		"damage": damage,
+		"source": source,
+	}
+
+
+func get_priority_target() -> Node2D:
+	var nearest: Node2D
+	var nearest_distance := INF
+	for candidate in get_tree().get_nodes_in_group("enemy_decoy"):
+		if not candidate is Node2D or not is_instance_valid(candidate):
+			continue
+		var candidate_2d := candidate as Node2D
+		if not is_target_within_encounter(candidate_2d):
+			continue
+		var distance := global_position.distance_squared_to(candidate_2d.global_position)
+		if distance < nearest_distance:
+			nearest = candidate_2d
+			nearest_distance = distance
+	if nearest != null:
+		return nearest
+	return get_tree().get_first_node_in_group("player") as Node2D
 
 
 func begin_forced_carry() -> void:
@@ -343,3 +410,25 @@ func _flash(critical: bool = false) -> void:
 	await get_tree().create_timer(0.12 if critical else 0.08).timeout
 	if is_instance_valid(_visual) and current_health > 0:
 		_refresh_visual_color()
+
+
+func _update_delayed_damage(delta: float) -> void:
+	for source_key in _delayed_damage.keys():
+		var entry: Dictionary = _delayed_damage[source_key]
+		entry["remaining"] = float(entry.get("remaining", 0.0)) - delta
+		if float(entry["remaining"]) > 0.0:
+			_delayed_damage[source_key] = entry
+			continue
+		_delayed_damage.erase(source_key)
+		if current_health <= 0:
+			continue
+		receive_damage(DamageInfo.new(
+			int(entry.get("damage", 0)),
+			entry.get("source") as Node,
+			Vector2.ZERO,
+			["player_attack", "damage_over_time", "secondary"],
+			StringName(source_key),
+			0,
+			false,
+			true
+		))

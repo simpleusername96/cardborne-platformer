@@ -44,7 +44,7 @@ func _physics_process(delta: float) -> void:
 	_state_timer -= delta
 	match _state:
 		"guard":
-			velocity.x = float(direction) * move_speed
+			velocity.x = float(direction) * move_speed * get_external_speed_scale()
 			if _state_timer <= 0.0:
 				_set_state("warning", attack_warning_time)
 		"warning":

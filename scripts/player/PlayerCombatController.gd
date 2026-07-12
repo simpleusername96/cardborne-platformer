@@ -33,6 +33,7 @@ var phase_timer: float = 0.0
 var action_elapsed: float = 0.0
 var guarded_timer: float = 0.0
 var guarded_rearm_timer: float = 0.0
+var character_runtime: CharacterCombatRuntime
 
 var _cooldowns: Dictionary = {}
 var _fallback_basic: AttackDefinition
@@ -50,6 +51,9 @@ var _post_double_jump_stagger_ready: bool = false
 # Normal combat resets preserve this per-stage limit; begin_stage owns its reset.
 var _last_bastion_used: bool = false
 var _action_serial: int = 0
+var _charge_fraction: float = 0.0
+var _action_start_position: Vector2 = Vector2.ZERO
+var _action_hit_wall: bool = false
 
 
 func _ready() -> void:
@@ -63,6 +67,12 @@ func _ready() -> void:
 		and not player.is_connected("extra_jump_performed", notify_extra_jump_performed)
 	):
 		player.connect("extra_jump_performed", notify_extra_jump_performed)
+	if (
+		player != null
+		and player.has_signal("dash_completed")
+		and not player.is_connected("dash_completed", notify_dash_completed)
+	):
+		player.connect("dash_completed", notify_dash_completed)
 
 
 func configure(
@@ -77,6 +87,7 @@ func configure(
 		var effect := value as ProgressionBehaviorEffect
 		if effect != null:
 			_progression_effects.append(effect)
+	_configure_character_runtime()
 	_fallback_basic = _make_fallback_basic(stats)
 	reset_combat_state()
 	begin_stage()
@@ -84,6 +95,8 @@ func configure(
 
 func begin_stage() -> void:
 	_last_bastion_used = false
+	if character_runtime != null:
+		character_runtime.begin_stage()
 	_publish_state()
 
 
@@ -96,6 +109,8 @@ func update_stats(effective_stats: Dictionary) -> void:
 
 func update_combat(delta: float) -> void:
 	_update_cooldowns(delta)
+	if character_runtime != null:
+		character_runtime.update(delta)
 	guarded_timer = maxf(guarded_timer - delta, 0.0)
 	guarded_rearm_timer = maxf(guarded_rearm_timer - delta, 0.0)
 	_rally_heavy_timer = maxf(_rally_heavy_timer - delta, 0.0)
@@ -109,7 +124,10 @@ func update_combat(delta: float) -> void:
 		return
 
 	action_elapsed += delta
-	phase_timer -= delta
+	if phase == Phase.STARTUP and _has_charge_contract(current_attack):
+		_update_charge_startup()
+	else:
+		phase_timer -= delta
 	if phase == Phase.STARTUP and not is_movement_locked():
 		attack_direction = player.facing
 	attack_presenter.update(
@@ -158,6 +176,8 @@ func is_movement_locked() -> bool:
 func apply_movement(delta: float) -> void:
 	if not is_movement_locked() or player == null:
 		return
+	if character_runtime != null and character_runtime.apply_movement(delta):
+		return
 	if current_attack is SkillDefinition and phase == Phase.ACTIVE:
 		var skill := current_attack as SkillDefinition
 		if skill.movement_distance > 0.0:
@@ -169,6 +189,9 @@ func apply_movement(delta: float) -> void:
 
 
 func notify_wall_collision() -> void:
+	_action_hit_wall = current_attack != null or _action_hit_wall
+	if character_runtime != null:
+		character_runtime.notify_wall_collision()
 	if current_attack is SkillDefinition and phase == Phase.ACTIVE:
 		var skill := current_attack as SkillDefinition
 		if skill.movement_distance > 0.0:
@@ -177,6 +200,8 @@ func notify_wall_collision() -> void:
 
 
 func blocks_incoming_damage(damage_info: DamageInfo) -> bool:
+	if character_runtime != null and character_runtime.blocks_incoming_damage(damage_info):
+		return true
 	if current_attack is SkillDefinition and phase == Phase.ACTIVE:
 		var skill := current_attack as SkillDefinition
 		var rush_block := (
@@ -208,7 +233,7 @@ func resolve_incoming_damage(amount: int) -> Dictionary:
 		"knockback_scale": 1.0,
 	}
 	if amount <= 0 or guarded_timer <= 0.0:
-		return result
+		return character_runtime.resolve_incoming_damage(amount, result) if character_runtime != null else result
 	result["damage"] = maxi(amount - 1, 0)
 	result["guard_consumed"] = true
 	var steady_feet := PlayerProgressionEffectQuery.first(
@@ -218,7 +243,7 @@ func resolve_incoming_damage(amount: int) -> Dictionary:
 	if steady_feet != null:
 		result["knockback_scale"] = steady_feet.value
 	_consume_guard()
-	return result
+	return character_runtime.resolve_incoming_damage(amount, result) if character_runtime != null else result
 
 
 func reduce_incoming_damage(amount: int) -> int:
@@ -226,6 +251,8 @@ func reduce_incoming_damage(amount: int) -> int:
 
 
 func notify_health_changed(previous_health: int, current_health: int) -> void:
+	if character_runtime != null:
+		character_runtime.notify_health_changed(previous_health, current_health)
 	if _last_bastion_used or previous_health <= 1 or current_health != 1:
 		return
 	var effect := PlayerProgressionEffectQuery.first(
@@ -242,6 +269,8 @@ func notify_health_changed(previous_health: int, current_health: int) -> void:
 
 
 func notify_player_damaged(resolved_damage: int) -> void:
+	if character_runtime != null:
+		character_runtime.notify_player_damaged(resolved_damage)
 	if resolved_damage <= 0 or current_attack == null or phase != Phase.STARTUP:
 		return
 	if bool(_active_attack_modifiers.get("uninterruptible_startup", false)):
@@ -250,8 +279,15 @@ func notify_player_damaged(resolved_damage: int) -> void:
 
 
 func notify_extra_jump_performed() -> void:
+	if character_runtime != null:
+		character_runtime.notify_extra_jump_performed()
 	if PlayerProgressionEffectQuery.first_post_double_jump_stagger(_progression_effects) > 0:
 		_post_double_jump_stagger_ready = true
+
+
+func notify_dash_completed(start_position: Vector2, end_position: Vector2) -> void:
+	if character_runtime != null:
+		character_runtime.notify_dash_completed(start_position, end_position)
 
 
 func reset_combat_state() -> void:
@@ -267,6 +303,11 @@ func reset_combat_state() -> void:
 	_pending_hit_contexts.clear()
 	_clear_rally_empowerment()
 	_post_double_jump_stagger_ready = false
+	_charge_fraction = 0.0
+	_action_start_position = Vector2.ZERO
+	_action_hit_wall = false
+	if character_runtime != null:
+		character_runtime.reset()
 	attack_hitbox.clear_damage_info_provider()
 	attack_hitbox.set_active(false)
 	attack_hitbox.visible = false
@@ -285,7 +326,7 @@ func get_state_snapshot() -> Dictionary:
 			"input_action": String(definition.input_action),
 			"cooldown": float(_cooldowns.get(String(definition.id), 0.0)),
 		})
-	return {
+	var snapshot := {
 		"phase": Phase.keys()[phase].to_lower(),
 		"current_attack_id": String(current_attack.id) if current_attack != null else "",
 		"guarded_time": guarded_timer,
@@ -293,9 +334,13 @@ func get_state_snapshot() -> Dictionary:
 		"rally_heavy_time": _rally_heavy_timer,
 		"post_double_jump_stagger_ready": _post_double_jump_stagger_ready,
 		"last_bastion_used": _last_bastion_used,
+		"charge_fraction": _charge_fraction,
 		"progression_effects": PlayerProgressionEffectQuery.effect_types(_progression_effects),
 		"actions": actions,
 	}
+	if character_runtime != null:
+		snapshot.merge(character_runtime.get_state_snapshot(), true)
+	return snapshot
 
 
 func get_effective_timing(definition: AttackDefinition) -> Dictionary:
@@ -327,6 +372,91 @@ func reduce_longest_skill_cooldown(seconds: float) -> StringName:
 	_cooldowns[String(longest_id)] = maxf(longest_remaining - seconds, 0.0)
 	_publish_state()
 	return longest_id
+
+
+func get_charge_fraction() -> float:
+	return _charge_fraction
+
+
+func get_action_serial() -> int:
+	return _action_serial
+
+
+func get_cooldown_remaining(definition_id: StringName) -> float:
+	return float(_cooldowns.get(String(definition_id), 0.0))
+
+
+func reset_cooldown(definition_id: StringName) -> bool:
+	var key := String(definition_id)
+	if not _cooldowns.has(key):
+		return false
+	_cooldowns.erase(key)
+	_publish_state()
+	return true
+
+
+func get_progression_effects() -> Array[ProgressionBehaviorEffect]:
+	return _progression_effects.duplicate()
+
+
+func get_card_contexts(trigger: StringName) -> Array:
+	if not is_inside_tree():
+		return []
+	var run_state := get_node_or_null("/root/RunState")
+	if run_state == null or not run_state.has_method("get_card_effect_contexts"):
+		return []
+	var contexts: Variant = run_state.call("get_card_effect_contexts", trigger)
+	return contexts if contexts is Array else []
+
+
+func find_targets_in_radius(
+	origin: Vector2,
+	radius: float,
+	max_targets: int = 16,
+	excluded: Array[Node] = []
+) -> Array[Node]:
+	var matches: Array[Dictionary] = []
+	if not is_inside_tree() or radius <= 0.0 or max_targets <= 0:
+		return []
+	for candidate in get_tree().get_nodes_in_group("enemies"):
+		if not candidate is Node2D or excluded.has(candidate) or not _target_is_active(candidate):
+			continue
+		var candidate_2d := candidate as Node2D
+		var distance := origin.distance_squared_to(candidate_2d.global_position)
+		if distance <= radius * radius:
+			matches.append({"target": candidate, "distance": distance})
+	matches.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		if not is_equal_approx(float(a["distance"]), float(b["distance"])):
+			return float(a["distance"]) < float(b["distance"])
+		return (a["target"] as Node).get_instance_id() < (b["target"] as Node).get_instance_id()
+	)
+	var targets: Array[Node] = []
+	for entry in matches.slice(0, mini(matches.size(), max_targets)):
+		targets.append(entry["target"] as Node)
+	return targets
+
+
+func find_targets_in_box(
+	center: Vector2,
+	half_extents: Vector2,
+	max_targets: int = 16
+) -> Array[Node]:
+	var candidates := find_targets_in_radius(center, half_extents.length(), max_targets * 2)
+	var targets: Array[Node] = []
+	for candidate in candidates:
+		var position := (candidate as Node2D).global_position
+		if (
+			absf(position.x - center.x) <= half_extents.x
+			and absf(position.y - center.y) <= half_extents.y
+		):
+			targets.append(candidate)
+			if targets.size() >= max_targets:
+				break
+	return targets
+
+
+func emit_status(message: String) -> void:
+	_emit_status(message)
 
 
 func spawn_secondary_shockwave(
@@ -383,7 +513,10 @@ func _begin_attack(definition: AttackDefinition) -> bool:
 	action_elapsed = 0.0
 	_active_target_count = 0
 	_rally_echo_spawned = false
+	_charge_fraction = 0.0
 	_action_serial += 1
+	_action_start_position = player.global_position
+	_action_hit_wall = false
 	_active_attack_modifiers = PlayerProgressionEffectQuery.attack_modifiers(
 		_progression_effects,
 		definition.id
@@ -393,13 +526,20 @@ func _begin_attack(definition: AttackDefinition) -> bool:
 	_apply_post_double_jump_stagger(definition)
 	_apply_rally_to_heavy(definition)
 	_apply_self_buff(definition)
-	phase_timer = _timing_value(definition.startup_time, "startup", _active_attack_modifiers)
+	if character_runtime != null:
+		character_runtime.prepare_attack(definition, _active_attack_modifiers)
+	phase_timer = _timing_value(
+		definition.charge_time_range.x if _has_charge_contract(definition) else definition.startup_time,
+		"startup",
+		_active_attack_modifiers
+	)
 	var cooldown_multiplier := (
 		float(stats.get("skill_cooldown_multiplier", 1.0))
 		if definition is SkillDefinition
 		else 1.0
 	)
-	_cooldowns[String(definition.id)] = definition.cooldown * cooldown_multiplier
+	if not definition.cooldown_from_release:
+		_cooldowns[String(definition.id)] = definition.cooldown * cooldown_multiplier
 	_configure_attack_geometry(definition)
 	attack_presenter.begin(definition, attack_direction, attack_hitbox.position)
 	if phase_timer <= 0.0:
@@ -411,6 +551,13 @@ func _begin_attack(definition: AttackDefinition) -> bool:
 func _advance_phase() -> void:
 	match phase:
 		Phase.STARTUP:
+			if current_attack.cooldown_from_release:
+				var cooldown_multiplier := (
+					float(stats.get("skill_cooldown_multiplier", 1.0))
+					if current_attack is SkillDefinition
+					else 1.0
+				)
+				_cooldowns[String(current_attack.id)] = current_attack.cooldown * cooldown_multiplier
 			phase = Phase.ACTIVE
 			phase_timer += _timing_value(
 				current_attack.active_time,
@@ -439,6 +586,10 @@ func _activate_hit() -> void:
 			"supported_ground": _has_supported_ground(player.global_position),
 			"action_serial": _action_serial,
 		})
+	if character_runtime != null and character_runtime.activate_attack(current_attack):
+		attack_hitbox.set_active(false)
+		attack_hitbox.visible = false
+		return
 	if current_attack is SkillDefinition:
 		var skill := current_attack as SkillDefinition
 		match skill.execution_mode:
@@ -462,6 +613,7 @@ func _activate_hit() -> void:
 
 
 func _finish_attack() -> void:
+	var event := _make_action_event(&"completed")
 	_release_carried_targets(false)
 	attack_hitbox.clear_damage_info_provider()
 	attack_hitbox.set_active(false, false)
@@ -471,10 +623,14 @@ func _finish_attack() -> void:
 	phase_timer = 0.0
 	action_elapsed = 0.0
 	_active_attack_modifiers.clear()
+	_charge_fraction = 0.0
 	attack_presenter.reset()
+	if character_runtime != null:
+		character_runtime.notify_attack_finished(event)
 
 
 func _cancel_current_attack() -> void:
+	var event := _make_action_event(&"interrupted")
 	_release_carried_targets(false)
 	attack_hitbox.clear_damage_info_provider()
 	attack_hitbox.set_active(false, false)
@@ -484,7 +640,10 @@ func _cancel_current_attack() -> void:
 	phase_timer = 0.0
 	action_elapsed = 0.0
 	_active_attack_modifiers.clear()
+	_charge_fraction = 0.0
 	attack_presenter.reset()
+	if character_runtime != null:
+		character_runtime.notify_attack_interrupted(event)
 	_emit_status("Attack interrupted")
 
 
@@ -528,20 +687,88 @@ func _resolve_damage_info(
 	definition: AttackDefinition,
 	direction: int,
 	secondary_hit: bool,
-	attack_modifiers: Dictionary
+	attack_modifiers: Dictionary,
+	event_context: Dictionary = {}
 ) -> DamageInfo:
-	var target_state := _target_state(area)
 	var receiver := _receiver_for_area(area)
+	var built := _build_hit(
+		receiver,
+		_target_state(area),
+		definition,
+		direction,
+		secondary_hit,
+		attack_modifiers,
+		event_context
+	)
+	_pending_hit_contexts[area.get_instance_id()] = built["event"]
+	return built["damage_info"] as DamageInfo
+
+
+func apply_runtime_hit(
+	target: Node,
+	definition: AttackDefinition,
+	attack_modifiers: Dictionary = {},
+	secondary_hit: bool = false,
+	event_context: Dictionary = {}
+) -> DamageInfo:
+	if target == null or definition == null or not target.has_method("receive_damage"):
+		return null
+	var direction := int(event_context.get("attack_direction", attack_direction))
+	var built := _build_hit(
+		target,
+		_target_state_for_node(target),
+		definition,
+		direction,
+		secondary_hit,
+		attack_modifiers,
+		event_context
+	)
+	var damage_info := built["damage_info"] as DamageInfo
+	target.call("receive_damage", damage_info)
+	_confirm_target_hit(built["event"], damage_info)
+	return damage_info
+
+
+func _build_hit(
+	target: Node,
+	target_state: Dictionary,
+	definition: AttackDefinition,
+	direction: int,
+	secondary_hit: bool,
+	attack_modifiers: Dictionary,
+	event_context: Dictionary
+) -> Dictionary:
 	var hit_context := {
 		"secondary_hit": secondary_hit,
 		"attack_direction": direction,
 		"source_position": player.global_position,
+		"action_serial": int(event_context.get("action_serial", _action_serial)),
+		"verb_id": String(event_context.get("verb_id", definition.id)),
 	}
+	if event_context.has("hit_context") and event_context["hit_context"] is Dictionary:
+		hit_context.merge(event_context["hit_context"], true)
 	var source_modifiers := {
-		"direct_damage_multiplier": float(stats.get("direct_damage_multiplier", 1.0)),
+		"direct_damage_multiplier": (
+			float(stats.get("direct_damage_multiplier", 1.0))
+			* float(attack_modifiers.get("direct_damage_multiplier", 1.0))
+		),
 		"direct_damage_additive": float(attack_modifiers.get("direct_damage_additive", 0.0)),
 		"stagger_additive": float(attack_modifiers.get("stagger_additive", 0.0)),
 	}
+	var runtime_context := (
+		character_runtime.prepare_damage(
+			definition,
+			target,
+			target_state,
+			source_modifiers,
+			secondary_hit,
+			event_context
+		)
+		if character_runtime != null
+		else {}
+	)
+	if runtime_context.has("hit_context") and runtime_context["hit_context"] is Dictionary:
+		hit_context.merge(runtime_context["hit_context"], true)
 	var consume_fracture := false
 	if definition is SkillDefinition and not secondary_hit:
 		var fracture_bonus := int(target_state.get("fractured_bonus_damage", 0))
@@ -562,6 +789,12 @@ func _resolve_damage_info(
 		absf(result.knockback.x) * float(direction),
 		result.knockback.y
 	)
+	if character_runtime != null:
+		resolved_knockback = character_runtime.modify_knockback(
+			definition,
+			target_state,
+			resolved_knockback
+		)
 	if (
 		definition is SkillDefinition
 		and (definition as SkillDefinition).launch_light_targets
@@ -578,20 +811,28 @@ func _resolve_damage_info(
 		result.critical,
 		secondary_hit
 	)
-	_pending_hit_contexts[area.get_instance_id()] = {
+	var pending_context := {
 		"definition": definition,
-		"target": receiver,
+		"target": target,
 		"target_state": target_state,
+		"action_serial": int(event_context.get("action_serial", _action_serial)),
+		"verb_id": StringName(event_context.get("verb_id", definition.id)),
 		"activations": card_hit_context.get("activations", []),
 		"consume_fracture": consume_fracture,
 	}
-	return damage_info
+	pending_context.merge(runtime_context, true)
+	pending_context.merge(event_context, true)
+	return {"damage_info": damage_info, "event": pending_context}
 
 
 func _target_state(area: Area2D) -> Dictionary:
 	var receiver: Node = area
 	if area is Hurtbox and (area as Hurtbox).receiver != null:
 		receiver = (area as Hurtbox).receiver
+	return _target_state_for_node(receiver)
+
+
+func _target_state_for_node(receiver: Node) -> Dictionary:
 	if receiver != null and receiver.has_method("get_combat_snapshot"):
 		var snapshot: Variant = receiver.call("get_combat_snapshot")
 		if snapshot is Dictionary:
@@ -602,6 +843,10 @@ func _target_state(area: Area2D) -> Dictionary:
 func _on_target_hit(area: Area2D, damage_info: DamageInfo) -> void:
 	var event: Dictionary = _pending_hit_contexts.get(area.get_instance_id(), {})
 	_pending_hit_contexts.erase(area.get_instance_id())
+	_confirm_target_hit(event, damage_info)
+
+
+func _confirm_target_hit(event: Dictionary, damage_info: DamageInfo) -> void:
 	var definition := event.get("definition") as AttackDefinition
 	if definition == null:
 		definition = current_attack
@@ -616,6 +861,8 @@ func _on_target_hit(area: Area2D, damage_info: DamageInfo) -> void:
 		if target.has_method("consume_fractured"):
 			target.call("consume_fractured")
 	_apply_mastery_on_hit(definition, target, event)
+	if character_runtime != null:
+		character_runtime.notify_target_hit(event)
 	if definition is SkillDefinition:
 		var skill := definition as SkillDefinition
 		if _active_target_count >= skill.max_targets:
@@ -951,6 +1198,27 @@ func _target_is_defeated(target: Node) -> bool:
 	return (health is int or health is float) and float(health) <= 0.0
 
 
+func _target_is_active(target: Node) -> bool:
+	if target == null or not is_instance_valid(target) or not target.has_method("receive_damage"):
+		return false
+	var health: Variant = target.get("current_health")
+	return not (health is int or health is float) or float(health) > 0.0
+
+
+func _make_action_event(reason: StringName) -> Dictionary:
+	return {
+		"definition": current_attack,
+		"action_serial": _action_serial,
+		"direction": attack_direction,
+		"target_count": _active_target_count,
+		"start_position": _action_start_position,
+		"end_position": player.global_position if player != null else _action_start_position,
+		"hit_wall": _action_hit_wall,
+		"reason": reason,
+		"modifiers": _active_attack_modifiers.duplicate(true),
+	}
+
+
 func _merge_action_modifiers(destination: Dictionary, source: Dictionary) -> void:
 	for key in source:
 		var value: Variant = source[key]
@@ -1027,35 +1295,89 @@ func _timing_value(base: float, phase_name: String, modifiers: Dictionary) -> fl
 
 
 func _fire_projectile(definition: AttackDefinition, direction: int) -> void:
+	var modifiers := _active_attack_modifiers.duplicate(true)
+	var event_context: Dictionary = {}
+	var target_cap := definition.projectile_target_cap
+	if _has_charge_contract(definition):
+		var maximum_damage := (
+			definition.maximum_charge_damage
+			+ int(modifiers.get("maximum_charge_damage_additive", 0))
+		)
+		var charged_damage := lerpf(
+			float(definition.base_damage),
+			float(maximum_damage),
+			_charge_fraction
+		)
+		modifiers["direct_damage_additive"] = (
+			float(modifiers.get("direct_damage_additive", 0.0))
+			+ charged_damage
+			- float(definition.base_damage)
+		)
+		if _charge_fraction >= 0.999:
+			target_cap += int(modifiers.get("full_charge_target_additive", 0))
+		event_context = {
+			"charge_fraction": _charge_fraction,
+			"hit_context": {"full_charge": _charge_fraction >= 0.999},
+		}
+	spawn_projectile(definition, direction, {
+		"modifiers": modifiers,
+		"max_targets": target_cap,
+		"event_context": event_context,
+	})
+
+
+func spawn_projectile(
+	definition: AttackDefinition,
+	direction: int,
+	options: Dictionary = {}
+) -> PlayerAttackProjectile:
 	var parent_node: Node = player.get_parent()
-	if parent_node == null:
-		return
+	if parent_node == null or definition == null:
+		return null
 	var projectile := PlayerAttackProjectile.new()
 	projectile.name = "%sProjectile" % definition.display_name.replace(" ", "")
 	projectile.damage_amount = definition.base_damage
 	projectile.knockback = definition.knockback
 	projectile.tags = _string_tags(definition.tags)
 	projectile.direction = direction
-	projectile.velocity = Vector2(
-		float(direction) * float(stats.get("attack_projectile_speed", 560.0)), 0.0
-	)
-	projectile.lifetime = float(stats.get("attack_projectile_lifetime", 0.65))
+	var speed := float(options.get(
+		"speed",
+		definition.projectile_speed if definition.projectile_speed > 0.0 else stats.get("attack_projectile_speed", 560.0)
+	))
+	var angle := deg_to_rad(float(options.get("angle_degrees", 0.0))) * float(direction)
+	projectile.velocity = Vector2(float(direction) * speed, 0.0).rotated(angle)
+	projectile.lifetime = float(options.get("lifetime", stats.get("attack_projectile_lifetime", 0.65)))
+	projectile.max_distance = float(options.get("max_distance", definition.projectile_range))
+	projectile.max_targets = int(options.get("max_targets", definition.projectile_target_cap))
 	var size_value: Variant = stats.get("attack_projectile_size", Vector2(34.0, 8.0))
-	projectile.projectile_size = size_value if size_value is Vector2 else Vector2(34.0, 8.0)
-	projectile.projectile_color = definition.visual_color
+	projectile.projectile_size = options.get(
+		"size",
+		size_value if size_value is Vector2 else Vector2(34.0, 8.0)
+	)
+	projectile.projectile_color = options.get("color", definition.visual_color)
+	var modifiers: Dictionary = options.get("modifiers", {})
+	if options.has("damage_scale"):
+		modifiers = modifiers.duplicate(true)
+		modifiers["direct_damage_multiplier"] = (
+			float(modifiers.get("direct_damage_multiplier", 1.0))
+			* float(options["damage_scale"])
+		)
 	projectile.set_damage_info_provider(
-		_damage_info_for_projectile_target.bind(
+		_resolve_damage_info.bind(
 			definition,
 			direction,
-			_active_attack_modifiers.duplicate(true)
+			bool(options.get("secondary_hit", false)),
+			modifiers,
+			options.get("event_context", {})
 		)
 	)
 	projectile.target_hit.connect(_on_target_hit)
 	parent_node.add_child(projectile)
-	projectile.global_position = player.global_position + Vector2(
+	projectile.global_position = options.get("origin", player.global_position + Vector2(
 		float(direction) * maxf(absf(definition.hitbox_offset.x), 24.0),
 		definition.hitbox_offset.y
-	)
+	))
+	return projectile
 
 
 func _make_fallback_basic(effective_stats: Dictionary) -> AttackDefinition:
@@ -1106,3 +1428,35 @@ func _emit_status(message: String) -> void:
 	var bus := get_node_or_null("/root/SignalBus")
 	if bus != null:
 		bus.emit_signal("status_message_changed", message)
+
+
+func _configure_character_runtime() -> void:
+	character_runtime = null
+	if kit == null or kit.runtime_script == null:
+		return
+	var runtime: Variant = kit.runtime_script.new()
+	if not runtime is CharacterCombatRuntime:
+		push_error("Character kit '%s' has an invalid combat runtime." % kit.id)
+		return
+	character_runtime = runtime
+	character_runtime.configure(self, player, kit, _progression_effects)
+
+
+func _has_charge_contract(definition: AttackDefinition) -> bool:
+	return definition != null and definition.charge_time_range != Vector2.ZERO
+
+
+func _update_charge_startup() -> void:
+	var minimum := current_attack.charge_time_range.x
+	var maximum := current_attack.charge_time_range.y
+	_charge_fraction = clampf(
+		(action_elapsed - minimum) / maxf(maximum - minimum, 0.001),
+		0.0,
+		1.0
+	)
+	if action_elapsed < minimum:
+		phase_timer = minimum - action_elapsed
+	elif Input.is_action_pressed(String(current_attack.input_action)) and action_elapsed < maximum:
+		phase_timer = maximum - action_elapsed
+	else:
+		phase_timer = 0.0

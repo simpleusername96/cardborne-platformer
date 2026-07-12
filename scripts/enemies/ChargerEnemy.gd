@@ -57,7 +57,7 @@ func _physics_process(delta: float) -> void:
 			if _state_timer <= 0.0:
 				_set_state("charge", charge_time)
 		"charge":
-			velocity.x = float(direction) * charge_speed
+			velocity.x = float(direction) * charge_speed * get_external_speed_scale()
 			if _state_timer <= 0.0 or is_on_wall():
 				_set_state("recovery", recovery_time)
 		"recovery":
@@ -77,7 +77,7 @@ func reset_enemy() -> void:
 
 
 func _update_patrol(_delta: float) -> void:
-	velocity.x = float(direction) * patrol_speed
+	velocity.x = float(direction) * patrol_speed * get_external_speed_scale()
 	if global_position.x <= left_limit:
 		direction = 1
 	elif global_position.x >= right_limit:
@@ -123,7 +123,7 @@ func get_combat_snapshot() -> Dictionary:
 
 
 func _can_start_charge() -> bool:
-	var player := get_tree().get_first_node_in_group("player") as Node2D
+	var player := get_priority_target()
 	if player == null or not is_target_within_encounter(player):
 		return false
 	var offset := player.global_position - global_position
@@ -131,7 +131,7 @@ func _can_start_charge() -> bool:
 
 
 func _lock_direction_to_player() -> void:
-	var player := get_tree().get_first_node_in_group("player") as Node2D
+	var player := get_priority_target()
 	if player == null or is_zero_approx(player.global_position.x - global_position.x):
 		return
 	direction = int(sign(player.global_position.x - global_position.x))

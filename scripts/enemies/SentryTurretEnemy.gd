@@ -56,7 +56,7 @@ func reset_enemy() -> void:
 
 
 func _face_player_if_in_range() -> void:
-	var target := get_tree().get_first_node_in_group("player") as Node2D
+	var target := get_priority_target()
 	if target == null or target.global_position.distance_to(global_position) > deactivation_range:
 		return
 	var offset := target.global_position.x - global_position.x
@@ -65,7 +65,7 @@ func _face_player_if_in_range() -> void:
 
 
 func _player_in_range(range_px: float) -> bool:
-	var target := get_tree().get_first_node_in_group("player") as Node2D
+	var target := get_priority_target()
 	return target != null and target.global_position.distance_to(global_position) <= range_px
 
 

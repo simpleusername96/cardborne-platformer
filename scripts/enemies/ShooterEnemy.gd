@@ -103,7 +103,7 @@ func get_combat_snapshot() -> Dictionary:
 
 
 func _face_player() -> void:
-	var target := get_tree().get_first_node_in_group("player") as Node2D
+	var target := get_priority_target()
 	if target == null or not is_target_within_encounter(target):
 		return
 	var offset := target.global_position.x - global_position.x
@@ -112,7 +112,7 @@ func _face_player() -> void:
 
 
 func _lock_aim_at_player() -> bool:
-	var target := get_tree().get_first_node_in_group("player") as Node2D
+	var target := get_priority_target()
 	if target == null or not _can_begin_aim(target):
 		return false
 	var offset := target.global_position - (global_position + Vector2(0.0, -28.0))

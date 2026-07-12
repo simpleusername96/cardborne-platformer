@@ -10,6 +10,10 @@ const SUPPORTED_TYPES: Array[StringName] = [
 	&"area_damage",
 	&"ground_shockwave",
 	&"arm_next_heavy",
+	&"split_projectile",
+	&"delayed_target_strike",
+	&"repeat_attack_path",
+	&"detonation_mark",
 ]
 
 @export var effect_type: StringName
@@ -25,6 +29,9 @@ const SUPPORTED_TYPES: Array[StringName] = [
 @export var damage_by_stack: PackedInt32Array = PackedInt32Array()
 @export var radius_by_stack: PackedFloat32Array = PackedFloat32Array()
 @export_range(1, 16, 1) var hits_per_target: int = 1
+@export_range(1, 16, 1) var projectile_count: int = 1
+@export_range(0.0, 90.0, 1.0) var angle_degrees: float = 0.0
+@export_range(0, 8, 1) var required_distinct_verbs: int = 0
 @export var proc_effects: bool = false
 @export var exclude_primary_target: bool = false
 @export var uninterruptible_startup: bool = false
@@ -73,4 +80,16 @@ func validate_definition() -> PackedStringArray:
 		&"arm_next_heavy":
 			if duration <= 0.0 or startup_scale >= 1.0 or not uninterruptible_startup:
 				errors.append("Heavy arm effect needs a window, faster startup, and interruption guard.")
+		&"split_projectile":
+			if damage <= 0 or projectile_count < 2 or angle_degrees <= 0.0 or proc_effects:
+				errors.append("Projectile split needs damage, count, angle, and non-recursive output.")
+		&"delayed_target_strike":
+			if damage <= 0 or delay <= 0.0 or proc_effects:
+				errors.append("Delayed target strike needs damage, delay, and non-recursive output.")
+		&"repeat_attack_path":
+			if damage_scale <= 0.0 or proc_effects:
+				errors.append("Attack-path repeat needs non-recursive damage scaling.")
+		&"detonation_mark":
+			if damage <= 0 or duration <= 0.0 or distance <= 0.0 or required_distinct_verbs <= 0:
+				errors.append("Detonation mark needs damage, duration, radius, and verb count.")
 	return errors

@@ -10,6 +10,10 @@ const SUPPORTED_TRIGGERS: Array[StringName] = [
 	&"skill_kill",
 	&"heavy_ground_impact",
 	&"guard_consumed",
+	&"archer_power_shot_terminated",
+	&"archer_mark_consumed",
+	&"assassin_shadow_lunge_completed",
+	&"assassin_flow_consumed",
 ]
 
 @export var id: StringName

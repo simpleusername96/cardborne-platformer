@@ -26,7 +26,7 @@ func _physics_process(delta: float) -> void:
 		return
 
 	if hit_stun_timer <= 0.0 and not is_staggered():
-		velocity.x = float(direction) * move_speed
+		velocity.x = float(direction) * move_speed * get_external_speed_scale()
 	super._physics_process(delta)
 
 	if global_position.x <= left_limit:

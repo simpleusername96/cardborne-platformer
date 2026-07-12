@@ -92,7 +92,7 @@ func _try_start_warning() -> void:
 	if not is_on_floor():
 		_state_timer = TARGET_RETRY_TIME
 		return
-	var target := get_tree().get_first_node_in_group("player") as Node2D
+	var target := get_priority_target()
 	if target == null or not is_target_within_encounter(target):
 		_state_timer = TARGET_RETRY_TIME
 		return
@@ -114,7 +114,7 @@ func _start_leap() -> void:
 		maximum_leap_speed_x
 	)
 	direction = _direction_to(global_position.x + horizontal_speed)
-	velocity = Vector2(horizontal_speed, leap_velocity_y)
+	velocity = Vector2(horizontal_speed * get_external_speed_scale(), leap_velocity_y)
 	_set_state(STATE_ACTIVE, leap_time)
 
 

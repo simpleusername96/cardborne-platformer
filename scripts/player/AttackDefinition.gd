@@ -25,6 +25,20 @@ const HIT_POLICY_ONCE := &"once_per_activation"
 @export var hit_policy: StringName = HIT_POLICY_ONCE
 @export var critical_rule: CriticalRule
 
+@export_group("Projectile")
+@export_range(0.0, 2000.0, 1.0) var projectile_speed: float = 0.0
+@export_range(0.0, 3000.0, 1.0) var projectile_range: float = 0.0
+@export_range(1, 16, 1) var projectile_target_cap: int = 1
+
+@export_group("Charge")
+@export var charge_time_range: Vector2 = Vector2.ZERO
+@export_range(0, 999, 1) var maximum_charge_damage: int = 0
+@export var cooldown_from_release: bool = false
+
+@export_group("Sequence")
+@export var sequence_step_timings: Array[Vector3] = []
+@export var sequence_requires_hold: bool = false
+
 @export_group("Presentation")
 @export var motion_style: StringName = &"quick_slash"
 @export var visual_color: Color = Color(1.0, 0.86, 0.22, 1.0)
@@ -56,6 +70,32 @@ func validate_definition() -> PackedStringArray:
 		errors.append("Attack '%s' needs a positive hitbox size." % id)
 	if hit_policy != HIT_POLICY_ONCE:
 		errors.append("Attack '%s' uses unsupported hit policy '%s'." % [id, hit_policy])
+	var has_projectile_contract := projectile_speed > 0.0 or projectile_range > 0.0
+	if has_projectile_contract and (projectile_speed <= 0.0 or projectile_range <= 0.0):
+		errors.append("Attack '%s' projectile needs positive speed and range." % id)
+	if charge_time_range != Vector2.ZERO:
+		if (
+			charge_time_range.x <= 0.0
+			or charge_time_range.y < charge_time_range.x
+			or maximum_charge_damage < base_damage
+			or not cooldown_from_release
+		):
+			errors.append("Attack '%s' has an invalid charge contract." % id)
+	elif maximum_charge_damage != 0 or cooldown_from_release:
+		errors.append("Attack '%s' cannot define charged output without charge timing." % id)
+	if not sequence_step_timings.is_empty():
+		if sequence_step_timings.size() < 2:
+			errors.append("Attack '%s' sequence needs at least two steps." % id)
+		var sequence_duration := 0.0
+		for timing in sequence_step_timings:
+			if timing.x < 0.0 or timing.y <= 0.0 or timing.z < 0.0:
+				errors.append("Attack '%s' sequence has invalid phase timing." % id)
+				break
+			sequence_duration += timing.x + timing.y + timing.z
+		if not is_equal_approx(sequence_duration, total_duration()):
+			errors.append("Attack '%s' sequence timing must match its total action cycle." % id)
+	elif sequence_requires_hold:
+		errors.append("Attack '%s' cannot require a held sequence without steps." % id)
 	if critical_rule != null:
 		for error in critical_rule.validate_definition():
 			errors.append("Attack '%s': %s" % [id, error])

@@ -6,6 +6,7 @@ extends Resource
 @export var content_version: int = 1
 @export var profile_id: StringName
 @export var passive_id: StringName
+@export var runtime_script: Script
 @export_range(0.0, 10.0, 0.05) var guarded_duration: float = 0.0
 @export_range(0.0, 60.0, 0.05) var guarded_rearm_cooldown: float = 0.0
 @export var basic_attack: AttackDefinition
@@ -41,6 +42,12 @@ func validate_definition() -> PackedStringArray:
 		errors.append("Character kit '%s' needs a positive content version." % id)
 	if String(profile_id).strip_edges().is_empty():
 		errors.append("Character kit '%s' needs a profile ID." % id)
+	if runtime_script == null:
+		errors.append("Character kit '%s' needs a combat runtime script." % id)
+	else:
+		var runtime: Variant = runtime_script.new()
+		if not runtime is CharacterCombatRuntime:
+			errors.append("Character kit '%s' runtime must extend CharacterCombatRuntime." % id)
 	if basic_attack == null or heavy_attack == null:
 		errors.append("Character kit '%s' needs basic and heavy attacks." % id)
 	if skills.size() != 3:
