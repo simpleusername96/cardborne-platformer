@@ -16,6 +16,10 @@
 - Persistent profile v1, twelve equipment items, eighteen mastery nodes, material
   settlement, loadouts, save recovery, temporary forge, and scoped consumables are
   active production systems.
+- Slime Court completes the run with four exact warned patterns, two phases,
+  stagger, two capped adds, boss HUD, exactly-once Boss Core settlement, and a
+  final build/material summary. Fixed gamepad controls and automatic prompt
+  switching are active alongside keyboard remapping.
 - `docs/product/2d_platform_action_card_game_prd.md` is the canonical product and
   first-complete-run blueprint.
 - Active content specs under `docs/design/` define characters, progression,
@@ -69,8 +73,8 @@ Read in this order:
 - Archer and Assassin rules are isolated behind character combat runtimes. The
   shared controller still retains legacy Warrior helper implementation and should
   shed it during the final structural quality pass rather than absorb new rules.
-- The three normal stages and 15-card catalog are complete. The authored boss,
-  end-to-end settlement, presentation, accessibility, and final tuning remain.
+- The three normal stages, 15-card catalog, authored boss, and terminal settlement
+  are complete. Procedural presentation, accessibility, and final tuning remain.
 - Flooded Works has deterministic geometry/runtime coverage, but complete-run
   difficulty and pacing still need Milestone 9 playtest tuning.
 - JSON design catalogs remain migration inputs until all typed runtime content lands.
@@ -89,6 +93,8 @@ Read in this order:
 - Warrior combat: `./tools/godot.ps1 --path . --headless --script res://tools/validate_warrior_combat_runtime.gd`
 - Complete Warrior: `./tools/godot.ps1 --path . --headless --script res://tools/validate_warrior_m5_runtime.gd`
 - Roster matrix: `./tools/godot.ps1 --path . --headless --script res://tools/validate_roster_stage_matrix.gd`
+- Boss runtime: `./tools/godot.ps1 --path . --headless --script res://tools/validate_slime_king_patterns_runtime.gd`
+- Boss roster: `./tools/godot.ps1 --path . --headless --script res://tools/validate_boss_roster_matrix.gd`
 - Enemy catalog: `./tools/godot.ps1 --path . --headless --script res://tools/validate_enemy_catalog.gd`
 - Design catalogs: `./tools/godot.ps1 --path . --headless --script res://tools/validate_design_catalogs.gd`
 - Focused validators: `Get-ChildItem tools/validate_*.gd`
@@ -96,5 +102,6 @@ Read in this order:
 
 ## Next Implementation Entry
 
-Continue Milestone 8 from the committed boss pattern contracts: finish the authored
-Slime Court runtime, boss HUD, terminal settlement, and all-character boss matrix.
+Continue Milestone 9: integrate procedural feedback/audio, finish presentation and
+robustness, run complete-run balance/save/input matrices, reconcile catalogs, and
+produce the release-candidate handoff.

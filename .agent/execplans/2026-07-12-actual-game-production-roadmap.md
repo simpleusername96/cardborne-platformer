@@ -44,7 +44,7 @@ existing foundations and accepted design catalogs into one complete run.
 ### In scope
 
 - Warrior, Archer, Assassin with shared traversal and complete combat kits.
-- Three deterministic generated Lower Ruins stages from 18 authored rooms.
+- Three deterministic generated regions from 30 stage-specific authored rooms.
 - Six normal enemies, two special actors, four core hazards, stage gimmicks.
 - Run levels, 15 cards, coins, shops, temporary forge, consumables.
 - Twelve persistent equipment items, shared materials, 18 mastery nodes, safe save.
@@ -112,16 +112,16 @@ Additional invariants:
 
 | Concern | As-is owner/evidence | Gap | Target handling |
 | --- | --- | --- | --- |
-| Boot/flow | `RunDirector`, `Game`, production UI | All three normal stages reach their reward boundary; boss transition remains. | Complete boss, death, and settlement transitions. |
-| Character data | Three profiles; complete typed Warrior kit | Archer/Assassin still use compatibility basic attacks and lack complete kits. | Add typed attacks, skills, passives, and character behavior owners. |
-| Movement | `PlayerController`, `MovementMetrics`, `PlayerCombatController` | Shared movement and generation limits are active; character-specific combat execution needs extraction. | Preserve common traversal while splitting combat responsibilities for M6. |
-| Combat | Deterministic resolver/result, earned critical rules, complete Warrior fixture | Archer and Assassin mechanics remain. | Extend the proven resolver path rather than branching in actors or UI. |
+| Boot/flow | `RunDirector`, `Game`, production UI | Three stages, rewards, boss, death, settlement, and restart are complete. | Run final release matrix and polish failure messaging. |
+| Character data | Three complete typed profiles/kits and character runtimes | Complete-run balance remains. | Tune identities without changing shared traversal. |
+| Movement | `PlayerController`, `MovementMetrics`, generated-route validators | Shared double jump, dash, crouch, climb, and authored limits are active. | Preserve the common traversal envelope through final tuning. |
+| Combat | Deterministic resolver/result and complete Warrior/Archer/Assassin fixtures | Presentation and complete-run tuning remain. | Keep earned criticals and deterministic hit ownership intact. |
 | Enemies | Six normal archetypes, 13 exact variants, Summon Node, and Small Slime are typed and validated. | Complete-run balance remains. | Preserve archetype/variant bounds while tuning combinations. |
-| Stages | Three deterministic authored/generated stages with fallbacks and runtime gates. | Boss arena remains. | Author the boss separately from normal-stage generation. |
+| Stages | Three deterministic authored/generated stages plus authored Slime Court. | Multi-resolution and complete-run pacing review remain. | Keep the boss separate from normal-stage generation. |
 | Progression | Transaction-safe rewards, levels, 15 cards, rest/shop/forge, scoped consumables | Complete-run balance remains. | Tune without adding a second stat or currency owner. |
-| Persistence | Profile schema v1, atomic primary/backup recovery, migration, wallet, per-character loadouts, and mastery commands. | Full-run settlement and remaining content activation remain. | Preserve `ProfileState` as the only public profile facade. |
-| Boss | Typed BossBase, four pattern Resources, and deterministic reviewed-chain scheduler. | Arena execution, HUD, cleanup, and settlement remain. | Author the arena against the committed scheduler contract. |
-| UI/feel | Menu, character/loadout/mastery, level/card/rest-forge rewards, full Warrior HUD, result, and settings with compact captures. | Roster prompts, boss states, and final presentation remain. | Add only states backed by working systems, then presentation pass. |
+| Persistence | Profile schema v1, recovery, wallet, loadouts, mastery, and exactly-once terminal settlement. | Final save/restart matrix remains. | Preserve `ProfileState` as the only public profile facade. |
+| Boss | Authored court, four exact patterns, two phases, HUD, cleanup, and settlement. | Final feel and balance pass remain. | Tune only through reviewed pattern and scheduler contracts. |
+| UI/feel | Complete production flow, boss/result states, keyboard remap, and fixed gamepad prompts. | Procedural feedback, presentation, and final robustness remain. | Finish only states backed by working systems. |
 
 ## As-Is / To-Be Delta Checklist
 
@@ -409,18 +409,28 @@ existing progression regressions.
 **Visible result:** Any character can complete three stages, defeat or lose to the
 boss, settle rewards, reload, and begin another run.
 
-- [ ] **8.1 Build authored Slime Court and stable camera/intro/lock contract.**
-- [ ] **8.2 Implement BossBase, pattern definitions, scheduler, stagger, phase transition.**
-- [ ] **8.3 Implement Jump Slam and Body Bump.**
-- [ ] **8.4 Implement Poison Bands with safe-floor validation.**
-- [ ] **8.5 Implement warned Small Slime Summon and active caps.**
-- [ ] **8.6 Implement reviewed Phase 2 chains and scheduler simulation.**
-- [ ] **8.7 Implement boss HUD, player/boss death, cleanup, settlement, clear summary.**
-- [ ] **8.8 Run every-character base-loadout and representative-build boss matrix.**
-- [ ] **8.9 Fun gate:** each pattern has a learned response and punish window; no
+- [x] **8.1 Build authored Slime Court and stable camera/intro/lock contract.**
+- [x] **8.2 Implement BossBase, pattern definitions, scheduler, stagger, phase transition.**
+- [x] **8.3 Implement Jump Slam and Body Bump.**
+- [x] **8.4 Implement Poison Bands with safe-floor validation.**
+- [x] **8.5 Implement warned Small Slime Summon and active caps.**
+- [x] **8.6 Implement reviewed Phase 2 chains and scheduler simulation.**
+- [x] **8.7 Implement boss HUD, player/boss death, cleanup, settlement, clear summary.**
+- [x] **8.8 Run every-character base-loadout and representative-build boss matrix.**
+- [x] **8.9 Fun gate:** each pattern has a learned response and punish window; no
   winning strategy is safe off-screen projectile spam or face-tanking.
 
 *Milestone gate:* the first complete production run works end to end.
+
+Gate evidence: Slime Court keeps the full 1280x720 authored arena visible at
+1280x720, 960x540, and 1920x1080. Exact runtime tests cover all four pattern
+timelines, one-hit windows, 50% poison-safe floor plus side platforms, two-add cap,
+both reviewed Phase 2 chains, 100-point stagger and 1.40 s punish, player death,
+scene exit, and exactly-once defeat cleanup. The boss HUD and result summary pass
+compact rendered inspection without panel or actor occlusion. A six-build matrix
+uses each character's real damage pipeline to defeat both phases, and three death
+paths grant no Boss Core. Production boot, boss flow, reward settlement, and restart
+tests pass with the real Slime Court and registered clear reward.
 
 #### Milestone 9 - Presentation, accessibility, tuning, release candidate
 
