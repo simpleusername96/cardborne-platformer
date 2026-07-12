@@ -399,6 +399,10 @@ func get_progression_effects() -> Array[ProgressionBehaviorEffect]:
 	return _progression_effects.duplicate()
 
 
+func get_active_attack_modifiers() -> Dictionary:
+	return _active_attack_modifiers.duplicate(true)
+
+
 func get_card_contexts(trigger: StringName) -> Array:
 	if not is_inside_tree():
 		return []
@@ -1372,12 +1376,35 @@ func spawn_projectile(
 		)
 	)
 	projectile.target_hit.connect(_on_target_hit)
+	projectile.terminated.connect(_on_projectile_terminated.bind(
+		definition,
+		options.get("event_context", {}).duplicate(true)
+	))
 	parent_node.add_child(projectile)
 	projectile.global_position = options.get("origin", player.global_position + Vector2(
 		float(direction) * maxf(absf(definition.hitbox_offset.x), 24.0),
 		definition.hitbox_offset.y
 	))
 	return projectile
+
+
+func _on_projectile_terminated(
+	reason: StringName,
+	position: Vector2,
+	targets_hit: int,
+	definition: AttackDefinition,
+	event_context: Dictionary
+) -> void:
+	if character_runtime == null:
+		return
+	character_runtime.notify_projectile_terminated({
+		"definition": definition,
+		"reason": reason,
+		"position": position,
+		"targets_hit": targets_hit,
+		"action_serial": int(event_context.get("action_serial", _action_serial)),
+		"event_context": event_context,
+	})
 
 
 func _make_fallback_basic(effective_stats: Dictionary) -> AttackDefinition:

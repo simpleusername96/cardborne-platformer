@@ -79,6 +79,10 @@ func notify_attack_interrupted(_event: Dictionary) -> void:
 	pass
 
 
+func notify_projectile_terminated(_event: Dictionary) -> void:
+	pass
+
+
 func blocks_incoming_damage(_damage_info: DamageInfo) -> bool:
 	return false
 
