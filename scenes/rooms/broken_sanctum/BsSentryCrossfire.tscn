@@ -1,0 +1,237 @@
+[gd_scene load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/stages/RoomTemplateHost.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/stages/RoomAnchor.gd" id="2"]
+
+[sub_resource type="RectangleShape2D" id="WestMassShape"]
+size = Vector2(400, 100)
+[sub_resource type="RectangleShape2D" id="CenterMassShape"]
+size = Vector2(440, 120)
+[sub_resource type="RectangleShape2D" id="EastMassShape"]
+size = Vector2(440, 100)
+[sub_resource type="RectangleShape2D" id="PerchShape"]
+size = Vector2(240, 12)
+[sub_resource type="RectangleShape2D" id="WestCoverShape"]
+size = Vector2(200, 120)
+[sub_resource type="RectangleShape2D" id="EastCoverShape"]
+size = Vector2(180, 140)
+
+[node name="BsSentryCrossfire" type="Node2D"]
+script = ExtResource("1")
+room_id = &"bs_sentry_crossfire"
+
+[node name="Terrain" type="Node2D" parent="."]
+[node name="WestFloorMass" type="StaticBody2D" parent="Terrain"]
+position = Vector2(200, 620)
+collision_layer = 1
+collision_mask = 0
+metadata/surface_id = &"crossfire_west_floor"
+metadata/support_top = 620.0
+metadata/support_width = 400.0
+metadata/critical = true
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/WestFloorMass"]
+position = Vector2(0, 50)
+shape = SubResource("WestMassShape")
+[node name="RockVisual" type="Polygon2D" parent="Terrain/WestFloorMass"]
+color = Color(0.14, 0.15, 0.21, 1)
+polygon = PackedVector2Array(-200, 0, 200, 0, 200, 100, -200, 100)
+[node name="SupportCap" type="Polygon2D" parent="Terrain/WestFloorMass"]
+color = Color(0.55, 0.46, 0.72, 1)
+polygon = PackedVector2Array(-200, 0, 200, 0, 200, 8, -200, 8)
+
+[node name="CenterFloorMass" type="StaticBody2D" parent="Terrain"]
+position = Vector2(620, 600)
+collision_layer = 1
+collision_mask = 0
+metadata/surface_id = &"crossfire_center_floor"
+metadata/support_top = 600.0
+metadata/support_width = 440.0
+metadata/critical = true
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/CenterFloorMass"]
+position = Vector2(0, 60)
+shape = SubResource("CenterMassShape")
+[node name="RockVisual" type="Polygon2D" parent="Terrain/CenterFloorMass"]
+color = Color(0.19, 0.18, 0.25, 1)
+polygon = PackedVector2Array(-220, 0, 220, 0, 220, 120, -220, 120)
+[node name="SupportCap" type="Polygon2D" parent="Terrain/CenterFloorMass"]
+color = Color(0.72, 0.56, 0.28, 1)
+polygon = PackedVector2Array(-220, 0, 220, 0, 220, 8, -220, 8)
+
+[node name="EastFloorMass" type="StaticBody2D" parent="Terrain"]
+position = Vector2(1060, 620)
+collision_layer = 1
+collision_mask = 0
+metadata/surface_id = &"crossfire_east_floor"
+metadata/support_top = 620.0
+metadata/support_width = 440.0
+metadata/critical = true
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/EastFloorMass"]
+position = Vector2(0, 50)
+shape = SubResource("EastMassShape")
+[node name="RockVisual" type="Polygon2D" parent="Terrain/EastFloorMass"]
+color = Color(0.14, 0.15, 0.21, 1)
+polygon = PackedVector2Array(-220, 0, 220, 0, 220, 100, -220, 100)
+[node name="SupportCap" type="Polygon2D" parent="Terrain/EastFloorMass"]
+color = Color(0.32, 0.62, 0.58, 1)
+polygon = PackedVector2Array(-220, 0, 220, 0, 220, 8, -220, 8)
+
+[node name="WestCover" type="StaticBody2D" parent="Terrain"]
+position = Vector2(500, 480)
+collision_layer = 1
+collision_mask = 0
+metadata/cover_id = &"crossfire_cover_west"
+metadata/cover_lane = &"lower_lane"
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/WestCover"]
+position = Vector2(0, 60)
+shape = SubResource("WestCoverShape")
+[node name="Visual" type="Polygon2D" parent="Terrain/WestCover"]
+color = Color(0.24, 0.22, 0.31, 1)
+polygon = PackedVector2Array(-100, 0, 100, 0, 100, 120, -100, 120)
+[node name="Cap" type="Polygon2D" parent="Terrain/WestCover"]
+color = Color(0.55, 0.46, 0.72, 1)
+polygon = PackedVector2Array(-100, 0, 100, 0, 100, 8, -100, 8)
+
+[node name="EastCover" type="StaticBody2D" parent="Terrain"]
+position = Vector2(810, 460)
+collision_layer = 1
+collision_mask = 0
+metadata/cover_id = &"crossfire_cover_east"
+metadata/cover_lane = &"upper_lane"
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/EastCover"]
+position = Vector2(0, 70)
+shape = SubResource("EastCoverShape")
+[node name="Visual" type="Polygon2D" parent="Terrain/EastCover"]
+color = Color(0.24, 0.22, 0.31, 1)
+polygon = PackedVector2Array(-90, 0, 90, 0, 90, 140, -90, 140)
+[node name="Cap" type="Polygon2D" parent="Terrain/EastCover"]
+color = Color(0.72, 0.56, 0.28, 1)
+polygon = PackedVector2Array(-90, 0, 90, 0, 90, 8, -90, 8)
+
+[node name="OneWay" type="Node2D" parent="."]
+[node name="WestSentryPerch" type="StaticBody2D" parent="OneWay"]
+position = Vector2(420, 380)
+collision_layer = 2
+collision_mask = 0
+metadata/surface_id = &"crossfire_west_perch"
+metadata/support_top = 380.0
+metadata/support_width = 240.0
+metadata/critical = false
+[node name="CollisionShape2D" type="CollisionShape2D" parent="OneWay/WestSentryPerch"]
+shape = SubResource("PerchShape")
+one_way_collision = true
+[node name="Visual" type="Polygon2D" parent="OneWay/WestSentryPerch"]
+color = Color(0.55, 0.46, 0.72, 1)
+polygon = PackedVector2Array(-120, -6, 120, -6, 120, 6, -120, 6)
+
+[node name="EastSentryPerch" type="StaticBody2D" parent="OneWay"]
+position = Vector2(1000, 500)
+collision_layer = 2
+collision_mask = 0
+metadata/surface_id = &"crossfire_east_perch"
+metadata/support_top = 500.0
+metadata/support_width = 240.0
+metadata/critical = false
+[node name="CollisionShape2D" type="CollisionShape2D" parent="OneWay/EastSentryPerch"]
+shape = SubResource("PerchShape")
+one_way_collision = true
+[node name="Visual" type="Polygon2D" parent="OneWay/EastSentryPerch"]
+color = Color(0.32, 0.62, 0.58, 1)
+polygon = PackedVector2Array(-120, -6, 120, -6, 120, 6, -120, 6)
+
+[node name="Hazards" type="Node2D" parent="."]
+[node name="DecorBack" type="Node2D" parent="."]
+z_index = -2
+[node name="AimChannelUpper" type="Polygon2D" parent="DecorBack"]
+color = Color(0.64, 0.48, 0.84, 0.1)
+polygon = PackedVector2Array(250, 330, 1110, 330, 1110, 420, 250, 420)
+[node name="AimChannelLower" type="Polygon2D" parent="DecorBack"]
+color = Color(0.32, 0.72, 0.66, 0.1)
+polygon = PackedVector2Array(380, 470, 1170, 470, 1170, 560, 380, 560)
+[node name="DecorFront" type="Node2D" parent="."]
+
+[node name="Anchors" type="Node2D" parent="."]
+[node name="Sockets" type="Node2D" parent="Anchors"]
+[node name="Entry" type="Marker2D" parent="Anchors/Sockets"]
+position = Vector2(0, 620)
+[node name="Exit" type="Marker2D" parent="Anchors/Sockets"]
+position = Vector2(1280, 620)
+
+[node name="Enemy" type="Node2D" parent="Anchors"]
+[node name="WestSentry" type="Marker2D" parent="Anchors/Enemy"]
+position = Vector2(420, 380)
+script = ExtResource("2")
+anchor_id = &"west_sentry"
+anchor_type = &"enemy"
+allowed_tags = Array[StringName]([&"zone"])
+support_width = 240.0
+patrol_width = 820.0
+clearance = 300.0
+has_escape_route = true
+has_line_of_sight = true
+has_cover_or_elevation = true
+required = true
+metadata/support_id = &"crossfire_west_perch"
+metadata/fire_lane = Rect2(250, 330, 860, 90)
+metadata/lane_id = &"upper_lane"
+metadata/cover_ids = Array[StringName]([&"crossfire_cover_west", &"crossfire_cover_east"])
+metadata/fire_phase = 0.0
+[node name="EastSentry" type="Marker2D" parent="Anchors/Enemy"]
+position = Vector2(1000, 500)
+script = ExtResource("2")
+anchor_id = &"east_sentry"
+anchor_type = &"enemy"
+allowed_tags = Array[StringName]([&"zone"])
+support_width = 240.0
+patrol_width = 760.0
+clearance = 260.0
+has_escape_route = true
+has_line_of_sight = true
+has_cover_or_elevation = true
+required = true
+metadata/support_id = &"crossfire_east_perch"
+metadata/fire_lane = Rect2(380, 470, 790, 90)
+metadata/lane_id = &"lower_lane"
+metadata/cover_ids = Array[StringName]([&"crossfire_cover_west", &"crossfire_cover_east"])
+metadata/fire_phase = 0.7
+
+[node name="Hazard" type="Node2D" parent="Anchors"]
+[node name="Reward" type="Node2D" parent="Anchors"]
+[node name="Objective" type="Node2D" parent="Anchors"]
+[node name="SafeEntry" type="Marker2D" parent="Anchors/Objective"]
+position = Vector2(120, 620)
+metadata/safe_radius = 240.0
+[node name="CoverWestSafeZone" type="Marker2D" parent="Anchors/Objective"]
+position = Vector2(350, 620)
+metadata/cover_id = &"crossfire_cover_west"
+metadata/safe_lane = &"lower_lane"
+[node name="CoverEastSafeZone" type="Marker2D" parent="Anchors/Objective"]
+position = Vector2(920, 620)
+metadata/cover_id = &"crossfire_cover_east"
+metadata/safe_lane = &"upper_lane"
+
+[node name="Recovery" type="Node2D" parent="Anchors"]
+[node name="CrossfireEntryRecovery" type="Marker2D" parent="Anchors/Recovery"]
+position = Vector2(120, 620)
+script = ExtResource("2")
+anchor_id = &"crossfire_entry_recovery"
+anchor_type = &"recovery"
+safe_radius = 180.0
+required = true
+metadata/support_id = &"crossfire_west_floor"
+[node name="CrossfireCenterRecovery" type="Marker2D" parent="Anchors/Recovery"]
+position = Vector2(700, 600)
+script = ExtResource("2")
+anchor_id = &"crossfire_center_recovery"
+anchor_type = &"recovery"
+safe_radius = 100.0
+metadata/support_id = &"crossfire_center_floor"
+
+[node name="CameraBounds" type="Node2D" parent="."]
+metadata/bounds = Rect2(0, 0, 1280, 720)
+[node name="Validation" type="Node2D" parent="."]
+metadata/safe_entry_radius = 240.0
+metadata/minimum_critical_landing = 220.0
+metadata/max_required_step = 20.0
+metadata/cover_count = 2
+metadata/crossfire_lanes_overlap = false
+metadata/fire_phases = PackedFloat32Array(0, 0.7)

@@ -1,0 +1,89 @@
+[gd_resource type="Resource" script_class="RoomTemplateData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/stages/RoomTemplateData.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/stages/RoomSocketData.gd" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/rooms/broken_sanctum/BsShieldChoke.tscn" id="3"]
+[ext_resource type="Script" path="res://scripts/stages/RoomEnemyAnchorData.gd" id="4"]
+
+[sub_resource type="Resource" id="EntrySocket"]
+script = ExtResource("2")
+id = &"shield_choke_in"
+direction = &"left"
+route_role = &"critical"
+local_position = Vector2(0, 620)
+opening_size = Vector2(180, 180)
+support_top = 620.0
+transition_type = &"seam"
+required_ability = &"baseline"
+approach_width = 320.0
+landing_width = 320.0
+headroom = 180.0
+
+[sub_resource type="Resource" id="ExitSocket"]
+script = ExtResource("2")
+id = &"shield_choke_out"
+direction = &"right"
+route_role = &"critical"
+local_position = Vector2(1280, 620)
+opening_size = Vector2(180, 180)
+support_top = 620.0
+transition_type = &"seam"
+required_ability = &"baseline"
+approach_width = 320.0
+landing_width = 320.0
+headroom = 180.0
+
+[sub_resource type="Resource" id="ShieldGuardAnchor"]
+script = ExtResource("4")
+id = &"shield_guard_center"
+allowed_pressure_roles = Array[StringName]([&"guard"])
+support_width = 640.0
+lane_width = 560.0
+clearance = 240.0
+has_escape_route = true
+has_line_of_sight = false
+has_cover_or_elevation = true
+
+[sub_resource type="Resource" id="FlankRangedAnchor"]
+script = ExtResource("4")
+id = &"flank_ranged"
+allowed_pressure_roles = Array[StringName]([&"ranged"])
+support_width = 280.0
+lane_width = 700.0
+clearance = 300.0
+has_escape_route = true
+has_line_of_sight = true
+has_cover_or_elevation = true
+
+[sub_resource type="Resource" id="EastOccupierAnchor"]
+script = ExtResource("4")
+id = &"east_occupier"
+allowed_pressure_roles = Array[StringName]([&"occupier"])
+support_width = 320.0
+lane_width = 240.0
+clearance = 180.0
+has_escape_route = false
+has_line_of_sight = false
+has_cover_or_elevation = false
+
+[resource]
+script = ExtResource("1")
+id = &"bs_shield_choke"
+display_name = "Sanctum Shield Choke"
+content_version = 1
+scene = ExtResource("3")
+role = &"combat"
+stage_tags = Array[StringName]([&"broken_sanctum"])
+required_route = true
+bounds = Rect2(0, 0, 1280, 720)
+entry_sockets = Array[ExtResource("2")]([SubResource("EntrySocket")])
+exit_sockets = Array[ExtResource("2")]([SubResource("ExitSocket")])
+encounter_budget = Vector2i(5, 6)
+hazard_budget = Vector2i(0, 0)
+reward_budget = Vector2i(0, 0)
+allowed_enemy_tags = Array[StringName]([&"guard", &"ranged", &"occupier"])
+forbidden_pairs = Array[StringName]([&"crumbling_platform", &"crouch_tunnel"])
+enemy_anchors = Array[ExtResource("4")]([SubResource("ShieldGuardAnchor"), SubResource("FlankRangedAnchor"), SubResource("EastOccupierAnchor")])
+recovery_anchor_ids = Array[StringName]([&"shield_entry_recovery", &"shield_exit_recovery"])
+estimated_seconds = Vector2i(35, 65)
+variant_group = &"sanctum_mixed_combat"

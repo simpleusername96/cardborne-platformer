@@ -1,0 +1,67 @@
+[gd_resource type="Resource" script_class="RoomTemplateData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/stages/RoomTemplateData.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/stages/RoomSocketData.gd" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/rooms/broken_sanctum/BsVolatileNave.tscn" id="3"]
+[ext_resource type="Script" path="res://scripts/stages/RoomHazardAnchorData.gd" id="4"]
+
+[sub_resource type="Resource" id="EntrySocket"]
+script = ExtResource("2")
+id = &"volatile_nave_in"
+direction = &"left"
+route_role = &"critical"
+local_position = Vector2(0, 620)
+opening_size = Vector2(180, 180)
+support_top = 620.0
+transition_type = &"seam"
+required_ability = &"baseline"
+approach_width = 320.0
+landing_width = 320.0
+headroom = 180.0
+
+[sub_resource type="Resource" id="ExitSocket"]
+script = ExtResource("2")
+id = &"volatile_nave_out"
+direction = &"right"
+route_role = &"critical"
+local_position = Vector2(1280, 620)
+opening_size = Vector2(180, 180)
+support_top = 620.0
+transition_type = &"seam"
+required_ability = &"baseline"
+approach_width = 240.0
+landing_width = 240.0
+headroom = 180.0
+
+[sub_resource type="Resource" id="VentBandAnchor"]
+script = ExtResource("4")
+id = &"sanctum_vent_band"
+allowed_hazard_ids = Array[StringName]([&"timed_poison_vent"])
+warning_space = Vector2(280, 160)
+safe_zone_id = &"nave_center_recovery"
+
+[sub_resource type="Resource" id="SpikeRowAnchor"]
+script = ExtResource("4")
+id = &"sanctum_spike_row"
+allowed_hazard_ids = Array[StringName]([&"spike_row"])
+warning_space = Vector2(240, 140)
+safe_zone_id = &"nave_exit_recovery"
+
+[resource]
+script = ExtResource("1")
+id = &"bs_volatile_nave"
+display_name = "Volatile Sanctum Nave"
+content_version = 1
+scene = ExtResource("3")
+role = &"hazard"
+stage_tags = Array[StringName]([&"broken_sanctum"])
+required_route = true
+bounds = Rect2(0, 0, 1280, 720)
+entry_sockets = Array[ExtResource("2")]([SubResource("EntrySocket")])
+exit_sockets = Array[ExtResource("2")]([SubResource("ExitSocket")])
+encounter_budget = Vector2i(0, 0)
+hazard_budget = Vector2i(1, 2)
+reward_budget = Vector2i(0, 0)
+hazard_anchors = Array[ExtResource("4")]([SubResource("VentBandAnchor"), SubResource("SpikeRowAnchor")])
+recovery_anchor_ids = Array[StringName]([&"nave_entry_recovery", &"nave_center_recovery", &"nave_exit_recovery"])
+estimated_seconds = Vector2i(25, 50)

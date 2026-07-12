@@ -1,0 +1,65 @@
+[gd_resource type="Resource" script_class="RoomTemplateData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/stages/RoomTemplateData.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/stages/RoomSocketData.gd" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/rooms/broken_sanctum/BsGateSwitchLoop.tscn" id="3"]
+[ext_resource type="Script" path="res://scripts/stages/RoomMovingPlatformAnchorData.gd" id="4"]
+
+[sub_resource type="Resource" id="EntrySocket"]
+script = ExtResource("2")
+id = &"gate_switch_loop_in"
+direction = &"left"
+route_role = &"critical"
+local_position = Vector2(0, 620)
+opening_size = Vector2(180, 180)
+support_top = 620.0
+transition_type = &"seam"
+required_ability = &"baseline"
+approach_width = 280.0
+landing_width = 280.0
+headroom = 180.0
+
+[sub_resource type="Resource" id="ExitSocket"]
+script = ExtResource("2")
+id = &"gate_switch_loop_out"
+direction = &"right"
+route_role = &"critical"
+local_position = Vector2(1280, 620)
+opening_size = Vector2(180, 180)
+support_top = 620.0
+transition_type = &"seam"
+required_ability = &"baseline"
+approach_width = 240.0
+landing_width = 240.0
+headroom = 180.0
+
+[sub_resource type="Resource" id="OverheadPlatformPath"]
+script = ExtResource("4")
+path_id = &"gate_overhead_route"
+start_position = Vector2(300, 350)
+end_position = Vector2(980, 350)
+travel_time = 2.4
+start_wait_time = 0.6
+end_wait_time = 0.6
+wait_pad_ids = Array[StringName]([&"gate_overhead_wait_west", &"gate_overhead_wait_east"])
+fall_recovery_id = &"gate_entry_recovery"
+checkpoint_safe_radius = 180.0
+
+[resource]
+script = ExtResource("1")
+id = &"bs_gate_switch_loop"
+display_name = "Sanctum Gate Switch Loop"
+content_version = 1
+scene = ExtResource("3")
+role = &"objective"
+stage_tags = Array[StringName]([&"broken_sanctum"])
+required_route = true
+bounds = Rect2(0, 0, 1280, 720)
+entry_sockets = Array[ExtResource("2")]([SubResource("EntrySocket")])
+exit_sockets = Array[ExtResource("2")]([SubResource("ExitSocket")])
+encounter_budget = Vector2i(0, 0)
+hazard_budget = Vector2i(0, 0)
+reward_budget = Vector2i(0, 0)
+moving_platform_anchors = Array[ExtResource("4")]([SubResource("OverheadPlatformPath")])
+recovery_anchor_ids = Array[StringName]([&"gate_entry_recovery", &"switch_recovery"])
+estimated_seconds = Vector2i(25, 45)

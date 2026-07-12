@@ -1,0 +1,137 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/stages/RoomTemplateHost.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/stages/RoomAnchor.gd" id="2"]
+
+[sub_resource type="RectangleShape2D" id="WestMassShape"]
+size = Vector2(400, 100)
+[sub_resource type="RectangleShape2D" id="CenterMassShape"]
+size = Vector2(480, 140)
+[sub_resource type="RectangleShape2D" id="EastMassShape"]
+size = Vector2(400, 100)
+[sub_resource type="RectangleShape2D" id="BoundaryShape"]
+size = Vector2(32, 720)
+
+[node name="BsBreachEntry" type="Node2D"]
+script = ExtResource("1")
+room_id = &"bs_breach_entry"
+
+[node name="Terrain" type="Node2D" parent="."]
+[node name="WestBreachMass" type="StaticBody2D" parent="Terrain"]
+position = Vector2(200, 620)
+collision_layer = 1
+collision_mask = 0
+metadata/surface_id = &"breach_west_floor"
+metadata/support_top = 620.0
+metadata/support_width = 400.0
+metadata/critical = true
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/WestBreachMass"]
+position = Vector2(0, 50)
+shape = SubResource("WestMassShape")
+[node name="RockVisual" type="Polygon2D" parent="Terrain/WestBreachMass"]
+color = Color(0.14, 0.15, 0.21, 1)
+polygon = PackedVector2Array(-200, 0, 200, 0, 200, 100, -200, 100)
+[node name="SupportCap" type="Polygon2D" parent="Terrain/WestBreachMass"]
+color = Color(0.55, 0.46, 0.72, 1)
+polygon = PackedVector2Array(-200, 0, 200, 0, 200, 8, -200, 8)
+
+[node name="CenterBreachMass" type="StaticBody2D" parent="Terrain"]
+position = Vector2(640, 580)
+collision_layer = 1
+collision_mask = 0
+metadata/surface_id = &"breach_center_rise"
+metadata/support_top = 580.0
+metadata/support_width = 480.0
+metadata/critical = true
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/CenterBreachMass"]
+position = Vector2(0, 70)
+shape = SubResource("CenterMassShape")
+[node name="RockVisual" type="Polygon2D" parent="Terrain/CenterBreachMass"]
+color = Color(0.19, 0.18, 0.25, 1)
+polygon = PackedVector2Array(-240, 0, 240, 0, 240, 140, -240, 140)
+[node name="SupportCap" type="Polygon2D" parent="Terrain/CenterBreachMass"]
+color = Color(0.72, 0.56, 0.28, 1)
+polygon = PackedVector2Array(-240, 0, 240, 0, 240, 8, -240, 8)
+
+[node name="EastBreachMass" type="StaticBody2D" parent="Terrain"]
+position = Vector2(1080, 620)
+collision_layer = 1
+collision_mask = 0
+metadata/surface_id = &"breach_east_floor"
+metadata/support_top = 620.0
+metadata/support_width = 400.0
+metadata/critical = true
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/EastBreachMass"]
+position = Vector2(0, 50)
+shape = SubResource("EastMassShape")
+[node name="RockVisual" type="Polygon2D" parent="Terrain/EastBreachMass"]
+color = Color(0.14, 0.15, 0.21, 1)
+polygon = PackedVector2Array(-200, 0, 200, 0, 200, 100, -200, 100)
+[node name="SupportCap" type="Polygon2D" parent="Terrain/EastBreachMass"]
+color = Color(0.32, 0.62, 0.58, 1)
+polygon = PackedVector2Array(-200, 0, 200, 0, 200, 8, -200, 8)
+
+[node name="LeftBoundary" type="StaticBody2D" parent="Terrain"]
+position = Vector2(-16, 360)
+collision_layer = 1
+collision_mask = 0
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/LeftBoundary"]
+shape = SubResource("BoundaryShape")
+[node name="RockVisual" type="Polygon2D" parent="Terrain/LeftBoundary"]
+color = Color(0.09, 0.1, 0.15, 1)
+polygon = PackedVector2Array(-16, -360, 16, -360, 16, 360, -16, 360)
+
+[node name="OneWay" type="Node2D" parent="."]
+[node name="Hazards" type="Node2D" parent="."]
+[node name="DecorBack" type="Node2D" parent="."]
+z_index = -2
+[node name="BrokenArch" type="Polygon2D" parent="DecorBack"]
+color = Color(0.31, 0.27, 0.4, 0.5)
+polygon = PackedVector2Array(430, 580, 430, 300, 500, 220, 580, 300, 580, 580, 540, 580, 540, 330, 500, 285, 470, 330, 470, 580)
+[node name="BreachGlow" type="Polygon2D" parent="DecorBack"]
+color = Color(0.62, 0.46, 0.82, 0.18)
+polygon = PackedVector2Array(810, 580, 920, 300, 1030, 580)
+[node name="DecorFront" type="Node2D" parent="."]
+
+[node name="Anchors" type="Node2D" parent="."]
+[node name="Sockets" type="Node2D" parent="Anchors"]
+[node name="Entry" type="Marker2D" parent="Anchors/Sockets"]
+position = Vector2(0, 620)
+[node name="Exit" type="Marker2D" parent="Anchors/Sockets"]
+position = Vector2(1280, 620)
+[node name="Enemy" type="Node2D" parent="Anchors"]
+[node name="Hazard" type="Node2D" parent="Anchors"]
+[node name="Reward" type="Node2D" parent="Anchors"]
+[node name="Objective" type="Node2D" parent="Anchors"]
+[node name="PlayerSpawn" type="Marker2D" parent="Anchors/Objective"]
+position = Vector2(140, 620)
+script = ExtResource("2")
+anchor_id = &"player_spawn"
+anchor_type = &"player_spawn"
+safe_radius = 240.0
+required = true
+metadata/facing = 1
+metadata/support_id = &"breach_west_floor"
+[node name="CameraFocus" type="Marker2D" parent="Anchors/Objective"]
+position = Vector2(520, 350)
+metadata/camera_id = &"breach_camera"
+[node name="NextGoal" type="Marker2D" parent="Anchors/Objective"]
+position = Vector2(1120, 620)
+
+[node name="Recovery" type="Node2D" parent="Anchors"]
+[node name="BreachRecovery" type="Marker2D" parent="Anchors/Recovery"]
+position = Vector2(140, 620)
+script = ExtResource("2")
+anchor_id = &"breach_recovery"
+anchor_type = &"recovery"
+safe_radius = 240.0
+required = true
+metadata/support_id = &"breach_west_floor"
+
+[node name="CameraBounds" type="Node2D" parent="."]
+metadata/bounds = Rect2(0, 0, 1280, 720)
+[node name="Validation" type="Node2D" parent="."]
+metadata/safe_entry_radius = 240.0
+metadata/minimum_critical_landing = 220.0
+metadata/max_required_step = 40.0
+metadata/player_spawn_id = &"player_spawn"

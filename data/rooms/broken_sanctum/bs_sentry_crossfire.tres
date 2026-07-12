@@ -1,0 +1,78 @@
+[gd_resource type="Resource" script_class="RoomTemplateData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/stages/RoomTemplateData.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/stages/RoomSocketData.gd" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/rooms/broken_sanctum/BsSentryCrossfire.tscn" id="3"]
+[ext_resource type="Script" path="res://scripts/stages/RoomEnemyAnchorData.gd" id="4"]
+
+[sub_resource type="Resource" id="EntrySocket"]
+script = ExtResource("2")
+id = &"sentry_crossfire_in"
+direction = &"left"
+route_role = &"critical"
+local_position = Vector2(0, 620)
+opening_size = Vector2(180, 180)
+support_top = 620.0
+transition_type = &"seam"
+required_ability = &"baseline"
+approach_width = 320.0
+landing_width = 320.0
+headroom = 180.0
+
+[sub_resource type="Resource" id="ExitSocket"]
+script = ExtResource("2")
+id = &"sentry_crossfire_out"
+direction = &"right"
+route_role = &"critical"
+local_position = Vector2(1280, 620)
+opening_size = Vector2(180, 180)
+support_top = 620.0
+transition_type = &"seam"
+required_ability = &"baseline"
+approach_width = 320.0
+landing_width = 320.0
+headroom = 180.0
+
+[sub_resource type="Resource" id="WestSentryAnchor"]
+script = ExtResource("4")
+id = &"west_sentry"
+allowed_pressure_roles = Array[StringName]([&"zone"])
+support_width = 240.0
+lane_width = 820.0
+clearance = 300.0
+has_escape_route = true
+has_line_of_sight = true
+has_cover_or_elevation = true
+
+[sub_resource type="Resource" id="EastSentryAnchor"]
+script = ExtResource("4")
+id = &"east_sentry"
+allowed_pressure_roles = Array[StringName]([&"zone"])
+support_width = 240.0
+lane_width = 760.0
+clearance = 260.0
+has_escape_route = true
+has_line_of_sight = true
+has_cover_or_elevation = true
+
+[resource]
+script = ExtResource("1")
+id = &"bs_sentry_crossfire"
+display_name = "Sanctum Sentry Crossfire"
+content_version = 1
+scene = ExtResource("3")
+role = &"combat"
+stage_tags = Array[StringName]([&"broken_sanctum"])
+required_route = true
+bounds = Rect2(0, 0, 1280, 720)
+entry_sockets = Array[ExtResource("2")]([SubResource("EntrySocket")])
+exit_sockets = Array[ExtResource("2")]([SubResource("ExitSocket")])
+encounter_budget = Vector2i(6, 6)
+hazard_budget = Vector2i(0, 0)
+reward_budget = Vector2i(0, 0)
+allowed_enemy_tags = Array[StringName]([&"zone"])
+forbidden_pairs = Array[StringName]([&"timed_poison_vent", &"crumbling_platform"])
+enemy_anchors = Array[ExtResource("4")]([SubResource("WestSentryAnchor"), SubResource("EastSentryAnchor")])
+recovery_anchor_ids = Array[StringName]([&"crossfire_entry_recovery", &"crossfire_center_recovery"])
+estimated_seconds = Vector2i(35, 60)
+variant_group = &"sanctum_mixed_combat"

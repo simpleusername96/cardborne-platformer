@@ -1,0 +1,148 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/stages/RoomTemplateHost.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/stages/RoomAnchor.gd" id="2"]
+
+[sub_resource type="RectangleShape2D" id="SideMassShape"]
+size = Vector2(400, 100)
+[sub_resource type="RectangleShape2D" id="CenterMassShape"]
+size = Vector2(480, 140)
+[sub_resource type="RectangleShape2D" id="SealShape"]
+size = Vector2(54, 92)
+
+[node name="BsReliquaryCache" type="Node2D"]
+script = ExtResource("1")
+room_id = &"bs_reliquary_cache"
+
+[node name="Terrain" type="Node2D" parent="."]
+[node name="WestCacheMass" type="StaticBody2D" parent="Terrain"]
+position = Vector2(200, 620)
+collision_layer = 1
+collision_mask = 0
+metadata/surface_id = &"reliquary_cache_west"
+metadata/support_top = 620.0
+metadata/support_width = 400.0
+metadata/critical = false
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/WestCacheMass"]
+position = Vector2(0, 50)
+shape = SubResource("SideMassShape")
+[node name="RockVisual" type="Polygon2D" parent="Terrain/WestCacheMass"]
+color = Color(0.14, 0.15, 0.21, 1)
+polygon = PackedVector2Array(-200, 0, 200, 0, 200, 100, -200, 100)
+[node name="SupportCap" type="Polygon2D" parent="Terrain/WestCacheMass"]
+color = Color(0.55, 0.46, 0.72, 1)
+polygon = PackedVector2Array(-200, 0, 200, 0, 200, 8, -200, 8)
+
+[node name="CenterCacheMass" type="StaticBody2D" parent="Terrain"]
+position = Vector2(640, 580)
+collision_layer = 1
+collision_mask = 0
+metadata/surface_id = &"reliquary_cache_center"
+metadata/support_top = 580.0
+metadata/support_width = 480.0
+metadata/critical = false
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/CenterCacheMass"]
+position = Vector2(0, 70)
+shape = SubResource("CenterMassShape")
+[node name="RockVisual" type="Polygon2D" parent="Terrain/CenterCacheMass"]
+color = Color(0.19, 0.18, 0.25, 1)
+polygon = PackedVector2Array(-240, 0, 240, 0, 240, 140, -240, 140)
+[node name="SupportCap" type="Polygon2D" parent="Terrain/CenterCacheMass"]
+color = Color(0.72, 0.56, 0.28, 1)
+polygon = PackedVector2Array(-240, 0, 240, 0, 240, 8, -240, 8)
+
+[node name="EastCacheMass" type="StaticBody2D" parent="Terrain"]
+position = Vector2(1080, 620)
+collision_layer = 1
+collision_mask = 0
+metadata/surface_id = &"reliquary_cache_east"
+metadata/support_top = 620.0
+metadata/support_width = 400.0
+metadata/critical = false
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/EastCacheMass"]
+position = Vector2(0, 50)
+shape = SubResource("SideMassShape")
+[node name="RockVisual" type="Polygon2D" parent="Terrain/EastCacheMass"]
+color = Color(0.14, 0.15, 0.21, 1)
+polygon = PackedVector2Array(-200, 0, 200, 0, 200, 100, -200, 100)
+[node name="SupportCap" type="Polygon2D" parent="Terrain/EastCacheMass"]
+color = Color(0.32, 0.62, 0.58, 1)
+polygon = PackedVector2Array(-200, 0, 200, 0, 200, 8, -200, 8)
+
+[node name="OneWay" type="Node2D" parent="."]
+[node name="Hazards" type="Node2D" parent="."]
+[node name="DecorBack" type="Node2D" parent="."]
+z_index = -2
+[node name="ReliquaryGlow" type="Polygon2D" parent="DecorBack"]
+color = Color(0.78, 0.62, 0.28, 0.24)
+polygon = PackedVector2Array(500, 580, 640, 280, 780, 580)
+[node name="BrokenRosette" type="Polygon2D" parent="DecorBack"]
+color = Color(0.55, 0.46, 0.72, 0.3)
+polygon = PackedVector2Array(520, 350, 640, 250, 760, 350, 720, 470, 560, 470)
+[node name="DecorFront" type="Node2D" parent="."]
+
+[node name="Anchors" type="Node2D" parent="."]
+[node name="Sockets" type="Node2D" parent="Anchors"]
+[node name="Branch" type="Marker2D" parent="Anchors/Sockets"]
+position = Vector2(600, 720)
+[node name="Return" type="Marker2D" parent="Anchors/Sockets"]
+position = Vector2(1040, 720)
+[node name="Enemy" type="Node2D" parent="Anchors"]
+[node name="Hazard" type="Node2D" parent="Anchors"]
+
+[node name="Reward" type="Node2D" parent="Anchors"]
+[node name="ReliquaryCacheReward" type="Marker2D" parent="Anchors/Reward"]
+position = Vector2(640, 580)
+script = ExtResource("2")
+anchor_id = &"reliquary_cache_reward"
+anchor_type = &"reward"
+risk_tier = 2
+required = true
+metadata/reward_role = &"cache_reward"
+metadata/interaction_space = Vector2(160, 110)
+metadata/support_id = &"reliquary_cache_center"
+
+[node name="Objective" type="Node2D" parent="Anchors"]
+[node name="CacheSeal" type="StaticBody2D" parent="Anchors/Objective"]
+position = Vector2(780, 488)
+collision_layer = 0
+collision_mask = 0
+metadata/visual_only = true
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Anchors/Objective/CacheSeal"]
+disabled = true
+position = Vector2(0, 46)
+shape = SubResource("SealShape")
+[node name="Visual" type="Polygon2D" parent="Anchors/Objective/CacheSeal"]
+color = Color(0.64, 0.48, 0.84, 0.65)
+polygon = PackedVector2Array(-27, 0, 27, 0, 27, 92, -27, 92)
+[node name="SafeDropReturn" type="Marker2D" parent="Anchors/Objective"]
+position = Vector2(1040, 620)
+metadata/return_socket_id = &"reliquary_cache_return"
+metadata/target_recovery_id = &"upper_return_recovery"
+
+[node name="Recovery" type="Node2D" parent="Anchors"]
+[node name="CacheEntryRecovery" type="Marker2D" parent="Anchors/Recovery"]
+position = Vector2(600, 580)
+script = ExtResource("2")
+anchor_id = &"cache_entry_recovery"
+anchor_type = &"recovery"
+safe_radius = 180.0
+required = true
+metadata/support_id = &"reliquary_cache_center"
+[node name="CacheReturnRecovery" type="Marker2D" parent="Anchors/Recovery"]
+position = Vector2(1040, 620)
+script = ExtResource("2")
+anchor_id = &"cache_return_recovery"
+anchor_type = &"recovery"
+safe_radius = 140.0
+required = true
+metadata/support_id = &"reliquary_cache_east"
+
+[node name="CameraBounds" type="Node2D" parent="."]
+metadata/bounds = Rect2(0, 0, 1280, 720)
+[node name="Validation" type="Node2D" parent="."]
+metadata/required_route = false
+metadata/minimum_optional_landing = 180.0
+metadata/branch_socket_id = &"reliquary_cache_branch"
+metadata/return_socket_id = &"reliquary_cache_return"
+metadata/non_rope_return = true

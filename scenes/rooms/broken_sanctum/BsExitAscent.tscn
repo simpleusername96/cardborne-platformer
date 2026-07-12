@@ -1,0 +1,194 @@
+[gd_scene load_steps=12 format=3]
+
+[ext_resource type="Script" path="res://scripts/stages/RoomTemplateHost.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/stages/ExitPortal.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/stages/RoomAnchor.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/stages/StageCheckpoint.gd" id="4"]
+
+[sub_resource type="RectangleShape2D" id="EntryMassShape"]
+size = Vector2(280, 100)
+[sub_resource type="RectangleShape2D" id="StepOneShape"]
+size = Vector2(250, 160)
+[sub_resource type="RectangleShape2D" id="StepTwoShape"]
+size = Vector2(250, 220)
+[sub_resource type="RectangleShape2D" id="UpperMassShape"]
+size = Vector2(250, 280)
+[sub_resource type="RectangleShape2D" id="ExitAreaShape"]
+size = Vector2(92, 116)
+[sub_resource type="RectangleShape2D" id="CheckpointShape"]
+size = Vector2(64, 96)
+
+[node name="BsExitAscent" type="Node2D"]
+script = ExtResource("1")
+room_id = &"bs_exit_ascent"
+
+[node name="Terrain" type="Node2D" parent="."]
+[node name="EntryMass" type="StaticBody2D" parent="Terrain"]
+position = Vector2(140, 620)
+collision_layer = 1
+collision_mask = 0
+metadata/surface_id = &"sanctum_exit_entry"
+metadata/support_top = 620.0
+metadata/support_width = 280.0
+metadata/critical = true
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/EntryMass"]
+position = Vector2(0, 50)
+shape = SubResource("EntryMassShape")
+[node name="RockVisual" type="Polygon2D" parent="Terrain/EntryMass"]
+color = Color(0.14, 0.15, 0.21, 1)
+polygon = PackedVector2Array(-140, 0, 140, 0, 140, 100, -140, 100)
+[node name="SupportCap" type="Polygon2D" parent="Terrain/EntryMass"]
+color = Color(0.55, 0.46, 0.72, 1)
+polygon = PackedVector2Array(-140, 0, 140, 0, 140, 8, -140, 8)
+
+[node name="StepOneMass" type="StaticBody2D" parent="Terrain"]
+position = Vector2(405, 560)
+collision_layer = 1
+collision_mask = 0
+metadata/surface_id = &"sanctum_exit_step_one"
+metadata/support_top = 560.0
+metadata/support_width = 250.0
+metadata/critical = true
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/StepOneMass"]
+position = Vector2(0, 80)
+shape = SubResource("StepOneShape")
+[node name="RockVisual" type="Polygon2D" parent="Terrain/StepOneMass"]
+color = Color(0.19, 0.18, 0.25, 1)
+polygon = PackedVector2Array(-125, 0, 125, 0, 125, 160, -125, 160)
+[node name="SupportCap" type="Polygon2D" parent="Terrain/StepOneMass"]
+color = Color(0.72, 0.56, 0.28, 1)
+polygon = PackedVector2Array(-125, 0, 125, 0, 125, 8, -125, 8)
+
+[node name="StepTwoMass" type="StaticBody2D" parent="Terrain"]
+position = Vector2(655, 500)
+collision_layer = 1
+collision_mask = 0
+metadata/surface_id = &"sanctum_exit_step_two"
+metadata/support_top = 500.0
+metadata/support_width = 250.0
+metadata/critical = true
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/StepTwoMass"]
+position = Vector2(0, 110)
+shape = SubResource("StepTwoShape")
+[node name="RockVisual" type="Polygon2D" parent="Terrain/StepTwoMass"]
+color = Color(0.14, 0.15, 0.21, 1)
+polygon = PackedVector2Array(-125, 0, 125, 0, 125, 220, -125, 220)
+[node name="SupportCap" type="Polygon2D" parent="Terrain/StepTwoMass"]
+color = Color(0.32, 0.62, 0.58, 1)
+polygon = PackedVector2Array(-125, 0, 125, 0, 125, 8, -125, 8)
+
+[node name="UpperApproachMass" type="StaticBody2D" parent="Terrain"]
+position = Vector2(905, 440)
+collision_layer = 1
+collision_mask = 0
+metadata/surface_id = &"sanctum_exit_upper_approach"
+metadata/support_top = 440.0
+metadata/support_width = 250.0
+metadata/critical = true
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/UpperApproachMass"]
+position = Vector2(0, 140)
+shape = SubResource("UpperMassShape")
+[node name="RockVisual" type="Polygon2D" parent="Terrain/UpperApproachMass"]
+color = Color(0.19, 0.18, 0.25, 1)
+polygon = PackedVector2Array(-125, 0, 125, 0, 125, 280, -125, 280)
+[node name="SupportCap" type="Polygon2D" parent="Terrain/UpperApproachMass"]
+color = Color(0.72, 0.56, 0.28, 1)
+polygon = PackedVector2Array(-125, 0, 125, 0, 125, 8, -125, 8)
+
+[node name="GateMass" type="StaticBody2D" parent="Terrain"]
+position = Vector2(1155, 440)
+collision_layer = 1
+collision_mask = 0
+metadata/surface_id = &"sanctum_exit_gate_mass"
+metadata/support_top = 440.0
+metadata/support_width = 250.0
+metadata/critical = true
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/GateMass"]
+position = Vector2(0, 140)
+shape = SubResource("UpperMassShape")
+[node name="RockVisual" type="Polygon2D" parent="Terrain/GateMass"]
+color = Color(0.14, 0.15, 0.21, 1)
+polygon = PackedVector2Array(-125, 0, 125, 0, 125, 280, -125, 280)
+[node name="SupportCap" type="Polygon2D" parent="Terrain/GateMass"]
+color = Color(0.55, 0.46, 0.72, 1)
+polygon = PackedVector2Array(-125, 0, 125, 0, 125, 8, -125, 8)
+
+[node name="OneWay" type="Node2D" parent="."]
+[node name="Hazards" type="Node2D" parent="."]
+[node name="DecorBack" type="Node2D" parent="."]
+z_index = -2
+[node name="GateHalo" type="Polygon2D" parent="DecorBack"]
+color = Color(0.64, 0.48, 0.84, 0.2)
+polygon = PackedVector2Array(1020, 440, 1140, 160, 1260, 440)
+[node name="BrokenSpire" type="Polygon2D" parent="DecorBack"]
+color = Color(0.28, 0.25, 0.38, 0.55)
+polygon = PackedVector2Array(700, 500, 730, 220, 770, 310, 810, 170, 850, 440, 850, 500)
+[node name="DecorFront" type="Node2D" parent="."]
+
+[node name="Anchors" type="Node2D" parent="."]
+[node name="Sockets" type="Node2D" parent="Anchors"]
+[node name="Entry" type="Marker2D" parent="Anchors/Sockets"]
+position = Vector2(0, 620)
+[node name="Exit" type="Marker2D" parent="Anchors/Sockets"]
+position = Vector2(1280, 440)
+[node name="Enemy" type="Node2D" parent="Anchors"]
+[node name="Hazard" type="Node2D" parent="Anchors"]
+[node name="Reward" type="Node2D" parent="Anchors"]
+[node name="Objective" type="Node2D" parent="Anchors"]
+[node name="ExitCheckpoint" type="Area2D" parent="Anchors/Objective"]
+position = Vector2(140, 620)
+script = ExtResource("4")
+checkpoint_id = "broken_sanctum_exit"
+respawn_offset = Vector2(0, -8)
+metadata/safe_radius = 240.0
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Anchors/Objective/ExitCheckpoint"]
+position = Vector2(0, -48)
+shape = SubResource("CheckpointShape")
+[node name="ExitGate" type="Area2D" parent="Anchors/Objective"]
+position = Vector2(1140, 440)
+collision_layer = 0
+collision_mask = 4
+script = ExtResource("2")
+prompt_text = "Ascend to the boss gate"
+interaction_enabled = false
+disabled_prompt_text = "Clear the Sanctum"
+metadata/critical_exit = true
+metadata/objective_requirements = Array[StringName]([&"broken_sanctum_clear"])
+metadata/interaction_space = Vector2(140, 150)
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Anchors/Objective/ExitGate"]
+position = Vector2(0, -58)
+shape = SubResource("ExitAreaShape")
+[node name="Frame" type="Polygon2D" parent="Anchors/Objective/ExitGate"]
+color = Color(0.55, 0.46, 0.72, 1)
+polygon = PackedVector2Array(-54, 0, -54, -126, -34, -152, 34, -152, 54, -126, 54, 0, 30, 0, 30, -112, -30, -112, -30, 0)
+[node name="Interior" type="Polygon2D" parent="Anchors/Objective/ExitGate"]
+z_index = 1
+color = Color(0.07, 0.08, 0.13, 1)
+polygon = PackedVector2Array(-28, 0, -28, -108, 28, -108, 28, 0)
+
+[node name="Recovery" type="Node2D" parent="Anchors"]
+[node name="ExitEntryRecovery" type="Marker2D" parent="Anchors/Recovery"]
+position = Vector2(140, 620)
+script = ExtResource("3")
+anchor_id = &"exit_entry_recovery"
+anchor_type = &"recovery"
+safe_radius = 240.0
+required = true
+metadata/support_id = &"sanctum_exit_entry"
+[node name="ExitAscentRecovery" type="Marker2D" parent="Anchors/Recovery"]
+position = Vector2(905, 440)
+script = ExtResource("3")
+anchor_id = &"exit_ascent_recovery"
+anchor_type = &"recovery"
+safe_radius = 140.0
+required = true
+metadata/support_id = &"sanctum_exit_upper_approach"
+
+[node name="CameraBounds" type="Node2D" parent="."]
+metadata/bounds = Rect2(0, 0, 1280, 720)
+[node name="Validation" type="Node2D" parent="."]
+metadata/safe_entry_radius = 240.0
+metadata/checkpoint_safe_radius = 240.0
+metadata/minimum_critical_landing = 220.0
+metadata/max_required_step = 60.0
+metadata/exit_portal_path = NodePath("../Anchors/Objective/ExitGate")

@@ -1,0 +1,164 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/stages/RoomTemplateHost.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/stages/RoomAnchor.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/stages/Climbable.gd" id="3"]
+
+[sub_resource type="RectangleShape2D" id="ShelfMassShape"]
+size = Vector2(320, 200)
+[sub_resource type="RectangleShape2D" id="BasinMassShape"]
+size = Vector2(640, 80)
+[sub_resource type="RectangleShape2D" id="CryptMarkerShape"]
+size = Vector2(48, 64)
+
+[node name="BsMaterialCrypt" type="Node2D"]
+script = ExtResource("1")
+room_id = &"bs_material_crypt"
+
+[node name="Terrain" type="Node2D" parent="."]
+[node name="EntryShelfMass" type="StaticBody2D" parent="Terrain"]
+position = Vector2(160, 520)
+collision_layer = 1
+collision_mask = 0
+metadata/surface_id = &"material_crypt_entry_shelf"
+metadata/support_top = 520.0
+metadata/support_width = 320.0
+metadata/critical = false
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/EntryShelfMass"]
+position = Vector2(0, 100)
+shape = SubResource("ShelfMassShape")
+[node name="RockVisual" type="Polygon2D" parent="Terrain/EntryShelfMass"]
+color = Color(0.14, 0.15, 0.21, 1)
+polygon = PackedVector2Array(-160, 0, 160, 0, 160, 200, -160, 200)
+[node name="SupportCap" type="Polygon2D" parent="Terrain/EntryShelfMass"]
+color = Color(0.55, 0.46, 0.72, 1)
+polygon = PackedVector2Array(-160, 0, 160, 0, 160, 8, -160, 8)
+
+[node name="CryptBasinMass" type="StaticBody2D" parent="Terrain"]
+position = Vector2(640, 640)
+collision_layer = 1
+collision_mask = 0
+metadata/surface_id = &"material_crypt_basin"
+metadata/support_top = 640.0
+metadata/support_width = 640.0
+metadata/critical = false
+metadata/recovery = true
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/CryptBasinMass"]
+position = Vector2(0, 40)
+shape = SubResource("BasinMassShape")
+[node name="RockVisual" type="Polygon2D" parent="Terrain/CryptBasinMass"]
+color = Color(0.19, 0.18, 0.25, 1)
+polygon = PackedVector2Array(-320, 0, 320, 0, 320, 80, -320, 80)
+[node name="SupportCap" type="Polygon2D" parent="Terrain/CryptBasinMass"]
+color = Color(0.32, 0.62, 0.58, 1)
+polygon = PackedVector2Array(-320, 0, 320, 0, 320, 8, -320, 8)
+
+[node name="ReturnShelfMass" type="StaticBody2D" parent="Terrain"]
+position = Vector2(1120, 520)
+collision_layer = 1
+collision_mask = 0
+metadata/surface_id = &"material_crypt_return_shelf"
+metadata/support_top = 520.0
+metadata/support_width = 320.0
+metadata/critical = false
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/ReturnShelfMass"]
+position = Vector2(0, 100)
+shape = SubResource("ShelfMassShape")
+[node name="RockVisual" type="Polygon2D" parent="Terrain/ReturnShelfMass"]
+color = Color(0.14, 0.15, 0.21, 1)
+polygon = PackedVector2Array(-160, 0, 160, 0, 160, 200, -160, 200)
+[node name="SupportCap" type="Polygon2D" parent="Terrain/ReturnShelfMass"]
+color = Color(0.72, 0.56, 0.28, 1)
+polygon = PackedVector2Array(-160, 0, 160, 0, 160, 8, -160, 8)
+
+[node name="OneWay" type="Node2D" parent="."]
+[node name="Hazards" type="Node2D" parent="."]
+[node name="DecorBack" type="Node2D" parent="."]
+z_index = -2
+[node name="MineralGlow" type="Polygon2D" parent="DecorBack"]
+color = Color(0.28, 0.78, 0.66, 0.22)
+polygon = PackedVector2Array(500, 640, 640, 360, 780, 640)
+[node name="CryptWall" type="Polygon2D" parent="DecorBack"]
+color = Color(0.38, 0.31, 0.48, 0.45)
+polygon = PackedVector2Array(360, 640, 360, 280, 440, 220, 520, 280, 520, 640)
+[node name="DecorFront" type="Node2D" parent="."]
+
+[node name="Anchors" type="Node2D" parent="."]
+[node name="Sockets" type="Node2D" parent="Anchors"]
+[node name="Branch" type="Marker2D" parent="Anchors/Sockets"]
+position = Vector2(240, 0)
+[node name="Return" type="Marker2D" parent="Anchors/Sockets"]
+position = Vector2(1040, 0)
+[node name="Enemy" type="Node2D" parent="Anchors"]
+[node name="Hazard" type="Node2D" parent="Anchors"]
+
+[node name="Reward" type="Node2D" parent="Anchors"]
+[node name="MaterialCryptNode" type="Marker2D" parent="Anchors/Reward"]
+position = Vector2(640, 640)
+script = ExtResource("2")
+anchor_id = &"material_crypt_node"
+anchor_type = &"reward"
+risk_tier = 2
+required = true
+metadata/reward_role = &"material_node"
+metadata/interaction_space = Vector2(150, 108)
+metadata/support_id = &"material_crypt_basin"
+
+[node name="Objective" type="Node2D" parent="Anchors"]
+[node name="ReturnRope" type="Area2D" parent="Anchors/Objective"]
+position = Vector2(1040, 200)
+script = ExtResource("3")
+climbable_size = Vector2(64, 640)
+visual_color = Color(0.78, 0.68, 0.4, 0.9)
+metadata/entry_support = &"material_crypt_return_shelf"
+metadata/exit_support = &"twin_choice_right_floor"
+metadata/support_overlap = 32.0
+[node name="MaterialMarker" type="StaticBody2D" parent="Anchors/Objective"]
+position = Vector2(640, 576)
+collision_layer = 0
+collision_mask = 0
+metadata/visual_only = true
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Anchors/Objective/MaterialMarker"]
+disabled = true
+position = Vector2(0, 32)
+shape = SubResource("CryptMarkerShape")
+[node name="Visual" type="Polygon2D" parent="Anchors/Objective/MaterialMarker"]
+color = Color(0.32, 0.78, 0.66, 0.75)
+polygon = PackedVector2Array(0, 0, 24, 34, 14, 64, -14, 64, -24, 34)
+
+[node name="Recovery" type="Node2D" parent="Anchors"]
+[node name="CryptEntryRecovery" type="Marker2D" parent="Anchors/Recovery"]
+position = Vector2(240, 520)
+script = ExtResource("2")
+anchor_id = &"crypt_entry_recovery"
+anchor_type = &"recovery"
+safe_radius = 160.0
+required = true
+metadata/support_id = &"material_crypt_entry_shelf"
+[node name="CryptBasinRecovery" type="Marker2D" parent="Anchors/Recovery"]
+position = Vector2(500, 640)
+script = ExtResource("2")
+anchor_id = &"crypt_basin_recovery"
+anchor_type = &"recovery"
+safe_radius = 180.0
+required = true
+metadata/support_id = &"material_crypt_basin"
+[node name="CryptReturnRecovery" type="Marker2D" parent="Anchors/Recovery"]
+position = Vector2(1040, 520)
+script = ExtResource("2")
+anchor_id = &"crypt_return_recovery"
+anchor_type = &"recovery"
+safe_radius = 140.0
+required = true
+metadata/support_id = &"material_crypt_return_shelf"
+
+[node name="CameraBounds" type="Node2D" parent="."]
+metadata/bounds = Rect2(0, 0, 1280, 720)
+[node name="Validation" type="Node2D" parent="."]
+metadata/required_route = false
+metadata/minimum_optional_landing = 180.0
+metadata/max_optional_rise = 120.0
+metadata/branch_socket_id = &"material_crypt_branch"
+metadata/return_socket_id = &"material_crypt_return"
+metadata/return_rope_path = NodePath("../Anchors/Objective/ReturnRope")
+metadata/return_rope_height = 640.0

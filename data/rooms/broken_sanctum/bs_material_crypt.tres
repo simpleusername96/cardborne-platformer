@@ -1,0 +1,64 @@
+[gd_resource type="Resource" script_class="RoomTemplateData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/stages/RoomTemplateData.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/stages/RoomSocketData.gd" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/rooms/broken_sanctum/BsMaterialCrypt.tscn" id="3"]
+[ext_resource type="Script" path="res://scripts/stages/RoomRewardAnchorData.gd" id="4"]
+
+[sub_resource type="Resource" id="BranchSocket"]
+script = ExtResource("2")
+id = &"material_crypt_branch"
+direction = &"branch"
+route_role = &"optional"
+local_position = Vector2(240, 0)
+opening_size = Vector2(160, 140)
+support_top = 520.0
+transition_type = &"drop"
+required_ability = &"baseline"
+approach_width = 280.0
+landing_width = 320.0
+headroom = 140.0
+recovery_id = &"crypt_entry_recovery"
+
+[sub_resource type="Resource" id="ReturnSocket"]
+script = ExtResource("2")
+id = &"material_crypt_return"
+direction = &"rejoin"
+route_role = &"return"
+local_position = Vector2(1040, 0)
+opening_size = Vector2(128, 140)
+support_top = 520.0
+transition_type = &"rope"
+required_ability = &"climb"
+approach_width = 240.0
+landing_width = 240.0
+headroom = 140.0
+recovery_id = &"crypt_return_recovery"
+
+[sub_resource type="Resource" id="MaterialReward"]
+script = ExtResource("4")
+id = &"material_crypt_node"
+reward_role = &"material_node"
+eligible_table_ids = Array[StringName]([&"material_cavern_ruin"])
+risk_tier = 2
+interaction_space = Vector2(150, 108)
+budget_cost = 1
+
+[resource]
+script = ExtResource("1")
+id = &"bs_material_crypt"
+display_name = "Lower Material Crypt"
+content_version = 1
+scene = ExtResource("3")
+role = &"optional"
+stage_tags = Array[StringName]([&"broken_sanctum"])
+required_route = false
+bounds = Rect2(0, 0, 1280, 720)
+entry_sockets = Array[ExtResource("2")]([SubResource("BranchSocket")])
+exit_sockets = Array[ExtResource("2")]([SubResource("ReturnSocket")])
+encounter_budget = Vector2i(0, 0)
+hazard_budget = Vector2i(0, 0)
+reward_budget = Vector2i(1, 1)
+reward_anchors = Array[ExtResource("4")]([SubResource("MaterialReward")])
+recovery_anchor_ids = Array[StringName]([&"crypt_entry_recovery", &"crypt_basin_recovery", &"crypt_return_recovery"])
+estimated_seconds = Vector2i(20, 40)

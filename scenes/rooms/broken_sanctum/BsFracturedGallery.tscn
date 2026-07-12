@@ -1,0 +1,231 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/stages/RoomTemplateHost.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/stages/RoomAnchor.gd" id="2"]
+
+[sub_resource type="RectangleShape2D" id="EntryMassShape"]
+size = Vector2(320, 100)
+[sub_resource type="RectangleShape2D" id="CenterMassShape"]
+size = Vector2(560, 120)
+[sub_resource type="RectangleShape2D" id="ExitMassShape"]
+size = Vector2(400, 100)
+[sub_resource type="RectangleShape2D" id="PerchShape"]
+size = Vector2(260, 12)
+[sub_resource type="RectangleShape2D" id="CoverShape"]
+size = Vector2(160, 120)
+
+[node name="BsFracturedGallery" type="Node2D"]
+script = ExtResource("1")
+room_id = &"bs_fractured_gallery"
+
+[node name="Terrain" type="Node2D" parent="."]
+[node name="EntryMass" type="StaticBody2D" parent="Terrain"]
+position = Vector2(160, 620)
+collision_layer = 1
+collision_mask = 0
+metadata/surface_id = &"fracture_entry_floor"
+metadata/support_top = 620.0
+metadata/support_width = 320.0
+metadata/critical = true
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/EntryMass"]
+position = Vector2(0, 50)
+shape = SubResource("EntryMassShape")
+[node name="RockVisual" type="Polygon2D" parent="Terrain/EntryMass"]
+color = Color(0.14, 0.15, 0.21, 1)
+polygon = PackedVector2Array(-160, 0, 160, 0, 160, 100, -160, 100)
+[node name="SupportCap" type="Polygon2D" parent="Terrain/EntryMass"]
+color = Color(0.55, 0.46, 0.72, 1)
+polygon = PackedVector2Array(-160, 0, 160, 0, 160, 8, -160, 8)
+
+[node name="CenterArenaMass" type="StaticBody2D" parent="Terrain"]
+position = Vector2(600, 600)
+collision_layer = 1
+collision_mask = 0
+metadata/surface_id = &"fracture_center_lane"
+metadata/support_top = 600.0
+metadata/support_width = 560.0
+metadata/critical = true
+metadata/charge_lane_width = 520.0
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/CenterArenaMass"]
+position = Vector2(0, 60)
+shape = SubResource("CenterMassShape")
+[node name="RockVisual" type="Polygon2D" parent="Terrain/CenterArenaMass"]
+color = Color(0.19, 0.18, 0.25, 1)
+polygon = PackedVector2Array(-280, 0, 280, 0, 280, 120, -280, 120)
+[node name="SupportCap" type="Polygon2D" parent="Terrain/CenterArenaMass"]
+color = Color(0.72, 0.56, 0.28, 1)
+polygon = PackedVector2Array(-280, 0, 280, 0, 280, 8, -280, 8)
+
+[node name="ExitMass" type="StaticBody2D" parent="Terrain"]
+position = Vector2(1080, 620)
+collision_layer = 1
+collision_mask = 0
+metadata/surface_id = &"fracture_exit_floor"
+metadata/support_top = 620.0
+metadata/support_width = 400.0
+metadata/critical = true
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/ExitMass"]
+position = Vector2(0, 50)
+shape = SubResource("ExitMassShape")
+[node name="RockVisual" type="Polygon2D" parent="Terrain/ExitMass"]
+color = Color(0.14, 0.15, 0.21, 1)
+polygon = PackedVector2Array(-200, 0, 200, 0, 200, 100, -200, 100)
+[node name="SupportCap" type="Polygon2D" parent="Terrain/ExitMass"]
+color = Color(0.32, 0.62, 0.58, 1)
+polygon = PackedVector2Array(-200, 0, 200, 0, 200, 8, -200, 8)
+
+[node name="LineBreakCover" type="StaticBody2D" parent="Terrain"]
+position = Vector2(820, 480)
+collision_layer = 1
+collision_mask = 0
+metadata/cover_id = &"fracture_line_break"
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/LineBreakCover"]
+position = Vector2(0, 60)
+shape = SubResource("CoverShape")
+[node name="Visual" type="Polygon2D" parent="Terrain/LineBreakCover"]
+color = Color(0.24, 0.22, 0.31, 1)
+polygon = PackedVector2Array(-80, 0, 80, 0, 80, 120, -80, 120)
+
+[node name="OneWay" type="Node2D" parent="."]
+[node name="WestEscapeLedge" type="StaticBody2D" parent="OneWay"]
+position = Vector2(430, 470)
+collision_layer = 2
+collision_mask = 0
+metadata/surface_id = &"fracture_west_escape"
+metadata/support_top = 470.0
+metadata/support_width = 260.0
+metadata/critical = false
+[node name="CollisionShape2D" type="CollisionShape2D" parent="OneWay/WestEscapeLedge"]
+shape = SubResource("PerchShape")
+one_way_collision = true
+[node name="Visual" type="Polygon2D" parent="OneWay/WestEscapeLedge"]
+color = Color(0.55, 0.46, 0.72, 1)
+polygon = PackedVector2Array(-130, -6, 130, -6, 130, 6, -130, 6)
+
+[node name="ShooterPerch" type="StaticBody2D" parent="OneWay"]
+position = Vector2(930, 450)
+collision_layer = 2
+collision_mask = 0
+metadata/surface_id = &"fracture_shooter_perch"
+metadata/support_top = 450.0
+metadata/support_width = 260.0
+metadata/critical = false
+[node name="CollisionShape2D" type="CollisionShape2D" parent="OneWay/ShooterPerch"]
+shape = SubResource("PerchShape")
+one_way_collision = true
+[node name="Visual" type="Polygon2D" parent="OneWay/ShooterPerch"]
+color = Color(0.32, 0.62, 0.58, 1)
+polygon = PackedVector2Array(-130, -6, 130, -6, 130, 6, -130, 6)
+
+[node name="Hazards" type="Node2D" parent="."]
+[node name="DecorBack" type="Node2D" parent="."]
+z_index = -2
+[node name="FractureRift" type="Polygon2D" parent="DecorBack"]
+color = Color(0.64, 0.48, 0.84, 0.18)
+polygon = PackedVector2Array(540, 600, 600, 180, 650, 380, 700, 130, 760, 600)
+[node name="DecorFront" type="Node2D" parent="."]
+
+[node name="Anchors" type="Node2D" parent="."]
+[node name="Sockets" type="Node2D" parent="Anchors"]
+[node name="Entry" type="Marker2D" parent="Anchors/Sockets"]
+position = Vector2(0, 620)
+[node name="Exit" type="Marker2D" parent="Anchors/Sockets"]
+position = Vector2(1280, 620)
+
+[node name="Enemy" type="Node2D" parent="Anchors"]
+[node name="FractureCharger" type="Marker2D" parent="Anchors/Enemy"]
+position = Vector2(620, 600)
+script = ExtResource("2")
+anchor_id = &"fracture_charger"
+anchor_type = &"enemy"
+allowed_tags = Array[StringName]([&"burst"])
+support_width = 560.0
+patrol_width = 520.0
+clearance = 240.0
+has_escape_route = true
+has_line_of_sight = false
+has_cover_or_elevation = true
+required = true
+metadata/support_id = &"fracture_center_lane"
+metadata/escape_pad_ids = Array[StringName]([&"fracture_west_escape", &"fracture_exit_floor"])
+[node name="FractureLeaper" type="Marker2D" parent="Anchors/Enemy"]
+position = Vector2(500, 600)
+script = ExtResource("2")
+anchor_id = &"fracture_leaper"
+anchor_type = &"enemy"
+allowed_tags = Array[StringName]([&"vertical"])
+support_width = 560.0
+patrol_width = 440.0
+clearance = 240.0
+has_escape_route = true
+has_line_of_sight = false
+has_cover_or_elevation = true
+metadata/support_id = &"fracture_center_lane"
+metadata/landing_recovery_id = &"fracture_exit_recovery"
+[node name="FractureShooter" type="Marker2D" parent="Anchors/Enemy"]
+position = Vector2(930, 450)
+script = ExtResource("2")
+anchor_id = &"fracture_shooter"
+anchor_type = &"enemy"
+allowed_tags = Array[StringName]([&"ranged"])
+support_width = 260.0
+patrol_width = 720.0
+clearance = 300.0
+has_escape_route = true
+has_line_of_sight = true
+has_cover_or_elevation = true
+metadata/support_id = &"fracture_shooter_perch"
+metadata/line_of_sight = Rect2(300, 340, 820, 220)
+metadata/cover_id = &"fracture_line_break"
+[node name="FractureOccupier" type="Marker2D" parent="Anchors/Enemy"]
+position = Vector2(1080, 620)
+script = ExtResource("2")
+anchor_id = &"fracture_occupier"
+anchor_type = &"enemy"
+allowed_tags = Array[StringName]([&"occupier"])
+support_width = 400.0
+patrol_width = 320.0
+clearance = 180.0
+has_escape_route = false
+has_line_of_sight = false
+has_cover_or_elevation = false
+metadata/support_id = &"fracture_exit_floor"
+
+[node name="Hazard" type="Node2D" parent="Anchors"]
+[node name="Reward" type="Node2D" parent="Anchors"]
+[node name="Objective" type="Node2D" parent="Anchors"]
+[node name="SafeEntry" type="Marker2D" parent="Anchors/Objective"]
+position = Vector2(120, 620)
+metadata/safe_radius = 240.0
+[node name="ResponseLevelWest" type="Marker2D" parent="Anchors/Objective"]
+position = Vector2(430, 470)
+metadata/support_id = &"fracture_west_escape"
+[node name="ResponseLevelEast" type="Marker2D" parent="Anchors/Objective"]
+position = Vector2(930, 450)
+metadata/support_id = &"fracture_shooter_perch"
+
+[node name="Recovery" type="Node2D" parent="Anchors"]
+[node name="FractureEntryRecovery" type="Marker2D" parent="Anchors/Recovery"]
+position = Vector2(120, 620)
+script = ExtResource("2")
+anchor_id = &"fracture_entry_recovery"
+anchor_type = &"recovery"
+safe_radius = 180.0
+required = true
+metadata/support_id = &"fracture_entry_floor"
+[node name="FractureExitRecovery" type="Marker2D" parent="Anchors/Recovery"]
+position = Vector2(1160, 620)
+script = ExtResource("2")
+anchor_id = &"fracture_exit_recovery"
+anchor_type = &"recovery"
+safe_radius = 100.0
+metadata/support_id = &"fracture_exit_floor"
+
+[node name="CameraBounds" type="Node2D" parent="."]
+metadata/bounds = Rect2(0, 0, 1280, 720)
+[node name="Validation" type="Node2D" parent="."]
+metadata/safe_entry_radius = 240.0
+metadata/minimum_critical_landing = 220.0
+metadata/max_required_step = 20.0
+metadata/charge_lane_width = 520.0
+metadata/leaper_arc_clearance = 240.0

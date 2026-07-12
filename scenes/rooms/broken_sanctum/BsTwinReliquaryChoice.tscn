@@ -1,0 +1,235 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/stages/RoomTemplateHost.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/stages/RoomAnchor.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/stages/Climbable.gd" id="3"]
+
+[sub_resource type="RectangleShape2D" id="BranchCoverShape"]
+size = Vector2(320, 12)
+[sub_resource type="RectangleShape2D" id="CenterMassShape"]
+size = Vector2(480, 100)
+[sub_resource type="RectangleShape2D" id="RightMassShape"]
+size = Vector2(480, 120)
+[sub_resource type="RectangleShape2D" id="ReturnLandingShape"]
+size = Vector2(240, 12)
+[sub_resource type="RectangleShape2D" id="ReturnStepShape"]
+size = Vector2(220, 12)
+
+[node name="BsTwinReliquaryChoice" type="Node2D"]
+script = ExtResource("1")
+room_id = &"bs_twin_reliquary_choice"
+
+[node name="Terrain" type="Node2D" parent="."]
+[node name="LowerBranchCover" type="StaticBody2D" parent="Terrain"]
+position = Vector2(160, 620)
+collision_layer = 2
+collision_mask = 0
+metadata/surface_id = &"twin_choice_lower_cover"
+metadata/support_top = 620.0
+metadata/support_width = 320.0
+metadata/critical = true
+metadata/one_way = true
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/LowerBranchCover"]
+shape = SubResource("BranchCoverShape")
+one_way_collision = true
+[node name="Visual" type="Polygon2D" parent="Terrain/LowerBranchCover"]
+color = Color(0.55, 0.46, 0.72, 1)
+polygon = PackedVector2Array(-160, -6, 160, -6, 160, 6, -160, 6)
+
+[node name="CenterChoiceMass" type="StaticBody2D" parent="Terrain"]
+position = Vector2(560, 620)
+collision_layer = 1
+collision_mask = 0
+metadata/surface_id = &"twin_choice_center_floor"
+metadata/support_top = 620.0
+metadata/support_width = 480.0
+metadata/critical = true
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/CenterChoiceMass"]
+position = Vector2(0, 50)
+shape = SubResource("CenterMassShape")
+[node name="RockVisual" type="Polygon2D" parent="Terrain/CenterChoiceMass"]
+color = Color(0.14, 0.15, 0.21, 1)
+polygon = PackedVector2Array(-240, 0, 240, 0, 240, 100, -240, 100)
+[node name="SupportCap" type="Polygon2D" parent="Terrain/CenterChoiceMass"]
+color = Color(0.72, 0.56, 0.28, 1)
+polygon = PackedVector2Array(-240, 0, 240, 0, 240, 8, -240, 8)
+
+[node name="RightChoiceMass" type="StaticBody2D" parent="Terrain"]
+position = Vector2(1040, 600)
+collision_layer = 1
+collision_mask = 0
+metadata/surface_id = &"twin_choice_right_floor"
+metadata/support_top = 600.0
+metadata/support_width = 480.0
+metadata/critical = true
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/RightChoiceMass"]
+position = Vector2(0, 60)
+shape = SubResource("RightMassShape")
+[node name="RockVisual" type="Polygon2D" parent="Terrain/RightChoiceMass"]
+color = Color(0.19, 0.18, 0.25, 1)
+polygon = PackedVector2Array(-240, 0, 240, 0, 240, 120, -240, 120)
+[node name="SupportCap" type="Polygon2D" parent="Terrain/RightChoiceMass"]
+color = Color(0.32, 0.62, 0.58, 1)
+polygon = PackedVector2Array(-240, 0, 240, 0, 240, 8, -240, 8)
+
+[node name="OneWay" type="Node2D" parent="."]
+[node name="UpperReturnLanding" type="StaticBody2D" parent="OneWay"]
+position = Vector2(1040, 140)
+collision_layer = 2
+collision_mask = 0
+metadata/surface_id = &"twin_choice_upper_return_landing"
+metadata/support_top = 140.0
+metadata/support_width = 240.0
+metadata/critical = false
+metadata/return_landing = true
+[node name="CollisionShape2D" type="CollisionShape2D" parent="OneWay/UpperReturnLanding"]
+shape = SubResource("ReturnLandingShape")
+one_way_collision = true
+[node name="Visual" type="Polygon2D" parent="OneWay/UpperReturnLanding"]
+color = Color(0.55, 0.46, 0.72, 1)
+polygon = PackedVector2Array(-120, -6, 120, -6, 120, 6, -120, 6)
+
+[node name="ReturnStepA" type="StaticBody2D" parent="OneWay"]
+position = Vector2(900, 240)
+collision_layer = 2
+collision_mask = 0
+metadata/surface_id = &"twin_choice_return_step_a"
+metadata/support_top = 240.0
+metadata/support_width = 220.0
+metadata/critical = false
+[node name="CollisionShape2D" type="CollisionShape2D" parent="OneWay/ReturnStepA"]
+shape = SubResource("ReturnStepShape")
+one_way_collision = true
+[node name="Visual" type="Polygon2D" parent="OneWay/ReturnStepA"]
+color = Color(0.72, 0.56, 0.28, 1)
+polygon = PackedVector2Array(-110, -6, 110, -6, 110, 6, -110, 6)
+
+[node name="ReturnStepB" type="StaticBody2D" parent="OneWay"]
+position = Vector2(780, 340)
+collision_layer = 2
+collision_mask = 0
+metadata/surface_id = &"twin_choice_return_step_b"
+metadata/support_top = 340.0
+metadata/support_width = 220.0
+metadata/critical = false
+[node name="CollisionShape2D" type="CollisionShape2D" parent="OneWay/ReturnStepB"]
+shape = SubResource("ReturnStepShape")
+one_way_collision = true
+[node name="Visual" type="Polygon2D" parent="OneWay/ReturnStepB"]
+color = Color(0.32, 0.62, 0.58, 1)
+polygon = PackedVector2Array(-110, -6, 110, -6, 110, 6, -110, 6)
+
+[node name="ReturnStepC" type="StaticBody2D" parent="OneWay"]
+position = Vector2(900, 440)
+collision_layer = 2
+collision_mask = 0
+metadata/surface_id = &"twin_choice_return_step_c"
+metadata/support_top = 440.0
+metadata/support_width = 220.0
+metadata/critical = false
+[node name="CollisionShape2D" type="CollisionShape2D" parent="OneWay/ReturnStepC"]
+shape = SubResource("ReturnStepShape")
+one_way_collision = true
+[node name="Visual" type="Polygon2D" parent="OneWay/ReturnStepC"]
+color = Color(0.72, 0.56, 0.28, 1)
+polygon = PackedVector2Array(-110, -6, 110, -6, 110, 6, -110, 6)
+
+[node name="ReturnStepD" type="StaticBody2D" parent="OneWay"]
+position = Vector2(1040, 520)
+collision_layer = 2
+collision_mask = 0
+metadata/surface_id = &"twin_choice_return_step_d"
+metadata/support_top = 520.0
+metadata/support_width = 220.0
+metadata/critical = false
+[node name="CollisionShape2D" type="CollisionShape2D" parent="OneWay/ReturnStepD"]
+shape = SubResource("ReturnStepShape")
+one_way_collision = true
+[node name="Visual" type="Polygon2D" parent="OneWay/ReturnStepD"]
+color = Color(0.32, 0.62, 0.58, 1)
+polygon = PackedVector2Array(-110, -6, 110, -6, 110, 6, -110, 6)
+
+[node name="Hazards" type="Node2D" parent="."]
+[node name="DecorBack" type="Node2D" parent="."]
+z_index = -2
+[node name="TwinReliquaryLeft" type="Polygon2D" parent="DecorBack"]
+color = Color(0.55, 0.46, 0.72, 0.24)
+polygon = PackedVector2Array(180, 620, 180, 300, 260, 220, 340, 300, 340, 620, 300, 620, 300, 330, 260, 285, 220, 330, 220, 620)
+[node name="TwinReliquaryRight" type="Polygon2D" parent="DecorBack"]
+color = Color(0.72, 0.56, 0.28, 0.22)
+polygon = PackedVector2Array(920, 600, 920, 300, 1000, 220, 1080, 300, 1080, 600, 1040, 600, 1040, 330, 1000, 285, 960, 330, 960, 600)
+[node name="DecorFront" type="Node2D" parent="."]
+
+[node name="Anchors" type="Node2D" parent="."]
+[node name="Sockets" type="Node2D" parent="Anchors"]
+[node name="CriticalEntry" type="Marker2D" parent="Anchors/Sockets"]
+position = Vector2(0, 620)
+[node name="LowerBranch" type="Marker2D" parent="Anchors/Sockets"]
+position = Vector2(240, 720)
+[node name="UpperBranch" type="Marker2D" parent="Anchors/Sockets"]
+position = Vector2(600, 0)
+[node name="LowerReturn" type="Marker2D" parent="Anchors/Sockets"]
+position = Vector2(1040, 720)
+[node name="UpperReturn" type="Marker2D" parent="Anchors/Sockets"]
+position = Vector2(1040, 0)
+[node name="CriticalExit" type="Marker2D" parent="Anchors/Sockets"]
+position = Vector2(1280, 600)
+
+[node name="Enemy" type="Node2D" parent="Anchors"]
+[node name="Hazard" type="Node2D" parent="Anchors"]
+[node name="Reward" type="Node2D" parent="Anchors"]
+[node name="Objective" type="Node2D" parent="Anchors"]
+[node name="UpperBranchRope" type="Area2D" parent="Anchors/Objective"]
+position = Vector2(600, 240)
+script = ExtResource("3")
+climbable_size = Vector2(64, 760)
+visual_color = Color(0.78, 0.68, 0.4, 0.9)
+metadata/entry_support = &"twin_choice_center_floor"
+metadata/exit_support = &"reliquary_cache_center"
+metadata/support_overlap = 32.0
+[node name="LowerDecision" type="Marker2D" parent="Anchors/Objective"]
+position = Vector2(240, 620)
+metadata/branch_socket_id = &"twin_choice_lower_branch"
+metadata/return_socket_id = &"twin_choice_lower_return"
+metadata/optional_room_id = &"bs_material_crypt"
+[node name="UpperDecision" type="Marker2D" parent="Anchors/Objective"]
+position = Vector2(600, 620)
+metadata/branch_socket_id = &"twin_choice_upper_branch"
+metadata/return_socket_id = &"twin_choice_upper_return"
+metadata/optional_room_id = &"bs_reliquary_cache"
+
+[node name="Recovery" type="Node2D" parent="Anchors"]
+[node name="ChoiceEntryRecovery" type="Marker2D" parent="Anchors/Recovery"]
+position = Vector2(120, 620)
+script = ExtResource("2")
+anchor_id = &"choice_entry_recovery"
+anchor_type = &"recovery"
+safe_radius = 180.0
+required = true
+metadata/support_id = &"twin_choice_lower_cover"
+[node name="ChoiceMainRecovery" type="Marker2D" parent="Anchors/Recovery"]
+position = Vector2(560, 620)
+script = ExtResource("2")
+anchor_id = &"choice_main_recovery"
+anchor_type = &"recovery"
+safe_radius = 180.0
+required = true
+metadata/support_id = &"twin_choice_center_floor"
+[node name="UpperReturnRecovery" type="Marker2D" parent="Anchors/Recovery"]
+position = Vector2(1040, 140)
+script = ExtResource("2")
+anchor_id = &"upper_return_recovery"
+anchor_type = &"recovery"
+safe_radius = 110.0
+required = true
+metadata/support_id = &"twin_choice_upper_return_landing"
+
+[node name="CameraBounds" type="Node2D" parent="."]
+metadata/bounds = Rect2(0, 0, 1280, 720)
+[node name="Validation" type="Node2D" parent="."]
+metadata/safe_entry_radius = 240.0
+metadata/minimum_critical_landing = 220.0
+metadata/optional_branch_count = 2
+metadata/lower_optional_offset = Vector2(0, 720)
+metadata/upper_optional_offset = Vector2(0, -720)
+metadata/upper_branch_rope_path = NodePath("../Anchors/Objective/UpperBranchRope")
