@@ -37,8 +37,9 @@ func _run() -> void:
 
 	_expect(run_director.get_phase_name() == "main_menu", "default boot should open the main menu")
 	_expect(
-		RunPhase.can_transition(RunPhase.Value.STAGE_CARD_REWARD, RunPhase.Value.RUN_CLEAR),
-		"card reward load failure needs a legal run-clear fallback"
+		RunPhase.can_transition(RunPhase.Value.STAGE_CARD_REWARD, RunPhase.Value.BOSS_LOADING)
+		and not RunPhase.can_transition(RunPhase.Value.STAGE_CARD_REWARD, RunPhase.Value.RUN_CLEAR),
+		"the third card reward should enter boss loading instead of granting early victory"
 	)
 	_expect(game.current_stage == null, "default boot must not instantiate a stage")
 	_expect(not ResourceLoader.exists(RETIRED_TESTBED_STAGE_PATH), "retired integrated testbed should stay removed")
@@ -92,7 +93,10 @@ func _run() -> void:
 
 	run_director.show_run_result(true)
 	await process_frame
-	_expect(run_director.get_phase_name() == "run_clear", "victory result should use run-clear phase")
+	_expect(run_director.get_phase_name() == "stage_active", "normal-stage victory requests should fail closed")
+	run_director.show_run_result(false)
+	await process_frame
+	_expect(run_director.get_phase_name() == "run_death", "player defeat should use run-death phase")
 	_expect(game.current_stage == null, "run result should unload gameplay")
 	_expect(_has_child_named(screen_root, "RunResult"), "run result screen should be mounted")
 

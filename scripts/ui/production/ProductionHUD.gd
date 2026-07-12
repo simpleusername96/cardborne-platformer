@@ -5,13 +5,21 @@ const Styles = preload("res://scripts/ui/production/ProductionUIStyles.gd")
 var health_label: Label
 var build_label: Label
 var objective_label: Label
+var combat_panel: PanelContainer
 var combat_label: Label
 var prompt_panel: PanelContainer
 var prompt_label: Label
+var boss_panel: PanelContainer
+var boss_name_label: Label
+var boss_health_bar: ProgressBar
+var boss_stagger_bar: ProgressBar
+var boss_status_label: Label
 var _stage_display_name: String = "Ruin Approach"
+var _stage_id: String = "ruin_approach"
 var _combat_state: Dictionary = {}
 var _interaction_prompt_text: String = ""
 var _interaction_prompt_active: bool = false
+var _boss: Node
 
 
 func _ready() -> void:
@@ -71,7 +79,7 @@ func _build_ui() -> void:
 	Styles.configure_label(objective_label, 14, Styles.TEXT_MUTED)
 	add_child(objective_label)
 
-	var combat_panel := _hud_panel()
+	combat_panel = _hud_panel()
 	combat_panel.name = "CombatPanel"
 	combat_panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	combat_panel.offset_left = 20.0
@@ -85,6 +93,8 @@ func _build_ui() -> void:
 	combat_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	Styles.configure_label(combat_label, 14)
 	combat_panel.add_child(_with_margin(combat_label, 14))
+
+	_build_boss_panel()
 
 	prompt_panel = _hud_panel(Styles.SURFACE_RAISED, Styles.AMBER)
 	prompt_panel.name = "InteractionPrompt"
@@ -102,6 +112,67 @@ func _build_ui() -> void:
 	prompt_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	Styles.configure_label(prompt_label, 16)
 	prompt_panel.add_child(_with_margin(prompt_label, 10))
+
+
+func _build_boss_panel() -> void:
+	boss_panel = _hud_panel(Color("20292d"), Styles.AMBER)
+	boss_panel.name = "BossPanel"
+	boss_panel.visible = false
+	boss_panel.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	boss_panel.offset_left = -230.0
+	boss_panel.offset_top = 98.0
+	boss_panel.offset_right = 230.0
+	boss_panel.offset_bottom = 181.0
+	add_child(boss_panel)
+
+	var margin := MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 14)
+	margin.add_theme_constant_override("margin_top", 7)
+	margin.add_theme_constant_override("margin_right", 14)
+	margin.add_theme_constant_override("margin_bottom", 7)
+	boss_panel.add_child(margin)
+
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 3)
+	margin.add_child(column)
+
+	var heading := HBoxContainer.new()
+	column.add_child(heading)
+	boss_name_label = Label.new()
+	boss_name_label.name = "BossName"
+	boss_name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	Styles.configure_label(boss_name_label, 14, Styles.TEXT)
+	heading.add_child(boss_name_label)
+	boss_status_label = Label.new()
+	boss_status_label.name = "BossStatus"
+	boss_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	boss_status_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	Styles.configure_label(boss_status_label, 13, Styles.AMBER)
+	heading.add_child(boss_status_label)
+
+	boss_health_bar = ProgressBar.new()
+	boss_health_bar.name = "BossHealth"
+	boss_health_bar.custom_minimum_size = Vector2(0.0, 15.0)
+	boss_health_bar.show_percentage = false
+	boss_health_bar.add_theme_stylebox_override(
+		"background", Styles.panel_style(Color("11171a"), Color("414c51"), 1)
+	)
+	boss_health_bar.add_theme_stylebox_override(
+		"fill", Styles.panel_style(Color("73ba4d"), Color("a9d36f"), 1)
+	)
+	column.add_child(boss_health_bar)
+
+	boss_stagger_bar = ProgressBar.new()
+	boss_stagger_bar.name = "BossStagger"
+	boss_stagger_bar.custom_minimum_size = Vector2(0.0, 5.0)
+	boss_stagger_bar.show_percentage = false
+	boss_stagger_bar.add_theme_stylebox_override(
+		"background", Styles.panel_style(Color("11171a"), Color("354147"), 0)
+	)
+	boss_stagger_bar.add_theme_stylebox_override(
+		"fill", Styles.panel_style(Styles.CYAN, Styles.CYAN, 0)
+	)
+	column.add_child(boss_stagger_bar)
 
 
 func _hud_panel(
@@ -154,9 +225,19 @@ func _refresh_run_summary() -> void:
 	]
 
 
-func _on_stage_started(_stage_id: String, stage_display_name: String) -> void:
+func _on_stage_started(stage_id: String, stage_display_name: String) -> void:
+	_stage_id = stage_id
 	_stage_display_name = stage_display_name
-	objective_label.text = "%s  -  Defeat enemies" % _stage_display_name
+	if stage_id == "slime_court":
+		objective_label.text = "Defeat the Slime King"
+		boss_panel.visible = true
+		_set_boss_combat_layout(true)
+		_show_boss_intro_state()
+		call_deferred("_bind_boss")
+	else:
+		objective_label.text = "%s  -  Defeat enemies" % _stage_display_name
+		boss_panel.visible = false
+		_set_boss_combat_layout(false)
 
 
 func _on_combat_state_changed(state: Dictionary) -> void:
@@ -199,6 +280,8 @@ func _refresh_combat_state() -> void:
 
 
 func _on_encounter_state_changed(state: Dictionary) -> void:
+	if _stage_id == "slime_court":
+		return
 	var remaining := int(state.get("remaining", 0))
 	if remaining > 0:
 		objective_label.text = "%s  -  Defeat enemies  %d" % [_stage_display_name, remaining]
@@ -223,3 +306,104 @@ func _refresh_interaction_prompt() -> void:
 	prompt_panel.visible = _interaction_prompt_active and not _interaction_prompt_text.is_empty()
 	var binding := Game.get_action_binding_text("interact", "E")
 	prompt_label.text = "%s  %s" % [binding, _interaction_prompt_text]
+
+
+func _set_boss_combat_layout(enabled: bool) -> void:
+	if combat_panel == null:
+		return
+	if enabled:
+		combat_panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
+		combat_panel.offset_left = 20.0
+		combat_panel.offset_top = 104.0
+		combat_panel.offset_right = 240.0
+		combat_panel.offset_bottom = 264.0
+	else:
+		combat_panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
+		combat_panel.offset_left = 20.0
+		combat_panel.offset_top = 104.0
+		combat_panel.offset_right = 370.0
+		combat_panel.offset_bottom = 264.0
+
+
+func _show_boss_intro_state() -> void:
+	boss_name_label.text = "SLIME KING   80 / 80"
+	boss_status_label.text = "THE COURT SEALS"
+	boss_health_bar.max_value = 80.0
+	boss_health_bar.value = 80.0
+	boss_stagger_bar.max_value = 100.0
+	boss_stagger_bar.value = 0.0
+
+
+func _bind_boss() -> void:
+	_boss = get_tree().get_first_node_in_group("boss")
+	if _boss == null:
+		return
+	var snapshot_callback := Callable(self, "_on_boss_snapshot")
+	if _boss.has_signal("snapshot_changed") and not _boss.is_connected("snapshot_changed", snapshot_callback):
+		_boss.connect("snapshot_changed", snapshot_callback)
+	if _boss.has_method("get_runtime_snapshot"):
+		_on_boss_snapshot(_boss.call("get_runtime_snapshot"))
+
+
+func _on_boss_snapshot(snapshot: Dictionary) -> void:
+	if boss_panel == null:
+		return
+	boss_panel.visible = true
+	var health := maxi(int(snapshot.get("health", 0)), 0)
+	var max_health := maxi(int(snapshot.get("max_health", 80)), 1)
+	var phase := maxi(int(snapshot.get("phase", 1)), 1)
+	boss_name_label.text = "SLIME KING   %d / %d   PHASE %s" % [
+		health,
+		max_health,
+		_roman_phase(phase),
+	]
+	boss_health_bar.max_value = float(max_health)
+	boss_health_bar.value = float(health)
+	boss_stagger_bar.max_value = maxf(float(snapshot.get("stagger_capacity", 100)), 1.0)
+	boss_stagger_bar.value = float(snapshot.get("stagger_meter", 0))
+	boss_status_label.text = _boss_status(snapshot)
+
+
+func _boss_status(snapshot: Dictionary) -> String:
+	var actor_state := StringName(snapshot.get("actor_state", &"dormant"))
+	if actor_state == &"phase_transition":
+		return "PHASE SHIFT"
+	if actor_state == &"staggered":
+		return "STAGGERED - ATTACK"
+	if actor_state == &"defeated":
+		return "CROWN BROKEN"
+	if actor_state in [&"dormant", &"cancelled"]:
+		return "THE COURT SEALS"
+	var pattern: Dictionary = snapshot.get("pattern", {})
+	var pattern_id := StringName(pattern.get("pattern_id", &""))
+	var pattern_state := StringName(pattern.get("state", &"idle"))
+	if pattern_state == &"recovery":
+		return "OPENING - ATTACK"
+	if pattern_state == &"neutral":
+		return "REPOSITION"
+	if pattern_state == &"active":
+		return _active_pattern_label(pattern_id)
+	if pattern_state == &"startup":
+		return _startup_pattern_label(pattern_id)
+	return "WATCH THE CROWN"
+
+
+func _startup_pattern_label(pattern_id: StringName) -> String:
+	return {
+		&"jump_slam": "SHADOW - MOVE",
+		&"body_bump": "LANE LOCK - EVADE",
+		&"poison_bands": "FIND SAFE FLOOR",
+		&"small_slime_summon": "SPAWN MARKERS",
+	}.get(pattern_id, "ATTACK INCOMING")
+
+
+func _active_pattern_label(pattern_id: StringName) -> String:
+	return {
+		&"jump_slam": "JUMP THE SHOCKWAVE",
+		&"body_bump": "CLEAR THE LANE",
+		&"poison_bands": "HOLD SAFE FLOOR",
+	}.get(pattern_id, "DODGE")
+
+
+func _roman_phase(phase: int) -> String:
+	return "II" if phase >= 2 else "I"
