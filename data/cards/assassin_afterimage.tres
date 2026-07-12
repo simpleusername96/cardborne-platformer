@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="CardDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/cards/CardDefinition.gd" id="1_card"]
+[ext_resource type="Script" path="res://scripts/cards/CardEffectDefinition.gd" id="2_effect"]
+
+[sub_resource type="Resource" id="RepeatPath"]
+script = ExtResource("2_effect")
+effect_type = &"repeat_attack_path"
+damage_scale = 0.5
+proc_effects = false
+
+[resource]
+script = ExtResource("1_card")
+id = &"assassin_afterimage"
+display_name = "Afterimage"
+description = "A Shadow Lunge that finishes without hitting a wall repeats its resolved hits at 50% damage without moving you."
+content_version = 1
+rarity = &"rare"
+compatibility = Array[StringName]([&"assassin"])
+trigger = &"assassin_shadow_lunge_completed"
+effects = Array[ExtResource("2_effect")]([SubResource("RepeatPath")])
+max_stacks = 1
