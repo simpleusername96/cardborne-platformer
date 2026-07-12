@@ -4,6 +4,10 @@ const BINDING_SAVE_PATH := "user://input_bindings.cfg"
 const META_SECTION := "meta"
 const KEYBOARD_SECTION := "keyboard"
 const SAVE_VERSION := 1
+const INPUT_DEVICE_KEYBOARD_MOUSE: StringName = &"keyboard_mouse"
+const INPUT_DEVICE_GAMEPAD: StringName = &"gamepad"
+const GAMEPAD_AXIS_SWITCH_THRESHOLD := 0.5
+const MOUSE_MOTION_SWITCH_THRESHOLD_SQUARED := 4.0
 
 const ACTION_DEFINITIONS := [
 	{"name": "move_left", "label": "move left", "default_keys": [KEY_A, KEY_LEFT]},
@@ -25,11 +29,40 @@ const ACTION_DEFINITIONS := [
 	{"name": "pause", "label": "settings", "default_keys": [KEY_ESCAPE]},
 ]
 
+# Axes are [axis, signed strength]. Buttons and axes accept every connected pad.
+const GAMEPAD_LAYOUT := {
+	"move_left": {"axes": [[JOY_AXIS_LEFT_X, -1.0]], "buttons": [JOY_BUTTON_DPAD_LEFT]},
+	"move_right": {"axes": [[JOY_AXIS_LEFT_X, 1.0]], "buttons": [JOY_BUTTON_DPAD_RIGHT]},
+	"jump": {"buttons": [JOY_BUTTON_A]},
+	"dash": {"buttons": [JOY_BUTTON_B]},
+	"attack": {"buttons": [JOY_BUTTON_X]},
+	"heavy_attack": {"buttons": [JOY_BUTTON_Y]},
+	"skill_1": {"buttons": [JOY_BUTTON_LEFT_SHOULDER]},
+	"skill_2": {"buttons": [JOY_BUTTON_RIGHT_SHOULDER]},
+	"skill_3": {"axes": [[JOY_AXIS_TRIGGER_LEFT, 1.0]]},
+	"use_consumable": {"axes": [[JOY_AXIS_TRIGGER_RIGHT, 1.0]]},
+	"climb_up": {"axes": [[JOY_AXIS_LEFT_Y, -1.0]], "buttons": [JOY_BUTTON_DPAD_UP]},
+	"climb_down": {"axes": [[JOY_AXIS_LEFT_Y, 1.0]], "buttons": [JOY_BUTTON_DPAD_DOWN]},
+	"climb_cancel": {"buttons": [JOY_BUTTON_B]},
+	"crouch": {"axes": [[JOY_AXIS_LEFT_Y, 1.0]], "buttons": [JOY_BUTTON_DPAD_DOWN]},
+	"drop_through": {"axes": [[JOY_AXIS_LEFT_Y, 1.0]], "buttons": [JOY_BUTTON_DPAD_DOWN]},
+	"interact": {"buttons": [JOY_BUTTON_RIGHT_STICK]},
+	"pause": {"buttons": [JOY_BUTTON_START]},
+}
+
 var _definitions_by_name: Dictionary = {}
+var _active_input_device: StringName = INPUT_DEVICE_KEYBOARD_MOUSE
 
 
 func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	ensure_input_map()
+
+
+func _input(event: InputEvent) -> void:
+	var input_device := _input_device_for_event(event)
+	if input_device != &"":
+		_set_active_input_device(input_device)
 
 
 func ensure_input_map() -> void:
@@ -40,10 +73,20 @@ func ensure_input_map() -> void:
 
 
 func get_input_guide_text() -> String:
+	var move_binding := (
+		"LS/D-pad"
+		if is_gamepad_active()
+		else get_binding_text("move_left", "A/Left") + "/" + get_binding_text("move_right", "D/Right")
+	)
+	var climb_binding := (
+		"LS/D-pad"
+		if is_gamepad_active()
+		else get_binding_text("climb_up", "W/Up") + "/" + get_binding_text("climb_down", "S/Down")
+	)
 	return "\n".join([
 		"Controls",
 		"Move %s | Crouch/drop %s" % [
-			get_binding_text("move_left", "A/Left") + "/" + get_binding_text("move_right", "D/Right"),
+			move_binding,
 			get_binding_text("crouch", "S/Down"),
 		],
 		"Jump %s | Dash %s | Basic %s | Heavy %s" % [
@@ -58,9 +101,8 @@ func get_input_guide_text() -> String:
 			get_binding_text("skill_3", "V"),
 			get_binding_text("use_consumable", "H"),
 		],
-		"Climb %s/%s | Dismount %s" % [
-			get_binding_text("climb_up", "W/Up"),
-			get_binding_text("climb_down", "S/Down"),
+		"Climb %s | Dismount %s" % [
+			climb_binding,
 			get_binding_text("climb_cancel", "C"),
 		],
 		"Interact %s | Settings %s" % [
@@ -90,6 +132,17 @@ func get_input_binding_rows() -> Array[Dictionary]:
 			"action": action_name,
 			"label": str(definition["label"]),
 			"binding": get_binding_text(action_name, "unbound"),
+			"keyboard_binding": get_binding_text_for_device(
+				action_name,
+				INPUT_DEVICE_KEYBOARD_MOUSE,
+				"unbound"
+			),
+			"gamepad_binding": get_binding_text_for_device(
+				action_name,
+				INPUT_DEVICE_GAMEPAD,
+				"unbound"
+			),
+			"input_device": _active_input_device,
 		})
 	return rows
 
@@ -101,23 +154,44 @@ func get_action_label(action_name: String) -> String:
 
 
 func get_binding_text(action_name: String, fallback: String = "unbound") -> String:
+	return get_binding_text_for_device(action_name, _active_input_device, fallback)
+
+
+func get_binding_text_for_device(
+	action_name: String,
+	input_device: StringName,
+	fallback: String = "unbound"
+) -> String:
 	if not InputMap.has_action(action_name):
 		return fallback
 
 	var labels: Array[String] = []
 	for event in InputMap.action_get_events(action_name):
-		if event is InputEventKey:
+		if input_device == INPUT_DEVICE_KEYBOARD_MOUSE and event is InputEventKey:
 			var key_event := event as InputEventKey
 			var keycode := _keycode_from_event(key_event)
 			if keycode != KEY_NONE:
 				labels.append(OS.get_keycode_string(keycode))
-		elif event is InputEventMouseButton:
+		elif input_device == INPUT_DEVICE_KEYBOARD_MOUSE and event is InputEventMouseButton:
 			var mouse_event := event as InputEventMouseButton
 			labels.append("Mouse%d" % mouse_event.button_index)
+		elif input_device == INPUT_DEVICE_GAMEPAD:
+			var gamepad_label := _gamepad_event_label(event)
+			if not gamepad_label.is_empty():
+				labels.append(gamepad_label)
 
+	labels = _dedupe_strings(labels)
 	if labels.is_empty():
 		return fallback
 	return "/".join(labels)
+
+
+func get_active_input_device() -> StringName:
+	return _active_input_device
+
+
+func is_gamepad_active() -> bool:
+	return _active_input_device == INPUT_DEVICE_GAMEPAD
 
 
 func remap_action_to_event(action_name: String, event: InputEventKey) -> Dictionary:
@@ -147,9 +221,10 @@ func restore_action_default(action_name: String) -> Dictionary:
 
 	var definition: Dictionary = _definitions_by_name[action_name]
 	_apply_keycodes(action_name, _to_int_array(definition.get("default_keys", [])))
+	_apply_gamepad_events(action_name)
 	_save_bindings()
 	SignalBus.input_bindings_changed.emit()
-	return {"ok": true, "message": "%s restored to default." % get_action_label(action_name)}
+	return {"ok": true, "message": "%s keyboard binding restored." % get_action_label(action_name)}
 
 
 func restore_all_defaults() -> void:
@@ -191,7 +266,9 @@ func _index_definitions() -> void:
 func _restore_defaults_without_saving() -> void:
 	_index_definitions()
 	for definition in ACTION_DEFINITIONS:
-		_apply_keycodes(str(definition["name"]), _to_int_array(definition.get("default_keys", [])))
+		var action_name := str(definition["name"])
+		_apply_keycodes(action_name, _to_int_array(definition.get("default_keys", [])))
+		_apply_gamepad_events(action_name)
 
 
 func _load_saved_bindings() -> void:
@@ -230,12 +307,36 @@ func _save_bindings() -> void:
 
 func _apply_keycodes(action_name: String, keycodes: Array[int]) -> void:
 	_ensure_action(action_name)
-	InputMap.action_erase_events(action_name)
+	for event in InputMap.action_get_events(action_name):
+		if event is InputEventKey:
+			InputMap.action_erase_event(action_name, event)
 	for keycode in _dedupe_ints(keycodes):
 		var event := InputEventKey.new()
 		event.keycode = keycode
 		event.physical_keycode = keycode
 		InputMap.action_add_event(action_name, event)
+
+
+func _apply_gamepad_events(action_name: String) -> void:
+	_ensure_action(action_name)
+	for event in InputMap.action_get_events(action_name):
+		if event is InputEventJoypadButton or event is InputEventJoypadMotion:
+			InputMap.action_erase_event(action_name, event)
+
+	var layout: Dictionary = GAMEPAD_LAYOUT.get(action_name, {})
+	for axis_value in layout.get("axes", []):
+		if not (axis_value is Array) or axis_value.size() != 2:
+			continue
+		var motion_event := InputEventJoypadMotion.new()
+		motion_event.device = -1
+		motion_event.axis = int(axis_value[0])
+		motion_event.axis_value = float(axis_value[1])
+		InputMap.action_add_event(action_name, motion_event)
+	for button_index in layout.get("buttons", []):
+		var button_event := InputEventJoypadButton.new()
+		button_event.device = -1
+		button_event.button_index = int(button_index)
+		InputMap.action_add_event(action_name, button_event)
 
 
 func _ensure_action(action_name: String) -> void:
@@ -276,6 +377,101 @@ func _dedupe_ints(values: Array[int]) -> Array[int]:
 		if not result.has(value):
 			result.append(value)
 	return result
+
+
+func _dedupe_strings(values: Array[String]) -> Array[String]:
+	var result: Array[String] = []
+	for value in values:
+		if not result.has(value):
+			result.append(value)
+	return result
+
+
+func _gamepad_event_label(event: InputEvent) -> String:
+	if event is InputEventJoypadButton:
+		var button_event := event as InputEventJoypadButton
+		match button_event.button_index:
+			JOY_BUTTON_A:
+				return "A"
+			JOY_BUTTON_B:
+				return "B"
+			JOY_BUTTON_X:
+				return "X"
+			JOY_BUTTON_Y:
+				return "Y"
+			JOY_BUTTON_LEFT_SHOULDER:
+				return "LB"
+			JOY_BUTTON_RIGHT_SHOULDER:
+				return "RB"
+			JOY_BUTTON_LEFT_STICK:
+				return "L3"
+			JOY_BUTTON_RIGHT_STICK:
+				return "R3"
+			JOY_BUTTON_START:
+				return "Start"
+			JOY_BUTTON_DPAD_UP:
+				return "D-pad Up"
+			JOY_BUTTON_DPAD_DOWN:
+				return "D-pad Down"
+			JOY_BUTTON_DPAD_LEFT:
+				return "D-pad Left"
+			JOY_BUTTON_DPAD_RIGHT:
+				return "D-pad Right"
+			_:
+				return "Button %d" % button_event.button_index
+
+	if event is InputEventJoypadMotion:
+		var motion_event := event as InputEventJoypadMotion
+		match motion_event.axis:
+			JOY_AXIS_LEFT_X:
+				return "LS Left" if motion_event.axis_value < 0.0 else "LS Right"
+			JOY_AXIS_LEFT_Y:
+				return "LS Up" if motion_event.axis_value < 0.0 else "LS Down"
+			JOY_AXIS_TRIGGER_LEFT:
+				return "LT"
+			JOY_AXIS_TRIGGER_RIGHT:
+				return "RT"
+			_:
+				var direction := "-" if motion_event.axis_value < 0.0 else "+"
+				return "Axis %d%s" % [motion_event.axis, direction]
+
+	return ""
+
+
+func _input_device_for_event(event: InputEvent) -> StringName:
+	if event is InputEventKey:
+		var key_event := event as InputEventKey
+		if key_event.pressed and not key_event.echo:
+			return INPUT_DEVICE_KEYBOARD_MOUSE
+	elif event is InputEventMouseButton:
+		if (event as InputEventMouseButton).pressed:
+			return INPUT_DEVICE_KEYBOARD_MOUSE
+	elif event is InputEventMouseMotion:
+		var mouse_motion := event as InputEventMouseMotion
+		if mouse_motion.relative.length_squared() >= MOUSE_MOTION_SWITCH_THRESHOLD_SQUARED:
+			return INPUT_DEVICE_KEYBOARD_MOUSE
+	elif event is InputEventJoypadButton:
+		if (event as InputEventJoypadButton).pressed:
+			return INPUT_DEVICE_GAMEPAD
+	elif event is InputEventJoypadMotion:
+		var joy_motion := event as InputEventJoypadMotion
+		var is_trigger := (
+			joy_motion.axis == JOY_AXIS_TRIGGER_LEFT
+			or joy_motion.axis == JOY_AXIS_TRIGGER_RIGHT
+		)
+		if (
+			is_trigger and joy_motion.axis_value >= GAMEPAD_AXIS_SWITCH_THRESHOLD
+			or not is_trigger and absf(joy_motion.axis_value) >= GAMEPAD_AXIS_SWITCH_THRESHOLD
+		):
+			return INPUT_DEVICE_GAMEPAD
+	return &""
+
+
+func _set_active_input_device(input_device: StringName) -> void:
+	if input_device == _active_input_device:
+		return
+	_active_input_device = input_device
+	SignalBus.input_bindings_changed.emit()
 
 
 func _is_allowed_overlap(action_a: String, action_b: String) -> bool:

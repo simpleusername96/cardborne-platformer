@@ -1,6 +1,6 @@
 extends Control
 
-const BINDING_HINT := "Keyboard only; mouse/gamepad remap deferred."
+const BINDING_HINT := "Keyboard bindings can be remapped. Gamepad controls use a fixed standard layout."
 
 var panel: PanelContainer
 var close_button: Button
@@ -40,6 +40,12 @@ func _input(event: InputEvent) -> void:
 					_clear_capture(true)
 					return
 				_apply_captured_key(key_event)
+		elif event is InputEventJoypadButton:
+			var button_event := event as InputEventJoypadButton
+			if button_event.pressed:
+				get_viewport().set_input_as_handled()
+				if button_event.button_index == JOY_BUTTON_B:
+					_clear_capture(true)
 		return
 
 	if event.is_action_pressed("pause"):
@@ -104,8 +110,8 @@ func _build_ui() -> void:
 	bindings_header.add_child(bindings_title)
 
 	var restore_all_button := Button.new()
-	restore_all_button.text = "Restore all"
-	restore_all_button.custom_minimum_size = Vector2(108, 34)
+	restore_all_button.text = "Restore keys"
+	restore_all_button.custom_minimum_size = Vector2(116, 34)
 	restore_all_button.pressed.connect(_restore_all_defaults)
 	bindings_header.add_child(restore_all_button)
 
@@ -187,16 +193,16 @@ func _make_binding_row(row_info: Dictionary) -> VBoxContainer:
 	row.add_child(button_row)
 
 	var change_button := Button.new()
-	change_button.text = "Change"
-	change_button.custom_minimum_size = Vector2(82.0, 34.0)
+	change_button.text = "Change key"
+	change_button.custom_minimum_size = Vector2(96.0, 34.0)
 	change_button.pressed.connect(func() -> void:
 		_begin_capture(action_name, action_label)
 	)
 	button_row.add_child(change_button)
 
 	var default_button := Button.new()
-	default_button.text = "Default"
-	default_button.custom_minimum_size = Vector2(82.0, 34.0)
+	default_button.text = "Key default"
+	default_button.custom_minimum_size = Vector2(96.0, 34.0)
 	default_button.pressed.connect(func() -> void:
 		_restore_action_default(action_name)
 	)
@@ -229,13 +235,17 @@ func _refresh_binding_rows() -> void:
 
 
 func _binding_row_text(row_info: Dictionary) -> String:
-	return "%s: %s" % [str(row_info["label"]), str(row_info["binding"])]
+	return "%s: %s  |  Pad %s" % [
+		str(row_info["label"]),
+		str(row_info.get("keyboard_binding", row_info.get("binding", "unbound"))),
+		str(row_info.get("gamepad_binding", "unbound")),
+	]
 
 
 func _begin_capture(action_name: String, action_label: String) -> void:
 	capture_action_name = action_name
 	capture_action_label = action_label
-	warning_label.text = "Press a key for %s. Esc cancels." % action_label
+	warning_label.text = "Press a keyboard key for %s. Esc or gamepad B cancels." % action_label
 
 
 func _apply_captured_key(key_event: InputEventKey) -> void:
@@ -258,14 +268,14 @@ func _clear_capture(show_message: bool) -> void:
 
 func _restore_action_default(action_name: String) -> void:
 	var result := Game.restore_action_default(action_name)
-	warning_label.text = str(result.get("message", "Default restored."))
+	warning_label.text = str(result.get("message", "Keyboard default restored."))
 	_clear_capture(false)
 	_refresh_binding_rows()
 
 
 func _restore_all_defaults() -> void:
 	Game.restore_all_input_defaults()
-	warning_label.text = "Default bindings restored."
+	warning_label.text = "Default keyboard bindings restored."
 	_clear_capture(false)
 	_refresh_binding_rows()
 

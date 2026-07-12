@@ -80,6 +80,14 @@ func get_action_binding_text(action_name: String, fallback: String = "unbound") 
 	return InputBindings.get_binding_text(action_name, fallback)
 
 
+func get_active_input_device() -> StringName:
+	return InputBindings.get_active_input_device()
+
+
+func is_gamepad_input_active() -> bool:
+	return InputBindings.is_gamepad_active()
+
+
 func get_input_action_label(action_name: String) -> String:
 	return InputBindings.get_action_label(action_name)
 
