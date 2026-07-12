@@ -1,171 +1,59 @@
 {
-  "schema": "cardborne.first_slice.enemy_trap_gimmick_catalog.v0",
+  "schema": "cardborne.first_run.encounter_catalog.v1",
   "enemies": [
-    {
-      "id": "walker",
-      "display_name": "Walker",
-      "lesson": "Basic attack timing, patrol spacing, and contact damage.",
-      "health": 3,
-      "contact_damage": 1,
-      "move_speed": 60,
-      "drop_table": "drop_walker_basic",
-      "telegraph": "None required beyond visible movement."
-    },
-    {
-      "id": "charger",
-      "display_name": "Charger",
-      "lesson": "React to warning, jump or dash away from burst movement.",
-      "health": 5,
-      "contact_damage": 1,
-      "charge_speed": 280,
-      "telegraph_time": 0.45,
-      "recovery_time": 0.7,
-      "drop_table": "drop_charger_basic",
-      "telegraph": "Flash or warning marker before charge."
-    },
-    {
-      "id": "shooter",
-      "display_name": "Shooter",
-      "lesson": "Maintain platforming control while dodging projectiles.",
-      "health": 4,
-      "contact_damage": 1,
-      "projectile_damage": 1,
-      "projectile_speed": 220,
-      "fire_interval": 1.6,
-      "drop_table": "drop_shooter_basic",
-      "telegraph": "Brief aim pose before firing."
-    },
-    {
-      "id": "small_slime",
-      "display_name": "Small Slime",
-      "lesson": "Low-threat pressure and boss summon management.",
-      "health": 2,
-      "contact_damage": 1,
-      "move_speed": 45,
-      "drop_table": "drop_small_slime",
-      "telegraph": "Spawn puff or drop marker before becoming active."
-    }
+    { "id": "walker", "roles": ["occupier"], "budget": 1, "health": 3, "damage": 1, "scene_owner": "WalkerEnemy", "support_width": 180, "drop_table": "drop_walker" },
+    { "id": "charger", "roles": ["burst"], "budget": 2, "health": 5, "damage": 1, "warning": 0.48, "active": 0.52, "recovery": 0.42, "scene_owner": "ChargerEnemy", "lane_width": 520, "drop_table": "drop_charger" },
+    { "id": "shooter", "roles": ["ranged"], "budget": 2, "health": 4, "damage": 1, "warning": 0.38, "fire_interval": 1.8, "projectile_speed": 280, "scene_owner": "ShooterEnemy", "requires_cover_or_elevation": true, "drop_table": "drop_shooter" },
+    { "id": "shield_guard", "roles": ["guard"], "budget": 3, "health": 7, "damage": 1, "warning": 0.35, "recovery": 0.55, "scene_owner": "ShieldGuardEnemy", "requires_flank_route": true, "drop_table": "drop_shield_guard" },
+    { "id": "leaper", "roles": ["vertical", "burst"], "budget": 2, "health": 4, "damage": 1, "warning": 0.35, "active": 0.52, "recovery": 0.5, "scene_owner": "LeaperEnemy", "lane_width": 420, "arc_clearance": 180, "drop_table": "drop_leaper" },
+    { "id": "sentry", "roles": ["ranged", "zone"], "budget": 3, "health": 6, "damage": 1, "warning": 0.45, "fire_interval": 1.4, "projectile_speed": 300, "max_active_projectiles": 2, "scene_owner": "SentryTurretEnemy", "requires_cover": true, "drop_table": "drop_sentry" }
   ],
-  "bosses": [
-    {
-      "id": "slime_king",
-      "display_name": "Giant Slime King",
-      "health": 80,
-      "contact_damage": 1,
-      "phase_2_threshold_percent": 50,
-      "drop_table": "drop_boss_slime_king",
-      "patterns": [
-        {
-          "id": "jump_slam",
-          "startup": "Boss jumps; landing shadow appears.",
-          "active": "Landing impact and shockwave.",
-          "recovery": "Boss pauses after landing.",
-          "counterplay": "Move out of shadow and jump over shockwave."
-        },
-        {
-          "id": "floor_poison",
-          "startup": "Warning rectangles appear on floor.",
-          "active": "Poison zones deal damage.",
-          "recovery": "Zones fade before next action.",
-          "counterplay": "Move to safe floor segments or platforms."
-        },
-        {
-          "id": "body_bump",
-          "startup": "Boss leans back and flashes.",
-          "active": "Horizontal dash.",
-          "recovery": "Boss slows and becomes punishable.",
-          "counterplay": "Jump, dash away, or stand on platform."
-        },
-        {
-          "id": "small_slime_summon",
-          "startup": "Spawn markers appear.",
-          "active": "Two small slimes become active.",
-          "recovery": "Boss waits briefly.",
-          "counterplay": "Clear summons or reposition before next pattern."
-        }
-      ]
-    }
+  "special_actors": [
+    { "id": "summon_node", "roles": ["summoner"], "budget": 4, "health": 8, "warning": 0.45, "spawn_interval": 2.6, "max_active_children": 2, "max_total_children": 6, "scene_owner": "SummonNodeEnemy", "drop_table": "drop_summon_node" },
+    { "id": "small_slime", "roles": ["occupier", "add"], "budget": 1, "health": 2, "damage": 1, "scene_owner": "SmallSlimeEnemy", "drop_table": "drop_small_slime" }
   ],
-  "traps": [
-    {
-      "id": "spike_row",
-      "display_name": "Spike Row",
-      "damage": 1,
-      "lesson": "Basic jump spacing and hazard respect.",
-      "warning": "Visible spikes. No delayed telegraph required.",
-      "reset_behavior": "Knock player back or respawn at checkpoint depending on implementation."
-    },
-    {
-      "id": "poison_floor",
-      "display_name": "Poison Floor",
-      "damage": 1,
-      "lesson": "Leave warned floor zones quickly.",
-      "warning": "Warning rectangle before active poison.",
-      "tick_interval": 0.75
-    },
-    {
-      "id": "falling_pit",
-      "display_name": "Falling Pit",
-      "damage": 1,
-      "lesson": "Commit to jumps and recover from missed platforms.",
-      "warning": "Visible gap.",
-      "reset_behavior": "Respawn at nearest safe anchor."
-    },
-    {
-      "id": "crushing_block",
-      "display_name": "Crushing Block",
-      "damage": 1,
-      "lesson": "Read repeating timing windows.",
-      "warning": "Shadow or warning line before falling.",
-      "implementation_scope": "future_hook"
-    }
+  "hazards": [
+    { "id": "spike_row", "budget": 1, "damage": 1, "warning": 0.0, "owner": "Hazard", "requires_visible_approach": true },
+    { "id": "timed_poison_vent", "budget": 2, "damage": 1, "warning": 0.7, "active": 1.2, "cooldown": 1.5, "tick_interval": 0.65, "owner": "TimedPoisonVent", "requires_permanent_safe_zone": true },
+    { "id": "fall_reset", "budget": 1, "damage": 1, "owner": "FallResetZone", "requires_recovery_anchor": true },
+    { "id": "crumbling_platform", "budget": 2, "warning": 0.45, "disabled": 1.8, "respawn": 0.25, "owner": "CrumblingPlatform", "requires_wait_pads_and_recovery": true }
   ],
   "gimmicks": [
-    {
-      "id": "one_way_platform",
-      "display_name": "One-Way Platform",
-      "purpose": "Support drop-through routing and vertical map movement.",
-      "risk": "Drop-through must not strand player below required route."
+    { "id": "one_way_platform", "owner": "built_in_collision", "required_checks": ["drop_safe", "forward_or_return_route"] },
+    { "id": "rope", "owner": "Climbable", "required_checks": ["stable_entry", "stable_exit", "lower_recovery"] },
+    { "id": "moving_platform", "owner": "planned", "required_checks": ["safe_wait_pads", "visible_path", "reset_state"] },
+    { "id": "switch_gate", "owner": "SwitchGate", "required_checks": ["switch_before_gate", "idempotent", "open_clearance"] },
+    { "id": "destructible_cache", "owner": "DestructibleObstacle", "required_checks": ["optional_or_resettable", "reward_reachable"] },
+    { "id": "chest", "owner": "planned_interactable", "required_checks": ["stable_interaction_space", "single_transaction"] },
+    { "id": "material_node", "owner": "planned_reward_source", "required_checks": ["optional_route", "single_transaction"] },
+    { "id": "checkpoint", "owner": "StageCheckpoint", "required_checks": ["safe_radius", "stable_support", "camera_bound"] },
+    { "id": "exit_portal", "owner": "ExitPortal", "required_checks": ["objectives_complete", "unobstructed"] }
+  ],
+  "encounter_rules": {
+    "max_high_attention_roles": 2,
+    "max_summoners": 1,
+    "max_guards_per_choke": 1,
+    "stage_1_forbidden_pairs": [["shooter", "sentry"], ["charger", "timed_poison_vent"]],
+    "global_forbidden_conditions": ["burst_without_escape_lane", "ranged_without_cover_or_elevation", "guard_blocks_only_exit", "vertical_actor_without_arc_clearance", "damage_inside_safe_entry"]
+  },
+  "boss": {
+    "id": "slime_king",
+    "stage_id": "slime_court",
+    "health": 80,
+    "phase_2_threshold": 0.5,
+    "stagger_recovery": 1.4,
+    "patterns": [
+      { "id": "jump_slam", "startup": 0.8, "active": 0.18, "recovery": 1.0 },
+      { "id": "body_bump", "startup": 0.55, "active": 0.45, "recovery": 0.8 },
+      { "id": "poison_bands", "startup": 0.9, "active": 2.2, "recovery": 0.8, "minimum_safe_floor_ratio": 0.35 },
+      { "id": "small_slime_summon", "startup": 0.7, "active_child_cap": 2, "recovery": 1.0 }
+    ],
+    "phase_2": {
+      "maximum_tempo_increase": 0.15,
+      "minimum_chain_recovery": 0.75,
+      "legal_chains": [["body_bump", "jump_slam"], ["poison_bands", "small_slime_summon"]],
+      "illegal_overlaps": ["jump_slam_without_safe_landing_during_poison", "body_bump_with_both_responses_blocked_by_adds", "summon_at_active_add_cap"]
     },
-    {
-      "id": "moving_platform",
-      "display_name": "Moving Platform",
-      "purpose": "Teach timing and horizontal/vertical traversal.",
-      "risk": "Must have safe start/end positions and predictable cycle."
-    },
-    {
-      "id": "locked_gate",
-      "display_name": "Locked Gate",
-      "purpose": "Gate optional reward or simple route objective.",
-      "risk": "Required keys must be reachable without soft lock."
-    },
-    {
-      "id": "breakable_wall",
-      "display_name": "Breakable Wall",
-      "purpose": "Hide optional coin/material reward.",
-      "risk": "Should be readable enough for first-slice testing."
-    },
-    {
-      "id": "chest",
-      "display_name": "Chest",
-      "purpose": "Deliver visible reward.",
-      "reward_source": "stage_chest"
-    },
-    {
-      "id": "material_node",
-      "display_name": "Material Node",
-      "purpose": "Teach resource gathering without complex crafting UI.",
-      "drop_table": "drop_material_node_common"
-    },
-    {
-      "id": "exit_portal",
-      "display_name": "Exit Portal",
-      "purpose": "Normal stage clear trigger."
-    },
-    {
-      "id": "boss_warning_zone",
-      "display_name": "Boss Warning Zone",
-      "purpose": "Telegraph boss attacks before damage."
-    }
-  ]
+    "drop_table": "drop_slime_king"
+  }
 }

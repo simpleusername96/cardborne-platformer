@@ -1,12 +1,12 @@
 # Cardborne Platformer
 
-Godot 4.7 GDScript production project for a 2D side-view action platform
-roguelite/RPG-lite with constrained generated stages and random build upgrades.
+Godot 4.7 GDScript project for a 2D action-platform roguelite. Authored room
+templates are assembled into constrained seeded stages; responsive traversal and
+readable combat feed a run-changing card, equipment, and mastery build.
 
-Current product scope is routed through `docs/product/README.md`. The canonical
-first-complete-run delta is
-`docs/product/FIRST_COMPLETE_RUN_SCOPE_DELTA.md`; the original PRD remains the
-baseline where that delta does not override it.
+Start with `docs/README.md`. The canonical product scope is
+`docs/product/2d_platform_action_card_game_prd.md`, and the active implementation
+checklist is `.agent/execplans/2026-07-12-actual-game-production-roadmap.md`.
 
 ## Requirements
 
@@ -44,34 +44,25 @@ If the local runtime is missing, install it with:
 
 ## Active Implementation
 
-Follow `.agent/execplans/2026-07-12-actual-game-production-roadmap.md` in
-milestone-sized batches. The current sequence is:
+Follow the active roadmap in milestone-sized batches. The production sequence is:
 
-1. Reconcile product scope and production foundation decisions.
-2. Separate profile, run, character-catalog, and effective-build ownership.
-3. Replace the default testbed boot with a player-facing production shell.
-4. Build constrained authored-room generation, encounters, progression, character
-   kits, and the boss as complete playable workflows.
-
-`MotionTestStage` remains an opt-in diagnostic until focused production tests cover
-its useful movement and combat checks.
+1. Finish a typed Warrior combat room and reward/build loop.
+2. Assemble the first generated stage from validated authored rooms.
+3. Add persistence, equipment, mastery, Stage 2, and the complete Warrior kit.
+4. Complete Archer and Assassin, Stage 3, the boss, and full-run polish.
 
 ## Design Data
 
-First-slice seed data lives in `data/design/first_slice/`. Generate map previews with:
+Implementation seed catalogs live in `data/design/first_slice/`. Validate their
+counts and cross-references with:
 
 ```powershell
-python tools/generate_map_previews.py
+.\tools\godot.ps1 --path . --headless --script res://tools/validate_design_catalogs.gd
 ```
 
-Generate UI/UX skeleton wireframes with:
+Validate production boot and the current playable stage with:
 
 ```powershell
-python tools/generate_uiux_wireframes.py
-```
-
-Generate procedural region graph examples with:
-
-```powershell
-python tools/generate_region_graph.py
+.\tools\godot.ps1 --path . --headless --script res://tools/validate_production_boot.gd
+.\tools\godot.ps1 --path . --headless --script res://tools/validate_production_stage.gd
 ```

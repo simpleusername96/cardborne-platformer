@@ -1,61 +1,67 @@
 ---
 type: spec
 status: active
-canonical_for: first-slice seed design data
-source: docs/product/FIRST_SLICE_EXPANSION.md
-scope: JSON seed data under data/design/first_slice
+owner: BK
+last_reviewed: 2026-07-12
+canonical_for: Preimplementation first-run JSON catalog role and migration boundary
+source: Cardborne active design specifications
+related:
+  - ../product/2d_platform_action_card_game_prd.md
+  - ../architecture/FIRST_SLICE_ARCHITECTURE.md
 ---
 
-# First Slice Data README
+# First-Run Design Data
 
 ## Purpose
 
-Explain the seed data files used to design the first playable slice before runtime Godot resources are generated. These files are intentionally plain JSON so they can be inspected, validated, and transformed by small scripts.
+Index the JSON catalogs that make current design IDs and provisional tuning
+machine-checkable before matching typed Godot Resources are implemented.
 
 ## Scope
 
-The seed data lives under `data/design/first_slice/` and covers:
+Files under `data/design/first_slice/` are migration input, not a runtime API.
+Each implementation milestone should convert the relevant entries to validated
+Godot Resources, update cross-reference tests, then retire that JSON ownership.
 
-- Economy and drop tables.
-- Player controls, stats, skill branches, and level curve.
-- Equipment examples.
-- Enemy, trap, and gimmick catalog.
-- Stage layout and visual preview data.
-- UI/UX screen skeletons and generated wireframe targets.
-- Reference/source candidates for future code and asset review.
-- Procedural region generation rules and generated region graph examples.
+## Catalogs
+
+| File | Canonical detail source | Migration target |
+| --- | --- | --- |
+| `player_progression.json` | `PLAYER_CHARACTER_SYSTEMS.md` | CharacterKit, AttackDefinition, SkillDefinition, MasteryDefinition Resources. |
+| `card_catalog.json` | `PROGRESSION_EQUIPMENT_ECONOMY.md` | CardDefinition Resources and CardCatalog. |
+| `equipment_catalog.json` | `PROGRESSION_EQUIPMENT_ECONOMY.md` | EquipmentDefinition and ForgeAffix Resources. |
+| `economy_tables.json` | `PROGRESSION_EQUIPMENT_ECONOMY.md` | RewardTable, ShopOffer, RunLevelCurve Resources. |
+| `enemy_trap_gimmick_catalog.json` | `ENEMIES_TRAPS_GIMMICKS.md` | EnemyDefinition, HazardDefinition, BossPatternDefinition Resources. |
+| `procedural_region_rules.json` | `PROCEDURAL_REGION_GENERATION.md` | StageProfile, RoomTemplateData, generation fixtures. |
+| `reference_asset_candidates.json` | Research evidence only | No runtime migration without approval/license ledger. |
 
 ## Requirements
 
-- Treat this data as preimplementation design input, not final runtime schema.
-- Prefer stable IDs that can later map to Godot `Resource` paths.
-- Keep display names separate from IDs.
-- Include purpose and implementation notes for entries that affect gameplay feel.
-- Avoid hard-coding final balance assumptions in docs when values are clearly placeholders.
-- Validate JSON syntax after changes.
-
-## File Index
-
-| File | Role |
-|---|---|
-| `economy_tables.json` | XP, coin, material, drop, shop, and clear reward seed values |
-| `player_progression.json` | controls, base stats, run level curve, skill branches, unlock examples |
-| `equipment_catalog.json` | first-slice equipment slots, sample item data, and forge/enchant roll profiles |
-| `enemy_trap_gimmick_catalog.json` | enemies, boss, traps, gimmicks, and reward hooks |
-| `stage_layouts.json` | script-readable authored map layouts and preview metadata |
-| `ui_screen_skeletons.json` | screen-level UI/UX composition targets for generated wireframes |
-| `reference_asset_candidates.json` | researched source, code, and asset candidates; evidence only |
-| `procedural_region_rules.json` | seeded procedural region graph rules, budgets, roles, gates, and validation contracts |
-| `generated/*.json` | generated procedural region examples for fixed seeds |
+- JSON syntax is valid and schema IDs end in `.v1` for accepted first-run catalogs.
+- IDs are lowercase snake_case and match active specs.
+- Cross-file references resolve or are explicitly marked as planned runtime owners.
+- Runtime does not silently read JSON and typed Resources for the same catalog.
+- Design docs own meaning; JSON owns exact migration IDs and provisional values.
+- A later balance change updates the typed runtime owner first after migration, not
+  this retired input.
 
 ## Acceptance Criteria
 
-- All JSON files parse successfully.
-- IDs are lowercase snake_case.
-- Cross-file references are readable by humans even before automated validation exists.
-- Map data can generate SVG previews using `tools/generate_map_previews.py`.
+- Every catalog parses and contains no duplicate ID within its namespace.
+- Character kit, card, equipment, enemy drop, stage profile, room, and boss IDs
+  cross-reference successfully.
+- The next implementation batch can enumerate exact Resources to create without
+  inventing content names or effects.
+- Deleted fixed-grid map and wireframe data is not referenced by active docs/tools.
+
+## Non-Goals
+
+- Treating JSON as final save, network, or runtime schema.
+- Generating production scenes directly from prose.
+- Preserving obsolete testbed markers or preview formats.
 
 ## Related
 
-- `docs/design/MAP_DATA_AND_VISUALIZATION.md`
+- `docs/product/2d_platform_action_card_game_prd.md`
 - `docs/architecture/FIRST_SLICE_ARCHITECTURE.md`
+- `data/design/first_slice/`

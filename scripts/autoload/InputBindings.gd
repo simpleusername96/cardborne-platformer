@@ -17,10 +17,6 @@ const ACTION_DEFINITIONS := [
 	{"name": "crouch", "label": "crouch/drop", "default_keys": [KEY_S, KEY_DOWN]},
 	{"name": "drop_through", "label": "drop through", "default_keys": [], "hidden": true},
 	{"name": "interact", "label": "interact", "default_keys": [KEY_E, KEY_ENTER]},
-	{"name": "open_build_panel", "label": "profile debug", "default_keys": [KEY_TAB]},
-	{"name": "regenerate_landscape", "label": "random seed", "default_keys": [KEY_R]},
-	{"name": "replay_landscape", "label": "replay seed", "default_keys": [KEY_T]},
-	{"name": "reset_testbed", "label": "checkpoint reset", "default_keys": [KEY_BACKSPACE]},
 	{"name": "pause", "label": "settings", "default_keys": [KEY_ESCAPE]},
 ]
 
@@ -55,13 +51,8 @@ func get_input_guide_text() -> String:
 			get_binding_text("climb_down", "S/Down"),
 			get_binding_text("climb_cancel", "C"),
 		],
-		"Interact %s | Profile %s" % [
+		"Interact %s | Settings %s" % [
 			get_binding_text("interact", "E/Enter"),
-			get_binding_text("open_build_panel", "Tab"),
-		],
-		"Seed random %s | Replay %s | Settings %s" % [
-			get_binding_text("regenerate_landscape", "R"),
-			get_binding_text("replay_landscape", "T"),
 			get_binding_text("pause", "Esc"),
 		],
 	])

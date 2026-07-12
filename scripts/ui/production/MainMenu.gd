@@ -2,7 +2,6 @@ extends Control
 
 signal new_run_requested
 signal settings_requested
-signal testbed_requested
 signal quit_requested
 
 const BackdropScene = preload("res://scripts/ui/production/ProductionBackdrop.gd")
@@ -66,16 +65,6 @@ func _build_ui() -> void:
 	var quit := _menu_button("Quit", Styles.CORAL, true)
 	quit.pressed.connect(func() -> void: quit_requested.emit())
 	menu.add_child(quit)
-
-	if OS.is_debug_build():
-		var dev_spacer := Control.new()
-		dev_spacer.custom_minimum_size = Vector2(0.0, 18.0)
-		menu.add_child(dev_spacer)
-		var testbed := _menu_button("Developer Testbed", Styles.AMBER, true)
-		testbed.add_theme_font_size_override("font_size", 14)
-		testbed.custom_minimum_size = Vector2(248.0, 44.0)
-		testbed.pressed.connect(func() -> void: testbed_requested.emit())
-		menu.add_child(testbed)
 
 	var flexible_space := Control.new()
 	flexible_space.size_flags_horizontal = Control.SIZE_EXPAND_FILL

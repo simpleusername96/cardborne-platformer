@@ -1,140 +1,236 @@
 ---
 type: spec
-status: draft
-source: docs/product/FIRST_SLICE_EXPANSION.md
-scope: First playable character and progression model
+status: active
+owner: BK
+last_reviewed: 2026-07-12
+canonical_for: First-run character movement, combat kits, controls, and mastery content
+source: Existing character profiles, player controller, player build contracts, and Cardborne Game Blueprint
+related:
+  - ../product/2d_platform_action_card_game_prd.md
+  - ./PROGRESSION_EQUIPMENT_ECONOMY.md
+  - ./PROCEDURAL_REGION_GENERATION.md
+  - ../architecture/FIRST_SLICE_ARCHITECTURE.md
 ---
 
 # Player Character Systems
 
 ## Purpose
 
-Define what is available to the user character in the first slice: controls, movement verbs, combat verbs, skill branches, equipment slots, and growth sources.
+Define the exact first-run player verbs and the three combat kits so implementation
+does not invent character identity inside `PlayerController` or during UI work.
 
 ## Scope
 
-The first implementation should ship one playable base character. Additional characters can be designed later, but the first slice should already have data shapes that make future character variants possible.
+This specification covers shared traversal, input actions, combat rules, Warrior,
+Archer, Assassin, skill cooldowns, mastery nodes, and cross-character acceptance.
+Cards and equipment are defined in `PROGRESSION_EQUIPMENT_ECONOMY.md`.
+
+## Shared Traversal Contract
+
+All three characters have these verbs from the first frame of a run:
+
+- accelerated horizontal movement and deceleration;
+- variable-height ground jump;
+- coyote time and jump buffering;
+- one baseline extra jump, producing a double jump;
+- at least one ground/air dash charge;
+- crouch with a shorter collision body;
+- fast fall;
+- one-way platform drop;
+- rope/ladder entry, climb, and safe dismount;
+- damage knockback, invulnerability, death, and checkpoint recovery.
+
+Critical routes may use this shared baseline but never require a combat skill,
+mastery, card, equipment item, extra Assassin dash, wall movement, or stat upgrade.
+
+### Baseline movement values
+
+Existing character profiles remain the tuning seed.
+
+| Character | HP | Move | Jump velocity | Extra jumps | Dash charges | Dash cooldown |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Warrior | 6 | 205 | -435 | 1 | 1 | 0.50 s |
+| Archer | 5 | 230 | -445 | 1 | 1 | 0.43 s |
+| Assassin | 4 | 255 | -455 | 1 | 2 | 0.36 s |
+
+These differences may make optional routes easier for one character, but generation
+uses the least-mobile required envelope.
+
+## Controls
+
+Input actions are stable; default keys remain remappable.
+
+| Action | Keyboard default | Gamepad default | Context |
+| --- | --- | --- | --- |
+| Move | A/D or arrows | Left stick/D-pad | Gameplay and menus where appropriate. |
+| Jump | Space | South face button | Also dismounts from a rope. |
+| Dash | Shift or K | East face button | Ground or air. |
+| Crouch / fast fall | S or Down | D-pad down / stick down | Drop-through uses Down + Jump. |
+| Basic attack | F | West face button | Reliable primary attack. |
+| Heavy attack | G | North face button | Committed, high-value attack. |
+| Skill 1 | Q | Left bumper | Shortest cooldown. |
+| Skill 2 | R | Right bumper | Area or positioning skill. |
+| Skill 3 | V | Left trigger | Longest cooldown/signature skill. |
+| Interact | E or Enter | Right trigger | Chests, gates, exits, rest/forge. |
+| Consumable | H | D-pad up | Uses equipped consumable. |
+| Pause/settings | Escape | Menu | Pauses safely. |
+
+Gameplay actions do not double as hidden debug commands. Context-sensitive actions
+must show the current prompt and cannot trigger a combat action simultaneously.
+
+## Shared Combat Rules
+
+- Basic attacks are available frequently and teach the kit.
+- Heavy attacks have at least 0.28 seconds of visible commitment and a larger
+  stagger value than basics.
+- Skills expose startup, active, recovery, cooldown, hit policy, and interruption
+  policy in data.
+- A cooldown starts when the skill commits, not when its visual effect ends.
+- Damage, knockback, stagger, marks, guard, and invulnerability use shared effect
+  contracts rather than direct enemy/player field edits.
+- A single attack cannot damage the same target repeatedly unless its data declares
+  a tick interval.
+- Air use must not silently reset shared jumps or dashes.
+- Hit pause and screen shake are feedback, not timing logic.
+
+## Warrior
+
+### Combat promise
+
+The Warrior controls space and converts enemy recovery into stagger and heavy
+damage. He is safest when deliberate, not when trading health indefinitely.
+
+### Base kit
+
+| Verb | ID | Behavior | Startup / active / recovery | Cooldown |
+| --- | --- | --- | --- | ---: |
+| Passive | `warrior_resolve` | Heavy or skill hits grant `guarded` for 1.5 s. Guarded reduces the next incoming hit by 1, minimum damage 0, then ends. Cannot stack. | Triggered on confirmed hit. | 5 s internal cooldown after guard is consumed. |
+| Basic | `warrior_cleave` | Wide forward slash, 2 damage, medium knockback, 20 stagger. Can turn before startup ends. | 0.12 / 0.15 / 0.19 s | 0.46 s total cycle. |
+| Heavy | `warrior_breaker` | Overhead strike, 4 damage, 60 stagger, small ground impact radius. Movement locked after startup midpoint. | 0.42 / 0.16 / 0.48 s | 1.10 s total cycle. |
+| Skill 1 | `warrior_shield_rush` | Move 180 px, block frontal projectile/contact damage during travel, deal 2 damage and 35 stagger on first enemy. Stops at solid wall. | 0.16 / 0.32 / 0.26 s | 5 s |
+| Skill 2 | `warrior_ground_splitter` | Short ground shockwave, 3 damage, launches light enemies, cannot travel through walls or gaps. | 0.34 / 0.35 / 0.42 s | 8 s |
+| Skill 3 | `warrior_rally` | Gain guarded immediately; next Heavy within 5 s starts 30% faster and creates a second shockwave at 50% damage. | 0.25 / instant / 0.25 s | 14 s |
+
+### Intended decisions
+
+- Use Shield Rush to take space, not as unrestricted invulnerability.
+- Save Breaker for a tell or recovery window.
+- Rally can stabilize a mistake or prepare a burst, but its long cooldown prevents
+  permanent defense.
+
+### Mastery nodes
+
+| ID | Prerequisite | Effect |
+| --- | --- | --- |
+| `warrior_broad_guard` | none | Guard also blocks one projectile without being consumed by 0-damage contact. |
+| `warrior_driving_rush` | none | Shield Rush carries light enemies to its endpoint; wall impact adds 20 stagger. |
+| `warrior_fracture` | Broad Guard or Driving Rush | Breaker applies `fractured` for 4 s; next skill hit deals +1 damage. |
+| `warrior_aftershock` | Driving Rush | Ground Splitter leaves one delayed 1-damage aftershock. |
+| `warrior_steady_feet` | Broad Guard | Taking a hit while guarded halves knockback. |
+| `warrior_last_bastion` | Fracture + Steady Feet | Once per stage at 1 HP, gain guard and reset Shield Rush; no heal. |
+
+## Archer
+
+### Combat promise
+
+The Archer controls range with marks and repositions without abandoning pressure.
+The fun is deciding when to consume a mark for burst and when to preserve it for
+area control.
+
+### Base kit
+
+| Verb | ID | Behavior | Startup / active / recovery | Cooldown |
+| --- | --- | --- | --- | ---: |
+| Passive | `archer_hunters_mark` | Skill hits mark a target for 6 s. Heavy consumes the mark for +2 damage and a small radial burst. One mark per target. | Triggered on hit. | None. |
+| Basic | `archer_quick_shot` | Fast arrow, 1 damage, 640 px/s, 800 px range. Air use preserves horizontal control. | 0.09 / projectile / 0.21 s | 0.30 s total cycle. |
+| Heavy | `archer_power_shot` | Charge up to 0.8 s; piercing arrow deals 2-4 damage and stronger knockback. Minimum charge still fires. | 0.28-0.80 / projectile / 0.32 s | 1.10 s from release. |
+| Skill 1 | `archer_vault_shot` | Hop 120 px away from aim direction and fire three low-damage arrows in a narrow fan. Marks first target hit. | 0.12 / 0.30 / 0.20 s | 5 s |
+| Skill 2 | `archer_rain_field` | Warn a 220 px area for 0.45 s, then six arrows strike over 1.2 s. Each target can be hit three times. | 0.30 / 1.20 / 0.30 s | 9 s |
+| Skill 3 | `archer_threadline` | Fire a tether arrow. On terrain, pull 160 px toward it without granting route access beyond shared movement; on enemy, pull light target and mark it. | 0.22 / 0.35 / 0.34 s | 12 s |
+
+### Intended decisions
+
+- Quick Shot sustains pressure but should not erase enemy tells from off-screen.
+- Power Shot rewards a safe lane and a marked target.
+- Threadline is combat repositioning; generated routes cannot require it.
+
+### Mastery nodes
+
+| ID | Prerequisite | Effect |
+| --- | --- | --- |
+| `archer_quick_nock` | none | Quick Shot after a dash starts 25% faster. |
+| `archer_piercing_draw` | none | Full-charge Power Shot pierces one additional target. |
+| `archer_shared_mark` | Quick Nock or Piercing Draw | Consuming a mark transfers a 3 s mark to the nearest unmarked enemy within 180 px. |
+| `archer_airborne_hunter` | Quick Nock | Vault Shot restores 25% air control immediately after firing. |
+| `archer_storm_pattern` | Piercing Draw | Rain Field's final arrow has +1 damage and 30 stagger. |
+| `archer_clean_release` | Shared Mark + Storm Pattern | Consuming a mark reduces the longest active skill cooldown by 1 s, once every 4 s. |
+
+## Assassin
+
+### Combat promise
+
+The Assassin crosses through danger, chains distinct verbs, and exits before the
+counterattack. Repeating one safe attack should be weaker than alternating tools.
+
+### Base kit
+
+| Verb | ID | Behavior | Startup / active / recovery | Cooldown |
+| --- | --- | --- | --- | ---: |
+| Passive | `assassin_flow` | Hitting with a different verb category than the previous hit grants one Flow stack for 3 s, max 3. At 3 stacks the next Heavy or skill deals +2 damage and consumes Flow. | Triggered on hit. | None. |
+| Basic | `assassin_twin_cut` | Two short slashes; each deals 1 damage. Second hit requires the button to remain held through the first recovery. | 0.07 / 0.07 / 0.08, then 0.08 / 0.07 / 0.12 s | 0.42 s full chain. |
+| Heavy | `assassin_shadow_lunge` | Travel 150 px through light enemies, 3 damage; +1 from behind. Stops before solid wall and cannot cross closed gates. | 0.24 / 0.20 / 0.34 s | 0.90 s total cycle. |
+| Skill 1 | `assassin_smoke_step` | 120 px invulnerable step through an enemy; leaves a decoy that draws aim for 0.8 s. No damage. | 0.08 / 0.18 / 0.18 s | 5 s |
+| Skill 2 | `assassin_kunai_fan` | Five short-range projectiles, 1 damage each; one target can take at most three hits. | 0.18 / projectile / 0.25 s | 7 s |
+| Skill 3 | `assassin_death_mark` | Mark one enemy for 5 s. The third distinct verb that hits detonates for 4 damage and 40 stagger. | 0.24 / instant / 0.28 s | 13 s |
+
+### Intended decisions
+
+- Flow rewards alternation rather than button repetition.
+- Smoke Step is an exit/reposition tool, not a mandatory route ability.
+- Death Mark asks the player to plan a three-verb sequence under pressure.
+
+### Mastery nodes
+
+| ID | Prerequisite | Effect |
+| --- | --- | --- |
+| `assassin_serrated_second` | none | Twin Cut's second hit applies a 2 s, 1-damage bleed; same source does not stack. |
+| `assassin_slipstream` | none | Shadow Lunge refunds one dash charge on kill, once every 5 s. |
+| `assassin_lingering_smoke` | Serrated Second or Slipstream | Smoke decoy lasts 1.3 s and briefly slows enemies entering it. |
+| `assassin_fan_return` | Serrated Second | Two Kunai Fan projectiles return; returning hits cannot hit the same target twice. |
+| `assassin_opportunist` | Slipstream | Attacks from behind add one Flow stack, still capped at three. |
+| `assassin_perfect_exit` | Lingering Smoke + Opportunist | Death Mark detonation resets Smoke Step if the Assassin took no damage since marking. |
 
 ## Requirements
 
-### Base Character
-
-Working label: **Base Adventurer**.
-
-The first playable character should support:
-
-- Left/right movement.
-- Acceleration and deceleration.
-- Ground jump.
-- Variable jump height.
-- Coyote time.
-- Jump buffer.
-- Dash.
-- Crouch.
-- Fast fall.
-- Drop-through one-way platform.
-- Basic melee attack.
-- Damage knockback.
-- Temporary post-hit invulnerability.
-- Health and death flow.
-- XP collection.
-- Coin collection.
-- Material collection.
-- Card effect application.
-- Equipment stat modifiers.
-
-### Controls
-
-| Action | Keyboard Input |
-|---|---|
-| Move left | A / Left Arrow |
-| Move right | D / Right Arrow |
-| Jump | Space |
-| Attack | F |
-| Dash | K / Shift |
-| Crouch | S / Down Arrow |
-| Fast fall | Hold Down in air |
-| Drop through one-way platform | Down + Jump |
-| Interact / confirm | E / Enter |
-| Open skill/equipment debug panel | Tab |
-| Pause | Esc |
-
-Gamepad is optional for the first slice, but actions should be named so bindings can be added later.
-
-Current motion-testbed profiles may tune basic attack damage, cooldown, active time, range, hitbox height, offset, knockback, motion style, and projectile values before separate character controllers exist.
-
-### Growth Sources
-
-| Source | Timing | Reset Behavior | Purpose |
-|---|---|---|---|
-| XP level | During run | Resets each run | Frequent progress feedback and micro-upgrades |
-| Card | Stage clear or special reward | Resets each run | Build-defining upgrade choice |
-| Coin purchase | In-run shop/rest point | Resets each run | Tactical spending and recovery choices |
-| Material upgrade | Between runs or debug profile | May persist once local profile exists | Longer-term upgrade or crafting hook |
-| Equipment | Found, bought, or crafted | Depends on implementation | Build identity and stat shaping |
-
-### Skill Branches
-
-First-slice data should define these branches even if the first implementation only activates a small subset:
-
-**Combat**
-
-- Basic attack damage.
-- Attack cooldown.
-- Boss damage.
-- Critical chance as a future hook.
-- Heavy attack unlock as a future hook.
-
-**Mobility**
-
-- Dash cooldown.
-- Extra dash charge.
-- Air control.
-- Fast-fall control.
-- Wall jump as a future hook.
-
-**Survival**
-
-- Max health.
-- Damage reduction as a future hook.
-- Healing bonus.
-- Invulnerability duration.
-
-**Card**
-
-- Extra card choice as a future hook.
-- One reroll per reward as a future hook.
-- Rare-card weight bonus as a future hook.
-
-**Economy**
-
-- Coin gain.
-- Material gain.
-- Shop discount.
-- Chest bonus chance as a future hook.
-
-### Equipment Slots
-
-First-slice equipment should use a small slot model:
-
-- **Weapon**: changes attack damage, attack timing, or range.
-- **Armor**: changes health, defense hooks, or knockback resistance.
-- **Charm 1**: small special modifier.
-- **Charm 2**: small special modifier, unlocked later.
-- **Relic**: run-defining or rare modifier.
-- **Consumable**: limited-use healing or utility item.
-
-Do not build a complex grid inventory for the first slice. Equipment can be represented as a list of owned item IDs plus equipped slot IDs.
+- Character definitions own kit references and tuning data; shared movement does
+  not branch on character ID.
+- Attack execution owns state, timing, cancellation, cooldown, and hit policy.
+- Skills cannot bypass closed gates, camera bounds, or required-route validation.
+- Every mastery effect maps to one shared effect or explicit kit extension; no
+  mastery writes arbitrary controller fields.
+- Base characters remain boss-capable without mastery or equipment unlocks.
+- Character selection changes combat decisions, not access to critical routes.
 
 ## Acceptance Criteria
 
-- Player movement and combat code can read effective stats without knowing whether the stat came from skill, card, equipment, or level.
-- The first UI can show health, XP, level, coins, materials, and equipped weapon without requiring full inventory management.
-- Skill and equipment data can be expanded without rewriting player movement.
-- The first playable character is feature-complete enough to clear the planned stages and boss.
+- Each character demonstrates basic, heavy, three skills, and passive in a
+  production encounter with no debug controls.
+- Every attack has visible startup/active/recovery and focused timing tests.
+- The same critical seed set is clearable by all three base profiles.
+- A 10-minute combat playtest produces distinct dominant decisions for each kit.
+- No skill or mastery is required to recover from a generated critical-path fall.
+- Cooldown, mark, guard, Flow, damage, and stagger UI agree with runtime state.
+
+## Non-Goals
+
+- Character-exclusive map gates in the first run.
+- More than three active skills or a separate per-character mana bar.
+- Large combo movelists, weapon swapping during combat, or PvP balance.
+- Permanent raw-stat growth that makes the base game uncleareable without grind.
 
 ## Related
 
-- `data/design/first_slice/player_progression.json`
-- `data/design/first_slice/equipment_catalog.json`
-- `docs/architecture/FIRST_SLICE_ARCHITECTURE.md`
+- `docs/product/2d_platform_action_card_game_prd.md`
+- `docs/design/PROGRESSION_EQUIPMENT_ECONOMY.md`
+- `docs/design/PROCEDURAL_REGION_GENERATION.md`
+- `data/characters/*.tres`

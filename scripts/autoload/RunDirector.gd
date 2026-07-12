@@ -8,7 +8,6 @@ enum Phase {
 	CHARACTER_SELECT,
 	RUN_ACTIVE,
 	RUN_RESULT,
-	DEVELOPER_TESTBED,
 }
 
 const MAIN_MENU_PATH := "res://scenes/ui/production/MainMenu.tscn"
@@ -16,8 +15,6 @@ const CHARACTER_SELECT_PATH := "res://scenes/ui/production/CharacterSelect.tscn"
 const PRODUCTION_HUD_PATH := "res://scenes/ui/production/ProductionHUD.tscn"
 const RUN_RESULT_PATH := "res://scenes/ui/production/RunResult.tscn"
 const PRODUCTION_STAGE_PATH := "res://scenes/stages/production/ProductionStageHost.tscn"
-const MOTION_TEST_STAGE_PATH := "res://scenes/stages/MotionTestStage.tscn"
-const DEBUG_HUD_PATH := "res://scenes/ui/HUD.tscn"
 
 var phase: Phase = Phase.BOOT
 var screen_root: Control
@@ -49,7 +46,6 @@ func show_main_menu() -> void:
 		return
 	menu.connect(&"new_run_requested", show_character_select)
 	menu.connect(&"settings_requested", func() -> void: Game.set_settings_open(true))
-	menu.connect(&"testbed_requested", start_developer_testbed)
 	menu.connect(&"quit_requested", func() -> void: get_tree().quit())
 	_set_phase(Phase.MAIN_MENU)
 
@@ -106,28 +102,6 @@ func show_run_result(victory: bool) -> void:
 	_set_phase(Phase.RUN_RESULT)
 
 
-func start_developer_testbed() -> void:
-	if not OS.is_debug_build() or not _roots_are_ready():
-		return
-	Game.set_settings_open(false)
-	if not RunState.start_new_run(RunState.selected_profile_index):
-		return
-	_clear_screen()
-	_clear_hud()
-	current_hud = _instantiate_control(DEBUG_HUD_PATH)
-	if current_hud != null:
-		hud_root.add_child(current_hud)
-	_add_testbed_exit_button()
-	if Game.load_stage(MOTION_TEST_STAGE_PATH) == null:
-		show_main_menu()
-		return
-	_set_phase(Phase.DEVELOPER_TESTBED)
-
-
-func is_developer_route() -> bool:
-	return phase == Phase.DEVELOPER_TESTBED
-
-
 func get_phase_name() -> String:
 	return Phase.keys()[phase].to_lower()
 
@@ -179,21 +153,6 @@ func _clear_children(parent: Node) -> void:
 		child.queue_free()
 
 
-func _add_testbed_exit_button() -> void:
-	var exit_button := Button.new()
-	exit_button.name = "ExitTestbedButton"
-	exit_button.text = "Exit Testbed"
-	exit_button.custom_minimum_size = Vector2(132.0, 44.0)
-	exit_button.process_mode = Node.PROCESS_MODE_ALWAYS
-	exit_button.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	exit_button.offset_left = -156.0
-	exit_button.offset_top = -64.0
-	exit_button.offset_right = -24.0
-	exit_button.offset_bottom = -20.0
-	exit_button.pressed.connect(show_main_menu)
-	hud_root.add_child(exit_button)
-
-
 func _roots_are_ready() -> bool:
 	if screen_root != null and hud_root != null:
 		return true
@@ -212,7 +171,5 @@ func _on_stage_cleared(_stage_id: String) -> void:
 
 
 func _on_player_died() -> void:
-	if phase == Phase.DEVELOPER_TESTBED:
-		Game.recover_after_death()
-	elif phase == Phase.RUN_ACTIVE:
+	if phase == Phase.RUN_ACTIVE:
 		call_deferred("show_run_result", false)

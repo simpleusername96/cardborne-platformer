@@ -6,7 +6,8 @@ topic: Godot platformer RPG-lite references and asset candidates
 scope: Preimplementation research for Cardborne Platformer
 related:
   - ../research/foundation_resource_survey_2026-07-05.md
-  - ../design/TESTBED_REIMPLEMENTATION_CONTRACT.md
+  - ../design/MAP_AUTHORING_PIPELINE_CONTRACT.md
+  - ../architecture/FIRST_SLICE_ARCHITECTURE.md
 ---
 
 # Genre References And Asset Candidates

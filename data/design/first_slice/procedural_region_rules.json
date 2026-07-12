@@ -1,178 +1,100 @@
 {
-  "schema": "cardborne.first_slice.procedural_region_rules.v0",
-  "notes": [
-    "Seed design data only. This controls procedural region graph generation before Godot runtime implementation.",
-    "The generator varies room graph, side paths, local danger, and reward placement while preserving mission outcome and difficulty band."
-  ],
+  "schema": "cardborne.first_run.stage_generation.v1",
   "generation_model": {
-    "approach": "mission_graph_then_region_graph",
-    "determinism": "same seed and profile must produce the same output",
-    "runtime_status": "prototype_python_first_port_to_gdscript_later"
+    "method": "authored_room_template_assembly",
+    "max_retries": 3,
+    "fallback_required": true,
+    "rng_streams": ["room_graph", "room_variant", "encounter", "hazard", "reward"]
   },
-  "profiles": [
+  "movement_constraints": {
+    "source": "MovementMetrics.route_limits_for_profiles",
+    "ordinary_gap_ratio": 0.65,
+    "ordinary_ledge_ratio": 0.72,
+    "critical_landing_width": 220,
+    "optional_landing_width": 180,
+    "critical_approach_width": 180,
+    "dash_approach_width": 260,
+    "standing_headroom_margin": 20,
+    "crouch_headroom_margin": 12,
+    "safe_entry_width": 240
+  },
+  "stage_profiles": [
     {
-      "id": "lower_ruins_first_slice",
-      "display_name": "Lower Ruins First Slice",
-      "biome": "ruined_training_field",
-      "target_room_count": {
-        "min": 10,
-        "max": 13
-      },
-      "critical_path_length": {
-        "min": 6,
-        "max": 8
-      },
-      "vertical_span": {
-        "min": 4,
-        "max": 6
-      },
-      "difficulty_budget": {
-        "min": 18,
-        "max": 35
-      },
-      "reward_budget": {
-        "min": 12,
-        "max": 22
-      },
-      "required_roles": [
-        "entrance",
-        "combat_intro",
-        "vertical_traversal",
-        "key_room",
-        "locked_gate",
-        "safe_shop",
-        "shortcut",
-        "boss_approach",
-        "boss"
-      ],
-      "optional_roles": [
-        "reward_room",
-        "material_cache",
-        "hazard_challenge",
-        "lore_or_map_room"
-      ],
-      "gates": [
-        {
-          "id": "lower_gate_key",
-          "type": "key_lock",
-          "key_role": "key_room",
-          "gate_role": "locked_gate",
-          "must_be_reachable_before_gate": true
-        }
-      ],
-      "shortcut_rules": [
-        {
-          "id": "shaft_return_shortcut",
-          "from_progress": "after_locked_gate",
-          "to_role": "vertical_traversal",
-          "opens_from_far_side": true
-        }
-      ],
-      "room_role_weights": {
-        "combat_intro": 1,
-        "combat": 5,
-        "vertical_traversal": 3,
-        "hazard_challenge": 2,
-        "reward_room": 3,
-        "material_cache": 2,
-        "lore_or_map_room": 1
-      }
+      "id": "ruin_approach",
+      "required_room_count": 6,
+      "optional_branch_count": [1, 1],
+      "required_roles": ["start", "traversal", "combat", "choice", "combat", "exit"],
+      "terminal_room_role": "exit",
+      "eligible_enemies": ["walker", "charger", "shooter"],
+      "eligible_hazards": ["spike_row", "fall_reset"],
+      "encounter_budget_per_room": [1, 3],
+      "hazard_budget_per_room": [0, 1],
+      "fallback_id": "fallback_ruin_approach_v1"
+    },
+    {
+      "id": "flooded_works",
+      "required_room_count": 7,
+      "optional_branch_count": [1, 2],
+      "required_roles": ["start", "traversal", "hazard", "combat", "choice", "combat", "safe"],
+      "terminal_room_role": "safe",
+      "eligible_enemies": ["walker", "charger", "shooter", "leaper"],
+      "eligible_hazards": ["spike_row", "fall_reset", "timed_poison_vent", "crumbling_platform"],
+      "encounter_budget_per_room": [2, 5],
+      "hazard_budget_per_room": [0, 2],
+      "fallback_id": "fallback_flooded_works_v1"
+    },
+    {
+      "id": "broken_sanctum",
+      "required_room_count": 8,
+      "optional_branch_count": [2, 2],
+      "required_roles": ["start", "combat", "objective", "hazard", "choice", "combat", "combat", "exit"],
+      "terminal_room_role": "exit",
+      "eligible_enemies": ["walker", "charger", "shooter", "shield_guard", "leaper", "sentry", "summon_node"],
+      "eligible_hazards": ["spike_row", "fall_reset", "timed_poison_vent", "crumbling_platform"],
+      "encounter_budget_per_room": [4, 7],
+      "hazard_budget_per_room": [1, 2],
+      "fallback_id": "fallback_broken_sanctum_v1"
     }
   ],
-  "room_role_contracts": [
-    {
-      "role": "entrance",
-      "purpose": "Start room and return anchor.",
-      "danger": 0,
-      "reward": 0,
-      "required": true
-    },
-    {
-      "role": "combat_intro",
-      "purpose": "Teach baseline enemy pressure.",
-      "danger_range": [1, 2],
-      "reward_range": [1, 2]
-    },
-    {
-      "role": "combat",
-      "purpose": "Main enemy room.",
-      "danger_range": [2, 4],
-      "reward_range": [1, 3]
-    },
-    {
-      "role": "vertical_traversal",
-      "purpose": "Multi-level movement room and routing hub.",
-      "danger_range": [1, 3],
-      "reward_range": [0, 2],
-      "vertical_bias": 2
-    },
-    {
-      "role": "key_room",
-      "purpose": "Contains key or unlock equivalent.",
-      "danger_range": [2, 3],
-      "reward_range": [2, 3],
-      "grants": ["lower_gate_key"]
-    },
-    {
-      "role": "locked_gate",
-      "purpose": "Blocks boss path until key is collected.",
-      "requires": ["lower_gate_key"],
-      "danger_range": [1, 3],
-      "reward_range": [0, 1]
-    },
-    {
-      "role": "safe_shop",
-      "purpose": "Rest, buy/sell, heal, and spend coins/materials safely.",
-      "danger": 0,
-      "reward": 0,
-      "safe": true
-    },
-    {
-      "role": "shortcut",
-      "purpose": "Reconnects later progress to a hub or earlier room.",
-      "danger_range": [0, 1],
-      "reward_range": [0, 1],
-      "opens_from_far_side": true
-    },
-    {
-      "role": "reward_room",
-      "purpose": "Optional chest/card/material reward.",
-      "danger_range": [0, 2],
-      "reward_range": [2, 4]
-    },
-    {
-      "role": "material_cache",
-      "purpose": "Optional material reward with minor traversal cost.",
-      "danger_range": [0, 2],
-      "reward_range": [2, 3]
-    },
-    {
-      "role": "hazard_challenge",
-      "purpose": "Optional or required hazard timing room.",
-      "danger_range": [2, 4],
-      "reward_range": [1, 3]
-    },
-    {
-      "role": "boss_approach",
-      "purpose": "Pre-boss pressure and staging room.",
-      "danger_range": [3, 4],
-      "reward_range": [1, 2]
-    },
-    {
-      "role": "boss",
-      "purpose": "Boss arena. Clear condition is boss defeat.",
-      "danger": 5,
-      "reward": 4,
-      "required": true
-    }
+  "room_templates": [
+    { "id": "lr_start_shelf", "role": "start", "stages": ["ruin_approach", "flooded_works", "broken_sanctum"], "required_anchors": ["player_spawn", "camera", "critical_exit", "recovery"] },
+    { "id": "lr_rise_steps", "role": "traversal", "stages": ["ruin_approach", "flooded_works", "broken_sanctum"], "terrain": ["mass_seam", "rise_steps"] },
+    { "id": "lr_lower_upper_choice", "role": "choice", "stages": ["ruin_approach", "flooded_works", "broken_sanctum"], "required_anchors": ["branch", "rejoin", "reward", "lower_recovery"] },
+    { "id": "lr_rope_shaft", "role": "traversal", "stages": ["ruin_approach", "flooded_works"], "terrain": ["rope_shaft"], "required_anchors": ["rope", "lower_recovery", "top_exit"] },
+    { "id": "lr_broken_bridge", "role": "traversal", "stages": ["ruin_approach", "flooded_works", "broken_sanctum"], "terrain": ["safe_gap", "drop_basin"], "required_anchors": ["jump_approach", "jump_landing", "recovery"] },
+    { "id": "lr_patrol_gallery", "role": "combat", "stages": ["ruin_approach", "flooded_works", "broken_sanctum"], "enemy_tags": ["occupier"], "required_anchors": ["safe_entry", "enemy_ground", "clear_gate"] },
+    { "id": "lr_charge_lane", "role": "combat", "stages": ["ruin_approach", "flooded_works", "broken_sanctum"], "enemy_tags": ["burst"], "required_anchors": ["charge_lane", "escape_pad", "clear_gate"] },
+    { "id": "lr_shooter_overlook", "role": "combat", "stages": ["ruin_approach", "flooded_works", "broken_sanctum"], "enemy_tags": ["ranged"], "required_anchors": ["ranged_perch", "cover", "ground_enemy"] },
+    { "id": "lr_shield_choke", "role": "combat", "stages": ["broken_sanctum"], "enemy_tags": ["guard"], "required_anchors": ["guard", "flank_route", "clear_exit"] },
+    { "id": "lr_leaper_basin", "role": "combat", "stages": ["flooded_works", "broken_sanctum"], "enemy_tags": ["vertical"], "required_anchors": ["leap_lane", "arc_clearance", "side_recovery"] },
+    { "id": "lr_poison_timing", "role": "hazard", "stages": ["flooded_works", "broken_sanctum"], "hazard_tags": ["timed_poison_vent"], "required_anchors": ["vent_group", "permanent_safe_zone"] },
+    { "id": "lr_crumble_crossing", "role": "hazard", "stages": ["flooded_works", "broken_sanctum"], "hazard_tags": ["crumbling_platform"], "required_anchors": ["wait_pad", "crumble_path", "lower_recovery"] },
+    { "id": "lr_gate_switch_loop", "role": "objective", "stages": ["flooded_works", "broken_sanctum"], "required_anchors": ["switch", "gate", "return_path"] },
+    { "id": "lr_destructible_cache", "role": "optional", "stages": ["ruin_approach", "flooded_works", "broken_sanctum"], "required_anchors": ["destructible", "cache_reward", "rejoin"] },
+    { "id": "lr_material_cavern", "role": "optional", "stages": ["ruin_approach", "flooded_works", "broken_sanctum"], "required_anchors": ["material_node", "branch", "rejoin", "recovery"] },
+    { "id": "lr_rest_forge", "role": "safe", "stages": ["flooded_works"], "required_anchors": ["rest_spawn", "forge", "shop", "exit"], "forbidden_tags": ["enemy", "hazard"] },
+    { "id": "lr_sentry_crossfire", "role": "combat", "stages": ["broken_sanctum"], "enemy_tags": ["ranged", "zone"], "required_anchors": ["sentry", "cover", "safe_entry", "clear_gate"] },
+    { "id": "lr_exit_ascent", "role": "exit", "stages": ["ruin_approach", "broken_sanctum"], "required_anchors": ["checkpoint", "final_encounter", "exit_portal"] }
+  ],
+  "graph_rules": [
+    "one_start_one_exit",
+    "all_required_objectives_on_reachable_critical_path",
+    "optional_branches_rejoin_before_exit",
+    "no_adjacent_same_primary_enemy_lesson",
+    "new_hazard_taught_before_mixed_pressure",
+    "safe_room_not_first_last_or_adjacent_to_safe_room",
+    "final_encounter_uses_only_previously_taught_pressure"
   ],
   "validation_rules": [
-    "all_rooms_reachable_from_entrance",
-    "key_room_reachable_before_locked_gate",
-    "boss_reachable_only_after_required_gate",
-    "at_least_one_shortcut_reconnects_to_hub",
-    "safe_shop_has_no_enemy_or_trap_budget",
-    "difficulty_budget_inside_profile_range",
-    "reward_budget_inside_profile_range"
+    "schema_and_cross_references",
+    "graph_reachability_and_objective_order",
+    "socket_direction_opening_and_support_delta",
+    "collision_path_and_visual_support_agreement",
+    "movement_envelope_landings_headroom_crouch_climb",
+    "fall_recovery_and_checkpoint_safety",
+    "enemy_hazard_support_clearance_response_space_caps",
+    "safe_entry_switch_reward_and_exit_clearance",
+    "camera_commitment_visibility",
+    "encounter_hazard_reward_and_duration_budgets"
   ]
 }

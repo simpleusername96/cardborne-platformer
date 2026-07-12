@@ -9,7 +9,7 @@ scope: External code, plugins, examples, and assets considered for the productio
 related:
   - ./external_codebase_deep_dive_2026-07-05.md
   - ./foundation_resource_survey_2026-07-05.md
-  - ../design/testbed-plan/06_external_foundation_replacement.md
+  - ../design/MAP_AUTHORING_PIPELINE_CONTRACT.md
   - ../../.agent/execplans/2026-07-12-actual-game-production-roadmap.md
 ---
 
@@ -23,7 +23,7 @@ Track which external packages are copied into the repo, which are only reference
 
 - `docs/research/external_codebase_deep_dive_2026-07-05.md`
 - `docs/research/foundation_resource_survey_2026-07-05.md`
-- `docs/design/testbed-plan/06_external_foundation_replacement.md`
+- `docs/design/MAP_AUTHORING_PIPELINE_CONTRACT.md`
 
 ## Entry Template
 

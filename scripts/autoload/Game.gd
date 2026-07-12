@@ -16,10 +16,6 @@ func register_roots(p_stage_root: Node, p_ui_root: CanvasLayer) -> void:
 	ui_root = p_ui_root
 
 
-func start_motion_test() -> void:
-	RunDirector.start_developer_testbed()
-
-
 func load_stage(scene_path: String) -> Node:
 	if stage_root == null:
 		push_error("Game.load_stage called before stage_root is registered.")

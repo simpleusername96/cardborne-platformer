@@ -11,8 +11,4 @@ signal interaction_prompt_changed(prompt_text: String, active: bool)
 signal settings_visibility_changed(is_visible: bool)
 signal input_bindings_changed
 signal status_message_changed(message: String)
-signal testbed_metrics_changed(metrics: Dictionary)
-signal testbed_flags_changed(flags: Dictionary)
-signal testbed_objective_changed(objective: String)
-signal testbed_route_status_changed(status: String)
 signal checkpoint_changed(checkpoint_id: String, checkpoint_position: Vector2)

@@ -14,7 +14,7 @@ var is_open: bool = false
 var _gate_body: StaticBody2D
 var _gate_shape: CollisionShape2D
 var _gate_visual: Polygon2D
-var _switch: TestbedInteractable
+var _switch: SwitchInteractable
 var _busy: bool = false
 
 
@@ -92,12 +92,11 @@ func _ensure_gate() -> void:
 
 
 func _ensure_switch() -> void:
-	_switch = get_node_or_null("Switch") as TestbedInteractable
+	_switch = get_node_or_null("Switch") as SwitchInteractable
 	if _switch == null:
-		_switch = TestbedInteractable.new()
+		_switch = SwitchInteractable.new()
 		_switch.name = "Switch"
-		_switch.prompt_text = "Switch"
-		_switch.result_message = "Switch toggled"
+		_switch.prompt_text = "Activate switch"
 		_switch.body_size = Vector2(44.0, 58.0)
 		_switch.position = switch_offset
 		add_child(_switch)
@@ -116,3 +115,5 @@ func _apply_gate_state() -> void:
 		else:
 			_gate_visual.color = Color(0.32, 0.48, 0.72, 0.95)
 			_gate_visual.scale.y = 1.0
+	if _switch != null:
+		_switch.set_active(is_open)

@@ -1,231 +1,95 @@
 {
-  "schema": "cardborne.first_slice.player_progression.v0",
-  "base_character": {
-    "id": "base_adventurer",
-    "display_name": "Base Adventurer",
-    "role": "First playable character",
-    "base_stats": {
-      "max_health": 5,
-      "attack_damage": 1,
-      "attack_cooldown": 0.35,
-      "move_speed": 220,
-      "acceleration": 1800,
-      "deceleration": 2200,
-      "air_acceleration": 1200,
-      "gravity": 1200,
-      "max_fall_speed": 700,
-      "jump_velocity": -420,
-      "jump_cut_multiplier": 0.45,
-      "coyote_time": 0.1,
-      "jump_buffer_time": 0.12,
-      "dash_speed": 520,
-      "dash_duration": 0.13,
-      "dash_cooldown": 0.45,
-      "dash_charges": 1,
-      "post_hit_invulnerability": 1.0,
-      "damage_knockback_x": 220,
-      "damage_knockback_y": -220
-    },
-    "input_actions": [
-      { "id": "move_left", "keyboard": ["A", "Left Arrow"] },
-      { "id": "move_right", "keyboard": ["D", "Right Arrow"] },
-      { "id": "jump", "keyboard": ["Space"] },
-      { "id": "attack", "keyboard": ["F"] },
-      { "id": "dash", "keyboard": ["K", "Shift"] },
-      { "id": "crouch", "keyboard": ["S", "Down Arrow"] },
-      { "id": "drop_through", "keyboard": ["Down + Jump"] },
-      { "id": "interact", "keyboard": ["E", "Enter"] },
-      { "id": "open_build_panel", "keyboard": ["Tab"] },
-      { "id": "pause", "keyboard": ["Esc"] }
-    ],
-    "starting_equipment": {
-      "weapon": "training_sword",
-      "armor": "traveler_jacket",
-      "charm_1": null,
-      "charm_2": null,
-      "relic": null,
-      "consumable": "small_potion"
-    }
+  "schema": "cardborne.first_run.player_progression.v1",
+  "shared_traversal": {
+    "baseline_extra_jumps": 1,
+    "baseline_dash_charges": 1,
+    "abilities": ["variable_jump", "double_jump", "dash", "crouch", "fast_fall", "one_way_drop", "climb", "damage_recovery"]
   },
-  "micro_upgrade_pool": [
+  "input_actions": [
+    { "id": "move_left", "keyboard": ["A", "Left"] },
+    { "id": "move_right", "keyboard": ["D", "Right"] },
+    { "id": "jump", "keyboard": ["Space"] },
+    { "id": "dash", "keyboard": ["Shift", "K"] },
+    { "id": "crouch", "keyboard": ["S", "Down"] },
+    { "id": "attack", "keyboard": ["F"] },
+    { "id": "heavy_attack", "keyboard": ["G"] },
+    { "id": "skill_1", "keyboard": ["Q"] },
+    { "id": "skill_2", "keyboard": ["R"] },
+    { "id": "skill_3", "keyboard": ["V"] },
+    { "id": "interact", "keyboard": ["E", "Enter"] },
+    { "id": "use_consumable", "keyboard": ["H"] },
+    { "id": "pause", "keyboard": ["Escape"] }
+  ],
+  "characters": [
     {
-      "id": "micro_power",
-      "display_name": "Power",
-      "source": "level_up",
-      "effect": { "type": "add_attack_damage", "value": 1 },
-      "max_stacks": 3
+      "id": "warrior",
+      "profile_resource": "res://data/characters/warrior_profile.tres",
+      "passive": "warrior_resolve",
+      "basic_attack": "warrior_cleave",
+      "heavy_attack": "warrior_breaker",
+      "skills": ["warrior_shield_rush", "warrior_ground_splitter", "warrior_rally"],
+      "starting_equipment": { "weapon": "iron_cleaver", "armor": "traveler_jacket", "charm": null, "relic": null, "consumable": "small_potion" },
+      "mastery_nodes": ["warrior_broad_guard", "warrior_driving_rush", "warrior_fracture", "warrior_aftershock", "warrior_steady_feet", "warrior_last_bastion"]
     },
     {
-      "id": "micro_vitality",
-      "display_name": "Vitality",
-      "source": "level_up",
-      "effect": { "type": "add_max_health", "value": 1 },
-      "max_stacks": 3
+      "id": "archer",
+      "profile_resource": "res://data/characters/archer_profile.tres",
+      "passive": "archer_hunters_mark",
+      "basic_attack": "archer_quick_shot",
+      "heavy_attack": "archer_power_shot",
+      "skills": ["archer_vault_shot", "archer_rain_field", "archer_threadline"],
+      "starting_equipment": { "weapon": "field_bow", "armor": "traveler_jacket", "charm": null, "relic": null, "consumable": "small_potion" },
+      "mastery_nodes": ["archer_quick_nock", "archer_piercing_draw", "archer_shared_mark", "archer_airborne_hunter", "archer_storm_pattern", "archer_clean_release"]
     },
     {
-      "id": "micro_quick_step",
-      "display_name": "Quick Step",
-      "source": "level_up",
-      "effect": { "type": "reduce_dash_cooldown", "value": 0.05 },
-      "max_stacks": 4
-    },
-    {
-      "id": "micro_light_foot",
-      "display_name": "Light Foot",
-      "source": "level_up",
-      "effect": { "type": "add_move_speed", "value": 10 },
-      "max_stacks": 4
-    },
-    {
-      "id": "micro_steady_hands",
-      "display_name": "Steady Hands",
-      "source": "level_up",
-      "effect": { "type": "multiply_attack_speed", "value": 0.95 },
-      "max_stacks": 4
+      "id": "assassin",
+      "profile_resource": "res://data/characters/assassin_profile.tres",
+      "passive": "assassin_flow",
+      "basic_attack": "assassin_twin_cut",
+      "heavy_attack": "assassin_shadow_lunge",
+      "skills": ["assassin_smoke_step", "assassin_kunai_fan", "assassin_death_mark"],
+      "starting_equipment": { "weapon": "rust_knives", "armor": "traveler_jacket", "charm": null, "relic": null, "consumable": "small_potion" },
+      "mastery_nodes": ["assassin_serrated_second", "assassin_slipstream", "assassin_lingering_smoke", "assassin_fan_return", "assassin_opportunist", "assassin_perfect_exit"]
     }
   ],
-  "skill_branches": [
-    {
-      "id": "combat",
-      "display_name": "Combat",
-      "nodes": [
-        {
-          "id": "combat_edge_training",
-          "display_name": "Edge Training",
-          "tier": 1,
-          "scope": "persistent_candidate",
-          "cost": [{ "currency": "rusted_scrap", "amount": 3 }],
-          "effect": { "type": "add_starting_attack_damage", "value": 1 }
-        },
-        {
-          "id": "combat_boss_focus",
-          "display_name": "Boss Focus",
-          "tier": 2,
-          "scope": "persistent_candidate",
-          "cost": [{ "currency": "boss_core", "amount": 1 }],
-          "effect": { "type": "add_boss_damage_bonus_percent", "value": 10 }
-        },
-        {
-          "id": "combat_heavy_attack_unlock",
-          "display_name": "Heavy Attack",
-          "tier": 3,
-          "scope": "future_hook",
-          "cost": [{ "currency": "rusted_scrap", "amount": 8 }],
-          "effect": { "type": "unlock_heavy_attack", "value": 1 }
-        }
-      ]
-    },
-    {
-      "id": "mobility",
-      "display_name": "Mobility",
-      "nodes": [
-        {
-          "id": "mobility_dash_tuning",
-          "display_name": "Dash Tuning",
-          "tier": 1,
-          "scope": "persistent_candidate",
-          "cost": [{ "currency": "sky_thread", "amount": 2 }],
-          "effect": { "type": "reduce_starting_dash_cooldown", "value": 0.05 }
-        },
-        {
-          "id": "mobility_air_step",
-          "display_name": "Air Step",
-          "tier": 2,
-          "scope": "persistent_candidate",
-          "cost": [{ "currency": "sky_thread", "amount": 5 }],
-          "effect": { "type": "add_starting_dash_charge", "value": 1 }
-        },
-        {
-          "id": "mobility_wall_jump_unlock",
-          "display_name": "Wall Jump",
-          "tier": 3,
-          "scope": "future_hook",
-          "cost": [{ "currency": "sky_thread", "amount": 10 }],
-          "effect": { "type": "unlock_wall_jump", "value": 1 }
-        }
-      ]
-    },
-    {
-      "id": "survival",
-      "display_name": "Survival",
-      "nodes": [
-        {
-          "id": "survival_tough_start",
-          "display_name": "Tough Start",
-          "tier": 1,
-          "scope": "persistent_candidate",
-          "cost": [{ "currency": "slime_residue", "amount": 4 }],
-          "effect": { "type": "add_starting_max_health", "value": 1 }
-        },
-        {
-          "id": "survival_recovery_training",
-          "display_name": "Recovery Training",
-          "tier": 2,
-          "scope": "persistent_candidate",
-          "cost": [{ "currency": "slime_residue", "amount": 6 }],
-          "effect": { "type": "add_healing_received_percent", "value": 10 }
-        },
-        {
-          "id": "survival_iron_nerve",
-          "display_name": "Iron Nerve",
-          "tier": 3,
-          "scope": "persistent_candidate",
-          "cost": [{ "currency": "boss_core", "amount": 1 }],
-          "effect": { "type": "add_starting_invulnerability_time", "value": 0.15 }
-        }
-      ]
-    },
-    {
-      "id": "card",
-      "display_name": "Card",
-      "nodes": [
-        {
-          "id": "card_first_reroll",
-          "display_name": "First Reroll",
-          "tier": 1,
-          "scope": "future_hook",
-          "cost": [{ "currency": "slime_residue", "amount": 5 }],
-          "effect": { "type": "add_card_reroll_per_run", "value": 1 }
-        },
-        {
-          "id": "card_wider_choice",
-          "display_name": "Wider Choice",
-          "tier": 2,
-          "scope": "future_hook",
-          "cost": [{ "currency": "boss_core", "amount": 1 }],
-          "effect": { "type": "add_card_choice", "value": 1 }
-        }
-      ]
-    },
-    {
-      "id": "economy",
-      "display_name": "Economy",
-      "nodes": [
-        {
-          "id": "economy_coin_pouch",
-          "display_name": "Coin Pouch",
-          "tier": 1,
-          "scope": "persistent_candidate",
-          "cost": [{ "currency": "rusted_scrap", "amount": 3 }],
-          "effect": { "type": "multiply_coin_gain", "value": 1.1 }
-        },
-        {
-          "id": "economy_salvager",
-          "display_name": "Salvager",
-          "tier": 2,
-          "scope": "persistent_candidate",
-          "cost": [{ "currency": "rusted_scrap", "amount": 6 }],
-          "effect": { "type": "multiply_material_gain", "value": 1.1 }
-        },
-        {
-          "id": "economy_shop_contact",
-          "display_name": "Shop Contact",
-          "tier": 3,
-          "scope": "future_hook",
-          "cost": [{ "currency": "boss_core", "amount": 1 }],
-          "effect": { "type": "shop_discount_percent", "value": 10 }
-        }
-      ]
-    }
+  "run_level_curve": [
+    { "level": 1, "xp_total": 0 },
+    { "level": 2, "xp_total": 20 },
+    { "level": 3, "xp_total": 55 },
+    { "level": 4, "xp_total": 105 },
+    { "level": 5, "xp_total": 170 },
+    { "level": 6, "xp_total": 250 }
+  ],
+  "micro_upgrades": [
+    { "id": "micro_power", "effect": { "type": "multiply_direct_damage", "value": 1.08 }, "max_stacks": 3 },
+    { "id": "micro_vitality", "effects": [{ "type": "add_max_health", "value": 1 }, { "type": "heal_now", "value": 1 }], "max_stacks": 3 },
+    { "id": "micro_quick_step", "effect": { "type": "reduce_dash_cooldown", "value": 0.04, "minimum": 0.24 }, "max_stacks": 4 },
+    { "id": "micro_skill_tempo", "effect": { "type": "multiply_skill_cooldowns", "value": 0.94 }, "max_stacks": 4 },
+    { "id": "micro_light_foot", "effects": [{ "type": "add_move_speed", "value": 8 }, { "type": "multiply_air_acceleration", "value": 1.04 }], "max_stacks": 4 }
+  ],
+  "mastery_costs": {
+    "root": { "matching_material": 4 },
+    "middle": { "matching_material": 8, "prerequisite_count": 1 },
+    "capstone": { "matching_material": 10, "boss_core": 1, "prerequisite_count": 2 }
+  },
+  "mastery_nodes": [
+    { "id": "warrior_broad_guard", "character": "warrior", "depth": "root", "effects": [{ "type": "guard_blocks_projectile" }] },
+    { "id": "warrior_driving_rush", "character": "warrior", "depth": "root", "effects": [{ "type": "shield_rush_carries_light_targets" }, { "type": "wall_impact_stagger", "value": 20 }] },
+    { "id": "warrior_fracture", "character": "warrior", "depth": "middle", "requires_any": ["warrior_broad_guard", "warrior_driving_rush"], "effects": [{ "type": "breaker_applies_fractured", "duration": 4.0, "next_skill_damage": 1 }] },
+    { "id": "warrior_aftershock", "character": "warrior", "depth": "middle", "requires": ["warrior_driving_rush"], "effects": [{ "type": "ground_splitter_aftershock", "damage": 1 }] },
+    { "id": "warrior_steady_feet", "character": "warrior", "depth": "middle", "requires": ["warrior_broad_guard"], "effects": [{ "type": "guard_knockback_scale", "value": 0.5 }] },
+    { "id": "warrior_last_bastion", "character": "warrior", "depth": "capstone", "requires": ["warrior_fracture", "warrior_steady_feet"], "effects": [{ "type": "once_per_stage_one_health_guard_and_skill_reset", "skill": "warrior_shield_rush" }] },
+    { "id": "archer_quick_nock", "character": "archer", "depth": "root", "effects": [{ "type": "post_dash_quick_shot_startup_scale", "value": 0.75 }] },
+    { "id": "archer_piercing_draw", "character": "archer", "depth": "root", "effects": [{ "type": "full_charge_extra_pierce", "value": 1 }] },
+    { "id": "archer_shared_mark", "character": "archer", "depth": "middle", "requires_any": ["archer_quick_nock", "archer_piercing_draw"], "effects": [{ "type": "transfer_consumed_mark", "duration": 3.0, "radius": 180 }] },
+    { "id": "archer_airborne_hunter", "character": "archer", "depth": "middle", "requires": ["archer_quick_nock"], "effects": [{ "type": "vault_air_control_restore", "value": 0.25 }] },
+    { "id": "archer_storm_pattern", "character": "archer", "depth": "middle", "requires": ["archer_piercing_draw"], "effects": [{ "type": "rain_final_arrow_bonus", "damage": 1, "stagger": 30 }] },
+    { "id": "archer_clean_release", "character": "archer", "depth": "capstone", "requires": ["archer_shared_mark", "archer_storm_pattern"], "effects": [{ "type": "mark_consume_reduce_longest_skill", "seconds": 1.0, "internal_cooldown": 4.0 }] },
+    { "id": "assassin_serrated_second", "character": "assassin", "depth": "root", "effects": [{ "type": "twin_cut_second_bleed", "damage": 1, "duration": 2.0 }] },
+    { "id": "assassin_slipstream", "character": "assassin", "depth": "root", "effects": [{ "type": "lunge_kill_refund_dash", "internal_cooldown": 5.0 }] },
+    { "id": "assassin_lingering_smoke", "character": "assassin", "depth": "middle", "requires_any": ["assassin_serrated_second", "assassin_slipstream"], "effects": [{ "type": "smoke_duration", "value": 1.3 }, { "type": "smoke_slow" }] },
+    { "id": "assassin_fan_return", "character": "assassin", "depth": "middle", "requires": ["assassin_serrated_second"], "effects": [{ "type": "kunai_return_count", "value": 2 }] },
+    { "id": "assassin_opportunist", "character": "assassin", "depth": "middle", "requires": ["assassin_slipstream"], "effects": [{ "type": "back_hit_flow_stack", "value": 1 }] },
+    { "id": "assassin_perfect_exit", "character": "assassin", "depth": "capstone", "requires": ["assassin_lingering_smoke", "assassin_opportunist"], "effects": [{ "type": "no_damage_death_mark_resets_smoke_step" }] }
   ]
 }

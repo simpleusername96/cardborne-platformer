@@ -1,240 +1,139 @@
 {
-  "schema": "cardborne.first_slice.equipment_catalog.v0",
-  "slots": [
-    { "id": "weapon", "display_name": "Weapon", "max_equipped": 1 },
-    { "id": "armor", "display_name": "Armor", "max_equipped": 1 },
-    { "id": "charm_1", "display_name": "Charm 1", "max_equipped": 1 },
-    { "id": "charm_2", "display_name": "Charm 2", "max_equipped": 1, "unlock": "future_hook" },
-    { "id": "relic", "display_name": "Relic", "max_equipped": 1 },
-    { "id": "consumable", "display_name": "Consumable", "max_equipped": 1 }
-  ],
-  "upgrade_system": {
-    "notes": [
-      "First-slice data contract for forge/enchant UI and balance discussion.",
-      "Forge/enchant can randomly increase one eligible stat. Each equipment profile controls probability, range, and cost.",
-      "The first implementation should avoid downgrade or item destruction until the core loop is playable."
-    ],
-    "max_forge_level": 5,
-    "failure_behavior": "no_stat_change_no_downgrade",
-    "stat_labels": {
-      "attack_damage": "Attack Damage",
-      "attack_speed": "Attack Speed",
-      "move_speed": "Move Speed",
-      "max_health": "Max Health",
-      "dash_cooldown": "Dash Cooldown",
-      "coin_gain": "Coin Gain",
-      "material_gain": "Material Gain",
-      "invulnerability_time": "Invulnerability Time"
-    },
-    "enchant_profiles": [
-      {
-        "id": "blade_balanced",
-        "display_name": "Balanced Blade",
-        "applies_to_slots": ["weapon"],
-        "rolls": [
-          { "stat": "attack_damage", "chance": 0.45, "amount_min": 1, "amount_max": 2 },
-          { "stat": "attack_speed", "chance": 0.25, "amount_min": -0.05, "amount_max": -0.03 },
-          { "stat": "dash_cooldown", "chance": 0.15, "amount_min": -0.04, "amount_max": -0.02 },
-          { "stat": "no_change", "chance": 0.15, "amount_min": 0, "amount_max": 0 }
-        ]
-      },
-      {
-        "id": "heavy_weapon",
-        "display_name": "Heavy Weapon",
-        "applies_to_slots": ["weapon"],
-        "rolls": [
-          { "stat": "attack_damage", "chance": 0.55, "amount_min": 1, "amount_max": 3 },
-          { "stat": "max_health", "chance": 0.15, "amount_min": 1, "amount_max": 1 },
-          { "stat": "attack_speed", "chance": 0.15, "amount_min": -0.04, "amount_max": -0.02 },
-          { "stat": "no_change", "chance": 0.15, "amount_min": 0, "amount_max": 0 }
-        ]
-      },
-      {
-        "id": "agile_gear",
-        "display_name": "Agile Gear",
-        "applies_to_slots": ["weapon", "armor", "charm_1"],
-        "rolls": [
-          { "stat": "move_speed", "chance": 0.35, "amount_min": 4, "amount_max": 10 },
-          { "stat": "dash_cooldown", "chance": 0.3, "amount_min": -0.05, "amount_max": -0.02 },
-          { "stat": "attack_speed", "chance": 0.2, "amount_min": -0.05, "amount_max": -0.02 },
-          { "stat": "no_change", "chance": 0.15, "amount_min": 0, "amount_max": 0 }
-        ]
-      },
-      {
-        "id": "utility_charm",
-        "display_name": "Utility Charm",
-        "applies_to_slots": ["charm_1", "charm_2", "relic"],
-        "rolls": [
-          { "stat": "coin_gain", "chance": 0.35, "amount_min": 0.05, "amount_max": 0.12 },
-          { "stat": "material_gain", "chance": 0.25, "amount_min": 0.05, "amount_max": 0.1 },
-          { "stat": "invulnerability_time", "chance": 0.15, "amount_min": 0.05, "amount_max": 0.1 },
-          { "stat": "no_change", "chance": 0.25, "amount_min": 0, "amount_max": 0 }
-        ]
-      }
-    ],
-    "item_upgrade_profiles": [
-      {
-        "item_id": "training_sword",
-        "enchant_profile": "blade_balanced",
-        "base_cost": [{ "currency": "coin", "amount": 8 }, { "currency": "rusted_scrap", "amount": 1 }]
-      },
-      {
-        "item_id": "heavy_cleaver",
-        "enchant_profile": "heavy_weapon",
-        "base_cost": [{ "currency": "coin", "amount": 16 }, { "currency": "rusted_scrap", "amount": 2 }]
-      },
-      {
-        "item_id": "swift_dagger",
-        "enchant_profile": "agile_gear",
-        "base_cost": [{ "currency": "coin", "amount": 14 }, { "currency": "sky_thread", "amount": 1 }]
-      },
-      {
-        "item_id": "patched_mail",
-        "enchant_profile": "heavy_weapon",
-        "base_cost": [{ "currency": "coin", "amount": 12 }, { "currency": "rusted_scrap", "amount": 2 }]
-      },
-      {
-        "item_id": "runner_cloak",
-        "enchant_profile": "agile_gear",
-        "base_cost": [{ "currency": "coin", "amount": 18 }, { "currency": "sky_thread", "amount": 1 }]
-      },
-      {
-        "item_id": "copper_charm",
-        "enchant_profile": "utility_charm",
-        "base_cost": [{ "currency": "coin", "amount": 10 }, { "currency": "rusted_scrap", "amount": 1 }]
-      }
+  "schema": "cardborne.first_run.equipment_catalog.v1",
+  "slots": ["weapon", "armor", "charm", "relic", "consumable"],
+  "rules": {
+    "persistent_slots": ["weapon", "armor", "charm", "relic"],
+    "temporary_slot": "consumable",
+    "no_durability": true,
+    "no_downgrade": true,
+    "duplicate_owned_item_result": "salvage_materials"
+  },
+  "forge": {
+    "coin_cost": 15,
+    "choices": 3,
+    "one_affix_per_item": true,
+    "replace_requires_confirmation": true,
+    "affixes": [
+      { "id": "forge_force", "slots": ["weapon"], "effect": { "type": "multiply_direct_damage", "value": 1.1 } },
+      { "id": "forge_tempo", "slots": ["weapon", "charm"], "effect": { "type": "multiply_relevant_cooldown", "value": 0.92 } },
+      { "id": "forge_guard", "slots": ["armor", "relic"], "effect": { "type": "reduce_first_encounter_damage", "value": 1 } },
+      { "id": "forge_stride", "slots": ["armor", "charm"], "effects": [{ "type": "add_move_speed", "value": 10 }, { "type": "multiply_air_acceleration", "value": 1.05 }] },
+      { "id": "forge_salvage", "slots": ["charm", "relic"], "effect": { "type": "bonus_next_material_drops", "drop_count": 2, "value": 1 } }
     ]
   },
   "items": [
     {
-      "id": "training_sword",
-      "display_name": "Training Sword",
+      "id": "iron_cleaver",
+      "display_name": "Iron Cleaver",
       "slot": "weapon",
-      "rarity": "common",
-      "source": "starting_equipment",
-      "effects": [
-        { "type": "add_attack_damage", "value": 0 }
-      ],
-      "notes": "Baseline weapon. Keeps first implementation simple."
+      "compatibility": ["warrior"],
+      "source": "warrior_starting",
+      "effects": [],
+      "salvage": { "rusted_scrap": 2 }
     },
     {
-      "id": "heavy_cleaver",
-      "display_name": "Heavy Cleaver",
+      "id": "bell_hammer",
+      "display_name": "Bell Hammer",
       "slot": "weapon",
-      "rarity": "rare",
-      "source": "chest_or_shop",
-      "effects": [
-        { "type": "add_attack_damage", "value": 2 },
-        { "type": "multiply_attack_speed", "value": 1.15 }
-      ],
-      "notes": "Higher damage with slower attacks."
+      "compatibility": ["warrior"],
+      "source": "optional_cache",
+      "effects": [{ "type": "modify_attack", "attack": "warrior_breaker", "add_damage": 1, "add_stagger": 20, "add_recovery": 0.12 }],
+      "salvage": { "rusted_scrap": 4 }
     },
     {
-      "id": "swift_dagger",
-      "display_name": "Swift Dagger",
+      "id": "field_bow",
+      "display_name": "Field Bow",
       "slot": "weapon",
-      "rarity": "rare",
-      "source": "shop_or_optional_reward",
-      "effects": [
-        { "type": "add_attack_damage", "value": -0.25 },
-        { "type": "multiply_attack_speed", "value": 0.8 }
-      ],
-      "notes": "Fast weapon for attack-speed builds. Implementation can clamp visible damage to safe values."
+      "compatibility": ["archer"],
+      "source": "archer_starting",
+      "effects": [],
+      "salvage": { "sky_thread": 2 }
+    },
+    {
+      "id": "twinstring_bow",
+      "display_name": "Twinstring Bow",
+      "slot": "weapon",
+      "compatibility": ["archer"],
+      "source": "high_route_cache",
+      "effects": [{ "type": "quick_shot_repeat", "delay": 0.16, "damage_scale": 0.5 }, { "type": "power_shot_max_damage", "add": -1 }],
+      "salvage": { "sky_thread": 4 }
+    },
+    {
+      "id": "rust_knives",
+      "display_name": "Rust Knives",
+      "slot": "weapon",
+      "compatibility": ["assassin"],
+      "source": "assassin_starting",
+      "effects": [],
+      "salvage": { "slime_residue": 2 }
+    },
+    {
+      "id": "hooked_blades",
+      "display_name": "Hooked Blades",
+      "slot": "weapon",
+      "compatibility": ["assassin"],
+      "source": "stage_3_cache",
+      "effects": [{ "type": "twin_cut_second_bleed", "damage": 1 }, { "type": "shadow_lunge_distance", "add": -20 }],
+      "salvage": { "slime_residue": 4 }
     },
     {
       "id": "traveler_jacket",
       "display_name": "Traveler Jacket",
       "slot": "armor",
-      "rarity": "common",
-      "source": "starting_equipment",
-      "effects": [
-        { "type": "add_max_health", "value": 0 }
-      ]
+      "compatibility": ["shared"],
+      "source": "shared_starting",
+      "effects": [],
+      "salvage": { "rusted_scrap": 1 }
     },
     {
       "id": "patched_mail",
       "display_name": "Patched Mail",
       "slot": "armor",
-      "rarity": "common",
-      "source": "chest",
-      "effects": [
-        { "type": "add_max_health", "value": 1 },
-        { "type": "add_move_speed", "value": -8 }
-      ]
+      "compatibility": ["shared"],
+      "source": "chest_or_material_unlock",
+      "effects": [{ "type": "add_max_health", "value": 1 }, { "type": "multiply_damage_knockback", "value": 0.85 }, { "type": "add_move_speed", "value": -8 }],
+      "salvage": { "rusted_scrap": 3 }
     },
     {
       "id": "runner_cloak",
       "display_name": "Runner Cloak",
       "slot": "armor",
-      "rarity": "rare",
-      "source": "high_route_chest",
-      "effects": [
-        { "type": "add_move_speed", "value": 18 }
-      ]
+      "compatibility": ["shared"],
+      "source": "high_route_reward",
+      "effects": [{ "type": "add_move_speed", "value": 16 }, { "type": "reduce_dash_cooldown", "value": 0.03 }, { "type": "add_max_health", "value": -1, "minimum": 3 }],
+      "salvage": { "sky_thread": 3 }
     },
     {
       "id": "copper_charm",
       "display_name": "Copper Charm",
-      "slot": "charm_1",
-      "rarity": "common",
-      "source": "shop",
-      "effects": [
-        { "type": "multiply_coin_gain", "value": 1.1 }
-      ]
+      "slot": "charm",
+      "compatibility": ["shared"],
+      "source": "shop_or_material_unlock",
+      "effects": [{ "type": "reduce_first_card_reroll_cost", "value": 6 }],
+      "salvage": { "rusted_scrap": 2 }
     },
     {
       "id": "spring_charm",
       "display_name": "Spring Charm",
-      "slot": "charm_1",
-      "rarity": "rare",
-      "source": "stage_02_optional_reward",
-      "effects": [
-        { "type": "add_jump_power", "value": -20 }
-      ]
+      "slot": "charm",
+      "compatibility": ["shared"],
+      "source": "stage_2_optional_reward",
+      "effects": [{ "type": "first_post_double_jump_attack_stagger", "value": 15 }],
+      "salvage": { "sky_thread": 2 }
     },
     {
       "id": "slime_relic",
       "display_name": "Slime Relic",
       "slot": "relic",
-      "rarity": "legendary",
-      "source": "boss_reward",
-      "effects": [
-        { "type": "add_invulnerability_time", "value": 0.25 },
-        { "type": "add_max_health", "value": 1 }
-      ]
-    },
-    {
-      "id": "small_potion",
-      "display_name": "Small Potion",
-      "slot": "consumable",
-      "rarity": "common",
-      "source": "starting_equipment_or_shop",
-      "effects": [
-        { "type": "heal_now", "value": 2 }
-      ],
-      "charges": 1
-    },
-    {
-      "id": "dash_tonic",
-      "display_name": "Dash Tonic",
-      "slot": "consumable",
-      "rarity": "rare",
-      "source": "shop",
-      "effects": [
-        { "type": "reduce_dash_cooldown_until_stage_clear", "value": 0.15 }
-      ],
-      "charges": 1
-    },
-    {
-      "id": "salvage_kit",
-      "display_name": "Salvage Kit",
-      "slot": "consumable",
-      "rarity": "common",
-      "source": "shop",
-      "effects": [
-        { "type": "bonus_material_from_next_node", "value": 1 }
-      ],
-      "charges": 1
+      "compatibility": ["shared"],
+      "source": "boss_core_unlock",
+      "effects": [{ "type": "full_health_encounter_clear_guard", "duration": 20.0, "limit": "once_per_stage" }],
+      "salvage": { "slime_residue": 5 }
     }
+  ],
+  "consumables": [
+    { "id": "small_potion", "coin_cost": 8, "charges": 1, "effect": { "type": "heal_now", "value": 2 } },
+    { "id": "dash_tonic", "coin_cost": 10, "charges": 1, "effect": { "type": "reduce_dash_cooldown_until_stage_exit", "value": 0.12 } },
+    { "id": "salvage_kit", "coin_cost": 10, "charges": 1, "effect": { "type": "bonus_next_material_node", "value": 1 } }
   ]
 }

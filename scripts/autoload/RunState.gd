@@ -17,15 +17,6 @@ var current_xp: int = 0
 var coins: int = 0
 var _unsettled_materials: Dictionary = {}
 var owned_cards: Array[String] = []
-var testbed_ability_flags: Dictionary = {
-	"double_jump_enabled": false,
-	"extra_dash_enabled": false,
-	"air_dash_enabled": true,
-	"rope_climb_enabled": true,
-	"wall_climb_enabled": false,
-	"wall_slide_enabled": false,
-	"wall_jump_enabled": false,
-}
 
 
 func _ready() -> void:
@@ -129,36 +120,12 @@ func grant_unsettled_material(material_id: String, amount: int) -> bool:
 	return true
 
 
-func get_testbed_ability_flags() -> Dictionary:
-	return testbed_ability_flags.duplicate()
-
-
-func is_testbed_ability_enabled(flag_name: String) -> bool:
-	return bool(testbed_ability_flags.get(flag_name, false))
-
-
-func set_testbed_ability_flag(flag_name: String, enabled: bool) -> void:
-	if not testbed_ability_flags.has(flag_name):
-		push_warning("Unknown testbed ability flag: %s" % flag_name)
-		return
-
-	testbed_ability_flags[flag_name] = enabled
-	_publish_testbed_state()
-
-
 func get_movement_metrics() -> Dictionary:
-	return MovementMetrics.calculate_for_profile(selected_profile, testbed_ability_flags)
+	return MovementMetrics.calculate_for_profile(selected_profile)
 
 
 func get_required_route_limits() -> Dictionary:
-	return MovementMetrics.route_limits_for_profiles(profiles, testbed_ability_flags)
-
-
-func get_testbed_metrics_snapshot() -> Dictionary:
-	return {
-		"active": get_movement_metrics(),
-		"route_limits": get_required_route_limits(),
-	}
+	return MovementMetrics.route_limits_for_profiles(profiles)
 
 
 func damage_player(amount: int) -> void:
@@ -230,9 +197,3 @@ func _publish_state() -> void:
 		)
 	SignalBus.player_stats_changed.emit(get_effective_stats())
 	SignalBus.player_health_changed.emit(current_health, max_health)
-	_publish_testbed_state()
-
-
-func _publish_testbed_state() -> void:
-	SignalBus.testbed_flags_changed.emit(get_testbed_ability_flags())
-	SignalBus.testbed_metrics_changed.emit(get_testbed_metrics_snapshot())

@@ -1,15 +1,15 @@
 ---
 type: evidence
-status: active
+status: archived
 created: 2026-07-05
+last_reviewed: 2026-07-12
 source: Web research and local document/code review on 2026-07-05
-topic: Foundation resources, packages, templates, and reference systems for rebuilding the testbed
+topic: Foundation resources, packages, templates, and reference systems for Cardborne production
 scope: Evidence for deciding whether to continue current Godot implementation, replace systems, or adopt external resources
 related:
-  - ../design/TESTBED_REIMPLEMENTATION_CONTRACT.md
   - ../references/GENRE_REFERENCES_AND_ASSETS.md
-  - ../design/MOTION_TEST_BED_SPEC.md
   - ../design/PROCEDURAL_REGION_GENERATION.md
+  - ../architecture/FIRST_SLICE_ARCHITECTURE.md
   - ./external_codebase_deep_dive_2026-07-05.md
 ---
 

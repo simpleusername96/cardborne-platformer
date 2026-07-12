@@ -3,6 +3,7 @@ extends SceneTree
 const CATALOG_PATH := "res://data/characters/character_catalog.tres"
 const CharacterCatalogScript := preload("res://scripts/player/CharacterCatalog.gd")
 const CharacterProfileScript := preload("res://scripts/player/CharacterProfile.gd")
+const MovementMetricsScript := preload("res://scripts/player/MovementMetrics.gd")
 
 var _failures: Array[String] = []
 
@@ -14,6 +15,7 @@ func _initialize() -> void:
 		_validate_valid_catalog(catalog)
 		_validate_invalid_catalogs(catalog)
 		_validate_base_stats(catalog.get_profile_by_id("warrior"))
+		_validate_route_limits(catalog)
 
 	if _failures.is_empty():
 		print("CHARACTER_CATALOG_VALIDATION_OK")
@@ -95,6 +97,28 @@ func _validate_base_stats(profile: CharacterProfile) -> void:
 	]:
 		_expect(not base_stats.has(presentation_key), "base stats should exclude %s" % presentation_key)
 		_expect(compatible_stats.has(presentation_key), "legacy stats should retain %s" % presentation_key)
+
+
+func _validate_route_limits(catalog: CharacterCatalog) -> void:
+	var limits: Dictionary = MovementMetricsScript.route_limits_for_profiles(catalog.profiles)
+	_expect(not limits.is_empty(), "character catalog should produce shared route limits")
+	for profile in catalog.profiles:
+		var metrics: Dictionary = MovementMetricsScript.calculate_for_profile(profile)
+		var profile_gap_limit := floorf(
+			float(metrics.get("route_reach", 0.0)) * MovementMetricsScript.REQUIRED_GAP_FACTOR
+		)
+		var profile_ledge_limit := floorf(
+			float(metrics.get("route_ledge_height", 0.0)) * MovementMetricsScript.REQUIRED_LEDGE_FACTOR
+		)
+		_expect(int(metrics.get("extra_jumps", 0)) >= 1, "%s must retain baseline double jump" % profile.id)
+		_expect(
+			float(limits.get("max_required_gap", INF)) <= profile_gap_limit,
+			"required gap must fit %s" % profile.id
+		)
+		_expect(
+			float(limits.get("max_required_ledge", INF)) <= profile_ledge_limit,
+			"required ledge must fit %s" % profile.id
+		)
 
 
 func _copy_catalog(source: CharacterCatalog) -> CharacterCatalog:

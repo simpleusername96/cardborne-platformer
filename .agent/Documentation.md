@@ -1,59 +1,82 @@
 # .agent/Documentation.md
 
 ## Current Status
-- Repository bootstrapped on 2026-06-30 under `D:\npjt\cardborne-platformer`.
-- The PRD has been copied into `docs/product/2d_platform_action_card_game_prd.md`.
-- Godot 4.7 stable portable runtime is expected at `.codex-runtime/godot-4.7-stable/` when installed. This directory is intentionally ignored by git.
-- An integrated movement/combat/map testbed exists and is now diagnostic evidence,
-  not the default production direction.
-- Remote repository was created at `https://github.com/simpleusername96/cardborne-platformer` and `master` tracks `origin/master`.
-- `docs/product/FIRST_COMPLETE_RUN_SCOPE_DELTA.md` defines the active complete-run
-  scope over the retained PRD and first-slice RPG-lite detail.
-- `.agent/execplans/2026-07-12-actual-game-production-roadmap.md` is the active
-  implementation sequence.
-- UI/UX screen skeletons are defined as data and generated to SVG previews before any image-model polish or Godot UI scene work.
-- A standalone HTML/CSS/JS code mockup under `docs/uiux/code_mockup/` now covers the first-slice screen flow, seeded landscape preview, and forge/enchant equipment roll UI.
-- Reference and asset candidates are cataloged, but no third-party assets have been imported yet.
-- Production map generation is constrained, seeded assembly of authored room
-  templates. Arbitrary platform or tile placement is excluded from critical routes.
+
+- Cardborne boots into a production menu, character selection, and a safe authored
+  entry-stage scaffold.
+- The integrated `MotionTestStage`, debug HUD, testbed inputs/flags, historical
+  handoff package, fixed-grid maps, and generated wireframe prototype were retired
+  on 2026-07-12. Git history preserves them if a focused investigation needs them.
+- Shared movement, movement metrics, damage, hit/hurt, enemy, checkpoint, hazard,
+  interactable, stage, input-remap, character-profile, and player-build foundations
+  remain available for production work.
+- `docs/product/2d_platform_action_card_game_prd.md` is the canonical product and
+  first-complete-run blueprint.
+- Active content specs under `docs/design/` define characters, progression,
+  equipment, economy, terrain, rooms, generation, enemies, hazards, boss, and
+  player-facing flow.
+- `docs/architecture/FIRST_SLICE_ARCHITECTURE.md` defines runtime ownership and
+  implementation boundaries.
+- `.agent/execplans/2026-07-12-actual-game-production-roadmap.md` is the only active
+  ExecPlan.
+- JSON under `data/design/first_slice/` is accepted migration input for future typed
+  Godot Resources, not a runtime schema.
+
+## Authority
+
+Read in this order:
+
+1. Root and nearest `AGENTS.md`.
+2. `docs/README.md`.
+3. Canonical product blueprint.
+4. Active design and architecture specs.
+5. Active production roadmap for execution order.
+6. Current code/tests as implementation evidence.
+7. Research/reference documents as advisory evidence.
 
 ## Durable Decisions
-- Use Godot 4.x with GDScript for MVP work.
-- Use the standard Godot build, not the .NET/C# build, unless the user changes language direction.
-- Work in milestone-sized batches from the active production roadmap while
-  preserving the proven player movement envelope.
-- Do not import an external package or asset family without a version/license
-  record, isolated spike, removal boundary, and explicit approval.
-- Treat `docs/product/2d_platform_action_card_game_prd.md` as an active spec.
-- Treat `docs/product/FIRST_COMPLETE_RUN_SCOPE_DELTA.md` as the canonical current
-  scope and clause-level override.
-- Treat `docs/product/FIRST_SLICE_EXPANSION.md` as compatible RPG-lite detail, not
-  authority for old sequencing limits.
-- Treat `data/design/first_slice/` JSON as seed design data, not final runtime schema.
-- Treat generated map SVGs under `docs/maps/generated/` as visual planning aids until Godot scenes exist.
-- Treat generated UI/UX SVGs under `docs/uiux/generated/` as screen composition targets until Godot UI scenes exist.
-- Treat `docs/uiux/code_mockup/` as a reviewable UI prototype, not runtime Godot scene code.
-- Treat `docs/references/GENRE_REFERENCES_AND_ASSETS.md` as evidence only; verify licenses again before importing assets.
-- Treat `data/design/first_slice/*.json` as migration/design input only; runtime
-  catalogs must not silently read it alongside typed Resources.
 
-## Key Discoveries
-- The current code proves many component interactions but does not yet provide a
-  complete player-facing run.
-- Highest production risks are generated-stage validity, state-scope separation,
-  effect consistency, progression integrity, character completeness, and boss
-  counterplay.
+- Use Godot 4.7 stable and GDScript.
+- Build a 28-38 minute first run: three generated normal stages and one authored
+  two-phase boss.
+- Preserve one shared baseline movement envelope for Warrior, Archer, and Assassin.
+- Generate Stage Plans from authored native Godot room scenes and typed metadata;
+  do not scatter arbitrary platforms or content coordinates.
+- Use `MovementMetrics` and full-stage validation before stage load.
+- Keep rewards and persistent writes transaction-safe and idempotent.
+- Use run levels for small support choices, cards for behavior changes, coins for
+  tactical spending, equipment for loadout tradeoffs, and mastery for persistent
+  kit variants.
+- Temporary forging offers a deterministic choice; it has no failure, downgrade,
+  or destruction result.
+- Do not adopt an external package/asset without explicit approval, version/license
+  record, isolated spike, wrapper/removal boundary, and acceptance evidence.
+- Every implementation batch after the first combat contract must extend a visible
+  playable run path and be evaluated against the fun contract.
 
-## Known Risks
-- Godot scene files can be fragile when hand-edited. Prefer editor-generated scenes when practical, then review diffs.
-- A one-shot full-game implementation would likely hide movement and boss-readability problems. Keep work milestone-sized.
-- The local Godot binary is ignored and should not be committed.
+## Current Risks
+
+- The production entry stage is only a safe scaffold, not credited Stage 1 content.
+- Character profiles have basic-attack seeds but heavy attacks, skills, passives,
+  cards, progression, and persistence are not implemented.
+- Enemy scripts are behavior prototypes without production scenes, catalogs, drops,
+  or encounter allocation.
+- JSON catalogs and docs are implementation-ready inputs but not runtime owners.
+- Fun remains unproven until real room/combat/reward playtests begin.
 
 ## Run / Verify
-- Check Godot: `.\tools\godot.ps1 --version`
-- Open editor: `.\tools\godot.ps1 --path . --editor`
-- Headless project check: `.\tools\godot.ps1 --path . --headless --import`
-- Generate map previews: `python tools/generate_map_previews.py`
-- Generate UI/UX wireframes: `python tools/generate_uiux_wireframes.py`
-- Generate procedural region examples: `python tools/generate_region_graph.py`
+
+- Godot version: `./tools/godot.ps1 --version`
+- Import: `./tools/godot.ps1 --path . --headless --import`
+- Short boot: `./tools/godot.ps1 --path . --headless --quit-after 2`
+- Production flow: `./tools/godot.ps1 --path . --headless --script res://tools/validate_production_boot.gd`
+- Production stage: `./tools/godot.ps1 --path . --headless --script res://tools/validate_production_stage.gd`
+- Design catalogs: `./tools/godot.ps1 --path . --headless --script res://tools/validate_design_catalogs.gd`
+- Focused validators: `Get-ChildItem tools/validate_*.gd`
 - Git status: `git status --short`
+
+## Next Implementation Entry
+
+Start from Milestone 1 in the active production roadmap: typed character attack and
+skill contracts, explicit run phases, and a Warrior combat slice in one authored
+production room. Do not spend another batch on menu polish or generic foundations.

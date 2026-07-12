@@ -1,16 +1,16 @@
 ---
 type: evidence
-status: active
+status: archived
 created: 2026-07-05
+last_reviewed: 2026-07-12
 source: Local clones, Godot 4.7 headless checks, source-level inspection, and current repo contract review on 2026-07-05
-topic: External Godot codebase deep dive for the platform-action testbed foundation
+topic: External Godot codebase deep dive for the Cardborne production foundation
 scope: Evidence and adoption recommendations for map authoring, input remapping, movement, procedural generation, combat components, enemy AI, shell UI, and progression tooling
 related:
-  - ../design/TESTBED_REIMPLEMENTATION_CONTRACT.md
-  - ../design/testbed-plan/FEATURE_PRIORITY.md
-  - ../design/MOTION_TEST_BED_SPEC.md
   - ../design/PROCEDURAL_REGION_GENERATION.md
+  - ../design/MAP_AUTHORING_PIPELINE_CONTRACT.md
   - ../design/ENEMIES_TRAPS_GIMMICKS.md
+  - ../architecture/FIRST_SLICE_ARCHITECTURE.md
   - ./foundation_resource_survey_2026-07-05.md
 ---
 

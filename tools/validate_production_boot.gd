@@ -2,7 +2,7 @@ extends SceneTree
 
 const MAIN_SCENE := "res://scenes/main/Main.tscn"
 const PRODUCTION_STAGE_PATH := "res://scenes/stages/production/ProductionStageHost.tscn"
-const MOTION_TEST_STAGE_PATH := "res://scenes/stages/MotionTestStage.tscn"
+const RETIRED_TESTBED_STAGE_PATH := "res://scenes/stages/MotionTestStage.tscn"
 
 var _failures: Array[String] = []
 
@@ -37,7 +37,7 @@ func _run() -> void:
 
 	_expect(run_director.get_phase_name() == "main_menu", "default boot should open the main menu")
 	_expect(game.current_stage == null, "default boot must not instantiate a stage")
-	_expect(game.current_stage_path != MOTION_TEST_STAGE_PATH, "default boot must not load MotionTestStage")
+	_expect(not ResourceLoader.exists(RETIRED_TESTBED_STAGE_PATH), "retired integrated testbed should stay removed")
 	_expect(_has_child_named(screen_root, "MainMenu"), "main menu screen should be mounted")
 	var main_menu := screen_root.get_node_or_null("MainMenu") as Control
 	var menu_backdrop := main_menu.get_node_or_null("Backdrop") as Control if main_menu != null else null
@@ -56,7 +56,6 @@ func _run() -> void:
 	await process_frame
 	_expect(run_director.get_phase_name() == "run_active", "production run should become active")
 	_expect(game.current_stage_path == PRODUCTION_STAGE_PATH, "run should load only the production stage host")
-	_expect(game.current_stage_path != MOTION_TEST_STAGE_PATH, "production run must not load MotionTestStage")
 	_expect(game.current_stage != null, "production stage should instantiate")
 	_expect(_has_child_named(hud_root, "ProductionHUD"), "production HUD should replace debug HUD")
 
@@ -65,17 +64,6 @@ func _run() -> void:
 	_expect(run_director.get_phase_name() == "run_result", "stage completion should show the run result")
 	_expect(game.current_stage == null, "run result should unload gameplay")
 	_expect(_has_child_named(screen_root, "RunResult"), "run result screen should be mounted")
-
-	run_director.show_main_menu()
-	await process_frame
-	if OS.is_debug_build():
-		run_director.start_developer_testbed()
-		await process_frame
-		await process_frame
-		_expect(run_director.get_phase_name() == "developer_testbed", "testbed should require explicit developer entry")
-		_expect(game.current_stage_path == MOTION_TEST_STAGE_PATH, "developer entry should load MotionTestStage")
-		run_director.show_main_menu()
-		await process_frame
 
 	game.unload_current_stage()
 	main_instance.queue_free()

@@ -1,1238 +1,337 @@
 ---
 type: spec
 status: active
-canonical_for: baseline Cardborne product behavior where not overridden by an active scope delta
-source: Original project brief
-scope: Original MVP baseline
+owner: BK
+created: 2026-06-30
+last_reviewed: 2026-07-12
+canonical_for: Cardborne product identity and first complete run scope
+source: Existing PRD, first-run scope delta, first-slice expansion, and owner feedback through 2026-07-12
 related:
-  - ./FIRST_COMPLETE_RUN_SCOPE_DELTA.md
-  - ./FIRST_SLICE_EXPANSION.md
+  - ../design/PLAYER_CHARACTER_SYSTEMS.md
+  - ../design/PROCEDURAL_REGION_GENERATION.md
+  - ../design/MAP_AUTHORING_PIPELINE_CONTRACT.md
+  - ../design/ENEMIES_TRAPS_GIMMICKS.md
+  - ../design/PROGRESSION_EQUIPMENT_ECONOMY.md
+  - ../design/PLAYER_FACING_FLOW.md
+  - ../architecture/FIRST_SLICE_ARCHITECTURE.md
+  - ../../.agent/execplans/2026-07-12-actual-game-production-roadmap.md
 ---
 
-# PRD: 2D Platform Action + Random Upgrade Card Game
+# Cardborne Game Blueprint
 
-**Working title:** Cardborne Platformer  
-**Target engine:** Godot 4.x  
-**Primary language:** GDScript  
-**Target platform for MVP:** Desktop keyboard controls  
-**Document purpose:** Give Codex enough product, gameplay, and technical direction to start building a real playable prototype without inventing core requirements.
+## Purpose
 
-> Authority notice: `FIRST_COMPLETE_RUN_SCOPE_DELTA.md` overrides the named MVP
-> restrictions for the first complete run. All other compatible behavior in this
-> PRD remains active.
+Define the game that current code and future implementation must build. This is
+the product source of truth. Linked design specifications own detailed content and
+the active roadmap owns implementation order.
 
----
+Cardborne is not a mechanics testbed and not a collection of independent RPG
+systems. It is a compact 2D action-platform roguelite where readable movement and
+combat produce rewards that visibly transform the rest of the run.
 
-## 1. Product Summary
+## Scope
 
-Build a compact, stable, and extensible 2D side-view action platformer where the player clears short stages, avoids hazards, fights enemies, and receives a random upgrade card after each stage. Every run should feel slightly different because the player’s stats, mobility, and combat options change through card choices.
+The first complete run contains:
 
-The MVP should focus on excellent core movement, simple but reliable combat, a small stage loop, and one pattern-based boss fight inspired by MMORPG boss encounters such as MapleStory: telegraphed attacks, floor warnings, safe zones, multiple phases, and short damage windows.
+- three playable characters;
+- three seeded normal stages assembled from authored room templates;
+- one authored two-phase boss fight;
+- character-specific basic attacks, heavy attacks, three skills, and one passive;
+- run levels, stage-clear cards, coins, temporary forging, and consumables;
+- persistent equipment ownership, materials, and six mastery nodes per character;
+- enemies, traps, optional routes, checkpoints, shops, rewards, death, settlement,
+  and clear flows;
+- one coherent Lower Ruins region with production-readable placeholder art and
+  audio.
 
-This is not a content-heavy roguelike yet. The first goal is to create a clean gameplay foundation that can later support more maps, enemies, cards, characters, weapons, bosses, and permanent skill trees.
+## Product Promise
 
----
+> Move through dangerous ruins with a responsive character, read threats, turn
+> openings into aggressive attacks, and assemble a build that changes how the
+> next room is played.
 
-## 2. Product Goals
+The player should be able to explain a satisfying run in terms of decisions:
 
-### 2.1 Primary Goals
+- which route they risked;
+- which enemy opening they exploited;
+- which card changed their attack pattern;
+- what they bought or forged instead of healing;
+- how their character kit solved the boss.
 
-1. Create a playable 2D action platformer prototype with reliable player controls.
-2. Implement a run loop:
-   - Enter stage.
-   - Fight enemies and avoid hazards.
-   - Clear stage.
-   - Choose 1 of 3 random upgrade cards.
-   - Continue to next stage.
-   - Fight a boss after several stages.
-3. Implement an extensible card system that can modify player stats and unlock simple mechanics.
-4. Implement a boss fight using visible warning zones and repeatable attack patterns.
-5. Use a modular project structure so additional stages, cards, enemies, and bosses can be added without rewriting core systems.
+## Fun Contract
 
-### 2.2 Non-Goals for MVP
+Fun cannot be proven by code coverage. It can be designed as testable hypotheses.
+Every milestone must protect these five pillars.
 
-Do not build these in the first implementation unless all MVP goals are complete:
+### 1. Responsive momentum
 
-- Online multiplayer.
-- Save files beyond simple local debug persistence.
-- Full roguelike procedural generation.
-- Complex inventory.
-- Dialogue system.
-- Shop system.
-- Multiple playable characters.
-- Full permanent skill tree.
-- Final art, VFX, sound design, localization, or monetization.
+- Ground control, jump buffering, coyote time, double jump, dash, crouch, fast
+  fall, one-way drop, and rope use must feel immediate and predictable.
+- Required traversal alternates action and recovery instead of long empty walks.
+- Normal rooms target 20-60 seconds. A player should rarely spend more than eight
+  seconds without a movement, combat, route, or reward decision.
 
----
+### 2. Read, commit, punish
 
-## 3. Target Player Experience
+- Dangerous movement and attacks expose a readable tell before damage.
+- Committing to an attack creates risk; enemy recovery creates a real punish
+  window.
+- Difficulty comes from compatible combinations and timing, not hidden rules or
+  inflated one-hit damage.
+- After a death, the player should be able to name the missed tell or bad choice.
 
-The player should feel that the game is:
+### 3. Builds change verbs
 
-- Easy to understand within 30 seconds.
-- Responsive when moving, jumping, dashing, and attacking.
-- Fair when taking damage because attacks have visible tells.
-- Replayable because upgrade cards change the build direction.
-- Expandable because new content can be added naturally.
+- Level-up choices may provide clear numeric support, but cards, mastery, and
+  equipment must mostly alter triggers, follow-ups, positioning, area coverage,
+  defense timing, or resource cadence.
+- By the middle of Stage 2, two runs with different card choices should play
+  differently without comparing stat screens.
+- Reward screens never offer effects that the selected character cannot use.
 
-The core promise is:
+### 4. Fair variety
 
-> “Clear short platform-action stages, choose random upgrades, and survive pattern-heavy boss fights.”
+- Seeds vary room order, optional branches, encounters, hazards, and rewards.
+- Authored templates define valid possibilities; generation never invents
+  arbitrary critical geometry.
+- The least-mobile base character can clear every required route.
+- Optional routes may be harder, but reward risk rather than gate completion.
+- Invalid generation fails closed and loads a curated fallback.
 
----
+### 5. Short-run tension without grind
 
-## 4. Core Gameplay Loop
+- A target run lasts 28-38 minutes: Stage 1 6-8, Stage 2 7-9, Stage 3 8-10,
+  boss 4-6, and choices/rest 3-5 minutes.
+- Common materials survive death so failed runs still teach and progress.
+- Base loadouts can clear the game. Persistent progression adds options and
+  bounded advantages, not a mandatory grind wall.
 
-### 4.1 Run-Level Loop
-
-1. Start new run.
-2. Load Stage 1.
-3. Player reaches the stage exit while fighting enemies and avoiding hazards.
-4. Stage clear screen appears.
-5. Reward screen shows 3 random upgrade cards.
-6. Player selects 1 card.
-7. Card effect applies immediately.
-8. Next stage loads.
-9. After Stage 3, load Boss Stage 1.
-10. Boss clear gives a stronger reward.
-11. Prototype run ends after boss clear.
-
-### 4.2 MVP Stage Flow
-
-MVP should include:
-
-- Stage 1: basic movement, basic enemies.
-- Stage 2: hazards and moving platforms.
-- Stage 3: mixed enemies and tighter platforming.
-- Boss Stage 1: large boss with 2 phases.
-
-### 4.3 Clear Conditions
-
-For MVP, a normal stage is cleared when the player reaches the exit portal.
-
-Boss stage is cleared when the boss health reaches 0.
-
----
-
-## 5. Core Controls
-
-### 5.1 Keyboard Controls
-
-| Action | Input |
-|---|---|
-| Move left | A / Left Arrow |
-| Move right | D / Right Arrow |
-| Jump | Space |
-| Attack | F |
-| Dash | K / Shift |
-| Crouch | S / Down Arrow |
-| Drop through one-way platform | Down + Jump |
-| Pause | Esc |
-
-### 5.2 Gamepad Controls
-
-Gamepad support is optional for MVP but the input map should be designed so gamepad can be added later.
-
-Suggested mapping:
-
-| Action | Input |
-|---|---|
-| Move | Left stick / D-pad |
-| Jump | South face button |
-| Attack | West face button |
-| Dash | East face button |
-| Crouch | Down |
-| Pause | Start |
-
----
-
-## 6. Player Controller Requirements
-
-The player controller is the highest-priority system. It must be stable before expanding content.
-
-### 6.1 Required Movement Features
-
-MVP player movement must include:
-
-- Left/right movement.
-- Acceleration and deceleration.
-- Ground jump.
-- Variable jump height.
-- Coyote time.
-- Jump buffering.
-- Dash.
-- Crouch.
-- Fast fall while holding down in air.
-- One-way platform drop.
-- Damage knockback.
-- Temporary invulnerability after damage.
-
-### 6.2 Recommended Starting Values
-
-Use exported variables so these can be tuned in the Godot editor.
-
-| Variable | Starting Value |
-|---|---:|
-| Move speed | 220 px/s |
-| Acceleration | 1800 px/s² |
-| Deceleration | 2200 px/s² |
-| Air acceleration | 1200 px/s² |
-| Gravity | 1200 px/s² |
-| Max fall speed | 700 px/s |
-| Jump velocity | -420 px/s |
-| Jump cut multiplier | 0.45 |
-| Coyote time | 0.10 s |
-| Jump buffer time | 0.12 s |
-| Dash speed | 520 px/s |
-| Dash duration | 0.13 s |
-| Dash cooldown | 0.45 s |
-| Post-hit invulnerability | 1.00 s |
-| Damage knockback X | 220 px/s |
-| Damage knockback Y | -220 px/s |
-
-### 6.3 Acceptance Criteria
-
-- Player can move, jump, dash, attack, crouch, and take damage in a test stage.
-- Jump input shortly before landing still triggers a jump.
-- Jump input shortly after leaving a ledge still works.
-- Releasing jump early produces a lower jump.
-- Dash cannot be spammed beyond cooldown rules.
-- Player does not get stuck on normal tile corners in the MVP test stage.
-- Player respawns or game-over flow triggers correctly after death.
-
----
-
-## 7. Combat System
-
-### 7.1 Player Combat
-
-MVP combat should be simple and reliable.
-
-Required:
-
-- Basic melee attack.
-- Attack hitbox appears briefly in front of player.
-- Attack has cooldown.
-- Attack direction follows facing direction.
-- Air attack uses same attack initially.
-- Enemies receive damage and knockback.
-- Player cannot attack infinitely faster than the defined cooldown.
-- Attack damage can be modified by cards.
-
-Optional after MVP:
-
-- Downward strike.
-- Charged attack.
-- Combo chain.
-- Projectile slash.
-- Critical hit.
-- Attack cancel rules.
-
-### 7.2 Player Health
-
-MVP health:
-
-| Property | Value |
-|---|---:|
-| Max health | 5 |
-| Contact damage from normal enemy | 1 |
-| Projectile damage | 1 |
-| Boss attack damage | 1 |
-| Hazard damage | 1 |
-| Death condition | Current health <= 0 |
-
-After taking damage, the player becomes briefly invulnerable.
-
-### 7.3 Damage Model
-
-Use a simple damage event structure:
-
-```gdscript
-class_name DamageInfo
-var amount: int
-var source: Node
-var knockback: Vector2
-var tags: Array[String]
-```
-
-Damage tags can later support effects like fire, poison, boss damage, melee damage, projectile damage, etc.
-
-For MVP, only amount and knockback are required.
-
----
-
-## 8. Card Upgrade System
-
-### 8.1 Card Reward Flow
-
-After each normal stage:
-
-1. Pause gameplay.
-2. Show reward screen.
-3. Randomly select 3 cards from the card pool.
-4. Player chooses 1.
-5. Apply card effect.
-6. Continue to next stage.
-
-After boss clear:
-
-- Show 3 cards with improved rarity weights.
-- Then end prototype or return to main menu.
-
-### 8.2 Card Rarities
-
-MVP rarities:
-
-| Rarity | Approx. Weight |
-|---|---:|
-| Common | 70 |
-| Rare | 25 |
-| Legendary | 5 |
-
-Boss reward weights:
-
-| Rarity | Approx. Weight |
-|---|---:|
-| Common | 40 |
-| Rare | 45 |
-| Legendary | 15 |
-
-### 8.3 Card Data Fields
-
-Implement cards as data resources, not hard-coded UI objects.
-
-Recommended Godot Resource:
-
-```gdscript
-class_name CardData
-extends Resource
-
-@export var id: String
-@export var display_name: String
-@export_multiline var description: String
-@export_enum("common", "rare", "legendary") var rarity: String = "common"
-@export var icon: Texture2D
-@export var max_stacks: int = 99
-@export var effect_type: String
-@export var effect_value: float
-@export var tags: Array[String]
-```
-
-The card application code should interpret `effect_type`.
-
-### 8.4 MVP Effect Types
-
-Implement these effect types first:
-
-| Effect Type | Meaning |
-|---|---|
-| `add_max_health` | Increase max health and heal by same amount. |
-| `add_attack_damage` | Increase player melee damage. |
-| `multiply_attack_speed` | Reduce attack cooldown. |
-| `add_move_speed` | Increase movement speed. |
-| `add_jump_power` | Increase jump height by making jump velocity more negative. |
-| `reduce_dash_cooldown` | Lower dash cooldown. |
-| `add_dash_charge` | Add one extra air dash or dash charge. |
-| `add_invulnerability_time` | Increase post-hit invulnerability. |
-| `heal_now` | Heal immediately. |
-| `add_card_choice` | Future-facing effect; can be implemented later. |
-
-### 8.5 MVP Card List
-
-Implement at least 15 cards.
-
-#### Common Cards
-
-1. **Sharp Edge**
-   - Effect: `add_attack_damage`
-   - Value: +1
-   - Description: Basic attacks deal +1 damage.
-
-2. **Light Boots**
-   - Effect: `add_move_speed`
-   - Value: +20
-   - Description: Move slightly faster.
-
-3. **Spring Legs**
-   - Effect: `add_jump_power`
-   - Value: -25
-   - Description: Jump slightly higher.
-
-4. **First Aid**
-   - Effect: `heal_now`
-   - Value: +2
-   - Description: Heal 2 health.
-
-5. **Tough Skin**
-   - Effect: `add_max_health`
-   - Value: +1
-   - Description: Gain +1 max health and heal 1.
-
-#### Rare Cards
-
-6. **Quick Hands**
-   - Effect: `multiply_attack_speed`
-   - Value: 0.90
-   - Description: Attack cooldown reduced by 10%.
-
-7. **Dash Tuning**
-   - Effect: `reduce_dash_cooldown`
-   - Value: 0.10
-   - Description: Dash cooldown reduced by 0.10 seconds.
-
-8. **Iron Nerve**
-   - Effect: `add_invulnerability_time`
-   - Value: +0.25
-   - Description: After being hit, stay invulnerable slightly longer.
-
-9. **Double Step**
-   - Effect: `add_dash_charge`
-   - Value: +1
-   - Description: Gain one additional dash charge.
-
-10. **Boss Breaker**
-   - Effect: `add_attack_damage`
-   - Value: +2
-   - Tags: `boss_focused`
-   - Description: Attacks deal +2 damage.
-
-#### Legendary Cards
-
-11. **Glass Blade**
-   - Effect: `add_attack_damage`
-   - Value: +4
-   - Description: Greatly increase attack damage. Future version may reduce max health.
-
-12. **Blink Rhythm**
-   - Effect: `reduce_dash_cooldown`
-   - Value: 0.25
-   - Description: Greatly reduce dash cooldown.
-
-13. **Giant Heart**
-   - Effect: `add_max_health`
-   - Value: +3
-   - Description: Gain +3 max health and heal 3.
-
-14. **Air Master**
-   - Effect: `add_dash_charge`
-   - Value: +2
-   - Description: Gain two additional dash charges.
-
-15. **Relentless**
-   - Effect: `multiply_attack_speed`
-   - Value: 0.75
-   - Description: Attack cooldown reduced by 25%.
-
-### 8.6 Card System Acceptance Criteria
-
-- Reward screen shows exactly 3 cards after a normal stage.
-- Clicking or confirming a card applies its effect.
-- Applied effects persist through the current run.
-- Multiple cards can stack unless max stack says otherwise.
-- Card UI displays name, rarity, and description.
-- Card reward can be skipped only if a debug flag is enabled.
-- The card system should be extendable by adding new `CardData` resources.
-
----
-
-## 9. Enemy System
-
-### 9.1 Enemy Architecture
-
-Use a shared base enemy script with common properties:
-
-- Max health.
-- Current health.
-- Contact damage.
-- Move speed.
-- Knockback handling.
-- Death event.
-- Damage receiving function.
-
-Each enemy type can implement its own AI.
-
-### 9.2 MVP Enemy Types
-
-#### Enemy 1: Walker
-
-Purpose: Basic target and movement obstacle.
-
-Behavior:
-
-- Patrols left and right.
-- Turns around at walls or ledges.
-- Damages player on contact.
-- Dies after a few hits.
-
-Recommended stats:
-
-| Stat | Value |
-|---|---:|
-| Health | 3 |
-| Contact damage | 1 |
-| Move speed | 60 px/s |
-
-#### Enemy 2: Charger
-
-Purpose: Teaches dash/jump evasion.
-
-Behavior:
-
-- Idles until player enters detection range.
-- Briefly telegraphs.
-- Charges horizontally.
-- Has recovery time after charge.
-
-Recommended stats:
-
-| Stat | Value |
-|---|---:|
-| Health | 5 |
-| Contact damage | 1 |
-| Move speed during charge | 280 px/s |
-| Telegraph time | 0.45 s |
-| Recovery time | 0.70 s |
-
-#### Enemy 3: Shooter
-
-Purpose: Adds projectile avoidance.
-
-Behavior:
-
-- Stays still or patrols slightly.
-- Fires projectile toward player every few seconds.
-- Projectile is destroyed on wall impact.
-- Projectile damages player.
-
-Recommended stats:
-
-| Stat | Value |
-|---|---:|
-| Health | 4 |
-| Projectile damage | 1 |
-| Fire interval | 1.6 s |
-| Projectile speed | 220 px/s |
-
-### 9.3 Enemy Acceptance Criteria
-
-- All three enemies can be placed in a stage scene.
-- Enemies damage the player.
-- Player attacks damage enemies.
-- Enemies die and disappear or play a placeholder death animation.
-- Shooter projectiles collide with walls and player.
-- Charger has a visible warning before charging.
-
----
-
-## 10. Boss System
-
-### 10.1 Boss Design Direction
-
-The MVP boss should be a readable pattern fight.
-
-Reference direction:
-
-- Large boss health bar.
-- Repeating attack patterns.
-- Clear telegraphs before damage.
-- Floor warning markers.
-- Safe zones.
-- Phase change at 50% health.
-- Adds or hazards during phase 2.
-- Short windows where the player can safely attack.
-
-Do not copy assets, names, or exact patterns from any existing game. Use the general idea of telegraphed MMORPG-style boss mechanics.
-
-### 10.2 MVP Boss: Giant Slime King
-
-#### Basic Properties
-
-| Property | Value |
-|---|---:|
-| Max health | 80 |
-| Contact damage | 1 |
-| Phase 2 threshold | 50% health |
-| Arena size | One screen wide or slightly wider |
-| Player respawn | Restart boss stage |
-
-#### Phase 1 Patterns
-
-1. **Jump Slam**
-   - Boss jumps upward.
-   - Shadow or marker shows landing area.
-   - On landing, creates shockwave moving left and right.
-   - Player avoids by jumping over shockwave or dashing away.
-
-2. **Floor Poison**
-   - Warning rectangles appear on floor.
-   - After delay, poison zones activate.
-   - Standing in zone damages player once per tick or once per activation.
-
-3. **Body Bump**
-   - Boss leans back.
-   - Boss dashes horizontally.
-   - Player avoids by jumping or dashing.
-
-#### Phase 2 Additions
-
-1. **Small Slime Summon**
-   - Boss spawns two small walker enemies.
-   - Summons should not overwhelm the player.
-   - Limit active summoned enemies.
-
-2. **Faster Pattern Timing**
-   - Reduce delay between attacks slightly.
-
-3. **Wider Shockwave**
-   - Jump Slam shockwave travels farther or faster.
-
-### 10.3 Boss Attack Telegraph Requirements
-
-Every damaging boss attack must have:
-
-- Startup warning.
-- Active damage window.
-- Recovery.
-- Clear visual placeholder, even if only colored rectangles are used.
-
-### 10.4 Boss Acceptance Criteria
-
-- Boss fight starts when boss stage loads.
-- Boss health bar appears.
-- Boss uses at least 3 attack patterns.
-- Boss changes behavior below 50% health.
-- Boss can kill the player.
-- Player can kill the boss.
-- Boss clear triggers reward screen or prototype completion screen.
-
----
-
-## 11. Map and Level Design
-
-### 11.1 MVP Level Format
-
-Use Godot scenes for authored stages.
-
-Each stage scene should include:
-
-- TileMapLayer or equivalent for solid ground.
-- One-way platforms.
-- Hazards.
-- Enemy spawn points or directly placed enemy scenes.
-- Player spawn point.
-- Exit portal.
-- Camera bounds.
-- Optional checkpoint.
-
-### 11.2 Tile / Collision Layers
-
-Recommended collision layers:
-
-| Layer | Purpose |
-|---|---|
-| World | Solid ground and walls |
-| OneWayPlatform | Drop-through platforms |
-| Player | Player body |
-| Enemy | Enemy bodies |
-| PlayerHitbox | Player attack hitboxes |
-| EnemyHitbox | Enemy attacks |
-| Hazard | Spikes, poison, kill zones |
-| Projectile | Bullets and magic shots |
-
-### 11.3 Stage 1 Requirements
-
-Theme: Training field / ruins placeholder.
-
-Includes:
-
-- Flat start area.
-- Small jump gap.
-- 2 Walker enemies.
-- 1 ledge.
-- Exit portal.
-
-### 11.4 Stage 2 Requirements
-
-Includes:
-
-- Spikes.
-- Moving platform.
-- 1 Walker.
-- 1 Shooter.
-- Slightly longer route.
-- Exit portal.
-
-### 11.5 Stage 3 Requirements
-
-Includes:
-
-- Mixed platforming.
-- 1 Charger.
-- 1 Shooter.
-- Hazard gap.
-- Optional checkpoint.
-- Exit portal.
-
-### 11.6 Boss Stage Requirements
-
-Includes:
-
-- Flat or mostly flat arena.
-- 2-3 platforms if needed.
-- Walls on both sides.
-- Boss spawn.
-- Player spawn.
-- Camera locked to arena.
-- No exit portal until boss is defeated.
-
----
-
-## 12. UI / UX Requirements
-
-### 12.1 HUD
-
-HUD must show:
-
-- Player health.
-- Current stage number.
-- Current cards or active card count.
-- Boss health bar during boss stage.
-- Optional dash cooldown indicator.
-
-### 12.2 Card Reward Screen
-
-Card screen must show:
-
-- 3 card panels.
-- Card name.
-- Rarity.
-- Description.
-- Confirm selection.
-- Continue to next stage.
-
-### 12.3 Menus
-
-MVP menus:
-
-- Main menu.
-- Pause menu.
-- Game over screen.
-- Prototype clear screen.
-
-### 12.4 UI Acceptance Criteria
-
-- HUD updates when health changes.
-- Boss health bar updates when boss takes damage.
-- Card selection can be performed with mouse.
-- Game can be restarted after death.
-- Pause stops gameplay and resumes correctly.
-
----
-
-## 13. Run State and Progression
-
-### 13.1 Run State
-
-Maintain a run state object or autoload with:
-
-- Current stage index.
-- Current health.
-- Max health.
-- Player stat modifiers.
-- Owned cards.
-- RNG seed.
-- Boss defeated flag.
-- Run ended flag.
-
-### 13.2 Permanent Progression
-
-Permanent skill tree is post-MVP.
-
-However, design the code so it can later support persistent upgrades. Do not hard-code all stats only inside the Player scene.
-
-Future skill tree branches:
-
-- Combat:
-  - Reduced attack cooldown.
-  - Unlock charged attack.
-  - Boss damage bonus.
-- Mobility:
-  - Unlock air dash.
-  - Unlock wall jump.
-  - Reduce dash cooldown.
-- Survival:
-  - Max health +1.
-  - Better healing.
-  - Longer invulnerability.
-- Card:
-  - Extra card choice.
-  - One reroll per run.
-  - Higher rare-card chance.
-
-### 13.3 MVP Persistence
-
-No full save system required.
-
-Optional debug persistence:
-
-- Store highest cleared stage.
-- Store last selected cards.
-- Store simple settings.
-
----
-
-## 14. Technical Architecture
-
-### 14.1 Suggested Project Structure
+## Core Run Loop
 
 ```text
-res://
-  project.godot
-  README.md
-
-  scenes/
-    main/
-      Main.tscn
-      MainMenu.tscn
-      GameOverScreen.tscn
-      PrototypeClearScreen.tscn
-
-    player/
-      Player.tscn
-      PlayerAttackHitbox.tscn
-
-    enemies/
-      EnemyBase.tscn
-      WalkerEnemy.tscn
-      ChargerEnemy.tscn
-      ShooterEnemy.tscn
-      EnemyProjectile.tscn
-
-    bosses/
-      SlimeKingBoss.tscn
-      BossWarningZone.tscn
-      Shockwave.tscn
-      PoisonZone.tscn
-
-    stages/
-      Stage01.tscn
-      Stage02.tscn
-      Stage03.tscn
-      BossStage01.tscn
-
-    ui/
-      HUD.tscn
-      CardRewardScreen.tscn
-      CardPanel.tscn
-      PauseMenu.tscn
-
-  scripts/
-    autoload/
-      Game.gd
-      RunState.gd
-      CardDatabase.gd
-      SignalBus.gd
-
-    player/
-      Player.gd
-      PlayerStats.gd
-      PlayerCombat.gd
-
-    combat/
-      DamageInfo.gd
-      Hurtbox.gd
-      Hitbox.gd
-
-    enemies/
-      EnemyBase.gd
-      WalkerEnemy.gd
-      ChargerEnemy.gd
-      ShooterEnemy.gd
-      EnemyProjectile.gd
-
-    bosses/
-      SlimeKingBoss.gd
-      BossWarningZone.gd
-      Shockwave.gd
-      PoisonZone.gd
-
-    cards/
-      CardData.gd
-      CardEffectApplier.gd
-
-    stages/
-      StageManager.gd
-      ExitPortal.gd
-      Hazard.gd
-      Checkpoint.gd
-
-    ui/
-      HUD.gd
-      CardRewardScreen.gd
-      CardPanel.gd
-      PauseMenu.gd
-
-  data/
-    cards/
-      sharp_edge.tres
-      light_boots.tres
-      spring_legs.tres
-      first_aid.tres
-      tough_skin.tres
-      quick_hands.tres
-      dash_tuning.tres
-      iron_nerve.tres
-      double_step.tres
-      boss_breaker.tres
-      glass_blade.tres
-      blink_rhythm.tres
-      giant_heart.tres
-      air_master.tres
-      relentless.tres
-
-  art/
-    placeholder/
-      player.png
-      enemy.png
-      boss.png
-      tiles.png
-
-  audio/
-    placeholder/
+main menu
+ -> character and persistent loadout
+ -> seeded Stage 1: teach and establish build
+ -> stage-clear card
+ -> seeded Stage 2: hazards and route risk
+ -> stage-clear card + rest/forge
+ -> seeded Stage 3: mixed mastery check
+ -> stage-clear card
+ -> authored Giant Slime King arena
+ -> persistent settlement and run summary
 ```
 
-### 14.2 Autoloads
-
-Recommended autoloads:
-
-#### Game.gd
-
-Responsible for:
-
-- Loading stages.
-- Restarting runs.
-- Transitioning between menu, stage, card reward, boss, and clear screen.
-- Holding high-level game mode.
-
-#### RunState.gd
-
-Responsible for:
-
-- Current run stats.
-- Owned cards.
-- Current stage number.
-- RNG seed.
-- Resetting run data.
-
-#### CardDatabase.gd
-
-Responsible for:
-
-- Loading all card resources.
-- Returning random card choices based on rarity weights.
-- Preventing invalid duplicates if max stacks reached.
-
-#### SignalBus.gd
-
-Responsible for shared signals:
-
-- `player_health_changed`
-- `player_died`
-- `stage_cleared`
-- `card_selected`
-- `boss_health_changed`
-- `boss_defeated`
-
-### 14.3 Code Principles
-
-- Prefer data-driven cards over hard-coded card selection.
-- Use signals for UI updates.
-- Keep Player movement separate from UI and stage flow.
-- Keep enemy base behavior reusable.
-- Use exported variables for tuning.
-- Make placeholder art acceptable.
-- Avoid building a giant abstract framework before the MVP works.
-- Write readable names and comments where gameplay tuning is non-obvious.
-
----
-
-## 15. Implementation Milestones
-
-### Milestone 1: Project Skeleton
-
-Deliverables:
-
-- Godot project opens.
-- Main menu loads.
-- Test stage loads from Start button.
-- Player scene exists.
-- Basic HUD exists.
-
-Acceptance criteria:
-
-- User can press Start and enter Stage 1.
-- No missing script errors.
-- Project has README with run instructions.
-
-### Milestone 2: Player Controller
-
-Deliverables:
-
-- Move.
-- Jump.
-- Variable jump.
-- Coyote time.
-- Jump buffer.
-- Dash.
-- Crouch.
-- Fast fall.
-- Health and damage.
-
-Acceptance criteria:
-
-- Player can complete a simple platforming test room.
-- Movement variables are tunable from editor.
-
-### Milestone 3: Combat and Enemies
-
-Deliverables:
-
-- Basic attack hitbox.
-- Enemy base class.
-- Walker enemy.
-- Charger enemy.
-- Shooter enemy.
-- Projectile.
-
-Acceptance criteria:
-
-- Player can kill all three enemy types.
-- Enemies can damage and kill player.
-- Game over screen works.
-
-### Milestone 4: Stage Flow
-
-Deliverables:
-
-- Stage01, Stage02, Stage03.
-- Exit portal.
-- StageManager.
-- Game loads next stage.
-
-Acceptance criteria:
-
-- Player can clear three normal stages in sequence.
-
-### Milestone 5: Card Reward System
-
-Deliverables:
-
-- CardData resource.
-- CardDatabase.
-- CardRewardScreen.
-- CardEffectApplier.
-- 15 MVP cards.
-
-Acceptance criteria:
-
-- After each normal stage, player chooses 1 of 3 cards.
-- Effects apply and persist through run.
-- Card choice affects actual gameplay.
-
-### Milestone 6: Boss Fight
-
-Deliverables:
-
-- Boss stage.
-- Slime King boss.
-- Boss health bar.
-- Jump Slam.
-- Floor Poison.
-- Body Bump.
-- Phase 2 behavior.
-- Boss defeat flow.
-
-Acceptance criteria:
-
-- Player can fight and defeat the boss.
-- Boss can defeat the player.
-- Boss uses visible warnings before attacks.
-- Prototype clear screen appears after boss reward or boss death.
-
-### Milestone 7: Polish Pass
-
-Deliverables:
-
-- Basic placeholder animations or color flashes.
-- Damage feedback.
-- Camera smoothing.
-- Pause menu.
-- Basic sound placeholders if available.
-- Balance tuning.
-
-Acceptance criteria:
-
-- Full MVP run is playable from main menu to prototype clear.
-- No major soft locks.
-- Death and restart work.
-
----
-
-## 16. Difficulty Design Rules
-
-MVP should avoid unfair one-shot design.
-
-Rules:
-
-- Most damage should remove 1 health.
-- Every boss attack must be telegraphed.
-- The player should survive several mistakes.
-- Hazards should teach before punishing heavily.
-- Stage 1 should be easy enough to clear on first or second try.
-- Stage 3 can demand combined use of jump, dash, and attack.
-- Boss phase 2 should be more intense but not chaotic.
-
-Difficulty should increase through pattern combinations, enemy placement, and reduced safety, not just inflated damage.
-
----
-
-## 17. Content Expansion Direction
-
-After the MVP works, expand in this order:
-
-### 17.1 v0.2
-
-- Add air dash as a real unlockable mechanic.
-- Add wall jump.
-- Add elite room.
-- Add card reroll.
-- Add 10 more cards.
-- Add one new enemy.
-
-### 17.2 v0.3
-
-- Add second world theme.
-- Add second boss.
-- Add room-based stage assembly.
-- Add more hazard types.
-- Add card synergies.
-
-### 17.3 v0.4
-
-- Add permanent skill tree.
-- Add run currency.
-- Add second playable character.
-- Add weapon variants.
-
-### 17.4 v1.0 Direction
-
-- Multiple worlds.
-- Multiple bosses.
-- Complete card pool.
-- Permanent progression.
-- Challenge modes.
-- Balanced difficulty modes.
-- Final art/audio pass.
-
----
-
-## 18. Initial Codex Task Prompt
-
-Use the following prompt to start implementation:
+Inside a normal stage:
 
 ```text
-Create a Godot 4.x GDScript project for a 2D side-view action platformer with random upgrade cards.
-
-Use the PRD in this repository as the source of truth.
-
-Build the MVP in milestones:
-1. Project skeleton with Main menu, Stage01, HUD, and Player scene.
-2. Player controller with left/right movement, jump, variable jump height, coyote time, jump buffer, dash, crouch, fast fall, health, damage, and death.
-3. Combat with a basic melee hitbox.
-4. Three enemy types: Walker, Charger, Shooter.
-5. Stage flow through Stage01, Stage02, Stage03.
-6. Card reward screen after each normal stage, showing 3 random cards. Selecting a card applies a stat effect.
-7. BossStage01 with SlimeKingBoss using telegraphed attacks and phase 2 at 50% health.
-8. Prototype clear screen after boss defeat.
-
-Use placeholder shapes or simple placeholder sprites. Do not depend on external assets.
-
-Keep code modular:
-- Player logic in scripts/player.
-- Combat helpers in scripts/combat.
-- Enemy logic in scripts/enemies.
-- Boss logic in scripts/bosses.
-- Card resources and application logic in scripts/cards and data/cards.
-- Stage flow in scripts/stages.
-- UI in scripts/ui.
-- Global state in scripts/autoload.
-
-Prioritize a working playable vertical slice over visual polish.
-Include README.md with how to run the project.
-Use exported variables for gameplay tuning.
+safe entry
+ -> traversal or light encounter
+ -> route choice
+ -> combat/hazard escalation
+ -> optional reward risk
+ -> checkpoint or recovery beat
+ -> final encounter/objective
+ -> exit
 ```
 
----
+## Stage Cadence
 
-## 19. Definition of Done for MVP
+| Stage | Player-facing job | Room target | Content emphasis |
+| --- | --- | ---: | --- |
+| Ruin Approach | Learn the seed and establish confidence. | 6 required + 1 optional | Basic traversal, Walker, Charger, simple gaps, visible rewards. |
+| Flooded Works | Force timing and spending decisions. | 7 required + 1-2 optional | Poison vents, crumbling paths, Shooter, Leaper, rest/forge. |
+| Broken Sanctum | Test the completed run build. | 8 required + 2 optional | Shield Guard, Sentry, gates, mixed encounters, reduced recovery. |
+| Slime Court | Read patterns and cash in the build. | Authored arena | Four boss patterns, two phases, bounded adds, clear punish windows. |
 
-The MVP is done when:
+Normal stages belong to one Lower Ruins region, so templates can share a visual
+language while stage profiles change pacing, danger budgets, and room eligibility.
 
-- The project opens in Godot 4.x without errors.
-- Starting a new run loads Stage 1.
-- Player can move, jump, dash, crouch, attack, take damage, and die.
-- Stage 1, Stage 2, and Stage 3 are playable.
-- At least three enemy types exist and work.
-- Stage clear opens a 3-card reward screen.
-- Selecting a card changes gameplay stats.
-- Boss stage loads after Stage 3.
-- Boss has a visible health bar, at least 3 attacks, and phase 2 behavior.
-- Boss defeat leads to a clear screen.
-- Restarting from death works.
-- Code is structured so new cards, stages, enemies, and bosses can be added without editing unrelated systems.
+## Playable Roster
 
----
+All characters share the same required traversal envelope: variable jump,
+baseline double jump, dash, crouch clearance, fast fall, one-way drop, rope use,
+damage recovery, and checkpoint respawn.
 
-## 20. Key Risk Areas
+| Character | Combat promise | Primary decision |
+| --- | --- | --- |
+| Warrior | Hold space, stagger threats, and convert defense into heavy punishment. | Commit now for control or wait for a safer counter. |
+| Archer | Control range, apply marks, and reposition while maintaining pressure. | Spend a mark for burst or preserve it for area control. |
+| Assassin | Cross through danger, chain distinct attacks, and exit before retaliation. | Continue a risky chain or disengage with cooldowns intact. |
 
-### 20.1 Player Movement Risk
+Exact attacks, skills, passives, timings, and mastery nodes are defined in
+`docs/design/PLAYER_CHARACTER_SYSTEMS.md`.
 
-If movement feels unreliable, the whole game fails. Implement player controller carefully before adding many cards or enemies.
+## Progression Layers
 
-### 20.2 Card System Risk
+Each growth layer has one purpose.
 
-If cards are hard-coded directly into UI or player code, scaling will become painful. Keep card data separate from card effect application.
+| Layer | Scope | Cadence | Purpose |
+| --- | --- | --- | --- |
+| Run Level | Run | Frequent XP thresholds | Small stabilizing choice that keeps momentum. |
+| Card | Run | After each normal stage | Build-defining behavior change. |
+| Coin | Run | Shops, rerolls, healing, temporary forge | Tactical opportunity cost. |
+| Temporary Forge | Run | One planned rest/forge beat plus rare reward | Tailor current equipment to the current build. |
+| Equipment | Persistent ownership | Loadout and rare discoveries | Starting identity and tradeoffs. |
+| Mastery | Persistent per character | Between runs | Unlock options and bounded kit variants. |
+| Material | Persistent shared wallet | Enemies, challenges, settlement | Fund equipment and mastery without affecting route access. |
 
-### 20.3 Boss Readability Risk
+The stat pipeline resolves sources in this order:
 
-Boss attacks must show warnings before damage. Placeholder warning rectangles are acceptable for MVP.
+```text
+character base
+ -> persistent mastery
+ -> equipped items
+ -> run-level upgrades
+ -> cards
+ -> temporary forge/effects
+ -> clamps and derived values
+```
 
-### 20.4 Scope Risk
+UI, enemies, cards, rooms, and equipment never edit final player fields directly.
 
-Do not build the permanent skill tree, procedural generation, or multiple characters before the MVP vertical slice works.
+## Content Scope
 
----
+The first complete run ships with:
 
-## 21. Recommended First Development Order
+- 18 authored Lower Ruins room templates;
+- 6 normal enemy archetypes;
+- 2 special enemy actors: Summon Node and Small Slime;
+- 4 core hazard families plus moving platform, switch gate, destructible cache,
+  chest, material node, checkpoint, and exit;
+- 15 stage-clear cards;
+- 5 repeatable run-level micro upgrades;
+- 12 persistent equipment items;
+- 18 mastery nodes, six per character;
+- 4 Giant Slime King pattern families.
 
-Codex should start with this exact order:
+Content IDs, roles, constraints, and values live in the linked design specs and
+`data/design/first_slice/` catalogs. A catalog entry is not complete until it is
+reachable in the player-facing loop and has focused validation.
 
-1. Create project folders and README.
-2. Create autoload scripts: Game, RunState, CardDatabase, SignalBus.
-3. Create Main scene and MainMenu.
-4. Create Player scene and movement script.
-5. Create Stage01 with TileMap placeholders or simple StaticBody2D platforms.
-6. Create HUD.
-7. Add player health/damage/death.
-8. Add player attack hitbox.
-9. Add EnemyBase and Walker.
-10. Add Charger and Shooter.
-11. Add stage exit and stage loading.
-12. Add CardData and 15 card resources.
-13. Add card reward screen and effect application.
-14. Add Stage02 and Stage03.
-15. Add BossStage01 and SlimeKingBoss.
-16. Add pause, game over, and clear screens.
-17. Tune values and fix soft locks.
+## Random Generation Contract
 
-The implementation should produce a playable vertical slice before adding extra content.
+- The generator creates a Stage Plan, not raw terrain.
+- A Stage Plan selects room templates, socket connections, encounter anchors,
+  hazard anchors, optional branches, checkpoints, and rewards.
+- Every accepted plan records seed, data version, retries, selected templates,
+  budget use, validation results, and fallback status.
+- Required geometry uses filled rock masses with visibly supported undersides,
+  varied top heights, stable landing surfaces, and navigable space between masses.
+- Critical route transitions are derived from `MovementMetrics` for the complete
+  base roster; no character-exclusive combat skill is a route requirement.
+- Enemy, trap, reward, and exit placement uses authored anchors only.
+
+## Combat And Encounter Contract
+
+- Basic attacks are reliable; heavy attacks create commitment and stagger;
+  skills create identity and room-scale decisions.
+- Every hit records source, amount, knockback, tags, and target policy.
+- Enemies expose one primary lesson and one punish window.
+- An encounter has safe entry, support under every mobile enemy, enough response
+  space for its pressure roles, and a deterministic completion condition.
+- Most normal damage removes one health. Boss or elite exceptions require a
+  stronger tell and explicit approval in the content spec.
+- Defeat rewards resolve once through a reward owner; enemy AI never grants
+  currency directly.
+
+## Boss Contract
+
+The Giant Slime King is an authored two-phase fight with Jump Slam, Body Bump,
+Poison Bands, and Small Slime Summon.
+
+- Every pattern has startup, active, recovery, and documented counterplay.
+- Phase 2 increases tempo and allows only reviewed legal combinations.
+- Poison never removes every safe floor segment.
+- Active adds are capped and cleaned between attempts.
+- Every character can win with a base loadout.
+- Boss victory settles persistent rewards and ends the run; there is no unused
+  post-boss card reward.
+
+## Player-Facing Surfaces
+
+Required surfaces are main menu, character/loadout selection, mastery, gameplay
+HUD, level-up choice, stage card reward, rest/forge, pause/settings, boss HUD,
+death summary, and clear summary.
+
+- HUD shows health, skills/cooldowns, XP, coins, and immediate objective.
+- Debug route metrics and explanatory test labels do not exist in production UI.
+- Every visible setting changes runtime behavior.
+- Primary flows support keyboard and one standard gamepad layout.
+- Danger telegraphs remain legible without relying on color alone.
+
+## Playtest And Balance Gates
+
+Automated validation protects correctness; playtests protect fun.
+
+Record per run:
+
+- seed, character, loadout, duration, room order, and fallback use;
+- damage taken by source and whether the source was visible;
+- encounter and room duration;
+- offered and selected cards;
+- unused skills and equipment;
+- coins earned/spent and materials settled;
+- death room/pattern and player explanation.
+
+Milestone playtest questions:
+
+1. Was movement enjoyable without enemies?
+2. Did each enemy create a different response?
+3. Did the selected card change the next stage in a noticeable way?
+4. Was an optional route tempting for a clear reason?
+5. Did the boss expose understandable punish windows?
+6. Did any wait, walk, reward screen, or encounter overstay its purpose?
+
+A milestone does not pass merely because players can finish it. Rework it when
+repeated testers describe combat as trading damage, maps as random blocks, rewards
+as invisible numbers, or deaths as unclear.
+
+## Requirements
+
+- Fresh boot enters production menu and never loads the retired integrated
+  testbed.
+- A complete run can be played without debug input or explanatory labels.
+- Three base characters clear every required route and the boss.
+- Same seed and content version reproduce the same accepted Stage Plan.
+- Invalid stages never reach gameplay silently.
+- Rewards apply once and state scopes do not leak across run/profile boundaries.
+- Persistent writes are versioned and preserve the last valid profile.
+- Every major milestone ends in a playable workflow with rendered inspection.
+
+## Acceptance Criteria
+
+The first complete run is done when a fresh player can:
+
+1. Select any character and persistent loadout.
+2. Complete three varied, valid seeded stages.
+3. Use every attack and skill with readable feedback.
+4. Gain levels, choose three stage cards, spend coins, forge, and use equipment.
+5. Collect and settle persistent materials without duplicate rewards.
+6. Defeat the two-phase boss or lose the run fairly.
+7. Return to menu, reload the profile, and start another reproducible run.
+
+The release candidate additionally passes the all-character seed matrix, economy
+bounds, save round trip, boss scheduler simulation, keyboard/gamepad path, and
+1280x720/1920x1080 rendered review.
+
+## Non-Goals
+
+- Online accounts, cloud saves, multiplayer, trading, or monetization.
+- Multiple biomes, multiple bosses, quests, dialogue trees, or campaign story.
+- Arbitrary per-tile procedural terrain or random boss arenas.
+- More than three characters or more than three active skills per character.
+- Grid inventory, durability, item destruction, downgrade, or mandatory grind.
+- Final commissioned art, final soundtrack, localization, console certification,
+  or storefront work.
+
+## Related
+
+- `docs/product/README.md`
+- `docs/design/PLAYER_CHARACTER_SYSTEMS.md`
+- `docs/design/PROCEDURAL_REGION_GENERATION.md`
+- `docs/design/MAP_AUTHORING_PIPELINE_CONTRACT.md`
+- `docs/design/ENEMIES_TRAPS_GIMMICKS.md`
+- `docs/design/PROGRESSION_EQUIPMENT_ECONOMY.md`
+- `docs/design/PLAYER_FACING_FLOW.md`
+- `docs/architecture/FIRST_SLICE_ARCHITECTURE.md`
+- `.agent/execplans/2026-07-12-actual-game-production-roadmap.md`

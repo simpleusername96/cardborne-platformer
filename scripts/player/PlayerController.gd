@@ -41,14 +41,10 @@ func _ready() -> void:
 	attack_hitbox.target_hit.connect(_on_attack_hit_confirmed)
 	SignalBus.selected_profile_changed.connect(_on_selected_profile_changed)
 	SignalBus.player_stats_changed.connect(_on_player_stats_changed)
-	SignalBus.testbed_flags_changed.connect(_on_testbed_flags_changed)
 
 
 func _physics_process(delta: float) -> void:
 	_update_timers(delta)
-
-	if RunDirector.is_developer_route() and Input.is_action_just_pressed("open_build_panel"):
-		RunState.cycle_profile(1)
 
 	var input_axis := Input.get_axis("move_left", "move_right")
 	if not is_zero_approx(input_axis):
@@ -253,7 +249,7 @@ func _update_climb_state(input_axis: float, _delta: float) -> void:
 
 
 func _set_climbing(enabled: bool) -> void:
-	is_climbing = enabled and RunState.is_testbed_ability_enabled("rope_climb_enabled")
+	is_climbing = enabled
 	if is_climbing:
 		velocity = Vector2.ZERO
 		is_dashing = false
@@ -409,17 +405,11 @@ func _fire_attack_projectile() -> void:
 
 
 func _max_dash_charges() -> int:
-	var charges := int(stats.get("dash_charges", 1))
-	if RunState.is_testbed_ability_enabled("extra_dash_enabled"):
-		charges += 1
-	return charges
+	return int(stats.get("dash_charges", 1))
 
 
 func _max_extra_jumps() -> int:
-	var profile_extra_jumps := int(stats.get("extra_jumps", 0))
-	if RunState.is_testbed_ability_enabled("double_jump_enabled"):
-		profile_extra_jumps = maxi(profile_extra_jumps, 1)
-	return profile_extra_jumps
+	return int(stats.get("extra_jumps", 1))
 
 
 func enter_climbable(_climbable: Area2D) -> void:
@@ -481,11 +471,6 @@ func _on_selected_profile_changed(_profile_id: String, _display_name: String, co
 
 func _on_player_stats_changed(new_stats: Dictionary) -> void:
 	stats = new_stats.duplicate()
-	dash_charges_left = _max_dash_charges()
-	extra_jumps_left = _max_extra_jumps()
-
-
-func _on_testbed_flags_changed(_flags: Dictionary) -> void:
 	dash_charges_left = _max_dash_charges()
 	extra_jumps_left = _max_extra_jumps()
 

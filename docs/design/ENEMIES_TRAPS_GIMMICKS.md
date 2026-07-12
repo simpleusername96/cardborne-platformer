@@ -1,86 +1,305 @@
 ---
 type: spec
 status: active
-canonical_for: first-slice enemies, traps, and map gimmicks
-source: docs/product/FIRST_SLICE_EXPANSION.md
-scope: Encounter and traversal content for the first playable version
+owner: BK
+last_reviewed: 2026-07-12
+canonical_for: First-run enemies, encounter composition, hazards, gimmicks, and Giant Slime King patterns
+source: Existing enemy and stage component scripts, prior content catalog, and Cardborne Game Blueprint
+related:
+  - ../product/2d_platform_action_card_game_prd.md
+  - ./PROCEDURAL_REGION_GENERATION.md
+  - ./MAP_AUTHORING_PIPELINE_CONTRACT.md
+  - ./PROGRESSION_EQUIPMENT_ECONOMY.md
 ---
 
-# Enemies, Traps, And Gimmicks
+# Enemies, Traps, Gimmicks, And Boss
 
 ## Purpose
 
-Define the first-slice encounter vocabulary so stages can teach combat, traversal, and reward collection without inventing behavior during implementation.
+Define the pressure vocabulary of the first complete run. Every actor must create a
+specific player response and fit declared room geometry; variety comes from
+compatible combinations, not arbitrary spawning.
 
 ## Scope
 
-This guide covers normal enemies, boss-related actors, traps, and map gimmicks planned for the first playable version. It intentionally favors clear teaching roles over content volume.
+This specification covers six normal enemies, two special actors, four core
+hazards, reusable stage gimmicks, encounter budgets, and the Giant Slime King.
+
+## Threat Design Rules
+
+- Each enemy has one primary lesson, one readable tell, and one punish window.
+- Normal contact/projectile/trap damage is 1 unless explicitly approved below.
+- A tell begins before the damaging movement or hitbox becomes active.
+- Enemy health increases only enough to expose its behavior; later stages increase
+  pressure through composition and space.
+- Spawns use compatible authored anchors with stable support and response room.
+- Enemies stop applying damage immediately on defeat and resolve rewards once.
+- Off-screen enemies do not begin burst attacks toward an unseen player.
+- Repeated traps use deterministic phases and preserve a visible safe response.
+
+## Pressure Roles
+
+| Role | Job | Combination limit |
+| --- | --- | --- |
+| `occupier` | Takes ordinary ground and asks for basic spacing. | Up to 3 light occupiers. |
+| `burst` | Temporarily claims a lane after a tell. | One primary burst actor per narrow lane. |
+| `ranged` | Makes stationary play unsafe. | One early; max two only with cover and no active turret overlap. |
+| `guard` | Blocks frontal repetition and asks for flank/stagger. | One per choke; never blocks the only exit. |
+| `vertical` | Claims jump arcs or platforms. | Requires ceiling/landing clearance. |
+| `zone` | Controls persistent space. | Must leave a stable safe route. |
+| `summoner` | Creates escalating target priority. | One; children count against active cap. |
+
+## Normal Enemy Catalog
+
+### Walker (`walker`)
+
+- Role/cost: occupier, 1 point.
+- Existing owner: `WalkerEnemy.gd` + `EnemyBase.gd`.
+- Health: 3; contact damage: 1; speed: 70.
+- Tell: visible patrol and facing are sufficient; no hidden acceleration.
+- Response: approach, jump over, knock back, or basic attack.
+- Punish: hit stun or direction change at patrol edge.
+- Anchor: >= 180 px support, patrol turn points, no immediate ledge fall.
+- Drop: 6 XP guaranteed; common coin chance.
+- Stage use: all stages; first hostile lesson in Stage 1.
+
+### Charger (`charger`)
+
+- Role/cost: burst, 2 points.
+- Existing owner: `ChargerEnemy.gd`.
+- Health: 5; contact damage: 1.
+- Timing seed: warning 0.48 s, charge 0.52 s at 360 px/s, recovery 0.42 s.
+- Tell: body compresses, facing locks, lane warning flashes.
+- Response: jump, dash away, change elevation, or use cover.
+- Punish: recovery after wall/charge endpoint; receives +20 stagger during recovery.
+- Anchor: >= 520 px charge lane or declared wall-stop lane; escape ledge/pad.
+- Exclusion: no poison band active across its only dodge lane.
+- Drop: 12 XP, 3 coins, Rusted Scrap chance.
+
+### Shooter (`shooter`)
+
+- Role/cost: ranged, 2 points.
+- Existing owner: `ShooterEnemy.gd` + `EnemyProjectile.gd`.
+- Health: 4; contact/projectile damage: 1.
+- Timing seed: aim 0.38 s, projectile 280 px/s, 1.8 s interval.
+- Tell: aim line or body pose shows direction; projectile contrasts background.
+- Response: move, use cover, change level, or interrupt.
+- Punish: aim and post-shot pause; melee approach remains possible.
+- Anchor: line-of-sight lane, cover or elevation change, no spawn behind opaque decor.
+- Exclusion: Stage 1 does not pair it with Sentry or poison timing.
+- Drop: 10 XP, 2 coins, Sky Thread chance.
+
+### Shield Guard (`shield_guard`)
+
+- Role/cost: guard, 3 points.
+- Existing owner: `ShieldGuardEnemy.gd`.
+- Health: 7; contact/attack damage: 1.
+- Timing seed: guard 1.2 s, attack tell 0.35 s, recovery 0.55 s.
+- Tell: shield direction and attack windup remain visually distinct.
+- Response: cross behind, stagger with Heavy, bait attack, or use area skill.
+- Punish: back and attack recovery; frontal blocked hits do not damage but still
+  provide clear feedback.
+- Anchor: >= 420 px room, flank route or second elevation, exit cannot sit behind
+  an unflankable guard.
+- Exclusion: one per encounter; no narrow crouch tunnel placement.
+- Drop: 18 XP, 4 coins, high Rusted Scrap chance.
+
+### Leaper (`leaper`)
+
+- Role/cost: vertical/burst, 2 points.
+- Existing owner: `LeaperEnemy.gd`.
+- Health: 4; contact damage: 1.
+- Timing seed: windup 0.35 s, leap 0.52 s, recovery 0.50 s.
+- Tell: crouch and projected landing marker.
+- Response: move through the arc, change elevation, or attack the landing.
+- Punish: fixed landing recovery; landing location cannot retarget after launch.
+- Anchor: >= 420 px horizontal lane, 180 px vertical clearance above arc, stable
+  landing support.
+- Exclusion: no low ceiling or moving-platform-only floor.
+- Drop: 12 XP, 2 coins, Slime Residue or Sky Thread chance.
+
+### Sentry (`sentry`)
+
+- Role/cost: ranged/zone, 3 points.
+- Existing owner: `SentryTurretEnemy.gd`.
+- Health: 6; projectile damage: 1; stationary.
+- Timing seed: warning 0.45 s, projectile 300 px/s, 1.4 s interval, max 2 active.
+- Tell: rotating aim line locks before firing.
+- Response: use cover, change level, close distance, or destroy from range.
+- Punish: cannot turn during the final warning; 0.45 s post-shot pause.
+- Anchor: fixed support, authored cover, no unavoidable crossfire at room entry.
+- Exclusion: two Sentries require at least two independent safe cover zones and a
+  validated no-overlap firing phase.
+- Drop: 20 XP, 5 coins, Rusted Scrap and equipment-blueprint chance.
+
+## Special Actors
+
+### Summon Node (`summon_node`)
+
+- Role/cost: summoner, 4 points; Stage 3 optional/final encounter only.
+- Existing owner: `SummonNodeEnemy.gd`.
+- Health: 8; no contact chase.
+- Warn 0.45 s before spawning; interval 2.6 s.
+- Max 2 active children, 6 total per encounter.
+- Spawn markers stay >= 150 px from player and on stable support.
+- Defeating the node removes or disables remaining children according to encounter
+  completion policy.
+
+### Small Slime (`small_slime`)
+
+- Role/cost: light occupier/add, 1 point.
+- Existing owner: `SmallSlimeEnemy.gd`.
+- Health: 2; contact damage: 1; limited lifetime outside boss.
+- Spawn warning appears before collision/damage activates.
+- Initially used by Summon Node and boss; not random free-roaming filler.
+
+## Encounter Composition
+
+| Budget | Typical legal examples | Forbidden examples |
+| ---: | --- | --- |
+| 1-2 | 2 Walkers; 1 Charger; 1 Shooter. | Burst plus hazard before either is taught. |
+| 3-4 | Charger + Walker; Shooter + 2 Walkers; Leaper + Walker. | Shield Guard blocking a single narrow exit. |
+| 5-6 | Shield Guard + Shooter with flank/cover; Charger + Leaper with two escape levels. | Shooter + Sentry without cover; Charger across full poison floor. |
+| 7 | Sentry + Shield + Walker in reviewed Stage 3 arena; Summon Node + light support. | Two burst actors sharing one unavoidable lane; summoner plus active-cap overflow. |
+
+Composition rules:
+
+- At most one new enemy lesson per teaching encounter.
+- At most two simultaneous high-attention roles: burst, ranged, guard, vertical,
+  zone, or summoner.
+- Light occupiers may fill downtime but cannot obscure tells.
+- The encounter completes deterministically when its declared required enemies or
+  objective are resolved; wandering physics pickups are irrelevant.
+- Reinforcements need authored warning anchors and count toward the same budget.
+
+## Hazard Catalog
+
+### Spike Row (`spike_row`)
+
+- Cost: 1; damage: 1.
+- Static visible geometry; no delayed tell required.
+- Critical placement leaves >= 220 px takeoff/landing or a safe walking bypass.
+- Does not begin inside a camera-hidden landing.
+
+### Timed Poison Vent (`timed_poison_vent`)
+
+- Cost: 2; damage: 1 per tick.
+- Existing owner: `TimedPoisonVent.gd`.
+- Timing seed: warning 0.70 s, active 1.20 s, cooldown 1.50 s, tick 0.65 s.
+- Warning and active states differ by shape/motion and color.
+- Permanent safe support remains available; encounter combinations preserve an
+  escape route during warning.
+
+### Fall Reset (`fall_reset`)
+
+- Cost: 1; damage: 1 then safe checkpoint/anchor reset.
+- Existing owner: `FallResetZone.gd`.
+- Gap and lower void are visually obvious before commitment.
+- Reset cannot emit a second damage/death before invulnerability begins.
+
+### Crumbling Platform (`crumbling_platform`)
+
+- Cost: 2.
+- Existing owner: `CrumblingPlatform.gd`.
+- Timing seed: shake 0.45 s, disabled 1.8 s, reappear 0.25 s.
+- Stable waiting/landing pads exist at both ends; required route has lower recovery
+  or checkpoint reset.
+- It resets on stage/room retry.
+
+`crushing_block` remains excluded until a production component and reviewed safe
+timing room exist.
+
+## Gimmick Catalog
+
+| ID | Existing foundation | Gameplay job | Required safety |
+| --- | --- | --- | --- |
+| `one_way_platform` | Player drop-through + collision | Vertical choice and recovery. | Safe destination and return/forward path. |
+| `rope` | `Climbable.gd` | Shared vertical traversal. | Stable entry/exit and lower recovery. |
+| `moving_platform` | not implemented | Predictable timing bridge. | Safe wait pads, visible path, reset state. |
+| `switch_gate` | `SwitchGate.gd`, `SwitchInteractable.gd` | Short visible objective loop. | Switch precedes gate and action is idempotent. |
+| `destructible_cache` | `DestructibleObstacle.gd` | Optional reward access and attack feedback. | Never sole required route unless it resets. |
+| `chest` | planned Interactable subtype | Deliberate reward claim. | Stable interaction space; applies once. |
+| `material_node` | planned damage/interact subtype | Optional persistent resource risk. | Reachable optional route and deterministic drop source. |
+| `checkpoint` | `StageCheckpoint.gd` | Recovery and pacing. | No active pressure in safe radius. |
+| `exit_portal` | `ExitPortal.gd` | Stage completion. | Objective-valid, unobstructed interaction space. |
+
+## Giant Slime King
+
+### Arena
+
+- Authored 1280x720 combat frame with 1,080 px usable ground lane.
+- Two one-way side platforms at different heights; neither is mandatory safety.
+- Camera remains stable; entrance locks only after player control and boss intro.
+- Arena supports melee approach, ranged line of sight, dash/jump evasion, and add
+  cleanup for every character.
+- No pattern damages the player during intro, phase transition, or death cleanup.
+
+### Base properties
+
+- ID: `slime_king`.
+- Health seed: 80; phase 2 begins at 50%.
+- Contact damage: 1 only during declared active movement.
+- Stagger: normal hits build a bounded stagger meter; stagger grants a 1.4 s punish
+  window and resets queued combo.
+- Pattern scheduler avoids immediate repeats and records chosen patterns.
+
+### Pattern timing
+
+| Pattern | Startup | Active | Recovery | Counterplay |
+| --- | ---: | ---: | ---: | --- |
+| `jump_slam` | 0.80 s shadow and ascent | 0.18 s landing + two ground shockwaves | 1.00 s | Leave shadow, then jump/dash shockwave; punish landing. |
+| `body_bump` | 0.55 s lean/flash, direction locks | 0.45 s horizontal body hitbox | 0.80 s | Change elevation or cross behind; punish wall/endpoint. |
+| `poison_bands` | 0.90 s floor warnings | 2.20 s alternating active bands | 0.80 s cleanup | Move to guaranteed safe 35% floor/platform area. |
+| `small_slime_summon` | 0.70 s two spawn markers | Adds activate; max 2 | 1.00 s | Clear adds or use boss recovery; markers never appear on player. |
+
+### Phase 2 legality
+
+- Base timing may accelerate by at most 15%; warning floors remain unchanged.
+- Legal reviewed chains: Body Bump -> 0.50 s neutral -> Jump Slam; Poison Bands ->
+  Summon only when safe floor and add spawn zones do not overlap.
+- Jump Slam cannot land while Poison Bands remove its shockwave jump landing area.
+- Body Bump cannot start while two active adds body-block both side responses.
+- Summon is skipped at active-add cap.
+- After any legal chain, boss takes at least 0.75 s neutral recovery.
+
+### Boss rewards and cleanup
+
+- Boss defeat disables all damage immediately, clears projectiles/hazards/adds,
+  then settles Boss Core and run result exactly once.
+- Player death cancels scheduler and resets arena state before another run.
+- No post-boss card is offered because no following combat remains.
 
 ## Requirements
 
-### Enemy Design Rules
-
-- Every enemy type must have a clear player lesson.
-- Enemy drops must reference a drop table or reward source ID.
-- Contact damage should be predictable and usually deal 1 health.
-- Enemy tells should be visible before sudden burst movement or projectile pressure.
-- The first slice should avoid enemies that require advanced movement not yet taught.
-
-### Trap Design Rules
-
-- Traps must be readable before they punish the player.
-- Traps should usually deal 1 health in the first slice.
-- Repeating traps need consistent timing.
-- Trap placement should teach before combining with enemy pressure.
-- Boss and major stage hazards must have a warning/startup phase before active damage.
-
-### Gimmick Design Rules
-
-- Gimmicks should change traversal, route choice, or reward access.
-- A gimmick must not permanently block stage completion unless it is a deliberate key/gate challenge.
-- Optional reward paths may be riskier than the main route.
-- Moving platforms must have stable timing and safe boarding space.
-
-## First-Slice Content
-
-**Enemies**
-
-- Walker: basic patrol target, teaches attack timing and contact damage.
-- Charger: warning then horizontal burst, teaches dodge and jump spacing.
-- Shooter: fires projectile, teaches movement under ranged pressure.
-- Small Slime: weak summoned enemy, used by boss phase 2 and simple swarm moments.
-
-**Boss**
-
-- Giant Slime King: two-phase pattern boss with jump slam, floor poison, body bump, summons, and faster phase-2 timing.
-
-**Traps**
-
-- Spike row: immediate contact hazard.
-- Poison floor: delayed warning and active damage floor.
-- Falling pit: reposition or damage/respawn pressure.
-- Crushing block: future hook; only use if warning timing is implemented.
-
-**Gimmicks**
-
-- One-way platform: supports drop-through movement.
-- Moving platform: teaches timing and patience.
-- Locked gate/key: optional route or simple required routing.
-- Breakable wall: optional reward access.
-- Chest: visible reward container.
-- Material node: interactable or breakable resource source.
-- Exit portal: normal stage clear.
-- Boss warning zone: telegraph area before boss damage.
+- Enemy AI declares a drop source ID but does not grant rewards directly.
+- Encounter allocator owns composition and anchor selection.
+- Every threat has a visual/audio tell suitable for its response time.
+- Every repeated or spawned actor has an active cap and cleanup owner.
+- Placeholder geometry remains readable without debug labels.
 
 ## Acceptance Criteria
 
-- Enemy, trap, and gimmick IDs exist in `data/design/first_slice/enemy_trap_gimmick_catalog.json`.
-- Stage layout data references only documented encounter/gimmick concepts.
-- Future implementation can place content from the guide without redefining its teaching purpose.
-- Boss attacks preserve the PRD rule: visible startup warning, active damage window, and recovery.
+- Every normal enemy can kill and be killed in an isolated production encounter.
+- Each enemy's intended response and punish window are observable in play.
+- Curated encounter fixtures cover every legal pair and every forbidden high-risk
+  combination.
+- No enemy floats, patrols off support, fires through required opaque cover, or
+  blocks an exit/checkpoint permanently.
+- Every hazard teaches alone before appearing with high encounter pressure.
+- Boss scheduler simulation never produces an illegal overlap or repeat sequence.
+- Warrior, Archer, and Assassin defeat the boss with base loadouts, and the boss
+  can defeat each through readable mistakes.
+
+## Non-Goals
+
+- Generic behavior-tree framework before current state scripts prove insufficient.
+- Random enemy stat affixes, elite modifiers, one-shot attacks, or invisible traps.
+- More normal enemy types before the six roles produce distinct encounters.
+- Procedurally generated boss arena or unrestricted pattern overlap.
 
 ## Related
 
-- `data/design/first_slice/enemy_trap_gimmick_catalog.json`
-- `data/design/first_slice/stage_layouts.json`
 - `docs/product/2d_platform_action_card_game_prd.md`
+- `docs/design/PROCEDURAL_REGION_GENERATION.md`
+- `docs/design/MAP_AUTHORING_PIPELINE_CONTRACT.md`
+- `data/design/first_slice/enemy_trap_gimmick_catalog.json`
