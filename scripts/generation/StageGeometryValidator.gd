@@ -137,18 +137,31 @@ static func _validate_optional_return(
 		if room.required_route:
 			continue
 		var host := hosts.get(String(room.id)) as RoomTemplateHost
-		var rope := host.get_node_or_null("Anchors/Objective/ReturnRope") as Climbable if host != null else null
 		var return_connection := _connection_from(plan, room.id, &"return")
-		if host == null or rope == null or return_connection == null:
-			errors.append("Optional room '%s' needs an authored return rope." % room.id)
+		if host == null or return_connection == null:
+			errors.append("Optional room '%s' needs an authored return route." % room.id)
 			continue
 		var target_host := hosts.get(String(return_connection.to_room_id)) as RoomTemplateHost
 		var optional_data := catalog.get_room_by_id(room.template_id)
-		var target_data := catalog.get_room_by_id(return_connection.to_room_id)
+		var target_room := _room_by_id(plan, return_connection.to_room_id)
+		var target_data := (
+			catalog.get_room_by_id(target_room.template_id)
+			if target_room != null
+			else null
+		)
+		if optional_data == null or target_data == null:
+			errors.append("Optional room '%s' return room references are invalid." % room.id)
+			continue
 		var from_socket := _find_socket(optional_data.exit_sockets, return_connection.from_socket_id)
 		var to_socket := _find_socket(target_data.entry_sockets, return_connection.to_socket_id)
 		if target_host == null or from_socket == null or to_socket == null:
 			errors.append("Optional room '%s' return socket references are invalid." % room.id)
+			continue
+		if from_socket.transition_type != &"rope":
+			continue
+		var rope := _find_climbable(host)
+		if rope == null:
+			errors.append("Optional room '%s' rope return needs an authored climbable." % room.id)
 			continue
 		var rope_top := rope.global_position.y - rope.climbable_size.y * 0.5
 		var rope_bottom := rope.global_position.y + rope.climbable_size.y * 0.5
@@ -203,4 +216,21 @@ static func _find_socket(
 	for socket in sockets:
 		if socket != null and socket.id == socket_id:
 			return socket
+	return null
+
+
+static func _room_by_id(plan: StagePlan, room_id: StringName) -> PlannedRoom:
+	for room in plan.get_rooms():
+		if room.id == room_id:
+			return room
+	return null
+
+
+static func _find_climbable(host: Node) -> Climbable:
+	var named_return := host.get_node_or_null("Anchors/Objective/ReturnRope") as Climbable
+	if named_return != null:
+		return named_return
+	for child in host.find_children("*", "", true, false):
+		if child is Climbable:
+			return child as Climbable
 	return null

@@ -47,13 +47,12 @@ func build_plan(
 		RoomSocketCompatibility.validate_movement_limits(movement_limits),
 		"Movement limits"
 	)
-	if not profile.supports_one_optional_branch():
-		preflight_errors.append("Stage planner requires a profile that allows one optional branch.")
 	if not preflight_errors.is_empty():
 		_last_report.record_validation_errors(preflight_errors)
 		return null
 
 	var graph_rng := streams.create_rng(&"room_graph")
+	var optional_branch_count := _pick_branch_count(profile.optional_branch_count, graph_rng)
 	var candidates_by_role: Array = []
 	for role in profile.required_roles:
 		var candidates := catalog.get_rooms_for_role(profile.id, role, true)
@@ -74,14 +73,19 @@ func build_plan(
 	)
 	optional_candidates = _filter_budget_compatible(optional_candidates, profile)
 	_shuffle(optional_candidates, graph_rng)
-	if optional_candidates.is_empty():
-		_last_report.record_failure(&"missing_optional_room", "No eligible optional room is available.")
+	if optional_candidates.size() < optional_branch_count:
+		_last_report.record_failure(
+			&"missing_optional_room",
+			"Stage needs %d unique optional rooms, but only %d are eligible."
+			% [optional_branch_count, optional_candidates.size()]
+		)
 		return null
 
 	var selection := _search_route(
 		0,
 		candidates_by_role,
 		optional_candidates,
+		optional_branch_count,
 		[],
 		{},
 		movement_limits
@@ -89,12 +93,13 @@ func build_plan(
 	if selection.is_empty():
 		_last_report.record_failure(
 			&"no_compatible_route",
-			"No unique required route with a compatible rejoining optional branch exists."
+			"No unique required route with %d compatible rejoining optional branches exists."
+			% optional_branch_count
 		)
 		return null
 
 	var required_templates: Array[RoomTemplateData] = selection["required_rooms"]
-	var optional_template: RoomTemplateData = selection["optional_room"]
+	var optional_templates: Array[RoomTemplateData] = selection["optional_rooms"]
 	var planned_rooms: Array[PlannedRoom] = []
 	var encounter_rng := streams.create_rng(&"encounter")
 	var hazard_rng := streams.create_rng(&"hazard")
@@ -111,17 +116,18 @@ func build_plan(
 				reward_rng
 			)
 		)
-	planned_rooms.append(
-		_plan_room(
-			optional_template,
-			false,
-			0,
-			profile,
-			encounter_rng,
-			hazard_rng,
-			reward_rng
+	for branch_index in optional_templates.size():
+		planned_rooms.append(
+			_plan_room(
+				optional_templates[branch_index],
+				false,
+				branch_index,
+				profile,
+				encounter_rng,
+				hazard_rng,
+				reward_rng
+			)
 		)
-	)
 
 	var connections: Array[PlannedConnection] = selection["connections"]
 	var encounters: Array[PlannedEncounter] = []
@@ -153,13 +159,25 @@ func build_plan(
 	for room in required_templates:
 		required_ids.append(String(room.id))
 	_last_report.record_decision(&"required_route", {"room_ids": required_ids})
+	var branch_decisions: Array[Dictionary] = []
+	for branch_index in optional_templates.size():
+		var branch_connection := _connection_by_id(
+			connections,
+			StringName("optional_branch_%d" % branch_index)
+		)
+		var return_connection := _connection_by_id(
+			connections,
+			StringName("optional_return_%d" % branch_index)
+		)
+		branch_decisions.append({
+			"branch_index": branch_index,
+			"room_id": String(optional_templates[branch_index].id),
+			"from_room_id": String(branch_connection.from_room_id),
+			"to_room_id": String(return_connection.to_room_id),
+		})
 	_last_report.record_decision(
-		&"optional_branch",
-		{
-			"room_id": String(optional_template.id),
-			"from_room_id": String(connections[-2].from_room_id),
-			"to_room_id": String(connections[-1].to_room_id),
-		}
+		&"optional_branches",
+		{"count": optional_templates.size(), "branches": branch_decisions}
 	)
 	return stage_plan
 
@@ -186,6 +204,7 @@ func _search_route(
 	role_index: int,
 	candidates_by_role: Array,
 	optional_candidates: Array[RoomTemplateData],
+	optional_branch_count: int,
 	selected: Array,
 	used_template_ids: Dictionary,
 	movement_limits: Dictionary
@@ -200,19 +219,20 @@ func _search_route(
 		)
 		if route_connections.is_empty():
 			return {}
-		var branch := _find_optional_branch(
+		var branches := _find_optional_branches(
 			required_templates,
 			optional_candidates,
+			optional_branch_count,
 			route_connections["used_sockets"],
 			movement_limits
 		)
-		if branch.is_empty():
+		if branches.is_empty():
 			return {}
 		var connections: Array[PlannedConnection] = route_connections["connections"]
-		connections.append_array(branch["connections"])
+		connections.append_array(branches["connections"])
 		return {
 			"required_rooms": required_templates,
-			"optional_room": branch["room"],
+			"optional_rooms": branches["rooms"],
 			"connections": connections,
 		}
 
@@ -236,6 +256,7 @@ func _search_route(
 			role_index + 1,
 			candidates_by_role,
 			optional_candidates,
+			optional_branch_count,
 			selected,
 			used_template_ids,
 			movement_limits
@@ -281,66 +302,117 @@ func _build_required_connections(
 	return {"connections": connections, "used_sockets": used_sockets}
 
 
-func _find_optional_branch(
+func _find_optional_branches(
 	required_rooms: Array[RoomTemplateData],
 	optional_candidates: Array[RoomTemplateData],
+	branch_count: int,
 	reserved_sockets: Dictionary,
 	movement_limits: Dictionary
 ) -> Dictionary:
-	var choice_index := -1
-	for room_index in required_rooms.size():
-		if required_rooms[room_index].role == &"choice":
-			choice_index = room_index
-			break
-	if choice_index < 0:
+	if branch_count == 0:
+		var no_rooms: Array[RoomTemplateData] = []
+		var no_connections: Array[PlannedConnection] = []
+		return {"rooms": no_rooms, "connections": no_connections}
+	var branch_sources: Array[RoomTemplateData] = []
+	for room in required_rooms:
+		if room.role == &"choice":
+			branch_sources.append(room)
+	if branch_sources.is_empty():
 		return {}
-	var branch_source := required_rooms[choice_index]
-	for optional_room in optional_candidates:
-		if required_rooms.has(optional_room):
-			continue
-		var used := reserved_sockets.duplicate()
-		var branch_pair := _find_available_pair(
-			branch_source,
-			optional_room,
-			&"optional",
-			movement_limits,
-			used
-		)
-		if branch_pair.is_empty():
-			continue
-		_reserve_pair(used, branch_source, optional_room, branch_pair)
-		var return_pair := _find_available_pair(
-			optional_room,
-			branch_source,
-			&"return",
-			movement_limits,
-			used
-		)
-		if return_pair.is_empty():
-			continue
-		var branch_from: RoomSocketData = branch_pair["from"]
-		var branch_to: RoomSocketData = branch_pair["to"]
-		var return_from: RoomSocketData = return_pair["from"]
-		var return_to: RoomSocketData = return_pair["to"]
-		var branch_connections: Array[PlannedConnection] = [
-			PlannedConnection.new(
-				&"optional_branch_0",
-				branch_source.id,
-				branch_from.id,
-				optional_room.id,
-				branch_to.id,
-				&"optional"
-			),
-			PlannedConnection.new(
-				&"optional_return_0",
-				optional_room.id,
-				return_from.id,
-				branch_source.id,
-				return_to.id,
-				&"return"
-			),
-		]
-		return {"room": optional_room, "connections": branch_connections}
+	return _search_optional_branches(
+		0,
+		branch_count,
+		branch_sources,
+		optional_candidates,
+		{},
+		reserved_sockets.duplicate(),
+		[],
+		[],
+		movement_limits
+	)
+
+
+func _search_optional_branches(
+	branch_index: int,
+	branch_count: int,
+	branch_sources: Array[RoomTemplateData],
+	optional_candidates: Array[RoomTemplateData],
+	selected_optional_ids: Dictionary,
+	used_sockets: Dictionary,
+	selected_rooms: Array[RoomTemplateData],
+	selected_connections: Array[PlannedConnection],
+	movement_limits: Dictionary
+) -> Dictionary:
+	if branch_index >= branch_count:
+		return {
+			"rooms": selected_rooms.duplicate(),
+			"connections": selected_connections.duplicate(),
+		}
+	for branch_source in branch_sources:
+		for optional_room in optional_candidates:
+			if selected_optional_ids.has(optional_room.id):
+				continue
+			for branch_pair in _find_available_pairs(
+				branch_source,
+				optional_room,
+				&"optional",
+				movement_limits,
+				used_sockets
+			):
+				var branch_used := used_sockets.duplicate()
+				_reserve_pair(branch_used, branch_source, optional_room, branch_pair)
+				for return_pair in _find_available_pairs(
+					optional_room,
+					branch_source,
+					&"return",
+					movement_limits,
+					branch_used
+				):
+					var next_used := branch_used.duplicate()
+					_reserve_pair(next_used, optional_room, branch_source, return_pair)
+					var branch_from: RoomSocketData = branch_pair["from"]
+					var branch_to: RoomSocketData = branch_pair["to"]
+					var return_from: RoomSocketData = return_pair["from"]
+					var return_to: RoomSocketData = return_pair["to"]
+					selected_rooms.append(optional_room)
+					selected_optional_ids[optional_room.id] = true
+					selected_connections.append(
+						PlannedConnection.new(
+							StringName("optional_branch_%d" % branch_index),
+							branch_source.id,
+							branch_from.id,
+							optional_room.id,
+							branch_to.id,
+							&"optional"
+						)
+					)
+					selected_connections.append(
+						PlannedConnection.new(
+							StringName("optional_return_%d" % branch_index),
+							optional_room.id,
+							return_from.id,
+							branch_source.id,
+							return_to.id,
+							&"return"
+						)
+					)
+					var result := _search_optional_branches(
+						branch_index + 1,
+						branch_count,
+						branch_sources,
+						optional_candidates,
+						selected_optional_ids,
+						next_used,
+						selected_rooms,
+						selected_connections,
+						movement_limits
+					)
+					if not result.is_empty():
+						return result
+					selected_connections.pop_back()
+					selected_connections.pop_back()
+					selected_optional_ids.erase(optional_room.id)
+					selected_rooms.pop_back()
 	return {}
 
 
@@ -351,6 +423,24 @@ func _find_available_pair(
 	movement_limits: Dictionary,
 	used_sockets: Dictionary
 ) -> Dictionary:
+	var pairs := _find_available_pairs(
+		from_room,
+		to_room,
+		route_role,
+		movement_limits,
+		used_sockets
+	)
+	return {} if pairs.is_empty() else pairs[0]
+
+
+func _find_available_pairs(
+	from_room: RoomTemplateData,
+	to_room: RoomTemplateData,
+	route_role: StringName,
+	movement_limits: Dictionary,
+	used_sockets: Dictionary
+) -> Array[Dictionary]:
+	var pairs: Array[Dictionary] = []
 	for from_socket in from_room.exit_sockets:
 		var from_key := _socket_key(from_room.id, &"exit", from_socket.id)
 		if used_sockets.has(from_key):
@@ -365,8 +455,18 @@ func _find_available_pair(
 				route_role,
 				movement_limits
 			):
-				return {"from": from_socket, "to": to_socket}
-	return {}
+				pairs.append({"from": from_socket, "to": to_socket})
+	return pairs
+
+
+func _connection_by_id(
+	connections: Array[PlannedConnection],
+	connection_id: StringName
+) -> PlannedConnection:
+	for connection in connections:
+		if connection.id == connection_id:
+			return connection
+	return null
 
 
 func _reserve_pair(
@@ -466,6 +566,12 @@ func _pick_budget(budget: Vector2i, rng: RandomNumberGenerator) -> int:
 	if budget.x == budget.y:
 		return budget.x
 	return rng.randi_range(budget.x, budget.y)
+
+
+func _pick_branch_count(branch_count: Vector2i, rng: RandomNumberGenerator) -> int:
+	if branch_count.x == branch_count.y:
+		return branch_count.x
+	return rng.randi_range(branch_count.x, branch_count.y)
 
 
 func _shuffle(values: Array, rng: RandomNumberGenerator) -> void:

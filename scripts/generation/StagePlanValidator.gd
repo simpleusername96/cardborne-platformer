@@ -230,14 +230,22 @@ static func _validate_rooms(
 			"Stage Plan optional room count %d is outside profile range %s."
 			% [optional_rooms.size(), profile.optional_branch_count]
 		)
-	for room in optional_rooms:
+	optional_rooms.sort_custom(
+		func(first: PlannedRoom, second: PlannedRoom) -> bool:
+			return first.route_index < second.route_index
+	)
+	for branch_index in optional_rooms.size():
+		var room := optional_rooms[branch_index]
 		if room.role != profile.optional_room_role:
 			errors.append(
 				"Optional planned room '%s' needs role '%s'."
 				% [room.id, profile.optional_room_role]
 			)
-		if room.route_index < 0:
-			errors.append("Optional planned room '%s' needs a non-negative branch index." % room.id)
+		if room.route_index != branch_index:
+			errors.append(
+				"Optional branch index %d is missing or duplicated near room '%s'."
+				% [branch_index, room.id]
+			)
 	if start_count != 1:
 		errors.append("Stage Plan needs exactly one start room, found %d." % start_count)
 	if terminal_count != 1:

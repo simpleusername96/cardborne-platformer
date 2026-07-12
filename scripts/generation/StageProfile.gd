@@ -46,6 +46,8 @@ func validate_definition() -> PackedStringArray:
 		errors.append("Stage profile '%s' has invalid terminal role '%s'." % [id, terminal_room_role])
 	if optional_branch_count.x < 0 or optional_branch_count.y < optional_branch_count.x:
 		errors.append("Stage profile '%s' optional branch count is invalid." % id)
+	if optional_branch_count.y > 0 and not required_roles.has(&"choice"):
+		errors.append("Stage profile '%s' needs a choice room for optional branches." % id)
 	_validate_budget(errors, encounter_budget_per_combat_room, "combat encounter")
 	_validate_budget(errors, hazard_budget_per_room, "hazard")
 	_validate_budget(errors, reward_budget_per_room, "reward")
@@ -65,8 +67,13 @@ func validate_definition() -> PackedStringArray:
 	return errors
 
 
+func supports_optional_branch_count(branch_count: int) -> bool:
+	return branch_count >= optional_branch_count.x and branch_count <= optional_branch_count.y
+
+
+# Kept for focused Stage 1-2 validators that assert their exact one-branch contract.
 func supports_one_optional_branch() -> bool:
-	return optional_branch_count.x <= 1 and optional_branch_count.y >= 1
+	return supports_optional_branch_count(1)
 
 
 func _validate_budget(errors: PackedStringArray, budget: Vector2i, label: String) -> void:

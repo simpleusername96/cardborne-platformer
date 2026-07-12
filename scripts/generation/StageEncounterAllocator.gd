@@ -1,8 +1,8 @@
 class_name StageEncounterAllocator
 extends RefCounted
 
-# Stage 1 caps keep exact-budget backtracking finite and reject accidental content growth.
-const MAX_STAGE_ROOMS := 8
+# MVP caps keep exact-budget backtracking finite while admitting the 8+2 Stage 3 graph.
+const MAX_STAGE_ROOMS := 12
 const MAX_ENCOUNTERS_PER_ROOM := 4
 const MAX_CANDIDATES_PER_ROOM := 32
 const MAX_SEARCH_STATES_PER_ROOM := 512
@@ -99,7 +99,7 @@ func _validate_inputs(
 		_last_errors.append("StagePlan already contains encounters; allocation will not overwrite them.")
 	if plan.get_rooms().size() > MAX_STAGE_ROOMS:
 		_last_errors.append(
-			"StagePlan has %d rooms, exceeding the Stage 1 allocator bound of %d."
+			"StagePlan has %d rooms, exceeding the normal-stage allocator bound of %d."
 			% [plan.get_rooms().size(), MAX_STAGE_ROOMS]
 		)
 	if plan.profile_id != profile.id or plan.profile_content_version != profile.content_version:
@@ -176,7 +176,7 @@ func _allocate_room(
 		return {"ok": false}
 	if template.enemy_anchors.size() > MAX_ENCOUNTERS_PER_ROOM:
 		_last_errors.append(
-			"Room '%s' has %d enemy anchors, exceeding the Stage 1 bound of %d."
+			"Room '%s' has %d enemy anchors, exceeding the normal-stage bound of %d."
 			% [room.id, template.enemy_anchors.size(), MAX_ENCOUNTERS_PER_ROOM]
 		)
 		return {"ok": false}
@@ -195,7 +195,7 @@ func _allocate_room(
 	var candidates_by_anchor: Array = candidate_result["candidates_by_anchor"]
 	if candidates_by_anchor.is_empty():
 		_last_errors.append(
-			"Room '%s' has no eligible pressure role, archetype, and Stage 1 variant chain."
+			"Room '%s' has no eligible pressure role, archetype, and stage variant chain."
 			% room.id
 		)
 		return {"ok": false}
