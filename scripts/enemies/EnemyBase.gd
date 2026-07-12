@@ -15,6 +15,7 @@ signal damaged(enemy: EnemyBase, damage_info: DamageInfo)
 @export var defeat_below_y: float = 900.0
 @export var auto_reset_on_defeat: bool = true
 @export var defeat_reset_delay: float = 2.0
+@export var encounter_bounds: Rect2 = Rect2()
 
 @export_group("Resolved Enemy")
 @export var enemy_catalog: EnemyCatalog
@@ -213,6 +214,17 @@ func get_combat_snapshot() -> Dictionary:
 
 func is_staggered() -> bool:
 	return staggered_timer > 0.0
+
+
+func is_target_within_encounter(target: Node2D) -> bool:
+	if target == null:
+		return false
+	return encounter_bounds.size == Vector2.ZERO or encounter_bounds.has_point(target.global_position)
+
+
+func is_player_within_encounter() -> bool:
+	var target := get_tree().get_first_node_in_group("player") as Node2D
+	return is_target_within_encounter(target)
 
 
 func _resolve_enemy_spec() -> void:

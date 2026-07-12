@@ -17,7 +17,9 @@ func _on_body_entered(body: Node) -> void:
 		return
 
 	var active_stage := get_tree().get_first_node_in_group("active_stage")
-	if active_stage != null and active_stage.has_method("respawn_player"):
+	if active_stage != null and active_stage.has_method("reset_player_after_fall"):
+		active_stage.reset_player_after_fall(reason)
+	elif active_stage != null and active_stage.has_method("respawn_player"):
 		active_stage.respawn_player(reason)
 
 

@@ -57,19 +57,31 @@ func set_checkpoint(checkpoint_id: String, checkpoint_position: Vector2, announc
 
 
 func respawn_player(reason: String = "respawn") -> void:
+	_return_player_to_checkpoint(reason, true)
+
+
+func reset_player_after_fall(reason: String = "fall") -> void:
+	_return_player_to_checkpoint(reason, false)
+
+
+func _return_player_to_checkpoint(reason: String, revive: bool) -> void:
 	if player == null or not is_instance_valid(player):
 		spawn_player()
 	if player == null or not is_instance_valid(player):
 		return
 
-	RunState.revive_player()
+	if revive:
+		RunState.revive_player()
 	if player.has_method("respawn_at"):
 		player.respawn_at(current_checkpoint_position, respawn_invulnerability_time)
 	else:
 		player.global_position = current_checkpoint_position
 		player.velocity = Vector2.ZERO
 	_after_player_respawned()
-	SignalBus.status_message_changed.emit("Respawned at %s (%s)" % [current_checkpoint_id, reason])
+	var verb := "Respawned" if revive else "Returned"
+	SignalBus.status_message_changed.emit(
+		"%s to %s (%s)" % [verb, current_checkpoint_id, reason]
+	)
 
 
 func respawn_player_after_defeat() -> void:

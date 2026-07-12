@@ -1,0 +1,51 @@
+[gd_resource type="Resource" script_class="RoomTemplateData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/stages/RoomTemplateData.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/stages/RoomSocketData.gd" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/rooms/lower_ruins/LrStartShelf.tscn" id="3"]
+
+[sub_resource type="Resource" id="EntrySocket"]
+script = ExtResource("2")
+id = &"start_entry"
+direction = &"left"
+route_role = &"critical"
+local_position = Vector2(0, 600)
+opening_size = Vector2(160, 140)
+support_top = 600.0
+transition_type = &"seam"
+required_ability = &"baseline"
+approach_width = 280.0
+landing_width = 280.0
+headroom = 140.0
+
+[sub_resource type="Resource" id="ExitSocket"]
+script = ExtResource("2")
+id = &"start_exit"
+direction = &"right"
+route_role = &"critical"
+local_position = Vector2(1120, 600)
+opening_size = Vector2(160, 140)
+support_top = 600.0
+transition_type = &"seam"
+required_ability = &"baseline"
+approach_width = 280.0
+landing_width = 280.0
+headroom = 140.0
+
+[resource]
+script = ExtResource("1")
+id = &"lr_start_shelf"
+display_name = "Start Shelf"
+content_version = 1
+scene = ExtResource("3")
+role = &"start"
+stage_tags = Array[StringName]([&"ruin_approach"])
+required_route = true
+bounds = Rect2(0, 0, 1120, 720)
+entry_sockets = Array[ExtResource("2")]([SubResource("EntrySocket")])
+exit_sockets = Array[ExtResource("2")]([SubResource("ExitSocket")])
+encounter_budget = Vector2i(0, 0)
+hazard_budget = Vector2i(0, 0)
+reward_budget = Vector2i(0, 0)
+recovery_anchor_ids = Array[StringName]([&"start_recovery"])
+estimated_seconds = Vector2i(10, 20)

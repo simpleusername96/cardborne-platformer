@@ -33,7 +33,7 @@ func interact(player: Node) -> void:
 func set_interaction_enabled(enabled: bool) -> void:
 	interaction_enabled = enabled
 	if _player != null:
-		SignalBus.interaction_prompt_changed.emit(_active_prompt(), not _active_prompt().is_empty())
+		_publish_prompt(_active_prompt())
 
 
 func _on_body_entered(body: Node) -> void:
@@ -42,7 +42,7 @@ func _on_body_entered(body: Node) -> void:
 
 	_player = body
 	var active_prompt := _active_prompt()
-	SignalBus.interaction_prompt_changed.emit(active_prompt, not active_prompt.is_empty())
+	_publish_prompt(active_prompt)
 
 
 func _on_body_exited(body: Node) -> void:
@@ -50,8 +50,16 @@ func _on_body_exited(body: Node) -> void:
 		return
 
 	_player = null
-	SignalBus.interaction_prompt_changed.emit("", false)
+	_publish_prompt("")
 
 
 func _active_prompt() -> String:
 	return prompt_text if interaction_enabled else disabled_prompt_text
+
+
+func _publish_prompt(message: String) -> void:
+	if not is_inside_tree():
+		return
+	var bus := get_node_or_null("/root/SignalBus")
+	if bus != null:
+		bus.emit_signal("interaction_prompt_changed", message, not message.is_empty())

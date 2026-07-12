@@ -38,6 +38,12 @@ func validate_definition() -> PackedStringArray:
 		errors.append("Room socket '%s' has invalid required ability '%s'." % [id, required_ability])
 	if opening_size.x <= 0.0 or opening_size.y <= 0.0:
 		errors.append("Room socket '%s' needs positive opening size." % id)
+	if (
+		not is_finite(local_position.x)
+		or not is_finite(local_position.y)
+		or not is_finite(support_top)
+	):
+		errors.append("Room socket '%s' needs finite position and support top." % id)
 	if approach_width <= 0.0 or landing_width <= 0.0 or headroom <= 0.0:
 		errors.append("Room socket '%s' needs positive approach, landing, and headroom." % id)
 	return errors

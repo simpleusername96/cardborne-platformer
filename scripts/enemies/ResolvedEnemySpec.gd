@@ -35,6 +35,10 @@ var _warning_time: float = 0.0
 var _active_time: float = 0.0
 var _recovery_time: float = 0.0
 var _charge_speed: float = 0.0
+var _cadence_time: float = 0.0
+var _projectile_speed: float = 0.0
+var _attack_range: float = 0.0
+var _active_projectile_cap: int = 0
 var _stagger_capacity: int = 0
 
 var _presentation_key: StringName
@@ -118,6 +122,18 @@ var recovery_time: float:
 var charge_speed: float:
 	get:
 		return _charge_speed
+var cadence_time: float:
+	get:
+		return _cadence_time
+var projectile_speed: float:
+	get:
+		return _projectile_speed
+var attack_range: float:
+	get:
+		return _attack_range
+var active_projectile_cap: int:
+	get:
+		return _active_projectile_cap
 var stagger_capacity: int:
 	get:
 		return _stagger_capacity
@@ -192,6 +208,10 @@ func _init(
 	_active_time = variant.active_time
 	_recovery_time = variant.recovery_time
 	_charge_speed = variant.charge_speed
+	_cadence_time = variant.cadence_time
+	_projectile_speed = variant.projectile_speed
+	_attack_range = variant.attack_range
+	_active_projectile_cap = variant.active_projectile_cap
 	_stagger_capacity = variant.stagger_capacity
 
 	_presentation_key = variant.presentation_key
@@ -219,6 +239,10 @@ func get_exact_stats() -> Dictionary:
 		"active": _active_time,
 		"recovery": _recovery_time,
 		"charge_speed": _charge_speed,
+		"cadence": _cadence_time,
+		"projectile_speed": _projectile_speed,
+		"attack_range": _attack_range,
+		"active_projectile_cap": _active_projectile_cap,
 		"stagger_capacity": _stagger_capacity,
 	}
 

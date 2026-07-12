@@ -149,6 +149,28 @@ func validate_authored_variant(
 		minimum_speed_or_range_ratio,
 		maximum_speed_or_range_ratio
 	)
+	_append_optional_ratio_error(
+		errors,
+		variant.id,
+		"cadence",
+		variant.cadence_time,
+		archetype.reference_cadence_time,
+		minimum_cadence_ratio,
+		maximum_cadence_ratio
+	)
+	for ranged_stat in [
+		["projectile speed", variant.projectile_speed, archetype.reference_projectile_speed],
+		["attack range", variant.attack_range, archetype.reference_attack_range],
+	]:
+		_append_optional_ratio_error(
+			errors,
+			variant.id,
+			ranged_stat[0],
+			float(ranged_stat[1]),
+			float(ranged_stat[2]),
+			minimum_speed_or_range_ratio,
+			maximum_speed_or_range_ratio
+		)
 
 	if archetype.reference_stagger_capacity <= 0:
 		errors.append("Enemy archetype '%s' has no valid stagger reference." % archetype.id)

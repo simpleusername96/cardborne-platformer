@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="EnemySceneCatalog" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/EnemySceneCatalog.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/enemies/EnemySceneEntry.gd" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/WalkerRuin.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/ChargerRuin.tscn" id="4"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/ShooterRuin.tscn" id="5"]
+
+[sub_resource type="Resource" id="Walker"]
+script = ExtResource("2")
+archetype_id = &"walker"
+scene = ExtResource("3")
+
+[sub_resource type="Resource" id="Charger"]
+script = ExtResource("2")
+archetype_id = &"charger"
+scene = ExtResource("4")
+
+[sub_resource type="Resource" id="Shooter"]
+script = ExtResource("2")
+archetype_id = &"shooter"
+scene = ExtResource("5")
+
+[resource]
+script = ExtResource("1")
+id = &"first_run_enemy_scenes"
+content_version = 1
+entries = Array[ExtResource("2")]([SubResource("Walker"), SubResource("Charger"), SubResource("Shooter")])

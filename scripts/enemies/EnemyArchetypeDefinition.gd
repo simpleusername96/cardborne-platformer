@@ -24,6 +24,10 @@ const FLOAT_TOLERANCE := 0.0001
 @export var reference_active_time: float = 0.0
 @export var reference_recovery_time: float = 0.0
 @export var reference_charge_speed: float = 0.0
+@export var reference_cadence_time: float = 0.0
+@export var reference_projectile_speed: float = 0.0
+@export var reference_attack_range: float = 0.0
+@export var reference_active_projectile_cap: int = 0
 @export var reference_stagger_capacity: int = 1
 
 @export_group("Room Requirements")
@@ -37,6 +41,8 @@ const FLOAT_TOLERANCE := 0.0001
 @export_group("Safety Bounds")
 @export var minimum_warning_time: float = 0.0
 @export var minimum_recovery_time: float = 0.0
+@export var minimum_cadence_time: float = 0.0
+@export var maximum_active_projectile_cap: int = 0
 @export var maximum_damage: int = NORMAL_DAMAGE
 
 
@@ -72,6 +78,11 @@ func validate_definition() -> PackedStringArray:
 	_validate_nonnegative_float(errors, "reference active time", reference_active_time)
 	_validate_nonnegative_float(errors, "reference recovery time", reference_recovery_time)
 	_validate_nonnegative_float(errors, "reference charge speed", reference_charge_speed)
+	_validate_nonnegative_float(errors, "reference cadence time", reference_cadence_time)
+	_validate_nonnegative_float(errors, "reference projectile speed", reference_projectile_speed)
+	_validate_nonnegative_float(errors, "reference attack range", reference_attack_range)
+	if reference_active_projectile_cap < 0:
+		errors.append("Enemy archetype '%s' reference projectile cap cannot be negative." % id)
 
 	_validate_nonnegative_float(errors, "minimum support width", minimum_support_width)
 	_validate_nonnegative_float(errors, "minimum lane width", minimum_lane_width)
@@ -86,6 +97,9 @@ func validate_definition() -> PackedStringArray:
 
 	_validate_nonnegative_float(errors, "minimum warning time", minimum_warning_time)
 	_validate_nonnegative_float(errors, "minimum recovery time", minimum_recovery_time)
+	_validate_nonnegative_float(errors, "minimum cadence time", minimum_cadence_time)
+	if maximum_active_projectile_cap < 0:
+		errors.append("Enemy archetype '%s' projectile cap ceiling cannot be negative." % id)
 	if maximum_damage != NORMAL_DAMAGE:
 		errors.append("Enemy archetype '%s' maximum damage must be exactly %d." % [id, NORMAL_DAMAGE])
 	if reference_damage > maximum_damage:
@@ -94,6 +108,10 @@ func validate_definition() -> PackedStringArray:
 		errors.append("Enemy archetype '%s' reference warning is below its safety floor." % id)
 	if minimum_recovery_time > reference_recovery_time + FLOAT_TOLERANCE:
 		errors.append("Enemy archetype '%s' reference recovery is below its safety floor." % id)
+	if minimum_cadence_time > reference_cadence_time + FLOAT_TOLERANCE:
+		errors.append("Enemy archetype '%s' reference cadence is below its safety floor." % id)
+	if reference_active_projectile_cap > maximum_active_projectile_cap:
+		errors.append("Enemy archetype '%s' reference projectile cap exceeds its ceiling." % id)
 
 	return errors
 
@@ -107,6 +125,10 @@ func reference_stats() -> Dictionary:
 		"active": reference_active_time,
 		"recovery": reference_recovery_time,
 		"charge_speed": reference_charge_speed,
+		"cadence": reference_cadence_time,
+		"projectile_speed": reference_projectile_speed,
+		"attack_range": reference_attack_range,
+		"active_projectile_cap": reference_active_projectile_cap,
 		"stagger_capacity": reference_stagger_capacity,
 	}
 
@@ -126,6 +148,8 @@ func safety_bounds() -> Dictionary:
 	return {
 		"minimum_warning_time": minimum_warning_time,
 		"minimum_recovery_time": minimum_recovery_time,
+		"minimum_cadence_time": minimum_cadence_time,
+		"maximum_active_projectile_cap": maximum_active_projectile_cap,
 		"maximum_damage": maximum_damage,
 	}
 

@@ -1,0 +1,131 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/stages/RoomTemplateHost.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/stages/RoomAnchor.gd" id="2"]
+
+[sub_resource type="RectangleShape2D" id="ApproachMassShape"]
+size = Vector2(480, 320)
+
+[sub_resource type="RectangleShape2D" id="BasinMassShape"]
+size = Vector2(96, 250)
+
+[sub_resource type="RectangleShape2D" id="LandingMassShape"]
+size = Vector2(544, 340)
+
+[node name="LrBrokenBridge" type="Node2D"]
+script = ExtResource("1")
+room_id = &"lr_broken_bridge"
+
+[node name="Terrain" type="Node2D" parent="."]
+
+[node name="ApproachMass" type="StaticBody2D" parent="Terrain"]
+position = Vector2(240, 580)
+collision_layer = 1
+collision_mask = 0
+metadata/surface_id = &"broken_bridge_approach"
+metadata/support_top = 580.0
+metadata/support_width = 480.0
+metadata/critical = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/ApproachMass"]
+position = Vector2(0, 160)
+shape = SubResource("ApproachMassShape")
+
+[node name="RockVisual" type="Polygon2D" parent="Terrain/ApproachMass"]
+color = Color(0.2, 0.25, 0.28, 1)
+polygon = PackedVector2Array(-240, 0, 240, 0, 240, 320, -240, 320)
+
+[node name="SupportCap" type="Polygon2D" parent="Terrain/ApproachMass"]
+color = Color(0.34, 0.57, 0.6, 1)
+polygon = PackedVector2Array(-240, 0, 240, 0, 240, 8, -240, 8)
+
+[node name="BasinMass" type="StaticBody2D" parent="Terrain"]
+position = Vector2(528, 650)
+collision_layer = 1
+collision_mask = 0
+metadata/support_top = 650.0
+metadata/support_width = 96.0
+metadata/critical = false
+metadata/recovery = true
+metadata/recovery_surface_id = &"broken_bridge_basin"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/BasinMass"]
+position = Vector2(0, 125)
+shape = SubResource("BasinMassShape")
+
+[node name="RockVisual" type="Polygon2D" parent="Terrain/BasinMass"]
+color = Color(0.23, 0.29, 0.32, 1)
+polygon = PackedVector2Array(-48, 0, 48, 0, 48, 250, -48, 250)
+
+[node name="SupportCap" type="Polygon2D" parent="Terrain/BasinMass"]
+color = Color(0.44, 0.54, 0.39, 1)
+polygon = PackedVector2Array(-48, 0, 48, 0, 48, 8, -48, 8)
+
+[node name="LandingMass" type="StaticBody2D" parent="Terrain"]
+position = Vector2(848, 560)
+collision_layer = 1
+collision_mask = 0
+metadata/surface_id = &"broken_bridge_landing"
+metadata/support_top = 560.0
+metadata/support_width = 544.0
+metadata/critical = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/LandingMass"]
+position = Vector2(0, 170)
+shape = SubResource("LandingMassShape")
+
+[node name="RockVisual" type="Polygon2D" parent="Terrain/LandingMass"]
+color = Color(0.2, 0.25, 0.28, 1)
+polygon = PackedVector2Array(-272, 0, 272, 0, 272, 340, -272, 340)
+
+[node name="SupportCap" type="Polygon2D" parent="Terrain/LandingMass"]
+color = Color(0.34, 0.57, 0.6, 1)
+polygon = PackedVector2Array(-272, 0, 272, 0, 272, 8, -272, 8)
+
+[node name="OneWay" type="Node2D" parent="."]
+[node name="Hazards" type="Node2D" parent="."]
+[node name="DecorBack" type="Node2D" parent="."]
+[node name="DecorFront" type="Node2D" parent="."]
+
+[node name="Anchors" type="Node2D" parent="."]
+[node name="Sockets" type="Node2D" parent="Anchors"]
+[node name="Entry" type="Marker2D" parent="Anchors/Sockets"]
+position = Vector2(0, 580)
+[node name="Exit" type="Marker2D" parent="Anchors/Sockets"]
+position = Vector2(1120, 560)
+
+[node name="Enemy" type="Node2D" parent="Anchors"]
+[node name="Hazard" type="Node2D" parent="Anchors"]
+[node name="Reward" type="Node2D" parent="Anchors"]
+[node name="Objective" type="Node2D" parent="Anchors"]
+[node name="SafeEntry" type="Marker2D" parent="Anchors/Objective"]
+position = Vector2(120, 580)
+metadata/safe_radius = 240.0
+[node name="JumpApproach" type="Marker2D" parent="Anchors/Objective"]
+position = Vector2(400, 580)
+metadata/support_id = &"broken_bridge_approach"
+[node name="JumpLanding" type="Marker2D" parent="Anchors/Objective"]
+position = Vector2(700, 560)
+metadata/support_id = &"broken_bridge_landing"
+
+[node name="Recovery" type="Node2D" parent="Anchors"]
+[node name="GapRecovery" type="Marker2D" parent="Anchors/Recovery"]
+position = Vector2(700, 560)
+script = ExtResource("2")
+anchor_id = &"gap_recovery"
+anchor_type = &"recovery"
+safe_radius = 160.0
+required = true
+metadata/safe_radius = 160.0
+metadata/fall_source = &"broken_bridge_basin"
+metadata/forward_route = &"broken_bridge_landing"
+
+[node name="CameraBounds" type="Node2D" parent="."]
+metadata/bounds = Rect2(0, 0, 1120, 720)
+
+[node name="Validation" type="Node2D" parent="."]
+metadata/safe_entry_radius = 240.0
+metadata/required_gap = 96.0
+metadata/max_required_step = 90.0
+metadata/minimum_critical_landing = 220.0
+metadata/gap_recovery_id = &"GapRecovery"

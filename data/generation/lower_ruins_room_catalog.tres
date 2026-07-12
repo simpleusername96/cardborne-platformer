@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="RoomCatalog" load_steps=12 format=3]
+
+[ext_resource type="Script" path="res://scripts/generation/RoomCatalog.gd" id="1"]
+[ext_resource type="Resource" path="res://data/rooms/lower_ruins/lr_start_shelf.tres" id="2"]
+[ext_resource type="Resource" path="res://data/rooms/lower_ruins/lr_rise_steps.tres" id="3"]
+[ext_resource type="Resource" path="res://data/rooms/lower_ruins/lr_broken_bridge.tres" id="4"]
+[ext_resource type="Resource" path="res://data/rooms/lower_ruins/lr_patrol_gallery.tres" id="5"]
+[ext_resource type="Resource" path="res://data/rooms/lower_ruins/lr_charge_lane.tres" id="6"]
+[ext_resource type="Resource" path="res://data/rooms/lower_ruins/lr_shooter_overlook.tres" id="7"]
+[ext_resource type="Resource" path="res://data/rooms/lower_ruins/lr_lower_upper_choice.tres" id="8"]
+[ext_resource type="Resource" path="res://data/rooms/lower_ruins/lr_destructible_cache.tres" id="9"]
+[ext_resource type="Resource" path="res://data/rooms/lower_ruins/lr_material_cavern.tres" id="10"]
+[ext_resource type="Resource" path="res://data/rooms/lower_ruins/lr_exit_ascent.tres" id="11"]
+
+[resource]
+script = ExtResource("1")
+id = &"lower_ruins_rooms"
+display_name = "Lower Ruins Rooms"
+content_version = 1
+rooms = Array[ExtResource("2")]([ExtResource("2"), ExtResource("3"), ExtResource("4"), ExtResource("5"), ExtResource("6"), ExtResource("7"), ExtResource("8"), ExtResource("9"), ExtResource("10"), ExtResource("11")])

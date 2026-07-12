@@ -1,8 +1,9 @@
-[gd_resource type="Resource" script_class="RoomTemplateData" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="RoomTemplateData" load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/stages/RoomTemplateData.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/stages/RoomSocketData.gd" id="2"]
 [ext_resource type="PackedScene" path="res://scenes/rooms/lower_ruins/LrPatrolGallery.tscn" id="3"]
+[ext_resource type="Script" path="res://scripts/stages/RoomEnemyAnchorData.gd" id="4"]
 
 [sub_resource type="Resource" id="EntrySocket"]
 script = ExtResource("2")
@@ -32,6 +33,39 @@ approach_width = 260.0
 landing_width = 260.0
 headroom = 120.0
 
+[sub_resource type="Resource" id="EnemyAnchorWalkerA"]
+script = ExtResource("4")
+id = &"walker_a"
+allowed_pressure_roles = Array[StringName]([&"occupier"])
+support_width = 260.0
+lane_width = 240.0
+clearance = 180.0
+has_escape_route = false
+has_line_of_sight = false
+has_cover_or_elevation = false
+
+[sub_resource type="Resource" id="EnemyAnchorWalkerB"]
+script = ExtResource("4")
+id = &"walker_b"
+allowed_pressure_roles = Array[StringName]([&"occupier"])
+support_width = 260.0
+lane_width = 220.0
+clearance = 180.0
+has_escape_route = false
+has_line_of_sight = false
+has_cover_or_elevation = false
+
+[sub_resource type="Resource" id="EnemyAnchorWalkerC"]
+script = ExtResource("4")
+id = &"walker_c"
+allowed_pressure_roles = Array[StringName]([&"occupier"])
+support_width = 220.0
+lane_width = 180.0
+clearance = 180.0
+has_escape_route = false
+has_line_of_sight = false
+has_cover_or_elevation = false
+
 [resource]
 script = ExtResource("1")
 id = &"lr_patrol_gallery"
@@ -48,5 +82,7 @@ encounter_budget = Vector2i(1, 2)
 hazard_budget = Vector2i(0, 0)
 reward_budget = Vector2i(0, 0)
 allowed_enemy_tags = Array[StringName]([&"occupier"])
+enemy_anchors = Array[ExtResource("4")]([SubResource("EnemyAnchorWalkerA"), SubResource("EnemyAnchorWalkerB"), SubResource("EnemyAnchorWalkerC")])
+recovery_anchor_ids = Array[StringName]([&"ground_recovery"])
 estimated_seconds = Vector2i(20, 40)
 variant_group = &"patrol_gallery_m1"

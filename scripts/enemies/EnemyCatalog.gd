@@ -220,4 +220,19 @@ func _validate_variant_safety(
 			"Enemy variant '%s' recovery %.3f is below archetype '%s' safety floor %.3f."
 			% [variant.id, variant.recovery_time, archetype.id, archetype.minimum_recovery_time]
 		)
+	if variant.cadence_time + FLOAT_TOLERANCE < archetype.minimum_cadence_time:
+		errors.append(
+			"Enemy variant '%s' cadence %.3f is below archetype '%s' safety floor %.3f."
+			% [variant.id, variant.cadence_time, archetype.id, archetype.minimum_cadence_time]
+		)
+	if variant.active_projectile_cap > archetype.maximum_active_projectile_cap:
+		errors.append(
+			"Enemy variant '%s' projectile cap %d exceeds archetype '%s' ceiling %d."
+			% [
+				variant.id,
+				variant.active_projectile_cap,
+				archetype.id,
+				archetype.maximum_active_projectile_cap,
+			]
+		)
 	return errors

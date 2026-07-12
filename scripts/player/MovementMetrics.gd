@@ -7,6 +7,10 @@ const CONSERVATIVE_DASH_REACH := 0.85
 const REQUIRED_GAP_FACTOR := 0.68
 const REQUIRED_LEDGE_FACTOR := 0.72
 const MAX_ROUTE_DASH_CHAIN := 2
+const MINIMUM_ROUTE_HEADROOM := 100.0
+const REQUIRED_ROUTE_ABILITIES: Array[StringName] = [
+	&"baseline", &"double_jump", &"dash", &"crouch", &"climb",
+]
 
 
 static func calculate(stats: Dictionary) -> Dictionary:
@@ -98,5 +102,7 @@ static func route_limits_for_profiles(profiles: Array) -> Dictionary:
 		"ledge_limiting_profile_id": ledge_profile.id,
 		"max_required_gap": floorf(minimum_route_reach * REQUIRED_GAP_FACTOR),
 		"max_required_ledge": floorf(minimum_ledge_height * REQUIRED_LEDGE_FACTOR),
+		"minimum_headroom": MINIMUM_ROUTE_HEADROOM,
+		"allowed_required_abilities": REQUIRED_ROUTE_ABILITIES.duplicate(),
 		"least_metrics": gap_metrics,
 	}

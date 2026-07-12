@@ -1,6 +1,7 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/stages/RoomTemplateHost.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/stages/RoomAnchor.gd" id="2"]
 
 [sub_resource type="RectangleShape2D" id="EntryMassShape"]
 size = Vector2(320, 280)
@@ -113,10 +114,41 @@ position = Vector2(1120, 600)
 [node name="Enemy" type="Node2D" parent="Anchors"]
 [node name="WalkerA" type="Marker2D" parent="Anchors/Enemy"]
 position = Vector2(570, 600)
+script = ExtResource("2")
+anchor_id = &"walker_a"
+anchor_type = &"enemy"
+allowed_tags = Array[StringName]([&"occupier"])
+support_width = 260.0
+patrol_width = 240.0
+clearance = 180.0
+has_escape_route = false
+has_line_of_sight = false
+has_cover_or_elevation = false
+required = true
 [node name="WalkerB" type="Marker2D" parent="Anchors/Enemy"]
 position = Vector2(860, 600)
+script = ExtResource("2")
+anchor_id = &"walker_b"
+anchor_type = &"enemy"
+allowed_tags = Array[StringName]([&"occupier"])
+support_width = 260.0
+patrol_width = 220.0
+clearance = 180.0
+has_escape_route = false
+has_line_of_sight = false
+has_cover_or_elevation = false
 [node name="WalkerC" type="Marker2D" parent="Anchors/Enemy"]
 position = Vector2(1010, 600)
+script = ExtResource("2")
+anchor_id = &"walker_c"
+anchor_type = &"enemy"
+allowed_tags = Array[StringName]([&"occupier"])
+support_width = 220.0
+patrol_width = 180.0
+clearance = 180.0
+has_escape_route = false
+has_line_of_sight = false
+has_cover_or_elevation = false
 
 [node name="Hazard" type="Node2D" parent="Anchors"]
 [node name="Reward" type="Node2D" parent="Anchors"]
@@ -126,6 +158,11 @@ position = Vector2(140, 620)
 [node name="Recovery" type="Node2D" parent="Anchors"]
 [node name="GroundRecovery" type="Marker2D" parent="Anchors/Recovery"]
 position = Vector2(180, 620)
+script = ExtResource("2")
+anchor_id = &"ground_recovery"
+anchor_type = &"recovery"
+safe_radius = 180.0
+required = true
 
 [node name="CameraBounds" type="Node2D" parent="."]
 metadata/bounds = Rect2(0, 0, 1120, 720)

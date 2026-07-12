@@ -23,6 +23,10 @@ const MAXIMUM_BUDGET_COST := 7
 @export var active_time: float = 0.0
 @export var recovery_time: float = 0.0
 @export var charge_speed: float = 0.0
+@export var cadence_time: float = 0.0
+@export var projectile_speed: float = 0.0
+@export var attack_range: float = 0.0
+@export var active_projectile_cap: int = 0
 @export var stagger_capacity: int = 1
 
 @export_group("Encounter And Presentation")
@@ -59,6 +63,11 @@ func validate_definition() -> PackedStringArray:
 	_validate_nonnegative_float(errors, "exact active time", active_time)
 	_validate_nonnegative_float(errors, "exact recovery time", recovery_time)
 	_validate_nonnegative_float(errors, "exact charge speed", charge_speed)
+	_validate_nonnegative_float(errors, "exact cadence time", cadence_time)
+	_validate_nonnegative_float(errors, "exact projectile speed", projectile_speed)
+	_validate_nonnegative_float(errors, "exact attack range", attack_range)
+	if active_projectile_cap < 0:
+		errors.append("Enemy variant '%s' projectile cap cannot be negative." % id)
 
 	var presentation := String(presentation_key)
 	var presentation_segments := presentation.split(".", true)
@@ -98,6 +107,10 @@ func exact_stats() -> Dictionary:
 		"active": active_time,
 		"recovery": recovery_time,
 		"charge_speed": charge_speed,
+		"cadence": cadence_time,
+		"projectile_speed": projectile_speed,
+		"attack_range": attack_range,
+		"active_projectile_cap": active_projectile_cap,
 		"stagger_capacity": stagger_capacity,
 	}
 

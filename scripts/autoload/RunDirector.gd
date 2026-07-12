@@ -95,7 +95,16 @@ func _load_production_stage() -> bool:
 		return false
 	hud_root.add_child(current_hud)
 
-	if Game.load_stage(PRODUCTION_STAGE_PATH) == null:
+	var loaded_stage := Game.load_stage(PRODUCTION_STAGE_PATH)
+	if loaded_stage == null:
+		show_main_menu()
+		return false
+	if (
+		loaded_stage.has_method("is_setup_complete")
+		and not bool(loaded_stage.call("is_setup_complete"))
+	):
+		Game.unload_current_stage()
+		SignalBus.status_message_changed.emit("Stage generation failed")
 		show_main_menu()
 		return false
 	_set_phase(RunPhase.Value.STAGE_ACTIVE)

@@ -1,7 +1,7 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/stages/RoomTemplateHost.gd" id="1"]
-[ext_resource type="Script" path="res://scripts/stages/ExitPortal.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/stages/RoomAnchor.gd" id="3"]
 
 [sub_resource type="RectangleShape2D" id="LaneMassShape"]
 size = Vector2(840, 300)
@@ -14,9 +14,6 @@ size = Vector2(32, 720)
 
 [sub_resource type="RectangleShape2D" id="EscapeLedgeShape"]
 size = Vector2(190, 12)
-
-[sub_resource type="RectangleShape2D" id="ExitAreaShape"]
-size = Vector2(92, 116)
 
 [node name="LrChargeLane" type="Node2D"]
 script = ExtResource("1")
@@ -126,39 +123,42 @@ position = Vector2(1120, 580)
 [node name="Enemy" type="Node2D" parent="Anchors"]
 [node name="ChargerA" type="Marker2D" parent="Anchors/Enemy"]
 position = Vector2(520, 600)
+script = ExtResource("3")
+anchor_id = &"charger_a"
+anchor_type = &"enemy"
+allowed_tags = Array[StringName]([&"burst"])
+support_width = 620.0
+patrol_width = 520.0
+clearance = 200.0
+has_escape_route = true
+has_line_of_sight = false
+has_cover_or_elevation = false
+required = true
 [node name="ChargerB" type="Marker2D" parent="Anchors/Enemy"]
 position = Vector2(650, 600)
+script = ExtResource("3")
+anchor_id = &"charger_b"
+anchor_type = &"enemy"
+allowed_tags = Array[StringName]([&"burst"])
+support_width = 620.0
+patrol_width = 520.0
+clearance = 200.0
+has_escape_route = true
+has_line_of_sight = false
+has_cover_or_elevation = false
 
 [node name="Hazard" type="Node2D" parent="Anchors"]
 [node name="Reward" type="Node2D" parent="Anchors"]
 [node name="Objective" type="Node2D" parent="Anchors"]
 
-[node name="ExitGate" type="Area2D" parent="Anchors/Objective"]
-position = Vector2(1010, 580)
-collision_layer = 0
-collision_mask = 4
-script = ExtResource("2")
-prompt_text = "Enter gate"
-interaction_enabled = false
-disabled_prompt_text = "Defeat all enemies"
-metadata/critical_exit = true
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Anchors/Objective/ExitGate"]
-position = Vector2(0, -58)
-shape = SubResource("ExitAreaShape")
-
-[node name="Frame" type="Polygon2D" parent="Anchors/Objective/ExitGate"]
-color = Color(0.42, 0.45, 0.47, 1)
-polygon = PackedVector2Array(-50, 0, -50, -124, -34, -146, 34, -146, 50, -124, 50, 0, 30, 0, 30, -112, -30, -112, -30, 0)
-
-[node name="Interior" type="Polygon2D" parent="Anchors/Objective/ExitGate"]
-z_index = 1
-color = Color(0.09, 0.13, 0.15, 1)
-polygon = PackedVector2Array(-28, 0, -28, -108, 28, -108, 28, 0)
-
 [node name="Recovery" type="Node2D" parent="Anchors"]
 [node name="LaneRecovery" type="Marker2D" parent="Anchors/Recovery"]
 position = Vector2(120, 600)
+script = ExtResource("3")
+anchor_id = &"lane_recovery"
+anchor_type = &"recovery"
+safe_radius = 180.0
+required = true
 
 [node name="CameraBounds" type="Node2D" parent="."]
 metadata/bounds = Rect2(0, 0, 1120, 720)

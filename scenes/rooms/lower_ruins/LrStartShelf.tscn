@@ -1,0 +1,112 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/stages/RoomTemplateHost.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/stages/RoomAnchor.gd" id="2"]
+
+[sub_resource type="RectangleShape2D" id="ShelfMassShape"]
+size = Vector2(1120, 300)
+
+[sub_resource type="RectangleShape2D" id="BoundaryShape"]
+size = Vector2(32, 720)
+
+[node name="LrStartShelf" type="Node2D"]
+script = ExtResource("1")
+room_id = &"lr_start_shelf"
+
+[node name="Terrain" type="Node2D" parent="."]
+
+[node name="StartShelfMass" type="StaticBody2D" parent="Terrain"]
+position = Vector2(560, 600)
+collision_layer = 1
+collision_mask = 0
+metadata/surface_id = &"start_shelf"
+metadata/support_top = 600.0
+metadata/support_width = 1120.0
+metadata/critical = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/StartShelfMass"]
+position = Vector2(0, 150)
+shape = SubResource("ShelfMassShape")
+
+[node name="RockVisual" type="Polygon2D" parent="Terrain/StartShelfMass"]
+color = Color(0.2, 0.25, 0.28, 1)
+polygon = PackedVector2Array(-560, 0, 560, 0, 560, 300, -560, 300)
+
+[node name="SupportCap" type="Polygon2D" parent="Terrain/StartShelfMass"]
+color = Color(0.34, 0.57, 0.6, 1)
+polygon = PackedVector2Array(-560, 0, 560, 0, 560, 8, -560, 8)
+
+[node name="GrooveA" type="Line2D" parent="Terrain/StartShelfMass"]
+width = 4.0
+default_color = Color(0.14, 0.19, 0.21, 1)
+points = PackedVector2Array(-480, 82, 450, 82)
+
+[node name="GrooveB" type="Line2D" parent="Terrain/StartShelfMass"]
+width = 4.0
+default_color = Color(0.14, 0.19, 0.21, 1)
+points = PackedVector2Array(-420, 158, 500, 158)
+
+[node name="LeftBoundary" type="StaticBody2D" parent="Terrain"]
+position = Vector2(-16, 360)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/LeftBoundary"]
+shape = SubResource("BoundaryShape")
+
+[node name="RockVisual" type="Polygon2D" parent="Terrain/LeftBoundary"]
+color = Color(0.15, 0.2, 0.22, 1)
+polygon = PackedVector2Array(-16, -360, 16, -360, 16, 360, -16, 360)
+
+[node name="OneWay" type="Node2D" parent="."]
+[node name="Hazards" type="Node2D" parent="."]
+[node name="DecorBack" type="Node2D" parent="."]
+[node name="DecorFront" type="Node2D" parent="."]
+
+[node name="Anchors" type="Node2D" parent="."]
+[node name="Sockets" type="Node2D" parent="Anchors"]
+[node name="Entry" type="Marker2D" parent="Anchors/Sockets"]
+position = Vector2(0, 600)
+[node name="Exit" type="Marker2D" parent="Anchors/Sockets"]
+position = Vector2(1120, 600)
+
+[node name="Enemy" type="Node2D" parent="Anchors"]
+[node name="Hazard" type="Node2D" parent="Anchors"]
+[node name="Reward" type="Node2D" parent="Anchors"]
+[node name="Objective" type="Node2D" parent="Anchors"]
+
+[node name="PlayerSpawn" type="Marker2D" parent="Anchors/Objective"]
+position = Vector2(160, 600)
+script = ExtResource("2")
+anchor_id = &"player_spawn"
+anchor_type = &"player_spawn"
+safe_radius = 240.0
+required = true
+metadata/facing = 1
+metadata/safe_radius = 240.0
+
+[node name="CameraFocus" type="Marker2D" parent="Anchors/Objective"]
+position = Vector2(420, 360)
+metadata/camera_id = &"start_shelf_camera"
+
+[node name="NextGoal" type="Marker2D" parent="Anchors/Objective"]
+position = Vector2(960, 600)
+
+[node name="Recovery" type="Node2D" parent="Anchors"]
+[node name="StartRecovery" type="Marker2D" parent="Anchors/Recovery"]
+position = Vector2(160, 600)
+script = ExtResource("2")
+anchor_id = &"start_recovery"
+anchor_type = &"recovery"
+safe_radius = 240.0
+required = true
+metadata/safe_radius = 240.0
+
+[node name="CameraBounds" type="Node2D" parent="."]
+metadata/bounds = Rect2(0, 0, 1120, 720)
+
+[node name="Validation" type="Node2D" parent="."]
+metadata/safe_entry_radius = 240.0
+metadata/minimum_critical_landing = 220.0
+metadata/player_spawn_id = &"PlayerSpawn"
+metadata/recovery_id = &"StartRecovery"

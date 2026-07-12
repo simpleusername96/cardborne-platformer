@@ -118,7 +118,7 @@ func get_combat_snapshot() -> Dictionary:
 
 func _can_start_charge() -> bool:
 	var player := get_tree().get_first_node_in_group("player") as Node2D
-	if player == null:
+	if player == null or not is_target_within_encounter(player):
 		return false
 	var offset := player.global_position - global_position
 	return absf(offset.x) <= detection_range and absf(offset.y) <= detection_height
