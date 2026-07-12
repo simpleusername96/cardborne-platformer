@@ -31,13 +31,15 @@ Godot Resources, update cross-reference tests, then retire that JSON ownership.
 | `card_catalog.json` | `PROGRESSION_EQUIPMENT_ECONOMY.md` | CardDefinition Resources and CardCatalog. |
 | `equipment_catalog.json` | `PROGRESSION_EQUIPMENT_ECONOMY.md` | EquipmentDefinition and ForgeAffix Resources. |
 | `economy_tables.json` | `PROGRESSION_EQUIPMENT_ECONOMY.md` | RewardTable, ShopOffer, RunLevelCurve Resources. |
-| `enemy_trap_gimmick_catalog.json` | `ENEMIES_TRAPS_GIMMICKS.md` | EnemyDefinition, HazardDefinition, BossPatternDefinition Resources. |
+| `enemy_trap_gimmick_catalog.json` | `ENEMIES_TRAPS_GIMMICKS.md` | EnemyArchetypeDefinition, EnemyVariantDefinition, EnemyTuningProfile, HazardDefinition, BossPatternDefinition Resources. |
 | `procedural_region_rules.json` | `PROCEDURAL_REGION_GENERATION.md` | StageProfile, RoomTemplateData, generation fixtures. |
 | `reference_asset_candidates.json` | Research evidence only | No runtime migration without approval/license ledger. |
 
 ## Requirements
 
-- JSON syntax is valid and schema IDs end in `.v1` for accepted first-run catalogs.
+- JSON syntax is valid and each catalog matches its explicitly accepted schema;
+  encounter catalog v2 owns the archetype/variant split while other catalogs remain
+  v1 until their own contract changes.
 - IDs are lowercase snake_case and match active specs.
 - Cross-file references resolve or are explicitly marked as planned runtime owners.
 - Runtime does not silently read JSON and typed Resources for the same catalog.
@@ -48,8 +50,8 @@ Godot Resources, update cross-reference tests, then retire that JSON ownership.
 ## Acceptance Criteria
 
 - Every catalog parses and contains no duplicate ID within its namespace.
-- Character kit, card, equipment, enemy drop, stage profile, room, and boss IDs
-  cross-reference successfully.
+- Character kit, critical rule, card, equipment, enemy archetype/variant/tuning,
+  drop, stage profile, room, and boss IDs cross-reference successfully.
 - The next implementation batch can enumerate exact Resources to create without
   inventing content names or effects.
 - Deleted fixed-grid map and wireframe data is not referenced by active docs/tools.

@@ -1,12 +1,80 @@
 {
-  "schema": "cardborne.first_run.encounter_catalog.v1",
-  "enemies": [
-    { "id": "walker", "roles": ["occupier"], "budget": 1, "health": 3, "damage": 1, "scene_owner": "WalkerEnemy", "support_width": 180, "drop_table": "drop_walker" },
-    { "id": "charger", "roles": ["burst"], "budget": 2, "health": 5, "damage": 1, "warning": 0.48, "active": 0.52, "recovery": 0.42, "scene_owner": "ChargerEnemy", "lane_width": 520, "drop_table": "drop_charger" },
-    { "id": "shooter", "roles": ["ranged"], "budget": 2, "health": 4, "damage": 1, "warning": 0.38, "fire_interval": 1.8, "projectile_speed": 280, "scene_owner": "ShooterEnemy", "requires_cover_or_elevation": true, "drop_table": "drop_shooter" },
-    { "id": "shield_guard", "roles": ["guard"], "budget": 3, "health": 7, "damage": 1, "warning": 0.35, "recovery": 0.55, "scene_owner": "ShieldGuardEnemy", "requires_flank_route": true, "drop_table": "drop_shield_guard" },
-    { "id": "leaper", "roles": ["vertical", "burst"], "budget": 2, "health": 4, "damage": 1, "warning": 0.35, "active": 0.52, "recovery": 0.5, "scene_owner": "LeaperEnemy", "lane_width": 420, "arc_clearance": 180, "drop_table": "drop_leaper" },
-    { "id": "sentry", "roles": ["ranged", "zone"], "budget": 3, "health": 6, "damage": 1, "warning": 0.45, "fire_interval": 1.4, "projectile_speed": 300, "max_active_projectiles": 2, "scene_owner": "SentryTurretEnemy", "requires_cover": true, "drop_table": "drop_sentry" }
+  "schema": "cardborne.first_run.encounter_catalog.v2",
+  "damage_policy": {
+    "per_hit_variance": 0.0,
+    "enemy_critical_hits": false,
+    "normal_damage": 1,
+    "damage_exception_requires": ["distinct_telegraph", "explicit_spec_approval", "separate_budget"]
+  },
+  "enemy_archetypes": [
+    {
+      "id": "walker",
+      "roles": ["occupier"],
+      "behavior_owner": "WalkerEnemy",
+      "reference_stats": { "health": 3, "damage": 1, "move_speed": 70, "stagger_capacity_ratio": 1.0 },
+      "room_requirements": { "support_width": 180 }
+    },
+    {
+      "id": "charger",
+      "roles": ["burst"],
+      "behavior_owner": "ChargerEnemy",
+      "reference_stats": { "health": 5, "damage": 1, "warning": 0.48, "active": 0.52, "recovery": 0.42, "charge_speed": 360 },
+      "safety_floors": { "warning": 0.40, "recovery": 0.36 },
+      "room_requirements": { "lane_width": 520, "escape_route": true }
+    },
+    {
+      "id": "shooter",
+      "roles": ["ranged"],
+      "behavior_owner": "ShooterEnemy",
+      "reference_stats": { "health": 4, "damage": 1, "warning": 0.38, "fire_interval": 1.80, "projectile_speed": 280, "range": 760, "post_shot_recovery": 0.45 },
+      "safety_floors": { "warning": 0.32, "fire_interval": 1.50, "post_shot_recovery": 0.40 },
+      "room_requirements": { "cover_or_elevation": true }
+    },
+    {
+      "id": "shield_guard",
+      "roles": ["guard"],
+      "behavior_owner": "ShieldGuardEnemy",
+      "reference_stats": { "health": 7, "damage": 1, "warning": 0.35, "recovery": 0.55, "guard_duration": 1.20 },
+      "safety_floors": { "warning": 0.35, "recovery": 0.55 },
+      "room_requirements": { "flank_route": true }
+    },
+    {
+      "id": "leaper",
+      "roles": ["vertical", "burst"],
+      "behavior_owner": "LeaperEnemy",
+      "reference_stats": { "health": 4, "damage": 1, "warning": 0.35, "active": 0.52, "recovery": 0.50 },
+      "safety_floors": { "warning": 0.32, "recovery": 0.45 },
+      "room_requirements": { "lane_width": 420, "arc_clearance": 180 }
+    },
+    {
+      "id": "sentry",
+      "roles": ["ranged", "zone"],
+      "behavior_owner": "SentryTurretEnemy",
+      "reference_stats": { "health": 6, "damage": 1, "warning": 0.45, "fire_interval": 1.40, "projectile_speed": 300, "range": 900, "post_shot_recovery": 0.45, "max_active_projectiles": 2 },
+      "safety_floors": { "warning": 0.42, "fire_interval": 1.40, "post_shot_recovery": 0.45 },
+      "safety_ceilings": { "max_active_projectiles": 2 },
+      "room_requirements": { "cover": true }
+    }
+  ],
+  "enemy_tuning_profiles": [
+    { "id": "tuning_ruin_approach", "stage_id": "ruin_approach", "health_ratio": [0.90, 1.10], "warning_ratio": [1.00, 1.25], "active_ratio": [1.00, 1.10], "recovery_ratio": [1.00, 1.25], "cadence_ratio": [1.00, 1.15], "speed_or_range_ratio": [0.85, 1.05], "max_stagger_capacity_ratio": 1.00, "allowed_damage": [1] },
+    { "id": "tuning_flooded_works", "stage_id": "flooded_works", "health_ratio": [1.00, 1.35], "warning_ratio": [0.95, 1.10], "active_ratio": [1.00, 1.10], "recovery_ratio": [0.95, 1.10], "cadence_ratio": [0.95, 1.05], "speed_or_range_ratio": [1.00, 1.10], "max_stagger_capacity_ratio": 1.10, "allowed_damage": [1] },
+    { "id": "tuning_broken_sanctum", "stage_id": "broken_sanctum", "health_ratio": [1.00, 1.70], "warning_ratio": [0.85, 1.05], "active_ratio": [1.00, 1.15], "recovery_ratio": [0.85, 1.05], "cadence_ratio": [0.85, 1.05], "speed_or_range_ratio": [1.00, 1.25], "max_stagger_capacity_ratio": 1.20, "allowed_damage": [1] }
+  ],
+  "enemy_variants": [
+    { "id": "walker_ruin", "archetype_id": "walker", "stage_id": "ruin_approach", "tuning_profile_id": "tuning_ruin_approach", "visual_key": "enemy.walker.ruin", "tuning_trait": "baseline_occupier", "budget": 1, "stats": { "health": 3, "damage": 1, "move_speed": 70, "stagger_capacity_ratio": 1.00 }, "drop_table": "drop_walker" },
+    { "id": "charger_ruin", "archetype_id": "charger", "stage_id": "ruin_approach", "tuning_profile_id": "tuning_ruin_approach", "visual_key": "enemy.charger.ruin", "tuning_trait": "teaching_charge", "budget": 2, "stats": { "health": 5, "damage": 1, "warning": 0.48, "active": 0.52, "recovery": 0.42, "charge_speed": 360 }, "drop_table": "drop_charger" },
+    { "id": "shooter_ruin", "archetype_id": "shooter", "stage_id": "ruin_approach", "tuning_profile_id": "tuning_ruin_approach", "visual_key": "enemy.shooter.ruin", "tuning_trait": "teaching_aim", "budget": 2, "stats": { "health": 4, "damage": 1, "warning": 0.42, "fire_interval": 2.00, "projectile_speed": 260, "range": 700, "post_shot_recovery": 0.50 }, "drop_table": "drop_shooter" },
+    { "id": "walker_flooded", "archetype_id": "walker", "stage_id": "flooded_works", "tuning_profile_id": "tuning_flooded_works", "visual_key": "enemy.walker.flooded", "tuning_trait": "faster_turnaround", "budget": 1, "stats": { "health": 4, "damage": 1, "move_speed": 76, "stagger_capacity_ratio": 1.05 }, "drop_table": "drop_walker" },
+    { "id": "charger_flooded", "archetype_id": "charger", "stage_id": "flooded_works", "tuning_profile_id": "tuning_flooded_works", "visual_key": "enemy.charger.flooded", "tuning_trait": "extended_lane", "budget": 2, "stats": { "health": 6, "damage": 1, "warning": 0.46, "active": 0.55, "recovery": 0.42, "charge_speed": 375 }, "drop_table": "drop_charger" },
+    { "id": "shooter_flooded", "archetype_id": "shooter", "stage_id": "flooded_works", "tuning_profile_id": "tuning_flooded_works", "visual_key": "enemy.shooter.flooded", "tuning_trait": "extended_range", "budget": 2, "stats": { "health": 5, "damage": 1, "warning": 0.38, "fire_interval": 1.75, "projectile_speed": 290, "range": 820, "post_shot_recovery": 0.45 }, "drop_table": "drop_shooter" },
+    { "id": "leaper_flooded", "archetype_id": "leaper", "stage_id": "flooded_works", "tuning_profile_id": "tuning_flooded_works", "visual_key": "enemy.leaper.flooded", "tuning_trait": "teaching_arc", "budget": 2, "stats": { "health": 4, "damage": 1, "warning": 0.38, "active": 0.52, "recovery": 0.52 }, "drop_table": "drop_leaper" },
+    { "id": "walker_sanctum", "archetype_id": "walker", "stage_id": "broken_sanctum", "tuning_profile_id": "tuning_broken_sanctum", "visual_key": "enemy.walker.sanctum", "tuning_trait": "reinforced_stagger", "budget": 2, "stats": { "health": 5, "damage": 1, "move_speed": 82, "stagger_capacity_ratio": 1.15 }, "drop_table": "drop_walker" },
+    { "id": "charger_sanctum", "archetype_id": "charger", "stage_id": "broken_sanctum", "tuning_profile_id": "tuning_broken_sanctum", "visual_key": "enemy.charger.sanctum", "tuning_trait": "compressed_recovery", "budget": 3, "stats": { "health": 6, "damage": 1, "warning": 0.42, "active": 0.58, "recovery": 0.38, "charge_speed": 395 }, "drop_table": "drop_charger" },
+    { "id": "shooter_sanctum", "archetype_id": "shooter", "stage_id": "broken_sanctum", "tuning_profile_id": "tuning_broken_sanctum", "visual_key": "enemy.shooter.sanctum", "tuning_trait": "compressed_reload", "budget": 3, "stats": { "health": 6, "damage": 1, "warning": 0.34, "fire_interval": 1.55, "projectile_speed": 315, "range": 920, "post_shot_recovery": 0.42 }, "drop_table": "drop_shooter" },
+    { "id": "shield_guard_sanctum", "archetype_id": "shield_guard", "stage_id": "broken_sanctum", "tuning_profile_id": "tuning_broken_sanctum", "visual_key": "enemy.shield_guard.sanctum", "tuning_trait": "baseline_guard", "budget": 3, "stats": { "health": 7, "damage": 1, "warning": 0.35, "recovery": 0.55, "guard_duration": 1.20 }, "drop_table": "drop_shield_guard" },
+    { "id": "leaper_sanctum", "archetype_id": "leaper", "stage_id": "broken_sanctum", "tuning_profile_id": "tuning_broken_sanctum", "visual_key": "enemy.leaper.sanctum", "tuning_trait": "compressed_windup", "budget": 3, "stats": { "health": 5, "damage": 1, "warning": 0.33, "active": 0.55, "recovery": 0.46 }, "drop_table": "drop_leaper" },
+    { "id": "sentry_sanctum", "archetype_id": "sentry", "stage_id": "broken_sanctum", "tuning_profile_id": "tuning_broken_sanctum", "visual_key": "enemy.sentry.sanctum", "tuning_trait": "baseline_crossfire", "budget": 3, "stats": { "health": 6, "damage": 1, "warning": 0.45, "fire_interval": 1.40, "projectile_speed": 300, "range": 900, "post_shot_recovery": 0.45, "max_active_projectiles": 2 }, "drop_table": "drop_sentry" }
   ],
   "special_actors": [
     { "id": "summon_node", "roles": ["summoner"], "budget": 4, "health": 8, "warning": 0.45, "spawn_interval": 2.6, "max_active_children": 2, "max_total_children": 6, "scene_owner": "SummonNodeEnemy", "drop_table": "drop_summon_node" },
@@ -30,6 +98,8 @@
     { "id": "exit_portal", "owner": "ExitPortal", "required_checks": ["objectives_complete", "unobstructed"] }
   ],
   "encounter_rules": {
+    "selection_order": ["pressure_role", "enemy_archetype", "enemy_variant", "anchor"],
+    "no_per_instance_stat_rolls": true,
     "max_high_attention_roles": 2,
     "max_summoners": 1,
     "max_guards_per_choke": 1,

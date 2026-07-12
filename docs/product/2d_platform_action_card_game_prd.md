@@ -194,7 +194,7 @@ UI, enemies, cards, rooms, and equipment never edit final player fields directly
 The first complete run ships with:
 
 - 18 authored Lower Ruins room templates;
-- 6 normal enemy archetypes;
+- 6 normal enemy archetypes and 13 stage-eligible first-run variants;
 - 2 special enemy actors: Summon Node and Small Slime;
 - 4 core hazard families plus moving platform, switch gate, destructible cache,
   chest, material node, checkpoint, and exit;
@@ -220,12 +220,18 @@ reachable in the player-facing loop and has focused validation.
 - Critical route transitions are derived from `MovementMetrics` for the complete
   base roster; no character-exclusive combat skill is a route requirement.
 - Enemy, trap, reward, and exit placement uses authored anchors only.
+- Encounter generation selects a pressure role, then an enemy archetype, then an
+  exact stage-eligible variant. It never rolls hidden per-instance combat stats.
 
 ## Combat And Encounter Contract
 
 - Basic attacks are reliable; heavy attacks create commitment and stagger;
   skills create identity and room-scale decisions.
 - Every hit records source, amount, knockback, tags, and target policy.
+- Direct damage is deterministic. There is no per-hit random damage spread and
+  enemies/hazards cannot critical in the first run.
+- Player critical hits use declared skill conditions with a 1.5 default multiplier,
+  not baseline luck; the same build and hit context produce the same outcome.
 - Enemies expose one primary lesson and one punish window.
 - An encounter has safe entry, support under every mobile enemy, enough response
   space for its pressure roles, and a deterministic completion condition.
@@ -292,6 +298,8 @@ as invisible numbers, or deaths as unclear.
   testbed.
 - A complete run can be played without debug input or explanatory labels.
 - Three base characters clear every required route and the boss.
+- All 13 first-run enemy variants preserve their archetype response contract and
+  are reproducible from the accepted stage seed/content version.
 - Same seed and content version reproduce the same accepted Stage Plan.
 - Invalid stages never reach gameplay silently.
 - Rewards apply once and state scopes do not leak across run/profile boundaries.

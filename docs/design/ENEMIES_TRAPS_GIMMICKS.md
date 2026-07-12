@@ -3,7 +3,7 @@ type: spec
 status: active
 owner: BK
 last_reviewed: 2026-07-12
-canonical_for: First-run enemies, encounter composition, hazards, gimmicks, and Giant Slime King patterns
+canonical_for: First-run enemy archetypes, variants, encounter composition, hazards, gimmicks, and Giant Slime King patterns
 source: Existing enemy and stage component scripts, prior content catalog, and Cardborne Game Blueprint
 related:
   - ../product/2d_platform_action_card_game_prd.md
@@ -22,16 +22,39 @@ compatible combinations, not arbitrary spawning.
 
 ## Scope
 
-This specification covers six normal enemies, two special actors, four core
-hazards, reusable stage gimmicks, encounter budgets, and the Giant Slime King.
+This specification covers six normal enemy archetypes, 13 first-run variants, two
+special actors, four core hazards, reusable stage gimmicks, encounter budgets, and
+the Giant Slime King.
+
+## Enemy Domain Terms
+
+| Term | Owned meaning |
+| --- | --- |
+| `EnemyArchetype` | Stable behavior lesson, tell, response, punish window, pressure roles, geometry contract, and safety bounds. Walker and Shooter are archetypes, not individual enemies. |
+| `EnemyVariant` | Concrete stage-eligible presentation and exact combat values for one archetype. It cannot replace the archetype's response contract. |
+| `EnemyTuningProfile` | Authoring bounds for a stage. It validates variants; it is not a blanket runtime multiplier. |
+| `ResolvedEnemySpec` | Immutable archetype + variant result consumed by a production enemy scene. |
+| `EnemyInstance` | One spawned runtime actor with current health, state, statuses, and position. It does not invent permanent stats. |
+| `PressureRole` | Encounter-composition job such as occupier, burst, ranged, or guard. It is not an enemy identity. |
+
+`template` remains reserved for authored room templates. Enemy code and data use
+the terms above so room generation, combat behavior, and runtime instances do not
+share an overloaded name.
 
 ## Threat Design Rules
 
 - Each enemy has one primary lesson, one readable tell, and one punish window.
 - Normal contact/projectile/trap damage is 1 unless explicitly approved below.
 - A tell begins before the damaging movement or hitbox becomes active.
-- Enemy health increases only enough to expose its behavior; later stages increase
-  pressure through composition and space.
+- Variants may adjust health, movement, warning, active duration, recovery, attack
+  cadence, range, projectile speed, stagger capacity, budget, drops, and
+  presentation only within their stage profile.
+- Later stages primarily increase pressure through composition and space. Variant
+  health rises only enough to expose behavior, never to create damage sponges.
+- Exact combat values come from the selected variant. Runtime instances have no
+  hidden random stat rolls or universal stage multiplier.
+- A variant must reveal meaningful timing, reach, armor, or weapon differences
+  through silhouette, equipment, animation, and telegraph; color alone is not enough.
 - Spawns use compatible authored anchors with stable support and response room.
 - Enemies stop applying damage immediately on defeat and resolve rewards once.
 - Off-screen enemies do not begin burst attacks toward an unseen player.
@@ -49,7 +72,11 @@ hazards, reusable stage gimmicks, encounter budgets, and the Giant Slime King.
 | `zone` | Controls persistent space. | Must leave a stable safe route. |
 | `summoner` | Creates escalating target priority. | One; children count against active cap. |
 
-## Normal Enemy Catalog
+## Enemy Archetype Catalog
+
+The values below are archetype reference values and behavior invariants. Stage
+generation never spawns an archetype directly; it selects one of the exact variants
+listed later.
 
 ### Walker (`walker`)
 
@@ -69,6 +96,7 @@ hazards, reusable stage gimmicks, encounter budgets, and the Giant Slime King.
 - Existing owner: `ChargerEnemy.gd`.
 - Health: 5; contact damage: 1.
 - Timing seed: warning 0.48 s, charge 0.52 s at 360 px/s, recovery 0.42 s.
+- Safety floor: warning >= 0.40 s and recovery >= 0.36 s for every variant.
 - Tell: body compresses, facing locks, lane warning flashes.
 - Response: jump, dash away, change elevation, or use cover.
 - Punish: recovery after wall/charge endpoint; receives +20 stagger during recovery.
@@ -82,6 +110,8 @@ hazards, reusable stage gimmicks, encounter budgets, and the Giant Slime King.
 - Existing owner: `ShooterEnemy.gd` + `EnemyProjectile.gd`.
 - Health: 4; contact/projectile damage: 1.
 - Timing seed: aim 0.38 s, projectile 280 px/s, 1.8 s interval.
+- Reference range: 760 px; post-shot recovery: 0.45 s.
+- Safety floor: aim >= 0.32 s, interval >= 1.50 s, post-shot recovery >= 0.40 s.
 - Tell: aim line or body pose shows direction; projectile contrasts background.
 - Response: move, use cover, change level, or interrupt.
 - Punish: aim and post-shot pause; melee approach remains possible.
@@ -95,6 +125,7 @@ hazards, reusable stage gimmicks, encounter budgets, and the Giant Slime King.
 - Existing owner: `ShieldGuardEnemy.gd`.
 - Health: 7; contact/attack damage: 1.
 - Timing seed: guard 1.2 s, attack tell 0.35 s, recovery 0.55 s.
+- Safety floor: attack tell >= 0.35 s and recovery >= 0.55 s.
 - Tell: shield direction and attack windup remain visually distinct.
 - Response: cross behind, stagger with Heavy, bait attack, or use area skill.
 - Punish: back and attack recovery; frontal blocked hits do not damage but still
@@ -110,6 +141,7 @@ hazards, reusable stage gimmicks, encounter budgets, and the Giant Slime King.
 - Existing owner: `LeaperEnemy.gd`.
 - Health: 4; contact damage: 1.
 - Timing seed: windup 0.35 s, leap 0.52 s, recovery 0.50 s.
+- Safety floor: windup >= 0.32 s and landing recovery >= 0.45 s.
 - Tell: crouch and projected landing marker.
 - Response: move through the arc, change elevation, or attack the landing.
 - Punish: fixed landing recovery; landing location cannot retarget after launch.
@@ -124,6 +156,8 @@ hazards, reusable stage gimmicks, encounter budgets, and the Giant Slime King.
 - Existing owner: `SentryTurretEnemy.gd`.
 - Health: 6; projectile damage: 1; stationary.
 - Timing seed: warning 0.45 s, projectile 300 px/s, 1.4 s interval, max 2 active.
+- Reference range: 900 px; post-shot recovery: 0.45 s.
+- Safety floor: warning >= 0.42 s, interval >= 1.40 s, post-shot recovery >= 0.45 s.
 - Tell: rotating aim line locks before firing.
 - Response: use cover, change level, close distance, or destroy from range.
 - Punish: cannot turn during the final warning; 0.45 s post-shot pause.
@@ -131,6 +165,74 @@ hazards, reusable stage gimmicks, encounter budgets, and the Giant Slime King.
 - Exclusion: two Sentries require at least two independent safe cover zones and a
   validated no-overlap firing phase.
 - Drop: 20 XP, 5 coins, Rusted Scrap and equipment-blueprint chance.
+
+## Enemy Tuning Profiles
+
+Ratios compare a concrete variant with its archetype reference values. Duration
+ratios below 1.0 are faster. These profiles validate authored variants and are not
+applied again when an instance spawns.
+
+| Stage profile | Health | Warning | Active | Recovery | Cadence | Speed/range | Max stagger capacity | Damage |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| `ruin_approach` | 0.90-1.10 | 1.00-1.25 | 1.00-1.10 | 1.00-1.25 | 1.00-1.15 | 0.85-1.05 | 1.00 | 1 |
+| `flooded_works` | 1.00-1.35 | 0.95-1.10 | 1.00-1.10 | 0.95-1.10 | 0.95-1.05 | 1.00-1.10 | 1.10 | 1 |
+| `broken_sanctum` | 1.00-1.70 | 0.85-1.05 | 1.00-1.15 | 0.85-1.05 | 0.85-1.05 | 1.00-1.25 | 1.20 | 1 |
+
+`Cadence` is the ratio for repeated attack intervals such as Shooter and Sentry
+fire intervals. Values below 1.0 attack more frequently; archetype safety floors
+still take precedence.
+
+- A health ratio above 1.35 in Stage 3 is reserved for the low-cost Walker or an
+  archetype whose behavior still resolves within the room-duration budget.
+- Attack damage remains 1. An approved 2-damage elite action would require a new
+  visible action, distinct telegraph, explicit spec entry, and separate budget.
+- Faster warnings or recovery cannot cross the archetype safety floor even when a
+  tuning profile ratio would otherwise allow it.
+
+## First-Run Enemy Variants
+
+All values are resolved values, not multipliers applied at spawn. Every variant
+inherits its archetype's roles, geometry contract, and behavior owner.
+
+| Variant | Stage | Exact tuning focus | Presentation requirement |
+| --- | --- | --- | --- |
+| `walker_ruin` | Ruin Approach | HP 3, move 70, stagger capacity x1.00, cost 1. | Plain occupier silhouette and clear facing. |
+| `charger_ruin` | Ruin Approach | HP 5, warn 0.48 s, active 0.52 s, recovery 0.42 s, speed 360, cost 2. | Long teaching windup and lane flash. |
+| `shooter_ruin` | Ruin Approach | HP 4, aim 0.42 s, interval 2.00 s, projectile 260, range 700, cost 2. | Short weapon and broad aim line. |
+| `walker_flooded` | Flooded Works | HP 4, move 76, stagger capacity x1.05, cost 1. | Faster gait and stage-readable wet gear. |
+| `charger_flooded` | Flooded Works | HP 6, warn 0.46 s, active 0.55 s, recovery 0.42 s, speed 375, cost 2. | Longer charge trail without hiding windup. |
+| `shooter_flooded` | Flooded Works | HP 5, aim 0.38 s, interval 1.75 s, projectile 290, range 820, cost 2. | Longer weapon plus matching range telegraph. |
+| `leaper_flooded` | Flooded Works | HP 4, windup 0.38 s, leap 0.52 s, recovery 0.52 s, cost 2. | Large landing marker and slow teaching crouch. |
+| `walker_sanctum` | Broken Sanctum | HP 5, move 82, stagger capacity x1.15, cost 2. | Reinforced silhouette communicates resistance. |
+| `charger_sanctum` | Broken Sanctum | HP 6, warn 0.42 s, active 0.58 s, recovery 0.38 s, speed 395, cost 3. | Heavier lane trail and sharper recovery pose. |
+| `shooter_sanctum` | Broken Sanctum | HP 6, aim 0.34 s, interval 1.55 s, projectile 315, range 920, cost 3. | Long weapon and narrow locked aim line. |
+| `shield_guard_sanctum` | Broken Sanctum | HP 7, guard 1.20 s, tell 0.35 s, recovery 0.55 s, cost 3. | Shield direction and exposed rear arc remain obvious. |
+| `leaper_sanctum` | Broken Sanctum | HP 5, windup 0.33 s, leap 0.55 s, recovery 0.46 s, cost 3. | Faster crouch but unchanged landing marker lead. |
+| `sentry_sanctum` | Broken Sanctum | HP 6, warn 0.45 s, interval 1.40 s, projectile 300, range 900, cost 3. | Fixed barrel and cover-readable aim line. |
+
+## Enemy Selection Pipeline
+
+```text
+room pressure role and budget
+ -> compatible EnemyArchetype
+ -> variants eligible for stage and tuning profile
+ -> deterministic enemy_variant RNG selection
+ -> anchor/geometry validation
+ -> Stage Plan stores archetype_id + variant_id
+ -> scene receives one immutable ResolvedEnemySpec
+ -> EnemyInstance starts with exact resolved values
+```
+
+- Encounter budget uses the selected variant's cost.
+- Same seed, content version, room, and encounter context select the same variant.
+- Archetype selection and variant selection use separate named RNG streams so a
+  presentation/tuning addition does not silently rewrite room topology.
+- Per-instance random health, attack, defense, range, warning, recovery, or reload
+  rolls are forbidden. Cosmetic-only variation may use a separate stream when it
+  does not alter collision, silhouette class, or telegraph readability.
+- Special actors remain concrete definitions because their summon/cleanup contract
+  is encounter-specific. Promote them to archetype/variant only when reused as a
+  normal generated family.
 
 ## Special Actors
 
@@ -272,7 +374,10 @@ timing room exist.
 ## Requirements
 
 - Enemy AI declares a drop source ID but does not grant rewards directly.
+- Enemy behavior consumes a `ResolvedEnemySpec`; it does not switch on stage or
+  variant IDs to calculate stats.
 - Encounter allocator owns composition and anchor selection.
+- Encounter allocator selects archetype before variant and records both IDs.
 - Every threat has a visual/audio tell suitable for its response time.
 - Every repeated or spawned actor has an active cap and cleanup owner.
 - Placeholder geometry remains readable without debug labels.
@@ -280,6 +385,8 @@ timing room exist.
 ## Acceptance Criteria
 
 - Every normal enemy can kill and be killed in an isolated production encounter.
+- All 13 variants validate against their archetype safety bounds and stage tuning
+  profile, and each appears in a focused fixture before random allocation.
 - Each enemy's intended response and punish window are observable in play.
 - Curated encounter fixtures cover every legal pair and every forbidden high-risk
   combination.
@@ -293,7 +400,8 @@ timing room exist.
 ## Non-Goals
 
 - Generic behavior-tree framework before current state scripts prove insufficient.
-- Random enemy stat affixes, elite modifiers, one-shot attacks, or invisible traps.
+- Random per-instance stats, generic stage multipliers, random enemy critical hits,
+  undeclared elite affixes, one-shot attacks, or invisible traps.
 - More normal enemy types before the six roles produce distinct encounters.
 - Procedurally generated boss arena or unrestricted pattern overlap.
 

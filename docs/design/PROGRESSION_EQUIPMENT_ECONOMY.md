@@ -159,6 +159,9 @@ transactions and remain after death. Boss Core is created only by boss victory.
 - Starting weapons are character-compatible; armor/charms are shared by default.
 - Alternate items offer a behavior/tradeoff, not a strict linear tier.
 - Base loadouts can clear every stage and boss.
+- First-run equipment does not grant opaque random damage ranges or random critical
+  chance. Any later critical effect must modify a declared earned condition or
+  multiplier and remain within the combat cap.
 - Duplicate owned item discoveries convert to their declared salvage materials.
 - Equipment discovery settles immediately so a rare optional-route reward is not
   erased by a later death. Boss-only equipment still requires victory.

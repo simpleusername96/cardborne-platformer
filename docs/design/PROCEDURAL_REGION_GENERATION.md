@@ -33,7 +33,8 @@ seed + content version
  -> mission/room graph
  -> room-template selection
  -> socket resolution
- -> encounter/hazard/reward allocation
+ -> encounter roles + enemy archetypes + stage variants
+ -> hazard/reward allocation
  -> full-stage validation
  -> bounded retry or curated fallback
  -> Stage Plan and Generation Report
@@ -185,12 +186,19 @@ room budget
  -> reserve teaching/recovery space
  -> select primary pressure role
  -> select compatible support role
+ -> select compatible enemy archetype
+ -> select exact stage-eligible variant through enemy_variant RNG
  -> select hazard only if response space remains
  -> place reward relative to risk
  -> validate caps and completion state
 ```
 
 - Optional reward value rises with route and encounter risk.
+- Room tags select pressure roles, not concrete enemy scenes. The allocator chooses
+  an archetype first, then a stage-eligible variant that satisfies the tuning
+  profile and authored anchor geometry.
+- A Stage Plan stores both `archetype_id` and `variant_id`, exact budget cost, anchor,
+  and resolved content version. Runtime never rolls another combat value.
 - Required exits and switches cannot be body-blocked by living enemies after an
   encounter is considered complete.
 - Physics pickups are convenience visuals; stage clear never depends on collecting
@@ -200,7 +208,8 @@ room budget
 
 ## Determinism And Retry
 
-- Store `run_seed`, `stage_index`, `content_version`, and named RNG stream seeds.
+- Store `run_seed`, `stage_index`, `content_version`, and named RNG stream seeds,
+  including separate `encounter` and `enemy_variant` streams.
 - Same inputs produce byte-equivalent Stage Plan data.
 - Validation failure derives a deterministic retry seed and records the reason.
 - Maximum three assembly retries, then load a curated known-good Stage Plan for
@@ -219,7 +228,9 @@ Reject a Stage Plan when any required check fails:
 5. Required jumps, rises, landings, headroom, crouch, ropes, and one-way drops fit
    the least-mobile shared envelope.
 6. Falls have recovery, reset, or safe checkpoint behavior.
-7. Enemy/hazard anchors have support, clearance, response space, and active caps.
+7. Enemy archetype/variant/tuning references resolve; exact variant stats preserve
+   safety bounds; enemy/hazard anchors have support, clearance, response space, and
+   active caps.
 8. Safe entry, checkpoint, switch, reward, and exit zones remain unobstructed.
 9. Camera bounds frame commitments before the player must make them.
 10. Encounter, hazard, reward, and duration budgets remain within profile limits.
@@ -229,6 +240,8 @@ Reject a Stage Plan when any required check fails:
 - Runtime consumes a validated Stage Plan, not raw design JSON or editor metadata.
 - Generation logic is independent from scene instantiation.
 - Every content selection is explainable in a Generation Report.
+- Generation Reports distinguish pressure role, archetype, and variant; adding a
+  variant cannot silently alter room topology.
 - Room content is authored to a contract and can be tested independently.
 - No accepted stage relies on debug flags or testbed geometry.
 
@@ -238,6 +251,7 @@ Reject a Stage Plan when any required check fails:
 - A 1,000-seed property sweep per profile accepts only valid plans or documented
   fallbacks.
 - Same seed/content version reproduces room order, encounters, hazards, and rewards.
+- Same seed/content version reproduces exact enemy variant IDs and combat values.
 - Every base character clears the curated seed set with no movement upgrade.
 - No unsupported enemy, floating marker, hidden collision, blocked exit, unsafe
   checkpoint, or unrecoverable required fall appears.

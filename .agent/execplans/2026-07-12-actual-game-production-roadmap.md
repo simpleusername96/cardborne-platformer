@@ -74,6 +74,8 @@ existing foundations and accepted design catalogs into one complete run.
 | Common materials/equipment unlocks persist on pickup; Boss Core requires victory. | Locked. |
 | Temporary forge offers three deterministic choices and cannot fail/downgrade/destroy. | Locked. |
 | All three active skills are available; no separate mana meter in the first run. | Locked. |
+| Normal enemies resolve as `EnemyArchetype` + exact stage `EnemyVariant`; `EnemyTuningProfile` validates authored bounds and is not a runtime multiplier. | Locked. |
+| Direct damage has no random spread. First-run critical hits are deterministic, player-earned conditions; enemies/hazards cannot critical. | Locked. |
 | Death ends the run; boss victory settles rewards and ends the run. | Locked. |
 
 ### Assumptions
@@ -82,6 +84,8 @@ existing foundations and accepted design catalogs into one complete run.
 - Current rectangles/colors remain legal short-lived placeholders while gameplay
   timing is built. Presentation milestone must replace them coherently.
 - Existing attack/profile values are tuning seeds, not balanced final values.
+- The 13 initial enemy Variant values are reviewable tuning seeds; their IDs,
+  archetype ownership, safety bounds, and no-random-instance rule are contracts.
 - JSON design catalogs are migrated to typed Resources per milestone and are never
   loaded beside those Resources as a second runtime owner.
 
@@ -100,6 +104,9 @@ Additional invariants:
 5. No damaging boss action without startup, active, recovery, and counterplay.
 6. No consecutive foundation-only batches after the first combat slice exists.
 7. No feature is complete until it is reachable from the production flow.
+8. No enemy behavior script branches on stage/variant ID to invent combat values;
+   it consumes one immutable `ResolvedEnemySpec`.
+9. No damage or critical test depends on an unrecorded lucky roll.
 
 ## Current-State Evidence Map
 
@@ -108,8 +115,8 @@ Additional invariants:
 | Boot/flow | `RunDirector`, `Game`, production UI | One scaffold stage jumps directly to result. | Add explicit phases and full stage/reward/boss transitions. |
 | Character data | `CharacterProfile`, three `.tres` files | Basic attack seeds only. | Typed kits, attacks, skills, passives, mastery references. |
 | Movement | `PlayerController`, `MovementMetrics` | Useful but mixed with attack execution. | Preserve motion; extract combat state; generator consumes limits. |
-| Combat | `DamageInfo`, Hitbox/Hurtbox, player attack proof | No heavy/skills/stagger/effect lifecycle. | Shared definitions/executor plus Warrior vertical slice. |
-| Enemies | Eight behavior scripts | No production scenes/catalog/drop/encounter ownership. | Promote six + two special through typed definitions and fixtures. |
+| Combat | `DamageInfo`, Hitbox/Hurtbox, player attack proof | No shared modifier order, hit result, earned critical, heavy/skills/stagger/effect lifecycle. | Deterministic resolver/critical rules plus Warrior vertical slice. |
+| Enemies | Eight behavior scripts plus design catalog v2 | Scripts still own embedded values; no typed archetype/variant/tuning catalog or production scenes. | Promote six archetypes, 13 exact variants, and two special actors through typed definitions/fixtures. |
 | Stages | `StageBase`, production scaffold, reusable components | No room templates/planner/assembler/allocator. | Native room contract and data-first generation pipeline. |
 | Progression | `RunState`, `PlayerBuild`, design JSON | Counters mostly inert; no reward transaction. | One deterministic build/effect/reward path. |
 | Persistence | `ProfileState` settings | No gameplay profile schema/backup/migration. | Versioned profile with wallet/equipment/mastery. |
@@ -128,6 +135,22 @@ Additional invariants:
   - To-be: movement owner consumes build snapshot; combat owner executes typed kit.
   - Accept: Warrior basic/heavy/Skill 1 works before further extraction.
   - Guard: no character ID switch in movement.
+- **Combat resolution**
+  - As-is: attacks construct integer `DamageInfo` directly; conditional bonuses are
+    distributed across kit descriptions.
+  - To-be: `DamageResolver` returns one `HitResult` with deterministic modifier
+    order, earned critical state, rounding, mitigation, stagger, and tags.
+  - Accept: identical build/target/context yields identical result; three character
+    critical fixtures pass; enemy damage never criticals.
+  - Guard: no `randf`/`randi` in damage resolution and no recursive critical procs.
+- **Enemy generation**
+  - As-is: behavior scripts and old design entries imply one concrete Walker,
+    Charger, or Shooter.
+  - To-be: allocator chooses pressure role -> archetype -> exact stage variant ->
+    validated anchor; scene consumes `ResolvedEnemySpec`.
+  - Accept: all 13 variants resolve, satisfy safety/tuning bounds, reproduce by
+    seed, and appear in focused fixtures.
+  - Guard: no blanket stage multiplier, hidden instance roll, or stage-ID branch in AI.
 - **Maps**
   - As-is: safe programmatic rock scaffold.
   - To-be: authored room scenes -> Stage Plan -> validation -> assembly -> allocation.
@@ -179,24 +202,36 @@ use Basic, Heavy, and Shield Rush against Walker/Charger, clear the room, and ex
   - Add Heavy, Skill 1-3, Consumable; keep debug actions absent.
   - Accept: remap and collision tests cover every visible action.
 - [ ] **1.2 Add typed character-combat Resources.**
-  - Files: `AttackDefinition`, `SkillDefinition`, `CharacterKit`, catalogs and
-    Warrior `.tres` data.
+  - Files: `AttackDefinition`, `SkillDefinition`, `CriticalRule`, `CharacterKit`,
+    catalogs and Warrior `.tres` data.
   - Reuse `DamageInfo`, Hitbox/Hurtbox, character profiles, effect definitions.
-  - Accept: catalog validation catches timings, IDs, hit policy, cooldown, and refs.
-- [ ] **1.3 Extract combat execution from movement.**
+  - Accept: catalog validation catches timings, IDs, hit policy, cooldown, critical
+    condition, and refs.
+- [ ] **1.3 Implement deterministic `DamageResolver` and `HitResult`.**
+  - Fixed direct damage, one final rounding step, no variance/enemy criticals,
+    earned player critical x1.5 capped at x2.0.
+  - Add fixtures for staggered Breaker, marked full-charge Power Shot, and rear-arc
+    Shadow Lunge; secondary hits cannot critical by default.
+  - Accept: repeated identical contexts are byte-equivalent and critical effects
+    cannot recursively retrigger.
+- [ ] **1.4 Extract combat execution from movement.**
   - Add `PlayerCombatController`; leave movement/damage/camera in `PlayerController`.
   - Accept: existing movement and attack-motion validators remain green.
-- [ ] **1.4 Implement Warrior Basic, Heavy, passive, and Shield Rush.**
+- [ ] **1.5 Implement Warrior Basic, Heavy, passive, and Shield Rush.**
   - Accept: timings/effects match spec and all have readable placeholder feedback.
-- [ ] **1.5 Promote Walker and Charger into production scenes.**
-  - Add definitions, defeat state, drop source ID (reward can log pending until M2).
+- [ ] **1.6 Implement typed enemy resolution and promote Ruin Walker/Charger.**
+  - Add `EnemyArchetypeDefinition`, `EnemyVariantDefinition`,
+    `EnemyTuningProfile`, `EnemyCatalog`, `ResolvedEnemySpec`.
+  - Promote `walker_ruin` and `charger_ruin` production scenes/fixtures with exact
+    stats, defeat state, presentation key, and drop source ID.
+  - Accept: scene behavior reads resolved values and has no stage/variant ID branch.
   - Guard: no auto-reset in production encounter after defeat.
-- [ ] **1.6 Author first room `lr_patrol_gallery`.**
+- [ ] **1.7 Author first room `lr_patrol_gallery`.**
   - Native room scene + metadata + safe entry/exit + two anchor variants.
   - Accept: Warrior can clear it from menu without debug narration.
-- [ ] **1.7 Fun gate.**
+- [ ] **1.8 Fun gate.**
   - Five focused play passes: movement-only, Walker, Charger, Heavy punish,
-    Shield Rush spacing.
+    Shield Rush spacing; staggered Breaker critical must feel earned and legible.
   - Rework if best strategy is repeated damage trading or attack spam.
 
 *Milestone gate:* one production combat room is enjoyable enough to repeat and
@@ -229,13 +264,14 @@ branch, valid encounters/rewards, checkpoint, exit, and fallback.
 - [ ] **3.2 Author Stage 1 rooms:** start shelf, rise steps, lower/upper choice,
   broken bridge, patrol gallery, charge lane, shooter overlook, optional cache,
   material cavern, exit ascent (eligible subset selected per seed).
-- [ ] **3.3 Implement StageProfile, StagePlan, GenerationReport.**
-- [ ] **3.4 Implement deterministic graph/template planner with named RNG streams.**
+- [ ] **3.3 Implement StageProfile, StagePlan, GenerationReport, and enemy catalog references.**
+- [ ] **3.4 Implement deterministic graph/template planner with separate encounter and enemy-variant RNG streams.**
 - [ ] **3.5 Implement movement/socket/full-plan validator.**
-- [ ] **3.6 Implement assembler and encounter/hazard/reward allocator.**
+- [ ] **3.6 Implement assembler and allocator:** pressure role -> archetype -> Ruin
+  variant -> anchor, then hazard/reward allocation.
 - [ ] **3.7 Add curated fallback Stage 1 plan.**
-- [ ] **3.8 Promote Shooter and static spike/fall-reset content.**
-- [ ] **3.9 Add three curated seeds and 1,000-seed property gate.**
+- [ ] **3.8 Promote Shooter and `shooter_ruin` plus static spike/fall-reset content.**
+- [ ] **3.9 Add three curated seeds and 1,000-seed property gate, including exact variant reproducibility.**
 - [ ] **3.10 All-character route gate:** Warrior, Archer, Assassin base profiles.
 - [ ] **3.11 Fun gate:** seeds vary decisions, not just room coordinates.
 
@@ -269,7 +305,9 @@ decision, and Warrior uses all three skills through two stage cards.
 - [ ] **5.2 Migrate Warrior/shared card subset and equipment effects.**
 - [ ] **5.3 Author rope shaft, leaper basin, poison timing, crumble crossing,
   rest/forge, and relevant variants.**
-- [ ] **5.4 Promote Leaper, Timed Poison Vent, Crumbling Platform, rope recovery.**
+- [ ] **5.4 Promote Leaper and Flooded variants:** `walker_flooded`,
+  `charger_flooded`, `shooter_flooded`, `leaper_flooded`; add Timed Poison Vent,
+  Crumbling Platform, rope recovery.
 - [ ] **5.5 Implement shop heal/consumable/reroll commands.**
 - [ ] **5.6 Implement deterministic three-choice forge and replacement confirmation.**
 - [ ] **5.7 Generate Flooded Works with curated fallback and seed gates.**
@@ -300,16 +338,19 @@ loops across the same Stage 1-2 seeds.
 **Visible result:** Broken Sanctum tests the finished build with mixed but fair
 encounters and leads through the third card reward to the boss.
 
-- [ ] **7.1 Promote Shield Guard and Sentry; finalize Summon Node special use.**
+- [ ] **7.1 Promote Shield Guard/Sentry and all Sanctum variants:**
+  `walker_sanctum`, `charger_sanctum`, `shooter_sanctum`,
+  `shield_guard_sanctum`, `leaper_sanctum`, `sentry_sanctum`; finalize Summon Node.
 - [ ] **7.2 Implement moving platform production component and chest/material nodes.**
 - [ ] **7.3 Author shield choke, gate loop, sentry crossfire, remaining optional and
   exit content to complete 18-room catalog.**
-- [ ] **7.4 Implement full encounter allocator compatibility/exclusion rules.**
+- [ ] **7.4 Implement full archetype/variant allocator compatibility, repetition,
+  tuning-bound, geometry, and exclusion rules.**
 - [ ] **7.5 Generate Broken Sanctum with curated fallback and seed gates.**
 - [ ] **7.6 Migrate remaining 15-card catalog and complete equipment/consumable paths.**
 - [ ] **7.7 Run multi-seed route/encounter/reward/economy matrix.**
-- [ ] **7.8 Fun gate:** difficulty rises through learned combinations, not longer
-  fights, hidden shots, or unavoidable overlap.
+- [ ] **7.8 Fun gate:** Variant changes are recognizable before contact and difficulty
+  rises through learned combinations, not longer fights, hidden shots, or unavoidable overlap.
 
 *Milestone gate:* all three normal stages form a varied, coherent complete build arc.
 
@@ -377,9 +418,10 @@ known environment warnings instead of rediscovering them.
 
 ## Fun Evidence
 
-For each playable milestone, record seed/character/build, duration, damage sources,
-room/encounter duration, reward offers/selections, unused verbs, spending, death
-reason, and tester comments against the five fun pillars.
+For each playable milestone, record seed/character/build, selected enemy archetype
+and variant IDs, critical trigger/result, duration, damage sources, room/encounter
+duration, reward offers/selections, unused verbs, spending, death reason, and tester
+comments against the five fun pillars.
 
 Rework before widening content when:
 
@@ -390,6 +432,8 @@ Rework before widening content when:
 - procedural rooms feel like shuffled blocks without pacing;
 - optional routes are ignored because reward/risk is unclear;
 - a death cannot be explained from visible information;
+- a Variant feels like an unexplained health/speed change or color-only reskin;
+- critical feedback looks lucky rather than earned from a visible condition;
 - a boss pattern has no reliable response or punish.
 
 ## Guard Checks

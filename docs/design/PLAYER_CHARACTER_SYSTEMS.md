@@ -93,6 +93,42 @@ must show the current prompt and cannot trigger a combat action simultaneously.
 - Air use must not silently reset shared jumps or dashes.
 - Hit pause and screen shake are feedback, not timing logic.
 
+## Damage And Critical Resolution
+
+Damage is deterministic and integer-valued. The first run does not roll a random
+damage range per hit: the same resolved build, target state, and hit context produce
+the same result.
+
+```text
+base direct damage
+ -> additive and multiplicative build effects
+ -> one declared critical check
+ -> critical multiplier when earned
+ -> target mitigation or guard
+ -> floor(non-negative value + 0.5), then clamp
+```
+
+- A first-run critical hit is earned by a visible positioning, setup, or punish
+  condition. Baseline random critical chance is 0%.
+- The default critical multiplier is 1.5 and cannot exceed 2.0 from future effects.
+- Enemy attacks, hazards, damage-over-time, echoes, aftershocks, and other secondary
+  hits cannot critical unless their definition explicitly opts in. None opt in for
+  the first run.
+- Critical resolution happens once per hit. A critical cannot recursively trigger
+  another critical or duplicate on-hit effects.
+- Critical feedback uses a distinct hit flash, sound, number treatment, and
+  `critical` hit-result tag; color alone is insufficient.
+- Enemy and hazard damage is fixed by the threat definition. They have no random
+  damage spread and no critical hits in the first run.
+
+First-run earned critical conditions:
+
+| Character | Attack | Condition |
+| --- | --- | --- |
+| Warrior | `warrior_breaker` | Hit a target during its declared stagger punish state. |
+| Archer | `archer_power_shot` | Release at full charge into a target with Hunter's Mark; the mark is consumed. |
+| Assassin | `assassin_shadow_lunge` | Hit from the target's authored rear arc. |
+
 ## Warrior
 
 ### Combat promise
@@ -106,7 +142,7 @@ damage. He is safest when deliberate, not when trading health indefinitely.
 | --- | --- | --- | --- | ---: |
 | Passive | `warrior_resolve` | Heavy or skill hits grant `guarded` for 1.5 s. Guarded reduces the next incoming hit by 1, minimum damage 0, then ends. Cannot stack. | Triggered on confirmed hit. | 5 s internal cooldown after guard is consumed. |
 | Basic | `warrior_cleave` | Wide forward slash, 2 damage, medium knockback, 20 stagger. Can turn before startup ends. | 0.12 / 0.15 / 0.19 s | 0.46 s total cycle. |
-| Heavy | `warrior_breaker` | Overhead strike, 4 damage, 60 stagger, small ground impact radius. Movement locked after startup midpoint. | 0.42 / 0.16 / 0.48 s | 1.10 s total cycle. |
+| Heavy | `warrior_breaker` | Overhead strike, 4 damage, 60 stagger, small ground impact radius. Critical against a staggered target. Movement locked after startup midpoint. | 0.42 / 0.16 / 0.48 s | 1.10 s total cycle. |
 | Skill 1 | `warrior_shield_rush` | Move 180 px, block frontal projectile/contact damage during travel, deal 2 damage and 35 stagger on first enemy. Stops at solid wall. | 0.16 / 0.32 / 0.26 s | 5 s |
 | Skill 2 | `warrior_ground_splitter` | Short ground shockwave, 3 damage, launches light enemies, cannot travel through walls or gaps. | 0.34 / 0.35 / 0.42 s | 8 s |
 | Skill 3 | `warrior_rally` | Gain guarded immediately; next Heavy within 5 s starts 30% faster and creates a second shockwave at 50% damage. | 0.25 / instant / 0.25 s | 14 s |
@@ -141,7 +177,7 @@ area control.
 
 | Verb | ID | Behavior | Startup / active / recovery | Cooldown |
 | --- | --- | --- | --- | ---: |
-| Passive | `archer_hunters_mark` | Skill hits mark a target for 6 s. Heavy consumes the mark for +2 damage and a small radial burst. One mark per target. | Triggered on hit. | None. |
+| Passive | `archer_hunters_mark` | Skill hits mark a target for 6 s. A full-charge Heavy consumes the mark, becomes critical, and creates a small radial burst. One mark per target. | Triggered on hit. | None. |
 | Basic | `archer_quick_shot` | Fast arrow, 1 damage, 640 px/s, 800 px range. Air use preserves horizontal control. | 0.09 / projectile / 0.21 s | 0.30 s total cycle. |
 | Heavy | `archer_power_shot` | Charge up to 0.8 s; piercing arrow deals 2-4 damage and stronger knockback. Minimum charge still fires. | 0.28-0.80 / projectile / 0.32 s | 1.10 s from release. |
 | Skill 1 | `archer_vault_shot` | Hop 120 px away from aim direction and fire three low-damage arrows in a narrow fan. Marks first target hit. | 0.12 / 0.30 / 0.20 s | 5 s |
@@ -178,7 +214,7 @@ counterattack. Repeating one safe attack should be weaker than alternating tools
 | --- | --- | --- | --- | ---: |
 | Passive | `assassin_flow` | Hitting with a different verb category than the previous hit grants one Flow stack for 3 s, max 3. At 3 stacks the next Heavy or skill deals +2 damage and consumes Flow. | Triggered on hit. | None. |
 | Basic | `assassin_twin_cut` | Two short slashes; each deals 1 damage. Second hit requires the button to remain held through the first recovery. | 0.07 / 0.07 / 0.08, then 0.08 / 0.07 / 0.12 s | 0.42 s full chain. |
-| Heavy | `assassin_shadow_lunge` | Travel 150 px through light enemies, 3 damage; +1 from behind. Stops before solid wall and cannot cross closed gates. | 0.24 / 0.20 / 0.34 s | 0.90 s total cycle. |
+| Heavy | `assassin_shadow_lunge` | Travel 150 px through light enemies, 3 damage; critical from behind. Stops before solid wall and cannot cross closed gates. | 0.24 / 0.20 / 0.34 s | 0.90 s total cycle. |
 | Skill 1 | `assassin_smoke_step` | 120 px invulnerable step through an enemy; leaves a decoy that draws aim for 0.8 s. No damage. | 0.08 / 0.18 / 0.18 s | 5 s |
 | Skill 2 | `assassin_kunai_fan` | Five short-range projectiles, 1 damage each; one target can take at most three hits. | 0.18 / projectile / 0.25 s | 7 s |
 | Skill 3 | `assassin_death_mark` | Mark one enemy for 5 s. The third distinct verb that hits detonates for 4 damage and 40 stagger. | 0.24 / instant / 0.28 s | 13 s |
@@ -220,6 +256,8 @@ counterattack. Repeating one safe attack should be weaker than alternating tools
 - A 10-minute combat playtest produces distinct dominant decisions for each kit.
 - No skill or mastery is required to recover from a generated critical-path fall.
 - Cooldown, mark, guard, Flow, damage, and stagger UI agree with runtime state.
+- Earned critical conditions produce the same result for the same build and hit
+  context; no test depends on lucky rolls.
 
 ## Non-Goals
 

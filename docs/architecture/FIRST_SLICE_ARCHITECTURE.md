@@ -39,9 +39,13 @@ class names may change only when the same boundary and acceptance tests remain.
 - Player Build resolves all stat/effect sources into one snapshot.
 - Player Movement consumes movement values and owns physical traversal only.
 - Player Combat executes attacks/skills and owns their state/timing.
+- Combat Resolution converts one declared hit context into a deterministic result,
+  including earned critical state, rounding, mitigation, and tags.
 - Stage Planning chooses validated room/encounter/reward data.
 - Stage Assembly instantiates an accepted plan.
-- Encounter Actors own behavior and emit combat/defeat facts.
+- Enemy Catalog owns archetypes, exact stage variants, and tuning validation.
+- Encounter Actors consume a resolved enemy specification, own behavior, and emit
+  combat/defeat facts.
 - Reward Economy resolves and applies idempotent transactions.
 - UI renders snapshots and sends narrow commands.
 
@@ -60,8 +64,8 @@ reward idempotency, save safety, and scene lifecycles interact.
 | `CharacterProfile.gd` / `.tres` | Three movement/attack tuning seeds. | Reference complete kit definitions; no profile-ID branches. |
 | `PlayerController.gd` | Proven movement, damage, camera hooks. | Keep movement; extract attack/skill state. |
 | `MovementMetrics.gd` | Shared movement-envelope calculation. | Make generator tests consume it directly. |
-| `DamageInfo`, `Hitbox`, `Hurtbox` | Shared combat payload and hit path. | Add tags, stagger, source/transaction IDs, per-attack target policy. |
-| `EnemyBase` + archetypes | Six behavior prototypes and projectiles. | Data-back definitions, production scenes, reward IDs, cleanup. |
+| `DamageInfo`, `Hitbox`, `Hurtbox` | Shared combat payload and hit path. | Add deterministic resolver, critical result, stagger, source/transaction IDs, per-attack target policy. |
+| `EnemyBase` + behavior scripts | Six archetype prototypes and projectiles. | Separate archetype behavior from exact variants/tuning, then add production scenes, reward IDs, cleanup. |
 | Stage components | Checkpoint, hazards, climbable, gate, destructible, exit. | Promote into authored room scenes and focused fixtures. |
 | `StageBase.gd` | Player spawn, checkpoint, clear signal. | Consume Stage Plan/report and own stage lifecycle only. |
 | Production UI | Menu, character selection, compact HUD, result shell. | Add real states as systems land; remove placeholder claims. |
@@ -142,6 +146,34 @@ resolve(character, mastery, equipment, run_levels, cards, temporary_effects)
 Consumers ask for effective values/abilities. They never inspect card, equipment,
 or mastery IDs.
 
+### Combat Resolution
+
+```text
+DamageResolver.resolve(hit_payload, source_build, target_snapshot, hit_context)
+ -> HitResult(final_damage, critical, stagger, knockback, tags, validation_errors)
+```
+
+`DamageResolver` owns modifier order, earned-critical evaluation, one final integer
+round, mitigation, and result tags. It hides effect storage and presentation. The
+first run has zero per-hit damage variance, zero enemy critical chance, and a 1.5
+default player critical multiplier capped at 2.0.
+
+### Enemy Catalog
+
+```text
+EnemyCatalog.resolve(archetype_id, variant_id, stage_id)
+ -> ResolvedEnemySpec
+```
+
+- `EnemyArchetypeDefinition` owns behavior owner, pressure roles, tell/response/
+  punish invariants, geometry needs, and safety bounds.
+- `EnemyVariantDefinition` owns exact stats, presentation key, stage eligibility,
+  budget, and drop source.
+- `EnemyTuningProfile` validates stage bounds; it is never applied as a second
+  runtime multiplier.
+- Enemy scenes consume `ResolvedEnemySpec`. They do not branch on stage or variant
+  IDs to calculate combat values.
+
 ### Content Catalogs
 
 Each catalog exposes `get(id)`, `has(id)`, `all_eligible(tags)`, and
@@ -155,7 +187,7 @@ matching typed catalog exists, then should be retired in the same milestone.
 StagePlanner.plan(profile, seed, catalogs) -> StagePlan
 StagePlanValidator.validate(plan, room_catalog, movement_limits) -> ValidationReport
 StageAssembler.assemble(plan) -> StageBase instance
-EncounterAllocator.allocate(plan, room anchors, catalogs) -> allocation entries
+EncounterAllocator.allocate(plan, room anchors, catalogs) -> archetype/variant entries
 ```
 
 Planning and validation remain data-only where possible. Assembly owns scene-tree
@@ -189,6 +221,7 @@ the service to commit one result.
 - `scripts/player/CharacterKit.gd`
 - `scripts/player/AttackDefinition.gd`
 - `scripts/player/SkillDefinition.gd`
+- `scripts/combat/DamageResolver.gd`, `HitResult.gd`, `CriticalRule.gd`
 - `scripts/player/PlayerBuild.gd`, `PlayerBuildSnapshot.gd`
 - `data/characters/`, `data/attacks/`, `data/skills/`, `data/mastery/`
 
@@ -211,7 +244,9 @@ the service to commit one result.
 
 ### Enemies/bosses
 
-- Existing `scripts/enemies/` behavior owners plus `EnemyDefinition.gd`
+- Existing `scripts/enemies/` behavior owners plus
+  `EnemyArchetypeDefinition.gd`, `EnemyVariantDefinition.gd`,
+  `EnemyTuningProfile.gd`, `EnemyCatalog.gd`, `ResolvedEnemySpec.gd`
 - production enemy scenes under `scenes/enemies/`
 - `scripts/bosses/BossBase.gd`, `BossPatternDefinition.gd`,
   `BossPatternScheduler.gd`, `SlimeKing.gd`
@@ -229,11 +264,15 @@ the service to commit one result.
 All definitions include `id`, `display_name`, `content_version`, tags,
 presentation references, and `validate_definition()`.
 
-- Attack/Skill: timings, cooldown, damage/stagger/effects, hit policy, cancellation,
-  movement impulse, compatibility.
+- Attack/Skill: timings, cooldown, damage/stagger/effects, earned-critical rule, hit
+  policy, cancellation, movement impulse, compatibility.
 - Card: rarity, compatibility, trigger, effects, max stacks, offer rules.
 - Equipment: slot, compatibility, persistent source, effects, tradeoffs, salvage.
-- Enemy: scene, pressure roles, budget cost, room requirements, drop source.
+- Enemy archetype: behavior owner, pressure roles, tell/response/punish contract,
+  safety bounds, room requirements.
+- Enemy variant: archetype, stage, exact stats, presentation key, budget cost, drop
+  source; no per-instance random stat range.
+- Enemy tuning profile: stage-bound authoring ranges and allowed damage values.
 - Hazard: scene, budget cost, warning/active/recovery, safe-zone requirement.
 - Room: scene, role, sockets, anchors, budgets, stage tags, expected duration.
 - Boss pattern: phases, timing, legality tags, cleanup owner, counterplay metadata.
@@ -271,12 +310,13 @@ presentation references, and `validate_definition()`.
 The active roadmap owns detailed checklists. Architecture dependency order is:
 
 1. Lock typed content/effect contracts and state scopes.
-2. Complete Warrior basic/heavy/Skill 1 in one authored production room.
+2. Complete deterministic damage/earned critical resolution and Warrior
+   basic/heavy/Skill 1 against Ruin Walker/Charger variants in one authored room.
 3. Implement reward transaction, one level choice, and three cards end to end.
 4. Build RoomTemplate contract, six Stage 1 rooms, planner, validator, assembler,
    allocator, fallback, and seed report.
 5. Complete Warrior skills, Stage 1 card flow, one rest/forge choice, and persistence.
-6. Promote six enemies/hazards and build Stages 2-3.
+6. Promote six enemy archetypes, 13 variants, hazards, and Stages 2-3.
 7. Complete Archer and Assassin using the proven shared contracts.
 8. Build boss scheduler, four patterns, settlement, and full-run flow.
 9. Replace placeholders, tune fun, and run release matrices.
@@ -291,10 +331,11 @@ multiple consecutive infrastructure-only milestones.
 - catalog IDs/references/effect compatibility;
 - player build source ordering and clamps;
 - attack/skill state timing and target hit policy;
+- deterministic damage order, earned critical conditions, and critical proc guards;
 - reward idempotency and economy bounds;
 - room/socket/anchor schema;
 - known valid/invalid movement transitions;
-- enemy support/clearance and boss pattern legality;
+- enemy archetype/variant/tuning references, support/clearance, and boss legality;
 - profile save round trip/migration/fallback.
 
 ### Scene tests
@@ -334,6 +375,8 @@ multiple consecutive infrastructure-only milestones.
 - Every persistent or reward mutation is idempotent or transaction-guarded.
 - The production run contains no dependency on the retired integrated testbed.
 - Code, catalogs, specs, and roadmap use the same canonical terms and IDs.
+- Enemy scenes have no stage-ID stat branches, and every spawned normal enemy
+  resolves through one archetype plus one exact variant.
 
 ## Non-Goals
 

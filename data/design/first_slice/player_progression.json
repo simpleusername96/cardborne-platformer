@@ -5,6 +5,20 @@
     "baseline_dash_charges": 1,
     "abilities": ["variable_jump", "double_jump", "dash", "crouch", "fast_fall", "one_way_drop", "climb", "damage_recovery"]
   },
+  "combat_resolution": {
+    "direct_damage_variance": 0.0,
+    "baseline_random_critical_chance": 0.0,
+    "enemy_critical_hits": false,
+    "default_critical_multiplier": 1.5,
+    "maximum_critical_multiplier": 2.0,
+    "rounding": "floor_non_negative_plus_half",
+    "secondary_hits_can_critical_by_default": false,
+    "critical_rules": [
+      { "id": "warrior_breaker_staggered", "attack_id": "warrior_breaker", "trigger": "earned_condition", "requires": ["target_staggered"] },
+      { "id": "archer_power_shot_marked_full_charge", "attack_id": "archer_power_shot", "trigger": "earned_condition", "requires": ["full_charge", "target_hunters_mark"], "consumes": ["target_hunters_mark"] },
+      { "id": "assassin_shadow_lunge_rear", "attack_id": "assassin_shadow_lunge", "trigger": "earned_condition", "requires": ["target_rear_arc"] }
+    ]
+  },
   "input_actions": [
     { "id": "move_left", "keyboard": ["A", "Left"] },
     { "id": "move_right", "keyboard": ["D", "Right"] },

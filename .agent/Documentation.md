@@ -43,6 +43,10 @@ Read in this order:
 - Generate Stage Plans from authored native Godot room scenes and typed metadata;
   do not scatter arbitrary platforms or content coordinates.
 - Use `MovementMetrics` and full-stage validation before stage load.
+- Model normal enemies as stable behavior archetypes plus exact stage variants;
+  tuning profiles validate authored bounds and never multiply runtime stats again.
+- Keep direct damage deterministic. Player critical hits require declared earned
+  conditions; enemies, hazards, and secondary hits do not critical by default.
 - Keep rewards and persistent writes transaction-safe and idempotent.
 - Use run levels for small support choices, cards for behavior changes, coins for
   tactical spending, equipment for loadout tradeoffs, and mastery for persistent
@@ -59,8 +63,9 @@ Read in this order:
 - The production entry stage is only a safe scaffold, not credited Stage 1 content.
 - Character profiles have basic-attack seeds but heavy attacks, skills, passives,
   cards, progression, and persistence are not implemented.
-- Enemy scripts are behavior prototypes without production scenes, catalogs, drops,
-  or encounter allocation.
+- Enemy scripts are behavior prototypes; design catalog v2 now defines six
+  archetypes and 13 variants, but typed Resources, production scenes, and allocator
+  integration remain unimplemented.
 - JSON catalogs and docs are implementation-ready inputs but not runtime owners.
 - Fun remains unproven until real room/combat/reward playtests begin.
 
@@ -77,6 +82,7 @@ Read in this order:
 
 ## Next Implementation Entry
 
-Start from Milestone 1 in the active production roadmap: typed character attack and
-skill contracts, explicit run phases, and a Warrior combat slice in one authored
-production room. Do not spend another batch on menu polish or generic foundations.
+Start from Milestone 1 in the active production roadmap: deterministic damage and
+earned critical resolution, typed character combat, Ruin Walker/Charger variants,
+and a Warrior combat slice in one authored production room. Do not spend another
+batch on menu polish or generic foundations.
