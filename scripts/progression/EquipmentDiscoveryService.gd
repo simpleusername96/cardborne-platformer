@@ -33,7 +33,7 @@ static func resolve(
 	if table.equipment_pool_chance < 1.0 and rng.randf() >= table.equipment_pool_chance:
 		return discoveries
 
-	var candidates := _eligible_items(
+	var candidates := eligible_items(
 		catalog,
 		table.equipment_pool_id,
 		profile_id,
@@ -61,7 +61,7 @@ static func resolve(
 	return discoveries
 
 
-static func _eligible_items(
+static func eligible_items(
 	catalog: EquipmentCatalog,
 	pool_id: StringName,
 	profile_id: StringName,

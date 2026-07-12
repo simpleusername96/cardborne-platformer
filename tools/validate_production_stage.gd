@@ -145,6 +145,22 @@ func _validate_runtime_content(stage: Variant) -> void:
 	_expect(required_enemies.size() > 0, "required route should contain combat")
 	_expect(stage.get_spawned_hazards().size() == plan.get_hazards().size(), "planned hazards should spawn exactly once")
 	_expect(stage.get_spawned_rewards().size() == plan.get_rewards().size(), "planned rewards should spawn exactly once")
+	for reward in stage.get_spawned_rewards():
+		var context: Dictionary = reward.get_claim_context()
+		var placement := _reward_by_id(plan, StringName(context.get("source_id", &"")))
+		var room := plan.get_room(placement.room_id) if placement != null else null
+		var expected_optional := (
+			placement != null
+			and (
+				placement.reward_role in [&"optional_route", &"route_choice"]
+				or (room != null and not room.required_route)
+			)
+		)
+		_expect(placement != null, "spawned reward should retain its planned source identity")
+		_expect(
+			bool(context.get("optional_route", false)) == expected_optional,
+			"spawned reward should retain its route ownership"
+		)
 	for enemy in all_enemies:
 		var encounter_id := StringName(enemy.get_meta("planned_encounter_id", ""))
 		var placement := _encounter_by_id(plan, encounter_id)
@@ -289,6 +305,13 @@ func _encounter_by_id(plan: StagePlan, encounter_id: StringName) -> PlannedEncou
 	for encounter in plan.get_encounters():
 		if encounter.id == encounter_id:
 			return encounter
+	return null
+
+
+func _reward_by_id(plan: StagePlan, reward_id: StringName) -> PlannedReward:
+	for reward in plan.get_rewards():
+		if reward.id == reward_id:
+			return reward
 	return null
 
 

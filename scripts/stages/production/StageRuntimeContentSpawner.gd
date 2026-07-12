@@ -79,6 +79,7 @@ static func spawn(
 	if errors.is_empty():
 		for placement in plan.get_rewards():
 			var host := room_hosts.get(String(placement.room_id)) as RoomTemplateHost
+			var planned_room := plan.get_room(placement.room_id)
 			var anchor := host.get_anchor_by_id(&"Reward", placement.anchor_id) if host != null else null
 			if anchor == null:
 				errors.append("Reward placement '%s' cannot resolve its anchor." % placement.id)
@@ -88,10 +89,26 @@ static func spawn(
 				errors.append("Reward placement '%s' has no valid source scene." % placement.id)
 				break
 			reward.name = String(placement.id).to_pascal_case()
+			var transaction_id := StringName(
+				"%d:%d:%s" % [plan.run_seed, plan.stage_index, placement.id]
+			)
+			var optional_route := (
+				placement.reward_role in [&"optional_route", &"route_choice"]
+				or (planned_room != null and not planned_room.required_route)
+			)
 			reward.configure_reward(
 				placement.reward_role,
 				placement.reward_table_id,
-				StringName("%d:%d:%s" % [plan.run_seed, plan.stage_index, placement.id])
+				transaction_id,
+				null,
+				null,
+				{
+					"request_id": transaction_id,
+					"stage_index": plan.stage_index,
+					"room_id": placement.room_id,
+					"source_id": placement.id,
+					"optional_route": optional_route,
+				}
 			)
 			reward.position = actors_root.to_local(anchor.global_position)
 			actors_root.add_child(reward)
@@ -143,7 +160,7 @@ static func spawn(
 static func instantiate_reward_source(reward_role: StringName) -> StageRewardInteractable:
 	var scene: PackedScene
 	match reward_role:
-		&"cache_reward", &"optional_route":
+		&"cache_reward", &"optional_route", &"route_choice":
 			scene = CHEST_REWARD_SCENE
 		&"material_node":
 			scene = MATERIAL_REWARD_SCENE

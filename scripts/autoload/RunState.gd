@@ -54,6 +54,7 @@ var _card_offer_sequence: int = 0
 var _card_reroll_used: bool = false
 var _card_reward_stage_index: int = -1
 var _committed_card_id: StringName
+var _pending_treasure_choice: Dictionary = {}
 var _rest_active: bool = false
 var _rest_consumable_purchased: bool = false
 var _rest_forge_committed: bool = false
@@ -144,6 +145,7 @@ func start_new_run(profile_index: int = -1, requested_seed: int = -1) -> bool:
 	_card_reroll_used = false
 	_card_reward_stage_index = -1
 	_committed_card_id = &""
+	_pending_treasure_choice.clear()
 	_rest_active = false
 	_rest_consumable_purchased = false
 	_rest_forge_committed = false
@@ -220,6 +222,7 @@ func get_run_snapshot() -> RunSnapshot:
 		"card_reward_pending": _card_reward_pending,
 		"card_offer": _string_name_array_to_strings(_pending_card_offer),
 		"card_reroll_used": _card_reroll_used,
+		"treasure_choice_pending": not _pending_treasure_choice.is_empty(),
 		"temporary_affixes": _temporary_affixes.duplicate(true),
 		"consumable_id": String(current_consumable_id),
 		"consumable_charges": consumable_charges,
@@ -602,6 +605,202 @@ func get_card_effect_contexts(trigger: StringName) -> Array[Dictionary]:
 		if card != null and card.trigger == trigger and stack > 0:
 			contexts.append({"definition": card, "stack": stack})
 	return contexts
+
+
+func begin_optional_chest_choice(
+	normal_transaction: RewardTransaction,
+	context: Dictionary
+) -> Dictionary:
+	if normal_transaction == null or not bool(context.get("optional_route", false)):
+		return {"ok": false, "message": "Optional chest choice context is invalid."}
+	var request_id := StringName(context.get("request_id", normal_transaction.id))
+	if request_id == &"" or request_id != normal_transaction.id:
+		return {"ok": false, "message": "Optional chest choice identity is invalid."}
+	if int(context.get("stage_index", current_stage_index)) != current_stage_index:
+		return {"ok": false, "message": "Optional chest choice belongs to another stage."}
+	if has_applied_reward(normal_transaction.id):
+		return {"ok": true, "pending": false, "message": "Chest reward was already applied."}
+	if not _pending_treasure_choice.is_empty():
+		var pending_snapshot: Dictionary = _pending_treasure_choice.get("snapshot", {})
+		if StringName(pending_snapshot.get("request_id", &"")) == request_id:
+			return {"ok": true, "pending": true, "snapshot": pending_snapshot.duplicate(true)}
+		return {"ok": false, "message": "Resolve the current treasure choice first."}
+
+	var card: CardDefinition
+	var replacement_effect: CardEffectDefinition
+	for card_context in get_card_effect_contexts(&"optional_route_chest_claimed"):
+		var candidate := card_context.get("definition") as CardDefinition
+		if candidate == null:
+			continue
+		for effect in candidate.effects:
+			if effect != null and effect.effect_type == &"request_reward_preview_replacement":
+				card = candidate
+				replacement_effect = effect
+				break
+		if replacement_effect != null:
+			break
+	if card == null or replacement_effect == null:
+		return {"ok": true, "pending": false}
+
+	var choice := TreasureChoiceService.build_choice(
+		normal_transaction,
+		context,
+		card,
+		replacement_effect,
+		ProfileState.equipment_catalog,
+		forge_catalog,
+		ProfileState.get_loadout(selected_profile.id),
+		_temporary_affixes,
+		run_seed,
+		current_stage_index
+	)
+	if not bool(choice.get("ok", false)):
+		return {
+			"ok": true,
+			"pending": false,
+			"message": "Treasure replacement was unavailable; normal reward applied.",
+		}
+	choice["context"] = _treasure_claim_context(context)
+	_pending_treasure_choice = choice
+	var snapshot: Dictionary = choice["snapshot"]
+	_publish_snapshot()
+	SignalBus.reward_preview_replacement_requested.emit(snapshot.duplicate(true))
+	return {"ok": true, "pending": true, "snapshot": snapshot.duplicate(true)}
+
+
+func get_pending_optional_chest_choice() -> Dictionary:
+	if _pending_treasure_choice.is_empty():
+		return {}
+	var snapshot: Dictionary = _pending_treasure_choice.get("snapshot", {})
+	return snapshot.duplicate(true)
+
+
+func cancel_optional_chest_choice(request_id: StringName, message: String) -> bool:
+	if _pending_treasure_choice.is_empty():
+		return true
+	if request_id != StringName(_pending_treasure_choice.get("request_id", &"")):
+		return false
+	_pending_treasure_choice.clear()
+	_publish_snapshot()
+	SignalBus.reward_preview_replacement_committed.emit({
+		"ok": false,
+		"cancelled": true,
+		"request_id": request_id,
+		"message": message,
+	})
+	return true
+
+
+func _treasure_claim_context(context: Dictionary) -> Dictionary:
+	return {
+		"request_id": StringName(context.get("request_id", &"")),
+		"stage_index": int(context.get("stage_index", current_stage_index)),
+		"room_id": StringName(context.get("room_id", &"")),
+		"source_id": StringName(context.get("source_id", &"")),
+		"optional_route": bool(context.get("optional_route", false)),
+	}
+
+
+func commit_optional_chest_choice(
+	request_id: StringName,
+	choice_id: StringName
+) -> Dictionary:
+	if _pending_treasure_choice.is_empty():
+		return {"ok": false, "message": "No treasure choice is pending."}
+	var pending_request_id := StringName(_pending_treasure_choice.get("request_id", &""))
+	if request_id == &"" or request_id != pending_request_id:
+		return {"ok": false, "message": "Treasure choice identity does not match."}
+
+	var result: RewardResult
+	var replacement_kind := &"normal"
+	match choice_id:
+		TreasureChoiceService.NORMAL_CHOICE_ID:
+			result = RewardService.apply(
+				_pending_treasure_choice.get("normal_transaction") as RewardTransaction,
+				self
+			)
+		TreasureChoiceService.REPLACEMENT_CHOICE_ID:
+			replacement_kind = StringName(
+				_pending_treasure_choice.get("replacement_kind", &"")
+			)
+			var replacement := (
+				_pending_treasure_choice.get("replacement_transaction") as RewardTransaction
+			)
+			if replacement_kind == &"forge":
+				result = _apply_treasure_forge_reward(
+					replacement,
+					_pending_treasure_choice.get("replacement_payload", {})
+				)
+			else:
+				result = RewardService.apply(replacement, self)
+		_:
+			return {"ok": false, "message": "Treasure choice is unavailable."}
+	if result == null or (not result.applied and not result.duplicate):
+		return {
+			"ok": false,
+			"message": result.message if result != null else "Treasure reward failed.",
+		}
+
+	var completion := result.to_dictionary()
+	completion.merge(_pending_treasure_choice.get("context", {}), true)
+	completion["ok"] = true
+	completion["request_id"] = request_id
+	completion["choice_id"] = choice_id
+	completion["replacement_kind"] = replacement_kind
+	_pending_treasure_choice.clear()
+	_publish_snapshot()
+	SignalBus.reward_preview_replacement_committed.emit(completion.duplicate(true))
+	return completion
+
+
+func _apply_treasure_forge_reward(
+	transaction: RewardTransaction,
+	payload: Dictionary
+) -> RewardResult:
+	if transaction == null:
+		return RewardResult.new(false, false, &"", {}, "Forge reward is unavailable.")
+	if has_applied_reward(transaction.id):
+		return RewardService.apply(transaction, self)
+	if has_terminal_settlement() or forge_catalog == null or selected_profile == null:
+		return RewardResult.new(false, false, transaction.id, {}, "Forge reward is unavailable.")
+	var item_id := StringName(payload.get("item_id", &""))
+	var affix_id := StringName(payload.get("affix_id", &""))
+	var item := ProfileState.equipment_catalog.get_item(item_id)
+	var affix := forge_catalog.get_affix(affix_id)
+	var loadout := ProfileState.get_loadout(selected_profile.id)
+	if (
+		item == null
+		or affix == null
+		or StringName(loadout.get(String(item.slot), &"")) != item_id
+		or not affix.supports_slot(item.slot)
+	):
+		return RewardResult.new(false, false, transaction.id, {}, "Forge replacement is invalid.")
+
+	var item_key := String(item_id)
+	var previous_affix := StringName(_temporary_affixes.get(item_key, &""))
+	# Rebuild before consuming the reward ID so any invalid affix can roll back atomically.
+	_temporary_affixes[item_key] = String(affix_id)
+	if not _rebuild_effective_build():
+		_restore_temporary_affix(item_key, previous_affix)
+		return RewardResult.new(false, false, transaction.id, {}, "Forge replacement produced an invalid build.")
+	var result := RewardService.apply(transaction, self)
+	if not result.applied and not result.duplicate:
+		_restore_temporary_affix(item_key, previous_affix)
+		return result
+	if _is_stage_cache_reward(transaction):
+		_stage_cache_discoveries[str(current_stage_index)] = true
+	_rebuild_forge_behavior_counters()
+	_publish_state()
+	return result
+
+
+func _restore_temporary_affix(item_key: String, previous_affix: StringName) -> void:
+	if previous_affix == &"":
+		_temporary_affixes.erase(item_key)
+	else:
+		_temporary_affixes[item_key] = String(previous_affix)
+	_rebuild_effective_build()
+	_rebuild_forge_behavior_counters()
 
 
 func can_reroll_card_offer() -> bool:

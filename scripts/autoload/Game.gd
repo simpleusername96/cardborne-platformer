@@ -6,6 +6,7 @@ var current_stage: Node
 var current_stage_path: String = ""
 var pause_menu_open: bool = false
 var settings_open: bool = false
+var reward_choice_open: bool = false
 
 
 func _ready() -> void:
@@ -74,11 +75,19 @@ func set_pause_menu_open(is_open: bool) -> void:
 	SignalBus.pause_visibility_changed.emit(pause_menu_open)
 
 
+func set_reward_choice_open(is_open: bool) -> void:
+	if reward_choice_open == is_open:
+		return
+	reward_choice_open = is_open
+	_sync_pause_state()
+
+
 func close_overlays() -> void:
 	var settings_was_open := settings_open
 	var pause_was_open := pause_menu_open
 	settings_open = false
 	pause_menu_open = false
+	reward_choice_open = false
 	_sync_pause_state()
 	if settings_was_open:
 		SignalBus.settings_visibility_changed.emit(false)
@@ -87,8 +96,8 @@ func close_overlays() -> void:
 
 
 func _sync_pause_state() -> void:
-	# Either overlay keeps gameplay paused while its always-processing UI owns input.
-	get_tree().paused = pause_menu_open or settings_open
+	# Always-processing overlays keep gameplay frozen until their transaction closes.
+	get_tree().paused = pause_menu_open or settings_open or reward_choice_open
 
 
 func ensure_input_map() -> void:

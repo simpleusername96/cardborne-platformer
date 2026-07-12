@@ -11,7 +11,7 @@ func _ready() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if not event.is_action_pressed("pause"):
 		return
-	if Game.settings_open:
+	if Game.settings_open or Game.reward_choice_open:
 		return
 	if Game.pause_menu_open:
 		get_viewport().set_input_as_handled()

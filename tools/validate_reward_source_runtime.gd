@@ -82,12 +82,18 @@ func _validate_visual_class_selection() -> void:
 	var generic := _instantiate_reward_source(&"stage_reward")
 	var chest := _instantiate_reward_source(&"cache_reward")
 	var optional := _instantiate_reward_source(&"optional_route")
+	var route_choice := _instantiate_reward_source(&"route_choice")
 	var material := _instantiate_reward_source(&"material_node")
-	for source in [generic, chest, optional, material]:
+	for source in [generic, chest, optional, route_choice, material]:
 		root.add_child(source)
 	await process_frame
 	_expect(generic is StageRewardInteractable and not generic is ChestInteractable, "generic role should use base reward source")
-	_expect(chest is ChestInteractable and optional is ChestInteractable, "cache and optional route should use chests")
+	_expect(
+		chest is ChestInteractable
+		and optional is ChestInteractable
+		and route_choice is ChestInteractable,
+		"cache and optional-route reward roles should use chests"
+	)
 	_expect(material is MaterialNode, "material_node role should use MaterialNode")
 	_expect(generic.prompt_text != chest.prompt_text and chest.prompt_text != material.prompt_text, "reward source prompts should be distinct")
 	_expect(generic.visual_color != chest.visual_color and chest.visual_color != material.visual_color, "reward source colors should be distinct")
@@ -96,7 +102,7 @@ func _validate_visual_class_selection() -> void:
 		and chest.get_node("Visual").polygon != material.get_node("Visual").polygon,
 		"reward source silhouettes should be distinct"
 	)
-	for source in [generic, chest, optional, material]:
+	for source in [generic, chest, optional, route_choice, material]:
 		source.queue_free()
 	await process_frame
 

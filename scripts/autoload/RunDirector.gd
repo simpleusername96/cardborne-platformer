@@ -9,6 +9,7 @@ const RUN_RESULT_PATH := "res://scenes/ui/production/RunResult.tscn"
 const LEVEL_REWARD_PATH := "res://scenes/ui/production/LevelReward.tscn"
 const CARD_REWARD_PATH := "res://scenes/ui/production/CardReward.tscn"
 const REST_FORGE_PATH := "res://scenes/ui/production/RestForge.tscn"
+const TREASURE_CHOICE_PATH := "res://scenes/ui/production/TreasureChoice.tscn"
 const PRODUCTION_STAGE_PATH := "res://scenes/stages/production/ProductionStageHost.tscn"
 const BOSS_STAGE_PATH := "res://scenes/stages/boss/SlimeCourt.tscn"
 const BOSS_CLEAR_REWARD_TABLE_ID := RunSettlementService.DEFAULT_BOSS_REWARD_TABLE_ID
@@ -20,6 +21,7 @@ var hud_root: Control
 var current_screen: Control
 var current_hud: Control
 var _last_profile_id: StringName = &"warrior"
+var _treasure_choice_screen: Control
 
 
 func _ready() -> void:
@@ -27,6 +29,7 @@ func _ready() -> void:
 	SignalBus.stage_cleared.connect(_on_stage_cleared)
 	SignalBus.player_died.connect(_on_player_died)
 	SignalBus.boss_defeated.connect(_on_boss_defeated)
+	SignalBus.reward_preview_replacement_requested.connect(_on_treasure_choice_requested)
 
 
 func register_ui_roots(p_screen_root: Control, p_hud_root: Control) -> void:
@@ -299,6 +302,12 @@ func _instantiate_control(scene_path: String) -> Control:
 
 
 func _clear_screen() -> void:
+	if current_screen != null and current_screen == _treasure_choice_screen:
+		_resolve_treasure_choice_fallback(
+			"Treasure choice closed; normal chest reward applied."
+		)
+	_treasure_choice_screen = null
+	Game.set_reward_choice_open(false)
 	current_screen = null
 	_clear_children(screen_root)
 
@@ -355,6 +364,62 @@ func _on_player_died() -> void:
 func _on_boss_defeated(reward_table_id: StringName) -> void:
 	if phase == RunPhase.Value.BOSS_ACTIVE:
 		call_deferred("_settle_reported_boss_defeat", reward_table_id)
+
+
+func _on_treasure_choice_requested(snapshot: Dictionary) -> void:
+	if phase != RunPhase.Value.STAGE_ACTIVE:
+		return
+	if not _roots_are_ready():
+		_resolve_treasure_choice_fallback(
+			"Treasure choice UI roots were unavailable; normal chest reward applied."
+		)
+		return
+	var choice_screen := _show_screen(TREASURE_CHOICE_PATH)
+	if choice_screen == null:
+		_resolve_treasure_choice_fallback(
+			"Treasure choice UI was unavailable; normal chest reward applied."
+		)
+		return
+	_treasure_choice_screen = choice_screen
+	Game.set_reward_choice_open(true)
+	choice_screen.connect(&"choice_requested", _on_treasure_choice_committed)
+	choice_screen.call("configure", snapshot)
+
+
+func _on_treasure_choice_committed(request_id: StringName, choice_id: StringName) -> void:
+	if phase != RunPhase.Value.STAGE_ACTIVE or not Game.reward_choice_open:
+		return
+	var result := RunState.commit_optional_chest_choice(request_id, choice_id)
+	if not bool(result.get("ok", false)):
+		if current_screen != null and current_screen.has_method("set_commit_error"):
+			current_screen.call(
+				"set_commit_error",
+				String(result.get("message", "Treasure choice failed."))
+			)
+		return
+	_clear_screen()
+
+
+func _resolve_treasure_choice_fallback(message: String) -> bool:
+	var pending := RunState.get_pending_optional_chest_choice()
+	if pending.is_empty():
+		return true
+	var request_id := StringName(pending.get("request_id", &""))
+	var result := RunState.commit_optional_chest_choice(
+		request_id,
+		TreasureChoiceService.NORMAL_CHOICE_ID
+	)
+	if bool(result.get("ok", false)):
+		SignalBus.status_message_changed.emit(message)
+		return true
+	RunState.cancel_optional_chest_choice(
+		request_id,
+		String(result.get("message", "Treasure choice was cancelled."))
+	)
+	SignalBus.status_message_changed.emit(
+		String(result.get("message", "Treasure choice was cancelled; reopen the chest."))
+	)
+	return false
 
 
 func _settle_reported_boss_defeat(reward_table_id: StringName) -> void:

@@ -20,7 +20,6 @@ var _last_required_clear_damage_serial: int = 0
 var _required_room_damage_baselines: Dictionary = {}
 var _cleared_required_rooms: Dictionary = {}
 var _resolved_action_triggers: Dictionary = {}
-var _treasure_request_ids: Dictionary = {}
 var _last_stand_used: bool = false
 
 
@@ -29,7 +28,6 @@ func _ready() -> void:
 	player.dash_completed.connect(_on_dash_completed)
 	SignalBus.required_room_encounter_started.connect(_on_required_room_encounter_started)
 	SignalBus.required_room_encounter_cleared.connect(_on_required_room_encounter_cleared)
-	SignalBus.optional_route_chest_claimed.connect(notify_optional_route_chest_claimed)
 
 
 func _exit_tree() -> void:
@@ -37,8 +35,6 @@ func _exit_tree() -> void:
 		SignalBus.required_room_encounter_started.disconnect(_on_required_room_encounter_started)
 	if SignalBus.required_room_encounter_cleared.is_connected(_on_required_room_encounter_cleared):
 		SignalBus.required_room_encounter_cleared.disconnect(_on_required_room_encounter_cleared)
-	if SignalBus.optional_route_chest_claimed.is_connected(notify_optional_route_chest_claimed):
-		SignalBus.optional_route_chest_claimed.disconnect(notify_optional_route_chest_claimed)
 
 
 func begin_stage() -> void:
@@ -48,7 +44,6 @@ func begin_stage() -> void:
 	_required_room_damage_baselines.clear()
 	_cleared_required_rooms.clear()
 	_resolved_action_triggers.clear()
-	_treasure_request_ids.clear()
 	_last_stand_used = false
 	_internal_cooldowns.clear()
 	reset_transient_state()
@@ -141,7 +136,6 @@ func get_state_snapshot() -> Dictionary:
 		"required_room_damage_baselines": _required_room_damage_baselines.duplicate(true),
 		"cleared_required_rooms": _sorted_keys(_cleared_required_rooms),
 		"resolved_action_trigger_count": _resolved_action_triggers.size(),
-		"treasure_request_ids": _sorted_keys(_treasure_request_ids),
 		"last_stand_used": _last_stand_used,
 	}
 
@@ -197,36 +191,6 @@ func notify_player_health_damage(event: Dictionary) -> void:
 					combat_controller.reset_skill_slot(effect.skill_slot)
 		_emit_status("%s triggered" % card.display_name)
 		break
-
-
-func notify_optional_route_chest_claimed(context: Dictionary) -> Dictionary:
-	if not bool(context.get("optional_route", false)):
-		return {}
-	var request_id := String(context.get("request_id", "")).strip_edges()
-	if request_id.is_empty() or _treasure_request_ids.has(request_id):
-		return {}
-	for card_context in _card_contexts(&"optional_route_chest_claimed"):
-		var card := card_context.get("definition") as CardDefinition
-		if card == null:
-			continue
-		for effect in card.effects:
-			if effect.effect_type != &"request_reward_preview_replacement":
-				continue
-			var request := {
-				"request_id": StringName(request_id),
-				"stage_index": int(context.get("stage_index", _stage_index)),
-				"room_id": StringName(context.get("room_id", &"")),
-				"source_id": StringName(context.get("source_id", &"")),
-				"card_id": card.id,
-				"selection_policy": &"replace_normal_reward",
-				"choice_pool": effect.reward_pool,
-				"additional_choice_count": effect.choice_count,
-			}
-			_treasure_request_ids[request_id] = true
-			SignalBus.reward_preview_replacement_requested.emit(request.duplicate(true))
-			_emit_status("%s found an extra preview" % card.display_name)
-			return request
-	return {}
 
 
 func prepare_target_hit(

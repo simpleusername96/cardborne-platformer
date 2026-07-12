@@ -16,6 +16,7 @@ signal required_room_encounter_started(context: Dictionary)
 signal required_room_encounter_cleared(context: Dictionary)
 signal optional_route_chest_claimed(context: Dictionary)
 signal reward_preview_replacement_requested(request: Dictionary)
+signal reward_preview_replacement_committed(result: Dictionary)
 signal player_died
 signal stage_started(stage_id: String, stage_display_name: String)
 signal stage_cleared(stage_id: String)
