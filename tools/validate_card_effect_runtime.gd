@@ -29,6 +29,7 @@ func _run() -> void:
 	await _validate_perfect_punish()
 	await _validate_echo_heavy()
 	await _validate_chain_burst()
+	await _validate_rewarded_skill_kill_order()
 	await _validate_dash_wake()
 	_finish()
 
@@ -132,6 +133,30 @@ func _validate_dash_wake() -> void:
 	await _clear_fixture()
 
 
+func _validate_rewarded_skill_kill_order() -> void:
+	_expect(_equip_card(&"chain_burst"), "reward-order fixture should equip chain burst")
+	await _create_fixture()
+	var primary: Variant = _spawn_enemy(Vector2(55.0, 100.0), 2)
+	var nearby: Variant = _spawn_enemy(Vector2(125.0, 100.0), 20)
+	primary.defeated.connect(func(_enemy: Variant) -> void:
+		RewardService.apply(
+			RewardTransaction.new(&"rewarded_skill_kill", &"fixture", {"coin": 1}),
+			_run_state
+		)
+	)
+	await _physics_steps(2)
+	await _press_action("skill_1")
+	await _physics_steps(24)
+	_expect(int(primary.current_health) == 0, "Shield Rush should defeat the primary target")
+	_expect(int(nearby.current_health) == 18, "reward publication must not erase skill-kill Chain Burst")
+	var combat: Node = _player.get_node("CombatController")
+	_expect(
+		_cooldown_for(combat, _kit.get_skill_by_slot(1).id) > 0.0,
+		"reward publication must not reset the committed skill cooldown"
+	)
+	await _clear_fixture()
+
+
 func _equip_card(card_id: StringName) -> bool:
 	for seed in range(1, 128):
 		if not _run_state.call("start_new_run", 0, seed):
@@ -196,6 +221,13 @@ func _physics_steps(count: int) -> void:
 	for _step in count:
 		await physics_frame
 		await process_frame
+
+
+func _press_action(action_name: String) -> void:
+	Input.action_press(action_name)
+	await physics_frame
+	await process_frame
+	Input.action_release(action_name)
 
 
 func _clear_fixture() -> void:

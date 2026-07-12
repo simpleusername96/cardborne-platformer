@@ -190,8 +190,8 @@ func _set_combat_enabled(enabled: bool) -> void:
 	if hurtbox != null:
 		hurtbox.collision_layer = 8 if enabled else 0
 		hurtbox.collision_mask = 16 if enabled else 0
-		hurtbox.monitorable = enabled
-		hurtbox.monitoring = enabled
+		hurtbox.set_deferred("monitorable", enabled)
+		hurtbox.set_deferred("monitoring", enabled)
 		for child in hurtbox.get_children():
 			if child is CollisionShape2D:
 				var shape := child as CollisionShape2D

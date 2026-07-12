@@ -36,6 +36,10 @@ func _run() -> void:
 		return
 
 	_expect(run_director.get_phase_name() == "main_menu", "default boot should open the main menu")
+	_expect(
+		RunPhase.can_transition(RunPhase.Value.STAGE_CARD_REWARD, RunPhase.Value.RUN_CLEAR),
+		"card reward load failure needs a legal run-clear fallback"
+	)
 	_expect(game.current_stage == null, "default boot must not instantiate a stage")
 	_expect(not ResourceLoader.exists(RETIRED_TESTBED_STAGE_PATH), "retired integrated testbed should stay removed")
 	_expect(_has_child_named(screen_root, "MainMenu"), "main menu screen should be mounted")

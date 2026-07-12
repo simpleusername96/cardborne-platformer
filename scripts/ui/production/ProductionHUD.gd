@@ -20,6 +20,7 @@ func _ready() -> void:
 	_build_ui()
 	SignalBus.player_health_changed.connect(_on_health_changed)
 	SignalBus.player_stats_changed.connect(_on_stats_changed)
+	SignalBus.run_state_changed.connect(_on_run_state_changed)
 	SignalBus.stage_started.connect(_on_stage_started)
 	SignalBus.combat_state_changed.connect(_on_combat_state_changed)
 	SignalBus.encounter_state_changed.connect(_on_encounter_state_changed)
@@ -134,6 +135,14 @@ func _on_health_changed(current_health: int, max_health: int) -> void:
 
 
 func _on_stats_changed(_stats: Dictionary) -> void:
+	_refresh_run_summary()
+
+
+func _on_run_state_changed(_snapshot: Dictionary) -> void:
+	_refresh_run_summary()
+
+
+func _refresh_run_summary() -> void:
 	var profile_name := "Adventurer"
 	if RunState.selected_profile != null:
 		profile_name = RunState.selected_profile.display_name

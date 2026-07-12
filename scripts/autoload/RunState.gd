@@ -232,7 +232,7 @@ func apply_reward_transaction(transaction: RewardTransaction) -> RewardResult:
 		grants,
 		"Reward applied."
 	)
-	_publish_state()
+	_publish_snapshot()
 	SignalBus.reward_applied.emit(result.to_dictionary())
 	if _pending_level_choices > 0:
 		SignalBus.level_reward_pending.emit(_pending_level_choices)
@@ -342,7 +342,7 @@ func spend_coins(amount: int) -> bool:
 	if amount <= 0 or coins < amount:
 		return false
 	coins -= amount
-	_publish_state()
+	_publish_snapshot()
 	return true
 
 
@@ -366,7 +366,7 @@ func begin_stage_card_reward() -> Dictionary:
 	if _pending_card_offer.size() != CardOfferService.CHOICE_COUNT:
 		_clear_card_reward_state()
 		return {"ok": false, "message": "No complete compatible card offer is available."}
-	_publish_state()
+	_publish_snapshot()
 	return {"ok": true, "pending": true, "offer": get_pending_card_offer()}
 
 
@@ -401,7 +401,15 @@ func get_card_effect_contexts(trigger: StringName) -> Array[Dictionary]:
 
 
 func can_reroll_card_offer() -> bool:
-	return _card_reward_pending and not _card_reroll_used and coins >= CARD_REROLL_COST
+	if not _card_reward_pending or _card_reroll_used or coins < CARD_REROLL_COST:
+		return false
+	return CardOfferService.eligible_ids(
+		card_catalog,
+		selected_profile.id,
+		_card_stacks,
+		[],
+		CardOfferService.supported_triggers_for_profile(selected_profile)
+	).size() > CardOfferService.CHOICE_COUNT
 
 
 func reroll_card_offer() -> Dictionary:
@@ -411,6 +419,8 @@ func reroll_card_offer() -> Dictionary:
 		return {"ok": false, "message": "The stage card reroll was already used."}
 	if coins < CARD_REROLL_COST:
 		return {"ok": false, "message": "Reroll needs %d coins." % CARD_REROLL_COST}
+	if not can_reroll_card_offer():
+		return {"ok": false, "message": "No different card choices are available."}
 
 	var previous_offer := _pending_card_offer.duplicate()
 	var next_offer: Array[StringName] = []
@@ -424,19 +434,26 @@ func reroll_card_offer() -> Dictionary:
 			run_seed,
 			current_stage_index,
 			candidate_sequence,
-			[]
+			[],
+			CardOfferService.supported_triggers_for_profile(selected_profile)
 		)
 		candidate_sequence += 1
-		if next_offer.size() == CardOfferService.CHOICE_COUNT and next_offer != previous_offer:
+		if (
+			next_offer.size() == CardOfferService.CHOICE_COUNT
+			and not _same_card_choice_set(next_offer, previous_offer)
+		):
 			break
-	if next_offer.size() != CardOfferService.CHOICE_COUNT or next_offer == previous_offer:
+	if (
+		next_offer.size() != CardOfferService.CHOICE_COUNT
+		or _same_card_choice_set(next_offer, previous_offer)
+	):
 		return {"ok": false, "message": "No different complete card offer is available."}
 
 	coins -= CARD_REROLL_COST
 	_card_offer_sequence = candidate_sequence
 	_card_reroll_used = true
 	_pending_card_offer = next_offer
-	_publish_state()
+	_publish_snapshot()
 	return {
 		"ok": true,
 		"cost": CARD_REROLL_COST,
@@ -461,7 +478,7 @@ func choose_card(card_id: StringName) -> Dictionary:
 	_card_reward_pending = false
 	_pending_card_offer.clear()
 	_committed_card_id = card_id
-	_publish_state()
+	_publish_snapshot()
 	return {
 		"ok": true,
 		"card_id": String(card_id),
@@ -478,7 +495,7 @@ func advance_stage_after_card_reward() -> bool:
 	_card_reward_stage_index = -1
 	_card_reroll_used = false
 	_committed_card_id = &""
-	_publish_state()
+	_publish_snapshot()
 	return true
 
 
@@ -506,6 +523,7 @@ func damage_player(amount: int) -> void:
 
 	current_health = maxi(current_health - amount, 0)
 	SignalBus.player_health_changed.emit(current_health, max_health)
+	_publish_snapshot()
 	if current_health <= 0:
 		SignalBus.player_died.emit()
 
@@ -516,11 +534,13 @@ func heal_player(amount: int) -> void:
 
 	current_health = mini(current_health + amount, max_health)
 	SignalBus.player_health_changed.emit(current_health, max_health)
+	_publish_snapshot()
 
 
 func revive_player() -> void:
 	current_health = max_health
 	SignalBus.player_health_changed.emit(current_health, max_health)
+	_publish_snapshot()
 
 
 func set_setting(setting_name: String, value: Variant) -> void:
@@ -634,7 +654,8 @@ func _build_card_offer(excluded_ids: Array[StringName]) -> Array[StringName]:
 		run_seed,
 		current_stage_index,
 		_card_offer_sequence,
-		excluded_ids
+		excluded_ids,
+		CardOfferService.supported_triggers_for_profile(selected_profile)
 	)
 	_card_offer_sequence += 1
 	return offer
@@ -655,6 +676,15 @@ func _string_name_array_to_strings(values: Array[StringName]) -> Array[String]:
 	return result
 
 
+func _same_card_choice_set(first: Array[StringName], second: Array[StringName]) -> bool:
+	if first.size() != second.size():
+		return false
+	for card_id in first:
+		if not second.has(card_id):
+			return false
+	return true
+
+
 func _create_run_seed() -> int:
 	return int((Time.get_unix_time_from_system() * 1000.0 + Time.get_ticks_usec()) as int) & 0x7fffffff
 
@@ -668,4 +698,8 @@ func _publish_state() -> void:
 		)
 	SignalBus.player_stats_changed.emit(get_effective_stats())
 	SignalBus.player_health_changed.emit(current_health, max_health)
+	_publish_snapshot()
+
+
+func _publish_snapshot() -> void:
 	SignalBus.run_state_changed.emit(get_run_snapshot().to_dictionary())
