@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="RewardTable" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/progression/RewardTable.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/progression/RewardEntry.gd" id="2"]
+
+[sub_resource type="Resource" id="XP"]
+script = ExtResource("2")
+content_id = &"xp"
+minimum_amount = 28
+maximum_amount = 28
+
+[sub_resource type="Resource" id="Coin"]
+script = ExtResource("2")
+content_id = &"coin"
+minimum_amount = 16
+maximum_amount = 16
+
+[sub_resource type="Resource" id="Scrap"]
+script = ExtResource("2")
+content_id = &"rusted_scrap"
+minimum_amount = 2
+maximum_amount = 2
+
+[sub_resource type="Resource" id="Thread"]
+script = ExtResource("2")
+content_id = &"sky_thread"
+minimum_amount = 1
+maximum_amount = 1
+
+[resource]
+script = ExtResource("1")
+id = &"stage_clear_broken_sanctum"
+display_name = "Broken Sanctum Clear"
+entries = Array[ExtResource("2")]([SubResource("XP"), SubResource("Coin"), SubResource("Scrap"), SubResource("Thread")])

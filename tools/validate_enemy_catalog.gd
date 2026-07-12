@@ -11,6 +11,14 @@ const FLOODED_SCENES := {
 	&"shooter_flooded": "res://scenes/enemies/ShooterFlooded.tscn",
 	&"leaper_flooded": "res://scenes/enemies/LeaperFlooded.tscn",
 }
+const SANCTUM_SCENES := {
+	&"walker_sanctum": "res://scenes/enemies/WalkerSanctum.tscn",
+	&"charger_sanctum": "res://scenes/enemies/ChargerSanctum.tscn",
+	&"shooter_sanctum": "res://scenes/enemies/ShooterSanctum.tscn",
+	&"shield_guard_sanctum": "res://scenes/enemies/ShieldGuardSanctum.tscn",
+	&"leaper_sanctum": "res://scenes/enemies/LeaperSanctum.tscn",
+	&"sentry_sanctum": "res://scenes/enemies/SentrySanctum.tscn",
+}
 
 var _failures: Array[String] = []
 
@@ -24,11 +32,12 @@ func _run() -> void:
 	_expect(catalog != null, "typed enemy catalog should load")
 	if catalog != null:
 		_expect(catalog.validate_catalog().is_empty(), "typed enemy catalog should validate")
-		_expect(catalog.archetypes.size() == 4, "catalog should contain four implemented archetypes")
-		_expect(catalog.tuning_profiles.size() == 2, "catalog should contain two stage tuning profiles")
-		_expect(catalog.variants.size() == 7, "catalog should contain Ruin and Flooded variants")
+		_expect(catalog.archetypes.size() == 6, "catalog should contain all six normal archetypes")
+		_expect(catalog.tuning_profiles.size() == 3, "catalog should contain all three stage tuning profiles")
+		_expect(catalog.variants.size() == 13, "catalog should contain all first-run variants")
 		_validate_resolution(catalog)
 		_validate_flooded_resolution(catalog)
+		_validate_sanctum_resolution(catalog)
 		_validate_scene_catalog(catalog)
 		_validate_leaper_drop()
 		_validate_content_ids()
@@ -38,6 +47,16 @@ func _run() -> void:
 	await _validate_scene(FLOODED_SCENES[&"charger_flooded"], &"charger", &"charger_flooded", 6, 66)
 	await _validate_scene(FLOODED_SCENES[&"shooter_flooded"], &"shooter", &"shooter_flooded", 5, 44)
 	await _validate_scene(FLOODED_SCENES[&"leaper_flooded"], &"leaper", &"leaper_flooded", 4, 55)
+	for variant_id: StringName in SANCTUM_SCENES:
+		var variant := catalog.get_variant_by_id(variant_id) if catalog != null else null
+		if variant != null:
+			await _validate_scene(
+				SANCTUM_SCENES[variant_id],
+				variant.archetype_id,
+				variant.id,
+				variant.health,
+				variant.stagger_capacity
+			)
 	_finish()
 
 
@@ -111,6 +130,19 @@ func _validate_flooded_resolution(catalog: EnemyCatalog) -> void:
 		source.warning_time = original_warning
 
 
+func _validate_sanctum_resolution(catalog: EnemyCatalog) -> void:
+	for variant_id: StringName in SANCTUM_SCENES:
+		var variant := catalog.get_variant_by_id(variant_id)
+		_expect(variant != null, "%s should be registered" % variant_id)
+		if variant == null:
+			continue
+		var resolved := catalog.resolve(variant.archetype_id, variant.id, &"broken_sanctum")
+		_expect(resolved != null, "%s should resolve for Broken Sanctum" % variant_id)
+		if resolved != null:
+			_expect(resolved.damage == 1, "%s should preserve one-damage safety" % variant_id)
+			_expect(resolved.budget_cost in [2, 3], "%s should keep its reviewed budget" % variant_id)
+
+
 func _validate_scene_catalog(catalog: EnemyCatalog) -> void:
 	var scenes := load(SCENE_CATALOG_PATH) as EnemySceneCatalog
 	_expect(scenes != null, "enemy scene catalog should load")
@@ -122,6 +154,11 @@ func _validate_scene_catalog(catalog: EnemyCatalog) -> void:
 		_expect(scene != null, "%s should have a registered scene" % variant_id)
 		if scene != null:
 			_expect(scene.resource_path == FLOODED_SCENES[variant_id], "%s should resolve its exact scene" % variant_id)
+	for variant_id: StringName in SANCTUM_SCENES:
+		var scene := scenes.get_scene_for_variant(variant_id, catalog)
+		_expect(scene != null, "%s should have a registered scene" % variant_id)
+		if scene != null:
+			_expect(scene.resource_path == SANCTUM_SCENES[variant_id], "%s should resolve its exact scene" % variant_id)
 
 
 func _validate_leaper_drop() -> void:

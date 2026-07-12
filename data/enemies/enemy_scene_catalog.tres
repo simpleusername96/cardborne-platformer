@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="EnemySceneCatalog" load_steps=17 format=3]
+[gd_resource type="Resource" script_class="EnemySceneCatalog" load_steps=29 format=3]
 
 [ext_resource type="Script" path="res://scripts/enemies/EnemySceneCatalog.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/enemies/EnemySceneEntry.gd" id="2"]
@@ -9,6 +9,12 @@
 [ext_resource type="PackedScene" path="res://scenes/enemies/ChargerFlooded.tscn" id="7"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/ShooterFlooded.tscn" id="8"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/LeaperFlooded.tscn" id="9"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/WalkerSanctum.tscn" id="10"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/ChargerSanctum.tscn" id="11"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/ShooterSanctum.tscn" id="12"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/ShieldGuardSanctum.tscn" id="13"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/LeaperSanctum.tscn" id="14"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/SentrySanctum.tscn" id="15"]
 
 [sub_resource type="Resource" id="Walker"]
 script = ExtResource("2")
@@ -49,8 +55,44 @@ archetype_id = &"leaper"
 variant_id = &"leaper_flooded"
 scene = ExtResource("9")
 
+[sub_resource type="Resource" id="WalkerSanctum"]
+script = ExtResource("2")
+archetype_id = &"walker"
+variant_id = &"walker_sanctum"
+scene = ExtResource("10")
+
+[sub_resource type="Resource" id="ChargerSanctum"]
+script = ExtResource("2")
+archetype_id = &"charger"
+variant_id = &"charger_sanctum"
+scene = ExtResource("11")
+
+[sub_resource type="Resource" id="ShooterSanctum"]
+script = ExtResource("2")
+archetype_id = &"shooter"
+variant_id = &"shooter_sanctum"
+scene = ExtResource("12")
+
+[sub_resource type="Resource" id="ShieldGuardSanctum"]
+script = ExtResource("2")
+archetype_id = &"shield_guard"
+variant_id = &"shield_guard_sanctum"
+scene = ExtResource("13")
+
+[sub_resource type="Resource" id="LeaperSanctum"]
+script = ExtResource("2")
+archetype_id = &"leaper"
+variant_id = &"leaper_sanctum"
+scene = ExtResource("14")
+
+[sub_resource type="Resource" id="SentrySanctum"]
+script = ExtResource("2")
+archetype_id = &"sentry"
+variant_id = &"sentry_sanctum"
+scene = ExtResource("15")
+
 [resource]
 script = ExtResource("1")
 id = &"first_run_enemy_scenes"
-content_version = 2
-entries = Array[ExtResource("2")]([SubResource("Walker"), SubResource("Charger"), SubResource("Shooter"), SubResource("WalkerFlooded"), SubResource("ChargerFlooded"), SubResource("ShooterFlooded"), SubResource("LeaperFlooded")])
+content_version = 3
+entries = Array[ExtResource("2")]([SubResource("Walker"), SubResource("Charger"), SubResource("Shooter"), SubResource("WalkerFlooded"), SubResource("ChargerFlooded"), SubResource("ShooterFlooded"), SubResource("LeaperFlooded"), SubResource("WalkerSanctum"), SubResource("ChargerSanctum"), SubResource("ShooterSanctum"), SubResource("ShieldGuardSanctum"), SubResource("LeaperSanctum"), SubResource("SentrySanctum")])
