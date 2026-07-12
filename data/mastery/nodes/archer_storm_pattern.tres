@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="MasteryNodeDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/progression/MasteryNodeDefinition.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/progression/ProgressionBehaviorEffect.gd" id="2"]
+
+[sub_resource type="Resource" id="FinalArrow"]
+script = ExtResource("2")
+effect_type = &"rain_final_arrow_bonus"
+source_id = &"archer_storm_pattern"
+source_scope = "mastery"
+damage = 1
+stagger = 30
+
+[resource]
+script = ExtResource("1")
+id = &"archer_storm_pattern"
+display_name = "Storm Pattern"
+mechanical_description = "Rain Field's final arrow gains 1 damage and 30 stagger."
+content_version = 1
+character_id = &"archer"
+depth = &"middle"
+requires_all = Array[StringName]([&"archer_piercing_draw"])
+costs = {
+"sky_thread": 8
+}
+behavior_effects = Array[ExtResource("2")]([SubResource("FinalArrow")])

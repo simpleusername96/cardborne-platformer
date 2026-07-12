@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="EquipmentDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/progression/EquipmentDefinition.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/progression/ProgressionBehaviorEffect.gd" id="2"]
+
+[sub_resource type="Resource" id="RerollDiscount"]
+script = ExtResource("2")
+effect_type = &"reduce_first_card_reroll_cost"
+source_id = &"copper_charm"
+source_scope = "equipment"
+value = 6.0
+
+[resource]
+script = ExtResource("1")
+id = &"copper_charm"
+display_name = "Copper Charm"
+mechanical_description = "The first card reroll each run costs 6 fewer coins."
+tradeoff_description = "It does not increase coin gains."
+content_version = 1
+slot = &"charm"
+compatibility = Array[StringName]([&"shared"])
+source = &"shop_or_material_unlock"
+behavior_effects = Array[ExtResource("2")]([SubResource("RerollDiscount")])
+salvage_materials = {
+"rusted_scrap": 2
+}
+unlock_costs = {
+"rusted_scrap": 6
+}

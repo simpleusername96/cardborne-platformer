@@ -1,0 +1,54 @@
+[gd_resource type="Resource" script_class="EquipmentDefinition" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/progression/EquipmentDefinition.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/player/EffectDefinition.gd" id="2"]
+
+[sub_resource type="Resource" id="Health"]
+script = ExtResource("2")
+stat_id = &"max_health"
+operation = "add"
+value = 1.0
+source_id = &"patched_mail"
+source_scope = "equipment"
+
+[sub_resource type="Resource" id="KnockbackX"]
+script = ExtResource("2")
+stat_id = &"damage_knockback_x"
+operation = "multiply"
+value = 0.85
+source_id = &"patched_mail"
+source_scope = "equipment"
+
+[sub_resource type="Resource" id="KnockbackY"]
+script = ExtResource("2")
+stat_id = &"damage_knockback_y"
+operation = "multiply"
+value = 0.85
+source_id = &"patched_mail"
+source_scope = "equipment"
+
+[sub_resource type="Resource" id="MovePenalty"]
+script = ExtResource("2")
+stat_id = &"move_speed"
+operation = "add"
+value = -8.0
+source_id = &"patched_mail"
+source_scope = "equipment"
+
+[resource]
+script = ExtResource("1")
+id = &"patched_mail"
+display_name = "Patched Mail"
+mechanical_description = "Adds 1 maximum health and scales damage knockback to 85 percent."
+tradeoff_description = "Move speed is reduced by 8."
+content_version = 1
+slot = &"armor"
+compatibility = Array[StringName]([&"shared"])
+source = &"chest_or_material_unlock"
+build_effects = Array[ExtResource("2")]([SubResource("Health"), SubResource("KnockbackX"), SubResource("KnockbackY"), SubResource("MovePenalty")])
+salvage_materials = {
+"rusted_scrap": 3
+}
+unlock_costs = {
+"rusted_scrap": 5
+}

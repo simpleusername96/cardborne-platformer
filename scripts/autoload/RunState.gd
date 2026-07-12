@@ -89,7 +89,10 @@ func start_new_run(profile_index: int = -1, requested_seed: int = -1) -> bool:
 	if profile_index >= 0:
 		candidate_index = wrapi(profile_index, 0, profiles.size())
 	var candidate_profile := profiles[candidate_index]
-	var candidate_build := PlayerBuild.resolve(candidate_profile.to_base_stats_dictionary())
+	var candidate_build := PlayerBuild.resolve(
+		candidate_profile.to_base_stats_dictionary(),
+		ProfileState.get_build_effects(StringName(candidate_profile.id))
+	)
 	if not _is_build_valid(candidate_profile, candidate_build):
 		return false
 	_apply_profile_build(candidate_index, candidate_profile, candidate_build)
@@ -124,7 +127,10 @@ func select_profile(profile_index: int) -> bool:
 
 	var candidate_index := wrapi(profile_index, 0, profiles.size())
 	var candidate_profile := profiles[candidate_index]
-	var candidate_build := PlayerBuild.resolve(candidate_profile.to_base_stats_dictionary())
+	var candidate_build := PlayerBuild.resolve(
+		candidate_profile.to_base_stats_dictionary(),
+		ProfileState.get_build_effects(StringName(candidate_profile.id))
+	)
 	if not _is_build_valid(candidate_profile, candidate_build):
 		return false
 	_apply_profile_build(candidate_index, candidate_profile, candidate_build)
@@ -223,6 +229,14 @@ func apply_reward_transaction(transaction: RewardTransaction) -> RewardResult:
 			"coin":
 				coins += amount
 			_:
+				if not ProfileState.grant_material(String(currency_id), amount):
+					return RewardResult.new(
+						false,
+						false,
+						transaction.id,
+						{},
+						"Persistent material grant failed."
+					)
 				grant_unsettled_material(String(currency_id), amount)
 	_applied_reward_ids[transaction_key] = true
 	var result := RewardResult.new(
@@ -283,7 +297,7 @@ func preview_micro_upgrade(upgrade_id: StringName) -> Dictionary:
 	candidate_stacks[String(upgrade.id)] = next_stack
 	var candidate := PlayerBuild.resolve(
 		selected_profile.to_base_stats_dictionary(),
-		_collect_run_effects(candidate_stacks)
+		_collect_all_build_effects(candidate_stacks)
 	)
 	if not candidate.is_valid():
 		return {"ok": false, "message": "Upgrade preview produced an invalid build."}
@@ -585,7 +599,7 @@ func _rebuild_effective_build() -> bool:
 		return false
 	var candidate := PlayerBuild.resolve(
 		selected_profile.to_base_stats_dictionary(),
-		_collect_run_effects(_micro_upgrade_stacks)
+		_collect_all_build_effects(_micro_upgrade_stacks)
 	)
 	if not _is_build_valid(selected_profile, candidate):
 		return false
@@ -609,6 +623,12 @@ func _collect_run_effects(stacks: Dictionary) -> Array:
 		for _stack in int(stacks[upgrade_id]):
 			for effect in upgrade.effects:
 				effects.append(effect)
+	return effects
+
+
+func _collect_all_build_effects(stacks: Dictionary) -> Array:
+	var effects: Array = ProfileState.get_build_effects(StringName(selected_profile.id))
+	effects.append_array(_collect_run_effects(stacks))
 	return effects
 
 

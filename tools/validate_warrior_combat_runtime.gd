@@ -2,6 +2,7 @@ extends SceneTree
 
 const PLAYER_SCENE := "res://scenes/player/Player.tscn"
 const ENEMY_SCRIPT := "res://scripts/enemies/EnemyBase.gd"
+const MASTERY_CATALOG := preload("res://data/mastery/mastery_catalog.tres")
 
 var _failures: Array[String] = []
 var _world: Node2D
@@ -36,6 +37,7 @@ func _run() -> void:
 
 	await _validate_cleave_and_breaker()
 	_validate_resolve_guard()
+	_validate_broad_guard()
 	await _validate_shield_rush()
 
 	_world.queue_free()
@@ -104,6 +106,38 @@ func _validate_resolve_guard() -> void:
 	_expect(
 		_player.combat_controller.guarded_rearm_timer > 0.0,
 		"consuming Resolve Guard should start its rearm timer"
+	)
+	source.queue_free()
+
+
+func _validate_broad_guard() -> void:
+	var mastery := MASTERY_CATALOG.get_node(&"warrior_broad_guard")
+	_expect(mastery != null, "Broad Guard mastery definition should exist")
+	if mastery == null:
+		return
+	_player.combat_controller.configure(
+		_run_state.get("selected_profile"),
+		_run_state.call("get_effective_stats"),
+		mastery.behavior_effects
+	)
+	_player.combat_controller.guarded_timer = 1.0
+	_player.invulnerability_timer = 0.0
+	var health_before: int = int(_run_state.get("current_health"))
+	var source := Node2D.new()
+	source.position = _player.position + Vector2(80.0, 0.0)
+	_world.add_child(source)
+	_player.receive_damage(DamageInfo.new(2, source, Vector2.ZERO, ["enemy_projectile"]))
+	_expect(
+		int(_run_state.get("current_health")) == health_before,
+		"Broad Guard should block one projectile completely"
+	)
+	_expect(
+		is_zero_approx(_player.combat_controller.guarded_timer),
+		"Broad Guard should consume the armed guard"
+	)
+	_expect(
+		_player.combat_controller.guarded_rearm_timer > 0.0,
+		"Broad Guard should start the Resolve rearm timer"
 	)
 	source.queue_free()
 

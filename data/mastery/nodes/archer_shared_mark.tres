@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="MasteryNodeDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/progression/MasteryNodeDefinition.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/progression/ProgressionBehaviorEffect.gd" id="2"]
+
+[sub_resource type="Resource" id="SharedMark"]
+script = ExtResource("2")
+effect_type = &"transfer_consumed_mark"
+source_id = &"archer_shared_mark"
+source_scope = "mastery"
+duration = 3.0
+radius = 180.0
+
+[resource]
+script = ExtResource("1")
+id = &"archer_shared_mark"
+display_name = "Shared Mark"
+mechanical_description = "Consuming a mark transfers a 3-second mark to the nearest unmarked enemy within 180 pixels."
+content_version = 1
+character_id = &"archer"
+depth = &"middle"
+requires_any = Array[StringName]([&"archer_quick_nock", &"archer_piercing_draw"])
+costs = {
+"sky_thread": 8
+}
+behavior_effects = Array[ExtResource("2")]([SubResource("SharedMark")])

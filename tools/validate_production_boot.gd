@@ -54,8 +54,35 @@ func _run() -> void:
 	await process_frame
 	_expect(run_director.get_phase_name() == "character_select", "new run should open character select")
 	_expect(_has_child_named(screen_root, "CharacterSelect"), "character select screen should be mounted")
+	var character_select := screen_root.get_node_or_null("CharacterSelect") as Control
+	_expect(character_select != null, "character/loadout screen should be a Control")
+	if character_select != null:
+		_expect(
+			character_select.find_child("CharacterStrip", true, false) != null,
+			"character/loadout screen should keep all runners visible"
+		)
+		_expect(
+			character_select.find_child("LoadoutBody", true, false) != null,
+			"character/loadout screen should expose the loadout workspace"
+		)
+		var start_button := character_select.find_child("StartRunButton", true, false) as Button
+		_expect(start_button != null and not start_button.disabled, "valid base loadout should enable Start Run")
+		var focus_owner := root.gui_get_focus_owner()
+		_expect(
+			focus_owner != null and String(focus_owner.name).begins_with("Character_"),
+			"character/loadout screen should focus the selected runner first"
+		)
+		character_select.call("_toggle_mode")
+		await process_frame
+		_expect(
+			character_select.find_child("MasteryGrid", true, false) != null,
+			"Mastery intent should open the six-node mastery workspace"
+		)
+		_expect(not start_button.visible, "Start Run should not compete with mastery decisions")
+		character_select.call("_toggle_mode")
+		await process_frame
 
-	_expect(run_director.start_production_run(0), "valid Warrior build should start a production run")
+	_expect(run_director.start_production_run(&"warrior"), "valid Warrior build should start by stable character ID")
 	await process_frame
 	await process_frame
 	_expect(run_director.get_phase_name() == "stage_active", "production stage should become active")

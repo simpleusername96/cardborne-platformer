@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="MasteryNodeDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/progression/MasteryNodeDefinition.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/progression/ProgressionBehaviorEffect.gd" id="2"]
+
+[sub_resource type="Resource" id="DashRefund"]
+script = ExtResource("2")
+effect_type = &"lunge_kill_refund_dash"
+source_id = &"assassin_slipstream"
+source_scope = "mastery"
+internal_cooldown = 5.0
+
+[resource]
+script = ExtResource("1")
+id = &"assassin_slipstream"
+display_name = "Slipstream"
+mechanical_description = "A Shadow Lunge kill refunds one dash charge, once every 5 seconds."
+content_version = 1
+character_id = &"assassin"
+depth = &"root"
+costs = {
+"slime_residue": 4
+}
+behavior_effects = Array[ExtResource("2")]([SubResource("DashRefund")])

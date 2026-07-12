@@ -25,6 +25,16 @@ var _captures: Array[Dictionary] = [
 		"state": "character_select",
 	},
 	{
+		"name": "desktop_mastery",
+		"size": Vector2i(1280, 720),
+		"state": "mastery",
+	},
+	{
+		"name": "compact_mastery",
+		"size": Vector2i(960, 540),
+		"state": "mastery",
+	},
+	{
 		"name": "desktop_production_stage",
 		"size": Vector2i(1280, 720),
 		"state": "production_stage",
@@ -89,7 +99,10 @@ func _initialize() -> void:
 
 func _run() -> void:
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(OUTPUT_DIR))
+	var capture_filter := OS.get_environment("CAPTURE_NAME")
 	for capture in _captures:
+		if not capture_filter.is_empty() and capture_filter != String(capture["name"]):
+			continue
 		await _capture(capture)
 	quit(1 if _failed else 0)
 
@@ -109,14 +122,24 @@ func _capture(capture: Dictionary) -> void:
 	var game := root.get_node_or_null("Game")
 	var run_director := root.get_node_or_null("RunDirector")
 	var run_state := root.get_node_or_null("RunState")
-	if game == null or run_director == null or run_state == null:
+	var profile_state := root.get_node_or_null("ProfileState")
+	if game == null or run_director == null or run_state == null or profile_state == null:
 		push_error("Production autoloads are unavailable; cannot capture UI state.")
 		_failed = true
 		return
+	profile_state.initialize_for_tests(
+		load("res://data/equipment/equipment_catalog.tres"),
+		load("res://data/mastery/mastery_catalog.tres")
+	)
 
 	match String(capture["state"]):
 		"character_select":
 			run_director.show_character_select()
+		"mastery":
+			run_director.show_character_select()
+			await process_frame
+			if run_director.current_screen != null:
+				run_director.current_screen.call("_toggle_mode")
 		"production_stage":
 			run_director.start_production_run(0)
 		"production_charge_lane":

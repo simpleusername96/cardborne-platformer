@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="EquipmentDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/progression/EquipmentDefinition.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/progression/ProgressionBehaviorEffect.gd" id="2"]
+
+[sub_resource type="Resource" id="BreakerModifier"]
+script = ExtResource("2")
+effect_type = &"modify_attack"
+source_id = &"bell_hammer"
+source_scope = "equipment"
+target_id = &"warrior_breaker"
+damage = 1
+stagger = 20
+recovery = 0.12
+
+[resource]
+script = ExtResource("1")
+id = &"bell_hammer"
+display_name = "Bell Hammer"
+mechanical_description = "Breaker gains 1 damage and 20 stagger."
+tradeoff_description = "Heavy recovery is 0.12 seconds longer."
+content_version = 1
+slot = &"weapon"
+compatibility = Array[StringName]([&"warrior"])
+source = &"optional_cache"
+behavior_effects = Array[ExtResource("2")]([SubResource("BreakerModifier")])
+salvage_materials = {
+"rusted_scrap": 4
+}
+unlock_costs = {
+"rusted_scrap": 6
+}

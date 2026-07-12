@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="EquipmentDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/progression/EquipmentDefinition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"rust_knives"
+display_name = "Rust Knives"
+mechanical_description = "Baseline Assassin attack timing and mobility."
+content_version = 1
+slot = &"weapon"
+compatibility = Array[StringName]([&"assassin"])
+source = &"assassin_starting"
+salvage_materials = {
+"slime_residue": 2
+}
+unlock_costs = {}
+starting_item = true

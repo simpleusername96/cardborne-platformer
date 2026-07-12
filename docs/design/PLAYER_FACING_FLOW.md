@@ -102,7 +102,7 @@ mobility summary, and current loadout without a separate tutorial page.
 ## Mastery
 
 - Show the selected character's six-node graph, owned materials, prerequisites,
-  equipped node state, and exact behavior change.
+  active purchased-node state, and exact behavior change.
 - Available, locked, affordable, purchased, and equipped states must differ by
   more than color.
 - A purchase preview states cost and resulting verb change before confirmation.

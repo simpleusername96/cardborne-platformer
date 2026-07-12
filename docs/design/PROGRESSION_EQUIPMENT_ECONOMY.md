@@ -206,6 +206,8 @@ transactions and remain after death. Boss Core is created only by boss victory.
 ## Mastery Economy
 
 The 18 node effects and prerequisites live in `PLAYER_CHARACTER_SYSTEMS.md`.
+Purchased mastery nodes are immediately active for that character in the first-run
+MVP. There is no separate mastery equip limit or second activation transaction.
 
 | Node depth | Cost rule | Design rule |
 | --- | --- | --- |

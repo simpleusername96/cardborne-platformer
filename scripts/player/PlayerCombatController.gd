@@ -34,6 +34,7 @@ var _cooldowns: Dictionary = {}
 var _fallback_basic: AttackDefinition
 var _active_target_count: int = 0
 var _active_attack_modifiers: Dictionary = {}
+var _progression_effects: Dictionary = {}
 # Hitbox applies damage before emitting target_hit, so retain the pre-hit target facts here.
 var _pending_hit_contexts: Dictionary = {}
 
@@ -45,9 +46,17 @@ func _ready() -> void:
 	attack_presenter.reset()
 
 
-func configure(profile: CharacterProfile, effective_stats: Dictionary) -> void:
+func configure(
+	profile: CharacterProfile,
+	effective_stats: Dictionary,
+	progression_effects: Array = []
+) -> void:
 	stats = effective_stats.duplicate(true)
 	kit = profile.combat_kit if profile != null else null
+	_progression_effects.clear()
+	for effect in progression_effects:
+		if effect is ProgressionBehaviorEffect:
+			_progression_effects[String(effect.effect_type)] = effect
 	_fallback_basic = _make_fallback_basic(stats)
 	reset_combat_state()
 
@@ -135,15 +144,30 @@ func notify_wall_collision() -> void:
 
 
 func blocks_incoming_damage(damage_info: DamageInfo) -> bool:
-	if not current_attack is SkillDefinition or phase != Phase.ACTIVE:
-		return false
-	var skill := current_attack as SkillDefinition
-	if not skill.frontal_guard_during_active or not _is_frontal_source(damage_info.source):
-		return false
-	var blockable := damage_info.tags.has("enemy_contact") or damage_info.tags.has("enemy_projectile")
-	if blockable:
-		_emit_status("Shield Rush blocked")
-	return blockable
+	if current_attack is SkillDefinition and phase == Phase.ACTIVE:
+		var skill := current_attack as SkillDefinition
+		var rush_block := (
+			skill.frontal_guard_during_active
+			and _is_frontal_source(damage_info.source)
+			and (
+				damage_info.tags.has("enemy_contact")
+				or damage_info.tags.has("enemy_projectile")
+			)
+		)
+		if rush_block:
+			_emit_status("Shield Rush blocked")
+			return true
+	if (
+		guarded_timer > 0.0
+		and damage_info.tags.has("enemy_projectile")
+		and _progression_effects.has("guard_blocks_projectile")
+	):
+		guarded_timer = 0.0
+		guarded_rearm_timer = kit.guarded_rearm_cooldown if kit != null else 0.0
+		_emit_status("Broad Guard blocked")
+		_publish_state()
+		return true
+	return false
 
 
 func reduce_incoming_damage(amount: int) -> int:
@@ -188,6 +212,7 @@ func get_state_snapshot() -> Dictionary:
 		"current_attack_id": String(current_attack.id) if current_attack != null else "",
 		"guarded_time": guarded_timer,
 		"guarded_rearm_time": guarded_rearm_timer,
+		"progression_effects": _progression_effects.keys(),
 		"actions": actions,
 	}
 

@@ -1,195 +1,381 @@
 extends Node
 
-# Owns profile-lifetime state; save I/O belongs to a separate persistence adapter.
+# Owns profile facts and commands; storage details remain behind ProfileSaveService.
 signal profile_changed(section: StringName)
 signal setting_changed(setting_id: StringName, value: Variant)
+signal persistence_failed(message: String)
 
-const EQUIPMENT_SLOTS: Array[String] = ["weapon", "armor", "charm", "relic"]
-const CONSUMABLE_SLOT := "consumable"
-const DEFAULT_SETTINGS: Dictionary = {
-	"master_volume": 0.8,
-	"music_volume": 0.7,
-	"sfx_volume": 0.8,
-	"screen_shake": true,
-	"damage_flash": true,
-}
+const EQUIPMENT_CATALOG_PATH := "res://data/equipment/equipment_catalog.tres"
+const MASTERY_CATALOG_PATH := "res://data/mastery/mastery_catalog.tres"
 
-var _materials: Dictionary = {}
-var _owned_equipment: Dictionary = {}
-var _loadout: Dictionary = {
-	"weapon": "",
-	"armor": "",
-	"charm": "",
-	"relic": "",
-	"consumable": "",
-}
-var _mastery_unlocks: Dictionary = {}
-var _durable_unlocks: Dictionary = {}
-var _settings: Dictionary = DEFAULT_SETTINGS.duplicate(true)
+var equipment_catalog: EquipmentCatalog
+var mastery_catalog: MasteryCatalog
+
+var _data: ProfileData
+var _commands: ProfileCommandService
+var _save_service: ProfileSaveService
+
+
+func _ready() -> void:
+	load_or_create_profile()
+
+
+func load_or_create_profile(profile_path: String = ProfileSaveService.DEFAULT_PRIMARY_PATH) -> bool:
+	if not _load_catalogs():
+		return false
+	_save_service = ProfileSaveService.new(equipment_catalog, mastery_catalog, profile_path)
+	_commands = ProfileCommandService.new(equipment_catalog, mastery_catalog)
+	var result := _save_service.load_or_create()
+	if not bool(result.get("ok", false)) or not result.get("data") is ProfileData:
+		push_error("Unable to initialize persistent profile state.")
+		return false
+	_data = result["data"]
+	if not bool(result.get("persisted", true)):
+		persistence_failed.emit("Profile is active in memory but could not be saved.")
+	profile_changed.emit(&"all")
+	return true
+
+
+func initialize_for_tests(
+	items: EquipmentCatalog,
+	masteries: MasteryCatalog,
+	profile_path: String = "",
+	load_existing: bool = false
+) -> void:
+	equipment_catalog = items
+	mastery_catalog = masteries
+	_commands = ProfileCommandService.new(equipment_catalog, mastery_catalog)
+	_data = ProfileData.new()
+	_save_service = null
+	if not profile_path.is_empty():
+		_save_service = ProfileSaveService.new(equipment_catalog, mastery_catalog, profile_path)
+		if load_existing:
+			var result := _save_service.load_or_create()
+			if bool(result.get("ok", false)) and result.get("data") is ProfileData:
+				_data = result["data"]
+
+
+func save_profile() -> Dictionary:
+	_ensure_initialized()
+	if _save_service == null:
+		return {"ok": true, "message": "Profile is in-memory only."}
+	var result := _save_service.save(_data)
+	if not bool(result.get("ok", false)):
+		var message := String(result.get("message", "Profile save failed."))
+		persistence_failed.emit(message)
+		push_warning(message)
+	return result
 
 
 func reset_to_defaults() -> void:
-	_materials.clear()
-	_owned_equipment.clear()
-	_mastery_unlocks.clear()
-	_durable_unlocks.clear()
-	_settings = DEFAULT_SETTINGS.duplicate(true)
-	for slot_id in _loadout:
-		_loadout[slot_id] = ""
+	_ensure_initialized()
+	_data.reset_to_defaults()
+	var persisted := bool(save_profile().get("ok", false))
 	profile_changed.emit(&"all")
+	if not persisted:
+		persistence_failed.emit("Default profile could not be persisted.")
 
 
 func get_profile_snapshot() -> Dictionary:
-	return {
-		"materials": get_materials(),
-		"owned_equipment": get_owned_equipment(),
-		"loadout": get_loadout(),
-		"mastery_unlocks": _mastery_unlocks.duplicate(true),
-		"durable_unlocks": get_durable_unlocks(),
-		"settings": get_settings(),
-	}
+	_ensure_initialized()
+	return _data.to_dictionary()
 
 
 func get_materials() -> Dictionary:
-	return _materials.duplicate(true)
+	_ensure_initialized()
+	return _data.materials.duplicate(true)
 
 
 func get_material_count(material_id: String) -> int:
-	return int(_materials.get(material_id, 0))
+	_ensure_initialized()
+	return int(_data.materials.get(material_id, 0))
 
 
 func grant_material(material_id: String, amount: int) -> bool:
-	if material_id.is_empty() or amount <= 0:
-		return false
-	_materials[material_id] = get_material_count(material_id) + amount
-	profile_changed.emit(&"materials")
-	return true
+	return bool(grant_material_command(material_id, amount).get("ok", false))
+
+
+func grant_material_command(material_id: String, amount: int) -> Dictionary:
+	_ensure_initialized()
+	return _commit(_commands.grant_material(_data, material_id, amount), &"materials")
 
 
 func spend_material(material_id: String, amount: int) -> bool:
-	if material_id.is_empty() or amount <= 0 or get_material_count(material_id) < amount:
-		return false
-	var remaining := get_material_count(material_id) - amount
-	if remaining == 0:
-		_materials.erase(material_id)
-	else:
-		_materials[material_id] = remaining
-	profile_changed.emit(&"materials")
-	return true
+	_ensure_initialized()
+	return bool(_commit(
+		_commands.spend_material(_data, material_id, amount), &"materials"
+	).get("ok", false))
 
 
 func get_owned_equipment() -> Array[String]:
-	var item_ids: Array[String] = []
-	for item_id in _owned_equipment:
-		item_ids.append(String(item_id))
-	item_ids.sort()
-	return item_ids
+	_ensure_initialized()
+	return _data.owned_equipment.duplicate()
 
 
 func owns_equipment(item_id: String) -> bool:
-	return _owned_equipment.has(item_id)
+	_ensure_initialized()
+	return _data.owned_equipment.has(item_id)
+
+
+func discover_equipment(item_id: StringName, transaction_id: StringName) -> Dictionary:
+	_ensure_initialized()
+	return _commit(
+		_commands.discover_equipment(_data, item_id, transaction_id), &"equipment"
+	)
+
+
+func purchase_equipment(item_id: StringName) -> Dictionary:
+	_ensure_initialized()
+	return _commit(_commands.purchase_equipment(_data, item_id), &"equipment")
 
 
 func grant_equipment(item_id: String) -> bool:
-	if item_id.is_empty() or owns_equipment(item_id):
-		return false
-	_owned_equipment[item_id] = true
-	profile_changed.emit(&"equipment")
-	return true
+	var transaction_id := StringName("manual_equipment:%s" % item_id)
+	var result := discover_equipment(StringName(item_id), transaction_id)
+	return bool(result.get("ok", false)) and not bool(result.get("duplicate", false))
 
 
-func get_loadout() -> Dictionary:
-	return _loadout.duplicate(true)
+func get_loadout(character_id: String = "warrior") -> Dictionary:
+	_ensure_initialized()
+	var raw_loadout: Variant = _data.loadouts.get(character_id, {})
+	return raw_loadout.duplicate(true) if raw_loadout is Dictionary else {}
 
 
-func set_loadout_item(slot_id: String, item_id: String) -> bool:
-	if not _is_loadout_slot(slot_id):
-		return false
-	if not item_id.is_empty() and not owns_equipment(item_id):
-		return false
-	if String(_loadout.get(slot_id, "")) == item_id:
-		return true
-	_loadout[slot_id] = item_id
-	profile_changed.emit(&"loadout")
-	return true
+func equip_item(
+	character_id: StringName,
+	slot_id: StringName,
+	item_id: StringName
+) -> Dictionary:
+	_ensure_initialized()
+	return _commit(
+		_commands.equip_item(_data, character_id, slot_id, item_id), &"loadout"
+	)
 
 
-func unlock_mastery(character_id: String, node_id: String) -> bool:
-	if character_id.is_empty() or node_id.is_empty():
-		return false
-	var character_nodes: Dictionary = _mastery_unlocks.get(character_id, {}).duplicate(true)
-	if character_nodes.has(node_id):
-		return false
-	character_nodes[node_id] = true
-	_mastery_unlocks[character_id] = character_nodes
-	profile_changed.emit(&"mastery")
-	return true
+func set_loadout_item(slot_id: String, item_id: String, character_id: String = "warrior") -> bool:
+	return bool(equip_item(
+		StringName(character_id), StringName(slot_id), StringName(item_id)
+	).get("ok", false))
+
+
+func purchase_mastery(character_id: StringName, node_id: StringName) -> Dictionary:
+	_ensure_initialized()
+	return _commit(
+		_commands.purchase_mastery(_data, character_id, node_id), &"mastery"
+	)
+
+
+func respec_character(character_id: StringName) -> Dictionary:
+	_ensure_initialized()
+	return _commit(_commands.respec_character(_data, character_id), &"mastery")
 
 
 func has_mastery(character_id: String, node_id: String) -> bool:
-	var character_nodes: Dictionary = _mastery_unlocks.get(character_id, {})
-	return character_nodes.has(node_id)
+	return get_mastery_unlocks(character_id).has(node_id)
 
 
 func get_mastery_unlocks(character_id: String) -> Array[String]:
-	var node_ids: Array[String] = []
-	var character_nodes: Dictionary = _mastery_unlocks.get(character_id, {})
-	for node_id in character_nodes:
-		node_ids.append(String(node_id))
-	node_ids.sort()
-	return node_ids
+	_ensure_initialized()
+	var values: Array[String] = []
+	var raw_values: Variant = _data.mastery_unlocks.get(character_id, [])
+	if raw_values is Array:
+		for value in raw_values:
+			values.append(String(value))
+	values.sort()
+	return values
 
 
 func unlock_content(content_id: String) -> bool:
-	if content_id.is_empty() or _durable_unlocks.has(content_id):
-		return false
-	_durable_unlocks[content_id] = true
-	profile_changed.emit(&"unlocks")
-	return true
+	_ensure_initialized()
+	return bool(_commit(
+		_commands.unlock_content(_data, StringName(content_id)), &"unlocks"
+	).get("ok", false))
 
 
 func has_content_unlock(content_id: String) -> bool:
-	return _durable_unlocks.has(content_id)
+	_ensure_initialized()
+	return _data.durable_unlocks.has(content_id)
 
 
 func get_durable_unlocks() -> Array[String]:
-	var content_ids: Array[String] = []
-	for content_id in _durable_unlocks:
-		content_ids.append(String(content_id))
-	content_ids.sort()
-	return content_ids
+	_ensure_initialized()
+	return _data.durable_unlocks.duplicate()
+
+
+func get_build_effects(character_id: StringName) -> Array:
+	_ensure_initialized()
+	var effects: Array = []
+	var loadout := get_loadout(String(character_id))
+	for slot_id in ProfileData.PERSISTENT_SLOTS:
+		var item_id := StringName(loadout.get(slot_id, ""))
+		var item := equipment_catalog.get_item(item_id) if equipment_catalog != null else null
+		if item == null:
+			continue
+		for effect in item.build_effects:
+			effects.append(effect)
+	return effects
+
+
+func get_behavior_effects(character_id: StringName) -> Array[ProgressionBehaviorEffect]:
+	_ensure_initialized()
+	var effects: Array[ProgressionBehaviorEffect] = []
+	var loadout := get_loadout(String(character_id))
+	for slot_id in ProfileData.PERSISTENT_SLOTS:
+		var item := equipment_catalog.get_item(StringName(loadout.get(slot_id, "")))
+		if item != null:
+			for effect in item.behavior_effects:
+				effects.append(effect)
+	for node_id in get_mastery_unlocks(String(character_id)):
+		var node := mastery_catalog.get_node(StringName(node_id)) if mastery_catalog != null else null
+		if node != null:
+			for effect in node.behavior_effects:
+				effects.append(effect)
+	return effects
+
+
+func preview_build(profile: CharacterProfile) -> PlayerBuildSnapshot:
+	if profile == null:
+		return PlayerBuildSnapshot.new({}, {}, [{"code": "missing_profile", "message": "Profile is missing."}])
+	return PlayerBuild.resolve(profile.to_base_stats_dictionary(), get_build_effects(StringName(profile.id)))
+
+
+func get_character_loadout_snapshot(profile: CharacterProfile) -> Dictionary:
+	_ensure_initialized()
+	if profile == null:
+		return {"ok": false, "message": "Character is unavailable."}
+	var character_id := StringName(profile.id)
+	var loadout := get_loadout(profile.id)
+	var build := preview_build(profile)
+	var slot_rows: Array[Dictionary] = []
+	for slot_id in ProfileData.PERSISTENT_SLOTS:
+		var options: Array[Dictionary] = []
+		for item in equipment_catalog.get_compatible(character_id):
+			if String(item.slot) != slot_id:
+				continue
+			options.append({
+				"id": String(item.id),
+				"display_name": item.display_name,
+				"description": item.mechanical_description,
+				"tradeoff": item.tradeoff_description,
+				"owned": owns_equipment(String(item.id)),
+				"equipped": String(loadout.get(slot_id, "")) == String(item.id),
+				"unlock_costs": item.unlock_costs.duplicate(true),
+			})
+		slot_rows.append({
+			"slot": slot_id,
+			"equipped_id": String(loadout.get(slot_id, "")),
+			"options": options,
+		})
+
+	var mastery_rows: Array[Dictionary] = []
+	var unlocked := get_mastery_unlocks(profile.id)
+	for node in mastery_catalog.get_for_character(character_id):
+		mastery_rows.append({
+			"id": String(node.id),
+			"display_name": node.display_name,
+			"description": node.mechanical_description,
+			"depth": String(node.depth),
+			"requires_all": _names_to_strings(node.requires_all),
+			"requires_any": _names_to_strings(node.requires_any),
+			"costs": node.costs.duplicate(true),
+			"purchased": unlocked.has(String(node.id)),
+			"affordable": _can_afford(node.costs),
+		})
+	return {
+		"ok": build.is_valid(),
+		"character_id": profile.id,
+		"materials": get_materials(),
+		"loadout": loadout,
+		"slots": slot_rows,
+		"mastery": mastery_rows,
+		"effective_stats": build.get_values(),
+		"source_breakdown": build.get_source_breakdown(),
+		"validation_errors": build.get_validation_errors(),
+	}
 
 
 func get_settings() -> Dictionary:
-	return _settings.duplicate(true)
+	_ensure_initialized()
+	return _data.settings.duplicate(true)
 
 
 func get_setting(setting_id: String, fallback: Variant = null) -> Variant:
-	return _settings.get(setting_id, fallback)
+	_ensure_initialized()
+	return _data.settings.get(setting_id, fallback)
 
 
 func set_setting(setting_id: String, value: Variant) -> bool:
-	if not _settings.has(setting_id) or not _is_valid_setting_value(setting_id, value):
+	_ensure_initialized()
+	if not _data.settings.has(setting_id) or not _is_valid_setting_value(setting_id, value):
 		return false
-	var normalized_value: Variant = value
-	if setting_id.ends_with("_volume"):
-		normalized_value = float(value)
-	if _settings[setting_id] == normalized_value:
+	var normalized_value: Variant = float(value) if setting_id.ends_with("_volume") else value
+	if _data.settings[setting_id] == normalized_value:
 		return true
-	_settings[setting_id] = normalized_value
+	_data.settings[setting_id] = normalized_value
+	var persisted := bool(save_profile().get("ok", false))
 	setting_changed.emit(StringName(setting_id), normalized_value)
 	profile_changed.emit(&"settings")
+	return persisted or _save_service == null
+
+
+func _commit(result: ProfileCommandResult, section: StringName) -> Dictionary:
+	var response := result.to_dictionary()
+	if not result.ok:
+		response["snapshot"] = get_profile_snapshot()
+		response["persisted"] = true
+		return response
+	var persisted := true
+	if result.changed:
+		persisted = bool(save_profile().get("ok", false))
+		profile_changed.emit(section)
+	response["persisted"] = persisted
+	response["snapshot"] = get_profile_snapshot()
+	return response
+
+
+func _load_catalogs() -> bool:
+	var loaded_items := load(EQUIPMENT_CATALOG_PATH)
+	var loaded_masteries := load(MASTERY_CATALOG_PATH)
+	if not loaded_items is EquipmentCatalog or not loaded_masteries is MasteryCatalog:
+		push_error("Unable to load profile progression catalogs.")
+		return false
+	equipment_catalog = loaded_items
+	mastery_catalog = loaded_masteries
+	var errors := PackedStringArray()
+	errors.append_array(equipment_catalog.validate_catalog())
+	errors.append_array(mastery_catalog.validate_catalog())
+	for error in errors:
+		push_error("Invalid profile progression catalog: %s" % error)
+	return errors.is_empty()
+
+
+func _ensure_initialized() -> void:
+	if _data != null and _commands != null:
+		return
+	if equipment_catalog == null or mastery_catalog == null:
+		_load_catalogs()
+	_data = ProfileData.new()
+	_commands = ProfileCommandService.new(equipment_catalog, mastery_catalog)
+
+
+func _can_afford(costs: Dictionary) -> bool:
+	for material_id in costs:
+		if get_material_count(String(material_id)) < int(costs[material_id]):
+			return false
 	return true
 
 
-func _is_loadout_slot(slot_id: String) -> bool:
-	return slot_id == CONSUMABLE_SLOT or EQUIPMENT_SLOTS.has(slot_id)
+func _names_to_strings(values: Array[StringName]) -> Array[String]:
+	var strings: Array[String] = []
+	for value in values:
+		strings.append(String(value))
+	return strings
 
 
 func _is_valid_setting_value(setting_id: String, value: Variant) -> bool:
 	if setting_id.ends_with("_volume"):
-		if typeof(value) != TYPE_FLOAT and typeof(value) != TYPE_INT:
+		if not (value is float or value is int):
 			return false
 		var numeric_value := float(value)
 		return is_finite(numeric_value) and numeric_value >= 0.0 and numeric_value <= 1.0
-	return typeof(value) == TYPE_BOOL
+	return value is bool

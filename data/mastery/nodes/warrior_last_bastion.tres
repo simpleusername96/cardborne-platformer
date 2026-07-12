@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="MasteryNodeDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/progression/MasteryNodeDefinition.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/progression/ProgressionBehaviorEffect.gd" id="2"]
+
+[sub_resource type="Resource" id="LastBastion"]
+script = ExtResource("2")
+effect_type = &"once_per_stage_one_health_guard_and_skill_reset"
+source_id = &"warrior_last_bastion"
+source_scope = "mastery"
+target_id = &"warrior_shield_rush"
+limit = &"once_per_stage"
+
+[resource]
+script = ExtResource("1")
+id = &"warrior_last_bastion"
+display_name = "Last Bastion"
+mechanical_description = "Once per stage at 1 health, gain guard and reset Shield Rush without healing."
+content_version = 1
+character_id = &"warrior"
+depth = &"capstone"
+requires_all = Array[StringName]([&"warrior_fracture", &"warrior_steady_feet"])
+costs = {
+"rusted_scrap": 10,
+"boss_core": 1
+}
+behavior_effects = Array[ExtResource("2")]([SubResource("LastBastion")])

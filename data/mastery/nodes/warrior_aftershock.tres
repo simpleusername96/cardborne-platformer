@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="MasteryNodeDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/progression/MasteryNodeDefinition.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/progression/ProgressionBehaviorEffect.gd" id="2"]
+
+[sub_resource type="Resource" id="Aftershock"]
+script = ExtResource("2")
+effect_type = &"ground_splitter_aftershock"
+source_id = &"warrior_aftershock"
+source_scope = "mastery"
+damage = 1
+
+[resource]
+script = ExtResource("1")
+id = &"warrior_aftershock"
+display_name = "Aftershock"
+mechanical_description = "Ground Splitter leaves one delayed aftershock that deals 1 damage."
+content_version = 1
+character_id = &"warrior"
+depth = &"middle"
+requires_all = Array[StringName]([&"warrior_driving_rush"])
+costs = {
+"rusted_scrap": 8
+}
+behavior_effects = Array[ExtResource("2")]([SubResource("Aftershock")])

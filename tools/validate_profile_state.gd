@@ -1,70 +1,119 @@
 extends SceneTree
 
 const ProfileStateScript = preload("res://scripts/autoload/ProfileState.gd")
+const EQUIPMENT_CATALOG := preload("res://data/equipment/equipment_catalog.tres")
+const MASTERY_CATALOG := preload("res://data/mastery/mastery_catalog.tres")
+const CHARACTER_CATALOG := preload("res://data/characters/character_catalog.tres")
 
 var _failures: Array[String] = []
 
 
 func _initialize() -> void:
 	var profile := ProfileStateScript.new()
-	_validate_materials(profile)
-	_validate_equipment(profile)
-	_validate_mastery_and_unlocks(profile)
+	profile.initialize_for_tests(EQUIPMENT_CATALOG, MASTERY_CATALOG)
+	_validate_defaults(profile)
+	_validate_material_and_equipment_commands(profile)
+	_validate_mastery_commands(profile)
+	_validate_discovery_idempotency(profile)
 	_validate_settings_and_snapshot(profile)
+	_validate_base_loadouts(profile)
 	profile.free()
-
-	if _failures.is_empty():
-		print("PROFILE_STATE_VALIDATION_OK")
-		quit(0)
-		return
-
-	for failure in _failures:
-		push_error(failure)
-	quit(1)
+	_finish()
 
 
-func _validate_materials(profile: Node) -> void:
-	_expect(profile.grant_material("stone", 5), "positive material grant should succeed")
-	_expect(profile.get_material_count("stone") == 5, "material grant should update count")
-	_expect(not profile.spend_material("stone", 6), "overspend should fail")
-	_expect(profile.spend_material("stone", 2), "affordable spend should succeed")
-	_expect(profile.get_material_count("stone") == 3, "material spend should update count")
-	_expect(not profile.grant_material("", 1), "blank material id should fail")
+func _validate_defaults(profile: Node) -> void:
+	for item_id in ["iron_cleaver", "field_bow", "rust_knives", "traveler_jacket"]:
+		_expect(profile.owns_equipment(item_id), "starting equipment '%s' should be owned" % item_id)
+	_expect(profile.get_loadout("warrior")["weapon"] == "iron_cleaver", "Warrior should start with Iron Cleaver")
+	_expect(profile.get_loadout("archer")["weapon"] == "field_bow", "Archer should start with Field Bow")
+	_expect(profile.get_loadout("assassin")["weapon"] == "rust_knives", "Assassin should start with Rust Knives")
 
 
-func _validate_equipment(profile: Node) -> void:
-	_expect(profile.grant_equipment("iron_blade"), "new equipment should be granted")
-	_expect(not profile.grant_equipment("iron_blade"), "duplicate equipment should be rejected")
-	_expect(profile.set_loadout_item("weapon", "iron_blade"), "owned equipment should equip")
-	_expect(not profile.set_loadout_item("armor", "missing_armor"), "unowned equipment should not equip")
-	_expect(not profile.set_loadout_item("unknown", ""), "unknown slot should fail")
-	var loadout: Dictionary = profile.get_loadout()
-	loadout["weapon"] = "mutated_copy"
-	_expect(profile.get_loadout()["weapon"] == "iron_blade", "loadout getter must return a copy")
+func _validate_material_and_equipment_commands(profile: Node) -> void:
+	_expect(profile.grant_material("rusted_scrap", 5), "material grant should succeed")
+	var purchase: Dictionary = profile.purchase_equipment(&"patched_mail")
+	_expect(bool(purchase.get("ok", false)), "affordable equipment purchase should succeed")
+	_expect(profile.get_material_count("rusted_scrap") == 0, "equipment purchase should charge exactly once")
+	_expect(not bool(profile.purchase_equipment(&"patched_mail").get("ok", true)), "owned equipment purchase should fail")
+	var equip: Dictionary = profile.equip_item(&"warrior", &"armor", &"patched_mail")
+	_expect(bool(equip.get("ok", false)), "owned compatible armor should equip")
+	_expect(
+		not bool(profile.equip_item(&"archer", &"weapon", &"iron_cleaver").get("ok", true)),
+		"incompatible character weapon should be rejected"
+	)
+	var warrior: CharacterProfile = CHARACTER_CATALOG.get_profile_by_id("warrior")
+	var preview: PlayerBuildSnapshot = profile.preview_build(warrior)
+	_expect(preview.is_valid(), "equipment preview should produce a valid build")
+	_expect_close(preview.get_stat(&"max_health"), warrior.max_health + 1.0, "Patched Mail should add one health")
+	_expect_close(preview.get_stat(&"move_speed"), warrior.move_speed - 8.0, "Patched Mail should reduce move speed")
+	_expect(preview.get_source_breakdown().has("patched_mail"), "equipment source should remain visible in build breakdown")
 
 
-func _validate_mastery_and_unlocks(profile: Node) -> void:
-	_expect(profile.unlock_mastery("warrior", "guard_counter"), "new mastery should unlock")
-	_expect(not profile.unlock_mastery("warrior", "guard_counter"), "duplicate mastery should fail")
-	_expect(profile.has_mastery("warrior", "guard_counter"), "mastery lookup should be character-scoped")
-	_expect(not profile.has_mastery("archer", "guard_counter"), "mastery must not leak between characters")
-	_expect(profile.unlock_content("elite_rooms"), "new content should unlock")
-	_expect(not profile.unlock_content("elite_rooms"), "duplicate content unlock should fail")
+func _validate_mastery_commands(profile: Node) -> void:
+	_expect(profile.grant_material("rusted_scrap", 12), "mastery material grant should succeed")
+	var locked: Dictionary = profile.purchase_mastery(&"warrior", &"warrior_steady_feet")
+	_expect(not bool(locked.get("ok", true)), "middle mastery should reject missing prerequisite")
+	_expect(profile.get_material_count("rusted_scrap") == 12, "rejected mastery should not charge")
+	_expect(
+		bool(profile.purchase_mastery(&"warrior", &"warrior_broad_guard").get("ok", false)),
+		"root mastery should purchase"
+	)
+	_expect(
+		bool(profile.purchase_mastery(&"warrior", &"warrior_steady_feet").get("ok", false)),
+		"unlocked middle mastery should purchase"
+	)
+	_expect(profile.get_material_count("rusted_scrap") == 0, "mastery purchases should use documented costs")
+	_expect(profile.has_mastery("warrior", "warrior_steady_feet"), "mastery should be character-scoped")
+	_expect(not profile.has_mastery("archer", "warrior_steady_feet"), "mastery should not leak to another character")
+	var respec: Dictionary = profile.respec_character(&"warrior")
+	_expect(bool(respec.get("ok", false)), "development respec should succeed")
+	_expect(profile.get_material_count("rusted_scrap") == 12, "respec should refund exact purchase costs")
+	_expect(profile.get_mastery_unlocks("warrior").is_empty(), "respec should clear only the selected character")
+
+
+func _validate_discovery_idempotency(profile: Node) -> void:
+	var first: Dictionary = profile.discover_equipment(&"bell_hammer", &"fixture:cache:1")
+	_expect(bool(first.get("ok", false)) and profile.owns_equipment("bell_hammer"), "first discovery should unlock equipment")
+	var before_duplicate: int = profile.get_material_count("rusted_scrap")
+	var duplicate: Dictionary = profile.discover_equipment(&"bell_hammer", &"fixture:cache:1")
+	_expect(bool(duplicate.get("duplicate", false)), "replayed discovery transaction should be duplicate")
+	_expect(profile.get_material_count("rusted_scrap") == before_duplicate, "replayed discovery should grant no salvage")
+	var second_source: Dictionary = profile.discover_equipment(&"bell_hammer", &"fixture:cache:2")
+	_expect(bool(second_source.get("ok", false)), "a distinct duplicate discovery should settle")
+	_expect(profile.get_material_count("rusted_scrap") == before_duplicate + 4, "owned Bell Hammer should salvage to four scrap")
 
 
 func _validate_settings_and_snapshot(profile: Node) -> void:
 	_expect(profile.set_setting("screen_shake", false), "known setting should update")
 	_expect(not profile.set_setting("unknown_setting", true), "unknown setting should fail")
 	_expect(not profile.set_setting("music_volume", 1.5), "out-of-range volume should fail")
-	_expect(not profile.set_setting("damage_flash", "yes"), "setting type mismatch should fail")
 	var snapshot: Dictionary = profile.get_profile_snapshot()
-	snapshot["materials"]["stone"] = 999
+	snapshot["materials"]["rusted_scrap"] = 999
 	snapshot["settings"]["screen_shake"] = true
-	_expect(profile.get_material_count("stone") == 3, "snapshot materials must be isolated")
-	_expect(profile.get_setting("screen_shake", true) == false, "snapshot settings must be isolated")
-	profile.reset_to_defaults()
-	_expect(profile.get_material_count("stone") == 0, "profile reset should clear materials")
-	_expect(profile.get_setting("screen_shake", false) == true, "profile reset should restore settings")
+	_expect(profile.get_material_count("rusted_scrap") != 999, "profile snapshot materials must be isolated")
+	_expect(profile.get_setting("screen_shake", true) == false, "profile snapshot settings must be isolated")
+
+
+func _validate_base_loadouts(profile: Node) -> void:
+	for character in CHARACTER_CATALOG.profiles:
+		var snapshot: Dictionary = profile.get_character_loadout_snapshot(character)
+		_expect(bool(snapshot.get("ok", false)), "base loadout for '%s' should resolve" % character.id)
+		_expect(snapshot["validation_errors"].is_empty(), "base loadout for '%s' should have no build errors" % character.id)
+
+
+func _finish() -> void:
+	if _failures.is_empty():
+		print("PROFILE_STATE_VALIDATION_OK")
+		quit(0)
+		return
+	for failure in _failures:
+		push_error(failure)
+	quit(1)
+
+
+func _expect_close(actual: float, expected: float, message: String) -> void:
+	if not is_equal_approx(actual, expected):
+		_failures.append("%s; expected %s, got %s." % [message, expected, actual])
 
 
 func _expect(condition: bool, message: String) -> void:

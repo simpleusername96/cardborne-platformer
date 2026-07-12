@@ -117,11 +117,11 @@ Additional invariants:
 | Movement | `PlayerController`, `MovementMetrics`, `PlayerCombatController` | Combat execution is extracted; generator does not yet consume limits. | Preserve motion and make generation consume validated limits. |
 | Combat | Deterministic resolver/result, earned critical rules, stagger, Warrior runtime fixture | Shared modifier/effect lifecycle and the other two complete kits remain. | Extend the proven resolver path rather than branching in actors or UI. |
 | Enemies | Typed catalog plus production Ruin Walker/Charger scenes | Remaining archetypes/variants and deterministic allocator are not promoted. | Promote six archetypes, 13 exact variants, and two special actors through typed definitions/fixtures. |
-| Stages | `StageBase` plus two native room scenes in one curated production route | No stage planner, assembler, or allocator yet. | Extend the native room contract into data-first generation. |
+| Stages | Deterministic Stage 1 planner, validator, assembler, allocator, ten authored rooms, and curated fallback. | Stages 2-3 and boss arena remain. | Reuse the proven generation pipeline with stage-specific catalogs. |
 | Progression | `RunState`, `PlayerBuild`, design JSON | Counters mostly inert; no reward transaction. | One deterministic build/effect/reward path. |
-| Persistence | `ProfileState` settings | No gameplay profile schema/backup/migration. | Versioned profile with wallet/equipment/mastery. |
+| Persistence | Profile schema v1, atomic primary/backup recovery, migration, wallet, per-character loadouts, and mastery commands. | Full-run settlement and remaining content activation remain. | Preserve `ProfileState` as the only public profile facade. |
 | Boss | Spec/catalog only | No boss code/scene. | Authored arena, scheduler, patterns, cleanup/settlement. |
-| UI/feel | Menu/select/result plus live combat actions and encounter objective | No reward/loadout/mastery/forge/full-skill surfaces; placeholders remain. | Add only states backed by working systems, then presentation pass. |
+| UI/feel | Menu, character/loadout/mastery, level/card rewards, HUD, result, and settings with compact captures. | Rest/forge, full-skill, boss, and final presentation states remain. | Add only states backed by working systems, then presentation pass. |
 
 ## As-Is / To-Be Delta Checklist
 
@@ -185,6 +185,10 @@ Additional invariants:
 - [x] Canonical fun-focused blueprint and implementation-ready linked specs/catalogs.
 - [x] Idempotent enemy/stage rewards, overflow-safe run levels, micro-upgrade
   choices, five typed cards with working event effects, card reroll, and replay.
+- [x] Deterministic generated Ruin Approach with one optional branch, typed
+  Shooter/hazards/rewards, geometry validation, fallback, and 1,000-seed gate.
+- [x] Persistent profile v1, 12 equipment items, 18 mastery nodes, per-character
+  loadouts, material settlement, backup recovery/migration, and loadout/mastery UI.
 
 ### Not credited as finished gameplay
 
@@ -295,15 +299,18 @@ and enjoyable with every base character.
 **Visible result:** Discover/equip an item, buy a mastery node, reload the app, and
 start a run with an accurately previewed build.
 
-- [ ] **4.1 Define ProfileData v1 and safe save/backup/migration service.**
-- [ ] **4.2 Migrate 12 equipment and 18 mastery nodes to typed Resources.**
-- [ ] **4.3 Extend PlayerBuild source order and source breakdown.**
-- [ ] **4.4 Implement material wallet and equipment unlock/salvage transactions.**
-- [ ] **4.5 Implement loadout and mastery command APIs.**
-- [ ] **4.6 Implement character/loadout and mastery UI states.**
-- [ ] **4.7 Add save round-trip, corrupt-primary fallback, purchase prerequisite,
+- [x] **4.1 Define ProfileData v1 and safe save/backup/migration service.**
+- [x] **4.2 Migrate 12 equipment and 18 mastery nodes to typed Resources.**
+- [x] **4.3 Extend PlayerBuild source order and source breakdown.**
+- [x] **4.4 Implement material wallet and equipment unlock/salvage transactions.**
+- [x] **4.5 Implement loadout and mastery command APIs.**
+- [x] **4.6 Implement character/loadout and mastery UI states.**
+- [x] **4.7 Add save round-trip, corrupt-primary fallback, purchase prerequisite,
   respec, and preview/runtime parity tests.**
-- [ ] **4.8 Base-loadout guard:** zero mastery remains clearable.
+- [x] **4.8 Base-loadout guard:** zero mastery remains clearable.
+  - Evidence: profile/catalog/persistence/run-integration validators pass; Broad
+    Guard has a runtime fixture; Stage 1's all-character base route gate remains
+    green; 1280x720 and 960x540 loadout/mastery captures have no overlap or clipping.
 
 *Milestone gate:* persistent progression provides options without creating a grind
 requirement or duplicate stat owner.

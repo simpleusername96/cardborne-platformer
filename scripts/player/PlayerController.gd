@@ -361,14 +361,22 @@ func _apply_run_state() -> void:
 	var profile := RunState.selected_profile
 	if profile != null:
 		body_polygon.color = profile.visual_color
-	combat_controller.configure(profile, stats)
+	combat_controller.configure(
+		profile,
+		stats,
+		ProfileState.get_behavior_effects(StringName(profile.id))
+	)
 	dash_charges_left = _max_dash_charges()
 	extra_jumps_left = _max_extra_jumps()
 
 
 func _on_selected_profile_changed(_profile_id: String, _display_name: String, color: Color) -> void:
 	body_polygon.color = color
-	combat_controller.configure(RunState.selected_profile, stats)
+	combat_controller.configure(
+		RunState.selected_profile,
+		stats,
+		ProfileState.get_behavior_effects(StringName(RunState.selected_profile.id))
+	)
 
 
 func _on_player_stats_changed(new_stats: Dictionary) -> void:

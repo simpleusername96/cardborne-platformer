@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="MasteryNodeDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/progression/MasteryNodeDefinition.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/progression/ProgressionBehaviorEffect.gd" id="2"]
+
+[sub_resource type="Resource" id="CleanRelease"]
+script = ExtResource("2")
+effect_type = &"mark_consume_reduce_longest_skill"
+source_id = &"archer_clean_release"
+source_scope = "mastery"
+seconds = 1.0
+internal_cooldown = 4.0
+
+[resource]
+script = ExtResource("1")
+id = &"archer_clean_release"
+display_name = "Clean Release"
+mechanical_description = "Consuming a mark reduces the longest active skill cooldown by 1 second, once every 4 seconds."
+content_version = 1
+character_id = &"archer"
+depth = &"capstone"
+requires_all = Array[StringName]([&"archer_shared_mark", &"archer_storm_pattern"])
+costs = {
+"sky_thread": 10,
+"boss_core": 1
+}
+behavior_effects = Array[ExtResource("2")]([SubResource("CleanRelease")])

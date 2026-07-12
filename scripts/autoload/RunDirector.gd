@@ -15,7 +15,7 @@ var screen_root: Control
 var hud_root: Control
 var current_screen: Control
 var current_hud: Control
-var _last_profile_index: int = 0
+var _last_profile_id: StringName = &"warrior"
 
 
 func _ready() -> void:
@@ -61,10 +61,14 @@ func show_character_select() -> void:
 		return
 	character_select.connect(&"back_requested", show_main_menu)
 	character_select.connect(&"run_requested", start_production_run)
+	character_select.connect(&"equipment_action_requested", _on_equipment_action_requested)
+	character_select.connect(&"mastery_purchase_requested", _on_mastery_purchase_requested)
+	character_select.connect(&"mastery_respec_requested", _on_mastery_respec_requested)
+	character_select.connect(&"persistence_retry_requested", _on_persistence_retry_requested)
 	_set_phase(RunPhase.Value.CHARACTER_SELECT)
 
 
-func start_production_run(profile_index: int) -> bool:
+func start_production_run(profile_reference: Variant) -> bool:
 	if not _roots_are_ready():
 		return false
 	if phase in [RunPhase.Value.RUN_DEATH, RunPhase.Value.RUN_CLEAR]:
@@ -75,12 +79,16 @@ func start_production_run(profile_index: int) -> bool:
 		_set_phase(RunPhase.Value.LOADOUT)
 	if phase != RunPhase.Value.LOADOUT:
 		return false
+	var profile_index := _profile_index_for_reference(profile_reference)
+	if profile_index < 0:
+		_report_start_error("Character is unavailable.")
+		return false
 	Game.set_settings_open(false)
 	if not RunState.start_new_run(profile_index):
-		SignalBus.status_message_changed.emit("Unable to start run: invalid character build")
+		_report_start_error("Loadout is invalid. Check the highlighted slot.")
 		return false
 
-	_last_profile_index = RunState.selected_profile_index
+	_last_profile_id = StringName(RunState.selected_profile.id)
 	return _load_production_stage()
 
 
@@ -133,7 +141,7 @@ func show_run_result(victory: bool) -> void:
 		profile_name = RunState.selected_profile.display_name
 	result.call(&"configure", victory, profile_name)
 	result.connect(&"menu_requested", show_main_menu)
-	result.connect(&"retry_requested", func() -> void: start_production_run(_last_profile_index))
+	result.connect(&"retry_requested", func() -> void: start_production_run(_last_profile_id))
 
 
 func get_phase_name() -> String:
@@ -316,3 +324,56 @@ func _on_card_continue_requested() -> void:
 func _set_card_reward_error(message: String) -> void:
 	if current_screen != null and current_screen.has_method("set_commit_error"):
 		current_screen.call("set_commit_error", message)
+
+
+func _profile_index_for_reference(profile_reference: Variant) -> int:
+	if profile_reference is int:
+		return int(profile_reference) if int(profile_reference) >= 0 else -1
+	if profile_reference is String or profile_reference is StringName:
+		return RunState.character_catalog.get_profile_index(String(profile_reference))
+	return -1
+
+
+func _report_start_error(message: String) -> void:
+	SignalBus.status_message_changed.emit(message)
+	if current_screen != null and current_screen.has_method("set_start_error"):
+		current_screen.call("set_start_error", message)
+
+
+func _on_equipment_action_requested(
+	character_id: StringName,
+	slot_id: StringName,
+	item_id: StringName,
+	unlock: bool
+) -> void:
+	if phase not in [RunPhase.Value.CHARACTER_SELECT, RunPhase.Value.LOADOUT]:
+		return
+	var result := (
+		ProfileState.purchase_equipment(item_id)
+		if unlock
+		else ProfileState.equip_item(character_id, slot_id, item_id)
+	)
+	_publish_profile_command_result(result)
+
+
+func _on_mastery_purchase_requested(character_id: StringName, node_id: StringName) -> void:
+	if phase not in [RunPhase.Value.CHARACTER_SELECT, RunPhase.Value.LOADOUT]:
+		return
+	_publish_profile_command_result(ProfileState.purchase_mastery(character_id, node_id))
+
+
+func _on_mastery_respec_requested(character_id: StringName) -> void:
+	if phase not in [RunPhase.Value.CHARACTER_SELECT, RunPhase.Value.LOADOUT]:
+		return
+	_publish_profile_command_result(ProfileState.respec_character(character_id))
+
+
+func _publish_profile_command_result(result: Dictionary) -> void:
+	if current_screen != null and current_screen.has_method("show_profile_command_result"):
+		current_screen.call("show_profile_command_result", result)
+
+
+func _on_persistence_retry_requested() -> void:
+	var save_result := ProfileState.save_profile()
+	save_result["persisted"] = bool(save_result.get("ok", false))
+	_publish_profile_command_result(save_result)

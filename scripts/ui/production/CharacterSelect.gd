@@ -1,7 +1,13 @@
 extends Control
 
 signal back_requested
-signal run_requested(profile_index: int)
+signal run_requested(profile_id: StringName)
+signal equipment_action_requested(
+	character_id: StringName, slot_id: StringName, item_id: StringName, unlock: bool
+)
+signal mastery_purchase_requested(character_id: StringName, node_id: StringName)
+signal mastery_respec_requested(character_id: StringName)
+signal persistence_retry_requested
 
 const BackdropScene = preload("res://scripts/ui/production/ProductionBackdrop.gd")
 const PortraitScene = preload("res://scripts/ui/production/ProductionPortrait.gd")
@@ -9,8 +15,17 @@ const Styles = preload("res://scripts/ui/production/ProductionUIStyles.gd")
 
 var selected_index: int = 0
 var _profiles: Array[CharacterProfile] = []
-var _card_buttons: Array[Button] = []
+var _character_buttons: Array[Button] = []
 var _selected_labels: Array[Label] = []
+var _content_host: VBoxContainer
+var _wallet_label: Label
+var _status_label: Label
+var _retry_button: Button
+var _mode_button: Button
+var _start_button: Button
+var _mastery_open: bool = false
+var _selected_slot_items: Dictionary = {}
+var _selected_mastery_id: StringName
 
 
 func _ready() -> void:
@@ -18,171 +33,573 @@ func _ready() -> void:
 	for profile in RunState.profiles:
 		_profiles.append(profile)
 	selected_index = clampi(RunState.selected_profile_index, 0, maxi(_profiles.size() - 1, 0))
-	_build_ui()
-	_update_selection()
+	_build_shell()
+	_refresh()
 
 
-func _build_ui() -> void:
-	var backdrop := BackdropScene.new()
-	add_child(backdrop)
+func _unhandled_input(event: InputEvent) -> void:
+	if not event.is_action_pressed("pause"):
+		return
+	get_viewport().set_input_as_handled()
+	if _mastery_open:
+		_toggle_mode()
+	else:
+		back_requested.emit()
+
+
+func _build_shell() -> void:
+	add_child(BackdropScene.new())
 
 	var margin := MarginContainer.new()
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	for side in ["left", "top", "right", "bottom"]:
-		margin.add_theme_constant_override("margin_%s" % side, 28)
+	for side in ["left", "right"]:
+		margin.add_theme_constant_override("margin_%s" % side, 20)
+	for side in ["top", "bottom"]:
+		margin.add_theme_constant_override("margin_%s" % side, 14)
 	add_child(margin)
 
 	var page := VBoxContainer.new()
-	page.add_theme_constant_override("separation", 14)
+	page.add_theme_constant_override("separation", 9)
 	margin.add_child(page)
+	page.add_child(_build_header())
+	page.add_child(_build_character_strip())
 
+	_content_host = VBoxContainer.new()
+	_content_host.name = "LoadoutContent"
+	_content_host.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_content_host.add_theme_constant_override("separation", 8)
+	page.add_child(_content_host)
+	page.add_child(_build_footer())
+
+
+func _build_header() -> HBoxContainer:
 	var header := HBoxContainer.new()
-	header.custom_minimum_size = Vector2(0.0, 48.0)
-	header.add_theme_constant_override("separation", 16)
-	page.add_child(header)
+	header.custom_minimum_size = Vector2(0.0, 42.0)
+	header.add_theme_constant_override("separation", 12)
 
 	var back := Button.new()
 	back.text = "Back"
-	back.custom_minimum_size = Vector2(104.0, 44.0)
+	back.custom_minimum_size = Vector2(88.0, 40.0)
 	Styles.apply_button(back, Styles.MOSS, true)
 	back.pressed.connect(func() -> void: back_requested.emit())
 	header.add_child(back)
 
 	var title := Label.new()
-	title.text = "CHOOSE YOUR RUNNER"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.text = "RUNNER & LOADOUT"
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	Styles.configure_label(title, 32)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	Styles.configure_label(title, 25)
 	header.add_child(title)
 
-	var header_balance := Control.new()
-	header_balance.custom_minimum_size = Vector2(104.0, 44.0)
-	header.add_child(header_balance)
+	_wallet_label = Label.new()
+	_wallet_label.custom_minimum_size = Vector2(240.0, 40.0)
+	_wallet_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_wallet_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	Styles.configure_label(_wallet_label, 13, Styles.TEXT_MUTED)
+	header.add_child(_wallet_label)
+	return header
 
-	var cards := HBoxContainer.new()
-	cards.name = "CharacterCards"
-	cards.add_theme_constant_override("separation", 18)
-	cards.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	page.add_child(cards)
 
+func _build_character_strip() -> HBoxContainer:
+	var strip := HBoxContainer.new()
+	strip.name = "CharacterStrip"
+	strip.custom_minimum_size = Vector2(0.0, 112.0)
+	strip.add_theme_constant_override("separation", 10)
 	for profile_index in _profiles.size():
-		cards.add_child(_build_character_card(profile_index, _profiles[profile_index]))
-
-	var footer := HBoxContainer.new()
-	footer.alignment = BoxContainer.ALIGNMENT_CENTER
-	footer.custom_minimum_size = Vector2(0.0, 52.0)
-	page.add_child(footer)
-
-	var start := Button.new()
-	start.name = "StartRunButton"
-	start.text = "Start Run"
-	start.custom_minimum_size = Vector2(240.0, 48.0)
-	start.disabled = _profiles.is_empty()
-	Styles.apply_button(start, Styles.AMBER)
-	start.pressed.connect(func() -> void: run_requested.emit(selected_index))
-	footer.add_child(start)
-
-	if not _card_buttons.is_empty():
-		_card_buttons[selected_index].grab_focus()
+		strip.add_child(_build_character_button(profile_index, _profiles[profile_index]))
+	return strip
 
 
-func _build_character_card(profile_index: int, profile: CharacterProfile) -> Button:
+func _build_character_button(profile_index: int, profile: CharacterProfile) -> Button:
 	var card := Button.new()
-	card.name = "CharacterCard_%s" % profile.id
+	card.name = "Character_%s" % profile.id
 	card.text = ""
-	card.custom_minimum_size = Vector2(250.0, 340.0)
+	card.custom_minimum_size = Vector2(0.0, 108.0)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	card.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	card.pressed.connect(func() -> void: _select_profile(profile_index))
-	_card_buttons.append(card)
+	_character_buttons.append(card)
 
 	var margin := MarginContainer.new()
 	margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	margin.offset_left = 18.0
-	margin.offset_top = 16.0
-	margin.offset_right = -18.0
-	margin.offset_bottom = -16.0
+	margin.offset_left = 12.0
+	margin.offset_top = 8.0
+	margin.offset_right = -12.0
+	margin.offset_bottom = -8.0
 	card.add_child(margin)
 
-	var content := VBoxContainer.new()
-	content.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	content.add_theme_constant_override("separation", 6)
-	margin.add_child(content)
+	var row := HBoxContainer.new()
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_theme_constant_override("separation", 10)
+	margin.add_child(row)
+
+	var portrait := PortraitScene.new()
+	portrait.custom_minimum_size = Vector2(78.0, 84.0)
+	portrait.configure(profile.id, profile.visual_color)
+	portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(portrait)
+
+	var text := VBoxContainer.new()
+	text.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	text.add_theme_constant_override("separation", 2)
+	row.add_child(text)
 
 	var name_label := Label.new()
 	name_label.text = profile.display_name.to_upper()
-	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	Styles.configure_label(name_label, 23)
-	content.add_child(name_label)
-
-	var portrait_center := CenterContainer.new()
-	portrait_center.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	portrait_center.custom_minimum_size = Vector2(0.0, 118.0)
-	content.add_child(portrait_center)
-
-	var portrait := PortraitScene.new()
-	portrait.custom_minimum_size = Vector2(150.0, 118.0)
-	portrait.configure(profile.id, profile.visual_color)
-	portrait_center.add_child(portrait)
+	Styles.configure_label(name_label, 18)
+	text.add_child(name_label)
 
 	var trait_label := Label.new()
 	trait_label.text = profile.trait_summary
-	trait_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	trait_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	trait_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	trait_label.custom_minimum_size = Vector2(0.0, 44.0)
-	Styles.configure_label(trait_label, 14, Styles.TEXT_MUTED)
-	content.add_child(trait_label)
+	trait_label.max_lines_visible = 2
+	trait_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	trait_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	Styles.configure_label(trait_label, 11, Styles.TEXT_MUTED)
+	text.add_child(trait_label)
 
-	var stats := GridContainer.new()
-	stats.columns = 2
-	stats.add_theme_constant_override("h_separation", 12)
-	stats.add_theme_constant_override("v_separation", 4)
-	content.add_child(stats)
-	_add_stat(stats, "HEALTH", str(profile.max_health))
-	_add_stat(stats, "DAMAGE", str(profile.attack_damage))
-	_add_stat(stats, "MOVE", str(roundi(profile.move_speed)))
-	_add_stat(stats, "DASH", str(profile.dash_charges))
-
-	var flexible := Control.new()
-	flexible.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	content.add_child(flexible)
+	var facts := Label.new()
+	facts.text = "HP %d   MOVE %d   DASH %d" % [
+		profile.max_health, roundi(profile.move_speed), profile.dash_charges,
+	]
+	Styles.configure_label(facts, 11, profile.visual_color)
+	text.add_child(facts)
 
 	var selected := Label.new()
 	selected.text = "SELECTED"
-	selected.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	selected.custom_minimum_size = Vector2(0.0, 24.0)
-	Styles.configure_label(selected, 13, profile.visual_color)
-	content.add_child(selected)
+	Styles.configure_label(selected, 10, profile.visual_color)
+	text.add_child(selected)
 	_selected_labels.append(selected)
 	return card
 
 
-func _add_stat(grid: GridContainer, stat_name: String, value: String) -> void:
-	var name_label := Label.new()
-	name_label.text = stat_name
-	Styles.configure_label(name_label, 12, Styles.TEXT_MUTED)
-	grid.add_child(name_label)
-	var value_label := Label.new()
-	value_label.text = value
-	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	value_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	Styles.configure_label(value_label, 14)
-	grid.add_child(value_label)
+func _build_footer() -> HBoxContainer:
+	var footer := HBoxContainer.new()
+	footer.custom_minimum_size = Vector2(0.0, 44.0)
+	footer.add_theme_constant_override("separation", 10)
+
+	_status_label = Label.new()
+	_status_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_status_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	Styles.configure_label(_status_label, 13, Styles.CORAL)
+	footer.add_child(_status_label)
+
+	_retry_button = Button.new()
+	_retry_button.text = "Retry Save"
+	_retry_button.visible = false
+	_retry_button.custom_minimum_size = Vector2(112.0, 42.0)
+	Styles.apply_button(_retry_button, Styles.CORAL, true)
+	_retry_button.pressed.connect(func() -> void: persistence_retry_requested.emit())
+	footer.add_child(_retry_button)
+
+	_mode_button = Button.new()
+	_mode_button.name = "ModeButton"
+	_mode_button.custom_minimum_size = Vector2(150.0, 42.0)
+	Styles.apply_button(_mode_button, Styles.CYAN, true)
+	_mode_button.pressed.connect(_toggle_mode)
+	footer.add_child(_mode_button)
+
+	_start_button = Button.new()
+	_start_button.name = "StartRunButton"
+	_start_button.text = "Start Run"
+	_start_button.custom_minimum_size = Vector2(190.0, 42.0)
+	Styles.apply_button(_start_button, Styles.AMBER)
+	_start_button.pressed.connect(_begin_start)
+	footer.add_child(_start_button)
+	return footer
+
+
+func _refresh() -> void:
+	if _profiles.is_empty():
+		_start_button.disabled = true
+		return
+	for profile_index in _character_buttons.size():
+		var selected := profile_index == selected_index
+		Styles.apply_character_card(
+			_character_buttons[profile_index], _profiles[profile_index].visual_color, selected
+		)
+		_selected_labels[profile_index].visible = selected
+	_update_wallet()
+	_clear_container(_content_host)
+	if _mastery_open:
+		_build_mastery_view()
+	else:
+		_build_loadout_view()
+	_mode_button.text = "Loadout" if _mastery_open else "Mastery"
+	_start_button.visible = not _mastery_open
+	if not _character_buttons.is_empty() and not _mastery_open:
+		_character_buttons[selected_index].grab_focus()
+
+
+func _build_loadout_view() -> void:
+	var profile := _profiles[selected_index]
+	var snapshot: Dictionary = ProfileState.get_character_loadout_snapshot(profile)
+	_start_button.disabled = not bool(snapshot.get("ok", false))
+
+	var body := HBoxContainer.new()
+	body.name = "LoadoutBody"
+	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	body.add_theme_constant_override("separation", 24)
+	_content_host.add_child(body)
+
+	var loadout_column := VBoxContainer.new()
+	loadout_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	loadout_column.add_theme_constant_override("separation", 5)
+	body.add_child(loadout_column)
+	loadout_column.add_child(_section_label("LOADOUT"))
+	for slot_row in snapshot.get("slots", []):
+		loadout_column.add_child(_build_slot_row(slot_row))
+	loadout_column.add_child(_build_consumable_row(snapshot.get("loadout", {})))
+
+	var divider := VSeparator.new()
+	body.add_child(divider)
+
+	var summary := VBoxContainer.new()
+	summary.custom_minimum_size = Vector2(330.0, 0.0)
+	summary.add_theme_constant_override("separation", 6)
+	body.add_child(summary)
+	summary.add_child(_section_label("EFFECTIVE BUILD"))
+	summary.add_child(_build_stat_grid(snapshot.get("effective_stats", {})))
+	var mastery_count := ProfileState.get_mastery_unlocks(profile.id).size()
+	var mastery_summary := Label.new()
+	mastery_summary.text = "MASTERY  %d / 6" % mastery_count
+	Styles.configure_label(mastery_summary, 13, profile.visual_color)
+	summary.add_child(mastery_summary)
+	var source_label := Label.new()
+	var source_count := 0
+	for source_id in snapshot.get("source_breakdown", {}):
+		if String(source_id) not in [PlayerBuild.BASE_CHARACTER_SOURCE, PlayerBuild.BUILD_LIMITS_SOURCE]:
+			source_count += 1
+	source_label.text = "%d active loadout modifier%s" % [source_count, "" if source_count == 1 else "s"]
+	Styles.configure_label(source_label, 12, Styles.TEXT_MUTED)
+	summary.add_child(source_label)
+
+
+func _build_slot_row(slot_row: Dictionary) -> HBoxContainer:
+	var slot_id := String(slot_row.get("slot", ""))
+	var options: Array = slot_row.get("options", [])
+	var equipped_id := String(slot_row.get("equipped_id", ""))
+	var row := HBoxContainer.new()
+	row.custom_minimum_size = Vector2(0.0, 38.0)
+	row.add_theme_constant_override("separation", 8)
+
+	var label := Label.new()
+	label.text = slot_id.to_upper()
+	label.custom_minimum_size = Vector2(76.0, 0.0)
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	Styles.configure_label(label, 12, Styles.TEXT_MUTED)
+	row.add_child(label)
+
+	var picker := OptionButton.new()
+	picker.name = "Slot_%s" % slot_id
+	picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	picker.custom_minimum_size = Vector2(0.0, 36.0)
+	Styles.apply_button(picker, _profiles[selected_index].visual_color, true)
+	var selected_index_in_picker := 0
+	for option_index in options.size():
+		var option: Dictionary = options[option_index]
+		var suffix := "" if bool(option.get("owned", false)) else "  [LOCKED]"
+		picker.add_item("%s%s" % [option.get("display_name", "Unknown"), suffix])
+		picker.set_item_metadata(option_index, option)
+		if String(option.get("id", "")) == equipped_id:
+			selected_index_in_picker = option_index
+	if options.is_empty():
+		picker.add_item("None available")
+		picker.disabled = true
+	else:
+		picker.select(selected_index_in_picker)
+		_selected_slot_items[slot_id] = options[selected_index_in_picker]
+	row.add_child(picker)
+
+	var action := Button.new()
+	action.custom_minimum_size = Vector2(112.0, 36.0)
+	Styles.apply_button(action, Styles.AMBER, true)
+	row.add_child(action)
+	_update_slot_action(action, slot_id, equipped_id)
+	picker.item_selected.connect(func(option_index: int) -> void:
+		_selected_slot_items[slot_id] = picker.get_item_metadata(option_index)
+		_update_slot_action(action, slot_id, equipped_id)
+	)
+	action.pressed.connect(func() -> void: _commit_slot_action(slot_id))
+	return row
+
+
+func _build_consumable_row(loadout: Dictionary) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.custom_minimum_size = Vector2(0.0, 38.0)
+	var label := Label.new()
+	label.text = "CONSUMABLE"
+	label.custom_minimum_size = Vector2(84.0, 0.0)
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	Styles.configure_label(label, 12, Styles.TEXT_MUTED)
+	row.add_child(label)
+	var value := Label.new()
+	value.text = String(loadout.get("consumable", "small_potion")).replace("_", " ").capitalize()
+	value.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	value.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	Styles.configure_label(value, 14)
+	row.add_child(value)
+	return row
+
+
+func _update_slot_action(button: Button, slot_id: String, equipped_id: String) -> void:
+	var option: Dictionary = _selected_slot_items.get(slot_id, {})
+	var item_id := String(option.get("id", ""))
+	if item_id.is_empty():
+		button.text = "Unavailable"
+		button.disabled = true
+	elif item_id == equipped_id:
+		button.text = "Equipped"
+		button.disabled = true
+	elif bool(option.get("owned", false)):
+		button.text = "Equip"
+		button.disabled = false
+	else:
+		button.text = "Unlock %s" % _cost_text(option.get("unlock_costs", {}), true)
+		button.disabled = not _can_afford(option.get("unlock_costs", {}))
+	button.tooltip_text = String(option.get("description", ""))
+
+
+func _commit_slot_action(slot_id: String) -> void:
+	var option: Dictionary = _selected_slot_items.get(slot_id, {})
+	var item_id := StringName(option.get("id", ""))
+	equipment_action_requested.emit(
+		StringName(_profiles[selected_index].id),
+		StringName(slot_id),
+		item_id,
+		not bool(option.get("owned", false))
+	)
+
+
+func _build_stat_grid(stats: Dictionary) -> GridContainer:
+	var grid := GridContainer.new()
+	grid.name = "StatGrid"
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation", 20)
+	grid.add_theme_constant_override("v_separation", 5)
+	for row in [
+		["Health", "max_health", 0], ["Damage", "attack_damage", 0],
+		["Move", "move_speed", 0], ["Dash cooldown", "dash_cooldown", 2],
+		["Jump", "jump_velocity", 0], ["Extra jumps", "extra_jumps", 0],
+	]:
+		var name_label := Label.new()
+		name_label.text = row[0]
+		Styles.configure_label(name_label, 12, Styles.TEXT_MUTED)
+		grid.add_child(name_label)
+		var value_label := Label.new()
+		var value := float(stats.get(row[1], 0.0))
+		value_label.text = ("%.*f" % [row[2], value]).trim_suffix(".00")
+		value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		value_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		Styles.configure_label(value_label, 14)
+		grid.add_child(value_label)
+	return grid
+
+
+func _build_mastery_view() -> void:
+	var profile := _profiles[selected_index]
+	var snapshot := ProfileState.get_character_loadout_snapshot(profile)
+	var mastery_rows: Array = snapshot.get("mastery", [])
+	var purchased_ids := ProfileState.get_mastery_unlocks(profile.id)
+
+	var heading := HBoxContainer.new()
+	heading.add_child(_section_label("%s MASTERY" % profile.display_name.to_upper()))
+	var spacer := Control.new()
+	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	heading.add_child(spacer)
+	if OS.is_debug_build():
+		var respec := Button.new()
+		respec.text = "Refund Mastery"
+		respec.disabled = purchased_ids.is_empty()
+		respec.custom_minimum_size = Vector2(154.0, 34.0)
+		Styles.apply_button(respec, Styles.CORAL, true)
+		respec.pressed.connect(_commit_respec)
+		heading.add_child(respec)
+	_content_host.add_child(heading)
+
+	var grid := GridContainer.new()
+	grid.name = "MasteryGrid"
+	grid.columns = 3
+	grid.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	grid.add_theme_constant_override("h_separation", 10)
+	grid.add_theme_constant_override("v_separation", 8)
+	_content_host.add_child(grid)
+	if _selected_mastery_id == &"" and not mastery_rows.is_empty():
+		_selected_mastery_id = StringName(mastery_rows[0].get("id", ""))
+	for row in mastery_rows:
+		var node := Button.new()
+		var state := _mastery_state(row, purchased_ids)
+		node.text = "%s\n%s  %s" % [
+			row.get("display_name", "Unknown"),
+			String(row.get("depth", "")).to_upper(),
+			state,
+		]
+		node.custom_minimum_size = Vector2(0.0, 64.0)
+		node.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		Styles.apply_button(node, profile.visual_color, state != "AVAILABLE")
+		var node_id := StringName(row.get("id", ""))
+		node.pressed.connect(func() -> void:
+			_selected_mastery_id = node_id
+			_refresh()
+		)
+		grid.add_child(node)
+	_content_host.add_child(_build_mastery_detail(mastery_rows, purchased_ids))
+
+
+func _build_mastery_detail(rows: Array, purchased_ids: Array[String]) -> HBoxContainer:
+	var selected: Dictionary = {}
+	for row in rows:
+		if StringName(row.get("id", "")) == _selected_mastery_id:
+			selected = row
+			break
+	var detail := HBoxContainer.new()
+	detail.custom_minimum_size = Vector2(0.0, 58.0)
+	detail.add_theme_constant_override("separation", 12)
+	var description := Label.new()
+	description.text = String(selected.get("description", "Select a mastery node."))
+	description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	description.max_lines_visible = 3
+	description.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	Styles.configure_label(description, 12, Styles.TEXT_MUTED)
+	detail.add_child(description)
+	var action := Button.new()
+	var state := _mastery_state(selected, purchased_ids)
+	action.text = "Purchased" if state == "OWNED" else "Purchase %s" % _cost_text(selected.get("costs", {}), false)
+	action.custom_minimum_size = Vector2(190.0, 42.0)
+	action.disabled = state != "AVAILABLE"
+	Styles.apply_button(action, Styles.AMBER)
+	action.pressed.connect(_commit_mastery_purchase)
+	detail.add_child(action)
+	return detail
+
+
+func _mastery_state(row: Dictionary, purchased_ids: Array[String]) -> String:
+	var node_id := String(row.get("id", ""))
+	if node_id.is_empty():
+		return "LOCKED"
+	if purchased_ids.has(node_id):
+		return "OWNED"
+	for required_id in row.get("requires_all", []):
+		if not purchased_ids.has(String(required_id)):
+			return "LOCKED"
+	var requires_any: Array = row.get("requires_any", [])
+	if not requires_any.is_empty():
+		var has_any := false
+		for required_id in requires_any:
+			has_any = has_any or purchased_ids.has(String(required_id))
+		if not has_any:
+			return "LOCKED"
+	return "AVAILABLE" if _can_afford(row.get("costs", {})) else "NEED MATERIAL"
+
+
+func _commit_mastery_purchase() -> void:
+	mastery_purchase_requested.emit(
+		StringName(_profiles[selected_index].id), _selected_mastery_id
+	)
+
+
+func _commit_respec() -> void:
+	mastery_respec_requested.emit(StringName(_profiles[selected_index].id))
+
+
+func _toggle_mode() -> void:
+	_mastery_open = not _mastery_open
+	_status_label.text = ""
+	_refresh()
+	_mode_button.grab_focus()
+
+
+func set_start_error(message: String) -> void:
+	_set_status({"ok": false, "message": message})
+	var snapshot := ProfileState.get_character_loadout_snapshot(_profiles[selected_index])
+	_start_button.disabled = not bool(snapshot.get("ok", false))
+	_start_button.grab_focus()
+
+
+func show_profile_command_result(result: Dictionary) -> void:
+	_set_status(result)
+	_refresh()
+
+
+func _begin_start() -> void:
+	if _start_button.disabled:
+		return
+	_start_button.disabled = true
+	_mode_button.disabled = true
+	for button in _character_buttons:
+		button.disabled = true
+	_status_label.text = "Starting run..."
+	_status_label.add_theme_color_override("font_color", Styles.TEXT_MUTED)
+	run_requested.emit(StringName(_profiles[selected_index].id))
 
 
 func _select_profile(profile_index: int) -> void:
 	selected_index = clampi(profile_index, 0, maxi(_profiles.size() - 1, 0))
-	_update_selection()
+	_selected_slot_items.clear()
+	_selected_mastery_id = &""
+	_status_label.text = ""
+	_refresh()
 
 
-func _update_selection() -> void:
-	for profile_index in _card_buttons.size():
-		var is_selected := profile_index == selected_index
-		Styles.apply_character_card(
-			_card_buttons[profile_index],
-			_profiles[profile_index].visual_color,
-			is_selected
-		)
-		_selected_labels[profile_index].visible = is_selected
+func _set_status(result: Dictionary) -> void:
+	var persisted := bool(result.get("persisted", true))
+	_status_label.text = (
+		String(result.get("message", "Unable to update profile."))
+		if persisted
+		else "Change is active in memory. Save failed."
+	)
+	_status_label.add_theme_color_override(
+		"font_color",
+		Styles.MOSS if bool(result.get("ok", false)) and persisted else Styles.CORAL
+	)
+	_retry_button.visible = not persisted
+
+
+func _update_wallet() -> void:
+	var materials := ProfileState.get_materials()
+	_wallet_label.text = "SCRAP %d   THREAD %d   RESIDUE %d   CORE %d" % [
+		int(materials.get("rusted_scrap", 0)),
+		int(materials.get("sky_thread", 0)),
+		int(materials.get("slime_residue", 0)),
+		int(materials.get("boss_core", 0)),
+	]
+
+
+func _can_afford(costs: Dictionary) -> bool:
+	if costs.is_empty():
+		return false
+	for material_id in costs:
+		if ProfileState.get_material_count(String(material_id)) < int(costs[material_id]):
+			return false
+	return true
+
+
+func _cost_text(costs: Dictionary, compact: bool) -> String:
+	if costs.is_empty():
+		return "Unavailable"
+	var parts: Array[String] = []
+	var ids := costs.keys()
+	ids.sort()
+	for material_id in ids:
+		var name := String(material_id)
+		if compact:
+			name = {"rusted_scrap": "S", "sky_thread": "T", "slime_residue": "R", "boss_core": "C"}.get(name, name)
+		else:
+			name = name.replace("_", " ").capitalize()
+		parts.append("%d %s" % [int(costs[material_id]), name])
+	return " + ".join(parts)
+
+
+func _section_label(text: String) -> Label:
+	var label := Label.new()
+	label.text = text
+	Styles.configure_label(label, 14, Styles.TEXT_MUTED)
+	return label
+
+
+func _clear_container(container: Node) -> void:
+	for child in container.get_children():
+		container.remove_child(child)
+		child.queue_free()

@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="MasteryNodeDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/progression/MasteryNodeDefinition.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/progression/ProgressionBehaviorEffect.gd" id="2"]
+
+[sub_resource type="Resource" id="PerfectExit"]
+script = ExtResource("2")
+effect_type = &"no_damage_death_mark_resets_smoke_step"
+source_id = &"assassin_perfect_exit"
+source_scope = "mastery"
+
+[resource]
+script = ExtResource("1")
+id = &"assassin_perfect_exit"
+display_name = "Perfect Exit"
+mechanical_description = "Death Mark detonation resets Smoke Step if no damage was taken since marking."
+content_version = 1
+character_id = &"assassin"
+depth = &"capstone"
+requires_all = Array[StringName]([&"assassin_lingering_smoke", &"assassin_opportunist"])
+costs = {
+"slime_residue": 10,
+"boss_core": 1
+}
+behavior_effects = Array[ExtResource("2")]([SubResource("PerfectExit")])
