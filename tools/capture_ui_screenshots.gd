@@ -93,9 +93,48 @@ var _captures: Array[Dictionary] = [
 		"state": "production_charge_lane",
 	},
 	{
+		"name": "desktop_ruin_exit_safe",
+		"size": Vector2i(1280, 720),
+		"state": "stage_room",
+		"stage_index": 0,
+		"room_id": &"lr_exit_ascent",
+		"local_position": Vector2(180.0, 650.0),
+	},
+	{
+		"name": "desktop_flooded_pump_safe",
+		"size": Vector2i(1280, 720),
+		"state": "stage_room",
+		"stage_index": 1,
+		"room_id": &"fw_pump_gallery",
+		"local_position": Vector2(80.0, 620.0),
+	},
+	{
+		"name": "desktop_sanctum_fracture_safe",
+		"size": Vector2i(1280, 720),
+		"state": "stage_room",
+		"stage_index": 2,
+		"room_id": &"bs_fractured_gallery",
+		"local_position": Vector2(80.0, 620.0),
+	},
+	{
 		"name": "desktop_level_reward",
 		"size": Vector2i(1280, 720),
 		"state": "level_reward",
+	},
+	{
+		"name": "desktop_treasure_choice",
+		"size": Vector2i(1280, 720),
+		"state": "treasure_choice",
+	},
+	{
+		"name": "compact_treasure_choice",
+		"size": Vector2i(960, 540),
+		"state": "treasure_choice",
+	},
+	{
+		"name": "hd_treasure_choice",
+		"size": Vector2i(1920, 1080),
+		"state": "treasure_choice",
 	},
 	{
 		"name": "compact_level_reward",
@@ -261,6 +300,10 @@ func _capture(capture: Dictionary) -> void:
 				stage.player.global_position = Vector2(1800.0, 600.0)
 				if stage.player.camera != null:
 					stage.player.camera.reset_smoothing()
+		"stage_room":
+			await _load_stage_room_capture(capture, run_director, game, run_state)
+		"treasure_choice":
+			await _load_treasure_choice_capture(run_director, game, run_state)
 		"level_reward":
 			run_director.start_production_run(0)
 			RewardService.apply(
@@ -424,3 +467,64 @@ func _load_flooded_capture(
 	stage.player.global_position = target_host.global_position + local_position
 	if stage.player.camera != null:
 		stage.player.camera.reset_smoothing()
+
+
+func _load_stage_room_capture(
+	capture: Dictionary,
+	run_director: Node,
+	game: Node,
+	run_state: Node
+) -> void:
+	run_director.start_production_run(0)
+	await process_frame
+	game.unload_current_stage()
+	var stage: Variant
+	var target_host: RoomTemplateHost
+	var accepted_seed := -1
+	for seed in 128:
+		run_state.start_new_run(0, seed)
+		run_state.current_stage_index = int(capture["stage_index"])
+		stage = game.load_stage(PRODUCTION_STAGE)
+		await process_frame
+		await physics_frame
+		if stage != null and stage.is_setup_complete():
+			target_host = stage.get_room_host(StringName(capture["room_id"]))
+			if target_host != null:
+				accepted_seed = seed
+				break
+		game.unload_current_stage()
+	if stage == null or target_host == null or stage.player == null:
+		push_error("Room capture target %s is unavailable." % capture["room_id"])
+		_failed = true
+		return
+	stage.player.set_physics_process(false)
+	stage.player.global_position = target_host.global_position + Vector2(capture["local_position"])
+	stage.set_meta("capture_seed", accepted_seed)
+	if stage.player.camera != null:
+		stage.player.camera.reset_smoothing()
+
+
+func _load_treasure_choice_capture(
+	run_director: Node,
+	game: Node,
+	run_state: Node
+) -> void:
+	run_director.start_production_run(0)
+	await process_frame
+	run_state.set("_card_stacks", {"treasure_instinct": 1})
+	var stage: Variant = game.current_stage
+	var chest: ChestInteractable
+	if stage != null:
+		for reward in stage.get_spawned_rewards():
+			if reward is ChestInteractable and bool(reward.get_claim_context().get("optional_route", false)):
+				chest = reward
+				break
+	if chest == null or stage.player == null:
+		push_error("Treasure choice capture has no production optional chest.")
+		_failed = true
+		return
+	chest.interact(stage.player)
+	await process_frame
+	if run_director.current_screen == null:
+		push_error("Treasure choice capture could not mount its modal.")
+		_failed = true

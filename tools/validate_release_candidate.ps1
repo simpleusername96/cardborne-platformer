@@ -10,8 +10,14 @@ $repoRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot "..")).Path
 $godot = Join-Path $PSScriptRoot "godot.ps1"
 $releaseMatrix = @(
   "validate_design_catalogs.gd",
+  "validate_room_templates.gd",
+  "validate_flooded_works_rooms.gd",
+  "validate_broken_sanctum_rooms.gd",
   "validate_complete_run_balance.gd",
+  "validate_card_reward.gd",
+  "validate_remaining_cards_runtime.gd",
   "validate_stage_generation_properties.gd",
+  "validate_flooded_generation.gd",
   "validate_roster_stage_matrix.gd",
   "validate_profile_persistence.gd",
   "validate_profile_run_integration.gd",
@@ -67,10 +73,10 @@ function Write-ValidationOutput {
 
 Push-Location -LiteralPath $repoRoot
 try {
-	if (-not $SkipImport) {
-		Write-Output "[release] Godot import"
-		$importOutput = @(& $godot --path $repoRoot --headless --import 2>&1)
-    $importFailed = $LASTEXITCODE -ne 0 -or ($importOutput -match "SCRIPT ERROR:")
+  if (-not $SkipImport) {
+    Write-Output "[release] Godot import"
+    $importOutput = @(& $godot --path $repoRoot --headless --import 2>&1)
+    $importFailed = $LASTEXITCODE -ne 0 -or ($importOutput -match "(SCRIPT ERROR:|ERROR:)")
     Write-ValidationOutput -Lines $importOutput -Failed $importFailed
     if ($importFailed) {
       throw "Godot import failed."
@@ -86,7 +92,7 @@ try {
     Write-Output "[release] $scriptName"
     $output = @(& $godot --path $repoRoot --headless --script "res://tools/$scriptName" 2>&1)
     $exitCode = $LASTEXITCODE
-    $failed = $exitCode -ne 0 -or ($output -match "SCRIPT ERROR:")
+    $failed = $exitCode -ne 0 -or ($output -match "(SCRIPT ERROR:|ERROR:)")
     Write-ValidationOutput -Lines $output -Failed $failed
     if ($failed) {
       throw "Release validator failed: $scriptName"

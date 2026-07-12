@@ -70,7 +70,14 @@ func _check_profile_attack(
 		world.queue_free()
 		await process_frame
 		return
-	await _wait_for_attack_activation(combat, hitbox, world, activation_mode)
+	if not await _wait_for_attack_activation(combat, hitbox, world, activation_mode):
+		_failures.append(
+			"Profile %d did not reach %s activation before timeout."
+			% [profile_index, activation_mode]
+		)
+		world.queue_free()
+		await process_frame
+		return
 	if str(combat.current_attack.motion_style) != expected_style:
 		_failures.append(
 			"Profile %d expected style %s, got %s."
@@ -115,7 +122,7 @@ func _wait_for_attack_activation(
 	hitbox: Hitbox,
 	world: Node,
 	activation_mode: StringName
-) -> void:
+) -> bool:
 	var timing := combat.get_effective_timing(combat.current_attack)
 	var timeout := float(timing.get("startup", 0.0)) + 0.2
 	var elapsed := 0.0
@@ -123,15 +130,16 @@ func _wait_for_attack_activation(
 		match activation_mode:
 			&"projectile":
 				if _count_player_projectiles(world) > 0:
-					return
+					return true
 			&"shared_hitbox":
 				if hitbox != null and hitbox.active:
-					return
+					return true
 			&"character_runtime":
 				if String(combat.get_state_snapshot().get("phase", "")) != "startup":
-					return
+					return true
 		await physics_frame
 		elapsed += 1.0 / float(Engine.physics_ticks_per_second)
+	return false
 
 
 func _count_player_projectiles(node: Node) -> int:

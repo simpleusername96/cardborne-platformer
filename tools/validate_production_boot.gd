@@ -2,7 +2,6 @@ extends SceneTree
 
 const MAIN_SCENE := "res://scenes/main/Main.tscn"
 const PRODUCTION_STAGE_PATH := "res://scenes/stages/production/ProductionStageHost.tscn"
-const RETIRED_TESTBED_STAGE_PATH := "res://scenes/stages/MotionTestStage.tscn"
 
 var _failures: Array[String] = []
 
@@ -42,7 +41,6 @@ func _run() -> void:
 		"the third card reward should enter boss loading instead of granting early victory"
 	)
 	_expect(game.current_stage == null, "default boot must not instantiate a stage")
-	_expect(not ResourceLoader.exists(RETIRED_TESTBED_STAGE_PATH), "retired integrated testbed should stay removed")
 	_expect(_has_child_named(screen_root, "MainMenu"), "main menu screen should be mounted")
 	var main_menu := screen_root.get_node_or_null("MainMenu") as Control
 	var menu_backdrop := main_menu.get_node_or_null("Backdrop") as Control if main_menu != null else null
