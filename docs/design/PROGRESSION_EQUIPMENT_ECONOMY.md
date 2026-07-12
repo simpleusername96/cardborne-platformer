@@ -328,6 +328,7 @@ afford one choice despite normal combat participation.
 - `docs/product/2d_platform_action_card_game_prd.md`
 - `docs/design/PLAYER_CHARACTER_SYSTEMS.md`
 - `docs/design/ENEMIES_TRAPS_GIMMICKS.md`
-- `data/design/first_slice/card_catalog.json`
-- `data/design/first_slice/equipment_catalog.json`
-- `data/design/first_slice/economy_tables.json`
+- `docs/data/RUNTIME_CATALOG_INDEX.md`
+- `data/cards/card_catalog.tres`
+- `data/equipment/equipment_catalog.tres`
+- `data/rewards/reward_catalog.tres`

@@ -3,7 +3,6 @@ extends SceneTree
 const PROFILE_PATH := "res://data/generation/flooded_works_profile.tres"
 const CATALOG_PATH := "res://data/generation/flooded_works_room_catalog.tres"
 const CHARACTER_CATALOG_PATH := "res://data/characters/character_catalog.tres"
-const RULES_PATH := "res://data/design/first_slice/procedural_region_rules.json"
 const ROOM_DATA_DIR := "res://data/rooms/flooded_works"
 const MIN_CRITICAL_LANDING := 220.0
 const MIN_OPTIONAL_LANDING := 180.0
@@ -61,7 +60,10 @@ func _run() -> void:
 
 	_validate_profile(profile)
 	_validate_catalog(catalog)
-	_validate_rules(profile)
+	_expect(
+		StageGenerationService.MAX_RANDOM_ATTEMPTS == 3,
+		"Shared generation should retain three random attempts."
+	)
 	var shared_limits := MovementMetrics.route_limits_for_profiles(characters.profiles)
 	_expect(not shared_limits.is_empty(), "Shared base-character movement limits should resolve.")
 	for room_data in catalog.rooms:
@@ -109,67 +111,6 @@ func _validate_catalog(catalog: RoomCatalog) -> void:
 		if file_name.ends_with(".tres"):
 			file_count += 1
 	_expect(file_count == EXPECTED_ROOM_IDS.size(), "Every Flooded Works room should have one data file.")
-
-
-func _validate_rules(profile: StageProfile) -> void:
-	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(RULES_PATH))
-	_expect(parsed is Dictionary, "Procedural region rules should parse as a dictionary.")
-	if not parsed is Dictionary:
-		return
-	var rules := parsed as Dictionary
-	var generation_model: Variant = rules.get("generation_model", {})
-	_expect(generation_model is Dictionary, "Generation model rules should exist.")
-	if generation_model is Dictionary:
-		_expect(
-			int(generation_model.get("max_retries", -1)) == 3,
-			"Shared generation rules should retain three retries."
-		)
-
-	var rule_profile: Dictionary = {}
-	var raw_profiles: Variant = rules.get("stage_profiles", [])
-	if raw_profiles is Array:
-		for raw_profile in raw_profiles:
-			if raw_profile is Dictionary and str(raw_profile.get("id", "")) == "flooded_works":
-				rule_profile = raw_profile
-				break
-	_expect(not rule_profile.is_empty(), "Procedural rules should define Flooded Works.")
-	if rule_profile.is_empty():
-		return
-	_expect(int(rule_profile.get("required_room_count", 0)) == 7, "Rules should require seven rooms.")
-	_expect(
-		_to_string_names(rule_profile.get("required_roles", [])) == EXPECTED_ROLES,
-		"Profile roles should match procedural rules."
-	)
-	var optional_range := _to_vector2i(rule_profile.get("optional_branch_count", []))
-	_expect(
-		profile.optional_branch_count.x >= optional_range.x
-		and profile.optional_branch_count.y <= optional_range.y,
-		"One optional branch should stay inside the shared 1-2 allowance."
-	)
-	_expect(
-		_to_vector2i(rule_profile.get("encounter_budget_per_room", []))
-		== profile.encounter_budget_per_combat_room,
-		"Combat budget should match procedural rules."
-	)
-	_expect(
-		_to_vector2i(rule_profile.get("hazard_budget_per_room", []))
-		== profile.hazard_budget_per_room,
-		"Hazard budget should match procedural rules."
-	)
-	_expect(
-		_same_ids(
-			profile.eligible_enemy_archetypes,
-			_to_string_names(rule_profile.get("eligible_enemy_archetypes", []))
-		),
-		"Enemy eligibility should match procedural rules."
-	)
-	_expect(
-		_same_ids(
-			profile.eligible_hazards,
-			_to_string_names(rule_profile.get("eligible_hazards", []))
-		),
-		"Hazard eligibility should match procedural rules."
-	)
 
 
 func _validate_room(data: RoomTemplateData, shared_limits: Dictionary) -> void:
@@ -803,20 +744,6 @@ func _same_ids(left: Array[StringName], right: Array[StringName]) -> bool:
 	left_copy.sort()
 	right_copy.sort()
 	return left_copy == right_copy
-
-
-func _to_string_names(value: Variant) -> Array[StringName]:
-	var names: Array[StringName] = []
-	if value is Array:
-		for item in value:
-			names.append(StringName(str(item)))
-	return names
-
-
-func _to_vector2i(value: Variant) -> Vector2i:
-	if value is Array and value.size() == 2:
-		return Vector2i(int(value[0]), int(value[1]))
-	return Vector2i(-1, -1)
 
 
 func _append_errors(errors: PackedStringArray, label: String) -> void:

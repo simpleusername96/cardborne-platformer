@@ -205,8 +205,9 @@ The first complete run ships with:
 - 4 Giant Slime King pattern families.
 
 Content IDs, roles, constraints, and values live in the linked design specs and
-`data/design/first_slice/` catalogs. A catalog entry is not complete until it is
-reachable in the player-facing loop and has focused validation.
+typed runtime catalogs indexed by `docs/data/RUNTIME_CATALOG_INDEX.md`. A catalog
+entry is not complete until it is reachable in the player-facing loop and has
+focused validation.
 
 ## Random Generation Contract
 

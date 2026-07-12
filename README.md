@@ -12,7 +12,7 @@ checklist is `.agent/execplans/2026-07-12-actual-game-production-roadmap.md`.
 
 - Godot 4.7 stable or compatible Godot 4.x build.
 - GDScript only for the MVP; the .NET/C# Godot build is not required.
-- Desktop keyboard controls are the initial target.
+- Desktop keyboard and fixed-layout gamepad controls are supported.
 
 ## Local Godot
 
@@ -51,10 +51,11 @@ Follow the active roadmap in milestone-sized batches. The production sequence is
 3. Add persistence, equipment, mastery, Stage 2, and the complete Warrior kit.
 4. Complete Archer and Assassin, Stage 3, the boss, and full-run polish.
 
-## Design Data
+## Runtime Catalogs
 
-Implementation seed catalogs live in `data/design/first_slice/`. Validate their
-counts and cross-references with:
+Typed Godot Resources under `data/` own gameplay IDs and accepted values. See
+`docs/data/RUNTIME_CATALOG_INDEX.md` and validate their definitions and
+cross-references with:
 
 ```powershell
 .\tools\godot.ps1 --path . --headless --script res://tools/validate_design_catalogs.gd

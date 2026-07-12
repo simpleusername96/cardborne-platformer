@@ -176,10 +176,9 @@ EnemyCatalog.resolve(archetype_id, variant_id, stage_id)
 
 ### Content Catalogs
 
-Each catalog exposes `get(id)`, `has(id)`, `all_eligible(tags)`, and
-`validate_catalog()`. Runtime does not read preimplementation JSON beside typed
-Resources. JSON under `data/design/first_slice/` is migration input until the
-matching typed catalog exists, then should be retired in the same milestone.
+Each catalog exposes focused lookup, eligibility, and validation APIs. Runtime and
+tests read typed Resources only; retired preimplementation JSON remains available
+through Git history, not as a parallel authority.
 
 ### Stage Pipeline
 

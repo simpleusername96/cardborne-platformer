@@ -35,7 +35,7 @@ Follow-up code-level inspection is recorded in `external_codebase_deep_dive_2026
 - `docs/design/PROCEDURAL_REGION_GENERATION.md`
 - `docs/design/testbed-plan/FEATURE_PRIORITY.md`
 - `docs/references/GENRE_REFERENCES_AND_ASSETS.md`
-- Current Godot implementation under `scripts/`, `scenes/`, `data/characters/`, and `data/design/first_slice/`
+- Current Godot implementation under `scripts/`, `scenes/`, and typed catalogs under `data/`
 
 ### Godot Foundation And Template Sources
 

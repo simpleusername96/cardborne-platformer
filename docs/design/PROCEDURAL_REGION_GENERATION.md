@@ -265,4 +265,6 @@ Reject a Stage Plan when any required check fails:
 - `docs/design/MAP_AUTHORING_PIPELINE_CONTRACT.md`
 - `docs/design/ENEMIES_TRAPS_GIMMICKS.md`
 - `scripts/player/MovementMetrics.gd`
-- `data/design/first_slice/procedural_region_rules.json`
+- `docs/data/RUNTIME_CATALOG_INDEX.md`
+- `data/generation/`
+- `data/rooms/`

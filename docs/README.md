@@ -19,7 +19,7 @@ game specifications.
 
 ## Supporting Material
 
-- `data/FIRST_SLICE_DATA_README.md` indexes implementation seed catalogs.
+- `data/RUNTIME_CATALOG_INDEX.md` maps gameplay domains to typed runtime owners.
 - `research/third_party_adoption_ledger.md` is the active external adoption record.
 - Dated surveys/deep dives are archived evidence; `references/` contains advisory
   candidates. Neither is product authority.

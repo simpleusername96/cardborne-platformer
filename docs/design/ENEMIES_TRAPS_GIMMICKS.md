@@ -410,4 +410,6 @@ timing room exist.
 - `docs/product/2d_platform_action_card_game_prd.md`
 - `docs/design/PROCEDURAL_REGION_GENERATION.md`
 - `docs/design/MAP_AUTHORING_PIPELINE_CONTRACT.md`
-- `data/design/first_slice/enemy_trap_gimmick_catalog.json`
+- `docs/data/RUNTIME_CATALOG_INDEX.md`
+- `data/enemies/enemy_catalog.tres`
+- `data/hazards/hazard_catalog.tres`
