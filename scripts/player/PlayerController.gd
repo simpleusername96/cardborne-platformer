@@ -15,6 +15,7 @@ signal dash_completed(start_position: Vector2, end_position: Vector2)
 @onready var hurtbox_collision: CollisionShape2D = $Hurtbox/CollisionShape2D
 @onready var combat_controller: PlayerCombatController = $CombatController
 @onready var camera: Camera2D = get_node_or_null("Camera2D")
+@onready var visual_overlay: PlayerVisualOverlay = $Visual/PlayerVisualOverlay
 
 var stats: Dictionary = {}
 var facing: int = 1
@@ -413,6 +414,7 @@ func _apply_run_state() -> void:
 	var profile := RunState.selected_profile
 	if profile != null:
 		body_polygon.color = profile.visual_color
+		visual_overlay.configure(StringName(profile.id), profile.visual_color)
 	combat_controller.configure(
 		profile,
 		stats,
@@ -424,6 +426,7 @@ func _apply_run_state() -> void:
 
 func _on_selected_profile_changed(_profile_id: String, _display_name: String, color: Color) -> void:
 	body_polygon.color = color
+	visual_overlay.configure(StringName(_profile_id), color)
 	combat_controller.configure(
 		RunState.selected_profile,
 		stats,

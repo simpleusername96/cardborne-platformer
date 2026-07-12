@@ -41,6 +41,7 @@ var _delayed_damage: Dictionary = {}
 
 var _visual: Polygon2D
 var _base_visual_color: Color = Color(0.84, 0.34, 0.28, 1.0)
+var _detail_overlay: EnemyDetailOverlay
 
 
 func _ready() -> void:
@@ -55,6 +56,7 @@ func _ready() -> void:
 	_ensure_contact_hitbox()
 	if _visual != null:
 		_base_visual_color = _visual.color
+	_ensure_detail_overlay()
 
 
 func receive_damage(damage_info: DamageInfo) -> void:
@@ -179,6 +181,16 @@ func _ensure_contact_hitbox() -> void:
 	rect.size = Vector2(40.0, 48.0)
 	shape.shape = rect
 	hitbox.add_child(shape)
+
+
+func _ensure_detail_overlay() -> void:
+	_detail_overlay = get_node_or_null("EnemyDetailOverlay") as EnemyDetailOverlay
+	if _detail_overlay == null:
+		_detail_overlay = EnemyDetailOverlay.new()
+		_detail_overlay.name = "EnemyDetailOverlay"
+		_detail_overlay.z_index = 4
+		add_child(_detail_overlay)
+	_detail_overlay.configure(self, archetype_id, variant_id, stage_id)
 
 
 func reset_enemy() -> void:

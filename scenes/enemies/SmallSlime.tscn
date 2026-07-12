@@ -6,6 +6,9 @@
 script = ExtResource("1")
 max_health = 2
 contact_damage = 1
+archetype_id = &"small_slime"
+variant_id = &"small_slime_sanctum"
+stage_id = &"broken_sanctum"
 auto_reset_on_defeat = false
 defeat_below_y = 780.0
 
