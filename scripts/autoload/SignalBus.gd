@@ -17,6 +17,8 @@ signal reward_preview_replacement_requested(request: Dictionary)
 signal player_died
 signal stage_started(stage_id: String, stage_display_name: String)
 signal stage_cleared(stage_id: String)
+signal boss_defeated(reward_table_id: StringName)
+signal run_settled(settlement: Dictionary)
 signal interaction_prompt_changed(prompt_text: String, active: bool)
 signal settings_visibility_changed(is_visible: bool)
 signal input_bindings_changed

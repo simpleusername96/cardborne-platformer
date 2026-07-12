@@ -7,6 +7,7 @@ const REWARD_CATALOG_PATH := "res://data/rewards/reward_catalog.tres"
 const PROGRESSION_CATALOG_PATH := "res://data/progression/run_progression_catalog.tres"
 const CARD_CATALOG_PATH := "res://data/cards/card_catalog.tres"
 const FORGE_CATALOG_PATH := "res://data/forge/forge_catalog.tres"
+const NORMAL_STAGE_COUNT := RunPhase.NORMAL_STAGE_COUNT
 const CARD_REROLL_COST := 12
 const REST_HEAL_COST := 8
 const REST_HEAL_AMOUNT := 2
@@ -67,6 +68,7 @@ var _consumable_salvage_remaining: int = 0
 var current_consumable_id: StringName = &"small_potion"
 var consumable_charges: int = 1
 var _catalogs_valid: bool = false
+var _settlement_service := RunSettlementService.new()
 
 
 func _ready() -> void:
@@ -154,6 +156,7 @@ func start_new_run(profile_index: int = -1, requested_seed: int = -1) -> bool:
 	var profile_loadout := ProfileState.get_loadout(candidate_profile.id)
 	current_consumable_id = StringName(profile_loadout.get("consumable", "small_potion"))
 	consumable_charges = 1
+	_settlement_service.reset(ProfileState)
 	_publish_state()
 	SignalBus.run_started.emit()
 	return true
@@ -196,6 +199,7 @@ func get_effective_build_snapshot() -> PlayerBuildSnapshot:
 
 
 func get_run_snapshot() -> RunSnapshot:
+	var terminal_settlement := get_terminal_settlement_snapshot()
 	return RunSnapshot.new({
 		"seed": run_seed,
 		"profile_id": selected_profile.id if selected_profile != null else "",
@@ -216,7 +220,45 @@ func get_run_snapshot() -> RunSnapshot:
 		"consumable_id": String(current_consumable_id),
 		"consumable_charges": consumable_charges,
 		"effective_stats": get_effective_stats(),
+		"terminal_settlement": terminal_settlement,
 	})
+
+
+func has_terminal_settlement() -> bool:
+	return _settlement_service.has_settlement()
+
+
+func get_terminal_settlement() -> RunSettlementSnapshot:
+	return _settlement_service.get_snapshot()
+
+
+func get_terminal_settlement_snapshot() -> Dictionary:
+	var settlement := get_terminal_settlement()
+	return settlement.to_dictionary() if settlement != null else {}
+
+
+func settle_run_death(reason: StringName = &"player_defeated") -> Dictionary:
+	var result := _settlement_service.settle_death(self, ProfileState, reason)
+	_publish_terminal_settlement(result)
+	return result
+
+
+func settle_run_victory(
+	reward_table_id: StringName = RunSettlementService.DEFAULT_BOSS_REWARD_TABLE_ID
+) -> Dictionary:
+	var result := _settlement_service.settle_victory(self, ProfileState, reward_table_id)
+	_publish_terminal_settlement(result)
+	return result
+
+
+func end_run_death(reason: StringName = &"player_defeated") -> Dictionary:
+	return settle_run_death(reason)
+
+
+func end_run_clear(
+	reward_table_id: StringName = RunSettlementService.DEFAULT_BOSS_REWARD_TABLE_ID
+) -> Dictionary:
+	return settle_run_victory(reward_table_id)
 
 
 func get_unsettled_materials() -> Dictionary:
@@ -233,6 +275,14 @@ func grant_unsettled_material(material_id: String, amount: int) -> bool:
 func apply_reward_transaction(transaction: RewardTransaction) -> RewardResult:
 	if transaction == null or transaction.id == &"":
 		return RewardResult.new(false, false, &"", {}, "Reward transaction ID is missing.")
+	if has_terminal_settlement():
+		return RewardResult.new(
+			false,
+			false,
+			transaction.id,
+			{},
+			"Run is already settled."
+		)
 	var transaction_key := String(transaction.id)
 	if _applied_reward_ids.has(transaction_key):
 		return RewardResult.new(
@@ -472,6 +522,12 @@ func spend_coins(amount: int) -> bool:
 
 
 func begin_stage_card_reward() -> Dictionary:
+	if (
+		has_terminal_settlement()
+		or current_stage_index < 0
+		or current_stage_index >= NORMAL_STAGE_COUNT
+	):
+		return {"ok": false, "message": "No normal-stage card reward is available."}
 	if card_catalog == null:
 		return {"ok": false, "message": "Card catalog is unavailable."}
 	if _card_reward_stage_index == current_stage_index:
@@ -622,7 +678,13 @@ func choose_card(card_id: StringName) -> Dictionary:
 
 
 func advance_stage_after_card_reward() -> bool:
-	if _card_reward_pending or _committed_card_id == &"":
+	if (
+		has_terminal_settlement()
+		or current_stage_index < 0
+		or current_stage_index >= NORMAL_STAGE_COUNT
+		or _card_reward_pending
+		or _committed_card_id == &""
+	):
 		return false
 	if _dash_tonic_active:
 		_dash_tonic_active = false
@@ -866,7 +928,7 @@ func _grant_xp_internal(amount: int) -> void:
 
 
 func damage_player(amount: int) -> void:
-	if amount <= 0 or current_health <= 0:
+	if has_terminal_settlement() or amount <= 0 or current_health <= 0:
 		return
 
 	current_health = maxi(current_health - amount, 0)
@@ -1103,3 +1165,13 @@ func _publish_state() -> void:
 
 func _publish_snapshot() -> void:
 	SignalBus.run_state_changed.emit(get_run_snapshot().to_dictionary())
+
+
+func _publish_terminal_settlement(result: Dictionary) -> void:
+	if not bool(result.get("ok", false)) or bool(result.get("duplicate", false)):
+		return
+	var settlement := result.get("settlement") as RunSettlementSnapshot
+	if settlement == null:
+		return
+	_publish_snapshot()
+	SignalBus.run_settled.emit(settlement.to_dictionary())

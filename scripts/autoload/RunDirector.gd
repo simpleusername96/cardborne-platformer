@@ -10,6 +10,9 @@ const LEVEL_REWARD_PATH := "res://scenes/ui/production/LevelReward.tscn"
 const CARD_REWARD_PATH := "res://scenes/ui/production/CardReward.tscn"
 const REST_FORGE_PATH := "res://scenes/ui/production/RestForge.tscn"
 const PRODUCTION_STAGE_PATH := "res://scenes/stages/production/ProductionStageHost.tscn"
+const BOSS_STAGE_PATH := "res://scenes/stages/boss/SlimeCourt.tscn"
+const BOSS_CLEAR_REWARD_TABLE_ID := RunSettlementService.DEFAULT_BOSS_REWARD_TABLE_ID
+const NORMAL_STAGE_COUNT := RunPhase.NORMAL_STAGE_COUNT
 
 var phase: RunPhase.Value = RunPhase.Value.BOOT
 var screen_root: Control
@@ -23,6 +26,7 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	SignalBus.stage_cleared.connect(_on_stage_cleared)
 	SignalBus.player_died.connect(_on_player_died)
+	SignalBus.boss_defeated.connect(_on_boss_defeated)
 
 
 func register_ui_roots(p_screen_root: Control, p_hud_root: Control) -> void:
@@ -44,7 +48,16 @@ func show_main_menu() -> void:
 		RunPhase.Value.RUN_DEATH,
 		RunPhase.Value.RUN_CLEAR,
 	]:
-		_set_phase(RunPhase.Value.RUN_DEATH)
+		var settlement: Dictionary = RunState.settle_run_death(&"run_abandoned")
+		var terminal := settlement.get("settlement") as RunSettlementSnapshot
+		if (
+			not bool(settlement.get("ok", false))
+			or terminal == null
+			or terminal.get_outcome() != RunSettlementSnapshot.OUTCOME_DEATH
+			or not _set_phase(RunPhase.Value.RUN_DEATH)
+		):
+			push_error("Active run could not settle before returning to the main menu.")
+			return
 	_prepare_non_gameplay_phase()
 	var menu := _show_screen(MAIN_MENU_PATH)
 	if menu == null:
@@ -94,44 +107,129 @@ func start_production_run(profile_reference: Variant) -> bool:
 
 
 func _load_production_stage() -> bool:
+	var stage_path := normal_stage_path_for_index(RunState.current_stage_index)
+	if stage_path.is_empty():
+		_fail_active_run(
+			"Refused to load normal stage index %d." % RunState.current_stage_index,
+			&"invalid_stage_index"
+		)
+		return false
 	if not _set_phase(RunPhase.Value.STAGE_LOADING):
 		return false
 	_clear_screen()
 	_clear_hud()
 	current_hud = _instantiate_control(PRODUCTION_HUD_PATH)
 	if current_hud == null:
-		show_main_menu()
+		_fail_active_run("Gameplay HUD failed to initialize.", &"hud_initialization_failed")
 		return false
 	hud_root.add_child(current_hud)
 
-	var loaded_stage := Game.load_stage(PRODUCTION_STAGE_PATH)
+	var loaded_stage := Game.load_stage(stage_path)
 	if loaded_stage == null:
-		show_main_menu()
+		_fail_active_run("Normal stage failed to load.", &"stage_load_failed")
 		return false
 	if (
 		loaded_stage.has_method("is_setup_complete")
 		and not bool(loaded_stage.call("is_setup_complete"))
 	):
 		Game.unload_current_stage()
-		SignalBus.status_message_changed.emit("Stage generation failed")
-		show_main_menu()
+		_fail_active_run("Stage generation failed.", &"stage_initialization_failed")
 		return false
-	_set_phase(RunPhase.Value.STAGE_ACTIVE)
+	if not _set_phase(RunPhase.Value.STAGE_ACTIVE):
+		Game.unload_current_stage()
+		_fail_active_run("Normal stage could not become active.", &"stage_activation_failed")
+		return false
 	return true
 
 
-func show_run_result(victory: bool) -> void:
-	var terminal_phase := RunPhase.Value.RUN_CLEAR if victory else RunPhase.Value.RUN_DEATH
+func _load_boss_stage() -> bool:
+	var stage_path := stage_path_for_index(RunState.current_stage_index)
+	if RunState.current_stage_index != NORMAL_STAGE_COUNT or stage_path != BOSS_STAGE_PATH:
+		_fail_active_run(
+			"Boss loading requires all three normal-stage rewards.",
+			&"invalid_boss_boundary"
+		)
+		return false
+	if not _set_phase(RunPhase.Value.BOSS_LOADING):
+		return false
+	_clear_screen()
+	_clear_hud()
+	current_hud = _instantiate_control(PRODUCTION_HUD_PATH)
+	if current_hud == null:
+		_fail_active_run("Boss HUD failed to initialize.", &"boss_hud_initialization_failed")
+		return false
+	hud_root.add_child(current_hud)
+
+	var loaded_stage := Game.load_stage(stage_path)
+	if loaded_stage == null:
+		_fail_active_run("Slime Court failed to load.", &"boss_load_failed")
+		return false
+	if (
+		loaded_stage.has_method("is_setup_complete")
+		and not bool(loaded_stage.call("is_setup_complete"))
+	):
+		Game.unload_current_stage()
+		_fail_active_run("Slime Court failed to initialize.", &"boss_initialization_failed")
+		return false
+	if not _set_phase(RunPhase.Value.BOSS_ACTIVE):
+		Game.unload_current_stage()
+		_fail_active_run("Boss could not become active.", &"boss_activation_failed")
+		return false
+	return true
+
+
+func show_run_result(
+	victory: bool,
+	terminal_reason: StringName = &"player_defeated",
+	boss_reward_table_id: StringName = BOSS_CLEAR_REWARD_TABLE_ID
+) -> void:
+	if victory:
+		_settle_boss_victory(boss_reward_table_id)
+		return
 	if phase not in [
+		RunPhase.Value.STAGE_LOADING,
 		RunPhase.Value.STAGE_ACTIVE,
 		RunPhase.Value.LEVEL_REWARD,
 		RunPhase.Value.STAGE_CARD_REWARD,
 		RunPhase.Value.REST_FORGE,
+		RunPhase.Value.BOSS_LOADING,
 		RunPhase.Value.BOSS_ACTIVE,
 	]:
 		return
-	if not _set_phase(terminal_phase):
+	var settlement: Dictionary = RunState.settle_run_death(terminal_reason)
+	if not bool(settlement.get("ok", false)):
+		push_error("Run death settlement failed: %s" % settlement.get("message", "Unknown error."))
 		return
+	var terminal := settlement.get("settlement") as RunSettlementSnapshot
+	if terminal == null or terminal.get_outcome() != RunSettlementSnapshot.OUTCOME_DEATH:
+		return
+	if not _set_phase(RunPhase.Value.RUN_DEATH):
+		return
+	_present_run_result(false)
+
+
+func _settle_boss_victory(reward_table_id: StringName) -> bool:
+	# Victory is legal only after the authored boss reports defeat during active play.
+	if phase != RunPhase.Value.BOSS_ACTIVE:
+		return false
+	var settlement: Dictionary = RunState.settle_run_victory(reward_table_id)
+	if not bool(settlement.get("ok", false)):
+		_fail_active_run(
+			"Boss victory settlement failed: %s"
+			% settlement.get("message", "Unknown error."),
+			&"boss_settlement_failed"
+		)
+		return false
+	var terminal := settlement.get("settlement") as RunSettlementSnapshot
+	if terminal == null or not terminal.is_victory():
+		return false
+	if not _set_phase(RunPhase.Value.RUN_CLEAR):
+		return false
+	_present_run_result(true)
+	return true
+
+
+func _present_run_result(victory: bool) -> void:
 	Game.unload_current_stage()
 	_clear_hud()
 	var result := _show_screen(RUN_RESULT_PATH)
@@ -144,6 +242,22 @@ func show_run_result(victory: bool) -> void:
 	result.call(&"configure", victory, profile_name)
 	result.connect(&"menu_requested", show_main_menu)
 	result.connect(&"retry_requested", func() -> void: start_production_run(_last_profile_id))
+
+
+func _fail_active_run(message: String, reason: StringName) -> void:
+	push_error(message)
+	SignalBus.status_message_changed.emit(message)
+	show_run_result(false, reason)
+
+
+func normal_stage_path_for_index(stage_index: int) -> String:
+	return PRODUCTION_STAGE_PATH if stage_index >= 0 and stage_index < NORMAL_STAGE_COUNT else ""
+
+
+func stage_path_for_index(stage_index: int) -> String:
+	if stage_index == NORMAL_STAGE_COUNT:
+		return BOSS_STAGE_PATH
+	return normal_stage_path_for_index(stage_index)
 
 
 func get_phase_name() -> String:
@@ -224,8 +338,23 @@ func _on_stage_cleared(stage_id: String) -> void:
 
 
 func _on_player_died() -> void:
-	if phase in [RunPhase.Value.STAGE_LOADING, RunPhase.Value.STAGE_ACTIVE, RunPhase.Value.BOSS_ACTIVE]:
+	if phase in [
+		RunPhase.Value.STAGE_LOADING,
+		RunPhase.Value.STAGE_ACTIVE,
+		RunPhase.Value.BOSS_LOADING,
+		RunPhase.Value.BOSS_ACTIVE,
+	]:
 		call_deferred("show_run_result", false)
+
+
+func _on_boss_defeated(reward_table_id: StringName) -> void:
+	if phase == RunPhase.Value.BOSS_ACTIVE:
+		call_deferred("_settle_reported_boss_defeat", reward_table_id)
+
+
+func _settle_reported_boss_defeat(reward_table_id: StringName) -> void:
+	if phase == RunPhase.Value.BOSS_ACTIVE:
+		_settle_boss_victory(reward_table_id)
 
 
 func _settle_stage_clear(stage_id: String) -> void:
@@ -236,8 +365,10 @@ func _settle_stage_clear(stage_id: String) -> void:
 		table_id = Game.current_stage.call("get_clear_reward_table_id")
 	var table := RunState.reward_catalog.get_table(table_id)
 	if table == null:
-		push_error("Stage '%s' has no clear reward table '%s'." % [stage_id, table_id])
-		show_run_result(false)
+		_fail_active_run(
+			"Stage '%s' has no clear reward table '%s'." % [stage_id, table_id],
+			&"stage_reward_missing"
+		)
 		return
 	var transaction_id := StringName("%d:%d:%s:stage_clear:0" % [
 		RunState.run_seed,
@@ -247,8 +378,10 @@ func _settle_stage_clear(stage_id: String) -> void:
 	var transaction := RewardService.resolve(table, transaction_id, RunState.run_seed)
 	var result := RewardService.apply(transaction, RunState)
 	if not result.applied and not result.duplicate:
-		push_error("Stage clear reward failed: %s" % result.message)
-		show_run_result(true)
+		_fail_active_run(
+			"Stage clear reward failed: %s" % result.message,
+			&"stage_reward_failed"
+		)
 		return
 	Game.unload_current_stage()
 	_clear_hud()
@@ -263,7 +396,7 @@ func _show_level_reward() -> void:
 		return
 	var level_reward := _show_screen(LEVEL_REWARD_PATH)
 	if level_reward == null:
-		show_run_result(true)
+		_fail_active_run("Level reward UI failed to initialize.", &"level_reward_ui_failed")
 		return
 	level_reward.connect(&"choice_requested", _on_level_choice_requested)
 
@@ -285,14 +418,16 @@ func _on_level_choice_requested(upgrade_id: StringName) -> void:
 func _show_card_reward() -> void:
 	var begin_result := RunState.begin_stage_card_reward()
 	if not bool(begin_result.get("ok", false)):
-		push_error("Card reward failed: %s" % begin_result.get("message", "Unknown error."))
-		show_run_result(true)
+		_fail_active_run(
+			"Card reward failed: %s" % begin_result.get("message", "Unknown error."),
+			&"card_reward_initialization_failed"
+		)
 		return
 	if not _set_phase(RunPhase.Value.STAGE_CARD_REWARD):
 		return
 	var card_reward := _show_screen(CARD_REWARD_PATH)
 	if card_reward == null:
-		show_run_result(true)
+		_fail_active_run("Card reward UI failed to initialize.", &"card_reward_ui_failed")
 		return
 	card_reward.connect(&"choice_requested", _on_card_choice_requested)
 	card_reward.connect(&"reroll_requested", _on_card_reroll_requested)
@@ -328,10 +463,15 @@ func _on_card_continue_requested() -> void:
 	if not RunState.advance_stage_after_card_reward():
 		_set_card_reward_error("Choose a card before continuing.")
 		return
-	if completed_stage_index == 1:
-		_show_rest_forge()
-	else:
-		_load_production_stage()
+	match completed_stage_index:
+		0:
+			_load_production_stage()
+		1:
+			_show_rest_forge()
+		2:
+			_load_boss_stage()
+		_:
+			_fail_active_run("Invalid stage card continuation.", &"invalid_card_continuation")
 
 
 func _set_card_reward_error(message: String) -> void:
@@ -342,14 +482,13 @@ func _set_card_reward_error(message: String) -> void:
 func _show_rest_forge() -> void:
 	var begin_result := RunState.begin_rest_forge()
 	if not bool(begin_result.get("ok", false)):
-		push_error("Rest/forge failed to initialize.")
-		show_run_result(false)
+		_fail_active_run("Rest/forge failed to initialize.", &"rest_forge_initialization_failed")
 		return
 	if not _set_phase(RunPhase.Value.REST_FORGE):
 		return
 	var rest := _show_screen(REST_FORGE_PATH)
 	if rest == null:
-		show_run_result(false)
+		_fail_active_run("Rest/forge UI failed to initialize.", &"rest_forge_ui_failed")
 		return
 	rest.connect(&"heal_requested", _on_rest_heal_requested)
 	rest.connect(&"consumable_requested", _on_rest_consumable_requested)
