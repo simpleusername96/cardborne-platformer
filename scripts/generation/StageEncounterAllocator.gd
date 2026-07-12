@@ -186,6 +186,7 @@ func _allocate_room(
 	var candidate_result := _build_candidates(
 		room,
 		anchors,
+		template,
 		profile,
 		enemy_catalog,
 		encounter_rng
@@ -205,7 +206,9 @@ func _allocate_room(
 		candidates_by_anchor,
 		0,
 		room.encounter_budget,
-		search_state
+		search_state,
+		template,
+		[]
 	)
 	if not bool(search_result.get("found", false)):
 		if bool(search_state["exhausted"]):
@@ -245,6 +248,7 @@ func _allocate_room(
 func _build_candidates(
 	room: PlannedRoom,
 	anchors: Array[RoomEnemyAnchorData],
+	template: RoomTemplateData,
 	profile: StageProfile,
 	enemy_catalog: EnemyCatalog,
 	encounter_rng: RandomNumberGenerator
@@ -263,6 +267,12 @@ func _build_candidates(
 					archetypes.append(archetype)
 			_shuffle(archetypes, encounter_rng)
 			for archetype in archetypes:
+				if EncounterCompositionRules.is_forbidden(
+					template,
+					pressure_role,
+					archetype.id
+				):
+					continue
 				var variants_by_cost: Dictionary = {}
 				for variant in enemy_catalog.variants:
 					if (
@@ -303,38 +313,48 @@ func _search_exact_budget(
 	candidates_by_anchor: Array,
 	anchor_index: int,
 	remaining_budget: int,
-	state: Dictionary
+	state: Dictionary,
+	template: RoomTemplateData,
+	selected: Array
 ) -> Dictionary:
 	state["visited"] = int(state["visited"]) + 1
 	if int(state["visited"]) > MAX_SEARCH_STATES_PER_ROOM:
 		state["exhausted"] = true
 		return {"found": false}
 	if remaining_budget == 0:
-		return {"found": true, "choices": []}
+		return {"found": true, "choices": selected.duplicate()}
 	if anchor_index >= candidates_by_anchor.size():
 		return {"found": false}
 
 	for candidate in candidates_by_anchor[anchor_index]:
 		var cost := int(candidate["budget_cost"])
-		if cost <= 0 or cost > remaining_budget:
+		if (
+			cost <= 0
+			or cost > remaining_budget
+			or not EncounterCompositionRules.permits_candidate(template, selected, candidate)
+		):
 			continue
+		selected.append(candidate)
 		var suffix := _search_exact_budget(
 			candidates_by_anchor,
 			anchor_index + 1,
 			remaining_budget - cost,
-			state
+			state,
+			template,
+			selected
 		)
 		if bool(suffix.get("found", false)):
-			var choices: Array = [candidate]
-			choices.append_array(suffix["choices"])
-			return {"found": true, "choices": choices}
+			return suffix
+		selected.pop_back()
 		if bool(state["exhausted"]):
 			return {"found": false}
 	return _search_exact_budget(
 		candidates_by_anchor,
 		anchor_index + 1,
 		remaining_budget,
-		state
+		state,
+		template,
+		selected
 	)
 
 

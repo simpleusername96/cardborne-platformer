@@ -477,6 +477,7 @@ static func _validate_encounters(
 	var seen_ids: Dictionary = {}
 	var spent_by_room: Dictionary = {}
 	var used_anchors: Dictionary = {}
+	var encounters_by_room: Dictionary = {}
 	var encounters := plan.get_encounters()
 	if not encounters.is_empty() and enemy_catalog == null:
 		errors.append("Planned encounter references need an EnemyCatalog to resolve.")
@@ -484,6 +485,7 @@ static func _validate_encounters(
 		_append_errors(errors, enemy_catalog.validate_catalog(), "Enemy catalog")
 	for room_key in room_map:
 		spent_by_room[room_key] = 0
+		encounters_by_room[room_key] = []
 
 	for encounter in encounters:
 		ContentId.validate(errors, "Planned encounter ID", encounter.id)
@@ -499,6 +501,9 @@ static func _validate_encounters(
 		if not room_map.has(room_key):
 			errors.append("Encounter '%s' references missing room '%s'." % [encounter.id, encounter.room_id])
 		else:
+			var room_encounters: Array = encounters_by_room.get(room_key, [])
+			room_encounters.append(encounter)
+			encounters_by_room[room_key] = room_encounters
 			var anchor_key := "%s:%s" % [room_key, encounter.anchor_id]
 			if used_anchors.has(anchor_key):
 				errors.append(
@@ -560,6 +565,14 @@ static func _validate_encounters(
 	var require_exact := require_allocated_encounters or not encounters.is_empty()
 	for room_key in room_map:
 		var planned_room: PlannedRoom = room_map[room_key]
+		var typed_encounters: Array[PlannedEncounter] = []
+		for encounter in encounters_by_room.get(room_key, []):
+			typed_encounters.append(encounter)
+		_append_errors(
+			errors,
+			EncounterCompositionRules.validate_room(template_map.get(room_key), typed_encounters),
+			"Room '%s'" % room_key
+		)
 		var spent := int(spent_by_room.get(room_key, 0))
 		if spent > planned_room.encounter_budget:
 			errors.append(
@@ -629,6 +642,8 @@ static func _validate_hazards(
 		var anchor := template.get_hazard_anchor_by_id(placement.anchor_id)
 		if anchor == null or not anchor.allowed_hazard_ids.has(placement.hazard_id):
 			errors.append("Hazard '%s' is incompatible with anchor '%s'." % [placement.id, placement.anchor_id])
+		if template.forbidden_pairs.has(placement.hazard_id):
+			errors.append("Hazard '%s' is excluded from room '%s'." % [placement.hazard_id, room_key])
 		var definition := hazard_catalog.get_hazard(placement.hazard_id)
 		if definition == null:
 			errors.append("Hazard '%s' references missing definition '%s'." % [placement.id, placement.hazard_id])

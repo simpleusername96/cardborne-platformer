@@ -132,6 +132,8 @@ func _allocate_hazards(
 		for hazard_id in hazard_ids:
 			if not profile.eligible_hazards.has(hazard_id):
 				continue
+			if template.forbidden_pairs.has(hazard_id):
+				continue
 			var definition := catalog.get_hazard(hazard_id)
 			if definition == null or definition.budget_cost <= 0:
 				continue
@@ -206,7 +208,8 @@ func _allocate_rewards(
 				anchor.id,
 				table.id,
 				table.content_version,
-				anchor.budget_cost
+				anchor.budget_cost,
+				anchor.reward_role
 			)
 		)
 	return placements
