@@ -1,9 +1,8 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scripts/stages/RoomTemplateHost.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/stages/ExitPortal.gd" id="2"]
 [ext_resource type="Script" path="res://scripts/stages/RoomAnchor.gd" id="3"]
-[ext_resource type="Script" path="res://scripts/stages/StageCheckpoint.gd" id="4"]
 
 [sub_resource type="RectangleShape2D" id="EntryMassShape"]
 size = Vector2(280, 100)
@@ -15,8 +14,6 @@ size = Vector2(250, 220)
 size = Vector2(250, 280)
 [sub_resource type="RectangleShape2D" id="ExitAreaShape"]
 size = Vector2(92, 116)
-[sub_resource type="RectangleShape2D" id="CheckpointShape"]
-size = Vector2(64, 96)
 
 [node name="BsExitAscent" type="Node2D"]
 script = ExtResource("1")
@@ -135,15 +132,9 @@ position = Vector2(1280, 440)
 [node name="Hazard" type="Node2D" parent="Anchors"]
 [node name="Reward" type="Node2D" parent="Anchors"]
 [node name="Objective" type="Node2D" parent="Anchors"]
-[node name="ExitCheckpoint" type="Area2D" parent="Anchors/Objective"]
+[node name="Checkpoint" type="Marker2D" parent="Anchors/Objective"]
 position = Vector2(140, 620)
-script = ExtResource("4")
-checkpoint_id = "broken_sanctum_exit"
-respawn_offset = Vector2(0, -8)
 metadata/safe_radius = 240.0
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Anchors/Objective/ExitCheckpoint"]
-position = Vector2(0, -48)
-shape = SubResource("CheckpointShape")
 [node name="ExitGate" type="Area2D" parent="Anchors/Objective"]
 position = Vector2(1140, 440)
 collision_layer = 0
@@ -189,6 +180,7 @@ metadata/bounds = Rect2(0, 0, 1280, 720)
 [node name="Validation" type="Node2D" parent="."]
 metadata/safe_entry_radius = 240.0
 metadata/checkpoint_safe_radius = 240.0
+metadata/checkpoint_path = NodePath("../Anchors/Objective/Checkpoint")
 metadata/minimum_critical_landing = 220.0
 metadata/max_required_step = 60.0
 metadata/exit_portal_path = NodePath("../Anchors/Objective/ExitGate")

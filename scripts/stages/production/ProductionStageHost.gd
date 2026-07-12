@@ -16,6 +16,12 @@ const STAGE_CONFIGS: Array[Dictionary] = [
 		"room_catalog_path": "res://data/generation/flooded_works_room_catalog.tres",
 		"clear_reward_id": &"stage_clear_flooded_works",
 	},
+	{
+		"id": &"broken_sanctum",
+		"profile_path": "res://data/generation/broken_sanctum_profile.tres",
+		"room_catalog_path": "res://data/generation/broken_sanctum_room_catalog.tres",
+		"clear_reward_id": &"stage_clear_broken_sanctum",
+	},
 ]
 
 @onready var rooms_root: Node2D = $Rooms

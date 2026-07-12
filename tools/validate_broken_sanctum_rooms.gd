@@ -296,6 +296,10 @@ func _validate_room_specific(data: RoomTemplateData, host: RoomTemplateHost) -> 
 			_expect(return_rope != null and return_rope.climbable_size.y >= 640.0, "Material Crypt return rope must reach the choice room.")
 		&"bs_exit_ascent":
 			_expect(host.get_exit_portal() != null, "Exit Ascent needs the shared exit portal.")
+			_expect(
+				host.get_anchor(&"Objective", &"Checkpoint") != null,
+				"Exit Ascent needs the terminal checkpoint marker consumed by runtime spawning."
+			)
 
 
 func _validate_sentry_crossfire(data: RoomTemplateData, host: RoomTemplateHost) -> void:

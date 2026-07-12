@@ -24,10 +24,11 @@ func _draw() -> void:
 	var bottom := _world_bounds.end.y
 	var width := _world_bounds.size.x
 	var ridge_y := top + _world_bounds.size.y * 0.48
-	var background := Color("11191a") if _stage_id == &"flooded_works" else Color("12171a")
-	var distant := Color("173033") if _stage_id == &"flooded_works" else Color("182225")
-	var structure := Color("26383a") if _stage_id == &"flooded_works" else Color("222d31")
-	var trim := Color("4d817b") if _stage_id == &"flooded_works" else Color("314038")
+	var palette := _palette_for_stage()
+	var background: Color = palette["background"]
+	var distant: Color = palette["distant"]
+	var structure: Color = palette["structure"]
+	var trim: Color = palette["trim"]
 	draw_rect(_world_bounds, background)
 	draw_colored_polygon(PackedVector2Array([
 		Vector2(left, ridge_y),
@@ -57,3 +58,35 @@ func _draw() -> void:
 			draw_rect(Rect2(pipe_x, top + 90.0, 120.0, 20.0), Color("664f3f"))
 			draw_rect(Rect2(pipe_x + 100.0, top + 90.0, 20.0, 105.0), Color("664f3f"))
 			pipe_x += 760.0
+	elif _stage_id == &"broken_sanctum":
+		var arch_x := left + 260.0
+		while arch_x < right:
+			draw_rect(Rect2(arch_x, top + 105.0, 18.0, 250.0), Color("424339"))
+			draw_rect(Rect2(arch_x + 132.0, top + 105.0, 18.0, 250.0), Color("424339"))
+			draw_rect(Rect2(arch_x, top + 105.0, 150.0, 14.0), Color("8b7541"))
+			arch_x += 620.0
+
+
+func _palette_for_stage() -> Dictionary:
+	match _stage_id:
+		&"flooded_works":
+			return {
+				"background": Color("11191a"),
+				"distant": Color("173033"),
+				"structure": Color("26383a"),
+				"trim": Color("4d817b"),
+			}
+		&"broken_sanctum":
+			return {
+				"background": Color("171719"),
+				"distant": Color("273029"),
+				"structure": Color("37383a"),
+				"trim": Color("8b7541"),
+			}
+		_:
+			return {
+				"background": Color("12171a"),
+				"distant": Color("182225"),
+				"structure": Color("222d31"),
+				"trim": Color("314038"),
+			}

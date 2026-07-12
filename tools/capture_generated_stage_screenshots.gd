@@ -10,6 +10,12 @@ var _captures: Array[Dictionary] = [
 	{"name": "desktop_seed1103_exit", "size": Vector2i(1280, 720), "seed": 1103, "target": &"exit"},
 	{"name": "compact_seed29017_choice", "size": Vector2i(960, 540), "seed": 29017, "target": &"choice"},
 	{"name": "compact_seed29017_optional", "size": Vector2i(960, 540), "seed": 29017, "target": &"optional"},
+	{"name": "sanctum_desktop_choice", "size": Vector2i(1280, 720), "seed": 41000, "stage_index": 2, "target": &"choice"},
+	{"name": "sanctum_desktop_gate_loop", "size": Vector2i(1280, 720), "seed": 41000, "stage_index": 2, "target": &"bs_gate_switch_loop"},
+	{"name": "sanctum_desktop_hazard", "size": Vector2i(1280, 720), "seed": 41000, "stage_index": 2, "target": &"hazard"},
+	{"name": "sanctum_desktop_combat", "size": Vector2i(1280, 720), "seed": 41000, "stage_index": 2, "target": &"combat"},
+	{"name": "sanctum_desktop_exit", "size": Vector2i(1280, 720), "seed": 41000, "stage_index": 2, "target": &"exit"},
+	{"name": "sanctum_compact_choice", "size": Vector2i(960, 540), "seed": 41000, "stage_index": 2, "target": &"choice"},
 ]
 var _failed := false
 
@@ -46,6 +52,7 @@ func _capture(capture: Dictionary) -> void:
 	await process_frame
 	director.start_production_run(0)
 	run_state.run_seed = int(capture["seed"])
+	run_state.current_stage_index = int(capture.get("stage_index", 0))
 	game.reload_current_stage()
 	for _frame in 4:
 		await process_frame
@@ -79,6 +86,8 @@ func _capture(capture: Dictionary) -> void:
 
 func _target_room(plan: StagePlan, target: StringName) -> PlannedRoom:
 	for room in plan.get_rooms():
+		if room.id == target or room.template_id == target:
+			return room
 		if target == &"optional" and not room.required_route:
 			return room
 		if room.role == target:
