@@ -136,29 +136,21 @@ charges.
 
 ## Authored Room Catalog
 
-The first run uses these 18 templates. Exact geometry lives in scenes; this table
-locks purpose, stage eligibility, and required anchors.
+The production run uses 30 stage-specific templates. Gameplay archetypes such as
+choice, choke, timing hazard, and cache are shared design language; a different
+socket, geometry, or anchor contract receives a distinct runtime ID.
 
-| ID | Role | Stages | Terrain/gameplay promise | Required anchors |
-| --- | --- | --- | --- | --- |
-| `lr_start_shelf` | start | 1-3 | Wide continuous mass, no pressure, one visible next goal. | player spawn, camera, right exit, recovery. |
-| `lr_rise_steps` | traversal | 1-3 | Three filled masses rise within ordinary ledge limits. | entry/exit sockets, three landings. |
-| `lr_lower_upper_choice` | choice | 1-3 | Lower safe path and upper optional reward route rejoin. | branch/rejoin, reward, lower recovery. |
-| `lr_rope_shaft` | traversal | 1-2 | Rope connects lower mass to two stable side ledges. | rope, lower recovery, top exit. |
-| `lr_broken_bridge` | traversal | 1-3 | One reviewed safe gap; lower basin prevents void confusion. | jump approach/landing, fall reset or recovery. |
-| `lr_patrol_gallery` | combat | 1-3 | Long mass with small elevation change for basic melee. | 3 ground enemy anchors, safe entry, clear gate. |
-| `lr_charge_lane` | combat | 1-3 | Wide telegraphed lane with two escape ledges. | charger anchor, turn bounds, escape pads. |
-| `lr_shooter_overlook` | combat | 1-3 | Lower approach and upper ranged perch with cover column. | shooter anchor, ground anchors, cover, line-of-sight tags. |
-| `lr_shield_choke` | combat | 3 | Two-level arena lets player cross behind Shield Guard. | shield anchor, flank route, no narrow body block. |
-| `lr_leaper_basin` | combat | 2-3 | Basin and side ledges expose leap arc and landing punish. | leaper anchor, arc clearance, side recovery. |
-| `lr_poison_timing` | hazard | 2-3 | Alternating warned floor bands with permanent safe pad. | vent groups, safe zone, cycle phase. |
-| `lr_crumble_crossing` | hazard | 2-3 | Crumbling ledges over recoverable lower mass. | platform anchors, lower route, respawn-safe exit. |
-| `lr_gate_switch_loop` | objective | 2-3 | Switch opens a visible gate after a short loop; no key search. | switch, gate, return path, objective state. |
-| `lr_destructible_cache` | optional | 1-3 | Readable breakable wall protects material/equipment chance. | destructible, cache reward, optional branch. |
-| `lr_material_cavern` | optional | 1-3 | Low-pressure rope/drop branch with material node. | material node, branch/rejoin, recovery. |
-| `lr_rest_forge` | safe | 2 | Terminal safe room hosts the stage card, heal, forge, and exit to Stage 3. | rest spawn, forge, shop, stage exit, no hazard. |
-| `lr_sentry_crossfire` | combat | 3 | Cover and two elevations prevent unavoidable projectile overlap. | sentry anchors, cover, safe entry, projectile limits. |
-| `lr_exit_ascent` | exit | 1, 3 | Final ascent to a clearly framed gate on a broad mass. | checkpoint, final encounter anchors, exit portal. |
+| Catalog | Count | Runtime members |
+| --- | ---: | --- |
+| Lower Ruins / Ruin Approach | 10 | `lr_start_shelf`, `lr_rise_steps`, `lr_broken_bridge`, `lr_patrol_gallery`, `lr_charge_lane`, `lr_shooter_overlook`, `lr_lower_upper_choice`, `lr_destructible_cache`, `lr_material_cavern`, `lr_exit_ascent` |
+| Flooded Works | 9 | `fw_flooded_entry`, `fw_rope_shaft`, `fw_poison_timing`, `fw_crumble_crossing`, `fw_leaper_basin`, `fw_pump_gallery`, `fw_lower_upper_choice`, `fw_sunken_cache`, `fw_rest_forge` |
+| Broken Sanctum | 11 | `bs_breach_entry`, `bs_shield_choke`, `bs_fractured_gallery`, `bs_sentry_crossfire`, `bs_gate_switch_loop`, `bs_volatile_nave`, `bs_twin_reliquary_choice`, `bs_recovery_cloister`, `bs_material_crypt`, `bs_reliquary_cache`, `bs_exit_ascent` |
+
+Broken Sanctum's choice room owns two independent branch/return socket pairs. Its
+shield room owns a flank route, its crossfire room owns two independent cover
+zones, and its gate loop owns an optional moving-platform route with safe wait
+pads and fall recovery. These are authored geometry contracts, not allocator
+exceptions.
 
 Templates may expose cosmetic or safe authored variants, but a variant cannot
 change sockets or movement classification without a new template ID/version.
@@ -168,7 +160,8 @@ change sockets or movement classification without a new template ID/version.
 - A Stage Plan has one start and one terminal exit anchor. Stage 2's anchor lives
   in its terminal rest/forge room.
 - Required rooms form a directed clear path; optional branches rejoin before exit.
-- Stage 1 includes exactly one optional branch; Stages 2-3 include at least one.
+- Stages 1-2 include exactly one optional branch in the first run; Stage 3 includes
+  exactly two. The planner supports bounded profile ranges for future catalogs.
 - The same room template cannot appear twice in one Stage Plan unless its contract
   allows repetition and a different authored variant is selected.
 - Two combat rooms with the same primary enemy lesson cannot be adjacent.

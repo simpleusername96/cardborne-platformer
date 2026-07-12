@@ -193,7 +193,7 @@ UI, enemies, cards, rooms, and equipment never edit final player fields directly
 
 The first complete run ships with:
 
-- 18 authored Lower Ruins room templates;
+- 30 authored stage-specific room templates: 10 Ruin, 9 Flooded, 11 Sanctum;
 - 6 normal enemy archetypes and 13 stage-eligible first-run variants;
 - 2 special enemy actors: Summon Node and Small Slime;
 - 4 core hazard families plus moving platform, switch gate, destructible cache,

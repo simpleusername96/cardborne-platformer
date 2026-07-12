@@ -112,15 +112,15 @@ Additional invariants:
 
 | Concern | As-is owner/evidence | Gap | Target handling |
 | --- | --- | --- | --- |
-| Boot/flow | `RunDirector`, `Game`, production UI | Stages 1-2 reach rewards and Rest & Forge; Stage 3/boss transitions remain. | Complete normal-stage, boss, death, and settlement transitions. |
+| Boot/flow | `RunDirector`, `Game`, production UI | All three normal stages reach their reward boundary; boss transition remains. | Complete boss, death, and settlement transitions. |
 | Character data | Three profiles; complete typed Warrior kit | Archer/Assassin still use compatibility basic attacks and lack complete kits. | Add typed attacks, skills, passives, and character behavior owners. |
 | Movement | `PlayerController`, `MovementMetrics`, `PlayerCombatController` | Shared movement and generation limits are active; character-specific combat execution needs extraction. | Preserve common traversal while splitting combat responsibilities for M6. |
 | Combat | Deterministic resolver/result, earned critical rules, complete Warrior fixture | Archer and Assassin mechanics remain. | Extend the proven resolver path rather than branching in actors or UI. |
-| Enemies | Ruin/Flooded exact variants for Walker, Charger, Shooter, and Leaper | Shield Guard, Sentry, Summon Node, and Sanctum variants remain. | Promote remaining archetypes/variants through typed definitions and fixtures. |
-| Stages | Deterministic generated Ruin Approach and Flooded Works with authored rooms and fallbacks. | Stage 3 and boss arena remain. | Reuse the accepted pipeline for Broken Sanctum; author the boss arena separately. |
-| Progression | Transaction-safe rewards, levels, seven cards, rest/shop/forge, scoped consumables | Remaining cards, character behavior paths, and complete-run balance remain. | Finish typed content without adding a second stat or currency owner. |
+| Enemies | Six normal archetypes, 13 exact variants, Summon Node, and Small Slime are typed and validated. | Complete-run balance remains. | Preserve archetype/variant bounds while tuning combinations. |
+| Stages | Three deterministic authored/generated stages with fallbacks and runtime gates. | Boss arena remains. | Author the boss separately from normal-stage generation. |
+| Progression | Transaction-safe rewards, levels, 15 cards, rest/shop/forge, scoped consumables | Complete-run balance remains. | Tune without adding a second stat or currency owner. |
 | Persistence | Profile schema v1, atomic primary/backup recovery, migration, wallet, per-character loadouts, and mastery commands. | Full-run settlement and remaining content activation remain. | Preserve `ProfileState` as the only public profile facade. |
-| Boss | Spec/catalog only | No boss code/scene. | Authored arena, scheduler, patterns, cleanup/settlement. |
+| Boss | Typed BossBase, four pattern Resources, and deterministic reviewed-chain scheduler. | Arena execution, HUD, cleanup, and settlement remain. | Author the arena against the committed scheduler contract. |
 | UI/feel | Menu, character/loadout/mastery, level/card/rest-forge rewards, full Warrior HUD, result, and settings with compact captures. | Roster prompts, boss states, and final presentation remain. | Add only states backed by working systems, then presentation pass. |
 
 ## As-Is / To-Be Delta Checklist
@@ -379,21 +379,30 @@ Warrior guard/stagger, Archer mark/charge control, and Assassin verb/Flow chaini
 **Visible result:** Broken Sanctum tests the finished build with mixed but fair
 encounters and leads through the third card reward to the boss.
 
-- [ ] **7.1 Promote Shield Guard/Sentry and all Sanctum variants:**
+- [x] **7.1 Promote Shield Guard/Sentry and all Sanctum variants:**
   `walker_sanctum`, `charger_sanctum`, `shooter_sanctum`,
   `shield_guard_sanctum`, `leaper_sanctum`, `sentry_sanctum`; finalize Summon Node.
-- [ ] **7.2 Implement moving platform production component and chest/material nodes.**
-- [ ] **7.3 Author shield choke, gate loop, sentry crossfire, remaining optional and
-  exit content to complete 18-room catalog.**
-- [ ] **7.4 Implement full archetype/variant allocator compatibility, repetition,
+- [x] **7.2 Implement moving platform production component and chest/material nodes.**
+- [x] **7.3 Author shield choke, gate loop, sentry crossfire, remaining optional and
+  exit content to complete the stage-specific normal-room catalogs.**
+- [x] **7.4 Implement full archetype/variant allocator compatibility, repetition,
   tuning-bound, geometry, and exclusion rules.**
-- [ ] **7.5 Generate Broken Sanctum with curated fallback and seed gates.**
-- [ ] **7.6 Migrate remaining 15-card catalog and complete equipment/consumable paths.**
-- [ ] **7.7 Run multi-seed route/encounter/reward/economy matrix.**
-- [ ] **7.8 Fun gate:** Variant changes are recognizable before contact and difficulty
+- [x] **7.5 Generate Broken Sanctum with curated fallback and seed gates.**
+- [x] **7.6 Migrate remaining 15-card catalog and complete equipment/consumable paths.**
+- [x] **7.7 Run multi-seed route/encounter/reward/economy matrix.**
+- [x] **7.8 Fun gate:** Variant changes are recognizable before contact and difficulty
   rises through learned combinations, not longer fights, hidden shots, or unavoidable overlap.
 
 *Milestone gate:* all three normal stages form a varied, coherent complete build arc.
+
+Gate evidence: 11 Broken Sanctum rooms enforce filled-mass terrain, safe sockets,
+two independent branches, flank/cover contracts, moving-platform wait pads, and a
+terminal checkpoint. A 120-seed sweep produced six required-route topologies and
+all six archetypes with complete plan/assembly validation. Production runtime
+setup, typed content spawning, and exit unlock passed for all three characters.
+Rendered 1280x720 and 960x540 captures showed coherent traversal space without HUD
+overlap. The complete 15-card catalog and Stage 3 reward sources pass focused and
+existing progression regressions.
 
 #### Milestone 8 - Giant Slime King and complete run
 
