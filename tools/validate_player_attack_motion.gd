@@ -17,9 +17,9 @@ func _run() -> void:
 		return
 
 	game.ensure_input_map()
-	await _check_profile_attack(0, "wide_slash", false, 0.18)
-	await _check_profile_attack(1, "arrow_projectile", true)
-	await _check_profile_attack(2, "quick_slash", false)
+	await _check_profile_attack(0, "wide_slash", &"shared_hitbox")
+	await _check_profile_attack(1, "arrow_projectile", &"projectile")
+	await _check_profile_attack(2, "quick_slash", &"character_runtime")
 
 	if not _failures.is_empty():
 		for failure in _failures:
@@ -27,14 +27,14 @@ func _run() -> void:
 		quit(1)
 		return
 
+	print("PLAYER_ATTACK_MOTION_VALIDATION_OK profiles=3 modes=3")
 	quit()
 
 
 func _check_profile_attack(
 	profile_index: int,
 	expected_style: String,
-	expects_projectile: bool,
-	startup_wait: float = 0.0
+	activation_mode: StringName
 ) -> void:
 	var run_state := root.get_node_or_null("/root/RunState")
 	if run_state == null:
@@ -60,8 +60,6 @@ func _check_profile_attack(
 	Input.action_press("attack")
 	await physics_frame
 	Input.action_release("attack")
-	if startup_wait > 0.0:
-		await create_timer(startup_wait).timeout
 	await physics_frame
 
 	var combat := player.get_node_or_null("CombatController") as PlayerCombatController
@@ -72,6 +70,7 @@ func _check_profile_attack(
 		world.queue_free()
 		await process_frame
 		return
+	await _wait_for_attack_activation(combat, hitbox, world, activation_mode)
 	if str(combat.current_attack.motion_style) != expected_style:
 		_failures.append(
 			"Profile %d expected style %s, got %s."
@@ -80,8 +79,8 @@ func _check_profile_attack(
 
 	if hitbox == null:
 		_failures.append("Profile %d has no attack hitbox." % profile_index)
-	elif not expects_projectile and not hitbox.visible:
-		_failures.append("Profile %d attack visual parent is not visible after attack." % profile_index)
+	elif activation_mode == &"shared_hitbox" and not hitbox.visible:
+		_failures.append("Profile %d melee hitbox was not visible during activation." % profile_index)
 
 	if attack_visual == null or not attack_visual.visible:
 		_failures.append("Profile %d attack visual is not visible after attack." % profile_index)
@@ -89,21 +88,50 @@ func _check_profile_attack(
 		_failures.append("Warrior attack visual should follow a left-facing startup turn.")
 
 	var projectile_count := _count_player_projectiles(world)
-	if expects_projectile:
+	if activation_mode == &"projectile":
 		if hitbox != null and hitbox.active:
 			_failures.append("Profile %d should not keep melee hitbox active for projectile attack." % profile_index)
 		if projectile_count < 1:
 			_failures.append("Profile %d did not spawn a player projectile." % profile_index)
-	else:
+	elif activation_mode == &"shared_hitbox":
 		if hitbox == null or not hitbox.active:
 			_failures.append("Profile %d did not activate melee hitbox." % profile_index)
 		elif profile_index == 0 and hitbox.position.x >= 0.0:
 			_failures.append("Warrior melee hitbox should follow a left-facing startup turn.")
 		if projectile_count != 0:
 			_failures.append("Profile %d unexpectedly spawned a projectile." % profile_index)
+	elif activation_mode == &"character_runtime":
+		if hitbox != null and hitbox.active:
+			_failures.append("Profile %d runtime-owned attack activated the shared hitbox." % profile_index)
+		if projectile_count != 0:
+			_failures.append("Profile %d unexpectedly spawned a projectile." % profile_index)
 
 	world.queue_free()
 	await process_frame
+
+
+func _wait_for_attack_activation(
+	combat: PlayerCombatController,
+	hitbox: Hitbox,
+	world: Node,
+	activation_mode: StringName
+) -> void:
+	var timing := combat.get_effective_timing(combat.current_attack)
+	var timeout := float(timing.get("startup", 0.0)) + 0.2
+	var elapsed := 0.0
+	while elapsed <= timeout:
+		match activation_mode:
+			&"projectile":
+				if _count_player_projectiles(world) > 0:
+					return
+			&"shared_hitbox":
+				if hitbox != null and hitbox.active:
+					return
+			&"character_runtime":
+				if String(combat.get_state_snapshot().get("phase", "")) != "startup":
+					return
+		await physics_frame
+		elapsed += 1.0 / float(Engine.physics_ticks_per_second)
 
 
 func _count_player_projectiles(node: Node) -> int:
