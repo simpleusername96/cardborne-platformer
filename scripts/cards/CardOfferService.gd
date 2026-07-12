@@ -61,6 +61,10 @@ static func supported_triggers_for_profile(profile: CharacterProfile) -> Array[S
 		&"dash_completed",
 		&"first_attack_after_extra_jump",
 		&"hit_target_in_recovery",
+		&"heavy_or_skill_multi_target_completed",
+		&"required_room_encounter_cleared_without_damage",
+		&"damage_left_one_health",
+		&"optional_route_chest_claimed",
 	]
 	if profile == null or profile.combat_kit == null:
 		return triggers

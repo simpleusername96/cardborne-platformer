@@ -34,6 +34,27 @@ func _validate_catalog_and_offer() -> void:
 	_expect(_all_unique(first), "card offer choices should be unique")
 	for profile in _run_state.profiles:
 		var triggers := CardOfferService.supported_triggers_for_profile(profile)
+		var eligible := CardOfferService.eligible_ids(
+			catalog,
+			profile.id,
+			{},
+			[],
+			triggers
+		)
+		var expected_ids: Array[StringName] = []
+		for card in catalog.cards:
+			if card != null and card.is_compatible(profile.id):
+				expected_ids.append(card.id)
+				_expect(
+					triggers.has(card.trigger),
+					"%s compatible card %s needs a live production trigger"
+					% [profile.id, card.id]
+				)
+				_expect(
+					eligible.has(card.id),
+					"%s compatible card %s should be reward-eligible"
+					% [profile.id, card.id]
+				)
 		var profile_offer := CardOfferService.build_offer(
 			catalog,
 			profile.id,
@@ -58,6 +79,25 @@ func _validate_catalog_and_offer() -> void:
 				)
 		_expect(has_shared, "%s offer should contain a shared card" % profile.id)
 		_expect(has_character_card, "%s offer should contain a character card" % profile.id)
+		var seen_ids: Dictionary = {}
+		for seed in 512:
+			for card_id in CardOfferService.build_offer(
+				catalog,
+				profile.id,
+				{},
+				seed,
+				seed % 3,
+				0,
+				[],
+				triggers
+			):
+				seen_ids[String(card_id)] = true
+		for card_id in expected_ids:
+			_expect(
+				seen_ids.has(String(card_id)),
+				"%s compatible card %s should appear in a production offer"
+				% [profile.id, card_id]
+			)
 
 
 func _validate_reroll_and_commit() -> void:

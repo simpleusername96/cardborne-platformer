@@ -21,5 +21,5 @@
 script = ExtResource("1")
 id = &"first_run_cards"
 display_name = "First Run Cards"
-content_version = 1
+content_version = 2
 cards = Array[ExtResource("2")]([ExtResource("2"), ExtResource("3"), ExtResource("4"), ExtResource("5"), ExtResource("6"), ExtResource("7"), ExtResource("8"), ExtResource("9"), ExtResource("10"), ExtResource("11"), ExtResource("12"), ExtResource("13"), ExtResource("14"), ExtResource("15"), ExtResource("16")])

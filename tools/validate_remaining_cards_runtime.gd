@@ -10,7 +10,6 @@ const CARD_PATHS: Array[String] = [
 ]
 
 var _failures: Array[String] = []
-var _original_card_catalog: CardCatalog
 var _run_state: Variant
 var _signal_bus: Node
 var _world: Node2D
@@ -47,22 +46,22 @@ func _prepare_run_state() -> bool:
 	if _run_state == null or _signal_bus == null:
 		_expect(false, "remaining-card fixture needs RunState and SignalBus")
 		return false
-	_original_card_catalog = _run_state.card_catalog
+	var catalog := _run_state.card_catalog as CardCatalog
 	_enemy_script = load(ENEMY_SCRIPT_PATH) as Script
-	if _original_card_catalog == null or _enemy_script == null:
+	if catalog == null or _enemy_script == null:
 		_expect(false, "remaining-card fixture needs production catalogs and enemy script")
 		return false
-	var fixture_catalog := CardCatalog.new()
-	fixture_catalog.cards = _original_card_catalog.cards.duplicate()
 	var stacks: Dictionary = {}
 	for path in CARD_PATHS:
 		var card := load(path) as CardDefinition
 		if card == null:
 			_expect(false, "fixture card should load from %s" % path)
 			continue
-		fixture_catalog.cards.append(card)
+		_expect(
+			catalog.get_card(card.id) == card,
+			"production catalog should own remaining card %s" % card.id
+		)
 		stacks[String(card.id)] = 1
-	_run_state.card_catalog = fixture_catalog
 	if not _run_state.call("start_new_run", 0, 74017):
 		_expect(false, "fixture should start a Warrior run")
 		return false
@@ -329,8 +328,7 @@ func _expect(condition: bool, message: String) -> void:
 
 
 func _finish() -> void:
-	if _original_card_catalog != null:
-		_run_state.card_catalog = _original_card_catalog
+	if _run_state != null:
 		_run_state.call("start_new_run", 0, 74018)
 	if _failures.is_empty():
 		print("REMAINING_CARDS_RUNTIME_VALIDATION_OK")
