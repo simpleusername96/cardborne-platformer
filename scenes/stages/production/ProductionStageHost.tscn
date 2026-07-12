@@ -1,0 +1,19 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/stages/production/ProductionStageHost.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/stages/production/ProductionStageBackdrop.gd" id="2"]
+
+[node name="ProductionStageHost" type="Node2D"]
+script = ExtResource("1")
+stage_id = "lower_ruins_entry"
+stage_display_name = "Lower Ruins: Entry"
+
+[node name="Backdrop" type="Node2D" parent="."]
+script = ExtResource("2")
+
+[node name="Terrain" type="Node2D" parent="."]
+
+[node name="Actors" type="Node2D" parent="."]
+
+[node name="PlayerSpawn" type="Marker2D" parent="."]
+position = Vector2(160, 620)

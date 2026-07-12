@@ -5,26 +5,52 @@ const MAIN_SCENE := "res://scenes/main/Main.tscn"
 
 var _captures: Array[Dictionary] = [
 	{
-		"name": "desktop_stage_hud",
+		"name": "desktop_main_menu",
 		"size": Vector2i(1280, 720),
-		"settings_open": false,
+		"state": "main_menu",
 	},
 	{
-		"name": "desktop_settings_popup",
+		"name": "compact_main_menu",
+		"size": Vector2i(960, 540),
+		"state": "main_menu",
+	},
+	{
+		"name": "desktop_character_select",
 		"size": Vector2i(1280, 720),
-		"settings_open": true,
+		"state": "character_select",
 	},
 	{
-		"name": "narrow_stage_hud",
-		"size": Vector2i(390, 720),
-		"settings_open": false,
+		"name": "compact_character_select",
+		"size": Vector2i(960, 540),
+		"state": "character_select",
 	},
 	{
-		"name": "narrow_settings_popup",
-		"size": Vector2i(390, 720),
-		"settings_open": true,
+		"name": "desktop_production_stage",
+		"size": Vector2i(1280, 720),
+		"state": "production_stage",
+	},
+	{
+		"name": "compact_production_stage",
+		"size": Vector2i(960, 540),
+		"state": "production_stage",
+	},
+	{
+		"name": "desktop_run_result",
+		"size": Vector2i(1280, 720),
+		"state": "run_result",
+	},
+	{
+		"name": "compact_run_result",
+		"size": Vector2i(960, 540),
+		"state": "run_result",
+	},
+	{
+		"name": "compact_settings_popup",
+		"size": Vector2i(960, 540),
+		"state": "settings",
 	},
 ]
+var _failed: bool = false
 
 
 func _initialize() -> void:
@@ -35,7 +61,7 @@ func _run() -> void:
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(OUTPUT_DIR))
 	for capture in _captures:
 		await _capture(capture)
-	quit()
+	quit(1 if _failed else 0)
 
 
 func _capture(capture: Dictionary) -> void:
@@ -48,29 +74,45 @@ func _capture(capture: Dictionary) -> void:
 	await process_frame
 	await process_frame
 
-	var game := root.get_node_or_null("/root/Game")
-	if game == null:
-		push_error("Game autoload is unavailable; cannot capture UI state.")
+	var game := root.get_node_or_null("Game")
+	var run_director := root.get_node_or_null("RunDirector")
+	if game == null or run_director == null:
+		push_error("Production autoloads are unavailable; cannot capture UI state.")
+		_failed = true
 		return
 
-	if bool(capture["settings_open"]):
-		game.set_settings_open(true)
-		await process_frame
-		await process_frame
+	match String(capture["state"]):
+		"character_select":
+			run_director.show_character_select()
+		"production_stage":
+			run_director.start_production_run(0)
+		"run_result":
+			run_director.start_production_run(1)
+			run_director.show_run_result(true)
+		"settings":
+			game.set_settings_open(true)
+	await process_frame
+	await process_frame
 
 	var viewport_texture := root.get_texture()
 	if viewport_texture == null:
 		push_error("Viewport texture is unavailable for %s" % capture["name"])
+		_failed = true
 		return
 
 	var image := viewport_texture.get_image()
 	if image == null:
 		push_error("Viewport image is unavailable for %s" % capture["name"])
+		_failed = true
 		return
 
 	var output_path := "%s/%s.png" % [OUTPUT_DIR, capture["name"]]
-	image.save_png(output_path)
+	var save_error := image.save_png(output_path)
+	if save_error != OK:
+		push_error("Unable to save %s (error %d)" % [output_path, save_error])
+		_failed = true
 
 	game.set_settings_open(false)
+	game.unload_current_stage()
 	main_instance.queue_free()
 	await process_frame

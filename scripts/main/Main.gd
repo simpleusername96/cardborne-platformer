@@ -4,7 +4,8 @@ extends Node
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	Game.register_roots($StageRoot, $UILayer)
-	Game.start_motion_test()
+	RunDirector.register_ui_roots($UILayer/ScreenRoot, $UILayer/HUDRoot)
+	RunDirector.start()
 
 
 func _unhandled_input(event: InputEvent) -> void:

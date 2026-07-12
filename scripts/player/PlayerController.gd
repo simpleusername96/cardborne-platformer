@@ -47,7 +47,7 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	_update_timers(delta)
 
-	if Input.is_action_just_pressed("open_build_panel"):
+	if RunDirector.is_developer_route() and Input.is_action_just_pressed("open_build_panel"):
 		RunState.cycle_profile(1)
 
 	var input_axis := Input.get_axis("move_left", "move_right")
