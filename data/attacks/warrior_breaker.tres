@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="AttackDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/player/AttackDefinition.gd" id="1"]
+[ext_resource type="Resource" path="res://data/attacks/warrior_breaker_critical.tres" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"warrior_breaker"
+display_name = "Breaker"
+content_version = 1
+input_action = &"heavy_attack"
+tags = Array[StringName]([&"player_attack", &"heavy", &"melee"])
+startup_time = 0.42
+active_time = 0.16
+recovery_time = 0.48
+cooldown = 1.1
+movement_lock_delay = 0.21
+base_damage = 4
+stagger = 60
+knockback = Vector2(310, -135)
+hitbox_size = Vector2(72, 66)
+hitbox_offset = Vector2(36, -32)
+critical_rule = ExtResource("2")
+motion_style = &"heavy_swing"
+visual_color = Color(1, 0.64, 0.12, 1)

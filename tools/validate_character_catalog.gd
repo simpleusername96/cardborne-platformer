@@ -15,6 +15,7 @@ func _initialize() -> void:
 		_validate_valid_catalog(catalog)
 		_validate_invalid_catalogs(catalog)
 		_validate_base_stats(catalog.get_profile_by_id("warrior"))
+		_validate_combat_kit(catalog.get_profile_by_id("warrior"))
 		_validate_route_limits(catalog)
 
 	if _failures.is_empty():
@@ -97,6 +98,29 @@ func _validate_base_stats(profile: CharacterProfile) -> void:
 	]:
 		_expect(not base_stats.has(presentation_key), "base stats should exclude %s" % presentation_key)
 		_expect(compatible_stats.has(presentation_key), "legacy stats should retain %s" % presentation_key)
+
+
+func _validate_combat_kit(profile: CharacterProfile) -> void:
+	_expect(profile != null, "warrior profile should resolve for combat kit validation")
+	if profile == null:
+		return
+	_expect(profile.combat_kit != null, "warrior profile should reference its typed combat kit")
+	if profile.combat_kit == null:
+		return
+	_expect(profile.combat_kit.validate_definition().is_empty(), "warrior combat kit should be valid")
+	_expect(profile.combat_kit.profile_id == &"warrior", "warrior kit should target warrior profile")
+	_expect(
+		profile.combat_kit.get_attack_for_action(&"attack").id == &"warrior_cleave",
+		"basic action should resolve warrior cleave"
+	)
+	_expect(
+		profile.combat_kit.get_attack_for_action(&"heavy_attack").id == &"warrior_breaker",
+		"heavy action should resolve warrior breaker"
+	)
+	var shield_rush := profile.combat_kit.get_skill_by_slot(1)
+	_expect(shield_rush != null, "warrior kit should expose skill slot 1")
+	if shield_rush != null:
+		_expect(shield_rush.id == &"warrior_shield_rush", "skill slot 1 should be shield rush")
 
 
 func _validate_route_limits(catalog: CharacterCatalog) -> void:

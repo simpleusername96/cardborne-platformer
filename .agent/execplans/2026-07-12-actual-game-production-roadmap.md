@@ -113,15 +113,15 @@ Additional invariants:
 | Concern | As-is owner/evidence | Gap | Target handling |
 | --- | --- | --- | --- |
 | Boot/flow | `RunDirector`, `Game`, production UI | One scaffold stage jumps directly to result. | Add explicit phases and full stage/reward/boss transitions. |
-| Character data | `CharacterProfile`, three `.tres` files | Basic attack seeds only. | Typed kits, attacks, skills, passives, mastery references. |
-| Movement | `PlayerController`, `MovementMetrics` | Useful but mixed with attack execution. | Preserve motion; extract combat state; generator consumes limits. |
-| Combat | `DamageInfo`, Hitbox/Hurtbox, player attack proof | No shared modifier order, hit result, earned critical, heavy/skills/stagger/effect lifecycle. | Deterministic resolver/critical rules plus Warrior vertical slice. |
-| Enemies | Eight behavior scripts plus design catalog v2 | Scripts still own embedded values; no typed archetype/variant/tuning catalog or production scenes. | Promote six archetypes, 13 exact variants, and two special actors through typed definitions/fixtures. |
-| Stages | `StageBase`, production scaffold, reusable components | No room templates/planner/assembler/allocator. | Native room contract and data-first generation pipeline. |
+| Character data | Three profiles; typed Warrior kit/attacks/Skill 1 | Archer/Assassin still use compatibility basic attacks; passives and full kits remain. | Typed kits, attacks, skills, passives, mastery references. |
+| Movement | `PlayerController`, `MovementMetrics`, `PlayerCombatController` | Combat execution is extracted; generator does not yet consume limits. | Preserve motion and make generation consume validated limits. |
+| Combat | Deterministic resolver/result, earned critical rules, stagger, Warrior runtime fixture | Shared modifier/effect lifecycle and the other two complete kits remain. | Extend the proven resolver path rather than branching in actors or UI. |
+| Enemies | Typed catalog plus production Ruin Walker/Charger scenes | Remaining archetypes/variants and deterministic allocator are not promoted. | Promote six archetypes, 13 exact variants, and two special actors through typed definitions/fixtures. |
+| Stages | `StageBase` plus two native room scenes in one curated production route | No stage planner, assembler, or allocator yet. | Extend the native room contract into data-first generation. |
 | Progression | `RunState`, `PlayerBuild`, design JSON | Counters mostly inert; no reward transaction. | One deterministic build/effect/reward path. |
 | Persistence | `ProfileState` settings | No gameplay profile schema/backup/migration. | Versioned profile with wallet/equipment/mastery. |
 | Boss | Spec/catalog only | No boss code/scene. | Authored arena, scheduler, patterns, cleanup/settlement. |
-| UI/feel | Menu/select/HUD/result shell | No reward/loadout/mastery/forge/skills; placeholders. | Add only states backed by working systems, then presentation pass. |
+| UI/feel | Menu/select/result plus live combat actions and encounter objective | No reward/loadout/mastery/forge/full-skill surfaces; placeholders remain. | Add only states backed by working systems, then presentation pass. |
 
 ## As-Is / To-Be Delta Checklist
 
@@ -178,6 +178,10 @@ Additional invariants:
   destructible, interactable, and exit foundations.
 - [x] Persistent keyboard remapping and focused validators.
 - [x] Integrated testbed/runtime/docs retirement.
+- [x] Deterministic damage and earned-critical resolution, typed Warrior kit,
+  Ruin Walker/Charger variants, and a two-room curated production encounter.
+- [x] Runtime fixtures for movement, Warrior attack/stagger/guard behavior, enemy
+  catalogs, room traversal contracts, encounter completion, and exit unlock.
 - [x] Canonical fun-focused blueprint and implementation-ready linked specs/catalogs.
 
 ### Not credited as finished gameplay
@@ -194,48 +198,51 @@ Additional invariants:
 
 #### Milestone 1 - Typed combat and one real Warrior encounter
 
-**Visible result:** Start Warrior from production flow, enter one authored room,
-use Basic, Heavy, and Shield Rush against Walker/Charger, clear the room, and exit.
+**Visible result:** Start Warrior from production flow, cross two linked authored
+rooms, use Basic, Heavy, and Shield Rush against Walker/Charger, clear the route,
+and exit.
 
-- [ ] **1.1 Add production input actions.**
+- [x] **1.1 Add production input actions.**
   - Files: `InputBindings.gd`, project input tests, settings rows.
   - Add Heavy, Skill 1-3, Consumable; keep debug actions absent.
   - Accept: remap and collision tests cover every visible action.
-- [ ] **1.2 Add typed character-combat Resources.**
+- [x] **1.2 Add typed character-combat Resources.**
   - Files: `AttackDefinition`, `SkillDefinition`, `CriticalRule`, `CharacterKit`,
     catalogs and Warrior `.tres` data.
   - Reuse `DamageInfo`, Hitbox/Hurtbox, character profiles, effect definitions.
   - Accept: catalog validation catches timings, IDs, hit policy, cooldown, critical
     condition, and refs.
-- [ ] **1.3 Implement deterministic `DamageResolver` and `HitResult`.**
+- [x] **1.3 Implement deterministic `DamageResolver` and `HitResult`.**
   - Fixed direct damage, one final rounding step, no variance/enemy criticals,
     earned player critical x1.5 capped at x2.0.
   - Add fixtures for staggered Breaker, marked full-charge Power Shot, and rear-arc
     Shadow Lunge; secondary hits cannot critical by default.
   - Accept: repeated identical contexts are byte-equivalent and critical effects
     cannot recursively retrigger.
-- [ ] **1.4 Extract combat execution from movement.**
+- [x] **1.4 Extract combat execution from movement.**
   - Add `PlayerCombatController`; leave movement/damage/camera in `PlayerController`.
   - Accept: existing movement and attack-motion validators remain green.
-- [ ] **1.5 Implement Warrior Basic, Heavy, passive, and Shield Rush.**
+- [x] **1.5 Implement Warrior Basic, Heavy, passive, and Shield Rush.**
   - Accept: timings/effects match spec and all have readable placeholder feedback.
-- [ ] **1.6 Implement typed enemy resolution and promote Ruin Walker/Charger.**
+- [x] **1.6 Implement typed enemy resolution and promote Ruin Walker/Charger.**
   - Add `EnemyArchetypeDefinition`, `EnemyVariantDefinition`,
     `EnemyTuningProfile`, `EnemyCatalog`, `ResolvedEnemySpec`.
   - Promote `walker_ruin` and `charger_ruin` production scenes/fixtures with exact
     stats, defeat state, presentation key, and drop source ID.
   - Accept: scene behavior reads resolved values and has no stage/variant ID branch.
   - Guard: no auto-reset in production encounter after defeat.
-- [ ] **1.7 Author first room `lr_patrol_gallery`.**
-  - Native room scene + metadata + safe entry/exit + two anchor variants.
-  - Accept: Warrior can clear it from menu without debug narration.
+- [x] **1.7 Author `lr_patrol_gallery` and `lr_charge_lane`.**
+  - Native room scenes + metadata + contiguous safe entry/exit + enemy anchors.
+  - Patrol Gallery owns Walker teaching space; Charge Lane owns the required 520 px
+    lane and two escape ledges for Charger counterplay.
+  - Accept: Warrior can clear both from menu without debug narration.
 - [ ] **1.8 Fun gate.**
   - Five focused play passes: movement-only, Walker, Charger, Heavy punish,
     Shield Rush spacing; staggered Breaker critical must feel earned and legible.
   - Rework if best strategy is repeated damage trading or attack spam.
 
-*Milestone gate:* one production combat room is enjoyable enough to repeat and
-proves the typed kit/enemy/room boundaries.
+*Milestone gate:* the two-room production combat route is enjoyable enough to
+repeat and proves the typed kit/enemy/room boundaries.
 
 #### Milestone 2 - Reward transaction and first build decision
 
@@ -507,6 +514,9 @@ not block implementation.
 - 2026-07-12: Fun contract and playtest gates are completion requirements alongside
   automated correctness.
 - 2026-07-12: Random no-change forging is rejected in favor of deterministic choice.
+- 2026-07-12: Milestone 1 uses linked Patrol Gallery and Charge Lane rooms because
+  Walker occupancy and Charger's 520 px lane/two-escape contract need distinct
+  teaching geometry.
 
 ## Success Criteria
 
@@ -527,10 +537,9 @@ boss, settle/reload persistent rewards, and begin another run.
 
 ## Next Steps
 
-1. Begin Milestone 1.1 with production input actions and focused remap validation.
-2. Add typed combat Resources and Warrior data before editing PlayerController.
-3. Deliver Warrior Basic/Heavy/Shield Rush in `lr_patrol_gallery` as the first
-   manual fun gate.
+1. Run Milestone 1.8's five manual play passes and tune spam/trading failures.
+2. Keep automated movement, combat, enemy, room, and production-flow fixtures green.
+3. Begin Milestone 2 with explicit run phases before adding reward transactions.
 4. Update this plan's Progress after each scoped commit; revise specs only when
    implementation/playtest evidence changes an accepted contract.
 
@@ -538,5 +547,6 @@ boss, settle/reload persistent rewards, and begin another run.
 
 Read `docs/README.md`, the Game Blueprint, Player Character Systems, encounter spec,
 map authoring/generation specs, progression/economy spec, and architecture before
-coding. Implement Milestone 1 next. Produce a playable Warrior combat room and its
-focused tests last; do not produce another planning-only or menu-only batch.
+coding. Finish the Milestone 1 fun gate on the playable two-room Warrior route,
+then implement Milestone 2 through the same production path; do not produce another
+planning-only or menu-only batch.

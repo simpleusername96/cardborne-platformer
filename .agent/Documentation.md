@@ -76,13 +76,15 @@ Read in this order:
 - Short boot: `./tools/godot.ps1 --path . --headless --quit-after 2`
 - Production flow: `./tools/godot.ps1 --path . --headless --script res://tools/validate_production_boot.gd`
 - Production stage: `./tools/godot.ps1 --path . --headless --script res://tools/validate_production_stage.gd`
+- Warrior combat: `./tools/godot.ps1 --path . --headless --script res://tools/validate_warrior_combat_runtime.gd`
+- Enemy catalog: `./tools/godot.ps1 --path . --headless --script res://tools/validate_enemy_catalog.gd`
 - Design catalogs: `./tools/godot.ps1 --path . --headless --script res://tools/validate_design_catalogs.gd`
 - Focused validators: `Get-ChildItem tools/validate_*.gd`
 - Git status: `git status --short`
 
 ## Next Implementation Entry
 
-Start from Milestone 1 in the active production roadmap: deterministic damage and
-earned critical resolution, typed character combat, Ruin Walker/Charger variants,
-and a Warrior combat slice in one authored production room. Do not spend another
-batch on menu polish or generic foundations.
+Finish Milestone 1's manual fun gate on the linked Patrol Gallery and Charge Lane
+route. Then start Milestone 2 with explicit run phases and transaction-safe enemy
+rewards. Deterministic Warrior combat and Ruin Walker/Charger runtime fixtures are
+already implemented; do not replace them with another testbed or generic layer.

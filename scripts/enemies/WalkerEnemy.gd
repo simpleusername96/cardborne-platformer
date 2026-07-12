@@ -11,6 +11,8 @@ var right_limit: float
 
 func _ready() -> void:
 	super._ready()
+	if resolved_spec != null:
+		move_speed = resolved_spec.move_speed
 	left_limit = spawn_position.x - patrol_half_width
 	right_limit = spawn_position.x + patrol_half_width
 	if _visual != null:
@@ -21,7 +23,7 @@ func _physics_process(delta: float) -> void:
 	if current_health <= 0:
 		return
 
-	if hit_stun_timer <= 0.0:
+	if hit_stun_timer <= 0.0 and not is_staggered():
 		velocity.x = float(direction) * move_speed
 	super._physics_process(delta)
 

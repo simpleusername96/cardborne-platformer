@@ -334,6 +334,11 @@ func _validate_enemy_catalog(
 			_is_exact_int(reference_stats.get("damage", 0), 1),
 			"%s base damage must be integer one" % archetype_id
 		)
+		_expect(
+			_is_integer_value(reference_stats.get("stagger_capacity", 0))
+			and int(reference_stats.get("stagger_capacity", 0)) > 0,
+			"%s needs positive integer base stagger capacity" % archetype_id
+		)
 
 	for variant_id in variants:
 		_validate_enemy_variant(
@@ -462,11 +467,19 @@ func _validate_enemy_variant(
 			reference_stats,
 			tuning.get("speed_or_range_ratio", [])
 		)
+	var reference_stagger := float(reference_stats.get("stagger_capacity", 0.0))
+	var variant_stagger_value: Variant = stats.get("stagger_capacity", 0)
 	_expect(
-		float(stats.get("stagger_capacity_ratio", 1.0))
-		<= float(tuning.get("max_stagger_capacity_ratio", 0.0)) + FLOAT_EPSILON,
-		"variant %s exceeds stagger capacity cap" % variant_id
+		_is_integer_value(variant_stagger_value) and int(variant_stagger_value) > 0,
+		"variant %s needs positive integer stagger capacity" % variant_id
 	)
+	if reference_stagger > 0.0 and _is_integer_value(variant_stagger_value):
+		var stagger_ratio := float(variant_stagger_value) / reference_stagger
+		_expect(
+			stagger_ratio
+			<= float(tuning.get("max_stagger_capacity_ratio", 0.0)) + FLOAT_EPSILON,
+			"variant %s exceeds stagger capacity cap" % variant_id
+		)
 
 
 func _validate_numeric_range(value: Variant, label: String) -> void:

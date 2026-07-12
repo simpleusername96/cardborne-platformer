@@ -60,6 +60,15 @@ func validate_catalog() -> PackedStringArray:
 				% [profile_id, build_error.get("message", "Unknown build error.")]
 			)
 
+		if profile.combat_kit != null:
+			if String(profile.combat_kit.profile_id) != profile_id:
+				errors.append(
+					"Character profile '%s' references kit for '%s'."
+					% [profile_id, profile.combat_kit.profile_id]
+				)
+			for kit_error in profile.combat_kit.validate_definition():
+				errors.append("Character profile '%s' has an invalid kit: %s" % [profile_id, kit_error])
+
 	for required_profile_id in REQUIRED_PROFILE_IDS:
 		if not seen_ids.has(required_profile_id):
 			errors.append("Missing required character profile '%s'." % required_profile_id)

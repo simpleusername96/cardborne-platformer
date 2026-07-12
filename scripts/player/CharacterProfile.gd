@@ -5,6 +5,7 @@ extends Resource
 @export var display_name: String = "Base Adventurer"
 @export var visual_color: Color = Color(0.8, 0.9, 1.0, 1.0)
 @export var trait_summary: String = "Balanced"
+@export var combat_kit: CharacterKit
 
 @export_group("Health And Combat")
 @export var max_health: int = 5

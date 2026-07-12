@@ -196,19 +196,19 @@ inherits its archetype's roles, geometry contract, and behavior owner.
 
 | Variant | Stage | Exact tuning focus | Presentation requirement |
 | --- | --- | --- | --- |
-| `walker_ruin` | Ruin Approach | HP 3, move 70, stagger capacity x1.00, cost 1. | Plain occupier silhouette and clear facing. |
-| `charger_ruin` | Ruin Approach | HP 5, warn 0.48 s, active 0.52 s, recovery 0.42 s, speed 360, cost 2. | Long teaching windup and lane flash. |
-| `shooter_ruin` | Ruin Approach | HP 4, aim 0.42 s, interval 2.00 s, projectile 260, range 700, cost 2. | Short weapon and broad aim line. |
-| `walker_flooded` | Flooded Works | HP 4, move 76, stagger capacity x1.05, cost 1. | Faster gait and stage-readable wet gear. |
-| `charger_flooded` | Flooded Works | HP 6, warn 0.46 s, active 0.55 s, recovery 0.42 s, speed 375, cost 2. | Longer charge trail without hiding windup. |
-| `shooter_flooded` | Flooded Works | HP 5, aim 0.38 s, interval 1.75 s, projectile 290, range 820, cost 2. | Longer weapon plus matching range telegraph. |
-| `leaper_flooded` | Flooded Works | HP 4, windup 0.38 s, leap 0.52 s, recovery 0.52 s, cost 2. | Large landing marker and slow teaching crouch. |
-| `walker_sanctum` | Broken Sanctum | HP 5, move 82, stagger capacity x1.15, cost 2. | Reinforced silhouette communicates resistance. |
-| `charger_sanctum` | Broken Sanctum | HP 6, warn 0.42 s, active 0.58 s, recovery 0.38 s, speed 395, cost 3. | Heavier lane trail and sharper recovery pose. |
-| `shooter_sanctum` | Broken Sanctum | HP 6, aim 0.34 s, interval 1.55 s, projectile 315, range 920, cost 3. | Long weapon and narrow locked aim line. |
-| `shield_guard_sanctum` | Broken Sanctum | HP 7, guard 1.20 s, tell 0.35 s, recovery 0.55 s, cost 3. | Shield direction and exposed rear arc remain obvious. |
-| `leaper_sanctum` | Broken Sanctum | HP 5, windup 0.33 s, leap 0.55 s, recovery 0.46 s, cost 3. | Faster crouch but unchanged landing marker lead. |
-| `sentry_sanctum` | Broken Sanctum | HP 6, warn 0.45 s, interval 1.40 s, projectile 300, range 900, cost 3. | Fixed barrel and cover-readable aim line. |
+| `walker_ruin` | Ruin Approach | HP 3, move 70, stagger 40, cost 1. | Plain occupier silhouette and clear facing. |
+| `charger_ruin` | Ruin Approach | HP 5, warn 0.48 s, active 0.52 s, recovery 0.42 s, speed 360, stagger 60, cost 2. | Long teaching windup and lane flash. |
+| `shooter_ruin` | Ruin Approach | HP 4, aim 0.42 s, interval 2.00 s, projectile 260, range 700, stagger 40, cost 2. | Short weapon and broad aim line. |
+| `walker_flooded` | Flooded Works | HP 4, move 76, stagger 42, cost 1. | Faster gait and stage-readable wet gear. |
+| `charger_flooded` | Flooded Works | HP 6, warn 0.46 s, active 0.55 s, recovery 0.42 s, speed 375, stagger 66, cost 2. | Longer charge trail without hiding windup. |
+| `shooter_flooded` | Flooded Works | HP 5, aim 0.38 s, interval 1.75 s, projectile 290, range 820, stagger 44, cost 2. | Longer weapon plus matching range telegraph. |
+| `leaper_flooded` | Flooded Works | HP 4, windup 0.38 s, leap 0.52 s, recovery 0.52 s, stagger 55, cost 2. | Large landing marker and slow teaching crouch. |
+| `walker_sanctum` | Broken Sanctum | HP 5, move 82, stagger 46, cost 2. | Reinforced silhouette communicates resistance. |
+| `charger_sanctum` | Broken Sanctum | HP 6, warn 0.42 s, active 0.58 s, recovery 0.38 s, speed 395, stagger 72, cost 3. | Heavier lane trail and sharper recovery pose. |
+| `shooter_sanctum` | Broken Sanctum | HP 6, aim 0.34 s, interval 1.55 s, projectile 315, range 920, stagger 48, cost 3. | Long weapon and narrow locked aim line. |
+| `shield_guard_sanctum` | Broken Sanctum | HP 7, guard 1.20 s, tell 0.35 s, recovery 0.55 s, stagger 100, cost 3. | Shield direction and exposed rear arc remain obvious. |
+| `leaper_sanctum` | Broken Sanctum | HP 5, windup 0.33 s, leap 0.55 s, recovery 0.46 s, stagger 60, cost 3. | Faster crouch but unchanged landing marker lead. |
+| `sentry_sanctum` | Broken Sanctum | HP 6, warn 0.45 s, interval 1.40 s, projectile 300, range 900, stagger 80, cost 3. | Fixed barrel and cover-readable aim line. |
 
 ## Enemy Selection Pipeline
 

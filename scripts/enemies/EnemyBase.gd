@@ -10,12 +10,24 @@ signal damaged(enemy: EnemyBase, damage_info: DamageInfo)
 @export var gravity: float = 1200.0
 @export var hit_stun_time: float = 0.16
 @export var hit_knockback_multiplier: float = 0.72
+@export var stagger_capacity: int = 40
+@export var stagger_duration: float = 1.4
+@export var defeat_below_y: float = 900.0
 @export var auto_reset_on_defeat: bool = true
 @export var defeat_reset_delay: float = 2.0
+
+@export_group("Resolved Enemy")
+@export var enemy_catalog: EnemyCatalog
+@export var archetype_id: StringName
+@export var variant_id: StringName
+@export var stage_id: StringName = &"ruin_approach"
 
 var current_health: int = 0
 var spawn_position: Vector2
 var hit_stun_timer: float = 0.0
+var stagger_meter: int = 0
+var staggered_timer: float = 0.0
+var resolved_spec: ResolvedEnemySpec
 
 var _visual: Polygon2D
 var _base_visual_color: Color = Color(0.84, 0.34, 0.28, 1.0)
@@ -26,6 +38,7 @@ func _ready() -> void:
 	collision_layer = 8
 	collision_mask = 1
 	spawn_position = global_position
+	_resolve_enemy_spec()
 	current_health = max_health
 	_ensure_body()
 	_ensure_hurtbox()
@@ -39,24 +52,39 @@ func receive_damage(damage_info: DamageInfo) -> void:
 		return
 
 	current_health = maxi(current_health - damage_info.amount, 0)
+	if staggered_timer <= 0.0 and damage_info.stagger > 0:
+		stagger_meter += damage_info.stagger
+		if stagger_meter >= stagger_capacity:
+			_enter_staggered_state()
 	damaged.emit(self, damage_info)
 	hit_stun_timer = hit_stun_time
 	velocity.x = damage_info.knockback.x * hit_knockback_multiplier
 	velocity.y = minf(velocity.y, damage_info.knockback.y * 0.55)
 	SignalBus.status_message_changed.emit("%s HP %d / %d" % [name, current_health, max_health])
-	_flash()
+	_flash(damage_info.critical)
 	if current_health <= 0:
 		_defeat()
 
 
 func _physics_process(delta: float) -> void:
 	hit_stun_timer = maxf(hit_stun_timer - delta, 0.0)
+	var was_staggered := staggered_timer > 0.0
+	staggered_timer = maxf(staggered_timer - delta, 0.0)
+	if staggered_timer > 0.0:
+		velocity.x = move_toward(velocity.x, 0.0, 1800.0 * delta)
+	elif was_staggered:
+		_refresh_visual_color()
 	if not is_on_floor():
 		velocity.y = minf(velocity.y + gravity * delta, 700.0)
 	move_and_slide()
+	if current_health > 0 and global_position.y > defeat_below_y:
+		_defeat()
 
 
 func _defeat() -> void:
+	if not visible or not is_physics_processing():
+		return
+	current_health = 0
 	defeated.emit(self)
 	SignalBus.status_message_changed.emit("%s defeated" % name)
 	set_physics_process(false)
@@ -134,6 +162,8 @@ func _ensure_contact_hitbox() -> void:
 func reset_enemy() -> void:
 	current_health = max_health
 	hit_stun_timer = 0.0
+	stagger_meter = 0
+	staggered_timer = 0.0
 	global_position = spawn_position
 	velocity = Vector2.ZERO
 	visible = true
@@ -174,12 +204,61 @@ func _set_combat_enabled(enabled: bool) -> void:
 		contact_hitbox.set_active(enabled)
 
 
-func _flash() -> void:
+func get_combat_snapshot() -> Dictionary:
+	return {
+		"staggered": staggered_timer > 0.0,
+		"mitigation": 0.0,
+	}
+
+
+func is_staggered() -> bool:
+	return staggered_timer > 0.0
+
+
+func _resolve_enemy_spec() -> void:
+	if enemy_catalog == null:
+		return
+	var errors := enemy_catalog.get_resolution_errors(archetype_id, variant_id, stage_id)
+	if not errors.is_empty():
+		for error in errors:
+			push_error("%s enemy resolution failed: %s" % [name, error])
+		return
+	resolved_spec = enemy_catalog.resolve(archetype_id, variant_id, stage_id)
+	if resolved_spec == null:
+		push_error("%s enemy resolution returned no spec." % name)
+		return
+	var script := get_script() as Script
+	if script != null and script.get_global_name() != String(resolved_spec.behavior_owner):
+		push_error(
+			"%s uses %s but resolved archetype requires %s."
+			% [name, script.get_global_name(), resolved_spec.behavior_owner]
+		)
+		resolved_spec = null
+		return
+	max_health = resolved_spec.health
+	contact_damage = resolved_spec.damage
+	stagger_capacity = resolved_spec.stagger_capacity
+
+
+func _enter_staggered_state() -> void:
+	stagger_meter = 0
+	staggered_timer = stagger_duration
+	hit_stun_timer = maxf(hit_stun_timer, stagger_duration)
+	velocity.x = 0.0
+	_refresh_visual_color()
+
+
+func _refresh_visual_color() -> void:
+	if _visual == null:
+		return
+	_visual.color = Color(0.36, 0.88, 0.92, 1.0) if is_staggered() else _base_visual_color
+
+
+func _flash(critical: bool = false) -> void:
 	if _visual == null:
 		return
 
-	var original_color := _visual.color
-	_visual.color = Color.WHITE
-	await get_tree().create_timer(0.08).timeout
+	_visual.color = Color(1.0, 0.76, 0.16, 1.0) if critical else Color.WHITE
+	await get_tree().create_timer(0.12 if critical else 0.08).timeout
 	if is_instance_valid(_visual) and current_health > 0:
-		_visual.color = original_color
+		_refresh_visual_color()

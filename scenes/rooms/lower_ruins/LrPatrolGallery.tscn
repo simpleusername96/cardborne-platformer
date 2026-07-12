@@ -1,0 +1,134 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/stages/RoomTemplateHost.gd" id="1"]
+
+[sub_resource type="RectangleShape2D" id="EntryMassShape"]
+size = Vector2(320, 280)
+
+[sub_resource type="RectangleShape2D" id="GalleryMassShape"]
+size = Vector2(800, 300)
+
+[sub_resource type="RectangleShape2D" id="BoundaryShape"]
+size = Vector2(32, 720)
+
+[sub_resource type="RectangleShape2D" id="LedgeShape"]
+size = Vector2(220, 12)
+
+[node name="LrPatrolGallery" type="Node2D"]
+script = ExtResource("1")
+room_id = &"lr_patrol_gallery"
+
+[node name="Terrain" type="Node2D" parent="."]
+
+[node name="EntryMass" type="StaticBody2D" parent="Terrain"]
+position = Vector2(160, 620)
+collision_layer = 1
+collision_mask = 0
+metadata/surface_id = &"patrol_entry"
+metadata/support_top = 620.0
+metadata/support_width = 320.0
+metadata/critical = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/EntryMass"]
+position = Vector2(0, 140)
+shape = SubResource("EntryMassShape")
+
+[node name="RockVisual" type="Polygon2D" parent="Terrain/EntryMass"]
+color = Color(0.20, 0.25, 0.28, 1)
+polygon = PackedVector2Array(-160, 0, 160, 0, 160, 280, -160, 280)
+
+[node name="SupportCap" type="Polygon2D" parent="Terrain/EntryMass"]
+color = Color(0.34, 0.57, 0.60, 1)
+polygon = PackedVector2Array(-160, 0, 160, 0, 160, 8, -160, 8)
+
+[node name="GalleryMass" type="StaticBody2D" parent="Terrain"]
+position = Vector2(720, 600)
+collision_layer = 1
+collision_mask = 0
+metadata/surface_id = &"patrol_gallery"
+metadata/support_top = 600.0
+metadata/support_width = 800.0
+metadata/critical = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/GalleryMass"]
+position = Vector2(0, 150)
+shape = SubResource("GalleryMassShape")
+
+[node name="RockVisual" type="Polygon2D" parent="Terrain/GalleryMass"]
+color = Color(0.23, 0.29, 0.32, 1)
+polygon = PackedVector2Array(-400, 0, 400, 0, 400, 300, -400, 300)
+
+[node name="SupportCap" type="Polygon2D" parent="Terrain/GalleryMass"]
+color = Color(0.44, 0.54, 0.39, 1)
+polygon = PackedVector2Array(-400, 0, 400, 0, 400, 8, -400, 8)
+
+[node name="GrooveA" type="Line2D" parent="Terrain/GalleryMass"]
+width = 4.0
+default_color = Color(0.15, 0.20, 0.22, 1)
+points = PackedVector2Array(-330, 72, 310, 72)
+
+[node name="GrooveB" type="Line2D" parent="Terrain/GalleryMass"]
+width = 4.0
+default_color = Color(0.15, 0.20, 0.22, 1)
+points = PackedVector2Array(-290, 138, 340, 138)
+
+[node name="LeftBoundary" type="StaticBody2D" parent="Terrain"]
+position = Vector2(-16, 360)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/LeftBoundary"]
+shape = SubResource("BoundaryShape")
+
+[node name="RockVisual" type="Polygon2D" parent="Terrain/LeftBoundary"]
+color = Color(0.15, 0.20, 0.22, 1)
+polygon = PackedVector2Array(-16, -360, 16, -360, 16, 360, -16, 360)
+
+[node name="OneWay" type="Node2D" parent="."]
+
+[node name="PatrolLedge" type="StaticBody2D" parent="OneWay"]
+position = Vector2(760, 490)
+collision_layer = 2
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="OneWay/PatrolLedge"]
+shape = SubResource("LedgeShape")
+one_way_collision = true
+
+[node name="Visual" type="Polygon2D" parent="OneWay/PatrolLedge"]
+color = Color(0.34, 0.57, 0.60, 1)
+polygon = PackedVector2Array(-110, -6, 110, -6, 110, 6, -110, 6)
+
+[node name="Hazards" type="Node2D" parent="."]
+[node name="DecorBack" type="Node2D" parent="."]
+[node name="DecorFront" type="Node2D" parent="."]
+
+[node name="Anchors" type="Node2D" parent="."]
+[node name="Sockets" type="Node2D" parent="Anchors"]
+[node name="Entry" type="Marker2D" parent="Anchors/Sockets"]
+position = Vector2(0, 620)
+[node name="Exit" type="Marker2D" parent="Anchors/Sockets"]
+position = Vector2(1120, 600)
+
+[node name="Enemy" type="Node2D" parent="Anchors"]
+[node name="WalkerA" type="Marker2D" parent="Anchors/Enemy"]
+position = Vector2(570, 600)
+[node name="WalkerB" type="Marker2D" parent="Anchors/Enemy"]
+position = Vector2(860, 600)
+[node name="WalkerC" type="Marker2D" parent="Anchors/Enemy"]
+position = Vector2(1010, 600)
+
+[node name="Hazard" type="Node2D" parent="Anchors"]
+[node name="Reward" type="Node2D" parent="Anchors"]
+[node name="Objective" type="Node2D" parent="Anchors"]
+[node name="SafeEntry" type="Marker2D" parent="Anchors/Objective"]
+position = Vector2(140, 620)
+[node name="Recovery" type="Node2D" parent="Anchors"]
+[node name="GroundRecovery" type="Marker2D" parent="Anchors/Recovery"]
+position = Vector2(180, 620)
+
+[node name="CameraBounds" type="Node2D" parent="."]
+metadata/bounds = Rect2(0, 0, 1120, 720)
+[node name="Validation" type="Node2D" parent="."]
+metadata/safe_entry_radius = 240.0
+metadata/max_required_step = 20.0

@@ -4,6 +4,8 @@ extends Area2D
 signal interacted(player: Node)
 
 @export var prompt_text: String = "Interact"
+@export var interaction_enabled: bool = true
+@export var disabled_prompt_text: String = ""
 
 var _player: Node
 
@@ -14,7 +16,7 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if _player == null:
+	if _player == null or not interaction_enabled:
 		return
 
 	if event.is_action_pressed("interact"):
@@ -23,7 +25,15 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func interact(player: Node) -> void:
+	if not interaction_enabled:
+		return
 	interacted.emit(player)
+
+
+func set_interaction_enabled(enabled: bool) -> void:
+	interaction_enabled = enabled
+	if _player != null:
+		SignalBus.interaction_prompt_changed.emit(_active_prompt(), not _active_prompt().is_empty())
 
 
 func _on_body_entered(body: Node) -> void:
@@ -31,7 +41,8 @@ func _on_body_entered(body: Node) -> void:
 		return
 
 	_player = body
-	SignalBus.interaction_prompt_changed.emit(prompt_text, true)
+	var active_prompt := _active_prompt()
+	SignalBus.interaction_prompt_changed.emit(active_prompt, not active_prompt.is_empty())
 
 
 func _on_body_exited(body: Node) -> void:
@@ -40,3 +51,7 @@ func _on_body_exited(body: Node) -> void:
 
 	_player = null
 	SignalBus.interaction_prompt_changed.emit("", false)
+
+
+func _active_prompt() -> String:
+	return prompt_text if interaction_enabled else disabled_prompt_text

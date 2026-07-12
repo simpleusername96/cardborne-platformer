@@ -11,6 +11,11 @@ const ACTION_DEFINITIONS := [
 	{"name": "jump", "label": "jump", "default_keys": [KEY_SPACE]},
 	{"name": "dash", "label": "dash", "default_keys": [KEY_K, KEY_SHIFT]},
 	{"name": "attack", "label": "attack", "default_keys": [KEY_F]},
+	{"name": "heavy_attack", "label": "heavy attack", "default_keys": [KEY_G]},
+	{"name": "skill_1", "label": "skill 1", "default_keys": [KEY_Q]},
+	{"name": "skill_2", "label": "skill 2", "default_keys": [KEY_R]},
+	{"name": "skill_3", "label": "skill 3", "default_keys": [KEY_V]},
+	{"name": "use_consumable", "label": "consumable", "default_keys": [KEY_H]},
 	{"name": "climb_up", "label": "climb up", "default_keys": [KEY_W, KEY_UP]},
 	{"name": "climb_down", "label": "climb down", "default_keys": [KEY_S, KEY_DOWN]},
 	{"name": "climb_cancel", "label": "dismount", "default_keys": [KEY_C]},
@@ -41,10 +46,17 @@ func get_input_guide_text() -> String:
 			get_binding_text("move_left", "A/Left") + "/" + get_binding_text("move_right", "D/Right"),
 			get_binding_text("crouch", "S/Down"),
 		],
-		"Jump %s | Dash %s | Attack %s" % [
+		"Jump %s | Dash %s | Basic %s | Heavy %s" % [
 			get_binding_text("jump", "Space"),
 			get_binding_text("dash", "K/Shift"),
 			get_binding_text("attack", "F"),
+			get_binding_text("heavy_attack", "G"),
+		],
+		"Skills %s/%s/%s | Consumable %s" % [
+			get_binding_text("skill_1", "Q"),
+			get_binding_text("skill_2", "R"),
+			get_binding_text("skill_3", "V"),
+			get_binding_text("use_consumable", "H"),
 		],
 		"Climb %s/%s | Dismount %s" % [
 			get_binding_text("climb_up", "W/Up"),

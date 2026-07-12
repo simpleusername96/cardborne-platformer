@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="CriticalRule" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/CriticalRule.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"warrior_breaker_staggered"
+content_version = 1
+required_target_flags = Array[StringName]([&"staggered"])
+multiplier = 1.5

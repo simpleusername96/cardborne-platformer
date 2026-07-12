@@ -1,182 +1,186 @@
 extends StageBase
 
-const WORLD_WIDTH := 2400.0
-const WORLD_BOTTOM := 900.0
-# Required-route masses share exact x boundaries; optional ledges never carry progression.
-const CRITICAL_SURFACES: Array[Dictionary] = [
-	{"id": "entry", "x": 0.0, "width": 480.0, "top": 620.0},
-	{"id": "first_rise", "x": 480.0, "width": 360.0, "top": 560.0},
-	{"id": "upper_walk", "x": 840.0, "width": 420.0, "top": 500.0},
-	{"id": "middle_drop", "x": 1260.0, "width": 360.0, "top": 550.0},
-	{"id": "gate_rise", "x": 1620.0, "width": 420.0, "top": 480.0},
-	{"id": "exit_walk", "x": 2040.0, "width": 360.0, "top": 540.0},
-]
+const WORLD_WIDTH := 2240.0
+const WORLD_HEIGHT := 720.0
+const PATROL_ROOM_DATA := preload("res://data/rooms/lower_ruins/lr_patrol_gallery.tres")
+const CHARGE_ROOM_DATA := preload("res://data/rooms/lower_ruins/lr_charge_lane.tres")
+const WALKER_SCENE := preload("res://scenes/enemies/WalkerRuin.tscn")
+const CHARGER_SCENE := preload("res://scenes/enemies/ChargerRuin.tscn")
 
-@onready var terrain_root: Node2D = $Terrain
+@onready var rooms_root: Node2D = $Rooms
+
+var _room_hosts: Dictionary = {}
+var _required_enemies: Array[EnemyBase] = []
+var _defeated_enemy_ids: Dictionary = {}
+var _exit_portal: ExitPortal
 
 
 func _ready() -> void:
-	_build_critical_terrain()
-	_build_optional_platforms()
-	_build_exit_gate()
+	if not _assemble_curated_rooms():
+		_abort_setup("Production route room assembly failed.")
+		return
+	if not _spawn_required_enemy(WALKER_SCENE, &"lr_patrol_gallery", &"WalkerA"):
+		_abort_setup("Production route Walker spawn failed.")
+		return
+	if not _spawn_required_enemy(CHARGER_SCENE, &"lr_charge_lane", &"ChargerA"):
+		_abort_setup("Production route Charger spawn failed.")
+		return
+	if not _configure_exit():
+		_abort_setup("Production route exit setup failed.")
+		return
 	super._ready()
+	_publish_encounter_state()
+
+
+func get_room_ids() -> Array[StringName]:
+	var ids: Array[StringName] = []
+	for room_id in _room_hosts:
+		ids.append(StringName(room_id))
+	ids.sort()
+	return ids
+
+
+func get_room_host(room_id: StringName) -> RoomTemplateHost:
+	return _room_hosts.get(String(room_id)) as RoomTemplateHost
 
 
 func get_critical_surface_contract() -> Array[Dictionary]:
-	return CRITICAL_SURFACES.duplicate(true)
+	var surfaces: Array[Dictionary] = []
+	for room_id in _room_hosts:
+		var room := _room_hosts[room_id] as RoomTemplateHost
+		for local_surface in room.get_support_surfaces():
+			var surface := local_surface.duplicate(true)
+			surface["id"] = "%s/%s" % [room_id, local_surface["id"]]
+			surface["x"] = float(local_surface["x"]) + room.position.x
+			surfaces.append(surface)
+	surfaces.sort_custom(func(left: Dictionary, right: Dictionary) -> bool: return left["x"] < right["x"])
+	return surfaces
 
 
-func get_exit_surface_id() -> String:
-	return "exit_walk"
+func get_required_enemies() -> Array[EnemyBase]:
+	return _required_enemies.duplicate()
 
 
-func _build_critical_terrain() -> void:
-	for surface_index in CRITICAL_SURFACES.size():
-		_create_rock_mass(surface_index, CRITICAL_SURFACES[surface_index])
+func get_remaining_enemy_count() -> int:
+	return maxi(_required_enemies.size() - _defeated_enemy_ids.size(), 0)
 
 
-func _create_rock_mass(surface_index: int, surface: Dictionary) -> void:
-	var width := float(surface["width"])
-	var top := float(surface["top"])
-	var height := WORLD_BOTTOM - top
-	var body := StaticBody2D.new()
-	body.name = "CriticalSurface_%02d_%s" % [surface_index, surface["id"]]
-	body.position = Vector2(float(surface["x"]) + width * 0.5, top)
-	body.collision_layer = 1
-	body.collision_mask = 0
-	body.set_meta("surface_id", surface["id"])
-	body.set_meta("critical", true)
-	body.set_meta("support_top", top)
-	body.set_meta("support_width", width)
-	terrain_root.add_child(body)
-
-	var collision := CollisionShape2D.new()
-	collision.name = "CollisionShape2D"
-	var rectangle := RectangleShape2D.new()
-	rectangle.size = Vector2(width, height)
-	collision.position = Vector2(0.0, height * 0.5)
-	collision.shape = rectangle
-	body.add_child(collision)
-
-	var visual := Polygon2D.new()
-	visual.name = "RockVisual"
-	visual.color = Color("344147")
-	visual.polygon = PackedVector2Array([
-		Vector2(-width * 0.5, 0.0),
-		Vector2(width * 0.5, 0.0),
-		Vector2(width * 0.5, height),
-		Vector2(-width * 0.5, height),
-	])
-	body.add_child(visual)
-
-	var cap := Polygon2D.new()
-	cap.name = "SupportCap"
-	cap.color = Color("718963") if surface_index % 2 == 0 else Color("57909a")
-	cap.polygon = PackedVector2Array([
-		Vector2(-width * 0.5, 0.0),
-		Vector2(width * 0.5, 0.0),
-		Vector2(width * 0.5, 8.0),
-		Vector2(-width * 0.5, 8.0),
-	])
-	cap.z_index = 1
-	body.add_child(cap)
-
-	for groove_index in 3:
-		var groove := Line2D.new()
-		groove.width = 4.0
-		groove.default_color = Color("283438")
-		var inset := 42.0 + groove_index * 22.0
-		groove.points = PackedVector2Array([
-			Vector2(-width * 0.5 + inset, 52.0 + groove_index * 46.0),
-			Vector2(width * 0.5 - inset, 52.0 + groove_index * 46.0),
-		])
-		body.add_child(groove)
+func is_exit_enabled() -> bool:
+	return _exit_portal != null and _exit_portal.interaction_enabled
 
 
-func _build_optional_platforms() -> void:
-	_create_one_way_platform("OptionalLedgeA", Vector2(1060.0, 390.0), 220.0)
-	_create_one_way_platform("OptionalLedgeB", Vector2(1810.0, 340.0), 240.0)
+func _assemble_curated_rooms() -> bool:
+	var room_offset := 0.0
+	for data in [PATROL_ROOM_DATA, CHARGE_ROOM_DATA]:
+		var room_data := data as RoomTemplateData
+		var data_errors := room_data.validate_definition()
+		if not data_errors.is_empty():
+			for error in data_errors:
+				push_error("Room data '%s' is invalid: %s" % [room_data.id, error])
+			return false
+		var room := room_data.scene.instantiate() as RoomTemplateHost
+		if room == null:
+			push_error("Room '%s' did not instantiate as RoomTemplateHost." % room_data.id)
+			return false
+		room.position.x = room_offset
+		rooms_root.add_child(room)
+		var host_errors := room.configure(room_data)
+		if not host_errors.is_empty():
+			for error in host_errors:
+				push_error("Room host '%s' is invalid: %s" % [room_data.id, error])
+			room.queue_free()
+			return false
+		_room_hosts[String(room_data.id)] = room
+		room_offset += room_data.bounds.size.x
+	return true
 
 
-func _create_one_way_platform(platform_name: String, position: Vector2, width: float) -> void:
-	var body := StaticBody2D.new()
-	body.name = platform_name
-	body.position = position
-	body.collision_layer = 2
-	body.collision_mask = 0
-	body.set_meta("critical", false)
-	terrain_root.add_child(body)
+func _spawn_required_enemy(
+	enemy_scene: PackedScene,
+	room_id: StringName,
+	anchor_id: StringName
+) -> bool:
+	var room := get_room_host(room_id)
+	if room == null:
+		push_error("Cannot spawn enemy: room '%s' is unavailable." % room_id)
+		return false
+	var anchor := room.get_anchor(&"Enemy", anchor_id)
+	if anchor == null:
+		push_error("Cannot spawn enemy: room '%s' has no anchor '%s'." % [room_id, anchor_id])
+		return false
+	var enemy := enemy_scene.instantiate() as EnemyBase
+	if enemy == null:
+		push_error("Enemy scene for '%s/%s' is invalid." % [room_id, anchor_id])
+		return false
+	enemy.position = actors_container.to_local(anchor.global_position)
+	actors_container.add_child(enemy)
+	if enemy.resolved_spec == null:
+		push_error("Enemy scene for '%s/%s' did not resolve its typed specification." % [room_id, anchor_id])
+		enemy.queue_free()
+		return false
+	enemy.defeated.connect(_on_required_enemy_defeated)
+	_required_enemies.append(enemy)
+	return true
 
-	var collision := CollisionShape2D.new()
-	var rectangle := RectangleShape2D.new()
-	rectangle.size = Vector2(width, 12.0)
-	collision.shape = rectangle
-	collision.one_way_collision = true
-	body.add_child(collision)
 
-	var visual := Polygon2D.new()
-	visual.color = Color("57909a")
-	visual.polygon = PackedVector2Array([
-		Vector2(-width * 0.5, -6.0),
-		Vector2(width * 0.5, -6.0),
-		Vector2(width * 0.5, 6.0),
-		Vector2(-width * 0.5, 6.0),
-	])
-	body.add_child(visual)
+func _configure_exit() -> bool:
+	var charge_room := get_room_host(&"lr_charge_lane")
+	if charge_room == null:
+		return false
+	_exit_portal = charge_room.get_exit_portal()
+	if _exit_portal == null:
+		return false
+	_set_exit_enabled(false)
+	return true
 
 
-func _build_exit_gate() -> void:
-	var exit := Area2D.new()
-	exit.name = "ExitGate"
-	exit.position = Vector2(2250.0, 540.0)
-	exit.collision_layer = 0
-	exit.collision_mask = 4
-	exit.set_meta("critical_exit", true)
-	exit.set_script(preload("res://scripts/stages/ExitPortal.gd"))
-	exit.set("prompt_text", "Enter gate")
-	add_child(exit)
+func _abort_setup(message: String) -> void:
+	push_error(message)
+	SignalBus.status_message_changed.emit("Stage setup failed")
+	for enemy in _required_enemies:
+		if is_instance_valid(enemy):
+			enemy.queue_free()
+	_required_enemies.clear()
+	_defeated_enemy_ids.clear()
+	_exit_portal = null
+	for room in _room_hosts.values():
+		if is_instance_valid(room):
+			room.queue_free()
+	_room_hosts.clear()
 
-	var collision := CollisionShape2D.new()
-	var rectangle := RectangleShape2D.new()
-	rectangle.size = Vector2(92.0, 116.0)
-	collision.position = Vector2(0.0, -58.0)
-	collision.shape = rectangle
-	exit.add_child(collision)
 
-	var frame := Polygon2D.new()
-	frame.color = Color("d4a33f")
-	frame.polygon = PackedVector2Array([
-		Vector2(-50.0, 0.0),
-		Vector2(-50.0, -124.0),
-		Vector2(-34.0, -146.0),
-		Vector2(34.0, -146.0),
-		Vector2(50.0, -124.0),
-		Vector2(50.0, 0.0),
-		Vector2(30.0, 0.0),
-		Vector2(30.0, -112.0),
-		Vector2(-30.0, -112.0),
-		Vector2(-30.0, 0.0),
-	])
-	exit.add_child(frame)
+func _on_required_enemy_defeated(enemy: EnemyBase) -> void:
+	var instance_id := enemy.get_instance_id()
+	if _defeated_enemy_ids.has(instance_id):
+		return
+	_defeated_enemy_ids[instance_id] = true
+	if get_remaining_enemy_count() == 0:
+		_set_exit_enabled(true)
+	_publish_encounter_state()
 
-	var interior := Polygon2D.new()
-	interior.color = Color("172225")
-	interior.polygon = PackedVector2Array([
-		Vector2(-28.0, 0.0),
-		Vector2(-28.0, -108.0),
-		Vector2(28.0, -108.0),
-		Vector2(28.0, 0.0),
-	])
-	interior.z_index = 1
-	exit.add_child(interior)
+
+func _set_exit_enabled(enabled: bool) -> void:
+	if _exit_portal == null:
+		return
+	_exit_portal.set_interaction_enabled(enabled)
+	var frame := _exit_portal.get_node_or_null("Frame") as Polygon2D
+	if frame != null:
+		frame.color = Color("d4a33f") if enabled else Color("6b7378")
+
+
+func _publish_encounter_state() -> void:
+	var remaining := get_remaining_enemy_count()
+	SignalBus.encounter_state_changed.emit({
+		"remaining": remaining,
+		"total": _required_enemies.size(),
+		"objective": "enter_gate" if remaining == 0 else "defeat_enemies",
+		"exit_enabled": is_exit_enabled(),
+	})
 
 
 func _after_player_respawned() -> void:
-	if player == null or player.camera == null:
+	if player == null:
 		return
-	player.camera.limit_left = 0
-	player.camera.limit_right = int(WORLD_WIDTH)
-	player.camera.limit_top = 0
-	player.camera.limit_bottom = 720
-	player.camera.make_current()
-	player.camera.reset_smoothing()
+	player.set_camera_limits(Rect2(0.0, 0.0, WORLD_WIDTH, WORLD_HEIGHT))
+	if player.camera != null:
+		player.camera.reset_smoothing()

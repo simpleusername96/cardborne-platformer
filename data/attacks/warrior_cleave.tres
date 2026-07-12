@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="AttackDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/player/AttackDefinition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"warrior_cleave"
+display_name = "Cleave"
+content_version = 1
+input_action = &"attack"
+tags = Array[StringName]([&"player_attack", &"basic", &"melee"])
+startup_time = 0.12
+active_time = 0.15
+recovery_time = 0.19
+cooldown = 0.46
+base_damage = 2
+stagger = 20
+knockback = Vector2(250, -95)
+hitbox_size = Vector2(58, 42)
+hitbox_offset = Vector2(38, -27)
+motion_style = &"wide_slash"
+visual_color = Color(1, 0.82, 0.18, 1)

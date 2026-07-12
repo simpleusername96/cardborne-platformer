@@ -24,20 +24,25 @@ func _run() -> void:
 
 	bindings.restore_all_defaults()
 	_expect_binding(bindings, "attack", "F", "attack default should be F")
+	_expect_binding(bindings, "heavy_attack", "G", "heavy attack default should be G")
+	_expect_binding(bindings, "skill_1", "Q", "skill 1 default should be Q")
+	_expect_binding(bindings, "skill_2", "R", "skill 2 default should be R")
+	_expect_binding(bindings, "skill_3", "V", "skill 3 default should be V")
+	_expect_binding(bindings, "use_consumable", "H", "consumable default should be H")
 
-	var remap_event := _make_key_event(KEY_G)
+	var remap_event := _make_key_event(KEY_J)
 	var remap_result: Dictionary = bindings.remap_action_to_event("attack", remap_event)
 	if not bool(remap_result.get("ok", false)):
-		_failures.append("Attack remap to G failed: %s" % str(remap_result.get("message", "")))
-	_expect_binding(bindings, "attack", "G", "attack should remap to G")
+		_failures.append("Attack remap to J failed: %s" % str(remap_result.get("message", "")))
+	_expect_binding(bindings, "attack", "J", "attack should remap to J")
 
 	var conflict_result: Dictionary = bindings.remap_action_to_event("attack", _make_key_event(KEY_SPACE))
 	if bool(conflict_result.get("ok", false)):
 		_failures.append("Attack remap to Space should be blocked because jump uses Space.")
-	_expect_binding(bindings, "attack", "G", "blocked duplicate should not change attack binding")
+	_expect_binding(bindings, "attack", "J", "blocked duplicate should not change attack binding")
 
 	bindings.ensure_input_map()
-	_expect_binding(bindings, "attack", "G", "saved attack binding should reload")
+	_expect_binding(bindings, "attack", "J", "saved attack binding should reload")
 
 	_write_saved_attack_key(KEY_SPACE)
 	bindings.ensure_input_map()

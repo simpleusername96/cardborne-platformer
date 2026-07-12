@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="EnemyArchetypeDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/EnemyArchetypeDefinition.gd" id="1_archetype"]
+
+[resource]
+script = ExtResource("1_archetype")
+id = &"walker"
+display_name = "Walker"
+content_version = 1
+tags = Array[StringName]([&"normal_enemy", &"grounded", &"teaching_enemy"])
+behavior_owner = &"WalkerEnemy"
+pressure_roles = Array[StringName]([&"occupier"])
+tell_contract = "Visible patrol and facing remain readable; movement has no hidden acceleration."
+response_contract = "Approach, jump over, knock back, or use a basic attack."
+punish_contract = "Hit stun and patrol-edge direction changes create the punish window."
+reference_health = 3
+reference_damage = 1
+reference_move_speed = 70.0
+reference_warning_time = 0.0
+reference_active_time = 0.0
+reference_recovery_time = 0.0
+reference_charge_speed = 0.0
+reference_stagger_capacity = 40
+minimum_support_width = 180.0
+minimum_lane_width = 0.0
+requires_patrol_turn_points = true
+requires_escape_route = false
+allows_wall_stop_lane = false
+room_requirement_tags = Array[StringName]([&"stable_support", &"no_immediate_ledge_fall"])
+minimum_warning_time = 0.0
+minimum_recovery_time = 0.0
+maximum_damage = 1

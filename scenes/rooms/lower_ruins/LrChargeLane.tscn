@@ -1,0 +1,168 @@
+[gd_scene load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://scripts/stages/RoomTemplateHost.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/stages/ExitPortal.gd" id="2"]
+
+[sub_resource type="RectangleShape2D" id="LaneMassShape"]
+size = Vector2(840, 300)
+
+[sub_resource type="RectangleShape2D" id="ExitMassShape"]
+size = Vector2(280, 320)
+
+[sub_resource type="RectangleShape2D" id="BoundaryShape"]
+size = Vector2(32, 720)
+
+[sub_resource type="RectangleShape2D" id="EscapeLedgeShape"]
+size = Vector2(190, 12)
+
+[sub_resource type="RectangleShape2D" id="ExitAreaShape"]
+size = Vector2(92, 116)
+
+[node name="LrChargeLane" type="Node2D"]
+script = ExtResource("1")
+room_id = &"lr_charge_lane"
+
+[node name="Terrain" type="Node2D" parent="."]
+
+[node name="ChargeLaneMass" type="StaticBody2D" parent="Terrain"]
+position = Vector2(420, 600)
+collision_layer = 1
+collision_mask = 0
+metadata/surface_id = &"charge_lane"
+metadata/support_top = 600.0
+metadata/support_width = 840.0
+metadata/critical = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/ChargeLaneMass"]
+position = Vector2(0, 150)
+shape = SubResource("LaneMassShape")
+
+[node name="RockVisual" type="Polygon2D" parent="Terrain/ChargeLaneMass"]
+color = Color(0.22, 0.28, 0.31, 1)
+polygon = PackedVector2Array(-420, 0, 420, 0, 420, 300, -420, 300)
+
+[node name="SupportCap" type="Polygon2D" parent="Terrain/ChargeLaneMass"]
+color = Color(0.34, 0.57, 0.60, 1)
+polygon = PackedVector2Array(-420, 0, 420, 0, 420, 8, -420, 8)
+
+[node name="GrooveA" type="Line2D" parent="Terrain/ChargeLaneMass"]
+width = 4.0
+default_color = Color(0.14, 0.19, 0.21, 1)
+points = PackedVector2Array(-350, 78, 320, 78)
+
+[node name="GrooveB" type="Line2D" parent="Terrain/ChargeLaneMass"]
+width = 4.0
+default_color = Color(0.14, 0.19, 0.21, 1)
+points = PackedVector2Array(-310, 148, 360, 148)
+
+[node name="ExitMass" type="StaticBody2D" parent="Terrain"]
+position = Vector2(980, 580)
+collision_layer = 1
+collision_mask = 0
+metadata/surface_id = &"charge_exit"
+metadata/support_top = 580.0
+metadata/support_width = 280.0
+metadata/critical = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/ExitMass"]
+position = Vector2(0, 160)
+shape = SubResource("ExitMassShape")
+
+[node name="RockVisual" type="Polygon2D" parent="Terrain/ExitMass"]
+color = Color(0.20, 0.25, 0.28, 1)
+polygon = PackedVector2Array(-140, 0, 140, 0, 140, 320, -140, 320)
+
+[node name="SupportCap" type="Polygon2D" parent="Terrain/ExitMass"]
+color = Color(0.44, 0.54, 0.39, 1)
+polygon = PackedVector2Array(-140, 0, 140, 0, 140, 8, -140, 8)
+
+[node name="RightBoundary" type="StaticBody2D" parent="Terrain"]
+position = Vector2(1136, 360)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/RightBoundary"]
+shape = SubResource("BoundaryShape")
+
+[node name="RockVisual" type="Polygon2D" parent="Terrain/RightBoundary"]
+color = Color(0.15, 0.20, 0.22, 1)
+polygon = PackedVector2Array(-16, -360, 16, -360, 16, 360, -16, 360)
+
+[node name="OneWay" type="Node2D" parent="."]
+
+[node name="EscapeLedgeA" type="StaticBody2D" parent="OneWay"]
+position = Vector2(300, 480)
+collision_layer = 2
+collision_mask = 0
+[node name="CollisionShape2D" type="CollisionShape2D" parent="OneWay/EscapeLedgeA"]
+shape = SubResource("EscapeLedgeShape")
+one_way_collision = true
+[node name="Visual" type="Polygon2D" parent="OneWay/EscapeLedgeA"]
+color = Color(0.44, 0.54, 0.39, 1)
+polygon = PackedVector2Array(-95, -6, 95, -6, 95, 6, -95, 6)
+
+[node name="EscapeLedgeB" type="StaticBody2D" parent="OneWay"]
+position = Vector2(700, 470)
+collision_layer = 2
+collision_mask = 0
+[node name="CollisionShape2D" type="CollisionShape2D" parent="OneWay/EscapeLedgeB"]
+shape = SubResource("EscapeLedgeShape")
+one_way_collision = true
+[node name="Visual" type="Polygon2D" parent="OneWay/EscapeLedgeB"]
+color = Color(0.34, 0.57, 0.60, 1)
+polygon = PackedVector2Array(-95, -6, 95, -6, 95, 6, -95, 6)
+
+[node name="Hazards" type="Node2D" parent="."]
+[node name="DecorBack" type="Node2D" parent="."]
+[node name="DecorFront" type="Node2D" parent="."]
+
+[node name="Anchors" type="Node2D" parent="."]
+[node name="Sockets" type="Node2D" parent="Anchors"]
+[node name="Entry" type="Marker2D" parent="Anchors/Sockets"]
+position = Vector2(0, 600)
+[node name="Exit" type="Marker2D" parent="Anchors/Sockets"]
+position = Vector2(1120, 580)
+
+[node name="Enemy" type="Node2D" parent="Anchors"]
+[node name="ChargerA" type="Marker2D" parent="Anchors/Enemy"]
+position = Vector2(520, 600)
+[node name="ChargerB" type="Marker2D" parent="Anchors/Enemy"]
+position = Vector2(650, 600)
+
+[node name="Hazard" type="Node2D" parent="Anchors"]
+[node name="Reward" type="Node2D" parent="Anchors"]
+[node name="Objective" type="Node2D" parent="Anchors"]
+
+[node name="ExitGate" type="Area2D" parent="Anchors/Objective"]
+position = Vector2(1010, 580)
+collision_layer = 0
+collision_mask = 4
+script = ExtResource("2")
+prompt_text = "Enter gate"
+interaction_enabled = false
+disabled_prompt_text = "Defeat all enemies"
+metadata/critical_exit = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Anchors/Objective/ExitGate"]
+position = Vector2(0, -58)
+shape = SubResource("ExitAreaShape")
+
+[node name="Frame" type="Polygon2D" parent="Anchors/Objective/ExitGate"]
+color = Color(0.42, 0.45, 0.47, 1)
+polygon = PackedVector2Array(-50, 0, -50, -124, -34, -146, 34, -146, 50, -124, 50, 0, 30, 0, 30, -112, -30, -112, -30, 0)
+
+[node name="Interior" type="Polygon2D" parent="Anchors/Objective/ExitGate"]
+z_index = 1
+color = Color(0.09, 0.13, 0.15, 1)
+polygon = PackedVector2Array(-28, 0, -28, -108, 28, -108, 28, 0)
+
+[node name="Recovery" type="Node2D" parent="Anchors"]
+[node name="LaneRecovery" type="Marker2D" parent="Anchors/Recovery"]
+position = Vector2(120, 600)
+
+[node name="CameraBounds" type="Node2D" parent="."]
+metadata/bounds = Rect2(0, 0, 1120, 720)
+[node name="Validation" type="Node2D" parent="."]
+metadata/minimum_charge_lane = 520.0
+metadata/escape_route_count = 2
+metadata/max_required_step = 20.0

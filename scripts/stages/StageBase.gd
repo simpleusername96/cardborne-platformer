@@ -3,8 +3,8 @@ extends Node2D
 
 signal stage_completed(stage_id: String)
 
-@export var stage_id: String = "motion_test"
-@export var stage_display_name: String = "Motion Test"
+@export var stage_id: String = "stage"
+@export var stage_display_name: String = "Stage"
 @export var player_scene: PackedScene = preload("res://scenes/player/Player.tscn")
 @export var spawn_player_on_ready: bool = true
 @export var respawn_invulnerability_time: float = 1.0

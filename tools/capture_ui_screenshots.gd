@@ -35,6 +35,16 @@ var _captures: Array[Dictionary] = [
 		"state": "production_stage",
 	},
 	{
+		"name": "desktop_charge_lane",
+		"size": Vector2i(1280, 720),
+		"state": "production_charge_lane",
+	},
+	{
+		"name": "compact_charge_lane",
+		"size": Vector2i(960, 540),
+		"state": "production_charge_lane",
+	},
+	{
 		"name": "desktop_run_result",
 		"size": Vector2i(1280, 720),
 		"state": "run_result",
@@ -67,12 +77,14 @@ func _run() -> void:
 func _capture(capture: Dictionary) -> void:
 	root.size = capture["size"]
 	DisplayServer.window_set_size(capture["size"])
+	await process_frame
+	await process_frame
 
 	var main_scene := load(MAIN_SCENE) as PackedScene
 	var main_instance := main_scene.instantiate()
 	root.add_child(main_instance)
-	await process_frame
-	await process_frame
+	for _frame in 4:
+		await process_frame
 
 	var game := root.get_node_or_null("Game")
 	var run_director := root.get_node_or_null("RunDirector")
@@ -86,6 +98,14 @@ func _capture(capture: Dictionary) -> void:
 			run_director.show_character_select()
 		"production_stage":
 			run_director.start_production_run(0)
+		"production_charge_lane":
+			run_director.start_production_run(0)
+			await process_frame
+			var stage: Variant = game.current_stage
+			if stage != null and stage.player != null:
+				stage.player.global_position = Vector2(1800.0, 600.0)
+				if stage.player.camera != null:
+					stage.player.camera.reset_smoothing()
 		"run_result":
 			run_director.start_production_run(1)
 			run_director.show_run_result(true)

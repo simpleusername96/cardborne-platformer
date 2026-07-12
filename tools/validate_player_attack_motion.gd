@@ -17,7 +17,7 @@ func _run() -> void:
 		return
 
 	game.ensure_input_map()
-	await _check_profile_attack(0, "heavy_swing", false)
+	await _check_profile_attack(0, "wide_slash", false, 0.18)
 	await _check_profile_attack(1, "arrow_projectile", true)
 	await _check_profile_attack(2, "quick_slash", false)
 
@@ -30,7 +30,12 @@ func _run() -> void:
 	quit()
 
 
-func _check_profile_attack(profile_index: int, expected_style: String, expects_projectile: bool) -> void:
+func _check_profile_attack(
+	profile_index: int,
+	expected_style: String,
+	expects_projectile: bool,
+	startup_wait: float = 0.0
+) -> void:
 	var run_state := root.get_node_or_null("/root/RunState")
 	if run_state == null:
 		_failures.append("RunState autoload is unavailable.")
@@ -49,30 +54,51 @@ func _check_profile_attack(profile_index: int, expected_style: String, expects_p
 	var player := packed_scene.instantiate()
 	world.add_child(player)
 	await process_frame
+	if profile_index == 0:
+		player.facing = -1
 
 	Input.action_press("attack")
 	await physics_frame
 	Input.action_release("attack")
+	if startup_wait > 0.0:
+		await create_timer(startup_wait).timeout
 	await physics_frame
 
-	if str(player.active_attack_motion_style) != expected_style:
-		_failures.append("Profile %d expected style %s, got %s." % [profile_index, expected_style, str(player.active_attack_motion_style)])
+	var combat := player.get_node_or_null("CombatController") as PlayerCombatController
+	var hitbox := player.get_node_or_null("AttackHitbox") as Hitbox
+	var attack_visual := player.get_node_or_null("AttackMotionVisual") as Polygon2D
+	if combat == null or combat.current_attack == null:
+		_failures.append("Profile %d did not start a combat action." % profile_index)
+		world.queue_free()
+		await process_frame
+		return
+	if str(combat.current_attack.motion_style) != expected_style:
+		_failures.append(
+			"Profile %d expected style %s, got %s."
+			% [profile_index, expected_style, str(combat.current_attack.motion_style)]
+		)
 
-	if not player.attack_hitbox.visible:
+	if hitbox == null:
+		_failures.append("Profile %d has no attack hitbox." % profile_index)
+	elif not expects_projectile and not hitbox.visible:
 		_failures.append("Profile %d attack visual parent is not visible after attack." % profile_index)
 
-	if player.attack_visual == null or not player.attack_visual.visible:
+	if attack_visual == null or not attack_visual.visible:
 		_failures.append("Profile %d attack visual is not visible after attack." % profile_index)
+	elif profile_index == 0 and attack_visual.position.x >= 0.0:
+		_failures.append("Warrior attack visual should follow a left-facing startup turn.")
 
 	var projectile_count := _count_player_projectiles(world)
 	if expects_projectile:
-		if player.attack_hitbox.active:
+		if hitbox != null and hitbox.active:
 			_failures.append("Profile %d should not keep melee hitbox active for projectile attack." % profile_index)
 		if projectile_count < 1:
 			_failures.append("Profile %d did not spawn a player projectile." % profile_index)
 	else:
-		if not player.attack_hitbox.active:
+		if hitbox == null or not hitbox.active:
 			_failures.append("Profile %d did not activate melee hitbox." % profile_index)
+		elif profile_index == 0 and hitbox.position.x >= 0.0:
+			_failures.append("Warrior melee hitbox should follow a left-facing startup turn.")
 		if projectile_count != 0:
 			_failures.append("Profile %d unexpectedly spawned a projectile." % profile_index)
 

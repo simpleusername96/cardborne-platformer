@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="CharacterKit" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/player/CharacterKit.gd" id="1"]
+[ext_resource type="Resource" path="res://data/attacks/warrior_cleave.tres" id="2"]
+[ext_resource type="Resource" path="res://data/attacks/warrior_breaker.tres" id="3"]
+[ext_resource type="Resource" path="res://data/skills/warrior_shield_rush.tres" id="4"]
+
+[resource]
+script = ExtResource("1")
+id = &"warrior_first_run"
+display_name = "Warrior"
+content_version = 1
+profile_id = &"warrior"
+passive_id = &"warrior_resolve"
+guarded_duration = 1.5
+guarded_rearm_cooldown = 5.0
+basic_attack = ExtResource("2")
+heavy_attack = ExtResource("3")
+skills = Array[ExtResource("4")]([ExtResource("4")])

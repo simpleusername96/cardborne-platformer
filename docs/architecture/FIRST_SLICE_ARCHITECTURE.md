@@ -61,14 +61,14 @@ reward idempotency, save safety, and scene lifecycles interact.
 | `RunState.gd` | Profiles, health, initial run counters. | Narrow to run facts/commands; remove persistent concerns. |
 | `ProfileState.gd` | Settings persistence foundation. | Add versioned wallet, equipment, mastery, backup/migration. |
 | `PlayerBuild*.gd` | Deterministic base-stat resolution and validation. | Add typed source layers and effect breakdown. |
-| `CharacterProfile.gd` / `.tres` | Three movement/attack tuning seeds. | Reference complete kit definitions; no profile-ID branches. |
-| `PlayerController.gd` | Proven movement, damage, camera hooks. | Keep movement; extract attack/skill state. |
+| `CharacterProfile.gd` / `.tres` | Three movement profiles; Warrior references a typed kit. | Add complete Archer/Assassin kits; no profile-ID branches. |
+| `PlayerController.gd` | Movement, damage response, camera hooks. | Keep combat execution and presentation in their extracted owners. |
 | `MovementMetrics.gd` | Shared movement-envelope calculation. | Make generator tests consume it directly. |
-| `DamageInfo`, `Hitbox`, `Hurtbox` | Shared combat payload and hit path. | Add deterministic resolver, critical result, stagger, source/transaction IDs, per-attack target policy. |
-| `EnemyBase` + behavior scripts | Six archetype prototypes and projectiles. | Separate archetype behavior from exact variants/tuning, then add production scenes, reward IDs, cleanup. |
-| Stage components | Checkpoint, hazards, climbable, gate, destructible, exit. | Promote into authored room scenes and focused fixtures. |
+| `DamageInfo`, `Hitbox`, `Hurtbox`, resolver/result | Deterministic damage, earned critical, stagger, and shared hit path. | Add effect/source transaction IDs when reward/effect lifecycle lands. |
+| `EnemyBase` + typed enemy catalog | Ruin Walker/Charger production variants plus remaining prototypes. | Promote the remaining archetypes/variants and connect reward cleanup. |
+| Stage components + native room contract | Two linked production rooms plus reusable checkpoint/hazard/gate parts. | Expand the reviewed room catalog, then add planning and assembly. |
 | `StageBase.gd` | Player spawn, checkpoint, clear signal. | Consume Stage Plan/report and own stage lifecycle only. |
-| Production UI | Menu, character selection, compact HUD, result shell. | Add real states as systems land; remove placeholder claims. |
+| Production UI | Menu, character selection, live combat/objective HUD, result shell. | Add only reward/build states backed by working systems. |
 
 The deleted integrated testbed is not an architecture owner. Focused test scenes
 may be created per subsystem when they are smaller than a production workflow.
@@ -217,11 +217,12 @@ the service to commit one result.
 ### Character/combat
 
 - `scripts/player/PlayerController.gd`: movement/damage/camera only
-- `scripts/player/PlayerCombatController.gd`
+- `scripts/player/PlayerCombatController.gd`, `PlayerAttackPresenter.gd`
 - `scripts/player/CharacterKit.gd`
 - `scripts/player/AttackDefinition.gd`
 - `scripts/player/SkillDefinition.gd`
 - `scripts/combat/DamageResolver.gd`, `HitResult.gd`, `CriticalRule.gd`
+- `scripts/content/ContentId.gd`: shared durable content-ID syntax validation
 - `scripts/player/PlayerBuild.gd`, `PlayerBuildSnapshot.gd`
 - `data/characters/`, `data/attacks/`, `data/skills/`, `data/mastery/`
 
@@ -311,7 +312,8 @@ The active roadmap owns detailed checklists. Architecture dependency order is:
 
 1. Lock typed content/effect contracts and state scopes.
 2. Complete deterministic damage/earned critical resolution and Warrior
-   basic/heavy/Skill 1 against Ruin Walker/Charger variants in one authored room.
+   basic/heavy/Skill 1 against Ruin Walker/Charger variants across the linked
+   Patrol Gallery and Charge Lane authored rooms.
 3. Implement reward transaction, one level choice, and three cards end to end.
 4. Build RoomTemplate contract, six Stage 1 rooms, planner, validator, assembler,
    allocator, fallback, and seed report.
