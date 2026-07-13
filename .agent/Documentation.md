@@ -3,8 +3,8 @@
 ## Current Status
 
 - Cardborne boots into a production menu, character/loadout/mastery selection,
-  three deterministic normal stages, stage rewards, cards, and the Rest & Forge
-  transition.
+  three versioned approved fixed normal stages, stage rewards, cards, and the Rest
+  & Forge transition.
 - The integrated `MotionTestStage`, debug HUD, testbed inputs/flags, historical
   handoff package, fixed-grid maps, and generated wireframe prototype were retired
   on 2026-07-12. Git history preserves them if a focused investigation needs them.
@@ -56,11 +56,12 @@ Read in this order:
 ## Durable Decisions
 
 - Use Godot 4.7 stable and GDScript.
-- Build a 28-38 minute first run: three generated normal stages and one authored
-  two-phase boss.
+- Build a 28-38 minute first run: three approved fixed normal stages and one
+  authored two-phase boss. Keep procedural selection dormant until the complete
+  gameplay loop and fixed-stage baselines are accepted.
 - Preserve one shared baseline movement envelope for Warrior, Archer, and Assassin.
-- Generate Stage Plans from authored native Godot room scenes and typed metadata;
-  do not scatter arbitrary platforms or content coordinates.
+- Assemble versioned Stage Plans from authored native Godot room scenes and typed
+  metadata; do not scatter arbitrary platforms or content coordinates.
 - Use `MovementMetrics` and full-stage validation before stage load.
 - Model normal enemies as stable behavior archetypes plus exact stage variants;
   tuning profiles validate authored bounds and never multiply runtime stats again.
@@ -83,8 +84,8 @@ Read in this order:
   commercial art or recorded audio.
 - Automated balance covers deterministic complete-run simulations; human feel and
   onboarding feedback should drive the next tuning plan.
-- Broadening room, enemy, card, or boss content will expand the seed and roster
-  matrices and must preserve the current least-mobile traversal contract.
+- Broadening room, enemy, card, or boss content will expand the approved-plan and
+  roster matrices and must preserve the current least-mobile traversal contract.
 
 ## Run / Verify
 
@@ -93,6 +94,7 @@ Read in this order:
 - Short boot: `./tools/godot.ps1 --path . --headless --quit-after 2`
 - Production flow: `./tools/godot.ps1 --path . --headless --script res://tools/validate_production_boot.gd`
 - Production stage: `./tools/godot.ps1 --path . --headless --script res://tools/validate_production_stage.gd`
+- Approved Stage Plans: `./tools/godot.ps1 --path . --headless --script res://tools/validate_curated_stage_plans.gd`
 - Flooded generation: `./tools/godot.ps1 --path . --headless --script res://tools/validate_flooded_generation.gd`
 - Flooded runtime: `./tools/godot.ps1 --path . --headless --script res://tools/validate_flooded_stage_runtime.gd`
 - Sanctum generation: `./tools/godot.ps1 --path . --headless --script res://tools/validate_broken_sanctum_generation.gd`

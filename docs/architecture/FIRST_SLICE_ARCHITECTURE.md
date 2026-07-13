@@ -2,9 +2,9 @@
 type: spec
 status: active
 owner: BK
-last_reviewed: 2026-07-12
+last_reviewed: 2026-07-13
 canonical_for: First complete run runtime ownership, data boundaries, state transitions, and implementation contracts
-source: Current Godot code, retired testbed lessons, active game blueprint, and content specs
+source: Current Godot code, retired testbed lessons, active game blueprint, content specs, and fixed-stage decision through 2026-07-13
 related:
   - ../product/2d_platform_action_card_game_prd.md
   - ../design/PLAYER_CHARACTER_SYSTEMS.md
@@ -191,6 +191,9 @@ EncounterAllocator.allocate(plan, room anchors, catalogs) -> archetype/variant e
 
 Planning and validation remain data-only where possible. Assembly owns scene-tree
 details. A validation failure cannot be converted into a warning and loaded.
+Production currently enters this pipeline through the explicit curated-plan path
+with one versioned fixed layout seed per approved stage. `StagePlanner` remains a
+dormant, testable future path and cannot be selected implicitly by production.
 
 ### Reward Economy
 
@@ -303,7 +306,8 @@ presentation references, and `validate_definition()`.
 ## Error And Failure Behavior
 
 - Invalid content catalog: block run start and list exact IDs/errors.
-- Invalid generated stage: deterministic retry then curated fallback.
+- Invalid approved stage: fail closed and return to a stable flow state. The
+  dormant random path may still retry and use curated fallback in focused tests.
 - Assembly mismatch: unload partial stage and return to a readable failure surface;
   never leave the player in a broken map.
 - Invalid reward choice: keep the choice screen open and do not spend/apply.
@@ -355,8 +359,9 @@ multiple consecutive infrastructure-only milestones.
 
 ### Batch/final gates
 
-- 1,000-seed property sweep at stage-generator gates, not every edit;
-- curated all-character seed play matrix;
+- 1,000-seed property sweep when changing the dormant planner or preparing its
+  future re-entry, not every fixed-stage edit;
+- approved-plan all-character play matrix;
 - complete run death/clear/save paths;
 - rendered gameplay/UI at 1280x720 and 1920x1080, with 960x540 robustness where
   practical;

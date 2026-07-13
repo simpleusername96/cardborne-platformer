@@ -3,9 +3,9 @@ type: spec
 status: active
 owner: BK
 created: 2026-06-30
-last_reviewed: 2026-07-12
+last_reviewed: 2026-07-13
 canonical_for: Cardborne product identity and first complete run scope
-source: Existing PRD, first-run scope delta, first-slice expansion, and owner feedback through 2026-07-12
+source: Existing PRD, first-run scope delta, first-slice expansion, and owner feedback through 2026-07-13
 related:
   - ../design/PLAYER_CHARACTER_SYSTEMS.md
   - ../design/PROCEDURAL_REGION_GENERATION.md
@@ -34,7 +34,7 @@ combat produce rewards that visibly transform the rest of the run.
 The first complete run contains:
 
 - three playable characters;
-- three seeded normal stages assembled from authored room templates;
+- three approved fixed normal stages assembled from authored room templates;
 - one authored two-phase boss fight;
 - character-specific basic attacks, heavy attacks, three skills, and one passive;
 - run levels, stage-clear cards, coins, temporary forging, and consumables;
@@ -89,14 +89,16 @@ Every milestone must protect these five pillars.
   differently without comparing stat screens.
 - Reward screens never offer effects that the selected character cannot use.
 
-### 4. Fair variety
+### 4. Fair authored variety
 
-- Seeds vary room order, optional branches, encounters, hazards, and rewards.
-- Authored templates define valid possibilities; generation never invents
-  arbitrary critical geometry.
+- The current vertical slice uses one reviewed Stage Plan per normal stage while
+  combat, progression, rewards, and presentation are finalized.
+- Authored rooms still provide route, encounter, hazard, and reward variety within
+  each fixed plan; no runtime system invents arbitrary critical geometry.
 - The least-mobile base character can clear every required route.
 - Optional routes may be harder, but reward risk rather than gate completion.
-- Invalid generation fails closed and loads a curated fallback.
+- The dormant random planner may return only after fixed-stage gameplay is
+  accepted and it can prove the same traversal and content contracts.
 
 ### 5. Short-run tension without grind
 
@@ -111,11 +113,11 @@ Every milestone must protect these five pillars.
 ```text
 main menu
  -> character and persistent loadout
- -> seeded Stage 1: teach and establish build
+ -> fixed Stage 1: teach and establish build
  -> stage-clear card
- -> seeded Stage 2: hazards and route risk
+ -> fixed Stage 2: hazards and route risk
  -> stage-clear card + rest/forge
- -> seeded Stage 3: mixed mastery check
+ -> fixed Stage 3: mixed mastery check
  -> stage-clear card
  -> authored Giant Slime King arena
  -> persistent settlement and run summary
@@ -138,7 +140,7 @@ safe entry
 
 | Stage | Player-facing job | Room target | Content emphasis |
 | --- | --- | ---: | --- |
-| Ruin Approach | Learn the seed and establish confidence. | 6 required + 1 optional | Basic traversal, Walker, Charger, simple gaps, visible rewards. |
+| Ruin Approach | Learn the route language and establish confidence. | 6 required + 1 optional | Basic traversal, Walker, Charger, simple gaps, visible rewards. |
 | Flooded Works | Force timing and spending decisions. | 7 required + 1-2 optional | Poison vents, crumbling paths, Shooter, Leaper, rest/forge. |
 | Broken Sanctum | Test the completed run build. | 8 required + 2 optional | Shield Guard, Sentry, gates, mixed encounters, reduced recovery. |
 | Slime Court | Read patterns and cash in the build. | Authored arena | Four boss patterns, two phases, bounded adds, clear punish windows. |
@@ -209,13 +211,16 @@ typed runtime catalogs indexed by `docs/data/RUNTIME_CATALOG_INDEX.md`. A catalo
 entry is not complete until it is reachable in the player-facing loop and has
 focused validation.
 
-## Random Generation Contract
+## Stage Plan And Deferred Generation Contract
 
-- The generator creates a Stage Plan, not raw terrain.
-- A Stage Plan selects room templates, socket connections, encounter anchors,
-  hazard anchors, optional branches, checkpoints, and rewards.
-- Every accepted plan records seed, data version, retries, selected templates,
-  budget use, validation results, and fallback status.
+- Production currently loads one versioned approved Stage Plan for each normal
+  stage through the explicit curated path. Different run seeds must not change its
+  rooms, connections, encounters, hazards, rewards, or field pickups.
+- A Stage Plan selects authored room templates, socket connections, encounter
+  anchors, hazard anchors, optional branches, checkpoints, and rewards; it never
+  describes raw arbitrary terrain coordinates.
+- Every approved plan records mode, layout version, fixed layout seed, selected
+  templates, complete content signature, and validation results.
 - Required geometry uses filled rock masses with visibly supported undersides,
   varied top heights, stable landing surfaces, and navigable space between masses.
 - Critical route transitions are derived from `MovementMetrics` for the complete
@@ -223,6 +228,9 @@ focused validation.
 - Enemy, trap, reward, and exit placement uses authored anchors only.
 - Encounter generation selects a pressure role, then an enemy archetype, then an
   exact stage-eligible variant. It never rolls hidden per-instance combat stats.
+- The random planner remains testable but dormant. A later re-entry plan must add
+  player-accepted fixed-stage baselines, broad seed validation, guaranteed return
+  from committed drops, and rendered review before production can call it again.
 
 ## Combat And Encounter Contract
 
@@ -272,7 +280,7 @@ Automated validation protects correctness; playtests protect fun.
 
 Record per run:
 
-- seed, character, loadout, duration, room order, and fallback use;
+- run ID, approved-plan version, character, loadout, duration, and room order;
 - damage taken by source and whether the source was visible;
 - encounter and room duration;
 - offered and selected cards;
@@ -300,8 +308,9 @@ as invisible numbers, or deaths as unclear.
 - A complete run can be played without debug input or explanatory labels.
 - Three base characters clear every required route and the boss.
 - All 13 first-run enemy variants preserve their archetype response contract and
-  are reproducible from the accepted stage seed/content version.
-- Same seed and content version reproduce the same accepted Stage Plan.
+  are reproducible from the approved plan/content version.
+- Different run seeds reproduce the same approved Stage Plan and map-content
+  signature for each normal stage.
 - Invalid stages never reach gameplay silently.
 - Rewards apply once and state scopes do not leak across run/profile boundaries.
 - Persistent writes are versioned and preserve the last valid profile.
@@ -312,22 +321,23 @@ as invisible numbers, or deaths as unclear.
 The first complete run is done when a fresh player can:
 
 1. Select any character and persistent loadout.
-2. Complete three varied, valid seeded stages.
+2. Complete three varied, valid approved fixed stages.
 3. Use every attack and skill with readable feedback.
 4. Gain levels, choose three stage cards, spend coins, forge, and use equipment.
 5. Collect and settle persistent materials without duplicate rewards.
 6. Defeat the two-phase boss or lose the run fairly.
 7. Return to menu, reload the profile, and start another reproducible run.
 
-The release candidate additionally passes the all-character seed matrix, economy
-bounds, save round trip, boss scheduler simulation, keyboard/gamepad path, and
-960x540/1280x720/1920x1080 rendered review.
+The release candidate additionally passes the all-character approved-plan matrix,
+economy bounds, save round trip, boss scheduler simulation, keyboard/gamepad path,
+and 960x540/1280x720/1920x1080 rendered review.
 
 ## Non-Goals
 
 - Online accounts, cloud saves, multiplayer, trading, or monetization.
 - Multiple biomes, multiple bosses, quests, dialogue trees, or campaign story.
 - Arbitrary per-tile procedural terrain or random boss arenas.
+- Runtime-random normal-stage topology during the fixed-stage gameplay refinement.
 - More than three characters or more than three active skills per character.
 - Grid inventory, durability, item destruction, downgrade, or mandatory grind.
 - Final commissioned art, final soundtrack, localization, console certification,

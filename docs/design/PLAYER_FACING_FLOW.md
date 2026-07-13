@@ -3,9 +3,9 @@ type: spec
 status: active
 owner: BK
 created: 2026-07-12
-last_reviewed: 2026-07-12
+last_reviewed: 2026-07-13
 canonical_for: First-run player-facing navigation, HUD, choices, rest, settings, and result behavior
-source: Cardborne Game Blueprint, current production UI, progression economy spec, and first-run architecture
+source: Cardborne Game Blueprint, current production UI, progression economy spec, first-run architecture, and owner feedback through 2026-07-13
 related:
   - ../product/2d_platform_action_card_game_prd.md
   - ./PLAYER_CHARACTER_SYSTEMS.md
@@ -67,7 +67,7 @@ Each surface renders an immutable snapshot and emits an intent. It never edits
 | `ChoiceOfferSnapshot` | transaction ID, choice kind, three options, compatibility, current build comparison, reroll state | inspect, choose, reroll, confirm |
 | `RestSnapshot` | health, coins, consumable, equipped items, shop offers, forge choices, committed purchases | heal, buy, forge, leave |
 | `SettingsSnapshot` | audio levels, screen shake, damage flash, bindings, conflict state | adjust, rebind, restore, close |
-| `ResultSnapshot` | outcome, character, stage, seed, duration, build, death source, kept materials, unlocks | new run, main menu |
+| `ResultSnapshot` | outcome, character, stage, duration, build, death source, kept materials, unlocks | new run, main menu |
 
 Rejected intents return a short player-safe reason and leave the last valid
 snapshot visible. Accepted intents publish a new snapshot before input unlocks.
@@ -202,8 +202,8 @@ and leave for Stage 3.
 
 Death summary shows:
 
-- reached stage and room;
-- seed and duration;
+- outcome and furthest stage/room;
+- run duration;
 - final cards/equipment/affixes;
 - lethal source and recent damage sources;
 - kept materials and newly unlocked equipment;
@@ -244,7 +244,7 @@ character selected; Main Menu returns to the main menu.
 | Failure | Player-facing response |
 | --- | --- |
 | Invalid loadout | Keep selection open; identify the affected slot. |
-| Stage generation fallback | Load the curated route normally; record technical detail outside production UI. |
+| Approved stage load failure | Keep the player out of the broken stage and return to a stable retry/menu surface. |
 | Stage load failure | Return to a stable menu/result state with Retry or Main Menu. |
 | Reward conflict or duplicate | Keep current snapshot; do not grant twice; allow safe retry when unresolved. |
 | Save failure | Preserve in-memory result, warn that persistence failed, and expose Retry. |

@@ -2,7 +2,7 @@
 type: spec
 status: active
 owner: BK
-last_reviewed: 2026-07-12
+last_reviewed: 2026-07-13
 canonical_for: First-run stage profiles, terrain vocabulary, room catalog, and constrained generation rules
 source: Existing procedural region prototype, movement metrics, rock-mass feedback, and Cardborne Game Blueprint
 related:
@@ -16,9 +16,14 @@ related:
 
 ## Purpose
 
-Define how the Lower Ruins varies by seed while remaining intentionally authored,
-traversable, readable, and fun. Generation chooses compatible authored content; it
-does not draw arbitrary platforms.
+Define the constraints a future Lower Ruins random planner must satisfy while
+remaining intentionally authored, traversable, readable, and fun. Generation
+chooses compatible authored content; it does not draw arbitrary platforms.
+
+Current production does not vary normal-stage topology by run seed. It loads one
+versioned approved Stage Plan per region while the complete gameplay loop is tuned.
+The planner and its property tests remain dormant implementation evidence; this
+specification governs later re-entry rather than the current player-facing path.
 
 ## Scope
 
