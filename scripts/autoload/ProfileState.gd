@@ -209,8 +209,14 @@ func get_durable_unlocks() -> Array[String]:
 
 func get_build_effects(character_id: StringName) -> Array:
 	_ensure_initialized()
+	return _get_build_effects_for_loadout(
+		character_id,
+		get_loadout(String(character_id))
+	)
+
+
+func _get_build_effects_for_loadout(character_id: StringName, loadout: Dictionary) -> Array:
 	var effects: Array = []
-	var loadout := get_loadout(String(character_id))
 	for slot_id in ProfileData.PERSISTENT_SLOTS:
 		var item_id := StringName(loadout.get(slot_id, ""))
 		var item := equipment_catalog.get_item(item_id) if equipment_catalog != null else null
@@ -251,12 +257,19 @@ func get_character_loadout_snapshot(profile: CharacterProfile) -> Dictionary:
 	var character_id := StringName(profile.id)
 	var loadout := get_loadout(profile.id)
 	var build := preview_build(profile)
+	var current_values := build.get_values()
 	var slot_rows: Array[Dictionary] = []
 	for slot_id in ProfileData.PERSISTENT_SLOTS:
 		var options: Array[Dictionary] = []
 		for item in equipment_catalog.get_compatible(character_id):
 			if String(item.slot) != slot_id:
 				continue
+			var candidate_loadout := loadout.duplicate(true)
+			candidate_loadout[slot_id] = String(item.id)
+			var candidate_build := PlayerBuild.resolve(
+				profile.to_base_stats_dictionary(),
+				_get_build_effects_for_loadout(character_id, candidate_loadout)
+			)
 			options.append({
 				"id": String(item.id),
 				"display_name": item.display_name,
@@ -265,6 +278,12 @@ func get_character_loadout_snapshot(profile: CharacterProfile) -> Dictionary:
 				"owned": owns_equipment(String(item.id)),
 				"equipped": String(loadout.get(slot_id, "")) == String(item.id),
 				"unlock_costs": item.unlock_costs.duplicate(true),
+				"projected_stats": candidate_build.get_values(),
+				"stat_deltas": BuildComparison.stat_deltas(
+					current_values,
+					candidate_build.get_values()
+				),
+				"validation_errors": candidate_build.get_validation_errors(),
 			})
 		slot_rows.append({
 			"slot": slot_id,
@@ -291,6 +310,7 @@ func get_character_loadout_snapshot(profile: CharacterProfile) -> Dictionary:
 		"character_id": profile.id,
 		"materials": get_materials(),
 		"loadout": loadout,
+		"base_stats": profile.to_base_stats_dictionary(),
 		"slots": slot_rows,
 		"mastery": mastery_rows,
 		"effective_stats": build.get_values(),

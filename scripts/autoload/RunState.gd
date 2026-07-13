@@ -1041,20 +1041,32 @@ func get_rest_forge_snapshot() -> Dictionary:
 		var item := ProfileState.equipment_catalog.get_item(item_id)
 		if item == null:
 			continue
+		var current_affix_id := StringName(_temporary_affixes.get(String(item.id), ""))
+		var current_affix := forge_catalog.get_affix(current_affix_id) if forge_catalog != null else null
 		item_rows.append({
 			"id": String(item.id),
 			"display_name": item.display_name,
 			"slot": String(item.slot),
-			"affix_id": String(_temporary_affixes.get(String(item.id), "")),
+			"description": item.mechanical_description,
+			"tradeoff": item.tradeoff_description,
+			"base_effects": _build_effect_rows(item.build_effects),
+			"affix_id": String(current_affix_id),
+			"affix_name": current_affix.display_name if current_affix != null else "",
+			"affix_description": current_affix.mechanical_description if current_affix != null else "",
 		})
 	var offer_rows: Array[Dictionary] = []
 	for affix_id in _forge_offer:
 		var affix := forge_catalog.get_affix(affix_id) if forge_catalog != null else null
 		if affix != null:
+			var preview := _preview_forge_affix(_forge_offer_item_id, affix)
 			offer_rows.append({
 				"id": String(affix.id),
 				"display_name": affix.display_name,
 				"description": affix.mechanical_description,
+				"projected_stats": preview.get("projected_stats", {}),
+				"stat_deltas": preview.get("stat_deltas", []),
+				"validation_errors": preview.get("validation_errors", []),
+				"final_coins": maxi(coins - (forge_catalog.coin_cost if forge_catalog != null else 15), 0),
 			})
 	var consumable_rows: Array[Dictionary] = []
 	for consumable_id in CONSUMABLES:
@@ -1085,6 +1097,7 @@ func get_rest_forge_snapshot() -> Dictionary:
 		"forge_item_id": String(_forge_offer_item_id),
 		"forge_offer": offer_rows,
 		"temporary_affixes": _temporary_affixes.duplicate(true),
+		"effective_stats": get_effective_stats(),
 	}
 
 
@@ -1352,13 +1365,17 @@ func _collect_run_effects(stacks: Dictionary) -> Array:
 
 
 func _collect_all_build_effects(stacks: Dictionary) -> Array:
+	return _collect_build_effects_with_affixes(stacks, _temporary_affixes)
+
+
+func _collect_build_effects_with_affixes(stacks: Dictionary, affixes: Dictionary) -> Array:
 	var effects: Array = ProfileState.get_build_effects(StringName(selected_profile.id))
 	effects.append_array(_collect_run_effects(stacks))
 	if forge_catalog != null:
-		var item_ids := _temporary_affixes.keys()
+		var item_ids := affixes.keys()
 		item_ids.sort()
 		for item_id in item_ids:
-			var affix := forge_catalog.get_affix(StringName(_temporary_affixes[item_id]))
+			var affix := forge_catalog.get_affix(StringName(affixes[item_id]))
 			if affix != null:
 				for effect in affix.build_effects:
 					effects.append(effect)
@@ -1371,6 +1388,41 @@ func _collect_all_build_effects(stacks: Dictionary) -> Array:
 		dash_effect.source_scope = EffectDefinition.SOURCE_SCOPE_TEMPORARY
 		effects.append(dash_effect)
 	return effects
+
+
+func _preview_forge_affix(
+	item_id: StringName,
+	affix: ForgeAffixDefinition
+) -> Dictionary:
+	if selected_profile == null or item_id == &"" or affix == null:
+		return {"projected_stats": {}, "stat_deltas": [], "validation_errors": []}
+	var candidate_affixes := _temporary_affixes.duplicate(true)
+	candidate_affixes[String(item_id)] = String(affix.id)
+	var candidate := PlayerBuild.resolve(
+		selected_profile.to_base_stats_dictionary(),
+		_collect_build_effects_with_affixes(_micro_upgrade_stacks, candidate_affixes)
+	)
+	return {
+		"projected_stats": candidate.get_values(),
+		"stat_deltas": BuildComparison.stat_deltas(
+			effective_build_snapshot.get_values(),
+			candidate.get_values()
+		),
+		"validation_errors": candidate.get_validation_errors(),
+	}
+
+
+func _build_effect_rows(effects: Array[EffectDefinition]) -> Array[Dictionary]:
+	var rows: Array[Dictionary] = []
+	for effect in effects:
+		if effect == null:
+			continue
+		rows.append({
+			"stat_id": String(effect.stat_id),
+			"operation": effect.operation,
+			"value": effect.value,
+		})
+	return rows
 
 
 func _rebuild_forge_behavior_counters() -> void:
