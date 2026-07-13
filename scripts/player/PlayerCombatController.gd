@@ -11,6 +11,8 @@ enum Phase {
 const AFTERSHOCK_DELAY := 0.4
 const RALLY_ECHO_DISTANCE := 180.0
 const RALLY_ECHO_DURATION := 0.3
+const STEP_IN_DISTANCE := 12.0
+const PROJECTILE_RELEASE_OVERLAP := 2.0
 
 @export var player_path: NodePath = NodePath("..")
 @export var hitbox_path: NodePath = NodePath("../AttackHitbox")
@@ -645,6 +647,7 @@ func _advance_phase() -> void:
 
 func _activate_hit() -> void:
 	attack_direction = player.facing if not is_movement_locked() else attack_direction
+	_apply_tagged_step_in(current_attack, attack_direction)
 	attack_hitbox.position.x = absf(current_attack.hitbox_offset.x) * float(attack_direction)
 	if card_runtime != null:
 		card_runtime.notify_attack_activated(current_attack, {
@@ -1532,11 +1535,48 @@ func spawn_projectile(
 		options.get("event_context", {}).duplicate(true)
 	))
 	parent_node.add_child(projectile)
+	var release_distance := _projectile_release_distance(definition, projectile.projectile_size)
 	projectile.global_position = options.get("origin", player.global_position + Vector2(
-		float(direction) * maxf(absf(definition.hitbox_offset.x), 24.0),
+		float(direction) * release_distance,
 		definition.hitbox_offset.y
 	))
 	return projectile
+
+
+func _apply_tagged_step_in(definition: AttackDefinition, direction: int) -> void:
+	var body := player as CharacterBody2D
+	if body == null or definition == null or not definition.tags.has(&"step_in"):
+		return
+	if not body.is_on_floor():
+		return
+	var requested := Vector2(float(direction) * STEP_IN_DISTANCE, 0.0)
+	var allowed := requested
+	var collision := KinematicCollision2D.new()
+	if body.test_move(body.global_transform, requested, collision):
+		allowed.x = collision.get_travel().x
+	allowed.y = 0.0
+	if absf(allowed.x) < 0.5 or int(sign(allowed.x)) != direction:
+		return
+	var destination := body.global_position + allowed
+	# The micro-step is combat spacing only; walls and unsupported ledges cancel it.
+	if not _has_supported_ground(destination):
+		return
+	body.global_position = destination
+
+
+func _projectile_release_distance(
+	definition: AttackDefinition,
+	projectile_size: Vector2
+) -> float:
+	var player_half_width := 0.0
+	var collision := player.get_node_or_null("Hurtbox/CollisionShape2D") as CollisionShape2D
+	if collision != null and collision.shape is RectangleShape2D:
+		player_half_width = (collision.shape as RectangleShape2D).size.x * 0.5
+	var overlap_release := maxf(
+		player_half_width + projectile_size.x * 0.5 - PROJECTILE_RELEASE_OVERLAP,
+		0.0
+	)
+	return maxf(absf(definition.hitbox_offset.x), overlap_release)
 
 
 func _fixed_projectile_damage(

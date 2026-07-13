@@ -65,11 +65,17 @@ func _validate_twin_cut_release_and_hold() -> void:
 
 func _validate_runtime_footprint_edges() -> void:
 	await _create_fixture()
-	var edge_overlap: Variant = _spawn_enemy(Vector2(67.0, 100.0), 20, true)
-	var outside: Variant = _spawn_enemy(Vector2(70.0, 100.0), 20, true)
+	var definition: AttackDefinition = ASSASSIN_KIT.basic_attack
+	var enemy_half_width := 19.0
+	var forward_reach := (
+		absf(definition.hitbox_offset.x)
+		+ definition.hitbox_size.x * 0.5
+		+ enemy_half_width
+	)
+	var edge_overlap: Variant = _spawn_enemy(Vector2(forward_reach - 0.5, 100.0), 20, true)
+	var outside: Variant = _spawn_enemy(Vector2(forward_reach + 0.5, 100.0), 20, true)
 	edge_overlap.set_physics_process(false)
 	outside.set_physics_process(false)
-	var definition: AttackDefinition = ASSASSIN_KIT.basic_attack
 	var center: Vector2 = _player.global_position + definition.hitbox_offset
 	var targets: Array[Node] = _player.combat_controller.find_targets_in_box(
 		center,

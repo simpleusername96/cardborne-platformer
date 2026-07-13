@@ -202,7 +202,7 @@ func _directional_origin(direction: int) -> Vector2:
 
 func _configure_wide_slash(size: Vector2) -> void:
 	var half := size * 0.5
-	var reach := minf(half.x, half.y)
+	var reach := minf(half.x * 0.80, half.y * 1.05)
 	visual.polygon = PackedVector2Array([
 		Vector2(-reach, -half.y * 0.20),
 		Vector2(-reach * 0.12, -half.y * 0.38),
@@ -215,7 +215,7 @@ func _configure_wide_slash(size: Vector2) -> void:
 
 func _configure_quick_slash(size: Vector2) -> void:
 	var half := size * 0.5
-	var reach := minf(half.x, half.y) * 0.78
+	var reach := minf(half.x * 0.78, half.y * 1.10)
 	visual.polygon = PackedVector2Array([
 		Vector2(-reach, -half.y * 0.16),
 		Vector2(reach * 0.72, -half.y * 0.28),
