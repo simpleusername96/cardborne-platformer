@@ -132,6 +132,7 @@ func _configure_state(hud: Control, state: StringName) -> void:
 	combat.merge(combat_overrides, true)
 	hud.call("_on_run_state_changed", {
 		"profile_id": String(profile_id),
+		"profile_display_name": String(profile_id).capitalize(),
 		"level": 5,
 		"xp": 158,
 		"coins": 25,

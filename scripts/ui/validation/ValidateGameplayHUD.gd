@@ -196,6 +196,7 @@ func _run_snapshot(
 ) -> Dictionary:
 	return {
 		"profile_id": String(profile_id),
+		"profile_display_name": String(profile_id).capitalize(),
 		"level": level,
 		"xp": xp,
 		"coins": coins,

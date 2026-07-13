@@ -212,6 +212,7 @@ func get_run_snapshot() -> RunSnapshot:
 	return RunSnapshot.new({
 		"seed": run_seed,
 		"profile_id": selected_profile.id if selected_profile != null else "",
+		"profile_display_name": selected_profile.display_name if selected_profile != null else "",
 		"stage_index": current_stage_index,
 		"health": current_health,
 		"max_health": max_health,

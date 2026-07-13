@@ -77,6 +77,10 @@ func _validate_level_choice() -> void:
 		"chosen micro-upgrade should appear in build source breakdown"
 	)
 	var snapshot: Dictionary = _run_state.get_run_snapshot().to_dictionary()
+	_expect(
+		String(snapshot.get("profile_display_name", "")) == "Warrior",
+		"run snapshots should expose the catalog-owned profile display name"
+	)
 	snapshot["coins"] = 99999
 	_expect(_run_state.coins != 99999, "run snapshots should be copy-safe")
 

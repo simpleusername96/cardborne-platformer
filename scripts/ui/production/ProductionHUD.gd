@@ -495,7 +495,10 @@ func _refresh_health_cluster() -> void:
 	var current_health := maxi(int(_run_snapshot.get("health", 0)), 0)
 	var max_health := maxi(int(_run_snapshot.get("max_health", 1)), 1)
 	var accent := Styles.class_accent(profile_id)
-	profile_label.text = String(profile_id).replace("_", " ").to_upper()
+	var profile_display_name := String(_run_snapshot.get("profile_display_name", "")).strip_edges()
+	if profile_display_name.is_empty():
+		profile_display_name = String(profile_id).replace("_", " ")
+	profile_label.text = profile_display_name.to_upper()
 	health_value_label.text = "%d / %d" % [current_health, max_health]
 	health_bar.max_value = float(max_health)
 	health_bar.value = float(current_health)
