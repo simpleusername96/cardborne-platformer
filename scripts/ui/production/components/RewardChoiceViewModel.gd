@@ -43,14 +43,14 @@ static func for_level_upgrade(
 			" (+%d restored)" % restored if restored > 0 else " (already full)",
 		])
 	if mechanics.is_empty():
-		mechanics.append("No valid stat change")
+		mechanics.append(String(preview.get("message", "Upgrade unavailable.")))
 	var presentation := _upgrade_presentation(upgrade, changes)
 	var footer := (
 		"IMMEDIATE RECOVERY"
 		if upgrade.recovery_choice
 		else "STACK %d -> %d / %d" % [current_stack, current_stack + 1, upgrade.max_stacks]
 	)
-	return _base_view_model(
+	var view := _base_view_model(
 		upgrade.id,
 		presentation["category"],
 		"RUN UPGRADE",
@@ -62,6 +62,8 @@ static func for_level_upgrade(
 		presentation["glyph"],
 		presentation["accent"]
 	)
+	view["enabled"] = bool(preview.get("ok", false))
+	return view
 
 
 static func for_card(
@@ -243,7 +245,7 @@ static func _format_card_effect(effect: CardEffectDefinition, stack: int) -> Str
 		&"request_reward_preview_replacement":
 			return "%d compatible replacement choice" % effect.choice_count
 		_:
-			return String(effect.effect_type).replace("_", " ").capitalize()
+			return "Effect details unavailable"
 
 
 static func _stack_int(values: PackedInt32Array, stack: int) -> int:
