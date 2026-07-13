@@ -19,7 +19,7 @@ func _run() -> void:
 	_bindings.ensure_input_map()
 	_validate_complete_layout()
 	_validate_prompt_switching()
-	_validate_settings_copy()
+	await _validate_settings_copy()
 	_finish()
 
 
@@ -125,26 +125,33 @@ func _validate_prompt_switching() -> void:
 
 
 func _validate_settings_copy() -> void:
-	var popup_script := load("res://scripts/ui/SettingsPopup.gd") as Script
-	if popup_script == null:
-		_failures.append("SettingsPopup script could not be loaded.")
+	var popup_scene := load("res://scenes/ui/SettingsPopup.tscn") as PackedScene
+	if popup_scene == null:
+		_failures.append("SettingsPopup scene could not be loaded.")
 		return
-	var popup := popup_script.new() as Control
+	var popup := popup_scene.instantiate() as Control
 	root.add_child(popup)
+	await process_frame
 	var warning_label := popup.get("warning_label") as Label
 	_expect(
 		warning_label != null
-		and warning_label.text.contains("Keyboard bindings can be remapped")
-		and warning_label.text.contains("fixed standard layout"),
+		and warning_label.text.contains("Keyboard keys can be remapped")
+		and warning_label.text.contains("Gamepad layout is fixed"),
 		"Settings should distinguish keyboard remapping from fixed gamepad controls"
 	)
-	var row_labels: Dictionary = popup.get("binding_row_labels")
-	var jump_row := row_labels.get("jump") as Label
+	var row_controls: Dictionary = popup.get("binding_row_controls")
+	var jump_controls: Dictionary = row_controls.get("jump", {})
+	var jump_keyboard := jump_controls.get("keyboard") as Button
+	var jump_gamepad := jump_controls.get("gamepad") as Label
 	_expect(
-		jump_row != null and jump_row.text.contains("Space") and jump_row.text.contains("Pad A"),
+		jump_keyboard != null
+		and jump_keyboard.text.contains("Space")
+		and jump_gamepad != null
+		and jump_gamepad.text == "A",
 		"Settings should show the keyboard key and fixed gamepad control together"
 	)
-	popup.free()
+	popup.queue_free()
+	await process_frame
 
 
 func _expected_layout() -> Dictionary:
