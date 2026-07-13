@@ -13,6 +13,7 @@ var _captures: Array[Dictionary] = [
 	{"name": "sanctum_route_choice", "size": Vector2i(1280, 720), "stage_index": 2, "target": &"bs_twin_reliquary_choice", "anchor": &"UpperReturnRecovery"},
 	{"name": "sanctum_crypt_recovery", "size": Vector2i(1280, 720), "stage_index": 2, "target": &"bs_material_crypt", "anchor": &"CryptBasinRecovery"},
 	{"name": "sanctum_crypt_recovery_compact", "size": Vector2i(960, 540), "stage_index": 2, "target": &"bs_material_crypt", "anchor": &"CryptBasinRecovery"},
+	{"name": "sanctum_reliquary_return", "size": Vector2i(1280, 720), "stage_index": 2, "target": &"bs_reliquary_cache", "anchor": &"CacheReturnRecovery"},
 ]
 var _failed := false
 
