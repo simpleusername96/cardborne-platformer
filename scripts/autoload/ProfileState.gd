@@ -220,7 +220,11 @@ func _get_build_effects_for_loadout(character_id: StringName, loadout: Dictionar
 	for slot_id in ProfileData.PERSISTENT_SLOTS:
 		var item_id := StringName(loadout.get(slot_id, ""))
 		var item := equipment_catalog.get_item(item_id) if equipment_catalog != null else null
-		if item == null:
+		if (
+			item == null
+			or not item.is_compatible(character_id)
+			or item.slot != StringName(slot_id)
+		):
 			continue
 		for effect in item.build_effects:
 			effects.append(effect)

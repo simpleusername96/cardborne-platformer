@@ -19,6 +19,7 @@ func _run() -> void:
 		return
 	_expect(_run_state.start_new_run(0, 7319), "Warrior preview fixture run should start")
 	_validate_loadout_previews()
+	_validate_loadout_boundary()
 	_validate_forge_preview_matches_commit()
 	_finish()
 
@@ -42,6 +43,21 @@ func _validate_loadout_previews() -> void:
 			if not option.get("stat_deltas", []).is_empty():
 				saw_changed_candidate = true
 	_expect(saw_changed_candidate, "loadout should include a candidate with a visible stat change")
+
+
+func _validate_loadout_boundary() -> void:
+	var incompatible_effects: Array = _profile_state.call(
+		"_get_build_effects_for_loadout",
+		&"warrior",
+		{"weapon": "twinstring_bow"}
+	)
+	_expect(incompatible_effects.is_empty(), "loadout preview should reject another class's item")
+	var wrong_slot_effects: Array = _profile_state.call(
+		"_get_build_effects_for_loadout",
+		&"warrior",
+		{"weapon": "copper_charm"}
+	)
+	_expect(wrong_slot_effects.is_empty(), "loadout preview should reject an item in the wrong slot")
 
 
 func _validate_forge_preview_matches_commit() -> void:
