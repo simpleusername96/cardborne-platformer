@@ -22,23 +22,22 @@ func _run() -> void:
 	result.call("configure", true, "Warrior", _victory_settlement())
 	await process_frame
 
-	var title := result.find_child("ResultTitle", true, false) as Label
-	var facts := result.find_child("RunFacts", true, false) as Label
-	var build := result.find_child("FinalBuild", true, false) as Label
-	var materials := result.find_child("KeptMaterials", true, false) as Label
-	_expect(title != null and title.text == "SLIME KING DEFEATED", "victory title should name the boss result")
-	_expect(facts != null and facts.text.contains("Slime Court"), "summary should name the boss arena")
-	_expect(facts != null and facts.text.contains("14:05"), "summary should format run duration")
-	_expect(build != null and build.text.contains("Dash Wake x2"), "summary should show final card stacks")
-	_expect(materials != null and materials.text.contains("Boss Core +1"), "summary should show the kept Boss Core")
+	var snapshot: Dictionary = result.call("get_display_snapshot")
+	_expect(snapshot.get("outcome", "") == "VICTORY", "victory outcome should be explicit")
+	_expect(snapshot.get("subtitle", "") == "SLIME KING DEFEATED", "victory subtitle should name the boss result")
+	_expect(String(snapshot.get("reach", "")).contains("Slime Court"), "summary should name the boss arena")
+	_expect(snapshot.get("time", "") == "14:05", "summary should format run duration")
+	_expect(String(snapshot.get("build", "")).contains("Dash Wake x2"), "summary should show final card stacks")
+	_expect(String(snapshot.get("materials", "")).contains("Boss Core  +1"), "summary should show the kept Boss Core")
 	_expect(result.size.is_equal_approx(Vector2(root.size)), "run result should fill compact viewport")
 
 	result.call("configure", false, "Archer", _death_settlement())
 	await process_frame
-	_expect(title.text == "EXPEDITION ENDED", "death title should be distinct from clear")
-	var detail := result.find_child("ResultDetail", true, false) as Label
-	_expect(detail != null and detail.text.contains("Player Defeated"), "death summary should retain terminal reason")
-	_expect(materials.text.contains("Sky Thread +2"), "death summary should show materials that persist")
+	snapshot = result.call("get_display_snapshot")
+	_expect(snapshot.get("outcome", "") == "DEFEAT", "death outcome should be distinct from clear")
+	_expect(snapshot.get("subtitle", "") == "EXPEDITION ENDED", "death subtitle should be distinct from clear")
+	_expect(String(snapshot.get("detail", "")).contains("fell before reaching the crown"), "death summary should explain the terminal reason")
+	_expect(String(snapshot.get("materials", "")).contains("Sky Thread  +2"), "death summary should show materials that persist")
 
 	result.queue_free()
 	await process_frame

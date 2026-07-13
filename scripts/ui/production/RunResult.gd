@@ -60,6 +60,20 @@ func configure(victory: bool, profile_name: String, settlement: Dictionary = {})
 	retry_button.text = "Begin Another Run" if victory else "Retry Expedition"
 
 
+func get_display_snapshot() -> Dictionary:
+	return {
+		"outcome": outcome_title.text,
+		"subtitle": outcome_subtitle.text,
+		"detail": detail_label.text,
+		"reach": reach_value.text,
+		"time": time_value.text,
+		"level": level_value.text,
+		"build": build_label.text,
+		"materials": materials_label.text,
+		"retry_action": retry_button.text,
+	}
+
+
 func _style_ui() -> void:
 	Styles.configure_label(outcome_title, 46, Styles.AMBER)
 	Styles.configure_label(outcome_subtitle, 18, Styles.TEXT)
