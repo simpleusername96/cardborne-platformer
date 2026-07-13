@@ -4,8 +4,8 @@ status: active
 owner: BK
 created: 2026-07-13
 last_reviewed: 2026-07-13
-topic: Player experience refinement after the first complete run
-scope: Traversal safety, field items, combat spacing, gameplay HUD, and production UI replacement
+topic: Fixed-stage player experience refinement after the first complete run
+scope: Fixed stage plans, traversal safety, field items, combat spacing, gameplay HUD, and production UI replacement
 source: Owner playtest feedback through 2026-07-13 and current production runtime evidence
 related:
   - ../../docs/product/2d_platform_action_card_game_prd.md
@@ -31,7 +31,8 @@ evidence, and the regression it must avoid.
 
 The final player-facing result must provide:
 
-- generated stages that cannot strand any playable character after a committed drop;
+- three approved fixed stages that cannot strand any playable character after a
+  committed drop;
 - visible field items that create recovery, route-choice, and reward moments;
 - class-specific attacks that can engage normal enemies without forced contact damage;
 - a compact bottom action bar with skills, cooldowns, class state, and consumables;
@@ -69,7 +70,8 @@ not as an acceptable final presentation baseline.
 | --- | --- | --- |
 | Product state | The integrated testbed remains retired; improvements land in the actual run. | Owner explicitly questioned testbed-like output and requested natural game UI/UX. |
 | Terrain form | Terrain uses filled rock masses at varied heights, not isolated thin debug platforms. | Owner visual reference and repeated map feedback. |
-| Traversal | Random generation must preserve usable character space and reject terrain that cannot be traversed with the supported movement kit. | Owner feedback on jump, dash, crouch, rope, and unreachable terrain. |
+| Production map mode | Use one approved curated Stage Plan per normal region while gameplay is refined. Keep the random planner dormant for later re-entry; do not delete it. | Owner explicitly deferred random generation until the overall game loop is settled. |
+| Traversal | Every approved fixed stage must preserve usable character space and be traversable with the supported base movement kit. | Owner feedback on jump, dash, crouch, rope, and unreachable terrain. |
 | Baseline movement | All characters retain double jump, dash, crouch/drop, and climb; character identity must not gate required routes. | Existing product contract plus owner correction. |
 | Drop recovery | A player who commits to an optional lower route must still have a guaranteed practical return or forward exit. | Owner screenshot and explicit soft-lock concern. |
 | Field items | Items should be visibly placed in the map to improve convenience, exploration, and fun, not only to repair healing scarcity. | Owner clarification. |
@@ -88,14 +90,15 @@ not as an acceptable final presentation baseline.
 | UI language | Preserve the current English game copy during this pass. | Localization is not yet an active product scope. | Keep strings short and structure layouts so Korean can fit later. |
 | Visual assets | Use project-original icons, frames, and procedural/bitmap assets with no new external runtime dependency. | The owner requested polished presentation, while adoption rules still apply. | External packs require a separate license/adoption decision. |
 | Attack tuning | Increase practical melee reach per class rather than applying one global percentage. | Uniform scaling would erase class identity and unnecessarily extend Archer range. | Use measured contact-safety envelopes and tune through fixtures plus playtests. |
-| Dynamic assistance | Field-item allocation is seed-deterministic and stage-budgeted, not secretly spawned from current health. | Hidden rubber-banding can make seeded runs dishonest. | Guarantee opportunities by stage/room role; do not inspect current HP when generating the stage. |
+| Dynamic assistance | Field items are authored at fixed reviewed positions and are not secretly added from current health. | The fixed-stage phase should be easy to inspect and balance. | Use typed pickup actors in approved rooms; do not inspect current HP when composing a stage. |
 
 ## Scope / Non-Scope
 
 In scope:
 
-- Conservative traversal and guaranteed return for every production room/seed/profile.
-- Seeded field pickups, class-specific combat reach, live HUD replacement, shared UI
+- Conservative traversal and guaranteed return for every approved production
+  room/plan/profile.
+- Authored field pickups, class-specific combat reach, live HUD replacement, shared UI
   components, full production-screen parity, and exact equipment/forge comparison.
 - Focused automated validation, rendered evidence, and complete human run checks.
 
@@ -120,18 +123,19 @@ Use these terms consistently during implementation:
 | **Attack footprint** | Collision region that can confirm a hit at one instant. | `AttackDefinition` and combat controller. |
 | **Effective reach** | Furthest practical enemy overlap reachable from neutral spacing, including footprint, offset, bounded movement, and projectile spawn. | Combat tuning and fixtures. |
 | **Contact-safety margin** | Distance/time buffer between the earliest player hit and the enemy's contact-damage envelope. | Combat balance validation. |
-| **Field pickup** | Visible world item collected immediately or automatically; it does not occupy a general inventory grid. | Field-item catalog, allocator, and pickup actor. |
+| **Field pickup** | Visible world item collected immediately or automatically; it does not occupy a general inventory grid. | Field-item catalog, authored placement manifest, and pickup actor. |
 | **Interactive reward** | Chest, material node, or other deliberate interaction that settles a transaction and publishes a receipt. | Existing reward services and interactables. |
 | **Consumable** | One equipped run-local item with explicit charges and manual activation. | `RunState` and the action bar. |
 | **Action bar** | Persistent bottom HUD showing basic, heavy, three skills, and equipped consumable. | Production HUD components. |
 | **Context lane** | One temporary region above the action bar used for interaction prompts and reward/pickup receipts without overlap. | Production HUD layout. |
+| **Approved Stage Plan** | The reviewed fixed room order, connections, encounters, hazards, rewards, and pickup positions used by production for one region. | `CuratedStagePlanBuilder`, fixed room scenes, and production-stage validation. |
 
 ## Progress
 
 ### Landed / already true
 
 - [x] The old integrated motion testbed and debug HUD are retired.
-- [x] Production flow includes menu, character/loadout, three generated stages,
+- [x] Production flow includes menu, character/loadout, three assembled stages,
   rewards, rest/forge, boss, settlement, and result.
 - [x] All three characters share the required baseline movement kit.
 - [x] Required room seams and stage entries have focused generation validation.
@@ -146,7 +150,7 @@ Use these terms consistently during implementation:
 
 - [ ] Guaranteed return from every stable optional-drop landing.
 - [ ] Conservative optional-route validation and all-character runtime traversal proof.
-- [ ] Visible field pickups and seed-deterministic constrained allocation.
+- [ ] Visible field pickups at fixed reviewed room positions.
 - [ ] Comfortable melee contact-safety margins for every character.
 - [ ] Bottom action bar, consumable status, and compact class-state display.
 - [ ] Shared UI component/scene foundation and complete production-screen replacement.
@@ -163,16 +167,19 @@ Use these terms consistently during implementation:
 - Reintroducing debug route annotations or a parallel testbed into production flow.
 - External UI frameworks or asset packages without explicit approval and adoption
   evidence.
+- Random room topology/content selection, broad seed matrices, or procedural map
+  balancing. These return only after fixed-stage gameplay and UI are accepted.
 
 ## Proposed Design / Guiding Implementation Principles
 
-1. **Playable safety precedes reward and polish.** A generated room that can strand a
+1. **Playable safety precedes reward and polish.** An approved room that can strand a
    player is invalid even if it is visually attractive or technically escapable at a
    theoretical movement limit.
 2. **The least-mobile profile owns required traversal.** Optional entry may be harder,
    but escape after commitment is treated as required traversal.
-3. **Authored anchors constrain randomness.** Generation chooses valid room, encounter,
-   hazard, reward, and field-pickup anchors; it does not scatter arbitrary coordinates.
+3. **Fixed composition precedes procedural variety.** Production uses reviewed curated
+   plans and authored content positions. The dormant planner remains isolated until a
+   later plan defines its re-entry criteria.
 4. **Combat comfort is measured against enemy threat, not sprite width alone.** Reach,
    startup, movement, target Hurtbox, and contact damage form one practical envelope.
 5. **UI scenes own composition; scripts own state and intent.** Replace large procedural
@@ -188,7 +195,7 @@ Use these terms consistently during implementation:
 | Concern | Desired owner | Reuse / retire |
 | --- | --- | --- |
 | Guaranteed-return graph | `StageGeometryValidator` over authored support/climb/drop metadata | Reuse `MovementMetrics`; retire the assumption that a recovery anchor proves escape. |
-| Field-pickup policy | One typed field-item catalog plus stage content allocator | Reuse room anchors and RNG streams; do not put item rules in room scenes or HUD. |
+| Field-pickup policy | One typed field-item catalog plus authored pickup actors in approved rooms | Keep effect rules in catalog/runtime; room scenes own reviewed positions, never effect semantics. |
 | Field-pickup settlement | Run/reward service transaction with one pickup actor | Reuse exactly-once reward semantics; do not create a second wallet owner. |
 | Attack contact safety | Character attack resources plus shared combat fixtures | Reuse `AttackDefinition`; do not scale player collision bodies. |
 | UI visual language | `ProductionUIStyles`, authored UI scenes, shared component scenes | Retire repeated raw `PanelContainer`/`Label` construction where a shared component exists. |
@@ -202,9 +209,9 @@ Use these terms consistently during implementation:
 | --- | --- | --- | --- |
 | Optional drop return | `scripts/generation/StageGeometryValidator.gd`, `scripts/stages/RoomTemplateHost.gd`, `scenes/rooms/broken_sanctum/BsMaterialCrypt.tscn` | The crypt basin is 120 px below its shelves. The rope reaches the shelf level, not the basin. Validation checks the declared return socket/rope but not every basin landing. | Extend geometry graph and repair/audit authored rooms. |
 | Optional movement margin | `tools/validate_broken_sanctum_rooms.gd`, `scripts/player/MovementMetrics.gd` | Optional rises may use full theoretical double-jump height instead of the conservative required-route envelope. | Treat committed return segments as required traversal. |
-| Generated stage topology | `StagePlanner`, `StagePlanValidator`, `StageGenerationService` | Room graph and required sockets are constrained, but a valid room can still contain an internally unsafe post-drop state. | Add room-internal reachability evidence to stage validity. |
+| Production stage topology | `CuratedStagePlanBuilder`, `StageGenerationService`, `ProductionStageHost` | Curated plans already exist only as random-generation fallback; production currently tries random plans first. | Make curated plans the explicit production path and validate only the approved composition during this plan. |
 | Terrain readability | Room scenes and procedural terrain visuals | Some background decoration reads like collision, and route affordances such as ropes do not visually connect to the reachable floor. | Separate collision silhouette, backdrop, climbable, and hazard treatment. |
-| Field items | Existing reward tables, chests, material nodes, enemy rewards | No small visible map-pickup loop; traversal space can feel empty between large interactions. | Add typed field pickups and placement budgets without replacing major rewards. |
+| Field items | Existing reward tables, chests, material nodes, enemy rewards | No small visible map-pickup loop; traversal space can feel empty between large interactions. | Add typed field pickups and reviewed fixed placement manifests without replacing major rewards. |
 | Consumable visibility | `RunState`, `PlayerController`, `InputBindings` | Consumable and charges exist and `H` uses them, but the live HUD does not expose the slot or count. | Add action-bar consumable slot and failure states. |
 | Melee spacing | `AttackDefinition` resources, `PlayerCombatController`, `EnemyBase` | Warrior basic forward footprint reaches farther than Assassin; enemy contact hitboxes are continuously active. Closing distance can feel like forced damage trading. | Measure and tune class-specific contact-safety margins. |
 | Attack truthfulness | `PlayerAttackPresenter`, Assassin runtime | Visuals now stay inside actual footprints and swept checks use Hurtboxes. | Preserve with regression tests while tuning reach. |
@@ -218,10 +225,10 @@ Use these terms consistently during implementation:
 
 | Concern | As-is | To-be | Acceptance check | Guard / leftover check |
 | --- | --- | --- | --- | --- |
-| Drop recovery | Declared anchors and rope/socket endpoints can pass while a basin remains practically inescapable. | Every stable post-drop support/recovery node reaches a required return/exit through conservative movement edges. | All authored rooms and seed matrices pass support-graph validation; runtime fixtures escape each committed drop with every character. | No room is accepted solely because a recovery anchor exists. |
-| Random terrain | Random room assembly can select internally unsafe authored geometry. | Planner admits only rooms with valid internal traversal contracts and preserves minimum body/landing/ceiling clearances. | Invalid-room fixture is rejected before gameplay; all production seeds load only valid plans. | No runtime fallback silently patches or accepts invalid geometry. |
+| Drop recovery | Declared anchors and rope/socket endpoints can pass while a basin remains practically inescapable. | Every committed drop included in an approved plan has a conservative authored return or forward exit. | Runtime fixtures escape every fixed-plan drop with every character. | No room is accepted solely because a recovery anchor exists. |
+| Production map selection | Production currently attempts random topology before curated fallback. | Production calls an explicit curated-plan path with one fixed layout seed; the random planner remains dormant and separately testable. | Different run seeds assemble the same room/content signature for each stage. | Do not delete planner/catalog code or silently fall back to random topology. |
 | Terrain visuals | Backdrop, solid terrain, climbables, and hazards can share similar block-like treatment. | Filled rock masses remain dominant while collision tops, pass-through decoration, ropes, and hazards are visually distinct. | Screenshot review identifies valid route and collision at a glance without debug text. | Visuals never imply walkable support outside collision bounds. |
-| Field items | Only large rewards/interactions meaningfully punctuate the map. | Seeded pickups create sustain, tempo, economy, and optional-risk lures at authored valid anchors. | Every normal stage meets pickup budget/spacing rules and all pickups are reachable. | Stage clear never depends on loose pickup collection. |
+| Field items | Only large rewards/interactions meaningfully punctuate the map. | Fixed pickups create sustain, tempo, economy, and optional-risk lures at reviewed room positions. | Every approved stage has the documented pickup set and every pickup is reachable. | Stage clear never depends on loose pickup collection. |
 | Melee reach | Especially short Assassin engagement can enter continuous contact-damage range. | Every basic attack has a documented class-specific contact-safety margin; Warrior controls space, Assassin steps/sweeps safely, Archer handles near-release overlap without extra max range. | Neutral-spacing fixtures prove hit-before-contact for normal melee targets; class timing and identity remain distinct. | No hidden hit padding or visual reach beyond collision. |
 | Gameplay HUD | Top/left text panels dominate and require reading repeated labels. | Health/XP/resources use compact meters; bottom action bar shows six actions, cooldowns, inputs, charges, disabled state, and class state. | A first-time player identifies health, usable skills, consumable count, objective, and resources within one glance. | No required HUD covers player, landing edge, enemy, or telegraph at supported viewports. |
 | Context messages | Prompt and reward receipt own separate bottom anchors. | One priority/queue lane above the action bar switches cleanly between prompt, pickup, and reward receipt. | Rapid pickup + chest + prompt scenarios remain readable and non-blocking. | No duplicate receipt, overlapping panels, or stale prompt. |
@@ -288,7 +295,7 @@ below remain authoritative during implementation.
 The seven milestones are executed in order:
 
 - [ ] **Phase A:** Baseline, safety contract, and visual foundation.
-- [ ] **Phase B:** Guaranteed traversal and constrained random generation.
+- [ ] **Phase B:** Approved fixed Stage Plans and guaranteed traversal.
 - [ ] **Phase C:** Combat spacing and class-specific reach.
 - [ ] **Phase D:** Field items and map reward rhythm.
 - [ ] **Phase E:** Gameplay HUD and context feedback.
@@ -306,10 +313,11 @@ and establish reusable presentation primitives before broad replacement.
 `ProductionUIStyles.gd`, production UI scenes/scripts, focused validators.
 
 - [ ] **A1 Capture reproducible playtest baselines.**
-  - **As-is:** Owner screenshots identify failures, but room/seed/profile and HUD state
+  - **As-is:** Owner screenshots identify failures, but room/plan/profile and HUD state
     are not always captured together.
-  - **To-be:** Add development-only evidence capture that records stage ID, seed, room
-    ID, character, position, health, and current build beside a screenshot/runtime log.
+  - **To-be:** Add development-only evidence capture that records stage ID, approved-plan
+    version, room ID, character, position, health, and current build beside a
+    screenshot/runtime log.
   - **Accept:** The crypt failure and one representative combat/HUD scene can be
     reproduced from recorded facts without reintroducing a player-facing debug HUD.
   - **Guard:** Evidence tooling is absent from release presentation and never mutates
@@ -321,7 +329,7 @@ and establish reusable presentation primitives before broad replacement.
   - **To-be:** Document and expose one least-mobile envelope for required paths and
     committed returns, including landing width, body/ceiling clearance, jump rise,
     horizontal reach, dash chain, rope entry, and crouch clearance.
-  - **Accept:** Movement validators report the same envelope for all generation owners.
+  - **Accept:** Movement validators report the same envelope for every approved stage.
   - **Guard:** Optional pre-commit challenges may exceed the required envelope only when
     a safe refusal/return remains available.
 
@@ -350,24 +358,37 @@ evidence exist before shared runtime rules change.
 
 ---
 
-# Phase B - Guaranteed Traversal And Constrained Random Generation
+# Phase B - Approved Fixed Stage Plans And Guaranteed Traversal
 
-**Goal:** Make every generated room and branch practically traversable for every base
-character, including recovery after a committed drop.
+**Goal:** Assemble one reviewed Stage Plan per normal region and make every included room
+and branch practically traversable for every base character, including recovery after a
+committed drop.
 
-**Source owners:** `StageGeometryValidator.gd`, `StagePlanValidator.gd`,
-`RoomTemplateHost.gd`, `RoomTemplateData.gd`, room scenes/data, generation validators.
+**Source owners:** `CuratedStagePlanBuilder.gd`, `StageGenerationService.gd`,
+`ProductionStageHost.gd`, `StageGeometryValidator.gd`, `StagePlanValidator.gd`,
+`RoomTemplateHost.gd`, `RoomTemplateData.gd`, approved room scenes/data, validators.
 
-- [ ] **B1 Model room-internal traversal as a directed support graph.**
-  - **As-is:** Socket connectivity and selected supports are checked, but all stable
-    landing regions are not nodes in one reachability graph.
-  - **To-be:** Build nodes for solid/one-way supports, stable fall landings, recovery
-    anchors, climbable entry/exit zones, sockets, and required exits; build movement
-    edges only when the conservative envelope permits them.
-  - **Accept:** Validator emits a useful path/reason for every unreachable node.
-  - **Guard:** Decoration and visual-only surfaces never enter the support graph.
+- [ ] **B1 Make curated Stage Plans the explicit production path.**
+  - **As-is:** `StageGenerationService` tries random plans first and reaches the existing
+    curated builder only after retries are exhausted.
+  - **To-be:** Add an explicit curated-plan service entry, use one versioned fixed layout
+    seed, and have `ProductionStageHost` request it directly for all three normal stages.
+  - **Accept:** Different run seeds produce the same room, encounter, hazard, reward, and
+    pickup signature for a given stage profile.
+  - **Guard:** Keep the random planner and its focused tests intact but dormant; production
+    never silently falls back to random topology.
 
-- [ ] **B2 Promote committed-drop returns to required traversal.**
+- [ ] **B2 Validate the approved composition as a product contract.**
+  - **As-is:** A curated fallback can be valid without a durable identity proving which
+    exact composition shipped.
+  - **To-be:** Record a stable plan mode/layout version in the generation report and add
+    deterministic signatures for each approved stage.
+  - **Accept:** Runtime and headless fixtures identify the curated mode and expected room
+    sequence for Ruin Approach, Flooded Works, and Broken Sanctum.
+  - **Guard:** Run seed may still drive cards and rewards outside map assembly; it cannot
+    alter stage geometry or authored pickup placement.
+
+- [ ] **B3 Promote committed-drop returns to required traversal.**
   - **As-is:** Entering an optional branch is optional, so its internal return can be
     validated too leniently.
   - **To-be:** Once a drop removes access to the entry support, every stable landing must
@@ -377,7 +398,7 @@ character, including recovery after a committed drop.
     passes only after a real route reaches the basin.
   - **Guard:** A checkpoint/recovery anchor alone cannot satisfy the rule.
 
-- [ ] **B3 Repair and audit authored drop rooms.**
+- [ ] **B4 Repair and audit approved drop rooms.**
   - **As-is:** `BsMaterialCrypt` has a near-limit 120 px shelf rise and a rope terminating
     at shelf height; other lower-route rooms may share the same metadata pattern.
   - **To-be:** Extend ropes to the basin or add comfortable rock steps/one-way ledges;
@@ -387,7 +408,7 @@ character, including recovery after a committed drop.
   - **Guard:** Filled rock-mass composition and varied terrain heights remain; fixes do
     not collapse rooms into flat corridors.
 
-- [ ] **B4 Enforce movement-space clearances.**
+- [ ] **B5 Enforce movement-space clearances in approved rooms.**
   - **As-is:** Local supports may be individually reachable while ceilings, walls,
     hazards, or narrow gaps make the movement unusable.
   - **To-be:** Validate standing width, jump arc clearance, dash corridor, crouch tunnel,
@@ -396,17 +417,17 @@ character, including recovery after a committed drop.
     specific message.
   - **Guard:** Character body dimensions remain unchanged during this batch.
 
-- [ ] **B5 Add all-character runtime traversal fixtures.**
+- [ ] **B6 Add all-character runtime traversal fixtures.**
   - **As-is:** Geometry math and boot checks can pass without exercising representative
     movement from the exact recovery positions.
   - **To-be:** Spawn every character at each committed-drop recovery anchor and execute
     bounded authored traversal inputs toward return/exit.
-  - **Accept:** Curated rooms and production seed matrix complete without timeout,
-    respawn loop, or manual intervention.
+  - **Accept:** Every approved room sequence completes without timeout, respawn loop, or
+    manual intervention for Warrior, Assassin, and Archer.
   - **Guard:** Runtime fixtures supplement rather than replace deterministic geometry
     validation.
 
-- [ ] **B6 Clarify collision visually.**
+- [ ] **B7 Clarify collision visually.**
   - **As-is:** Decorative pillars/mineral forms can read as solid, and a rope may look
     useful while failing to meet the floor.
   - **To-be:** Solid top edges, pass-through backdrop, climbables, one-way platforms,
@@ -414,10 +435,10 @@ character, including recovery after a committed drop.
   - **Accept:** Screenshot review can trace the intended return route at normal zoom.
   - **Guard:** No invisible collision wall or visible unsupported floor remains.
 
-*Phase B gate:* focused room validators, the existing 1,000-seed deterministic stage
-generation property gate, all three region generation validators, roster-stage matrix,
-and rendered route screenshots pass before field items are used to decorate or soften
-any room.
+*Phase B gate:* fixed-plan identity tests, focused room validators, all three curated
+region validators, roster-stage matrix, and rendered route screenshots pass before field
+items are added. The dormant random planner's existing property tests remain useful, but
+the broad seed matrix is not a completion blocker for this plan.
 
 ---
 
@@ -494,8 +515,8 @@ trading.
 **Goal:** Add visible, constrained pickups that reward movement and route choice while
 preserving authoritative reward/economy ownership.
 
-**Source owners:** new typed field-item catalog/actor, room pickup anchors,
-`StageContentAllocator`, `NamedRngStreams`, reward/run services, room validators.
+**Source owners:** new typed field-item catalog/actor, authored room pickup nodes,
+fixed-stage placement manifests, reward/run services, and room validators.
 
 - [ ] **D1 Define the minimum field-pickup catalog.**
   - **As-is:** Consumables and currencies exist, but no typed small world-pickup catalog
@@ -507,23 +528,24 @@ preserving authoritative reward/economy ownership.
     presentation, and unsupported inventory behavior.
   - **Guard:** Field pickups do not become equipment, cards, or a second consumable bag.
 
-- [ ] **D2 Add purpose-tagged pickup anchors.**
+- [ ] **D2 Add purpose-tagged authored pickup positions.**
   - **As-is:** Rooms expose enemy, hazard, moving-platform, reward, and recovery anchors,
     but not small pickup placement intent.
-  - **To-be:** Author safe-route, post-combat, recovery, optional-risk, secret, and
-    economy pickup anchors with support/clearance and spacing metadata.
-  - **Accept:** Every anchor sits on reachable safe support and declares one purpose.
+  - **To-be:** Place safe-route, post-combat, recovery, optional-risk, secret, and economy
+    pickup nodes in the rooms used by the approved Stage Plans.
+  - **Accept:** Every position sits on reachable safe support, declares one purpose, and
+    is included in a reviewed per-stage manifest.
   - **Guard:** Pickups never float unintentionally, overlap hazards, block sockets, or
     occupy required landing space.
 
-- [ ] **D3 Allocate seed-deterministic stage pickup budgets.**
+- [ ] **D3 Define fixed per-stage pickup manifests and budgets.**
   - **As-is:** Major reward budgets exist; small pickup rhythm does not.
-  - **To-be:** Give each stage minimum/maximum sustain, tempo, and economy budgets;
-    allocate them through a named RNG stream after geometry validity is known.
-  - **Accept:** Same seed/profile produces the same placements; seed matrix stays within
-    per-stage budgets and minimum spacing.
-  - **Guard:** Generation does not inspect current HP and required progression never
-    depends on collecting all loose pickups.
+  - **To-be:** Give each approved stage an exact reviewed sustain, tempo, and economy set
+    with stable IDs and positions; keep budget ranges as future procedural constraints.
+  - **Accept:** Different run seeds assemble the same expected pickup manifest and every
+    placement meets support, hazard-clearance, and spacing rules.
+  - **Guard:** Assembly does not inspect current HP and required progression never depends
+    on collecting all loose pickups.
 
 - [ ] **D4 Implement safe collection and settlement.**
   - **As-is:** Interactive reward sources already have exactly-once transactions, but
@@ -552,9 +574,9 @@ preserving authoritative reward/economy ownership.
   - **Accept:** Pickup type and collectability are readable against all three regions.
   - **Guard:** Effects never resemble hazards, enemy projectiles, or required exits.
 
-*Phase D gate:* catalog, allocator, room-anchor, transaction, production-stage, and
-seed-matrix checks pass; rendered captures demonstrate readable item rhythm rather
-than random visual noise.
+*Phase D gate:* catalog, authored-position, fixed-manifest, transaction, and production
+stage checks pass; rendered captures demonstrate intentional item rhythm without visual
+noise.
 
 ---
 
@@ -721,14 +743,15 @@ result.
 **Goal:** Validate the revised systems together as a coherent run rather than accepting
 isolated technical success.
 
-- [ ] **G1 Run traversal and pickup seed matrices together.**
-  - **As-is:** Existing matrices do not include new pickup anchors or all post-drop
-    escape scenarios.
-  - **To-be:** Validate all production seeds/characters for route reachability, item
-    support, hazard clearance, pickup budgets, and exit completion.
+- [ ] **G1 Validate every approved plan and pickup manifest together.**
+  - **As-is:** Existing checks do not include fixed pickup positions or all post-drop
+    escape scenarios in the exact production compositions.
+  - **To-be:** Validate all three approved plans with all characters for route
+    reachability, item support, hazard clearance, exact pickup manifests, and exit
+    completion.
   - **Accept:** No invalid stage reaches gameplay and no item is required to escape.
-  - **Guard:** Seed determinism remains stable unless a documented content-version bump
-    intentionally changes it.
+  - **Guard:** Layout signature remains stable unless a documented stage-content version
+    bump intentionally changes it.
 
 - [ ] **G2 Run combat spacing and attrition sessions.**
   - **As-is:** Deterministic combat tests prove mechanics but not repeated engagement
@@ -738,7 +761,7 @@ isolated technical success.
     deaths caused by unreadable spacing.
   - **Accept:** Basic combat no longer assumes trades, while hazards/enemy attacks still
     create meaningful attrition and field items do not trivialize the run.
-  - **Guard:** Do not tune only from one character or one seed.
+  - **Guard:** Do not tune only from one character or one stage.
 
 - [ ] **G3 Run UI recognition tests.**
   - **As-is:** Functional labels can technically expose state while remaining slow to
@@ -774,7 +797,7 @@ isolated technical success.
   - **Guard:** A passing headless suite alone cannot close the plan.
 
 *Phase G gate:* all final automated gates pass and three production-style human runs
-are complete with recorded seeds/builds and no required work left.
+are complete with recorded approved-plan IDs/builds and no required work left.
 
 ---
 
@@ -784,16 +807,16 @@ are complete with recorded seeds/builds and no required work left.
 
 - Run only the focused validator for the touched responsibility.
 - For UI, render one target state at 960x540 and 1280x720 before broad capture.
-- For room work, validate the edited room plus one invalid fixture before region matrix.
+- For room work, validate the edited room plus one invalid fixture before all-region checks.
 - For combat tuning, run the affected character and contact-safety fixture before roster
   matrix.
 - Use `git diff --check` and targeted `rg` guards after each focused batch.
 
 ### Batch gates
 
-- **After B:** room validators, region generation/runtime validators, roster-stage matrix.
+- **After B:** fixed-plan identity, room, curated-region runtime, and roster-stage checks.
 - **After C:** all character combat validators, attack presentation, enemy/contact fixtures.
-- **After D:** field catalog/allocator/transaction checks and all region seed matrices.
+- **After D:** field catalog/authored-position/manifest/transaction checks in all regions.
 - **After E:** HUD state suite and three-viewport screenshot inspection.
 - **After F:** complete UI flow, focus, snapshot parity, and three-viewport screen matrix.
 
@@ -837,7 +860,7 @@ git diff --check
 
 ### Field-item scenarios
 
-- Same seed produces the same item categories and anchors.
+- Different run seeds assemble the same approved item categories and positions.
 - Full health, partial health, zero/full consumable charges, and active cooldown states.
 - Rapid overlapping pickup callbacks settle exactly once.
 - Pickup immediately before death, checkpoint/reset, stage clear, and reload.
@@ -865,9 +888,9 @@ git diff --check
 
 ## Guard Checks
 
-- [ ] No `MotionTestStage`, debug HUD, seed flag, or route annotation returns to production.
-- [ ] No stable post-drop support lacks a graph path to return/exit.
-- [ ] No field pickup uses arbitrary world coordinates outside authored valid anchors.
+- [ ] No `MotionTestStage`, debug HUD, seed/map selector, or route annotation returns to production.
+- [ ] No stable post-drop support in an approved room lacks a validated return/exit path.
+- [ ] No field pickup exists outside an authored, validated pickup node.
 - [ ] No map item, movement upgrade, enemy boost, or damage trick is required to escape.
 - [ ] No character body/collision scale changes as a substitute for attack tuning.
 - [ ] No attack visual exceeds its real collision footprint.
@@ -888,7 +911,8 @@ git diff --check
   unless a migration is explicitly planned and tested.
 - Add new UI scenes alongside old builders, switch one screen at a time, then delete the
   old builder only after parity and responsive checks pass.
-- Version field-item generation separately if it intentionally changes seeded content.
+- Version approved stage and pickup manifests when an intentional layout/content change
+  alters their deterministic signatures.
 - Do not repair invalid stages at runtime. Reject and report them before gameplay so
   rollback remains deterministic.
 
@@ -933,7 +957,9 @@ git diff --check
 - A recovery anchor means safe standing/reset, not guaranteed escape.
 - Character body enlargement is rejected as the main attack-range fix.
 - The first in-run inventory presentation is an action bar/quick consumable, not a grid.
-- Hidden health-sensitive item spawning is rejected; stage allocation stays seeded.
+- Hidden health-sensitive item spawning is rejected; field items stay fixed and authored.
+- Random stage generation remains implemented but dormant until the core game loop and
+  fixed-stage content are proven fun enough to define meaningful procedural constraints.
 
 ## Handoff Summary
 
@@ -957,7 +983,7 @@ Produce last:
 Stop when:
 
 - every phase gate and final gate passes;
-- no generated stage can strand a base character after a committed drop;
+- no approved stage can strand a base character after a committed drop;
 - normal combat does not require routine contact trades;
 - field pickups are constrained, useful, and non-essential to completion;
 - all production screens use the shared game UI language without debug-style leftovers;
