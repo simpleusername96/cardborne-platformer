@@ -2,7 +2,7 @@
 type: spec
 status: active
 owner: BK
-last_reviewed: 2026-07-12
+last_reviewed: 2026-07-13
 canonical_for: Production room-template scene, socket, anchor, and validation schema
 source: Existing StageBase/component contracts, map pipeline research, and active procedural generation spec
 related:
@@ -147,6 +147,13 @@ leave optional anchors empty.
 - Visual-only polygons have collision disabled and explicit naming.
 - Hidden collision outside visible terrain is forbidden.
 - One-way collision is used only for authored one-way ledges.
+- A committed `drop` return uses a visible pass-through hatch on collision layer 2;
+  solid terrain at the source socket is a validation failure.
+- A drop return owns a supported target landing and a recovery anchor on that landing.
+- A cross-room return rope reaches its lower mount and extends at least 24 px above
+  the upper landing collision surface so jump-dismount can settle on the platform.
+- Every approved committed return has an all-character runtime input fixture in
+  addition to static socket/support validation.
 - Required landings expose continuous support for their declared width.
 - A crouch tunnel must prove standing collision cannot enter and crouch collision
   can enter/exit without trapping the player.
@@ -188,7 +195,8 @@ not traverse arbitrary scene trees or parse external editor data.
 7. Play the room with every base character.
 8. Add visuals without changing collision communication.
 9. Register the Resource and reviewed timing range.
-10. Add the room to curated seeds before random eligibility.
+10. Add the room to the approved fixed Stage Plan before considering future random
+    eligibility.
 
 ## Requirements
 
@@ -201,7 +209,7 @@ not traverse arbitrary scene trees or parse external editor data.
 
 ## Acceptance Criteria
 
-- The 18-room catalog has matching scene/Resource pairs and unique IDs.
+- The 30-room catalog has matching scene/Resource pairs and unique IDs.
 - Each room passes isolated schema, geometry, camera, and anchor validation.
 - Every required-route room is manually cleared by all three base characters.
 - Assembling two compatible rooms produces no collision crack, overlap, camera

@@ -5,6 +5,14 @@
 - Cardborne boots into a production menu, character/loadout/mastery selection,
   three versioned approved fixed normal stages, stage rewards, cards, and the Rest
   & Forge transition.
+- Fixed layout V3 is the active normal-stage contract. Six committed-return
+  scenarios are statically validated and replayed with Warrior, Archer, and
+  Assassin; the random planner remains dormant.
+- Fixed field pickups now provide authored healing, consumable, cooldown, coin, and
+  material beats. The live HUD exposes six action slots, consumable charges, class
+  state, objective/boss state, and non-modal prompt/reward receipts.
+- Character/loadout, reward choices, Rest & Forge, pause/settings, and result screens
+  now expose authoritative availability and current-versus-result information.
 - The integrated `MotionTestStage`, debug HUD, testbed inputs/flags, historical
   handoff package, fixed-grid maps, and generated wireframe prototype were retired
   on 2026-07-12. Git history preserves them if a focused investigation needs them.
@@ -84,6 +92,9 @@ Read in this order:
   commercial art or recorded audio.
 - Automated balance covers deterministic complete-run simulations; human feel and
   onboarding feedback should drive the next tuning plan.
+- Full production-style runs for all three characters, fresh-player UI recognition,
+  pickup audio, reduced-motion polish, and the remaining broad clearance fixtures
+  are still required before the active refinement plan can be marked done.
 - Broadening room, enemy, card, or boss content will expand the approved-plan and
   roster matrices and must preserve the current least-mobile traversal contract.
 
@@ -95,6 +106,10 @@ Read in this order:
 - Production flow: `./tools/godot.ps1 --path . --headless --script res://tools/validate_production_boot.gd`
 - Production stage: `./tools/godot.ps1 --path . --headless --script res://tools/validate_production_stage.gd`
 - Approved Stage Plans: `./tools/godot.ps1 --path . --headless --script res://tools/validate_curated_stage_plans.gd`
+- Fixed committed returns: `./tools/godot.ps1 --path . --headless --script res://tools/validate_fixed_drop_runtime.gd`
+- Fixed field pickups: `./tools/godot.ps1 --path . --headless --script res://tools/validate_fixed_field_pickup_manifest.gd`
+- Gameplay HUD: `./tools/godot.ps1 --path . --headless --script res://tools/validate_gameplay_hud.gd`
+- Production shell UI: `./tools/godot.ps1 --path . --headless --script res://tools/validate_shell_ui.gd`
 - Flooded generation: `./tools/godot.ps1 --path . --headless --script res://tools/validate_flooded_generation.gd`
 - Flooded runtime: `./tools/godot.ps1 --path . --headless --script res://tools/validate_flooded_stage_runtime.gd`
 - Sanctum generation: `./tools/godot.ps1 --path . --headless --script res://tools/validate_broken_sanctum_generation.gd`
@@ -114,7 +129,7 @@ Read in this order:
 
 ## Next Implementation Entry
 
-Execute `.agent/execplans/2026-07-13-player-experience-refinement.md` in order. Start
-with its baseline and guaranteed-traversal phases, and do not use field items or UI
-polish to conceal invalid room geometry. Keep the retired testbed and parallel JSON
-catalogs retired.
+Continue `.agent/execplans/2026-07-13-player-experience-refinement.md` from its open
+items and Phase G gates. Preserve fixed layout V3 while completing rendered review,
+quality/release checks, and one production-style run per character. Keep the retired
+testbed, parallel JSON catalogs, and random production path retired.

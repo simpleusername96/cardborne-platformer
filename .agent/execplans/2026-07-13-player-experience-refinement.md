@@ -44,11 +44,11 @@ The final player-facing result must provide:
 
 The integrated testbed is retired and the production run is structurally complete,
 but owner playtests exposed a gap between system completeness and player experience.
-One Broken Sanctum optional room can leave the player in a basin whose practical
-return jump is near the theoretical double-jump limit, while the declared rope does
-not reach the basin. Current validation proves room/socket metadata and selected
-support relationships, but not that every stable post-fall landing can return to the
-required route.
+Owner playtests exposed optional-room returns whose practical route did not match the
+declared socket contract. The fixed-layout V3 repair now connects every approved basin,
+cross-room rope, and upper-cache drop to a usable landing, with all-character input
+replay covering the six committed-return fixtures. Broader clearance categories and
+human full-run evidence remain open.
 
 Combat definitions and visible attack footprints now agree, and direct chest/material
 claims now publish exact receipts. Those fixes exposed a separate balance problem:
@@ -146,16 +146,46 @@ Use these terms consistently during implementation:
 - [x] Equipment data already contains base mechanical descriptions, tradeoffs, and
   build/behavior effects.
 
+### Completed in the current implementation
+
+- [x] Production requests one versioned approved Stage Plan per normal region; random
+  planning remains dormant and is excluded from the default release gate.
+- [x] Fixed-layout V3 guarantees the six approved committed-return scenarios through
+  authored ropes, one-way hatches, recovery support, static contracts, and runtime
+  input replay for Warrior, Archer, and Assassin.
+- [x] Visible typed field pickups occupy fixed reviewed room positions and settle once
+  through authoritative run state with a concise HUD receipt.
+- [x] Warrior, Assassin, and Archer use class-specific practical reach with collision-
+  truthful attack presentation and hit-before-contact fixtures.
+- [x] The live HUD uses compact health/resource regions, a six-slot bottom action bar,
+  class state, consumable charges, objective/boss state, and one context lane.
+- [x] Loadout, reward, Treasure, Rest & Forge, pause/settings, and result decisions show
+  authoritative availability and current-versus-result information.
+
 ### Still open
 
-- [ ] Guaranteed return from every stable optional-drop landing.
-- [ ] Conservative optional-route validation and all-character runtime traversal proof.
-- [ ] Visible field pickups at fixed reviewed room positions.
-- [ ] Comfortable melee contact-safety margins for every character.
-- [ ] Bottom action bar, consumable status, and compact class-state display.
-- [ ] Shared UI component/scene foundation and complete production-screen replacement.
-- [ ] Visible current-versus-candidate equipment and forge comparisons.
-- [ ] Integrated visual, accessibility, balance, and fun validation.
+- [ ] Add invalid fixtures for every remaining clearance category, not only support,
+  rope, one-way hatch, recovery, and fixed pickup contracts.
+- [ ] Finish the authored-scene/component migration where large screen scripts still
+  own procedural composition, and decide whether a single icon manifest adds value.
+- [ ] Complete pickup audio and reduced-motion/transition polish without adding an
+  external runtime dependency.
+- [ ] Complete three full production runs, combat attrition sessions, fresh-player UI
+  recognition, and final fun/balance acceptance.
+
+### Implementation evidence (2026-07-13)
+
+- Fixed layout V3 is locked by complete plan signatures for Ruin Approach, Flooded
+  Works, and Broken Sanctum across multiple run seeds.
+- `validate_fixed_drop_runtime.gd` passes three character profiles against six committed
+  return fixtures: two local basin ropes, three cross-room ropes, and one upper drop.
+- `validate_fixed_field_pickup_manifest.gd` and `validate_field_pickups.gd` cover fixed
+  placement, supported landing, authoritative effects, duplicate callbacks, receipts,
+  and actor removal.
+- Combat spacing, gameplay HUD, reward choice, equipment decision, shell UI, gamepad,
+  and settings validators are part of the default release matrix.
+- Layout, combat, field-item, HUD, equipment/reward, and shell changes are split into
+  scoped commits so remaining polish can be reviewed or reverted independently.
 
 ### Out of scope for this plan
 
@@ -203,7 +233,10 @@ Use these terms consistently during implementation:
 | Temporary messages | One context lane coordinating prompt and receipt priority | Reuse reward receipts; retire overlapping independent bottom anchors. |
 | Stat comparison | One reusable stat-delta view model/component | Reuse equipment/build snapshots; do not calculate stats inside UI scripts. |
 
-## Current-State Evidence Map
+## Baseline Evidence Map (Pre-Implementation)
+
+The observations in this table preserve the starting point. The Progress section and
+checked task evidence are authoritative for the current implementation state.
 
 | Concern | Owner(s) today | Observed behavior / problem | Plan handling |
 | --- | --- | --- | --- |
@@ -292,13 +325,14 @@ below remain authoritative during implementation.
 
 ## Tasks
 
-The seven milestones are executed in order:
+The seven milestones are executed in order. An unchecked phase can contain completed
+items; its remaining item or human gate is stated inside the phase.
 
 - [ ] **Phase A:** Baseline, safety contract, and visual foundation.
 - [ ] **Phase B:** Approved fixed Stage Plans and guaranteed traversal.
 - [ ] **Phase C:** Combat spacing and class-specific reach.
 - [ ] **Phase D:** Field items and map reward rhythm.
-- [ ] **Phase E:** Gameplay HUD and context feedback.
+- [x] **Phase E:** Gameplay HUD and context feedback.
 - [ ] **Phase F:** Production screen replacement and decision clarity.
 - [ ] **Phase G:** Integrated fun, balance, accessibility, and release gate.
 
@@ -323,7 +357,7 @@ and establish reusable presentation primitives before broad replacement.
   - **Guard:** Evidence tooling is absent from release presentation and never mutates
     the run.
 
-- [ ] **A2 Lock conservative traversal margins.**
+- [x] **A2 Lock conservative traversal margins.**
   - **As-is:** Required routes use conservative factors, but optional committed returns
     can use full theoretical movement height.
   - **To-be:** Document and expose one least-mobile envelope for required paths and
@@ -368,7 +402,7 @@ committed drop.
 `ProductionStageHost.gd`, `StageGeometryValidator.gd`, `StagePlanValidator.gd`,
 `RoomTemplateHost.gd`, `RoomTemplateData.gd`, approved room scenes/data, validators.
 
-- [ ] **B1 Make curated Stage Plans the explicit production path.**
+- [x] **B1 Make curated Stage Plans the explicit production path.**
   - **As-is:** `StageGenerationService` tries random plans first and reaches the existing
     curated builder only after retries are exhausted.
   - **To-be:** Add an explicit curated-plan service entry, use one versioned fixed layout
@@ -378,7 +412,7 @@ committed drop.
   - **Guard:** Keep the random planner and its focused tests intact but dormant; production
     never silently falls back to random topology.
 
-- [ ] **B2 Validate the approved composition as a product contract.**
+- [x] **B2 Validate the approved composition as a product contract.**
   - **As-is:** A curated fallback can be valid without a durable identity proving which
     exact composition shipped.
   - **To-be:** Record a stable plan mode/layout version in the generation report and add
@@ -388,7 +422,7 @@ committed drop.
   - **Guard:** Run seed may still drive cards and rewards outside map assembly; it cannot
     alter stage geometry or authored pickup placement.
 
-- [ ] **B3 Promote committed-drop returns to required traversal.**
+- [x] **B3 Promote committed-drop returns to required traversal.**
   - **As-is:** Entering an optional branch is optional, so its internal return can be
     validated too leniently.
   - **To-be:** Once a drop removes access to the entry support, every stable landing must
@@ -398,7 +432,7 @@ committed drop.
     passes only after a real route reaches the basin.
   - **Guard:** A checkpoint/recovery anchor alone cannot satisfy the rule.
 
-- [ ] **B4 Repair and audit approved drop rooms.**
+- [x] **B4 Repair and audit approved drop rooms.**
   - **As-is:** `BsMaterialCrypt` has a near-limit 120 px shelf rise and a rope terminating
     at shelf height; other lower-route rooms may share the same metadata pattern.
   - **To-be:** Extend ropes to the basin or add comfortable rock steps/one-way ledges;
@@ -416,8 +450,11 @@ committed drop.
   - **Accept:** Purpose-built invalid fixtures fail for each clearance category with a
     specific message.
   - **Guard:** Character body dimensions remain unchanged during this batch.
+  - **Progress:** Fixed support widths, rope endpoints, local recovery graphs, drop
+    hatches, collision layers, and target recovery landings are enforced. Dedicated
+    invalid ceiling, dash-corridor, crouch-tunnel, and moving-sweep fixtures remain.
 
-- [ ] **B6 Add all-character runtime traversal fixtures.**
+- [x] **B6 Add all-character runtime traversal fixtures.**
   - **As-is:** Geometry math and boot checks can pass without exercising representative
     movement from the exact recovery positions.
   - **To-be:** Spawn every character at each committed-drop recovery anchor and execute
@@ -434,6 +471,9 @@ committed drop.
     hazards, and exits receive distinct silhouettes/contrast without debug labels.
   - **Accept:** Screenshot review can trace the intended return route at normal zoom.
   - **Guard:** No invisible collision wall or visible unsupported floor remains.
+  - **Progress:** Fixed rooms use filled masses, visible one-way hatch caps, shaft
+    recesses, and ropes that extend above their landing. Final full-stage screenshot
+    review remains part of the Phase G gate.
 
 *Phase B gate:* fixed-plan identity tests, focused room validators, all three curated
 region validators, roster-stage matrix, and rendered route screenshots pass before field
@@ -450,7 +490,7 @@ making all attacks feel identical or expanding the player body.
 **Source owners:** character kit/attack resources, `PlayerCombatController.gd`,
 character runtimes, `EnemyBase.gd`, attack presentation and combat validators.
 
-- [ ] **C1 Measure contact-safety envelopes.**
+- [x] **C1 Measure contact-safety envelopes.**
   - **As-is:** Attack data is validated in isolation; no matrix compares earliest player
     hit to enemy body/contact overlap after startup and relative motion.
   - **To-be:** Record effective reach, startup travel, enemy approach travel, Hurtbox
@@ -459,7 +499,7 @@ character runtimes, `EnemyBase.gd`, attack presentation and combat validators.
   - **Accept:** A validator reports margins and fails unsafe neutral engagements.
   - **Guard:** It uses actual shapes/offsets and runtime movement, not guessed sprite size.
 
-- [ ] **C2 Tune Warrior space control.**
+- [x] **C2 Tune Warrior space control.**
   - **As-is:** Cleave is broader than Assassin attacks but can still feel visually small
     against the game scale.
   - **To-be:** Widen/extend the frontal arc modestly and preserve slower commitment,
@@ -469,7 +509,7 @@ character runtimes, `EnemyBase.gd`, attack presentation and combat validators.
     remains clearly shorter than Archer projectile play.
   - **Guard:** Breaker and skills do not inherit unintended global range inflation.
 
-- [ ] **C3 Tune Assassin entry and sweep.**
+- [x] **C3 Tune Assassin entry and sweep.**
   - **As-is:** Twin Cut's forward edge is the shortest melee basic and may require unsafe
     proximity despite fast timing.
   - **To-be:** Add a small committed step-in and/or wider swept footprint so both pulses
@@ -480,7 +520,7 @@ character runtimes, `EnemyBase.gd`, attack presentation and combat validators.
   - **Guard:** No invulnerability, hidden vertical padding, or off-footprint hit is added
     merely to hide spacing problems.
 
-- [ ] **C4 Improve Archer near-release reliability.**
+- [x] **C4 Improve Archer near-release reliability.**
   - **As-is:** Long projectile range is already ample, but close targets can expose spawn
     or collision-size edge cases.
   - **To-be:** Validate projectile spawn overlap, collision width, and immediate near
@@ -496,8 +536,10 @@ character runtimes, `EnemyBase.gd`, attack presentation and combat validators.
   - **Accept:** Controlled fixtures prove one spacing mistake does not become an
     uninterruptible multi-hit loss; deliberate enemy attacks retain telegraphs.
   - **Guard:** Do not solve all melee difficulty by disabling contact damage.
+  - **Progress:** Hit-before-contact and knockback fixtures pass. Repeated-engagement
+    attrition judgment remains a human Phase G session.
 
-- [ ] **C6 Preserve truthful attack presentation.**
+- [x] **C6 Preserve truthful attack presentation.**
   - **As-is:** The landed presenter now derives visuals from the exact footprint.
   - **To-be:** Update motion silhouettes after tuning while preserving footprint bounds,
     facing symmetry, startup/active/recovery timing, and distinct class signatures.
@@ -518,7 +560,7 @@ preserving authoritative reward/economy ownership.
 **Source owners:** new typed field-item catalog/actor, authored room pickup nodes,
 fixed-stage placement manifests, reward/run services, and room validators.
 
-- [ ] **D1 Define the minimum field-pickup catalog.**
+- [x] **D1 Define the minimum field-pickup catalog.**
   - **As-is:** Consumables and currencies exist, but no typed small world-pickup catalog
     owns immediate effects, visuals, eligibility, or value.
   - **To-be:** Define data-driven healing, consumable-refill, cooldown-recovery, coin,
@@ -528,7 +570,7 @@ fixed-stage placement manifests, reward/run services, and room validators.
     presentation, and unsupported inventory behavior.
   - **Guard:** Field pickups do not become equipment, cards, or a second consumable bag.
 
-- [ ] **D2 Add purpose-tagged authored pickup positions.**
+- [x] **D2 Add purpose-tagged authored pickup positions.**
   - **As-is:** Rooms expose enemy, hazard, moving-platform, reward, and recovery anchors,
     but not small pickup placement intent.
   - **To-be:** Place safe-route, post-combat, recovery, optional-risk, secret, and economy
@@ -538,7 +580,7 @@ fixed-stage placement manifests, reward/run services, and room validators.
   - **Guard:** Pickups never float unintentionally, overlap hazards, block sockets, or
     occupy required landing space.
 
-- [ ] **D3 Define fixed per-stage pickup manifests and budgets.**
+- [x] **D3 Define fixed per-stage pickup manifests and budgets.**
   - **As-is:** Major reward budgets exist; small pickup rhythm does not.
   - **To-be:** Give each approved stage an exact reviewed sustain, tempo, and economy set
     with stable IDs and positions; keep budget ranges as future procedural constraints.
@@ -547,7 +589,7 @@ fixed-stage placement manifests, reward/run services, and room validators.
   - **Guard:** Assembly does not inspect current HP and required progression never depends
     on collecting all loose pickups.
 
-- [ ] **D4 Implement safe collection and settlement.**
+- [x] **D4 Implement safe collection and settlement.**
   - **As-is:** Interactive reward sources already have exactly-once transactions, but
     loose field collection does not exist.
   - **To-be:** Collect immediate effects once, auto-store currencies/materials through
@@ -557,7 +599,7 @@ fixed-stage placement manifests, reward/run services, and room validators.
     and full-charge behavior is explicit.
   - **Guard:** UI never writes health, charges, currencies, or materials directly.
 
-- [ ] **D5 Make pickups worth route decisions.**
+- [x] **D5 Make pickups worth route decisions.**
   - **As-is:** Traversal often leads only to mandatory combat or large interactables.
   - **To-be:** Place modest recovery on readable safe paths, stronger economy/material
     value on optional risk, and tempo pickups where they can change an upcoming combat
@@ -573,6 +615,8 @@ fixed-stage placement manifests, reward/run services, and room validators.
     collection sound/flash, and an icon-based receipt in the context lane.
   - **Accept:** Pickup type and collectability are readable against all three regions.
   - **Guard:** Effects never resemble hazards, enemy projectiles, or required exits.
+  - **Progress:** Category silhouettes/colors, idle bob, collection lift/fade, and HUD
+    receipt are implemented. Pickup audio and final three-region visual review remain.
 
 *Phase D gate:* catalog, authored-position, fixed-manifest, transaction, and production
 stage checks pass; rendered captures demonstrate intentional item rhythm without visual
@@ -588,7 +632,7 @@ actions and resources immediately readable without covering play space.
 **Source owners:** `ProductionHUD.gd`, combat/run snapshots, new action-bar/context
 components, `RewardReceiptPresenter`, interaction prompt, boss HUD.
 
-- [ ] **E1 Expand player-facing snapshots without moving authority.**
+- [x] **E1 Expand player-facing snapshots without moving authority.**
   - **As-is:** Combat actions expose ID, label, input, and cooldown; run snapshot owns
     consumable data separately; disabled reasons/icons are absent.
   - **To-be:** Provide presentation-ready action identity, icon ID, cooldown fraction,
@@ -598,7 +642,7 @@ components, `RewardReceiptPresenter`, interaction prompt, boss HUD.
     gameplay legality.
   - **Guard:** No UI-specific mutable gameplay state enters `RunState` or combat runtime.
 
-- [ ] **E2 Build the six-slot bottom action bar.**
+- [x] **E2 Build the six-slot bottom action bar.**
   - **As-is:** Five attacks/skills render as multiline text in a top-left panel and the
     consumable is invisible.
   - **To-be:** Stable slots show Basic, Heavy, Skill 1-3, and Consumable with icon, input
@@ -607,7 +651,7 @@ components, `RewardReceiptPresenter`, interaction prompt, boss HUD.
     and Korean stress labels fit without moving slots.
   - **Guard:** Routine readiness is visual; do not restore repeated `READY` strings.
 
-- [ ] **E3 Replace health/build text panels.**
+- [x] **E3 Replace health/build text panels.**
   - **As-is:** Health and build summary occupy large bordered rectangles with dominant
     text.
   - **To-be:** Use a compact portrait/class emblem, health meter, optional guard layer,
@@ -616,7 +660,7 @@ components, `RewardReceiptPresenter`, interaction prompt, boss HUD.
     and currency gain are readable peripherally.
   - **Guard:** No oversized persistent panel obscures upper landing or enemy space.
 
-- [ ] **E4 Give class states dedicated visual language.**
+- [x] **E4 Give class states dedicated visual language.**
   - **As-is:** Guard, charge, Hunter's Mark, Flow, and Death Mark are appended to a text
     list.
   - **To-be:** Render only relevant class state as compact pips/rings/stacks adjacent to
@@ -625,7 +669,7 @@ components, `RewardReceiptPresenter`, interaction prompt, boss HUD.
     mechanic without reading a sentence.
   - **Guard:** State meaning is not conveyed by color alone.
 
-- [ ] **E5 Unify prompts and receipts in the context lane.**
+- [x] **E5 Unify prompts and receipts in the context lane.**
   - **As-is:** Interaction prompt and reward receipt use independent bottom anchors and
     would collide with an action bar.
   - **To-be:** One lane prioritizes active interaction, then committed receipt/pickup
@@ -635,7 +679,7 @@ components, `RewardReceiptPresenter`, interaction prompt, boss HUD.
     scenarios remain readable without modal interruption.
   - **Guard:** Existing exactly-once receipt semantics and input continuity remain.
 
-- [ ] **E6 Integrate objective and boss states.**
+- [x] **E6 Integrate objective and boss states.**
   - **As-is:** Objective and boss panels work but share the same generic text/panel
     language.
   - **To-be:** Objective appears briefly on room/phase change then collapses; boss name,
@@ -665,8 +709,11 @@ make build/equipment decisions exact before confirmation.
   - **Accept:** Screen scripts shrink toward presentation logic and no duplicate layout
     builder owns the same visual pattern.
   - **Guard:** Existing routes, signals, idempotent commands, and save/error states remain.
+  - **Progress:** Production scenes and reusable action, reward, equipment, and forge
+    components exist. Remaining large composition code must be split only where it
+    still owns layout rather than binding/presentation.
 
-- [ ] **F2 Redesign main menu and character/loadout.**
+- [x] **F2 Redesign main menu and character/loadout.**
   - **As-is:** Selection is information-complete but dominated by generic cards and text.
   - **To-be:** Character silhouette/portrait and combat promise lead; loadout slots use
     item icons; effective stats and candidate deltas sit in a restrained comparison
@@ -676,7 +723,7 @@ make build/equipment decisions exact before confirmation.
     consumable, and Start Run readiness without tooltips.
   - **Guard:** Locked choices never appear actionable and start remains single-submit.
 
-- [ ] **F3 Redesign level-up, card, and Treasure choices.**
+- [x] **F3 Redesign level-up, card, and Treasure choices.**
   - **As-is:** Choices are mainly text inside similar panels.
   - **To-be:** Use distinct upgrade/card/reward objects with icon/art, concise primary
     effect, exact current -> result values, compatibility, selected/focus states, and
@@ -685,7 +732,7 @@ make build/equipment decisions exact before confirmation.
     long descriptions fit or intentionally scroll.
   - **Guard:** Visual rarity or animation never hides actual mechanics.
 
-- [ ] **F4 Add reusable equipment detail and stat-delta view.**
+- [x] **F4 Add reusable equipment detail and stat-delta view.**
   - **As-is:** Equipment resources own mechanics/tradeoffs, but UIs expose incomplete
     portions and may hide descriptions in tooltips.
   - **To-be:** Show item name/slot, permanent base effect, tradeoff, current affix,
@@ -695,7 +742,7 @@ make build/equipment decisions exact before confirmation.
   - **Guard:** Behavioral effects are described honestly rather than converted into fake
     scalar scores.
 
-- [ ] **F5 Redesign Rest & Forge.**
+- [x] **F5 Redesign Rest & Forge.**
   - **As-is:** Rows show item names and affix descriptions without complete base context,
     projected stats, final coin balance, or prominent temporary duration.
   - **To-be:** Camp/forge scene leads; heal, consumable, reroll, and forge are distinct
@@ -705,7 +752,7 @@ make build/equipment decisions exact before confirmation.
     explain cost/eligibility without changing state.
   - **Guard:** Temporary forge never reads as permanent equipment leveling.
 
-- [ ] **F6 Redesign pause/settings and result.**
+- [x] **F6 Redesign pause/settings and result.**
   - **As-is:** Functional modal panels do not share strong game identity or outcome
     hierarchy.
   - **To-be:** Pause keeps the dimmed live scene visible with compact commands; settings
@@ -722,8 +769,10 @@ make build/equipment decisions exact before confirmation.
   - **Accept:** Motion clarifies state and completes quickly enough for repeated runs.
   - **Guard:** No looping decoration, camera-obscuring flash, or input delay masquerades
     as polish.
+  - **Progress:** Reward and pickup feedback are present. A coherent transition pass and
+    explicit reduced-motion alternative remain.
 
-- [ ] **F8 Retire debug-like copy and obsolete builders.**
+- [x] **F8 Retire debug-like copy and obsolete builders.**
   - **As-is:** `READY`, raw IDs, implementation terms, and generic helper paragraphs can
     leak into player-facing text.
   - **To-be:** Use concise action language, catalog display names, and icon/state
@@ -743,7 +792,7 @@ result.
 **Goal:** Validate the revised systems together as a coherent run rather than accepting
 isolated technical success.
 
-- [ ] **G1 Validate every approved plan and pickup manifest together.**
+- [x] **G1 Validate every approved plan and pickup manifest together.**
   - **As-is:** Existing checks do not include fixed pickup positions or all post-drop
     escape scenarios in the exact production compositions.
   - **To-be:** Validate all three approved plans with all characters for route
@@ -779,6 +828,9 @@ isolated technical success.
     focus, reduced motion, disabled/empty/error states, and longest supported strings.
   - **Accept:** 960x540, 1280x720, and 1920x1080 pass every required screen/state.
   - **Guard:** No required indicator covers player, enemy, landing edge, or telegraph.
+  - **Progress:** Automated shell and HUD checks cover 960x540, 1280x720, and
+    1920x1080, including focus restoration and compact states. Fresh-player
+    recognition and the complete screen/state matrix remain.
 
 - [ ] **G5 Run code/document quality gates.**
   - **As-is:** Broad UI changes risk large catch-all scripts and stale comments/docs.
@@ -787,6 +839,9 @@ isolated technical success.
   - **Accept:** Codebase quality audit has no unresolved high-severity finding; comments
     are short, truthful, and explain only non-obvious intent/invariants.
   - **Guard:** No unrelated refactor or asset/dependency churn.
+  - **Progress:** Independent audit findings for fixed-map signatures, card fail-closed
+    behavior, loadout focus, dormant random gates, and pickup lifecycle were addressed.
+    Final release-matrix and documentation reruns remain.
 
 - [ ] **G6 Complete release-style manual runs.**
   - **As-is:** Prior RC proves complete flow before these experience changes.
@@ -930,13 +985,16 @@ git diff --check
 
 ## Next Steps
 
-1. Phase A baseline and shared contracts.
-2. Phase B guaranteed traversal, beginning with `BsMaterialCrypt` and then all drop rooms.
-3. Phase C contact-safety tuning for Assassin, Warrior, then Archer edge cases.
-4. Phase D field-item vertical slice in Ruin Approach, then all regions.
-5. Phase E live gameplay HUD and context lane.
-6. Phase F broad screen parity, beginning with Character Select and Rest & Forge.
-7. Phase G full integration, human runs, documentation, and release gate.
+1. Finish final automated import, boot, focused UI/map checks, and the default release
+   matrix against fixed layout V3.
+2. Render and inspect the current hatch/rope, HUD, shell, reward, and equipment states at
+   supported viewports; repair only visible blockers.
+3. Close scoped quality/documentation findings and decide whether remaining procedural
+   screen composition or a global icon manifest materially improves the player build.
+4. Complete one production-style run per character plus combat attrition and UI
+   recognition sessions; record balance/fun findings before marking the plan done.
+5. Define random-generation re-entry in a separate future plan only after fixed-stage
+   gameplay is accepted.
 
 ## Open Questions To Confirm As Work Proceeds
 
@@ -960,6 +1018,8 @@ git diff --check
 - Hidden health-sensitive item spawning is rejected; field items stay fixed and authored.
 - Random stage generation remains implemented but dormant until the core game loop and
   fixed-stage content are proven fun enough to define meaningful procedural constraints.
+- Fixed layout V3 is the current approved map contract. A layout-version bump and new
+  deterministic signatures are required for future room/content changes.
 
 ## Handoff Summary
 
