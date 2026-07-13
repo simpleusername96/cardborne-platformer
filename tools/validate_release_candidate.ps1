@@ -22,6 +22,7 @@ $releaseMatrix = @(
   "validate_build_previews.gd",
   "validate_player_stat_presentation.gd",
   "validate_gameplay_hud.gd",
+  "validate_shell_ui.gd",
   "validate_equipment_decision_ui.gd",
   "validate_reward_choice_ui.gd",
   "validate_card_reward.gd",
