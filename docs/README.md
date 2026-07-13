@@ -29,6 +29,23 @@ game specifications.
   candidates. Neither is product authority.
 - `.agent/Documentation.md` records current project state and verification paths.
 
+## Preproduction Drafts
+
+These documents are intentionally non-canonical until the owner accepts the proposed
+production-art and UI foundation:
+
+- `design/GAME_COMPONENT_ART_SYSTEM.md` proposes the tile, reusable component,
+  stage-skin, decoration, actor, and unique-set-piece boundaries.
+- `design/UI_VISUAL_SYSTEM.md` proposes the borderless flat UI, Theme, asset, state,
+  and component contracts.
+- `research/component_ui_foundation_research_2026-07-13.md` records local and
+  external evidence behind those proposals.
+- `.agent/execplans/2026-07-13-component-ui-foundation.md` is the draft future
+  implementation sequence. It does not authorize work while the current gameplay
+  branch is unresolved.
+- `design/references/README.md` classifies generated boards as references rather
+  than production-ready atlases or sprites.
+
 ## Lifecycle Rule
 
 Active specs define released behavior. An active plan defines what to do next only

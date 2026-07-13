@@ -2,13 +2,14 @@
 type: evidence
 status: active
 created: 2026-07-05
-last_reviewed: 2026-07-12
+last_reviewed: 2026-07-13
 source: Local deep-dive evidence plus current official upstream release and compatibility documentation
 topic: Third-party package adoption and reference tracking
 scope: External code, plugins, examples, and assets considered for the production foundation
 related:
   - ./external_codebase_deep_dive_2026-07-05.md
   - ./foundation_resource_survey_2026-07-05.md
+  - ./component_ui_foundation_research_2026-07-13.md
   - ../design/MAP_AUTHORING_PIPELINE_CONTRACT.md
   - ../../.agent/execplans/2026-07-12-actual-game-production-roadmap.md
 ---
@@ -44,7 +45,7 @@ Track which external packages are copied into the repo, which are only reference
 
 | Package | Purpose | Source URL | Commit or release | License | Copied paths | Local modifications | Validation commands | Attribution needs | Adoption status |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| LDtk + Godot LDtk Importer | Primary candidate for authored room geometry and typed markers behind a local resolver. | `https://github.com/deepnight/ldtk`; `https://github.com/heygleeson/godot-ldtk-importer` | LDtk `v1.5.3` (`72c75f1`); importer release `2.0.1` (`92803cc`); use locally reviewed importer `0ecab8d` for the isolated spike | MIT | none | none | Importer `0ecab8d` imported and booted in an external Godot 4.7 clone; repository-local typed-marker/reimport spike and approval remain required. | none known | candidate |
+| LDtk + Godot LDtk Importer | Deferred candidate for authored room geometry and typed markers behind a local resolver; Godot-native TileMapLayer is the first foundation spike. | `https://github.com/deepnight/ldtk`; `https://github.com/heygleeson/godot-ldtk-importer` | LDtk `v1.5.3` (`72c75f1`); importer release `2.0.1` (`92803cc`); use locally reviewed importer `0ecab8d` for any isolated spike | MIT | none | none | Importer `0ecab8d` imported and booted in an external Godot 4.7 clone. Cardborne typed-marker, collision, stable-ID, deterministic reimport, and generated-output tests remain required. Native authoring measurements must justify reopening the spike. | none known | deferred-candidate |
 | KoBeWi ControlsRemap | Candidate/reference for small persistent input remap core. | `https://github.com/KoBeWi/Godot-Input-Remap` | `0d7204b` from local deep dive | MIT | none | Local implementation in `scripts/autoload/InputBindings.gd` follows the small resource-pattern idea without copying files. | `.\tools\godot.ps1 --path . --headless --import`; `.\tools\godot.ps1 --path . --headless --script res://tools/validate_input_remap.gd`; rendered settings popup at 1280x720 and 390x720. | none known | reference-only |
 | GDQuest Godot 4 Procedural Generation | Reference for deterministic path-first room/chunk generation. | `https://github.com/gdquest-demos/godot-4-procedural-generation` | `19c98ce` from local deep dive | Source MIT; assets CC-BY 4.0 | none | none | Deep dive source inspection only for this repo. | CC-BY attribution required if assets are copied; no assets copied. | reference-only |
 | Ultimate Platformer Controller 2D | Movement feature checklist and formulas. | `https://github.com/Noah-Erz/ultimate-platformer-controller-2d` | `9ce6580` from local deep dive | MIT | none | none | Source inspection only. | none known | reference-only |
