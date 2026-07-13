@@ -1,24 +1,41 @@
 extends Control
 
-const BINDING_HINT := "Keyboard bindings can be remapped. Gamepad controls use a fixed standard layout."
+const Styles = preload("res://scripts/ui/production/ProductionUIStyles.gd")
+const BINDING_HINT := "Keyboard keys can be remapped. Gamepad layout is fixed."
 
-var panel: PanelContainer
-var close_button: Button
-var bindings_box: VBoxContainer
-var warning_label: Label
-var binding_row_labels: Dictionary = {}
+@onready var panel: PanelContainer = %SettingsPanel
+@onready var title_label: Label = %SettingsTitle
+@onready var accent_rule: ColorRect = %SettingsRule
+@onready var close_button: Button = %CloseButton
+@onready var restore_all_button: Button = %RestoreAllButton
+@onready var bindings_box: VBoxContainer = %BindingsBox
+@onready var warning_label: Label = %BindingStatus
+@onready var master_slider: HSlider = %MasterSlider
+@onready var music_slider: HSlider = %MusicSlider
+@onready var sfx_slider: HSlider = %SfxSlider
+@onready var master_value: Label = %MasterValue
+@onready var music_value: Label = %MusicValue
+@onready var sfx_value: Label = %SfxValue
+@onready var screen_shake_toggle: CheckBox = %ScreenShakeToggle
+@onready var damage_flash_toggle: CheckBox = %DamageFlashToggle
+
+var binding_row_controls: Dictionary = {}
 var capture_action_name: String = ""
-var capture_action_label: String = ""
 
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	visible = false
 	mouse_filter = Control.MOUSE_FILTER_STOP
-	set_anchors_preset(Control.PRESET_FULL_RECT)
-	_build_ui()
+	_style_ui()
+	_configure_settings_controls()
+	_rebuild_binding_rows()
+	close_button.pressed.connect(func() -> void: Game.set_settings_open(false))
+	restore_all_button.pressed.connect(_restore_all_defaults)
 	SignalBus.settings_visibility_changed.connect(_on_settings_visibility_changed)
 	SignalBus.input_bindings_changed.connect(_on_input_bindings_changed)
+	_layout_panel()
+	call_deferred("_layout_panel")
 
 
 func _notification(what: int) -> void:
@@ -35,7 +52,11 @@ func _input(event: InputEvent) -> void:
 			var key_event := event as InputEventKey
 			if key_event.pressed and not key_event.echo:
 				get_viewport().set_input_as_handled()
-				var keycode := key_event.physical_keycode if key_event.physical_keycode != KEY_NONE else key_event.keycode
+				var keycode := (
+					key_event.physical_keycode
+					if key_event.physical_keycode != KEY_NONE
+					else key_event.keycode
+				)
 				if keycode == KEY_ESCAPE and capture_action_name != "pause":
 					_clear_capture(true)
 					return
@@ -48,241 +69,197 @@ func _input(event: InputEvent) -> void:
 					_clear_capture(true)
 		return
 
-	if event.is_action_pressed("pause"):
+	if event.is_action_pressed("pause") or event.is_action_pressed("ui_cancel"):
 		get_viewport().set_input_as_handled()
 		Game.set_settings_open(false)
 
 
-func _build_ui() -> void:
-	var dim := ColorRect.new()
-	dim.color = Color(0.0, 0.0, 0.0, 0.48)
-	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(dim)
-
-	panel = PanelContainer.new()
-	panel.add_theme_stylebox_override("panel", _panel_style())
-	add_child(panel)
-
-	var margin := MarginContainer.new()
-	margin.add_theme_constant_override("margin_left", 18)
-	margin.add_theme_constant_override("margin_top", 18)
-	margin.add_theme_constant_override("margin_right", 18)
-	margin.add_theme_constant_override("margin_bottom", 18)
-	panel.add_child(margin)
-
-	var root_box := VBoxContainer.new()
-	root_box.add_theme_constant_override("separation", 8)
-	margin.add_child(root_box)
-
-	var header := HBoxContainer.new()
-	header.add_theme_constant_override("separation", 12)
-	root_box.add_child(header)
-
-	var title := Label.new()
-	title.text = "Settings"
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	header.add_child(title)
-
-	close_button = Button.new()
-	close_button.text = "Close"
-	close_button.custom_minimum_size = Vector2(88, 40)
-	close_button.pressed.connect(func() -> void: Game.set_settings_open(false))
-	header.add_child(close_button)
-
-	root_box.add_child(_make_slider_row("Master", "master_volume"))
-	root_box.add_child(_make_slider_row("Music", "music_volume"))
-	root_box.add_child(_make_slider_row("SFX", "sfx_volume"))
-
-	var toggle_row := HBoxContainer.new()
-	toggle_row.add_theme_constant_override("separation", 20)
-	root_box.add_child(toggle_row)
-	toggle_row.add_child(_make_check_box("Screen shake", "screen_shake"))
-	toggle_row.add_child(_make_check_box("Damage flash", "damage_flash"))
-
-	var bindings_header := HBoxContainer.new()
-	bindings_header.add_theme_constant_override("separation", 12)
-	root_box.add_child(bindings_header)
-
-	var bindings_title := Label.new()
-	bindings_title.text = "Input bindings"
-	bindings_title.add_theme_font_size_override("font_size", 15)
-	bindings_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	bindings_header.add_child(bindings_title)
-
-	var restore_all_button := Button.new()
-	restore_all_button.text = "Restore keys"
-	restore_all_button.custom_minimum_size = Vector2(116, 34)
-	restore_all_button.pressed.connect(_restore_all_defaults)
-	bindings_header.add_child(restore_all_button)
-
-	warning_label = Label.new()
-	warning_label.text = BINDING_HINT
-	warning_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	warning_label.add_theme_font_size_override("font_size", 12)
-	root_box.add_child(warning_label)
-
-	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(0.0, 248.0)
-	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	root_box.add_child(scroll)
-
-	bindings_box = VBoxContainer.new()
-	bindings_box.add_theme_constant_override("separation", 6)
-	bindings_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.add_child(bindings_box)
-
-	_rebuild_binding_rows()
-	_layout_panel()
+func _style_ui() -> void:
+	panel.add_theme_stylebox_override(
+		"panel",
+		Styles.panel_style(Color(Styles.SURFACE, 0.99), Styles.OUTLINE)
+	)
+	Styles.configure_label(title_label, 28, Styles.TEXT)
+	accent_rule.color = Styles.MOSS
+	Styles.apply_button(close_button, Styles.CYAN, true)
+	Styles.apply_button(restore_all_button, Styles.MOSS, true)
+	close_button.add_theme_font_size_override("font_size", 15)
+	restore_all_button.add_theme_font_size_override("font_size", 14)
+	for label in [%AudioHeading, %FeedbackHeading, %ControlsHeading]:
+		Styles.configure_label(label as Label, 15, Styles.AMBER)
+	for label in [%ActionColumn, %KeyboardColumn, %GamepadColumn]:
+		Styles.configure_label(label as Label, 11, Styles.TEXT_MUTED)
+	for label in [%MasterLabel, %MusicLabel, %SfxLabel]:
+		Styles.configure_label(label as Label, 14, Styles.TEXT)
+	for label in [master_value, music_value, sfx_value]:
+		Styles.configure_label(label, 13, Styles.TEXT_MUTED)
+	Styles.configure_label(warning_label, 12, Styles.TEXT_MUTED)
+	screen_shake_toggle.add_theme_font_size_override("font_size", 14)
+	damage_flash_toggle.add_theme_font_size_override("font_size", 14)
+	screen_shake_toggle.add_theme_color_override("font_color", Styles.TEXT)
+	damage_flash_toggle.add_theme_color_override("font_color", Styles.TEXT)
 
 
-func _make_slider_row(label_text: String, setting_name: String) -> HBoxContainer:
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 12)
+func _configure_settings_controls() -> void:
+	_configure_slider(master_slider, master_value, "master_volume")
+	_configure_slider(music_slider, music_value, "music_volume")
+	_configure_slider(sfx_slider, sfx_value, "sfx_volume")
+	screen_shake_toggle.set_pressed_no_signal(
+		bool(RunState.get_setting("screen_shake", true))
+	)
+	damage_flash_toggle.set_pressed_no_signal(
+		bool(RunState.get_setting("damage_flash", true))
+	)
+	screen_shake_toggle.toggled.connect(func(enabled: bool) -> void:
+		RunState.set_setting("screen_shake", enabled)
+	)
+	damage_flash_toggle.toggled.connect(func(enabled: bool) -> void:
+		RunState.set_setting("damage_flash", enabled)
+	)
 
-	var label := Label.new()
-	label.text = label_text
-	label.custom_minimum_size = Vector2(84, 32)
-	row.add_child(label)
 
-	var slider := HSlider.new()
+func _configure_slider(slider: HSlider, value_label: Label, setting_name: String) -> void:
 	slider.min_value = 0.0
 	slider.max_value = 100.0
 	slider.step = 1.0
-	slider.value = float(RunState.get_setting(setting_name, 0.8)) * 100.0
-	slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	slider.custom_minimum_size = Vector2(220, 36)
+	slider.set_value_no_signal(float(RunState.get_setting(setting_name, 0.8)) * 100.0)
+	_update_slider_value(value_label, slider.value)
 	slider.value_changed.connect(func(value: float) -> void:
 		RunState.set_setting(setting_name, value / 100.0)
+		_update_slider_value(value_label, value)
 	)
-	row.add_child(slider)
-	return row
 
 
-func _make_check_box(label_text: String, setting_name: String) -> CheckBox:
-	var checkbox := CheckBox.new()
-	checkbox.text = label_text
-	checkbox.button_pressed = bool(RunState.get_setting(setting_name, true))
-	checkbox.custom_minimum_size = Vector2(150, 40)
-	checkbox.toggled.connect(func(is_pressed: bool) -> void:
-		RunState.set_setting(setting_name, is_pressed)
-	)
-	return checkbox
+func _update_slider_value(label: Label, value: float) -> void:
+	label.text = "%d%%" % int(round(value))
 
 
-func _make_binding_row(row_info: Dictionary) -> VBoxContainer:
-	var action_name := str(row_info["action"])
-	var action_label := str(row_info["label"])
+func _make_binding_row(row_info: Dictionary) -> HBoxContainer:
+	var action_name := String(row_info["action"])
+	var action_label := String(row_info["label"]).capitalize()
 
-	var row := VBoxContainer.new()
-	row.add_theme_constant_override("separation", 4)
-	row.custom_minimum_size = Vector2(0.0, 68.0)
+	var row := HBoxContainer.new()
+	row.name = "Binding_%s" % action_name
+	row.custom_minimum_size = Vector2(0.0, 44.0)
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_theme_constant_override("separation", 8)
 
-	var binding_label := Label.new()
-	binding_label.text = _binding_row_text(row_info)
-	binding_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	binding_label.custom_minimum_size = Vector2(0.0, 24.0)
-	binding_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(binding_label)
-	binding_row_labels[action_name] = binding_label
+	var action := Label.new()
+	action.text = action_label
+	action.custom_minimum_size = Vector2(105.0, 0.0)
+	action.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	Styles.configure_label(action, 13, Styles.TEXT)
+	row.add_child(action)
 
-	var button_row := HBoxContainer.new()
-	button_row.add_theme_constant_override("separation", 8)
-	button_row.size_flags_horizontal = Control.SIZE_SHRINK_END
-	row.add_child(button_row)
-
-	var change_button := Button.new()
-	change_button.text = "Change key"
-	change_button.custom_minimum_size = Vector2(96.0, 34.0)
-	change_button.pressed.connect(func() -> void:
+	var keyboard_button := Button.new()
+	keyboard_button.text = String(row_info.get("keyboard_binding", "Unbound"))
+	keyboard_button.custom_minimum_size = Vector2(155.0, 40.0)
+	keyboard_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	keyboard_button.clip_text = true
+	Styles.apply_button(keyboard_button, Styles.CYAN, true)
+	keyboard_button.add_theme_font_size_override("font_size", 13)
+	keyboard_button.pressed.connect(func() -> void:
 		_begin_capture(action_name, action_label)
 	)
-	button_row.add_child(change_button)
+	row.add_child(keyboard_button)
+
+	var gamepad_label := Label.new()
+	gamepad_label.text = String(row_info.get("gamepad_binding", "Unbound"))
+	gamepad_label.custom_minimum_size = Vector2(145.0, 0.0)
+	gamepad_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	gamepad_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	Styles.configure_label(gamepad_label, 12, Styles.TEXT_MUTED)
+	row.add_child(gamepad_label)
 
 	var default_button := Button.new()
-	default_button.text = "Key default"
-	default_button.custom_minimum_size = Vector2(96.0, 34.0)
+	default_button.text = "Default"
+	default_button.custom_minimum_size = Vector2(78.0, 40.0)
+	Styles.apply_button(default_button, Styles.MOSS, true)
+	default_button.add_theme_font_size_override("font_size", 12)
 	default_button.pressed.connect(func() -> void:
 		_restore_action_default(action_name)
 	)
-	button_row.add_child(default_button)
+	row.add_child(default_button)
 
+	binding_row_controls[action_name] = {
+		"keyboard": keyboard_button,
+		"gamepad": gamepad_label,
+	}
 	return row
 
 
 func _rebuild_binding_rows() -> void:
 	if bindings_box == null:
 		return
-
 	for child in bindings_box.get_children():
 		bindings_box.remove_child(child)
 		child.queue_free()
-	binding_row_labels.clear()
-
+	binding_row_controls.clear()
 	for row_info in Game.get_input_binding_rows():
 		bindings_box.add_child(_make_binding_row(row_info))
+	call_deferred("_layout_panel")
 
 
 func _refresh_binding_rows() -> void:
 	for row_info in Game.get_input_binding_rows():
-		var action_name := str(row_info["action"])
-		if not binding_row_labels.has(action_name):
+		var action_name := String(row_info["action"])
+		if not binding_row_controls.has(action_name):
 			_rebuild_binding_rows()
 			return
-		var binding_label := binding_row_labels[action_name] as Label
-		binding_label.text = _binding_row_text(row_info)
-
-
-func _binding_row_text(row_info: Dictionary) -> String:
-	return "%s: %s  |  Pad %s" % [
-		str(row_info["label"]),
-		str(row_info.get("keyboard_binding", row_info.get("binding", "unbound"))),
-		str(row_info.get("gamepad_binding", "unbound")),
-	]
+		var controls: Dictionary = binding_row_controls[action_name]
+		var keyboard_button := controls["keyboard"] as Button
+		var gamepad_label := controls["gamepad"] as Label
+		keyboard_button.text = (
+			"Press a key"
+			if action_name == capture_action_name
+			else String(row_info.get("keyboard_binding", "Unbound"))
+		)
+		gamepad_label.text = String(row_info.get("gamepad_binding", "Unbound"))
 
 
 func _begin_capture(action_name: String, action_label: String) -> void:
 	capture_action_name = action_name
-	capture_action_label = action_label
 	warning_label.text = "Press a keyboard key for %s. Esc or gamepad B cancels." % action_label
+	_refresh_binding_rows()
 
 
 func _apply_captured_key(key_event: InputEventKey) -> void:
 	var result := Game.remap_action_to_event(capture_action_name, key_event)
 	if bool(result.get("ok", false)):
-		warning_label.text = str(result.get("message", "Binding updated."))
 		capture_action_name = ""
-		capture_action_label = ""
+		warning_label.text = String(result.get("message", "Binding updated."))
 		_refresh_binding_rows()
 	else:
-		warning_label.text = str(result.get("message", "Unable to use that key."))
+		warning_label.text = String(result.get("message", "Unable to use that key."))
 
 
 func _clear_capture(show_message: bool) -> void:
 	capture_action_name = ""
-	capture_action_label = ""
 	if show_message:
 		warning_label.text = "Remap canceled."
+	_refresh_binding_rows()
 
 
 func _restore_action_default(action_name: String) -> void:
 	var result := Game.restore_action_default(action_name)
-	warning_label.text = str(result.get("message", "Keyboard default restored."))
-	_clear_capture(false)
+	capture_action_name = ""
+	warning_label.text = String(result.get("message", "Keyboard default restored."))
 	_refresh_binding_rows()
 
 
 func _restore_all_defaults() -> void:
 	Game.restore_all_input_defaults()
+	capture_action_name = ""
 	warning_label.text = "Default keyboard bindings restored."
-	_clear_capture(false)
 	_refresh_binding_rows()
 
 
 func _layout_panel() -> void:
 	var viewport_size := get_viewport_rect().size
-	var panel_size := Vector2(minf(660.0, viewport_size.x - 32.0), minf(640.0, viewport_size.y - 32.0))
+	var panel_size := Vector2(
+		minf(900.0, viewport_size.x - 24.0),
+		minf(650.0, viewport_size.y - 24.0)
+	)
 	var panel_position := (viewport_size - panel_size) * 0.5
 	panel.set_anchors_preset(Control.PRESET_TOP_LEFT, false)
 	panel.offset_left = panel_position.x
@@ -291,29 +268,13 @@ func _layout_panel() -> void:
 	panel.offset_bottom = panel_position.y + panel_size.y
 
 
-func _panel_style() -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.08, 0.09, 0.11, 0.97)
-	style.border_color = Color(0.52, 0.58, 0.66, 0.85)
-	style.border_width_left = 1
-	style.border_width_top = 1
-	style.border_width_right = 1
-	style.border_width_bottom = 1
-	style.corner_radius_top_left = 8
-	style.corner_radius_top_right = 8
-	style.corner_radius_bottom_left = 8
-	style.corner_radius_bottom_right = 8
-	return style
-
-
 func _on_settings_visibility_changed(is_visible: bool) -> void:
 	visible = is_visible
 	if visible:
 		close_button.text = "Back" if Game.pause_menu_open else "Close"
 		warning_label.text = BINDING_HINT
 		_refresh_binding_rows()
-		if close_button != null:
-			close_button.grab_focus()
+		close_button.grab_focus()
 	else:
 		_clear_capture(false)
 

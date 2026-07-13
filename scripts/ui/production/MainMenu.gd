@@ -4,78 +4,30 @@ signal new_run_requested
 signal settings_requested
 signal quit_requested
 
-const BackdropScene = preload("res://scripts/ui/production/ProductionBackdrop.gd")
 const Styles = preload("res://scripts/ui/production/ProductionUIStyles.gd")
+
+@onready var region_label: Label = %RegionLabel
+@onready var title_label: Label = %TitleLabel
+@onready var invitation_label: Label = %InvitationLabel
+@onready var accent_rule: ColorRect = %AccentRule
+@onready var new_run_button: Button = %NewRunButton
+@onready var settings_button: Button = %SettingsButton
+@onready var quit_button: Button = %QuitButton
 
 
 func _ready() -> void:
-	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_build_ui()
+	_style_ui()
+	new_run_button.pressed.connect(func() -> void: new_run_requested.emit())
+	settings_button.pressed.connect(func() -> void: settings_requested.emit())
+	quit_button.pressed.connect(func() -> void: quit_requested.emit())
+	new_run_button.grab_focus()
 
 
-func _build_ui() -> void:
-	var backdrop := BackdropScene.new()
-	add_child(backdrop)
-
-	var margin := MarginContainer.new()
-	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	margin.add_theme_constant_override("margin_left", 56)
-	margin.add_theme_constant_override("margin_top", 46)
-	margin.add_theme_constant_override("margin_right", 56)
-	margin.add_theme_constant_override("margin_bottom", 42)
-	add_child(margin)
-
-	var layout := HBoxContainer.new()
-	margin.add_child(layout)
-
-	var menu := VBoxContainer.new()
-	menu.custom_minimum_size = Vector2(340.0, 0.0)
-	menu.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	menu.add_theme_constant_override("separation", 12)
-	layout.add_child(menu)
-
-	var region := Label.new()
-	region.text = "LOWER RUINS"
-	Styles.configure_label(region, 16, Styles.AMBER)
-	menu.add_child(region)
-
-	var title := Label.new()
-	title.text = "CARDBORNE"
-	Styles.configure_label(title, 52)
-	menu.add_child(title)
-
-	var rule := ColorRect.new()
-	rule.color = Styles.MOSS
-	rule.custom_minimum_size = Vector2(86.0, 4.0)
-	rule.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	menu.add_child(rule)
-
-	var spacer := Control.new()
-	spacer.custom_minimum_size = Vector2(0.0, 64.0)
-	menu.add_child(spacer)
-
-	var new_run := _menu_button("New Run", Styles.CYAN)
-	new_run.pressed.connect(func() -> void: new_run_requested.emit())
-	menu.add_child(new_run)
-
-	var settings := _menu_button("Settings", Styles.MOSS)
-	settings.pressed.connect(func() -> void: settings_requested.emit())
-	menu.add_child(settings)
-
-	var quit := _menu_button("Quit", Styles.CORAL, true)
-	quit.pressed.connect(func() -> void: quit_requested.emit())
-	menu.add_child(quit)
-
-	var flexible_space := Control.new()
-	flexible_space.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	layout.add_child(flexible_space)
-	new_run.grab_focus()
-
-
-func _menu_button(label_text: String, accent: Color, quiet: bool = false) -> Button:
-	var button := Button.new()
-	button.text = label_text
-	button.custom_minimum_size = Vector2(286.0, 52.0)
-	button.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	Styles.apply_button(button, accent, quiet)
-	return button
+func _style_ui() -> void:
+	Styles.configure_label(region_label, 15, Styles.AMBER)
+	Styles.configure_label(title_label, 52, Styles.TEXT)
+	Styles.configure_label(invitation_label, 16, Styles.TEXT_MUTED)
+	accent_rule.color = Styles.MOSS
+	Styles.apply_button(new_run_button, Styles.CYAN)
+	Styles.apply_button(settings_button, Styles.MOSS, true)
+	Styles.apply_button(quit_button, Styles.CORAL, true)

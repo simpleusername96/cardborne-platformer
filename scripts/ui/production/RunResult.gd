@@ -3,186 +3,195 @@ extends Control
 signal menu_requested
 signal retry_requested
 
-const BackdropScene = preload("res://scripts/ui/production/ProductionBackdrop.gd")
 const Styles = preload("res://scripts/ui/production/ProductionUIStyles.gd")
+const LOADOUT_SLOT_ORDER: Array[String] = ["weapon", "armor", "charm", "relic"]
+const MATERIAL_NAMES := {
+	"rusted_scrap": "Rusted Scrap",
+	"sky_thread": "Sky Thread",
+	"slime_residue": "Slime Residue",
+	"boss_core": "Boss Core",
+}
 
-var title_label: Label
-var detail_label: Label
-var facts_label: Label
-var build_label: Label
-var materials_label: Label
-var retry_button: Button
+@onready var outcome_marker: ColorRect = %OutcomeMarker
+@onready var outcome_title: Label = %OutcomeTitle
+@onready var outcome_subtitle: Label = %OutcomeSubtitle
+@onready var detail_label: Label = %ResultDetail
+@onready var reach_value: Label = %ReachValue
+@onready var time_value: Label = %TimeValue
+@onready var level_value: Label = %LevelValue
+@onready var build_heading: Label = %BuildHeading
+@onready var build_label: Label = %BuildSummary
+@onready var rewards_heading: Label = %RewardsHeading
+@onready var materials_label: Label = %KeptMaterials
+@onready var summary_panel: PanelContainer = %SummaryPanel
+@onready var summary_rule: ColorRect = %SummaryRule
+@onready var summary_divider: ColorRect = %SummaryDivider
+@onready var retry_button: Button = %RetryButton
+@onready var menu_button: Button = %MenuButton
 
 
 func _ready() -> void:
-	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_build_ui()
+	_style_ui()
+	retry_button.pressed.connect(func() -> void: retry_requested.emit())
+	menu_button.pressed.connect(func() -> void: menu_requested.emit())
+	retry_button.grab_focus()
 
 
-func configure(
-	victory: bool,
-	profile_name: String,
-	settlement: Dictionary = {}
-) -> void:
-	if title_label == null:
-		return
-	title_label.text = "SLIME KING DEFEATED" if victory else "EXPEDITION ENDED"
-	title_label.add_theme_color_override("font_color", Styles.AMBER if victory else Styles.CORAL)
+func configure(victory: bool, profile_name: String, settlement: Dictionary = {}) -> void:
+	var accent := Styles.AMBER if victory else Styles.CORAL
+	outcome_marker.color = accent
+	outcome_title.text = "VICTORY" if victory else "DEFEAT"
+	outcome_title.add_theme_color_override("font_color", accent)
+	outcome_subtitle.text = "SLIME KING DEFEATED" if victory else "EXPEDITION ENDED"
 	detail_label.text = _result_detail(victory, profile_name, settlement)
-	facts_label.text = _fact_line(settlement)
+	reach_value.text = _final_reach(settlement)
+	time_value.text = _format_duration(
+		maxi(int(round(float(settlement.get("duration_seconds", 0.0)))), 0)
+	)
+	level_value.text = "Lv %d" % maxi(int(_run_build(settlement).get("level", 1)), 1)
+	build_heading.text = "%s BUILD" % profile_name.to_upper()
 	build_label.text = _build_summary(settlement)
 	materials_label.text = _material_summary(settlement)
+	rewards_heading.add_theme_color_override("font_color", accent)
 	materials_label.add_theme_color_override(
 		"font_color",
-		Styles.AMBER if victory else Styles.TEXT_MUTED
+		Styles.AMBER if _has_kept_materials(settlement) else Styles.TEXT_MUTED
 	)
-	retry_button.text = "Run Again" if victory else "Retry"
+	retry_button.text = "Begin Another Run" if victory else "Retry Expedition"
 
 
-func _build_ui() -> void:
-	var backdrop := BackdropScene.new()
-	add_child(backdrop)
-
-	var center := CenterContainer.new()
-	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	add_child(center)
-
-	var content := VBoxContainer.new()
-	content.custom_minimum_size = Vector2(620.0, 0.0)
-	content.add_theme_constant_override("separation", 11)
-	center.add_child(content)
-
-	var marker := ColorRect.new()
-	marker.color = Styles.AMBER
-	marker.custom_minimum_size = Vector2(90.0, 5.0)
-	marker.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	content.add_child(marker)
-
-	title_label = Label.new()
-	title_label.name = "ResultTitle"
-	title_label.text = "EXPEDITION COMPLETE"
-	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	Styles.configure_label(title_label, 34, Styles.AMBER)
-	content.add_child(title_label)
-
-	detail_label = Label.new()
-	detail_label.name = "ResultDetail"
-	detail_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	detail_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	detail_label.custom_minimum_size = Vector2(0.0, 36.0)
-	Styles.configure_label(detail_label, 16, Styles.TEXT_MUTED)
-	content.add_child(detail_label)
-
-	var summary_panel := PanelContainer.new()
+func _style_ui() -> void:
+	Styles.configure_label(outcome_title, 46, Styles.AMBER)
+	Styles.configure_label(outcome_subtitle, 18, Styles.TEXT)
+	Styles.configure_label(detail_label, 15, Styles.TEXT_MUTED)
+	for label in [%ReachHeading, %TimeHeading, %LevelHeading]:
+		Styles.configure_label(label as Label, 12, Styles.TEXT_MUTED)
+	for label in [reach_value, time_value, level_value]:
+		Styles.configure_label(label, 19, Styles.TEXT)
+	Styles.configure_label(build_heading, 13, Styles.CYAN)
+	Styles.configure_label(build_label, 14, Styles.TEXT_MUTED)
+	Styles.configure_label(rewards_heading, 13, Styles.AMBER)
+	Styles.configure_label(materials_label, 14, Styles.AMBER)
 	summary_panel.add_theme_stylebox_override(
 		"panel",
-		Styles.panel_style(Color(Styles.SURFACE, 0.96), Styles.OUTLINE)
+		Styles.panel_style(Color(Styles.SURFACE, 0.97), Styles.OUTLINE)
 	)
-	content.add_child(summary_panel)
-
-	var summary_margin := MarginContainer.new()
-	summary_margin.add_theme_constant_override("margin_left", 18)
-	summary_margin.add_theme_constant_override("margin_top", 12)
-	summary_margin.add_theme_constant_override("margin_right", 18)
-	summary_margin.add_theme_constant_override("margin_bottom", 12)
-	summary_panel.add_child(summary_margin)
-
-	var summary := VBoxContainer.new()
-	summary.add_theme_constant_override("separation", 7)
-	summary_margin.add_child(summary)
-
-	facts_label = Label.new()
-	facts_label.name = "RunFacts"
-	facts_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	Styles.configure_label(facts_label, 16)
-	summary.add_child(facts_label)
-
-	var rule := ColorRect.new()
-	rule.color = Color(Styles.OUTLINE, 0.7)
-	rule.custom_minimum_size = Vector2(0.0, 1.0)
-	summary.add_child(rule)
-
-	build_label = Label.new()
-	build_label.name = "FinalBuild"
-	build_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	build_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	Styles.configure_label(build_label, 14, Styles.TEXT_MUTED)
-	summary.add_child(build_label)
-
-	materials_label = Label.new()
-	materials_label.name = "KeptMaterials"
-	materials_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	materials_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	Styles.configure_label(materials_label, 14, Styles.AMBER)
-	summary.add_child(materials_label)
-
-	var button_row := HBoxContainer.new()
-	button_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	button_row.add_theme_constant_override("separation", 12)
-	content.add_child(button_row)
-
-	retry_button = Button.new()
-	retry_button.text = "Run Again"
-	retry_button.custom_minimum_size = Vector2(180.0, 48.0)
+	summary_rule.color = Color(Styles.OUTLINE, 0.72)
+	summary_divider.color = Color(Styles.OUTLINE, 0.72)
 	Styles.apply_button(retry_button, Styles.AMBER)
-	retry_button.pressed.connect(func() -> void: retry_requested.emit())
-	button_row.add_child(retry_button)
-
-	var menu_button := Button.new()
-	menu_button.text = "Main Menu"
-	menu_button.custom_minimum_size = Vector2(180.0, 48.0)
 	Styles.apply_button(menu_button, Styles.MOSS, true)
-	menu_button.pressed.connect(func() -> void: menu_requested.emit())
-	button_row.add_child(menu_button)
-	retry_button.grab_focus()
 
 
 func _result_detail(victory: bool, profile_name: String, settlement: Dictionary) -> String:
 	if victory:
-		return "%s broke the crown and secured the Slime King's core." % profile_name
-	var reason := _display_id(String(settlement.get("terminal_reason", "player_defeated")))
-	return "%s's expedition ended: %s." % [profile_name, reason]
+		return "%s broke the crown and returned with its core." % profile_name
+	match String(settlement.get("terminal_reason", "player_defeated")):
+		"run_abandoned":
+			return "%s ended the expedition. Secured materials were kept." % profile_name
+		"player_defeated":
+			return "%s fell before reaching the crown." % profile_name
+		_:
+			return "%s's expedition could not continue." % profile_name
 
 
-func _fact_line(settlement: Dictionary) -> String:
-	var location := "Slime Court" if bool(settlement.get("boss_reached", false)) else (
-		"Stage %d" % maxi(int(settlement.get("stage_reached", 1)), 1)
-	)
-	var seed := int(settlement.get("seed", 0))
-	var elapsed := maxi(int(round(float(settlement.get("duration_seconds", 0.0)))), 0)
-	return "%s     Seed %d     %s" % [location, seed, _format_duration(elapsed)]
+func _final_reach(settlement: Dictionary) -> String:
+	if bool(settlement.get("boss_reached", false)):
+		return "Slime Court"
+	return "Stage %d" % clampi(int(settlement.get("stage_reached", 1)), 1, 3)
 
 
 func _build_summary(settlement: Dictionary) -> String:
-	var build: Dictionary = settlement.get("run_build", {})
-	var cards: Dictionary = build.get("cards", {})
-	var card_parts: Array[String] = []
+	var lines: Array[String] = []
+	var equipment_names := _loadout_names(settlement)
+	lines.append(
+		"Equipment  %s" % " / ".join(equipment_names)
+		if not equipment_names.is_empty()
+		else "Equipment  Starting gear"
+	)
+
+	var card_names := _card_names(_run_build(settlement).get("cards", {}))
+	lines.append(
+		"Cards  %s" % ", ".join(card_names)
+		if not card_names.is_empty()
+		else "Cards  None collected"
+	)
+
+	var affix_names := _affix_names(_run_build(settlement).get("temporary_affixes", {}))
+	if not affix_names.is_empty():
+		lines.append("Forge  %s" % ", ".join(affix_names))
+	return "\n".join(lines)
+
+
+func _loadout_names(settlement: Dictionary) -> Array[String]:
+	var names: Array[String] = []
+	var profile: Dictionary = settlement.get("profile", {})
+	var loadout: Dictionary = profile.get("loadout", {})
+	var catalog := ProfileState.equipment_catalog as EquipmentCatalog
+	if catalog == null:
+		return names
+	for slot_id in LOADOUT_SLOT_ORDER:
+		var item_id := StringName(loadout.get(slot_id, ""))
+		if item_id == &"":
+			continue
+		var item := catalog.get_item(item_id)
+		if item != null:
+			names.append(item.display_name)
+	return names
+
+
+func _card_names(cards_value: Variant) -> Array[String]:
+	var names: Array[String] = []
+	if not cards_value is Dictionary:
+		return names
+	var cards := cards_value as Dictionary
 	var card_ids := cards.keys()
 	card_ids.sort()
 	for card_id in card_ids:
+		var card := RunState.get_card_definition(StringName(card_id))
+		if card == null:
+			continue
 		var stacks := int(cards.get(card_id, 0))
-		card_parts.append("%s%s" % [
-			_display_id(String(card_id)),
-			" x%d" % stacks if stacks > 1 else "",
-		])
-	var card_text := ", ".join(card_parts) if not card_parts.is_empty() else "No cards"
-	return "Final build: Lv %d  |  %s" % [maxi(int(build.get("level", 1)), 1), card_text]
+		if stacks <= 0:
+			continue
+		names.append("%s%s" % [card.display_name, " x%d" % stacks if stacks > 1 else ""])
+	return names
+
+
+func _affix_names(affixes_value: Variant) -> Array[String]:
+	var names: Array[String] = []
+	if not affixes_value is Dictionary or RunState.forge_catalog == null:
+		return names
+	var affixes := affixes_value as Dictionary
+	var item_ids := affixes.keys()
+	item_ids.sort()
+	for item_id in item_ids:
+		var affix := RunState.forge_catalog.get_affix(StringName(affixes.get(item_id, "")))
+		if affix != null and not names.has(affix.display_name):
+			names.append(affix.display_name)
+	return names
 
 
 func _material_summary(settlement: Dictionary) -> String:
 	var delta: Dictionary = settlement.get("persistent_material_delta", {})
 	var parts: Array[String] = []
-	var material_ids := delta.keys()
-	material_ids.sort()
-	for material_id in material_ids:
+	for material_id in ["boss_core", "rusted_scrap", "sky_thread", "slime_residue"]:
 		var amount := int(delta.get(material_id, 0))
 		if amount > 0:
-			parts.append("%s +%d" % [_display_id(String(material_id)), amount])
-	return "Kept: %s" % ", ".join(parts) if not parts.is_empty() else "No new materials kept"
+			parts.append("%s  +%d" % [MATERIAL_NAMES[material_id], amount])
+	return "\n".join(parts) if not parts.is_empty() else "No new materials secured"
 
 
-func _display_id(value: String) -> String:
-	return value.replace("_", " ").capitalize()
+func _has_kept_materials(settlement: Dictionary) -> bool:
+	var delta: Dictionary = settlement.get("persistent_material_delta", {})
+	for amount in delta.values():
+		if int(amount) > 0:
+			return true
+	return false
+
+
+func _run_build(settlement: Dictionary) -> Dictionary:
+	var value: Variant = settlement.get("run_build", {})
+	return value as Dictionary if value is Dictionary else {}
 
 
 func _format_duration(total_seconds: int) -> String:
