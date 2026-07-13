@@ -111,31 +111,53 @@ func _validate_geometry_fixture(plan: StagePlan, config: Dictionary, run_state: 
 	_expect(errors.is_empty(), "%s curated geometry should validate: %s" % [config["id"], "; ".join(errors)])
 	if config["id"] == &"broken_sanctum":
 		var crypt := assembly.get_room_hosts().get("bs_material_crypt") as RoomTemplateHost
-		var step := crypt.get_node_or_null("OneWay/BasinReturnStep") if crypt != null else null
-		var rope := crypt.get_node_or_null("Anchors/Objective/ReturnRope") as Climbable if crypt != null else null
-		_expect(step != null, "Material Crypt should include its basin return step.")
-		_expect(rope != null, "Material Crypt should include its return rope.")
-		if rope != null:
-			rope.position.x = 1040.0
-			rope.set_meta("entry_support", &"material_crypt_return_shelf")
-			rope.set_meta("exit_support", &"twin_choice_right_floor")
-			var blocked := StageGeometryValidator.validate_assembly(plan, catalog, assembly, limits)
+		var choice := assembly.get_room_hosts().get("bs_twin_reliquary_choice") as RoomTemplateHost
+		var basin_rope := (
+			crypt.get_node_or_null("Anchors/Objective/BasinReturnRope") as Climbable
+			if crypt != null else null
+		)
+		var return_rope := (
+			crypt.get_node_or_null("Anchors/Objective/ReturnRope") as Climbable
+			if crypt != null else null
+		)
+		var hatch := (
+			choice.get_node_or_null("Terrain/LowerReturnHatch") as StaticBody2D
+			if choice != null else null
+		)
+		_expect(basin_rope != null, "Material Crypt should include its local basin rope.")
+		_expect(return_rope != null, "Material Crypt should include its cross-room return rope.")
+		_expect(hatch != null, "Twin Reliquary Choice should include its lower return hatch.")
+		_expect(basin_rope != return_rope, "Local and cross-room return ropes must be separate nodes.")
+		if basin_rope != null:
+			var original_x := basin_rope.position.x
+			basin_rope.position.x = 1040.0
+			var invalid_local := StageGeometryValidator.validate_assembly(plan, catalog, assembly, limits)
 			_expect(
-				_has_message(blocked, "terminates beneath solid terrain"),
-				"The former rope shaft should fail the upper dismount contract."
+				_has_message(invalid_local, "local climbable 'BasinReturnRope'")
+				and _has_message(invalid_local, "crypt_basin_recovery")
+				and _has_message(invalid_local, "cannot reach the return rope"),
+				"Embedding the local rope in the return shelf should fail basin recovery."
 			)
-			rope.position.x = 240.0
-			rope.set_meta("entry_support", &"material_crypt_entry_shelf")
-			rope.set_meta("exit_support", &"twin_choice_lower_cover")
-		if step != null:
-			step.get_parent().remove_child(step)
-			step.free()
-			var invalid := StageGeometryValidator.validate_assembly(plan, catalog, assembly, limits)
+			basin_rope.position.x = original_x
+		if hatch != null:
+			var hatch_shape := hatch.get_node_or_null("CollisionShape2D") as CollisionShape2D
+			hatch.set_meta("one_way", false)
+			if hatch_shape != null:
+				hatch_shape.one_way_collision = false
+			var blocked_return := StageGeometryValidator.validate_assembly(plan, catalog, assembly, limits)
 			_expect(
-				_has_message(invalid, "crypt_basin_recovery")
-				and _has_message(invalid, "cannot reach the return rope"),
-				"Removing the basin step should fail the committed-drop return contract."
+				_has_message(blocked_return, "terminates beneath solid terrain"),
+				"A solid lower-return hatch should fail the cross-room dismount contract."
 			)
+			hatch.set_meta("one_way", true)
+			if hatch_shape != null:
+				hatch_shape.one_way_collision = true
+		var restored := StageGeometryValidator.validate_assembly(plan, catalog, assembly, limits)
+		_expect(
+			restored.is_empty(),
+			"Broken Sanctum geometry should recover after invalid fixtures: %s"
+			% "; ".join(restored)
+		)
 	rooms_root.queue_free()
 
 

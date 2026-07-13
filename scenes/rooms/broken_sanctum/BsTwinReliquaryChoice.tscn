@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/stages/RoomTemplateHost.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/stages/RoomAnchor.gd" id="2"]
@@ -8,8 +8,10 @@
 size = Vector2(320, 12)
 [sub_resource type="RectangleShape2D" id="CenterMassShape"]
 size = Vector2(480, 100)
-[sub_resource type="RectangleShape2D" id="RightMassShape"]
-size = Vector2(480, 120)
+[sub_resource type="RectangleShape2D" id="RightFillShape"]
+size = Vector2(192, 120)
+[sub_resource type="RectangleShape2D" id="ReturnHatchShape"]
+size = Vector2(480, 12)
 [sub_resource type="RectangleShape2D" id="ReturnLandingShape"]
 size = Vector2(240, 12)
 [sub_resource type="RectangleShape2D" id="ReturnStepShape"]
@@ -54,23 +56,59 @@ polygon = PackedVector2Array(-240, 0, 240, 0, 240, 100, -240, 100)
 color = Color(0.72, 0.56, 0.28, 1)
 polygon = PackedVector2Array(-240, 0, 240, 0, 240, 8, -240, 8)
 
-[node name="RightChoiceMass" type="StaticBody2D" parent="Terrain"]
-position = Vector2(1040, 600)
+[node name="RightChoiceFillWest" type="StaticBody2D" parent="Terrain"]
+position = Vector2(896, 600)
 collision_layer = 1
 collision_mask = 0
-metadata/surface_id = &"twin_choice_right_floor"
+metadata/surface_id = &"twin_choice_right_floor_west"
+metadata/support_top = 600.0
+metadata/support_width = 192.0
+metadata/critical = false
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/RightChoiceFillWest"]
+position = Vector2(0, 60)
+shape = SubResource("RightFillShape")
+[node name="RockVisual" type="Polygon2D" parent="Terrain/RightChoiceFillWest"]
+color = Color(0.19, 0.18, 0.25, 1)
+polygon = PackedVector2Array(-96, 0, 96, 0, 96, 120, -96, 120)
+[node name="SupportCap" type="Polygon2D" parent="Terrain/RightChoiceFillWest"]
+color = Color(0.32, 0.62, 0.58, 1)
+polygon = PackedVector2Array(-96, 0, 96, 0, 96, 8, -96, 8)
+
+[node name="RightChoiceFillEast" type="StaticBody2D" parent="Terrain"]
+position = Vector2(1184, 600)
+collision_layer = 1
+collision_mask = 0
+metadata/surface_id = &"twin_choice_right_floor_east"
+metadata/support_top = 600.0
+metadata/support_width = 192.0
+metadata/critical = false
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/RightChoiceFillEast"]
+position = Vector2(0, 60)
+shape = SubResource("RightFillShape")
+[node name="RockVisual" type="Polygon2D" parent="Terrain/RightChoiceFillEast"]
+color = Color(0.19, 0.18, 0.25, 1)
+polygon = PackedVector2Array(-96, 0, 96, 0, 96, 120, -96, 120)
+[node name="SupportCap" type="Polygon2D" parent="Terrain/RightChoiceFillEast"]
+color = Color(0.32, 0.62, 0.58, 1)
+polygon = PackedVector2Array(-96, 0, 96, 0, 96, 8, -96, 8)
+
+[node name="LowerReturnHatch" type="StaticBody2D" parent="Terrain"]
+position = Vector2(1040, 600)
+collision_layer = 2
+collision_mask = 0
+metadata/surface_id = &"twin_choice_return_hatch"
 metadata/support_top = 600.0
 metadata/support_width = 480.0
 metadata/critical = true
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/RightChoiceMass"]
-position = Vector2(0, 60)
-shape = SubResource("RightMassShape")
-[node name="RockVisual" type="Polygon2D" parent="Terrain/RightChoiceMass"]
-color = Color(0.19, 0.18, 0.25, 1)
-polygon = PackedVector2Array(-240, 0, 240, 0, 240, 120, -240, 120)
-[node name="SupportCap" type="Polygon2D" parent="Terrain/RightChoiceMass"]
-color = Color(0.32, 0.62, 0.58, 1)
-polygon = PackedVector2Array(-240, 0, 240, 0, 240, 8, -240, 8)
+metadata/one_way = true
+metadata/return_landing = true
+metadata/shaft_width = 96.0
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/LowerReturnHatch"]
+shape = SubResource("ReturnHatchShape")
+one_way_collision = true
+[node name="Visual" type="Polygon2D" parent="Terrain/LowerReturnHatch"]
+color = Color(0.78, 0.68, 0.4, 1)
+polygon = PackedVector2Array(-48, -6, 48, -6, 48, 6, -48, 6)
 
 [node name="OneWay" type="Node2D" parent="."]
 [node name="UpperReturnLanding" type="StaticBody2D" parent="OneWay"]

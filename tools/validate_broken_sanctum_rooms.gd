@@ -4,6 +4,7 @@ const ROOM_DATA_DIR := "res://data/rooms/broken_sanctum"
 const CHARACTER_CATALOG_PATH := "res://data/characters/character_catalog.tres"
 const MIN_CRITICAL_LANDING := 220.0
 const MIN_OPTIONAL_LANDING := 180.0
+const MIN_RETURN_SHAFT_WIDTH := 88.0
 const EXPECTED_ROOM_IDS: Array[StringName] = [
 	&"bs_breach_entry",
 	&"bs_shield_choke",
@@ -306,7 +307,7 @@ func _validate_room_specific(
 func _validate_material_crypt(
 	data: RoomTemplateData,
 	host: RoomTemplateHost,
-	limits: Dictionary
+	_limits: Dictionary
 ) -> void:
 	_expect(
 		_socket_by_transition(data.entry_sockets, &"optional", &"drop") != null,
@@ -314,34 +315,58 @@ func _validate_material_crypt(
 	)
 	var return_socket := _socket_by_transition(data.exit_sockets, &"return", &"rope")
 	_expect(return_socket != null, "Material Crypt needs its rope return.")
+	var basin_rope := host.get_node_or_null("Anchors/Objective/BasinReturnRope") as Climbable
 	var return_rope := host.get_node_or_null("Anchors/Objective/ReturnRope") as Climbable
+	_expect(basin_rope != null, "Material Crypt needs a basin-to-shelf climbable.")
 	_expect(return_rope != null, "Material Crypt needs an authored return rope.")
-	if return_rope == null or return_socket == null:
+	if basin_rope == null or return_rope == null or return_socket == null:
 		return
 	var surfaces := _collect_surfaces(host)
 	var basin := _surface_by_id(surfaces, &"material_crypt_basin")
-	var step := _surface_by_id(surfaces, &"material_crypt_basin_step")
-	var entry := _surface_by_id(surfaces, &"material_crypt_entry_shelf")
-	_expect(not basin.is_empty() and not step.is_empty() and not entry.is_empty(), "Material Crypt needs basin, return step, and rope-mount support.")
-	if basin.is_empty() or step.is_empty() or entry.is_empty():
+	var return_shelf := _surface_by_id(surfaces, &"material_crypt_return_shelf")
+	_expect(not basin.is_empty() and not return_shelf.is_empty(), "Material Crypt needs basin and return-shelf support.")
+	if basin.is_empty() or return_shelf.is_empty():
 		return
-	var max_ledge := float(limits.get("max_required_ledge", 0.0))
 	_expect(
-		float(basin["top"]) - float(step["top"]) <= max_ledge,
-		"Material Crypt basin-to-step rise must use required-route margin."
+		host.get_node_or_null("OneWay/BasinReturnStep") == null,
+		"Material Crypt should not rely on the former basin step workaround."
+	)
+	var basin_rope_half := basin_rope.climbable_size * 0.5
+	var basin_rope_top := basin_rope.position.y - basin_rope_half.y
+	var basin_rope_bottom := basin_rope.position.y + basin_rope_half.y
+	var basin_rope_left := basin_rope.position.x - basin_rope_half.x
+	var basin_rope_right := basin_rope.position.x + basin_rope_half.x
+	_expect(
+		basin_rope_top <= float(return_shelf["top"]) + 1.0
+		and basin_rope_bottom >= float(basin["top"]) - 1.0,
+		"Material Crypt basin rope must span both authored support tops."
 	)
 	_expect(
-		float(step["top"]) - float(entry["top"]) <= max_ledge,
-		"Material Crypt step-to-rope rise must use required-route margin."
+		basin_rope_right <= float(return_shelf["x"]) + 1.0,
+		"Material Crypt basin rope must stay outside the solid return shelf."
 	)
-	_expect(float(step["width"]) >= MIN_OPTIONAL_LANDING, "Material Crypt return step is too narrow.")
+	_expect(
+		float(return_shelf["x"]) - basin_rope_right
+		<= float(basin_rope.get_meta("endpoint_clearance", 0.0)) + 1.0,
+		"Material Crypt basin rope is too far from its shelf dismount."
+	)
+	_expect(
+		basin_rope_left <= float(basin["end_x"]) and basin_rope_right >= float(basin["x"]),
+		"Material Crypt basin rope must overlap the basin approach."
+	)
+	_expect(
+		StringName(basin_rope.get_meta("entry_support", &"")) == &"material_crypt_basin"
+		and StringName(basin_rope.get_meta("exit_support", &"")) == &"material_crypt_return_shelf"
+		and StringName(basin_rope.get_meta("route_scope", &"")) == &"room_local",
+		"Material Crypt basin rope must own only the local return route."
+	)
 	var rope_top := return_rope.position.y - return_rope.climbable_size.y * 0.5
 	var rope_bottom := return_rope.position.y + return_rope.climbable_size.y * 0.5
 	_expect(rope_top <= -100.0, "Material Crypt return rope must reach through the choice-room cover.")
-	_expect(absf(rope_bottom - float(entry["top"])) <= 1.0, "Material Crypt return rope must mount on the entry shelf.")
+	_expect(absf(rope_bottom - float(return_shelf["top"])) <= 1.0, "Material Crypt return rope must mount on the return shelf.")
 	_expect(
-		return_rope.position.x >= float(entry["x"])
-		and return_rope.position.x <= float(entry["end_x"]),
+		return_rope.position.x >= float(return_shelf["x"])
+		and return_rope.position.x <= float(return_shelf["end_x"]),
 		"Material Crypt return rope must overlap its lower mount."
 	)
 	_expect(
@@ -349,8 +374,9 @@ func _validate_material_crypt(
 		"Material Crypt return socket must identify the real rope shaft."
 	)
 	_expect(
-		StringName(return_rope.get_meta("entry_support", &"")) == &"material_crypt_entry_shelf"
-		and StringName(return_rope.get_meta("exit_support", &"")) == &"twin_choice_lower_cover",
+		StringName(return_rope.get_meta("entry_support", &"")) == &"material_crypt_return_shelf"
+		and StringName(return_rope.get_meta("exit_support", &"")) == &"twin_choice_return_hatch"
+		and StringName(return_rope.get_meta("route_scope", &"")) == &"cross_room",
 		"Material Crypt return rope support metadata is stale."
 	)
 
@@ -406,7 +432,8 @@ func _validate_choice_room(data: RoomTemplateData, host: RoomTemplateHost) -> vo
 	_expect(returns.size() == 2, "Twin Reliquary Choice needs two return entries.")
 	_expect(_socket_by_transition(branches, &"optional", &"drop") != null, "Choice needs a lower drop branch.")
 	_expect(_socket_by_transition(branches, &"optional", &"rope") != null, "Choice needs an upper rope branch.")
-	_expect(_socket_by_transition(returns, &"return", &"rope") != null, "Choice needs a lower rope return.")
+	var lower_return := _socket_by_transition(returns, &"return", &"rope")
+	_expect(lower_return != null, "Choice needs a lower rope return.")
 	_expect(_socket_by_transition(returns, &"return", &"drop") != null, "Choice needs an upper drop return.")
 	var endpoints: Dictionary = {}
 	for socket in branches + returns:
@@ -415,6 +442,68 @@ func _validate_choice_room(data: RoomTemplateData, host: RoomTemplateHost) -> vo
 		endpoints[key] = true
 	var branch_rope := host.get_node_or_null("Anchors/Objective/UpperBranchRope") as Climbable
 	_expect(branch_rope != null and branch_rope.climbable_size.y >= 760.0, "Upper optional branch needs an authored rope.")
+	_validate_lower_return_hatch(lower_return, host)
+
+
+func _validate_lower_return_hatch(return_socket: RoomSocketData, host: RoomTemplateHost) -> void:
+	# The one-way top stays continuous; the split fill masses define the clear rope shaft.
+	var west := host.get_node_or_null("Terrain/RightChoiceFillWest") as StaticBody2D
+	var east := host.get_node_or_null("Terrain/RightChoiceFillEast") as StaticBody2D
+	var hatch := host.get_node_or_null("Terrain/LowerReturnHatch") as StaticBody2D
+	_expect(
+		west != null and east != null and hatch != null,
+		"Lower return needs two fill masses and a centered hatch."
+	)
+	if west == null or east == null or hatch == null or return_socket == null:
+		return
+	var west_rect := _collision_rect(west)
+	var east_rect := _collision_rect(east)
+	var hatch_rect := _collision_rect(hatch)
+	_expect(
+		west_rect.has_area() and east_rect.has_area() and hatch_rect.has_area(),
+		"Lower return hatch geometry needs rectangular collision."
+	)
+	if not west_rect.has_area() or not east_rect.has_area() or not hatch_rect.has_area():
+		return
+	var hatch_shape := hatch.get_node_or_null("CollisionShape2D") as CollisionShape2D
+	_expect(
+		hatch_shape != null and hatch_shape.one_way_collision,
+		"Lower return hatch must be one-way collision."
+	)
+	_expect(
+		StringName(hatch.get_meta("surface_id", &"")) == &"twin_choice_return_hatch",
+		"Lower return hatch needs its stable support ID."
+	)
+	var shaft_width := east_rect.position.x - west_rect.end.x
+	_expect(
+		shaft_width >= MIN_RETURN_SHAFT_WIDTH,
+		"Lower return shaft needs player-width clearance around the rope."
+	)
+	_expect(
+		absf(shaft_width - float(hatch.get_meta("shaft_width", 0.0))) <= 1.0,
+		"Lower return shaft metadata must match its collision gap."
+	)
+	_expect(
+		hatch_rect.position.x <= west_rect.position.x + 1.0,
+		"Lower return one-way surface must cover the west fill."
+	)
+	_expect(
+		hatch_rect.end.x >= east_rect.end.x - 1.0,
+		"Lower return one-way surface must cover the east fill."
+	)
+	_expect(
+		west_rect.end.y >= 719.0 and east_rect.end.y >= 719.0,
+		"Lower return fill masses must reach the room floor."
+	)
+	_expect(
+		return_socket.local_position.x >= west_rect.end.x
+		and return_socket.local_position.x <= east_rect.position.x,
+		"Lower return socket must align with the open hatch shaft."
+	)
+	_expect(
+		absf(return_socket.support_top - float(hatch.get_meta("support_top", 0.0))) <= 1.0,
+		"Lower return socket must use the hatch support top."
+	)
 
 
 # Planner compatibility uses different transition signatures so each optional room reserves its matching pair.
@@ -536,6 +625,14 @@ func _surface_by_id(
 		if StringName(surface["id"]) == surface_id:
 			return surface
 	return {}
+
+
+func _collision_rect(body: StaticBody2D) -> Rect2:
+	var shape_node := body.get_node_or_null("CollisionShape2D") as CollisionShape2D
+	var rectangle := shape_node.shape as RectangleShape2D if shape_node != null else null
+	if rectangle == null:
+		return Rect2()
+	return Rect2(body.position + shape_node.position - rectangle.size * 0.5, rectangle.size)
 
 
 func _surface_supports(x: float, top: float, surfaces: Array[Dictionary]) -> bool:

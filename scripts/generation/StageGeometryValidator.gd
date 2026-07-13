@@ -3,6 +3,7 @@ extends RefCounted
 
 const MIN_CRITICAL_LANDING_WIDTH := 220.0
 const POSITION_TOLERANCE := 1.0
+const LOCAL_ROUTE_SCOPE := &"room_local"
 
 
 static func validate_assembly(
@@ -277,6 +278,7 @@ static func _validate_rope_support_contract(
 		errors.append("Optional room '%s' return rope upper support mismatches its socket." % room_id)
 	if not bool(exit_support.get("one_way", false)):
 		errors.append("Optional room '%s' return rope terminates beneath solid terrain." % room_id)
+	_validate_local_climbables(errors, room_id, host, local_surfaces)
 	_validate_recovery_paths(
 		errors,
 		room_id,
@@ -285,6 +287,35 @@ static func _validate_rope_support_contract(
 		StringName(entry_support["id"]),
 		movement_limits
 	)
+
+
+static func _validate_local_climbables(
+	errors: PackedStringArray,
+	room_id: StringName,
+	host: RoomTemplateHost,
+	surfaces: Array[Dictionary]
+) -> void:
+	for child in host.find_children("*", "", true, false):
+		if not child is Climbable or child.get_meta("route_scope", &"") != LOCAL_ROUTE_SCOPE:
+			continue
+		var entry_support := _surface_by_id(
+			surfaces,
+			StringName(child.get_meta("entry_support", &""))
+		)
+		var exit_support := _surface_by_id(
+			surfaces,
+			StringName(child.get_meta("exit_support", &""))
+		)
+		if entry_support.is_empty() or exit_support.is_empty():
+			errors.append(
+				"Optional room '%s' local climbable '%s' references missing support."
+				% [room_id, child.name]
+			)
+		elif not _local_climbable_connects(host, child, entry_support, exit_support):
+			errors.append(
+				"Optional room '%s' local climbable '%s' misses its authored route."
+				% [room_id, child.name]
+			)
 
 
 static func _validate_recovery_paths(
@@ -342,9 +373,51 @@ static func _build_support_graph(
 		var entry_id := StringName(child.get_meta("entry_support", &""))
 		var exit_id := StringName(child.get_meta("exit_support", &""))
 		if graph.has(String(entry_id)) and graph.has(String(exit_id)):
+			if child.get_meta("route_scope", &"") == LOCAL_ROUTE_SCOPE:
+				var entry_support := _surface_by_id(surfaces, entry_id)
+				var exit_support := _surface_by_id(surfaces, exit_id)
+				if not _local_climbable_connects(host, child, entry_support, exit_support):
+					continue
 			_add_graph_edge(graph, entry_id, exit_id)
 			_add_graph_edge(graph, exit_id, entry_id)
 	return graph
+
+
+static func _local_climbable_connects(
+	host: RoomTemplateHost,
+	climbable: Climbable,
+	entry_support: Dictionary,
+	exit_support: Dictionary
+) -> bool:
+	if entry_support.is_empty() or exit_support.is_empty():
+		return false
+	var local_position := host.to_local(climbable.global_position)
+	var half_size := climbable.climbable_size * 0.5
+	var rope_top := local_position.y - half_size.y
+	var rope_bottom := local_position.y + half_size.y
+	var upper_top := minf(float(entry_support["top"]), float(exit_support["top"]))
+	var lower_top := maxf(float(entry_support["top"]), float(exit_support["top"]))
+	if rope_top > upper_top + POSITION_TOLERANCE:
+		return false
+	if rope_bottom < lower_top - POSITION_TOLERANCE:
+		return false
+	var clearance := float(climbable.get_meta("endpoint_clearance", POSITION_TOLERANCE))
+	if _horizontal_gap(entry_support, local_position.x, half_size.x) > clearance:
+		return false
+	if _horizontal_gap(exit_support, local_position.x, half_size.x) > clearance:
+		return false
+	return (
+		not bool(climbable.get_meta("outside_exit_support", false))
+		or _support_overlap(exit_support, local_position.x, half_size.x) <= POSITION_TOLERANCE
+	)
+
+
+static func _horizontal_gap(surface: Dictionary, center_x: float, half_width: float) -> float:
+	var support_start := float(surface["x"])
+	var support_end := support_start + float(surface["width"])
+	var climbable_start := center_x - half_width
+	var climbable_end := center_x + half_width
+	return maxf(maxf(support_start - climbable_end, climbable_start - support_end), 0.0)
 
 
 static func _add_graph_edge(graph: Dictionary, from_id: StringName, to_id: StringName) -> void:
