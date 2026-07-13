@@ -1,7 +1,9 @@
 class_name CuratedStagePlanBuilder
 extends RefCounted
 
-const FALLBACK_ATTEMPT := 3
+const CURATED_ATTEMPT := 3
+# Random generation still reports this same curated attempt when it falls back.
+const FALLBACK_ATTEMPT := CURATED_ATTEMPT
 
 var _last_errors := PackedStringArray()
 
@@ -18,7 +20,7 @@ func build(
 	movement_limits: Dictionary
 ) -> StagePlan:
 	if profile == null:
-		_last_errors = PackedStringArray(["Curated fallback needs a StageProfile."])
+		_last_errors = PackedStringArray(["Curated planning needs a StageProfile."])
 		return null
 	match profile.id:
 		&"ruin_approach":
@@ -28,7 +30,7 @@ func build(
 		&"broken_sanctum":
 			return build_broken_sanctum(catalog, profile, run_seed, stage_index, movement_limits)
 		_:
-			_last_errors = PackedStringArray(["No curated fallback exists for '%s'." % profile.id])
+			_last_errors = PackedStringArray(["No curated plan exists for '%s'." % profile.id])
 			return null
 
 
@@ -41,7 +43,7 @@ func build_ruin_approach(
 ) -> StagePlan:
 	_last_errors.clear()
 	if catalog == null or profile == null:
-		_last_errors.append("Curated fallback needs a RoomCatalog and StageProfile.")
+		_last_errors.append("Curated planning needs a RoomCatalog and StageProfile.")
 		return null
 
 	var specs := [
@@ -57,7 +59,7 @@ func build_ruin_approach(
 	for spec in specs:
 		var template := catalog.get_room_by_id(spec[0])
 		if template == null:
-			_last_errors.append("Curated fallback is missing room '%s'." % spec[0])
+			_last_errors.append("Curated plan is missing room '%s'." % spec[0])
 			continue
 		rooms.append(
 			PlannedRoom.new(
@@ -89,7 +91,7 @@ func build_ruin_approach(
 		stage_index,
 		catalog.content_version,
 		profile.content_version,
-		FALLBACK_ATTEMPT
+		CURATED_ATTEMPT
 	)
 	var plan := StagePlan.new(
 		run_seed,
@@ -103,7 +105,7 @@ func build_ruin_approach(
 		connections,
 		[],
 		StagePlan.CURRENT_SCHEMA_VERSION,
-		FALLBACK_ATTEMPT
+		CURATED_ATTEMPT
 	)
 	_last_errors = StagePlanValidator.validate_plan(
 		plan,
@@ -123,7 +125,7 @@ func build_flooded_works(
 ) -> StagePlan:
 	_last_errors.clear()
 	if catalog == null or profile == null:
-		_last_errors.append("Flooded fallback needs a RoomCatalog and StageProfile.")
+		_last_errors.append("Flooded curated planning needs a RoomCatalog and StageProfile.")
 		return null
 	var specs := [
 		[&"fw_flooded_entry", true, 0, 0, 0, 0],
@@ -139,7 +141,7 @@ func build_flooded_works(
 	for spec in specs:
 		var template := catalog.get_room_by_id(spec[0])
 		if template == null:
-			_last_errors.append("Flooded fallback is missing room '%s'." % spec[0])
+			_last_errors.append("Flooded curated plan is missing room '%s'." % spec[0])
 			continue
 		rooms.append(PlannedRoom.new(
 			template.id, template.id, template.content_version, template.role,
@@ -158,12 +160,12 @@ func build_flooded_works(
 		_connection(&"optional_return_0", &"fw_sunken_cache", &"sunken_cache_return", &"fw_lower_upper_choice", &"flooded_choice_return", &"return"),
 	]
 	var streams := NamedRngStreams.new(
-		run_seed, stage_index, catalog.content_version, profile.content_version, FALLBACK_ATTEMPT
+		run_seed, stage_index, catalog.content_version, profile.content_version, CURATED_ATTEMPT
 	)
 	var plan := StagePlan.new(
 		run_seed, stage_index, profile.id, profile.content_version, catalog.id,
 		catalog.content_version, streams.get_stream_seeds(), rooms, connections, [],
-		StagePlan.CURRENT_SCHEMA_VERSION, FALLBACK_ATTEMPT
+		StagePlan.CURRENT_SCHEMA_VERSION, CURATED_ATTEMPT
 	)
 	_last_errors = StagePlanValidator.validate_plan(plan, catalog, profile, movement_limits)
 	return plan if _last_errors.is_empty() else null
@@ -178,7 +180,7 @@ func build_broken_sanctum(
 ) -> StagePlan:
 	_last_errors.clear()
 	if catalog == null or profile == null:
-		_last_errors.append("Broken Sanctum fallback needs a RoomCatalog and StageProfile.")
+		_last_errors.append("Broken Sanctum curated planning needs a RoomCatalog and StageProfile.")
 		return null
 	var specs := [
 		[&"bs_breach_entry", true, 0, 0, 0, 0],
@@ -196,7 +198,7 @@ func build_broken_sanctum(
 	for spec in specs:
 		var template := catalog.get_room_by_id(spec[0])
 		if template == null:
-			_last_errors.append("Broken Sanctum fallback is missing room '%s'." % spec[0])
+			_last_errors.append("Broken Sanctum curated plan is missing room '%s'." % spec[0])
 			continue
 		rooms.append(PlannedRoom.new(
 			template.id, template.id, template.content_version, template.role,
@@ -218,12 +220,12 @@ func build_broken_sanctum(
 		_connection(&"optional_return_1", &"bs_reliquary_cache", &"reliquary_cache_return", &"bs_twin_reliquary_choice", &"twin_choice_upper_return", &"return"),
 	]
 	var streams := NamedRngStreams.new(
-		run_seed, stage_index, catalog.content_version, profile.content_version, FALLBACK_ATTEMPT
+		run_seed, stage_index, catalog.content_version, profile.content_version, CURATED_ATTEMPT
 	)
 	var plan := StagePlan.new(
 		run_seed, stage_index, profile.id, profile.content_version, catalog.id,
 		catalog.content_version, streams.get_stream_seeds(), rooms, connections, [],
-		StagePlan.CURRENT_SCHEMA_VERSION, FALLBACK_ATTEMPT
+		StagePlan.CURRENT_SCHEMA_VERSION, CURATED_ATTEMPT
 	)
 	_last_errors = StagePlanValidator.validate_plan(plan, catalog, profile, movement_limits)
 	return plan if _last_errors.is_empty() else null

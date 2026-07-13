@@ -125,7 +125,7 @@ func _validate_room(data: RoomTemplateData, limits: Dictionary) -> void:
 	_validate_surfaces(data, host, surfaces, limits)
 	_validate_sockets(data, surfaces, limits)
 	_validate_anchors(data, host, surfaces)
-	_validate_room_specific(data, host)
+	_validate_room_specific(data, host, limits)
 	var decor_front := host.get_node_or_null("DecorFront")
 	_expect(
 		decor_front == null or decor_front.get_child_count() == 0,
@@ -244,7 +244,11 @@ func _validate_anchors(data: RoomTemplateData, host: RoomTemplateHost, surfaces:
 		_expect(not data.recovery_anchor_ids.is_empty(), "%s required room needs recovery anchors." % data.id)
 
 
-func _validate_room_specific(data: RoomTemplateData, host: RoomTemplateHost) -> void:
+func _validate_room_specific(
+	data: RoomTemplateData,
+	host: RoomTemplateHost,
+	limits: Dictionary
+) -> void:
 	match data.id:
 		&"bs_breach_entry":
 			var player_spawn := host.get_node_or_null("Anchors/Objective/PlayerSpawn") as RoomAnchor
@@ -290,16 +294,65 @@ func _validate_room_specific(data: RoomTemplateData, host: RoomTemplateHost) -> 
 			_expect(_socket_by_transition(data.exit_sockets, &"return", &"drop") != null, "Reliquary Cache needs its authored drop return.")
 			_expect(data.reward_anchors.size() == 1 and data.reward_anchors[0].reward_role == &"cache_reward", "Reliquary Cache needs one chest reward.")
 		&"bs_material_crypt":
-			_expect(_socket_by_transition(data.entry_sockets, &"optional", &"drop") != null, "Material Crypt needs its lower drop entry.")
-			_expect(_socket_by_transition(data.exit_sockets, &"return", &"rope") != null, "Material Crypt needs its rope return.")
-			var return_rope := host.get_node_or_null("Anchors/Objective/ReturnRope") as Climbable
-			_expect(return_rope != null and return_rope.climbable_size.y >= 640.0, "Material Crypt return rope must reach the choice room.")
+			_validate_material_crypt(data, host, limits)
 		&"bs_exit_ascent":
 			_expect(host.get_exit_portal() != null, "Exit Ascent needs the shared exit portal.")
 			_expect(
 				host.get_anchor(&"Objective", &"Checkpoint") != null,
 				"Exit Ascent needs the terminal checkpoint marker consumed by runtime spawning."
 			)
+
+
+func _validate_material_crypt(
+	data: RoomTemplateData,
+	host: RoomTemplateHost,
+	limits: Dictionary
+) -> void:
+	_expect(
+		_socket_by_transition(data.entry_sockets, &"optional", &"drop") != null,
+		"Material Crypt needs its lower drop entry."
+	)
+	var return_socket := _socket_by_transition(data.exit_sockets, &"return", &"rope")
+	_expect(return_socket != null, "Material Crypt needs its rope return.")
+	var return_rope := host.get_node_or_null("Anchors/Objective/ReturnRope") as Climbable
+	_expect(return_rope != null, "Material Crypt needs an authored return rope.")
+	if return_rope == null or return_socket == null:
+		return
+	var surfaces := _collect_surfaces(host)
+	var basin := _surface_by_id(surfaces, &"material_crypt_basin")
+	var step := _surface_by_id(surfaces, &"material_crypt_basin_step")
+	var entry := _surface_by_id(surfaces, &"material_crypt_entry_shelf")
+	_expect(not basin.is_empty() and not step.is_empty() and not entry.is_empty(), "Material Crypt needs basin, return step, and rope-mount support.")
+	if basin.is_empty() or step.is_empty() or entry.is_empty():
+		return
+	var max_ledge := float(limits.get("max_required_ledge", 0.0))
+	_expect(
+		float(basin["top"]) - float(step["top"]) <= max_ledge,
+		"Material Crypt basin-to-step rise must use required-route margin."
+	)
+	_expect(
+		float(step["top"]) - float(entry["top"]) <= max_ledge,
+		"Material Crypt step-to-rope rise must use required-route margin."
+	)
+	_expect(float(step["width"]) >= MIN_OPTIONAL_LANDING, "Material Crypt return step is too narrow.")
+	var rope_top := return_rope.position.y - return_rope.climbable_size.y * 0.5
+	var rope_bottom := return_rope.position.y + return_rope.climbable_size.y * 0.5
+	_expect(rope_top <= -100.0, "Material Crypt return rope must reach through the choice-room cover.")
+	_expect(absf(rope_bottom - float(entry["top"])) <= 1.0, "Material Crypt return rope must mount on the entry shelf.")
+	_expect(
+		return_rope.position.x >= float(entry["x"])
+		and return_rope.position.x <= float(entry["end_x"]),
+		"Material Crypt return rope must overlap its lower mount."
+	)
+	_expect(
+		return_socket.local_position.x == return_rope.position.x,
+		"Material Crypt return socket must identify the real rope shaft."
+	)
+	_expect(
+		StringName(return_rope.get_meta("entry_support", &"")) == &"material_crypt_entry_shelf"
+		and StringName(return_rope.get_meta("exit_support", &"")) == &"twin_choice_lower_cover",
+		"Material Crypt return rope support metadata is stale."
+	)
 
 
 func _validate_sentry_crossfire(data: RoomTemplateData, host: RoomTemplateHost) -> void:
@@ -473,6 +526,16 @@ func _collect_surfaces(host: RoomTemplateHost) -> Array[Dictionary]:
 				"body": body,
 			})
 	return surfaces
+
+
+func _surface_by_id(
+	surfaces: Array[Dictionary],
+	surface_id: StringName
+) -> Dictionary:
+	for surface in surfaces:
+		if StringName(surface["id"]) == surface_id:
+			return surface
+	return {}
 
 
 func _surface_supports(x: float, top: float, surfaces: Array[Dictionary]) -> bool:

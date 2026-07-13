@@ -2,6 +2,72 @@ class_name StageGenerationService
 extends RefCounted
 
 const MAX_RANDOM_ATTEMPTS := 3
+const CURATED_PLAN_MODE := &"curated_fixed"
+
+
+## Builds reviewed topology and allocates every map-content stream from the layout seed.
+func generate_curated(
+	room_catalog: RoomCatalog,
+	profile: StageProfile,
+	enemy_catalog: EnemyCatalog,
+	hazard_catalog: HazardCatalog,
+	reward_catalog: RewardCatalog,
+	layout_seed: int,
+	layout_version: int,
+	stage_index: int,
+	movement_limits: Dictionary
+) -> StageGenerationResult:
+	var preflight_errors := _preflight(
+		room_catalog,
+		profile,
+		enemy_catalog,
+		hazard_catalog,
+		reward_catalog,
+		movement_limits,
+		0
+	)
+	if layout_version <= 0:
+		preflight_errors.append("Curated layout version must be positive.")
+	if not preflight_errors.is_empty():
+		var failed_report := _new_report(
+			room_catalog,
+			profile,
+			layout_seed,
+			stage_index,
+			CuratedStagePlanBuilder.CURATED_ATTEMPT
+		)
+		failed_report.record_validation_errors(preflight_errors)
+		return StageGenerationResult.new(false, null, failed_report)
+
+	var failures: Array[Dictionary] = []
+	var plan := _build_curated_plan(
+		room_catalog,
+		profile,
+		enemy_catalog,
+		hazard_catalog,
+		reward_catalog,
+		layout_seed,
+		stage_index,
+		movement_limits,
+		failures,
+		&"curated_topology"
+	)
+	var report := _new_report(
+		room_catalog,
+		profile,
+		layout_seed,
+		stage_index,
+		CuratedStagePlanBuilder.CURATED_ATTEMPT
+	)
+	_copy_attempt_failures(report, failures)
+	if plan == null:
+		report.record_failure(&"curated_plan_failed", "Curated fixed plan failed validation.")
+		return StageGenerationResult.new(false, null, report)
+	report.record_decision(
+		&"accepted_curated_plan",
+		_curated_plan_details(plan, profile, layout_seed, layout_version)
+	)
+	return StageGenerationResult.new(true, plan, report)
 
 
 func generate(
@@ -79,48 +145,34 @@ func generate(
 		})
 		return StageGenerationResult.new(true, completed, report)
 
-	var fallback_builder := CuratedStagePlanBuilder.new()
-	var fallback_topology := fallback_builder.build(
+	var fallback_plan := _build_curated_plan(
 		room_catalog,
 		profile,
+		enemy_catalog,
+		hazard_catalog,
+		reward_catalog,
 		run_seed,
 		stage_index,
-		movement_limits
+		movement_limits,
+		attempt_failures,
+		&"fallback_topology"
 	)
-	var fallback_attempt := CuratedStagePlanBuilder.FALLBACK_ATTEMPT
-	if fallback_topology == null:
-		for error in fallback_builder.last_errors:
-			attempt_failures.append({
-				"attempt": fallback_attempt,
-				"code": "fallback_topology",
-				"message": error,
-			})
-	else:
-		var fallback_plan := _allocate_and_validate(
-			fallback_topology,
+	var fallback_attempt := CuratedStagePlanBuilder.CURATED_ATTEMPT
+	if fallback_plan != null:
+		var fallback_report := _new_report(
 			room_catalog,
 			profile,
-			enemy_catalog,
-			hazard_catalog,
-			reward_catalog,
-			movement_limits,
-			attempt_failures
+			run_seed,
+			stage_index,
+			fallback_attempt
 		)
-		if fallback_plan != null:
-			var fallback_report := _new_report(
-				room_catalog,
-				profile,
-				run_seed,
-				stage_index,
-				fallback_attempt
-			)
-			_copy_attempt_failures(fallback_report, attempt_failures)
-			fallback_report.mark_fallback(profile.fallback_id)
-			fallback_report.record_decision(&"accepted_fallback", {
-				"fallback_id": String(profile.fallback_id),
-				"room_count": fallback_plan.get_rooms().size(),
-			})
-			return StageGenerationResult.new(true, fallback_plan, fallback_report)
+		_copy_attempt_failures(fallback_report, attempt_failures)
+		fallback_report.mark_fallback(profile.fallback_id)
+		fallback_report.record_decision(&"accepted_fallback", {
+			"fallback_id": String(profile.fallback_id),
+			"room_count": fallback_plan.get_rooms().size(),
+		})
+		return StageGenerationResult.new(true, fallback_plan, fallback_report)
 
 	var report := _new_report(
 		room_catalog,
@@ -132,6 +184,73 @@ func generate(
 	_copy_attempt_failures(report, attempt_failures)
 	report.record_failure(&"generation_exhausted", "Random attempts and curated fallback failed.")
 	return StageGenerationResult.new(false, null, report)
+
+
+func _build_curated_plan(
+	room_catalog: RoomCatalog,
+	profile: StageProfile,
+	enemy_catalog: EnemyCatalog,
+	hazard_catalog: HazardCatalog,
+	reward_catalog: RewardCatalog,
+	plan_seed: int,
+	stage_index: int,
+	movement_limits: Dictionary,
+	attempt_failures: Array[Dictionary],
+	topology_failure_code: StringName
+) -> StagePlan:
+	var builder := CuratedStagePlanBuilder.new()
+	var topology := builder.build(
+		room_catalog,
+		profile,
+		plan_seed,
+		stage_index,
+		movement_limits
+	)
+	if topology == null:
+		_append_errors(
+			attempt_failures,
+			CuratedStagePlanBuilder.CURATED_ATTEMPT,
+			topology_failure_code,
+			builder.last_errors
+		)
+		return null
+	return _allocate_and_validate(
+		topology,
+		room_catalog,
+		profile,
+		enemy_catalog,
+		hazard_catalog,
+		reward_catalog,
+		movement_limits,
+		attempt_failures
+	)
+
+
+func _curated_plan_details(
+	plan: StagePlan,
+	profile: StageProfile,
+	layout_seed: int,
+	layout_version: int
+) -> Dictionary:
+	return {
+		"mode": String(CURATED_PLAN_MODE),
+		"layout_version": layout_version,
+		"layout_seed": layout_seed,
+		"curated_plan_id": "%s_v%d" % [profile.id, layout_version],
+		"room_signature": _room_signature(plan),
+		"plan_signature": plan.to_json().sha256_text(),
+		"room_count": plan.get_rooms().size(),
+		"encounter_count": plan.get_encounters().size(),
+		"hazard_count": plan.get_hazards().size(),
+		"reward_count": plan.get_rewards().size(),
+	}
+
+
+func _room_signature(plan: StagePlan) -> String:
+	var room_ids := PackedStringArray()
+	for room in plan.get_rooms():
+		room_ids.append(String(room.id))
+	return ",".join(room_ids)
 
 
 func _allocate_and_validate(

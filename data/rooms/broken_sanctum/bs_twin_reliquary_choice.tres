@@ -23,15 +23,15 @@ script = ExtResource("2")
 id = &"twin_choice_lower_return"
 direction = &"rejoin"
 route_role = &"return"
-local_position = Vector2(1040, 720)
+local_position = Vector2(240, 720)
 opening_size = Vector2(128, 140)
-support_top = 600.0
+support_top = 620.0
 transition_type = &"rope"
 required_ability = &"climb"
 approach_width = 240.0
 landing_width = 240.0
 headroom = 140.0
-recovery_id = &"choice_main_recovery"
+recovery_id = &"choice_entry_recovery"
 
 [sub_resource type="Resource" id="UpperReturn"]
 script = ExtResource("2")
@@ -96,7 +96,7 @@ recovery_id = &"choice_main_recovery"
 script = ExtResource("1")
 id = &"bs_twin_reliquary_choice"
 display_name = "Twin Reliquary Choice"
-content_version = 1
+content_version = 2
 scene = ExtResource("3")
 role = &"choice"
 stage_tags = Array[StringName]([&"broken_sanctum"])

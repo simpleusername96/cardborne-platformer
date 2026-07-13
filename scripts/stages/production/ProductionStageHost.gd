@@ -4,6 +4,9 @@ const ENEMY_CATALOG: EnemyCatalog = preload("res://data/enemies/enemy_catalog.tr
 const ENEMY_SCENES: EnemySceneCatalog = preload("res://data/enemies/enemy_scene_catalog.tres")
 const HAZARD_CATALOG: HazardCatalog = preload("res://data/hazards/hazard_catalog.tres")
 const TERRAIN_STYLER := preload("res://scripts/visuals/TerrainPresentationStyler.gd")
+const FIXED_LAYOUT_VERSION := 1
+# Changing this seed intentionally versions every approved stage-content signature.
+const FIXED_LAYOUT_SEED_V1 := 0x43415244
 const STAGE_CONFIGS: Array[Dictionary] = [
 	{
 		"id": &"ruin_approach",
@@ -51,8 +54,8 @@ var _terrain_presentation: Dictionary = {}
 
 
 func _ready() -> void:
-	if not _setup_generated_stage():
-		_abort_setup("Production stage generation failed.")
+	if not _setup_approved_stage():
+		_abort_setup("Production stage setup failed.")
 		return
 	_setup_succeeded = true
 	super._ready()
@@ -153,20 +156,21 @@ func is_exit_enabled() -> bool:
 	return _exit_portal != null and _exit_portal.interaction_enabled
 
 
-func _setup_generated_stage() -> bool:
+func _setup_approved_stage() -> bool:
 	if not _load_stage_configuration():
 		return false
 	var scene_errors := ENEMY_SCENES.validate_catalog(ENEMY_CATALOG)
 	if not scene_errors.is_empty():
 		_publish_errors("Enemy scene catalog", scene_errors)
 		return false
-	var generation := StageGenerationService.new().generate(
+	var generation := StageGenerationService.new().generate_curated(
 		_room_catalog,
 		_stage_profile,
 		ENEMY_CATALOG,
 		HAZARD_CATALOG,
 		RunState.reward_catalog,
-		RunState.run_seed,
+		FIXED_LAYOUT_SEED_V1,
+		FIXED_LAYOUT_VERSION,
 		RunState.current_stage_index,
 		RunState.get_required_route_limits()
 	)
@@ -244,16 +248,16 @@ func _configure_stage_endpoints() -> bool:
 		elif room.role == _stage_profile.terminal_room_role:
 			terminal_host = get_room_host(room.id)
 	if start_host == null or terminal_host == null:
-		push_error("Generated stage has no start or terminal room.")
+		push_error("Production stage has no start or terminal room.")
 		return false
 	var spawn_anchor := start_host.get_anchor(&"Objective", &"PlayerSpawn")
 	if spawn_anchor == null:
-		push_error("Generated stage start room has no player spawn.")
+		push_error("Production stage start room has no player spawn.")
 		return false
 	player_spawn.global_position = spawn_anchor.global_position
 	_exit_portal = terminal_host.get_exit_portal()
 	if _exit_portal == null:
-		push_error("Generated stage terminal room has no exit portal.")
+		push_error("Production stage terminal room has no exit portal.")
 		return false
 	return true
 
