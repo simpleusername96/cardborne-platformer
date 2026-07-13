@@ -1,0 +1,257 @@
+class_name RewardChoiceCard
+extends Button
+
+const Styles = preload("res://scripts/ui/production/ProductionUIStyles.gd")
+const GlyphScript = preload("res://scripts/ui/production/components/RewardChoiceGlyph.gd")
+
+var choice_id: StringName
+
+var _accent: Color = Styles.CYAN
+var _action_text := "CHOOSE"
+var _base_enabled := true
+var _selected := false
+var _pointer_inside := false
+var _built := false
+var _pending_view: Dictionary = {}
+
+var _category_label: Label
+var _rarity_label: Label
+var _glyph: Control
+var _surface: ColorRect
+var _title_label: Label
+var _description_label: Label
+var _value_label: Label
+var _footer_label: Label
+var _state_label: Label
+
+
+func _ready() -> void:
+	focus_mode = Control.FOCUS_ALL
+	mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	clip_contents = true
+	_build_content()
+	focus_entered.connect(_refresh_state)
+	focus_exited.connect(_refresh_state)
+	mouse_entered.connect(_on_mouse_entered)
+	mouse_exited.connect(_on_mouse_exited)
+	_built = true
+	if not _pending_view.is_empty():
+		_apply_view(_pending_view)
+	_refresh_state()
+
+
+func configure_choice(identifier: StringName, view: Dictionary) -> void:
+	choice_id = identifier
+	_pending_view = view.duplicate(true)
+	if _built:
+		_apply_view(_pending_view)
+
+
+func set_commit_pending(is_selected: bool) -> void:
+	_selected = is_selected
+	disabled = true
+	_refresh_state()
+
+
+func restore_interaction() -> void:
+	_selected = false
+	disabled = not _base_enabled
+	_refresh_state()
+
+
+func mark_committed(is_selected: bool) -> void:
+	_selected = is_selected
+	disabled = true
+	_refresh_state()
+
+
+func get_visible_copy() -> String:
+	return "\n".join([
+		_category_label.text,
+		_rarity_label.text,
+		_title_label.text,
+		_description_label.text,
+		_value_label.text,
+		_footer_label.text,
+		_state_label.text,
+	])
+
+
+func has_visible_text_overflow() -> bool:
+	for label in [
+		_category_label,
+		_rarity_label,
+		_title_label,
+		_description_label,
+		_value_label,
+		_footer_label,
+		_state_label,
+	]:
+		if label.visible:
+			if label.size.y + 0.5 < label.get_minimum_size().y:
+				return true
+			if label.get_line_count() > label.get_visible_line_count():
+				return true
+	return false
+
+
+func _build_content() -> void:
+	Styles.apply_button(self, _accent)
+	for color_name in [
+		"font_color",
+		"font_hover_color",
+		"font_pressed_color",
+		"font_focus_color",
+		"font_disabled_color",
+	]:
+		add_theme_color_override(color_name, Color.TRANSPARENT)
+	add_theme_font_size_override("font_size", 1)
+	_surface = ColorRect.new()
+	_surface.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_surface.offset_left = 3.0
+	_surface.offset_top = 3.0
+	_surface.offset_right = -3.0
+	_surface.offset_bottom = -3.0
+	_surface.color = Styles.SURFACE
+	_surface.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_surface)
+
+	var margin := MarginContainer.new()
+	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	for side in ["left", "top", "right", "bottom"]:
+		margin.add_theme_constant_override("margin_%s" % side, 15)
+	margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(margin)
+
+	var content := VBoxContainer.new()
+	content.add_theme_constant_override("separation", 7)
+	content.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	margin.add_child(content)
+
+	var meta := HBoxContainer.new()
+	meta.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	content.add_child(meta)
+	_category_label = _label(11, Styles.TEXT_MUTED)
+	_category_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	meta.add_child(_category_label)
+	_rarity_label = _label(11, _accent)
+	_rarity_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	meta.add_child(_rarity_label)
+
+	var glyph_center := CenterContainer.new()
+	glyph_center.custom_minimum_size = Vector2(0.0, 60.0)
+	glyph_center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	content.add_child(glyph_center)
+	_glyph = GlyphScript.new()
+	glyph_center.add_child(_glyph)
+
+	_title_label = _label(21, Styles.TEXT)
+	_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_title_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_title_label.max_lines_visible = 2
+	_title_label.custom_minimum_size = Vector2(0.0, 50.0)
+	content.add_child(_title_label)
+
+	_description_label = _label(14, Styles.TEXT_MUTED)
+	_description_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_description_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_description_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_description_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	content.add_child(_description_label)
+
+	var divider := ColorRect.new()
+	divider.color = Color(Styles.OUTLINE, 0.62)
+	divider.custom_minimum_size = Vector2(0.0, 1.0)
+	divider.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	content.add_child(divider)
+
+	_value_label = _label(14, Styles.TEXT)
+	_value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_value_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	content.add_child(_value_label)
+
+	var footer := HBoxContainer.new()
+	footer.add_theme_constant_override("separation", 8)
+	footer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	content.add_child(footer)
+	_footer_label = _label(11, Styles.TEXT_MUTED)
+	_footer_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	footer.add_child(_footer_label)
+	_state_label = _label(11, _accent)
+	_state_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	footer.add_child(_state_label)
+
+
+func _apply_view(view: Dictionary) -> void:
+	_accent = view.get("accent", Styles.CYAN)
+	_action_text = String(view.get("action", "CHOOSE")).to_upper()
+	_base_enabled = bool(view.get("enabled", true))
+	text = String(view.get("title", "Reward"))
+	tooltip_text = "%s. %s. %s" % [
+		text,
+		String(view.get("description", "")),
+		String(view.get("value", "")),
+	]
+	_category_label.text = String(view.get("category", "REWARD")).to_upper()
+	_rarity_label.text = String(view.get("rarity", "")).to_upper()
+	_rarity_label.visible = not _rarity_label.text.is_empty()
+	_title_label.text = text
+	_description_label.text = String(view.get("description", ""))
+	_value_label.text = String(view.get("value", ""))
+	_value_label.visible = not _value_label.text.is_empty()
+	_footer_label.text = String(view.get("footer", "")).to_upper()
+	_footer_label.visible = not _footer_label.text.is_empty()
+	_glyph.call("configure", StringName(view.get("glyph", &"card")), _accent)
+	disabled = not _base_enabled
+	_selected = false
+	_refresh_state()
+
+
+func _refresh_state() -> void:
+	if not _built:
+		return
+	var highlighted := has_focus() or _pointer_inside or _selected
+	var border := _accent if highlighted else Styles.OUTLINE
+	var border_width := 3 if _selected else (2 if highlighted else 1)
+	# Opaque choice surfaces keep backdrop marks from reading as reward mechanics.
+	var background := Styles.SURFACE_RAISED if highlighted else Styles.SURFACE
+	_surface.color = background
+	add_theme_stylebox_override("normal", Styles.panel_style(background, border, border_width))
+	add_theme_stylebox_override("hover", Styles.panel_style(Styles.SURFACE_RAISED.lightened(0.04), _accent, 2))
+	add_theme_stylebox_override("pressed", Styles.panel_style(Styles.SURFACE_RAISED.darkened(0.05), _accent, 3))
+	add_theme_stylebox_override("focus", Styles.panel_style(background, _accent, 3))
+	var disabled_border := _accent if _selected else Color(Styles.OUTLINE, 0.48)
+	add_theme_stylebox_override(
+		"disabled",
+		Styles.panel_style(Styles.SURFACE, disabled_border, 3 if _selected else 1)
+	)
+	_rarity_label.add_theme_color_override("font_color", _accent)
+	_state_label.add_theme_color_override(
+		"font_color",
+		_accent if highlighted and not disabled else Styles.TEXT_MUTED
+	)
+	if _selected:
+		_state_label.text = "SELECTED"
+	elif disabled:
+		_state_label.text = "UNAVAILABLE" if not _base_enabled else "WAITING"
+	elif has_focus() or _pointer_inside:
+		_state_label.text = "FOCUSED"
+	else:
+		_state_label.text = _action_text
+
+
+func _on_mouse_entered() -> void:
+	_pointer_inside = true
+	_refresh_state()
+
+
+func _on_mouse_exited() -> void:
+	_pointer_inside = false
+	_refresh_state()
+
+
+func _label(font_size: int, color: Color) -> Label:
+	var label := Label.new()
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	Styles.configure_label(label, font_size, color)
+	return label

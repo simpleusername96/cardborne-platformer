@@ -3,6 +3,12 @@ extends Control
 signal choice_requested(request_id: StringName, choice_id: StringName)
 
 const Styles = preload("res://scripts/ui/production/ProductionUIStyles.gd")
+const ChoiceViewModel = preload(
+	"res://scripts/ui/production/components/RewardChoiceViewModel.gd"
+)
+const ChoiceCardScene = preload(
+	"res://scenes/ui/production/components/RewardChoiceCard.tscn"
+)
 
 var _panel: PanelContainer
 var _title: Label
@@ -19,6 +25,7 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_build_ui()
+	call_deferred("_layout_panel")
 
 
 func _notification(what: int) -> void:
@@ -35,24 +42,24 @@ func configure(snapshot: Dictionary) -> void:
 	_clear_options()
 	for option_value in snapshot.get("options", []):
 		if option_value is Dictionary:
-			_option_row.add_child(_build_option(option_value))
+			var button := _build_option(option_value)
+			_option_row.add_child(button)
 	_status.text = ""
-	if not _buttons.is_empty():
-		_buttons[0].grab_focus()
+	_wire_choice_focus()
+	call_deferred("_focus_first_option")
 
 
 func set_commit_error(message: String) -> void:
 	_status.text = message
 	_status.add_theme_color_override("font_color", Styles.CORAL)
 	for button in _buttons:
-		button.disabled = false
-	if not _buttons.is_empty():
-		_buttons[0].grab_focus()
+		button.call("restore_interaction")
+	_focus_first_option()
 
 
 func _build_ui() -> void:
 	var dim := ColorRect.new()
-	dim.color = Color(0.0, 0.0, 0.0, 0.72)
+	dim.color = Color(0.0, 0.0, 0.0, 0.76)
 	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(dim)
 
@@ -64,57 +71,48 @@ func _build_ui() -> void:
 	add_child(_panel)
 
 	var margin := MarginContainer.new()
-	margin.add_theme_constant_override("margin_left", 24)
-	margin.add_theme_constant_override("margin_top", 20)
-	margin.add_theme_constant_override("margin_right", 24)
-	margin.add_theme_constant_override("margin_bottom", 20)
+	for side in ["left", "top", "right", "bottom"]:
+		margin.add_theme_constant_override("margin_%s" % side, 18)
 	_panel.add_child(margin)
 
 	var page := VBoxContainer.new()
-	page.add_theme_constant_override("separation", 12)
+	page.add_theme_constant_override("separation", 8)
 	margin.add_child(page)
 
 	_title = Label.new()
 	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	Styles.configure_label(_title, 28, Styles.AMBER)
+	Styles.configure_label(_title, 26, Styles.TEXT)
 	page.add_child(_title)
 
 	_instruction = Label.new()
 	_instruction.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	Styles.configure_label(_instruction, 14, Styles.TEXT_MUTED)
+	_instruction.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	Styles.configure_label(_instruction, 13, Styles.TEXT_MUTED)
 	page.add_child(_instruction)
 
 	_option_row = HBoxContainer.new()
 	_option_row.name = "TreasureOptions"
-	_option_row.add_theme_constant_override("separation", 16)
+	_option_row.add_theme_constant_override("separation", 12)
 	_option_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	page.add_child(_option_row)
 
 	_status = Label.new()
 	_status.name = "Status"
 	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_status.custom_minimum_size = Vector2(0.0, 24.0)
-	Styles.configure_label(_status, 14, Styles.TEXT_MUTED)
+	_status.custom_minimum_size = Vector2(0.0, 20.0)
+	Styles.configure_label(_status, 13, Styles.TEXT_MUTED)
 	page.add_child(_status)
-	_layout_panel()
 
 
 func _build_option(option: Dictionary) -> Button:
 	var choice_id := StringName(option.get("id", &""))
-	var button := Button.new()
+	var button := ChoiceCardScene.instantiate() as Button
 	button.name = "Choice_%s" % choice_id
-	button.text = "%s\n\n%s\n\n%s" % [
-		String(option.get("label", "CHOOSE")),
-		String(option.get("title", "Reward")),
-		String(option.get("description", "")),
-	]
-	button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	button.custom_minimum_size = Vector2(360.0, 280.0)
-	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	button.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	Styles.apply_button(
-		button,
-		Styles.AMBER if choice_id == TreasureChoiceService.REPLACEMENT_CHOICE_ID else Styles.CYAN
+	button.custom_minimum_size.x = 360.0
+	button.call(
+		"configure_choice",
+		choice_id,
+		ChoiceViewModel.for_treasure_option(option)
 	)
 	button.pressed.connect(func() -> void: _request_choice(choice_id))
 	_buttons.append(button)
@@ -123,7 +121,10 @@ func _build_option(option: Dictionary) -> Button:
 
 func _request_choice(choice_id: StringName) -> void:
 	for button in _buttons:
-		button.disabled = true
+		button.call(
+			"set_commit_pending",
+			StringName(button.get("choice_id")) == choice_id
+		)
 	choice_requested.emit(_request_id, choice_id)
 
 
@@ -134,10 +135,28 @@ func _clear_options() -> void:
 		child.queue_free()
 
 
+func _wire_choice_focus() -> void:
+	if _buttons.size() < 2:
+		return
+	for index in _buttons.size():
+		var button := _buttons[index]
+		var left := _buttons[(index - 1 + _buttons.size()) % _buttons.size()]
+		var right := _buttons[(index + 1) % _buttons.size()]
+		button.focus_neighbor_left = button.get_path_to(left)
+		button.focus_neighbor_right = button.get_path_to(right)
+
+
+func _focus_first_option() -> void:
+	if not _buttons.is_empty() and not _buttons[0].disabled:
+		_buttons[0].grab_focus()
+
+
 func _layout_panel() -> void:
+	if _panel == null:
+		return
 	var panel_size := Vector2(
-		minf(900.0, maxf(size.x - 40.0, 640.0)),
-		minf(500.0, maxf(size.y - 32.0, 440.0))
+		minf(1040.0, maxf(size.x - 40.0, 0.0)),
+		minf(580.0, maxf(size.y - 24.0, 0.0))
 	)
 	var panel_position := (size - panel_size) * 0.5
 	_panel.offset_left = panel_position.x
