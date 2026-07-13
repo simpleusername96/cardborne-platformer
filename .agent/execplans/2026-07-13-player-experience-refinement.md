@@ -127,7 +127,7 @@ Use these terms consistently during implementation:
 | **Interactive reward** | Chest, material node, or other deliberate interaction that settles a transaction and publishes a receipt. | Existing reward services and interactables. |
 | **Consumable** | One equipped run-local item with explicit charges and manual activation. | `RunState` and the action bar. |
 | **Action bar** | Persistent bottom HUD showing basic, heavy, three skills, and equipped consumable. | Production HUD components. |
-| **Context lane** | One temporary region above the action bar used for interaction prompts and reward/pickup receipts without overlap. | Production HUD layout. |
+| **Context lane** | One temporary top-center region below the objective used for interaction prompts and reward/pickup receipts without overlap. | Production HUD layout. |
 | **Approved Stage Plan** | The reviewed fixed room order, connections, encounters, hazards, rewards, and pickup positions used by production for one region. | `CuratedStagePlanBuilder`, fixed room scenes, and production-stage validation. |
 
 ## Progress
@@ -164,8 +164,9 @@ Use these terms consistently during implementation:
 
 ### Still open
 
-- [ ] Add invalid fixtures for every remaining clearance category, not only support,
-  rope, one-way hatch, recovery, and fixed pickup contracts.
+- [ ] Add full branch-entry-to-return collision replay and invalid fixtures for ceiling,
+  wall, hazard, and remaining clearance categories, not only support, rope, one-way
+  hatch, recovery, and fixed pickup contracts.
 - [ ] Finish the authored-scene/component migration where large screen scripts still
   own procedural composition, and decide whether a single icon manifest adds value.
 - [ ] Complete pickup audio and reduced-motion/transition polish without adding an
@@ -184,6 +185,10 @@ Use these terms consistently during implementation:
   and actor removal.
 - Combat spacing, gameplay HUD, reward choice, equipment decision, shell UI, gamepad,
   and settings validators are part of the default release matrix.
+- The default 33-check release matrix passes with a per-validator watchdog; dormant
+  random-planner sweeps run only in the explicit full matrix.
+- Cooldown pickup receipts report the affected skill count and actual maximum applied
+  recovery, while loadout and forge screens survive live compact/regular resizing.
 - Layout, combat, field-item, HUD, equipment/reward, and shell changes are split into
   scoped commits so remaining polish can be reviewed or reverted independently.
 
@@ -291,10 +296,10 @@ below remain authoritative during implementation.
 ```text
 +--------------------------------------------------------------------------+
 | [portrait] HP bar / guard          objective              Lv / XP / coin |
+|                 [context prompt OR reward/pickup receipt]                |
 |                                                                          |
 |                         unobstructed game world                          |
 |                                                                          |
-|                 [context prompt OR reward/pickup receipt]                |
 |            [F Basic][G Heavy][Q S1][R S2][V S3][H Consumable xN]        |
 |                        [class state / short status]                       |
 +--------------------------------------------------------------------------+
@@ -308,7 +313,8 @@ below remain authoritative during implementation.
 - Basic/heavy slots show identity and temporary lock/charge state; skill slots show
   cooldown masks and numeric seconds; consumable shows icon, input, and count.
 - Interaction prompts and receipts share the context lane because interacting with a
-  source normally replaces its prompt with its receipt.
+  source normally replaces its prompt with its receipt. The lane stays below the
+  top-center objective rather than moving with the bottom action bar.
 - Boss UI occupies a restrained top-center band and does not displace the action bar.
 
 ### Screen-specific hierarchy
@@ -832,7 +838,7 @@ isolated technical success.
     1920x1080, including focus restoration and compact states. Fresh-player
     recognition and the complete screen/state matrix remain.
 
-- [ ] **G5 Run code/document quality gates.**
+- [x] **G5 Run code/document quality gates.**
   - **As-is:** Broad UI changes risk large catch-all scripts and stale comments/docs.
   - **To-be:** Audit responsibility boundaries, comments, dead builders, resource schema,
     duplicated state, validation quality, and canonical design-doc deltas.
@@ -840,8 +846,11 @@ isolated technical success.
     are short, truthful, and explain only non-obvious intent/invariants.
   - **Guard:** No unrelated refactor or asset/dependency churn.
   - **Progress:** Independent audit findings for fixed-map signatures, card fail-closed
-    behavior, loadout focus, dormant random gates, and pickup lifecycle were addressed.
-    Final release-matrix and documentation reruns remain.
+    behavior, loadout focus, pickup lifecycle, release-process timeout, dormant random
+    gates, truthful cooldown receipts, live resize, and comment/doc accuracy were
+    addressed. Import, boot, focused checks, and the default 33-check release matrix
+    pass on the current implementation. Full-route collision replay remains a scoped
+    Phase G traversal gap rather than an unreported quality claim.
 
 - [ ] **G6 Complete release-style manual runs.**
   - **As-is:** Prior RC proves complete flow before these experience changes.
@@ -985,21 +994,19 @@ git diff --check
 
 ## Next Steps
 
-1. Finish final automated import, boot, focused UI/map checks, and the default release
-   matrix against fixed layout V3.
-2. Render and inspect the current hatch/rope, HUD, shell, reward, and equipment states at
-   supported viewports; repair only visible blockers.
-3. Close scoped quality/documentation findings and decide whether remaining procedural
-   screen composition or a global icon manifest materially improves the player build.
-4. Complete one production-style run per character plus combat attrition and UI
+1. Add branch-entry-to-return collision replay plus invalid ceiling, wall, and hazard
+   fixtures for committed optional routes.
+2. Complete one production-style run per character plus combat attrition and UI
    recognition sessions; record balance/fun findings before marking the plan done.
-5. Define random-generation re-entry in a separate future plan only after fixed-stage
+3. Complete pickup audio and reduced-motion polish, then decide whether the remaining
+   procedural screen composition or a global icon manifest improves the player build.
+4. Define random-generation re-entry in a separate future plan only after fixed-stage
    gameplay is accepted.
 
 ## Open Questions To Confirm As Work Proceeds
 
-- Exact names, values, and per-stage budgets for the first field-pickup catalog after one
-  playable vertical slice.
+- Whether authored field-pickup values or per-stage budgets need tuning after the three
+  production-style attrition runs.
 - Whether a separate paused run-summary screen is useful after the action bar and
   loadout/forge comparisons are complete; do not build it without a meaningful task.
 - Whether final game copy remains English-only or begins Korean localization in a later

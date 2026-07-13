@@ -7,12 +7,15 @@
   & Forge transition.
 - Fixed layout V3 is the active normal-stage contract. Six committed-return
   scenarios are statically validated and replayed with Warrior, Archer, and
-  Assassin; the random planner remains dormant.
+  Assassin; the random planner remains dormant in production and the default
+  release matrix.
 - Fixed field pickups now provide authored healing, consumable, cooldown, coin, and
   material beats. The live HUD exposes six action slots, consumable charges, class
   state, objective/boss state, and non-modal prompt/reward receipts.
 - Character/loadout, reward choices, Rest & Forge, pause/settings, and result screens
   now expose authoritative availability and current-versus-result information.
+  Loadout and Rest & Forge also rebuild between compact and regular layouts after a
+  live window resize while preserving screen state and focus intent.
 - The integrated `MotionTestStage`, debug HUD, testbed inputs/flags, historical
   handoff package, fixed-grid maps, and generated wireframe prototype were retired
   on 2026-07-12. Git history preserves them if a focused investigation needs them.
@@ -95,6 +98,9 @@ Read in this order:
 - Full production-style runs for all three characters, fresh-player UI recognition,
   pickup audio, reduced-motion polish, and the remaining broad clearance fixtures
   are still required before the active refinement plan can be marked done.
+- Current return replay begins from stable post-drop recovery. Full
+  branch-entry-to-return collision sweeps and invalid ceiling/wall/hazard fixtures
+  remain required before authored traversal coverage is complete.
 - Broadening room, enemy, card, or boss content will expand the approved-plan and
   roster matrices and must preserve the current least-mobile traversal contract.
 
@@ -122,14 +128,16 @@ Read in this order:
 - Enemy catalog: `./tools/godot.ps1 --path . --headless --script res://tools/validate_enemy_catalog.gd`
 - Design catalogs: `./tools/godot.ps1 --path . --headless --script res://tools/validate_design_catalogs.gd`
 - Remaining card runtime: `./tools/godot.ps1 --path . --headless --script res://tools/validate_remaining_cards_runtime.gd`
-- Release candidate core matrix: `./tools/validate_release_candidate.ps1`
+- Release candidate core matrix: `./tools/validate_release_candidate.ps1` (180-second
+  watchdog per Godot process; random planner dormant)
 - Full focused regression matrix: `./tools/validate_release_candidate.ps1 -Full`
+  (includes dormant random-planner coverage)
 - Focused validators: `Get-ChildItem tools/validate_*.gd`
 - Git status: `git status --short`
 
 ## Next Implementation Entry
 
 Continue `.agent/execplans/2026-07-13-player-experience-refinement.md` from its open
-items and Phase G gates. Preserve fixed layout V3 while completing rendered review,
-quality/release checks, and one production-style run per character. Keep the retired
-testbed, parallel JSON catalogs, and random production path retired.
+items and Phase G gates. Preserve fixed layout V3 while adding complete optional-route
+collision replay and completing one production-style run per character. Keep the
+retired testbed, parallel JSON catalogs, and random production path retired.
