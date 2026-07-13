@@ -10,7 +10,11 @@ signal mastery_respec_requested(character_id: StringName)
 signal persistence_retry_requested
 
 const BackdropScene = preload("res://scripts/ui/production/ProductionBackdrop.gd")
+const EquipmentDecisionPanelScene = preload(
+	"res://scenes/ui/production/components/EquipmentDecisionPanel.tscn"
+)
 const PortraitScene = preload("res://scripts/ui/production/ProductionPortrait.gd")
+const StatPresentation = preload("res://scripts/player/PlayerStatPresentation.gd")
 const Styles = preload("res://scripts/ui/production/ProductionUIStyles.gd")
 
 var selected_index: int = 0
@@ -26,10 +30,13 @@ var _start_button: Button
 var _mastery_open: bool = false
 var _selected_slot_items: Dictionary = {}
 var _selected_mastery_id: StringName
+var _equipment_detail: Control
+var _compact_layout: bool = false
 
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_compact_layout = get_viewport_rect().size.y <= 600.0
 	for profile in RunState.profiles:
 		_profiles.append(profile)
 	selected_index = clampi(RunState.selected_profile_index, 0, maxi(_profiles.size() - 1, 0))
@@ -53,13 +60,13 @@ func _build_shell() -> void:
 	var margin := MarginContainer.new()
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	for side in ["left", "right"]:
-		margin.add_theme_constant_override("margin_%s" % side, 20)
+		margin.add_theme_constant_override("margin_%s" % side, 16 if _compact_layout else 20)
 	for side in ["top", "bottom"]:
-		margin.add_theme_constant_override("margin_%s" % side, 14)
+		margin.add_theme_constant_override("margin_%s" % side, 10 if _compact_layout else 14)
 	add_child(margin)
 
 	var page := VBoxContainer.new()
-	page.add_theme_constant_override("separation", 9)
+	page.add_theme_constant_override("separation", 6 if _compact_layout else 9)
 	margin.add_child(page)
 	page.add_child(_build_header())
 	page.add_child(_build_character_strip())
@@ -74,12 +81,12 @@ func _build_shell() -> void:
 
 func _build_header() -> HBoxContainer:
 	var header := HBoxContainer.new()
-	header.custom_minimum_size = Vector2(0.0, 42.0)
+	header.custom_minimum_size = Vector2(0.0, 38.0 if _compact_layout else 42.0)
 	header.add_theme_constant_override("separation", 12)
 
 	var back := Button.new()
 	back.text = "Back"
-	back.custom_minimum_size = Vector2(88.0, 40.0)
+	back.custom_minimum_size = Vector2(78.0 if _compact_layout else 88.0, 36.0 if _compact_layout else 40.0)
 	Styles.apply_button(back, Styles.MOSS, true)
 	back.pressed.connect(func() -> void: back_requested.emit())
 	header.add_child(back)
@@ -88,14 +95,14 @@ func _build_header() -> HBoxContainer:
 	title.text = "RUNNER & LOADOUT"
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	Styles.configure_label(title, 25)
+	Styles.configure_label(title, 21 if _compact_layout else 25)
 	header.add_child(title)
 
 	_wallet_label = Label.new()
-	_wallet_label.custom_minimum_size = Vector2(240.0, 40.0)
+	_wallet_label.custom_minimum_size = Vector2(200.0 if _compact_layout else 240.0, 36.0 if _compact_layout else 40.0)
 	_wallet_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_wallet_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	Styles.configure_label(_wallet_label, 13, Styles.TEXT_MUTED)
+	Styles.configure_label(_wallet_label, 11 if _compact_layout else 13, Styles.TEXT_MUTED)
 	header.add_child(_wallet_label)
 	return header
 
@@ -103,7 +110,7 @@ func _build_header() -> HBoxContainer:
 func _build_character_strip() -> HBoxContainer:
 	var strip := HBoxContainer.new()
 	strip.name = "CharacterStrip"
-	strip.custom_minimum_size = Vector2(0.0, 112.0)
+	strip.custom_minimum_size = Vector2(0.0, 88.0 if _compact_layout else 112.0)
 	strip.add_theme_constant_override("separation", 10)
 	for profile_index in _profiles.size():
 		strip.add_child(_build_character_button(profile_index, _profiles[profile_index]))
@@ -114,7 +121,7 @@ func _build_character_button(profile_index: int, profile: CharacterProfile) -> B
 	var card := Button.new()
 	card.name = "Character_%s" % profile.id
 	card.text = ""
-	card.custom_minimum_size = Vector2(0.0, 108.0)
+	card.custom_minimum_size = Vector2(0.0, 84.0 if _compact_layout else 108.0)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	card.pressed.connect(func() -> void: _select_profile(profile_index))
 	_character_buttons.append(card)
@@ -122,10 +129,10 @@ func _build_character_button(profile_index: int, profile: CharacterProfile) -> B
 	var margin := MarginContainer.new()
 	margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	margin.offset_left = 12.0
-	margin.offset_top = 8.0
-	margin.offset_right = -12.0
-	margin.offset_bottom = -8.0
+	margin.offset_left = 8.0 if _compact_layout else 12.0
+	margin.offset_top = 6.0 if _compact_layout else 8.0
+	margin.offset_right = -8.0 if _compact_layout else -12.0
+	margin.offset_bottom = -6.0 if _compact_layout else -8.0
 	card.add_child(margin)
 
 	var row := HBoxContainer.new()
@@ -134,7 +141,7 @@ func _build_character_button(profile_index: int, profile: CharacterProfile) -> B
 	margin.add_child(row)
 
 	var portrait := PortraitScene.new()
-	portrait.custom_minimum_size = Vector2(78.0, 84.0)
+	portrait.custom_minimum_size = Vector2(58.0, 68.0) if _compact_layout else Vector2(78.0, 84.0)
 	portrait.configure(profile.id, profile.visual_color)
 	portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(portrait)
@@ -147,23 +154,23 @@ func _build_character_button(profile_index: int, profile: CharacterProfile) -> B
 
 	var name_label := Label.new()
 	name_label.text = profile.display_name.to_upper()
-	Styles.configure_label(name_label, 18)
+	Styles.configure_label(name_label, 15 if _compact_layout else 18)
 	text.add_child(name_label)
 
 	var trait_label := Label.new()
 	trait_label.text = profile.trait_summary
 	trait_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	trait_label.max_lines_visible = 2
+	trait_label.max_lines_visible = 1 if _compact_layout else 2
 	trait_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	trait_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	Styles.configure_label(trait_label, 11, Styles.TEXT_MUTED)
+	Styles.configure_label(trait_label, 10 if _compact_layout else 11, Styles.TEXT_MUTED)
 	text.add_child(trait_label)
 
 	var facts := Label.new()
 	facts.text = "HP %d   MOVE %d   DASH %d" % [
 		profile.max_health, roundi(profile.move_speed), profile.dash_charges,
 	]
-	Styles.configure_label(facts, 11, profile.visual_color)
+	Styles.configure_label(facts, 10 if _compact_layout else 11, profile.visual_color)
 	text.add_child(facts)
 
 	var selected := Label.new()
@@ -176,7 +183,7 @@ func _build_character_button(profile_index: int, profile: CharacterProfile) -> B
 
 func _build_footer() -> HBoxContainer:
 	var footer := HBoxContainer.new()
-	footer.custom_minimum_size = Vector2(0.0, 44.0)
+	footer.custom_minimum_size = Vector2(0.0, 40.0 if _compact_layout else 44.0)
 	footer.add_theme_constant_override("separation", 10)
 
 	_status_label = Label.new()
@@ -189,14 +196,14 @@ func _build_footer() -> HBoxContainer:
 	_retry_button = Button.new()
 	_retry_button.text = "Retry Save"
 	_retry_button.visible = false
-	_retry_button.custom_minimum_size = Vector2(112.0, 42.0)
+	_retry_button.custom_minimum_size = Vector2(104.0, 38.0 if _compact_layout else 42.0)
 	Styles.apply_button(_retry_button, Styles.CORAL, true)
 	_retry_button.pressed.connect(func() -> void: persistence_retry_requested.emit())
 	footer.add_child(_retry_button)
 
 	_mode_button = Button.new()
 	_mode_button.name = "ModeButton"
-	_mode_button.custom_minimum_size = Vector2(150.0, 42.0)
+	_mode_button.custom_minimum_size = Vector2(126.0 if _compact_layout else 150.0, 38.0 if _compact_layout else 42.0)
 	Styles.apply_button(_mode_button, Styles.CYAN, true)
 	_mode_button.pressed.connect(_toggle_mode)
 	footer.add_child(_mode_button)
@@ -204,7 +211,7 @@ func _build_footer() -> HBoxContainer:
 	_start_button = Button.new()
 	_start_button.name = "StartRunButton"
 	_start_button.text = "Start Run"
-	_start_button.custom_minimum_size = Vector2(190.0, 42.0)
+	_start_button.custom_minimum_size = Vector2(156.0 if _compact_layout else 190.0, 38.0 if _compact_layout else 42.0)
 	Styles.apply_button(_start_button, Styles.AMBER)
 	_start_button.pressed.connect(_begin_start)
 	footer.add_child(_start_button)
@@ -236,28 +243,45 @@ func _refresh() -> void:
 func _build_loadout_view() -> void:
 	var profile := _profiles[selected_index]
 	var snapshot: Dictionary = ProfileState.get_character_loadout_snapshot(profile)
+	_selected_slot_items.clear()
 	_start_button.disabled = not bool(snapshot.get("ok", false))
 
 	var body := HBoxContainer.new()
 	body.name = "LoadoutBody"
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	body.add_theme_constant_override("separation", 24)
+	body.add_theme_constant_override("separation", 16 if _compact_layout else 24)
 	_content_host.add_child(body)
 
 	var loadout_column := VBoxContainer.new()
 	loadout_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	loadout_column.add_theme_constant_override("separation", 5)
+	loadout_column.add_theme_constant_override("separation", 4 if _compact_layout else 5)
 	body.add_child(loadout_column)
 	loadout_column.add_child(_section_label("LOADOUT"))
+	var first_slot_id := ""
+	var first_equipped_id := ""
 	for slot_row in snapshot.get("slots", []):
 		loadout_column.add_child(_build_slot_row(slot_row))
+		if first_slot_id.is_empty():
+			first_slot_id = String(slot_row.get("slot", ""))
+			first_equipped_id = String(slot_row.get("equipped_id", ""))
 	loadout_column.add_child(_build_consumable_row(snapshot.get("loadout", {})))
+	_equipment_detail = EquipmentDecisionPanelScene.instantiate() as Control
+	_equipment_detail.name = "SelectedEquipmentDetail"
+	_equipment_detail.custom_minimum_size.y = 112.0 if _compact_layout else 132.0
+	_equipment_detail.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	loadout_column.add_child(_equipment_detail)
+	if not first_slot_id.is_empty():
+		_show_loadout_option(
+			first_slot_id,
+			_selected_slot_items.get(first_slot_id, {}),
+			first_equipped_id
+		)
 
 	var divider := VSeparator.new()
 	body.add_child(divider)
 
 	var summary := VBoxContainer.new()
-	summary.custom_minimum_size = Vector2(330.0, 0.0)
+	summary.custom_minimum_size = Vector2(290.0 if _compact_layout else 330.0, 0.0)
 	summary.add_theme_constant_override("separation", 6)
 	body.add_child(summary)
 	summary.add_child(_section_label("EFFECTIVE BUILD"))
@@ -282,12 +306,12 @@ func _build_slot_row(slot_row: Dictionary) -> HBoxContainer:
 	var options: Array = slot_row.get("options", [])
 	var equipped_id := String(slot_row.get("equipped_id", ""))
 	var row := HBoxContainer.new()
-	row.custom_minimum_size = Vector2(0.0, 38.0)
+	row.custom_minimum_size = Vector2(0.0, 34.0 if _compact_layout else 38.0)
 	row.add_theme_constant_override("separation", 8)
 
 	var label := Label.new()
 	label.text = slot_id.to_upper()
-	label.custom_minimum_size = Vector2(76.0, 0.0)
+	label.custom_minimum_size = Vector2(66.0 if _compact_layout else 76.0, 0.0)
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	Styles.configure_label(label, 12, Styles.TEXT_MUTED)
 	row.add_child(label)
@@ -295,7 +319,7 @@ func _build_slot_row(slot_row: Dictionary) -> HBoxContainer:
 	var picker := OptionButton.new()
 	picker.name = "Slot_%s" % slot_id
 	picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	picker.custom_minimum_size = Vector2(0.0, 36.0)
+	picker.custom_minimum_size = Vector2(0.0, 32.0 if _compact_layout else 36.0)
 	Styles.apply_button(picker, _profiles[selected_index].visual_color, true)
 	var selected_index_in_picker := 0
 	for option_index in options.size():
@@ -314,13 +338,20 @@ func _build_slot_row(slot_row: Dictionary) -> HBoxContainer:
 	row.add_child(picker)
 
 	var action := Button.new()
-	action.custom_minimum_size = Vector2(112.0, 36.0)
+	action.custom_minimum_size = Vector2(98.0 if _compact_layout else 112.0, 32.0 if _compact_layout else 36.0)
 	Styles.apply_button(action, Styles.AMBER, true)
 	row.add_child(action)
 	_update_slot_action(action, slot_id, equipped_id)
 	picker.item_selected.connect(func(option_index: int) -> void:
 		_selected_slot_items[slot_id] = picker.get_item_metadata(option_index)
 		_update_slot_action(action, slot_id, equipped_id)
+		_show_loadout_option(slot_id, _selected_slot_items[slot_id], equipped_id)
+	)
+	picker.focus_entered.connect(func() -> void:
+		_show_loadout_option(slot_id, _selected_slot_items.get(slot_id, {}), equipped_id)
+	)
+	action.focus_entered.connect(func() -> void:
+		_show_loadout_option(slot_id, _selected_slot_items.get(slot_id, {}), equipped_id)
 	)
 	action.pressed.connect(func() -> void: _commit_slot_action(slot_id))
 	return row
@@ -328,7 +359,7 @@ func _build_slot_row(slot_row: Dictionary) -> HBoxContainer:
 
 func _build_consumable_row(loadout: Dictionary) -> HBoxContainer:
 	var row := HBoxContainer.new()
-	row.custom_minimum_size = Vector2(0.0, 38.0)
+	row.custom_minimum_size = Vector2(0.0, 34.0 if _compact_layout else 38.0)
 	var label := Label.new()
 	label.text = "CONSUMABLE"
 	label.custom_minimum_size = Vector2(84.0, 0.0)
@@ -342,6 +373,35 @@ func _build_consumable_row(loadout: Dictionary) -> HBoxContainer:
 	Styles.configure_label(value, 14)
 	row.add_child(value)
 	return row
+
+
+func _show_loadout_option(slot_id: String, option: Dictionary, equipped_id: String) -> void:
+	if _equipment_detail == null or not is_instance_valid(_equipment_detail):
+		return
+	var item_id := String(option.get("id", ""))
+	var owned := bool(option.get("owned", false))
+	var state_text := "LOCKED"
+	if item_id == equipped_id:
+		state_text = "EQUIPPED"
+	elif owned:
+		state_text = "OWNED | READY TO EQUIP"
+	else:
+		state_text = "LOCKED | %s" % _cost_text(option.get("unlock_costs", {}), false)
+	var empty_text := (
+		"No build change; this item is already equipped."
+		if item_id == equipped_id
+		else "No numeric change; the behavior is described above."
+	)
+	_equipment_detail.call("configure", {
+		"context_text": "%s | PERMANENT LOADOUT" % slot_id.to_upper(),
+		"state_text": state_text,
+		"title": String(option.get("display_name", "Unavailable")),
+		"description": String(option.get("description", "No item is available for this slot.")),
+		"tradeoff": String(option.get("tradeoff", "")),
+		"stat_deltas": option.get("stat_deltas", []),
+		"validation_errors": option.get("validation_errors", []),
+		"empty_mechanics_text": empty_text,
+	}, _compact_layout)
 
 
 func _update_slot_action(button: Button, slot_id: String, equipped_id: String) -> void:
@@ -379,21 +439,28 @@ func _build_stat_grid(stats: Dictionary) -> GridContainer:
 	grid.columns = 2
 	grid.add_theme_constant_override("h_separation", 20)
 	grid.add_theme_constant_override("v_separation", 5)
-	for row in [
-		["Health", "max_health", 0], ["Damage", "attack_damage", 0],
-		["Move", "move_speed", 0], ["Dash cooldown", "dash_cooldown", 2],
-		["Jump", "jump_velocity", 0], ["Extra jumps", "extra_jumps", 0],
+	for stat_id in [
+		&"max_health",
+		&"attack_damage",
+		&"attack_range",
+		&"move_speed",
+		&"jump_velocity",
+		&"extra_jumps",
+		&"dash_cooldown",
+		&"dash_charges",
 	]:
 		var name_label := Label.new()
-		name_label.text = row[0]
-		Styles.configure_label(name_label, 12, Styles.TEXT_MUTED)
+		name_label.text = StatPresentation.display_name(stat_id)
+		Styles.configure_label(name_label, 11 if _compact_layout else 12, Styles.TEXT_MUTED)
 		grid.add_child(name_label)
 		var value_label := Label.new()
-		var value := float(stats.get(row[1], 0.0))
-		value_label.text = ("%.*f" % [row[2], value]).trim_suffix(".00")
+		value_label.text = StatPresentation.format_value(
+			stat_id,
+			float(stats.get(String(stat_id), 0.0))
+		)
 		value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		value_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		Styles.configure_label(value_label, 14)
+		Styles.configure_label(value_label, 13 if _compact_layout else 14)
 		grid.add_child(value_label)
 	return grid
 
