@@ -7,6 +7,8 @@ const ActionSlotScene = preload("res://scenes/ui/production/components/HUDAction
 
 const OBJECTIVE_EXPANDED_SECONDS := 4.0
 const ACTION_SLOT_MINIMUM_SIZE := Vector2(92.0, 104.0)
+const ACTION_CENTER_GAP_COMPACT := 120.0
+const ACTION_CENTER_GAP_WIDE := 160.0
 const ACTION_SLOT_DEFINITIONS: Array[Dictionary] = [
 	{"slot_role": &"basic", "input_action": &"attack", "fallback": "F", "fallback_label": "Basic"},
 	{"slot_role": &"heavy", "input_action": &"heavy_attack", "fallback": "G", "fallback_label": "Heavy"},
@@ -35,6 +37,7 @@ var objective_timer: Timer
 
 var action_bar: PanelContainer
 var action_row: HBoxContainer
+var action_center_gap: Control
 var action_slots: Array[Control] = []
 
 var context_lane: Control
@@ -96,6 +99,11 @@ func get_layout_snapshot() -> Dictionary:
 		"objective_rect": objective_container.get_rect() if objective_container != null else Rect2(),
 		"boss_rect": boss_panel.get_rect() if boss_panel != null else Rect2(),
 		"action_bar_rect": action_bar.get_rect() if action_bar != null else Rect2(),
+		"action_center_gap_rect": (
+			Rect2(action_center_gap.global_position - global_position, action_center_gap.size)
+			if action_center_gap != null
+			else Rect2()
+		),
 		"context_lane_rect": context_lane.get_rect() if context_lane != null else Rect2(),
 		"prompt_visible": prompt_panel.visible if prompt_panel != null else false,
 		"receipt_active": _receipt_active,
@@ -270,7 +278,7 @@ func _build_objective() -> void:
 
 
 func _build_action_bar() -> void:
-	action_bar = _hud_panel(Color(Styles.SURFACE, 0.97), Styles.OUTLINE)
+	action_bar = _hud_panel(Color.TRANSPARENT, Color.TRANSPARENT)
 	action_bar.name = "ActionBar"
 	action_bar.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 	add_child(action_bar)
@@ -280,7 +288,13 @@ func _build_action_bar() -> void:
 	action_row.name = "ActionSlots"
 	action_row.add_theme_constant_override("separation", 5)
 	margin.add_child(action_row)
-	for definition in ACTION_SLOT_DEFINITIONS:
+	for index in ACTION_SLOT_DEFINITIONS.size():
+		if index == 3:
+			action_center_gap = Control.new()
+			action_center_gap.name = "PlayerSafeGap"
+			action_center_gap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			action_row.add_child(action_center_gap)
+		var definition := ACTION_SLOT_DEFINITIONS[index]
 		var slot := ActionSlotScene.instantiate() as Control
 		slot.name = "Action_%s" % String(definition["slot_role"])
 		action_row.add_child(slot)
@@ -290,7 +304,7 @@ func _build_action_bar() -> void:
 func _build_context_lane() -> void:
 	context_lane = Control.new()
 	context_lane.name = "ContextLane"
-	context_lane.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	context_lane.set_anchors_preset(Control.PRESET_CENTER_TOP)
 	context_lane.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(context_lane)
 	prompt_panel = _hud_panel(Color(Styles.SURFACE_RAISED, 0.97), Styles.AMBER)
@@ -427,21 +441,27 @@ func _layout_responsive() -> void:
 	var slot_size := ACTION_SLOT_MINIMUM_SIZE
 	for slot in action_slots:
 		slot.custom_minimum_size = slot_size
+	var center_gap_width := ACTION_CENTER_GAP_COMPACT if compact else ACTION_CENTER_GAP_WIDE
+	action_center_gap.custom_minimum_size = Vector2(center_gap_width, slot_size.y)
 	var separation := float(action_row.get_theme_constant("separation"))
-	var bar_width := slot_size.x * float(action_slots.size()) + separation * float(action_slots.size() - 1) + 16.0
+	var bar_width := (
+		slot_size.x * float(action_slots.size())
+		+ center_gap_width
+		+ separation * float(action_slots.size())
+		+ 16.0
+	)
 	var bar_height := slot_size.y + 16.0
 	action_bar.offset_left = -bar_width * 0.5
 	action_bar.offset_top = -(bar_height + 14.0)
 	action_bar.offset_right = bar_width * 0.5
 	action_bar.offset_bottom = -14.0
 
-	var lane_width := minf(560.0, maxf(size.x - 32.0, 320.0))
+	var lane_width := 320.0 if compact else minf(540.0, size.x - 680.0)
 	var lane_height := 58.0
-	var lane_bottom := action_bar.offset_top - 10.0
 	context_lane.offset_left = -lane_width * 0.5
-	context_lane.offset_top = lane_bottom - lane_height
+	context_lane.offset_top = 86.0
 	context_lane.offset_right = lane_width * 0.5
-	context_lane.offset_bottom = lane_bottom
+	context_lane.offset_bottom = 86.0 + lane_height
 	_refresh_action_slots()
 	_refresh_boss_header()
 

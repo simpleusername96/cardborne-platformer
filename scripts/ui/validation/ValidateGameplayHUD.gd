@@ -45,15 +45,26 @@ func _validate_viewport(packed: PackedScene, viewport_size: Vector2i) -> void:
 	var resources_rect := layout["resources_rect"] as Rect2
 	var objective_rect := layout["objective_rect"] as Rect2
 	var action_rect := layout["action_bar_rect"] as Rect2
+	var safe_gap_rect := layout["action_center_gap_rect"] as Rect2
 	var context_rect := layout["context_lane_rect"] as Rect2
 	_expect(_inside(viewport_rect, health_rect), "%s health cluster should fit" % viewport_size)
 	_expect(_inside(viewport_rect, resources_rect), "%s resource strip should fit" % viewport_size)
 	_expect(_inside(viewport_rect, objective_rect), "%s objective band should fit" % viewport_size)
 	_expect(_inside(viewport_rect, action_rect), "%s action bar should fit" % viewport_size)
+	_expect(_inside(viewport_rect, safe_gap_rect), "%s action-bar safe gap should fit" % viewport_size)
 	_expect(_inside(viewport_rect, context_rect), "%s context lane should fit" % viewport_size)
 	_expect(not health_rect.intersects(objective_rect), "%s health and objective should not overlap" % viewport_size)
 	_expect(not resources_rect.intersects(objective_rect), "%s resources and objective should not overlap" % viewport_size)
+	_expect(not health_rect.intersects(context_rect), "%s context lane should not cover health" % viewport_size)
+	_expect(not resources_rect.intersects(context_rect), "%s context lane should not cover resources" % viewport_size)
+	_expect(not objective_rect.intersects(context_rect), "%s context lane should not cover the objective" % viewport_size)
 	_expect(context_rect.end.y < action_rect.position.y, "%s context lane should stay above actions" % viewport_size)
+	_expect(
+		safe_gap_rect.position.x < viewport_size.x * 0.5
+		and safe_gap_rect.end.x > viewport_size.x * 0.5,
+		"%s action bar should leave the followed-player center unobstructed" % viewport_size
+	)
+	_expect(safe_gap_rect.size.x >= 120.0, "%s action-bar safe gap should be at least 120px" % viewport_size)
 	_expect((layout["slots"] as Array).size() == 6, "%s HUD should expose six stable action slots" % viewport_size)
 	_expect(hud.find_child("CombatPanel", true, false) == null, "legacy multiline combat panel should be absent")
 	_expect(not _all_label_text(hud).contains("READY"), "routine readiness should not use READY text")
