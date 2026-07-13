@@ -53,7 +53,7 @@ func _on_body_entered(body: Node) -> void:
 
 
 func _finish_collection(result: Dictionary) -> void:
-	monitoring = false
+	set_deferred("monitoring", false)
 	set_deferred("monitorable", false)
 	if bool(result.get("applied", false)):
 		var signal_bus := get_node_or_null("/root/SignalBus")

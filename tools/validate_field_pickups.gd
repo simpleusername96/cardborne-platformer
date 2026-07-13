@@ -2,6 +2,7 @@ extends SceneTree
 
 const CATALOG := preload("res://data/items/field_pickup_catalog.tres")
 const FIELD_PICKUP_SCENE := preload("res://scenes/stages/components/FieldPickup.tscn")
+const PLAYER_SCENE_PATH := "res://scenes/player/Player.tscn"
 
 class CooldownTarget:
 	extends Node
@@ -92,29 +93,53 @@ func _validate_currency_and_replay() -> void:
 
 func _validate_actor_lifecycle() -> void:
 	_expect(_run_state.start_new_run(0, 913), "pickup actor fixture run should start")
+	var packed_player := load(PLAYER_SCENE_PATH) as PackedScene
+	_expect(packed_player != null, "pickup collision fixture should load the production player")
+	if packed_player == null:
+		return
 	_run_state.damage_player(2)
 	var health_before: int = _run_state.current_health
+	var world := Node2D.new()
+	root.add_child(world)
+	var floor := StaticBody2D.new()
+	var floor_shape := CollisionShape2D.new()
+	var floor_rectangle := RectangleShape2D.new()
+	floor_rectangle.size = Vector2(240.0, 40.0)
+	floor_shape.shape = floor_rectangle
+	floor.position = Vector2(100.0, 180.0)
+	floor.add_child(floor_shape)
+	world.add_child(floor)
 	var pickup := FIELD_PICKUP_SCENE.instantiate() as FieldPickup
 	pickup.pickup_id = &"fixture_actor_vital"
 	pickup.definition = CATALOG.get_definition(&"vital_shard")
-	root.add_child(pickup)
-	var player := Node2D.new()
-	player.add_to_group("player")
-	root.add_child(player)
+	pickup.position = Vector2(100.0, 110.0)
+	world.add_child(pickup)
+	var player := packed_player.instantiate() as CharacterBody2D
+	_expect(player != null, "pickup collision fixture should instantiate the production player body")
+	if player == null:
+		world.queue_free()
+		await process_frame
+		return
+	player.position = Vector2(100.0, 160.0)
+	var camera := player.get_node_or_null("Camera2D") as Camera2D
+	if camera != null:
+		camera.enabled = false
+	world.add_child(player)
 	var receipts: Array[Dictionary] = []
 	var signal_bus := root.get_node_or_null("/root/SignalBus")
 	var receipt_handler := func(receipt: Dictionary) -> void: receipts.append(receipt)
 	signal_bus.field_pickup_collected.connect(receipt_handler)
-	pickup.call("_on_body_entered", player)
-	pickup.call("_on_body_entered", player)
-	await process_frame
+	for _frame in 5:
+		await physics_frame
+		await process_frame
 	_expect(_run_state.current_health == health_before + 1, "pickup actor should apply its effect")
-	_expect(receipts.size() == 1, "pickup actor should publish one collection receipt")
+	_expect(receipts.size() == 1, "player collision should publish one collection receipt")
 	await create_timer(0.25).timeout
 	_expect(not is_instance_valid(pickup), "collected pickup actor should remove itself")
 	if signal_bus.field_pickup_collected.is_connected(receipt_handler):
 		signal_bus.field_pickup_collected.disconnect(receipt_handler)
-	player.queue_free()
+	world.queue_free()
+	await process_frame
 	await process_frame
 
 
