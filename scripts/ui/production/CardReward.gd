@@ -184,7 +184,8 @@ func _build_choice_button(card_id: StringName) -> Button:
 	)
 	if card != null:
 		view["enabled"] = (
-			next_stack <= card.max_stacks
+			bool(view.get("enabled", false))
+			and next_stack <= card.max_stacks
 			and card.is_compatible(StringName(RunState.selected_profile.id))
 		)
 	button.call("configure_choice", card_id, view)

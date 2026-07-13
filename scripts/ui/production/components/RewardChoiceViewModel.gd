@@ -76,13 +76,14 @@ static func for_card(
 	var compatibility := "SHARED"
 	if not card.compatibility.has(&"shared") and not card.compatibility.is_empty():
 		compatibility = String(card.compatibility[0]).to_upper()
-	var mechanics := _card_mechanics(card, next_stack)
+	var preview := _card_mechanics(card, next_stack)
+	var mechanics: Array[String] = preview["lines"]
 	mechanics.push_front("Stack %d -> %d / %d" % [
 		current_stack,
 		next_stack,
 		card.max_stacks,
 	])
-	return _base_view_model(
+	var view := _base_view_model(
 		card.id,
 		"%s CARD" % compatibility,
 		String(card.rarity),
@@ -94,6 +95,8 @@ static func for_card(
 		&"card",
 		_rarity_color(card.rarity)
 	)
+	view["enabled"] = bool(preview["complete"])
+	return view
 
 
 static func for_treasure_option(option: Dictionary) -> Dictionary:
@@ -174,14 +177,19 @@ static func _base_view_model(
 	}
 
 
-static func _card_mechanics(card: CardDefinition, next_stack: int) -> Array[String]:
+static func _card_mechanics(card: CardDefinition, next_stack: int) -> Dictionary:
 	var lines: Array[String] = []
+	var complete := true
 	for effect in card.effects:
 		if effect != null:
-			lines.append(_format_card_effect(effect, next_stack))
+			var line := _format_card_effect(effect, next_stack)
+			if line.is_empty():
+				complete = false
+				line = "Effect details unavailable"
+			lines.append(line)
 	if card.internal_cooldown > 0.0:
 		lines.append("Internal cooldown %ss" % _number(card.internal_cooldown))
-	return lines
+	return {"lines": lines, "complete": complete}
 
 
 static func _format_card_effect(effect: CardEffectDefinition, stack: int) -> String:
@@ -247,7 +255,7 @@ static func _format_card_effect(effect: CardEffectDefinition, stack: int) -> Str
 		&"request_reward_preview_replacement":
 			return "%d compatible replacement choice" % effect.choice_count
 		_:
-			return "Effect details unavailable"
+			return ""
 
 
 static func _stack_int(values: PackedInt32Array, stack: int) -> int:

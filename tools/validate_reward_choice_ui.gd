@@ -38,6 +38,7 @@ func _run() -> void:
 	await _validate_card_reward()
 	await _validate_treasure_choice()
 	await _validate_catalog_choice_copy()
+	_validate_unavailable_card_preview()
 	_finish()
 
 
@@ -226,6 +227,25 @@ func _validate_catalog_choice_copy() -> void:
 			copy.contains(upgrade.description),
 			"%s compact choice should retain its upgrade description" % upgrade.display_name
 		)
+
+
+func _validate_unavailable_card_preview() -> void:
+	var effect := CardEffectDefinition.new()
+	effect.effect_type = &"future_unpresented_effect"
+	var card := CardDefinition.new()
+	card.id = &"unpresented_fixture"
+	card.display_name = "Unpresented Fixture"
+	card.description = "Fixture for fail-closed reward presentation."
+	card.effects = [effect]
+	var view := ChoiceViewModel.for_card(card, 0, 1)
+	_expect(
+		not bool(view.get("enabled", true)),
+		"cards with unpresented effects must not remain selectable"
+	)
+	_expect(
+		String(view.get("value", "")).contains("Effect details unavailable"),
+		"cards with unpresented effects should explain why they are unavailable"
+	)
 
 
 func _render_compact_choice(choice_id: StringName, view: Dictionary) -> String:
