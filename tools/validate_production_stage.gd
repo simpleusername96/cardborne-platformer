@@ -193,22 +193,38 @@ func _validate_hud(run_director: Node, game: Node, stage: Variant) -> void:
 	_expect(hud != null, "production run should mount its HUD")
 	if hud == null:
 		return
-	var objective := hud.get("objective_label") as Label
-	var combat := hud.get("combat_label") as Label
+	var layout: Dictionary = hud.call("get_layout_snapshot")
 	_expect(
-		objective != null and objective.text.contains(str(stage.get_remaining_enemy_count())),
-		"HUD should show the generated required encounter count"
+		String(layout.get("objective_detail", "")).contains(
+			str(stage.get_remaining_enemy_count())
+		),
+		"HUD should show the approved required encounter count"
 	)
+	var slots_by_role: Dictionary = {}
+	for slot_value in layout.get("slots", []):
+		if slot_value is Dictionary:
+			var slot := slot_value as Dictionary
+			slots_by_role[String(slot.get("slot_role", ""))] = slot
+	var basic: Dictionary = slots_by_role.get("basic", {})
+	var skill_1: Dictionary = slots_by_role.get("skill_1", {})
 	_expect(
-		combat != null and combat.text.contains("Cleave") and combat.text.contains("Shield Rush"),
+		String(basic.get("label", "")) == "CLEAVE"
+		and bool(basic.get("available", false))
+		and String(skill_1.get("label", "")) == "SHIELD RUSH"
+		and bool(skill_1.get("available", false)),
 		"HUD should retain the selected Warrior kit"
 	)
 	var bus := root.get_node_or_null("/root/SignalBus")
 	bus.emit_signal("interaction_prompt_changed", "Enter gate", true)
 	await process_frame
-	var prompt := hud.get("prompt_label") as Label
+	layout = hud.call("get_layout_snapshot")
 	var binding: String = str(game.call("get_action_binding_text", "interact", "E"))
-	_expect(prompt != null and prompt.text.begins_with(binding), "interaction prompt should use current binding")
+	_expect(
+		bool(layout.get("prompt_visible", false))
+		and String(layout.get("prompt_binding", "")) == binding
+		and String(layout.get("prompt_text", "")) == "Enter gate",
+		"interaction prompt should use current binding and message"
+	)
 	bus.emit_signal("interaction_prompt_changed", "", false)
 
 

@@ -105,7 +105,10 @@ func get_layout_snapshot() -> Dictionary:
 			else Rect2()
 		),
 		"context_lane_rect": context_lane.get_rect() if context_lane != null else Rect2(),
+		"objective_detail": objective_detail_label.text if objective_detail_label != null else "",
 		"prompt_visible": prompt_panel.visible if prompt_panel != null else false,
+		"prompt_binding": prompt_binding_label.text if prompt_binding_label != null else "",
+		"prompt_text": prompt_label.text if prompt_label != null else "",
 		"receipt_active": _receipt_active,
 		"slots": slot_snapshots,
 		"class_state": class_state.get_display_snapshot() if class_state != null else {},
