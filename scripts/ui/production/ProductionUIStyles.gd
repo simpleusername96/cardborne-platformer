@@ -11,6 +11,13 @@ const CYAN := Color("62a9b5")
 const AMBER := Color("d4a33f")
 const CORAL := Color("d9654f")
 const OUTLINE := Color("526068")
+const HEALTH := Color("c54d45")
+const HEALTH_LOW := Color("e66b52")
+const XP := Color("62bdc7")
+const SCRAP := Color("b88a59")
+const THREAD := Color("6fd5d1")
+const RESIDUE := Color("75b96c")
+const BOSS_CORE := Color("aa89cf")
 
 
 static func panel_style(
@@ -53,3 +60,22 @@ static func apply_character_card(button: Button, accent: Color, selected: bool) 
 static func configure_label(label: Label, size: int, color: Color = TEXT) -> void:
 	label.add_theme_font_size_override("font_size", size)
 	label.add_theme_color_override("font_color", color)
+
+
+static func action_accent(slot_role: StringName) -> Color:
+	return {
+		&"basic": AMBER,
+		&"heavy": Color("d8894b"),
+		&"skill_1": CYAN,
+		&"skill_2": MOSS,
+		&"skill_3": Color("c5b45c"),
+		&"consumable": Color("63b987"),
+	}.get(slot_role, CYAN)
+
+
+static func class_accent(profile_id: StringName) -> Color:
+	return {
+		&"warrior": AMBER,
+		&"archer": CYAN,
+		&"assassin": Color("c088cf"),
+	}.get(profile_id, CYAN)

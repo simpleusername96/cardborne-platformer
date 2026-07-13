@@ -1,6 +1,8 @@
 class_name RewardReceiptPresenter
 extends Control
 
+signal presentation_state_changed(active: bool)
+
 const Styles = preload("res://scripts/ui/production/ProductionUIStyles.gd")
 const DISPLAY_SECONDS := 2.8
 const FADE_SECONDS := 0.22
@@ -23,6 +25,7 @@ var _summary: Label
 var _queue: Array[Dictionary] = []
 var _presenting: bool = false
 var _display_serial: int = 0
+var _embedded: bool = false
 
 
 func _ready() -> void:
@@ -47,6 +50,16 @@ func present(receipt: Dictionary) -> void:
 	_queue.append(receipt.duplicate(true))
 	if not _presenting:
 		_show_next()
+
+
+func set_embedded(embedded: bool) -> void:
+	_embedded = embedded
+	if is_node_ready() and _panel != null:
+		_layout_panel()
+
+
+func is_presenting() -> bool:
+	return _presenting
 
 
 func build_view_model(receipt: Dictionary) -> Dictionary:
@@ -81,9 +94,9 @@ func get_display_snapshot() -> Dictionary:
 
 func _show_next() -> void:
 	if _queue.is_empty() or _panel == null:
-		_presenting = false
+		_set_presenting(false)
 		return
-	_presenting = true
+	_set_presenting(true)
 	_display_serial += 1
 	var serial := _display_serial
 	var view_model := build_view_model(_queue.pop_front())
@@ -103,6 +116,13 @@ func _show_next() -> void:
 	_panel.visible = false
 	_panel.modulate = Color.WHITE
 	_show_next()
+
+
+func _set_presenting(active: bool) -> void:
+	if _presenting == active:
+		return
+	_presenting = active
+	presentation_state_changed.emit(active)
 
 
 func _build_ui() -> void:
@@ -145,6 +165,9 @@ func _build_ui() -> void:
 
 
 func _layout_panel() -> void:
+	if _embedded:
+		_panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		return
 	var panel_width := minf(540.0, maxf(size.x - 40.0, 320.0))
 	_panel.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 	_panel.offset_left = -panel_width * 0.5
