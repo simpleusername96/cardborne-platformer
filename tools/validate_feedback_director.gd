@@ -282,8 +282,20 @@ func _validate_safe_global_events() -> void:
 		int(_snapshot()["request_count"]) == before,
 		"failed rewards should not produce celebration feedback"
 	)
-	_bus.emit_signal("reward_applied", {"ok": true, "transaction_id": "reward-test"})
+	_bus.emit_signal("reward_applied", {"applied": true, "transaction_id": "reward-test"})
 	_expect_last_cue(&"reward", "applied rewards should request reward feedback")
+	var before_field_reward := int(_snapshot()["request_count"])
+	_bus.emit_signal("reward_applied", {"applied": true, "transaction_id": "field:focus-1"})
+	_expect(
+		int(_snapshot()["request_count"]) == before_field_reward,
+		"field currency settlement should wait for the field pickup event"
+	)
+	_bus.emit_signal("field_pickup_collected", {
+		"applied": true,
+		"pickup_id": "focus-1",
+		"effect_type": "reduce_skill_cooldowns",
+	})
+	_expect_last_cue(&"reward", "field pickups should request one reward cue")
 	_bus.emit_signal("stage_cleared", "lower_ruins")
 	_expect_last_cue(&"stage_clear", "stage clear should request its own cue")
 	_bus.emit_signal("boss_defeated", &"boss_clear_slime_king")

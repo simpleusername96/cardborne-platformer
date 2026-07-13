@@ -151,6 +151,7 @@ func _connect_global_events() -> void:
 	if bus != null:
 		bus.gameplay_feedback_requested.connect(_on_feedback_requested)
 		bus.reward_applied.connect(_on_reward_applied)
+		bus.field_pickup_collected.connect(_on_field_pickup_collected)
 		bus.stage_cleared.connect(_on_stage_cleared)
 		bus.boss_defeated.connect(_on_boss_defeated)
 	var profile := get_node_or_null("/root/ProfileState")
@@ -168,13 +169,28 @@ func _on_feedback_requested(request: Variant) -> void:
 
 
 func _on_reward_applied(result: Dictionary) -> void:
-	if not bool(result.get("ok", false)):
+	if not bool(result.get("applied", result.get("ok", false))):
+		return
+	var transaction_id := String(result.get("transaction_id", ""))
+	if transaction_id.begins_with("field:"):
 		return
 	request_feedback({
 		"cue_id": &"reward",
 		"context": {
 			"source": "reward_applied",
-			"transaction_id": String(result.get("transaction_id", "")),
+			"transaction_id": transaction_id,
+		},
+	})
+
+
+func _on_field_pickup_collected(result: Dictionary) -> void:
+	if not bool(result.get("applied", false)):
+		return
+	request_feedback({
+		"cue_id": &"reward",
+		"context": {
+			"source": "field_pickup",
+			"pickup_id": String(result.get("pickup_id", "")),
 		},
 	})
 
