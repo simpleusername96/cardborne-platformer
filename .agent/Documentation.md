@@ -34,8 +34,10 @@
   player-facing flow.
 - `docs/architecture/FIRST_SLICE_ARCHITECTURE.md` defines runtime ownership and
   implementation boundaries.
-- `.agent/execplans/2026-07-12-actual-game-production-roadmap.md` is the completed
-  implementation record; there is no active ExecPlan.
+- `.agent/execplans/2026-07-13-player-experience-refinement.md` is the active plan for
+  traversal safety, field items, combat spacing, and production UI replacement.
+- `.agent/execplans/2026-07-12-actual-game-production-roadmap.md` remains the completed
+  first-run implementation record.
 - Provisional design JSON was retired after all runtime owners moved to typed Godot
   Resources. Git history remains the archive.
 
@@ -110,6 +112,7 @@ Read in this order:
 
 ## Next Implementation Entry
 
-The first complete-run roadmap is done. Start the next implementation only from
-owner playtest findings or an explicitly scoped expansion plan; do not reopen the
-retired testbed or parallel JSON catalogs.
+Execute `.agent/execplans/2026-07-13-player-experience-refinement.md` in order. Start
+with its baseline and guaranteed-traversal phases, and do not use field items or UI
+polish to conceal invalid room geometry. Keep the retired testbed and parallel JSON
+catalogs retired.

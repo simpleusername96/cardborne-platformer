@@ -15,13 +15,15 @@ game specifications.
 | 6 | `design/PROGRESSION_EQUIPMENT_ECONOMY.md` | Levels, cards, equipment, currencies, and settlement. |
 | 7 | `design/PLAYER_FACING_FLOW.md` | Navigation, HUD, choices, rest, settings, and result behavior. |
 | 8 | `architecture/FIRST_SLICE_ARCHITECTURE.md` | Runtime ownership and implementation contracts. |
-| 9 | `.agent/execplans/2026-07-12-actual-game-production-roadmap.md` | Completed first-run implementation record. |
+| 9 | `../.agent/execplans/2026-07-13-player-experience-refinement.md` | Active traversal, combat, field-item, and production UI refinement plan. |
 
 ## Supporting Material
 
 - `data/RUNTIME_CATALOG_INDEX.md` maps gameplay domains to typed runtime owners.
 - `release/FIRST_COMPLETE_RUN_RC1.md` records the playable release candidate and
   its player/operator verification paths.
+- `.agent/execplans/2026-07-12-actual-game-production-roadmap.md` is the completed
+  first-run implementation record.
 - `research/third_party_adoption_ledger.md` is the active external adoption record.
 - Dated surveys/deep dives are archived evidence; `references/` contains advisory
   candidates. Neither is product authority.
