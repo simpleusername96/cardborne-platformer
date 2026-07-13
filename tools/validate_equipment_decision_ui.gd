@@ -73,6 +73,15 @@ func _validate_character_select(viewport_size: Vector2i) -> void:
 			_collect_text(detail).contains("->") or _collect_text(detail).contains("behavior"),
 			"candidate equipment should show exact deltas or an honest behavior-only state"
 		)
+		picker.grab_focus()
+		screen.call("_commit_slot_action", "armor")
+		screen.call("show_profile_command_result", {"ok": true, "message": "Loadout updated."})
+		await _settle()
+		var refreshed_picker := screen.find_child("Slot_armor", true, false) as OptionButton
+		_expect(
+			refreshed_picker != null and root.gui_get_focus_owner() == refreshed_picker,
+			"equipment refresh should restore focus to the edited slot"
+		)
 	var stat_grid := screen.find_child("StatGrid", true, false) as GridContainer
 	_expect(stat_grid != null, "character select should keep effective stats visible")
 	if stat_grid != null:

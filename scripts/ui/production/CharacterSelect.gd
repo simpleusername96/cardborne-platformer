@@ -31,6 +31,7 @@ var _mastery_open: bool = false
 var _selected_slot_items: Dictionary = {}
 var _selected_mastery_id: StringName
 var _equipment_detail: Control
+var _focus_after_refresh: StringName = &""
 var _compact_layout: bool = false
 
 
@@ -236,7 +237,25 @@ func _refresh() -> void:
 		_build_loadout_view()
 	_mode_button.text = "Loadout" if _mastery_open else "Mastery"
 	_start_button.visible = not _mastery_open
-	if not _character_buttons.is_empty() and not _mastery_open:
+	_restore_focus_after_refresh()
+
+
+func _restore_focus_after_refresh() -> void:
+	var requested_name := _focus_after_refresh
+	_focus_after_refresh = &""
+	if requested_name != &"":
+		var requested := find_child(String(requested_name), true, false) as Control
+		if (
+			requested != null
+			and requested.is_visible_in_tree()
+			and requested.focus_mode != Control.FOCUS_NONE
+			and (not (requested is BaseButton) or not (requested as BaseButton).disabled)
+		):
+			requested.grab_focus()
+			return
+	if _mastery_open:
+		_mode_button.grab_focus()
+	elif not _character_buttons.is_empty():
 		_character_buttons[selected_index].grab_focus()
 
 
@@ -425,6 +444,7 @@ func _update_slot_action(button: Button, slot_id: String, equipped_id: String) -
 func _commit_slot_action(slot_id: String) -> void:
 	var option: Dictionary = _selected_slot_items.get(slot_id, {})
 	var item_id := StringName(option.get("id", ""))
+	_focus_after_refresh = StringName("Slot_%s" % slot_id)
 	equipment_action_requested.emit(
 		StringName(_profiles[selected_index].id),
 		StringName(slot_id),
@@ -498,6 +518,8 @@ func _build_mastery_view() -> void:
 	for row in mastery_rows:
 		var node := Button.new()
 		var state := _mastery_state(row, purchased_ids)
+		var node_id := StringName(row.get("id", ""))
+		node.name = "Mastery_%s" % node_id
 		node.text = "%s\n%s  %s" % [
 			row.get("display_name", "Unknown"),
 			String(row.get("depth", "")).to_upper(),
@@ -506,9 +528,9 @@ func _build_mastery_view() -> void:
 		node.custom_minimum_size = Vector2(0.0, 64.0)
 		node.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		Styles.apply_button(node, profile.visual_color, state != "AVAILABLE")
-		var node_id := StringName(row.get("id", ""))
 		node.pressed.connect(func() -> void:
 			_selected_mastery_id = node_id
+			_focus_after_refresh = StringName(node.name)
 			_refresh()
 		)
 		grid.add_child(node)
@@ -562,12 +584,14 @@ func _mastery_state(row: Dictionary, purchased_ids: Array[String]) -> String:
 
 
 func _commit_mastery_purchase() -> void:
+	_focus_after_refresh = StringName("Mastery_%s" % _selected_mastery_id)
 	mastery_purchase_requested.emit(
 		StringName(_profiles[selected_index].id), _selected_mastery_id
 	)
 
 
 func _commit_respec() -> void:
+	_focus_after_refresh = &"ModeButton"
 	mastery_respec_requested.emit(StringName(_profiles[selected_index].id))
 
 
