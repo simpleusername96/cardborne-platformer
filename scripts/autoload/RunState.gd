@@ -11,6 +11,7 @@ const NORMAL_STAGE_COUNT := RunPhase.NORMAL_STAGE_COUNT
 const CARD_REROLL_COST := 12
 const REST_HEAL_COST := 8
 const REST_HEAL_AMOUNT := 2
+const MAX_CONSUMABLE_CHARGES := 1
 const CONSUMABLES: Dictionary = {
 	"small_potion": {"display_name": "Small Potion", "cost": 8, "description": "Heal 2."},
 	"dash_tonic": {"display_name": "Dash Tonic", "cost": 10, "description": "Dash cooldown -0.12 s this stage."},
@@ -44,6 +45,7 @@ var _unsettled_materials: Dictionary = {}
 var _micro_upgrade_stacks: Dictionary = {}
 var _card_stacks: Dictionary = {}
 var _applied_reward_ids: Dictionary = {}
+var _applied_field_pickup_ids: Dictionary = {}
 var _stage_cache_discoveries: Dictionary = {}
 var _pending_level_choices: int = 0
 var _pending_level_offer: Array[StringName] = []
@@ -135,6 +137,7 @@ func start_new_run(profile_index: int = -1, requested_seed: int = -1) -> bool:
 	_micro_upgrade_stacks.clear()
 	_card_stacks.clear()
 	_applied_reward_ids.clear()
+	_applied_field_pickup_ids.clear()
 	_stage_cache_discoveries.clear()
 	_pending_level_choices = 0
 	_pending_level_offer.clear()
@@ -379,6 +382,95 @@ func apply_reward_transaction(transaction: RewardTransaction) -> RewardResult:
 
 func has_applied_reward(transaction_id: StringName) -> bool:
 	return _applied_reward_ids.has(String(transaction_id))
+
+
+func apply_field_pickup(
+	pickup_id: StringName,
+	definition: FieldPickupDefinition,
+	player: Node = null
+) -> Dictionary:
+	if pickup_id == &"" or definition == null or not definition.validate_definition().is_empty():
+		return _field_pickup_result(false, false, pickup_id, definition, 0.0, "Pickup is unavailable.")
+	if has_terminal_settlement() or current_health <= 0:
+		return _field_pickup_result(false, false, pickup_id, definition, 0.0, "Run is already settled.")
+	var pickup_key := String(pickup_id)
+	if _applied_field_pickup_ids.has(pickup_key):
+		return _field_pickup_result(false, true, pickup_id, definition, 0.0, "Pickup was already collected.")
+
+	var applied_amount := 0.0
+	match definition.effect_type:
+		FieldPickupDefinition.EFFECT_HEAL:
+			if current_health >= max_health:
+				return _field_pickup_result(false, false, pickup_id, definition, 0.0, "Health is already full.")
+			var previous_health := current_health
+			heal_player(int(definition.amount))
+			applied_amount = float(current_health - previous_health)
+		FieldPickupDefinition.EFFECT_REFILL_CONSUMABLE:
+			if consumable_charges >= MAX_CONSUMABLE_CHARGES:
+				return _field_pickup_result(false, false, pickup_id, definition, 0.0, "Consumable charge is already full.")
+			var previous_charges := consumable_charges
+			consumable_charges = mini(
+				consumable_charges + int(definition.amount),
+				MAX_CONSUMABLE_CHARGES
+			)
+			applied_amount = float(consumable_charges - previous_charges)
+			_publish_state()
+		FieldPickupDefinition.EFFECT_REDUCE_SKILL_COOLDOWNS:
+			if player == null or not player.has_method("apply_skill_cooldown_recovery"):
+				return _field_pickup_result(false, false, pickup_id, definition, 0.0, "No skill cooldown can recover.")
+			var reduced: Variant = player.call("apply_skill_cooldown_recovery", definition.amount)
+			if not reduced is Array or reduced.is_empty():
+				return _field_pickup_result(false, false, pickup_id, definition, 0.0, "No skill cooldown can recover.")
+			applied_amount = definition.amount
+		FieldPickupDefinition.EFFECT_GRANT_CURRENCY:
+			var transaction_id := StringName("field:%s" % pickup_id)
+			var transaction := RewardTransaction.new(
+				transaction_id,
+				definition.id,
+				{String(definition.currency_id): int(definition.amount)}
+			)
+			var reward_result := apply_reward_transaction(transaction)
+			if reward_result.duplicate:
+				_applied_field_pickup_ids[pickup_key] = true
+				return _field_pickup_result(false, true, pickup_id, definition, 0.0, "Pickup was already collected.")
+			if not reward_result.applied:
+				return _field_pickup_result(false, false, pickup_id, definition, 0.0, reward_result.message)
+			applied_amount = definition.amount
+		_:
+			return _field_pickup_result(false, false, pickup_id, definition, 0.0, "Pickup effect is unsupported.")
+
+	_applied_field_pickup_ids[pickup_key] = true
+	return _field_pickup_result(
+		true,
+		false,
+		pickup_id,
+		definition,
+		applied_amount,
+		"%s collected." % definition.display_name
+	)
+
+
+func _field_pickup_result(
+	applied: bool,
+	duplicate: bool,
+	pickup_id: StringName,
+	definition: FieldPickupDefinition,
+	applied_amount: float,
+	message: String
+) -> Dictionary:
+	return {
+		"ok": applied or duplicate,
+		"applied": applied,
+		"duplicate": duplicate,
+		"pickup_id": String(pickup_id),
+		"definition_id": String(definition.id) if definition != null else "",
+		"display_name": definition.display_name if definition != null else "Pickup",
+		"effect_type": String(definition.effect_type) if definition != null else "",
+		"amount": applied_amount,
+		"currency_id": String(definition.currency_id) if definition != null else "",
+		"icon_id": String(definition.icon_id) if definition != null else "",
+		"message": message,
+	}
 
 
 func get_reward_resolution_context() -> Dictionary:

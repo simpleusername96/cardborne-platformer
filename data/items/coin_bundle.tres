@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="FieldPickupDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/items/FieldPickupDefinition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"coin_bundle"
+display_name = "Coin Bundle"
+effect_type = &"grant_currency"
+amount = 3.0
+currency_id = &"coin"
+icon_id = &"pickup_coin"
+visual_color = Color(0.95, 0.70, 0.24, 1)

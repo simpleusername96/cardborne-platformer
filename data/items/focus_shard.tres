@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="FieldPickupDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/items/FieldPickupDefinition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"focus_shard"
+display_name = "Focus Shard"
+effect_type = &"reduce_skill_cooldowns"
+amount = 1.25
+icon_id = &"pickup_focus"
+visual_color = Color(0.43, 0.78, 0.96, 1)

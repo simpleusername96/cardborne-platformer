@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="FieldPickupDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/items/FieldPickupDefinition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"slime_residue_droplet"
+display_name = "Slime Residue"
+effect_type = &"grant_currency"
+amount = 1.0
+currency_id = &"slime_residue"
+icon_id = &"pickup_residue"
+visual_color = Color(0.57, 0.82, 0.38, 1)

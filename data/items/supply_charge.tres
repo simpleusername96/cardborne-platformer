@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="FieldPickupDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/items/FieldPickupDefinition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"supply_charge"
+display_name = "Supply Charge"
+effect_type = &"refill_consumable"
+amount = 1.0
+icon_id = &"pickup_supply"
+visual_color = Color(0.30, 0.73, 0.92, 1)
