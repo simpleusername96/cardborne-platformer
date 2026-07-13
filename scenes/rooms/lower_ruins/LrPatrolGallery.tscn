@@ -1,7 +1,9 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/stages/RoomTemplateHost.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/stages/RoomAnchor.gd" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/stages/components/FieldPickup.tscn" id="3_field_pickup"]
+[ext_resource type="Resource" path="res://data/items/vital_shard.tres" id="4_vital_shard"]
 
 [sub_resource type="RectangleShape2D" id="EntryMassShape"]
 size = Vector2(320, 280)
@@ -152,5 +154,12 @@ required = true
 [node name="CameraBounds" type="Node2D" parent="."]
 metadata/bounds = Rect2(0, 0, 1120, 720)
 [node name="Validation" type="Node2D" parent="."]
+
+[node name="FieldPickups" type="Node2D" parent="."]
+
+[node name="PatrolVitalShard" parent="FieldPickups" instance=ExtResource("3_field_pickup")]
+position = Vector2(1080, 570)
+pickup_id = &"ruin_patrol_vital_01"
+definition = ExtResource("4_vital_shard")
 metadata/safe_entry_radius = 240.0
 metadata/max_required_step = 20.0

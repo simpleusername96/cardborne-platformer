@@ -1,8 +1,10 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/stages/RoomTemplateHost.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/stages/Climbable.gd" id="2"]
 [ext_resource type="Script" path="res://scripts/stages/RoomAnchor.gd" id="3"]
+[ext_resource type="PackedScene" path="res://scenes/stages/components/FieldPickup.tscn" id="4_field_pickup"]
+[ext_resource type="Resource" path="res://data/items/sky_thread_wisp.tres" id="5_sky_thread"]
 
 [sub_resource type="RectangleShape2D" id="ShelfShape"]
 size = Vector2(320, 200)
@@ -180,6 +182,13 @@ metadata/support_id = &"sunken_exit_shelf"
 [node name="CameraBounds" type="Node2D" parent="."]
 metadata/bounds = Rect2(0, 0, 1280, 720)
 [node name="Validation" type="Node2D" parent="."]
+
+[node name="FieldPickups" type="Node2D" parent="."]
+
+[node name="SunkenThreadWisp" parent="FieldPickups" instance=ExtResource("4_field_pickup")]
+position = Vector2(880, 620)
+pickup_id = &"flooded_cache_thread_01"
+definition = ExtResource("5_sky_thread")
 metadata/required_route = false
 metadata/minimum_optional_landing = 180.0
 metadata/drop_depth = 130.0

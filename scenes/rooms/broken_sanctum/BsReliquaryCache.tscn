@@ -1,7 +1,9 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/stages/RoomTemplateHost.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/stages/RoomAnchor.gd" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/stages/components/FieldPickup.tscn" id="3_field_pickup"]
+[ext_resource type="Resource" path="res://data/items/slime_residue_droplet.tres" id="4_slime_residue"]
 
 [sub_resource type="RectangleShape2D" id="SideMassShape"]
 size = Vector2(400, 100)
@@ -141,6 +143,13 @@ metadata/support_id = &"reliquary_cache_east"
 [node name="CameraBounds" type="Node2D" parent="."]
 metadata/bounds = Rect2(0, 0, 1280, 720)
 [node name="Validation" type="Node2D" parent="."]
+
+[node name="FieldPickups" type="Node2D" parent="."]
+
+[node name="ReliquaryResidueDroplet" parent="FieldPickups" instance=ExtResource("3_field_pickup")]
+position = Vector2(920, 590)
+pickup_id = &"sanctum_reliquary_residue_01"
+definition = ExtResource("4_slime_residue")
 metadata/required_route = false
 metadata/minimum_optional_landing = 180.0
 metadata/branch_socket_id = &"reliquary_cache_branch"

@@ -1,7 +1,9 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/stages/RoomTemplateHost.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/stages/RoomAnchor.gd" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/stages/components/FieldPickup.tscn" id="3_field_pickup"]
+[ext_resource type="Resource" path="res://data/items/focus_shard.tres" id="4_focus_shard"]
 
 [sub_resource type="RectangleShape2D" id="WestMassShape"]
 size = Vector2(400, 100)
@@ -229,6 +231,13 @@ metadata/support_id = &"crossfire_center_floor"
 [node name="CameraBounds" type="Node2D" parent="."]
 metadata/bounds = Rect2(0, 0, 1280, 720)
 [node name="Validation" type="Node2D" parent="."]
+
+[node name="FieldPickups" type="Node2D" parent="."]
+
+[node name="CrossfireFocusShard" parent="FieldPickups" instance=ExtResource("3_field_pickup")]
+position = Vector2(700, 570)
+pickup_id = &"sanctum_crossfire_focus_01"
+definition = ExtResource("4_focus_shard")
 metadata/safe_entry_radius = 240.0
 metadata/minimum_critical_landing = 220.0
 metadata/max_required_step = 20.0
