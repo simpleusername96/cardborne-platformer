@@ -1,7 +1,9 @@
 param(
   [switch] $Full,
   [switch] $SkipImport,
-  [switch] $VerboseOutput
+  [switch] $VerboseOutput,
+  [ValidateRange(1, 3600)]
+  [int] $ValidatorTimeoutSeconds = 180
 )
 
 $ErrorActionPreference = "Stop"
@@ -80,14 +82,70 @@ function Write-ValidationOutput {
   }
 }
 
+function Invoke-GodotCommand {
+  param(
+    [string[]] $Arguments,
+    [string] $Label,
+    [hashtable] $Environment = @{}
+  )
+
+  $startInfo = [System.Diagnostics.ProcessStartInfo]::new()
+  $startInfo.FileName = (Get-Process -Id $PID).Path
+  $startInfo.WorkingDirectory = $repoRoot
+  $startInfo.UseShellExecute = $false
+  $startInfo.RedirectStandardOutput = $true
+  $startInfo.RedirectStandardError = $true
+  foreach ($key in $Environment.Keys) {
+    $startInfo.Environment[[string] $key] = [string] $Environment[$key]
+  }
+  foreach ($argument in @("-NoLogo", "-NoProfile", "-NonInteractive", "-File", $godot) + $Arguments) {
+    $startInfo.ArgumentList.Add([string] $argument)
+  }
+
+  $process = [System.Diagnostics.Process]::new()
+  $process.StartInfo = $startInfo
+  if (-not $process.Start()) {
+    throw "Unable to start $Label."
+  }
+  $standardOutput = $process.StandardOutput.ReadToEndAsync()
+  $standardError = $process.StandardError.ReadToEndAsync()
+  $timedOut = -not $process.WaitForExit($ValidatorTimeoutSeconds * 1000)
+  if ($timedOut) {
+    try {
+      $process.Kill($true)
+    } catch {
+      $process.Kill()
+    }
+  }
+  $process.WaitForExit()
+
+  $lines = @()
+  foreach ($text in @($standardOutput.GetAwaiter().GetResult(), $standardError.GetAwaiter().GetResult())) {
+    if (-not [string]::IsNullOrWhiteSpace($text)) {
+      $lines += @($text -split "\r?\n")
+    }
+  }
+  return [PSCustomObject]@{
+    Lines = $lines
+    ExitCode = if ($timedOut) { -1 } else { $process.ExitCode }
+    TimedOut = $timedOut
+  }
+}
+
 Push-Location -LiteralPath $repoRoot
 try {
   if (-not $SkipImport) {
     Write-Output "[release] Godot import"
-    $importOutput = @(& $godot --path $repoRoot --headless --import 2>&1)
-    $importFailed = $LASTEXITCODE -ne 0 -or ($importOutput -match "(SCRIPT ERROR:|ERROR:)")
+    $importResult = Invoke-GodotCommand -Arguments @(
+      "--path", $repoRoot, "--headless", "--import"
+    ) -Label "Godot import"
+    $importOutput = @($importResult.Lines)
+    $importFailed = $importResult.TimedOut -or $importResult.ExitCode -ne 0 -or ($importOutput -match "(SCRIPT ERROR:|ERROR:)")
     Write-ValidationOutput -Lines $importOutput -Failed $importFailed
     if ($importFailed) {
+      if ($importResult.TimedOut) {
+        throw "Godot import timed out after $ValidatorTimeoutSeconds seconds."
+      }
       throw "Godot import failed."
     }
   }
@@ -99,11 +157,24 @@ try {
       throw "Release validator is missing: $scriptName"
     }
     Write-Output "[release] $scriptName"
-    $output = @(& $godot --path $repoRoot --headless --script "res://tools/$scriptName" 2>&1)
-    $exitCode = $LASTEXITCODE
-    $failed = $exitCode -ne 0 -or ($output -match "(SCRIPT ERROR:|ERROR:)")
+    $validatorArguments = @(
+      "--path", $repoRoot, "--headless", "--script", "res://tools/$scriptName"
+    )
+    $validatorEnvironment = @{}
+    if ($Full -and $scriptName -eq "validate_broken_sanctum_rooms.gd") {
+      $validatorEnvironment["CARDBORNE_INCLUDE_RANDOM_PLANNER"] = "1"
+    }
+    $result = Invoke-GodotCommand `
+      -Arguments $validatorArguments `
+      -Label $scriptName `
+      -Environment $validatorEnvironment
+    $output = @($result.Lines)
+    $failed = $result.TimedOut -or $result.ExitCode -ne 0 -or ($output -match "(SCRIPT ERROR:|ERROR:)")
     Write-ValidationOutput -Lines $output -Failed $failed
     if ($failed) {
+      if ($result.TimedOut) {
+        throw "Release validator timed out after $ValidatorTimeoutSeconds seconds: $scriptName"
+      }
       throw "Release validator failed: $scriptName"
     }
     $completed += 1

@@ -46,8 +46,16 @@ func _run() -> void:
 
 	var profile := _build_profile()
 	_append_errors(profile.validate_definition(), "Focused Stage 3 profile")
-	await _validate_planner_and_assembly(catalog, profile, limits)
+	if _include_random_planner():
+		await _validate_planner_and_assembly(catalog, profile, limits)
 	_finish()
+
+
+func _include_random_planner() -> bool:
+	return (
+		OS.get_environment("CARDBORNE_INCLUDE_RANDOM_PLANNER") == "1"
+		or OS.get_cmdline_user_args().has("--include-random-planner")
+	)
 
 
 func _build_catalog() -> RoomCatalog:
@@ -701,7 +709,11 @@ func _expect(condition: bool, message: String) -> void:
 
 func _finish() -> void:
 	if _failures.is_empty():
-		print("BROKEN_SANCTUM_ROOM_VALIDATION_OK rooms=11 combat_variants=3 optional_branches=2")
+		var planner_mode := "full" if _include_random_planner() else "dormant"
+		print(
+			"BROKEN_SANCTUM_ROOM_VALIDATION_OK rooms=11 planner=%s"
+			% planner_mode
+		)
 		quit(0)
 		return
 	for failure in _failures:

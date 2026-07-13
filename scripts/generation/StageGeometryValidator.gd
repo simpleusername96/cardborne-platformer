@@ -1,6 +1,8 @@
 class_name StageGeometryValidator
 extends RefCounted
 
+## Validates authored support metadata and topology; runtime fixtures own collision-swept traversal.
+
 const MIN_CRITICAL_LANDING_WIDTH := 220.0
 const POSITION_TOLERANCE := 1.0
 const LOCAL_ROUTE_SCOPE := &"room_local"
