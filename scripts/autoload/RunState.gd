@@ -563,11 +563,15 @@ func preview_micro_upgrade(upgrade_id: StringName) -> Dictionary:
 	if upgrade == null:
 		return {"ok": false, "message": "Upgrade definition is unavailable."}
 	if upgrade.recovery_choice:
+		var recovery_health_after := mini(current_health + upgrade.heal_on_apply, max_health)
 		return {
 			"ok": true,
 			"upgrade_id": String(upgrade.id),
 			"changes": {},
 			"heal": upgrade.heal_on_apply,
+			"current_health_before": current_health,
+			"current_health_after": recovery_health_after,
+			"max_health_after": max_health,
 		}
 	var candidate_stacks := _micro_upgrade_stacks.duplicate(true)
 	var next_stack := int(candidate_stacks.get(String(upgrade.id), 0)) + 1
@@ -586,11 +590,17 @@ func preview_micro_upgrade(upgrade_id: StringName) -> Dictionary:
 		var after := candidate.get_stat(stat_id)
 		if not is_equal_approx(before, after):
 			changes[String(stat_id)] = {"before": before, "after": after}
+	var maximum_health_after := roundi(candidate.get_stat(&"max_health"))
+	var current_health_after := mini(current_health, maximum_health_after)
+	current_health_after = mini(current_health_after + upgrade.heal_on_apply, maximum_health_after)
 	return {
 		"ok": true,
 		"upgrade_id": String(upgrade.id),
 		"changes": changes,
 		"heal": upgrade.heal_on_apply,
+		"current_health_before": current_health,
+		"current_health_after": current_health_after,
+		"max_health_after": maximum_health_after,
 	}
 
 

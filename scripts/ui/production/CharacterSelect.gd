@@ -384,7 +384,7 @@ func _show_loadout_option(slot_id: String, option: Dictionary, equipped_id: Stri
 	if item_id == equipped_id:
 		state_text = "EQUIPPED"
 	elif owned:
-		state_text = "OWNED | READY TO EQUIP"
+		state_text = "OWNED | AVAILABLE"
 	else:
 		state_text = "LOCKED | %s" % _cost_text(option.get("unlock_costs", {}), false)
 	var empty_text := (

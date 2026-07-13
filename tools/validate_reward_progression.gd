@@ -21,6 +21,7 @@ func _run() -> void:
 	)
 	_validate_reward_replay()
 	_validate_level_choice()
+	_validate_health_preview()
 	_validate_overflow_and_caps()
 	_finish()
 
@@ -78,6 +79,30 @@ func _validate_level_choice() -> void:
 	var snapshot: Dictionary = _run_state.get_run_snapshot().to_dictionary()
 	snapshot["coins"] = 99999
 	_expect(_run_state.coins != 99999, "run snapshots should be copy-safe")
+
+
+func _validate_health_preview() -> void:
+	_expect(_run_state.start_new_run(0, 44022), "health preview fixture run should start")
+	_run_state.current_health = 3
+	var vitality: Dictionary = _run_state.preview_micro_upgrade(&"micro_vitality")
+	_expect(bool(vitality.get("ok", false)), "Vitality should provide an available preview")
+	_expect(
+		int(vitality.get("current_health_before", -1)) == 3,
+		"Vitality preview should expose authoritative current health"
+	)
+	_expect(
+		int(vitality.get("current_health_after", -1)) == 4,
+		"Vitality preview should include its immediate heal"
+	)
+	_expect(
+		int(vitality.get("max_health_after", -1)) == 7,
+		"Vitality preview should include its maximum-health increase"
+	)
+	var recovery: Dictionary = _run_state.preview_micro_upgrade(&"micro_recovery")
+	_expect(
+		int(recovery.get("current_health_after", -1)) == 5,
+		"Recovery preview should use the same capped heal rule as commit"
+	)
 
 
 func _validate_overflow_and_caps() -> void:

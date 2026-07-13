@@ -32,13 +32,15 @@ static func for_level_upgrade(
 			))
 	var heal := int(preview.get("heal", 0))
 	if heal > 0:
-		var maximum_after := current_max_health
-		if changes.has("max_health"):
-			maximum_after = roundi(float(changes["max_health"].get("after", current_max_health)))
-		var health_after := mini(current_health + heal, maximum_after)
-		var restored := health_after - current_health
+		var health_before := int(preview.get("current_health_before", current_health))
+		var maximum_after := int(preview.get("max_health_after", current_max_health))
+		var health_after := int(preview.get(
+			"current_health_after",
+			mini(health_before + heal, maximum_after)
+		))
+		var restored := health_after - health_before
 		mechanics.append("Current health %d -> %d%s" % [
-			current_health,
+			health_before,
 			health_after,
 			" (+%d restored)" % restored if restored > 0 else " (already full)",
 		])
