@@ -33,8 +33,11 @@ func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_build_ui()
 	var signal_bus := get_node_or_null("/root/SignalBus")
-	if signal_bus != null and signal_bus.has_signal("interactive_reward_claimed"):
-		signal_bus.connect("interactive_reward_claimed", present)
+	if signal_bus != null:
+		if signal_bus.has_signal("interactive_reward_claimed"):
+			signal_bus.connect("interactive_reward_claimed", present)
+		if signal_bus.has_signal("field_pickup_collected"):
+			signal_bus.connect("field_pickup_collected", _on_field_pickup_collected)
 
 
 func _notification(what: int) -> void:
@@ -45,9 +48,58 @@ func _notification(what: int) -> void:
 func present(receipt: Dictionary) -> void:
 	if not bool(receipt.get("applied", false)):
 		return
+	_enqueue_view_model(build_view_model(receipt))
+
+
+func build_field_pickup_view_model(receipt: Dictionary) -> Dictionary:
+	var effect_type := StringName(receipt.get("effect_type", &""))
+	var amount := maxf(float(receipt.get("amount", 0.0)), 0.0)
+	var amount_text := _format_amount(amount)
+	var display_name := String(receipt.get("display_name", "Field Pickup")).strip_edges()
+	if display_name.is_empty():
+		display_name = "Field Pickup"
+	match effect_type:
+		&"heal":
+			return _field_pickup_view_model(
+				"VITAL RESTORED", "%s  +%s HP" % [display_name, amount_text], Styles.RESIDUE
+			)
+		&"reduce_skill_cooldowns":
+			return _field_pickup_view_model(
+				"FOCUS RESTORED",
+				"%s  -%ss Skill Cooldowns" % [display_name, amount_text],
+				Styles.CYAN
+			)
+		&"refill_consumable":
+			var unit := "Consumable Charge" if is_equal_approx(amount, 1.0) else "Consumable Charges"
+			return _field_pickup_view_model(
+				"SUPPLY RESTOCKED", "%s  +%s %s" % [display_name, amount_text, unit], Styles.THREAD
+			)
+		&"grant_currency":
+			var currency_id := String(receipt.get("currency_id", ""))
+			var currency_label := String(GRANT_LABELS.get(currency_id, "Currency"))
+			var summary := "%s  +%s %s" % [display_name, amount_text, currency_label]
+			if display_name.nocasecmp_to(currency_label) == 0:
+				summary = "%s  +%s" % [display_name, amount_text]
+			return _field_pickup_view_model(
+				"CURRENCY COLLECTED", summary, Styles.AMBER
+			)
+	return _field_pickup_view_model(
+		"PICKUP COLLECTED",
+		String(receipt.get("message", "%s collected." % display_name)),
+		Styles.MOSS
+	)
+
+
+func _on_field_pickup_collected(receipt: Dictionary) -> void:
+	if not bool(receipt.get("applied", false)):
+		return
+	_enqueue_view_model(build_field_pickup_view_model(receipt))
+
+
+func _enqueue_view_model(view_model: Dictionary) -> void:
 	if _queue.size() >= MAX_QUEUE_SIZE:
 		_queue.pop_front()
-	_queue.append(receipt.duplicate(true))
+	_queue.append(view_model.duplicate(true))
 	if not _presenting:
 		_show_next()
 
@@ -99,7 +151,7 @@ func _show_next() -> void:
 	_set_presenting(true)
 	_display_serial += 1
 	var serial := _display_serial
-	var view_model := build_view_model(_queue.pop_front())
+	var view_model: Dictionary = _queue.pop_front()
 	_title.text = String(view_model["title"])
 	_title.add_theme_color_override("font_color", view_model["accent"] as Color)
 	_summary.text = String(view_model["summary"])
@@ -174,6 +226,16 @@ func _layout_panel() -> void:
 	_panel.offset_top = -168.0
 	_panel.offset_right = panel_width * 0.5
 	_panel.offset_bottom = -92.0
+
+
+func _field_pickup_view_model(title: String, summary: String, accent: Color) -> Dictionary:
+	return {"title": title, "summary": summary, "accent": accent}
+
+
+func _format_amount(amount: float) -> String:
+	if is_equal_approx(amount, roundf(amount)):
+		return str(int(roundf(amount)))
+	return ("%.2f" % amount).trim_suffix("0").trim_suffix(".")
 
 
 func _receipt_title(

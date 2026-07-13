@@ -97,19 +97,32 @@ func _validate_viewport(packed: PackedScene, viewport_size: Vector2i) -> void:
 	layout = hud.call("get_layout_snapshot")
 	_expect(bool(layout["prompt_visible"]), "active interaction should occupy the context lane")
 	var receipt: RewardReceiptPresenter = hud.get("reward_receipt")
-	receipt.present({
+	var chest_view := receipt.build_view_model({
 		"applied": true,
 		"reward_role": &"cache_reward",
 		"grants": {"coin": 7, "xp": 3, "rusted_scrap": 1},
 		"equipment_discoveries": [],
 	})
+	_expect(chest_view["title"] == "CHEST OPENED", "reward receipt should preserve its committed title")
+	_expect(String(chest_view["summary"]).contains("+7 Coins"), "reward receipt should preserve exact grant values")
+	var signal_bus := root.get_node("/root/SignalBus")
+	signal_bus.emit_signal("field_pickup_collected", {
+		"applied": true,
+		"effect_type": "heal",
+		"amount": 2.0,
+		"currency_id": "",
+		"display_name": "Vital Shard",
+		"message": "Vital Shard collected.",
+	})
 	await process_frame
 	layout = hud.call("get_layout_snapshot")
-	_expect(bool(layout["receipt_active"]), "committed receipt should occupy the context lane")
-	_expect(not bool(layout["prompt_visible"]), "receipt should suppress the overlapping prompt")
+	_expect(bool(layout["receipt_active"]), "field pickup receipt should occupy the context lane")
+	_expect(not bool(layout["prompt_visible"]), "field pickup receipt should suppress the overlapping prompt")
 	var receipt_view := receipt.get_display_snapshot()
-	_expect(receipt_view["title"] == "CHEST OPENED", "context lane should preserve exact receipt title")
-	_expect(String(receipt_view["summary"]).contains("+7 Coins"), "context lane should preserve exact receipt values")
+	_expect(receipt_view["title"] == "VITAL RESTORED", "field pickup should use the Vital receipt title")
+	_expect(receipt_view["summary"] == "Vital Shard  +2 HP", "field pickup should show the exact applied health")
+	_expect(not String(receipt_view["summary"]).contains("heal"), "field pickup receipt should not expose effect IDs")
+	_assert_field_pickup_view_models(receipt)
 
 	var action_before_boss := (hud.call("get_layout_snapshot") as Dictionary)["action_bar_rect"] as Rect2
 	hud.call("_on_stage_started", "slime_court", "Slime Court")
@@ -208,6 +221,32 @@ func _combat_snapshot(overrides: Dictionary = {}) -> Dictionary:
 	return snapshot
 
 
+func _assert_field_pickup_view_models(receipt: RewardReceiptPresenter) -> void:
+	var focus := receipt.build_field_pickup_view_model({
+		"effect_type": "reduce_skill_cooldowns",
+		"amount": 1.25,
+		"display_name": "Focus Shard",
+	})
+	_expect(focus["title"] == "FOCUS RESTORED", "Focus pickup should use the Focus receipt title")
+	_expect(focus["summary"] == "Focus Shard  -1.25s Skill Cooldowns", "Focus pickup should keep exact seconds")
+	var supply := receipt.build_field_pickup_view_model({
+		"effect_type": "refill_consumable",
+		"amount": 1.0,
+		"display_name": "Supply Charge",
+	})
+	_expect(supply["title"] == "SUPPLY RESTOCKED", "Supply pickup should use the Supply receipt title")
+	_expect(supply["summary"] == "Supply Charge  +1 Consumable Charge", "Supply pickup should keep exact charges")
+	var currency := receipt.build_field_pickup_view_model({
+		"effect_type": "grant_currency",
+		"amount": 1.0,
+		"currency_id": "rusted_scrap",
+		"display_name": "Rusted Scrap",
+	})
+	_expect(currency["title"] == "CURRENCY COLLECTED", "Currency pickup should use the Currency receipt title")
+	_expect(currency["summary"] == "Rusted Scrap  +1", "Currency pickup should keep exact grants")
+	_expect(not String(currency["summary"]).contains("rusted_scrap"), "Currency receipt should not expose raw IDs")
+
+
 func _inside(bounds: Rect2, rect: Rect2) -> bool:
 	return (
 		rect.position.x >= bounds.position.x - 0.1
@@ -233,7 +272,7 @@ func _expect(condition: bool, message: String) -> void:
 
 func _finish() -> void:
 	if _failures.is_empty():
-		print("GAMEPLAY_HUD_VALIDATION_OK viewports=3 slots=6 context_priority=receipt>prompt")
+		print("GAMEPLAY_HUD_VALIDATION_OK viewports=3 slots=6 field_pickup=signal>receipt>prompt")
 		quit(0)
 		return
 	for failure in _failures:

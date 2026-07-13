@@ -5,6 +5,7 @@ const OUTPUT_DIR := "res://.codex-runtime/uiux/gameplay_hud"
 const Styles = preload("res://scripts/ui/production/ProductionUIStyles.gd")
 const CAPTURES: Array[Dictionary] = [
 	{"name": "compact_low_health", "size": Vector2i(960, 540), "state": &"warrior"},
+	{"name": "compact_field_pickup", "size": Vector2i(960, 540), "state": &"field_pickup"},
 	{"name": "compact_boss_archer", "size": Vector2i(960, 540), "state": &"boss_archer"},
 	{"name": "desktop_assassin_prompt", "size": Vector2i(1280, 720), "state": &"assassin"},
 	{"name": "hd_boss_archer", "size": Vector2i(1920, 1080), "state": &"boss_archer"},
@@ -126,6 +127,16 @@ func _configure_state(hud: Control, state: StringName) -> void:
 	hud.call("_on_combat_state_changed", combat)
 	if state == &"assassin":
 		hud.call("_on_interaction_prompt_changed", "Open cache", true)
+	elif state == &"field_pickup":
+		var signal_bus := root.get_node("/root/SignalBus")
+		signal_bus.emit_signal("field_pickup_collected", {
+			"applied": true,
+			"effect_type": "reduce_skill_cooldowns",
+			"amount": 1.25,
+			"currency_id": "",
+			"display_name": "Focus Shard",
+			"message": "Focus Shard collected.",
+		})
 	elif state == &"warrior":
 		var receipt: RewardReceiptPresenter = hud.get("reward_receipt")
 		receipt.present({
