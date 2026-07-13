@@ -1,6 +1,7 @@
 extends SceneTree
 
 const CATALOG := preload("res://data/items/field_pickup_catalog.tres")
+const FIELD_PICKUP_SCENE := preload("res://scenes/stages/components/FieldPickup.tscn")
 
 class CooldownTarget:
 	extends Node
@@ -32,6 +33,7 @@ func _run() -> void:
 	_validate_consumable_refill()
 	_validate_cooldown_recovery()
 	_validate_currency_and_replay()
+	await _validate_actor_lifecycle()
 	_finish()
 
 
@@ -78,6 +80,34 @@ func _validate_currency_and_replay() -> void:
 	var duplicate: Dictionary = _run_state.apply_field_pickup(&"fixture_coins", coin_bundle)
 	_expect(bool(duplicate.get("duplicate", false)), "coin pickup should reject replay")
 	_expect(_run_state.coins == coins_before + 3, "replayed coin pickup must not grant twice")
+
+
+func _validate_actor_lifecycle() -> void:
+	_expect(_run_state.start_new_run(0, 913), "pickup actor fixture run should start")
+	_run_state.damage_player(2)
+	var health_before: int = _run_state.current_health
+	var pickup := FIELD_PICKUP_SCENE.instantiate() as FieldPickup
+	pickup.pickup_id = &"fixture_actor_vital"
+	pickup.definition = CATALOG.get_definition(&"vital_shard")
+	root.add_child(pickup)
+	var player := Node2D.new()
+	player.add_to_group("player")
+	root.add_child(player)
+	var receipts: Array[Dictionary] = []
+	var signal_bus := root.get_node_or_null("/root/SignalBus")
+	var receipt_handler := func(receipt: Dictionary) -> void: receipts.append(receipt)
+	signal_bus.field_pickup_collected.connect(receipt_handler)
+	pickup.call("_on_body_entered", player)
+	pickup.call("_on_body_entered", player)
+	await process_frame
+	_expect(_run_state.current_health == health_before + 1, "pickup actor should apply its effect")
+	_expect(receipts.size() == 1, "pickup actor should publish one collection receipt")
+	await create_timer(0.25).timeout
+	_expect(not is_instance_valid(pickup), "collected pickup actor should remove itself")
+	if signal_bus.field_pickup_collected.is_connected(receipt_handler):
+		signal_bus.field_pickup_collected.disconnect(receipt_handler)
+	player.queue_free()
+	await process_frame
 
 
 func _expect(condition: bool, message: String) -> void:
