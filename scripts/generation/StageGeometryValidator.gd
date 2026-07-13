@@ -4,6 +4,7 @@ extends RefCounted
 const MIN_CRITICAL_LANDING_WIDTH := 220.0
 const POSITION_TOLERANCE := 1.0
 const LOCAL_ROUTE_SCOPE := &"room_local"
+const ONE_WAY_COLLISION_LAYER := 2
 
 
 static func validate_assembly(
@@ -207,7 +208,14 @@ static func _validate_optional_return(
 		if target_host == null or from_socket == null or to_socket == null:
 			errors.append("Optional room '%s' return socket references are invalid." % room.id)
 			continue
+		if from_socket.transition_type == &"drop":
+			_validate_drop_return_contract(errors, room.id, host, target_host, from_socket, to_socket)
+			continue
 		if from_socket.transition_type != &"rope":
+			errors.append(
+				"Optional room '%s' uses unsupported return transition '%s'."
+				% [room.id, from_socket.transition_type]
+			)
 			continue
 		var rope := _find_climbable(host)
 		if rope == null:
@@ -231,6 +239,48 @@ static func _validate_optional_return(
 			to_socket,
 			movement_limits
 		)
+
+
+static func _validate_drop_return_contract(
+	errors: PackedStringArray,
+	room_id: StringName,
+	host: RoomTemplateHost,
+	target_host: RoomTemplateHost,
+	from_socket: RoomSocketData,
+	to_socket: RoomSocketData
+) -> void:
+	var source_surface := _surface_at(
+		_collect_support_surfaces(host),
+		from_socket.local_position.x,
+		from_socket.support_top
+	)
+	if source_surface.is_empty():
+		errors.append("Optional room '%s' drop return has no authored hatch." % room_id)
+	elif not bool(source_surface.get("one_way", false)):
+		errors.append("Optional room '%s' drop return is blocked by solid terrain." % room_id)
+	elif (int(source_surface.get("collision_layer", 0)) & ONE_WAY_COLLISION_LAYER) == 0:
+		errors.append("Optional room '%s' drop return hatch uses the wrong collision layer." % room_id)
+
+	var target_surface := _surface_at(
+		_collect_support_surfaces(target_host),
+		to_socket.local_position.x,
+		to_socket.support_top
+	)
+	if target_surface.is_empty():
+		errors.append("Optional room '%s' drop return has no target landing." % room_id)
+	var recovery := target_host.get_anchor_by_id(&"Recovery", to_socket.recovery_id)
+	if recovery == null:
+		errors.append("Optional room '%s' drop return has no target recovery." % room_id)
+	elif not target_surface.is_empty() and (
+		absf(recovery.position.y - to_socket.support_top) > POSITION_TOLERANCE
+		or recovery.position.x < float(target_surface.get("x", INF)) - POSITION_TOLERANCE
+		or recovery.position.x > (
+			float(target_surface.get("x", -INF))
+			+ float(target_surface.get("width", 0.0))
+			+ POSITION_TOLERANCE
+		)
+	):
+		errors.append("Optional room '%s' drop return misses its target recovery." % room_id)
 
 
 static func _validate_rope_support_contract(
@@ -485,6 +535,7 @@ static func _collect_support_surfaces(host: RoomTemplateHost) -> Array[Dictionar
 				"x": child.position.x - width * 0.5,
 				"width": width,
 				"top": float(child.get_meta("support_top", child.position.y)),
+				"collision_layer": child.collision_layer,
 				"one_way": (
 					root_name == &"OneWay"
 					or bool(child.get_meta("one_way", false))

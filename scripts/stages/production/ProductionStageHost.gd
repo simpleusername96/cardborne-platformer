@@ -4,7 +4,7 @@ const ENEMY_CATALOG: EnemyCatalog = preload("res://data/enemies/enemy_catalog.tr
 const ENEMY_SCENES: EnemySceneCatalog = preload("res://data/enemies/enemy_scene_catalog.tres")
 const HAZARD_CATALOG: HazardCatalog = preload("res://data/hazards/hazard_catalog.tres")
 const TERRAIN_STYLER := preload("res://scripts/visuals/TerrainPresentationStyler.gd")
-const FIXED_LAYOUT_VERSION := 1
+const FIXED_LAYOUT_VERSION := 3
 # Changing this seed intentionally versions every approved stage-content signature.
 const FIXED_LAYOUT_SEED_V1 := 0x43415244
 const STAGE_CONFIGS: Array[Dictionary] = [

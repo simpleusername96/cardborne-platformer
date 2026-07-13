@@ -116,9 +116,9 @@ metadata/endpoint_clearance = 8.0
 metadata/outside_exit_support = true
 metadata/route_scope = &"room_local"
 [node name="ReturnRope" type="Area2D" parent="Anchors/Objective"]
-position = Vector2(1040, 200)
+position = Vector2(1040, 180)
 script = ExtResource("3")
-climbable_size = Vector2(64, 640)
+climbable_size = Vector2(64, 680)
 visual_color = Color(0.78, 0.68, 0.4, 0.9)
 metadata/entry_support = &"material_crypt_return_shelf"
 metadata/exit_support = &"twin_choice_return_hatch"
@@ -174,4 +174,4 @@ metadata/return_socket_id = &"material_crypt_return"
 metadata/basin_return_rope_path = NodePath("../Anchors/Objective/BasinReturnRope")
 metadata/basin_return_rope_height = 120.0
 metadata/return_rope_path = NodePath("../Anchors/Objective/ReturnRope")
-metadata/return_rope_height = 640.0
+metadata/return_rope_height = 680.0

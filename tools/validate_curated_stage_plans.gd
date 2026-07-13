@@ -1,7 +1,7 @@
 extends SceneTree
 
 const PRODUCTION_STAGE_PATH := "res://scenes/stages/production/ProductionStageHost.tscn"
-const FIXED_LAYOUT_VERSION := 1
+const FIXED_LAYOUT_VERSION := 3
 const FIXED_LAYOUT_SEED_V1 := 0x43415244
 const RUN_SEEDS := [1103, 73102]
 const STAGES: Array[Dictionary] = [
@@ -9,19 +9,19 @@ const STAGES: Array[Dictionary] = [
 		"id": &"ruin_approach",
 		"catalog": "res://data/generation/lower_ruins_room_catalog.tres",
 		"rooms": "lr_start_shelf,lr_rise_steps,lr_patrol_gallery,lr_lower_upper_choice,lr_charge_lane,lr_exit_ascent,lr_destructible_cache",
-		"signature": "4644bc4f9578d982039a57ea6478e8fc6c2d6f10fda0642151bb7a57aeb515bd",
+		"signature": "4fcfbe982b997d0ba7124de916e90595c0c78c8c9d941a49f036cc20652526db",
 	},
 	{
 		"id": &"flooded_works",
 		"catalog": "res://data/generation/flooded_works_room_catalog.tres",
 		"rooms": "fw_flooded_entry,fw_rope_shaft,fw_poison_timing,fw_leaper_basin,fw_lower_upper_choice,fw_pump_gallery,fw_rest_forge,fw_sunken_cache",
-		"signature": "223d3c8eb033da302406aa46693cba7207c6c5b15f5dc52fbb4db45685b3ff0f",
+		"signature": "63841cf5889fd4757e58145eb1c287b911ac158151554689958a7b8c7e1289f2",
 	},
 	{
 		"id": &"broken_sanctum",
 		"catalog": "res://data/generation/broken_sanctum_room_catalog.tres",
 		"rooms": "bs_breach_entry,bs_shield_choke,bs_gate_switch_loop,bs_volatile_nave,bs_twin_reliquary_choice,bs_recovery_cloister,bs_sentry_crossfire,bs_exit_ascent,bs_material_crypt,bs_reliquary_cache",
-		"signature": "529d17c9dd36f28cbbf33c8f4d8f7e120c67fc6aeb1c9bdb3c2999f776cfd697",
+		"signature": "74ded5c61a48ba66d146f1190a7a06280acf227f94a6604d75544791a3fa2000",
 	},
 ]
 
@@ -87,7 +87,8 @@ func _validate_stage(stage_index: int, config: Dictionary, run_state: Node) -> v
 			_expect(plan_signature == plan_json.sha256_text(), "%s plan signature should cover complete map content." % config["id"])
 			_expect(
 				plan_signature == String(config["signature"]),
-				"%s approved V1 plan changed without a layout-version bump." % config["id"]
+				"%s approved V3 plan signature mismatch: expected %s, got %s."
+				% [config["id"], config["signature"], plan_signature]
 			)
 			if baseline_plan.is_empty():
 				baseline_plan = plan_json
@@ -119,6 +120,7 @@ func _validate_geometry_fixture(plan: StagePlan, config: Dictionary, run_state: 
 	if config["id"] == &"broken_sanctum":
 		var crypt := assembly.get_room_hosts().get("bs_material_crypt") as RoomTemplateHost
 		var choice := assembly.get_room_hosts().get("bs_twin_reliquary_choice") as RoomTemplateHost
+		var reliquary := assembly.get_room_hosts().get("bs_reliquary_cache") as RoomTemplateHost
 		var basin_rope := (
 			crypt.get_node_or_null("Anchors/Objective/BasinReturnRope") as Climbable
 			if crypt != null else null
@@ -131,9 +133,14 @@ func _validate_geometry_fixture(plan: StagePlan, config: Dictionary, run_state: 
 			choice.get_node_or_null("Terrain/LowerReturnHatch") as StaticBody2D
 			if choice != null else null
 		)
+		var upper_drop_hatch := (
+			reliquary.get_node_or_null("OneWay/ReturnHatch") as StaticBody2D
+			if reliquary != null else null
+		)
 		_expect(basin_rope != null, "Material Crypt should include its local basin rope.")
 		_expect(return_rope != null, "Material Crypt should include its cross-room return rope.")
 		_expect(hatch != null, "Twin Reliquary Choice should include its lower return hatch.")
+		_expect(upper_drop_hatch != null, "Upper Reliquary Cache should include a pass-through return hatch.")
 		_expect(basin_rope != return_rope, "Local and cross-room return ropes must be separate nodes.")
 		if basin_rope != null:
 			var original_x := basin_rope.position.x
@@ -159,6 +166,24 @@ func _validate_geometry_fixture(plan: StagePlan, config: Dictionary, run_state: 
 			hatch.set_meta("one_way", true)
 			if hatch_shape != null:
 				hatch_shape.one_way_collision = true
+		if upper_drop_hatch != null:
+			var original_collision_layer := upper_drop_hatch.collision_layer
+			upper_drop_hatch.collision_layer = 1
+			var wrong_layer_drop := StageGeometryValidator.validate_assembly(
+				plan, catalog, assembly, limits
+			)
+			_expect(
+				_has_message(wrong_layer_drop, "drop return hatch uses the wrong collision layer"),
+				"A drop hatch on the solid collision layer should fail validation."
+			)
+			upper_drop_hatch.collision_layer = original_collision_layer
+			upper_drop_hatch.position.x += 240.0
+			var blocked_drop := StageGeometryValidator.validate_assembly(plan, catalog, assembly, limits)
+			_expect(
+				_has_message(blocked_drop, "drop return has no authored hatch"),
+				"A solid floor at the upper cache return should fail drop-route validation."
+			)
+			upper_drop_hatch.position.x -= 240.0
 		var restored := StageGeometryValidator.validate_assembly(plan, catalog, assembly, limits)
 		_expect(
 			restored.is_empty(),
