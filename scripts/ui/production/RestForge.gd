@@ -30,6 +30,26 @@ func _ready() -> void:
 	_compact_layout = get_viewport_rect().size.y <= 600.0
 	_build_shell()
 	_render()
+	get_viewport().size_changed.connect(_on_viewport_size_changed)
+
+
+func _on_viewport_size_changed() -> void:
+	var compact := get_viewport_rect().size.y <= 600.0
+	if compact == _compact_layout:
+		return
+	var focus_owner := get_viewport().gui_get_focus_owner()
+	var focus_name: String = (
+		String(focus_owner.name)
+		if focus_owner != null and is_ancestor_of(focus_owner)
+		else ""
+	)
+	_compact_layout = compact
+	_content = null
+	_focus_targets.clear()
+	_clear(self)
+	_build_shell()
+	_render()
+	_previous_focus_name = focus_name
 
 
 func configure(snapshot: Dictionary, result: Dictionary = {}) -> void:

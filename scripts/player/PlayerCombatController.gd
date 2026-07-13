@@ -387,9 +387,24 @@ func reduce_longest_skill_cooldown(seconds: float) -> StringName:
 
 
 func reduce_all_skill_cooldowns(seconds: float) -> Array[StringName]:
+	var result := recover_all_skill_cooldowns(seconds)
+	var reduced: Array[StringName] = []
+	for skill_id in result.get("skill_ids", []):
+		reduced.append(StringName(skill_id))
+	return reduced
+
+
+func recover_all_skill_cooldowns(seconds: float) -> Dictionary:
 	var reduced: Array[StringName] = []
 	if seconds <= 0.0 or kit == null:
-		return reduced
+		return {
+			"skill_ids": reduced,
+			"skill_count": 0,
+			"max_seconds": 0.0,
+			"total_seconds": 0.0,
+		}
+	var max_seconds := 0.0
+	var total_seconds := 0.0
 	for skill in kit.skills:
 		if skill == null:
 			continue
@@ -398,15 +413,23 @@ func reduce_all_skill_cooldowns(seconds: float) -> Array[StringName]:
 		if remaining <= 0.0:
 			continue
 		var next_remaining := maxf(remaining - seconds, 0.0)
+		var applied_seconds := remaining - next_remaining
 		if next_remaining <= 0.0:
 			_cooldowns.erase(key)
 		else:
 			_cooldowns[key] = next_remaining
 		reduced.append(skill.id)
+		max_seconds = maxf(max_seconds, applied_seconds)
+		total_seconds += applied_seconds
 	reduced.sort()
 	if not reduced.is_empty():
 		_publish_state()
-	return reduced
+	return {
+		"skill_ids": reduced,
+		"skill_count": reduced.size(),
+		"max_seconds": max_seconds,
+		"total_seconds": total_seconds,
+	}
 
 
 func get_charge_fraction() -> float:
@@ -1261,13 +1284,21 @@ func _fixed_shockwave_damage(
 func _has_supported_ground(origin: Vector2) -> bool:
 	if not is_inside_tree():
 		return false
-	var query := PhysicsRayQueryParameters2D.create(
-		origin + Vector2(0.0, -4.0),
-		origin + Vector2(0.0, 30.0),
-		3
-	)
-	query.hit_from_inside = true
-	return not player.get_world_2d().direct_space_state.intersect_ray(query).is_empty()
+	var half_width := 6.0
+	var collision := player.get_node_or_null("Hurtbox/CollisionShape2D") as CollisionShape2D
+	if collision != null and collision.shape is RectangleShape2D:
+		half_width = maxf((collision.shape as RectangleShape2D).size.x * 0.5 - 2.0, 2.0)
+	for offset_x in [-half_width, 0.0, half_width]:
+		var sample_origin := origin + Vector2(offset_x, 0.0)
+		var query := PhysicsRayQueryParameters2D.create(
+			sample_origin + Vector2(0.0, -4.0),
+			sample_origin + Vector2(0.0, 30.0),
+			3
+		)
+		query.hit_from_inside = true
+		if player.get_world_2d().direct_space_state.intersect_ray(query).is_empty():
+			return false
+	return true
 
 
 func _consume_guard() -> void:
@@ -1558,7 +1589,7 @@ func _apply_tagged_step_in(definition: AttackDefinition, direction: int) -> void
 	if absf(allowed.x) < 0.5 or int(sign(allowed.x)) != direction:
 		return
 	var destination := body.global_position + allowed
-	# The micro-step is combat spacing only; walls and unsupported ledges cancel it.
+	# Collision plus three footprint rays keep this spacing step off walls and ledges.
 	if not _has_supported_ground(destination):
 		return
 	body.global_position = destination

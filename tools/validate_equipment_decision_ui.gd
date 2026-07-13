@@ -46,6 +46,7 @@ func _run() -> void:
 	for viewport_size in VIEWPORTS:
 		await _validate_character_select(viewport_size)
 		await _validate_rest_forge(viewport_size)
+	await _validate_live_resize()
 	await _validate_invalid_forge_state()
 	_finish()
 
@@ -122,6 +123,39 @@ func _validate_rest_forge(viewport_size: Vector2i) -> void:
 	_validate_no_raw_ids(screen, "rest forge")
 	screen.queue_free()
 	await process_frame
+
+
+func _validate_live_resize() -> void:
+	_set_viewport(Vector2i(1280, 720))
+	var character_select := (load(CHARACTER_SELECT_SCENE) as PackedScene).instantiate() as Control
+	root.add_child(character_select)
+	await _settle()
+	await _assert_live_resize(character_select, "character select")
+	character_select.queue_free()
+	await process_frame
+
+	_set_viewport(Vector2i(1280, 720))
+	var rest_forge := (load(REST_FORGE_SCENE) as PackedScene).instantiate() as Control
+	rest_forge.call("configure", _rest_snapshot)
+	root.add_child(rest_forge)
+	await _settle()
+	await _assert_live_resize(rest_forge, "rest forge")
+	rest_forge.queue_free()
+	await process_frame
+
+
+func _assert_live_resize(screen: Control, context: String) -> void:
+	_set_viewport(Vector2i(960, 540))
+	await _settle()
+	_expect(bool(screen.get("_compact_layout")), "%s should enter compact mode after live resize" % context)
+	_validate_bounds(screen, Vector2i(960, 540), "%s live compact" % context)
+	_validate_focus(screen, "%s live compact" % context)
+
+	_set_viewport(Vector2i(1920, 1080))
+	await _settle()
+	_expect(not bool(screen.get("_compact_layout")), "%s should leave compact mode after live resize" % context)
+	_validate_bounds(screen, Vector2i(1920, 1080), "%s live regular" % context)
+	_validate_focus(screen, "%s live regular" % context)
 
 
 func _validate_invalid_forge_state() -> void:

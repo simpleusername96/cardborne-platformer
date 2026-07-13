@@ -9,9 +9,14 @@ class CooldownTarget:
 	var recovered_seconds: float = 0.0
 
 
-	func apply_skill_cooldown_recovery(seconds: float) -> Array[StringName]:
+	func apply_skill_cooldown_recovery(seconds: float) -> Dictionary:
 		recovered_seconds += seconds
-		return [&"fixture_skill"]
+		return {
+			"skill_ids": [&"fixture_short", &"fixture_long"],
+			"skill_count": 2,
+			"max_seconds": 0.4,
+			"total_seconds": 0.65,
+		}
 
 
 var _failures: Array[String] = []
@@ -68,6 +73,9 @@ func _validate_cooldown_recovery() -> void:
 	var result: Dictionary = _run_state.apply_field_pickup(&"fixture_focus", focus, target)
 	_expect(bool(result.get("applied", false)), "focus pickup should recover active skill cooldowns")
 	_expect(is_equal_approx(target.recovered_seconds, 1.25), "focus pickup should use catalog value")
+	_expect(is_equal_approx(float(result.get("amount", 0.0)), 0.4), "focus receipt should use the largest applied recovery")
+	_expect(int(result.get("affected_skill_count", 0)) == 2, "focus receipt should count affected skills")
+	_expect(is_equal_approx(float(result.get("total_recovered_seconds", 0.0)), 0.65), "focus receipt should retain total recovery")
 	target.queue_free()
 
 

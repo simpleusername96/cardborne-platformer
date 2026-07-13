@@ -43,6 +43,29 @@ func _ready() -> void:
 	selected_index = clampi(RunState.selected_profile_index, 0, maxi(_profiles.size() - 1, 0))
 	_build_shell()
 	_refresh()
+	get_viewport().size_changed.connect(_on_viewport_size_changed)
+
+
+func _on_viewport_size_changed() -> void:
+	var compact := get_viewport_rect().size.y <= 600.0
+	if compact == _compact_layout:
+		return
+	var focus_owner := get_viewport().gui_get_focus_owner()
+	if focus_owner != null and is_ancestor_of(focus_owner):
+		_focus_after_refresh = StringName(focus_owner.name)
+	_compact_layout = compact
+	_character_buttons.clear()
+	_selected_labels.clear()
+	_content_host = null
+	_wallet_label = null
+	_status_label = null
+	_retry_button = null
+	_mode_button = null
+	_start_button = null
+	_equipment_detail = null
+	_clear_container(self)
+	_build_shell()
+	_refresh()
 
 
 func _unhandled_input(event: InputEvent) -> void:

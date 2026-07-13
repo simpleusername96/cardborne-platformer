@@ -64,9 +64,15 @@ func build_field_pickup_view_model(receipt: Dictionary) -> Dictionary:
 				"VITAL RESTORED", "%s  +%s HP" % [display_name, amount_text], Styles.RESIDUE
 			)
 		&"reduce_skill_cooldowns":
+			var skill_count := maxi(int(receipt.get("affected_skill_count", 1)), 1)
+			var summary := "%s  Cooldown -%ss" % [display_name, amount_text]
+			if skill_count > 1:
+				summary = "%s  %d cooldowns, up to -%ss" % [
+					display_name, skill_count, amount_text,
+				]
 			return _field_pickup_view_model(
 				"FOCUS RESTORED",
-				"%s  -%ss Skill Cooldowns" % [display_name, amount_text],
+				summary,
 				Styles.CYAN
 			)
 		&"refill_consumable":

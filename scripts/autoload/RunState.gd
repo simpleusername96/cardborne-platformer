@@ -399,6 +399,7 @@ func apply_field_pickup(
 		return _field_pickup_result(false, true, pickup_id, definition, 0.0, "Pickup was already collected.")
 
 	var applied_amount := 0.0
+	var result_details: Dictionary = {}
 	match definition.effect_type:
 		FieldPickupDefinition.EFFECT_HEAL:
 			if current_health >= max_health:
@@ -419,10 +420,14 @@ func apply_field_pickup(
 		FieldPickupDefinition.EFFECT_REDUCE_SKILL_COOLDOWNS:
 			if player == null or not player.has_method("apply_skill_cooldown_recovery"):
 				return _field_pickup_result(false, false, pickup_id, definition, 0.0, "No skill cooldown can recover.")
-			var reduced: Variant = player.call("apply_skill_cooldown_recovery", definition.amount)
-			if not reduced is Array or reduced.is_empty():
+			var recovery: Variant = player.call("apply_skill_cooldown_recovery", definition.amount)
+			if not recovery is Dictionary or int(recovery.get("skill_count", 0)) <= 0:
 				return _field_pickup_result(false, false, pickup_id, definition, 0.0, "No skill cooldown can recover.")
-			applied_amount = definition.amount
+			applied_amount = maxf(float(recovery.get("max_seconds", 0.0)), 0.0)
+			result_details = {
+				"affected_skill_count": int(recovery.get("skill_count", 0)),
+				"total_recovered_seconds": maxf(float(recovery.get("total_seconds", 0.0)), 0.0),
+			}
 		FieldPickupDefinition.EFFECT_GRANT_CURRENCY:
 			var transaction_id := StringName("field:%s" % pickup_id)
 			var transaction := RewardTransaction.new(
@@ -447,7 +452,8 @@ func apply_field_pickup(
 		pickup_id,
 		definition,
 		applied_amount,
-		"%s collected." % definition.display_name
+		"%s collected." % definition.display_name,
+		result_details
 	)
 
 
@@ -457,9 +463,10 @@ func _field_pickup_result(
 	pickup_id: StringName,
 	definition: FieldPickupDefinition,
 	applied_amount: float,
-	message: String
+	message: String,
+	details: Dictionary = {}
 ) -> Dictionary:
-	return {
+	var result := {
 		"ok": applied or duplicate,
 		"applied": applied,
 		"duplicate": duplicate,
@@ -472,6 +479,8 @@ func _field_pickup_result(
 		"icon_id": String(definition.icon_id) if definition != null else "",
 		"message": message,
 	}
+	result.merge(details, true)
+	return result
 
 
 func get_reward_resolution_context() -> Dictionary:

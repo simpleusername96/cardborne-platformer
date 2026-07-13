@@ -139,10 +139,10 @@ func heal_player(amount: int) -> int:
 	return maxi(RunState.current_health - previous_health, 0)
 
 
-func apply_skill_cooldown_recovery(seconds: float) -> Array[StringName]:
+func apply_skill_cooldown_recovery(seconds: float) -> Dictionary:
 	if seconds <= 0.0:
-		return []
-	return combat_controller.reduce_all_skill_cooldowns(seconds)
+		return {}
+	return combat_controller.recover_all_skill_cooldowns(seconds)
 
 
 func _try_use_consumable() -> void:
