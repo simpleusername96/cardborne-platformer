@@ -3,6 +3,8 @@ extends SceneTree
 const HUD_SCENE := "res://scenes/ui/production/ProductionHUD.tscn"
 const OUTPUT_DIR := "res://.codex-runtime/uiux/gameplay_hud"
 const Styles = preload("res://scripts/ui/production/ProductionUIStyles.gd")
+const SETTLE_FRAMES := 8
+const CLEANUP_FRAMES := 4
 const CAPTURES: Array[Dictionary] = [
 	{"name": "compact_low_health", "size": Vector2i(960, 540), "state": &"warrior"},
 	{"name": "compact_field_pickup", "size": Vector2i(960, 540), "state": &"field_pickup"},
@@ -25,8 +27,20 @@ func _run() -> void:
 		push_error("Gameplay HUD capture scene is unavailable.")
 		quit(1)
 		return
+	var requested_capture := OS.get_environment("GAMEPLAY_HUD_CAPTURE").strip_edges()
+	var matched_capture := false
 	for capture in CAPTURES:
+		if not requested_capture.is_empty() and capture["name"] != requested_capture:
+			continue
+		matched_capture = true
 		await _capture(packed, capture)
+	if not requested_capture.is_empty() and not matched_capture:
+		push_error("Unknown gameplay HUD capture: %s" % requested_capture)
+		_failed = true
+	if not _failed:
+		print("GAMEPLAY_HUD_CAPTURE_OK target=%s" % (
+			requested_capture if not requested_capture.is_empty() else "all"
+		))
 	quit(1 if _failed else 0)
 
 
@@ -38,10 +52,11 @@ func _capture(packed: PackedScene, capture: Dictionary) -> void:
 	root.add_child(backdrop)
 	var hud := packed.instantiate() as Control
 	root.add_child(hud)
-	await process_frame
+	await _wait_frames(2)
 	_configure_state(hud, StringName(capture["state"]))
-	for _frame in 3:
-		await process_frame
+	await _wait_frames(SETTLE_FRAMES)
+	RenderingServer.force_draw(false)
+	await _wait_frames(2)
 	RenderingServer.force_draw(false)
 	await process_frame
 	var image := root.get_texture().get_image()
@@ -51,7 +66,14 @@ func _capture(packed: PackedScene, capture: Dictionary) -> void:
 		_failed = true
 	hud.queue_free()
 	backdrop.queue_free()
+	await _wait_frames(CLEANUP_FRAMES)
+	RenderingServer.force_draw(false)
 	await process_frame
+
+
+func _wait_frames(frame_count: int) -> void:
+	for _frame in frame_count:
+		await process_frame
 
 
 func _build_backdrop(viewport_size: Vector2) -> Control:
