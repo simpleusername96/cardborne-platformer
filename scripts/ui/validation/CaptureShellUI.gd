@@ -3,7 +3,8 @@ extends SceneTree
 const OUTPUT_DIR := "res://.codex-runtime/uiux/shell"
 const MAIN_SCENE := "res://scenes/main/Main.tscn"
 const RUN_RESULT_SCENE := "res://scenes/ui/production/RunResult.tscn"
-const SETTLE_FRAMES := 8
+const SETTLE_FRAMES := 10
+const DRAW_PASSES := 3
 const CLEANUP_FRAMES := 4
 const VIEWPORTS: Array[Dictionary] = [
 	{"prefix": "compact", "size": Vector2i(960, 540)},
@@ -139,18 +140,22 @@ func _mount_main() -> Dictionary:
 
 func _save_current(capture_name: String) -> void:
 	await _wait_frames(SETTLE_FRAMES)
+	await _flush_render_frames()
 	if not _requested.is_empty() and _requested != capture_name:
 		return
-	RenderingServer.force_draw(false)
-	await _wait_frames(2)
-	RenderingServer.force_draw(false)
-	await process_frame
 	var texture := root.get_texture()
 	var image := texture.get_image() if texture != null else null
 	var output_path := "%s/%s.png" % [OUTPUT_DIR, capture_name]
 	if image == null or image.save_png(output_path) != OK:
 		push_error("Unable to save shell UI capture: %s" % output_path)
 		_failed = true
+
+
+func _flush_render_frames() -> void:
+	for _draw_pass in DRAW_PASSES:
+		RenderingServer.force_draw(false)
+		await RenderingServer.frame_post_draw
+		await process_frame
 
 
 func _cleanup(main: Node, game: Node) -> void:
