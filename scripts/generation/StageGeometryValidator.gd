@@ -18,6 +18,7 @@ static func validate_assembly(
 	var hosts := assembly.get_room_hosts()
 	_validate_room_bounds(errors, plan, catalog, assembly.get_room_positions())
 	_validate_required_surfaces(errors, plan, hosts, movement_limits)
+	_validate_connection_openings(errors, plan, catalog, hosts)
 	_validate_optional_return(errors, plan, catalog, hosts)
 	_validate_hazard_recovery(errors, plan, hosts)
 	return errors
@@ -125,6 +126,53 @@ static func _validate_room_socket_access(
 				"Required room '%s' socket '%s' cannot reach critical support."
 				% [room.id, socket_id]
 			)
+
+
+static func _validate_connection_openings(
+	errors: PackedStringArray,
+	plan: StagePlan,
+	catalog: RoomCatalog,
+	hosts: Dictionary
+) -> void:
+	for connection in plan.get_connections():
+		var from_room := plan.get_room(connection.from_room_id)
+		var to_room := plan.get_room(connection.to_room_id)
+		if from_room == null or to_room == null:
+			continue
+		var from_data := catalog.get_room_by_id(from_room.template_id)
+		var to_data := catalog.get_room_by_id(to_room.template_id)
+		if from_data == null or to_data == null:
+			continue
+		_validate_connected_socket_clearance(
+			errors,
+			connection,
+			hosts.get(String(from_room.id)) as RoomTemplateHost,
+			_find_socket(from_data.exit_sockets, connection.from_socket_id),
+			&"source"
+		)
+		_validate_connected_socket_clearance(
+			errors,
+			connection,
+			hosts.get(String(to_room.id)) as RoomTemplateHost,
+			_find_socket(to_data.entry_sockets, connection.to_socket_id),
+			&"target"
+		)
+
+
+static func _validate_connected_socket_clearance(
+	errors: PackedStringArray,
+	connection: PlannedConnection,
+	host: RoomTemplateHost,
+	socket: RoomSocketData,
+	endpoint: StringName
+) -> void:
+	if host == null or socket == null:
+		return
+	for blocker in host.get_socket_clearance_blockers(socket):
+		errors.append(
+			"Connection '%s' %s socket '%s/%s' is blocked by '%s'."
+			% [connection.id, endpoint, host.room_id, socket.id, blocker]
+		)
 
 
 static func _validate_optional_return(

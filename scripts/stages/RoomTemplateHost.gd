@@ -8,6 +8,9 @@ const REQUIRED_ROOTS: Array[StringName] = [
 const REQUIRED_ANCHOR_GROUPS: Array[StringName] = [
 	&"Sockets", &"Enemy", &"Hazard", &"Reward", &"Objective", &"Recovery",
 ]
+const SOCKET_CLEARANCE_DEPTH := 48.0
+const SOCKET_CLEARANCE_OUTSET := 4.0
+const SOCKET_FLOOR_MARGIN := 8.0
 
 @export var room_id: StringName
 
@@ -127,6 +130,75 @@ func _validate_socket_markers(data: RoomTemplateData, errors: PackedStringArray)
 				"Room '%s' socket '%s' has no authored marker at %s."
 				% [room_id, socket.id, socket.local_position]
 			)
+
+
+## Reports solid terrain that intrudes into standing clearance at a horizontal socket.
+func get_socket_clearance_blockers(socket: RoomSocketData) -> Array[String]:
+	var blockers: Array[String] = []
+	var terrain := get_node_or_null("Terrain")
+	if (
+		terrain == null
+		or socket == null
+		or socket.direction not in [&"left", &"right"]
+	):
+		return blockers
+	var collision_shapes: Array[Node] = terrain.find_children(
+		"*",
+		"CollisionShape2D",
+		true,
+		false
+	)
+	var opening_height := minf(socket.opening_size.y, socket.headroom)
+	if opening_height <= SOCKET_FLOOR_MARGIN:
+		return blockers
+	var clearance_depth := minf(
+		socket.opening_size.x * 0.5,
+		SOCKET_CLEARANCE_DEPTH
+	)
+	var clearance_position := Vector2(
+		socket.local_position.x - SOCKET_CLEARANCE_OUTSET,
+		socket.support_top - opening_height
+	)
+	if socket.direction == &"right":
+		clearance_position.x = socket.local_position.x - clearance_depth
+	var clearance := Rect2(
+		clearance_position,
+		Vector2(
+			clearance_depth + SOCKET_CLEARANCE_OUTSET,
+			opening_height - SOCKET_FLOOR_MARGIN
+		)
+	)
+	for shape_node in collision_shapes:
+		var collision_shape := shape_node as CollisionShape2D
+		if not _is_solid_terrain_shape(collision_shape):
+			continue
+		if clearance.intersects(_shape_bounds_in_room(collision_shape)):
+			blockers.append(String(get_path_to(collision_shape)))
+	return blockers
+
+
+func _is_solid_terrain_shape(collision_shape: CollisionShape2D) -> bool:
+	if collision_shape == null or collision_shape.disabled or collision_shape.shape == null:
+		return false
+	if collision_shape.one_way_collision:
+		return false
+	var body := collision_shape.get_parent() as CollisionObject2D
+	return body != null and (body.collision_layer & 1) != 0
+
+
+func _shape_bounds_in_room(collision_shape: CollisionShape2D) -> Rect2:
+	var shape_rect := collision_shape.shape.get_rect()
+	var corners := [
+		shape_rect.position,
+		shape_rect.position + Vector2(shape_rect.size.x, 0.0),
+		shape_rect.end,
+		shape_rect.position + Vector2(0.0, shape_rect.size.y),
+	]
+	var first := to_local(collision_shape.to_global(corners[0]))
+	var bounds := Rect2(first, Vector2.ZERO)
+	for corner_index in range(1, corners.size()):
+		bounds = bounds.expand(to_local(collision_shape.to_global(corners[corner_index])))
+	return bounds
 
 
 func _validate_safe_objective_clearance(

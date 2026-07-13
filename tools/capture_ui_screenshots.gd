@@ -297,7 +297,12 @@ func _capture(capture: Dictionary) -> void:
 			await process_frame
 			var stage: Variant = game.current_stage
 			if stage != null and stage.player != null:
-				stage.player.global_position = Vector2(1800.0, 600.0)
+				var charge_lane := stage.get_room_host(&"lr_charge_lane") as RoomTemplateHost
+				if charge_lane == null:
+					push_error("Charge Lane capture target is unavailable.")
+					_failed = true
+					return
+				stage.player.global_position = charge_lane.global_position + Vector2(1080.0, 580.0)
 				if stage.player.camera != null:
 					stage.player.camera.reset_smoothing()
 		"stage_room":

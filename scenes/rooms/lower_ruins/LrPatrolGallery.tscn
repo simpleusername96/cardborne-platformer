@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/stages/RoomTemplateHost.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/stages/RoomAnchor.gd" id="2"]
@@ -8,9 +8,6 @@ size = Vector2(320, 280)
 
 [sub_resource type="RectangleShape2D" id="GalleryMassShape"]
 size = Vector2(800, 300)
-
-[sub_resource type="RectangleShape2D" id="BoundaryShape"]
-size = Vector2(32, 720)
 
 [sub_resource type="RectangleShape2D" id="LedgeShape"]
 size = Vector2(220, 12)
@@ -72,18 +69,6 @@ points = PackedVector2Array(-330, 72, 310, 72)
 width = 4.0
 default_color = Color(0.15, 0.20, 0.22, 1)
 points = PackedVector2Array(-290, 138, 340, 138)
-
-[node name="LeftBoundary" type="StaticBody2D" parent="Terrain"]
-position = Vector2(-16, 360)
-collision_layer = 1
-collision_mask = 0
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/LeftBoundary"]
-shape = SubResource("BoundaryShape")
-
-[node name="RockVisual" type="Polygon2D" parent="Terrain/LeftBoundary"]
-color = Color(0.15, 0.20, 0.22, 1)
-polygon = PackedVector2Array(-16, -360, 16, -360, 16, 360, -16, 360)
 
 [node name="OneWay" type="Node2D" parent="."]
 

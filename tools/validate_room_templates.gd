@@ -64,8 +64,37 @@ func _validate_room(data: RoomTemplateData) -> void:
 			"%s should reject enemy patrol inside its terminal checkpoint" % data.id
 		)
 		enemy_anchor.position = original_position
+	if data.id == &"lr_patrol_gallery":
+		_validate_socket_blocker_rejection(room, data)
 	room.queue_free()
 	await process_frame
+
+
+func _validate_socket_blocker_rejection(
+	room: RoomTemplateHost,
+	data: RoomTemplateData
+) -> void:
+	var entry_socket := data.entry_sockets[0]
+	var blocker := StaticBody2D.new()
+	blocker.name = "InjectedSocketBlocker"
+	blocker.position = entry_socket.local_position + Vector2(
+		-2.0,
+		-entry_socket.headroom * 0.5
+	)
+	blocker.collision_layer = 1
+	blocker.collision_mask = 0
+	var collision_shape := CollisionShape2D.new()
+	var rectangle := RectangleShape2D.new()
+	rectangle.size = Vector2(8.0, entry_socket.headroom - 16.0)
+	collision_shape.shape = rectangle
+	blocker.add_child(collision_shape)
+	room.get_node("Terrain").add_child(blocker)
+	_expect(
+		not room.get_socket_clearance_blockers(entry_socket).is_empty(),
+		"room geometry should report solid terrain across a connected socket"
+	)
+	blocker.get_parent().remove_child(blocker)
+	blocker.queue_free()
 
 
 func _anchor_has_support(anchor: RoomAnchor, surfaces: Array) -> bool:
