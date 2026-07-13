@@ -45,7 +45,7 @@ func _run() -> void:
 	_validate_plan_and_rooms(stage)
 	_validate_surfaces(stage)
 	_validate_runtime_content(stage)
-	_validate_fall_reset(stage, run_state)
+	await _validate_fall_reset(stage, run_state)
 	await _validate_hud(run_director, game, stage)
 	await _validate_exit_flow(stage, run_director, game, run_state)
 
@@ -179,13 +179,41 @@ func _validate_runtime_content(stage: Variant) -> void:
 
 
 func _validate_fall_reset(stage: Variant, run_state: Node) -> void:
+	var world_bounds: Rect2 = stage.get_world_bounds()
+	var fall_reset := stage.find_child("StageFallReset", true, false) as FallResetZone
+	_expect(fall_reset != null, "production stage should own one stage-wide fall reset")
+	if fall_reset == null:
+		return
+	var collision := fall_reset.get_node_or_null("CollisionShape2D") as CollisionShape2D
+	var rectangle := collision.shape as RectangleShape2D if collision != null else null
+	_expect(
+		rectangle != null and rectangle.size == Vector2(world_bounds.size.x + 480.0, 180.0),
+		"production fall reset collision should span the complete approved stage"
+	)
 	var before := int(run_state.get("current_health"))
 	if before > 1:
 		run_state.call("damage_player", 1)
 		before -= 1
-	stage.reset_player_after_fall("validation")
+	stage.player.global_position = Vector2(world_bounds.end.x + 100.0, fall_reset.global_position.y)
+	stage.player.velocity = Vector2.ZERO
+	for _frame in 3:
+		await physics_frame
+		await process_frame
 	_expect(int(run_state.get("current_health")) == before, "fall reset must not heal the player")
-	_expect(stage.player.global_position.is_equal_approx(stage.current_checkpoint_position), "fall reset should use checkpoint")
+	_expect(
+		stage.player.global_position.is_equal_approx(stage.current_checkpoint_position),
+		"far-edge fall reset collision should return the player to the checkpoint"
+	)
+
+	stage.player.global_position = Vector2(world_bounds.end.x + 600.0, world_bounds.end.y + 720.0)
+	stage.player.velocity = Vector2.ZERO
+	await physics_frame
+	await process_frame
+	_expect(
+		stage.player.global_position.is_equal_approx(stage.current_checkpoint_position),
+		"stage Y failsafe should recover a player that misses the reset area"
+	)
+	_expect(int(run_state.get("current_health")) == before, "fall failsafe must not heal the player")
 
 
 func _validate_hud(run_director: Node, game: Node, stage: Variant) -> void:

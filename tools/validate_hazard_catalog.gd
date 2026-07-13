@@ -183,13 +183,19 @@ func _validate_fall_reset(definition: HazardDefinition) -> void:
 		if instance != null:
 			instance.free()
 		return
+	_expect(instance.zone_size == Vector2(2000.0, 160.0), "fall_reset should keep its authored default size")
+	instance.zone_size = Vector2(4200.0, 180.0)
 	root.add_child(instance)
 	await process_frame
 	await physics_frame
 	var collision := instance.get_node_or_null("CollisionShape2D") as CollisionShape2D
+	var rectangle := collision.shape as RectangleShape2D if collision != null else null
 	_expect(collision != null and collision.shape != null, "fall_reset should have collision after ready")
 	_expect(collision != null and not collision.disabled, "fall_reset collision should remain active after ready")
-	_expect(instance.zone_size == Vector2(2000.0, 160.0), "fall_reset should cover the authored stage-wide catch size")
+	_expect(
+		rectangle != null and rectangle.size == instance.zone_size,
+		"fall_reset collision should resize to its configured stage-wide catch size"
+	)
 	_expect(instance.reason == "fall", "fall_reset should publish the fall reset reason")
 	_expect(
 		instance.collision_layer == 0 and instance.collision_mask == 4,

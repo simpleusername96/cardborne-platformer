@@ -24,11 +24,10 @@ func _on_body_entered(body: Node) -> void:
 
 
 func _ensure_shape() -> void:
-	if get_node_or_null("CollisionShape2D") != null:
-		return
-
-	var shape := CollisionShape2D.new()
+	var shape := get_node_or_null("CollisionShape2D") as CollisionShape2D
+	if shape == null:
+		shape = CollisionShape2D.new()
+		add_child(shape)
 	var rect := RectangleShape2D.new()
 	rect.size = zone_size
 	shape.shape = rect
-	add_child(shape)

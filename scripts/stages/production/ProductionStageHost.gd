@@ -5,6 +5,7 @@ const ENEMY_SCENES: EnemySceneCatalog = preload("res://data/enemies/enemy_scene_
 const HAZARD_CATALOG: HazardCatalog = preload("res://data/hazards/hazard_catalog.tres")
 const TERRAIN_STYLER := preload("res://scripts/visuals/TerrainPresentationStyler.gd")
 const FIXED_LAYOUT_VERSION := 3
+const FALL_RESET_FAILSAFE_MARGIN := 360.0
 # Changing this seed intentionally versions every approved stage-content signature.
 const FIXED_LAYOUT_SEED_V1 := 0x43415244
 const STAGE_CONFIGS: Array[Dictionary] = [
@@ -68,6 +69,8 @@ func _ready() -> void:
 func _physics_process(_delta: float) -> void:
 	if _setup_succeeded and player != null:
 		_publish_required_room_start_if_entered()
+		if player.global_position.y > _world_bounds.end.y + FALL_RESET_FAILSAFE_MARGIN:
+			reset_player_after_fall("fall_bounds")
 
 
 func is_setup_complete() -> bool:
