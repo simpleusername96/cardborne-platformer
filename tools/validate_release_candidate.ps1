@@ -16,6 +16,7 @@ $releaseMatrix = @(
   "validate_curated_stage_plans.gd",
   "validate_field_pickups.gd",
   "validate_fixed_field_pickup_manifest.gd",
+  "validate_fixed_drop_runtime.gd",
   "validate_complete_run_balance.gd",
   "validate_combat_spacing.gd",
   "validate_build_previews.gd",
