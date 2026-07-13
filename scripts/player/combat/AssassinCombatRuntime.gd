@@ -376,6 +376,7 @@ func _pulse_melee(definition: AttackDefinition, hit_index: int) -> void:
 	var body := player as Node2D
 	if body == null:
 		return
+	controller.call("present_runtime_attack_pulse", definition, hit_index)
 	var direction := _attack_direction()
 	var center := body.global_position + Vector2(
 		absf(definition.hitbox_offset.x) * float(direction),
@@ -385,7 +386,7 @@ func _pulse_melee(definition: AttackDefinition, hit_index: int) -> void:
 	var targets: Variant = controller.call(
 		"find_targets_in_box",
 		center,
-		definition.hitbox_size * 0.5 + Vector2(0.0, 28.0),
+		definition.hitbox_size * 0.5,
 		16
 	)
 	if not targets is Array:
@@ -432,7 +433,7 @@ func _pulse_lunge_targets() -> void:
 	var targets: Variant = controller.call(
 		"find_targets_in_box",
 		center,
-		_motion_definition.hitbox_size * 0.5 + Vector2(0.0, 28.0),
+		_motion_definition.hitbox_size * 0.5,
 		16
 	)
 	if not targets is Array:

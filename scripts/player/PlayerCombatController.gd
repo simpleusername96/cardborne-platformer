@@ -133,15 +133,16 @@ func update_combat(delta: float) -> void:
 		phase_timer -= delta
 	if phase == Phase.STARTUP and not is_movement_locked():
 		attack_direction = player.facing
-	attack_presenter.update(
-		current_attack,
-		StringName(Phase.keys()[phase].to_lower()),
-		phase_timer,
-		_phase_duration(),
-		attack_direction
-	)
 	while current_attack != null and phase_timer <= 0.0:
 		_advance_phase()
+	if current_attack != null:
+		attack_presenter.update(
+			current_attack,
+			StringName(Phase.keys()[phase].to_lower()),
+			phase_timer,
+			_phase_duration(),
+			attack_direction
+		)
 	_publish_state()
 
 
@@ -489,18 +490,33 @@ func find_targets_in_box(
 	half_extents: Vector2,
 	max_targets: int = 16
 ) -> Array[Node]:
-	var candidates := find_targets_in_radius(center, half_extents.length(), max_targets * 2)
+	var attack_bounds := Rect2(center - half_extents, half_extents * 2.0)
+	var matches: Array[Dictionary] = []
+	for candidate in get_tree().get_nodes_in_group("enemies"):
+		if not candidate is Node2D or not _target_is_active(candidate):
+			continue
+		var target_bounds := _target_hurtbox_bounds(candidate as Node2D)
+		if not attack_bounds.intersects(target_bounds):
+			continue
+		matches.append({
+			"target": candidate,
+			"distance": center.distance_squared_to(target_bounds.get_center()),
+		})
+	matches.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		if not is_equal_approx(float(a["distance"]), float(b["distance"])):
+			return float(a["distance"]) < float(b["distance"])
+		return (a["target"] as Node).get_instance_id() < (b["target"] as Node).get_instance_id()
+	)
 	var targets: Array[Node] = []
-	for candidate in candidates:
-		var position := (candidate as Node2D).global_position
-		if (
-			absf(position.x - center.x) <= half_extents.x
-			and absf(position.y - center.y) <= half_extents.y
-		):
-			targets.append(candidate)
-			if targets.size() >= max_targets:
-				break
+	for entry in matches.slice(0, mini(matches.size(), max_targets)):
+		targets.append(entry["target"] as Node)
 	return targets
+
+
+func present_runtime_attack_pulse(definition: AttackDefinition, hit_index: int) -> void:
+	if definition == null or definition != current_attack or attack_presenter == null:
+		return
+	attack_presenter.show_runtime_pulse(hit_index)
 
 
 func emit_status(message: String) -> void:
@@ -1307,6 +1323,36 @@ func _target_is_active(target: Node) -> bool:
 		return false
 	var health: Variant = target.get("current_health")
 	return not (health is int or health is float) or float(health) > 0.0
+
+
+func _target_hurtbox_bounds(target: Node2D) -> Rect2:
+	var hurtbox := target.get_node_or_null("Hurtbox") as Area2D
+	if hurtbox == null:
+		return Rect2(target.global_position - Vector2(0.5, 0.5), Vector2.ONE)
+	var has_bounds := false
+	var bounds := Rect2()
+	for child in hurtbox.find_children("*", "CollisionShape2D", true, false):
+		var collision_shape := child as CollisionShape2D
+		if collision_shape == null or collision_shape.disabled or collision_shape.shape == null:
+			continue
+		var shape_bounds := _shape_world_bounds(collision_shape)
+		bounds = shape_bounds if not has_bounds else bounds.merge(shape_bounds)
+		has_bounds = true
+	return bounds if has_bounds else Rect2(target.global_position - Vector2(0.5, 0.5), Vector2.ONE)
+
+
+func _shape_world_bounds(collision_shape: CollisionShape2D) -> Rect2:
+	var shape_rect := collision_shape.shape.get_rect()
+	var corners := [
+		shape_rect.position,
+		shape_rect.position + Vector2(shape_rect.size.x, 0.0),
+		shape_rect.end,
+		shape_rect.position + Vector2(0.0, shape_rect.size.y),
+	]
+	var bounds := Rect2(collision_shape.to_global(corners[0]), Vector2.ZERO)
+	for index in range(1, corners.size()):
+		bounds = bounds.expand(collision_shape.to_global(corners[index]))
+	return bounds
 
 
 func _make_action_event(reason: StringName) -> Dictionary:

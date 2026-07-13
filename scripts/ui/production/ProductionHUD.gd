@@ -9,6 +9,7 @@ var combat_panel: PanelContainer
 var combat_label: Label
 var prompt_panel: PanelContainer
 var prompt_label: Label
+var reward_receipt: RewardReceiptPresenter
 var boss_panel: PanelContainer
 var boss_name_label: Label
 var boss_health_bar: ProgressBar
@@ -112,6 +113,10 @@ func _build_ui() -> void:
 	prompt_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	Styles.configure_label(prompt_label, 16)
 	prompt_panel.add_child(_with_margin(prompt_label, 10))
+
+	reward_receipt = RewardReceiptPresenter.new()
+	reward_receipt.name = "RewardReceiptPresenter"
+	add_child(reward_receipt)
 
 
 func _build_boss_panel() -> void:

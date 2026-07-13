@@ -46,8 +46,7 @@ func _capture_attack(capture: Dictionary) -> void:
 	await process_frame
 
 	Input.action_press("attack")
-	await physics_frame
-	await physics_frame
+	await _wait_for_attack_startup(player)
 	await process_frame
 	await process_frame
 	RenderingServer.force_draw(false)
@@ -58,6 +57,16 @@ func _capture_attack(capture: Dictionary) -> void:
 	Input.action_release("attack")
 	world.queue_free()
 	await process_frame
+
+
+func _wait_for_attack_startup(player: Node) -> void:
+	var combat := player.get_node_or_null("CombatController") as PlayerCombatController
+	for _frame in 30:
+		await physics_frame
+		if combat == null or combat.current_attack == null:
+			continue
+		if String(combat.get_state_snapshot().get("phase", "")) != "startup":
+			return
 
 
 func _add_stage_floor(world: Node2D) -> void:

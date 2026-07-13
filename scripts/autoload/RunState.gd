@@ -747,6 +747,11 @@ func commit_optional_chest_choice(
 	completion["request_id"] = request_id
 	completion["choice_id"] = choice_id
 	completion["replacement_kind"] = replacement_kind
+	completion["replacement_payload"] = (
+		_pending_treasure_choice.get("replacement_payload", {}).duplicate(true)
+		if choice_id == TreasureChoiceService.REPLACEMENT_CHOICE_ID
+		else {}
+	)
 	_pending_treasure_choice.clear()
 	_publish_snapshot()
 	SignalBus.reward_preview_replacement_committed.emit(completion.duplicate(true))

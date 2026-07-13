@@ -63,6 +63,21 @@ var _captures: Array[Dictionary] = [
 		"state": "production_stage",
 	},
 	{
+		"name": "compact_reward_receipt",
+		"size": Vector2i(960, 540),
+		"state": "production_reward_receipt",
+	},
+	{
+		"name": "desktop_reward_receipt",
+		"size": Vector2i(1280, 720),
+		"state": "production_reward_receipt",
+	},
+	{
+		"name": "hd_reward_receipt",
+		"size": Vector2i(1920, 1080),
+		"state": "production_reward_receipt",
+	},
+	{
 		"name": "desktop_archer_combat",
 		"size": Vector2i(1280, 720),
 		"state": "production_archer",
@@ -279,6 +294,26 @@ func _capture(capture: Dictionary) -> void:
 				run_director.current_screen.call("_toggle_mode")
 		"production_stage":
 			run_director.start_production_run(0)
+		"production_reward_receipt":
+			run_director.start_production_run(0)
+			await process_frame
+			var hud: Variant = run_director.current_hud
+			if hud == null or hud.get("reward_receipt") == null:
+				push_error("Reward receipt capture needs a production HUD.")
+				_failed = true
+				return
+			hud.call("_on_interaction_prompt_changed", "Open cache", true)
+			hud.get("reward_receipt").call("present", {
+				"applied": true,
+				"reward_role": &"cache_reward",
+				"grants": {
+					"coin": 12,
+					"xp": 8,
+					"rusted_scrap": 2,
+					"sky_thread": 1,
+				},
+				"equipment_discoveries": [],
+			})
 		"production_archer":
 			run_director.start_production_run(1)
 			await _inject_combat_capture(run_director, game, {

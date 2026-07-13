@@ -109,6 +109,10 @@ func _validate_visual_class_selection() -> void:
 
 func _validate_single_claim_and_replay() -> void:
 	_expect(_run_state.start_new_run(0, 8107), "claim fixture run should start")
+	var signal_bus := root.get_node_or_null("/root/SignalBus")
+	var receipts: Array[Dictionary] = []
+	var capture_receipt := func(receipt: Dictionary) -> void: receipts.append(receipt.duplicate(true))
+	signal_bus.connect("interactive_reward_claimed", capture_receipt)
 	var source := _instantiate_reward_source(&"cache_reward")
 	source.configure_reward(
 		&"cache_reward", &"optional_cache_ruin", &"8107:0:cache:one", _run_state, REWARD_CATALOG
@@ -122,8 +126,13 @@ func _validate_single_claim_and_replay() -> void:
 	source.interact(null)
 	_expect(source.is_claimed(), "successful source should become claimed")
 	_expect(contexts.size() == 1, "one source should emit one local claimed context")
+	_expect(receipts.size() == 1, "one applied source should emit one interactive receipt")
 	_expect(coins_after > coins_before and _run_state.coins == coins_after, "repeat interaction should not settle twice")
 	_expect(contexts[0]["reward_role"] == "cache_reward", "claimed context should preserve role metadata")
+	_expect(
+		source.get_node("LidVisual").visible,
+		"claimed chest should retain a visibly open lid"
+	)
 
 	var replay := _instantiate_reward_source(&"cache_reward")
 	replay.configure_reward(
@@ -135,7 +144,9 @@ func _validate_single_claim_and_replay() -> void:
 	replay.interact(null)
 	replay.interact(null)
 	_expect(replay_contexts.size() == 1 and replay_contexts[0]["duplicate"], "recreated source should settle replay once as duplicate")
+	_expect(receipts.size() == 1, "duplicate transaction replay should not emit another receipt")
 	_expect(_run_state.coins == coins_after, "replayed source should not mutate rewards")
+	signal_bus.disconnect("interactive_reward_claimed", capture_receipt)
 	source.queue_free()
 	replay.queue_free()
 	await process_frame

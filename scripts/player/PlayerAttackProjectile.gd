@@ -58,11 +58,11 @@ func _ensure_shape_and_visual() -> void:
 		var half := projectile_size * 0.5
 		visual.polygon = PackedVector2Array([
 			Vector2(-half.x, -half.y),
-			Vector2(half.x - 6.0, -half.y),
-			Vector2(half.x + 8.0, 0.0),
-			Vector2(half.x - 6.0, half.y),
+			Vector2(half.x * 0.62, -half.y),
+			Vector2(half.x, 0.0),
+			Vector2(half.x * 0.62, half.y),
 			Vector2(-half.x, half.y),
-			Vector2(-half.x - 7.0, 0.0),
+			Vector2(-half.x * 0.72, 0.0),
 		])
 		add_child(visual)
 

@@ -5,6 +5,7 @@ signal run_state_changed(snapshot: Dictionary)
 # Accepts GameplayFeedbackRequest or its Dictionary representation.
 signal gameplay_feedback_requested(request: Variant)
 signal reward_applied(result: Dictionary)
+signal interactive_reward_claimed(receipt: Dictionary)
 signal level_reward_pending(pending_count: int)
 signal level_choice_committed(result: Dictionary)
 signal selected_profile_changed(profile_id: String, display_name: String, color: Color)

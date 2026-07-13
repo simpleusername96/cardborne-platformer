@@ -67,8 +67,7 @@ func _settle_claim_context(context: Dictionary, player: Node) -> void:
 	_settled = true
 	super.interact(player)
 	set_interaction_enabled(false)
-	if _visual != null:
-		_visual.color = Color(visual_color, 0.28)
+	_apply_claimed_visual()
 	_last_claim_context = context.duplicate(true)
 	_last_claim_context.merge(_claim_context, true)
 	_last_claim_context["reward_role"] = String(reward_role)
@@ -78,6 +77,13 @@ func _settle_claim_context(context: Dictionary, player: Node) -> void:
 			_last_claim_context.get("transaction_id", transaction_id)
 		)
 	claimed.emit(_last_claim_context.duplicate(true))
+	var signal_bus := get_node_or_null("/root/SignalBus")
+	# Replayed transaction IDs settle the source locally but never announce a new reward.
+	if signal_bus != null and bool(_last_claim_context.get("applied", false)):
+		signal_bus.emit_signal(
+			"interactive_reward_claimed",
+			_last_claim_context.duplicate(true)
+		)
 
 
 func configure_reward(
@@ -135,6 +141,11 @@ func _build_visual_polygon() -> PackedVector2Array:
 		Vector2(-half_width * 0.72, 0.0),
 		Vector2(-half_width, -visual_size.y * 0.58),
 	])
+
+
+func _apply_claimed_visual() -> void:
+	if _visual != null:
+		_visual.color = Color(visual_color, 0.28)
 
 
 func _get_reward_target() -> Node:

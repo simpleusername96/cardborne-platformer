@@ -15,6 +15,7 @@ $releaseMatrix = @(
   "validate_broken_sanctum_rooms.gd",
   "validate_complete_run_balance.gd",
   "validate_card_reward.gd",
+  "validate_reward_receipt.gd",
   "validate_remaining_cards_runtime.gd",
   "validate_stage_generation_properties.gd",
   "validate_flooded_generation.gd",

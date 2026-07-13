@@ -26,6 +26,7 @@ func _run() -> void:
 		return
 	game.ensure_input_map()
 	await _validate_twin_cut_release_and_hold()
+	await _validate_runtime_footprint_edges()
 	await _validate_flow_contract()
 	await _validate_shadow_lunge_rear_and_wall()
 	await _validate_smoke_step()
@@ -59,6 +60,24 @@ func _validate_twin_cut_release_and_hold() -> void:
 	_expect(bool(snapshot.get("twin_second_committed", false)), "held Twin Cut should commit after first recovery")
 	_expect(bool(snapshot.get("twin_second_fired", false)), "held Twin Cut should fire at the authored offset")
 	_expect(int(snapshot.get("twin_hit_counts", {}).get("2", 0)) == 1, "Twin Cut hit two should own a separate ledger")
+	await _clear_fixture()
+
+
+func _validate_runtime_footprint_edges() -> void:
+	await _create_fixture()
+	var edge_overlap: Variant = _spawn_enemy(Vector2(67.0, 100.0), 20, true)
+	var outside: Variant = _spawn_enemy(Vector2(70.0, 100.0), 20, true)
+	edge_overlap.set_physics_process(false)
+	outside.set_physics_process(false)
+	var definition: AttackDefinition = ASSASSIN_KIT.basic_attack
+	var center: Vector2 = _player.global_position + definition.hitbox_offset
+	var targets: Array[Node] = _player.combat_controller.find_targets_in_box(
+		center,
+		definition.hitbox_size * 0.5,
+		16
+	)
+	_expect(targets.has(edge_overlap), "Twin Cut should hit a Hurtbox that overlaps its edge")
+	_expect(not targets.has(outside), "Twin Cut should reject a Hurtbox outside its edge")
 	await _clear_fixture()
 
 

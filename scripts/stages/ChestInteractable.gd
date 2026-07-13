@@ -5,6 +5,7 @@ var _pending_request_id: StringName
 var _pending_player: Node
 var _optional_claim_published: bool = false
 var _signal_bus: Node
+@onready var _lid_visual: Polygon2D = get_node_or_null("LidVisual") as Polygon2D
 
 
 func _init() -> void:
@@ -109,3 +110,27 @@ func _build_visual_polygon() -> PackedVector2Array:
 		Vector2(-half_width, 0.0),
 		Vector2(-half_width, -visual_size.y * 0.72),
 	])
+
+
+func _apply_claimed_visual() -> void:
+	super._apply_claimed_visual()
+	if _visual != null:
+		var half_width := visual_size.x * 0.5
+		_visual.polygon = PackedVector2Array([
+			Vector2(-half_width, -visual_size.y * 0.62),
+			Vector2(half_width, -visual_size.y * 0.62),
+			Vector2(half_width, 0.0),
+			Vector2(-half_width, 0.0),
+		])
+	if _lid_visual != null:
+		var half_width := visual_size.x * 0.5
+		_lid_visual.visible = true
+		_lid_visual.color = Color(visual_color, 0.42)
+		_lid_visual.position = Vector2(-2.0, -visual_size.y * 0.64)
+		_lid_visual.rotation = -0.28
+		_lid_visual.polygon = PackedVector2Array([
+			Vector2(-half_width, -visual_size.y * 0.24),
+			Vector2(half_width, -visual_size.y * 0.24),
+			Vector2(half_width * 0.84, 0.0),
+			Vector2(-half_width * 0.84, 0.0),
+		])
