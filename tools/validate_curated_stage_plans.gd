@@ -9,16 +9,19 @@ const STAGES: Array[Dictionary] = [
 		"id": &"ruin_approach",
 		"catalog": "res://data/generation/lower_ruins_room_catalog.tres",
 		"rooms": "lr_start_shelf,lr_rise_steps,lr_patrol_gallery,lr_lower_upper_choice,lr_charge_lane,lr_exit_ascent,lr_destructible_cache",
+		"signature": "4644bc4f9578d982039a57ea6478e8fc6c2d6f10fda0642151bb7a57aeb515bd",
 	},
 	{
 		"id": &"flooded_works",
 		"catalog": "res://data/generation/flooded_works_room_catalog.tres",
 		"rooms": "fw_flooded_entry,fw_rope_shaft,fw_poison_timing,fw_leaper_basin,fw_lower_upper_choice,fw_pump_gallery,fw_rest_forge,fw_sunken_cache",
+		"signature": "223d3c8eb033da302406aa46693cba7207c6c5b15f5dc52fbb4db45685b3ff0f",
 	},
 	{
 		"id": &"broken_sanctum",
 		"catalog": "res://data/generation/broken_sanctum_room_catalog.tres",
 		"rooms": "bs_breach_entry,bs_shield_choke,bs_gate_switch_loop,bs_volatile_nave,bs_twin_reliquary_choice,bs_recovery_cloister,bs_sentry_crossfire,bs_exit_ascent,bs_material_crypt,bs_reliquary_cache",
+		"signature": "529d17c9dd36f28cbbf33c8f4d8f7e120c67fc6aeb1c9bdb3c2999f776cfd697",
 	},
 ]
 
@@ -82,6 +85,10 @@ func _validate_stage(stage_index: int, config: Dictionary, run_state: Node) -> v
 			var plan_json := plan.to_json()
 			var plan_signature := String(details.get("plan_signature", ""))
 			_expect(plan_signature == plan_json.sha256_text(), "%s plan signature should cover complete map content." % config["id"])
+			_expect(
+				plan_signature == String(config["signature"]),
+				"%s approved V1 plan changed without a layout-version bump." % config["id"]
+			)
 			if baseline_plan.is_empty():
 				baseline_plan = plan_json
 				baseline_signature = plan_signature
