@@ -2,6 +2,7 @@ extends SceneTree
 
 const STAGE_PATH := "res://scenes/stages/production/ProductionStageHost.tscn"
 const RUN_SEED := 2207
+const FIXED_LAYOUT_SEED_V1 := 0x43415244
 const REQUIRED_ROLES: Array[StringName] = [
 	&"start", &"traversal", &"hazard", &"combat", &"choice", &"combat", &"safe",
 ]
@@ -22,9 +23,12 @@ func _run() -> void:
 		return
 	profile_state.initialize_for_tests(
 		load("res://data/equipment/equipment_catalog.tres"),
-		load("res://data/mastery/mastery_catalog.tres")
+		load("res://data/mastery/mastery_catalog.tres"),
+		"",
+		false,
+		load("res://data/equipment/equipment_progression_catalog.tres")
 	)
-	_expect(run_state.start_new_run(0, RUN_SEED), "Warrior fixture should start")
+	_expect(run_state.start_new_run(0, RUN_SEED), "Traveler fixture should start")
 	run_state.current_stage_index = 1
 
 	var packed := load(STAGE_PATH) as PackedScene
@@ -60,7 +64,10 @@ func _validate_plan(stage: Variant) -> void:
 	_expect(plan != null and plan.profile_id == &"flooded_works", "runtime should retain the Flooded plan")
 	if plan == null:
 		return
-	_expect(plan.run_seed == RUN_SEED and plan.stage_index == 1, "plan identity should preserve seed and stage")
+	_expect(
+		plan.run_seed == FIXED_LAYOUT_SEED_V1 and plan.stage_index == 1,
+		"plan identity should be fixed; seed=%d stage=%d" % [plan.run_seed, plan.stage_index]
+	)
 	_expect(plan.get_rooms().size() == 8, "Flooded runtime should assemble its 7+1 graph")
 	var required: Array[PlannedRoom] = []
 	var optional_count := 0

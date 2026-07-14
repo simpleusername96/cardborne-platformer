@@ -2,6 +2,7 @@ extends SceneTree
 
 const STAGE_PATH := "res://scenes/stages/production/ProductionStageHost.tscn"
 const RUN_SEED := 41_000
+const FIXED_LAYOUT_SEED_V1 := 0x43415244
 const REQUIRED_ROLES: Array[StringName] = [
 	&"start", &"combat", &"objective", &"hazard", &"choice", &"safe", &"combat", &"exit",
 ]
@@ -22,10 +23,12 @@ func _run() -> void:
 		return
 	profile_state.initialize_for_tests(
 		load("res://data/equipment/equipment_catalog.tres"),
-		load("res://data/mastery/mastery_catalog.tres")
+		load("res://data/mastery/mastery_catalog.tres"),
+		"",
+		false,
+		load("res://data/equipment/equipment_progression_catalog.tres")
 	)
-	for profile_index in 3:
-		await _validate_profile_stage(run_state, profile_index)
+	await _validate_profile_stage(run_state, 0)
 	_finish()
 
 
@@ -56,7 +59,10 @@ func _validate_plan(stage: Variant, profile_index: int) -> void:
 	_expect(plan != null and plan.profile_id == &"broken_sanctum", "profile %d should retain Stage 3 plan" % profile_index)
 	if plan == null:
 		return
-	_expect(plan.run_seed == RUN_SEED and plan.stage_index == 2, "Stage 3 plan identity should be stable")
+	_expect(
+		plan.run_seed == FIXED_LAYOUT_SEED_V1 and plan.stage_index == 2,
+		"Stage 3 plan identity should be fixed; seed=%d stage=%d" % [plan.run_seed, plan.stage_index]
+	)
 	_expect(plan.get_rooms().size() == 10, "Broken Sanctum should assemble 8+2 rooms")
 	var required: Array[PlannedRoom] = []
 	var optional_count := 0
@@ -119,7 +125,7 @@ func _expect(condition: bool, message: String) -> void:
 
 func _finish() -> void:
 	if _failures.is_empty():
-		print("BROKEN_SANCTUM_RUNTIME_VALIDATION_OK profiles=3")
+		print("BROKEN_SANCTUM_RUNTIME_VALIDATION_OK hero=traveler")
 		quit(0)
 		return
 	for failure in _failures:

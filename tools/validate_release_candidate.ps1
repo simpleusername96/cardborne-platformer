@@ -79,22 +79,14 @@ $releaseMatrix = @(
 $extendedMatrix = @(
   "validate_profile_persistence.gd",
   "validate_stage_generation_core.gd",
-  "validate_stage_generation_properties.gd",
-  "validate_stage_generation_service.gd",
-  "validate_multi_branch_stage_planner.gd",
-  "validate_stage_content_allocator.gd",
-  "validate_stage_encounter_allocator.gd",
-  "validate_encounter_composition_rules.gd",
-  "validate_broken_sanctum_generation.gd",
   "validate_broken_sanctum_runtime.gd",
-  "validate_flooded_generation.gd",
   "validate_flooded_stage_runtime.gd",
   "validate_shooter_runtime.gd"
 )
 
 if ($Full) {
-  # Keep this list explicit: historical class fixtures remain in the repository
-  # for migration evidence but are not authorities for the Traveler build.
+  # Historical class fixtures and dormant random-planner properties remain as
+  # evidence, but neither is authoritative for the fixed Traveler build.
   $scripts = @($releaseMatrix + $extendedMatrix | Select-Object -Unique)
 } else {
   $scripts = $releaseMatrix
