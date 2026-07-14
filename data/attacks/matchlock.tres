@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="AttackDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/player/AttackDefinition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"matchlock_shot"
+display_name = "Matchlock"
+content_version = 1
+input_action = &"attack"
+tags = Array[StringName]([&"player_attack", &"basic", &"ranged", &"projectile", &"cartridge", &"reload"])
+startup_time = 0.08
+active_time = 0.04
+recovery_time = 1.35
+cooldown = 1.47
+movement_lock_delay = 0.04
+base_damage = 5
+stagger = 42
+knockback = Vector2(310, -70)
+hitbox_size = Vector2(24, 8)
+hitbox_offset = Vector2(30, -27)
+projectile_speed = 920.0
+projectile_range = 680.0
+projectile_target_cap = 1
+motion_style = &"arrow_projectile"
+visual_color = Color(0.94, 0.68, 0.32, 1)
