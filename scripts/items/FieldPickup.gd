@@ -74,12 +74,43 @@ func _apply_presentation() -> void:
 	visible = true
 	_core.color = definition.visual_color
 	_halo.color = Color(definition.visual_color, 0.22)
-	_core.polygon = _shape_for_effect(definition.effect_type, 13.0)
-	_halo.polygon = _shape_for_effect(definition.effect_type, 19.0)
+	_core.polygon = _shape_for_definition(definition, 13.0)
+	_halo.polygon = _shape_for_definition(definition, 19.0)
 
 
-func _shape_for_effect(effect_type: StringName, radius: float) -> PackedVector2Array:
-	match effect_type:
+func _shape_for_definition(pickup: FieldPickupDefinition, radius: float) -> PackedVector2Array:
+	match pickup.icon_id:
+		&"pickup_scrap", &"pickup_steel":
+			return PackedVector2Array([
+				Vector2(-radius * 0.82, radius * 0.55), Vector2(-radius * 0.46, -radius),
+				Vector2(0.0, -radius * 0.48), Vector2(radius * 0.52, -radius * 0.86),
+				Vector2(radius, radius * 0.64), Vector2(0.0, radius),
+			])
+		&"pickup_timber", &"pickup_hardwood":
+			return PackedVector2Array([
+				Vector2(-radius, -radius * 0.52), Vector2(radius * 0.72, -radius),
+				Vector2(radius, radius * 0.52), Vector2(-radius * 0.72, radius),
+			])
+		&"pickup_thread", &"pickup_fabric":
+			return PackedVector2Array([
+				Vector2(-radius * 0.62, -radius), Vector2(radius * 0.62, -radius),
+				Vector2(radius, -radius * 0.34), Vector2(radius * 0.62, radius),
+				Vector2(-radius * 0.62, radius), Vector2(-radius, -radius * 0.34),
+			])
+		&"pickup_arrows":
+			return PackedVector2Array([
+				Vector2(0.0, -radius), Vector2(radius * 0.82, -radius * 0.18),
+				Vector2(radius * 0.34, -radius * 0.18), Vector2(radius * 0.34, radius),
+				Vector2(-radius * 0.34, radius), Vector2(-radius * 0.34, -radius * 0.18),
+				Vector2(-radius * 0.82, -radius * 0.18),
+			])
+		&"pickup_cartridges":
+			return PackedVector2Array([
+				Vector2(-radius * 0.76, -radius * 0.46), Vector2(radius * 0.76, -radius * 0.46),
+				Vector2(radius, radius * 0.62), Vector2(radius * 0.48, radius),
+				Vector2(-radius * 0.48, radius), Vector2(-radius, radius * 0.62),
+			])
+	match pickup.effect_type:
 		FieldPickupDefinition.EFFECT_HEAL:
 			return PackedVector2Array([
 				Vector2(0.0, -radius), Vector2(radius * 0.72, 0.0),

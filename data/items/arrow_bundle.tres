@@ -4,10 +4,10 @@
 
 [resource]
 script = ExtResource("1")
-id = &"rusted_scrap_fragment"
-display_name = "Iron Scrap Bundle"
-effect_type = &"grant_currency"
-amount = 3.0
-currency_id = &"rusted_scrap"
-icon_id = &"pickup_scrap"
-visual_color = Color(0.80, 0.52, 0.31, 1)
+id = &"arrow_bundle"
+display_name = "Arrow Bundle"
+effect_type = &"grant_ranged_supply"
+amount = 4.0
+supply_id = &"arrows"
+icon_id = &"pickup_arrows"
+visual_color = Color(0.84, 0.68, 0.35, 1)

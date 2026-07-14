@@ -500,6 +500,33 @@ func apply_field_pickup(
 			if not reward_result.applied:
 				return _field_pickup_result(false, false, pickup_id, definition, 0.0, reward_result.message)
 			applied_amount = definition.amount
+		FieldPickupDefinition.EFFECT_GRANT_RANGED_SUPPLY:
+			var profile_state := get_node_or_null("/root/ProfileState")
+			if profile_state == null or not profile_state.has_method("grant_ranged_supply"):
+				return _field_pickup_result(false, false, pickup_id, definition, 0.0, "Ranged supply is unavailable.")
+			var supply_result: Dictionary = profile_state.call(
+				"grant_ranged_supply",
+				definition.supply_id,
+				int(definition.amount)
+			)
+			if not bool(supply_result.get("ok", false)):
+				return _field_pickup_result(
+					false,
+					false,
+					pickup_id,
+					definition,
+					0.0,
+					String(supply_result.get("message", "Ranged supply could not be stored."))
+				)
+			if not bool(supply_result.get("changed", false)):
+				return _field_pickup_result(false, false, pickup_id, definition, 0.0, "Ranged supply is already full.")
+			var supply_payload: Dictionary = supply_result.get("payload", {})
+			applied_amount = float(supply_payload.get("amount", 0))
+			result_details = {
+				"supply_id": String(definition.supply_id),
+				"current": int(supply_payload.get("current", 0)),
+				"maximum": int(supply_payload.get("maximum", 0)),
+			}
 		_:
 			return _field_pickup_result(false, false, pickup_id, definition, 0.0, "Pickup effect is unsupported.")
 
@@ -534,6 +561,7 @@ func _field_pickup_result(
 		"effect_type": String(definition.effect_type) if definition != null else "",
 		"amount": applied_amount,
 		"currency_id": String(definition.currency_id) if definition != null else "",
+		"supply_id": String(definition.supply_id) if definition != null else "",
 		"icon_id": String(definition.icon_id) if definition != null else "",
 		"message": message,
 	}

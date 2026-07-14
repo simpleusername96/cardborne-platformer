@@ -8,13 +8,18 @@ const DISPLAY_SECONDS := 2.8
 const FADE_SECONDS := 0.22
 const MAX_QUEUE_SIZE := 4
 const GRANT_ORDER: Array[String] = [
-	"coin", "xp", "rusted_scrap", "sky_thread", "slime_residue", "boss_core",
+	"coin", "xp", "rusted_scrap", "common_timber", "sky_thread",
+	"steel_fragment", "hardwood", "reinforced_fabric", "slime_residue", "boss_core",
 ]
 const GRANT_LABELS := {
 	"coin": "Coins",
 	"xp": "XP",
-	"rusted_scrap": "Rusted Scrap",
-	"sky_thread": "Sky Thread",
+	"rusted_scrap": "Iron Scrap",
+	"common_timber": "Common Timber",
+	"sky_thread": "Rough Fiber",
+	"steel_fragment": "Steel Fragments",
+	"hardwood": "Hardwood",
+	"reinforced_fabric": "Reinforced Fabric",
 	"slime_residue": "Slime Residue",
 	"boss_core": "Boss Core",
 }
@@ -86,8 +91,16 @@ func build_field_pickup_view_model(receipt: Dictionary) -> Dictionary:
 			var summary := "%s  +%s %s" % [display_name, amount_text, currency_label]
 			if display_name.nocasecmp_to(currency_label) == 0:
 				summary = "%s  +%s" % [display_name, amount_text]
+			var title := "CURRENCY COLLECTED" if currency_id in ["coin", "xp"] else "MATERIAL COLLECTED"
+			return _field_pickup_view_model(title, summary, Styles.AMBER)
+		&"grant_ranged_supply":
+			var supply_id := String(receipt.get("supply_id", ""))
+			var supply_label := "Arrows" if supply_id == "arrows" else "Cartridges"
+			var supply_title := "ARROWS RESTOCKED" if supply_id == "arrows" else "AMMUNITION RESTOCKED"
 			return _field_pickup_view_model(
-				"CURRENCY COLLECTED", summary, Styles.AMBER
+				supply_title,
+				"%s  +%s %s" % [display_name, amount_text, supply_label],
+				Styles.THREAD
 			)
 	return _field_pickup_view_model(
 		"PICKUP COLLECTED",

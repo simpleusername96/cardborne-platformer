@@ -254,13 +254,21 @@ func _assert_field_pickup_view_models(receipt: RewardReceiptPresenter) -> void:
 	_expect(supply["summary"] == "Supply Charge  +1 Consumable Charge", "Supply pickup should keep exact charges")
 	var currency := receipt.build_field_pickup_view_model({
 		"effect_type": "grant_currency",
-		"amount": 1.0,
+		"amount": 3.0,
 		"currency_id": "rusted_scrap",
-		"display_name": "Rusted Scrap",
+		"display_name": "Iron Scrap Bundle",
 	})
-	_expect(currency["title"] == "CURRENCY COLLECTED", "Currency pickup should use the Currency receipt title")
-	_expect(currency["summary"] == "Rusted Scrap  +1", "Currency pickup should keep exact grants")
+	_expect(currency["title"] == "MATERIAL COLLECTED", "Material pickup should use the Material receipt title")
+	_expect(currency["summary"] == "Iron Scrap Bundle  +3 Iron Scrap", "Material pickup should keep exact grants")
 	_expect(not String(currency["summary"]).contains("rusted_scrap"), "Currency receipt should not expose raw IDs")
+	var arrows := receipt.build_field_pickup_view_model({
+		"effect_type": "grant_ranged_supply",
+		"amount": 4.0,
+		"supply_id": "arrows",
+		"display_name": "Arrow Bundle",
+	})
+	_expect(arrows["title"] == "ARROWS RESTOCKED", "Arrow pickup should use a specific supply title")
+	_expect(arrows["summary"] == "Arrow Bundle  +4 Arrows", "Arrow receipt should keep exact supply")
 
 
 func _inside(bounds: Rect2, rect: Rect2) -> bool:

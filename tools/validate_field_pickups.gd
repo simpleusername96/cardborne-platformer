@@ -30,15 +30,25 @@ func _initialize() -> void:
 
 func _run() -> void:
 	_run_state = root.get_node_or_null("/root/RunState")
+	var profile_state := root.get_node_or_null("/root/ProfileState")
 	_expect(_run_state != null, "field pickup fixture needs RunState")
+	_expect(profile_state != null, "field pickup fixture needs ProfileState")
 	_expect(CATALOG.validate_catalog().is_empty(), "field pickup catalog should validate")
-	if _run_state == null:
+	if _run_state == null or profile_state == null:
 		_finish()
 		return
+	profile_state.initialize_for_tests(
+		load("res://data/equipment/equipment_catalog.tres"),
+		load("res://data/mastery/mastery_catalog.tres"),
+		"",
+		false,
+		load("res://data/equipment/equipment_progression_catalog.tres")
+	)
 	_validate_healing_and_retry()
 	_validate_consumable_refill()
 	_validate_cooldown_recovery()
 	_validate_currency_and_replay()
+	_validate_material_and_ranged_supply(profile_state)
 	await _validate_actor_lifecycle()
 	_finish()
 
@@ -89,6 +99,37 @@ func _validate_currency_and_replay() -> void:
 	var duplicate: Dictionary = _run_state.apply_field_pickup(&"fixture_coins", coin_bundle)
 	_expect(bool(duplicate.get("duplicate", false)), "coin pickup should reject replay")
 	_expect(_run_state.coins == coins_before + 3, "replayed coin pickup must not grant twice")
+
+
+func _validate_material_and_ranged_supply(profile_state: Node) -> void:
+	var materials_before: Dictionary = profile_state.get_materials()
+	var timber := CATALOG.get_definition(&"common_timber_bundle")
+	var material_result: Dictionary = _run_state.apply_field_pickup(&"fixture_timber", timber)
+	_expect(bool(material_result.get("applied", false)), "material bundle should apply")
+	_expect(
+		int(profile_state.get_materials().get("common_timber", 0))
+		== int(materials_before.get("common_timber", 0)) + 3,
+		"material bundle should persist its exact profile grant"
+	)
+
+	profile_state.spend_ranged_supply(&"arrows", 10)
+	var arrows_before := int(profile_state.get_ranged_supplies().get("arrows", 0))
+	var arrows := CATALOG.get_definition(&"arrow_bundle")
+	var arrow_result: Dictionary = _run_state.apply_field_pickup(&"fixture_arrows", arrows)
+	_expect(bool(arrow_result.get("applied", false)), "arrow bundle should apply below the cap")
+	_expect(
+		int(profile_state.get_ranged_supplies().get("arrows", 0)) == arrows_before + 4,
+		"arrow bundle should persist four arrows"
+	)
+	_expect(arrow_result.get("supply_id") == "arrows", "arrow receipt should identify its supply")
+
+	profile_state.grant_ranged_supply(&"cartridges", 99)
+	var cartridges := CATALOG.get_definition(&"cartridge_pouch")
+	var full_result: Dictionary = _run_state.apply_field_pickup(
+		&"fixture_cartridges_full",
+		cartridges
+	)
+	_expect(not bool(full_result.get("applied", false)), "full cartridges should leave the pouch available")
 
 
 func _validate_actor_lifecycle() -> void:

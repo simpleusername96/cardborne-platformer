@@ -5,12 +5,15 @@ const EFFECT_HEAL := &"heal"
 const EFFECT_REFILL_CONSUMABLE := &"refill_consumable"
 const EFFECT_REDUCE_SKILL_COOLDOWNS := &"reduce_skill_cooldowns"
 const EFFECT_GRANT_CURRENCY := &"grant_currency"
+const EFFECT_GRANT_RANGED_SUPPLY := &"grant_ranged_supply"
 const EFFECT_TYPES: Array[StringName] = [
 	EFFECT_HEAL,
 	EFFECT_REFILL_CONSUMABLE,
 	EFFECT_REDUCE_SKILL_COOLDOWNS,
 	EFFECT_GRANT_CURRENCY,
+	EFFECT_GRANT_RANGED_SUPPLY,
 ]
+const RANGED_SUPPLY_IDS: Array[StringName] = [&"arrows", &"cartridges"]
 
 @export var id: StringName
 @export var display_name: String
@@ -18,6 +21,7 @@ const EFFECT_TYPES: Array[StringName] = [
 @export var effect_type: StringName
 @export_range(0.25, 20.0, 0.25) var amount: float = 1.0
 @export var currency_id: StringName
+@export var supply_id: StringName
 @export var icon_id: StringName
 @export var visual_color: Color = Color("70d69a")
 
@@ -40,6 +44,11 @@ func validate_definition() -> PackedStringArray:
 		ContentId.validate(errors, "Field pickup '%s' currency ID" % id, currency_id)
 	elif currency_id != &"":
 		errors.append("Field pickup '%s' declares currency for a non-currency effect." % id)
+	if effect_type == EFFECT_GRANT_RANGED_SUPPLY:
+		if supply_id not in RANGED_SUPPLY_IDS:
+			errors.append("Field pickup '%s' needs a supported ranged supply ID." % id)
+	elif supply_id != &"":
+		errors.append("Field pickup '%s' declares supply for a non-supply effect." % id)
 	if visual_color.a <= 0.0:
 		errors.append("Field pickup '%s' needs a visible color." % id)
 	return errors
