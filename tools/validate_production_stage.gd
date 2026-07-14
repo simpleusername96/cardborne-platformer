@@ -228,16 +228,13 @@ func _validate_hud(run_director: Node, game: Node, stage: Variant) -> void:
 		),
 		"HUD should show the approved required encounter count"
 	)
-	var slots_by_role: Dictionary = {}
-	for slot_value in layout.get("slots", []):
-		if slot_value is Dictionary:
-			var slot := slot_value as Dictionary
-			slots_by_role[String(slot.get("slot_role", ""))] = slot
-	var basic: Dictionary = slots_by_role.get("basic", {})
+	var combat: Dictionary = layout.get("combat", {})
+	var melee: Dictionary = combat.get("melee", {})
+	var ranged: Dictionary = combat.get("ranged", {})
 	_expect(
-		bool(basic.get("available", false))
-		and String(basic.get("label", "")) == "HUNTING BOW",
-		"HUD should expose the Traveler's contextual attack"
+		String(melee.get("name", "")).contains("Sword")
+		and String(ranged.get("name", "")).contains("Bow"),
+		"HUD should expose both halves of the Traveler's contextual attack"
 	)
 	var bus := root.get_node_or_null("/root/SignalBus")
 	bus.emit_signal("interaction_prompt_changed", "Enter gate", true)

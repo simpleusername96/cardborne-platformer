@@ -25,23 +25,23 @@ func _draw() -> void:
 	var radius := minf(size.x, size.y) * 0.34
 	var width := maxf(radius * 0.15, 1.5)
 	match icon_id:
-		&"basic":
+		&"basic", &"attack", &"melee":
 			_draw_blade(center, radius, draw_tone, width)
 		&"heavy":
 			_draw_hammer(center, radius, draw_tone, width)
-		&"skill_1":
+		&"skill_1", &"guard", &"armor":
 			_draw_shield(center, radius, draw_tone, width)
 		&"skill_2":
 			_draw_split(center, radius, draw_tone, width)
 		&"skill_3":
 			_draw_banner(center, radius, draw_tone, width)
-		&"consumable":
+		&"consumable", &"potion":
 			_draw_bottle(center, radius, draw_tone, width)
 		&"warrior":
 			_draw_shield(center, radius, draw_tone, width)
 		&"assassin":
 			_draw_twin_blades(center, radius, draw_tone, width)
-		&"archer":
+		&"archer", &"ranged":
 			_draw_bow(center, radius, draw_tone, width)
 		&"coin":
 			draw_circle(center, radius * 0.82, draw_tone)

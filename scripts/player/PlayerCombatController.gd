@@ -912,17 +912,34 @@ func _shared_combat_summary() -> Dictionary:
 	var melee: Dictionary = _hero_loadout.get("melee", {})
 	var ranged: Dictionary = _hero_loadout.get("ranged", {})
 	var shield: Dictionary = _hero_loadout.get("shield", {})
+	var armor: Dictionary = _hero_loadout.get("armor", {})
+	var melee_model := melee.get("model") as EquipmentModelDefinition
+	var ranged_model := ranged.get("model") as EquipmentModelDefinition
+	var shield_model := shield.get("model") as EquipmentModelDefinition
+	var armor_model := armor.get("model") as EquipmentModelDefinition
+	var spirit := _hero_loadout.get("spirit_stone") as SpiritStoneDefinition
+	var ranged_runtime: Dictionary = ranged.get("runtime", {})
+	var armor_runtime: Dictionary = armor.get("runtime", {})
 	return {
-		"melee_model_id": String((melee.get("model") as EquipmentModelDefinition).id) if melee.get("model") != null else "",
+		"melee_model_id": String(melee_model.id) if melee_model != null else "",
+		"melee_display_name": melee_model.display_name if melee_model != null else "Melee",
 		"melee_condition": int((melee.get("runtime", {}) as Dictionary).get("condition", 0)),
 		"melee_maximum_condition": int((melee.get("runtime", {}) as Dictionary).get("maximum_condition", 0)),
-		"ranged_model_id": String((ranged.get("model") as EquipmentModelDefinition).id) if ranged.get("model") != null else "",
+		"ranged_model_id": String(ranged_model.id) if ranged_model != null else "",
+		"ranged_display_name": ranged_model.display_name if ranged_model != null else "Ranged",
 		"ranged_resource_id": String((ranged.get("intent_policy", {}) as Dictionary).get("resource_id", "")),
 		"ranged_resource_count": int(ranged.get("resource_count", 0)),
-		"shield_model_id": String((shield.get("model") as EquipmentModelDefinition).id) if shield.get("model") != null else "",
+		"ranged_resource_maximum": int(ranged_runtime.get("maximum_ranged_resource", 0)),
+		"shield_model_id": String(shield_model.id) if shield_model != null else "",
+		"shield_display_name": shield_model.display_name if shield_model != null else "Shield",
 		"shield_condition": int((shield.get("runtime", {}) as Dictionary).get("condition", 0)),
 		"shield_maximum_condition": int((shield.get("runtime", {}) as Dictionary).get("maximum_condition", 0)),
-		"spirit_stone_id": String((_hero_loadout.get("spirit_stone") as SpiritStoneDefinition).id) if _hero_loadout.get("spirit_stone") != null else "",
+		"armor_model_id": String(armor_model.id) if armor_model != null else "",
+		"armor_display_name": armor_model.display_name if armor_model != null else "Armor",
+		"armor_health_bonus": int(armor_runtime.get("max_health_bonus", 0)),
+		"armor_knockback_reduction": float(armor_runtime.get("knockback_reduction_fraction", 0.0)),
+		"spirit_stone_id": String(spirit.id) if spirit != null else "",
+		"spirit_stone_display_name": spirit.display_name if spirit != null else "Spirit Stone",
 	}
 
 

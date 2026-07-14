@@ -65,6 +65,12 @@ static func configure_label(label: Label, size: int, color: Color = TEXT) -> voi
 static func action_accent(slot_role: StringName) -> Color:
 	return {
 		&"basic": AMBER,
+		&"attack": AMBER,
+		&"melee": AMBER,
+		&"ranged": CYAN,
+		&"guard": CYAN,
+		&"spirit": MOSS,
+		&"potion": Color("63b987"),
 		&"heavy": Color("d8894b"),
 		&"skill_1": CYAN,
 		&"skill_2": MOSS,

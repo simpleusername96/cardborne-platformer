@@ -281,7 +281,10 @@ func _capture(capture: Dictionary) -> void:
 		return
 	profile_state.initialize_for_tests(
 		load("res://data/equipment/equipment_catalog.tres"),
-		load("res://data/mastery/mastery_catalog.tres")
+		load("res://data/mastery/mastery_catalog.tres"),
+		"",
+		false,
+		load("res://data/equipment/equipment_progression_catalog.tres")
 	)
 
 	match String(capture["state"]):

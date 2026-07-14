@@ -2,21 +2,9 @@ extends Control
 
 const Styles = preload("res://scripts/ui/production/ProductionUIStyles.gd")
 const Glyph = preload("res://scripts/ui/production/components/HUDGlyph.gd")
-const ClassState = preload("res://scripts/ui/production/components/HUDClassState.gd")
-const ActionSlotScene = preload("res://scenes/ui/production/components/HUDActionSlot.tscn")
+const CombatDock = preload("res://scripts/ui/production/components/HUDCombatDock.gd")
 
 const OBJECTIVE_EXPANDED_SECONDS := 4.0
-const ACTION_SLOT_MINIMUM_SIZE := Vector2(92.0, 104.0)
-const ACTION_CENTER_GAP_COMPACT := 120.0
-const ACTION_CENTER_GAP_WIDE := 160.0
-const ACTION_SLOT_DEFINITIONS: Array[Dictionary] = [
-	{"slot_role": &"basic", "input_action": &"attack", "fallback": "F", "fallback_label": "Basic"},
-	{"slot_role": &"heavy", "input_action": &"heavy_attack", "fallback": "G", "fallback_label": "Heavy"},
-	{"slot_role": &"skill_1", "input_action": &"skill_1", "fallback": "Q", "fallback_label": "Skill 1"},
-	{"slot_role": &"skill_2", "input_action": &"skill_2", "fallback": "R", "fallback_label": "Skill 2"},
-	{"slot_role": &"skill_3", "input_action": &"skill_3", "fallback": "V", "fallback_label": "Skill 3"},
-	{"slot_role": &"consumable", "input_action": &"use_consumable", "fallback": "H", "fallback_label": "Consumable"},
-]
 
 var health_panel: PanelContainer
 var portrait_frame: PanelContainer
@@ -25,20 +13,14 @@ var profile_label: Label
 var health_value_label: Label
 var health_bar: ProgressBar
 var level_xp_label: Label
-var class_state: HUDClassState
-
-var resource_panel: PanelContainer
-var resource_value_labels: Dictionary = {}
+var armor_label: Label
 
 var objective_container: Control
 var objective_title_label: Label
 var objective_detail_label: Label
 var objective_timer: Timer
 
-var action_bar: PanelContainer
-var action_row: HBoxContainer
-var action_center_gap: Control
-var action_slots: Array[Control] = []
+var combat_dock: HUDCombatDock
 
 var context_lane: Control
 var prompt_panel: PanelContainer
@@ -83,44 +65,40 @@ func _ready() -> void:
 
 
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_RESIZED and action_bar != null:
+	if what == NOTIFICATION_RESIZED and combat_dock != null:
 		_layout_responsive()
 
 
 func get_layout_snapshot() -> Dictionary:
-	var slot_snapshots: Array[Dictionary] = []
-	for slot in action_slots:
-		if slot.has_method("get_display_snapshot"):
-			slot_snapshots.append(slot.call("get_display_snapshot"))
+	var dock_snapshot := combat_dock.get_display_snapshot() if combat_dock != null else {}
+	var local_safe_gap: Rect2 = dock_snapshot.get("safe_gap_rect", Rect2())
+	var safe_gap := Rect2(
+		combat_dock.position + local_safe_gap.position,
+		local_safe_gap.size
+	) if combat_dock != null else Rect2()
 	return {
 		"viewport": size,
 		"health_rect": health_panel.get_rect() if health_panel != null else Rect2(),
-		"resources_rect": resource_panel.get_rect() if resource_panel != null else Rect2(),
 		"objective_rect": objective_container.get_rect() if objective_container != null else Rect2(),
 		"boss_rect": boss_panel.get_rect() if boss_panel != null else Rect2(),
-		"action_bar_rect": action_bar.get_rect() if action_bar != null else Rect2(),
-		"action_center_gap_rect": (
-			Rect2(action_center_gap.global_position - global_position, action_center_gap.size)
-			if action_center_gap != null
-			else Rect2()
-		),
+		"combat_dock_rect": combat_dock.get_rect() if combat_dock != null else Rect2(),
+		"player_safe_gap_rect": safe_gap,
 		"context_lane_rect": context_lane.get_rect() if context_lane != null else Rect2(),
 		"objective_detail": objective_detail_label.text if objective_detail_label != null else "",
 		"prompt_visible": prompt_panel.visible if prompt_panel != null else false,
 		"prompt_binding": prompt_binding_label.text if prompt_binding_label != null else "",
 		"prompt_text": prompt_label.text if prompt_label != null else "",
 		"receipt_active": _receipt_active,
-		"slots": slot_snapshots,
-		"class_state": class_state.get_display_snapshot() if class_state != null else {},
+		"armor": armor_label.text if armor_label != null else "",
+		"combat": dock_snapshot,
 	}
 
 
 func _build_ui() -> void:
 	_build_health_cluster()
-	_build_resource_strip()
 	_build_objective()
 	_build_boss_panel()
-	_build_action_bar()
+	_build_combat_dock()
 	_build_context_lane()
 	_layout_responsive()
 
@@ -187,59 +165,11 @@ func _build_health_cluster() -> void:
 	Styles.configure_label(level_xp_label, 12, Styles.TEXT_MUTED)
 	details.add_child(level_xp_label)
 
-	class_state = ClassState.new()
-	class_state.name = "ClassState"
-	class_state.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	details.add_child(class_state)
-
-
-func _build_resource_strip() -> void:
-	resource_panel = _hud_panel(Color(Styles.SURFACE, 0.94), Styles.OUTLINE)
-	resource_panel.name = "ResourceStrip"
-	resource_panel.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	add_child(resource_panel)
-	var margin := _margin_container(8, 7, 8, 6)
-	resource_panel.add_child(margin)
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 3)
-	margin.add_child(row)
-	var resources: Array[Dictionary] = [
-		{"id": &"coin", "label": "COIN", "tone": Styles.AMBER},
-		{"id": &"rusted_scrap", "label": "SCRAP", "tone": Styles.SCRAP},
-		{"id": &"sky_thread", "label": "THREAD", "tone": Styles.THREAD},
-		{"id": &"slime_residue", "label": "RESID", "tone": Styles.RESIDUE},
-		{"id": &"boss_core", "label": "CORE", "tone": Styles.BOSS_CORE},
-	]
-	for definition in resources:
-		row.add_child(_build_resource_item(definition))
-
-
-func _build_resource_item(definition: Dictionary) -> Control:
-	var column := VBoxContainer.new()
-	column.custom_minimum_size = Vector2(52.0, 44.0)
-	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	column.add_theme_constant_override("separation", 0)
-	var value_row := HBoxContainer.new()
-	value_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	value_row.add_theme_constant_override("separation", 2)
-	column.add_child(value_row)
-	var glyph := Glyph.new()
-	glyph.custom_minimum_size = Vector2(17.0, 17.0)
-	glyph.configure(StringName(definition["id"]), definition["tone"] as Color)
-	value_row.add_child(glyph)
-	var value_label := Label.new()
-	value_label.name = "%sValue" % String(definition["id"]).to_pascal_case()
-	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	value_label.custom_minimum_size = Vector2(24.0, 19.0)
-	Styles.configure_label(value_label, 13, Styles.TEXT)
-	value_row.add_child(value_label)
-	resource_value_labels[String(definition["id"])] = value_label
-	var id_label := Label.new()
-	id_label.text = String(definition["label"])
-	id_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	Styles.configure_label(id_label, 10, Styles.TEXT_MUTED)
-	column.add_child(id_label)
-	return column
+	armor_label = Label.new()
+	armor_label.name = "ArmorState"
+	armor_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	Styles.configure_label(armor_label, 12, Styles.TEXT_MUTED)
+	details.add_child(armor_label)
 
 
 func _build_objective() -> void:
@@ -280,28 +210,11 @@ func _build_objective() -> void:
 	_show_objective("Defeat enemies")
 
 
-func _build_action_bar() -> void:
-	action_bar = _hud_panel(Color.TRANSPARENT, Color.TRANSPARENT)
-	action_bar.name = "ActionBar"
-	action_bar.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	add_child(action_bar)
-	var margin := _margin_container(8, 8, 8, 8)
-	action_bar.add_child(margin)
-	action_row = HBoxContainer.new()
-	action_row.name = "ActionSlots"
-	action_row.add_theme_constant_override("separation", 5)
-	margin.add_child(action_row)
-	for index in ACTION_SLOT_DEFINITIONS.size():
-		if index == 3:
-			action_center_gap = Control.new()
-			action_center_gap.name = "PlayerSafeGap"
-			action_center_gap.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			action_row.add_child(action_center_gap)
-		var definition := ACTION_SLOT_DEFINITIONS[index]
-		var slot := ActionSlotScene.instantiate() as Control
-		slot.name = "Action_%s" % String(definition["slot_role"])
-		action_row.add_child(slot)
-		action_slots.append(slot)
+func _build_combat_dock() -> void:
+	combat_dock = CombatDock.new()
+	combat_dock.name = "CombatDock"
+	combat_dock.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	add_child(combat_dock)
 
 
 func _build_context_lane() -> void:
@@ -426,10 +339,6 @@ func _layout_responsive() -> void:
 	health_panel.offset_top = 14.0
 	health_panel.offset_right = 312.0
 	health_panel.offset_bottom = 112.0
-	resource_panel.offset_left = -306.0
-	resource_panel.offset_top = 14.0
-	resource_panel.offset_right = -16.0
-	resource_panel.offset_bottom = 78.0
 	var objective_width := 280.0 if compact else 340.0
 	objective_container.offset_left = -objective_width * 0.5
 	objective_container.offset_top = 17.0
@@ -441,23 +350,15 @@ func _layout_responsive() -> void:
 	boss_panel.offset_right = boss_width * 0.5
 	boss_panel.offset_bottom = 82.0
 
-	var slot_size := ACTION_SLOT_MINIMUM_SIZE
-	for slot in action_slots:
-		slot.custom_minimum_size = slot_size
-	var center_gap_width := ACTION_CENTER_GAP_COMPACT if compact else ACTION_CENTER_GAP_WIDE
-	action_center_gap.custom_minimum_size = Vector2(center_gap_width, slot_size.y)
-	var separation := float(action_row.get_theme_constant("separation"))
-	var bar_width := (
-		slot_size.x * float(action_slots.size())
-		+ center_gap_width
-		+ separation * float(action_slots.size())
-		+ 16.0
-	)
-	var bar_height := slot_size.y + 16.0
-	action_bar.offset_left = -bar_width * 0.5
-	action_bar.offset_top = -(bar_height + 14.0)
-	action_bar.offset_right = bar_width * 0.5
-	action_bar.offset_bottom = -14.0
+	combat_dock.set_compact(compact)
+	var dock_size := Vector2(724.0 if compact else 810.0, 92.0)
+	# The two attack choices occupy less width than the three status tiles.
+	# Offset the dock so its intentional empty lane, not its outer bounds, follows the player.
+	var safe_gap_shift := 96.0 if compact else 98.0
+	combat_dock.offset_left = -dock_size.x * 0.5 + safe_gap_shift
+	combat_dock.offset_top = -(dock_size.y + 14.0)
+	combat_dock.offset_right = dock_size.x * 0.5 + safe_gap_shift
+	combat_dock.offset_bottom = -14.0
 
 	var lane_width := 320.0 if compact else minf(540.0, size.x - 680.0)
 	var lane_height := 58.0
@@ -465,14 +366,14 @@ func _layout_responsive() -> void:
 	context_lane.offset_top = 86.0
 	context_lane.offset_right = lane_width * 0.5
 	context_lane.offset_bottom = 86.0 + lane_height
-	_refresh_action_slots()
+	combat_dock.configure(_run_snapshot, _combat_state)
 	_refresh_boss_header()
 
 
 func _refresh_all() -> void:
 	_refresh_health_cluster()
-	_refresh_resources()
-	_refresh_action_slots()
+	if combat_dock != null:
+		combat_dock.configure(_run_snapshot, _combat_state)
 	_refresh_context_lane()
 
 
@@ -485,16 +386,16 @@ func _on_health_changed(current_health: int, max_health: int) -> void:
 func _on_run_state_changed(snapshot: Dictionary) -> void:
 	_run_snapshot = snapshot.duplicate(true)
 	_refresh_health_cluster()
-	_refresh_resources()
-	_refresh_action_slots()
+	if combat_dock != null:
+		combat_dock.configure(_run_snapshot, _combat_state)
 
 
 func _refresh_health_cluster() -> void:
 	if health_bar == null:
 		return
-	var profile_id := StringName(_run_snapshot.get("profile_id", "warrior"))
+	var profile_id := StringName(_run_snapshot.get("profile_id", "traveler"))
 	if profile_id == &"":
-		profile_id = &"warrior"
+		profile_id = &"traveler"
 	var current_health := maxi(int(_run_snapshot.get("health", 0)), 0)
 	var max_health := maxi(int(_run_snapshot.get("max_health", 1)), 1)
 	var accent := Styles.class_accent(profile_id)
@@ -518,89 +419,20 @@ func _refresh_health_cluster() -> void:
 		"panel", Styles.panel_style(Color("151c1f"), accent, 2)
 	)
 	portrait_glyph.configure(profile_id, accent)
-	class_state.configure(profile_id, _combat_state)
-
-
-func _refresh_resources() -> void:
-	if resource_value_labels.is_empty():
-		return
-	var materials_value: Variant = _run_snapshot.get("materials", {})
-	var materials: Dictionary = materials_value if materials_value is Dictionary else {}
-	resource_value_labels["coin"].text = str(maxi(int(_run_snapshot.get("coins", 0)), 0))
-	for material_id in ["rusted_scrap", "sky_thread", "slime_residue", "boss_core"]:
-		resource_value_labels[material_id].text = str(maxi(int(materials.get(material_id, 0)), 0))
+	var loadout: Dictionary = _combat_state.get("loadout", {})
+	var armor_name := String(loadout.get("armor_display_name", "Traveler Coat"))
+	var health_bonus := maxi(int(loadout.get("armor_health_bonus", 0)), 0)
+	armor_label.text = "%s%s" % [
+		armor_name,
+		"  +%d HP" % health_bonus if health_bonus > 0 else "",
+	]
 
 
 func _on_combat_state_changed(state: Dictionary) -> void:
 	_combat_state = state.duplicate(true)
-	_refresh_action_slots()
 	_refresh_health_cluster()
-
-
-func _refresh_action_slots() -> void:
-	if action_slots.is_empty():
-		return
-	# Availability and timing mirror snapshots; presentation never predicts combat legality.
-	var actions_by_input: Dictionary = {}
-	for action_value in _combat_state.get("actions", []):
-		if not action_value is Dictionary:
-			continue
-		var action := action_value as Dictionary
-		actions_by_input[String(action.get("input_action", ""))] = action
-	var current_attack_id := String(_combat_state.get("current_attack_id", ""))
-	var global_charge := clampf(float(_combat_state.get("charge_fraction", 0.0)), 0.0, 1.0)
-	for index in ACTION_SLOT_DEFINITIONS.size():
-		var definition := ACTION_SLOT_DEFINITIONS[index]
-		var role := StringName(definition["slot_role"])
-		var input_action := StringName(definition["input_action"])
-		var view_model := {
-			"slot_role": role,
-			"input": Game.get_action_binding_text(String(input_action), String(definition["fallback"])),
-			"label": String(definition["fallback_label"]),
-			"available": false,
-			"active": false,
-			"cooldown": 0.0,
-			"charge_fraction": 0.0,
-			"charges": -1,
-		}
-		if role == &"consumable":
-			var consumable_id := String(_run_snapshot.get("consumable_id", ""))
-			var charges := maxi(int(_run_snapshot.get("consumable_charges", 0)), 0)
-			var consumable_label := (
-				consumable_id.replace("_", " ").capitalize()
-				if not consumable_id.is_empty()
-				else "Consumable"
-			)
-			view_model["label"] = _compact_action_label(consumable_label)
-			view_model["available"] = not consumable_id.is_empty() and charges > 0
-			view_model["charges"] = charges
-		else:
-			var action_value: Variant = actions_by_input.get(String(input_action), null)
-			if action_value is Dictionary:
-				var action := action_value as Dictionary
-				var action_id := String(action.get("id", ""))
-				view_model["label"] = _compact_action_label(
-					String(action.get("label", definition["fallback_label"]))
-				)
-				view_model["available"] = not action_id.is_empty()
-				view_model["active"] = not action_id.is_empty() and action_id == current_attack_id
-				view_model["cooldown"] = maxf(float(action.get("cooldown", 0.0)), 0.0)
-				if bool(view_model["active"]) and global_charge > 0.0:
-					view_model["charge_fraction"] = global_charge
-		action_slots[index].call("configure", view_model)
-
-
-func _compact_action_label(label: String) -> String:
-	if not _compact_layout:
-		return label
-	return {
-		"Guard Breaker": "Breaker",
-		"Ground Splitter": "Splitter",
-		"Shadow Lunge": "Lunge",
-		"Small Potion": "Potion",
-		"Dash Tonic": "Tonic",
-		"Salvage Kit": "Salvage",
-	}.get(label, label)
+	if combat_dock != null:
+		combat_dock.configure(_run_snapshot, _combat_state)
 
 
 func _on_stage_started(stage_id: String, stage_display_name: String) -> void:
@@ -642,7 +474,8 @@ func _collapse_objective() -> void:
 
 
 func _on_input_bindings_changed() -> void:
-	_refresh_action_slots()
+	if combat_dock != null:
+		combat_dock.configure(_run_snapshot, _combat_state)
 	_refresh_context_lane()
 
 
