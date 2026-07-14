@@ -5,6 +5,7 @@ signal presentation_state_changed(active: bool)
 
 const Styles = preload("res://scripts/ui/production/ProductionUIStyles.gd")
 const DISPLAY_SECONDS := 2.8
+const PERMANENT_REWARD_SECONDS := 4.0
 const FADE_SECONDS := 0.22
 const MAX_QUEUE_SIZE := 4
 const GRANT_ORDER: Array[String] = [
@@ -137,9 +138,19 @@ func build_view_model(receipt: Dictionary) -> Dictionary:
 	var role := StringName(receipt.get("reward_role", &"generic_reward"))
 	var replacement_kind := StringName(receipt.get("replacement_kind", &"normal"))
 	var discoveries: Variant = receipt.get("equipment_discoveries", [])
-	var title := _receipt_title(role, replacement_kind, discoveries)
+	var blueprint_unlocks: Variant = receipt.get("blueprint_unlocks", [])
+	var spirit_unlocks: Variant = receipt.get("spirit_stone_unlocks", [])
+	var title := _receipt_title(
+		role,
+		replacement_kind,
+		discoveries,
+		blueprint_unlocks,
+		spirit_unlocks
+	)
 	var parts := _grant_parts(receipt.get("grants", {}))
 	parts.append_array(_equipment_parts(discoveries))
+	parts.append_array(_blueprint_parts(blueprint_unlocks))
+	parts.append_array(_spirit_stone_parts(spirit_unlocks))
 	if replacement_kind == &"forge":
 		var forge_text := _forge_text(receipt.get("replacement_payload", {}))
 		if not forge_text.is_empty():
@@ -149,7 +160,12 @@ func build_view_model(receipt: Dictionary) -> Dictionary:
 	return {
 		"title": title,
 		"summary": "  /  ".join(parts),
-		"accent": Styles.MOSS if role == &"material_node" else Styles.AMBER,
+		"accent": _receipt_accent(role),
+		"display_seconds": (
+			PERMANENT_REWARD_SECONDS
+			if _has_entries(blueprint_unlocks) or _has_entries(spirit_unlocks)
+			else DISPLAY_SECONDS
+		),
 	}
 
 
@@ -176,7 +192,7 @@ func _show_next() -> void:
 	_summary.text = String(view_model["summary"])
 	_panel.visible = true
 	_panel.modulate = Color.WHITE
-	await get_tree().create_timer(DISPLAY_SECONDS).timeout
+	await get_tree().create_timer(float(view_model.get("display_seconds", DISPLAY_SECONDS))).timeout
 	if serial != _display_serial or not is_instance_valid(_panel):
 		return
 	var tween := create_tween()
@@ -260,7 +276,9 @@ func _format_amount(amount: float) -> String:
 func _receipt_title(
 	role: StringName,
 	replacement_kind: StringName,
-	discoveries: Variant
+	discoveries: Variant,
+	blueprint_unlocks: Variant,
+	spirit_unlocks: Variant
 ) -> String:
 	if replacement_kind == &"forge":
 		return "FORGE APPLIED"
@@ -271,11 +289,25 @@ func _receipt_title(
 		return "CACHE SALVAGED"
 	if replacement_kind == &"equipment":
 		return "EQUIPMENT FOUND"
+	if _has_entries(blueprint_unlocks) and _has_entries(spirit_unlocks):
+		return "NEW DISCOVERIES"
+	if _has_entries(blueprint_unlocks):
+		return "BLUEPRINT ACQUIRED" if _has_new_unlock(blueprint_unlocks) else "BLUEPRINT ALREADY KNOWN"
+	if _has_entries(spirit_unlocks):
+		return "SPIRIT STONE ATTUNED" if _has_new_unlock(spirit_unlocks) else "SPIRIT STONE ALREADY KNOWN"
 	match role:
 		&"cache_reward", &"optional_route", &"route_choice":
 			return "CHEST OPENED"
 		&"material_node":
 			return "MATERIAL EXTRACTED"
+		&"npc_reward":
+			return "REQUEST COMPLETED"
+		&"spirit_shrine":
+			return "SHRINE AWAKENED"
+		&"elite_reward":
+			return "ELITE DEFEATED"
+		&"stage_clear":
+			return "STAGE CLEARED"
 	return "REWARD COLLECTED"
 
 
@@ -328,6 +360,80 @@ func _equipment_parts(discoveries_value: Variant) -> Array[String]:
 	return parts
 
 
+func _blueprint_parts(unlocks_value: Variant) -> Array[String]:
+	var parts: Array[String] = []
+	if not unlocks_value is Array:
+		return parts
+	var catalog: Variant = _progression_catalog()
+	for value in unlocks_value:
+		if not value is Dictionary:
+			continue
+		var unlock := value as Dictionary
+		var model_id := StringName(unlock.get("model_id", &""))
+		var blueprint: Variant = catalog.get_blueprint_for_model(model_id) if catalog != null else null
+		var display_name := (
+			String(blueprint.get("display_name"))
+			if blueprint != null
+			else "%s Blueprint" % String(model_id).capitalize()
+		)
+		parts.append(
+			"%s already known" % display_name
+			if bool(unlock.get("duplicate", false))
+			else "%s - forge now available" % display_name
+		)
+	return parts
+
+
+func _spirit_stone_parts(unlocks_value: Variant) -> Array[String]:
+	var parts: Array[String] = []
+	if not unlocks_value is Array:
+		return parts
+	var catalog: Variant = _progression_catalog()
+	for value in unlocks_value:
+		if not value is Dictionary:
+			continue
+		var unlock := value as Dictionary
+		var stone_id := StringName(unlock.get("stone_id", &""))
+		var stone: Variant = catalog.get_spirit_stone(stone_id) if catalog != null else null
+		var display_name := (
+			String(stone.get("display_name"))
+			if stone != null
+			else String(stone_id).capitalize()
+		)
+		if bool(unlock.get("duplicate", false)):
+			parts.append("%s already attuned" % display_name)
+			continue
+		var effect := (
+			String(stone.get("passive_description"))
+			if stone != null
+			else "Passive effect available."
+		)
+		parts.append("%s - %s" % [display_name, effect.trim_suffix(".")])
+	return parts
+
+
+func _has_entries(value: Variant) -> bool:
+	return value is Array and not value.is_empty()
+
+
+func _has_new_unlock(value: Variant) -> bool:
+	if not value is Array:
+		return false
+	for entry in value:
+		if entry is Dictionary and not bool(entry.get("duplicate", false)):
+			return true
+	return false
+
+
+func _receipt_accent(role: StringName) -> Color:
+	match role:
+		&"material_node", &"npc_reward":
+			return Styles.MOSS
+		&"spirit_shrine":
+			return Styles.CYAN
+	return Styles.AMBER
+
+
 func _forge_text(payload_value: Variant) -> String:
 	if not payload_value is Dictionary:
 		return ""
@@ -361,3 +467,8 @@ func _forge_affix(affix_id: StringName) -> Variant:
 		return null
 	var catalog: Variant = run_state.get("forge_catalog")
 	return catalog.get_affix(affix_id) if catalog != null else null
+
+
+func _progression_catalog() -> Variant:
+	var profile_state := get_node_or_null("/root/ProfileState")
+	return profile_state.get("progression_catalog") if profile_state != null else null

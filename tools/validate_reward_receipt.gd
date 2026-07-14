@@ -2,6 +2,7 @@ extends SceneTree
 
 const EQUIPMENT_CATALOG := preload("res://data/equipment/equipment_catalog.tres")
 const MASTERY_CATALOG := preload("res://data/mastery/mastery_catalog.tres")
+const PROGRESSION_CATALOG := preload("res://data/equipment/equipment_progression_catalog.tres")
 
 var _failures: Array[String] = []
 var _checkpoint := "initialize"
@@ -20,7 +21,7 @@ func _run() -> void:
 	if profile_state == null or run_state == null:
 		_finish()
 		return
-	profile_state.initialize_for_tests(EQUIPMENT_CATALOG, MASTERY_CATALOG)
+	profile_state.initialize_for_tests(EQUIPMENT_CATALOG, MASTERY_CATALOG, "", false, PROGRESSION_CATALOG)
 	_checkpoint = "start run"
 	_expect(run_state.start_new_run(0, 9227), "receipt fixture run should start")
 	root.size = Vector2i(960, 540)
@@ -45,7 +46,7 @@ func _run() -> void:
 	_expect(
 		String(view["summary"]).contains("+7 Coins")
 		and String(view["summary"]).contains("+3 XP")
-		and String(view["summary"]).contains("+1 Rusted Scrap"),
+		and String(view["summary"]).contains("+1 Iron Scrap"),
 		"currency receipt should name every grant"
 	)
 
@@ -71,7 +72,7 @@ func _run() -> void:
 	_expect(view["title"] == "CACHE SALVAGED", "duplicate equipment should identify salvage")
 	_expect(
 		String(view["summary"]).contains("Bell Hammer duplicate")
-		and String(view["summary"]).contains("+4 Rusted Scrap"),
+		and String(view["summary"]).contains("+4 Iron Scrap"),
 		"duplicate receipt should identify item and salvage"
 	)
 
@@ -86,6 +87,31 @@ func _run() -> void:
 	view = presenter.build_view_model(forge)
 	_expect(view["title"] == "FORGE APPLIED", "forge replacement should use forge title")
 	_expect(String(view["summary"]).contains("Bell Hammer: Force"), "forge receipt should name item and affix")
+
+	var blueprint := {
+		"applied": true,
+		"reward_role": &"npc_reward",
+		"grants": {},
+		"blueprint_unlocks": [{"model_id": "hunting_spear", "duplicate": false}],
+		"spirit_stone_unlocks": [],
+	}
+	view = presenter.build_view_model(blueprint)
+	_expect(view["title"] == "BLUEPRINT ACQUIRED", "new blueprint should lead the receipt")
+	_expect(
+		String(view["summary"]).contains("Hunting Spear Blueprint - forge now available"),
+		"blueprint receipt should explain its next use"
+	)
+	_expect(float(view["display_seconds"]) == 4.0, "permanent unlock should remain visible longer")
+	var spirit := {
+		"applied": true,
+		"reward_role": &"spirit_shrine",
+		"grants": {},
+		"blueprint_unlocks": [],
+		"spirit_stone_unlocks": [{"stone_id": "frost_spirit_stone", "duplicate": false}],
+	}
+	view = presenter.build_view_model(spirit)
+	_expect(view["title"] == "SPIRIT STONE ATTUNED", "new Spirit Stone should lead the receipt")
+	_expect(String(view["summary"]).contains("Frost Spirit Stone"), "Spirit receipt should use its display name")
 
 	_checkpoint = "present first receipt"
 	presenter.present(currency)
