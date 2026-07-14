@@ -74,8 +74,11 @@ adding more content or random topology.
 - All three normal stages, six committed-return fixtures, enemy/hazard families,
   card rewards, boss flow, settlement, and profile restart recovery are in the
   active release matrix.
-- The minimum equipment-progression ExecPlan is complete. There is no active
-  implementation plan after this record update.
+- The minimum equipment-progression ExecPlan is complete. The original SVG UI
+  starter set now provides 6 structural masks and 22 semantic glyphs under
+  `art/ui/production/`, with a rendered adoption catalog and Godot capture tool.
+  No production screen has adopted the assets yet, and there is no active
+  implementation plan after this bounded pass.
 
 ## Authority
 
@@ -137,7 +140,8 @@ inspection at `960x540`, `1280x720`, and `1920x1080` where applicable.
 
 ## Next Steps
 
-No task from the completed migration plan remains. The next cross-module feature
-should start with a new ExecPlan grounded in owner playtest evidence. Random map
-re-entry, active skills, larger equipment/content catalogs, multiple save slots,
-and final art are separate decisions rather than implied continuation work.
+No task from the completed migration or SVG asset catalog plans remains. The next
+cross-module feature should start with a new ExecPlan grounded in owner feedback.
+Production-screen SVG adoption, random map re-entry, active skills, larger
+equipment/content catalogs, multiple save slots, and final world art remain
+separate decisions rather than implied continuation work.

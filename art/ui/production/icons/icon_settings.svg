@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <title>Settings</title>
+  <path fill="#fff" fill-rule="evenodd" d="M27 4h10l3 9 9-3 5 9-7 6 7 7-5 9-9-3-3 10H27l-3-10-9 3-5-9 7-7-7-6 5-9 9 3 3-9Zm5 18a10 10 0 1 0 0 20 10 10 0 0 0 0-20Z"/>
+</svg>

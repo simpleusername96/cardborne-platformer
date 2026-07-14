@@ -1,0 +1,44 @@
+{
+  "set": "cardborne-production-ui",
+  "version": 1,
+  "created": "2026-07-15",
+  "provenance": "Original geometry authored for this repository; no third-party assets or external references.",
+  "rendering": {
+    "source_fill": "#ffffff",
+    "mode": "tintable-mask",
+    "panel_outlines": false,
+    "embedded_text": false
+  },
+  "shapes": [
+    { "id": "panel_slab", "file": "shapes/panel_slab.svg", "view_box": "0 0 640 360" },
+    { "id": "panel_compact", "file": "shapes/panel_compact.svg", "view_box": "0 0 480 176" },
+    { "id": "panel_card", "file": "shapes/panel_card.svg", "view_box": "0 0 320 440" },
+    { "id": "banner_objective", "file": "shapes/banner_objective.svg", "view_box": "0 0 520 96" },
+    { "id": "button_plate", "file": "shapes/button_plate.svg", "view_box": "0 0 320 64" },
+    { "id": "slot_plate", "file": "shapes/slot_plate.svg", "view_box": "0 0 96 112" }
+  ],
+  "icons": [
+    { "id": "back", "file": "icons/icon_back.svg", "role": "navigation" },
+    { "id": "settings", "file": "icons/icon_settings.svg", "role": "navigation" },
+    { "id": "exit", "file": "icons/icon_exit.svg", "role": "navigation" },
+    { "id": "melee", "file": "icons/icon_melee.svg", "role": "equipment" },
+    { "id": "ranged", "file": "icons/icon_ranged.svg", "role": "equipment" },
+    { "id": "shield", "file": "icons/icon_shield.svg", "role": "equipment" },
+    { "id": "armor", "file": "icons/icon_armor.svg", "role": "equipment" },
+    { "id": "spirit", "file": "icons/icon_spirit.svg", "role": "equipment" },
+    { "id": "potion", "file": "icons/icon_potion.svg", "role": "equipment" },
+    { "id": "scrap", "file": "icons/icon_scrap.svg", "role": "material" },
+    { "id": "timber", "file": "icons/icon_timber.svg", "role": "material" },
+    { "id": "fiber", "file": "icons/icon_fiber.svg", "role": "material" },
+    { "id": "steel", "file": "icons/icon_steel.svg", "role": "material" },
+    { "id": "fabric", "file": "icons/icon_fabric.svg", "role": "material" },
+    { "id": "arrows", "file": "icons/icon_arrows.svg", "role": "supply" },
+    { "id": "cartridges", "file": "icons/icon_cartridges.svg", "role": "supply" },
+    { "id": "boss_core", "file": "icons/icon_boss_core.svg", "role": "reward" },
+    { "id": "speed", "file": "icons/icon_speed.svg", "role": "reward" },
+    { "id": "health", "file": "icons/icon_health.svg", "role": "reward" },
+    { "id": "force", "file": "icons/icon_force.svg", "role": "reward" },
+    { "id": "cache", "file": "icons/icon_cache.svg", "role": "interaction" },
+    { "id": "confirm", "file": "icons/icon_confirm.svg", "role": "interaction" }
+  ]
+}

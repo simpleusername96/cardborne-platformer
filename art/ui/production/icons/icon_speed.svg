@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <title>Light foot</title>
+  <circle fill="#fff" cx="42" cy="11" r="7"/>
+  <path fill="#fff" d="m29 19 12 3 7 10 11 4-3 8-14-5-6-8-7 11-12 16-8-6 11-16 4-10-10 6H3v-8h9l17-5ZM3 12h20v6H3v-6ZM3 37h12v6H3v-6Z"/>
+</svg>
