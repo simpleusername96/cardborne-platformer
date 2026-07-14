@@ -1,12 +1,13 @@
 ---
 type: record
-status: active
+status: superseded
 owner: BK
 created: 2026-07-12
 last_reviewed: 2026-07-12
 topic: First complete Cardborne run release candidate
 scope: Playable content, verification evidence, and known limitations
 source: Completed production roadmap and validated Godot runtime
+superseded_by: ./TRAVELER_EQUIPMENT_VERTICAL_SLICE.md
 related:
   - ../product/2d_platform_action_card_game_prd.md
   - ../../.agent/execplans/2026-07-12-actual-game-production-roadmap.md
@@ -14,6 +15,9 @@ related:
 ---
 
 # First Complete Run RC1
+
+> **Superseded 2026-07-14.** This is the historical three-class baseline. The
+> current production record is `TRAVELER_EQUIPMENT_VERTICAL_SLICE.md`.
 
 ## Context
 

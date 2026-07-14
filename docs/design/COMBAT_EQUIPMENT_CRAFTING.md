@@ -14,7 +14,7 @@ related:
   - ../../.agent/execplans/2026-07-14-minimum-equipment-progression-vertical-slice.md
   - ./COMBAT_LOADOUT_DECISION_BRIEF.md
   - ../product/2d_platform_action_card_game_prd.md
-  - ./PLAYER_UIUX_REFINEMENT_PLAN.md
+  - ./PRODUCTION_UI_CONTRACT.md
   - ../architecture/FIRST_SLICE_ARCHITECTURE.md
 ---
 
@@ -34,8 +34,8 @@ related:
  -> 장비 비교와 장착 -> 다음 전투에서 변화 확인 -> 자동 저장
 ```
 
-현재 배포 코드는 아직 Warrior, Archer, Assassin 세 프로필과 세 기술 슬롯을
-사용한다. 이 문서는 구현 완료 보고가 아니라 이를 교체하는 제품 사양이다.
+현재 생산 경로는 이 사양의 한 Traveler, 상황 공격, 방패 방어, 장비 성장 순환을
+사용한다. 이전 세 클래스 데이터는 v1 저장 마이그레이션과 역사 fixture에만 남는다.
 
 ## Scope
 

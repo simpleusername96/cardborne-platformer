@@ -11,7 +11,7 @@ related:
   - ../design/PROCEDURAL_REGION_GENERATION.md
   - ../design/MAP_AUTHORING_PIPELINE_CONTRACT.md
   - ../design/ENEMIES_TRAPS_GIMMICKS.md
-  - ../design/PLAYER_UIUX_REFINEMENT_PLAN.md
+  - ../design/PRODUCTION_UI_CONTRACT.md
   - ../architecture/FIRST_SLICE_ARCHITECTURE.md
 ---
 

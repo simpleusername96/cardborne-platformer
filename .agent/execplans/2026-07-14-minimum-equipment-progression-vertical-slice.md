@@ -1,6 +1,6 @@
 ---
 type: plan
-status: active
+status: done
 owner: BK
 created: 2026-07-14
 last_reviewed: 2026-07-14
@@ -11,7 +11,7 @@ source: Owner decisions through 2026-07-14 and inspected production code, data, 
 related:
   - ../../docs/product/2d_platform_action_card_game_prd.md
   - ../../docs/design/COMBAT_EQUIPMENT_CRAFTING.md
-  - ../../docs/design/PLAYER_UIUX_REFINEMENT_PLAN.md
+  - ../../docs/design/PRODUCTION_UI_CONTRACT.md
   - ../../docs/architecture/FIRST_SLICE_ARCHITECTURE.md
   - ../../docs/data/RUNTIME_CATALOG_INDEX.md
 ---
@@ -144,7 +144,7 @@ related:
 
 ## Progress State
 
-### Landed / Already True
+### Completed
 
 - [x] 공통 이동은 달리기, 점프 버퍼, 코요테 타임, 2단 점프, 대시, 숙이기,
   일방 통행 낙하, 줄 오르기를 지원한다.
@@ -156,20 +156,16 @@ related:
 - [x] `FieldPickup`과 `RewardReceiptPresenter`가 필드 획득과 짧은 수령 표시를 제공한다.
 - [x] `EquipmentDefinition`, `EquipmentCatalog`, `ProfileData`,
   `ProfileCommandService`, `ProfileSaveService`가 영구 장비·재료·백업 저장 기반을 제공한다.
-- [x] `EquipmentDecisionPanel`, `CharacterSelect`, `RestForge`, `ProductionHUD`가
-  비교 화면과 반응형 UI의 재사용 기반을 제공한다.
-- [x] `CuratedStagePlanBuilder`와 고정 레이아웃 V3가 랜덤 없이 승인된 Stage Plan을 만든다.
-
-### Still Open
-
-- [ ] 클래스 선택과 캐릭터 소유 전투/장비/숙련을 한 영웅 소유로 마이그레이션한다.
-- [ ] 상황 공격과 독립 방패 방어를 실제 입력·미리보기·판정에 연결한다.
-- [ ] 최소 장비 8개, 정령석 2개, 2등급 재료·설계도 데이터를 만든다.
-- [ ] 제작·재제작·수리 명령과 프로필 v2 저장을 구현한다.
-- [ ] 적·상자·NPC·정예·완료 보상을 고정 획득 경로에 연결한다.
-- [ ] 연습장 완료/스킵 동등성과 Stage 1 핵심 순환을 구현한다.
-- [ ] HUD와 대장간을 디버그 문구 없는 실제 게임 화면으로 바꾼다.
-- [ ] 이전 클래스·기술·임시 강화 경로를 생산 실행에서 제거하고 회귀를 통과한다.
+- [x] 한 Traveler가 상황 공격, 방패 방어, 장비·설계도·재료·정령석을 소유한다.
+- [x] 8개 장비 모델, 2개 정령석, 6개 재료, 2개 등급, 제작·재제작·수리,
+  상태, 화살·탄약이 typed Resource와 원자적 명령으로 동작한다.
+- [x] 프로필 v2 마이그레이션, 자동 저장, backup 복구, 재실행 round trip이 통과한다.
+- [x] 고정 Arsenal Trial의 완료/스킵 동등성과 고정 Stage 1 획득·제작 순환이 동작한다.
+- [x] Hero Preparation, Forge, 장비 중심 HUD, 상호작용/획득 receipt가 생산 UI다.
+- [x] 클래스 선택, class HUD, active skill 입력, RestForge, 임시 affix, 구 장비 드롭이
+  생산 실행에서 제거되었다.
+- [x] 고정 레이아웃 V5의 세 normal stage, 복귀 경로, boss, settlement가 통과한다.
+- [x] 활성 Full release matrix 68개와 세 해상도 렌더링 QA가 통과했다.
 
 ## Guiding Implementation Principle
 
@@ -584,11 +580,11 @@ settings
     생산 `control/tactical skill`이 긍정 요구사항으로 남지 않는다. 과거 결정을
     폐기하는 문장과 non-goal/guard 문장은 허용한다.
   - Guard: superseded 연구/기록 문서는 역사 근거로 유지하고 실행 권한을 주지 않는다.
-- [ ] **A2 Capture representative v1 fixtures.**
+- [x] **A2 Capture representative v1 fixtures.**
   - `PlayerCombatController`, Warrior melee/guard, Archer projectile, profile save,
     reward settlement, field pickup, fixed Stage 1, HUD/forge 스냅샷을 집중 fixture로 고정한다.
   - Accept: 새 fixture가 현재 `master`에서 통과하고 실패 시 어떤 보존 동작이 깨졌는지 말한다.
-- [ ] **A3 Define target Resource and snapshot contracts without production activation.**
+- [x] **A3 Define target Resource and snapshot contracts without production activation.**
   - `CombatToolDefinition`, material/blueprint/Spirit definitions, `AttackIntent`,
     hero loadout, crafted equipment snapshot의 필드와 검증 규칙을 만든다.
   - Accept: 최소 8 장비 모델, 2 정령석, 2등급 재료 fixture가 정적 검증을 통과한다.
@@ -604,23 +600,23 @@ settings
 **Source owners:** `PlayerController`, `PlayerCombatController`, current combat
 runtimes, input bindings, Player scene, RunState development activation path.
 
-- [ ] **B1 Add one shared hero baseline.**
+- [x] **B1 Add one shared hero baseline.**
   - As-is: `RunState` selects one of three profiles and applies character movement/build.
   - To-be: 하나의 영웅 HP·이동 지표와 loadout snapshot을 플레이어에 적용한다.
   - Accept: 모든 기존 필수 경로가 동일한 영웅 fixture로 통과한다.
   - Guard: 이동에 장비 ID나 정령석 ID 조건문을 넣지 않는다.
-- [ ] **B2 Implement `AttackIntentResolver`.**
+- [x] **B2 Implement `AttackIntentResolver`.**
   - 근접 후보, 원거리 후보, 시야, 자원, fallback, 16px 완충, 0.15초 유지,
     action lock 규칙을 순수 입력/결과 계약으로 구현한다.
   - Accept: 가까운/먼/뒤/벽 뒤/탄약 0/경계/다수 적 fixture가 정확한 모델 ID를 반환한다.
-- [ ] **B3 Route preview and execution through the same intent.**
+- [x] **B3 Route preview and execution through the same intent.**
   - `PlayerAttackPresenter`와 `PlayerCombatController`가 같은 intent geometry를 사용한다.
   - Accept: 표시 범위와 실제 hurtbox/projectile 판정 오차가 허용치 4px 이하다.
-- [ ] **B4 Implement shield runtime and `guard` input.**
+- [x] **B4 Implement shield runtime and `guard` input.**
   - 원형 방패 startup/active/recovery, 정면 각도, stability, 정밀 방어를 구현한다.
   - `heavy_attack`은 마이그레이션 입력 alias로 한 배치만 유지한 뒤 생산 표시에서 제거한다.
   - Accept: 일반/강/측후면/방어 불가/정밀 방어 fixture가 통과한다.
-- [ ] **B5 Remove production skill input execution.**
+- [x] **B5 Remove production skill input execution.**
   - Q/R/V 입력이 생산 플레이어에서 어떤 공격도 시작하지 않게 한다.
   - Accept: 입력 검증과 HUD snapshot에 기술 슬롯이 없다.
   - Guard: 기존 기술 데이터는 A fixture와 마이그레이션이 필요할 때까지 삭제하지 않는다.
@@ -635,23 +631,23 @@ runtimes, input bindings, Player scene, RunState development activation path.
 **Source owners:** `EquipmentDefinition/Catalog`, `ProfileData`,
 `ProfileCommandService`, `ProfileState`, `ProfileSaveService`, data Resources.
 
-- [ ] **C1 Replace class equipment catalog with the minimum catalog.**
+- [x] **C1 Replace class equipment catalog with the minimum catalog.**
   - 8 equipment models, 2 Spirit Stones, 6 material IDs와 recipes를 typed Resource로 만든다.
   - Accept: exact ID/count, recipe, role, grade, weakness, unsupported field 검증이 통과한다.
   - Guard: 새 카탈로그가 랜덤 옵션, 희귀도, 액티브 기술 참조를 허용하지 않는다.
-- [ ] **C2 Add profile schema v2.**
+- [x] **C2 Add profile schema v2.**
   - 한 hero loadout, blueprint set, crafted model state, Spirit unlock, materials,
     tutorial state, settings, transaction ledger를 직렬화한다.
   - Accept: defaults, round trip, invalid slot/grade/condition/material fixtures가 통과한다.
-- [ ] **C3 Implement v1 -> v2 migration.**
+- [x] **C3 Implement v1 -> v2 migration.**
   - 기존 재료/설정/거래를 보존하고 장비는 명시적 salvage 표로 전환한다.
   - Accept: Warrior/Archer/Assassin 대표 v1 저장과 손상 primary/정상 backup이 기대 v2로 복구된다.
   - Guard: 검증된 v2 staging이 성공하기 전 v1 primary를 덮어쓰지 않는다.
-- [ ] **C4 Add atomic profile commands.**
+- [x] **C4 Add atomic profile commands.**
   - blueprint/Spirit unlock, craft, recraft, repair, equip을 복제-검증-비용 차감-저장
     순서로 구현한다.
   - Accept: 성공, 미해금, 재료 부족, 중복, 잘못된 slot/grade, save failure rollback이 통과한다.
-- [ ] **C5 Activate the one-hero loadout behind a temporary migration flag.**
+- [x] **C5 Activate the one-hero loadout behind a temporary migration flag.**
   - B의 전투가 프로필 v2 snapshot을 사용하도록 연결하되 이전 save fixture는 유지한다.
   - Accept: 앱 재실행 후 장착 모델과 상태가 동일하다.
 
@@ -665,19 +661,19 @@ runtimes, input bindings, Player scene, RunState development activation path.
 **Source owners:** profile commands, new crafting service/catalog, combat equipment
 runtime state, RunState stage preparation, RestForge replacement.
 
-- [ ] **D1 Implement deterministic crafting previews.**
+- [x] **D1 Implement deterministic crafting previews.**
   - 현재 모델, 결과 모델, recipe, 보유량, 부족량, 행동 차이, 수치 차이를 한 snapshot으로 만든다.
   - Accept: UI preview, command result, runtime build가 동일한 resolver 값을 사용한다.
-- [ ] **D2 Implement craft and recraft.**
+- [x] **D2 Implement craft and recraft.**
   - Grade 1 대안 제작과 Grade 2 같은 모델 재제작을 구현한다.
   - Accept: 재료가 정확히 한 번 차감되고 모델 복제품이 생기지 않는다.
-- [ ] **D3 Implement condition and repair.**
+- [x] **D3 Implement condition and repair.**
   - 공격/방어 거래당 감소, 마모 불이익, 무료 25% 정비, 35% 수리를 연결한다.
   - Accept: 다중 적중 중복 감소 없음, 상태 clamp, 상태 0 전투 가능, save round trip이 통과한다.
-- [ ] **D4 Implement arrows, cartridges, and reload.**
+- [x] **D4 Implement arrows, cartridges, and reload.**
   - 활/총 자원 adapter, stage minimum, 보급 결과, 총 자동 장전을 구현한다.
   - Accept: 자원 0 fallback, 보급 상한, 대시 장전 취소, 장비 변경, respawn fixture가 통과한다.
-- [ ] **D5 Replace temporary forge production actions.**
+- [x] **D5 Replace temporary forge production actions.**
   - `RunState` 임시 affix와 `RestForge` affix 선택을 생산 경로에서 제거하고
     제작/재제작/수리/장착 명령으로 교체한다.
   - Guard: 기존 affix fixture는 기록용으로만 남기거나 대체 검증 후 삭제한다.
@@ -692,17 +688,17 @@ runtime state, RunState stage preparation, RestForge replacement.
 **Source owners:** damage/status resolution, Spirit definitions/runtime, reward
 entry/service/result, chest/NPC/elite/stage reward integration, receipt presenter.
 
-- [ ] **E1 Implement one passive Spirit owner.**
+- [x] **E1 Implement one passive Spirit owner.**
   - 장착 Stone 하나의 조건과 결과만 구독하고 공격/방어 이벤트 ID로 중복을 막는다.
   - Accept: 불씨 4번째 직접 공격과 서리 정밀 방어가 정확한 조건에서만 발동한다.
   - Guard: 입력 action, cooldown, resonance, active damage API가 없다.
-- [ ] **E2 Add blueprint and Spirit reward entry types.**
+- [x] **E2 Add blueprint and Spirit reward entry types.**
   - `RewardEntry`, `RewardTransaction`, `RewardResult`, `RewardService`에 영구 해금 타입을 추가한다.
   - Accept: 미보유/기보유/재실행/저장 실패 경로가 정확히 한 번 정산된다.
-- [ ] **E3 Extend field pickup families.**
+- [x] **E3 Extend field pickup families.**
   - 일반/정제 금속·목재·섬유와 활/총 보급을 모양, 색, 이름, 실제 변화량으로 연결한다.
   - Accept: 접촉, 낭떠러지 안전 회수, 최대치, 장착 불일치, receipt 병합이 통과한다.
-- [ ] **E4 Implement exact acquisition sources.**
+- [x] **E4 Implement exact acquisition sources.**
   - NPC 의뢰=창, 상자=화승총, 정예=대형 방패, Stage clear=보강 갑옷,
     제단=서리 정령석을 고정 ID로 연결한다.
   - Accept: 각 출처를 두 번 실행하거나 앱을 재시작해도 중복 지급되지 않는다.
@@ -718,19 +714,19 @@ entry/service/result, chest/NPC/elite/stage reward integration, receipt presente
 **Source owners:** new fixed Trial scene/plan, curated Stage 1 builder/rooms,
 content anchors/spawner, RunDirector phases, checkpoints/fall recovery.
 
-- [ ] **F1 Author five fixed Trial rooms.**
+- [x] **F1 Author five fixed Trial rooms.**
   - 기존 방/적/체크포인트/픽업을 재사용하고 4-6분 길이로 만든다.
   - Accept: 새 프로필 완료 경로에서 각 동작을 실제로 한 번 수행한다.
-- [ ] **F2 Implement complete/skip parity.**
+- [x] **F2 Implement complete/skip parity.**
   - 같은 idempotent baseline transaction으로 기본 loadout과 tutorial resolved를 지급한다.
   - Accept: 완료/스킵 profile snapshot이 telemetry flag를 제외하고 동일하다.
-- [ ] **F3 Recompose fixed Ruin Approach beats.**
+- [x] **F3 Recompose fixed Ruin Approach beats.**
   - 위 11개 beat와 고정 획득 앵커, 중간/최종 forge, 체크포인트를 배치한다.
   - Accept: 승인된 room/anchor IDs와 전체 Stage Plan 검증이 통과한다.
-- [ ] **F4 Validate all committed returns and fall recovery.**
+- [x] **F4 Validate all committed returns and fall recovery.**
   - NPC, cache, shrine, forge, elite 선택 경로의 진입-복귀를 검증한다.
   - Accept: 하단에 머무는 상태가 없고 fall zone/월드 하한이 최근 체크포인트로 복귀시킨다.
-- [ ] **F5 Validate guaranteed economy.**
+- [x] **F5 Validate guaranteed economy.**
   - 필수 경로에서 대안 1개와 Grade 2 1개가 가능하며 선택 경로 보상은 추가 선택만 만든다.
   - Accept: 고정 보상 합계, 중복 방지, 사망/재진입 시나리오가 통과한다.
 
@@ -745,24 +741,24 @@ content anchors/spawner, RunDirector phases, checkpoints/fall recovery.
 **Source owners:** MainMenu, CharacterSelect replacement, RestForge replacement,
 ProductionHUD, equipment decision component, receipt presenter, styles, input glyphs.
 
-- [ ] **G1 Replace character selection with one-hero preparation.**
+- [x] **G1 Replace character selection with one-hero preparation.**
   - As-is: 캐릭터 strip, class loadout, mastery mode.
   - To-be: 6개 loadout slot, 모델 목록, 제작 상태, 비교, 저장 상태, Start.
   - Accept: 마우스/키보드/게임패드로 모든 모델을 검사하고 가능한 주 행동을 실행한다.
   - Guard: 클래스 이름, mastery tab, 원시 ID가 없다.
-- [ ] **G2 Replace RestForge with deterministic forge.**
+- [x] **G2 Replace RestForge with deterministic forge.**
   - craft/recraft/repair/equip 상태와 실패 이유를 동일 비교 component로 표시한다.
   - Accept: 성공 후 포커스와 선택 모델이 유지되고 결과값이 즉시 갱신된다.
-- [ ] **G3 Simplify Production HUD.**
+- [x] **G3 Simplify Production HUD.**
   - HP, contextual attack pair, ammo, melee/shield condition, shield stability,
     Spirit passive, potion, objective/prompt/receipt만 남긴다.
   - Accept: 960x540에서 전투 시야를 가리지 않고 1920x1080에서 과도하게 퍼지지 않는다.
-- [ ] **G4 Complete reward and interaction feedback.**
+- [x] **G4 Complete reward and interaction feedback.**
   - E prompt, chest/NPC/shrine result, material merge receipt, craft/recraft/repair result를 구현한다.
   - Accept: 각 획득/명령의 성공·실패·중복 상태가 플레이어에게 보인다.
-- [ ] **G5 Verify accessibility and responsive behavior.**
+- [x] **G5 Verify accessibility and responsive behavior.**
   - 명확한 포커스, 40px 이상 주요 타깃, 색 외 상태 표시, 텍스트 wrap/overflow,
-    reduced motion, 입력 glyph 변경을 검증한다.
+    motion-sensitive feedback controls, 입력 glyph 변경을 검증한다.
 
 *Visible result:* 새 시스템을 설명하는 디버그 문단 없이도 플레이어가 현재 장비,
 다음 행동, 획득 내용, 제작 가능 여부를 화면에서 이해한다.
@@ -775,20 +771,20 @@ ProductionHUD, equipment decision component, receipt presenter, styles, input gl
 **Source owners:** RunDirector/RunPhase/RunState, catalogs, old character/skill data,
 old UI, cards/micro-upgrades compatibility, release scripts, docs.
 
-- [ ] **H1 Activate the one-hero flow by default.**
+- [x] **H1 Activate the one-hero flow by default.**
   - Main Menu의 New Game이 Trial/Skip 또는 준비 화면으로 진입한다.
   - Accept: 개발 flag 없이 production boot와 Stage 1 complete가 통과한다.
-- [ ] **H2 Preserve only compatible existing run systems.**
+- [x] **H2 Preserve only compatible existing run systems.**
   - 공유 카드와 장비에 무관한 micro-upgrade만 유지한다.
   - 스킬 cooldown, character-specific, heavy-specific 선택은 offer에서 제외한다.
   - Accept: 보상 화면에 죽은 선택이나 존재하지 않는 입력 설명이 없다.
-- [ ] **H3 Retire old production owners.**
+- [x] **H3 Retire old production owners.**
   - class selection, character loadouts, class HUD state, skill action slots,
     temporary affix production UI/data consumers를 제거한다.
   - Guard: historical migration fixture와 superseded docs 외에 class ID 분기가 없다.
-- [ ] **H4 Run focused and full validation.**
+- [x] **H4 Run focused and full validation.**
   - 아래 Validation Cadence의 batch/final gates와 실제 렌더링을 완료한다.
-- [ ] **H5 Update durable docs and close the plan.**
+- [x] **H5 Update durable docs and close the plan.**
   - architecture/data index/PRD/UI spec/release record/`.agent/Documentation.md`를
     실제 구현으로 갱신하고 이 계획을 `done`으로 바꾼다.
 
@@ -843,24 +839,24 @@ old UI, cards/micro-upgrades compatibility, release scripts, docs.
 
 ## Guard Checks
 
-- [ ] 생산 실행에 클래스 선택과 Warrior/Archer/Assassin 표시가 없다.
-- [ ] 생산 combat path에 `skill_1`, `skill_2`, `skill_3`, Spirit Art, resonance가 없다.
-- [ ] 정령석은 입력, cooldown, resource gauge를 소유하지 않는다.
-- [ ] 상황 공격 미리보기와 실행이 하나의 intent를 사용한다.
-- [ ] UI는 profile/run/crafting/reward dictionary를 직접 수정하지 않는다.
-- [ ] 설계도 획득과 완성 장비 제작은 서로 다른 상태다.
-- [ ] 재료 등급은 행동·사거리·표적 정책을 바꾸지 않는다.
-- [ ] 제작·재제작·수리에 실패 확률, 파괴, 하락, 랜덤 옵션이 없다.
-- [ ] 상태 0과 탄약 0에서도 Stage 1을 시작하고 완료할 수 있다.
-- [ ] 필수 경로는 특정 장비, 정령석, 탄약, 상태를 요구하지 않는다.
-- [ ] 모든 낙하는 안전 복귀 또는 최근 체크포인트 respawn으로 끝난다.
-- [ ] Trial 완료와 Skip의 기계적 profile snapshot이 동일하다.
-- [ ] 모든 reward/profile transaction은 재실행 후에도 한 번만 적용된다.
-- [ ] 저장 테스트가 실제 `user://profile.json`을 읽거나 쓰지 않는다.
-- [ ] 임시 forge affix가 영구 제작 UI나 build에 남지 않는다.
-- [ ] 원시 ID, 디버그 계약 문구, 기술 슬롯, 공명 게이지가 생산 UI에 없다.
-- [ ] 세 지원 해상도에서 clipping, overlap, accidental horizontal overflow가 없다.
-- [ ] 관련 없는 사용자 변경과 `docs/design/references/`를 stage/revert/정리하지 않는다.
+- [x] 생산 실행에 클래스 선택과 Warrior/Archer/Assassin 표시가 없다.
+- [x] 생산 combat path에 `skill_1`, `skill_2`, `skill_3`, Spirit Art, resonance가 없다.
+- [x] 정령석은 입력, cooldown, resource gauge를 소유하지 않는다.
+- [x] 상황 공격 미리보기와 실행이 하나의 intent를 사용한다.
+- [x] UI는 profile/run/crafting/reward dictionary를 직접 수정하지 않는다.
+- [x] 설계도 획득과 완성 장비 제작은 서로 다른 상태다.
+- [x] 재료 등급은 행동·사거리·표적 정책을 바꾸지 않는다.
+- [x] 제작·재제작·수리에 실패 확률, 파괴, 하락, 랜덤 옵션이 없다.
+- [x] 상태 0과 탄약 0에서도 Stage 1을 시작하고 완료할 수 있다.
+- [x] 필수 경로는 특정 장비, 정령석, 탄약, 상태를 요구하지 않는다.
+- [x] 모든 낙하는 안전 복귀 또는 최근 체크포인트 respawn으로 끝난다.
+- [x] Trial 완료와 Skip의 기계적 profile snapshot이 동일하다.
+- [x] 모든 reward/profile transaction은 재실행 후에도 한 번만 적용된다.
+- [x] 저장 테스트가 실제 `user://profile.json`을 읽거나 쓰지 않는다.
+- [x] 임시 forge affix가 영구 제작 UI나 build에 남지 않는다.
+- [x] 원시 ID, 디버그 계약 문구, 기술 슬롯, 공명 게이지가 생산 UI에 없다.
+- [x] 세 지원 해상도에서 clipping, overlap, accidental horizontal overflow가 없다.
+- [x] 관련 없는 사용자 변경과 `docs/design/references/`를 stage/revert/정리하지 않는다.
 
 ## Rollback / Safety
 
@@ -955,23 +951,18 @@ old UI, cards/micro-upgrades compatibility, release scripts, docs.
 - **2026-07-14:** 기존 이동·피해·공격 표현·적·보상·저장 기반은 재사용하되, 클래스
   중심 생산 경로와 중복 소유자는 교체 완료 후 제거한다.
 
-## Handoff Summary
+## Completion Record
 
-Read first:
+- 한 Traveler 생산 경로, 상황 공격, 방패 방어, 장비 성장, 고정 Trial/Stage 1,
+  profile v2, Forge, HUD, 보상, 세 고정 stage, boss flow가 구현되었다.
+- `validate_release_candidate.ps1 -Full -SkipImport`는 2026-07-14에 활성 검사
+  `68/68`을 통과했다.
+- progression UI, gameplay HUD, shell UI, fixed-stage evidence를 Godot 4.7로
+  렌더링하고 `960x540`, `1280x720`, `1920x1080` 적용 화면을 검사했다.
+- 활성 제품/전투/UI/architecture/catalog 문서와 현재 release record를 구현에
+  맞췄다.
+- `docs/design/references/`의 관련 없는 사용자 파일은 변경하거나 stage하지 않았다.
 
-1. 이 계획의 `Decisions Locked`, `Proposed Design`, `Guard Checks`.
-2. `docs/design/COMBAT_EQUIPMENT_CRAFTING.md`의 정렬된 최소 사양.
-3. `Current-State Evidence Map`에 기록된 실제 코드 소유자.
-4. 구현하려는 Phase의 기존 집중 validator.
-
-Produce last:
-
-- 해당 Phase의 실제 플레이 가능 결과;
-- 집중 검사와 batch gate 결과;
-- scoped commit과 이 계획의 체크 상태 갱신;
-- H에서 최종 UI 캡처, release gate 결과, 최신 architecture/data/docs;
-- `status: done`으로 닫힌 계획.
-
-Stop only when the complete Stage 1 equipment-progression loop works in the
-production path. Do not continue directly into active skills, additional tools,
-Stage 2, or procedural generation without a new owner-approved plan.
+이 계획은 완료 기록이며 더 이상 실행 지시가 아니다. 액티브 기술, 추가 장비,
+랜덤 맵, 다중 저장 슬롯, 최종 아트는 owner playtest 근거와 새 ExecPlan 없이
+연속 구현하지 않는다.
