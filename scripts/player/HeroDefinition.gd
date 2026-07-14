@@ -3,6 +3,7 @@ extends Resource
 
 const REQUIRED_STATS: Array[StringName] = [
 	&"max_health",
+	&"direct_damage_multiplier",
 	&"move_speed",
 	&"acceleration",
 	&"deceleration",

@@ -183,10 +183,13 @@ func _build_choice_button(card_id: StringName) -> Button:
 		}
 	)
 	if card != null:
+		var hero_id := StringName(
+			RunState.get_hero_combat_loadout_snapshot().get("hero_id", "traveler")
+		)
 		view["enabled"] = (
 			bool(view.get("enabled", false))
 			and next_stack <= card.max_stacks
-			and card.is_compatible(StringName(RunState.selected_profile.id))
+			and card.is_compatible(hero_id)
 		)
 	button.call("configure_choice", card_id, view)
 	button.pressed.connect(func() -> void: _request_choice(card_id))

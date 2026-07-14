@@ -23,6 +23,15 @@ const MATERIAL_CURRENCIES: PackedStringArray = [
 	"rusted_scrap", "steel_fragment", "common_timber", "hardwood",
 	"sky_thread", "reinforced_fabric", "slime_residue", "boss_core",
 ]
+const HERO_CARD_PROFILE_ID := &"traveler"
+const HERO_CARD_TRIGGERS: Array[StringName] = [
+	&"dash_completed",
+	&"first_attack_after_extra_jump",
+	&"hit_target_in_recovery",
+	&"required_room_encounter_cleared_without_damage",
+	&"damage_left_one_health",
+	&"optional_route_chest_claimed",
+]
 
 var character_catalog: CharacterCatalog
 var reward_catalog: RewardCatalog
@@ -1033,10 +1042,10 @@ func can_reroll_card_offer() -> bool:
 		return false
 	return CardOfferService.eligible_ids(
 		card_catalog,
-		selected_profile.id,
+		HERO_CARD_PROFILE_ID,
 		_card_stacks,
 		[],
-		CardOfferService.supported_triggers_for_profile(selected_profile)
+		HERO_CARD_TRIGGERS
 	).size() > CardOfferService.CHOICE_COUNT
 
 
@@ -1058,13 +1067,13 @@ func reroll_card_offer() -> Dictionary:
 	for _attempt in 16:
 		next_offer = CardOfferService.build_offer(
 			card_catalog,
-			selected_profile.id,
+			HERO_CARD_PROFILE_ID,
 			_card_stacks,
 			run_seed,
 			current_stage_index,
 			candidate_sequence,
 			[],
-			CardOfferService.supported_triggers_for_profile(selected_profile)
+			HERO_CARD_TRIGGERS
 		)
 		candidate_sequence += 1
 		if (
@@ -1092,10 +1101,7 @@ func reroll_card_offer() -> Dictionary:
 
 
 func get_card_reroll_cost() -> int:
-	var discount := PlayerProgressionEffectQuery.first_card_reroll_discount(
-		ProfileState.get_behavior_effects(StringName(selected_profile.id))
-	)
-	return maxi(CARD_REROLL_COST - discount, 0)
+	return CARD_REROLL_COST
 
 
 func choose_card(card_id: StringName) -> Dictionary:
@@ -1104,7 +1110,7 @@ func choose_card(card_id: StringName) -> Dictionary:
 	if not _pending_card_offer.has(card_id):
 		return {"ok": false, "message": "Card is not in the current offer."}
 	var card := get_card_definition(card_id)
-	if card == null or not card.is_compatible(selected_profile.id):
+	if card == null or not card.is_compatible(HERO_CARD_PROFILE_ID):
 		return {"ok": false, "message": "Card is unavailable for this character."}
 	var next_stack := get_card_stack(card_id) + 1
 	if next_stack > card.max_stacks:
@@ -1637,13 +1643,13 @@ func _load_run_catalogs() -> void:
 func _build_card_offer(excluded_ids: Array[StringName]) -> Array[StringName]:
 	var offer := CardOfferService.build_offer(
 		card_catalog,
-		selected_profile.id,
+		HERO_CARD_PROFILE_ID,
 		_card_stacks,
 		run_seed,
 		current_stage_index,
 		_card_offer_sequence,
 		excluded_ids,
-		CardOfferService.supported_triggers_for_profile(selected_profile)
+		HERO_CARD_TRIGGERS
 	)
 	_card_offer_sequence += 1
 	return offer

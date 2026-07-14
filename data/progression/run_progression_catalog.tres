@@ -1,10 +1,9 @@
-[gd_resource type="Resource" script_class="RunProgressionCatalog" load_steps=8 format=3]
+[gd_resource type="Resource" script_class="RunProgressionCatalog" load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/progression/RunProgressionCatalog.gd" id="1"]
 [ext_resource type="Resource" path="res://data/progression/micro_upgrades/micro_power.tres" id="2"]
 [ext_resource type="Resource" path="res://data/progression/micro_upgrades/micro_vitality.tres" id="3"]
 [ext_resource type="Resource" path="res://data/progression/micro_upgrades/micro_quick_step.tres" id="4"]
-[ext_resource type="Resource" path="res://data/progression/micro_upgrades/micro_skill_tempo.tres" id="5"]
 [ext_resource type="Resource" path="res://data/progression/micro_upgrades/micro_light_foot.tres" id="6"]
 [ext_resource type="Resource" path="res://data/progression/micro_upgrades/micro_recovery.tres" id="7"]
 
@@ -12,7 +11,7 @@
 script = ExtResource("1")
 id = &"first_run_progression"
 display_name = "First Run Progression"
-content_version = 2
+content_version = 3
 level_xp_totals = PackedInt32Array(0, 20, 55, 100, 145, 185)
-micro_upgrades = Array[ExtResource("2")]([ExtResource("2"), ExtResource("3"), ExtResource("4"), ExtResource("5"), ExtResource("6")])
+micro_upgrades = Array[ExtResource("2")]([ExtResource("2"), ExtResource("3"), ExtResource("4"), ExtResource("6")])
 recovery_choice = ExtResource("7")
