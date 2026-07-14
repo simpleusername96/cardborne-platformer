@@ -2,20 +2,37 @@ class_name ProfileSaveService
 extends RefCounted
 
 const DEFAULT_PRIMARY_PATH := "user://profile.json"
+const V1_MIGRATION_TRANSACTION := "migration:v1_to_v2"
+const V1_STARTING_EQUIPMENT: Array[String] = [
+	"iron_cleaver", "field_bow", "rust_knives", "traveler_jacket",
+]
+const V1_EQUIPMENT_SALVAGE: Dictionary = {
+	"bell_hammer": {"rusted_scrap": 4},
+	"twinstring_bow": {"common_timber": 3, "sky_thread": 2},
+	"hooked_blades": {"rusted_scrap": 3},
+	"patched_mail": {"rusted_scrap": 3, "sky_thread": 2},
+	"runner_cloak": {"sky_thread": 4},
+	"copper_charm": {"rusted_scrap": 2},
+	"spring_charm": {"common_timber": 2},
+	"slime_relic": {"slime_residue": 2},
+}
 
 var primary_path: String
 var backup_path: String
 var _equipment_catalog: EquipmentCatalog
 var _mastery_catalog: MasteryCatalog
+var _progression_catalog: EquipmentProgressionCatalog
 
 
 func _init(
 	equipment_catalog: EquipmentCatalog = null,
 	mastery_catalog: MasteryCatalog = null,
-	profile_path: String = DEFAULT_PRIMARY_PATH
+	profile_path: String = DEFAULT_PRIMARY_PATH,
+	progression_catalog: EquipmentProgressionCatalog = null
 ) -> void:
 	_equipment_catalog = equipment_catalog
 	_mastery_catalog = mastery_catalog
+	_progression_catalog = progression_catalog
 	primary_path = profile_path
 	backup_path = "%s.backup" % profile_path
 
@@ -58,7 +75,11 @@ func load_or_create() -> Dictionary:
 func save(data: ProfileData) -> Dictionary:
 	if data == null:
 		return {"ok": false, "message": "Profile data is unavailable."}
-	var errors := data.validate_data(_equipment_catalog, _mastery_catalog)
+	var errors := data.validate_data(
+		_equipment_catalog,
+		_mastery_catalog,
+		_progression_catalog
+	)
 	if not errors.is_empty():
 		return {
 			"ok": false,
@@ -97,15 +118,26 @@ func migrate_payload(payload: Dictionary) -> Dictionary:
 	var version := int(payload.get("schema_version", 0))
 	if version == ProfileData.CURRENT_SCHEMA_VERSION:
 		return {"ok": true, "payload": payload.duplicate(true), "migrated": false}
-	if version != 0:
+	if version == ProfileData.LEGACY_SCHEMA_VERSION:
+		return {
+			"ok": true,
+			"payload": _migrate_v1_snapshot(payload),
+			"migrated": true,
+		}
+	if version == 0:
+		return {
+			"ok": true,
+			"payload": _migrate_v1_snapshot(_migrate_legacy_snapshot(payload)),
+			"migrated": true,
+		}
+	if version > ProfileData.CURRENT_SCHEMA_VERSION:
 		return {
 			"ok": false,
 			"message": "Profile schema version %d is newer than this build." % version,
 		}
 	return {
-		"ok": true,
-		"payload": _migrate_legacy_snapshot(payload),
-		"migrated": true,
+		"ok": false,
+		"message": "Profile schema version %d cannot be migrated." % version,
 	}
 
 
@@ -126,7 +158,11 @@ func _load_candidate(path: String) -> Dictionary:
 			"errors": PackedStringArray([String(migration.get("message", "Migration failed."))]),
 		}
 	var data := ProfileData.from_dictionary(migration["payload"])
-	var errors := data.validate_data(_equipment_catalog, _mastery_catalog)
+	var errors := data.validate_data(
+		_equipment_catalog,
+		_mastery_catalog,
+		_progression_catalog
+	)
 	if not errors.is_empty():
 		return {"ok": false, "errors": errors}
 	return {
@@ -138,7 +174,16 @@ func _load_candidate(path: String) -> Dictionary:
 
 
 func _migrate_legacy_snapshot(payload: Dictionary) -> Dictionary:
-	var migrated := ProfileData.new().to_dictionary()
+	var migrated := {
+		"schema_version": ProfileData.LEGACY_SCHEMA_VERSION,
+		"materials": {},
+		"owned_equipment": ProfileData.DEFAULT_OWNED_EQUIPMENT.duplicate(),
+		"loadouts": ProfileData.DEFAULT_LOADOUTS.duplicate(true),
+		"mastery_unlocks": {"warrior": [], "archer": [], "assassin": []},
+		"durable_unlocks": [],
+		"settings": ProfileData.DEFAULT_SETTINGS.duplicate(true),
+		"applied_profile_transactions": [],
+	}
 	var legacy_materials: Variant = payload.get("materials", {})
 	if legacy_materials is Dictionary:
 		for material_id in legacy_materials:
@@ -187,6 +232,123 @@ func _migrate_legacy_snapshot(payload: Dictionary) -> Dictionary:
 	if legacy_loadout is Dictionary:
 		_apply_legacy_loadout(legacy_loadout, migrated["loadouts"], owned)
 	return migrated
+
+
+func _migrate_v1_snapshot(payload: Dictionary) -> Dictionary:
+	var migrated := ProfileData.new().to_dictionary()
+	_copy_materials(payload.get("materials", {}), migrated["materials"])
+
+	var owned := _known_v1_equipment(payload.get("owned_equipment", []))
+	migrated["owned_equipment"] = owned
+	_copy_v1_loadouts(payload.get("loadouts", {}), migrated["loadouts"], owned)
+	_copy_v1_mastery(payload.get("mastery_unlocks", {}), migrated["mastery_unlocks"])
+	_copy_known_settings(payload.get("settings", {}), migrated["settings"])
+	migrated["durable_unlocks"] = _unique_strings(payload.get("durable_unlocks", []))
+	migrated["applied_profile_transactions"] = _unique_strings(
+		payload.get("applied_profile_transactions", [])
+	)
+	_apply_v1_equipment_salvage(owned, migrated)
+	if not migrated["applied_profile_transactions"].has(V1_MIGRATION_TRANSACTION):
+		migrated["applied_profile_transactions"].append(V1_MIGRATION_TRANSACTION)
+	migrated["applied_profile_transactions"].sort()
+	migrated["durable_unlocks"].sort()
+	return migrated
+
+
+func _copy_materials(raw_materials: Variant, destination: Dictionary) -> void:
+	if not raw_materials is Dictionary:
+		return
+	for material_id in raw_materials:
+		var key := String(material_id)
+		if ProfileData.MATERIAL_IDS.has(key):
+			destination[key] = maxi(int(raw_materials[material_id]), 0)
+
+
+func _known_v1_equipment(raw_owned: Variant) -> Array[String]:
+	var owned := ProfileData.DEFAULT_OWNED_EQUIPMENT.duplicate()
+	if raw_owned is Array:
+		for raw_item_id in raw_owned:
+			var item_id := String(raw_item_id)
+			if (
+				_equipment_catalog != null
+				and _equipment_catalog.get_item(StringName(item_id)) != null
+				and not owned.has(item_id)
+			):
+				owned.append(item_id)
+	owned.sort()
+	return owned
+
+
+func _copy_v1_loadouts(raw_loadouts: Variant, destination: Dictionary, owned: Array[String]) -> void:
+	if not raw_loadouts is Dictionary:
+		return
+	for character_id in ProfileData.CHARACTER_IDS:
+		var raw_loadout: Variant = raw_loadouts.get(character_id, null)
+		if not raw_loadout is Dictionary:
+			continue
+		for slot_id in ProfileData.ALL_SLOTS:
+			var item_id := String(raw_loadout.get(slot_id, destination[character_id][slot_id]))
+			if slot_id == "consumable":
+				if ProfileData.LEGACY_CONSUMABLE_IDS.has(item_id):
+					destination[character_id][slot_id] = item_id
+				continue
+			if item_id.is_empty() and slot_id in ["charm", "relic"]:
+				destination[character_id][slot_id] = ""
+				continue
+			var item := _equipment_catalog.get_item(StringName(item_id)) if _equipment_catalog != null else null
+			if (
+				item != null
+				and owned.has(item_id)
+				and String(item.slot) == slot_id
+				and item.is_compatible(StringName(character_id))
+			):
+				destination[character_id][slot_id] = item_id
+
+
+func _copy_v1_mastery(raw_mastery: Variant, destination: Dictionary) -> void:
+	if not raw_mastery is Dictionary:
+		return
+	for character_id in ProfileData.CHARACTER_IDS:
+		var node_ids := _unique_strings(raw_mastery.get(character_id, []))
+		var accepted: Array[String] = []
+		for node_id in node_ids:
+			var node := _mastery_catalog.get_node(StringName(node_id)) if _mastery_catalog != null else null
+			if node != null and String(node.character_id) == character_id:
+				accepted.append(node_id)
+		destination[character_id] = accepted
+
+
+func _copy_known_settings(raw_settings: Variant, destination: Dictionary) -> void:
+	if not raw_settings is Dictionary:
+		return
+	for setting_id in ProfileData.DEFAULT_SETTINGS:
+		if raw_settings.has(setting_id):
+			destination[setting_id] = raw_settings[setting_id]
+
+
+func _apply_v1_equipment_salvage(owned: Array[String], migrated: Dictionary) -> void:
+	for item_id in owned:
+		if V1_STARTING_EQUIPMENT.has(item_id):
+			continue
+		var migration_record := "migration:v1_equipment:%s" % item_id
+		if not migrated["durable_unlocks"].has(migration_record):
+			migrated["durable_unlocks"].append(migration_record)
+		var salvage: Dictionary = V1_EQUIPMENT_SALVAGE.get(item_id, {})
+		for material_id in salvage:
+			migrated["materials"][material_id] = (
+				int(migrated["materials"].get(material_id, 0)) + int(salvage[material_id])
+			)
+
+
+func _unique_strings(raw_values: Variant) -> Array[String]:
+	var values: Array[String] = []
+	if raw_values is Array:
+		for raw_value in raw_values:
+			var value := String(raw_value)
+			if not value.is_empty() and not values.has(value):
+				values.append(value)
+	values.sort()
+	return values
 
 
 func _apply_legacy_loadout(

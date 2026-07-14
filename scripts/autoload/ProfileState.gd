@@ -7,9 +7,12 @@ signal persistence_failed(message: String)
 
 const EQUIPMENT_CATALOG_PATH := "res://data/equipment/equipment_catalog.tres"
 const MASTERY_CATALOG_PATH := "res://data/mastery/mastery_catalog.tres"
+const PROGRESSION_CATALOG_PATH := \
+	"res://data/equipment/equipment_progression_catalog.tres"
 
 var equipment_catalog: EquipmentCatalog
 var mastery_catalog: MasteryCatalog
+var progression_catalog: EquipmentProgressionCatalog
 
 var _data: ProfileData
 var _commands: ProfileCommandService
@@ -23,7 +26,12 @@ func _ready() -> void:
 func load_or_create_profile(profile_path: String = ProfileSaveService.DEFAULT_PRIMARY_PATH) -> bool:
 	if not _load_catalogs():
 		return false
-	_save_service = ProfileSaveService.new(equipment_catalog, mastery_catalog, profile_path)
+	_save_service = ProfileSaveService.new(
+		equipment_catalog,
+		mastery_catalog,
+		profile_path,
+		progression_catalog
+	)
 	_commands = ProfileCommandService.new(equipment_catalog, mastery_catalog)
 	var result := _save_service.load_or_create()
 	if not bool(result.get("ok", false)) or not result.get("data") is ProfileData:
@@ -40,15 +48,22 @@ func initialize_for_tests(
 	items: EquipmentCatalog,
 	masteries: MasteryCatalog,
 	profile_path: String = "",
-	load_existing: bool = false
+	load_existing: bool = false,
+	progression: EquipmentProgressionCatalog = null
 ) -> void:
 	equipment_catalog = items
 	mastery_catalog = masteries
+	progression_catalog = progression
 	_commands = ProfileCommandService.new(equipment_catalog, mastery_catalog)
 	_data = ProfileData.new()
 	_save_service = null
 	if not profile_path.is_empty():
-		_save_service = ProfileSaveService.new(equipment_catalog, mastery_catalog, profile_path)
+		_save_service = ProfileSaveService.new(
+			equipment_catalog,
+			mastery_catalog,
+			profile_path,
+			progression_catalog
+		)
 		if load_existing:
 			var result := _save_service.load_or_create()
 			if bool(result.get("ok", false)) and result.get("data") is ProfileData:
@@ -422,14 +437,21 @@ func _persist_candidate(candidate: ProfileData) -> bool:
 func _load_catalogs() -> bool:
 	var loaded_items := load(EQUIPMENT_CATALOG_PATH)
 	var loaded_masteries := load(MASTERY_CATALOG_PATH)
-	if not loaded_items is EquipmentCatalog or not loaded_masteries is MasteryCatalog:
+	var loaded_progression := load(PROGRESSION_CATALOG_PATH)
+	if (
+		not loaded_items is EquipmentCatalog
+		or not loaded_masteries is MasteryCatalog
+		or not loaded_progression is EquipmentProgressionCatalog
+	):
 		push_error("Unable to load profile progression catalogs.")
 		return false
 	equipment_catalog = loaded_items
 	mastery_catalog = loaded_masteries
+	progression_catalog = loaded_progression
 	var errors := PackedStringArray()
 	errors.append_array(equipment_catalog.validate_catalog())
 	errors.append_array(mastery_catalog.validate_catalog())
+	errors.append_array(progression_catalog.validate_catalog())
 	for error in errors:
 		push_error("Invalid profile progression catalog: %s" % error)
 	return errors.is_empty()
