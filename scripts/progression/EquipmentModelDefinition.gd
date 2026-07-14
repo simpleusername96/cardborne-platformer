@@ -44,6 +44,9 @@ const GRADE_ONE_MAX_CONDITION := 100
 @export var precise_guard_window_seconds: float = 0.0
 @export var guard_move_speed_multiplier: float = 1.0
 @export var blocks_jump_while_guarding: bool = false
+@export var normal_block_condition_cost: int = 0
+@export var heavy_block_condition_cost: int = 0
+@export var precise_block_condition_cost: int = 0
 
 @export_group("Condition")
 @export var has_condition: bool = false
@@ -109,6 +112,9 @@ func tuning_snapshot() -> Dictionary:
 		"precise_guard_window_seconds": precise_guard_window_seconds,
 		"guard_move_speed_multiplier": guard_move_speed_multiplier,
 		"blocks_jump_while_guarding": blocks_jump_while_guarding,
+		"normal_block_condition_cost": normal_block_condition_cost,
+		"heavy_block_condition_cost": heavy_block_condition_cost,
+		"precise_block_condition_cost": precise_block_condition_cost,
 		"has_condition": has_condition,
 		"grade_one_max_condition": grade_one_max_condition,
 		"max_health_bonus": max_health_bonus,
@@ -124,6 +130,12 @@ func _validate_common_values(errors: PackedStringArray) -> void:
 		errors.append("Equipment model '%s' ranged resource values cannot be negative." % id)
 	if grade_one_max_condition < 0:
 		errors.append("Equipment model '%s' condition cannot be negative." % id)
+	if (
+		normal_block_condition_cost < 0
+		or heavy_block_condition_cost < 0
+		or precise_block_condition_cost < 0
+	):
+		errors.append("Equipment model '%s' block condition costs cannot be negative." % id)
 	if max_health_bonus < 0:
 		errors.append("Equipment model '%s' max-health bonus cannot be negative." % id)
 	for value in [
@@ -195,6 +207,10 @@ func _validate_shield(errors: PackedStringArray) -> void:
 		errors.append("Shield model '%s' needs valid stability and a frontal guard angle." % id)
 	if not has_condition or grade_one_max_condition != GRADE_ONE_MAX_CONDITION:
 		errors.append("Shield model '%s' needs Grade 1 condition 100." % id)
+	if normal_block_condition_cost <= 0 or heavy_block_condition_cost <= 0:
+		errors.append("Shield model '%s' needs positive normal and heavy condition costs." % id)
+	if precise_block_condition_cost != 0:
+		errors.append("Shield model '%s' precise guard cannot consume condition." % id)
 	if _has_melee_tuning() or _has_ranged_tuning() or _has_armor_tuning():
 		errors.append("Shield model '%s' contains tuning owned by another slot." % id)
 
@@ -245,6 +261,9 @@ func _has_guard_tuning() -> bool:
 		or not is_zero_approx(precise_guard_window_seconds)
 		or not is_equal_approx(guard_move_speed_multiplier, 1.0)
 		or blocks_jump_while_guarding
+		or normal_block_condition_cost != 0
+		or heavy_block_condition_cost != 0
+		or precise_block_condition_cost != 0
 	)
 
 

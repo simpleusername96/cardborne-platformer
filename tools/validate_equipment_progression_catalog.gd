@@ -164,6 +164,9 @@ func _validate_models(catalog: EquipmentProgressionCatalog) -> void:
 			is_equal_approx(round_shield.precise_guard_window_seconds, 0.14),
 			"Round Shield precise window must remain 0.14 seconds"
 		)
+		_expect(round_shield.normal_block_condition_cost == 1, "Round Shield normal block must cost 1 condition")
+		_expect(round_shield.heavy_block_condition_cost == 3, "Round Shield heavy block must cost 3 condition")
+		_expect(round_shield.precise_block_condition_cost == 0, "Round Shield precise block must cost no condition")
 
 	_validate_shield_model(catalog, &"tower_shield", 150, 160.0, 0.30, 0.28, 0.35, true)
 	var tower_shield := catalog.get_model(&"tower_shield")
@@ -172,6 +175,9 @@ func _validate_models(catalog: EquipmentProgressionCatalog) -> void:
 			is_zero_approx(tower_shield.precise_guard_window_seconds),
 			"Tower Shield must not invent an unspecified precise-window duration"
 		)
+		_expect(tower_shield.normal_block_condition_cost == 1, "Tower Shield normal block must cost 1 condition")
+		_expect(tower_shield.heavy_block_condition_cost == 2, "Tower Shield heavy block must cost 2 condition")
+		_expect(tower_shield.precise_block_condition_cost == 0, "Tower Shield precise block must cost no condition")
 
 	var traveler_coat := catalog.get_model(&"traveler_coat")
 	_expect(traveler_coat != null, "Traveler Coat should resolve")
@@ -261,6 +267,10 @@ func _validate_blueprints(catalog: EquipmentProgressionCatalog) -> void:
 		)
 		_expect(blueprint.minimum_material_grade == 1, "%s minimum grade must remain 1" % model_id)
 		_expect(blueprint.maximum_material_grade == 2, "%s maximum grade must remain 2" % model_id)
+		_expect(
+			blueprint.recipe == null or blueprint.recipe.get_cost(blueprint.primary_material_family) > 0,
+			"%s primary repair material must belong to its recipe" % model_id
+		)
 		_expect(blueprint.recipe != null, "%s should have a typed recipe" % model_id)
 		if blueprint.recipe == null:
 			continue

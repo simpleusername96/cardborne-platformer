@@ -10,6 +10,7 @@ const MAXIMUM_MATERIAL_GRADE := MaterialDefinition.GRADE_TWO
 @export var tags: Array[StringName] = []
 @export var presentation_key: StringName
 @export var model_id: StringName
+@export var primary_material_family: StringName
 @export var starting_blueprint: bool = false
 @export var minimum_material_grade: int = MINIMUM_MATERIAL_GRADE
 @export var maximum_material_grade: int = MAXIMUM_MATERIAL_GRADE
@@ -26,6 +27,11 @@ func validate_definition() -> PackedStringArray:
 	ContentId.validate_list(errors, "Equipment blueprint '%s' tag" % id, tags, true)
 	ContentId.validate(errors, "Equipment blueprint '%s' presentation key" % id, presentation_key)
 	ContentId.validate(errors, "Equipment blueprint '%s' model ID" % id, model_id)
+	ContentId.validate(
+		errors,
+		"Equipment blueprint '%s' primary material family" % id,
+		primary_material_family
+	)
 	if not tags.has(&"equipment_blueprint"):
 		errors.append("Equipment blueprint '%s' needs the equipment_blueprint tag." % id)
 	var expected_id := StringName("%s_blueprint" % model_id)
@@ -41,6 +47,10 @@ func validate_definition() -> PackedStringArray:
 		return errors
 	for recipe_error in recipe.validate_definition():
 		errors.append("Equipment blueprint '%s': %s" % [id, recipe_error])
+	if recipe.get_cost(primary_material_family) <= 0:
+		errors.append(
+			"Equipment blueprint '%s' primary material must appear in its recipe." % id
+		)
 	var expected_recipe_id := StringName("%s_recipe" % model_id)
 	if recipe.id != expected_recipe_id:
 		errors.append(

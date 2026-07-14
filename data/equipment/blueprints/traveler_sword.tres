@@ -24,6 +24,7 @@ content_version = 1
 tags = Array[StringName]([&"equipment_blueprint", &"melee"])
 presentation_key = &"traveler_sword_blueprint"
 model_id = &"traveler_sword"
+primary_material_family = &"metal"
 starting_blueprint = true
 minimum_material_grade = 1
 maximum_material_grade = 2

@@ -18,5 +18,7 @@ guard_stability = 150
 guard_angle_degrees = 160.0
 guard_move_speed_multiplier = 0.35
 blocks_jump_while_guarding = true
+normal_block_condition_cost = 1
+heavy_block_condition_cost = 2
 has_condition = true
 grade_one_max_condition = 100

@@ -24,6 +24,7 @@ content_version = 1
 tags = Array[StringName]([&"equipment_blueprint", &"melee"])
 presentation_key = &"hunting_spear_blueprint"
 model_id = &"hunting_spear"
+primary_material_family = &"timber"
 starting_blueprint = false
 minimum_material_grade = 1
 maximum_material_grade = 2

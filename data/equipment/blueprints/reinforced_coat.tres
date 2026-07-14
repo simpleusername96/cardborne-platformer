@@ -24,6 +24,7 @@ content_version = 1
 tags = Array[StringName]([&"equipment_blueprint", &"armor"])
 presentation_key = &"reinforced_coat_blueprint"
 model_id = &"reinforced_coat"
+primary_material_family = &"textile"
 starting_blueprint = false
 minimum_material_grade = 1
 maximum_material_grade = 2

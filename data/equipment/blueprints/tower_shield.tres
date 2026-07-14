@@ -24,6 +24,7 @@ content_version = 1
 tags = Array[StringName]([&"equipment_blueprint", &"shield"])
 presentation_key = &"tower_shield_blueprint"
 model_id = &"tower_shield"
+primary_material_family = &"metal"
 starting_blueprint = false
 minimum_material_grade = 1
 maximum_material_grade = 2
