@@ -21,6 +21,8 @@ const CLEANUP_FRAMES := 4
 
 var _failed := false
 var _requested := ""
+var _profile_state: Node
+var _run_state: Node
 
 
 func _initialize() -> void:
@@ -32,6 +34,12 @@ func _run() -> void:
 	_requested = OS.get_environment("CAPTURE_NAME").strip_edges()
 	if not _requested.is_empty() and not _is_known_capture(_requested):
 		push_error("Unknown progression UI capture: %s" % _requested)
+		quit(1)
+		return
+	_profile_state = root.get_node_or_null("/root/ProfileState")
+	_run_state = root.get_node_or_null("/root/RunState")
+	if _profile_state == null or _run_state == null:
+		push_error("Progression UI capture requires production autoloads.")
 		quit(1)
 		return
 	_initialize_profile_fixture()
@@ -50,7 +58,8 @@ func _run() -> void:
 
 
 func _initialize_profile_fixture() -> void:
-	ProfileState.initialize_for_tests(
+	_profile_state.call(
+		"initialize_for_tests",
 		load("res://data/equipment/equipment_catalog.tres"),
 		load("res://data/mastery/mastery_catalog.tres"),
 		"",
@@ -65,8 +74,8 @@ func _initialize_profile_fixture() -> void:
 		["hardwood", 5],
 		["reinforced_fabric", 5],
 	]:
-		ProfileState.grant_material_command(String(grant[0]), int(grant[1]))
-	ProfileState.unlock_blueprint(&"hunting_spear", &"capture:hunting_spear")
+		_profile_state.call("grant_material_command", String(grant[0]), int(grant[1]))
+	_profile_state.call("unlock_blueprint", &"hunting_spear", &"capture:hunting_spear")
 
 
 func _capture(capture_name: String, viewport_size: Vector2i, state: StringName) -> void:
@@ -98,10 +107,10 @@ func _mount_state(state: StringName) -> Control:
 		&"forge":
 			scene_path = FORGE_SCENE
 		&"card_reward":
-			if not RunState.start_new_run(0, 73021):
+			if not bool(_run_state.call("start_new_run", 0, 73021)):
 				push_error("Card reward capture could not start a Traveler run.")
 				return null
-			var begin_result: Dictionary = RunState.begin_stage_card_reward()
+			var begin_result: Dictionary = _run_state.call("begin_stage_card_reward")
 			if not bool(begin_result.get("ok", false)):
 				push_error("Card reward capture could not build an offer.")
 				return null
@@ -120,7 +129,7 @@ func _mount_state(state: StringName) -> Control:
 	await _wait_frames(2)
 	if state == &"forge":
 		(screen as ForgeScreen).configure(
-			ProfileState.get_preparation_snapshot(),
+			_profile_state.call("get_preparation_snapshot"),
 			{},
 			"CAMP FORGE"
 		)

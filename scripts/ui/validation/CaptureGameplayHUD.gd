@@ -53,8 +53,10 @@ func _capture(packed: PackedScene, capture: Dictionary) -> void:
 	await _wait_frames(2)
 	_configure_state(hud, StringName(capture["state"]))
 	await _wait_frames(SETTLE_FRAMES)
-	RenderingServer.force_draw(false)
-	await _wait_frames(2)
+	for _pass in 3:
+		RenderingServer.force_draw(false)
+		await RenderingServer.frame_post_draw
+		await process_frame
 	var image := root.get_texture().get_image()
 	var output_path := "%s/%s.png" % [OUTPUT_DIR, capture["name"]]
 	if image == null or image.save_png(output_path) != OK:
@@ -67,7 +69,8 @@ func _capture(packed: PackedScene, capture: Dictionary) -> void:
 
 func _build_backdrop(viewport_size: Vector2) -> Control:
 	var backdrop := Control.new()
-	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	backdrop.position = Vector2.ZERO
+	backdrop.size = viewport_size
 	backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_add_rect(backdrop, Rect2(Vector2.ZERO, viewport_size), Color("11191b"))
 	_add_rect(

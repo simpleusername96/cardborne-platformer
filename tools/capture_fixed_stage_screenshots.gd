@@ -71,10 +71,10 @@ func _capture(capture: Dictionary) -> void:
 		stage.player.camera.reset_smoothing()
 	for _frame in SETTLE_FRAMES:
 		await process_frame
-	RenderingServer.force_draw(false)
-	await process_frame
-	RenderingServer.force_draw(false)
-	await process_frame
+	for _pass in 3:
+		RenderingServer.force_draw(false)
+		await RenderingServer.frame_post_draw
+		await process_frame
 	var image := root.get_texture().get_image()
 	var path := "%s/%s.png" % [OUTPUT_DIR, capture["name"]]
 	if image == null or image.save_png(path) != OK:
