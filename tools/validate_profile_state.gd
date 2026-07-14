@@ -4,6 +4,9 @@ const ProfileStateScript = preload("res://scripts/autoload/ProfileState.gd")
 const EQUIPMENT_CATALOG := preload("res://data/equipment/equipment_catalog.tres")
 const MASTERY_CATALOG := preload("res://data/mastery/mastery_catalog.tres")
 const CHARACTER_CATALOG := preload("res://data/characters/character_catalog.tres")
+const PROGRESSION_CATALOG := preload(
+	"res://data/equipment/equipment_progression_catalog.tres"
+)
 const ROLLBACK_PATH := "user://profile_state_rollback_validation.json"
 
 var _failures: Array[String] = []
@@ -11,7 +14,9 @@ var _failures: Array[String] = []
 
 func _initialize() -> void:
 	var profile := ProfileStateScript.new()
-	profile.initialize_for_tests(EQUIPMENT_CATALOG, MASTERY_CATALOG)
+	profile.initialize_for_tests(
+		EQUIPMENT_CATALOG, MASTERY_CATALOG, "", false, PROGRESSION_CATALOG
+	)
 	_validate_defaults(profile)
 	_validate_material_and_equipment_commands(profile)
 	_validate_mastery_commands(profile)
@@ -19,6 +24,7 @@ func _initialize() -> void:
 	_validate_settings_and_snapshot(profile)
 	_validate_base_loadouts(profile)
 	profile.free()
+	_validate_v2_progression_commands()
 	_validate_failed_save_rolls_back_memory()
 	_finish()
 
@@ -103,15 +109,45 @@ func _validate_base_loadouts(profile: Node) -> void:
 		_expect(snapshot["validation_errors"].is_empty(), "base loadout for '%s' should have no build errors" % character.id)
 
 
+func _validate_v2_progression_commands() -> void:
+	var profile := ProfileStateScript.new()
+	profile.initialize_for_tests(
+		EQUIPMENT_CATALOG, MASTERY_CATALOG, "", false, PROGRESSION_CATALOG
+	)
+	var unlock: Dictionary = profile.unlock_blueprint(&"hunting_spear", &"fixture:profile:spear")
+	_expect(bool(unlock.get("ok", false)), "profile boundary should unlock a blueprint")
+	profile.grant_material("rusted_scrap", 3)
+	profile.grant_material("common_timber", 4)
+	var craft: Dictionary = profile.craft_equipment(&"hunting_spear")
+	_expect(bool(craft.get("ok", false)), "profile boundary should craft unlocked equipment")
+	_expect(
+		bool(profile.equip_hero_item(&"melee", &"hunting_spear").get("ok", false)),
+		"profile boundary should equip crafted equipment"
+	)
+	var preparation: Dictionary = profile.get_preparation_snapshot()
+	_expect(preparation["loadout"]["melee"] == "hunting_spear", "preparation snapshot should expose equipped melee")
+	_expect(preparation["slots"].size() == 4, "preparation snapshot should expose four equipment slots")
+	profile.free()
+
+
 func _validate_failed_save_rolls_back_memory() -> void:
 	_cleanup_rollback_fixture()
 	var blocked_temp_path := ProjectSettings.globalize_path("%s.tmp" % ROLLBACK_PATH)
 	var mkdir_error := DirAccess.make_dir_recursive_absolute(blocked_temp_path)
 	_expect(mkdir_error == OK, "rollback fixture should block the staging file path")
 	var profile := ProfileStateScript.new()
-	profile.initialize_for_tests(EQUIPMENT_CATALOG, MASTERY_CATALOG, ROLLBACK_PATH)
+	profile.initialize_for_tests(
+		EQUIPMENT_CATALOG,
+		MASTERY_CATALOG,
+		ROLLBACK_PATH,
+		false,
+		PROGRESSION_CATALOG
+	)
 	var before := profile.get_profile_snapshot()
-	var result: Dictionary = profile.grant_material_command("rusted_scrap", 5)
+	var result: Dictionary = profile.unlock_blueprint(
+		&"hunting_spear",
+		&"fixture:rollback:spear"
+	)
 	_expect(not bool(result.get("ok", true)), "failed persistence should reject the command")
 	_expect(result.get("code") == "persistence_failed", "failed persistence should expose its reason")
 	_expect(

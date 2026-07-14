@@ -1,6 +1,13 @@
 extends Node
 
 # Owns profile facts and commands; storage details remain behind ProfileSaveService.
+const RuntimeResolver = preload(
+	"res://scripts/progression/EquipmentRuntimeResolver.gd"
+)
+const ProgressionService = preload(
+	"res://scripts/progression/EquipmentProgressionService.gd"
+)
+
 signal profile_changed(section: StringName)
 signal setting_changed(setting_id: StringName, value: Variant)
 signal persistence_failed(message: String)
@@ -32,7 +39,11 @@ func load_or_create_profile(profile_path: String = ProfileSaveService.DEFAULT_PR
 		profile_path,
 		progression_catalog
 	)
-	_commands = ProfileCommandService.new(equipment_catalog, mastery_catalog)
+	_commands = ProfileCommandService.new(
+		equipment_catalog,
+		mastery_catalog,
+		progression_catalog
+	)
 	var result := _save_service.load_or_create()
 	if not bool(result.get("ok", false)) or not result.get("data") is ProfileData:
 		push_error("Unable to initialize persistent profile state.")
@@ -54,7 +65,11 @@ func initialize_for_tests(
 	equipment_catalog = items
 	mastery_catalog = masteries
 	progression_catalog = progression
-	_commands = ProfileCommandService.new(equipment_catalog, mastery_catalog)
+	_commands = ProfileCommandService.new(
+		equipment_catalog,
+		mastery_catalog,
+		progression_catalog
+	)
 	_data = ProfileData.new()
 	_save_service = null
 	if not profile_path.is_empty():
@@ -129,6 +144,203 @@ func spend_material(material_id: String, amount: int) -> bool:
 		_commands.spend_material(candidate, material_id, amount),
 		&"materials"
 	).get("ok", false))
+
+
+func get_hero_loadout() -> Dictionary:
+	_ensure_initialized()
+	return _data.hero_loadout.duplicate(true)
+
+
+func get_crafted_equipment() -> Dictionary:
+	_ensure_initialized()
+	return _data.crafted_equipment.duplicate(true)
+
+
+func get_ranged_supplies() -> Dictionary:
+	_ensure_initialized()
+	return _data.ranged_supplies.duplicate(true)
+
+
+func get_tutorial_state() -> Dictionary:
+	_ensure_initialized()
+	return _data.tutorial_state.duplicate(true)
+
+
+func unlock_blueprint(
+	model_id: StringName,
+	transaction_id: StringName
+) -> Dictionary:
+	_ensure_initialized()
+	var candidate := _data.duplicate_data()
+	return _commit_candidate(
+		candidate,
+		_commands.unlock_blueprint(candidate, model_id, transaction_id),
+		&"blueprints"
+	)
+
+
+func unlock_spirit_stone(
+	stone_id: StringName,
+	transaction_id: StringName
+) -> Dictionary:
+	_ensure_initialized()
+	var candidate := _data.duplicate_data()
+	return _commit_candidate(
+		candidate,
+		_commands.unlock_spirit_stone(candidate, stone_id, transaction_id),
+		&"spirit_stones"
+	)
+
+
+func craft_equipment(model_id: StringName) -> Dictionary:
+	_ensure_initialized()
+	var candidate := _data.duplicate_data()
+	return _commit_candidate(
+		candidate,
+		_commands.craft_equipment(candidate, model_id),
+		&"equipment"
+	)
+
+
+func recraft_equipment(model_id: StringName) -> Dictionary:
+	_ensure_initialized()
+	var candidate := _data.duplicate_data()
+	return _commit_candidate(
+		candidate,
+		_commands.recraft_equipment(candidate, model_id),
+		&"equipment"
+	)
+
+
+func repair_equipment(model_id: StringName) -> Dictionary:
+	_ensure_initialized()
+	var candidate := _data.duplicate_data()
+	return _commit_candidate(
+		candidate,
+		_commands.repair_equipment(candidate, model_id),
+		&"equipment"
+	)
+
+
+func equip_hero_item(slot_id: StringName, item_id: StringName) -> Dictionary:
+	_ensure_initialized()
+	var candidate := _data.duplicate_data()
+	return _commit_candidate(
+		candidate,
+		_commands.equip_hero_item(candidate, slot_id, item_id),
+		&"hero_loadout"
+	)
+
+
+func apply_stage_entry_maintenance() -> Dictionary:
+	_ensure_initialized()
+	var candidate := _data.duplicate_data()
+	return _commit_candidate(
+		candidate,
+		_commands.apply_stage_entry_maintenance(candidate),
+		&"equipment"
+	)
+
+
+func grant_ranged_supply(supply_id: StringName, amount: int) -> Dictionary:
+	_ensure_initialized()
+	var candidate := _data.duplicate_data()
+	return _commit_candidate(
+		candidate,
+		_commands.grant_ranged_supply(candidate, supply_id, amount),
+		&"ranged_supplies"
+	)
+
+
+func spend_ranged_supply(supply_id: StringName, amount: int = 1) -> Dictionary:
+	_ensure_initialized()
+	var candidate := _data.duplicate_data()
+	return _commit_candidate(
+		candidate,
+		_commands.spend_ranged_supply(candidate, supply_id, amount),
+		&"ranged_supplies"
+	)
+
+
+func consume_equipment_condition(
+	model_id: StringName,
+	amount: float = 1.0
+) -> Dictionary:
+	_ensure_initialized()
+	var candidate := _data.duplicate_data()
+	return _commit_candidate(
+		candidate,
+		_commands.consume_equipment_condition(candidate, model_id, amount),
+		&"equipment"
+	)
+
+
+func resolve_tutorial(completed: bool, transaction_id: StringName) -> Dictionary:
+	_ensure_initialized()
+	var candidate := _data.duplicate_data()
+	return _commit_candidate(
+		candidate,
+		_commands.resolve_tutorial(candidate, completed, transaction_id),
+		&"tutorial"
+	)
+
+
+func get_equipment_decision_snapshot(model_id: StringName) -> Dictionary:
+	_ensure_initialized()
+	var model := progression_catalog.get_model(model_id) if progression_catalog != null else null
+	if model == null:
+		return {"ok": false, "code": "missing_model", "message": "Equipment is unavailable."}
+	var crafted_state: Dictionary = _data.crafted_equipment.get(String(model_id), {}).duplicate(true)
+	return {
+		"ok": true,
+		"model_id": String(model.id),
+		"display_name": model.display_name,
+		"slot": String(model.slot),
+		"behavior": model.behavior_description,
+		"weakness": model.weakness_description,
+		"blueprint_unlocked": _data.unlocked_blueprints.has(String(model_id)),
+		"crafted": not crafted_state.is_empty(),
+		"equipped": String(_data.hero_loadout.get(String(model.slot), "")) == String(model_id),
+		"runtime": RuntimeResolver.resolve(model, crafted_state) if not crafted_state.is_empty() else {},
+		"craft": ProgressionService.preview_craft(progression_catalog, _data, model_id),
+		"recraft": ProgressionService.preview_recraft(progression_catalog, _data, model_id),
+		"repair": ProgressionService.preview_repair(progression_catalog, _data, model_id),
+	}
+
+
+func get_preparation_snapshot() -> Dictionary:
+	_ensure_initialized()
+	var slots: Array[Dictionary] = []
+	for slot_id in ["melee", "ranged", "shield", "armor"]:
+		var options: Array[Dictionary] = []
+		for model in progression_catalog.models:
+			if model != null and String(model.slot) == slot_id:
+				options.append(get_equipment_decision_snapshot(model.id))
+		slots.append({
+			"slot": slot_id,
+			"equipped_id": String(_data.hero_loadout.get(slot_id, "")),
+			"options": options,
+		})
+	var stones: Array[Dictionary] = []
+	for stone in progression_catalog.spirit_stones:
+		if stone != null:
+			stones.append({
+				"id": String(stone.id),
+				"display_name": stone.display_name,
+				"description": stone.passive_description,
+				"weakness": stone.weakness_description,
+				"unlocked": _data.unlocked_spirit_stones.has(String(stone.id)),
+				"equipped": String(_data.hero_loadout.get("spirit_stone", "")) == String(stone.id),
+			})
+	return {
+		"hero_id": _data.hero_id,
+		"materials": _data.materials.duplicate(true),
+		"ranged_supplies": _data.ranged_supplies.duplicate(true),
+		"tutorial": _data.tutorial_state.duplicate(true),
+		"loadout": _data.hero_loadout.duplicate(true),
+		"slots": slots,
+		"spirit_stones": stones,
+	}
 
 
 func get_owned_equipment() -> Array[String]:
@@ -463,7 +675,11 @@ func _ensure_initialized() -> void:
 	if equipment_catalog == null or mastery_catalog == null:
 		_load_catalogs()
 	_data = ProfileData.new()
-	_commands = ProfileCommandService.new(equipment_catalog, mastery_catalog)
+	_commands = ProfileCommandService.new(
+		equipment_catalog,
+		mastery_catalog,
+		progression_catalog
+	)
 
 
 func _can_afford(costs: Dictionary) -> bool:
