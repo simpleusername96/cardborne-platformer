@@ -1,7 +1,9 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/stages/RoomTemplateHost.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/stages/RoomAnchor.gd" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/stages/components/FieldPickup.tscn" id="3_field_pickup"]
+[ext_resource type="Resource" path="res://data/items/arrow_bundle.tres" id="4_arrow_bundle"]
 
 [sub_resource type="RectangleShape2D" id="ApproachMassShape"]
 size = Vector2(550, 280)
@@ -208,6 +210,13 @@ metadata/bounds = Rect2(0, 0, 1120, 720)
 
 [node name="Validation" type="Node2D" parent="."]
 metadata/safe_entry_radius = 240.0
+
+[node name="FieldPickups" type="Node2D" parent="."]
+
+[node name="OverlookArrowBundle" parent="FieldPickups" instance=ExtResource("3_field_pickup")]
+position = Vector2(120, 590)
+pickup_id = &"ruin_overlook_arrows_01"
+definition = ExtResource("4_arrow_bundle")
 metadata/minimum_critical_landing = 220.0
 metadata/max_required_step = 60.0
 metadata/shooter_support_width = 260.0

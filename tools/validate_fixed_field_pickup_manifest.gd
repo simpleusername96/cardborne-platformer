@@ -7,21 +7,39 @@ const MIN_ANCHOR_DISTANCE := 44.0
 const MANIFEST := [
 	{
 		"scene": "res://scenes/rooms/lower_ruins/LrPatrolGallery.tscn",
+		"node": "PatrolIronBundle",
+		"id": &"ruin_patrol_iron_01",
+		"definition": "res://data/items/rusted_scrap_fragment.tres",
+	},
+	{
+		"scene": "res://scenes/rooms/lower_ruins/LrPatrolGallery.tscn",
+		"node": "PatrolTimberBundle",
+		"id": &"ruin_patrol_timber_01",
+		"definition": "res://data/items/common_timber_bundle.tres",
+	},
+	{
+		"scene": "res://scenes/rooms/lower_ruins/LrPatrolGallery.tscn",
 		"node": "PatrolVitalShard",
 		"id": &"ruin_patrol_vital_01",
 		"definition": "res://data/items/vital_shard.tres",
 	},
 	{
+		"scene": "res://scenes/rooms/lower_ruins/LrShooterOverlook.tscn",
+		"node": "OverlookArrowBundle",
+		"id": &"ruin_overlook_arrows_01",
+		"definition": "res://data/items/arrow_bundle.tres",
+	},
+	{
 		"scene": "res://scenes/rooms/lower_ruins/LrLowerUpperChoice.tscn",
-		"node": "BranchFocusShard",
-		"id": &"ruin_choice_focus_01",
-		"definition": "res://data/items/focus_shard.tres",
+		"node": "BranchRoughFiber",
+		"id": &"ruin_choice_fiber_01",
+		"definition": "res://data/items/sky_thread_wisp.tres",
 	},
 	{
 		"scene": "res://scenes/rooms/lower_ruins/LrDestructibleCache.tscn",
-		"node": "CacheScrapFragment",
-		"id": &"ruin_cache_scrap_01",
-		"definition": "res://data/items/rusted_scrap_fragment.tres",
+		"node": "CacheCartridgePouch",
+		"id": &"ruin_cache_cartridges_01",
+		"definition": "res://data/items/cartridge_pouch.tres",
 	},
 	{
 		"scene": "res://scenes/rooms/lower_ruins/LrExitAscent.tscn",
@@ -86,6 +104,7 @@ var _stage_counts: Dictionary = {
 	"flooded_works": 0,
 	"broken_sanctum": 0,
 }
+var _scene_counts: Dictionary = {}
 
 
 func _initialize() -> void:
@@ -94,12 +113,16 @@ func _initialize() -> void:
 
 func _run() -> void:
 	for entry in MANIFEST:
+		var scene_path := String(entry["scene"])
+		_scene_counts[scene_path] = int(_scene_counts.get(scene_path, 0)) + 1
+	for entry in MANIFEST:
 		await _validate_entry(entry)
 	_expect(_seen_ids.size() == MANIFEST.size(), "fixed pickup IDs must be globally unique")
 	for stage_id in _stage_counts:
+		var expected_count := 7 if stage_id == "lower_ruins" else 4
 		_expect(
-			int(_stage_counts[stage_id]) == 4,
-			"%s should contain exactly four authored field pickups" % stage_id
+			int(_stage_counts[stage_id]) == expected_count,
+			"%s should contain exactly %d authored field pickups" % [stage_id, expected_count]
 		)
 	_finish()
 
@@ -132,8 +155,9 @@ func _validate_entry(entry: Dictionary) -> void:
 		_increment_stage_count(scene_path)
 	var pickups_root := room.get_node_or_null("FieldPickups")
 	_expect(
-		pickups_root != null and pickups_root.get_child_count() == 1,
-		"%s should keep the fixed one-pickup room manifest" % scene_path
+		pickups_root != null
+		and pickups_root.get_child_count() == int(_scene_counts.get(scene_path, 0)),
+		"%s pickup nodes should match the fixed manifest" % scene_path
 	)
 	room.queue_free()
 	await process_frame

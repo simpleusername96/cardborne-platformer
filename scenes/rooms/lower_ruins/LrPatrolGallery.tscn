@@ -1,9 +1,11 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scripts/stages/RoomTemplateHost.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/stages/RoomAnchor.gd" id="2"]
 [ext_resource type="PackedScene" path="res://scenes/stages/components/FieldPickup.tscn" id="3_field_pickup"]
 [ext_resource type="Resource" path="res://data/items/vital_shard.tres" id="4_vital_shard"]
+[ext_resource type="Resource" path="res://data/items/rusted_scrap_fragment.tres" id="5_iron_scrap"]
+[ext_resource type="Resource" path="res://data/items/common_timber_bundle.tres" id="6_common_timber"]
 
 [sub_resource type="RectangleShape2D" id="EntryMassShape"]
 size = Vector2(320, 280)
@@ -139,6 +141,14 @@ has_cover_or_elevation = false
 
 [node name="Hazard" type="Node2D" parent="Anchors"]
 [node name="Reward" type="Node2D" parent="Anchors"]
+[node name="NpcReward" type="Marker2D" parent="Anchors/Reward"]
+position = Vector2(390, 600)
+script = ExtResource("2")
+anchor_id = &"npc_reward"
+anchor_type = &"reward"
+required = true
+metadata/reward_role = &"npc_reward"
+metadata/interaction_space = Vector2(140, 110)
 [node name="Objective" type="Node2D" parent="Anchors"]
 [node name="SafeEntry" type="Marker2D" parent="Anchors/Objective"]
 position = Vector2(140, 620)
@@ -156,6 +166,16 @@ metadata/bounds = Rect2(0, 0, 1120, 720)
 [node name="Validation" type="Node2D" parent="."]
 
 [node name="FieldPickups" type="Node2D" parent="."]
+
+[node name="PatrolIronBundle" parent="FieldPickups" instance=ExtResource("3_field_pickup")]
+position = Vector2(350, 570)
+pickup_id = &"ruin_patrol_iron_01"
+definition = ExtResource("5_iron_scrap")
+
+[node name="PatrolTimberBundle" parent="FieldPickups" instance=ExtResource("3_field_pickup")]
+position = Vector2(240, 590)
+pickup_id = &"ruin_patrol_timber_01"
+definition = ExtResource("6_common_timber")
 
 [node name="PatrolVitalShard" parent="FieldPickups" instance=ExtResource("3_field_pickup")]
 position = Vector2(1080, 570)

@@ -1,15 +1,15 @@
 extends SceneTree
 
 const PRODUCTION_STAGE_PATH := "res://scenes/stages/production/ProductionStageHost.tscn"
-const FIXED_LAYOUT_VERSION := 3
+const FIXED_LAYOUT_VERSION := 4
 const FIXED_LAYOUT_SEED_V1 := 0x43415244
 const RUN_SEEDS := [1103, 73102]
 const STAGES: Array[Dictionary] = [
 	{
 		"id": &"ruin_approach",
 		"catalog": "res://data/generation/lower_ruins_room_catalog.tres",
-		"rooms": "lr_start_shelf,lr_rise_steps,lr_patrol_gallery,lr_lower_upper_choice,lr_charge_lane,lr_exit_ascent,lr_destructible_cache",
-		"signature": "4fcfbe982b997d0ba7124de916e90595c0c78c8c9d941a49f036cc20652526db",
+		"rooms": "lr_start_shelf,lr_rise_steps,lr_patrol_gallery,lr_shooter_overlook,lr_lower_upper_choice,lr_broken_bridge,lr_charge_lane,lr_exit_ascent,lr_destructible_cache",
+		"signature": "598140e5d122291aa0b98ff4c61f6d6580c57eded59c587a92e0bc4677b82d94",
 	},
 	{
 		"id": &"flooded_works",
@@ -87,7 +87,7 @@ func _validate_stage(stage_index: int, config: Dictionary, run_state: Node) -> v
 			_expect(plan_signature == plan_json.sha256_text(), "%s plan signature should cover complete map content." % config["id"])
 			_expect(
 				plan_signature == String(config["signature"]),
-				"%s approved V3 plan signature mismatch: expected %s, got %s."
+				"%s approved V4 plan signature mismatch: expected %s, got %s."
 				% [config["id"], config["signature"], plan_signature]
 			)
 			if baseline_plan.is_empty():

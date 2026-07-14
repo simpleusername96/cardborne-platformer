@@ -2,6 +2,7 @@ extends SceneTree
 
 const EQUIPMENT_CATALOG := preload("res://data/equipment/equipment_catalog.tres")
 const MASTERY_CATALOG := preload("res://data/mastery/mastery_catalog.tres")
+const PROGRESSION_CATALOG := preload("res://data/equipment/equipment_progression_catalog.tres")
 const ROOM_CATALOG := preload("res://data/generation/lower_ruins_room_catalog.tres")
 const STAGE_PROFILE := preload("res://data/generation/ruin_approach_profile.tres")
 const ENEMY_CATALOG := preload("res://data/enemies/enemy_catalog.tres")
@@ -29,10 +30,11 @@ func _run() -> void:
 		return
 	_spawner_script = load(SPAWNER_SCRIPT_PATH) as Script
 	_expect(_spawner_script != null, "reward fixture should load runtime content spawner")
-	_profile_state.initialize_for_tests(EQUIPMENT_CATALOG, MASTERY_CATALOG)
+	_initialize_profile_fixture()
 	_validate_reward_role_round_trip()
 	await _validate_visual_class_selection()
 	await _validate_single_claim_and_replay()
+	await _validate_quest_gate_and_permanent_sources()
 	_validate_material_node_scope()
 	_validate_equipment_discovery()
 	_validate_production_equipment_pools()
@@ -84,7 +86,9 @@ func _validate_visual_class_selection() -> void:
 	var optional := _instantiate_reward_source(&"optional_route")
 	var route_choice := _instantiate_reward_source(&"route_choice")
 	var material := _instantiate_reward_source(&"material_node")
-	for source in [generic, chest, optional, route_choice, material]:
+	var npc := _instantiate_reward_source(&"npc_reward")
+	var shrine := _instantiate_reward_source(&"spirit_shrine")
+	for source in [generic, chest, optional, route_choice, material, npc, shrine]:
 		root.add_child(source)
 	await process_frame
 	_expect(generic is StageRewardInteractable and not generic is ChestInteractable, "generic role should use base reward source")
@@ -95,6 +99,8 @@ func _validate_visual_class_selection() -> void:
 		"cache and optional-route reward roles should use chests"
 	)
 	_expect(material is MaterialNode, "material_node role should use MaterialNode")
+	_expect(npc is QuestRewardInteractable, "npc_reward role should use a gated request source")
+	_expect(shrine is SpiritShrineInteractable, "spirit_shrine role should use a shrine source")
 	_expect(generic.prompt_text != chest.prompt_text and chest.prompt_text != material.prompt_text, "reward source prompts should be distinct")
 	_expect(generic.visual_color != chest.visual_color and chest.visual_color != material.visual_color, "reward source colors should be distinct")
 	_expect(
@@ -102,7 +108,7 @@ func _validate_visual_class_selection() -> void:
 		and chest.get_node("Visual").polygon != material.get_node("Visual").polygon,
 		"reward source silhouettes should be distinct"
 	)
-	for source in [generic, chest, optional, route_choice, material]:
+	for source in [generic, chest, optional, route_choice, material, npc, shrine]:
 		source.queue_free()
 	await process_frame
 
@@ -152,8 +158,58 @@ func _validate_single_claim_and_replay() -> void:
 	await process_frame
 
 
+func _validate_quest_gate_and_permanent_sources() -> void:
+	_initialize_profile_fixture()
+	_expect(_run_state.start_new_run(0, 8111), "permanent source fixture should start")
+	var npc := _instantiate_reward_source(&"npc_reward")
+	npc.configure_reward(
+		&"npc_reward",
+		&"npc_hunting_spear",
+		&"8111:0:npc",
+		_run_state,
+		REWARD_CATALOG,
+		{"room_id": &"fixture_patrol"}
+	)
+	root.add_child(npc)
+	await process_frame
+	npc.interact(null)
+	_expect(not npc.is_claimed(), "NPC reward should stay locked before its encounter clears")
+	var signal_bus := root.get_node_or_null("/root/SignalBus")
+	signal_bus.required_room_encounter_cleared.emit({"room_id": &"other_room"})
+	_expect(not npc.interaction_enabled, "unrelated room clear should not unlock the NPC reward")
+	signal_bus.required_room_encounter_cleared.emit({"room_id": &"fixture_patrol"})
+	_expect(npc.interaction_enabled, "matching room clear should unlock the NPC reward")
+	npc.interact(null)
+	_expect(npc.is_claimed(), "cleared NPC request should settle once")
+
+	var shrine := _instantiate_reward_source(&"spirit_shrine")
+	shrine.configure_reward(
+		&"spirit_shrine",
+		&"shrine_frost_spirit",
+		&"8111:0:shrine",
+		_run_state,
+		REWARD_CATALOG
+	)
+	root.add_child(shrine)
+	await process_frame
+	shrine.interact(null)
+	_expect(shrine.is_claimed(), "Spirit shrine should settle through interaction")
+	var snapshot: Dictionary = _profile_state.get_profile_snapshot()
+	_expect(
+		(snapshot.get("unlocked_blueprints", []) as Array).has("hunting_spear"),
+		"NPC source should unlock the Hunting Spear blueprint"
+	)
+	_expect(
+		(snapshot.get("unlocked_spirit_stones", []) as Array).has("frost_spirit_stone"),
+		"shrine source should unlock the Frost Spirit Stone"
+	)
+	npc.queue_free()
+	shrine.queue_free()
+	await process_frame
+
+
 func _validate_material_node_scope() -> void:
-	_profile_state.initialize_for_tests(EQUIPMENT_CATALOG, MASTERY_CATALOG)
+	_initialize_profile_fixture()
 	_run_state.start_new_run(0, 8203)
 	_run_state.coins = 30
 	_run_state.begin_rest_forge()
@@ -172,7 +228,7 @@ func _validate_material_node_scope() -> void:
 
 
 func _validate_equipment_discovery() -> void:
-	_profile_state.initialize_for_tests(EQUIPMENT_CATALOG, MASTERY_CATALOG)
+	_initialize_profile_fixture()
 	_run_state.start_new_run(0, 8309)
 	var equipment_entry := RewardEntry.new()
 	equipment_entry.reward_type = RewardEntry.TYPE_EQUIPMENT_DISCOVERY
@@ -226,7 +282,7 @@ func _validate_equipment_discovery() -> void:
 
 
 func _validate_production_equipment_pools() -> void:
-	_profile_state.initialize_for_tests(EQUIPMENT_CATALOG, MASTERY_CATALOG)
+	_initialize_profile_fixture()
 	_expect(_run_state.start_new_run(0, 8401), "production equipment fixture should start")
 	var cache := REWARD_CATALOG.get_table(&"optional_cache_ruin")
 	_expect(
@@ -298,6 +354,16 @@ func _instantiate_reward_source(reward_role: StringName) -> StageRewardInteracta
 	if _spawner_script == null:
 		return null
 	return _spawner_script.call("instantiate_reward_source", reward_role) as StageRewardInteractable
+
+
+func _initialize_profile_fixture() -> void:
+	_profile_state.initialize_for_tests(
+		EQUIPMENT_CATALOG,
+		MASTERY_CATALOG,
+		"",
+		false,
+		PROGRESSION_CATALOG
+	)
 
 
 func _expect(condition: bool, message: String) -> void:

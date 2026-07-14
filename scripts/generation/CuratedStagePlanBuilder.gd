@@ -49,10 +49,12 @@ func build_ruin_approach(
 	var specs := [
 		[&"lr_start_shelf", true, 0, 0, 0, 0],
 		[&"lr_rise_steps", true, 1, 0, 0, 0],
-		[&"lr_patrol_gallery", true, 2, 1, 0, 0],
-		[&"lr_lower_upper_choice", true, 3, 0, 0, 1],
-		[&"lr_charge_lane", true, 4, 2, 0, 0],
-		[&"lr_exit_ascent", true, 5, 2, 0, 0],
+		[&"lr_patrol_gallery", true, 2, 2, 0, 1],
+		[&"lr_shooter_overlook", true, 3, 2, 0, 0],
+		[&"lr_lower_upper_choice", true, 4, 0, 0, 1],
+		[&"lr_broken_bridge", true, 5, 0, 0, 0],
+		[&"lr_charge_lane", true, 6, 3, 0, 0],
+		[&"lr_exit_ascent", true, 7, 2, 0, 0],
 		[&"lr_destructible_cache", false, 0, 0, 0, 1],
 	]
 	var rooms: Array[PlannedRoom] = []
@@ -80,9 +82,11 @@ func build_ruin_approach(
 	var connections: Array[PlannedConnection] = [
 		_connection(&"critical_0", &"lr_start_shelf", &"start_exit", &"lr_rise_steps", &"rise_entry", &"critical"),
 		_connection(&"critical_1", &"lr_rise_steps", &"rise_exit", &"lr_patrol_gallery", &"patrol_entry", &"critical"),
-		_connection(&"critical_2", &"lr_patrol_gallery", &"patrol_exit", &"lr_lower_upper_choice", &"choice_entry", &"critical"),
-		_connection(&"critical_3", &"lr_lower_upper_choice", &"choice_exit", &"lr_charge_lane", &"charge_entry", &"critical"),
-		_connection(&"critical_4", &"lr_charge_lane", &"charge_exit", &"lr_exit_ascent", &"exit_ascent_entry", &"critical"),
+		_connection(&"critical_2", &"lr_patrol_gallery", &"patrol_exit", &"lr_shooter_overlook", &"shooter_entry", &"critical"),
+		_connection(&"critical_3", &"lr_shooter_overlook", &"shooter_exit", &"lr_lower_upper_choice", &"choice_entry", &"critical"),
+		_connection(&"critical_4", &"lr_lower_upper_choice", &"choice_exit", &"lr_broken_bridge", &"broken_bridge_entry", &"critical"),
+		_connection(&"critical_5", &"lr_broken_bridge", &"broken_bridge_exit", &"lr_charge_lane", &"charge_entry", &"critical"),
+		_connection(&"critical_6", &"lr_charge_lane", &"charge_exit", &"lr_exit_ascent", &"exit_ascent_entry", &"critical"),
 		_connection(&"optional_branch_0", &"lr_lower_upper_choice", &"choice_optional_branch", &"lr_destructible_cache", &"cache_branch", &"optional"),
 		_connection(&"optional_return_0", &"lr_destructible_cache", &"cache_rejoin", &"lr_lower_upper_choice", &"choice_optional_rejoin", &"return"),
 	]

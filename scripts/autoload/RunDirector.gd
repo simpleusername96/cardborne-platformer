@@ -12,6 +12,9 @@ const REST_FORGE_PATH := "res://scenes/ui/production/RestForge.tscn"
 const TREASURE_CHOICE_PATH := "res://scenes/ui/production/TreasureChoice.tscn"
 const PRODUCTION_STAGE_PATH := "res://scenes/stages/production/ProductionStageHost.tscn"
 const BOSS_STAGE_PATH := "res://scenes/stages/boss/SlimeCourt.tscn"
+const REWARD_RECEIPT_PRESENTER := preload(
+	"res://scripts/ui/production/RewardReceiptPresenter.gd"
+)
 const BOSS_CLEAR_REWARD_TABLE_ID := RunSettlementService.DEFAULT_BOSS_REWARD_TABLE_ID
 const NORMAL_STAGE_COUNT := RunPhase.NORMAL_STAGE_COUNT
 
@@ -22,6 +25,7 @@ var current_screen: Control
 var current_hud: Control
 var _last_profile_id: StringName = &"warrior"
 var _treasure_choice_screen: Control
+var _pending_stage_clear_receipt: Dictionary = {}
 
 
 func _ready() -> void:
@@ -453,6 +457,10 @@ func _settle_stage_clear(stage_id: String) -> void:
 			&"stage_reward_failed"
 		)
 		return
+	if result.applied:
+		_pending_stage_clear_receipt = result.to_dictionary()
+		_pending_stage_clear_receipt["reward_role"] = "stage_clear"
+		_pending_stage_clear_receipt["source_id"] = String(table_id)
 	Game.unload_current_stage()
 	_clear_hud()
 	if RunState.get_pending_level_choice_count() > 0:
@@ -468,6 +476,7 @@ func _show_level_reward() -> void:
 	if level_reward == null:
 		_fail_active_run("Level reward UI failed to initialize.", &"level_reward_ui_failed")
 		return
+	_present_pending_stage_clear_receipt(level_reward)
 	level_reward.connect(&"choice_requested", _on_level_choice_requested)
 
 
@@ -499,6 +508,7 @@ func _show_card_reward() -> void:
 	if card_reward == null:
 		_fail_active_run("Card reward UI failed to initialize.", &"card_reward_ui_failed")
 		return
+	_present_pending_stage_clear_receipt(card_reward)
 	card_reward.connect(&"choice_requested", _on_card_choice_requested)
 	card_reward.connect(&"reroll_requested", _on_card_reroll_requested)
 	card_reward.connect(&"continue_requested", _on_card_continue_requested)
@@ -513,6 +523,16 @@ func _on_card_choice_requested(card_id: StringName) -> void:
 		return
 	if current_screen != null and current_screen.has_method("show_commit_result"):
 		current_screen.call("show_commit_result", result)
+
+
+func _present_pending_stage_clear_receipt(screen: Control) -> void:
+	if screen == null or _pending_stage_clear_receipt.is_empty():
+		return
+	var presenter := REWARD_RECEIPT_PRESENTER.new() as RewardReceiptPresenter
+	presenter.name = "StageClearReceipt"
+	screen.add_child(presenter)
+	presenter.present(_pending_stage_clear_receipt)
+	_pending_stage_clear_receipt.clear()
 
 
 func _on_card_reroll_requested() -> void:

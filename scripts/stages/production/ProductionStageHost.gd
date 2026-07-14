@@ -4,7 +4,7 @@ const ENEMY_CATALOG: EnemyCatalog = preload("res://data/enemies/enemy_catalog.tr
 const ENEMY_SCENES: EnemySceneCatalog = preload("res://data/enemies/enemy_scene_catalog.tres")
 const HAZARD_CATALOG: HazardCatalog = preload("res://data/hazards/hazard_catalog.tres")
 const TERRAIN_STYLER := preload("res://scripts/visuals/TerrainPresentationStyler.gd")
-const FIXED_LAYOUT_VERSION := 3
+const FIXED_LAYOUT_VERSION := 4
 const FALL_RESET_FAILSAFE_MARGIN := 360.0
 # Changing this seed intentionally versions every approved stage-content signature.
 const FIXED_LAYOUT_SEED_V1 := 0x43415244
@@ -153,6 +153,10 @@ func get_spawned_rewards() -> Array[StageRewardInteractable]:
 
 func get_remaining_enemy_count() -> int:
 	return maxi(_required_enemies.size() - _defeated_required_ids.size(), 0)
+
+
+func is_required_room_cleared(room_id: StringName) -> bool:
+	return _cleared_required_rooms.has(String(room_id))
 
 
 func is_exit_enabled() -> bool:
@@ -325,6 +329,15 @@ func _settle_enemy_reward(enemy: EnemyBase, encounter_id: StringName) -> void:
 	var result := RewardService.apply(transaction, RunState)
 	if not result.applied and not result.duplicate:
 		push_error("Enemy reward '%s' failed: %s" % [transaction_id, result.message])
+	elif result.applied and (
+		not result.blueprint_unlocks.is_empty()
+		or not result.spirit_stone_unlocks.is_empty()
+	):
+		var receipt := result.to_dictionary()
+		receipt["reward_role"] = "elite_reward"
+		receipt["source_id"] = String(enemy.resolved_spec.drop_source_id)
+		receipt["room_id"] = String(enemy.get_meta("planned_room_id", ""))
+		SignalBus.interactive_reward_claimed.emit(receipt)
 
 
 func _set_exit_enabled(enabled: bool) -> void:

@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="RewardTable" load_steps=6 format=3]
+[gd_resource type="Resource" script_class="RewardTable" load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/progression/RewardTable.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/progression/RewardEntry.gd" id="2"]
@@ -15,15 +15,32 @@ content_id = &"coin"
 minimum_amount = 4
 maximum_amount = 4
 
-[sub_resource type="Resource" id="Scrap"]
+[sub_resource type="Resource" id="Blueprint"]
 script = ExtResource("2")
-content_id = &"rusted_scrap"
-minimum_amount = 1
-maximum_amount = 2
-chance = 0.55
+reward_type = &"blueprint_unlock"
+content_id = &"tower_shield"
+
+[sub_resource type="Resource" id="Steel"]
+script = ExtResource("2")
+content_id = &"steel_fragment"
+minimum_amount = 6
+maximum_amount = 6
+
+[sub_resource type="Resource" id="Hardwood"]
+script = ExtResource("2")
+content_id = &"hardwood"
+minimum_amount = 5
+maximum_amount = 5
+
+[sub_resource type="Resource" id="Fabric"]
+script = ExtResource("2")
+content_id = &"reinforced_fabric"
+minimum_amount = 5
+maximum_amount = 5
 
 [resource]
 script = ExtResource("1")
 id = &"drop_shield_guard"
 display_name = "Shield Guard Drop"
-entries = Array[ExtResource("2")]([SubResource("XP"), SubResource("Coin"), SubResource("Scrap")])
+content_version = 2
+entries = Array[ExtResource("2")]([SubResource("XP"), SubResource("Coin"), SubResource("Blueprint"), SubResource("Steel"), SubResource("Hardwood"), SubResource("Fabric")])

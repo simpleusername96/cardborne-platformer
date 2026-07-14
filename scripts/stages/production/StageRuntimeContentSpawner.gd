@@ -4,6 +4,8 @@ extends RefCounted
 const GENERIC_REWARD_SCENE := preload("res://scenes/stages/components/StageRewardInteractable.tscn")
 const CHEST_REWARD_SCENE := preload("res://scenes/stages/components/ChestInteractable.tscn")
 const MATERIAL_REWARD_SCENE := preload("res://scenes/stages/components/MaterialNode.tscn")
+const QUEST_REWARD_SCENE := preload("res://scenes/stages/components/QuestRewardInteractable.tscn")
+const SPIRIT_SHRINE_SCENE := preload("res://scenes/stages/components/SpiritShrineInteractable.tscn")
 
 
 static func spawn(
@@ -50,6 +52,7 @@ static func spawn(
 		)
 		enemy.position = actors_root.to_local(anchor.global_position)
 		enemy.set_meta("planned_encounter_id", String(placement.id))
+		enemy.set_meta("planned_room_id", String(placement.room_id))
 		var room := plan.get_room(placement.room_id)
 		enemy.set_meta("required_route", room != null and room.required_route)
 		actors_root.add_child(enemy)
@@ -164,6 +167,10 @@ static func instantiate_reward_source(reward_role: StringName) -> StageRewardInt
 			scene = CHEST_REWARD_SCENE
 		&"material_node":
 			scene = MATERIAL_REWARD_SCENE
+		&"npc_reward":
+			scene = QUEST_REWARD_SCENE
+		&"spirit_shrine":
+			scene = SPIRIT_SHRINE_SCENE
 		_:
 			scene = GENERIC_REWARD_SCENE
 	var source := scene.instantiate() as StageRewardInteractable

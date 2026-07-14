@@ -106,12 +106,12 @@ position = Vector2(0, 600)
 position = Vector2(1120, 580)
 
 [node name="Enemy" type="Node2D" parent="Anchors"]
-[node name="ChargerA" type="Marker2D" parent="Anchors/Enemy"]
+[node name="EliteGuard" type="Marker2D" parent="Anchors/Enemy"]
 position = Vector2(520, 600)
 script = ExtResource("3")
-anchor_id = &"charger_a"
+anchor_id = &"elite_guard"
 anchor_type = &"enemy"
-allowed_tags = Array[StringName]([&"burst"])
+allowed_tags = Array[StringName]([&"guard"])
 support_width = 620.0
 patrol_width = 520.0
 clearance = 200.0

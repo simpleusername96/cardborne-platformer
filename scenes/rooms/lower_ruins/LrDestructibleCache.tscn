@@ -4,7 +4,7 @@
 [ext_resource type="Script" path="res://scripts/stages/RoomAnchor.gd" id="2"]
 [ext_resource type="Script" path="res://scripts/stages/Climbable.gd" id="3"]
 [ext_resource type="PackedScene" path="res://scenes/stages/components/FieldPickup.tscn" id="4_field_pickup"]
-[ext_resource type="Resource" path="res://data/items/rusted_scrap_fragment.tres" id="5_rusted_scrap"]
+[ext_resource type="Resource" path="res://data/items/cartridge_pouch.tres" id="5_cartridge_pouch"]
 
 [sub_resource type="RectangleShape2D" id="ApproachMassShape"]
 size = Vector2(520, 280)
@@ -187,10 +187,10 @@ metadata/bounds = Rect2(0, 0, 1120, 720)
 
 [node name="FieldPickups" type="Node2D" parent="."]
 
-[node name="CacheScrapFragment" parent="FieldPickups" instance=ExtResource("4_field_pickup")]
+[node name="CacheCartridgePouch" parent="FieldPickups" instance=ExtResource("4_field_pickup")]
 position = Vector2(650, 550)
-pickup_id = &"ruin_cache_scrap_01"
-definition = ExtResource("5_rusted_scrap")
+pickup_id = &"ruin_cache_cartridges_01"
+definition = ExtResource("5_cartridge_pouch")
 metadata/safe_entry_radius = 240.0
 metadata/required_route = false
 metadata/minimum_optional_landing = 220.0

@@ -2,8 +2,8 @@ extends SceneTree
 
 const STAGE_PATH := "res://scenes/stages/production/ProductionStageHost.tscn"
 const MAIN_SCENE := "res://scenes/main/Main.tscn"
-const REQUIRED_ROOM_COUNT := 6
-const TOTAL_ROOM_COUNT := 7
+const REQUIRED_ROOM_COUNT := 8
+const TOTAL_ROOM_COUNT := 9
 const MIN_LANDING_WIDTH := 220.0
 
 var _failures: Array[String] = []
@@ -30,7 +30,7 @@ func _run() -> void:
 	if run_director == null or game == null or run_state == null:
 		_finish()
 		return
-	_expect(run_director.start_production_run(0), "production Warrior run should start")
+	_expect(run_director.start_production_run(0), "production Traveler run should start")
 	await process_frame
 	await process_frame
 	var stage: Variant = game.current_stage
@@ -85,8 +85,8 @@ func _validate_plan_and_rooms(stage: Variant) -> void:
 			_expect(host.get_node_or_null(root_name) != null, "room %s needs %s" % [room.id, root_name])
 		if room.role != &"exit":
 			_expect(host.get_exit_portal() == null, "only the terminal room may own an exit portal")
-	_expect(rooms.size() == TOTAL_ROOM_COUNT, "Stage 1 should contain six required rooms and one optional room")
-	_expect(required_count == REQUIRED_ROOM_COUNT and optional_count == 1, "Stage 1 route ownership should be 6+1")
+	_expect(rooms.size() == TOTAL_ROOM_COUNT, "Stage 1 should contain eight required rooms and one optional room")
+	_expect(required_count == REQUIRED_ROOM_COUNT and optional_count == 1, "Stage 1 route ownership should be 8+1")
 	_expect(stage.get_room_ids().size() == TOTAL_ROOM_COUNT, "all planned rooms should instantiate")
 	if choice_room != null and optional_room != null:
 		var choice_host: RoomTemplateHost = stage.get_room_host(choice_room.id)
@@ -234,13 +234,10 @@ func _validate_hud(run_director: Node, game: Node, stage: Variant) -> void:
 			var slot := slot_value as Dictionary
 			slots_by_role[String(slot.get("slot_role", ""))] = slot
 	var basic: Dictionary = slots_by_role.get("basic", {})
-	var skill_1: Dictionary = slots_by_role.get("skill_1", {})
 	_expect(
-		String(basic.get("label", "")) == "CLEAVE"
-		and bool(basic.get("available", false))
-		and String(skill_1.get("label", "")) == "SHIELD RUSH"
-		and bool(skill_1.get("available", false)),
-		"HUD should retain the selected Warrior kit"
+		bool(basic.get("available", false))
+		and String(basic.get("label", "")) == "HUNTING BOW",
+		"HUD should expose the Traveler's contextual attack"
 	)
 	var bus := root.get_node_or_null("/root/SignalBus")
 	bus.emit_signal("interaction_prompt_changed", "Enter gate", true)
@@ -269,7 +266,7 @@ func _validate_exit_flow(stage: Variant, run_director: Node, game: Node, run_sta
 	await process_frame
 	_expect(run_director.get_phase_name() == "stage_active", "locked exit cannot clear the stage")
 	for enemy in stage.get_required_enemies():
-		enemy.receive_damage(DamageInfo.new(enemy.current_health, stage.player))
+		_defeat_for_flow_validation(enemy, stage.player)
 	await process_frame
 	_expect(stage.get_remaining_enemy_count() == 0, "required defeats should settle exactly once")
 	_expect(stage.is_exit_enabled(), "optional content cannot block the terminal exit")
@@ -277,13 +274,19 @@ func _validate_exit_flow(stage: Variant, run_director: Node, game: Node, run_sta
 	await process_frame
 	await process_frame
 	_expect(game.current_stage == null, "reward flow should unload gameplay")
-	while run_director.get_phase_name() == "level_reward":
+	for _choice_index in 8:
+		if run_director.get_phase_name() != "level_reward":
+			break
 		var offer: Array = run_state.call("get_pending_level_offer")
 		_expect(offer.size() == 3, "level reward should offer three choices")
 		if offer.is_empty():
 			return
+		var pending_before := int(run_state.call("get_pending_level_choice_count"))
 		run_director.call("_on_level_choice_requested", offer[0])
 		await process_frame
+		if int(run_state.call("get_pending_level_choice_count")) >= pending_before:
+			_expect(false, "level reward choice should advance the Traveler build")
+			return
 	_expect(run_director.get_phase_name() == "stage_card_reward", "stage clear should reach card reward")
 	var card_offer: Array = run_state.call("get_pending_card_offer")
 	_expect(card_offer.size() == 3, "card reward should offer three choices")
@@ -317,20 +320,26 @@ func _validate_flooded_exit_flow(
 	if exit == null:
 		return
 	for enemy in stage.get_required_enemies():
-		enemy.receive_damage(DamageInfo.new(enemy.current_health, stage.player))
+		_defeat_for_flow_validation(enemy, stage.player)
 	await process_frame
 	_expect(stage.is_exit_enabled(), "Flooded required defeats should unlock the safe-room exit")
 	exit.interact(stage.player)
 	await process_frame
 	await process_frame
 	_expect(game.current_stage == null, "Flooded clear should unload gameplay for rewards")
-	while run_director.get_phase_name() == "level_reward":
+	for _choice_index in 8:
+		if run_director.get_phase_name() != "level_reward":
+			break
 		var level_offer: Array = run_state.call("get_pending_level_offer")
 		_expect(level_offer.size() == 3, "Flooded clear level reward should offer three choices")
 		if level_offer.is_empty():
 			return
+		var pending_before := int(run_state.call("get_pending_level_choice_count"))
 		run_director.call("_on_level_choice_requested", level_offer[0])
 		await process_frame
+		if int(run_state.call("get_pending_level_choice_count")) >= pending_before:
+			_expect(false, "Flooded level reward choice should advance the Traveler build")
+			return
 	_expect(run_director.get_phase_name() == "stage_card_reward", "Flooded clear should reach card reward")
 	var card_offer: Array = run_state.call("get_pending_card_offer")
 	_expect(card_offer.size() == 3, "Flooded card reward should offer three choices")
@@ -357,6 +366,17 @@ func _reward_by_id(plan: StagePlan, reward_id: StringName) -> PlannedReward:
 		if reward.id == reward_id:
 			return reward
 	return null
+
+
+func _defeat_for_flow_validation(enemy: Variant, source: Node) -> void:
+	# Flow validation bypasses defensive AI so it tests settlement, not combat tactics.
+	enemy.receive_damage(DamageInfo.new(
+		enemy.current_health,
+		source,
+		Vector2.ZERO,
+		["area"],
+		&"production_flow_validation"
+	))
 
 
 func _expect(condition: bool, message: String) -> void:

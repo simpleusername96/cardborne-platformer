@@ -34,7 +34,7 @@ func _run() -> void:
 		_expect(catalog.validate_catalog().is_empty(), "typed enemy catalog should validate")
 		_expect(catalog.archetypes.size() == 6, "catalog should contain all six normal archetypes")
 		_expect(catalog.tuning_profiles.size() == 3, "catalog should contain all three stage tuning profiles")
-		_expect(catalog.variants.size() == 13, "catalog should contain all first-run variants")
+		_expect(catalog.variants.size() == 14, "catalog should contain all first-run variants")
 		_validate_resolution(catalog)
 		_validate_flooded_resolution(catalog)
 		_validate_sanctum_resolution(catalog)
@@ -63,8 +63,10 @@ func _run() -> void:
 func _validate_resolution(catalog: EnemyCatalog) -> void:
 	var walker := catalog.resolve(&"walker", &"walker_ruin", &"ruin_approach")
 	var charger := catalog.resolve(&"charger", &"charger_ruin", &"ruin_approach")
+	var shield_guard := catalog.resolve(&"shield_guard", &"shield_guard_ruin", &"ruin_approach")
 	_expect(walker != null, "walker ruin should resolve")
 	_expect(charger != null, "charger ruin should resolve")
+	_expect(shield_guard != null, "shield guard ruin should resolve")
 	if walker != null:
 		_expect(walker.health == 3 and walker.damage == 1, "walker ruin should keep exact health/damage")
 		_expect(is_equal_approx(walker.move_speed, 70.0), "walker ruin should keep exact speed")
@@ -78,6 +80,10 @@ func _validate_resolution(catalog: EnemyCatalog) -> void:
 		_expect(is_equal_approx(charger.active_time, 0.52), "charger active time should be exact")
 		_expect(is_equal_approx(charger.recovery_time, 0.42), "charger recovery should be exact")
 		_expect(is_equal_approx(charger.charge_speed, 360.0), "charger speed should be exact")
+	if shield_guard != null:
+		_expect(shield_guard.health == 7 and shield_guard.damage == 1, "ruin elite should keep exact health/damage")
+		_expect(shield_guard.budget_cost == 3, "ruin elite should own the three-point encounter budget")
+		_expect(shield_guard.drop_source_id == &"drop_shield_guard", "ruin elite should own the shield blueprint source")
 	_expect(
 		catalog.resolve(&"walker", &"walker_ruin", &"broken_sanctum") == null,
 		"stage-mismatched resolution should fail"

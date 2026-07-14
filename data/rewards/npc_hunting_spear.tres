@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="RewardTable" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/progression/RewardTable.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/progression/RewardEntry.gd" id="2"]
+
+[sub_resource type="Resource" id="Blueprint"]
+script = ExtResource("2")
+reward_type = &"blueprint_unlock"
+content_id = &"hunting_spear"
+
+[sub_resource type="Resource" id="Scrap"]
+script = ExtResource("2")
+content_id = &"rusted_scrap"
+minimum_amount = 3
+maximum_amount = 3
+
+[sub_resource type="Resource" id="Timber"]
+script = ExtResource("2")
+content_id = &"common_timber"
+minimum_amount = 4
+maximum_amount = 4
+
+[resource]
+script = ExtResource("1")
+id = &"npc_hunting_spear"
+display_name = "Ruin Worker Request"
+content_version = 1
+entries = Array[ExtResource("2")]([SubResource("Blueprint"), SubResource("Scrap"), SubResource("Timber")])
