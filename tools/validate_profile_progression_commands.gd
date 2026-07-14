@@ -17,6 +17,7 @@ var _commands := ProfileCommandService.new(
 func _initialize() -> void:
 	_validate_unlock_craft_recraft_repair()
 	_validate_loadout_supply_and_maintenance()
+	_validate_atomic_reward_settlement()
 	_validate_tutorial_parity_and_rejections()
 	_finish()
 
@@ -105,6 +106,41 @@ func _validate_tutorial_parity_and_rejections() -> void:
 	var rejected := _commands.craft_equipment(shortage, &"matchlock")
 	_expect(not rejected.ok and rejected.code == &"insufficient_materials", "crafting should reject material shortage")
 	_expect(not shortage.crafted_equipment.has("matchlock"), "rejected craft should not mutate equipment")
+
+
+func _validate_atomic_reward_settlement() -> void:
+	var data := ProfileData.new()
+	var settled := _commands.settle_progression_reward(
+		data,
+		&"fixture:progression_reward",
+		{"steel_fragment": 2, "hardwood": 1},
+		[&"hunting_spear"],
+		[&"frost_spirit_stone"]
+	)
+	_expect(settled.ok and settled.changed, "valid progression reward should settle atomically")
+	_expect(data.materials["steel_fragment"] == 2, "atomic reward should grant materials")
+	_expect(data.unlocked_blueprints.has("hunting_spear"), "atomic reward should unlock blueprint")
+	_expect(data.unlocked_spirit_stones.has("frost_spirit_stone"), "atomic reward should unlock Spirit Stone")
+	var replay := _commands.settle_progression_reward(
+		data,
+		&"fixture:progression_reward",
+		{"steel_fragment": 2},
+		[&"hunting_spear"],
+		[&"frost_spirit_stone"]
+	)
+	_expect(replay.ok and replay.duplicate and not replay.changed, "progression reward replay should be idempotent")
+	_expect(data.materials["steel_fragment"] == 2, "replayed reward should not duplicate materials")
+
+	var before := data.to_dictionary()
+	var invalid := _commands.settle_progression_reward(
+		data,
+		&"fixture:invalid_reward",
+		{"steel_fragment": 1},
+		[&"missing_model"],
+		[]
+	)
+	_expect(not invalid.ok, "invalid progression reward should be rejected")
+	_expect(data.to_dictionary() == before, "rejected progression reward should not partially mutate profile")
 
 
 func _expect(condition: bool, message: String) -> void:

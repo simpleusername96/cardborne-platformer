@@ -17,17 +17,17 @@ func _init(
 	id: StringName = &"",
 	resolved_grants: Dictionary = {},
 	result_message: String = "",
-	resolved_equipment_discoveries: Array[Dictionary] = [],
-	resolved_blueprint_unlocks: Array[Dictionary] = [],
-	resolved_spirit_stone_unlocks: Array[Dictionary] = []
+	resolved_equipment_discoveries: Array = [],
+	resolved_blueprint_unlocks: Array = [],
+	resolved_spirit_stone_unlocks: Array = []
 ) -> void:
 	applied = was_applied
 	duplicate = was_duplicate
 	transaction_id = id
 	grants = resolved_grants.duplicate(true)
-	equipment_discoveries = resolved_equipment_discoveries.duplicate(true)
-	blueprint_unlocks = resolved_blueprint_unlocks.duplicate(true)
-	spirit_stone_unlocks = resolved_spirit_stone_unlocks.duplicate(true)
+	equipment_discoveries = _dictionary_array(resolved_equipment_discoveries)
+	blueprint_unlocks = _dictionary_array(resolved_blueprint_unlocks)
+	spirit_stone_unlocks = _dictionary_array(resolved_spirit_stone_unlocks)
 	message = result_message
 
 
@@ -42,3 +42,11 @@ func to_dictionary() -> Dictionary:
 		"spirit_stone_unlocks": spirit_stone_unlocks.duplicate(true),
 		"message": message,
 	}
+
+
+func _dictionary_array(values: Array) -> Array[Dictionary]:
+	var copied: Array[Dictionary] = []
+	for value in values:
+		if value is Dictionary:
+			copied.append(value.duplicate(true))
+	return copied

@@ -192,6 +192,27 @@ func unlock_spirit_stone(
 	)
 
 
+func settle_progression_reward(
+	transaction_id: StringName,
+	material_grants: Dictionary,
+	blueprint_model_ids: Array[StringName],
+	spirit_stone_ids: Array[StringName]
+) -> Dictionary:
+	_ensure_initialized()
+	var candidate := _data.duplicate_data()
+	return _commit_candidate(
+		candidate,
+		_commands.settle_progression_reward(
+			candidate,
+			transaction_id,
+			material_grants,
+			blueprint_model_ids,
+			spirit_stone_ids
+		),
+		&"progression_reward"
+	)
+
+
 func craft_equipment(model_id: StringName) -> Dictionary:
 	_ensure_initialized()
 	var candidate := _data.duplicate_data()

@@ -20,7 +20,8 @@ const CONSUMABLES: Dictionary = {
 
 const RUN_CURRENCIES: PackedStringArray = ["xp", "coin"]
 const MATERIAL_CURRENCIES: PackedStringArray = [
-	"rusted_scrap", "sky_thread", "slime_residue", "boss_core",
+	"rusted_scrap", "steel_fragment", "common_timber", "hardwood",
+	"sky_thread", "reinforced_fabric", "slime_residue", "boss_core",
 ]
 
 var character_catalog: CharacterCatalog
@@ -312,7 +313,14 @@ func apply_reward_transaction(transaction: RewardTransaction) -> RewardResult:
 		)
 	var grants := transaction.get_grants()
 	var equipment_ids := transaction.get_equipment_discoveries()
-	var validation_error := _validate_reward_contents(grants, equipment_ids)
+	var blueprint_ids := transaction.get_blueprint_unlocks()
+	var spirit_stone_ids := transaction.get_spirit_stone_unlocks()
+	var validation_error := _validate_reward_contents(
+		grants,
+		equipment_ids,
+		blueprint_ids,
+		spirit_stone_ids
+	)
 	if not validation_error.is_empty():
 		return RewardResult.new(
 			false,
@@ -321,6 +329,55 @@ func apply_reward_transaction(transaction: RewardTransaction) -> RewardResult:
 			{},
 			validation_error
 		)
+	var consumable_salvage_eligible := _is_material_node_reward(transaction)
+	var forge_salvage_remaining := _forge_salvage_remaining
+	var consumable_salvage_remaining := _consumable_salvage_remaining
+	for currency_id in grants:
+		var amount := int(grants[currency_id])
+		if (
+			String(currency_id) in ["rusted_scrap", "sky_thread", "slime_residue"]
+			and forge_salvage_remaining > 0
+		):
+			amount += _forge_salvage_value
+			grants[currency_id] = amount
+			forge_salvage_remaining -= 1
+		if (
+			String(currency_id) in ["rusted_scrap", "sky_thread", "slime_residue"]
+			and consumable_salvage_remaining > 0
+			and consumable_salvage_eligible
+		):
+			amount += 1
+			grants[currency_id] = amount
+			consumable_salvage_remaining -= 1
+
+	var persistent_grants: Dictionary = {}
+	for currency_id in grants:
+		if MATERIAL_CURRENCIES.has(String(currency_id)):
+			persistent_grants[String(currency_id)] = int(grants[currency_id])
+	var progression_settlement := {
+		"ok": true,
+		"changed": false,
+		"payload": {"blueprint_unlocks": [], "spirit_stone_unlocks": []},
+	}
+	if (
+		not persistent_grants.is_empty()
+		or not blueprint_ids.is_empty()
+		or not spirit_stone_ids.is_empty()
+	):
+		progression_settlement = ProfileState.settle_progression_reward(
+			StringName("reward:%s:progression" % transaction.id),
+			persistent_grants,
+			blueprint_ids,
+			spirit_stone_ids
+		)
+		if not bool(progression_settlement.get("ok", false)):
+			return RewardResult.new(
+				false,
+				false,
+				transaction.id,
+				{},
+				String(progression_settlement.get("message", "Progression reward failed."))
+			)
 	var equipment_settlement := _settle_equipment_discoveries(transaction.id, equipment_ids)
 	if not bool(equipment_settlement.get("ok", false)):
 		return RewardResult.new(
@@ -330,39 +387,19 @@ func apply_reward_transaction(transaction: RewardTransaction) -> RewardResult:
 			{},
 			String(equipment_settlement.get("message", "Equipment discovery failed."))
 		)
-	var consumable_salvage_eligible := _is_material_node_reward(transaction)
+
+	_forge_salvage_remaining = forge_salvage_remaining
+	_consumable_salvage_remaining = consumable_salvage_remaining
 	for currency_id in grants:
 		var amount := int(grants[currency_id])
-		if (
-			String(currency_id) in ["rusted_scrap", "sky_thread", "slime_residue"]
-			and _forge_salvage_remaining > 0
-		):
-			amount += _forge_salvage_value
-			grants[currency_id] = amount
-			_forge_salvage_remaining -= 1
-		if (
-			String(currency_id) in ["rusted_scrap", "sky_thread", "slime_residue"]
-			and _consumable_salvage_remaining > 0
-			and consumable_salvage_eligible
-		):
-			amount += 1
-			grants[currency_id] = amount
-			_consumable_salvage_remaining -= 1
 		match String(currency_id):
 			"xp":
 				_grant_xp_internal(amount)
 			"coin":
 				coins += amount
 			_:
-				if not ProfileState.grant_material(String(currency_id), amount):
-					return RewardResult.new(
-						false,
-						false,
-						transaction.id,
-						{},
-						"Persistent material grant failed."
-					)
-				grant_unsettled_material(String(currency_id), amount)
+				if bool(progression_settlement.get("changed", false)):
+					grant_unsettled_material(String(currency_id), amount)
 	if not equipment_ids.is_empty() and _is_stage_cache_reward(transaction):
 		_stage_cache_discoveries[str(current_stage_index)] = true
 	_applied_reward_ids[transaction_key] = true
@@ -372,7 +409,9 @@ func apply_reward_transaction(transaction: RewardTransaction) -> RewardResult:
 		transaction.id,
 		grants,
 		"Reward applied.",
-		equipment_settlement["results"]
+		equipment_settlement["results"],
+		progression_settlement.get("payload", {}).get("blueprint_unlocks", []),
+		progression_settlement.get("payload", {}).get("spirit_stone_unlocks", [])
 	)
 	_publish_snapshot()
 	SignalBus.reward_applied.emit(result.to_dictionary())
@@ -495,7 +534,9 @@ func get_reward_resolution_context() -> Dictionary:
 
 func _validate_reward_contents(
 	grants: Dictionary,
-	equipment_ids: Array[StringName]
+	equipment_ids: Array[StringName],
+	blueprint_ids: Array[StringName],
+	spirit_stone_ids: Array[StringName]
 ) -> String:
 	for currency_id in grants:
 		var amount_value: Variant = grants[currency_id]
@@ -514,6 +555,26 @@ func _validate_reward_contents(
 		if item_id == &"" or seen_equipment.has(item_id) or not ProfileState.has_equipment_definition(item_id):
 			return "Reward transaction contains invalid equipment discovery."
 		seen_equipment[item_id] = true
+	var seen_blueprints: Dictionary = {}
+	for model_id in blueprint_ids:
+		if (
+			model_id == &""
+			or seen_blueprints.has(model_id)
+			or ProfileState.progression_catalog == null
+			or ProfileState.progression_catalog.get_blueprint_for_model(model_id) == null
+		):
+			return "Reward transaction contains invalid blueprint unlock."
+		seen_blueprints[model_id] = true
+	var seen_stones: Dictionary = {}
+	for stone_id in spirit_stone_ids:
+		if (
+			stone_id == &""
+			or seen_stones.has(stone_id)
+			or ProfileState.progression_catalog == null
+			or ProfileState.progression_catalog.get_spirit_stone(stone_id) == null
+		):
+			return "Reward transaction contains invalid Spirit Stone unlock."
+		seen_stones[stone_id] = true
 	return ""
 
 

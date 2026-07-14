@@ -100,6 +100,55 @@ func unlock_spirit_stone(
 	)
 
 
+func settle_progression_reward(
+	data: ProfileData,
+	transaction_id: StringName,
+	material_grants: Dictionary,
+	blueprint_model_ids: Array[StringName],
+	spirit_stone_ids: Array[StringName]
+) -> ProfileCommandResult:
+	if data == null or transaction_id == &"":
+		return _rejected(&"invalid_transaction", "Progression reward needs a transaction ID.")
+	if _transaction_applied(data, transaction_id):
+		return _duplicate(&"duplicate_transaction", "Progression reward was already settled.")
+	var validation_error := _validate_progression_reward(
+		material_grants,
+		blueprint_model_ids,
+		spirit_stone_ids
+	)
+	if not validation_error.is_empty():
+		return _rejected(&"invalid_progression_reward", validation_error)
+
+	var blueprint_results: Array[Dictionary] = []
+	for model_id in blueprint_model_ids:
+		var model_key := String(model_id)
+		var duplicate := data.unlocked_blueprints.has(model_key)
+		if not duplicate:
+			data.unlocked_blueprints.append(model_key)
+		blueprint_results.append({"model_id": model_key, "duplicate": duplicate})
+	data.unlocked_blueprints.sort()
+
+	var spirit_results: Array[Dictionary] = []
+	for stone_id in spirit_stone_ids:
+		var stone_key := String(stone_id)
+		var duplicate := data.unlocked_spirit_stones.has(stone_key)
+		if not duplicate:
+			data.unlocked_spirit_stones.append(stone_key)
+		spirit_results.append({"stone_id": stone_key, "duplicate": duplicate})
+	data.unlocked_spirit_stones.sort()
+	_grant_cost(data, material_grants)
+	_record_transaction(data, transaction_id)
+	return _accepted(
+		&"progression_reward_settled",
+		"Progression reward settled.",
+		{
+			"materials": material_grants.duplicate(true),
+			"blueprint_unlocks": blueprint_results,
+			"spirit_stone_unlocks": spirit_results,
+		}
+	)
+
+
 func craft_equipment(data: ProfileData, model_id: StringName) -> ProfileCommandResult:
 	var preview := ProgressionService.preview_craft(progression_catalog, data, model_id)
 	if not bool(preview.get("can_execute", false)):
@@ -477,6 +526,43 @@ func _mastery_ids(data: ProfileData, character_id: String) -> Array[String]:
 		for node_id in raw_ids:
 			ids.append(String(node_id))
 	return ids
+
+
+func _validate_progression_reward(
+	material_grants: Dictionary,
+	blueprint_model_ids: Array[StringName],
+	spirit_stone_ids: Array[StringName]
+) -> String:
+	for raw_material_id in material_grants:
+		var material_id := String(raw_material_id)
+		var amount: Variant = material_grants[raw_material_id]
+		if (
+			not ProfileData.MATERIAL_IDS.has(material_id)
+			or not amount is int
+			or int(amount) <= 0
+		):
+			return "Progression reward contains an invalid material grant."
+	var seen_blueprints: Dictionary = {}
+	for model_id in blueprint_model_ids:
+		if (
+			model_id == &""
+			or seen_blueprints.has(model_id)
+			or progression_catalog == null
+			or progression_catalog.get_blueprint_for_model(model_id) == null
+		):
+			return "Progression reward contains an invalid blueprint unlock."
+		seen_blueprints[model_id] = true
+	var seen_stones: Dictionary = {}
+	for stone_id in spirit_stone_ids:
+		if (
+			stone_id == &""
+			or seen_stones.has(stone_id)
+			or progression_catalog == null
+			or progression_catalog.get_spirit_stone(stone_id) == null
+		):
+			return "Progression reward contains an invalid Spirit Stone unlock."
+		seen_stones[stone_id] = true
+	return ""
 
 
 func _first_shortage(data: ProfileData, costs: Dictionary) -> String:
