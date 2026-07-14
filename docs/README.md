@@ -8,14 +8,13 @@ game specifications.
 | Order | Document | Authority |
 | ---: | --- | --- |
 | 1 | `product/2d_platform_action_card_game_prd.md` | Canonical product and fun specification. |
-| 2 | `design/PLAYER_CHARACTER_SYSTEMS.md` | Character kits, controls, combat, and mastery. |
+| 2 | `design/ARSENAL_EQUIPMENT_PROGRESSION.md` | One hero, weapon disciplines, full equipment, progression, tutorial, and saves. |
 | 3 | `design/PROCEDURAL_REGION_GENERATION.md` | Stage profiles, terrain, room catalog, and generation. |
 | 4 | `design/MAP_AUTHORING_PIPELINE_CONTRACT.md` | Room-template and anchor schema. |
 | 5 | `design/ENEMIES_TRAPS_GIMMICKS.md` | Enemy, hazard, encounter, and boss content. |
-| 6 | `design/PROGRESSION_EQUIPMENT_ECONOMY.md` | Levels, cards, equipment, currencies, and settlement. |
-| 7 | `design/PLAYER_FACING_FLOW.md` | Navigation, HUD, choices, rest, settings, and result behavior. |
-| 8 | `architecture/FIRST_SLICE_ARCHITECTURE.md` | Runtime ownership and implementation contracts. |
-| 9 | `../.agent/execplans/2026-07-13-player-experience-refinement.md` | Active traversal, combat, field-item, and production UI refinement plan. |
+| 6 | `design/PLAYER_FACING_FLOW.md` | Profiles, Armory, HUD, choices, saves, settings, and results. |
+| 7 | `architecture/FIRST_SLICE_ARCHITECTURE.md` | Current runtime ownership and migration boundaries. |
+| 8 | `../.agent/execplans/2026-07-14-single-hero-arsenal-migration.md` | Active implementation checklist and batch gates. |
 
 ## Supporting Material
 
@@ -24,6 +23,11 @@ game specifications.
   its player/operator verification paths.
 - `.agent/execplans/2026-07-12-actual-game-production-roadmap.md` is the completed
   first-run implementation record.
+- `design/PLAYER_CHARACTER_SYSTEMS.md`,
+  `design/PROGRESSION_EQUIPMENT_ECONOMY.md`, and the 2026-07-13 refinement plan are
+  superseded v1 implementation/migration evidence.
+- `design/reports/arsenal-equipment-system.html` is the interactive design report;
+  it explains the active specs but does not override them.
 - `research/third_party_adoption_ledger.md` is the active external adoption record.
 - Dated surveys/deep dives are archived evidence; `references/` contains advisory
   candidates. Neither is product authority.
@@ -31,7 +35,8 @@ game specifications.
 
 ## Lifecycle Rule
 
-Active specs define released behavior. An active plan defines what to do next only
-when one exists. Evidence supports decisions but is not obeyed directly. Deleted
-prototype material is historical and should be recovered from Git only for a
-specific investigation.
+Active specs define the required product target; `.agent/Documentation.md` and
+current validators distinguish what has landed. An active plan defines execution
+order. Evidence supports decisions but is not obeyed directly. Deleted prototype
+material is historical and should be recovered from Git only for a specific
+investigation.

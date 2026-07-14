@@ -1,9 +1,9 @@
 ---
 type: spec
-status: active
+status: superseded
 owner: BK
-last_reviewed: 2026-07-12
-canonical_for: First-run character movement, combat kits, controls, and mastery content
+last_reviewed: 2026-07-14
+superseded_by: ./ARSENAL_EQUIPMENT_PROGRESSION.md
 source: Existing character profiles, player controller, player build contracts, and Cardborne Game Blueprint
 related:
   - ../product/2d_platform_action_card_game_prd.md
@@ -13,6 +13,11 @@ related:
 ---
 
 # Player Character Systems
+
+> Superseded on 2026-07-14. This document records the released three-character
+> implementation and remains migration evidence. New work follows
+> `ARSENAL_EQUIPMENT_PROGRESSION.md`, where these kits become weapon disciplines
+> for one hero.
 
 ## Purpose
 

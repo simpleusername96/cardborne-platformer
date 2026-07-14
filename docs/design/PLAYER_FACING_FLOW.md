@@ -3,15 +3,14 @@ type: spec
 status: active
 owner: BK
 created: 2026-07-12
-last_reviewed: 2026-07-13
+last_reviewed: 2026-07-14
 canonical_for: First-run player-facing navigation, HUD, choices, rest, settings, and result behavior
-source: Cardborne Game Blueprint, current production UI, progression economy spec, first-run architecture, and owner feedback through 2026-07-13
+source: Cardborne Game Blueprint, current production UI, arsenal/equipment spec, first-run architecture, and owner feedback through 2026-07-14
 related:
   - ../product/2d_platform_action_card_game_prd.md
-  - ./PLAYER_CHARACTER_SYSTEMS.md
-  - ./PROGRESSION_EQUIPMENT_ECONOMY.md
+  - ./ARSENAL_EQUIPMENT_PROGRESSION.md
   - ../architecture/FIRST_SLICE_ARCHITECTURE.md
-  - ../../.agent/execplans/2026-07-12-actual-game-production-roadmap.md
+  - ../../.agent/execplans/2026-07-14-single-hero-arsenal-migration.md
 ---
 
 # Player-Facing Flow
@@ -26,20 +25,23 @@ domain state directly, or explain debug contracts.
 
 This spec owns navigation, visible state, commands, focus behavior, compact-screen
 behavior, and error handling for the first complete run. Gameplay rules and values
-remain owned by the linked character, progression, encounter, and architecture
+remain owned by the linked arsenal, progression, encounter, and architecture
 specs.
 
 ## Flow Contract
 
 ```text
 main menu
- -> character and loadout
+ -> selected profile: Continue / New Run / Training
+ -> first profile only: Arsenal Trial or equal-reward skip
+ -> Armory: two weapons and complete equipment loadout
  -> stage HUD
     -> level-up choice -> stage HUD
     -> pause/settings -> stage HUD
  -> stage card choice
+ -> inter-stage Armory
  -> next stage
- -> Stage 2 rest/forge
+ -> Stage 2 Armory/rest/forge
  -> Stage 3
  -> boss HUD
  -> death or clear summary
@@ -62,12 +64,13 @@ Each surface renders an immutable snapshot and emits an intent. It never edits
 
 | Snapshot | Minimum fields | Intents |
 | --- | --- | --- |
-| `CharacterLoadoutSnapshot` | characters, selected character, unlocked/equipped items, consumable, mastery summary, validation errors | select character, equip, unequip, select consumable, open mastery, start run |
-| `RunHUDSnapshot` | health, max health, skill cooldowns/charges, XP progress, coins, objective, boss state when present | pause only |
+| `ProfileMenuSnapshot` | three profile summaries, selected profile, valid suspend metadata, migration/save errors | select/create/delete profile, continue, new run, training, settings |
+| `ArmorySnapshot` | weapon A/B, active slot, enchantments, armor, charm, relic, consumable, mastery presets, owned/locked choices, costs, next-stage pressure, validation errors | equip, compare, enhance, socket, edit mastery, start/continue stage |
+| `RunHUDSnapshot` | health, active/reserve weapons, swap state, enchantment, skill cooldowns/charges, consumable, XP, coins, objective, boss state when present | swap weapon, use consumable, pause |
 | `ChoiceOfferSnapshot` | transaction ID, choice kind, three options, compatibility, current build comparison, reroll state | inspect, choose, reroll, confirm |
 | `RestSnapshot` | health, coins, consumable, equipped items, shop offers, forge choices, committed purchases | heal, buy, forge, leave |
 | `SettingsSnapshot` | audio levels, screen shake, damage flash, bindings, conflict state | adjust, rebind, restore, close |
-| `ResultSnapshot` | outcome, character, stage, duration, build, death source, kept materials, unlocks | new run, main menu |
+| `ResultSnapshot` | outcome, profile, stage, duration, weapon pair, full build, death source, kept materials, unlocks | new run, armory, main menu |
 
 Rejected intents return a short player-safe reason and leave the last valid
 snapshot visible. Accepted intents publish a new snapshot before input unlocks.
@@ -76,24 +79,39 @@ snapshot visible. Accepted intents publish a new snapshot before input unlocks.
 
 Commands appear in this order:
 
-1. New Run.
-2. Settings.
-3. Quit.
+1. Continue, only when the selected profile owns a valid suspend.
+2. New Run.
+3. Profiles.
+4. Training.
+5. Settings.
+6. Quit.
 
-New Run opens character/loadout selection. Settings opens above the current
-backdrop and returns focus to Settings when closed. There is no developer route,
-continue command without a resumable-run contract, or disabled decorative command.
+New Run opens the Arsenal Trial decision for an uninitialized profile, otherwise
+the Armory. When a suspend exists, New Run asks the player to Continue or explicitly
+Abandon the suspended run before replacing it. Settings opens above the current
+backdrop and returns focus to Settings when closed. There is no developer route or
+disabled decorative command.
 
-## Character And Loadout
+## Profile And Armory
 
-The first viewport shows all three characters, their combat promise, health, base
-mobility summary, and current loadout without a separate tutorial page.
+Profile selection shows three local slots with play time, last safe location,
+completion state, and last-used weapon pair. Empty slots offer Create. Deleting a
+profile names the slot and requires hold/second confirmation; it never occurs from
+a generic Back command.
 
-- Character selection changes the accent and loadout snapshot immediately.
-- Equipment is grouped by weapon, armor, charm, relic, and consumable slots.
+- The Armory does not select a hero. It prepares the one persistent hero.
+- Equipment is grouped by Weapon A, Weapon B, per-weapon enchantment, armor, charm,
+  relic, and consumable slots.
+- The first viewport shows both equipped weapon promises, active mastery presets,
+  complete resulting stats, and the next stage's declared pressures.
+- Comparison shows authored base value, current enhancement result, candidate
+  result, behavior change, tradeoff, and exact material cost.
 - Locked items show their material requirement without presenting an active equip
   command.
-- Mastery opens as a focused subview and returns to the same character/loadout.
+- Mastery opens for one discipline as a focused subview and returns to the same
+  weapon and scroll/focus position.
+- Enchanting and support-equipment changes are free only at an Armory boundary;
+  permanent unlocks/enhancements commit through explicit transactions.
 - Start Run is enabled only when the snapshot validates all equipped IDs and slot
   compatibility.
 - Starting a run requires one confirmation, then disables repeated input until the
@@ -101,23 +119,28 @@ mobility summary, and current loadout without a separate tutorial page.
 
 ## Mastery
 
-- Show the selected character's six-node graph, owned materials, prerequisites,
-  active purchased-node state, and exact behavior change.
+- Show the selected weapon discipline's six-node graph, owned materials,
+  prerequisites, purchased state, equipped preset, and exact behavior change.
 - Available, locked, affordable, purchased, and equipped states must differ by
   more than color.
 - A purchase preview states cost and resulting verb change before confirmation.
 - Failed purchase leaves currency unchanged and explains the missing prerequisite
   or material.
-- Development respec is visibly labeled only in development builds and never
-  destroys spent materials in release behavior.
+- Purchased nodes remain owned. Changing the bounded equipped preset is free at an
+  Armory and never destroys spent materials.
 
 ## Gameplay HUD
 
 The HUD stays compact and leaves traversal commitments visible.
 
 - Health is continuously visible and flashes only on actual health change.
+- Active and reserve weapons, swap readiness, and both enchantments remain
+  distinguishable by label/icon/shape, not color alone.
+- Weapon swap updates Basic, Heavy, Skill 1-3, passive state, and prompts together;
+  no stale action from the reserve kit remains visible as active.
 - Skill 1-3 show input, icon/name, cooldown or charges, and disabled reason when a
   state prevents use.
+- The one equipped consumable shows identity, input, charge, and disabled reason.
 - XP shows current level progress; coins show the current spendable run amount.
 - Objective is one concise action, updated on room or phase transition.
 - Interaction prompt appears only inside a valid interaction range.
@@ -146,7 +169,8 @@ review size without clipping or overlap.
 
 - Present three compatible, uncapped cards after each normal stage.
 - Each option shows trigger, gameplay consequence, compatibility, and the part of
-  the current kit it changes. Flavor text cannot replace the mechanical statement.
+  either equipped discipline it changes. Flavor text cannot replace the mechanical
+  statement.
 - Inspecting an option previews affected attacks/skills without mutating the build.
 - Reroll is shown only when available and affordable; it commits through its own
   transaction.
@@ -169,11 +193,11 @@ and presents the resolved normal reward beside one deterministic replacement.
 - The modal has no skip path, owns keyboard/gamepad focus, and resumes gameplay
   only after one successful commit.
 
-## Rest, Shop, And Forge
+## Inter-Stage Armory, Rest, Shop, And Forge
 
-After the final Stage 2 encounter, its terminal safe room presents the stage card
-and five commands: heal, buy consumable, reroll the active offer when legal, forge,
-and leave for Stage 3.
+After each normal-stage reward, the Armory allows loadout preparation for the next
+stage. The Stage 2 terminal safe room additionally presents heal, buy consumable,
+reroll the active offer when legal, temporary forge, and leave for Stage 3.
 
 - The header keeps health and coins visible while comparing costs.
 - Unaffordable commands remain visible but disabled with the exact shortage.
@@ -189,8 +213,14 @@ and leave for Stage 3.
 ## Pause And Settings
 
 - Pause stops gameplay but not UI input.
-- Resume is the first focused command; Settings and Main Menu follow.
-- Main Menu warns that run-local progress will be lost before ending an active run.
+- Resume is the first focused command; Loadout Overview, Settings, Save & Return to
+  Menu, and Abandon Run follow.
+- Save & Return is enabled only at a legal safe boundary. It writes and verifies a
+  checkpoint suspend before returning to the menu.
+- Outside a legal boundary, the command explains the next safe save point rather
+  than pretending to save exact actor state.
+- Abandon Run names the progress that will be settled/lost and requires explicit
+  confirmation. It is the only pause command that deletes an active suspend.
 - Audio, screen shake, damage flash, and keyboard binding controls reflect real
   runtime state.
 - Binding capture names the action, supports cancel, rejects disallowed conflicts,
@@ -210,13 +240,27 @@ Death summary shows:
 - New Run and Main Menu.
 
 Clear summary additionally shows Boss Core and boss unlocks. It does not imply a
-post-boss reward choice. New Run returns to character/loadout with the previous
-character selected; Main Menu returns to the main menu.
+post-boss reward choice. New Run returns to the Armory with the previous loadout
+preselected; Main Menu returns to the selected profile.
+
+## Save And Continue
+
+- Accepted profile commands autosave to the selected versioned profile slot.
+- A profile owns at most one run suspend, written only after an authored checkpoint,
+  between stages, or by Save & Return from a legal pause state.
+- Continue reconstructs the approved stage at the saved checkpoint; it never
+  restores arbitrary mid-air position, projectiles, animation frames, or partial
+  attack windows.
+- Resuming does not delete the suspend. The next safe boundary atomically replaces
+  it; explicit abandon, terminal death settlement, or victory settlement deletes it.
+- Save status is concise: Saving, Saved, or an actionable Retry message. Success is
+  not shown before the replacement file verifies.
 
 ## Feedback And Visual Hierarchy
 
 - Threat uses red plus shape/motion; reward uses amber; interaction uses cyan;
-  recovery uses green; character identity uses its own accent.
+  recovery uses green; active weapon and enchantment use labeled silhouettes and
+  restrained accents.
 - Color never carries a mandatory state alone.
 - Gameplay feedback priority is player damage/death, enemy startup, skill result,
   objective transition, reward, then status message.
@@ -248,6 +292,8 @@ character selected; Main Menu returns to the main menu.
 | Stage load failure | Return to a stable menu/result state with Retry or Main Menu. |
 | Reward conflict or duplicate | Keep current snapshot; do not grant twice; allow safe retry when unresolved. |
 | Save failure | Preserve in-memory result, warn that persistence failed, and expose Retry. |
+| Corrupt suspend | Recover the valid backup; otherwise offer Restart Current Stage or Abandon Run without granting rewards. |
+| Incompatible suspend content | Keep profile progress, explain the version mismatch, and offer Restart Current Stage or Abandon Run. |
 | Binding conflict | Keep old binding and identify the conflicting action. |
 | Missing presentation asset | Use the declared placeholder without changing layout or gameplay. |
 
@@ -259,11 +305,18 @@ character selected; Main Menu returns to the main menu.
 - Debug and unavailable features remain absent from production surfaces.
 - Compact and standard desktop layouts preserve gameplay visibility and focus.
 - Run-ending, spending, forging, and mastery actions are explicit and idempotent.
+- Profile, tutorial skip, equipment, enhancement, save, resume, and abandon actions
+  are explicit and idempotent.
 
 ## Acceptance Criteria
 
-- A keyboard user completes menu -> loadout -> stage -> level choice -> card reward
-  -> rest/forge -> boss -> result without mouse or debug input.
+- A keyboard user completes profile -> Trial complete/skip -> Armory -> stage ->
+  weapon swap -> level choice -> card reward -> inter-stage preparation -> boss ->
+  result without mouse or debug input.
+- Save & Return and Continue work from every declared legal boundary, preserve the
+  last valid snapshot on failure, and do not repeat rewards.
+- Tutorial complete and skip produce equal mechanical profile snapshots; replay
+  produces no duplicate unlock transaction.
 - Every screen has a valid initial focus, back rule, loading state, disabled state,
   and recoverable error state where applicable.
 - Choice previews match the applied build snapshot and repeated confirmation applies
@@ -282,6 +335,5 @@ character selected; Main Menu returns to the main menu.
 ## Related
 
 - `docs/product/2d_platform_action_card_game_prd.md`
-- `docs/design/PLAYER_CHARACTER_SYSTEMS.md`
-- `docs/design/PROGRESSION_EQUIPMENT_ECONOMY.md`
+- `docs/design/ARSENAL_EQUIPMENT_PROGRESSION.md`
 - `docs/architecture/FIRST_SLICE_ARCHITECTURE.md`

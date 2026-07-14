@@ -1,9 +1,10 @@
 ---
 type: plan
-status: active
+status: superseded
 owner: BK
 created: 2026-07-13
-last_reviewed: 2026-07-13
+last_reviewed: 2026-07-14
+superseded_by: 2026-07-14-single-hero-arsenal-migration.md
 topic: Fixed-stage player experience refinement after the first complete run
 scope: Fixed stage plans, traversal safety, field items, combat spacing, gameplay HUD, and production UI replacement
 source: Owner playtest feedback through 2026-07-13 and current production runtime evidence
@@ -20,6 +21,11 @@ related:
 ---
 
 # Cardborne Player Experience Refinement Plan
+
+> Superseded on 2026-07-14 by
+> `2026-07-14-single-hero-arsenal-migration.md`. Completed work remains valid;
+> open traversal, production-run, and UI quality gates were carried into the new
+> migration plan.
 
 ## Purpose
 

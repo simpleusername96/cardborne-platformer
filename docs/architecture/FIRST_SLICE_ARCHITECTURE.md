@@ -2,18 +2,17 @@
 type: spec
 status: active
 owner: BK
-last_reviewed: 2026-07-13
+last_reviewed: 2026-07-14
 canonical_for: First complete run runtime ownership, data boundaries, state transitions, and implementation contracts
-source: Current Godot code, retired testbed lessons, active game blueprint, content specs, and fixed-stage decision through 2026-07-13
+source: Current Godot code, retired testbed lessons, active game blueprint, content specs, and fixed-stage decision through 2026-07-14
 related:
   - ../product/2d_platform_action_card_game_prd.md
-  - ../design/PLAYER_CHARACTER_SYSTEMS.md
+  - ../design/ARSENAL_EQUIPMENT_PROGRESSION.md
   - ../design/PROCEDURAL_REGION_GENERATION.md
   - ../design/MAP_AUTHORING_PIPELINE_CONTRACT.md
   - ../design/ENEMIES_TRAPS_GIMMICKS.md
-  - ../design/PROGRESSION_EQUIPMENT_ECONOMY.md
   - ../design/PLAYER_FACING_FLOW.md
-  - ../../.agent/execplans/2026-07-12-actual-game-production-roadmap.md
+  - ../../.agent/execplans/2026-07-14-single-hero-arsenal-migration.md
 ---
 
 # First Complete Run Architecture
@@ -29,6 +28,13 @@ rules in UI, enemies, or a monolithic stage script.
 This architecture applies through the first complete run. It defines public
 responsibilities and target file ownership, not an abstract framework. Concrete
 class names may change only when the same boundary and acceptance tests remain.
+
+The character-specific owners below describe the currently released v1 runtime.
+The active migration replaces selection with one hero, reclassifies the three kits
+as weapon disciplines, adds an Armory loadout and profile/run-suspend v2 contracts,
+and preserves these responsibility boundaries. Target names, order, deletion gates,
+and compatibility adapters are owned by
+`.agent/execplans/2026-07-14-single-hero-arsenal-migration.md`.
 
 ## Domain Brief
 
@@ -56,19 +62,19 @@ reward idempotency, save safety, and scene lifecycles interact.
 
 | Existing owner | Keep | Immediate correction/extension |
 | --- | --- | --- |
-| `RunDirector.gd` | Production menu/select/run/result orchestration. | Expand explicit phases; never absorb content rules. |
+| `RunDirector.gd` | Complete v1 menu/select/run/reward/result orchestration. | Replace character selection with profile/Trial/Armory/Continue phases; never absorb content rules. |
 | `Game.gd` | Scene load/unload and settings pause bridge. | Keep as technical scene service. |
-| `RunState.gd` | Profiles, health, initial run counters. | Narrow to run facts/commands; remove persistent concerns. |
-| `ProfileState.gd` | Settings persistence foundation. | Add versioned wallet, equipment, mastery, backup/migration. |
-| `PlayerBuild*.gd` | Deterministic base-stat resolution and validation. | Add typed source layers and effect breakdown. |
-| `CharacterProfile.gd` / `.tres` | Three movement profiles; Warrior references a typed kit. | Add complete Archer/Assassin kits; no profile-ID branches. |
+| `RunState.gd` | Complete v1 run facts, rewards, cards, forge, stage progress, and snapshots. | Add explicit safe-boundary suspend export/restore without scene-tree serialization. |
+| `ProfileState.gd` | Versioned v1 wallet, equipment, mastery, settings, transaction ledger, and automatic persistence. | Migrate atomically to three v2 profile slots and one hero Armory loadout. |
+| `PlayerBuild*.gd` | Deterministic layered build resolution, validation, and effect breakdown. | Replace character compatibility with hero/discipline/loadout sources. |
+| `CharacterProfile.gd` / typed kits | Three complete v1 movement/combat profiles. | Reclassify kits as weapon disciplines and retire profile-specific movement after parity. |
 | `PlayerController.gd` | Movement, damage response, camera hooks. | Keep combat execution and presentation in their extracted owners. |
 | `MovementMetrics.gd` | Shared movement-envelope calculation. | Make generator tests consume it directly. |
-| `DamageInfo`, `Hitbox`, `Hurtbox`, resolver/result | Deterministic damage, earned critical, stagger, and shared hit path. | Add effect/source transaction IDs when reward/effect lifecycle lands. |
-| `EnemyBase` + typed enemy catalog | Ruin Walker/Charger production variants plus remaining prototypes. | Promote the remaining archetypes/variants and connect reward cleanup. |
-| Stage components + native room contract | Two linked production rooms plus reusable checkpoint/hazard/gate parts. | Expand the reviewed room catalog, then add planning and assembly. |
+| `DamageInfo`, `Hitbox`, `Hurtbox`, resolver/result | Deterministic damage, earned critical, stagger, and shared hit path. | Add one shared enchantment/status owner; do not duplicate rules in discipline runtimes. |
+| `EnemyBase` + typed enemy catalog | Six behavior archetypes and 13 production variants with reward cleanup. | Preserve behavior ownership while expanding weapon/enchantment fixtures. |
+| Stage components + native room contract | Three approved fixed Stage Plans, authored rooms, recovery, hazards, gates, and pickups. | Preserve fixed-plan safety while the gameplay migration is evaluated. |
 | `StageBase.gd` | Player spawn, checkpoint, clear signal. | Consume Stage Plan/report and own stage lifecycle only. |
-| Production UI | Menu, character selection, live combat/objective HUD, result shell. | Add only reward/build states backed by working systems. |
+| Production UI | Complete v1 menu, character/loadout, rewards, Armory-adjacent forge, HUD, settings, and result surfaces. | Replace class surfaces with profile, Arsenal Trial, Armory, two-weapon HUD, and truthful save states. |
 
 The deleted integrated testbed is not an architecture owner. Focused test scenes
 may be created per subsystem when they are smaller than a production workflow.
@@ -80,31 +86,42 @@ Target phases:
 ```text
 BOOT
 MAIN_MENU
-CHARACTER_SELECT
-LOADOUT
+PROFILE_SELECT
+ARSENAL_TRIAL
+ARMORY
+RUN_RESTORING
 STAGE_LOADING
 STAGE_ACTIVE
 LEVEL_REWARD
 STAGE_CARD_REWARD
+INTER_STAGE_ARMORY
 REST_FORGE
 BOSS_LOADING
 BOSS_ACTIVE
+RUN_SUSPENDING
 RUN_DEATH
 RUN_CLEAR
 ```
 
 Allowed transitions:
 
-- Main Menu -> Character Select -> Loadout -> Stage Loading.
+- Main Menu selects a profile, then routes to Continue, New Run, Training,
+  Settings, or Quit.
+- A fresh profile routes through Arsenal Trial complete/skip, then Armory.
+- New Run -> Armory -> Stage Loading; Continue -> Run Restoring -> validated Stage
+  Loading at the saved checkpoint.
 - Stage Loading -> Stage Active only after generation/assembly validation succeeds.
 - Stage Active -> Level Reward -> Stage Active for queued level choices.
 - Stage Active -> Stage Card Reward after normal-stage completion.
-- Stage Card Reward -> next Stage Loading, except Stage 2 may pass through Rest/Forge.
+- Stage Card Reward -> Inter-Stage Armory -> next Stage Loading; Stage 2 may also
+  pass through Rest/Forge.
 - Stage 3 reward -> Boss Loading -> Boss Active.
 - Any active gameplay -> Run Death at zero health.
 - Boss Active -> Run Clear on one boss settlement transaction.
-- Death/Clear -> Main Menu or a fresh new-run flow; no production stage retry that
-  preserves the failed run.
+- A legal safe boundary may enter Run Suspending and returns to Main Menu only after
+  the suspend verifies.
+- Death/Clear -> Main Menu or Armory after settlement; no stage retry preserves a
+  terminally failed run.
 
 `RunDirector` validates transitions and coordinates owners. It does not calculate
 rewards, stats, rooms, or save payloads.
@@ -116,8 +133,10 @@ rewards, stats, rooms, or save payloads.
 Public commands:
 
 - `start_run(profile_id, loadout, seed)`
+- `switch_active_weapon`
 - `apply_damage`, `heal`, `grant_xp`, `spend_coin`
 - `advance_stage`, `record_card`, `set_temporary_affix`
+- `build_suspend_snapshot(checkpoint_id)`, `restore_from_suspend(snapshot)`
 - `end_run_death`, `end_run_clear`
 - snapshot getters returning copies/read-only Resources
 
@@ -127,19 +146,22 @@ Hidden: dictionaries, RNG stream construction, transaction history layout.
 
 Public commands:
 
-- `load_or_create_profile`
-- `grant_material`, `unlock_equipment`, `equip_item`
-- `purchase_mastery`, `respec_character`
+- `load_or_create_profile`, `select_profile`
+- `grant_material`, `unlock_equipment`, `equip_armory_loadout`
+- `purchase_discipline_mastery`, `set_mastery_preset`
+- `unlock_blueprint`, `enhance_item`, `socket_enchantment`
 - `set_setting`, `save_profile`
 
-Hidden: file path, ConfigFile/JSON choice, backup rotation, migration internals.
+Hidden: slot/file paths, ConfigFile/JSON choice, backup rotation, v1 migration,
+and transaction-ledger internals.
 
 ### Player Build
 
 Public contract:
 
 ```text
-resolve(character, mastery, equipment, run_levels, cards, temporary_effects)
+resolve(hero, armory_loadout, discipline_mastery, enhancements,
+        run_levels, cards, temporary_effects)
  -> PlayerBuildSnapshot(values, sources, abilities, validation_errors)
 ```
 
@@ -217,25 +239,30 @@ both branches.
 - `scripts/autoload/RunState.gd`
 - `scripts/autoload/ProfileState.gd`
 - `scripts/run/RunSnapshot.gd`
+- `scripts/run/RunSuspendData.gd`, `RunSuspendSaveService.gd`
 - `scripts/run/RunPhase.gd` if enum/resource extraction becomes useful
-- `scripts/profile/ProfileData.gd`, `ProfileSaveService.gd`
+- `scripts/profile/ProfileData.gd`, `ProfileSaveService.gd`, profile slot registry
+- `scripts/profile/ArmoryLoadout.gd` or an equivalent typed immutable value
 
-### Character/combat
+### Hero/arsenal/combat
 
 - `scripts/player/PlayerController.gd`: movement/damage/camera only
 - `scripts/player/PlayerCombatController.gd`, `PlayerAttackPresenter.gd`
-- `scripts/player/CharacterKit.gd`
+- `scripts/player/HeroDefinition.gd`, `WeaponDisciplineDefinition.gd`,
+  `WeaponFormDefinition.gd`; `CharacterKit.gd` remains only as a migration adapter
 - `scripts/player/AttackDefinition.gd`
 - `scripts/player/SkillDefinition.gd`
 - `scripts/combat/DamageResolver.gd`, `HitResult.gd`, `CriticalRule.gd`
+- one shared enchantment/status resolver and catalog under combat/progression
 - `scripts/content/ContentId.gd`: shared durable content-ID syntax validation
 - `scripts/player/PlayerBuild.gd`, `PlayerBuildSnapshot.gd`
-- `data/characters/`, `data/attacks/`, `data/skills/`, `data/mastery/`
+- `data/hero/`, `data/weapons/`, `data/attacks/`, `data/skills/`, `data/mastery/`
 
 ### Cards/progression/economy
 
 - `scripts/cards/CardDefinition.gd`, `CardCatalog.gd`, `CardEffectApplier.gd`
-- `scripts/progression/EffectDefinition.gd`, `EquipmentDefinition.gd`
+- `scripts/progression/EffectDefinition.gd`, `EquipmentDefinition.gd`,
+  enchantment and deterministic enhancement definitions
 - `scripts/progression/RewardService.gd`, `RewardTransaction.gd`,
   `TreasureChoiceService.gd`
 - `scripts/progression/EquipmentCatalog.gd`, `MasteryCatalog.gd`
@@ -297,11 +324,16 @@ presentation references, and `validate_definition()`.
 
 ## Save Safety
 
-- Profile schema starts at version 1 when persistent gameplay data lands.
+- The released profile schema is v1; the arsenal migration stages v2 and validates
+  a full round trip before rotating the v1 primary to backup.
 - Write a temporary file, validate it, preserve last valid backup, then replace.
 - Migration is explicit per version and never runs in UI code.
 - Corrupt primary save falls back to backup and reports a readable error.
-- Run-local state is not silently restored as persistent state in the first run.
+- Three profile slots remain isolated and never share a writable active object.
+- Run suspend uses a separate versioned file per profile and only captures authored
+  safe-boundary facts; it never serializes arbitrary nodes or mid-frame state.
+- Resume keeps the last valid suspend until a later safe boundary replaces it.
+  Explicit abandon, terminal death settlement, or victory settlement deletes it.
 
 ## Error And Failure Behavior
 
@@ -352,7 +384,8 @@ multiple consecutive infrastructure-only milestones.
 ### Scene tests
 
 - one room per terrain/encounter lesson;
-- each character kit against representative enemies;
+- each first-slice weapon discipline against representative enemies; keep the v1
+  character-kit fixture only until migration parity is accepted;
 - stage assembly and cleanup;
 - UI focus/pause/choice commit;
 - boss phase and death cleanup.
@@ -361,7 +394,8 @@ multiple consecutive infrastructure-only milestones.
 
 - 1,000-seed property sweep when changing the dormant planner or preparing its
   future re-entry, not every fixed-stage edit;
-- approved-plan all-character play matrix;
+- approved-plan weapon-pair play matrix; retain the v1 all-character matrix only
+  as a temporary migration guard;
 - complete run death/clear/save paths;
 - rendered gameplay/UI at 1280x720 and 1920x1080, with 960x540 robustness where
   practical;
@@ -385,6 +419,8 @@ multiple consecutive infrastructure-only milestones.
 - Stage planning can be tested without rendering and assembly can be tested from a
   saved Stage Plan fixture.
 - Every persistent or reward mutation is idempotent or transaction-guarded.
+- Profile v1 -> v2 and checkpoint suspend round trips preserve ownership and cannot
+  replay consumed reward transactions.
 - The production run contains no dependency on the retired integrated testbed.
 - Code, catalogs, specs, and roadmap use the same canonical terms and IDs.
 - Enemy scenes have no stage-ID stat branches, and every spawned normal enemy
@@ -396,15 +432,15 @@ multiple consecutive infrastructure-only milestones.
   classes without current pressure.
 - Adopting LDtk, a state-machine plugin, test framework, or menu framework before a
   separate approved spike.
-- Designing final save compatibility beyond the first complete-run profile.
+- Cloud, cross-device, or arbitrary historical save compatibility beyond the
+  documented local v1 -> v2 migration and checkpoint suspend.
 
 ## Related
 
 - `docs/product/2d_platform_action_card_game_prd.md`
-- `docs/design/PLAYER_CHARACTER_SYSTEMS.md`
+- `docs/design/ARSENAL_EQUIPMENT_PROGRESSION.md`
 - `docs/design/PROCEDURAL_REGION_GENERATION.md`
 - `docs/design/MAP_AUTHORING_PIPELINE_CONTRACT.md`
 - `docs/design/ENEMIES_TRAPS_GIMMICKS.md`
-- `docs/design/PROGRESSION_EQUIPMENT_ECONOMY.md`
 - `docs/design/PLAYER_FACING_FLOW.md`
-- `.agent/execplans/2026-07-12-actual-game-production-roadmap.md`
+- `.agent/execplans/2026-07-14-single-hero-arsenal-migration.md`

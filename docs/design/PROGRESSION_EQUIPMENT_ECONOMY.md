@@ -1,10 +1,10 @@
 ---
 type: spec
-status: active
+status: superseded
 owner: BK
 created: 2026-07-12
-last_reviewed: 2026-07-12
-canonical_for: First-run levels, cards, equipment, materials, shops, forging, rewards, and settlement
+last_reviewed: 2026-07-14
+superseded_by: ./ARSENAL_EQUIPMENT_PROGRESSION.md
 source: Existing economy/equipment seed catalogs, original card PRD, first-run scope decisions, and fun contract
 related:
   - ../product/2d_platform_action_card_game_prd.md
@@ -14,6 +14,11 @@ related:
 ---
 
 # Progression, Equipment, And Economy
+
+> Superseded on 2026-07-14. This document records the released class-owned
+> progression and remains migration evidence. New work follows
+> `ARSENAL_EQUIPMENT_PROGRESSION.md`, which owns the single-hero arsenal, complete
+> equipment loadout, enchantments, enhancement, and material economy.
 
 ## Purpose
 

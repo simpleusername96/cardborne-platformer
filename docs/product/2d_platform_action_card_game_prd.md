@@ -3,18 +3,17 @@ type: spec
 status: active
 owner: BK
 created: 2026-06-30
-last_reviewed: 2026-07-13
+last_reviewed: 2026-07-14
 canonical_for: Cardborne product identity and first complete run scope
-source: Existing PRD, first-run scope delta, first-slice expansion, and owner feedback through 2026-07-13
+source: Existing PRD, first-run scope delta, first-slice expansion, and owner feedback through 2026-07-14
 related:
-  - ../design/PLAYER_CHARACTER_SYSTEMS.md
+  - ../design/ARSENAL_EQUIPMENT_PROGRESSION.md
   - ../design/PROCEDURAL_REGION_GENERATION.md
   - ../design/MAP_AUTHORING_PIPELINE_CONTRACT.md
   - ../design/ENEMIES_TRAPS_GIMMICKS.md
-  - ../design/PROGRESSION_EQUIPMENT_ECONOMY.md
   - ../design/PLAYER_FACING_FLOW.md
   - ../architecture/FIRST_SLICE_ARCHITECTURE.md
-  - ../../.agent/execplans/2026-07-12-actual-game-production-roadmap.md
+  - ../../.agent/execplans/2026-07-14-single-hero-arsenal-migration.md
 ---
 
 # Cardborne Game Blueprint
@@ -31,14 +30,18 @@ combat produce rewards that visibly transform the rest of the run.
 
 ## Scope
 
-The first complete run contains:
+The target first complete run contains:
 
-- three playable characters;
+- one persistent hero with a fixed reliable movement envelope;
 - three approved fixed normal stages assembled from authored room templates;
 - one authored two-phase boss fight;
-- character-specific basic attacks, heavy attacks, three skills, and one passive;
+- two equipped weapon disciplines, each with Basic, Heavy, three skills, passive,
+  mastery, weapon form, and enchantment;
 - run levels, stage-clear cards, coins, temporary forging, and consumables;
-- persistent equipment ownership, materials, and six mastery nodes per character;
+- armor, charm, relic, consumable, deterministic enhancement, four materials, and
+  six mastery nodes per weapon discipline;
+- a skippable and replayable Arsenal Trial, three local profile slots, automatic
+  profile persistence, and checkpoint-level Continue;
 - enemies, traps, optional routes, checkpoints, shops, rewards, death, settlement,
   and clear flows;
 - one coherent Lower Ruins region with production-readable placeholder art and
@@ -46,17 +49,17 @@ The first complete run contains:
 
 ## Product Promise
 
-> Move through dangerous ruins with a responsive character, read threats, turn
-> openings into aggressive attacks, and assemble a build that changes how the
-> next room is played.
+> Move one persistent hero through dangerous ruins, read threats, switch between
+> two prepared weapon disciplines, and turn discoveries into a build that changes
+> how the next room is played.
 
 The player should be able to explain a satisfying run in terms of decisions:
 
 - which route they risked;
 - which enemy opening they exploited;
 - which card changed their attack pattern;
-- what they bought or forged instead of healing;
-- how their character kit solved the boss.
+- what they enhanced, equipped, or forged instead of healing;
+- when switching weapons or using support gear solved the boss.
 
 ## Fun Contract
 
@@ -87,7 +90,7 @@ Every milestone must protect these five pillars.
   defense timing, or resource cadence.
 - By the middle of Stage 2, two runs with different card choices should play
   differently without comparing stat screens.
-- Reward screens never offer effects that the selected character cannot use.
+- Reward screens never offer effects that neither equipped discipline can use.
 
 ### 4. Fair authored variety
 
@@ -95,7 +98,7 @@ Every milestone must protect these five pillars.
   combat, progression, rewards, and presentation are finalized.
 - Authored rooms still provide route, encounter, hazard, and reward variety within
   each fixed plan; no runtime system invents arbitrary critical geometry.
-- The least-mobile base character can clear every required route.
+- The shared hero baseline can clear every required route with any legal loadout.
 - Optional routes may be harder, but reward risk rather than gate completion.
 - The dormant random planner may return only after fixed-stage gameplay is
   accepted and it can prove the same traversal and content contracts.
@@ -112,11 +115,14 @@ Every milestone must protect these five pillars.
 
 ```text
 main menu
- -> character and persistent loadout
- -> fixed Stage 1: teach and establish build
+ -> profile / Continue / New Run / Training
+ -> optional Arsenal Trial or mechanically equal skip
+ -> Armory: two weapons and complete equipment loadout
+ -> fixed Stage 1: establish and test the build
  -> stage-clear card
+ -> inter-stage Armory
  -> fixed Stage 2: hazards and route risk
- -> stage-clear card + rest/forge
+ -> stage-clear card + Armory/rest/forge
  -> fixed Stage 3: mixed mastery check
  -> stage-clear card
  -> authored Giant Slime King arena
@@ -148,20 +154,25 @@ safe entry
 Normal stages belong to one Lower Ruins region, so templates can share a visual
 language while stage profiles change pacing, danger budgets, and room eligibility.
 
-## Playable Roster
+## Hero And Arsenal
 
-All characters share the same required traversal envelope: variable jump,
-baseline double jump, dash, crouch clearance, fast fall, one-way drop, rope use,
-damage recovery, and checkpoint respawn.
+The game has one persistent hero. Variable jump, double jump, dash, crouch
+clearance, fast fall, one-way drop, rope use, damage recovery, and checkpoint
+respawn never depend on equipment or unlocks.
 
-| Character | Combat promise | Primary decision |
+| Weapon discipline | Combat promise | Primary decision |
 | --- | --- | --- |
-| Warrior | Hold space, stagger threats, and convert defense into heavy punishment. | Commit now for control or wait for a safer counter. |
-| Archer | Control range, apply marks, and reposition while maintaining pressure. | Spend a mark for burst or preserve it for area control. |
-| Assassin | Cross through danger, chain distinct attacks, and exit before retaliation. | Continue a risky chain or disengage with cooldowns intact. |
+| Sword & Shield | Hold space, stagger threats, and convert defense into heavy punishment. | Commit now for control or wait for a safer counter. |
+| Bow | Control range, apply marks, and reposition while maintaining pressure. | Spend a mark for burst or preserve it for area control. |
+| Twin Blades | Cross through danger, chain distinct attacks, and exit before retaliation. | Continue a risky chain or disengage with cooldowns intact. |
+| Spear | Hold ideal spacing and pin movement. | Keep measured reach or trade it for crowd control. |
+| Great Axe | Make slow commitments that break armor and posture. | Spend safety for the strongest stagger payoff. |
+| Matchlock | Plan powerful shots around an explicit reload cadence. | Fire now or preserve the prepared shot for a priority target. |
 
-Exact attacks, skills, passives, timings, and mastery nodes are defined in
-`docs/design/PLAYER_CHARACTER_SYSTEMS.md`.
+The first migration reuses the three released character kits as the first three
+disciplines. Spear, Great Axe, and Matchlock are authored only after that slice
+passes combat-fun and balance gates. Exact content is owned by
+`docs/design/ARSENAL_EQUIPMENT_PROGRESSION.md`.
 
 ## Progression Layers
 
@@ -173,16 +184,17 @@ Each growth layer has one purpose.
 | Card | Run | After each normal stage | Build-defining behavior change. |
 | Coin | Run | Shops, rerolls, healing, temporary forge | Tactical opportunity cost. |
 | Temporary Forge | Run | One planned rest/forge beat plus rare reward | Tailor current equipment to the current build. |
-| Equipment | Persistent ownership | Loadout and rare discoveries | Starting identity and tradeoffs. |
-| Mastery | Persistent per character | Between runs | Unlock options and bounded kit variants. |
-| Material | Persistent shared wallet | Enemies, challenges, settlement | Fund equipment and mastery without affecting route access. |
+| Equipment | Persistent ownership | Armory and rare discoveries | Two weapons plus armor, charm, relic, consumable, and enchantments define preparation. |
+| Enhancement | Persistent per item | Armory | Deterministic authored weapon/armor growth without failure or random rolls. |
+| Mastery | Persistent per discipline | Armory | Unlock behavior options and equip a bounded preset. |
+| Material | Persistent shared wallet | Enemies, challenges, settlement | Fund equipment, enhancement, and mastery without affecting route access. |
 
 The stat pipeline resolves sources in this order:
 
 ```text
-character base
- -> persistent mastery
- -> equipped items
+hero base
+ -> equipped weapon disciplines and mastery presets
+ -> armor, charm, relic, consumable, and enchantments
  -> run-level upgrades
  -> cards
  -> temporary forge/effects
@@ -202,8 +214,10 @@ The first complete run ships with:
   chest, material node, checkpoint, and exit;
 - 15 stage-clear cards;
 - 5 repeatable run-level micro upgrades;
-- 12 persistent equipment items;
-- 18 mastery nodes, six per character;
+- a first migration set of 6 weapon forms, existing support equipment, 4
+  enchantments, and 18 mastery nodes;
+- a bounded complete target of 18 weapon forms, 5 armor, 6 charms, 4 relics, 4
+  consumables, and 36 mastery nodes;
 - 4 Giant Slime King pattern families.
 
 Content IDs, roles, constraints, and values live in the linked design specs and
@@ -223,8 +237,9 @@ focused validation.
   templates, complete content signature, and validation results.
 - Required geometry uses filled rock masses with visibly supported undersides,
   varied top heights, stable landing surfaces, and navigable space between masses.
-- Critical route transitions are derived from `MovementMetrics` for the complete
-  base roster; no character-exclusive combat skill is a route requirement.
+- Critical route transitions are derived from `MovementMetrics` for the shared
+  hero baseline; no weapon discipline, equipment effect, or mastery unlock is a
+  route requirement.
 - Enemy, trap, reward, and exit placement uses authored anchors only.
 - Encounter generation selects a pressure role, then an enemy archetype, then an
   exact stage-eligible variant. It never rolls hidden per-instance combat stats.
@@ -258,17 +273,20 @@ Poison Bands, and Small Slime Summon.
 - Phase 2 increases tempo and allows only reviewed legal combinations.
 - Poison never removes every safe floor segment.
 - Active adds are capped and cleaned between attempts.
-- Every character can win with a base loadout.
+- The shared hero can win with every legal base weapon pair and no mastery unlocks.
 - Boss victory settles persistent rewards and ends the run; there is no unused
   post-boss card reward.
 
 ## Player-Facing Surfaces
 
-Required surfaces are main menu, character/loadout selection, mastery, gameplay
-HUD, level-up choice, stage card reward, rest/forge, pause/settings, boss HUD,
-death summary, and clear summary.
+Required surfaces are profile-aware main menu, optional Arsenal Trial, Armory,
+mastery, gameplay HUD, level-up choice, stage card reward, inter-stage preparation,
+pause/settings, boss HUD, death summary, and clear summary.
 
-- HUD shows health, skills/cooldowns, XP, coins, and immediate objective.
+- Main Menu exposes Continue only for a valid checkpoint suspend; New Run resolves
+  any existing suspend explicitly.
+- HUD shows health, active and reserve weapons, swap state, enchantment, skills,
+  consumable, XP, coins, and immediate objective.
 - Debug route metrics and explanatory test labels do not exist in production UI.
 - Every visible setting changes runtime behavior.
 - Primary flows support keyboard and one standard gamepad layout.
@@ -280,7 +298,8 @@ Automated validation protects correctness; playtests protect fun.
 
 Record per run:
 
-- run ID, approved-plan version, character, loadout, duration, and room order;
+- run ID, approved-plan version, profile, weapon pair, full loadout, duration, and
+  room order;
 - damage taken by source and whether the source was visible;
 - encounter and room duration;
 - offered and selected cards;
@@ -306,7 +325,8 @@ as invisible numbers, or deaths as unclear.
 - Fresh boot enters production menu and never loads the retired integrated
   testbed.
 - A complete run can be played without debug input or explanatory labels.
-- Three base characters clear every required route and the boss.
+- The shared hero and every legal base weapon pair clear every required route and
+  the boss.
 - All 13 first-run enemy variants preserve their archetype response contract and
   are reproducible from the approved plan/content version.
 - Different run seeds reproduce the same approved Stage Plan and map-content
@@ -314,23 +334,30 @@ as invisible numbers, or deaths as unclear.
 - Invalid stages never reach gameplay silently.
 - Rewards apply once and state scopes do not leak across run/profile boundaries.
 - Persistent writes are versioned and preserve the last valid profile.
+- Tutorial completion and skip grant identical mechanical unlocks exactly once.
+- Continue restores only validated safe-boundary state and never duplicates a
+  reward transaction.
 - Every major milestone ends in a playable workflow with rendered inspection.
 
 ## Acceptance Criteria
 
 The first complete run is done when a fresh player can:
 
-1. Select any character and persistent loadout.
-2. Complete three varied, valid approved fixed stages.
-3. Use every attack and skill with readable feedback.
-4. Gain levels, choose three stage cards, spend coins, forge, and use equipment.
-5. Collect and settle persistent materials without duplicate rewards.
+1. Select a profile, complete or skip the Arsenal Trial, and prepare a legal full
+   equipment loadout in the Armory.
+2. Complete three varied, valid approved fixed stages with one hero and two
+   swappable weapon disciplines.
+3. Use both complete weapon kits, support equipment, consumable, and enchantments
+   with readable feedback.
+4. Gain levels, choose three stage cards, spend coins, forge, enhance, and use
+   persistent materials.
+5. Save and return at a legal boundary, then Continue without duplicate rewards.
 6. Defeat the two-phase boss or lose the run fairly.
-7. Return to menu, reload the profile, and start another reproducible run.
+7. Reload any of three isolated profiles and start another reproducible run.
 
-The release candidate additionally passes the all-character approved-plan matrix,
-economy bounds, save round trip, boss scheduler simulation, keyboard/gamepad path,
-and 960x540/1280x720/1920x1080 rendered review.
+The release candidate additionally passes the weapon-pair approved-plan matrix,
+economy bounds, profile and suspend round trips, boss scheduler simulation,
+keyboard/gamepad path, and 960x540/1280x720/1920x1080 rendered review.
 
 ## Non-Goals
 
@@ -338,7 +365,8 @@ and 960x540/1280x720/1920x1080 rendered review.
 - Multiple biomes, multiple bosses, quests, dialogue trees, or campaign story.
 - Arbitrary per-tile procedural terrain or random boss arenas.
 - Runtime-random normal-stage topology during the fixed-stage gameplay refinement.
-- More than three characters or more than three active skills per character.
+- Multiple playable heroes, unrestricted weapon proliferation, or more than three
+  active skills per weapon discipline.
 - Grid inventory, durability, item destruction, downgrade, or mandatory grind.
 - Final commissioned art, final soundtrack, localization, console certification,
   or storefront work.
@@ -346,11 +374,10 @@ and 960x540/1280x720/1920x1080 rendered review.
 ## Related
 
 - `docs/product/README.md`
-- `docs/design/PLAYER_CHARACTER_SYSTEMS.md`
+- `docs/design/ARSENAL_EQUIPMENT_PROGRESSION.md`
 - `docs/design/PROCEDURAL_REGION_GENERATION.md`
 - `docs/design/MAP_AUTHORING_PIPELINE_CONTRACT.md`
 - `docs/design/ENEMIES_TRAPS_GIMMICKS.md`
-- `docs/design/PROGRESSION_EQUIPMENT_ECONOMY.md`
 - `docs/design/PLAYER_FACING_FLOW.md`
 - `docs/architecture/FIRST_SLICE_ARCHITECTURE.md`
-- `.agent/execplans/2026-07-12-actual-game-production-roadmap.md`
+- `.agent/execplans/2026-07-14-single-hero-arsenal-migration.md`
