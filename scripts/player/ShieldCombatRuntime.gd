@@ -29,6 +29,10 @@ func reset() -> void:
 	_stability = _maximum_stability
 
 
+func set_condition(condition: int) -> void:
+	_policy["condition"] = maxi(condition, 0)
+
+
 func update(delta: float, guard_held: bool) -> void:
 	var remaining := maxf(delta, 0.0)
 	_guard_held = guard_held

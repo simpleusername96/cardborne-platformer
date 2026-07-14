@@ -52,6 +52,7 @@ func _initialize() -> void:
 	_validate_near_and_far_targets()
 	_validate_disqualified_and_unavailable_targets()
 	_validate_boundary_hysteresis()
+	_validate_mirrored_melee_geometry()
 	_validate_deterministic_targeting()
 	_validate_action_lock_and_intent_isolation()
 	_validate_defense_phases_and_precision()
@@ -135,6 +136,28 @@ func _validate_boundary_hysteresis() -> void:
 	)
 	_expect(ranged_held.mode == AttackIntentScript.MODE_RANGED, "ranged boundary mode should also hold for 0.15 seconds")
 	_expect(ranged_held.reason == &"selection_hysteresis", "ranged boundary hold should expose hysteresis reason")
+
+
+func _validate_mirrored_melee_geometry() -> void:
+	var action := {
+		"tool_id": &"traveler_sword",
+		"hitbox_size": Vector2(72.0, 42.0),
+		"hitbox_offset": Vector2(40.0, -27.0),
+	}
+	var intent = AttackIntentResolverScript.resolve(
+		Vector2.LEFT,
+		Vector2.LEFT,
+		{"origin": Vector2.ZERO, "targets": [_target(&"left", Vector2(-58.0, -27.0))]},
+		action,
+		RANGED_POLICY,
+		_default_ranged_state()
+	)
+	var rect: Rect2 = intent.geometry.get("rect", Rect2())
+	_expect(intent.mode == AttackIntentScript.MODE_MELEE, "left-facing nearby target should select melee")
+	_expect(
+		rect.get_center().is_equal_approx(Vector2(-40.0, -27.0)),
+		"mirroring melee reach must not invert its vertical offset"
+	)
 
 
 func _validate_deterministic_targeting() -> void:

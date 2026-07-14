@@ -34,6 +34,7 @@ var selected_profile_index: int = 0
 var selected_profile: CharacterProfile
 var effective_stats: Dictionary = {}
 var effective_build_snapshot: PlayerBuildSnapshot
+var hero_combat_loadout: Dictionary = {}
 
 var current_health: int = 0
 var max_health: int = 0
@@ -108,7 +109,7 @@ func _load_profiles() -> void:
 	selected_profile = profiles[selected_profile_index]
 
 
-func start_new_run(profile_index: int = -1, requested_seed: int = -1) -> bool:
+func start_new_run(_profile_index: int = -1, requested_seed: int = -1) -> bool:
 	if profiles.is_empty():
 		_load_profiles()
 	if profiles.is_empty():
@@ -116,17 +117,23 @@ func start_new_run(profile_index: int = -1, requested_seed: int = -1) -> bool:
 	if not _catalogs_valid:
 		return false
 
-	var candidate_index := selected_profile_index
-	if profile_index >= 0:
-		candidate_index = wrapi(profile_index, 0, profiles.size())
+	# The legacy catalog remains a migration fixture; Traveler owns production runs.
+	var candidate_index := 0
 	var candidate_profile := profiles[candidate_index]
+	var maintenance := ProfileState.apply_stage_entry_maintenance()
+	if not bool(maintenance.get("ok", false)):
+		return false
+	var candidate_hero := ProfileState.get_hero_combat_snapshot()
+	if not bool(candidate_hero.get("ok", false)):
+		push_error(String(candidate_hero.get("message", "Shared hero loadout is invalid.")))
+		return false
 	var candidate_build := PlayerBuild.resolve(
-		candidate_profile.to_base_stats_dictionary(),
-		ProfileState.get_build_effects(StringName(candidate_profile.id))
+		candidate_hero["stats"],
+		[]
 	)
 	if not _is_build_valid(candidate_profile, candidate_build):
 		return false
-	_apply_profile_build(candidate_index, candidate_profile, candidate_build)
+	_apply_hero_build(candidate_index, candidate_profile, candidate_build, candidate_hero)
 	max_health = int(effective_stats.get("max_health", 5))
 	current_health = max_health
 	run_seed = requested_seed if requested_seed >= 0 else _create_run_seed()
@@ -162,7 +169,7 @@ func start_new_run(profile_index: int = -1, requested_seed: int = -1) -> bool:
 	_forge_salvage_value = 0
 	_dash_tonic_active = false
 	_consumable_salvage_remaining = 0
-	var profile_loadout := ProfileState.get_loadout(candidate_profile.id)
+	var profile_loadout: Dictionary = candidate_hero["loadout"]
 	current_consumable_id = StringName(profile_loadout.get("consumable", "small_potion"))
 	consumable_charges = 1
 	_run_started_at_msec = Time.get_ticks_msec()
@@ -204,6 +211,18 @@ func get_effective_stats() -> Dictionary:
 	return effective_stats.duplicate()
 
 
+func get_hero_combat_loadout_snapshot() -> Dictionary:
+	return hero_combat_loadout.duplicate(true)
+
+
+func refresh_hero_combat_loadout() -> bool:
+	var candidate := ProfileState.get_hero_combat_snapshot()
+	if not bool(candidate.get("ok", false)):
+		return false
+	hero_combat_loadout = candidate
+	return true
+
+
 func get_effective_build_snapshot() -> PlayerBuildSnapshot:
 	return effective_build_snapshot
 
@@ -212,8 +231,8 @@ func get_run_snapshot() -> RunSnapshot:
 	var terminal_settlement := get_terminal_settlement_snapshot()
 	return RunSnapshot.new({
 		"seed": run_seed,
-		"profile_id": selected_profile.id if selected_profile != null else "",
-		"profile_display_name": selected_profile.display_name if selected_profile != null else "",
+		"profile_id": String(hero_combat_loadout.get("hero_id", "traveler")),
+		"profile_display_name": String(hero_combat_loadout.get("display_name", "Traveler")),
 		"stage_index": current_stage_index,
 		"health": current_health,
 		"max_health": max_health,
@@ -650,7 +669,7 @@ func preview_micro_upgrade(upgrade_id: StringName) -> Dictionary:
 		return {"ok": false, "message": "Upgrade is already capped."}
 	candidate_stacks[String(upgrade.id)] = next_stack
 	var candidate := PlayerBuild.resolve(
-		selected_profile.to_base_stats_dictionary(),
+		hero_combat_loadout.get("stats", {}),
 		_collect_all_build_effects(candidate_stacks)
 	)
 	if not candidate.is_valid():
@@ -1413,17 +1432,35 @@ func _apply_profile_build(
 	effective_stats = resolved_stats
 
 
+func _apply_hero_build(
+	profile_index: int,
+	legacy_profile: CharacterProfile,
+	build_snapshot: PlayerBuildSnapshot,
+	combat_loadout: Dictionary
+) -> void:
+	selected_profile_index = profile_index
+	selected_profile = legacy_profile
+	hero_combat_loadout = combat_loadout.duplicate(true)
+	effective_build_snapshot = build_snapshot
+	effective_stats = build_snapshot.get_values()
+
+
 func _rebuild_effective_build() -> bool:
-	if selected_profile == null:
+	if selected_profile == null or hero_combat_loadout.is_empty():
 		return false
 	var candidate := PlayerBuild.resolve(
-		selected_profile.to_base_stats_dictionary(),
+		hero_combat_loadout.get("stats", {}),
 		_collect_all_build_effects(_micro_upgrade_stacks)
 	)
 	if not _is_build_valid(selected_profile, candidate):
 		return false
 	var previous_health := current_health
-	_apply_profile_build(selected_profile_index, selected_profile, candidate)
+	_apply_hero_build(
+		selected_profile_index,
+		selected_profile,
+		candidate,
+		hero_combat_loadout
+	)
 	max_health = int(effective_stats.get("max_health", 5))
 	current_health = clampi(previous_health, 0, max_health)
 	return true
@@ -1450,8 +1487,7 @@ func _collect_all_build_effects(stacks: Dictionary) -> Array:
 
 
 func _collect_build_effects_with_affixes(stacks: Dictionary, affixes: Dictionary) -> Array:
-	var effects: Array = ProfileState.get_build_effects(StringName(selected_profile.id))
-	effects.append_array(_collect_run_effects(stacks))
+	var effects: Array = _collect_run_effects(stacks)
 	if forge_catalog != null:
 		var item_ids := affixes.keys()
 		item_ids.sort()
@@ -1480,7 +1516,7 @@ func _preview_forge_affix(
 	var candidate_affixes := _temporary_affixes.duplicate(true)
 	candidate_affixes[String(item_id)] = String(affix.id)
 	var candidate := PlayerBuild.resolve(
-		selected_profile.to_base_stats_dictionary(),
+		hero_combat_loadout.get("stats", {}),
 		_collect_build_effects_with_affixes(_micro_upgrade_stacks, candidate_affixes)
 	)
 	return {
@@ -1614,7 +1650,13 @@ func _create_run_seed() -> int:
 
 
 func _publish_state() -> void:
-	if selected_profile != null:
+	if not hero_combat_loadout.is_empty():
+		SignalBus.selected_profile_changed.emit(
+			String(hero_combat_loadout.get("hero_id", "traveler")),
+			String(hero_combat_loadout.get("display_name", "Traveler")),
+			hero_combat_loadout.get("visual_color", Color.WHITE)
+		)
+	elif selected_profile != null:
 		SignalBus.selected_profile_changed.emit(
 			selected_profile.id,
 			selected_profile.display_name,

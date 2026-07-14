@@ -304,8 +304,9 @@ static func _melee_geometry(
 	var size := _vector_value(action.get("hitbox_size", Vector2.ONE), Vector2.ONE)
 	size = Vector2(maxf(absf(size.x), EPSILON), maxf(absf(size.y), EPSILON))
 	var offset := _vector_value(action.get("hitbox_offset", Vector2.ZERO), Vector2.ZERO)
-	var perpendicular := Vector2(-forward.y, forward.x)
-	var center := origin + forward * offset.x + perpendicular * offset.y
+	# Side-scroller attacks mirror horizontal reach only; vertical placement stays fixed.
+	var horizontal_direction := -1.0 if forward.x < 0.0 else 1.0
+	var center := origin + Vector2(offset.x * horizontal_direction, offset.y)
 	var hit_rect := Rect2(center - size * 0.5, size)
 	var geometry: Dictionary = {}
 	if action.get("geometry", {}) is Dictionary:

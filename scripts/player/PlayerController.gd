@@ -101,10 +101,14 @@ func _physics_process(delta: float) -> void:
 func receive_damage(damage_info: DamageInfo) -> void:
 	if invulnerability_timer > 0.0 or RunState.current_health <= 0:
 		return
-	if combat_controller.blocks_incoming_damage(damage_info):
+	var defense := combat_controller.resolve_shared_defense(damage_info)
+	if bool(defense.get("handled", false)):
+		if bool(defense.get("blocked", false)):
+			return
+	elif combat_controller.blocks_incoming_damage(damage_info):
 		return
-
-	var defense := combat_controller.resolve_incoming_damage(damage_info.amount)
+	else:
+		defense = combat_controller.resolve_incoming_damage(damage_info.amount)
 	var resolved_damage := int(defense.get("damage", damage_info.amount))
 	resolved_damage = RunState.reduce_damage_with_forge_guard(resolved_damage)
 	var previous_health: int = RunState.current_health
@@ -128,7 +132,11 @@ func receive_damage(damage_info: DamageInfo) -> void:
 			-float(facing) * float(stats.get("damage_knockback_x", 220.0)),
 			float(stats.get("damage_knockback_y", -220.0))
 		)
-	velocity = knockback * float(defense.get("knockback_scale", 1.0))
+	velocity = (
+		knockback
+		* float(defense.get("knockback_scale", 1.0))
+		* float(stats.get("knockback_received_multiplier", 1.0))
+	)
 
 
 func heal_player(amount: int) -> int:
@@ -227,7 +235,10 @@ func _update_gravity(delta: float) -> void:
 
 
 func _update_horizontal_motion(input_axis: float, delta: float) -> void:
-	var move_speed := float(stats.get("move_speed", 220.0))
+	var move_speed := (
+		float(stats.get("move_speed", 220.0))
+		* combat_controller.get_movement_speed_multiplier()
+	)
 	if is_crouching:
 		move_speed *= crouch_speed_multiplier
 
@@ -240,6 +251,8 @@ func _update_horizontal_motion(input_axis: float, delta: float) -> void:
 
 func _try_jump() -> void:
 	if jump_buffer_timer <= 0.0:
+		return
+	if combat_controller.blocks_jump():
 		return
 	if is_crouching:
 		if not _can_stand():
@@ -356,7 +369,12 @@ func _request_gameplay_feedback(
 		"strength": strength,
 		"world_position": global_position + Vector2(0.0, -26.0),
 		"burst": burst,
-		"context": {"source": "player", "profile_id": String(RunState.selected_profile.id)},
+		"context": {
+			"source": "player",
+			"profile_id": String(
+				RunState.get_hero_combat_loadout_snapshot().get("hero_id", "traveler")
+			),
+		},
 	})
 
 
@@ -434,6 +452,15 @@ func respawn_at(respawn_position: Vector2, invulnerability_time: float) -> void:
 
 func _apply_run_state() -> void:
 	stats = RunState.get_effective_stats()
+	var hero := RunState.get_hero_combat_loadout_snapshot()
+	if bool(hero.get("ok", false)):
+		var hero_color: Color = hero.get("visual_color", Color.WHITE)
+		body_polygon.color = hero_color
+		visual_overlay.configure(StringName(hero.get("hero_id", "traveler")), hero_color)
+		combat_controller.configure_shared_hero(hero, stats)
+		dash_charges_left = _max_dash_charges()
+		extra_jumps_left = _max_extra_jumps()
+		return
 	var profile := RunState.selected_profile
 	if profile != null:
 		body_polygon.color = profile.visual_color
@@ -450,6 +477,9 @@ func _apply_run_state() -> void:
 func _on_selected_profile_changed(_profile_id: String, _display_name: String, color: Color) -> void:
 	body_polygon.color = color
 	visual_overlay.configure(StringName(_profile_id), color)
+	var hero := RunState.get_hero_combat_loadout_snapshot()
+	if bool(hero.get("ok", false)):
+		return
 	combat_controller.configure(
 		RunState.selected_profile,
 		stats,

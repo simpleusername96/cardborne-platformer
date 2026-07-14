@@ -57,6 +57,9 @@ func _check_profile_attack(
 	var player := packed_scene.instantiate()
 	world.add_child(player)
 	await process_frame
+	var combat := player.get_node_or_null("CombatController") as PlayerCombatController
+	var legacy_profile := CHARACTER_CATALOG.profiles[profile_index] as CharacterProfile
+	combat.configure(legacy_profile, legacy_profile.to_stats_dictionary(), [])
 	if profile_index == 0:
 		player.facing = -1
 
@@ -65,7 +68,6 @@ func _check_profile_attack(
 	Input.action_release("attack")
 	await physics_frame
 
-	var combat := player.get_node_or_null("CombatController") as PlayerCombatController
 	var hitbox := player.get_node_or_null("AttackHitbox") as Hitbox
 	var attack_visual := player.get_node_or_null("AttackMotionVisual") as Polygon2D
 	var presenter := player.get_node_or_null("AttackPresenter") as PlayerAttackPresenter

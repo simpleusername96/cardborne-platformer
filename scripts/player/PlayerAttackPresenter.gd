@@ -15,15 +15,21 @@ const CONTACT_OUTLINE_ALPHA := 0.68
 var _origin := Vector2.ZERO
 var _runtime_pulse_index: int = 0
 var _current_style: StringName = &""
+var _aim_direction: Vector2 = Vector2.ZERO
 
 
-func begin(definition: AttackDefinition, direction: int, origin: Vector2) -> void:
+func begin(
+	definition: AttackDefinition,
+	direction: int,
+	origin: Vector2,
+	aim_direction: Vector2 = Vector2.ZERO
+) -> void:
 	_origin = Vector2(absf(origin.x), origin.y)
 	_runtime_pulse_index = 0
 	_current_style = definition.motion_style
-	visual.position = _directional_origin(direction)
-	visual.rotation = 0.0
-	visual.scale = Vector2(float(direction), 1.0)
+	_aim_direction = aim_direction.normalized() if not aim_direction.is_zero_approx() else Vector2.ZERO
+	visual.position = _presentation_origin(definition, direction)
+	_apply_direction(definition, direction)
 	visual.color = definition.visual_color
 	visual.modulate = Color(1.0, 1.0, 1.0, 0.46)
 	visual.z_index = 20
@@ -39,12 +45,15 @@ func update(
 	phase_name: StringName,
 	phase_timer: float,
 	phase_duration: float,
-	direction: int
+	direction: int,
+	aim_direction: Vector2 = Vector2.ZERO
 ) -> void:
 	if definition == null or visual == null:
 		return
-	visual.scale = Vector2(float(direction), 1.0)
-	visual.position = _directional_origin(direction)
+	if not aim_direction.is_zero_approx():
+		_aim_direction = aim_direction.normalized()
+	_apply_direction(definition, direction)
+	visual.position = _presentation_origin(definition, direction)
 	_contact_visual.position = _directional_origin(direction)
 	_contact_outline.position = _directional_origin(direction)
 	var progress := clampf(1.0 - phase_timer / maxf(phase_duration, 0.01), 0.0, 1.0)
@@ -53,10 +62,12 @@ func update(
 	match phase_name:
 		&"startup":
 			visual.modulate.a = lerpf(0.38, 0.86, progress)
-			visual.rotation = _startup_rotation(definition.motion_style, progress)
+			if not _uses_vector_aim(definition):
+				visual.rotation = _startup_rotation(definition.motion_style, progress)
 		&"active":
 			visual.modulate.a = 1.0
-			visual.rotation = _active_rotation(definition.motion_style, progress)
+			if not _uses_vector_aim(definition):
+				visual.rotation = _active_rotation(definition.motion_style, progress)
 			if definition.motion_style == &"shield_rush":
 				visual.position += Vector2(6.0 * float(direction), 0.0)
 			elif definition.motion_style == &"ground_splitter":
@@ -65,7 +76,8 @@ func update(
 				visual.scale *= lerpf(1.0, 1.12, progress)
 		&"recovery":
 			visual.modulate.a = lerpf(0.68, 0.0, progress)
-			visual.rotation = _recovery_rotation(definition.motion_style)
+			if not _uses_vector_aim(definition):
+				visual.rotation = _recovery_rotation(definition.motion_style)
 
 
 func show_runtime_pulse(hit_index: int) -> void:
@@ -97,6 +109,7 @@ func get_visual_contract() -> Dictionary:
 		),
 		"motion_signature": str(visual.polygon) if visual != null else "",
 		"runtime_pulse_index": _runtime_pulse_index,
+		"aim_direction": _aim_direction,
 		"contact_visible": _contact_visual != null and _contact_visual.visible,
 		"contact_outline_visible": _contact_outline != null and _contact_outline.visible,
 	}
@@ -117,6 +130,7 @@ func reset() -> void:
 		_contact_outline.position = Vector2.ZERO
 	_runtime_pulse_index = 0
 	_current_style = &""
+	_aim_direction = Vector2.ZERO
 
 
 func _configure_motion(style: StringName, size: Vector2) -> void:
@@ -198,6 +212,28 @@ func _recovery_rotation(style: StringName) -> float:
 
 func _directional_origin(direction: int) -> Vector2:
 	return Vector2(_origin.x * float(direction), _origin.y)
+
+
+func _presentation_origin(definition: AttackDefinition, direction: int) -> Vector2:
+	if _uses_vector_aim(definition):
+		return _aim_direction * absf(_origin.x) + Vector2(0.0, _origin.y)
+	return _directional_origin(direction)
+
+
+func _apply_direction(definition: AttackDefinition, direction: int) -> void:
+	if _uses_vector_aim(definition):
+		visual.scale = Vector2.ONE
+		visual.rotation = _aim_direction.angle()
+		return
+	visual.scale = Vector2(float(direction), 1.0)
+
+
+func _uses_vector_aim(definition: AttackDefinition) -> bool:
+	return (
+		definition != null
+		and definition.projectile_speed > 0.0
+		and not _aim_direction.is_zero_approx()
+	)
 
 
 func _configure_wide_slash(size: Vector2) -> void:

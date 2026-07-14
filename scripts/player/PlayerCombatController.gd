@@ -13,6 +13,9 @@ const RALLY_ECHO_DISTANCE := 180.0
 const RALLY_ECHO_DURATION := 0.3
 const STEP_IN_DISTANCE := 12.0
 const PROJECTILE_RELEASE_OVERLAP := 2.0
+const AttackIntentResolverValue = preload("res://scripts/player/AttackIntentResolver.gd")
+const ShieldRuntimeValue = preload("res://scripts/player/ShieldCombatRuntime.gd")
+const SpiritRuntimeValue = preload("res://scripts/player/SpiritStoneCombatRuntime.gd")
 
 @export var player_path: NodePath = NodePath("..")
 @export var hitbox_path: NodePath = NodePath("../AttackHitbox")
@@ -57,6 +60,15 @@ var _action_serial: int = 0
 var _charge_fraction: float = 0.0
 var _action_start_position: Vector2 = Vector2.ZERO
 var _action_hit_wall: bool = false
+var _shared_hero_mode: bool = false
+var _hero_loadout: Dictionary = {}
+var _committed_intent: AttackIntent
+var _last_intent: AttackIntent
+var _last_intent_elapsed: float = INF
+var _shield_runtime: Variant = ShieldRuntimeValue.new()
+var _spirit_runtime: Variant = SpiritRuntimeValue.new()
+var _condition_spent_action_serial: int = -1
+var _defense_event_serial: int = 0
 
 
 func _ready() -> void:
@@ -83,6 +95,8 @@ func configure(
 	effective_stats: Dictionary,
 	progression_effects: Array = []
 ) -> void:
+	_shared_hero_mode = false
+	_hero_loadout.clear()
 	stats = effective_stats.duplicate(true)
 	kit = profile.combat_kit if profile != null else null
 	_progression_effects.clear()
@@ -94,6 +108,28 @@ func configure(
 	_fallback_basic = _make_fallback_basic(stats)
 	reset_combat_state()
 	begin_stage()
+
+
+func configure_shared_hero(
+	combat_loadout: Dictionary,
+	effective_stats: Dictionary
+) -> bool:
+	if not bool(combat_loadout.get("ok", false)):
+		return false
+	_shared_hero_mode = true
+	_hero_loadout = combat_loadout.duplicate(true)
+	stats = effective_stats.duplicate(true)
+	kit = null
+	_progression_effects.clear()
+	character_runtime = null
+	_fallback_basic = null
+	_shield_runtime.configure(
+		(_hero_loadout.get("shield", {}) as Dictionary).get("defense_policy", {})
+	)
+	_spirit_runtime.configure(_hero_loadout.get("spirit_stone") as SpiritStoneDefinition)
+	reset_combat_state()
+	begin_stage()
+	return true
 
 
 func begin_stage() -> void:
@@ -114,6 +150,13 @@ func update_stats(effective_stats: Dictionary) -> void:
 
 func update_combat(delta: float) -> void:
 	_update_cooldowns(delta)
+	_last_intent_elapsed = minf(_last_intent_elapsed + maxf(delta, 0.0), 60.0)
+	if _shared_hero_mode:
+		_shield_runtime.update(
+			delta,
+			current_attack == null and Input.is_action_pressed("guard")
+		)
+		_spirit_runtime.update(delta)
 	if character_runtime != null:
 		character_runtime.update(delta)
 	guarded_timer = maxf(guarded_timer - delta, 0.0)
@@ -133,7 +176,7 @@ func update_combat(delta: float) -> void:
 		_update_charge_startup()
 	else:
 		phase_timer -= delta
-	if phase == Phase.STARTUP and not is_movement_locked():
+	if phase == Phase.STARTUP and not _shared_hero_mode and not is_movement_locked():
 		attack_direction = player.facing
 	while current_attack != null and phase_timer <= 0.0:
 		_advance_phase()
@@ -143,7 +186,8 @@ func update_combat(delta: float) -> void:
 			StringName(Phase.keys()[phase].to_lower()),
 			phase_timer,
 			_phase_duration(),
-			attack_direction
+			attack_direction,
+			_committed_intent.direction if _committed_intent != null else Vector2.ZERO
 		)
 	_publish_state()
 
@@ -151,6 +195,14 @@ func update_combat(delta: float) -> void:
 func try_start_input() -> bool:
 	if current_attack != null:
 		return false
+	if _shared_hero_mode:
+		if _shield_runtime.get_state_snapshot().get("phase", &"idle") != &"idle":
+			return false
+		return (
+			_try_start_contextual_attack()
+			if Input.is_action_just_pressed("attack")
+			else false
+		)
 
 	for action_name in [&"skill_3", &"skill_2", &"skill_1", &"heavy_attack", &"attack"]:
 		if not Input.is_action_just_pressed(String(action_name)):
@@ -163,7 +215,20 @@ func try_start_input() -> bool:
 
 
 func is_action_committed() -> bool:
-	return current_attack != null
+	if current_attack != null:
+		return true
+	return (
+		_shared_hero_mode
+		and _shield_runtime.get_state_snapshot().get("phase", &"idle") != &"idle"
+	)
+
+
+func get_movement_speed_multiplier() -> float:
+	return _shield_runtime.movement_speed_multiplier() if _shared_hero_mode else 1.0
+
+
+func blocks_jump() -> bool:
+	return _shared_hero_mode and _shield_runtime.blocks_jump()
 
 
 func is_movement_locked() -> bool:
@@ -205,7 +270,58 @@ func notify_wall_collision() -> void:
 			phase_timer = 0.0
 
 
+func resolve_shared_defense(damage_info: DamageInfo) -> Dictionary:
+	if not _shared_hero_mode or damage_info == null:
+		return {"handled": false}
+	var source_position: Variant = null
+	if damage_info.source is Node2D:
+		source_position = (damage_info.source as Node2D).global_position
+	var result: Variant = _shield_runtime.resolve_attack(
+		{
+			"source_position": source_position,
+			"defender_position": player.global_position,
+			"stability_cost": (
+				damage_info.stagger
+				if damage_info.stagger > 0
+				else 35 if damage_info.tags.has("heavy") else 20
+			),
+			"tags": damage_info.tags.duplicate(),
+			"unblockable": (
+				damage_info.tags.has("unblockable")
+				or damage_info.tags.has("hazard")
+			),
+		},
+		Vector2(float(player.facing), 0.0)
+	)
+	if result.condition_cost > 0:
+		var shield_model := (_hero_loadout.get("shield", {}) as Dictionary).get("model") as EquipmentModelDefinition
+		var profile_state := get_node_or_null("/root/ProfileState")
+		if shield_model != null and profile_state != null:
+			var condition_result: Dictionary = profile_state.call(
+				"consume_equipment_condition",
+				shield_model.id,
+				result.condition_cost
+			)
+			if bool(condition_result.get("ok", false)):
+				_refresh_shared_loadout()
+	if result.precise:
+		_defense_event_serial += 1
+		_apply_precise_guard_spirit(damage_info.source)
+	if result.blocked:
+		_emit_status("Precise guard" if result.precise else "Blocked")
+	elif result.guard_broken:
+		_emit_status("Guard broken")
+	var snapshot: Dictionary = result.to_snapshot()
+	snapshot["handled"] = true
+	snapshot["damage"] = 0 if result.blocked else damage_info.amount
+	snapshot["knockback_scale"] = 0.0 if result.blocked else 1.0
+	_publish_state()
+	return snapshot
+
+
 func blocks_incoming_damage(damage_info: DamageInfo) -> bool:
+	if _shared_hero_mode:
+		return false
 	if character_runtime != null and character_runtime.blocks_incoming_damage(damage_info):
 		return true
 	if current_attack is SkillDefinition and phase == Phase.ACTIVE:
@@ -314,6 +430,14 @@ func reset_combat_state() -> void:
 	_charge_fraction = 0.0
 	_action_start_position = Vector2.ZERO
 	_action_hit_wall = false
+	_committed_intent = null
+	_last_intent = null
+	_last_intent_elapsed = INF
+	_condition_spent_action_serial = -1
+	_defense_event_serial = 0
+	if _shared_hero_mode:
+		_shield_runtime.reset()
+		_spirit_runtime.reset()
 	if character_runtime != null:
 		character_runtime.reset()
 	if card_runtime != null:
@@ -347,7 +471,17 @@ func get_state_snapshot() -> Dictionary:
 		"charge_fraction": _charge_fraction,
 		"progression_effects": PlayerProgressionEffectQuery.effect_types(_progression_effects),
 		"actions": actions,
+		"shared_hero_mode": _shared_hero_mode,
+		"committed_intent": (
+			_committed_intent.to_snapshot()
+			if _committed_intent != null
+			else {}
+		),
 	}
+	if _shared_hero_mode:
+		snapshot["guard"] = _shield_runtime.get_state_snapshot()
+		snapshot["spirit"] = _spirit_runtime.get_state_snapshot()
+		snapshot["loadout"] = _shared_combat_summary()
 	if character_runtime != null:
 		snapshot.merge(character_runtime.get_state_snapshot(), true)
 	if card_runtime != null:
@@ -577,6 +711,197 @@ func spawn_secondary_shockwave(
 	return _add_wave(wave, resolved_origin, resolved_direction)
 
 
+func _try_start_contextual_attack() -> bool:
+	var melee: Dictionary = _hero_loadout.get("melee", {})
+	var ranged: Dictionary = _hero_loadout.get("ranged", {})
+	var ranged_attack := ranged.get("attack") as AttackDefinition
+	var ranged_state := {
+		"resource_count": int(ranged.get("resource_count", 0)),
+		"resource_available": int(ranged.get("resource_count", 0)) > 0,
+		"loaded": true,
+		"reloading": (
+			ranged_attack != null
+			and float(_cooldowns.get(String(ranged_attack.id), 0.0)) > 0.0
+		),
+	}
+	var previous := {
+		"intent": _last_intent,
+		"elapsed": _last_intent_elapsed,
+		"action_locked": false,
+	}
+	var facing_vector := Vector2(float(player.facing), 0.0)
+	var intent := AttackIntentResolverValue.resolve(
+		facing_vector,
+		facing_vector,
+		_build_context_target_snapshot(),
+		melee.get("intent_policy", {}),
+		ranged.get("intent_policy", {}),
+		ranged_state,
+		previous
+	)
+	var definition := _definition_for_intent(intent)
+	if definition == null or float(_cooldowns.get(String(definition.id), 0.0)) > 0.0:
+		return false
+
+	var spent_supply := false
+	if intent.mode == AttackIntent.MODE_RANGED and intent.resource_cost > 0:
+		var profile_state := get_node_or_null("/root/ProfileState")
+		if profile_state == null:
+			return false
+		var spend_result: Dictionary = profile_state.call(
+			"spend_ranged_supply",
+			intent.resource_id,
+			intent.resource_cost
+		)
+		if not bool(spend_result.get("ok", false)):
+			ranged_state["resource_count"] = 0
+			ranged_state["resource_available"] = false
+			intent = AttackIntentResolverValue.resolve(
+				facing_vector,
+				facing_vector,
+				_build_context_target_snapshot(),
+				melee.get("intent_policy", {}),
+				ranged.get("intent_policy", {}),
+				ranged_state
+			)
+			definition = _definition_for_intent(intent)
+		else:
+			spent_supply = true
+			_refresh_shared_loadout()
+
+	_committed_intent = intent
+	_last_intent = intent
+	_last_intent_elapsed = 0.0
+	if _begin_attack(definition):
+		return true
+	_committed_intent = null
+	if spent_supply:
+		var profile_state := get_node_or_null("/root/ProfileState")
+		if profile_state != null:
+			profile_state.call("grant_ranged_supply", intent.resource_id, intent.resource_cost)
+		_refresh_shared_loadout()
+	return false
+
+
+func _definition_for_intent(intent: AttackIntent) -> AttackDefinition:
+	if intent == null:
+		return null
+	var role := "ranged" if intent.mode == AttackIntent.MODE_RANGED else "melee"
+	return (_hero_loadout.get(role, {}) as Dictionary).get("attack") as AttackDefinition
+
+
+func _build_context_target_snapshot() -> Dictionary:
+	var targets: Array[Dictionary] = []
+	var origin: Vector2 = player.global_position
+	for candidate in get_tree().get_nodes_in_group("enemies"):
+		if not candidate is Node2D or not _target_is_active(candidate):
+			continue
+		var target := candidate as Node2D
+		var hurtbox := _target_hurtbox_bounds(target)
+		var on_screen := _is_world_point_on_screen(hurtbox.get_center())
+		targets.append({
+			"id": StringName(str(target.get_instance_id())),
+			"position": hurtbox.get_center(),
+			"hurtbox_rect": hurtbox,
+			"alive": true,
+			"discovered": on_screen,
+			"targetable": true,
+			"is_enemy": true,
+			"on_screen": on_screen,
+			"line_of_sight": _has_line_of_sight(origin, hurtbox.get_center()),
+		})
+	return {"origin": origin, "targets": targets}
+
+
+func _has_line_of_sight(origin: Vector2, destination: Vector2) -> bool:
+	if not is_inside_tree() or origin.is_equal_approx(destination):
+		return true
+	var query := PhysicsRayQueryParameters2D.create(origin, destination, 1)
+	var body := player as CollisionObject2D
+	if body != null:
+		query.exclude = [body.get_rid()]
+	return player.get_world_2d().direct_space_state.intersect_ray(query).is_empty()
+
+
+func _is_world_point_on_screen(world_point: Vector2) -> bool:
+	var viewport := player.get_viewport() as Viewport
+	if viewport == null:
+		return true
+	var camera := viewport.get_camera_2d()
+	if camera == null:
+		return true
+	var zoom := Vector2(maxf(absf(camera.zoom.x), 0.01), maxf(absf(camera.zoom.y), 0.01))
+	var size := viewport.get_visible_rect().size / zoom
+	var bounds := Rect2(camera.get_screen_center_position() - size * 0.5, size).grow(48.0)
+	return bounds.has_point(world_point)
+
+
+func _refresh_shared_loadout() -> bool:
+	var previous_shield := (_hero_loadout.get("shield", {}) as Dictionary).get("model") as EquipmentModelDefinition
+	var previous_spirit := _hero_loadout.get("spirit_stone") as SpiritStoneDefinition
+	var run_state := get_node_or_null("/root/RunState")
+	if run_state == null or not bool(run_state.call("refresh_hero_combat_loadout")):
+		return false
+	var candidate: Dictionary = run_state.call("get_hero_combat_loadout_snapshot")
+	if not bool(candidate.get("ok", false)):
+		return false
+	_hero_loadout = candidate
+	var shield: Dictionary = _hero_loadout.get("shield", {})
+	var shield_model := shield.get("model") as EquipmentModelDefinition
+	var shield_policy: Dictionary = shield.get("defense_policy", {})
+	if previous_shield == null or shield_model == null or previous_shield.id != shield_model.id:
+		_shield_runtime.configure(shield_policy)
+	else:
+		_shield_runtime.set_condition(int(shield_policy.get("condition", 0)))
+	var next_spirit := _hero_loadout.get("spirit_stone") as SpiritStoneDefinition
+	if (
+		previous_spirit == null
+		or next_spirit == null
+		or previous_spirit.id != next_spirit.id
+	):
+		_spirit_runtime.configure(next_spirit)
+	return true
+
+
+func _apply_precise_guard_spirit(source: Node) -> void:
+	var spirit := _hero_loadout.get("spirit_stone") as SpiritStoneDefinition
+	if (
+		spirit == null
+		or spirit.trigger != SpiritStoneDefinition.TRIGGER_PRECISE_GUARD
+		or source == null
+		or not source.has_method("apply_external_slow")
+	):
+		return
+	var event_id := StringName("guard:%d" % _defense_event_serial)
+	var passive_result: Dictionary = _spirit_runtime.record_precise_guard(event_id)
+	if not bool(passive_result.get("triggered", false)):
+		return
+	source.call(
+		"apply_external_slow",
+		spirit.slow_duration_seconds,
+		1.0 - spirit.slow_fraction
+	)
+	_emit_status("%s: attacker slowed" % spirit.display_name)
+
+
+func _shared_combat_summary() -> Dictionary:
+	var melee: Dictionary = _hero_loadout.get("melee", {})
+	var ranged: Dictionary = _hero_loadout.get("ranged", {})
+	var shield: Dictionary = _hero_loadout.get("shield", {})
+	return {
+		"melee_model_id": String((melee.get("model") as EquipmentModelDefinition).id) if melee.get("model") != null else "",
+		"melee_condition": int((melee.get("runtime", {}) as Dictionary).get("condition", 0)),
+		"melee_maximum_condition": int((melee.get("runtime", {}) as Dictionary).get("maximum_condition", 0)),
+		"ranged_model_id": String((ranged.get("model") as EquipmentModelDefinition).id) if ranged.get("model") != null else "",
+		"ranged_resource_id": String((ranged.get("intent_policy", {}) as Dictionary).get("resource_id", "")),
+		"ranged_resource_count": int(ranged.get("resource_count", 0)),
+		"shield_model_id": String((shield.get("model") as EquipmentModelDefinition).id) if shield.get("model") != null else "",
+		"shield_condition": int((shield.get("runtime", {}) as Dictionary).get("condition", 0)),
+		"shield_maximum_condition": int((shield.get("runtime", {}) as Dictionary).get("maximum_condition", 0)),
+		"spirit_stone_id": String((_hero_loadout.get("spirit_stone") as SpiritStoneDefinition).id) if _hero_loadout.get("spirit_stone") != null else "",
+	}
+
+
 func _definition_for_action(action_name: StringName) -> AttackDefinition:
 	if kit != null:
 		return kit.get_attack_for_action(action_name)
@@ -584,6 +909,11 @@ func _definition_for_action(action_name: StringName) -> AttackDefinition:
 
 
 func _available_attacks() -> Array[AttackDefinition]:
+	if _shared_hero_mode:
+		return [
+			(_hero_loadout.get("melee", {}) as Dictionary).get("attack") as AttackDefinition,
+			(_hero_loadout.get("ranged", {}) as Dictionary).get("attack") as AttackDefinition,
+		]
 	if kit == null:
 		return [_fallback_basic]
 	var definitions: Array[AttackDefinition] = [kit.basic_attack, kit.heavy_attack]
@@ -631,7 +961,12 @@ func _begin_attack(definition: AttackDefinition) -> bool:
 	if not definition.cooldown_from_release:
 		_cooldowns[String(definition.id)] = definition.cooldown * cooldown_multiplier
 	_configure_attack_geometry(definition)
-	attack_presenter.begin(definition, attack_direction, attack_hitbox.position)
+	attack_presenter.begin(
+		definition,
+		attack_direction,
+		attack_hitbox.position,
+		_committed_intent.direction if _committed_intent != null else Vector2.ZERO
+	)
 	if phase_timer <= 0.0:
 		_advance_phase()
 	_publish_state()
@@ -669,7 +1004,8 @@ func _advance_phase() -> void:
 
 
 func _activate_hit() -> void:
-	attack_direction = player.facing if not is_movement_locked() else attack_direction
+	if not _shared_hero_mode and not is_movement_locked():
+		attack_direction = player.facing
 	_apply_tagged_step_in(current_attack, attack_direction)
 	attack_hitbox.position.x = absf(current_attack.hitbox_offset.x) * float(attack_direction)
 	if card_runtime != null:
@@ -720,6 +1056,7 @@ func _finish_attack() -> void:
 		character_runtime.notify_attack_finished(event)
 	if card_runtime != null:
 		card_runtime.notify_attack_completed(event)
+	_committed_intent = null
 
 
 func _cancel_current_attack() -> void:
@@ -737,6 +1074,7 @@ func _cancel_current_attack() -> void:
 	attack_presenter.reset()
 	if character_runtime != null:
 		character_runtime.notify_attack_interrupted(event)
+	_committed_intent = null
 	_emit_status("Attack interrupted")
 
 
@@ -941,6 +1279,15 @@ func _build_hit(
 		"activations": card_hit_context.get("activations", []),
 		"consume_fracture": consume_fracture,
 	}
+	if _shared_hero_mode:
+		pending_context["shared_intent_mode"] = StringName(event_context.get(
+			"shared_intent_mode",
+			_committed_intent.mode if _committed_intent != null else &""
+		))
+		pending_context["shared_tool_id"] = StringName(event_context.get(
+			"shared_tool_id",
+			_committed_intent.tool_id if _committed_intent != null else &""
+		))
 	pending_context.merge(runtime_context, true)
 	pending_context.merge(event_context, true)
 	return {"damage_info": damage_info, "event": pending_context}
@@ -999,6 +1346,8 @@ func _confirm_target_hit(event: Dictionary, damage_info: DamageInfo) -> void:
 	if bool(event.get("consume_fracture", false)) and target != null:
 		if target.has_method("consume_fractured"):
 			target.call("consume_fractured")
+	_apply_shared_attack_wear(event, damage_info)
+	_apply_shared_attack_spirit(event, damage_info)
 	_apply_mastery_on_hit(definition, target, event)
 	if character_runtime != null:
 		character_runtime.notify_target_hit(event)
@@ -1020,6 +1369,59 @@ func _confirm_target_hit(event: Dictionary, damage_info: DamageInfo) -> void:
 	if card_runtime != null:
 		card_runtime.notify_attack_hit(event)
 	_publish_state()
+
+
+func _apply_shared_attack_wear(event: Dictionary, damage_info: DamageInfo) -> void:
+	if (
+		not _shared_hero_mode
+		or damage_info.secondary_hit
+		or StringName(event.get("shared_intent_mode", &"")) != AttackIntent.MODE_MELEE
+	):
+		return
+	var action_serial := int(event.get("action_serial", -1))
+	if action_serial < 0 or action_serial == _condition_spent_action_serial:
+		return
+	var melee_model := (_hero_loadout.get("melee", {}) as Dictionary).get("model") as EquipmentModelDefinition
+	var profile_state := get_node_or_null("/root/ProfileState")
+	if melee_model == null or profile_state == null:
+		return
+	var result: Dictionary = profile_state.call(
+		"consume_equipment_condition",
+		melee_model.id,
+		1.0
+	)
+	if not bool(result.get("ok", false)):
+		return
+	_condition_spent_action_serial = action_serial
+	_refresh_shared_loadout()
+
+
+func _apply_shared_attack_spirit(event: Dictionary, damage_info: DamageInfo) -> void:
+	if not _shared_hero_mode or damage_info.secondary_hit:
+		return
+	var target := event.get("target") as Node
+	if target == null or not target.has_method("apply_delayed_damage"):
+		return
+	var action_serial := int(event.get("action_serial", -1))
+	if action_serial < 0:
+		return
+	var passive_result: Dictionary = _spirit_runtime.record_direct_attack(
+		StringName("attack:%d" % action_serial)
+	)
+	if not bool(passive_result.get("triggered", false)):
+		return
+	var spirit := passive_result.get("definition") as SpiritStoneDefinition
+	if spirit == null or spirit.effect != SpiritStoneDefinition.EFFECT_BURN:
+		return
+	for tick_index in range(spirit.burn_tick_count):
+		target.call(
+			"apply_delayed_damage",
+			StringName("%s:%d:%d" % [spirit.id, action_serial, tick_index]),
+			0.45 * float(tick_index + 1),
+			spirit.burn_damage_per_tick,
+			player
+		)
+	_emit_status("%s: burn applied" % spirit.display_name)
 
 
 func _apply_mastery_on_hit(
@@ -1481,6 +1883,11 @@ func _timing_value(base: float, phase_name: String, modifiers: Dictionary) -> fl
 func _fire_projectile(definition: AttackDefinition, direction: int) -> void:
 	var modifiers := _active_attack_modifiers.duplicate(true)
 	var event_context: Dictionary = {}
+	if _shared_hero_mode and _committed_intent != null:
+		event_context = {
+			"shared_intent_mode": _committed_intent.mode,
+			"shared_tool_id": _committed_intent.tool_id,
+		}
 	var target_cap := definition.projectile_target_cap
 	if _has_charge_contract(definition):
 		var maximum_damage := (
@@ -1499,15 +1906,18 @@ func _fire_projectile(definition: AttackDefinition, direction: int) -> void:
 		)
 		if _charge_fraction >= 0.999:
 			target_cap += int(modifiers.get("full_charge_target_additive", 0))
-		event_context = {
+		event_context.merge({
 			"charge_fraction": _charge_fraction,
 			"hit_context": {"full_charge": _charge_fraction >= 0.999},
-		}
-	spawn_projectile(definition, direction, {
+		}, true)
+	var options := {
 		"modifiers": modifiers,
 		"max_targets": target_cap,
 		"event_context": event_context,
-	})
+	}
+	if _shared_hero_mode and _committed_intent != null:
+		options["velocity_direction"] = _committed_intent.direction
+	spawn_projectile(definition, direction, options)
 
 
 func spawn_projectile(
@@ -1523,13 +1933,24 @@ func spawn_projectile(
 	projectile.damage_amount = definition.base_damage
 	projectile.knockback = definition.knockback
 	projectile.tags = _string_tags(definition.tags)
-	projectile.direction = direction
+	var velocity_direction: Vector2 = options.get(
+		"velocity_direction",
+		Vector2(float(direction), 0.0)
+	)
+	if velocity_direction.is_zero_approx():
+		velocity_direction = Vector2(float(direction), 0.0)
+	velocity_direction = velocity_direction.normalized()
+	projectile.direction = int(sign(velocity_direction.x)) if not is_zero_approx(velocity_direction.x) else direction
 	var speed := float(options.get(
 		"speed",
 		definition.projectile_speed if definition.projectile_speed > 0.0 else stats.get("attack_projectile_speed", 560.0)
 	))
-	var angle := deg_to_rad(float(options.get("angle_degrees", 0.0))) * float(direction)
-	projectile.velocity = Vector2(float(direction) * speed, 0.0).rotated(angle)
+	if options.has("velocity_direction"):
+		projectile.velocity = velocity_direction * speed
+	else:
+		var angle := deg_to_rad(float(options.get("angle_degrees", 0.0))) * float(direction)
+		projectile.velocity = Vector2(float(direction) * speed, 0.0).rotated(angle)
+	projectile.rotation = projectile.velocity.angle()
 	projectile.lifetime = float(options.get("lifetime", stats.get("attack_projectile_lifetime", 0.65)))
 	projectile.max_distance = float(options.get("max_distance", definition.projectile_range))
 	projectile.max_targets = int(options.get("max_targets", definition.projectile_target_cap))
@@ -1567,10 +1988,12 @@ func spawn_projectile(
 	))
 	parent_node.add_child(projectile)
 	var release_distance := _projectile_release_distance(definition, projectile.projectile_size)
-	projectile.global_position = options.get("origin", player.global_position + Vector2(
-		float(direction) * release_distance,
-		definition.hitbox_offset.y
-	))
+	projectile.global_position = options.get(
+		"origin",
+		player.global_position
+		+ velocity_direction * release_distance
+		+ Vector2(0.0, definition.hitbox_offset.y)
+	)
 	return projectile
 
 
