@@ -316,6 +316,26 @@ func get_equipment_decision_snapshot(model_id: StringName) -> Dictionary:
 	if model == null:
 		return {"ok": false, "code": "missing_model", "message": "Equipment is unavailable."}
 	var crafted_state: Dictionary = _data.crafted_equipment.get(String(model_id), {}).duplicate(true)
+	var current_runtime := (
+		RuntimeResolver.resolve(model, crafted_state)
+		if not crafted_state.is_empty()
+		else {}
+	)
+	var craft := _with_runtime_preview(
+		model,
+		ProgressionService.preview_craft(progression_catalog, _data, model_id),
+		current_runtime
+	)
+	var recraft := _with_runtime_preview(
+		model,
+		ProgressionService.preview_recraft(progression_catalog, _data, model_id),
+		current_runtime
+	)
+	var repair := _with_runtime_preview(
+		model,
+		ProgressionService.preview_repair(progression_catalog, _data, model_id),
+		current_runtime
+	)
 	return {
 		"ok": true,
 		"model_id": String(model.id),
@@ -326,11 +346,27 @@ func get_equipment_decision_snapshot(model_id: StringName) -> Dictionary:
 		"blueprint_unlocked": _data.unlocked_blueprints.has(String(model_id)),
 		"crafted": not crafted_state.is_empty(),
 		"equipped": String(_data.hero_loadout.get(String(model.slot), "")) == String(model_id),
-		"runtime": RuntimeResolver.resolve(model, crafted_state) if not crafted_state.is_empty() else {},
-		"craft": ProgressionService.preview_craft(progression_catalog, _data, model_id),
-		"recraft": ProgressionService.preview_recraft(progression_catalog, _data, model_id),
-		"repair": ProgressionService.preview_repair(progression_catalog, _data, model_id),
+		"runtime": current_runtime,
+		"craft": craft,
+		"recraft": recraft,
+		"repair": repair,
 	}
+
+
+func _with_runtime_preview(
+	model: EquipmentModelDefinition,
+	preview: Dictionary,
+	current_runtime: Dictionary
+) -> Dictionary:
+	var result := preview.duplicate(true)
+	result["current_runtime"] = current_runtime.duplicate(true)
+	var result_state: Variant = result.get("result_state", {})
+	result["result_runtime"] = (
+		RuntimeResolver.resolve(model, result_state)
+		if result_state is Dictionary and bool(result_state.get("owned", false))
+		else {}
+	)
+	return result
 
 
 func get_preparation_snapshot() -> Dictionary:

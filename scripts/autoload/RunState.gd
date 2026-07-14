@@ -232,6 +232,34 @@ func refresh_hero_combat_loadout() -> bool:
 	return true
 
 
+func synchronize_hero_profile() -> Dictionary:
+	if selected_profile == null:
+		return {"ok": false, "message": "No active Traveler run is available."}
+	var candidate := ProfileState.get_hero_combat_snapshot()
+	if not bool(candidate.get("ok", false)):
+		return {
+			"ok": false,
+			"message": candidate.get("message", "Traveler equipment is invalid."),
+		}
+	var candidate_build := PlayerBuild.resolve(
+		candidate.get("stats", {}),
+		_collect_all_build_effects(_micro_upgrade_stacks)
+	)
+	if not _is_build_valid(selected_profile, candidate_build):
+		return {"ok": false, "message": "Traveler equipment produced an invalid build."}
+	var previous_health := current_health
+	_apply_hero_build(
+		selected_profile_index,
+		selected_profile,
+		candidate_build,
+		candidate
+	)
+	max_health = int(effective_stats.get("max_health", 5))
+	current_health = clampi(previous_health, 0, max_health)
+	_publish_state()
+	return {"ok": true, "message": "Traveler equipment synchronized."}
+
+
 func get_effective_build_snapshot() -> PlayerBuildSnapshot:
 	return effective_build_snapshot
 

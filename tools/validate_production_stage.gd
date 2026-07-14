@@ -349,9 +349,18 @@ func _validate_flooded_exit_flow(
 	await process_frame
 	run_director.call("_on_card_continue_requested")
 	await process_frame
-	_expect(run_director.get_phase_name() == "rest_forge", "Stage 2 card Continue should open Rest & Forge")
-	_expect(bool(run_state.call("get_rest_forge_snapshot").get("active", false)), "Rest & Forge session should be active")
-	_expect(int(run_state.get("current_stage_index")) == 2, "Rest & Forge should prepare Stage 3")
+	_expect(run_director.get_phase_name() == "rest_forge", "Stage 2 card Continue should open the camp forge")
+	_expect(run_director.current_screen is ForgeScreen, "camp forge should use the deterministic equipment screen")
+	var profile_state := root.get_node_or_null("/root/ProfileState")
+	var preparation: Dictionary = (
+		profile_state.call("get_preparation_snapshot") if profile_state != null else {}
+	)
+	_expect(
+		String(preparation.get("hero_id", "")) == "traveler"
+		and (preparation.get("slots", []) as Array).size() == 4,
+		"camp forge should expose the saved Traveler equipment state"
+	)
+	_expect(int(run_state.get("current_stage_index")) == 2, "camp forge should prepare Stage 3")
 
 
 func _encounter_by_id(plan: StagePlan, encounter_id: StringName) -> PlannedEncounter:

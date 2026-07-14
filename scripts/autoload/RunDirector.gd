@@ -8,7 +8,7 @@ const PRODUCTION_HUD_PATH := "res://scenes/ui/production/ProductionHUD.tscn"
 const RUN_RESULT_PATH := "res://scenes/ui/production/RunResult.tscn"
 const LEVEL_REWARD_PATH := "res://scenes/ui/production/LevelReward.tscn"
 const CARD_REWARD_PATH := "res://scenes/ui/production/CardReward.tscn"
-const REST_FORGE_PATH := "res://scenes/ui/production/RestForge.tscn"
+const FORGE_SCREEN_PATH := "res://scenes/ui/production/ForgeScreen.tscn"
 const TREASURE_CHOICE_PATH := "res://scenes/ui/production/TreasureChoice.tscn"
 const PRODUCTION_STAGE_PATH := "res://scenes/stages/production/ProductionStageHost.tscn"
 const BOSS_STAGE_PATH := "res://scenes/stages/boss/SlimeCourt.tscn"
@@ -26,6 +26,8 @@ var current_hud: Control
 var _last_profile_id: StringName = &"warrior"
 var _treasure_choice_screen: Control
 var _pending_stage_clear_receipt: Dictionary = {}
+var _stage_forge_open := false
+var _forge_heading := "FIELD FORGE"
 
 
 func _ready() -> void:
@@ -34,6 +36,7 @@ func _ready() -> void:
 	SignalBus.player_died.connect(_on_player_died)
 	SignalBus.boss_defeated.connect(_on_boss_defeated)
 	SignalBus.reward_preview_replacement_requested.connect(_on_treasure_choice_requested)
+	SignalBus.forge_requested.connect(_on_stage_forge_requested)
 
 
 func register_ui_roots(p_screen_root: Control, p_hud_root: Control) -> void:
@@ -570,53 +573,74 @@ func _set_card_reward_error(message: String) -> void:
 
 
 func _show_rest_forge() -> void:
-	var begin_result := RunState.begin_rest_forge()
-	if not bool(begin_result.get("ok", false)):
-		_fail_active_run("Rest/forge failed to initialize.", &"rest_forge_initialization_failed")
-		return
 	if not _set_phase(RunPhase.Value.REST_FORGE):
 		return
-	var rest := _show_screen(REST_FORGE_PATH)
-	if rest == null:
-		_fail_active_run("Rest/forge UI failed to initialize.", &"rest_forge_ui_failed")
+	_stage_forge_open = false
+	_forge_heading = "CAMP FORGE"
+	var forge := _show_screen(FORGE_SCREEN_PATH)
+	if forge == null:
+		_fail_active_run("Forge UI failed to initialize.", &"forge_ui_failed")
 		return
-	rest.connect(&"heal_requested", _on_rest_heal_requested)
-	rest.connect(&"consumable_requested", _on_rest_consumable_requested)
-	rest.connect(&"forge_item_requested", _on_forge_item_requested)
-	rest.connect(&"forge_affix_requested", _on_forge_affix_requested)
-	rest.connect(&"leave_requested", _on_rest_leave_requested)
-	rest.call("configure", RunState.get_rest_forge_snapshot())
+	_connect_forge_screen(forge)
+	forge.call("configure", ProfileState.get_preparation_snapshot(), {}, _forge_heading)
 
 
-func _on_rest_heal_requested() -> void:
-	_publish_rest_result(RunState.buy_rest_heal())
+func _on_stage_forge_requested(context: Dictionary) -> void:
+	if phase != RunPhase.Value.STAGE_ACTIVE or _stage_forge_open or current_screen != null:
+		return
+	_stage_forge_open = true
+	_forge_heading = String(context.get("heading", "FIELD FORGE"))
+	var forge := _show_screen(FORGE_SCREEN_PATH)
+	if forge == null:
+		_stage_forge_open = false
+		return
+	Game.set_reward_choice_open(true)
+	_connect_forge_screen(forge)
+	forge.call("configure", ProfileState.get_preparation_snapshot(), {}, _forge_heading)
 
 
-func _on_rest_consumable_requested(consumable_id: StringName) -> void:
-	_publish_rest_result(RunState.buy_rest_consumable(consumable_id))
+func _connect_forge_screen(forge: Control) -> void:
+	forge.connect(&"equipment_action_requested", _on_forge_equipment_action_requested)
+	forge.connect(&"leave_requested", _on_forge_leave_requested)
 
 
-func _on_forge_item_requested(item_id: StringName) -> void:
-	_publish_rest_result(RunState.begin_forge_offer(item_id))
-
-
-func _on_forge_affix_requested(
-	item_id: StringName,
-	affix_id: StringName,
-	confirm_replace: bool
+func _on_forge_equipment_action_requested(
+	action: StringName,
+	model_id: StringName,
+	slot_id: StringName
 ) -> void:
-	_publish_rest_result(RunState.commit_forge_affix(item_id, affix_id, confirm_replace))
-
-
-func _publish_rest_result(result: Dictionary) -> void:
+	var result: Dictionary
+	match action:
+		&"craft":
+			result = ProfileState.craft_equipment(model_id)
+		&"recraft":
+			result = ProfileState.recraft_equipment(model_id)
+		&"repair":
+			result = ProfileState.repair_equipment(model_id)
+		&"equip":
+			result = ProfileState.equip_hero_item(slot_id, model_id)
+		_:
+			result = {"ok": false, "message": "Forge action is unavailable."}
+	if bool(result.get("ok", false)):
+		var sync := RunState.synchronize_hero_profile()
+		if not bool(sync.get("ok", false)):
+			result = sync
 	if current_screen != null and current_screen.has_method("configure"):
-		current_screen.call("configure", RunState.get_rest_forge_snapshot(), result)
+		current_screen.call(
+			"configure",
+			ProfileState.get_preparation_snapshot(),
+			result,
+			_forge_heading
+		)
 
 
-func _on_rest_leave_requested() -> void:
-	if phase != RunPhase.Value.REST_FORGE or not RunState.end_rest_forge():
+func _on_forge_leave_requested() -> void:
+	if _stage_forge_open:
+		_stage_forge_open = false
+		_clear_screen()
 		return
-	_load_production_stage()
+	if phase == RunPhase.Value.REST_FORGE:
+		_load_production_stage()
 
 
 func _profile_index_for_reference(profile_reference: Variant) -> int:

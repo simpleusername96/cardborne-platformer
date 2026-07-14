@@ -1,10 +1,11 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=13 format=3]
 
 [ext_resource type="Script" path="res://scripts/stages/RoomTemplateHost.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/stages/ExitPortal.gd" id="2"]
 [ext_resource type="Script" path="res://scripts/stages/RoomAnchor.gd" id="3"]
 [ext_resource type="PackedScene" path="res://scenes/stages/components/FieldPickup.tscn" id="4_field_pickup"]
 [ext_resource type="Resource" path="res://data/items/coin_bundle.tres" id="5_coin_bundle"]
+[ext_resource type="PackedScene" path="res://scenes/stages/components/ForgeStationInteractable.tscn" id="6_forge"]
 
 [sub_resource type="RectangleShape2D" id="EntryMassShape"]
 size = Vector2(300, 250)
@@ -185,6 +186,11 @@ position = Vector2(150, 650)
 metadata/facing = 1
 metadata/safe_radius = 240.0
 metadata/camera_id = &"exit_ascent_camera"
+
+[node name="FinalForge" parent="Anchors/Objective" instance=ExtResource("6_forge")]
+position = Vector2(230, 650)
+station_id = &"ruin_final_forge"
+heading = "GATE FORGE"
 
 [node name="FinalEncounter" type="Marker2D" parent="Anchors/Objective"]
 position = Vector2(830, 500)
