@@ -41,6 +41,7 @@ const STAT_RULES: Dictionary = {
 	"post_hit_invulnerability": {"minimum": 0.0, "maximum": 10.0, "integer": false},
 	"damage_knockback_x": {"minimum": -5000.0, "maximum": 5000.0, "integer": false},
 	"damage_knockback_y": {"minimum": -5000.0, "maximum": 5000.0, "integer": false},
+	"knockback_received_multiplier": {"minimum": 0.0, "maximum": 1.0, "integer": false},
 }
 
 const OPERATION_ORDER: Dictionary = {

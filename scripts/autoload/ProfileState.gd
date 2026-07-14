@@ -7,6 +7,10 @@ const RuntimeResolver = preload(
 const ProgressionService = preload(
 	"res://scripts/progression/EquipmentProgressionService.gd"
 )
+const HeroLoadoutResolver = preload(
+	"res://scripts/player/HeroCombatLoadoutResolver.gd"
+)
+const HERO_DEFINITION := preload("res://data/hero/traveler.tres")
 
 signal profile_changed(section: StringName)
 signal setting_changed(setting_id: StringName, value: Variant)
@@ -362,6 +366,15 @@ func get_preparation_snapshot() -> Dictionary:
 		"slots": slots,
 		"spirit_stones": stones,
 	}
+
+
+func get_hero_combat_snapshot() -> Dictionary:
+	_ensure_initialized()
+	return HeroLoadoutResolver.resolve(
+		HERO_DEFINITION,
+		_data,
+		progression_catalog
+	)
 
 
 func get_owned_equipment() -> Array[String]:

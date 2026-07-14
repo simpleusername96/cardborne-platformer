@@ -1,6 +1,7 @@
-[gd_resource type="Resource" script_class="EquipmentModelDefinition" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="EquipmentModelDefinition" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/progression/EquipmentModelDefinition.gd" id="1_model"]
+[ext_resource type="Resource" path="res://data/attacks/hunting_spear.tres" id="2_attack"]
 
 [resource]
 script = ExtResource("1_model")
@@ -12,6 +13,7 @@ presentation_key = &"hunting_spear"
 slot = &"melee"
 behavior_description = "A long narrow thrust that rewards contact within the final 32 pixels of its reach."
 weakness_description = "Targets within 36 pixels are weak hits, and recovery is slower than the sword."
+attack_definition = ExtResource("2_attack")
 damage = 3
 stagger_damage = 24
 reach = 118.0

@@ -12,7 +12,7 @@ const MELEE_ACTION := {
 const RANGED_POLICY := {
 	"tool_id": &"hunting_bow",
 	"range": 520.0,
-	"resource_id": &"arrow",
+	"resource_id": &"arrows",
 	"resource_cost": 1,
 	"requires_line_of_sight": true,
 }
@@ -77,7 +77,7 @@ func _validate_near_and_far_targets() -> void:
 	_expect(far_intent.mode == AttackIntentScript.MODE_RANGED, "far target should select ranged")
 	_expect(far_intent.tool_id == &"hunting_bow", "far target should use the ranged tool")
 	_expect(far_intent.target_id == &"far", "far target should be recorded")
-	_expect(far_intent.resource_id == &"arrow" and far_intent.resource_cost == 1, "ranged intent should record resource cost")
+	_expect(far_intent.resource_id == &"arrows" and far_intent.resource_cost == 1, "ranged intent should record resource cost")
 	_expect(far_intent.reason == &"ranged_target", "far target should explain ranged selection")
 	_expect(far_intent.geometry.get("kind") == &"line", "ranged intent should expose line geometry")
 

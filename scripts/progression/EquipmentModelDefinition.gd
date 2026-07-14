@@ -18,6 +18,7 @@ const GRADE_ONE_MAX_CONDITION := 100
 @export_multiline var weakness_description: String
 
 @export_group("Attack Tuning")
+@export var attack_definition: AttackDefinition
 @export var damage: int = 0
 @export var stagger_damage: int = 0
 @export var reach: float = 0.0
@@ -165,6 +166,7 @@ func _validate_common_values(errors: PackedStringArray) -> void:
 
 func _validate_melee(errors: PackedStringArray) -> void:
 	_validate_positive_attack(errors)
+	_validate_attack_reference(errors, false)
 	if recovery_seconds <= 0.0:
 		errors.append("Melee model '%s' needs positive recovery." % id)
 	if not has_condition or grade_one_max_condition != GRADE_ONE_MAX_CONDITION:
@@ -185,6 +187,7 @@ func _validate_melee(errors: PackedStringArray) -> void:
 
 func _validate_ranged(errors: PackedStringArray) -> void:
 	_validate_positive_attack(errors)
+	_validate_attack_reference(errors, true)
 	ContentId.validate(errors, "Ranged model '%s' resource ID" % id, ranged_resource_id)
 	if starting_ranged_resource <= 0 or maximum_ranged_resource < starting_ranged_resource:
 		errors.append("Ranged model '%s' needs valid positive starting/max resources." % id)
@@ -199,6 +202,8 @@ func _validate_ranged(errors: PackedStringArray) -> void:
 
 
 func _validate_shield(errors: PackedStringArray) -> void:
+	if attack_definition != null:
+		errors.append("Shield model '%s' cannot reference an attack definition." % id)
 	if damage != 0 or stagger_damage != 0 or not is_zero_approx(reach):
 		errors.append("Shield model '%s' cannot contain attack damage or reach." % id)
 	if startup_seconds <= 0.0 or recovery_seconds <= 0.0:
@@ -216,6 +221,8 @@ func _validate_shield(errors: PackedStringArray) -> void:
 
 
 func _validate_armor(errors: PackedStringArray) -> void:
+	if attack_definition != null:
+		errors.append("Armor model '%s' cannot reference an attack definition." % id)
 	if (
 		damage != 0
 		or stagger_damage != 0
@@ -233,6 +240,31 @@ func _validate_armor(errors: PackedStringArray) -> void:
 func _validate_positive_attack(errors: PackedStringArray) -> void:
 	if damage <= 0 or stagger_damage <= 0 or reach <= 0.0 or startup_seconds <= 0.0:
 		errors.append("Attack model '%s' needs positive damage, stagger, reach, and startup." % id)
+
+
+func _validate_attack_reference(errors: PackedStringArray, ranged: bool) -> void:
+	if attack_definition == null:
+		errors.append("Attack model '%s' needs an attack definition." % id)
+		return
+	for attack_error in attack_definition.validate_definition():
+		errors.append("Attack model '%s': %s" % [id, attack_error])
+	var expected_recovery := reload_seconds if ranged and recovery_seconds <= 0.0 else recovery_seconds
+	if (
+		attack_definition.base_damage != damage
+		or attack_definition.stagger != stagger_damage
+		or not is_equal_approx(attack_definition.startup_time, startup_seconds)
+		or not is_equal_approx(attack_definition.recovery_time, expected_recovery)
+	):
+		errors.append("Attack model '%s' display tuning differs from its attack definition." % id)
+	var definition_reach := (
+		attack_definition.projectile_range
+		if ranged
+		else absf(attack_definition.hitbox_offset.x) + attack_definition.hitbox_size.x * 0.5
+	)
+	if not is_equal_approx(definition_reach, reach):
+		errors.append("Attack model '%s' reach differs from its attack definition." % id)
+	if ranged != (attack_definition.projectile_range > 0.0):
+		errors.append("Attack model '%s' has the wrong melee/ranged attack contract." % id)
 
 
 func _has_melee_tuning() -> bool:

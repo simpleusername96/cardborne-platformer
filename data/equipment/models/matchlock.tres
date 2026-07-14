@@ -1,6 +1,7 @@
-[gd_resource type="Resource" script_class="EquipmentModelDefinition" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="EquipmentModelDefinition" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/progression/EquipmentModelDefinition.gd" id="1_model"]
+[ext_resource type="Resource" path="res://data/attacks/matchlock.tres" id="2_attack"]
 
 [resource]
 script = ExtResource("1_model")
@@ -12,6 +13,7 @@ presentation_key = &"matchlock"
 slot = &"ranged"
 behavior_description = "A high-impact long-range shot followed by automatic reload."
 weakness_description = "The 1.35-second reload creates a long gap, and dashing cancels it."
+attack_definition = ExtResource("2_attack")
 damage = 5
 stagger_damage = 42
 reach = 680.0
