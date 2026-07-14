@@ -4,8 +4,9 @@
 
 - The released code is still the three-profile Warrior/Archer/Assassin v1 runtime.
   The active product target changed on 2026-07-14 to one persistent hero carrying
-  melee, ranged, and shield equipment simultaneously. Attack selects melee/ranged
-  from context and defense always uses the shield. No code migration is complete;
+  melee, ranged, and shield tools simultaneously. Attack selects melee/ranged from
+  context and each ranged model owns a distinct target/resource policy; defense
+  always uses the shield. No code migration is complete;
   the former two-weapon arsenal ExecPlan is superseded.
 
 - Cardborne boots into a production menu, character/loadout/mastery selection,
@@ -46,9 +47,9 @@
   complete production states.
 - `docs/product/2d_platform_action_card_game_prd.md` is the canonical product and
   first-complete-run blueprint. `docs/design/COMBAT_EQUIPMENT_CRAFTING.md` is the
-  canonical target for contextual combat equipment, blueprints, material grades,
-  condition, arrows, Spirit Stones, techniques, supporting equipment, onboarding,
-  replay, and persistence.
+  canonical target for contextual combat tools, 12 distinct models, active/passive
+  boundaries, material grades, condition, ranged resources, Spirit Stones,
+  supporting equipment, onboarding, replay, and persistence.
 - The old character, progression/equipment, six-discipline arsenal, and former
   player-facing specs are superseded evidence. Active content specs continue to
   own terrain, rooms, generation, enemies, hazards, and boss. The active UI work
@@ -84,14 +85,21 @@ Read in this order:
 - Use one persistent hero with a shared baseline movement envelope. Extract useful
   melee, ranged, defense, and mobility behavior from the existing Warrior, Archer,
   and Assassin kits, but do not preserve selectable classes or full-kit switching.
-- Equip one melee weapon, one bow, and one shield simultaneously. Attack selects
-  melee/ranged deterministically from target distance, facing, line of sight, and
-  arrows; defense always raises the shield.
-- Bound the first complete target to nine blueprints across those three roles.
-  Material grades provide direct growth; blueprints change reach, timing, response,
-  and one authored rule.
-- Use one Spirit Stone across melee, arrows, shield, and one Spirit technique.
-  Do not implement per-weapon enchantment sockets or elemental ammunition stacks.
+- Equip one melee tool, one ranged tool, and one shield simultaneously. Attack
+  selects melee first, then delegates distant intent to the equipped bow, matchlock,
+  returning-shuriken, or Root Sigil policy; defense always uses the shield.
+- Bound the first complete target to 12 tool models across those three roles. A
+  model must differ on at least two functional axes and declare one hard weakness.
+  Material grades provide direct growth without changing action identity.
+- Add at most three extra combat active slots: one control, one tactical, and one
+  Spirit Art. Only control and tactical are freely selected; the Spirit Stone
+  supplies the Art.
+- Keep active actions, tool intrinsic traits, accessory passives, one Spirit
+  Attunement, and run-card effects explicitly separate. Do not add a parallel
+  passive skill tree in the first target.
+- Use one Spirit Stone to provide exactly one passive Attunement and one active
+  Spirit Art. Do not implement per-weapon enchantment sockets or elemental
+  ammunition stacks.
 - Assemble versioned Stage Plans from authored native Godot room scenes and typed
   metadata; do not scatter arbitrary platforms or content coordinates.
 - Use `MovementMetrics` and full-stage validation before stage load.
@@ -102,17 +110,18 @@ Read in this order:
 - Keep rewards and persistent writes transaction-safe and idempotent.
 - Use run levels for small support choices, cards for run-local behavior changes,
   coins for tactical spending, three combat tools plus support equipment for
-  preparation, material-grade recrafting for direct growth, and bounded techniques
-  for persistent behavior options.
-- Apply condition only to melee weapons and shields in the first target; bows use
-  arrows instead. Condition 0 and arrows 0 must recover to a playable minimum and
+  preparation, material-grade recrafting for direct growth, and bounded
+  control/tactical skills for persistent behavior options.
+- Apply condition only to melee tools and shields in the first target. Ranged tools
+  use arrows, cartridges/reload, reusable blades, or regenerating focus. Condition
+  0 and any empty ranged-resource state must recover to a playable minimum and
   cannot force stage replay.
 - Persistent profile v1 autosave/backup exists. Player-facing profile slots,
   checkpoint run suspension, Save & Return, and Continue do not exist yet and are
   owned by the next replacement migration plan.
 - Temporary forging exists in v1 but is not a target arbitrary-affix layer. The
   migration replaces its player-facing role with deterministic crafting, repair,
-  arrow resupply, and declared card/consumable effects.
+  tool-specific ranged supply, and declared card/consumable effects.
 - Do not adopt an external package/asset without explicit approval, version/license
   record, isolated spike, wrapper/removal boundary, and acceptance evidence.
 - Every implementation batch after the first combat contract must extend a visible
@@ -132,7 +141,7 @@ Read in this order:
   branch-entry-to-return collision sweeps and invalid ceiling/wall/hazard fixtures
   remain required before authored traversal coverage is complete.
 - Broadening room, enemy, card, or boss content will expand the approved-plan,
-  context-attack, and equipment/Spirit matrices and must preserve the shared hero
+  context-attack, and tool/active/passive/Spirit matrices and must preserve the shared hero
   traversal contract.
 
 ## Run / Verify
@@ -171,7 +180,7 @@ Read in this order:
 Do not resume the superseded arsenal plan. First create a replacement ExecPlan
 from `docs/design/COMBAT_EQUIPMENT_CRAFTING.md` and
 `docs/design/PLAYER_UIUX_REFINEMENT_PLAN.md`. Its first executable batch should
-freeze representative v1 melee/ranged/defense fixtures, define context-attack and
-equipment snapshot contracts, and keep all current release checks green before
-changing production selection. Preserve fixed layout V3, the retired testbed, and
-the dormant random production path throughout migration.
+freeze representative v1 melee/ranged/defense fixtures, define context-attack,
+ranged-policy, active/passive, and tool snapshot contracts, and keep all current
+release checks green before changing production selection. Preserve fixed layout
+V3, the retired testbed, and the dormant random production path throughout migration.

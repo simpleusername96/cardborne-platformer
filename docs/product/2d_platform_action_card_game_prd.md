@@ -34,12 +34,12 @@ The target first complete run contains:
 - one persistent hero with a fixed reliable movement envelope;
 - three approved fixed normal stages assembled from authored room templates;
 - one authored two-phase boss fight;
-- three simultaneously equipped combat tools: one melee weapon, one ranged weapon,
+- three simultaneously equipped combat tools: one melee tool, one ranged tool,
   and one shield, selected by attack/defense context rather than manual swapping;
 - run levels, stage-clear cards, coins, blacksmith services, and consumables;
 - armor, one accessory, one Spirit Stone, one consumable, deterministic blueprint
-  crafting, three material grades across four material families, and bounded
-  melee/ranged/Spirit techniques;
+  crafting, three material grades across four material families, and one selected
+  control skill, one selected tactical skill, and one Spirit Art;
 - a skippable and replayable weapon training prologue, three local profile slots, automatic
   profile persistence, and checkpoint-level Continue;
 - enemies, traps, optional routes, checkpoints, shops, rewards, death, settlement,
@@ -50,7 +50,8 @@ The target first complete run contains:
 ## Product Promise
 
 > Move one persistent hero through dangerous ruins, read distance and attack
-> intent, let melee, bow, and shield answer the situation without a weapon menu,
+> intent, let melee, a mechanically distinct ranged tool, and a shield answer the
+> situation without a weapon menu,
 > and turn discovered blueprints, better materials, and Spirit Stones into a build
 > that changes how the next room is played.
 
@@ -60,7 +61,8 @@ The player should be able to explain a satisfying run in terms of decisions:
 - which enemy opening they exploited;
 - which card changed their attack pattern;
 - what they recrafted, equipped, repaired, or resupplied instead of healing;
-- when attacking, defending, or using a Spirit technique solved the boss.
+- when attacking, defending, controlling space, preparing tactically, or using a
+  Spirit Art solved the boss.
 
 ## Fun Contract
 
@@ -86,12 +88,12 @@ Every milestone must protect these five pillars.
 
 ### 3. Builds change verbs
 
-- Level-up choices may provide clear numeric support, but cards, blueprints,
-  techniques, accessories, and Spirit Stones must mostly alter triggers,
+- Level-up choices may provide clear numeric support, but cards, tool models,
+  control/tactical skills, accessories, and Spirit Stones must mostly alter triggers,
   follow-ups, positioning, area coverage, defense timing, or resource cadence.
 - By the middle of Stage 2, two runs with different card choices should play
   differently without comparing stat screens.
-- Reward screens never offer effects that the equipped tools, techniques, or
+- Reward screens never offer effects that the equipped tools, skills, or
   Spirit Stone cannot use.
 
 ### 4. Fair authored variety
@@ -119,7 +121,7 @@ Every milestone must protect these five pillars.
 main menu
  -> profile / Continue / New Run / Training
  -> optional weapon training prologue or mechanically equal skip
- -> preparation: melee weapon, ranged weapon, shield, and support equipment
+ -> preparation: melee tool, ranged tool, shield, active skills, and support equipment
  -> stage map: first-clear/replay rewards and next destination
  -> fixed Stage 1: establish and test the build
  -> stage-clear card
@@ -163,22 +165,28 @@ The game has one persistent hero. Variable jump, double jump, dash, crouch
 clearance, fast fall, one-way drop, rope use, damage recovery, and checkpoint
 respawn never depend on equipment or unlocks.
 
-The hero always carries one melee weapon, one bow, and one shield. Attack chooses
-melee for a valid close target and ranged for a visible distant target when arrows
-are available. Defense always raises the shield. There is no combat-time weapon
-swap and no selectable combat class.
+The hero always carries one melee tool, one ranged tool, and one shield. Attack
+chooses melee for a valid close target; otherwise the equipped ranged tool resolves
+its own target and resource policy. Defense always uses the shield. There is no
+combat-time weapon swap and no selectable combat class.
 
-| Combat tool | Blueprint target | Primary decision |
-| --- | ---: | --- |
-| Melee weapon | Traveler Sword, Hunting Spear, Smith Hammer | Coverage and speed versus piercing reach or posture damage. |
-| Ranged weapon | Hunting Bow, Longbow, Recurve Bow | Fast mobile pressure versus deliberate range or mobility. |
-| Shield | Round Shield, Buckler, Tower Shield | Balanced blocking versus precise defense or sustained stability. |
+| Combat role | First-target models | Primary decision |
+| --- | --- | --- |
+| Melee tool | Traveler Sword, Hunting Spear, Twin Knives, Smith Hammer | Combo mobility, sweet-spot reach, close pressure, or charged posture break. |
+| Ranged tool | Hunting Bow, Matchlock, Returning Shuriken, Root Sigil | Charged projectile, shot/reload, throw/recall, or delayed ground targeting. |
+| Shield | Round Shield, Buckler, Tower Shield, Mirror Shield | Balanced guard, parry, stationary brace, or projectile storage/return. |
 
-Raw growth comes from rebuilding the same blueprint with better material grades.
-New blueprints change reach, timing, response type, and one authored rule rather
-than adding random affixes. One equipped Spirit Stone channels a shared element
-through melee, arrows, defense, and one Spirit technique. Exact content and
-selection rules are owned by `docs/design/COMBAT_EQUIPMENT_CRAFTING.md`.
+Every model declares a distinct active action, one intrinsic passive trait, one
+resource/recovery policy, and one hard weakness. A new model must differ on at
+least two functional axes; damage, speed, color, or element alone do not qualify.
+Raw growth comes from rebuilding the same model with better material grades.
+
+Attack and defense are joined by at most three additional active slots: one
+control skill for enemy space/timing, one tactical skill for hero readiness,
+attention, or combat information, and one Spirit Art chosen by the equipped
+Spirit Stone. The Stone also provides exactly one passive Spirit Attunement.
+Exact content and selection rules are owned by
+`docs/design/COMBAT_EQUIPMENT_CRAFTING.md`.
 
 ## Progression Layers
 
@@ -192,16 +200,17 @@ Each growth layer has one purpose.
 | Equipment | Persistent ownership | Preparation and fixed discoveries | Melee, ranged, shield, armor, accessory, Spirit Stone, and consumable define preparation. |
 | Blueprint | Persistent unlock | Fixed chests, NPC quests, milestones | Add a new readable tool tradeoff without random rarity. |
 | Material Grade | Persistent per crafted item | Blacksmith | Rebuild a known form with better materials, no failure or random rolls. |
-| Technique | Persistent unlock | Training, manuals, Spirit trials | Equip one melee, one ranged, and one Spirit behavior. |
+| Active Skill | Persistent unlock | Training, manuals, Spirit trials | Equip one control and one tactical behavior; the Spirit Stone supplies the Spirit Art. |
+| Passive Source | Mixed | Tool, accessory, Spirit Stone, run card | Modify one declared trigger without adding a button or duplicating another source. |
 | Material | Persistent shared wallet | Visible drops, challenges, settlement | Fund crafting and repair without affecting route access. |
 
 The stat pipeline resolves sources in this order:
 
 ```text
 hero base
- -> equipped melee, ranged, shield, and material grades
+ -> equipped melee, ranged, shield, their intrinsic traits, and material grades
  -> armor, accessory, Spirit Stone, and consumable
- -> equipped melee/ranged/Spirit techniques
+ -> equipped control/tactical skills and Spirit Art/Attunement
  -> run-level upgrades
  -> cards
  -> consumable and other declared temporary effects
@@ -221,9 +230,9 @@ The first complete run ships with:
   chest, material node, checkpoint, and exit;
 - 15 stage-clear cards;
 - 5 repeatable run-level micro upgrades;
-- 9 combat-equipment blueprints across melee, ranged, and shield roles;
+- 12 combat-tool models and blueprints across melee, ranged, and shield roles;
 - 3 material grades across metal, timber, fiber, and hide, plus 4 Spirit Stones;
-- 3 armor, 4 accessories, 3 consumables, 2 melee techniques, and 2 ranged techniques;
+- 3 armor, 4 accessories, 3 consumables, 3 control skills, and 3 tactical skills;
 - 4 Giant Slime King pattern families.
 
 Content IDs, roles, constraints, and values live in the linked design specs and
@@ -244,7 +253,7 @@ focused validation.
 - Required geometry uses filled rock masses with visibly supported undersides,
   varied top heights, stable landing surfaces, and navigable space between masses.
 - Critical route transitions are derived from `MovementMetrics` for the shared
-  hero baseline; no combat equipment, Spirit Stone, accessory, or technique is a
+  hero baseline; no combat equipment, Spirit Stone, accessory, or active skill is a
   route requirement.
 - Enemy, trap, reward, and exit placement uses authored anchors only.
 - Encounter generation selects a pressure role, then an enemy archetype, then an
@@ -255,10 +264,12 @@ focused validation.
 
 ## Combat And Encounter Contract
 
-- Context attacks are reliable: close qualified threats use melee, visible distant
-  threats use a bow when arrows exist, and no valid ranged target falls back to
-  melee. Melee/ranged techniques create commitment and Spirit techniques create
-  bounded room-scale decisions.
+- Context attacks are reliable: close qualified threats use melee; otherwise the
+  equipped ranged tool resolves its declared line, recall, reload, or ground-target
+  policy. No valid ranged intent falls back to melee without consuming a resource.
+- Control skills change enemy space or timing, tactical skills change readiness,
+  attention, or information, and Spirit Arts spend resonance for a bounded
+  high-impact result. None is a stronger copy of the basic attack.
 - Defense always uses the shield and distinguishes normal, precise, heavy, and
   unblockable responses with visible tells.
 - Every hit records source, amount, knockback, tags, and target policy.
@@ -283,7 +294,8 @@ Poison Bands, and Small Slime Summon.
 - Phase 2 increases tempo and allows only reviewed legal combinations.
 - Poison never removes every safe floor segment.
 - Active adds are capped and cleaned between attempts.
-- The shared hero can win with the three basic combat tools and no technique upgrade.
+- The shared hero can win with the three basic combat tools and default control,
+  tactical, and Spirit choices.
 - Boss victory settles persistent rewards and ends the run; there is no unused
   post-boss card reward.
 
@@ -295,9 +307,10 @@ stage card reward, pause/settings, boss HUD, death summary, and clear summary.
 
 - Main Menu exposes Continue only for a valid checkpoint suspend; New Run resolves
   any existing suspend explicitly.
-- HUD shows health, predicted melee/ranged attack, shield state, arrows, relevant
-  condition warnings, Spirit Stone, three techniques, consumable, coins, and the
-  immediate objective. Persistent material totals stay in preparation screens.
+- HUD shows health, the predicted melee/ranged action, shield state, the equipped
+  ranged tool's one relevant resource, condition warnings, resonance, three active
+  skills, consumable, coins, and the immediate objective. Passive effects appear
+  only when charged or triggered; persistent materials stay in preparation screens.
 - Debug route metrics and explanatory test labels do not exist in production UI.
 - Every visible setting changes runtime behavior.
 - Primary flows support keyboard and one standard gamepad layout.
@@ -345,8 +358,8 @@ as invisible numbers, or deaths as unclear.
 - Rewards apply once and state scopes do not leak across run/profile boundaries.
 - Persistent writes are versioned and preserve the last valid profile.
 - Weapon training completion and skip grant identical mechanical unlocks exactly once.
-- Condition and arrows can create preparation pressure but can never block stage
-  entry: equipped tools receive minimum maintenance and arrow supply.
+- Condition and ranged resources can create preparation pressure but can never
+  block stage entry: equipped tools receive minimum maintenance or readiness.
 - Blueprint and Spirit Stone rewards have fixed recoverable sources; random drops
   cannot permanently deny them.
 - Continue restores only validated safe-boundary state and never duplicates a
@@ -361,16 +374,17 @@ The first complete run is done when a fresh player can:
    equipment loadout.
 2. Complete three varied, valid approved fixed stages with one hero carrying
    melee, ranged, and shield equipment without manual weapon swapping.
-3. Predict and use contextual attacks, shield defense, three techniques, support
-   equipment, consumables, and one Spirit Stone with readable feedback.
+3. Predict and use contextual attacks, shield defense, control, tactical, and
+   Spirit active skills, support equipment, consumables, and passive effects with
+   readable feedback.
 4. Gain levels, choose three stage cards, spend coins, craft, rebuild, repair,
-   resupply arrows, and use persistent materials.
+   resupply ranged resources, and use persistent materials.
 5. Save and return at a legal boundary, then Continue without duplicate rewards.
 6. Defeat the two-phase boss or lose the run fairly.
 7. Reload any of three isolated profiles and start another reproducible run.
 
 The release candidate additionally passes the context-attack scenario matrix,
-equipment/Spirit approved-plan matrix, economy bounds, condition/ammunition
+equipment/active/passive approved-plan matrix, economy bounds, condition/resource
 soft-lock fixtures, profile and suspend round trips, boss scheduler simulation,
 keyboard/gamepad path, and 960x540/1280x720/1920x1080 rendered review.
 
@@ -382,7 +396,7 @@ keyboard/gamepad path, and 960x540/1280x720/1920x1080 rendered review.
 - Arbitrary per-tile procedural terrain or random boss arenas.
 - Runtime-random normal-stage topology during the fixed-stage gameplay refinement.
 - Multiple playable heroes, combat-time weapon swapping, unrestricted weapon
-  proliferation, or more than three active techniques.
+  proliferation, or more than three additional combat active slots.
 - Grid inventory, ranged-weapon durability on top of ammunition, item destruction,
   downgrade, random affixes, or mandatory grind.
 - Final commissioned art, final soundtrack, localization, console certification,

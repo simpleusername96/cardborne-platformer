@@ -8,8 +8,9 @@ Use documents in this order:
 
 1. `2d_platform_action_card_game_prd.md` for product promise, fun contract, run
    scope, and completion criteria.
-2. `../design/COMBAT_EQUIPMENT_CRAFTING.md` for one-hero contextual combat,
-   equipment, materials, Spirit Stones, techniques, onboarding, and persistence;
+2. `../design/COMBAT_LOADOUT_DECISION_BRIEF.md` for the short combat decision
+   summary, then `../design/COMBAT_EQUIPMENT_CRAFTING.md` for the authoritative
+   12-tool, active/passive, crafting, Spirit, onboarding, and persistence rules;
    other active design specs own stages and encounters.
 3. `../architecture/FIRST_SLICE_ARCHITECTURE.md` for code ownership and runtime
    contracts.

@@ -3,12 +3,16 @@
 This index prevents plans, evidence, and old prototypes from competing with active
 game specifications.
 
+For a short explanation of the current combat decision, read
+`design/COMBAT_LOADOUT_DECISION_BRIEF.md`. It is a derived decision record; the
+product blueprint and detailed combat spec below remain authoritative.
+
 ## Read First
 
 | Order | Document | Authority |
 | ---: | --- | --- |
 | 1 | `product/2d_platform_action_card_game_prd.md` | Canonical product and fun specification. |
-| 2 | `design/COMBAT_EQUIPMENT_CRAFTING.md` | One hero, contextual melee/ranged/shield combat, blueprints, materials, Spirit Stones, repair, ammunition, and techniques. |
+| 2 | `design/COMBAT_EQUIPMENT_CRAFTING.md` | One hero, 12 distinct combat-tool models, active/passive boundaries, crafting, ranged resources, Spirit Stones, and unlocks. |
 | 3 | `design/PROCEDURAL_REGION_GENERATION.md` | Stage profiles, terrain, room catalog, and generation. |
 | 4 | `design/MAP_AUTHORING_PIPELINE_CONTRACT.md` | Room-template and anchor schema. |
 | 5 | `design/ENEMIES_TRAPS_GIMMICKS.md` | Enemy, hazard, encounter, and boss content. |
@@ -30,6 +34,8 @@ game specifications.
   snapshot of the former six-discipline direction. It is retained for comparison
   and does not define current work.
 - `research/third_party_adoption_ledger.md` is the active external adoption record.
+- `research/combat_loadout_reference_review_2026-07-14.md` is active advisory
+  evidence for the combat-slot and active/passive decisions.
 - Dated surveys/deep dives are archived evidence; `references/` contains advisory
   candidates. Neither is product authority.
 - `.agent/Documentation.md` records current project state and verification paths.
