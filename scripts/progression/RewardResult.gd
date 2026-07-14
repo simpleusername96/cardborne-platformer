@@ -6,6 +6,8 @@ var duplicate: bool
 var transaction_id: StringName
 var grants: Dictionary
 var equipment_discoveries: Array[Dictionary]
+var blueprint_unlocks: Array[Dictionary]
+var spirit_stone_unlocks: Array[Dictionary]
 var message: String
 
 
@@ -15,13 +17,17 @@ func _init(
 	id: StringName = &"",
 	resolved_grants: Dictionary = {},
 	result_message: String = "",
-	resolved_equipment_discoveries: Array[Dictionary] = []
+	resolved_equipment_discoveries: Array[Dictionary] = [],
+	resolved_blueprint_unlocks: Array[Dictionary] = [],
+	resolved_spirit_stone_unlocks: Array[Dictionary] = []
 ) -> void:
 	applied = was_applied
 	duplicate = was_duplicate
 	transaction_id = id
 	grants = resolved_grants.duplicate(true)
 	equipment_discoveries = resolved_equipment_discoveries.duplicate(true)
+	blueprint_unlocks = resolved_blueprint_unlocks.duplicate(true)
+	spirit_stone_unlocks = resolved_spirit_stone_unlocks.duplicate(true)
 	message = result_message
 
 
@@ -32,5 +38,7 @@ func to_dictionary() -> Dictionary:
 		"transaction_id": String(transaction_id),
 		"grants": grants.duplicate(true),
 		"equipment_discoveries": equipment_discoveries.duplicate(true),
+		"blueprint_unlocks": blueprint_unlocks.duplicate(true),
+		"spirit_stone_unlocks": spirit_stone_unlocks.duplicate(true),
 		"message": message,
 	}

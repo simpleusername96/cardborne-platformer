@@ -13,6 +13,8 @@ static func resolve(
 	rng.seed = stable_seed(run_seed, String(transaction_id))
 	var grants: Dictionary = {}
 	var equipment_discoveries: Array[StringName] = []
+	var blueprint_unlocks: Array[StringName] = []
+	var spirit_stone_unlocks: Array[StringName] = []
 	for entry in table.entries:
 		if entry == null:
 			continue
@@ -26,7 +28,18 @@ static func resolve(
 			RewardEntry.TYPE_EQUIPMENT_DISCOVERY:
 				for _discovery in amount:
 					equipment_discoveries.append(entry.content_id)
-	return RewardTransaction.new(transaction_id, table.id, grants, equipment_discoveries)
+			RewardEntry.TYPE_BLUEPRINT_UNLOCK:
+				blueprint_unlocks.append(entry.content_id)
+			RewardEntry.TYPE_SPIRIT_STONE_UNLOCK:
+				spirit_stone_unlocks.append(entry.content_id)
+	return RewardTransaction.new(
+		transaction_id,
+		table.id,
+		grants,
+		equipment_discoveries,
+		blueprint_unlocks,
+		spirit_stone_unlocks
+	)
 
 
 static func resolve_with_context(
@@ -47,7 +60,9 @@ static func resolve_with_context(
 		transaction.id,
 		transaction.source_id,
 		transaction.get_grants(),
-		equipment_discoveries
+		equipment_discoveries,
+		transaction.get_blueprint_unlocks(),
+		transaction.get_spirit_stone_unlocks()
 	)
 
 
