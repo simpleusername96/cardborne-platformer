@@ -1,0 +1,42 @@
+[gd_resource type="Resource" script_class="EquipmentProgressionCatalog" load_steps=30 format=3]
+
+[ext_resource type="Script" path="res://scripts/progression/EquipmentProgressionCatalog.gd" id="1_catalog"]
+[ext_resource type="Script" path="res://scripts/progression/MaterialDefinition.gd" id="2_material_script"]
+[ext_resource type="Script" path="res://scripts/progression/EquipmentModelDefinition.gd" id="3_model_script"]
+[ext_resource type="Script" path="res://scripts/progression/EquipmentBlueprintDefinition.gd" id="4_blueprint_script"]
+[ext_resource type="Script" path="res://scripts/progression/SpiritStoneDefinition.gd" id="5_stone_script"]
+[ext_resource type="Resource" path="res://data/materials/rusted_scrap.tres" id="6_rusted_scrap"]
+[ext_resource type="Resource" path="res://data/materials/steel_fragment.tres" id="7_steel_fragment"]
+[ext_resource type="Resource" path="res://data/materials/common_timber.tres" id="8_common_timber"]
+[ext_resource type="Resource" path="res://data/materials/hardwood.tres" id="9_hardwood"]
+[ext_resource type="Resource" path="res://data/materials/sky_thread.tres" id="10_sky_thread"]
+[ext_resource type="Resource" path="res://data/materials/reinforced_fabric.tres" id="11_reinforced_fabric"]
+[ext_resource type="Resource" path="res://data/equipment/models/traveler_sword.tres" id="12_traveler_sword"]
+[ext_resource type="Resource" path="res://data/equipment/models/hunting_spear.tres" id="13_hunting_spear"]
+[ext_resource type="Resource" path="res://data/equipment/models/hunting_bow.tres" id="14_hunting_bow"]
+[ext_resource type="Resource" path="res://data/equipment/models/matchlock.tres" id="15_matchlock"]
+[ext_resource type="Resource" path="res://data/equipment/models/round_shield.tres" id="16_round_shield"]
+[ext_resource type="Resource" path="res://data/equipment/models/tower_shield.tres" id="17_tower_shield"]
+[ext_resource type="Resource" path="res://data/equipment/models/traveler_coat.tres" id="18_traveler_coat"]
+[ext_resource type="Resource" path="res://data/equipment/models/reinforced_coat.tres" id="19_reinforced_coat"]
+[ext_resource type="Resource" path="res://data/equipment/blueprints/traveler_sword.tres" id="20_traveler_sword_blueprint"]
+[ext_resource type="Resource" path="res://data/equipment/blueprints/hunting_spear.tres" id="21_hunting_spear_blueprint"]
+[ext_resource type="Resource" path="res://data/equipment/blueprints/hunting_bow.tres" id="22_hunting_bow_blueprint"]
+[ext_resource type="Resource" path="res://data/equipment/blueprints/matchlock.tres" id="23_matchlock_blueprint"]
+[ext_resource type="Resource" path="res://data/equipment/blueprints/round_shield.tres" id="24_round_shield_blueprint"]
+[ext_resource type="Resource" path="res://data/equipment/blueprints/tower_shield.tres" id="25_tower_shield_blueprint"]
+[ext_resource type="Resource" path="res://data/equipment/blueprints/traveler_coat.tres" id="26_traveler_coat_blueprint"]
+[ext_resource type="Resource" path="res://data/equipment/blueprints/reinforced_coat.tres" id="27_reinforced_coat_blueprint"]
+[ext_resource type="Resource" path="res://data/spirit_stones/ember_spirit_stone.tres" id="28_ember_stone"]
+[ext_resource type="Resource" path="res://data/spirit_stones/frost_spirit_stone.tres" id="29_frost_stone"]
+
+[resource]
+script = ExtResource("1_catalog")
+id = &"minimum_equipment_progression"
+display_name = "Minimum Equipment Progression"
+content_version = 1
+tags = Array[StringName]([&"equipment_progression_catalog", &"minimum_slice"])
+materials = Array[ExtResource("2_material_script")]([ExtResource("6_rusted_scrap"), ExtResource("7_steel_fragment"), ExtResource("8_common_timber"), ExtResource("9_hardwood"), ExtResource("10_sky_thread"), ExtResource("11_reinforced_fabric")])
+models = Array[ExtResource("3_model_script")]([ExtResource("12_traveler_sword"), ExtResource("13_hunting_spear"), ExtResource("14_hunting_bow"), ExtResource("15_matchlock"), ExtResource("16_round_shield"), ExtResource("17_tower_shield"), ExtResource("18_traveler_coat"), ExtResource("19_reinforced_coat")])
+blueprints = Array[ExtResource("4_blueprint_script")]([ExtResource("20_traveler_sword_blueprint"), ExtResource("21_hunting_spear_blueprint"), ExtResource("22_hunting_bow_blueprint"), ExtResource("23_matchlock_blueprint"), ExtResource("24_round_shield_blueprint"), ExtResource("25_tower_shield_blueprint"), ExtResource("26_traveler_coat_blueprint"), ExtResource("27_reinforced_coat_blueprint")])
+spirit_stones = Array[ExtResource("5_stone_script")]([ExtResource("28_ember_stone"), ExtResource("29_frost_stone")])

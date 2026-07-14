@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="SpiritStoneDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/progression/SpiritStoneDefinition.gd" id="1_stone"]
+
+[resource]
+script = ExtResource("1_stone")
+id = &"frost_spirit_stone"
+display_name = "Frost Spirit Stone"
+content_version = 1
+tags = Array[StringName]([&"spirit_stone", &"passive"])
+presentation_key = &"frost_spirit_stone"
+passive_description = "A precise guard slows the attacker by 25% for 1.5 seconds."
+weakness_description = "It does not trigger on ordinary guards or unblockable attacks."
+trigger = &"precise_guard"
+effect = &"slow"
+deduplicate_by_event_id = true
+slow_fraction = 0.25
+slow_duration_seconds = 1.5

@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="EquipmentBlueprintDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/progression/EquipmentBlueprintDefinition.gd" id="1_blueprint"]
+[ext_resource type="Script" path="res://scripts/progression/CraftingRecipeDefinition.gd" id="2_recipe"]
+
+[sub_resource type="Resource" id="Recipe"]
+script = ExtResource("2_recipe")
+id = &"traveler_sword_recipe"
+display_name = "Traveler Sword Recipe"
+content_version = 1
+tags = Array[StringName]([&"crafting_recipe"])
+presentation_key = &"traveler_sword_recipe"
+family_costs = {
+"metal": 5,
+"timber": 2
+}
+same_grade_only = true
+
+[resource]
+script = ExtResource("1_blueprint")
+id = &"traveler_sword_blueprint"
+display_name = "Traveler Sword Blueprint"
+content_version = 1
+tags = Array[StringName]([&"equipment_blueprint", &"melee"])
+presentation_key = &"traveler_sword_blueprint"
+model_id = &"traveler_sword"
+starting_blueprint = true
+minimum_material_grade = 1
+maximum_material_grade = 2
+recipe = SubResource("Recipe")

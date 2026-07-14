@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="EquipmentModelDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/progression/EquipmentModelDefinition.gd" id="1_model"]
+
+[resource]
+script = ExtResource("1_model")
+id = &"reinforced_coat"
+display_name = "Reinforced Coat"
+content_version = 1
+tags = Array[StringName]([&"equipment_model", &"armor"])
+presentation_key = &"reinforced_coat"
+slot = &"armor"
+behavior_description = "Adds 2 maximum health and reduces knockback by 15%."
+weakness_description = "Dash reuse is delayed by 0.06 seconds."
+max_health_bonus = 2
+knockback_reduction_fraction = 0.15
+dash_cooldown_addition_seconds = 0.06

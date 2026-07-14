@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="EquipmentModelDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/progression/EquipmentModelDefinition.gd" id="1_model"]
+
+[resource]
+script = ExtResource("1_model")
+id = &"hunting_spear"
+display_name = "Hunting Spear"
+content_version = 1
+tags = Array[StringName]([&"equipment_model", &"melee"])
+presentation_key = &"hunting_spear"
+slot = &"melee"
+behavior_description = "A long narrow thrust that rewards contact within the final 32 pixels of its reach."
+weakness_description = "Targets within 36 pixels are weak hits, and recovery is slower than the sword."
+damage = 3
+stagger_damage = 24
+reach = 118.0
+startup_seconds = 0.16
+recovery_seconds = 0.3
+close_range_penalty_distance = 36.0
+tip_reward_length = 32.0
+has_condition = true
+grade_one_max_condition = 100

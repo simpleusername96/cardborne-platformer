@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="EquipmentModelDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/progression/EquipmentModelDefinition.gd" id="1_model"]
+
+[resource]
+script = ExtResource("1_model")
+id = &"tower_shield"
+display_name = "Tower Shield"
+content_version = 1
+tags = Array[StringName]([&"equipment_model", &"shield"])
+presentation_key = &"tower_shield"
+slot = &"shield"
+behavior_description = "A slow 160-degree frontal brace with high stability."
+weakness_description = "Guard movement falls to 35%, jumping is blocked, and side or rear attacks remain exposed."
+startup_seconds = 0.3
+recovery_seconds = 0.28
+guard_stability = 150
+guard_angle_degrees = 160.0
+guard_move_speed_multiplier = 0.35
+blocks_jump_while_guarding = true
+has_condition = true
+grade_one_max_condition = 100

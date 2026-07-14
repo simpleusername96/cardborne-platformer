@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="EquipmentBlueprintDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/progression/EquipmentBlueprintDefinition.gd" id="1_blueprint"]
+[ext_resource type="Script" path="res://scripts/progression/CraftingRecipeDefinition.gd" id="2_recipe"]
+
+[sub_resource type="Resource" id="Recipe"]
+script = ExtResource("2_recipe")
+id = &"hunting_bow_recipe"
+display_name = "Hunting Bow Recipe"
+content_version = 1
+tags = Array[StringName]([&"crafting_recipe"])
+presentation_key = &"hunting_bow_recipe"
+family_costs = {
+"metal": 1,
+"textile": 3,
+"timber": 5
+}
+same_grade_only = true
+
+[resource]
+script = ExtResource("1_blueprint")
+id = &"hunting_bow_blueprint"
+display_name = "Hunting Bow Blueprint"
+content_version = 1
+tags = Array[StringName]([&"equipment_blueprint", &"ranged"])
+presentation_key = &"hunting_bow_blueprint"
+model_id = &"hunting_bow"
+starting_blueprint = true
+minimum_material_grade = 1
+maximum_material_grade = 2
+recipe = SubResource("Recipe")

@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="EquipmentModelDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/progression/EquipmentModelDefinition.gd" id="1_model"]
+
+[resource]
+script = ExtResource("1_model")
+id = &"hunting_bow"
+display_name = "Hunting Bow"
+content_version = 1
+tags = Array[StringName]([&"equipment_model", &"ranged"])
+presentation_key = &"hunting_bow"
+slot = &"ranged"
+behavior_description = "Quick straight arrows pressure visible enemies at range."
+weakness_description = "It consumes arrows and has low single-shot damage."
+damage = 2
+stagger_damage = 10
+reach = 520.0
+startup_seconds = 0.12
+recovery_seconds = 0.44
+ranged_resource_id = &"arrows"
+starting_ranged_resource = 12
+maximum_ranged_resource = 20

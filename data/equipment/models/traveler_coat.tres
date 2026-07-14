@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="EquipmentModelDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/progression/EquipmentModelDefinition.gd" id="1_model"]
+
+[resource]
+script = ExtResource("1_model")
+id = &"traveler_coat"
+display_name = "Traveler Coat"
+content_version = 1
+tags = Array[StringName]([&"equipment_model", &"armor"])
+presentation_key = &"traveler_coat"
+slot = &"armor"
+behavior_description = "Baseline armor that leaves movement and dash timing unchanged."
+weakness_description = "It provides no additional survival bonus."

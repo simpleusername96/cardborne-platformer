@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="EquipmentBlueprintDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/progression/EquipmentBlueprintDefinition.gd" id="1_blueprint"]
+[ext_resource type="Script" path="res://scripts/progression/CraftingRecipeDefinition.gd" id="2_recipe"]
+
+[sub_resource type="Resource" id="Recipe"]
+script = ExtResource("2_recipe")
+id = &"tower_shield_recipe"
+display_name = "Tower Shield Recipe"
+content_version = 1
+tags = Array[StringName]([&"crafting_recipe"])
+presentation_key = &"tower_shield_recipe"
+family_costs = {
+"metal": 6,
+"timber": 4
+}
+same_grade_only = true
+
+[resource]
+script = ExtResource("1_blueprint")
+id = &"tower_shield_blueprint"
+display_name = "Tower Shield Blueprint"
+content_version = 1
+tags = Array[StringName]([&"equipment_blueprint", &"shield"])
+presentation_key = &"tower_shield_blueprint"
+model_id = &"tower_shield"
+starting_blueprint = false
+minimum_material_grade = 1
+maximum_material_grade = 2
+recipe = SubResource("Recipe")

@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="SpiritStoneDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/progression/SpiritStoneDefinition.gd" id="1_stone"]
+
+[resource]
+script = ExtResource("1_stone")
+id = &"ember_spirit_stone"
+display_name = "Ember Spirit Stone"
+content_version = 1
+tags = Array[StringName]([&"spirit_stone", &"passive"])
+presentation_key = &"ember_spirit_stone"
+passive_description = "The fourth direct attack within 3 seconds applies 1 burn damage twice."
+weakness_description = "The count resets when the direct-hit sequence is interrupted."
+trigger = &"direct_attack_sequence"
+effect = &"burn"
+deduplicate_by_event_id = true
+required_direct_attack_count = 4
+direct_attack_window_seconds = 3.0
+burn_damage_per_tick = 1
+burn_tick_count = 2
