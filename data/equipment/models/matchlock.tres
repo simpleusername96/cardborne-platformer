@@ -21,5 +21,6 @@ startup_seconds = 0.08
 ranged_resource_id = &"cartridges"
 starting_ranged_resource = 5
 maximum_ranged_resource = 8
+stage_minimum_ranged_resource = 4
 reload_seconds = 1.35
 dash_cancels_reload = true

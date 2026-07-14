@@ -22,3 +22,4 @@ recovery_seconds = 0.44
 ranged_resource_id = &"arrows"
 starting_ranged_resource = 12
 maximum_ranged_resource = 20
+stage_minimum_ranged_resource = 8

@@ -78,7 +78,10 @@ func _physics_process(delta: float) -> void:
 		move_and_slide()
 		return
 
-	if not combat_controller.is_action_committed():
+	if (
+		not combat_controller.is_action_committed()
+		or combat_controller.can_dash_cancel_reload()
+	):
 		_update_dash(input_axis, delta)
 	if is_dashing:
 		move_and_slide()
@@ -207,6 +210,7 @@ func _update_dash(input_axis: float, delta: float) -> void:
 	if dash_cooldown_timer > 0.0 or dash_charges_left <= 0:
 		return
 
+	combat_controller.cancel_reload_for_dash()
 	if not is_zero_approx(input_axis):
 		facing = int(sign(input_axis))
 	dash_charges_left -= 1

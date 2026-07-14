@@ -231,6 +231,30 @@ func blocks_jump() -> bool:
 	return _shared_hero_mode and _shield_runtime.blocks_jump()
 
 
+func can_dash_cancel_reload() -> bool:
+	if (
+		not _shared_hero_mode
+		or current_attack == null
+		or phase != Phase.RECOVERY
+		or not current_attack.tags.has(&"reload")
+	):
+		return false
+	var ranged_model := (_hero_loadout.get("ranged", {}) as Dictionary).get("model") as EquipmentModelDefinition
+	return ranged_model != null and ranged_model.dash_cancels_reload
+
+
+func cancel_reload_for_dash() -> bool:
+	if not can_dash_cancel_reload():
+		return false
+	var definition := current_attack
+	var ranged_model := (_hero_loadout.get("ranged", {}) as Dictionary).get("model") as EquipmentModelDefinition
+	_cancel_current_attack()
+	_cooldowns[String(definition.id)] = maxf(ranged_model.reload_seconds, 0.0)
+	_emit_status("Reload canceled")
+	_publish_state()
+	return true
+
+
 func is_movement_locked() -> bool:
 	if current_attack == null:
 		return false

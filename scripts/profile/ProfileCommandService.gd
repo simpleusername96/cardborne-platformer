@@ -218,10 +218,18 @@ func apply_stage_entry_maintenance(data: ProfileData) -> ProfileCommandResult:
 				StringName(raw_entry.get("model_id", &"")),
 				raw_entry["result_state"]
 			)
+	var supply: Dictionary = preview.get("ranged_supply", {})
+	if bool(supply.get("can_execute", false)):
+		data.ranged_supplies[String(supply.get("supply_id", ""))] = int(
+			supply.get("result", 0)
+		)
 	return _accepted(
 		&"stage_entry_maintenance_applied",
-		"Equipped melee and shield were maintained to at least 25%.",
-		{"entries": preview.get("entries", []).duplicate(true)}
+		"Equipment condition and ranged supply were prepared for stage entry.",
+		{
+			"entries": preview.get("entries", []).duplicate(true),
+			"ranged_supply": supply.duplicate(true),
+		}
 	)
 
 

@@ -215,8 +215,8 @@ static func preview_stage_entry_maintenance(
 	snapshot["model_ids"] = []
 	snapshot["grade_ids"] = {}
 	snapshot["entries"] = []
-	snapshot["current_state"] = {"equipment": {}}
-	snapshot["result_state"] = {"equipment": {}}
+	snapshot["current_state"] = {"equipment": {}, "ranged_supplies": {}}
+	snapshot["result_state"] = {"equipment": {}, "ranged_supplies": {}}
 	if catalog == null:
 		return _outcome(snapshot, false, CODE_MISSING_CATALOG, "Equipment catalog is unavailable.")
 	if profile == null:
@@ -236,6 +236,16 @@ static func preview_stage_entry_maintenance(
 			changed = true
 		elif entry["code"] != CODE_MAINTENANCE_NOT_REQUIRED and first_failure.is_empty():
 			first_failure = entry
+	var supply_entry := _preview_stage_supply(catalog, profile)
+	snapshot["ranged_supply"] = supply_entry
+	var supply_id := String(supply_entry.get("supply_id", ""))
+	if not supply_id.is_empty():
+		snapshot["current_state"]["ranged_supplies"][supply_id] = supply_entry.get("current", 0)
+		snapshot["result_state"]["ranged_supplies"][supply_id] = supply_entry.get("result", 0)
+	if bool(supply_entry.get("can_execute", false)):
+		changed = true
+	elif supply_entry.get("code") != CODE_MAINTENANCE_NOT_REQUIRED and first_failure.is_empty():
+		first_failure = supply_entry
 	if not first_failure.is_empty():
 		return _outcome(snapshot, false, first_failure["code"], first_failure["reason"])
 	if not changed:
@@ -243,7 +253,7 @@ static func preview_stage_entry_maintenance(
 			snapshot,
 			false,
 			CODE_MAINTENANCE_NOT_REQUIRED,
-			"Equipped melee and shield condition are already at least 25%."
+			"Equipment condition and ranged supply already meet stage-entry minimums."
 		)
 	return _outcome(snapshot, true, CODE_READY, "Free stage-entry maintenance is available.")
 
@@ -312,6 +322,40 @@ static func _preview_free_maintenance_model(
 		)
 	snapshot["result_state"]["condition"] = threshold
 	return _outcome(snapshot, true, CODE_READY, "Equipment will be maintained to 25% condition.")
+
+
+static func _preview_stage_supply(
+	catalog: EquipmentProgressionCatalog,
+	profile: ProfileData
+) -> Dictionary:
+	var model_id := StringName(_value_for_id(
+		profile.hero_loadout,
+		EquipmentModelDefinition.SLOT_RANGED,
+		&""
+	))
+	var snapshot := _base_snapshot(ACTION_STAGE_ENTRY_MAINTENANCE, model_id, &"")
+	var model := catalog.get_model(model_id)
+	if model == null or model.slot != EquipmentModelDefinition.SLOT_RANGED:
+		return _outcome(snapshot, false, CODE_MISSING_MODEL, "Equipped ranged model is unavailable.")
+	_populate_model(snapshot, model)
+	var supply_id := String(model.ranged_resource_id)
+	var current := int(profile.ranged_supplies.get(supply_id, 0))
+	var minimum := model.stage_minimum_ranged_resource
+	snapshot.merge({
+		"supply_id": supply_id,
+		"current": current,
+		"minimum": minimum,
+		"maximum": model.maximum_ranged_resource,
+		"result": maxi(current, minimum),
+	}, true)
+	if current >= minimum:
+		return _outcome(
+			snapshot,
+			false,
+			CODE_MAINTENANCE_NOT_REQUIRED,
+			"Equipped ranged supply already meets its stage minimum."
+		)
+	return _outcome(snapshot, true, CODE_READY, "Stage-entry ranged supply is available.")
 
 
 static func _base_snapshot(

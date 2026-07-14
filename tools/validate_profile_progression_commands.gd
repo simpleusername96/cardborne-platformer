@@ -84,10 +84,12 @@ func _validate_loadout_supply_and_maintenance() -> void:
 
 	data.crafted_equipment["hunting_spear"]["condition"] = 10.0
 	data.crafted_equipment["round_shield"]["condition"] = 5.0
+	data.ranged_supplies["arrows"] = 2
 	var maintenance := _commands.apply_stage_entry_maintenance(data)
 	_expect(maintenance.ok and maintenance.changed, "low equipped condition should receive free maintenance")
 	_expect(data.crafted_equipment["hunting_spear"]["condition"] == 25.0, "melee maintenance should reach 25%")
 	_expect(data.crafted_equipment["round_shield"]["condition"] == 25.0, "shield maintenance should reach 25%")
+	_expect(data.ranged_supplies["arrows"] == 8, "stage entry should guarantee eight equipped bow arrows")
 
 
 func _validate_tutorial_parity_and_rejections() -> void:

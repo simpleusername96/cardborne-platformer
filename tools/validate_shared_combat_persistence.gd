@@ -25,10 +25,15 @@ func _run() -> void:
 		false,
 		load("res://data/equipment/equipment_progression_catalog.tres")
 	)
+	profile_state.spend_ranged_supply(&"arrows", 10)
 	if not bool(run_state.start_new_run(0, 1702)):
 		_failures.append("Shared hero run could not start.")
 		_finish()
 		return
+	_expect(
+		int(profile_state.get_ranged_supplies().get("arrows", 0)) == 8,
+		"Run start must restore the equipped bow's minimum arrow supply."
+	)
 
 	var world := Node2D.new()
 	root.add_child(world)
@@ -94,6 +99,23 @@ func _run() -> void:
 	_expect(
 		int(profile_state.get_ranged_supplies().get("arrows", 0)) == arrows_before - 1,
 		"Committed ranged action must persist one arrow debit."
+	)
+
+	combat.reset_combat_state()
+	var matchlock_loadout: Dictionary = run_state.get_hero_combat_loadout_snapshot()
+	var matchlock_model := load("res://data/equipment/models/matchlock.tres") as EquipmentModelDefinition
+	var matchlock_attack := matchlock_model.attack_definition.duplicate(true) as AttackDefinition
+	(matchlock_loadout["ranged"] as Dictionary)["model"] = matchlock_model
+	(matchlock_loadout["ranged"] as Dictionary)["attack"] = matchlock_attack
+	combat.configure_shared_hero(matchlock_loadout, run_state.get_effective_stats())
+	_expect(bool(combat.call("_begin_attack", matchlock_attack)), "Matchlock action should start.")
+	combat.update_combat(0.13)
+	_expect(combat.can_dash_cancel_reload(), "Matchlock recovery should allow dash cancellation.")
+	_expect(combat.cancel_reload_for_dash(), "Dash cancellation should interrupt matchlock recovery.")
+	_expect(combat.current_attack == null, "Canceled reload should release the action lock.")
+	_expect(
+		combat.get_cooldown_remaining(matchlock_attack.id) >= matchlock_model.reload_seconds - 0.001,
+		"Canceled matchlock reload should restart its full reload timer."
 	)
 
 	world.queue_free()

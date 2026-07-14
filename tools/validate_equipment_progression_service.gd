@@ -344,6 +344,7 @@ func _validate_stage_entry_maintenance(catalog: EquipmentProgressionCatalog) -> 
 	var profile := ProfileData.new()
 	profile.crafted_equipment["traveler_sword"]["condition"] = 24.0
 	profile.crafted_equipment["round_shield"]["condition"] = 25.0
+	profile.ranged_supplies["arrows"] = 2
 	profile.unlocked_blueprints.append("hunting_spear")
 	profile.crafted_equipment["hunting_spear"] = {
 		"grade_id": "grade_1",
@@ -365,6 +366,7 @@ func _validate_stage_entry_maintenance(catalog: EquipmentProgressionCatalog) -> 
 	)
 	var sword_entry := _entry_for(preview, &"traveler_sword")
 	var shield_entry := _entry_for(preview, &"round_shield")
+	var supply_entry: Dictionary = preview.get("ranged_supply", {})
 	_expect_outcome(
 		sword_entry,
 		Service.ACTION_STAGE_ENTRY_MAINTENANCE,
@@ -390,6 +392,17 @@ func _validate_stage_entry_maintenance(catalog: EquipmentProgressionCatalog) -> 
 	_expect(
 		not preview["model_ids"].has(&"hunting_spear"),
 		"maintenance should ignore unequipped condition models"
+	)
+	_expect(
+		bool(supply_entry.get("can_execute", false))
+		and supply_entry.get("supply_id") == "arrows"
+		and int(supply_entry.get("current", -1)) == 2
+		and int(supply_entry.get("result", -1)) == 8,
+		"stage entry should preview the equipped bow's minimum arrow supply"
+	)
+	_expect(
+		int(preview["result_state"]["ranged_supplies"].get("arrows", -1)) == 8,
+		"maintenance result state should include ranged supply"
 	)
 	_expect(profile.to_dictionary() == before, "maintenance preview must not mutate ProfileData")
 	_expect(

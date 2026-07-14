@@ -35,6 +35,7 @@ const GRADE_ONE_MAX_CONDITION := 100
 @export var ranged_resource_id: StringName
 @export var starting_ranged_resource: int = 0
 @export var maximum_ranged_resource: int = 0
+@export var stage_minimum_ranged_resource: int = 0
 @export var reload_seconds: float = 0.0
 @export var dash_cancels_reload: bool = false
 
@@ -106,6 +107,7 @@ func tuning_snapshot() -> Dictionary:
 		"ranged_resource_id": ranged_resource_id,
 		"starting_ranged_resource": starting_ranged_resource,
 		"maximum_ranged_resource": maximum_ranged_resource,
+		"stage_minimum_ranged_resource": stage_minimum_ranged_resource,
 		"reload_seconds": reload_seconds,
 		"dash_cancels_reload": dash_cancels_reload,
 		"guard_stability": guard_stability,
@@ -127,7 +129,11 @@ func tuning_snapshot() -> Dictionary:
 func _validate_common_values(errors: PackedStringArray) -> void:
 	if damage < 0 or stagger_damage < 0:
 		errors.append("Equipment model '%s' damage values cannot be negative." % id)
-	if starting_ranged_resource < 0 or maximum_ranged_resource < 0:
+	if (
+		starting_ranged_resource < 0
+		or maximum_ranged_resource < 0
+		or stage_minimum_ranged_resource < 0
+	):
 		errors.append("Equipment model '%s' ranged resource values cannot be negative." % id)
 	if grade_one_max_condition < 0:
 		errors.append("Equipment model '%s' condition cannot be negative." % id)
@@ -191,6 +197,11 @@ func _validate_ranged(errors: PackedStringArray) -> void:
 	ContentId.validate(errors, "Ranged model '%s' resource ID" % id, ranged_resource_id)
 	if starting_ranged_resource <= 0 or maximum_ranged_resource < starting_ranged_resource:
 		errors.append("Ranged model '%s' needs valid positive starting/max resources." % id)
+	if (
+		stage_minimum_ranged_resource <= 0
+		or stage_minimum_ranged_resource > starting_ranged_resource
+	):
+		errors.append("Ranged model '%s' needs a stage minimum at or below its starting resources." % id)
 	if recovery_seconds <= 0.0 and reload_seconds <= 0.0:
 		errors.append("Ranged model '%s' needs positive recovery or reload." % id)
 	if dash_cancels_reload and reload_seconds <= 0.0:
@@ -281,6 +292,7 @@ func _has_ranged_tuning() -> bool:
 		ranged_resource_id != &""
 		or starting_ranged_resource != 0
 		or maximum_ranged_resource != 0
+		or stage_minimum_ranged_resource != 0
 		or not is_zero_approx(reload_seconds)
 		or dash_cancels_reload
 	)

@@ -137,6 +137,7 @@ func _validate_models(catalog: EquipmentProgressionCatalog) -> void:
 		_expect(bow.ranged_resource_id == &"arrows", "Hunting Bow must consume arrows")
 		_expect(bow.starting_ranged_resource == 12, "Hunting Bow must start with 12 arrows")
 		_expect(bow.maximum_ranged_resource == 20, "Hunting Bow must cap at 20 arrows")
+		_expect(bow.stage_minimum_ranged_resource == 8, "Hunting Bow must guarantee 8 stage-entry arrows")
 		_expect(is_zero_approx(bow.reload_seconds), "Hunting Bow must not gain reload timing")
 
 	_validate_attack_model(
@@ -154,6 +155,7 @@ func _validate_models(catalog: EquipmentProgressionCatalog) -> void:
 		_expect(matchlock.ranged_resource_id == &"cartridges", "Matchlock must consume cartridges")
 		_expect(matchlock.starting_ranged_resource == 5, "Matchlock must start with 5 cartridges")
 		_expect(matchlock.maximum_ranged_resource == 8, "Matchlock must cap at 8 cartridges")
+		_expect(matchlock.stage_minimum_ranged_resource == 4, "Matchlock must guarantee 4 stage-entry cartridges")
 		_expect(is_equal_approx(matchlock.reload_seconds, 1.35), "Matchlock reload must remain 1.35 seconds")
 		_expect(matchlock.dash_cancels_reload, "Matchlock dash must cancel reload")
 

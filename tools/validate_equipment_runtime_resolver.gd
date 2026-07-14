@@ -71,6 +71,8 @@ func _validate_ranged_and_armor_grade() -> void:
 	_expect(bow["stagger_damage"] == 12, "Grade 2 bow should add 15% stagger")
 	_expect(bow["maximum_condition"] == 0 and not bow["worn"], "bow should not own condition")
 	_expect(bow["maximum_ranged_resource"] == 20, "grade should not change arrow capacity")
+	_expect(bow["starting_ranged_resource"] == 12, "bow should expose starting arrows")
+	_expect(bow["stage_minimum_ranged_resource"] == 8, "bow should expose stage-entry arrows")
 
 	var coat := Resolver.resolve(
 		CATALOG.get_model(&"reinforced_coat"),
