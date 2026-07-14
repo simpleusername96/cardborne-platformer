@@ -3,9 +3,9 @@ type: spec
 status: draft
 owner: BK
 created: 2026-07-13
-last_reviewed: 2026-07-13
+last_reviewed: 2026-07-14
 canonical_for: Proposed terrain-tile, reusable-component, stage-skin, decoration, and unique-set-piece boundaries
-source: Owner visual direction through 2026-07-13, current room/component contracts, and component UI foundation research
+source: Owner visual direction through 2026-07-14, current room/component contracts, and component UI foundation research
 related:
   - ./MAP_AUTHORING_PIPELINE_CONTRACT.md
   - ./PROCEDURAL_REGION_GENERATION.md
@@ -13,6 +13,7 @@ related:
   - ./UI_VISUAL_SYSTEM.md
   - ../research/component_ui_foundation_research_2026-07-13.md
   - ./references/README.md
+  - ./WORLD_COMPONENT_IMAGE_PRODUCTION_PLAN.md
   - ../../.agent/execplans/2026-07-13-component-ui-foundation.md
 ---
 
@@ -36,6 +37,10 @@ This is a proposed production contract. It does not authorize code or asset migr
 - Regional art is authored by stage skin; visual modules are never randomly mixed across stages.
 
 The generated boards under `docs/design/references/` are direction and decomposition references. They are not production-ready atlases or sprite sheets.
+
+`WORLD_COMPONENT_IMAGE_PRODUCTION_PLAN.md` defines generation-call scope, candidate
+review, cleanup, temporary HTML-gallery approval, and production handoff. This spec
+defines the asset boundaries; the plan defines how candidate art moves through them.
 
 ## Canonical Terms
 
@@ -109,7 +114,7 @@ Use reusable scenes for:
 - ropes and other climbables;
 - switches, gates, destructible blockers, checkpoints, exits;
 - chests, material nodes, reward sources, field pickups;
-- stage-local mechanisms with warning/active/recovery state;
+- stage-local mechanisms with a declared warning/active/cooldown, disabled/respawning, or equivalent state cycle;
 - reusable particle/audio/feedback emitters when they have an independent lifecycle.
 
 Components must remain explicit scene instances resolved by authored anchors or placed directly in the room. Do not hide stateful production hazards inside TileSet scene collections. This preserves IDs, typed definitions, validator access, deterministic spawning, and clear ownership.
@@ -123,7 +128,7 @@ Keep behavior shared and skin selection regional.
 | Solid terrain | Collision silhouette and support semantics | Ruin stone, flooded foundry masonry, fractured sanctum block |
 | One-way platform | Support width and drop-through behavior | Wood/iron catwalk, corroded grate, relic slab |
 | Pendulum chassis | Pivot, arm length, angular path, timing, damage envelope | Brick mount/iron arm/axe; corroded mount/chain/hammer; sanctum mount/rod/saw |
-| Vent | Warning/active/recovery timing and damage area | Boiler nozzle/steam; corroded pipe/toxin; relic fissure/energy |
+| Vent | Warning/active/cooldown timing and damage area | Boiler nozzle/steam; corroded pipe/toxin; relic fissure/energy |
 | Chest | Interaction and reward transaction | Salvage coffer, sealed workshop crate, sanctum reliquary |
 | Rope/climbable | Entry/exit support and climb geometry | Hemp rope, cable, braided relic cord |
 | Pickup | Pickup type and settlement behavior | Shared icon silhouette with regional halo/material treatment |
@@ -254,13 +259,13 @@ For the pendulum example, the fixed contract is pivot location, arm length, angu
 
 - Required child nodes and typed definitions resolve.
 - Visual-skin swaps leave gameplay snapshots unchanged.
-- Hazard warning, active, recovery, and safe-zone contracts remain visible and valid.
+- Declared hazard states, timing, damage/support envelopes, and safe-zone contracts remain visible and valid.
 - Components instantiate in an isolated gallery scene and in at least one production room.
 - Stage skin manifests contain no cross-region asset paths unless explicitly shared.
 
 ### Rooms And Unique Content
 
-- All three base characters can clear required routes.
+- Every required route passes the current shared movement/traversal envelope; presentation work cannot narrow it.
 - Foreground decor never hides player, enemy tell, hazard warning, landing edge, reward, or exit.
 - Unique collision delegates to the same geometry/recovery validation as repeated content.
 - A room remains understandable with debug labels disabled.

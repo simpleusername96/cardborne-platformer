@@ -36,6 +36,9 @@ production-art and UI foundation:
 
 - `design/GAME_COMPONENT_ART_SYSTEM.md` proposes the tile, reusable component,
   stage-skin, decoration, actor, and unique-set-piece boundaries.
+- `design/WORLD_COMPONENT_IMAGE_PRODUCTION_PLAN.md` defines image-generation batch
+  size, per-family production order, candidate approval, cleanup, and temporary HTML
+  gallery review before Godot integration.
 - `design/UI_VISUAL_SYSTEM.md` proposes the borderless flat UI, Theme, asset, state,
   and component contracts.
 - `research/component_ui_foundation_research_2026-07-13.md` records local and

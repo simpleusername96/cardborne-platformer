@@ -3,15 +3,16 @@ type: plan
 status: draft
 owner: BK
 created: 2026-07-13
-last_reviewed: 2026-07-13
+last_reviewed: 2026-07-14
 topic: Tile, reusable world component, stage-skin, production-art, and flat UI foundation
 scope: Preproduction decisions plus a future bounded implementation and migration sequence
-source: Owner direction through 2026-07-13, current repository evidence, official tool research, and generated component guides
+source: Owner direction through 2026-07-14, current repository evidence, official tool research, and generated component guides
 related:
   - ../../docs/product/2d_platform_action_card_game_prd.md
   - ../../docs/design/MAP_AUTHORING_PIPELINE_CONTRACT.md
   - ../../docs/design/PLAYER_FACING_FLOW.md
   - ../../docs/design/GAME_COMPONENT_ART_SYSTEM.md
+  - ../../docs/design/WORLD_COMPONENT_IMAGE_PRODUCTION_PLAN.md
   - ../../docs/design/UI_VISUAL_SYSTEM.md
   - ../../docs/research/component_ui_foundation_research_2026-07-13.md
   - 2026-07-13-player-experience-refinement.md
@@ -42,7 +43,9 @@ The goal is not to redesign game rules or resume random map generation. The goal
 - [x] Compared native authoring, LDtk, and Tiled without installing a dependency.
 - [x] Generated and inspected world-style and component-decomposition reference boards.
 - [x] Defined proposed tile/component/skin/unique and flat UI contracts.
+- [x] Defined image-generation batch boundaries, asset approval gates, and the temporary HTML review-gallery contract.
 - [ ] Owner accepts or revises the two draft design specs.
+- [ ] Owner accepts or revises the world-component image production plan.
 - [ ] A separate implementation branch/worktree is created after current gameplay work lands.
 
 No game code, production scene, runtime resource, dependency, or import configuration is changed by this preproduction branch.
@@ -54,8 +57,8 @@ No game code, production scene, runtime resource, dependency, or import configur
 - One Godot-native terrain TileSet foundation and semantic TileMapLayer layout.
 - One representative room migration that preserves sockets, anchors, collision, and route validation.
 - Stage-specific visual skin contracts for terrain and reusable components.
-- A modular trap assembly contract proven by one pendulum family.
-- A component gallery for isolated visual/state review.
+- A reusable component-skin contract proven first by existing poison-vent, crumbling-platform, and spike-row behavior.
+- A temporary static HTML asset-review gallery followed by a Godot component gallery for isolated runtime/state review.
 - A project Theme, semantic type variations, token ownership, and image manifest.
 - One representative HUD/menu migration followed by measured rollout.
 - Focused validators, screenshots, and migration guards.
@@ -76,7 +79,7 @@ No game code, production scene, runtime resource, dependency, or import configur
 - Approved fixed stage plans remain the production mode while presentation is refined.
 - Existing room scenes remain the source of truth for geometry composition, sockets, anchors, and camera bounds.
 - Existing typed definitions and runtime spawners remain behavior owners.
-- All three characters retain the same required-route mobility baseline.
+- Required routes retain the current shared movement/traversal envelope; presentation work does not depend on a character-class model.
 - UI continues to render immutable snapshots and emit intents.
 - The selected visual direction is simplified saturated foundry/relic art with borderless flat UI.
 - Exact cell size, atlas resolution, and final colors remain spike decisions.
@@ -88,7 +91,7 @@ No game code, production scene, runtime resource, dependency, or import configur
 | Static terrain | Repeated `StaticBody2D` + collision + `Polygon2D` in 30 rooms. | External stage TileSets and semantic TileMapLayers for repeated static surfaces. | Route, socket, support, collision, and camera snapshots must remain equal or intentionally versioned. |
 | Terrain variation | `TerrainPresentationStyler` recolors named polygons. | Stage TileSets implement the same semantic role manifest with stage-specific art. | No cross-stage atlas mixing; stable semantic roles. |
 | Room composition | Authored room scenes plus typed resources and anchors. | Same room contract, now composed from tiles/components/set pieces. | Do not move planner/anchor data into TileSet metadata. |
-| Hazards | Typed definitions instantiate reusable scenes at anchors. | Same behavior scenes with separate skin selection and clearer art/state nodes. | Warning/active/recovery and damage envelopes unchanged. |
+| Hazards | Typed definitions instantiate reusable scenes at anchors. | Same behavior scenes with separate skin selection and clearer art/state nodes. | Existing runtime states, timing, and damage/support envelopes remain unchanged. |
 | Interactables | Several reusable scenes, mostly procedural visuals. | Same transaction/interaction scenes with manifest-backed skins. | Transaction IDs and exactly-once settlement unchanged. |
 | Trap variants | Individual behavior scenes/definitions; no common visual module contract. | Chassis/actuator/connector/payload/telegraph roles with validated variants. | Cosmetic swap cannot alter gameplay envelope. |
 | Unique content | One-off room/boss polygons mixed with repeated geometry. | Unique landmarks remain authored, but repeated surfaces and behaviors delegate to shared systems. | “Unique” cannot bypass collision/hazard/reward validation. |
@@ -132,16 +135,21 @@ Choose one room and one UI surface that exercise the largest number of contracts
 
 - room candidate criteria: solid mass, inner/outer corner, one-way ledge, socket seam, component anchor, foreground/background decor, and existing geometry fixtures;
 - UI candidate: `ProductionHUD`, because it exercises responsive layout, six action states, prompt/receipt lane, boss state, class accents, and gameplay visibility;
-- component candidate: pendulum trap family, because it proves fixed behavior dimensions plus replaceable mount/connector/payload skins;
+- component candidates: timed poison vent and crumbling platform, because both already exist and prove state/telegraph/support skins without adding gameplay behavior;
 - stage skin candidate: Flooded Works/foundry, because it most directly matches the selected visual direction.
 
-The exact room is selected after the latest gameplay branch is rebased and its active layout changes are known.
+The provisional first room is `FwCrumbleCrossing`; `FwPoisonTiming` follows only after
+the first terrain/component slice passes. Final selection is reconciled against the
+latest clean gameplay branch before implementation.
+
+Lock the provisional room only after the latest gameplay branch is rebased and its active layout changes are known.
 
 ## Milestones
 
 ### M0 - Decision And Branch Gate
 
 - [ ] Owner reviews `GAME_COMPONENT_ART_SYSTEM.md`.
+- [ ] Owner reviews `WORLD_COMPONENT_IMAGE_PRODUCTION_PLAN.md`.
 - [ ] Owner reviews `UI_VISUAL_SYSTEM.md`.
 - [ ] Record accepted changes in Decision Notes; do not silently promote unresolved draft language.
 - [ ] Confirm parent gameplay work is committed or intentionally excluded.
@@ -180,7 +188,7 @@ Stop if:
 
 Acceptance:
 
-- Room geometry/route validators pass for all characters.
+- Room geometry/route validators pass against the current shared traversal contract.
 - Visual support edges and collision support edges agree.
 - No missing atlas/source IDs after editor reopen and headless import.
 - Authoring time and diff readability are better than the polygon baseline.
@@ -200,17 +208,20 @@ Guard:
 #### To-be
 
 - [ ] Define a stage-skin manifest for terrain, platforms, hazards, interactables, pickups, and common feedback.
-- [ ] Add an isolated component gallery with deterministic states.
+- [ ] Build the temporary static HTML review gallery defined by `WORLD_COMPONENT_IMAGE_PRODUCTION_PLAN.md`.
+- [ ] Add an isolated Godot component gallery with deterministic runtime states.
 - [ ] Prove one component can swap between fallback and Flooded Works skin without changing gameplay snapshot.
-- [ ] Prove the pendulum family decomposition: mount, pivot, connector, payload, telegraph, motion envelope.
-- [ ] Add at least axe, rectangular hammer, and saw visual payload examples; only one behavior envelope is required in the first spike.
+- [ ] Prove timed-poison-vent `warning`/`active`/`cooldown` art without changing origin, damage area, or timing.
+- [ ] Prove crumbling-platform `stable`/`warning`/`disabled`/`respawning` art without changing support top, width, or timing.
+- [ ] Prove spike-row presentation without changing its damage bounds or placement width.
+- [ ] Defer pendulum mount/connector/payload production until a real gameplay behavior contract exists.
 - [ ] Add skin completeness and cross-stage path validation.
 
 Acceptance:
 
 - Skin swap changes presentation only.
-- Warning/active/recovery timing and collision are identical before/after.
-- Gallery shows normal, warning, active, recovery, disabled/broken, and interaction states as applicable.
+- Runtime state timing and collision/support behavior are identical before/after.
+- Gallery shows every existing warning, active, cooldown, stable, disabled, respawning, available, pending, claimed, and depleted state as applicable.
 
 Guard:
 
@@ -260,7 +271,7 @@ Guard:
 
 Acceptance:
 
-- The region is fully clearable by all three characters.
+- The region remains fully clearable under the current shared movement/traversal contract.
 - Stage visual language is coherent and contains no accidental other-region assets.
 - Terrain reads as filled masses at varied heights with usable traversal space.
 - Foreground and HUD never obscure collision edges or hazard tells.
@@ -337,7 +348,7 @@ Default result: no external tool adoption.
 - Stable source/atlas ID and missing-tile scan.
 - Collision/visible-silhouette comparison.
 - One-way physics-layer validation.
-- Room socket, support, seam, anchor, camera, and all-character traversal validation.
+- Room socket, support, seam, anchor, camera, and shared traversal-envelope validation.
 - Editor reopen plus headless reimport check.
 
 ### Components/Skins
@@ -345,7 +356,7 @@ Default result: no external tool adoption.
 - Isolated component configuration warnings/validator.
 - Definition and skin manifest completeness.
 - Before/after gameplay snapshot equality under skin swap.
-- Hazard warning/active/recovery/safe-zone checks.
+- Hazard warning/active/cooldown and stable/disabled/respawning safe-zone checks.
 - Interaction exactly-once and reward receipt checks.
 - Gallery screenshots for every state.
 
@@ -381,7 +392,7 @@ Default result: no external tool adoption.
 
 | Risk | Consequence | Mitigation |
 | --- | --- | --- |
-| Tile visuals do not match collision | Unreadable or blocked traversal | Collision/silhouette validator plus all-character room replay. |
+| Tile visuals do not match collision | Unreadable or blocked traversal | Collision/silhouette validator plus shared traversal-contract room replay. |
 | Tile source IDs shift | Invisible/missing terrain references | Stable manifest, no destructive reindex, explicit migration validator. |
 | Overusing tiles for stateful objects | Hidden behavior and brittle IDs | Keep hazards/interactables as explicit scenes at typed anchors. |
 | Skin data leaks into behavior | Stage art changes gameplay | Snapshot equality and typed gameplay variants for envelope changes. |
@@ -393,10 +404,10 @@ Default result: no external tool adoption.
 
 ## Open Questions
 
-- [ ] Which representative room should be the first tile migration after current gameplay changes land?
+- [ ] Does the latest gameplay branch preserve the required `FwCrumbleCrossing` contracts so it can remain the first tile migration? If not, select another Flooded Works room with equivalent coverage.
 - [ ] Does the owner accept 32 px as the starting cell-size candidate for the spike?
 - [ ] Should stage TileSets be entirely separate, or share a locked semantic base with stage atlases? Recommended first answer: separate resources with a validated common manifest.
-- [ ] Which UI image family should be produced first: class/action icons or equipment/reward icons? Recommended first answer: class/action icons because the HUD is the first surface.
+- [ ] Which UI image family should be produced first after the gameplay model lands? Defer character, weapon, equipment, skill-tree, and inventory icons during the world-component image phase.
 - [ ] Should the unique menu backdrop be static, lightly parallaxed, or animated? Defer until structural UI passes.
 - [ ] Is LDtk worth a spike after native authoring measurements? Default: no.
 
@@ -409,3 +420,6 @@ Default result: no external tool adoption.
 - 2026-07-13: Owner required a simpler art style because detailed image generation introduces noisy, pointillist artifacts.
 - 2026-07-13: Preproduction recommends Godot-native TileMapLayer/TileSet/PackedScene/Theme first; LDtk and Tiled remain conditional spikes.
 - 2026-07-13: This branch intentionally contains preparation artifacts only. Implementation starts on a fresh branch after current gameplay work is reconciled.
+- 2026-07-14: Owner required image-generation call boundaries, per-asset production planning, and a temporary HTML review gallery before new art generation.
+- 2026-07-14: The first component-skin proof uses existing timed poison vent, crumbling platform, and spike row behavior; pendulum art is deferred until its gameplay contract exists.
+- 2026-07-14: Character, weapon, equipment, skill-tree, and inventory work remains outside this presentation branch.
