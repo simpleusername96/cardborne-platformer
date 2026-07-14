@@ -69,11 +69,12 @@ func save_profile() -> Dictionary:
 
 func reset_to_defaults() -> void:
 	_ensure_initialized()
-	_data.reset_to_defaults()
-	var persisted := bool(save_profile().get("ok", false))
-	profile_changed.emit(&"all")
-	if not persisted:
+	var candidate := ProfileData.new()
+	if not _persist_candidate(candidate):
 		persistence_failed.emit("Default profile could not be persisted.")
+		return
+	_data = candidate
+	profile_changed.emit(&"all")
 
 
 func get_profile_snapshot() -> Dictionary:
@@ -97,13 +98,21 @@ func grant_material(material_id: String, amount: int) -> bool:
 
 func grant_material_command(material_id: String, amount: int) -> Dictionary:
 	_ensure_initialized()
-	return _commit(_commands.grant_material(_data, material_id, amount), &"materials")
+	var candidate := _data.duplicate_data()
+	return _commit_candidate(
+		candidate,
+		_commands.grant_material(candidate, material_id, amount),
+		&"materials"
+	)
 
 
 func spend_material(material_id: String, amount: int) -> bool:
 	_ensure_initialized()
-	return bool(_commit(
-		_commands.spend_material(_data, material_id, amount), &"materials"
+	var candidate := _data.duplicate_data()
+	return bool(_commit_candidate(
+		candidate,
+		_commands.spend_material(candidate, material_id, amount),
+		&"materials"
 	).get("ok", false))
 
 
@@ -124,14 +133,22 @@ func has_equipment_definition(item_id: StringName) -> bool:
 
 func discover_equipment(item_id: StringName, transaction_id: StringName) -> Dictionary:
 	_ensure_initialized()
-	return _commit(
-		_commands.discover_equipment(_data, item_id, transaction_id), &"equipment"
+	var candidate := _data.duplicate_data()
+	return _commit_candidate(
+		candidate,
+		_commands.discover_equipment(candidate, item_id, transaction_id),
+		&"equipment"
 	)
 
 
 func purchase_equipment(item_id: StringName) -> Dictionary:
 	_ensure_initialized()
-	return _commit(_commands.purchase_equipment(_data, item_id), &"equipment")
+	var candidate := _data.duplicate_data()
+	return _commit_candidate(
+		candidate,
+		_commands.purchase_equipment(candidate, item_id),
+		&"equipment"
+	)
 
 
 func grant_equipment(item_id: String) -> bool:
@@ -152,8 +169,11 @@ func equip_item(
 	item_id: StringName
 ) -> Dictionary:
 	_ensure_initialized()
-	return _commit(
-		_commands.equip_item(_data, character_id, slot_id, item_id), &"loadout"
+	var candidate := _data.duplicate_data()
+	return _commit_candidate(
+		candidate,
+		_commands.equip_item(candidate, character_id, slot_id, item_id),
+		&"loadout"
 	)
 
 
@@ -165,14 +185,22 @@ func set_loadout_item(slot_id: String, item_id: String, character_id: String = "
 
 func purchase_mastery(character_id: StringName, node_id: StringName) -> Dictionary:
 	_ensure_initialized()
-	return _commit(
-		_commands.purchase_mastery(_data, character_id, node_id), &"mastery"
+	var candidate := _data.duplicate_data()
+	return _commit_candidate(
+		candidate,
+		_commands.purchase_mastery(candidate, character_id, node_id),
+		&"mastery"
 	)
 
 
 func respec_character(character_id: StringName) -> Dictionary:
 	_ensure_initialized()
-	return _commit(_commands.respec_character(_data, character_id), &"mastery")
+	var candidate := _data.duplicate_data()
+	return _commit_candidate(
+		candidate,
+		_commands.respec_character(candidate, character_id),
+		&"mastery"
+	)
 
 
 func has_mastery(character_id: String, node_id: String) -> bool:
@@ -192,8 +220,11 @@ func get_mastery_unlocks(character_id: String) -> Array[String]:
 
 func unlock_content(content_id: String) -> bool:
 	_ensure_initialized()
-	return bool(_commit(
-		_commands.unlock_content(_data, StringName(content_id)), &"unlocks"
+	var candidate := _data.duplicate_data()
+	return bool(_commit_candidate(
+		candidate,
+		_commands.unlock_content(candidate, StringName(content_id)),
+		&"unlocks"
 	).get("ok", false))
 
 
@@ -340,26 +371,52 @@ func set_setting(setting_id: String, value: Variant) -> bool:
 	var normalized_value: Variant = float(value) if setting_id.ends_with("_volume") else value
 	if _data.settings[setting_id] == normalized_value:
 		return true
-	_data.settings[setting_id] = normalized_value
-	var persisted := bool(save_profile().get("ok", false))
+	var candidate := _data.duplicate_data()
+	candidate.settings[setting_id] = normalized_value
+	if not _persist_candidate(candidate):
+		return false
+	_data = candidate
 	setting_changed.emit(StringName(setting_id), normalized_value)
 	profile_changed.emit(&"settings")
-	return persisted or _save_service == null
+	return true
 
 
-func _commit(result: ProfileCommandResult, section: StringName) -> Dictionary:
+func _commit_candidate(
+	candidate: ProfileData,
+	result: ProfileCommandResult,
+	section: StringName
+) -> Dictionary:
 	var response := result.to_dictionary()
 	if not result.ok:
 		response["snapshot"] = get_profile_snapshot()
 		response["persisted"] = true
 		return response
-	var persisted := true
 	if result.changed:
-		persisted = bool(save_profile().get("ok", false))
+		if not _persist_candidate(candidate):
+			response["ok"] = false
+			response["changed"] = false
+			response["code"] = "persistence_failed"
+			response["message"] = "Profile change could not be saved."
+			response["persisted"] = false
+			response["snapshot"] = get_profile_snapshot()
+			return response
+		_data = candidate
 		profile_changed.emit(section)
-	response["persisted"] = persisted
+	response["persisted"] = true
 	response["snapshot"] = get_profile_snapshot()
 	return response
+
+
+func _persist_candidate(candidate: ProfileData) -> bool:
+	if _save_service == null:
+		return true
+	var result := _save_service.save(candidate)
+	if bool(result.get("ok", false)):
+		return true
+	var message := String(result.get("message", "Profile save failed."))
+	persistence_failed.emit(message)
+	push_warning(message)
+	return false
 
 
 func _load_catalogs() -> bool:

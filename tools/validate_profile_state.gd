@@ -4,6 +4,7 @@ const ProfileStateScript = preload("res://scripts/autoload/ProfileState.gd")
 const EQUIPMENT_CATALOG := preload("res://data/equipment/equipment_catalog.tres")
 const MASTERY_CATALOG := preload("res://data/mastery/mastery_catalog.tres")
 const CHARACTER_CATALOG := preload("res://data/characters/character_catalog.tres")
+const ROLLBACK_PATH := "user://profile_state_rollback_validation.json"
 
 var _failures: Array[String] = []
 
@@ -18,6 +19,7 @@ func _initialize() -> void:
 	_validate_settings_and_snapshot(profile)
 	_validate_base_loadouts(profile)
 	profile.free()
+	_validate_failed_save_rolls_back_memory()
 	_finish()
 
 
@@ -99,6 +101,34 @@ func _validate_base_loadouts(profile: Node) -> void:
 		var snapshot: Dictionary = profile.get_character_loadout_snapshot(character)
 		_expect(bool(snapshot.get("ok", false)), "base loadout for '%s' should resolve" % character.id)
 		_expect(snapshot["validation_errors"].is_empty(), "base loadout for '%s' should have no build errors" % character.id)
+
+
+func _validate_failed_save_rolls_back_memory() -> void:
+	_cleanup_rollback_fixture()
+	var blocked_temp_path := ProjectSettings.globalize_path("%s.tmp" % ROLLBACK_PATH)
+	var mkdir_error := DirAccess.make_dir_recursive_absolute(blocked_temp_path)
+	_expect(mkdir_error == OK, "rollback fixture should block the staging file path")
+	var profile := ProfileStateScript.new()
+	profile.initialize_for_tests(EQUIPMENT_CATALOG, MASTERY_CATALOG, ROLLBACK_PATH)
+	var before := profile.get_profile_snapshot()
+	var result: Dictionary = profile.grant_material_command("rusted_scrap", 5)
+	_expect(not bool(result.get("ok", true)), "failed persistence should reject the command")
+	_expect(result.get("code") == "persistence_failed", "failed persistence should expose its reason")
+	_expect(
+		profile.get_profile_snapshot() == before,
+		"failed persistence must leave the live in-memory profile unchanged"
+	)
+	profile.free()
+	_cleanup_rollback_fixture()
+
+
+func _cleanup_rollback_fixture() -> void:
+	for suffix in ["", ".backup", ".tmp", ".corrupt"]:
+		var path := ProjectSettings.globalize_path("%s%s" % [ROLLBACK_PATH, suffix])
+		if DirAccess.dir_exists_absolute(path):
+			DirAccess.remove_absolute(path)
+		elif FileAccess.file_exists(path):
+			DirAccess.remove_absolute(path)
 
 
 func _finish() -> void:
