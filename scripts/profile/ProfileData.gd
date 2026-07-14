@@ -68,7 +68,7 @@ const DEFAULT_TUTORIAL_STATE: Dictionary = {
 	"skipped": false,
 }
 
-# Transitional v1 fields remain serialized only until production migration cleanup.
+# Compatibility-only v1 state remains for migration fixtures, not the Traveler flow.
 const CHARACTER_IDS: Array[String] = ["warrior", "archer", "assassin"]
 const PERSISTENT_SLOTS: Array[String] = ["weapon", "armor", "charm", "relic"]
 const ALL_SLOTS: Array[String] = ["weapon", "armor", "charm", "relic", "consumable"]

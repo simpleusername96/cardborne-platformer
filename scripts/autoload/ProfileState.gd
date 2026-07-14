@@ -413,6 +413,7 @@ func get_hero_combat_snapshot() -> Dictionary:
 	)
 
 
+# Compatibility facade for v1 migration fixtures; production uses the Traveler APIs above.
 func get_owned_equipment() -> Array[String]:
 	_ensure_initialized()
 	return _data.owned_equipment.duplicate()

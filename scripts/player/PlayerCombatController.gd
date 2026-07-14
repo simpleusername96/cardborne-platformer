@@ -204,6 +204,7 @@ func try_start_input() -> bool:
 			else false
 		)
 
+	# Historical combat fixtures use this branch; production exits through shared-hero mode above.
 	for action_name in [&"skill_3", &"skill_2", &"skill_1", &"heavy_attack", &"attack"]:
 		if not InputMap.has_action(action_name):
 			continue

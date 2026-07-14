@@ -13,7 +13,8 @@ const EQUIPMENT_POOL_IDS: Array[StringName] = [
 @export var content_version: int = 1
 @export var tags: Array[StringName] = []
 @export var entries: Array[RewardEntry] = []
-@export_group("Equipment Discovery")
+# Legacy resource fields; active reward tables leave both values empty.
+@export_group("Legacy Equipment Discovery")
 @export var equipment_pool_id: StringName
 @export_range(0.0, 1.0, 0.01) var equipment_pool_chance: float = 0.0
 
