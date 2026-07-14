@@ -3,13 +3,14 @@ extends Node
 signal phase_changed(phase_name: String)
 
 const MAIN_MENU_PATH := "res://scenes/ui/production/MainMenu.tscn"
-const CHARACTER_SELECT_PATH := "res://scenes/ui/production/CharacterSelect.tscn"
+const HERO_PREPARATION_PATH := "res://scenes/ui/production/HeroPreparation.tscn"
 const PRODUCTION_HUD_PATH := "res://scenes/ui/production/ProductionHUD.tscn"
 const RUN_RESULT_PATH := "res://scenes/ui/production/RunResult.tscn"
 const LEVEL_REWARD_PATH := "res://scenes/ui/production/LevelReward.tscn"
 const CARD_REWARD_PATH := "res://scenes/ui/production/CardReward.tscn"
 const FORGE_SCREEN_PATH := "res://scenes/ui/production/ForgeScreen.tscn"
 const TREASURE_CHOICE_PATH := "res://scenes/ui/production/TreasureChoice.tscn"
+const ARSENAL_TRIAL_PATH := "res://scenes/stages/trial/ArsenalTrial.tscn"
 const PRODUCTION_STAGE_PATH := "res://scenes/stages/production/ProductionStageHost.tscn"
 const BOSS_STAGE_PATH := "res://scenes/stages/boss/SlimeCourt.tscn"
 const REWARD_RECEIPT_PRESENTER := preload(
@@ -23,7 +24,7 @@ var screen_root: Control
 var hud_root: Control
 var current_screen: Control
 var current_hud: Control
-var _last_profile_id: StringName = &"warrior"
+var _last_profile_id: StringName = &"traveler"
 var _treasure_choice_screen: Control
 var _pending_stage_clear_receipt: Dictionary = {}
 var _stage_forge_open := false
@@ -50,11 +51,11 @@ func start() -> void:
 
 func show_main_menu() -> void:
 	if phase == RunPhase.Value.LOADOUT:
-		_set_phase(RunPhase.Value.CHARACTER_SELECT)
+		_set_phase(RunPhase.Value.PREPARATION)
 	elif phase not in [
 		RunPhase.Value.BOOT,
 		RunPhase.Value.MAIN_MENU,
-		RunPhase.Value.CHARACTER_SELECT,
+		RunPhase.Value.PREPARATION,
 		RunPhase.Value.RUN_DEATH,
 		RunPhase.Value.RUN_CLEAR,
 	]:
@@ -72,34 +73,114 @@ func show_main_menu() -> void:
 	var menu := _show_screen(MAIN_MENU_PATH)
 	if menu == null:
 		return
-	menu.connect(&"new_run_requested", show_character_select)
+	menu.connect(&"new_run_requested", show_hero_preparation)
 	menu.connect(&"settings_requested", func() -> void: Game.set_settings_open(true))
 	menu.connect(&"quit_requested", func() -> void: get_tree().quit())
 	_set_phase(RunPhase.Value.MAIN_MENU)
 
 
-func show_character_select() -> void:
+func show_hero_preparation() -> void:
 	_prepare_non_gameplay_phase()
-	var character_select := _show_screen(CHARACTER_SELECT_PATH)
-	if character_select == null:
+	var preparation := _show_screen(HERO_PREPARATION_PATH)
+	if preparation == null:
 		return
-	character_select.connect(&"back_requested", show_main_menu)
-	character_select.connect(&"run_requested", start_production_run)
-	character_select.connect(&"equipment_action_requested", _on_equipment_action_requested)
-	character_select.connect(&"mastery_purchase_requested", _on_mastery_purchase_requested)
-	character_select.connect(&"mastery_respec_requested", _on_mastery_respec_requested)
-	character_select.connect(&"persistence_retry_requested", _on_persistence_retry_requested)
-	_set_phase(RunPhase.Value.CHARACTER_SELECT)
+	preparation.connect(&"back_requested", show_main_menu)
+	preparation.connect(&"start_requested", _on_preparation_start_requested)
+	preparation.connect(&"tutorial_requested", start_arsenal_trial)
+	preparation.connect(
+		&"equipment_command_requested",
+		_on_preparation_equipment_command_requested
+	)
+	preparation.connect(
+		&"spirit_stone_equip_requested",
+		_on_preparation_spirit_stone_requested
+	)
+	preparation.connect(&"settings_requested", func() -> void: Game.set_settings_open(true))
+	_set_phase(RunPhase.Value.PREPARATION)
 
 
-func start_production_run(profile_reference: Variant) -> bool:
+func start_arsenal_trial() -> bool:
+	if phase != RunPhase.Value.PREPARATION or not _roots_are_ready():
+		return false
+	Game.close_overlays()
+	if not RunState.start_new_run(0):
+		_present_preparation_result({
+			"ok": false,
+			"message": "The Arsenal Trial could not prepare the Traveler.",
+		})
+		return false
+	if not _set_phase(RunPhase.Value.TRIAL_LOADING):
+		return false
+	_clear_screen()
+	_clear_hud()
+	current_hud = _instantiate_control(PRODUCTION_HUD_PATH)
+	if current_hud == null:
+		_set_phase(RunPhase.Value.PREPARATION)
+		show_hero_preparation()
+		return false
+	hud_root.add_child(current_hud)
+	var trial := Game.load_stage(ARSENAL_TRIAL_PATH)
+	if trial == null:
+		_clear_hud()
+		_set_phase(RunPhase.Value.PREPARATION)
+		show_hero_preparation()
+		return false
+	trial.call("configure_baseline_resolution_target", ProfileState, &"resolve_tutorial")
+	trial.connect(&"trial_resolved", _on_arsenal_trial_resolved)
+	if not _set_phase(RunPhase.Value.TRIAL_ACTIVE):
+		Game.unload_current_stage()
+		_clear_hud()
+		show_hero_preparation()
+		return false
+	return true
+
+
+func _on_arsenal_trial_resolved(_outcome: StringName) -> void:
+	if phase != RunPhase.Value.TRIAL_ACTIVE:
+		return
+	Game.unload_current_stage()
+	_clear_hud()
+	if _set_phase(RunPhase.Value.PREPARATION):
+		show_hero_preparation()
+
+
+func _on_preparation_start_requested() -> void:
+	var tutorial := ProfileState.get_tutorial_state()
+	if not bool(tutorial.get("resolved", false)):
+		var skip_result := ProfileState.resolve_tutorial(false, &"tutorial:baseline")
+		if not bool(skip_result.get("ok", false)):
+			_present_preparation_result(skip_result)
+			return
+	start_production_run(&"traveler")
+
+
+func _on_preparation_equipment_command_requested(
+	action: StringName,
+	model_id: StringName,
+	slot_id: StringName
+) -> void:
+	_present_preparation_result(_execute_equipment_action(action, model_id, slot_id))
+
+
+func _on_preparation_spirit_stone_requested(stone_id: StringName) -> void:
+	_present_preparation_result(
+		_execute_equipment_action(&"equip", stone_id, &"spirit_stone")
+	)
+
+
+func _present_preparation_result(result: Dictionary) -> void:
+	if current_screen != null and current_screen.has_method("show_command_result"):
+		current_screen.call("show_command_result", result)
+
+
+func start_production_run(profile_reference: Variant = &"traveler") -> bool:
 	if not _roots_are_ready():
 		return false
 	if phase in [RunPhase.Value.RUN_DEATH, RunPhase.Value.RUN_CLEAR]:
-		_set_phase(RunPhase.Value.CHARACTER_SELECT)
+		_set_phase(RunPhase.Value.PREPARATION)
 	if phase == RunPhase.Value.MAIN_MENU:
-		_set_phase(RunPhase.Value.CHARACTER_SELECT)
-	if phase == RunPhase.Value.CHARACTER_SELECT:
+		_set_phase(RunPhase.Value.PREPARATION)
+	if phase == RunPhase.Value.PREPARATION:
 		_set_phase(RunPhase.Value.LOADOUT)
 	if phase != RunPhase.Value.LOADOUT:
 		return false
@@ -112,7 +193,7 @@ func start_production_run(profile_reference: Variant) -> bool:
 		_report_start_error("Loadout is invalid. Check the highlighted slot.")
 		return false
 
-	_last_profile_id = StringName(RunState.selected_profile.id)
+	_last_profile_id = &"traveler"
 	return _load_production_stage()
 
 
@@ -609,6 +690,21 @@ func _on_forge_equipment_action_requested(
 	model_id: StringName,
 	slot_id: StringName
 ) -> void:
+	var result := _execute_equipment_action(action, model_id, slot_id)
+	if current_screen != null and current_screen.has_method("configure"):
+		current_screen.call(
+			"configure",
+			ProfileState.get_preparation_snapshot(),
+			result,
+			_forge_heading
+		)
+
+
+func _execute_equipment_action(
+	action: StringName,
+	model_id: StringName,
+	slot_id: StringName
+) -> Dictionary:
 	var result: Dictionary
 	match action:
 		&"craft":
@@ -625,13 +721,7 @@ func _on_forge_equipment_action_requested(
 		var sync := RunState.synchronize_hero_profile()
 		if not bool(sync.get("ok", false)):
 			result = sync
-	if current_screen != null and current_screen.has_method("configure"):
-		current_screen.call(
-			"configure",
-			ProfileState.get_preparation_snapshot(),
-			result,
-			_forge_heading
-		)
+	return result
 
 
 func _on_forge_leave_requested() -> void:
@@ -647,6 +737,8 @@ func _profile_index_for_reference(profile_reference: Variant) -> int:
 	if profile_reference is int:
 		return int(profile_reference) if int(profile_reference) >= 0 else -1
 	if profile_reference is String or profile_reference is StringName:
+		if String(profile_reference) == "traveler":
+			return 0
 		return RunState.character_catalog.get_profile_index(String(profile_reference))
 	return -1
 
@@ -655,42 +747,3 @@ func _report_start_error(message: String) -> void:
 	SignalBus.status_message_changed.emit(message)
 	if current_screen != null and current_screen.has_method("set_start_error"):
 		current_screen.call("set_start_error", message)
-
-
-func _on_equipment_action_requested(
-	character_id: StringName,
-	slot_id: StringName,
-	item_id: StringName,
-	unlock: bool
-) -> void:
-	if phase not in [RunPhase.Value.CHARACTER_SELECT, RunPhase.Value.LOADOUT]:
-		return
-	var result := (
-		ProfileState.purchase_equipment(item_id)
-		if unlock
-		else ProfileState.equip_item(character_id, slot_id, item_id)
-	)
-	_publish_profile_command_result(result)
-
-
-func _on_mastery_purchase_requested(character_id: StringName, node_id: StringName) -> void:
-	if phase not in [RunPhase.Value.CHARACTER_SELECT, RunPhase.Value.LOADOUT]:
-		return
-	_publish_profile_command_result(ProfileState.purchase_mastery(character_id, node_id))
-
-
-func _on_mastery_respec_requested(character_id: StringName) -> void:
-	if phase not in [RunPhase.Value.CHARACTER_SELECT, RunPhase.Value.LOADOUT]:
-		return
-	_publish_profile_command_result(ProfileState.respec_character(character_id))
-
-
-func _publish_profile_command_result(result: Dictionary) -> void:
-	if current_screen != null and current_screen.has_method("show_profile_command_result"):
-		current_screen.call("show_profile_command_result", result)
-
-
-func _on_persistence_retry_requested() -> void:
-	var save_result := ProfileState.save_profile()
-	save_result["persisted"] = bool(save_result.get("ok", false))
-	_publish_profile_command_result(save_result)

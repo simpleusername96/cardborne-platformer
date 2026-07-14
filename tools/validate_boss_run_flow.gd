@@ -23,7 +23,10 @@ func _run() -> void:
 		return
 	_profile_state.initialize_for_tests(
 		load("res://data/equipment/equipment_catalog.tres"),
-		load("res://data/mastery/mastery_catalog.tres")
+		load("res://data/mastery/mastery_catalog.tres"),
+		"",
+		false,
+		load("res://data/equipment/equipment_progression_catalog.tres")
 	)
 	_validate_phase_contract()
 	_validate_third_card_boundary()
@@ -152,7 +155,7 @@ func _validate_boss_clear_integration() -> void:
 	_run_director.call("register_ui_roots", screen_root, hud_root)
 	for next_phase in [
 		RunPhase.Value.MAIN_MENU,
-		RunPhase.Value.CHARACTER_SELECT,
+		RunPhase.Value.PREPARATION,
 		RunPhase.Value.LOADOUT,
 		RunPhase.Value.STAGE_LOADING,
 		RunPhase.Value.STAGE_ACTIVE,

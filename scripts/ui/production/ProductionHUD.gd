@@ -443,6 +443,9 @@ func _on_stage_started(stage_id: String, stage_display_name: String) -> void:
 		boss_panel.visible = true
 		_show_boss_intro_state()
 		call_deferred("_bind_boss")
+	elif stage_id == "arsenal_trial":
+		boss_panel.visible = false
+		objective_container.visible = false
 	else:
 		boss_panel.visible = false
 		objective_container.visible = true

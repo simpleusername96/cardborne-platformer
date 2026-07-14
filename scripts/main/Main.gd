@@ -17,7 +17,11 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		Game.set_pause_menu_open(false)
 		return
-	if RunDirector.phase not in [RunPhase.Value.STAGE_ACTIVE, RunPhase.Value.BOSS_ACTIVE]:
+	if RunDirector.phase not in [
+		RunPhase.Value.TRIAL_ACTIVE,
+		RunPhase.Value.STAGE_ACTIVE,
+		RunPhase.Value.BOSS_ACTIVE,
+	]:
 		return
 	get_viewport().set_input_as_handled()
 	Game.set_pause_menu_open(true)
