@@ -7,13 +7,12 @@ last_reviewed: 2026-07-14
 canonical_for: Cardborne product identity and first complete run scope
 source: Existing PRD, first-run scope delta, first-slice expansion, and owner feedback through 2026-07-14
 related:
-  - ../design/ARSENAL_EQUIPMENT_PROGRESSION.md
+  - ../design/COMBAT_EQUIPMENT_CRAFTING.md
   - ../design/PROCEDURAL_REGION_GENERATION.md
   - ../design/MAP_AUTHORING_PIPELINE_CONTRACT.md
   - ../design/ENEMIES_TRAPS_GIMMICKS.md
-  - ../design/PLAYER_FACING_FLOW.md
+  - ../design/PLAYER_UIUX_REFINEMENT_PLAN.md
   - ../architecture/FIRST_SLICE_ARCHITECTURE.md
-  - ../../.agent/execplans/2026-07-14-single-hero-arsenal-migration.md
 ---
 
 # Cardborne Game Blueprint
@@ -35,12 +34,13 @@ The target first complete run contains:
 - one persistent hero with a fixed reliable movement envelope;
 - three approved fixed normal stages assembled from authored room templates;
 - one authored two-phase boss fight;
-- two equipped weapon disciplines, each with Basic, Heavy, three skills, passive,
-  mastery, weapon form, and enchantment;
-- run levels, stage-clear cards, coins, temporary forging, and consumables;
-- armor, charm, relic, consumable, deterministic enhancement, four materials, and
-  six mastery nodes per weapon discipline;
-- a skippable and replayable Arsenal Trial, three local profile slots, automatic
+- three simultaneously equipped combat tools: one melee weapon, one ranged weapon,
+  and one shield, selected by attack/defense context rather than manual swapping;
+- run levels, stage-clear cards, coins, blacksmith services, and consumables;
+- armor, one accessory, one Spirit Stone, one consumable, deterministic blueprint
+  crafting, three material grades across four material families, and bounded
+  melee/ranged/Spirit techniques;
+- a skippable and replayable weapon training prologue, three local profile slots, automatic
   profile persistence, and checkpoint-level Continue;
 - enemies, traps, optional routes, checkpoints, shops, rewards, death, settlement,
   and clear flows;
@@ -49,17 +49,18 @@ The target first complete run contains:
 
 ## Product Promise
 
-> Move one persistent hero through dangerous ruins, read threats, switch between
-> two prepared weapon disciplines, and turn discoveries into a build that changes
-> how the next room is played.
+> Move one persistent hero through dangerous ruins, read distance and attack
+> intent, let melee, bow, and shield answer the situation without a weapon menu,
+> and turn discovered blueprints, better materials, and Spirit Stones into a build
+> that changes how the next room is played.
 
 The player should be able to explain a satisfying run in terms of decisions:
 
 - which route they risked;
 - which enemy opening they exploited;
 - which card changed their attack pattern;
-- what they enhanced, equipped, or forged instead of healing;
-- when switching weapons or using support gear solved the boss.
+- what they recrafted, equipped, repaired, or resupplied instead of healing;
+- when attacking, defending, or using a Spirit technique solved the boss.
 
 ## Fun Contract
 
@@ -85,12 +86,13 @@ Every milestone must protect these five pillars.
 
 ### 3. Builds change verbs
 
-- Level-up choices may provide clear numeric support, but cards, mastery, and
-  equipment must mostly alter triggers, follow-ups, positioning, area coverage,
-  defense timing, or resource cadence.
+- Level-up choices may provide clear numeric support, but cards, blueprints,
+  techniques, accessories, and Spirit Stones must mostly alter triggers,
+  follow-ups, positioning, area coverage, defense timing, or resource cadence.
 - By the middle of Stage 2, two runs with different card choices should play
   differently without comparing stat screens.
-- Reward screens never offer effects that neither equipped discipline can use.
+- Reward screens never offer effects that the equipped tools, techniques, or
+  Spirit Stone cannot use.
 
 ### 4. Fair authored variety
 
@@ -116,14 +118,15 @@ Every milestone must protect these five pillars.
 ```text
 main menu
  -> profile / Continue / New Run / Training
- -> optional Arsenal Trial or mechanically equal skip
- -> Armory: two weapons and complete equipment loadout
+ -> optional weapon training prologue or mechanically equal skip
+ -> preparation: melee weapon, ranged weapon, shield, and support equipment
+ -> stage map: first-clear/replay rewards and next destination
  -> fixed Stage 1: establish and test the build
  -> stage-clear card
- -> inter-stage Armory
+ -> blacksmith / preparation
  -> fixed Stage 2: hazards and route risk
- -> stage-clear card + Armory/rest/forge
- -> fixed Stage 3: mixed mastery check
+ -> stage-clear card + blacksmith/rest/preparation
+ -> fixed Stage 3: mixed build check
  -> stage-clear card
  -> authored Giant Slime King arena
  -> persistent settlement and run summary
@@ -147,32 +150,35 @@ safe entry
 | Stage | Player-facing job | Room target | Content emphasis |
 | --- | --- | ---: | --- |
 | Ruin Approach | Learn the route language and establish confidence. | 6 required + 1 optional | Basic traversal, Walker, Charger, simple gaps, visible rewards. |
-| Flooded Works | Force timing and spending decisions. | 7 required + 1-2 optional | Poison vents, crumbling paths, Shooter, Leaper, rest/forge. |
+| Flooded Works | Force timing and spending decisions. | 7 required + 1-2 optional | Poison vents, crumbling paths, Shooter, Leaper, rest/blacksmith. |
 | Broken Sanctum | Test the completed run build. | 8 required + 2 optional | Shield Guard, Sentry, gates, mixed encounters, reduced recovery. |
 | Slime Court | Read patterns and cash in the build. | Authored arena | Four boss patterns, two phases, bounded adds, clear punish windows. |
 
 Normal stages belong to one Lower Ruins region, so templates can share a visual
 language while stage profiles change pacing, danger budgets, and room eligibility.
 
-## Hero And Arsenal
+## Hero And Combat Equipment
 
 The game has one persistent hero. Variable jump, double jump, dash, crouch
 clearance, fast fall, one-way drop, rope use, damage recovery, and checkpoint
 respawn never depend on equipment or unlocks.
 
-| Weapon discipline | Combat promise | Primary decision |
-| --- | --- | --- |
-| Sword & Shield | Hold space, stagger threats, and convert defense into heavy punishment. | Commit now for control or wait for a safer counter. |
-| Bow | Control range, apply marks, and reposition while maintaining pressure. | Spend a mark for burst or preserve it for area control. |
-| Twin Blades | Cross through danger, chain distinct attacks, and exit before retaliation. | Continue a risky chain or disengage with cooldowns intact. |
-| Spear | Hold ideal spacing and pin movement. | Keep measured reach or trade it for crowd control. |
-| Great Axe | Make slow commitments that break armor and posture. | Spend safety for the strongest stagger payoff. |
-| Matchlock | Plan powerful shots around an explicit reload cadence. | Fire now or preserve the prepared shot for a priority target. |
+The hero always carries one melee weapon, one bow, and one shield. Attack chooses
+melee for a valid close target and ranged for a visible distant target when arrows
+are available. Defense always raises the shield. There is no combat-time weapon
+swap and no selectable combat class.
 
-The first migration reuses the three released character kits as the first three
-disciplines. Spear, Great Axe, and Matchlock are authored only after that slice
-passes combat-fun and balance gates. Exact content is owned by
-`docs/design/ARSENAL_EQUIPMENT_PROGRESSION.md`.
+| Combat tool | Blueprint target | Primary decision |
+| --- | ---: | --- |
+| Melee weapon | Traveler Sword, Hunting Spear, Smith Hammer | Coverage and speed versus piercing reach or posture damage. |
+| Ranged weapon | Hunting Bow, Longbow, Recurve Bow | Fast mobile pressure versus deliberate range or mobility. |
+| Shield | Round Shield, Buckler, Tower Shield | Balanced blocking versus precise defense or sustained stability. |
+
+Raw growth comes from rebuilding the same blueprint with better material grades.
+New blueprints change reach, timing, response type, and one authored rule rather
+than adding random affixes. One equipped Spirit Stone channels a shared element
+through melee, arrows, defense, and one Spirit technique. Exact content and
+selection rules are owned by `docs/design/COMBAT_EQUIPMENT_CRAFTING.md`.
 
 ## Progression Layers
 
@@ -182,22 +188,23 @@ Each growth layer has one purpose.
 | --- | --- | --- | --- |
 | Run Level | Run | Frequent XP thresholds | Small stabilizing choice that keeps momentum. |
 | Card | Run | After each normal stage | Build-defining behavior change. |
-| Coin | Run | Shops, rerolls, healing, temporary forge | Tactical opportunity cost. |
-| Temporary Forge | Run | One planned rest/forge beat plus rare reward | Tailor current equipment to the current build. |
-| Equipment | Persistent ownership | Armory and rare discoveries | Two weapons plus armor, charm, relic, consumable, and enchantments define preparation. |
-| Enhancement | Persistent per item | Armory | Deterministic authored weapon/armor growth without failure or random rolls. |
-| Mastery | Persistent per discipline | Armory | Unlock behavior options and equip a bounded preset. |
-| Material | Persistent shared wallet | Enemies, challenges, settlement | Fund equipment, enhancement, and mastery without affecting route access. |
+| Coin | Run | Shops, rerolls, healing, repair, and resupply | Tactical opportunity cost. |
+| Equipment | Persistent ownership | Preparation and fixed discoveries | Melee, ranged, shield, armor, accessory, Spirit Stone, and consumable define preparation. |
+| Blueprint | Persistent unlock | Fixed chests, NPC quests, milestones | Add a new readable tool tradeoff without random rarity. |
+| Material Grade | Persistent per crafted item | Blacksmith | Rebuild a known form with better materials, no failure or random rolls. |
+| Technique | Persistent unlock | Training, manuals, Spirit trials | Equip one melee, one ranged, and one Spirit behavior. |
+| Material | Persistent shared wallet | Visible drops, challenges, settlement | Fund crafting and repair without affecting route access. |
 
 The stat pipeline resolves sources in this order:
 
 ```text
 hero base
- -> equipped weapon disciplines and mastery presets
- -> armor, charm, relic, consumable, and enchantments
+ -> equipped melee, ranged, shield, and material grades
+ -> armor, accessory, Spirit Stone, and consumable
+ -> equipped melee/ranged/Spirit techniques
  -> run-level upgrades
  -> cards
- -> temporary forge/effects
+ -> consumable and other declared temporary effects
  -> clamps and derived values
 ```
 
@@ -214,10 +221,9 @@ The first complete run ships with:
   chest, material node, checkpoint, and exit;
 - 15 stage-clear cards;
 - 5 repeatable run-level micro upgrades;
-- a first migration set of 6 weapon forms, existing support equipment, 4
-  enchantments, and 18 mastery nodes;
-- a bounded complete target of 18 weapon forms, 5 armor, 6 charms, 4 relics, 4
-  consumables, and 36 mastery nodes;
+- 9 combat-equipment blueprints across melee, ranged, and shield roles;
+- 3 material grades across metal, timber, fiber, and hide, plus 4 Spirit Stones;
+- 3 armor, 4 accessories, 3 consumables, 2 melee techniques, and 2 ranged techniques;
 - 4 Giant Slime King pattern families.
 
 Content IDs, roles, constraints, and values live in the linked design specs and
@@ -238,7 +244,7 @@ focused validation.
 - Required geometry uses filled rock masses with visibly supported undersides,
   varied top heights, stable landing surfaces, and navigable space between masses.
 - Critical route transitions are derived from `MovementMetrics` for the shared
-  hero baseline; no weapon discipline, equipment effect, or mastery unlock is a
+  hero baseline; no combat equipment, Spirit Stone, accessory, or technique is a
   route requirement.
 - Enemy, trap, reward, and exit placement uses authored anchors only.
 - Encounter generation selects a pressure role, then an enemy archetype, then an
@@ -249,8 +255,12 @@ focused validation.
 
 ## Combat And Encounter Contract
 
-- Basic attacks are reliable; heavy attacks create commitment and stagger;
-  skills create identity and room-scale decisions.
+- Context attacks are reliable: close qualified threats use melee, visible distant
+  threats use a bow when arrows exist, and no valid ranged target falls back to
+  melee. Melee/ranged techniques create commitment and Spirit techniques create
+  bounded room-scale decisions.
+- Defense always uses the shield and distinguishes normal, precise, heavy, and
+  unblockable responses with visible tells.
 - Every hit records source, amount, knockback, tags, and target policy.
 - Direct damage is deterministic. There is no per-hit random damage spread and
   enemies/hazards cannot critical in the first run.
@@ -273,20 +283,21 @@ Poison Bands, and Small Slime Summon.
 - Phase 2 increases tempo and allows only reviewed legal combinations.
 - Poison never removes every safe floor segment.
 - Active adds are capped and cleaned between attempts.
-- The shared hero can win with every legal base weapon pair and no mastery unlocks.
+- The shared hero can win with the three basic combat tools and no technique upgrade.
 - Boss victory settles persistent rewards and ends the run; there is no unused
   post-boss card reward.
 
 ## Player-Facing Surfaces
 
-Required surfaces are profile-aware main menu, optional Arsenal Trial, Armory,
-mastery, gameplay HUD, level-up choice, stage card reward, inter-stage preparation,
-pause/settings, boss HUD, death summary, and clear summary.
+Required surfaces are profile-aware main menu, optional weapon training prologue,
+equipment preparation, blacksmith, stage map/replay, gameplay HUD, level-up choice,
+stage card reward, pause/settings, boss HUD, death summary, and clear summary.
 
 - Main Menu exposes Continue only for a valid checkpoint suspend; New Run resolves
   any existing suspend explicitly.
-- HUD shows health, active and reserve weapons, swap state, enchantment, skills,
-  consumable, XP, coins, and immediate objective.
+- HUD shows health, predicted melee/ranged attack, shield state, arrows, relevant
+  condition warnings, Spirit Stone, three techniques, consumable, coins, and the
+  immediate objective. Persistent material totals stay in preparation screens.
 - Debug route metrics and explanatory test labels do not exist in production UI.
 - Every visible setting changes runtime behavior.
 - Primary flows support keyboard and one standard gamepad layout.
@@ -298,7 +309,7 @@ Automated validation protects correctness; playtests protect fun.
 
 Record per run:
 
-- run ID, approved-plan version, profile, weapon pair, full loadout, duration, and
+- run ID, approved-plan version, profile, full equipment loadout, duration, and
   room order;
 - damage taken by source and whether the source was visible;
 - encounter and room duration;
@@ -325,8 +336,7 @@ as invisible numbers, or deaths as unclear.
 - Fresh boot enters production menu and never loads the retired integrated
   testbed.
 - A complete run can be played without debug input or explanatory labels.
-- The shared hero and every legal base weapon pair clear every required route and
-  the boss.
+- The shared hero with the three basic combat tools clears every required route and boss.
 - All 13 first-run enemy variants preserve their archetype response contract and
   are reproducible from the approved plan/content version.
 - Different run seeds reproduce the same approved Stage Plan and map-content
@@ -334,7 +344,11 @@ as invisible numbers, or deaths as unclear.
 - Invalid stages never reach gameplay silently.
 - Rewards apply once and state scopes do not leak across run/profile boundaries.
 - Persistent writes are versioned and preserve the last valid profile.
-- Tutorial completion and skip grant identical mechanical unlocks exactly once.
+- Weapon training completion and skip grant identical mechanical unlocks exactly once.
+- Condition and arrows can create preparation pressure but can never block stage
+  entry: equipped tools receive minimum maintenance and arrow supply.
+- Blueprint and Spirit Stone rewards have fixed recoverable sources; random drops
+  cannot permanently deny them.
 - Continue restores only validated safe-boundary state and never duplicates a
   reward transaction.
 - Every major milestone ends in a playable workflow with rendered inspection.
@@ -343,41 +357,43 @@ as invisible numbers, or deaths as unclear.
 
 The first complete run is done when a fresh player can:
 
-1. Select a profile, complete or skip the Arsenal Trial, and prepare a legal full
-   equipment loadout in the Armory.
-2. Complete three varied, valid approved fixed stages with one hero and two
-   swappable weapon disciplines.
-3. Use both complete weapon kits, support equipment, consumable, and enchantments
-   with readable feedback.
-4. Gain levels, choose three stage cards, spend coins, forge, enhance, and use
-   persistent materials.
+1. Select a profile, complete or skip weapon training, and prepare a legal full
+   equipment loadout.
+2. Complete three varied, valid approved fixed stages with one hero carrying
+   melee, ranged, and shield equipment without manual weapon swapping.
+3. Predict and use contextual attacks, shield defense, three techniques, support
+   equipment, consumables, and one Spirit Stone with readable feedback.
+4. Gain levels, choose three stage cards, spend coins, craft, rebuild, repair,
+   resupply arrows, and use persistent materials.
 5. Save and return at a legal boundary, then Continue without duplicate rewards.
 6. Defeat the two-phase boss or lose the run fairly.
 7. Reload any of three isolated profiles and start another reproducible run.
 
-The release candidate additionally passes the weapon-pair approved-plan matrix,
-economy bounds, profile and suspend round trips, boss scheduler simulation,
+The release candidate additionally passes the context-attack scenario matrix,
+equipment/Spirit approved-plan matrix, economy bounds, condition/ammunition
+soft-lock fixtures, profile and suspend round trips, boss scheduler simulation,
 keyboard/gamepad path, and 960x540/1280x720/1920x1080 rendered review.
 
 ## Non-Goals
 
 - Online accounts, cloud saves, multiplayer, trading, or monetization.
-- Multiple biomes, multiple bosses, quests, dialogue trees, or campaign story.
+- Multiple biomes, multiple bosses, long quest chains, dialogue trees, or campaign
+  story. Short fixed NPC requests for blueprints and Spirit trials are in scope.
 - Arbitrary per-tile procedural terrain or random boss arenas.
 - Runtime-random normal-stage topology during the fixed-stage gameplay refinement.
-- Multiple playable heroes, unrestricted weapon proliferation, or more than three
-  active skills per weapon discipline.
-- Grid inventory, durability, item destruction, downgrade, or mandatory grind.
+- Multiple playable heroes, combat-time weapon swapping, unrestricted weapon
+  proliferation, or more than three active techniques.
+- Grid inventory, ranged-weapon durability on top of ammunition, item destruction,
+  downgrade, random affixes, or mandatory grind.
 - Final commissioned art, final soundtrack, localization, console certification,
   or storefront work.
 
 ## Related
 
 - `docs/product/README.md`
-- `docs/design/ARSENAL_EQUIPMENT_PROGRESSION.md`
+- `docs/design/COMBAT_EQUIPMENT_CRAFTING.md`
 - `docs/design/PROCEDURAL_REGION_GENERATION.md`
 - `docs/design/MAP_AUTHORING_PIPELINE_CONTRACT.md`
 - `docs/design/ENEMIES_TRAPS_GIMMICKS.md`
-- `docs/design/PLAYER_FACING_FLOW.md`
+- `docs/design/PLAYER_UIUX_REFINEMENT_PLAN.md`
 - `docs/architecture/FIRST_SLICE_ARCHITECTURE.md`
-- `.agent/execplans/2026-07-14-single-hero-arsenal-migration.md`

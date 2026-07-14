@@ -1,9 +1,10 @@
 ---
 type: plan
-status: active
+status: superseded
 owner: BK
 created: 2026-07-14
 last_reviewed: 2026-07-14
+superseded_by: ../../docs/design/COMBAT_EQUIPMENT_CRAFTING.md
 topic: Single-hero arsenal, full equipment, onboarding, and save/continue migration
 scope: Product documents, combat identity, progression catalogs, profile schema, run suspension, production UI, tutorial, and compatibility validation
 supersedes: 2026-07-13-player-experience-refinement.md
@@ -18,6 +19,12 @@ related:
 ---
 
 # Single-Hero Arsenal Migration Plan
+
+> **Superseded 2026-07-14.** Do not execute this plan's two-weapon swap,
+> six-discipline, per-weapon enchantment, or enhancement-rank phases. The active
+> gameplay target is `docs/design/COMBAT_EQUIPMENT_CRAFTING.md`; the active UI work
+> sequence is `docs/design/PLAYER_UIUX_REFINEMENT_PLAN.md`. A replacement cross-code
+> ExecPlan must be created from those documents before implementation begins.
 
 ## Purpose
 

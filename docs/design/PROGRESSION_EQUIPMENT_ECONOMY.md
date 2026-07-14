@@ -4,7 +4,7 @@ status: superseded
 owner: BK
 created: 2026-07-12
 last_reviewed: 2026-07-14
-superseded_by: ./ARSENAL_EQUIPMENT_PROGRESSION.md
+superseded_by: ./COMBAT_EQUIPMENT_CRAFTING.md
 source: Existing economy/equipment seed catalogs, original card PRD, first-run scope decisions, and fun contract
 related:
   - ../product/2d_platform_action_card_game_prd.md

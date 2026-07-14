@@ -1,10 +1,10 @@
 ---
 type: spec
-status: active
+status: superseded
 owner: BK
 created: 2026-07-14
 last_reviewed: 2026-07-14
-canonical_for: Single-hero combat disciplines, equipment loadouts, skills, enchantments, upgrades, materials, tutorial unlocks, and save continuity
+superseded_by: ./COMBAT_EQUIPMENT_CRAFTING.md
 supersedes:
   - ./PLAYER_CHARACTER_SYSTEMS.md
   - ./PROGRESSION_EQUIPMENT_ECONOMY.md
@@ -18,6 +18,11 @@ related:
 ---
 
 # Arsenal, Equipment, And Progression
+
+> **Superseded 2026-07-14.** Do not implement the six-discipline, two-weapon
+> switching, per-weapon enchantment, or abstract enhancement-rank target in this
+> document. The active replacement is `COMBAT_EQUIPMENT_CRAFTING.md`; UI work is
+> ordered by `PLAYER_UIUX_REFINEMENT_PLAN.md`.
 
 ## Purpose
 

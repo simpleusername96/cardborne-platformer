@@ -4,8 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark">
-  <meta name="description" content="Cardborne의 단일 영웅, 무기 계통, 전신 장비, 인챈트, 강화, 튜토리얼, 저장 시스템 목표를 탐색하는 인터랙티브 설계 보고서">
-  <title>Cardborne | 아스널·장비·성장 시스템</title>
+  <meta name="description" content="대체된 Cardborne 6무기 계통 설계의 역사적 인터랙티브 보고서">
+  <meta name="robots" content="noindex">
+  <title>대체됨 | Cardborne 아스널·장비·성장 시스템</title>
   <style>
     :root {
       --bg: #12171a;
@@ -49,6 +50,17 @@
     h2 { font-size: clamp(1.45rem, 2.4vw, 2rem); }
     h3 { font-size: 1rem; }
     strong { font-weight: 720; }
+
+    .superseded-notice {
+      width: min(calc(100% - 40px), var(--content));
+      margin: 24px auto 0;
+      padding: 14px 16px;
+      border: 1px solid var(--amber);
+      background: #2a2418;
+      color: var(--text);
+    }
+    .superseded-notice strong { color: var(--focus); }
+    .superseded-notice a { color: var(--focus); }
 
     .skip-link {
       position: fixed;
@@ -578,13 +590,19 @@
       </nav>
       <p class="nav-label">Source</p>
       <div class="doc-links">
-        <a href="../ARSENAL_EQUIPMENT_PROGRESSION.md">목표 시스템 명세</a>
-        <a href="../../../.agent/execplans/2026-07-14-single-hero-arsenal-migration.md">구현 체크리스트</a>
+        <a href="../COMBAT_EQUIPMENT_CRAFTING.md">현재 게임 시스템 명세</a>
+        <a href="../PLAYER_UIUX_REFINEMENT_PLAN.md">현재 UI/UX 계획</a>
       </div>
-      <p class="sidebar-note">문서 상태: 목표 설계 확정안<br>코드 상태: 아직 3개 클래스 구조</p>
+      <p class="sidebar-note">문서 상태: 대체된 역사 자료<br>현재 방향: 근접·원거리·방패 3역할</p>
     </aside>
 
     <main id="main">
+      <div class="superseded-notice" role="note">
+        <strong>이 보고서는 대체되었습니다.</strong>
+        아래의 6개 무기 계통, 무기 A/B 교체, 인챈트·강화 설계는 현재 목표가
+        아닙니다. <a href="../COMBAT_EQUIPMENT_CRAFTING.md">현재 게임 시스템 명세</a>와
+        <a href="../PLAYER_UIUX_REFINEMENT_PLAN.md">현재 UI/UX 계획</a>을 사용하세요.
+      </div>
       <div class="content">
         <section class="hero" id="overview">
           <div>
@@ -803,7 +821,7 @@
       </div>
     </main>
 
-    <footer><div class="content"><span>Cardborne single-hero arsenal target · 2026-07-14</span><span><a href="../ARSENAL_EQUIPMENT_PROGRESSION.md">명세</a> · <a href="../../../.agent/execplans/2026-07-14-single-hero-arsenal-migration.md">체크리스트</a></span></div></footer>
+    <footer><div class="content"><span>Superseded historical direction · 2026-07-14</span><span><a href="../COMBAT_EQUIPMENT_CRAFTING.md">현재 명세</a> · <a href="../PLAYER_UIUX_REFINEMENT_PLAN.md">현재 UI/UX 계획</a></span></div></footer>
   </div>
 
   <script>

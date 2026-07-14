@@ -1,10 +1,10 @@
 ---
 type: spec
-status: active
+status: superseded
 owner: BK
 created: 2026-07-12
 last_reviewed: 2026-07-14
-canonical_for: First-run player-facing navigation, HUD, choices, rest, settings, and result behavior
+superseded_by: ./PLAYER_UIUX_REFINEMENT_PLAN.md
 source: Cardborne Game Blueprint, current production UI, arsenal/equipment spec, first-run architecture, and owner feedback through 2026-07-14
 related:
   - ../product/2d_platform_action_card_game_prd.md
@@ -14,6 +14,10 @@ related:
 ---
 
 # Player-Facing Flow
+
+> **Superseded 2026-07-14.** This document describes the former class and
+> weapon A/B interface. Use `PLAYER_UIUX_REFINEMENT_PLAN.md` for the active
+> player-facing direction and `COMBAT_EQUIPMENT_CRAFTING.md` for gameplay rules.
 
 ## Purpose
 

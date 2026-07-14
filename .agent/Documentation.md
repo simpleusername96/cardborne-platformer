@@ -3,9 +3,10 @@
 ## Current Status
 
 - The released code is still the three-profile Warrior/Archer/Assassin v1 runtime.
-  The active product target changed on 2026-07-14 to one persistent hero whose two
-  weapons and complete equipment loadout define combat. No code migration should be
-  reported complete until the active arsenal ExecPlan batch gates pass.
+  The active product target changed on 2026-07-14 to one persistent hero carrying
+  melee, ranged, and shield equipment simultaneously. Attack selects melee/ranged
+  from context and defense always uses the shield. No code migration is complete;
+  the former two-weapon arsenal ExecPlan is superseded.
 
 - Cardborne boots into a production menu, character/loadout/mastery selection,
   three versioned approved fixed normal stages, stage rewards, cards, and the Rest
@@ -44,17 +45,19 @@
   synthesized gameplay cues. Pause, settings return, and abandon confirmation are
   complete production states.
 - `docs/product/2d_platform_action_card_game_prd.md` is the canonical product and
-  first-complete-run blueprint. `docs/design/ARSENAL_EQUIPMENT_PROGRESSION.md` is
-  the canonical target for the one-hero arsenal, full equipment, onboarding, and
-  save continuity.
-- The old character and progression/equipment specs are superseded v1 migration
-  evidence. Active content specs continue to own terrain, rooms, generation,
-  enemies, hazards, boss, and player-facing flow.
+  first-complete-run blueprint. `docs/design/COMBAT_EQUIPMENT_CRAFTING.md` is the
+  canonical target for contextual combat equipment, blueprints, material grades,
+  condition, arrows, Spirit Stones, techniques, supporting equipment, onboarding,
+  replay, and persistence.
+- The old character, progression/equipment, six-discipline arsenal, and former
+  player-facing specs are superseded evidence. Active content specs continue to
+  own terrain, rooms, generation, enemies, hazards, and boss. The active UI work
+  sequence is `docs/design/PLAYER_UIUX_REFINEMENT_PLAN.md`.
 - `docs/architecture/FIRST_SLICE_ARCHITECTURE.md` defines runtime ownership and
   implementation boundaries.
-- `.agent/execplans/2026-07-14-single-hero-arsenal-migration.md` is the active plan.
-  The 2026-07-13 refinement plan is superseded; its unfinished traversal and UI
-  gates are carried forward.
+- `.agent/execplans/2026-07-14-single-hero-arsenal-migration.md` is superseded and
+  must not be executed. No cross-code gameplay ExecPlan is active; create its
+  replacement from the current gameplay spec and UI/UX plan before coding.
 - `.agent/execplans/2026-07-12-actual-game-production-roadmap.md` remains the completed
   first-run implementation record.
 - Provisional design JSON was retired after all runtime owners moved to typed Godot
@@ -78,9 +81,17 @@ Read in this order:
 - Build a 28-38 minute first run: three approved fixed normal stages and one
   authored two-phase boss. Keep procedural selection dormant until the complete
   gameplay loop and fixed-stage baselines are accepted.
-- Use one persistent hero with a shared baseline movement envelope. Reclassify the
-  existing Warrior, Archer, and Assassin kits as Sword & Shield, Bow, and Twin
-  Blades before authoring Spear, Great Axe, or Matchlock.
+- Use one persistent hero with a shared baseline movement envelope. Extract useful
+  melee, ranged, defense, and mobility behavior from the existing Warrior, Archer,
+  and Assassin kits, but do not preserve selectable classes or full-kit switching.
+- Equip one melee weapon, one bow, and one shield simultaneously. Attack selects
+  melee/ranged deterministically from target distance, facing, line of sight, and
+  arrows; defense always raises the shield.
+- Bound the first complete target to nine blueprints across those three roles.
+  Material grades provide direct growth; blueprints change reach, timing, response,
+  and one authored rule.
+- Use one Spirit Stone across melee, arrows, shield, and one Spirit technique.
+  Do not implement per-weapon enchantment sockets or elemental ammunition stacks.
 - Assemble versioned Stage Plans from authored native Godot room scenes and typed
   metadata; do not scatter arbitrary platforms or content coordinates.
 - Use `MovementMetrics` and full-stage validation before stage load.
@@ -90,14 +101,18 @@ Read in this order:
   conditions; enemies, hazards, and secondary hits do not critical by default.
 - Keep rewards and persistent writes transaction-safe and idempotent.
 - Use run levels for small support choices, cards for run-local behavior changes,
-  coins for tactical spending, two weapons plus support equipment for preparation,
-  deterministic enhancement for item investment, and mastery for persistent
-  discipline variants.
+  coins for tactical spending, three combat tools plus support equipment for
+  preparation, material-grade recrafting for direct growth, and bounded techniques
+  for persistent behavior options.
+- Apply condition only to melee weapons and shields in the first target; bows use
+  arrows instead. Condition 0 and arrows 0 must recover to a playable minimum and
+  cannot force stage replay.
 - Persistent profile v1 autosave/backup exists. Player-facing profile slots,
   checkpoint run suspension, Save & Return, and Continue do not exist yet and are
-  owned by the active migration plan.
-- Temporary forging offers a deterministic choice; it has no failure, downgrade,
-  or destruction result.
+  owned by the next replacement migration plan.
+- Temporary forging exists in v1 but is not a target arbitrary-affix layer. The
+  migration replaces its player-facing role with deterministic crafting, repair,
+  arrow resupply, and declared card/consumable effects.
 - Do not adopt an external package/asset without explicit approval, version/license
   record, isolated spike, wrapper/removal boundary, and acceptance evidence.
 - Every implementation batch after the first combat contract must extend a visible
@@ -111,12 +126,14 @@ Read in this order:
   onboarding feedback should drive the next tuning plan.
 - Full production-style v1 runs remain migration baselines. Fresh-player UI
   recognition, pickup audio, reduced-motion polish, and broad clearance fixtures
-  are carried into the active arsenal plan's release gates.
+  are carried into `docs/design/PLAYER_UIUX_REFINEMENT_PLAN.md` and the next
+  cross-code migration plan's release gates.
 - Current return replay begins from stable post-drop recovery. Full
   branch-entry-to-return collision sweeps and invalid ceiling/wall/hazard fixtures
   remain required before authored traversal coverage is complete.
-- Broadening room, enemy, card, or boss content will expand the approved-plan and
-  weapon-pair matrices and must preserve the shared hero traversal contract.
+- Broadening room, enemy, card, or boss content will expand the approved-plan,
+  context-attack, and equipment/Spirit matrices and must preserve the shared hero
+  traversal contract.
 
 ## Run / Verify
 
@@ -151,8 +168,10 @@ Read in this order:
 
 ## Next Implementation Entry
 
-Start Phase A of
-`.agent/execplans/2026-07-14-single-hero-arsenal-migration.md`: freeze representative
-v1 profile fixtures, introduce target resources/adapters without switching
-production, and keep all current release checks green. Preserve fixed layout V3,
-the retired testbed, and the dormant random production path throughout migration.
+Do not resume the superseded arsenal plan. First create a replacement ExecPlan
+from `docs/design/COMBAT_EQUIPMENT_CRAFTING.md` and
+`docs/design/PLAYER_UIUX_REFINEMENT_PLAN.md`. Its first executable batch should
+freeze representative v1 melee/ranged/defense fixtures, define context-attack and
+equipment snapshot contracts, and keep all current release checks green before
+changing production selection. Preserve fixed layout V3, the retired testbed, and
+the dormant random production path throughout migration.

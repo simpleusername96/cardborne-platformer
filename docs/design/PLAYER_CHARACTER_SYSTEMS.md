@@ -3,7 +3,7 @@ type: spec
 status: superseded
 owner: BK
 last_reviewed: 2026-07-14
-superseded_by: ./ARSENAL_EQUIPMENT_PROGRESSION.md
+superseded_by: ./COMBAT_EQUIPMENT_CRAFTING.md
 source: Existing character profiles, player controller, player build contracts, and Cardborne Game Blueprint
 related:
   - ../product/2d_platform_action_card_game_prd.md
