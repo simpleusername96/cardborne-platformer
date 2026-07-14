@@ -19,6 +19,9 @@ func _run() -> void:
 	var hud := packed.instantiate() as Control
 	root.add_child(hud)
 	await process_frame
+	var dock_before := (hud.call("get_layout_snapshot") as Dictionary).get(
+		"combat_dock_rect", Rect2()
+	) as Rect2
 	hud.call("_on_stage_started", "slime_court", "Slime Court")
 	hud.call("_on_boss_snapshot", _boss_snapshot(&"jump_slam", &"startup"))
 	await process_frame
@@ -28,30 +31,37 @@ func _run() -> void:
 	var status_label := hud.find_child("BossStatus", true, false) as Label
 	var health_bar := hud.find_child("BossHealth", true, false) as ProgressBar
 	var stagger_bar := hud.find_child("BossStagger", true, false) as ProgressBar
-	var combat_panel := hud.find_child("CombatPanel", true, false) as Control
 	_expect(panel != null and panel.visible, "Slime Court should reveal boss HUD")
-	_expect(name_label != null and name_label.text.contains("64 / 80"), "boss HUD should show exact health")
-	_expect(name_label != null and name_label.text.contains("PHASE II"), "boss HUD should show phase")
+	_expect(name_label != null and name_label.text == "SLIME KING  64/80  P2", "compact boss header should retain health and phase")
 	_expect(status_label != null and status_label.text == "SHADOW - MOVE", "Jump Slam startup should name its response")
 	_expect(health_bar != null and is_equal_approx(health_bar.value, 64.0), "health bar should consume boss snapshot")
 	_expect(stagger_bar != null and is_equal_approx(stagger_bar.value, 35.0), "stagger bar should consume boss snapshot")
+	var layout := hud.call("get_layout_snapshot") as Dictionary
 	_expect(
-		combat_panel != null
-		and is_equal_approx(combat_panel.anchor_top, 0.0)
-		and combat_panel.offset_right - combat_panel.offset_left <= 220.0,
-		"boss mode should keep player actions in a narrow non-occluding column"
+		(layout.get("combat_dock_rect", Rect2()) as Rect2).is_equal_approx(dock_before),
+		"boss mode should not move the combat dock"
+	)
+	_expect(
+		Rect2(Vector2.ZERO, Vector2(root.size)).encloses(layout.get("boss_rect", Rect2())),
+		"boss panel should remain inside the compact viewport"
 	)
 
 	hud.call("_on_boss_snapshot", _boss_snapshot(&"poison_bands", &"active"))
-	_expect(status_label.text == "HOLD SAFE FLOOR", "active Poison should retain its learned response")
+	if status_label != null:
+		_expect(status_label.text == "HOLD SAFE FLOOR", "active Poison should retain its learned response")
 	var staggered := _boss_snapshot(&"", &"idle")
 	staggered["actor_state"] = &"staggered"
 	hud.call("_on_boss_snapshot", staggered)
-	_expect(status_label.text == "STAGGERED - ATTACK", "stagger should expose the punish window")
+	if status_label != null:
+		_expect(status_label.text == "STAGGERED - ATTACK", "stagger should expose the punish window")
 
 	hud.call("_on_stage_started", "ruin_approach", "Ruin Approach")
-	_expect(not panel.visible, "normal stages should hide boss HUD")
-	_expect(is_equal_approx(combat_panel.anchor_top, 0.0), "normal stages should restore top action layout")
+	_expect(panel != null and not panel.visible, "normal stages should hide boss HUD")
+	layout = hud.call("get_layout_snapshot") as Dictionary
+	_expect(
+		(layout.get("combat_dock_rect", Rect2()) as Rect2).is_equal_approx(dock_before),
+		"normal stages should preserve the combat dock"
+	)
 	hud.queue_free()
 	await process_frame
 	_finish()

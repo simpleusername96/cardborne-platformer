@@ -59,12 +59,6 @@ func _run() -> void:
 	view = presenter.build_view_model(discovery)
 	_expect(view["title"] == "EQUIPMENT FOUND", "new equipment should lead the receipt")
 	_expect(String(view["summary"]).contains("Bell Hammer unlocked"), "equipment receipt should use display name")
-	var replacement := discovery.duplicate(true)
-	replacement["reward_role"] = &"optional_route"
-	replacement["replacement_kind"] = &"equipment"
-	view = presenter.build_view_model(replacement)
-	_expect(view["title"] == "EQUIPMENT FOUND", "Treasure equipment replacement should identify its result")
-
 	var duplicate := discovery.duplicate(true)
 	duplicate["equipment_discoveries"][0]["duplicate"] = true
 	duplicate["equipment_discoveries"][0]["payload"]["salvage"] = {"rusted_scrap": 4}
@@ -75,18 +69,6 @@ func _run() -> void:
 		and String(view["summary"]).contains("+4 Iron Scrap"),
 		"duplicate receipt should identify item and salvage"
 	)
-
-	var forge := {
-		"applied": true,
-		"reward_role": &"optional_route",
-		"replacement_kind": &"forge",
-		"replacement_payload": {"item_id": &"bell_hammer", "affix_id": &"forge_force"},
-		"grants": {},
-		"equipment_discoveries": [],
-	}
-	view = presenter.build_view_model(forge)
-	_expect(view["title"] == "FORGE APPLIED", "forge replacement should use forge title")
-	_expect(String(view["summary"]).contains("Bell Hammer: Force"), "forge receipt should name item and affix")
 
 	var blueprint := {
 		"applied": true,
@@ -148,7 +130,7 @@ func _expect(condition: bool, message: String) -> void:
 
 func _finish() -> void:
 	if _failures.is_empty():
-		print("REWARD_RECEIPT_VALIDATION_OK scenarios=7 viewport=960x540 queue=1")
+		print("REWARD_RECEIPT_VALIDATION_OK scenarios=6 viewport=960x540 queue=1")
 		quit(0)
 		return
 	for failure in _failures:

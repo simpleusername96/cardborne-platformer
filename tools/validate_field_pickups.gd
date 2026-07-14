@@ -4,22 +4,6 @@ const CATALOG := preload("res://data/items/field_pickup_catalog.tres")
 const FIELD_PICKUP_SCENE := preload("res://scenes/stages/components/FieldPickup.tscn")
 const PLAYER_SCENE_PATH := "res://scenes/player/Player.tscn"
 
-class CooldownTarget:
-	extends Node
-
-	var recovered_seconds: float = 0.0
-
-
-	func apply_skill_cooldown_recovery(seconds: float) -> Dictionary:
-		recovered_seconds += seconds
-		return {
-			"skill_ids": [&"fixture_short", &"fixture_long"],
-			"skill_count": 2,
-			"max_seconds": 0.4,
-			"total_seconds": 0.65,
-		}
-
-
 var _failures: Array[String] = []
 var _run_state: Node
 
@@ -46,7 +30,6 @@ func _run() -> void:
 	)
 	_validate_healing_and_retry()
 	_validate_consumable_refill()
-	_validate_cooldown_recovery()
 	_validate_currency_and_replay()
 	_validate_material_and_ranged_supply(profile_state)
 	await _validate_actor_lifecycle()
@@ -75,19 +58,6 @@ func _validate_consumable_refill() -> void:
 	_expect(_run_state.consumable_charges == 1, "supply pickup should respect one-charge cap")
 	var capped: Dictionary = _run_state.apply_field_pickup(&"fixture_supply_full", supply)
 	_expect(not bool(capped.get("applied", false)), "full consumable should not consume another supply pickup")
-
-
-func _validate_cooldown_recovery() -> void:
-	var target := CooldownTarget.new()
-	root.add_child(target)
-	var focus := CATALOG.get_definition(&"focus_shard")
-	var result: Dictionary = _run_state.apply_field_pickup(&"fixture_focus", focus, target)
-	_expect(bool(result.get("applied", false)), "focus pickup should recover active skill cooldowns")
-	_expect(is_equal_approx(target.recovered_seconds, 1.25), "focus pickup should use catalog value")
-	_expect(is_equal_approx(float(result.get("amount", 0.0)), 0.4), "focus receipt should use the largest applied recovery")
-	_expect(int(result.get("affected_skill_count", 0)) == 2, "focus receipt should count affected skills")
-	_expect(is_equal_approx(float(result.get("total_recovered_seconds", 0.0)), 0.65), "focus receipt should retain total recovery")
-	target.queue_free()
 
 
 func _validate_currency_and_replay() -> void:

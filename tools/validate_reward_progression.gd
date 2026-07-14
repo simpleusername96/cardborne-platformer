@@ -27,7 +27,7 @@ func _run() -> void:
 
 
 func _validate_reward_replay() -> void:
-	_expect(_run_state.start_new_run(0, 44021), "fixed-seed Warrior run should start")
+	_expect(_run_state.start_new_run(0, 44021), "fixed-seed Traveler run should start")
 	var table: RewardTable = _run_state.reward_catalog.get_table(&"drop_walker")
 	var first := RewardService.resolve(table, &"44021:0:patrol:walker_a:0", 44021)
 	var repeat := RewardService.resolve(table, &"44021:0:patrol:walker_a:0", 44021)
@@ -78,8 +78,8 @@ func _validate_level_choice() -> void:
 	)
 	var snapshot: Dictionary = _run_state.get_run_snapshot().to_dictionary()
 	_expect(
-		String(snapshot.get("profile_display_name", "")) == "Warrior",
-		"run snapshots should expose the catalog-owned profile display name"
+		String(snapshot.get("profile_display_name", "")) == "Traveler",
+		"run snapshots should expose the hero display name"
 	)
 	snapshot["coins"] = 99999
 	_expect(_run_state.coins != 99999, "run snapshots should be copy-safe")
@@ -99,7 +99,7 @@ func _validate_health_preview() -> void:
 		"Vitality preview should include its immediate heal"
 	)
 	_expect(
-		int(vitality.get("max_health_after", -1)) == 7,
+		int(vitality.get("max_health_after", -1)) == 6,
 		"Vitality preview should include its maximum-health increase"
 	)
 	var recovery: Dictionary = _run_state.preview_micro_upgrade(&"micro_recovery")

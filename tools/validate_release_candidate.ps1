@@ -12,47 +12,90 @@ $repoRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot "..")).Path
 $godot = Join-Path $PSScriptRoot "godot.ps1"
 $releaseMatrix = @(
   "validate_design_catalogs.gd",
+  "validate_hero_definition.gd",
+  "validate_hero_attack_definitions.gd",
+  "validate_context_combat_contract.gd",
+  "validate_hero_combat_loadout.gd",
+  "validate_shared_hero_combat_runtime.gd",
+  "validate_shared_combat_persistence.gd",
+  "validate_shield_combat_runtime.gd",
+  "validate_spirit_stone_combat_runtime.gd",
+  "validate_player_movement_runtime.gd",
+  "validate_equipment_progression_catalog.gd",
+  "validate_equipment_runtime_resolver.gd",
+  "validate_equipment_progression_service.gd",
+  "validate_profile_v2.gd",
+  "validate_profile_progression_commands.gd",
+  "validate_arsenal_trial.gd",
+  "validate_hero_preparation_ui.gd",
+  "validate_forge_screen.gd",
+  "validate_forge_station_flow.gd",
   "validate_room_templates.gd",
   "validate_flooded_works_rooms.gd",
   "validate_broken_sanctum_rooms.gd",
   "validate_curated_stage_plans.gd",
+  "validate_stage1_progression_rewards.gd",
   "validate_field_pickups.gd",
   "validate_fixed_field_pickup_manifest.gd",
   "validate_fixed_drop_runtime.gd",
-  "validate_complete_run_balance.gd",
-  "validate_combat_spacing.gd",
-  "validate_build_previews.gd",
-  "validate_player_stat_presentation.gd",
+  "validate_enemy_catalog.gd",
+  "validate_hazard_catalog.gd",
+  "validate_flooded_enemy_runtime.gd",
+  "validate_flooded_hazard_runtime.gd",
+  "validate_sanctum_enemy_catalog.gd",
+  "validate_sanctum_enemy_sentry.gd",
+  "validate_sanctum_enemy_shield.gd",
+  "validate_sanctum_enemy_summon.gd",
+  "validate_moving_platform_runtime.gd",
+  "validate_terrain_presentation.gd",
+  "validate_feedback_cues.gd",
+  "validate_feedback_director.gd",
+  "validate_gameplay_feedback_emitters.gd",
   "validate_gameplay_hud.gd",
   "validate_shell_ui.gd",
-  "validate_equipment_decision_ui.gd",
-  "validate_reward_choice_ui.gd",
   "validate_card_reward.gd",
+  "validate_remaining_cards_catalog.gd",
   "validate_reward_receipt.gd",
   "validate_remaining_cards_runtime.gd",
-  "validate_roster_stage_matrix.gd",
-  "validate_profile_persistence.gd",
-  "validate_profile_run_integration.gd",
+  "validate_remaining_cards_stage_facts.gd",
+  "validate_reward_progression.gd",
+  "validate_reward_source_runtime.gd",
+  "validate_reward_unlock_types.gd",
   "validate_gamepad_input.gd",
   "validate_input_remap.gd",
   "validate_pause_flow.gd",
   "validate_production_boot.gd",
   "validate_production_stage.gd",
   "validate_slime_court_runtime.gd",
+  "validate_boss_hud.gd",
+  "validate_boss_pattern_contract.gd",
+  "validate_boss_scheduler.gd",
   "validate_slime_king_patterns_runtime.gd",
-  "validate_boss_roster_matrix.gd",
   "validate_boss_run_flow.gd",
   "validate_run_settlement.gd",
   "validate_run_result_ui.gd"
 )
 
+$extendedMatrix = @(
+  "validate_profile_persistence.gd",
+  "validate_stage_generation_core.gd",
+  "validate_stage_generation_properties.gd",
+  "validate_stage_generation_service.gd",
+  "validate_multi_branch_stage_planner.gd",
+  "validate_stage_content_allocator.gd",
+  "validate_stage_encounter_allocator.gd",
+  "validate_encounter_composition_rules.gd",
+  "validate_broken_sanctum_generation.gd",
+  "validate_broken_sanctum_runtime.gd",
+  "validate_flooded_generation.gd",
+  "validate_flooded_stage_runtime.gd",
+  "validate_shooter_runtime.gd"
+)
+
 if ($Full) {
-  $scripts = @(
-    Get-ChildItem -LiteralPath $PSScriptRoot -Filter "validate_*.gd" -File |
-      Sort-Object Name |
-      ForEach-Object Name |
-      Where-Object { $_ -ne "validate_release_candidate.gd" }
-  )
+  # Keep this list explicit: historical class fixtures remain in the repository
+  # for migration evidence but are not authorities for the Traveler build.
+  $scripts = @($releaseMatrix + $extendedMatrix | Select-Object -Unique)
 } else {
   $scripts = $releaseMatrix
 }

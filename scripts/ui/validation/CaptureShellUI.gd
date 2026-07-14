@@ -60,7 +60,10 @@ func _capture_viewport(prefix: String, viewport_size: Vector2i) -> void:
 	profile_state.call(
 		"initialize_for_tests",
 		load("res://data/equipment/equipment_catalog.tres"),
-		load("res://data/mastery/mastery_catalog.tres")
+		load("res://data/mastery/mastery_catalog.tres"),
+		"",
+		false,
+		load("res://data/equipment/equipment_progression_catalog.tres")
 	)
 
 	await _save_current("%s_main_menu" % prefix)
@@ -73,9 +76,9 @@ func _capture_viewport(prefix: String, viewport_size: Vector2i) -> void:
 		_failed = true
 		await _cleanup(main, game)
 		return
-	result.call("configure", true, "Archer", _result_settlement(true))
+	result.call("configure", true, "Traveler", _result_settlement(true))
 	await _save_current("%s_victory" % prefix)
-	result.call("configure", false, "Archer", _result_settlement(false))
+	result.call("configure", false, "Traveler", _result_settlement(false))
 	await _save_current("%s_defeat" % prefix)
 
 	run_director.call("show_main_menu")
@@ -183,21 +186,13 @@ func _result_settlement(victory: bool) -> Dictionary:
 		"stage_reached": 3 if victory else 2,
 		"boss_reached": victory,
 		"duration_seconds": 845.0 if victory else 392.0,
-		"profile": {
-			"loadout": {
-				"weapon": "field_bow",
-				"armor": "traveler_jacket",
-				"charm": "copper_charm",
-			}
-		},
+		"profile": {"hero_loadout": ProfileData.DEFAULT_HERO_LOADOUT.duplicate(true)},
 		"run_build": {
 			"level": 6 if victory else 3,
 			"cards": {
 				"dash_wake": 2,
-				"archer_split_shaft": 1,
-				"steady_hands": 1,
+				"perfect_punish": 1,
 			},
-			"temporary_affixes": {},
 		},
 		"persistent_material_delta": {
 			"sky_thread": 4,

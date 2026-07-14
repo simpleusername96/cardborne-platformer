@@ -104,11 +104,10 @@ func _validate_enemy_rewards() -> void:
 			% [variant.id, variant.drop_source_id]
 		)
 	for table in REWARD_CATALOG.tables:
-		if table.equipment_pool_id != &"":
-			_expect(
-				RewardTable.EQUIPMENT_POOL_IDS.has(table.equipment_pool_id),
-				"reward table %s has unsupported equipment pool" % table.id
-			)
+		_expect(
+			table.equipment_pool_id == &"" and is_zero_approx(table.equipment_pool_chance),
+			"reward table %s should not use a legacy equipment discovery pool" % table.id
+		)
 
 
 func _validate_stage_references() -> void:

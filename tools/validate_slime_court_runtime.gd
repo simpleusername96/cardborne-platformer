@@ -22,7 +22,10 @@ func _run() -> void:
 		return
 	profile_state.initialize_for_tests(
 		load("res://data/equipment/equipment_catalog.tres"),
-		load("res://data/mastery/mastery_catalog.tres")
+		load("res://data/mastery/mastery_catalog.tres"),
+		"",
+		false,
+		load("res://data/equipment/equipment_progression_catalog.tres")
 	)
 
 	var stage: Variant = await _spawn_stage(88031)

@@ -58,7 +58,7 @@ const FIXTURES: Array[Dictionary] = [
 var _failures: Array[String] = []
 var _game: Node
 var _run_state: Node
-var _validated_profiles: Dictionary = {}
+var _validated_heroes: Dictionary = {}
 var _validated_fixture_ids: Dictionary = {}
 
 
@@ -87,13 +87,15 @@ func _run() -> void:
 			requested_profile = int(argument.trim_prefix("--profile="))
 		elif argument.begins_with("--fixture="):
 			requested_fixture = argument.trim_prefix("--fixture=")
-	for profile_index in 3:
-		if requested_profile >= 0 and profile_index != requested_profile:
-			continue
+	if requested_profile > 0:
+		_expect(false, "Fixed drop runtime only supports the Traveler profile index 0.")
+		_finish()
+		return
+	for profile_index in [0]:
 		for fixture in FIXTURES:
 			if not requested_fixture.is_empty() and String(fixture["id"]) != requested_fixture:
 				continue
-			_validated_profiles[profile_index] = true
+			_validated_heroes[profile_index] = true
 			_validated_fixture_ids[String(fixture["id"])] = true
 			await _validate_fixture(profile_index, fixture, packed_player)
 	_finish()
@@ -426,8 +428,8 @@ func _finish() -> void:
 	_release_inputs()
 	if _failures.is_empty():
 		print(
-			"FIXED_DROP_RUNTIME_VALIDATION_OK profiles=%d fixtures=%d"
-			% [_validated_profiles.size(), _validated_fixture_ids.size()]
+			"FIXED_DROP_RUNTIME_VALIDATION_OK heroes=%d fixtures=%d"
+			% [_validated_heroes.size(), _validated_fixture_ids.size()]
 		)
 		quit(0)
 		return

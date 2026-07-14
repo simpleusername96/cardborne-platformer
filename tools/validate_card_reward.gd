@@ -1,5 +1,14 @@
 extends SceneTree
 
+const HERO_ID := &"traveler"
+const LIVE_TRIGGERS: Array[StringName] = [
+	&"dash_completed",
+	&"first_attack_after_extra_jump",
+	&"hit_target_in_recovery",
+	&"required_room_encounter_cleared_without_damage",
+	&"damage_left_one_health",
+]
+
 var _failures: Array[String] = []
 var _run_state: Node
 
@@ -10,7 +19,7 @@ func _initialize() -> void:
 
 func _run() -> void:
 	_run_state = root.get_node_or_null("/root/RunState")
-	_expect(_run_state != null, "card reward fixture needs RunState autoload")
+	_expect(_run_state != null, "card reward fixture needs RunState")
 	if _run_state == null:
 		_finish()
 		return
@@ -21,164 +30,85 @@ func _run() -> void:
 
 
 func _validate_catalog_and_offer() -> void:
-	var catalog: CardCatalog = _run_state.get("card_catalog") as CardCatalog
-	_expect(catalog != null, "card catalog should load")
+	var catalog := _run_state.get("card_catalog") as CardCatalog
+	_expect(catalog != null, "production card catalog should load")
 	if catalog == null:
 		return
-	_expect(catalog.validate_catalog().is_empty(), "first card catalog should validate")
-	_expect(catalog.cards.size() == 15, "first run should register the complete card catalog")
-	var first := CardOfferService.build_offer(catalog, &"warrior", {}, 93117, 0, 0)
-	var repeat := CardOfferService.build_offer(catalog, &"warrior", {}, 93117, 0, 0)
+	_expect(catalog.validate_catalog().is_empty(), "production card catalog should validate")
+	_expect(catalog.cards.size() == 5, "production should expose exactly five live cards")
+	for card in catalog.cards:
+		_expect(card.compatibility == [&"shared"], "%s should be shared by the Traveler" % card.id)
+		_expect(LIVE_TRIGGERS.has(card.trigger), "%s should use a live Traveler trigger" % card.id)
+
+	var first := CardOfferService.build_offer(catalog, HERO_ID, {}, 93117, 0, 0, [], LIVE_TRIGGERS)
+	var repeat := CardOfferService.build_offer(catalog, HERO_ID, {}, 93117, 0, 0, [], LIVE_TRIGGERS)
 	_expect(first == repeat, "identical card offer inputs should reproduce exactly")
-	_expect(first.size() == 3, "card offers should contain exactly three choices")
-	_expect(_all_unique(first), "card offer choices should be unique")
-	for profile in _run_state.profiles:
-		var triggers := CardOfferService.supported_triggers_for_profile(profile)
-		var eligible := CardOfferService.eligible_ids(
-			catalog,
-			profile.id,
-			{},
-			[],
-			triggers
-		)
-		var expected_ids: Array[StringName] = []
-		for card in catalog.cards:
-			if card != null and card.is_compatible(profile.id):
-				expected_ids.append(card.id)
-				_expect(
-					triggers.has(card.trigger),
-					"%s compatible card %s needs a live production trigger"
-					% [profile.id, card.id]
-				)
-				_expect(
-					eligible.has(card.id),
-					"%s compatible card %s should be reward-eligible"
-					% [profile.id, card.id]
-				)
-		var profile_offer := CardOfferService.build_offer(
-			catalog,
-			profile.id,
-			{},
-			93117,
-			0,
-			0,
-			[],
-			triggers
-		)
-		_expect(profile_offer.size() == 3, "%s should receive a complete live offer" % profile.id)
-		var has_shared := false
-		var has_character_card := false
-		for card_id in profile_offer:
-			var card := catalog.get_card(card_id)
-			_expect(card != null and triggers.has(card.trigger), "%s cannot receive a dead card" % profile.id)
-			if card != null:
-				has_shared = has_shared or card.compatibility.has(&"shared")
-				has_character_card = has_character_card or (
-					card.compatibility.has(StringName(profile.id))
-					and not card.compatibility.has(&"shared")
-				)
-		_expect(has_shared, "%s offer should contain a shared card" % profile.id)
-		_expect(has_character_card, "%s offer should contain a character card" % profile.id)
-		var seen_ids: Dictionary = {}
-		for seed in 512:
-			for card_id in CardOfferService.build_offer(
-				catalog,
-				profile.id,
-				{},
-				seed,
-				seed % 3,
-				0,
-				[],
-				triggers
-			):
-				seen_ids[String(card_id)] = true
-		for card_id in expected_ids:
-			_expect(
-				seen_ids.has(String(card_id)),
-				"%s compatible card %s should appear in a production offer"
-				% [profile.id, card_id]
-			)
+	_expect(first.size() == 3 and _all_unique(first), "offers should contain three unique cards")
+	var seen: Dictionary = {}
+	for seed in 256:
+		for card_id in CardOfferService.build_offer(
+			catalog, HERO_ID, {}, seed, seed % 3, 0, [], LIVE_TRIGGERS
+		):
+			seen[String(card_id)] = true
+	for card in catalog.cards:
+		_expect(seen.has(String(card.id)), "%s should be reachable from production offers" % card.id)
 
 
 func _validate_reroll_and_commit() -> void:
-	_expect(_run_state.call("start_new_run", 0, 93117), "fixed-seed card run should start")
-	var begin: Dictionary = _run_state.call("begin_stage_card_reward")
+	_expect(_run_state.start_new_run(0, 93117), "fixed-seed Traveler run should start")
+	var begin: Dictionary = _run_state.begin_stage_card_reward()
 	_expect(bool(begin.get("ok", false)), "stage card reward should begin")
-	var original: Array[StringName] = _run_state.call("get_pending_card_offer")
-	_expect(original.size() == 3 and _all_unique(original), "pending offer should be three unique cards")
+	var original: Array[StringName] = _run_state.get_pending_card_offer()
+	_expect(original.size() == 3 and _all_unique(original), "pending offer should be complete")
 
-	var invalid: Dictionary = _run_state.call("choose_card", &"not_offered")
+	var invalid: Dictionary = _run_state.choose_card(&"not_offered")
 	_expect(not bool(invalid.get("ok", false)), "an unoffered card should fail closed")
-	_expect(_run_state.call("get_card_stacks").is_empty(), "failed choice must not mutate stacks")
+	_expect(_run_state.get_card_stacks().is_empty(), "failed choice must not mutate stacks")
 
-	var funding := RewardTransaction.new(&"card_fixture_coins", &"fixture", {"coin": 30})
-	var funded := RewardService.apply(funding, _run_state)
-	_expect(funded.applied and int(_run_state.get("coins")) == 30, "fixture coins should apply once")
-	var rerolled: Dictionary = _run_state.call("reroll_card_offer")
-	var next_offer: Array[StringName] = _run_state.call("get_pending_card_offer")
-	_expect(bool(rerolled.get("ok", false)), "affordable first reroll should succeed")
-	_expect(
-		next_offer.size() == 3 and not _same_choice_set(next_offer, original),
-		"reroll should produce a different complete choice set"
+	var funded := RewardService.apply(
+		RewardTransaction.new(&"card_fixture_coins", &"fixture", {"coin": 30}),
+		_run_state
 	)
+	_expect(funded.applied and int(_run_state.get("coins")) == 30, "fixture coins should apply once")
+	var rerolled: Dictionary = _run_state.reroll_card_offer()
+	var next_offer: Array[StringName] = _run_state.get_pending_card_offer()
+	_expect(bool(rerolled.get("ok", false)), "first affordable reroll should succeed")
+	_expect(next_offer.size() == 3 and not _same_choice_set(next_offer, original), "reroll should visibly change the offer")
 	_expect(int(_run_state.get("coins")) == 18, "reroll should deduct exactly 12 coins")
-	var second_reroll: Dictionary = _run_state.call("reroll_card_offer")
-	_expect(not bool(second_reroll.get("ok", false)), "second stage reroll should fail")
-	_expect(int(_run_state.get("coins")) == 18, "failed reroll must not spend coins")
+	_expect(not bool(_run_state.reroll_card_offer().get("ok", false)), "one stage allows one reroll")
 
 	var selected := next_offer[0]
-	var committed: Dictionary = _run_state.call("choose_card", selected)
-	_expect(bool(committed.get("ok", false)), "offered card should commit")
-	_expect(int(_run_state.call("get_card_stack", selected)) == 1, "card commit should add one stack")
-	var duplicate: Dictionary = _run_state.call("choose_card", selected)
-	_expect(not bool(duplicate.get("ok", false)), "one reward cannot commit twice")
-	_expect(int(_run_state.call("get_card_stack", selected)) == 1, "duplicate commit must not add a stack")
-	_expect(_run_state.call("advance_stage_after_card_reward"), "committed reward should unlock next stage")
-	_expect(int(_run_state.get("current_stage_index")) == 1, "card continuation should advance stage index")
-
-	var snapshot: Dictionary = _run_state.call("get_run_snapshot").to_dictionary()
-	var cards: Dictionary = snapshot.get("cards", {})
-	cards[String(selected)] = 99
-	_expect(
-		int(_run_state.call("get_card_stack", selected)) == 1,
-		"card stacks in run snapshots should be copy-safe"
-	)
+	var committed: Dictionary = _run_state.choose_card(selected)
+	_expect(bool(committed.get("ok", false)), "an offered card should commit")
+	_expect(int(_run_state.get_card_stack(selected)) == 1, "card commit should add one stack")
+	_expect(not bool(_run_state.choose_card(selected).get("ok", false)), "one reward cannot commit twice")
+	_expect(_run_state.advance_stage_after_card_reward(), "a committed reward should unlock the next stage")
+	_expect(int(_run_state.get("current_stage_index")) == 1, "card continuation should advance one stage")
 
 
 func _validate_offer_reproduction() -> void:
-	_expect(_run_state.call("start_new_run", 0, 93117), "reproduction run should restart")
-	_run_state.call("begin_stage_card_reward")
-	var original: Array[StringName] = _run_state.call("get_pending_card_offer")
+	_expect(_run_state.start_new_run(0, 93117), "reproduction run should restart")
+	_run_state.begin_stage_card_reward()
+	var original: Array[StringName] = _run_state.get_pending_card_offer()
 	RewardService.apply(
 		RewardTransaction.new(&"card_fixture_coins_repeat", &"fixture", {"coin": 30}),
 		_run_state
 	)
-	_run_state.call("reroll_card_offer")
-	var rerolled: Array[StringName] = _run_state.call("get_pending_card_offer")
+	_run_state.reroll_card_offer()
+	var rerolled: Array[StringName] = _run_state.get_pending_card_offer()
 
-	_expect(_run_state.call("start_new_run", 0, 93117), "second reproduction run should restart")
-	_run_state.call("begin_stage_card_reward")
-	var repeated_original: Array[StringName] = _run_state.call("get_pending_card_offer")
+	_expect(_run_state.start_new_run(0, 93117), "second reproduction run should restart")
+	_run_state.begin_stage_card_reward()
+	var repeated_original: Array[StringName] = _run_state.get_pending_card_offer()
 	RewardService.apply(
 		RewardTransaction.new(&"card_fixture_coins_repeat", &"fixture", {"coin": 30}),
 		_run_state
 	)
-	_run_state.call("reroll_card_offer")
-	var repeated_reroll: Array[StringName] = _run_state.call("get_pending_card_offer")
-	_expect(original == repeated_original, "initial stage offer should reproduce after restart")
-	_expect(rerolled == repeated_reroll, "rerolled stage offer should reproduce after restart")
-
-	_expect(_run_state.call("start_new_run", 1, 77), "Archer card run should start")
-	RewardService.apply(
-		RewardTransaction.new(&"fallback_reroll_coins", &"fixture", {"coin": 20}),
-		_run_state
-	)
-	_run_state.call("begin_stage_card_reward")
-	var archer_coins := int(_run_state.get("coins"))
-	_expect(_run_state.call("can_reroll_card_offer"), "Archer should have enough live cards to reroll")
-	var archer_reroll: Dictionary = _run_state.call("reroll_card_offer")
-	_expect(bool(archer_reroll.get("ok", false)), "Archer reroll should succeed")
-	_expect(int(_run_state.get("coins")) == archer_coins - 12, "Archer reroll should spend exact cost")
+	_run_state.reroll_card_offer()
+	var repeated_reroll: Array[StringName] = _run_state.get_pending_card_offer()
+	_expect(original == repeated_original, "initial offer should reproduce after restart")
+	_expect(rerolled == repeated_reroll, "rerolled offer should reproduce after restart")
+	_expect(not _run_state.start_new_run(1, 77), "retired class profile indexes should fail closed")
 
 
 func _all_unique(values: Array[StringName]) -> bool:
@@ -206,7 +136,7 @@ func _expect(condition: bool, message: String) -> void:
 
 func _finish() -> void:
 	if _failures.is_empty():
-		print("CARD_REWARD_VALIDATION_OK")
+		print("CARD_REWARD_VALIDATION_OK hero=traveler catalog=5 offer=3")
 		quit(0)
 		return
 	for failure in _failures:

@@ -285,15 +285,15 @@ func _validate_safe_global_events() -> void:
 	_bus.emit_signal("reward_applied", {"applied": true, "transaction_id": "reward-test"})
 	_expect_last_cue(&"reward", "applied rewards should request reward feedback")
 	var before_field_reward := int(_snapshot()["request_count"])
-	_bus.emit_signal("reward_applied", {"applied": true, "transaction_id": "field:focus-1"})
+	_bus.emit_signal("reward_applied", {"applied": true, "transaction_id": "field:arrows-1"})
 	_expect(
 		int(_snapshot()["request_count"]) == before_field_reward,
 		"field currency settlement should wait for the field pickup event"
 	)
 	_bus.emit_signal("field_pickup_collected", {
 		"applied": true,
-		"pickup_id": "focus-1",
-		"effect_type": "reduce_skill_cooldowns",
+		"pickup_id": "arrows-1",
+		"effect_type": "grant_ranged_supply",
 	})
 	_expect_last_cue(&"reward", "field pickups should request one reward cue")
 	_bus.emit_signal("stage_cleared", "lower_ruins")

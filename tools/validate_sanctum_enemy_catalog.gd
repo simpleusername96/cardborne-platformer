@@ -206,20 +206,16 @@ func _validate_special_actor_scenes() -> void:
 
 func _validate_drop_tables() -> void:
 	_validate_drop("res://data/rewards/drop_shield_guard.tres", &"drop_shield_guard", {
-		&"xp": [18, 18, 1.0], &"coin": [4, 4, 1.0], &"rusted_scrap": [1, 2, 0.55],
+		&"xp": [18, 18, 1.0],
+		&"coin": [4, 4, 1.0],
+		&"tower_shield": [1, 1, 1.0, RewardEntry.TYPE_BLUEPRINT_UNLOCK],
+		&"steel_fragment": [6, 6, 1.0],
+		&"hardwood": [5, 5, 1.0],
+		&"reinforced_fabric": [5, 5, 1.0],
 	})
-	var sentry := _validate_drop("res://data/rewards/drop_sentry.tres", &"drop_sentry", {
+	_validate_drop("res://data/rewards/drop_sentry.tres", &"drop_sentry", {
 		&"xp": [20, 20, 1.0], &"coin": [5, 5, 1.0], &"rusted_scrap": [1, 1, 1.0],
 	})
-	if sentry != null:
-		_expect(
-			sentry.equipment_pool_id == RewardTable.EQUIPMENT_POOL_COMPATIBLE_NON_BOSS,
-			"Sentry equipment pool ID should be exact"
-		)
-		_expect(
-			is_equal_approx(sentry.equipment_pool_chance, 0.1),
-			"Sentry equipment pool chance should be exact"
-		)
 	_validate_drop("res://data/rewards/drop_summon_node.tres", &"drop_summon_node", {
 		&"xp": [20, 20, 1.0], &"coin": [4, 4, 1.0], &"slime_residue": [1, 2, 0.5],
 	})
@@ -246,6 +242,11 @@ func _validate_drop(path: String, expected_id: StringName, expected: Dictionary)
 		if entry != null:
 			_expect(entry.minimum_amount == row[0] and entry.maximum_amount == row[1], "%s %s amount should be exact" % [path, content_id])
 			_expect(is_equal_approx(entry.chance, row[2]), "%s %s chance should be exact" % [path, content_id])
+			if row.size() >= 4:
+				_expect(
+					entry.reward_type == row[3],
+					"%s %s reward type should be exact" % [path, content_id]
+				)
 	return table
 
 

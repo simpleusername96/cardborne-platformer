@@ -29,7 +29,10 @@ func _run() -> void:
 	_profile_state.call(
 		"initialize_for_tests",
 		load("res://data/equipment/equipment_catalog.tres"),
-		load("res://data/mastery/mastery_catalog.tres")
+		load("res://data/mastery/mastery_catalog.tres"),
+		"",
+		false,
+		load("res://data/equipment/equipment_progression_catalog.tres")
 	)
 	for viewport_size in VIEWPORTS:
 		root.size = viewport_size
@@ -78,7 +81,7 @@ func _validate_run_result(viewport_size: Vector2i) -> void:
 	if screen == null:
 		return
 	var settlement := _victory_settlement()
-	screen.call("configure", true, "Archer", settlement)
+	screen.call("configure", true, "Traveler", settlement)
 	await process_frame
 
 	var retry := screen.get_node("%RetryButton") as Button
@@ -90,12 +93,12 @@ func _validate_run_result(viewport_size: Vector2i) -> void:
 	_assert_true(root.gui_get_focus_owner() == retry, "Run result must focus its retry action.")
 	var victory_text := _visible_label_text(screen)
 	_assert_contains(victory_text, "VICTORY", "Victory result needs a clear outcome.")
-	_assert_contains(victory_text, "Split Shaft", "Result build must use card display names.")
-	_assert_contains(victory_text, "Field Bow", "Result build must include equipped item names.")
+	_assert_contains(victory_text, "Dash Wake", "Result build must use card display names.")
+	_assert_contains(victory_text, "Traveler Sword", "Result build must include equipped item names.")
 	_assert_contains(victory_text, "Boss Core", "Victory result must show kept rewards.")
 	_assert_not_contains(victory_text, "Seed", "Run seed must not be player-facing.")
 	_assert_not_contains(victory_text, "73021", "Run seed value must not be player-facing.")
-	_assert_not_contains(victory_text, "archer_split_shaft", "Card IDs must not be player-facing.")
+	_assert_not_contains(victory_text, "dash_wake", "Card IDs must not be player-facing.")
 
 	var calls := {"retry": 0, "menu": 0}
 	screen.connect(&"retry_requested", func() -> void: calls["retry"] += 1)
@@ -108,7 +111,7 @@ func _validate_run_result(viewport_size: Vector2i) -> void:
 	settlement["terminal_reason"] = "run_abandoned"
 	settlement["boss_reached"] = false
 	settlement["stage_reached"] = 2
-	screen.call("configure", false, "Archer", settlement)
+	screen.call("configure", false, "Traveler", settlement)
 	await process_frame
 	var defeat_text := _visible_label_text(screen)
 	_assert_contains(defeat_text, "DEFEAT", "Defeat result needs a clear outcome.")
@@ -245,21 +248,13 @@ func _victory_settlement() -> Dictionary:
 		"stage_reached": 3,
 		"boss_reached": true,
 		"duration_seconds": 845.0,
-		"profile": {
-			"loadout": {
-				"weapon": "field_bow",
-				"armor": "traveler_jacket",
-				"charm": "copper_charm",
-			}
-		},
+		"profile": {"hero_loadout": ProfileData.DEFAULT_HERO_LOADOUT.duplicate(true)},
 		"run_build": {
 			"level": 6,
 			"cards": {
 				"dash_wake": 2,
-				"archer_split_shaft": 1,
-				"steady_hands": 1,
+				"perfect_punish": 1,
 			},
-			"temporary_affixes": {},
 		},
 		"persistent_material_delta": {
 			"sky_thread": 4,

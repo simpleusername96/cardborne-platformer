@@ -197,17 +197,6 @@ func _combat_snapshot() -> Dictionary:
 
 
 func _assert_field_pickup_view_models(receipt: RewardReceiptPresenter) -> void:
-	var focus := receipt.build_field_pickup_view_model({
-		"effect_type": "reduce_skill_cooldowns",
-		"amount": 0.4,
-		"affected_skill_count": 2,
-		"display_name": "Focus Shard",
-	})
-	_expect(focus["title"] == "FOCUS RESTORED", "Focus pickup should use the Focus receipt title")
-	_expect(
-		focus["summary"] == "Focus Shard  2 cooldowns, up to -0.4s",
-		"Focus pickup should show the affected count and truthful maximum recovery"
-	)
 	var supply := receipt.build_field_pickup_view_model({
 		"effect_type": "refill_consumable",
 		"amount": 1.0,
