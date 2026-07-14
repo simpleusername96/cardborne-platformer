@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Cardborne의 대형 원경 카메라 커버리지와 상태 오버레이 기반 월드 컴포넌트를 검토하는 로컬 HTML 리포트입니다.">
+  <title>Cardborne · World Component State Lab</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="gallery.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">본문으로 건너뛰기</a>
+
+  <header class="page-header">
+    <div class="brand-lockup" aria-label="Cardborne component state lab">
+      <span class="brand-mark" aria-hidden="true">CB</span>
+      <span>
+        <strong>WORLD COMPONENT LAB</strong>
+        <small>Flooded Works · interaction proof</small>
+      </span>
+    </div>
+    <p class="header-note"><span class="status-dot" aria-hidden="true"></span> Review prototype · not production art</p>
+  </header>
+
+  <main id="main">
+    <section class="hero" aria-labelledby="hero-title">
+      <p class="eyebrow">ART DIRECTION → RUNTIME CONTRACT</p>
+      <h1 id="hero-title">원경은 크게, 상호작용 상태는 얇게 겹친다.</h1>
+      <p class="hero-copy">
+        카메라는 하나의 큰 배경 평면을 잘라 보고, 지형지물은 고정된 베이스 위에 상태 오버레이만 교체합니다.
+        아래 인라인 SVG는 상태 전환과 충돌 규칙을 검토하는 시뮬레이션이며, 제작용 월드 에셋이 아닙니다.
+      </p>
+      <div class="contract-strip" aria-label="구현 계약 요약">
+        <span><b>01</b> One background plane</span>
+        <span><b>02</b> One immutable base</span>
+        <span><b>03</b> State-owned overlays</span>
+      </div>
+    </section>
+
+    <section class="report-section" aria-labelledby="world-title">
+      <div class="section-heading">
+        <div>
+          <p class="section-index">01 · CAMERA COVERAGE</p>
+          <h2 id="world-title">화면보다 큰 단일 원경</h2>
+        </div>
+        <span class="section-badge">1 visual plane</span>
+      </div>
+      <p class="section-copy">
+        배경의 논리 크기는 스테이지 경계에 256px 오버스캔을 더한 <b>9,472 × 1,952</b>입니다.
+        화면은 그 안을 이동하며 필요한 부분만 보여줍니다. 권장 출력은 0.75px/world의 <b>7,104 × 1,464</b>이고,
+        4개 조각(각 1,776 × 1,464 + 16px bleed)은 로딩을 위한 기술적 분할일 뿐 미술 계층은 하나입니다.
+      </p>
+
+      <div class="world-lab">
+        <div class="viewer-toolbar" aria-label="카메라 뷰포트 크기">
+          <span class="control-label">VIEWPORT</span>
+          <div class="segmented-control" role="group" aria-label="뷰포트 프리셋">
+            <button type="button" data-viewport="960x540" aria-pressed="false">960 × 540</button>
+            <button type="button" data-viewport="1280x720" aria-pressed="true">1280 × 720</button>
+            <button type="button" data-viewport="1920x1080" aria-pressed="false">1920 × 1080</button>
+          </div>
+          <label class="check-control">
+            <input id="show-seams" type="checkbox">
+            <span>기술 분할 보기</span>
+          </label>
+        </div>
+
+        <figure class="camera-figure">
+          <div class="camera-window" id="world-camera" aria-label="큰 원경 위를 이동하는 카메라 미리보기">
+            <div class="background-plane" id="background-plane" aria-hidden="true">
+              <img src="assets/flooded-works-panorama-preview.png" alt="">
+              <div class="world-safe-area"></div>
+              <div class="chunk-seam seam-one"><span>chunk 01 / 02</span></div>
+              <div class="chunk-seam seam-two"><span>chunk 02 / 03</span></div>
+              <div class="chunk-seam seam-three"><span>chunk 03 / 04</span></div>
+            </div>
+            <div class="camera-corners" aria-hidden="true"></div>
+            <div class="camera-hud">
+              <span id="camera-position">CAM X 0 · Y 0</span>
+              <span class="preview-warning">SIMULATION · SOURCE 1672×941</span>
+            </div>
+          </div>
+          <figcaption>
+            현재 1,672×941 그림을 큰 논리 평면에 매핑한 분위기·카메라 시뮬레이션입니다. 제작용 7,104×1,464 원경에서는
+            플레이어와 발판·함정처럼 상호작용 가능한 실루엣을 제거하고, 실제 디테일을 채운 4개 연속 조각을 사용합니다.
+          </figcaption>
+        </figure>
+
+        <div class="camera-controls">
+          <label for="camera-x">
+            <span>카메라 X</span>
+            <output id="camera-x-output" for="camera-x">35%</output>
+          </label>
+          <input id="camera-x" type="range" min="0" max="100" value="35">
+          <label for="camera-y">
+            <span>카메라 Y</span>
+            <output id="camera-y-output" for="camera-y">55%</output>
+          </label>
+          <input id="camera-y" type="range" min="0" max="100" value="55">
+        </div>
+
+        <dl class="metric-grid">
+          <div><dt>Stage bounds</dt><dd>8,960 × 1,440</dd></div>
+          <div><dt>Background bounds</dt><dd>9,472 × 1,952</dd></div>
+          <div><dt>Overscan</dt><dd>256 px / edge</dd></div>
+          <div><dt>Coverage</dt><dd id="coverage-value">7.4 screens wide</dd></div>
+        </dl>
+      </div>
+    </section>
+
+    <section class="report-section component-section" aria-labelledby="components-title">
+      <div class="section-heading">
+        <div>
+          <p class="section-index">02 · STATE OVERLAYS</p>
+          <h2 id="components-title">같은 베이스, 다른 상태</h2>
+        </div>
+        <span class="section-badge">2 interaction simulations</span>
+      </div>
+      <p class="section-copy">
+        상태 버튼을 눌러 베이스가 다시 그려지지 않는지 확인할 수 있습니다. <b>Overlay만</b> 켜 보면 상태 레이어의 실제 분리 범위가 드러납니다.
+      </p>
+
+      <div class="component-grid">
+        <article class="component-card" data-component="vent" data-state="warning" aria-labelledby="vent-title">
+          <header class="component-header">
+            <div>
+              <p class="component-kicker">HAZARD · 180 × 96</p>
+              <h3 id="vent-title">Timed Poison Vent</h3>
+            </div>
+            <span class="runtime-pill danger-pill" data-state-pill>WARNING</span>
+          </header>
+
+          <div class="component-stage">
+            <div class="stage-grid" aria-hidden="true"></div>
+            <div class="svg-mount" id="vent-svg" role="img" aria-label="상태 오버레이를 적용한 독성 배기구 컴포넌트"></div>
+            <div class="stage-caption">
+              <span>BASE_01</span>
+              <span data-layer-caption>+ WARNING_OVERLAY</span>
+            </div>
+          </div>
+
+          <div class="component-controls">
+            <div class="state-control">
+              <span class="control-label">STATE</span>
+              <div class="state-buttons" role="group" aria-label="독성 배기구 상태">
+                <button type="button" data-state-choice="warning" aria-pressed="true">Warning</button>
+                <button type="button" data-state-choice="active" aria-pressed="false">Active</button>
+                <button type="button" data-state-choice="cooldown" aria-pressed="false">Cooldown</button>
+              </div>
+            </div>
+            <button type="button" class="play-button" data-autoplay aria-pressed="false"><span aria-hidden="true">▶</span> Cycle</button>
+          </div>
+
+          <div class="timeline" aria-label="현재 상태 진행도">
+            <div class="timeline-copy"><span data-state-copy>사전 경고 · 피해 없음</span><span data-duration>0.70 s</span></div>
+            <div class="timeline-track"><span data-progress></span></div>
+          </div>
+
+          <fieldset class="layer-controls">
+            <legend>레이어 검사</legend>
+            <label><input type="checkbox" data-layer-toggle="base" checked> Base</label>
+            <label><input type="checkbox" data-layer-toggle="overlay" checked> State overlay</label>
+            <label><input type="checkbox" data-layer-toggle="debug"> Collision / pivot</label>
+          </fieldset>
+
+          <dl class="component-specs">
+            <div><dt>Warning</dt><dd>0.70 s</dd></div>
+            <div><dt>Active</dt><dd>1.20 s</dd></div>
+            <div><dt>Cooldown</dt><dd>1.50 s</dd></div>
+            <div><dt>Damage</dt><dd>Active only</dd></div>
+          </dl>
+        </article>
+
+        <article class="component-card" data-component="platform" data-state="stable" aria-labelledby="platform-title">
+          <header class="component-header">
+            <div>
+              <p class="component-kicker">TERRAIN · 220 × 28</p>
+              <h3 id="platform-title">Crumbling Platform</h3>
+            </div>
+            <span class="runtime-pill" data-state-pill>STABLE</span>
+          </header>
+
+          <div class="component-stage">
+            <div class="stage-grid" aria-hidden="true"></div>
+            <div class="svg-mount" id="platform-svg" role="img" aria-label="상태 오버레이를 적용한 붕괴 발판 컴포넌트"></div>
+            <div class="stage-caption">
+              <span>BASE_01</span>
+              <span data-layer-caption>+ NO OVERLAY</span>
+            </div>
+          </div>
+
+          <div class="component-controls">
+            <div class="state-control">
+              <span class="control-label">STATE</span>
+              <div class="state-buttons" role="group" aria-label="붕괴 발판 상태">
+                <button type="button" data-state-choice="stable" aria-pressed="true">Stable</button>
+                <button type="button" data-state-choice="warning" aria-pressed="false">Warning</button>
+                <button type="button" data-state-choice="disabled" aria-pressed="false">Disabled</button>
+                <button type="button" data-state-choice="respawning" aria-pressed="false">Respawn</button>
+              </div>
+            </div>
+            <button type="button" class="play-button" data-autoplay aria-pressed="false"><span aria-hidden="true">▶</span> Collapse</button>
+          </div>
+
+          <div class="timeline" aria-label="현재 상태 진행도">
+            <div class="timeline-copy"><span data-state-copy>고정 상태 · 충돌 켜짐</span><span data-duration>∞</span></div>
+            <div class="timeline-track"><span data-progress></span></div>
+          </div>
+
+          <fieldset class="layer-controls">
+            <legend>레이어 검사</legend>
+            <label><input type="checkbox" data-layer-toggle="base" checked> Base</label>
+            <label><input type="checkbox" data-layer-toggle="overlay" checked> State overlay</label>
+            <label><input type="checkbox" data-layer-toggle="debug"> Collision / sensor</label>
+          </fieldset>
+
+          <dl class="component-specs">
+            <div><dt>Warning</dt><dd>0.45 s</dd></div>
+            <div><dt>Disabled</dt><dd>1.80 s</dd></div>
+            <div><dt>Respawn</dt><dd>0.25 s</dd></div>
+            <div><dt>Collision</dt><dd>Off × 2 states</dd></div>
+          </dl>
+        </article>
+      </div>
+    </section>
+
+    <aside class="implementation-note" aria-labelledby="implementation-title">
+      <p class="section-index">IMPLEMENTATION RULE</p>
+      <h2 id="implementation-title">이미지를 크게 만드는 대신, 월드 좌표로 관리한다.</h2>
+      <div class="rule-grid">
+        <div><span>01</span><p><b>논리 캔버스</b><br>배경은 <code>world_bounds.grow(256)</code>에 고정합니다.</p></div>
+        <div><span>02</span><p><b>카메라 크롭</b><br>뷰어는 배경을 늘리지 않고 현재 카메라 사각형만 보여줍니다.</p></div>
+        <div><span>03</span><p><b>기술 분할</b><br>GPU 한계를 위해 4조각으로 나눠도 한 평면처럼 같은 좌표에 배치합니다.</p></div>
+      </div>
+    </aside>
+  </main>
+
+  <footer>
+    <span>CARDBORNE / COMPONENT UI PREPRODUCTION</span>
+    <span>Static review artifact · no runtime dependency</span>
+  </footer>
+</body>
+</html>

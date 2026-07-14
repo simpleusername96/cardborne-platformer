@@ -46,6 +46,32 @@ product blueprint and detailed combat spec below remain authoritative.
   candidates. Neither is product authority.
 - `.agent/Documentation.md` records current project state and verification paths.
 
+## Preproduction Drafts
+
+These documents are intentionally non-canonical until the owner accepts the proposed
+production-art and UI foundation:
+
+- `design/GAME_COMPONENT_ART_SYSTEM.md` proposes the tile, reusable component,
+  stage-skin, decoration, actor, and unique-set-piece boundaries.
+- `design/WORLD_COMPONENT_IMAGE_PRODUCTION_PLAN.md` defines image-generation batch
+  size, per-family production order, candidate approval, cleanup, and temporary HTML
+  gallery review before Godot integration.
+- `design/UI_VISUAL_SYSTEM.md` proposes the borderless flat UI, Theme, asset, state,
+  and component contracts.
+- `research/component_ui_foundation_research_2026-07-13.md` records local and
+  external evidence behind those proposals.
+- `.agent/execplans/2026-07-13-component-ui-foundation.md` is the draft future
+  implementation sequence. It authorizes no work unless explicitly activated
+  against the current `master`.
+- `.agent/handoffs/2026-07-14-world-component-imagegen-session.md` is the active
+  continuation record for the latest terrain-first, canonical-base, and state-overlay
+  correction. Read it before executing the older image-generation call matrix.
+- `design/references/README.md` classifies generated boards as references rather
+  than production-ready atlases or sprites.
+- `tools/component_gallery/` is a static review prototype, not shipped UI. Its
+  background coverage model and inline SVG world objects are historical evidence;
+  production backgrounds and world components remain raster assets.
+
 ## Lifecycle Rule
 
 Active specs define required product behavior; `.agent/Documentation.md`, the
