@@ -12,9 +12,26 @@ related:
   - ./references/README.md
   - ../research/component_ui_foundation_research_2026-07-13.md
   - ../../.agent/execplans/2026-07-13-component-ui-foundation.md
+  - ../../.agent/handoffs/2026-07-14-world-component-imagegen-session.md
 ---
 
 # World Component Image Production Plan
+
+## Revision Notice
+
+Image-generation experiments performed after this draft exposed a material problem in
+the detailed call matrix: complete per-object renders and complete per-state body
+renders do not reliably compose into one coherent map, and they create too many calls.
+
+The owner's latest direction is terrain-first, with one canonical component base plus
+separate state overlays/effects. Pickup work must begin from shared family rules rather
+than seven unrelated finished paintings. The expected 17-call budget and detailed
+production-batch sections below are therefore **not approved execution instructions**
+until revised.
+
+Read `.agent/handoffs/2026-07-14-world-component-imagegen-session.md` for the generated
+file index, observed failures, corrected production model, and next-session sequence.
+The stage-skin scope, no-gameplay-change guards, and gallery requirement remain valid.
 
 ## Purpose
 

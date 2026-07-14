@@ -15,6 +15,7 @@ related:
   - ../../docs/design/WORLD_COMPONENT_IMAGE_PRODUCTION_PLAN.md
   - ../../docs/design/UI_VISUAL_SYSTEM.md
   - ../../docs/research/component_ui_foundation_research_2026-07-13.md
+  - ../handoffs/2026-07-14-world-component-imagegen-session.md
   - 2026-07-13-player-experience-refinement.md
 ---
 
@@ -44,8 +45,9 @@ The goal is not to redesign game rules or resume random map generation. The goal
 - [x] Generated and inspected world-style and component-decomposition reference boards.
 - [x] Defined proposed tile/component/skin/unique and flat UI contracts.
 - [x] Defined image-generation batch boundaries, asset approval gates, and the temporary HTML review-gallery contract.
+- [x] Tested the first generation model and recorded why per-object/full-state rendering is not a viable production unit.
 - [ ] Owner accepts or revises the two draft design specs.
-- [ ] Owner accepts or revises the world-component image production plan.
+- [ ] Revise the world-component image production plan around terrain-first kits, canonical bases, and state overlays; then obtain owner acceptance.
 - [ ] A separate implementation branch/worktree is created after current gameplay work lands.
 
 No game code, production scene, runtime resource, dependency, or import configuration is changed by this preproduction branch.
@@ -423,3 +425,5 @@ Default result: no external tool adoption.
 - 2026-07-14: Owner required image-generation call boundaries, per-asset production planning, and a temporary HTML review gallery before new art generation.
 - 2026-07-14: The first component-skin proof uses existing timed poison vent, crumbling platform, and spike row behavior; pendulum art is deferred until its gameplay contract exists.
 - 2026-07-14: Character, weapon, equipment, skill-tree, and inventory work remains outside this presentation branch.
+- 2026-07-14: Owner rejected broad per-object and complete-state image generation after visual trials; future production is terrain-first and uses canonical component bases plus separate overlay/effect layers.
+- 2026-07-14: Generated previews remain unaccepted external evidence. No generated image is runtime art or may be imported without strict-grid/alpha/pivot/gallery review.

@@ -46,6 +46,9 @@ production-art and UI foundation:
 - `.agent/execplans/2026-07-13-component-ui-foundation.md` is the draft future
   implementation sequence. It does not authorize work while the current gameplay
   branch is unresolved.
+- `.agent/handoffs/2026-07-14-world-component-imagegen-session.md` is the active
+  continuation record for the latest terrain-first, canonical-base, and state-overlay
+  correction. Read it before executing the older image-generation call matrix.
 - `design/references/README.md` classifies generated boards as references rather
   than production-ready atlases or sprites.
 
