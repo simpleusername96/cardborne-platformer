@@ -15,10 +15,11 @@ const ACTION_DEFINITIONS := [
 	{"name": "jump", "label": "jump", "default_keys": [KEY_SPACE]},
 	{"name": "dash", "label": "dash", "default_keys": [KEY_K, KEY_SHIFT]},
 	{"name": "attack", "label": "attack", "default_keys": [KEY_F]},
-	{"name": "heavy_attack", "label": "heavy attack", "default_keys": [KEY_G]},
-	{"name": "skill_1", "label": "skill 1", "default_keys": [KEY_Q]},
-	{"name": "skill_2", "label": "skill 2", "default_keys": [KEY_R]},
-	{"name": "skill_3", "label": "skill 3", "default_keys": [KEY_V]},
+	{"name": "guard", "label": "guard", "default_keys": [KEY_G]},
+	{"name": "heavy_attack", "label": "heavy attack", "default_keys": [KEY_G], "hidden": true},
+	{"name": "skill_1", "label": "skill 1", "default_keys": [KEY_Q], "hidden": true},
+	{"name": "skill_2", "label": "skill 2", "default_keys": [KEY_R], "hidden": true},
+	{"name": "skill_3", "label": "skill 3", "default_keys": [KEY_V], "hidden": true},
 	{"name": "use_consumable", "label": "consumable", "default_keys": [KEY_H]},
 	{"name": "climb_up", "label": "climb up", "default_keys": [KEY_W, KEY_UP]},
 	{"name": "climb_down", "label": "climb down", "default_keys": [KEY_S, KEY_DOWN]},
@@ -36,6 +37,7 @@ const GAMEPAD_LAYOUT := {
 	"jump": {"buttons": [JOY_BUTTON_A]},
 	"dash": {"buttons": [JOY_BUTTON_B]},
 	"attack": {"buttons": [JOY_BUTTON_X]},
+	"guard": {"buttons": [JOY_BUTTON_Y]},
 	"heavy_attack": {"buttons": [JOY_BUTTON_Y]},
 	"skill_1": {"buttons": [JOY_BUTTON_LEFT_SHOULDER]},
 	"skill_2": {"buttons": [JOY_BUTTON_RIGHT_SHOULDER]},
@@ -89,16 +91,13 @@ func get_input_guide_text() -> String:
 			move_binding,
 			get_binding_text("crouch", "S/Down"),
 		],
-		"Jump %s | Dash %s | Basic %s | Heavy %s" % [
+		"Jump %s | Dash %s | Attack %s | Guard %s" % [
 			get_binding_text("jump", "Space"),
 			get_binding_text("dash", "K/Shift"),
 			get_binding_text("attack", "F"),
-			get_binding_text("heavy_attack", "G"),
+			get_binding_text("guard", "G"),
 		],
-		"Skills %s/%s/%s | Consumable %s" % [
-			get_binding_text("skill_1", "Q"),
-			get_binding_text("skill_2", "R"),
-			get_binding_text("skill_3", "V"),
+		"Consumable %s" % [
 			get_binding_text("use_consumable", "H"),
 		],
 		"Climb %s | Dismount %s" % [
@@ -479,4 +478,7 @@ func _is_allowed_overlap(action_a: String, action_b: String) -> bool:
 		return true
 
 	var crouch_climb_down := ["crouch", "climb_down"]
-	return crouch_climb_down.has(action_a) and crouch_climb_down.has(action_b)
+	if crouch_climb_down.has(action_a) and crouch_climb_down.has(action_b):
+		return true
+	var guard_migration_alias := ["guard", "heavy_attack"]
+	return guard_migration_alias.has(action_a) and guard_migration_alias.has(action_b)

@@ -76,8 +76,13 @@ func _validate_prompt_switching() -> void:
 	)
 	_expect_contains(
 		str(_bindings.get_input_guide_text()),
-		"Skills LB/RB/LT | Consumable RT",
-		"gamepad guide should show fixed shoulder and trigger actions"
+		"Attack X | Guard Y",
+		"gamepad guide should show production combat actions"
+	)
+	_expect_contains(
+		str(_bindings.get_input_guide_text()),
+		"Consumable RT",
+		"gamepad guide should show the consumable action"
 	)
 	_expect(_device_change_count == 1, "first device switch should emit one binding-change signal")
 
@@ -161,6 +166,7 @@ func _expected_layout() -> Dictionary:
 		"jump": [_button_signature(JOY_BUTTON_A)],
 		"dash": [_button_signature(JOY_BUTTON_B)],
 		"attack": [_button_signature(JOY_BUTTON_X)],
+		"guard": [_button_signature(JOY_BUTTON_Y)],
 		"heavy_attack": [_button_signature(JOY_BUTTON_Y)],
 		"skill_1": [_button_signature(JOY_BUTTON_LEFT_SHOULDER)],
 		"skill_2": [_button_signature(JOY_BUTTON_RIGHT_SHOULDER)],
