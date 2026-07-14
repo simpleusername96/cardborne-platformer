@@ -8,6 +8,7 @@ source: Current Godot code, retired testbed lessons, active game blueprint, cont
 related:
   - ../product/2d_platform_action_card_game_prd.md
   - ../design/COMBAT_EQUIPMENT_CRAFTING.md
+  - ../../.agent/execplans/2026-07-14-minimum-equipment-progression-vertical-slice.md
   - ../design/PROCEDURAL_REGION_GENERATION.md
   - ../design/MAP_AUTHORING_PIPELINE_CONTRACT.md
   - ../design/ENEMIES_TRAPS_GIMMICKS.md
@@ -31,11 +32,11 @@ class names may change only when the same boundary and acceptance tests remain.
 The character-specific owners below describe the currently released v1 runtime.
 The active target replaces selection with one hero carrying melee, ranged, and
 shield equipment simultaneously. Contextual attack selection, separate defense,
-blueprint/material crafting, bounded active/passive loadouts, one Spirit Stone,
-preparation UI, profile slots, and
-run suspension preserve these responsibility boundaries. Detailed gameplay rules
-are owned by `docs/design/COMBAT_EQUIPMENT_CRAFTING.md`; UI execution order is owned
-by `docs/design/PLAYER_UIUX_REFINEMENT_PLAN.md`.
+blueprint/material crafting, one passive Spirit Stone, preparation UI, and one
+automatically persisted profile preserve these responsibility boundaries. Detailed
+gameplay rules are owned by `docs/design/COMBAT_EQUIPMENT_CRAFTING.md`; current
+execution order is owned by
+`.agent/execplans/2026-07-14-minimum-equipment-progression-vertical-slice.md`.
 
 ## Domain Brief
 
@@ -45,16 +46,12 @@ by `docs/design/PLAYER_UIUX_REFINEMENT_PLAN.md`.
 - Content Catalogs own immutable definitions and cross-reference validation.
 - Player Build resolves all stat/effect sources into one snapshot.
 - Player Movement consumes movement values and owns physical traversal only.
-- Player Combat resolves attack intent and executes tool actions and active skills, and
-  owns their state/timing.
+- Player Combat resolves attack intent and executes equipped tool actions, and owns
+  their state/timing.
 - Equipment & Crafting owns tool-model identity, material grades, condition,
   ranged resources, recipes, and preparation validation.
-- Active Skills owns control/tactical role validation and execution contracts; it
-  cannot recalculate tool attacks or movement.
-- Passive Resolution owns intrinsic traits, accessory passives, Spirit Attunement,
-  and run-card trigger dispatch without adding hidden active inputs.
-- Spirit Binding owns one equipped Stone's single Attunement and single Spirit Art
-  and hides resonance/status timing from tool implementations.
+- Passive Resolution owns the equipped Spirit Stone and run-card trigger dispatch
+  without adding hidden active inputs.
 - Combat Resolution converts one declared hit context into a deterministic result,
   including earned critical state, rounding, mitigation, and tags.
 - Stage Planning chooses validated room/encounter/reward data.
@@ -72,19 +69,19 @@ reward idempotency, save safety, and scene lifecycles interact.
 
 | Existing owner | Keep | Immediate correction/extension |
 | --- | --- | --- |
-| `RunDirector.gd` | Complete v1 menu/select/run/reward/result orchestration. | Replace character selection with profile/training/preparation/map/Continue phases; never absorb content rules. |
+| `RunDirector.gd` | Complete v1 menu/select/run/reward/result orchestration. | Replace character selection with training/preparation/Stage 1 phases; never absorb content rules. |
 | `Game.gd` | Scene load/unload and settings pause bridge. | Keep as technical scene service. |
-| `RunState.gd` | Complete v1 run facts, rewards, cards, forge, stage progress, and snapshots. | Add explicit safe-boundary suspend export/restore without scene-tree serialization. |
-| `ProfileState.gd` | Versioned v1 wallet, equipment, mastery, settings, transaction ledger, and automatic persistence. | Migrate atomically to three v2 profile slots, crafted tool state, control/tactical skills, Spirit Stones, and one hero preparation loadout. |
-| `PlayerBuild*.gd` | Deterministic layered build resolution, validation, and effect breakdown. | Replace character compatibility with hero/tool/material/active/passive/Spirit sources. |
-| `CharacterProfile.gd` / typed kits | Three complete v1 movement/combat profiles. | Extract reusable melee, ranged, defense, and active-skill behavior, then retire selectable profiles after parity. |
+| `RunState.gd` | Complete v1 run facts, rewards, cards, forge, stage progress, and snapshots. | Add contextual-tool resources and deterministic blacksmith state; run suspension is deferred. |
+| `ProfileState.gd` | Versioned v1 wallet, equipment, mastery, settings, transaction ledger, and automatic persistence. | Migrate atomically to one v2 hero loadout, blueprints, crafted state, materials, and passive Spirit Stones. |
+| `PlayerBuild*.gd` | Deterministic layered build resolution, validation, and effect breakdown. | Replace character compatibility with hero/tool/material/Spirit sources. |
+| `CharacterProfile.gd` / typed kits | Three complete v1 movement/combat profiles. | Extract reusable melee, ranged, and defense behavior, then retire selectable profiles after parity. |
 | `PlayerController.gd` | Movement, damage response, camera hooks. | Keep combat execution and presentation in their extracted owners. |
 | `MovementMetrics.gd` | Shared movement-envelope calculation. | Make generator tests consume it directly. |
-| `DamageInfo`, `Hitbox`, `Hurtbox`, resolver/result | Deterministic damage, earned critical, stagger, and shared hit path. | Add shared passive/Spirit trigger owners; do not duplicate element rules in tool runtimes. |
+| `DamageInfo`, `Hitbox`, `Hurtbox`, resolver/result | Deterministic damage, earned critical, stagger, and shared hit path. | Add one passive Spirit trigger owner; do not duplicate element rules in tool runtimes. |
 | `EnemyBase` + typed enemy catalog | Six behavior archetypes and 13 production variants with reward cleanup. | Preserve behavior ownership while adding context-attack, defense, and Spirit fixtures. |
 | Stage components + native room contract | Three approved fixed Stage Plans, authored rooms, recovery, hazards, gates, and pickups. | Preserve fixed-plan safety while the gameplay migration is evaluated. |
 | `StageBase.gd` | Player spawn, checkpoint, clear signal. | Consume Stage Plan/report and own stage lifecycle only. |
-| Production UI | Complete v1 menu, character/loadout, rewards, forge, HUD, settings, and result surfaces. | Replace class surfaces with profile, weapon training, preparation, blacksmith, stage map, contextual-tool HUD, visible loot, and truthful save states. |
+| Production UI | Complete v1 menu, character/loadout, rewards, forge, HUD, settings, and result surfaces. | Replace class surfaces with weapon training, one-hero preparation, blacksmith, contextual-tool HUD, visible loot, and truthful save states. |
 
 The deleted integrated testbed is not an architecture owner. Focused test scenes
 may be created per subsystem when they are smaller than a production workflow.
@@ -96,11 +93,8 @@ Target phases:
 ```text
 BOOT
 MAIN_MENU
-PROFILE_SELECT
 WEAPON_TRAINING
 PREPARATION
-STAGE_MAP
-RUN_RESTORING
 STAGE_LOADING
 STAGE_ACTIVE
 LEVEL_REWARD
@@ -109,27 +103,23 @@ INTER_STAGE_PREPARATION
 BLACKSMITH
 BOSS_LOADING
 BOSS_ACTIVE
-RUN_SUSPENDING
 RUN_DEATH
 RUN_CLEAR
 ```
 
 Allowed transitions:
 
-- Main Menu selects a profile, then routes to Continue, New Run, Training,
-  Settings, or Quit.
-- A fresh profile routes through Weapon Training complete/skip, then Preparation.
-- New Run -> Preparation -> Stage Map -> Stage Loading; Continue -> Run Restoring -> validated Stage
-  Loading at the saved checkpoint.
+- Main Menu routes to New Game, Training, Settings, or Quit.
+- A fresh profile routes through Weapon Training complete/skip, then Preparation;
+  a resolved profile routes directly to Preparation.
+- New Game -> Preparation -> Stage Loading.
 - Stage Loading -> Stage Active only after generation/assembly validation succeeds.
 - Stage Active -> Level Reward -> Stage Active for queued level choices.
 - Stage Active -> Stage Card Reward after normal-stage completion.
-- Stage Card Reward -> Inter-Stage Preparation -> Blacksmith/Stage Map -> next Stage Loading.
+- Stage Card Reward -> Inter-Stage Preparation -> Blacksmith -> next Stage Loading.
 - Stage 3 reward -> Boss Loading -> Boss Active.
 - Any active gameplay -> Run Death at zero health.
 - Boss Active -> Run Clear on one boss settlement transaction.
-- A legal safe boundary may enter Run Suspending and returns to Main Menu only after
-  the suspend verifies.
 - Death/Clear -> Main Menu or Preparation after settlement; no stage retry preserves a
   terminally failed run.
 
@@ -142,12 +132,11 @@ rewards, stats, rooms, or save payloads.
 
 Public commands:
 
-- `start_run(profile_id, loadout, seed)`
+- `start_run(loadout, seed)`
 - `spend_ranged_resource`, `grant_ranged_resource`, `recover_owned_projectiles`,
   `record_equipment_condition_use`
 - `apply_damage`, `heal`, `grant_xp`, `spend_coin`
 - `advance_stage`, `record_card`, `set_run_effect`
-- `build_suspend_snapshot(checkpoint_id)`, `restore_from_suspend(snapshot)`
 - `end_run_death`, `end_run_clear`
 - snapshot getters returning copies/read-only Resources
 
@@ -157,14 +146,14 @@ Hidden: dictionaries, RNG stream construction, transaction history layout.
 
 Public commands:
 
-- `load_or_create_profile`, `select_profile`
-- `grant_material`, `unlock_blueprint`, `unlock_control_skill`,
-  `unlock_tactical_skill`, `unlock_spirit_stone`
-- `apply_crafting_transaction`, `apply_repair_transaction`, `equip_preparation_loadout`
-- `awaken_spirit_stone`, `record_training_state`
+- `load_or_create_profile`
+- `grant_material`, `unlock_blueprint`, `unlock_spirit_stone`
+- `craft_equipment`, `recraft_equipment`, `repair_equipment`,
+  `equip_preparation_loadout`
+- `record_training_state`
 - `set_setting`, `save_profile`
 
-Hidden: slot/file paths, ConfigFile/JSON choice, backup rotation, v1 migration,
+Hidden: file paths, ConfigFile/JSON choice, backup rotation, v1 migration,
 and transaction-ledger internals.
 
 ### Player Build
@@ -172,14 +161,14 @@ and transaction-ledger internals.
 Public contract:
 
 ```text
-resolve(hero, combat_tools, material_grades, supporting_equipment,
-        active_skills, passive_sources, spirit_stone, run_levels, cards,
+resolve(hero, combat_tools, material_grades, armor, spirit_stone, consumable,
+        run_levels, cards,
         temporary_effects)
  -> PlayerBuildSnapshot(values, sources, abilities, validation_errors)
 ```
 
 Consumers ask for effective values/abilities. They never inspect card, blueprint,
-material, tool, skill, passive, or Spirit Stone IDs.
+material, tool, passive, or Spirit Stone IDs.
 
 ### Context Attack And Defense
 
@@ -204,21 +193,19 @@ draws previews. Combat execution and presentation consume the same immutable
 intent. Defense owns frontal angle, precise timing, heavy/unblockable rules, and
 the equipped guard policy. No resolver reads UI nodes.
 
-### Active And Passive Definitions
+### Passive Spirit Definition
 
 ```text
-ActiveSkillCatalog.resolve(skill_id, role) -> ActiveSkillDefinition
 PassiveTriggerResolver.evaluate(event, passive_snapshot) -> PassiveResult[]
-SpiritBinding.resolve(stone_id) -> SpiritBindingSnapshot(attunement, art)
+SpiritStoneCatalog.resolve(stone_id) -> SpiritStoneDefinition
 ```
 
-- `ActiveSkillDefinition` declares exactly one role: control, tactical, or Spirit
-  Art. Control may own enemy position/timing; tactical may own readiness,
-  attention, or information; Spirit Art must spend resonance.
 - `PassiveTraitDefinition` has no input binding. It declares trigger, eligibility,
   result, cooldown/stacking policy, and event deduplication key.
-- Tool intrinsic traits, accessories, Spirit Attunement, and run cards are separate
-  passive source kinds even though they share trigger dispatch.
+- A `SpiritStoneDefinition` references exactly one passive trait. It has no input,
+  active action, cooldown button, charge meter, or resonance policy.
+- Spirit Stone and run-card effects are separate passive source kinds even when
+  they share trigger dispatch.
 - Material grade, armor base values, condition, and ammunition are build values,
   not passive definitions.
 
@@ -313,9 +300,8 @@ tools or materials directly.
 - `scripts/autoload/RunState.gd`
 - `scripts/autoload/ProfileState.gd`
 - `scripts/run/RunSnapshot.gd`
-- `scripts/run/RunSuspendData.gd`, `RunSuspendSaveService.gd`
 - `scripts/run/RunPhase.gd` if enum/resource extraction becomes useful
-- `scripts/profile/ProfileData.gd`, `ProfileSaveService.gd`, profile slot registry
+- `scripts/profile/ProfileData.gd`, `ProfileSaveService.gd`
 - `scripts/profile/PreparationLoadout.gd` or an equivalent typed immutable value
 
 ### Hero/equipment/combat
@@ -325,15 +311,13 @@ tools or materials directly.
 - `scripts/player/HeroDefinition.gd`; `CharacterKit.gd` remains only as a migration adapter
 - `scripts/player/AttackIntentResolver.gd`, `RangedTargetingPolicy.gd`,
   `DefenseResolver.gd`
-- `scripts/player/AttackDefinition.gd`, `ActiveSkillDefinition.gd`,
-  `PassiveTraitDefinition.gd`
+- `scripts/player/AttackDefinition.gd`, `PassiveTraitDefinition.gd`
 - `scripts/combat/DamageResolver.gd`, `HitResult.gd`, `CriticalRule.gd`
-- one shared passive trigger resolver plus Spirit Binding/resonance owner under
-  combat/progression
+- one shared passive trigger resolver and Spirit Stone owner under combat/progression
 - `scripts/content/ContentId.gd`: shared durable content-ID syntax validation
 - `scripts/player/PlayerBuild.gd`, `PlayerBuildSnapshot.gd`
-- `data/hero/`, `data/equipment/combat/`, `data/attacks/`, `data/skills/control/`,
-  `data/skills/tactical/`, `data/passives/`, `data/spirit_stones/`
+- `data/hero/`, `data/equipment/combat/`, `data/attacks/`, `data/passives/`,
+  `data/spirit_stones/`
 
 ### Cards/progression/economy
 
@@ -381,17 +365,15 @@ presentation references, and `validate_definition()`.
 
 - Attack: activation pattern, timings, damage/stagger/effects, earned-critical
   rule, hit policy, cancellation, movement impulse, and presentation geometry.
-- Active skill: role, activation, primary target/result, cooldown or resonance
-  cost, failure policy, compatibility, and presentation geometry.
 - Passive trait: source kind, trigger, eligibility, result, cooldown/stacking,
   event deduplication, and presentation key; no input action.
 - Card: rarity, compatibility, trigger, effects, max stacks, offer rules.
-- Combat tool blueprint: role, active action, intrinsic trait, targeting/resource
+- Combat tool blueprint: role, action, targeting/resource
   policy, hard weakness, recipe families, material-grade bounds, and presentation key.
 - Crafted equipment: blueprint, material grade, effective values, and condition
   only where the active gameplay spec allows it.
-- Spirit Stone: one Attunement reference, one Spirit Art reference, resonance
-  policy, deterministic trigger/cooldown policy, and presentation key.
+- Spirit Stone: one passive-trait reference, deterministic trigger/deduplication
+  policy, and presentation key; no input or resource gauge.
 - Enemy archetype: behavior owner, pressure roles, tell/response/punish contract,
   safety bounds, room requirements.
 - Enemy variant: archetype, stage, exact stats, presentation key, budget cost, drop
@@ -418,11 +400,8 @@ presentation references, and `validate_definition()`.
 - Write a temporary file, validate it, preserve last valid backup, then replace.
 - Migration is explicit per version and never runs in UI code.
 - Corrupt primary save falls back to backup and reports a readable error.
-- Three profile slots remain isolated and never share a writable active object.
-- Run suspend uses a separate versioned file per profile and only captures authored
-  safe-boundary facts; it never serializes arbitrary nodes or mid-frame state.
-- Resume keeps the last valid suspend until a later safe boundary replaces it.
-  Explicit abandon, terminal death settlement, or victory settlement deletes it.
+- The first vertical slice uses one local profile. Multiple slots and run suspend
+  are deferred and must not leak partial fields into schema v2.
 
 ## Error And Failure Behavior
 
@@ -446,8 +425,8 @@ dependency order used for RC1 was:
 3. Implement reward transaction, one level choice, and three cards end to end.
 4. Build RoomTemplate contract, six Stage 1 rooms, planner, validator, assembler,
    allocator, fallback, and seed report.
-5. Complete representative control/tactical/Spirit active skills, Stage 1 card
-   flow, one blacksmith choice, and persistence.
+5. Complete deterministic blueprint crafting, material-grade recrafting, repair,
+   passive Spirit Stones, Stage 1 rewards, and persistence.
 6. Promote six enemy archetypes, 13 variants, hazards, and Stages 2-3.
 7. Extract ranged and mobility behavior from the released profiles through the
    proven shared contracts before retiring class selection.
@@ -463,12 +442,11 @@ multiple consecutive infrastructure-only milestones.
 
 - catalog IDs/references/effect compatibility;
 - player build source ordering and clamps;
-- attack/skill state timing and target hit policy;
-- context-attack priority, hysteresis, melee fallback, and all four ranged policies;
-- bow line/arrow, matchlock line/reload, returning-shuriken path/recall, and Root
-  Sigil visibility/ground/resource fixtures;
+- attack state timing and target hit policy;
+- context-attack priority, hysteresis, melee fallback, bow, and matchlock policies;
+- bow line/arrow and matchlock line/reload fixtures;
 - shield angle, model policy, precise defense, heavy/unblockable rules, and condition cost;
-- control/tactical role ownership, Spirit resonance cost, and passive trigger deduplication;
+- passive Spirit trigger ownership and event deduplication;
 - crafting recipes, material-grade bounds, repair floor, and ranged-resource minimums;
 - deterministic damage order, earned critical conditions, and critical proc guards;
 - reward idempotency and economy bounds;
@@ -481,7 +459,7 @@ multiple consecutive infrastructure-only milestones.
 ### Scene tests
 
 - one room per terrain/encounter lesson;
-- all 12 tool-model definitions through role-focused representative fixtures; keep
+- all 6 tool-model definitions through role-focused representative fixtures; keep
   v1 character-kit fixtures only until extraction parity is accepted;
 - stage assembly and cleanup;
 - UI focus/pause/choice commit;
@@ -491,7 +469,7 @@ multiple consecutive infrastructure-only milestones.
 
 - 1,000-seed property sweep when changing the dormant planner or preparing its
   future re-entry, not every fixed-stage edit;
-- approved-plan tool/active/passive/Spirit play matrix plus context-attack scenarios; retain
+- approved-plan tool/passive-Spirit play matrix plus context-attack scenarios; retain
   the v1 all-character matrix only as a temporary migration guard;
 - complete run death/clear/save paths;
 - rendered gameplay/UI at 1280x720 and 1920x1080, with 960x540 robustness where

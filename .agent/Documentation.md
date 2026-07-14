@@ -47,18 +47,21 @@
   complete production states.
 - `docs/product/2d_platform_action_card_game_prd.md` is the canonical product and
   first-complete-run blueprint. `docs/design/COMBAT_EQUIPMENT_CRAFTING.md` is the
-  canonical target for contextual combat tools, 12 distinct models, active/passive
-  boundaries, material grades, condition, ranged resources, Spirit Stones,
-  supporting equipment, onboarding, replay, and persistence.
+  canonical first target for one hero, 6 combat-tool models, 2 armor, 2 passive
+  Spirit Stones, blueprints, two material grades, crafting, recrafting, repair,
+  ranged supply, onboarding, Stage 1 rewards, and persistence.
 - The old character, progression/equipment, six-discipline arsenal, and former
   player-facing specs are superseded evidence. Active content specs continue to
-  own terrain, rooms, generation, enemies, hazards, and boss. The active UI work
-  sequence is `docs/design/PLAYER_UIUX_REFINEMENT_PLAN.md`.
+  own terrain, rooms, generation, enemies, hazards, and boss. The former standalone
+  UI plan is superseded; its accepted minimum work is in the active ExecPlan.
 - `docs/architecture/FIRST_SLICE_ARCHITECTURE.md` defines runtime ownership and
   implementation boundaries.
 - `.agent/execplans/2026-07-14-single-hero-arsenal-migration.md` is superseded and
-  must not be executed. No cross-code gameplay ExecPlan is active; create its
-  replacement from the current gameplay spec and UI/UX plan before coding.
+  must not be executed.
+- `.agent/execplans/2026-07-14-minimum-equipment-progression-vertical-slice.md` is
+  the active cross-code implementation plan. It begins with preserved v1 fixtures,
+  then delivers one hero, contextual combat, profile v2, crafting, passive Spirit
+  Stones, the fixed Trial/Stage 1 loop, production UI, cleanup, and release gates.
 - `.agent/execplans/2026-07-12-actual-game-production-roadmap.md` remains the completed
   first-run implementation record.
 - Provisional design JSON was retired after all runtime owners moved to typed Godot
@@ -86,20 +89,17 @@ Read in this order:
   melee, ranged, defense, and mobility behavior from the existing Warrior, Archer,
   and Assassin kits, but do not preserve selectable classes or full-kit switching.
 - Equip one melee tool, one ranged tool, and one shield simultaneously. Attack
-  selects melee first, then delegates distant intent to the equipped bow, matchlock,
-  returning-shuriken, or Root Sigil policy; defense always uses the shield.
-- Bound the first complete target to 12 tool models across those three roles. A
-  model must differ on at least two functional axes and declare one hard weakness.
-  Material grades provide direct growth without changing action identity.
-- Add at most three extra combat active slots: one control, one tactical, and one
-  Spirit Art. Only control and tactical are freely selected; the Spirit Stone
-  supplies the Art.
-- Keep active actions, tool intrinsic traits, accessory passives, one Spirit
-  Attunement, and run-card effects explicitly separate. Do not add a parallel
-  passive skill tree in the first target.
-- Use one Spirit Stone to provide exactly one passive Attunement and one active
-  Spirit Art. Do not implement per-weapon enchantment sockets or elemental
-  ammunition stacks.
+  selects melee first and delegates a valid distant intent to Hunting Bow or
+  Matchlock; defense always uses the shield.
+- Bound the first vertical slice to 6 combat-tool models: Traveler Sword/Hunting
+  Spear, Hunting Bow/Matchlock, and Round/Tower Shield. Each alternative differs
+  on at least two functional axes and declares one hard weakness.
+- Add no separate active-skill slots or skill tree in the first vertical slice.
+  Q/R/V must not trigger hidden production combat actions.
+- Equip one Spirit Stone that provides exactly one passive elemental rule. It has
+  no active Art, input, cooldown button, or resonance gauge.
+- Use only 2 armor, 2 passive Spirit Stones, 1 consumable, 3 material families,
+  and 2 material grades in the first target.
 - Assemble versioned Stage Plans from authored native Godot room scenes and typed
   metadata; do not scatter arbitrary platforms or content coordinates.
 - Use `MovementMetrics` and full-stage validation before stage load.
@@ -109,16 +109,16 @@ Read in this order:
   conditions; enemies, hazards, and secondary hits do not critical by default.
 - Keep rewards and persistent writes transaction-safe and idempotent.
 - Use run levels for small support choices, cards for run-local behavior changes,
-  coins for tactical spending, three combat tools plus support equipment for
-  preparation, material-grade recrafting for direct growth, and bounded
-  control/tactical skills for persistent behavior options.
+  coins for tactical spending, three combat tools plus armor/Spirit/consumable for
+  preparation, blueprints for new behavior, and material-grade recrafting for
+  direct growth.
 - Apply condition only to melee tools and shields in the first target. Ranged tools
-  use arrows, cartridges/reload, reusable blades, or regenerating focus. Condition
+  use arrows or cartridges/reload. Condition
   0 and any empty ranged-resource state must recover to a playable minimum and
   cannot force stage replay.
-- Persistent profile v1 autosave/backup exists. Player-facing profile slots,
-  checkpoint run suspension, Save & Return, and Continue do not exist yet and are
-  owned by the next replacement migration plan.
+- Persistent profile v1 autosave/backup exists. The active plan migrates one local
+  profile to v2 and proves app-restart recovery. Multiple slots, checkpoint run
+  suspension, Save & Return, and Continue remain later expansion.
 - Temporary forging exists in v1 but is not a target arbitrary-affix layer. The
   migration replaces its player-facing role with deterministic crafting, repair,
   tool-specific ranged supply, and declared card/consumable effects.
@@ -135,14 +135,13 @@ Read in this order:
   onboarding feedback should drive the next tuning plan.
 - Full production-style v1 runs remain migration baselines. Fresh-player UI
   recognition, pickup audio, reduced-motion polish, and broad clearance fixtures
-  are carried into `docs/design/PLAYER_UIUX_REFINEMENT_PLAN.md` and the next
-  cross-code migration plan's release gates.
+  are carried into the active minimum equipment-progression ExecPlan's release gates.
 - Current return replay begins from stable post-drop recovery. Full
   branch-entry-to-return collision sweeps and invalid ceiling/wall/hazard fixtures
   remain required before authored traversal coverage is complete.
 - Broadening room, enemy, card, or boss content will expand the approved-plan,
-  context-attack, and tool/active/passive/Spirit matrices and must preserve the shared hero
-  traversal contract.
+  context-attack, and tool/passive-Spirit matrices and must preserve the shared
+  hero traversal contract.
 
 ## Run / Verify
 
@@ -177,10 +176,10 @@ Read in this order:
 
 ## Next Implementation Entry
 
-Do not resume the superseded arsenal plan. First create a replacement ExecPlan
-from `docs/design/COMBAT_EQUIPMENT_CRAFTING.md` and
-`docs/design/PLAYER_UIUX_REFINEMENT_PLAN.md`. Its first executable batch should
-freeze representative v1 melee/ranged/defense fixtures, define context-attack,
-ranged-policy, active/passive, and tool snapshot contracts, and keep all current
-release checks green before changing production selection. Preserve fixed layout
-V3, the retired testbed, and the dormant random production path throughout migration.
+Execute Phase A of
+`.agent/execplans/2026-07-14-minimum-equipment-progression-vertical-slice.md`.
+Freeze representative v1 melee/ranged/defense/profile/reward/UI fixtures, then
+define the minimum tool, blueprint, material, Spirit Stone, loadout, and
+`AttackIntent` contracts without changing production selection. Preserve fixed
+layout V3, the retired testbed, the dormant random production path, and unrelated
+`docs/design/references/` files throughout migration.

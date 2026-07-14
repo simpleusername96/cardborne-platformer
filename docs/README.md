@@ -12,11 +12,11 @@ product blueprint and detailed combat spec below remain authoritative.
 | Order | Document | Authority |
 | ---: | --- | --- |
 | 1 | `product/2d_platform_action_card_game_prd.md` | Canonical product and fun specification. |
-| 2 | `design/COMBAT_EQUIPMENT_CRAFTING.md` | One hero, 12 distinct combat-tool models, active/passive boundaries, crafting, ranged resources, Spirit Stones, and unlocks. |
-| 3 | `design/PROCEDURAL_REGION_GENERATION.md` | Stage profiles, terrain, room catalog, and generation. |
-| 4 | `design/MAP_AUTHORING_PIPELINE_CONTRACT.md` | Room-template and anchor schema. |
-| 5 | `design/ENEMIES_TRAPS_GIMMICKS.md` | Enemy, hazard, encounter, and boss content. |
-| 6 | `design/PLAYER_UIUX_REFINEMENT_PLAN.md` | Active As-Is/To-Be UI/UX checklist for profiles, preparation, HUD, loot, crafting, replay, saves, and results. |
+| 2 | `design/COMBAT_EQUIPMENT_CRAFTING.md` | Minimum complete one-hero combat, 6 tool models, blueprints, two material grades, crafting, repair, supply, and passive Spirit Stones. |
+| 3 | `../.agent/execplans/2026-07-14-minimum-equipment-progression-vertical-slice.md` | Active As-Is/To-Be implementation checklist and validation gates. |
+| 4 | `design/PROCEDURAL_REGION_GENERATION.md` | Stage profiles, terrain, room catalog, and generation. |
+| 5 | `design/MAP_AUTHORING_PIPELINE_CONTRACT.md` | Room-template and anchor schema. |
+| 6 | `design/ENEMIES_TRAPS_GIMMICKS.md` | Enemy, hazard, encounter, and boss content. |
 | 7 | `architecture/FIRST_SLICE_ARCHITECTURE.md` | Current runtime ownership and migration boundaries. |
 
 ## Supporting Material
@@ -30,12 +30,15 @@ product blueprint and detailed combat spec below remain authoritative.
   `design/PROGRESSION_EQUIPMENT_ECONOMY.md`,
   `design/ARSENAL_EQUIPMENT_PROGRESSION.md`, `design/PLAYER_FACING_FLOW.md`, and the
   2026-07-14 single-hero arsenal migration plan are superseded evidence.
+- `design/PLAYER_UIUX_REFINEMENT_PLAN.md` is superseded UI research. Its accepted
+  minimum UI work is incorporated into the active equipment-progression ExecPlan.
 - `design/reports/arsenal-equipment-system.html` is a superseded interactive
   snapshot of the former six-discipline direction. It is retained for comparison
   and does not define current work.
 - `research/third_party_adoption_ledger.md` is the active external adoption record.
 - `research/combat_loadout_reference_review_2026-07-14.md` is active advisory
-  evidence for the combat-slot and active/passive decisions.
+  evidence only. Its former active-skill recommendation was not adopted; the
+  current minimum decision record and ExecPlan are authoritative.
 - Dated surveys/deep dives are archived evidence; `references/` contains advisory
   candidates. Neither is product authority.
 - `.agent/Documentation.md` records current project state and verification paths.
@@ -43,8 +46,7 @@ product blueprint and detailed combat spec below remain authoritative.
 ## Lifecycle Rule
 
 Active specs define the required product target; `.agent/Documentation.md` and
-current validators distinguish what has landed. The active UI/UX plan defines its
-own execution order. There is no active cross-code gameplay ExecPlan after the
-latest redesign; create one from the active specs before implementation. Evidence
-supports decisions but is not obeyed directly. Deleted prototype material is
-historical and should be recovered from Git only for a specific investigation.
+current validators distinguish what has landed. The active minimum equipment-
+progression ExecPlan defines implementation order and UI gates. Evidence supports
+decisions but is not obeyed directly. Deleted prototype material is historical and
+should be recovered from Git only for a specific investigation.

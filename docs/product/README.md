@@ -10,12 +10,14 @@ Use documents in this order:
    scope, and completion criteria.
 2. `../design/COMBAT_LOADOUT_DECISION_BRIEF.md` for the short combat decision
    summary, then `../design/COMBAT_EQUIPMENT_CRAFTING.md` for the authoritative
-   12-tool, active/passive, crafting, Spirit, onboarding, and persistence rules;
+   minimum 6-tool, blueprint, two-grade crafting, repair, passive Spirit,
+   onboarding, and persistence rules;
    other active design specs own stages and encounters.
 3. `../architecture/FIRST_SLICE_ARCHITECTURE.md` for code ownership and runtime
    contracts.
-4. `../design/PLAYER_UIUX_REFINEMENT_PLAN.md` for the active UI/UX implementation
-   checklist. No cross-code gameplay ExecPlan is active after the latest redesign.
+4. `../../.agent/execplans/2026-07-14-minimum-equipment-progression-vertical-slice.md`
+   for the active implementation and UI/UX checklist. The former standalone UI
+   plan is superseded evidence.
 5. The 2026-07-12 roadmap is the completed v1 implementation record.
 6. `../references/` and `../research/` as evidence only.
 

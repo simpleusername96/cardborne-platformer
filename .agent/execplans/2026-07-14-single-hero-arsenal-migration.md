@@ -4,7 +4,7 @@ status: superseded
 owner: BK
 created: 2026-07-14
 last_reviewed: 2026-07-14
-superseded_by: ../../docs/design/COMBAT_EQUIPMENT_CRAFTING.md
+superseded_by: 2026-07-14-minimum-equipment-progression-vertical-slice.md
 topic: Single-hero arsenal, full equipment, onboarding, and save/continue migration
 scope: Product documents, combat identity, progression catalogs, profile schema, run suspension, production UI, tutorial, and compatibility validation
 supersedes: 2026-07-13-player-experience-refinement.md

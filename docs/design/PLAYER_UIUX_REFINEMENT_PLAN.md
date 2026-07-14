@@ -1,12 +1,13 @@
 ---
 type: plan
-status: active
+status: superseded
 owner: BK
 created: 2026-07-14
 last_reviewed: 2026-07-14
 topic: Production game UI and UX migration for contextual combat equipment, crafting, loot, replay, and save continuity
 scope: Main menu, profiles, onboarding, preparation, forge, stage map, gameplay HUD, loot feedback, choices, settings, results, focus, and responsive validation
 supersedes: ./PLAYER_FACING_FLOW.md
+superseded_by: ../../.agent/execplans/2026-07-14-minimum-equipment-progression-vertical-slice.md
 source: Owner feedback through 2026-07-14 and inspected production UI, input, field pickup, reward, save, and combat state
 related:
   - ./COMBAT_EQUIPMENT_CRAFTING.md
@@ -15,6 +16,11 @@ related:
 ---
 
 # 플레이어 UI/UX 개선 계획
+
+> **Superseded 2026-07-14.** 이 문서의 프로필 3개, 제압/전술/정령술,
+> 공명, 12개 도구 UI 목표는 실행하지 않는다. 현재 UI 범위와 실행 순서는
+> `.agent/execplans/2026-07-14-minimum-equipment-progression-vertical-slice.md`가
+> 소유한다. 이 문서는 이전 화면 조사와 비교 근거로만 유지한다.
 
 ## Purpose
 
