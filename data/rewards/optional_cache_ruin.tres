@@ -22,5 +22,3 @@ id = &"optional_cache_ruin"
 display_name = "Ruin Cache"
 content_version = 2
 entries = Array[ExtResource("2")]([SubResource("Coin"), SubResource("Scrap")])
-equipment_pool_id = &"stage_cache"
-equipment_pool_chance = 1.0

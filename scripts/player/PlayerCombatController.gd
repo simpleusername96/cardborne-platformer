@@ -205,6 +205,8 @@ func try_start_input() -> bool:
 		)
 
 	for action_name in [&"skill_3", &"skill_2", &"skill_1", &"heavy_attack", &"attack"]:
+		if not InputMap.has_action(action_name):
+			continue
 		if not Input.is_action_just_pressed(String(action_name)):
 			continue
 		var definition := _definition_for_action(action_name)

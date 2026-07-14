@@ -46,24 +46,9 @@ static func resolve_with_context(
 	table: RewardTable,
 	transaction_id: StringName,
 	run_seed: int,
-	context: Dictionary
+	_context: Dictionary
 ) -> RewardTransaction:
-	var transaction := resolve(table, transaction_id, run_seed)
-	if transaction == null:
-		return null
-	var equipment_discoveries := transaction.get_equipment_discoveries()
-	var discovery_seed := stable_seed(run_seed, "equipment:%s" % transaction_id)
-	for item_id in EquipmentDiscoveryService.resolve(table, discovery_seed, context):
-		if not equipment_discoveries.has(item_id):
-			equipment_discoveries.append(item_id)
-	return RewardTransaction.new(
-		transaction.id,
-		transaction.source_id,
-		transaction.get_grants(),
-		equipment_discoveries,
-		transaction.get_blueprint_unlocks(),
-		transaction.get_spirit_stone_unlocks()
-	)
+	return resolve(table, transaction_id, run_seed)
 
 
 static func apply(transaction: RewardTransaction, run_state: Node) -> RewardResult:

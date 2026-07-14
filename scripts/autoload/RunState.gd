@@ -42,7 +42,6 @@ var _micro_upgrade_stacks: Dictionary = {}
 var _card_stacks: Dictionary = {}
 var _applied_reward_ids: Dictionary = {}
 var _applied_field_pickup_ids: Dictionary = {}
-var _stage_cache_discoveries: Dictionary = {}
 var _pending_level_choices: int = 0
 var _pending_level_offer: Array[StringName] = []
 var _level_offer_sequence: int = 0
@@ -65,7 +64,7 @@ func _ready() -> void:
 
 
 func start_new_run(_profile_index: int = -1, requested_seed: int = -1) -> bool:
-	if not _catalogs_valid:
+	if not _catalogs_valid or _profile_index not in [-1, 0]:
 		return false
 
 	var maintenance := ProfileState.apply_stage_entry_maintenance()
@@ -94,7 +93,6 @@ func start_new_run(_profile_index: int = -1, requested_seed: int = -1) -> bool:
 	_card_stacks.clear()
 	_applied_reward_ids.clear()
 	_applied_field_pickup_ids.clear()
-	_stage_cache_discoveries.clear()
 	_pending_level_choices = 0
 	_pending_level_offer.clear()
 	_level_offer_sequence = 0
@@ -326,8 +324,6 @@ func apply_reward_transaction(transaction: RewardTransaction) -> RewardResult:
 			_:
 				if bool(progression_settlement.get("changed", false)):
 					grant_unsettled_material(String(currency_id), amount)
-	if not equipment_ids.is_empty() and _is_stage_cache_reward(transaction):
-		_stage_cache_discoveries[str(current_stage_index)] = true
 	_applied_reward_ids[transaction_key] = true
 	var result := RewardResult.new(
 		true,
@@ -466,13 +462,7 @@ func _field_pickup_result(
 
 
 func get_reward_resolution_context() -> Dictionary:
-	return {
-		"profile_id": HERO_CARD_PROFILE_ID,
-		"stage_index": current_stage_index,
-		"equipment_catalog": ProfileState.equipment_catalog,
-		"owned_equipment": ProfileState.get_owned_equipment(),
-		"stage_cache_claimed": _stage_cache_discoveries.has(str(current_stage_index)),
-	}
+	return {}
 
 
 func _validate_reward_contents(
@@ -844,16 +834,6 @@ func use_consumable() -> Dictionary:
 	consumable_charges -= 1
 	_publish_state()
 	return {"ok": true, "message": "Healing Potion used.", "snapshot": get_run_snapshot().to_dictionary()}
-
-
-func _is_stage_cache_reward(transaction: RewardTransaction) -> bool:
-	if reward_catalog == null or transaction == null:
-		return false
-	var table := reward_catalog.get_table(transaction.source_id)
-	return (
-		table != null
-		and table.equipment_pool_id == RewardTable.EQUIPMENT_POOL_STAGE_CACHE
-	)
 
 
 func get_movement_metrics() -> Dictionary:
