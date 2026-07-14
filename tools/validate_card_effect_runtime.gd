@@ -27,11 +27,6 @@ func _run() -> void:
 
 	await _validate_aerial_opener()
 	await _validate_perfect_punish()
-	await _validate_echo_heavy()
-	await _validate_chain_burst()
-	await _validate_warrior_seismic_edge()
-	await _validate_warrior_counterweight()
-	await _validate_rewarded_skill_kill_order()
 	await _validate_dash_wake()
 	_finish()
 
@@ -55,15 +50,11 @@ func _validate_perfect_punish() -> void:
 	_expect(_equip_card(&"perfect_punish"), "perfect punish should be obtainable from an offer")
 	await _create_fixture()
 	var runtime: Node = _player.get_node("CardRuntime")
-	var combat: Node = _player.get_node("CombatController")
-	var skill: SkillDefinition = _kit.get_skill_by_slot(1)
-	combat.call("_begin_attack", skill)
 	var prepared: Dictionary = runtime.call("prepare_target_hit", _kit.basic_attack, {"recovery": true})
 	var modifiers: Dictionary = prepared.get("modifiers", {})
 	_expect(float(modifiers.get("direct_damage_additive", 0.0)) == 1.0, "perfect punish should add one damage in recovery")
 	var enemy: Variant = _spawn_enemy(Vector2(60.0, 100.0), 20)
 	await _physics_steps(2)
-	var before: float = _cooldown_for(combat, skill.id)
 	runtime.call("notify_attack_hit", {
 		"definition": _kit.basic_attack,
 		"damage_info": DamageInfo.new(3, _player, Vector2.ZERO, ["basic"]),
@@ -72,8 +63,11 @@ func _validate_perfect_punish() -> void:
 		"activations": prepared.get("activations", []),
 		"defeated": false,
 	})
-	var after: float = _cooldown_for(combat, skill.id)
-	_expect(is_equal_approx(before - after, 0.75), "perfect punish should trim the longest skill cooldown by 0.75 seconds")
+	var state: Dictionary = runtime.call("get_state_snapshot")
+	_expect(
+		is_equal_approx(float(state.get("internal_cooldowns", {}).get("perfect_punish", 0.0)), 2.0),
+		"perfect punish should start its two-second internal cooldown"
+	)
 	var blocked: Dictionary = runtime.call("prepare_target_hit", _kit.basic_attack, {"recovery": true})
 	_expect(blocked.get("modifiers", {}).is_empty(), "perfect punish internal cooldown should block immediate repetition")
 	await _clear_fixture()

@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="CardDefinition" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="CardDefinition" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/cards/CardDefinition.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/cards/CardEffectDefinition.gd" id="2"]
@@ -8,19 +8,14 @@ script = ExtResource("2")
 effect_type = &"add_damage"
 damage = 1
 
-[sub_resource type="Resource" id="Cooldown"]
-script = ExtResource("2")
-effect_type = &"reduce_longest_skill_cooldown"
-seconds = 0.75
-
 [resource]
 script = ExtResource("1")
 id = &"perfect_punish"
 display_name = "Perfect Punish"
-description = "Hitting a recovering enemy gains 1 damage and trims the longest skill cooldown."
+description = "Hitting a recovering enemy gains 1 damage."
 rarity = &"rare"
 compatibility = Array[StringName]([&"shared"])
 trigger = &"hit_target_in_recovery"
-effects = Array[ExtResource("2")]([SubResource("Damage"), SubResource("Cooldown")])
+effects = Array[ExtResource("2")]([SubResource("Damage")])
 max_stacks = 1
 internal_cooldown = 2.0

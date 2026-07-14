@@ -19,7 +19,7 @@ const EXPECTED: Dictionary = {
 		"path": "res://data/cards/last_stand.tres",
 		"rarity": &"legendary",
 		"trigger": &"damage_left_one_health",
-		"effect_types": [&"grant_invulnerability", &"reset_skill_slot"],
+		"effect_types": [&"grant_invulnerability"],
 		"internal_cooldown": 0.0,
 	},
 	"treasure_instinct": {
@@ -68,7 +68,6 @@ func _validate_cards() -> void:
 	_expect(second_wind.effects[0].health == 1, "Second Wind should heal one")
 	var last_stand := load(String(EXPECTED["last_stand"]["path"])) as CardDefinition
 	_expect(is_equal_approx(last_stand.effects[0].seconds, 1.2), "Last Stand should grant 1.2 seconds")
-	_expect(last_stand.effects[1].skill_slot == 1, "Last Stand should reset Skill 1")
 	var treasure := load(String(EXPECTED["treasure_instinct"]["path"])) as CardDefinition
 	_expect(treasure.effects[0].choice_count == 1, "Treasure Instinct should request one choice")
 	_expect(

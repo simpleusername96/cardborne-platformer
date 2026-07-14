@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="CardDefinition" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="CardDefinition" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/cards/CardDefinition.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/cards/CardEffectDefinition.gd" id="2"]
@@ -8,18 +8,13 @@ script = ExtResource("2")
 effect_type = &"grant_invulnerability"
 seconds = 1.2
 
-[sub_resource type="Resource" id="SkillReset"]
-script = ExtResource("2")
-effect_type = &"reset_skill_slot"
-skill_slot = 1
-
 [resource]
 script = ExtResource("1")
 id = &"last_stand"
 display_name = "Last Stand"
-description = "Damage that leaves exactly 1 health grants 1.2 seconds of invulnerability and resets Skill 1 once per stage."
+description = "Once per stage, damage that leaves exactly 1 health grants 1.2 seconds of invulnerability."
 rarity = &"legendary"
 compatibility = Array[StringName]([&"shared"])
 trigger = &"damage_left_one_health"
-effects = Array[ExtResource("2")]([SubResource("Invulnerability"), SubResource("SkillReset")])
+effects = Array[ExtResource("2")]([SubResource("Invulnerability")])
 max_stacks = 1

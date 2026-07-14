@@ -5,8 +5,10 @@ const MAIN_SCENE_PATH := "res://scenes/main/Main.tscn"
 const ENEMY_SCRIPT_PATH := "res://scripts/enemies/EnemyBase.gd"
 const EQUIPMENT_CATALOG := preload("res://data/equipment/equipment_catalog.tres")
 const MASTERY_CATALOG := preload("res://data/mastery/mastery_catalog.tres")
+const PROGRESSION_CATALOG := preload(
+	"res://data/equipment/equipment_progression_catalog.tres"
+)
 const CARD_PATHS: Array[String] = [
-	"res://data/cards/kinetic_refund.tres",
 	"res://data/cards/second_wind.tres",
 	"res://data/cards/last_stand.tres",
 	"res://data/cards/treasure_instinct.tres",
@@ -20,7 +22,6 @@ var _world: Node2D
 var _player: Variant
 var _combat: Variant
 var _runtime: Variant
-var _kit: CharacterKit
 var _enemy_script: Script
 
 
@@ -36,7 +37,6 @@ func _run() -> void:
 	if _player == null:
 		_finish()
 		return
-	await _validate_kinetic_refund()
 	_validate_second_wind()
 	_validate_last_stand()
 	await _validate_treasure_instinct()
@@ -52,7 +52,13 @@ func _prepare_run_state() -> bool:
 	if _run_state == null or _signal_bus == null or _profile_state == null:
 		_expect(false, "remaining-card fixture needs profile, run, and signal autoloads")
 		return false
-	_profile_state.initialize_for_tests(EQUIPMENT_CATALOG, MASTERY_CATALOG)
+	_profile_state.initialize_for_tests(
+		EQUIPMENT_CATALOG,
+		MASTERY_CATALOG,
+		"",
+		false,
+		PROGRESSION_CATALOG
+	)
 	var catalog := _run_state.card_catalog as CardCatalog
 	_enemy_script = load(ENEMY_SCRIPT_PATH) as Script
 	if catalog == null or _enemy_script == null:
@@ -70,7 +76,7 @@ func _prepare_run_state() -> bool:
 		)
 		stacks[String(card.id)] = 1
 	if not _run_state.call("start_new_run", 0, 74017):
-		_expect(false, "fixture should start a Warrior run")
+		_expect(false, "fixture should start a Traveler run")
 		return false
 	_run_state.set("_card_stacks", stacks)
 	return true
@@ -91,47 +97,7 @@ func _create_fixture() -> void:
 	await _physics_steps(2)
 	_combat = _player.get_node("CombatController")
 	_runtime = _player.get_node("CardRuntime")
-	_kit = _run_state.selected_profile.combat_kit
-	_expect(_combat != null and _runtime != null and _kit != null, "player fixture should expose card/combat contracts")
-
-
-func _validate_kinetic_refund() -> void:
-	_combat.reset_combat_state()
-	_combat.begin_stage()
-	_expect(_combat.call("_begin_attack", _kit.heavy_attack), "kinetic fixture should begin Heavy")
-	var first := _spawn_enemy(Vector2(60.0, 100.0), 60)
-	var second := _spawn_enemy(Vector2(90.0, 100.0), 60)
-	await _physics_steps(2)
-	_combat.apply_runtime_hit(first, _kit.heavy_attack)
-	_combat.apply_runtime_hit(first, _kit.heavy_attack)
-	_combat.apply_runtime_hit(second, _kit.heavy_attack, {}, true)
-	var one_target_event: Dictionary = _combat.call("_make_action_event", &"completed")
-	_expect(int(one_target_event.get("target_count", 0)) == 1, "duplicate and secondary hits should count as one target")
-	var initial_cooldowns := _seed_skill_cooldowns(5.0)
-	_runtime.notify_attack_completed(one_target_event)
-	_expect(_cooldowns_match(initial_cooldowns), "one target should not trigger Kinetic Refund")
-
-	_combat.apply_runtime_hit(second, _kit.heavy_attack)
-	var two_target_event: Dictionary = _combat.call("_make_action_event", &"completed")
-	_expect(int(two_target_event.get("target_count", 0)) == 2, "two distinct primary targets should be counted")
-	_runtime.notify_attack_completed(two_target_event)
-	_expect(_cooldowns_match(_offset_cooldowns(initial_cooldowns, -1.0)), "Kinetic Refund should trim every active skill")
-	var snapshot: Dictionary = _runtime.get_state_snapshot()
-	_expect(
-		is_equal_approx(float(snapshot.get("internal_cooldowns", {}).get("kinetic_refund", 0.0)), 3.0),
-		"Kinetic Refund should start its three-second internal cooldown"
-	)
-
-	var during_icd := _current_skill_cooldowns()
-	var next_event := two_target_event.duplicate(true)
-	next_event["action_serial"] = int(two_target_event["action_serial"]) + 1
-	_runtime.notify_attack_completed(next_event)
-	_expect(_cooldowns_match(during_icd), "Kinetic Refund internal cooldown should block another activation")
-	_runtime.call("_process", 3.1)
-	var after_icd_event := two_target_event.duplicate(true)
-	after_icd_event["action_serial"] = int(two_target_event["action_serial"]) + 2
-	_runtime.notify_attack_completed(after_icd_event)
-	_expect(_cooldowns_match(_offset_cooldowns(during_icd, -1.0)), "Kinetic Refund should become ready after three seconds")
+	_expect(_combat != null and _runtime != null, "player fixture should expose card/combat contracts")
 
 
 func _validate_second_wind() -> void:
@@ -168,33 +134,24 @@ func _validate_second_wind() -> void:
 func _validate_last_stand() -> void:
 	_combat.reset_combat_state()
 	_combat.begin_stage()
-	var skill := _kit.get_skill_by_slot(1)
-	_expect(skill != null, "Last Stand fixture needs Skill 1")
-	if skill == null:
-		return
 	_run_state.max_health = 6
 	_run_state.current_health = 3
 	_player.invulnerability_timer = 0.0
-	_combat.set("_cooldowns", {String(skill.id): 4.0})
 	_player.receive_damage(DamageInfo.new(2, null, Vector2.ZERO, ["fixture"]))
 	_expect(_run_state.current_health == 1, "Last Stand should require damage leaving exactly one health")
 	_expect(_player.invulnerability_timer >= 1.19, "Last Stand should grant 1.2 seconds of invulnerability")
-	_expect(is_zero_approx(_combat.get_cooldown_remaining(skill.id)), "Last Stand should reset Skill 1")
 	_expect(bool(_runtime.get_state_snapshot().get("last_stand_used", false)), "Last Stand should expose its stage ledger")
 
 	_run_state.current_health = 3
 	_player.invulnerability_timer = 0.0
-	_combat.set("_cooldowns", {String(skill.id): 4.0})
 	_player.receive_damage(DamageInfo.new(2, null, Vector2.ZERO, ["fixture"]))
-	_expect(_combat.get_cooldown_remaining(skill.id) == 4.0, "Last Stand should trigger once per stage")
 	_expect(_player.invulnerability_timer < 1.19, "a spent Last Stand should grant only normal hit invulnerability")
 
 	_combat.begin_stage()
 	_run_state.current_health = 3
 	_player.invulnerability_timer = 0.0
-	_combat.set("_cooldowns", {String(skill.id): 4.0})
 	_player.receive_damage(DamageInfo.new(2, null, Vector2.ZERO, ["fixture"]))
-	_expect(is_zero_approx(_combat.get_cooldown_remaining(skill.id)), "begin_stage should reset Last Stand scope")
+	_expect(_player.invulnerability_timer >= 1.19, "begin_stage should reset Last Stand scope")
 
 	_combat.begin_stage()
 	_run_state.current_health = 1
@@ -364,7 +321,7 @@ func _validate_treasure_ui_flow() -> void:
 	_expect(run_director != null and game != null, "Treasure UI fixture needs production directors")
 	if run_director == null or game == null:
 		return
-	run_director.show_character_select()
+	run_director.show_hero_preparation()
 	await process_frame
 	_expect(run_director.start_production_run(0), "Treasure UI fixture should start a production run")
 	await process_frame
@@ -481,41 +438,6 @@ func _validate_treasure_ui_flow() -> void:
 	game.unload_current_stage()
 	main.queue_free()
 	await process_frame
-
-
-func _seed_skill_cooldowns(base: float) -> Dictionary:
-	var cooldowns: Dictionary = {}
-	for index in _kit.skills.size():
-		var skill := _kit.skills[index]
-		if skill != null:
-			cooldowns[String(skill.id)] = base + float(index)
-	_combat.set("_cooldowns", cooldowns.duplicate(true))
-	return cooldowns
-
-
-func _current_skill_cooldowns() -> Dictionary:
-	var cooldowns: Dictionary = {}
-	for skill in _kit.skills:
-		if skill != null:
-			cooldowns[String(skill.id)] = _combat.get_cooldown_remaining(skill.id)
-	return cooldowns
-
-
-func _offset_cooldowns(source: Dictionary, offset: float) -> Dictionary:
-	var result: Dictionary = {}
-	for key in source:
-		result[key] = maxf(float(source[key]) + offset, 0.0)
-	return result
-
-
-func _cooldowns_match(expected: Dictionary) -> bool:
-	var actual := _current_skill_cooldowns()
-	if actual.size() != expected.size():
-		return false
-	for key in expected:
-		if not is_equal_approx(float(actual.get(key, -1.0)), float(expected[key])):
-			return false
-	return true
 
 
 func _room_context(room_id: StringName) -> Dictionary:
