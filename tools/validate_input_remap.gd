@@ -25,11 +25,11 @@ func _run() -> void:
 	bindings.call("_input", _make_key_event(KEY_F))
 	bindings.restore_all_defaults()
 	_expect_binding(bindings, "attack", "F", "attack default should be F")
-	_expect_binding(bindings, "heavy_attack", "G", "heavy attack default should be G")
-	_expect_binding(bindings, "skill_1", "Q", "skill 1 default should be Q")
-	_expect_binding(bindings, "skill_2", "R", "skill 2 default should be R")
-	_expect_binding(bindings, "skill_3", "V", "skill 3 default should be V")
+	_expect_binding(bindings, "guard", "G", "guard default should be G")
 	_expect_binding(bindings, "use_consumable", "H", "consumable default should be H")
+	for retired_action in ["heavy_attack", "skill_1", "skill_2", "skill_3"]:
+		if InputMap.has_action(retired_action):
+			_failures.append("Retired action should not be recreated: %s" % retired_action)
 	var attack_gamepad_events := _gamepad_event_signatures("attack")
 	if attack_gamepad_events.is_empty():
 		_failures.append("Attack should retain a fixed gamepad event at defaults.")

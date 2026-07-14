@@ -3,13 +3,11 @@ extends Resource
 
 const EFFECT_HEAL := &"heal"
 const EFFECT_REFILL_CONSUMABLE := &"refill_consumable"
-const EFFECT_REDUCE_SKILL_COOLDOWNS := &"reduce_skill_cooldowns"
 const EFFECT_GRANT_CURRENCY := &"grant_currency"
 const EFFECT_GRANT_RANGED_SUPPLY := &"grant_ranged_supply"
 const EFFECT_TYPES: Array[StringName] = [
 	EFFECT_HEAL,
 	EFFECT_REFILL_CONSUMABLE,
-	EFFECT_REDUCE_SKILL_COOLDOWNS,
 	EFFECT_GRANT_CURRENCY,
 	EFFECT_GRANT_RANGED_SUPPLY,
 ]
@@ -37,7 +35,7 @@ func validate_definition() -> PackedStringArray:
 		errors.append("Field pickup '%s' has an unsupported effect type." % id)
 	if not is_finite(amount) or amount <= 0.0:
 		errors.append("Field pickup '%s' needs a positive amount." % id)
-	if effect_type != EFFECT_REDUCE_SKILL_COOLDOWNS and not is_equal_approx(amount, roundf(amount)):
+	if not is_equal_approx(amount, roundf(amount)):
 		errors.append("Field pickup '%s' needs a whole-number amount." % id)
 	ContentId.validate(errors, "Field pickup '%s' icon ID" % id, icon_id)
 	if effect_type == EFFECT_GRANT_CURRENCY:

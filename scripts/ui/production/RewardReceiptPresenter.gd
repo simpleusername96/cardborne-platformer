@@ -69,18 +69,6 @@ func build_field_pickup_view_model(receipt: Dictionary) -> Dictionary:
 			return _field_pickup_view_model(
 				"VITAL RESTORED", "%s  +%s HP" % [display_name, amount_text], Styles.RESIDUE
 			)
-		&"reduce_skill_cooldowns":
-			var skill_count := maxi(int(receipt.get("affected_skill_count", 1)), 1)
-			var summary := "%s  Cooldown -%ss" % [display_name, amount_text]
-			if skill_count > 1:
-				summary = "%s  %d cooldowns, up to -%ss" % [
-					display_name, skill_count, amount_text,
-				]
-			return _field_pickup_view_model(
-				"FOCUS RESTORED",
-				summary,
-				Styles.CYAN
-			)
 		&"refill_consumable":
 			var unit := "Consumable Charge" if is_equal_approx(amount, 1.0) else "Consumable Charges"
 			return _field_pickup_view_model(
@@ -136,13 +124,11 @@ func is_presenting() -> bool:
 
 func build_view_model(receipt: Dictionary) -> Dictionary:
 	var role := StringName(receipt.get("reward_role", &"generic_reward"))
-	var replacement_kind := StringName(receipt.get("replacement_kind", &"normal"))
 	var discoveries: Variant = receipt.get("equipment_discoveries", [])
 	var blueprint_unlocks: Variant = receipt.get("blueprint_unlocks", [])
 	var spirit_unlocks: Variant = receipt.get("spirit_stone_unlocks", [])
 	var title := _receipt_title(
 		role,
-		replacement_kind,
 		discoveries,
 		blueprint_unlocks,
 		spirit_unlocks
@@ -151,10 +137,6 @@ func build_view_model(receipt: Dictionary) -> Dictionary:
 	parts.append_array(_equipment_parts(discoveries))
 	parts.append_array(_blueprint_parts(blueprint_unlocks))
 	parts.append_array(_spirit_stone_parts(spirit_unlocks))
-	if replacement_kind == &"forge":
-		var forge_text := _forge_text(receipt.get("replacement_payload", {}))
-		if not forge_text.is_empty():
-			parts.append(forge_text)
 	if parts.is_empty():
 		parts.append(String(receipt.get("message", "Reward applied.")))
 	return {
@@ -275,20 +257,15 @@ func _format_amount(amount: float) -> String:
 
 func _receipt_title(
 	role: StringName,
-	replacement_kind: StringName,
 	discoveries: Variant,
 	blueprint_unlocks: Variant,
 	spirit_unlocks: Variant
 ) -> String:
-	if replacement_kind == &"forge":
-		return "FORGE APPLIED"
 	if discoveries is Array and not discoveries.is_empty():
 		for value in discoveries:
 			if value is Dictionary and not bool(value.get("duplicate", false)):
 				return "EQUIPMENT FOUND"
 		return "CACHE SALVAGED"
-	if replacement_kind == &"equipment":
-		return "EQUIPMENT FOUND"
 	if _has_entries(blueprint_unlocks) and _has_entries(spirit_unlocks):
 		return "NEW DISCOVERIES"
 	if _has_entries(blueprint_unlocks):
@@ -434,41 +411,12 @@ func _receipt_accent(role: StringName) -> Color:
 	return Styles.AMBER
 
 
-func _forge_text(payload_value: Variant) -> String:
-	if not payload_value is Dictionary:
-		return ""
-	var payload := payload_value as Dictionary
-	var item_id := StringName(payload.get("item_id", &""))
-	var affix_id := StringName(payload.get("affix_id", &""))
-	var item: Variant = _equipment_item(item_id)
-	var affix: Variant = _forge_affix(affix_id)
-	var item_name: String = (
-		String(item.get("display_name")) if item != null else String(item_id).capitalize()
-	)
-	var affix_name: String = (
-		String(affix.get("display_name")) if affix != null else String(affix_id).capitalize()
-	)
-	if item_id == &"" or affix_id == &"":
-		return ""
-	return "%s: %s" % [item_name, affix_name]
-
-
 func _equipment_item(item_id: StringName) -> Variant:
 	var profile_state := get_node_or_null("/root/ProfileState")
 	if profile_state == null:
 		return null
 	var catalog: Variant = profile_state.get("equipment_catalog")
 	return catalog.get_item(item_id) if catalog != null else null
-
-
-func _forge_affix(affix_id: StringName) -> Variant:
-	var run_state := get_node_or_null("/root/RunState")
-	if run_state == null:
-		return null
-	var catalog: Variant = run_state.get("forge_catalog")
-	return catalog.get_affix(affix_id) if catalog != null else null
-
-
 func _progression_catalog() -> Variant:
 	var profile_state := get_node_or_null("/root/ProfileState")
 	return profile_state.get("progression_catalog") if profile_state != null else null

@@ -90,9 +90,9 @@ func _confirm_main_menu() -> void:
 
 
 func _refresh_context() -> void:
-	var profile_name := "Adventurer"
-	if RunState.selected_profile != null:
-		profile_name = RunState.selected_profile.display_name
+	var profile_name := String(
+		RunState.get_hero_combat_loadout_snapshot().get("display_name", "Traveler")
+	)
 	var location := "Slime Court" if RunDirector.phase == RunPhase.Value.BOSS_ACTIVE else (
 		"Stage %d" % (RunState.current_stage_index + 1)
 	)

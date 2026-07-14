@@ -1,12 +1,30 @@
 extends SceneTree
 
+const CATALOG := preload("res://data/cards/card_catalog.tres")
 const EXPECTED: Dictionary = {
-	"kinetic_refund": {
-		"path": "res://data/cards/kinetic_refund.tres",
+	"dash_wake": {
+		"path": "res://data/cards/dash_wake.tres",
 		"rarity": &"common",
-		"trigger": &"heavy_or_skill_multi_target_completed",
-		"effect_types": [&"reduce_all_skill_cooldowns"],
-		"internal_cooldown": 3.0,
+		"trigger": &"dash_completed",
+		"effect_types": [&"spawn_damage_trail"],
+		"internal_cooldown": 0.0,
+		"max_stacks": 2,
+	},
+	"aerial_opener": {
+		"path": "res://data/cards/aerial_opener.tres",
+		"rarity": &"common",
+		"trigger": &"first_attack_after_extra_jump",
+		"effect_types": [&"add_damage", &"add_stagger"],
+		"internal_cooldown": 0.0,
+		"max_stacks": 1,
+	},
+	"perfect_punish": {
+		"path": "res://data/cards/perfect_punish.tres",
+		"rarity": &"rare",
+		"trigger": &"hit_target_in_recovery",
+		"effect_types": [&"add_damage"],
+		"internal_cooldown": 2.0,
+		"max_stacks": 1,
 	},
 	"second_wind": {
 		"path": "res://data/cards/second_wind.tres",
@@ -14,6 +32,7 @@ const EXPECTED: Dictionary = {
 		"trigger": &"required_room_encounter_cleared_without_damage",
 		"effect_types": [&"heal_player"],
 		"internal_cooldown": 0.0,
+		"max_stacks": 1,
 	},
 	"last_stand": {
 		"path": "res://data/cards/last_stand.tres",
@@ -21,13 +40,7 @@ const EXPECTED: Dictionary = {
 		"trigger": &"damage_left_one_health",
 		"effect_types": [&"grant_invulnerability"],
 		"internal_cooldown": 0.0,
-	},
-	"treasure_instinct": {
-		"path": "res://data/cards/treasure_instinct.tres",
-		"rarity": &"common",
-		"trigger": &"optional_route_chest_claimed",
-		"effect_types": [&"request_reward_preview_replacement"],
-		"internal_cooldown": 0.0,
+		"max_stacks": 1,
 	},
 }
 
@@ -36,11 +49,12 @@ var _failures: Array[String] = []
 
 func _initialize() -> void:
 	_validate_cards()
-	_validate_malformed_effects()
 	_finish()
 
 
 func _validate_cards() -> void:
+	_expect(CATALOG.validate_catalog().is_empty(), "production card catalog should validate")
+	_expect(CATALOG.cards.size() == EXPECTED.size(), "catalog should expose only five live cards")
 	for card_id in EXPECTED:
 		var expected: Dictionary = EXPECTED[card_id]
 		var card := load(String(expected["path"])) as CardDefinition
@@ -51,7 +65,10 @@ func _validate_cards() -> void:
 		_expect(card.rarity == expected["rarity"], "card '%s' should use its authored rarity" % card_id)
 		_expect(card.trigger == expected["trigger"], "card '%s' should use its domain trigger" % card_id)
 		_expect(card.compatibility == [&"shared"], "card '%s' should be shared" % card_id)
-		_expect(card.max_stacks == 1, "card '%s' should have one stack" % card_id)
+		_expect(
+			card.max_stacks == int(expected["max_stacks"]),
+			"card '%s' should use its authored stack cap" % card_id
+		)
 		_expect(
 			is_equal_approx(card.internal_cooldown, float(expected["internal_cooldown"])),
 			"card '%s' should use its authored internal cooldown" % card_id
@@ -61,31 +78,16 @@ func _validate_cards() -> void:
 		for effect in card.effects:
 			effect_types.append(effect.effect_type)
 		_expect(effect_types == expected["effect_types"], "card '%s' should expose exact effects" % card_id)
+		_expect(CATALOG.get_card(card.id) == card, "catalog should own card '%s'" % card_id)
 
-	var kinetic := load(String(EXPECTED["kinetic_refund"]["path"])) as CardDefinition
-	_expect(is_equal_approx(kinetic.effects[0].seconds, 1.0), "Kinetic Refund should trim one second")
+	var dash := load(String(EXPECTED["dash_wake"]["path"])) as CardDefinition
+	_expect(dash.effects[0].damage_by_stack == PackedInt32Array([1, 2]), "Dash Wake should scale by stack")
+	var aerial := load(String(EXPECTED["aerial_opener"]["path"])) as CardDefinition
+	_expect(aerial.effects[0].damage == 1 and aerial.effects[1].stagger == 20, "Aerial Opener should expose exact bonuses")
 	var second_wind := load(String(EXPECTED["second_wind"]["path"])) as CardDefinition
 	_expect(second_wind.effects[0].health == 1, "Second Wind should heal one")
 	var last_stand := load(String(EXPECTED["last_stand"]["path"])) as CardDefinition
 	_expect(is_equal_approx(last_stand.effects[0].seconds, 1.2), "Last Stand should grant 1.2 seconds")
-	var treasure := load(String(EXPECTED["treasure_instinct"]["path"])) as CardDefinition
-	_expect(treasure.effects[0].choice_count == 1, "Treasure Instinct should request one choice")
-	_expect(
-		treasure.effects[0].reward_pool == &"compatible_equipment_or_forge",
-		"Treasure Instinct should use the compatible equipment/forge pool"
-	)
-
-
-func _validate_malformed_effects() -> void:
-	var cooldown := CardEffectDefinition.new()
-	cooldown.effect_type = &"reduce_all_skill_cooldowns"
-	_expect(not cooldown.validate_definition().is_empty(), "cooldown reduction should reject zero seconds")
-	var heal := CardEffectDefinition.new()
-	heal.effect_type = &"heal_player"
-	_expect(not heal.validate_definition().is_empty(), "heal should reject zero health")
-	var replacement := CardEffectDefinition.new()
-	replacement.effect_type = &"request_reward_preview_replacement"
-	_expect(not replacement.validate_definition().is_empty(), "replacement should require a reward pool")
 
 
 func _expect(condition: bool, message: String) -> void:

@@ -127,7 +127,6 @@ func _build_snapshot(
 			"level": int(run_facts.get("level", 1)),
 			"cards": _copy_dictionary(run_facts.get("cards", {})),
 			"micro_upgrades": _copy_dictionary(run_facts.get("micro_upgrades", {})),
-			"temporary_affixes": _copy_dictionary(run_facts.get("temporary_affixes", {})),
 			"effective_stats": _copy_dictionary(run_facts.get("effective_stats", {})),
 			"consumable_id": String(run_facts.get("consumable_id", "")),
 			"consumable_charges": int(run_facts.get("consumable_charges", 0)),
@@ -170,24 +169,27 @@ func _get_profile_materials(profile_state: Node) -> Dictionary:
 func _get_profile_facts(profile_state: Node, profile_id: String) -> Dictionary:
 	var facts := {
 		"id": profile_id,
-		"loadout": {},
-		"owned_equipment": [],
-		"mastery_unlocks": [],
+		"hero_loadout": {},
+		"crafted_equipment": {},
+		"unlocked_blueprints": [],
+		"unlocked_spirit_stones": [],
+		"ranged_supplies": {},
 	}
 	if profile_state == null:
 		return facts
-	if profile_state.has_method("get_loadout"):
-		var loadout: Variant = profile_state.call("get_loadout", profile_id)
-		if loadout is Dictionary:
-			facts["loadout"] = loadout.duplicate(true)
-	if profile_state.has_method("get_owned_equipment"):
-		var equipment: Variant = profile_state.call("get_owned_equipment")
-		if equipment is Array:
-			facts["owned_equipment"] = equipment.duplicate()
-	if profile_state.has_method("get_mastery_unlocks"):
-		var mastery: Variant = profile_state.call("get_mastery_unlocks", profile_id)
-		if mastery is Array:
-			facts["mastery_unlocks"] = mastery.duplicate()
+	if not profile_state.has_method("get_profile_snapshot"):
+		return facts
+	var snapshot: Variant = profile_state.call("get_profile_snapshot")
+	if not snapshot is Dictionary:
+		return facts
+	var profile := snapshot as Dictionary
+	facts["hero_loadout"] = _copy_dictionary(profile.get("hero_loadout", {}))
+	facts["crafted_equipment"] = _copy_dictionary(profile.get("crafted_equipment", {}))
+	facts["unlocked_blueprints"] = _copy_array(profile.get("unlocked_blueprints", []))
+	facts["unlocked_spirit_stones"] = _copy_array(
+		profile.get("unlocked_spirit_stones", [])
+	)
+	facts["ranged_supplies"] = _copy_dictionary(profile.get("ranged_supplies", {}))
 	return facts
 
 
@@ -207,6 +209,10 @@ func _material_delta(before: Dictionary, after: Dictionary) -> Dictionary:
 
 func _copy_dictionary(value: Variant) -> Dictionary:
 	return value.duplicate(true) if value is Dictionary else {}
+
+
+func _copy_array(value: Variant) -> Array:
+	return value.duplicate(true) if value is Array else []
 
 
 func _empty_boss_reward() -> Dictionary:

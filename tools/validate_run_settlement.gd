@@ -12,14 +12,14 @@ class FakeProfileState:
 		materials[material_id] = int(materials.get(material_id, 0)) + amount
 		return true
 
-	func get_loadout(_profile_id: String = "warrior") -> Dictionary:
-		return {"weapon": "iron_cleaver", "armor": "traveler_jacket"}
-
-	func get_owned_equipment() -> Array[String]:
-		return ["iron_cleaver", "traveler_jacket"]
-
-	func get_mastery_unlocks(_profile_id: String) -> Array[String]:
-		return ["warrior_steady_feet"]
+	func get_profile_snapshot() -> Dictionary:
+		return {
+			"hero_loadout": ProfileData.DEFAULT_HERO_LOADOUT.duplicate(true),
+			"crafted_equipment": ProfileData.DEFAULT_CRAFTED_EQUIPMENT.duplicate(true),
+			"unlocked_blueprints": ProfileData.DEFAULT_BLUEPRINTS.duplicate(),
+			"unlocked_spirit_stones": ["ember_spirit_stone"],
+			"ranged_supplies": ProfileData.DEFAULT_RANGED_SUPPLIES.duplicate(true),
+		}
 
 
 class FakeRunState:
@@ -37,7 +37,7 @@ class FakeRunState:
 		reward_catalog = catalog
 		facts = {
 			"seed": 8123,
-			"profile_id": "warrior",
+			"profile_id": "traveler",
 			"stage_index": 3,
 			"health": 4,
 			"max_health": 6,
@@ -45,9 +45,8 @@ class FakeRunState:
 			"xp": 88,
 			"coins": 21,
 			"materials": {"rusted_scrap": 3},
-			"cards": {"chain_burst": 1},
+			"cards": {"dash_wake": 1},
 			"micro_upgrades": {"micro_power": 2},
-			"temporary_affixes": {"iron_cleaver": "forge_force"},
 			"effective_stats": {"max_health": 6, "attack_power": 1.2},
 			"consumable_id": "small_potion",
 			"consumable_charges": 0,
@@ -117,21 +116,21 @@ func _validate_isolated_settlement() -> void:
 	_expect(snapshot != null and snapshot.is_victory(), "victory should create a typed snapshot")
 	if snapshot != null:
 		_expect(snapshot.get_value(&"seed") == 8123, "settlement should record the run seed")
-		_expect(snapshot.get_value(&"profile_id") == "warrior", "settlement should record profile")
+		_expect(snapshot.get_value(&"profile_id") == "traveler", "settlement should record hero")
 		_expect(snapshot.get_value(&"stage_reached") == 3, "boss settlement should record Stage 3")
 		var build: Dictionary = snapshot.get_value(&"run_build", {})
 		var economy: Dictionary = snapshot.get_value(&"run_economy", {})
 		var boss_reward: Dictionary = snapshot.get_value(&"boss_reward", {})
 		var material_delta: Dictionary = snapshot.get_value(&"persistent_material_delta", {})
-		_expect(build.get("cards", {}).get("chain_burst", 0) == 1, "build facts should include cards")
+		_expect(build.get("cards", {}).get("dash_wake", 0) == 1, "build facts should include cards")
 		_expect(economy.get("coins", 0) == 21, "economy facts should include final coins")
 		_expect(boss_reward.get("boss_core", 0) == 1, "boss facts should include one core")
 		_expect(material_delta.get("rusted_scrap", 0) == 3, "material delta should retain prior rewards")
 		_expect(material_delta.get("boss_core", 0) == 1, "material delta should include the boss core")
-		build["cards"]["chain_burst"] = 99
+		build["cards"]["dash_wake"] = 99
 		boss_reward["boss_core"] = 99
 		_expect(
-			snapshot.get_value(&"run_build", {}).get("cards", {}).get("chain_burst", 0) == 1,
+			snapshot.get_value(&"run_build", {}).get("cards", {}).get("dash_wake", 0) == 1,
 			"settlement build facts should be copy-safe"
 		)
 		_expect(
@@ -176,7 +175,7 @@ func _validate_failure_and_death() -> void:
 
 	run_state.facts = {
 		"seed": 9001,
-		"profile_id": "warrior",
+		"profile_id": "traveler",
 		"stage_index": 1,
 		"health": 0,
 		"max_health": 6,
@@ -184,9 +183,8 @@ func _validate_failure_and_death() -> void:
 		"xp": 31,
 		"coins": 9,
 		"materials": {"rusted_scrap": 2},
-		"cards": {"chain_burst": 1},
+		"cards": {"dash_wake": 1},
 		"micro_upgrades": {},
-		"temporary_affixes": {},
 		"effective_stats": {"max_health": 6},
 		"consumable_id": "small_potion",
 		"consumable_charges": 1,
@@ -221,7 +219,10 @@ func _validate_run_state_restart() -> void:
 		return
 	profile_state.initialize_for_tests(
 		load("res://data/equipment/equipment_catalog.tres"),
-		load("res://data/mastery/mastery_catalog.tres")
+		load("res://data/mastery/mastery_catalog.tres"),
+		"",
+		false,
+		load("res://data/equipment/equipment_progression_catalog.tres")
 	)
 	var original_reward_catalog: RewardCatalog = run_state.get("reward_catalog")
 	run_state.set("reward_catalog", _boss_reward_catalog(1))

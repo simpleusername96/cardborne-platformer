@@ -70,6 +70,29 @@ static func calculate_for_profile(profile: CharacterProfile) -> Dictionary:
 	return metrics
 
 
+static func route_limits_for_stats(
+	stats: Dictionary,
+	hero_id: StringName = &"traveler",
+	display_name: String = "Traveler"
+) -> Dictionary:
+	var metrics := calculate(stats)
+	if metrics.is_empty():
+		return {}
+	return {
+		"least_mobile_profile_id": hero_id,
+		"least_mobile_profile_name": display_name,
+		"gap_limiting_profile_id": hero_id,
+		"ledge_limiting_profile_id": hero_id,
+		"max_required_gap": floorf(float(metrics["route_reach"]) * REQUIRED_GAP_FACTOR),
+		"max_required_ledge": floorf(
+			float(metrics["route_ledge_height"]) * REQUIRED_LEDGE_FACTOR
+		),
+		"minimum_headroom": MINIMUM_ROUTE_HEADROOM,
+		"allowed_required_abilities": REQUIRED_ROUTE_ABILITIES.duplicate(),
+		"least_metrics": metrics,
+	}
+
+
 static func route_limits_for_profiles(profiles: Array) -> Dictionary:
 	var gap_profile: CharacterProfile
 	var ledge_profile: CharacterProfile

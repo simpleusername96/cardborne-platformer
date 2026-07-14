@@ -1,10 +1,10 @@
 extends SceneTree
 
-const CHARACTER_CATALOG := preload("res://data/characters/character_catalog.tres")
+const HERO := preload("res://data/hero/traveler.tres")
 const CARD_CATALOG := preload("res://data/cards/card_catalog.tres")
-const EQUIPMENT_CATALOG := preload("res://data/equipment/equipment_catalog.tres")
-const MASTERY_CATALOG := preload("res://data/mastery/mastery_catalog.tres")
-const FORGE_CATALOG := preload("res://data/forge/forge_catalog.tres")
+const EQUIPMENT_CATALOG := preload(
+	"res://data/equipment/equipment_progression_catalog.tres"
+)
 const PROGRESSION_CATALOG := preload("res://data/progression/run_progression_catalog.tres")
 const REWARD_CATALOG := preload("res://data/rewards/reward_catalog.tres")
 const ENEMY_CATALOG := preload("res://data/enemies/enemy_catalog.tres")
@@ -37,7 +37,7 @@ func _initialize() -> void:
 func _run() -> void:
 	_validate_catalogs()
 	_validate_content_counts()
-	_validate_profile_ids()
+	_validate_live_ids()
 	_validate_enemy_rewards()
 	_validate_stage_references()
 	_validate_generation_smoke()
@@ -51,11 +51,9 @@ func _run() -> void:
 
 
 func _validate_catalogs() -> void:
-	_append_errors(CHARACTER_CATALOG.validate_catalog(), "Character catalog")
+	_append_errors(HERO.validate_definition(), "Traveler definition")
 	_append_errors(CARD_CATALOG.validate_catalog(), "Card catalog")
 	_append_errors(EQUIPMENT_CATALOG.validate_catalog(), "Equipment catalog")
-	_append_errors(MASTERY_CATALOG.validate_catalog(), "Mastery catalog")
-	_append_errors(FORGE_CATALOG.validate_catalog(), "Forge catalog")
 	_append_errors(PROGRESSION_CATALOG.validate_catalog(), "Progression catalog")
 	_append_errors(REWARD_CATALOG.validate_catalog(), "Reward catalog")
 	_append_errors(ENEMY_CATALOG.validate_catalog(), "Enemy catalog")
@@ -68,14 +66,13 @@ func _validate_catalogs() -> void:
 
 
 func _validate_content_counts() -> void:
-	_expect(CHARACTER_CATALOG.profiles.size() == 3, "first run needs three characters")
-	_expect(CARD_CATALOG.cards.size() == 15, "first run needs fifteen cards")
-	_expect(EQUIPMENT_CATALOG.items.size() == 12, "first run needs twelve equipment items")
-	_expect(MASTERY_CATALOG.nodes.size() == 18, "first run needs eighteen mastery nodes")
-	_expect(FORGE_CATALOG.affixes.size() == 5, "first run needs five forge affixes")
-	_expect(REWARD_CATALOG.tables.size() == 14, "first run needs fourteen reward tables")
+	_expect(String(HERO.id) == "traveler", "production needs one Traveler hero")
+	_expect(CARD_CATALOG.cards.size() == 5, "production needs five live cards")
+	_expect(EQUIPMENT_CATALOG.models.size() == 8, "production needs eight equipment models")
+	_expect(EQUIPMENT_CATALOG.spirit_stones.size() == 2, "production needs two Spirit Stones")
+	_expect(REWARD_CATALOG.tables.size() == 17, "production needs seventeen reward tables")
 	_expect(ENEMY_CATALOG.archetypes.size() == 6, "first run needs six enemy archetypes")
-	_expect(ENEMY_CATALOG.variants.size() == 13, "first run needs thirteen enemy variants")
+	_expect(ENEMY_CATALOG.variants.size() == 14, "production needs fourteen enemy variants")
 	_expect(ENEMY_CATALOG.tuning_profiles.size() == 3, "first run needs three tuning profiles")
 	_expect(HAZARD_CATALOG.definitions.size() == 4, "first run needs four core hazards")
 	_expect(
@@ -90,27 +87,13 @@ func _validate_content_counts() -> void:
 		)
 
 
-func _validate_profile_ids() -> void:
-	var profile_ids: Array[StringName] = []
-	for profile in CHARACTER_CATALOG.profiles:
-		profile_ids.append(StringName(profile.id))
+func _validate_live_ids() -> void:
 	for card in CARD_CATALOG.cards:
 		for compatibility_id in card.compatibility:
 			_expect(
-				compatibility_id == &"shared" or profile_ids.has(compatibility_id),
+				compatibility_id in [&"shared", HERO.id],
 				"card %s has unknown compatibility %s" % [card.id, compatibility_id]
 			)
-	for item in EQUIPMENT_CATALOG.items:
-		for compatibility_id in item.compatibility:
-			_expect(
-				compatibility_id == &"shared" or profile_ids.has(compatibility_id),
-				"equipment %s has unknown compatibility %s" % [item.id, compatibility_id]
-			)
-	for mastery in MASTERY_CATALOG.nodes:
-		_expect(
-			profile_ids.has(mastery.character_id),
-			"mastery %s has unknown character %s" % [mastery.id, mastery.character_id]
-		)
 
 
 func _validate_enemy_rewards() -> void:
@@ -171,7 +154,9 @@ func _validate_stage_references() -> void:
 
 
 func _validate_generation_smoke() -> void:
-	var limits := MovementMetrics.route_limits_for_profiles(CHARACTER_CATALOG.profiles)
+	var limits := MovementMetrics.route_limits_for_stats(
+		HERO.to_base_stats_dictionary(), HERO.id, HERO.display_name
+	)
 	for stage_index in STAGES.size():
 		var stage: Dictionary = STAGES[stage_index]
 		var result := StageGenerationService.new().generate(
@@ -202,7 +187,7 @@ func _expect(condition: bool, message: String) -> void:
 
 func _finish() -> void:
 	if _failures.is_empty():
-		print("DESIGN_CATALOG_VALIDATION_OK typed_catalogs=9 stages=3 rooms=30")
+		print("DESIGN_CATALOG_VALIDATION_OK production_catalogs=7 stages=3 rooms=30")
 		quit(0)
 		return
 	for failure in _failures:

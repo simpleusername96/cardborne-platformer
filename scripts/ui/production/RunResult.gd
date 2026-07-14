@@ -4,10 +4,16 @@ signal menu_requested
 signal retry_requested
 
 const Styles = preload("res://scripts/ui/production/ProductionUIStyles.gd")
-const LOADOUT_SLOT_ORDER: Array[String] = ["weapon", "armor", "charm", "relic"]
+const LOADOUT_SLOT_ORDER: Array[String] = [
+	"melee", "ranged", "shield", "armor", "spirit_stone",
+]
 const MATERIAL_NAMES := {
 	"rusted_scrap": "Rusted Scrap",
+	"steel_fragment": "Steel Fragment",
+	"common_timber": "Common Timber",
+	"hardwood": "Hardwood",
 	"sky_thread": "Sky Thread",
+	"reinforced_fabric": "Reinforced Fabric",
 	"slime_residue": "Slime Residue",
 	"boss_core": "Boss Core",
 }
@@ -130,26 +136,28 @@ func _build_summary(settlement: Dictionary) -> String:
 		else "Cards  None collected"
 	)
 
-	var affix_names := _affix_names(_run_build(settlement).get("temporary_affixes", {}))
-	if not affix_names.is_empty():
-		lines.append("Forge  %s" % ", ".join(affix_names))
 	return "\n".join(lines)
 
 
 func _loadout_names(settlement: Dictionary) -> Array[String]:
 	var names: Array[String] = []
 	var profile: Dictionary = settlement.get("profile", {})
-	var loadout: Dictionary = profile.get("loadout", {})
-	var catalog := ProfileState.equipment_catalog as EquipmentCatalog
+	var loadout: Dictionary = profile.get("hero_loadout", {})
+	var catalog := ProfileState.progression_catalog as EquipmentProgressionCatalog
 	if catalog == null:
 		return names
 	for slot_id in LOADOUT_SLOT_ORDER:
 		var item_id := StringName(loadout.get(slot_id, ""))
 		if item_id == &"":
 			continue
-		var item := catalog.get_item(item_id)
-		if item != null:
-			names.append(item.display_name)
+		if slot_id == "spirit_stone":
+			var stone := catalog.get_spirit_stone(item_id)
+			if stone != null:
+				names.append(stone.display_name)
+			continue
+		var model := catalog.get_model(item_id)
+		if model != null:
+			names.append(model.display_name)
 	return names
 
 
@@ -171,24 +179,10 @@ func _card_names(cards_value: Variant) -> Array[String]:
 	return names
 
 
-func _affix_names(affixes_value: Variant) -> Array[String]:
-	var names: Array[String] = []
-	if not affixes_value is Dictionary or RunState.forge_catalog == null:
-		return names
-	var affixes := affixes_value as Dictionary
-	var item_ids := affixes.keys()
-	item_ids.sort()
-	for item_id in item_ids:
-		var affix := RunState.forge_catalog.get_affix(StringName(affixes.get(item_id, "")))
-		if affix != null and not names.has(affix.display_name):
-			names.append(affix.display_name)
-	return names
-
-
 func _material_summary(settlement: Dictionary) -> String:
 	var delta: Dictionary = settlement.get("persistent_material_delta", {})
 	var parts: Array[String] = []
-	for material_id in ["boss_core", "rusted_scrap", "sky_thread", "slime_residue"]:
+	for material_id in MATERIAL_NAMES:
 		var amount := int(delta.get(material_id, 0))
 		if amount > 0:
 			parts.append("%s  +%d" % [MATERIAL_NAMES[material_id], amount])

@@ -27,21 +27,11 @@ func _draw() -> void:
 	match icon_id:
 		&"basic", &"attack", &"melee":
 			_draw_blade(center, radius, draw_tone, width)
-		&"heavy":
-			_draw_hammer(center, radius, draw_tone, width)
-		&"skill_1", &"guard", &"armor":
+		&"guard", &"armor":
 			_draw_shield(center, radius, draw_tone, width)
-		&"skill_2":
-			_draw_split(center, radius, draw_tone, width)
-		&"skill_3":
-			_draw_banner(center, radius, draw_tone, width)
 		&"consumable", &"potion":
 			_draw_bottle(center, radius, draw_tone, width)
-		&"warrior":
-			_draw_shield(center, radius, draw_tone, width)
-		&"assassin":
-			_draw_twin_blades(center, radius, draw_tone, width)
-		&"archer", &"ranged":
+		&"ranged":
 			_draw_bow(center, radius, draw_tone, width)
 		&"coin":
 			draw_circle(center, radius * 0.82, draw_tone)
@@ -87,15 +77,6 @@ func _draw_blade(center: Vector2, radius: float, color: Color, width: float) -> 
 	)
 
 
-func _draw_hammer(center: Vector2, radius: float, color: Color, width: float) -> void:
-	var head := Rect2(
-		center + Vector2(-radius * 0.76, -radius * 0.62),
-		Vector2(radius * 1.52, radius * 0.62)
-	)
-	draw_rect(head, color, false, width)
-	draw_line(center + Vector2(0.0, -radius * 0.02), center + Vector2(0.0, radius * 0.88), color, width * 1.25)
-
-
 func _draw_shield(center: Vector2, radius: float, color: Color, width: float) -> void:
 	var shield := PackedVector2Array([
 		center + Vector2(0.0, -radius),
@@ -107,27 +88,6 @@ func _draw_shield(center: Vector2, radius: float, color: Color, width: float) ->
 	])
 	draw_colored_polygon(shield, Color(color, color.a * 0.22))
 	_draw_polygon_outline(shield, color, width)
-
-
-func _draw_split(center: Vector2, radius: float, color: Color, width: float) -> void:
-	draw_line(center + Vector2(0.0, radius), center + Vector2(0.0, -radius * 0.18), color, width)
-	draw_line(center + Vector2(0.0, -radius * 0.18), center + Vector2(-radius * 0.68, -radius * 0.82), color, width)
-	draw_line(center + Vector2(0.0, -radius * 0.18), center + Vector2(radius * 0.68, -radius * 0.82), color, width)
-	draw_circle(center + Vector2(-radius * 0.68, -radius * 0.82), width * 0.85, color)
-	draw_circle(center + Vector2(radius * 0.68, -radius * 0.82), width * 0.85, color)
-
-
-func _draw_banner(center: Vector2, radius: float, color: Color, width: float) -> void:
-	var pole_x := center.x - radius * 0.48
-	draw_line(Vector2(pole_x, center.y - radius), Vector2(pole_x, center.y + radius), color, width)
-	var banner := PackedVector2Array([
-		Vector2(pole_x, center.y - radius * 0.82),
-		center + Vector2(radius * 0.72, -radius * 0.62),
-		center + Vector2(radius * 0.34, -radius * 0.08),
-		Vector2(pole_x, center.y - radius * 0.18),
-	])
-	draw_colored_polygon(banner, Color(color, color.a * 0.62))
-	_draw_polygon_outline(banner, color, width)
 
 
 func _draw_bottle(center: Vector2, radius: float, color: Color, width: float) -> void:
@@ -146,11 +106,6 @@ func _draw_bottle(center: Vector2, radius: float, color: Color, width: float) ->
 	])
 	draw_colored_polygon(body, Color(color, color.a * 0.28))
 	_draw_polygon_outline(body, color, width)
-
-
-func _draw_twin_blades(center: Vector2, radius: float, color: Color, width: float) -> void:
-	draw_line(center + Vector2(-radius, radius * 0.68), center + Vector2(radius * 0.55, -radius), color, width, true)
-	draw_line(center + Vector2(radius, radius * 0.68), center + Vector2(-radius * 0.55, -radius), color, width, true)
 
 
 func _draw_bow(center: Vector2, radius: float, color: Color, width: float) -> void:

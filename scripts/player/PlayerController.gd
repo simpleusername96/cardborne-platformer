@@ -41,13 +41,13 @@ func _ready() -> void:
 	add_to_group("player")
 	_prepare_collision_shapes()
 	_apply_run_state()
-	SignalBus.selected_profile_changed.connect(_on_selected_profile_changed)
+	SignalBus.hero_changed.connect(_on_hero_changed)
 	SignalBus.player_stats_changed.connect(_on_player_stats_changed)
 
 
 func _exit_tree() -> void:
-	if SignalBus.selected_profile_changed.is_connected(_on_selected_profile_changed):
-		SignalBus.selected_profile_changed.disconnect(_on_selected_profile_changed)
+	if SignalBus.hero_changed.is_connected(_on_hero_changed):
+		SignalBus.hero_changed.disconnect(_on_hero_changed)
 	if SignalBus.player_stats_changed.is_connected(_on_player_stats_changed):
 		SignalBus.player_stats_changed.disconnect(_on_player_stats_changed)
 
@@ -113,7 +113,6 @@ func receive_damage(damage_info: DamageInfo) -> void:
 	else:
 		defense = combat_controller.resolve_incoming_damage(damage_info.amount)
 	var resolved_damage := int(defense.get("damage", damage_info.amount))
-	resolved_damage = RunState.reduce_damage_with_forge_guard(resolved_damage)
 	var previous_health: int = RunState.current_health
 	RunState.damage_player(resolved_damage)
 	combat_controller.notify_health_changed(previous_health, RunState.current_health)
@@ -148,12 +147,6 @@ func heal_player(amount: int) -> int:
 	var previous_health := RunState.current_health
 	RunState.heal_player(amount)
 	return maxi(RunState.current_health - previous_health, 0)
-
-
-func apply_skill_cooldown_recovery(seconds: float) -> Dictionary:
-	if seconds <= 0.0:
-		return {}
-	return combat_controller.recover_all_skill_cooldowns(seconds)
 
 
 func _try_use_consumable() -> void:
@@ -457,38 +450,23 @@ func respawn_at(respawn_position: Vector2, invulnerability_time: float) -> void:
 func _apply_run_state() -> void:
 	stats = RunState.get_effective_stats()
 	var hero := RunState.get_hero_combat_loadout_snapshot()
-	if bool(hero.get("ok", false)):
-		var hero_color: Color = hero.get("visual_color", Color.WHITE)
-		body_polygon.color = hero_color
-		visual_overlay.configure(StringName(hero.get("hero_id", "traveler")), hero_color)
-		combat_controller.configure_shared_hero(hero, stats)
-		dash_charges_left = _max_dash_charges()
-		extra_jumps_left = _max_extra_jumps()
+	if not bool(hero.get("ok", false)):
+		push_error("Traveler combat loadout is unavailable.")
 		return
-	var profile := RunState.selected_profile
-	if profile != null:
-		body_polygon.color = profile.visual_color
-		visual_overlay.configure(StringName(profile.id), profile.visual_color)
-	combat_controller.configure(
-		profile,
-		stats,
-		ProfileState.get_behavior_effects(StringName(profile.id))
-	)
+	var hero_color: Color = hero.get("visual_color", Color.WHITE)
+	body_polygon.color = hero_color
+	visual_overlay.configure(StringName(hero.get("hero_id", "traveler")), hero_color)
+	combat_controller.configure_shared_hero(hero, stats)
 	dash_charges_left = _max_dash_charges()
 	extra_jumps_left = _max_extra_jumps()
 
 
-func _on_selected_profile_changed(_profile_id: String, _display_name: String, color: Color) -> void:
+func _on_hero_changed(hero_id: String, _display_name: String, color: Color) -> void:
 	body_polygon.color = color
-	visual_overlay.configure(StringName(_profile_id), color)
+	visual_overlay.configure(StringName(hero_id), color)
 	var hero := RunState.get_hero_combat_loadout_snapshot()
 	if bool(hero.get("ok", false)):
-		return
-	combat_controller.configure(
-		RunState.selected_profile,
-		stats,
-		ProfileState.get_behavior_effects(StringName(RunState.selected_profile.id))
-	)
+		combat_controller.configure_shared_hero(hero, stats)
 
 
 func _on_player_stats_changed(new_stats: Dictionary) -> void:

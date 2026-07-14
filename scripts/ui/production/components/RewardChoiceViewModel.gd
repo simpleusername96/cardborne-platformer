@@ -99,40 +99,6 @@ static func for_card(
 	return view
 
 
-static func for_treasure_option(option: Dictionary) -> Dictionary:
-	var choice_id := StringName(option.get("id", &""))
-	var kind := StringName(option.get("kind", &"normal"))
-	var mechanics: Array[String] = []
-	for line in String(option.get("description", "")).split("\n", false):
-		if not line.strip_edges().is_empty():
-			mechanics.append(line.strip_edges())
-	var description: String = {
-		&"normal": "Original resolved cache reward.",
-		&"equipment": "Equipment discovery replaces the cache reward.",
-		&"forge": "Run forge affix replaces the cache reward.",
-	}.get(kind, "Resolved reward choice.")
-	var glyph: StringName = kind
-	if kind == &"normal":
-		glyph = &"cache"
-	var category: String = {
-		&"normal": "CACHE",
-		&"equipment": "EQUIPMENT",
-		&"forge": "RUN FORGE",
-	}.get(kind, "REWARD")
-	return _base_view_model(
-		choice_id,
-		category,
-		"RESOLVED" if kind == &"normal" else "REPLACEMENT",
-		String(option.get("title", "Reward")),
-		description,
-		mechanics,
-		"ORIGINAL CACHE" if kind == &"normal" else "REPLACES CACHE REWARD",
-		String(option.get("label", "CHOOSE")),
-		glyph,
-		Styles.MOSS if choice_id == TreasureChoiceService.NORMAL_CHOICE_ID else Styles.CYAN
-	)
-
-
 static func _upgrade_presentation(
 	upgrade: MicroUpgradeDefinition,
 	changes: Dictionary
@@ -145,7 +111,7 @@ static func _upgrade_presentation(
 		return {"category": "OFFENSE", "glyph": &"offense", "accent": Styles.AMBER}
 	if changes.has("move_speed") or changes.has("air_acceleration"):
 		return {"category": "MOBILITY", "glyph": &"mobility", "accent": Styles.CYAN}
-	if changes.has("dash_cooldown") or changes.has("skill_cooldown_multiplier"):
+	if changes.has("dash_cooldown"):
 		return {"category": "TEMPO", "glyph": &"tempo", "accent": Color("c5b45c")}
 	return {"category": "UPGRADE", "glyph": &"card", "accent": Styles.CYAN}
 
@@ -210,8 +176,6 @@ static func _format_card_effect(effect: CardEffectDefinition, stack: int) -> Str
 			return "+%d damage" % effect.damage
 		&"add_stagger":
 			return "+%d stagger" % effect.stagger
-		&"reduce_longest_skill_cooldown":
-			return "Longest skill cooldown -%ss" % _number(effect.seconds)
 		&"area_damage":
 			return "%d damage / %spx radius" % [
 				effect.damage,
@@ -244,16 +208,10 @@ static func _format_card_effect(effect: CardEffectDefinition, stack: int) -> Str
 				_number(effect.duration),
 				_number(effect.distance),
 			]
-		&"reduce_all_skill_cooldowns":
-			return "All skill cooldowns -%ss" % _number(effect.seconds)
 		&"heal_player":
 			return "Restore %d health" % effect.health
 		&"grant_invulnerability":
 			return "Invulnerable for %ss" % _number(effect.seconds)
-		&"reset_skill_slot":
-			return "Reset Skill %d" % effect.skill_slot
-		&"request_reward_preview_replacement":
-			return "%d compatible replacement choice" % effect.choice_count
 		_:
 			return ""
 

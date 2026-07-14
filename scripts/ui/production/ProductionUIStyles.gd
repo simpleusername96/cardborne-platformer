@@ -71,17 +71,9 @@ static func action_accent(slot_role: StringName) -> Color:
 		&"guard": CYAN,
 		&"spirit": MOSS,
 		&"potion": Color("63b987"),
-		&"heavy": Color("d8894b"),
-		&"skill_1": CYAN,
-		&"skill_2": MOSS,
-		&"skill_3": Color("c5b45c"),
 		&"consumable": Color("63b987"),
 	}.get(slot_role, CYAN)
 
 
-static func class_accent(profile_id: StringName) -> Color:
-	return {
-		&"warrior": AMBER,
-		&"archer": CYAN,
-		&"assassin": Color("c088cf"),
-	}.get(profile_id, CYAN)
+static func hero_accent() -> Color:
+	return CYAN

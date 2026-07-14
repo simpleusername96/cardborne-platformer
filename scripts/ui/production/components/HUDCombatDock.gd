@@ -6,8 +6,6 @@ const Glyph = preload("res://scripts/ui/production/components/HUDGlyph.gd")
 
 const POTION_LABELS := {
 	"small_potion": "Small Potion",
-	"dash_tonic": "Dash Tonic",
-	"salvage_kit": "Salvage Kit",
 }
 
 var _run_snapshot: Dictionary = {}

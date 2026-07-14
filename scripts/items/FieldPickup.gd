@@ -118,13 +118,6 @@ func _shape_for_definition(pickup: FieldPickupDefinition, radius: float) -> Pack
 			])
 		FieldPickupDefinition.EFFECT_REFILL_CONSUMABLE:
 			return _regular_polygon(6, radius)
-		FieldPickupDefinition.EFFECT_REDUCE_SKILL_COOLDOWNS:
-			return PackedVector2Array([
-				Vector2(0.0, -radius), Vector2(radius * 0.34, -radius * 0.34),
-				Vector2(radius, 0.0), Vector2(radius * 0.34, radius * 0.34),
-				Vector2(0.0, radius), Vector2(-radius * 0.34, radius * 0.34),
-				Vector2(-radius, 0.0), Vector2(-radius * 0.34, -radius * 0.34),
-			])
 		_:
 			return _regular_polygon(8, radius)
 

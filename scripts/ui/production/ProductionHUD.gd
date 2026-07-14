@@ -398,7 +398,7 @@ func _refresh_health_cluster() -> void:
 		profile_id = &"traveler"
 	var current_health := maxi(int(_run_snapshot.get("health", 0)), 0)
 	var max_health := maxi(int(_run_snapshot.get("max_health", 1)), 1)
-	var accent := Styles.class_accent(profile_id)
+	var accent := Styles.hero_accent()
 	var profile_display_name := String(_run_snapshot.get("profile_display_name", "")).strip_edges()
 	if profile_display_name.is_empty():
 		profile_display_name = String(profile_id).replace("_", " ")

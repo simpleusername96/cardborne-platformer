@@ -19,7 +19,7 @@ func _run() -> void:
 	var result := packed.instantiate() as Control
 	root.add_child(result)
 	await process_frame
-	result.call("configure", true, "Warrior", _victory_settlement())
+	result.call("configure", true, "Traveler", _victory_settlement())
 	await process_frame
 
 	var snapshot: Dictionary = result.call("get_display_snapshot")
@@ -31,7 +31,7 @@ func _run() -> void:
 	_expect(String(snapshot.get("materials", "")).contains("Boss Core  +1"), "summary should show the kept Boss Core")
 	_expect(result.size.is_equal_approx(Vector2(root.size)), "run result should fill compact viewport")
 
-	result.call("configure", false, "Archer", _death_settlement())
+	result.call("configure", false, "Traveler", _death_settlement())
 	await process_frame
 	snapshot = result.call("get_display_snapshot")
 	_expect(snapshot.get("outcome", "") == "DEFEAT", "death outcome should be distinct from clear")
@@ -52,7 +52,8 @@ func _victory_settlement() -> Dictionary:
 		"stage_reached": 3,
 		"boss_reached": true,
 		"duration_seconds": 845.0,
-		"run_build": {"level": 6, "cards": {"dash_wake": 2, "warrior_seismic_edge": 1}},
+		"profile": {"hero_loadout": ProfileData.DEFAULT_HERO_LOADOUT.duplicate(true)},
+		"run_build": {"level": 6, "cards": {"dash_wake": 2, "perfect_punish": 1}},
 		"persistent_material_delta": {"slime_residue": 8, "boss_core": 1},
 	}
 
@@ -65,6 +66,7 @@ func _death_settlement() -> Dictionary:
 		"stage_reached": 2,
 		"boss_reached": false,
 		"duration_seconds": 301.0,
+		"profile": {"hero_loadout": ProfileData.DEFAULT_HERO_LOADOUT.duplicate(true)},
 		"run_build": {"level": 3, "cards": {}},
 		"persistent_material_delta": {"sky_thread": 2},
 	}

@@ -346,7 +346,7 @@ func _validate_flooded_exit_flow(
 	await process_frame
 	run_director.call("_on_card_continue_requested")
 	await process_frame
-	_expect(run_director.get_phase_name() == "rest_forge", "Stage 2 card Continue should open the camp forge")
+	_expect(run_director.get_phase_name() == "forge", "Stage 2 card Continue should open the camp forge")
 	_expect(run_director.current_screen is ForgeScreen, "camp forge should use the deterministic equipment screen")
 	var profile_state := root.get_node_or_null("/root/ProfileState")
 	var preparation: Dictionary = (

@@ -55,9 +55,9 @@ const MANIFEST := [
 	},
 	{
 		"scene": "res://scenes/rooms/flooded_works/FwLeaperBasin.tscn",
-		"node": "EscapeFocusShard",
-		"id": &"flooded_basin_focus_01",
-		"definition": "res://data/items/focus_shard.tres",
+		"node": "EscapeSupplyCharge",
+		"id": &"flooded_basin_supply_01",
+		"definition": "res://data/items/supply_charge.tres",
 	},
 	{
 		"scene": "res://scenes/rooms/flooded_works/FwSunkenCache.tscn",
@@ -79,9 +79,9 @@ const MANIFEST := [
 	},
 	{
 		"scene": "res://scenes/rooms/broken_sanctum/BsSentryCrossfire.tscn",
-		"node": "CrossfireFocusShard",
-		"id": &"sanctum_crossfire_focus_01",
-		"definition": "res://data/items/focus_shard.tres",
+		"node": "CrossfireSupplyCharge",
+		"id": &"sanctum_crossfire_supply_01",
+		"definition": "res://data/items/supply_charge.tres",
 	},
 	{
 		"scene": "res://scenes/rooms/broken_sanctum/BsReliquaryCache.tscn",

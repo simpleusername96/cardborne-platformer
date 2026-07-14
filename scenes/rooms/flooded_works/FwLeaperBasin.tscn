@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://scripts/stages/RoomTemplateHost.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/stages/RoomAnchor.gd" id="2"]
 [ext_resource type="PackedScene" path="res://scenes/stages/components/FieldPickup.tscn" id="3_field_pickup"]
-[ext_resource type="Resource" path="res://data/items/focus_shard.tres" id="4_focus_shard"]
+[ext_resource type="Resource" path="res://data/items/supply_charge.tres" id="4_supply_charge"]
 
 [sub_resource type="RectangleShape2D" id="EntryShape"]
 size = Vector2(300, 100)
@@ -170,10 +170,10 @@ metadata/bounds = Rect2(0, 0, 1280, 720)
 
 [node name="FieldPickups" type="Node2D" parent="."]
 
-[node name="EscapeFocusShard" parent="FieldPickups" instance=ExtResource("3_field_pickup")]
+[node name="EscapeSupplyCharge" parent="FieldPickups" instance=ExtResource("3_field_pickup")]
 position = Vector2(810, 490)
-pickup_id = &"flooded_basin_focus_01"
-definition = ExtResource("4_focus_shard")
+pickup_id = &"flooded_basin_supply_01"
+definition = ExtResource("4_supply_charge")
 metadata/safe_entry_radius = 240.0
 metadata/minimum_critical_landing = 220.0
 metadata/leap_lane_width = 420.0

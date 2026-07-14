@@ -16,10 +16,6 @@ const ACTION_DEFINITIONS := [
 	{"name": "dash", "label": "dash", "default_keys": [KEY_K, KEY_SHIFT]},
 	{"name": "attack", "label": "attack", "default_keys": [KEY_F]},
 	{"name": "guard", "label": "guard", "default_keys": [KEY_G]},
-	{"name": "heavy_attack", "label": "heavy attack", "default_keys": [KEY_G], "hidden": true},
-	{"name": "skill_1", "label": "skill 1", "default_keys": [KEY_Q], "hidden": true},
-	{"name": "skill_2", "label": "skill 2", "default_keys": [KEY_R], "hidden": true},
-	{"name": "skill_3", "label": "skill 3", "default_keys": [KEY_V], "hidden": true},
 	{"name": "use_consumable", "label": "consumable", "default_keys": [KEY_H]},
 	{"name": "climb_up", "label": "climb up", "default_keys": [KEY_W, KEY_UP]},
 	{"name": "climb_down", "label": "climb down", "default_keys": [KEY_S, KEY_DOWN]},
@@ -38,10 +34,6 @@ const GAMEPAD_LAYOUT := {
 	"dash": {"buttons": [JOY_BUTTON_B]},
 	"attack": {"buttons": [JOY_BUTTON_X]},
 	"guard": {"buttons": [JOY_BUTTON_Y]},
-	"heavy_attack": {"buttons": [JOY_BUTTON_Y]},
-	"skill_1": {"buttons": [JOY_BUTTON_LEFT_SHOULDER]},
-	"skill_2": {"buttons": [JOY_BUTTON_RIGHT_SHOULDER]},
-	"skill_3": {"axes": [[JOY_AXIS_TRIGGER_LEFT, 1.0]]},
 	"use_consumable": {"axes": [[JOY_AXIS_TRIGGER_RIGHT, 1.0]]},
 	"climb_up": {"axes": [[JOY_AXIS_LEFT_Y, -1.0]], "buttons": [JOY_BUTTON_DPAD_UP]},
 	"climb_down": {"axes": [[JOY_AXIS_LEFT_Y, 1.0]], "buttons": [JOY_BUTTON_DPAD_DOWN]},
@@ -480,5 +472,4 @@ func _is_allowed_overlap(action_a: String, action_b: String) -> bool:
 	var crouch_climb_down := ["crouch", "climb_down"]
 	if crouch_climb_down.has(action_a) and crouch_climb_down.has(action_b):
 		return true
-	var guard_migration_alias := ["guard", "heavy_attack"]
-	return guard_migration_alias.has(action_a) and guard_migration_alias.has(action_b)
+	return false
