@@ -76,6 +76,8 @@ Generated panel sheets are reference boards only. Production panels use project-
 - `references/visual-style-slate-cutout.png` is a supporting simplification reference, not a competing palette.
 - `references/ui-shell/background-*.png` are the selected source references for the five production shell backgrounds under `art/ui/production/backgrounds/`.
 - `references/ui-shell/panel-*.png` and the contact sheet remain review evidence. Presence in the reference folder alone never grants runtime approval.
+- `references/ui-assets/README.md` records the 19-file raster UI illustration pack, prompt family, post-processing, and SVG fallbacks. Production copies live under `art/ui/production/illustrations/`.
+- `reports/ui-raster-asset-catalog.png` is the checkerboard and 64 px review board for that pack; it is evidence, not a runtime sprite sheet.
 - `references/README.md` records how all visual boards may and may not be used.
 
 ## System Boundary
@@ -117,6 +119,13 @@ Requirements:
 - stable padding and optical size inside a documented icon box;
 - large source asset with reviewed downscales for gameplay size;
 - visual state is composed by UI, not generated as separate “selected” and “disabled” art whenever tint/fill/marker can express it.
+
+The first production illustration pack implements this contract for the single
+Traveler, all active equipment models, both Spirit Stones, the small potion,
+the five active shared cards, Slime King, and the large Boss Core reward. Its
+stable IDs and SVG fallbacks are registered in
+`art/ui/production/asset-manifest.json`; runtime screen adoption remains a
+separate implementation decision.
 
 ### Use Project-Authored SVG Masks For
 

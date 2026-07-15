@@ -58,3 +58,28 @@ modal, so its raster remains an available asset rather than a forced backdrop.
 Do not stretch these files, tile them, or bake screen controls into replacements.
 Source references and generation provenance remain under
 `docs/design/references/ui-shell/`.
+
+## Raster UI illustrations
+
+The first non-background raster pack lives under `illustrations/` and contains
+19 independent `512 x 512` RGBA PNGs:
+
+- one Traveler portrait;
+- eight active equipment-model illustrations;
+- two Spirit Stones and one small potion;
+- five active-card vignettes;
+- one Slime King portrait and one large Boss Core reward illustration.
+
+These images carry internal color, material, pose, and expressive identity that
+would become brittle or noisy as monochrome SVG. They are neutral-state art:
+selection, rarity, quantity, condition, cooldown, lock, disabled, and focus stay
+live in Godot. Card files contain no card frame or text.
+
+Use the SVG role icons as stable fallbacks and for small semantic counters. In
+particular, `icon_boss_core.svg` remains the small counter while
+`illustrations/rewards/boss_core.png` is reserved for a large reward view.
+
+The complete ID, display-size, safe-padding, fallback, ownership, and source
+mapping is in `asset-manifest.json`. Generation prompts and alpha-validation
+evidence are recorded in `docs/design/references/ui-assets/README.md`; the visual
+catalog is `docs/design/reports/ui-raster-asset-catalog.png`.

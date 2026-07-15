@@ -108,6 +108,11 @@ adding more content or random topology.
   Preparation, and Run Result use an aspect-preserving cover renderer, while
   Forge preserves the live stage behind its centered modal. The larger UI
   migration remains active in the master UI overhaul plan.
+- The first detailed UI illustration pack now provides 19 independent `512x512`
+  RGBA assets for the Traveler, all active equipment and loadout items, the five
+  active shared cards, Slime King, and the large Boss Core reward. The manifest,
+  SVG fallbacks, prompts, and alpha-validation record are complete; runtime
+  screen wiring is owned by the active master UI overhaul plan.
 
 ## Authority
 

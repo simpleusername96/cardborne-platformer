@@ -1,8 +1,8 @@
 {
   "set": "cardborne-production-ui",
-  "version": 1,
+  "version": 2,
   "created": "2026-07-15",
-  "provenance": "Original SVG geometry and project-generated raster backgrounds authored for this repository; no third-party runtime dependencies.",
+  "provenance": "Original SVG geometry and project-generated raster backgrounds and illustrations authored for this repository; no third-party runtime dependencies.",
   "rendering": {
     "source_fill": "#ffffff",
     "mode": "tintable-mask",
@@ -15,6 +15,27 @@
     { "id": "shell_hero_preparation", "file": "backgrounds/hero_preparation.png", "size": [1672, 941], "screen": "Hero Preparation", "source": "docs/design/references/ui-shell/background-preparation-v01.png" },
     { "id": "shell_forge", "file": "backgrounds/forge.png", "size": [1672, 941], "screen": "Forge contextual/deferred", "source": "docs/design/references/ui-shell/background-forge-v01.png" },
     { "id": "shell_run_result", "file": "backgrounds/run_result.png", "size": [1672, 941], "screen": "Run Result", "source": "docs/design/references/ui-shell/background-run-result-v01.png" }
+  ],
+  "illustrations": [
+    { "id": "portrait_traveler", "role": "character_portrait", "file": "illustrations/characters/traveler.png", "size": [512, 512], "display_sizes": [64, 160, 256], "safe_padding_px": 16, "fallback": "melee", "tint": false, "owner": "traveler", "source": "docs/design/references/ui-assets/README.md#traveler" },
+    { "id": "equipment_traveler_sword", "role": "equipment", "file": "illustrations/equipment/traveler_sword.png", "size": [512, 512], "display_sizes": [48, 128, 256], "safe_padding_px": 16, "fallback": "melee", "tint": false, "owner": "traveler_sword", "source": "docs/design/references/ui-assets/README.md#equipment" },
+    { "id": "equipment_hunting_spear", "role": "equipment", "file": "illustrations/equipment/hunting_spear.png", "size": [512, 512], "display_sizes": [48, 128, 256], "safe_padding_px": 16, "fallback": "melee", "tint": false, "owner": "hunting_spear", "source": "docs/design/references/ui-assets/README.md#equipment" },
+    { "id": "equipment_hunting_bow", "role": "equipment", "file": "illustrations/equipment/hunting_bow.png", "size": [512, 512], "display_sizes": [48, 128, 256], "safe_padding_px": 16, "fallback": "ranged", "tint": false, "owner": "hunting_bow", "source": "docs/design/references/ui-assets/README.md#equipment" },
+    { "id": "equipment_matchlock", "role": "equipment", "file": "illustrations/equipment/matchlock.png", "size": [512, 512], "display_sizes": [48, 128, 256], "safe_padding_px": 16, "fallback": "ranged", "tint": false, "owner": "matchlock", "source": "docs/design/references/ui-assets/README.md#equipment" },
+    { "id": "equipment_round_shield", "role": "equipment", "file": "illustrations/equipment/round_shield.png", "size": [512, 512], "display_sizes": [48, 128, 256], "safe_padding_px": 16, "fallback": "shield", "tint": false, "owner": "round_shield", "source": "docs/design/references/ui-assets/README.md#equipment" },
+    { "id": "equipment_tower_shield", "role": "equipment", "file": "illustrations/equipment/tower_shield.png", "size": [512, 512], "display_sizes": [48, 128, 256], "safe_padding_px": 16, "fallback": "shield", "tint": false, "owner": "tower_shield", "source": "docs/design/references/ui-assets/README.md#equipment" },
+    { "id": "equipment_traveler_coat", "role": "equipment", "file": "illustrations/equipment/traveler_coat.png", "size": [512, 512], "display_sizes": [48, 128, 256], "safe_padding_px": 16, "fallback": "armor", "tint": false, "owner": "traveler_coat", "source": "docs/design/references/ui-assets/README.md#equipment" },
+    { "id": "equipment_reinforced_coat", "role": "equipment", "file": "illustrations/equipment/reinforced_coat.png", "size": [512, 512], "display_sizes": [48, 128, 256], "safe_padding_px": 16, "fallback": "armor", "tint": false, "owner": "reinforced_coat", "source": "docs/design/references/ui-assets/README.md#equipment" },
+    { "id": "spirit_ember", "role": "spirit_stone", "file": "illustrations/spirit_stones/ember_spirit_stone.png", "size": [512, 512], "display_sizes": [48, 128, 192], "safe_padding_px": 16, "fallback": "spirit", "tint": false, "owner": "ember_spirit_stone", "source": "docs/design/references/ui-assets/README.md#spirit-stones-and-consumable" },
+    { "id": "spirit_frost", "role": "spirit_stone", "file": "illustrations/spirit_stones/frost_spirit_stone.png", "size": [512, 512], "display_sizes": [48, 128, 192], "safe_padding_px": 16, "fallback": "spirit", "tint": false, "owner": "frost_spirit_stone", "source": "docs/design/references/ui-assets/README.md#spirit-stones-and-consumable" },
+    { "id": "consumable_small_potion", "role": "consumable", "file": "illustrations/consumables/small_potion.png", "size": [512, 512], "display_sizes": [32, 64, 160], "safe_padding_px": 16, "fallback": "potion", "tint": false, "owner": "small_potion", "source": "docs/design/references/ui-assets/README.md#spirit-stones-and-consumable" },
+    { "id": "card_dash_wake", "role": "card_vignette", "file": "illustrations/cards/dash_wake.png", "size": [512, 512], "display_sizes": [96, 160, 224], "safe_padding_px": 16, "fallback": "speed", "tint": false, "owner": "dash_wake", "source": "docs/design/references/ui-assets/README.md#active-card-vignettes" },
+    { "id": "card_aerial_opener", "role": "card_vignette", "file": "illustrations/cards/aerial_opener.png", "size": [512, 512], "display_sizes": [96, 160, 224], "safe_padding_px": 16, "fallback": "force", "tint": false, "owner": "aerial_opener", "source": "docs/design/references/ui-assets/README.md#active-card-vignettes" },
+    { "id": "card_perfect_punish", "role": "card_vignette", "file": "illustrations/cards/perfect_punish.png", "size": [512, 512], "display_sizes": [96, 160, 224], "safe_padding_px": 16, "fallback": "force", "tint": false, "owner": "perfect_punish", "source": "docs/design/references/ui-assets/README.md#active-card-vignettes" },
+    { "id": "card_second_wind", "role": "card_vignette", "file": "illustrations/cards/second_wind.png", "size": [512, 512], "display_sizes": [96, 160, 224], "safe_padding_px": 16, "fallback": "health", "tint": false, "owner": "second_wind", "source": "docs/design/references/ui-assets/README.md#active-card-vignettes" },
+    { "id": "card_last_stand", "role": "card_vignette", "file": "illustrations/cards/last_stand.png", "size": [512, 512], "display_sizes": [96, 160, 224], "safe_padding_px": 16, "fallback": "health", "tint": false, "owner": "last_stand", "source": "docs/design/references/ui-assets/README.md#active-card-vignettes" },
+    { "id": "boss_slime_king", "role": "boss_portrait", "file": "illustrations/bosses/slime_king.png", "size": [512, 512], "display_sizes": [64, 160, 256], "safe_padding_px": 16, "fallback": "boss_core", "tint": false, "owner": "slime_king", "source": "docs/design/references/ui-assets/README.md#boss-and-reward" },
+    { "id": "reward_boss_core", "role": "reward_illustration", "file": "illustrations/rewards/boss_core.png", "size": [512, 512], "display_sizes": [128, 192, 256], "safe_padding_px": 16, "fallback": "boss_core", "tint": false, "owner": "boss_core", "source": "docs/design/references/ui-assets/README.md#boss-and-reward" }
   ],
   "shapes": [
     { "id": "panel_slab", "file": "shapes/panel_slab.svg", "view_box": "0 0 640 360" },

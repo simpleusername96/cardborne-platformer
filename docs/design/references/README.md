@@ -17,7 +17,7 @@ related:
 
 ## Status
 
-Most images in this folder are retained exploratory references, not production-ready runtime assets. They communicate candidate palette, silhouette, density, and modular decomposition. The owner-selected anchor and five selected shell backgrounds under `ui-shell/` are exceptions: they ground the active UI art direction, while their separately imported production copies live under `art/ui/production/backgrounds/`.
+Most images in this folder are retained exploratory references, not production-ready runtime assets. They communicate candidate palette, silhouette, density, and modular decomposition. The owner-selected anchor and five selected shell backgrounds under `ui-shell/` are exceptions: they ground the active UI art direction, while their separately imported production copies live under `art/ui/production/backgrounds/`. `ui-assets/README.md` records the separately generated 19-file production UI illustration pack under `art/ui/production/illustrations/`.
 
 ## UI Shell Art Direction
 
@@ -27,6 +27,13 @@ Most images in this folder are retained exploratory references, not production-r
 | `ui-shell/background-*.png` | Selected screen-specific source references generated from the active visual contract. | Production copies exist under `art/ui/production/backgrounds/`; four shell contexts are connected and Forge is deferred. |
 | `ui-shell/panel-*.png` | Shape-language reference sheets for deterministic SVG/NinePatch/Theme reconstruction. | Never crop or stretch directly into production. |
 | `ui-shell/README.md` | Batch roles, generation constraints, findings, and limitations. | Advisory evidence. |
+
+## Raster UI Illustrations
+
+| Path | Use | Runtime status |
+| --- | --- | --- |
+| `ui-assets/README.md` | Exact raster/SVG boundary, 19 asset IDs, prompt family, generator source IDs, fallbacks, and alpha-validation record. | Production files exist but are not yet wired into screens. |
+| `../reports/ui-raster-asset-catalog.png` | Checkerboard transparency review plus 64 px readability samples. | Evidence only; never use as a runtime sheet. |
 
 ## Working Direction
 
