@@ -149,6 +149,7 @@ func _validate_card_reward_ui(locale: String, viewport_size: Vector2i) -> void:
 	var row := screen.find_child("CardChoices", true, false) as HBoxContainer
 	var buttons := _choice_buttons(row)
 	_expect(buttons.size() == 3, "%s %s card reward should show three choices" % [locale, viewport_size])
+	_validate_card_art(buttons, offer, locale, viewport_size)
 	_validate_reward_surface(screen, buttons, locale, viewport_size, "card")
 	var visible := _collect_visible_text(screen)
 	_expect(
@@ -176,6 +177,7 @@ func _validate_card_reward_ui(locale: String, viewport_size: Vector2i) -> void:
 	offer = _run_state.get_pending_card_offer()
 	row = screen.find_child("CardChoices", true, false) as HBoxContainer
 	buttons = _choice_buttons(row)
+	_validate_card_art(buttons, offer, locale, viewport_size)
 	_validate_reward_surface(screen, buttons, locale, viewport_size, "card reroll")
 	var reroll_copy := _collect_visible_text(screen)
 	_expect(
@@ -210,6 +212,24 @@ func _validate_card_reward_ui(locale: String, viewport_size: Vector2i) -> void:
 			_expect(_ui_events.has("continue"), "Enter/Space confirm should continue after commit")
 	await _capture_if_requested(screen, "card_committed", locale, viewport_size)
 	await _unmount(screen)
+
+
+func _validate_card_art(
+	buttons: Array[Button],
+	offer: Array[StringName],
+	locale: String,
+	viewport_size: Vector2i
+) -> void:
+	for index in mini(buttons.size(), offer.size()):
+		var expected_id := StringName("card_%s" % offer[index])
+		_expect(
+			StringName(buttons[index].call("get_art_asset_id")) == expected_id,
+			"%s %s must resolve %s" % [locale, viewport_size, expected_id]
+		)
+		_expect(
+			String(buttons[index].call("get_art_texture_path")).contains("/illustrations/cards/"),
+			"%s %s card art must use the production vignette" % [locale, viewport_size]
+		)
 
 
 func _validate_reward_surface(

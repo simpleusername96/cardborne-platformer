@@ -2,6 +2,7 @@ class_name RewardChoiceCard
 extends Button
 
 const Styles = preload("res://scripts/ui/production/ProductionUIStyles.gd")
+const Assets = preload("res://scripts/ui/production/ProductionUIAssets.gd")
 const GlyphScript = preload("res://scripts/ui/production/components/RewardChoiceGlyph.gd")
 const Text = preload("res://scripts/ui/localization/LocalizedText.gd")
 
@@ -18,6 +19,8 @@ var _pending_view: Dictionary = {}
 var _category_label: Label
 var _rarity_label: Label
 var _glyph: Control
+var _art: TextureRect
+var _art_asset_id: StringName
 var _surface: ColorRect
 var _title_label: Label
 var _description_label: Label
@@ -86,6 +89,14 @@ func get_visible_copy() -> String:
 	])
 
 
+func get_art_asset_id() -> StringName:
+	return _art_asset_id
+
+
+func get_art_texture_path() -> String:
+	return _art.texture.resource_path if _art != null and _art.texture != null else ""
+
+
 func has_visible_text_overflow() -> bool:
 	for label in [
 		_category_label,
@@ -151,6 +162,13 @@ func _build_content() -> void:
 	_glyph_center.custom_minimum_size = Vector2(0.0, 52.0)
 	_glyph_center.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_content.add_child(_glyph_center)
+	_art = TextureRect.new()
+	_art.name = "CardIllustration"
+	_art.custom_minimum_size = Vector2(96.0, 96.0)
+	_art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_glyph_center.add_child(_art)
 	_glyph = GlyphScript.new()
 	_glyph_center.add_child(_glyph)
 
@@ -210,6 +228,10 @@ func _apply_view(view: Dictionary) -> void:
 	_value_label.visible = not _value_label.text.is_empty()
 	_footer_label.text = String(view.get("footer", "")).to_upper()
 	_footer_label.visible = not _footer_label.text.is_empty()
+	_art_asset_id = Assets.asset_id_for_owner(choice_id)
+	_art.texture = Assets.texture(_art_asset_id) if _art_asset_id != &"" else null
+	_art.visible = _art.texture != null
+	_glyph.visible = not _art.visible
 	_glyph.call("configure", StringName(view.get("glyph", &"card")), _accent)
 	disabled = not _base_enabled
 	_selected = false
@@ -271,7 +293,8 @@ func _apply_responsive_layout() -> void:
 	for side in ["left", "top", "right", "bottom"]:
 		_margin.add_theme_constant_override("margin_%s" % side, inset)
 	_content.add_theme_constant_override("separation", 4 if compact else 6)
-	_glyph_center.custom_minimum_size.y = 40.0 if compact else 52.0
+	_glyph_center.custom_minimum_size.y = 96.0 if compact else 120.0
+	_art.custom_minimum_size = Vector2(92.0, 92.0) if compact else Vector2(116.0, 116.0)
 	_title_label.add_theme_font_size_override("font_size", 21 if compact else 24)
 	_title_label.custom_minimum_size.y = 44.0 if compact else 50.0
 	_description_label.add_theme_font_size_override("font_size", Styles.TYPE_CAPTION)

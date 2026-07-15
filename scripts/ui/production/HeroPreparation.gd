@@ -8,6 +8,7 @@ signal settings_requested
 signal back_requested
 
 const Styles = preload("res://scripts/ui/production/ProductionUIStyles.gd")
+const Assets = preload("res://scripts/ui/production/ProductionUIAssets.gd")
 const Text = preload("res://scripts/ui/localization/LocalizedText.gd")
 
 const SLOT_ORDER: Array[StringName] = [
@@ -53,6 +54,7 @@ const MATERIAL_ROWS: Array[Array] = [
 @onready var _model_list: VBoxContainer = %ModelList
 @onready var _materials_label: Label = %MaterialsLabel
 @onready var _supplies_label: Label = %SuppliesLabel
+@onready var _traveler_portrait: TextureRect = %TravelerPortrait
 @onready var _detail: HeroPreparationDetail = %HeroPreparationDetail
 @onready var _status_label: Label = %StatusLabel
 @onready var _start_button: Button = %StartButton
@@ -71,6 +73,7 @@ var _status_source := "Select a model to inspect its next action."
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_cache_slot_buttons()
+	_configure_asset_slots()
 	_connect_controls()
 	_apply_styles()
 	_compact_layout = _is_compact_layout()
@@ -188,6 +191,16 @@ func _apply_styles() -> void:
 	_set_persistence_state(&"saved")
 
 
+func _configure_asset_slots() -> void:
+	_traveler_portrait.texture = Assets.texture_for_owner(&"traveler")
+	_traveler_portrait.tooltip_text = _t("Traveler")
+	for slot_id in SLOT_ORDER:
+		var button := _slot_buttons.get(slot_id) as Button
+		button.expand_icon = true
+		button.icon_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		button.add_theme_constant_override("icon_max_width", 36)
+
+
 func _apply_copy() -> void:
 	%ScreenEyebrow.text = _t("PREPARATION • STAGE 1")
 	%HeroNameLabel.text = _t("Traveler")
@@ -219,6 +232,9 @@ func _apply_layout() -> void:
 	_outer_margin.add_theme_constant_override("margin_top", vertical_margin)
 	_outer_margin.add_theme_constant_override("margin_bottom", vertical_margin)
 	_page.add_theme_constant_override("separation", 5 if _compact_layout else 9)
+	_traveler_portrait.custom_minimum_size = (
+		Vector2(56.0, 56.0) if _compact_layout else Vector2(72.0, 72.0)
+	)
 	%Body.add_theme_constant_override("separation", 7 if _compact_layout else 11)
 	%SlotList.add_theme_constant_override("separation", 2 if _compact_layout else 4)
 	%LoadoutContent.add_theme_constant_override("separation", 4 if _compact_layout else 7)
@@ -351,6 +367,7 @@ func _update_slot_buttons() -> void:
 		var button := _slot_buttons.get(slot_id) as Button
 		var selected := slot_id == _selected_slot
 		var summary := _slot_summary(slot_id)
+		button.icon = Assets.texture_for_owner(_slot_owner_id(slot_id), slot_id)
 		button.text = (
 			_t(SLOT_LABELS[String(slot_id)])
 			if _compact_layout
@@ -363,6 +380,17 @@ func _update_slot_buttons() -> void:
 				"normal",
 				Styles.panel_style(Styles.SURFACE_RAISED, Styles.CYAN, 2)
 			)
+
+
+func _slot_owner_id(slot_id: StringName) -> StringName:
+	if slot_id in EQUIPMENT_SLOTS:
+		var row := _find_equipment_slot(_snapshot, slot_id)
+		return StringName(String(row.get("equipped_id", "")))
+	if slot_id == &"spirit_stone":
+		return StringName(_equipped_stone_id(_snapshot.get("spirit_stones", [])))
+	if slot_id == &"consumable":
+		return StringName(String(_as_dictionary(_snapshot.get("loadout", {})).get("consumable", "")))
+	return &""
 
 
 func _slot_summary(slot_id: StringName) -> String:
@@ -428,7 +456,8 @@ func _build_equipment_model_list() -> void:
 		var button := _make_model_button(
 			_t(String(option.get("display_name", "Equipment"))),
 			_equipment_model_state(option),
-			model_id == selected_id
+			model_id == selected_id,
+			StringName(model_id)
 		)
 		button.set_meta("preparation_id", model_id)
 		button.pressed.connect(_select_model.bind(StringName(model_id)))
@@ -456,7 +485,8 @@ func _build_spirit_stone_list() -> void:
 		var button := _make_model_button(
 			_t(String(stone.get("display_name", "Spirit Stone"))),
 			state,
-			stone_id == selected_id
+			stone_id == selected_id,
+			StringName(stone_id)
 		)
 		button.set_meta("preparation_id", stone_id)
 		button.pressed.connect(_select_model.bind(StringName(stone_id)))
@@ -469,13 +499,23 @@ func _build_consumable_list() -> void:
 		_snapshot.get("loadout", {})
 	).get("consumable", "")))
 	_selected_ids["consumable"] = String(consumable_id)
-	var button := _make_model_button(_t("Healing Potion"), _t("Prepared · 1 use"), true)
+	var button := _make_model_button(
+		_t("Healing Potion"),
+		_t("Prepared · 1 use"),
+		true,
+		consumable_id
+	)
 	button.disabled = true
 	_model_list.add_child(button)
 	_model_buttons.append(button)
 
 
-func _make_model_button(title: String, state: String, selected: bool) -> Button:
+func _make_model_button(
+	title: String,
+	state: String,
+	selected: bool,
+	asset_owner_id: StringName = &""
+) -> Button:
 	var button := Button.new()
 	button.name = "PreparationModelButton"
 	button.text = "%s%s\n%s" % ["› " if selected else "", title, state]
@@ -485,6 +525,10 @@ func _make_model_button(title: String, state: String, selected: bool) -> Button:
 	button.button_pressed = selected
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	button.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	button.icon = Assets.texture_for_owner(asset_owner_id)
+	button.expand_icon = true
+	button.icon_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	button.add_theme_constant_override("icon_max_width", 42)
 	Styles.apply_button(button, Styles.AMBER if selected else Styles.CYAN, not selected)
 	button.add_theme_font_size_override("font_size", Styles.TYPE_CAPTION)
 	if selected:

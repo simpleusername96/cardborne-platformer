@@ -38,6 +38,31 @@ func _run() -> void:
 			and image.visible,
 			"run result background should preserve aspect and cover"
 		)
+		_expect(
+			StringName(backdrop.get("background_asset_id")) == &"shell_run_result",
+			"run result background should resolve through ProductionUIAssets"
+		)
+	var traveler_art := result.get_node("%TravelerArt") as TextureRect
+	var slime_art := result.get_node("%SlimeKingArt") as TextureRect
+	var core_art := result.get_node("%BossCoreArt") as TextureRect
+	_expect(
+		traveler_art.texture != null
+		and traveler_art.texture.resource_path.ends_with("/illustrations/characters/traveler.png")
+		and traveler_art.visible,
+		"victory result should show Traveler art"
+	)
+	_expect(
+		slime_art.texture != null
+		and slime_art.texture.resource_path.ends_with("/illustrations/bosses/slime_king.png")
+		and slime_art.visible,
+		"victory result should show Slime King art"
+	)
+	_expect(
+		core_art.texture != null
+		and core_art.texture.resource_path.ends_with("/illustrations/rewards/boss_core.png")
+		and core_art.visible,
+		"victory result should show secured Boss Core art"
+	)
 
 	var snapshot: Dictionary = result.call("get_display_snapshot")
 	_expect(snapshot.get("outcome", "") == _t("VICTORY"), "victory outcome should be explicit")
@@ -50,6 +75,7 @@ func _run() -> void:
 
 	result.call("configure", false, "Traveler", _death_settlement())
 	await process_frame
+	_expect(not core_art.visible, "defeat result should not imply a secured Boss Core")
 	snapshot = result.call("get_display_snapshot")
 	_expect(snapshot.get("outcome", "") == _t("DEFEAT"), "death outcome should be distinct from clear")
 	_expect(snapshot.get("subtitle", "") == _t("EXPEDITION ENDED"), "death subtitle should be distinct from clear")

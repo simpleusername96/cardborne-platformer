@@ -1,8 +1,7 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/production/MainMenu.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/ui/production/ProductionBackdrop.gd" id="2"]
-[ext_resource type="Texture2D" path="res://art/ui/production/backgrounds/main_menu.png" id="4"]
 
 [node name="MainMenu" type="Control"]
 layout_mode = 3
@@ -22,7 +21,7 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("2")
-backdrop_texture = ExtResource("4")
+background_asset_id = &"shell_main_menu"
 
 [node name="SafeMargin" type="MarginContainer" parent="."]
 layout_mode = 1

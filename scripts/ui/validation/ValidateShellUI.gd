@@ -474,6 +474,16 @@ func _assert_backdrop(backdrop: Control, expected_path: String, label: String) -
 	if backdrop == null:
 		return
 	var texture := backdrop.get("backdrop_texture") as Texture2D
+	var expected_asset_id := StringName({
+		"res://art/ui/production/backgrounds/main_menu.png": &"shell_main_menu",
+		"res://art/ui/production/backgrounds/settings.png": &"shell_settings",
+		"res://art/ui/production/backgrounds/run_result.png": &"shell_run_result",
+	}.get(expected_path, &""))
+	_assert_true(
+		expected_asset_id == &""
+		or StringName(backdrop.get("background_asset_id")) == expected_asset_id,
+		"%s backdrop must resolve through ProductionUIAssets." % label
+	)
 	_assert_true(
 		texture != null and texture.resource_path == expected_path,
 		"%s must use %s." % [label, expected_path]

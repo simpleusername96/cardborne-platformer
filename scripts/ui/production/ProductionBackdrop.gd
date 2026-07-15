@@ -1,6 +1,13 @@
 class_name ProductionBackdrop
 extends Control
 
+const Assets = preload("res://scripts/ui/production/ProductionUIAssets.gd")
+
+
+@export var background_asset_id: StringName:
+	set(value):
+		background_asset_id = value
+		backdrop_texture = Assets.texture(value) if value != &"" else null
 
 @export var backdrop_texture: Texture2D:
 	set(value):

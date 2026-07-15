@@ -5,6 +5,7 @@ signal equipment_command_requested(action: StringName, model_id: StringName, slo
 signal spirit_stone_equip_requested(stone_id: StringName)
 
 const Styles = preload("res://scripts/ui/production/ProductionUIStyles.gd")
+const Assets = preload("res://scripts/ui/production/ProductionUIAssets.gd")
 const Text = preload("res://scripts/ui/localization/LocalizedText.gd")
 
 const MATERIAL_LABELS := {
@@ -38,6 +39,7 @@ const SUPPLY_LABELS := {
 @onready var _content: VBoxContainer = $Margin/Scroll/Content
 @onready var _context_label: Label = %ContextLabel
 @onready var _state_label: Label = %StateLabel
+@onready var _art_preview: TextureRect = %AssetPreview
 @onready var _title_label: Label = %TitleLabel
 @onready var _behavior_heading: Label = %BehaviorHeading
 @onready var _behavior_label: Label = %BehaviorLabel
@@ -56,6 +58,7 @@ var _model_id: StringName
 var _slot_id: StringName
 var _stone_id: StringName
 var _compact := false
+var _art_asset_id: StringName
 
 
 func _ready() -> void:
@@ -79,6 +82,7 @@ func configure_equipment(
 	_model_id = StringName(String(decision.get("model_id", "")))
 	_slot_id = StringName(String(decision.get("slot", "")))
 	_stone_id = &""
+	_set_art_for_owner(_model_id, String(decision.get("display_name", "Equipment")))
 	_apply_density()
 	if not bool(decision.get("ok", false)):
 		_render_unavailable("Equipment unavailable", "This model cannot be inspected right now.")
@@ -93,6 +97,7 @@ func configure_spirit_stone(stone: Dictionary, compact: bool = false) -> void:
 	_model_id = &""
 	_slot_id = &"spirit_stone"
 	_stone_id = StringName(String(stone.get("id", "")))
+	_set_art_for_owner(_stone_id, String(stone.get("display_name", "Spirit Stone")))
 	_apply_density()
 	if _stone_id == &"" or String(stone.get("display_name", "")).strip_edges().is_empty():
 		_render_unavailable("Spirit Stone unavailable", "No Stone can be inspected right now.")
@@ -130,6 +135,7 @@ func configure_consumable(consumable_id: StringName, compact: bool = false) -> v
 	_model_id = &""
 	_slot_id = &"consumable"
 	_stone_id = &""
+	_set_art_for_owner(consumable_id, "Healing Potion")
 	_apply_density()
 
 	_context_label.text = _t("CONSUMABLE")
@@ -154,8 +160,17 @@ func configure_unavailable(title: String, message: String, compact: bool = false
 	_model_id = &""
 	_slot_id = &""
 	_stone_id = &""
+	_set_art_for_owner(&"", "")
 	_apply_density()
 	_render_unavailable(title, message)
+
+
+func get_art_asset_id() -> StringName:
+	return _art_asset_id
+
+
+func get_art_texture_path() -> String:
+	return _art_preview.texture.resource_path if _art_preview.texture != null else ""
 
 
 func _render_equipment(decision: Dictionary, supplies: Dictionary) -> void:
@@ -372,6 +387,7 @@ func _action_reason(preview: Dictionary) -> String:
 
 
 func _render_unavailable(title: String, message: String) -> void:
+	_set_art_for_owner(&"", "")
 	_context_label.text = _t("PREPARATION")
 	_state_label.text = _t("UNAVAILABLE")
 	_title_label.text = _t(title)
@@ -508,6 +524,16 @@ func _apply_density() -> void:
 	_reason_label.max_lines_visible = 2
 	_action_button.custom_minimum_size.y = Styles.TARGET_HEIGHT
 	_action_button.add_theme_font_size_override("font_size", Styles.TYPE_BUTTON)
+	_art_preview.custom_minimum_size = Vector2(56.0, 56.0) if _compact else Vector2(72.0, 72.0)
+
+
+func _set_art_for_owner(owner_id: StringName, tooltip: String) -> void:
+	if _art_preview == null:
+		return
+	_art_asset_id = Assets.asset_id_for_owner(owner_id)
+	_art_preview.texture = Assets.texture(_art_asset_id) if _art_asset_id != &"" else null
+	_art_preview.visible = _art_preview.texture != null
+	_art_preview.tooltip_text = _t(tooltip) if not tooltip.is_empty() else ""
 
 
 func _t(source: Variant, values: Array = []) -> String:

@@ -111,8 +111,10 @@ adding more content or random topology.
 - The first detailed UI illustration pack now provides 19 independent `512x512`
   RGBA assets for the Traveler, all active equipment and loadout items, the five
   active shared cards, Slime King, and the large Boss Core reward. The manifest,
-  SVG fallbacks, prompts, and alpha-validation record are complete; runtime
-  screen wiring is owned by the active master UI overhaul plan.
+  SVG fallbacks, prompts, and alpha-validation record are complete. The first
+  runtime pass now shows them in Hero Preparation, Card Reward, and Run Result
+  through one 52-ID asset registry; every retained asset has an explicit
+  runtime, fallback, contextual, or deferred disposition.
 
 ## Authority
 
@@ -145,7 +147,7 @@ Read in this order:
 .\tools\godot.ps1 --path . --headless --import
 .\tools\godot.ps1 --path . --headless --quit-after 2
 
-# Active release gates: 70 core checks, 75 with persistence/runtime extensions
+# Active release gates: 71 core checks, 76 with persistence/runtime extensions
 .\tools\validate_release_candidate.ps1
 .\tools\validate_release_candidate.ps1 -Full
 
@@ -168,6 +170,12 @@ unchanged Arsenal Trial source-text guard: this UI worktree checks out CRLF whil
 the guard compares an LF-only literal. The relevant Git blobs match main and the
 same validator passes in the main worktree, so this is checkout/test-harness
 debt rather than a shell-background regression.
+
+The 2026-07-16 easy-adoption pass added `validate_production_ui_assets.gd` to the
+release matrix and passed the asset, Shell UI, Hero Preparation, Card Reward, and
+Run Result gates. Real OpenGL captures cover all three supported viewports;
+Hero Preparation and reward captures additionally cover English and Korean. The
+full release suite and production Web export remain later plan gates.
 
 ## Risks
 

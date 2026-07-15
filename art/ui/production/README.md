@@ -83,3 +83,23 @@ The complete ID, display-size, safe-padding, fallback, ownership, and source
 mapping is in `asset-manifest.json`. Generation prompts and alpha-validation
 evidence are recorded in `docs/design/references/ui-assets/README.md`; the visual
 catalog is `docs/design/reports/ui-raster-asset-catalog.png`.
+
+## Runtime ownership and current adoption
+
+`scripts/ui/production/ProductionUIAssets.gd` is the only runtime path and
+fallback resolver. Screens request semantic IDs or content-owner IDs; they do not
+repeat raster paths. `tools/validate_production_ui_assets.gd` cross-checks all 52
+registry entries against this manifest, imported dimensions, fallbacks, owners,
+and disposition.
+
+The first adoption batch uses:
+
+- four shell background contexts: Main Menu, shell Settings, Hero Preparation,
+  and Run Result;
+- Traveler, equipment, Spirit Stone, and potion art in Hero Preparation;
+- all five active card vignettes in Card Reward;
+- Traveler, Slime King, and Boss Core art in the result summary.
+
+Structural SVGs and the remaining small semantic icons retain explicit deferred
+or fallback disposition in the manifest until the shared Theme, merchant, and HUD
+milestones measure their actual slots.

@@ -85,6 +85,13 @@ func _validate_viewport(viewport_size: Vector2i) -> void:
 	root.add_child(screen)
 	await _settle()
 	_validate_backdrop(screen, viewport_size)
+	var portrait := screen.find_child("TravelerPortrait", true, false) as TextureRect
+	_expect(
+		portrait != null
+		and portrait.texture != null
+		and portrait.texture.resource_path.ends_with("/illustrations/characters/traveler.png"),
+		"%s should use the Traveler portrait asset" % viewport_size
+	)
 
 	var visible_text := _collect_text(screen)
 	var compact := viewport_size.x <= 1050 or viewport_size.y <= 600
@@ -103,14 +110,24 @@ func _validate_viewport(viewport_size: Vector2i) -> void:
 	_expect(visible_text.contains("Saved locally"), "%s should show persistence status" % viewport_size)
 
 	for button_name in REQUIRED_SLOT_BUTTONS:
+		var slot_button := screen.find_child(button_name, true, false) as Button
+		_expect(slot_button != null, "%s should expose %s" % [viewport_size, button_name])
 		_expect(
-			screen.find_child(button_name, true, false) is Button,
-			"%s should expose %s" % [viewport_size, button_name]
+			slot_button != null and slot_button.icon != null,
+			"%s %s should resolve a production image or semantic fallback" % [viewport_size, button_name]
 		)
 	var detail := screen.find_child("HeroPreparationDetail", true, false) as Control
 	_expect(detail != null, "%s should show equipment detail" % viewport_size)
 	if detail != null:
 		_expect(_label_text(detail, "TitleLabel") == "Traveler Sword", "default detail should show Traveler Sword")
+		_expect(
+			StringName(detail.call("get_art_asset_id")) == &"equipment_traveler_sword",
+			"default detail should resolve Traveler Sword art"
+		)
+		_expect(
+			String(detail.call("get_art_texture_path")).ends_with("/illustrations/equipment/traveler_sword.png"),
+			"default detail should display Traveler Sword art"
+		)
 		_expect(not _label_text(detail, "BehaviorLabel").is_empty(), "equipment behavior should be visible")
 		_expect(not _label_text(detail, "WeaknessLabel").is_empty(), "equipment weakness should be visible")
 		_expect(_label_text(detail, "StateLabel").contains("Grade 1"), "equipment grade should be visible")
@@ -150,6 +167,10 @@ func _validate_backdrop(screen: Control, viewport_size: Vector2i) -> void:
 	if backdrop == null:
 		return
 	var texture := backdrop.get("backdrop_texture") as Texture2D
+	_expect(
+		StringName(backdrop.get("background_asset_id")) == &"shell_hero_preparation",
+		"%s should resolve its background through ProductionUIAssets" % viewport_size
+	)
 	_expect(
 		texture != null
 		and texture.resource_path == "res://art/ui/production/backgrounds/hero_preparation.png",

@@ -5,6 +5,7 @@ signal retry_requested
 signal end_requested
 
 const Styles = preload("res://scripts/ui/production/ProductionUIStyles.gd")
+const Assets = preload("res://scripts/ui/production/ProductionUIAssets.gd")
 const LOADOUT_SLOT_ORDER: Array[String] = [
 	"melee", "ranged", "shield", "armor", "spirit_stone",
 ]
@@ -33,6 +34,9 @@ const MATERIAL_NAMES := {
 @onready var summary_panel: PanelContainer = %SummaryPanel
 @onready var summary_rule: ColorRect = %SummaryRule
 @onready var summary_divider: ColorRect = %SummaryDivider
+@onready var traveler_art: TextureRect = %TravelerArt
+@onready var slime_king_art: TextureRect = %SlimeKingArt
+@onready var boss_core_art: TextureRect = %BossCoreArt
 @onready var retry_button: Button = %RetryButton
 @onready var menu_button: Button = %MenuButton
 
@@ -46,6 +50,7 @@ var _last_attempt: Dictionary = {}
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	_configure_art_slots()
 	_style_ui()
 	_apply_static_copy()
 	retry_button.pressed.connect(_on_retry_pressed)
@@ -86,6 +91,7 @@ func configure(victory: bool, profile_name: String, settlement: Dictionary = {})
 		"font_color",
 		Styles.AMBER if _has_kept_materials(settlement) else Styles.TEXT_MUTED
 	)
+	_update_result_art(victory, settlement)
 	retry_button.text = UILocalization.text(&"Begin Another Run")
 	menu_button.text = UILocalization.text(&"Main Menu")
 
@@ -124,6 +130,9 @@ func configure_retry_decision(profile_name: String, attempt: Dictionary) -> void
 		&"Health, coins, potions, cards, and equipment condition return to stage-entry values. Secured materials stay kept."
 	)
 	materials_label.add_theme_color_override("font_color", Styles.TEXT_MUTED)
+	traveler_art.visible = true
+	slime_king_art.visible = bool(attempt.get("boss_attempt", false))
+	boss_core_art.visible = false
 	retry_button.text = UILocalization.text(
 		&"Retry Boss" if bool(attempt.get("boss_attempt", false)) else &"Retry Stage"
 	)
@@ -178,6 +187,27 @@ func _style_ui() -> void:
 	summary_divider.color = Color(Styles.OUTLINE, 0.72)
 	Styles.apply_button(retry_button, Styles.AMBER)
 	Styles.apply_button(menu_button, Styles.MOSS, true)
+
+
+func _configure_art_slots() -> void:
+	traveler_art.texture = Assets.texture_for_owner(&"traveler")
+	slime_king_art.texture = Assets.texture_for_owner(&"slime_king")
+	boss_core_art.texture = Assets.texture_for_owner(&"boss_core")
+	for art in [traveler_art, slime_king_art, boss_core_art]:
+		art.visible = art.texture != null
+
+
+func _update_result_art(victory: bool, settlement: Dictionary) -> void:
+	var delta: Dictionary = settlement.get("persistent_material_delta", {})
+	traveler_art.visible = traveler_art.texture != null
+	slime_king_art.visible = slime_king_art.texture != null and (
+		victory or bool(settlement.get("boss_reached", false))
+	)
+	boss_core_art.visible = (
+		boss_core_art.texture != null
+		and victory
+		and int(delta.get("boss_core", 0)) > 0
+	)
 
 
 func _result_detail(victory: bool, profile_name: String, settlement: Dictionary) -> String:
@@ -309,6 +339,9 @@ func _apply_static_copy() -> void:
 	%ReachHeading.text = UILocalization.text(&"FINAL REACH")
 	%TimeHeading.text = UILocalization.text(&"RUN TIME")
 	%LevelHeading.text = UILocalization.text(&"FINAL LEVEL")
+	traveler_art.tooltip_text = UILocalization.text(&"Traveler")
+	slime_king_art.tooltip_text = UILocalization.text(&"Slime King")
+	boss_core_art.tooltip_text = UILocalization.text(&"Boss Core")
 
 
 func _on_locale_changed(_locale: String = "") -> void:

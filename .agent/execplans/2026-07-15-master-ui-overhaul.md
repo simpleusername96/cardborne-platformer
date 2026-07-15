@@ -8,6 +8,7 @@ topic: Master-targeted production UI overhaul and measured presentation-asset ad
 scope: Functional-baseline integration, current UI asset adoption, full production-screen and HUD visual migration, and measurement-backed world-presentation dependencies
 source: Owner direction through 2026-07-16, master/concurrent-task audit, current functional/UI branches, active UI specifications, runtime catalogs, validators, and rendered Godot captures
 related:
+  - ../../design-qa.md
   - ../../docs/README.md
   - ../../docs/product/2d_platform_action_card_game_prd.md
   - ../../docs/design/PRODUCTION_UI_CONTRACT.md
@@ -127,14 +128,18 @@ catalog expansion.
 - The isolated baseline passed shell, Hero Preparation, Card Reward, Run Result,
   and gameplay-HUD validators; deterministic baseline captures exist for all
   supported viewports.
+- Milestone 1 is implemented on the isolated branch: five backgrounds and nineteen
+  illustrations are imported without stale visual-branch behavior; all 52 UI
+  assets have explicit runtime/fallback/contextual/deferred disposition.
+- `ProductionUIAssets.gd` is the sole runtime lookup/fallback owner. Main Menu,
+  shell Settings, Hero Preparation, Card Reward, and Run Result resolve their
+  imagery through it while Forge retains the live Safe Intermission view.
+- The asset, shell, Hero Preparation, Card Reward, and Run Result validators pass.
+  English and Korean rendered captures at all three supported viewports show the
+  new assets without clipping, lost focus, or hidden required values.
 
 ### Still Open
 
-- Selectively import the visual branch's production assets without importing its
-  stale behavior or documentation deletions.
-- Create one runtime asset owner and eliminate scattered asset paths.
-- Apply the current 52 production UI assets to appropriate runtime slots or record
-  explicit disposition.
 - Replace bordered, rounded, code-local style construction with the approved flat
   Theme system.
 - Migrate every current screen and HUD state without breaking commands, focus,
@@ -394,23 +399,23 @@ visible in the lowest-risk real screens.
 `ProductionUIAssets.gd`, `ProductionBackdrop.gd`, Main Menu, Hero Preparation,
 Card Reward, and Run Result.
 
-- [ ] Selectively import the five production backgrounds, nineteen production
+- [x] Selectively import the five production backgrounds, nineteen production
   illustrations, their reviewed import settings, and v2 manifest entries from
   `codex/ui-visual-pass-1`.
-- [ ] Preserve the 28 existing SVG assets and merge manifest metadata without
+- [x] Preserve the 28 existing SVG assets and merge manifest metadata without
   losing provenance, fallback, tint, display-size, or ownership fields.
-- [ ] Add `ProductionUIAssets.gd` as the only runtime lookup/fallback owner.
-- [ ] Add a focused validator that checks manifest IDs, paths, dimensions,
+- [x] Add `ProductionUIAssets.gd` as the only runtime lookup/fallback owner.
+- [x] Add a focused validator that checks manifest IDs, paths, dimensions,
   fallbacks, and runtime/deferred disposition.
-- [ ] Reapply optional aspect-preserving cover rendering to
+- [x] Reapply optional aspect-preserving cover rendering to
   `ProductionBackdrop.gd` with the procedural fallback intact.
-- [ ] Apply `main_menu.png`, `hero_preparation.png`, and `run_result.png` to their
+- [x] Apply `main_menu.png`, `hero_preparation.png`, and `run_result.png` to their
   full-screen contexts.
-- [ ] Apply Traveler/equipment/Spirit/potion illustrations to Hero Preparation
+- [x] Apply Traveler/equipment/Spirit/potion illustrations to Hero Preparation
   and the five card vignettes to Card Reward.
-- [ ] Apply Slime King/Boss Core/Traveler art to result/boss-summary contexts where
+- [x] Apply Slime King/Boss Core/Traveler art to result/boss-summary contexts where
   it improves identity without replacing live values.
-- [ ] Assign every one of the 52 UI assets a runtime, fallback, contextual, or
+- [x] Assign every one of the 52 UI assets a runtime, fallback, contextual, or
   deferred disposition.
 
 **As-is:** assets exist but do not affect the main runtime.
@@ -424,6 +429,10 @@ pass.
 
 **Guard:** do not use UI portraits as world sprites, do not rasterize live controls,
 and do not hide missing IDs through layout changes.
+
+**Status 2026-07-16:** passed. The focused validators, English/Korean captures, and
+reference-versus-runtime review are recorded in `design-qa.md`. This completes
+asset adoption only; the Theme-wide visual migration remains Milestone 2.
 
 ### Milestone 2 - Theme And Shared Component Foundation
 
@@ -761,14 +770,17 @@ These are not blockers for Milestones 0-1 unless noted:
   latest-master final integration instead of moving `master` first.
 - 2026-07-16: `codex/master-ui-overhaul` was created from `c72d98e`; baseline
   shell, preparation, reward, result, and HUD validators and captures passed.
+- 2026-07-16: Milestone 1 passed with a 52-ID asset registry, four connected shell
+  background contexts, nineteen runtime illustration slots, explicit disposition
+  for the retained SVG set, and three-viewport English/Korean rendered evidence.
+- 2026-07-16: `forge.png` remains deferred because a full-screen image breaks the
+  live-world overlay contract; the existing centered modal and stage context win.
 
 ## Next Steps
 
-1. Execute Milestone 1 without new image generation: selectively import the five
-   backgrounds and nineteen illustrations, add the asset owner/validator, and
-   apply the first visible screen path.
-2. Stop for rendered review after the easy-adoption batch before beginning the
-   Theme-wide migration.
+1. Review the Milestone 1 captures and `design-qa.md` at the planned visual stop.
+2. If the easy-adoption direction is accepted, begin Milestone 2 with one Theme
+   and a shell/dense-screen/modal/HUD spike before migrating all surfaces.
 3. Leave `master` untouched until Milestone 7 creates a fresh integration branch
    from its then-current head.
 
