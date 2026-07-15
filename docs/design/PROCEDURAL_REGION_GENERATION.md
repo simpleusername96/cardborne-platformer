@@ -104,7 +104,7 @@ equipment, cards, passive Spirit effects, or extra dash charges.
 
 ### `ruin_approach`
 
-- 6 required rooms, 1 optional branch.
+- 8 required rooms, 1 optional branch.
 - Required roles: start, traversal, light combat, route choice, final combat, exit.
 - Enemies: Walker, Charger; one Shooter only after its teaching lane.
 - Hazards: safe gaps, visible spike rows, one optional rope shaft.
@@ -128,7 +128,7 @@ equipment, cards, passive Spirit effects, or extra dash charges.
 
 ### `broken_sanctum`
 
-- 8 required rooms, 2 optional branches.
+- 9 required rooms, 2 optional branches.
 - Required roles: start, mixed combat, gate loop, hazard combat, optional cache,
   fall recovery, final mixed encounter, exit.
 - Enemies: full six-enemy normal roster; Sentry and Shield Guard require compatible
@@ -148,7 +148,7 @@ socket, geometry, or anchor contract receives a distinct runtime ID.
 | Catalog | Count | Runtime members |
 | --- | ---: | --- |
 | Lower Ruins / Ruin Approach | 10 | `lr_start_shelf`, `lr_rise_steps`, `lr_broken_bridge`, `lr_patrol_gallery`, `lr_charge_lane`, `lr_shooter_overlook`, `lr_lower_upper_choice`, `lr_destructible_cache`, `lr_material_cavern`, `lr_exit_ascent` |
-| Flooded Works | 8 | `fw_flooded_entry`, `fw_rope_shaft`, `fw_poison_timing`, `fw_crumble_crossing`, `fw_leaper_basin`, `fw_pump_gallery`, `fw_lower_upper_choice`, `fw_sunken_cache` |
+| Flooded Works | 9 | `fw_flooded_entry`, `fw_rope_shaft`, `fw_poison_timing`, `fw_crumble_crossing`, `fw_leaper_basin`, `fw_pump_gallery`, `fw_lower_upper_choice`, `fw_sunken_cache`, `fw_exit_shelter` |
 | Broken Sanctum | 11 | `bs_breach_entry`, `bs_shield_choke`, `bs_fractured_gallery`, `bs_sentry_crossfire`, `bs_gate_switch_loop`, `bs_volatile_nave`, `bs_twin_reliquary_choice`, `bs_recovery_cloister`, `bs_material_crypt`, `bs_reliquary_cache`, `bs_exit_ascent` |
 
 Broken Sanctum's choice room owns two independent branch/return socket pairs. Its
@@ -157,8 +157,9 @@ zones, and its gate loop owns an optional moving-platform route with safe wait
 pads and fall recovery. These are authored geometry contracts, not allocator
 exceptions.
 
-The existing `fw_rest_forge` room is migration material for the separate Safe
-Intermission shell. It is not eligible for a normal combat-stage plan.
+The existing `fw_rest_forge` room remains migration material; production uses the
+standalone Safe Intermission shell instead. It is not eligible for a normal
+combat-stage plan. Normal-stage exit shelters contain no merchant or Forge.
 
 Templates may expose cosmetic or safe authored variants, but a variant cannot
 change sockets or movement classification without a new template ID/version.
@@ -207,7 +208,7 @@ room budget
 - Reward RNG uses a stream separate from room selection so retries cannot reroll
   already committed room topology.
 
-## Determinism And Retry
+## Deferred Generation Determinism And Assembly Retry
 
 - Store `run_seed`, `stage_index`, `content_version`, and named RNG stream seeds,
   including separate `encounter` and `enemy_variant` streams.
@@ -248,15 +249,26 @@ Reject a Stage Plan when any required check fails:
 
 ## Acceptance Criteria
 
-- Three curated seeds per profile are manually reviewed and fun to replay.
-- A 1,000-seed property sweep per profile accepts only valid plans or documented
-  fallbacks.
-- Same seed/content version reproduces room order, encounters, hazards, and rewards.
-- Same seed/content version reproduces exact enemy variant IDs and combat values.
-- The baseline Traveler clears the curated seed set with no movement upgrade.
+Current fixed-stage acceptance:
+
+| Stage | Required rooms | Enemies | Vertical range | Meaningful elevation changes | Multi-elevation combat rooms | Max consecutive empty rooms |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Ruin Approach | 8 | 8 | 720 px | 9 | 2 | 2 |
+| Flooded Works | 7 | 10 | 760 px | 9 | 3 | 1 |
+| Broken Sanctum | 9 | 12 | 740 px | 11 | 4 | 2 |
+
+- Every normal-stage card reward routes through Safe Intermission before the next
+  stage or boss.
+- The baseline Traveler clears each approved fixed route with no movement upgrade.
 - No unsupported enemy, floating marker, hidden collision, blocked exit, unsafe
   fall-recovery point, or unrecoverable required fall appears.
-- Different seeds change at least room order or optional branch plus encounter
+
+Deferred random re-entry gates, not current production acceptance:
+
+- three curated seeds per profile are manually reviewed;
+- a 1,000-seed property sweep accepts only valid plans or documented fallbacks;
+- same seed/content version reproduces topology and exact content;
+- different seeds change room order or an optional branch plus encounter
   allocation without changing the stage's teaching job.
 
 ## Non-Goals

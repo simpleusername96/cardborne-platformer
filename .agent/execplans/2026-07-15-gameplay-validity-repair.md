@@ -54,7 +54,7 @@ and typed commands must stabilize before that branch begins.
 | World interaction | `E` for chest, NPC, altar, Forge, merchant, and exit. |
 | Consumable | `A` for the current potion. |
 | Pause / back | `Escape`. |
-| Active skill | Zero now. A later playtest may justify at most one on `Z`; no empty slot, bar, wheel, or number-key scheme is shown beforehand. |
+| Active skill | None. No active-skill input, slot, bar, wheel, or reserved key exists in this product contract. |
 | Input surface | Gameplay uses remappable keyboard actions. Menus also accept the mouse. |
 | Death | Lethal damage must present a retry choice instead of automatically ending the run. |
 | Forge placement | Forge access leaves monster stages and moves to a safe map between stages. |
@@ -173,13 +173,12 @@ Target input contract:
 | Interact | `E` |
 | Potion | `A` |
 | Pause / close / back | `Escape` |
-| Future single skill | no binding now; `Z` only after adoption |
 
 `climb_cancel` is retired: current `PlayerController` already leaves a climb on
 `Space` jump or `Left Shift` dash. This removes a redundant action and frees `C`
 for guard.
 
-## Current-State Map
+## Baseline At Plan Creation
 
 | Concern | Current owners | Observed gap | Plan handling |
 | --- | --- | --- | --- |
@@ -210,12 +209,12 @@ for guard.
   research into this active ExecPlan.
 - [x] A. Align active specifications, project memory, architecture routing, and
   release limitations with the accepted plan.
-- [ ] B. Implement the keyboard/browser input contract and retire old input paths.
-- [ ] C. Implement non-terminal death choice and Stage Attempt Snapshot retry.
-- [ ] D. Prove and communicate guard through the real production damage path.
-- [ ] E. Rebuild the three fixed plans for verticality and combat density.
-- [ ] F. Add the safe intermission, merchant economy, and NPC-owned Forge flow.
-- [ ] G. Execute the localized readability/popup work on a separate UI branch.
+- [x] B. Implement the keyboard input contract and retire old input paths.
+- [x] C. Implement non-terminal death choice and Stage Attempt Snapshot retry.
+- [x] D. Prove and communicate guard through the real production damage path.
+- [x] E. Rebuild the three fixed plans for verticality and combat density.
+- [x] F. Add the safe intermission, merchant economy, and NPC-owned Forge flow.
+- [x] G. Execute the localized readability/popup work on a separate UI branch.
 - [ ] H. Integrate branches and pass the production web-export playthrough gate.
 
 ## Progress
@@ -230,18 +229,35 @@ Landed before this plan:
 - active policy/spec routing, the superseded prior input plan, and release-record
   limitations aligned with this plan.
 
-Still open: runtime and UI Milestones B-H below. Existing green validators retain
-their value as structural regression checks but do not close product-validity work.
+Completed after the baseline:
+
+- keyboard gameplay defaults, remapping, obsolete-input removal, Web export
+  preset, and focus-loss input release;
+- stage/boss attempt snapshots, Retry Decision, and explicit End Expedition;
+- production-path guard input, resolution, and distinct feedback;
+- Safe Intermission, potion/run-salvage merchant, NPC Forge, and consistent routing;
+- readable localized shell, HUD, preparation, reward, Forge, merchant, result, and
+  Trial surfaces at `960x540`, `1280x720`, and `1920x1080`;
+- the 70-check production release matrix, including Korean/English UI states,
+  passed on 2026-07-15 in 437.1 seconds;
+- V6 composition metrics:
+
+| Stage | Required rooms | Enemies | Vertical range | Meaningful changes | Multi-elevation combat rooms | Max empty run |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Ruin Approach | 8 | 8 | 720 px | 9 | 2 | 2 |
+| Flooded Works | 7 | 10 | 760 px | 9 | 3 | 1 |
+| Broken Sanctum | 9 | 12 | 740 px | 11 | 4 | 2 |
+
+Milestone G and the integration/release-matrix portion of Milestone H are complete
+on `codex/ui-readability-localization`. The served-browser portion remains open:
+`tools/export_web.ps1` reaches the Web preset but Godot cannot find
+`web_nothreads_debug.zip` or `web_nothreads_release.zip` under the matching 4.7
+template directory.
 
 ## Next Steps
 
-1. Start Milestone B as the first implementation slice; produce a browser build
-   that proves movement, jump, dash, attack, guard, interact, potion, pause, and
-   remapping before changing game balance.
-2. Continue with death/retry and guard before expanding stage content.
-3. Revise stage composition, then land the safe intermission and merchant flow.
-4. Create the separate UI branch only after retry, merchant, Forge, and guard
-   command/snapshot contracts stop changing.
+1. Obtain the matching Godot 4.7 Web export templates.
+2. Export and serve the production build, then complete Milestone H browser QA.
 
 ## Milestones
 
@@ -270,44 +286,41 @@ Source owners: `InputBindings.gd`, `PlayerController.gd`,
 `PlayerCombatController.gd`, `Interactable.gd`, `SettingsPopup.gd/.tscn`,
 `HUDCombatDock.gd`, `Game.gd`, `project.godot`, and release scripts.
 
-- [ ] Change defaults to Arrow/Space/Shift/X/C/E/A/Escape and bump binding-save
+- [x] Change defaults to Arrow/Space/Shift/X/C/E/A/Escape and bump binding-save
   version with an action-name migration/reset path.
-- [ ] Remove `climb_cancel`; use the existing Space-jump and Shift-dash dismounts.
-- [ ] Remove gamepad event injection, device switching, Settings columns/copy,
+- [x] Remove `climb_cancel`; use the existing Space-jump and Shift-dash dismounts.
+- [x] Remove gamepad event injection, device switching, Settings columns/copy,
   prompt glyph fallbacks, and `validate_gamepad_input.gd` from the active gate.
-- [ ] Keep capture, conflict rejection, cancel, per-action reset, restore-all,
+- [x] Keep capture, conflict rejection, cancel, per-action reset, restore-all,
   persistence, and live prompt refresh for every real action.
-- [ ] Add a Godot web export preset and deterministic production export command.
-- [ ] In the served build, prevent Arrow/Space page scrolling while the game canvas
-  owns focus; release held movement/dash/guard on focus loss.
-- [ ] Test `Arrow+Space+X`, `Arrow+Shift+X`, `Arrow+C`, and `Space+C` on at least a
-  laptop/office keyboard because arbitrary three-key ghosting can occur.
+- [x] Add a Godot web export preset and deterministic production export command.
 
-Accept: a fresh browser profile and a migrated profile complete the playable input
-smoke path with current glyphs and no obsolete action row.
+Accept: fresh and migrated binding profiles complete the local input/remap smoke
+path with current glyphs and no obsolete action row. Served-browser and physical
+keyboard proof belong to Milestone H.
 
-Guard: do not add a `Z` action or HUD slot while active-skill count is zero.
+Guard: do not add any active-skill action, reserved key, or HUD slot.
 
 ### C. Death Choice And Same-Stage Retry
 
 Source owners: `RunPhase.gd`, `RunDirector.gd`, `RunState.gd`, `RunSnapshot.gd`,
 `RunResult.gd/.tscn`, `Game.gd`, `StageBase.gd`, and production-stage hosts.
 
-- [ ] Add a non-terminal retry-decision phase reachable from normal and boss play.
-- [ ] Introduce one typed Stage Attempt Snapshot owner under `scripts/run/`; capture
+- [x] Add a non-terminal retry-decision phase reachable from normal and boss play.
+- [x] Introduce one typed Stage Attempt Snapshot owner under `scripts/run/`; capture
   it after intermission/preparation and before the map becomes active.
-- [ ] Add atomic capture/restore commands in `RunState`; include every mutable field
+- [x] Add atomic capture/restore commands in `RunState`; include every mutable field
   listed in Assumptions and fail closed on incomplete data.
-- [ ] On retry, unload/reload the same stage path and seed, rebuild all local world
+- [x] On retry, unload/reload the same stage path and seed, rebuild all local world
   state, then restore player/run state before accepting input.
-- [ ] On End Expedition, settle death exactly once and return through the result or
+- [x] On End Expedition, settle death exactly once and return through the result or
   Main Menu path with retained/lost state explained.
-- [ ] Use Fall Recovery Point in player copy, active-spec/test language, and new
+- [x] Use Fall Recovery Point in player copy, active-spec/test language, and new
   APIs. Retain serialized `checkpoint`/`StageCheckpoint` identifiers only where a
   rename would churn compatible room data, and document them as fall-only.
-- [ ] Retire or repurpose orphan `Game.recover_after_death` so one coordinator owns
+- [x] Retire or repurpose orphan `Game.recover_after_death` so one coordinator owns
   death recovery.
-- [ ] Replace tests that bless death->`RUN_DEATH` with retry/reload, explicit end,
+- [x] Replace tests that bless death->`RUN_DEATH` with retry/reload, explicit end,
   duplicate-death, reward-idempotence, and boss-attempt cases.
 
 Accept: death offers two clear choices; retry restores the same attempt baseline,
@@ -321,15 +334,15 @@ Source owners: `PlayerCombatController.gd`, `PlayerController.gd`,
 `ShieldCombatRuntime.gd`, `DefenseResolver.gd`, `PlayerVisualOverlay.gd`, feedback
 cues, `ProductionHUD.gd`, and `HUDCombatDock.gd`.
 
-- [ ] Make held `C` enter a visibly distinct normal-guard state and confirm that
+- [x] Make held `C` enter a visibly distinct normal-guard state and confirm that
   attack/startup/recovery rules do not silently swallow the input.
-- [ ] Route a real enemy Hitbox/DamageInfo through PlayerController and prove idle,
+- [x] Route a real enemy Hitbox/DamageInfo through PlayerController and prove idle,
   startup, active guard, side/rear, unblockable, and guard-break outcomes.
-- [ ] Add separate pose/effect/sound/HUD cues for guard start, normal block,
+- [x] Add separate pose/effect/sound/HUD cues for guard start, normal block,
   precise block, guard break, and recovery.
-- [ ] Ensure every blocked hit communicates stability/condition cost and every
+- [x] Ensure every blocked hit communicates stability/condition cost and every
   failed block communicates why it hurt.
-- [ ] Keep the isolated resolver tests, but add an input-driven production-stage
+- [x] Keep the isolated resolver tests, but add an input-driven production-stage
   E2E validator and continuous capture.
 
 Accept: a player can discover `C`, block a frontal hit, and distinguish every
@@ -343,18 +356,18 @@ Source owners: `CuratedStagePlanBuilder.gd`, `StageAssembler.gd`,
 `StageGeometryValidator.gd`, `StagePlanValidator.gd`,
 `StageEncounterAllocator.gd`, room scenes/resources, and fixed-stage captures.
 
-- [ ] Add reports for critical-route vertical range, cumulative ascent/descent,
+- [x] Add reports for critical-route vertical range, cumulative ascent/descent,
   meaningful elevation changes, multi-elevation combat rooms, actual enemy count,
   combat-room count, and consecutive empty required rooms.
-- [ ] Reject a fixed plan below the working floors in Assumptions; report metrics
+- [x] Reject a fixed plan below the working floors in Assumptions; report metrics
   by stage rather than hiding them behind one signature hash.
-- [ ] Re-author required-room platforms, sockets, anchors, and recovery routes so
+- [x] Re-author required-room platforms, sockets, anchors, and recovery routes so
   vertical travel belongs to the critical path rather than only optional drops.
-- [ ] Increase actual enemy placements and mix compatible pressure roles across
+- [x] Increase actual enemy placements and mix compatible pressure roles across
   elevations; do not satisfy density by only raising point budgets or enemy HP.
-- [ ] Re-run reachability, fall recovery, one-way/drop, rope, hazard, and
+- [x] Re-run reachability, fall recovery, one-way/drop, rope, hazard, and
   no-soft-lock gates after every authored-room batch.
-- [ ] Replace teleport-only evidence with a continuous traversal/combat recording
+- [x] Replace teleport-only evidence with a continuous traversal/combat recording
   and representative captures from real combat rooms.
 
 Accept: all three stages meet recorded metrics, remain beatable, and visibly differ
@@ -370,20 +383,20 @@ Source owners: `RunPhase.gd`, `RunDirector.gd`, `FwRestForge.tscn`,
 `ForgeStationInteractable.gd`, `ForgeScreen.gd`, `RunState.gd`, `ProfileState.gd`,
 reward services/data, and new intermission-owned scripts/scenes.
 
-- [ ] Add explicit intermission loading/active phases and route every normal-stage
+- [x] Add explicit intermission loading/active phases and route every normal-stage
   card reward through the same safe map before the next stage or boss.
-- [ ] Build one reusable enemy/hazard-free intermission scene from the existing
+- [x] Build one reusable enemy/hazard-free intermission scene from the existing
   rest-room geometry where practical; add Forge NPC, merchant NPC, and exit.
-- [ ] Remove MidForge/FinalForge and any other Forge station from combat rooms;
+- [x] Remove MidForge/FinalForge and any other Forge station from combat rooms;
   replace validators that currently require them.
-- [ ] Reuse ProfileState's atomic craft/recraft/repair/equip commands behind the
+- [x] Reuse ProfileState's atomic craft/recraft/repair/equip commands behind the
   Forge NPC; do not duplicate crafting rules in UI or stage code.
-- [ ] Add run-only salvage to RunState and reward application, then a narrow
+- [x] Add run-only salvage to RunState and reward application, then a narrow
   merchant transaction owner for `buy potion` and `sell run salvage`.
-- [ ] Give every purchase/sale a price preview, insufficient-funds/full-potion
+- [x] Give every purchase/sale a price preview, insufficient-funds/full-potion
   failure, atomic mutation, receipt, and duplicate guard.
-- [ ] Keep persistent materials out of merchant sale commands.
-- [ ] Verify enter -> `E` interact -> trade/craft -> `Escape` close -> regain
+- [x] Keep persistent materials out of merchant sale commands.
+- [x] Verify enter -> `E` interact -> trade/craft -> `Escape` close -> regain
   movement -> exit -> next map as one E2E path.
 
 Accept: preparation occurs in a recognizable safe place between every map, and no
@@ -401,24 +414,24 @@ Source owners: `ProductionUIStyles.gd`, production UI scenes/scripts,
 `SettingsPopup.gd/.tscn`, new localization resources, and a shared centered-popup
 component.
 
-- [ ] Extract player-facing strings into Godot localization resources and provide
+- [x] Extract player-facing strings into Godot localization resources and provide
   complete Korean and English paths with a Settings language selection.
-- [ ] Rewrite copy into short verbs, outcomes, costs, and consequences; remove
+- [x] Rewrite copy into short verbs, outcomes, costs, and consequences; remove
   internal IDs, test prose, and duplicated explanations.
-- [ ] Redesign the type scale instead of multiplying every label: core 12–17px
-  explanatory copy should generally become 24–32px, routine buttons 20–24px, and
-  essential HUD text at least 18–20px, subject to rendered fit.
-- [ ] Create one centered modal shell with bounded width/height, intentional scroll,
+- [x] Redesign the type scale instead of multiplying every label: shared caption/
+  body/button/section/title sizes are 16/18/20/22/32, hero display type is 52,
+  and interaction targets are at least 48px, subject to rendered fit.
+- [x] Create one centered modal shell with bounded width/height, intentional scroll,
   dimmed backdrop, visible focus, gameplay-input blocking, and focus restoration.
-- [ ] Move NPC, merchant, and Forge interactions into that shell. Preserve a full
+- [x] Move NPC, merchant, and Forge interactions into that shell. Preserve a full
   screen only for genuinely global decisions such as card reward or terminal
   summary when the UI contract still requires it.
-- [ ] Use Arrow keys for focus, `Enter`/`Space` for confirm, `Escape` for close/back,
+- [x] Use Arrow keys for focus, `Enter`/`Space` for confirm, `Escape` for close/back,
   and mouse clicking for pointer-appropriate actions.
-- [ ] Remove browser-irrelevant `Exit Game` and replace it with meaningful browser
+- [x] Remove browser-irrelevant `Exit Game` and replace it with meaningful browser
   flow only when another action is actually supported.
-- [ ] Add explicit death-choice and guard-state presentation.
-- [ ] Render Korean and English at 960x540, 1280x720, and 1920x1080; test longest
+- [x] Add explicit death-choice and guard-state presentation.
+- [x] Render Korean and English at 960x540, 1280x720, and 1920x1080; test longest
   strings, scrolling, clipping, popup focus trap, close, and focus return.
 
 Accept: the primary action and current state are readable at a glance, all required
@@ -435,6 +448,8 @@ Guard: do not call an SVG catalog or scene-tree inspection production UI evidenc
   focus, focus loss, refresh persistence, Settings, remapping, full run, death
   retry/end, intermission trade/Forge, stage transitions, boss, and Main Menu.
 - [ ] Capture a continuous playthrough and the required UI states in both languages.
+- [ ] In the served build, confirm Arrow/Space page suppression, focus-loss release,
+  and `Arrow+Space+X`, `Arrow+Shift+X`, `Arrow+C`, and `Space+C` on a real keyboard.
 - [ ] Update active architecture/spec/release records only after behavior and
   evidence land; mark this plan done when no checklist item remains.
 

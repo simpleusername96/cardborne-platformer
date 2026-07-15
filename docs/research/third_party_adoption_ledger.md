@@ -83,5 +83,6 @@ changing collision, combat, or content IDs.
 - The accepted procedural family is production-readable prototype presentation,
   not a claim that final commercial art direction is complete.
 - Commit hashes come from the local deep-dive evidence and should be re-verified before copying from upstream.
-- Browser-export input behavior and the revised keyboard defaults remain deferred
-  in the local input implementation.
+- Revised keyboard defaults are implemented and locally validated. Served-browser
+  input validation remains pending because the required local Web export templates
+  are unavailable.

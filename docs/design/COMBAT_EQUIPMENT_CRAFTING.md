@@ -4,7 +4,7 @@ status: active
 owner: BK
 created: 2026-07-14
 last_reviewed: 2026-07-15
-canonical_for: Minimum single-hero contextual combat, equipment, blueprint, material-grade, crafting, repair, passive Spirit Stone, and Stage 1 progression rules
+canonical_for: Minimum single-hero contextual combat, equipment, blueprint, material-grade, crafting, repair, passive Spirit Stone, and first-run progression rules
 supersedes:
   - ./ARSENAL_EQUIPMENT_PROGRESSION.md
   - ./PLAYER_CHARACTER_SYSTEMS.md
@@ -48,12 +48,12 @@ related:
 - 설계도, 일반/정제 재료, 확정 제작과 재제작;
 - 근접/방패 상태와 수리, 활/총 보급과 재장전;
 - 패시브 정령석 효과;
-- 고정 연습장과 고정 Stage 1의 획득·제작 순환;
+- 고정 연습장, 세 전투 Stage, 반복 Safe Intermission의 획득·제작 순환;
 - 획득 거래, 프로필 저장과 재실행 복구.
 
 액티브 기술, 스킬 트리, 정령 액티브, 공명 게이지, 장신구, 세 번째 이후 장비
-모델, Stage 2 이후 성장, 런타임 랜덤 맵은 이 사양의 첫 목표가 아니다. 이후
-액티브 기술을 검토하더라도 동시 장착은 최대 하나이며 별도 스킬 바를 만들지 않는다.
+모델, 런타임 랜덤 맵은 이 사양의 첫 목표가 아니다. 액티브 기술과 그 입력·슬롯은
+현재 제품 계약 밖이다.
 
 ## Domain Brief
 
@@ -98,13 +98,12 @@ related:
 | 상태 | 근접 도구와 방패의 현재 마모도. | 파괴 확률, 방어구 내구도 |
 | 정령석 | 입력 없이 원소 조건 하나를 제공하는 패시브 장비. | 액티브 기술, 궁극기 |
 | 획득 거래 | 보상 원천 하나를 정확히 한 번 적용하는 정산. | 획득 애니메이션 자체 |
-| 준비 구역 | 제작, 재제작, 수리, 장착이 가능한 안전 구역. | 전투 중 인벤토리 |
-| 런 부산물 (`Run Salvage`) | 현재 런에서만 존재하고 휴식 맵 상인이 코인으로 교환하는 부산물. | 영구 제작 재료, 저장 마이그레이션 salvage |
+| Safe Intermission | Forge 제작·재제작·수리·장착과 상인 거래가 가능한 적 없는 정비 맵. | 전투 중 인벤토리, 전투 Stage 내부 Forge |
+| 런 부산물 (`Run Salvage`) | 현재 런에서만 존재하고 Safe Intermission 상인이 코인으로 교환하는 부산물. | 영구 제작 재료, 저장 마이그레이션 salvage |
 | 상호작용 | 상자, NPC, 제단, 대장간, 출구에 `E`로 의도를 전달하는 저빈도 행동. | 공격, 자동 획득 |
 
 장비의 기본 공격과 방어를 `스킬`이라고 부르지 않는다. 이번 목표에는 `charm`,
-`참`, `제압 기술`, `전술 기술`, `Spirit Art`, `공명`이 없다. 나중에 액티브
-기술 하나를 실험하더라도 공격·방어와 다른 명확한 책임이 있어야 한다.
+`참`, `제압 기술`, `전술 기술`, `Spirit Art`, `공명`이 없다.
 
 ## Functional Ownership
 
@@ -149,8 +148,8 @@ related:
 | Spirit Stone | 1 | 패시브 원소 조건 하나. |
 | Consumable | 1 | 긴급 체력 회복. |
 
-전투 중에는 장비를 변경하지 않는다. 변경, 제작, 재제작, 수리는 준비 구역이나
-대장간에서만 가능하다.
+전투 중에는 장비를 변경하지 않는다. 변경, 제작, 재제작, 수리는 준비 화면이나
+Safe Intermission의 Forge에서만 가능하다.
 
 ### Controls
 
@@ -167,8 +166,7 @@ related:
 
 오른손은 방향키로 이동하고 왼손은 `X/C` 공격·방어를 담당한다. 줄에서 내리기는
 이미 `Space` 점프 또는 `Left Shift` 대시로 해결하므로 별도 climb-cancel 키를
-두지 않는다. 현재 액티브 기술은 0개다. 이후 하나를 채택하면 기본키 `Z`를
-사용하되, 미구현 상태에서 빈 슬롯이나 입력 안내를 노출하지 않는다. 모든 실제
+두지 않는다. 현재 액티브 기술과 예약 키는 없다. 모든 실제
 gameplay key는 재지정 가능하고 안내는 현재 바인딩 하나만 간결하게 표시한다.
 마우스는 메뉴 포인터로 사용하며 전투 기본 배치는 마우스 버튼에 의존하지 않는다.
 
@@ -319,7 +317,7 @@ precise window, guard break, recovery를 시각/소리로 구분한다.
 | Stage clear | Reinforced Coat blueprint + refined materials |
 
 필수 경로와 Stage clear 보상은 대안 모델 하나와 Grade 2 재제작 하나를 보장한다.
-전투 Stage 안에는 대장간을 두지 않는다. Stage clear 카드 뒤 안전한 휴식 맵의
+전투 Stage 안에는 대장간을 두지 않는다. Stage clear 카드 뒤 Safe Intermission의
 Forge NPC에게서 Grade 1 대안을 제작하고 장비 하나를 수리 또는 Grade 2로
 재제작한 뒤 다음 Stage 전투에서 차이를 확인한다.
 
@@ -337,7 +335,7 @@ Forge NPC에게서 Grade 1 대안을 제작하고 장비 하나를 수리 또는
 - 보상과 보이는 아이템은 같은 거래 ID를 사용해 재실행 후 중복되지 않는다.
 - 런 부산물은 Stage Attempt Snapshot에 포함되며 상인 판매 거래가 확정될 때만
   감소한다. 영구 제작 재료는 상인에게 팔 수 없다.
-- 휴식 맵 상인은 회복 물약 구매와 런 부산물 판매만 제공한다. 가격, 잔액 부족,
+- Safe Intermission 상인은 회복 물약 구매와 런 부산물 판매만 제공한다. 가격, 잔액 부족,
   물약 최대 보유, 거래 성공/실패를 커밋 전에 보여 준다.
 
 ## Persistence Contract
@@ -392,7 +390,7 @@ loadout이 복원되어야 한다.
 ## Non-Goals
 
 - 첫 목표의 액티브 기술, 스킬 트리, 정령 액티브, 공명 게이지;
-- 이후에도 한 번에 하나를 초과하는 액티브 기술 또는 스킬 바;
+- 액티브 기술, 액티브 기술 입력·슬롯, 또는 스킬 바;
 - 세 번째 이후 도구/방어구/정령석, 장신구, 다중 방어구 슬롯;
 - 무기별 원소 소켓, 원소 탄약, 랜덤 희귀도/옵션/강화;
 - 장비 파괴, 상태 0 사용 금지, 기본 보급을 위한 의무 반복;

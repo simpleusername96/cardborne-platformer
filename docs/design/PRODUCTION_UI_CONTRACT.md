@@ -5,7 +5,7 @@ owner: BK
 created: 2026-07-14
 last_reviewed: 2026-07-15
 canonical_for: Traveler production screens, gameplay HUD, feedback, focus, and responsive behavior
-source: Implemented Godot UI scenes, owner feedback through 2026-07-15, and rendered validation at three supported resolutions
+source: Implemented Godot UI scenes, owner feedback through 2026-07-15, and automated validation at three supported resolutions
 related:
   - ../product/2d_platform_action_card_game_prd.md
   - ./COMBAT_EQUIPMENT_CRAFTING.md
@@ -28,8 +28,9 @@ This specification owns the main menu, Hero Preparation, Arsenal Trial prompts,
 safe-intermission merchant and Forge popups, gameplay HUD, interaction and reward
 feedback, card rewards, pause and settings, and run results. Combat rules and
 equipment values remain owned by `COMBAT_EQUIPMENT_CRAFTING.md` and typed runtime
-snapshots. Its implementation is reserved for the separate UI branch named by the
-active gameplay-validity plan.
+snapshots. The implementation is present on
+`codex/ui-readability-localization`; integration and served-browser review remain
+owned by that plan.
 
 ## Requirements
 
@@ -63,7 +64,8 @@ active gameplay-validity plan.
 - The objective or boss state occupies the top center and never competes with an
   interaction prompt or reward receipt.
 - The bottom dock shows the contextual melee/ranged attack pair, guard and shield
-  stability, passive Spirit Stone progress, and potion charges.
+  stability, and potion charges. Passive Spirit Stone progress appears only when
+  charged, triggered, or otherwise immediately relevant.
 - The highlighted attack preview and committed attack use the same
   `AttackIntent`; the HUD never predicts a different tool than combat executes.
 - Interaction prompts include the current input glyph and a concise verb.
@@ -90,7 +92,7 @@ active gameplay-validity plan.
   apply across preparation, merchant, Forge, rewards, results, pause, and settings.
 - Focus is visible by outline and state, begins on a safe primary action, and
   returns after settings or pause closes.
-- Primary targets are at least 40 px high; confirm actions target 44 px or more.
+- All primary and confirm targets are at least 48 px high.
 - Required state is never communicated by color alone. Labels, glyphs, borders,
   quantities, and condition text reinforce color.
 - Screen shake and damage flash are independently switchable. This slice uses no
@@ -126,8 +128,10 @@ active gameplay-validity plan.
    hidden mandatory action; keyboard alone can complete the full required path.
 5. Rendered captures pass at `960x540`, `1280x720`, and `1920x1080` for preparation,
    Forge, rewards, results, HUD, pause, settings, remapping, and fixed stages.
-6. `validate_hero_preparation_ui.gd`, `validate_forge_screen.gd`,
-   `validate_gameplay_hud.gd`, and `validate_shell_ui.gd` pass.
+6. `tools/validate_hero_preparation_ui.gd`, `tools/validate_forge_screen.gd`,
+   `tools/validate_merchant_screen.gd`,
+   `scripts/ui/validation/ValidateGameplayHUD.gd`, and
+   `scripts/ui/validation/ValidateShellUI.gd` pass.
 7. Korean and English locale paths, centered merchant/Forge popups, arrow-key
    navigation, `Escape` close/back, and focus restoration are verified at all
    supported browser viewports.
@@ -146,5 +150,5 @@ active gameplay-validity plan.
   current implementation work.
 - `../../.agent/execplans/2026-07-15-gameplay-validity-repair.md` owns the active
   implementation order and the handoff to the separate UI branch.
-- The current rendered evidence is generated under `.codex-runtime/uiux/` and is
-  intentionally excluded from source control.
+- Task-owned rendered evidence is generated outside source control and is not a
+  substitute for the served-browser gate.

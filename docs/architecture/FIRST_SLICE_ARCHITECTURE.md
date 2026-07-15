@@ -2,7 +2,7 @@
 type: spec
 status: active
 owner: BK
-last_reviewed: 2026-07-14
+last_reviewed: 2026-07-15
 canonical_for: First complete run runtime ownership, state transitions, persistence, and failure boundaries
 source: Current Godot 4.7 runtime, active product and equipment specs, and fixed-stage release evidence through 2026-07-14
 related:
@@ -27,8 +27,10 @@ putting combat, progression, save, map, and UI rules into one controller.
 ## Scope
 
 This architecture covers one persistent Traveler, the Arsenal Trial, three
-approved fixed normal stages, stage rewards and Forge transitions, and Slime
-Court. It describes the implemented runtime rather than a future migration.
+approved fixed normal stages, stage rewards, Safe Intermission transitions, and
+Slime Court. Normal-stage card rewards route through the enemy-free Safe Intermission
+before the next stage or boss. It describes the implemented runtime rather than
+a future migration.
 
 Historical Warrior, Archer, Assassin, mastery, skill, and equipment-item owners
 remain only for v1 save migration and focused fixtures. They are not production
@@ -41,6 +43,8 @@ extension points.
 | `Game.gd` | Scene load/unload, overlay roots, pause/settings bridge | Run rules, rewards, equipment values |
 | `RunDirector.gd` | Legal phase transitions and production scene orchestration | Combat math, recipes, room geometry, save payloads |
 | `RunState.gd` | Mutable facts for one attempt, cards, level choices, stage progress, reward application, terminal settlement | Persistent file I/O, UI layout |
+| `StageAttemptSnapshot.gd` | Copy-safe stage/boss entry baseline used by same-run retry | World-scene state, disk Continue, terminal settlement |
+| `MerchantTransactionService.gd` | Atomic potion purchase and run-salvage sale previews/transactions | Persistent material sale, UI layout, crafting |
 | `ProfileState.gd` | One in-memory profile facade, atomic persistent commands, settings, copy-safe snapshots | Recipe calculation, combat target selection |
 | `ProfileData.gd` / `ProfileSaveService.gd` | Schema v2 validation, v1 migration, staged writes, backup recovery | Player-facing formatting, run state |
 | `PlayerController.gd` | Movement, collision, damage response, fall-recovery respawn, camera hooks | Equipment recipes, reward resolution |
@@ -61,11 +65,7 @@ extension points.
 
 `RunPhase` is the sole phase vocabulary:
 
-The graph below records the implemented runtime as of 2026-07-15. It is not the
-target death/intermission flow: the active gameplay-validity plan owns the pending
-Retry Decision, Stage Attempt Snapshot, and Safe Intermission deltas. Update this
-graph only when those runtime transitions land so architecture evidence stays
-truthful.
+The graph below records the implemented runtime as of 2026-07-15.
 
 ```text
 BOOT -> MAIN_MENU -> PREPARATION
@@ -73,10 +73,12 @@ PREPARATION -> TRIAL_LOADING -> TRIAL_ACTIVE -> PREPARATION
 PREPARATION -> LOADOUT -> STAGE_LOADING -> STAGE_ACTIVE
 STAGE_ACTIVE -> LEVEL_REWARD -> STAGE_ACTIVE
 STAGE_ACTIVE -> STAGE_CARD_REWARD
-STAGE_CARD_REWARD -> STAGE_LOADING | FORGE | BOSS_LOADING
-FORGE -> STAGE_LOADING
+STAGE_CARD_REWARD -> INTERMISSION_LOADING -> INTERMISSION_ACTIVE
+INTERMISSION_ACTIVE -> STAGE_LOADING | BOSS_LOADING
 BOSS_LOADING -> BOSS_ACTIVE -> RUN_CLEAR
-active gameplay -> RUN_DEATH
+STAGE_ACTIVE | BOSS_ACTIVE -> RETRY_DECISION
+RETRY_DECISION -> restore Stage Attempt Snapshot -> STAGE_LOADING | BOSS_LOADING
+RETRY_DECISION -> End Expedition -> RUN_DEATH
 RUN_DEATH | RUN_CLEAR -> MAIN_MENU | PREPARATION
 ```
 
@@ -92,6 +94,10 @@ returns to a stable preparation, menu, or result state after a load failure.
   seeds affect deterministic rewards and evidence, not approved map topology.
 - UI and actors consume duplicate snapshots. Mutable dictionaries stay private to
   their owner.
+- `RunState` captures and atomically restores one `StageAttemptSnapshot` for the
+  current normal-stage or boss attempt. Retry never calls terminal settlement.
+- Run salvage is temporary run state. Only `MerchantTransactionService` converts
+  it to run coin, using idempotent transaction IDs.
 - Persistent commands clone `ProfileData`, validate the result, stage the write,
   verify it, rotate the backup, and only then publish the new in-memory state.
 - Profile commands include blueprint/Spirit unlock, craft, recraft, repair, equip,
@@ -219,6 +225,12 @@ StageRuntimeContentSpawner.spawn(plan, typed catalogs) -> actors and interactabl
 - **Invalid approved stage:** unload partial state and return to a stable screen;
   never load the bad plan as a warning-only fallback.
 - **Invalid or duplicate reward:** apply nothing and return a typed reason.
+- **Incomplete attempt snapshot:** apply nothing, leave retry safely, and return to
+  Main Menu without duplicating settlement or rewards.
+- **Duplicate retry/end request:** accept one phase transition and ignore the
+  duplicate without applying state twice.
+- **Invalid or duplicate merchant transaction:** spend/sell nothing and return a
+  typed reason.
 - **Craft/equip/save failure:** preserve the last valid profile and expose retryable
   feedback; do not spend materials partially.
 - **Corrupt primary save:** load the valid backup, preserving the original files
@@ -251,9 +263,12 @@ StageRuntimeContentSpawner.spawn(plan, typed catalogs) -> actors and interactabl
    valid backup without duplicate permanent rewards.
 4. Craft, recraft, repair, equip, condition, ranged supply, and passive Spirit
    behavior use typed snapshots and atomic commands.
-5. Three approved fixed stages and Slime Court fail closed on invalid content and
-   provide no-soft-lock required routes and recovery.
-6. Reward, UI, input, boss, settlement, import, boot, and full active release
+5. Three approved fixed stages and Slime Court fail closed on invalid content,
+   provide no-soft-lock routes, and support snapshot retry or explicit End
+   Expedition after lethal damage.
+6. Every normal-stage card reward enters Safe Intermission, whose merchant and
+   Forge transactions remain unavailable in monster stages.
+7. Reward, UI, input, boss, settlement, import, boot, and full active release
    matrices pass under Godot 4.7.
 
 ## Non-Goals

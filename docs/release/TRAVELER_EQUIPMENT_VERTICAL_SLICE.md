@@ -40,6 +40,12 @@ The active production run now contains:
   same idempotent baseline transaction;
 - three approved fixed normal stages, guaranteed recovery paths and supplies,
   authored enemy/hazard/reward placements, and the two-phase Slime King fight;
+- V6 composition at Ruin `8 enemies / 720px`, Flooded `10 / 760px`, and Sanctum
+  `12 / 740px`, with at least two multi-elevation combat rooms per stage;
+- keyboard gameplay defaults on Arrow/`Space`/`Left Shift`/`X`/`C`/`E`/`A`/
+  `Escape`, same-stage/boss snapshot retry, and explicit End Expedition;
+- production guard feedback and an enemy-free Safe Intermission after every
+  normal-stage card reward, with potion/run-salvage merchant and NPC Forge;
 - Hero Preparation, deterministic Forge, contextual equipment HUD, field pickup
   and permanent reward receipts, shared card rewards, pause/settings, and run
   results at all three target viewport sizes under Godot render checks;
@@ -61,15 +67,21 @@ combat, reward, and progression quality from procedural-topology risk.
 
 - `validate_release_candidate.ps1 -Full -SkipImport` passed `68/68` active checks
   on 2026-07-14.
-- That result is retained as structural regression evidence, not product approval
-  for the death/retry, live guard, stage-density, intermission, UI, input, or web
-  export gaps recorded by the active gameplay-validity plan.
+- That result is retained as the 2026-07-14 structural baseline. After input,
+  death/retry, guard, stage-density, intermission, and localized UI repair, the
+  current 70-check core matrix passed `70/70` on 2026-07-15 in 437.1 seconds.
+- The five optional persistence/runtime extensions were not rerun in the
+  2026-07-15 core pass; the prior Full result remains historical evidence rather
+  than a claim about the current tree.
 - The matrix covers Traveler movement/combat, equipment data and commands, profile
   v2 migration/persistence, Trial parity, all three fixed stages, drops and fall
   recovery, enemies/hazards, UI, cards/rewards, boss flow, and settlement.
 - Progression, shell, gameplay HUD, and fixed-stage capture scripts rendered with
   Godot 4.7 at `960x540`, `1280x720`, and `1920x1080` where applicable.
-- Browser export remains unverified because the repository has no export preset.
+- The Web export preset and deterministic export command exist. Served-browser QA
+  remains incomplete because `web_nothreads_debug.zip` and
+  `web_nothreads_release.zip` are absent from the local Godot 4.7 export-template
+  directory; editor/headless checks are not browser evidence.
 - `git diff --check`, Godot import, short boot, and task-scoped legacy-term guards
   are the final handoff gates.
 

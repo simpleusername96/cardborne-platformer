@@ -34,7 +34,7 @@ passive Spirit Stone.
   active production systems.
 - The Arsenal Trial is fixed and skippable. Complete and skip apply the same
   idempotent mechanical baseline.
-- Ruin Approach, Flooded Works, and Broken Sanctum use approved fixed layout V5
+- Ruin Approach, Flooded Works, and Broken Sanctum use approved fixed layout V6
   plans. Slime Court remains the authored two-phase boss stage.
 - Runtime-random topology is dormant until a separate re-entry plan proves broad
   route, recovery, and player-acceptance gates.
@@ -44,8 +44,7 @@ passive Spirit Stone.
   move, `Space` jumps, `Left Shift` dashes, `X` attacks, `C` guards, `E`
   interacts, `A` uses a potion, and `Escape` pauses or goes back. Menus accept
   keyboard and mouse.
-- The current active-skill count is zero. A later playtest-backed experiment is
-  capped at one on `Z` and may not create a multi-slot skill bar.
+- The current product contract has no active skill, active-skill key, slot, or bar.
 
 ## Rationale
 
@@ -71,22 +70,36 @@ adding more content or random topology.
 ## Current Status
 
 - Main Menu enters Hero Preparation, Arsenal Trial, or a production expedition.
-- Hero Preparation and Forge expose six loadout slots, exact costs,
-  current-versus-result values, command availability, and persistence state.
+- Arrow/`Space`/`Left Shift`/`X`/`C`/`E`/`A`/`Escape` defaults, remapping,
+  browser focus-loss release, and current-key prompts are implemented without a
+  gameplay gamepad path.
+- Lethal damage enters Retry Decision. Retry restores the current stage/boss entry
+  snapshot; End Expedition is the only death settlement path.
+- Held `C` reaches the production guard path with distinct normal block, precise
+  block, guard break, condition/stability cost, and hurt feedback.
+- Hero Preparation and Safe Intermission Forge expose six loadout slots, exact
+  costs, current-versus-result values, command availability, and persistence state.
+- Every normal-stage card reward enters the enemy-free Safe Intermission. Its
+  merchant buys potions or sells run salvage; its Forge owns craft/recraft/repair/
+  equip interaction, and neither appears in monster stages.
 - The gameplay HUD shows health, objective/boss state, contextual attack pair,
   shield condition/stability, passive Spirit progress, potion charges,
   interactions, and reward receipts.
 - Authored pickups cover healing, potion refill, arrows, cartridges, coins, and
   all active material grades. Fixed rewards unlock the Stage 1 alternatives and
   Frost Spirit Stone.
+- Stage V6 composition is validated at Ruin `8 enemies / 720px`, Flooded
+  `10 / 760px`, and Sanctum `12 / 740px`, with 9/9/11 meaningful elevation
+  changes and 2/3/4 multi-elevation combat rooms respectively.
 - All three normal stages, six committed-return fixtures, enemy/hazard families,
-  card rewards, boss flow, settlement, and profile restart recovery are in the
-  active release matrix.
+  card rewards, boss flow, retry/settlement, intermission, and profile restart
+  recovery are in the active release matrix.
 - The minimum equipment-progression ExecPlan is complete. The original SVG UI
   starter set now provides 6 structural masks and 22 semantic glyphs under
   `art/ui/production/`, with a rendered adoption catalog and Godot capture tool.
-  No production screen has adopted the assets yet; that work remains Milestone G
-  on the separate UI branch in the active gameplay-validity plan.
+  The UI branch now owns the shared 16/18/20/22/32 type scale, 48px targets,
+  English/Korean locale selection, centered merchant/Forge shells, and responsive
+  shell/HUD/preparation/reward screens; served-browser review remains open.
 
 ## Authority
 
@@ -119,7 +132,7 @@ Read in this order:
 .\tools\godot.ps1 --path . --headless --import
 .\tools\godot.ps1 --path . --headless --quit-after 2
 
-# Active release gates: 63 core checks, 68 with persistence/runtime extensions
+# Active release gates: 70 core checks, 75 with persistence/runtime extensions
 .\tools\validate_release_candidate.ps1
 .\tools\validate_release_candidate.ps1 -Full
 
@@ -130,8 +143,10 @@ Read in this order:
 .\tools\godot.ps1 --path . --script res://tools/capture_fixed_stage_screenshots.gd
 ```
 
-The accepted 2026-07-14 evidence is `68/68` active Full checks plus rendered
-inspection at `960x540`, `1280x720`, and `1920x1080` where applicable.
+The accepted historical evidence is `68/68` Full checks on 2026-07-14. The current
+2026-07-15 evidence is `70/70` core checks in 437.1 seconds plus rendered inspection
+at `960x540`, `1280x720`, and `1920x1080` where applicable. The five extended
+persistence/runtime checks were not rerun in that current pass.
 
 ## Risks
 
@@ -145,16 +160,12 @@ inspection at `960x540`, `1280x720`, and `1920x1080` where applicable.
   spatial transitions.
 - Compatibility code increases maintenance surface until v1 migration support is
   intentionally retired in a separate owner-approved cleanup.
-- Current runtime input still contains `F/G/H` defaults, fixed gamepad behavior,
-  Settings presentation, and validators from the former contract. These are
-  implementation drift, not current product requirements.
 
 ## Next Steps
 
 The active cross-module implementation plan is
-`.agent/execplans/2026-07-15-gameplay-validity-repair.md`. It owns input cleanup,
-same-run stage retry, live guard proof, stage verticality and enemy density, the
-safe intermission merchant/Forge flow, and browser-export validation. Readability,
-bilingual copy, and centered popup implementation remain a separate UI branch in
-that plan. Random map re-entry, active skills, larger equipment/content catalogs,
-multiple save slots, and final world art remain separate decisions.
+`.agent/execplans/2026-07-15-gameplay-validity-repair.md`. Its implemented runtime,
+UI, and 70-check release-matrix work is complete; matching Godot 4.7 Web export
+templates are still required before served-browser QA can close Milestone H.
+Random map re-entry, larger equipment/content catalogs, multiple save slots, and
+final world art remain separate decisions.

@@ -47,8 +47,8 @@ product blueprint and detailed combat spec below remain authoritative.
   current work.
 - `research/player_input_and_ui_followup_audit_2026-07-15.md` is archived evidence
   from a rejected control recommendation; it does not define current work.
-- `research/plan_validity_audit_2026-07-15.md` records the evidence-backed gap
-  between completed-plan claims, active specs, and the current playable runtime.
+- `research/plan_validity_audit_2026-07-15.md` is the archived evidence audit that
+  created the active gameplay-validity plan; it does not describe current gaps.
 - Dated surveys/deep dives are archived evidence; `references/` contains advisory
   candidates. Neither is product authority.
 - `.agent/Documentation.md` records current project state and verification paths.

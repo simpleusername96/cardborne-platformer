@@ -1,6 +1,6 @@
 ---
 type: evidence
-status: active
+status: archived
 owner: BK
 created: 2026-07-15
 last_reviewed: 2026-07-15
@@ -17,6 +17,15 @@ related:
 ---
 
 # 구현 계획 Validity Audit - 2026-07-15
+
+## Resolution Note
+
+This document preserves the pre-repair findings that created the active gameplay
+validity plan. Keyboard input, stage/boss retry, guard feedback, V6 stage
+composition, Safe Intermission, merchant, and NPC Forge findings were addressed by
+that implementation. UI Milestone G and served-browser Milestone H remain tracked
+only in `.agent/execplans/2026-07-15-gameplay-validity-repair.md`; current state is
+recorded in `.agent/Documentation.md` and the release record.
 
 ## Purpose
 

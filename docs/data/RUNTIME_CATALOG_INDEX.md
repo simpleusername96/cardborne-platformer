@@ -2,7 +2,7 @@
 type: spec
 status: active
 owner: BK
-last_reviewed: 2026-07-14
+last_reviewed: 2026-07-15
 canonical_for: Cardborne typed runtime catalog ownership and validation entry points
 source: Implemented Godot Resources and active design specifications
 related:
@@ -10,6 +10,7 @@ related:
   - ../design/COMBAT_EQUIPMENT_CRAFTING.md
   - ../architecture/FIRST_SLICE_ARCHITECTURE.md
   - ../../.agent/execplans/2026-07-14-minimum-equipment-progression-vertical-slice.md
+  - ../../.agent/execplans/2026-07-15-gameplay-validity-repair.md
   - ../../.agent/execplans/2026-07-12-actual-game-production-roadmap.md
 ---
 
@@ -37,6 +38,9 @@ These are the typed owners used by the active Traveler production flow.
 | Equipment progression | `data/equipment/equipment_progression_catalog.tres`, `data/equipment/models/`, `data/equipment/blueprints/`, `data/materials/`, `data/spirit_stones/` | equipment catalog, resolver, command, profile v2, and Forge validators |
 | Cards and run levels | `data/cards/card_catalog.tres`, `data/progression/run_progression_catalog.tres` | `validate_remaining_cards_catalog.gd`, card runtime, and reward progression validators |
 | Rewards and economy | `data/rewards/reward_catalog.tres` | `validate_stage1_progression_rewards.gd`, `validate_reward_progression.gd`, `validate_reward_source_runtime.gd` |
+| Stage-attempt retry | `scripts/run/StageAttemptSnapshot.gd`, `RunState.gd`, `RunDirector.gd` | `validate_stage_attempt_snapshot.gd`, `validate_stage_attempt_retry.gd` |
+| Safe intermission economy | `scripts/stages/intermission/SafeIntermission.gd`, `scripts/run/MerchantTransactionService.gd`, run salvage in `RunState.gd` | `validate_safe_intermission_flow.gd`, `validate_merchant_transactions.gd`, `validate_merchant_screen.gd` |
+| UI localization | `scripts/autoload/UILocalization.gd`, `localization/ui.en.po`, `localization/ui.ko.po` | shell, preparation, HUD, Forge, merchant, and reward UI locale/viewport validators |
 | Field supplies | `data/items/field_pickup_catalog.tres` | `validate_field_pickups.gd`, fixed manifest/drop validators |
 | Enemies | `data/enemies/enemy_catalog.tres`, `data/enemies/enemy_scene_catalog.tres` | enemy catalog and runtime validators |
 | Hazards | `data/hazards/hazard_catalog.tres` | `validate_hazard_catalog.gd`, stage hazard validators |

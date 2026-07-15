@@ -152,9 +152,9 @@ safe entry
 
 | Stage | Player-facing job | Room target | Content emphasis |
 | --- | --- | ---: | --- |
-| Ruin Approach | Learn the route language and establish confidence. | 6 required + 1 optional | Basic traversal, Walker, Charger, simple gaps, visible rewards. |
-| Flooded Works | Force timing and spending decisions. | 7 required + 1-2 optional | Poison vents, crumbling paths, Shooter, Leaper, and timed recovery. |
-| Broken Sanctum | Test the completed run build. | 8 required + 2 optional | Shield Guard, Sentry, gates, mixed encounters, reduced recovery. |
+| Ruin Approach | Learn the route language and establish confidence. | 8 required + 1 optional | Basic traversal, Walker, Charger, simple gaps, visible rewards. |
+| Flooded Works | Force timing and spending decisions. | 7 required + 1 optional | Poison vents, crumbling paths, Shooter, Leaper, and timed recovery. |
+| Broken Sanctum | Test the completed run build. | 9 required + 2 optional | Shield Guard, Sentry, gates, mixed encounters, reduced recovery. |
 | Slime Court | Read patterns and cash in the build. | Authored arena | Four boss patterns, two phases, bounded adds, clear punish windows. |
 
 Normal stages belong to one Lower Ruins region, so templates can share a visual
@@ -184,10 +184,8 @@ Raw growth comes from rebuilding the same model with better material grades.
 
 The first vertical slice adds no active skill. One equipped Spirit Stone provides
 one passive elemental rule and never adds an input, active Art, or resonance gauge.
-If a later combat playtest proves that one more decision is necessary, the design
-may add at most one active skill; it may not grow into multiple skill slots or a
-skill bar. Exact content and selection rules are owned by
-`docs/design/COMBAT_EQUIPMENT_CRAFTING.md`.
+Active-skill inputs, slots, bars, and selection rules are outside the current
+product contract.
 
 ## Progression Layers
 
@@ -197,7 +195,8 @@ Each growth layer has one purpose.
 | --- | --- | --- | --- |
 | Run Level | Run | Frequent XP thresholds | Small stabilizing choice that keeps momentum. |
 | Card | Run | After each normal stage | Build-defining behavior change. |
-| Coin | Run | Shops, rerolls, healing, repair, and resupply | Tactical opportunity cost. |
+| Coin | Run | Card rerolls and merchant potion purchase | Tactical opportunity cost. |
+| Run Salvage | Run | Enemy/reward byproduct sold at the intermission merchant | Optional conversion into run coin. |
 | Equipment | Persistent ownership | Preparation and fixed discoveries | Melee, ranged, shield, armor, Spirit Stone, and consumable define preparation. |
 | Blueprint | Persistent unlock | Fixed chests, NPC quests, milestones | Add a new readable tool tradeoff without random rarity. |
 | Material Grade | Persistent per crafted item | Blacksmith | Rebuild a known form with better materials, no failure or random rolls. |
@@ -229,7 +228,7 @@ The first complete run ships with:
 - 2 special enemy actors: Summon Node and Small Slime;
 - 4 core hazard families plus moving platform, switch gate, destructible cache,
   chest, material node, fall-recovery point, and exit;
-- 15 stage-clear cards;
+- 5 shared stage-clear cards; each reward offers 3 compatible choices;
 - 5 repeatable run-level micro upgrades;
 - 6 combat-tool models and blueprints across melee, ranged, and shield roles;
 - 2 material grades across metal, timber, and textile, plus 2 passive Spirit Stones;
@@ -268,8 +267,7 @@ focused validation.
   equipped ranged tool resolves its declared line, recall, reload, or ground-target
   policy. No valid ranged intent falls back to melee without consuming a resource.
 - The first vertical slice has no active skill. Equipment actions and passive
-  Spirit effects must not create hidden extra inputs. A later experiment is capped
-  at one explicit active skill and requires a playtest-backed owner decision.
+  Spirit effects must not create hidden extra inputs.
 - Defense always uses the shield and distinguishes normal, precise, heavy, and
   unblockable responses with visible tells.
 - Every hit records source, amount, knockback, tags, and target policy.
@@ -312,12 +310,16 @@ pause/settings, boss HUD, death retry choice, and clear summary.
   only when charged or triggered; persistent materials stay in preparation screens.
 - Debug route metrics and explanatory test labels do not exist in production UI.
 - Every visible setting changes runtime behavior.
-- Gameplay uses remappable keyboard actions. Menus and decision screens are fully
-  operable by keyboard and mouse.
+- Gameplay uses remappable keyboard actions: Arrow keys move, climb, and crouch;
+  `Space` jumps; `Down Arrow + Space` drops through; `Left Shift` dashes; `X`
+  attacks; `C` guards; `E` interacts; `A` uses the potion; and `Escape` pauses or
+  goes back. Menus and decision screens are fully operable by Arrow keys,
+  `Enter`/`Space`, `Escape`, and mouse.
 - Player-facing explanations are available as concise Korean and English locale
   paths. The selected language uses short, direct copy at a readable size.
-- Defeat offers a same-run current-stage retry from the stage-entry snapshot or a
-  return to the main menu; fall-recovery points do not imply death-save behavior.
+- Defeat offers a same-run current-stage retry from the stage-entry snapshot or an
+  explicit End Expedition path that settles once and returns to the main menu;
+  fall-recovery points do not imply death-save behavior.
 - Danger telegraphs remain legible without relying on color alone.
 
 ## Playtest And Balance Gates
