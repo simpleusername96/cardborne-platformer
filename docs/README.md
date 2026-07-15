@@ -14,11 +14,12 @@ product blueprint and detailed combat spec below remain authoritative.
 | 1 | `product/2d_platform_action_card_game_prd.md` | Canonical product and fun specification. |
 | 2 | `design/COMBAT_EQUIPMENT_CRAFTING.md` | Minimum complete one-hero combat, 6 tool models, blueprints, two material grades, crafting, repair, supply, and passive Spirit Stones. |
 | 3 | `design/PRODUCTION_UI_CONTRACT.md` | Current production screens, HUD, feedback, focus, and responsive behavior. |
-| 4 | `design/PROCEDURAL_REGION_GENERATION.md` | Stage profiles, terrain, room catalog, and deferred generation. |
-| 5 | `design/2D_PLATFORMER_MAP_DESIGN_GUIDELINE.md` | Canonical room intention, gameplay verticality, routing, pacing, and map acceptance rules. |
-| 6 | `design/MAP_AUTHORING_PIPELINE_CONTRACT.md` | Room-template and anchor schema. |
-| 7 | `design/ENEMIES_TRAPS_GIMMICKS.md` | Enemy, hazard, encounter, and boss content. |
-| 8 | `architecture/FIRST_SLICE_ARCHITECTURE.md` | Current runtime ownership and retained compatibility boundaries. |
+| 4 | `design/UI_VISUAL_SYSTEM.md` | Accepted UI art direction, asset boundaries, shell backgrounds, panels, state visuals, and validation. |
+| 5 | `design/PROCEDURAL_REGION_GENERATION.md` | Stage profiles, terrain, room catalog, and deferred generation. |
+| 6 | `design/2D_PLATFORMER_MAP_DESIGN_GUIDELINE.md` | Canonical room intention, gameplay verticality, routing, pacing, and map acceptance rules. |
+| 7 | `design/MAP_AUTHORING_PIPELINE_CONTRACT.md` | Room-template and anchor schema. |
+| 8 | `design/ENEMIES_TRAPS_GIMMICKS.md` | Enemy, hazard, encounter, and boss content. |
+| 9 | `architecture/FIRST_SLICE_ARCHITECTURE.md` | Current runtime ownership and retained compatibility boundaries. |
 
 ## Supporting Material
 
@@ -74,8 +75,6 @@ production-art and UI foundation:
 - `design/WORLD_COMPONENT_IMAGE_PRODUCTION_PLAN.md` defines image-generation batch
   size, per-family production order, candidate approval, cleanup, and temporary HTML
   gallery review before Godot integration.
-- `design/UI_VISUAL_SYSTEM.md` proposes the borderless flat UI, Theme, asset, state,
-  and component contracts.
 - `research/component_ui_foundation_research_2026-07-13.md` records local and
   external evidence behind those proposals.
 - `.agent/execplans/2026-07-13-component-ui-foundation.md` is the draft future

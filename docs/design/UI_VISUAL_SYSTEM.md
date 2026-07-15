@@ -1,11 +1,12 @@
 ---
 type: spec
-status: draft
+status: active
 owner: BK
 created: 2026-07-13
 last_reviewed: 2026-07-15
-scope: Proposed production UI visual language, asset roles, Theme ownership, reusable components, and validation
-source: Owner UI direction through 2026-07-15, the active production UI contract, the original UI SVG kit, and component UI foundation research
+canonical_for: Cardborne UI art direction, shell backdrop roles, panel visual roles, and raster/vector asset boundaries
+scope: Accepted production UI visual language, asset roles, Theme ownership, reusable components, and validation
+source: Owner-approved UI direction through 2026-07-15, the active production UI contract, the original UI SVG kit, and component UI foundation research
 related:
   - ./PRODUCTION_UI_CONTRACT.md
   - ./COMBAT_EQUIPMENT_CRAFTING.md
@@ -23,7 +24,7 @@ related:
 
 Define a coherent game UI system that replaces testbed-like panels and scattered code-local styling without replacing the working snapshot, intent, transaction, focus, and responsive-layout contracts in `PRODUCTION_UI_CONTRACT.md`.
 
-This draft locks the owner's visual direction but defers exact asset production and migration until the first implementation spike is approved.
+This specification locks the owner's visual direction. Generated reference images remain review candidates until separately selected and prepared for production.
 
 ## Locked Direction
 
@@ -36,6 +37,45 @@ This draft locks the owner's visual direction but defers exact asset production 
 - Use bitmap art for expressive or detailed portraits, item illustrations, backdrops, and world assets.
 - Use project-authored monochrome SVG masks for simple panel/button silhouettes and semantic glyphs when their geometry remains cleaner and more reusable than raster art.
 - Complex AI-generated SVG is not a production dependency. Structural UI remains Godot Control/Theme composition, not baked screenshots.
+
+## World Theme
+
+- The shell UI belongs to one drowned ancient-industrial ruin complex, not a collection of unrelated fantasy biomes.
+- Monumental stone masses, vertical shafts, arches, gates, chains, restrained oxidized metal, and sparse moss establish the place.
+- Pale cyan distance light creates depth; mustard amber marks rare machinery or guidance; coral and violet remain small semantic accents.
+- Different screens show different rooms or camera positions in the same architectural family. They do not repeat one composition or introduce a new palette per screen.
+
+## Image Construction Rules
+
+- Build scenes from large clean color masses and three to five readable depth planes.
+- Use value grouping, overlap, scale, and broad light openings for depth. Do not add detail merely to imply quality.
+- Keep surfaces mostly clean. Reject pointillism, speckle, hatching, tiny repeated motifs, dense cracks, stains, paint daubs, and noisy procedural texture.
+- Use no visible outlines. Separate adjacent shapes through value and hue shifts within the same palette family.
+- Keep one dominant dark family, one secondary teal/stone family, and at most one small warm accent in a backdrop.
+- Do not bake text, logos, UI controls, characters, enemies, hazards, pickups, or gameplay-significant props into a shell backdrop.
+- Compose backdrops at 16:9 with cover-safe edges for `960x540`, `1280x720`, and `1920x1080`. UI occupancy zones remain low contrast and structurally simple.
+- A fixed shell backdrop is not a gameplay panorama. Sequential edge continuation applies to scrolling map panoramas, not independent menu-screen camera shots.
+
+## Background And Panel Separation
+
+| Surface | Bitmap background role | Live panel role |
+| --- | --- | --- |
+| Main Menu | Unique establishing view; left 40-42% stays dark and quiet while the ruin opening and depth sit to the right. | Menu slab and buttons remain live SVG/Theme controls. |
+| Hero Preparation | Subdued armory hall; detail stays at extreme edges and the upper band because three live columns occupy most of the screen. | Loadout, model, detail, header, and footer remain live controls. |
+| Forge | Ancient workshop with restrained amber heat at the perimeter; the central work area remains low contrast. | Category, comparison, cost, action, and receipt surfaces remain live controls. |
+| Settings | A quiet archive/control-room backdrop may be used from shell flow; in-run settings keeps the live game view under a dim layer. | The large settings slab, rows, sliders, bindings, and close action remain live controls. |
+| Pause and confirmation | No dedicated bitmap background; retain and dim the current game screen. | Pause and confirmation use compact live modal surfaces. |
+| Mid-run rewards | No dedicated bitmap background; retain and dim the current stage or authored reward space. | Choice cards, comparison, and confirm actions remain live controls. |
+| Run Result | Unique monumental gate/throne view with a quiet central zone sized for the result stack and edge-weighted framing. | Outcome, summary, rewards, and actions remain live controls. |
+
+Generated panel sheets are reference boards only. Production panels use project-authored SVG masks, NinePatch margins, flat Theme surfaces, or ordinary Godot containers. Never stretch a generated sheet, crop its parts into production, or bake labels and interactive states into it.
+
+## Reference Authority
+
+- `references/ui-shell/owner-reference-lower-ruins.png` is the primary owner-selected theme and structural mood anchor.
+- `references/visual-style-slate-cutout.png` is a supporting simplification reference, not a competing palette.
+- `references/ui-shell/` contains generated candidates for review. Presence in that folder does not mean acceptance or runtime approval.
+- `references/README.md` records how all visual boards may and may not be used.
 
 ## System Boundary
 
@@ -136,7 +176,22 @@ Exact color values are tuned in the visual spike. These roles are stable:
 | `supply` | Consumables, ammunition, repair supply, and field recovery. |
 | `boss` | Boss-specific emphasis. |
 
-The selected world palette starts from charcoal, verdigris teal, rust red, mustard gold, controlled violet, and warm off-white. Avoid a pale beige-dominant result.
+The selected world palette starts from charcoal, verdigris teal, rust red, mustard gold, controlled violet, and warm off-white. Avoid a pale beige-dominant result. The first implementation spike locks these baseline values:
+
+| Visual token | Baseline | Constraint |
+| --- | --- | --- |
+| Canvas charcoal | `#12171A` | Dominant shell and modal-dim family. |
+| Surface navy | `#1C2428` | Standard panel family; nearby surfaces vary by value, not unrelated hue. |
+| Raised surface | `#263136` | Focused or selected structural plane. |
+| Verdigris cyan | `#62A9B5` | Interaction and controlled distance-light family. |
+| Moss green | `#6F8F62` | Sparse world-growth and recovery accent. |
+| Mustard amber | `#D4A33F` | Rare machinery, reward, and guidance accent. |
+| Controlled coral | `#D9654F` | Threat or destructive state, never general decoration. |
+| Warm off-white | `#F0F1E8` | Primary text and pale distant light. |
+| Muted text/stone | `#A8B4AE` | Secondary copy and desaturated architecture. |
+| Controlled violet | `#AA89CF` | Boss-specific or explicitly semantic emphasis only. |
+
+Background generation may shift these values for depth, but it keeps them in the same hue families and uses no additional dominant accent.
 
 ### Type Roles
 

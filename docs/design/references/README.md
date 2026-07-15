@@ -17,7 +17,16 @@ related:
 
 ## Status
 
-These images are retained exploratory references, not accepted art direction or production-ready runtime assets. They communicate candidate palette, silhouette, density, and modular decomposition. No image in this folder may be promoted by implication; an accepted direction still requires explicit owner review, then a redraw on an exact grid with clean alpha, stable pivots, and reviewed collision before use in the game.
+Most images in this folder are retained exploratory references, not production-ready runtime assets. They communicate candidate palette, silhouette, density, and modular decomposition. The exception is the owner-selected theme anchor under `ui-shell/`, which is authoritative only for the active UI art-direction rules in `UI_VISUAL_SYSTEM.md`; generated candidates beside it still require explicit owner review and production preparation.
+
+## UI Shell Art Direction
+
+| Path | Use | Runtime status |
+| --- | --- | --- |
+| `ui-shell/owner-reference-lower-ruins.png` | Primary owner-selected theme and structural mood anchor for shell UI imagery. | Reference only. |
+| `ui-shell/background-*.png` | Screen-specific background candidates generated from the active visual contract. | Unselected candidates; not connected to Godot. |
+| `ui-shell/panel-*.png` | Shape-language reference sheets for deterministic SVG/NinePatch/Theme reconstruction. | Never crop or stretch directly into production. |
+| `ui-shell/README.md` | Batch roles, generation constraints, findings, and limitations. | Advisory evidence. |
 
 ## Working Direction
 
