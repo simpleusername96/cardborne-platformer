@@ -9,7 +9,7 @@ const NORMAL_STAGE_COUNT := RunPhase.NORMAL_STAGE_COUNT
 const CARD_REROLL_COST := 12
 const MAX_CONSUMABLE_CHARGES := 1
 
-const RUN_CURRENCIES: PackedStringArray = ["xp", "coin"]
+const RUN_CURRENCIES: PackedStringArray = ["xp", "coin", "salvage"]
 const MATERIAL_CURRENCIES: PackedStringArray = [
 	"rusted_scrap", "steel_fragment", "common_timber", "hardwood",
 	"sky_thread", "reinforced_fabric", "slime_residue", "boss_core",
@@ -37,11 +37,13 @@ var current_stage_index: int = 0
 var run_level: int = 1
 var current_xp: int = 0
 var coins: int = 0
+var _run_salvage: int = 0
 var _unsettled_materials: Dictionary = {}
 var _micro_upgrade_stacks: Dictionary = {}
 var _card_stacks: Dictionary = {}
 var _applied_reward_ids: Dictionary = {}
 var _applied_field_pickup_ids: Dictionary = {}
+var _applied_merchant_transaction_ids: Dictionary = {}
 var _pending_level_choices: int = 0
 var _pending_level_offer: Array[StringName] = []
 var _level_offer_sequence: int = 0
@@ -55,7 +57,9 @@ var current_consumable_id: StringName = &"small_potion"
 var consumable_charges: int = 1
 var _catalogs_valid: bool = false
 var _settlement_service := RunSettlementService.new()
+var _merchant_transaction_service := MerchantTransactionService.new()
 var _run_started_at_msec: int = 0
+var _stage_attempt_snapshot: StageAttemptSnapshot
 
 
 func _ready() -> void:
@@ -88,11 +92,13 @@ func start_new_run(_profile_index: int = -1, requested_seed: int = -1) -> bool:
 	run_level = 1
 	current_xp = 0
 	coins = 0
+	_run_salvage = 0
 	_unsettled_materials.clear()
 	_micro_upgrade_stacks.clear()
 	_card_stacks.clear()
 	_applied_reward_ids.clear()
 	_applied_field_pickup_ids.clear()
+	_applied_merchant_transaction_ids.clear()
 	_pending_level_choices = 0
 	_pending_level_offer.clear()
 	_level_offer_sequence = 0
@@ -106,6 +112,7 @@ func start_new_run(_profile_index: int = -1, requested_seed: int = -1) -> bool:
 	current_consumable_id = StringName(profile_loadout.get("consumable", "small_potion"))
 	consumable_charges = 1
 	_run_started_at_msec = Time.get_ticks_msec()
+	_stage_attempt_snapshot = null
 	_settlement_service.reset(ProfileState)
 	_publish_state()
 	SignalBus.run_started.emit()
@@ -169,6 +176,8 @@ func get_run_snapshot() -> RunSnapshot:
 		"level": run_level,
 		"xp": current_xp,
 		"coins": coins,
+		"run_salvage": _run_salvage,
+		"applied_merchant_transaction_ids": get_applied_merchant_transaction_ids(),
 		"materials": get_unsettled_materials(),
 		"cards": _card_stacks.duplicate(true),
 		"micro_upgrades": _micro_upgrade_stacks.duplicate(true),
@@ -182,6 +191,149 @@ func get_run_snapshot() -> RunSnapshot:
 		"elapsed_seconds": get_run_elapsed_seconds(),
 		"terminal_settlement": terminal_settlement,
 	})
+
+
+func capture_stage_attempt(stage_path: String, boss_attempt: bool) -> Dictionary:
+	if has_terminal_settlement() or current_health <= 0:
+		return _stage_attempt_failure("An active, unsettled run is required.")
+	var profile_resources := _capture_stage_attempt_profile_resources()
+	if profile_resources.is_empty():
+		return _stage_attempt_failure("Stage attempt profile resources are unavailable.")
+	var candidate := StageAttemptSnapshot.new({
+		"version": StageAttemptSnapshot.VERSION,
+		"run_seed": run_seed,
+		"stage_index": current_stage_index,
+		"stage_path": stage_path,
+		"boss_attempt": boss_attempt,
+		"run_state": {
+			"run_seed": run_seed,
+			"stage_index": current_stage_index,
+			"current_health": current_health,
+			"max_health": max_health,
+			"run_level": run_level,
+			"current_xp": current_xp,
+			"coins": coins,
+			"run_salvage": _run_salvage,
+			"unsettled_materials": _unsettled_materials.duplicate(true),
+			"micro_upgrade_stacks": _micro_upgrade_stacks.duplicate(true),
+			"card_stacks": _card_stacks.duplicate(true),
+			"applied_reward_ids": _applied_reward_ids.duplicate(true),
+			"applied_field_pickup_ids": _applied_field_pickup_ids.duplicate(true),
+			"applied_merchant_transaction_ids": (
+				_applied_merchant_transaction_ids.duplicate(true)
+			),
+			"pending_level_choices": _pending_level_choices,
+			"pending_level_offer": _string_name_array_to_strings(_pending_level_offer),
+			"level_offer_sequence": _level_offer_sequence,
+			"card_reward_pending": _card_reward_pending,
+			"pending_card_offer": _string_name_array_to_strings(_pending_card_offer),
+			"card_offer_sequence": _card_offer_sequence,
+			"card_reroll_used": _card_reroll_used,
+			"card_reward_stage_index": _card_reward_stage_index,
+			"committed_card_id": String(_committed_card_id),
+			"current_consumable_id": String(current_consumable_id),
+			"consumable_charges": consumable_charges,
+			"hero_combat_loadout": hero_combat_loadout.duplicate(true),
+		},
+		"profile_resources": profile_resources,
+	})
+	if not candidate.is_valid():
+		return _stage_attempt_failure(
+			"Stage attempt capture is incomplete: %s"
+			% "; ".join(candidate.get_validation_errors())
+		)
+	_stage_attempt_snapshot = candidate
+	return {
+		"ok": true,
+		"message": "Stage attempt captured.",
+		"snapshot": candidate.to_dictionary(),
+	}
+
+
+func has_stage_attempt_snapshot() -> bool:
+	return _stage_attempt_snapshot != null and _stage_attempt_snapshot.is_valid()
+
+
+func get_stage_attempt_snapshot() -> StageAttemptSnapshot:
+	return _stage_attempt_snapshot
+
+
+func get_stage_attempt_snapshot_data() -> Dictionary:
+	return (
+		_stage_attempt_snapshot.to_dictionary()
+		if _stage_attempt_snapshot != null
+		else {}
+	)
+
+
+func restore_stage_attempt() -> Dictionary:
+	if has_terminal_settlement():
+		return _stage_attempt_failure("A settled run cannot restore an attempt.")
+	if _stage_attempt_snapshot == null or not _stage_attempt_snapshot.is_valid():
+		return _stage_attempt_failure("No complete stage attempt snapshot is available.")
+	if (
+		run_seed != _stage_attempt_snapshot.get_run_seed()
+		or current_stage_index != _stage_attempt_snapshot.get_stage_index()
+	):
+		return _stage_attempt_failure("Stage attempt identity no longer matches the active run.")
+
+	var run_data := _stage_attempt_snapshot.get_run_state()
+	var candidate_loadout: Dictionary = run_data.get("hero_combat_loadout", {}).duplicate(true)
+	var candidate_micro_upgrades: Dictionary = run_data.get("micro_upgrade_stacks", {}).duplicate(true)
+	var candidate_build := PlayerBuild.resolve(
+		candidate_loadout.get("stats", {}),
+		_collect_all_build_effects(candidate_micro_upgrades)
+	)
+	if not _is_build_valid(HERO_CARD_PROFILE_ID, candidate_build):
+		return _stage_attempt_failure("Stage attempt build is invalid.")
+	var candidate_max_health := int(candidate_build.get_values().get("max_health", 0))
+	if candidate_max_health != int(run_data.get("max_health", -1)):
+		return _stage_attempt_failure("Stage attempt maximum health is inconsistent.")
+
+	# Profile persistence is committed only after the complete run candidate validates.
+	var profile_restore: Dictionary = ProfileState.restore_stage_attempt_resources(
+		_stage_attempt_snapshot.get_profile_resources()
+	)
+	if not bool(profile_restore.get("ok", false)):
+		return _stage_attempt_failure(
+			"Stage attempt profile restore failed: %s"
+			% profile_restore.get("message", "Unknown error.")
+		)
+
+	run_seed = int(run_data["run_seed"])
+	current_stage_index = int(run_data["stage_index"])
+	run_level = int(run_data["run_level"])
+	current_xp = int(run_data["current_xp"])
+	coins = int(run_data["coins"])
+	_run_salvage = int(run_data["run_salvage"])
+	_unsettled_materials = (run_data["unsettled_materials"] as Dictionary).duplicate(true)
+	_micro_upgrade_stacks = candidate_micro_upgrades
+	_card_stacks = (run_data["card_stacks"] as Dictionary).duplicate(true)
+	_applied_reward_ids = (run_data["applied_reward_ids"] as Dictionary).duplicate(true)
+	_applied_field_pickup_ids = (run_data["applied_field_pickup_ids"] as Dictionary).duplicate(true)
+	_applied_merchant_transaction_ids = (
+		(run_data["applied_merchant_transaction_ids"] as Dictionary).duplicate(true)
+	)
+	_pending_level_choices = int(run_data["pending_level_choices"])
+	_pending_level_offer = _strings_to_string_name_array(run_data["pending_level_offer"] as Array)
+	_level_offer_sequence = int(run_data["level_offer_sequence"])
+	_card_reward_pending = bool(run_data["card_reward_pending"])
+	_pending_card_offer = _strings_to_string_name_array(run_data["pending_card_offer"] as Array)
+	_card_offer_sequence = int(run_data["card_offer_sequence"])
+	_card_reroll_used = bool(run_data["card_reroll_used"])
+	_card_reward_stage_index = int(run_data["card_reward_stage_index"])
+	_committed_card_id = StringName(run_data["committed_card_id"])
+	current_consumable_id = StringName(run_data["current_consumable_id"])
+	consumable_charges = int(run_data["consumable_charges"])
+	_apply_hero_build(candidate_build, candidate_loadout)
+	max_health = candidate_max_health
+	current_health = int(run_data["current_health"])
+	_publish_state()
+	return {
+		"ok": true,
+		"message": "Stage attempt restored.",
+		"snapshot": get_run_snapshot().to_dictionary(),
+	}
 
 
 func get_run_elapsed_seconds() -> float:
@@ -236,6 +388,97 @@ func grant_unsettled_material(material_id: String, amount: int) -> bool:
 		return false
 	_unsettled_materials[material_id] = int(_unsettled_materials.get(material_id, 0)) + amount
 	return true
+
+
+func get_run_salvage() -> int:
+	return _run_salvage
+
+
+func get_applied_merchant_transaction_ids() -> Array[String]:
+	var result: Array[String] = []
+	for transaction_id in _applied_merchant_transaction_ids:
+		result.append(String(transaction_id))
+	result.sort()
+	return result
+
+
+func get_merchant_snapshot() -> Dictionary:
+	var run_facts := _merchant_run_facts()
+	var buy_preview := _merchant_transaction_service.preview(
+		MerchantTransactionService.BUY_POTION,
+		run_facts
+	)
+	var sell_preview := _merchant_transaction_service.preview(
+		MerchantTransactionService.SELL_ALL_SALVAGE,
+		run_facts
+	)
+	return {
+		"coins": coins,
+		"run_salvage": _run_salvage,
+		"consumable_id": String(current_consumable_id),
+		"consumable_charges": consumable_charges,
+		"max_consumable_charges": MAX_CONSUMABLE_CHARGES,
+		"buy_potion": buy_preview,
+		"sell_run_salvage": sell_preview.duplicate(true),
+		"sell_all_salvage": sell_preview,
+		"applied_transaction_ids": get_applied_merchant_transaction_ids(),
+	}
+
+
+func buy_merchant_potion(transaction_id: StringName) -> Dictionary:
+	return _merchant_result(
+		apply_merchant_transaction(transaction_id, MerchantTransactionService.BUY_POTION)
+	)
+
+
+func sell_run_salvage(transaction_id: StringName) -> Dictionary:
+	return _merchant_result(
+		apply_merchant_transaction(transaction_id, MerchantTransactionService.SELL_ALL_SALVAGE)
+	)
+
+
+func preview_merchant_transaction(kind: StringName) -> Dictionary:
+	return _merchant_transaction_service.preview(kind, _merchant_run_facts())
+
+
+func apply_merchant_transaction(
+	transaction_id: StringName,
+	kind: StringName
+) -> MerchantTransactionReceipt:
+	var receipt := _merchant_transaction_service.execute(
+		transaction_id,
+		kind,
+		_merchant_run_facts(),
+		_applied_merchant_transaction_ids
+	)
+	if receipt.is_applied():
+		var after: Dictionary = receipt.get_value(&"after", {})
+		coins = int(after["coins"])
+		_run_salvage = int(after["run_salvage"])
+		consumable_charges = int(after["consumable_charges"])
+		_applied_merchant_transaction_ids[String(transaction_id)] = true
+		_publish_state()
+	return receipt
+
+
+func _merchant_result(receipt: MerchantTransactionReceipt) -> Dictionary:
+	return {
+		"ok": receipt.is_applied(),
+		"duplicate": receipt.is_duplicate(),
+		"message": receipt.get_message(),
+		"receipt": receipt.to_dictionary(),
+		"snapshot": get_run_snapshot().to_dictionary(),
+	}
+
+
+func _merchant_run_facts() -> Dictionary:
+	return {
+		"active": not has_terminal_settlement() and current_health > 0,
+		"coins": coins,
+		"run_salvage": _run_salvage,
+		"consumable_charges": consumable_charges,
+		"max_consumable_charges": MAX_CONSUMABLE_CHARGES,
+	}
 
 
 func apply_reward_transaction(transaction: RewardTransaction) -> RewardResult:
@@ -321,6 +564,8 @@ func apply_reward_transaction(transaction: RewardTransaction) -> RewardResult:
 				_grant_xp_internal(amount)
 			"coin":
 				coins += amount
+			"salvage":
+				_run_salvage += amount
 			_:
 				if bool(progression_settlement.get("changed", false)):
 					grant_unsettled_material(String(currency_id), amount)
@@ -1009,6 +1254,48 @@ func _string_name_array_to_strings(values: Array[StringName]) -> Array[String]:
 	for value in values:
 		result.append(String(value))
 	return result
+
+
+func _strings_to_string_name_array(values: Array) -> Array[StringName]:
+	var result: Array[StringName] = []
+	for value in values:
+		if value is String or value is StringName:
+			result.append(StringName(value))
+	return result
+
+
+func _capture_stage_attempt_profile_resources() -> Dictionary:
+	if (
+		ProfileState == null
+		or not ProfileState.has_method("get_crafted_equipment")
+		or not ProfileState.has_method("get_ranged_supplies")
+	):
+		return {}
+	var crafted: Dictionary = ProfileState.get_crafted_equipment()
+	var equipment_conditions: Dictionary = {}
+	for raw_model_id in crafted:
+		var model_id := String(raw_model_id)
+		if not ProfileData.CONDITION_MODEL_IDS.has(model_id):
+			continue
+		var raw_state: Variant = crafted[raw_model_id]
+		if not raw_state is Dictionary:
+			return {}
+		var condition: Variant = (raw_state as Dictionary).get("condition", null)
+		if not (condition is int or condition is float) or not is_finite(float(condition)):
+			return {}
+		equipment_conditions[model_id] = float(condition)
+	return {
+		"equipment_conditions": equipment_conditions,
+		"ranged_supplies": ProfileState.get_ranged_supplies(),
+	}
+
+
+func _stage_attempt_failure(message: String) -> Dictionary:
+	return {
+		"ok": false,
+		"message": message,
+		"snapshot": {},
+	}
 
 
 func _same_card_choice_set(first: Array[StringName], second: Array[StringName]) -> bool:

@@ -300,6 +300,31 @@ func consume_equipment_condition(
 	)
 
 
+func restore_stage_attempt_resources(resources: Dictionary) -> Dictionary:
+	_ensure_initialized()
+	var raw_conditions: Variant = resources.get("equipment_conditions", null)
+	var raw_supplies: Variant = resources.get("ranged_supplies", null)
+	if not raw_conditions is Dictionary or not raw_supplies is Dictionary:
+		return {
+			"ok": false,
+			"changed": false,
+			"code": "invalid_attempt_resources",
+			"message": "Stage attempt resources are incomplete.",
+			"persisted": true,
+			"snapshot": get_profile_snapshot(),
+		}
+	var candidate := _data.duplicate_data()
+	return _commit_candidate(
+		candidate,
+		_commands.restore_stage_attempt_resources(
+			candidate,
+			raw_conditions as Dictionary,
+			raw_supplies as Dictionary
+		),
+		&"attempt_resources"
+	)
+
+
 func resolve_tutorial(completed: bool, transaction_id: StringName) -> Dictionary:
 	_ensure_initialized()
 	var candidate := _data.duplicate_data()

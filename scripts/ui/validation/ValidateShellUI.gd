@@ -183,26 +183,34 @@ func _validate_settings(viewport_size: Vector2i) -> void:
 	await process_frame
 	_assert_contains(
 		(screen.get_node("%BindingStatus") as Label).text,
-		"Press a keyboard key",
+		"Press a key",
 		"Remap capture must expose its active state."
 	)
 	_assert_true(String(screen.get("capture_action_name")) == "jump", "Remap capture must own the selected action.")
-	var cancel := InputEventJoypadButton.new()
-	cancel.button_index = JOY_BUTTON_B
+	var cancel := InputEventKey.new()
+	cancel.keycode = KEY_ESCAPE
+	cancel.physical_keycode = KEY_ESCAPE
 	cancel.pressed = true
 	screen.call("_input", cancel)
 	await process_frame
-	_assert_true(String(screen.get("capture_action_name")).is_empty(), "Gamepad B must cancel remap capture.")
+	_assert_true(String(screen.get("capture_action_name")).is_empty(), "Escape must cancel remap capture.")
 	_assert_contains(
 		(screen.get_node("%BindingStatus") as Label).text,
 		"canceled",
 		"Canceled remap must be visible."
 	)
+	screen.call("_begin_capture", "pause", "Settings")
+	screen.call("_input", cancel)
+	await process_frame
+	_assert_true(
+		String(screen.get("capture_action_name")).is_empty(),
+		"Escape must also cancel capture for the pause action; Default restores Escape."
+	)
 
 	screen.call("_begin_capture", "jump", "Jump")
 	var conflict := InputEventKey.new()
-	conflict.keycode = KEY_F
-	conflict.physical_keycode = KEY_F
+	conflict.keycode = KEY_X
+	conflict.physical_keycode = KEY_X
 	conflict.pressed = true
 	screen.call("_apply_captured_key", conflict)
 	await process_frame

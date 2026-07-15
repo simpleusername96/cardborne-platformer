@@ -24,15 +24,17 @@ func _run() -> void:
 	await process_frame
 
 	var run_director := root.get_node_or_null("RunDirector")
+	var run_state := root.get_node_or_null("RunState")
 	var game := root.get_node_or_null("Game")
 	var profile_state := root.get_node_or_null("ProfileState")
 	var screen_root := main_instance.get_node_or_null("UILayer/ScreenRoot")
 	var hud_root := main_instance.get_node_or_null("UILayer/HUDRoot")
 	_expect(run_director != null, "RunDirector autoload should exist")
+	_expect(run_state != null, "RunState autoload should exist")
 	_expect(game != null, "Game autoload should exist")
 	_expect(profile_state != null, "ProfileState autoload should exist")
 	_expect(screen_root != null and hud_root != null, "main scene should expose production UI roots")
-	if run_director == null or game == null or profile_state == null or screen_root == null or hud_root == null:
+	if run_director == null or run_state == null or game == null or profile_state == null or screen_root == null or hud_root == null:
 		_finish()
 		return
 	profile_state.initialize_for_tests(
@@ -45,9 +47,12 @@ func _run() -> void:
 
 	_expect(run_director.get_phase_name() == "main_menu", "default boot should open the main menu")
 	_expect(
-		RunPhase.can_transition(RunPhase.Value.STAGE_CARD_REWARD, RunPhase.Value.BOSS_LOADING)
+		RunPhase.can_transition(
+			RunPhase.Value.STAGE_CARD_REWARD,
+			RunPhase.Value.INTERMISSION_LOADING
+		)
 		and not RunPhase.can_transition(RunPhase.Value.STAGE_CARD_REWARD, RunPhase.Value.RUN_CLEAR),
-		"the third card reward should enter boss loading instead of granting early victory"
+		"every normal-stage card reward should enter Safe Intermission"
 	)
 	_expect(game.current_stage == null, "default boot must not instantiate a stage")
 	_expect(_has_child_named(screen_root, "MainMenu"), "main menu screen should be mounted")
@@ -106,11 +111,16 @@ func _run() -> void:
 	run_director.show_run_result(true)
 	await process_frame
 	_expect(run_director.get_phase_name() == "stage_active", "normal-stage victory requests should fail closed")
-	run_director.show_run_result(false)
+	run_state.damage_player(999)
 	await process_frame
-	_expect(run_director.get_phase_name() == "run_death", "player defeat should use run-death phase")
-	_expect(game.current_stage == null, "run result should unload gameplay")
-	_expect(_has_child_named(screen_root, "RunResult"), "run result screen should be mounted")
+	await process_frame
+	_expect(run_director.get_phase_name() == "retry_decision", "player defeat should offer a retry decision")
+	_expect(not run_state.has_terminal_settlement(), "retry decision should remain non-terminal")
+	_expect(game.current_stage == null, "retry decision should unload the defeated world")
+	_expect(_has_child_named(screen_root, "RunResult"), "retry decision screen should be mounted")
+	_expect(run_director.end_expedition(), "explicit End Expedition should settle defeat")
+	await process_frame
+	_expect(run_director.get_phase_name() == "run_death", "End Expedition should use run-death phase")
 
 	game.unload_current_stage()
 	main_instance.queue_free()

@@ -9,6 +9,7 @@ func _initialize() -> void:
 	_validate_round_shield_flow()
 	_validate_attack_matrix()
 	_validate_guard_break_and_recovery()
+	_validate_held_guard_rearms_after_recovery()
 	_validate_worn_shield()
 	if _failures.is_empty():
 		print("SHIELD_COMBAT_RUNTIME_VALIDATION_OK")
@@ -75,6 +76,24 @@ func _validate_worn_shield() -> void:
 	var result: Variant = runtime.resolve_attack(_normal_attack(), Vector2.RIGHT)
 	_expect(result.blocked, "Condition-zero shield must remain usable.")
 	_expect(result.condition_cost == 0, "Condition cannot fall below zero.")
+
+
+func _validate_held_guard_rearms_after_recovery() -> void:
+	var runtime: Variant = _active_runtime()
+	runtime.resolve_attack(
+		_normal_attack().merged({"stability_cost": 100}, true),
+		Vector2.RIGHT
+	)
+	runtime.update(0.14, true)
+	_expect(
+		runtime.get_state_snapshot()["phase"] == &"startup",
+		"Held guard should re-enter startup when break recovery ends."
+	)
+	runtime.update(0.08, true)
+	_expect(
+		runtime.get_state_snapshot()["phase"] == &"active",
+		"Held guard should become active again without another press."
+	)
 
 
 func _runtime() -> Variant:

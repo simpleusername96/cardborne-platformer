@@ -16,10 +16,10 @@ const EXPECTED_ROOM_IDS: Array[StringName] = [
 	&"fw_pump_gallery",
 	&"fw_lower_upper_choice",
 	&"fw_sunken_cache",
-	&"fw_rest_forge",
+	&"fw_exit_shelter",
 ]
 const EXPECTED_ROLES: Array[StringName] = [
-	&"start", &"traversal", &"hazard", &"combat", &"choice", &"combat", &"safe",
+	&"start", &"combat", &"hazard", &"combat", &"choice", &"combat", &"safe",
 ]
 const POISON_ROUTE: Array[StringName] = [
 	&"fw_flooded_entry",
@@ -28,7 +28,7 @@ const POISON_ROUTE: Array[StringName] = [
 	&"fw_leaper_basin",
 	&"fw_lower_upper_choice",
 	&"fw_pump_gallery",
-	&"fw_rest_forge",
+	&"fw_exit_shelter",
 ]
 const CRUMBLE_ROUTE: Array[StringName] = [
 	&"fw_flooded_entry",
@@ -37,7 +37,7 @@ const CRUMBLE_ROUTE: Array[StringName] = [
 	&"fw_leaper_basin",
 	&"fw_lower_upper_choice",
 	&"fw_pump_gallery",
-	&"fw_rest_forge",
+	&"fw_exit_shelter",
 ]
 
 var _failures: Array[String] = []
@@ -83,8 +83,8 @@ func _validate_profile(profile: StageProfile) -> void:
 	_expect(profile.optional_branch_count == Vector2i(1, 1), "Profile should choose one optional branch.")
 	_expect(profile.terminal_room_role == &"safe", "Profile terminal role should be safe.")
 	_expect(
-		profile.encounter_budget_per_combat_room == Vector2i(2, 5),
-		"Profile combat budget should be 2-5."
+		profile.encounter_budget_per_combat_room == Vector2i(2, 6),
+		"Profile combat budget should be 2-6."
 	)
 	_expect(
 		profile.hazard_budget_per_room == Vector2i(0, 2),
@@ -307,7 +307,7 @@ func _validate_room_specific(
 			_validate_choice_room(data, host)
 		&"fw_sunken_cache":
 			_validate_optional_room(data, host)
-		&"fw_rest_forge":
+		&"fw_exit_shelter":
 			_validate_safe_room(data, host)
 
 
@@ -447,15 +447,15 @@ func _validate_optional_room(data: RoomTemplateData, host: RoomTemplateHost) -> 
 
 
 func _validate_safe_room(data: RoomTemplateData, host: RoomTemplateHost) -> void:
-	_expect(data.encounter_budget == Vector2i.ZERO, "Rest/forge cannot budget enemies.")
-	_expect(data.hazard_budget == Vector2i.ZERO, "Rest/forge cannot budget hazards.")
-	_expect(data.enemy_anchors.is_empty(), "Rest/forge cannot declare enemy anchors.")
-	_expect(data.hazard_anchors.is_empty(), "Rest/forge cannot declare hazard anchors.")
-	_expect(host.get_node_or_null("Anchors/Objective/RestSpawn") != null, "Rest spawn is missing.")
+	_expect(data.encounter_budget == Vector2i.ZERO, "Exit shelter cannot budget enemies.")
+	_expect(data.hazard_budget == Vector2i.ZERO, "Exit shelter cannot budget hazards.")
+	_expect(data.enemy_anchors.is_empty(), "Exit shelter cannot declare enemy anchors.")
+	_expect(data.hazard_anchors.is_empty(), "Exit shelter cannot declare hazard anchors.")
+	_expect(host.get_node_or_null("Anchors/Objective/ShelterSpawn") != null, "Shelter spawn is missing.")
 	_expect(host.get_node_or_null("Anchors/Objective/Checkpoint") != null, "Checkpoint is missing.")
-	_expect(host.get_node_or_null("Anchors/Objective/ForgeStation") != null, "Forge anchor is missing.")
-	_expect(host.get_node_or_null("Anchors/Objective/ShopStation") != null, "Shop anchor is missing.")
-	_expect(host.get_exit_portal() != null, "Rest/forge terminal exit is missing.")
+	_expect(host.get_node_or_null("Anchors/Objective/ForgeStation") == null, "Exit shelter cannot own a Forge anchor.")
+	_expect(host.get_node_or_null("Anchors/Objective/ShopStation") == null, "Exit shelter cannot own a Shop anchor.")
+	_expect(host.get_exit_portal() != null, "Exit shelter terminal exit is missing.")
 
 
 func _validate_role_candidates(

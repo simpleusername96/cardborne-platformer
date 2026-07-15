@@ -64,6 +64,25 @@ func _ready() -> void:
 		_refresh_all()
 
 
+func _exit_tree() -> void:
+	# RunDirector replaces the HUD and loads the next stage in the same frame.
+	# Disconnect immediately so the detached HUD cannot receive the new stage's
+	# singleton events before queue_free is flushed.
+	var callbacks := {
+		&"player_health_changed": Callable(self, "_on_health_changed"),
+		&"run_state_changed": Callable(self, "_on_run_state_changed"),
+		&"stage_started": Callable(self, "_on_stage_started"),
+		&"combat_state_changed": Callable(self, "_on_combat_state_changed"),
+		&"encounter_state_changed": Callable(self, "_on_encounter_state_changed"),
+		&"input_bindings_changed": Callable(self, "_on_input_bindings_changed"),
+		&"interaction_prompt_changed": Callable(self, "_on_interaction_prompt_changed"),
+	}
+	for signal_name in callbacks:
+		var callback: Callable = callbacks[signal_name]
+		if SignalBus.is_connected(signal_name, callback):
+			SignalBus.disconnect(signal_name, callback)
+
+
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED and combat_dock != null:
 		_layout_responsive()
@@ -446,6 +465,10 @@ func _on_stage_started(stage_id: String, stage_display_name: String) -> void:
 	elif stage_id == "arsenal_trial":
 		boss_panel.visible = false
 		objective_container.visible = false
+	elif stage_id == "safe_intermission":
+		boss_panel.visible = false
+		objective_container.visible = true
+		_show_objective("Prepare, then continue")
 	else:
 		boss_panel.visible = false
 		objective_container.visible = true
@@ -467,7 +490,7 @@ func _show_objective(detail: String) -> void:
 	objective_title_label.text = _stage_display_name.to_upper()
 	objective_detail_label.text = detail
 	objective_detail_label.visible = true
-	if objective_timer != null:
+	if objective_timer != null and objective_timer.is_inside_tree():
 		objective_timer.start()
 
 
@@ -521,7 +544,12 @@ func _show_boss_intro_state() -> void:
 
 
 func _bind_boss() -> void:
-	_boss = get_tree().get_first_node_in_group("boss")
+	if not is_inside_tree():
+		return
+	var tree := get_tree()
+	if tree == null:
+		return
+	_boss = tree.get_first_node_in_group("boss")
 	if _boss == null:
 		return
 	var snapshot_callback := Callable(self, "_on_boss_snapshot")

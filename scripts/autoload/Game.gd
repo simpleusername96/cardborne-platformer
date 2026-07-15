@@ -120,14 +120,6 @@ func get_action_binding_text(action_name: String, fallback: String = "unbound") 
 	return InputBindings.get_binding_text(action_name, fallback)
 
 
-func get_active_input_device() -> StringName:
-	return InputBindings.get_active_input_device()
-
-
-func is_gamepad_input_active() -> bool:
-	return InputBindings.is_gamepad_active()
-
-
 func get_input_action_label(action_name: String) -> String:
 	return InputBindings.get_action_label(action_name)
 
@@ -142,21 +134,3 @@ func restore_action_default(action_name: String) -> Dictionary:
 
 func restore_all_input_defaults() -> void:
 	InputBindings.restore_all_defaults()
-
-
-func recover_after_death() -> void:
-	SignalBus.status_message_changed.emit("Player defeated")
-	call_deferred("_recover_after_death")
-
-
-func _recover_after_death() -> void:
-	await get_tree().create_timer(0.45).timeout
-	if RunState.current_health > 0:
-		return
-
-	var active_stage := get_tree().get_first_node_in_group("active_stage")
-	if active_stage != null and active_stage.has_method("respawn_player_after_defeat"):
-		active_stage.respawn_player_after_defeat()
-		return
-
-	reload_current_stage()

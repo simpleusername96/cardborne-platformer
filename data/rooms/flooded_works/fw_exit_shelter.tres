@@ -2,11 +2,11 @@
 
 [ext_resource type="Script" path="res://scripts/stages/RoomTemplateData.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/stages/RoomSocketData.gd" id="2"]
-[ext_resource type="PackedScene" path="res://scenes/rooms/flooded_works/FwRestForge.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://scenes/rooms/flooded_works/FwExitShelter.tscn" id="3"]
 
 [sub_resource type="Resource" id="EntrySocket"]
 script = ExtResource("2")
-id = &"rest_forge_in"
+id = &"exit_shelter_in"
 direction = &"left"
 route_role = &"critical"
 local_position = Vector2(0, 620)
@@ -20,7 +20,7 @@ headroom = 180.0
 
 [sub_resource type="Resource" id="ExitSocket"]
 script = ExtResource("2")
-id = &"rest_forge_out"
+id = &"exit_shelter_out"
 direction = &"right"
 route_role = &"critical"
 local_position = Vector2(1280, 620)
@@ -34,8 +34,8 @@ headroom = 180.0
 
 [resource]
 script = ExtResource("1")
-id = &"fw_rest_forge"
-display_name = "Rest and Forge"
+id = &"fw_exit_shelter"
+display_name = "Flooded Exit Shelter"
 content_version = 1
 scene = ExtResource("3")
 role = &"safe"
@@ -47,5 +47,5 @@ exit_sockets = Array[ExtResource("2")]([SubResource("ExitSocket")])
 encounter_budget = Vector2i(0, 0)
 hazard_budget = Vector2i(0, 0)
 reward_budget = Vector2i(0, 0)
-recovery_anchor_ids = Array[StringName]([&"rest_recovery"])
-estimated_seconds = Vector2i(20, 60)
+recovery_anchor_ids = Array[StringName]([&"exit_shelter_recovery"])
+estimated_seconds = Vector2i(8, 20)

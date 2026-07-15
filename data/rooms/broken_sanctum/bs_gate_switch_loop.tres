@@ -1,9 +1,10 @@
-[gd_resource type="Resource" script_class="RoomTemplateData" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="RoomTemplateData" load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/stages/RoomTemplateData.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/stages/RoomSocketData.gd" id="2"]
 [ext_resource type="PackedScene" path="res://scenes/rooms/broken_sanctum/BsGateSwitchLoop.tscn" id="3"]
 [ext_resource type="Script" path="res://scripts/stages/RoomMovingPlatformAnchorData.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/stages/RoomEnemyAnchorData.gd" id="5"]
 
 [sub_resource type="Resource" id="EntrySocket"]
 script = ExtResource("2")
@@ -24,9 +25,9 @@ script = ExtResource("2")
 id = &"gate_switch_loop_out"
 direction = &"right"
 route_role = &"critical"
-local_position = Vector2(1280, 620)
+local_position = Vector2(1280, 460)
 opening_size = Vector2(180, 180)
-support_top = 620.0
+support_top = 460.0
 transition_type = &"seam"
 required_ability = &"baseline"
 approach_width = 240.0
@@ -36,8 +37,8 @@ headroom = 180.0
 [sub_resource type="Resource" id="OverheadPlatformPath"]
 script = ExtResource("4")
 path_id = &"gate_overhead_route"
-start_position = Vector2(300, 350)
-end_position = Vector2(980, 350)
+start_position = Vector2(300, 200)
+end_position = Vector2(980, 200)
 travel_time = 2.4
 start_wait_time = 0.6
 end_wait_time = 0.6
@@ -45,11 +46,44 @@ wait_pad_ids = Array[StringName]([&"gate_overhead_wait_west", &"gate_overhead_wa
 fall_recovery_id = &"gate_entry_recovery"
 checkpoint_safe_radius = 180.0
 
+[sub_resource type="Resource" id="WestOccupierAnchor"]
+script = ExtResource("5")
+id = &"gate_west_occupier"
+allowed_pressure_roles = Array[StringName]([&"occupier"])
+support_width = 240.0
+lane_width = 160.0
+clearance = 180.0
+has_escape_route = true
+has_line_of_sight = false
+has_cover_or_elevation = true
+
+[sub_resource type="Resource" id="EastOccupierAnchor"]
+script = ExtResource("5")
+id = &"gate_east_occupier"
+allowed_pressure_roles = Array[StringName]([&"occupier"])
+support_width = 240.0
+lane_width = 160.0
+clearance = 180.0
+has_escape_route = true
+has_line_of_sight = false
+has_cover_or_elevation = true
+
+[sub_resource type="Resource" id="OverheadShooterAnchor"]
+script = ExtResource("5")
+id = &"gate_overhead_shooter"
+allowed_pressure_roles = Array[StringName]([&"ranged"])
+support_width = 220.0
+lane_width = 180.0
+clearance = 300.0
+has_escape_route = true
+has_line_of_sight = true
+has_cover_or_elevation = true
+
 [resource]
 script = ExtResource("1")
 id = &"bs_gate_switch_loop"
 display_name = "Sanctum Gate Switch Loop"
-content_version = 1
+content_version = 3
 scene = ExtResource("3")
 role = &"objective"
 stage_tags = Array[StringName]([&"broken_sanctum"])
@@ -57,9 +91,11 @@ required_route = true
 bounds = Rect2(0, 0, 1280, 720)
 entry_sockets = Array[ExtResource("2")]([SubResource("EntrySocket")])
 exit_sockets = Array[ExtResource("2")]([SubResource("ExitSocket")])
-encounter_budget = Vector2i(0, 0)
+encounter_budget = Vector2i(7, 7)
 hazard_budget = Vector2i(0, 0)
 reward_budget = Vector2i(0, 0)
+allowed_enemy_tags = Array[StringName]([&"occupier", &"ranged"])
+enemy_anchors = Array[ExtResource("5")]([SubResource("WestOccupierAnchor"), SubResource("EastOccupierAnchor"), SubResource("OverheadShooterAnchor")])
 moving_platform_anchors = Array[ExtResource("4")]([SubResource("OverheadPlatformPath")])
 recovery_anchor_ids = Array[StringName]([&"gate_entry_recovery", &"switch_recovery"])
 estimated_seconds = Vector2i(25, 45)

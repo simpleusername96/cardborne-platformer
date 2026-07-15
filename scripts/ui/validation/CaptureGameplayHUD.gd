@@ -10,6 +10,11 @@ const CAPTURES: Array[Dictionary] = [
 	{"name": "compact_field_pickup", "size": Vector2i(960, 540), "state": &"field_pickup"},
 	{"name": "compact_boss", "size": Vector2i(960, 540), "state": &"boss"},
 	{"name": "desktop_interaction", "size": Vector2i(1280, 720), "state": &"interaction"},
+	{"name": "desktop_guard_start", "size": Vector2i(1280, 720), "state": &"guard_start"},
+	{"name": "desktop_guard_block", "size": Vector2i(1280, 720), "state": &"normal_block"},
+	{"name": "desktop_precise_guard", "size": Vector2i(1280, 720), "state": &"precise_block"},
+	{"name": "desktop_guard_break", "size": Vector2i(1280, 720), "state": &"guard_break"},
+	{"name": "desktop_guard_recovery", "size": Vector2i(1280, 720), "state": &"guard_recovery"},
 	{"name": "hd_boss", "size": Vector2i(1920, 1080), "state": &"boss"},
 ]
 
@@ -44,12 +49,16 @@ func _run() -> void:
 
 func _capture(packed: PackedScene, capture: Dictionary) -> void:
 	var viewport_size := capture["size"] as Vector2i
-	root.size = viewport_size
-	DisplayServer.window_set_size(viewport_size)
+	var viewport := SubViewport.new()
+	viewport.size = viewport_size
+	viewport.render_target_clear_mode = SubViewport.CLEAR_MODE_ALWAYS
+	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	viewport.gui_disable_input = true
+	root.add_child(viewport)
 	var backdrop := _build_backdrop(Vector2(viewport_size))
-	root.add_child(backdrop)
+	viewport.add_child(backdrop)
 	var hud := packed.instantiate() as Control
-	root.add_child(hud)
+	viewport.add_child(hud)
 	await _wait_frames(2)
 	_configure_state(hud, StringName(capture["state"]))
 	await _wait_frames(SETTLE_FRAMES)
@@ -57,13 +66,12 @@ func _capture(packed: PackedScene, capture: Dictionary) -> void:
 		RenderingServer.force_draw(false)
 		await RenderingServer.frame_post_draw
 		await process_frame
-	var image := root.get_texture().get_image()
+	var image := viewport.get_texture().get_image()
 	var output_path := "%s/%s.png" % [OUTPUT_DIR, capture["name"]]
 	if image == null or image.save_png(output_path) != OK:
 		push_error("Unable to save gameplay HUD capture: %s" % output_path)
 		_failed = true
-	hud.queue_free()
-	backdrop.queue_free()
+	viewport.queue_free()
 	await _wait_frames(CLEANUP_FRAMES)
 
 
@@ -101,7 +109,7 @@ func _configure_state(hud: Control, state: StringName) -> void:
 		health = 2
 		potion_charges = 0
 	hud.call("_on_run_state_changed", _run_snapshot(health, potion_charges))
-	hud.call("_on_combat_state_changed", _combat_snapshot())
+	hud.call("_on_combat_state_changed", _combat_snapshot(state))
 	match state:
 		&"interaction":
 			hud.call("_on_interaction_prompt_changed", "Open cache", true)
@@ -150,8 +158,8 @@ func _run_snapshot(health: int, potion_charges: int) -> Dictionary:
 	}
 
 
-func _combat_snapshot() -> Dictionary:
-	return {
+func _combat_snapshot(state: StringName = &"") -> Dictionary:
+	var snapshot := {
 		"phase": "idle",
 		"shared_hero_mode": true,
 		"committed_intent": {"mode": "ranged", "tool_id": "hunting_bow"},
@@ -177,6 +185,61 @@ func _combat_snapshot() -> Dictionary:
 			"spirit_stone_display_name": "Ember Spirit Stone",
 		},
 	}
+	var guard: Dictionary = snapshot["guard"]
+	var feedback := {
+		"event_id": 1,
+		"active": true,
+		"remaining": 0.8,
+		"stability_cost": 0,
+		"condition_cost": 0,
+		"damage": 0,
+	}
+	match state:
+		&"guard_start":
+			guard.merge({"phase": &"startup", "guarding": true}, true)
+			feedback.merge({
+				"outcome": &"guard_start",
+				"reason": &"guard_start",
+				"label": "GUARD RAISED",
+			}, true)
+		&"normal_block":
+			guard.merge({"phase": &"active", "guarding": true, "stability_fraction": 0.45}, true)
+			feedback.merge({
+				"outcome": &"normal_block",
+				"reason": &"blocked",
+				"label": "BLOCKED",
+				"stability_cost": 20,
+				"condition_cost": 1,
+			}, true)
+		&"precise_block":
+			guard.merge({"phase": &"active", "guarding": true}, true)
+			feedback.merge({
+				"outcome": &"precise_block",
+				"reason": &"precise_block",
+				"label": "PRECISE GUARD",
+			}, true)
+		&"guard_break":
+			guard.merge({"phase": &"recovery", "guarding": false, "stability_fraction": 0.0}, true)
+			feedback.merge({
+				"outcome": &"guard_break",
+				"reason": &"guard_broken",
+				"label": "GUARD BROKEN",
+				"stability_cost": 100,
+				"condition_cost": 1,
+				"damage": 2,
+			}, true)
+		&"guard_recovery":
+			guard.merge({"phase": &"recovery", "guarding": false}, true)
+			feedback.merge({
+				"outcome": &"guard_recovery",
+				"reason": &"guard_recovery",
+				"label": "GUARD RECOVERY",
+			}, true)
+		_:
+			feedback.clear()
+	if not feedback.is_empty():
+		snapshot["defense_feedback"] = feedback
+	return snapshot
 
 
 func _wait_frames(frame_count: int) -> void:

@@ -81,6 +81,10 @@ func get_display_snapshot() -> Dictionary:
 			"name": _guard_name.text,
 			"condition": _guard_condition.text,
 			"stability": _guard_stability.text,
+			"phase": String((_combat_snapshot.get("guard", {}) as Dictionary).get("phase", "idle")),
+			"outcome": String((_combat_snapshot.get("defense_feedback", {}) as Dictionary).get("outcome", "")),
+			"reason": String((_combat_snapshot.get("defense_feedback", {}) as Dictionary).get("reason", "")),
+			"feedback_visible": bool((_combat_snapshot.get("defense_feedback", {}) as Dictionary).get("active", false)),
 		},
 		"spirit": {"name": _spirit_name.text, "state": _spirit_state.text},
 		"potion": {"name": _potion_name.text, "count": _potion_count.text},
@@ -101,7 +105,7 @@ func _build_ui() -> void:
 	var attack_column := VBoxContainer.new()
 	attack_column.add_theme_constant_override("separation", 4)
 	attack_margin.add_child(attack_column)
-	attack_column.add_child(_header("attack", "attack", "F", "ATTACK", Styles.AMBER))
+	attack_column.add_child(_header("attack", "attack", "X", "ATTACK", Styles.AMBER))
 	var attack_pair := HBoxContainer.new()
 	attack_pair.add_theme_constant_override("separation", 4)
 	attack_column.add_child(attack_pair)
@@ -121,7 +125,7 @@ func _build_ui() -> void:
 	_safe_gap.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_row.add_child(_safe_gap)
 
-	var guard := _status_panel("guard", "guard", "G", "GUARD", Styles.CYAN)
+	var guard := _status_panel("guard", "guard", "C", "GUARD", Styles.CYAN)
 	_guard_panel = guard["panel"]
 	_guard_name = guard["name"]
 	_guard_condition = guard["primary"]
@@ -136,7 +140,7 @@ func _build_ui() -> void:
 	_row.add_child(_spirit_panel)
 
 	var potion := _status_panel(
-		"potion", "use_consumable", "H", "POTION", Color("63b987")
+		"potion", "use_consumable", "A", "POTION", Color("63b987")
 	)
 	_potion_panel = potion["panel"]
 	_potion_name = potion["name"]
@@ -246,7 +250,7 @@ func _render() -> void:
 	for input_action in _input_labels:
 		var input := _input_labels[input_action] as Label
 		var fallback := String(
-			{"attack": "F", "guard": "G", "use_consumable": "H"}.get(
+			{"attack": "X", "guard": "C", "use_consumable": "A"}.get(
 				input_action, "--"
 			)
 		)
@@ -269,15 +273,34 @@ func _render() -> void:
 	_apply_choice_style(_melee_panel, Styles.AMBER, intent_mode == "melee")
 	_apply_choice_style(_ranged_panel, Styles.CYAN, intent_mode == "ranged")
 
-	_guard_name.text = _compact_name(String(loadout.get("shield_display_name", "Shield")))
-	_guard_condition.text = "Condition %s" % _percent(
+	var shield_name := _compact_name(String(loadout.get("shield_display_name", "Shield")))
+	var shield_condition := _percent(
 		int(loadout.get("shield_condition", 0)),
 		int(loadout.get("shield_maximum_condition", 0))
 	)
 	var guard: Dictionary = _combat_snapshot.get("guard", {})
-	_guard_stability.text = "Stability %d%%" % int(round(
+	var stability_percent := int(round(
 		clampf(float(guard.get("stability_fraction", 0.0)), 0.0, 1.0) * 100.0
 	))
+	var feedback: Dictionary = _combat_snapshot.get("defense_feedback", {})
+	var feedback_active := bool(feedback.get("active", false))
+	var phase := StringName(guard.get("phase", &"idle"))
+	_guard_name.text = _guard_title(shield_name, phase, feedback, feedback_active)
+	_guard_condition.text = "Condition %s" % shield_condition
+	_guard_stability.text = "Stability %d%%" % stability_percent
+	if feedback_active:
+		var condition_cost := maxi(int(feedback.get("condition_cost", 0)), 0)
+		var stability_cost := maxi(int(feedback.get("stability_cost", 0)), 0)
+		var damage := maxi(int(feedback.get("damage", 0)), 0)
+		if condition_cost > 0:
+			_guard_condition.text = "-%d CND  •  %s" % [condition_cost, shield_condition]
+		elif StringName(feedback.get("outcome", &"")) == &"precise_block":
+			_guard_condition.text = "CND: NO COST"
+		if stability_cost > 0:
+			_guard_stability.text = "-%d STB  •  %d%%" % [stability_cost, stability_percent]
+		elif damage > 0:
+			_guard_stability.text = "DAMAGE %d  •  %d%%" % [damage, stability_percent]
+	_apply_guard_style(phase, feedback, feedback_active)
 
 	var spirit: Dictionary = _combat_snapshot.get("spirit", {})
 	_spirit_name.text = _compact_name(String(loadout.get("spirit_stone_display_name", "Spirit Stone")))
@@ -308,6 +331,54 @@ func _apply_choice_style(panel: PanelContainer, accent: Color, active: bool) -> 
 			2 if active else 1
 		)
 	)
+
+
+func _guard_title(
+	shield_name: String,
+	phase: StringName,
+	feedback: Dictionary,
+	feedback_active: bool
+) -> String:
+	if feedback_active:
+		return String(feedback.get("label", "GUARD"))
+	return {
+		&"startup": "RAISING  •  %s" % shield_name,
+		&"active": "ACTIVE  •  %s" % shield_name,
+		&"recovery": "RECOVER  •  %s" % shield_name,
+	}.get(phase, shield_name)
+
+
+func _apply_guard_style(
+	phase: StringName,
+	feedback: Dictionary,
+	feedback_active: bool
+) -> void:
+	var outcome := StringName(feedback.get("outcome", &"")) if feedback_active else &""
+	var accent := Styles.OUTLINE
+	var width := 1
+	var title_color := Styles.TEXT
+	if phase in [&"startup", &"active"]:
+		accent = Styles.CYAN
+		width = 2
+	if phase == &"recovery":
+		title_color = Styles.TEXT_MUTED
+	match outcome:
+		&"normal_block":
+			accent = Styles.CYAN
+			width = 3
+			title_color = Styles.CYAN.lightened(0.2)
+		&"precise_block":
+			accent = Styles.AMBER
+			width = 3
+			title_color = Styles.AMBER.lightened(0.2)
+		&"guard_break", &"guard_failed":
+			accent = Styles.CORAL
+			width = 3 if outcome == &"guard_break" else 2
+			title_color = Styles.CORAL.lightened(0.2)
+	_guard_panel.add_theme_stylebox_override(
+		"panel", Styles.panel_style(Color(Styles.SURFACE, 0.96), accent, width)
+	)
+	_guard_name.add_theme_color_override("font_color", title_color)
 
 
 func _compact_name(value: String) -> String:

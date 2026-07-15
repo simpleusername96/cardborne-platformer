@@ -342,6 +342,106 @@ func consume_equipment_condition(
 	)
 
 
+func restore_stage_attempt_resources(
+	data: ProfileData,
+	equipment_conditions: Dictionary,
+	ranged_supplies: Dictionary
+) -> ProfileCommandResult:
+	if data == null:
+		return _rejected(&"missing_profile", "Stage attempt resources need a profile.")
+	if ranged_supplies.size() != ProfileData.RANGED_SUPPLY_LIMITS.size():
+		return _rejected(&"invalid_attempt_supplies", "Stage attempt supplies are incomplete.")
+	for supply_id in ProfileData.RANGED_SUPPLY_LIMITS:
+		var amount: Variant = ranged_supplies.get(supply_id, null)
+		if (
+			not amount is int
+			or int(amount) < 0
+			or int(amount) > int(ProfileData.RANGED_SUPPLY_LIMITS[supply_id])
+		):
+			return _rejected(
+				&"invalid_attempt_supplies",
+				"Stage attempt supply '%s' is invalid." % supply_id
+			)
+	var expected_condition_ids := {}
+	for raw_model_id in data.crafted_equipment:
+		var model_id := String(raw_model_id)
+		if not ProfileData.CONDITION_MODEL_IDS.has(model_id):
+			continue
+		expected_condition_ids[model_id] = true
+	if equipment_conditions.size() != expected_condition_ids.size():
+		return _rejected(
+			&"incomplete_attempt_conditions",
+			"Stage attempt equipment conditions are incomplete."
+		)
+	for model_id in expected_condition_ids:
+		if not equipment_conditions.has(model_id):
+			return _rejected(
+				&"incomplete_attempt_conditions",
+				"Stage attempt condition for '%s' is missing." % model_id
+			)
+	for raw_model_id in equipment_conditions:
+		var model_id := String(raw_model_id)
+		var raw_condition: Variant = equipment_conditions[raw_model_id]
+		var raw_state: Variant = data.crafted_equipment.get(model_id, null)
+		var model := (
+			progression_catalog.get_model(StringName(model_id))
+			if progression_catalog != null
+			else null
+		)
+		if (
+			model == null
+			or not model.has_condition
+			or not raw_state is Dictionary
+			or not (raw_condition is int or raw_condition is float)
+			or not is_finite(float(raw_condition))
+		):
+			return _rejected(
+				&"invalid_attempt_condition",
+				"Stage attempt condition for '%s' is invalid." % model_id
+			)
+		var grade_id := StringName((raw_state as Dictionary).get("grade_id", ""))
+		var maximum := ProgressionService.maximum_condition(model, grade_id)
+		if float(raw_condition) < 0.0 or float(raw_condition) > maximum:
+			return _rejected(
+				&"invalid_attempt_condition",
+				"Stage attempt condition for '%s' is outside its valid range." % model_id
+			)
+
+	var changed := data.ranged_supplies != ranged_supplies
+	data.ranged_supplies = ranged_supplies.duplicate(true)
+	for raw_model_id in equipment_conditions:
+		var model_id := String(raw_model_id)
+		var state: Dictionary = data.crafted_equipment[model_id].duplicate(true)
+		var restored_condition := float(equipment_conditions[raw_model_id])
+		changed = changed or not is_equal_approx(
+			float(state.get("condition", 0.0)),
+			restored_condition
+		)
+		state["condition"] = restored_condition
+		data.crafted_equipment[model_id] = state
+	var validation_errors := data.validate_data(
+		equipment_catalog,
+		mastery_catalog,
+		progression_catalog
+	)
+	if not validation_errors.is_empty():
+		return _rejected(
+			&"invalid_attempt_resources",
+			"Stage attempt resources would produce an invalid profile."
+		)
+	if not changed:
+		return ProfileCommandResult.new(
+			true,
+			false,
+			&"attempt_resources_unchanged",
+			"Stage attempt resources are already restored."
+		)
+	return _accepted(
+		&"attempt_resources_restored",
+		"Stage attempt equipment condition and ranged supplies were restored."
+	)
+
+
 func resolve_tutorial(
 	data: ProfileData,
 	completed: bool,

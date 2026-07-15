@@ -23,6 +23,7 @@ signal boss_defeated(reward_table_id: StringName)
 signal run_settled(settlement: Dictionary)
 signal interaction_prompt_changed(prompt_text: String, active: bool)
 signal forge_requested(context: Dictionary)
+signal merchant_requested(context: Dictionary)
 signal pause_visibility_changed(is_visible: bool)
 signal settings_visibility_changed(is_visible: bool)
 signal input_bindings_changed

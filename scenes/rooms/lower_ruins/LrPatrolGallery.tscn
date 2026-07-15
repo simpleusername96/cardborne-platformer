@@ -11,7 +11,7 @@
 size = Vector2(320, 280)
 
 [sub_resource type="RectangleShape2D" id="GalleryMassShape"]
-size = Vector2(800, 300)
+size = Vector2(800, 360)
 
 [sub_resource type="RectangleShape2D" id="LedgeShape"]
 size = Vector2(220, 12)
@@ -44,21 +44,21 @@ color = Color(0.34, 0.57, 0.60, 1)
 polygon = PackedVector2Array(-160, 0, 160, 0, 160, 8, -160, 8)
 
 [node name="GalleryMass" type="StaticBody2D" parent="Terrain"]
-position = Vector2(720, 600)
+position = Vector2(720, 540)
 collision_layer = 1
 collision_mask = 0
 metadata/surface_id = &"patrol_gallery"
-metadata/support_top = 600.0
+metadata/support_top = 540.0
 metadata/support_width = 800.0
 metadata/critical = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/GalleryMass"]
-position = Vector2(0, 150)
+position = Vector2(0, 180)
 shape = SubResource("GalleryMassShape")
 
 [node name="RockVisual" type="Polygon2D" parent="Terrain/GalleryMass"]
 color = Color(0.23, 0.29, 0.32, 1)
-polygon = PackedVector2Array(-400, 0, 400, 0, 400, 300, -400, 300)
+polygon = PackedVector2Array(-400, 0, 400, 0, 400, 360, -400, 360)
 
 [node name="SupportCap" type="Polygon2D" parent="Terrain/GalleryMass"]
 color = Color(0.44, 0.54, 0.39, 1)
@@ -76,16 +76,20 @@ points = PackedVector2Array(-290, 138, 340, 138)
 
 [node name="OneWay" type="Node2D" parent="."]
 
-[node name="PatrolLedge" type="StaticBody2D" parent="OneWay"]
-position = Vector2(760, 490)
+[node name="PatrolLedge" type="StaticBody2D" parent="Terrain"]
+position = Vector2(760, 440)
 collision_layer = 2
 collision_mask = 0
+metadata/surface_id = &"patrol_ledge"
+metadata/support_top = 440.0
+metadata/support_width = 220.0
+metadata/critical = false
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="OneWay/PatrolLedge"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/PatrolLedge"]
 shape = SubResource("LedgeShape")
 one_way_collision = true
 
-[node name="Visual" type="Polygon2D" parent="OneWay/PatrolLedge"]
+[node name="Visual" type="Polygon2D" parent="Terrain/PatrolLedge"]
 color = Color(0.34, 0.57, 0.60, 1)
 polygon = PackedVector2Array(-110, -6, 110, -6, 110, 6, -110, 6)
 
@@ -98,11 +102,11 @@ polygon = PackedVector2Array(-110, -6, 110, -6, 110, 6, -110, 6)
 [node name="Entry" type="Marker2D" parent="Anchors/Sockets"]
 position = Vector2(0, 620)
 [node name="Exit" type="Marker2D" parent="Anchors/Sockets"]
-position = Vector2(1120, 600)
+position = Vector2(1120, 540)
 
 [node name="Enemy" type="Node2D" parent="Anchors"]
 [node name="WalkerA" type="Marker2D" parent="Anchors/Enemy"]
-position = Vector2(570, 600)
+position = Vector2(520, 540)
 script = ExtResource("2")
 anchor_id = &"walker_a"
 anchor_type = &"enemy"
@@ -115,7 +119,7 @@ has_line_of_sight = false
 has_cover_or_elevation = false
 required = true
 [node name="WalkerB" type="Marker2D" parent="Anchors/Enemy"]
-position = Vector2(860, 600)
+position = Vector2(1000, 540)
 script = ExtResource("2")
 anchor_id = &"walker_b"
 anchor_type = &"enemy"
@@ -126,23 +130,23 @@ clearance = 180.0
 has_escape_route = false
 has_line_of_sight = false
 has_cover_or_elevation = false
-[node name="WalkerC" type="Marker2D" parent="Anchors/Enemy"]
-position = Vector2(1010, 600)
+[node name="PerchShooter" type="Marker2D" parent="Anchors/Enemy"]
+position = Vector2(760, 440)
 script = ExtResource("2")
-anchor_id = &"walker_c"
+anchor_id = &"perch_shooter"
 anchor_type = &"enemy"
-allowed_tags = Array[StringName]([&"occupier"])
+allowed_tags = Array[StringName]([&"ranged"])
 support_width = 220.0
 patrol_width = 180.0
-clearance = 180.0
-has_escape_route = false
-has_line_of_sight = false
-has_cover_or_elevation = false
+clearance = 300.0
+has_escape_route = true
+has_line_of_sight = true
+has_cover_or_elevation = true
 
 [node name="Hazard" type="Node2D" parent="Anchors"]
 [node name="Reward" type="Node2D" parent="Anchors"]
 [node name="NpcReward" type="Marker2D" parent="Anchors/Reward"]
-position = Vector2(390, 600)
+position = Vector2(390, 540)
 script = ExtResource("2")
 anchor_id = &"npc_reward"
 anchor_type = &"reward"
@@ -168,7 +172,7 @@ metadata/bounds = Rect2(0, 0, 1120, 720)
 [node name="FieldPickups" type="Node2D" parent="."]
 
 [node name="PatrolIronBundle" parent="FieldPickups" instance=ExtResource("3_field_pickup")]
-position = Vector2(350, 570)
+position = Vector2(350, 510)
 pickup_id = &"ruin_patrol_iron_01"
 definition = ExtResource("5_iron_scrap")
 
@@ -178,7 +182,7 @@ pickup_id = &"ruin_patrol_timber_01"
 definition = ExtResource("6_common_timber")
 
 [node name="PatrolVitalShard" parent="FieldPickups" instance=ExtResource("3_field_pickup")]
-position = Vector2(1080, 570)
+position = Vector2(1080, 510)
 pickup_id = &"ruin_patrol_vital_01"
 definition = ExtResource("4_vital_shard")
 metadata/safe_entry_radius = 240.0

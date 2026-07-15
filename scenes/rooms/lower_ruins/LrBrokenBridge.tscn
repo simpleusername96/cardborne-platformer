@@ -1,8 +1,7 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/stages/RoomTemplateHost.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/stages/RoomAnchor.gd" id="2"]
-[ext_resource type="PackedScene" path="res://scenes/stages/components/ForgeStationInteractable.tscn" id="3_forge"]
 
 [sub_resource type="RectangleShape2D" id="ApproachMassShape"]
 size = Vector2(480, 320)
@@ -11,7 +10,7 @@ size = Vector2(480, 320)
 size = Vector2(96, 250)
 
 [sub_resource type="RectangleShape2D" id="LandingMassShape"]
-size = Vector2(544, 340)
+size = Vector2(544, 400)
 
 [node name="LrBrokenBridge" type="Node2D"]
 script = ExtResource("1")
@@ -63,21 +62,21 @@ color = Color(0.44, 0.54, 0.39, 1)
 polygon = PackedVector2Array(-48, 0, 48, 0, 48, 8, -48, 8)
 
 [node name="LandingMass" type="StaticBody2D" parent="Terrain"]
-position = Vector2(848, 560)
+position = Vector2(848, 500)
 collision_layer = 1
 collision_mask = 0
 metadata/surface_id = &"broken_bridge_landing"
-metadata/support_top = 560.0
+metadata/support_top = 500.0
 metadata/support_width = 544.0
 metadata/critical = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/LandingMass"]
-position = Vector2(0, 170)
+position = Vector2(0, 200)
 shape = SubResource("LandingMassShape")
 
 [node name="RockVisual" type="Polygon2D" parent="Terrain/LandingMass"]
 color = Color(0.2, 0.25, 0.28, 1)
-polygon = PackedVector2Array(-272, 0, 272, 0, 272, 340, -272, 340)
+polygon = PackedVector2Array(-272, 0, 272, 0, 272, 400, -272, 400)
 
 [node name="SupportCap" type="Polygon2D" parent="Terrain/LandingMass"]
 color = Color(0.34, 0.57, 0.6, 1)
@@ -93,7 +92,7 @@ polygon = PackedVector2Array(-272, 0, 272, 0, 272, 8, -272, 8)
 [node name="Entry" type="Marker2D" parent="Anchors/Sockets"]
 position = Vector2(0, 580)
 [node name="Exit" type="Marker2D" parent="Anchors/Sockets"]
-position = Vector2(1120, 560)
+position = Vector2(1120, 500)
 
 [node name="Enemy" type="Node2D" parent="Anchors"]
 [node name="Hazard" type="Node2D" parent="Anchors"]
@@ -106,17 +105,12 @@ metadata/safe_radius = 240.0
 position = Vector2(400, 580)
 metadata/support_id = &"broken_bridge_approach"
 [node name="JumpLanding" type="Marker2D" parent="Anchors/Objective"]
-position = Vector2(700, 560)
+position = Vector2(700, 500)
 metadata/support_id = &"broken_bridge_landing"
-
-[node name="MidForge" parent="Anchors/Objective" instance=ExtResource("3_forge")]
-position = Vector2(900, 560)
-station_id = &"ruin_mid_forge"
-heading = "RUIN WORKBENCH"
 
 [node name="Recovery" type="Node2D" parent="Anchors"]
 [node name="GapRecovery" type="Marker2D" parent="Anchors/Recovery"]
-position = Vector2(700, 560)
+position = Vector2(700, 500)
 script = ExtResource("2")
 anchor_id = &"gap_recovery"
 anchor_type = &"recovery"
@@ -132,6 +126,6 @@ metadata/bounds = Rect2(0, 0, 1120, 720)
 [node name="Validation" type="Node2D" parent="."]
 metadata/safe_entry_radius = 240.0
 metadata/required_gap = 96.0
-metadata/max_required_step = 90.0
+metadata/max_required_step = 80.0
 metadata/minimum_critical_landing = 220.0
 metadata/gap_recovery_id = &"GapRecovery"

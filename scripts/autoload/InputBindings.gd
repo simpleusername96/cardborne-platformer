@@ -3,49 +3,56 @@ extends Node
 const BINDING_SAVE_PATH := "user://input_bindings.cfg"
 const META_SECTION := "meta"
 const KEYBOARD_SECTION := "keyboard"
-const SAVE_VERSION := 1
-const INPUT_DEVICE_KEYBOARD_MOUSE: StringName = &"keyboard_mouse"
-const INPUT_DEVICE_GAMEPAD: StringName = &"gamepad"
-const GAMEPAD_AXIS_SWITCH_THRESHOLD := 0.5
-const MOUSE_MOTION_SWITCH_THRESHOLD_SQUARED := 4.0
+const SAVE_VERSION := 2
+
+const RETIRED_ACTIONS := [
+	"climb_cancel",
+	"heavy_attack",
+	"skill_1",
+	"skill_2",
+	"skill_3",
+]
+
+# Version 1 persisted every default, so those exact values must become the new
+# defaults while genuine player remaps continue to load.
+const VERSION_1_DEFAULTS := {
+	"move_left": [KEY_A, KEY_LEFT],
+	"move_right": [KEY_D, KEY_RIGHT],
+	"jump": [KEY_SPACE],
+	"dash": [KEY_K, KEY_SHIFT],
+	"attack": [KEY_F],
+	"guard": [KEY_G],
+	"heavy_attack": [KEY_G],
+	"use_consumable": [KEY_H],
+	"climb_up": [KEY_W, KEY_UP],
+	"climb_down": [KEY_S, KEY_DOWN],
+	"climb_cancel": [KEY_C],
+	"crouch": [KEY_S, KEY_DOWN],
+	"drop_through": [],
+	"interact": [KEY_E, KEY_ENTER],
+	"pause": [KEY_ESCAPE],
+}
+const VERSION_1_ACTION_ALIASES := {
+	"guard": "heavy_attack",
+}
 
 const ACTION_DEFINITIONS := [
-	{"name": "move_left", "label": "move left", "default_keys": [KEY_A, KEY_LEFT]},
-	{"name": "move_right", "label": "move right", "default_keys": [KEY_D, KEY_RIGHT]},
+	{"name": "move_left", "label": "move left", "default_keys": [KEY_LEFT]},
+	{"name": "move_right", "label": "move right", "default_keys": [KEY_RIGHT]},
 	{"name": "jump", "label": "jump", "default_keys": [KEY_SPACE]},
-	{"name": "dash", "label": "dash", "default_keys": [KEY_K, KEY_SHIFT]},
-	{"name": "attack", "label": "attack", "default_keys": [KEY_F]},
-	{"name": "guard", "label": "guard", "default_keys": [KEY_G]},
-	{"name": "use_consumable", "label": "consumable", "default_keys": [KEY_H]},
-	{"name": "climb_up", "label": "climb up", "default_keys": [KEY_W, KEY_UP]},
-	{"name": "climb_down", "label": "climb down", "default_keys": [KEY_S, KEY_DOWN]},
-	{"name": "climb_cancel", "label": "dismount", "default_keys": [KEY_C]},
-	{"name": "crouch", "label": "crouch/drop", "default_keys": [KEY_S, KEY_DOWN]},
+	{"name": "dash", "label": "dash", "default_keys": [KEY_SHIFT]},
+	{"name": "attack", "label": "attack", "default_keys": [KEY_X]},
+	{"name": "guard", "label": "guard", "default_keys": [KEY_C]},
+	{"name": "use_consumable", "label": "potion", "default_keys": [KEY_A]},
+	{"name": "climb_up", "label": "climb up", "default_keys": [KEY_UP]},
+	{"name": "climb_down", "label": "climb down", "default_keys": [KEY_DOWN]},
+	{"name": "crouch", "label": "crouch/drop", "default_keys": [KEY_DOWN]},
 	{"name": "drop_through", "label": "drop through", "default_keys": [], "hidden": true},
-	{"name": "interact", "label": "interact", "default_keys": [KEY_E, KEY_ENTER]},
+	{"name": "interact", "label": "interact", "default_keys": [KEY_E]},
 	{"name": "pause", "label": "settings", "default_keys": [KEY_ESCAPE]},
 ]
 
-# Axes are [axis, signed strength]. Buttons and axes accept every connected pad.
-const GAMEPAD_LAYOUT := {
-	"move_left": {"axes": [[JOY_AXIS_LEFT_X, -1.0]], "buttons": [JOY_BUTTON_DPAD_LEFT]},
-	"move_right": {"axes": [[JOY_AXIS_LEFT_X, 1.0]], "buttons": [JOY_BUTTON_DPAD_RIGHT]},
-	"jump": {"buttons": [JOY_BUTTON_A]},
-	"dash": {"buttons": [JOY_BUTTON_B]},
-	"attack": {"buttons": [JOY_BUTTON_X]},
-	"guard": {"buttons": [JOY_BUTTON_Y]},
-	"use_consumable": {"axes": [[JOY_AXIS_TRIGGER_RIGHT, 1.0]]},
-	"climb_up": {"axes": [[JOY_AXIS_LEFT_Y, -1.0]], "buttons": [JOY_BUTTON_DPAD_UP]},
-	"climb_down": {"axes": [[JOY_AXIS_LEFT_Y, 1.0]], "buttons": [JOY_BUTTON_DPAD_DOWN]},
-	"climb_cancel": {"buttons": [JOY_BUTTON_B]},
-	"crouch": {"axes": [[JOY_AXIS_LEFT_Y, 1.0]], "buttons": [JOY_BUTTON_DPAD_DOWN]},
-	"drop_through": {"axes": [[JOY_AXIS_LEFT_Y, 1.0]], "buttons": [JOY_BUTTON_DPAD_DOWN]},
-	"interact": {"buttons": [JOY_BUTTON_RIGHT_STICK]},
-	"pause": {"buttons": [JOY_BUTTON_START]},
-}
-
 var _definitions_by_name: Dictionary = {}
-var _active_input_device: StringName = INPUT_DEVICE_KEYBOARD_MOUSE
 
 
 func _ready() -> void:
@@ -53,51 +60,44 @@ func _ready() -> void:
 	ensure_input_map()
 
 
-func _input(event: InputEvent) -> void:
-	var input_device := _input_device_for_event(event)
-	if input_device != &"":
-		_set_active_input_device(input_device)
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
+		release_gameplay_actions()
 
 
 func ensure_input_map() -> void:
 	_index_definitions()
+	_remove_retired_actions()
 	_restore_defaults_without_saving()
-	_load_saved_bindings()
+	if _load_saved_bindings():
+		_save_bindings()
 	SignalBus.input_bindings_changed.emit()
 
 
 func get_input_guide_text() -> String:
-	var move_binding := (
-		"LS/D-pad"
-		if is_gamepad_active()
-		else get_binding_text("move_left", "A/Left") + "/" + get_binding_text("move_right", "D/Right")
-	)
-	var climb_binding := (
-		"LS/D-pad"
-		if is_gamepad_active()
-		else get_binding_text("climb_up", "W/Up") + "/" + get_binding_text("climb_down", "S/Down")
-	)
 	return "\n".join([
 		"Controls",
 		"Move %s | Crouch/drop %s" % [
-			move_binding,
-			get_binding_text("crouch", "S/Down"),
+			get_binding_text("move_left", "Left") + "/" + get_binding_text("move_right", "Right"),
+			get_binding_text("crouch", "Down"),
 		],
 		"Jump %s | Dash %s | Attack %s | Guard %s" % [
 			get_binding_text("jump", "Space"),
-			get_binding_text("dash", "K/Shift"),
-			get_binding_text("attack", "F"),
-			get_binding_text("guard", "G"),
+			get_binding_text("dash", "Shift"),
+			get_binding_text("attack", "X"),
+			get_binding_text("guard", "C"),
 		],
-		"Consumable %s" % [
-			get_binding_text("use_consumable", "H"),
+		"Potion %s" % [
+			get_binding_text("use_consumable", "A"),
 		],
-		"Climb %s | Dismount %s" % [
-			climb_binding,
-			get_binding_text("climb_cancel", "C"),
+		"Climb %s/%s | Dismount %s or %s" % [
+			get_binding_text("climb_up", "Up"),
+			get_binding_text("climb_down", "Down"),
+			get_binding_text("jump", "Space"),
+			get_binding_text("dash", "Shift"),
 		],
 		"Interact %s | Settings %s" % [
-			get_binding_text("interact", "E/Enter"),
+			get_binding_text("interact", "E"),
 			get_binding_text("pause", "Esc"),
 		],
 	])
@@ -123,17 +123,6 @@ func get_input_binding_rows() -> Array[Dictionary]:
 			"action": action_name,
 			"label": str(definition["label"]),
 			"binding": get_binding_text(action_name, "unbound"),
-			"keyboard_binding": get_binding_text_for_device(
-				action_name,
-				INPUT_DEVICE_KEYBOARD_MOUSE,
-				"unbound"
-			),
-			"gamepad_binding": get_binding_text_for_device(
-				action_name,
-				INPUT_DEVICE_GAMEPAD,
-				"unbound"
-			),
-			"input_device": _active_input_device,
 		})
 	return rows
 
@@ -145,31 +134,16 @@ func get_action_label(action_name: String) -> String:
 
 
 func get_binding_text(action_name: String, fallback: String = "unbound") -> String:
-	return get_binding_text_for_device(action_name, _active_input_device, fallback)
-
-
-func get_binding_text_for_device(
-	action_name: String,
-	input_device: StringName,
-	fallback: String = "unbound"
-) -> String:
 	if not InputMap.has_action(action_name):
 		return fallback
 
 	var labels: Array[String] = []
 	for event in InputMap.action_get_events(action_name):
-		if input_device == INPUT_DEVICE_KEYBOARD_MOUSE and event is InputEventKey:
+		if event is InputEventKey:
 			var key_event := event as InputEventKey
 			var keycode := _keycode_from_event(key_event)
 			if keycode != KEY_NONE:
 				labels.append(OS.get_keycode_string(keycode))
-		elif input_device == INPUT_DEVICE_KEYBOARD_MOUSE and event is InputEventMouseButton:
-			var mouse_event := event as InputEventMouseButton
-			labels.append("Mouse%d" % mouse_event.button_index)
-		elif input_device == INPUT_DEVICE_GAMEPAD:
-			var gamepad_label := _gamepad_event_label(event)
-			if not gamepad_label.is_empty():
-				labels.append(gamepad_label)
 
 	labels = _dedupe_strings(labels)
 	if labels.is_empty():
@@ -177,12 +151,9 @@ func get_binding_text_for_device(
 	return "/".join(labels)
 
 
-func get_active_input_device() -> StringName:
-	return _active_input_device
-
-
-func is_gamepad_active() -> bool:
-	return _active_input_device == INPUT_DEVICE_GAMEPAD
+func release_gameplay_actions() -> void:
+	for definition in ACTION_DEFINITIONS:
+		Input.action_release(StringName(definition["name"]))
 
 
 func remap_action_to_event(action_name: String, event: InputEventKey) -> Dictionary:
@@ -211,11 +182,18 @@ func restore_action_default(action_name: String) -> Dictionary:
 		return {"ok": false, "message": "Unknown action: %s" % action_name}
 
 	var definition: Dictionary = _definitions_by_name[action_name]
-	_apply_keycodes(action_name, _to_int_array(definition.get("default_keys", [])))
-	_apply_gamepad_events(action_name)
+	var default_keycodes := _to_int_array(definition.get("default_keys", []))
+	var conflict := _conflict_for_keycodes(action_name, default_keycodes)
+	if not conflict.is_empty():
+		return {
+			"ok": false,
+			"message": "%s default conflicts with %s. Reset that action first."
+			% [get_action_label(action_name), conflict],
+		}
+	_apply_keycodes(action_name, default_keycodes)
 	_save_bindings()
 	SignalBus.input_bindings_changed.emit()
-	return {"ok": true, "message": "%s keyboard binding restored." % get_action_label(action_name)}
+	return {"ok": true, "message": "%s binding restored." % get_action_label(action_name)}
 
 
 func restore_all_defaults() -> void:
@@ -259,30 +237,89 @@ func _restore_defaults_without_saving() -> void:
 	for definition in ACTION_DEFINITIONS:
 		var action_name := str(definition["name"])
 		_apply_keycodes(action_name, _to_int_array(definition.get("default_keys", [])))
-		_apply_gamepad_events(action_name)
 
 
-func _load_saved_bindings() -> void:
+func _load_saved_bindings() -> bool:
 	var config := ConfigFile.new()
 	var error := config.load(BINDING_SAVE_PATH)
 	if error != OK:
-		return
+		return false
 
+	var saved_version := int(config.get_value(META_SECTION, "version", 1))
+	if saved_version < 1 or saved_version > SAVE_VERSION:
+		push_warning(
+			"Resetting input bindings from unsupported save version %d." % saved_version
+		)
+		return true
+
+	var saved_bindings: Array[Dictionary] = []
 	for definition in ACTION_DEFINITIONS:
 		var action_name := str(definition["name"])
-		if not config.has_section_key(KEYBOARD_SECTION, action_name):
+		var source_action := _saved_source_action(config, action_name, saved_version)
+		if source_action.is_empty():
 			continue
-		var saved_value: Variant = config.get_value(KEYBOARD_SECTION, action_name)
+		var saved_value: Variant = config.get_value(KEYBOARD_SECTION, source_action)
 		if not (saved_value is Array):
 			continue
 		var keycodes := _to_int_array(saved_value)
-		if keycodes.is_empty() and not bool(definition.get("hidden", false)):
+		if saved_version == 1 and _matches_version_1_default(source_action, keycodes):
+			continue
+		saved_bindings.append({"action": action_name, "keycodes": keycodes})
+
+	# Version 1 did not know the accepted defaults. Genuine remaps own their keys;
+	# a newly assigned default is left unbound when it would steal that remap.
+	if saved_version == 1:
+		_clear_default_conflicts_for_migration(saved_bindings)
+	else:
+		# Version 2 persists intentional empty bindings created by that migration.
+		for saved in saved_bindings:
+			if (saved["keycodes"] as Array).is_empty():
+				_apply_keycodes(String(saved["action"]), [])
+
+	for saved in saved_bindings:
+		var action_name := String(saved["action"])
+		var keycodes := saved["keycodes"] as Array[int]
+		if keycodes.is_empty():
+			_apply_keycodes(action_name, [])
 			continue
 		var conflict := _conflict_for_keycodes(action_name, keycodes)
 		if not conflict.is_empty():
 			push_warning("Ignoring saved binding for %s because it conflicts with %s." % [action_name, conflict])
 			continue
 		_apply_keycodes(action_name, keycodes)
+	return saved_version != SAVE_VERSION
+
+
+func _clear_default_conflicts_for_migration(saved_bindings: Array[Dictionary]) -> void:
+	for saved in saved_bindings:
+		var owner := String(saved["action"])
+		var keycodes := saved["keycodes"] as Array[int]
+		for keycode in keycodes:
+			for definition in ACTION_DEFINITIONS:
+				var other_action := String(definition["name"])
+				if _is_allowed_overlap(owner, other_action):
+					continue
+				if _keycodes_for_action(other_action).has(keycode):
+					_apply_keycodes(other_action, [])
+
+
+func _saved_source_action(config: ConfigFile, action_name: String, saved_version: int) -> String:
+	if config.has_section_key(KEYBOARD_SECTION, action_name):
+		return action_name
+	if saved_version == 1:
+		var alias := str(VERSION_1_ACTION_ALIASES.get(action_name, ""))
+		if not alias.is_empty() and config.has_section_key(KEYBOARD_SECTION, alias):
+			return alias
+	return ""
+
+
+func _matches_version_1_default(action_name: String, keycodes: Array[int]) -> bool:
+	if not VERSION_1_DEFAULTS.has(action_name):
+		return false
+	var expected := _to_int_array(VERSION_1_DEFAULTS[action_name])
+	keycodes.sort()
+	expected.sort()
+	return keycodes == expected
 
 
 func _save_bindings() -> void:
@@ -298,36 +335,12 @@ func _save_bindings() -> void:
 
 func _apply_keycodes(action_name: String, keycodes: Array[int]) -> void:
 	_ensure_action(action_name)
-	for event in InputMap.action_get_events(action_name):
-		if event is InputEventKey:
-			InputMap.action_erase_event(action_name, event)
+	InputMap.action_erase_events(action_name)
 	for keycode in _dedupe_ints(keycodes):
 		var event := InputEventKey.new()
 		event.keycode = keycode
 		event.physical_keycode = keycode
 		InputMap.action_add_event(action_name, event)
-
-
-func _apply_gamepad_events(action_name: String) -> void:
-	_ensure_action(action_name)
-	for event in InputMap.action_get_events(action_name):
-		if event is InputEventJoypadButton or event is InputEventJoypadMotion:
-			InputMap.action_erase_event(action_name, event)
-
-	var layout: Dictionary = GAMEPAD_LAYOUT.get(action_name, {})
-	for axis_value in layout.get("axes", []):
-		if not (axis_value is Array) or axis_value.size() != 2:
-			continue
-		var motion_event := InputEventJoypadMotion.new()
-		motion_event.device = -1
-		motion_event.axis = int(axis_value[0])
-		motion_event.axis_value = float(axis_value[1])
-		InputMap.action_add_event(action_name, motion_event)
-	for button_index in layout.get("buttons", []):
-		var button_event := InputEventJoypadButton.new()
-		button_event.device = -1
-		button_event.button_index = int(button_index)
-		InputMap.action_add_event(action_name, button_event)
 
 
 func _ensure_action(action_name: String) -> void:
@@ -378,91 +391,10 @@ func _dedupe_strings(values: Array[String]) -> Array[String]:
 	return result
 
 
-func _gamepad_event_label(event: InputEvent) -> String:
-	if event is InputEventJoypadButton:
-		var button_event := event as InputEventJoypadButton
-		match button_event.button_index:
-			JOY_BUTTON_A:
-				return "A"
-			JOY_BUTTON_B:
-				return "B"
-			JOY_BUTTON_X:
-				return "X"
-			JOY_BUTTON_Y:
-				return "Y"
-			JOY_BUTTON_LEFT_SHOULDER:
-				return "LB"
-			JOY_BUTTON_RIGHT_SHOULDER:
-				return "RB"
-			JOY_BUTTON_LEFT_STICK:
-				return "L3"
-			JOY_BUTTON_RIGHT_STICK:
-				return "R3"
-			JOY_BUTTON_START:
-				return "Start"
-			JOY_BUTTON_DPAD_UP:
-				return "D-pad Up"
-			JOY_BUTTON_DPAD_DOWN:
-				return "D-pad Down"
-			JOY_BUTTON_DPAD_LEFT:
-				return "D-pad Left"
-			JOY_BUTTON_DPAD_RIGHT:
-				return "D-pad Right"
-			_:
-				return "Button %d" % button_event.button_index
-
-	if event is InputEventJoypadMotion:
-		var motion_event := event as InputEventJoypadMotion
-		match motion_event.axis:
-			JOY_AXIS_LEFT_X:
-				return "LS Left" if motion_event.axis_value < 0.0 else "LS Right"
-			JOY_AXIS_LEFT_Y:
-				return "LS Up" if motion_event.axis_value < 0.0 else "LS Down"
-			JOY_AXIS_TRIGGER_LEFT:
-				return "LT"
-			JOY_AXIS_TRIGGER_RIGHT:
-				return "RT"
-			_:
-				var direction := "-" if motion_event.axis_value < 0.0 else "+"
-				return "Axis %d%s" % [motion_event.axis, direction]
-
-	return ""
-
-
-func _input_device_for_event(event: InputEvent) -> StringName:
-	if event is InputEventKey:
-		var key_event := event as InputEventKey
-		if key_event.pressed and not key_event.echo:
-			return INPUT_DEVICE_KEYBOARD_MOUSE
-	elif event is InputEventMouseButton:
-		if (event as InputEventMouseButton).pressed:
-			return INPUT_DEVICE_KEYBOARD_MOUSE
-	elif event is InputEventMouseMotion:
-		var mouse_motion := event as InputEventMouseMotion
-		if mouse_motion.relative.length_squared() >= MOUSE_MOTION_SWITCH_THRESHOLD_SQUARED:
-			return INPUT_DEVICE_KEYBOARD_MOUSE
-	elif event is InputEventJoypadButton:
-		if (event as InputEventJoypadButton).pressed:
-			return INPUT_DEVICE_GAMEPAD
-	elif event is InputEventJoypadMotion:
-		var joy_motion := event as InputEventJoypadMotion
-		var is_trigger := (
-			joy_motion.axis == JOY_AXIS_TRIGGER_LEFT
-			or joy_motion.axis == JOY_AXIS_TRIGGER_RIGHT
-		)
-		if (
-			is_trigger and joy_motion.axis_value >= GAMEPAD_AXIS_SWITCH_THRESHOLD
-			or not is_trigger and absf(joy_motion.axis_value) >= GAMEPAD_AXIS_SWITCH_THRESHOLD
-		):
-			return INPUT_DEVICE_GAMEPAD
-	return &""
-
-
-func _set_active_input_device(input_device: StringName) -> void:
-	if input_device == _active_input_device:
-		return
-	_active_input_device = input_device
-	SignalBus.input_bindings_changed.emit()
+func _remove_retired_actions() -> void:
+	for action_name in RETIRED_ACTIONS:
+		if InputMap.has_action(action_name):
+			InputMap.erase_action(action_name)
 
 
 func _is_allowed_overlap(action_a: String, action_b: String) -> bool:

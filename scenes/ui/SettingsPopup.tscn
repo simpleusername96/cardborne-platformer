@@ -222,12 +222,6 @@ layout_mode = 2
 size_flags_horizontal = 3
 text = "KEYBOARD"
 
-[node name="GamepadColumn" type="Label" parent="SettingsPanel/Margin/Content/Body/Controls/ColumnHeader"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(145, 0)
-layout_mode = 2
-text = "GAMEPAD"
-
 [node name="DefaultColumnSpacer" type="Control" parent="SettingsPanel/Margin/Content/Body/Controls/ColumnHeader"]
 custom_minimum_size = Vector2(78, 0)
 layout_mode = 2
@@ -249,6 +243,6 @@ theme_override_constants/separation = 4
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 34)
 layout_mode = 2
-text = "Keyboard keys can be remapped. Gamepad layout is fixed."
+text = "Select a key to remap it."
 autowrap_mode = 2
 vertical_alignment = 1

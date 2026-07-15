@@ -46,9 +46,23 @@ func _validate_phase_contract() -> void:
 	_expect(
 		RunPhase.can_transition(
 			RunPhase.Value.STAGE_CARD_REWARD,
+			RunPhase.Value.INTERMISSION_LOADING
+		),
+		"the third card continuation should enter intermission loading"
+	)
+	_expect(
+		RunPhase.can_transition(
+			RunPhase.Value.INTERMISSION_LOADING,
+			RunPhase.Value.INTERMISSION_ACTIVE
+		),
+		"the final Safe Intermission should become active"
+	)
+	_expect(
+		RunPhase.can_transition(
+			RunPhase.Value.INTERMISSION_ACTIVE,
 			RunPhase.Value.BOSS_LOADING
 		),
-		"the third card continuation should enter boss loading"
+		"leaving the final Safe Intermission should enter boss loading"
 	)
 	_expect(
 		RunPhase.can_transition(RunPhase.Value.BOSS_LOADING, RunPhase.Value.BOSS_ACTIVE),
@@ -76,6 +90,8 @@ func _validate_phase_contract() -> void:
 		RunPhase.Value.STAGE_ACTIVE,
 		RunPhase.Value.LEVEL_REWARD,
 		RunPhase.Value.STAGE_CARD_REWARD,
+		RunPhase.Value.INTERMISSION_LOADING,
+		RunPhase.Value.INTERMISSION_ACTIVE,
 		RunPhase.Value.BOSS_LOADING,
 	]:
 		_expect(
@@ -160,6 +176,8 @@ func _validate_boss_clear_integration() -> void:
 		RunPhase.Value.STAGE_LOADING,
 		RunPhase.Value.STAGE_ACTIVE,
 		RunPhase.Value.STAGE_CARD_REWARD,
+		RunPhase.Value.INTERMISSION_LOADING,
+		RunPhase.Value.INTERMISSION_ACTIVE,
 		RunPhase.Value.BOSS_LOADING,
 		RunPhase.Value.BOSS_ACTIVE,
 	]:

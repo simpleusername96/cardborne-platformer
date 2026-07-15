@@ -19,7 +19,7 @@ const EXPECTED_ROOM_IDS: Array[StringName] = [
 	&"bs_exit_ascent",
 ]
 const REQUIRED_ROLES: Array[StringName] = [
-	&"start", &"combat", &"objective", &"hazard", &"choice", &"safe", &"combat", &"exit",
+	&"start", &"combat", &"objective", &"hazard", &"choice", &"combat", &"safe", &"combat", &"exit",
 ]
 
 var _failures: Array[String] = []
@@ -81,7 +81,7 @@ func _build_profile() -> StageProfile:
 	var profile := StageProfile.new()
 	profile.id = &"broken_sanctum"
 	profile.display_name = "Broken Sanctum"
-	profile.content_version = 1
+	profile.content_version = 2
 	profile.required_room_count = REQUIRED_ROLES.size()
 	profile.required_roles = REQUIRED_ROLES.duplicate()
 	profile.optional_branch_count = Vector2i(2, 2)
@@ -93,7 +93,7 @@ func _build_profile() -> StageProfile:
 	profile.eligible_hazards = [
 		&"spike_row", &"fall_reset", &"timed_poison_vent", &"crumbling_platform",
 	]
-	profile.encounter_budget_per_combat_room = Vector2i(4, 7)
+	profile.encounter_budget_per_combat_room = Vector2i(4, 8)
 	profile.hazard_budget_per_room = Vector2i(0, 2)
 	profile.reward_budget_per_room = Vector2i(0, 2)
 	profile.fallback_id = &"fallback_broken_sanctum_focus"
@@ -263,7 +263,7 @@ func _validate_room_specific(
 			var player_spawn := host.get_node_or_null("Anchors/Objective/PlayerSpawn") as RoomAnchor
 			_expect(player_spawn != null and player_spawn.safe_radius >= 240.0, "Breach entry needs one safe player spawn.")
 		&"bs_shield_choke":
-			_expect(data.encounter_budget == Vector2i(5, 6), "Shield Choke budget must stay realizable at 5-6.")
+			_expect(data.encounter_budget == Vector2i(5, 8), "Shield Choke should admit its three authored elevations.")
 			var guard := data.get_enemy_anchor_by_id(&"shield_guard_center")
 			_expect(guard != null and guard.support_width >= 420.0, "Shield Guard needs at least 420px support.")
 			_expect(guard != null and guard.has_escape_route and guard.has_cover_or_elevation, "Shield Guard needs a true flank route.")
@@ -272,7 +272,7 @@ func _validate_room_specific(
 		&"bs_sentry_crossfire":
 			_validate_sentry_crossfire(data, host)
 		&"bs_fractured_gallery":
-			_expect(data.encounter_budget == Vector2i(5, 6), "Fractured Gallery budget must stay realizable at 5-6.")
+			_expect(data.encounter_budget == Vector2i(5, 8), "Fractured Gallery should admit three authored placements.")
 			var charger := data.get_enemy_anchor_by_id(&"fracture_charger")
 			var leaper := data.get_enemy_anchor_by_id(&"fracture_leaper")
 			_expect(charger != null and charger.lane_width >= 520.0 and charger.has_escape_route, "Fractured Gallery needs a legal charger lane.")
@@ -414,7 +414,7 @@ func _validate_gate_moving_platform(data: RoomTemplateData, host: RoomTemplateHo
 		return
 	var contract := data.moving_platform_anchors[0]
 	_expect(contract.path_id == &"gate_overhead_route", "Gate overhead path ID is incorrect.")
-	_expect(contract.start_position == Vector2(300, 350) and contract.end_position == Vector2(980, 350), "Gate overhead endpoints should span x300..980 at y350.")
+	_expect(contract.start_position == Vector2(300, 200) and contract.end_position == Vector2(980, 200), "Gate overhead endpoints should span x300..980 at y200.")
 	_expect(contract.fall_recovery_id == &"gate_entry_recovery", "Gate overhead route should fall back to entry recovery.")
 	var platform := host.get_node_or_null("OneWay/OverheadPlatform") as MovingPlatform
 	_expect(platform != null, "Gate loop needs the shared MovingPlatform component.")

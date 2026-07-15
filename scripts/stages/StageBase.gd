@@ -53,7 +53,9 @@ func set_checkpoint(checkpoint_id: String, checkpoint_position: Vector2, announc
 	current_checkpoint_position = checkpoint_position
 	SignalBus.checkpoint_changed.emit(current_checkpoint_id, current_checkpoint_position)
 	if announce:
-		SignalBus.status_message_changed.emit("Checkpoint: %s" % current_checkpoint_id)
+		SignalBus.status_message_changed.emit(
+			"Fall recovery point: %s" % current_checkpoint_id
+		)
 
 
 func respawn_player(reason: String = "respawn") -> void:
@@ -82,11 +84,6 @@ func _return_player_to_checkpoint(reason: String, revive: bool) -> void:
 	SignalBus.status_message_changed.emit(
 		"%s to %s (%s)" % [verb, current_checkpoint_id, reason]
 	)
-
-
-func respawn_player_after_defeat() -> void:
-	respawn_player("defeated")
-
 
 func _default_spawn_position() -> Vector2:
 	return player_spawn.global_position if player_spawn != null else global_position

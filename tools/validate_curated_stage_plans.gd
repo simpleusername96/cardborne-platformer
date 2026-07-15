@@ -1,7 +1,7 @@
 extends SceneTree
 
 const PRODUCTION_STAGE_PATH := "res://scenes/stages/production/ProductionStageHost.tscn"
-const FIXED_LAYOUT_VERSION := 5
+const FIXED_LAYOUT_VERSION := 6
 const FIXED_LAYOUT_SEED_V1 := 0x43415244
 const RUN_SEEDS := [1103, 73102]
 const STAGES: Array[Dictionary] = [
@@ -9,19 +9,19 @@ const STAGES: Array[Dictionary] = [
 		"id": &"ruin_approach",
 		"catalog": "res://data/generation/lower_ruins_room_catalog.tres",
 		"rooms": "lr_start_shelf,lr_rise_steps,lr_patrol_gallery,lr_shooter_overlook,lr_lower_upper_choice,lr_broken_bridge,lr_charge_lane,lr_exit_ascent,lr_destructible_cache",
-		"signature": "3e49de5de849b3a424cdbb0d3c6956264fe6c9e750e6de6e232b0acfe552a7d3",
+		"signature": "c69853e64fe09eec9411d5261d7534dac2d0aebf05b600ef50f343d9ed0f9b5b",
 	},
 	{
 		"id": &"flooded_works",
 		"catalog": "res://data/generation/flooded_works_room_catalog.tres",
-		"rooms": "fw_flooded_entry,fw_rope_shaft,fw_poison_timing,fw_leaper_basin,fw_lower_upper_choice,fw_pump_gallery,fw_rest_forge,fw_sunken_cache",
-		"signature": "63841cf5889fd4757e58145eb1c287b911ac158151554689958a7b8c7e1289f2",
+		"rooms": "fw_flooded_entry,fw_rope_shaft,fw_poison_timing,fw_leaper_basin,fw_lower_upper_choice,fw_pump_gallery,fw_exit_shelter,fw_sunken_cache",
+		"signature": "d09118f3c1ed0850030856d1e681bb94dd3a098db48ab81039bc288388febe5f",
 	},
 	{
 		"id": &"broken_sanctum",
 		"catalog": "res://data/generation/broken_sanctum_room_catalog.tres",
-		"rooms": "bs_breach_entry,bs_shield_choke,bs_gate_switch_loop,bs_volatile_nave,bs_twin_reliquary_choice,bs_recovery_cloister,bs_sentry_crossfire,bs_exit_ascent,bs_material_crypt,bs_reliquary_cache",
-		"signature": "74ded5c61a48ba66d146f1190a7a06280acf227f94a6604d75544791a3fa2000",
+		"rooms": "bs_breach_entry,bs_shield_choke,bs_gate_switch_loop,bs_volatile_nave,bs_twin_reliquary_choice,bs_fractured_gallery,bs_recovery_cloister,bs_sentry_crossfire,bs_exit_ascent,bs_material_crypt,bs_reliquary_cache",
+		"signature": "73a5ca1d6fe013c44791d993459c742b6cad14a490d8b524c544e105bff50f0c",
 	},
 ]
 
@@ -87,7 +87,7 @@ func _validate_stage(stage_index: int, config: Dictionary, run_state: Node) -> v
 			_expect(plan_signature == plan_json.sha256_text(), "%s plan signature should cover complete map content." % config["id"])
 			_expect(
 				plan_signature == String(config["signature"]),
-				"%s approved V5 plan signature mismatch: expected %s, got %s."
+				"%s approved V6 plan signature mismatch: expected %s, got %s."
 				% [config["id"], config["signature"], plan_signature]
 			)
 			if baseline_plan.is_empty():
@@ -117,6 +117,12 @@ func _validate_geometry_fixture(plan: StagePlan, config: Dictionary, run_state: 
 	var limits: Dictionary = run_state.call("get_required_route_limits")
 	var errors := StageGeometryValidator.validate_assembly(plan, catalog, assembly, limits)
 	_expect(errors.is_empty(), "%s curated geometry should validate: %s" % [config["id"], "; ".join(errors)])
+	var composition_errors := StageCompositionMetrics.validate_fixed_stage(plan, assembly)
+	_expect(
+		composition_errors.is_empty(),
+		"%s curated composition should validate: %s"
+		% [config["id"], "; ".join(composition_errors)]
+	)
 	if config["id"] == &"broken_sanctum":
 		var crypt := assembly.get_room_hosts().get("bs_material_crypt") as RoomTemplateHost
 		var choice := assembly.get_room_hosts().get("bs_twin_reliquary_choice") as RoomTemplateHost

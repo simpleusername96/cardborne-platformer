@@ -30,7 +30,7 @@ const MATERIAL_ORDER: Array[String] = [
 
 var _snapshot: Dictionary = {}
 var _result: Dictionary = {}
-var _heading: String = "FIELD FORGE"
+var _heading: String = "TRAVELER FORGE"
 var _selected_slot: String = "melee"
 var _selected_model_id: String = ""
 var _selected_model: Dictionary = {}
@@ -72,6 +72,12 @@ func _ready() -> void:
 	_render()
 
 
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("pause"):
+		get_viewport().set_input_as_handled()
+		leave_requested.emit()
+
+
 func _notification(what: int) -> void:
 	if what != NOTIFICATION_RESIZED or _page == null:
 		return
@@ -84,7 +90,7 @@ func _notification(what: int) -> void:
 func configure(
 	snapshot: Dictionary,
 	result: Dictionary = {},
-	heading: String = "FIELD FORGE"
+	heading: String = "TRAVELER FORGE"
 ) -> void:
 	_snapshot = snapshot.duplicate(true)
 	_result = result.duplicate(true)

@@ -1,8 +1,8 @@
 class_name ForgeStationInteractable
 extends Interactable
 
-@export var station_id: StringName = &"field_forge"
-@export var heading: String = "FIELD FORGE"
+@export var station_id: StringName = &"intermission_forge"
+@export var heading: String = "TRAVELER FORGE"
 
 var _visual: Polygon2D
 

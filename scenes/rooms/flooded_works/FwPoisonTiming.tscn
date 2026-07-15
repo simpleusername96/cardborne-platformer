@@ -12,7 +12,7 @@ size = Vector2(240, 100)
 [sub_resource type="RectangleShape2D" id="CenterShape"]
 size = Vector2(240, 140)
 [sub_resource type="RectangleShape2D" id="ExitShape"]
-size = Vector2(240, 120)
+size = Vector2(240, 180)
 [sub_resource type="RectangleShape2D" id="SafeLaneShape"]
 size = Vector2(720, 12)
 
@@ -95,19 +95,19 @@ color = Color(0.36, 0.72, 0.38, 1)
 polygon = PackedVector2Array(-120, 0, 120, 0, 120, 8, -120, 8)
 
 [node name="ExitMass" type="StaticBody2D" parent="Terrain"]
-position = Vector2(1160, 600)
+position = Vector2(1160, 540)
 collision_layer = 1
 collision_mask = 0
 metadata/surface_id = &"poison_exit_floor"
-metadata/support_top = 600.0
+metadata/support_top = 540.0
 metadata/support_width = 240.0
 metadata/critical = true
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/ExitMass"]
-position = Vector2(0, 60)
+position = Vector2(0, 90)
 shape = SubResource("ExitShape")
 [node name="RockVisual" type="Polygon2D" parent="Terrain/ExitMass"]
 color = Color(0.16, 0.22, 0.24, 1)
-polygon = PackedVector2Array(-120, 0, 120, 0, 120, 120, -120, 120)
+polygon = PackedVector2Array(-120, 0, 120, 0, 120, 180, -120, 180)
 [node name="SupportCap" type="Polygon2D" parent="Terrain/ExitMass"]
 color = Color(0.24, 0.58, 0.61, 1)
 polygon = PackedVector2Array(-120, 0, 120, 0, 120, 8, -120, 8)
@@ -141,7 +141,7 @@ polygon = PackedVector2Array(320, 560, 560, 560, 560, 620, 320, 620, 800, 560, 1
 [node name="Entry" type="Marker2D" parent="Anchors/Sockets"]
 position = Vector2(0, 620)
 [node name="Exit" type="Marker2D" parent="Anchors/Sockets"]
-position = Vector2(1280, 600)
+position = Vector2(1280, 540)
 [node name="Enemy" type="Node2D" parent="Anchors"]
 [node name="Hazard" type="Node2D" parent="Anchors"]
 [node name="PoisonVentGroup" type="Marker2D" parent="Anchors/Hazard"]
@@ -184,7 +184,7 @@ safe_radius = 180.0
 required = true
 metadata/support_id = &"poison_safe_lane"
 [node name="PoisonExitRecovery" type="Marker2D" parent="Anchors/Recovery"]
-position = Vector2(1160, 600)
+position = Vector2(1160, 540)
 script = ExtResource("2")
 anchor_id = &"poison_exit_recovery"
 anchor_type = &"recovery"
@@ -203,6 +203,6 @@ pickup_id = &"flooded_poison_vital_01"
 definition = ExtResource("4_vital_shard")
 metadata/safe_entry_radius = 240.0
 metadata/minimum_critical_landing = 220.0
-metadata/max_required_step = 40.0
+metadata/max_required_step = 80.0
 metadata/permanent_safe_lane_id = &"poison_safe_lane"
 metadata/hazard_anchor_id = &"poison_vent_group"

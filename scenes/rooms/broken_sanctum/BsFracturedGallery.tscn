@@ -6,9 +6,9 @@
 [sub_resource type="RectangleShape2D" id="EntryMassShape"]
 size = Vector2(320, 100)
 [sub_resource type="RectangleShape2D" id="CenterMassShape"]
-size = Vector2(560, 120)
+size = Vector2(560, 180)
 [sub_resource type="RectangleShape2D" id="ExitMassShape"]
-size = Vector2(400, 100)
+size = Vector2(400, 260)
 [sub_resource type="RectangleShape2D" id="PerchShape"]
 size = Vector2(260, 12)
 [sub_resource type="RectangleShape2D" id="CoverShape"]
@@ -38,44 +38,44 @@ color = Color(0.55, 0.46, 0.72, 1)
 polygon = PackedVector2Array(-160, 0, 160, 0, 160, 8, -160, 8)
 
 [node name="CenterArenaMass" type="StaticBody2D" parent="Terrain"]
-position = Vector2(600, 600)
+position = Vector2(600, 540)
 collision_layer = 1
 collision_mask = 0
 metadata/surface_id = &"fracture_center_lane"
-metadata/support_top = 600.0
+metadata/support_top = 540.0
 metadata/support_width = 560.0
 metadata/critical = true
 metadata/charge_lane_width = 520.0
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/CenterArenaMass"]
-position = Vector2(0, 60)
+position = Vector2(0, 90)
 shape = SubResource("CenterMassShape")
 [node name="RockVisual" type="Polygon2D" parent="Terrain/CenterArenaMass"]
 color = Color(0.19, 0.18, 0.25, 1)
-polygon = PackedVector2Array(-280, 0, 280, 0, 280, 120, -280, 120)
+polygon = PackedVector2Array(-280, 0, 280, 0, 280, 180, -280, 180)
 [node name="SupportCap" type="Polygon2D" parent="Terrain/CenterArenaMass"]
 color = Color(0.72, 0.56, 0.28, 1)
 polygon = PackedVector2Array(-280, 0, 280, 0, 280, 8, -280, 8)
 
 [node name="ExitMass" type="StaticBody2D" parent="Terrain"]
-position = Vector2(1080, 620)
+position = Vector2(1080, 460)
 collision_layer = 1
 collision_mask = 0
 metadata/surface_id = &"fracture_exit_floor"
-metadata/support_top = 620.0
+metadata/support_top = 460.0
 metadata/support_width = 400.0
 metadata/critical = true
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/ExitMass"]
-position = Vector2(0, 50)
+position = Vector2(0, 130)
 shape = SubResource("ExitMassShape")
 [node name="RockVisual" type="Polygon2D" parent="Terrain/ExitMass"]
 color = Color(0.14, 0.15, 0.21, 1)
-polygon = PackedVector2Array(-200, 0, 200, 0, 200, 100, -200, 100)
+polygon = PackedVector2Array(-200, 0, 200, 0, 200, 260, -200, 260)
 [node name="SupportCap" type="Polygon2D" parent="Terrain/ExitMass"]
 color = Color(0.32, 0.62, 0.58, 1)
 polygon = PackedVector2Array(-200, 0, 200, 0, 200, 8, -200, 8)
 
 [node name="LineBreakCover" type="StaticBody2D" parent="Terrain"]
-position = Vector2(820, 480)
+position = Vector2(820, 420)
 collision_layer = 1
 collision_mask = 0
 metadata/cover_id = &"fracture_line_break"
@@ -88,11 +88,11 @@ polygon = PackedVector2Array(-80, 0, 80, 0, 80, 120, -80, 120)
 
 [node name="OneWay" type="Node2D" parent="."]
 [node name="WestEscapeLedge" type="StaticBody2D" parent="OneWay"]
-position = Vector2(430, 470)
+position = Vector2(430, 380)
 collision_layer = 2
 collision_mask = 0
 metadata/surface_id = &"fracture_west_escape"
-metadata/support_top = 470.0
+metadata/support_top = 380.0
 metadata/support_width = 260.0
 metadata/critical = false
 [node name="CollisionShape2D" type="CollisionShape2D" parent="OneWay/WestEscapeLedge"]
@@ -103,11 +103,11 @@ color = Color(0.55, 0.46, 0.72, 1)
 polygon = PackedVector2Array(-130, -6, 130, -6, 130, 6, -130, 6)
 
 [node name="ShooterPerch" type="StaticBody2D" parent="OneWay"]
-position = Vector2(930, 450)
+position = Vector2(930, 260)
 collision_layer = 2
 collision_mask = 0
 metadata/surface_id = &"fracture_shooter_perch"
-metadata/support_top = 450.0
+metadata/support_top = 260.0
 metadata/support_width = 260.0
 metadata/critical = false
 [node name="CollisionShape2D" type="CollisionShape2D" parent="OneWay/ShooterPerch"]
@@ -130,11 +130,11 @@ polygon = PackedVector2Array(540, 600, 600, 180, 650, 380, 700, 130, 760, 600)
 [node name="Entry" type="Marker2D" parent="Anchors/Sockets"]
 position = Vector2(0, 620)
 [node name="Exit" type="Marker2D" parent="Anchors/Sockets"]
-position = Vector2(1280, 620)
+position = Vector2(1280, 460)
 
 [node name="Enemy" type="Node2D" parent="Anchors"]
 [node name="FractureCharger" type="Marker2D" parent="Anchors/Enemy"]
-position = Vector2(620, 600)
+position = Vector2(620, 540)
 script = ExtResource("2")
 anchor_id = &"fracture_charger"
 anchor_type = &"enemy"
@@ -149,7 +149,7 @@ required = true
 metadata/support_id = &"fracture_center_lane"
 metadata/escape_pad_ids = Array[StringName]([&"fracture_west_escape", &"fracture_exit_floor"])
 [node name="FractureLeaper" type="Marker2D" parent="Anchors/Enemy"]
-position = Vector2(500, 600)
+position = Vector2(500, 540)
 script = ExtResource("2")
 anchor_id = &"fracture_leaper"
 anchor_type = &"enemy"
@@ -163,7 +163,7 @@ has_cover_or_elevation = true
 metadata/support_id = &"fracture_center_lane"
 metadata/landing_recovery_id = &"fracture_exit_recovery"
 [node name="FractureShooter" type="Marker2D" parent="Anchors/Enemy"]
-position = Vector2(930, 450)
+position = Vector2(930, 260)
 script = ExtResource("2")
 anchor_id = &"fracture_shooter"
 anchor_type = &"enemy"
@@ -178,7 +178,7 @@ metadata/support_id = &"fracture_shooter_perch"
 metadata/line_of_sight = Rect2(300, 340, 820, 220)
 metadata/cover_id = &"fracture_line_break"
 [node name="FractureOccupier" type="Marker2D" parent="Anchors/Enemy"]
-position = Vector2(1080, 620)
+position = Vector2(1080, 460)
 script = ExtResource("2")
 anchor_id = &"fracture_occupier"
 anchor_type = &"enemy"
@@ -198,10 +198,10 @@ metadata/support_id = &"fracture_exit_floor"
 position = Vector2(40, 620)
 metadata/safe_radius = 240.0
 [node name="ResponseLevelWest" type="Marker2D" parent="Anchors/Objective"]
-position = Vector2(430, 470)
+position = Vector2(430, 380)
 metadata/support_id = &"fracture_west_escape"
 [node name="ResponseLevelEast" type="Marker2D" parent="Anchors/Objective"]
-position = Vector2(930, 450)
+position = Vector2(930, 260)
 metadata/support_id = &"fracture_shooter_perch"
 
 [node name="Recovery" type="Node2D" parent="Anchors"]
@@ -214,7 +214,7 @@ safe_radius = 180.0
 required = true
 metadata/support_id = &"fracture_entry_floor"
 [node name="FractureExitRecovery" type="Marker2D" parent="Anchors/Recovery"]
-position = Vector2(1160, 620)
+position = Vector2(1160, 460)
 script = ExtResource("2")
 anchor_id = &"fracture_exit_recovery"
 anchor_type = &"recovery"
@@ -226,6 +226,6 @@ metadata/bounds = Rect2(0, 0, 1280, 720)
 [node name="Validation" type="Node2D" parent="."]
 metadata/safe_entry_radius = 240.0
 metadata/minimum_critical_landing = 220.0
-metadata/max_required_step = 20.0
+metadata/max_required_step = 80.0
 metadata/charge_lane_width = 520.0
 metadata/leaper_arc_clearance = 240.0

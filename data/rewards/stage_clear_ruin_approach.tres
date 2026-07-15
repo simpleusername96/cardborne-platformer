@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="RewardTable" load_steps=9 format=3]
+[gd_resource type="Resource" script_class="RewardTable" load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scripts/progression/RewardTable.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/progression/RewardEntry.gd" id="2"]
@@ -14,6 +14,12 @@ script = ExtResource("2")
 content_id = &"coin"
 minimum_amount = 8
 maximum_amount = 8
+
+[sub_resource type="Resource" id="Salvage"]
+script = ExtResource("2")
+content_id = &"salvage"
+minimum_amount = 3
+maximum_amount = 3
 
 [sub_resource type="Resource" id="Blueprint"]
 script = ExtResource("2")
@@ -42,5 +48,5 @@ maximum_amount = 3
 script = ExtResource("1")
 id = &"stage_clear_ruin_approach"
 display_name = "Ruin Approach Clear"
-content_version = 2
-entries = Array[ExtResource("2")]([SubResource("XP"), SubResource("Coin"), SubResource("Blueprint"), SubResource("Scrap"), SubResource("Timber"), SubResource("Fiber")])
+content_version = 3
+entries = Array[ExtResource("2")]([SubResource("XP"), SubResource("Coin"), SubResource("Salvage"), SubResource("Blueprint"), SubResource("Scrap"), SubResource("Timber"), SubResource("Fiber")])

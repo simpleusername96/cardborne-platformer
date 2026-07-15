@@ -39,6 +39,22 @@ func _run() -> void:
 	_expect(String(snapshot.get("detail", "")).contains("fell before reaching the crown"), "death summary should explain the terminal reason")
 	_expect(String(snapshot.get("materials", "")).contains("Sky Thread  +2"), "death summary should show materials that persist")
 
+	result.call("configure_retry_decision", "Traveler", _attempt_snapshot())
+	await process_frame
+	snapshot = result.call("get_display_snapshot")
+	_expect(bool(snapshot.get("retry_decision", false)), "death choice should use retry-decision mode")
+	_expect(snapshot.get("retry_action", "") == "Retry Stage", "death choice should retry the current stage")
+	_expect(snapshot.get("secondary_action", "") == "End Expedition", "death choice should expose explicit settlement")
+	var retry_button := result.get_node("%RetryButton") as Button
+	var end_button := result.get_node("%MenuButton") as Button
+	_expect(retry_button.custom_minimum_size.y >= 44.0, "Retry Stage should retain a usable keyboard target")
+	_expect(end_button.custom_minimum_size.y >= 44.0, "End Expedition should retain a usable keyboard target")
+	_expect(root.gui_get_focus_owner() == retry_button, "retry decision should focus its primary action")
+	var calls := {"end": 0}
+	result.connect(&"end_requested", func() -> void: calls["end"] += 1)
+	end_button.pressed.emit()
+	_expect(calls["end"] == 1, "End Expedition control should emit its dedicated command once")
+
 	result.queue_free()
 	await process_frame
 	_finish()
@@ -69,6 +85,20 @@ func _death_settlement() -> Dictionary:
 		"profile": {"hero_loadout": ProfileData.DEFAULT_HERO_LOADOUT.duplicate(true)},
 		"run_build": {"level": 3, "cards": {}},
 		"persistent_material_delta": {"sky_thread": 2},
+	}
+
+
+func _attempt_snapshot() -> Dictionary:
+	return {
+		"version": StageAttemptSnapshot.VERSION,
+		"run_seed": 1204,
+		"stage_index": 1,
+		"stage_path": "res://scenes/stages/production/ProductionStageHost.tscn",
+		"boss_attempt": false,
+		"run_state": {
+			"run_level": 3,
+			"card_stacks": {"dash_wake": 1},
+		},
 	}
 
 

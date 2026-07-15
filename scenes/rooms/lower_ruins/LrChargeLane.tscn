@@ -7,7 +7,7 @@
 size = Vector2(840, 300)
 
 [sub_resource type="RectangleShape2D" id="ExitMassShape"]
-size = Vector2(280, 320)
+size = Vector2(280, 380)
 
 [sub_resource type="RectangleShape2D" id="EscapeLedgeShape"]
 size = Vector2(190, 12)
@@ -50,21 +50,21 @@ default_color = Color(0.14, 0.19, 0.21, 1)
 points = PackedVector2Array(-310, 148, 360, 148)
 
 [node name="ExitMass" type="StaticBody2D" parent="Terrain"]
-position = Vector2(980, 580)
+position = Vector2(980, 520)
 collision_layer = 1
 collision_mask = 0
 metadata/surface_id = &"charge_exit"
-metadata/support_top = 580.0
+metadata/support_top = 520.0
 metadata/support_width = 280.0
 metadata/critical = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/ExitMass"]
-position = Vector2(0, 160)
+position = Vector2(0, 190)
 shape = SubResource("ExitMassShape")
 
 [node name="RockVisual" type="Polygon2D" parent="Terrain/ExitMass"]
 color = Color(0.20, 0.25, 0.28, 1)
-polygon = PackedVector2Array(-140, 0, 140, 0, 140, 320, -140, 320)
+polygon = PackedVector2Array(-140, 0, 140, 0, 140, 380, -140, 380)
 
 [node name="SupportCap" type="Polygon2D" parent="Terrain/ExitMass"]
 color = Color(0.44, 0.54, 0.39, 1)
@@ -103,7 +103,7 @@ polygon = PackedVector2Array(-95, -6, 95, -6, 95, 6, -95, 6)
 [node name="Entry" type="Marker2D" parent="Anchors/Sockets"]
 position = Vector2(0, 600)
 [node name="Exit" type="Marker2D" parent="Anchors/Sockets"]
-position = Vector2(1120, 580)
+position = Vector2(1120, 520)
 
 [node name="Enemy" type="Node2D" parent="Anchors"]
 [node name="EliteGuard" type="Marker2D" parent="Anchors/Enemy"]
@@ -150,4 +150,4 @@ metadata/bounds = Rect2(0, 0, 1120, 720)
 [node name="Validation" type="Node2D" parent="."]
 metadata/minimum_charge_lane = 520.0
 metadata/escape_route_count = 2
-metadata/max_required_step = 20.0
+metadata/max_required_step = 80.0

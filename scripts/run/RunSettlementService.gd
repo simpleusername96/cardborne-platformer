@@ -134,6 +134,10 @@ func _build_snapshot(
 		"run_economy": {
 			"xp": int(run_facts.get("xp", 0)),
 			"coins": int(run_facts.get("coins", 0)),
+			"run_salvage": int(run_facts.get("run_salvage", 0)),
+			"merchant_transaction_ids": _copy_array(
+				run_facts.get("applied_merchant_transaction_ids", [])
+			),
 		},
 		"run_material_rewards": _copy_dictionary(run_facts.get("materials", {})),
 		"persistent_materials_before": _profile_materials_at_start.duplicate(true),

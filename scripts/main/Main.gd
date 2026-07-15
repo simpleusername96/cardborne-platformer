@@ -20,6 +20,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if RunDirector.phase not in [
 		RunPhase.Value.TRIAL_ACTIVE,
 		RunPhase.Value.STAGE_ACTIVE,
+		RunPhase.Value.INTERMISSION_ACTIVE,
 		RunPhase.Value.BOSS_ACTIVE,
 	]:
 		return

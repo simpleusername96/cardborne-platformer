@@ -4,7 +4,7 @@ const ENEMY_CATALOG: EnemyCatalog = preload("res://data/enemies/enemy_catalog.tr
 const ENEMY_SCENES: EnemySceneCatalog = preload("res://data/enemies/enemy_scene_catalog.tres")
 const HAZARD_CATALOG: HazardCatalog = preload("res://data/hazards/hazard_catalog.tres")
 const TERRAIN_STYLER := preload("res://scripts/visuals/TerrainPresentationStyler.gd")
-const FIXED_LAYOUT_VERSION := 5
+const FIXED_LAYOUT_VERSION := 6
 const FALL_RESET_FAILSAFE_MARGIN := 360.0
 # Changing this seed intentionally versions every approved stage-content signature.
 const FIXED_LAYOUT_SEED_V1 := 0x43415244
@@ -52,6 +52,7 @@ var _cleared_required_rooms: Dictionary = {}
 var _exit_portal: ExitPortal
 var _world_bounds := Rect2()
 var _terrain_presentation: Dictionary = {}
+var _composition_metrics: Dictionary = {}
 
 
 func _ready() -> void:
@@ -95,6 +96,10 @@ func get_world_bounds() -> Rect2:
 
 func get_terrain_presentation_snapshot() -> Dictionary:
 	return _terrain_presentation.duplicate(true)
+
+
+func get_composition_metrics() -> Dictionary:
+	return _composition_metrics.duplicate(true)
 
 
 func get_room_ids() -> Array[StringName]:
@@ -203,6 +208,15 @@ func _setup_approved_stage() -> bool:
 	if not geometry_errors.is_empty():
 		_publish_errors("Stage geometry", geometry_errors)
 		return false
+	_composition_metrics = StageCompositionMetrics.analyze(_stage_plan, _assembly_result)
+	var composition_errors := StageCompositionMetrics.validate_fixed_stage(
+		_stage_plan,
+		_assembly_result
+	)
+	if not composition_errors.is_empty():
+		_publish_errors("Stage composition", composition_errors)
+		return false
+	_generation_report.record_decision(&"composition_metrics", _composition_metrics)
 	if not _configure_stage_endpoints():
 		return false
 	_runtime_content = StageRuntimeContentSpawner.spawn(

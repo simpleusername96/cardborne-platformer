@@ -1,8 +1,9 @@
-[gd_resource type="Resource" script_class="RoomTemplateData" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="RoomTemplateData" load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/stages/RoomTemplateData.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/stages/RoomSocketData.gd" id="2"]
 [ext_resource type="PackedScene" path="res://scenes/rooms/flooded_works/FwRopeShaft.tscn" id="3"]
+[ext_resource type="Script" path="res://scripts/stages/RoomEnemyAnchorData.gd" id="4"]
 
 [sub_resource type="Resource" id="EntrySocket"]
 script = ExtResource("2")
@@ -23,29 +24,64 @@ script = ExtResource("2")
 id = &"rope_shaft_out"
 direction = &"right"
 route_role = &"critical"
-local_position = Vector2(1280, 500)
+local_position = Vector2(1280, 300)
 opening_size = Vector2(180, 180)
-support_top = 500.0
+support_top = 300.0
 transition_type = &"seam"
 required_ability = &"baseline"
 approach_width = 300.0
 landing_width = 300.0
 headroom = 180.0
 
+[sub_resource type="Resource" id="LowerOccupier"]
+script = ExtResource("4")
+id = &"shaft_lower_occupier"
+allowed_pressure_roles = Array[StringName]([&"occupier"])
+support_width = 480.0
+lane_width = 200.0
+clearance = 180.0
+has_escape_route = true
+has_line_of_sight = false
+has_cover_or_elevation = true
+
+[sub_resource type="Resource" id="MidLeaper"]
+script = ExtResource("4")
+id = &"shaft_mid_leaper"
+allowed_pressure_roles = Array[StringName]([&"vertical"])
+support_width = 220.0
+lane_width = 420.0
+clearance = 200.0
+has_escape_route = true
+has_line_of_sight = false
+has_cover_or_elevation = true
+
+[sub_resource type="Resource" id="UpperShooter"]
+script = ExtResource("4")
+id = &"shaft_upper_shooter"
+allowed_pressure_roles = Array[StringName]([&"ranged"])
+support_width = 220.0
+lane_width = 180.0
+clearance = 260.0
+has_escape_route = true
+has_line_of_sight = true
+has_cover_or_elevation = true
+
 [resource]
 script = ExtResource("1")
 id = &"fw_rope_shaft"
 display_name = "Flooded Rope Shaft"
-content_version = 1
+content_version = 3
 scene = ExtResource("3")
-role = &"traversal"
+role = &"combat"
 stage_tags = Array[StringName]([&"flooded_works"])
 required_route = true
 bounds = Rect2(0, 0, 1280, 720)
 entry_sockets = Array[ExtResource("2")]([SubResource("EntrySocket")])
 exit_sockets = Array[ExtResource("2")]([SubResource("ExitSocket")])
-encounter_budget = Vector2i(0, 0)
+encounter_budget = Vector2i(5, 5)
 hazard_budget = Vector2i(0, 0)
 reward_budget = Vector2i(0, 0)
+allowed_enemy_tags = Array[StringName]([&"occupier", &"vertical", &"ranged"])
+enemy_anchors = Array[ExtResource("4")]([SubResource("LowerOccupier"), SubResource("MidLeaper"), SubResource("UpperShooter")])
 recovery_anchor_ids = Array[StringName]([&"shaft_entry_recovery", &"shaft_lower_recovery", &"shaft_exit_recovery"])
 estimated_seconds = Vector2i(20, 35)

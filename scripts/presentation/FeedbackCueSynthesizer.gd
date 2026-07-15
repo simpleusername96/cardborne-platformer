@@ -9,6 +9,11 @@ const CUE_IDS: Array[StringName] = [
 	&"enemy_hit",
 	&"critical_hit",
 	&"player_hurt",
+	&"guard_start",
+	&"guard_block",
+	&"precise_guard",
+	&"guard_break",
+	&"guard_recover",
 	&"enemy_defeat",
 	&"boss_warning",
 	&"boss_defeat",
@@ -63,6 +68,16 @@ static func _cue_spec(cue_id: StringName) -> Dictionary:
 			return _spec(0.16, 390.0, 118.0, 0.32, 0.27, 0.86)
 		&"player_hurt":
 			return _spec(0.18, 180.0, 72.0, 0.26, 0.32, 0.82)
+		&"guard_start":
+			return _spec(0.10, 230.0, 360.0, 0.12, 0.01, 0.54)
+		&"guard_block":
+			return _spec(0.12, 290.0, 145.0, 0.34, 0.16, 0.70)
+		&"precise_guard":
+			return _spec(0.18, 520.0, 780.0, 0.18, 0.01, 0.72)
+		&"guard_break":
+			return _spec(0.24, 210.0, 48.0, 0.38, 0.38, 0.88)
+		&"guard_recover":
+			return _spec(0.09, 260.0, 190.0, 0.08, 0.01, 0.42)
 		&"enemy_defeat":
 			return _spec(0.22, 310.0, 82.0, 0.20, 0.20, 0.78)
 		&"boss_warning":
@@ -123,6 +138,17 @@ static func _sample(
 			tone += 0.28 * sin(TAU * 790.0 * time_seconds) * pow(1.0 - progress, 2.0)
 		&"player_hurt":
 			tone *= 0.78 + 0.22 * sin(TAU * 18.0 * time_seconds)
+		&"guard_block":
+			tone += 0.26 * sin(TAU * 860.0 * time_seconds) * pow(1.0 - progress, 2.0)
+		&"precise_guard":
+			tone = _note_sequence_sample(
+				time_seconds, duration, PackedFloat32Array([523.25, 783.99])
+			)
+			texture = 0.0
+			envelope = 1.0
+		&"guard_break":
+			tone *= 0.7 + 0.3 * sin(TAU * 23.0 * time_seconds)
+			texture *= 1.0 - progress * 0.35
 		&"enemy_defeat":
 			tone += 0.22 * sin(phase * 0.5) * (1.0 - progress)
 		&"boss_warning":

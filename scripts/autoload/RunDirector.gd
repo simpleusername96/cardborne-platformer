@@ -9,8 +9,10 @@ const RUN_RESULT_PATH := "res://scenes/ui/production/RunResult.tscn"
 const LEVEL_REWARD_PATH := "res://scenes/ui/production/LevelReward.tscn"
 const CARD_REWARD_PATH := "res://scenes/ui/production/CardReward.tscn"
 const FORGE_SCREEN_PATH := "res://scenes/ui/production/ForgeScreen.tscn"
+const MERCHANT_SCREEN_PATH := "res://scenes/ui/production/MerchantScreen.tscn"
 const ARSENAL_TRIAL_PATH := "res://scenes/stages/trial/ArsenalTrial.tscn"
 const PRODUCTION_STAGE_PATH := "res://scenes/stages/production/ProductionStageHost.tscn"
+const SAFE_INTERMISSION_PATH := "res://scenes/stages/intermission/SafeIntermission.tscn"
 const BOSS_STAGE_PATH := "res://scenes/stages/boss/SlimeCourt.tscn"
 const REWARD_RECEIPT_PRESENTER := preload(
 	"res://scripts/ui/production/RewardReceiptPresenter.gd"
@@ -25,8 +27,8 @@ var current_screen: Control
 var current_hud: Control
 var _last_profile_id: StringName = &"traveler"
 var _pending_stage_clear_receipt: Dictionary = {}
-var _stage_forge_open := false
-var _forge_heading := "FIELD FORGE"
+var _intermission_overlay_open := false
+var _interaction_heading := "TRAVELER FORGE"
 
 
 func _ready() -> void:
@@ -34,7 +36,8 @@ func _ready() -> void:
 	SignalBus.stage_cleared.connect(_on_stage_cleared)
 	SignalBus.player_died.connect(_on_player_died)
 	SignalBus.boss_defeated.connect(_on_boss_defeated)
-	SignalBus.forge_requested.connect(_on_stage_forge_requested)
+	SignalBus.forge_requested.connect(_on_intermission_forge_requested)
+	SignalBus.merchant_requested.connect(_on_intermission_merchant_requested)
 
 
 func register_ui_roots(p_screen_root: Control, p_hud_root: Control) -> void:
@@ -223,6 +226,15 @@ func _load_production_stage() -> bool:
 		Game.unload_current_stage()
 		_fail_active_run("Stage generation failed.", &"stage_initialization_failed")
 		return false
+	var attempt_capture: Dictionary = RunState.capture_stage_attempt(stage_path, false)
+	if not bool(attempt_capture.get("ok", false)):
+		Game.unload_current_stage()
+		_fail_active_run(
+			"Stage attempt could not be captured: %s"
+			% attempt_capture.get("message", "Unknown error."),
+			&"attempt_capture_failed"
+		)
+		return false
 	if not _set_phase(RunPhase.Value.STAGE_ACTIVE):
 		Game.unload_current_stage()
 		_fail_active_run("Normal stage could not become active.", &"stage_activation_failed")
@@ -259,9 +271,48 @@ func _load_boss_stage() -> bool:
 		Game.unload_current_stage()
 		_fail_active_run("Slime Court failed to initialize.", &"boss_initialization_failed")
 		return false
+	var attempt_capture: Dictionary = RunState.capture_stage_attempt(stage_path, true)
+	if not bool(attempt_capture.get("ok", false)):
+		Game.unload_current_stage()
+		_fail_active_run(
+			"Boss attempt could not be captured: %s"
+			% attempt_capture.get("message", "Unknown error."),
+			&"attempt_capture_failed"
+		)
+		return false
 	if not _set_phase(RunPhase.Value.BOSS_ACTIVE):
 		Game.unload_current_stage()
 		_fail_active_run("Boss could not become active.", &"boss_activation_failed")
+		return false
+	return true
+
+
+func _load_safe_intermission() -> bool:
+	if RunState.current_stage_index <= 0 or RunState.current_stage_index > NORMAL_STAGE_COUNT:
+		_fail_active_run(
+			"Safe Intermission requires a completed normal-stage reward.",
+			&"invalid_intermission_boundary"
+		)
+		return false
+	if not _set_phase(RunPhase.Value.INTERMISSION_LOADING):
+		return false
+	_clear_screen()
+	_clear_hud()
+	current_hud = _instantiate_control(PRODUCTION_HUD_PATH)
+	if current_hud == null:
+		_fail_active_run("Intermission HUD failed to initialize.", &"hud_initialization_failed")
+		return false
+	hud_root.add_child(current_hud)
+	var intermission := Game.load_stage(SAFE_INTERMISSION_PATH) as SafeIntermission
+	if intermission == null or not intermission.is_setup_complete():
+		Game.unload_current_stage()
+		_fail_active_run("Safe Intermission failed to initialize.", &"intermission_load_failed")
+		return false
+	intermission.continue_requested.connect(_on_intermission_continue_requested)
+	_intermission_overlay_open = false
+	if not _set_phase(RunPhase.Value.INTERMISSION_ACTIVE):
+		Game.unload_current_stage()
+		_fail_active_run("Safe Intermission could not become active.", &"intermission_activation_failed")
 		return false
 	return true
 
@@ -274,26 +325,102 @@ func show_run_result(
 	if victory:
 		_settle_boss_victory(boss_reward_table_id)
 		return
+	if terminal_reason == &"player_defeated" and phase in [
+		RunPhase.Value.STAGE_ACTIVE,
+		RunPhase.Value.BOSS_ACTIVE,
+	]:
+		_present_retry_decision()
+		return
+	_end_expedition(terminal_reason)
+
+
+func retry_current_stage() -> bool:
+	if phase != RunPhase.Value.RETRY_DECISION:
+		return false
+	var attempt := RunState.get_stage_attempt_snapshot()
+	if attempt == null or not attempt.is_valid():
+		_end_expedition(&"retry_snapshot_missing")
+		return false
+	var stage_path := attempt.get_stage_path()
+	var boss_attempt := attempt.is_boss_attempt()
+	var expected_path := BOSS_STAGE_PATH if boss_attempt else normal_stage_path_for_index(
+		attempt.get_stage_index()
+	)
+	if stage_path != expected_path:
+		_end_expedition(&"retry_stage_mismatch")
+		return false
+
+	Game.set_reward_choice_open(false)
+	_clear_screen()
+	var restore: Dictionary = RunState.restore_stage_attempt()
+	if not bool(restore.get("ok", false)):
+		push_error("Stage retry restore failed: %s" % restore.get("message", "Unknown error."))
+		_end_expedition(&"retry_restore_failed")
+		return false
+	_pending_stage_clear_receipt.clear()
+	_intermission_overlay_open = false
+	return _load_boss_stage() if boss_attempt else _load_production_stage()
+
+
+func end_expedition(reason: StringName = &"player_defeated") -> bool:
+	if phase != RunPhase.Value.RETRY_DECISION:
+		return false
+	return _end_expedition(reason)
+
+
+func _present_retry_decision() -> bool:
+	if phase == RunPhase.Value.RETRY_DECISION:
+		return true
+	if phase not in [RunPhase.Value.STAGE_ACTIVE, RunPhase.Value.BOSS_ACTIVE]:
+		return false
+	if not RunState.has_stage_attempt_snapshot():
+		return _end_expedition(&"retry_snapshot_missing")
+	if not _set_phase(RunPhase.Value.RETRY_DECISION):
+		return false
+	Game.unload_current_stage()
+	_clear_hud()
+	var result := _show_screen(RUN_RESULT_PATH)
+	if result == null:
+		return _end_expedition(&"retry_ui_failed")
+	var profile_name := String(
+		RunState.get_hero_combat_loadout_snapshot().get("display_name", "Traveler")
+	)
+	result.call(
+		&"configure_retry_decision",
+		profile_name,
+		RunState.get_stage_attempt_snapshot_data()
+	)
+	result.connect(&"retry_requested", retry_current_stage)
+	result.connect(&"end_requested", func() -> void: end_expedition())
+	Game.set_reward_choice_open(true)
+	return true
+
+
+func _end_expedition(reason: StringName) -> bool:
 	if phase not in [
 		RunPhase.Value.STAGE_LOADING,
 		RunPhase.Value.STAGE_ACTIVE,
 		RunPhase.Value.LEVEL_REWARD,
 		RunPhase.Value.STAGE_CARD_REWARD,
-		RunPhase.Value.FORGE,
+		RunPhase.Value.INTERMISSION_LOADING,
+		RunPhase.Value.INTERMISSION_ACTIVE,
 		RunPhase.Value.BOSS_LOADING,
 		RunPhase.Value.BOSS_ACTIVE,
+		RunPhase.Value.RETRY_DECISION,
 	]:
-		return
-	var settlement: Dictionary = RunState.settle_run_death(terminal_reason)
+		return false
+	Game.set_reward_choice_open(false)
+	var settlement: Dictionary = RunState.settle_run_death(reason)
 	if not bool(settlement.get("ok", false)):
 		push_error("Run death settlement failed: %s" % settlement.get("message", "Unknown error."))
-		return
+		return false
 	var terminal := settlement.get("settlement") as RunSettlementSnapshot
 	if terminal == null or terminal.get_outcome() != RunSettlementSnapshot.OUTCOME_DEATH:
-		return
+		return false
 	if not _set_phase(RunPhase.Value.RUN_DEATH):
-		return
+		return false
 	_present_run_result(false)
+	return true
 
 
 func _settle_boss_victory(reward_table_id: StringName) -> bool:
@@ -433,12 +560,10 @@ func _on_stage_cleared(stage_id: String) -> void:
 
 func _on_player_died() -> void:
 	if phase in [
-		RunPhase.Value.STAGE_LOADING,
 		RunPhase.Value.STAGE_ACTIVE,
-		RunPhase.Value.BOSS_LOADING,
 		RunPhase.Value.BOSS_ACTIVE,
 	]:
-		call_deferred("show_run_result", false)
+		call_deferred("_present_retry_decision")
 
 
 func _on_boss_defeated(reward_table_id: StringName) -> void:
@@ -448,11 +573,21 @@ func _on_boss_defeated(reward_table_id: StringName) -> void:
 
 func _settle_reported_boss_defeat(reward_table_id: StringName) -> void:
 	if phase == RunPhase.Value.BOSS_ACTIVE:
+		# Death wins if lethal damage and boss defeat are reported in the same
+		# frame, regardless of deferred callback order.
+		if RunState.current_health <= 0:
+			_present_retry_decision()
+			return
 		_settle_boss_victory(reward_table_id)
 
 
 func _settle_stage_clear(stage_id: String) -> void:
 	if phase != RunPhase.Value.STAGE_ACTIVE:
+		return
+	# A clear fact can race the lethal-hit fact in the same frame. Never award a
+	# stage clear or enter rewards from a defeated attempt.
+	if RunState.current_health <= 0:
+		_present_retry_decision()
 		return
 	var table_id := StringName("stage_clear_%s" % stage_id)
 	if Game.current_stage != null and Game.current_stage.has_method("get_clear_reward_table_id"):
@@ -569,19 +704,10 @@ func _on_card_reroll_requested() -> void:
 func _on_card_continue_requested() -> void:
 	if phase != RunPhase.Value.STAGE_CARD_REWARD:
 		return
-	var completed_stage_index := RunState.current_stage_index
 	if not RunState.advance_stage_after_card_reward():
 		_set_card_reward_error("Choose a card before continuing.")
 		return
-	match completed_stage_index:
-		0:
-			_load_production_stage()
-		1:
-			_show_camp_forge()
-		2:
-			_load_boss_stage()
-		_:
-			_fail_active_run("Invalid stage card continuation.", &"invalid_card_continuation")
+	_load_safe_intermission()
 
 
 func _set_card_reward_error(message: String) -> void:
@@ -589,31 +715,40 @@ func _set_card_reward_error(message: String) -> void:
 		current_screen.call("set_commit_error", message)
 
 
-func _show_camp_forge() -> void:
-	if not _set_phase(RunPhase.Value.FORGE):
+func _on_intermission_forge_requested(context: Dictionary) -> void:
+	if (
+		phase != RunPhase.Value.INTERMISSION_ACTIVE
+		or _intermission_overlay_open
+		or current_screen != null
+	):
 		return
-	_stage_forge_open = false
-	_forge_heading = "CAMP FORGE"
+	_intermission_overlay_open = true
+	_interaction_heading = String(context.get("heading", "TRAVELER FORGE"))
 	var forge := _show_screen(FORGE_SCREEN_PATH)
 	if forge == null:
-		_fail_active_run("Forge UI failed to initialize.", &"forge_ui_failed")
-		return
-	_connect_forge_screen(forge)
-	forge.call("configure", ProfileState.get_preparation_snapshot(), {}, _forge_heading)
-
-
-func _on_stage_forge_requested(context: Dictionary) -> void:
-	if phase != RunPhase.Value.STAGE_ACTIVE or _stage_forge_open or current_screen != null:
-		return
-	_stage_forge_open = true
-	_forge_heading = String(context.get("heading", "FIELD FORGE"))
-	var forge := _show_screen(FORGE_SCREEN_PATH)
-	if forge == null:
-		_stage_forge_open = false
+		_intermission_overlay_open = false
 		return
 	Game.set_reward_choice_open(true)
 	_connect_forge_screen(forge)
-	forge.call("configure", ProfileState.get_preparation_snapshot(), {}, _forge_heading)
+	forge.call("configure", ProfileState.get_preparation_snapshot(), {}, _interaction_heading)
+
+
+func _on_intermission_merchant_requested(context: Dictionary) -> void:
+	if (
+		phase != RunPhase.Value.INTERMISSION_ACTIVE
+		or _intermission_overlay_open
+		or current_screen != null
+	):
+		return
+	_intermission_overlay_open = true
+	_interaction_heading = String(context.get("heading", "TRAVELING MERCHANT"))
+	var merchant := _show_screen(MERCHANT_SCREEN_PATH)
+	if merchant == null:
+		_intermission_overlay_open = false
+		return
+	Game.set_reward_choice_open(true)
+	_connect_merchant_screen(merchant)
+	merchant.call("configure", _merchant_view_snapshot(), {}, _interaction_heading)
 
 
 func _connect_forge_screen(forge: Control) -> void:
@@ -632,7 +767,7 @@ func _on_forge_equipment_action_requested(
 			"configure",
 			ProfileState.get_preparation_snapshot(),
 			result,
-			_forge_heading
+			_interaction_heading
 		)
 
 
@@ -661,12 +796,79 @@ func _execute_equipment_action(
 
 
 func _on_forge_leave_requested() -> void:
-	if _stage_forge_open:
-		_stage_forge_open = false
-		_clear_screen()
+	_close_intermission_overlay()
+
+
+func _connect_merchant_screen(merchant: Control) -> void:
+	merchant.connect(&"buy_potion_requested", _on_merchant_buy_potion_requested)
+	merchant.connect(&"sell_salvage_requested", _on_merchant_sell_salvage_requested)
+	merchant.connect(&"leave_requested", _close_intermission_overlay)
+
+
+func _on_merchant_buy_potion_requested() -> void:
+	_apply_merchant_transaction(&"buy_potion")
+
+
+func _on_merchant_sell_salvage_requested() -> void:
+	_apply_merchant_transaction(&"sell_all_salvage")
+
+
+func _apply_merchant_transaction(kind: StringName) -> void:
+	if phase != RunPhase.Value.INTERMISSION_ACTIVE or not _intermission_overlay_open:
 		return
-	if phase == RunPhase.Value.FORGE:
+	var transaction_sequence := RunState.get_applied_merchant_transaction_ids().size() + 1
+	var transaction_id := StringName("%d:intermission:%d:merchant:%d:%s" % [
+		RunState.run_seed,
+		RunState.current_stage_index,
+		transaction_sequence,
+		kind,
+	])
+	var receipt: Variant = RunState.apply_merchant_transaction(transaction_id, kind)
+	var result: Dictionary = (
+		receipt.to_dictionary()
+		if receipt != null and receipt.has_method("to_dictionary")
+		else {"ok": false, "message": "Merchant transaction failed."}
+	)
+	if current_screen != null and current_screen.has_method("configure"):
+		current_screen.call(
+			"configure",
+			_merchant_view_snapshot(),
+			result,
+			_interaction_heading
+		)
+
+
+func _merchant_view_snapshot() -> Dictionary:
+	var run_snapshot := RunState.get_run_snapshot().to_dictionary()
+	run_snapshot["max_consumable_charges"] = RunState.MAX_CONSUMABLE_CHARGES
+	run_snapshot["buy_potion"] = RunState.preview_merchant_transaction(&"buy_potion")
+	run_snapshot["sell_all_salvage"] = RunState.preview_merchant_transaction(
+		&"sell_all_salvage"
+	)
+	return run_snapshot
+
+
+func _close_intermission_overlay() -> void:
+	if phase != RunPhase.Value.INTERMISSION_ACTIVE or not _intermission_overlay_open:
+		return
+	_intermission_overlay_open = false
+	_clear_screen()
+
+
+func _on_intermission_continue_requested() -> void:
+	if (
+		phase != RunPhase.Value.INTERMISSION_ACTIVE
+		or _intermission_overlay_open
+		or current_screen != null
+	):
+		return
+	Game.unload_current_stage()
+	if RunState.current_stage_index < NORMAL_STAGE_COUNT:
 		_load_production_stage()
+	elif RunState.current_stage_index == NORMAL_STAGE_COUNT:
+		_load_boss_stage()
+	else:
+		_fail_active_run("Invalid intermission continuation.", &"invalid_intermission_exit")
 
 
 func _profile_index_for_reference(profile_reference: Variant) -> int:

@@ -90,7 +90,7 @@ func _validate_plan(
 			required_count += 1
 		else:
 			optional_count += 1
-	_expect(required_count == 8 and optional_count == 2, "seed %d should preserve the 8+2 contract" % seed)
+	_expect(required_count == 9 and optional_count == 2, "seed %d should preserve the 9+2 contract" % seed)
 	var errors := StagePlanValidator.validate_complete(
 		plan, rooms, profile, limits, enemies, hazards, rewards
 	)

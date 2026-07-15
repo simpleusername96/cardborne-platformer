@@ -1,7 +1,7 @@
 extends Control
 
 const Styles = preload("res://scripts/ui/production/ProductionUIStyles.gd")
-const BINDING_HINT := "Keyboard keys can be remapped. Gamepad layout is fixed."
+const BINDING_HINT := "Select a key to remap it."
 
 @onready var panel: PanelContainer = %SettingsPanel
 @onready var title_label: Label = %SettingsTitle
@@ -57,16 +57,10 @@ func _input(event: InputEvent) -> void:
 					if key_event.physical_keycode != KEY_NONE
 					else key_event.keycode
 				)
-				if keycode == KEY_ESCAPE and capture_action_name != "pause":
+				if keycode == KEY_ESCAPE:
 					_clear_capture(true)
 					return
 				_apply_captured_key(key_event)
-		elif event is InputEventJoypadButton:
-			var button_event := event as InputEventJoypadButton
-			if button_event.pressed:
-				get_viewport().set_input_as_handled()
-				if button_event.button_index == JOY_BUTTON_B:
-					_clear_capture(true)
 		return
 
 	if event.is_action_pressed("pause") or event.is_action_pressed("ui_cancel"):
@@ -87,7 +81,7 @@ func _style_ui() -> void:
 	restore_all_button.add_theme_font_size_override("font_size", 14)
 	for label in [%AudioHeading, %FeedbackHeading, %ControlsHeading]:
 		Styles.configure_label(label as Label, 15, Styles.AMBER)
-	for label in [%ActionColumn, %KeyboardColumn, %GamepadColumn]:
+	for label in [%ActionColumn, %KeyboardColumn]:
 		Styles.configure_label(label as Label, 11, Styles.TEXT_MUTED)
 	for label in [%MasterLabel, %MusicLabel, %SfxLabel]:
 		Styles.configure_label(label as Label, 14, Styles.TEXT)
@@ -152,7 +146,7 @@ func _make_binding_row(row_info: Dictionary) -> HBoxContainer:
 	row.add_child(action)
 
 	var keyboard_button := Button.new()
-	keyboard_button.text = String(row_info.get("keyboard_binding", "Unbound"))
+	keyboard_button.text = String(row_info.get("binding", "Unbound"))
 	keyboard_button.custom_minimum_size = Vector2(155.0, 40.0)
 	keyboard_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	keyboard_button.clip_text = true
@@ -162,14 +156,6 @@ func _make_binding_row(row_info: Dictionary) -> HBoxContainer:
 		_begin_capture(action_name, action_label)
 	)
 	row.add_child(keyboard_button)
-
-	var gamepad_label := Label.new()
-	gamepad_label.text = String(row_info.get("gamepad_binding", "Unbound"))
-	gamepad_label.custom_minimum_size = Vector2(145.0, 0.0)
-	gamepad_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	gamepad_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	Styles.configure_label(gamepad_label, 12, Styles.TEXT_MUTED)
-	row.add_child(gamepad_label)
 
 	var default_button := Button.new()
 	default_button.text = "Default"
@@ -183,7 +169,6 @@ func _make_binding_row(row_info: Dictionary) -> HBoxContainer:
 
 	binding_row_controls[action_name] = {
 		"keyboard": keyboard_button,
-		"gamepad": gamepad_label,
 	}
 	return row
 
@@ -208,18 +193,16 @@ func _refresh_binding_rows() -> void:
 			return
 		var controls: Dictionary = binding_row_controls[action_name]
 		var keyboard_button := controls["keyboard"] as Button
-		var gamepad_label := controls["gamepad"] as Label
 		keyboard_button.text = (
 			"Press a key"
 			if action_name == capture_action_name
-			else String(row_info.get("keyboard_binding", "Unbound"))
+			else String(row_info.get("binding", "Unbound"))
 		)
-		gamepad_label.text = String(row_info.get("gamepad_binding", "Unbound"))
 
 
 func _begin_capture(action_name: String, action_label: String) -> void:
 	capture_action_name = action_name
-	warning_label.text = "Press a keyboard key for %s. Esc or gamepad B cancels." % action_label
+	warning_label.text = "Press a key for %s. Esc cancels." % action_label
 	_refresh_binding_rows()
 
 
@@ -243,14 +226,14 @@ func _clear_capture(show_message: bool) -> void:
 func _restore_action_default(action_name: String) -> void:
 	var result := Game.restore_action_default(action_name)
 	capture_action_name = ""
-	warning_label.text = String(result.get("message", "Keyboard default restored."))
+	warning_label.text = String(result.get("message", "Default restored."))
 	_refresh_binding_rows()
 
 
 func _restore_all_defaults() -> void:
 	Game.restore_all_input_defaults()
 	capture_action_name = ""
-	warning_label.text = "Default keyboard bindings restored."
+	warning_label.text = "Default bindings restored."
 	_refresh_binding_rows()
 
 

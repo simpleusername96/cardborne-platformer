@@ -314,7 +314,7 @@ func _set_crouching(enabled: bool) -> void:
 
 func _update_climb_state(input_axis: float, _delta: float) -> void:
 	if is_climbing:
-		if climbable_count <= 0 or Input.is_action_just_pressed("climb_cancel") or Input.is_action_just_pressed("dash"):
+		if climbable_count <= 0 or Input.is_action_just_pressed("dash"):
 			_set_climbing(false)
 			return
 		if Input.is_action_just_pressed("jump"):
@@ -407,7 +407,7 @@ func restore_air_control(fraction: float, direction: int) -> void:
 
 func enter_climbable(_climbable: Area2D) -> void:
 	climbable_count += 1
-	SignalBus.status_message_changed.emit("Climbable: W/S or Up/Down, Space dismount")
+	SignalBus.status_message_changed.emit("Climbable: Up/Down Arrows, Space to jump away")
 
 
 func exit_climbable(_climbable: Area2D) -> void:

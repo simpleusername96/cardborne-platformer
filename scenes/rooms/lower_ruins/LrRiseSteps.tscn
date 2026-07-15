@@ -7,10 +7,10 @@
 size = Vector2(360, 280)
 
 [sub_resource type="RectangleShape2D" id="MiddleMassShape"]
-size = Vector2(360, 340)
+size = Vector2(360, 360)
 
 [sub_resource type="RectangleShape2D" id="UpperMassShape"]
-size = Vector2(400, 400)
+size = Vector2(400, 440)
 
 [node name="LrRiseSteps" type="Node2D"]
 script = ExtResource("1")
@@ -40,42 +40,42 @@ color = Color(0.34, 0.57, 0.6, 1)
 polygon = PackedVector2Array(-180, 0, 180, 0, 180, 8, -180, 8)
 
 [node name="MiddleMass" type="StaticBody2D" parent="Terrain"]
-position = Vector2(540, 560)
+position = Vector2(540, 540)
 collision_layer = 1
 collision_mask = 0
 metadata/surface_id = &"rise_middle"
-metadata/support_top = 560.0
+metadata/support_top = 540.0
 metadata/support_width = 360.0
 metadata/critical = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/MiddleMass"]
-position = Vector2(0, 170)
+position = Vector2(0, 180)
 shape = SubResource("MiddleMassShape")
 
 [node name="RockVisual" type="Polygon2D" parent="Terrain/MiddleMass"]
 color = Color(0.23, 0.29, 0.32, 1)
-polygon = PackedVector2Array(-180, 0, 180, 0, 180, 340, -180, 340)
+polygon = PackedVector2Array(-180, 0, 180, 0, 180, 360, -180, 360)
 
 [node name="SupportCap" type="Polygon2D" parent="Terrain/MiddleMass"]
 color = Color(0.44, 0.54, 0.39, 1)
 polygon = PackedVector2Array(-180, 0, 180, 0, 180, 8, -180, 8)
 
 [node name="UpperMass" type="StaticBody2D" parent="Terrain"]
-position = Vector2(920, 500)
+position = Vector2(920, 460)
 collision_layer = 1
 collision_mask = 0
 metadata/surface_id = &"rise_upper"
-metadata/support_top = 500.0
+metadata/support_top = 460.0
 metadata/support_width = 400.0
 metadata/critical = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/UpperMass"]
-position = Vector2(0, 200)
+position = Vector2(0, 220)
 shape = SubResource("UpperMassShape")
 
 [node name="RockVisual" type="Polygon2D" parent="Terrain/UpperMass"]
 color = Color(0.2, 0.25, 0.28, 1)
-polygon = PackedVector2Array(-200, 0, 200, 0, 200, 400, -200, 400)
+polygon = PackedVector2Array(-200, 0, 200, 0, 200, 440, -200, 440)
 
 [node name="SupportCap" type="Polygon2D" parent="Terrain/UpperMass"]
 color = Color(0.34, 0.57, 0.6, 1)
@@ -91,7 +91,7 @@ polygon = PackedVector2Array(-200, 0, 200, 0, 200, 8, -200, 8)
 [node name="Entry" type="Marker2D" parent="Anchors/Sockets"]
 position = Vector2(0, 620)
 [node name="Exit" type="Marker2D" parent="Anchors/Sockets"]
-position = Vector2(1120, 500)
+position = Vector2(1120, 460)
 
 [node name="Enemy" type="Node2D" parent="Anchors"]
 [node name="Hazard" type="Node2D" parent="Anchors"]
@@ -121,7 +121,7 @@ safe_radius = 100.0
 required = true
 metadata/support_id = &"rise_lower"
 [node name="MiddleLanding" type="Marker2D" parent="Anchors/Recovery"]
-position = Vector2(540, 560)
+position = Vector2(540, 540)
 script = ExtResource("2")
 anchor_id = &"middle_landing"
 anchor_type = &"recovery"
@@ -129,7 +129,7 @@ safe_radius = 100.0
 required = true
 metadata/support_id = &"rise_middle"
 [node name="UpperLanding" type="Marker2D" parent="Anchors/Recovery"]
-position = Vector2(900, 500)
+position = Vector2(900, 460)
 script = ExtResource("2")
 anchor_id = &"upper_landing"
 anchor_type = &"recovery"
@@ -144,4 +144,4 @@ metadata/bounds = Rect2(0, 0, 1120, 720)
 metadata/safe_entry_radius = 240.0
 metadata/minimum_critical_landing = 220.0
 metadata/critical_landing_count = 3
-metadata/max_required_step = 60.0
+metadata/max_required_step = 80.0

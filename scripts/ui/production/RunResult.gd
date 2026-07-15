@@ -2,6 +2,7 @@ extends Control
 
 signal menu_requested
 signal retry_requested
+signal end_requested
 
 const Styles = preload("res://scripts/ui/production/ProductionUIStyles.gd")
 const LOADOUT_SLOT_ORDER: Array[String] = [
@@ -35,15 +36,19 @@ const MATERIAL_NAMES := {
 @onready var retry_button: Button = %RetryButton
 @onready var menu_button: Button = %MenuButton
 
+var _retry_decision := false
+
 
 func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	_style_ui()
-	retry_button.pressed.connect(func() -> void: retry_requested.emit())
-	menu_button.pressed.connect(func() -> void: menu_requested.emit())
+	retry_button.pressed.connect(_on_retry_pressed)
+	menu_button.pressed.connect(_on_secondary_pressed)
 	retry_button.grab_focus()
 
 
 func configure(victory: bool, profile_name: String, settlement: Dictionary = {}) -> void:
+	_retry_decision = false
 	var accent := Styles.AMBER if victory else Styles.CORAL
 	outcome_marker.color = accent
 	outcome_title.text = "VICTORY" if victory else "DEFEAT"
@@ -58,12 +63,52 @@ func configure(victory: bool, profile_name: String, settlement: Dictionary = {})
 	build_heading.text = "%s BUILD" % profile_name.to_upper()
 	build_label.text = _build_summary(settlement)
 	materials_label.text = _material_summary(settlement)
+	rewards_heading.text = "REWARDS KEPT"
 	rewards_heading.add_theme_color_override("font_color", accent)
 	materials_label.add_theme_color_override(
 		"font_color",
 		Styles.AMBER if _has_kept_materials(settlement) else Styles.TEXT_MUTED
 	)
-	retry_button.text = "Begin Another Run" if victory else "Retry Expedition"
+	retry_button.text = "Begin Another Run"
+	menu_button.text = "Main Menu"
+
+
+func configure_retry_decision(profile_name: String, attempt: Dictionary) -> void:
+	_retry_decision = true
+	var run_state: Dictionary = attempt.get("run_state", {})
+	var stage_index := int(attempt.get("stage_index", 0))
+	outcome_marker.color = Styles.CORAL
+	outcome_title.text = "DEFEAT"
+	outcome_title.add_theme_color_override("font_color", Styles.CORAL)
+	outcome_subtitle.text = "CHOOSE YOUR NEXT STEP"
+	detail_label.text = (
+		"Retry restores %s to the state from this stage's entrance."
+		% profile_name
+	)
+	reach_value.text = (
+		"Slime Court"
+		if bool(attempt.get("boss_attempt", false))
+		else "Stage %d" % (stage_index + 1)
+	)
+	time_value.text = _format_duration(maxi(int(RunState.get_run_elapsed_seconds()), 0))
+	level_value.text = "Lv %d" % maxi(int(run_state.get("run_level", 1)), 1)
+	build_heading.text = "%s BUILD" % profile_name.to_upper()
+	build_label.text = _build_summary({
+		"profile": {"hero_loadout": ProfileState.get_hero_loadout()},
+		"run_build": {
+			"cards": (run_state.get("card_stacks", {}) as Dictionary).duplicate(true),
+		},
+	})
+	rewards_heading.text = "RETRY RULE"
+	rewards_heading.add_theme_color_override("font_color", Styles.CORAL)
+	materials_label.text = (
+		"Health, run resources, supplies, and equipment condition return to stage "
+		+ "entry. Secured materials stay kept."
+	)
+	materials_label.add_theme_color_override("font_color", Styles.TEXT_MUTED)
+	retry_button.text = "Retry Stage"
+	menu_button.text = "End Expedition"
+	retry_button.grab_focus()
 
 
 func get_display_snapshot() -> Dictionary:
@@ -77,7 +122,20 @@ func get_display_snapshot() -> Dictionary:
 		"build": build_label.text,
 		"materials": materials_label.text,
 		"retry_action": retry_button.text,
+		"secondary_action": menu_button.text,
+		"retry_decision": _retry_decision,
 	}
+
+
+func _on_retry_pressed() -> void:
+	retry_requested.emit()
+
+
+func _on_secondary_pressed() -> void:
+	if _retry_decision:
+		end_requested.emit()
+	else:
+		menu_requested.emit()
 
 
 func _style_ui() -> void:

@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="RoomTemplateData" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="RoomTemplateData" load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/stages/RoomTemplateData.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/stages/RoomSocketData.gd" id="2"]
@@ -24,9 +24,9 @@ script = ExtResource("2")
 id = &"leaper_basin_out"
 direction = &"right"
 route_role = &"critical"
-local_position = Vector2(1280, 600)
+local_position = Vector2(1280, 460)
 opening_size = Vector2(180, 180)
-support_top = 600.0
+support_top = 460.0
 transition_type = &"seam"
 required_ability = &"baseline"
 approach_width = 320.0
@@ -44,11 +44,33 @@ has_escape_route = true
 has_line_of_sight = false
 has_cover_or_elevation = true
 
+[sub_resource type="Resource" id="RangedPerchAnchor"]
+script = ExtResource("4")
+id = &"basin_ranged_perch"
+allowed_pressure_roles = Array[StringName]([&"ranged"])
+support_width = 220.0
+lane_width = 180.0
+clearance = 300.0
+has_escape_route = true
+has_line_of_sight = true
+has_cover_or_elevation = true
+
+[sub_resource type="Resource" id="ExitOccupierAnchor"]
+script = ExtResource("4")
+id = &"basin_exit_occupier"
+allowed_pressure_roles = Array[StringName]([&"occupier"])
+support_width = 380.0
+lane_width = 260.0
+clearance = 180.0
+has_escape_route = true
+has_line_of_sight = false
+has_cover_or_elevation = true
+
 [resource]
 script = ExtResource("1")
 id = &"fw_leaper_basin"
 display_name = "Leaper Basin"
-content_version = 1
+content_version = 3
 scene = ExtResource("3")
 role = &"combat"
 stage_tags = Array[StringName]([&"flooded_works"])
@@ -56,12 +78,12 @@ required_route = true
 bounds = Rect2(0, 0, 1280, 720)
 entry_sockets = Array[ExtResource("2")]([SubResource("EntrySocket")])
 exit_sockets = Array[ExtResource("2")]([SubResource("ExitSocket")])
-encounter_budget = Vector2i(2, 2)
+encounter_budget = Vector2i(5, 5)
 hazard_budget = Vector2i(0, 0)
 reward_budget = Vector2i(0, 0)
-allowed_enemy_tags = Array[StringName]([&"vertical"])
+allowed_enemy_tags = Array[StringName]([&"vertical", &"ranged", &"occupier"])
 forbidden_pairs = Array[StringName]([&"timed_poison_vent"])
-enemy_anchors = Array[ExtResource("4")]([SubResource("LeaperAnchor")])
+enemy_anchors = Array[ExtResource("4")]([SubResource("LeaperAnchor"), SubResource("RangedPerchAnchor"), SubResource("ExitOccupierAnchor")])
 recovery_anchor_ids = Array[StringName]([&"basin_entry_recovery", &"basin_side_recovery"])
 estimated_seconds = Vector2i(25, 45)
 variant_group = &"flooded_leaper_lesson"

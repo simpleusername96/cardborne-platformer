@@ -70,6 +70,7 @@ func _validate_viewport(packed: PackedScene, viewport_size: Vector2i) -> void:
 	_expect((combat["ranged"] as Dictionary)["state"] == "ARROW 7/20", "ranged supply should show current and maximum")
 	_expect((combat["guard"] as Dictionary)["condition"] == "Condition 84%", "shield condition should be exact")
 	_expect((combat["guard"] as Dictionary)["stability"] == "Stability 65%", "guard stability should be exact")
+	await _assert_guard_feedback_states(hud)
 	_expect((combat["spirit"] as Dictionary)["state"] == "3/4 direct hits", "passive Spirit progress should be visible")
 	_expect((combat["potion"] as Dictionary)["count"] == "x1", "potion charges should be visible")
 	_expect(String(layout["armor"]).contains("Traveler Coat"), "health cluster should identify current armor")
@@ -145,6 +146,53 @@ func _validate_viewport(packed: PackedScene, viewport_size: Vector2i) -> void:
 	_expect(dock_before_boss.is_equal_approx(layout["combat_dock_rect"]), "boss mode should not move the combat dock")
 
 	hud.queue_free()
+	await process_frame
+
+
+func _assert_guard_feedback_states(hud: Control) -> void:
+	var cases: Array[Dictionary] = [
+		{"phase": &"startup", "outcome": &"guard_start", "reason": &"guard_start", "label": "GUARD RAISED"},
+		{"phase": &"active", "outcome": &"normal_block", "reason": &"blocked", "label": "BLOCKED", "stability_cost": 20, "condition_cost": 1},
+		{"phase": &"active", "outcome": &"precise_block", "reason": &"precise_block", "label": "PRECISE GUARD"},
+		{"phase": &"recovery", "outcome": &"guard_break", "reason": &"guard_broken", "label": "GUARD BROKEN", "stability_cost": 100, "condition_cost": 1, "damage": 2},
+		{"phase": &"startup", "outcome": &"guard_failed", "reason": &"guard_startup", "label": "TOO EARLY", "damage": 1},
+		{"phase": &"recovery", "outcome": &"guard_failed", "reason": &"guard_recovery", "label": "RECOVERING", "damage": 1},
+		{"phase": &"active", "outcome": &"guard_failed", "reason": &"outside_guard_angle", "label": "OUTSIDE GUARD", "damage": 1},
+		{"phase": &"active", "outcome": &"guard_failed", "reason": &"unblockable", "label": "UNBLOCKABLE", "damage": 1},
+		{"phase": &"idle", "outcome": &"guard_failed", "reason": &"not_guarding", "label": "GUARD DOWN", "damage": 1},
+	]
+	for guard_case in cases:
+		var snapshot := _combat_snapshot()
+		(snapshot["guard"] as Dictionary).merge({
+			"phase": guard_case["phase"],
+			"guarding": guard_case["phase"] in [&"startup", &"active"],
+		}, true)
+		snapshot["defense_feedback"] = {
+			"event_id": 1,
+			"active": true,
+			"remaining": 0.8,
+			"outcome": guard_case["outcome"],
+			"reason": guard_case["reason"],
+			"label": guard_case["label"],
+			"stability_cost": int(guard_case.get("stability_cost", 0)),
+			"condition_cost": int(guard_case.get("condition_cost", 0)),
+			"damage": int(guard_case.get("damage", 0)),
+		}
+		hud.call("_on_combat_state_changed", snapshot)
+		await process_frame
+		var guard_view: Dictionary = ((hud.call("get_layout_snapshot") as Dictionary)["combat"] as Dictionary)["guard"]
+		_expect(guard_view["phase"] == String(guard_case["phase"]), "HUD should expose guard phase %s" % guard_case["phase"])
+		_expect(guard_view["outcome"] == String(guard_case["outcome"]), "HUD should expose guard outcome %s" % guard_case["outcome"])
+		_expect(guard_view["reason"] == String(guard_case["reason"]), "HUD should expose guard reason %s" % guard_case["reason"])
+		_expect(guard_view["name"] == guard_case["label"], "HUD should show guard label %s" % guard_case["label"])
+		_expect(bool(guard_view["feedback_visible"]), "HUD guard feedback should be visible")
+		if int(guard_case.get("condition_cost", 0)) > 0:
+			_expect(String(guard_view["condition"]).contains("-%d CND" % guard_case["condition_cost"]), "HUD should show exact condition cost")
+		if int(guard_case.get("stability_cost", 0)) > 0:
+			_expect(String(guard_view["stability"]).contains("-%d STB" % guard_case["stability_cost"]), "HUD should show exact stability cost")
+		if int(guard_case.get("damage", 0)) > 0 and int(guard_case.get("stability_cost", 0)) == 0:
+			_expect(String(guard_view["stability"]).contains("DAMAGE %d" % guard_case["damage"]), "HUD should show passed damage")
+	hud.call("_on_combat_state_changed", _combat_snapshot())
 	await process_frame
 
 

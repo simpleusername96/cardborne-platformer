@@ -49,8 +49,8 @@ func build_ruin_approach(
 	var specs := [
 		[&"lr_start_shelf", true, 0, 0, 0, 0],
 		[&"lr_rise_steps", true, 1, 0, 0, 0],
-		[&"lr_patrol_gallery", true, 2, 2, 0, 1],
-		[&"lr_shooter_overlook", true, 3, 2, 0, 0],
+		[&"lr_patrol_gallery", true, 2, 4, 0, 1],
+		[&"lr_shooter_overlook", true, 3, 3, 0, 0],
 		[&"lr_lower_upper_choice", true, 4, 0, 0, 1],
 		[&"lr_broken_bridge", true, 5, 0, 0, 0],
 		[&"lr_charge_lane", true, 6, 3, 0, 0],
@@ -133,12 +133,12 @@ func build_flooded_works(
 		return null
 	var specs := [
 		[&"fw_flooded_entry", true, 0, 0, 0, 0],
-		[&"fw_rope_shaft", true, 1, 0, 0, 0],
+		[&"fw_rope_shaft", true, 1, 5, 0, 0],
 		[&"fw_poison_timing", true, 2, 0, 2, 0],
-		[&"fw_leaper_basin", true, 3, 2, 0, 0],
+		[&"fw_leaper_basin", true, 3, 5, 0, 0],
 		[&"fw_lower_upper_choice", true, 4, 0, 0, 1],
-		[&"fw_pump_gallery", true, 5, 2, 0, 0],
-		[&"fw_rest_forge", true, 6, 0, 0, 0],
+		[&"fw_pump_gallery", true, 5, 6, 0, 0],
+		[&"fw_exit_shelter", true, 6, 0, 0, 0],
 		[&"fw_sunken_cache", false, 0, 0, 0, 1],
 	]
 	var rooms: Array[PlannedRoom] = []
@@ -159,7 +159,7 @@ func build_flooded_works(
 		_connection(&"critical_2", &"fw_poison_timing", &"poison_timing_out", &"fw_leaper_basin", &"leaper_basin_in", &"critical"),
 		_connection(&"critical_3", &"fw_leaper_basin", &"leaper_basin_out", &"fw_lower_upper_choice", &"flooded_choice_in", &"critical"),
 		_connection(&"critical_4", &"fw_lower_upper_choice", &"flooded_choice_out", &"fw_pump_gallery", &"pump_gallery_in", &"critical"),
-		_connection(&"critical_5", &"fw_pump_gallery", &"pump_gallery_out", &"fw_rest_forge", &"rest_forge_in", &"critical"),
+		_connection(&"critical_5", &"fw_pump_gallery", &"pump_gallery_out", &"fw_exit_shelter", &"exit_shelter_in", &"critical"),
 		_connection(&"optional_branch_0", &"fw_lower_upper_choice", &"flooded_choice_branch", &"fw_sunken_cache", &"sunken_cache_branch", &"optional"),
 		_connection(&"optional_return_0", &"fw_sunken_cache", &"sunken_cache_return", &"fw_lower_upper_choice", &"flooded_choice_return", &"return"),
 	]
@@ -188,13 +188,14 @@ func build_broken_sanctum(
 		return null
 	var specs := [
 		[&"bs_breach_entry", true, 0, 0, 0, 0],
-		[&"bs_shield_choke", true, 1, 5, 0, 0],
-		[&"bs_gate_switch_loop", true, 2, 0, 0, 0],
+		[&"bs_shield_choke", true, 1, 8, 0, 0],
+		[&"bs_gate_switch_loop", true, 2, 7, 0, 0],
 		[&"bs_volatile_nave", true, 3, 0, 1, 0],
 		[&"bs_twin_reliquary_choice", true, 4, 0, 0, 0],
-		[&"bs_recovery_cloister", true, 5, 0, 0, 0],
-		[&"bs_sentry_crossfire", true, 6, 6, 0, 0],
-		[&"bs_exit_ascent", true, 7, 0, 0, 0],
+		[&"bs_fractured_gallery", true, 5, 8, 0, 0],
+		[&"bs_recovery_cloister", true, 6, 0, 0, 0],
+		[&"bs_sentry_crossfire", true, 7, 6, 0, 0],
+		[&"bs_exit_ascent", true, 8, 2, 0, 0],
 		[&"bs_material_crypt", false, 0, 0, 0, 1],
 		[&"bs_reliquary_cache", false, 1, 0, 0, 1],
 	]
@@ -215,9 +216,10 @@ func build_broken_sanctum(
 		_connection(&"critical_1", &"bs_shield_choke", &"shield_choke_out", &"bs_gate_switch_loop", &"gate_switch_loop_in", &"critical"),
 		_connection(&"critical_2", &"bs_gate_switch_loop", &"gate_switch_loop_out", &"bs_volatile_nave", &"volatile_nave_in", &"critical"),
 		_connection(&"critical_3", &"bs_volatile_nave", &"volatile_nave_out", &"bs_twin_reliquary_choice", &"twin_choice_in", &"critical"),
-		_connection(&"critical_4", &"bs_twin_reliquary_choice", &"twin_choice_out", &"bs_recovery_cloister", &"recovery_cloister_in", &"critical"),
-		_connection(&"critical_5", &"bs_recovery_cloister", &"recovery_cloister_out", &"bs_sentry_crossfire", &"sentry_crossfire_in", &"critical"),
-		_connection(&"critical_6", &"bs_sentry_crossfire", &"sentry_crossfire_out", &"bs_exit_ascent", &"sanctum_exit_in", &"critical"),
+		_connection(&"critical_4", &"bs_twin_reliquary_choice", &"twin_choice_out", &"bs_fractured_gallery", &"fractured_gallery_in", &"critical"),
+		_connection(&"critical_5", &"bs_fractured_gallery", &"fractured_gallery_out", &"bs_recovery_cloister", &"recovery_cloister_in", &"critical"),
+		_connection(&"critical_6", &"bs_recovery_cloister", &"recovery_cloister_out", &"bs_sentry_crossfire", &"sentry_crossfire_in", &"critical"),
+		_connection(&"critical_7", &"bs_sentry_crossfire", &"sentry_crossfire_out", &"bs_exit_ascent", &"sanctum_exit_in", &"critical"),
 		_connection(&"optional_branch_0", &"bs_twin_reliquary_choice", &"twin_choice_lower_branch", &"bs_material_crypt", &"material_crypt_branch", &"optional"),
 		_connection(&"optional_return_0", &"bs_material_crypt", &"material_crypt_return", &"bs_twin_reliquary_choice", &"twin_choice_lower_return", &"return"),
 		_connection(&"optional_branch_1", &"bs_twin_reliquary_choice", &"twin_choice_upper_branch", &"bs_reliquary_cache", &"reliquary_cache_branch", &"optional"),

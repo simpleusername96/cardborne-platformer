@@ -320,6 +320,33 @@ func _cue_defaults(cue_id: StringName) -> Dictionary:
 				"burst_radius": 24.0,
 				"burst_color": Color(1.0, 0.32, 0.28),
 			}, true)
+		&"guard_block":
+			defaults.merge({
+				"shake_strength": 1.5,
+				"shake_duration": 0.08,
+				"pause_duration": 0.010,
+				"burst": true,
+				"burst_radius": 14.0,
+				"burst_color": Color(0.31, 0.83, 0.91),
+			}, true)
+		&"precise_guard":
+			defaults.merge({
+				"shake_strength": 2.5,
+				"shake_duration": 0.10,
+				"pause_duration": 0.020,
+				"burst": true,
+				"burst_radius": 19.0,
+				"burst_color": Color(1.0, 0.84, 0.34),
+			}, true)
+		&"guard_break":
+			defaults.merge({
+				"shake_strength": 6.0,
+				"shake_duration": 0.18,
+				"pause_duration": 0.030,
+				"burst": true,
+				"burst_radius": 26.0,
+				"burst_color": Color(1.0, 0.35, 0.27),
+			}, true)
 		&"enemy_defeat":
 			defaults.merge({
 				"shake_strength": 4.0,

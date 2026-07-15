@@ -2,6 +2,7 @@ extends SceneTree
 
 const STAGE_PATH := "res://scenes/stages/production/ProductionStageHost.tscn"
 const MAIN_SCENE := "res://scenes/main/Main.tscn"
+const SAFE_INTERMISSION_PATH := "res://scenes/stages/intermission/SafeIntermission.tscn"
 const REQUIRED_ROOM_COUNT := 8
 const TOTAL_ROOM_COUNT := 9
 const MIN_LANDING_WIDTH := 220.0
@@ -294,9 +295,18 @@ func _validate_exit_flow(stage: Variant, run_director: Node, game: Node, run_sta
 	run_director.call("_on_card_continue_requested")
 	await process_frame
 	await process_frame
-	_expect(run_director.get_phase_name() == "stage_active", "card Continue should load the next stage")
-	_expect(game.current_stage != null and game.current_stage.is_setup_complete(), "next generated stage should initialize")
+	_expect(run_director.get_phase_name() == "intermission_active", "card Continue should enter Safe Intermission")
+	_expect(
+		game.current_stage_path == SAFE_INTERMISSION_PATH,
+		"Safe Intermission should be the loaded world"
+	)
 	_expect(int(run_state.get("current_stage_index")) == 1, "card Continue should advance stage index")
+	if game.current_stage != null and game.current_stage.has_method("complete_stage"):
+		game.current_stage.call("complete_stage")
+		await process_frame
+		await process_frame
+	_expect(run_director.get_phase_name() == "stage_active", "intermission Continue should load Stage 2")
+	_expect(game.current_stage != null and game.current_stage.is_setup_complete(), "next generated stage should initialize")
 	if game.current_stage != null and game.current_stage.is_setup_complete():
 		await _validate_flooded_exit_flow(game.current_stage, run_director, game, run_state)
 
@@ -346,18 +356,19 @@ func _validate_flooded_exit_flow(
 	await process_frame
 	run_director.call("_on_card_continue_requested")
 	await process_frame
-	_expect(run_director.get_phase_name() == "forge", "Stage 2 card Continue should open the camp forge")
-	_expect(run_director.current_screen is ForgeScreen, "camp forge should use the deterministic equipment screen")
-	var profile_state := root.get_node_or_null("/root/ProfileState")
-	var preparation: Dictionary = (
-		profile_state.call("get_preparation_snapshot") if profile_state != null else {}
+	await process_frame
+	_expect(run_director.get_phase_name() == "intermission_active", "Stage 2 card Continue should enter Safe Intermission")
+	_expect(
+		game.current_stage_path == SAFE_INTERMISSION_PATH,
+		"Stage 2 should use the shared intermission map"
 	)
 	_expect(
-		String(preparation.get("hero_id", "")) == "traveler"
-		and (preparation.get("slots", []) as Array).size() == 4,
-		"camp forge should expose the saved Traveler equipment state"
+		game.current_stage != null
+		and game.current_stage.find_children("*", "ForgeStationInteractable", true, false).size() == 1
+		and game.current_stage.find_children("*", "MerchantInteractable", true, false).size() == 1,
+		"Safe Intermission should own one Forge NPC and one merchant NPC"
 	)
-	_expect(int(run_state.get("current_stage_index")) == 2, "camp forge should prepare Stage 3")
+	_expect(int(run_state.get("current_stage_index")) == 2, "Safe Intermission should prepare Stage 3")
 
 
 func _encounter_by_id(plan: StagePlan, encounter_id: StringName) -> PlannedEncounter:

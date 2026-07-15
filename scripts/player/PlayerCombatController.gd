@@ -12,6 +12,7 @@ const AFTERSHOCK_DELAY := 0.4
 const RALLY_ECHO_DISTANCE := 180.0
 const RALLY_ECHO_DURATION := 0.3
 const STEP_IN_DISTANCE := 12.0
+const DEFENSE_FEEDBACK_SECONDS := 0.9
 const PROJECTILE_RELEASE_OVERLAP := 2.0
 const AttackIntentResolverValue = preload("res://scripts/player/AttackIntentResolver.gd")
 const ShieldRuntimeValue = preload("res://scripts/player/ShieldCombatRuntime.gd")
@@ -69,6 +70,9 @@ var _shield_runtime: Variant = ShieldRuntimeValue.new()
 var _spirit_runtime: Variant = SpiritRuntimeValue.new()
 var _condition_spent_action_serial: int = -1
 var _defense_event_serial: int = 0
+var _defense_feedback_serial: int = 0
+var _defense_feedback_timer: float = 0.0
+var _defense_feedback: Dictionary = {}
 
 
 func _ready() -> void:
@@ -151,11 +155,19 @@ func update_stats(effective_stats: Dictionary) -> void:
 func update_combat(delta: float) -> void:
 	_update_cooldowns(delta)
 	_last_intent_elapsed = minf(_last_intent_elapsed + maxf(delta, 0.0), 60.0)
+	_defense_feedback_timer = maxf(_defense_feedback_timer - maxf(delta, 0.0), 0.0)
 	if _shared_hero_mode:
+		var previous_guard_phase := StringName(
+			_shield_runtime.get_state_snapshot().get("phase", &"idle")
+		)
 		_shield_runtime.update(
 			delta,
 			current_attack == null and Input.is_action_pressed("guard")
 		)
+		var current_guard_phase := StringName(
+			_shield_runtime.get_state_snapshot().get("phase", &"idle")
+		)
+		_record_guard_phase_transition(previous_guard_phase, current_guard_phase)
 		_spirit_runtime.update(delta)
 	if character_runtime != null:
 		character_runtime.update(delta)
@@ -338,12 +350,142 @@ func resolve_shared_defense(damage_info: DamageInfo) -> Dictionary:
 		_emit_status("Precise guard" if result.precise else "Blocked")
 	elif result.guard_broken:
 		_emit_status("Guard broken")
+	else:
+		_emit_status(_failed_guard_label(result.reason))
+	_record_defense_result(result, damage_info.amount)
 	var snapshot: Dictionary = result.to_snapshot()
 	snapshot["handled"] = true
 	snapshot["damage"] = 0 if result.blocked else damage_info.amount
 	snapshot["knockback_scale"] = 0.0 if result.blocked else 1.0
 	_publish_state()
 	return snapshot
+
+
+func _record_guard_phase_transition(
+	previous_phase: StringName,
+	current_phase: StringName
+) -> void:
+	if previous_phase == current_phase:
+		return
+	if (
+		current_phase in [&"startup", &"active"]
+		and previous_phase not in [&"startup", &"active"]
+	):
+		_record_defense_feedback(
+			&"guard_start",
+			&"guard_start",
+			"GUARD RAISED",
+			"Hold Guard to block frontal hits.",
+			0,
+			0,
+			0
+		)
+		_emit_defense_cue(&"guard_start", 0.55)
+	elif current_phase == &"recovery" and previous_phase in [&"startup", &"active"]:
+		_record_defense_feedback(
+			&"guard_recovery",
+			&"guard_recovery",
+			"GUARD RECOVERY",
+			"Guard is briefly unavailable.",
+			0,
+			0,
+			0
+		)
+		_emit_defense_cue(&"guard_recover", 0.45)
+
+
+func _record_defense_result(result: DefenseResult, incoming_damage: int) -> void:
+	var outcome := &"guard_failed"
+	var cue_id := &""
+	var label := _failed_guard_label(result.reason)
+	var detail := "%d damage" % maxi(incoming_damage, 0)
+	if result.guard_broken:
+		outcome = &"guard_break"
+		cue_id = &"guard_break"
+		label = "GUARD BROKEN"
+		detail = _defense_cost_detail(result, true)
+	elif result.blocked and result.precise:
+		outcome = &"precise_block"
+		cue_id = &"precise_guard"
+		label = "PRECISE GUARD"
+		detail = _defense_cost_detail(result, false)
+	elif result.blocked:
+		outcome = &"normal_block"
+		cue_id = &"guard_block"
+		label = "BLOCKED"
+		detail = _defense_cost_detail(result, false)
+	_record_defense_feedback(
+		outcome,
+		result.reason,
+		label,
+		detail,
+		result.stability_cost,
+		result.condition_cost,
+		0 if result.blocked else maxi(incoming_damage, 0)
+	)
+	if cue_id != &"":
+		_emit_defense_cue(cue_id, 1.15 if result.precise else 1.0)
+
+
+func _record_defense_feedback(
+	outcome: StringName,
+	reason: StringName,
+	label: String,
+	detail: String,
+	stability_cost: int,
+	condition_cost: int,
+	damage: int
+) -> void:
+	_defense_feedback_serial += 1
+	_defense_feedback_timer = DEFENSE_FEEDBACK_SECONDS
+	_defense_feedback = {
+		"event_id": _defense_feedback_serial,
+		"outcome": outcome,
+		"reason": reason,
+		"label": label,
+		"detail": detail,
+		"stability_cost": maxi(stability_cost, 0),
+		"condition_cost": maxi(condition_cost, 0),
+		"damage": maxi(damage, 0),
+	}
+
+
+func _defense_cost_detail(result: DefenseResult, includes_damage: bool) -> String:
+	var parts: Array[String] = []
+	if result.stability_cost > 0:
+		parts.append("-%d Stability" % result.stability_cost)
+	if result.condition_cost > 0:
+		parts.append("-%d Condition" % result.condition_cost)
+	if includes_damage:
+		parts.append("hit passed through")
+	if parts.is_empty():
+		return "No guard cost"
+	return "  •  ".join(parts)
+
+
+func _failed_guard_label(reason: StringName) -> String:
+	return String({
+		&"guard_startup": "TOO EARLY",
+		&"guard_recovery": "RECOVERING",
+		&"outside_guard_angle": "OUTSIDE GUARD",
+		&"unblockable": "UNBLOCKABLE",
+		&"not_guarding": "GUARD DOWN",
+	}.get(reason, "GUARD FAILED"))
+
+
+func _emit_defense_cue(cue_id: StringName, strength: float) -> void:
+	var bus := get_node_or_null("/root/SignalBus")
+	if bus == null:
+		return
+	bus.emit_signal("gameplay_feedback_requested", {
+		"cue_id": cue_id,
+		"strength": strength,
+		"world_position": player.global_position if player is Node2D else Vector2.ZERO,
+		"context": {
+			"source": "player_guard",
+			"event_id": _defense_feedback_serial,
+		},
+	})
 
 
 func blocks_incoming_damage(damage_info: DamageInfo) -> bool:
@@ -462,6 +604,9 @@ func reset_combat_state() -> void:
 	_last_intent_elapsed = INF
 	_condition_spent_action_serial = -1
 	_defense_event_serial = 0
+	_defense_feedback_serial = 0
+	_defense_feedback_timer = 0.0
+	_defense_feedback.clear()
 	if _shared_hero_mode:
 		_shield_runtime.reset()
 		_spirit_runtime.reset()
@@ -507,6 +652,9 @@ func get_state_snapshot() -> Dictionary:
 	}
 	if _shared_hero_mode:
 		snapshot["guard"] = _shield_runtime.get_state_snapshot()
+		snapshot["defense_feedback"] = _defense_feedback.duplicate(true)
+		snapshot["defense_feedback"]["active"] = _defense_feedback_timer > 0.0
+		snapshot["defense_feedback"]["remaining"] = _defense_feedback_timer
 		snapshot["spirit"] = _spirit_runtime.get_state_snapshot()
 		snapshot["loadout"] = _shared_combat_summary()
 	if character_runtime != null:
