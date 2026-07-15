@@ -21,6 +21,23 @@ func _run() -> void:
 	await process_frame
 	result.call("configure", true, "Traveler", _victory_settlement())
 	await process_frame
+	var backdrop := result.get_node_or_null("Backdrop") as Control
+	_expect(backdrop != null, "run result should expose the production backdrop")
+	if backdrop != null:
+		var texture := backdrop.get("backdrop_texture") as Texture2D
+		_expect(
+			texture != null
+			and texture.resource_path == "res://art/ui/production/backgrounds/run_result.png",
+			"run result should use the selected gate background"
+		)
+		var image := backdrop.get_node_or_null("Image") as TextureRect
+		_expect(
+			image != null
+			and image.stretch_mode == TextureRect.STRETCH_KEEP_ASPECT_COVERED
+			and image.texture == texture
+			and image.visible,
+			"run result background should preserve aspect and cover"
+		)
 
 	var snapshot: Dictionary = result.call("get_display_snapshot")
 	_expect(snapshot.get("outcome", "") == _t("VICTORY"), "victory outcome should be explicit")

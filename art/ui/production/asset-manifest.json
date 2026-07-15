@@ -2,13 +2,20 @@
   "set": "cardborne-production-ui",
   "version": 1,
   "created": "2026-07-15",
-  "provenance": "Original geometry authored for this repository; no third-party assets or external references.",
+  "provenance": "Original SVG geometry and project-generated raster backgrounds authored for this repository; no third-party runtime dependencies.",
   "rendering": {
     "source_fill": "#ffffff",
     "mode": "tintable-mask",
     "panel_outlines": false,
     "embedded_text": false
   },
+  "backgrounds": [
+    { "id": "shell_main_menu", "file": "backgrounds/main_menu.png", "size": [1672, 941], "screen": "Main Menu", "source": "docs/design/references/ui-shell/background-main-menu-v01.png" },
+    { "id": "shell_settings", "file": "backgrounds/settings.png", "size": [1672, 941], "screen": "Shell Settings", "source": "docs/design/references/ui-shell/background-settings-v01.png" },
+    { "id": "shell_hero_preparation", "file": "backgrounds/hero_preparation.png", "size": [1672, 941], "screen": "Hero Preparation", "source": "docs/design/references/ui-shell/background-preparation-v01.png" },
+    { "id": "shell_forge", "file": "backgrounds/forge.png", "size": [1672, 941], "screen": "Forge contextual/deferred", "source": "docs/design/references/ui-shell/background-forge-v01.png" },
+    { "id": "shell_run_result", "file": "backgrounds/run_result.png", "size": [1672, 941], "screen": "Run Result", "source": "docs/design/references/ui-shell/background-run-result-v01.png" }
+  ],
   "shapes": [
     { "id": "panel_slab", "file": "shapes/panel_slab.svg", "view_box": "0 0 640 360" },
     { "id": "panel_compact", "file": "shapes/panel_compact.svg", "view_box": "0 0 480 176" },

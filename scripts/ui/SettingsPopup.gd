@@ -17,6 +17,7 @@ const ACTION_LABELS := {
 	"pause": "Pause / back",
 }
 
+@onready var shell_backdrop: Control = %ShellBackdrop
 @onready var panel: PanelContainer = %SettingsPanel
 @onready var title_label: Label = %SettingsTitle
 @onready var accent_rule: ColorRect = %SettingsRule
@@ -302,6 +303,7 @@ func _on_settings_visibility_changed(is_visible: bool) -> void:
 		_previous_focus = focus_owner if focus_owner != null and not is_ancestor_of(focus_owner) else null
 	visible = is_visible
 	if visible:
+		shell_backdrop.visible = not Game.pause_menu_open
 		_apply_copy()
 		_refresh_binding_rows()
 		close_button.grab_focus()

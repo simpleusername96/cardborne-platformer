@@ -1,9 +1,9 @@
 ---
 type: evidence
-status: draft
+status: active
 owner: BK
 created: 2026-07-15
-topic: UI shell backdrop and panel image-generation candidates
+topic: Selected UI shell backdrops and panel image-generation references
 scope: Main Menu, Settings, Hero Preparation, Forge, Run Result, and reusable panel references
 source: Owner-approved art direction, current production UI layouts, and built-in image generation
 related:
@@ -16,7 +16,7 @@ related:
 
 ## Purpose
 
-Keep the accepted visual anchor, generated shell-backdrop candidates, and generated panel-family references together for owner review. These files are not runtime assets and are not connected to Godot scenes.
+Keep the accepted visual anchor, selected shell-backdrop sources, and generated panel-family references together with their production-adoption record. Reference files remain outside Godot import; selected backgrounds are copied into the production asset tree.
 
 ## Sources
 
@@ -36,6 +36,27 @@ Keep the accepted visual anchor, generated shell-backdrop candidates, and genera
 | `panel-shell-reference-v01.png` | Panel direction sheet | Large settings slab, pause slab, compact confirmation, and header/banner silhouettes. |
 | `panel-choice-reference-v01.png` | Panel direction sheet | Choice card, detail surface, result summary, receipt band, and action-band silhouettes. |
 | `ui-shell-candidates-contact-sheet.png` | Review board | One-page comparison of the seven generated candidates. |
+
+## Runtime Promotion
+
+The owner selected all five screen backgrounds for production consideration on
+2026-07-15. Godot scenes reference only the production copies below; the source
+files in this directory remain immutable provenance and comparison evidence.
+
+| Selected source | Production copy |
+| --- | --- |
+| `background-main-menu-v01.png` | `art/ui/production/backgrounds/main_menu.png` |
+| `background-settings-v01.png` | `art/ui/production/backgrounds/settings.png` |
+| `background-preparation-v01.png` | `art/ui/production/backgrounds/hero_preparation.png` |
+| `background-forge-v01.png` | `art/ui/production/backgrounds/forge.png` |
+| `background-run-result-v01.png` | `art/ui/production/backgrounds/run_result.png` |
+
+Main Menu, shell Settings, Hero Preparation, and Run Result use their copies as
+full-screen shell imagery. Forge keeps the live stage visible behind its centered
+modal, so its copy is retained for a later measured contextual slot instead of
+being forced into a full-screen in-run backdrop. The panel sheets were not
+promoted. Live SVG/Theme/NinePatch controls still own panels, labels, focus,
+interaction, and state.
 
 ## Shared Generation Contract
 
@@ -66,10 +87,11 @@ Keep the accepted visual anchor, generated shell-backdrop candidates, and genera
 - All five backdrop candidates are `1672x941` 16:9 images, contain no baked text or UI, and preserve the required screen-specific quiet zones.
 - The two panel sheets contain only related dark-navy silhouettes on a neutral review canvas. Their slight generated tonal variation is reference material, not a production texture treatment.
 - The retained files test whether one simplified art family can cover multiple shell screens while preserving the separation between bitmap backdrops and live UI panels.
-- Owner review is required before any candidate is promoted or adapted for runtime.
+- All five background sources were selected and promoted as separate production copies; four are connected to shell contexts, Forge is deferred, and the two panel sheets remain non-runtime references.
 
 ## Limitations
 
 - Image-generation output is not evidence of exact crop safety, stretch margins, alpha, or production filtering.
 - Panel candidates require deterministic reconstruction before implementation.
+- Production background replacement should preserve the existing screen-safe compositions or repeat the three-viewport visual QA pass.
 - Gameplay-map panorama continuity and terrain-component production remain governed separately.

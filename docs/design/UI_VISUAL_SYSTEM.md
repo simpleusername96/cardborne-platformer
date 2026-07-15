@@ -24,7 +24,7 @@ related:
 
 Define a coherent game UI system that replaces testbed-like panels and scattered code-local styling without replacing the working snapshot, intent, transaction, focus, and responsive-layout contracts in `PRODUCTION_UI_CONTRACT.md`.
 
-This specification locks the owner's visual direction. Generated reference images remain review candidates until separately selected and prepared for production.
+This specification locks the owner's visual direction. The five selected shell backgrounds have production copies under `art/ui/production/backgrounds/`; generated panel sheets remain reference-only until deterministically rebuilt.
 
 ## Locked Direction
 
@@ -74,7 +74,8 @@ Generated panel sheets are reference boards only. Production panels use project-
 
 - `references/ui-shell/owner-reference-lower-ruins.png` is the primary owner-selected theme and structural mood anchor.
 - `references/visual-style-slate-cutout.png` is a supporting simplification reference, not a competing palette.
-- `references/ui-shell/` contains generated candidates for review. Presence in that folder does not mean acceptance or runtime approval.
+- `references/ui-shell/background-*.png` are the selected source references for the five production shell backgrounds under `art/ui/production/backgrounds/`.
+- `references/ui-shell/panel-*.png` and the contact sheet remain review evidence. Presence in the reference folder alone never grants runtime approval.
 - `references/README.md` records how all visual boards may and may not be used.
 
 ## System Boundary

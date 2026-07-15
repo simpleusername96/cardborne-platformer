@@ -2,7 +2,7 @@
 type: record
 status: active
 owner: BK
-last_reviewed: 2026-07-15
+last_reviewed: 2026-07-16
 topic: Current Cardborne implementation state and verification entry points
 source: Active specs, current Godot runtime, release gates, and rendered QA evidence
 related:
@@ -103,7 +103,11 @@ adding more content or random topology.
   `art/ui/production/`, with a rendered adoption catalog and Godot capture tool.
   The UI branch now owns the shared 16/18/20/22/32 type scale, 48px targets,
   English/Korean locale selection, centered merchant/Forge shells, and responsive
-  shell/HUD/preparation/reward screens; served-browser review remains open.
+  shell/HUD/preparation/reward screens. The current visual batch adds the selected
+  raster source set and production copies; Main Menu, shell Settings, Hero
+  Preparation, and Run Result use an aspect-preserving cover renderer, while
+  Forge preserves the live stage behind its centered modal. The larger UI
+  migration remains active in the master UI overhaul plan.
 
 ## Authority
 
@@ -152,6 +156,14 @@ The accepted historical evidence is `68/68` Full checks on 2026-07-14. The curre
 at `960x540`, `1280x720`, and `1920x1080` where applicable. The five extended
 persistence/runtime checks were not rerun in that current pass.
 
+The 2026-07-15 shell-background pass additionally passed the focused Shell UI,
+Hero Preparation, Forge, and Run Result validators plus real OpenGL captures at
+all three viewports. The core release suite was attempted but stopped at the
+unchanged Arsenal Trial source-text guard: this UI worktree checks out CRLF while
+the guard compares an LF-only literal. The relevant Git blobs match main and the
+same validator passes in the main worktree, so this is checkout/test-harness
+debt rather than a shell-background regression.
+
 ## Risks
 
 - Actor, terrain, UI icon, audio, and effects are coherent prototype presentation,
@@ -172,10 +184,11 @@ The active cross-module implementation plan is
 UI, and 70-check release-matrix work is complete; matching Godot 4.7 Web export
 templates are still required before served-browser QA can close Milestone H.
 The active visual follow-on is
-`.agent/execplans/2026-07-15-master-ui-overhaul.md`: integrate the functional line
-into `master`, selectively adopt the existing production UI assets, then migrate
-the full screen/HUD system and measure world-presentation requirements from runtime
-bounds instead of conversation-chosen image counts.
+`.agent/execplans/2026-07-15-master-ui-overhaul.md`: implement the visual migration
+in the isolated `codex/master-ui-overhaul` worktree, selectively adopt existing
+production UI assets, then integrate scoped UI commits onto the latest `master`.
+World-presentation requirements are measured from runtime bounds instead of
+conversation-chosen image counts.
 The active map-composition follow-on is
 `.agent/execplans/2026-07-15-fixed-stage-map-enhancement.md`: preserve the fixed
 authored-room pipeline while replacing metric-only height with meaningful route,

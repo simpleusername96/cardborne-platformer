@@ -2,6 +2,14 @@ class_name ProductionBackdrop
 extends Control
 
 
+@export var backdrop_texture: Texture2D:
+	set(value):
+		backdrop_texture = value
+		_sync_texture()
+
+var _texture_rect: TextureRect
+
+
 func _init() -> void:
 	name = "Backdrop"
 
@@ -9,6 +17,16 @@ func _init() -> void:
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_texture_rect = TextureRect.new()
+	_texture_rect.name = "Image"
+	_texture_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_texture_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_texture_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	_texture_rect.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	_texture_rect.texture_repeat = CanvasItem.TEXTURE_REPEAT_DISABLED
+	add_child(_texture_rect)
+	_texture_rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_sync_texture()
 
 
 func _notification(what: int) -> void:
@@ -20,6 +38,8 @@ func _draw() -> void:
 	var width := size.x
 	var height := size.y
 	draw_rect(Rect2(Vector2.ZERO, size), ProductionUIStyles.BACKGROUND)
+	if backdrop_texture != null:
+		return
 
 	var distant := Color("1a2426")
 	draw_colored_polygon(PackedVector2Array([
@@ -61,3 +81,12 @@ func _draw() -> void:
 	draw_rect(Rect2(Vector2(0.0, height * 0.76), Vector2(width * 0.18, 5.0)), ProductionUIStyles.MOSS)
 	draw_rect(Rect2(Vector2(width * 0.60, height * 0.61), Vector2(width * 0.22, 5.0)), ProductionUIStyles.CYAN)
 	draw_rect(Rect2(Vector2(width * 0.88, height * 0.49), Vector2(width * 0.035, height * 0.21)), ProductionUIStyles.AMBER)
+
+
+func _sync_texture() -> void:
+	if _texture_rect == null:
+		queue_redraw()
+		return
+	_texture_rect.texture = backdrop_texture
+	_texture_rect.visible = backdrop_texture != null
+	queue_redraw()

@@ -16,6 +16,7 @@ const STATE_SUFFIXES: Array[String] = [
 	"victory",
 	"defeat",
 	"pause",
+	"pause_settings",
 	"abandon",
 	"settings",
 	"remap",
@@ -92,6 +93,10 @@ func _capture_viewport(prefix: String, viewport_size: Vector2i) -> void:
 	await physics_frame
 	game.call("set_pause_menu_open", true)
 	await _save_current("%s_pause" % prefix)
+	game.call("set_settings_open", true)
+	await _save_current("%s_pause_settings" % prefix)
+	game.call("set_settings_open", false)
+	await _wait_frames(2)
 	var pause_menu := main.get_node_or_null("UILayer/PauseMenu") as Control
 	if pause_menu == null:
 		push_error("Pause menu is unavailable for abandon capture.")

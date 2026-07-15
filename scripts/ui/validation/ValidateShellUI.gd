@@ -75,6 +75,11 @@ func _validate_main_menu(viewport_size: Vector2i) -> void:
 	var new_run := screen.get_node("%NewRunButton") as Button
 	var settings := screen.get_node("%SettingsButton") as Button
 	_assert_true(screen.get_node_or_null("%QuitButton") == null, "Main menu must not expose a browser exit action.")
+	_assert_backdrop(
+		screen.get_node("Backdrop") as Control,
+		"res://art/ui/production/backgrounds/main_menu.png",
+		"Main menu"
+	)
 	_assert_inside(new_run, viewport_size, "Main menu primary action")
 	_assert_target(new_run, 44.0, "Main menu primary action")
 	_assert_target(settings, 44.0, "Main menu settings action")
@@ -106,6 +111,11 @@ func _validate_run_result(viewport_size: Vector2i) -> void:
 	var retry := screen.get_node("%RetryButton") as Button
 	var menu := screen.get_node("%MenuButton") as Button
 	var summary_panel := screen.get_node("%SummaryPanel") as Control
+	_assert_backdrop(
+		screen.get_node("Backdrop") as Control,
+		"res://art/ui/production/backgrounds/run_result.png",
+		"Run result"
+	)
 	_assert_inside(summary_panel, viewport_size, "Run result summary")
 	_assert_target(retry, 44.0, "Run result retry action")
 	_assert_target(menu, 44.0, "Run result menu action")
@@ -241,7 +251,14 @@ func _validate_settings(viewport_size: Vector2i) -> void:
 	var bindings := screen.get_node("%BindingsBox") as VBoxContainer
 	var language_selector := screen.get_node("%LanguageSelector") as OptionButton
 	var active_locale := String(_localization.call("get_locale"))
+	var shell_backdrop := screen.get_node("%ShellBackdrop") as Control
 	_assert_true(screen.visible, "Settings must become visible from Game state.")
+	_assert_backdrop(
+		shell_backdrop,
+		"res://art/ui/production/backgrounds/settings.png",
+		"Shell settings"
+	)
+	_assert_true(shell_backdrop.visible, "Shell settings must show its authored background.")
 	_assert_inside(panel, viewport_size, "Settings panel")
 	_assert_inside(screen.get_node("%LanguageSelector") as Control, viewport_size, "Settings language selector")
 	_assert_target(close_button, 44.0, "Settings close action")
@@ -342,6 +359,14 @@ func _validate_settings(viewport_size: Vector2i) -> void:
 	for _frame in 2:
 		await process_frame
 	_assert_true(root.gui_get_focus_owner() == return_focus, "Closing Settings must restore prior focus.")
+	_game.call("set_pause_menu_open", true)
+	_game.call("set_settings_open", true)
+	await process_frame
+	_assert_true(not shell_backdrop.visible, "In-run settings must preserve the live stage view.")
+	_assert_true(close_button.text == _t("Back"), "In-run settings must return to Pause.")
+	_game.call("close_overlays")
+	for _frame in 2:
+		await process_frame
 	return_focus.queue_free()
 	await process_frame
 	await _unmount(screen)
@@ -442,6 +467,28 @@ func _assert_inside(control: Control, viewport_size: Vector2i, label: String) ->
 func _assert_target(control: Control, minimum: float, label: String) -> void:
 	if control.size.x < minimum or control.size.y < minimum:
 		_errors.append("%s target is too small: %s." % [label, control.size])
+
+
+func _assert_backdrop(backdrop: Control, expected_path: String, label: String) -> void:
+	_assert_true(backdrop != null, "%s backdrop must exist." % label)
+	if backdrop == null:
+		return
+	var texture := backdrop.get("backdrop_texture") as Texture2D
+	_assert_true(
+		texture != null and texture.resource_path == expected_path,
+		"%s must use %s." % [label, expected_path]
+	)
+	var image := backdrop.get_node_or_null("Image") as TextureRect
+	_assert_true(image != null, "%s backdrop must create its image layer." % label)
+	if image == null:
+		return
+	_assert_true(
+		image.expand_mode == TextureRect.EXPAND_IGNORE_SIZE
+		and image.stretch_mode == TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		and image.texture == texture
+		and image.visible,
+		"%s backdrop must preserve aspect and cover the viewport." % label
+	)
 
 
 func _assert_contains(text: String, expected: String, message: String) -> void:

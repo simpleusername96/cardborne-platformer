@@ -84,6 +84,7 @@ func _validate_viewport(viewport_size: Vector2i) -> void:
 		return
 	root.add_child(screen)
 	await _settle()
+	_validate_backdrop(screen, viewport_size)
 
 	var visible_text := _collect_text(screen)
 	var compact := viewport_size.x <= 1050 or viewport_size.y <= 600
@@ -141,6 +142,27 @@ func _validate_viewport(viewport_size: Vector2i) -> void:
 
 	screen.queue_free()
 	await process_frame
+
+
+func _validate_backdrop(screen: Control, viewport_size: Vector2i) -> void:
+	var backdrop := screen.get_node_or_null("Backdrop") as Control
+	_expect(backdrop != null, "%s should expose the production backdrop" % viewport_size)
+	if backdrop == null:
+		return
+	var texture := backdrop.get("backdrop_texture") as Texture2D
+	_expect(
+		texture != null
+		and texture.resource_path == "res://art/ui/production/backgrounds/hero_preparation.png",
+		"%s should use the Hero Preparation background" % viewport_size
+	)
+	var image := backdrop.get_node_or_null("Image") as TextureRect
+	_expect(
+		image != null
+		and image.stretch_mode == TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		and image.texture == texture
+		and image.visible,
+		"%s background should preserve aspect and cover" % viewport_size
+	)
 
 
 func _validate_action_and_signal_contracts() -> void:
