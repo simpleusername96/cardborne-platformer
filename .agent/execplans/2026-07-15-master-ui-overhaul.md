@@ -3,10 +3,10 @@ type: plan
 status: active
 owner: BK
 created: 2026-07-15
-last_reviewed: 2026-07-15
+last_reviewed: 2026-07-16
 topic: Master-targeted production UI overhaul and measured presentation-asset adoption
 scope: Functional-baseline integration, current UI asset adoption, full production-screen and HUD visual migration, and measurement-backed world-presentation dependencies
-source: Owner direction through 2026-07-15, clean master audit, current functional/UI branches, active UI specifications, runtime catalogs, validators, and rendered Godot captures
+source: Owner direction through 2026-07-16, master/concurrent-task audit, current functional/UI branches, active UI specifications, runtime catalogs, validators, and rendered Godot captures
 related:
   - ../../docs/README.md
   - ../../docs/product/2d_platform_action_card_game_prd.md
@@ -29,13 +29,16 @@ flow, snapshots, commands, focus rules, localization, and responsive contracts.
 
 The implementation order is deliberate:
 
-1. make the latest functional branch the `master` baseline;
+1. isolate the UI work on the reviewed functional snapshot without moving
+   `master` while another master-targeted task can still resume;
 2. selectively adopt every already-usable production UI asset;
 3. establish one shared Theme and one runtime asset owner;
 4. migrate every current screen and the gameplay HUD in player-testable batches;
-5. measure rather than guess the number of world-background panels and terrain
+5. integrate only scoped UI commits onto the then-current `master` after the
+   concurrent task reaches a stable handoff;
+6. measure rather than guess the number of world-background panels and terrain
    component types;
-6. leave a concrete asset-production backlog for art that does not yet exist.
+7. leave a concrete asset-production backlog for art that does not yet exist.
 
 This plan is active because the owner explicitly requested a complete `master` UI
 replacement. It does not authorize changing gameplay rules or treating unaccepted
@@ -53,6 +56,9 @@ audit of `master` at `d278184` and the current functional line found:
 - `codex/ui-readability-localization` contains the later gameplay-validity,
   localization, responsive-text, modal, merchant, intermission, and validation
   work and is a direct descendant of `master`;
+- a separate resumable Codex task shares that original checkout and added the
+  fixed-stage map-plan commit `a8ab850` after this UI plan, so the mixed branch
+  is not a safe ongoing UI implementation surface or a wholesale merge unit;
 - `codex/ui-visual-pass-1` diverged earlier and contains useful visual assets, but
   also older screen behavior, obsolete documentation changes, and a browser-
   inappropriate Quit action, so it must not be merged wholesale;
@@ -88,8 +94,9 @@ catalog expansion.
 
 | Topic | Current assumption / suggested default | Why it matters | Resolution gate |
 | --- | --- | --- | --- |
-| Functional baseline | Fast-forward or merge the current functional branch into `master` before visual implementation. | UI work on `d278184` would reintroduce already-fixed behavior and copy. | Baseline release checks and branch diff review in Milestone 0. |
-| Implementation branch | Create `codex/master-ui-overhaul` from the updated `master`; do not work directly in a dirty main worktree. | Isolates visual migration while keeping `master` authoritative. | Confirm clean updated `master`, then branch. |
+| Functional baseline | Use immutable snapshot `c72d98e`, which contains the functional/localization series and this plan, while implementation proceeds. | UI work on `d278184` would reintroduce fixed behavior, but moving `master` first would interfere with the other master-targeted task. | Baseline validators and captures in the isolated worktree. |
+| Implementation branch | Use `codex/master-ui-overhaul` in its own worktree; never continue UI implementation in the shared `codex/ui-readability-localization` checkout. | Separates UI writes from the resumable map task without rewriting shared history. | Worktree status, branch ancestry, and task-owned diff review. |
+| Final integration | Create a temporary integration branch from the then-current `master` and cherry-pick only scoped UI commits in order. Latest `master` behavior and map geometry win conflicts; the visual layer is reapplied around them. | Prevents the mixed source branch or stale visual branch from becoming an integration authority. | Milestone 7 full validation before merging the integration branch. |
 | UI visual spec | Keep `UI_VISUAL_SYSTEM.md` draft during the first cross-screen spike; promote it only after rendered evidence passes. | Prevents an unproven visual proposal from becoming canonical. | Milestone 2 evidence review. |
 | Static backgrounds | Main Menu, Hero Preparation, and Run Result use full-screen art. Shell Settings may use its background; in-run Settings keeps the live scene. Forge uses the live Safe Intermission behind its centered modal, with `forge.png` used only as a restrained modal/content crop if it helps. | Blind one-to-one wiring would violate the active overlay contract. | Contextual captures for shell/in-run Settings and Forge. |
 | Font | Keep the current Godot font path for the first migration. Add a font only if Korean/English rendered evidence proves a real identity or legibility gap. | A new font is an external asset, license, import, and fallback decision. | Type-system spike at three viewports. |
@@ -116,10 +123,13 @@ catalog expansion.
   and boss states.
 - The current post-functional normal-stage bounds have been measured rather than
   inferred from the old HTML gallery.
+- `codex/master-ui-overhaul` now exists in a dedicated worktree at `c72d98e`.
+- The isolated baseline passed shell, Hero Preparation, Card Reward, Run Result,
+  and gameplay-HUD validators; deterministic baseline captures exist for all
+  supported viewports.
 
 ### Still Open
 
-- Move the functional baseline to `master` and create the implementation branch.
 - Selectively import the visual branch's production assets without importing its
   stale behavior or documentation deletions.
 - Create one runtime asset owner and eliminate scattered asset paths.
@@ -131,6 +141,8 @@ catalog expansion.
   snapshots, localization, or viewport fit.
 - Produce the measured world-asset manifest and complete one Flooded Works visual
   proof before broader world art.
+- Integrate scoped UI commits onto the latest reviewed `master` only after the
+  other master-targeted task reaches a stable handoff.
 - Pass the production export and served-browser UI flow.
 
 ### Out Of Scope For This Plan
@@ -336,39 +348,42 @@ data and receive no new production art unless the product contract changes.
 
 ## Tasks
 
-### Milestone 0 - Master Baseline And Branch Gate
+### Milestone 0 - Isolated Functional Baseline And Branch Gate
 
-**Goal:** Put visual work on the latest functional truth without contaminating
-`master` with obsolete UI-branch behavior.
+**Goal:** Put visual work on the reviewed functional truth without moving
+`master`, sharing a writable checkout, or importing obsolete UI-branch behavior.
 
 **Source owners:** Git branches/worktrees, release matrix, active specs, `.agent`
 records.
 
-- [ ] Confirm the current `master` head and re-run the core release gate; record
-  failures before any UI merge.
-- [ ] Review `master..codex/ui-readability-localization` and integrate the complete
-  functional/localization series into `master` through a clean fast-forward or
-  reviewed merge.
-- [ ] Confirm the new `master` includes Safe Intermission, merchant, centered
-  modal behavior, KO/EN localization, current controls, stage composition, retry,
-  and their validators.
-- [ ] Create `codex/master-ui-overhaul` from that clean `master`.
-- [ ] Capture all current shell/progression/HUD/fixed-stage/boss baselines at the
+- [x] Confirm local `master` remains at `d278184`, no registered worktree owns it,
+  and the resumable master-targeted task is operating through the mixed
+  `codex/ui-readability-localization` history instead.
+- [x] Review `master..codex/ui-readability-localization` and select `c72d98e` as
+  the immutable UI baseline: functional/localization work plus this plan, before
+  the unrelated `a8ab850` map-plan commit.
+- [x] Create `codex/master-ui-overhaul` from `c72d98e` in a dedicated worktree.
+- [x] Confirm the baseline includes Safe Intermission, merchant, centered modal
+  behavior, KO/EN localization, current controls, stage composition, retry, and
+  their validators.
+- [x] Capture current shell/progression/HUD baselines at the
   supported viewports before visual changes.
-- [ ] Record exact visual-branch paths/commits to import; explicitly reject its
+- [x] Record exact visual-branch paths/commits to import; explicitly reject its
   Quit action, documentation deletions, and stale screen behavior.
 
-**As-is:** `master` is behind the functional branch and the visual branch diverged
-before those contracts landed.
+**As-is:** `master` is behind the functional branch, the original checkout is
+shared by a resumable task, and the visual branch diverged before current behavior
+contracts landed.
 
-**To-be:** one clean implementation branch has functional parity with the intended
-`master` target and a rendered baseline.
+**To-be:** one isolated implementation branch has functional parity with the
+intended `master` target and a rendered baseline, while `master` and the other task
+remain untouched.
 
-**Accept:** focused validators and baseline captures pass or every pre-existing
-failure is recorded with a current owner.
+**Accept:** the five focused UI validators pass, the three deterministic capture
+suites complete, and the UI worktree contains no unrelated source change.
 
-**Guard:** never resolve a functional/visual conflict by accepting the visual branch
-wholesale.
+**Guard:** never resolve a functional/visual conflict by accepting either the
+visual branch or the mixed functional/map branch wholesale.
 
 ### Milestone 1 - Asset Import, Runtime Owner, And Easy Adoption
 
@@ -579,6 +594,12 @@ generation calls; expansion follows the accepted proof and recalculated manifest
 **Goal:** Land the completed UI overhaul on `master` with full behavioral and
 rendered evidence.
 
+- [ ] Confirm the other master-targeted task has reached a stable commit/handoff;
+  do not merge or rewrite its branch from this worktree.
+- [ ] Create a temporary integration branch from the then-current `master` and
+  cherry-pick only the scoped UI commits produced by this plan.
+- [ ] Resolve overlaps by preserving current `master` behavior and stage geometry,
+  then reapplying presentation changes; never use blanket `ours`/`theirs` choices.
 - [ ] Run all focused UI, input, reward, intermission, progression, retry, HUD,
   boss, and result validators after each related merge batch.
 - [ ] Run the full release candidate gate after the final source batch.
@@ -665,6 +686,8 @@ The plan itself is valid when:
 - active specs remain authoritative for behavior and the draft visual spec remains
   non-canonical until its acceptance gate;
 - a future executor can start Milestone 0 without relying on conversation history;
+- the implementation branch and final integration strategy do not depend on a
+  shared writable checkout or a stable `master` during UI development;
 - Markdown/frontmatter and `git diff --check` pass.
 
 ## Rollback / Safety
@@ -676,6 +699,8 @@ The plan itself is valid when:
 - If a visual batch fails, revert that batch without reverting functional baseline
   work.
 - Never reset or overwrite user-authored changes in another worktree.
+- Do not rebase or rewrite the mixed `codex/ui-readability-localization` history;
+  integration uses scoped UI commits on a fresh branch from latest `master`.
 - Preserve snapshot/intent/service boundaries; visual nodes may emit existing
   intents but do not mutate domain dictionaries.
 - Do not preload all panorama panels or all stage skins.
@@ -697,6 +722,7 @@ The plan itself is valid when:
 | State drift | Warning/active/cooldown bodies do not match. | Canonical base plus separate overlays/parts/effects. |
 | Theme migration changes behavior | Focus, commands, or snapshots regress during restyle. | Preserve public APIs and migrate/test one surface family at a time. |
 | Documentation authority conflicts | Draft art plans are mistaken for approved execution. | This active plan cites drafts as evidence and carries explicit approval gates. |
+| Concurrent master-targeted work | A second task resumes in the shared checkout or lands newer map/UI-adjacent changes. | Dedicated UI worktree now; latest-master integration branch later; functional/map behavior wins conflicts. |
 
 ## Open Questions
 
@@ -730,16 +756,21 @@ These are not blockers for Milestones 0-1 unless noted:
   additional UI raster generation is deferred until a real unresolved slot exists.
 - 2026-07-15: The old visual branch is an asset/evidence source, not an integration
   authority.
+- 2026-07-16: A second resumable task was confirmed in the original checkout and
+  added `a8ab850` after this plan. The owner accepted isolated UI development and
+  latest-master final integration instead of moving `master` first.
+- 2026-07-16: `codex/master-ui-overhaul` was created from `c72d98e`; baseline
+  shell, preparation, reward, result, and HUD validators and captures passed.
 
 ## Next Steps
 
-1. Execute Milestone 0: integrate the functional branch into `master`, create
-   `codex/master-ui-overhaul`, and record a clean rendered baseline.
-2. Execute Milestone 1 without new image generation: selectively import the five
+1. Execute Milestone 1 without new image generation: selectively import the five
    backgrounds and nineteen illustrations, add the asset owner/validator, and
    apply the first visible screen path.
-3. Stop for rendered review after the easy-adoption batch before beginning the
+2. Stop for rendered review after the easy-adoption batch before beginning the
    Theme-wide migration.
+3. Leave `master` untouched until Milestone 7 creates a fresh integration branch
+   from its then-current head.
 
 ## Handoff Summary
 
