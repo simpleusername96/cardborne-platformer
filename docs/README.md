@@ -15,9 +15,10 @@ product blueprint and detailed combat spec below remain authoritative.
 | 2 | `design/COMBAT_EQUIPMENT_CRAFTING.md` | Minimum complete one-hero combat, 6 tool models, blueprints, two material grades, crafting, repair, supply, and passive Spirit Stones. |
 | 3 | `design/PRODUCTION_UI_CONTRACT.md` | Current production screens, HUD, feedback, focus, and responsive behavior. |
 | 4 | `design/PROCEDURAL_REGION_GENERATION.md` | Stage profiles, terrain, room catalog, and deferred generation. |
-| 5 | `design/MAP_AUTHORING_PIPELINE_CONTRACT.md` | Room-template and anchor schema. |
-| 6 | `design/ENEMIES_TRAPS_GIMMICKS.md` | Enemy, hazard, encounter, and boss content. |
-| 7 | `architecture/FIRST_SLICE_ARCHITECTURE.md` | Current runtime ownership and retained compatibility boundaries. |
+| 5 | `design/2D_PLATFORMER_MAP_DESIGN_GUIDELINE.md` | Canonical room intention, gameplay verticality, routing, pacing, and map acceptance rules. |
+| 6 | `design/MAP_AUTHORING_PIPELINE_CONTRACT.md` | Room-template and anchor schema. |
+| 7 | `design/ENEMIES_TRAPS_GIMMICKS.md` | Enemy, hazard, encounter, and boss content. |
+| 8 | `architecture/FIRST_SLICE_ARCHITECTURE.md` | Current runtime ownership and retained compatibility boundaries. |
 
 ## Supporting Material
 
@@ -34,6 +35,9 @@ product blueprint and detailed combat spec below remain authoritative.
   targeted plan for selective adoption of the existing UI asset branches, the
   complete production-screen/HUD visual migration, and measurement-backed world
   presentation dependencies.
+- `.agent/execplans/2026-07-15-fixed-stage-map-enhancement.md` is the active
+  checklist plan for meaningful vertical routes, stage-specific height profiles,
+  encounter composition, and continuous traversal validation.
 - `.agent/execplans/2026-07-12-actual-game-production-roadmap.md` is the completed
   first-run implementation record.
 - `design/PLAYER_CHARACTER_SYSTEMS.md`,
@@ -53,6 +57,9 @@ product blueprint and detailed combat spec below remain authoritative.
   from a rejected control recommendation; it does not define current work.
 - `research/plan_validity_audit_2026-07-15.md` is the archived evidence audit that
   created the active gameplay-validity plan; it does not describe current gaps.
+- `research/2d_platformer_map_design_research_2026-07-15.md` is the active
+  cross-case evidence and current-stage diagnosis behind the canonical map
+  guideline and fixed-stage enhancement plan.
 - Dated surveys/deep dives are archived evidence; `references/` contains advisory
   candidates. Neither is product authority.
 - `.agent/Documentation.md` records current project state and verification paths.

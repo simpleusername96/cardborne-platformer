@@ -9,10 +9,13 @@ related:
   - ../docs/product/2d_platform_action_card_game_prd.md
   - ../docs/design/COMBAT_EQUIPMENT_CRAFTING.md
   - ../docs/design/PRODUCTION_UI_CONTRACT.md
+  - ../docs/design/2D_PLATFORMER_MAP_DESIGN_GUIDELINE.md
+  - ../docs/research/2d_platformer_map_design_research_2026-07-15.md
   - ../docs/architecture/FIRST_SLICE_ARCHITECTURE.md
   - ../docs/release/TRAVELER_EQUIPMENT_VERTICAL_SLICE.md
   - ./execplans/2026-07-15-gameplay-validity-repair.md
   - ./execplans/2026-07-15-master-ui-overhaul.md
+  - ./execplans/2026-07-15-fixed-stage-map-enhancement.md
 ---
 
 # Project Documentation Memory
@@ -173,5 +176,11 @@ The active visual follow-on is
 into `master`, selectively adopt the existing production UI assets, then migrate
 the full screen/HUD system and measure world-presentation requirements from runtime
 bounds instead of conversation-chosen image counts.
+The active map-composition follow-on is
+`.agent/execplans/2026-07-15-fixed-stage-map-enhancement.md`: preserve the fixed
+authored-room pipeline while replacing metric-only height with meaningful route,
+combat, camera, and pacing verticality. Research and the canonical guideline are
+complete; runtime map implementation begins with diagnostic strengthening and a
+Ruin pilot pass.
 Random map re-entry, larger equipment/content catalogs, multiple save slots, and
 final world art remain separate decisions.
