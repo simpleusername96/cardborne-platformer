@@ -42,6 +42,10 @@ product blueprint and detailed combat spec below remain authoritative.
 - `research/combat_loadout_reference_review_2026-07-14.md` is active advisory
   evidence only. Its former active-skill recommendation was not adopted; the
   current combat and UI specs are authoritative.
+- `research/player_input_and_ui_followup_audit_2026-07-15.md` is active advisory
+  evidence for control conventions, menu navigation, and deferred UI findings.
+  It authorizes no UI implementation; the current product specs remain
+  authoritative.
 - Dated surveys/deep dives are archived evidence; `references/` contains advisory
   candidates. Neither is product authority.
 - `.agent/Documentation.md` records current project state and verification paths.
