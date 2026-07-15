@@ -3,8 +3,8 @@ type: plan
 status: active
 owner: BK
 created: 2026-07-15
-last_reviewed: 2026-07-15
-source: Current fixed-stage code and metrics, rendered room captures, 2D platformer map-design research, and the canonical map-design guideline
+last_reviewed: 2026-07-16
+source: Current fixed-stage code and metrics, rendered room captures, 2D platformer map-design research, the canonical map-design guideline, and the 2026-07-16 per-stage visual direction review
 topic: Gameplay-verticality and map-composition enhancement for the three fixed normal stages
 scope: Metrics, curated topology, authored room geometry, encounter placement, camera proof, and continuous traversal validation
 related:
@@ -52,6 +52,24 @@ acceptance가 실패하면 다음 stage로 넘어가지 않는다.
 [2D Platformer Map Design Research](../../docs/research/2d_platformer_map_design_research_2026-07-15.md)의
 결론에 따라 range와 enemy count를 더 올리는 것만으로는 해결하지 않는다.
 
+### 2026-07-16 visual-direction clarification
+
+owner review에서 세 stage를 한 장에 축약한 비교 이미지는 실제 설계도로 쓰기엔
+너무 단순하다고 판정했다. 목표는 각 stage가 독립된 상세 side-cutaway map으로
+읽히고, 서로 연결된 방·shaft·우회로·shortcut·landmark가 전체 실루엣 안에서
+기억되는 방향이다. 참고점은 *Hollow Knight*가 보여주는 촘촘한 공간 접힘과
+장소 기억성이지만, 기존 map silhouette, room, icon, character, UI를 복제하지
+않는다.
+
+생성된 세 이미지는 이 방향을 확인한 visual study이지 collision 좌표나 확정
+room count가 아니다. 이미지의 20여 개 numbered chamber를 그대로 구현하면
+PRD의 compact vertical slice, normal-room 20–60초, stage별 6–10분 목표와
+충돌할 가능성이 높다. 첫 implementation pass는 current authored template와
+8/7/9 required-room baseline을 유지하되, 각 template 안을 2–4개의 명확한
+gameplay beat, 여러 elevation band, side pocket, sightline, shortcut으로
+세분화한다. 그 결과로도 목표 밀도와 플레이타임을 만들 수 없다는 측정
+evidence가 생긴 뒤에만 room-count 변경을 별도 승인 대상으로 올린다.
+
 ## Outcome
 
 완료 시:
@@ -67,6 +85,9 @@ acceptance가 실패하면 다음 stage로 넘어가지 않는다.
    continuous rendered playtest로 증명된다.
 6. 기존 retry, safe intermission, Forge/merchant 분리, reward, boss flow,
    keyboard input 계약은 회귀하지 않는다.
+7. implementation 전에 stage별 독립 construction blueprint가 존재하며,
+   room ID, 연결, height waveform, combat/recovery beat, reward, shortcut,
+   camera commitment가 실제 source owner와 대응한다.
 
 ## Scope
 
@@ -78,6 +99,7 @@ acceptance가 실패하면 다음 stage로 넘어가지 않는다.
 - room resource socket, recovery, enemy/hazard/reward anchor 갱신
 - 기존 enemy variant와 hazard의 재배치
 - fixed-stage capture target과 continuous traversal evidence 추가
+- stage별 construction blueprint와 route/height/encounter overlay 작성
 - 관련 validator와 product-flow regression
 
 ### Non-scope
@@ -116,6 +138,8 @@ room intention은 이 plan의 matrices와 authored scene/resource가 소유한�
 - current active room count를 우선 유지하고 geometry와 connection을
   재작성한다. 새 room은 acceptance를 충족할 수 없다는 증거가 있을 때만
   별도 scope로 요청한다.
+- visual study의 numbered chamber는 확정 room count가 아니다. current room
+  template 하나가 여러 gameplay beat와 sub-chamber를 소유할 수 있다.
 - current enemy floors 8/10/12와 required-room counts 8/7/9는 하한으로
   보존한다.
 - optional reward resolution, stable IDs, deterministic seed behavior를
@@ -125,6 +149,36 @@ room intention은 이 plan의 matrices와 authored scene/resource가 소유한�
 - Web export template가 준비되지 않은 동안 desktop production capture를
   strongest substitute로 쓰되, release acceptance는 served Web 확인 전
   닫지 않는다.
+
+## Current-State / Target Delta
+
+| Concern | As-is | To-be | Accept | Guard |
+| --- | --- | --- | --- | --- |
+| Stage drawing | 세 stage를 비교하는 저밀도 concept와 개별 room still이 분리되어 있다. | stage별 한 장의 construction blueprint가 current room ID와 runtime graph를 설명한다. | blueprint의 모든 critical/optional connection이 `CuratedStagePlanBuilder.gd` target graph와 1:1 대조된다. | concept art의 임의 room이나 route를 source에 몰래 추가하지 않는다. |
+| Macro topology | required linear chain에 optional same-hub return이 붙는다. | 여러 고도에서 갈라진 route가 앞으로 재합류하고, later shortcut이 earlier landmark를 다시 연결한다. | graph diagnostic과 실제 continuous traversal이 branch, rejoin, shortcut을 모두 증명한다. | hidden teleport, unreachable socket, reward duplication이 없다. |
+| Room density | 넓은 평지, 얇은 floating ledge, 큰 empty void가 action을 분리한다. | 각 room은 2–4개의 읽을 수 있는 beat와 supported mass, preview, commitment, consequence, recovery를 갖는다. | debug label 없이 first-time player가 다음 목표와 선택을 설명한다. | 장식 platform, blind drop, 8초 이상 decision vacuum을 늘리지 않는다. |
+| Vertical combat | enemy count와 y-span이 주된 자동 증거다. | threat lane, cover, escape/re-engage route가 높이에 따라 달라진다. | combat-room intention 문장과 real-damage playtest가 같은 결론을 낸다. | enemy 수만 늘려 metric을 통과하지 않는다. |
+| Scale | 이미지상 많은 chamber가 넓은 metroidvania scope로 오해될 수 있다. | compact 6–10분 stage 안에서 공간을 접고 기억 가능한 landmark를 반복 노출한다. | stage clear timing과 room-duration sample이 PRD 범위에 들어온다. | 새 biome, ability gate, 장거리 backtracking campaign으로 확장하지 않는다. |
+
+## Construction Blueprint Contract
+
+Milestone 0에서 세 stage 각각에 다음 layer가 분리되어야 한다. 최종 visual은
+`docs/design/visuals/`에 stage별 파일로 두고, 구조와 room-ID 대응표는
+`docs/design/STAGE_MAP_BLUEPRINTS.md`가 소유한다.
+
+| Layer | 반드시 보여줄 내용 | 구현 연결 |
+| --- | --- | --- |
+| Collision silhouette | filled terrain mass, platform, shaft, drop, climb, room boundary | `scenes/rooms/**.tscn` |
+| Route graph | start, exit, critical route, optional route, forward rejoin, one-way shortcut | `CuratedStagePlanBuilder.gd`, room socket resources |
+| Height waveform | elevation band, peak, descent, reversal, recovery | `StageCompositionMetrics.gd` diagnostics |
+| Encounter layer | safe entry, combat zone, enemy lane, cover, escape, reward | room anchors and allocated content |
+| Camera/landmark layer | pre-commit preview, landing cue, memorable landmark, revisited vista | authored camera bounds and rendered evidence |
+| Rhythm layer | teach, transform, test, release and expected 20–60초 room duration | room intention matrix and continuous timing note |
+
+Blueprint acceptance is a design gate, not decorative paperwork. A future executor
+must be able to name the scene/resource changed for every marked room, connection,
+reward, and shortcut. If the drawing cannot be reconciled with current IDs and
+movement limits, update the drawing before code.
 
 ## Proposed Design
 
@@ -261,6 +315,8 @@ blockout 결과가 더 나은 의도를 발견하면 Decision Notes에 이유를
 
 ## Tasks
 
+- [ ] Milestone 0에서 visual study를 current room graph와 movement envelope에
+  맞는 stage별 construction blueprint로 번역하고 owner review를 받는다.
 - [ ] Milestone A에서 directionality와 branch topology diagnostic을 먼저
   red/green 검증한다.
 - [ ] Milestone B에서 Ruin을 pilot stage로 재저작하고 continuous play로
@@ -272,6 +328,45 @@ blockout 결과가 더 나은 의도를 발견하면 Decision Notes에 이유를
   합쳐 release acceptance를 닫는다.
 
 ## Milestones
+
+### Milestone 0 — Design translation and scope lock
+
+Goal: visual direction을 implementation 가능한 room graph와 construction
+blueprint로 바꾸고, 이미지의 분위기와 실제 production scope를 분리한다.
+
+Tasks:
+
+- [ ] `docs/design/STAGE_MAP_BLUEPRINTS.md`에 Ruin, Flooded, Sanctum의 current
+  node/edge table과 target node/edge table을 나란히 기록한다.
+- [ ] `docs/design/visuals/`에 stage별 독립 map blueprint를 한 장씩 만든다.
+  비교용 composite 한 장으로 대체하지 않는다.
+- [ ] 모든 blueprint에 current room ID 경계, start/exit, critical route,
+  optional route, forward rejoin, shortcut, safe/combat/reward zone을 표시한다.
+- [ ] 각 required room을 2–4개의 gameplay beat로 나누되 이것을 새 runtime
+  room 또는 새 stable ID로 자동 승격하지 않는다.
+- [ ] 각 stage의 height waveform과 teach → transform → test → release 순서를
+  blueprint 아래에 기록한다.
+- [ ] stage별 landmark 3개 이상을 정하고, later route에서 earlier landmark를
+  다른 높이 또는 방향으로 다시 보게 할 위치를 표시한다.
+- [ ] current `MovementMetrics.gd` envelope로 critical jump/drop/climb을
+  검토하고, 불확실한 gap에는 수치를 적지 말고 blockout 검증 대상으로 남긴다.
+- [ ] room당 20–60초, Ruin 6–8분, Flooded 7–9분, Sanctum 8–10분의 timing
+  budget을 작성한다.
+- [ ] existing template로 목표를 만족할 수 없는 후보를 별도 목록화하되,
+  새 room 제작이나 active-room-count 증가는 이 milestone에서 승인하지 않는다.
+- [ ] owner review에서 세 blueprint의 구조적 방향과 Ruin pilot 범위를
+  확인한다.
+
+Acceptance:
+
+- [ ] 세 stage가 각각 독립 이미지와 source-linked room graph를 가진다.
+- [ ] first-time reviewer가 각 stage의 start, exit, main route, optional route,
+  forward rejoin, shortcut, combat peak, recovery를 설명할 수 있다.
+- [ ] Ruin/Flooded/Sanctum의 silhouette와 height waveform이 서로 다르다.
+- [ ] blueprint의 모든 확정 항목이 current source owner에 대응하고, visual
+  study의 임의 요소가 requirement로 승격되지 않았다.
+- [ ] estimated timing이 PRD 범위에 있으며, room-count 확대는 evidence와
+  owner approval 없이는 다음 milestone에 들어가지 않는다.
 
 ### Milestone A — Baseline and diagnostic contract
 
@@ -517,6 +612,8 @@ When export templates are available:
 - [x] External research and visual-source analysis completed.
 - [x] Canonical map-design guideline written.
 - [x] Current metrics rerun on Godot 4.7 and recorded.
+- [x] Per-stage detailed visual studies generated and reviewed as direction probes.
+- [ ] Milestone 0 construction blueprints reconciled with current room IDs and approved.
 - [ ] Milestone A diagnostic contract implemented.
 - [ ] Milestone B Ruin implemented and accepted.
 - [ ] Milestone C Flooded implemented and accepted.
@@ -526,11 +623,11 @@ When export templates are available:
 
 ## Next Steps
 
-1. Implement Milestone A only.
-2. Produce the Ruin macro sketch and update the Ruin target matrix if blockout
-   evidence requires a better sequence.
-3. Complete and playtest Ruin before touching Flooded.
-4. Apply the proven pattern to Flooded, then Sanctum without copying the same
+1. Complete Milestone 0 only; do not edit gameplay geometry yet.
+2. Review the three source-linked blueprints and lock the Ruin pilot boundary.
+3. Implement Milestone A diagnostics against the approved target graph.
+4. Complete and playtest Ruin before touching Flooded.
+5. Apply the proven pattern to Flooded, then Sanctum without copying the same
    silhouette.
 
 ## Rollback / Safety
@@ -559,6 +656,8 @@ When export templates are available:
 | Metrics are gamed again | separate diagnostics, no aggregate score, manual critical gates |
 | Three stages converge on the same zigzag shape | lock distinct spatial thesis and compare collision-only silhouettes |
 | Camera reveals information too late | commitment-before-information capture checklist |
+| Detailed concept is mistaken for a mandate to build a large metroidvania | keep PRD timing budget, current template baseline, and explicit room-count approval gate |
+| A beautiful blueprint cannot be mapped to runtime owners | require room IDs, sockets, anchors, and source paths on the construction version before geometry work |
 | Scope leaks into UI or world art | keep UI and final art in their existing plans; blockout/readability only here |
 | Web QA remains blocked | preserve desktop evidence, link the exact export-template blocker, do not claim release closure |
 
@@ -569,6 +668,9 @@ deferred until rendered evidence exists:
 
 - Whether one currently inactive catalog room should replace an active room.
   Default: do not increase active room count.
+- Whether one stage needs an additional runtime room after dense blockout and
+  timing validation. Default: first create sub-chambers/gameplay beats inside
+  existing templates; request owner approval only with measured evidence.
 - Whether continuous evidence is best stored as short video, frame sequence, or
   scripted checkpoints. Default: use the smallest artifact that proves camera and
   traversal without adding runtime code.
@@ -588,3 +690,11 @@ deferred until rendered evidence exists:
   Ruin proves the guideline through continuous play.
 - 2026-07-15: World-space route readability belongs to map authoring even while
   UI readability is handled separately.
+- 2026-07-16: Each stage needs its own detailed construction blueprint; a
+  three-stage comparison image is insufficient implementation evidence.
+- 2026-07-16: The approved visual direction is dense, folded, landmark-driven
+  side-view exploration, not a copy of another game's map or an expansion into
+  a full metroidvania campaign.
+- 2026-07-16: Visual-study chamber count is illustrative. Existing authored
+  templates and PRD timing remain the first-pass scope until play evidence
+  justifies an explicit room-count decision.
