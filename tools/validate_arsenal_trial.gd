@@ -75,6 +75,9 @@ func _initialize() -> void:
 
 func _run() -> void:
 	root.size = Vector2i(1280, 720)
+	var localization := root.get_node_or_null("/root/UILocalization")
+	if localization != null:
+		localization.call("set_locale", "en")
 	var packed := load(TRIAL_SCENE_PATH) as PackedScene
 	if packed == null:
 		_failures.append("Arsenal Trial scene could not be loaded.")
@@ -83,8 +86,37 @@ func _run() -> void:
 
 	_validate_source_boundaries()
 	await _validate_authored_layout(packed)
+	await _validate_korean_ui(packed, localization)
+	if localization != null:
+		localization.call("set_locale", "en")
 	await _validate_resolution_parity(packed)
 	_finish()
+
+
+func _validate_korean_ui(packed: PackedScene, localization: Node) -> void:
+	_expect(localization != null, "Arsenal Trial localization owner should be available.")
+	if localization == null:
+		return
+	localization.call("set_locale", "ko")
+	var trial := await _instantiate_trial(packed, "KoreanTrial")
+	if trial == null:
+		return
+	var beat := trial.get_node("TrialUI/PromptPanel/Margin/VBox/BeatLabel") as Label
+	var prompt := trial.get_node("TrialUI/PromptPanel/Margin/VBox/PromptLabel") as Label
+	var skip := trial.get_node("TrialUI/SkipButton") as Button
+	_expect(beat.text == "움직여 보기", "Trial beat should localize to Korean.")
+	_expect(prompt.text.contains("방향키"), "Trial prompt should explain Korean controls.")
+	_expect(skip.text == "연습 건너뛰기", "Trial skip action should localize to Korean.")
+	for viewport_size in [Vector2i(960, 540), Vector2i(1280, 720), Vector2i(1920, 1080)]:
+		root.size = viewport_size
+		await process_frame
+		_expect(
+			_rect_fits((trial.get_node("TrialUI/PromptPanel") as Control).get_global_rect(), viewport_size),
+			"Korean Trial prompt should fit %s." % viewport_size
+		)
+		_expect(_rect_fits(skip.get_global_rect(), viewport_size), "Korean Trial skip should fit %s." % viewport_size)
+	trial.queue_free()
+	await process_frame
 
 
 func _validate_source_boundaries() -> void:
@@ -318,7 +350,7 @@ func _advance_trial_to_exit(trial: Node) -> void:
 		var gate := trial.get_node(gate_path) as CollisionShape2D
 		_expect(gate.disabled, "Completed teaching beats should open gate %s." % gate_path)
 	var prompt := trial.get_node("TrialUI/PromptPanel/Margin/VBox/PromptLabel") as Label
-	_expect(prompt.text == "Use the exit", "The fifth beat should direct the player to the exit.")
+	_expect(prompt.text == "E opens the exit", "The fifth beat should direct the player to the exit.")
 
 
 func _instantiate_trial(packed: PackedScene, node_name: String) -> Node:
@@ -413,8 +445,8 @@ func _validate_ui_fit(trial: Node, viewport_size: Vector2i) -> void:
 		"Prompt panel and skip button should not overlap at %s." % viewport_size
 	)
 	_expect(
-		skip.size.x >= 120.0 and skip.size.y >= 44.0,
-		"Skip button should keep a readable 44px target at %s." % viewport_size
+		skip.size.x >= 120.0 and skip.size.y >= 48.0,
+		"Skip button should keep a readable 48px target at %s." % viewport_size
 	)
 	_expect(skip.focus_mode == Control.FOCUS_ALL, "Skip button should remain keyboard-focusable.")
 	_expect(skip.text == "Skip Trial", "Skip control should use short player-facing copy.")
@@ -426,6 +458,10 @@ func _validate_ui_fit(trial: Node, viewport_size: Vector2i) -> void:
 		var label := trial.get_node(label_path) as Label
 		_expect(not label.text.contains("\n"), "Trial prompt text should stay compact: %s" % label_path)
 		_expect(label.text.length() <= 32, "Trial prompt text should stay game-like: %s" % label_path)
+		_expect(
+			label.get_theme_font_size("font_size") >= 16,
+			"Trial prompt text should be at least 16px: %s" % label_path
+		)
 
 
 func _rect_fits(rect: Rect2, viewport_size: Vector2i) -> bool:

@@ -15,6 +15,7 @@ SignalBus="*res://scripts/autoload/SignalBus.gd"
 ProfileState="*res://scripts/autoload/ProfileState.gd"
 RunState="*res://scripts/autoload/RunState.gd"
 InputBindings="*res://scripts/autoload/InputBindings.gd"
+UILocalization="*res://scripts/autoload/UILocalization.gd"
 Game="*res://scripts/autoload/Game.gd"
 RunDirector="*res://scripts/autoload/RunDirector.gd"
 FeedbackDirector="*res://scripts/presentation/FeedbackDirector.gd"
@@ -23,6 +24,10 @@ FeedbackDirector="*res://scripts/presentation/FeedbackDirector.gd"
 
 window/size/viewport_width=1280
 window/size/viewport_height=720
+
+[internationalization]
+
+locale/translations=PackedStringArray("res://localization/ui.en.po", "res://localization/ui.ko.po")
 
 [layer_names]
 

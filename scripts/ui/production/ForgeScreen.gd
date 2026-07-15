@@ -4,8 +4,9 @@ extends Control
 signal equipment_action_requested(action: StringName, model_id: StringName, slot_id: StringName)
 signal leave_requested
 
-const BackdropScene = preload("res://scripts/ui/production/ProductionBackdrop.gd")
 const Styles = preload("res://scripts/ui/production/ProductionUIStyles.gd")
+const ModalShell = preload("res://scripts/ui/production/components/CenteredModalShell.gd")
+const Text = preload("res://scripts/ui/localization/LocalizedText.gd")
 
 const SLOT_ORDER: Array[String] = ["melee", "ranged", "shield", "armor", "spirit_stone"]
 const SLOT_LABELS := {
@@ -36,14 +37,16 @@ var _selected_model_id: String = ""
 var _selected_model: Dictionary = {}
 var _compact := false
 
-var _margin: MarginContainer
+var _modal: CenteredModalShell
 var _page: VBoxContainer
 var _title_label: Label
-var _resource_row: HBoxContainer
-var _tabs: HBoxContainer
+var _resource_row: HFlowContainer
+var _tabs: HFlowContainer
+var _body: HBoxContainer
 var _model_panel: PanelContainer
 var _model_list: VBoxContainer
 var _detail_panel: PanelContainer
+var _detail_scroll: ScrollContainer
 var _detail_column: VBoxContainer
 var _slot_label: Label
 var _model_title: Label
@@ -52,7 +55,7 @@ var _behavior_label: Label
 var _weakness_label: Label
 var _stats_grid: GridContainer
 var _cost_label: Label
-var _actions: HBoxContainer
+var _actions: HFlowContainer
 var _status_label: Label
 var _leave_button: Button
 var _tab_buttons: Dictionary = {}
@@ -69,13 +72,10 @@ func _ready() -> void:
 		var profile_state := get_node_or_null("/root/ProfileState")
 		if profile_state != null and profile_state.has_method("get_preparation_snapshot"):
 			_snapshot = profile_state.call("get_preparation_snapshot")
+	var localization := get_node_or_null("/root/UILocalization")
+	if localization != null:
+		localization.connect(&"locale_changed", _on_locale_changed)
 	_render()
-
-
-func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("pause"):
-		get_viewport().set_input_as_handled()
-		leave_requested.emit()
 
 
 func _notification(what: int) -> void:
@@ -144,18 +144,17 @@ func get_layout_snapshot() -> Dictionary:
 		"model_panel_rect": _model_panel.get_global_rect() if _model_panel != null else Rect2(),
 		"detail_panel_rect": _detail_panel.get_global_rect() if _detail_panel != null else Rect2(),
 		"leave_rect": _leave_button.get_global_rect() if _leave_button != null else Rect2(),
+		"panel_rect": _modal.panel_rect() if _modal != null else Rect2(),
 		"status": _status_label.text if _status_label != null else "",
 	}
 
 
 func _build_ui() -> void:
-	add_child(BackdropScene.new())
-	_margin = MarginContainer.new()
-	_margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	add_child(_margin)
-	_page = VBoxContainer.new()
-	_page.add_theme_constant_override("separation", 10)
-	_margin.add_child(_page)
+	_modal = ModalShell.new()
+	_modal.configure_size(Vector2(920.0, 680.0))
+	_modal.close_requested.connect(func() -> void: leave_requested.emit())
+	add_child(_modal)
+	_page = _modal.content
 
 	var header := HBoxContainer.new()
 	header.add_theme_constant_override("separation", 12)
@@ -165,15 +164,14 @@ func _build_ui() -> void:
 	heading_column.add_theme_constant_override("separation", 0)
 	header.add_child(heading_column)
 	var eyebrow := Label.new()
-	eyebrow.text = "TRAVELER WORKBENCH"
-	Styles.configure_label(eyebrow, 12, Styles.TEXT_MUTED)
+	eyebrow.name = "ForgeEyebrow"
+	Styles.configure_label(eyebrow, Styles.TYPE_CAPTION, Styles.TEXT_MUTED)
 	heading_column.add_child(eyebrow)
 	_title_label = Label.new()
-	Styles.configure_label(_title_label, 27, Styles.TEXT)
+	Styles.configure_label(_title_label, Styles.TYPE_TITLE, Styles.TEXT)
 	heading_column.add_child(_title_label)
 	_leave_button = Button.new()
-	_leave_button.text = "LEAVE"
-	_leave_button.custom_minimum_size = Vector2(132.0, 44.0)
+	_leave_button.custom_minimum_size = Vector2(132.0, Styles.TARGET_HEIGHT)
 	Styles.apply_button(_leave_button, Styles.TEXT_MUTED, true)
 	_leave_button.pressed.connect(func() -> void: leave_requested.emit())
 	header.add_child(_leave_button)
@@ -189,34 +187,35 @@ func _build_ui() -> void:
 	resource_margin.add_theme_constant_override("margin_top", 7)
 	resource_margin.add_theme_constant_override("margin_bottom", 7)
 	resource_panel.add_child(resource_margin)
-	_resource_row = HBoxContainer.new()
+	_resource_row = HFlowContainer.new()
 	_resource_row.add_theme_constant_override("separation", 18)
+	_resource_row.add_theme_constant_override("v_separation", 6)
 	resource_margin.add_child(_resource_row)
 
-	_tabs = HBoxContainer.new()
+	_tabs = HFlowContainer.new()
 	_tabs.add_theme_constant_override("separation", 6)
 	_page.add_child(_tabs)
 	for slot_id in SLOT_ORDER:
 		var tab := Button.new()
-		tab.text = SLOT_LABELS[slot_id]
 		tab.toggle_mode = true
-		tab.custom_minimum_size = Vector2(148.0, 40.0)
+		tab.custom_minimum_size = Vector2(148.0, Styles.TARGET_HEIGHT)
 		tab.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		Styles.apply_button(tab, Styles.CYAN, true)
 		tab.pressed.connect(func() -> void: select_slot(StringName(slot_id)))
 		_tabs.add_child(tab)
 		_tab_buttons[slot_id] = tab
 
-	var body := HBoxContainer.new()
-	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	body.add_theme_constant_override("separation", 10)
-	_page.add_child(body)
+	_body = HBoxContainer.new()
+	_body.custom_minimum_size = Vector2(0.0, 300.0)
+	_body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_body.add_theme_constant_override("separation", 10)
+	_page.add_child(_body)
 	_model_panel = PanelContainer.new()
 	_model_panel.custom_minimum_size = Vector2(280.0, 0.0)
 	_model_panel.add_theme_stylebox_override(
 		"panel", Styles.panel_style(Color(Styles.SURFACE, 0.96), Styles.OUTLINE)
 	)
-	body.add_child(_model_panel)
+	_body.add_child(_model_panel)
 	var model_margin := MarginContainer.new()
 	model_margin.add_theme_constant_override("margin_left", 8)
 	model_margin.add_theme_constant_override("margin_right", 8)
@@ -237,28 +236,36 @@ func _build_ui() -> void:
 	_detail_panel.add_theme_stylebox_override(
 		"panel", Styles.panel_style(Color(Styles.SURFACE, 0.96), Styles.CYAN)
 	)
-	body.add_child(_detail_panel)
+	_detail_panel.clip_contents = true
+	_body.add_child(_detail_panel)
 	var detail_margin := MarginContainer.new()
 	for side in ["left", "right"]:
 		detail_margin.add_theme_constant_override("margin_%s" % side, 18)
 	for side in ["top", "bottom"]:
 		detail_margin.add_theme_constant_override("margin_%s" % side, 13)
 	_detail_panel.add_child(detail_margin)
+	_detail_scroll = ScrollContainer.new()
+	_detail_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_detail_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	_detail_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_detail_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	detail_margin.add_child(_detail_scroll)
 	_detail_column = VBoxContainer.new()
+	_detail_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_detail_column.add_theme_constant_override("separation", 7)
-	detail_margin.add_child(_detail_column)
+	_detail_scroll.add_child(_detail_column)
 	_slot_label = Label.new()
-	Styles.configure_label(_slot_label, 11, Styles.CYAN)
+	Styles.configure_label(_slot_label, Styles.TYPE_CAPTION, Styles.CYAN)
 	_detail_column.add_child(_slot_label)
 	_model_title = Label.new()
-	Styles.configure_label(_model_title, 25, Styles.TEXT)
+	Styles.configure_label(_model_title, 28, Styles.TEXT)
 	_detail_column.add_child(_model_title)
 	_state_label = Label.new()
-	Styles.configure_label(_state_label, 13, Styles.AMBER)
+	Styles.configure_label(_state_label, Styles.TYPE_CAPTION, Styles.AMBER)
 	_detail_column.add_child(_state_label)
-	_behavior_label = _wrapping_label(15, Styles.TEXT, 2)
+	_behavior_label = _wrapping_label(Styles.TYPE_BODY, Styles.TEXT, 3)
 	_detail_column.add_child(_behavior_label)
-	_weakness_label = _wrapping_label(13, Styles.TEXT_MUTED, 2)
+	_weakness_label = _wrapping_label(Styles.TYPE_CAPTION, Styles.TEXT_MUTED, 2)
 	_detail_column.add_child(_weakness_label)
 	var separator := HSeparator.new()
 	_detail_column.add_child(separator)
@@ -266,10 +273,10 @@ func _build_ui() -> void:
 	_stats_grid.columns = 3
 	_stats_grid.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_detail_column.add_child(_stats_grid)
-	_cost_label = _wrapping_label(13, Styles.TEXT_MUTED, 2)
+	_cost_label = _wrapping_label(Styles.TYPE_CAPTION, Styles.TEXT_MUTED, 2)
 	_detail_column.add_child(_cost_label)
-	_actions = HBoxContainer.new()
-	_actions.alignment = BoxContainer.ALIGNMENT_END
+	_actions = HFlowContainer.new()
+	_actions.alignment = FlowContainer.ALIGNMENT_END
 	_actions.add_theme_constant_override("separation", 8)
 	_detail_column.add_child(_actions)
 
@@ -278,34 +285,42 @@ func _build_ui() -> void:
 	_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_status_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_status_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	Styles.configure_label(_status_label, 13, Styles.TEXT_MUTED)
+	_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_status_label.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
+	Styles.configure_label(_status_label, Styles.TYPE_CAPTION, Styles.TEXT_MUTED)
 	_page.add_child(_status_label)
 	_apply_layout()
 
 
 func _apply_layout() -> void:
-	var horizontal := 12 if _compact else 26
-	var vertical := 8 if _compact else 18
-	for side in ["left", "right"]:
-		_margin.add_theme_constant_override("margin_%s" % side, horizontal)
-	for side in ["top", "bottom"]:
-		_margin.add_theme_constant_override("margin_%s" % side, vertical)
 	_page.add_theme_constant_override("separation", 7 if _compact else 10)
-	_model_panel.custom_minimum_size.x = 235.0 if _compact else 280.0
-	_title_label.add_theme_font_size_override("font_size", 23 if _compact else 27)
-	_model_title.add_theme_font_size_override("font_size", 21 if _compact else 25)
+	_model_panel.custom_minimum_size.x = 250.0 if _compact else 290.0
+	_body.custom_minimum_size.y = 300.0 if _compact else 330.0
+	_title_label.add_theme_font_size_override("font_size", 28 if _compact else Styles.TYPE_TITLE)
+	_model_title.add_theme_font_size_override("font_size", 24 if _compact else 28)
+	var eyebrow := _page.find_child("ForgeEyebrow", true, false) as Label
+	if eyebrow != null:
+		eyebrow.visible = not _compact
+	_behavior_label.max_lines_visible = 1 if _compact else 3
+	_weakness_label.visible = not _compact
+	_cost_label.max_lines_visible = 1 if _compact else 2
 	for tab_value in _tab_buttons.values():
 		var tab := tab_value as Button
-		tab.custom_minimum_size.y = 38.0 if _compact else 42.0
+		tab.custom_minimum_size = Vector2(130.0 if _compact else 148.0, Styles.TARGET_HEIGHT)
 
 
 func _render() -> void:
-	_title_label.text = _heading
+	var eyebrow := _page.find_child("ForgeEyebrow", true, false) as Label
+	if eyebrow != null:
+		eyebrow.text = _t("TRAVELER WORKBENCH")
+	_title_label.text = _t(_heading)
+	_leave_button.text = _t("Close")
 	_render_resources()
 	_render_tabs()
 	_render_models()
 	_render_detail()
 	_render_status()
+	call_deferred("_refresh_focus_path")
 
 
 func _render_resources() -> void:
@@ -316,10 +331,10 @@ func _render_resources() -> void:
 		if _compact and amount <= 0:
 			continue
 		var label := Label.new()
-		label.text = "%s  %d" % [MATERIAL_LABELS[material_id], amount]
+		label.text = "%s  %d" % [_t(MATERIAL_LABELS[material_id]), amount]
 		Styles.configure_label(
 			label,
-			12 if _compact else 13,
+			Styles.TYPE_CAPTION,
 			Styles.AMBER if material_id in ["steel_fragment", "hardwood", "reinforced_fabric"] else Styles.TEXT_MUTED
 		)
 		_resource_row.add_child(label)
@@ -328,11 +343,11 @@ func _render_resources() -> void:
 	_resource_row.add_child(spacer)
 	var supplies: Dictionary = _snapshot.get("ranged_supplies", {})
 	var supply := Label.new()
-	supply.text = "Arrows %d   Cartridges %d" % [
+	supply.text = _t("Arrows %d · Cartridges %d", [
 		int(supplies.get("arrows", 0)),
 		int(supplies.get("cartridges", 0)),
-	]
-	Styles.configure_label(supply, 13, Styles.CYAN)
+	])
+	Styles.configure_label(supply, Styles.TYPE_CAPTION, Styles.CYAN)
 	_resource_row.add_child(supply)
 
 
@@ -341,6 +356,7 @@ func _render_tabs() -> void:
 		var tab := _tab_buttons.get(slot_id) as Button
 		if tab == null:
 			continue
+		tab.text = _t(SLOT_LABELS[slot_id])
 		tab.button_pressed = slot_id == _selected_slot
 		Styles.apply_button(tab, Styles.AMBER if tab.button_pressed else Styles.CYAN, true)
 
@@ -353,9 +369,9 @@ func _render_models() -> void:
 		_selected_model_id = ""
 		_selected_model = {}
 		var empty := Label.new()
-		empty.text = "No unlocked options yet."
+		empty.text = _t("No unlocked options yet.")
 		empty.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		Styles.configure_label(empty, 14, Styles.TEXT_MUTED)
+		Styles.configure_label(empty, Styles.TYPE_BODY, Styles.TEXT_MUTED)
 		_model_list.add_child(empty)
 		return
 	if _selected_model_id.is_empty() or not _contains_model(options, _selected_model_id):
@@ -369,7 +385,7 @@ func _render_models() -> void:
 		button.custom_minimum_size = Vector2(0.0, 58.0 if _compact else 66.0)
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		button.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-		button.tooltip_text = String(option.get("display_name", "Equipment"))
+		button.tooltip_text = _t(String(option.get("display_name", "Equipment")))
 		var selected := option_id == _selected_model_id
 		Styles.apply_character_card(button, Styles.AMBER if selected else Styles.CYAN, selected)
 		button.pressed.connect(func() -> void: _select_model(option_id))
@@ -384,8 +400,8 @@ func _render_detail() -> void:
 	_clear(_actions)
 	_action_buttons.clear()
 	if _selected_model.is_empty():
-		_slot_label.text = SLOT_LABELS.get(_selected_slot, "EQUIPMENT")
-		_model_title.text = "Nothing selected"
+		_slot_label.text = _t(SLOT_LABELS.get(_selected_slot, "EQUIPMENT"))
+		_model_title.text = _t("Nothing selected")
 		_state_label.text = ""
 		_behavior_label.text = ""
 		_weakness_label.text = ""
@@ -395,11 +411,13 @@ func _render_detail() -> void:
 		_render_spirit_detail()
 		return
 	var model := _selected_model
-	_slot_label.text = SLOT_LABELS.get(_selected_slot, "EQUIPMENT")
-	_model_title.text = String(model.get("display_name", "Equipment"))
+	_slot_label.text = _t(SLOT_LABELS.get(_selected_slot, "EQUIPMENT"))
+	_model_title.text = _t(String(model.get("display_name", "Equipment")))
 	_state_label.text = _equipment_state_text(model)
-	_behavior_label.text = String(model.get("behavior", ""))
-	_weakness_label.text = "Tradeoff: %s" % String(model.get("weakness", "None"))
+	_behavior_label.text = _t(String(model.get("behavior", "")))
+	_weakness_label.text = _t(
+		"Tradeoff: %s", [_t(String(model.get("weakness", "None")))]
+	)
 	var current: Dictionary = model.get("runtime", {})
 	var preview := _primary_preview(model)
 	var result_runtime: Dictionary = preview.get("result_runtime", {})
@@ -410,17 +428,19 @@ func _render_detail() -> void:
 
 func _render_spirit_detail() -> void:
 	var stone := _selected_model
-	_slot_label.text = "PASSIVE SPIRIT STONE"
-	_model_title.text = String(stone.get("display_name", "Spirit Stone"))
-	_state_label.text = "EQUIPPED" if bool(stone.get("equipped", false)) else (
-		"AVAILABLE" if bool(stone.get("unlocked", false)) else "NOT ATTUNED"
+	_slot_label.text = _t("PASSIVE SPIRIT STONE")
+	_model_title.text = _t(String(stone.get("display_name", "Spirit Stone")))
+	_state_label.text = _t("EQUIPPED") if bool(stone.get("equipped", false)) else (
+		_t("AVAILABLE") if bool(stone.get("unlocked", false)) else _t("NOT ATTUNED")
 	)
-	_behavior_label.text = String(stone.get("description", ""))
-	_weakness_label.text = "Limit: %s" % String(stone.get("weakness", "None"))
-	_add_stat_row("Trigger", "Passive", "No input")
-	_cost_label.text = "Spirit Stones add one passive effect and never consume a skill slot."
+	_behavior_label.text = _t(String(stone.get("description", "")))
+	_weakness_label.text = _t(
+		"Limit: %s", [_t(String(stone.get("weakness", "None")))]
+	)
+	_add_stat_row("Trigger", _t("Passive"), _t("No input"))
+	_cost_label.text = _t("Spirit Stones grant one passive effect.")
 	_add_action_button(
-		"EQUIP",
+		"Equip",
 		&"equip",
 		bool(stone.get("unlocked", false)) and not bool(stone.get("equipped", false)),
 		String(stone.get("id", "")),
@@ -435,7 +455,7 @@ func _build_equipment_actions(model: Dictionary) -> void:
 	if not bool(model.get("crafted", false)):
 		var craft: Dictionary = model.get("craft", {})
 		_add_action_button(
-			"CRAFT",
+			"Craft",
 			&"craft",
 			bool(craft.get("can_execute", false)),
 			model_id,
@@ -444,7 +464,7 @@ func _build_equipment_actions(model: Dictionary) -> void:
 		)
 		return
 	_add_action_button(
-		"EQUIP",
+		"Equip",
 		&"equip",
 		not bool(model.get("equipped", false)),
 		model_id,
@@ -453,7 +473,7 @@ func _build_equipment_actions(model: Dictionary) -> void:
 	)
 	var recraft: Dictionary = model.get("recraft", {})
 	_add_action_button(
-		"RECRAFT GRADE 2",
+		"Upgrade to Grade 2",
 		&"recraft",
 		bool(recraft.get("can_execute", false)),
 		model_id,
@@ -463,7 +483,7 @@ func _build_equipment_actions(model: Dictionary) -> void:
 	var repair: Dictionary = model.get("repair", {})
 	if bool((repair.get("model", {}) as Dictionary).get("has_condition", false)):
 		_add_action_button(
-			"REPAIR",
+			"Repair",
 			&"repair",
 			bool(repair.get("can_execute", false)),
 			model_id,
@@ -481,10 +501,10 @@ func _add_action_button(
 	reason: String
 ) -> void:
 	var button := Button.new()
-	button.text = label
-	button.custom_minimum_size = Vector2(132.0, 42.0)
+	button.text = _t(label)
+	button.custom_minimum_size = Vector2(150.0, Styles.TARGET_HEIGHT)
 	button.disabled = not enabled
-	button.tooltip_text = reason
+	button.tooltip_text = _t(reason)
 	Styles.apply_button(button, Styles.AMBER if enabled else Styles.OUTLINE)
 	button.pressed.connect(func() -> void:
 		equipment_action_requested.emit(action, StringName(model_id), slot_id)
@@ -501,18 +521,20 @@ func _render_runtime_stats(
 	match slot_id:
 		"melee", "ranged":
 			_add_runtime_stat("Damage", "damage", current, result)
-			_add_runtime_stat("Stagger", "stagger_damage", current, result)
 			_add_runtime_stat("Reach", "reach", current, result, " px")
-			_add_runtime_stat("Startup", "startup_seconds", current, result, " s", 2)
 			_add_runtime_stat("Recovery", "recovery_seconds", current, result, " s", 2)
-			if slot_id == "ranged":
+			if not _compact:
+				_add_runtime_stat("Stagger", "stagger_damage", current, result)
+				_add_runtime_stat("Startup", "startup_seconds", current, result, " s", 2)
+			if slot_id == "ranged" and not _compact:
 				_add_runtime_stat("Capacity", "maximum_ranged_resource", current, result)
 		"shield":
 			_add_runtime_stat("Stability", "guard_stability", current, result)
 			_add_runtime_stat("Guard Arc", "guard_angle_degrees", current, result, " deg")
-			_add_runtime_stat("Precise Guard", "precise_guard_window_seconds", current, result, " s", 2)
-			_add_runtime_stat("Move While Guarding", "guard_move_speed_multiplier", current, result, "x", 2)
 			_add_runtime_stat("Condition", "condition", current, result)
+			if not _compact:
+				_add_runtime_stat("Precise Guard", "precise_guard_window_seconds", current, result, " s", 2)
+				_add_runtime_stat("Move While Guarding", "guard_move_speed_multiplier", current, result, "x", 2)
 		"armor":
 			_add_runtime_stat("Max HP", "max_health_bonus", current, result, " bonus")
 			_add_runtime_stat("Knockback Resist", "knockback_reduction_fraction", current, result, "%", 0, 100.0)
@@ -539,27 +561,31 @@ func _add_runtime_stat(
 
 func _add_stat_row(label_text: String, current_text: String, result_text: String) -> void:
 	var label := Label.new()
-	label.text = label_text
-	Styles.configure_label(label, 13, Styles.TEXT_MUTED)
+	label.text = _t(label_text)
+	Styles.configure_label(label, Styles.TYPE_CAPTION, Styles.TEXT_MUTED)
 	_stats_grid.add_child(label)
 	var current := Label.new()
 	current.text = current_text
 	current.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	Styles.configure_label(current, 13, Styles.TEXT)
+	Styles.configure_label(current, Styles.TYPE_CAPTION, Styles.TEXT)
 	_stats_grid.add_child(current)
 	var result := Label.new()
 	result.text = result_text if result_text == current_text else "%s -> %s" % [current_text, result_text]
 	result.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	Styles.configure_label(result, 13, Styles.MOSS if result_text != current_text else Styles.TEXT_MUTED)
+	Styles.configure_label(
+		result,
+		Styles.TYPE_CAPTION,
+		Styles.MOSS if result_text != current_text else Styles.TEXT_MUTED
+	)
 	_stats_grid.add_child(result)
 
 
 func _render_status() -> void:
 	if _result.is_empty():
-		_status_label.text = "Choose a model to inspect its exact costs and result."
+		_status_label.text = _t("Choose equipment to see its cost and result.")
 		_status_label.add_theme_color_override("font_color", Styles.TEXT_MUTED)
 		return
-	_status_label.text = String(_result.get("message", "Equipment updated."))
+	_status_label.text = _t(String(_result.get("message", "Equipment updated.")))
 	_status_label.add_theme_color_override(
 		"font_color", Styles.MOSS if bool(_result.get("ok", false)) else Styles.CORAL
 	)
@@ -570,7 +596,13 @@ func _select_model(model_id: String) -> void:
 	_render_models()
 	_render_detail()
 	if not _action_buttons.is_empty():
-		_action_buttons[0].grab_focus()
+		_focus_action(_action_buttons[0])
+
+
+func _focus_action(button: Button) -> void:
+	button.grab_focus()
+	if _detail_scroll != null:
+		_detail_scroll.ensure_control_visible(button)
 
 
 func _options_for_slot(slot_id: String) -> Array[Dictionary]:
@@ -601,33 +633,39 @@ func _contains_model(options: Array[Dictionary], model_id: String) -> bool:
 
 
 func _model_button_text(option: Dictionary) -> String:
-	var title := String(option.get("display_name", "Equipment"))
+	var title := _t(String(option.get("display_name", "Equipment")))
 	if _selected_slot == "spirit_stone":
 		if bool(option.get("equipped", false)):
-			return "%s\nEquipped" % title
-		return "%s\n%s" % [title, "Available" if bool(option.get("unlocked", false)) else "Not attuned"]
+			return "%s\n%s" % [title, _t("Equipped")]
+		return "%s\n%s" % [
+			title,
+			_t("Available") if bool(option.get("unlocked", false)) else _t("Not attuned"),
+		]
 	if bool(option.get("equipped", false)):
-		return "%s\nEquipped" % title
+		return "%s\n%s" % [title, _t("Equipped")]
 	if bool(option.get("crafted", false)):
 		var grade := String((option.get("runtime", {}) as Dictionary).get("grade_id", "grade_1"))
-		return "%s\n%s" % [title, "Grade 2" if grade == "grade_2" else "Grade 1"]
+		return "%s\n%s" % [
+			title,
+			_t("Grade 2") if grade == "grade_2" else _t("Grade 1"),
+		]
 	if not bool(option.get("blueprint_unlocked", false)):
-		return "%s\nBlueprint needed" % title
-	return "%s\nReady to craft" % title
+		return "%s\n%s" % [title, _t("Blueprint needed")]
+	return "%s\n%s" % [title, _t("Ready to craft")]
 
 
 func _equipment_state_text(model: Dictionary) -> String:
 	if not bool(model.get("crafted", false)):
-		return "BLUEPRINT READY" if bool(model.get("blueprint_unlocked", false)) else "BLUEPRINT NOT FOUND"
+		return _t("BLUEPRINT READY") if bool(model.get("blueprint_unlocked", false)) else _t("BLUEPRINT NOT FOUND")
 	var runtime: Dictionary = model.get("runtime", {})
-	var grade := "GRADE 2" if String(runtime.get("grade_id", "")) == "grade_2" else "GRADE 1"
-	var equipped := "  /  EQUIPPED" if bool(model.get("equipped", false)) else ""
+	var grade := _t("GRADE 2") if String(runtime.get("grade_id", "")) == "grade_2" else _t("GRADE 1")
+	var equipped := "  /  %s" % _t("EQUIPPED") if bool(model.get("equipped", false)) else ""
 	if float(runtime.get("maximum_condition", 0.0)) > 0.0:
-		return "%s%s  /  CONDITION %d%%" % [
+		return _t("%s%s / CONDITION %d%%", [
 			grade,
 			equipped,
 			roundi(float(runtime.get("condition_ratio", 0.0)) * 100.0),
-		]
+		])
 	return "%s%s" % [grade, equipped]
 
 
@@ -643,7 +681,7 @@ func _primary_preview(model: Dictionary) -> Dictionary:
 func _preview_cost_text(preview: Dictionary) -> String:
 	var costs: Dictionary = preview.get("costs", {})
 	if costs.is_empty():
-		return String(preview.get("reason", "No material cost."))
+		return _t(String(preview.get("reason", "No material cost.")))
 	var parts: Array[String] = []
 	var ids := costs.keys()
 	ids.sort()
@@ -651,11 +689,38 @@ func _preview_cost_text(preview: Dictionary) -> String:
 	for material_value in ids:
 		var material_id := String(material_value)
 		parts.append("%s %d/%d" % [
-			MATERIAL_LABELS.get(material_id, "Material"),
+			_t(MATERIAL_LABELS.get(material_id, "Material")),
 			int(owned.get(material_id, 0)),
 			int(costs.get(material_id, 0)),
 		])
-	return "Materials: %s" % "   ".join(parts)
+	return _t("Materials: %s", [" · ".join(parts)])
+
+
+func _refresh_focus_path() -> void:
+	if _modal == null:
+		return
+	var controls: Array[Control] = []
+	for slot_id in SLOT_ORDER:
+		var tab := _tab_buttons.get(slot_id) as Button
+		if tab != null:
+			controls.append(tab)
+	for button in _model_buttons:
+		controls.append(button)
+	for button in _action_buttons:
+		controls.append(button)
+	controls.append(_leave_button)
+	_modal.link_vertical_focus(controls)
+	var first := _tab_buttons.get(_selected_slot) as Button
+	if first != null and get_viewport().gui_get_focus_owner() == null:
+		first.grab_focus()
+
+
+func _on_locale_changed(_locale: String) -> void:
+	_render()
+
+
+func _t(source: Variant, values: Array = []) -> String:
+	return Text.resolve(self, source, values)
 
 
 func _number_text(value: float, decimals: int) -> String:

@@ -82,13 +82,6 @@ layout_mode = 2
 size_flags_horizontal = 0
 text = "Settings"
 
-[node name="QuitButton" type="Button" parent="SafeMargin/Layout/MenuColumn"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(300, 44)
-layout_mode = 2
-size_flags_horizontal = 0
-text = "Exit Game"
-
 [node name="FlexibleSpace" type="Control" parent="SafeMargin/Layout"]
 layout_mode = 2
 size_flags_horizontal = 3

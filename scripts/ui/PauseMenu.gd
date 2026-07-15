@@ -23,9 +23,11 @@ func _ready() -> void:
 	visible = false
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	_style_ui()
+	_apply_copy()
 	_connect_actions()
 	SignalBus.pause_visibility_changed.connect(_on_pause_visibility_changed)
 	SignalBus.settings_visibility_changed.connect(_on_settings_visibility_changed)
+	UILocalization.locale_changed.connect(_on_locale_changed)
 	_layout_panel()
 
 
@@ -51,11 +53,11 @@ func _style_ui() -> void:
 		"panel",
 		Styles.panel_style(Color(Styles.SURFACE, 0.98), Styles.OUTLINE)
 	)
-	Styles.configure_label(eyebrow_label, 13, Styles.AMBER)
-	Styles.configure_label(title_label, 32, Styles.TEXT)
-	Styles.configure_label(context_label, 14, Styles.TEXT_MUTED)
-	Styles.configure_label(warning_title, 20, Styles.CORAL)
-	Styles.configure_label(warning_label, 14, Styles.TEXT_MUTED)
+	Styles.configure_label(eyebrow_label, Styles.TYPE_CAPTION, Styles.AMBER)
+	Styles.configure_label(title_label, Styles.TYPE_TITLE, Styles.TEXT)
+	Styles.configure_label(context_label, Styles.TYPE_BODY, Styles.TEXT_MUTED)
+	Styles.configure_label(warning_title, Styles.TYPE_SECTION, Styles.CORAL)
+	Styles.configure_label(warning_label, Styles.TYPE_BODY, Styles.TEXT_MUTED)
 	accent_rule.color = Styles.MOSS
 	Styles.apply_button(resume_button, Styles.CYAN)
 	Styles.apply_button(settings_button, Styles.MOSS, true)
@@ -93,8 +95,10 @@ func _refresh_context() -> void:
 	var profile_name := String(
 		RunState.get_hero_combat_loadout_snapshot().get("display_name", "Traveler")
 	)
-	var location := "Slime Court" if RunDirector.phase == RunPhase.Value.BOSS_ACTIVE else (
-		"Stage %d" % (RunState.current_stage_index + 1)
+	var location := (
+		UILocalization.text(&"Slime Court")
+		if RunDirector.phase == RunPhase.Value.BOSS_ACTIVE
+		else UILocalization.text(&"Stage {0}", [RunState.current_stage_index + 1])
 	)
 	context_label.text = "%s  |  %s" % [profile_name, location]
 
@@ -130,3 +134,22 @@ func _layout_panel() -> void:
 	panel.offset_top = panel_position.y
 	panel.offset_right = panel_position.x + panel_size.x
 	panel.offset_bottom = panel_position.y + panel_size.y
+
+
+func _apply_copy() -> void:
+	eyebrow_label.text = UILocalization.text(&"EXPEDITION")
+	title_label.text = UILocalization.text(&"PAUSED")
+	resume_button.text = UILocalization.text(&"Resume")
+	settings_button.text = UILocalization.text(&"Settings")
+	main_menu_button.text = UILocalization.text(&"End Expedition")
+	warning_title.text = UILocalization.text(&"END THIS EXPEDITION?")
+	warning_label.text = UILocalization.text(
+		&"Run cards, coins, and stage progress will be lost. Secured materials stay kept."
+	)
+	keep_playing_button.text = UILocalization.text(&"Keep Playing")
+	confirm_end_button.text = UILocalization.text(&"End Expedition")
+	_refresh_context()
+
+
+func _on_locale_changed(_locale: String = "") -> void:
+	_apply_copy()

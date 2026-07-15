@@ -3,6 +3,7 @@ extends RefCounted
 
 const StatPresentation = preload("res://scripts/player/PlayerStatPresentation.gd")
 const Styles = preload("res://scripts/ui/production/ProductionUIStyles.gd")
+const Text = preload("res://scripts/ui/localization/LocalizedText.gd")
 
 
 static func for_level_upgrade(
@@ -10,7 +11,8 @@ static func for_level_upgrade(
 	preview: Dictionary,
 	current_stack: int,
 	current_health: int,
-	current_max_health: int
+	current_max_health: int,
+	context: Node
 ) -> Dictionary:
 	var mechanics: Array[String] = []
 	var changes: Dictionary = preview.get("changes", {})
@@ -19,17 +21,11 @@ static func for_level_upgrade(
 	for stat_id_value in stat_ids:
 		var stat_id := StringName(stat_id_value)
 		var values: Dictionary = changes[stat_id_value]
-		if stat_id == &"max_health":
-			mechanics.append("Max health %s -> %s" % [
-				StatPresentation.format_value(stat_id, float(values.get("before", 0.0))),
-				StatPresentation.format_value(stat_id, float(values.get("after", 0.0))),
-			])
-		else:
-			mechanics.append(StatPresentation.format_transition(
-				stat_id,
-				float(values.get("before", 0.0)),
-				float(values.get("after", 0.0))
-			))
+		mechanics.append(_t(context, "%s %s -> %s", [
+			_t(context, StatPresentation.display_name(stat_id)),
+			StatPresentation.format_value(stat_id, float(values.get("before", 0.0))),
+			StatPresentation.format_value(stat_id, float(values.get("after", 0.0))),
+		]))
 	var heal := int(preview.get("heal", 0))
 	if heal > 0:
 		var health_before := int(preview.get("current_health_before", current_health))
@@ -39,28 +35,36 @@ static func for_level_upgrade(
 			mini(health_before + heal, maximum_after)
 		))
 		var restored := health_after - health_before
-		mechanics.append("Current health %d -> %d%s" % [
-			health_before,
-			health_after,
-			" (+%d restored)" % restored if restored > 0 else " (already full)",
-		])
+		mechanics.append(
+			_t(
+				context,
+				"Current health %d -> %d (+%d restored)"
+				if restored > 0
+				else "Current health %d -> %d (already full)",
+				[health_before, health_after, restored] if restored > 0 else [health_before, health_after]
+			)
+		)
 	if mechanics.is_empty():
-		mechanics.append(String(preview.get("message", "Upgrade unavailable.")))
+		mechanics.append(_t(context, preview.get("message", "Upgrade unavailable.")))
 	var presentation := _upgrade_presentation(upgrade, changes)
 	var footer := (
-		"IMMEDIATE RECOVERY"
+		_t(context, "IMMEDIATE RECOVERY")
 		if upgrade.recovery_choice
-		else "STACK %d -> %d / %d" % [current_stack, current_stack + 1, upgrade.max_stacks]
+		else _t(
+			context,
+			"STACK %d -> %d / %d",
+			[current_stack, current_stack + 1, upgrade.max_stacks]
+		)
 	)
 	var view := _base_view_model(
 		upgrade.id,
-		presentation["category"],
-		"RUN UPGRADE",
-		upgrade.display_name,
-		upgrade.description,
+		_t(context, presentation["category"]),
+		_t(context, "RUN UPGRADE"),
+		_t(context, upgrade.display_name),
+		_t(context, upgrade.description),
 		mechanics,
 		footer,
-		"ADD UPGRADE",
+		_t(context, "ADD UPGRADE"),
 		presentation["glyph"],
 		presentation["accent"]
 	)
@@ -71,27 +75,25 @@ static func for_level_upgrade(
 static func for_card(
 	card: CardDefinition,
 	current_stack: int,
-	next_stack: int
+	next_stack: int,
+	context: Node
 ) -> Dictionary:
-	var compatibility := "SHARED"
-	if not card.compatibility.has(&"shared") and not card.compatibility.is_empty():
-		compatibility = String(card.compatibility[0]).to_upper()
-	var preview := _card_mechanics(card, next_stack)
+	var preview := _card_mechanics(card, next_stack, context)
 	var mechanics: Array[String] = preview["lines"]
-	mechanics.push_front("Stack %d -> %d / %d" % [
-		current_stack,
-		next_stack,
-		card.max_stacks,
-	])
+	mechanics.push_front(_t(
+		context,
+		"Stack %d -> %d / %d",
+		[current_stack, next_stack, card.max_stacks]
+	))
 	var view := _base_view_model(
 		card.id,
-		"%s CARD" % compatibility,
-		String(card.rarity),
-		card.display_name,
-		card.description,
+		_t(context, "RUN CARD"),
+		_t(context, String(card.rarity)),
+		_t(context, card.display_name),
+		_t(context, card.description),
 		mechanics,
-		"NO COIN COST",
-		"ADD CARD",
+		_t(context, "NO COIN COST"),
+		_t(context, "ADD CARD"),
 		&"card",
 		_rarity_color(card.rarity)
 	)
@@ -143,75 +145,91 @@ static func _base_view_model(
 	}
 
 
-static func _card_mechanics(card: CardDefinition, next_stack: int) -> Dictionary:
+static func _card_mechanics(
+	card: CardDefinition,
+	next_stack: int,
+	context: Node
+) -> Dictionary:
 	var lines: Array[String] = []
 	var complete := true
 	for effect in card.effects:
 		if effect != null:
-			var line := _format_card_effect(effect, next_stack)
+			var line := _format_card_effect(effect, next_stack, context)
 			if line.is_empty():
 				complete = false
-				line = "Effect details unavailable"
+				line = _t(context, "Effect details unavailable")
 			lines.append(line)
 	if card.internal_cooldown > 0.0:
-		lines.append("Internal cooldown %ss" % _number(card.internal_cooldown))
+		lines.append(_t(
+			context,
+			"Internal cooldown %ss",
+			[_number(card.internal_cooldown)]
+		))
 	return {"lines": lines, "complete": complete}
 
 
-static func _format_card_effect(effect: CardEffectDefinition, stack: int) -> String:
+static func _format_card_effect(
+	effect: CardEffectDefinition,
+	stack: int,
+	context: Node
+) -> String:
 	match effect.effect_type:
 		&"repeat_hit":
-			return "%s%% damage + %s%% stagger after %ss" % [
+			return _t(context, "%s%% damage + %s%% stagger after %ss", [
 				_number(effect.damage_scale * 100.0),
 				_number(effect.stagger_scale * 100.0),
 				_number(effect.delay),
-			]
+			])
 		&"spawn_damage_trail":
-			return "%d damage / %ss trail / %d hit per target" % [
+			return _t(context, "%d damage / %ss trail / %d hit per target", [
 				_stack_int(effect.damage_by_stack, stack),
 				_number(effect.duration),
 				effect.hits_per_target,
-			]
+			])
 		&"add_damage":
-			return "+%d damage" % effect.damage
+			return _t(context, "+%d damage", [effect.damage])
 		&"add_stagger":
-			return "+%d stagger" % effect.stagger
+			return _t(context, "+%d stagger", [effect.stagger])
 		&"area_damage":
-			return "%d damage / %spx radius" % [
+			return _t(context, "%d damage / %spx radius", [
 				effect.damage,
 				_number(_stack_float(effect.radius_by_stack, stack)),
-			]
+			])
 		&"ground_shockwave":
-			return "%d damage / %d stagger / %spx reach" % [
+			return _t(context, "%d damage / %d stagger / %spx reach", [
 				effect.damage,
 				effect.stagger,
 				_number(effect.distance),
-			]
+			])
 		&"arm_next_heavy":
-			return "%ss window / %s%% faster / uninterruptible" % [
+			return _t(context, "%ss window / %s%% faster / uninterruptible", [
 				_number(effect.duration),
 				_number((1.0 - effect.startup_scale) * 100.0),
-			]
+			])
 		&"split_projectile":
-			return "%d arrows x %d damage / +/- %s degrees" % [
+			return _t(context, "%d arrows x %d damage / +/- %s degrees", [
 				effect.projectile_count,
 				effect.damage,
 				_number(effect.angle_degrees),
-			]
+			])
 		&"delayed_target_strike":
-			return "%d damage after %ss" % [effect.damage, _number(effect.delay)]
+			return _t(context, "%d damage after %ss", [effect.damage, _number(effect.delay)])
 		&"repeat_attack_path":
-			return "Repeat resolved hits at %s%% damage" % _number(effect.damage_scale * 100.0)
+			return _t(
+				context,
+				"Repeat resolved hits at %s%% damage",
+				[_number(effect.damage_scale * 100.0)]
+			)
 		&"detonation_mark":
-			return "%d damage / %ss mark / %spx range" % [
+			return _t(context, "%d damage / %ss mark / %spx range", [
 				effect.damage,
 				_number(effect.duration),
 				_number(effect.distance),
-			]
+			])
 		&"heal_player":
-			return "Restore %d health" % effect.health
+			return _t(context, "Restore %d health", [effect.health])
 		&"grant_invulnerability":
-			return "Invulnerable for %ss" % _number(effect.seconds)
+			return _t(context, "Invulnerable for %ss", [_number(effect.seconds)])
 		_:
 			return ""
 
@@ -242,3 +260,7 @@ static func _number(value: float) -> String:
 	while formatted.contains(".") and formatted.ends_with("0"):
 		formatted = formatted.trim_suffix("0")
 	return formatted.trim_suffix(".")
+
+
+static func _t(context: Node, source_value: Variant, values: Array = []) -> String:
+	return Text.resolve(context, source_value, values)

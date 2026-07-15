@@ -8,6 +8,7 @@ const VIEWPORTS: Array[Vector2i] = [
 ]
 
 var _failures: Array[String] = []
+var _localization: Node
 
 
 func _initialize() -> void:
@@ -15,17 +16,21 @@ func _initialize() -> void:
 
 
 func _run() -> void:
+	_localization = root.get_node_or_null("/root/UILocalization")
+	_expect(_localization != null, "gameplay HUD validation needs UILocalization")
 	var packed := load(HUD_SCENE) as PackedScene
 	_expect(packed != null, "gameplay HUD scene should load")
 	if packed == null:
 		_finish()
 		return
-	for viewport_size in VIEWPORTS:
-		await _validate_viewport(packed, viewport_size)
+	for locale in ["en", "ko"]:
+		_expect(bool(_localization.call("set_locale", locale)), "locale should be supported")
+		for viewport_size in VIEWPORTS:
+			await _validate_viewport(packed, viewport_size, locale)
 	_finish()
 
 
-func _validate_viewport(packed: PackedScene, viewport_size: Vector2i) -> void:
+func _validate_viewport(packed: PackedScene, viewport_size: Vector2i, locale: String) -> void:
 	root.size = viewport_size
 	DisplayServer.window_set_size(viewport_size)
 	var hud := packed.instantiate() as Control
@@ -59,6 +64,7 @@ func _validate_viewport(packed: PackedScene, viewport_size: Vector2i) -> void:
 	)
 	_expect(safe_gap_rect.size.x >= 120.0, "%s player-safe gap should be at least 120px" % viewport_size)
 	_expect(hud.find_child("CombatPanel", true, false) == null, "legacy multiline combat panel should be absent")
+	_assert_visible_label_scale(hud, locale, viewport_size)
 	var all_text := _all_label_text(hud).to_upper()
 	for retired_text in ["SKILL 1", "SKILL 2", "SKILL 3", "WARRIOR", "ARCHER", "ASSASSIN", "READY"]:
 		_expect(not all_text.contains(retired_text), "HUD should not expose retired text %s" % retired_text)
@@ -66,14 +72,14 @@ func _validate_viewport(packed: PackedScene, viewport_size: Vector2i) -> void:
 	_expect(combat["intent"] == "ranged", "committed ranged intent should be highlighted")
 	_expect(bool((combat["ranged"] as Dictionary)["active"]), "ranged half of Attack should be active")
 	_expect(not bool((combat["melee"] as Dictionary)["active"]), "melee half should remain inactive")
-	_expect((combat["melee"] as Dictionary)["state"] == "CND 72%", "melee condition should be exact")
-	_expect((combat["ranged"] as Dictionary)["state"] == "ARROW 7/20", "ranged supply should show current and maximum")
-	_expect((combat["guard"] as Dictionary)["condition"] == "Condition 84%", "shield condition should be exact")
-	_expect((combat["guard"] as Dictionary)["stability"] == "Stability 65%", "guard stability should be exact")
+	_expect((combat["melee"] as Dictionary)["state"] == _t("CND %s", ["72%"]), "melee condition should be exact")
+	_expect((combat["ranged"] as Dictionary)["state"] == "%s 7/20" % _t("ARROW"), "ranged supply should show current and maximum")
+	_expect((combat["guard"] as Dictionary)["condition"] == _t("Condition %s", ["84%"]), "shield condition should be exact")
+	_expect((combat["guard"] as Dictionary)["stability"] == _t("Stability %d%%", [65]), "guard stability should be exact")
 	await _assert_guard_feedback_states(hud)
-	_expect((combat["spirit"] as Dictionary)["state"] == "3/4 direct hits", "passive Spirit progress should be visible")
+	_expect((combat["spirit"] as Dictionary)["state"] == _t("%d/4 direct hits", [3]), "passive Spirit progress should remain available")
 	_expect((combat["potion"] as Dictionary)["count"] == "x1", "potion charges should be visible")
-	_expect(String(layout["armor"]).contains("Traveler Coat"), "health cluster should identify current armor")
+	_expect(String(layout["armor"]).contains(_t("Traveler Coat")), "health cluster should identify current armor")
 
 	hud.call("_on_interaction_prompt_changed", "Open cache", true)
 	await process_frame
@@ -86,8 +92,8 @@ func _validate_viewport(packed: PackedScene, viewport_size: Vector2i) -> void:
 		"grants": {"coin": 7, "xp": 3, "rusted_scrap": 1},
 		"equipment_discoveries": [],
 	})
-	_expect(chest_view["title"] == "CHEST OPENED", "reward receipt should preserve its committed title")
-	_expect(String(chest_view["summary"]).contains("+7 Coins"), "reward receipt should preserve exact grant values")
+	_expect(chest_view["title"] == _t("CHEST OPENED"), "reward receipt should preserve its committed title")
+	_expect(String(chest_view["summary"]).contains("+7 %s" % _t("Coins")), "reward receipt should preserve exact grant values")
 	var signal_bus := root.get_node("/root/SignalBus")
 	signal_bus.emit_signal("field_pickup_collected", {
 		"applied": true,
@@ -102,8 +108,11 @@ func _validate_viewport(packed: PackedScene, viewport_size: Vector2i) -> void:
 	_expect(bool(layout["receipt_active"]), "field pickup receipt should occupy the context lane")
 	_expect(not bool(layout["prompt_visible"]), "field pickup receipt should suppress the overlapping prompt")
 	var receipt_view := receipt.get_display_snapshot()
-	_expect(receipt_view["title"] == "VITAL RESTORED", "field pickup should use the Vital receipt title")
-	_expect(receipt_view["summary"] == "Vital Shard  +2 HP", "field pickup should show the exact applied health")
+	_expect(receipt_view["title"] == _t("VITAL RESTORED"), "field pickup should use the Vital receipt title")
+	_expect(
+		receipt_view["summary"] == _t("%s +%s HP", ["Vital Shard", "2"]),
+		"field pickup should show the exact applied health"
+	)
 	_expect(not String(receipt_view["summary"]).contains("heal"), "field pickup receipt should not expose effect IDs")
 	_assert_field_pickup_view_models(receipt)
 
@@ -132,7 +141,7 @@ func _validate_viewport(packed: PackedScene, viewport_size: Vector2i) -> void:
 			]
 		)
 		var boss_name := hud.find_child("BossName", true, false) as Label
-		_expect(boss_name.text == "SLIME KING  64/80  P2", "compact boss title should retain health and phase")
+		_expect(boss_name.text == _t("SLIME KING %d/%d P%d", [64, 80, 2]), "compact boss title should retain health and phase")
 		var boss_title_width := boss_name.get_theme_font("font").get_string_size(
 			boss_name.text,
 			HORIZONTAL_ALIGNMENT_LEFT,
@@ -184,14 +193,17 @@ func _assert_guard_feedback_states(hud: Control) -> void:
 		_expect(guard_view["phase"] == String(guard_case["phase"]), "HUD should expose guard phase %s" % guard_case["phase"])
 		_expect(guard_view["outcome"] == String(guard_case["outcome"]), "HUD should expose guard outcome %s" % guard_case["outcome"])
 		_expect(guard_view["reason"] == String(guard_case["reason"]), "HUD should expose guard reason %s" % guard_case["reason"])
-		_expect(guard_view["name"] == guard_case["label"], "HUD should show guard label %s" % guard_case["label"])
+		_expect(guard_view["name"] == _t(String(guard_case["label"])), "HUD should show guard label %s" % guard_case["label"])
 		_expect(bool(guard_view["feedback_visible"]), "HUD guard feedback should be visible")
 		if int(guard_case.get("condition_cost", 0)) > 0:
 			_expect(String(guard_view["condition"]).contains("-%d CND" % guard_case["condition_cost"]), "HUD should show exact condition cost")
 		if int(guard_case.get("stability_cost", 0)) > 0:
 			_expect(String(guard_view["stability"]).contains("-%d STB" % guard_case["stability_cost"]), "HUD should show exact stability cost")
 		if int(guard_case.get("damage", 0)) > 0 and int(guard_case.get("stability_cost", 0)) == 0:
-			_expect(String(guard_view["stability"]).contains("DAMAGE %d" % guard_case["damage"]), "HUD should show passed damage")
+			_expect(
+				String(guard_view["stability"]).contains(str(guard_case["damage"])),
+				"HUD should show passed damage"
+			)
 	hud.call("_on_combat_state_changed", _combat_snapshot())
 	await process_frame
 
@@ -250,16 +262,22 @@ func _assert_field_pickup_view_models(receipt: RewardReceiptPresenter) -> void:
 		"amount": 1.0,
 		"display_name": "Supply Charge",
 	})
-	_expect(supply["title"] == "SUPPLY RESTOCKED", "Supply pickup should use the Supply receipt title")
-	_expect(supply["summary"] == "Supply Charge  +1 Consumable Charge", "Supply pickup should keep exact charges")
+	_expect(supply["title"] == _t("SUPPLY RESTOCKED"), "Supply pickup should use the Supply receipt title")
+	_expect(
+		supply["summary"] == "%s +1 %s" % [_t("Supply Charge"), _t("Potion Charge")],
+		"Supply pickup should keep exact charges"
+	)
 	var currency := receipt.build_field_pickup_view_model({
 		"effect_type": "grant_currency",
 		"amount": 3.0,
 		"currency_id": "rusted_scrap",
 		"display_name": "Iron Scrap Bundle",
 	})
-	_expect(currency["title"] == "MATERIAL COLLECTED", "Material pickup should use the Material receipt title")
-	_expect(currency["summary"] == "Iron Scrap Bundle  +3 Iron Scrap", "Material pickup should keep exact grants")
+	_expect(currency["title"] == _t("MATERIAL COLLECTED"), "Material pickup should use the Material receipt title")
+	_expect(
+		currency["summary"] == "%s +3 %s" % [_t("Iron Scrap Bundle"), _t("Iron Scrap")],
+		"Material pickup should keep exact grants"
+	)
 	_expect(not String(currency["summary"]).contains("rusted_scrap"), "Currency receipt should not expose raw IDs")
 	var arrows := receipt.build_field_pickup_view_model({
 		"effect_type": "grant_ranged_supply",
@@ -267,8 +285,27 @@ func _assert_field_pickup_view_models(receipt: RewardReceiptPresenter) -> void:
 		"supply_id": "arrows",
 		"display_name": "Arrow Bundle",
 	})
-	_expect(arrows["title"] == "ARROWS RESTOCKED", "Arrow pickup should use a specific supply title")
-	_expect(arrows["summary"] == "Arrow Bundle  +4 Arrows", "Arrow receipt should keep exact supply")
+	_expect(arrows["title"] == _t("ARROWS RESTOCKED"), "Arrow pickup should use a specific supply title")
+	_expect(
+		arrows["summary"] == "%s +4 %s" % [_t("Arrow Bundle"), _t("Arrows")],
+		"Arrow receipt should keep exact supply"
+	)
+
+
+func _assert_visible_label_scale(node: Node, locale: String, viewport_size: Vector2i) -> void:
+	if node is Label and (node as Label).is_visible_in_tree():
+		var label := node as Label
+		_expect(
+			label.get_theme_font_size("font_size") >= 16,
+			"visible HUD label must be >=16px: %s %s %s=%d"
+			% [locale, viewport_size, label.name, label.get_theme_font_size("font_size")]
+		)
+	for child in node.get_children():
+		_assert_visible_label_scale(child, locale, viewport_size)
+
+
+func _t(source: String, values: Array = []) -> String:
+	return String(_localization.call("text", StringName(source), values))
 
 
 func _inside(bounds: Rect2, rect: Rect2) -> bool:
@@ -296,7 +333,7 @@ func _expect(condition: bool, message: String) -> void:
 
 func _finish() -> void:
 	if _failures.is_empty():
-		print("GAMEPLAY_HUD_VALIDATION_OK viewports=3 contextual_attack=paired field_pickup=signal>receipt>prompt")
+		print("GAMEPLAY_HUD_VALIDATION_OK locales=2 viewports=3 contextual_attack=paired field_pickup=signal>receipt>prompt")
 		quit(0)
 		return
 	for failure in _failures:

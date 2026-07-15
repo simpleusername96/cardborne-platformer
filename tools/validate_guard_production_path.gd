@@ -287,7 +287,13 @@ func _assert_feedback(
 	var guard_view := _guard_view(fixture)
 	_expect(String(guard_view.get("outcome", "")) == String(expected_outcome), "HUD should receive the defense outcome")
 	_expect(String(guard_view.get("reason", "")) == String(expected_reason), "HUD should receive the defense reason")
-	_expect(String(guard_view.get("name", "")) == expected_label, "HUD should show the defense label")
+	var localization := root.get_node_or_null("/root/UILocalization")
+	var localized_label := (
+		String(localization.call("text", StringName(expected_label)))
+		if localization != null
+		else expected_label
+	)
+	_expect(String(guard_view.get("name", "")) == localized_label, "HUD should show the defense label")
 
 
 func _assert_overlay(

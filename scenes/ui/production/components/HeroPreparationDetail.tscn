@@ -16,94 +16,102 @@ theme_override_constants/margin_top = 12
 theme_override_constants/margin_right = 14
 theme_override_constants/margin_bottom = 12
 
-[node name="Content" type="VBoxContainer" parent="Margin"]
+[node name="Scroll" type="ScrollContainer" parent="Margin"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Content" type="VBoxContainer" parent="Margin/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
 layout_mode = 2
 theme_override_constants/separation = 7
 
-[node name="Header" type="HBoxContainer" parent="Margin/Content"]
+[node name="Header" type="HBoxContainer" parent="Margin/Scroll/Content"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="ContextLabel" type="Label" parent="Margin/Content/Header"]
+[node name="ContextLabel" type="Label" parent="Margin/Scroll/Content/Header"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 text = "MELEE"
 
-[node name="StateLabel" type="Label" parent="Margin/Content/Header"]
+[node name="StateLabel" type="Label" parent="Margin/Scroll/Content/Header"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "EQUIPPED • GRADE 1"
 horizontal_alignment = 2
 
-[node name="TitleLabel" type="Label" parent="Margin/Content"]
+[node name="TitleLabel" type="Label" parent="Margin/Scroll/Content"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Traveler Sword"
 text_overrun_behavior = 3
 
-[node name="BehaviorHeading" type="Label" parent="Margin/Content"]
+[node name="BehaviorHeading" type="Label" parent="Margin/Scroll/Content"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "BEHAVIOR"
 
-[node name="BehaviorLabel" type="Label" parent="Margin/Content"]
+[node name="BehaviorLabel" type="Label" parent="Margin/Scroll/Content"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Balanced consecutive slashes."
 autowrap_mode = 2
 text_overrun_behavior = 3
 
-[node name="WeaknessHeading" type="Label" parent="Margin/Content"]
+[node name="WeaknessHeading" type="Label" parent="Margin/Scroll/Content"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "WEAKNESS"
 
-[node name="WeaknessLabel" type="Label" parent="Margin/Content"]
+[node name="WeaknessLabel" type="Label" parent="Margin/Scroll/Content"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Limited reach and posture damage."
 autowrap_mode = 2
 text_overrun_behavior = 3
 
-[node name="StatsHeading" type="Label" parent="Margin/Content"]
+[node name="StatsHeading" type="Label" parent="Margin/Scroll/Content"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "CURRENT → RESULT"
 
-[node name="StatsGrid" type="GridContainer" parent="Margin/Content"]
+[node name="StatsGrid" type="GridContainer" parent="Margin/Scroll/Content"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/h_separation = 14
 theme_override_constants/v_separation = 3
 columns = 2
 
-[node name="ConditionLabel" type="Label" parent="Margin/Content"]
+[node name="ConditionLabel" type="Label" parent="Margin/Scroll/Content"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Condition 100 / 100 • Ready"
 text_overrun_behavior = 3
 
-[node name="CostLabel" type="Label" parent="Margin/Content"]
+[node name="CostLabel" type="Label" parent="Margin/Scroll/Content"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "COST  Steel Fragment 0/3"
 autowrap_mode = 2
 text_overrun_behavior = 3
 
-[node name="ReasonLabel" type="Label" parent="Margin/Content"]
+[node name="ReasonLabel" type="Label" parent="Margin/Scroll/Content"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "More materials are required."
 autowrap_mode = 2
 text_overrun_behavior = 3
 
-[node name="Spacer" type="Control" parent="Margin/Content"]
+[node name="Spacer" type="Control" parent="Margin/Scroll/Content"]
 layout_mode = 2
 size_flags_vertical = 3
 mouse_filter = 2
 
-[node name="PrimaryActionButton" type="Button" parent="Margin/Content"]
+[node name="PrimaryActionButton" type="Button" parent="Margin/Scroll/Content"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2

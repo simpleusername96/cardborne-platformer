@@ -3,6 +3,7 @@ extends Control
 
 const Styles = preload("res://scripts/ui/production/ProductionUIStyles.gd")
 const Glyph = preload("res://scripts/ui/production/components/HUDGlyph.gd")
+const Text = preload("res://scripts/ui/localization/LocalizedText.gd")
 
 const POTION_LABELS := {
 	"small_potion": "Small Potion",
@@ -32,11 +33,15 @@ var _potion_panel: PanelContainer
 var _potion_name: Label
 var _potion_count: Label
 var _input_labels: Dictionary = {}
+var _title_labels: Dictionary = {}
 
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_build_ui()
+	var localization := get_node_or_null("/root/UILocalization")
+	if localization != null:
+		localization.connect(&"locale_changed", _on_locale_changed)
 	_apply_layout()
 	_render()
 
@@ -165,11 +170,11 @@ func _attack_choice(icon_id: StringName, fallback_name: String) -> Dictionary:
 	glyph.custom_minimum_size = Vector2(18.0, 18.0)
 	glyph.configure(icon_id, Styles.AMBER if icon_id == &"melee" else Styles.CYAN)
 	row.add_child(glyph)
-	var name := _label(fallback_name, 10, Styles.TEXT_MUTED)
+	var name := _label(fallback_name, Styles.TYPE_CAPTION, Styles.TEXT_MUTED)
 	name.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(name)
-	var state := _label("--", 11, Styles.TEXT)
+	var state := _label("--", Styles.TYPE_CAPTION, Styles.TEXT)
 	state.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	state.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	column.add_child(state)
@@ -190,13 +195,13 @@ func _status_panel(
 	column.add_theme_constant_override("separation", 2)
 	margin.add_child(column)
 	column.add_child(_header(icon_id, input_action, input_fallback, title, accent))
-	var name := _label("--", 11, Styles.TEXT)
+	var name := _label("--", Styles.TYPE_CAPTION, Styles.TEXT)
 	name.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	column.add_child(name)
-	var primary := _label("--", 11, Styles.TEXT_MUTED)
+	var primary := _label("--", Styles.TYPE_CAPTION, Styles.TEXT_MUTED)
 	primary.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	column.add_child(primary)
-	var secondary := _label("--", 10, Styles.TEXT_MUTED)
+	var secondary := _label("--", Styles.TYPE_CAPTION, Styles.TEXT_MUTED)
 	secondary.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	column.add_child(secondary)
 	return {
@@ -220,13 +225,14 @@ func _header(
 	glyph.custom_minimum_size = Vector2(16.0, 16.0)
 	glyph.configure(icon_id, accent)
 	row.add_child(glyph)
-	var title_label := _label(title, 10, accent)
+	var title_label := _label(_t(title), Styles.TYPE_CAPTION, accent)
 	title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_title_labels[title] = title_label
 	row.add_child(title_label)
 	if not input_fallback.is_empty():
-		var input := _label(input_fallback, 11, Styles.TEXT)
+		var input := _label(input_fallback, Styles.TYPE_CAPTION, Styles.TEXT)
 		input.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		input.custom_minimum_size = Vector2(28.0, 18.0)
+		input.custom_minimum_size = Vector2(34.0, 24.0)
 		input.add_theme_stylebox_override(
 			"normal", Styles.panel_style(Color("101518"), Color(accent, 0.8), 1)
 		)
@@ -236,17 +242,20 @@ func _header(
 
 
 func _apply_layout() -> void:
-	custom_minimum_size = Vector2(724.0 if _compact else 810.0, 92.0)
-	_attack_panel.custom_minimum_size = Vector2(196.0 if _compact else 224.0, 92.0)
-	_safe_gap.custom_minimum_size = Vector2(120.0 if _compact else 150.0, 92.0)
-	_guard_panel.custom_minimum_size = Vector2(132.0 if _compact else 148.0, 92.0)
-	_spirit_panel.custom_minimum_size = Vector2(132.0 if _compact else 148.0, 92.0)
-	_potion_panel.custom_minimum_size = Vector2(92.0 if _compact else 108.0, 92.0)
+	_spirit_panel.visible = not _compact
+	custom_minimum_size = Vector2(728.0 if _compact else 954.0, 112.0)
+	_attack_panel.custom_minimum_size = Vector2(250.0 if _compact else 270.0, 112.0)
+	_safe_gap.custom_minimum_size = Vector2(130.0 if _compact else 140.0, 112.0)
+	_guard_panel.custom_minimum_size = Vector2(195.0 if _compact else 205.0, 112.0)
+	_spirit_panel.custom_minimum_size = Vector2(0.0 if _compact else 175.0, 112.0)
+	_potion_panel.custom_minimum_size = Vector2(135.0 if _compact else 140.0, 112.0)
 
 
 func _render() -> void:
 	if _melee_name == null:
 		return
+	for title in _title_labels:
+		(_title_labels[title] as Label).text = _t(String(title))
 	for input_action in _input_labels:
 		var input := _input_labels[input_action] as Label
 		var fallback := String(
@@ -259,12 +268,12 @@ func _render() -> void:
 	var loadout: Dictionary = _combat_snapshot.get("loadout", {})
 	var intent: Dictionary = _combat_snapshot.get("committed_intent", {})
 	var intent_mode := String(intent.get("mode", ""))
-	_melee_name.text = _compact_name(String(loadout.get("melee_display_name", "Melee")))
-	_melee_state.text = "CND %s" % _percent(
+	_melee_name.text = _t(_compact_name(String(loadout.get("melee_display_name", "Melee"))))
+	_melee_state.text = _t("CND %s", [_percent(
 		int(loadout.get("melee_condition", 0)),
 		int(loadout.get("melee_maximum_condition", 0))
-	)
-	_ranged_name.text = _compact_name(String(loadout.get("ranged_display_name", "Ranged")))
+	)])
+	_ranged_name.text = _t(_compact_name(String(loadout.get("ranged_display_name", "Ranged"))))
 	_ranged_state.text = "%s %d/%d" % [
 		_supply_label(String(loadout.get("ranged_resource_id", ""))),
 		maxi(int(loadout.get("ranged_resource_count", 0)), 0),
@@ -273,7 +282,7 @@ func _render() -> void:
 	_apply_choice_style(_melee_panel, Styles.AMBER, intent_mode == "melee")
 	_apply_choice_style(_ranged_panel, Styles.CYAN, intent_mode == "ranged")
 
-	var shield_name := _compact_name(String(loadout.get("shield_display_name", "Shield")))
+	var shield_name := _t(_compact_name(String(loadout.get("shield_display_name", "Shield"))))
 	var shield_condition := _percent(
 		int(loadout.get("shield_condition", 0)),
 		int(loadout.get("shield_maximum_condition", 0))
@@ -286,8 +295,8 @@ func _render() -> void:
 	var feedback_active := bool(feedback.get("active", false))
 	var phase := StringName(guard.get("phase", &"idle"))
 	_guard_name.text = _guard_title(shield_name, phase, feedback, feedback_active)
-	_guard_condition.text = "Condition %s" % shield_condition
-	_guard_stability.text = "Stability %d%%" % stability_percent
+	_guard_condition.text = _t("Condition %s", [shield_condition])
+	_guard_stability.text = _t("Stability %d%%", [stability_percent])
 	if feedback_active:
 		var condition_cost := maxi(int(feedback.get("condition_cost", 0)), 0)
 		var stability_cost := maxi(int(feedback.get("stability_cost", 0)), 0)
@@ -295,31 +304,31 @@ func _render() -> void:
 		if condition_cost > 0:
 			_guard_condition.text = "-%d CND  •  %s" % [condition_cost, shield_condition]
 		elif StringName(feedback.get("outcome", &"")) == &"precise_block":
-			_guard_condition.text = "CND: NO COST"
+			_guard_condition.text = _t("CND: NO COST")
 		if stability_cost > 0:
 			_guard_stability.text = "-%d STB  •  %d%%" % [stability_cost, stability_percent]
 		elif damage > 0:
-			_guard_stability.text = "DAMAGE %d  •  %d%%" % [damage, stability_percent]
+			_guard_stability.text = _t("DAMAGE %d · %d%%", [damage, stability_percent])
 	_apply_guard_style(phase, feedback, feedback_active)
 
 	var spirit: Dictionary = _combat_snapshot.get("spirit", {})
-	_spirit_name.text = _compact_name(String(loadout.get("spirit_stone_display_name", "Spirit Stone")))
+	_spirit_name.text = _t(_compact_name(String(loadout.get("spirit_stone_display_name", "Spirit Stone"))))
 	_spirit_state.text = _spirit_status(spirit)
 
 	var consumable_id := String(_run_snapshot.get("consumable_id", ""))
 	var charges := maxi(int(_run_snapshot.get("consumable_charges", 0)), 0)
-	_potion_name.text = POTION_LABELS.get(consumable_id, "No Potion")
-	_potion_count.text = "x%d" % charges if charges > 0 else "EMPTY"
+	_potion_name.text = _t(String(POTION_LABELS.get(consumable_id, "No Potion")))
+	_potion_count.text = "x%d" % charges if charges > 0 else _t("EMPTY")
 	_potion_count.add_theme_color_override("font_color", Styles.TEXT if charges > 0 else Styles.TEXT_MUTED)
 
 
 func _spirit_status(spirit: Dictionary) -> String:
 	var trigger := String(spirit.get("trigger", ""))
 	if trigger == "direct_attack_sequence":
-		return "%d/4 direct hits" % clampi(int(spirit.get("direct_attack_count", 0)), 0, 4)
+		return _t("%d/4 direct hits", [clampi(int(spirit.get("direct_attack_count", 0)), 0, 4)])
 	if trigger == "precise_guard":
-		return "Precise guard"
-	return "Passive"
+		return _t("Precise guard")
+	return _t("Passive")
 
 
 func _apply_choice_style(panel: PanelContainer, accent: Color, active: bool) -> void:
@@ -340,11 +349,11 @@ func _guard_title(
 	feedback_active: bool
 ) -> String:
 	if feedback_active:
-		return String(feedback.get("label", "GUARD"))
+		return _t(String(feedback.get("label", "GUARD")))
 	return {
-		&"startup": "RAISING  •  %s" % shield_name,
-		&"active": "ACTIVE  •  %s" % shield_name,
-		&"recovery": "RECOVER  •  %s" % shield_name,
+		&"startup": _t("RAISING · %s", [shield_name]),
+		&"active": _t("ACTIVE · %s", [shield_name]),
+		&"recovery": _t("RECOVER · %s", [shield_name]),
 	}.get(phase, shield_name)
 
 
@@ -397,7 +406,15 @@ func _compact_name(value: String) -> String:
 
 
 func _supply_label(resource_id: String) -> String:
-	return {"arrows": "ARROW", "cartridges": "SHOT"}.get(resource_id, "AMMO")
+	return _t(String({"arrows": "ARROW", "cartridges": "SHOT"}.get(resource_id, "AMMO")))
+
+
+func _on_locale_changed(_locale: String) -> void:
+	_render()
+
+
+func _t(source: Variant, values: Array = []) -> String:
+	return Text.resolve(self, source, values)
 
 
 func _percent(current: int, maximum: int) -> String:

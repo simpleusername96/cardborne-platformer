@@ -39,7 +39,7 @@ layout_mode = 2
 theme_override_constants/separation = 10
 
 [node name="Header" type="HBoxContainer" parent="SettingsPanel/Margin/Content"]
-custom_minimum_size = Vector2(0, 42)
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 theme_override_constants/separation = 12
 
@@ -52,7 +52,7 @@ vertical_alignment = 1
 
 [node name="CloseButton" type="Button" parent="SettingsPanel/Margin/Content/Header"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(92, 42)
+custom_minimum_size = Vector2(108, 48)
 layout_mode = 2
 text = "Close"
 
@@ -65,37 +65,44 @@ size_flags_horizontal = 0
 [node name="Body" type="HBoxContainer" parent="SettingsPanel/Margin/Content"]
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_constants/separation = 20
+theme_override_constants/separation = 16
 
-[node name="Preferences" type="VBoxContainer" parent="SettingsPanel/Margin/Content/Body"]
-custom_minimum_size = Vector2(270, 0)
+[node name="PreferencesScroll" type="ScrollContainer" parent="SettingsPanel/Margin/Content/Body"]
+custom_minimum_size = Vector2(310, 0)
 layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Preferences" type="VBoxContainer" parent="SettingsPanel/Margin/Content/Body/PreferencesScroll"]
+custom_minimum_size = Vector2(286, 0)
+layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/separation = 10
 
-[node name="AudioHeading" type="Label" parent="SettingsPanel/Margin/Content/Body/Preferences"]
+[node name="AudioHeading" type="Label" parent="SettingsPanel/Margin/Content/Body/PreferencesScroll/Preferences"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "AUDIO"
 
-[node name="MasterRow" type="HBoxContainer" parent="SettingsPanel/Margin/Content/Body/Preferences"]
-custom_minimum_size = Vector2(0, 42)
+[node name="MasterRow" type="HBoxContainer" parent="SettingsPanel/Margin/Content/Body/PreferencesScroll/Preferences"]
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="MasterLabel" type="Label" parent="SettingsPanel/Margin/Content/Body/Preferences/MasterRow"]
+[node name="MasterLabel" type="Label" parent="SettingsPanel/Margin/Content/Body/PreferencesScroll/Preferences/MasterRow"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(58, 0)
+custom_minimum_size = Vector2(84, 0)
 layout_mode = 2
 text = "Master"
 vertical_alignment = 1
 
-[node name="MasterSlider" type="HSlider" parent="SettingsPanel/Margin/Content/Body/Preferences/MasterRow"]
+[node name="MasterSlider" type="HSlider" parent="SettingsPanel/Margin/Content/Body/PreferencesScroll/Preferences/MasterRow"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 40)
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="MasterValue" type="Label" parent="SettingsPanel/Margin/Content/Body/Preferences/MasterRow"]
+[node name="MasterValue" type="Label" parent="SettingsPanel/Margin/Content/Body/PreferencesScroll/Preferences/MasterRow"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(42, 0)
 layout_mode = 2
@@ -103,25 +110,25 @@ text = "80%"
 horizontal_alignment = 2
 vertical_alignment = 1
 
-[node name="MusicRow" type="HBoxContainer" parent="SettingsPanel/Margin/Content/Body/Preferences"]
-custom_minimum_size = Vector2(0, 42)
+[node name="MusicRow" type="HBoxContainer" parent="SettingsPanel/Margin/Content/Body/PreferencesScroll/Preferences"]
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="MusicLabel" type="Label" parent="SettingsPanel/Margin/Content/Body/Preferences/MusicRow"]
+[node name="MusicLabel" type="Label" parent="SettingsPanel/Margin/Content/Body/PreferencesScroll/Preferences/MusicRow"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(58, 0)
+custom_minimum_size = Vector2(84, 0)
 layout_mode = 2
 text = "Music"
 vertical_alignment = 1
 
-[node name="MusicSlider" type="HSlider" parent="SettingsPanel/Margin/Content/Body/Preferences/MusicRow"]
+[node name="MusicSlider" type="HSlider" parent="SettingsPanel/Margin/Content/Body/PreferencesScroll/Preferences/MusicRow"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 40)
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="MusicValue" type="Label" parent="SettingsPanel/Margin/Content/Body/Preferences/MusicRow"]
+[node name="MusicValue" type="Label" parent="SettingsPanel/Margin/Content/Body/PreferencesScroll/Preferences/MusicRow"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(42, 0)
 layout_mode = 2
@@ -129,25 +136,25 @@ text = "70%"
 horizontal_alignment = 2
 vertical_alignment = 1
 
-[node name="SfxRow" type="HBoxContainer" parent="SettingsPanel/Margin/Content/Body/Preferences"]
-custom_minimum_size = Vector2(0, 42)
+[node name="SfxRow" type="HBoxContainer" parent="SettingsPanel/Margin/Content/Body/PreferencesScroll/Preferences"]
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="SfxLabel" type="Label" parent="SettingsPanel/Margin/Content/Body/Preferences/SfxRow"]
+[node name="SfxLabel" type="Label" parent="SettingsPanel/Margin/Content/Body/PreferencesScroll/Preferences/SfxRow"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(58, 0)
+custom_minimum_size = Vector2(84, 0)
 layout_mode = 2
 text = "SFX"
 vertical_alignment = 1
 
-[node name="SfxSlider" type="HSlider" parent="SettingsPanel/Margin/Content/Body/Preferences/SfxRow"]
+[node name="SfxSlider" type="HSlider" parent="SettingsPanel/Margin/Content/Body/PreferencesScroll/Preferences/SfxRow"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 40)
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="SfxValue" type="Label" parent="SettingsPanel/Margin/Content/Body/Preferences/SfxRow"]
+[node name="SfxValue" type="Label" parent="SettingsPanel/Margin/Content/Body/PreferencesScroll/Preferences/SfxRow"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(42, 0)
 layout_mode = 2
@@ -155,24 +162,38 @@ text = "80%"
 horizontal_alignment = 2
 vertical_alignment = 1
 
-[node name="PreferenceSpacer" type="Control" parent="SettingsPanel/Margin/Content/Body/Preferences"]
-custom_minimum_size = Vector2(0, 12)
+[node name="LanguageSpacer" type="Control" parent="SettingsPanel/Margin/Content/Body/PreferencesScroll/Preferences"]
+custom_minimum_size = Vector2(0, 6)
 layout_mode = 2
 
-[node name="FeedbackHeading" type="Label" parent="SettingsPanel/Margin/Content/Body/Preferences"]
+[node name="LanguageHeading" type="Label" parent="SettingsPanel/Margin/Content/Body/PreferencesScroll/Preferences"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "LANGUAGE"
+
+[node name="LanguageSelector" type="OptionButton" parent="SettingsPanel/Margin/Content/Body/PreferencesScroll/Preferences"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+
+[node name="FeedbackSpacer" type="Control" parent="SettingsPanel/Margin/Content/Body/PreferencesScroll/Preferences"]
+custom_minimum_size = Vector2(0, 6)
+layout_mode = 2
+
+[node name="FeedbackHeading" type="Label" parent="SettingsPanel/Margin/Content/Body/PreferencesScroll/Preferences"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "FEEDBACK"
 
-[node name="ScreenShakeToggle" type="CheckBox" parent="SettingsPanel/Margin/Content/Body/Preferences"]
+[node name="ScreenShakeToggle" type="CheckBox" parent="SettingsPanel/Margin/Content/Body/PreferencesScroll/Preferences"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 42)
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 text = "Screen shake"
 
-[node name="DamageFlashToggle" type="CheckBox" parent="SettingsPanel/Margin/Content/Body/Preferences"]
+[node name="DamageFlashToggle" type="CheckBox" parent="SettingsPanel/Margin/Content/Body/PreferencesScroll/Preferences"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 42)
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 text = "Damage flash"
 
@@ -187,7 +208,7 @@ size_flags_horizontal = 3
 theme_override_constants/separation = 7
 
 [node name="ControlsHeader" type="HBoxContainer" parent="SettingsPanel/Margin/Content/Body/Controls"]
-custom_minimum_size = Vector2(0, 36)
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 theme_override_constants/separation = 12
 
@@ -200,30 +221,30 @@ vertical_alignment = 1
 
 [node name="RestoreAllButton" type="Button" parent="SettingsPanel/Margin/Content/Body/Controls/ControlsHeader"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(112, 36)
+custom_minimum_size = Vector2(150, 48)
 layout_mode = 2
 text = "Restore All"
 
 [node name="ColumnHeader" type="HBoxContainer" parent="SettingsPanel/Margin/Content/Body/Controls"]
-custom_minimum_size = Vector2(0, 20)
+custom_minimum_size = Vector2(0, 26)
 layout_mode = 2
 theme_override_constants/separation = 8
 
 [node name="ActionColumn" type="Label" parent="SettingsPanel/Margin/Content/Body/Controls/ColumnHeader"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(105, 0)
+custom_minimum_size = Vector2(128, 0)
 layout_mode = 2
 text = "ACTION"
 
 [node name="KeyboardColumn" type="Label" parent="SettingsPanel/Margin/Content/Body/Controls/ColumnHeader"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(155, 0)
+custom_minimum_size = Vector2(148, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 text = "KEYBOARD"
 
 [node name="DefaultColumnSpacer" type="Control" parent="SettingsPanel/Margin/Content/Body/Controls/ColumnHeader"]
-custom_minimum_size = Vector2(78, 0)
+custom_minimum_size = Vector2(104, 0)
 layout_mode = 2
 
 [node name="BindingsScroll" type="ScrollContainer" parent="SettingsPanel/Margin/Content/Body/Controls"]
@@ -241,7 +262,7 @@ theme_override_constants/separation = 4
 
 [node name="BindingStatus" type="Label" parent="SettingsPanel/Margin/Content/Body/Controls"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 34)
+custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 text = "Select a key to remap it."
 autowrap_mode = 2

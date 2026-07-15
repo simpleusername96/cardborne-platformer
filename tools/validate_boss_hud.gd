@@ -32,8 +32,8 @@ func _run() -> void:
 	var health_bar := hud.find_child("BossHealth", true, false) as ProgressBar
 	var stagger_bar := hud.find_child("BossStagger", true, false) as ProgressBar
 	_expect(panel != null and panel.visible, "Slime Court should reveal boss HUD")
-	_expect(name_label != null and name_label.text == "SLIME KING  64/80  P2", "compact boss header should retain health and phase")
-	_expect(status_label != null and status_label.text == "SHADOW - MOVE", "Jump Slam startup should name its response")
+	_expect(name_label != null and name_label.text == _t("SLIME KING %d/%d P%d", [64, 80, 2]), "compact boss header should retain health and phase")
+	_expect(status_label != null and status_label.text == _t("SHADOW - MOVE"), "Jump Slam startup should name its response")
 	_expect(health_bar != null and is_equal_approx(health_bar.value, 64.0), "health bar should consume boss snapshot")
 	_expect(stagger_bar != null and is_equal_approx(stagger_bar.value, 35.0), "stagger bar should consume boss snapshot")
 	var layout := hud.call("get_layout_snapshot") as Dictionary
@@ -48,12 +48,12 @@ func _run() -> void:
 
 	hud.call("_on_boss_snapshot", _boss_snapshot(&"poison_bands", &"active"))
 	if status_label != null:
-		_expect(status_label.text == "HOLD SAFE FLOOR", "active Poison should retain its learned response")
+		_expect(status_label.text == _t("HOLD SAFE FLOOR"), "active Poison should retain its learned response")
 	var staggered := _boss_snapshot(&"", &"idle")
 	staggered["actor_state"] = &"staggered"
 	hud.call("_on_boss_snapshot", staggered)
 	if status_label != null:
-		_expect(status_label.text == "STAGGERED - ATTACK", "stagger should expose the punish window")
+		_expect(status_label.text == _t("STAGGERED · ATTACK"), "stagger should expose the punish window")
 
 	hud.call("_on_stage_started", "ruin_approach", "Ruin Approach")
 	_expect(panel != null and not panel.visible, "normal stages should hide boss HUD")
@@ -77,6 +77,11 @@ func _boss_snapshot(pattern_id: StringName, state: StringName) -> Dictionary:
 		"stagger_meter": 35,
 		"pattern": {"pattern_id": pattern_id, "state": state},
 	}
+
+
+func _t(source: StringName, values: Array = []) -> String:
+	var localization := root.get_node_or_null("/root/UILocalization")
+	return String(localization.call("text", source, values)) if localization != null else String(source)
 
 
 func _expect(condition: bool, message: String) -> void:

@@ -233,8 +233,8 @@ func _validate_hud(run_director: Node, game: Node, stage: Variant) -> void:
 	var melee: Dictionary = combat.get("melee", {})
 	var ranged: Dictionary = combat.get("ranged", {})
 	_expect(
-		String(melee.get("name", "")).contains("Sword")
-		and String(ranged.get("name", "")).contains("Bow"),
+		String(melee.get("name", "")).contains(_t("Sword"))
+		and String(ranged.get("name", "")).contains(_t("Bow")),
 		"HUD should expose both halves of the Traveler's contextual attack"
 	)
 	var bus := root.get_node_or_null("/root/SignalBus")
@@ -245,7 +245,7 @@ func _validate_hud(run_director: Node, game: Node, stage: Variant) -> void:
 	_expect(
 		bool(layout.get("prompt_visible", false))
 		and String(layout.get("prompt_binding", "")) == binding
-		and String(layout.get("prompt_text", "")) == "Enter gate",
+		and String(layout.get("prompt_text", "")) == _t("Enter gate"),
 		"interaction prompt should use current binding and message"
 	)
 	bus.emit_signal("interaction_prompt_changed", "", false)
@@ -399,6 +399,11 @@ func _defeat_for_flow_validation(enemy: Variant, source: Node) -> void:
 func _expect(condition: bool, message: String) -> void:
 	if not condition:
 		_failures.append(message)
+
+
+func _t(source: StringName, values: Array = []) -> String:
+	var localization := root.get_node_or_null("/root/UILocalization")
+	return String(localization.call("text", source, values)) if localization != null else String(source)
 
 
 func _finish() -> void:

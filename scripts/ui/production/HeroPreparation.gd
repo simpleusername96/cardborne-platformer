@@ -8,6 +8,7 @@ signal settings_requested
 signal back_requested
 
 const Styles = preload("res://scripts/ui/production/ProductionUIStyles.gd")
+const Text = preload("res://scripts/ui/localization/LocalizedText.gd")
 
 const SLOT_ORDER: Array[StringName] = [
 	&"melee",
@@ -63,6 +64,8 @@ var _selected_slot: StringName = &"melee"
 var _selected_ids: Dictionary = {}
 var _compact_layout := false
 var _snapshot_available := false
+var _persistence_state: StringName = &"saved"
+var _status_source := "Select a model to inspect its next action."
 
 
 func _ready() -> void:
@@ -77,6 +80,10 @@ func _ready() -> void:
 	if not ProfileState.persistence_failed.is_connected(_on_persistence_failed):
 		ProfileState.persistence_failed.connect(_on_persistence_failed)
 	get_viewport().size_changed.connect(_on_viewport_size_changed)
+	var localization := get_node_or_null("/root/UILocalization")
+	if localization != null:
+		localization.connect(&"locale_changed", _on_locale_changed)
+	_apply_copy()
 	refresh_from_profile(false)
 	call_deferred("_establish_initial_focus")
 
@@ -166,23 +173,39 @@ func _apply_styles() -> void:
 	Styles.apply_button(_tutorial_button, Styles.MOSS, true)
 	Styles.apply_button(_settings_button, Styles.CYAN, true)
 	Styles.apply_button(_start_button, Styles.AMBER)
-	Styles.configure_label(%ScreenEyebrow, 10, Styles.AMBER)
-	Styles.configure_label(%HeroNameLabel, 26, Styles.TEXT)
-	Styles.configure_label(%StageLabel, 12, Styles.TEXT_MUTED)
-	Styles.configure_label(_persistence_label, 11, Styles.MOSS)
-	Styles.configure_label(%LoadoutHeading, 12, Styles.TEXT_MUTED)
-	Styles.configure_label(%MaterialsHeading, 10, Styles.TEXT_MUTED)
-	Styles.configure_label(%SuppliesHeading, 10, Styles.TEXT_MUTED)
-	Styles.configure_label(_materials_label, 10, Styles.TEXT)
-	Styles.configure_label(_supplies_label, 10, Styles.TEXT)
-	Styles.configure_label(_model_heading, 12, Styles.TEXT_MUTED)
-	Styles.configure_label(_model_subtitle, 10, Styles.TEXT_MUTED)
-	Styles.configure_label(_status_label, 11, Styles.TEXT_MUTED)
+	Styles.configure_label(%ScreenEyebrow, Styles.TYPE_CAPTION, Styles.AMBER)
+	Styles.configure_label(%HeroNameLabel, 28, Styles.TEXT)
+	Styles.configure_label(%StageLabel, Styles.TYPE_CAPTION, Styles.TEXT_MUTED)
+	Styles.configure_label(_persistence_label, Styles.TYPE_CAPTION, Styles.MOSS)
+	Styles.configure_label(%LoadoutHeading, Styles.TYPE_CAPTION, Styles.TEXT_MUTED)
+	Styles.configure_label(%MaterialsHeading, Styles.TYPE_CAPTION, Styles.TEXT_MUTED)
+	Styles.configure_label(%SuppliesHeading, Styles.TYPE_CAPTION, Styles.TEXT_MUTED)
+	Styles.configure_label(_materials_label, Styles.TYPE_CAPTION, Styles.TEXT)
+	Styles.configure_label(_supplies_label, Styles.TYPE_CAPTION, Styles.TEXT)
+	Styles.configure_label(_model_heading, Styles.TYPE_CAPTION, Styles.TEXT_MUTED)
+	Styles.configure_label(_model_subtitle, Styles.TYPE_CAPTION, Styles.TEXT_MUTED)
+	Styles.configure_label(_status_label, Styles.TYPE_CAPTION, Styles.TEXT_MUTED)
 	_set_persistence_state(&"saved")
 
 
+func _apply_copy() -> void:
+	%ScreenEyebrow.text = _t("PREPARATION • STAGE 1")
+	%HeroNameLabel.text = _t("Traveler")
+	%StageLabel.text = _t("Ruin Approach")
+	_back_button.text = _t("Back")
+	_tutorial_button.text = _t("Begin Trial")
+	_settings_button.text = _t("Settings")
+	%LoadoutHeading.text = _t("TRAVELER LOADOUT")
+	%MaterialsHeading.text = _t("MATERIALS")
+	%SuppliesHeading.text = _t("RANGED SUPPLIES")
+	_start_button.text = _t("Start Stage 1")
+	_status_label.text = _t(_status_source)
+	_set_persistence_state(_persistence_state)
+
+
 func _apply_layout() -> void:
-	var viewport_width := get_viewport_rect().size.x
+	var viewport_size := get_viewport_rect().size
+	var viewport_width := viewport_size.x
 	var horizontal_margin := 12 if _compact_layout else maxi(20, int((viewport_width - 1280.0) * 0.5))
 	horizontal_margin = mini(horizontal_margin, 320)
 	_outer_margin.add_theme_constant_override("margin_left", horizontal_margin)
@@ -203,25 +226,38 @@ func _apply_layout() -> void:
 	_loadout_panel.custom_minimum_size.x = 190.0 if _compact_layout else 238.0
 	_model_panel.custom_minimum_size.x = 215.0 if _compact_layout else 290.0
 	_detail.custom_minimum_size.x = 0.0 if _compact_layout else 420.0
-	var panel_height := 410.0 if _compact_layout else 560.0
+	var header_height := 62.0 if _compact_layout else 85.0
+	var footer_height := Styles.TARGET_HEIGHT
+	var page_gaps := float((5 if _compact_layout else 9) * 2)
+	var available_height := (
+		viewport_size.y
+		- float(vertical_margin * 2)
+		- header_height
+		- footer_height
+		- page_gaps
+	)
+	var panel_height := clampf(available_height, 320.0, 560.0)
 	for panel in [_loadout_panel, _model_panel, _detail]:
 		panel.custom_minimum_size.y = panel_height
 		panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	for button_value in _slot_buttons.values():
 		var slot_button := button_value as Button
-		slot_button.custom_minimum_size.y = 40.0 if _compact_layout else 44.0
-		slot_button.add_theme_font_size_override("font_size", 12 if _compact_layout else 14)
-	_back_button.custom_minimum_size.y = 40.0
-	_tutorial_button.custom_minimum_size.y = 40.0
-	_settings_button.custom_minimum_size.y = 40.0
-	_start_button.custom_minimum_size.y = 40.0 if _compact_layout else 44.0
+		slot_button.custom_minimum_size.y = Styles.TARGET_HEIGHT
+		slot_button.add_theme_font_size_override("font_size", Styles.TYPE_CAPTION)
+	_back_button.custom_minimum_size.y = Styles.TARGET_HEIGHT
+	_tutorial_button.custom_minimum_size.y = Styles.TARGET_HEIGHT
+	_settings_button.custom_minimum_size.y = Styles.TARGET_HEIGHT
+	_start_button.custom_minimum_size.y = Styles.TARGET_HEIGHT
 	for header_button in [_back_button, _tutorial_button, _settings_button]:
-		header_button.add_theme_font_size_override("font_size", 13 if _compact_layout else 16)
-	_start_button.add_theme_font_size_override("font_size", 14 if _compact_layout else 17)
+		header_button.add_theme_font_size_override("font_size", Styles.TYPE_BUTTON)
+	_start_button.add_theme_font_size_override("font_size", Styles.TYPE_BUTTON)
 	%StageLabel.visible = not _compact_layout
+	%MaterialsHeading.visible = not _compact_layout
+	_materials_label.visible = not _compact_layout
 	%SuppliesHeading.visible = not _compact_layout
-	Styles.configure_label(%HeroNameLabel, 21 if _compact_layout else 26, Styles.TEXT)
-	Styles.configure_label(%StageLabel, 10 if _compact_layout else 12, Styles.TEXT_MUTED)
+	_supplies_label.visible = not _compact_layout
+	Styles.configure_label(%HeroNameLabel, 26 if _compact_layout else 28, Styles.TEXT)
+	Styles.configure_label(%StageLabel, Styles.TYPE_CAPTION, Styles.TEXT_MUTED)
 	_update_model_detail()
 
 
@@ -266,12 +302,12 @@ func _render_unavailable_snapshot() -> void:
 	_start_button.disabled = true
 	_clear_model_list()
 	var label := Label.new()
-	label.text = "Preparation is unavailable."
+	label.text = _t("Preparation is unavailable.")
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	Styles.configure_label(label, 12, Styles.TEXT_MUTED)
+	Styles.configure_label(label, Styles.TYPE_BODY, Styles.TEXT_MUTED)
 	_model_list.add_child(label)
-	_materials_label.text = "Balances unavailable"
-	_supplies_label.text = "Supplies unavailable"
+	_materials_label.text = _t("Balances unavailable")
+	_supplies_label.text = _t("Supplies unavailable")
 	_detail.configure_unavailable(
 		"Preparation unavailable",
 		"Return after preparation finishes loading.",
@@ -283,7 +319,7 @@ func _render_unavailable_snapshot() -> void:
 
 func _update_tutorial_button() -> void:
 	var tutorial := _as_dictionary(_snapshot.get("tutorial", {}))
-	_tutorial_button.text = "Replay Trial" if bool(tutorial.get("resolved", false)) else "Begin Trial"
+	_tutorial_button.text = _t("Replay Trial") if bool(tutorial.get("resolved", false)) else _t("Begin Trial")
 
 
 func _update_balances() -> void:
@@ -292,20 +328,22 @@ func _update_balances() -> void:
 	for pair in MATERIAL_ROWS:
 		var left_id := String(pair[0])
 		var right_id := String(pair[1])
-		material_lines.append("%s %d  •  %s %d" % [
-			String(MATERIAL_BALANCE_LABELS[left_id]),
+		material_lines.append("%s %d · %s %d" % [
+			_t(MATERIAL_BALANCE_LABELS[left_id]),
 			int(materials.get(left_id, 0)),
-			String(MATERIAL_BALANCE_LABELS[right_id]),
+			_t(MATERIAL_BALANCE_LABELS[right_id]),
 			int(materials.get(right_id, 0)),
 		])
 	_materials_label.text = "\n".join(material_lines)
 
 	var supplies := _as_dictionary(_snapshot.get("ranged_supplies", {}))
-	_supplies_label.text = "Arrows %d\nCartridges %d" % [
+	_supplies_label.text = "%s %d\n%s %d" % [
+		_t("Arrows"),
 		int(supplies.get("arrows", 0)),
+		_t("Cartridges"),
 		int(supplies.get("cartridges", 0)),
 	]
-	_supplies_label.text += "\nHealing Potion prepared"
+	_supplies_label.text += "\n" + _t("Healing Potion prepared")
 
 
 func _update_slot_buttons() -> void:
@@ -314,9 +352,9 @@ func _update_slot_buttons() -> void:
 		var selected := slot_id == _selected_slot
 		var summary := _slot_summary(slot_id)
 		button.text = (
-			String(SLOT_LABELS[String(slot_id)])
+			_t(SLOT_LABELS[String(slot_id)])
 			if _compact_layout
-			else "%s\n%s" % [String(SLOT_LABELS[String(slot_id)]), summary]
+			else "%s\n%s" % [_t(SLOT_LABELS[String(slot_id)]), summary]
 		)
 		button.button_pressed = selected
 		Styles.apply_button(button, Styles.CYAN, not selected)
@@ -335,14 +373,14 @@ func _slot_summary(slot_id: StringName) -> String:
 			if option_value is Dictionary:
 				var option := option_value as Dictionary
 				if String(option.get("model_id", "")) == equipped_id:
-					return String(option.get("display_name", "Unavailable"))
-		return "Unavailable"
+					return _t(String(option.get("display_name", "Unavailable")))
+		return _t("Unavailable")
 	if slot_id == &"spirit_stone":
 		for stone_value in _snapshot.get("spirit_stones", []):
 			if stone_value is Dictionary and bool((stone_value as Dictionary).get("equipped", false)):
-				return String((stone_value as Dictionary).get("display_name", "Unavailable"))
-		return "Unavailable"
-	return "Healing Potion"
+				return _t(String((stone_value as Dictionary).get("display_name", "Unavailable")))
+		return _t("Unavailable")
+	return _t("Healing Potion")
 
 
 func _select_slot(slot_id: StringName) -> void:
@@ -357,11 +395,11 @@ func _select_slot(slot_id: StringName) -> void:
 func _rebuild_model_list() -> void:
 	_clear_model_list()
 	_model_buttons.clear()
-	_model_heading.text = String(SLOT_LABELS.get(String(_selected_slot), "Equipment")).to_upper()
+	_model_heading.text = _t(SLOT_LABELS.get(String(_selected_slot), "Equipment")).to_upper()
 	_model_subtitle.text = (
-		"PASSIVE CHOICES"
+		_t("PASSIVE CHOICES")
 		if _selected_slot == &"spirit_stone"
-		else ("STAGE SUPPLY" if _selected_slot == &"consumable" else "MODELS AND BLUEPRINTS")
+		else (_t("STAGE SUPPLY") if _selected_slot == &"consumable" else _t("MODELS AND BLUEPRINTS"))
 	)
 	if _selected_slot in EQUIPMENT_SLOTS:
 		_build_equipment_model_list()
@@ -388,7 +426,7 @@ func _build_equipment_model_list() -> void:
 		var option := option_value as Dictionary
 		var model_id := String(option.get("model_id", ""))
 		var button := _make_model_button(
-			String(option.get("display_name", "Equipment")),
+			_t(String(option.get("display_name", "Equipment"))),
 			_equipment_model_state(option),
 			model_id == selected_id
 		)
@@ -412,11 +450,11 @@ func _build_spirit_stone_list() -> void:
 			continue
 		var stone := stone_value as Dictionary
 		var stone_id := String(stone.get("id", ""))
-		var state := "Equipped" if bool(stone.get("equipped", false)) else (
-			"Owned" if bool(stone.get("unlocked", false)) else "Locked"
+		var state := _t("Equipped") if bool(stone.get("equipped", false)) else (
+			_t("Owned") if bool(stone.get("unlocked", false)) else _t("Locked")
 		)
 		var button := _make_model_button(
-			String(stone.get("display_name", "Spirit Stone")),
+			_t(String(stone.get("display_name", "Spirit Stone"))),
 			state,
 			stone_id == selected_id
 		)
@@ -431,7 +469,7 @@ func _build_consumable_list() -> void:
 		_snapshot.get("loadout", {})
 	).get("consumable", "")))
 	_selected_ids["consumable"] = String(consumable_id)
-	var button := _make_model_button("Healing Potion", "Prepared • 1 use", true)
+	var button := _make_model_button(_t("Healing Potion"), _t("Prepared · 1 use"), true)
 	button.disabled = true
 	_model_list.add_child(button)
 	_model_buttons.append(button)
@@ -441,14 +479,14 @@ func _make_model_button(title: String, state: String, selected: bool) -> Button:
 	var button := Button.new()
 	button.name = "PreparationModelButton"
 	button.text = "%s%s\n%s" % ["› " if selected else "", title, state]
-	button.custom_minimum_size = Vector2(0.0, 46.0 if _compact_layout else 52.0)
+	button.custom_minimum_size = Vector2(0.0, 52.0)
 	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	button.toggle_mode = true
 	button.button_pressed = selected
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	button.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	Styles.apply_button(button, Styles.AMBER if selected else Styles.CYAN, not selected)
-	button.add_theme_font_size_override("font_size", 13 if _compact_layout else 15)
+	button.add_theme_font_size_override("font_size", Styles.TYPE_CAPTION)
 	if selected:
 		button.add_theme_stylebox_override(
 			"normal",
@@ -459,10 +497,10 @@ func _make_model_button(title: String, state: String, selected: bool) -> Button:
 
 func _equipment_model_state(option: Dictionary) -> String:
 	if not bool(option.get("crafted", false)):
-		return "Blueprint" if bool(option.get("blueprint_unlocked", false)) else "Locked blueprint"
+		return _t("Blueprint") if bool(option.get("blueprint_unlocked", false)) else _t("Locked blueprint")
 	var runtime := _as_dictionary(option.get("runtime", {}))
-	var grade := "Grade 2" if String(runtime.get("grade_id", "")) == "grade_2" else "Grade 1"
-	return "%s • %s" % ["Equipped" if bool(option.get("equipped", false)) else "Owned", grade]
+	var grade := _t("Grade 2") if String(runtime.get("grade_id", "")) == "grade_2" else _t("Grade 1")
+	return "%s · %s" % [_t("Equipped") if bool(option.get("equipped", false)) else _t("Owned"), grade]
 
 
 func _select_model(model_id: StringName) -> void:
@@ -567,20 +605,22 @@ func _on_persistence_failed(_message: String) -> void:
 
 
 func _set_persistence_state(state: StringName) -> void:
+	_persistence_state = state
 	match state:
 		&"saving":
-			_persistence_label.text = "… Saving"
+			_persistence_label.text = _t("… Saving")
 			_persistence_label.add_theme_color_override("font_color", Styles.TEXT_MUTED)
 		&"failed":
-			_persistence_label.text = "! Save failed"
+			_persistence_label.text = _t("! Save failed")
 			_persistence_label.add_theme_color_override("font_color", Styles.CORAL)
 		_:
-			_persistence_label.text = "✓ Saved locally"
+			_persistence_label.text = _t("✓ Saved locally")
 			_persistence_label.add_theme_color_override("font_color", Styles.MOSS)
 
 
 func _set_status(message: String, color: Color) -> void:
-	_status_label.text = message
+	_status_source = message
+	_status_label.text = _t(message)
 	_status_label.add_theme_color_override("font_color", color)
 
 
@@ -636,6 +676,15 @@ func _establish_initial_focus() -> void:
 	var button := _slot_buttons.get(_selected_slot) as Button
 	if button != null:
 		button.grab_focus()
+
+
+func _on_locale_changed(_locale: String) -> void:
+	_apply_copy()
+	refresh_from_profile(true)
+
+
+func _t(source: Variant, values: Array = []) -> String:
+	return Text.resolve(self, source, values)
 
 
 func _as_dictionary(value: Variant) -> Dictionary:

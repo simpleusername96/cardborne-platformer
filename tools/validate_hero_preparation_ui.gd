@@ -36,6 +36,7 @@ const FORBIDDEN_VISIBLE_TEXT: Array[String] = [
 
 var _failures: Array[String] = []
 var _profile_state: Node
+var _localization: Node
 var _last_equipment_signal: Dictionary = {}
 var _last_stone_signal: StringName
 var _top_events: Array[String] = []
@@ -47,10 +48,13 @@ func _initialize() -> void:
 
 func _run() -> void:
 	_profile_state = root.get_node_or_null("/root/ProfileState")
+	_localization = root.get_node_or_null("/root/UILocalization")
 	_expect(_profile_state != null, "Hero Preparation validation needs ProfileState")
-	if _profile_state == null:
+	_expect(_localization != null, "Hero Preparation validation needs UILocalization")
+	if _profile_state == null or _localization == null:
 		_finish()
 		return
+	_localization.call("set_locale", "en")
 	_profile_state.initialize_for_tests(
 		EQUIPMENT_CATALOG,
 		MASTERY_CATALOG,
@@ -67,6 +71,8 @@ func _run() -> void:
 		"rendering and selection must not mutate the preparation snapshot"
 	)
 	await _validate_action_and_signal_contracts()
+	await _validate_korean_rendering()
+	_localization.call("set_locale", "en")
 	_finish()
 
 
@@ -80,15 +86,19 @@ func _validate_viewport(viewport_size: Vector2i) -> void:
 	await _settle()
 
 	var visible_text := _collect_text(screen)
+	var compact := viewport_size.x <= 1050 or viewport_size.y <= 600
 	_expect(visible_text.contains("Traveler"), "%s should show the single Traveler" % viewport_size)
 	_expect(visible_text.contains("STAGE 1"), "%s should show the next stage" % viewport_size)
 	_expect(visible_text.contains("Spirit Stone"), "%s should show the Spirit Stone slot" % viewport_size)
-	_expect(visible_text.contains("Healing Potion"), "%s should summarize the consumable" % viewport_size)
-	_expect(visible_text.contains("MATERIALS"), "%s should show material balances" % viewport_size)
-	_expect(
-		visible_text.contains("Arrows") and visible_text.contains("Cartridges"),
-		"%s should show supply balances" % viewport_size
-	)
+	if compact:
+		_expect(not visible_text.contains("MATERIALS"), "%s should hide secondary balances" % viewport_size)
+	else:
+		_expect(visible_text.contains("Healing Potion"), "%s should summarize the consumable" % viewport_size)
+		_expect(visible_text.contains("MATERIALS"), "%s should show material balances" % viewport_size)
+		_expect(
+			visible_text.contains("Arrows") and visible_text.contains("Cartridges"),
+			"%s should show supply balances" % viewport_size
+		)
 	_expect(visible_text.contains("Saved locally"), "%s should show persistence status" % viewport_size)
 
 	for button_name in REQUIRED_SLOT_BUTTONS:
@@ -106,14 +116,28 @@ func _validate_viewport(viewport_size: Vector2i) -> void:
 		_expect(_label_text(detail, "ConditionLabel").contains("Condition"), "equipment condition should be visible")
 		var action := detail.find_child("PrimaryActionButton", true, false) as Button
 		_expect(action != null and action.text == "Recraft to Grade 2", "full Grade 1 equipment should offer recraft")
+		if compact:
+			var consumable := screen.find_child("ConsumableButton", true, false) as Button
+			var melee := screen.find_child("MeleeButton", true, false) as Button
+			if consumable != null:
+				consumable.pressed.emit()
+				await _settle()
+				_expect(
+					_label_text(detail, "TitleLabel") == "Healing Potion",
+					"%s should reveal the compact consumable summary on selection" % viewport_size
+				)
+			if melee != null:
+				melee.pressed.emit()
+				await _settle()
 
 	_validate_no_forbidden_text(screen, viewport_size)
 	_validate_targets(screen, viewport_size)
+	_validate_type_scale(screen, viewport_size)
 	await _validate_focus(screen, viewport_size)
 	_validate_rects(screen, viewport_size)
 	_validate_major_layout(screen, viewport_size)
 	_validate_text_fit(screen, viewport_size)
-	await _capture_if_requested(viewport_size)
+	await _capture_if_requested(viewport_size, "en")
 
 	screen.queue_free()
 	await process_frame
@@ -283,8 +307,8 @@ func _validate_targets(screen: Control, viewport_size: Vector2i) -> void:
 			continue
 		visible_buttons += 1
 		_expect(
-			button.size.y >= 40.0,
-			"%s target %s is shorter than 40px: %.1f" % [viewport_size, button.name, button.size.y]
+			button.size.y >= 48.0,
+			"%s target %s is shorter than 48px: %.1f" % [viewport_size, button.name, button.size.y]
 		)
 		_expect(
 			button.focus_mode != Control.FOCUS_NONE,
@@ -332,6 +356,8 @@ func _validate_rects(screen: Control, viewport_size: Vector2i) -> void:
 		var rect := control.get_global_rect()
 		if rect.size.x <= 0.0 or rect.size.y <= 0.0:
 			continue
+		if _is_scroll_descendant(control, screen):
+			continue
 		_expect(
 			viewport_rect.encloses(rect),
 			"%s %s exceeds the viewport: %s" % [viewport_size, control.name, rect]
@@ -367,6 +393,48 @@ func _validate_text_fit(screen: Control, viewport_size: Vector2i) -> void:
 				int(label.call("get_visible_line_count")) >= int(label.call("get_line_count")),
 				"%s label %s clips wrapped text" % [viewport_size, label.name]
 			)
+
+
+func _is_scroll_descendant(control: Control, screen: Control) -> bool:
+	var parent := control.get_parent()
+	while parent != null and parent != screen:
+		if parent is ScrollContainer:
+			return true
+		parent = parent.get_parent()
+	return false
+
+
+func _validate_type_scale(screen: Control, viewport_size: Vector2i) -> void:
+	for node in screen.find_children("*", "Control", true, false):
+		var control := node as Control
+		if control == null or not control.is_visible_in_tree():
+			continue
+		if control is Label or control is BaseButton:
+			_expect(
+				control.get_theme_font_size("font_size") >= 16,
+				"%s %s uses text smaller than 16px" % [viewport_size, control.name]
+			)
+
+
+func _validate_korean_rendering() -> void:
+	_localization.call("set_locale", "ko")
+	for viewport_size in VIEWPORTS:
+		_set_viewport(viewport_size)
+		var screen := (load(HERO_PREPARATION_SCENE) as PackedScene).instantiate() as Control
+		root.add_child(screen)
+		await _settle()
+		var visible_text := _collect_text(screen)
+		_expect(visible_text.contains("여행자"), "%s Korean preparation should localize the hero" % viewport_size)
+		_expect(visible_text.contains("저장"), "%s Korean preparation should localize save status" % viewport_size)
+		_expect(visible_text.contains("공격") or visible_text.contains("근접"), "%s Korean preparation should localize loadout copy" % viewport_size)
+		_validate_targets(screen, viewport_size)
+		_validate_type_scale(screen, viewport_size)
+		_validate_rects(screen, viewport_size)
+		_validate_major_layout(screen, viewport_size)
+		_validate_text_fit(screen, viewport_size)
+		await _capture_if_requested(viewport_size, "ko")
+		screen.queue_free()
+		await process_frame
 
 
 func _validate_no_forbidden_text(screen: Control, viewport_size: Vector2i) -> void:
@@ -405,14 +473,15 @@ func _settle() -> void:
 		await process_frame
 
 
-func _capture_if_requested(viewport_size: Vector2i) -> void:
+func _capture_if_requested(viewport_size: Vector2i, locale: String) -> void:
 	if OS.get_environment("CAPTURE_HERO_PREPARATION_UI") != "1":
 		return
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(CAPTURE_DIR))
 	await RenderingServer.frame_post_draw
 	var image := root.get_texture().get_image()
-	var output_path := "%s/hero_preparation_%dx%d.png" % [
+	var output_path := "%s/hero_preparation_%s_%dx%d.png" % [
 		CAPTURE_DIR,
+		locale,
 		viewport_size.x,
 		viewport_size.y,
 	]

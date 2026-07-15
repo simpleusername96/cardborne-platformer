@@ -4,6 +4,7 @@ extends Control
 signal presentation_state_changed(active: bool)
 
 const Styles = preload("res://scripts/ui/production/ProductionUIStyles.gd")
+const Text = preload("res://scripts/ui/localization/LocalizedText.gd")
 const DISPLAY_SECONDS := 2.8
 const PERMANENT_REWARD_SECONDS := 4.0
 const FADE_SECONDS := 0.22
@@ -38,6 +39,9 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_build_ui()
+	var localization := get_node_or_null("/root/UILocalization")
+	if localization != null:
+		localization.connect(&"locale_changed", _on_locale_changed)
 	var signal_bus := get_node_or_null("/root/SignalBus")
 	if signal_bus != null:
 		if signal_bus.has_signal("interactive_reward_claimed"):
@@ -67,33 +71,37 @@ func build_field_pickup_view_model(receipt: Dictionary) -> Dictionary:
 	match effect_type:
 		&"heal":
 			return _field_pickup_view_model(
-				"VITAL RESTORED", "%s  +%s HP" % [display_name, amount_text], Styles.RESIDUE
+				_t("VITAL RESTORED"),
+				_t("%s +%s HP", [_t(display_name), amount_text]),
+				Styles.RESIDUE
 			)
 		&"refill_consumable":
-			var unit := "Consumable Charge" if is_equal_approx(amount, 1.0) else "Consumable Charges"
+			var unit := _t("Potion Charge") if is_equal_approx(amount, 1.0) else _t("Potion Charges")
 			return _field_pickup_view_model(
-				"SUPPLY RESTOCKED", "%s  +%s %s" % [display_name, amount_text, unit], Styles.THREAD
+				_t("SUPPLY RESTOCKED"),
+				"%s +%s %s" % [_t(display_name), amount_text, unit],
+				Styles.THREAD
 			)
 		&"grant_currency":
 			var currency_id := String(receipt.get("currency_id", ""))
-			var currency_label := String(GRANT_LABELS.get(currency_id, "Currency"))
-			var summary := "%s  +%s %s" % [display_name, amount_text, currency_label]
+			var currency_label := _t(String(GRANT_LABELS.get(currency_id, "Currency")))
+			var summary := "%s +%s %s" % [_t(display_name), amount_text, currency_label]
 			if display_name.nocasecmp_to(currency_label) == 0:
 				summary = "%s  +%s" % [display_name, amount_text]
-			var title := "CURRENCY COLLECTED" if currency_id in ["coin", "xp"] else "MATERIAL COLLECTED"
+			var title := _t("CURRENCY COLLECTED") if currency_id in ["coin", "xp"] else _t("MATERIAL COLLECTED")
 			return _field_pickup_view_model(title, summary, Styles.AMBER)
 		&"grant_ranged_supply":
 			var supply_id := String(receipt.get("supply_id", ""))
-			var supply_label := "Arrows" if supply_id == "arrows" else "Cartridges"
-			var supply_title := "ARROWS RESTOCKED" if supply_id == "arrows" else "AMMUNITION RESTOCKED"
+			var supply_label := _t("Arrows") if supply_id == "arrows" else _t("Cartridges")
+			var supply_title := _t("ARROWS RESTOCKED") if supply_id == "arrows" else _t("AMMUNITION RESTOCKED")
 			return _field_pickup_view_model(
 				supply_title,
-				"%s  +%s %s" % [display_name, amount_text, supply_label],
+				"%s +%s %s" % [_t(display_name), amount_text, supply_label],
 				Styles.THREAD
 			)
 	return _field_pickup_view_model(
-		"PICKUP COLLECTED",
-		String(receipt.get("message", "%s collected." % display_name)),
+		_t("PICKUP COLLECTED"),
+		_t(String(receipt.get("message", "%s collected." % display_name))),
 		Styles.MOSS
 	)
 
@@ -127,18 +135,18 @@ func build_view_model(receipt: Dictionary) -> Dictionary:
 	var discoveries: Variant = receipt.get("equipment_discoveries", [])
 	var blueprint_unlocks: Variant = receipt.get("blueprint_unlocks", [])
 	var spirit_unlocks: Variant = receipt.get("spirit_stone_unlocks", [])
-	var title := _receipt_title(
+	var title := _t(_receipt_title(
 		role,
 		discoveries,
 		blueprint_unlocks,
 		spirit_unlocks
-	)
+	))
 	var parts := _grant_parts(receipt.get("grants", {}))
 	parts.append_array(_equipment_parts(discoveries))
 	parts.append_array(_blueprint_parts(blueprint_unlocks))
 	parts.append_array(_spirit_stone_parts(spirit_unlocks))
 	if parts.is_empty():
-		parts.append(String(receipt.get("message", "Reward applied.")))
+		parts.append(_t(String(receipt.get("message", "Reward applied."))))
 	return {
 		"title": title,
 		"summary": "  /  ".join(parts),
@@ -219,7 +227,7 @@ func _build_ui() -> void:
 	_title = Label.new()
 	_title.name = "ReceiptTitle"
 	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	Styles.configure_label(_title, 13, Styles.AMBER)
+	Styles.configure_label(_title, Styles.TYPE_CAPTION, Styles.AMBER)
 	column.add_child(_title)
 
 	_summary = Label.new()
@@ -228,7 +236,7 @@ func _build_ui() -> void:
 	_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_summary.max_lines_visible = 2
 	_summary.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	Styles.configure_label(_summary, 15, Styles.TEXT)
+	Styles.configure_label(_summary, Styles.TYPE_BODY, Styles.TEXT)
 	column.add_child(_summary)
 	_layout_panel()
 
@@ -237,12 +245,22 @@ func _layout_panel() -> void:
 	if _embedded:
 		_panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		return
-	var panel_width := minf(540.0, maxf(size.x - 40.0, 320.0))
+	var panel_width := minf(680.0, maxf(size.x - 40.0, 320.0))
 	_panel.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 	_panel.offset_left = -panel_width * 0.5
-	_panel.offset_top = -168.0
+	_panel.offset_top = -206.0
 	_panel.offset_right = panel_width * 0.5
-	_panel.offset_bottom = -92.0
+	_panel.offset_bottom = -96.0
+
+
+func _on_locale_changed(_locale: String) -> void:
+	# New receipts are built in the active locale. Keep the current timed receipt
+	# stable rather than changing a message while the player is reading it.
+	pass
+
+
+func _t(source: Variant, values: Array = []) -> String:
+	return Text.resolve(self, source, values)
 
 
 func _field_pickup_view_model(title: String, summary: String, accent: Color) -> Dictionary:
@@ -306,7 +324,7 @@ func _grant_parts(grants_value: Variant) -> Array[String]:
 	for grant_id in grant_ids:
 		parts.append("+%d %s" % [
 			int(grants.get(grant_id, 0)),
-			String(GRANT_LABELS.get(grant_id, grant_id.capitalize())),
+			_t(String(GRANT_LABELS.get(grant_id, grant_id.capitalize()))),
 		])
 	return parts
 
@@ -321,7 +339,7 @@ func _equipment_parts(discoveries_value: Variant) -> Array[String]:
 		var discovery := value as Dictionary
 		var item_id := StringName(discovery.get("item_id", &""))
 		var item: Variant = _equipment_item(item_id)
-		var item_name: String = (
+		var item_name: String = _t(
 			String(item.get("display_name")) if item != null else String(item_id).capitalize()
 		)
 		if bool(discovery.get("duplicate", false)):
@@ -348,7 +366,7 @@ func _blueprint_parts(unlocks_value: Variant) -> Array[String]:
 		var unlock := value as Dictionary
 		var model_id := StringName(unlock.get("model_id", &""))
 		var blueprint: Variant = catalog.get_blueprint_for_model(model_id) if catalog != null else null
-		var display_name := (
+		var display_name := _t(
 			String(blueprint.get("display_name"))
 			if blueprint != null
 			else "%s Blueprint" % String(model_id).capitalize()
@@ -372,7 +390,7 @@ func _spirit_stone_parts(unlocks_value: Variant) -> Array[String]:
 		var unlock := value as Dictionary
 		var stone_id := StringName(unlock.get("stone_id", &""))
 		var stone: Variant = catalog.get_spirit_stone(stone_id) if catalog != null else null
-		var display_name := (
+		var display_name := _t(
 			String(stone.get("display_name"))
 			if stone != null
 			else String(stone_id).capitalize()
@@ -380,7 +398,7 @@ func _spirit_stone_parts(unlocks_value: Variant) -> Array[String]:
 		if bool(unlock.get("duplicate", false)):
 			parts.append("%s already attuned" % display_name)
 			continue
-		var effect := (
+		var effect := _t(
 			String(stone.get("passive_description"))
 			if stone != null
 			else "Passive effect available."

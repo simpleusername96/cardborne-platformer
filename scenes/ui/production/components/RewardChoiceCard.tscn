@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://scripts/ui/production/components/RewardChoiceCard.gd" id="1"]
 
 [node name="RewardChoiceCard" type="Button"]
-custom_minimum_size = Vector2(250, 300)
+custom_minimum_size = Vector2(260, 300)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3

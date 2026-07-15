@@ -125,8 +125,8 @@ func _validate_normal_stage_retry(main: Node) -> void:
 	if result != null:
 		var display: Dictionary = result.call("get_display_snapshot")
 		_expect(bool(display.get("retry_decision", false)), "result surface should expose retry-decision mode")
-		_expect(display.get("retry_action", "") == "Retry Stage", "primary action should retry this stage")
-		_expect(display.get("secondary_action", "") == "End Expedition", "secondary action should end explicitly")
+		_expect(display.get("retry_action", "") == _t("Retry Stage"), "primary action should retry this stage")
+		_expect(display.get("secondary_action", "") == _t("End Expedition"), "secondary action should end explicitly")
 
 	_signal_bus.player_died.emit()
 	await process_frame
@@ -309,6 +309,11 @@ func _on_run_settled(_snapshot: Dictionary) -> void:
 func _expect(condition: bool, message: String) -> void:
 	if not condition:
 		_failures.append(message)
+
+
+func _t(source: StringName, values: Array = []) -> String:
+	var localization := root.get_node_or_null("/root/UILocalization")
+	return String(localization.call("text", source, values)) if localization != null else String(source)
 
 
 func _finish() -> void:

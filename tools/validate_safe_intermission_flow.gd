@@ -16,11 +16,22 @@ func _run() -> void:
 	var run_director := root.get_node_or_null("/root/RunDirector")
 	var game := root.get_node_or_null("/root/Game")
 	var signal_bus := root.get_node_or_null("/root/SignalBus")
+	var ui_localization := root.get_node_or_null("/root/UILocalization")
 	_expect(
-		run_state != null and run_director != null and game != null and signal_bus != null,
+		run_state != null
+			and run_director != null
+			and game != null
+			and signal_bus != null
+			and ui_localization != null,
 		"Safe Intermission fixture needs production autoloads."
 	)
-	if run_state == null or run_director == null or game == null or signal_bus == null:
+	if (
+		run_state == null
+		or run_director == null
+		or game == null
+		or signal_bus == null
+		or ui_localization == null
+	):
 		_finish()
 		return
 	signal_bus.stage_cleared.connect(func(_stage_id: String) -> void:
@@ -78,7 +89,8 @@ func _run() -> void:
 		)
 		var hud_layout: Dictionary = run_director.current_hud.call("get_layout_snapshot")
 		_expect(
-			String(hud_layout.get("objective_detail", "")) == "Prepare, then continue",
+			String(hud_layout.get("objective_detail", ""))
+				== String(ui_localization.call("text", &"Prepare, then continue")),
 			"Safe Intermission HUD should never present a combat objective."
 		)
 		_expect(
@@ -117,7 +129,7 @@ func _run() -> void:
 			var escape := InputEventAction.new()
 			escape.action = &"pause"
 			escape.pressed = true
-			run_director.current_screen.call("_unhandled_input", escape)
+			Input.parse_input_event(escape)
 			await process_frame
 			_expect(not game.reward_choice_open and not paused, "Escape should close Merchant and resume movement.")
 			_expect(game.current_stage == intermission, "Closing Merchant should retain Safe Intermission.")
@@ -137,7 +149,7 @@ func _run() -> void:
 				run_state.get_applied_merchant_transaction_ids().size() == 2,
 				"Two purchases should retain two distinct transaction IDs."
 			)
-			run_director.current_screen.call("_unhandled_input", escape)
+			Input.parse_input_event(escape)
 			await process_frame
 			_expect(not game.reward_choice_open and not paused, "Second Escape should restore movement.")
 

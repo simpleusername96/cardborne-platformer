@@ -61,7 +61,13 @@ func _run() -> void:
 	var warning := pause_menu.find_child("AbandonWarning", true, false) as Label
 	var keep_playing := pause_menu.find_child("KeepPlayingButton", true, false) as Button
 	_expect(confirmation != null and confirmation.visible, "Main Menu should open confirmation")
-	_expect(warning != null and warning.text.contains("will be lost"), "confirmation should state run loss")
+	_expect(
+		warning != null
+			and warning.text == _t(
+				"Run cards, coins, and stage progress will be lost. Secured materials stay kept."
+			),
+		"confirmation should state run loss"
+	)
 	_expect(keep_playing != null and keep_playing.has_focus(), "safe confirmation action should own focus")
 
 	pause_menu.call("_show_menu")
@@ -70,7 +76,7 @@ func _run() -> void:
 	var close_button := settings.get("close_button") as Button
 	_expect(paused, "settings opened from pause should keep gameplay stopped")
 	_expect(not pause_menu.visible and settings.visible, "settings should replace pause menu visually")
-	_expect(close_button != null and close_button.text == "Back", "paused settings should expose Back")
+	_expect(close_button != null and close_button.text == _t("Back"), "paused settings should expose Back")
 
 	game.set_settings_open(false)
 	await process_frame
@@ -96,6 +102,11 @@ func _run() -> void:
 func _expect(condition: bool, message: String) -> void:
 	if not condition:
 		_failures.append(message)
+
+
+func _t(source: StringName, values: Array = []) -> String:
+	var localization := root.get_node_or_null("/root/UILocalization")
+	return String(localization.call("text", source, values)) if localization != null else String(source)
 
 
 func _finish() -> void:

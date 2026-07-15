@@ -1,6 +1,8 @@
 class_name ArsenalTrial
 extends StageBase
 
+const Text = preload("res://scripts/ui/localization/LocalizedText.gd")
+
 signal beat_changed(index: int, room_id: StringName, title: String, prompt: String)
 signal beat_completed(room_id: StringName)
 signal resolution_requested(outcome: StringName, transaction_id: StringName)
@@ -26,11 +28,11 @@ const BEAT_TITLES := [
 	"LEAVE READY",
 ]
 const BEAT_PROMPTS := [
-	"Jump the gap",
-	"Strike near. Shoot far.",
-	"Guard the pulse",
-	"Collect, then interact",
-	"Use the exit",
+	"Arrows move · Space jumps",
+	"X attacks · range changes weapon",
+	"Hold C to guard",
+	"Take token · E opens cache",
+	"E opens the exit",
 ]
 
 @export var baseline_resolution_target_path: NodePath
@@ -77,6 +79,10 @@ func _ready() -> void:
 	])
 	_guard_check.set_trial_enabled(false)
 	super._ready()
+	var localization := get_node_or_null("/root/UILocalization")
+	if localization != null:
+		localization.connect(&"locale_changed", _on_locale_changed)
+	_skip_button.text = _t("Skip Trial")
 	_set_active_beat(0)
 
 
@@ -248,7 +254,7 @@ func _fail_resolution(
 	baseline_result: Dictionary = {}
 ) -> Dictionary:
 	_resolution_in_flight = false
-	_prompt_label.text = "Try again"
+	_prompt_label.text = _t("Try again")
 	baseline_resolution_failed.emit(outcome, code)
 	return _resolution_result(false, false, false, outcome, baseline_result, code)
 
@@ -300,11 +306,19 @@ func _set_active_beat(index: int) -> void:
 	if index < 0 or index >= ROOM_IDS.size():
 		return
 	_active_beat_index = index
-	_beat_label.text = BEAT_TITLES[index]
-	_prompt_label.text = BEAT_PROMPTS[index]
+	_render_active_beat(true)
+
+
+func _render_active_beat(publish_change: bool) -> void:
+	var index := _active_beat_index
+	var title := _t(BEAT_TITLES[index])
+	var prompt := _t(BEAT_PROMPTS[index])
+	_beat_label.text = title
+	_prompt_label.text = prompt
 	_progress_label.text = "%d / %d" % [index + 1, ROOM_IDS.size()]
 	_guard_check.set_trial_enabled(ROOM_IDS[index] == &"guard")
-	beat_changed.emit(index + 1, ROOM_IDS[index], BEAT_TITLES[index], BEAT_PROMPTS[index])
+	if publish_change:
+		beat_changed.emit(index + 1, ROOM_IDS[index], title, prompt)
 
 
 func _active_room_id() -> StringName:
@@ -327,7 +341,7 @@ func _on_training_pickup_collected(_player: Node) -> void:
 	if _cache_interacted:
 		_complete_beat(&"pickup_interaction")
 	else:
-		_prompt_label.text = "Inspect the cache"
+		_prompt_label.text = _t("Inspect the cache")
 
 
 func _on_training_cache_interacted(_player: Node) -> void:
@@ -335,7 +349,7 @@ func _on_training_cache_interacted(_player: Node) -> void:
 	if _pickup_collected:
 		_complete_beat(&"pickup_interaction")
 	else:
-		_prompt_label.text = "Collect the token"
+		_prompt_label.text = _t("Collect the token")
 
 
 func _on_fall_reset_body_entered(body: Node) -> void:
@@ -345,3 +359,12 @@ func _on_fall_reset_body_entered(body: Node) -> void:
 
 func _on_skip_button_pressed() -> void:
 	request_skip()
+
+
+func _on_locale_changed(_locale: String) -> void:
+	_skip_button.text = _t("Skip Trial")
+	_render_active_beat(false)
+
+
+func _t(source: Variant, values: Array = []) -> String:
+	return Text.resolve(self, source, values)

@@ -3,6 +3,7 @@ extends Button
 
 const Styles = preload("res://scripts/ui/production/ProductionUIStyles.gd")
 const GlyphScript = preload("res://scripts/ui/production/components/RewardChoiceGlyph.gd")
+const Text = preload("res://scripts/ui/localization/LocalizedText.gd")
 
 var choice_id: StringName
 
@@ -23,6 +24,9 @@ var _description_label: Label
 var _value_label: Label
 var _footer_label: Label
 var _state_label: Label
+var _content: VBoxContainer
+var _glyph_center: CenterContainer
+var _margin: MarginContainer
 
 
 func _ready() -> void:
@@ -34,9 +38,14 @@ func _ready() -> void:
 	focus_exited.connect(_refresh_state)
 	mouse_entered.connect(_on_mouse_entered)
 	mouse_exited.connect(_on_mouse_exited)
+	resized.connect(_apply_responsive_layout)
+	var localization := get_node_or_null("/root/UILocalization")
+	if localization != null:
+		localization.connect(&"locale_changed", _on_locale_changed)
 	_built = true
 	if not _pending_view.is_empty():
 		_apply_view(_pending_view)
+	_apply_responsive_layout()
 	_refresh_state()
 
 
@@ -116,68 +125,68 @@ func _build_content() -> void:
 	_surface.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_surface)
 
-	var margin := MarginContainer.new()
-	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_margin = MarginContainer.new()
+	_margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	for side in ["left", "top", "right", "bottom"]:
-		margin.add_theme_constant_override("margin_%s" % side, 15)
-	margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(margin)
+		_margin.add_theme_constant_override("margin_%s" % side, 14)
+	_margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_margin)
 
-	var content := VBoxContainer.new()
-	content.add_theme_constant_override("separation", 7)
-	content.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	margin.add_child(content)
+	_content = VBoxContainer.new()
+	_content.add_theme_constant_override("separation", 6)
+	_content.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_margin.add_child(_content)
 
 	var meta := HBoxContainer.new()
 	meta.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	content.add_child(meta)
-	_category_label = _label(11, Styles.TEXT_MUTED)
+	_content.add_child(meta)
+	_category_label = _label(Styles.TYPE_CAPTION, Styles.TEXT_MUTED)
 	_category_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	meta.add_child(_category_label)
-	_rarity_label = _label(11, _accent)
+	_rarity_label = _label(Styles.TYPE_CAPTION, _accent)
 	_rarity_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	meta.add_child(_rarity_label)
 
-	var glyph_center := CenterContainer.new()
-	glyph_center.custom_minimum_size = Vector2(0.0, 60.0)
-	glyph_center.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	content.add_child(glyph_center)
+	_glyph_center = CenterContainer.new()
+	_glyph_center.custom_minimum_size = Vector2(0.0, 52.0)
+	_glyph_center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_content.add_child(_glyph_center)
 	_glyph = GlyphScript.new()
-	glyph_center.add_child(_glyph)
+	_glyph_center.add_child(_glyph)
 
-	_title_label = _label(21, Styles.TEXT)
+	_title_label = _label(24, Styles.TEXT)
 	_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_title_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_title_label.max_lines_visible = 2
 	_title_label.custom_minimum_size = Vector2(0.0, 50.0)
-	content.add_child(_title_label)
+	_content.add_child(_title_label)
 
-	_description_label = _label(14, Styles.TEXT_MUTED)
+	_description_label = _label(Styles.TYPE_CAPTION, Styles.TEXT_MUTED)
 	_description_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_description_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_description_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_description_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	content.add_child(_description_label)
+	_content.add_child(_description_label)
 
 	var divider := ColorRect.new()
 	divider.color = Color(Styles.OUTLINE, 0.62)
 	divider.custom_minimum_size = Vector2(0.0, 1.0)
 	divider.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	content.add_child(divider)
+	_content.add_child(divider)
 
-	_value_label = _label(14, Styles.TEXT)
+	_value_label = _label(Styles.TYPE_CAPTION, Styles.TEXT)
 	_value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_value_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	content.add_child(_value_label)
+	_content.add_child(_value_label)
 
 	var footer := HBoxContainer.new()
 	footer.add_theme_constant_override("separation", 8)
 	footer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	content.add_child(footer)
-	_footer_label = _label(11, Styles.TEXT_MUTED)
+	_content.add_child(footer)
+	_footer_label = _label(Styles.TYPE_CAPTION, Styles.TEXT_MUTED)
 	_footer_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	footer.add_child(_footer_label)
-	_state_label = _label(11, _accent)
+	_state_label = _label(Styles.TYPE_CAPTION, _accent)
 	_state_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	footer.add_child(_state_label)
 
@@ -231,11 +240,11 @@ func _refresh_state() -> void:
 		_accent if highlighted and not disabled else Styles.TEXT_MUTED
 	)
 	if _selected:
-		_state_label.text = "SELECTED"
+		_state_label.text = _t("SELECTED")
 	elif disabled:
-		_state_label.text = "UNAVAILABLE" if not _base_enabled else "WAITING"
+		_state_label.text = _t("UNAVAILABLE" if not _base_enabled else "WAITING")
 	elif has_focus() or _pointer_inside:
-		_state_label.text = "FOCUSED"
+		_state_label.text = _t("FOCUSED")
 	else:
 		_state_label.text = _action_text
 
@@ -248,6 +257,29 @@ func _on_mouse_entered() -> void:
 func _on_mouse_exited() -> void:
 	_pointer_inside = false
 	_refresh_state()
+
+
+func _on_locale_changed(_locale: String) -> void:
+	_refresh_state()
+
+
+func _apply_responsive_layout() -> void:
+	if not _built:
+		return
+	var compact := size.y < 390.0 or size.x < 320.0
+	var inset := 10 if compact else 14
+	for side in ["left", "top", "right", "bottom"]:
+		_margin.add_theme_constant_override("margin_%s" % side, inset)
+	_content.add_theme_constant_override("separation", 4 if compact else 6)
+	_glyph_center.custom_minimum_size.y = 40.0 if compact else 52.0
+	_title_label.add_theme_font_size_override("font_size", 21 if compact else 24)
+	_title_label.custom_minimum_size.y = 44.0 if compact else 50.0
+	_description_label.add_theme_font_size_override("font_size", Styles.TYPE_CAPTION)
+	_value_label.add_theme_font_size_override("font_size", Styles.TYPE_CAPTION)
+
+
+func _t(source: Variant, values: Array = []) -> String:
+	return Text.resolve(self, source, values)
 
 
 func _label(font_size: int, color: Color) -> Label:

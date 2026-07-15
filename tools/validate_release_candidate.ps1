@@ -32,6 +32,7 @@ $releaseMatrix = @(
   "validate_forge_screen.gd",
   "validate_forge_station_flow.gd",
   "validate_merchant_transactions.gd",
+  "validate_merchant_screen.gd",
   "validate_safe_intermission_flow.gd",
   "validate_room_templates.gd",
   "validate_flooded_works_rooms.gd",

@@ -23,28 +23,28 @@ func _run() -> void:
 	await process_frame
 
 	var snapshot: Dictionary = result.call("get_display_snapshot")
-	_expect(snapshot.get("outcome", "") == "VICTORY", "victory outcome should be explicit")
-	_expect(snapshot.get("subtitle", "") == "SLIME KING DEFEATED", "victory subtitle should name the boss result")
-	_expect(String(snapshot.get("reach", "")).contains("Slime Court"), "summary should name the boss arena")
+	_expect(snapshot.get("outcome", "") == _t("VICTORY"), "victory outcome should be explicit")
+	_expect(snapshot.get("subtitle", "") == _t("SLIME KING DEFEATED"), "victory subtitle should name the boss result")
+	_expect(String(snapshot.get("reach", "")).contains(_t("Slime Court")), "summary should name the boss arena")
 	_expect(snapshot.get("time", "") == "14:05", "summary should format run duration")
-	_expect(String(snapshot.get("build", "")).contains("Dash Wake x2"), "summary should show final card stacks")
-	_expect(String(snapshot.get("materials", "")).contains("Boss Core  +1"), "summary should show the kept Boss Core")
+	_expect(String(snapshot.get("build", "")).contains("%s x2" % _t("Dash Wake")), "summary should show final card stacks")
+	_expect(String(snapshot.get("materials", "")).contains("%s  +1" % _t("Boss Core")), "summary should show the kept Boss Core")
 	_expect(result.size.is_equal_approx(Vector2(root.size)), "run result should fill compact viewport")
 
 	result.call("configure", false, "Traveler", _death_settlement())
 	await process_frame
 	snapshot = result.call("get_display_snapshot")
-	_expect(snapshot.get("outcome", "") == "DEFEAT", "death outcome should be distinct from clear")
-	_expect(snapshot.get("subtitle", "") == "EXPEDITION ENDED", "death subtitle should be distinct from clear")
-	_expect(String(snapshot.get("detail", "")).contains("fell before reaching the crown"), "death summary should explain the terminal reason")
-	_expect(String(snapshot.get("materials", "")).contains("Sky Thread  +2"), "death summary should show materials that persist")
+	_expect(snapshot.get("outcome", "") == _t("DEFEAT"), "death outcome should be distinct from clear")
+	_expect(snapshot.get("subtitle", "") == _t("EXPEDITION ENDED"), "death subtitle should be distinct from clear")
+	_expect(snapshot.get("detail", "") == _t("{0} fell before reaching the crown.", ["Traveler"]), "death summary should explain the terminal reason")
+	_expect(String(snapshot.get("materials", "")).contains("%s  +2" % _t("Sky Thread")), "death summary should show materials that persist")
 
 	result.call("configure_retry_decision", "Traveler", _attempt_snapshot())
 	await process_frame
 	snapshot = result.call("get_display_snapshot")
 	_expect(bool(snapshot.get("retry_decision", false)), "death choice should use retry-decision mode")
-	_expect(snapshot.get("retry_action", "") == "Retry Stage", "death choice should retry the current stage")
-	_expect(snapshot.get("secondary_action", "") == "End Expedition", "death choice should expose explicit settlement")
+	_expect(snapshot.get("retry_action", "") == _t("Retry Stage"), "death choice should retry the current stage")
+	_expect(snapshot.get("secondary_action", "") == _t("End Expedition"), "death choice should expose explicit settlement")
 	var retry_button := result.get_node("%RetryButton") as Button
 	var end_button := result.get_node("%MenuButton") as Button
 	_expect(retry_button.custom_minimum_size.y >= 44.0, "Retry Stage should retain a usable keyboard target")
@@ -105,6 +105,11 @@ func _attempt_snapshot() -> Dictionary:
 func _expect(condition: bool, message: String) -> void:
 	if not condition:
 		_failures.append(message)
+
+
+func _t(source: StringName, values: Array = []) -> String:
+	var localization := root.get_node_or_null("/root/UILocalization")
+	return String(localization.call("text", source, values)) if localization != null else String(source)
 
 
 func _finish() -> void:

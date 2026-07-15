@@ -81,7 +81,10 @@ func _run() -> void:
 		var start_button := preparation.find_child("StartButton", true, false) as Button
 		var trial_button := preparation.find_child("TutorialButton", true, false) as Button
 		_expect(start_button != null and not start_button.disabled, "valid base loadout should enable Stage 1")
-		_expect(trial_button != null and trial_button.text == "Begin Trial", "fresh profile should offer the Arsenal Trial")
+		_expect(
+			trial_button != null and trial_button.text == _t("Begin Trial"),
+			"fresh profile should offer the Arsenal Trial"
+		)
 		var focus_owner := root.gui_get_focus_owner()
 		_expect(
 			focus_owner != null and preparation.is_ancestor_of(focus_owner),
@@ -130,6 +133,11 @@ func _run() -> void:
 
 func _has_child_named(parent: Node, child_name: String) -> bool:
 	return parent.get_node_or_null(child_name) != null
+
+
+func _t(source: StringName, values: Array = []) -> String:
+	var localization := root.get_node_or_null("/root/UILocalization")
+	return String(localization.call("text", source, values)) if localization != null else String(source)
 
 
 func _expect(condition: bool, message: String) -> void:

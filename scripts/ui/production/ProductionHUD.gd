@@ -3,6 +3,7 @@ extends Control
 const Styles = preload("res://scripts/ui/production/ProductionUIStyles.gd")
 const Glyph = preload("res://scripts/ui/production/components/HUDGlyph.gd")
 const CombatDock = preload("res://scripts/ui/production/components/HUDCombatDock.gd")
+const Text = preload("res://scripts/ui/localization/LocalizedText.gd")
 
 const OBJECTIVE_EXPANDED_SECONDS := 4.0
 
@@ -57,6 +58,9 @@ func _ready() -> void:
 	SignalBus.encounter_state_changed.connect(_on_encounter_state_changed)
 	SignalBus.input_bindings_changed.connect(_on_input_bindings_changed)
 	SignalBus.interaction_prompt_changed.connect(_on_interaction_prompt_changed)
+	var localization := get_node_or_null("/root/UILocalization")
+	if localization != null:
+		localization.connect(&"locale_changed", _on_locale_changed)
 	var initial_snapshot: Variant = RunState.get_run_snapshot()
 	if initial_snapshot != null and initial_snapshot.has_method("to_dictionary"):
 		_on_run_state_changed(initial_snapshot.call("to_dictionary"))
@@ -81,6 +85,10 @@ func _exit_tree() -> void:
 		var callback: Callable = callbacks[signal_name]
 		if SignalBus.is_connected(signal_name, callback):
 			SignalBus.disconnect(signal_name, callback)
+	var localization := get_node_or_null("/root/UILocalization")
+	var locale_callback := Callable(self, "_on_locale_changed")
+	if localization != null and localization.is_connected(&"locale_changed", locale_callback):
+		localization.disconnect(&"locale_changed", locale_callback)
 
 
 func _notification(what: int) -> void:
@@ -159,12 +167,12 @@ func _build_health_cluster() -> void:
 	profile_label.name = "ProfileName"
 	profile_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	profile_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	Styles.configure_label(profile_label, 16, Styles.TEXT)
+	Styles.configure_label(profile_label, Styles.TYPE_BODY, Styles.TEXT)
 	heading.add_child(profile_label)
 	health_value_label = Label.new()
 	health_value_label.name = "HealthValue"
 	health_value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	Styles.configure_label(health_value_label, 16, Styles.TEXT)
+	Styles.configure_label(health_value_label, Styles.TYPE_BODY, Styles.TEXT)
 	heading.add_child(health_value_label)
 
 	health_bar = ProgressBar.new()
@@ -181,13 +189,13 @@ func _build_health_cluster() -> void:
 
 	level_xp_label = Label.new()
 	level_xp_label.name = "LevelXP"
-	Styles.configure_label(level_xp_label, 12, Styles.TEXT_MUTED)
+	Styles.configure_label(level_xp_label, Styles.TYPE_CAPTION, Styles.TEXT_MUTED)
 	details.add_child(level_xp_label)
 
 	armor_label = Label.new()
 	armor_label.name = "ArmorState"
 	armor_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	Styles.configure_label(armor_label, 12, Styles.TEXT_MUTED)
+	Styles.configure_label(armor_label, Styles.TYPE_CAPTION, Styles.TEXT_MUTED)
 	details.add_child(armor_label)
 
 
@@ -213,20 +221,20 @@ func _build_objective() -> void:
 	objective_title_label.name = "ObjectiveTitle"
 	objective_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	objective_title_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	Styles.configure_label(objective_title_label, 16, Styles.TEXT)
+	Styles.configure_label(objective_title_label, Styles.TYPE_BODY, Styles.TEXT)
 	column.add_child(objective_title_label)
 	objective_detail_label = Label.new()
 	objective_detail_label.name = "ObjectiveDetail"
 	objective_detail_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	objective_detail_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	Styles.configure_label(objective_detail_label, 13, Styles.TEXT_MUTED)
+	Styles.configure_label(objective_detail_label, Styles.TYPE_CAPTION, Styles.TEXT_MUTED)
 	column.add_child(objective_detail_label)
 	objective_timer = Timer.new()
 	objective_timer.one_shot = true
 	objective_timer.wait_time = OBJECTIVE_EXPANDED_SECONDS
 	objective_timer.timeout.connect(_collapse_objective)
 	add_child(objective_timer)
-	_show_objective("Defeat enemies")
+	_show_objective(_t("Defeat enemies"))
 
 
 func _build_combat_dock() -> void:
@@ -262,7 +270,7 @@ func _build_context_lane() -> void:
 	prompt_binding_label = Label.new()
 	prompt_binding_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	prompt_binding_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	Styles.configure_label(prompt_binding_label, 13, Styles.TEXT)
+	Styles.configure_label(prompt_binding_label, Styles.TYPE_CAPTION, Styles.TEXT)
 	badge.add_child(prompt_binding_label)
 	prompt_label = Label.new()
 	prompt_label.name = "PromptText"
@@ -270,7 +278,7 @@ func _build_context_lane() -> void:
 	prompt_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	prompt_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	prompt_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	Styles.configure_label(prompt_label, 14, Styles.TEXT)
+	Styles.configure_label(prompt_label, Styles.TYPE_BODY, Styles.TEXT)
 	row.add_child(prompt_label)
 
 	reward_receipt = RewardReceiptPresenter.new()
@@ -297,7 +305,7 @@ func _build_boss_panel() -> void:
 	boss_name_label.name = "BossName"
 	boss_name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	boss_name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	Styles.configure_label(boss_name_label, 14, Styles.TEXT)
+	Styles.configure_label(boss_name_label, Styles.TYPE_BODY, Styles.TEXT)
 	heading.add_child(boss_name_label)
 	boss_status_label = Label.new()
 	boss_status_label.name = "BossStatus"
@@ -305,7 +313,7 @@ func _build_boss_panel() -> void:
 	boss_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	boss_status_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	boss_status_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	Styles.configure_label(boss_status_label, 13, Styles.AMBER)
+	Styles.configure_label(boss_status_label, Styles.TYPE_CAPTION, Styles.AMBER)
 	heading.add_child(boss_status_label)
 	boss_health_bar = ProgressBar.new()
 	boss_health_bar.name = "BossHealth"
@@ -356,35 +364,39 @@ func _layout_responsive() -> void:
 	_compact_layout = compact
 	health_panel.offset_left = 16.0
 	health_panel.offset_top = 14.0
-	health_panel.offset_right = 312.0
-	health_panel.offset_bottom = 112.0
-	var objective_width := 280.0 if compact else 340.0
+	health_panel.offset_right = 350.0
+	health_panel.offset_bottom = 132.0
+	var objective_width := 260.0 if compact else 400.0
 	objective_container.offset_left = -objective_width * 0.5
 	objective_container.offset_top = 17.0
 	objective_container.offset_right = objective_width * 0.5
-	objective_container.offset_bottom = 70.0
-	var boss_width := 324.0 if compact else 440.0
-	boss_panel.offset_left = -boss_width * 0.5
+	objective_container.offset_bottom = 78.0
+	var boss_width := 370.0 if compact else 500.0
+	var boss_shift := 70.0 if compact else 0.0
+	boss_panel.offset_left = -boss_width * 0.5 + boss_shift
 	boss_panel.offset_top = 14.0
-	boss_panel.offset_right = boss_width * 0.5
-	boss_panel.offset_bottom = 82.0
+	boss_panel.offset_right = boss_width * 0.5 + boss_shift
+	boss_panel.offset_bottom = 92.0
+	boss_name_label.add_theme_font_size_override(
+		"font_size", Styles.TYPE_CAPTION if compact else Styles.TYPE_BODY
+	)
 
 	combat_dock.set_compact(compact)
-	var dock_size := Vector2(724.0 if compact else 810.0, 92.0)
+	var dock_size := Vector2(728.0 if compact else 954.0, 112.0)
 	# The two attack choices occupy less width than the three status tiles.
 	# Offset the dock so its intentional empty lane, not its outer bounds, follows the player.
-	var safe_gap_shift := 96.0 if compact else 98.0
+	var safe_gap_shift := 49.0 if compact else 137.0
 	combat_dock.offset_left = -dock_size.x * 0.5 + safe_gap_shift
 	combat_dock.offset_top = -(dock_size.y + 14.0)
 	combat_dock.offset_right = dock_size.x * 0.5 + safe_gap_shift
 	combat_dock.offset_bottom = -14.0
 
-	var lane_width := 320.0 if compact else minf(540.0, size.x - 680.0)
-	var lane_height := 58.0
+	var lane_width := 400.0 if compact else minf(620.0, size.x - 620.0)
+	var lane_height := 96.0
 	context_lane.offset_left = -lane_width * 0.5
-	context_lane.offset_top = 86.0
+	context_lane.offset_top = 140.0
 	context_lane.offset_right = lane_width * 0.5
-	context_lane.offset_bottom = 86.0 + lane_height
+	context_lane.offset_bottom = 140.0 + lane_height
 	combat_dock.configure(_run_snapshot, _combat_state)
 	_refresh_boss_header()
 
@@ -421,7 +433,7 @@ func _refresh_health_cluster() -> void:
 	var profile_display_name := String(_run_snapshot.get("profile_display_name", "")).strip_edges()
 	if profile_display_name.is_empty():
 		profile_display_name = String(profile_id).replace("_", " ")
-	profile_label.text = profile_display_name.to_upper()
+	profile_label.text = _t(profile_display_name).to_upper()
 	health_value_label.text = "%d / %d" % [current_health, max_health]
 	health_bar.max_value = float(max_health)
 	health_bar.value = float(current_health)
@@ -442,7 +454,7 @@ func _refresh_health_cluster() -> void:
 	var armor_name := String(loadout.get("armor_display_name", "Traveler Coat"))
 	var health_bonus := maxi(int(loadout.get("armor_health_bonus", 0)), 0)
 	armor_label.text = "%s%s" % [
-		armor_name,
+		_t(armor_name),
 		"  +%d HP" % health_bonus if health_bonus > 0 else "",
 	]
 
@@ -468,11 +480,11 @@ func _on_stage_started(stage_id: String, stage_display_name: String) -> void:
 	elif stage_id == "safe_intermission":
 		boss_panel.visible = false
 		objective_container.visible = true
-		_show_objective("Prepare, then continue")
+		_show_objective(_t("Prepare, then continue"))
 	else:
 		boss_panel.visible = false
 		objective_container.visible = true
-		_show_objective("Defeat enemies")
+		_show_objective(_t("Defeat enemies"))
 
 
 func _on_encounter_state_changed(state: Dictionary) -> void:
@@ -480,14 +492,16 @@ func _on_encounter_state_changed(state: Dictionary) -> void:
 		return
 	var remaining := int(state.get("remaining", 0))
 	_show_objective(
-		"Defeat %d remaining" % remaining if remaining > 0 else "Enter the gate"
+		_t("Defeat %d remaining", [remaining])
+		if remaining > 0
+		else _t("Enter the gate")
 	)
 
 
 func _show_objective(detail: String) -> void:
 	if objective_title_label == null:
 		return
-	objective_title_label.text = _stage_display_name.to_upper()
+	objective_title_label.text = _t(_stage_display_name).to_upper()
 	objective_detail_label.text = detail
 	objective_detail_label.visible = true
 	if objective_timer != null and objective_timer.is_inside_tree():
@@ -525,7 +539,7 @@ func _refresh_context_lane() -> void:
 		and not _interaction_prompt_text.is_empty()
 	)
 	prompt_binding_label.text = Game.get_action_binding_text("interact", "E")
-	prompt_label.text = _interaction_prompt_text
+	prompt_label.text = _t(_interaction_prompt_text)
 
 
 func _show_boss_intro_state() -> void:
@@ -536,7 +550,7 @@ func _show_boss_intro_state() -> void:
 		"phase": 1,
 	}
 	_refresh_boss_header()
-	boss_status_label.text = "THE COURT SEALS"
+	boss_status_label.text = _t("THE COURT SEALS")
 	boss_health_bar.max_value = 80.0
 	boss_health_bar.value = 80.0
 	boss_stagger_bar.max_value = 100.0
@@ -582,54 +596,69 @@ func _refresh_boss_header() -> void:
 	var max_health := maxi(int(_boss_snapshot.get("max_health", 80)), 1)
 	var phase := maxi(int(_boss_snapshot.get("phase", 1)), 1)
 	if _compact_layout:
-		boss_name_label.text = "SLIME KING  %d/%d  P%d" % [health, max_health, phase]
+		boss_name_label.text = _t("SLIME KING %d/%d P%d", [health, max_health, phase])
 	else:
-		boss_name_label.text = "SLIME KING   %d / %d   PHASE %s" % [
+		boss_name_label.text = _t("SLIME KING %d/%d · PHASE %s", [
 			health,
 			max_health,
 			_roman_phase(phase),
-		]
+		])
 
 
 func _boss_status(snapshot: Dictionary) -> String:
 	var actor_state := StringName(snapshot.get("actor_state", &"dormant"))
 	if actor_state == &"phase_transition":
-		return "PHASE SHIFT"
+		return _t("PHASE SHIFT")
 	if actor_state == &"staggered":
-		return "STAGGERED - ATTACK"
+		return _t("STAGGERED · ATTACK")
 	if actor_state == &"defeated":
-		return "CROWN BROKEN"
+		return _t("CROWN BROKEN")
 	if actor_state in [&"dormant", &"cancelled"]:
-		return "THE COURT SEALS"
+		return _t("THE COURT SEALS")
 	var pattern: Dictionary = snapshot.get("pattern", {})
 	var pattern_id := StringName(pattern.get("pattern_id", &""))
 	var pattern_state := StringName(pattern.get("state", &"idle"))
 	if pattern_state == &"recovery":
-		return "OPENING - ATTACK"
+		return _t("OPENING · ATTACK")
 	if pattern_state == &"neutral":
-		return "REPOSITION"
+		return _t("REPOSITION")
 	if pattern_state == &"active":
 		return _active_pattern_label(pattern_id)
 	if pattern_state == &"startup":
 		return _startup_pattern_label(pattern_id)
-	return "WATCH THE CROWN"
+	return _t("WATCH THE CROWN")
 
 
 func _startup_pattern_label(pattern_id: StringName) -> String:
-	return {
+	return _t(String({
 		&"jump_slam": "SHADOW - MOVE",
 		&"body_bump": "LANE LOCK - EVADE",
 		&"poison_bands": "FIND SAFE FLOOR",
 		&"small_slime_summon": "SPAWN MARKERS",
-	}.get(pattern_id, "ATTACK INCOMING")
+	}.get(pattern_id, "ATTACK INCOMING")))
 
 
 func _active_pattern_label(pattern_id: StringName) -> String:
-	return {
+	return _t(String({
 		&"jump_slam": "JUMP THE SHOCKWAVE",
 		&"body_bump": "CLEAR THE LANE",
 		&"poison_bands": "HOLD SAFE FLOOR",
-	}.get(pattern_id, "DODGE")
+	}.get(pattern_id, "DODGE")))
+
+
+func _on_locale_changed(_locale: String) -> void:
+	_refresh_all()
+	if _stage_id == "safe_intermission":
+		_show_objective(_t("Prepare, then continue"))
+	elif _stage_id not in ["slime_court", "arsenal_trial"]:
+		_show_objective(_t("Defeat enemies"))
+	if boss_panel != null and boss_panel.visible:
+		_refresh_boss_header()
+		boss_status_label.text = _boss_status(_boss_snapshot)
+
+
+func _t(source: Variant, values: Array = []) -> String:
+	return Text.resolve(self, source, values)
 
 
 func _roman_phase(phase: int) -> String:

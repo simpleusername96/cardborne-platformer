@@ -274,7 +274,7 @@ offset_top = -94.0
 offset_right = 38.0
 offset_bottom = -70.0
 theme_override_colors/font_color = Color(1, 0.81, 0.42, 1)
-theme_override_font_sizes/font_size = 15
+theme_override_font_sizes/font_size = 18
 text = "NEAR"
 horizontal_alignment = 1
 
@@ -293,7 +293,7 @@ offset_top = -94.0
 offset_right = 38.0
 offset_bottom = -70.0
 theme_override_colors/font_color = Color(0.5, 0.94, 0.98, 1)
-theme_override_font_sizes/font_size = 15
+theme_override_font_sizes/font_size = 18
 text = "FAR"
 horizontal_alignment = 1
 
@@ -544,20 +544,20 @@ alignment = 1
 
 [node name="BeatLabel" type="Label" parent="TrialUI/PromptPanel/Margin/VBox"]
 theme_override_colors/font_color = Color(0.93, 0.79, 0.34, 1)
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 20
 text = "GET MOVING"
 horizontal_alignment = 1
 
 [node name="PromptLabel" type="Label" parent="TrialUI/PromptPanel/Margin/VBox"]
 theme_override_colors/font_color = Color(0.94, 0.96, 0.98, 1)
-theme_override_font_sizes/font_size = 21
-text = "Jump the gap"
+theme_override_font_sizes/font_size = 24
+text = "Arrows move · Space jumps"
 horizontal_alignment = 1
 autowrap_mode = 2
 
 [node name="ProgressLabel" type="Label" parent="TrialUI/PromptPanel/Margin/VBox"]
 theme_override_colors/font_color = Color(0.58, 0.72, 0.76, 1)
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 16
 text = "1 / 5"
 horizontal_alignment = 1
 
@@ -577,7 +577,7 @@ focus_neighbor_right = NodePath("../SkipButton")
 focus_neighbor_bottom = NodePath("../SkipButton")
 theme_override_colors/font_color = Color(0.9, 0.93, 0.94, 1)
 theme_override_colors/font_disabled_color = Color(0.48, 0.52, 0.54, 1)
-theme_override_font_sizes/font_size = 17
+theme_override_font_sizes/font_size = 20
 theme_override_styles/normal = SubResource("Style_button_normal")
 theme_override_styles/hover = SubResource("Style_button_hover")
 theme_override_styles/pressed = SubResource("Style_button_hover")

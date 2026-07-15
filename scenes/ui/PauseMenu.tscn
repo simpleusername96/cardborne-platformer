@@ -50,7 +50,7 @@ text = "PAUSED"
 
 [node name="PauseContext" type="Label" parent="PausePanel/Margin/Content"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 24)
+custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
 text = "Adventurer  |  Stage 1"
 
@@ -100,7 +100,7 @@ text = "END THIS RUN?"
 
 [node name="AbandonWarning" type="Label" parent="PausePanel/Margin/Content/AbandonConfirmation"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 60)
+custom_minimum_size = Vector2(0, 72)
 layout_mode = 2
 text = "Run cards, coins, and stage progress will be lost. Secured materials remain yours."
 autowrap_mode = 2

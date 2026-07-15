@@ -60,7 +60,7 @@ size_flags_horizontal = 4
 
 [node name="OutcomeTitle" type="Label" parent="SafeMargin/Center/Content"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 54)
+custom_minimum_size = Vector2(0, 60)
 layout_mode = 2
 text = "VICTORY"
 horizontal_alignment = 1
@@ -73,7 +73,7 @@ horizontal_alignment = 1
 
 [node name="ResultDetail" type="Label" parent="SafeMargin/Center/Content"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 32)
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 text = "The expedition is complete."
 horizontal_alignment = 1
@@ -81,7 +81,7 @@ autowrap_mode = 2
 
 [node name="SummaryPanel" type="PanelContainer" parent="SafeMargin/Center/Content"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 194)
+custom_minimum_size = Vector2(0, 232)
 layout_mode = 2
 
 [node name="Margin" type="MarginContainer" parent="SafeMargin/Center/Content/SummaryPanel"]
@@ -156,7 +156,7 @@ custom_minimum_size = Vector2(0, 1)
 layout_mode = 2
 
 [node name="Body" type="HBoxContainer" parent="SafeMargin/Center/Content/SummaryPanel/Margin/Summary"]
-custom_minimum_size = Vector2(0, 86)
+custom_minimum_size = Vector2(0, 120)
 layout_mode = 2
 theme_override_constants/separation = 18
 
@@ -184,7 +184,7 @@ custom_minimum_size = Vector2(1, 0)
 layout_mode = 2
 
 [node name="Rewards" type="VBoxContainer" parent="SafeMargin/Center/Content/SummaryPanel/Margin/Summary/Body"]
-custom_minimum_size = Vector2(220, 0)
+custom_minimum_size = Vector2(340, 0)
 layout_mode = 2
 theme_override_constants/separation = 4
 
@@ -208,12 +208,12 @@ theme_override_constants/separation = 12
 
 [node name="RetryButton" type="Button" parent="SafeMargin/Center/Content/ButtonRow"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(210, 48)
+custom_minimum_size = Vector2(240, 52)
 layout_mode = 2
 text = "Begin Another Run"
 
 [node name="MenuButton" type="Button" parent="SafeMargin/Center/Content/ButtonRow"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(180, 48)
+custom_minimum_size = Vector2(210, 52)
 layout_mode = 2
 text = "Main Menu"

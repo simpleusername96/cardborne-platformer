@@ -126,22 +126,29 @@ theme_override_constants/margin_top = 8
 theme_override_constants/margin_right = 10
 theme_override_constants/margin_bottom = 8
 
-[node name="LoadoutContent" type="VBoxContainer" parent="OuterMargin/Page/Body/LoadoutPanel/LoadoutMargin"]
+[node name="LoadoutScroll" type="ScrollContainer" parent="OuterMargin/Page/Body/LoadoutPanel/LoadoutMargin"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="LoadoutContent" type="VBoxContainer" parent="OuterMargin/Page/Body/LoadoutPanel/LoadoutMargin/LoadoutScroll"]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/separation = 7
 
-[node name="LoadoutHeading" type="Label" parent="OuterMargin/Page/Body/LoadoutPanel/LoadoutMargin/LoadoutContent"]
+[node name="LoadoutHeading" type="Label" parent="OuterMargin/Page/Body/LoadoutPanel/LoadoutMargin/LoadoutScroll/LoadoutContent"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "TRAVELER LOADOUT"
 
-[node name="SlotList" type="VBoxContainer" parent="OuterMargin/Page/Body/LoadoutPanel/LoadoutMargin/LoadoutContent"]
+[node name="SlotList" type="VBoxContainer" parent="OuterMargin/Page/Body/LoadoutPanel/LoadoutMargin/LoadoutScroll/LoadoutContent"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="MeleeButton" type="Button" parent="OuterMargin/Page/Body/LoadoutPanel/LoadoutMargin/LoadoutContent/SlotList"]
+[node name="MeleeButton" type="Button" parent="OuterMargin/Page/Body/LoadoutPanel/LoadoutMargin/LoadoutScroll/LoadoutContent/SlotList"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
@@ -149,7 +156,7 @@ toggle_mode = true
 text = "Melee\nTraveler Sword"
 alignment = 0
 
-[node name="RangedButton" type="Button" parent="OuterMargin/Page/Body/LoadoutPanel/LoadoutMargin/LoadoutContent/SlotList"]
+[node name="RangedButton" type="Button" parent="OuterMargin/Page/Body/LoadoutPanel/LoadoutMargin/LoadoutScroll/LoadoutContent/SlotList"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
@@ -157,7 +164,7 @@ toggle_mode = true
 text = "Ranged\nHunting Bow"
 alignment = 0
 
-[node name="ShieldButton" type="Button" parent="OuterMargin/Page/Body/LoadoutPanel/LoadoutMargin/LoadoutContent/SlotList"]
+[node name="ShieldButton" type="Button" parent="OuterMargin/Page/Body/LoadoutPanel/LoadoutMargin/LoadoutScroll/LoadoutContent/SlotList"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
@@ -165,7 +172,7 @@ toggle_mode = true
 text = "Shield\nRound Shield"
 alignment = 0
 
-[node name="ArmorButton" type="Button" parent="OuterMargin/Page/Body/LoadoutPanel/LoadoutMargin/LoadoutContent/SlotList"]
+[node name="ArmorButton" type="Button" parent="OuterMargin/Page/Body/LoadoutPanel/LoadoutMargin/LoadoutScroll/LoadoutContent/SlotList"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
@@ -173,7 +180,7 @@ toggle_mode = true
 text = "Armor\nTraveler Coat"
 alignment = 0
 
-[node name="SpiritStoneButton" type="Button" parent="OuterMargin/Page/Body/LoadoutPanel/LoadoutMargin/LoadoutContent/SlotList"]
+[node name="SpiritStoneButton" type="Button" parent="OuterMargin/Page/Body/LoadoutPanel/LoadoutMargin/LoadoutScroll/LoadoutContent/SlotList"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
@@ -181,7 +188,7 @@ toggle_mode = true
 text = "Spirit Stone\nEmber Spirit Stone"
 alignment = 0
 
-[node name="ConsumableButton" type="Button" parent="OuterMargin/Page/Body/LoadoutPanel/LoadoutMargin/LoadoutContent/SlotList"]
+[node name="ConsumableButton" type="Button" parent="OuterMargin/Page/Body/LoadoutPanel/LoadoutMargin/LoadoutScroll/LoadoutContent/SlotList"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
@@ -189,28 +196,28 @@ toggle_mode = true
 text = "Consumable\nHealing Potion"
 alignment = 0
 
-[node name="LoadoutSpacer" type="Control" parent="OuterMargin/Page/Body/LoadoutPanel/LoadoutMargin/LoadoutContent"]
+[node name="LoadoutSpacer" type="Control" parent="OuterMargin/Page/Body/LoadoutPanel/LoadoutMargin/LoadoutScroll/LoadoutContent"]
 layout_mode = 2
 size_flags_vertical = 3
 mouse_filter = 2
 
-[node name="MaterialsHeading" type="Label" parent="OuterMargin/Page/Body/LoadoutPanel/LoadoutMargin/LoadoutContent"]
+[node name="MaterialsHeading" type="Label" parent="OuterMargin/Page/Body/LoadoutPanel/LoadoutMargin/LoadoutScroll/LoadoutContent"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "MATERIALS"
 
-[node name="MaterialsLabel" type="Label" parent="OuterMargin/Page/Body/LoadoutPanel/LoadoutMargin/LoadoutContent"]
+[node name="MaterialsLabel" type="Label" parent="OuterMargin/Page/Body/LoadoutPanel/LoadoutMargin/LoadoutScroll/LoadoutContent"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Iron 0  •  Steel 0\nTimber 0  •  Hardwood 0\nFiber 0  •  Fabric 0"
 autowrap_mode = 2
 
-[node name="SuppliesHeading" type="Label" parent="OuterMargin/Page/Body/LoadoutPanel/LoadoutMargin/LoadoutContent"]
+[node name="SuppliesHeading" type="Label" parent="OuterMargin/Page/Body/LoadoutPanel/LoadoutMargin/LoadoutScroll/LoadoutContent"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "RANGED SUPPLIES"
 
-[node name="SuppliesLabel" type="Label" parent="OuterMargin/Page/Body/LoadoutPanel/LoadoutMargin/LoadoutContent"]
+[node name="SuppliesLabel" type="Label" parent="OuterMargin/Page/Body/LoadoutPanel/LoadoutMargin/LoadoutScroll/LoadoutContent"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Arrows 12 / 20\nCartridges 5 / 8"

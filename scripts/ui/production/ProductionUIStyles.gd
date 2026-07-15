@@ -19,6 +19,16 @@ const THREAD := Color("6fd5d1")
 const RESIDUE := Color("75b96c")
 const BOSS_CORE := Color("aa89cf")
 
+# Shared desktop-web type and target scale. Individual screens may promote a
+# label, but essential copy must not fall below the caption size.
+const TYPE_CAPTION := 16
+const TYPE_BODY := 18
+const TYPE_BUTTON := 20
+const TYPE_SECTION := 22
+const TYPE_TITLE := 32
+const TYPE_HERO := 52
+const TARGET_HEIGHT := 48
+
 
 static func panel_style(
 	background: Color = SURFACE,
@@ -45,7 +55,8 @@ static func apply_button(button: Button, accent: Color = CYAN, quiet: bool = fal
 	button.add_theme_color_override("font_pressed_color", TEXT)
 	button.add_theme_color_override("font_focus_color", TEXT)
 	button.add_theme_color_override("font_disabled_color", Color(TEXT_MUTED, 0.55))
-	button.add_theme_font_size_override("font_size", 17)
+	button.add_theme_font_size_override("font_size", TYPE_BUTTON)
+	button.custom_minimum_size.y = maxf(button.custom_minimum_size.y, TARGET_HEIGHT)
 
 
 static func apply_character_card(button: Button, accent: Color, selected: bool) -> void:

@@ -5,6 +5,7 @@ signal equipment_command_requested(action: StringName, model_id: StringName, slo
 signal spirit_stone_equip_requested(stone_id: StringName)
 
 const Styles = preload("res://scripts/ui/production/ProductionUIStyles.gd")
+const Text = preload("res://scripts/ui/localization/LocalizedText.gd")
 
 const MATERIAL_LABELS := {
 	"rusted_scrap": "Iron Scrap",
@@ -34,7 +35,7 @@ const SUPPLY_LABELS := {
 }
 
 @onready var _margin: MarginContainer = $Margin
-@onready var _content: VBoxContainer = $Margin/Content
+@onready var _content: VBoxContainer = $Margin/Scroll/Content
 @onready var _context_label: Label = %ContextLabel
 @onready var _state_label: Label = %StateLabel
 @onready var _title_label: Label = %TitleLabel
@@ -97,28 +98,28 @@ func configure_spirit_stone(stone: Dictionary, compact: bool = false) -> void:
 		_render_unavailable("Spirit Stone unavailable", "No Stone can be inspected right now.")
 		return
 
-	_context_label.text = "SPIRIT STONE"
-	_title_label.text = String(stone.get("display_name", "Spirit Stone"))
-	_behavior_label.text = String(stone.get("description", "Passive effect unavailable."))
-	_weakness_label.text = String(stone.get("weakness", "No weakness description available."))
+	_context_label.text = _t("SPIRIT STONE")
+	_title_label.text = _t(String(stone.get("display_name", "Spirit Stone")))
+	_behavior_label.text = _t(String(stone.get("description", "Passive effect unavailable.")))
+	_weakness_label.text = _t(String(stone.get("weakness", "No weakness description available.")))
 	_clear_stats()
 	_add_stat("TYPE", "Passive")
 	_add_stat("TRIGGER", "Automatic")
-	_condition_label.text = "Activates when its stated condition is met."
+	_condition_label.text = _t("Activates automatically when its condition is met.")
 	_cost_label.text = ""
 	_cost_label.visible = false
 
 	var unlocked := bool(stone.get("unlocked", false))
 	var equipped := bool(stone.get("equipped", false))
-	_state_label.text = "EQUIPPED" if equipped else ("OWNED" if unlocked else "LOCKED")
+	_state_label.text = _t("EQUIPPED") if equipped else (_t("OWNED") if unlocked else _t("LOCKED"))
 	if equipped:
-		_reason_label.text = "This passive is active for the next stage."
+		_reason_label.text = _t("This passive is active for the next stage.")
 		_set_action("Equipped", false)
 	elif unlocked:
-		_reason_label.text = "Ready to equip."
+		_reason_label.text = _t("Ready to equip.")
 		_set_action("Equip Spirit Stone", true)
 	else:
-		_reason_label.text = "Discover this Spirit Stone before equipping it."
+		_reason_label.text = _t("Discover this Spirit Stone before equipping it.")
 		_set_action("Locked", false)
 
 
@@ -131,18 +132,18 @@ func configure_consumable(consumable_id: StringName, compact: bool = false) -> v
 	_stone_id = &""
 	_apply_density()
 
-	_context_label.text = "CONSUMABLE"
-	_state_label.text = "PREPARED"
-	_title_label.text = "Healing Potion" if consumable_id == &"small_potion" else "Recovery Item"
-	_behavior_label.text = "Restores 2 health and is not spent when health is already full."
-	_weakness_label.text = "One use is prepared for the next stage."
+	_context_label.text = _t("CONSUMABLE")
+	_state_label.text = _t("PREPARED")
+	_title_label.text = _t("Healing Potion") if consumable_id == &"small_potion" else _t("Recovery Item")
+	_behavior_label.text = _t("Restores 2 health. It is not used at full health.")
+	_weakness_label.text = _t("One use is prepared for the next stage.")
 	_clear_stats()
 	_add_stat("RECOVERY", "2 health")
 	_add_stat("USES", "1")
-	_condition_label.text = "Carried with the Traveler's loadout."
+	_condition_label.text = _t("Carried with the Traveler's loadout.")
 	_cost_label.text = ""
 	_cost_label.visible = false
-	_reason_label.text = "Ready for Stage 1."
+	_reason_label.text = _t("Ready for Stage 1.")
 	_set_action("Prepared", false)
 
 
@@ -169,10 +170,10 @@ func _render_equipment(decision: Dictionary, supplies: Dictionary) -> void:
 	if result_runtime.is_empty():
 		result_runtime = runtime.duplicate(true)
 
-	_context_label.text = String(SLOT_LABELS.get(slot, "EQUIPMENT"))
-	_title_label.text = String(decision.get("display_name", "Equipment"))
-	_behavior_label.text = String(decision.get("behavior", "Behavior unavailable."))
-	_weakness_label.text = String(decision.get("weakness", "Weakness unavailable."))
+	_context_label.text = _t(SLOT_LABELS.get(slot, "EQUIPMENT"))
+	_title_label.text = _t(String(decision.get("display_name", "Equipment")))
+	_behavior_label.text = _t(String(decision.get("behavior", "Behavior unavailable.")))
+	_weakness_label.text = _t(String(decision.get("weakness", "Weakness unavailable.")))
 	_state_label.text = _equipment_state_text(
 		crafted,
 		equipped,
@@ -217,12 +218,12 @@ func _equipment_state_text(
 	var grade_source := runtime if crafted else result_runtime
 	var grade := _grade_text(String(grade_source.get("grade_id", "")))
 	if equipped:
-		return "EQUIPPED • %s" % grade
+		return "%s · %s" % [_t("EQUIPPED"), grade]
 	if crafted:
-		return "OWNED • %s" % grade
+		return "%s · %s" % [_t("OWNED"), grade]
 	if blueprint_unlocked:
-		return "BLUEPRINT • %s" % grade
-	return "LOCKED • %s" % grade
+		return "%s · %s" % [_t("BLUEPRINT"), grade]
+	return "%s · %s" % [_t("LOCKED"), grade]
 
 
 func _render_equipment_stats(
@@ -274,7 +275,7 @@ func _render_condition_or_supply(
 			current.get("maximum_ranged_resource", 0)
 		))
 		_condition_label.text = "%s  %d / %d" % [
-			String(SUPPLY_LABELS.get(supply_id, "Supply")),
+			_t(SUPPLY_LABELS.get(supply_id, "Supply")),
 			current_supply,
 			maximum_supply,
 		]
@@ -282,25 +283,25 @@ func _render_condition_or_supply(
 
 	var maximum := float(current.get("maximum_condition", result.get("maximum_condition", 0.0)))
 	if maximum <= 0.0:
-		_condition_label.text = "Condition  —  Not used by this slot"
+		_condition_label.text = _t("Condition · Not used by this slot")
 		return
 	var condition := float(current.get("condition", maximum))
 	var result_condition := float(result.get("condition", condition))
 	var result_maximum := float(result.get("maximum_condition", maximum))
 	if not crafted:
-		_condition_label.text = "Condition after craft  %d / %d" % [
+		_condition_label.text = _t("Condition after craft %d/%d", [
 			int(round(result_condition)),
 			int(round(result_maximum)),
-		]
+		])
 		return
-	var state := "Worn" if is_zero_approx(condition) else ("Low" if condition / maximum <= 0.25 else "Ready")
+	var state := _t("Worn") if is_zero_approx(condition) else (_t("Low") if condition / maximum <= 0.25 else _t("Ready"))
 	var condition_text := "%d / %d" % [int(round(condition)), int(round(maximum))]
 	if not is_equal_approx(condition, result_condition) or not is_equal_approx(maximum, result_maximum):
 		condition_text += "  →  %d / %d" % [
 			int(round(result_condition)),
 			int(round(result_maximum)),
 		]
-	_condition_label.text = "Condition  %s  •  %s" % [condition_text, state]
+	_condition_label.text = _t("Condition %s · %s", [condition_text, state])
 
 
 func _render_cost(preview: Dictionary) -> void:
@@ -317,12 +318,12 @@ func _render_cost(preview: Dictionary) -> void:
 		var required := int(costs.get(material_id, 0))
 		var balance := int(owned.get(material_id, 0))
 		parts.append("%s %d/%d" % [
-			String(MATERIAL_LABELS.get(material_id, "Material")),
+			_t(MATERIAL_LABELS.get(material_id, "Material")),
 			balance,
 			required,
 		])
 	_cost_label.visible = true
-	_cost_label.text = "COST  %s" % ("  •  ".join(parts) if not parts.is_empty() else "Unavailable")
+	_cost_label.text = _t("COST %s", [" · ".join(parts) if not parts.is_empty() else _t("Unavailable")])
 
 
 func _render_equipment_action(
@@ -332,19 +333,19 @@ func _render_equipment_action(
 ) -> void:
 	match _action:
 		&"craft":
-			_reason_label.text = _action_reason(preview)
+			_reason_label.text = _t(_action_reason(preview))
 			_set_action("Craft", bool(preview.get("can_execute", false)))
 		&"recraft":
-			_reason_label.text = _action_reason(preview)
+			_reason_label.text = _t(_action_reason(preview))
 			_set_action("Recraft to Grade 2", bool(preview.get("can_execute", false)))
 		&"repair":
-			_reason_label.text = _action_reason(preview)
+			_reason_label.text = _t(_action_reason(preview))
 			_set_action("Repair", bool(preview.get("can_execute", false)))
 		&"equip":
-			_reason_label.text = "Owned and ready to equip."
+			_reason_label.text = _t("Owned and ready to equip.")
 			_set_action("Equip", crafted and not equipped)
 		_:
-			_reason_label.text = "This model is fully prepared."
+			_reason_label.text = _t("This model is fully prepared.")
 			_set_action("Equipped", false)
 
 
@@ -371,24 +372,24 @@ func _action_reason(preview: Dictionary) -> String:
 
 
 func _render_unavailable(title: String, message: String) -> void:
-	_context_label.text = "PREPARATION"
-	_state_label.text = "UNAVAILABLE"
-	_title_label.text = title
-	_behavior_label.text = message
-	_weakness_label.text = "Return after preparation data is available."
+	_context_label.text = _t("PREPARATION")
+	_state_label.text = _t("UNAVAILABLE")
+	_title_label.text = _t(title)
+	_behavior_label.text = _t(message)
+	_weakness_label.text = _t("Return after preparation data is available.")
 	_clear_stats()
 	_add_stat("STATUS", "Unavailable")
 	_condition_label.text = ""
 	_cost_label.text = ""
 	_cost_label.visible = false
-	_reason_label.text = "No command can be sent."
+	_reason_label.text = _t("No command can be sent.")
 	_set_action("Unavailable", false)
 
 
 func _set_action(text: String, enabled: bool) -> void:
-	_action_button.text = text
+	_action_button.text = _t(text)
 	_action_button.disabled = not enabled
-	_action_button.tooltip_text = _reason_label.text if not enabled else text
+	_action_button.tooltip_text = _reason_label.text if not enabled else _t(text)
 
 
 func _on_action_pressed() -> void:
@@ -408,19 +409,19 @@ func _clear_stats() -> void:
 
 func _add_stat(label_text: String, value_text: String) -> void:
 	var label := Label.new()
-	label.text = label_text
+	label.text = _t(label_text)
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	Styles.configure_label(label, 10 if _compact else 11, Styles.TEXT_MUTED)
+	Styles.configure_label(label, Styles.TYPE_CAPTION, Styles.TEXT_MUTED)
 	_stats_grid.add_child(label)
 
 	var value := Label.new()
-	value.text = value_text
+	value.text = _t(value_text)
 	value.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	value.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	value.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	value.tooltip_text = value_text
-	Styles.configure_label(value, 11 if _compact else 12, Styles.TEXT)
+	value.tooltip_text = value.text
+	Styles.configure_label(value, Styles.TYPE_CAPTION, Styles.TEXT)
 	_stats_grid.add_child(value)
 
 
@@ -467,7 +468,7 @@ func _transition_text(
 
 
 func _grade_text(grade_id: String) -> String:
-	return "Grade 2" if grade_id == "grade_2" else "Grade 1"
+	return _t("Grade 2") if grade_id == "grade_2" else _t("Grade 1")
 
 
 func _as_dictionary(value: Variant) -> Dictionary:
@@ -477,6 +478,9 @@ func _as_dictionary(value: Variant) -> Dictionary:
 func _apply_density() -> void:
 	if _margin == null:
 		return
+	_behavior_heading.text = _t("BEHAVIOR")
+	_weakness_heading.text = _t("WEAKNESS")
+	_stats_heading.text = _t("CURRENT → RESULT")
 	var horizontal := 10 if _compact else 14
 	var vertical := 8 if _compact else 12
 	for side in ["left", "right"]:
@@ -484,16 +488,16 @@ func _apply_density() -> void:
 	for side in ["top", "bottom"]:
 		_margin.add_theme_constant_override("margin_%s" % side, vertical)
 	_content.add_theme_constant_override("separation", 4 if _compact else 7)
-	Styles.configure_label(_context_label, 10 if _compact else 11, Styles.TEXT_MUTED)
-	Styles.configure_label(_state_label, 10 if _compact else 11, Styles.AMBER)
-	Styles.configure_label(_title_label, 19 if _compact else 24, Styles.TEXT)
+	Styles.configure_label(_context_label, Styles.TYPE_CAPTION, Styles.TEXT_MUTED)
+	Styles.configure_label(_state_label, Styles.TYPE_CAPTION, Styles.AMBER)
+	Styles.configure_label(_title_label, 24 if _compact else 28, Styles.TEXT)
 	for heading in [_behavior_heading, _weakness_heading, _stats_heading]:
-		Styles.configure_label(heading, 9 if _compact else 10, Styles.TEXT_MUTED)
-	Styles.configure_label(_behavior_label, 11 if _compact else 13, Styles.TEXT)
-	Styles.configure_label(_weakness_label, 11 if _compact else 12, Styles.TEXT_MUTED)
-	Styles.configure_label(_condition_label, 11 if _compact else 12, Styles.CYAN)
-	Styles.configure_label(_cost_label, 10 if _compact else 11, Styles.TEXT)
-	Styles.configure_label(_reason_label, 10 if _compact else 11, Styles.TEXT_MUTED)
+		Styles.configure_label(heading, Styles.TYPE_CAPTION, Styles.TEXT_MUTED)
+	Styles.configure_label(_behavior_label, Styles.TYPE_BODY, Styles.TEXT)
+	Styles.configure_label(_weakness_label, Styles.TYPE_CAPTION, Styles.TEXT_MUTED)
+	Styles.configure_label(_condition_label, Styles.TYPE_CAPTION, Styles.CYAN)
+	Styles.configure_label(_cost_label, Styles.TYPE_CAPTION, Styles.TEXT)
+	Styles.configure_label(_reason_label, Styles.TYPE_CAPTION, Styles.TEXT_MUTED)
 	_behavior_label.max_lines_visible = 2 if _compact else 3
 	_weakness_label.max_lines_visible = 2 if _compact else 3
 	_behavior_label.custom_minimum_size.y = 28.0 if _compact else 36.0
@@ -502,5 +506,9 @@ func _apply_density() -> void:
 	_reason_label.custom_minimum_size.y = 28.0 if _compact else 32.0
 	_cost_label.max_lines_visible = 2
 	_reason_label.max_lines_visible = 2
-	_action_button.custom_minimum_size.y = 40.0 if _compact else 44.0
-	_action_button.add_theme_font_size_override("font_size", 14 if _compact else 17)
+	_action_button.custom_minimum_size.y = Styles.TARGET_HEIGHT
+	_action_button.add_theme_font_size_override("font_size", Styles.TYPE_BUTTON)
+
+
+func _t(source: Variant, values: Array = []) -> String:
+	return Text.resolve(self, source, values)

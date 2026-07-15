@@ -75,7 +75,6 @@ func show_main_menu() -> void:
 		return
 	menu.connect(&"new_run_requested", show_hero_preparation)
 	menu.connect(&"settings_requested", func() -> void: Game.set_settings_open(true))
-	menu.connect(&"quit_requested", func() -> void: get_tree().quit())
 	_set_phase(RunPhase.Value.MAIN_MENU)
 
 
