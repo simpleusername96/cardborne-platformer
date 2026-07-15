@@ -30,6 +30,10 @@ product blueprint and detailed combat spec below remain authoritative.
 - `.agent/execplans/2026-07-15-gameplay-validity-repair.md` is the active
   implementation plan for input, death/retry, guard, stages, safe intermission,
   the separate UI branch, and browser-export validation.
+- `.agent/execplans/2026-07-15-master-ui-overhaul.md` is the active `master`-
+  targeted plan for selective adoption of the existing UI asset branches, the
+  complete production-screen/HUD visual migration, and measurement-backed world
+  presentation dependencies.
 - `.agent/execplans/2026-07-12-actual-game-production-roadmap.md` is the completed
   first-run implementation record.
 - `design/PLAYER_CHARACTER_SYSTEMS.md`,

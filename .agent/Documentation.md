@@ -12,6 +12,7 @@ related:
   - ../docs/architecture/FIRST_SLICE_ARCHITECTURE.md
   - ../docs/release/TRAVELER_EQUIPMENT_VERTICAL_SLICE.md
   - ./execplans/2026-07-15-gameplay-validity-repair.md
+  - ./execplans/2026-07-15-master-ui-overhaul.md
 ---
 
 # Project Documentation Memory
@@ -167,5 +168,10 @@ The active cross-module implementation plan is
 `.agent/execplans/2026-07-15-gameplay-validity-repair.md`. Its implemented runtime,
 UI, and 70-check release-matrix work is complete; matching Godot 4.7 Web export
 templates are still required before served-browser QA can close Milestone H.
+The active visual follow-on is
+`.agent/execplans/2026-07-15-master-ui-overhaul.md`: integrate the functional line
+into `master`, selectively adopt the existing production UI assets, then migrate
+the full screen/HUD system and measure world-presentation requirements from runtime
+bounds instead of conversation-chosen image counts.
 Random map re-entry, larger equipment/content catalogs, multiple save slots, and
 final world art remain separate decisions.
