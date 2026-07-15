@@ -39,13 +39,15 @@ product blueprint and detailed combat spec below remain authoritative.
   snapshot of the former six-discipline direction. It is retained for comparison
   and does not define current work.
 - `research/third_party_adoption_ledger.md` is the active external adoption record.
-- `research/combat_loadout_reference_review_2026-07-14.md` is active advisory
-  evidence only. Its former active-skill recommendation was not adopted; the
-  current combat and UI specs are authoritative.
+- `research/combat_loadout_reference_review_2026-07-14.md` is archived evidence.
+  Its former three-active-skill recommendation was rejected and must not guide
+  current work.
 - `research/player_input_and_ui_followup_audit_2026-07-15.md` is active advisory
-  evidence for control conventions, menu navigation, and deferred UI findings.
+  evidence for web keyboard controls, menu navigation, and deferred UI findings.
   It authorizes no UI implementation; the current product specs remain
   authoritative.
+- `research/plan_validity_audit_2026-07-15.md` records the evidence-backed gap
+  between completed-plan claims, active specs, and the current playable runtime.
 - Dated surveys/deep dives are archived evidence; `references/` contains advisory
   candidates. Neither is product authority.
 - `.agent/Documentation.md` records current project state and verification paths.

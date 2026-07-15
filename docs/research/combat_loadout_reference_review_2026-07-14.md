@@ -1,9 +1,9 @@
 ---
 type: evidence
-status: active
+status: archived
 owner: BK
 created: 2026-07-14
-last_reviewed: 2026-07-14
+last_reviewed: 2026-07-15
 topic: Action-platformer combat loadouts, active/passive separation, and distinct weapon verbs
 scope: Advisory evidence for Cardborne's single-hero combat equipment and skill-slot redesign
 source: Official developer, publisher, and game-site material reviewed on 2026-07-14
@@ -14,6 +14,10 @@ related:
 ---
 
 # 전투 구성 비교 조사 - 2026-07-14
+
+> Historical evidence only. The three-active-skill recommendation below was
+> rejected. Current combat direction is owned by
+> `COMBAT_EQUIPMENT_CRAFTING.md` and caps any later active-skill experiment at one.
 
 ## Purpose
 

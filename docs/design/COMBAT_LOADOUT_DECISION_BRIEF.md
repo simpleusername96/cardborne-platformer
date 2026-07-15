@@ -3,13 +3,14 @@ type: record
 status: active
 owner: BK
 created: 2026-07-14
-last_reviewed: 2026-07-14
-source: Owner feedback and scope correction completed on 2026-07-14
+last_reviewed: 2026-07-15
+source: Owner feedback and scope correction through 2026-07-15
 topic: Concise decision summary for the minimum single-hero combat and equipment loop
 related:
   - ./COMBAT_EQUIPMENT_CRAFTING.md
   - ../../.agent/execplans/2026-07-14-minimum-equipment-progression-vertical-slice.md
-  - ./PLAYER_UIUX_REFINEMENT_PLAN.md
+  - ./PRODUCTION_UI_CONTRACT.md
+  - ../research/player_input_and_ui_followup_audit_2026-07-15.md
 ---
 
 # 최소 전투·장비 결정 요약
@@ -21,7 +22,8 @@ related:
 미루면 사용자가 원하는 핵심 게임 순환 자체가 사라진다.
 
 따라서 **핵심 시스템은 모두 구현하되 콘텐츠 수만 제한한다.** 상세 규칙은
-`COMBAT_EQUIPMENT_CRAFTING.md`, 실행 순서는 활성 ExecPlan이 소유한다.
+`COMBAT_EQUIPMENT_CRAFTING.md`, 실행 순서는 새 작업이 시작될 때 작성하는
+활성 ExecPlan이 소유한다.
 
 ## Decision
 
@@ -35,6 +37,7 @@ related:
 - 근접 도구와 방패는 수리 가능한 상태를 가지지만 0에서도 파괴되거나 사용 불가가 되지 않는다.
 - 불씨/서리 정령석 두 개는 패시브 효과 하나씩만 제공한다.
 - 별도 액티브 기술, 기술 슬롯, 스킬 트리, 정령 액티브, 공명 게이지는 이번 구현에 없다.
+  이후 실험도 동시에 하나를 초과하지 않는다.
 - 고정 연습장과 고정 Stage 1에서 획득, 제작, 재제작, 장착, 저장을 한 번 완주한다.
 
 ## Rationale
@@ -49,12 +52,13 @@ related:
 
 - 이전의 12개 도구, 제압/전술/정령술, 장신구 목표는 현재 구현 목표가 아니다.
 - 생산 HUD에는 공격, 방어, 소비 아이템과 필요한 장비 자원만 표시한다.
-- Q/R/V는 현재 생산 전투 행동을 가지지 않는다.
+- 현재 액티브 기술 키는 없다. `R`은 소비 아이템에 사용하며 다중 기술 키를 만들지 않는다.
 - 첫 완료 보상은 대안 장비 하나 제작과 장비 하나 Grade 2 재제작을 보장한다.
 - Stage 2, 추가 장비, 스킬 트리, 랜덤 맵은 첫 순환이 플레이테스트를 통과한 뒤 별도 계획으로 확장한다.
 
 ## Related
 
 - 상세 사양: `docs/design/COMBAT_EQUIPMENT_CRAFTING.md`
-- 구현 계획: `.agent/execplans/2026-07-14-minimum-equipment-progression-vertical-slice.md`
-- UI/UX: `docs/design/PLAYER_UIUX_REFINEMENT_PLAN.md`
+- 완료된 구현 기록: `.agent/execplans/2026-07-14-minimum-equipment-progression-vertical-slice.md`
+- UI contract: `docs/design/PRODUCTION_UI_CONTRACT.md`
+- 입력 및 별도 UI 브랜치 기록: `docs/research/player_input_and_ui_followup_audit_2026-07-15.md`

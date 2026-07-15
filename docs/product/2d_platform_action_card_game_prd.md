@@ -3,9 +3,9 @@ type: spec
 status: active
 owner: BK
 created: 2026-06-30
-last_reviewed: 2026-07-14
+last_reviewed: 2026-07-15
 canonical_for: Cardborne product identity and first complete run scope
-source: Existing PRD, first-run scope delta, first-slice expansion, and owner feedback through 2026-07-14
+source: Existing PRD, first-run scope delta, first-slice expansion, and owner feedback through 2026-07-15
 related:
   - ../design/COMBAT_EQUIPMENT_CRAFTING.md
   - ../design/PROCEDURAL_REGION_GENERATION.md
@@ -179,9 +179,11 @@ weakness. A new model must differ on at
 least two functional axes; damage, speed, color, or element alone do not qualify.
 Raw growth comes from rebuilding the same model with better material grades.
 
-The first vertical slice adds no separate active-skill slots. One equipped Spirit
-Stone provides one passive elemental rule and never adds an input, active Art, or
-resonance gauge. Exact content and selection rules are owned by
+The first vertical slice adds no active skill. One equipped Spirit Stone provides
+one passive elemental rule and never adds an input, active Art, or resonance gauge.
+If a later combat playtest proves that one more decision is necessary, the design
+may add at most one active skill; it may not grow into multiple skill slots or a
+skill bar. Exact content and selection rules are owned by
 `docs/design/COMBAT_EQUIPMENT_CRAFTING.md`.
 
 ## Progression Layers
@@ -261,8 +263,9 @@ focused validation.
 - Context attacks are reliable: close qualified threats use melee; otherwise the
   equipped ranged tool resolves its declared line, recall, reload, or ground-target
   policy. No valid ranged intent falls back to melee without consuming a resource.
-- The first vertical slice has no separate active skills. Equipment actions and
-  passive Spirit effects must not create hidden extra inputs.
+- The first vertical slice has no active skill. Equipment actions and passive
+  Spirit effects must not create hidden extra inputs. A later experiment is capped
+  at one explicit active skill and requires a playtest-backed owner decision.
 - Defense always uses the shield and distinguishes normal, precise, heavy, and
   unblockable responses with visible tells.
 - Every hit records source, amount, knockback, tags, and target policy.
@@ -304,7 +307,8 @@ stage card reward, pause/settings, boss HUD, death summary, and clear summary.
   only when charged or triggered; persistent materials stay in preparation screens.
 - Debug route metrics and explanatory test labels do not exist in production UI.
 - Every visible setting changes runtime behavior.
-- Primary flows support keyboard and one standard gamepad layout.
+- Gameplay uses remappable keyboard actions. Menus and decision screens are fully
+  operable by keyboard and mouse.
 - Danger telegraphs remain legible without relying on color alone.
 
 ## Playtest And Balance Gates
@@ -378,7 +382,7 @@ The first complete run is done when a fresh player can:
 The release candidate additionally passes the context-attack scenario matrix,
 equipment/passive approved-plan matrix, economy bounds, condition/resource
 soft-lock fixtures, profile round trips, boss scheduler simulation,
-keyboard/gamepad path, and 960x540/1280x720/1920x1080 rendered review.
+keyboard/mouse path, and 960x540/1280x720/1920x1080 browser-viewport review.
 
 ## Non-Goals
 
@@ -388,11 +392,10 @@ keyboard/gamepad path, and 960x540/1280x720/1920x1080 rendered review.
 - Arbitrary per-tile procedural terrain or random boss arenas.
 - Runtime-random normal-stage topology during the fixed-stage gameplay refinement.
 - Multiple playable heroes, combat-time weapon swapping, unrestricted weapon
-  proliferation, or separate active-skill slots in the first vertical slice.
+  proliferation, or multiple active-skill slots.
 - Grid inventory, ranged-weapon durability on top of ammunition, item destruction,
   downgrade, random affixes, or mandatory grind.
-- Final commissioned art, final soundtrack, localization, console certification,
-  or storefront work.
+- Final commissioned art, final soundtrack, or localization.
 
 ## Related
 
@@ -401,5 +404,5 @@ keyboard/gamepad path, and 960x540/1280x720/1920x1080 rendered review.
 - `docs/design/PROCEDURAL_REGION_GENERATION.md`
 - `docs/design/MAP_AUTHORING_PIPELINE_CONTRACT.md`
 - `docs/design/ENEMIES_TRAPS_GIMMICKS.md`
-- `docs/design/PLAYER_UIUX_REFINEMENT_PLAN.md`
+- `docs/design/PRODUCTION_UI_CONTRACT.md`
 - `docs/architecture/FIRST_SLICE_ARCHITECTURE.md`

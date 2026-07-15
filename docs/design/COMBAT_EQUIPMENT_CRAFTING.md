@@ -3,13 +3,13 @@ type: spec
 status: active
 owner: BK
 created: 2026-07-14
-last_reviewed: 2026-07-14
+last_reviewed: 2026-07-15
 canonical_for: Minimum single-hero contextual combat, equipment, blueprint, material-grade, crafting, repair, passive Spirit Stone, and Stage 1 progression rules
 supersedes:
   - ./ARSENAL_EQUIPMENT_PROGRESSION.md
   - ./PLAYER_CHARACTER_SYSTEMS.md
   - ./PROGRESSION_EQUIPMENT_ECONOMY.md
-source: Owner decisions through 2026-07-14 and current runtime inspection
+source: Owner decisions through 2026-07-15, current runtime inspection, and the player-input convention audit
 related:
   - ../../.agent/execplans/2026-07-14-minimum-equipment-progression-vertical-slice.md
   - ./COMBAT_LOADOUT_DECISION_BRIEF.md
@@ -50,8 +50,9 @@ related:
 - 고정 연습장과 고정 Stage 1의 획득·제작 순환;
 - 획득 거래, 프로필 저장과 재실행 복구.
 
-별도 액티브 기술, 스킬 트리, 정령 액티브, 공명 게이지, 장신구, 세 번째 이후
-장비 모델, Stage 2 이후 성장, 런타임 랜덤 맵은 이 사양의 첫 목표가 아니다.
+액티브 기술, 스킬 트리, 정령 액티브, 공명 게이지, 장신구, 세 번째 이후 장비
+모델, Stage 2 이후 성장, 런타임 랜덤 맵은 이 사양의 첫 목표가 아니다. 이후
+액티브 기술을 검토하더라도 동시 장착은 최대 하나이며 별도 스킬 바를 만들지 않는다.
 
 ## Domain Brief
 
@@ -97,9 +98,11 @@ related:
 | 정령석 | 입력 없이 원소 조건 하나를 제공하는 패시브 장비. | 액티브 기술, 궁극기 |
 | 획득 거래 | 보상 원천 하나를 정확히 한 번 적용하는 정산. | 획득 애니메이션 자체 |
 | 준비 구역 | 제작, 재제작, 수리, 장착이 가능한 안전 구역. | 전투 중 인벤토리 |
+| 상호작용 | 상자, NPC, 제단, 대장간, 출구에 `E`로 의도를 전달하는 저빈도 행동. | 공격, 자동 획득 |
 
 장비의 기본 공격과 방어를 `스킬`이라고 부르지 않는다. 이번 목표에는 `charm`,
-`참`, `제압 기술`, `전술 기술`, `Spirit Art`, `공명`이 없다.
+`참`, `제압 기술`, `전술 기술`, `Spirit Art`, `공명`이 없다. 나중에 액티브
+기술 하나를 실험하더라도 공격·방어와 다른 명확한 책임이 있어야 한다.
 
 ## Functional Ownership
 
@@ -149,19 +152,23 @@ related:
 
 ### Controls
 
-| Role | Keyboard | Gamepad | Action |
-| --- | --- | --- | --- |
-| Move | `A/D` | Left stick | 이동. |
-| Jump | `Space` | `A` | 공통 점프/2단 점프. |
-| Dash | `Shift` or `K` | `B` | 공통 대시. |
-| Context attack | `F` | `X` | 근접 또는 원거리 공격 하나. |
-| Guard | `G` | `Y` | 장착 방패를 들고/내림. |
-| Consumable | `H` | `RT` | 회복 물약 사용. |
-| Interact | `E` | `R3` | 상자, NPC, 제단, 대장간, 출구. |
-| Pause | `Escape` | `Menu` | 일시정지와 설정. |
+| Role | Keyboard default | Action |
+| --- | --- | --- |
+| Move / climb | `WASD` | 이동, 줄 오르기와 내려가기. |
+| Jump / drop through | `Space` / `S + Space` | 점프·2단 점프, 일방통행 발판 통과. |
+| Dash | `Left Shift` | 공통 대시. |
+| Context attack | `J` | 근접 또는 원거리 공격 하나. |
+| Guard | `K` | 누르면 정밀 방어를 시도하고, 유지하면 일반 방어를 계속한다. |
+| Consumable | `R` | 회복 물약 사용. |
+| Interact | `E` | 상자, NPC, 제단, 대장간, 출구. |
+| Pause / back | `Escape` | 일시정지, 팝업 닫기, 이전 메뉴. |
 
-Q/R/V 또는 LT에 숨은 액티브 전투 행동을 두지 않는다. 모든 입력은 재지정 가능하고
-게임패드에서 한 버튼에 두 전투 행동을 겹치지 않는다.
+`F` 공격은 오른쪽 이동 `D`와 같은 왼손 검지를 사용해 동시 입력이 불편하다.
+고빈도 전투를 오른손의 `J/K`로 분리하고 이동·점프·대시는 왼손에 유지한다.
+현재 액티브 기술은 0개다. 이후 하나를 채택하면 기본키 `L`을 사용하되, 미구현
+상태에서 빈 슬롯이나 입력 안내를 노출하지 않는다. 모든 실제 gameplay key는
+재지정 가능하고 안내는 현재 바인딩 하나만 간결하게 표시한다. 마우스는 메뉴
+포인터로 사용하며 전투 기본 배치는 마우스 버튼에 의존하지 않는다.
 
 ## Context Attack Resolution
 
@@ -347,7 +354,7 @@ loadout이 복원되어야 한다.
 
 ## Requirements
 
-- [ ] 생산 화면에 클래스 선택, 무기 전환, Q/R/V 기술 슬롯이 없다.
+- [ ] 생산 화면에 클래스 선택, 무기 전환, 다중 액티브 기술 슬롯이 없다.
 - [ ] 한 영웅이 근접, 원거리, 방패를 동시에 장착한다.
 - [ ] 상황 공격과 실제 미리보기가 같은 intent를 사용한다.
 - [ ] 방어 입력은 항상 장착 방패를 사용한다.
@@ -373,11 +380,12 @@ loadout이 복원되어야 한다.
 6. 대장간 비교값, 명령 결과, 실제 전투값이 일치한다.
 7. 상태 0과 화살/탄약 0 fixture에서 진행 불능이 없다.
 8. 저장 실패 rollback, backup 복구, v1 -> v2, 앱 재실행 round trip이 통과한다.
-9. UI는 `PLAYER_UIUX_REFINEMENT_PLAN.md`의 세 해상도, 포커스, 피드백 검증을 통과한다.
+9. UI는 `PRODUCTION_UI_CONTRACT.md`의 뷰포트, 포커스, 피드백 검증을 통과한다.
 
 ## Non-Goals
 
-- 별도 액티브 기술, 스킬 트리, 정령 액티브, 공명 게이지;
+- 첫 목표의 액티브 기술, 스킬 트리, 정령 액티브, 공명 게이지;
+- 이후에도 한 번에 하나를 초과하는 액티브 기술 또는 스킬 바;
 - 세 번째 이후 도구/방어구/정령석, 장신구, 다중 방어구 슬롯;
 - 무기별 원소 소켓, 원소 탄약, 랜덤 희귀도/옵션/강화;
 - 장비 파괴, 상태 0 사용 금지, 기본 보급을 위한 의무 반복;
@@ -389,6 +397,7 @@ loadout이 복원되어야 한다.
 
 - `.agent/execplans/2026-07-14-minimum-equipment-progression-vertical-slice.md`
 - `docs/product/2d_platform_action_card_game_prd.md`
-- `docs/design/PLAYER_UIUX_REFINEMENT_PLAN.md`
+- `docs/design/PRODUCTION_UI_CONTRACT.md`
+- `docs/research/player_input_and_ui_followup_audit_2026-07-15.md`
 - `docs/design/ENEMIES_TRAPS_GIMMICKS.md`
 - `docs/architecture/FIRST_SLICE_ARCHITECTURE.md`

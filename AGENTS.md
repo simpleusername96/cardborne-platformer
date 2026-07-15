@@ -43,7 +43,7 @@
 ### FE
 - Prefer a component-driven UI so design and behavior stay consistent.
 - Check alignment, typography, spacing, and padding/gap explicitly.
-- Check overflow and clipping explicitly; no child element should be visibly cut off or exceed its container at supported desktop/mobile widths.
+- Check overflow and clipping explicitly; no child element should be visibly cut off or exceed its container at supported browser viewport sizes.
 - Avoid unnecessary explanatory or guideline text.
 - Keep non-essential elements visually restrained.
 

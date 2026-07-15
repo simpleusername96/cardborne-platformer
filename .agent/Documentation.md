@@ -2,7 +2,7 @@
 type: record
 status: active
 owner: BK
-last_reviewed: 2026-07-14
+last_reviewed: 2026-07-15
 topic: Current Cardborne implementation state and verification entry points
 source: Active specs, current Godot runtime, release gates, and rendered QA evidence
 related:
@@ -39,6 +39,11 @@ passive Spirit Stone.
   route, recovery, and player-acceptance gates.
 - The production card catalog contains five shared cards with no retired skill or
   class dependency.
+- The active product contract specifies remappable keyboard actions, with `J`
+  context attack, `K` guard, `E` world interaction, `R` consumable, `Space` jump,
+  and `Left Shift` dash as defaults. Menus accept keyboard and mouse.
+- The current active-skill count is zero. A later playtest-backed experiment is
+  capped at one and may not create a multi-slot skill bar.
 
 ## Rationale
 
@@ -137,6 +142,9 @@ inspection at `960x540`, `1280x720`, and `1920x1080` where applicable.
   spatial transitions.
 - Compatibility code increases maintenance surface until v1 migration support is
   intentionally retired in a separate owner-approved cleanup.
+- Current runtime input still contains `F/G/H` defaults, fixed gamepad behavior,
+  Settings presentation, and validators from the former contract. These are
+  implementation drift, not current product requirements.
 
 ## Next Steps
 

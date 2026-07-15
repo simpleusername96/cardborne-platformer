@@ -5,14 +5,14 @@ templates are assembled into constrained seeded stages; responsive traversal and
 readable combat feed a run-changing card, equipment, and mastery build.
 
 Start with `docs/README.md`. The canonical product scope is
-`docs/product/2d_platform_action_card_game_prd.md`, and the active implementation
-checklist is `.agent/execplans/2026-07-12-actual-game-production-roadmap.md`.
+`docs/product/2d_platform_action_card_game_prd.md`. Completed ExecPlans under
+`.agent/execplans/` are implementation records, not an active backlog.
 
 ## Requirements
 
 - Godot 4.7 stable or compatible Godot 4.x build.
 - GDScript only for the MVP; the .NET/C# Godot build is not required.
-- Desktop keyboard and fixed-layout gamepad controls are supported.
+- Gameplay uses remappable keyboard input; menus also accept the mouse.
 
 ## Local Godot
 
@@ -42,18 +42,16 @@ If the local runtime is missing, install it with:
 .\tools\setup-godot.ps1
 ```
 
-## Release Candidate
+## Current Playable Baseline
 
-The first complete run is implemented: choose Warrior, Archer, or Assassin; clear
-three constrained seeded stages; make level, card, shop, forge, equipment, and
-mastery decisions; then defeat or lose to the two-phase Slime King. The run settles
-persistent materials and equipment before replay or return to the main menu.
-Optional chests also support the `Treasure Instinct` exclusive reward choice,
-replacing rather than duplicating the resolved cache reward.
+One persistent Traveler can clear three approved fixed stages, make card and
+equipment decisions, use deterministic Forge services, and fight the two-phase
+Slime King. Blueprints, materials, crafted grades, equipment condition, and the
+equipped loadout persist between app starts.
 
-See `docs/release/FIRST_COMPLETE_RUN_RC1.md` for the player path, known limitation,
-and release validation evidence. The completed roadmap remains an implementation
-record rather than an active checklist.
+See `docs/release/TRAVELER_EQUIPMENT_VERTICAL_SLICE.md` for the implemented path
+and validation evidence. Completed roadmaps remain implementation records rather
+than active checklists.
 
 ## Runtime Catalogs
 

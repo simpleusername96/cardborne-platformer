@@ -16,8 +16,8 @@ Use documents in this order:
 3. `../architecture/FIRST_SLICE_ARCHITECTURE.md` for code ownership and runtime
    contracts.
 4. `../../.agent/execplans/2026-07-14-minimum-equipment-progression-vertical-slice.md`
-   for the active implementation and UI/UX checklist. The former standalone UI
-   plan is superseded evidence.
+   as the completed migration and validation record. It is not an active checklist.
+   The former standalone UI plan is superseded evidence.
 5. The 2026-07-12 roadmap is the completed v1 implementation record.
 6. `../references/` and `../research/` as evidence only.
 

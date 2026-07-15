@@ -3,7 +3,7 @@ type: record
 status: active
 owner: BK
 created: 2026-07-14
-last_reviewed: 2026-07-14
+last_reviewed: 2026-07-15
 topic: One-Traveler equipment-progression vertical slice
 scope: Implemented production flow, validation evidence, and retained limitations
 source: Completed minimum equipment-progression ExecPlan and validated Godot runtime
@@ -40,7 +40,7 @@ The active production run now contains:
   authored enemy/hazard/reward placements, and the two-phase Slime King fight;
 - Hero Preparation, deterministic Forge, contextual equipment HUD, field pickup
   and permanent reward receipts, shared card rewards, pause/settings, and run
-  results at all supported desktop resolutions;
+  results at all three target viewport sizes under Godot render checks;
 - five production cards that do not depend on retired class skills or cooldowns.
 
 Runtime-random topology remains dormant. Historical class catalogs and v1 profile
@@ -64,6 +64,7 @@ combat, reward, and progression quality from procedural-topology risk.
   recovery, enemies/hazards, UI, cards/rewards, boss flow, and settlement.
 - Progression, shell, gameplay HUD, and fixed-stage capture scripts rendered with
   Godot 4.7 at `960x540`, `1280x720`, and `1920x1080` where applicable.
+- Browser export remains unverified because the repository has no export preset.
 - `git diff --check`, Godot import, short boot, and task-scoped legacy-term guards
   are the final handoff gates.
 

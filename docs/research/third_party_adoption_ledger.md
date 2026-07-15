@@ -2,7 +2,7 @@
 type: evidence
 status: active
 created: 2026-07-05
-last_reviewed: 2026-07-13
+last_reviewed: 2026-07-15
 source: Local deep-dive evidence plus current official upstream release and compatibility documentation
 topic: Third-party package adoption and reference tracking
 scope: External code, plugins, examples, and assets considered for the production foundation
@@ -83,4 +83,5 @@ changing collision, combat, or content IDs.
 - The accepted procedural family is production-readable prototype presentation,
   not a claim that final commercial art direction is complete.
 - Commit hashes come from the local deep-dive evidence and should be re-verified before copying from upstream.
-- Mouse, gamepad, and axis remapping remain deferred in the local input implementation.
+- Browser-export input behavior and the revised keyboard defaults remain deferred
+  in the local input implementation.

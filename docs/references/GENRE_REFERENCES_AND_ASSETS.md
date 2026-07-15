@@ -26,13 +26,13 @@ Collect implementation references, UI/UX standards, code examples, and asset can
   - Use for `move_and_slide`, collision response, and physics-process placement.
 - [Godot TileMapLayer docs](https://docs.godotengine.org/en/stable/classes/class_tilemaplayer.html)
   - Use for Godot 4.7 tile-based stage implementation. TileMapLayer replaces the older multi-layer TileMap approach.
-- [Godot keyboard/controller UI navigation](https://docs.godotengine.org/en/stable/tutorials/ui/gui_navigation.html)
-  - Use for menu focus, controller navigation, and avoiding gameplay input conflicts with `ui_*` actions.
+- [Godot GUI keyboard navigation](https://docs.godotengine.org/en/stable/tutorials/ui/gui_navigation.html)
+  - Use for menu focus, explicit focus neighbors, and avoiding gameplay input conflicts with `ui_*` actions.
 
 ### Code References
 
 - [Official Godot 2D Platformer demo](https://github.com/godotengine/godot-demo-projects/tree/master/2d/platformer)
-  - Useful for side-scrolling player controller, enemies, moving platforms, coins, camera bounds, keyboard/gamepad controls, and pause menu.
+  - Useful for side-scrolling movement, enemies, moving platforms, coins, camera bounds, keyboard controls, and pause menu.
   - Repository license: MIT.
 - [GDQuest beginner 2D platformer project](https://github.com/gdquest-demos/godot-3-beginner-2d-platformer)
   - Useful for connected levels, pass-through platforms, coins, enemies, title screen, pause menu, and score counter.
@@ -71,7 +71,7 @@ Preferred source for first imports: Kenney CC0 packs. They have clear licensing,
 - [Kenney UI Pack - Adventure](https://www.kenney.nl/assets/ui-pack-adventure)
   - CC0. Better theme fit for fantasy shop/card/rest UI.
 - [Kenney Input Prompts](https://kenney.nl/assets/input-prompts)
-  - CC0. Candidate for keyboard, mouse, and controller prompt glyphs.
+  - CC0. Candidate for keyboard and mouse prompt glyphs.
 - [Kenney Game Icons](https://kenney.nl/assets/game-icons)
   - CC0. Candidate for coins, materials, equipment slots, and card tags.
 - [OpenGameArt CC0 Resources](https://opengameart.org/content/cc0-resources)
@@ -81,7 +81,7 @@ Preferred source for first imports: Kenney CC0 packs. They have clear licensing,
 ## Findings
 
 - Godot official docs support the current plan to use `CharacterBody2D`, `move_and_slide`, Input Map actions, `Control` focus, and `TileMapLayer` for Godot 4.7.
-- The official Godot 2D Platformer demo overlaps strongly with this project: player controller, enemies, moving platforms, coins, pause menu, camera bounds, keyboard/gamepad controls.
+- The official Godot 2D Platformer demo overlaps strongly with this project: player movement, enemies, moving platforms, coins, pause menu, camera bounds, and keyboard controls.
 - Procedural metroidvania-style generation should start with mission/room graph constraints, not raw random tile placement.
 - Lock/key, shortcut, and boss access constraints must be validated after generation so the map is always winnable.
 - Kenney CC0 packs are the safest first asset source because they cover platformer tiles, UI, prompts, icons, and character placeholders without attribution requirements.
