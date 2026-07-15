@@ -13,6 +13,7 @@ related:
   - ../design/ENEMIES_TRAPS_GIMMICKS.md
   - ../design/PRODUCTION_UI_CONTRACT.md
   - ../architecture/FIRST_SLICE_ARCHITECTURE.md
+  - ../../.agent/execplans/2026-07-15-gameplay-validity-repair.md
 ---
 
 # Cardborne Game Blueprint
@@ -41,8 +42,8 @@ The target first complete run contains:
   and two material grades across metal, timber, and textile;
 - a skippable and replayable weapon training prologue and automatic single-profile
   persistence for the first vertical slice;
-- enemies, traps, optional routes, checkpoints, shops, rewards, death, settlement,
-  and clear flows;
+- enemies, traps, optional routes, fall-recovery points, shops, rewards, death,
+  settlement, and clear flows;
 - one coherent Lower Ruins region with production-readable placeholder art and
   audio.
 
@@ -123,11 +124,13 @@ main menu
  -> stage map: first-clear/replay rewards and next destination
  -> fixed Stage 1: establish and test the build
  -> stage-clear card
- -> blacksmith / preparation
+ -> safe intermission: merchant / Forge / preparation
  -> fixed Stage 2: hazards and route risk
- -> stage-clear card + blacksmith/rest/preparation
+ -> stage-clear card
+ -> safe intermission: merchant / Forge / preparation
  -> fixed Stage 3: mixed build check
  -> stage-clear card
+ -> safe intermission: merchant / Forge / preparation
  -> authored Giant Slime King arena
  -> persistent settlement and run summary
 ```
@@ -140,7 +143,7 @@ safe entry
  -> route choice
  -> combat/hazard escalation
  -> optional reward risk
- -> checkpoint or recovery beat
+ -> fall-recovery point or recovery beat
  -> final encounter/objective
  -> exit
 ```
@@ -150,7 +153,7 @@ safe entry
 | Stage | Player-facing job | Room target | Content emphasis |
 | --- | --- | ---: | --- |
 | Ruin Approach | Learn the route language and establish confidence. | 6 required + 1 optional | Basic traversal, Walker, Charger, simple gaps, visible rewards. |
-| Flooded Works | Force timing and spending decisions. | 7 required + 1-2 optional | Poison vents, crumbling paths, Shooter, Leaper, rest/blacksmith. |
+| Flooded Works | Force timing and spending decisions. | 7 required + 1-2 optional | Poison vents, crumbling paths, Shooter, Leaper, and timed recovery. |
 | Broken Sanctum | Test the completed run build. | 8 required + 2 optional | Shield Guard, Sentry, gates, mixed encounters, reduced recovery. |
 | Slime Court | Read patterns and cash in the build. | Authored arena | Four boss patterns, two phases, bounded adds, clear punish windows. |
 
@@ -160,7 +163,7 @@ language while stage profiles change pacing, danger budgets, and room eligibilit
 ## Hero And Combat Equipment
 
 The game has one persistent hero. Variable jump, double jump, dash, crouch
-clearance, fast fall, one-way drop, rope use, damage recovery, and checkpoint
+clearance, fast fall, one-way drop, rope use, damage recovery, and fall-recovery
 respawn never depend on equipment or unlocks.
 
 The hero always carries one melee tool, one ranged tool, and one shield. Attack
@@ -220,11 +223,12 @@ UI, enemies, cards, rooms, and equipment never edit final player fields directly
 
 The first complete run ships with:
 
-- 30 authored stage-specific room templates: 10 Ruin, 9 Flooded, 11 Sanctum;
+- 29 authored normal-stage room templates: 10 Ruin, 8 Flooded, 11 Sanctum;
+- 1 authored Safe Intermission shell reused between every combat map;
 - 6 normal enemy archetypes and 13 stage-eligible first-run variants;
 - 2 special enemy actors: Summon Node and Small Slime;
 - 4 core hazard families plus moving platform, switch gate, destructible cache,
-  chest, material node, checkpoint, and exit;
+  chest, material node, fall-recovery point, and exit;
 - 15 stage-clear cards;
 - 5 repeatable run-level micro upgrades;
 - 6 combat-tool models and blueprints across melee, ranged, and shield roles;
@@ -243,8 +247,8 @@ focused validation.
   stage through the explicit curated path. Different run seeds must not change its
   rooms, connections, encounters, hazards, rewards, or field pickups.
 - A Stage Plan selects authored room templates, socket connections, encounter
-  anchors, hazard anchors, optional branches, checkpoints, and rewards; it never
-  describes raw arbitrary terrain coordinates.
+  anchors, hazard anchors, optional branches, fall-recovery points, and rewards;
+  it never describes raw arbitrary terrain coordinates.
 - Every approved plan records mode, layout version, fixed layout seed, selected
   templates, complete content signature, and validation results.
 - Required geometry uses filled rock masses with visibly supported undersides,
@@ -298,8 +302,9 @@ Poison Bands, and Small Slime Summon.
 ## Player-Facing Surfaces
 
 Required surfaces are profile-aware main menu, optional weapon training prologue,
-equipment preparation, blacksmith, stage map/replay, gameplay HUD, level-up choice,
-stage card reward, pause/settings, boss HUD, death summary, and clear summary.
+equipment preparation, the safe intermission map, centered merchant and Forge
+popups, stage map/replay, gameplay HUD, level-up choice, stage card reward,
+pause/settings, boss HUD, death retry choice, and clear summary.
 
 - HUD shows health, the predicted melee/ranged action, shield state, the equipped
   ranged tool's one relevant resource, condition warnings, the equipped passive
@@ -309,6 +314,10 @@ stage card reward, pause/settings, boss HUD, death summary, and clear summary.
 - Every visible setting changes runtime behavior.
 - Gameplay uses remappable keyboard actions. Menus and decision screens are fully
   operable by keyboard and mouse.
+- Player-facing explanations are available as concise Korean and English locale
+  paths. The selected language uses short, direct copy at a readable size.
+- Defeat offers a same-run current-stage retry from the stage-entry snapshot or a
+  return to the main menu; fall-recovery points do not imply death-save behavior.
 - Danger telegraphs remain legible without relying on color alone.
 
 ## Playtest And Balance Gates
@@ -395,7 +404,7 @@ keyboard/mouse path, and 960x540/1280x720/1920x1080 browser-viewport review.
   proliferation, or multiple active-skill slots.
 - Grid inventory, ranged-weapon durability on top of ammunition, item destruction,
   downgrade, random affixes, or mandatory grind.
-- Final commissioned art, final soundtrack, or localization.
+- Final commissioned art or final soundtrack.
 
 ## Related
 

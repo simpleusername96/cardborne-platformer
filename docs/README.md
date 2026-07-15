@@ -27,6 +27,9 @@ product blueprint and detailed combat spec below remain authoritative.
 - `release/FIRST_COMPLETE_RUN_RC1.md` is the superseded three-class baseline.
 - `.agent/execplans/2026-07-14-minimum-equipment-progression-vertical-slice.md` is
   the completed migration and validation record, not current work.
+- `.agent/execplans/2026-07-15-gameplay-validity-repair.md` is the active
+  implementation plan for input, death/retry, guard, stages, safe intermission,
+  the separate UI branch, and browser-export validation.
 - `.agent/execplans/2026-07-12-actual-game-production-roadmap.md` is the completed
   first-run implementation record.
 - `design/PLAYER_CHARACTER_SYSTEMS.md`,
@@ -42,10 +45,8 @@ product blueprint and detailed combat spec below remain authoritative.
 - `research/combat_loadout_reference_review_2026-07-14.md` is archived evidence.
   Its former three-active-skill recommendation was rejected and must not guide
   current work.
-- `research/player_input_and_ui_followup_audit_2026-07-15.md` is active advisory
-  evidence for web keyboard controls, menu navigation, and deferred UI findings.
-  It authorizes no UI implementation; the current product specs remain
-  authoritative.
+- `research/player_input_and_ui_followup_audit_2026-07-15.md` is archived evidence
+  from a rejected control recommendation; it does not define current work.
 - `research/plan_validity_audit_2026-07-15.md` records the evidence-backed gap
   between completed-plan claims, active specs, and the current playable runtime.
 - Dated surveys/deep dives are archived evidence; `references/` contains advisory

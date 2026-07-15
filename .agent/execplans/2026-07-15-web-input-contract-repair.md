@@ -1,6 +1,6 @@
 ---
 type: plan
-status: done
+status: superseded
 owner: BK
 created: 2026-07-15
 last_reviewed: 2026-07-15
@@ -11,9 +11,14 @@ related:
   - ../../docs/design/COMBAT_EQUIPMENT_CRAFTING.md
   - ../../docs/design/PRODUCTION_UI_CONTRACT.md
   - ../../docs/research/player_input_and_ui_followup_audit_2026-07-15.md
+superseded_by: ./2026-07-15-gameplay-validity-repair.md
 ---
 
 # Web Input Contract Repair And Validity Audit
+
+> Historical note: the owner rejected this document's `WASD` and `J/K/R`
+> recommendation. The active control and implementation contract is now
+> `2026-07-15-gameplay-validity-repair.md`.
 
 ## Purpose
 

@@ -11,7 +11,7 @@ related:
   - ./COMBAT_EQUIPMENT_CRAFTING.md
   - ../architecture/FIRST_SLICE_ARCHITECTURE.md
   - ../release/TRAVELER_EQUIPMENT_VERTICAL_SLICE.md
-  - ../research/player_input_and_ui_followup_audit_2026-07-15.md
+  - ../../.agent/execplans/2026-07-15-gameplay-validity-repair.md
 ---
 
 # Production UI Contract
@@ -25,30 +25,37 @@ contracts or mutate gameplay dictionaries directly.
 ## Scope
 
 This specification owns the main menu, Hero Preparation, Arsenal Trial prompts,
-Forge, gameplay HUD, interaction and reward feedback, card rewards, pause and
-settings, and terminal run results. Combat rules and equipment values remain owned
-by `COMBAT_EQUIPMENT_CRAFTING.md` and typed runtime snapshots.
+safe-intermission merchant and Forge popups, gameplay HUD, interaction and reward
+feedback, card rewards, pause and settings, and run results. Combat rules and
+equipment values remain owned by `COMBAT_EQUIPMENT_CRAFTING.md` and typed runtime
+snapshots. Its implementation is reserved for the separate UI branch named by the
+active gameplay-validity plan.
 
 ## Requirements
 
 ### Player Flow
 
-- **Main menu:** Begin Expedition, Settings, and Exit Game are the only primary
-  commands.
+- **Main menu:** Begin Expedition and Settings are the primary commands. Do not
+  expose a quit command that has no dependable browser behavior.
 - **Hero Preparation:** present one Traveler and six slots: melee, ranged, shield,
   armor, Spirit Stone, and consumable. Show equipped model, blueprint/crafted
   state, current-versus-result values, costs, condition, and save state.
 - **Arsenal Trial:** teach movement, contextual attack, guard, pickup/interaction,
   and exit in five fixed rooms. Skip Trial remains visible and mechanically equal
   to completion.
-- **Forge:** separate melee, ranged, shield, armor, and Spirit Stone views. The
-  selected model exposes one truthful primary command: craft, recraft, repair,
-  equip, or its exact disabled reason.
+- **Safe intermission:** merchant and Forge NPCs open centered, bounded popups
+  over the rest map instead of replacing the whole screen. The merchant supports
+  potion purchase and run-salvage sale. Forge views separate melee, ranged,
+  shield, armor, and Spirit Stone; the selected model exposes one truthful primary
+  command: craft, recraft, repair, equip, or its exact disabled reason.
 - **Rewards:** card selection presents three compatible shared cards. Permanent
   blueprint and Spirit Stone rewards use a short non-modal receipt that states
   what changed and where it is usable.
-- **Run result:** victory and defeat show final reach, duration, level, Traveler
-  build, and retained materials before replay or return to menu.
+- **Death choice:** lethal damage opens a non-terminal choice before settlement:
+  retry the current stage from its stage-entry snapshot or end the expedition and
+  return through the main-menu path.
+- **Run result:** victory or an explicitly ended expedition shows final reach,
+  duration, level, Traveler build, and retained materials.
 
 ### Gameplay HUD
 
@@ -78,9 +85,9 @@ by `COMBAT_EQUIPMENT_CRAFTING.md` and typed runtime snapshots.
 - Every command is reachable by keyboard, and pointer-appropriate commands also
   work with the mouse. Gameplay bindings support capture, conflict rejection,
   cancel, per-action reset, and restore-all.
-- Arrow keys or `WASD` move focus, `Enter` or `Space` confirms, and `Escape`
+- Arrow keys move focus, `Enter` or `Space` confirms, and `Escape`
   closes the current popup or returns to the previous screen. The same meanings
-  apply across preparation, Forge, rewards, results, pause, and settings.
+  apply across preparation, merchant, Forge, rewards, results, pause, and settings.
 - Focus is visible by outline and state, begins on a safe primary action, and
   returns after settings or pause closes.
 - Primary targets are at least 40 px high; confirm actions target 44 px or more.
@@ -90,6 +97,8 @@ by `COMBAT_EQUIPMENT_CRAFTING.md` and typed runtime snapshots.
   large spatial panel transitions, so a separate reduced-motion mode is deferred.
 - Ending an expedition requires a confirmation that distinguishes lost run state
   from retained persistent materials.
+- Player-facing explanations are available in concise natural Korean and English,
+  with one selected language shown at a time rather than duplicate paragraphs.
 
 ### Responsive Layout
 
@@ -99,6 +108,9 @@ by `COMBAT_EQUIPMENT_CRAFTING.md` and typed runtime snapshots.
   neighboring command or escapes its panel.
 - Large viewports constrain decision surfaces near the center instead of scaling
   typography with viewport width.
+- Core explanatory text must be redesigned for roughly 2-3x stronger perceived
+  readability than the current build through larger type, shorter copy, spacing,
+  and hierarchy; blind uniform scaling is not sufficient.
 - Gameplay HUD clusters preserve the center playfield and do not cover one
   another at any supported viewport.
 
@@ -116,20 +128,23 @@ by `COMBAT_EQUIPMENT_CRAFTING.md` and typed runtime snapshots.
    Forge, rewards, results, HUD, pause, settings, remapping, and fixed stages.
 6. `validate_hero_preparation_ui.gd`, `validate_forge_screen.gd`,
    `validate_gameplay_hud.gd`, and `validate_shell_ui.gd` pass.
+7. Korean and English locale paths, centered merchant/Forge popups, arrow-key
+   navigation, `Escape` close/back, and focus restoration are verified at all
+   supported browser viewports.
 
 ## Non-Goals
 
 - A class-selection screen, combat-time inventory, weapon wheel, or active-skill
   bar.
 - A global inventory grid, multiple save-slot browser, or mid-run Continue screen.
-- Final commercial illustration, animation, recorded music, or localization.
+- Final commercial illustration, animation, or recorded music.
 - A runtime-random map preview or seed-selection interface.
 
 ## Related
 
 - `PLAYER_UIUX_REFINEMENT_PLAN.md` is superseded research and does not define
   current implementation work.
-- `../research/player_input_and_ui_followup_audit_2026-07-15.md` stores the
-  keyboard-navigation and readability handoff for the separate UI branch.
+- `../../.agent/execplans/2026-07-15-gameplay-validity-repair.md` owns the active
+  implementation order and the handoff to the separate UI branch.
 - The current rendered evidence is generated under `.codex-runtime/uiux/` and is
   intentionally excluded from source control.

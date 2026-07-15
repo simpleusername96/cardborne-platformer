@@ -13,6 +13,8 @@ related:
   - ../design/COMBAT_EQUIPMENT_CRAFTING.md
   - ../design/PRODUCTION_UI_CONTRACT.md
   - ../../.agent/execplans/2026-07-14-minimum-equipment-progression-vertical-slice.md
+  - ../../.agent/execplans/2026-07-15-gameplay-validity-repair.md
+  - ../research/plan_validity_audit_2026-07-15.md
 ---
 
 # Traveler Equipment-Progression Vertical Slice
@@ -59,6 +61,9 @@ combat, reward, and progression quality from procedural-topology risk.
 
 - `validate_release_candidate.ps1 -Full -SkipImport` passed `68/68` active checks
   on 2026-07-14.
+- That result is retained as structural regression evidence, not product approval
+  for the death/retry, live guard, stage-density, intermission, UI, input, or web
+  export gaps recorded by the active gameplay-validity plan.
 - The matrix covers Traveler movement/combat, equipment data and commands, profile
   v2 migration/persistence, Trial parity, all three fixed stages, drops and fall
   recovery, enemies/hazards, UI, cards/rewards, boss flow, and settlement.

@@ -11,6 +11,7 @@ related:
   - ../docs/design/PRODUCTION_UI_CONTRACT.md
   - ../docs/architecture/FIRST_SLICE_ARCHITECTURE.md
   - ../docs/release/TRAVELER_EQUIPMENT_VERTICAL_SLICE.md
+  - ./execplans/2026-07-15-gameplay-validity-repair.md
 ---
 
 # Project Documentation Memory
@@ -39,11 +40,12 @@ passive Spirit Stone.
   route, recovery, and player-acceptance gates.
 - The production card catalog contains five shared cards with no retired skill or
   class dependency.
-- The active product contract specifies remappable keyboard actions, with `J`
-  context attack, `K` guard, `E` world interaction, `R` consumable, `Space` jump,
-  and `Left Shift` dash as defaults. Menus accept keyboard and mouse.
+- The active product contract specifies remappable keyboard actions: arrow keys
+  move, `Space` jumps, `Left Shift` dashes, `X` attacks, `C` guards, `E`
+  interacts, `A` uses a potion, and `Escape` pauses or goes back. Menus accept
+  keyboard and mouse.
 - The current active-skill count is zero. A later playtest-backed experiment is
-  capped at one and may not create a multi-slot skill bar.
+  capped at one on `Z` and may not create a multi-slot skill bar.
 
 ## Rationale
 
@@ -60,7 +62,8 @@ adding more content or random topology.
 - Character, skill, mastery, and old equipment-item data remain only for v1 save
   migration and focused historical fixtures. They must not re-enter production
   screens, inputs, rewards, or stage requirements.
-- Class selection, RestForge, temporary affixes, generated equipment discovery,
+- Class selection, the former RestForge implementation, temporary affixes,
+  generated equipment discovery,
   class HUD state, active skill slots, Spirit Arts, and resonance are retired.
 - The integrated testbed remains deleted; focused validators and capture scripts
   own subsystem evidence.
@@ -82,8 +85,8 @@ adding more content or random topology.
 - The minimum equipment-progression ExecPlan is complete. The original SVG UI
   starter set now provides 6 structural masks and 22 semantic glyphs under
   `art/ui/production/`, with a rendered adoption catalog and Godot capture tool.
-  No production screen has adopted the assets yet, and there is no active
-  implementation plan after this bounded pass.
+  No production screen has adopted the assets yet; that work remains Milestone G
+  on the separate UI branch in the active gameplay-validity plan.
 
 ## Authority
 
@@ -148,8 +151,10 @@ inspection at `960x540`, `1280x720`, and `1920x1080` where applicable.
 
 ## Next Steps
 
-No task from the completed migration or SVG asset catalog plans remains. The next
-cross-module feature should start with a new ExecPlan grounded in owner feedback.
-Production-screen SVG adoption, random map re-entry, active skills, larger
-equipment/content catalogs, multiple save slots, and final world art remain
-separate decisions rather than implied continuation work.
+The active cross-module implementation plan is
+`.agent/execplans/2026-07-15-gameplay-validity-repair.md`. It owns input cleanup,
+same-run stage retry, live guard proof, stage verticality and enemy density, the
+safe intermission merchant/Forge flow, and browser-export validation. Readability,
+bilingual copy, and centered popup implementation remain a separate UI branch in
+that plan. Random map re-entry, active skills, larger equipment/content catalogs,
+multiple save slots, and final world art remain separate decisions.

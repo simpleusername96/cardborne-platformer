@@ -9,9 +9,10 @@ supersedes:
   - ./ARSENAL_EQUIPMENT_PROGRESSION.md
   - ./PLAYER_CHARACTER_SYSTEMS.md
   - ./PROGRESSION_EQUIPMENT_ECONOMY.md
-source: Owner decisions through 2026-07-15, current runtime inspection, and the player-input convention audit
+source: Owner decisions through 2026-07-15, current runtime inspection, and the active gameplay-validity plan
 related:
   - ../../.agent/execplans/2026-07-14-minimum-equipment-progression-vertical-slice.md
+  - ../../.agent/execplans/2026-07-15-gameplay-validity-repair.md
   - ./COMBAT_LOADOUT_DECISION_BRIEF.md
   - ../product/2d_platform_action_card_game_prd.md
   - ./PRODUCTION_UI_CONTRACT.md
@@ -98,6 +99,7 @@ related:
 | 정령석 | 입력 없이 원소 조건 하나를 제공하는 패시브 장비. | 액티브 기술, 궁극기 |
 | 획득 거래 | 보상 원천 하나를 정확히 한 번 적용하는 정산. | 획득 애니메이션 자체 |
 | 준비 구역 | 제작, 재제작, 수리, 장착이 가능한 안전 구역. | 전투 중 인벤토리 |
+| 런 부산물 (`Run Salvage`) | 현재 런에서만 존재하고 휴식 맵 상인이 코인으로 교환하는 부산물. | 영구 제작 재료, 저장 마이그레이션 salvage |
 | 상호작용 | 상자, NPC, 제단, 대장간, 출구에 `E`로 의도를 전달하는 저빈도 행동. | 공격, 자동 획득 |
 
 장비의 기본 공격과 방어를 `스킬`이라고 부르지 않는다. 이번 목표에는 `charm`,
@@ -154,21 +156,21 @@ related:
 
 | Role | Keyboard default | Action |
 | --- | --- | --- |
-| Move / climb | `WASD` | 이동, 줄 오르기와 내려가기. |
-| Jump / drop through | `Space` / `S + Space` | 점프·2단 점프, 일방통행 발판 통과. |
+| Move / climb | Arrow keys | 이동, 줄 오르기와 내려가기. |
+| Jump / drop through | `Space` / `Down Arrow + Space` | 점프·2단 점프, 일방통행 발판 통과. |
 | Dash | `Left Shift` | 공통 대시. |
-| Context attack | `J` | 근접 또는 원거리 공격 하나. |
-| Guard | `K` | 누르면 정밀 방어를 시도하고, 유지하면 일반 방어를 계속한다. |
-| Consumable | `R` | 회복 물약 사용. |
+| Context attack | `X` | 근접 또는 원거리 공격 하나. |
+| Guard | `C` | 누르면 정밀 방어를 시도하고, 유지하면 일반 방어를 계속한다. |
+| Consumable | `A` | 회복 물약 사용. |
 | Interact | `E` | 상자, NPC, 제단, 대장간, 출구. |
 | Pause / back | `Escape` | 일시정지, 팝업 닫기, 이전 메뉴. |
 
-`F` 공격은 오른쪽 이동 `D`와 같은 왼손 검지를 사용해 동시 입력이 불편하다.
-고빈도 전투를 오른손의 `J/K`로 분리하고 이동·점프·대시는 왼손에 유지한다.
-현재 액티브 기술은 0개다. 이후 하나를 채택하면 기본키 `L`을 사용하되, 미구현
-상태에서 빈 슬롯이나 입력 안내를 노출하지 않는다. 모든 실제 gameplay key는
-재지정 가능하고 안내는 현재 바인딩 하나만 간결하게 표시한다. 마우스는 메뉴
-포인터로 사용하며 전투 기본 배치는 마우스 버튼에 의존하지 않는다.
+오른손은 방향키로 이동하고 왼손은 `X/C` 공격·방어를 담당한다. 줄에서 내리기는
+이미 `Space` 점프 또는 `Left Shift` 대시로 해결하므로 별도 climb-cancel 키를
+두지 않는다. 현재 액티브 기술은 0개다. 이후 하나를 채택하면 기본키 `Z`를
+사용하되, 미구현 상태에서 빈 슬롯이나 입력 안내를 노출하지 않는다. 모든 실제
+gameplay key는 재지정 가능하고 안내는 현재 바인딩 하나만 간결하게 표시한다.
+마우스는 메뉴 포인터로 사용하며 전투 기본 배치는 마우스 버튼에 의존하지 않는다.
 
 ## Context Attack Resolution
 
@@ -316,11 +318,12 @@ precise window, guard break, recovery를 시각/소리로 구분한다.
 | Spirit shrine | Frost Spirit Stone |
 | Stage clear | Reinforced Coat blueprint + refined materials |
 
-필수 경로 총합은 대안 모델 하나와 Grade 2 재제작 하나를 보장한다. 중간 대장간에서
-Grade 1 대안을 제작하고, 최종 대장간에서 수리 또는 Grade 2 재제작한 뒤 마지막
-전투에서 차이를 확인한다.
+필수 경로와 Stage clear 보상은 대안 모델 하나와 Grade 2 재제작 하나를 보장한다.
+전투 Stage 안에는 대장간을 두지 않는다. Stage clear 카드 뒤 안전한 휴식 맵의
+Forge NPC에게서 Grade 1 대안을 제작하고 장비 하나를 수리 또는 Grade 2로
+재제작한 뒤 다음 Stage 전투에서 차이를 확인한다.
 
-모든 하단 구역에는 직접 복귀 경로 또는 즉시 체크포인트 복귀가 있다. 필수/선택
+모든 하단 구역에는 직접 복귀 경로 또는 즉시 낙하 복귀 지점 이동이 있다. 필수/선택
 왕복은 공통 이동 지표로 검증하며 장비, 탄약, 상태, 정령석을 경로 조건으로 쓰지 않는다.
 
 ## Loot And Feedback
@@ -332,6 +335,10 @@ Grade 1 대안을 제작하고, 최종 대장간에서 수리 또는 Grade 2 재
 - 설계도와 정령석은 `E` 상호작용 후 이름, 슬롯, 행동/효과, 제작 필요 여부를 표시한다.
 - 화면 애니메이션은 보상 owner가 성공을 확정한 뒤에만 나타난다.
 - 보상과 보이는 아이템은 같은 거래 ID를 사용해 재실행 후 중복되지 않는다.
+- 런 부산물은 Stage Attempt Snapshot에 포함되며 상인 판매 거래가 확정될 때만
+  감소한다. 영구 제작 재료는 상인에게 팔 수 없다.
+- 휴식 맵 상인은 회복 물약 구매와 런 부산물 판매만 제공한다. 가격, 잔액 부족,
+  물약 최대 보유, 거래 성공/실패를 커밋 전에 보여 준다.
 
 ## Persistence Contract
 
@@ -389,15 +396,16 @@ loadout이 복원되어야 한다.
 - 세 번째 이후 도구/방어구/정령석, 장신구, 다중 방어구 슬롯;
 - 무기별 원소 소켓, 원소 탄약, 랜덤 희귀도/옵션/강화;
 - 장비 파괴, 상태 0 사용 금지, 기본 보급을 위한 의무 반복;
-- 다중 프로필, 체크포인트 런 중단, 클라우드 저장;
+- 다중 프로필, 중간 런 디스크 저장/Continue, 클라우드 저장;
 - 장비로만 통과하는 필수 이동 경로;
 - 고정 Stage 1 검증 전 런타임 랜덤 지형 생성.
 
 ## Related
 
 - `.agent/execplans/2026-07-14-minimum-equipment-progression-vertical-slice.md`
+- `.agent/execplans/2026-07-15-gameplay-validity-repair.md`
 - `docs/product/2d_platform_action_card_game_prd.md`
 - `docs/design/PRODUCTION_UI_CONTRACT.md`
-- `docs/research/player_input_and_ui_followup_audit_2026-07-15.md`
+- `docs/research/plan_validity_audit_2026-07-15.md`
 - `docs/design/ENEMIES_TRAPS_GIMMICKS.md`
 - `docs/architecture/FIRST_SLICE_ARCHITECTURE.md`

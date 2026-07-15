@@ -13,6 +13,7 @@ related:
   - ../design/MAP_AUTHORING_PIPELINE_CONTRACT.md
   - ../design/ENEMIES_TRAPS_GIMMICKS.md
   - ../data/RUNTIME_CATALOG_INDEX.md
+  - ../../.agent/execplans/2026-07-15-gameplay-validity-repair.md
 ---
 
 # First Complete Run Architecture
@@ -42,7 +43,7 @@ extension points.
 | `RunState.gd` | Mutable facts for one attempt, cards, level choices, stage progress, reward application, terminal settlement | Persistent file I/O, UI layout |
 | `ProfileState.gd` | One in-memory profile facade, atomic persistent commands, settings, copy-safe snapshots | Recipe calculation, combat target selection |
 | `ProfileData.gd` / `ProfileSaveService.gd` | Schema v2 validation, v1 migration, staged writes, backup recovery | Player-facing formatting, run state |
-| `PlayerController.gd` | Movement, collision, damage response, checkpoint respawn, camera hooks | Equipment recipes, reward resolution |
+| `PlayerController.gd` | Movement, collision, damage response, fall-recovery respawn, camera hooks | Equipment recipes, reward resolution |
 | `PlayerCombatController.gd` | Attack state machine and committed tool execution | Persistent ownership, UI prediction |
 | `AttackIntentResolver.gd` | Deterministic melee/ranged choice from target, range, obstruction, resource, and prior intent | Applying damage, drawing previews |
 | `ShieldCombatRuntime.gd` | Guard phases, angle, stability, precise guard, condition use | General attack selection |
@@ -59,6 +60,12 @@ extension points.
 ## Runtime State Machine
 
 `RunPhase` is the sole phase vocabulary:
+
+The graph below records the implemented runtime as of 2026-07-15. It is not the
+target death/intermission flow: the active gameplay-validity plan owns the pending
+Retry Decision, Stage Attempt Snapshot, and Safe Intermission deltas. Update this
+graph only when those runtime transitions land so architecture evidence stays
+truthful.
 
 ```text
 BOOT -> MAIN_MENU -> PREPARATION
@@ -167,7 +174,7 @@ StageRuntimeContentSpawner.spawn(plan, typed catalogs) -> actors and interactabl
 - Invalid catalogs, plans, assembly, geometry, or required anchors fail closed.
 - Required routes fit the shared Traveler movement envelope. Optional drops either
   return through authored geometry/rope/platform recovery or hit a reset zone that
-  respawns at the latest checkpoint.
+  respawns at the latest fall-recovery point.
 - The random planner remains testable but dormant. It cannot be selected by a run
   seed or production setting.
 
@@ -216,8 +223,8 @@ StageRuntimeContentSpawner.spawn(plan, typed catalogs) -> actors and interactabl
   feedback; do not spend materials partially.
 - **Corrupt primary save:** load the valid backup, preserving the original files
   when migration cannot validate.
-- **World fall:** reset to the latest checkpoint; never leave the player below the
-  playable world.
+- **World fall:** reset to the latest fall-recovery point; never leave the player
+  below the playable world.
 - **Missing presentation asset:** use the declared placeholder without changing
   collision, timing, or rewards.
 
@@ -254,7 +261,7 @@ StageRuntimeContentSpawner.spawn(plan, typed catalogs) -> actors and interactabl
 - Runtime-random normal-stage topology, random equipment stats, or random affixes.
 - Selectable classes, active skill trees, Spirit Arts, resonance, or weapon wheels.
 - Multiple save slots, cloud saves, or mid-run suspension/Continue.
-- Final commercial art, localization, or broad content expansion.
+- Final commercial art or broad content expansion.
 
 ## Related
 

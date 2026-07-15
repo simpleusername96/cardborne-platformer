@@ -10,7 +10,7 @@ related:
   - ./COMBAT_EQUIPMENT_CRAFTING.md
   - ../../.agent/execplans/2026-07-14-minimum-equipment-progression-vertical-slice.md
   - ./PRODUCTION_UI_CONTRACT.md
-  - ../research/player_input_and_ui_followup_audit_2026-07-15.md
+  - ../../.agent/execplans/2026-07-15-gameplay-validity-repair.md
 ---
 
 # 최소 전투·장비 결정 요약
@@ -52,7 +52,7 @@ related:
 
 - 이전의 12개 도구, 제압/전술/정령술, 장신구 목표는 현재 구현 목표가 아니다.
 - 생산 HUD에는 공격, 방어, 소비 아이템과 필요한 장비 자원만 표시한다.
-- 현재 액티브 기술 키는 없다. `R`은 소비 아이템에 사용하며 다중 기술 키를 만들지 않는다.
+- 현재 액티브 기술 키는 없다. `A`는 소비 아이템에 사용하며 다중 기술 키를 만들지 않는다.
 - 첫 완료 보상은 대안 장비 하나 제작과 장비 하나 Grade 2 재제작을 보장한다.
 - Stage 2, 추가 장비, 스킬 트리, 랜덤 맵은 첫 순환이 플레이테스트를 통과한 뒤 별도 계획으로 확장한다.
 
@@ -61,4 +61,4 @@ related:
 - 상세 사양: `docs/design/COMBAT_EQUIPMENT_CRAFTING.md`
 - 완료된 구현 기록: `.agent/execplans/2026-07-14-minimum-equipment-progression-vertical-slice.md`
 - UI contract: `docs/design/PRODUCTION_UI_CONTRACT.md`
-- 입력 및 별도 UI 브랜치 기록: `docs/research/player_input_and_ui_followup_audit_2026-07-15.md`
+- 활성 개선 계획: `.agent/execplans/2026-07-15-gameplay-validity-repair.md`

@@ -2,7 +2,7 @@
 type: spec
 status: active
 owner: BK
-last_reviewed: 2026-07-12
+last_reviewed: 2026-07-15
 canonical_for: First-run enemy archetypes, variants, encounter composition, hazards, gimmicks, and Giant Slime King patterns
 source: Existing enemy and stage component scripts, prior content catalog, and Cardborne Game Blueprint
 related:
@@ -10,6 +10,7 @@ related:
   - ./PROCEDURAL_REGION_GENERATION.md
   - ./MAP_AUTHORING_PIPELINE_CONTRACT.md
   - ./PROGRESSION_EQUIPMENT_ECONOMY.md
+  - ../../.agent/execplans/2026-07-15-gameplay-validity-repair.md
 ---
 
 # Enemies, Traps, Gimmicks, And Boss
@@ -127,7 +128,8 @@ listed later.
 - Timing seed: guard 1.2 s, attack tell 0.35 s, recovery 0.55 s.
 - Safety floor: attack tell >= 0.35 s and recovery >= 0.55 s.
 - Tell: shield direction and attack windup remain visually distinct.
-- Response: cross behind, stagger with Heavy, bait attack, or use area skill.
+- Response: cross behind, bait and guard the attack, or use the ranged tool from a
+  legal flank line.
 - Punish: back and attack recovery; frontal blocked hits do not damage but still
   provide clear feedback.
 - Anchor: >= 420 px room, flank route or second elevation, exit cannot sit behind
@@ -294,7 +296,7 @@ Composition rules:
 
 ### Fall Reset (`fall_reset`)
 
-- Cost: 1; damage: 1 then safe checkpoint/anchor reset.
+- Cost: 1; damage: 1 then safe fall-recovery/anchor reset.
 - Existing owner: `FallResetZone.gd`.
 - Gap and lower void are visually obvious before commitment.
 - Reset cannot emit a second damage/death before invulnerability begins.
@@ -305,7 +307,7 @@ Composition rules:
 - Existing owner: `CrumblingPlatform.gd`.
 - Timing seed: shake 0.45 s, disabled 1.8 s, reappear 0.25 s.
 - Stable waiting/landing pads exist at both ends; required route has lower recovery
-  or checkpoint reset.
+  or fall-recovery reset.
 - It resets on stage/room retry.
 
 `crushing_block` remains excluded until a production component and reviewed safe
@@ -322,7 +324,7 @@ timing room exist.
 | `destructible_cache` | `DestructibleObstacle.gd` | Optional reward access and attack feedback. | Never sole required route unless it resets. |
 | `chest` | planned Interactable subtype | Deliberate reward claim. | Stable interaction space; applies once. |
 | `material_node` | planned damage/interact subtype | Optional persistent resource risk. | Reachable optional route and deterministic drop source. |
-| `checkpoint` | `StageCheckpoint.gd` | Recovery and pacing. | No active pressure in safe radius. |
+| `checkpoint` | `StageCheckpoint.gd` | Internal ID/component for fall recovery and pacing, never death retry. | No active pressure in safe radius. |
 | `exit_portal` | `ExitPortal.gd` | Stage completion. | Objective-valid, unobstructed interaction space. |
 
 ## Giant Slime King
@@ -368,7 +370,9 @@ timing room exist.
 
 - Boss defeat disables all damage immediately, clears projectiles/hazards/adds,
   then settles Boss Core and run result exactly once.
-- Player death cancels scheduler and resets arena state before another run.
+- Player death cancels the scheduler and clears transient arena state before the
+  Retry Decision. `Retry Stage` rebuilds from the boss-entry snapshot; `End
+  Expedition` settles death exactly once.
 - No post-boss card is offered because no following combat remains.
 
 ## Requirements
@@ -391,11 +395,11 @@ timing room exist.
 - Curated encounter fixtures cover every legal pair and every forbidden high-risk
   combination.
 - No enemy floats, patrols off support, fires through required opaque cover, or
-  blocks an exit/checkpoint permanently.
+  blocks an exit/fall-recovery point permanently.
 - Every hazard teaches alone before appearing with high encounter pressure.
 - Boss scheduler simulation never produces an illegal overlap or repeat sequence.
-- Warrior, Archer, and Assassin defeat the boss with base loadouts, and the boss
-  can defeat each through readable mistakes.
+- The Traveler defeats the boss with the baseline loadout, and the boss can defeat
+  the Traveler through readable mistakes.
 
 ## Non-Goals
 

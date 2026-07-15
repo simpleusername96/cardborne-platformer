@@ -13,7 +13,7 @@ related:
   - ../design/PRODUCTION_UI_CONTRACT.md
   - ./player_input_and_ui_followup_audit_2026-07-15.md
   - ../../.agent/execplans/2026-07-14-minimum-equipment-progression-vertical-slice.md
-  - ../../.agent/execplans/2026-07-15-web-input-contract-repair.md
+  - ../../.agent/execplans/2026-07-15-gameplay-validity-repair.md
 ---
 
 # 구현 계획 Validity Audit - 2026-07-15
@@ -237,16 +237,17 @@ map therefore passes.
 
 ### 6. Controls And Browser Constraints
 
-The detailed evidence and recommendation live in
-`player_input_and_ui_followup_audit_2026-07-15.md`.
+The external source review is retained in the archived
+`player_input_and_ui_followup_audit_2026-07-15.md`; the accepted recommendation
+and implementation order live in the active gameplay-validity plan.
 
 Current product recommendation:
 
-- `WASD`, `Space`, `Left Shift` for movement;
-- `J` attack, `K` guard;
+- arrow keys, `Space`, `Left Shift` for movement;
+- `X` attack, `C` guard;
 - `E` for chest/NPC/altar/Forge/exit interaction;
-- `R` potion;
-- no active skill now; at most one future skill on `L` if playtesting justifies it;
+- `A` potion;
+- no active skill now; at most one future skill on `Z` if playtesting justifies it;
 - keyboard/mouse menu navigation and full keyboard completion path.
 
 Current runtime still uses `F/G/H`, fixed gamepad events, gamepad prompt switching,
@@ -265,7 +266,7 @@ The separate UI branch handoff remains:
 - roughly 2-3x stronger core-text readability, redesigned rather than blindly
   scaling every font;
 - centered NPC, merchant, and Forge popups;
-- `Escape` close/back, arrows or `WASD` focus, `Enter`/`Space` confirm;
+- `Escape` close/back, arrow-key focus, `Enter`/`Space` confirm;
 - visible focus restoration and no clipping at supported browser viewports;
 - readable death choices and guard-state feedback.
 
@@ -283,7 +284,8 @@ The separate UI branch handoff remains:
 
 1. **P0 gameplay:** replace terminal retry with same-run current-stage restart and
    define the stage-entry snapshot/rollback contract.
-2. **P0 gameplay/input:** implement `J/K/R`, remove gamepad product behavior, and
+2. **P0 gameplay/input:** implement arrow movement plus `X/C/E/A`, remove gamepad
+   product behavior, and
    add live guard E2E plus unmistakable block feedback.
 3. **P1 flow:** create one consistent safe intermission map between normal stages;
    move Forge there and add a minimal merchant after the currency/salvage decision.

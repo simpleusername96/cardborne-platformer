@@ -1,6 +1,6 @@
 ---
 type: evidence
-status: active
+status: archived
 owner: BK
 created: 2026-07-15
 last_reviewed: 2026-07-15
@@ -11,10 +11,14 @@ related:
   - ../design/COMBAT_EQUIPMENT_CRAFTING.md
   - ../design/PRODUCTION_UI_CONTRACT.md
   - ../product/2d_platform_action_card_game_prd.md
-  - ../../.agent/execplans/2026-07-15-web-input-contract-repair.md
+  - ../../.agent/execplans/2026-07-15-gameplay-validity-repair.md
 ---
 
 # 플레이어 입력 관습 및 UI 후속 감사 - 2026-07-15
+
+> Historical evidence only. The owner rejected this audit's final `WASD` and
+> `J/K/R` recommendation. The active plan records the accepted arrow-key and
+> `X/C/E/A` contract plus the separate UI-branch handoff.
 
 ## Purpose
 

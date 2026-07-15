@@ -2,7 +2,7 @@
 type: spec
 status: active
 owner: BK
-last_reviewed: 2026-07-13
+last_reviewed: 2026-07-15
 canonical_for: First-run stage profiles, terrain vocabulary, room catalog, and constrained generation rules
 source: Existing procedural region prototype, movement metrics, rock-mass feedback, and Cardborne Game Blueprint
 related:
@@ -10,6 +10,7 @@ related:
   - ./MAP_AUTHORING_PIPELINE_CONTRACT.md
   - ./ENEMIES_TRAPS_GIMMICKS.md
   - ../architecture/FIRST_SLICE_ARCHITECTURE.md
+  - ../../.agent/execplans/2026-07-15-gameplay-validity-repair.md
 ---
 
 # Procedural Region Generation
@@ -94,11 +95,10 @@ At generation time, calculate route limits from every base profile with
 | Rope entry/exit | Stable support overlaps climb volume by >= 24 px. |
 | Enemy support | Full enemy footprint plus 24 px margin on each side. |
 | Safe entry | First 240 px of a room cannot contain active damage or immediate aggro. |
-| Checkpoint safety | No enemy, projectile lane, trap, or moving platform can hit spawn during recovery. |
+| Fall-recovery safety | No enemy, projectile lane, trap, or moving platform can hit spawn during recovery. |
 
 Optional routes may use up to the full shared envelope. They cannot require
-equipment, cards, mastery, Archer Threadline, Assassin Smoke Step, or extra dash
-charges.
+equipment, cards, passive Spirit effects, or extra dash charges.
 
 ## Stage Profiles
 
@@ -110,27 +110,27 @@ charges.
 - Hazards: safe gaps, visible spike rows, one optional rope shaft.
 - Encounter budget per combat room: 1-3.
 - Hazard budget per room: 0-1.
-- Recovery: checkpoint after room 3 or before final combat.
+- Recovery: fall-recovery point after room 3 or before final combat.
 - Fun target: confidence and first card anticipation, not attrition.
 
 ### `flooded_works`
 
-- 7 required rooms, 1-2 optional branches, one rest/forge room.
+- 7 required rooms, 1 optional branch, and no in-stage merchant or Forge.
 - Required roles in order: start, traversal, timing hazard, combat, route choice,
-  final escalation combat, terminal rest/forge exit.
+  final escalation combat, terminal exit.
 - Enemies: Walker, Charger, Shooter, Leaper.
 - Hazards: poison vent, crumbling platform, moving bridge, drop basin.
 - Encounter budget per combat room: 2-5.
 - Hazard budget per room: 0-2, but only one new pressure type per teaching room.
-- Recovery: checkpoint before final escalation; rest/forge opens only after all
-  Stage 2 objectives are clear.
+- Recovery: fall-recovery point before final escalation. The separate Safe
+  Intermission opens after Stage clear and card reward.
 - Fun target: decide whether to spend for safety or preserve coins for build power.
 
 ### `broken_sanctum`
 
 - 8 required rooms, 2 optional branches.
 - Required roles: start, mixed combat, gate loop, hazard combat, optional cache,
-  checkpoint, final mixed encounter, exit.
+  fall recovery, final mixed encounter, exit.
 - Enemies: full six-enemy normal roster; Sentry and Shield Guard require compatible
   room geometry.
 - Hazards: all core hazards and gimmicks except unapproved crushing blocks.
@@ -141,14 +141,14 @@ charges.
 
 ## Authored Room Catalog
 
-The production run uses 30 stage-specific templates. Gameplay archetypes such as
+The production run uses 29 normal-stage templates. Gameplay archetypes such as
 choice, choke, timing hazard, and cache are shared design language; a different
 socket, geometry, or anchor contract receives a distinct runtime ID.
 
 | Catalog | Count | Runtime members |
 | --- | ---: | --- |
 | Lower Ruins / Ruin Approach | 10 | `lr_start_shelf`, `lr_rise_steps`, `lr_broken_bridge`, `lr_patrol_gallery`, `lr_charge_lane`, `lr_shooter_overlook`, `lr_lower_upper_choice`, `lr_destructible_cache`, `lr_material_cavern`, `lr_exit_ascent` |
-| Flooded Works | 9 | `fw_flooded_entry`, `fw_rope_shaft`, `fw_poison_timing`, `fw_crumble_crossing`, `fw_leaper_basin`, `fw_pump_gallery`, `fw_lower_upper_choice`, `fw_sunken_cache`, `fw_rest_forge` |
+| Flooded Works | 8 | `fw_flooded_entry`, `fw_rope_shaft`, `fw_poison_timing`, `fw_crumble_crossing`, `fw_leaper_basin`, `fw_pump_gallery`, `fw_lower_upper_choice`, `fw_sunken_cache` |
 | Broken Sanctum | 11 | `bs_breach_entry`, `bs_shield_choke`, `bs_fractured_gallery`, `bs_sentry_crossfire`, `bs_gate_switch_loop`, `bs_volatile_nave`, `bs_twin_reliquary_choice`, `bs_recovery_cloister`, `bs_material_crypt`, `bs_reliquary_cache`, `bs_exit_ascent` |
 
 Broken Sanctum's choice room owns two independent branch/return socket pairs. Its
@@ -157,13 +157,16 @@ zones, and its gate loop owns an optional moving-platform route with safe wait
 pads and fall recovery. These are authored geometry contracts, not allocator
 exceptions.
 
+The existing `fw_rest_forge` room is migration material for the separate Safe
+Intermission shell. It is not eligible for a normal combat-stage plan.
+
 Templates may expose cosmetic or safe authored variants, but a variant cannot
 change sockets or movement classification without a new template ID/version.
 
 ## Graph Rules
 
-- A Stage Plan has one start and one terminal exit anchor. Stage 2's anchor lives
-  in its terminal rest/forge room.
+- A Stage Plan has one start and one terminal exit anchor. Safe Intermission is a
+  separate scene reached only after Stage clear and card reward.
 - Required rooms form a directed clear path; optional branches rejoin before exit.
 - Stages 1-2 include exactly one optional branch in the first run; Stage 3 includes
   exactly two. The planner supports bounded profile ranges for future catalogs.
@@ -172,7 +175,7 @@ change sockets or movement classification without a new template ID/version.
 - Two combat rooms with the same primary enemy lesson cannot be adjacent.
 - A new hazard appears once without simultaneous high encounter pressure before it
   can appear in a mixed room.
-- Rest/forge cannot be first, last, or adjacent to another safe room.
+- Merchant and Forge anchors are invalid in every normal combat-stage plan.
 - Final combat cannot use a pressure combination unseen earlier in the run.
 
 ## Encounter, Hazard, And Reward Allocation
@@ -225,11 +228,11 @@ Reject a Stage Plan when any required check fails:
 4. Critical surfaces form a traversable collision path.
 5. Required jumps, rises, landings, headroom, crouch, ropes, and one-way drops fit
    the least-mobile shared envelope.
-6. Falls have recovery, reset, or safe checkpoint behavior.
+6. Falls have recovery, reset, or safe fall-recovery behavior.
 7. Enemy archetype/variant/tuning references resolve; exact variant stats preserve
    safety bounds; enemy/hazard anchors have support, clearance, response space, and
    active caps.
-8. Safe entry, checkpoint, switch, reward, and exit zones remain unobstructed.
+8. Safe entry, fall-recovery, switch, reward, and exit zones remain unobstructed.
 9. Camera bounds frame commitments before the player must make them.
 10. Encounter, hazard, reward, and duration budgets remain within profile limits.
 
@@ -250,9 +253,9 @@ Reject a Stage Plan when any required check fails:
   fallbacks.
 - Same seed/content version reproduces room order, encounters, hazards, and rewards.
 - Same seed/content version reproduces exact enemy variant IDs and combat values.
-- Every base character clears the curated seed set with no movement upgrade.
+- The baseline Traveler clears the curated seed set with no movement upgrade.
 - No unsupported enemy, floating marker, hidden collision, blocked exit, unsafe
-  checkpoint, or unrecoverable required fall appears.
+  fall-recovery point, or unrecoverable required fall appears.
 - Different seeds change at least room order or optional branch plus encounter
   allocation without changing the stage's teaching job.
 
@@ -260,7 +263,7 @@ Reject a Stage Plan when any required check fails:
 
 - Per-tile noise, arbitrary platform scattering, infinite levels, or random boss
   arenas.
-- Metroidvania ability locks or character-exclusive critical routes.
+- Metroidvania ability locks or equipment/skill-exclusive critical routes.
 - Generating art, collision, enemy AI, or reward rules from prose at runtime.
 - Treating mathematical clearability as proof that a room is enjoyable.
 

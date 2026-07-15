@@ -2,7 +2,7 @@
 type: spec
 status: active
 owner: BK
-last_reviewed: 2026-07-13
+last_reviewed: 2026-07-15
 canonical_for: Production room-template scene, socket, anchor, and validation schema
 source: Existing StageBase/component contracts, map pipeline research, and active procedural generation spec
 related:
@@ -10,6 +10,7 @@ related:
   - ./ENEMIES_TRAPS_GIMMICKS.md
   - ../architecture/FIRST_SLICE_ARCHITECTURE.md
   - ../research/third_party_adoption_ledger.md
+  - ../../.agent/execplans/2026-07-15-gameplay-validity-repair.md
 ---
 
 # Map Authoring Pipeline Contract
@@ -129,7 +130,7 @@ All content is placed through `StageAnchor` nodes or equivalent typed data.
 | `enemy` | allowed_tags, support_width, patrol_width, ceiling, line_of_sight | Selected enemy must satisfy every field. |
 | `hazard` | allowed_ids, warning_space, safe_zone_id, reset_id | Trap must leave documented response. |
 | `reward` | reward_role, risk_tier, interaction_space | Reachable and not overlapped by collision/threat spawn. |
-| `checkpoint` | facing, safe_radius, camera_id | Stable support and safe recovery. |
+| `checkpoint` | facing, safe_radius, camera_id | Internal anchor ID for a stable fall-recovery point; never death retry or saved run state. |
 | `switch` | objective_id, target_gate_id | Reachable before target gate; idempotent. |
 | `gate` | objective_id, open_clearance | Cannot permanently block required route after completion. |
 | `destructible` | allowed_ids, result_role | Optional unless reset/alternate route exists. |
@@ -189,10 +190,10 @@ not traverse arbitrary scene trees or parse external editor data.
 1. Choose one catalog ID and its gameplay promise.
 2. Block solid filled terrain and camera bounds.
 3. Add sockets and verify transition surfaces.
-4. Add recovery and checkpoint anchors before pressure anchors.
+4. Add recovery and fall-recovery (`checkpoint`) anchors before pressure anchors.
 5. Add enemy/hazard/reward candidates with compatibility fields.
 6. Run isolated room validation.
-7. Play the room with every base character.
+7. Play the room with the baseline Traveler movement/combat profile.
 8. Add visuals without changing collision communication.
 9. Register the Resource and reviewed timing range.
 10. Add the room to the approved fixed Stage Plan before considering future random
@@ -202,16 +203,17 @@ not traverse arbitrary scene trees or parse external editor data.
 
 - Every production room can be opened and understood without generator code.
 - Every generator-facing property is typed and validated.
-- Shared player, enemy, hazard, reward, and checkpoint components are instantiated
-  through local project contracts.
+- Shared player, enemy, hazard, reward, and fall-recovery components are
+  instantiated through local project contracts.
 - External editors remain replaceable behind an import adapter.
 - A room with a critical validation failure cannot enter the runtime catalog.
 
 ## Acceptance Criteria
 
-- The 30-room catalog has matching scene/Resource pairs and unique IDs.
+- The 29-room normal-stage catalog has matching scene/Resource pairs and unique
+  IDs; Safe Intermission uses a separate scene/Resource contract.
 - Each room passes isolated schema, geometry, camera, and anchor validation.
-- Every required-route room is manually cleared by all three base characters.
+- Every required-route room is manually cleared by the baseline Traveler.
 - Assembling two compatible rooms produces no collision crack, overlap, camera
   jump, unsafe spawn, or mismatched visual seam.
 - Changing a socket contract increments content version and invalidates stale Stage
