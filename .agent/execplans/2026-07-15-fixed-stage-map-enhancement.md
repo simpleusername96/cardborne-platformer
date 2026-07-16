@@ -4,9 +4,9 @@ status: active
 owner: BK
 created: 2026-07-15
 last_reviewed: 2026-07-16
-source: Current fixed-stage code and metrics, rendered room captures, 2D platformer map-design research, the canonical map-design guideline, and the 2026-07-16 per-stage visual direction review
+source: Current fixed-stage code and metrics, rendered room captures, 2D platformer map-design research, the canonical map-design guideline, Codex session 019f6138-03a7-73d1-8ec6-a959d2f4d935, and the 2026-07-16 per-stage visual and owner-play reviews
 topic: Gameplay-verticality and map-composition enhancement for the three fixed normal stages
-scope: Metrics, curated topology, authored room geometry, encounter placement, camera proof, and continuous traversal validation
+scope: Metrics, curated topology, authored room geometry, traversal comfort, terrain-aware encounter behavior, camera proof, and continuous traversal validation
 related:
   - ../../docs/product/2d_platform_action_card_game_prd.md
   - ../../docs/design/MAP_AUTHORING_PIPELINE_CONTRACT.md
@@ -70,6 +70,35 @@ gameplay beat, 여러 elevation band, side pocket, sightline, shortcut으로
 세분화한다. 그 결과로도 목표 밀도와 플레이타임을 만들 수 없다는 측정
 evidence가 생긴 뒤에만 room-count 변경을 별도 승인 대상으로 올린다.
 
+### 2026-07-16 owner-play validity amendment
+
+같은 owner가 current production path를 직접 플레이한 결과, 이전 세션의
+구조적 방향만으로는 부족하고 다음 실행 조건이 추가로 확인됐다.
+
+- required route에 반복되는 높은 단차와 벽 인접 착지가 많아, 자동
+  reachability를 통과해도 이동이 불필요하게 어렵다.
+- rope는 상승보다 하강이 불안정하다. current climb runtime은 one-way
+  platform 하강, rope 중심 정렬, 상단 mount/dismount를 계약으로 다루지
+  않으며, geometry validator는 metadata만으로 양방향 연결을 인정한다.
+- basic ranged-enemy projectile가 terrain을 통과하므로 authored cover와
+  lower/upper route의 tactical 의미가 무너진다.
+- leaper는 encounter 안에서 landing destination을 선택하지 않고 target
+  x와 한 fixed leap profile에 의존한다. 일부 mobile enemy도 wall/ledge와
+  관계없이 authored patrol bound만 따르므로 멈추거나 끼일 수 있다.
+- ordinary enemy의 full-range aim line 또는 synthetic jump arc는 합리적인
+  movement와 local startup tell을 대신할 수 없다.
+- current movement, shooter, leaper, guard, stage-composition validator가
+  모두 통과해도 위 실제 플레이 문제는 검출되지 않는다.
+
+이 amendment는 map redesign이 collision scene만 바꾸고 끝나는 것을 막는다.
+map이 cover, rope, enemy lane, landing destination, camera commitment를
+의도한다면 그 의도를 실제 runtime behavior와 continuous input path가
+증명해야 한다.
+
+다만 contextual attack input, shield-system redesign, consumable capacity,
+Forge/Merchant modal information architecture는 map plan에 흡수하지 않는다.
+그 항목은 별도 gameplay/input/economy/UI follow-up이 소유한다.
+
 ## Outcome
 
 완료 시:
@@ -88,6 +117,12 @@ evidence가 생긴 뒤에만 room-count 변경을 별도 승인 대상으로 올
 7. implementation 전에 stage별 독립 construction blueprint가 존재하며,
    room ID, 연결, height waveform, combat/recovery beat, reward, shortcut,
    camera commitment가 실제 source owner와 대응한다.
+8. required traversal은 theoretical movement maximum을 반복해서 요구하지
+   않고, routine transition과 intentional challenge transition이 구별된다.
+9. rope, basic projectile cover, leaper landing, mobile-enemy patrol이 authored
+   terrain intention과 실제 runtime에서 일치한다.
+10. ordinary enemy tell은 startup과 위험 destination을 읽게 하되, full
+    trajectory overlay를 합리적인 behavior의 대체물로 사용하지 않는다.
 
 ## Scope
 
@@ -98,6 +133,10 @@ evidence가 생긴 뒤에만 room-count 변경을 별도 승인 대상으로 올
 - active authored room scene의 collision/platform/anchor/camera composition
 - room resource socket, recovery, enemy/hazard/reward anchor 갱신
 - 기존 enemy variant와 hazard의 재배치
+- required-transition comfort diagnostic과 repeated near-limit sequence 제거
+- rope ascent/descent, one-way crossing, mount/dismount runtime contract 보강
+- existing basic projectile와 mobile enemy의 bounded terrain-interaction repair
+- normal-stage camera framing 또는 geometry-with-default-camera proof
 - fixed-stage capture target과 continuous traversal evidence 추가
 - stage별 construction blueprint와 route/height/encounter overlay 작성
 - 관련 validator와 product-flow regression
@@ -113,6 +152,10 @@ evidence가 생긴 뒤에만 room-count 변경을 별도 승인 대상으로 올
 - procedural/random stage production 복귀
 - death checkpoint 또는 save-point policy 변경
 - normal stage 안에 Forge, merchant, safe-intermission NPC 재도입
+- contextual melee/ranged input 분리 또는 key binding 재설계
+- shield timing/resource redesign과 potion charge/economy 변경
+- Forge/Merchant 화면의 정보 구조 또는 visual redesign
+- 새 pathfinding framework나 범용 navigation system 도입
 
 ## Ownership and File Boundaries
 
@@ -125,6 +168,12 @@ evidence가 생긴 뒤에만 room-count 변경을 별도 승인 대상으로 올
 | sockets and content anchors | matching `data/rooms/**.tres` |
 | authoring/resource validity | existing `tools/validate_room_templates.gd` and related validators |
 | map composition acceptance | `tools/validate_stage_composition.gd` |
+| movement envelope and comfort diagnostics | `scripts/player/MovementMetrics.gd`, `scripts/generation/StageGeometryValidator.gd`, `StageCompositionMetrics.gd` |
+| rope runtime contract | `scripts/player/PlayerController.gd`, `scripts/stages/Climbable.gd` |
+| projectile/cover interaction | `scripts/enemies/EnemyProjectile.gd` and the shared collision contract |
+| terrain-aware existing enemy movement | matching `scripts/enemies/LeaperEnemy.gd`, walker/charger/guard owners only where a reproduced map-validity failure requires it |
+| normal-stage camera behavior | `scripts/stages/production/ProductionStageHost.gd` and `PlayerController.gd` camera ownership |
+| runtime validity fixtures | `tools/validate_player_movement_runtime.gd`, `validate_shooter_runtime.gd`, `validate_flooded_enemy_runtime.gd` |
 | rendered evidence | `tools/capture_fixed_stage_screenshots.gd` plus a bounded continuous-traversal capture if needed |
 
 `RoomTemplateData.gd`에 design prose field를 바로 추가하지 않는다.
@@ -142,6 +191,15 @@ room intention은 이 plan의 matrices와 authored scene/resource가 소유한�
   template 하나가 여러 gameplay beat와 sub-chamber를 소유할 수 있다.
 - current enemy floors 8/10/12와 required-room counts 8/7/9는 하한으로
   보존한다.
+- current movement values는 그대로 두되, 그 theoretical maximum을 routine
+  required route의 반복 난도로 사용하는 것은 허용하지 않는다.
+- basic ranged-enemy projectile는 authored solid terrain과 declared cover를
+  관통하지 않는다. one-way surface의 projectile policy는 Milestone A에서
+  명시하고 모든 room에 일관되게 적용한다.
+- rope는 실제 input으로 아래→위와 위→아래 이동, one-way top crossing,
+  상·하단 dismount를 모두 증명해야 양방향 edge로 인정한다.
+- leaper와 mobile patrol enemy의 수정은 existing archetype가 authored
+  terrain intention을 수행하는 데 필요한 최소 behavior에 한정한다.
 - optional reward resolution, stable IDs, deterministic seed behavior를
   유지한다.
 - fall recovery anchor는 local traversal recovery이며 death respawn이 아니다.
@@ -157,7 +215,13 @@ room intention은 이 plan의 matrices와 authored scene/resource가 소유한�
 | Stage drawing | 세 stage를 비교하는 저밀도 concept와 개별 room still이 분리되어 있다. | stage별 한 장의 construction blueprint가 current room ID와 runtime graph를 설명한다. | blueprint의 모든 critical/optional connection이 `CuratedStagePlanBuilder.gd` target graph와 1:1 대조된다. | concept art의 임의 room이나 route를 source에 몰래 추가하지 않는다. |
 | Macro topology | required linear chain에 optional same-hub return이 붙는다. | 여러 고도에서 갈라진 route가 앞으로 재합류하고, later shortcut이 earlier landmark를 다시 연결한다. | graph diagnostic과 실제 continuous traversal이 branch, rejoin, shortcut을 모두 증명한다. | hidden teleport, unreachable socket, reward duplication이 없다. |
 | Room density | 넓은 평지, 얇은 floating ledge, 큰 empty void가 action을 분리한다. | 각 room은 2–4개의 읽을 수 있는 beat와 supported mass, preview, commitment, consequence, recovery를 갖는다. | debug label 없이 first-time player가 다음 목표와 선택을 설명한다. | 장식 platform, blind drop, 8초 이상 decision vacuum을 늘리지 않는다. |
+| Traversal comfort | validator가 가능한 최대 gap/ledge만 확인해 near-limit jump가 연속되어도 통과한다. | routine transition, challenge transition, optional mastery line을 구분하고 required route에 입력 여유를 남긴다. | transition difficulty ratio와 연속 near-limit 구간을 진단하고, continuous clear에서 반복 벽 충돌·edge miss가 없다. | movement stat을 올리거나 collision을 축소해 geometry 문제를 숨기지 않는다. |
+| Rope transfer | metadata graph는 rope를 양방향 edge로 보지만 runtime descent가 one-way top에 막힐 수 있다. | rope 중심 정렬, 상·하단 mount/dismount, one-way crossing이 같은 input language로 동작한다. | 실제 player fixture와 Flooded continuous run이 양방향 이동을 증명한다. | teleport, hidden collision toggle, stage별 예외로 통과시키지 않는다. |
+| Projectile cover | enemy projectile가 player mask만 사용해 terrain과 cover를 통과한다. | basic ranged projectile가 solid terrain과 declared cover에 막히고 shooter placement가 실제 cover decision을 만든다. | cover 뒤 player가 피해를 받지 않고 projectile가 terrain contact에서 종료된다. | 적 사거리·탄속을 낮추거나 warning line만 짧게 해 문제를 숨기지 않는다. |
+| Terrain-aware enemy movement | leaper는 fixed target-x leap를 반복하고 일부 patrol enemy는 wall/ledge를 인지하지 않는다. | leaper는 encounter 안의 valid landing destination을 선택하고 mobile enemy는 authored lane에서 반복 행동 가능하다. | 여러 leap 또는 patrol cycle 뒤에도 enemy가 stuck/idle lock에 빠지지 않고 intended pressure를 유지한다. | 범용 pathfinding이나 새 enemy archetype으로 scope를 확장하지 않는다. |
+| Enemy tell | full-range line과 synthetic arc가 behavior readability의 주된 근거다. | ordinary enemy는 local startup, facing/pose, destination 또는 impact cue로 읽히고 full trajectory는 꼭 필요한 경우만 남는다. | production capture에서 debug-like path 없이도 위험과 대응 공간을 설명한다. | boss의 required startup warning이나 color-independent danger cue를 제거하지 않는다. |
 | Vertical combat | enemy count와 y-span이 주된 자동 증거다. | threat lane, cover, escape/re-engage route가 높이에 따라 달라진다. | combat-room intention 문장과 real-damage playtest가 같은 결론을 낸다. | enemy 수만 늘려 metric을 통과하지 않는다. |
+| Camera commitments | normal stage는 full-world limit와 player smoothing만 사용하고 authored `camera_id` marker는 runtime owner가 없다. | default camera로 읽히는 geometry를 우선하고, 불가능한 commitment에만 최소 camera focus/lookahead owner를 둔다. | irreversible jump/drop 전에 landing, threat, safe cue가 실제 continuous frame에 들어온다. | teleported still이나 editor viewport만으로 camera acceptance를 닫지 않는다. |
 | Scale | 이미지상 많은 chamber가 넓은 metroidvania scope로 오해될 수 있다. | compact 6–10분 stage 안에서 공간을 접고 기억 가능한 landmark를 반복 노출한다. | stage clear timing과 room-duration sample이 PRD 범위에 들어온다. | 새 biome, ability gate, 장거리 backtracking campaign으로 확장하지 않는다. |
 
 ## Construction Blueprint Contract
@@ -275,9 +339,9 @@ blockout 결과가 더 나은 의도를 발견하면 Decision Notes에 이유를
 | Room | Rhythm role | Target intention | Required proof |
 | --- | --- | --- | --- |
 | `lr_start_shelf` | Preview | broken ascent의 첫 landmark와 safe landing language를 보여준다. | 첫 control frame이 안전하고 다음 ledge가 보임 |
-| `lr_rise_steps` | Teach | 기본 jump/dash로 두 elevation band를 오르고 낮은 recovery shelf를 경험한다. | 실패가 death가 아닌 lower recovery로 이어짐 |
+| `lr_rise_steps` | Teach | 기본 jump/dash로 두 elevation band를 오르고 낮은 recovery shelf를 경험한다. | 실패가 death가 아닌 lower recovery로 이어지고 near-limit wall jump가 연속되지 않음 |
 | `lr_patrol_gallery` | Transform | walker 때문에 upper/lower band를 바꾸게 한다. | 같은 floor에서 전부 처리할 수 없는 pressure |
-| `lr_shooter_overlook` | First peak | upper exposure와 lower cover를 shooter line으로 구분한다. | entry safe zone과 shooter tell이 같은 frame |
+| `lr_shooter_overlook` | First peak | upper exposure와 lower cover를 shooter line으로 구분한다. | entry safe zone과 shooter tell이 같은 frame이고 lower cover가 실제 projectile를 막음 |
 | `lr_lower_upper_choice` | Route decision | 빠른 exposed line과 안전한 slower line의 비용을 먼저 보여준다. | route별 movement/risk 차이 2개 이상 |
 | `lr_destructible_cache` | Optional loop | 짧은 challenge 끝 reward를 얻고 앞쪽으로 재합류한다. | reward를 challenge 중간에 banking하지 않음 |
 | `lr_broken_bridge` | Release/transform | 이전 peak를 내려다보고 controlled descent 뒤 새 ascent를 시작한다. | Forge/NPC 없음, empty corridor가 아님 |
@@ -289,12 +353,12 @@ blockout 결과가 더 나은 의도를 발견하면 Decision Notes에 이유를
 | Room | Rhythm role | Target intention | Required proof |
 | --- | --- | --- | --- |
 | `fw_flooded_entry` | Preview | 아래 basin과 최종 pump landmark를 먼저 암시한다. | safe entry에서 하강 destination이 보임 |
-| `fw_rope_shaft` | Teach | vertical transfer와 높이별 enemy response를 안전하게 소개한다. | 한 번에 한 pressure role부터 노출 |
+| `fw_rope_shaft` | Teach | vertical transfer와 높이별 enemy response를 안전하게 소개한다. | 실제 input으로 rope 상·하행, one-way top crossing, 양 끝 dismount가 자연스럽게 동작 |
 | `fw_poison_timing` | Transform | safe pad 사이 timing 이동을 가르치되 기다릴 공간을 보장한다. | poison tell 전에 safe destination 표시 |
-| `fw_leaper_basin` | First peak | controlled drop 뒤 leaper center pressure에서 두 exit를 판단한다. | basin entry가 blind drop이 아님 |
+| `fw_leaper_basin` | First peak | controlled drop 뒤 leaper center pressure에서 두 exit를 판단한다. | basin entry가 blind drop이 아니고 leaper가 둘 이상의 valid landing destination 사이에서 반복 이동 |
 | `fw_lower_upper_choice` | Route decision | dry upper precision과 wet lower hazard management를 구분한다. | route별 verb/risk 차이와 reward clue |
 | `fw_sunken_cache` | Optional loop | lower risk를 연장해 reward를 얻고 앞쪽으로 빠져나간다. | same-hub backtrack 제거 |
-| `fw_pump_gallery` | Combine/test | shooter/leaper/charger pressure와 known timing을 상승 중 결합한다. | entry safe zone, 중간 recovery band |
+| `fw_pump_gallery` | Combine/test | shooter/leaper/charger pressure와 known timing을 상승 중 결합한다. | entry safe zone, projectile-blocking cover, 중간 recovery band, 반복 cycle 뒤 stuck enemy 없음 |
 | `fw_exit_shelter` | Release | stage pressure를 풀고 다음 flow로 명확히 넘긴다. | enemy/hazard 없는 짧은 전망, Forge 없음 |
 
 ### Broken Sanctum
@@ -307,18 +371,18 @@ blockout 결과가 더 나은 의도를 발견하면 Decision Notes에 이유를
 | `bs_material_crypt` | Early optional | controlled lower drop, reward, forward rejoin을 제공한다. | branch origin과 rejoin이 다른 critical room |
 | `bs_volatile_nave` | Hazard peak | 이미 본 nave를 hazard timing으로 다시 해석한다. | safe zone과 commitment가 camera에 보임 |
 | `bs_twin_reliquary_choice` | Transfer | twin optional hub 대신 main-route vertical transept가 된다. | 한 문장 main intention, ambiguous exits 없음 |
-| `bs_fractured_gallery` | Combine | fractured platforms에서 enemy priority와 elevation change를 결합한다. | enemy가 빈 곳 채우기가 아닌 terrain role 보유 |
+| `bs_fractured_gallery` | Combine | fractured platforms에서 enemy priority와 elevation change를 결합한다. | enemy가 빈 곳 채우기가 아닌 terrain role을 갖고 wall/ledge에서 idle lock에 빠지지 않음 |
 | `bs_recovery_cloister` | Release/clue | 안전한 회복과 later upper branch clue를 제공한다. | safe zone이 crossfire reach 밖 |
 | `bs_reliquary_cache` | Late optional | 숙련된 upper line과 reward 뒤 crossfire 앞쪽으로 재합류한다. | early crypt와 다른 verb/risk |
-| `bs_sentry_crossfire` | Tactical test | cover band 사이를 이동해 sentry line을 끊고 flank한다. | unavoidable entry hit 없음, 두 threat lane 식별 |
+| `bs_sentry_crossfire` | Tactical test | cover band 사이를 이동해 sentry line을 끊고 flank한다. | unavoidable entry hit 없음, 두 threat lane 식별, declared cover가 projectile를 실제로 차단 |
 | `bs_exit_ascent` | Final test | gate, flank, elevation transfer를 짧게 결합한다. | 새 요소 없음, boss/next-flow 전 release |
 
 ## Tasks
 
 - [ ] Milestone 0에서 visual study를 current room graph와 movement envelope에
   맞는 stage별 construction blueprint로 번역하고 owner review를 받는다.
-- [ ] Milestone A에서 directionality와 branch topology diagnostic을 먼저
-  red/green 검증한다.
+- [ ] Milestone A에서 directionality, traversal comfort, rope, projectile
+  cover, terrain-aware enemy behavior diagnostic을 먼저 red/green 검증한다.
 - [ ] Milestone B에서 Ruin을 pilot stage로 재저작하고 continuous play로
   guideline을 증명한다.
 - [ ] Milestone C에서 Flooded의 basin descent와 pump ascent를 재저작한다.
@@ -368,16 +432,23 @@ Acceptance:
 - [ ] estimated timing이 PRD 범위에 있으며, room-count 확대는 evidence와
   owner approval 없이는 다음 milestone에 들어가지 않는다.
 
-### Milestone A — Baseline and diagnostic contract
+### Milestone A — Baseline, diagnostic, and shared terrain contract
 
-Goal: 현재 결과를 보존하고 “수치상 높음”과 “의미 있는 수직성”을 분리해
-검출한다.
+Goal: 현재 결과를 보존하면서 “수치상 가능함”과 “실제로 편안하고 지형과
+상호작용함”을 분리해 검출하고, room redesign이 의존할 공용 runtime
+contract를 먼저 고정한다.
 
 Tasks:
 
 - [ ] current validator JSON과 fixed-stage captures를 dated evidence 위치에
   보존하거나 재생성 명령과 hash를 기록한다.
 - [ ] current critical graph를 stage별 node/edge table로 snapshot한다.
+- [ ] baseline player fixture에서 full/short/late jump input과 landing 오차를
+  측정해 routine, challenge, optional mastery transition의 comfort band를
+  근거와 함께 정한다.
+- [ ] critical transition을 movement maximum 대비 ratio로 보고하고,
+  near-limit required transition이 연속되는 구간을 stage/room ID와 함께
+  진단한다.
 - [ ] `StageCompositionMetrics.gd`에 direction reversal을 추가한다.
 - [ ] meaningful ascent와 descent transition count를 각각 추가한다.
 - [ ] optional branch origin, rejoin, divergence span, stage-position
@@ -389,12 +460,47 @@ Tasks:
 - [ ] validator error가 stage ID, measured value, expected condition을
   구체적으로 말하게 한다.
 - [ ] current stage가 새 target에서 왜 실패하는지 red test로 먼저 확인한다.
+- [ ] `validate_player_movement_runtime.gd`에 rope 하단 진입, 상승, one-way
+  top 통과, 위에서 하강 진입, 하단 dismount fixture를 추가하고 current
+  descent failure를 red test로 재현한다.
+- [ ] rope runtime을 stage별 예외 없이 공용 owner에서 수정하고, rope
+  중심 정렬과 collision-mask 복구가 dash/jump/respawn에서도 안전한지
+  검증한다.
+- [ ] `validate_shooter_runtime.gd`에 solid cover fixture를 추가하고,
+  projectile가 player까지 진행하는 current behavior를 red test로 남긴 뒤
+  shared projectile terrain collision을 구현한다.
+- [ ] one-way platform의 projectile-blocking policy를 명시하고 room마다
+  같은 collision rule을 사용한다.
+- [ ] `validate_flooded_enemy_runtime.gd`에 둘 이상의 landing surface를 가진
+  leaper fixture를 추가하고, repeated cycle에서 destination 선택, 실제
+  landing, alternate retry, no-stuck을 검증한다.
+- [ ] walker/charger/shield-guard 중 current authored geometry에서 stuck이
+  재현되는 mobile archetype에만 wall/ledge response fixture와 최소 공용
+  behavior repair를 추가한다.
+- [ ] normal enemy validator에서 full-range line 또는 synthetic arc 길이를
+  product acceptance로 고정한 assertion을 제거하고, startup visibility,
+  facing/destination cue, recovery readability로 교체한다.
+- [ ] normal-stage `camera_id` metadata를 실제로 소비할지 제거할지 결정한다.
+  default camera로 commitment를 읽게 만드는 geometry를 우선하고, 부족한
+  경우에만 최소 focus/lookahead owner를 구현한다.
 
 Acceptance:
 
 - [ ] current three-stage metrics가 이전 값과 동일하게 재현된다.
 - [ ] current Ruin monotonic profile을 새 diagnostic이 검출한다.
 - [ ] current four same-hub optional return edge를 graph diagnostic이 검출한다.
+- [ ] comfort band가 임의 상수가 아니라 runtime input fixture와 owner review로
+  기록되고, current near-limit chain 위치가 식별된다.
+- [ ] player fixture가 같은 rope를 실제 input으로 양방향 통과하고 collision
+  mask가 모든 exit path에서 원복된다.
+- [ ] basic shooter projectile가 solid cover contact에서 종료되고 cover 뒤
+  player에게 damage를 전달하지 않는다.
+- [ ] leaper가 둘 이상의 reachable destination을 사용해 여러 cycle을
+  완료하며 하나의 고정 궤적 뒤 idle lock에 빠지지 않는다.
+- [ ] product validator가 full trajectory overlay의 존재나 길이를 필수
+  계약으로 요구하지 않는다.
+- [ ] normal-stage camera acceptance의 runtime owner와 evidence method가
+  하나로 정해지고 dead `camera_id` metadata가 남지 않는다.
 - [ ] reachability 또는 stable-ID validation이 회귀하지 않는다.
 
 ### Milestone B — Ruin blockout and room pass
@@ -407,7 +513,10 @@ Tasks:
 - [ ] stage macro sketch를 start/peak/descent/split/rejoin/exit로 확정한다.
 - [ ] `lr_rise_steps`와 `lr_patrol_gallery`의 ascent를 두 개의 distinct
   elevation band로 정리한다.
-- [ ] `lr_shooter_overlook`에 safe entry, lower cover, upper exposure를 만든다.
+- [ ] required route의 near-limit transition이 연속되지 않게 wall clearance,
+  landing width, recovery floor를 조정한다.
+- [ ] `lr_shooter_overlook`에 safe entry, projectile-blocking lower cover,
+  upper exposure를 만든다.
 - [ ] `lr_lower_upper_choice`의 두 route를 movement/risk 두 항목 이상에서
   다르게 만든다.
 - [ ] `lr_destructible_cache` return socket을 앞쪽 critical route로 옮긴다.
@@ -418,6 +527,10 @@ Tasks:
 - [ ] `lr_exit_ascent`는 known element만 결합하도록 정리한다.
 - [ ] geometry 수정에 맞춰 recovery/enemy/reward/socket anchor를 갱신한다.
 - [ ] 모든 changed room의 content version을 contract에 맞게 갱신한다.
+- [ ] default camera 또는 approved focus behavior로 broken descent와
+  re-engage landing이 commitment 전에 보이는지 확인한다.
+- [ ] shooter/walker/charger를 여러 behavior cycle 관찰해 wall 또는
+  platform edge에서 pressure가 소멸하지 않는지 확인한다.
 
 Acceptance:
 
@@ -427,7 +540,12 @@ Acceptance:
 - [ ] optional branch가 forward-rejoin한다.
 - [ ] first-time viewer가 upper/lower route와 reward를 debug label 없이
   설명한다.
-- [ ] shooter와 charger room에서 elevation change가 실제 response를 바꾼다.
+- [ ] routine required transition에 입력 여유가 있고 repeated wall collision,
+  edge miss, near-limit chain이 없다.
+- [ ] shooter cover가 실제 projectile를 막고 elevation change가 실제
+  response를 바꾼다.
+- [ ] ordinary enemy의 full trajectory line 없이도 startup, threat lane,
+  recovery를 설명할 수 있다.
 - [ ] baseline continuous clear, fall recovery, stage retry가 통과한다.
 
 ### Milestone C — Flooded blockout and room pass
@@ -439,11 +557,16 @@ Tasks:
 - [ ] entry에서 basin 또는 pump landmark 중 하나를 먼저 보여준다.
 - [ ] rope shaft를 vertical teach room으로 단순화한 뒤 pressure를 단계적으로
   추가한다.
+- [ ] rope shaft의 모든 required rope를 위→아래, 아래→위로 직접 통과하고
+  one-way top mount/dismount와 horizontal drift를 조정한다.
 - [ ] poison timing room에 기다릴 safe pad와 다음 destination을 보장한다.
-- [ ] leaper basin의 drop을 blind fall이 아닌 previewed commitment로 만든다.
+- [ ] leaper basin의 drop을 blind fall이 아닌 previewed commitment로 만들고,
+  leaper가 encounter 안의 valid landing destination을 바꿔가며 이동하게 한다.
 - [ ] lower/upper choice를 dry precision과 wet management로 구분한다.
 - [ ] sunken cache를 same-hub return에서 forward rejoin으로 바꾼다.
 - [ ] pump gallery를 known element의 vertical combine/test로 재구성한다.
+- [ ] pump gallery의 declared cover가 shooter projectile를 막고, leaper와
+  mobile patrol enemy가 여러 cycle 뒤에도 stuck되지 않는지 확인한다.
 - [ ] exit shelter는 짧은 release로 유지하고 facility/NPC를 넣지 않는다.
 - [ ] existing hazard reset과 room retry가 새 geometry에서 결정론적으로
   동작하는지 확인한다.
@@ -455,6 +578,9 @@ Acceptance:
 - [ ] optional branch가 forward-rejoin한다.
 - [ ] upper/lower route가 movement, hazard, time, reward 중 2개 이상에서 다르다.
 - [ ] poison/leaper/pump peak 사이에 safe recovery가 있다.
+- [ ] 모든 required rope가 actual input으로 자연스럽게 양방향 통과된다.
+- [ ] leaper가 하나의 synthetic arc 반복이 아니라 reachable destination
+  이동으로 basin pressure를 유지한다.
 - [ ] moving platform 신규 구현 없이 모든 required line이 clear된다.
 - [ ] baseline continuous clear와 real-hazard reset이 통과한다.
 
@@ -474,8 +600,11 @@ Tasks:
 - [ ] shield choke의 flank elevation과 recovery floor를 정리한다.
 - [ ] fractured gallery의 enemy마다 terrain relation을 기록하고 불필요한
   enemy를 제거 또는 이동한다.
+- [ ] fractured gallery의 mobile enemy가 wall/ledge에서 멈추는 배치를
+  제거하거나 공용 terrain response로 해결한다.
 - [ ] recovery cloister를 실제 crossfire 밖 safe zone으로 만든다.
-- [ ] sentry crossfire에 cover band, transfer window, flank path를 만든다.
+- [ ] sentry crossfire에 projectile-blocking cover band, transfer window,
+  flank path를 만든다.
 - [ ] exit ascent에서 새 mechanic을 추가하지 않고 known element를 결합한다.
 
 Acceptance:
@@ -485,6 +614,8 @@ Acceptance:
 - [ ] 두 branch 모두 forward-rejoin한다.
 - [ ] gate shortcut이 시각적으로 열리고 실제 traversal을 줄인다.
 - [ ] shield, fractured, sentry combat이 서로 다른 tactical verticality를 준다.
+- [ ] sentry projectile가 declared cover를 관통하지 않고, ordinary enemy
+  tell이 full-screen trajectory overlay 없이 읽힌다.
 - [ ] recovery cloister 진입 시 unavoidable projectile 또는 body hit이 없다.
 - [ ] baseline continuous clear, both optional loops, stage retry가 통과한다.
 
@@ -502,8 +633,14 @@ Tasks:
   review한다.
 - [ ] 모든 room entry와 exit buffer를 실제 threat reach로 확인한다.
 - [ ] irreversible jump/drop 전 camera가 landing 또는 safe cue를 보여준다.
+- [ ] 실제 normal-stage camera owner가 authored focus/lookahead를 소비하거나,
+  해당 marker를 제거하고 default camera로 읽히는 geometry를 증명한다.
 - [ ] reward anchor가 optional line과 risk를 설명하는 위치인지 확인한다.
 - [ ] 8초 이상 decision vacuum이 드문지 continuous timing note를 남긴다.
+- [ ] stage별 repeated near-limit transition, failed wall approach, rope reversal,
+  stuck enemy, projectile-through-cover 횟수를 continuous note에 기록한다.
+- [ ] ordinary enemy의 full-range Line2D/arc를 전수 검토하고, 합리적인
+  behavior와 local startup/destination cue로 대체 가능한 것은 제거한다.
 - [ ] Ruin/Flooded/Sanctum silhouette를 collision-only overview로 비교한다.
 - [ ] normal stage 안에 Forge, merchant, intermission NPC가 없는지 validator와
   rendered run으로 확인한다.
@@ -514,7 +651,11 @@ Acceptance:
   한 문단으로 설명할 수 있다.
 - [ ] 세 stage의 collision-only silhouette와 height waveform이 구별된다.
 - [ ] 모든 combat room이 enemy-terrain relation을 통과한다.
+- [ ] required traversal, rope, cover, mobile enemy가 shared terrain contract를
+  동일하게 사용하며 room별 예외가 없다.
 - [ ] 모든 critical camera commitment가 first-time clear에서 읽힌다.
+- [ ] owner before/after run에서 route 기억, 불필요한 climb friction, enemy
+  stuck, unfair projectile에 대한 개선이 확인된다.
 - [ ] safe intermission과 normal-stage facility separation이 회귀하지 않는다.
 
 ### Milestone F — Release-level validation
@@ -533,6 +674,10 @@ Tasks:
 - [ ] optional route를 각각 진입, reward, rejoin까지 연속 clear한다.
 - [ ] actual enemy damage, guard, fall recovery, stage retry를 새 geometry에서
   확인한다.
+- [ ] every required rope reversal, shooter/sentry cover interaction, repeated
+  leaper destination, mobile patrol cycle을 actual stage에서 확인한다.
+- [ ] production capture에는 debug route label과 불필요한 full trajectory
+  overlay가 없고, 필요한 danger startup은 color 외 cue와 함께 남는다.
 - [ ] Web export template가 있으면 production Web export를 만들고 built app을
   fastrun codex lane에서 확인한다.
 - [ ] Web export template가 여전히 없으면 blocker를 기존 gameplay-validity
@@ -562,6 +707,17 @@ Acceptance:
 `.\tools\godot.ps1 --path . --headless --script res://tools/validate_stage_composition.gd`
 
 `.\tools\godot.ps1 --path . --headless --script res://tools/validate_production_stage.gd`
+
+`.\tools\godot.ps1 --path . --headless --script res://tools/validate_player_movement_runtime.gd`
+
+`.\tools\godot.ps1 --path . --headless --script res://tools/validate_shooter_runtime.gd`
+
+`.\tools\godot.ps1 --path . --headless --script res://tools/validate_flooded_enemy_runtime.gd`
+
+The three runtime validators above are not accepted unchanged. Their fixtures
+must cover rope descent through a one-way top, projectile contact with authored
+cover, repeated leaper destination selection, and reproduced mobile-enemy stuck
+cases before they can close Milestone A.
 
 ### Flow regressions
 
@@ -594,6 +750,14 @@ Capture minimum:
 6. Explain the next route, optional clue, and reward without debug labels.
 7. Measure any stretch longer than eight seconds without movement, combat, route,
    or reward decision.
+8. Climb every required rope in both directions, reverse once near the top and
+   bottom, and dismount without repeated collision or corrective jumping.
+9. Stand behind every declared shooter/sentry cover surface and confirm the
+   projectile terminates on terrain rather than damaging through it.
+10. Observe every leaper and mobile patrol encounter for multiple cycles and
+    record any idle lock, wall push, repeated unreachable landing, or lane exit.
+11. Repeat representative routine jumps with early release and imperfect
+    approach; required navigation must not depend on theoretical maximum input.
 
 ### Web production validation
 
@@ -613,8 +777,11 @@ When export templates are available:
 - [x] Canonical map-design guideline written.
 - [x] Current metrics rerun on Godot 4.7 and recorded.
 - [x] Per-stage detailed visual studies generated and reviewed as direction probes.
+- [x] Owner production-path feedback and code/validator blind spots audited for
+  traversal comfort, rope descent, projectile cover, leaper/patrol behavior,
+  trajectory overlays, and normal-stage camera ownership.
 - [ ] Milestone 0 construction blueprints reconciled with current room IDs and approved.
-- [ ] Milestone A diagnostic contract implemented.
+- [ ] Milestone A diagnostic and shared terrain-interaction contract implemented.
 - [ ] Milestone B Ruin implemented and accepted.
 - [ ] Milestone C Flooded implemented and accepted.
 - [ ] Milestone D Sanctum implemented and accepted.
@@ -625,9 +792,12 @@ When export templates are available:
 
 1. Complete Milestone 0 only; do not edit gameplay geometry yet.
 2. Review the three source-linked blueprints and lock the Ruin pilot boundary.
-3. Implement Milestone A diagnostics against the approved target graph.
-4. Complete and playtest Ruin before touching Flooded.
-5. Apply the proven pattern to Flooded, then Sanctum without copying the same
+3. Add Milestone A red fixtures for comfort chains, rope descent, terrain-blocked
+   projectiles, repeated leaper destinations, mobile-enemy stuck behavior, and
+   camera commitments before changing runtime behavior.
+4. Implement the shared Milestone A contracts, then rerun the same fixtures green.
+5. Complete and playtest Ruin before touching Flooded.
+6. Apply the proven pattern to Flooded, then Sanctum without copying the same
    silhouette.
 
 ## Rollback / Safety
@@ -642,6 +812,13 @@ When export templates are available:
   reachability, flow, and capture validation in the same milestone.
 - Never weaken movement, no-soft-lock, safe-intermission, or reward-duplication
   validators to make new geometry pass.
+- Do not change player movement values, collision body size, enemy range, or
+  projectile speed merely to make authored geometry easier.
+- Fix rope, projectile collision, and reproduced existing-enemy terrain behavior
+  in their shared owners; do not add per-room exception branches.
+- Keep previous full-path telegraph behavior available until the replacement
+  startup/destination cue passes production readability review in the same
+  milestone.
 - If a forward rejoin breaks the current graph contract, extend the validator
   explicitly; do not bypass it with hidden teleports.
 - Do not add external assets or dependencies.
@@ -652,6 +829,11 @@ When export templates are available:
 | --- | --- |
 | Better-looking geometry becomes harder than intended | baseline movement proof, safe entry, continuous first-clear test |
 | More vertical combat produces unavoidable hits | threat-lane review, entry buffer, one pressure role introduced at a time |
+| Comfort diagnostic becomes another arbitrary number | derive bands from runtime input fixtures, report ratios separately, keep owner continuous-play gate |
+| Rope descent fix breaks one-way drop or leaves collision mask disabled | bidirectional fixture, jump/dash/respawn exit coverage, mask restoration assertion |
+| Projectile collision makes existing ranged encounters inert | review every declared cover lane, preserve exposed attack windows, change placement before weakening collision |
+| Terrain-aware enemy repair grows into a navigation rewrite | limit changes to reproduced existing-archetype failures and authored encounter bounds |
+| Removing full trajectories makes attacks unreadable | retain local startup, facing/pose, destination or impact cue and verify without color-only dependence |
 | Forward rejoin breaks reward/reset determinism | stable IDs, retry test after each optional reward, graph validation |
 | Metrics are gamed again | separate diagnostics, no aggregate score, manual critical gates |
 | Three stages converge on the same zigzag shape | lock distinct spatial thesis and compare collision-only silhouettes |
@@ -676,6 +858,16 @@ deferred until rendered evidence exists:
   traversal without adding runtime code.
 - Whether future authored stages need machine-readable intention metadata.
   Default: keep intention in plan/spec until repeated validator value is proven.
+- Whether one-way platforms block basic enemy projectiles. Default: a surface
+  presented and documented as cover blocks them; non-cover one-way surfaces must
+  use one consistent declared policy rather than room-specific exceptions.
+- Whether leaper landing candidates come from support surfaces or authored local
+  markers. Default: derive from existing support geometry first; add local markers
+  only when the intended destination cannot be expressed reliably without a new
+  global schema.
+- Whether normal-stage camera commitments need a focus/lookahead consumer.
+  Default: first reshape geometry for the existing camera; add the smallest
+  runtime owner only where continuous evidence still reveals information late.
 
 ## Decision Notes
 
@@ -698,3 +890,15 @@ deferred until rendered evidence exists:
 - 2026-07-16: Visual-study chamber count is illustrative. Existing authored
   templates and PRD timing remain the first-pass scope until play evidence
   justifies an explicit room-count decision.
+- 2026-07-16: Session `019f6138-03a7-73d1-8ec6-a959d2f4d935` is source evidence
+  for the separated stage blueprints, folded-space direction, room-boundary
+  explanation, and staged rollout; session imagery is not collision authority.
+- 2026-07-16: Automated reachability and isolated runtime validators do not close
+  map validity without actual rope descent, cover collision, repeated enemy
+  behavior, camera, and continuous traversal evidence.
+- 2026-07-16: The map plan owns bounded shared runtime repairs only where authored
+  terrain intention otherwise cannot function. Contextual attack input, shield
+  redesign, potion economy, and intermission UI remain separate follow-ups.
+- 2026-07-16: Full-range ordinary-enemy trajectory overlays are not a substitute
+  for rational terrain-aware behavior. Required startup and danger readability
+  remain, especially for boss attacks.
