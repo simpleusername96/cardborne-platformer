@@ -1,39 +1,35 @@
 extends Control
 
 const Styles = preload("res://scripts/ui/production/ProductionUIStyles.gd")
-const Glyph = preload("res://scripts/ui/production/components/HUDGlyph.gd")
-const CombatDock = preload("res://scripts/ui/production/components/HUDCombatDock.gd")
 const Text = preload("res://scripts/ui/localization/LocalizedText.gd")
 
-const OBJECTIVE_EXPANDED_SECONDS := 4.0
+@onready var health_panel: PanelContainer = $HealthCluster
+@onready var portrait_frame: PanelContainer = $HealthCluster/Margin/Row/ClassEmblem
+@onready var portrait_icon: ProductionAssetIcon = $HealthCluster/Margin/Row/ClassEmblem/PortraitMargin/PortraitIcon
+@onready var profile_label: Label = $HealthCluster/Margin/Row/Details/Heading/ProfileName
+@onready var health_value_label: Label = $HealthCluster/Margin/Row/Details/Heading/HealthValue
+@onready var health_bar: ProgressBar = $HealthCluster/Margin/Row/Details/PlayerHealth
+@onready var level_xp_label: Label = $HealthCluster/Margin/Row/Details/LevelXP
+@onready var armor_label: Label = $HealthCluster/Margin/Row/Details/ArmorState
 
-var health_panel: PanelContainer
-var portrait_frame: PanelContainer
-var portrait_glyph: HUDGlyph
-var profile_label: Label
-var health_value_label: Label
-var health_bar: ProgressBar
-var level_xp_label: Label
-var armor_label: Label
+@onready var objective_container: Control = $ObjectiveBand
+@onready var objective_title_label: Label = $ObjectiveBand/Column/ObjectiveTitle
+@onready var objective_detail_label: Label = $ObjectiveBand/Column/ObjectiveDetail
+@onready var objective_timer: Timer = $ObjectiveTimer
 
-var objective_container: Control
-var objective_title_label: Label
-var objective_detail_label: Label
-var objective_timer: Timer
+@onready var combat_dock: HUDCombatDock = $CombatDock
 
-var combat_dock: HUDCombatDock
+@onready var context_lane: Control = $ContextLane
+@onready var prompt_panel: PanelContainer = $ContextLane/InteractionPrompt
+@onready var prompt_binding_label: Label = $ContextLane/InteractionPrompt/Margin/Row/BindingBadge/PromptBinding
+@onready var prompt_label: Label = $ContextLane/InteractionPrompt/Margin/Row/PromptText
+@onready var reward_receipt: RewardReceiptPresenter = $ContextLane/RewardReceiptPresenter
 
-var context_lane: Control
-var prompt_panel: PanelContainer
-var prompt_binding_label: Label
-var prompt_label: Label
-var reward_receipt: RewardReceiptPresenter
-
-var boss_panel: PanelContainer
-var boss_name_label: Label
-var boss_health_bar: ProgressBar
-var boss_stagger_bar: ProgressBar
-var boss_status_label: Label
+@onready var boss_panel: PanelContainer = $BossPanel
+@onready var boss_name_label: Label = $BossPanel/Margin/Column/Heading/BossName
+@onready var boss_health_bar: ProgressBar = $BossPanel/Margin/Column/BossHealth
+@onready var boss_stagger_bar: ProgressBar = $BossPanel/Margin/Column/BossStagger
+@onready var boss_status_label: Label = $BossPanel/Margin/Column/Heading/BossStatus
 
 var _stage_display_name: String = "Ruin Approach"
 var _stage_id: String = "ruin_approach"
@@ -51,7 +47,11 @@ func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	Styles.apply_theme(self)
-	_build_ui()
+	objective_timer.timeout.connect(_collapse_objective)
+	reward_receipt.set_embedded(true)
+	reward_receipt.presentation_state_changed.connect(_on_receipt_state_changed)
+	_show_objective(_t("Defeat enemies"))
+	_layout_responsive()
 	SignalBus.player_health_changed.connect(_on_health_changed)
 	SignalBus.run_state_changed.connect(_on_run_state_changed)
 	SignalBus.stage_started.connect(_on_stage_started)
@@ -118,229 +118,9 @@ func get_layout_snapshot() -> Dictionary:
 		"prompt_text": prompt_label.text if prompt_label != null else "",
 		"receipt_active": _receipt_active,
 		"armor": armor_label.text if armor_label != null else "",
+		"portrait_asset": portrait_icon.get_asset_id() if portrait_icon != null else &"",
 		"combat": dock_snapshot,
 	}
-
-
-func _build_ui() -> void:
-	_build_health_cluster()
-	_build_objective()
-	_build_boss_panel()
-	_build_combat_dock()
-	_build_context_lane()
-	_layout_responsive()
-
-
-func _build_health_cluster() -> void:
-	health_panel = _hud_panel(Color(Styles.SURFACE, 0.95))
-	health_panel.name = "HealthCluster"
-	health_panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	add_child(health_panel)
-
-	var margin := _margin_container(9, 8, 10, 8)
-	health_panel.add_child(margin)
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 9)
-	margin.add_child(row)
-
-	portrait_frame = PanelContainer.new()
-	portrait_frame.name = "ClassEmblem"
-	portrait_frame.custom_minimum_size = Vector2(50.0, 50.0)
-	portrait_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	portrait_frame.add_theme_stylebox_override(
-		"panel", Styles.panel_style(Color("151c1f"), Styles.AMBER, 2)
-	)
-	row.add_child(portrait_frame)
-	var portrait_margin := _margin_container(7, 7, 7, 7)
-	portrait_frame.add_child(portrait_margin)
-	portrait_glyph = Glyph.new()
-	portrait_glyph.name = "PortraitGlyph"
-	portrait_margin.add_child(portrait_glyph)
-
-	var details := VBoxContainer.new()
-	details.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	details.add_theme_constant_override("separation", 2)
-	row.add_child(details)
-
-	var heading := HBoxContainer.new()
-	details.add_child(heading)
-	profile_label = Label.new()
-	profile_label.name = "ProfileName"
-	profile_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	profile_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	Styles.configure_label(profile_label, Styles.TYPE_BODY, Styles.TEXT)
-	heading.add_child(profile_label)
-	health_value_label = Label.new()
-	health_value_label.name = "HealthValue"
-	health_value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	Styles.configure_label(health_value_label, Styles.TYPE_BODY, Styles.TEXT)
-	heading.add_child(health_value_label)
-
-	health_bar = ProgressBar.new()
-	health_bar.name = "PlayerHealth"
-	health_bar.custom_minimum_size = Vector2(0.0, 12.0)
-	health_bar.show_percentage = false
-	health_bar.theme_type_variation = &"HealthMeter"
-	details.add_child(health_bar)
-
-	level_xp_label = Label.new()
-	level_xp_label.name = "LevelXP"
-	Styles.configure_label(level_xp_label, Styles.TYPE_CAPTION, Styles.TEXT_MUTED)
-	details.add_child(level_xp_label)
-
-	armor_label = Label.new()
-	armor_label.name = "ArmorState"
-	armor_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	Styles.configure_label(armor_label, Styles.TYPE_CAPTION, Styles.TEXT_MUTED)
-	details.add_child(armor_label)
-
-
-func _build_objective() -> void:
-	objective_container = Control.new()
-	objective_container.name = "ObjectiveBand"
-	objective_container.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	objective_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(objective_container)
-	var rule := ColorRect.new()
-	rule.name = "ObjectiveRule"
-	rule.color = Color(Styles.OUTLINE, 0.88)
-	rule.set_anchors_preset(Control.PRESET_TOP_WIDE)
-	rule.offset_bottom = 2.0
-	rule.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	objective_container.add_child(rule)
-	var column := VBoxContainer.new()
-	column.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	column.offset_top = 7.0
-	column.add_theme_constant_override("separation", 1)
-	objective_container.add_child(column)
-	objective_title_label = Label.new()
-	objective_title_label.name = "ObjectiveTitle"
-	objective_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	objective_title_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	Styles.configure_label(objective_title_label, Styles.TYPE_BODY, Styles.TEXT)
-	column.add_child(objective_title_label)
-	objective_detail_label = Label.new()
-	objective_detail_label.name = "ObjectiveDetail"
-	objective_detail_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	objective_detail_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	Styles.configure_label(objective_detail_label, Styles.TYPE_CAPTION, Styles.TEXT_MUTED)
-	column.add_child(objective_detail_label)
-	objective_timer = Timer.new()
-	objective_timer.one_shot = true
-	objective_timer.wait_time = OBJECTIVE_EXPANDED_SECONDS
-	objective_timer.timeout.connect(_collapse_objective)
-	add_child(objective_timer)
-	_show_objective(_t("Defeat enemies"))
-
-
-func _build_combat_dock() -> void:
-	combat_dock = CombatDock.new()
-	combat_dock.name = "CombatDock"
-	combat_dock.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	add_child(combat_dock)
-
-
-func _build_context_lane() -> void:
-	context_lane = Control.new()
-	context_lane.name = "ContextLane"
-	context_lane.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	context_lane.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(context_lane)
-	prompt_panel = _hud_panel(Color(Styles.SURFACE_RAISED, 0.97))
-	prompt_panel.name = "InteractionPrompt"
-	Styles.apply_panel(prompt_panel, &"PromptBadge")
-	prompt_panel.visible = false
-	prompt_panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	context_lane.add_child(prompt_panel)
-	var margin := _margin_container(12, 9, 12, 9)
-	prompt_panel.add_child(margin)
-	var row := HBoxContainer.new()
-	row.alignment = BoxContainer.ALIGNMENT_CENTER
-	row.add_theme_constant_override("separation", 10)
-	margin.add_child(row)
-	var badge := PanelContainer.new()
-	badge.custom_minimum_size = Vector2(42.0, 28.0)
-	Styles.apply_panel(badge, &"PromptBadge")
-	row.add_child(badge)
-	prompt_binding_label = Label.new()
-	prompt_binding_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	prompt_binding_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	Styles.configure_label(prompt_binding_label, Styles.TYPE_CAPTION, Styles.TEXT)
-	badge.add_child(prompt_binding_label)
-	prompt_label = Label.new()
-	prompt_label.name = "PromptText"
-	prompt_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	prompt_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	prompt_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	prompt_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	Styles.configure_label(prompt_label, Styles.TYPE_BODY, Styles.TEXT)
-	row.add_child(prompt_label)
-
-	reward_receipt = RewardReceiptPresenter.new()
-	reward_receipt.name = "RewardReceiptPresenter"
-	reward_receipt.set_embedded(true)
-	reward_receipt.presentation_state_changed.connect(_on_receipt_state_changed)
-	context_lane.add_child(reward_receipt)
-
-
-func _build_boss_panel() -> void:
-	boss_panel = _hud_panel(Color("20292d"))
-	boss_panel.name = "BossPanel"
-	boss_panel.visible = false
-	boss_panel.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	add_child(boss_panel)
-	var margin := _margin_container(12, 6, 12, 6)
-	boss_panel.add_child(margin)
-	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", 3)
-	margin.add_child(column)
-	var heading := HBoxContainer.new()
-	column.add_child(heading)
-	boss_name_label = Label.new()
-	boss_name_label.name = "BossName"
-	boss_name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	boss_name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	Styles.configure_label(boss_name_label, Styles.TYPE_BODY, Styles.TEXT)
-	heading.add_child(boss_name_label)
-	boss_status_label = Label.new()
-	boss_status_label.name = "BossStatus"
-	boss_status_label.custom_minimum_size = Vector2(100.0, 0.0)
-	boss_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	boss_status_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	boss_status_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	Styles.configure_label(boss_status_label, Styles.TYPE_CAPTION, Styles.AMBER)
-	heading.add_child(boss_status_label)
-	boss_health_bar = ProgressBar.new()
-	boss_health_bar.name = "BossHealth"
-	boss_health_bar.custom_minimum_size = Vector2(0.0, 13.0)
-	boss_health_bar.show_percentage = false
-	boss_health_bar.theme_type_variation = &"BossMeter"
-	column.add_child(boss_health_bar)
-	boss_stagger_bar = ProgressBar.new()
-	boss_stagger_bar.name = "BossStagger"
-	boss_stagger_bar.custom_minimum_size = Vector2(0.0, 4.0)
-	boss_stagger_bar.show_percentage = false
-	boss_stagger_bar.theme_type_variation = &"ResourceMeter"
-	column.add_child(boss_stagger_bar)
-
-
-func _hud_panel(
-	background: Color = Styles.SURFACE
-) -> PanelContainer:
-	var panel := PanelContainer.new()
-	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	panel.add_theme_stylebox_override("panel", Styles.flat_style(background))
-	return panel
-
-
-func _margin_container(left: int, top: int, right: int, bottom: int) -> MarginContainer:
-	var margin := MarginContainer.new()
-	margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	margin.add_theme_constant_override("margin_left", left)
-	margin.add_theme_constant_override("margin_top", top)
-	margin.add_theme_constant_override("margin_right", right)
-	margin.add_theme_constant_override("margin_bottom", bottom)
-	return margin
 
 
 func _layout_responsive() -> void:
@@ -433,7 +213,9 @@ func _refresh_health_cluster() -> void:
 	portrait_frame.add_theme_stylebox_override(
 		"panel", Styles.panel_style(Color("151c1f"), accent, 2)
 	)
-	portrait_glyph.configure(profile_id, accent)
+	# Keep the 32 px HUD identity slot on a crisp semantic vector; detailed
+	# character raster is reserved for the reviewed 64 px+ presentation slots.
+	portrait_icon.configure(&"melee", accent, 32.0)
 	var loadout: Dictionary = _combat_state.get("loadout", {})
 	var armor_name := String(loadout.get("armor_display_name", "Traveler Coat"))
 	var health_bonus := maxi(int(loadout.get("armor_health_bonus", 0)), 0)

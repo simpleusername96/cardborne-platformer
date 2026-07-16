@@ -4,7 +4,7 @@ status: active
 owner: BK
 created: 2026-07-16
 last_reviewed: 2026-07-16
-topic: Milestones 1-2 production UI asset and flat-theme rendered QA
+topic: Milestones 1-5 production UI and gameplay HUD rendered QA
 source: Owner-selected UI references, active visual spec, production asset catalog, Godot 4.7 validators, and deterministic OpenGL captures
 related:
   - ./.agent/execplans/2026-07-15-master-ui-overhaul.md
@@ -13,15 +13,16 @@ related:
   - ./docs/design/reports/ui-raster-asset-catalog.png
 ---
 
-# Production UI Milestones 1-2 Design QA
+# Production UI Milestones 1-5 Design QA
 
 ## Purpose
 
-Record the bounded rendered-acceptance evidence for Milestones 1 and 2 of the
-master UI overhaul: centralized production asset ownership, first real-screen
-image placements, and the shared flat Theme/component foundation. This document
-is evidence for the active ExecPlan, not a replacement for the remaining
-implementation milestones.
+Record the bounded rendered-acceptance evidence for Milestones 1 through 5 of the
+master UI overhaul: centralized production asset ownership, real-screen image
+placements, the shared flat Theme/component foundation, all shell and economy
+surfaces, and the gameplay HUD/Trial migration. This document is evidence for the
+active ExecPlan, not a replacement for the remaining world proof and integration
+milestones.
 
 ## Sources
 
@@ -32,10 +33,11 @@ implementation milestones.
 
 ## Result
 
-**Passed for Milestones 1-2.** This result approves asset resolution, the first
-real-screen placements, and the shared flat Theme/component foundation. It does
-not approve the complete UI overhaul: remaining screen composition migration,
-world presentation, production Web export, and full-run QA remain open milestones.
+**Passed for Milestones 1-5.** This result approves the UI asset registry, shell,
+dense progression/economy surfaces, shared flat Theme/components, gameplay HUD,
+feedback presentation, and Arsenal Trial UI. It does not approve the complete UI
+overhaul: measured world presentation, production Web export, integration, and
+full-run QA remain open milestones.
 
 ## Reviewed Scope
 
@@ -94,10 +96,11 @@ Runtime captures:
 - **Exception:** a left border property is used only as a reserved four-pixel
   inside marker lane for focus/selection/prompt state. It is not a perimeter
   outline and the lane exists in every state, so bounds remain stable.
-- **Remaining warnings:** Milestones 3-5 still own the remaining screen-local
-  composition migration; compact Settings intentionally scrolls internally; the
+- **Remaining warnings:** Milestone 6 still owns measured world presentation and
+  Milestone 7 owns integration/export/full-run QA; compact Settings intentionally
+  scrolls internally; the
   `1672x941` shell images remain modestly soft at 1920x1080.
-- **Result:** passed for the Milestone 2 representative cross-surface spike.
+- **Result:** passed for the Milestones 1-5 production UI and gameplay HUD scope.
 
 ## Automated Evidence
 
@@ -128,6 +131,35 @@ Runtime captures:
   identity slots; smaller semantic use continues to fall back to SVG.
 - Forge artwork remains deferred because the live Safe Intermission view provides
   clearer gameplay context than a full-screen workshop background.
+
+## Milestones 3-5 Incremental Evidence
+
+- Shell validation covers Main Menu, Pause, destructive confirmation, shell and
+  in-run Settings, victory, defeat, retry, and ended-expedition states in English
+  and Korean at `960x540`, `1280x720`, and `1920x1080`.
+- Merchant, Forge, transaction, safe-intermission, receipt, Card Reward, Level
+  Reward, and production boot gates pass. Forge commands are fully inside the
+  detail scroll viewport and the live stage remains visible behind both economy
+  overlays.
+- `ProductionHUD.gd` no longer constructs its stable Health, Objective, Boss,
+  Combat, or Context node trees. These are authored reusable scenes; the script
+  owns responsive placement and event/snapshot binding.
+- Existing semantic SVGs replace the removed procedural HUD glyph renderer at
+  16-32 px. Detailed raster remains reserved for reviewed `64 px+` identity slots.
+- Gameplay HUD captures cover low health, interaction, field pickup, five guard
+  outcomes, and boss state in both locales. Trial captures cover both locales at
+  every supported viewport.
+- Real-world captures reviewed:
+  `.codex-runtime/uiux/fixed_stage/ruin_route_choice.png`,
+  `.codex-runtime/uiux/fixed_stage/sanctum_crypt_recovery_compact.png`, and
+  `.codex-runtime/uiux/boss/{desktop_jump_startup,compact_poison_active,hd_summon_startup}.png`.
+  Player, landing edges, hazards, boss telegraphs, and the center-safe gap remain
+  visible.
+- Focused results include `GAMEPLAY_HUD_VALIDATION_OK locales=2 viewports=3`,
+  `BOSS_HUD_VALIDATION_OK viewport=960x540`,
+  `GUARD_PRODUCTION_PATH_VALIDATION_OK outcomes=9`,
+  `ARSENAL_TRIAL_VALIDATION_OK ... ui=960x540,1280x720,1920x1080`, and passing
+  feedback/pickup/boot gates.
 
 ## Unrun Gates
 

@@ -1,5 +1,6 @@
 extends SceneTree
 
+const Styles = preload("res://scripts/ui/production/ProductionUIStyles.gd")
 const TRIAL_SCENE_PATH := "res://scenes/stages/trial/ArsenalTrial.tscn"
 const TRIAL_CONTROLLER_PATH := "res://scripts/stages/trial/ArsenalTrial.gd"
 const EXPECTED_ROOM_IDS: Array[StringName] = [
@@ -109,12 +110,14 @@ func _validate_korean_ui(packed: PackedScene, localization: Node) -> void:
 	_expect(skip.text == "연습 건너뛰기", "Trial skip action should localize to Korean.")
 	for viewport_size in [Vector2i(960, 540), Vector2i(1280, 720), Vector2i(1920, 1080)]:
 		root.size = viewport_size
+		DisplayServer.window_set_size(viewport_size)
 		await process_frame
 		_expect(
 			_rect_fits((trial.get_node("TrialUI/PromptPanel") as Control).get_global_rect(), viewport_size),
 			"Korean Trial prompt should fit %s." % viewport_size
 		)
 		_expect(_rect_fits(skip.get_global_rect(), viewport_size), "Korean Trial skip should fit %s." % viewport_size)
+		await _capture_if_requested(viewport_size, "ko")
 	trial.queue_free()
 	await process_frame
 
@@ -142,7 +145,7 @@ func _validate_source_boundaries() -> void:
 				]
 			)
 
-	var controller_source := FileAccess.get_file_as_string(TRIAL_CONTROLLER_PATH)
+	var controller_source := FileAccess.get_file_as_string(TRIAL_CONTROLLER_PATH).replace("\r\n", "\n")
 	_expect(
 		controller_source.contains(
 			"func request_complete() -> Dictionary:\n\treturn _request_resolution(OUTCOME_COMPLETED)"
@@ -198,8 +201,11 @@ func _validate_authored_layout(packed: PackedScene) -> void:
 	var first_signature := _geometry_signature(trial)
 	_validate_geometry_signature(first_signature)
 	await _validate_ui_fit(trial, Vector2i(960, 540))
+	await _capture_if_requested(Vector2i(960, 540), "en")
 	await _validate_ui_fit(trial, Vector2i(1280, 720))
+	await _capture_if_requested(Vector2i(1280, 720), "en")
 	await _validate_ui_fit(trial, Vector2i(1920, 1080))
+	await _capture_if_requested(Vector2i(1920, 1080), "en")
 
 	trial.queue_free()
 	await process_frame
@@ -435,9 +441,14 @@ func _validate_geometry_signature(signature: Dictionary) -> void:
 
 func _validate_ui_fit(trial: Node, viewport_size: Vector2i) -> void:
 	root.size = viewport_size
+	DisplayServer.window_set_size(viewport_size)
 	await process_frame
-	var prompt := trial.get_node("TrialUI/PromptPanel") as Control
+	var prompt := trial.get_node("TrialUI/PromptPanel") as PanelContainer
 	var skip := trial.get_node("TrialUI/SkipButton") as Button
+	_expect(prompt.theme == Styles.PRODUCTION_THEME, "Trial prompt should inherit the production Theme.")
+	_expect(prompt.theme_type_variation == &"PromptBadge", "Trial prompt should use the flat prompt surface.")
+	_expect(skip.theme == Styles.PRODUCTION_THEME, "Skip Trial should use the production Theme.")
+	_expect(skip.theme_type_variation == &"SecondaryButton", "Skip Trial should use secondary hierarchy.")
 	_expect(_rect_fits(prompt.get_global_rect(), viewport_size), "Prompt panel should fit %s." % viewport_size)
 	_expect(_rect_fits(skip.get_global_rect(), viewport_size), "Skip button should fit %s." % viewport_size)
 	_expect(
@@ -462,6 +473,25 @@ func _validate_ui_fit(trial: Node, viewport_size: Vector2i) -> void:
 			label.get_theme_font_size("font_size") >= 16,
 			"Trial prompt text should be at least 16px: %s" % label_path
 		)
+
+
+func _capture_if_requested(viewport_size: Vector2i, locale: String) -> void:
+	if OS.get_environment("CAPTURE_ARSENAL_TRIAL") != "1":
+		return
+	var output_dir := "user://arsenal_trial_ui_validation"
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(output_dir))
+	for _pass in 3:
+		RenderingServer.force_draw(false)
+		await RenderingServer.frame_post_draw
+		await process_frame
+	var image := root.get_texture().get_image()
+	var output_path := "%s/trial_%s_%dx%d.png" % [
+		output_dir, locale, viewport_size.x, viewport_size.y,
+	]
+	var error := image.save_png(output_path) if image != null else ERR_CANT_CREATE
+	_expect(error == OK, "Trial capture should save %s." % output_path)
+	if error == OK:
+		print("ARSENAL_TRIAL_CAPTURE %s" % ProjectSettings.globalize_path(output_path))
 
 
 func _rect_fits(rect: Rect2, viewport_size: Vector2i) -> bool:

@@ -41,6 +41,24 @@ func _validate_viewport(packed: PackedScene, viewport_size: Vector2i, locale: St
 	await process_frame
 
 	var layout: Dictionary = hud.call("get_layout_snapshot")
+	_expect(
+		hud.get_node("HealthCluster").scene_file_path.ends_with("HUDHealthCluster.tscn")
+		and hud.get_node("ObjectiveBand").scene_file_path.ends_with("HUDObjectiveBand.tscn")
+		and hud.get_node("BossPanel").scene_file_path.ends_with("HUDBossPanel.tscn")
+		and hud.get_node("ContextLane").scene_file_path.ends_with("HUDContextLane.tscn"),
+		"stable HUD regions should be authored as reusable scenes"
+	)
+	_expect(
+		StringName(layout.get("portrait_asset", &"")) == &"melee",
+		"32px Traveler identity should use the semantic melee SVG"
+	)
+	var role_assets := _production_asset_ids(hud)
+	for asset_id in [&"melee", &"ranged", &"shield", &"spirit", &"potion"]:
+		_expect(role_assets.has(asset_id), "HUD should render semantic SVG %s" % asset_id)
+	_expect(
+		not FileAccess.file_exists("res://scripts/ui/production/components/HUDGlyph.gd"),
+		"retired procedural HUD glyph renderer should be absent"
+	)
 	var viewport_rect := Rect2(Vector2.ZERO, Vector2(viewport_size))
 	var health_rect := layout["health_rect"] as Rect2
 	var objective_rect := layout["objective_rect"] as Rect2
@@ -324,6 +342,19 @@ func _all_label_text(node: Node) -> String:
 	for child in node.get_children():
 		parts.append(_all_label_text(child))
 	return "\n".join(parts)
+
+
+func _production_asset_ids(node: Node) -> Array[StringName]:
+	var ids: Array[StringName] = []
+	if node is ProductionAssetIcon:
+		var asset_id := (node as ProductionAssetIcon).get_asset_id()
+		if asset_id != &"" and not ids.has(asset_id):
+			ids.append(asset_id)
+	for child in node.get_children():
+		for asset_id in _production_asset_ids(child):
+			if not ids.has(asset_id):
+				ids.append(asset_id)
+	return ids
 
 
 func _expect(condition: bool, message: String) -> void:

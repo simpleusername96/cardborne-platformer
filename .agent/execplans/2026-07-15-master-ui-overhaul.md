@@ -566,19 +566,19 @@ the visible play area.
 **Source owners:** `ProductionHUD.tscn/.gd`, HUD components, receipt presenter,
 feedback director/cues, Arsenal Trial prompts, HUD validators/captures.
 
-- [ ] Move stable HUD node composition from `ProductionHUD.gd` into scenes and
+- [x] Move stable HUD node composition from `ProductionHUD.gd` into scenes and
   reusable components; keep snapshot/event binding in scripts.
-- [ ] Replace small procedural role glyphs with the SVG set where legible.
-- [ ] Keep precise values for health, XP, condition, stability, ammunition,
+- [x] Replace small procedural role glyphs with the SVG set where legible.
+- [x] Keep precise values for health, XP, condition, stability, ammunition,
   charges, cost, cooldown, and boss state as text/meters.
-- [ ] Use detailed raster only at reviewed `64 px+` identity slots; otherwise use
+- [x] Use detailed raster only at reviewed `64 px+` identity slots; otherwise use
   SVG or text.
-- [ ] Preserve the center player-safe gap, objective/boss lane, context lane, and
+- [x] Preserve the center player-safe gap, objective/boss lane, context lane, and
   stable bottom combat dock.
-- [ ] Migrate guard start/block/precise/break/recovery, low health, pickup,
+- [x] Migrate guard start/block/precise/break/recovery, low health, pickup,
   interaction, reward, boss startup/active/recovery, and failure states.
-- [ ] Restyle Arsenal Trial instructions and Skip Trial without obscuring traversal.
-- [ ] Add the evidenced missing simple SVGs only if the all-state review still
+- [x] Restyle Arsenal Trial instructions and Skip Trial without obscuring traversal.
+- [x] Add the evidenced missing simple SVGs only if the all-state review still
   requires them.
 
 **Accept:** gameplay HUD and Trial validators pass in KO/EN at all viewports, and
@@ -587,6 +587,16 @@ telegraphs.
 
 **Guard:** visual simplification cannot remove exact state, and decorative UI cannot
 occupy the playfield simply because space is available.
+
+**Status 2026-07-16:** passed. Health, objective, boss, combat, and context regions
+are now authored scene components; `ProductionHUD.gd` retains responsive layout,
+snapshot binding, and event presentation only. The retired procedural glyph
+renderer was removed and active 16-32 px roles use existing melee/ranged/shield/
+spirit/potion SVGs. No new simple SVG proved necessary. HUD, boss, nine guard
+outcomes, feedback, pickups, Trial, and boot validators pass; English/Korean
+captures cover all three viewports. Real Ruin, Sanctum, Trial, and Slime Court
+captures retain the player, landing edges, hazards, telegraphs, and center-safe
+gap.
 
 ### Milestone 6 - Measured World Background And Component Proof
 
@@ -812,12 +822,16 @@ These are not blockers for Milestones 0-1 unless noted:
 - 2026-07-16: Milestone 4 kept `forge.png` deferred, promoted only semantic
   economy/progression assets used by live slots, and added a trailing Forge
   scroll safe area so focused commands remain fully visible at every viewport.
+- 2026-07-16: Milestone 5 removed `HUDGlyph.gd`, promoted the five live combat
+  role SVGs, and retained the flat objective rule instead of adopting
+  `banner_objective`; the latter obscured more world without adding state.
 
 ## Next Steps
 
-1. Begin Milestone 5 by extracting stable HUD composition into reusable scenes.
-2. Replace legible procedural HUD glyphs and validate gameplay/Trial states in
-   English and Korean at all supported viewports.
+1. Begin Milestone 6 with measured stage coverage and the representative Flooded
+   Works room inventory before generating or choosing any terrain count.
+2. Implement one lazy panorama definition/renderer path with procedural fallback,
+   then prove the accepted overlap and component-state contract in the real room.
 3. Leave `master` untouched until Milestone 7 creates a fresh integration branch
    from its then-current head.
 

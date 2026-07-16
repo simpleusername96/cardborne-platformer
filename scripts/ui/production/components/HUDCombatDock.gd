@@ -2,11 +2,11 @@ class_name HUDCombatDock
 extends Control
 
 const Styles = preload("res://scripts/ui/production/ProductionUIStyles.gd")
-const Glyph = preload("res://scripts/ui/production/components/HUDGlyph.gd")
+const AssetIcon = preload("res://scripts/ui/production/components/ProductionAssetIcon.gd")
 const Text = preload("res://scripts/ui/localization/LocalizedText.gd")
 
 const POTION_LABELS := {
-	"small_potion": "Small Potion",
+	"small_potion": "Healing Potion",
 }
 
 var _run_snapshot: Dictionary = {}
@@ -167,9 +167,12 @@ func _attack_choice(icon_id: StringName, fallback_name: String) -> Dictionary:
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
 	row.add_theme_constant_override("separation", 4)
 	column.add_child(row)
-	var glyph := Glyph.new()
-	glyph.custom_minimum_size = Vector2(18.0, 18.0)
-	glyph.configure(icon_id, Styles.AMBER if icon_id == &"melee" else Styles.CYAN)
+	var glyph := AssetIcon.new()
+	glyph.configure(
+		_asset_id(icon_id),
+		Styles.AMBER if icon_id == &"melee" else Styles.CYAN,
+		18.0
+	)
 	row.add_child(glyph)
 	var name := _label(fallback_name, Styles.TYPE_CAPTION, Styles.TEXT_MUTED)
 	name.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
@@ -222,9 +225,8 @@ func _header(
 ) -> Control:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 5)
-	var glyph := Glyph.new()
-	glyph.custom_minimum_size = Vector2(16.0, 16.0)
-	glyph.configure(icon_id, accent)
+	var glyph := AssetIcon.new()
+	glyph.configure(_asset_id(icon_id), accent, 16.0)
 	row.add_child(glyph)
 	var title_label := _label(_t(title), Styles.TYPE_CAPTION, accent)
 	title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -395,11 +397,11 @@ func _compact_name(value: String) -> String:
 	var always_short := String({
 		"Traveler Sword": "Sword",
 		"Hunting Spear": "Spear",
+		"Hunting Bow": "Bow",
 	}.get(value, value))
 	if not _compact:
 		return always_short
 	return {
-		"Hunting Bow": "Bow",
 		"Round Shield": "Round Shield",
 		"Ember Spirit Stone": "Ember Stone",
 		"Frost Spirit Stone": "Frost Stone",
@@ -452,3 +454,11 @@ func _label(text: String, font_size: int, color: Color) -> Label:
 
 func _local_rect(control: Control) -> Rect2:
 	return Rect2(control.global_position - global_position, control.size)
+
+
+func _asset_id(role: StringName) -> StringName:
+	return {
+		&"attack": &"melee",
+		&"guard": &"shield",
+		&"consumable": &"potion",
+	}.get(role, role)

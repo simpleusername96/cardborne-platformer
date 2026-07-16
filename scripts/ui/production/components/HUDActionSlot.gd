@@ -2,14 +2,14 @@ class_name HUDActionSlot
 extends Control
 
 const Styles = preload("res://scripts/ui/production/ProductionUIStyles.gd")
-const Glyph = preload("res://scripts/ui/production/components/HUDGlyph.gd")
+const AssetIcon = preload("res://scripts/ui/production/components/ProductionAssetIcon.gd")
 
 var _view_model: Dictionary = {}
 var _input_label: Label
 var _count_label: Label
 var _name_label: Label
 var _state_label: Label
-var _glyph: HUDGlyph
+var _glyph: ProductionAssetIcon
 
 
 func _ready() -> void:
@@ -86,7 +86,7 @@ func _draw() -> void:
 
 
 func _build_children() -> void:
-	_glyph = Glyph.new()
+	_glyph = AssetIcon.new()
 	_glyph.name = "ActionGlyph"
 	add_child(_glyph)
 
@@ -155,7 +155,17 @@ func _apply_view_model() -> void:
 		_state_label.text = "%d%%" % int(round(charge * 100.0))
 
 	_state_label.add_theme_color_override("font_color", accent if charge > 0.0 else Styles.TEXT)
-	_glyph.configure(role, accent, not available or cooldown > 0.05)
+	_glyph.configure(_asset_id(role), accent, 32.0)
+	_glyph.modulate.a = 0.42 if not available or cooldown > 0.05 else 1.0
 	_glyph.visible = _state_label.text.is_empty()
 	_layout_children()
 	queue_redraw()
+
+
+func _asset_id(role: StringName) -> StringName:
+	return {
+		&"basic": &"melee",
+		&"attack": &"melee",
+		&"guard": &"shield",
+		&"consumable": &"potion",
+	}.get(role, role)

@@ -1,0 +1,43 @@
+[gd_scene format=3]
+
+[node name="BossPanel" type="PanelContainer"]
+visible = false
+mouse_filter = 2
+theme_type_variation = &"FlatPanel"
+
+[node name="Margin" type="MarginContainer" parent="."]
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 6
+
+[node name="Column" type="VBoxContainer" parent="Margin"]
+theme_override_constants/separation = 3
+
+[node name="Heading" type="HBoxContainer" parent="Margin/Column"]
+
+[node name="BossName" type="Label" parent="Margin/Column/Heading"]
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.941176, 0.945098, 0.909804, 1)
+theme_override_font_sizes/font_size = 18
+text_overrun_behavior = 3
+
+[node name="BossStatus" type="Label" parent="Margin/Column/Heading"]
+custom_minimum_size = Vector2(100, 0)
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.831373, 0.639216, 0.247059, 1)
+theme_override_font_sizes/font_size = 16
+text_overrun_behavior = 3
+horizontal_alignment = 2
+
+[node name="BossHealth" type="ProgressBar" parent="Margin/Column"]
+custom_minimum_size = Vector2(0, 13)
+mouse_filter = 2
+theme_type_variation = &"BossMeter"
+show_percentage = false
+
+[node name="BossStagger" type="ProgressBar" parent="Margin/Column"]
+custom_minimum_size = Vector2(0, 4)
+mouse_filter = 2
+theme_type_variation = &"ResourceMeter"
+show_percentage = false

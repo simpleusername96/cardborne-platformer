@@ -19,6 +19,7 @@ const CAPTURES: Array[Dictionary] = [
 ]
 
 var _failed := false
+var _localization: Node
 
 
 func _initialize() -> void:
@@ -32,13 +33,20 @@ func _run() -> void:
 		push_error("Gameplay HUD capture scene is unavailable.")
 		quit(1)
 		return
+	_localization = root.get_node_or_null("/root/UILocalization")
+	if _localization == null:
+		push_error("Gameplay HUD capture needs UILocalization.")
+		quit(1)
+		return
 	var requested := OS.get_environment("GAMEPLAY_HUD_CAPTURE").strip_edges()
 	var matched := false
-	for capture in CAPTURES:
-		if not requested.is_empty() and capture["name"] != requested:
-			continue
-		matched = true
-		await _capture(packed, capture)
+	for locale in ["en", "ko"]:
+		_localization.call("set_locale", locale)
+		for capture in CAPTURES:
+			if not requested.is_empty() and capture["name"] != requested:
+				continue
+			matched = true
+			await _capture(packed, capture, locale)
 	if not requested.is_empty() and not matched:
 		push_error("Unknown gameplay HUD capture: %s" % requested)
 		_failed = true
@@ -47,7 +55,7 @@ func _run() -> void:
 	quit(1 if _failed else 0)
 
 
-func _capture(packed: PackedScene, capture: Dictionary) -> void:
+func _capture(packed: PackedScene, capture: Dictionary, locale: String) -> void:
 	var viewport_size := capture["size"] as Vector2i
 	var viewport := SubViewport.new()
 	viewport.size = viewport_size
@@ -67,7 +75,7 @@ func _capture(packed: PackedScene, capture: Dictionary) -> void:
 		await RenderingServer.frame_post_draw
 		await process_frame
 	var image := viewport.get_texture().get_image()
-	var output_path := "%s/%s.png" % [OUTPUT_DIR, capture["name"]]
+	var output_path := "%s/%s_%s.png" % [OUTPUT_DIR, capture["name"], locale]
 	if image == null or image.save_png(output_path) != OK:
 		push_error("Unable to save gameplay HUD capture: %s" % output_path)
 		_failed = true

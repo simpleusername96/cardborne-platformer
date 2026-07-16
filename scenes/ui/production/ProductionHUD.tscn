@@ -1,6 +1,11 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/production/ProductionHUD.gd" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/ui/production/components/HUDHealthCluster.tscn" id="2_health"]
+[ext_resource type="PackedScene" path="res://scenes/ui/production/components/HUDObjectiveBand.tscn" id="3_objective"]
+[ext_resource type="PackedScene" path="res://scenes/ui/production/components/HUDBossPanel.tscn" id="4_boss"]
+[ext_resource type="PackedScene" path="res://scenes/ui/production/components/HUDCombatDock.tscn" id="5_dock"]
+[ext_resource type="PackedScene" path="res://scenes/ui/production/components/HUDContextLane.tscn" id="6_context"]
 
 [node name="ProductionHUD" type="Control"]
 layout_mode = 3
@@ -11,3 +16,42 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("1")
+
+[node name="HealthCluster" parent="." instance=ExtResource("2_health")]
+layout_mode = 0
+anchors_preset = 0
+
+[node name="ObjectiveBand" parent="." instance=ExtResource("3_objective")]
+layout_mode = 0
+anchors_preset = 10
+anchor_left = 0.5
+anchor_right = 0.5
+grow_horizontal = 2
+
+[node name="BossPanel" parent="." instance=ExtResource("4_boss")]
+layout_mode = 0
+anchors_preset = 10
+anchor_left = 0.5
+anchor_right = 0.5
+grow_horizontal = 2
+
+[node name="CombatDock" parent="." instance=ExtResource("5_dock")]
+layout_mode = 0
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="ContextLane" parent="." instance=ExtResource("6_context")]
+layout_mode = 0
+anchors_preset = 10
+anchor_left = 0.5
+anchor_right = 0.5
+grow_horizontal = 2
+
+[node name="ObjectiveTimer" type="Timer" parent="."]
+wait_time = 4.0
+one_shot = true
