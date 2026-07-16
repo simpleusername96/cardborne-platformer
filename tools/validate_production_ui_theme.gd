@@ -4,6 +4,8 @@ const Styles = preload("res://scripts/ui/production/ProductionUIStyles.gd")
 const ThemeResource: Theme = preload("res://art/ui/production/production_ui_theme.tres")
 
 const THEME_PATH := "res://art/ui/production/production_ui_theme.tres"
+const FONT_PATH := "res://art/ui/production/fonts/NotoSansKR-Variable.ttf"
+const REQUIRED_GLYPHS := ["A", "0", "가", "한", "설", "정"]
 const VARIATIONS := {
 	&"PrimaryButton": &"Button",
 	&"SecondaryButton": &"Button",
@@ -42,6 +44,18 @@ func _run() -> void:
 		String(ProjectSettings.get_setting("gui/theme/custom", "")) == THEME_PATH,
 		"project must install the production Theme globally"
 	)
+	_expect(FileAccess.file_exists(FONT_PATH), "production font must be bundled for exported builds")
+	_expect(ThemeResource.default_font != null, "production Theme must own its default font")
+	if ThemeResource.default_font != null:
+		_expect(
+			ThemeResource.default_font.resource_path == FONT_PATH,
+			"production Theme default font must resolve to the bundled Noto Sans KR file"
+		)
+		for glyph in REQUIRED_GLYPHS:
+			_expect(
+				ThemeResource.default_font.has_char(glyph.unicode_at(0)),
+				"production font must contain representative glyph %s" % glyph
+			)
 	_expect(ThemeResource.default_font_size == Styles.TYPE_BODY, "Theme body type must be 18px")
 	for variation in VARIATIONS:
 		_expect(
@@ -131,7 +145,10 @@ func _expect(condition: bool, message: String) -> void:
 
 func _finish() -> void:
 	if _failures.is_empty():
-		print("PRODUCTION_UI_THEME_OK variations=%d buttons=5 panels=4 meters=3 marker=left" % VARIATIONS.size())
+		print(
+			"PRODUCTION_UI_THEME_OK variations=%d buttons=5 panels=4 meters=3 marker=left font=ko-en"
+			% VARIATIONS.size()
+		)
 		quit(0)
 		return
 	for failure in _failures:

@@ -277,6 +277,15 @@ msgid "{0}'s expedition could not continue."
 msgstr "{0}의 원정을 더 진행할 수 없습니다."
 
 # Materials
+msgid "Iron Scrap"
+msgstr "고철"
+
+msgid "Rough Fiber"
+msgstr "거친 섬유"
+
+msgid "Steel Fragments"
+msgstr "강철 조각"
+
 msgid "Rusted Scrap"
 msgstr "녹슨 고철"
 

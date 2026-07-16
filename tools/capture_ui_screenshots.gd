@@ -16,6 +16,7 @@ const STATES: Array[StringName] = [
 	&"card_reward",
 	&"run_result",
 ]
+const LOCALES: PackedStringArray = ["en", "ko"]
 const SETTLE_FRAMES := 10
 const CLEANUP_FRAMES := 4
 
@@ -23,6 +24,7 @@ var _failed := false
 var _requested := ""
 var _profile_state: Node
 var _run_state: Node
+var _localization: Node
 
 
 func _initialize() -> void:
@@ -38,20 +40,27 @@ func _run() -> void:
 		return
 	_profile_state = root.get_node_or_null("/root/ProfileState")
 	_run_state = root.get_node_or_null("/root/RunState")
-	if _profile_state == null or _run_state == null:
+	_localization = root.get_node_or_null("/root/UILocalization")
+	if _profile_state == null or _run_state == null or _localization == null:
 		push_error("Progression UI capture requires production autoloads.")
 		quit(1)
 		return
 	_initialize_profile_fixture()
-	for viewport in VIEWPORTS:
-		var prefix := String(viewport["prefix"])
-		if not _requested.is_empty() and not _requested.begins_with("%s_" % prefix):
-			continue
-		for state in STATES:
-			var capture_name := "%s_%s" % [prefix, state]
-			if not _requested.is_empty() and capture_name != _requested:
+	var original_locale := String(_localization.call("get_locale"))
+	for locale in LOCALES:
+		_localization.call("set_locale", locale)
+		for viewport in VIEWPORTS:
+			var prefix := String(viewport["prefix"])
+			if not _requested.is_empty() and not _requested.begins_with("%s_" % prefix):
 				continue
-			await _capture(capture_name, viewport["size"] as Vector2i, state)
+			for state in STATES:
+				var legacy_name := "%s_%s" % [prefix, state]
+				var capture_name := "%s_%s" % [legacy_name, locale]
+				if not _requested.is_empty() and _requested != capture_name:
+					if locale != "en" or _requested != legacy_name:
+						continue
+				await _capture(capture_name, viewport["size"] as Vector2i, state, locale == "en")
+	_localization.call("set_locale", original_locale)
 	if not _failed:
 		print("PROGRESSION_UI_CAPTURE_OK target=%s" % (_requested if not _requested.is_empty() else "all"))
 	quit(1 if _failed else 0)
@@ -78,7 +87,12 @@ func _initialize_profile_fixture() -> void:
 	_profile_state.call("unlock_blueprint", &"hunting_spear", &"capture:hunting_spear")
 
 
-func _capture(capture_name: String, viewport_size: Vector2i, state: StringName) -> void:
+func _capture(
+	capture_name: String,
+	viewport_size: Vector2i,
+	state: StringName,
+	write_legacy_english: bool
+) -> void:
 	root.size = viewport_size
 	DisplayServer.window_set_size(viewport_size)
 	var screen := await _mount_state(state)
@@ -95,6 +109,12 @@ func _capture(capture_name: String, viewport_size: Vector2i, state: StringName) 
 	if image == null or image.save_png(output_path) != OK:
 		push_error("Unable to save progression UI capture: %s" % output_path)
 		_failed = true
+	elif write_legacy_english:
+		var legacy_name := capture_name.trim_suffix("_en")
+		var legacy_path := "%s/%s.png" % [OUTPUT_DIR, legacy_name]
+		if image.save_png(legacy_path) != OK:
+			push_error("Unable to save legacy progression UI capture: %s" % legacy_path)
+			_failed = true
 	screen.queue_free()
 	await _wait_frames(CLEANUP_FRAMES)
 
@@ -131,7 +151,7 @@ func _mount_state(state: StringName) -> Control:
 		(screen as ForgeScreen).configure(
 			_profile_state.call("get_preparation_snapshot"),
 			{},
-			"CAMP FORGE"
+			"TRAVELER FORGE"
 		)
 		(screen as ForgeScreen).select_slot(&"melee")
 		screen.call("_select_model", "hunting_spear")
@@ -163,8 +183,12 @@ func _victory_settlement() -> Dictionary:
 func _is_known_capture(capture_name: String) -> bool:
 	for viewport in VIEWPORTS:
 		for state in STATES:
-			if capture_name == "%s_%s" % [viewport["prefix"], state]:
+			var legacy_name := "%s_%s" % [viewport["prefix"], state]
+			if capture_name == legacy_name:
 				return true
+			for locale in LOCALES:
+				if capture_name == "%s_%s" % [legacy_name, locale]:
+					return true
 	return false
 
 

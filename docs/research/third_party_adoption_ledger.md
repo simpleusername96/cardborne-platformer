@@ -2,7 +2,7 @@
 type: evidence
 status: active
 created: 2026-07-05
-last_reviewed: 2026-07-15
+last_reviewed: 2026-07-16
 source: Local deep-dive evidence plus current official upstream release and compatibility documentation
 topic: Third-party package adoption and reference tracking
 scope: External code, plugins, examples, and assets considered for the production foundation
@@ -59,6 +59,7 @@ Track which external packages are copied into the repo, which are only reference
 | Metroidvania System | Later minimap/world-map/exploration-state candidate. | `https://github.com/KoBeWi/Metroidvania-System` | `d9e456d` from local deep dive | MIT | none | none | Deep dive import ran with plugin warning/leak signals in external clone. | none known | deferred |
 | YATI | Tiled importer fallback if LDtk spike fails. | `https://github.com/Kiamo2/YATI` | `72a3716` from local deep dive | MIT | none | none | Source inspection only. | none known | deferred |
 | Dialogic 2 | Later dialogue/NPC/shop content candidate. | `https://github.com/dialogic-godot/dialogic` | `e127f85` from local deep dive | MIT; some bundled assets/fonts have separate notices | none | none | Source inspection only. | Verify bundled asset/font notices before copying. | deferred |
+| Noto Sans KR variable font | Deterministic Korean and English UI glyphs in desktop and Web exports. | `https://github.com/google/fonts/tree/26c5c976d82d50c24a8f0a7ac455e0a7c639c226/ofl/notosanskr` | Google Fonts commit `26c5c976d82d50c24a8f0a7ac455e0a7c639c226`; font Git blob `b386890ba945e1f39448a6b59f20c5d194f58808`; SHA-256 `194018e6b2b293a7964f037b25c0249ce1418bc9ab3c971060a03aa57861e252` | SIL OFL-1.1; `art/ui/production/fonts/NotoSansKR-OFL.txt` | `art/ui/production/fonts/NotoSansKR-Variable.ttf`; `art/ui/production/fonts/NotoSansKR-OFL.txt` | Font binary is unmodified; only the local filename is normalized. | `validate_production_ui_theme.gd`; full release matrix; Web export; rendered Korean and English browser inspection. | Preserve the copyright notice and OFL text with distributed copies; no UI attribution placement required. | copied |
 
 ## Project-Original Presentation Set
 

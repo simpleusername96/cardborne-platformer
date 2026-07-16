@@ -277,6 +277,15 @@ msgid "{0}'s expedition could not continue."
 msgstr "{0}'s expedition could not continue."
 
 # Materials
+msgid "Iron Scrap"
+msgstr "Iron Scrap"
+
+msgid "Rough Fiber"
+msgstr "Rough Fiber"
+
+msgid "Steel Fragments"
+msgstr "Steel Fragments"
+
 msgid "Rusted Scrap"
 msgstr "Rusted Scrap"
 

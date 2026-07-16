@@ -43,6 +43,8 @@ const MATERIAL_ROWS: Array[Array] = [
 ]
 @onready var _outer_margin: MarginContainer = %OuterMargin
 @onready var _page: VBoxContainer = %Page
+@onready var _header: HBoxContainer = $OuterMargin/Page/Header
+@onready var _footer: HBoxContainer = $OuterMargin/Page/Footer
 @onready var _back_button: Button = %BackButton
 @onready var _persistence_label: Label = %PersistenceLabel
 @onready var _tutorial_button: Button = %TutorialButton
@@ -78,6 +80,7 @@ func _ready() -> void:
 	_connect_controls()
 	_apply_styles()
 	_compact_layout = _is_compact_layout()
+	_apply_copy()
 	_apply_layout()
 	if not ProfileState.profile_changed.is_connected(_on_profile_changed):
 		ProfileState.profile_changed.connect(_on_profile_changed)
@@ -87,7 +90,6 @@ func _ready() -> void:
 	var localization := get_node_or_null("/root/UILocalization")
 	if localization != null:
 		localization.connect(&"locale_changed", _on_locale_changed)
-	_apply_copy()
 	refresh_from_profile(false)
 	call_deferred("_establish_initial_focus")
 
@@ -237,8 +239,24 @@ func _apply_layout() -> void:
 	_loadout_panel.custom_minimum_size.x = 190.0 if _compact_layout else 238.0
 	_model_panel.custom_minimum_size.x = 215.0 if _compact_layout else 290.0
 	_detail.custom_minimum_size.x = 0.0 if _compact_layout else 420.0
-	var header_height := 62.0 if _compact_layout else 85.0
-	var footer_height := Styles.TARGET_HEIGHT
+	%StageLabel.visible = not _compact_layout
+	%MaterialsHeading.visible = not _compact_layout
+	_materials_label.visible = not _compact_layout
+	%SuppliesHeading.visible = not _compact_layout
+	_supplies_label.visible = not _compact_layout
+	Styles.configure_label(%HeroNameLabel, 26 if _compact_layout else 28, Styles.TEXT)
+	Styles.configure_label(%StageLabel, Styles.TYPE_CAPTION, Styles.TEXT_MUTED)
+	for button_value in _slot_buttons.values():
+		var slot_button := button_value as Button
+		slot_button.custom_minimum_size.y = Styles.TARGET_HEIGHT
+		slot_button.add_theme_font_size_override("font_size", Styles.TYPE_CAPTION)
+	for header_button in [_back_button, _tutorial_button, _settings_button]:
+		header_button.custom_minimum_size.y = Styles.TARGET_HEIGHT
+		header_button.add_theme_font_size_override("font_size", Styles.TYPE_BUTTON)
+	_start_button.custom_minimum_size.y = Styles.TARGET_HEIGHT
+	_start_button.add_theme_font_size_override("font_size", Styles.TYPE_BUTTON)
+	var header_height := maxf(Styles.TARGET_HEIGHT, _header.get_combined_minimum_size().y)
+	var footer_height := maxf(Styles.TARGET_HEIGHT, _footer.get_combined_minimum_size().y)
 	var page_gaps := float((5 if _compact_layout else 9) * 2)
 	var available_height := (
 		viewport_size.y
@@ -251,24 +269,6 @@ func _apply_layout() -> void:
 	for panel in [_loadout_panel, _model_panel, _detail]:
 		panel.custom_minimum_size.y = panel_height
 		panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	for button_value in _slot_buttons.values():
-		var slot_button := button_value as Button
-		slot_button.custom_minimum_size.y = Styles.TARGET_HEIGHT
-		slot_button.add_theme_font_size_override("font_size", Styles.TYPE_CAPTION)
-	_back_button.custom_minimum_size.y = Styles.TARGET_HEIGHT
-	_tutorial_button.custom_minimum_size.y = Styles.TARGET_HEIGHT
-	_settings_button.custom_minimum_size.y = Styles.TARGET_HEIGHT
-	_start_button.custom_minimum_size.y = Styles.TARGET_HEIGHT
-	for header_button in [_back_button, _tutorial_button, _settings_button]:
-		header_button.add_theme_font_size_override("font_size", Styles.TYPE_BUTTON)
-	_start_button.add_theme_font_size_override("font_size", Styles.TYPE_BUTTON)
-	%StageLabel.visible = not _compact_layout
-	%MaterialsHeading.visible = not _compact_layout
-	_materials_label.visible = not _compact_layout
-	%SuppliesHeading.visible = not _compact_layout
-	_supplies_label.visible = not _compact_layout
-	Styles.configure_label(%HeroNameLabel, 26 if _compact_layout else 28, Styles.TEXT)
-	Styles.configure_label(%StageLabel, Styles.TYPE_CAPTION, Styles.TEXT_MUTED)
 	_update_model_detail()
 
 
@@ -708,6 +708,7 @@ func _establish_initial_focus() -> void:
 
 func _on_locale_changed(_locale: String) -> void:
 	_apply_copy()
+	_apply_layout()
 	refresh_from_profile(true)
 
 

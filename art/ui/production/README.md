@@ -1,9 +1,10 @@
-# Cardborne Production UI SVGs
+# Cardborne Production UI Assets
 
-These SVGs were drawn specifically for this repository. No third-party icon,
-font, raster image, traced shape, or external URL is embedded or required.
-They may be used, modified, recolored, and shipped with Cardborne without an
-attribution requirement from this asset set.
+The SVGs and raster images in this directory were created specifically for this
+repository. They may be used, modified, recolored, and shipped with Cardborne
+without an attribution requirement from that project-original asset set. The
+separately identified Noto Sans KR font is the only third-party production UI
+asset and ships under its included SIL Open Font License 1.1.
 
 The files are deliberately monochrome white masks:
 
@@ -99,9 +100,18 @@ layout. `scripts/ui/production/ProductionUIStyles.gd` remains the narrow owner f
 semantic tokens and genuinely dynamic flat styles; screens should not rebuild the
 shared variations locally.
 
+The Theme embeds `fonts/NotoSansKR-Variable.ttf` as its default font so Korean
+and English remain identical across desktop and Web exports instead of relying
+on host fonts. The file is an unmodified Noto Sans KR variable TTF from Google
+Fonts commit `26c5c976d82d50c24a8f0a7ac455e0a7c639c226`; only its local filename was
+normalized. Its copyright notice and OFL-1.1 terms are preserved in
+`fonts/NotoSansKR-OFL.txt`, and adoption evidence is recorded in
+`docs/research/third_party_adoption_ledger.md`.
+
 `tools/validate_production_ui_theme.gd` checks the configured project Theme,
 variation/base-type coverage, zero-radius/no-perimeter rules, marker exception,
-meter styles, shared modal use, and button target height. It is part of the release
+meter styles, shared modal use, button target height, bundled font ownership,
+and representative Korean/English glyph coverage. It is part of the release
 candidate matrix.
 
 ## Runtime ownership and current adoption
