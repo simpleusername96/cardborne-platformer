@@ -24,6 +24,7 @@ var _commit_error_source := ""
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	Styles.apply_theme(self)
 	_build_ui()
 	_apply_responsive_layout()
 	var localization := get_node_or_null("/root/UILocalization")

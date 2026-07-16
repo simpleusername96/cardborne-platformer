@@ -69,6 +69,7 @@ static func for_level_upgrade(
 		presentation["accent"]
 	)
 	view["enabled"] = bool(preview.get("ok", false))
+	view["asset_id"] = _upgrade_asset_id(StringName(presentation["glyph"]))
 	return view
 
 
@@ -143,6 +144,17 @@ static func _base_view_model(
 		"accent": accent,
 		"enabled": id != &"",
 	}
+
+
+static func _upgrade_asset_id(glyph: StringName) -> StringName:
+	match glyph:
+		&"survival", &"recovery":
+			return &"health"
+		&"mobility", &"tempo":
+			return &"speed"
+		&"offense":
+			return &"force"
+	return &"confirm"
 
 
 static func _card_mechanics(

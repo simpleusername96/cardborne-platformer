@@ -5,7 +5,9 @@ signal equipment_action_requested(action: StringName, model_id: StringName, slot
 signal leave_requested
 
 const Styles = preload("res://scripts/ui/production/ProductionUIStyles.gd")
+const Assets = preload("res://scripts/ui/production/ProductionUIAssets.gd")
 const ModalShell = preload("res://scripts/ui/production/components/CenteredModalShell.gd")
+const AssetIcon = preload("res://scripts/ui/production/components/ProductionAssetIcon.gd")
 const Text = preload("res://scripts/ui/localization/LocalizedText.gd")
 
 const SLOT_ORDER: Array[String] = ["melee", "ranged", "shield", "armor", "spirit_stone"]
@@ -28,6 +30,14 @@ const MATERIAL_ORDER: Array[String] = [
 	"rusted_scrap", "common_timber", "sky_thread",
 	"steel_fragment", "hardwood", "reinforced_fabric",
 ]
+const MATERIAL_ICON_IDS := {
+	"rusted_scrap": &"scrap",
+	"common_timber": &"timber",
+	"sky_thread": &"fiber",
+	"steel_fragment": &"steel",
+	"hardwood": &"timber",
+	"reinforced_fabric": &"fabric",
+}
 
 var _snapshot: Dictionary = {}
 var _result: Dictionary = {}
@@ -50,22 +60,26 @@ var _detail_scroll: ScrollContainer
 var _detail_column: VBoxContainer
 var _slot_label: Label
 var _model_title: Label
+var _model_art: ProductionAssetIcon
 var _state_label: Label
 var _behavior_label: Label
 var _weakness_label: Label
 var _stats_grid: GridContainer
 var _cost_label: Label
 var _actions: HFlowContainer
+var _detail_end_spacer: Control
 var _status_label: Label
 var _leave_button: Button
 var _tab_buttons: Dictionary = {}
 var _model_buttons: Array[Button] = []
 var _action_buttons: Array[Button] = []
+var _resource_asset_ids: Array[StringName] = []
 
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	Styles.apply_theme(self)
 	_compact = size.x <= 1000.0 or size.y <= 600.0
 	_build_ui()
 	if _snapshot.is_empty():
@@ -138,11 +152,14 @@ func get_layout_snapshot() -> Dictionary:
 		"heading": _title_label.text if _title_label != null else "",
 		"selected_slot": _selected_slot,
 		"selected_model": _model_title.text if _model_title != null else "",
+		"model_art_asset": _model_art.get_asset_id() if _model_art != null else &"",
+		"resource_assets": _resource_asset_ids.duplicate(),
 		"tabs": tabs,
 		"models": models,
 		"actions": actions,
 		"model_panel_rect": _model_panel.get_global_rect() if _model_panel != null else Rect2(),
 		"detail_panel_rect": _detail_panel.get_global_rect() if _detail_panel != null else Rect2(),
+		"detail_view_rect": _detail_scroll.get_global_rect() if _detail_scroll != null else Rect2(),
 		"leave_rect": _leave_button.get_global_rect() if _leave_button != null else Rect2(),
 		"panel_rect": _modal.panel_rect() if _modal != null else Rect2(),
 		"status": _status_label.text if _status_label != null else "",
@@ -177,9 +194,7 @@ func _build_ui() -> void:
 	header.add_child(_leave_button)
 
 	var resource_panel := PanelContainer.new()
-	resource_panel.add_theme_stylebox_override(
-		"panel", Styles.panel_style(Color(Styles.SURFACE, 0.96), Styles.OUTLINE)
-	)
+	Styles.apply_panel(resource_panel)
 	_page.add_child(resource_panel)
 	var resource_margin := MarginContainer.new()
 	resource_margin.add_theme_constant_override("margin_left", 12)
@@ -200,7 +215,7 @@ func _build_ui() -> void:
 		tab.toggle_mode = true
 		tab.custom_minimum_size = Vector2(148.0, Styles.TARGET_HEIGHT)
 		tab.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		Styles.apply_button(tab, Styles.CYAN, true)
+		Styles.apply_choice_button(tab)
 		tab.pressed.connect(func() -> void: select_slot(StringName(slot_id)))
 		_tabs.add_child(tab)
 		_tab_buttons[slot_id] = tab
@@ -212,9 +227,7 @@ func _build_ui() -> void:
 	_page.add_child(_body)
 	_model_panel = PanelContainer.new()
 	_model_panel.custom_minimum_size = Vector2(280.0, 0.0)
-	_model_panel.add_theme_stylebox_override(
-		"panel", Styles.panel_style(Color(Styles.SURFACE, 0.96), Styles.OUTLINE)
-	)
+	Styles.apply_panel(_model_panel)
 	_body.add_child(_model_panel)
 	var model_margin := MarginContainer.new()
 	model_margin.add_theme_constant_override("margin_left", 8)
@@ -233,9 +246,7 @@ func _build_ui() -> void:
 
 	_detail_panel = PanelContainer.new()
 	_detail_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_detail_panel.add_theme_stylebox_override(
-		"panel", Styles.panel_style(Color(Styles.SURFACE, 0.96), Styles.CYAN)
-	)
+	Styles.apply_panel(_detail_panel)
 	_detail_panel.clip_contents = true
 	_body.add_child(_detail_panel)
 	var detail_margin := MarginContainer.new()
@@ -254,6 +265,11 @@ func _build_ui() -> void:
 	_detail_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_detail_column.add_theme_constant_override("separation", 7)
 	_detail_scroll.add_child(_detail_column)
+	_model_art = AssetIcon.new()
+	_model_art.name = "SelectedModelArt"
+	_model_art.configure(&"", Color.WHITE, 96.0)
+	_model_art.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_detail_column.add_child(_model_art)
 	_slot_label = Label.new()
 	Styles.configure_label(_slot_label, Styles.TYPE_CAPTION, Styles.CYAN)
 	_detail_column.add_child(_slot_label)
@@ -277,8 +293,14 @@ func _build_ui() -> void:
 	_detail_column.add_child(_cost_label)
 	_actions = HFlowContainer.new()
 	_actions.alignment = FlowContainer.ALIGNMENT_END
+	# FlowContainer can report a zero-height minimum before its dynamic buttons settle.
+	# Reserve the interaction row so the scroll range always includes the full target.
+	_actions.custom_minimum_size = Vector2(0.0, Styles.TARGET_HEIGHT)
 	_actions.add_theme_constant_override("separation", 8)
 	_detail_column.add_child(_actions)
+	_detail_end_spacer = Control.new()
+	_detail_end_spacer.custom_minimum_size = Vector2(0.0, 32.0)
+	_detail_column.add_child(_detail_end_spacer)
 
 	_status_label = Label.new()
 	_status_label.custom_minimum_size = Vector2(0.0, 28.0)
@@ -325,30 +347,25 @@ func _render() -> void:
 
 func _render_resources() -> void:
 	_clear(_resource_row)
+	_resource_asset_ids.clear()
 	var materials: Dictionary = _snapshot.get("materials", {})
 	for material_id in MATERIAL_ORDER:
 		var amount := int(materials.get(material_id, 0))
 		if _compact and amount <= 0:
 			continue
-		var label := Label.new()
-		label.text = "%s  %d" % [_t(MATERIAL_LABELS[material_id]), amount]
-		Styles.configure_label(
-			label,
-			Styles.TYPE_CAPTION,
-			Styles.AMBER if material_id in ["steel_fragment", "hardwood", "reinforced_fabric"] else Styles.TEXT_MUTED
-		)
-		_resource_row.add_child(label)
+		var tone := Styles.AMBER if material_id in ["steel_fragment", "hardwood", "reinforced_fabric"] else Styles.TEXT_MUTED
+		_resource_row.add_child(_resource_badge(
+			StringName(MATERIAL_ICON_IDS[material_id]),
+			_t(MATERIAL_LABELS[material_id]),
+			amount,
+			tone
+		))
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_resource_row.add_child(spacer)
 	var supplies: Dictionary = _snapshot.get("ranged_supplies", {})
-	var supply := Label.new()
-	supply.text = _t("Arrows %d · Cartridges %d", [
-		int(supplies.get("arrows", 0)),
-		int(supplies.get("cartridges", 0)),
-	])
-	Styles.configure_label(supply, Styles.TYPE_CAPTION, Styles.CYAN)
-	_resource_row.add_child(supply)
+	_resource_row.add_child(_resource_badge(&"arrows", _t("Arrows"), int(supplies.get("arrows", 0)), Styles.CYAN))
+	_resource_row.add_child(_resource_badge(&"cartridges", _t("Cartridges"), int(supplies.get("cartridges", 0)), Styles.CYAN))
 
 
 func _render_tabs() -> void:
@@ -358,7 +375,7 @@ func _render_tabs() -> void:
 			continue
 		tab.text = _t(SLOT_LABELS[slot_id])
 		tab.button_pressed = slot_id == _selected_slot
-		Styles.apply_button(tab, Styles.AMBER if tab.button_pressed else Styles.CYAN, true)
+		Styles.apply_choice_button(tab)
 
 
 func _render_models() -> void:
@@ -386,6 +403,10 @@ func _render_models() -> void:
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		button.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 		button.tooltip_text = _t(String(option.get("display_name", "Equipment")))
+		button.icon = Assets.texture_for_owner(StringName(option_id))
+		button.expand_icon = true
+		button.icon_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		button.add_theme_constant_override("icon_max_width", 44)
 		var selected := option_id == _selected_model_id
 		Styles.apply_character_card(button, Styles.AMBER if selected else Styles.CYAN, selected)
 		button.pressed.connect(func() -> void: _select_model(option_id))
@@ -400,6 +421,7 @@ func _render_detail() -> void:
 	_clear(_actions)
 	_action_buttons.clear()
 	if _selected_model.is_empty():
+		_model_art.configure(&"", Color.WHITE, 80.0 if _compact else 96.0)
 		_slot_label.text = _t(SLOT_LABELS.get(_selected_slot, "EQUIPMENT"))
 		_model_title.text = _t("Nothing selected")
 		_state_label.text = ""
@@ -408,9 +430,11 @@ func _render_detail() -> void:
 		_cost_label.text = ""
 		return
 	if _selected_slot == "spirit_stone":
+		_set_model_art(StringName(_selected_model.get("id", "")))
 		_render_spirit_detail()
 		return
 	var model := _selected_model
+	_set_model_art(StringName(model.get("model_id", "")))
 	_slot_label.text = _t(SLOT_LABELS.get(_selected_slot, "EQUIPMENT"))
 	_model_title.text = _t(String(model.get("display_name", "Equipment")))
 	_state_label.text = _equipment_state_text(model)
@@ -447,6 +471,31 @@ func _render_spirit_detail() -> void:
 		&"spirit_stone",
 		"Attune this Spirit Stone" if bool(stone.get("unlocked", false)) else "Find this Spirit Stone first"
 	)
+
+
+func _set_model_art(owner_id: StringName) -> void:
+	var asset_id := Assets.asset_id_for_owner(owner_id)
+	_model_art.configure(asset_id, Color.WHITE, 80.0 if _compact else 96.0)
+
+
+func _resource_badge(
+	asset_id: StringName,
+	label_text: String,
+	amount: int,
+	tone: Color
+) -> HBoxContainer:
+	var badge := HBoxContainer.new()
+	badge.add_theme_constant_override("separation", 5)
+	var icon := AssetIcon.new()
+	icon.configure(asset_id, tone, 24.0)
+	badge.add_child(icon)
+	var label := Label.new()
+	label.text = "%s  %d" % [label_text, amount]
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	Styles.configure_label(label, Styles.TYPE_CAPTION, tone)
+	badge.add_child(label)
+	_resource_asset_ids.append(asset_id)
+	return badge
 
 
 func _build_equipment_actions(model: Dictionary) -> void:
@@ -601,8 +650,23 @@ func _select_model(model_id: String) -> void:
 
 func _focus_action(button: Button) -> void:
 	button.grab_focus()
-	if _detail_scroll != null:
+	call_deferred("_ensure_action_visible", button)
+
+
+func _ensure_action_visible(button: Button) -> void:
+	if _detail_scroll != null and is_instance_valid(button):
 		_detail_scroll.ensure_control_visible(button)
+		# Include the trailing safe area after dynamic FlowContainer layout settles.
+		call_deferred("_finish_action_scroll", button)
+
+
+func _finish_action_scroll(button: Button) -> void:
+	if (
+		_detail_scroll != null
+		and is_instance_valid(button)
+		and is_instance_valid(_detail_end_spacer)
+	):
+		_detail_scroll.ensure_control_visible(_detail_end_spacer)
 
 
 func _options_for_slot(slot_id: String) -> Array[Dictionary]:

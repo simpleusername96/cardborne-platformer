@@ -38,6 +38,7 @@ var _embedded: bool = false
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	Styles.apply_theme(self)
 	_build_ui()
 	var localization := get_node_or_null("/root/UILocalization")
 	if localization != null:
@@ -207,10 +208,7 @@ func _build_ui() -> void:
 	_panel.name = "RewardReceipt"
 	_panel.visible = false
 	_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_panel.add_theme_stylebox_override(
-		"panel",
-		Styles.panel_style(Color(Styles.SURFACE_RAISED, 0.97), Styles.AMBER, 2)
-	)
+	Styles.apply_panel(_panel, &"PromptBadge")
 	add_child(_panel)
 
 	var margin := MarginContainer.new()

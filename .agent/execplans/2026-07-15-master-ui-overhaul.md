@@ -527,19 +527,19 @@ content pack and shared components.
 **Source owners:** Hero Preparation, Card Reward, Level Reward, Merchant, Forge,
 their components/view models, and focused validators.
 
-- [ ] Add stable image slots to loadout/model/detail rows without reducing exact
+- [x] Add stable image slots to loadout/model/detail rows without reducing exact
   costs, current-result comparison, condition, save, or disabled-reason content.
-- [ ] Ensure all eight equipment models, two Spirit Stones, and potion resolve
+- [x] Ensure all eight equipment models, two Spirit Stones, and potion resolve
   their correct art and semantic role.
-- [ ] Apply the five card vignettes without baking rarity, stack, selection,
+- [x] Apply the five card vignettes without baking rarity, stack, selection,
   reroll, or disabled state into images.
-- [ ] Keep Level Reward on semantic SVG/state art unless a real unresolved raster
+- [x] Keep Level Reward on semantic SVG/state art unless a real unresolved raster
   slot is demonstrated.
-- [ ] Migrate Merchant buy/sell presentation with potion/material/supply assets,
+- [x] Migrate Merchant buy/sell presentation with potion/material/supply assets,
   exact price/holdings, receipt, and stable failure states.
-- [ ] Migrate Forge as a centered live-world overlay. Test `forge.png` only as a
+- [x] Migrate Forge as a centered live-world overlay. Test `forge.png` only as a
   restrained internal crop; defer it with a reason if it competes with content.
-- [ ] Confirm Card Reward remains global while Merchant/Forge remain bounded
+- [x] Confirm Card Reward remains global while Merchant/Forge remain bounded
   overlays.
 
 **Accept:** all commands still use the existing services/snapshots, all focused
@@ -548,6 +548,15 @@ keyboard alone at every supported viewport and locale.
 
 **Guard:** no screen writes gameplay dictionaries, no legacy item/class content
 returns, and illustrations never hide mechanical comparison data.
+
+**Status 2026-07-16:** passed. Hero Preparation, Card/Level Reward, Merchant,
+Forge, receipt, transaction, and safe-intermission validators pass. Runtime art
+slots resolve the active equipment, Spirit Stone, potion, card, material, and
+supply assets while Level Reward remains semantic SVG. Merchant and Forge remain
+bounded live-world overlays; `forge.png` stays deferred because the real stage
+context communicates location more clearly. English/Korean OpenGL captures pass
+at all three viewports, including full 48 px Forge actions inside the detail
+scroll viewport.
 
 ### Milestone 5 - HUD, Feedback, Trial, And World-Visibility Migration
 
@@ -800,12 +809,15 @@ These are not blockers for Milestones 0-1 unless noted:
 - 2026-07-16: `UI_VISUAL_SYSTEM.md` was already active when the Milestone 2 spike
   completed. The earlier draft-promotion gate was stale and has been retired;
   `design-qa.md` now records the proof instead.
+- 2026-07-16: Milestone 4 kept `forge.png` deferred, promoted only semantic
+  economy/progression assets used by live slots, and added a trailing Forge
+  scroll safe area so focused commands remain fully visible at every viewport.
 
 ## Next Steps
 
-1. Review the Milestone 3 shell captures and `design-qa.md` at the next visual stop.
-2. Begin Milestone 4 with Merchant, Forge, and the remaining dense decision
-   surfaces while preserving service/snapshot ownership.
+1. Begin Milestone 5 by extracting stable HUD composition into reusable scenes.
+2. Replace legible procedural HUD glyphs and validate gameplay/Trial states in
+   English and Korean at all supported viewports.
 3. Leave `master` untouched until Milestone 7 creates a fresh integration branch
    from its then-current head.
 

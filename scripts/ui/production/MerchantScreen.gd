@@ -7,6 +7,7 @@ signal leave_requested
 
 const Styles = preload("res://scripts/ui/production/ProductionUIStyles.gd")
 const ModalShell = preload("res://scripts/ui/production/components/CenteredModalShell.gd")
+const AssetIcon = preload("res://scripts/ui/production/components/ProductionAssetIcon.gd")
 const Text = preload("res://scripts/ui/localization/LocalizedText.gd")
 
 var _snapshot: Dictionary = {}
@@ -19,6 +20,8 @@ var _salvage_label: Label
 var _potion_label: Label
 var _sale_label: Label
 var _status_label: Label
+var _potion_icon: ProductionAssetIcon
+var _salvage_icon: ProductionAssetIcon
 var _buy_button: Button
 var _sell_button: Button
 var _leave_button: Button
@@ -28,6 +31,7 @@ var _modal: CenteredModalShell
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	Styles.apply_theme(self)
 	_build_ui()
 	var localization := get_node_or_null("/root/UILocalization")
 	if localization != null:
@@ -63,6 +67,8 @@ func get_layout_snapshot() -> Dictionary:
 		"sell_rect": _sell_button.get_global_rect() if _sell_button != null else Rect2(),
 		"leave_rect": _leave_button.get_global_rect() if _leave_button != null else Rect2(),
 		"status": _status_label.text if _status_label != null else "",
+		"potion_asset": _potion_icon.get_asset_id() if _potion_icon != null else &"",
+		"salvage_asset": _salvage_icon.get_asset_id() if _salvage_icon != null else &"",
 		"panel_rect": _modal.panel_rect() if _modal != null else Rect2(),
 	}
 
@@ -77,22 +83,43 @@ func _build_ui() -> void:
 	_title_label = Label.new()
 	Styles.configure_label(_title_label, Styles.TYPE_TITLE, Styles.TEXT)
 	page.add_child(_title_label)
+	var balance_row := HBoxContainer.new()
+	balance_row.add_theme_constant_override("separation", 20)
+	page.add_child(balance_row)
 	_coins_label = _label(Styles.TYPE_SECTION, Styles.AMBER)
+	_coins_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_salvage_label = _label(Styles.TYPE_SECTION, Styles.CYAN)
-	page.add_child(_coins_label)
-	page.add_child(_salvage_label)
+	_salvage_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	balance_row.add_child(_coins_label)
+	balance_row.add_child(_salvage_label)
 	page.add_child(HSeparator.new())
 
+	var potion_row := HBoxContainer.new()
+	potion_row.add_theme_constant_override("separation", 12)
+	page.add_child(potion_row)
+	_potion_icon = AssetIcon.new()
+	_potion_icon.configure(&"consumable_small_potion", Color.WHITE, 64.0)
+	potion_row.add_child(_potion_icon)
 	_potion_label = _label(Styles.TYPE_BODY, Styles.TEXT)
+	_potion_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_potion_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_potion_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	page.add_child(_potion_label)
+	potion_row.add_child(_potion_label)
 	_buy_button = _button("")
 	_buy_button.pressed.connect(func() -> void: buy_potion_requested.emit())
 	page.add_child(_buy_button)
 
+	var sale_row := HBoxContainer.new()
+	sale_row.add_theme_constant_override("separation", 12)
+	page.add_child(sale_row)
+	_salvage_icon = AssetIcon.new()
+	_salvage_icon.configure(&"scrap", Styles.SCRAP, 32.0)
+	sale_row.add_child(_salvage_icon)
 	_sale_label = _label(Styles.TYPE_BODY, Styles.TEXT)
+	_sale_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_sale_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_sale_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	page.add_child(_sale_label)
+	sale_row.add_child(_sale_label)
 	_sell_button = _button("")
 	_sell_button.pressed.connect(func() -> void: sell_salvage_requested.emit())
 	page.add_child(_sell_button)

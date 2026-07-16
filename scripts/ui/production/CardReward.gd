@@ -35,6 +35,7 @@ var _committed := false
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	Styles.apply_theme(self)
 	_build_ui()
 	refresh_offer()
 	var localization := get_node_or_null("/root/UILocalization")

@@ -1,7 +1,10 @@
 extends SceneTree
 
+const Styles = preload("res://scripts/ui/production/ProductionUIStyles.gd")
 const SCREEN_PATH := "res://scenes/ui/production/ForgeScreen.tscn"
-const VIEWPORTS := [Vector2i(960, 540), Vector2i(1280, 720), Vector2i(1920, 1080)]
+# Shrink the compatibility-renderer viewport between captures. Intel's GL driver can
+# briefly return a partially redrawn frame when this validation window grows.
+const VIEWPORTS := [Vector2i(1920, 1080), Vector2i(1280, 720), Vector2i(960, 540)]
 
 var _failures: Array[String] = []
 var _profile_state: Node
@@ -65,6 +68,7 @@ func _validate_viewport(viewport_size: Vector2i, locale: String) -> void:
 	screen.call("_select_model", "hunting_spear")
 	await process_frame
 	var layout: Dictionary = screen.get_layout_snapshot()
+	_expect(screen.theme == Styles.PRODUCTION_THEME, "forge screen should use the production Theme")
 	_expect(layout.get("heading", "") == "RUIN WORKBENCH", "forge heading should be player-facing")
 	_expect((layout.get("tabs", []) as Array).size() == 5, "forge should expose five equipment tabs")
 	_expect((layout.get("models", []) as Array).size() == 2, "melee tab should expose two models")
@@ -72,7 +76,15 @@ func _validate_viewport(viewport_size: Vector2i, locale: String) -> void:
 		String(layout.get("selected_model", "")) == _t("Hunting Spear"),
 		"selected model should use localized display name"
 	)
+	_expect(
+		StringName(layout.get("model_art_asset", &"")) == &"equipment_hunting_spear",
+		"selected forge model should resolve its production illustration"
+	)
+	var resource_assets: Array = layout.get("resource_assets", [])
+	for asset_id in [&"scrap", &"timber", &"arrows", &"cartridges"]:
+		_expect(resource_assets.has(asset_id), "forge resources should use %s" % asset_id)
 	var actions: Array = layout.get("actions", [])
+	var detail_view_rect: Rect2 = layout.get("detail_view_rect", Rect2())
 	_expect(actions.size() == 1, "uncrafted model should show one primary craft action")
 	if not actions.is_empty():
 		_expect(String(actions[0].get("text", "")) == _t("Craft"), "uncrafted action should be Craft")
@@ -82,8 +94,10 @@ func _validate_viewport(viewport_size: Vector2i, locale: String) -> void:
 	for action in actions:
 		var rect: Rect2 = action.get("rect", Rect2())
 		_expect(
-			rect.size.y >= 48.0 and _inside(rect, viewport_size),
-			"forge action needs a 48px in-bounds target: %s %s %s" % [locale, viewport_size, rect]
+			rect.size.y >= 48.0 and _inside(rect, viewport_size) and detail_view_rect.encloses(rect),
+			"forge action needs a fully visible 48px target: %s %s %s in %s" % [
+				locale, viewport_size, rect, detail_view_rect,
+			]
 		)
 	var panel_rect: Rect2 = layout.get("panel_rect", Rect2())
 	_expect(
@@ -119,6 +133,7 @@ func _validate_viewport(viewport_size: Vector2i, locale: String) -> void:
 		visible_text += " " + String(action.get("text", ""))
 	for raw_id in ["hunting_spear", "rusted_scrap", "common_timber", "spirit_stone"]:
 		_expect(not visible_text.contains(raw_id), "forge UI should not expose raw ID %s" % raw_id)
+	await _capture_if_requested(viewport_size, locale)
 	screen.queue_free()
 	await process_frame
 
@@ -130,6 +145,28 @@ func _t(source: String) -> String:
 func _inside(rect: Rect2, viewport_size: Vector2i) -> bool:
 	var bounds := Rect2(Vector2.ZERO, Vector2(viewport_size))
 	return rect.size.x > 0.0 and rect.size.y > 0.0 and bounds.encloses(rect)
+
+
+func _capture_if_requested(viewport_size: Vector2i, locale: String) -> void:
+	if OS.get_environment("CAPTURE_FORGE_SCREEN") != "1":
+		return
+	var output_dir := "user://forge_screen_validation"
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(output_dir))
+	for _draw_pass in 3:
+		RenderingServer.force_draw(false)
+		await RenderingServer.frame_post_draw
+		await process_frame
+	var image := root.get_texture().get_image()
+	var output_path := "%s/forge_%s_%dx%d.png" % [
+		output_dir,
+		locale,
+		viewport_size.x,
+		viewport_size.y,
+	]
+	var error := image.save_png(output_path) if image != null else ERR_CANT_CREATE
+	_expect(error == OK, "forge capture should save %s" % output_path)
+	if error == OK:
+		print("FORGE_SCREEN_CAPTURE %s" % ProjectSettings.globalize_path(output_path))
 
 
 func _expect(condition: bool, message: String) -> void:

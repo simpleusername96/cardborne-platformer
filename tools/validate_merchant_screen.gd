@@ -1,5 +1,6 @@
 extends SceneTree
 
+const Styles = preload("res://scripts/ui/production/ProductionUIStyles.gd")
 const SCREEN_PATH := "res://scenes/ui/production/MerchantScreen.tscn"
 const VIEWPORTS := [Vector2i(960, 540), Vector2i(1280, 720), Vector2i(1920, 1080)]
 
@@ -45,6 +46,7 @@ func _validate_viewport(viewport_size: Vector2i, locale: String) -> void:
 	for _frame in 3:
 		await process_frame
 	var layout: Dictionary = screen.call("get_layout_snapshot")
+	_expect(screen.theme == Styles.PRODUCTION_THEME, "merchant screen should use the production Theme")
 	var bounds := Rect2(Vector2.ZERO, Vector2(viewport_size))
 	var panel_rect: Rect2 = layout.get("panel_rect", Rect2())
 	_expect(bounds.encloses(panel_rect), "merchant modal must fit %s %s" % [locale, viewport_size])
@@ -66,6 +68,14 @@ func _validate_viewport(viewport_size: Vector2i, locale: String) -> void:
 	_expect(String(layout.get("leave_text", "")) == _t("Close"), "close action should localize")
 	_expect(String(layout.get("coins", "")).contains("40"), "coin balance should stay visible")
 	_expect(String(layout.get("salvage", "")).contains("6"), "salvage balance should stay visible")
+	_expect(
+		StringName(layout.get("potion_asset", &"")) == &"consumable_small_potion",
+		"merchant potion offer should use the production potion illustration"
+	)
+	_expect(
+		StringName(layout.get("salvage_asset", &"")) == &"scrap",
+		"merchant salvage sale should use the semantic scrap asset"
+	)
 	_expect(screen.find_child("Backdrop", true, false) == null, "merchant modal must preserve the map behind it")
 	await _capture_if_requested(viewport_size, locale)
 

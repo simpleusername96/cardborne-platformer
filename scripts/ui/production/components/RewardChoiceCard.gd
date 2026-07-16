@@ -233,7 +233,7 @@ func _apply_view(view: Dictionary) -> void:
 	_value_label.visible = not _value_label.text.is_empty()
 	_footer_label.text = String(view.get("footer", "")).to_upper()
 	_footer_label.visible = not _footer_label.text.is_empty()
-	_art_asset_id = Assets.asset_id_for_owner(choice_id)
+	_art_asset_id = StringName(view.get("asset_id", Assets.asset_id_for_owner(choice_id)))
 	_art.texture = Assets.texture(_art_asset_id) if _art_asset_id != &"" else null
 	_art.visible = _art.texture != null
 	_glyph.visible = not _art.visible

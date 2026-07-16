@@ -99,6 +99,11 @@ func _validate_level_reward_ui(locale: String, viewport_size: Vector2i) -> void:
 	var row := screen.find_child("UpgradeChoices", true, false) as HBoxContainer
 	var buttons := _choice_buttons(row)
 	_expect(buttons.size() == 3, "%s %s level reward should show three choices" % [locale, viewport_size])
+	for button in buttons:
+		_expect(
+			StringName(button.call("get_art_asset_id")) in [&"health", &"speed", &"force", &"confirm"],
+			"%s %s level reward should use semantic SVG art" % [locale, viewport_size]
+		)
 	_validate_reward_surface(screen, buttons, locale, viewport_size, "level")
 	var visible := _collect_visible_text(screen)
 	_expect(
