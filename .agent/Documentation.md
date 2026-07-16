@@ -92,8 +92,8 @@ adding more content or random topology.
 - Authored pickups cover healing, potion refill, arrows, cartridges, coins, and
   all active material grades. Fixed rewards unlock the Stage 1 alternatives and
   Frost Spirit Stone.
-- Stage V6 composition is validated at Ruin `8 enemies / 720px`, Flooded
-  `10 / 760px`, and Sanctum `12 / 740px`, with 9/9/11 meaningful elevation
+- Stage V6 composition is validated at Ruin `8 enemies / 784px`, Flooded
+  `10 / 896px`, and Sanctum `12 / 740px`, with 13/16/11 meaningful elevation
   changes and 2/3/4 multi-elevation combat rooms respectively.
 - The fixed-stage enhancement pass has locked source-linked construction
   blueprints for all three normal stages. They preserve current room counts and
@@ -106,6 +106,13 @@ adding more content or random topology.
   drops into and climbs out of the optional cache, observes Walker/Shooter/
   Charger cycles, preserves minimap knowledge on fall recovery, and unlocks the
   exit after only the terminal encounter.
+- Flooded Works now closes its basin/pump milestone at `10 enemies / 896px`
+  with twelve meaningful descents, four meaningful ascents, one forward rejoin,
+  and zero near-limit chains. Its production runtime fixture continuously
+  traverses the route, crosses the required rope in both directions, resets a
+  real poison hazard on retry, exercises multi-destination Leaper and Pump
+  Gallery combat, preserves minimap knowledge, and unlocks the shelter exit only
+  after actual terminal-room arrival while earlier enemies remain alive.
 - Normal-stage completion now follows typed terminal policy: Ruin and Sanctum
   require only their terminal-room encounter, while Flooded Works uses shelter
   arrival. Earlier and optional enemies no longer own the exit or HUD objective.
@@ -183,6 +190,7 @@ Read in this order:
 .\tools\godot.ps1 --path . --script res://scripts/ui/validation/CaptureShellUI.gd
 .\tools\godot.ps1 --path . --script res://tools/capture_fixed_stage_screenshots.gd
 .\tools\godot.ps1 --path . --headless --script res://tools/validate_ruin_stage_runtime.gd
+.\tools\godot.ps1 --path . --headless --script res://tools/validate_flooded_stage_runtime.gd
 ```
 
 The accepted historical evidence is `68/68` Full checks on 2026-07-14 and `70/70`

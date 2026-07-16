@@ -61,9 +61,13 @@ polygon = PackedVector2Array(-16, -360, 16, -360, 16, 360, -16, 360)
 color = Color(0.28, 0.33, 0.34, 0.9)
 polygon = PackedVector2Array(440, 420, 900, 420, 860, 470, 480, 470)
 
+[node name="PumpVista" type="Polygon2D" parent="DecorBack"]
+color = Color(0.26, 0.46, 0.48, 0.32)
+polygon = PackedVector2Array(120, 620, 170, 470, 220, 620, 200, 620, 200, 520, 140, 520, 140, 620)
+
 [node name="ExitGlow" type="Polygon2D" parent="DecorBack"]
 color = Color(0.26, 0.66, 0.64, 0.22)
-polygon = PackedVector2Array(1020, 620, 1130, 470, 1240, 620)
+polygon = PackedVector2Array(930, 620, 1040, 470, 1150, 620)
 
 [node name="DecorFront" type="Node2D" parent="."]
 
@@ -92,8 +96,13 @@ position = Vector2(180, 620)
 metadata/facing = 1
 metadata/safe_radius = 240.0
 
+[node name="ArrivalView" type="Marker2D" parent="Anchors/Objective"]
+position = Vector2(640, 620)
+metadata/release_role = &"pressure_vista"
+metadata/facility_free = true
+
 [node name="ExitGate" type="Area2D" parent="Anchors/Objective"]
-position = Vector2(1130, 620)
+position = Vector2(1040, 620)
 collision_layer = 0
 collision_mask = 4
 script = ExtResource("2")
@@ -136,3 +145,5 @@ metadata/checkpoint_safe_radius = 240.0
 metadata/checkpoint_path = NodePath("../Anchors/Objective/Checkpoint")
 metadata/exit_path = NodePath("../Anchors/Objective/ExitGate")
 metadata/minimum_critical_landing = 220.0
+metadata/terminal_policy = &"arrival"
+metadata/no_facility_content = true

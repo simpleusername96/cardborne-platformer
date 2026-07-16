@@ -331,10 +331,22 @@ func _validate_flooded_exit_flow(
 		if room.role == &"safe":
 			terminal = stage.get_room_host(room.id)
 	var exit := terminal.get_exit_portal() if terminal != null else null
-	_expect(exit != null and stage.is_exit_enabled(), "Flooded shelter should use arrival policy")
+	_expect(
+		exit != null and not stage.is_exit_enabled(),
+		"Flooded shelter should remain locked until the player arrives"
+	)
 	if exit == null:
 		return
 	_expect(stage.get_remaining_enemy_count() > 0, "Flooded enemies should remain optional to stage completion")
+	var arrival := terminal.get_node_or_null("Anchors/Objective/ArrivalView") as Node2D
+	stage.player.respawn_at(
+		arrival.global_position if arrival != null else terminal.global_position + Vector2(640.0, 620.0),
+		0.0
+	)
+	for _frame in 3:
+		await physics_frame
+		await process_frame
+	_expect(stage.is_exit_enabled(), "Flooded shelter should unlock on terminal-room arrival")
 	exit.interact(stage.player)
 	await process_frame
 	await process_frame

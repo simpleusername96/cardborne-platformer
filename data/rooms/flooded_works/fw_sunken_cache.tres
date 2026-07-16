@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="RoomTemplateData" load_steps=6 format=3]
+[gd_resource type="Resource" script_class="RoomTemplateData" load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/stages/RoomTemplateData.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/stages/RoomSocketData.gd" id="2"]
@@ -10,9 +10,9 @@ script = ExtResource("2")
 id = &"sunken_cache_branch"
 direction = &"up"
 route_role = &"optional"
-local_position = Vector2(64, 0)
+local_position = Vector2(320, 0)
 opening_size = Vector2(128, 120)
-support_top = 520.0
+support_top = 220.0
 transition_type = &"drop"
 required_ability = &"baseline"
 approach_width = 260.0
@@ -25,9 +25,24 @@ script = ExtResource("2")
 id = &"sunken_cache_return"
 direction = &"up"
 route_role = &"return"
+local_position = Vector2(1280, 0)
+opening_size = Vector2(128, 120)
+support_top = 284.0
+transition_type = &"rope"
+required_ability = &"climb"
+approach_width = 260.0
+landing_width = 220.0
+headroom = 120.0
+recovery_id = &"sunken_recovery"
+
+[sub_resource type="Resource" id="LegacyReturnSocket"]
+script = ExtResource("2")
+id = &"sunken_cache_legacy_return"
+direction = &"up"
+route_role = &"return"
 local_position = Vector2(1216, 0)
 opening_size = Vector2(128, 120)
-support_top = 520.0
+support_top = 284.0
 transition_type = &"rope"
 required_ability = &"climb"
 approach_width = 260.0
@@ -57,14 +72,14 @@ budget_cost = 1
 script = ExtResource("1")
 id = &"fw_sunken_cache"
 display_name = "Sunken Cache"
-content_version = 2
+content_version = 3
 scene = ExtResource("3")
 role = &"optional"
 stage_tags = Array[StringName]([&"flooded_works"])
 required_route = false
 bounds = Rect2(0, 0, 1280, 720)
 entry_sockets = Array[ExtResource("2")]([SubResource("BranchSocket")])
-exit_sockets = Array[ExtResource("2")]([SubResource("ReturnSocket")])
+exit_sockets = Array[ExtResource("2")]([SubResource("LegacyReturnSocket"), SubResource("ReturnSocket")])
 encounter_budget = Vector2i(0, 0)
 hazard_budget = Vector2i(0, 0)
 reward_budget = Vector2i(1, 2)

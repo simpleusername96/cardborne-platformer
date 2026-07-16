@@ -83,8 +83,8 @@ func _validate_profile(profile: StageProfile) -> void:
 	_expect(profile.optional_branch_count == Vector2i(1, 1), "Profile should choose one optional branch.")
 	_expect(profile.terminal_room_role == &"safe", "Profile terminal role should be safe.")
 	_expect(
-		profile.encounter_budget_per_combat_room == Vector2i(2, 6),
-		"Profile combat budget should be 2-6."
+		profile.encounter_budget_per_combat_room == Vector2i(2, 7),
+		"Profile combat budget should be 2-7."
 	)
 	_expect(
 		profile.hazard_budget_per_room == Vector2i(0, 2),
@@ -300,9 +300,9 @@ func _validate_room_specific(
 		&"fw_crumble_crossing":
 			_validate_crumble_room(data, host, surfaces)
 		&"fw_leaper_basin":
-			_validate_leaper_room(data)
+			_validate_leaper_room(data, host)
 		&"fw_pump_gallery":
-			_validate_pump_gallery(data)
+			_validate_pump_gallery(data, host)
 		&"fw_lower_upper_choice":
 			_validate_choice_room(data, host)
 		&"fw_sunken_cache":
@@ -355,15 +355,23 @@ func _validate_poison_room(
 		data.hazard_anchors[0].allowed_hazard_ids == [&"timed_poison_vent"],
 		"Poison room should only host the timed poison vent."
 	)
-	var safe_lane := _surface_by_id(surfaces, &"poison_safe_lane")
-	_expect(not safe_lane.is_empty(), "Poison room should expose a permanent safe lane.")
-	if not safe_lane.is_empty():
-		_expect(float(safe_lane["width"]) >= 720.0, "Poison safe lane should span both vent bands.")
-		var safe_body := host.get_node_or_null("OneWay/PermanentSafeLane")
+	var safe_pad := _surface_by_id(surfaces, &"poison_center_safe")
+	var destination := _surface_by_id(surfaces, &"poison_exit_floor")
+	_expect(not safe_pad.is_empty(), "Poison room should expose a permanent wait pad.")
+	_expect(not destination.is_empty(), "Poison room should expose the next safe destination.")
+	if not safe_pad.is_empty():
+		_expect(float(safe_pad["width"]) >= 220.0, "Poison wait pad should be a stable landing.")
+		var safe_body := host.get_node_or_null("Terrain/CenterSafeMass")
 		_expect(
-			safe_body != null and bool(safe_body.get_meta("permanent_safe_lane", false)),
-			"Poison safe lane should be explicitly permanent."
+			safe_body != null and bool(safe_body.get_meta("permanent_safe_pad", false)),
+			"Poison wait pad should be explicitly permanent."
 		)
+	var destination_marker := host.get_node_or_null("Anchors/Objective/NextSafeDestination")
+	_expect(
+		destination_marker != null
+			and bool(destination_marker.get_meta("visible_before_hazard", false)),
+		"Poison destination should be previewed before entering the active vent band."
+	)
 
 
 func _validate_crumble_room(
@@ -401,28 +409,48 @@ func _validate_crumble_room(
 	)
 
 
-func _validate_leaper_room(data: RoomTemplateData) -> void:
+func _validate_leaper_room(data: RoomTemplateData, host: RoomTemplateHost) -> void:
 	var anchor := data.get_enemy_anchor_by_id(&"leaper_arc")
 	_expect(anchor != null, "Leaper basin should declare its vertical anchor.")
 	if anchor != null:
 		_expect(anchor.lane_width >= 420.0, "Leaper lane should be at least 420px.")
 		_expect(anchor.clearance >= 180.0, "Leaper arc clearance should be at least 180px.")
 		_expect(anchor.has_escape_route, "Leaper basin should expose side recovery.")
-
-
-func _validate_pump_gallery(data: RoomTemplateData) -> void:
+	var validation := host.get_node_or_null("Validation")
+	var destinations: Array = validation.get_meta("reachable_destination_ids", []) if validation != null else []
 	_expect(
-		_same_ids(data.allowed_enemy_tags, [&"occupier", &"burst", &"ranged"]),
-		"Pump gallery should support walker, charger, and shooter pressure roles."
+		validation != null and bool(validation.get_meta("previewed_commitment", false)),
+		"Leaper basin should preview the drop before commitment."
+	)
+	_expect(destinations.size() >= 2, "Leaper basin should expose multiple landing destinations.")
+
+
+func _validate_pump_gallery(data: RoomTemplateData, host: RoomTemplateHost) -> void:
+	_expect(
+		_same_ids(data.allowed_enemy_tags, [&"occupier", &"burst", &"ranged", &"vertical"]),
+		"Pump gallery should combine walker, charger, leaper, and shooter pressure roles."
 	)
 	var charger := data.get_enemy_anchor_by_id(&"gallery_center_charger")
 	var shooter := data.get_enemy_anchor_by_id(&"gallery_shooter_perch")
-	_expect(charger != null and charger.lane_width >= 560.0, "Pump gallery needs a charger lane.")
+	var leaper := data.get_enemy_anchor_by_id(&"gallery_leaper")
+	_expect(charger != null and charger.lane_width >= 520.0, "Pump gallery needs a charger lane.")
 	_expect(charger != null and charger.has_escape_route, "Charger lane needs escape pads.")
 	_expect(shooter != null and shooter.has_line_of_sight, "Shooter perch needs line of sight.")
 	_expect(
 		shooter != null and shooter.has_cover_or_elevation,
 		"Shooter perch needs cover or elevation."
+	)
+	_expect(
+		leaper != null and leaper.lane_width >= 420.0 and leaper.has_escape_route,
+		"Pump gallery needs a destination-driven Leaper lane."
+	)
+	_expect(
+		host.get_node_or_null("Terrain/CoverWall") != null,
+		"Pump gallery should own solid projectile cover."
+	)
+	_expect(
+		_socket_for_role(data.entry_sockets, &"return") != null,
+		"Pump gallery should own the optional forward-rejoin socket."
 	)
 
 
@@ -434,6 +462,9 @@ func _validate_choice_room(data: RoomTemplateData, host: RoomTemplateHost) -> vo
 		host.get_anchor_by_id(&"Reward", &"flooded_upper_reward") != null,
 		"Choice upper route should own its reward anchor."
 	)
+	var validation := host.get_node_or_null("Validation")
+	var axes: Array = validation.get_meta("route_difference_axes", []) if validation != null else []
+	_expect(axes.size() >= 2, "Flooded choice routes should differ on at least two axes.")
 
 
 func _validate_optional_room(data: RoomTemplateData, host: RoomTemplateHost) -> void:
@@ -443,7 +474,13 @@ func _validate_optional_room(data: RoomTemplateData, host: RoomTemplateHost) -> 
 	var return_rope := host.get_node_or_null("Anchors/Objective/ReturnRope") as Climbable
 	_expect(return_rope != null, "Sunken cache should own a return rope.")
 	if return_rope != null:
-		_expect(return_rope.climbable_size.y >= 620.0, "Sunken cache return rope should reach choice.")
+		_expect(return_rope.climbable_size.y >= 380.0, "Sunken cache return rope should reach Pump Gallery.")
+	var validation := host.get_node_or_null("Validation")
+	_expect(
+		validation != null
+			and validation.get_meta("forward_rejoin_room", &"") == &"fw_pump_gallery",
+		"Sunken cache should declare its Pump Gallery forward rejoin."
+	)
 
 
 func _validate_safe_room(data: RoomTemplateData, host: RoomTemplateHost) -> void:
@@ -524,7 +561,8 @@ func _validate_route_connections(
 func _validate_optional_connections(catalog: RoomCatalog, limits: Dictionary) -> void:
 	var choice := catalog.get_room_by_id(&"fw_lower_upper_choice")
 	var optional := catalog.get_room_by_id(&"fw_sunken_cache")
-	if choice == null or optional == null:
+	var pump := catalog.get_room_by_id(&"fw_pump_gallery")
+	if choice == null or optional == null or pump == null:
 		return
 	_expect(
 		not RoomSocketCompatibility.find_pair(
@@ -538,11 +576,11 @@ func _validate_optional_connections(catalog: RoomCatalog, limits: Dictionary) ->
 	_expect(
 		not RoomSocketCompatibility.find_pair(
 			optional.exit_sockets,
-			choice.entry_sockets,
+			pump.entry_sockets,
 			&"return",
 			limits
 		).is_empty(),
-		"Sunken cache return rope should reconnect to choice."
+		"Sunken cache return rope should reconnect to Pump Gallery."
 	)
 
 
@@ -586,7 +624,8 @@ func _validate_assembled_candidate(
 
 	var optional := catalog.get_room_by_id(&"fw_sunken_cache")
 	var choice := catalog.get_room_by_id(&"fw_lower_upper_choice")
-	if optional == null or choice == null:
+	var pump := catalog.get_room_by_id(&"fw_pump_gallery")
+	if optional == null or choice == null or pump == null:
 		return
 	planned_rooms.append(
 		PlannedRoom.new(optional.id, optional.id, optional.content_version, optional.role, false, 0)
@@ -597,12 +636,20 @@ func _validate_assembled_candidate(
 		&"optional",
 		limits
 	)
-	var return_pair := RoomSocketCompatibility.find_pair(
-		optional.exit_sockets,
-		choice.entry_sockets,
-		&"return",
-		limits
-	)
+	var forward_return := _socket_by_id(optional.exit_sockets, &"sunken_cache_return")
+	var pump_rejoin := _socket_by_id(pump.entry_sockets, &"pump_optional_rejoin")
+	var return_pair: Dictionary = {}
+	if (
+		forward_return != null
+		and pump_rejoin != null
+		and RoomSocketCompatibility.are_compatible(
+			forward_return,
+			pump_rejoin,
+			&"return",
+			limits
+		)
+	):
+		return_pair = {"from": forward_return, "to": pump_rejoin}
 	if branch_pair.is_empty() or return_pair.is_empty():
 		return
 	connections.append(
@@ -620,7 +667,7 @@ func _validate_assembled_candidate(
 			&"optional_return_0",
 			optional.id,
 			(return_pair["from"] as RoomSocketData).id,
-			choice.id,
+			pump.id,
 			(return_pair["to"] as RoomSocketData).id,
 			&"return"
 		)
@@ -734,6 +781,13 @@ func _surface_by_id(surfaces: Array[Dictionary], surface_id: StringName) -> Dict
 func _socket_for_role(sockets: Array[RoomSocketData], role: StringName) -> RoomSocketData:
 	for socket in sockets:
 		if socket != null and socket.route_role == role:
+			return socket
+	return null
+
+
+func _socket_by_id(sockets: Array[RoomSocketData], socket_id: StringName) -> RoomSocketData:
+	for socket in sockets:
+		if socket != null and socket.id == socket_id:
 			return socket
 	return null
 

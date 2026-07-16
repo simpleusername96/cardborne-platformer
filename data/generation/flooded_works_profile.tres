@@ -6,7 +6,7 @@
 script = ExtResource("1")
 id = &"flooded_works"
 display_name = "Flooded Works"
-content_version = 3
+content_version = 4
 required_room_count = 7
 required_roles = Array[StringName]([&"start", &"combat", &"hazard", &"combat", &"choice", &"combat", &"safe"])
 optional_branch_count = Vector2i(1, 1)
@@ -14,7 +14,7 @@ optional_room_role = &"optional"
 terminal_room_role = &"safe"
 eligible_enemy_archetypes = Array[StringName]([&"walker", &"charger", &"shooter", &"leaper"])
 eligible_hazards = Array[StringName]([&"spike_row", &"fall_reset", &"timed_poison_vent", &"crumbling_platform"])
-encounter_budget_per_combat_room = Vector2i(2, 6)
+encounter_budget_per_combat_room = Vector2i(2, 7)
 hazard_budget_per_room = Vector2i(0, 2)
 reward_budget_per_room = Vector2i(0, 2)
 fallback_id = &"fallback_flooded_works_v1"

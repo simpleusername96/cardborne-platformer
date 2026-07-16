@@ -55,6 +55,7 @@ var _cleared_required_rooms: Dictionary = {}
 var _exit_portal: ExitPortal
 var _terminal_room_id: StringName
 var _exit_policy_id: StringName = &"arrival"
+var _terminal_arrived: bool = false
 var _world_bounds := Rect2()
 var _terrain_presentation: Dictionary = {}
 var _world_visual_proof: Dictionary = {}
@@ -336,6 +337,7 @@ func _configure_stage_endpoints() -> bool:
 		return false
 	_terminal_room_id = terminal_host.room_id
 	_exit_policy_id = _exit_portal.get_unlock_policy_id()
+	_terminal_arrived = false
 	return true
 
 
@@ -358,6 +360,7 @@ func _abort_setup(message: String) -> void:
 	_exit_portal = null
 	_terminal_room_id = &""
 	_exit_policy_id = &"arrival"
+	_terminal_arrived = false
 	_exploration_state = null
 	_map_content_signature = ""
 	_gate_marker_ids.clear()
@@ -540,7 +543,19 @@ func _after_player_respawned() -> void:
 	player.set_camera_limits(_world_bounds)
 	if player.camera != null:
 		player.camera.reset_smoothing()
+	reset_runtime_hazards()
 	_update_navigation(true)
+
+
+## Restores deterministic hazard start states whenever the player retries from a checkpoint.
+func reset_runtime_hazards() -> void:
+	for hazard in get_spawned_hazards():
+		if hazard == null or not is_instance_valid(hazard):
+			continue
+		if hazard.has_method("reset_hazard"):
+			hazard.call("reset_hazard")
+		elif hazard.has_method("reset_platform"):
+			hazard.call("reset_platform")
 
 
 func set_checkpoint(
@@ -568,7 +583,7 @@ func _is_exit_eligible() -> bool:
 	if _exit_portal == null:
 		return false
 	if _exit_policy_id == &"arrival":
-		return true
+		return _terminal_arrived
 	if _exit_policy_id == &"terminal_encounter":
 		return get_terminal_remaining_enemy_count() == 0
 	return false
@@ -689,9 +704,19 @@ func _update_navigation(force_publish: bool = false) -> void:
 		return
 	var previous_room := _exploration_state.get_current_room_id()
 	var changed := _exploration_state.update_player(player.global_position)
+	var current_room := _exploration_state.get_current_room_id()
+	var terminal_arrival_changed := false
+	if (
+		not _terminal_arrived
+		and _exit_policy_id == &"arrival"
+		and current_room == _terminal_room_id
+	):
+		_terminal_arrived = true
+		terminal_arrival_changed = true
+		_refresh_exit_eligibility()
 	if changed or force_publish:
 		_publish_map_state()
-	if _exploration_state.get_current_room_id() != previous_room:
+	if current_room != previous_room or terminal_arrival_changed:
 		_publish_encounter_state()
 
 

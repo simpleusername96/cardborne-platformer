@@ -6,14 +6,16 @@
 [ext_resource type="PackedScene" path="res://scenes/stages/components/FieldPickup.tscn" id="4_field_pickup"]
 [ext_resource type="Resource" path="res://data/items/sky_thread_wisp.tres" id="5_sky_thread"]
 
-[sub_resource type="RectangleShape2D" id="ShelfShape"]
-size = Vector2(320, 200)
+[sub_resource type="RectangleShape2D" id="EntryShelfShape"]
+size = Vector2(400, 500)
 [sub_resource type="RectangleShape2D" id="BasinShape"]
-size = Vector2(640, 70)
+size = Vector2(560, 372)
+[sub_resource type="RectangleShape2D" id="ExitShelfShape"]
+size = Vector2(320, 436)
 [sub_resource type="RectangleShape2D" id="BasinRopeShape"]
-size = Vector2(64, 130)
+size = Vector2(64, 64)
 [sub_resource type="RectangleShape2D" id="ReturnRopeShape"]
-size = Vector2(64, 660)
+size = Vector2(64, 384)
 
 [node name="FwSunkenCache" type="Node2D"]
 script = ExtResource("1")
@@ -21,56 +23,56 @@ room_id = &"fw_sunken_cache"
 
 [node name="Terrain" type="Node2D" parent="."]
 [node name="EntryShelfMass" type="StaticBody2D" parent="Terrain"]
-position = Vector2(160, 520)
+position = Vector2(200, 220)
 collision_layer = 1
 collision_mask = 0
 metadata/surface_id = &"sunken_entry_shelf"
-metadata/support_top = 520.0
-metadata/support_width = 320.0
+metadata/support_top = 220.0
+metadata/support_width = 400.0
 metadata/critical = false
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/EntryShelfMass"]
-position = Vector2(0, 100)
-shape = SubResource("ShelfShape")
+position = Vector2(0, 250)
+shape = SubResource("EntryShelfShape")
 [node name="RockVisual" type="Polygon2D" parent="Terrain/EntryShelfMass"]
 color = Color(0.16, 0.22, 0.24, 1)
-polygon = PackedVector2Array(-160, 0, 160, 0, 160, 200, -160, 200)
+polygon = PackedVector2Array(-200, 0, 200, 0, 200, 500, -200, 500)
 [node name="SupportCap" type="Polygon2D" parent="Terrain/EntryShelfMass"]
 color = Color(0.24, 0.58, 0.61, 1)
-polygon = PackedVector2Array(-160, 0, 160, 0, 160, 8, -160, 8)
+polygon = PackedVector2Array(-200, 0, 200, 0, 200, 8, -200, 8)
 
 [node name="SunkenBasinMass" type="StaticBody2D" parent="Terrain"]
-position = Vector2(640, 650)
+position = Vector2(680, 348)
 collision_layer = 1
 collision_mask = 0
 metadata/surface_id = &"sunken_basin_floor"
-metadata/support_top = 650.0
-metadata/support_width = 640.0
+metadata/support_top = 348.0
+metadata/support_width = 560.0
 metadata/critical = false
 metadata/recovery = true
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/SunkenBasinMass"]
-position = Vector2(0, 35)
+position = Vector2(0, 186)
 shape = SubResource("BasinShape")
 [node name="RockVisual" type="Polygon2D" parent="Terrain/SunkenBasinMass"]
 color = Color(0.2, 0.28, 0.3, 1)
-polygon = PackedVector2Array(-320, 0, 320, 0, 320, 70, -320, 70)
+polygon = PackedVector2Array(-280, 0, 280, 0, 280, 372, -280, 372)
 [node name="SupportCap" type="Polygon2D" parent="Terrain/SunkenBasinMass"]
 color = Color(0.42, 0.58, 0.36, 1)
-polygon = PackedVector2Array(-320, 0, 320, 0, 320, 8, -320, 8)
+polygon = PackedVector2Array(-280, 0, 280, 0, 280, 8, -280, 8)
 
 [node name="ExitShelfMass" type="StaticBody2D" parent="Terrain"]
-position = Vector2(1120, 520)
+position = Vector2(1120, 284)
 collision_layer = 1
 collision_mask = 0
 metadata/surface_id = &"sunken_exit_shelf"
-metadata/support_top = 520.0
+metadata/support_top = 284.0
 metadata/support_width = 320.0
 metadata/critical = false
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/ExitShelfMass"]
-position = Vector2(0, 100)
-shape = SubResource("ShelfShape")
+position = Vector2(0, 218)
+shape = SubResource("ExitShelfShape")
 [node name="RockVisual" type="Polygon2D" parent="Terrain/ExitShelfMass"]
 color = Color(0.16, 0.22, 0.24, 1)
-polygon = PackedVector2Array(-160, 0, 160, 0, 160, 200, -160, 200)
+polygon = PackedVector2Array(-160, 0, 160, 0, 160, 436, -160, 436)
 [node name="SupportCap" type="Polygon2D" parent="Terrain/ExitShelfMass"]
 color = Color(0.24, 0.58, 0.61, 1)
 polygon = PackedVector2Array(-160, 0, 160, 0, 160, 8, -160, 8)
@@ -80,23 +82,29 @@ polygon = PackedVector2Array(-160, 0, 160, 0, 160, 8, -160, 8)
 [node name="DecorBack" type="Node2D" parent="."]
 [node name="FloodWater" type="Polygon2D" parent="DecorBack"]
 color = Color(0.12, 0.36, 0.48, 0.42)
-polygon = PackedVector2Array(320, 700, 960, 700, 960, 720, 320, 720)
+polygon = PackedVector2Array(320, 540, 960, 540, 960, 720, 320, 720)
 [node name="CacheGlow" type="Polygon2D" parent="DecorBack"]
 color = Color(0.78, 0.62, 0.25, 0.32)
-polygon = PackedVector2Array(500, 650, 600, 570, 700, 650)
+polygon = PackedVector2Array(500, 348, 600, 268, 700, 348)
+[node name="ForwardFlow" type="Polygon2D" parent="DecorBack"]
+color = Color(0.3, 0.65, 0.64, 0.3)
+polygon = PackedVector2Array(1160, 120, 1220, 80, 1280, 120, 1280, 160, 1220, 120, 1160, 160)
 [node name="DecorFront" type="Node2D" parent="."]
 
 [node name="Anchors" type="Node2D" parent="."]
 [node name="Sockets" type="Node2D" parent="Anchors"]
 [node name="Branch" type="Marker2D" parent="Anchors/Sockets"]
-position = Vector2(64, 0)
-[node name="Return" type="Marker2D" parent="Anchors/Sockets"]
+position = Vector2(320, 0)
+[node name="LegacyReturn" type="Marker2D" parent="Anchors/Sockets"]
 position = Vector2(1216, 0)
+[node name="Return" type="Marker2D" parent="Anchors/Sockets"]
+position = Vector2(1280, 0)
+
 [node name="Enemy" type="Node2D" parent="Anchors"]
 [node name="Hazard" type="Node2D" parent="Anchors"]
 [node name="Reward" type="Node2D" parent="Anchors"]
 [node name="SunkenCacheReward" type="Marker2D" parent="Anchors/Reward"]
-position = Vector2(560, 650)
+position = Vector2(560, 348)
 script = ExtResource("3")
 anchor_id = &"sunken_cache_reward"
 anchor_type = &"reward"
@@ -106,7 +114,7 @@ metadata/reward_role = &"cache_reward"
 metadata/interaction_space = Vector2(150, 104)
 metadata/support_id = &"sunken_basin_floor"
 [node name="SunkenMaterialNode" type="Marker2D" parent="Anchors/Reward"]
-position = Vector2(760, 650)
+position = Vector2(760, 348)
 script = ExtResource("3")
 anchor_id = &"sunken_material_node"
 anchor_type = &"reward"
@@ -118,13 +126,13 @@ metadata/support_id = &"sunken_basin_floor"
 
 [node name="Objective" type="Node2D" parent="Anchors"]
 [node name="DropLanding" type="Marker2D" parent="Anchors/Objective"]
-position = Vector2(400, 650)
+position = Vector2(440, 348)
 metadata/support_id = &"sunken_basin_floor"
 
 [node name="BasinRope" type="Area2D" parent="Anchors/Objective"]
-position = Vector2(960, 585)
+position = Vector2(960, 316)
 script = ExtResource("2")
-climbable_size = Vector2(64, 130)
+climbable_size = Vector2(64, 64)
 visual_color = Color(0.73, 0.78, 0.48, 0.9)
 metadata/entry_support = &"sunken_basin_floor"
 metadata/exit_support = &"sunken_exit_shelf"
@@ -133,25 +141,25 @@ metadata/support_overlap = 32.0
 shape = SubResource("BasinRopeShape")
 [node name="Visual" type="Polygon2D" parent="Anchors/Objective/BasinRope"]
 color = Color(0.73, 0.78, 0.48, 0.9)
-polygon = PackedVector2Array(-5, -65, 5, -65, 5, 65, -5, 65)
+polygon = PackedVector2Array(-5, -32, 5, -32, 5, 32, -5, 32)
 
 [node name="ReturnRope" type="Area2D" parent="Anchors/Objective"]
-position = Vector2(1216, 190)
+position = Vector2(1280, 92)
 script = ExtResource("2")
-climbable_size = Vector2(64, 660)
+climbable_size = Vector2(64, 384)
 visual_color = Color(0.73, 0.78, 0.48, 0.9)
 metadata/entry_support = &"sunken_exit_shelf"
-metadata/exit_support = &"flooded_choice_return_cover"
+metadata/exit_support = &"gallery_optional_rejoin"
 metadata/support_overlap = 32.0
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Anchors/Objective/ReturnRope"]
 shape = SubResource("ReturnRopeShape")
 [node name="Visual" type="Polygon2D" parent="Anchors/Objective/ReturnRope"]
 color = Color(0.73, 0.78, 0.48, 0.9)
-polygon = PackedVector2Array(-5, -330, 5, -330, 5, 330, -5, 330)
+polygon = PackedVector2Array(-5, -192, 5, -192, 5, 192, -5, 192)
 [node name="RungA" type="Line2D" parent="Anchors/Objective/ReturnRope"]
 width = 3.0
 default_color = Color(0.73, 0.78, 0.48, 0.9)
-points = PackedVector2Array(-18, -220, 18, -220)
+points = PackedVector2Array(-18, -128, 18, -128)
 [node name="RungB" type="Line2D" parent="Anchors/Objective/ReturnRope"]
 width = 3.0
 default_color = Color(0.73, 0.78, 0.48, 0.9)
@@ -159,11 +167,11 @@ points = PackedVector2Array(-18, 0, 18, 0)
 [node name="RungC" type="Line2D" parent="Anchors/Objective/ReturnRope"]
 width = 3.0
 default_color = Color(0.73, 0.78, 0.48, 0.9)
-points = PackedVector2Array(-18, 220, 18, 220)
+points = PackedVector2Array(-18, 128, 18, 128)
 
 [node name="Recovery" type="Node2D" parent="Anchors"]
 [node name="SunkenRecovery" type="Marker2D" parent="Anchors/Recovery"]
-position = Vector2(400, 650)
+position = Vector2(440, 348)
 script = ExtResource("3")
 anchor_id = &"sunken_recovery"
 anchor_type = &"recovery"
@@ -172,27 +180,29 @@ required = true
 metadata/support_id = &"sunken_basin_floor"
 metadata/forward_route = &"BasinRope"
 [node name="SunkenExitRecovery" type="Marker2D" parent="Anchors/Recovery"]
-position = Vector2(1080, 520)
+position = Vector2(1120, 284)
 script = ExtResource("3")
 anchor_id = &"sunken_exit_recovery"
 anchor_type = &"recovery"
-safe_radius = 130.0
+safe_radius = 140.0
+required = true
 metadata/support_id = &"sunken_exit_shelf"
 
 [node name="CameraBounds" type="Node2D" parent="."]
 metadata/bounds = Rect2(0, 0, 1280, 720)
 [node name="Validation" type="Node2D" parent="."]
+metadata/minimum_optional_landing = 180.0
+metadata/drop_depth = 320.0
+metadata/branch_socket_id = &"sunken_cache_branch"
+metadata/return_socket_id = &"sunken_cache_return"
+metadata/legacy_return_socket_id = &"sunken_cache_legacy_return"
+metadata/return_rope_path = NodePath("../Anchors/Objective/ReturnRope")
+metadata/return_rope_height = 384.0
+metadata/forward_rejoin_room = &"fw_pump_gallery"
 
 [node name="FieldPickups" type="Node2D" parent="."]
-
 [node name="SunkenThreadWisp" parent="FieldPickups" instance=ExtResource("4_field_pickup")]
-position = Vector2(880, 620)
+position = Vector2(880, 318)
 pickup_id = &"flooded_cache_thread_01"
 definition = ExtResource("5_sky_thread")
 metadata/required_route = false
-metadata/minimum_optional_landing = 180.0
-metadata/drop_depth = 130.0
-metadata/branch_socket_id = &"sunken_cache_branch"
-metadata/return_socket_id = &"sunken_cache_return"
-metadata/return_rope_path = NodePath("../Anchors/Objective/ReturnRope")
-metadata/return_rope_height = 660.0

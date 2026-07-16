@@ -58,7 +58,29 @@ func _validate_stage(stage_index: int, expected: Dictionary) -> void:
 	_expect(not prior_enemies.is_empty(), "%s should retain bypassable earlier combat" % expected["id"])
 
 	if expected["policy"] == &"arrival":
-		_expect(stage.is_exit_enabled(), "%s arrival exit should be ready immediately" % expected["id"])
+		_expect(
+			not stage.is_exit_enabled(),
+			"%s arrival exit should remain locked before terminal-room arrival" % expected["id"]
+		)
+		var terminal_host: RoomTemplateHost = stage.get_room_host(terminal_room_id)
+		var arrival_anchor := (
+			terminal_host.get_node_or_null("Anchors/Objective/ArrivalView") as Node2D
+			if terminal_host != null
+			else null
+		)
+		var arrival_position := (
+			arrival_anchor.global_position
+			if arrival_anchor != null
+			else terminal_host.global_position + terminal_host.template_data.bounds.size * 0.5
+		)
+		stage.player.respawn_at(arrival_position, 0.0)
+		for _frame in 3:
+			await physics_frame
+			await process_frame
+		_expect(
+			stage.is_exit_enabled(),
+			"%s arrival exit should unlock after entering the terminal room" % expected["id"]
+		)
 	else:
 		_expect(not terminal_enemies.is_empty(), "%s terminal room should own combat" % expected["id"])
 		_expect(not stage.is_exit_enabled(), "%s terminal encounter should start locked" % expected["id"])

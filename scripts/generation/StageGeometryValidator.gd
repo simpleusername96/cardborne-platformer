@@ -91,11 +91,37 @@ static func _validate_required_surfaces(
 				continue
 			var previous := surfaces[surface_index - 1]
 			var gap := float(surface["x"]) - (float(previous["x"]) + float(previous["width"]))
-			if gap > max_gap:
+			var authored_transition := _critical_climbable_connects(
+				host,
+				StringName(previous["id"]),
+				StringName(surface["id"])
+			)
+			if gap > max_gap and not authored_transition:
 				errors.append("Required room '%s' has an internal gap beyond route limits." % room.id)
-			if absf(float(surface["top"]) - float(previous["top"])) > max_ledge:
+			if (
+				absf(float(surface["top"]) - float(previous["top"])) > max_ledge
+				and not authored_transition
+			):
 				errors.append("Required room '%s' has an internal rise beyond route limits." % room.id)
 		_validate_room_socket_access(errors, plan, room, host, surfaces, max_gap)
+
+
+static func _critical_climbable_connects(
+	host: RoomTemplateHost,
+	first_id: StringName,
+	second_id: StringName
+) -> bool:
+	for child in host.find_children("*", "", true, false):
+		if not child is Climbable:
+			continue
+		var entry_id := StringName(child.get_meta("entry_support", &""))
+		var exit_id := StringName(child.get_meta("exit_support", &""))
+		if (
+			(entry_id == first_id and exit_id == second_id)
+			or (entry_id == second_id and exit_id == first_id)
+		):
+			return true
+	return false
 
 
 static func _validate_room_socket_access(

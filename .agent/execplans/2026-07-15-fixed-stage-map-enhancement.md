@@ -872,42 +872,42 @@ Goal: basin descent와 pump ascent가 stage의 장소성과 timing을 함께 표
 
 Tasks:
 
-- [ ] entry에서 basin 또는 pump landmark 중 하나를 먼저 보여준다.
-- [ ] rope shaft를 vertical teach room으로 단순화한 뒤 pressure를 단계적으로
+- [x] entry에서 basin 또는 pump landmark 중 하나를 먼저 보여준다.
+- [x] rope shaft를 vertical teach room으로 단순화한 뒤 pressure를 단계적으로
   추가한다.
-- [ ] rope shaft의 모든 required rope를 위→아래, 아래→위로 직접 통과하고
+- [x] rope shaft의 모든 required rope를 위→아래, 아래→위로 직접 통과하고
   one-way top mount/dismount와 horizontal drift를 조정한다.
-- [ ] poison timing room에 기다릴 safe pad와 다음 destination을 보장한다.
-- [ ] leaper basin의 drop을 blind fall이 아닌 previewed commitment로 만들고,
+- [x] poison timing room에 기다릴 safe pad와 다음 destination을 보장한다.
+- [x] leaper basin의 drop을 blind fall이 아닌 previewed commitment로 만들고,
   leaper가 encounter 안의 valid landing destination을 바꿔가며 이동하게 한다.
-- [ ] lower/upper choice를 dry precision과 wet management로 구분한다.
-- [ ] sunken cache를 same-hub return에서 forward rejoin으로 바꾼다.
-- [ ] pump gallery를 known element의 vertical combine/test로 재구성한다.
-- [ ] pump gallery의 declared cover가 shooter projectile를 막고, leaper와
+- [x] lower/upper choice를 dry precision과 wet management로 구분한다.
+- [x] sunken cache를 same-hub return에서 forward rejoin으로 바꾼다.
+- [x] pump gallery를 known element의 vertical combine/test로 재구성한다.
+- [x] pump gallery의 declared cover가 shooter projectile를 막고, leaper와
   mobile patrol enemy가 여러 cycle 뒤에도 stuck되지 않는지 확인한다.
-- [ ] exit shelter는 짧은 release로 유지하고 facility/NPC를 넣지 않으며,
+- [x] exit shelter는 짧은 release로 유지하고 facility/NPC를 넣지 않으며,
   arrival policy로 global combat clear 없이 출구를 사용할 수 있게 한다.
-- [ ] existing hazard reset과 room retry가 새 geometry에서 결정론적으로
+- [x] existing hazard reset과 room retry가 새 geometry에서 결정론적으로
   동작하는지 확인한다.
-- [ ] Flooded minimap에서 basin descent, optional lower branch, pump ascent,
+- [x] Flooded minimap에서 basin descent, optional lower branch, pump ascent,
   shelter가 실제 assembled y-position과 일치하는지 확인한다.
 
 Acceptance:
 
-- [ ] range ≥ 720 px, enemies ≥ 10, required rooms = 7.
-- [ ] meaningful descent sequence와 ascent sequence가 각각 3 transition 이상.
-- [ ] optional branch가 forward-rejoin한다.
-- [ ] upper/lower route가 movement, hazard, time, reward 중 2개 이상에서 다르다.
-- [ ] poison/leaper/pump peak 사이에 safe recovery가 있다.
-- [ ] 모든 required rope가 actual input으로 자연스럽게 양방향 통과된다.
-- [ ] leaper가 하나의 synthetic arc 반복이 아니라 reachable destination
+- [x] range ≥ 720 px, enemies ≥ 10, required rooms = 7.
+- [x] meaningful descent sequence와 ascent sequence가 각각 3 transition 이상.
+- [x] optional branch가 forward-rejoin한다.
+- [x] upper/lower route가 movement, hazard, time, reward 중 2개 이상에서 다르다.
+- [x] poison/leaper/pump peak 사이에 safe recovery가 있다.
+- [x] 모든 required rope가 actual input으로 자연스럽게 양방향 통과된다.
+- [x] leaper가 하나의 synthetic arc 반복이 아니라 reachable destination
   이동으로 basin pressure를 유지한다.
-- [ ] rope/leaper/pump enemy를 하나 이상 살려 둔 채 shelter에 도달해
+- [x] rope/leaper/pump enemy를 하나 이상 살려 둔 채 shelter에 도달해
   stage를 끝낼 수 있다.
-- [ ] Flooded minimap이 current room, active checkpoint, discovered cache,
+- [x] Flooded minimap이 current room, active checkpoint, discovered cache,
   shelter exit를 올바르게 표시한다.
-- [ ] moving platform 신규 구현 없이 모든 required line이 clear된다.
-- [ ] baseline continuous clear와 real-hazard reset이 통과한다.
+- [x] moving platform 신규 구현 없이 모든 required line이 clear된다.
+- [x] baseline continuous clear와 real-hazard reset이 통과한다.
 
 ### Milestone D — Sanctum topology distribution and room pass
 
@@ -1173,26 +1173,20 @@ When export templates are available:
 - [x] Milestone A completion, minimap, diagnostic, and shared terrain-interaction
   contract implemented.
 - [x] Milestone B Ruin implemented and accepted.
-- [ ] Milestone C Flooded implemented and accepted.
+- [x] Milestone C Flooded implemented and accepted.
 - [ ] Milestone D Sanctum implemented and accepted.
 - [ ] Milestone E cross-stage pass accepted.
 - [ ] Milestone F release validation accepted.
 
 ## Next Steps
 
-1. Complete Milestone 0 only; do not edit gameplay geometry yet.
-2. Add terminal policy and minimap layers to the three source-linked blueprints,
-   then lock the Ruin pilot boundary.
-3. Add Milestone A red fixtures for global enemy gating, terminal local policy,
-   map room crossing/fog/retry, comfort chains, rope descent, terrain-blocked
-   projectiles, repeated leaper destinations, mobile-enemy stuck behavior, and
-   camera commitments before changing runtime behavior.
-4. Implement the shared Milestone A completion/navigation/terrain contracts, then
-   rerun the same fixtures green.
-5. Complete and playtest Ruin before touching Flooded, including enemy bypass and
-   minimap evidence.
-6. Apply the proven pattern to Flooded, then Sanctum without copying the same
-   silhouette.
+1. Rebuild Broken Sanctum with two distributed forward-rejoining branches.
+2. Prove its gate shortcut, recovery cloister, cover bands, terminal-local
+   completion, and live minimap state.
+3. Run the cross-stage pacing/camera pass without converging the three
+   silhouettes.
+4. Close the complete release matrix, production build, rendered evidence, and
+   continuous traversal record.
 
 ## Rollback / Safety
 
@@ -1336,3 +1330,10 @@ deferred until rendered evidence exists:
   intentionally excluded.
 - 2026-07-16: Exploration knowledge persists across same-stage retry but resets
   across new run/stage/content signature.
+- 2026-07-16: Flooded `arrival` means actual entry into the terminal shelter,
+  not an exit that is globally enabled at stage spawn. Arrival remains latched
+  after checkpoint recovery and never depends on the stage-wide enemy tally.
+- 2026-07-16: The fixed Sunken Cache uses a forward-return socket into Pump
+  Gallery. A separately named legacy socket preserves dormant procedural
+  same-hub generation so the production topology improvement does not silently
+  invalidate the reusable room catalog.

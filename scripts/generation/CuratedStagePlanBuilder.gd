@@ -137,7 +137,7 @@ func build_flooded_works(
 		[&"fw_poison_timing", true, 2, 0, 2, 0],
 		[&"fw_leaper_basin", true, 3, 5, 0, 0],
 		[&"fw_lower_upper_choice", true, 4, 0, 0, 1],
-		[&"fw_pump_gallery", true, 5, 6, 0, 0],
+		[&"fw_pump_gallery", true, 5, 7, 0, 0],
 		[&"fw_exit_shelter", true, 6, 0, 0, 0],
 		[&"fw_sunken_cache", false, 0, 0, 0, 1],
 	]
@@ -161,7 +161,7 @@ func build_flooded_works(
 		_connection(&"critical_4", &"fw_lower_upper_choice", &"flooded_choice_out", &"fw_pump_gallery", &"pump_gallery_in", &"critical"),
 		_connection(&"critical_5", &"fw_pump_gallery", &"pump_gallery_out", &"fw_exit_shelter", &"exit_shelter_in", &"critical"),
 		_connection(&"optional_branch_0", &"fw_lower_upper_choice", &"flooded_choice_branch", &"fw_sunken_cache", &"sunken_cache_branch", &"optional"),
-		_connection(&"optional_return_0", &"fw_sunken_cache", &"sunken_cache_return", &"fw_lower_upper_choice", &"flooded_choice_return", &"return"),
+		_connection(&"optional_return_0", &"fw_sunken_cache", &"sunken_cache_return", &"fw_pump_gallery", &"pump_optional_rejoin", &"return"),
 	]
 	var streams := NamedRngStreams.new(
 		run_seed, stage_index, catalog.content_version, profile.content_version, CURATED_ATTEMPT

@@ -5,22 +5,22 @@
 [ext_resource type="Script" path="res://scripts/stages/RoomAnchor.gd" id="3"]
 
 [sub_resource type="RectangleShape2D" id="EntryMassShape"]
-size = Vector2(360, 100)
+size = Vector2(360, 476)
 
-[sub_resource type="RectangleShape2D" id="LowerMassShape"]
-size = Vector2(480, 180)
+[sub_resource type="RectangleShape2D" id="ApproachMassShape"]
+size = Vector2(220, 412)
 
-[sub_resource type="RectangleShape2D" id="MidMassShape"]
-size = Vector2(220, 12)
+[sub_resource type="RectangleShape2D" id="RopeTopShape"]
+size = Vector2(240, 12)
 
-[sub_resource type="RectangleShape2D" id="UpperMassShape"]
-size = Vector2(220, 340)
+[sub_resource type="RectangleShape2D" id="BottomMassShape"]
+size = Vector2(240, 156)
 
 [sub_resource type="RectangleShape2D" id="ExitMassShape"]
-size = Vector2(220, 420)
+size = Vector2(240, 92)
 
 [sub_resource type="RectangleShape2D" id="RopeShape"]
-size = Vector2(64, 80)
+size = Vector2(64, 192)
 
 [node name="FwRopeShaft" type="Node2D"]
 script = ExtResource("1")
@@ -29,159 +29,132 @@ room_id = &"fw_rope_shaft"
 [node name="Terrain" type="Node2D" parent="."]
 
 [node name="EntryMass" type="StaticBody2D" parent="Terrain"]
-position = Vector2(180, 620)
+position = Vector2(180, 244)
 collision_layer = 1
 collision_mask = 0
 metadata/surface_id = &"shaft_entry_floor"
-metadata/support_top = 620.0
+metadata/support_top = 244.0
 metadata/support_width = 360.0
 metadata/critical = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/EntryMass"]
-position = Vector2(0, 50)
+position = Vector2(0, 238)
 shape = SubResource("EntryMassShape")
 
 [node name="RockVisual" type="Polygon2D" parent="Terrain/EntryMass"]
 color = Color(0.16, 0.22, 0.24, 1)
-polygon = PackedVector2Array(-180, 0, 180, 0, 180, 100, -180, 100)
+polygon = PackedVector2Array(-180, 0, 180, 0, 180, 476, -180, 476)
 
 [node name="SupportCap" type="Polygon2D" parent="Terrain/EntryMass"]
 color = Color(0.24, 0.58, 0.61, 1)
 polygon = PackedVector2Array(-180, 0, 180, 0, 180, 8, -180, 8)
 
-[node name="LowerRecoveryMass" type="StaticBody2D" parent="Terrain"]
-position = Vector2(600, 540)
+[node name="ApproachMass" type="StaticBody2D" parent="Terrain"]
+position = Vector2(470, 308)
+collision_layer = 1
+collision_mask = 0
+metadata/surface_id = &"shaft_rope_approach"
+metadata/support_top = 308.0
+metadata/support_width = 220.0
+metadata/critical = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/ApproachMass"]
+position = Vector2(0, 206)
+shape = SubResource("ApproachMassShape")
+
+[node name="RockVisual" type="Polygon2D" parent="Terrain/ApproachMass"]
+color = Color(0.18, 0.25, 0.27, 1)
+polygon = PackedVector2Array(-110, 0, 110, 0, 110, 412, -110, 412)
+
+[node name="SupportCap" type="Polygon2D" parent="Terrain/ApproachMass"]
+color = Color(0.42, 0.58, 0.36, 1)
+polygon = PackedVector2Array(-110, 0, 110, 0, 110, 8, -110, 8)
+
+[node name="BottomMass" type="StaticBody2D" parent="Terrain"]
+position = Vector2(920, 564)
 collision_layer = 1
 collision_mask = 0
 metadata/surface_id = &"shaft_lower_recovery"
-metadata/support_top = 540.0
-metadata/support_width = 480.0
+metadata/support_top = 564.0
+metadata/support_width = 240.0
 metadata/critical = true
 metadata/recovery = true
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/LowerRecoveryMass"]
-position = Vector2(0, 90)
-shape = SubResource("LowerMassShape")
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/BottomMass"]
+position = Vector2(0, 78)
+shape = SubResource("BottomMassShape")
 
-[node name="RockVisual" type="Polygon2D" parent="Terrain/LowerRecoveryMass"]
+[node name="RockVisual" type="Polygon2D" parent="Terrain/BottomMass"]
 color = Color(0.2, 0.28, 0.3, 1)
-polygon = PackedVector2Array(-240, 0, 240, 0, 240, 180, -240, 180)
+polygon = PackedVector2Array(-120, 0, 120, 0, 120, 156, -120, 156)
 
-[node name="SupportCap" type="Polygon2D" parent="Terrain/LowerRecoveryMass"]
+[node name="SupportCap" type="Polygon2D" parent="Terrain/BottomMass"]
 color = Color(0.42, 0.58, 0.36, 1)
-polygon = PackedVector2Array(-240, 0, 240, 0, 240, 8, -240, 8)
-
-[node name="MidMass" type="StaticBody2D" parent="Terrain"]
-position = Vector2(730, 460)
-collision_layer = 2
-collision_mask = 0
-metadata/surface_id = &"shaft_mid_landing"
-metadata/support_top = 460.0
-metadata/support_width = 220.0
-metadata/critical = true
-metadata/one_way = true
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/MidMass"]
-shape = SubResource("MidMassShape")
-one_way_collision = true
-
-[node name="RockVisual" type="Polygon2D" parent="Terrain/MidMass"]
-color = Color(0.22, 0.3, 0.31, 1)
-polygon = PackedVector2Array(-110, -6, 110, -6, 110, 6, -110, 6)
-
-[node name="SupportCap" type="Polygon2D" parent="Terrain/MidMass"]
-color = Color(0.68, 0.43, 0.24, 1)
-polygon = PackedVector2Array(-110, 0, 110, 0, 110, 8, -110, 8)
-
-[node name="UpperMass" type="StaticBody2D" parent="Terrain"]
-position = Vector2(950, 380)
-collision_layer = 1
-collision_mask = 0
-metadata/surface_id = &"shaft_upper_landing"
-metadata/support_top = 380.0
-metadata/support_width = 220.0
-metadata/critical = true
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/UpperMass"]
-position = Vector2(0, 170)
-shape = SubResource("UpperMassShape")
-
-[node name="RockVisual" type="Polygon2D" parent="Terrain/UpperMass"]
-color = Color(0.2, 0.28, 0.3, 1)
-polygon = PackedVector2Array(-110, 0, 110, 0, 110, 340, -110, 340)
-
-[node name="SupportCap" type="Polygon2D" parent="Terrain/UpperMass"]
-color = Color(0.42, 0.58, 0.36, 1)
-polygon = PackedVector2Array(-110, 0, 110, 0, 110, 8, -110, 8)
+polygon = PackedVector2Array(-120, 0, 120, 0, 120, 8, -120, 8)
 
 [node name="ExitMass" type="StaticBody2D" parent="Terrain"]
-position = Vector2(1170, 300)
+position = Vector2(1160, 628)
 collision_layer = 1
 collision_mask = 0
 metadata/surface_id = &"shaft_exit_floor"
-metadata/support_top = 300.0
-metadata/support_width = 220.0
+metadata/support_top = 628.0
+metadata/support_width = 240.0
 metadata/critical = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/ExitMass"]
-position = Vector2(0, 210)
+position = Vector2(0, 46)
 shape = SubResource("ExitMassShape")
 
 [node name="RockVisual" type="Polygon2D" parent="Terrain/ExitMass"]
-color = Color(0.18, 0.25, 0.27, 1)
-polygon = PackedVector2Array(-110, 0, 110, 0, 110, 420, -110, 420)
+color = Color(0.16, 0.22, 0.24, 1)
+polygon = PackedVector2Array(-120, 0, 120, 0, 120, 92, -120, 92)
 
 [node name="SupportCap" type="Polygon2D" parent="Terrain/ExitMass"]
 color = Color(0.24, 0.58, 0.61, 1)
-polygon = PackedVector2Array(-110, 0, 110, 0, 110, 8, -110, 8)
+polygon = PackedVector2Array(-120, 0, 120, 0, 120, 8, -120, 8)
+
+[node name="RopeTopLanding" type="StaticBody2D" parent="Terrain"]
+position = Vector2(700, 372)
+collision_layer = 2
+collision_mask = 0
+metadata/surface_id = &"shaft_rope_top"
+metadata/support_top = 372.0
+metadata/support_width = 240.0
+metadata/critical = true
+metadata/one_way = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/RopeTopLanding"]
+shape = SubResource("RopeTopShape")
+one_way_collision = true
+
+[node name="Visual" type="Polygon2D" parent="Terrain/RopeTopLanding"]
+color = Color(0.42, 0.58, 0.36, 1)
+polygon = PackedVector2Array(-120, -6, 120, -6, 120, 6, -120, 6)
 
 [node name="OneWay" type="Node2D" parent="."]
 [node name="Hazards" type="Node2D" parent="."]
+
 [node name="DecorBack" type="Node2D" parent="."]
 [node name="ShaftWater" type="Polygon2D" parent="DecorBack"]
 color = Color(0.12, 0.36, 0.48, 0.38)
-polygon = PackedVector2Array(360, 540, 620, 540, 620, 720, 360, 720)
+polygon = PackedVector2Array(800, 650, 1280, 650, 1280, 720, 800, 720)
+[node name="FlowArrow" type="Polygon2D" parent="DecorBack"]
+color = Color(0.3, 0.65, 0.64, 0.35)
+polygon = PackedVector2Array(770, 410, 810, 452, 850, 410, 830, 410, 830, 350, 790, 350, 790, 410)
+
 [node name="DecorFront" type="Node2D" parent="."]
 
 [node name="Anchors" type="Node2D" parent="."]
 [node name="Sockets" type="Node2D" parent="Anchors"]
 [node name="Entry" type="Marker2D" parent="Anchors/Sockets"]
-position = Vector2(0, 620)
+position = Vector2(0, 244)
 [node name="Exit" type="Marker2D" parent="Anchors/Sockets"]
-position = Vector2(1280, 300)
+position = Vector2(1280, 628)
 
 [node name="Enemy" type="Node2D" parent="Anchors"]
 
-[node name="ShaftLowerOccupier" type="Marker2D" parent="Anchors/Enemy"]
-position = Vector2(450, 540)
-script = ExtResource("3")
-anchor_id = &"shaft_lower_occupier"
-anchor_type = &"enemy"
-allowed_tags = Array[StringName]([&"occupier"])
-support_width = 480.0
-patrol_width = 200.0
-clearance = 180.0
-has_escape_route = true
-has_cover_or_elevation = true
-required = true
-metadata/support_id = &"shaft_lower_recovery"
-
-[node name="ShaftMidLeaper" type="Marker2D" parent="Anchors/Enemy"]
-position = Vector2(730, 460)
-script = ExtResource("3")
-anchor_id = &"shaft_mid_leaper"
-anchor_type = &"enemy"
-allowed_tags = Array[StringName]([&"vertical"])
-support_width = 220.0
-patrol_width = 420.0
-clearance = 200.0
-has_escape_route = true
-has_cover_or_elevation = true
-required = true
-metadata/support_id = &"shaft_mid_landing"
-
 [node name="ShaftUpperShooter" type="Marker2D" parent="Anchors/Enemy"]
-position = Vector2(950, 380)
+position = Vector2(700, 372)
 script = ExtResource("3")
 anchor_id = &"shaft_upper_shooter"
 anchor_type = &"enemy"
@@ -193,24 +166,52 @@ has_escape_route = true
 has_line_of_sight = true
 has_cover_or_elevation = true
 required = true
-metadata/support_id = &"shaft_upper_landing"
-metadata/line_of_sight = Rect2(620, 280, 660, 280)
+metadata/support_id = &"shaft_rope_top"
+metadata/line_of_sight = Rect2(420, 220, 620, 320)
+
+[node name="ShaftMidLeaper" type="Marker2D" parent="Anchors/Enemy"]
+position = Vector2(920, 564)
+script = ExtResource("3")
+anchor_id = &"shaft_mid_leaper"
+anchor_type = &"enemy"
+allowed_tags = Array[StringName]([&"vertical"])
+support_width = 240.0
+patrol_width = 420.0
+clearance = 200.0
+has_escape_route = true
+has_cover_or_elevation = true
+required = true
+metadata/support_id = &"shaft_lower_recovery"
+
+[node name="ShaftLowerOccupier" type="Marker2D" parent="Anchors/Enemy"]
+position = Vector2(1160, 628)
+script = ExtResource("3")
+anchor_id = &"shaft_lower_occupier"
+anchor_type = &"enemy"
+allowed_tags = Array[StringName]([&"occupier"])
+support_width = 240.0
+patrol_width = 200.0
+clearance = 180.0
+has_escape_route = true
+has_cover_or_elevation = true
+required = true
+metadata/support_id = &"shaft_exit_floor"
 
 [node name="Hazard" type="Node2D" parent="Anchors"]
 [node name="Reward" type="Node2D" parent="Anchors"]
 [node name="Objective" type="Node2D" parent="Anchors"]
 
 [node name="RopeEntry" type="Marker2D" parent="Anchors/Objective"]
-position = Vector2(698, 540)
+position = Vector2(778, 564)
 metadata/support_id = &"shaft_lower_recovery"
 
 [node name="RopeClimb" type="Area2D" parent="Anchors/Objective"]
-position = Vector2(730, 500)
+position = Vector2(810, 468)
 script = ExtResource("2")
-climbable_size = Vector2(64, 80)
+climbable_size = Vector2(64, 192)
 visual_color = Color(0.73, 0.78, 0.48, 0.9)
 metadata/entry_support = &"shaft_lower_recovery"
-metadata/exit_support = &"shaft_mid_landing"
+metadata/exit_support = &"shaft_rope_top"
 metadata/support_overlap = 32.0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Anchors/Objective/RopeClimb"]
@@ -218,12 +219,12 @@ shape = SubResource("RopeShape")
 
 [node name="Visual" type="Polygon2D" parent="Anchors/Objective/RopeClimb"]
 color = Color(0.73, 0.78, 0.48, 0.9)
-polygon = PackedVector2Array(-5, -40, 5, -40, 5, 40, -5, 40)
+polygon = PackedVector2Array(-5, -96, 5, -96, 5, 96, -5, 96)
 
 [node name="RungA" type="Line2D" parent="Anchors/Objective/RopeClimb"]
 width = 3.0
 default_color = Color(0.73, 0.78, 0.48, 0.9)
-points = PackedVector2Array(-18, -28, 18, -28)
+points = PackedVector2Array(-18, -64, 18, -64)
 [node name="RungB" type="Line2D" parent="Anchors/Objective/RopeClimb"]
 width = 3.0
 default_color = Color(0.73, 0.78, 0.48, 0.9)
@@ -231,38 +232,38 @@ points = PackedVector2Array(-18, 0, 18, 0)
 [node name="RungC" type="Line2D" parent="Anchors/Objective/RopeClimb"]
 width = 3.0
 default_color = Color(0.73, 0.78, 0.48, 0.9)
-points = PackedVector2Array(-18, 28, 18, 28)
+points = PackedVector2Array(-18, 64, 18, 64)
 
 [node name="RopeExit" type="Marker2D" parent="Anchors/Objective"]
-position = Vector2(762, 460)
-metadata/support_id = &"shaft_mid_landing"
+position = Vector2(778, 372)
+metadata/support_id = &"shaft_rope_top"
 
 [node name="Recovery" type="Node2D" parent="Anchors"]
 [node name="ShaftEntryRecovery" type="Marker2D" parent="Anchors/Recovery"]
-position = Vector2(160, 620)
+position = Vector2(160, 244)
 script = ExtResource("3")
 anchor_id = &"shaft_entry_recovery"
 anchor_type = &"recovery"
-safe_radius = 160.0
+safe_radius = 180.0
 required = true
 metadata/support_id = &"shaft_entry_floor"
 
 [node name="ShaftLowerRecovery" type="Marker2D" parent="Anchors/Recovery"]
-position = Vector2(730, 540)
+position = Vector2(920, 564)
 script = ExtResource("3")
 anchor_id = &"shaft_lower_recovery"
 anchor_type = &"recovery"
-safe_radius = 100.0
+safe_radius = 120.0
 required = true
 metadata/support_id = &"shaft_lower_recovery"
 metadata/forward_route = &"RopeClimb"
 
 [node name="ShaftExitRecovery" type="Marker2D" parent="Anchors/Recovery"]
-position = Vector2(1170, 300)
+position = Vector2(1160, 628)
 script = ExtResource("3")
 anchor_id = &"shaft_exit_recovery"
 anchor_type = &"recovery"
-safe_radius = 90.0
+safe_radius = 100.0
 metadata/support_id = &"shaft_exit_floor"
 
 [node name="CameraBounds" type="Node2D" parent="."]
@@ -270,8 +271,9 @@ metadata/bounds = Rect2(0, 0, 1280, 720)
 
 [node name="Validation" type="Node2D" parent="."]
 metadata/minimum_critical_landing = 220.0
-metadata/max_required_step = 80.0
+metadata/max_required_step = 64.0
 metadata/rope_path = NodePath("../Anchors/Objective/RopeClimb")
-metadata/rope_height = 80.0
+metadata/rope_height = 192.0
 metadata/rope_support_overlap = 32.0
 metadata/lower_recovery_id = &"shaft_lower_recovery"
+metadata/required_bidirectional = true

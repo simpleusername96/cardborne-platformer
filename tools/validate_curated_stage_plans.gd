@@ -15,7 +15,7 @@ const STAGES: Array[Dictionary] = [
 		"id": &"flooded_works",
 		"catalog": "res://data/generation/flooded_works_room_catalog.tres",
 		"rooms": "fw_flooded_entry,fw_rope_shaft,fw_poison_timing,fw_leaper_basin,fw_lower_upper_choice,fw_pump_gallery,fw_exit_shelter,fw_sunken_cache",
-		"signature": "d09118f3c1ed0850030856d1e681bb94dd3a098db48ab81039bc288388febe5f",
+		"signature": "dbf46b856f11079f84cbf37736359d550a595ef409fb5504ba23e392d110e44f",
 	},
 	{
 		"id": &"broken_sanctum",

@@ -22,6 +22,22 @@ func _initialize() -> void:
 		),
 		"third simultaneous high-attention enemy should be rejected"
 	)
+	var final_gallery := template.duplicate() as RoomTemplateData
+	final_gallery.variant_group = &"flooded_final_gallery"
+	_expect(
+		EncounterCompositionRules.permits_candidate(
+			final_gallery, selected, _candidate(&"vertical", &"leaper")
+		),
+		"reviewed final gallery should admit one three-threat combine/test"
+	)
+	var gallery_selected: Array[Dictionary] = selected.duplicate()
+	gallery_selected.append(_candidate(&"vertical", &"leaper"))
+	_expect(
+		not EncounterCompositionRules.permits_candidate(
+			final_gallery, gallery_selected, _candidate(&"guard", &"shield_guard")
+		),
+		"final gallery should still reject a fourth high-attention threat"
+	)
 	_expect(
 		not EncounterCompositionRules.permits_candidate(
 			template, [], _candidate(&"ranged", &"sentry")

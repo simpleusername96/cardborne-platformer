@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/stages/RoomTemplateHost.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/stages/RoomAnchor.gd" id="2"]
@@ -6,11 +6,13 @@
 [ext_resource type="Resource" path="res://data/items/supply_charge.tres" id="4_supply_charge"]
 
 [sub_resource type="RectangleShape2D" id="EntryShape"]
-size = Vector2(300, 100)
+size = Vector2(300, 476)
+[sub_resource type="RectangleShape2D" id="PreviewShape"]
+size = Vector2(220, 412)
 [sub_resource type="RectangleShape2D" id="BasinShape"]
-size = Vector2(600, 180)
+size = Vector2(300, 284)
 [sub_resource type="RectangleShape2D" id="ExitShape"]
-size = Vector2(380, 260)
+size = Vector2(240, 348)
 [sub_resource type="RectangleShape2D" id="SideLedgeShape"]
 size = Vector2(220, 12)
 
@@ -19,84 +21,105 @@ script = ExtResource("1")
 room_id = &"fw_leaper_basin"
 
 [node name="Terrain" type="Node2D" parent="."]
+
 [node name="EntryMass" type="StaticBody2D" parent="Terrain"]
-position = Vector2(150, 620)
+position = Vector2(150, 244)
 collision_layer = 1
 collision_mask = 0
 metadata/surface_id = &"leaper_entry_floor"
-metadata/support_top = 620.0
+metadata/support_top = 244.0
 metadata/support_width = 300.0
 metadata/critical = true
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/EntryMass"]
-position = Vector2(0, 50)
+position = Vector2(0, 238)
 shape = SubResource("EntryShape")
 [node name="RockVisual" type="Polygon2D" parent="Terrain/EntryMass"]
 color = Color(0.16, 0.22, 0.24, 1)
-polygon = PackedVector2Array(-150, 0, 150, 0, 150, 100, -150, 100)
+polygon = PackedVector2Array(-150, 0, 150, 0, 150, 476, -150, 476)
 [node name="SupportCap" type="Polygon2D" parent="Terrain/EntryMass"]
 color = Color(0.24, 0.58, 0.61, 1)
 polygon = PackedVector2Array(-150, 0, 150, 0, 150, 8, -150, 8)
 
+[node name="PreviewMass" type="StaticBody2D" parent="Terrain"]
+position = Vector2(410, 308)
+collision_layer = 1
+collision_mask = 0
+metadata/surface_id = &"leaper_preview_ledge"
+metadata/support_top = 308.0
+metadata/support_width = 220.0
+metadata/critical = true
+metadata/preview_commitment = true
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/PreviewMass"]
+position = Vector2(0, 206)
+shape = SubResource("PreviewShape")
+[node name="RockVisual" type="Polygon2D" parent="Terrain/PreviewMass"]
+color = Color(0.18, 0.25, 0.27, 1)
+polygon = PackedVector2Array(-110, 0, 110, 0, 110, 412, -110, 412)
+[node name="SupportCap" type="Polygon2D" parent="Terrain/PreviewMass"]
+color = Color(0.42, 0.58, 0.36, 1)
+polygon = PackedVector2Array(-110, 0, 110, 0, 110, 8, -110, 8)
+
 [node name="BasinMass" type="StaticBody2D" parent="Terrain"]
-position = Vector2(600, 540)
+position = Vector2(890, 436)
 collision_layer = 1
 collision_mask = 0
 metadata/surface_id = &"leaper_basin_lane"
-metadata/support_top = 540.0
-metadata/support_width = 600.0
+metadata/support_top = 436.0
+metadata/support_width = 300.0
 metadata/critical = true
 metadata/leap_lane_width = 420.0
 metadata/arc_clearance = 180.0
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/BasinMass"]
-position = Vector2(0, 90)
+position = Vector2(0, 142)
 shape = SubResource("BasinShape")
 [node name="RockVisual" type="Polygon2D" parent="Terrain/BasinMass"]
 color = Color(0.2, 0.28, 0.3, 1)
-polygon = PackedVector2Array(-300, 0, 300, 0, 300, 180, -300, 180)
+polygon = PackedVector2Array(-150, 0, 150, 0, 150, 284, -150, 284)
 [node name="SupportCap" type="Polygon2D" parent="Terrain/BasinMass"]
 color = Color(0.42, 0.58, 0.36, 1)
-polygon = PackedVector2Array(-300, 0, 300, 0, 300, 8, -300, 8)
+polygon = PackedVector2Array(-150, 0, 150, 0, 150, 8, -150, 8)
 
 [node name="ExitMass" type="StaticBody2D" parent="Terrain"]
-position = Vector2(1090, 460)
+position = Vector2(1160, 372)
 collision_layer = 1
 collision_mask = 0
 metadata/surface_id = &"leaper_exit_floor"
-metadata/support_top = 460.0
-metadata/support_width = 380.0
+metadata/support_top = 372.0
+metadata/support_width = 240.0
 metadata/critical = true
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/ExitMass"]
-position = Vector2(0, 130)
+position = Vector2(0, 174)
 shape = SubResource("ExitShape")
 [node name="RockVisual" type="Polygon2D" parent="Terrain/ExitMass"]
 color = Color(0.18, 0.25, 0.27, 1)
-polygon = PackedVector2Array(-190, 0, 190, 0, 190, 260, -190, 260)
+polygon = PackedVector2Array(-120, 0, 120, 0, 120, 348, -120, 348)
 [node name="SupportCap" type="Polygon2D" parent="Terrain/ExitMass"]
 color = Color(0.24, 0.58, 0.61, 1)
-polygon = PackedVector2Array(-190, 0, 190, 0, 190, 8, -190, 8)
+polygon = PackedVector2Array(-120, 0, 120, 0, 120, 8, -120, 8)
 
-[node name="OneWay" type="Node2D" parent="."]
-[node name="LeftEscapeLedge" type="StaticBody2D" parent="OneWay"]
-position = Vector2(420, 420)
+[node name="LeftEscapeLedge" type="StaticBody2D" parent="Terrain"]
+position = Vector2(630, 372)
 collision_layer = 2
 collision_mask = 0
 metadata/surface_id = &"leaper_left_escape"
-metadata/support_top = 420.0
+metadata/support_top = 372.0
 metadata/support_width = 220.0
-metadata/critical = false
-[node name="CollisionShape2D" type="CollisionShape2D" parent="OneWay/LeftEscapeLedge"]
+metadata/critical = true
+metadata/one_way = true
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/LeftEscapeLedge"]
 shape = SubResource("SideLedgeShape")
 one_way_collision = true
-[node name="Visual" type="Polygon2D" parent="OneWay/LeftEscapeLedge"]
+[node name="Visual" type="Polygon2D" parent="Terrain/LeftEscapeLedge"]
 color = Color(0.42, 0.58, 0.36, 1)
 polygon = PackedVector2Array(-110, -6, 110, -6, 110, 6, -110, 6)
 
+[node name="OneWay" type="Node2D" parent="."]
 [node name="RangedPerch" type="StaticBody2D" parent="OneWay"]
-position = Vector2(760, 360)
+position = Vector2(880, 308)
 collision_layer = 2
 collision_mask = 0
 metadata/surface_id = &"leaper_ranged_perch"
-metadata/support_top = 360.0
+metadata/support_top = 308.0
 metadata/support_width = 220.0
 metadata/critical = false
 [node name="CollisionShape2D" type="CollisionShape2D" parent="OneWay/RangedPerch"]
@@ -108,26 +131,29 @@ polygon = PackedVector2Array(-110, -6, 110, -6, 110, 6, -110, 6)
 
 [node name="Hazards" type="Node2D" parent="."]
 [node name="DecorBack" type="Node2D" parent="."]
+[node name="DropPreview" type="Polygon2D" parent="DecorBack"]
+color = Color(0.3, 0.65, 0.64, 0.28)
+polygon = PackedVector2Array(470, 330, 500, 370, 530, 330, 515, 330, 515, 300, 485, 300, 485, 330)
 [node name="LandingTell" type="Polygon2D" parent="DecorBack"]
 color = Color(0.72, 0.48, 0.25, 0.28)
-polygon = PackedVector2Array(520, 540, 600, 480, 680, 540)
+polygon = PackedVector2Array(650, 436, 780, 362, 910, 436)
 [node name="DecorFront" type="Node2D" parent="."]
 
 [node name="Anchors" type="Node2D" parent="."]
 [node name="Sockets" type="Node2D" parent="Anchors"]
 [node name="Entry" type="Marker2D" parent="Anchors/Sockets"]
-position = Vector2(0, 620)
+position = Vector2(0, 244)
 [node name="Exit" type="Marker2D" parent="Anchors/Sockets"]
-position = Vector2(1280, 460)
-[node name="Enemy" type="Node2D" parent="Anchors"]
+position = Vector2(1280, 372)
 
+[node name="Enemy" type="Node2D" parent="Anchors"]
 [node name="LeaperArc" type="Marker2D" parent="Anchors/Enemy"]
-position = Vector2(600, 540)
+position = Vector2(890, 436)
 script = ExtResource("2")
 anchor_id = &"leaper_arc"
 anchor_type = &"enemy"
 allowed_tags = Array[StringName]([&"vertical"])
-support_width = 600.0
+support_width = 300.0
 patrol_width = 420.0
 clearance = 180.0
 has_escape_route = true
@@ -136,10 +162,10 @@ has_cover_or_elevation = true
 required = true
 metadata/support_id = &"leaper_basin_lane"
 metadata/arc_clearance = 180.0
-metadata/landing_lane = Rect2(390, 360, 420, 180)
+metadata/landing_lane = Rect2(680, 256, 420, 180)
 
 [node name="BasinRangedPerch" type="Marker2D" parent="Anchors/Enemy"]
-position = Vector2(760, 360)
+position = Vector2(880, 308)
 script = ExtResource("2")
 anchor_id = &"basin_ranged_perch"
 anchor_type = &"enemy"
@@ -152,15 +178,15 @@ has_line_of_sight = true
 has_cover_or_elevation = true
 required = true
 metadata/support_id = &"leaper_ranged_perch"
-metadata/line_of_sight = Rect2(300, 240, 800, 300)
+metadata/line_of_sight = Rect2(500, 188, 620, 300)
 
 [node name="BasinExitOccupier" type="Marker2D" parent="Anchors/Enemy"]
-position = Vector2(1100, 460)
+position = Vector2(1160, 372)
 script = ExtResource("2")
 anchor_id = &"basin_exit_occupier"
 anchor_type = &"enemy"
 allowed_tags = Array[StringName]([&"occupier"])
-support_width = 380.0
+support_width = 240.0
 patrol_width = 260.0
 clearance = 180.0
 has_escape_route = true
@@ -173,28 +199,42 @@ metadata/support_id = &"leaper_exit_floor"
 [node name="Reward" type="Node2D" parent="Anchors"]
 [node name="Objective" type="Node2D" parent="Anchors"]
 [node name="SafeEntry" type="Marker2D" parent="Anchors/Objective"]
-position = Vector2(140, 620)
+position = Vector2(140, 244)
 metadata/safe_radius = 240.0
-[node name="ArcStart" type="Marker2D" parent="Anchors/Objective"]
-position = Vector2(390, 540)
-[node name="ArcEnd" type="Marker2D" parent="Anchors/Objective"]
-position = Vector2(810, 540)
+[node name="CommitmentPreview" type="Marker2D" parent="Anchors/Objective"]
+position = Vector2(430, 308)
+metadata/landing_support = &"leaper_basin_lane"
+metadata/previewed_before_drop = true
+[node name="LeaperDestinationLeft" type="Marker2D" parent="Anchors/Objective"]
+position = Vector2(630, 372)
+metadata/support_id = &"leaper_left_escape"
+[node name="LeaperDestinationRight" type="Marker2D" parent="Anchors/Objective"]
+position = Vector2(880, 308)
+metadata/support_id = &"leaper_ranged_perch"
 
 [node name="Recovery" type="Node2D" parent="Anchors"]
 [node name="BasinEntryRecovery" type="Marker2D" parent="Anchors/Recovery"]
-position = Vector2(140, 620)
+position = Vector2(140, 244)
 script = ExtResource("2")
 anchor_id = &"basin_entry_recovery"
 anchor_type = &"recovery"
-safe_radius = 140.0
+safe_radius = 160.0
 required = true
 metadata/support_id = &"leaper_entry_floor"
+[node name="BasinFloorRecovery" type="Marker2D" parent="Anchors/Recovery"]
+position = Vector2(760, 436)
+script = ExtResource("2")
+anchor_id = &"basin_floor_recovery"
+anchor_type = &"recovery"
+safe_radius = 120.0
+required = true
+metadata/support_id = &"leaper_basin_lane"
 [node name="BasinSideRecovery" type="Marker2D" parent="Anchors/Recovery"]
-position = Vector2(1040, 460)
+position = Vector2(1160, 372)
 script = ExtResource("2")
 anchor_id = &"basin_side_recovery"
 anchor_type = &"recovery"
-safe_radius = 100.0
+safe_radius = 110.0
 metadata/support_id = &"leaper_exit_floor"
 
 [node name="CameraBounds" type="Node2D" parent="."]
@@ -204,10 +244,12 @@ metadata/safe_entry_radius = 240.0
 metadata/minimum_critical_landing = 220.0
 metadata/leap_lane_width = 420.0
 metadata/arc_clearance = 180.0
-metadata/max_required_step = 80.0
+metadata/max_required_step = 64.0
+metadata/previewed_commitment = true
+metadata/reachable_destination_ids = Array[StringName]([&"leaper_left_escape", &"leaper_ranged_perch", &"leaper_basin_lane"])
 
 [node name="FieldPickups" type="Node2D" parent="."]
 [node name="EscapeSupplyCharge" parent="FieldPickups" instance=ExtResource("3_field_pickup")]
-position = Vector2(420, 390)
+position = Vector2(630, 342)
 pickup_id = &"flooded_basin_supply_01"
 definition = ExtResource("4_supply_charge")
