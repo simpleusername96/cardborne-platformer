@@ -113,7 +113,12 @@ listed later.
 - Timing seed: aim 0.38 s, projectile 280 px/s, 1.8 s interval.
 - Reference range: 760 px; post-shot recovery: 0.45 s.
 - Safety floor: aim >= 0.32 s, interval >= 1.50 s, post-shot recovery >= 0.40 s.
-- Tell: aim line or body pose shows direction; projectile contrasts background.
+- Tell: a short local facing cue and body/weapon pose show startup direction;
+  ordinary enemies do not draw a full projectile-range line.
+- Basic enemy projectiles terminate on authored solid terrain (collision layer
+  1). One-way traversal platforms (layer 2) remain permeable unless the room
+  authors that surface as solid cover, so the collision rule is consistent
+  across rooms rather than selected per encounter.
 - Response: move, use cover, change level, or interrupt.
 - Punish: aim and post-shot pause; melee approach remains possible.
 - Anchor: line-of-sight lane, cover or elevation change, no spawn behind opaque decor.

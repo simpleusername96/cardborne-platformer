@@ -114,7 +114,6 @@ metadata/facing = 1
 metadata/support_id = &"breach_west_floor"
 [node name="CameraFocus" type="Marker2D" parent="Anchors/Objective"]
 position = Vector2(520, 350)
-metadata/camera_id = &"breach_camera"
 [node name="NextGoal" type="Marker2D" parent="Anchors/Objective"]
 position = Vector2(1120, 620)
 

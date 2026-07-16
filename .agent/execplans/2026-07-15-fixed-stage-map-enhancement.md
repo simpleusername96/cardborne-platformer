@@ -627,7 +627,7 @@ blockout 결과가 더 나은 의도를 발견하면 Decision Notes에 이유를
 
 - [x] Milestone 0에서 visual study를 current room graph와 movement envelope에
   맞는 stage별 construction blueprint로 번역하고 owner review를 받는다.
-- [ ] Milestone A에서 completion policy, minimap state, directionality,
+- [x] Milestone A에서 completion policy, minimap state, directionality,
   traversal comfort, rope, projectile cover, terrain-aware enemy behavior를
   먼저 red/green 검증한다.
 - [ ] Milestone B에서 Ruin을 pilot stage로 재저작하고 continuous play로
@@ -692,126 +692,126 @@ geometry pass 전에 해결해 이후 stage review가 target flow를 사용하�
 
 Tasks:
 
-- [ ] current validator JSON과 fixed-stage captures를 dated evidence 위치에
+- [x] current validator JSON과 fixed-stage captures를 dated evidence 위치에
   보존하거나 재생성 명령과 hash를 기록한다.
-- [ ] current critical graph를 stage별 node/edge table로 snapshot한다.
-- [ ] current exit fixtures가 main-route enemy를 모두 죽여야 unlock되는 것을
+- [x] current critical graph를 stage별 node/edge table로 snapshot한다.
+- [x] current exit fixtures가 main-route enemy를 모두 죽여야 unlock되는 것을
   red evidence로 보존하고, `required_route`와 mandatory combat의 의미를
   분리한다.
-- [ ] terminal room에 typed unlock policy를 추가하고 free-form
+- [x] terminal room에 typed unlock policy를 추가하고 free-form
   `objective_requirements` metadata를 제거하거나 migration한다.
-- [ ] `ProductionStageHost.gd`의 exit eligibility가 global
+- [x] `ProductionStageHost.gd`의 exit eligibility가 global
   `_required_enemies`/`get_remaining_enemy_count()`에 의존하지 않게 한다.
-- [ ] Ruin/Sanctum은 terminal-room encounter index만, Flooded는 arrival
+- [x] Ruin/Sanctum은 terminal-room encounter index만, Flooded는 arrival
   policy만 사용하도록 stage-specific fixture를 작성한다.
-- [ ] prior main-route enemy를 살려 둔 채 exit가 열리고 stage-clear reward
+- [x] prior main-route enemy를 살려 둔 채 exit가 열리고 stage-clear reward
   flow가 한 번만 commit되는 regression을 추가한다.
-- [ ] room-local clear signal, Second Wind card trigger, NPC/reward unlock이
+- [x] room-local clear signal, Second Wind card trigger, NPC/reward unlock이
   global exit gate 제거 뒤에도 유지되는지 검증한다.
-- [ ] normal-stage objective snapshot을 `navigate_to_exit`,
+- [x] normal-stage objective snapshot을 `navigate_to_exit`,
   `terminal_objective`, `exit_ready` state로 바꾸고 global enemy count copy를
   제거한다.
-- [ ] `StagePlan`, `StageAssemblyResult`, room hosts에서 room bounds,
+- [x] `StagePlan`, `StageAssemblyResult`, room hosts에서 room bounds,
   connections, start/exit, objective/reward anchors를 읽는 copy-safe map
   snapshot contract를 만든다.
-- [ ] responsibility-shaped exploration-state owner를
+- [x] responsibility-shaped exploration-state owner를
   `scripts/stages/navigation/` 아래에 추가하고 current/visited/discovered
   state를 `ProductionStageHost`가 host한다.
-- [ ] room crossing, socket-boundary hysteresis, player projection,
+- [x] room crossing, socket-boundary hysteresis, player projection,
   checkpoint/reward/gate state update를 semantic change에만 publish하도록
   한다. HUD가 stage scene tree를 poll하지 않는다.
-- [ ] `SignalBus`에 stage-map snapshot channel을 추가하고 detached HUD가
+- [x] `SignalBus`에 stage-map snapshot channel을 추가하고 detached HUD가
   next-stage event를 받지 않도록 connect/disconnect lifecycle을 검증한다.
-- [ ] `ProductionHUD.tscn` top-right에 reusable minimap scene을 mount하고
+- [x] `ProductionHUD.tscn` top-right에 reusable minimap scene을 mount하고
   runtime vector renderer, fog state, marker contract, normal-stage visibility를
   구현한다.
-- [ ] `docs/design/PRODUCTION_UI_CONTRACT.md`의 Gameplay HUD contract에
+- [x] `docs/design/PRODUCTION_UI_CONTRACT.md`의 Gameplay HUD contract에
   normal-stage top-right minimap, visibility, fog, marker boundary를 반영한다.
-- [ ] 960×540, 1280×720, 1920×1080에서 minimap이 health, objective/boss,
+- [x] 960×540, 1280×720, 1920×1080에서 minimap이 health, objective/boss,
   context lane, combat dock과 겹치지 않는 layout fixture를 추가한다.
-- [ ] unvisited/visited/current, locked/ready, claimed/open 상태가 color 외
+- [x] unvisited/visited/current, locked/ready, claimed/open 상태가 color 외
   shape/edge 차이로 읽히는 rendered fixture를 추가한다.
-- [ ] same-stage retry가 discovery를 보존하고 new run/stage가 reset하는
+- [x] same-stage retry가 discovery를 보존하고 new run/stage가 reset하는
   RunState regression을 추가한다.
-- [ ] baseline player fixture에서 full/short/late jump input과 landing 오차를
+- [x] baseline player fixture에서 full/short/late jump input과 landing 오차를
   측정해 routine, challenge, optional mastery transition의 comfort band를
   근거와 함께 정한다.
-- [ ] critical transition을 movement maximum 대비 ratio로 보고하고,
+- [x] critical transition을 movement maximum 대비 ratio로 보고하고,
   near-limit required transition이 연속되는 구간을 stage/room ID와 함께
   진단한다.
-- [ ] `StageCompositionMetrics.gd`에 direction reversal을 추가한다.
-- [ ] meaningful ascent와 descent transition count를 각각 추가한다.
-- [ ] optional branch origin, rejoin, divergence span, stage-position
+- [x] `StageCompositionMetrics.gd`에 direction reversal을 추가한다.
+- [x] meaningful ascent와 descent transition count를 각각 추가한다.
+- [x] optional branch origin, rejoin, divergence span, stage-position
   distribution diagnostic을 추가한다.
-- [ ] same-hub return과 forward rejoin을 구분한다.
-- [ ] current vertical range, enemy floor, elevation-change, empty-run gate를
+- [x] same-hub return과 forward rejoin을 구분한다.
+- [x] current vertical range, enemy floor, elevation-change, empty-run gate를
   제거하거나 약화하지 않는다.
-- [ ] diagnostic을 단일 aggregate score로 만들지 않는다.
-- [ ] validator error가 stage ID, measured value, expected condition을
+- [x] diagnostic을 단일 aggregate score로 만들지 않는다.
+- [x] validator error가 stage ID, measured value, expected condition을
   구체적으로 말하게 한다.
-- [ ] current stage가 새 target에서 왜 실패하는지 red test로 먼저 확인한다.
-- [ ] `validate_player_movement_runtime.gd`에 rope 하단 진입, 상승, one-way
+- [x] current stage가 새 target에서 왜 실패하는지 red test로 먼저 확인한다.
+- [x] `validate_player_movement_runtime.gd`에 rope 하단 진입, 상승, one-way
   top 통과, 위에서 하강 진입, 하단 dismount fixture를 추가하고 current
   descent failure를 red test로 재현한다.
-- [ ] rope runtime을 stage별 예외 없이 공용 owner에서 수정하고, rope
+- [x] rope runtime을 stage별 예외 없이 공용 owner에서 수정하고, rope
   중심 정렬과 collision-mask 복구가 dash/jump/respawn에서도 안전한지
   검증한다.
-- [ ] `validate_shooter_runtime.gd`에 solid cover fixture를 추가하고,
+- [x] `validate_shooter_runtime.gd`에 solid cover fixture를 추가하고,
   projectile가 player까지 진행하는 current behavior를 red test로 남긴 뒤
   shared projectile terrain collision을 구현한다.
-- [ ] one-way platform의 projectile-blocking policy를 명시하고 room마다
+- [x] one-way platform의 projectile-blocking policy를 명시하고 room마다
   같은 collision rule을 사용한다.
-- [ ] `validate_flooded_enemy_runtime.gd`에 둘 이상의 landing surface를 가진
+- [x] `validate_flooded_enemy_runtime.gd`에 둘 이상의 landing surface를 가진
   leaper fixture를 추가하고, repeated cycle에서 destination 선택, 실제
   landing, alternate retry, no-stuck을 검증한다.
-- [ ] walker/charger/shield-guard 중 current authored geometry에서 stuck이
+- [x] walker/charger/shield-guard 중 current authored geometry에서 stuck이
   재현되는 mobile archetype에만 wall/ledge response fixture와 최소 공용
   behavior repair를 추가한다.
-- [ ] normal enemy validator에서 full-range line 또는 synthetic arc 길이를
+- [x] normal enemy validator에서 full-range line 또는 synthetic arc 길이를
   product acceptance로 고정한 assertion을 제거하고, startup visibility,
   facing/destination cue, recovery readability로 교체한다.
-- [ ] normal-stage `camera_id` metadata를 실제로 소비할지 제거할지 결정한다.
+- [x] normal-stage `camera_id` metadata를 실제로 소비할지 제거할지 결정한다.
   default camera로 commitment를 읽게 만드는 geometry를 우선하고, 부족한
   경우에만 최소 focus/lookahead owner를 구현한다.
 
 Acceptance:
 
-- [ ] current three-stage metrics가 이전 값과 동일하게 재현된다.
-- [ ] global main-route kill tally 없이 stage별 typed terminal policy가
+- [x] current three-stage metrics가 이전 값과 동일하게 재현된다.
+- [x] global main-route kill tally 없이 stage별 typed terminal policy가
   exit eligibility를 결정한다.
-- [ ] Ruin/Sanctum은 이전 room enemy를 최소 하나 살려 두고 terminal
+- [x] Ruin/Sanctum은 이전 room enemy를 최소 하나 살려 두고 terminal
   encounter만 clear해 exit를 열 수 있고, Flooded는 required enemy를
   살려 둔 채 shelter exit를 사용할 수 있다.
-- [ ] room-local encounter clear, card/reward, enemy-drop settlement은
+- [x] room-local encounter clear, card/reward, enemy-drop settlement은
   regression 없이 유지된다.
-- [ ] HUD default objective에 global `Defeat N remaining`이 없고
+- [x] HUD default objective에 global `Defeat N remaining`이 없고
   navigate → local terminal blocker → ready transition이 policy와 일치한다.
-- [ ] minimap snapshot의 room/connection 수와 bounds가 current StagePlan과
+- [x] minimap snapshot의 room/connection 수와 bounds가 current StagePlan과
   assembly에 일치한다.
-- [ ] player가 두 room을 이동하면 start/previous/current state와 player
+- [x] player가 두 room을 이동하면 start/previous/current state와 player
   marker가 올바르게 갱신되고 socket boundary에서 flicker하지 않는다.
-- [ ] exit는 처음부터 표시되고 undiscovered reward와 ordinary enemy는
+- [x] exit는 처음부터 표시되고 undiscovered reward와 ordinary enemy는
   표시되지 않는다. checkpoint, reward claim, gate/shortcut state가 stale하지
   않다.
-- [ ] same-stage retry 뒤 visited room은 유지되고 new run/stage에서는
+- [x] same-stage retry 뒤 visited room은 유지되고 new run/stage에서는
   초기 dark state로 돌아간다.
-- [ ] supported viewport와 en/ko locale에서 minimap이 기존 HUD region과
+- [x] supported viewport와 en/ko locale에서 minimap이 기존 HUD region과
   겹치거나 잘리지 않는다.
-- [ ] current Ruin monotonic profile을 새 diagnostic이 검출한다.
-- [ ] current four same-hub optional return edge를 graph diagnostic이 검출한다.
-- [ ] comfort band가 임의 상수가 아니라 runtime input fixture와 owner review로
+- [x] current Ruin monotonic profile을 새 diagnostic이 검출한다.
+- [x] current four same-hub optional return edge를 graph diagnostic이 검출한다.
+- [x] comfort band가 임의 상수가 아니라 runtime input fixture와 owner review로
   기록되고, current near-limit chain 위치가 식별된다.
-- [ ] player fixture가 같은 rope를 실제 input으로 양방향 통과하고 collision
+- [x] player fixture가 같은 rope를 실제 input으로 양방향 통과하고 collision
   mask가 모든 exit path에서 원복된다.
-- [ ] basic shooter projectile가 solid cover contact에서 종료되고 cover 뒤
+- [x] basic shooter projectile가 solid cover contact에서 종료되고 cover 뒤
   player에게 damage를 전달하지 않는다.
-- [ ] leaper가 둘 이상의 reachable destination을 사용해 여러 cycle을
+- [x] leaper가 둘 이상의 reachable destination을 사용해 여러 cycle을
   완료하며 하나의 고정 궤적 뒤 idle lock에 빠지지 않는다.
-- [ ] product validator가 full trajectory overlay의 존재나 길이를 필수
+- [x] product validator가 full trajectory overlay의 존재나 길이를 필수
   계약으로 요구하지 않는다.
-- [ ] normal-stage camera acceptance의 runtime owner와 evidence method가
+- [x] normal-stage camera acceptance의 runtime owner와 evidence method가
   하나로 정해지고 dead `camera_id` metadata가 남지 않는다.
-- [ ] reachability 또는 stable-ID validation이 회귀하지 않는다.
+- [x] reachability 또는 stable-ID validation이 회귀하지 않는다.
 
 ### Milestone B — Ruin blockout and room pass
 
@@ -1170,7 +1170,7 @@ When export templates are available:
   visited-space mapping, minimap placement, markers, and blocked/available path
   guidance.
 - [x] Milestone 0 construction blueprints reconciled with current room IDs and approved.
-- [ ] Milestone A completion, minimap, diagnostic, and shared terrain-interaction
+- [x] Milestone A completion, minimap, diagnostic, and shared terrain-interaction
   contract implemented.
 - [ ] Milestone B Ruin implemented and accepted.
 - [ ] Milestone C Flooded implemented and accepted.

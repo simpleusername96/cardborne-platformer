@@ -439,6 +439,15 @@ msgstr "남은 적 %d마리 처치"
 msgid "Enter the gate"
 msgstr "출구로 이동하세요"
 
+msgid "Reach the exit"
+msgstr "출구를 찾으세요"
+
+msgid "Clear the final chamber · %d remaining"
+msgstr "마지막 방 정리 · %d마리 남음"
+
+msgid "Exit ready"
+msgstr "출구 이용 가능"
+
 msgid "Prepare, then continue"
 msgstr "정비한 뒤 다음 지역으로 이동하세요"
 

@@ -30,6 +30,7 @@ const Text = preload("res://scripts/ui/localization/LocalizedText.gd")
 @onready var boss_health_bar: ProgressBar = $BossPanel/Margin/Column/BossHealth
 @onready var boss_stagger_bar: ProgressBar = $BossPanel/Margin/Column/BossStagger
 @onready var boss_status_label: Label = $BossPanel/Margin/Column/Heading/BossStatus
+@onready var stage_minimap: HUDStageMinimap = $StageMinimap
 
 var _stage_display_name: String = "Ruin Approach"
 var _stage_id: String = "ruin_approach"
@@ -41,6 +42,8 @@ var _receipt_active: bool = false
 var _compact_layout: bool = false
 var _boss: Node
 var _boss_snapshot: Dictionary = {}
+var _objective_state: Dictionary = {"objective": &"navigate_to_exit"}
+var _stage_map_snapshot: Dictionary = {}
 
 
 func _ready() -> void:
@@ -50,13 +53,14 @@ func _ready() -> void:
 	objective_timer.timeout.connect(_collapse_objective)
 	reward_receipt.set_embedded(true)
 	reward_receipt.presentation_state_changed.connect(_on_receipt_state_changed)
-	_show_objective(_t("Defeat enemies"))
+	_show_objective(_t("Reach the exit"))
 	_layout_responsive()
 	SignalBus.player_health_changed.connect(_on_health_changed)
 	SignalBus.run_state_changed.connect(_on_run_state_changed)
 	SignalBus.stage_started.connect(_on_stage_started)
 	SignalBus.combat_state_changed.connect(_on_combat_state_changed)
 	SignalBus.encounter_state_changed.connect(_on_encounter_state_changed)
+	SignalBus.stage_map_changed.connect(_on_stage_map_changed)
 	SignalBus.input_bindings_changed.connect(_on_input_bindings_changed)
 	SignalBus.interaction_prompt_changed.connect(_on_interaction_prompt_changed)
 	var localization := get_node_or_null("/root/UILocalization")
@@ -79,6 +83,7 @@ func _exit_tree() -> void:
 		&"stage_started": Callable(self, "_on_stage_started"),
 		&"combat_state_changed": Callable(self, "_on_combat_state_changed"),
 		&"encounter_state_changed": Callable(self, "_on_encounter_state_changed"),
+		&"stage_map_changed": Callable(self, "_on_stage_map_changed"),
 		&"input_bindings_changed": Callable(self, "_on_input_bindings_changed"),
 		&"interaction_prompt_changed": Callable(self, "_on_interaction_prompt_changed"),
 	}
@@ -109,6 +114,13 @@ func get_layout_snapshot() -> Dictionary:
 		"health_rect": health_panel.get_rect() if health_panel != null else Rect2(),
 		"objective_rect": objective_container.get_rect() if objective_container != null else Rect2(),
 		"boss_rect": boss_panel.get_rect() if boss_panel != null else Rect2(),
+		"minimap_rect": stage_minimap.get_rect() if stage_minimap != null else Rect2(),
+		"minimap_visible": stage_minimap.visible if stage_minimap != null else false,
+		"minimap": (
+			stage_minimap.get_display_snapshot()
+			if stage_minimap != null
+			else {}
+		),
 		"combat_dock_rect": combat_dock.get_rect() if combat_dock != null else Rect2(),
 		"player_safe_gap_rect": safe_gap,
 		"context_lane_rect": context_lane.get_rect() if context_lane != null else Rect2(),
@@ -144,6 +156,11 @@ func _layout_responsive() -> void:
 	boss_name_label.add_theme_font_size_override(
 		"font_size", Styles.TYPE_CAPTION if compact else Styles.TYPE_BODY
 	)
+	var minimap_size := Vector2(180.0, 116.0) if compact else Vector2(232.0, 154.0)
+	stage_minimap.offset_left = -minimap_size.x - 16.0
+	stage_minimap.offset_top = 14.0
+	stage_minimap.offset_right = -16.0
+	stage_minimap.offset_bottom = 14.0 + minimap_size.y
 
 	combat_dock.set_compact(compact)
 	var dock_size := Vector2(728.0 if compact else 954.0, 112.0)
@@ -238,29 +255,43 @@ func _on_stage_started(stage_id: String, stage_display_name: String) -> void:
 	if stage_id == "slime_court":
 		objective_container.visible = false
 		boss_panel.visible = true
+		stage_minimap.visible = false
 		_show_boss_intro_state()
 		call_deferred("_bind_boss")
 	elif stage_id == "arsenal_trial":
 		boss_panel.visible = false
 		objective_container.visible = false
+		stage_minimap.visible = false
 	elif stage_id == "safe_intermission":
 		boss_panel.visible = false
 		objective_container.visible = true
+		stage_minimap.visible = false
 		_show_objective(_t("Prepare, then continue"))
 	else:
 		boss_panel.visible = false
 		objective_container.visible = true
-		_show_objective(_t("Defeat enemies"))
+		stage_minimap.visible = not _stage_map_snapshot.is_empty()
+		_show_objective(_objective_detail())
 
 
 func _on_encounter_state_changed(state: Dictionary) -> void:
 	if _stage_id == "slime_court":
 		return
-	var remaining := int(state.get("remaining", 0))
-	_show_objective(
-		_t("Defeat %d remaining", [remaining])
-		if remaining > 0
-		else _t("Enter the gate")
+	_objective_state = state.duplicate(true)
+	_show_objective(_objective_detail())
+
+
+func _on_stage_map_changed(snapshot: Dictionary) -> void:
+	if stage_minimap == null:
+		return
+	_stage_map_snapshot = snapshot.duplicate(true)
+	stage_minimap.configure(_stage_map_snapshot)
+	var snapshot_stage_id := String(_stage_map_snapshot.get("stage_id", ""))
+	if not snapshot_stage_id.is_empty():
+		_stage_id = snapshot_stage_id
+	stage_minimap.visible = (
+		not _stage_map_snapshot.is_empty()
+		and _stage_id not in ["slime_court", "arsenal_trial", "safe_intermission"]
 	)
 
 
@@ -417,7 +448,7 @@ func _on_locale_changed(_locale: String) -> void:
 	if _stage_id == "safe_intermission":
 		_show_objective(_t("Prepare, then continue"))
 	elif _stage_id not in ["slime_court", "arsenal_trial"]:
-		_show_objective(_t("Defeat enemies"))
+		_show_objective(_objective_detail())
 	if boss_panel != null and boss_panel.visible:
 		_refresh_boss_header()
 		boss_status_label.text = _boss_status(_boss_snapshot)
@@ -429,3 +460,19 @@ func _t(source: Variant, values: Array = []) -> String:
 
 func _roman_phase(phase: int) -> String:
 	return "II" if phase >= 2 else "I"
+
+
+func _objective_detail() -> String:
+	var objective := StringName(_objective_state.get("objective", &"navigate_to_exit"))
+	match objective:
+		&"terminal_objective":
+			var remaining := int(_objective_state.get("terminal_remaining", 0))
+			return (
+				_t("Clear the final chamber · %d remaining", [remaining])
+				if remaining > 0
+				else _t("Exit ready")
+			)
+		&"exit_ready":
+			return _t("Exit ready")
+		_:
+			return _t("Reach the exit")

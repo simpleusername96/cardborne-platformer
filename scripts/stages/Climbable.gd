@@ -43,3 +43,7 @@ func _on_body_entered(body: Node) -> void:
 func _on_body_exited(body: Node) -> void:
 	if body.has_method("exit_climbable"):
 		body.exit_climbable(self)
+
+
+func get_climb_axis_x() -> float:
+	return global_position.x

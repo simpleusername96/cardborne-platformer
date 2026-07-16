@@ -78,7 +78,11 @@ func _validate_stage(stage_index: int, config: Dictionary, run_state: Node) -> v
 			geometry_errors.is_empty(),
 			"%s geometry should validate: %s" % [config["id"], "; ".join(geometry_errors)]
 		)
-		var metrics := StageCompositionMetrics.analyze(generation.plan, assembly)
+		var metrics := StageCompositionMetrics.analyze(
+			generation.plan,
+			assembly,
+			run_state.call("get_required_route_limits") as Dictionary
+		)
 		print("STAGE_COMPOSITION_METRICS %s %s" % [config["id"], JSON.stringify(metrics)])
 		for error in StageCompositionMetrics.validate_fixed_stage(generation.plan, assembly):
 			_failures.append(error)

@@ -157,10 +157,10 @@ collision_layer = 0
 collision_mask = 4
 script = ExtResource("2")
 prompt_text = "Ascend to the boss gate"
+unlock_policy = 1
 interaction_enabled = false
-disabled_prompt_text = "Clear the Sanctum"
+disabled_prompt_text = "Clear the final chamber"
 metadata/critical_exit = true
-metadata/objective_requirements = Array[StringName]([&"broken_sanctum_clear"])
 metadata/interaction_space = Vector2(140, 150)
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Anchors/Objective/ExitGate"]
 position = Vector2(0, -58)

@@ -439,6 +439,15 @@ msgstr "Defeat %d remaining"
 msgid "Enter the gate"
 msgstr "Enter the gate"
 
+msgid "Reach the exit"
+msgstr "Reach the exit"
+
+msgid "Clear the final chamber · %d remaining"
+msgstr "Clear the final chamber · %d remaining"
+
+msgid "Exit ready"
+msgstr "Exit ready"
+
 msgid "Prepare, then continue"
 msgstr "Prepare, then continue"
 

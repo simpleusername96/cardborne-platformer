@@ -35,6 +35,8 @@ var extra_jumps_left: int = 0
 var _standing_body_size: Vector2
 var _standing_hurtbox_size: Vector2
 var _dash_start_position: Vector2
+var _climbables: Array[Climbable] = []
+var _active_climbable: Climbable
 
 
 func _ready() -> void:
@@ -165,7 +167,7 @@ func _update_timers(delta: float) -> void:
 	if one_way_drop_timer > 0.0:
 		one_way_drop_timer = maxf(one_way_drop_timer - delta, 0.0)
 		if one_way_drop_timer <= 0.0:
-			set_collision_mask_value(2, true)
+			_restore_one_way_collision()
 
 	if is_on_floor():
 		dash_charges_left = _max_dash_charges()
@@ -324,10 +326,21 @@ func _update_climb_state(input_axis: float, _delta: float) -> void:
 			return
 
 		var vertical_axis := Input.get_axis("climb_up", "climb_down")
-		velocity = Vector2(input_axis * float(stats.get("move_speed", 220.0)) * 0.35, vertical_axis * climb_speed)
+		if _active_climbable == null or not is_instance_valid(_active_climbable):
+			_active_climbable = _nearest_climbable()
+		var center_speed := 0.0
+		if _active_climbable != null:
+			center_speed = clampf(
+				(_active_climbable.get_climb_axis_x() - global_position.x) * 10.0,
+				-climb_speed,
+				climb_speed
+			)
+		var lateral_input := input_axis * float(stats.get("move_speed", 220.0)) * 0.12
+		velocity = Vector2(center_speed + lateral_input, vertical_axis * climb_speed)
 		coyote_timer = 0.0
 		dash_charges_left = _max_dash_charges()
 		extra_jumps_left = _max_extra_jumps()
+		set_collision_mask_value(2, false)
 		return
 
 	if climbable_count <= 0:
@@ -340,11 +353,21 @@ func _update_climb_state(input_axis: float, _delta: float) -> void:
 func _set_climbing(enabled: bool) -> void:
 	is_climbing = enabled
 	if is_climbing:
+		_active_climbable = _nearest_climbable()
+		if _active_climbable == null:
+			is_climbing = false
+			_restore_one_way_collision()
+			return
 		_set_crouching(false)
 		velocity = Vector2.ZERO
 		is_dashing = false
 		dash_timer = 0.0
+		global_position.x = _active_climbable.get_climb_axis_x()
+		set_collision_mask_value(2, false)
 		SignalBus.status_message_changed.emit("Climb mode")
+	else:
+		_active_climbable = null
+		_restore_one_way_collision()
 
 
 func _perform_jump() -> void:
@@ -352,7 +375,7 @@ func _perform_jump() -> void:
 	velocity.y = float(stats.get("jump_velocity", -420.0))
 	jump_buffer_timer = 0.0
 	coyote_timer = 0.0
-	is_climbing = false
+	_set_climbing(false)
 	_request_gameplay_feedback(&"jump", 0.65, false)
 
 
@@ -405,15 +428,43 @@ func restore_air_control(fraction: float, direction: int) -> void:
 	velocity.x = target
 
 
-func enter_climbable(_climbable: Area2D) -> void:
-	climbable_count += 1
+func enter_climbable(climbable: Area2D) -> void:
+	if climbable is Climbable and not _climbables.has(climbable):
+		_climbables.append(climbable)
+	climbable_count = _climbables.size()
 	SignalBus.status_message_changed.emit("Climbable: Up/Down Arrows, Space to jump away")
 
 
-func exit_climbable(_climbable: Area2D) -> void:
-	climbable_count = maxi(climbable_count - 1, 0)
+func exit_climbable(climbable: Area2D) -> void:
+	if climbable is Climbable:
+		_climbables.erase(climbable)
+	climbable_count = _climbables.size()
 	if climbable_count <= 0:
 		_set_climbing(false)
+	elif _active_climbable == climbable:
+		_active_climbable = _nearest_climbable()
+
+
+func _nearest_climbable() -> Climbable:
+	var live: Array[Climbable] = []
+	var nearest: Climbable
+	var nearest_distance := INF
+	for climbable in _climbables:
+		if climbable == null or not is_instance_valid(climbable):
+			continue
+		live.append(climbable)
+		var distance := global_position.distance_squared_to(climbable.global_position)
+		if distance < nearest_distance:
+			nearest = climbable
+			nearest_distance = distance
+	_climbables = live
+	climbable_count = _climbables.size()
+	return nearest
+
+
+func _restore_one_way_collision() -> void:
+	if not is_climbing and one_way_drop_timer <= 0.0:
+		set_collision_mask_value(2, true)
 
 
 func set_camera_limits(bounds: Rect2) -> void:
@@ -440,6 +491,8 @@ func respawn_at(respawn_position: Vector2, invulnerability_time: float) -> void:
 	is_climbing = false
 	_set_crouching(false)
 	climbable_count = 0
+	_climbables.clear()
+	_active_climbable = null
 	invulnerability_timer = invulnerability_time
 	set_collision_mask_value(2, true)
 	combat_controller.reset_combat_state()

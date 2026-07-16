@@ -77,6 +77,8 @@ func reset_enemy() -> void:
 
 
 func _update_patrol(_delta: float) -> void:
+	if should_reverse_at_terrain(direction):
+		direction *= -1
 	velocity.x = float(direction) * patrol_speed * get_external_speed_scale()
 	if global_position.x <= left_limit:
 		direction = 1

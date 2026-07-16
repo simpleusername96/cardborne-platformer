@@ -3,7 +3,7 @@ type: spec
 status: active
 owner: BK
 created: 2026-07-14
-last_reviewed: 2026-07-15
+last_reviewed: 2026-07-16
 canonical_for: Traveler production screens, gameplay HUD, feedback, focus, and responsive behavior
 source: Implemented Godot UI scenes, owner feedback through 2026-07-15, and automated validation at three supported resolutions
 related:
@@ -63,6 +63,18 @@ owned by that plan.
 - The top-left cluster shows Traveler health, level/XP, and armor.
 - The objective or boss state occupies the top center and never competes with an
   interaction prompt or reward receipt.
+- Normal stages reserve the top-right for a compact assembled-plan minimap.
+  Unvisited room envelopes are dark, visited rooms brighten, and the current
+  room plus player use a distinct edge and shape. Boss, trial, and safe
+  intermission screens hide this minimap.
+- The minimap always shows start and exit, then reveals only the active
+  checkpoint, discovered reward, and discovered gate/shortcut state. Exit
+  locked/ready, reward available/claimed, and gate closed/open use shape or edge
+  differences in addition to color. Ordinary enemies and hazards are never
+  tracked as radar targets.
+- The normal-stage objective transitions from navigation, to a terminal-room
+  local blocker when one exists, to exit ready. It never copies a global
+  main-route enemy count.
 - The bottom dock shows the contextual melee/ranged attack pair, guard and shield
   stability, and potion charges. Passive Spirit Stone progress appears only when
   charged, triggered, or otherwise immediately relevant.
@@ -75,6 +87,10 @@ owned by that plan.
 ### State And Commands
 
 - UI reads copy-safe snapshots from `RunState` and `ProfileState`.
+- Gameplay navigation reads a copy-safe stage-map snapshot published by the
+  active stage. The HUD never polls room nodes or collision, and same-stage
+  retry preserves exploration knowledge without preserving claimed rewards or
+  opened gates.
 - UI emits narrow commands through `RunDirector`, `ProfileState`, or the owning
   service. It does not edit profile, reward, equipment, or run dictionaries.
 - Failed commands preserve the last valid snapshot, identify the reason, and keep

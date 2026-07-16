@@ -29,7 +29,10 @@ func _physics_process(delta: float) -> void:
 		velocity.x = float(direction) * move_speed * get_external_speed_scale()
 	super._physics_process(delta)
 
-	if global_position.x <= left_limit:
+	if should_reverse_at_terrain(direction):
+		direction *= -1
+		velocity.x = 0.0
+	elif global_position.x <= left_limit:
 		direction = 1
 	elif global_position.x >= right_limit:
 		direction = -1

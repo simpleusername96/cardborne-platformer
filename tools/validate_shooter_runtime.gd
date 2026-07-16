@@ -7,6 +7,7 @@ const EXPECTED_RECOVERY := 0.5
 const EXPECTED_INTERVAL := 2.0
 const EXPECTED_PROJECTILE_SPEED := 260.0
 const EXPECTED_PROJECTILE_RANGE := 700.0
+const EXPECTED_AIM_CUE_LENGTH := 96.0
 
 var _failures: Array[String] = []
 
@@ -28,6 +29,7 @@ func _run() -> void:
 			"identical Shooter fixtures should produce byte-equivalent behavior"
 		)
 	await _validate_aim_interruption()
+	await _validate_solid_cover()
 	_finish()
 
 
@@ -77,9 +79,9 @@ func _run_deterministic_fixture(label: String) -> Dictionary:
 			if current_aim_line.points.size() == 2:
 				_expect(
 					is_equal_approx(
-						current_aim_line.points[1].length(), EXPECTED_PROJECTILE_RANGE
+						current_aim_line.points[1].length(), EXPECTED_AIM_CUE_LENGTH
 					),
-					"%s warning line should communicate the projectile range" % label
+					"%s warning should be a local facing cue, not a full-range overlay" % label
 				)
 			else:
 				_expect(false, "%s warning line should have a complete aim segment" % label)
@@ -237,6 +239,62 @@ func _validate_aim_interruption() -> void:
 		var snapshot: Dictionary = shooter.get_combat_snapshot()
 		_expect(bool(snapshot.get("recovery", false)), "damage should interrupt aim into recovery")
 		_expect(_find_projectile(world) == null, "interrupted aim should not emit a projectile")
+	world.queue_free()
+	await process_frame
+
+
+func _validate_solid_cover() -> void:
+	var packed_scene := load(SHOOTER_SCENE_PATH) as PackedScene
+	if packed_scene == null:
+		return
+	var world := Node2D.new()
+	world.name = "ShooterCoverFixture"
+	root.add_child(world)
+	_add_floor(world)
+	var cover := StaticBody2D.new()
+	cover.name = "SolidCover"
+	cover.position = Vector2(300.0, 62.0)
+	cover.collision_layer = 1
+	cover.collision_mask = 0
+	world.add_child(cover)
+	var cover_shape := CollisionShape2D.new()
+	var cover_rect := RectangleShape2D.new()
+	cover_rect.size = Vector2(28.0, 124.0)
+	cover_shape.shape = cover_rect
+	cover.add_child(cover_shape)
+	var player_marker := Node2D.new()
+	player_marker.add_to_group("player")
+	player_marker.position = Vector2(120.0, 72.0)
+	world.add_child(player_marker)
+	var shooter: Variant = packed_scene.instantiate()
+	if not _is_shooter_instance(shooter):
+		_expect(false, "solid-cover fixture should instantiate ShooterEnemy behavior")
+		world.queue_free()
+		await process_frame
+		return
+	shooter.position = Vector2(480.0, 100.0)
+	world.add_child(shooter)
+	var shot: EnemyProjectile
+	for _frame in 100:
+		await physics_frame
+		await process_frame
+		shot = _find_projectile(world) as EnemyProjectile
+		if shot != null:
+			break
+	_expect(shot != null, "solid-cover fixture should observe a projectile")
+	var terrain_contacts := [0]
+	if shot != null:
+		shot.terrain_hit.connect(
+			func(_body: PhysicsBody2D) -> void:
+				terrain_contacts[0] += 1
+		)
+		for _frame in 90:
+			if not is_instance_valid(shot):
+				break
+			await physics_frame
+			await process_frame
+		_expect(not is_instance_valid(shot), "solid cover should terminate the projectile")
+		_expect(terrain_contacts[0] == 1, "solid cover should report one terrain contact")
 	world.queue_free()
 	await process_frame
 

@@ -41,6 +41,8 @@ $releaseMatrix = @(
   "validate_broken_sanctum_rooms.gd",
   "validate_curated_stage_plans.gd",
   "validate_stage_composition.gd",
+  "validate_stage_progression_policy.gd",
+  "validate_stage_minimap_runtime.gd",
   "validate_stage1_progression_rewards.gd",
   "validate_field_pickups.gd",
   "validate_fixed_field_pickup_manifest.gd",

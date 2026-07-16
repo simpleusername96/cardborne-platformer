@@ -14,6 +14,7 @@ signal player_health_changed(current_health: int, max_health: int)
 signal player_stats_changed(stats: Dictionary)
 signal combat_state_changed(state: Dictionary)
 signal encounter_state_changed(state: Dictionary)
+signal stage_map_changed(snapshot: Dictionary)
 signal required_room_encounter_started(context: Dictionary)
 signal required_room_encounter_cleared(context: Dictionary)
 signal player_died

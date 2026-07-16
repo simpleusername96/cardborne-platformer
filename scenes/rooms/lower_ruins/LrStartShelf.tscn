@@ -87,7 +87,6 @@ metadata/safe_radius = 240.0
 
 [node name="CameraFocus" type="Marker2D" parent="Anchors/Objective"]
 position = Vector2(420, 360)
-metadata/camera_id = &"start_shelf_camera"
 
 [node name="NextGoal" type="Marker2D" parent="Anchors/Objective"]
 position = Vector2(960, 600)

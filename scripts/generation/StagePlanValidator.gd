@@ -422,11 +422,11 @@ static func _validate_optional_branches(
 			continue
 		var source_index := _required_index(required_rooms, incoming[0].from_room_id)
 		var target_index := _required_index(required_rooms, outgoing[0].to_room_id)
-		if source_index < 0 or required_rooms[source_index].role != &"choice":
-			errors.append("Optional room '%s' must branch from a required choice room." % optional_room.id)
-		if target_index != source_index:
+		if source_index < 0:
+			errors.append("Optional room '%s' must branch from a required room." % optional_room.id)
+		if target_index < source_index or target_index > source_index + 1:
 			errors.append(
-				"Optional room '%s' must rejoin the choice room that owns its branch."
+				"Optional room '%s' must rejoin its origin or the next required room."
 				% optional_room.id
 			)
 

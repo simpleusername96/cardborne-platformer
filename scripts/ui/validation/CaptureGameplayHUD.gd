@@ -7,9 +7,11 @@ const SETTLE_FRAMES := 8
 const CLEANUP_FRAMES := 4
 const CAPTURES: Array[Dictionary] = [
 	{"name": "compact_low_health", "size": Vector2i(960, 540), "state": &"low_health"},
+	{"name": "compact_minimap_initial", "size": Vector2i(960, 540), "state": &"minimap_initial"},
 	{"name": "compact_field_pickup", "size": Vector2i(960, 540), "state": &"field_pickup"},
 	{"name": "compact_boss", "size": Vector2i(960, 540), "state": &"boss"},
 	{"name": "desktop_interaction", "size": Vector2i(1280, 720), "state": &"interaction"},
+	{"name": "desktop_minimap_explored", "size": Vector2i(1280, 720), "state": &"minimap_explored"},
 	{"name": "desktop_guard_start", "size": Vector2i(1280, 720), "state": &"guard_start"},
 	{"name": "desktop_guard_block", "size": Vector2i(1280, 720), "state": &"normal_block"},
 	{"name": "desktop_precise_guard", "size": Vector2i(1280, 720), "state": &"precise_block"},
@@ -118,6 +120,15 @@ func _configure_state(hud: Control, state: StringName) -> void:
 		potion_charges = 0
 	hud.call("_on_run_state_changed", _run_snapshot(health, potion_charges))
 	hud.call("_on_combat_state_changed", _combat_snapshot(state))
+	hud.call("_on_stage_started", "ruin_approach", "Ruin Approach")
+	var explored := state == &"minimap_explored"
+	hud.call("_on_stage_map_changed", _map_snapshot(explored))
+	hud.call("_on_encounter_state_changed", {
+		"objective": &"terminal_objective" if explored else &"navigate_to_exit",
+		"exit_ready": false,
+		"terminal_policy": &"terminal_encounter",
+		"terminal_remaining": 1 if explored else 2,
+	})
 	match state:
 		&"interaction":
 			hud.call("_on_interaction_prompt_changed", "Open cache", true)
@@ -149,6 +160,38 @@ func _configure_state(hud: Control, state: StringName) -> void:
 				"stagger_meter": 35,
 				"pattern": {"pattern_id": &"jump_slam", "state": &"startup"},
 			})
+
+
+func _map_snapshot(explored: bool) -> Dictionary:
+	return {
+		"stage_id": "ruin_approach",
+		"stage_index": 0,
+		"content_signature": "capture-fixture",
+		"revision": 2 if explored else 1,
+		"world_bounds": Rect2(0.0, 0.0, 1600.0, 900.0),
+		"current_room_id": "exit" if explored else "start",
+		"player_position": Vector2(1460.0, 220.0) if explored else Vector2(120.0, 700.0),
+		"has_player_position": true,
+		"rooms": [
+			{"id": "start", "bounds": Rect2(0.0, 540.0, 360.0, 360.0), "required_route": true, "visited": true, "current": not explored, "state": "visited" if explored else "current"},
+			{"id": "rise", "bounds": Rect2(360.0, 360.0, 360.0, 360.0), "required_route": true, "visited": explored, "current": false, "state": "visited" if explored else "unvisited"},
+			{"id": "cache", "bounds": Rect2(720.0, 540.0, 300.0, 360.0), "required_route": false, "visited": explored, "current": false, "state": "visited" if explored else "unvisited"},
+			{"id": "exit", "bounds": Rect2(1180.0, 0.0, 420.0, 360.0), "required_route": true, "visited": explored, "current": explored, "state": "current" if explored else "unvisited"},
+		],
+		"connections": [
+			{"id": "critical_0", "from_room_id": "start", "to_room_id": "rise", "route_role": "critical"},
+			{"id": "critical_1", "from_room_id": "rise", "to_room_id": "exit", "route_role": "critical"},
+			{"id": "optional", "from_room_id": "rise", "to_room_id": "cache", "route_role": "optional"},
+			{"id": "return", "from_room_id": "cache", "to_room_id": "exit", "route_role": "return"},
+		],
+		"markers": [
+			{"id": "start:start", "type": "start", "room_id": "start", "position": Vector2(120.0, 700.0), "state": "known", "visible": true},
+			{"id": "exit:exit", "type": "exit", "room_id": "exit", "position": Vector2(1480.0, 220.0), "state": "locked", "visible": true},
+			{"id": "reward:cache", "type": "reward", "room_id": "cache", "position": Vector2(850.0, 700.0), "state": "claimed" if explored else "available", "visible": explored},
+			{"id": "checkpoint:exit", "type": "checkpoint", "room_id": "exit", "position": Vector2(1300.0, 260.0), "state": "active" if explored else "inactive", "visible": explored},
+			{"id": "gate:loop", "type": "gate", "room_id": "exit", "position": Vector2(1380.0, 220.0), "state": "open" if explored else "closed", "visible": explored},
+		],
+	}
 
 
 func _run_snapshot(health: int, potion_charges: int) -> Dictionary:

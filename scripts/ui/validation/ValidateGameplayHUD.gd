@@ -38,6 +38,14 @@ func _validate_viewport(packed: PackedScene, viewport_size: Vector2i, locale: St
 	await process_frame
 	hud.call("_on_run_state_changed", _run_snapshot(4, 73, 6, 7, 1))
 	hud.call("_on_combat_state_changed", _combat_snapshot())
+	hud.call("_on_stage_started", "ruin_approach", "Ruin Approach")
+	hud.call("_on_encounter_state_changed", {
+		"objective": &"navigate_to_exit",
+		"exit_ready": false,
+		"terminal_policy": &"terminal_encounter",
+		"terminal_remaining": 2,
+	})
+	hud.call("_on_stage_map_changed", _map_snapshot(false))
 	await process_frame
 
 	var layout: Dictionary = hud.call("get_layout_snapshot")
@@ -45,6 +53,7 @@ func _validate_viewport(packed: PackedScene, viewport_size: Vector2i, locale: St
 		hud.get_node("HealthCluster").scene_file_path.ends_with("HUDHealthCluster.tscn")
 		and hud.get_node("ObjectiveBand").scene_file_path.ends_with("HUDObjectiveBand.tscn")
 		and hud.get_node("BossPanel").scene_file_path.ends_with("HUDBossPanel.tscn")
+		and hud.get_node("StageMinimap").scene_file_path.ends_with("HUDStageMinimap.tscn")
 		and hud.get_node("ContextLane").scene_file_path.ends_with("HUDContextLane.tscn"),
 		"stable HUD regions should be authored as reusable scenes"
 	)
@@ -62,18 +71,61 @@ func _validate_viewport(packed: PackedScene, viewport_size: Vector2i, locale: St
 	var viewport_rect := Rect2(Vector2.ZERO, Vector2(viewport_size))
 	var health_rect := layout["health_rect"] as Rect2
 	var objective_rect := layout["objective_rect"] as Rect2
+	var minimap_rect := layout["minimap_rect"] as Rect2
 	var dock_rect := layout["combat_dock_rect"] as Rect2
 	var safe_gap_rect := layout["player_safe_gap_rect"] as Rect2
 	var context_rect := layout["context_lane_rect"] as Rect2
 	_expect(_inside(viewport_rect, health_rect), "%s health cluster should fit" % viewport_size)
 	_expect(_inside(viewport_rect, objective_rect), "%s objective band should fit" % viewport_size)
+	_expect(_inside(viewport_rect, minimap_rect), "%s minimap should fit" % viewport_size)
 	_expect(_inside(viewport_rect, dock_rect), "%s combat dock should fit" % viewport_size)
 	_expect(_inside(viewport_rect, safe_gap_rect), "%s player-safe gap should fit" % viewport_size)
 	_expect(_inside(viewport_rect, context_rect), "%s context lane should fit" % viewport_size)
 	_expect(not health_rect.intersects(objective_rect), "%s health and objective should not overlap" % viewport_size)
+	_expect(not health_rect.intersects(minimap_rect), "%s health and minimap should not overlap" % viewport_size)
+	_expect(not objective_rect.intersects(minimap_rect), "%s objective and minimap should not overlap" % viewport_size)
 	_expect(not health_rect.intersects(context_rect), "%s context lane should not cover health" % viewport_size)
 	_expect(not objective_rect.intersects(context_rect), "%s context lane should not cover the objective" % viewport_size)
 	_expect(context_rect.end.y < dock_rect.position.y, "%s context lane should stay above combat state" % viewport_size)
+	_expect(bool(layout["minimap_visible"]), "%s normal stage should show the minimap" % viewport_size)
+	var minimap: Dictionary = layout["minimap"]
+	_expect(minimap["room_count"] == 3, "minimap should retain every assembled room envelope")
+	_expect(minimap["visited_room_count"] == 1, "initial minimap should reveal only the start room")
+	_expect(minimap["current_room_count"] == 1, "minimap should have exactly one current room")
+	_expect(
+		(minimap["visible_marker_ids"] as Array).has("exit:exit"),
+		"exit marker should be visible from stage start"
+	)
+	_expect(
+		not (minimap["visible_marker_ids"] as Array).has("reward:cache"),
+		"undiscovered reward marker should remain hidden"
+	)
+	_expect(layout["objective_detail"] == _t("Reach the exit"), "HUD should not use a global enemy tally")
+	hud.call("_on_stage_map_changed", _map_snapshot(true))
+	hud.call("_on_encounter_state_changed", {
+		"objective": &"terminal_objective",
+		"exit_ready": false,
+		"terminal_policy": &"terminal_encounter",
+		"terminal_remaining": 1,
+	})
+	await process_frame
+	layout = hud.call("get_layout_snapshot")
+	minimap = layout["minimap"]
+	_expect(minimap["visited_room_count"] == 3, "explored rooms should remain bright")
+	for marker_id in ["reward:cache", "checkpoint:exit", "gate:loop"]:
+		_expect(
+			(minimap["visible_marker_ids"] as Array).has(marker_id),
+			"discovered marker %s should be visible" % marker_id
+		)
+	_expect(
+		(minimap["marker_states"] as Dictionary)["reward:cache"] == "claimed"
+		and (minimap["marker_states"] as Dictionary)["gate:loop"] == "open",
+		"claimed/open markers should retain non-color state"
+	)
+	_expect(
+		layout["objective_detail"] == _t("Clear the final chamber · %d remaining", [1]),
+		"terminal objective should report only the local blocker"
+	)
 	_expect(
 		safe_gap_rect.position.x < viewport_size.x * 0.5
 		and safe_gap_rect.end.x > viewport_size.x * 0.5,
@@ -148,6 +200,7 @@ func _validate_viewport(packed: PackedScene, viewport_size: Vector2i, locale: St
 	await process_frame
 	layout = hud.call("get_layout_snapshot")
 	var boss_rect := layout["boss_rect"] as Rect2
+	_expect(not bool(layout["minimap_visible"]), "boss mode should hide the normal-stage minimap")
 	_expect(_inside(viewport_rect, boss_rect), "%s boss band should fit" % viewport_size)
 	_expect(not health_rect.intersects(boss_rect), "%s boss band should not cover health" % viewport_size)
 	if viewport_size == Vector2i(960, 540):
@@ -271,6 +324,36 @@ func _combat_snapshot() -> Dictionary:
 			"armor_health_bonus": 0,
 			"spirit_stone_display_name": "Ember Spirit Stone",
 		},
+	}
+
+
+func _map_snapshot(explored: bool) -> Dictionary:
+	return {
+		"stage_id": "ruin_approach",
+		"stage_index": 0,
+		"content_signature": "hud-fixture",
+		"revision": 2 if explored else 1,
+		"world_bounds": Rect2(0.0, 0.0, 1200.0, 720.0),
+		"current_room_id": "exit" if explored else "start",
+		"player_position": Vector2(1080.0, 360.0) if explored else Vector2(120.0, 500.0),
+		"has_player_position": true,
+		"rooms": [
+			{"id": "start", "bounds": Rect2(0.0, 360.0, 360.0, 360.0), "required_route": true, "visited": true, "current": not explored, "state": "visited" if explored else "current"},
+			{"id": "cache", "bounds": Rect2(420.0, 360.0, 300.0, 360.0), "required_route": false, "visited": explored, "current": false, "state": "visited" if explored else "unvisited"},
+			{"id": "exit", "bounds": Rect2(780.0, 0.0, 420.0, 360.0), "required_route": true, "visited": explored, "current": explored, "state": "current" if explored else "unvisited"},
+		],
+		"connections": [
+			{"id": "critical", "from_room_id": "start", "to_room_id": "exit", "route_role": "critical"},
+			{"id": "optional", "from_room_id": "start", "to_room_id": "cache", "route_role": "optional"},
+			{"id": "return", "from_room_id": "cache", "to_room_id": "exit", "route_role": "return"},
+		],
+		"markers": [
+			{"id": "start:start", "type": "start", "room_id": "start", "position": Vector2(120.0, 500.0), "state": "known", "visible": true},
+			{"id": "exit:exit", "type": "exit", "room_id": "exit", "position": Vector2(1080.0, 240.0), "state": "locked", "visible": true},
+			{"id": "reward:cache", "type": "reward", "room_id": "cache", "position": Vector2(560.0, 520.0), "state": "claimed" if explored else "available", "visible": explored},
+			{"id": "checkpoint:exit", "type": "checkpoint", "room_id": "exit", "position": Vector2(900.0, 260.0), "state": "active" if explored else "inactive", "visible": explored},
+			{"id": "gate:loop", "type": "gate", "room_id": "exit", "position": Vector2(980.0, 220.0), "state": "open" if explored else "closed", "visible": explored},
+		],
 	}
 
 

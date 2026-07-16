@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/production/ProductionHUD.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/ui/production/components/HUDHealthCluster.tscn" id="2_health"]
@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/production/components/HUDBossPanel.tscn" id="4_boss"]
 [ext_resource type="PackedScene" path="res://scenes/ui/production/components/HUDCombatDock.tscn" id="5_dock"]
 [ext_resource type="PackedScene" path="res://scenes/ui/production/components/HUDContextLane.tscn" id="6_context"]
+[ext_resource type="PackedScene" path="res://scenes/ui/production/components/HUDStageMinimap.tscn" id="7_minimap"]
 
 [node name="ProductionHUD" type="Control"]
 layout_mode = 3
@@ -34,6 +35,13 @@ anchors_preset = 10
 anchor_left = 0.5
 anchor_right = 0.5
 grow_horizontal = 2
+
+[node name="StageMinimap" parent="." instance=ExtResource("7_minimap")]
+layout_mode = 0
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+grow_horizontal = 0
 
 [node name="CombatDock" parent="." instance=ExtResource("5_dock")]
 layout_mode = 0

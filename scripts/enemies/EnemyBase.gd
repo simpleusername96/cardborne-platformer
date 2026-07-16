@@ -376,6 +376,29 @@ func is_player_within_encounter() -> bool:
 	return is_target_within_encounter(target)
 
 
+func should_reverse_at_terrain(
+	facing_direction: int,
+	lookahead: float = 30.0,
+	drop_probe: float = 72.0
+) -> bool:
+	if facing_direction == 0:
+		return false
+	if is_on_wall():
+		return true
+	if not is_on_floor():
+		return false
+	var probe_x := global_position.x + float(facing_direction) * lookahead
+	var query := PhysicsRayQueryParameters2D.create(
+		Vector2(probe_x, global_position.y - 6.0),
+		Vector2(probe_x, global_position.y + drop_probe),
+		1,
+		[get_rid()]
+	)
+	query.collide_with_areas = false
+	query.collide_with_bodies = true
+	return get_world_2d().direct_space_state.intersect_ray(query).is_empty()
+
+
 func _resolve_enemy_spec() -> void:
 	if enemy_catalog == null:
 		return

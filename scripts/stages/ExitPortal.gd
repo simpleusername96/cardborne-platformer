@@ -1,6 +1,21 @@
 class_name ExitPortal
 extends Interactable
 
+enum UnlockPolicy {
+	ARRIVAL,
+	TERMINAL_ENCOUNTER,
+}
+
+@export var unlock_policy: UnlockPolicy = UnlockPolicy.ARRIVAL
+
+
+func get_unlock_policy_id() -> StringName:
+	return (
+		&"terminal_encounter"
+		if unlock_policy == UnlockPolicy.TERMINAL_ENCOUNTER
+		else &"arrival"
+	)
+
 
 func interact(player: Node) -> void:
 	if not interaction_enabled:

@@ -99,6 +99,18 @@ adding more content or random topology.
   blueprints for all three normal stages. They preserve current room counts and
   stable IDs while defining forward rejoins, distinct height waveforms,
   stage-specific terminal policies, and the assembled-plan minimap contract.
+- Normal-stage completion now follows typed terminal policy: Ruin and Sanctum
+  require only their terminal-room encounter, while Flooded Works uses shelter
+  arrival. Earlier and optional enemies no longer own the exit or HUD objective.
+- The normal-stage HUD now renders a top-right fog-of-war minimap from the
+  accepted StagePlan/assembly snapshot. Visited knowledge persists across a
+  same-stage retry, while reward, checkpoint, gate, and exit state remain live
+  stage facts.
+- Shared traversal/combat terrain contracts now cover centered bidirectional
+  rope use through one-way tops, solid-cover projectile termination,
+  destination-selected Leaper movement, and wall/ledge response for mobile
+  patrol enemies. Ordinary-enemy warnings use local direction/destination cues
+  instead of full trajectories.
 - All three normal stages, six committed-return fixtures, enemy/hazard families,
   card rewards, boss flow, retry/settlement, intermission, and profile restart
   recovery are in the active release matrix.

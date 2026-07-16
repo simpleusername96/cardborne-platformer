@@ -224,17 +224,22 @@ func _validate_hud(run_director: Node, game: Node, stage: Variant) -> void:
 		return
 	var layout: Dictionary = hud.call("get_layout_snapshot")
 	_expect(
-		String(layout.get("objective_detail", "")).contains(
-			str(stage.get_remaining_enemy_count())
-		),
-		"HUD should show the approved required encounter count"
+		String(layout.get("objective_detail", "")) == _t("Reach the exit"),
+		"HUD should navigate to the exit without a global enemy tally"
+	)
+	_expect(bool(layout.get("minimap_visible", false)), "normal stage should show its minimap")
+	_expect(
+		int((layout.get("minimap", {}) as Dictionary).get("room_count", 0))
+		== stage.get_stage_plan().get_rooms().size(),
+		"HUD minimap should mirror the accepted StagePlan"
 	)
 	var combat: Dictionary = layout.get("combat", {})
 	var melee: Dictionary = combat.get("melee", {})
 	var ranged: Dictionary = combat.get("ranged", {})
 	_expect(
-		String(melee.get("name", "")).contains(_t("Sword"))
-		and String(ranged.get("name", "")).contains(_t("Bow")),
+		not String(melee.get("name", "")).is_empty()
+		and not String(ranged.get("name", "")).is_empty()
+		and String(melee.get("name", "")) != String(ranged.get("name", "")),
 		"HUD should expose both halves of the Traveler's contextual attack"
 	)
 	var bus := root.get_node_or_null("/root/SignalBus")
@@ -263,11 +268,14 @@ func _validate_exit_flow(stage: Variant, run_director: Node, game: Node, run_sta
 	exit.interact(stage.player)
 	await process_frame
 	_expect(run_director.get_phase_name() == "stage_active", "locked exit cannot clear the stage")
+	var terminal_room_id := terminal.room_id
 	for enemy in stage.get_required_enemies():
+		if StringName(enemy.get_meta("planned_room_id", &"")) != terminal_room_id:
+			continue
 		_defeat_for_flow_validation(enemy, stage.player)
 	await process_frame
-	_expect(stage.get_remaining_enemy_count() == 0, "required defeats should settle exactly once")
-	_expect(stage.is_exit_enabled(), "optional content cannot block the terminal exit")
+	_expect(stage.get_remaining_enemy_count() > 0, "earlier required-route enemies should remain bypassable")
+	_expect(stage.is_exit_enabled(), "terminal-room combat alone should unlock the exit")
 	exit.interact(stage.player)
 	await process_frame
 	await process_frame
@@ -323,13 +331,10 @@ func _validate_flooded_exit_flow(
 		if room.role == &"safe":
 			terminal = stage.get_room_host(room.id)
 	var exit := terminal.get_exit_portal() if terminal != null else null
-	_expect(exit != null and not stage.is_exit_enabled(), "Flooded safe-room exit should start locked")
+	_expect(exit != null and stage.is_exit_enabled(), "Flooded shelter should use arrival policy")
 	if exit == null:
 		return
-	for enemy in stage.get_required_enemies():
-		_defeat_for_flow_validation(enemy, stage.player)
-	await process_frame
-	_expect(stage.is_exit_enabled(), "Flooded required defeats should unlock the safe-room exit")
+	_expect(stage.get_remaining_enemy_count() > 0, "Flooded enemies should remain optional to stage completion")
 	exit.interact(stage.player)
 	await process_frame
 	await process_frame

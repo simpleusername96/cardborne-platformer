@@ -91,7 +91,6 @@ metadata/interaction_role = &"stage_exit_shelter"
 position = Vector2(180, 620)
 metadata/facing = 1
 metadata/safe_radius = 240.0
-metadata/camera_id = &"exit_shelter_camera"
 
 [node name="ExitGate" type="Area2D" parent="Anchors/Objective"]
 position = Vector2(1130, 620)
@@ -100,9 +99,8 @@ collision_mask = 4
 script = ExtResource("2")
 prompt_text = "Leave Flooded Works"
 interaction_enabled = false
-disabled_prompt_text = "Defeat all required enemies"
+disabled_prompt_text = ""
 metadata/critical_exit = true
-metadata/objective_requirements = Array[StringName]([&"required_encounters_clear"])
 metadata/interaction_space = Vector2(140, 140)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Anchors/Objective/ExitGate"]

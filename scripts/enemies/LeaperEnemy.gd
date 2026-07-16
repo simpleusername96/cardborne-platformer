@@ -22,7 +22,8 @@ const TARGET_RETRY_TIME := 0.12
 var direction: int = -1
 var _state: StringName = STATE_IDLE
 var _state_timer: float = TARGET_RETRY_TIME
-var _locked_target_x: float = 0.0
+var _locked_landing_position := Vector2.ZERO
+var _last_landing_x: float = INF
 var _landing_warning: Line2D
 
 
@@ -61,7 +62,12 @@ func _physics_process(delta: float) -> void:
 			if _state_timer <= 0.0:
 				_start_leap()
 		STATE_ACTIVE:
-			if _state_timer <= 0.0 or (is_on_floor() and velocity.y >= 0.0):
+			if is_on_floor() and velocity.y >= 0.0:
+				if absf(global_position.x - _locked_landing_position.x) <= 72.0:
+					global_position.x = _locked_landing_position.x
+				velocity = Vector2.ZERO
+				_set_state(STATE_RECOVERY, recovery_time)
+			elif _state_timer <= 0.0:
 				_set_state(STATE_RECOVERY, recovery_time)
 		STATE_RECOVERY:
 			velocity.x = move_toward(velocity.x, 0.0, 1100.0 * delta)
@@ -75,7 +81,8 @@ func _physics_process(delta: float) -> void:
 func reset_enemy() -> void:
 	super.reset_enemy()
 	direction = -1
-	_locked_target_x = global_position.x
+	_locked_landing_position = global_position
+	_last_landing_x = INF
 	_set_state(STATE_IDLE, TARGET_RETRY_TIME)
 
 
@@ -85,6 +92,7 @@ func get_combat_snapshot() -> Dictionary:
 	snapshot["active"] = _state == STATE_ACTIVE
 	snapshot["recovery"] = _state == STATE_RECOVERY
 	snapshot["state_time_remaining"] = _state_timer
+	snapshot["landing_target"] = _locked_landing_position
 	return snapshot
 
 
@@ -100,22 +108,31 @@ func _try_start_warning() -> void:
 	if distance > activation_range or distance < 48.0:
 		_state_timer = TARGET_RETRY_TIME
 		return
-	_locked_target_x = target.global_position.x
-	direction = _direction_to(_locked_target_x)
+	var landing: Variant = _select_landing_destination(target)
+	if landing == null:
+		_state_timer = TARGET_RETRY_TIME
+		return
+	_locked_landing_position = landing as Vector2
+	direction = _direction_to(_locked_landing_position.x)
 	_update_landing_warning_geometry()
 	_set_state(STATE_WARNING, warning_time)
 
 
 func _start_leap() -> void:
-	var horizontal_delta := _locked_target_x - global_position.x
+	var flight_time := _flight_time_to(_locked_landing_position.y)
+	if flight_time <= 0.0:
+		_set_state(STATE_RECOVERY, recovery_time)
+		return
+	var horizontal_delta := _locked_landing_position.x - global_position.x
 	var horizontal_speed := clampf(
-		horizontal_delta / maxf(leap_time, 0.001),
+		horizontal_delta / flight_time,
 		-maximum_leap_speed_x,
 		maximum_leap_speed_x
 	)
 	direction = _direction_to(global_position.x + horizontal_speed)
 	velocity = Vector2(horizontal_speed * get_external_speed_scale(), leap_velocity_y)
-	_set_state(STATE_ACTIVE, leap_time)
+	_last_landing_x = _locked_landing_position.x
+	_set_state(STATE_ACTIVE, maxf(leap_time, flight_time + 0.12))
 
 
 func _direction_to(target_x: float) -> int:
@@ -156,11 +173,10 @@ func _update_visual() -> void:
 func _update_landing_warning_geometry() -> void:
 	if _landing_warning == null:
 		return
-	var landing_x := _locked_target_x - global_position.x
+	var landing := _locked_landing_position - global_position
 	_landing_warning.points = PackedVector2Array([
-		Vector2.ZERO,
-		Vector2(landing_x * 0.5, -arc_clearance),
-		Vector2(landing_x, 0.0),
+		landing + Vector2(-24.0, 0.0),
+		landing + Vector2(24.0, 0.0),
 	])
 
 
@@ -177,3 +193,83 @@ func _ensure_landing_warning() -> Line2D:
 		add_child(line)
 	line.visible = false
 	return line
+
+
+func _select_landing_destination(target: Node2D) -> Variant:
+	var bounds := encounter_bounds
+	if bounds.size == Vector2.ZERO:
+		bounds = Rect2(global_position - Vector2(520.0, 260.0), Vector2(1040.0, 520.0))
+	var nominal_flight := _flight_time_to(global_position.y)
+	var maximum_reach := maximum_leap_speed_x * maxf(nominal_flight, leap_time)
+	var candidates: Array[Vector2] = []
+	var sample_xs: Array[float] = [
+		clampf(target.global_position.x, bounds.position.x + 24.0, bounds.end.x - 24.0),
+		global_position.x - maximum_reach * 0.72,
+		global_position.x + maximum_reach * 0.72,
+		lerpf(bounds.position.x, bounds.end.x, 0.25),
+		lerpf(bounds.position.x, bounds.end.x, 0.50),
+		lerpf(bounds.position.x, bounds.end.x, 0.75),
+	]
+	for sample_x in sample_xs:
+		var landing: Variant = _support_at_x(clampf(
+			sample_x,
+			bounds.position.x + 20.0,
+			bounds.end.x - 20.0
+		), bounds)
+		if landing == null:
+			continue
+		var candidate := landing as Vector2
+		var horizontal_delta := absf(candidate.x - global_position.x)
+		if horizontal_delta < 64.0 or horizontal_delta > maximum_reach + 1.0:
+			continue
+		if _flight_time_to(candidate.y) <= 0.0:
+			continue
+		if not _contains_near(candidates, candidate):
+			candidates.append(candidate)
+	if candidates.is_empty():
+		return null
+	candidates.sort_custom(
+		func(left: Vector2, right: Vector2) -> bool:
+			return (
+				_landing_score(left, target.global_position)
+				< _landing_score(right, target.global_position)
+			)
+	)
+	return candidates[0]
+
+
+func _support_at_x(x: float, bounds: Rect2) -> Variant:
+	var query := PhysicsRayQueryParameters2D.create(
+		Vector2(x, bounds.position.y - 64.0),
+		Vector2(x, bounds.end.y + 96.0),
+		1,
+		[get_rid()]
+	)
+	query.collide_with_areas = false
+	query.collide_with_bodies = true
+	var hit := get_world_2d().direct_space_state.intersect_ray(query)
+	return hit.get("position", null)
+
+
+func _flight_time_to(landing_y: float) -> float:
+	var vertical_delta := landing_y - global_position.y
+	var discriminant := leap_velocity_y * leap_velocity_y + 2.0 * gravity * vertical_delta
+	if discriminant < 0.0 or gravity <= 0.0:
+		return -1.0
+	return (-leap_velocity_y + sqrt(discriminant)) / gravity
+
+
+func _landing_score(candidate: Vector2, target_position: Vector2) -> float:
+	var repeat_penalty := (
+		260.0
+		if is_finite(_last_landing_x) and absf(candidate.x - _last_landing_x) < 48.0
+		else 0.0
+	)
+	return absf(candidate.x - target_position.x) + repeat_penalty
+
+
+func _contains_near(candidates: Array[Vector2], candidate: Vector2) -> bool:
+	for existing in candidates:
+		if existing.distance_to(candidate) < 24.0:
+			return true
+	return false

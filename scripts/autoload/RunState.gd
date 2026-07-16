@@ -60,6 +60,7 @@ var _settlement_service := RunSettlementService.new()
 var _merchant_transaction_service := MerchantTransactionService.new()
 var _run_started_at_msec: int = 0
 var _stage_attempt_snapshot: StageAttemptSnapshot
+var _stage_exploration_knowledge: Dictionary = {}
 
 
 func _ready() -> void:
@@ -113,6 +114,7 @@ func start_new_run(_profile_index: int = -1, requested_seed: int = -1) -> bool:
 	consumable_charges = 1
 	_run_started_at_msec = Time.get_ticks_msec()
 	_stage_attempt_snapshot = null
+	_stage_exploration_knowledge.clear()
 	_settlement_service.reset(ProfileState)
 	_publish_state()
 	SignalBus.run_started.emit()
@@ -264,6 +266,42 @@ func get_stage_attempt_snapshot_data() -> Dictionary:
 		if _stage_attempt_snapshot != null
 		else {}
 	)
+
+
+func begin_stage_exploration(content_signature: String) -> Dictionary:
+	if content_signature.is_empty():
+		return {}
+	if not _stage_exploration_knowledge.has(content_signature):
+		_stage_exploration_knowledge[content_signature] = {
+			"visited_room_ids": [],
+			"discovered_marker_ids": [],
+		}
+	return get_stage_exploration_knowledge(content_signature)
+
+
+func update_stage_exploration(
+	content_signature: String,
+	knowledge: Dictionary
+) -> bool:
+	if content_signature.is_empty():
+		return false
+	var normalized := _normalize_stage_exploration_knowledge(knowledge)
+	var previous := _stage_exploration_knowledge.get(content_signature, {}) as Dictionary
+	if previous == normalized:
+		return false
+	_stage_exploration_knowledge[content_signature] = normalized
+	return true
+
+
+func get_stage_exploration_knowledge(content_signature: String) -> Dictionary:
+	if content_signature.is_empty():
+		return {}
+	var value := _stage_exploration_knowledge.get(content_signature, {}) as Dictionary
+	return value.duplicate(true)
+
+
+func get_all_stage_exploration_knowledge() -> Dictionary:
+	return _stage_exploration_knowledge.duplicate(true)
 
 
 func restore_stage_attempt() -> Dictionary:
@@ -1295,6 +1333,25 @@ func _stage_attempt_failure(message: String) -> Dictionary:
 		"ok": false,
 		"message": message,
 		"snapshot": {},
+	}
+
+
+func _normalize_stage_exploration_knowledge(knowledge: Dictionary) -> Dictionary:
+	var visited: Array[String] = []
+	for room_id in knowledge.get("visited_room_ids", []):
+		var normalized := String(room_id)
+		if not normalized.is_empty() and not visited.has(normalized):
+			visited.append(normalized)
+	visited.sort()
+	var discovered: Array[String] = []
+	for marker_id in knowledge.get("discovered_marker_ids", []):
+		var normalized := String(marker_id)
+		if not normalized.is_empty() and not discovered.has(normalized):
+			discovered.append(normalized)
+	discovered.sort()
+	return {
+		"visited_room_ids": visited,
+		"discovered_marker_ids": discovered,
 	}
 
 
