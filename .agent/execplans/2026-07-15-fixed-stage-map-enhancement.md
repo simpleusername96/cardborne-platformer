@@ -4,13 +4,14 @@ status: active
 owner: BK
 created: 2026-07-15
 last_reviewed: 2026-07-16
-source: Current fixed-stage code and metrics, rendered room captures, 2D platformer map-design research, the canonical map-design guideline, Codex session 019f6138-03a7-73d1-8ec6-a959d2f4d935, and the 2026-07-16 per-stage visual and owner-play reviews
-topic: Gameplay-verticality and map-composition enhancement for the three fixed normal stages
-scope: Metrics, curated topology, authored room geometry, traversal comfort, terrain-aware encounter behavior, camera proof, and continuous traversal validation
+source: Current fixed-stage code and metrics, rendered room captures, 2D platformer map-design research, the canonical map-design guideline, Codex session 019f6138-03a7-73d1-8ec6-a959d2f4d935, the 2026-07-16 per-stage visual and owner-play reviews, and official Nintendo/Ubisoft navigation guidance
+topic: Gameplay verticality, completion policy, exploration readability, and map composition for the three fixed normal stages
+scope: Metrics, curated topology, authored room geometry, traversal comfort, stage-exit eligibility, fog-of-war minimap state, terrain-aware encounter behavior, camera proof, and continuous traversal validation
 related:
   - ../../docs/product/2d_platform_action_card_game_prd.md
   - ../../docs/design/MAP_AUTHORING_PIPELINE_CONTRACT.md
   - ../../docs/design/2D_PLATFORMER_MAP_DESIGN_GUIDELINE.md
+  - ../../docs/design/PRODUCTION_UI_CONTRACT.md
   - ../../docs/research/2d_platformer_map_design_research_2026-07-15.md
   - ./2026-07-15-gameplay-validity-repair.md
 ---
@@ -22,6 +23,12 @@ related:
 현재 세 normal stage가 자동 수치상 “높은 맵”인 데서 멈추지 않고,
 높이가 경로 선택, 적 대응, 위험·보상, camera 정보, 행동 리듬을 바꾸는
 짧고 완결된 action-platform stage가 되도록 재저작한다.
+
+동시에 주 경로의 모든 적을 전역 합산해 출구를 잠그는 current rule을
+제거하고, 종착점 도달과 명시적 local objective만 stage completion을
+결정하게 한다. 조립된 room graph는 탐색 상태와 결합해 우상단 minimap으로
+표시하며, 미방문 공간은 어둡고 현재 위치와 발견된 주요 지점은 명확하게
+읽혀야 한다.
 
 이 plan은 실제 구현 체크리스트다. 각 milestone은 blockout → 자동 검증 →
 rendered inspection → continuous play 순서로 닫는다. 이전 milestone의
@@ -99,6 +106,52 @@ map이 cover, rope, enemy lane, landing destination, camera commitment를
 Forge/Merchant modal information architecture는 map plan에 흡수하지 않는다.
 그 항목은 별도 gameplay/input/economy/UI follow-up이 소유한다.
 
+### 2026-07-16 progression and minimap amendment
+
+current runtime audit에서 다음 원인이 확인됐다.
+
+- `ProductionStageHost.gd`는 `required_route` room의 모든 enemy를
+  `_required_enemies`로 합산하고, 그 수가 0이 될 때만 terminal
+  `ExitPortal`을 연다.
+- terminal scene의 `objective_requirements` metadata는 실제 unlock policy를
+  선택하지 않는다. Ruin의 `final_encounter_clear`, Flooded의
+  `required_encounters_clear`, Sanctum의 `broken_sanctum_clear`가 서로
+  다른 문자열이어도 runtime 결과는 동일한 global kill gate다.
+- `ProductionHUD.gd`도 같은 aggregate를 받아 stage 전체에 “Defeat N
+  remaining”을 표시한다.
+- 반면 `StagePlan`, `StageAssemblyResult`, `RoomTemplateHost`에는 minimap에
+  필요한 room ID, connection, assembled position, bounds가 이미 있다.
+  physics collision을 다시 훑거나 별도 수작업 node graph를 만들 필요가 없다.
+- current HUD는 top-left health, top-center objective/boss, bottom combat,
+  center context lane을 예약하고 있어 top-right가 normal-stage minimap의
+  자연스러운 owner다.
+
+외부 pattern도 같은 결론을 지지한다.
+
+- Nintendo의 공식 *Metroid Dread* 안내는 이동한 위치를 map에 기록하고,
+  top-right minimap, terrain outline, marker, door/station icon을 navigation
+  도구로 사용한다. 같은 공식 newcomer guide는 약한 적을 모두 처치할
+  필요 없이 전략적으로 피할 수 있다고 명시한다.
+  ([Planet ZDR](https://metroid.nintendo.com/dread/ca/planet-zdr/),
+  [newcomer guide](https://www.nintendo.com/en-gb/News/2021/September/Metroid-Dread-Report-Vol-9-Handy-tips-for-newcomers-2047809.html))
+- Ubisoft의 공식 *Prince of Persia: The Lost Crown* accessibility guidance는
+  자유 탐색의 즐거움과 길을 잃는 좌절을 분리하고, objective와
+  available/blocked path를 선택적으로 보여 주는 navigation aid를 설명한다.
+  ([Accessibility Spotlight](https://www.ubisoft.com/en-gb/game/prince-of-persia/the-lost-crown/news-updates/5nGZiBSFtcEzFd93QlTotS/prince-of-persia-the-lost-crown-accessibility-spotlight))
+
+따라서 이 amendment는 “combat을 없앤다”가 아니라 다음 의미 경계를
+고정한다.
+
+- `required_route`는 main traversal topology다. mandatory kill이라는 뜻이
+  아니다.
+- `encounter clear`는 room-local combat fact다. card trigger, local reward,
+  명시적 arena lock에는 사용할 수 있지만 stage 전체 출구에 암묵적으로
+  전파하지 않는다.
+- `stage exit eligible`은 terminal room의 authored policy가 결정한다.
+- `stage clear`는 eligible exit에서 player가 상호작용했을 때만 발생한다.
+- minimap discovery는 player knowledge다. combat/reward rollback과 같은
+  state로 취급하지 않는다.
+
 ## Outcome
 
 완료 시:
@@ -123,6 +176,14 @@ Forge/Merchant modal information architecture는 map plan에 흡수하지 않는
    terrain intention과 실제 runtime에서 일치한다.
 10. ordinary enemy tell은 startup과 위험 destination을 읽게 하되, full
     trajectory overlay를 합리적인 behavior의 대체물로 사용하지 않는다.
+11. non-terminal enemy가 살아 있어도 player가 terminal policy를 충족하면
+    stage를 끝낼 수 있고, global enemy tally가 exit 또는 HUD objective를
+    소유하지 않는다.
+12. normal stage의 top-right minimap이 assembled room layout, 현재 player
+    위치, 미방문/방문/current room, start, exit, checkpoint, 발견된
+    reward, gate/shortcut 상태를 표시한다.
+13. minimap knowledge는 fall recovery와 같은-stage death retry에서
+    유지되고, 새 run 또는 다른 stage 시작에서 올바르게 초기화된다.
 
 ## Scope
 
@@ -139,11 +200,16 @@ Forge/Merchant modal information architecture는 map plan에 흡수하지 않는
 - normal-stage camera framing 또는 geometry-with-default-camera proof
 - fixed-stage capture target과 continuous traversal evidence 추가
 - stage별 construction blueprint와 route/height/encounter overlay 작성
+- global required-enemy gate를 authored terminal policy로 교체
+- stage objective snapshot에서 global enemy count 제거
+- assembled room graph 기반 exploration state와 fog-of-war minimap
+- normal-stage HUD top-right minimap component, responsive layout, marker state
+- same-stage retry에서 discovery knowledge 보존
 - 관련 validator와 product-flow regression
 
 ### Non-scope
 
-- UI/HUD/modal/typography 변경
+- minimap 외의 broad UI/HUD/modal/typography 변경
 - gamepad 또는 다른 platform 입력
 - player movement value 또는 새 movement skill 변경
 - 새 enemy archetype, boss pattern, card, equipment, merchant item 추가
@@ -155,7 +221,11 @@ Forge/Merchant modal information architecture는 map plan에 흡수하지 않는
 - contextual melee/ranged input 분리 또는 key binding 재설계
 - shield timing/resource redesign과 potion charge/economy 변경
 - Forge/Merchant 화면의 정보 구조 또는 visual redesign
-- 새 pathfinding framework나 범용 navigation system 도입
+- full-screen map, zoom/pan input, player-placed marker, map station, fast travel
+- ordinary enemy, projectile, 개별 hazard의 live minimap tracking
+- 숨은 reward의 사전 공개 또는 모든 optional POI의 처음부터 표시
+- minimap을 위해 physics collision을 runtime rasterize하거나 별도
+  pathfinding/navigation framework를 도입하는 일
 
 ## Ownership and File Boundaries
 
@@ -173,6 +243,13 @@ Forge/Merchant modal information architecture는 map plan에 흡수하지 않는
 | projectile/cover interaction | `scripts/enemies/EnemyProjectile.gd` and the shared collision contract |
 | terrain-aware existing enemy movement | matching `scripts/enemies/LeaperEnemy.gd`, walker/charger/guard owners only where a reproduced map-validity failure requires it |
 | normal-stage camera behavior | `scripts/stages/production/ProductionStageHost.gd` and `PlayerController.gd` camera ownership |
+| terminal completion policy | `scripts/stages/production/ProductionStageHost.gd`, a typed `ExitPortal` unlock policy, and the three terminal room scenes |
+| room-local encounter facts | existing room encounter indexes and signals; they must not own global exit eligibility |
+| exploration/discovery state | new responsibility-shaped owner under `scripts/stages/navigation/`, hosted by `ProductionStageHost.gd` |
+| map topology snapshot | read-only projection of `StagePlan`, `StageAssemblyResult`, `RoomTemplateData.bounds`, sockets, and authored objective/reward anchors |
+| retry knowledge boundary | `scripts/autoload/RunState.gd` and stage-attempt restore tests |
+| minimap presentation | new component under `scripts/ui/production/components/`, mounted by `ProductionHUD.gd` / `ProductionHUD.tscn` |
+| minimap layout and rendered proof | `scripts/ui/validation/ValidateGameplayHUD.gd`, `CaptureGameplayHUD.gd`, and fixed-stage captures |
 | runtime validity fixtures | `tools/validate_player_movement_runtime.gd`, `validate_shooter_runtime.gd`, `validate_flooded_enemy_runtime.gd` |
 | rendered evidence | `tools/capture_fixed_stage_screenshots.gd` plus a bounded continuous-traversal capture if needed |
 
@@ -203,7 +280,31 @@ room intention은 이 plan의 matrices와 authored scene/resource가 소유한�
 - optional reward resolution, stable IDs, deterministic seed behavior를
   유지한다.
 - fall recovery anchor는 local traversal recovery이며 death respawn이 아니다.
-- UI overhaul dirty work와 master integration plan은 이 작업이 소유하지 않는다.
+- `required_route`는 main-route classification으로 유지하며 exit unlock의
+  kill requirement로 해석하지 않는다.
+- Ruin과 Sanctum은 terminal room의 명시적 encounter/objective만 exit를
+  잠글 수 있다. Flooded는 exit shelter 도달 자체가 terminal objective다.
+- local encounter lock이 필요한 경우 그 room의 적만 소유하고, 한번 열린
+  route를 다시 잠그지 않으며, optional/non-terminal enemy는 stage exit를
+  막지 않는다.
+- minimap은 room bounds와 connection을 uniform scale로 투영한다. player
+  marker는 같은 transform으로 world position을 변환한다.
+- approved assembled room silhouette는 stage 시작부터 어둡게 보이고,
+  방문한 room은 밝아진다. optional reward marker와 세부 POI는 해당 room
+  또는 branch를 발견하기 전에는 보이지 않는다.
+- exit marker는 navigation을 위해 처음부터 보인다. locked/ready 상태는
+  색뿐 아니라 icon shape 또는 badge로 구분한다.
+- normal-stage minimap은 player, current room, start, exit, active checkpoint,
+  discovered unclaimed reward, discovered gate/shortcut, current terminal
+  objective만 표시한다. ordinary enemy와 개별 hazard는 표시하지 않는다.
+- discovery는 같은 run의 같은 stage retry에서 유지하고 새 run/stage에서
+  reset한다. fall recovery는 discovery를 바꾸지 않는다.
+- first pass는 항상 보이는 minimap만 구현한다. 새 map input action이나
+  full-screen map은 추가하지 않는다.
+- minimap room geometry는 runtime vector drawing과 existing authored data를
+  사용한다. room collision을 복제한 raster asset은 만들지 않는다.
+- UI overhaul dirty work와 master integration plan은 minimap 외에는 이
+  작업이 소유하지 않는다.
 - Web export template가 준비되지 않은 동안 desktop production capture를
   strongest substitute로 쓰되, release acceptance는 served Web 확인 전
   닫지 않는다.
@@ -220,6 +321,11 @@ room intention은 이 plan의 matrices와 authored scene/resource가 소유한�
 | Projectile cover | enemy projectile가 player mask만 사용해 terrain과 cover를 통과한다. | basic ranged projectile가 solid terrain과 declared cover에 막히고 shooter placement가 실제 cover decision을 만든다. | cover 뒤 player가 피해를 받지 않고 projectile가 terrain contact에서 종료된다. | 적 사거리·탄속을 낮추거나 warning line만 짧게 해 문제를 숨기지 않는다. |
 | Terrain-aware enemy movement | leaper는 fixed target-x leap를 반복하고 일부 patrol enemy는 wall/ledge를 인지하지 않는다. | leaper는 encounter 안의 valid landing destination을 선택하고 mobile enemy는 authored lane에서 반복 행동 가능하다. | 여러 leap 또는 patrol cycle 뒤에도 enemy가 stuck/idle lock에 빠지지 않고 intended pressure를 유지한다. | 범용 pathfinding이나 새 enemy archetype으로 scope를 확장하지 않는다. |
 | Enemy tell | full-range line과 synthetic arc가 behavior readability의 주된 근거다. | ordinary enemy는 local startup, facing/pose, destination 또는 impact cue로 읽히고 full trajectory는 꼭 필요한 경우만 남는다. | production capture에서 debug-like path 없이도 위험과 대응 공간을 설명한다. | boss의 required startup warning이나 color-independent danger cue를 제거하지 않는다. |
+| Stage completion | main-route room의 모든 enemy가 하나의 global remaining count가 되어 exit를 잠근다. | terminal authored policy만 exit eligibility를 결정하고 non-terminal combat은 회피 가능한 risk/reward가 된다. | prior main-route enemy를 하나 이상 살려 둔 채 Ruin/Sanctum terminal objective 또는 Flooded arrival로 stage clear flow에 진입한다. | boss defeat와 명시적 local arena objective는 우회시키지 않는다. |
+| Objective copy | HUD가 stage 전체 enemy count를 immediate objective로 표시한다. | 기본 objective는 exit navigation이며, terminal local lock이 active일 때만 그 local requirement를 표시한다. | normal-stage HUD에 global `Defeat N remaining`이 없고 lock/ready transition이 실제 exit policy와 일치한다. | hidden requirement나 stale count를 다른 label로 바꾸어 남기지 않는다. |
+| Minimap topology | assembled room positions와 bounds가 runtime에 있으나 player-facing navigation surface가 없다. | StagePlan/Assembly를 하나의 copy-safe map snapshot으로 투영한다. | snapshot room/edge count와 plan이 일치하고 모든 projected bounds가 minimap content rect 안에 들어온다. | physics tree scan, duplicated hand-authored node graph, per-stage hard-coded screen coordinates를 사용하지 않는다. |
+| Exploration fog | 방문 여부와 current room을 추적하지 않는다. | unvisited room은 dark silhouette, visited room은 readable fill, current room/player는 shape+accent로 구분한다. | 실제 room crossing과 같은-stage retry에서 state transition이 결정론적으로 재현된다. | color-only state, boundary flicker, retry knowledge loss가 없다. |
+| Map POI | exit prompt 외에 stage navigation marker contract가 없다. | start, exit, active checkpoint, discovered reward, gate/shortcut, terminal objective만 제한적으로 표시한다. | undiscovered reward와 ordinary enemy가 노출되지 않고 claimed/open state가 stale하지 않다. | minimap이 combat radar나 collectible spoiler가 되지 않는다. |
 | Vertical combat | enemy count와 y-span이 주된 자동 증거다. | threat lane, cover, escape/re-engage route가 높이에 따라 달라진다. | combat-room intention 문장과 real-damage playtest가 같은 결론을 낸다. | enemy 수만 늘려 metric을 통과하지 않는다. |
 | Camera commitments | normal stage는 full-world limit와 player smoothing만 사용하고 authored `camera_id` marker는 runtime owner가 없다. | default camera로 읽히는 geometry를 우선하고, 불가능한 commitment에만 최소 camera focus/lookahead owner를 둔다. | irreversible jump/drop 전에 landing, threat, safe cue가 실제 continuous frame에 들어온다. | teleported still이나 editor viewport만으로 camera acceptance를 닫지 않는다. |
 | Scale | 이미지상 많은 chamber가 넓은 metroidvania scope로 오해될 수 있다. | compact 6–10분 stage 안에서 공간을 접고 기억 가능한 landmark를 반복 노출한다. | stage clear timing과 room-duration sample이 PRD 범위에 들어온다. | 새 biome, ability gate, 장거리 backtracking campaign으로 확장하지 않는다. |
@@ -238,6 +344,7 @@ Milestone 0에서 세 stage 각각에 다음 layer가 분리되어야 한다. �
 | Encounter layer | safe entry, combat zone, enemy lane, cover, escape, reward | room anchors and allocated content |
 | Camera/landmark layer | pre-commit preview, landing cue, memorable landmark, revisited vista | authored camera bounds and rendered evidence |
 | Rhythm layer | teach, transform, test, release and expected 20–60초 room duration | room intention matrix and continuous timing note |
+| Minimap layer | room envelope, connection, unvisited/visited/current state, start/exit, checkpoint, discovered POI, gate/shortcut state | StagePlan/Assembly snapshot and HUD minimap renderer |
 
 Blueprint acceptance is a design gate, not decorative paperwork. A future executor
 must be able to name the scene/resource changed for every marked room, connection,
@@ -255,6 +362,145 @@ movement limits, update the drawing before code.
 
 stage마다 동일한 순서의 방을 복제하지 않고, signature geometry와
 height profile을 다르게 한다.
+
+### Completion policy: reach and resolve, not global extermination
+
+Canonical terms:
+
+| Term | Meaning |
+| --- | --- |
+| main route | start에서 terminal까지 이어지는 required traversal graph |
+| local encounter clear | 한 room에 계획된 encounter가 끝났다는 combat fact |
+| terminal objective | exit eligibility를 위해 terminal room이 명시적으로 요구하는 arrival, encounter, switch, or boss fact |
+| exit eligible | `ExitPortal` interaction을 허용할 수 있는 상태 |
+| stage clear | eligible exit에서 player interaction이 commit된 뒤 발생하는 run-flow fact |
+
+`ProductionStageHost`는 terminal scene의 typed policy를 읽어 exit eligibility를
+계산한다. free-form `objective_requirements` string을 계속 늘리지 않는다.
+첫 implementation은 다음 세 mode만 허용한다.
+
+| Policy | Behavior | Current stage use |
+| --- | --- | --- |
+| `arrival` | exit에 도달하면 추가 kill requirement 없이 상호작용할 수 있다. | Flooded Works |
+| `terminal_encounter` | terminal room에 실제로 배치된 encounter만 clear하면 열린다. | Ruin Approach, Broken Sanctum |
+| `explicit_objective` | authored switch/gate/objective fact를 요구한다. | reserved; current stage가 실제로 필요할 때만 사용 |
+
+Stage-specific target:
+
+- Ruin: `lr_exit_ascent`의 terminal encounter만 exit를 잠근다. 이전
+  `lr_patrol_gallery`, `lr_shooter_overlook`, `lr_charge_lane` enemy가
+  살아 있어도 상관없다.
+- Flooded: `fw_exit_shelter`에 도달하면 exit가 ready다. rope, poison,
+  leaper, pump encounter의 global clear는 요구하지 않는다.
+- Sanctum: required traversal에서 gate/switch를 실제로 통과해야 하는 것은
+  geometry/objective contract로 남지만, exit unlock은 `bs_exit_ascent`의
+  terminal encounter만 소유한다. 이전 crossfire enemy의 전멸은 요구하지
+  않는다.
+- Slime Court는 이 policy를 쓰지 않는다. boss defeat가 기존 stage
+  completion owner다.
+
+Invariant:
+
+- main-route classification, enemy reward settlement, room-clear card trigger는
+  유지하되 exit eligibility 계산에서 분리한다.
+- local arena lock은 명시적으로 authored된 room에만 존재하고 그 room을
+  벗어난 enemy나 optional enemy를 세지 않는다.
+- 열린 local route와 terminal exit는 enemy respawn 또는 stale signal로
+  다시 잠기지 않는다.
+- HUD의 normal-stage default objective는 `Find the exit`이고, player가
+  locked terminal room에 있을 때만 local requirement와 local remaining
+  count를 보여 준다. ready가 되면 `Enter the gate`로 바뀐다.
+- non-terminal enemy를 회피하면 그 enemy reward/XP를 얻지 못한다. stage
+  clear reward는 정상 지급되므로 combat은 risk/reward choice로 남는다.
+
+### Runtime minimap and exploration state
+
+Data flow:
+
+> `StagePlan` + `StageAssemblyResult` + authored anchors
+> → stage-owned exploration state
+> → copy-safe map snapshot on `SignalBus`
+> → `ProductionHUD` top-right minimap renderer
+
+The stage-owned state is the only owner of `current_room_id`, visited room IDs,
+and discovered POI state. HUD는 active stage tree를 직접 순회하거나 gameplay
+state를 수정하지 않는다.
+
+Minimum snapshot:
+
+- stage ID and world bounds;
+- room ID, role, assembled bounds, route requirement, discovery state;
+- connection ID, route role, from/to room IDs, socket endpoints;
+- player world position and current room ID;
+- start, exit, active checkpoint, discovered reward, discovered gate/shortcut,
+  and terminal-objective markers with resolved/locked state.
+
+Room state:
+
+| State | Presentation | Transition |
+| --- | --- | --- |
+| `unvisited` | dark filled silhouette plus low-contrast/dashed edge | initial state for every room not yet entered |
+| `visited` | brighter fill and solid edge | first stable entry into room bounds |
+| `current` | visited styling plus thicker accent edge and player marker | current stable containing room |
+
+Room-boundary jitter를 막기 위해 current-room detection은 기존 room bounds를
+공용 owner에서 한 번만 계산하고, socket boundary에는 이전 room 유지 또는
+작은 hysteresis를 사용한다. exact margin은 runtime fixture에서 정하되
+stage별 hard-coded exception은 두지 않는다.
+
+Projection:
+
+- `scale = min(content_width / world_width, content_height / world_height)`의
+  uniform scale을 사용한다.
+- world bounds의 origin을 빼고 같은 scale/offset을 room, connection,
+  marker, player 모두에 적용한다.
+- 남는 축은 center-letterbox한다. stage가 viewport보다 몇 배 넓거나
+  높아도 crop, independent x/y stretch, camera-relative drift가 없다.
+- first pass는 `RoomTemplateData.bounds`와 assembled connections를 coarse
+  side-cutaway envelope로 사용한다. rendered evidence에서 rectangle만으로
+  route가 오해되는 room이 확인될 때만 small authored map-cell schema를
+  추가하며, physics collision을 runtime 복제하지 않는다.
+
+Marker contract:
+
+| Marker | Reveal/state rule |
+| --- | --- |
+| player | always visible inside the current room; distinct filled shape, not color alone |
+| start | visible after stage begins |
+| exit | visible from stage start; locked/ready badge follows terminal policy |
+| active checkpoint | visible after activation; previous checkpoint becomes inactive or disappears |
+| gate/shortcut | hidden until its room is visited; closed/open state uses shape plus line style |
+| reward/cache/material node | hidden until its room is visited; unclaimed only, then resolved/dimmed |
+| terminal objective | shown only while it is the active blocker |
+
+Ordinary enemy, projectile, temporary hazard, every loose pickup, off-screen
+damage source는 minimap marker가 아니다. minimap은 radar가 아니라 navigation
+surface다.
+
+Presentation:
+
+- normal-stage only, anchored top-right.
+- starting layout target is approximately 240×148 at 1280×720 and 190×118 at
+  960×540 with 16 px outer margin; responsive validation may reduce these values
+  but cannot overlap health, objective/boss, context lane, or combat dock.
+- reuse `ProductionUIStyles.gd` surfaces and limited palette. unvisited/visited/
+  current, locked/ready must differ by fill, edge, and icon shape rather than hue
+  alone.
+- room geometry is drawn as runtime vector primitives. existing semantic SVGs
+  such as exit/cache may be reused; only missing player/checkpoint/gate glyphs
+  receive small UI SVG assets.
+- hidden during Arsenal Trial, Safe Intermission, and Slime Court unless a later
+  explicit design requires it.
+
+Persistence:
+
+- entering a room records knowledge immediately after stable containment.
+- fall recovery preserves visited rooms and POI discovery.
+- same-stage death retry restores mechanical stage-entry state but merges forward
+  the defeated attempt's discovery knowledge.
+- a new run or a different stage starts with a fresh discovery set.
+- discovery is keyed by run, stage index, and approved plan/content signature so
+  stale room IDs cannot leak across a changed map version.
 
 ### Ruin Approach: broken ascent
 
@@ -381,8 +627,9 @@ blockout 결과가 더 나은 의도를 발견하면 Decision Notes에 이유를
 
 - [ ] Milestone 0에서 visual study를 current room graph와 movement envelope에
   맞는 stage별 construction blueprint로 번역하고 owner review를 받는다.
-- [ ] Milestone A에서 directionality, traversal comfort, rope, projectile
-  cover, terrain-aware enemy behavior diagnostic을 먼저 red/green 검증한다.
+- [ ] Milestone A에서 completion policy, minimap state, directionality,
+  traversal comfort, rope, projectile cover, terrain-aware enemy behavior를
+  먼저 red/green 검증한다.
 - [ ] Milestone B에서 Ruin을 pilot stage로 재저작하고 continuous play로
   guideline을 증명한다.
 - [ ] Milestone C에서 Flooded의 basin descent와 pump ascent를 재저작한다.
@@ -406,6 +653,8 @@ Tasks:
   비교용 composite 한 장으로 대체하지 않는다.
 - [ ] 모든 blueprint에 current room ID 경계, start/exit, critical route,
   optional route, forward rejoin, shortcut, safe/combat/reward zone을 표시한다.
+- [ ] 각 blueprint에 terminal unlock policy, terminal local objective,
+  minimap room envelope, marker reveal point를 별도 layer로 표시한다.
 - [ ] 각 required room을 2–4개의 gameplay beat로 나누되 이것을 새 runtime
   room 또는 새 stable ID로 자동 승격하지 않는다.
 - [ ] 각 stage의 height waveform과 teach → transform → test → release 순서를
@@ -426,23 +675,64 @@ Acceptance:
 - [ ] 세 stage가 각각 독립 이미지와 source-linked room graph를 가진다.
 - [ ] first-time reviewer가 각 stage의 start, exit, main route, optional route,
   forward rejoin, shortcut, combat peak, recovery를 설명할 수 있다.
+- [ ] reviewer가 stage별 exit unlock requirement와 minimap의 unvisited,
+  visited, current, locked/ready state를 source owner와 연결해 설명할 수 있다.
 - [ ] Ruin/Flooded/Sanctum의 silhouette와 height waveform이 서로 다르다.
 - [ ] blueprint의 모든 확정 항목이 current source owner에 대응하고, visual
   study의 임의 요소가 requirement로 승격되지 않았다.
 - [ ] estimated timing이 PRD 범위에 있으며, room-count 확대는 evidence와
   owner approval 없이는 다음 milestone에 들어가지 않는다.
 
-### Milestone A — Baseline, diagnostic, and shared terrain contract
+### Milestone A — Progression, navigation, diagnostic, and shared terrain contract
 
 Goal: 현재 결과를 보존하면서 “수치상 가능함”과 “실제로 편안하고 지형과
 상호작용함”을 분리해 검출하고, room redesign이 의존할 공용 runtime
-contract를 먼저 고정한다.
+contract를 먼저 고정한다. global extermination gate와 missing minimap도
+geometry pass 전에 해결해 이후 stage review가 target flow를 사용하게 한다.
 
 Tasks:
 
 - [ ] current validator JSON과 fixed-stage captures를 dated evidence 위치에
   보존하거나 재생성 명령과 hash를 기록한다.
 - [ ] current critical graph를 stage별 node/edge table로 snapshot한다.
+- [ ] current exit fixtures가 main-route enemy를 모두 죽여야 unlock되는 것을
+  red evidence로 보존하고, `required_route`와 mandatory combat의 의미를
+  분리한다.
+- [ ] terminal room에 typed unlock policy를 추가하고 free-form
+  `objective_requirements` metadata를 제거하거나 migration한다.
+- [ ] `ProductionStageHost.gd`의 exit eligibility가 global
+  `_required_enemies`/`get_remaining_enemy_count()`에 의존하지 않게 한다.
+- [ ] Ruin/Sanctum은 terminal-room encounter index만, Flooded는 arrival
+  policy만 사용하도록 stage-specific fixture를 작성한다.
+- [ ] prior main-route enemy를 살려 둔 채 exit가 열리고 stage-clear reward
+  flow가 한 번만 commit되는 regression을 추가한다.
+- [ ] room-local clear signal, Second Wind card trigger, NPC/reward unlock이
+  global exit gate 제거 뒤에도 유지되는지 검증한다.
+- [ ] normal-stage objective snapshot을 `navigate_to_exit`,
+  `terminal_objective`, `exit_ready` state로 바꾸고 global enemy count copy를
+  제거한다.
+- [ ] `StagePlan`, `StageAssemblyResult`, room hosts에서 room bounds,
+  connections, start/exit, objective/reward anchors를 읽는 copy-safe map
+  snapshot contract를 만든다.
+- [ ] responsibility-shaped exploration-state owner를
+  `scripts/stages/navigation/` 아래에 추가하고 current/visited/discovered
+  state를 `ProductionStageHost`가 host한다.
+- [ ] room crossing, socket-boundary hysteresis, player projection,
+  checkpoint/reward/gate state update를 semantic change에만 publish하도록
+  한다. HUD가 stage scene tree를 poll하지 않는다.
+- [ ] `SignalBus`에 stage-map snapshot channel을 추가하고 detached HUD가
+  next-stage event를 받지 않도록 connect/disconnect lifecycle을 검증한다.
+- [ ] `ProductionHUD.tscn` top-right에 reusable minimap scene을 mount하고
+  runtime vector renderer, fog state, marker contract, normal-stage visibility를
+  구현한다.
+- [ ] `docs/design/PRODUCTION_UI_CONTRACT.md`의 Gameplay HUD contract에
+  normal-stage top-right minimap, visibility, fog, marker boundary를 반영한다.
+- [ ] 960×540, 1280×720, 1920×1080에서 minimap이 health, objective/boss,
+  context lane, combat dock과 겹치지 않는 layout fixture를 추가한다.
+- [ ] unvisited/visited/current, locked/ready, claimed/open 상태가 color 외
+  shape/edge 차이로 읽히는 rendered fixture를 추가한다.
+- [ ] same-stage retry가 discovery를 보존하고 new run/stage가 reset하는
+  RunState regression을 추가한다.
 - [ ] baseline player fixture에서 full/short/late jump input과 landing 오차를
   측정해 routine, challenge, optional mastery transition의 comfort band를
   근거와 함께 정한다.
@@ -487,6 +777,26 @@ Tasks:
 Acceptance:
 
 - [ ] current three-stage metrics가 이전 값과 동일하게 재현된다.
+- [ ] global main-route kill tally 없이 stage별 typed terminal policy가
+  exit eligibility를 결정한다.
+- [ ] Ruin/Sanctum은 이전 room enemy를 최소 하나 살려 두고 terminal
+  encounter만 clear해 exit를 열 수 있고, Flooded는 required enemy를
+  살려 둔 채 shelter exit를 사용할 수 있다.
+- [ ] room-local encounter clear, card/reward, enemy-drop settlement은
+  regression 없이 유지된다.
+- [ ] HUD default objective에 global `Defeat N remaining`이 없고
+  navigate → local terminal blocker → ready transition이 policy와 일치한다.
+- [ ] minimap snapshot의 room/connection 수와 bounds가 current StagePlan과
+  assembly에 일치한다.
+- [ ] player가 두 room을 이동하면 start/previous/current state와 player
+  marker가 올바르게 갱신되고 socket boundary에서 flicker하지 않는다.
+- [ ] exit는 처음부터 표시되고 undiscovered reward와 ordinary enemy는
+  표시되지 않는다. checkpoint, reward claim, gate/shortcut state가 stale하지
+  않다.
+- [ ] same-stage retry 뒤 visited room은 유지되고 new run/stage에서는
+  초기 dark state로 돌아간다.
+- [ ] supported viewport와 en/ko locale에서 minimap이 기존 HUD region과
+  겹치거나 잘리지 않는다.
 - [ ] current Ruin monotonic profile을 새 diagnostic이 검출한다.
 - [ ] current four same-hub optional return edge를 graph diagnostic이 검출한다.
 - [ ] comfort band가 임의 상수가 아니라 runtime input fixture와 owner review로
@@ -524,13 +834,17 @@ Tasks:
   Forge/NPC가 없음을 확인한다.
 - [ ] `lr_charge_lane`에 charge를 끊는 side ledge와 명확한 re-engage
   landing을 만든다.
-- [ ] `lr_exit_ascent`는 known element만 결합하도록 정리한다.
+- [ ] `lr_exit_ascent`는 known element만 결합하고, 이 room의 encounter만
+  terminal exit를 잠그도록 정리한다.
 - [ ] geometry 수정에 맞춰 recovery/enemy/reward/socket anchor를 갱신한다.
 - [ ] 모든 changed room의 content version을 contract에 맞게 갱신한다.
 - [ ] default camera 또는 approved focus behavior로 broken descent와
   re-engage landing이 commitment 전에 보이는지 확인한다.
 - [ ] shooter/walker/charger를 여러 behavior cycle 관찰해 wall 또는
   platform edge에서 pressure가 소멸하지 않는지 확인한다.
+- [ ] Ruin minimap에서 broken descent, upper/lower split, optional forward
+  rejoin이 assembled vertical offset와 일치하고 current-room state가
+  continuous run 중 올바르게 이동하는지 확인한다.
 
 Acceptance:
 
@@ -546,6 +860,10 @@ Acceptance:
   response를 바꾼다.
 - [ ] ordinary enemy의 full trajectory line 없이도 startup, threat lane,
   recovery를 설명할 수 있다.
+- [ ] patrol/shooter/charge enemy를 하나 이상 살려 둔 채 exit-ascent local
+  encounter만 clear하고 stage를 끝낼 수 있다.
+- [ ] Ruin minimap의 unvisited silhouette, visited path, current player,
+  exit lock/ready, discovered optional reward가 실제 route와 일치한다.
 - [ ] baseline continuous clear, fall recovery, stage retry가 통과한다.
 
 ### Milestone C — Flooded blockout and room pass
@@ -567,9 +885,12 @@ Tasks:
 - [ ] pump gallery를 known element의 vertical combine/test로 재구성한다.
 - [ ] pump gallery의 declared cover가 shooter projectile를 막고, leaper와
   mobile patrol enemy가 여러 cycle 뒤에도 stuck되지 않는지 확인한다.
-- [ ] exit shelter는 짧은 release로 유지하고 facility/NPC를 넣지 않는다.
+- [ ] exit shelter는 짧은 release로 유지하고 facility/NPC를 넣지 않으며,
+  arrival policy로 global combat clear 없이 출구를 사용할 수 있게 한다.
 - [ ] existing hazard reset과 room retry가 새 geometry에서 결정론적으로
   동작하는지 확인한다.
+- [ ] Flooded minimap에서 basin descent, optional lower branch, pump ascent,
+  shelter가 실제 assembled y-position과 일치하는지 확인한다.
 
 Acceptance:
 
@@ -581,6 +902,10 @@ Acceptance:
 - [ ] 모든 required rope가 actual input으로 자연스럽게 양방향 통과된다.
 - [ ] leaper가 하나의 synthetic arc 반복이 아니라 reachable destination
   이동으로 basin pressure를 유지한다.
+- [ ] rope/leaper/pump enemy를 하나 이상 살려 둔 채 shelter에 도달해
+  stage를 끝낼 수 있다.
+- [ ] Flooded minimap이 current room, active checkpoint, discovered cache,
+  shelter exit를 올바르게 표시한다.
 - [ ] moving platform 신규 구현 없이 모든 required line이 clear된다.
 - [ ] baseline continuous clear와 real-hazard reset이 통과한다.
 
@@ -605,7 +930,10 @@ Tasks:
 - [ ] recovery cloister를 실제 crossfire 밖 safe zone으로 만든다.
 - [ ] sentry crossfire에 projectile-blocking cover band, transfer window,
   flank path를 만든다.
-- [ ] exit ascent에서 새 mechanic을 추가하지 않고 known element를 결합한다.
+- [ ] exit ascent에서 새 mechanic을 추가하지 않고 known element를 결합하며,
+  이 room의 encounter만 terminal exit를 잠그게 한다.
+- [ ] Sanctum minimap에서 gate closed/open, opened shortcut, early/late branch,
+  active checkpoint, exit lock/ready marker를 실제 state와 연결한다.
 
 Acceptance:
 
@@ -617,6 +945,10 @@ Acceptance:
 - [ ] sentry projectile가 declared cover를 관통하지 않고, ordinary enemy
   tell이 full-screen trajectory overlay 없이 읽힌다.
 - [ ] recovery cloister 진입 시 unavoidable projectile 또는 body hit이 없다.
+- [ ] shield/fractured/crossfire enemy를 하나 이상 살려 둔 채 exit-ascent
+  local encounter만 clear하고 stage를 끝낼 수 있다.
+- [ ] gate/shortcut와 두 optional branch의 minimap marker/reveal state가
+  stale하거나 reward를 사전 공개하지 않는다.
 - [ ] baseline continuous clear, both optional loops, stage retry가 통과한다.
 
 ### Milestone E — Cross-stage encounter, camera, and pacing pass
@@ -641,6 +973,12 @@ Tasks:
   stuck enemy, projectile-through-cover 횟수를 continuous note에 기록한다.
 - [ ] ordinary enemy의 full-range Line2D/arc를 전수 검토하고, 합리적인
   behavior와 local startup/destination cue로 대체 가능한 것은 제거한다.
+- [ ] global enemy remaining count를 참조하는 exit, HUD, validator, terminal
+  scene copy가 남아 있지 않은지 전수 검색한다.
+- [ ] normal-stage minimap marker set을 전수 검토하고 enemy radar, hidden
+  reward spoiler, stale checkpoint/gate state가 없는지 확인한다.
+- [ ] minimap이 three-stage silhouette 차이를 보존하고 wide/tall map을
+  independent axis stretch 없이 fit하는지 비교한다.
 - [ ] Ruin/Flooded/Sanctum silhouette를 collision-only overview로 비교한다.
 - [ ] normal stage 안에 Forge, merchant, intermission NPC가 없는지 validator와
   rendered run으로 확인한다.
@@ -656,6 +994,8 @@ Acceptance:
 - [ ] 모든 critical camera commitment가 first-time clear에서 읽힌다.
 - [ ] owner before/after run에서 route 기억, 불필요한 climb friction, enemy
   stuck, unfair projectile에 대한 개선이 확인된다.
+- [ ] owner before/after run에서 non-terminal combat을 회피하는 선택과
+  minimap의 위치/미방문/목표 정보가 과도한 안내 없이 이해된다.
 - [ ] safe intermission과 normal-stage facility separation이 회귀하지 않는다.
 
 ### Milestone F — Release-level validation
@@ -674,6 +1014,10 @@ Tasks:
 - [ ] optional route를 각각 진입, reward, rejoin까지 연속 clear한다.
 - [ ] actual enemy damage, guard, fall recovery, stage retry를 새 geometry에서
   확인한다.
+- [ ] 각 stage에서 non-terminal enemy를 최소 하나 남기고 terminal policy로
+  clear한 continuous evidence를 남긴다.
+- [ ] 각 stage에서 최소 세 room과 optional branch를 방문해 fog transition,
+  player marker, checkpoint/reward/gate state를 continuous evidence로 남긴다.
 - [ ] every required rope reversal, shooter/sentry cover interaction, repeated
   leaper destination, mobile patrol cycle을 actual stage에서 확인한다.
 - [ ] production capture에는 debug route label과 불필요한 full trajectory
@@ -690,7 +1034,12 @@ Acceptance:
 - [ ] 모든 automated command가 exit 0이다.
 - [ ] required/optional route에서 soft lock, blind commitment, reward duplicate,
   missing recovery가 없다.
-- [ ] 1280×720과 compact supported viewport에서 route와 enemy tell이 읽힌다.
+- [ ] skipped enemy가 stage clear를 막지 않고, terminal local objective와
+  boss requirement만 의도대로 block한다.
+- [ ] minimap state가 new run, room crossing, fall recovery, death retry,
+  reward claim, checkpoint, gate open에서 결정론적으로 맞다.
+- [ ] 1280×720과 compact supported viewport에서 route, enemy tell,
+  minimap fog/marker가 읽힌다.
 - [ ] production Web path가 가능할 경우 desktop과 동작이 일치한다.
 - [ ] guideline의 10개 acceptance criterion을 모두 체크했다.
 
@@ -708,22 +1057,31 @@ Acceptance:
 
 `.\tools\godot.ps1 --path . --headless --script res://tools/validate_production_stage.gd`
 
+`.\tools\godot.ps1 --path . --headless --script res://tools/validate_stage_progression_policy.gd`
+
+`.\tools\godot.ps1 --path . --headless --script res://tools/validate_stage_minimap_runtime.gd`
+
+`.\tools\godot.ps1 --path . --headless --script res://tools/validate_gameplay_hud.gd`
+
 `.\tools\godot.ps1 --path . --headless --script res://tools/validate_player_movement_runtime.gd`
 
 `.\tools\godot.ps1 --path . --headless --script res://tools/validate_shooter_runtime.gd`
 
 `.\tools\godot.ps1 --path . --headless --script res://tools/validate_flooded_enemy_runtime.gd`
 
-The three runtime validators above are not accepted unchanged. Their fixtures
-must cover rope descent through a one-way top, projectile contact with authored
-cover, repeated leaper destination selection, and reproduced mobile-enemy stuck
-cases before they can close Milestone A.
+The runtime validators above are not accepted unchanged. Their fixtures must
+cover non-terminal enemy bypass, stage-specific terminal policy, room crossing
+and fog state, same-stage retry discovery, rope descent through a one-way top,
+projectile contact with authored cover, repeated leaper destination selection,
+and reproduced mobile-enemy stuck cases before they can close Milestone A.
 
 ### Flow regressions
 
 `.\tools\godot.ps1 --path . --headless --script res://tools/validate_forge_station_flow.gd`
 
 `.\tools\godot.ps1 --path . --headless --script res://tools/validate_safe_intermission_flow.gd`
+
+`.\tools\godot.ps1 --path . --headless --script res://tools/validate_stage_attempt_retry.gd`
 
 관련 gameplay-validity release matrix가 targeted command를 제공하면 같은
 commit에서 재실행한다.
@@ -739,6 +1097,16 @@ Capture minimum:
 | Ruin | teach, shooter split, optional forward rejoin, charge test, exit release |
 | Flooded | descent preview, leaper basin, upper/lower split, pump ascent, shelter |
 | Sanctum | gate loop before/after, early branch, late branch, crossfire, final ascent |
+
+Every normal-stage capture includes the minimap. Additional isolated HUD captures
+cover:
+
+- initial dark map with start/current/exit;
+- partially explored map with current player and active checkpoint;
+- discovered optional reward before and after claim;
+- closed/open gate or shortcut;
+- locked/ready terminal exit;
+- compact 960×540 and normal 1280×720 overlap proof in both locales.
 
 ### Manual continuous scenarios
 
@@ -758,6 +1126,21 @@ Capture minimum:
     record any idle lock, wall push, repeated unreachable landing, or lane exit.
 11. Repeat representative routine jumps with early release and imperfect
     approach; required navigation must not depend on theoretical maximum input.
+12. In each stage, leave at least one non-terminal main-route enemy alive and
+    complete only the authored terminal policy. Confirm the stage clears once.
+13. In Ruin and Sanctum, reach the terminal room while its local encounter is
+    alive, confirm the exit is locked, then clear only that local encounter.
+14. In Flooded, reach the shelter with earlier enemies alive and confirm arrival
+    is sufficient.
+15. Cross at least three room boundaries while watching the minimap; current,
+    visited, unvisited, and player position must update without flicker.
+16. Activate a checkpoint, discover and claim an optional reward, and open the
+    Sanctum gate/shortcut; confirm each marker changes once and does not expose
+    undiscovered content.
+17. Die after exploring multiple rooms, retry the same stage, and confirm map
+    knowledge persists while mechanical/reward state restores to stage entry.
+18. Start a new run and enter the next stage; confirm prior discovery does not
+    leak.
 
 ### Web production validation
 
@@ -768,7 +1151,8 @@ When export templates are available:
 3. Use the fastrun manager's `codex` lane.
 4. Inspect the built Web app, not only the editor/dev path.
 5. Verify keyboard movement, jump, dash, attack, guard, interaction, pause,
-   stage retry, optional branch, and camera framing.
+   stage retry, optional branch, non-terminal enemy bypass, minimap fog/markers,
+   and camera framing.
 
 ## Progress
 
@@ -780,8 +1164,14 @@ When export templates are available:
 - [x] Owner production-path feedback and code/validator blind spots audited for
   traversal comfort, rope descent, projectile cover, leaper/patrol behavior,
   trajectory overlays, and normal-stage camera ownership.
+- [x] Global required-route enemy gate, unused terminal requirement metadata,
+  assembled room-position data, retry boundary, and top-right HUD capacity audited.
+- [x] Official Nintendo/Ubisoft navigation patterns reviewed for enemy bypass,
+  visited-space mapping, minimap placement, markers, and blocked/available path
+  guidance.
 - [ ] Milestone 0 construction blueprints reconciled with current room IDs and approved.
-- [ ] Milestone A diagnostic and shared terrain-interaction contract implemented.
+- [ ] Milestone A completion, minimap, diagnostic, and shared terrain-interaction
+  contract implemented.
 - [ ] Milestone B Ruin implemented and accepted.
 - [ ] Milestone C Flooded implemented and accepted.
 - [ ] Milestone D Sanctum implemented and accepted.
@@ -791,12 +1181,16 @@ When export templates are available:
 ## Next Steps
 
 1. Complete Milestone 0 only; do not edit gameplay geometry yet.
-2. Review the three source-linked blueprints and lock the Ruin pilot boundary.
-3. Add Milestone A red fixtures for comfort chains, rope descent, terrain-blocked
+2. Add terminal policy and minimap layers to the three source-linked blueprints,
+   then lock the Ruin pilot boundary.
+3. Add Milestone A red fixtures for global enemy gating, terminal local policy,
+   map room crossing/fog/retry, comfort chains, rope descent, terrain-blocked
    projectiles, repeated leaper destinations, mobile-enemy stuck behavior, and
    camera commitments before changing runtime behavior.
-4. Implement the shared Milestone A contracts, then rerun the same fixtures green.
-5. Complete and playtest Ruin before touching Flooded.
+4. Implement the shared Milestone A completion/navigation/terrain contracts, then
+   rerun the same fixtures green.
+5. Complete and playtest Ruin before touching Flooded, including enemy bypass and
+   minimap evidence.
 6. Apply the proven pattern to Flooded, then Sanctum without copying the same
    silhouette.
 
@@ -808,6 +1202,14 @@ When export templates are available:
   user-authored dirty files.
 - Preserve stable room IDs and reward IDs. Change content version when authored
   geometry or anchor meaning changes.
+- Preserve room-local encounter clear facts and reward settlement while removing
+  their accidental global exit authority.
+- Do not make the exit permanently open as a shortcut around a terminal local
+  objective; change only the authored policy for that stage.
+- Keep minimap geometry derived from StagePlan/Assembly. Do not hand-maintain a
+  second per-stage graph or rasterized collision map.
+- Preserve exploration knowledge separately from retry-restored mechanical and
+  reward state.
 - Keep current room scenes available until replacement geometry passes
   reachability, flow, and capture validation in the same milestone.
 - Never weaken movement, no-soft-lock, safe-intermission, or reward-duplication
@@ -834,13 +1236,22 @@ When export templates are available:
 | Projectile collision makes existing ranged encounters inert | review every declared cover lane, preserve exposed attack windows, change placement before weakening collision |
 | Terrain-aware enemy repair grows into a navigation rewrite | limit changes to reproduced existing-archetype failures and authored encounter bounds |
 | Removing full trajectories makes attacks unreadable | retain local startup, facing/pose, destination or impact cue and verify without color-only dependence |
+| Removing the global kill gate makes every stage a trivial dash-through | retain traversal, hazards, local terminal objectives, and enemy reward opportunity; validate bypass as a choice rather than mandatory combat |
+| Legacy `required_*` names silently regain exit authority | define main-route/local-encounter/exit-eligibility terms and search for aggregate exit/HUD consumers |
+| Terminal policy becomes free-form metadata drift | use one typed policy with validator coverage and remove dead requirement strings |
+| Minimap duplicates or disagrees with the stage | project StagePlan/Assembly data, compare room/edge counts, and avoid runtime physics rasterization |
+| Fog flickers at room seams | single current-room owner, deterministic overlap rule, boundary hysteresis fixture |
+| Minimap spoils optional rewards or becomes enemy radar | reveal POI only after room discovery and exclude ordinary enemy/hazard tracking |
+| Discovery is lost or duplicated on retry | treat it as knowledge, merge it forward across same-stage restore, reset by run/stage/content signature |
+| Top-right minimap overlaps compact boss/objective UI | normal-stage-only visibility plus 960×540/1280×720/1920×1080 layout assertions and captures |
+| Color-only fog or lock state is inaccessible | combine fill, edge, icon shape, and text-free badge state |
 | Forward rejoin breaks reward/reset determinism | stable IDs, retry test after each optional reward, graph validation |
 | Metrics are gamed again | separate diagnostics, no aggregate score, manual critical gates |
 | Three stages converge on the same zigzag shape | lock distinct spatial thesis and compare collision-only silhouettes |
 | Camera reveals information too late | commitment-before-information capture checklist |
 | Detailed concept is mistaken for a mandate to build a large metroidvania | keep PRD timing budget, current template baseline, and explicit room-count approval gate |
 | A beautiful blueprint cannot be mapped to runtime owners | require room IDs, sockets, anchors, and source paths on the construction version before geometry work |
-| Scope leaks into UI or world art | keep UI and final art in their existing plans; blockout/readability only here |
+| Scope leaks into broader UI or world art | keep only the normal-stage minimap here; all other UI redesign and final art stay in their existing plans |
 | Web QA remains blocked | preserve desktop evidence, link the exact export-template blocker, do not claim release closure |
 
 ## Open Questions
@@ -868,13 +1279,23 @@ deferred until rendered evidence exists:
 - Whether normal-stage camera commitments need a focus/lookahead consumer.
   Default: first reshape geometry for the existing camera; add the smallest
   runtime owner only where continuous evidence still reveals information late.
+- Whether coarse room bounds are sufficient minimap geometry after the denser
+  blockout. Default: ship StagePlan/Assembly bounds first; add a small authored
+  map-cell schema only for rooms that rendered evidence proves misleading.
+- Whether resolved reward markers disappear or remain dimmed. Default: dim within
+  the current stage so the player can remember the visited POI without confusing
+  it with an available reward.
+- Whether the active checkpoint marker shows only the current point or checkpoint
+  history. Default: show only the active checkpoint.
+- Whether a full-screen map and user markers are valuable after the minimap ships.
+  Default: defer; do not allocate an input binding in this plan.
 
 ## Decision Notes
 
 - 2026-07-15: Structural range alone is rejected as the definition of verticality.
 - 2026-07-15: Fixed curated topology remains the production baseline.
-- 2026-07-15: Current movement values, enemy catalog, stage counts, and UI branch
-  remain outside the map redesign.
+- 2026-07-15: Current movement values, enemy catalog, stage counts, and the broad
+  UI branch beyond the later-approved minimap remain outside the map redesign.
 - 2026-07-15: Existing room count is preserved for the first pass.
 - 2026-07-15: Optional paths should forward-rejoin by default; same-hub return
   requires an explicit reward and pacing justification.
@@ -902,3 +1323,16 @@ deferred until rendered evidence exists:
 - 2026-07-16: Full-range ordinary-enemy trajectory overlays are not a substitute
   for rational terrain-aware behavior. Required startup and danger readability
   remain, especially for boss attacks.
+- 2026-07-16: `required_route` is a topology term, not a global mandatory-kill
+  contract. Normal-stage completion is owned by typed terminal policy.
+- 2026-07-16: Ruin and Sanctum require only their terminal local objective;
+  Flooded requires arrival at its shelter. Non-terminal and optional enemies may
+  be bypassed.
+- 2026-07-16: The normal-stage minimap uses assembled world coordinates, not a
+  duplicate hand-authored screen map. Unvisited rooms are dark, visited rooms
+  brighten, and current player/room are shape-plus-accent states.
+- 2026-07-16: Exit, active checkpoint, discovered reward, and discovered
+  gate/shortcut are the initial POI set. Ordinary enemy and hazard tracking is
+  intentionally excluded.
+- 2026-07-16: Exploration knowledge persists across same-stage retry but resets
+  across new run/stage/content signature.
