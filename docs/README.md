@@ -26,19 +26,18 @@ product blueprint and detailed combat spec below remain authoritative.
 - `data/RUNTIME_CATALOG_INDEX.md` maps gameplay domains to typed runtime owners.
 - `release/TRAVELER_EQUIPMENT_VERTICAL_SLICE.md` records the current playable
   baseline and its verification evidence.
+- `release/FIXED_STAGE_MAP_ENHANCEMENT.md` records the completed normal-stage
+  topology, minimap, completion-policy, traversal, and Web release evidence.
 - `release/FIRST_COMPLETE_RUN_RC1.md` is the superseded three-class baseline.
 - `.agent/execplans/2026-07-14-minimum-equipment-progression-vertical-slice.md` is
   the completed migration and validation record, not current work.
-- `.agent/execplans/2026-07-15-gameplay-validity-repair.md` is the active
-  implementation plan for input, death/retry, guard, stages, safe intermission,
-  the separate UI branch, and browser-export validation.
-- `.agent/execplans/2026-07-15-master-ui-overhaul.md` is the active `master`-
-  targeted plan for selective adoption of the existing UI asset branches, the
-  complete production-screen/HUD visual migration, and measurement-backed world
-  presentation dependencies.
-- `.agent/execplans/2026-07-15-fixed-stage-map-enhancement.md` is the active
-  checklist plan for meaningful vertical routes, stage-specific height profiles,
-  encounter composition, and continuous traversal validation.
+- `.agent/execplans/2026-07-15-gameplay-validity-repair.md` is the completed
+  input, death/retry, guard, stage, safe-intermission, and browser-export record.
+- `.agent/execplans/2026-07-15-master-ui-overhaul.md` is the completed production
+  screen, HUD, asset, responsive-layout, and Web UI migration record.
+- `.agent/execplans/2026-07-15-fixed-stage-map-enhancement.md` is the completed
+  meaningful-verticality, minimap, completion-policy, encounter, and continuous
+  traversal record.
 - `.agent/execplans/2026-07-12-actual-game-production-roadmap.md` is the completed
   first-run implementation record.
 - `design/PLAYER_CHARACTER_SYSTEMS.md`,

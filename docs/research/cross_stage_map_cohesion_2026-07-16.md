@@ -114,11 +114,11 @@ a value that can be honestly inferred from scripted frame counts.
 The following runtime artifacts remain outside source control:
 
 ```text
-3311d9774db171a8ab04783ef380de3256a05c3fc2a8f6d4669ade04f4080e68  stage_silhouette_comparison.png
-70f332a25afe43f159139a87ff823115c4066050e3991bd6b0acc68db3cf9570  ruin_charge_reengage.png
-65a7c1b5c00715967b3210f3df0ee945e141ebb67a3b97498a47450f48a54b2a  flooded_pump_ascent.png
-cc2ab2e81dd7a7fed3fac43f657282ddfb0e1cc0be793c0c2777e01ec4c90432  sanctum_fractured_roles.png
-641a39ec9087171fb5cb18f2ea7d50a0d97658eae4d8ca8e17c241e8329b2aa0  sanctum_sentry_crossfire.png
+e5d491089405021d35f43610271890a8ab07d644297fcb7bc8d43acb68851526  stage_silhouette_comparison.png
+b6a513dd03c8d882bb7d0ef6a1e590cf95a074d97c0b11d564b88c326a4c446c  ruin_charge_reengage.png
+553fc7f46feeadfa48a663420a1afa963bd0fd2f8c9877673c0b2230fb617724  flooded_pump_ascent.png
+3c67b5e240988f408c903ad1a291af8518ed7953216c7c316c0253fecfec2636  sanctum_fractured_roles.png
+493b46099896ef69b643cc48fce4c66003f819112886fbc956155cf41c19837e  sanctum_sentry_crossfire.png
 ```
 
 The collision comparison is projected from the actual assembled room bodies,
@@ -141,8 +141,9 @@ basin, and Sanctum's two distributed vertical branches.
 .\tools\godot.ps1 --path . --headless --script res://tools/validate_stage_minimap_runtime.gd
 ```
 
-## Remaining Release Work
+## Release Closure
 
-Milestone F still owns the complete release matrix, production build/export,
-built-app interaction, final capture inventory, and release-level completion
-record.
+Milestone F is complete. The full `81/81` release matrix, final capture inventory,
+Godot 4.7 Web export, fastrun `codex`-lane built-app interaction, and retained
+limits are recorded in
+[Fixed Stage Map Enhancement](../release/FIXED_STAGE_MAP_ENHANCEMENT.md).

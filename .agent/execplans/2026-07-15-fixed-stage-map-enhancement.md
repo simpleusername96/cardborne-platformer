@@ -1,6 +1,6 @@
 ---
 type: plan
-status: active
+status: done
 owner: BK
 created: 2026-07-15
 last_reviewed: 2026-07-16
@@ -13,6 +13,7 @@ related:
   - ../../docs/design/2D_PLATFORMER_MAP_DESIGN_GUIDELINE.md
   - ../../docs/design/PRODUCTION_UI_CONTRACT.md
   - ../../docs/research/2d_platformer_map_design_research_2026-07-15.md
+  - ../../docs/release/FIXED_STAGE_MAP_ENHANCEMENT.md
   - ./2026-07-15-gameplay-validity-repair.md
 ---
 
@@ -33,6 +34,15 @@ related:
 이 plan은 실제 구현 체크리스트다. 각 milestone은 blockout → 자동 검증 →
 rendered inspection → continuous play 순서로 닫는다. 이전 milestone의
 acceptance가 실패하면 다음 stage로 넘어가지 않는다.
+
+## Completion
+
+2026-07-16에 Milestone 0–F를 모두 닫았다. 세 stage의 고정 topology,
+전진 재합류, typed completion policy, fog-of-war minimap, terrain-aware
+enemy behavior, Web production path가 같은 release line에 반영됐다.
+최종 근거와 잔여 한계는
+[Fixed Stage Map Enhancement](../../docs/release/FIXED_STAGE_MAP_ENHANCEMENT.md)에
+기록한다.
 
 ## Why / Context
 
@@ -634,8 +644,8 @@ blockout 결과가 더 나은 의도를 발견하면 Decision Notes에 이유를
   guideline을 증명한다.
 - [x] Milestone C에서 Flooded의 basin descent와 pump ascent를 재저작한다.
 - [x] Milestone D에서 Sanctum branch를 분산하고 gate/shortcut loop를 만든다.
-- [ ] Milestone E에서 세 stage의 encounter, camera, pacing을 함께 review한다.
-- [ ] Milestone F에서 자동·rendered·continuous·Web production evidence를
+- [x] Milestone E에서 세 stage의 encounter, camera, pacing을 함께 review한다.
+- [x] Milestone F에서 자동·rendered·continuous·Web production evidence를
   합쳐 release acceptance를 닫는다.
 
 ## Milestones
@@ -1005,43 +1015,42 @@ Goal: 자동 수치, 정지 캡처, 연속 플레이, Web production path가 같
 
 Tasks:
 
-- [ ] Godot import와 모든 targeted validator를 실행한다.
-- [ ] fixed capture 목록에 각 stage의 teach, route choice, combat peak,
+- [x] Godot import와 모든 targeted validator를 실행한다.
+- [x] fixed capture 목록에 각 stage의 teach, route choice, combat peak,
   optional rejoin, release를 포함한다.
-- [ ] teleport still 외에 stage start-to-exit continuous traversal evidence를
+- [x] teleport still 외에 stage start-to-exit continuous traversal evidence를
   stage별 하나씩 남긴다.
-- [ ] baseline required route를 keyboard input으로 연속 clear한다.
-- [ ] optional route를 각각 진입, reward, rejoin까지 연속 clear한다.
-- [ ] actual enemy damage, guard, fall recovery, stage retry를 새 geometry에서
+- [x] baseline required route를 keyboard input으로 연속 clear한다.
+- [x] optional route를 각각 진입, reward, rejoin까지 연속 clear한다.
+- [x] actual enemy damage, guard, fall recovery, stage retry를 새 geometry에서
   확인한다.
-- [ ] 각 stage에서 non-terminal enemy를 최소 하나 남기고 terminal policy로
+- [x] 각 stage에서 non-terminal enemy를 최소 하나 남기고 terminal policy로
   clear한 continuous evidence를 남긴다.
-- [ ] 각 stage에서 최소 세 room과 optional branch를 방문해 fog transition,
+- [x] 각 stage에서 최소 세 room과 optional branch를 방문해 fog transition,
   player marker, checkpoint/reward/gate state를 continuous evidence로 남긴다.
-- [ ] every required rope reversal, shooter/sentry cover interaction, repeated
+- [x] every required rope reversal, shooter/sentry cover interaction, repeated
   leaper destination, mobile patrol cycle을 actual stage에서 확인한다.
-- [ ] production capture에는 debug route label과 불필요한 full trajectory
+- [x] production capture에는 debug route label과 불필요한 full trajectory
   overlay가 없고, 필요한 danger startup은 color 외 cue와 함께 남는다.
-- [ ] Web export template가 있으면 production Web export를 만들고 built app을
+- [x] Web export template가 있으면 production Web export를 만들고 built app을
   fastrun codex lane에서 확인한다.
-- [ ] Web export template가 여전히 없으면 blocker를 기존 gameplay-validity
-  plan과 연결하고 desktop production capture를 임시 evidence로 남긴다.
-- [ ] capture와 metric의 before/after summary를 research 또는 completion
+- [x] Web export template가 존재하므로 blocker fallback은 필요하지 않았다.
+- [x] capture와 metric의 before/after summary를 research 또는 completion
   record에 추가한다.
 
 Acceptance:
 
-- [ ] 모든 automated command가 exit 0이다.
-- [ ] required/optional route에서 soft lock, blind commitment, reward duplicate,
+- [x] 모든 automated command가 exit 0이다.
+- [x] required/optional route에서 soft lock, blind commitment, reward duplicate,
   missing recovery가 없다.
-- [ ] skipped enemy가 stage clear를 막지 않고, terminal local objective와
+- [x] skipped enemy가 stage clear를 막지 않고, terminal local objective와
   boss requirement만 의도대로 block한다.
-- [ ] minimap state가 new run, room crossing, fall recovery, death retry,
+- [x] minimap state가 new run, room crossing, fall recovery, death retry,
   reward claim, checkpoint, gate open에서 결정론적으로 맞다.
-- [ ] 1280×720과 compact supported viewport에서 route, enemy tell,
+- [x] 1280×720과 compact supported viewport에서 route, enemy tell,
   minimap fog/marker가 읽힌다.
-- [ ] production Web path가 가능할 경우 desktop과 동작이 일치한다.
-- [ ] guideline의 10개 acceptance criterion을 모두 체크했다.
+- [x] production Web path가 가능할 경우 desktop과 동작이 일치한다.
+- [x] guideline의 10개 acceptance criterion을 모두 체크했다.
 
 ## Test Plan
 
@@ -1176,14 +1185,15 @@ When export templates are available:
 - [x] Milestone C Flooded implemented and accepted.
 - [x] Milestone D Sanctum implemented and accepted.
 - [x] Milestone E cross-stage pass accepted.
-- [ ] Milestone F release validation accepted.
+- [x] Milestone F release validation accepted.
 
 ## Next Steps
 
-1. Close the complete release matrix, production build, rendered evidence, and
-   continuous traversal record.
-2. Verify the built Web path through the canonical fastrun codex lane.
-3. Publish the final completion record and retire this ExecPlan.
+1. Treat `docs/release/FIXED_STAGE_MAP_ENHANCEMENT.md` as the release closure.
+2. Keep subjective fun and pacing tuning as human playtest work; do not weaken
+   the closed movement, recovery, completion, or minimap contracts.
+3. Re-enter random topology, final world art, or additional rooms only through
+   separately approved work.
 
 ## Rollback / Safety
 
@@ -1243,12 +1253,12 @@ When export templates are available:
 | Detailed concept is mistaken for a mandate to build a large metroidvania | keep PRD timing budget, current template baseline, and explicit room-count approval gate |
 | A beautiful blueprint cannot be mapped to runtime owners | require room IDs, sockets, anchors, and source paths on the construction version before geometry work |
 | Scope leaks into broader UI or world art | keep only the normal-stage minimap here; all other UI redesign and final art stay in their existing plans |
-| Web QA remains blocked | preserve desktop evidence, link the exact export-template blocker, do not claim release closure |
+| Later Web changes diverge from desktop behavior | keep deterministic export, browser-input validation, fastrun codex-lane smoke, and the full release matrix |
 
 ## Open Questions
 
-No question blocks Milestone A or Ruin blockout. The following decisions are
-deferred until rendered evidence exists:
+No question blocks this completed plan. The following decisions remain explicitly
+deferred to future, separately scoped work:
 
 - Whether one currently inactive catalog room should replace an active room.
   Default: do not increase active room count.
@@ -1357,3 +1367,6 @@ deferred until rendered evidence exists:
   projectile cover, enemy bypass, and minimap clarity. This closes the technical
   acceptance without claiming that scripted evidence can determine subjective
   fun.
+- 2026-07-16: Milestone F closed with `81/81` Full release checks, 28 refreshed
+  fixed-stage captures plus the collision-silhouette comparison, a Godot 4.7 Web
+  export, and built-app interaction on the fastrun `codex` lane.

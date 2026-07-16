@@ -13,6 +13,7 @@ related:
   - ../docs/research/2d_platformer_map_design_research_2026-07-15.md
   - ../docs/architecture/FIRST_SLICE_ARCHITECTURE.md
   - ../docs/release/TRAVELER_EQUIPMENT_VERTICAL_SLICE.md
+  - ../docs/release/FIXED_STAGE_MAP_ENHANCEMENT.md
   - ./execplans/2026-07-15-gameplay-validity-repair.md
   - ./execplans/2026-07-15-master-ui-overhaul.md
   - ./execplans/2026-07-15-fixed-stage-map-enhancement.md
@@ -140,6 +141,10 @@ adding more content or random topology.
 - All three normal stages, six committed-return fixtures, enemy/hazard families,
   card rewards, boss flow, retry/settlement, intermission, and profile restart
   recovery are in the active release matrix.
+- The fixed-stage map enhancement ExecPlan is complete. Its final closure passed
+  the `81/81` Full release matrix, refreshed the stage capture inventory, exported
+  the Godot 4.7 Web build, and verified Main Menu, Hero Preparation, Stage 1
+  launch, movement, minimap/HUD, and pause on the fastrun `codex` lane.
 - The minimum equipment-progression and master UI-overhaul ExecPlans are complete.
   The production set provides 6 structural masks, 22 semantic glyphs, 5 reviewed
   shell backgrounds, 19 detailed illustrations, and one bundled bilingual font
@@ -192,7 +197,7 @@ Read in this order:
 .\tools\godot.ps1 --path . --headless --import
 .\tools\godot.ps1 --path . --headless --quit-after 2
 
-# Active release gates: 72 core checks, 77 with persistence/runtime extensions
+# Active release gates: 75 core checks, 81 with persistence/runtime extensions
 .\tools\validate_release_candidate.ps1
 .\tools\validate_release_candidate.ps1 -Full
 
@@ -206,8 +211,8 @@ Read in this order:
 ```
 
 The accepted historical evidence is `68/68` Full checks on 2026-07-14 and `70/70`
-core checks on 2026-07-15. The current integrated evidence is `77/77` Full checks
-on 2026-07-16 (`RELEASE_CANDIDATE_MATRIX_OK checks=77 full=True seconds=634.6`),
+core checks on 2026-07-15. The current integrated evidence is `81/81` Full checks
+on 2026-07-16 (`RELEASE_CANDIDATE_MATRIX_OK checks=81 full=True seconds=632.7`),
 plus rendered inspection at `960x540`, `1280x720`, and `1920x1080`.
 
 The 2026-07-15 shell-background pass additionally passed the focused Shell UI,
@@ -242,6 +247,13 @@ three-stage, reward, intermission, retry/end, boss, result, locale, and viewport
 path. The served build also exposed and verified the fix for missing Korean host
 fallback by bundling Noto Sans KR Variable in the project Theme.
 
+The fixed-stage release closure regenerated 28 stage views plus the assembled
+collision-silhouette comparison and exported nine Web files. The built app
+returned HTTP 200 at the fastrun `codex` port, focused a `1280x720` canvas, and
+reported zero browser error events while traversing Main Menu, Hero Preparation,
+Stage 1 launch, rightward movement, and pause. The task-scoped completion record
+is `docs/release/FIXED_STAGE_MAP_ENHANCEMENT.md`.
+
 ## Risks
 
 - Actor, terrain, UI icon, audio, and effects are coherent prototype presentation,
@@ -257,15 +269,11 @@ fallback by bundling Noto Sans KR Variable in the project Theme.
 
 ## Next Steps
 
-The gameplay-validity and master UI-overhaul plans are complete. Their runtime,
-UI, `77/77` full release, production Web export, and served-browser evidence are
-landed on the validated integration line. World-presentation requirements remain
-measured from runtime bounds instead of conversation-chosen image counts.
-The active map-composition follow-on is
-`.agent/execplans/2026-07-15-fixed-stage-map-enhancement.md`: preserve the fixed
-authored-room pipeline while replacing metric-only height with meaningful route,
-combat, camera, and pacing verticality. Its existing progress remains independent
-of this completed UI migration.
+The gameplay-validity, master UI-overhaul, and fixed-stage map enhancement plans
+are complete. Their runtime, UI, `81/81` Full release, production Web export,
+served-browser evidence, completion policy, minimap, and authored-map contracts
+are landed on `master`. World-presentation requirements remain measured from
+runtime bounds instead of conversation-chosen image counts.
 Random map re-entry, larger equipment/content catalogs, multiple save slots, and
 the remaining nine panorama panels, broader terrain rollout, actor animation,
 native-HD shell replacements, and final world art remain separate decisions.
