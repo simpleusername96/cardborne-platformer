@@ -3,8 +3,9 @@ extends SceneTree
 const STAGE_PATH := "res://scenes/stages/production/ProductionStageHost.tscn"
 const RUN_SEED := 41_000
 const FIXED_LAYOUT_SEED_V1 := 0x43415244
+const OPTIONAL_ROOM_COUNT := 2
 const REQUIRED_ROLES: Array[StringName] = [
-	&"start", &"combat", &"objective", &"hazard", &"choice", &"safe", &"combat", &"exit",
+	&"start", &"combat", &"objective", &"hazard", &"choice", &"combat", &"safe", &"combat", &"exit",
 ]
 
 var _failures: Array[String] = []
@@ -63,7 +64,10 @@ func _validate_plan(stage: Variant, profile_index: int) -> void:
 		plan.run_seed == FIXED_LAYOUT_SEED_V1 and plan.stage_index == 2,
 		"Stage 3 plan identity should be fixed; seed=%d stage=%d" % [plan.run_seed, plan.stage_index]
 	)
-	_expect(plan.get_rooms().size() == 10, "Broken Sanctum should assemble 8+2 rooms")
+	_expect(
+		plan.get_rooms().size() == REQUIRED_ROLES.size() + OPTIONAL_ROOM_COUNT,
+		"Broken Sanctum should assemble its required route plus two optional rooms"
+	)
 	var required: Array[PlannedRoom] = []
 	var optional_count := 0
 	for room in plan.get_rooms():
@@ -78,12 +82,15 @@ func _validate_plan(stage: Variant, profile_index: int) -> void:
 	for room in required:
 		roles.append(room.role)
 	_expect(roles == REQUIRED_ROLES, "Stage 3 required role sequence should remain exact")
-	_expect(optional_count == 2, "Stage 3 should contain two optional branches")
+	_expect(optional_count == OPTIONAL_ROOM_COUNT, "Stage 3 should contain two optional branches")
 
 
 func _validate_runtime_content(stage: Variant, profile_index: int) -> void:
 	var plan: StagePlan = stage.get_stage_plan()
-	_expect(stage.get_room_ids().size() == 10, "profile %d should instantiate every Stage 3 room" % profile_index)
+	_expect(
+		stage.get_room_ids().size() == REQUIRED_ROLES.size() + OPTIONAL_ROOM_COUNT,
+		"profile %d should instantiate every Stage 3 room" % profile_index
+	)
 	_expect(stage.get_all_enemies().size() == plan.get_encounters().size(), "every Sanctum encounter should spawn")
 	for enemy in stage.get_all_enemies():
 		_expect(enemy.resolved_spec != null, "Sanctum enemy should retain resolved data")

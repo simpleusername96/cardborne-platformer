@@ -514,12 +514,21 @@ func _validate_lower_return_hatch(return_socket: RoomSocketData, host: RoomTempl
 	)
 
 
-# Planner compatibility uses different transition signatures so each optional room reserves its matching pair.
+# Planner compatibility keeps required combat slots distinct and reserves the
+# matching transition pair for each optional room.
 func _validate_planner_and_assembly(
 	catalog: RoomCatalog,
 	profile: StageProfile,
 	limits: Dictionary
 ) -> void:
+	var expected_combat_ids: Array[StringName] = [
+		&"bs_shield_choke", &"bs_sentry_crossfire", &"bs_fractured_gallery",
+	]
+	var expected_combat_slot_count := profile.required_roles.count(&"combat")
+	_expect(
+		expected_combat_slot_count <= expected_combat_ids.size(),
+		"Required combat slots must not exceed the focused combat catalog."
+	)
 	var combat_coverage: Dictionary = {}
 	var assembled_signatures: Dictionary = {}
 	for seed in range(1, 65):
@@ -530,13 +539,19 @@ func _validate_planner_and_assembly(
 			continue
 		var optional_rooms: Array[PlannedRoom] = []
 		var combat_ids: Array[StringName] = []
+		var unique_combat_ids: Dictionary = {}
 		for room in plan.get_rooms():
 			if not room.required_route:
 				optional_rooms.append(room)
 			elif room.role == &"combat":
 				combat_ids.append(room.template_id)
+				unique_combat_ids[room.template_id] = true
 				combat_coverage[room.template_id] = true
-		_expect(combat_ids.size() == 2 and combat_ids[0] != combat_ids[1], "Required combat slots must use unique templates.")
+		_expect(
+			combat_ids.size() == expected_combat_slot_count
+			and unique_combat_ids.size() == combat_ids.size(),
+			"Required combat slots must be filled with unique templates."
+		)
 		_expect(optional_rooms.size() == 2, "Every plan needs exactly two optional rooms.")
 		_validate_plan_branch_ends(plan, optional_rooms)
 
@@ -550,9 +565,16 @@ func _validate_planner_and_assembly(
 		assembled_signatures[signature] = true
 		await _validate_assembled_plan(plan, catalog, limits)
 
-	for combat_id in [&"bs_shield_choke", &"bs_sentry_crossfire", &"bs_fractured_gallery"]:
+	for combat_id in expected_combat_ids:
 		_expect(combat_coverage.has(combat_id), "Planner seeds should exercise combat alternative %s." % combat_id)
-	_expect(assembled_signatures.size() >= 3, "At least three distinct combat-pair plans should assemble.")
+	var expected_signature_count := _combination_count(
+		expected_combat_ids.size(),
+		expected_combat_slot_count
+	)
+	_expect(
+		assembled_signatures.size() >= expected_signature_count,
+		"Seed sweep should assemble every distinct required-combat combination."
+	)
 
 
 func _validate_plan_branch_ends(plan: StagePlan, optional_rooms: Array[PlannedRoom]) -> void:
@@ -695,6 +717,16 @@ func _same_ids(left: Array[StringName], right: Array[StringName]) -> bool:
 	left_copy.sort()
 	right_copy.sort()
 	return left_copy == right_copy
+
+
+func _combination_count(total: int, chosen: int) -> int:
+	if chosen < 0 or chosen > total:
+		return 0
+	var smaller_side := mini(chosen, total - chosen)
+	var result := 1
+	for index in range(1, smaller_side + 1):
+		result = int(result * (total - smaller_side + index) / index)
+	return result
 
 
 func _append_errors(errors: PackedStringArray, label: String) -> void:
