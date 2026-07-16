@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="RoomTemplateData" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="RoomTemplateData" load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/stages/RoomTemplateData.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/stages/RoomSocketData.gd" id="2"]
@@ -32,18 +32,33 @@ approach_width = 320.0
 landing_width = 320.0
 headroom = 180.0
 
+[sub_resource type="Resource" id="ReliquaryBranchSocket"]
+script = ExtResource("2")
+id = &"cloister_reliquary_branch"
+direction = &"up"
+route_role = &"optional"
+local_position = Vector2(960, 0)
+opening_size = Vector2(128, 160)
+support_top = 620.0
+transition_type = &"rope"
+required_ability = &"climb"
+approach_width = 260.0
+landing_width = 260.0
+headroom = 160.0
+recovery_id = &"cloister_checkpoint_recovery"
+
 [resource]
 script = ExtResource("1")
 id = &"bs_recovery_cloister"
 display_name = "Recovery Cloister"
-content_version = 1
+content_version = 2
 scene = ExtResource("3")
 role = &"safe"
 stage_tags = Array[StringName]([&"broken_sanctum"])
 required_route = true
 bounds = Rect2(0, 0, 1280, 720)
 entry_sockets = Array[ExtResource("2")]([SubResource("EntrySocket")])
-exit_sockets = Array[ExtResource("2")]([SubResource("ExitSocket")])
+exit_sockets = Array[ExtResource("2")]([SubResource("ExitSocket"), SubResource("ReliquaryBranchSocket")])
 encounter_budget = Vector2i(0, 0)
 hazard_budget = Vector2i(0, 0)
 reward_budget = Vector2i(0, 0)

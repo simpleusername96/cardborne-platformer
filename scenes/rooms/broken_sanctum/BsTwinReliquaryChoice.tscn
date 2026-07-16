@@ -1,17 +1,19 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scripts/stages/RoomTemplateHost.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/stages/RoomAnchor.gd" id="2"]
 [ext_resource type="Script" path="res://scripts/stages/Climbable.gd" id="3"]
 
 [sub_resource type="RectangleShape2D" id="BranchCoverShape"]
-size = Vector2(320, 12)
+size = Vector2(320, 100)
 [sub_resource type="RectangleShape2D" id="CenterMassShape"]
-size = Vector2(480, 100)
+size = Vector2(320, 164)
 [sub_resource type="RectangleShape2D" id="RightFillShape"]
-size = Vector2(192, 120)
+size = Vector2(280, 228)
+[sub_resource type="RectangleShape2D" id="ExitFillShape"]
+size = Vector2(160, 292)
 [sub_resource type="RectangleShape2D" id="ReturnHatchShape"]
-size = Vector2(480, 12)
+size = Vector2(240, 12)
 [sub_resource type="RectangleShape2D" id="ReturnLandingShape"]
 size = Vector2(240, 12)
 [sub_resource type="RectangleShape2D" id="ReturnStepShape"]
@@ -24,95 +26,96 @@ room_id = &"bs_twin_reliquary_choice"
 [node name="Terrain" type="Node2D" parent="."]
 [node name="LowerBranchCover" type="StaticBody2D" parent="Terrain"]
 position = Vector2(160, 620)
-collision_layer = 2
+collision_layer = 1
 collision_mask = 0
-metadata/surface_id = &"twin_choice_lower_cover"
+metadata/surface_id = &"twin_transfer_entry"
 metadata/support_top = 620.0
 metadata/support_width = 320.0
 metadata/critical = true
-metadata/one_way = true
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/LowerBranchCover"]
+position = Vector2(0, 50)
 shape = SubResource("BranchCoverShape")
-one_way_collision = true
-[node name="Visual" type="Polygon2D" parent="Terrain/LowerBranchCover"]
+[node name="RockVisual" type="Polygon2D" parent="Terrain/LowerBranchCover"]
 color = Color(0.55, 0.46, 0.72, 1)
-polygon = PackedVector2Array(-160, -6, 160, -6, 160, 6, -160, 6)
+polygon = PackedVector2Array(-160, 0, 160, 0, 160, 100, -160, 100)
 
 [node name="CenterChoiceMass" type="StaticBody2D" parent="Terrain"]
-position = Vector2(560, 620)
+position = Vector2(480, 556)
 collision_layer = 1
 collision_mask = 0
-metadata/surface_id = &"twin_choice_center_floor"
-metadata/support_top = 620.0
-metadata/support_width = 480.0
+metadata/surface_id = &"twin_transfer_mid"
+metadata/support_top = 556.0
+metadata/support_width = 320.0
 metadata/critical = true
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/CenterChoiceMass"]
-position = Vector2(0, 50)
+position = Vector2(0, 82)
 shape = SubResource("CenterMassShape")
 [node name="RockVisual" type="Polygon2D" parent="Terrain/CenterChoiceMass"]
 color = Color(0.14, 0.15, 0.21, 1)
-polygon = PackedVector2Array(-240, 0, 240, 0, 240, 100, -240, 100)
+polygon = PackedVector2Array(-160, 0, 160, 0, 160, 164, -160, 164)
 [node name="SupportCap" type="Polygon2D" parent="Terrain/CenterChoiceMass"]
 color = Color(0.72, 0.56, 0.28, 1)
-polygon = PackedVector2Array(-240, 0, 240, 0, 240, 8, -240, 8)
+polygon = PackedVector2Array(-160, 0, 160, 0, 160, 8, -160, 8)
 
 [node name="RightChoiceFillWest" type="StaticBody2D" parent="Terrain"]
-position = Vector2(896, 600)
+position = Vector2(780, 492)
 collision_layer = 1
 collision_mask = 0
-metadata/surface_id = &"twin_choice_right_floor_west"
-metadata/support_top = 600.0
-metadata/support_width = 192.0
-metadata/critical = false
+metadata/surface_id = &"twin_transfer_crown"
+metadata/support_top = 492.0
+metadata/support_width = 280.0
+metadata/critical = true
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/RightChoiceFillWest"]
-position = Vector2(0, 60)
+position = Vector2(0, 114)
 shape = SubResource("RightFillShape")
 [node name="RockVisual" type="Polygon2D" parent="Terrain/RightChoiceFillWest"]
 color = Color(0.19, 0.18, 0.25, 1)
-polygon = PackedVector2Array(-96, 0, 96, 0, 96, 120, -96, 120)
+polygon = PackedVector2Array(-140, 0, 140, 0, 140, 228, -140, 228)
 [node name="SupportCap" type="Polygon2D" parent="Terrain/RightChoiceFillWest"]
 color = Color(0.32, 0.62, 0.58, 1)
-polygon = PackedVector2Array(-96, 0, 96, 0, 96, 8, -96, 8)
+polygon = PackedVector2Array(-140, 0, 140, 0, 140, 8, -140, 8)
 
 [node name="RightChoiceFillEast" type="StaticBody2D" parent="Terrain"]
-position = Vector2(1184, 600)
+position = Vector2(1200, 428)
 collision_layer = 1
 collision_mask = 0
-metadata/surface_id = &"twin_choice_right_floor_east"
-metadata/support_top = 600.0
-metadata/support_width = 192.0
+metadata/surface_id = &"twin_transfer_exit"
+metadata/support_top = 428.0
+metadata/support_width = 160.0
 metadata/critical = false
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/RightChoiceFillEast"]
-position = Vector2(0, 60)
-shape = SubResource("RightFillShape")
+position = Vector2(0, 146)
+shape = SubResource("ExitFillShape")
 [node name="RockVisual" type="Polygon2D" parent="Terrain/RightChoiceFillEast"]
 color = Color(0.19, 0.18, 0.25, 1)
-polygon = PackedVector2Array(-96, 0, 96, 0, 96, 120, -96, 120)
+polygon = PackedVector2Array(-80, 0, 80, 0, 80, 292, -80, 292)
 [node name="SupportCap" type="Polygon2D" parent="Terrain/RightChoiceFillEast"]
 color = Color(0.32, 0.62, 0.58, 1)
-polygon = PackedVector2Array(-96, 0, 96, 0, 96, 8, -96, 8)
+polygon = PackedVector2Array(-80, 0, 80, 0, 80, 8, -80, 8)
 
 [node name="LowerReturnHatch" type="StaticBody2D" parent="Terrain"]
-position = Vector2(1040, 600)
+position = Vector2(1040, 428)
 collision_layer = 2
 collision_mask = 0
 metadata/surface_id = &"twin_choice_return_hatch"
-metadata/support_top = 600.0
-metadata/support_width = 480.0
+metadata/support_top = 428.0
+metadata/support_width = 240.0
 metadata/critical = true
 metadata/one_way = true
 metadata/return_landing = true
-metadata/shaft_width = 96.0
+metadata/shaft_width = 240.0
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/LowerReturnHatch"]
+position = Vector2(0, 6)
 shape = SubResource("ReturnHatchShape")
 one_way_collision = true
 [node name="Visual" type="Polygon2D" parent="Terrain/LowerReturnHatch"]
 color = Color(0.78, 0.68, 0.4, 1)
-polygon = PackedVector2Array(-48, -6, 48, -6, 48, 6, -48, 6)
+polygon = PackedVector2Array(-120, 0, 120, 0, 120, 12, -120, 12)
 
 [node name="OneWay" type="Node2D" parent="."]
 [node name="UpperReturnLanding" type="StaticBody2D" parent="OneWay"]
 position = Vector2(1040, 140)
+visible = false
 collision_layer = 2
 collision_mask = 0
 metadata/surface_id = &"twin_choice_upper_return_landing"
@@ -121,6 +124,7 @@ metadata/support_width = 240.0
 metadata/critical = false
 metadata/return_landing = true
 [node name="CollisionShape2D" type="CollisionShape2D" parent="OneWay/UpperReturnLanding"]
+disabled = true
 shape = SubResource("ReturnLandingShape")
 one_way_collision = true
 [node name="Visual" type="Polygon2D" parent="OneWay/UpperReturnLanding"]
@@ -129,6 +133,7 @@ polygon = PackedVector2Array(-120, -6, 120, -6, 120, 6, -120, 6)
 
 [node name="ReturnStepA" type="StaticBody2D" parent="OneWay"]
 position = Vector2(900, 240)
+visible = false
 collision_layer = 2
 collision_mask = 0
 metadata/surface_id = &"twin_choice_return_step_a"
@@ -136,6 +141,7 @@ metadata/support_top = 240.0
 metadata/support_width = 220.0
 metadata/critical = false
 [node name="CollisionShape2D" type="CollisionShape2D" parent="OneWay/ReturnStepA"]
+disabled = true
 shape = SubResource("ReturnStepShape")
 one_way_collision = true
 [node name="Visual" type="Polygon2D" parent="OneWay/ReturnStepA"]
@@ -144,6 +150,7 @@ polygon = PackedVector2Array(-110, -6, 110, -6, 110, 6, -110, 6)
 
 [node name="ReturnStepB" type="StaticBody2D" parent="OneWay"]
 position = Vector2(780, 340)
+visible = false
 collision_layer = 2
 collision_mask = 0
 metadata/surface_id = &"twin_choice_return_step_b"
@@ -151,6 +158,7 @@ metadata/support_top = 340.0
 metadata/support_width = 220.0
 metadata/critical = false
 [node name="CollisionShape2D" type="CollisionShape2D" parent="OneWay/ReturnStepB"]
+disabled = true
 shape = SubResource("ReturnStepShape")
 one_way_collision = true
 [node name="Visual" type="Polygon2D" parent="OneWay/ReturnStepB"]
@@ -159,6 +167,7 @@ polygon = PackedVector2Array(-110, -6, 110, -6, 110, 6, -110, 6)
 
 [node name="ReturnStepC" type="StaticBody2D" parent="OneWay"]
 position = Vector2(900, 440)
+visible = false
 collision_layer = 2
 collision_mask = 0
 metadata/surface_id = &"twin_choice_return_step_c"
@@ -166,6 +175,7 @@ metadata/support_top = 440.0
 metadata/support_width = 220.0
 metadata/critical = false
 [node name="CollisionShape2D" type="CollisionShape2D" parent="OneWay/ReturnStepC"]
+disabled = true
 shape = SubResource("ReturnStepShape")
 one_way_collision = true
 [node name="Visual" type="Polygon2D" parent="OneWay/ReturnStepC"]
@@ -174,6 +184,7 @@ polygon = PackedVector2Array(-110, -6, 110, -6, 110, 6, -110, 6)
 
 [node name="ReturnStepD" type="StaticBody2D" parent="OneWay"]
 position = Vector2(1040, 520)
+visible = false
 collision_layer = 2
 collision_mask = 0
 metadata/surface_id = &"twin_choice_return_step_d"
@@ -181,6 +192,7 @@ metadata/support_top = 520.0
 metadata/support_width = 220.0
 metadata/critical = false
 [node name="CollisionShape2D" type="CollisionShape2D" parent="OneWay/ReturnStepD"]
+disabled = true
 shape = SubResource("ReturnStepShape")
 one_way_collision = true
 [node name="Visual" type="Polygon2D" parent="OneWay/ReturnStepD"]
@@ -211,30 +223,40 @@ position = Vector2(1040, 720)
 [node name="UpperReturn" type="Marker2D" parent="Anchors/Sockets"]
 position = Vector2(1040, 0)
 [node name="CriticalExit" type="Marker2D" parent="Anchors/Sockets"]
-position = Vector2(1280, 600)
+position = Vector2(1280, 428)
 
 [node name="Enemy" type="Node2D" parent="Anchors"]
 [node name="Hazard" type="Node2D" parent="Anchors"]
 [node name="Reward" type="Node2D" parent="Anchors"]
 [node name="Objective" type="Node2D" parent="Anchors"]
 [node name="UpperBranchRope" type="Area2D" parent="Anchors/Objective"]
-position = Vector2(600, 240)
+visible = false
+monitoring = false
+monitorable = false
+position = Vector2(600, 196)
 script = ExtResource("3")
-climbable_size = Vector2(64, 760)
+climbable_size = Vector2(64, 720)
 visual_color = Color(0.78, 0.68, 0.4, 0.9)
-metadata/entry_support = &"twin_choice_center_floor"
+metadata/entry_support = &"twin_transfer_mid"
 metadata/exit_support = &"reliquary_cache_center"
 metadata/support_overlap = 32.0
+metadata/compatibility_only = true
 [node name="LowerDecision" type="Marker2D" parent="Anchors/Objective"]
 position = Vector2(240, 620)
 metadata/branch_socket_id = &"twin_choice_lower_branch"
 metadata/return_socket_id = &"twin_choice_lower_return"
 metadata/optional_room_id = &"bs_material_crypt"
+metadata/compatibility_only = true
 [node name="UpperDecision" type="Marker2D" parent="Anchors/Objective"]
 position = Vector2(600, 620)
 metadata/branch_socket_id = &"twin_choice_upper_branch"
 metadata/return_socket_id = &"twin_choice_upper_return"
 metadata/optional_room_id = &"bs_reliquary_cache"
+metadata/compatibility_only = true
+[node name="TransferRead" type="Marker2D" parent="Anchors/Objective"]
+position = Vector2(880, 460)
+metadata/route_surfaces = Array[StringName]([&"twin_transfer_entry", &"twin_transfer_mid", &"twin_transfer_crown", &"twin_choice_return_hatch", &"twin_transfer_exit"])
+metadata/branch_hub = false
 
 [node name="Recovery" type="Node2D" parent="Anchors"]
 [node name="ChoiceEntryRecovery" type="Marker2D" parent="Anchors/Recovery"]
@@ -244,23 +266,23 @@ anchor_id = &"choice_entry_recovery"
 anchor_type = &"recovery"
 safe_radius = 180.0
 required = true
-metadata/support_id = &"twin_choice_lower_cover"
+metadata/support_id = &"twin_transfer_entry"
 [node name="ChoiceMainRecovery" type="Marker2D" parent="Anchors/Recovery"]
-position = Vector2(560, 620)
+position = Vector2(480, 556)
 script = ExtResource("2")
 anchor_id = &"choice_main_recovery"
 anchor_type = &"recovery"
 safe_radius = 180.0
 required = true
-metadata/support_id = &"twin_choice_center_floor"
+metadata/support_id = &"twin_transfer_mid"
 [node name="UpperReturnRecovery" type="Marker2D" parent="Anchors/Recovery"]
-position = Vector2(1040, 140)
+position = Vector2(1040, 428)
 script = ExtResource("2")
 anchor_id = &"upper_return_recovery"
 anchor_type = &"recovery"
 safe_radius = 110.0
 required = true
-metadata/support_id = &"twin_choice_upper_return_landing"
+metadata/support_id = &"twin_choice_return_hatch"
 
 [node name="CameraBounds" type="Node2D" parent="."]
 metadata/bounds = Rect2(0, 0, 1280, 720)
@@ -271,3 +293,5 @@ metadata/optional_branch_count = 2
 metadata/lower_optional_offset = Vector2(0, 720)
 metadata/upper_optional_offset = Vector2(0, -720)
 metadata/upper_branch_rope_path = NodePath("../Anchors/Objective/UpperBranchRope")
+metadata/main_route_transfer = true
+metadata/fixed_branch_hub = false

@@ -58,7 +58,12 @@ static func build(
 		exit_portal
 	)
 	if runtime_content != null:
-		_append_checkpoint_marker(markers, runtime_content.checkpoint, terminal_room_id)
+		_append_checkpoint_markers(
+			markers,
+			hosts,
+			runtime_content.checkpoint,
+			terminal_room_id
+		)
 		_append_reward_markers(markers, runtime_content.rewards)
 	_append_gate_markers(markers, hosts)
 	markers.sort_custom(
@@ -121,17 +126,44 @@ static func _append_endpoint_markers(
 			})
 
 
+static func _append_checkpoint_markers(
+	markers: Array[Dictionary],
+	hosts: Dictionary,
+	runtime_checkpoint: StageCheckpoint,
+	terminal_room_id: StringName
+) -> void:
+	var seen_ids: Dictionary = {}
+	var room_ids := hosts.keys()
+	room_ids.sort()
+	for room_value in room_ids:
+		var room_id := String(room_value)
+		var host := hosts[room_value] as RoomTemplateHost
+		if host == null:
+			continue
+		for node in host.find_children("*", "StageCheckpoint", true, false):
+			var checkpoint := node as StageCheckpoint
+			if checkpoint == null or seen_ids.has(checkpoint.checkpoint_id):
+				continue
+			_append_checkpoint_marker(markers, checkpoint, StringName(room_id))
+			seen_ids[checkpoint.checkpoint_id] = true
+	if (
+		runtime_checkpoint != null
+		and not seen_ids.has(runtime_checkpoint.checkpoint_id)
+	):
+		_append_checkpoint_marker(markers, runtime_checkpoint, terminal_room_id)
+
+
 static func _append_checkpoint_marker(
 	markers: Array[Dictionary],
 	checkpoint: StageCheckpoint,
-	terminal_room_id: StringName
+	room_id: StringName
 ) -> void:
 	if checkpoint == null:
 		return
 	markers.append({
 		"id": "checkpoint:%s" % checkpoint.checkpoint_id,
 		"type": "checkpoint",
-		"room_id": String(terminal_room_id),
+		"room_id": String(room_id),
 		"position": checkpoint.global_position,
 		"state": "inactive",
 		"always_visible": false,

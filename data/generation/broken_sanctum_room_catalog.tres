@@ -17,5 +17,5 @@
 script = ExtResource("1")
 id = &"broken_sanctum_rooms"
 display_name = "Broken Sanctum Rooms"
-content_version = 2
+content_version = 3
 rooms = Array[RoomTemplateData]([ExtResource("2"), ExtResource("3"), ExtResource("4"), ExtResource("5"), ExtResource("6"), ExtResource("7"), ExtResource("8"), ExtResource("9"), ExtResource("10"), ExtResource("11"), ExtResource("12")])

@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scripts/stages/RoomTemplateHost.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/stages/RoomAnchor.gd" id="2"]
@@ -7,7 +7,13 @@
 [sub_resource type="RectangleShape2D" id="ShelfMassShape"]
 size = Vector2(320, 200)
 [sub_resource type="RectangleShape2D" id="BasinMassShape"]
-size = Vector2(640, 80)
+size = Vector2(400, 264)
+[sub_resource type="RectangleShape2D" id="GateShelfShape"]
+size = Vector2(180, 328)
+[sub_resource type="RectangleShape2D" id="LegacyReturnShelfShape"]
+size = Vector2(180, 392)
+[sub_resource type="RectangleShape2D" id="NaveReturnShelfShape"]
+size = Vector2(264, 12)
 [sub_resource type="RectangleShape2D" id="CryptMarkerShape"]
 size = Vector2(48, 64)
 
@@ -35,41 +41,79 @@ color = Color(0.55, 0.46, 0.72, 1)
 polygon = PackedVector2Array(-160, 0, 160, 0, 160, 8, -160, 8)
 
 [node name="CryptBasinMass" type="StaticBody2D" parent="Terrain"]
-position = Vector2(640, 640)
+position = Vector2(520, 456)
 collision_layer = 1
 collision_mask = 0
 metadata/surface_id = &"material_crypt_basin"
-metadata/support_top = 640.0
-metadata/support_width = 640.0
+metadata/support_top = 456.0
+metadata/support_width = 400.0
 metadata/critical = false
 metadata/recovery = true
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/CryptBasinMass"]
-position = Vector2(0, 40)
+position = Vector2(0, 132)
 shape = SubResource("BasinMassShape")
 [node name="RockVisual" type="Polygon2D" parent="Terrain/CryptBasinMass"]
 color = Color(0.19, 0.18, 0.25, 1)
-polygon = PackedVector2Array(-320, 0, 320, 0, 320, 80, -320, 80)
+polygon = PackedVector2Array(-200, 0, 200, 0, 200, 264, -200, 264)
 [node name="SupportCap" type="Polygon2D" parent="Terrain/CryptBasinMass"]
 color = Color(0.32, 0.62, 0.58, 1)
-polygon = PackedVector2Array(-320, 0, 320, 0, 320, 8, -320, 8)
+polygon = PackedVector2Array(-200, 0, 200, 0, 200, 8, -200, 8)
+
+[node name="GateEntryShelfMass" type="StaticBody2D" parent="Terrain"]
+position = Vector2(810, 392)
+collision_layer = 1
+collision_mask = 0
+metadata/surface_id = &"material_crypt_gate_entry"
+metadata/support_top = 392.0
+metadata/support_width = 180.0
+metadata/critical = false
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/GateEntryShelfMass"]
+position = Vector2(0, 164)
+shape = SubResource("GateShelfShape")
+[node name="RockVisual" type="Polygon2D" parent="Terrain/GateEntryShelfMass"]
+color = Color(0.14, 0.15, 0.21, 1)
+polygon = PackedVector2Array(-90, 0, 90, 0, 90, 328, -90, 328)
+[node name="SupportCap" type="Polygon2D" parent="Terrain/GateEntryShelfMass"]
+color = Color(0.55, 0.46, 0.72, 1)
+polygon = PackedVector2Array(-90, 0, 90, 0, 90, 8, -90, 8)
 
 [node name="ReturnShelfMass" type="StaticBody2D" parent="Terrain"]
-position = Vector2(1120, 520)
+position = Vector2(990, 328)
 collision_layer = 1
 collision_mask = 0
 metadata/surface_id = &"material_crypt_return_shelf"
-metadata/support_top = 520.0
-metadata/support_width = 320.0
+metadata/support_top = 328.0
+metadata/support_width = 180.0
 metadata/critical = false
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/ReturnShelfMass"]
-position = Vector2(0, 100)
-shape = SubResource("ShelfMassShape")
+position = Vector2(0, 196)
+shape = SubResource("LegacyReturnShelfShape")
 [node name="RockVisual" type="Polygon2D" parent="Terrain/ReturnShelfMass"]
 color = Color(0.14, 0.15, 0.21, 1)
-polygon = PackedVector2Array(-160, 0, 160, 0, 160, 200, -160, 200)
+polygon = PackedVector2Array(-90, 0, 90, 0, 90, 392, -90, 392)
 [node name="SupportCap" type="Polygon2D" parent="Terrain/ReturnShelfMass"]
 color = Color(0.72, 0.56, 0.28, 1)
-polygon = PackedVector2Array(-160, 0, 160, 0, 160, 8, -160, 8)
+polygon = PackedVector2Array(-90, 0, 90, 0, 90, 8, -90, 8)
+
+[node name="NaveReturnShelfMass" type="StaticBody2D" parent="Terrain"]
+position = Vector2(1180, 284)
+collision_layer = 2
+collision_mask = 0
+metadata/surface_id = &"material_crypt_nave_return"
+metadata/support_top = 284.0
+metadata/support_width = 264.0
+metadata/critical = false
+metadata/one_way = true
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/NaveReturnShelfMass"]
+position = Vector2(0, 6)
+shape = SubResource("NaveReturnShelfShape")
+one_way_collision = true
+[node name="RockVisual" type="Polygon2D" parent="Terrain/NaveReturnShelfMass"]
+color = Color(0.14, 0.15, 0.21, 1)
+polygon = PackedVector2Array(-132, 0, 132, 0, 132, 12, -132, 12)
+[node name="SupportCap" type="Polygon2D" parent="Terrain/NaveReturnShelfMass"]
+color = Color(0.32, 0.62, 0.58, 1)
+polygon = PackedVector2Array(-132, 0, 132, 0, 132, 8, -132, 8)
 
 [node name="OneWay" type="Node2D" parent="."]
 [node name="Hazards" type="Node2D" parent="."]
@@ -77,7 +121,7 @@ polygon = PackedVector2Array(-160, 0, 160, 0, 160, 8, -160, 8)
 z_index = -2
 [node name="MineralGlow" type="Polygon2D" parent="DecorBack"]
 color = Color(0.28, 0.78, 0.66, 0.22)
-polygon = PackedVector2Array(500, 640, 640, 360, 780, 640)
+polygon = PackedVector2Array(380, 456, 520, 228, 660, 456)
 [node name="CryptWall" type="Polygon2D" parent="DecorBack"]
 color = Color(0.38, 0.31, 0.48, 0.45)
 polygon = PackedVector2Array(360, 640, 360, 280, 440, 220, 520, 280, 520, 640)
@@ -87,14 +131,18 @@ polygon = PackedVector2Array(360, 640, 360, 280, 440, 220, 520, 280, 520, 640)
 [node name="Sockets" type="Node2D" parent="Anchors"]
 [node name="Branch" type="Marker2D" parent="Anchors/Sockets"]
 position = Vector2(240, 0)
+[node name="GateBranch" type="Marker2D" parent="Anchors/Sockets"]
+position = Vector2(840, 0)
 [node name="Return" type="Marker2D" parent="Anchors/Sockets"]
 position = Vector2(1040, 0)
+[node name="NaveReturn" type="Marker2D" parent="Anchors/Sockets"]
+position = Vector2(1280, 0)
 [node name="Enemy" type="Node2D" parent="Anchors"]
 [node name="Hazard" type="Node2D" parent="Anchors"]
 
 [node name="Reward" type="Node2D" parent="Anchors"]
 [node name="MaterialCryptNode" type="Marker2D" parent="Anchors/Reward"]
-position = Vector2(640, 640)
+position = Vector2(520, 456)
 script = ExtResource("2")
 anchor_id = &"material_crypt_node"
 anchor_type = &"reward"
@@ -106,26 +154,38 @@ metadata/support_id = &"material_crypt_basin"
 
 [node name="Objective" type="Node2D" parent="Anchors"]
 [node name="BasinReturnRope" type="Area2D" parent="Anchors/Objective"]
-position = Vector2(920, 580)
+position = Vector2(720, 424)
 script = ExtResource("3")
-climbable_size = Vector2(64, 120)
+climbable_size = Vector2(64, 64)
 visual_color = Color(0.32, 0.78, 0.66, 0.9)
 metadata/entry_support = &"material_crypt_basin"
-metadata/exit_support = &"material_crypt_return_shelf"
+metadata/exit_support = &"material_crypt_gate_entry"
 metadata/endpoint_clearance = 8.0
-metadata/outside_exit_support = true
 metadata/route_scope = &"room_local"
 [node name="ReturnRope" type="Area2D" parent="Anchors/Objective"]
-position = Vector2(1040, 180)
+position = Vector2(1312, 92)
 script = ExtResource("3")
-climbable_size = Vector2(64, 680)
+climbable_size = Vector2(64, 384)
 visual_color = Color(0.78, 0.68, 0.4, 0.9)
+metadata/socket_id = &"material_crypt_nave_return"
+metadata/socket_horizontal_offset = 32.0
+metadata/entry_support = &"material_crypt_nave_return"
+metadata/exit_support = &"nave_crypt_rejoin_cover"
+metadata/support_overlap = 32.0
+metadata/route_scope = &"cross_room"
+[node name="LegacyReturnRope" type="Area2D" parent="Anchors/Objective"]
+position = Vector2(1040, 18)
+script = ExtResource("3")
+climbable_size = Vector2(64, 620)
+visual_color = Color(0.55, 0.46, 0.72, 0.35)
+metadata/socket_id = &"material_crypt_return"
 metadata/entry_support = &"material_crypt_return_shelf"
 metadata/exit_support = &"twin_choice_return_hatch"
 metadata/support_overlap = 32.0
 metadata/route_scope = &"cross_room"
+metadata/compatibility_only = true
 [node name="MaterialMarker" type="StaticBody2D" parent="Anchors/Objective"]
-position = Vector2(640, 576)
+position = Vector2(520, 392)
 collision_layer = 0
 collision_mask = 0
 metadata/visual_only = true
@@ -147,21 +207,37 @@ safe_radius = 160.0
 required = true
 metadata/support_id = &"material_crypt_entry_shelf"
 [node name="CryptBasinRecovery" type="Marker2D" parent="Anchors/Recovery"]
-position = Vector2(500, 640)
+position = Vector2(500, 456)
 script = ExtResource("2")
 anchor_id = &"crypt_basin_recovery"
 anchor_type = &"recovery"
 safe_radius = 180.0
 required = true
 metadata/support_id = &"material_crypt_basin"
+[node name="CryptGateEntryRecovery" type="Marker2D" parent="Anchors/Recovery"]
+position = Vector2(840, 392)
+script = ExtResource("2")
+anchor_id = &"crypt_gate_entry_recovery"
+anchor_type = &"recovery"
+safe_radius = 160.0
+required = true
+metadata/support_id = &"material_crypt_gate_entry"
 [node name="CryptReturnRecovery" type="Marker2D" parent="Anchors/Recovery"]
-position = Vector2(1040, 520)
+position = Vector2(1040, 328)
 script = ExtResource("2")
 anchor_id = &"crypt_return_recovery"
 anchor_type = &"recovery"
 safe_radius = 140.0
 required = true
 metadata/support_id = &"material_crypt_return_shelf"
+[node name="CryptNaveReturnRecovery" type="Marker2D" parent="Anchors/Recovery"]
+position = Vector2(1180, 284)
+script = ExtResource("2")
+anchor_id = &"crypt_nave_return_recovery"
+anchor_type = &"recovery"
+safe_radius = 140.0
+required = true
+metadata/support_id = &"material_crypt_nave_return"
 
 [node name="CameraBounds" type="Node2D" parent="."]
 metadata/bounds = Rect2(0, 0, 1280, 720)
@@ -171,7 +247,10 @@ metadata/minimum_optional_landing = 180.0
 metadata/max_optional_rise = 120.0
 metadata/branch_socket_id = &"material_crypt_branch"
 metadata/return_socket_id = &"material_crypt_return"
+metadata/forward_branch_socket_id = &"material_crypt_gate_branch"
+metadata/forward_return_socket_id = &"material_crypt_nave_return"
+metadata/forward_rejoin_room = &"bs_volatile_nave"
 metadata/basin_return_rope_path = NodePath("../Anchors/Objective/BasinReturnRope")
-metadata/basin_return_rope_height = 120.0
+metadata/basin_return_rope_height = 64.0
 metadata/return_rope_path = NodePath("../Anchors/Objective/ReturnRope")
-metadata/return_rope_height = 680.0
+metadata/return_rope_height = 384.0

@@ -8,6 +8,7 @@ const INITIAL_WARNING_DELAY := 0.2
 const TARGET_RETRY_DELAY := 0.1
 const MAX_PROJECTILE_LIFETIME := 5.0
 const VIEWPORT_MARGIN := 48.0
+const AIM_CUE_LENGTH := 96.0
 
 @export var activation_range: float = 900.0
 @export var deactivation_range: float = 1020.0
@@ -258,7 +259,7 @@ func _update_aim_warning_geometry() -> void:
 	_aim_warning.position = Vector2(0.0, -28.0) + _locked_aim_direction * 24.0
 	_aim_warning.points = PackedVector2Array([
 		Vector2.ZERO,
-		_locked_aim_direction * activation_range,
+		_locked_aim_direction * AIM_CUE_LENGTH,
 	])
 
 

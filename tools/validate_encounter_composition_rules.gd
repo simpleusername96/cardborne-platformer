@@ -38,6 +38,14 @@ func _initialize() -> void:
 		),
 		"final gallery should still reject a fourth high-attention threat"
 	)
+	var fractured_gallery := template.duplicate() as RoomTemplateData
+	fractured_gallery.variant_group = &"sanctum_fractured_gallery"
+	_expect(
+		EncounterCompositionRules.permits_candidate(
+			fractured_gallery, selected, _candidate(&"vertical", &"leaper")
+		),
+		"reviewed Sanctum gallery should admit its three terrain-bound threat roles"
+	)
 	_expect(
 		not EncounterCompositionRules.permits_candidate(
 			template, [], _candidate(&"ranged", &"sentry")

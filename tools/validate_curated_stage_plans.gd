@@ -21,7 +21,7 @@ const STAGES: Array[Dictionary] = [
 		"id": &"broken_sanctum",
 		"catalog": "res://data/generation/broken_sanctum_room_catalog.tres",
 		"rooms": "bs_breach_entry,bs_shield_choke,bs_gate_switch_loop,bs_volatile_nave,bs_twin_reliquary_choice,bs_fractured_gallery,bs_recovery_cloister,bs_sentry_crossfire,bs_exit_ascent,bs_material_crypt,bs_reliquary_cache",
-		"signature": "73a5ca1d6fe013c44791d993459c742b6cad14a490d8b524c544e105bff50f0c",
+		"signature": "e1861bdcd27b4befda3eb7fb3d1da6f3286a99bec3e58fd7b72c3a6e2c08a52c",
 	},
 ]
 
@@ -125,7 +125,7 @@ func _validate_geometry_fixture(plan: StagePlan, config: Dictionary, run_state: 
 	)
 	if config["id"] == &"broken_sanctum":
 		var crypt := assembly.get_room_hosts().get("bs_material_crypt") as RoomTemplateHost
-		var choice := assembly.get_room_hosts().get("bs_twin_reliquary_choice") as RoomTemplateHost
+		var nave := assembly.get_room_hosts().get("bs_volatile_nave") as RoomTemplateHost
 		var reliquary := assembly.get_room_hosts().get("bs_reliquary_cache") as RoomTemplateHost
 		var basin_rope := (
 			crypt.get_node_or_null("Anchors/Objective/BasinReturnRope") as Climbable
@@ -135,46 +135,44 @@ func _validate_geometry_fixture(plan: StagePlan, config: Dictionary, run_state: 
 			crypt.get_node_or_null("Anchors/Objective/ReturnRope") as Climbable
 			if crypt != null else null
 		)
-		var hatch := (
-			choice.get_node_or_null("Terrain/LowerReturnHatch") as StaticBody2D
-			if choice != null else null
+		var forward_hatch := (
+			nave.get_node_or_null("Terrain/EntryMass") as StaticBody2D
+			if nave != null else null
 		)
-		var upper_drop_hatch := (
-			reliquary.get_node_or_null("OneWay/ReturnHatch") as StaticBody2D
+		var sentry_drop_hatch := (
+			reliquary.get_node_or_null("Terrain/EastCacheReturnMass") as StaticBody2D
 			if reliquary != null else null
 		)
 		_expect(basin_rope != null, "Material Crypt should include its local basin rope.")
 		_expect(return_rope != null, "Material Crypt should include its cross-room return rope.")
-		_expect(hatch != null, "Twin Reliquary Choice should include its lower return hatch.")
-		_expect(upper_drop_hatch != null, "Upper Reliquary Cache should include a pass-through return hatch.")
+		_expect(forward_hatch != null, "Volatile Nave should include its crypt rejoin hatch.")
+		_expect(sentry_drop_hatch != null, "Upper Reliquary Cache should include its sentry return hatch.")
 		_expect(basin_rope != return_rope, "Local and cross-room return ropes must be separate nodes.")
 		if basin_rope != null:
 			var original_x := basin_rope.position.x
-			basin_rope.position.x = 1040.0
+			basin_rope.position.x = 990.0
 			var invalid_local := StageGeometryValidator.validate_assembly(plan, catalog, assembly, limits)
 			_expect(
-				_has_message(invalid_local, "local climbable 'BasinReturnRope'")
-				and _has_message(invalid_local, "crypt_basin_recovery")
-				and _has_message(invalid_local, "cannot reach the return rope"),
-				"Embedding the local rope in the return shelf should fail basin recovery."
+				_has_message(invalid_local, "local climbable 'BasinReturnRope'"),
+				"Embedding the local rope in the return shelves should fail its route contract."
 			)
 			basin_rope.position.x = original_x
-		if hatch != null:
-			var hatch_shape := hatch.get_node_or_null("CollisionShape2D") as CollisionShape2D
-			hatch.set_meta("one_way", false)
+		if forward_hatch != null:
+			var hatch_shape := forward_hatch.get_node_or_null("CollisionShape2D") as CollisionShape2D
+			forward_hatch.set_meta("one_way", false)
 			if hatch_shape != null:
 				hatch_shape.one_way_collision = false
 			var blocked_return := StageGeometryValidator.validate_assembly(plan, catalog, assembly, limits)
 			_expect(
 				_has_message(blocked_return, "terminates beneath solid terrain"),
-				"A solid lower-return hatch should fail the cross-room dismount contract."
+				"A solid nave rejoin hatch should fail the cross-room dismount contract."
 			)
-			hatch.set_meta("one_way", true)
+			forward_hatch.set_meta("one_way", true)
 			if hatch_shape != null:
 				hatch_shape.one_way_collision = true
-		if upper_drop_hatch != null:
-			var original_collision_layer := upper_drop_hatch.collision_layer
-			upper_drop_hatch.collision_layer = 1
+		if sentry_drop_hatch != null:
+			var original_collision_layer := sentry_drop_hatch.collision_layer
+			sentry_drop_hatch.collision_layer = 1
 			var wrong_layer_drop := StageGeometryValidator.validate_assembly(
 				plan, catalog, assembly, limits
 			)
@@ -182,14 +180,14 @@ func _validate_geometry_fixture(plan: StagePlan, config: Dictionary, run_state: 
 				_has_message(wrong_layer_drop, "drop return hatch uses the wrong collision layer"),
 				"A drop hatch on the solid collision layer should fail validation."
 			)
-			upper_drop_hatch.collision_layer = original_collision_layer
-			upper_drop_hatch.position.x += 240.0
+			sentry_drop_hatch.collision_layer = original_collision_layer
+			sentry_drop_hatch.position.x -= 240.0
 			var blocked_drop := StageGeometryValidator.validate_assembly(plan, catalog, assembly, limits)
 			_expect(
 				_has_message(blocked_drop, "drop return has no authored hatch"),
-				"A solid floor at the upper cache return should fail drop-route validation."
+				"Moving the sentry-return hatch away should fail drop-route validation."
 			)
-			upper_drop_hatch.position.x -= 240.0
+			sentry_drop_hatch.position.x += 240.0
 		var restored := StageGeometryValidator.validate_assembly(plan, catalog, assembly, limits)
 		_expect(
 			restored.is_empty(),

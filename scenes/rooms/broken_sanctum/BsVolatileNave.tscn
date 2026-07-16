@@ -4,13 +4,13 @@
 [ext_resource type="Script" path="res://scripts/stages/RoomAnchor.gd" id="2"]
 
 [sub_resource type="RectangleShape2D" id="EntryMassShape"]
-size = Vector2(320, 100)
+size = Vector2(220, 12)
 [sub_resource type="RectangleShape2D" id="VentMassShape"]
 size = Vector2(240, 120)
 [sub_resource type="RectangleShape2D" id="CenterMassShape"]
 size = Vector2(240, 160)
 [sub_resource type="RectangleShape2D" id="ExitMassShape"]
-size = Vector2(240, 100)
+size = Vector2(240, 164)
 [sub_resource type="RectangleShape2D" id="SafeLaneShape"]
 size = Vector2(720, 12)
 
@@ -20,22 +20,24 @@ room_id = &"bs_volatile_nave"
 
 [node name="Terrain" type="Node2D" parent="."]
 [node name="EntryMass" type="StaticBody2D" parent="Terrain"]
-position = Vector2(160, 620)
-collision_layer = 1
+position = Vector2(110, 620)
+collision_layer = 2
 collision_mask = 0
-metadata/surface_id = &"nave_entry_floor"
+metadata/surface_id = &"nave_crypt_rejoin_cover"
 metadata/support_top = 620.0
-metadata/support_width = 320.0
+metadata/support_width = 220.0
 metadata/critical = true
+metadata/one_way = true
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/EntryMass"]
-position = Vector2(0, 50)
+position = Vector2(0, 6)
 shape = SubResource("EntryMassShape")
+one_way_collision = true
 [node name="RockVisual" type="Polygon2D" parent="Terrain/EntryMass"]
 color = Color(0.14, 0.15, 0.21, 1)
-polygon = PackedVector2Array(-160, 0, 160, 0, 160, 100, -160, 100)
+polygon = PackedVector2Array(-110, 0, 110, 0, 110, 12, -110, 12)
 [node name="SupportCap" type="Polygon2D" parent="Terrain/EntryMass"]
 color = Color(0.55, 0.46, 0.72, 1)
-polygon = PackedVector2Array(-160, 0, 160, 0, 160, 8, -160, 8)
+polygon = PackedVector2Array(-110, 0, 110, 0, 110, 8, -110, 8)
 
 [node name="VentMassWest" type="StaticBody2D" parent="Terrain"]
 position = Vector2(440, 600)
@@ -93,19 +95,19 @@ color = Color(0.72, 0.4, 0.34, 1)
 polygon = PackedVector2Array(-120, 0, 120, 0, 120, 8, -120, 8)
 
 [node name="ExitMass" type="StaticBody2D" parent="Terrain"]
-position = Vector2(1160, 620)
+position = Vector2(1160, 556)
 collision_layer = 1
 collision_mask = 0
 metadata/surface_id = &"nave_exit_floor"
-metadata/support_top = 620.0
+metadata/support_top = 556.0
 metadata/support_width = 240.0
 metadata/critical = true
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/ExitMass"]
-position = Vector2(0, 50)
+position = Vector2(0, 82)
 shape = SubResource("ExitMassShape")
 [node name="RockVisual" type="Polygon2D" parent="Terrain/ExitMass"]
 color = Color(0.14, 0.15, 0.21, 1)
-polygon = PackedVector2Array(-120, 0, 120, 0, 120, 100, -120, 100)
+polygon = PackedVector2Array(-120, 0, 120, 0, 120, 164, -120, 164)
 [node name="SupportCap" type="Polygon2D" parent="Terrain/ExitMass"]
 color = Color(0.55, 0.46, 0.72, 1)
 polygon = PackedVector2Array(-120, 0, 120, 0, 120, 8, -120, 8)
@@ -150,8 +152,10 @@ polygon = PackedVector2Array(300, 600, 470, 280, 640, 600)
 [node name="Sockets" type="Node2D" parent="Anchors"]
 [node name="Entry" type="Marker2D" parent="Anchors/Sockets"]
 position = Vector2(0, 620)
+[node name="CryptRejoin" type="Marker2D" parent="Anchors/Sockets"]
+position = Vector2(0, 720)
 [node name="Exit" type="Marker2D" parent="Anchors/Sockets"]
-position = Vector2(1280, 620)
+position = Vector2(1280, 556)
 [node name="Enemy" type="Node2D" parent="Anchors"]
 
 [node name="Hazard" type="Node2D" parent="Anchors"]
@@ -185,6 +189,10 @@ metadata/support_id = &"nave_spike_floor_east"
 [node name="SafeEntry" type="Marker2D" parent="Anchors/Objective"]
 position = Vector2(120, 620)
 metadata/safe_radius = 240.0
+[node name="CryptRejoinRead" type="Marker2D" parent="Anchors/Objective"]
+position = Vector2(80, 620)
+metadata/rejoin_socket_id = &"nave_crypt_rejoin"
+metadata/branch_room_id = &"bs_material_crypt"
 [node name="UpperSafeRoute" type="Marker2D" parent="Anchors/Objective"]
 position = Vector2(680, 440)
 metadata/support_id = &"nave_upper_safe_gallery"
@@ -198,7 +206,7 @@ anchor_id = &"nave_entry_recovery"
 anchor_type = &"recovery"
 safe_radius = 180.0
 required = true
-metadata/support_id = &"nave_entry_floor"
+metadata/support_id = &"nave_crypt_rejoin_cover"
 [node name="NaveCenterRecovery" type="Marker2D" parent="Anchors/Recovery"]
 position = Vector2(680, 560)
 script = ExtResource("2")
@@ -208,7 +216,7 @@ safe_radius = 120.0
 required = true
 metadata/support_id = &"nave_center_safe"
 [node name="NaveExitRecovery" type="Marker2D" parent="Anchors/Recovery"]
-position = Vector2(1160, 620)
+position = Vector2(1160, 556)
 script = ExtResource("2")
 anchor_id = &"nave_exit_recovery"
 anchor_type = &"recovery"
@@ -220,6 +228,7 @@ metadata/bounds = Rect2(0, 0, 1280, 720)
 [node name="Validation" type="Node2D" parent="."]
 metadata/safe_entry_radius = 240.0
 metadata/minimum_critical_landing = 220.0
-metadata/max_required_step = 40.0
+metadata/max_required_step = 44.0
 metadata/permanent_safe_lane_id = &"nave_upper_safe_gallery"
 metadata/hazard_anchor_count = 2
+metadata/forward_rejoin_room = &"bs_material_crypt"

@@ -93,7 +93,7 @@ func _build_profile() -> StageProfile:
 	profile.eligible_hazards = [
 		&"spike_row", &"fall_reset", &"timed_poison_vent", &"crumbling_platform",
 	]
-	profile.encounter_budget_per_combat_room = Vector2i(4, 8)
+	profile.encounter_budget_per_combat_room = Vector2i(4, 9)
 	profile.hazard_budget_per_room = Vector2i(0, 2)
 	profile.reward_budget_per_room = Vector2i(0, 2)
 	profile.fallback_id = &"fallback_broken_sanctum_focus"
@@ -272,7 +272,7 @@ func _validate_room_specific(
 		&"bs_sentry_crossfire":
 			_validate_sentry_crossfire(data, host)
 		&"bs_fractured_gallery":
-			_expect(data.encounter_budget == Vector2i(5, 8), "Fractured Gallery should admit three authored placements.")
+			_expect(data.encounter_budget == Vector2i(9, 9), "Fractured Gallery should exactly fill its three terrain roles.")
 			var charger := data.get_enemy_anchor_by_id(&"fracture_charger")
 			var leaper := data.get_enemy_anchor_by_id(&"fracture_leaper")
 			_expect(charger != null and charger.lane_width >= 520.0 and charger.has_escape_route, "Fractured Gallery needs a legal charger lane.")
@@ -317,75 +317,105 @@ func _validate_material_crypt(
 	host: RoomTemplateHost,
 	_limits: Dictionary
 ) -> void:
-	_expect(
-		_socket_by_transition(data.entry_sockets, &"optional", &"drop") != null,
-		"Material Crypt needs its lower drop entry."
-	)
-	var return_socket := _socket_by_transition(data.exit_sockets, &"return", &"rope")
-	_expect(return_socket != null, "Material Crypt needs its rope return.")
+	var legacy_branch := _socket_by_id(data.entry_sockets, &"material_crypt_branch")
+	var forward_branch := _socket_by_id(data.entry_sockets, &"material_crypt_gate_branch")
+	var legacy_return := _socket_by_id(data.exit_sockets, &"material_crypt_return")
+	var forward_return := _socket_by_id(data.exit_sockets, &"material_crypt_nave_return")
+	_expect(legacy_branch != null and legacy_return != null, "Material Crypt must preserve planner-compatible sockets.")
+	_expect(forward_branch != null and forward_return != null, "Material Crypt needs gate-to-nave forward sockets.")
 	var basin_rope := host.get_node_or_null("Anchors/Objective/BasinReturnRope") as Climbable
 	var return_rope := host.get_node_or_null("Anchors/Objective/ReturnRope") as Climbable
+	var legacy_return_rope := host.get_node_or_null("Anchors/Objective/LegacyReturnRope") as Climbable
 	_expect(basin_rope != null, "Material Crypt needs a basin-to-shelf climbable.")
-	_expect(return_rope != null, "Material Crypt needs an authored return rope.")
-	if basin_rope == null or return_rope == null or return_socket == null:
+	_expect(return_rope != null, "Material Crypt needs an authored nave return rope.")
+	_expect(legacy_return_rope != null, "Material Crypt needs a planner-compatibility return rope.")
+	if (
+		basin_rope == null
+		or return_rope == null
+		or legacy_return_rope == null
+		or forward_return == null
+		or legacy_return == null
+	):
 		return
 	var surfaces := _collect_surfaces(host)
 	var basin := _surface_by_id(surfaces, &"material_crypt_basin")
-	var return_shelf := _surface_by_id(surfaces, &"material_crypt_return_shelf")
-	_expect(not basin.is_empty() and not return_shelf.is_empty(), "Material Crypt needs basin and return-shelf support.")
-	if basin.is_empty() or return_shelf.is_empty():
-		return
+	var gate_shelf := _surface_by_id(surfaces, &"material_crypt_gate_entry")
+	var legacy_shelf := _surface_by_id(surfaces, &"material_crypt_return_shelf")
+	var nave_shelf := _surface_by_id(surfaces, &"material_crypt_nave_return")
 	_expect(
-		host.get_node_or_null("OneWay/BasinReturnStep") == null,
-		"Material Crypt should not rely on the former basin step workaround."
+		not basin.is_empty()
+		and not gate_shelf.is_empty()
+		and not legacy_shelf.is_empty()
+		and not nave_shelf.is_empty(),
+		"Material Crypt needs basin, gate-entry, legacy-return, and nave-return support."
 	)
+	if basin.is_empty() or gate_shelf.is_empty() or legacy_shelf.is_empty() or nave_shelf.is_empty():
+		return
 	var basin_rope_half := basin_rope.climbable_size * 0.5
 	var basin_rope_top := basin_rope.position.y - basin_rope_half.y
 	var basin_rope_bottom := basin_rope.position.y + basin_rope_half.y
-	var basin_rope_left := basin_rope.position.x - basin_rope_half.x
-	var basin_rope_right := basin_rope.position.x + basin_rope_half.x
 	_expect(
-		basin_rope_top <= float(return_shelf["top"]) + 1.0
+		basin_rope_top <= float(gate_shelf["top"]) + 1.0
 		and basin_rope_bottom >= float(basin["top"]) - 1.0,
 		"Material Crypt basin rope must span both authored support tops."
 	)
 	_expect(
-		basin_rope_right <= float(return_shelf["x"]) + 1.0,
-		"Material Crypt basin rope must stay outside the solid return shelf."
-	)
-	_expect(
-		float(return_shelf["x"]) - basin_rope_right
-		<= float(basin_rope.get_meta("endpoint_clearance", 0.0)) + 1.0,
-		"Material Crypt basin rope is too far from its shelf dismount."
-	)
-	_expect(
-		basin_rope_left <= float(basin["end_x"]) and basin_rope_right >= float(basin["x"]),
-		"Material Crypt basin rope must overlap the basin approach."
-	)
-	_expect(
 		StringName(basin_rope.get_meta("entry_support", &"")) == &"material_crypt_basin"
-		and StringName(basin_rope.get_meta("exit_support", &"")) == &"material_crypt_return_shelf"
+		and StringName(basin_rope.get_meta("exit_support", &"")) == &"material_crypt_gate_entry"
 		and StringName(basin_rope.get_meta("route_scope", &"")) == &"room_local",
 		"Material Crypt basin rope must own only the local return route."
 	)
-	var rope_top := return_rope.position.y - return_rope.climbable_size.y * 0.5
-	var rope_bottom := return_rope.position.y + return_rope.climbable_size.y * 0.5
-	_expect(rope_top <= -100.0, "Material Crypt return rope must reach through the choice-room cover.")
-	_expect(absf(rope_bottom - float(return_shelf["top"])) <= 1.0, "Material Crypt return rope must mount on the return shelf.")
-	_expect(
-		return_rope.position.x >= float(return_shelf["x"])
-		and return_rope.position.x <= float(return_shelf["end_x"]),
-		"Material Crypt return rope must overlap its lower mount."
+	_validate_return_rope(
+		forward_return,
+		return_rope,
+		nave_shelf,
+		&"material_crypt_nave_return",
+		&"nave_crypt_rejoin_cover",
+		-100.0,
+		"forward"
+	)
+	_validate_return_rope(
+		legacy_return,
+		legacy_return_rope,
+		legacy_shelf,
+		&"material_crypt_return_shelf",
+		&"twin_choice_return_hatch",
+		-292.0,
+		"legacy"
 	)
 	_expect(
-		return_socket.local_position.x == return_rope.position.x,
-		"Material Crypt return socket must identify the real rope shaft."
+		host.get_node("Validation").get_meta("forward_rejoin_room", &"") == &"bs_volatile_nave",
+		"Material Crypt should declare its forward rejoin."
+	)
+
+
+func _validate_return_rope(
+	socket: RoomSocketData,
+	rope: Climbable,
+	lower_support: Dictionary,
+	entry_support_id: StringName,
+	exit_support_id: StringName,
+	required_top: float,
+	label: String
+) -> void:
+	var rope_top := rope.position.y - rope.climbable_size.y * 0.5
+	var rope_bottom := rope.position.y + rope.climbable_size.y * 0.5
+	_expect(rope_top <= required_top + 1.0, "Material Crypt %s rope does not reach its upper support." % label)
+	_expect(
+		absf(rope_bottom - float(lower_support["top"])) <= 1.0,
+		"Material Crypt %s rope does not mount on its lower support." % label
+	)
+	var expected_offset := float(rope.get_meta("socket_horizontal_offset", 0.0))
+	_expect(
+		absf(rope.position.x - socket.local_position.x - expected_offset) <= 1.0,
+		"Material Crypt %s rope has an undocumented socket offset." % label
 	)
 	_expect(
-		StringName(return_rope.get_meta("entry_support", &"")) == &"material_crypt_return_shelf"
-		and StringName(return_rope.get_meta("exit_support", &"")) == &"twin_choice_return_hatch"
-		and StringName(return_rope.get_meta("route_scope", &"")) == &"cross_room",
-		"Material Crypt return rope support metadata is stale."
+		StringName(rope.get_meta("socket_id", &"")) == socket.id
+		and StringName(rope.get_meta("entry_support", &"")) == entry_support_id
+		and StringName(rope.get_meta("exit_support", &"")) == exit_support_id
+		and StringName(rope.get_meta("route_scope", &"")) == &"cross_room",
+		"Material Crypt %s rope metadata is stale." % label
 	)
 
 
@@ -436,21 +466,21 @@ func _validate_gate_moving_platform(data: RoomTemplateData, host: RoomTemplateHo
 func _validate_choice_room(data: RoomTemplateData, host: RoomTemplateHost) -> void:
 	var branches := _sockets_for_role(data.exit_sockets, &"optional")
 	var returns := _sockets_for_role(data.entry_sockets, &"return")
-	_expect(branches.size() == 2, "Twin Reliquary Choice needs two branch exits.")
-	_expect(returns.size() == 2, "Twin Reliquary Choice needs two return entries.")
-	_expect(_socket_by_transition(branches, &"optional", &"drop") != null, "Choice needs a lower drop branch.")
-	_expect(_socket_by_transition(branches, &"optional", &"rope") != null, "Choice needs an upper rope branch.")
-	var lower_return := _socket_by_transition(returns, &"return", &"rope")
-	_expect(lower_return != null, "Choice needs a lower rope return.")
-	_expect(_socket_by_transition(returns, &"return", &"drop") != null, "Choice needs an upper drop return.")
-	var endpoints: Dictionary = {}
-	for socket in branches + returns:
-		var key := "%s:%s" % [socket.local_position, socket.route_role]
-		_expect(not endpoints.has(key), "Choice branch socket endpoints must be unique.")
-		endpoints[key] = true
+	_expect(branches.size() == 2 and returns.size() == 2, "Twin transfer should retain only its planner-compatibility sockets.")
 	var branch_rope := host.get_node_or_null("Anchors/Objective/UpperBranchRope") as Climbable
-	_expect(branch_rope != null and branch_rope.climbable_size.y >= 760.0, "Upper optional branch needs an authored rope.")
-	_validate_lower_return_hatch(lower_return, host)
+	_expect(
+		branch_rope != null
+		and branch_rope.climbable_size.y >= 720.0
+		and bool(branch_rope.get_meta("compatibility_only", false)),
+		"Twin transfer should retain a disabled compatibility rope."
+	)
+	var validation := host.get_node("Validation")
+	_expect(
+		bool(validation.get_meta("main_route_transfer", false))
+		and not bool(validation.get_meta("fixed_branch_hub", true)),
+		"Twin Reliquary must be an unambiguous fixed-route transfer."
+	)
+	_expect(host.get_node_or_null("Anchors/Objective/TransferRead") != null, "Twin transfer needs a readable route owner.")
 
 
 func _validate_lower_return_hatch(return_socket: RoomSocketData, host: RoomTemplateHost) -> void:
@@ -707,6 +737,16 @@ func _socket_by_transition(
 ) -> RoomSocketData:
 	for socket in sockets:
 		if socket != null and socket.route_role == role and socket.transition_type == transition:
+			return socket
+	return null
+
+
+func _socket_by_id(
+	sockets: Array[RoomSocketData],
+	socket_id: StringName
+) -> RoomSocketData:
+	for socket in sockets:
+		if socket != null and socket.id == socket_id:
 			return socket
 	return null
 

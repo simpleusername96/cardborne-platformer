@@ -19,7 +19,7 @@ func _run() -> void:
 	_expect(world != null and player != null and sentry != null, "Sentry fixture should instantiate")
 	if world != null and player != null and sentry != null:
 		await _validate_locked_warning_and_recovery(world, player, sentry)
-		await _validate_projectile_cap(sentry)
+		await _validate_projectile_cap(player, sentry)
 		await _validate_inactivity(player, sentry)
 		await _validate_defeat_cleanup(world, player, sentry)
 		world.queue_free()
@@ -86,6 +86,12 @@ func _validate_locked_warning_and_recovery(world: Node2D, player: Node2D, sentry
 			locked_facing = sentry.direction
 			var line := sentry.get_node_or_null("AimWarning") as Line2D
 			_expect(line != null and line.visible, "Sentry warning should show the locked aim line")
+			_expect(
+				line != null
+				and line.points.size() == 2
+				and is_equal_approx(line.points[1].length(), 96.0),
+				"Sentry warning should stay a local direction cue, not a full-range overlay"
+			)
 			break
 	_expect(warning_frame >= 0, "On-screen Sentry should enter warning")
 	if warning_frame < 0:
@@ -120,7 +126,12 @@ func _validate_locked_warning_and_recovery(world: Node2D, player: Node2D, sentry
 	_expect(idle_frame - recovery_frame >= 25, "Sentry recovery should preserve the 0.45 s floor")
 
 
-func _validate_projectile_cap(sentry: Variant) -> void:
+func _validate_projectile_cap(player: Node2D, sentry: Variant) -> void:
+	# Keep this registry-cap fixture above the authored floor so the shared
+	# projectile/terrain contract does not consume each shot before overlap.
+	player.position = Vector2(360.0, 272.0)
+	sentry.reset_enemy()
+	await physics_frame
 	var maximum_seen := 0
 	for _frame in 260:
 		await physics_frame

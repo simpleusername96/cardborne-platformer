@@ -192,7 +192,7 @@ func build_broken_sanctum(
 		[&"bs_gate_switch_loop", true, 2, 7, 0, 0],
 		[&"bs_volatile_nave", true, 3, 0, 1, 0],
 		[&"bs_twin_reliquary_choice", true, 4, 0, 0, 0],
-		[&"bs_fractured_gallery", true, 5, 8, 0, 0],
+		[&"bs_fractured_gallery", true, 5, 9, 0, 0],
 		[&"bs_recovery_cloister", true, 6, 0, 0, 0],
 		[&"bs_sentry_crossfire", true, 7, 6, 0, 0],
 		[&"bs_exit_ascent", true, 8, 2, 0, 0],
@@ -220,10 +220,10 @@ func build_broken_sanctum(
 		_connection(&"critical_5", &"bs_fractured_gallery", &"fractured_gallery_out", &"bs_recovery_cloister", &"recovery_cloister_in", &"critical"),
 		_connection(&"critical_6", &"bs_recovery_cloister", &"recovery_cloister_out", &"bs_sentry_crossfire", &"sentry_crossfire_in", &"critical"),
 		_connection(&"critical_7", &"bs_sentry_crossfire", &"sentry_crossfire_out", &"bs_exit_ascent", &"sanctum_exit_in", &"critical"),
-		_connection(&"optional_branch_0", &"bs_twin_reliquary_choice", &"twin_choice_lower_branch", &"bs_material_crypt", &"material_crypt_branch", &"optional"),
-		_connection(&"optional_return_0", &"bs_material_crypt", &"material_crypt_return", &"bs_twin_reliquary_choice", &"twin_choice_lower_return", &"return"),
-		_connection(&"optional_branch_1", &"bs_twin_reliquary_choice", &"twin_choice_upper_branch", &"bs_reliquary_cache", &"reliquary_cache_branch", &"optional"),
-		_connection(&"optional_return_1", &"bs_reliquary_cache", &"reliquary_cache_return", &"bs_twin_reliquary_choice", &"twin_choice_upper_return", &"return"),
+		_connection(&"optional_branch_0", &"bs_gate_switch_loop", &"gate_material_branch", &"bs_material_crypt", &"material_crypt_gate_branch", &"optional"),
+		_connection(&"optional_return_0", &"bs_material_crypt", &"material_crypt_nave_return", &"bs_volatile_nave", &"nave_crypt_rejoin", &"return"),
+		_connection(&"optional_branch_1", &"bs_recovery_cloister", &"cloister_reliquary_branch", &"bs_reliquary_cache", &"reliquary_cache_cloister_branch", &"optional"),
+		_connection(&"optional_return_1", &"bs_reliquary_cache", &"reliquary_cache_sentry_return", &"bs_sentry_crossfire", &"sentry_reliquary_rejoin", &"return"),
 	]
 	var streams := NamedRngStreams.new(
 		run_seed, stage_index, catalog.content_version, profile.content_version, CURATED_ATTEMPT

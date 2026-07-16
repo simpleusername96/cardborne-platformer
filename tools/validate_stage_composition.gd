@@ -21,6 +21,7 @@ const STAGES: Array[Dictionary] = [
 		"id": &"broken_sanctum",
 		"profile": "res://data/generation/broken_sanctum_profile.tres",
 		"catalog": "res://data/generation/broken_sanctum_room_catalog.tres",
+		"target_ready": true,
 	},
 ]
 

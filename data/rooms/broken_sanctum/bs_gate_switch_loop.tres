@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="RoomTemplateData" load_steps=6 format=3]
+[gd_resource type="Resource" script_class="RoomTemplateData" load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/stages/RoomTemplateData.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/stages/RoomSocketData.gd" id="2"]
@@ -25,14 +25,29 @@ script = ExtResource("2")
 id = &"gate_switch_loop_out"
 direction = &"right"
 route_role = &"critical"
-local_position = Vector2(1280, 460)
+local_position = Vector2(1280, 620)
 opening_size = Vector2(180, 180)
-support_top = 460.0
+support_top = 620.0
 transition_type = &"seam"
 required_ability = &"baseline"
 approach_width = 240.0
 landing_width = 240.0
 headroom = 180.0
+
+[sub_resource type="Resource" id="MaterialBranchSocket"]
+script = ExtResource("2")
+id = &"gate_material_branch"
+direction = &"down"
+route_role = &"optional"
+local_position = Vector2(840, 720)
+opening_size = Vector2(160, 140)
+support_top = 556.0
+transition_type = &"drop"
+required_ability = &"baseline"
+approach_width = 220.0
+landing_width = 300.0
+headroom = 140.0
+recovery_id = &"switch_recovery"
 
 [sub_resource type="Resource" id="OverheadPlatformPath"]
 script = ExtResource("4")
@@ -61,8 +76,8 @@ has_cover_or_elevation = true
 script = ExtResource("5")
 id = &"gate_east_occupier"
 allowed_pressure_roles = Array[StringName]([&"occupier"])
-support_width = 240.0
-lane_width = 160.0
+support_width = 360.0
+lane_width = 260.0
 clearance = 180.0
 has_escape_route = true
 has_line_of_sight = false
@@ -83,14 +98,14 @@ has_cover_or_elevation = true
 script = ExtResource("1")
 id = &"bs_gate_switch_loop"
 display_name = "Sanctum Gate Switch Loop"
-content_version = 3
+content_version = 4
 scene = ExtResource("3")
 role = &"objective"
 stage_tags = Array[StringName]([&"broken_sanctum"])
 required_route = true
 bounds = Rect2(0, 0, 1280, 720)
 entry_sockets = Array[ExtResource("2")]([SubResource("EntrySocket")])
-exit_sockets = Array[ExtResource("2")]([SubResource("ExitSocket")])
+exit_sockets = Array[ExtResource("2")]([SubResource("ExitSocket"), SubResource("MaterialBranchSocket")])
 encounter_budget = Vector2i(7, 7)
 hazard_budget = Vector2i(0, 0)
 reward_budget = Vector2i(0, 0)

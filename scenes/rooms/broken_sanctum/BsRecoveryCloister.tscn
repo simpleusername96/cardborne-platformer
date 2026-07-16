@@ -1,10 +1,11 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scripts/stages/RoomTemplateHost.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/stages/RoomAnchor.gd" id="2"]
 [ext_resource type="Script" path="res://scripts/stages/StageCheckpoint.gd" id="3"]
 [ext_resource type="PackedScene" path="res://scenes/stages/components/FieldPickup.tscn" id="4_field_pickup"]
 [ext_resource type="Resource" path="res://data/items/vital_shard.tres" id="5_vital_shard"]
+[ext_resource type="Script" path="res://scripts/stages/Climbable.gd" id="6"]
 
 [sub_resource type="RectangleShape2D" id="SideMassShape"]
 size = Vector2(400, 100)
@@ -90,6 +91,8 @@ polygon = PackedVector2Array(540, 580, 640, 380, 740, 580)
 position = Vector2(0, 620)
 [node name="Exit" type="Marker2D" parent="Anchors/Sockets"]
 position = Vector2(1280, 620)
+[node name="ReliquaryBranch" type="Marker2D" parent="Anchors/Sockets"]
+position = Vector2(960, 0)
 [node name="Enemy" type="Node2D" parent="Anchors"]
 [node name="Hazard" type="Node2D" parent="Anchors"]
 [node name="Reward" type="Node2D" parent="Anchors"]
@@ -108,6 +111,20 @@ shape = SubResource("CheckpointShape")
 [node name="QuietBeat" type="Marker2D" parent="Anchors/Objective"]
 position = Vector2(820, 580)
 metadata/interaction_role = &"recovery"
+[node name="ReliquaryBranchRope" type="Area2D" parent="Anchors/Objective"]
+position = Vector2(960, 240)
+script = ExtResource("6")
+climbable_size = Vector2(64, 760)
+visual_color = Color(0.72, 0.56, 0.28, 0.9)
+metadata/socket_id = &"cloister_reliquary_branch"
+metadata/entry_support = &"cloister_east_floor"
+metadata/exit_support = &"reliquary_cache_cloister_entry"
+metadata/support_overlap = 32.0
+metadata/route_scope = &"cross_room"
+[node name="ReliquaryClue" type="Marker2D" parent="Anchors/Objective"]
+position = Vector2(900, 620)
+metadata/branch_socket_id = &"cloister_reliquary_branch"
+metadata/rejoin_room_id = &"bs_sentry_crossfire"
 
 [node name="Recovery" type="Node2D" parent="Anchors"]
 [node name="CloisterEntryRecovery" type="Marker2D" parent="Anchors/Recovery"]
@@ -130,6 +147,9 @@ metadata/support_id = &"cloister_checkpoint_floor"
 [node name="CameraBounds" type="Node2D" parent="."]
 metadata/bounds = Rect2(0, 0, 1280, 720)
 [node name="Validation" type="Node2D" parent="."]
+metadata/safe_room = true
+metadata/late_branch_room = &"bs_reliquary_cache"
+metadata/branch_rope_path = NodePath("../Anchors/Objective/ReliquaryBranchRope")
 
 [node name="FieldPickups" type="Node2D" parent="."]
 

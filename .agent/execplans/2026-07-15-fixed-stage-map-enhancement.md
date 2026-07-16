@@ -632,8 +632,8 @@ blockout 결과가 더 나은 의도를 발견하면 Decision Notes에 이유를
   먼저 red/green 검증한다.
 - [x] Milestone B에서 Ruin을 pilot stage로 재저작하고 continuous play로
   guideline을 증명한다.
-- [ ] Milestone C에서 Flooded의 basin descent와 pump ascent를 재저작한다.
-- [ ] Milestone D에서 Sanctum branch를 분산하고 gate/shortcut loop를 만든다.
+- [x] Milestone C에서 Flooded의 basin descent와 pump ascent를 재저작한다.
+- [x] Milestone D에서 Sanctum branch를 분산하고 gate/shortcut loop를 만든다.
 - [ ] Milestone E에서 세 stage의 encounter, camera, pacing을 함께 review한다.
 - [ ] Milestone F에서 자동·rendered·continuous·Web production evidence를
   합쳐 release acceptance를 닫는다.
@@ -915,41 +915,41 @@ Goal: 한 hub에 몰린 branch를 stage 전체 loop와 shortcut으로 분산한�
 
 Tasks:
 
-- [ ] material crypt branch origin을 gate-loop 또는 volatile-nave 구간으로 옮긴다.
-- [ ] reliquary cache branch origin을 recovery-cloister 이후 구간으로 옮긴다.
-- [ ] 두 branch의 new sockets와 forward rejoin을 authored scene/resource에
+- [x] material crypt branch origin을 gate-loop 또는 volatile-nave 구간으로 옮긴다.
+- [x] reliquary cache branch origin을 recovery-cloister 이후 구간으로 옮긴다.
+- [x] 두 branch의 new sockets와 forward rejoin을 authored scene/resource에
   추가한다.
-- [ ] twin reliquary choice를 unambiguous main-route transfer room으로
+- [x] twin reliquary choice를 unambiguous main-route transfer room으로
   재작성한다.
-- [ ] gate-switch loop가 opened shortcut으로 이동 시간을 줄이는지 확인한다.
-- [ ] shield choke의 flank elevation과 recovery floor를 정리한다.
-- [ ] fractured gallery의 enemy마다 terrain relation을 기록하고 불필요한
+- [x] gate-switch loop가 opened shortcut으로 이동 시간을 줄이는지 확인한다.
+- [x] shield choke의 flank elevation과 recovery floor를 정리한다.
+- [x] fractured gallery의 enemy마다 terrain relation을 기록하고 불필요한
   enemy를 제거 또는 이동한다.
-- [ ] fractured gallery의 mobile enemy가 wall/ledge에서 멈추는 배치를
+- [x] fractured gallery의 mobile enemy가 wall/ledge에서 멈추는 배치를
   제거하거나 공용 terrain response로 해결한다.
-- [ ] recovery cloister를 실제 crossfire 밖 safe zone으로 만든다.
-- [ ] sentry crossfire에 projectile-blocking cover band, transfer window,
+- [x] recovery cloister를 실제 crossfire 밖 safe zone으로 만든다.
+- [x] sentry crossfire에 projectile-blocking cover band, transfer window,
   flank path를 만든다.
-- [ ] exit ascent에서 새 mechanic을 추가하지 않고 known element를 결합하며,
+- [x] exit ascent에서 새 mechanic을 추가하지 않고 known element를 결합하며,
   이 room의 encounter만 terminal exit를 잠그게 한다.
-- [ ] Sanctum minimap에서 gate closed/open, opened shortcut, early/late branch,
+- [x] Sanctum minimap에서 gate closed/open, opened shortcut, early/late branch,
   active checkpoint, exit lock/ready marker를 실제 state와 연결한다.
 
 Acceptance:
 
-- [ ] range ≥ 720 px, enemies ≥ 12, required rooms = 9.
-- [ ] 두 branch origin이 critical route에서 최소 2 room 떨어져 있다.
-- [ ] 두 branch 모두 forward-rejoin한다.
-- [ ] gate shortcut이 시각적으로 열리고 실제 traversal을 줄인다.
-- [ ] shield, fractured, sentry combat이 서로 다른 tactical verticality를 준다.
-- [ ] sentry projectile가 declared cover를 관통하지 않고, ordinary enemy
+- [x] range ≥ 720 px, enemies ≥ 12, required rooms = 9.
+- [x] 두 branch origin이 critical route에서 최소 2 room 떨어져 있다.
+- [x] 두 branch 모두 forward-rejoin한다.
+- [x] gate shortcut이 시각적으로 열리고 실제 traversal을 줄인다.
+- [x] shield, fractured, sentry combat이 서로 다른 tactical verticality를 준다.
+- [x] sentry projectile가 declared cover를 관통하지 않고, ordinary enemy
   tell이 full-screen trajectory overlay 없이 읽힌다.
-- [ ] recovery cloister 진입 시 unavoidable projectile 또는 body hit이 없다.
-- [ ] shield/fractured/crossfire enemy를 하나 이상 살려 둔 채 exit-ascent
+- [x] recovery cloister 진입 시 unavoidable projectile 또는 body hit이 없다.
+- [x] shield/fractured/crossfire enemy를 하나 이상 살려 둔 채 exit-ascent
   local encounter만 clear하고 stage를 끝낼 수 있다.
-- [ ] gate/shortcut와 두 optional branch의 minimap marker/reveal state가
+- [x] gate/shortcut와 두 optional branch의 minimap marker/reveal state가
   stale하거나 reward를 사전 공개하지 않는다.
-- [ ] baseline continuous clear, both optional loops, stage retry가 통과한다.
+- [x] baseline continuous clear, both optional loops, stage retry가 통과한다.
 
 ### Milestone E — Cross-stage encounter, camera, and pacing pass
 
@@ -1174,18 +1174,17 @@ When export templates are available:
   contract implemented.
 - [x] Milestone B Ruin implemented and accepted.
 - [x] Milestone C Flooded implemented and accepted.
-- [ ] Milestone D Sanctum implemented and accepted.
+- [x] Milestone D Sanctum implemented and accepted.
 - [ ] Milestone E cross-stage pass accepted.
 - [ ] Milestone F release validation accepted.
 
 ## Next Steps
 
-1. Rebuild Broken Sanctum with two distributed forward-rejoining branches.
-2. Prove its gate shortcut, recovery cloister, cover bands, terminal-local
-   completion, and live minimap state.
-3. Run the cross-stage pacing/camera pass without converging the three
+1. Run the cross-stage pacing/camera pass without converging the three
    silhouettes.
-4. Close the complete release matrix, production build, rendered evidence, and
+2. Audit every ordinary-enemy warning, room entry/exit buffer, facility boundary,
+   and minimap marker across all three stages.
+3. Close the complete release matrix, production build, rendered evidence, and
    continuous traversal record.
 
 ## Rollback / Safety
@@ -1337,3 +1336,16 @@ deferred until rendered evidence exists:
   Gallery. A separately named legacy socket preserves dormant procedural
   same-hub generation so the production topology improvement does not silently
   invalidate the reusable room catalog.
+- 2026-07-16: Fixed Sanctum distributes its early branch from Gate Switch Loop to
+  Material Crypt/Nave and its late branch from Recovery Cloister to Reliquary
+  Cache/Sentry Crossfire. Separately named legacy sockets preserve dormant
+  procedural compatibility.
+- 2026-07-16: Cross-room rope and drop endpoints may use a small documented
+  horizontal seam-clearance offset when an exact room-boundary center would
+  collide with adjacent solid terrain; support overlap and runtime traversal
+  still validate the connection.
+- 2026-07-16: The minimap checkpoint set includes every authored
+  `StageCheckpoint`, while only the active checkpoint is visible.
+- 2026-07-16: Sentry startup keeps its locked direction and warning time but uses
+  a 96 px local cue; the previous activation-range line is rejected as a
+  full-screen trajectory overlay.

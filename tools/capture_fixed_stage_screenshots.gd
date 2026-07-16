@@ -24,10 +24,17 @@ var _captures: Array[Dictionary] = [
 	{"name": "flooded_poison_visual_baseline", "size": Vector2i(1280, 720), "stage_index": 1, "target": &"fw_poison_timing", "anchor": &"PoisonSafeRecovery", "baseline": true, "hazard_state": &"active"},
 	{"name": "flooded_poison_visual_proof", "size": Vector2i(1280, 720), "stage_index": 1, "target": &"fw_poison_timing", "anchor": &"PoisonSafeRecovery", "hazard_state": &"active"},
 	{"name": "flooded_poison_visual_debug", "size": Vector2i(1280, 720), "stage_index": 1, "target": &"fw_poison_timing", "anchor": &"PoisonSafeRecovery", "hazard_state": &"active", "debug": true},
-	{"name": "sanctum_route_choice", "size": Vector2i(1280, 720), "stage_index": 2, "target": &"bs_twin_reliquary_choice", "anchor": &"UpperReturnRecovery"},
-	{"name": "sanctum_crypt_recovery", "size": Vector2i(1280, 720), "stage_index": 2, "target": &"bs_material_crypt", "anchor": &"CryptBasinRecovery"},
-	{"name": "sanctum_crypt_recovery_compact", "size": Vector2i(960, 540), "stage_index": 2, "target": &"bs_material_crypt", "anchor": &"CryptBasinRecovery"},
-	{"name": "sanctum_reliquary_return", "size": Vector2i(1280, 720), "stage_index": 2, "target": &"bs_reliquary_cache", "anchor": &"CacheReturnRecovery"},
+	{"name": "sanctum_shield_flank", "size": Vector2i(1280, 720), "stage_index": 2, "target": &"bs_shield_choke", "anchor": &"FlankRoute"},
+	{"name": "sanctum_gate_closed", "size": Vector2i(1280, 720), "stage_index": 2, "target": &"bs_gate_switch_loop", "anchor": &"SwitchRecovery"},
+	{"name": "sanctum_gate_open", "size": Vector2i(1280, 720), "stage_index": 2, "target": &"bs_gate_switch_loop", "anchor": &"SwitchRecovery", "gate_state": &"open"},
+	{"name": "sanctum_material_forward_rejoin", "size": Vector2i(1280, 720), "stage_index": 2, "target": &"bs_material_crypt", "anchor": &"CryptNaveReturnRecovery"},
+	{"name": "sanctum_transfer", "size": Vector2i(1280, 720), "stage_index": 2, "target": &"bs_twin_reliquary_choice", "anchor": &"TransferRead"},
+	{"name": "sanctum_fractured_roles", "size": Vector2i(1280, 720), "stage_index": 2, "target": &"bs_fractured_gallery", "anchor": &"ResponseLevelWest"},
+	{"name": "sanctum_recovery_branch", "size": Vector2i(1280, 720), "stage_index": 2, "target": &"bs_recovery_cloister", "anchor": &"ReliquaryClue"},
+	{"name": "sanctum_reliquary_forward_rejoin", "size": Vector2i(1280, 720), "stage_index": 2, "target": &"bs_reliquary_cache", "anchor": &"CacheReturnRecovery"},
+	{"name": "sanctum_sentry_crossfire", "size": Vector2i(1280, 720), "stage_index": 2, "target": &"bs_sentry_crossfire", "anchor": &"TransferRead"},
+	{"name": "sanctum_sentry_crossfire_compact", "size": Vector2i(960, 540), "stage_index": 2, "target": &"bs_sentry_crossfire", "anchor": &"TransferRead"},
+	{"name": "sanctum_exit_ascent", "size": Vector2i(1280, 720), "stage_index": 2, "target": &"bs_exit_ascent", "anchor": &"ExitAscentRecovery"},
 ]
 var _failed := false
 
@@ -80,6 +87,7 @@ func _capture(capture: Dictionary) -> void:
 		push_error("Capture target '%s' is unavailable." % capture["target"])
 		_failed = true
 		return
+	_set_gate_state(host, StringName(capture.get("gate_state", &"")))
 	var focus := _focus_position(host, planned_room.role, StringName(capture.get("anchor", &"")))
 	stage.player.respawn_at(focus, 0.0)
 	if bool(capture.get("baseline", false)):
@@ -149,6 +157,20 @@ func _set_hazard_state(stage: Node, host: RoomTemplateHost, state: StringName) -
 		elif state == &"warning" and hazard is CrumblingPlatform:
 			hazard.reset_platform()
 			hazard.trigger_collapse()
+
+
+func _set_gate_state(host: RoomTemplateHost, state: StringName) -> void:
+	if state == &"":
+		return
+	for node in host.find_children("*", "SwitchGate", true, false):
+		var gate := node as SwitchGate
+		if gate == null:
+			continue
+		if state == &"open":
+			gate.open_delay = 0.0
+			gate.open_gate()
+		elif state == &"closed":
+			gate.reset_gate()
 
 
 func _target_room(plan: StagePlan, target: StringName) -> PlannedRoom:

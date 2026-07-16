@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="RoomTemplateData" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="RoomTemplateData" load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/stages/RoomTemplateData.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/stages/RoomSocketData.gd" id="2"]
@@ -24,14 +24,29 @@ script = ExtResource("2")
 id = &"volatile_nave_out"
 direction = &"right"
 route_role = &"critical"
-local_position = Vector2(1280, 620)
+local_position = Vector2(1280, 556)
 opening_size = Vector2(180, 180)
-support_top = 620.0
+support_top = 556.0
 transition_type = &"seam"
 required_ability = &"baseline"
 approach_width = 240.0
 landing_width = 240.0
 headroom = 180.0
+
+[sub_resource type="Resource" id="CryptRejoinSocket"]
+script = ExtResource("2")
+id = &"nave_crypt_rejoin"
+direction = &"down"
+route_role = &"return"
+local_position = Vector2(0, 720)
+opening_size = Vector2(128, 140)
+support_top = 620.0
+transition_type = &"rope"
+required_ability = &"climb"
+approach_width = 220.0
+landing_width = 220.0
+headroom = 140.0
+recovery_id = &"nave_entry_recovery"
 
 [sub_resource type="Resource" id="VentBandAnchor"]
 script = ExtResource("4")
@@ -51,13 +66,13 @@ safe_zone_id = &"nave_exit_recovery"
 script = ExtResource("1")
 id = &"bs_volatile_nave"
 display_name = "Volatile Sanctum Nave"
-content_version = 1
+content_version = 2
 scene = ExtResource("3")
 role = &"hazard"
 stage_tags = Array[StringName]([&"broken_sanctum"])
 required_route = true
 bounds = Rect2(0, 0, 1280, 720)
-entry_sockets = Array[ExtResource("2")]([SubResource("EntrySocket")])
+entry_sockets = Array[ExtResource("2")]([SubResource("EntrySocket"), SubResource("CryptRejoinSocket")])
 exit_sockets = Array[ExtResource("2")]([SubResource("ExitSocket")])
 encounter_budget = Vector2i(0, 0)
 hazard_budget = Vector2i(1, 2)

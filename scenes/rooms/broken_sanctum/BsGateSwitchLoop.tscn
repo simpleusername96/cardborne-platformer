@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://scripts/stages/RoomTemplateHost.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/stages/RoomAnchor.gd" id="2"]
@@ -6,13 +6,15 @@
 [ext_resource type="PackedScene" path="res://scenes/stages/components/MovingPlatform.tscn" id="4"]
 
 [sub_resource type="RectangleShape2D" id="EntryMassShape"]
-size = Vector2(280, 100)
+size = Vector2(240, 100)
 [sub_resource type="RectangleShape2D" id="StepMassShape"]
-size = Vector2(240, 180)
+size = Vector2(240, 164)
 [sub_resource type="RectangleShape2D" id="SwitchMassShape"]
-size = Vector2(280, 260)
+size = Vector2(280, 228)
 [sub_resource type="RectangleShape2D" id="ExitMassShape"]
-size = Vector2(240, 260)
+size = Vector2(360, 100)
+[sub_resource type="RectangleShape2D" id="BranchCoverShape"]
+size = Vector2(240, 12)
 [sub_resource type="RectangleShape2D" id="OverheadWaitShape"]
 size = Vector2(220, 12)
 [sub_resource type="RectangleShape2D" id="OverheadStepShape"]
@@ -24,94 +26,96 @@ room_id = &"bs_gate_switch_loop"
 
 [node name="Terrain" type="Node2D" parent="."]
 [node name="EntryMass" type="StaticBody2D" parent="Terrain"]
-position = Vector2(140, 620)
+position = Vector2(120, 620)
 collision_layer = 1
 collision_mask = 0
 metadata/surface_id = &"gate_loop_entry"
 metadata/support_top = 620.0
-metadata/support_width = 280.0
+metadata/support_width = 240.0
 metadata/critical = true
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/EntryMass"]
 position = Vector2(0, 50)
 shape = SubResource("EntryMassShape")
 [node name="RockVisual" type="Polygon2D" parent="Terrain/EntryMass"]
 color = Color(0.14, 0.15, 0.21, 1)
-polygon = PackedVector2Array(-140, 0, 140, 0, 140, 100, -140, 100)
+polygon = PackedVector2Array(-120, 0, 120, 0, 120, 100, -120, 100)
 [node name="SupportCap" type="Polygon2D" parent="Terrain/EntryMass"]
 color = Color(0.55, 0.46, 0.72, 1)
-polygon = PackedVector2Array(-140, 0, 140, 0, 140, 8, -140, 8)
+polygon = PackedVector2Array(-120, 0, 120, 0, 120, 8, -120, 8)
 
 [node name="LoopStepWest" type="StaticBody2D" parent="Terrain"]
-position = Vector2(400, 540)
+position = Vector2(360, 556)
 collision_layer = 1
 collision_mask = 0
 metadata/surface_id = &"gate_loop_step_west"
-metadata/support_top = 540.0
+metadata/support_top = 556.0
 metadata/support_width = 240.0
 metadata/critical = true
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/LoopStepWest"]
-position = Vector2(0, 90)
+position = Vector2(0, 82)
 shape = SubResource("StepMassShape")
 [node name="RockVisual" type="Polygon2D" parent="Terrain/LoopStepWest"]
 color = Color(0.19, 0.18, 0.25, 1)
-polygon = PackedVector2Array(-120, 0, 120, 0, 120, 180, -120, 180)
+polygon = PackedVector2Array(-120, 0, 120, 0, 120, 164, -120, 164)
 [node name="SupportCap" type="Polygon2D" parent="Terrain/LoopStepWest"]
 color = Color(0.72, 0.56, 0.28, 1)
 polygon = PackedVector2Array(-120, 0, 120, 0, 120, 8, -120, 8)
 
 [node name="SwitchMass" type="StaticBody2D" parent="Terrain"]
-position = Vector2(660, 460)
+position = Vector2(620, 492)
 collision_layer = 1
 collision_mask = 0
 metadata/surface_id = &"gate_loop_switch_floor"
-metadata/support_top = 460.0
+metadata/support_top = 492.0
 metadata/support_width = 280.0
 metadata/critical = true
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/SwitchMass"]
-position = Vector2(0, 130)
+position = Vector2(0, 114)
 shape = SubResource("SwitchMassShape")
 [node name="RockVisual" type="Polygon2D" parent="Terrain/SwitchMass"]
 color = Color(0.14, 0.15, 0.21, 1)
-polygon = PackedVector2Array(-140, 0, 140, 0, 140, 260, -140, 260)
+polygon = PackedVector2Array(-140, 0, 140, 0, 140, 228, -140, 228)
 [node name="SupportCap" type="Polygon2D" parent="Terrain/SwitchMass"]
 color = Color(0.32, 0.62, 0.58, 1)
 polygon = PackedVector2Array(-140, 0, 140, 0, 140, 8, -140, 8)
 
 [node name="LoopStepEast" type="StaticBody2D" parent="Terrain"]
-position = Vector2(920, 540)
-collision_layer = 1
+position = Vector2(840, 556)
+collision_layer = 2
 collision_mask = 0
-metadata/surface_id = &"gate_loop_step_east"
-metadata/support_top = 540.0
+metadata/surface_id = &"gate_material_branch_cover"
+metadata/support_top = 556.0
 metadata/support_width = 240.0
 metadata/critical = true
+metadata/one_way = true
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/LoopStepEast"]
-position = Vector2(0, 90)
-shape = SubResource("StepMassShape")
+position = Vector2(0, 6)
+shape = SubResource("BranchCoverShape")
+one_way_collision = true
 [node name="RockVisual" type="Polygon2D" parent="Terrain/LoopStepEast"]
 color = Color(0.19, 0.18, 0.25, 1)
-polygon = PackedVector2Array(-120, 0, 120, 0, 120, 180, -120, 180)
+polygon = PackedVector2Array(-120, 0, 120, 0, 120, 12, -120, 12)
 [node name="SupportCap" type="Polygon2D" parent="Terrain/LoopStepEast"]
 color = Color(0.72, 0.56, 0.28, 1)
 polygon = PackedVector2Array(-120, 0, 120, 0, 120, 8, -120, 8)
 
 [node name="ExitMass" type="StaticBody2D" parent="Terrain"]
-position = Vector2(1160, 460)
+position = Vector2(1100, 620)
 collision_layer = 1
 collision_mask = 0
 metadata/surface_id = &"gate_loop_exit"
-metadata/support_top = 460.0
-metadata/support_width = 240.0
+metadata/support_top = 620.0
+metadata/support_width = 360.0
 metadata/critical = true
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/ExitMass"]
-position = Vector2(0, 130)
+position = Vector2(0, 50)
 shape = SubResource("ExitMassShape")
 [node name="RockVisual" type="Polygon2D" parent="Terrain/ExitMass"]
 color = Color(0.14, 0.15, 0.21, 1)
-polygon = PackedVector2Array(-120, 0, 120, 0, 120, 260, -120, 260)
+polygon = PackedVector2Array(-180, 0, 180, 0, 180, 100, -180, 100)
 [node name="SupportCap" type="Polygon2D" parent="Terrain/ExitMass"]
 color = Color(0.55, 0.46, 0.72, 1)
-polygon = PackedVector2Array(-120, 0, 120, 0, 120, 8, -120, 8)
+polygon = PackedVector2Array(-180, 0, 180, 0, 180, 8, -180, 8)
 
 [node name="OneWay" type="Node2D" parent="."]
 [node name="OverheadStepWest" type="StaticBody2D" parent="OneWay"]
@@ -202,10 +206,12 @@ polygon = PackedVector2Array(580, 500, 660, 300, 740, 500)
 [node name="Entry" type="Marker2D" parent="Anchors/Sockets"]
 position = Vector2(0, 620)
 [node name="Exit" type="Marker2D" parent="Anchors/Sockets"]
-position = Vector2(1280, 460)
+position = Vector2(1280, 620)
+[node name="MaterialBranch" type="Marker2D" parent="Anchors/Sockets"]
+position = Vector2(840, 720)
 [node name="Enemy" type="Node2D" parent="Anchors"]
 [node name="GateWestOccupier" type="Marker2D" parent="Anchors/Enemy"]
-position = Vector2(480, 540)
+position = Vector2(360, 556)
 script = ExtResource("2")
 anchor_id = &"gate_west_occupier"
 anchor_type = &"enemy"
@@ -219,18 +225,18 @@ has_cover_or_elevation = true
 required = true
 metadata/support_id = &"gate_loop_step_west"
 [node name="GateEastOccupier" type="Marker2D" parent="Anchors/Enemy"]
-position = Vector2(920, 540)
+position = Vector2(1100, 620)
 script = ExtResource("2")
 anchor_id = &"gate_east_occupier"
 anchor_type = &"enemy"
 allowed_tags = Array[StringName]([&"occupier"])
-support_width = 240.0
-patrol_width = 160.0
+support_width = 360.0
+patrol_width = 260.0
 clearance = 180.0
 has_escape_route = true
 has_line_of_sight = false
 has_cover_or_elevation = true
-metadata/support_id = &"gate_loop_step_east"
+metadata/support_id = &"gate_loop_exit"
 [node name="GateOverheadShooter" type="Marker2D" parent="Anchors/Enemy"]
 position = Vector2(1080, 200)
 script = ExtResource("2")
@@ -249,27 +255,31 @@ metadata/support_id = &"gate_overhead_wait_east"
 [node name="Reward" type="Node2D" parent="Anchors"]
 [node name="Objective" type="Node2D" parent="Anchors"]
 [node name="GateController" type="Node2D" parent="Anchors/Objective"]
-position = Vector2(1000, 540)
+position = Vector2(780, 556)
 script = ExtResource("3")
 gate_size = Vector2(64, 180)
-switch_offset = Vector2(-340, -120)
+switch_offset = Vector2(-160, -64)
 opens_once = true
 open_delay = 0.18
 metadata/objective_id = &"sanctum_gate_loop"
 metadata/open_clearance = 180.0
 [node name="SwitchAnchor" type="Marker2D" parent="Anchors/Objective"]
-position = Vector2(660, 460)
+position = Vector2(620, 492)
 metadata/objective_id = &"sanctum_gate_loop"
 metadata/target_gate_id = &"sanctum_loop_gate"
 metadata/support_id = &"gate_loop_switch_floor"
 [node name="GateAnchor" type="Marker2D" parent="Anchors/Objective"]
-position = Vector2(1000, 540)
+position = Vector2(780, 556)
 metadata/objective_id = &"sanctum_gate_loop"
 metadata/gate_id = &"sanctum_loop_gate"
 metadata/open_clearance = 180.0
 [node name="ReturnPath" type="Marker2D" parent="Anchors/Objective"]
-position = Vector2(920, 540)
-metadata/route_surfaces = Array[StringName]([&"gate_loop_switch_floor", &"gate_loop_step_east", &"gate_loop_exit"])
+position = Vector2(1100, 620)
+metadata/route_surfaces = Array[StringName]([&"gate_loop_switch_floor", &"gate_material_branch_cover", &"gate_loop_exit"])
+[node name="MaterialBranchRead" type="Marker2D" parent="Anchors/Objective"]
+position = Vector2(840, 556)
+metadata/branch_socket_id = &"gate_material_branch"
+metadata/rejoin_room_id = &"bs_volatile_nave"
 [node name="OverheadWaitWest" type="Marker2D" parent="Anchors/Objective"]
 position = Vector2(200, 200)
 script = ExtResource("2")
@@ -297,7 +307,7 @@ safe_radius = 180.0
 required = true
 metadata/support_id = &"gate_loop_entry"
 [node name="SwitchRecovery" type="Marker2D" parent="Anchors/Recovery"]
-position = Vector2(660, 460)
+position = Vector2(620, 492)
 script = ExtResource("2")
 anchor_id = &"switch_recovery"
 anchor_type = &"recovery"
@@ -310,8 +320,9 @@ metadata/bounds = Rect2(0, 0, 1280, 720)
 [node name="Validation" type="Node2D" parent="."]
 metadata/safe_entry_radius = 240.0
 metadata/minimum_critical_landing = 220.0
-metadata/max_required_step = 80.0
+metadata/max_required_step = 64.0
 metadata/switch_precedes_gate = true
 metadata/gate_controller_path = NodePath("../Anchors/Objective/GateController")
 metadata/moving_platform_path_id = &"gate_overhead_route"
 metadata/ground_route_remains_required = true
+metadata/forward_branch_room = &"bs_material_crypt"

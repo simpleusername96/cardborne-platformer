@@ -245,7 +245,7 @@ static func _validate_optional_return(
 				% [room.id, from_socket.transition_type]
 			)
 			continue
-		var rope := _find_climbable(host)
+		var rope := _find_climbable(host, from_socket.id)
 		if rope == null:
 			errors.append("Optional room '%s' rope return needs an authored climbable." % room.id)
 			continue
@@ -674,7 +674,14 @@ static func _room_by_id(plan: StagePlan, room_id: StringName) -> PlannedRoom:
 	return null
 
 
-static func _find_climbable(host: Node) -> Climbable:
+static func _find_climbable(host: Node, socket_id: StringName = &"") -> Climbable:
+	if not String(socket_id).is_empty():
+		for child in host.find_children("*", "", true, false):
+			if (
+				child is Climbable
+				and StringName(child.get_meta("socket_id", &"")) == socket_id
+			):
+				return child as Climbable
 	var named_return := host.get_node_or_null("Anchors/Objective/ReturnRope") as Climbable
 	if named_return != null:
 		return named_return

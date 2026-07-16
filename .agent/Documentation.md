@@ -93,7 +93,7 @@ adding more content or random topology.
   all active material grades. Fixed rewards unlock the Stage 1 alternatives and
   Frost Spirit Stone.
 - Stage V6 composition is validated at Ruin `8 enemies / 784px`, Flooded
-  `10 / 896px`, and Sanctum `12 / 740px`, with 13/16/11 meaningful elevation
+  `10 / 896px`, and Sanctum `12 / 736px`, with 13/16/15 meaningful elevation
   changes and 2/3/4 multi-elevation combat rooms respectively.
 - The fixed-stage enhancement pass has locked source-linked construction
   blueprints for all three normal stages. They preserve current room counts and
@@ -113,6 +113,13 @@ adding more content or random topology.
   real poison hazard on retry, exercises multi-destination Leaper and Pump
   Gallery combat, preserves minimap knowledge, and unlocks the shelter exit only
   after actual terminal-room arrival while earlier enemies remain alive.
+- Broken Sanctum now closes its distributed-route milestone at
+  `12 enemies / 736px` with three meaningful descents, four direction reversals,
+  two forward rejoins, and zero near-limit transitions. Its production runtime
+  fixture opens the gate shortcut, continuously clears the required supports,
+  traverses both optional routes, preserves the active Cloister checkpoint on
+  the minimap, exercises Charger/Leaper/Shooter/Sentry terrain roles, and opens
+  the exit after only the terminal encounter.
 - Normal-stage completion now follows typed terminal policy: Ruin and Sanctum
   require only their terminal-room encounter, while Flooded Works uses shelter
   arrival. Earlier and optional enemies no longer own the exit or HUD objective.

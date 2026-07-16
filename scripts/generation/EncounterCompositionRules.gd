@@ -6,6 +6,10 @@ const HIGH_ATTENTION_ROLES: Array[StringName] = [
 ]
 const MAX_HIGH_ATTENTION_ENEMIES := 2
 const FINAL_GALLERY_HIGH_ATTENTION_ENEMIES := 3
+const THREE_THREAT_COMBINE_GROUPS: Array[StringName] = [
+	&"flooded_final_gallery",
+	&"sanctum_fractured_gallery",
+]
 const MAX_SAME_ARCHETYPE := 2
 
 
@@ -27,7 +31,7 @@ static func permits_candidate(
 			same_archetype_count += 1
 	var high_attention_limit := (
 		FINAL_GALLERY_HIGH_ATTENTION_ENEMIES
-		if template != null and template.variant_group == &"flooded_final_gallery"
+		if template != null and THREE_THREAT_COMBINE_GROUPS.has(template.variant_group)
 		else MAX_HIGH_ATTENTION_ENEMIES
 	)
 	return (

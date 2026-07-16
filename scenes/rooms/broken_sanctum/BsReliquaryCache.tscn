@@ -10,7 +10,7 @@ size = Vector2(400, 100)
 [sub_resource type="RectangleShape2D" id="CenterMassShape"]
 size = Vector2(480, 140)
 [sub_resource type="RectangleShape2D" id="EastReturnMassShape"]
-size = Vector2(220, 100)
+size = Vector2(320, 16)
 [sub_resource type="RectangleShape2D" id="ReturnHatchShape"]
 size = Vector2(180, 16)
 [sub_resource type="RectangleShape2D" id="SealShape"]
@@ -58,29 +58,31 @@ color = Color(0.72, 0.56, 0.28, 1)
 polygon = PackedVector2Array(-240, 0, 240, 0, 240, 8, -240, 8)
 
 [node name="EastCacheReturnMass" type="StaticBody2D" parent="Terrain"]
-position = Vector2(1170, 620)
-collision_layer = 1
+position = Vector2(1204, 620)
+collision_layer = 2
 collision_mask = 0
-metadata/surface_id = &"reliquary_cache_east"
+metadata/surface_id = &"reliquary_cache_sentry_hatch"
 metadata/support_top = 620.0
-metadata/support_width = 220.0
+metadata/support_width = 320.0
 metadata/critical = false
+metadata/one_way = true
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/EastCacheReturnMass"]
-position = Vector2(0, 50)
+position = Vector2(0, 8)
 shape = SubResource("EastReturnMassShape")
+one_way_collision = true
 [node name="RockVisual" type="Polygon2D" parent="Terrain/EastCacheReturnMass"]
 color = Color(0.14, 0.15, 0.21, 1)
-polygon = PackedVector2Array(-110, 0, 110, 0, 110, 100, -110, 100)
+polygon = PackedVector2Array(-160, 0, 160, 0, 160, 16, -160, 16)
 [node name="SupportCap" type="Polygon2D" parent="Terrain/EastCacheReturnMass"]
 color = Color(0.32, 0.62, 0.58, 1)
-polygon = PackedVector2Array(-110, 0, 110, 0, 110, 8, -110, 8)
+polygon = PackedVector2Array(-160, 0, 160, 0, 160, 8, -160, 8)
 
 [node name="OneWay" type="Node2D" parent="."]
 [node name="ReturnHatch" type="StaticBody2D" parent="OneWay"]
 position = Vector2(970, 620)
 collision_layer = 2
 collision_mask = 0
-metadata/surface_id = &"reliquary_cache_return_hatch"
+metadata/surface_id = &"reliquary_cache_cloister_entry"
 metadata/support_top = 620.0
 metadata/support_width = 180.0
 metadata/one_way = true
@@ -109,8 +111,12 @@ polygon = PackedVector2Array(880, 620, 1060, 620, 1060, 720, 880, 720)
 [node name="Sockets" type="Node2D" parent="Anchors"]
 [node name="Branch" type="Marker2D" parent="Anchors/Sockets"]
 position = Vector2(600, 720)
+[node name="CloisterBranch" type="Marker2D" parent="Anchors/Sockets"]
+position = Vector2(960, 720)
 [node name="Return" type="Marker2D" parent="Anchors/Sockets"]
 position = Vector2(1040, 720)
+[node name="SentryReturn" type="Marker2D" parent="Anchors/Sockets"]
+position = Vector2(1280, 720)
 [node name="Enemy" type="Node2D" parent="Anchors"]
 [node name="Hazard" type="Node2D" parent="Anchors"]
 
@@ -143,6 +149,11 @@ polygon = PackedVector2Array(-27, 0, 27, 0, 27, 92, -27, 92)
 position = Vector2(1040, 620)
 metadata/return_socket_id = &"reliquary_cache_return"
 metadata/target_recovery_id = &"upper_return_recovery"
+metadata/compatibility_only = true
+[node name="SentryDropReturn" type="Marker2D" parent="Anchors/Objective"]
+position = Vector2(1296, 620)
+metadata/return_socket_id = &"reliquary_cache_sentry_return"
+metadata/target_room_id = &"bs_sentry_crossfire"
 
 [node name="Recovery" type="Node2D" parent="Anchors"]
 [node name="CacheEntryRecovery" type="Marker2D" parent="Anchors/Recovery"]
@@ -153,18 +164,34 @@ anchor_type = &"recovery"
 safe_radius = 180.0
 required = true
 metadata/support_id = &"reliquary_cache_center"
+[node name="CacheCloisterEntryRecovery" type="Marker2D" parent="Anchors/Recovery"]
+position = Vector2(960, 620)
+script = ExtResource("2")
+anchor_id = &"cache_cloister_entry_recovery"
+anchor_type = &"recovery"
+safe_radius = 180.0
+required = true
+metadata/support_id = &"reliquary_cache_cloister_entry"
 [node name="CacheReturnRecovery" type="Marker2D" parent="Anchors/Recovery"]
-position = Vector2(1170, 620)
+position = Vector2(1204, 620)
 script = ExtResource("2")
 anchor_id = &"cache_return_recovery"
 anchor_type = &"recovery"
 safe_radius = 100.0
 required = true
-metadata/support_id = &"reliquary_cache_east"
+metadata/support_id = &"reliquary_cache_sentry_hatch"
 
 [node name="CameraBounds" type="Node2D" parent="."]
 metadata/bounds = Rect2(0, 0, 1280, 720)
 [node name="Validation" type="Node2D" parent="."]
+metadata/required_route = false
+metadata/minimum_optional_landing = 180.0
+metadata/branch_socket_id = &"reliquary_cache_branch"
+metadata/return_socket_id = &"reliquary_cache_return"
+metadata/non_rope_return = true
+metadata/forward_branch_socket_id = &"reliquary_cache_cloister_branch"
+metadata/forward_return_socket_id = &"reliquary_cache_sentry_return"
+metadata/forward_rejoin_room = &"bs_sentry_crossfire"
 
 [node name="FieldPickups" type="Node2D" parent="."]
 
@@ -172,8 +199,3 @@ metadata/bounds = Rect2(0, 0, 1280, 720)
 position = Vector2(760, 550)
 pickup_id = &"sanctum_reliquary_residue_01"
 definition = ExtResource("4_slime_residue")
-metadata/required_route = false
-metadata/minimum_optional_landing = 180.0
-metadata/branch_socket_id = &"reliquary_cache_branch"
-metadata/return_socket_id = &"reliquary_cache_return"
-metadata/non_rope_return = true

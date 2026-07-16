@@ -6,7 +6,7 @@
 script = ExtResource("1_variant")
 id = &"sentry_sanctum"
 display_name = "Sanctum Sentry"
-content_version = 1
+content_version = 2
 tags = Array[StringName]([&"normal_enemy", &"broken_sanctum", &"baseline_crossfire"])
 archetype_id = &"sentry"
 stage_id = &"broken_sanctum"
@@ -21,7 +21,7 @@ attack_range = 900.0
 active_projectile_cap = 2
 stagger_capacity = 80
 presentation_key = &"enemy.sentry.sanctum"
-presentation_description = "A fixed barrel and thin cover-readable aim line identify the crossfire role."
+presentation_description = "A fixed barrel and short locked-direction flash identify the crossfire role."
 tuning_trait = &"baseline_crossfire"
 budget_cost = 3
 drop_source_id = &"drop_sentry"
