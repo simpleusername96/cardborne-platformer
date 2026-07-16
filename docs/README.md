@@ -7,6 +7,25 @@ For a short explanation of the current combat decision, read
 `design/COMBAT_LOADOUT_DECISION_BRIEF.md`. It is a derived decision record; the
 product blueprint and detailed combat spec below remain authoritative.
 
+## Core Play Review Package
+
+The following documents are the current review package for shifting the next
+milestone from content breadth to a measured Core Play Proof. The audit is active
+evidence to consult; the foundation specification and roadmap remain drafts until
+the owner accepts their scope. The active PRD and production contracts continue to
+govern runtime behavior:
+
+- `audits/cardborne_gameplay_experience_audit_2026-07-16.md` diagnoses the current
+  repository from game-design and implementation perspectives, separates essential
+  foundations from direct enjoyment work and deferred polish, and defines the
+  prerequisites for procedural-generation re-entry.
+- `design/CORE_PLAY_FOUNDATIONS.md` proposes controls, movement, combat grammar,
+  shared enemy states, three build directions, stage rhythm, boss learning,
+  presentation requirements, and human acceptance gates.
+- `.agent/execplans/2026-07-16-core-play-experience-roadmap.md` divides the work into
+  small pull requests with hypotheses, fixtures, rollback boundaries, automated
+  checks, and human playtest gates.
+
 ## Read First
 
 | Order | Document | Authority |
