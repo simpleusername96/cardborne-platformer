@@ -50,6 +50,7 @@ var _last_attempt: Dictionary = {}
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	Styles.apply_theme(self)
 	_configure_art_slots()
 	_style_ui()
 	_apply_static_copy()
@@ -94,6 +95,7 @@ func configure(victory: bool, profile_name: String, settlement: Dictionary = {})
 	_update_result_art(victory, settlement)
 	retry_button.text = UILocalization.text(&"Begin Another Run")
 	menu_button.text = UILocalization.text(&"Main Menu")
+	Styles.apply_button(menu_button, Styles.MOSS, true)
 
 
 func configure_retry_decision(profile_name: String, attempt: Dictionary) -> void:
@@ -137,6 +139,7 @@ func configure_retry_decision(profile_name: String, attempt: Dictionary) -> void
 		&"Retry Boss" if bool(attempt.get("boss_attempt", false)) else &"Retry Stage"
 	)
 	menu_button.text = UILocalization.text(&"End Expedition")
+	Styles.apply_button(menu_button, Styles.CORAL, true)
 	retry_button.grab_focus()
 
 
@@ -179,10 +182,7 @@ func _style_ui() -> void:
 	Styles.configure_label(build_label, Styles.TYPE_BODY, Styles.TEXT_MUTED)
 	Styles.configure_label(rewards_heading, Styles.TYPE_CAPTION, Styles.AMBER)
 	Styles.configure_label(materials_label, Styles.TYPE_BODY, Styles.AMBER)
-	summary_panel.add_theme_stylebox_override(
-		"panel",
-		Styles.panel_style(Color(Styles.SURFACE, 0.97), Styles.OUTLINE)
-	)
+	Styles.apply_panel(summary_panel)
 	summary_rule.color = Color(Styles.OUTLINE, 0.72)
 	summary_divider.color = Color(Styles.OUTLINE, 0.72)
 	Styles.apply_button(retry_button, Styles.AMBER)

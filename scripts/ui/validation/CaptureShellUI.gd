@@ -11,6 +11,7 @@ const VIEWPORTS: Array[Dictionary] = [
 	{"prefix": "desktop", "size": Vector2i(1280, 720)},
 	{"prefix": "hd", "size": Vector2i(1920, 1080)},
 ]
+const LOCALES: PackedStringArray = ["en", "ko"]
 const STATE_SUFFIXES: Array[String] = [
 	"main_menu",
 	"victory",
@@ -24,6 +25,7 @@ const STATE_SUFFIXES: Array[String] = [
 
 var _failed := false
 var _requested := ""
+var _original_locale := "en"
 
 
 func _initialize() -> void:
@@ -37,17 +39,30 @@ func _run() -> void:
 		push_error("Unknown shell UI capture: %s" % _requested)
 		quit(1)
 		return
-	for viewport in VIEWPORTS:
-		var prefix := String(viewport["prefix"])
-		if not _requested.is_empty() and not _requested.begins_with("%s_" % prefix):
+	var localization := root.get_node_or_null("UILocalization")
+	if localization == null:
+		push_error("Shell UI capture requires UILocalization.")
+		quit(1)
+		return
+	_original_locale = String(localization.call("get_locale"))
+	for locale in LOCALES:
+		if not _requested.is_empty() and not _capture_matches_locale(_requested, locale):
 			continue
-		await _capture_viewport(prefix, viewport["size"] as Vector2i)
+		localization.call("set_locale", locale)
+		await process_frame
+		for viewport in VIEWPORTS:
+			var prefix := String(viewport["prefix"])
+			if not _requested.is_empty() and not _requested.begins_with("%s_" % prefix):
+				continue
+			await _capture_viewport(prefix, viewport["size"] as Vector2i, locale)
+	localization.call("set_locale", _original_locale)
+	await process_frame
 	if not _failed:
 		print("SHELL_UI_CAPTURE_OK target=%s" % (_requested if not _requested.is_empty() else "all"))
 	quit(1 if _failed else 0)
 
 
-func _capture_viewport(prefix: String, viewport_size: Vector2i) -> void:
+func _capture_viewport(prefix: String, viewport_size: Vector2i, locale: String) -> void:
 	root.size = viewport_size
 	DisplayServer.window_set_size(viewport_size)
 	await _wait_frames(2)
@@ -67,7 +82,7 @@ func _capture_viewport(prefix: String, viewport_size: Vector2i) -> void:
 		load("res://data/equipment/equipment_progression_catalog.tres")
 	)
 
-	await _save_current("%s_main_menu" % prefix)
+	await _save_current(_capture_name(prefix, "main_menu", locale), "%s_main_menu" % prefix if locale == "en" else "")
 
 	game.call("unload_current_stage")
 	run_director.call("_clear_hud")
@@ -78,9 +93,9 @@ func _capture_viewport(prefix: String, viewport_size: Vector2i) -> void:
 		await _cleanup(main, game)
 		return
 	result.call("configure", true, "Traveler", _result_settlement(true))
-	await _save_current("%s_victory" % prefix)
+	await _save_current(_capture_name(prefix, "victory", locale), "%s_victory" % prefix if locale == "en" else "")
 	result.call("configure", false, "Traveler", _result_settlement(false))
-	await _save_current("%s_defeat" % prefix)
+	await _save_current(_capture_name(prefix, "defeat", locale), "%s_defeat" % prefix if locale == "en" else "")
 
 	run_director.call("show_main_menu")
 	await _wait_frames(4)
@@ -92,9 +107,9 @@ func _capture_viewport(prefix: String, viewport_size: Vector2i) -> void:
 	await process_frame
 	await physics_frame
 	game.call("set_pause_menu_open", true)
-	await _save_current("%s_pause" % prefix)
+	await _save_current(_capture_name(prefix, "pause", locale), "%s_pause" % prefix if locale == "en" else "")
 	game.call("set_settings_open", true)
-	await _save_current("%s_pause_settings" % prefix)
+	await _save_current(_capture_name(prefix, "pause_settings", locale), "%s_pause_settings" % prefix if locale == "en" else "")
 	game.call("set_settings_open", false)
 	await _wait_frames(2)
 	var pause_menu := main.get_node_or_null("UILayer/PauseMenu") as Control
@@ -103,20 +118,20 @@ func _capture_viewport(prefix: String, viewport_size: Vector2i) -> void:
 		_failed = true
 	else:
 		pause_menu.call("_show_confirmation")
-		await _save_current("%s_abandon" % prefix)
+		await _save_current(_capture_name(prefix, "abandon", locale), "%s_abandon" % prefix if locale == "en" else "")
 
 	game.call("close_overlays")
 	run_director.call("show_main_menu")
 	await _wait_frames(4)
 	game.call("set_settings_open", true)
-	await _save_current("%s_settings" % prefix)
+	await _save_current(_capture_name(prefix, "settings", locale), "%s_settings" % prefix if locale == "en" else "")
 	var settings := main.get_node_or_null("UILayer/SettingsPopup") as Control
 	if settings == null:
 		push_error("Settings popup is unavailable for remap capture.")
 		_failed = true
 	else:
 		settings.call("_begin_capture", "jump", "Jump")
-		await _save_current("%s_remap" % prefix)
+		await _save_current(_capture_name(prefix, "remap", locale), "%s_remap" % prefix if locale == "en" else "")
 
 	await _cleanup(main, game)
 
@@ -146,17 +161,27 @@ func _mount_main() -> Dictionary:
 	}
 
 
-func _save_current(capture_name: String) -> void:
+func _save_current(capture_name: String, legacy_name: String = "") -> void:
 	await _wait_frames(SETTLE_FRAMES)
 	await _flush_render_frames()
-	if not _requested.is_empty() and _requested != capture_name:
+	if not _requested.is_empty() and _requested not in [capture_name, legacy_name]:
 		return
 	var texture := root.get_texture()
 	var image := texture.get_image() if texture != null else null
-	var output_path := "%s/%s.png" % [OUTPUT_DIR, capture_name]
-	if image == null or image.save_png(output_path) != OK:
-		push_error("Unable to save shell UI capture: %s" % output_path)
+	if image == null:
+		push_error("Unable to read shell UI capture: %s" % capture_name)
 		_failed = true
+		return
+	var output_names: Array[String] = [capture_name]
+	if not legacy_name.is_empty():
+		output_names.append(legacy_name)
+	for output_name in output_names:
+		if not _requested.is_empty() and _requested != output_name:
+			continue
+		var output_path := "%s/%s.png" % [OUTPUT_DIR, output_name]
+		if image.save_png(output_path) != OK:
+			push_error("Unable to save shell UI capture: %s" % output_path)
+			_failed = true
 
 
 func _flush_render_frames() -> void:
@@ -180,7 +205,20 @@ func _is_known_capture(capture_name: String) -> bool:
 		for suffix in STATE_SUFFIXES:
 			if capture_name == "%s_%s" % [prefix, suffix]:
 				return true
+			for locale in LOCALES:
+				if capture_name == _capture_name(prefix, suffix, locale):
+					return true
 	return false
+
+
+func _capture_name(prefix: String, suffix: String, locale: String) -> String:
+	return "%s_%s_%s" % [prefix, suffix, locale]
+
+
+func _capture_matches_locale(capture_name: String, locale: String) -> bool:
+	if capture_name.ends_with("_%s" % locale):
+		return true
+	return locale == "en" and not capture_name.ends_with("_ko")
 
 
 func _result_settlement(victory: bool) -> Dictionary:

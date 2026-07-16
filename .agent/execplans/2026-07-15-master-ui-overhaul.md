@@ -496,22 +496,28 @@ background behavior.
 `SettingsPopup.tscn/.gd`, `RunResult.tscn/.gd`, `ProductionBackdrop.gd`, shell
 capture/validation scripts.
 
-- [ ] Finish Main Menu composition without reintroducing unsupported actions.
-- [ ] Migrate Pause and End Expedition confirmation to the shared Theme and
+- [x] Finish Main Menu composition without reintroducing unsupported actions.
+- [x] Migrate Pause and End Expedition confirmation to the shared Theme and
   explicit destructive hierarchy.
-- [ ] Apply `settings.png` only in shell context; preserve the live stage plus dim
+- [x] Apply `settings.png` only in shell context; preserve the live stage plus dim
   layer in pause/in-run context.
-- [ ] Keep capture, conflict, cancel, reset-one, restore-all, language, audio,
+- [x] Keep capture, conflict, cancel, reset-one, restore-all, language, audio,
   screen-shake, and damage-flash paths visible and operable.
-- [ ] Migrate victory, retry decision, and ended-expedition summaries with
+- [x] Migrate victory, retry decision, and ended-expedition summaries with
   Traveler/Slime King/Boss Core art in appropriate slots.
-- [ ] Verify initial focus, focus neighbors, Escape/back, close, and return focus.
+- [x] Verify initial focus, focus neighbors, Escape/back, close, and return focus.
 
 **Accept:** all shell states pass `ValidateShellUI.gd` and rendered KO/EN evidence
 at three viewports with no clipping, overlap, unsupported action, or lost context.
 
 **Guard:** no background image may make a modal look like navigation to another
 screen.
+
+**Status 2026-07-16:** passed. Main Menu, Pause/abandon, shell and in-run Settings,
+victory/defeat/retry result states use the production Theme and preserve their
+functional hierarchy. Focus/remap/pause/result validators pass, and the shell
+capture tool now records English and Korean OpenGL evidence at all three viewports
+while retaining the legacy English filenames.
 
 ### Milestone 4 - Preparation, Rewards, Merchant, And Forge Migration
 
@@ -797,9 +803,9 @@ These are not blockers for Milestones 0-1 unless noted:
 
 ## Next Steps
 
-1. Review the Milestone 2 captures and `design-qa.md` at the planned visual stop.
-2. Begin Milestone 3 with the remaining Shell, Pause, Settings, and Run Result
-   composition/style migration while preserving shell-versus-live-world context.
+1. Review the Milestone 3 shell captures and `design-qa.md` at the next visual stop.
+2. Begin Milestone 4 with Merchant, Forge, and the remaining dense decision
+   surfaces while preserving service/snapshot ownership.
 3. Leave `master` untouched until Milestone 7 creates a fresh integration branch
    from its then-current head.
 

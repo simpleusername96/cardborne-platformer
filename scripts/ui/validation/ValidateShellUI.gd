@@ -1,5 +1,6 @@
 extends SceneTree
 
+const Styles = preload("res://scripts/ui/production/ProductionUIStyles.gd")
 const MAIN_MENU_SCENE := "res://scenes/ui/production/MainMenu.tscn"
 const RUN_RESULT_SCENE := "res://scenes/ui/production/RunResult.tscn"
 const PAUSE_MENU_SCENE := "res://scenes/ui/PauseMenu.tscn"
@@ -74,6 +75,7 @@ func _validate_main_menu(viewport_size: Vector2i) -> void:
 		return
 	var new_run := screen.get_node("%NewRunButton") as Button
 	var settings := screen.get_node("%SettingsButton") as Button
+	_assert_true(screen.theme == Styles.PRODUCTION_THEME, "Main menu must use the production Theme.")
 	_assert_true(screen.get_node_or_null("%QuitButton") == null, "Main menu must not expose a browser exit action.")
 	_assert_backdrop(
 		screen.get_node("Backdrop") as Control,
@@ -111,6 +113,11 @@ func _validate_run_result(viewport_size: Vector2i) -> void:
 	var retry := screen.get_node("%RetryButton") as Button
 	var menu := screen.get_node("%MenuButton") as Button
 	var summary_panel := screen.get_node("%SummaryPanel") as Control
+	_assert_true(screen.theme == Styles.PRODUCTION_THEME, "Run result must use the production Theme.")
+	_assert_true(
+		summary_panel.theme_type_variation == &"FlatPanel",
+		"Run result summary must use the shared flat surface."
+	)
 	_assert_backdrop(
 		screen.get_node("Backdrop") as Control,
 		"res://art/ui/production/backgrounds/run_result.png",
@@ -169,6 +176,10 @@ func _validate_run_result(viewport_size: Vector2i) -> void:
 	)
 	_assert_true(retry.text == _t("Retry Stage"), "Stage death must offer a localized same-stage retry.")
 	_assert_true(menu.text == _t("End Expedition"), "Stage death must offer a localized expedition exit.")
+	_assert_true(
+		menu.theme_type_variation == &"DangerButton",
+		"End Expedition must use the destructive action hierarchy."
+	)
 	_assert_inside(summary_panel, viewport_size, "Retry decision summary")
 	menu.pressed.emit()
 	_assert_true(calls["end"] == 1, "Death decision must emit End Expedition separately from Main Menu.")
@@ -192,6 +203,11 @@ func _validate_pause_menu(viewport_size: Vector2i) -> void:
 	var end_expedition := screen.get_node("%MainMenuButton") as Button
 	var keep_playing := screen.get_node("%KeepPlayingButton") as Button
 	var confirm_end := screen.get_node("%ConfirmEndRunButton") as Button
+	_assert_true(screen.theme == Styles.PRODUCTION_THEME, "Pause must use the production Theme.")
+	_assert_true(
+		panel.theme_type_variation == &"ModalSurface",
+		"Pause must use the shared modal surface."
+	)
 	_assert_true(screen.visible, "Pause menu must become visible from Game state.")
 	_assert_inside(panel, viewport_size, "Pause panel")
 	_assert_true(panel.global_position.x >= viewport_size.x * 0.5, "Pause panel must preserve the left play view.")
@@ -252,6 +268,11 @@ func _validate_settings(viewport_size: Vector2i) -> void:
 	var language_selector := screen.get_node("%LanguageSelector") as OptionButton
 	var active_locale := String(_localization.call("get_locale"))
 	var shell_backdrop := screen.get_node("%ShellBackdrop") as Control
+	_assert_true(screen.theme == Styles.PRODUCTION_THEME, "Settings must use the production Theme.")
+	_assert_true(
+		panel.theme_type_variation == &"ModalSurface",
+		"Settings must use the shared modal surface."
+	)
 	_assert_true(screen.visible, "Settings must become visible from Game state.")
 	_assert_backdrop(
 		shell_backdrop,
