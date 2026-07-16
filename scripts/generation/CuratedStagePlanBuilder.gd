@@ -53,7 +53,7 @@ func build_ruin_approach(
 		[&"lr_shooter_overlook", true, 3, 3, 0, 0],
 		[&"lr_lower_upper_choice", true, 4, 0, 0, 1],
 		[&"lr_broken_bridge", true, 5, 0, 0, 0],
-		[&"lr_charge_lane", true, 6, 3, 0, 0],
+		[&"lr_charge_lane", true, 6, 2, 0, 0],
 		[&"lr_exit_ascent", true, 7, 2, 0, 0],
 		[&"lr_destructible_cache", false, 0, 0, 0, 1],
 	]
@@ -88,7 +88,7 @@ func build_ruin_approach(
 		_connection(&"critical_5", &"lr_broken_bridge", &"broken_bridge_exit", &"lr_charge_lane", &"charge_entry", &"critical"),
 		_connection(&"critical_6", &"lr_charge_lane", &"charge_exit", &"lr_exit_ascent", &"exit_ascent_entry", &"critical"),
 		_connection(&"optional_branch_0", &"lr_lower_upper_choice", &"choice_optional_branch", &"lr_destructible_cache", &"cache_branch", &"optional"),
-		_connection(&"optional_return_0", &"lr_destructible_cache", &"cache_rejoin", &"lr_lower_upper_choice", &"choice_optional_rejoin", &"return"),
+		_connection(&"optional_return_0", &"lr_destructible_cache", &"cache_rejoin", &"lr_broken_bridge", &"broken_bridge_optional_rejoin", &"return"),
 	]
 	var streams := NamedRngStreams.new(
 		run_seed,

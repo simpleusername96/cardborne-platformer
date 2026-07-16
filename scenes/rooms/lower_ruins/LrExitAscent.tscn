@@ -8,19 +8,14 @@
 
 [sub_resource type="RectangleShape2D" id="EntryMassShape"]
 size = Vector2(300, 250)
-
 [sub_resource type="RectangleShape2D" id="LowerStepShape"]
-size = Vector2(260, 330)
-
+size = Vector2(260, 314)
 [sub_resource type="RectangleShape2D" id="UpperStepShape"]
-size = Vector2(260, 410)
-
+size = Vector2(260, 378)
 [sub_resource type="RectangleShape2D" id="GateMassShape"]
-size = Vector2(300, 490)
-
+size = Vector2(300, 442)
 [sub_resource type="RectangleShape2D" id="BoundaryShape"]
 size = Vector2(32, 720)
-
 [sub_resource type="RectangleShape2D" id="ExitAreaShape"]
 size = Vector2(92, 116)
 
@@ -29,7 +24,6 @@ script = ExtResource("1")
 room_id = &"lr_exit_ascent"
 
 [node name="Terrain" type="Node2D" parent="."]
-
 [node name="EntryMass" type="StaticBody2D" parent="Terrain"]
 position = Vector2(150, 650)
 collision_layer = 1
@@ -38,78 +32,66 @@ metadata/surface_id = &"exit_entry"
 metadata/support_top = 650.0
 metadata/support_width = 300.0
 metadata/critical = true
-
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/EntryMass"]
 position = Vector2(0, 125)
 shape = SubResource("EntryMassShape")
-
 [node name="RockVisual" type="Polygon2D" parent="Terrain/EntryMass"]
 color = Color(0.2, 0.25, 0.28, 1)
 polygon = PackedVector2Array(-150, 0, 150, 0, 150, 250, -150, 250)
-
 [node name="SupportCap" type="Polygon2D" parent="Terrain/EntryMass"]
 color = Color(0.34, 0.57, 0.6, 1)
 polygon = PackedVector2Array(-150, 0, 150, 0, 150, 8, -150, 8)
 
 [node name="LowerStepMass" type="StaticBody2D" parent="Terrain"]
-position = Vector2(430, 570)
+position = Vector2(430, 586)
 collision_layer = 1
 collision_mask = 0
 metadata/surface_id = &"exit_lower_step"
-metadata/support_top = 570.0
+metadata/support_top = 586.0
 metadata/support_width = 260.0
 metadata/critical = true
-
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/LowerStepMass"]
-position = Vector2(0, 165)
+position = Vector2(0, 157)
 shape = SubResource("LowerStepShape")
-
 [node name="RockVisual" type="Polygon2D" parent="Terrain/LowerStepMass"]
 color = Color(0.23, 0.29, 0.32, 1)
-polygon = PackedVector2Array(-130, 0, 130, 0, 130, 330, -130, 330)
-
+polygon = PackedVector2Array(-130, 0, 130, 0, 130, 314, -130, 314)
 [node name="SupportCap" type="Polygon2D" parent="Terrain/LowerStepMass"]
 color = Color(0.44, 0.54, 0.39, 1)
 polygon = PackedVector2Array(-130, 0, 130, 0, 130, 8, -130, 8)
 
 [node name="UpperStepMass" type="StaticBody2D" parent="Terrain"]
-position = Vector2(690, 490)
+position = Vector2(690, 522)
 collision_layer = 1
 collision_mask = 0
 metadata/surface_id = &"exit_upper_step"
-metadata/support_top = 490.0
+metadata/support_top = 522.0
 metadata/support_width = 260.0
 metadata/critical = true
-
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/UpperStepMass"]
-position = Vector2(0, 205)
+position = Vector2(0, 189)
 shape = SubResource("UpperStepShape")
-
 [node name="RockVisual" type="Polygon2D" parent="Terrain/UpperStepMass"]
 color = Color(0.2, 0.25, 0.28, 1)
-polygon = PackedVector2Array(-130, 0, 130, 0, 130, 410, -130, 410)
-
+polygon = PackedVector2Array(-130, 0, 130, 0, 130, 378, -130, 378)
 [node name="SupportCap" type="Polygon2D" parent="Terrain/UpperStepMass"]
 color = Color(0.34, 0.57, 0.6, 1)
 polygon = PackedVector2Array(-130, 0, 130, 0, 130, 8, -130, 8)
 
 [node name="GateMass" type="StaticBody2D" parent="Terrain"]
-position = Vector2(970, 410)
+position = Vector2(970, 458)
 collision_layer = 1
 collision_mask = 0
 metadata/surface_id = &"exit_gate_mass"
-metadata/support_top = 410.0
+metadata/support_top = 458.0
 metadata/support_width = 300.0
 metadata/critical = true
-
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/GateMass"]
-position = Vector2(0, 245)
+position = Vector2(0, 221)
 shape = SubResource("GateMassShape")
-
 [node name="RockVisual" type="Polygon2D" parent="Terrain/GateMass"]
 color = Color(0.23, 0.29, 0.32, 1)
-polygon = PackedVector2Array(-150, 0, 150, 0, 150, 490, -150, 490)
-
+polygon = PackedVector2Array(-150, 0, 150, 0, 150, 442, -150, 442)
 [node name="SupportCap" type="Polygon2D" parent="Terrain/GateMass"]
 color = Color(0.44, 0.54, 0.39, 1)
 polygon = PackedVector2Array(-150, 0, 150, 0, 150, 8, -150, 8)
@@ -118,10 +100,8 @@ polygon = PackedVector2Array(-150, 0, 150, 0, 150, 8, -150, 8)
 position = Vector2(1136, 360)
 collision_layer = 1
 collision_mask = 0
-
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/RightBoundary"]
 shape = SubResource("BoundaryShape")
-
 [node name="RockVisual" type="Polygon2D" parent="Terrain/RightBoundary"]
 color = Color(0.15, 0.2, 0.22, 1)
 polygon = PackedVector2Array(-16, -360, 16, -360, 16, 360, -16, 360)
@@ -129,6 +109,9 @@ polygon = PackedVector2Array(-16, -360, 16, -360, 16, 360, -16, 360)
 [node name="OneWay" type="Node2D" parent="."]
 [node name="Hazards" type="Node2D" parent="."]
 [node name="DecorBack" type="Node2D" parent="."]
+[node name="GateBeacon" type="Polygon2D" parent="DecorBack"]
+color = Color(0.44, 0.54, 0.39, 0.55)
+polygon = PackedVector2Array(930, 210, 970, 150, 1010, 210, 995, 300, 945, 300)
 [node name="DecorFront" type="Node2D" parent="."]
 
 [node name="Anchors" type="Node2D" parent="."]
@@ -136,11 +119,11 @@ polygon = PackedVector2Array(-16, -360, 16, -360, 16, 360, -16, 360)
 [node name="Entry" type="Marker2D" parent="Anchors/Sockets"]
 position = Vector2(0, 650)
 [node name="Exit" type="Marker2D" parent="Anchors/Sockets"]
-position = Vector2(1120, 410)
+position = Vector2(1120, 458)
 
 [node name="Enemy" type="Node2D" parent="Anchors"]
 [node name="WalkerA" type="Marker2D" parent="Anchors/Enemy"]
-position = Vector2(690, 490)
+position = Vector2(690, 522)
 script = ExtResource("3")
 anchor_id = &"walker_a"
 anchor_type = &"enemy"
@@ -152,13 +135,8 @@ has_escape_route = false
 has_line_of_sight = false
 has_cover_or_elevation = false
 required = true
-metadata/allowed_tags = Array[StringName]([&"occupier"])
-metadata/support_width = 260.0
-metadata/patrol_width = 200.0
-metadata/ceiling = 300.0
-metadata/line_of_sight = false
 [node name="WalkerB" type="Marker2D" parent="Anchors/Enemy"]
-position = Vector2(970, 410)
+position = Vector2(970, 458)
 script = ExtResource("3")
 anchor_id = &"walker_b"
 anchor_type = &"enemy"
@@ -170,27 +148,19 @@ has_escape_route = false
 has_line_of_sight = false
 has_cover_or_elevation = false
 required = true
-metadata/allowed_tags = Array[StringName]([&"occupier"])
-metadata/support_width = 260.0
-metadata/patrol_width = 200.0
-metadata/ceiling = 300.0
-metadata/line_of_sight = false
 
 [node name="Hazard" type="Node2D" parent="Anchors"]
 [node name="Reward" type="Node2D" parent="Anchors"]
 [node name="Objective" type="Node2D" parent="Anchors"]
-
 [node name="Checkpoint" type="Marker2D" parent="Anchors/Objective"]
 position = Vector2(150, 650)
 metadata/facing = 1
 metadata/safe_radius = 240.0
-
 [node name="FinalEncounter" type="Marker2D" parent="Anchors/Objective"]
-position = Vector2(830, 450)
+position = Vector2(830, 490)
 metadata/anchor_count = 2
-
 [node name="ExitGate" type="Area2D" parent="Anchors/Objective"]
-position = Vector2(1010, 410)
+position = Vector2(1010, 458)
 collision_layer = 0
 collision_mask = 4
 script = ExtResource("2")
@@ -200,15 +170,12 @@ interaction_enabled = false
 disabled_prompt_text = "Clear the final chamber"
 metadata/critical_exit = true
 metadata/interaction_space = Vector2(120, 140)
-
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Anchors/Objective/ExitGate"]
 position = Vector2(0, -58)
 shape = SubResource("ExitAreaShape")
-
 [node name="Frame" type="Polygon2D" parent="Anchors/Objective/ExitGate"]
 color = Color(0.42, 0.45, 0.47, 1)
 polygon = PackedVector2Array(-50, 0, -50, -124, -34, -146, 34, -146, 50, -124, 50, 0, 30, 0, 30, -112, -30, -112, -30, 0)
-
 [node name="Interior" type="Polygon2D" parent="Anchors/Objective/ExitGate"]
 z_index = 1
 color = Color(0.09, 0.13, 0.15, 1)
@@ -222,29 +189,28 @@ anchor_id = &"entry_recovery"
 anchor_type = &"recovery"
 safe_radius = 240.0
 required = true
-metadata/safe_radius = 240.0
+metadata/support_id = &"exit_entry"
 [node name="AscentRecovery" type="Marker2D" parent="Anchors/Recovery"]
-position = Vector2(430, 570)
+position = Vector2(430, 586)
 script = ExtResource("3")
 anchor_id = &"ascent_recovery"
 anchor_type = &"recovery"
 safe_radius = 130.0
-metadata/safe_radius = 130.0
+metadata/support_id = &"exit_lower_step"
 
 [node name="CameraBounds" type="Node2D" parent="."]
 metadata/bounds = Rect2(0, 0, 1120, 720)
-
 [node name="Validation" type="Node2D" parent="."]
-
-[node name="FieldPickups" type="Node2D" parent="."]
-
-[node name="AscentCoinBundle" parent="FieldPickups" instance=ExtResource("4_field_pickup")]
-position = Vector2(430, 540)
-pickup_id = &"ruin_exit_coin_01"
-definition = ExtResource("5_coin_bundle")
 metadata/safe_entry_radius = 240.0
 metadata/checkpoint_safe_radius = 240.0
 metadata/minimum_critical_landing = 220.0
-metadata/max_required_step = 80.0
+metadata/max_required_step = 64.0
 metadata/final_encounter_anchor_count = 2
 metadata/exit_portal_path = NodePath("../Anchors/Objective/ExitGate")
+metadata/terminal_scope = &"room_local"
+
+[node name="FieldPickups" type="Node2D" parent="."]
+[node name="AscentCoinBundle" parent="FieldPickups" instance=ExtResource("4_field_pickup")]
+position = Vector2(430, 556)
+pickup_id = &"ruin_exit_coin_01"
+definition = ExtResource("5_coin_bundle")

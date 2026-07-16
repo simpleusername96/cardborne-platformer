@@ -9,6 +9,7 @@ const STAGES: Array[Dictionary] = [
 		"id": &"ruin_approach",
 		"profile": "res://data/generation/ruin_approach_profile.tres",
 		"catalog": "res://data/generation/lower_ruins_room_catalog.tres",
+		"target_ready": true,
 	},
 	{
 		"id": &"flooded_works",
@@ -86,6 +87,12 @@ func _validate_stage(stage_index: int, config: Dictionary, run_state: Node) -> v
 		print("STAGE_COMPOSITION_METRICS %s %s" % [config["id"], JSON.stringify(metrics)])
 		for error in StageCompositionMetrics.validate_fixed_stage(generation.plan, assembly):
 			_failures.append(error)
+		if bool(config.get("target_ready", false)):
+			for error in StageCompositionMetrics.validate_target_structure(
+				generation.plan,
+				assembly
+			):
+				_failures.append(error)
 	rooms_root.queue_free()
 
 

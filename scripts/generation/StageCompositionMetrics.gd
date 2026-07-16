@@ -220,6 +220,11 @@ static func validate_target_structure(
 			"Stage '%s' still has %d same-hub optional returns; expected 0."
 			% [stage_id, metrics["same_hub_return_count"]]
 		)
+	if int(metrics["max_near_limit_chain"]) > 1:
+		errors.append(
+			"Stage '%s' has a required near-limit chain of %d; maximum is 1."
+			% [stage_id, metrics["max_near_limit_chain"]]
+		)
 	match stage_id:
 		&"ruin_approach":
 			if int(metrics["meaningful_descent_transitions"]) < 2:
@@ -231,6 +236,11 @@ static func validate_target_structure(
 				errors.append(
 					"Stage 'ruin_approach' has %d direction reversals; expected at least 2."
 					% metrics["direction_reversals"]
+				)
+			if int(metrics["near_limit_required_transition_count"]) > 0:
+				errors.append(
+					"Stage 'ruin_approach' has %d near-limit required transitions; expected 0."
+					% metrics["near_limit_required_transition_count"]
 				)
 		&"flooded_works":
 			if int(metrics["meaningful_descent_transitions"]) < 3:

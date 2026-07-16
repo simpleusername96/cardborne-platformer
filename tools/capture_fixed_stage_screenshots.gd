@@ -8,7 +8,12 @@ const DEBUG_OVERLAY_SCRIPT = preload("res://tools/WorldProofDebugOverlay.gd")
 
 var _captures: Array[Dictionary] = [
 	{"name": "ruin_start", "size": Vector2i(1280, 720), "stage_index": 0, "target": &"start"},
+	{"name": "ruin_shooter_split", "size": Vector2i(1280, 720), "stage_index": 0, "target": &"lr_shooter_overlook", "anchor": &"GroundRecovery"},
 	{"name": "ruin_route_choice", "size": Vector2i(1280, 720), "stage_index": 0, "target": &"choice"},
+	{"name": "ruin_optional_forward_rejoin", "size": Vector2i(1280, 720), "stage_index": 0, "target": &"lr_destructible_cache", "anchor": &"ReturnRope"},
+	{"name": "ruin_broken_descent", "size": Vector2i(1280, 720), "stage_index": 0, "target": &"lr_broken_bridge", "anchor": &"DescentPreview"},
+	{"name": "ruin_charge_reengage", "size": Vector2i(1280, 720), "stage_index": 0, "target": &"lr_charge_lane", "anchor": &"ChargeRead"},
+	{"name": "ruin_exit_release", "size": Vector2i(1280, 720), "stage_index": 0, "target": &"lr_exit_ascent", "anchor": &"EntryRecovery"},
 	{"name": "flooded_route_choice", "size": Vector2i(1280, 720), "stage_index": 1, "target": &"choice"},
 	{"name": "flooded_optional_cache", "size": Vector2i(1280, 720), "stage_index": 1, "target": &"fw_sunken_cache"},
 	{"name": "flooded_poison_visual_baseline", "size": Vector2i(1280, 720), "stage_index": 1, "target": &"fw_poison_timing", "anchor": &"PoisonSafeRecovery", "baseline": true, "hazard_state": &"active"},
@@ -154,9 +159,12 @@ func _target_room(plan: StagePlan, target: StringName) -> PlannedRoom:
 
 func _focus_position(host: RoomTemplateHost, role: StringName, anchor_name: StringName) -> Vector2:
 	if anchor_name != &"":
-		var requested := host.get_node_or_null("Anchors/Recovery/%s" % anchor_name) as Marker2D
-		if requested != null:
-			return requested.global_position
+		for group_name in ["Recovery", "Objective"]:
+			var requested := host.get_node_or_null(
+				"Anchors/%s/%s" % [group_name, anchor_name]
+			) as Node2D
+			if requested != null:
+				return requested.global_position
 	if role == &"start":
 		var spawn := host.get_anchor(&"Objective", &"PlayerSpawn")
 		if spawn != null:

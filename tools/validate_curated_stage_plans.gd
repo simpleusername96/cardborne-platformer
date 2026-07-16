@@ -9,7 +9,7 @@ const STAGES: Array[Dictionary] = [
 		"id": &"ruin_approach",
 		"catalog": "res://data/generation/lower_ruins_room_catalog.tres",
 		"rooms": "lr_start_shelf,lr_rise_steps,lr_patrol_gallery,lr_shooter_overlook,lr_lower_upper_choice,lr_broken_bridge,lr_charge_lane,lr_exit_ascent,lr_destructible_cache",
-		"signature": "c69853e64fe09eec9411d5261d7534dac2d0aebf05b600ef50f343d9ed0f9b5b",
+		"signature": "6d6aee4913503fe48b8fe5f0f8c4c11781a7ae8f661d2d14a08feafc85458049",
 	},
 	{
 		"id": &"flooded_works",

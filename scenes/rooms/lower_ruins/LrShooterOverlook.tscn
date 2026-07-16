@@ -1,21 +1,24 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://scripts/stages/RoomTemplateHost.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/stages/RoomAnchor.gd" id="2"]
 [ext_resource type="PackedScene" path="res://scenes/stages/components/FieldPickup.tscn" id="3_field_pickup"]
 [ext_resource type="Resource" path="res://data/items/arrow_bundle.tres" id="4_arrow_bundle"]
 
-[sub_resource type="RectangleShape2D" id="ApproachMassShape"]
-size = Vector2(550, 280)
-
-[sub_resource type="RectangleShape2D" id="CoverMassShape"]
-size = Vector2(220, 360)
-
-[sub_resource type="RectangleShape2D" id="ExitMassShape"]
-size = Vector2(350, 360)
-
+[sub_resource type="RectangleShape2D" id="BandAShape"]
+size = Vector2(240, 280)
+[sub_resource type="RectangleShape2D" id="BandBShape"]
+size = Vector2(220, 320)
+[sub_resource type="RectangleShape2D" id="BandCShape"]
+size = Vector2(220, 384)
+[sub_resource type="RectangleShape2D" id="BandDShape"]
+size = Vector2(220, 424)
+[sub_resource type="RectangleShape2D" id="BandEShape"]
+size = Vector2(220, 488)
+[sub_resource type="RectangleShape2D" id="CoverWallShape"]
+size = Vector2(80, 100)
 [sub_resource type="RectangleShape2D" id="ShooterPerchShape"]
-size = Vector2(260, 12)
+size = Vector2(220, 12)
 
 [node name="LrShooterOverlook" type="Node2D"]
 script = ExtResource("1")
@@ -23,96 +26,125 @@ room_id = &"lr_shooter_overlook"
 
 [node name="Terrain" type="Node2D" parent="."]
 
-[node name="ApproachMass" type="StaticBody2D" parent="Terrain"]
-position = Vector2(275, 620)
+[node name="BandA" type="StaticBody2D" parent="Terrain"]
+position = Vector2(120, 620)
 collision_layer = 1
 collision_mask = 0
-metadata/surface_id = &"shooter_approach"
+metadata/surface_id = &"shooter_band_a"
 metadata/support_top = 620.0
-metadata/support_width = 550.0
+metadata/support_width = 240.0
 metadata/critical = true
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/ApproachMass"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/BandA"]
 position = Vector2(0, 140)
-shape = SubResource("ApproachMassShape")
-
-[node name="RockVisual" type="Polygon2D" parent="Terrain/ApproachMass"]
+shape = SubResource("BandAShape")
+[node name="RockVisual" type="Polygon2D" parent="Terrain/BandA"]
 color = Color(0.2, 0.25, 0.28, 1)
-polygon = PackedVector2Array(-275, 0, 275, 0, 275, 280, -275, 280)
-
-[node name="SupportCap" type="Polygon2D" parent="Terrain/ApproachMass"]
+polygon = PackedVector2Array(-120, 0, 120, 0, 120, 280, -120, 280)
+[node name="SupportCap" type="Polygon2D" parent="Terrain/BandA"]
 color = Color(0.34, 0.57, 0.6, 1)
-polygon = PackedVector2Array(-275, 0, 275, 0, 275, 8, -275, 8)
+polygon = PackedVector2Array(-120, 0, 120, 0, 120, 8, -120, 8)
 
-[node name="CoverMass" type="StaticBody2D" parent="Terrain"]
-position = Vector2(660, 540)
+[node name="BandB" type="StaticBody2D" parent="Terrain"]
+position = Vector2(350, 580)
 collision_layer = 1
 collision_mask = 0
-metadata/surface_id = &"shooter_cover"
-metadata/support_top = 540.0
+metadata/surface_id = &"shooter_band_b"
+metadata/support_top = 580.0
 metadata/support_width = 220.0
 metadata/critical = true
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/CoverMass"]
-position = Vector2(0, 180)
-shape = SubResource("CoverMassShape")
-
-[node name="RockVisual" type="Polygon2D" parent="Terrain/CoverMass"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/BandB"]
+position = Vector2(0, 160)
+shape = SubResource("BandBShape")
+[node name="RockVisual" type="Polygon2D" parent="Terrain/BandB"]
 color = Color(0.23, 0.29, 0.32, 1)
-polygon = PackedVector2Array(-110, 0, 110, 0, 110, 360, -110, 360)
-
-[node name="SupportCap" type="Polygon2D" parent="Terrain/CoverMass"]
+polygon = PackedVector2Array(-110, 0, 110, 0, 110, 320, -110, 320)
+[node name="SupportCap" type="Polygon2D" parent="Terrain/BandB"]
 color = Color(0.44, 0.54, 0.39, 1)
 polygon = PackedVector2Array(-110, 0, 110, 0, 110, 8, -110, 8)
 
-[node name="ExitMass" type="StaticBody2D" parent="Terrain"]
-position = Vector2(945, 540)
+[node name="CoverWall" type="StaticBody2D" parent="Terrain"]
+position = Vector2(370, 470)
 collision_layer = 1
 collision_mask = 0
-metadata/surface_id = &"shooter_exit"
-metadata/support_top = 540.0
-metadata/support_width = 350.0
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/CoverWall"]
+shape = SubResource("CoverWallShape")
+[node name="Visual" type="Polygon2D" parent="Terrain/CoverWall"]
+color = Color(0.15, 0.2, 0.22, 1)
+polygon = PackedVector2Array(-40, -50, 40, -50, 40, 50, -40, 50)
+[node name="Cap" type="Polygon2D" parent="Terrain/CoverWall"]
+color = Color(0.44, 0.54, 0.39, 1)
+polygon = PackedVector2Array(-40, -50, 40, -50, 40, -42, -40, -42)
+
+[node name="BandC" type="StaticBody2D" parent="Terrain"]
+position = Vector2(570, 516)
+collision_layer = 1
+collision_mask = 0
+metadata/surface_id = &"shooter_band_c"
+metadata/support_top = 516.0
+metadata/support_width = 220.0
 metadata/critical = true
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/ExitMass"]
-position = Vector2(0, 180)
-shape = SubResource("ExitMassShape")
-
-[node name="RockVisual" type="Polygon2D" parent="Terrain/ExitMass"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/BandC"]
+position = Vector2(0, 192)
+shape = SubResource("BandCShape")
+[node name="RockVisual" type="Polygon2D" parent="Terrain/BandC"]
 color = Color(0.2, 0.25, 0.28, 1)
-polygon = PackedVector2Array(-175, 0, 175, 0, 175, 360, -175, 360)
-
-[node name="SupportCap" type="Polygon2D" parent="Terrain/ExitMass"]
+polygon = PackedVector2Array(-110, 0, 110, 0, 110, 384, -110, 384)
+[node name="SupportCap" type="Polygon2D" parent="Terrain/BandC"]
 color = Color(0.34, 0.57, 0.6, 1)
-polygon = PackedVector2Array(-175, 0, 175, 0, 175, 8, -175, 8)
+polygon = PackedVector2Array(-110, 0, 110, 0, 110, 8, -110, 8)
 
-[node name="OneWay" type="Node2D" parent="."]
+[node name="BandD" type="StaticBody2D" parent="Terrain"]
+position = Vector2(790, 476)
+collision_layer = 1
+collision_mask = 0
+metadata/surface_id = &"shooter_band_d"
+metadata/support_top = 476.0
+metadata/support_width = 220.0
+metadata/critical = true
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/BandD"]
+position = Vector2(0, 212)
+shape = SubResource("BandDShape")
+[node name="RockVisual" type="Polygon2D" parent="Terrain/BandD"]
+color = Color(0.23, 0.29, 0.32, 1)
+polygon = PackedVector2Array(-110, 0, 110, 0, 110, 424, -110, 424)
+[node name="SupportCap" type="Polygon2D" parent="Terrain/BandD"]
+color = Color(0.44, 0.54, 0.39, 1)
+polygon = PackedVector2Array(-110, 0, 110, 0, 110, 8, -110, 8)
+
+[node name="BandE" type="StaticBody2D" parent="Terrain"]
+position = Vector2(1010, 412)
+collision_layer = 1
+collision_mask = 0
+metadata/surface_id = &"shooter_band_e"
+metadata/support_top = 412.0
+metadata/support_width = 220.0
+metadata/critical = true
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/BandE"]
+position = Vector2(0, 244)
+shape = SubResource("BandEShape")
+[node name="RockVisual" type="Polygon2D" parent="Terrain/BandE"]
+color = Color(0.2, 0.25, 0.28, 1)
+polygon = PackedVector2Array(-110, 0, 110, 0, 110, 488, -110, 488)
+[node name="SupportCap" type="Polygon2D" parent="Terrain/BandE"]
+color = Color(0.34, 0.57, 0.6, 1)
+polygon = PackedVector2Array(-110, 0, 110, 0, 110, 8, -110, 8)
 
 [node name="ShooterPerch" type="StaticBody2D" parent="Terrain"]
-position = Vector2(660, 440)
+position = Vector2(790, 378)
 collision_layer = 2
 collision_mask = 0
 metadata/surface_id = &"shooter_perch"
-metadata/support_top = 440.0
-metadata/support_width = 260.0
+metadata/support_top = 378.0
+metadata/support_width = 220.0
 metadata/critical = false
-
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/ShooterPerch"]
 shape = SubResource("ShooterPerchShape")
 one_way_collision = true
-
 [node name="Visual" type="Polygon2D" parent="Terrain/ShooterPerch"]
 color = Color(0.34, 0.57, 0.6, 1)
-polygon = PackedVector2Array(-130, -6, 130, -6, 130, 6, -130, 6)
+polygon = PackedVector2Array(-110, -6, 110, -6, 110, 6, -110, 6)
 
-[node name="LeftBracket" type="Polygon2D" parent="Terrain/ShooterPerch"]
-color = Color(0.2, 0.25, 0.28, 1)
-polygon = PackedVector2Array(-92, 6, -74, 6, -74, 60, -92, 60)
-
-[node name="RightBracket" type="Polygon2D" parent="Terrain/ShooterPerch"]
-color = Color(0.2, 0.25, 0.28, 1)
-polygon = PackedVector2Array(74, 6, 92, 6, 92, 60, 74, 60)
-
+[node name="OneWay" type="Node2D" parent="."]
 [node name="Hazards" type="Node2D" parent="."]
 [node name="DecorBack" type="Node2D" parent="."]
 [node name="DecorFront" type="Node2D" parent="."]
@@ -122,103 +154,72 @@ polygon = PackedVector2Array(74, 6, 92, 6, 92, 60, 74, 60)
 [node name="Entry" type="Marker2D" parent="Anchors/Sockets"]
 position = Vector2(0, 620)
 [node name="Exit" type="Marker2D" parent="Anchors/Sockets"]
-position = Vector2(1120, 540)
+position = Vector2(1120, 412)
 
 [node name="Enemy" type="Node2D" parent="Anchors"]
 [node name="GroundA" type="Marker2D" parent="Anchors/Enemy"]
-position = Vector2(410, 620)
+position = Vector2(570, 516)
 script = ExtResource("2")
 anchor_id = &"ground_a"
 anchor_type = &"enemy"
 allowed_tags = Array[StringName]([&"occupier"])
-support_width = 260.0
-patrol_width = 220.0
+support_width = 220.0
+patrol_width = 160.0
 clearance = 180.0
 has_escape_route = false
 has_line_of_sight = false
 has_cover_or_elevation = false
-metadata/allowed_tags = Array[StringName]([&"occupier"])
-metadata/support_width = 260.0
-metadata/patrol_width = 220.0
-metadata/ceiling = 300.0
-metadata/line_of_sight = false
-
 [node name="ShooterA" type="Marker2D" parent="Anchors/Enemy"]
-position = Vector2(660, 440)
+position = Vector2(790, 378)
 script = ExtResource("2")
 anchor_id = &"shooter_a"
 anchor_type = &"enemy"
 allowed_tags = Array[StringName]([&"ranged"])
-support_width = 260.0
-patrol_width = 220.0
+support_width = 220.0
+patrol_width = 180.0
 clearance = 300.0
 has_escape_route = true
 has_line_of_sight = true
 has_cover_or_elevation = true
 required = true
-metadata/allowed_tags = Array[StringName]([&"ranged"])
-metadata/support_width = 260.0
-metadata/patrol_width = 220.0
-metadata/ceiling = 300.0
-metadata/line_of_sight = Rect2(260, 260, 760, 300)
-metadata/cover_id = &"CoverMass"
-
-[node name="GroundB" type="Marker2D" parent="Anchors/Enemy"]
-position = Vector2(960, 540)
-script = ExtResource("2")
-anchor_id = &"ground_b"
-anchor_type = &"enemy"
-allowed_tags = Array[StringName]([&"occupier"])
-support_width = 260.0
-patrol_width = 220.0
-clearance = 180.0
-has_escape_route = false
-has_line_of_sight = false
-has_cover_or_elevation = false
-metadata/allowed_tags = Array[StringName]([&"occupier"])
-metadata/support_width = 260.0
-metadata/patrol_width = 220.0
-metadata/ceiling = 300.0
-metadata/line_of_sight = true
-
+metadata/line_of_sight = Rect2(120, 360, 920, 300)
+metadata/cover_id = &"CoverWall"
 [node name="Hazard" type="Node2D" parent="Anchors"]
 [node name="Reward" type="Node2D" parent="Anchors"]
 [node name="Objective" type="Node2D" parent="Anchors"]
 [node name="SafeEntry" type="Marker2D" parent="Anchors/Objective"]
-position = Vector2(40, 620)
+position = Vector2(80, 620)
 metadata/safe_radius = 240.0
 [node name="Cover" type="Marker2D" parent="Anchors/Objective"]
-position = Vector2(660, 540)
-metadata/support_id = &"shooter_cover"
-[node name="LineOfSightStart" type="Marker2D" parent="Anchors/Objective"]
-position = Vector2(260, 620)
-[node name="LineOfSightEnd" type="Marker2D" parent="Anchors/Objective"]
-position = Vector2(1020, 620)
+position = Vector2(370, 520)
+metadata/support_id = &"CoverWall"
+[node name="LowerExposureStart" type="Marker2D" parent="Anchors/Objective"]
+position = Vector2(120, 620)
+[node name="UpperExposureStart" type="Marker2D" parent="Anchors/Objective"]
+position = Vector2(680, 476)
 
 [node name="Recovery" type="Node2D" parent="Anchors"]
 [node name="GroundRecovery" type="Marker2D" parent="Anchors/Recovery"]
-position = Vector2(180, 620)
+position = Vector2(120, 620)
 script = ExtResource("2")
 anchor_id = &"ground_recovery"
 anchor_type = &"recovery"
 safe_radius = 180.0
 required = true
-metadata/safe_radius = 180.0
+metadata/support_id = &"shooter_band_a"
 
 [node name="CameraBounds" type="Node2D" parent="."]
 metadata/bounds = Rect2(0, 0, 1120, 720)
-
 [node name="Validation" type="Node2D" parent="."]
 metadata/safe_entry_radius = 240.0
+metadata/minimum_critical_landing = 220.0
+metadata/max_required_step = 64.0
+metadata/cover_id = &"CoverWall"
+metadata/lower_cover_lane = Rect2(0, 500, 470, 120)
+metadata/upper_exposure_lane = Rect2(680, 360, 440, 160)
 
 [node name="FieldPickups" type="Node2D" parent="."]
-
 [node name="OverlookArrowBundle" parent="FieldPickups" instance=ExtResource("3_field_pickup")]
 position = Vector2(120, 590)
 pickup_id = &"ruin_overlook_arrows_01"
 definition = ExtResource("4_arrow_bundle")
-metadata/minimum_critical_landing = 220.0
-metadata/max_required_step = 60.0
-metadata/shooter_support_width = 260.0
-metadata/line_of_sight_width = 760.0
-metadata/cover_id = &"CoverMass"

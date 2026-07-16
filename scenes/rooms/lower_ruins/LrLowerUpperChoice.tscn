@@ -6,7 +6,7 @@
 [ext_resource type="Resource" path="res://data/items/sky_thread_wisp.tres" id="4_rough_fiber"]
 
 [sub_resource type="RectangleShape2D" id="LowerRouteShape"]
-size = Vector2(896, 280)
+size = Vector2(968, 280)
 
 [sub_resource type="RectangleShape2D" id="UpperLedgeShape"]
 size = Vector2(220, 12)
@@ -21,12 +21,12 @@ room_id = &"lr_lower_upper_choice"
 [node name="Terrain" type="Node2D" parent="."]
 
 [node name="LowerRouteMass" type="StaticBody2D" parent="Terrain"]
-position = Vector2(560, 620)
+position = Vector2(596, 620)
 collision_layer = 1
 collision_mask = 0
 metadata/surface_id = &"choice_lower_route"
 metadata/support_top = 620.0
-metadata/support_width = 896.0
+metadata/support_width = 968.0
 metadata/critical = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/LowerRouteMass"]
@@ -35,11 +35,11 @@ shape = SubResource("LowerRouteShape")
 
 [node name="RockVisual" type="Polygon2D" parent="Terrain/LowerRouteMass"]
 color = Color(0.2, 0.25, 0.28, 1)
-polygon = PackedVector2Array(-448, 0, 448, 0, 448, 280, -448, 280)
+polygon = PackedVector2Array(-484, 0, 484, 0, 484, 280, -484, 280)
 
 [node name="SupportCap" type="Polygon2D" parent="Terrain/LowerRouteMass"]
 color = Color(0.34, 0.57, 0.6, 1)
-polygon = PackedVector2Array(-448, 0, 448, 0, 448, 8, -448, 8)
+polygon = PackedVector2Array(-484, 0, 484, 0, 484, 8, -484, 8)
 
 [node name="OneWay" type="Node2D" parent="."]
 
@@ -53,19 +53,6 @@ shape = SubResource("ShaftCoverShape")
 one_way_collision = true
 
 [node name="Visual" type="Polygon2D" parent="OneWay/BranchShaftCover"]
-color = Color(0.34, 0.57, 0.6, 1)
-polygon = PackedVector2Array(-56, -6, 56, -6, 56, 6, -56, 6)
-
-[node name="ReturnShaftCover" type="StaticBody2D" parent="OneWay"]
-position = Vector2(1064, 620)
-collision_layer = 2
-collision_mask = 0
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="OneWay/ReturnShaftCover"]
-shape = SubResource("ShaftCoverShape")
-one_way_collision = true
-
-[node name="Visual" type="Polygon2D" parent="OneWay/ReturnShaftCover"]
 color = Color(0.34, 0.57, 0.6, 1)
 polygon = PackedVector2Array(-56, -6, 56, -6, 56, 6, -56, 6)
 
@@ -112,7 +99,7 @@ color = Color(0.23, 0.29, 0.32, 1)
 polygon = PackedVector2Array(-82, 6, 82, 6, 54, 30, -54, 30)
 
 [node name="RejoinPad" type="StaticBody2D" parent="OneWay"]
-position = Vector2(810, 540)
+position = Vector2(900, 540)
 collision_layer = 2
 collision_mask = 0
 metadata/surface_id = &"choice_rejoin_pad"
@@ -142,14 +129,16 @@ polygon = PackedVector2Array(-82, 6, 82, 6, 54, 30, -54, 30)
 position = Vector2(0, 620)
 [node name="Branch" type="Marker2D" parent="Anchors/Sockets"]
 position = Vector2(56, 720)
-[node name="Rejoin" type="Marker2D" parent="Anchors/Sockets"]
+[node name="LegacyRejoin" type="Marker2D" parent="Anchors/Sockets"]
 position = Vector2(1064, 720)
+metadata/socket_id = &"choice_optional_rejoin"
+metadata/compatibility_only = true
 [node name="Exit" type="Marker2D" parent="Anchors/Sockets"]
 position = Vector2(1120, 620)
 
 [node name="Enemy" type="Node2D" parent="Anchors"]
 [node name="GroundOccupier" type="Marker2D" parent="Anchors/Enemy"]
-position = Vector2(940, 620)
+position = Vector2(930, 620)
 script = ExtResource("2")
 anchor_id = &"ground_occupier"
 anchor_type = &"enemy"
@@ -187,6 +176,10 @@ metadata/safe_radius = 240.0
 position = Vector2(260, 620)
 [node name="LowerRejoin" type="Marker2D" parent="Anchors/Objective"]
 position = Vector2(900, 620)
+metadata/route_profile = &"lower_enemy_flat"
+[node name="UpperRoute" type="Marker2D" parent="Anchors/Objective"]
+position = Vector2(560, 475)
+metadata/route_profile = &"upper_precision_reward"
 
 [node name="Recovery" type="Node2D" parent="Anchors"]
 [node name="LowerRecovery" type="Marker2D" parent="Anchors/Recovery"]
@@ -202,6 +195,15 @@ metadata/safe_radius = 180.0
 metadata/bounds = Rect2(0, 0, 1120, 720)
 
 [node name="Validation" type="Node2D" parent="."]
+metadata/safe_entry_radius = 240.0
+metadata/lower_route_width = 968.0
+metadata/minimum_optional_landing = 220.0
+metadata/max_optional_rise = 80.0
+metadata/branch_socket_id = &"choice_optional_branch"
+metadata/legacy_rejoin_socket_id = &"choice_optional_rejoin"
+metadata/recovery_id = &"LowerRecovery"
+metadata/optional_room_offset = Vector2(0, 720)
+metadata/route_difference_axes = Array[StringName]([&"movement", &"risk"])
 
 [node name="FieldPickups" type="Node2D" parent="."]
 
@@ -209,11 +211,3 @@ metadata/bounds = Rect2(0, 0, 1120, 720)
 position = Vector2(700, 590)
 pickup_id = &"ruin_choice_fiber_01"
 definition = ExtResource("4_rough_fiber")
-metadata/safe_entry_radius = 240.0
-metadata/lower_route_width = 1120.0
-metadata/minimum_optional_landing = 220.0
-metadata/max_optional_rise = 80.0
-metadata/branch_socket_id = &"choice_optional_branch"
-metadata/rejoin_socket_id = &"choice_optional_rejoin"
-metadata/recovery_id = &"LowerRecovery"
-metadata/optional_room_offset = Vector2(0, 720)

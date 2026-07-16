@@ -99,6 +99,13 @@ adding more content or random topology.
   blueprints for all three normal stages. They preserve current room counts and
   stable IDs while defining forward rejoins, distinct height waveforms,
   stage-specific terminal policies, and the assembled-plan minimap contract.
+- Ruin Approach now closes the pilot geometry milestone at `8 enemies / 784px`
+  with two meaningful descents, two direction reversals, one forward rejoin,
+  and zero near-limit required transitions. Its production runtime fixture
+  continuously clears the required route with actual movement/jump input,
+  drops into and climbs out of the optional cache, observes Walker/Shooter/
+  Charger cycles, preserves minimap knowledge on fall recovery, and unlocks the
+  exit after only the terminal encounter.
 - Normal-stage completion now follows typed terminal policy: Ruin and Sanctum
   require only their terminal-room encounter, while Flooded Works uses shelter
   arrival. Earlier and optional enemies no longer own the exit or HUD objective.
@@ -175,6 +182,7 @@ Read in this order:
 .\tools\godot.ps1 --path . --script res://scripts/ui/validation/CaptureGameplayHUD.gd
 .\tools\godot.ps1 --path . --script res://scripts/ui/validation/CaptureShellUI.gd
 .\tools\godot.ps1 --path . --script res://tools/capture_fixed_stage_screenshots.gd
+.\tools\godot.ps1 --path . --headless --script res://tools/validate_ruin_stage_runtime.gd
 ```
 
 The accepted historical evidence is `68/68` Full checks on 2026-07-14 and `70/70`

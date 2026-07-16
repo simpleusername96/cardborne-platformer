@@ -630,7 +630,7 @@ blockout 결과가 더 나은 의도를 발견하면 Decision Notes에 이유를
 - [x] Milestone A에서 completion policy, minimap state, directionality,
   traversal comfort, rope, projectile cover, terrain-aware enemy behavior를
   먼저 red/green 검증한다.
-- [ ] Milestone B에서 Ruin을 pilot stage로 재저작하고 continuous play로
+- [x] Milestone B에서 Ruin을 pilot stage로 재저작하고 continuous play로
   guideline을 증명한다.
 - [ ] Milestone C에서 Flooded의 basin descent와 pump ascent를 재저작한다.
 - [ ] Milestone D에서 Sanctum branch를 분산하고 gate/shortcut loop를 만든다.
@@ -819,52 +819,52 @@ Goal: 가장 단순한 stage에서 guideline을 먼저 증명한다.
 
 Tasks:
 
-- [ ] target room matrix를 실제 scene node/anchor inventory와 대조한다.
-- [ ] stage macro sketch를 start/peak/descent/split/rejoin/exit로 확정한다.
-- [ ] `lr_rise_steps`와 `lr_patrol_gallery`의 ascent를 두 개의 distinct
+- [x] target room matrix를 실제 scene node/anchor inventory와 대조한다.
+- [x] stage macro sketch를 start/peak/descent/split/rejoin/exit로 확정한다.
+- [x] `lr_rise_steps`와 `lr_patrol_gallery`의 ascent를 두 개의 distinct
   elevation band로 정리한다.
-- [ ] required route의 near-limit transition이 연속되지 않게 wall clearance,
+- [x] required route의 near-limit transition이 연속되지 않게 wall clearance,
   landing width, recovery floor를 조정한다.
-- [ ] `lr_shooter_overlook`에 safe entry, projectile-blocking lower cover,
+- [x] `lr_shooter_overlook`에 safe entry, projectile-blocking lower cover,
   upper exposure를 만든다.
-- [ ] `lr_lower_upper_choice`의 두 route를 movement/risk 두 항목 이상에서
+- [x] `lr_lower_upper_choice`의 두 route를 movement/risk 두 항목 이상에서
   다르게 만든다.
-- [ ] `lr_destructible_cache` return socket을 앞쪽 critical route로 옮긴다.
-- [ ] `lr_broken_bridge`에 controlled descent와 vista/release를 만들고
+- [x] `lr_destructible_cache` return socket을 앞쪽 critical route로 옮긴다.
+- [x] `lr_broken_bridge`에 controlled descent와 vista/release를 만들고
   Forge/NPC가 없음을 확인한다.
-- [ ] `lr_charge_lane`에 charge를 끊는 side ledge와 명확한 re-engage
+- [x] `lr_charge_lane`에 charge를 끊는 side ledge와 명확한 re-engage
   landing을 만든다.
-- [ ] `lr_exit_ascent`는 known element만 결합하고, 이 room의 encounter만
+- [x] `lr_exit_ascent`는 known element만 결합하고, 이 room의 encounter만
   terminal exit를 잠그도록 정리한다.
-- [ ] geometry 수정에 맞춰 recovery/enemy/reward/socket anchor를 갱신한다.
-- [ ] 모든 changed room의 content version을 contract에 맞게 갱신한다.
-- [ ] default camera 또는 approved focus behavior로 broken descent와
+- [x] geometry 수정에 맞춰 recovery/enemy/reward/socket anchor를 갱신한다.
+- [x] 모든 changed room의 content version을 contract에 맞게 갱신한다.
+- [x] default camera 또는 approved focus behavior로 broken descent와
   re-engage landing이 commitment 전에 보이는지 확인한다.
-- [ ] shooter/walker/charger를 여러 behavior cycle 관찰해 wall 또는
+- [x] shooter/walker/charger를 여러 behavior cycle 관찰해 wall 또는
   platform edge에서 pressure가 소멸하지 않는지 확인한다.
-- [ ] Ruin minimap에서 broken descent, upper/lower split, optional forward
+- [x] Ruin minimap에서 broken descent, upper/lower split, optional forward
   rejoin이 assembled vertical offset와 일치하고 current-room state가
   continuous run 중 올바르게 이동하는지 확인한다.
 
 Acceptance:
 
-- [ ] range ≥ 720 px, enemies ≥ 8, required rooms = 8.
-- [ ] meaningful descent transition ≥ 2.
-- [ ] direction reversal ≥ 2.
-- [ ] optional branch가 forward-rejoin한다.
-- [ ] first-time viewer가 upper/lower route와 reward를 debug label 없이
+- [x] range ≥ 720 px, enemies ≥ 8, required rooms = 8.
+- [x] meaningful descent transition ≥ 2.
+- [x] direction reversal ≥ 2.
+- [x] optional branch가 forward-rejoin한다.
+- [x] first-time viewer가 upper/lower route와 reward를 debug label 없이
   설명한다.
-- [ ] routine required transition에 입력 여유가 있고 repeated wall collision,
+- [x] routine required transition에 입력 여유가 있고 repeated wall collision,
   edge miss, near-limit chain이 없다.
-- [ ] shooter cover가 실제 projectile를 막고 elevation change가 실제
+- [x] shooter cover가 실제 projectile를 막고 elevation change가 실제
   response를 바꾼다.
-- [ ] ordinary enemy의 full trajectory line 없이도 startup, threat lane,
+- [x] ordinary enemy의 full trajectory line 없이도 startup, threat lane,
   recovery를 설명할 수 있다.
-- [ ] patrol/shooter/charge enemy를 하나 이상 살려 둔 채 exit-ascent local
+- [x] patrol/shooter/charge enemy를 하나 이상 살려 둔 채 exit-ascent local
   encounter만 clear하고 stage를 끝낼 수 있다.
-- [ ] Ruin minimap의 unvisited silhouette, visited path, current player,
+- [x] Ruin minimap의 unvisited silhouette, visited path, current player,
   exit lock/ready, discovered optional reward가 실제 route와 일치한다.
-- [ ] baseline continuous clear, fall recovery, stage retry가 통과한다.
+- [x] baseline continuous clear, fall recovery, stage retry가 통과한다.
 
 ### Milestone C — Flooded blockout and room pass
 
@@ -1172,7 +1172,7 @@ When export templates are available:
 - [x] Milestone 0 construction blueprints reconciled with current room IDs and approved.
 - [x] Milestone A completion, minimap, diagnostic, and shared terrain-interaction
   contract implemented.
-- [ ] Milestone B Ruin implemented and accepted.
+- [x] Milestone B Ruin implemented and accepted.
 - [ ] Milestone C Flooded implemented and accepted.
 - [ ] Milestone D Sanctum implemented and accepted.
 - [ ] Milestone E cross-stage pass accepted.
