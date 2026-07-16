@@ -98,22 +98,19 @@ adding more content or random topology.
 - All three normal stages, six committed-return fixtures, enemy/hazard families,
   card rewards, boss flow, retry/settlement, intermission, and profile restart
   recovery are in the active release matrix.
-- The minimum equipment-progression ExecPlan is complete. The original SVG UI
-  starter set now provides 6 structural masks and 22 semantic glyphs under
-  `art/ui/production/`, with a rendered adoption catalog and Godot capture tool.
-  The UI branch now owns the shared 16/18/20/22/32 type scale, 48px targets,
-  English/Korean locale selection, centered merchant/Forge shells, and responsive
-  shell/HUD/preparation/reward screens. The current visual batch adds the selected
-  raster source set and production copies; Main Menu, shell Settings, Hero
-  Preparation, and Run Result use an aspect-preserving cover renderer, while
-  Forge preserves the live stage behind its centered modal. The larger UI
-  migration remains active in the master UI overhaul plan.
-- The UI overhaul branch now has one project-level flat Theme with fifteen
+- The minimum equipment-progression and master UI-overhaul ExecPlans are complete.
+  The production set provides 6 structural masks, 22 semantic glyphs, 5 reviewed
+  shell backgrounds, 19 detailed illustrations, and one bundled bilingual font
+  under `art/ui/production/`. The runtime uses the shared 16/18/20/22/32 type
+  scale, 48px targets, English/Korean locale selection, centered merchant/Forge
+  shells, responsive shell/HUD/preparation/reward screens, and context-sensitive
+  backdrops. Forge and in-run Settings preserve the live stage.
+- The integrated UI now has one project-level flat Theme with fifteen
   semantic variations for buttons, surfaces, meters, and recurring text roles.
   `ProductionUIStyles.gd` owns only semantic tokens and dynamic flat-state helpers;
   focus and selection use a stable inside-left marker rather than a perimeter
-  outline. Main Menu, Hero Preparation, Settings, Card Reward, and gameplay HUD
-  provide the Milestone 2 representative proof.
+  outline. Noto Sans KR Variable is the deterministic desktop/Web Theme font and
+  ships with its OFL-1.1 text and exact provenance record.
 - The first detailed UI illustration pack now provides 19 independent `512x512`
   RGBA assets for the Traveler, all active equipment and loadout items, the five
   active shared cards, Slime King, and the large Boss Core reward. The manifest,
@@ -164,10 +161,10 @@ Read in this order:
 .\tools\godot.ps1 --path . --script res://tools/capture_fixed_stage_screenshots.gd
 ```
 
-The accepted historical evidence is `68/68` Full checks on 2026-07-14. The current
-2026-07-15 evidence is `70/70` core checks in 437.1 seconds plus rendered inspection
-at `960x540`, `1280x720`, and `1920x1080` where applicable. The five extended
-persistence/runtime checks were not rerun in that current pass.
+The accepted historical evidence is `68/68` Full checks on 2026-07-14 and `70/70`
+core checks on 2026-07-15. The current integrated evidence is `77/77` Full checks
+on 2026-07-16 (`RELEASE_CANDIDATE_MATRIX_OK checks=77 full=True seconds=634.6`),
+plus rendered inspection at `960x540`, `1280x720`, and `1920x1080`.
 
 The 2026-07-15 shell-background pass additionally passed the focused Shell UI,
 Hero Preparation, Forge, and Run Result validators plus real OpenGL captures at
@@ -180,8 +177,7 @@ debt rather than a shell-background regression.
 The 2026-07-16 easy-adoption pass added `validate_production_ui_assets.gd` to the
 release matrix and passed the asset, Shell UI, Hero Preparation, Card Reward, and
 Run Result gates. Real OpenGL captures cover all three supported viewports;
-Hero Preparation and reward captures additionally cover English and Korean. The
-full release suite and production Web export remain later plan gates.
+Hero Preparation and reward captures cover English and Korean.
 
 The 2026-07-16 Theme foundation pass added
 `tools/validate_production_ui_theme.gd` to the release matrix. It checks the
@@ -190,8 +186,17 @@ styleboxes, the reserved inside-left marker, flat meters, helper semantics, moda
 ownership, and 48 px button targets. Shell, preparation, reward, HUD, Forge,
 Merchant, intermission, result, boss, receipt, remap, pause, and production-boot
 focused gates passed; rendered evidence covers English and Korean at all three
-supported viewports. The full release suite and production Web export remain
-Milestone 7 gates.
+supported viewports.
+
+The 2026-07-16 final integration passed the full release matrix and the Godot 4.7
+production Web export. The build was served through the canonical codex-lane port;
+all observed resources returned HTTP 200 and the browser reported no warning or
+error. Real browser interaction covered Main Menu, Hero Preparation, Settings,
+language/remap persistence, Trial/skip, stage launch, pause/resume, and live
+Canvas movement/jump/attack. Deterministic validators and captures cover the full
+three-stage, reward, intermission, retry/end, boss, result, locale, and viewport
+path. The served build also exposed and verified the fix for missing Korean host
+fallback by bundling Noto Sans KR Variable in the project Theme.
 
 ## Risks
 
@@ -208,21 +213,15 @@ Milestone 7 gates.
 
 ## Next Steps
 
-The active cross-module implementation plan is
-`.agent/execplans/2026-07-15-gameplay-validity-repair.md`. Its implemented runtime,
-UI, and 70-check release-matrix work is complete; matching Godot 4.7 Web export
-templates are still required before served-browser QA can close Milestone H.
-The active visual follow-on is
-`.agent/execplans/2026-07-15-master-ui-overhaul.md`: implement the visual migration
-in the isolated `codex/master-ui-overhaul` worktree, selectively adopt existing
-production UI assets, then integrate scoped UI commits onto the latest `master`.
-World-presentation requirements are measured from runtime bounds instead of
-conversation-chosen image counts.
+The gameplay-validity and master UI-overhaul plans are complete. Their runtime,
+UI, `77/77` full release, production Web export, and served-browser evidence are
+landed on the validated integration line. World-presentation requirements remain
+measured from runtime bounds instead of conversation-chosen image counts.
 The active map-composition follow-on is
 `.agent/execplans/2026-07-15-fixed-stage-map-enhancement.md`: preserve the fixed
 authored-room pipeline while replacing metric-only height with meaningful route,
-combat, camera, and pacing verticality. Research and the canonical guideline are
-complete; runtime map implementation begins with diagnostic strengthening and a
-Ruin pilot pass.
+combat, camera, and pacing verticality. Its existing progress remains independent
+of this completed UI migration.
 Random map re-entry, larger equipment/content catalogs, multiple save slots, and
-final world art remain separate decisions.
+the remaining nine panorama panels, broader terrain rollout, actor animation,
+native-HD shell replacements, and final world art remain separate decisions.

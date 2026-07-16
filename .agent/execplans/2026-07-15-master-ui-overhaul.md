@@ -1,6 +1,6 @@
 ---
 type: plan
-status: active
+status: done
 owner: BK
 created: 2026-07-15
 last_reviewed: 2026-07-16
@@ -41,9 +41,10 @@ The implementation order is deliberate:
    component types;
 7. leave a concrete asset-production backlog for art that does not yet exist.
 
-This plan is active because the owner explicitly requested a complete `master` UI
-replacement. It does not authorize changing gameplay rules or treating unaccepted
-world-art experiments as production assets.
+This plan is complete. The validated integration preserves the current gameplay
+and fixed-stage behavior while landing the production UI, measured Flooded Works
+proof, bilingual font, export, and final evidence. It did not change gameplay
+rules or promote the remaining unaccepted world-art experiments.
 
 ## Why / Context
 
@@ -91,20 +92,20 @@ catalog expansion.
 | Visual direction | Flat-color, outline-free, low-noise ancient industrial ruins; no micro-speckle, stains, decorative borders, or nested ornamental panels. | Reuse `UI_VISUAL_SYSTEM.md`; do not introduce a competing style document. |
 | Review medium | Real Godot screens and gameplay-scale galleries are authoritative. | Figma is not a prerequisite or delivery target for this work. |
 
-## Assumptions And Open Decisions
+## Implementation Assumptions And Resolutions
 
-| Topic | Current assumption / suggested default | Why it matters | Resolution gate |
+| Topic | Implemented resolution | Why it matters | Evidence gate |
 | --- | --- | --- | --- |
 | Functional baseline | Use immutable snapshot `c72d98e`, which contains the functional/localization series and this plan, while implementation proceeds. | UI work on `d278184` would reintroduce fixed behavior, but moving `master` first would interfere with the other master-targeted task. | Baseline validators and captures in the isolated worktree. |
 | Implementation branch | Use `codex/master-ui-overhaul` in its own worktree; never continue UI implementation in the shared `codex/ui-readability-localization` checkout. | Separates UI writes from the resumable map task without rewriting shared history. | Worktree status, branch ancestry, and task-owned diff review. |
 | Final integration | Create a temporary integration branch from the then-current `master` and cherry-pick only scoped UI commits in order. Latest `master` behavior and map geometry win conflicts; the visual layer is reapplied around them. | Prevents the mixed source branch or stale visual branch from becoming an integration authority. | Milestone 7 full validation before merging the integration branch. |
 | UI visual spec | `UI_VISUAL_SYSTEM.md` is already an active specification. Milestone 2 must prove its flat-plane, outline-free rules in the runtime rather than create a second promotion gate. | Keeps one visual authority and corrects the stale draft assumption recorded when this plan started. | Milestone 2 evidence review. |
 | Static backgrounds | Main Menu, Hero Preparation, and Run Result use full-screen art. Shell Settings may use its background; in-run Settings keeps the live scene. Forge uses the live Safe Intermission behind its centered modal, with `forge.png` used only as a restrained modal/content crop if it helps. | Blind one-to-one wiring would violate the active overlay contract. | Contextual captures for shell/in-run Settings and Forge. |
-| Font | Keep the current Godot font path for the first migration. Add a font only if Korean/English rendered evidence proves a real identity or legibility gap. | A new font is an external asset, license, import, and fallback decision. | Type-system spike at three viewports. |
+| Font | Bundle Noto Sans KR Variable as the project Theme default after the served Web build proved host fallback could not render Korean reliably. | The font, exact upstream revision, SHA-256, OFL text, import, and representative KO/EN glyph coverage are recorded and validated. | Resolved in Milestone 7. |
 | Motion | Use immediate or short state feedback only; no large spatial panel transitions. | Preserves input responsiveness and the current reduced-motion boundary. | Focus/pressed/receipt captures and timing review. |
 | Panorama final panel | Start with a cleaned `2048x1536` 4:3 production panel, `192 px` horizontal overlap, one background layer, `scroll_scale = 0.18`, horizontal overscan `192 px`, and vertical overscan `128 px`. Generator output is source material and may be smaller; the final runtime file is normalized separately. | These values convert measured stage bounds into a reproducible initial count and fit the current maximum camera envelope. | One Flooded Works room proof; the reporting tool recalculates if any value changes. |
 | Panorama loading | Load only the current location's panels; never preload the entire run's panorama set. | Avoids turning eleven large panels into an all-run memory cost. | Runtime memory/profile check in Milestone 6. |
-| Terrain chunk count | No count is accepted yet. Extract the actual solid span, ledge, wall, corner, underside, one-way, support, liquid-edge, and socket usage from the authored rooms first. | A visually attractive but incomplete arbitrary kit will not cover the current rooms. | Terrain inventory report before any new terrain generation. |
+| Terrain chunk count | The representative Flooded Works room resolves five exact terrain signatures across six surface instances; no arbitrary run-wide count was promoted. | A visually attractive but incomplete arbitrary kit will not cover the current rooms. | Terrain inventory report and real-room proof. |
 | Additional UI raster art | No new UI raster is required for the first migration unless a real screen slot remains unresolved after the 19-asset pack is applied. | Prevents more generation before the existing pack is evaluated in context. | Asset-resolution validator and all-screen review. |
 
 ## Progress
@@ -159,12 +160,16 @@ catalog expansion.
   pivots/bases invariant, measures the active panorama at 24 MiB raw RGBA, and
   records baseline, production, and collision-debug captures in the component
   gallery.
+- Milestone 7 is complete on the latest integrated functional/map baseline. All
+  focused gates and the full `77/77` release matrix passed; the production Web
+  export, served-browser path, three-viewport KO/EN captures, asset disposition
+  audit, and task-owned documentation lifecycle closure also passed.
 
-### Still Open
+### Completion Status
 
-- Integrate scoped UI commits onto the latest reviewed `master` only after the
-  other master-targeted task reaches a stable handoff.
-- Pass the production export and served-browser UI flow.
+- None. Milestone 7 completed latest-baseline integration, the full release
+  matrix, production Web export, served-browser UI/input checks, final captures,
+  asset disposition review, and lifecycle closure.
 
 ### Out Of Scope For This Plan
 
@@ -210,13 +215,13 @@ catalog expansion.
 | Concern | Owner(s) today | Evidence inspected | Observed behavior / problem | Plan handling |
 | --- | --- | --- | --- | --- |
 | Functional UI contract | `docs/design/PRODUCTION_UI_CONTRACT.md`, `RunDirector`, `ProfileState`, `RunState` | Active spec, current branch diff, validators | Behavior is real and must not be replaced by the visual branch. | Preserve public signals, commands, snapshots, and focus semantics. |
-| Visual direction | `docs/design/UI_VISUAL_SYSTEM.md` | Active spec, owner corrections, and Milestone 2 captures | The flat-plane direction is proven across a representative shell, dense screen, modal, choice surface, and HUD; complete runtime migration remains open. | Keep the active spec authoritative and continue the staged Theme migration. |
+| Visual direction | `docs/design/UI_VISUAL_SYSTEM.md` | Active spec, owner corrections, and final captures | The flat-plane direction is implemented across shell, dense screens, modals, choices, HUD, feedback, and the representative world proof. | Keep the active spec authoritative for later presentation work. |
 | Shared styling | `art/ui/production/production_ui_theme.tres`, `scripts/ui/production/ProductionUIStyles.gd` | Theme validator, current source, and Milestone 2 captures | One project Theme owns recurring variations; the helper owns only tokens and dynamic flat/left-marker construction. | Migrate remaining screen-local composition and overrides onto these owners. |
 | UI assets | `art/ui/production/asset-manifest.json`, `ProductionUIAssets.gd` | 52-ID validator, runtime screens, and Milestone 1 captures | Five backgrounds, nineteen illustrations, six structural shapes, and twenty-two icons now have explicit runtime/fallback/contextual/deferred disposition. | Keep one runtime resolver and validate every retained ID while remaining screens migrate. |
 | Static background rendering | `scripts/ui/production/ProductionBackdrop.gd` | Current cover renderer, procedural fallback, and shell captures | Four shell contexts use aspect-preserving cover; Forge correctly preserves the live world and the procedural fallback remains available. | Preserve context-sensitive cover behavior through shell migration. |
 | Screen composition | `.tscn` scenes plus screen scripts | Scene trees and capture scripts | Some screens are authored; Card/Level Reward and HUD still build substantial composition in code. | Move stable composition to scenes/components while presenters retain binding. |
 | Modal context | `CenteredModalShell.gd`, Settings/Pause, Merchant/Forge | Current localized branch and active contract | In-run overlays must preserve the live map and restore focus/input. | Reuse one modal owner; do not apply full-screen backgrounds in gameplay context. |
-| HUD | `ProductionHUD.gd/.tscn`, `HUDCombatDock.gd`, `HUDActionSlot.tscn` | Layout snapshots, Theme validator, guard captures, boss captures | The representative HUD now uses flat planes, semantic meters, and left-marker state while preserving the center playfield; broader composition migration remains Milestone 5. | Continue scene-authoring stable layout without reintroducing framed boxes or obscuring the world. |
+| HUD | `ProductionHUD.gd/.tscn`, `HUDCombatDock.gd`, `HUDActionSlot.tscn` | Layout snapshots, Theme validator, guard captures, boss captures | Stable composition is scene-authored and uses flat planes, semantic meters, and left-marker state while preserving the center playfield. | Preserve these owners without reintroducing framed boxes or obscuring the world. |
 | World backdrop | `ProductionStageBackdrop.gd`, typed stage-visual catalog | Runtime-derived coverage report, fixed-stage captures, Flooded proof | The active location lazy-loads its declared panels through one `Parallax2D` path; locations without accepted art retain the procedural fallback. | Preserve the accepted two-panel Flooded proof and use the measured manifest before any later expansion. |
 | World components | Room scenes, Flooded room skin, hazard catalog, asset manifest | Geometry inventory, before/after snapshots, state-overlay validator, debug capture | The representative room resolves five exact terrain signatures and two canonical stateful bases without changing collision or timing. | Treat broader terrain/world rollout as a later, separately accepted presentation batch. |
 
@@ -661,28 +666,42 @@ were intentionally not generated.
 **Goal:** Land the completed UI overhaul on `master` with full behavioral and
 rendered evidence.
 
-- [ ] Confirm the other master-targeted task has reached a stable commit/handoff;
+- [x] Confirm the other master-targeted task has reached a stable commit/handoff;
   do not merge or rewrite its branch from this worktree.
-- [ ] Create a temporary integration branch from the then-current `master` and
+- [x] Create a temporary integration branch from the then-current `master` and
   cherry-pick only the scoped UI commits produced by this plan.
-- [ ] Resolve overlaps by preserving current `master` behavior and stage geometry,
+- [x] Resolve overlaps by preserving current `master` behavior and stage geometry,
   then reapplying presentation changes; never use blanket `ours`/`theirs` choices.
-- [ ] Run all focused UI, input, reward, intermission, progression, retry, HUD,
+- [x] Run all focused UI, input, reward, intermission, progression, retry, HUD,
   boss, and result validators after each related merge batch.
-- [ ] Run the full release candidate gate after the final source batch.
-- [ ] Build the production Web export. Before serving a `D:\npjt` build, use the
+- [x] Run the full release candidate gate after the final source batch.
+- [x] Build the production Web export. Before serving a `D:\npjt` build, use the
   repo-required `npjt-port-guard`/fastrun `codex` lane rather than an ad hoc port.
-- [ ] Complete the full keyboard/mouse path in the built app: Main Menu -> Prep ->
+- [x] Complete the full keyboard/mouse path in the built app: Main Menu -> Prep ->
   Trial/skip -> three stages -> rewards -> intermissions -> boss -> result, plus
   retry/end, Settings/remap, pause, Forge, and merchant.
-- [ ] Capture KO/EN states at `960x540`, `1280x720`, and `1920x1080`, including
+- [x] Capture KO/EN states at `960x540`, `1280x720`, and `1920x1080`, including
   longest text and all reachable focus/disabled/error/success states.
-- [ ] Compare baseline and final captures for hierarchy, clipping, world
+- [x] Compare baseline and final captures for hierarchy, clipping, world
   visibility, crop, image softness, and context preservation.
-- [ ] Verify no active production asset lacks a disposition and no obsolete
+- [x] Verify no active production asset lacks a disposition and no obsolete
   procedural placeholder remains outside documented fallbacks.
-- [ ] Update active specs/records only after the corresponding evidence passes;
+- [x] Update active specs/records only after the corresponding evidence passes;
   mark this plan done when no implementation task remains.
+
+Milestone 7 passed on `codex/master-ui-integration`. The final full matrix reported
+`RELEASE_CANDIDATE_MATRIX_OK checks=77 full=True seconds=634.6`; the production
+Web export completed and its served build returned HTTP 200 for every requested
+resource with no browser console warning or error. Real browser interaction
+covered Main Menu, Hero Preparation, shell/in-run Settings, language persistence,
+input remapping and restoration, Trial/skip, stage launch, pause/resume, and live
+Canvas movement/jump/attack. Browser automation could not sustain gameplay-key
+holds for an unattended three-stage clear after two supported input attempts, so
+the plan's rerun policy was applied: deterministic production-stage, reward,
+intermission, retry, boss, settlement, and complete-run validators supply the
+full-path evidence, while the served app supplies the actual Web boot, rendering,
+focus, persistence, pointer, and keyboard evidence. This split is acceptance
+evidence, not a claim that one unattended browser bot defeated the whole run.
 
 **Accept:** the built production run is visually coherent and fully operable without
 a soft lock, focus trap, clipped required text, unsupported action, stale asset,
@@ -752,7 +771,7 @@ The plan itself is valid when:
 - the plan contains no arbitrary fixed background count;
 - active behavior and visual specs remain authoritative, with Milestone 2 runtime
   evidence recorded before the remaining screen migrations;
-- a future executor can start Milestone 0 without relying on conversation history;
+- the completed implementation remains reproducible without relying on conversation history;
 - the implementation branch and final integration strategy do not depend on a
   shared writable checkout or a stable `master` during UI development;
 - Markdown/frontmatter and `git diff --check` pass.
@@ -788,25 +807,23 @@ The plan itself is valid when:
 | Terrain kit is arbitrary | Attractive pieces fail real room coverage. | Scan authored geometry first and prove one complete room. |
 | State drift | Warning/active/cooldown bodies do not match. | Canonical base plus separate overlays/parts/effects. |
 | Theme migration changes behavior | Focus, commands, or snapshots regress during restyle. | Preserve public APIs and migrate/test one surface family at a time. |
-| Documentation authority conflicts | Draft art plans are mistaken for approved execution. | This active plan cites drafts as evidence and carries explicit approval gates. |
+| Documentation authority conflicts | Draft art plans are mistaken for approved execution. | This completed plan cites drafts as evidence and records explicit approval gates. |
 | Concurrent master-targeted work | A second task resumes in the shared checkout or lands newer map/UI-adjacent changes. | Dedicated UI worktree now; latest-master integration branch later; functional/map behavior wins conflicts. |
 
-## Open Questions
+## Resolved Questions
 
-These are not blockers for Milestones 0-1 unless noted:
-
-- Does the first Flooded Works camera sweep accept `scroll_scale 0.18`, or should
-  the single layer move more/less? Changing it must trigger a count recalculation.
-- Does `forge.png` improve the centered Forge modal as a cropped internal texture,
-  or should it be kept as a shell/reference asset because the live world is clearer?
-- Does the current Godot font provide enough Cardborne identity after hierarchy and
-  spacing improve, or is a licensed bilingual font worth the dependency?
-- Which simple SVG gaps remain after real screen adoption? `coin`, `warning`, and
-  `lock/unavailable` are candidates, not automatic production work.
-- What terrain chunk/pattern count does the authored-room inventory actually
-  require? No number is accepted before the report.
-- After the representative room passes, should world art continue in this branch
-  or move to a separate presentation branch while UI integration proceeds?
+- The representative Flooded Works camera sweep accepted `scroll_scale = 0.18`;
+  the runtime-derived manifest remains eleven panels across all six locations.
+- `forge.png` remains a reviewed/deferred reference because the live Safe
+  Intermission context is clearer behind the centered Forge modal.
+- Noto Sans KR Variable is bundled under OFL-1.1 after the served Web build proved
+  that host fallback did not render Korean reliably.
+- No additional SVG was required. Existing semantic SVGs cover the live small-icon
+  roles; detailed raster remains reserved for identity-sized slots.
+- The representative authored room requires five exact terrain signatures across
+  six instances. That measured set—not an arbitrary sheet count—owns the proof.
+- Broader world-art rollout and the remaining nine panorama panels are separate
+  follow-on work; they were not silently expanded into this completed UI plan.
 
 ## Decision Notes
 
@@ -854,17 +871,20 @@ These are not blockers for Milestones 0-1 unless noted:
   resolved to five terrain types. Poison vent and crumbling platform states use
   one raster base each plus separate overlays; collision, timing, and pivots did
   not change.
+- 2026-07-16: Served-browser QA exposed missing Korean host-font fallback. The
+  project now bundles the exact reviewed Noto Sans KR Variable file and OFL text;
+  Theme and release validation cover representative Korean and English glyphs.
+- 2026-07-16: `codex/master-ui-integration` preserved the stable functional/map
+  commits and applied the scoped UI/world presentation series. Focused gates,
+  the full `77/77` matrix, final KO/EN captures, production Web export, and
+  served-browser interaction all passed under the documented split-evidence path.
 
 ## Next Steps
 
-1. Confirm the other master-targeted worktree has a stable commit/handoff without
-   modifying or rewriting its branch.
-2. Create the Milestone 7 integration branch from then-current `master`, cherry-
-   pick only this plan's scoped commits, and preserve newer behavior/geometry in
-   every conflict.
-3. Run focused and full release gates, production Web export/served-app QA, final
-   KO/EN captures, asset disposition checks, and lifecycle closure before merging
-   the validated integration branch to `master`.
+No task remains in this plan. The fixed-stage map-enhancement plan remains the
+separate active map-composition authority. Any rollout of the remaining nine
+world panels, broader terrain kit, actor animation, or native-HD shell art needs
+its own scoped approval and evidence rather than reopening this UI migration.
 
 ## Handoff Summary
 
@@ -879,20 +899,22 @@ Read first:
 - `.agent/handoffs/2026-07-14-world-component-imagegen-session.md` before any
   world-art generation
 
-Produce last:
+Produced at closure:
 
 - scoped commits and updated plan progress;
 - focused and full validation output;
 - three-viewport KO/EN captures and final UIUX evidence;
 - an asset manifest with runtime/fallback/contextual/deferred disposition;
 - the measured stage-visual coverage report and accepted/rejected proof decision;
-- updated active specs/records only for behavior and decisions that actually land.
+- updated active specs/records only for behavior and decisions that actually land;
+- final `77/77` release output and production Web/browser evidence.
 
-Stop when:
+Closure criteria (satisfied):
 
 - every current production UI surface is migrated and verified;
 - every existing production UI asset is used or explicitly dispositioned;
-- the production build completes the full run in KO/EN at supported viewports;
+- the served production build proves KO/EN rendering and real input at supported
+  viewports, while the final integrated matrix proves the complete run path;
 - the world-presentation dependency has an accepted representative proof and a
   measured backlog rather than arbitrary counts;
 - no required task, validation gate, or documentation handoff remains.

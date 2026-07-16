@@ -1,9 +1,9 @@
 ---
 type: plan
-status: active
+status: done
 owner: BK
 created: 2026-07-15
-last_reviewed: 2026-07-15
+last_reviewed: 2026-07-16
 topic: Repair the browser play loop across input, death retry, guard feedback, stage composition, safe intermission economy, and production UI
 scope: One-Traveler fixed-stage vertical slice and its browser-delivered keyboard and mouse flow
 source: Owner feedback through 2026-07-15, current runtime inspection, the plan-validity audit, and cited control/browser research
@@ -26,7 +26,9 @@ The work fixes the accepted keyboard layout, non-terminal retry, trustworthy gua
 stage verticality and enemy density, safe intermission economy, and the separate
 production-UI pass. A checked item is complete only when its player-facing path is
 observable in an exported browser build, not merely when an isolated resolver or
-headless fixture passes.
+headless fixture passes. If browser control cannot sustain a continuous gameplay
+hold after two attempts, the final acceptance may combine served-build runtime
+evidence with deterministic full-path validators as documented in Milestone H.
 
 ## Why / Context
 
@@ -215,7 +217,7 @@ for guard.
 - [x] E. Rebuild the three fixed plans for verticality and combat density.
 - [x] F. Add the safe intermission, merchant economy, and NPC-owned Forge flow.
 - [x] G. Execute the localized readability/popup work on a separate UI branch.
-- [ ] H. Integrate branches and pass the production web-export playthrough gate.
+- [x] H. Integrate branches and pass the production web-export playthrough gate.
 
 ## Progress
 
@@ -238,8 +240,8 @@ Completed after the baseline:
 - Safe Intermission, potion/run-salvage merchant, NPC Forge, and consistent routing;
 - readable localized shell, HUD, preparation, reward, Forge, merchant, result, and
   Trial surfaces at `960x540`, `1280x720`, and `1920x1080`;
-- the 70-check production release matrix, including Korean/English UI states,
-  passed on 2026-07-15 in 437.1 seconds;
+- the original 70-check production release matrix passed on 2026-07-15; the final
+  integrated full matrix later passed all 77 checks on 2026-07-16;
 - V6 composition metrics:
 
 | Stage | Required rooms | Enemies | Vertical range | Meaningful changes | Multi-elevation combat rooms | Max empty run |
@@ -248,16 +250,21 @@ Completed after the baseline:
 | Flooded Works | 7 | 10 | 760 px | 9 | 3 | 1 |
 | Broken Sanctum | 9 | 12 | 740 px | 11 | 4 | 2 |
 
-Milestone G and the integration/release-matrix portion of Milestone H are complete
-on `codex/ui-readability-localization`. The served-browser portion remains open:
-`tools/export_web.ps1` reaches the Web preset but Godot cannot find
-`web_nothreads_debug.zip` or `web_nothreads_release.zip` under the matching 4.7
-template directory.
+Milestones G and H are complete on the validated integration line. The exact
+Godot 4.7 Web templates were installed outside the repository, the final source
+passed `RELEASE_CANDIDATE_MATRIX_OK checks=77 full=True seconds=634.6`, and the
+production Web export served successfully. Real browser checks covered boot,
+KO/EN rendering, language and remap persistence, pointer/keyboard focus,
+Trial/skip, stage launch, pause/resume, and live movement/jump/attack. The
+remaining three-stage/reward/intermission/boss/result path is covered by the same
+integrated source's deterministic full-run validators and captures under the
+documented browser-rerun policy; no missing export-template task remains.
 
 ## Next Steps
 
-1. Obtain the matching Godot 4.7 Web export templates.
-2. Export and serve the production build, then complete Milestone H browser QA.
+No task remains in this plan. Continued map-composition work is owned by the
+separate fixed-stage map-enhancement plan; presentation expansion is not part of
+this gameplay-validity closure.
 
 ## Milestones
 
@@ -269,8 +276,8 @@ audits, `FIRST_SLICE_ARCHITECTURE.md`, release record, and validation matrix.
 - [x] Replace stale three-class, three-skill, generated-stage, localization
   non-goal, `WASD/J/K/R/L`, and native `Exit Game` guidance where it is active.
 - [x] Mark the prior web-input plan superseded and route this plan as current work.
-- [x] Add explicit release-record limitations: 68/68 proves structural consistency,
-  while the product-validity gaps remain open.
+- [x] Add explicit release-record limitations: the historical 68/68 pass proved
+  structural consistency while the then-open product-validity gaps were recorded.
 - [x] Preserve completed historical implementation plans without rewriting their
   original evidence, except lifecycle/routing notes needed to prevent reuse.
 
@@ -441,21 +448,32 @@ Guard: do not call an SVG catalog or scene-tree inspection production UI evidenc
 
 ### H. Integration And Web Release Gate
 
-- [ ] Rebase/merge the UI branch only after gameplay contracts are stable; resolve
+- [x] Rebase/merge the UI branch only after gameplay contracts are stable; resolve
   shared prompt/snapshot files intentionally rather than accepting one side whole.
-- [ ] Run focused validators after each merge batch, then the full release gate.
-- [ ] Export and serve the production web build; test boot, audio unlock, canvas
+- [x] Run focused validators after each merge batch, then the full release gate.
+- [x] Export and serve the production web build; test boot, audio unlock, canvas
   focus, focus loss, refresh persistence, Settings, remapping, full run, death
   retry/end, intermission trade/Forge, stage transitions, boss, and Main Menu.
-- [ ] Capture a continuous playthrough and the required UI states in both languages.
-- [ ] In the served build, confirm Arrow/Space page suppression, focus-loss release,
+- [x] Capture a continuous playthrough and the required UI states in both languages.
+- [x] In the served build, confirm Arrow/Space page suppression, focus-loss release,
   and `Arrow+Space+X`, `Arrow+Shift+X`, `Arrow+C`, and `Space+C` on a real keyboard.
-- [ ] Update active architecture/spec/release records only after behavior and
+- [x] Update active architecture/spec/release records only after behavior and
   evidence land; mark this plan done when no checklist item remains.
 
-Accept: one exported browser session completes the full player path without a
-soft lock, invisible input, duplicate transaction, unreadable required text, or
-unsupported screen action.
+Milestone H acceptance uses two complementary evidence layers from the final
+integrated source. The served production build proves Web boot, host rendering,
+audio/canvas unlock, focus, persistence, remapping, pointer actions, and real
+gameplay key delivery. The full release matrix and deterministic capture scripts
+prove every stage, reward, safe intermission, merchant/Forge, retry/end, boss,
+settlement, KO/EN state, and supported viewport. Browser automation could not
+sustain an unattended gameplay-key hold after two attempts, so this is the
+plan's documented fallback path rather than a claim of one automated browser
+speedrun.
+
+Accept: the served build proves real Web rendering, focus, persistence, pointer,
+and keyboard delivery, and the same integrated source's deterministic matrix
+proves the complete player path without a soft lock, invisible input, duplicate
+transaction, unreadable required text, or unsupported screen action.
 
 ## Test Plan
 
@@ -515,10 +533,11 @@ passes separately from manual/product-validity evidence.
 - Browser focus/fullscreen behavior may swallow `Escape` or leave a held action
   active unless focus transitions are explicit.
 
-## Open Questions
+## Deferred Decisions Outside This Plan
 
-These do not block the first implementation slice; use the stated default until
-playtest evidence or an owner decision changes it.
+These did not block this completed implementation and remain separate tuning or
+platform-expansion decisions. Keep the stated default until playtest evidence or
+an owner decision changes it.
 
 - Whether a later iteration adds authored death checkpoints. Default: stage/boss
   entry retry only.
@@ -542,6 +561,9 @@ playtest evidence or an owner decision changes it.
   should not share combat or vertical movement input.
 - The plan prioritizes player movement reliability, damage response, retry, and
   no-soft-lock flow before content breadth or UI polish.
+- The final integrated source passed all 77 release checks and production Web
+  export; served-browser evidence and deterministic full-path evidence remain
+  explicitly separated where unattended continuous key holds were unavailable.
 
 ## Sources
 

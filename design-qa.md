@@ -4,8 +4,8 @@ status: active
 owner: BK
 created: 2026-07-16
 last_reviewed: 2026-07-16
-topic: Milestones 1-6 production UI, gameplay HUD, and measured world-proof QA
-source: Owner-selected UI references, active visual spec, production asset catalog, Godot 4.7 validators, and deterministic OpenGL captures
+topic: Milestones 1-7 production UI, gameplay HUD, measured world-proof, integration, and Web-export QA
+source: Owner-selected UI references, active visual spec, production asset catalog, Godot 4.7 validators, deterministic OpenGL captures, final full release matrix, and served production Web build
 related:
   - ./.agent/execplans/2026-07-15-master-ui-overhaul.md
   - ./docs/design/UI_VISUAL_SYSTEM.md
@@ -13,31 +13,32 @@ related:
   - ./docs/design/reports/ui-raster-asset-catalog.png
 ---
 
-# Production UI Milestones 1-6 Design QA
+# Production UI Milestones 1-7 Final Design QA
 
 ## Purpose
 
-Record the bounded rendered-acceptance evidence for Milestones 1 through 6 of the
+Record the final rendered-acceptance evidence for Milestones 1 through 7 of the
 master UI overhaul: centralized production asset ownership, real-screen image
 placements, the shared flat Theme/component foundation, all shell and economy
 surfaces, the gameplay HUD/Trial migration, and one measured Flooded Works world
-proof. This document is evidence for the active ExecPlan, not a replacement for
-the remaining integration/export milestone.
+proof, followed by latest-baseline integration, full validation, production Web
+export, and served-browser checks.
 
 ## Sources
 
 - Owner-selected composition and visual-language references under `docs/design/`.
 - The production asset catalog and manifest under `art/ui/production/`.
-- Current Godot scenes, UI scripts, focused validators, and deterministic OpenGL
-  captures produced from this isolated worktree.
+- Final integrated Godot scenes, UI scripts, focused validators, deterministic
+  OpenGL captures, full release output, and the served production Web build.
 
 ## Result
 
-**Passed for Milestones 1-6.** This result approves the UI asset registry, shell,
+**Passed for Milestones 1-7.** This result approves the UI asset registry, shell,
 dense progression/economy surfaces, shared flat Theme/components, gameplay HUD,
 feedback presentation, Arsenal Trial UI, and the bounded Flooded Works panorama,
-terrain, and state-overlay proof. It does not approve the complete UI overhaul:
-production Web export, integration, and full-run QA remain open Milestone 7 work.
+terrain, and state-overlay proof. The integrated source passed all 77 release
+checks, production Web export, and the served-browser rendering/input path. No
+implementation or acceptance task remains in the UI overhaul plan.
 
 ## Reviewed Scope
 
@@ -102,16 +103,16 @@ Runtime captures:
 - **Exception:** a left border property is used only as a reserved four-pixel
   inside marker lane for focus/selection/prompt state. It is not a perimeter
   outline and the lane exists in every state, so bounds remain stable.
-- **Remaining warnings:** Milestone 7 owns integration/export/full-run QA; compact
-  Settings intentionally scrolls internally; the
-  `1672x941` shell images remain modestly soft at 1920x1080.
-- **Result:** passed for the Milestones 1-6 production UI, gameplay HUD, and
-  representative world-proof scope.
+- **Remaining warnings:** compact Settings intentionally scrolls internally; the
+  `1672x941` shell images remain modestly soft at 1920x1080. Both are accepted MVP
+  constraints rather than unfinished tasks in this plan.
+- **Result:** passed for the complete Milestones 1-7 production UI, gameplay HUD,
+  representative world-proof, integration, and Web-export scope.
 
 ## Automated Evidence
 
 - `PRODUCTION_UI_ASSETS_OK assets=52 backgrounds=5 illustrations=19 shapes=6 icons=22`
-- `PRODUCTION_UI_THEME_OK variations=15 buttons=5 panels=4 meters=3 marker=left`
+- `PRODUCTION_UI_THEME_OK variations=15 buttons=5 panels=4 meters=3 marker=left font=ko-en`
 - `SHELL_UI_VALIDATION_OK locales=2 viewports=3 screens=4`
 - `HERO_PREPARATION_UI_VALIDATION_OK`
 - `CARD_REWARD_VALIDATION_OK ... ui_locales=2 ui_viewports=3 targets=48px`
@@ -129,14 +130,17 @@ Runtime captures:
 - `FLOODED_WORLD_ASSET_MANIFEST_OK runtime_png=15 terrain=5 components=2`
 - Stage renderer, terrain presentation, hazard catalog/runtime, room composition,
   stage composition, production stage, and curated-stage-plan validators pass.
+- `RELEASE_CANDIDATE_MATRIX_OK checks=77 full=True seconds=634.6`
+- `WEB_EXPORT_OK`; the final served build returned HTTP 200 for all observed
+  resources and produced no browser console warning or error.
 
 ## Findings
 
-- No P0/P1/P2 defect blocks the Milestones 1-2 batch.
+- No P0/P1/P2 defect blocks the completed Milestones 1-7 scope.
 - The Theme validator and rendered evidence confirm zero-radius surfaces and no
   top/right/bottom perimeter borders. Remaining local style construction owns
-  dynamic flat state only; Milestones 3-5 still own composition migration on the
-  surfaces outside this representative spike.
+  dynamic flat state only; the stable shell, progression, modal, and HUD
+  composition migration is complete.
 - The `1672x941` shell images are modestly upscaled at 1920x1080. The reviewed HD
   captures remain usable for the MVP, but native-size replacement remains a
   targeted option if later Theme simplification makes softness more visible.
@@ -197,8 +201,27 @@ Runtime captures:
   review at desktop and compact sizes found no console error, accidental document
   horizontal overflow, or broken state/seam/debug control.
 
-## Unrun Gates
+## Milestone 7 Final Gate Evidence
 
-The full release matrix, production Web export, served-browser path, and complete
-run are intentionally not claimed here. They belong to Milestone 7 after the
-scoped UI/world commits are integrated onto then-current `master`.
+- The latest functional/fixed-stage baseline and scoped UI/world commits were
+  integrated without replacing newer gameplay or geometry wholesale.
+- The integrated source passed every focused UI/input/reward/intermission/retry/
+  HUD/boss/result gate and the full `77/77` release matrix.
+- The exact Godot 4.7 production Web export completed and the built app passed
+  served-browser boot, KO/EN glyph rendering, language persistence, remap and
+  restoration, pointer interaction, stage launch, pause/resume, and live Canvas
+  movement/jump/attack with no console warning or error.
+- Two browser-control attempts could not provide a sustained unattended key hold
+  for a complete three-stage clear. Per the ExecPlan rerun policy, deterministic
+  production-stage, reward, intermission, retry/end, boss, settlement, complete-
+  run, and rendered-capture gates provide that full-path evidence. This report
+  does not mislabel the split evidence as one automated browser speedrun.
+- Final KO/EN progression, shell, HUD, boss, and fixed-stage captures at
+  `960x540`, `1280x720`, and `1920x1080` show no required-text clipping, focus
+  loss, modal context break, or center-playfield obstruction.
+
+The served build initially exposed missing Korean host-font fallback. Bundling
+the reviewed Noto Sans KR Variable TTF under OFL-1.1 fixed the Web glyph failure;
+the Theme validator now checks the bundled path and representative Korean and
+English glyphs. The font's exact upstream revision, hash, license, and local
+files are recorded in the third-party adoption ledger.
