@@ -4,7 +4,7 @@
 [ext_resource type="Script" path="res://scripts/stages/RoomAnchor.gd" id="2"]
 
 [sub_resource type="RectangleShape2D" id="ApproachMassShape"]
-size = Vector2(340, 480)
+size = Vector2(420, 480)
 [sub_resource type="RectangleShape2D" id="MiddleMassShape"]
 size = Vector2(220, 400)
 [sub_resource type="RectangleShape2D" id="LandingMassShape"]
@@ -26,17 +26,17 @@ collision_layer = 1
 collision_mask = 0
 metadata/surface_id = &"broken_bridge_approach"
 metadata/support_top = 420.0
-metadata/support_width = 340.0
+metadata/support_width = 420.0
 metadata/critical = true
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/ApproachMass"]
 position = Vector2(0, 240)
 shape = SubResource("ApproachMassShape")
 [node name="RockVisual" type="Polygon2D" parent="Terrain/ApproachMass"]
 color = Color(0.2, 0.25, 0.28, 1)
-polygon = PackedVector2Array(-170, 0, 170, 0, 170, 480, -170, 480)
+polygon = PackedVector2Array(-210, 0, 210, 0, 210, 480, -210, 480)
 [node name="SupportCap" type="Polygon2D" parent="Terrain/ApproachMass"]
 color = Color(0.34, 0.57, 0.6, 1)
-polygon = PackedVector2Array(-170, 0, 170, 0, 170, 8, -170, 8)
+polygon = PackedVector2Array(-210, 0, 210, 0, 210, 8, -210, 8)
 
 [node name="MiddleMass" type="StaticBody2D" parent="Terrain"]
 position = Vector2(610, 500)
@@ -101,7 +101,7 @@ collision_mask = 0
 metadata/surface_id = &"broken_bridge_optional_rejoin"
 metadata/support_top = 420.0
 metadata/support_width = 220.0
-metadata/critical = false
+metadata/critical = true
 [node name="CollisionShape2D" type="CollisionShape2D" parent="OneWay/OptionalRejoinCover"]
 shape = SubResource("RejoinCoverShape")
 one_way_collision = true

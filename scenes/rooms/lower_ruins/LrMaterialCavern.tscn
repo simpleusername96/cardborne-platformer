@@ -17,7 +17,7 @@ size = Vector2(280, 380)
 size = Vector2(64, 120)
 
 [sub_resource type="RectangleShape2D" id="ReturnRopeShape"]
-size = Vector2(64, 620)
+size = Vector2(64, 700)
 
 [node name="LrMaterialCavern" type="Node2D"]
 script = ExtResource("1")
@@ -110,7 +110,7 @@ polygon = PackedVector2Array(560, 640, 585, 604, 608, 640)
 [node name="Branch" type="Marker2D" parent="Anchors/Sockets"]
 position = Vector2(56, 0)
 [node name="Rejoin" type="Marker2D" parent="Anchors/Sockets"]
-position = Vector2(1064, 0)
+position = Vector2(930, 0)
 
 [node name="Enemy" type="Node2D" parent="Anchors"]
 [node name="BasinOccupier" type="Marker2D" parent="Anchors/Enemy"]
@@ -187,27 +187,27 @@ points = PackedVector2Array(-18, 36, 18, 36)
 [node name="RopeExit" type="Marker2D" parent="Anchors/Objective"]
 position = Vector2(864, 520)
 [node name="OptionalRejoin" type="Marker2D" parent="Anchors/Objective"]
-position = Vector2(1064, 0)
+position = Vector2(930, 0)
 
 [node name="ReturnRope" type="Area2D" parent="Anchors/Objective"]
-position = Vector2(1064, 210)
+position = Vector2(930, 170)
 script = ExtResource("2")
-climbable_size = Vector2(64, 620)
+climbable_size = Vector2(64, 700)
 visual_color = Color(0.72, 0.78, 0.52, 0.82)
 metadata/entry_support = &"cavern_exit_shelf"
-metadata/exit_support = &"choice_return_cover"
+metadata/exit_support = &"choice_rejoin_pad"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Anchors/Objective/ReturnRope"]
 shape = SubResource("ReturnRopeShape")
 
 [node name="Visual" type="Polygon2D" parent="Anchors/Objective/ReturnRope"]
 color = Color(0.72, 0.78, 0.52, 0.82)
-polygon = PackedVector2Array(-5, -310, 5, -310, 5, 310, -5, 310)
+polygon = PackedVector2Array(-5, -350, 5, -350, 5, 350, -5, 350)
 
 [node name="RungA" type="Line2D" parent="Anchors/Objective/ReturnRope"]
 width = 3.0
 default_color = Color(0.72, 0.78, 0.52, 0.82)
-points = PackedVector2Array(-18, -205, 18, -205)
+points = PackedVector2Array(-18, -233, 18, -233)
 
 [node name="RungB" type="Line2D" parent="Anchors/Objective/ReturnRope"]
 width = 3.0
@@ -217,7 +217,7 @@ points = PackedVector2Array(-18, 0, 18, 0)
 [node name="RungC" type="Line2D" parent="Anchors/Objective/ReturnRope"]
 width = 3.0
 default_color = Color(0.72, 0.78, 0.52, 0.82)
-points = PackedVector2Array(-18, 205, 18, 205)
+points = PackedVector2Array(-18, 233, 18, 233)
 
 [node name="Recovery" type="Node2D" parent="Anchors"]
 [node name="CavernRecovery" type="Marker2D" parent="Anchors/Recovery"]
@@ -243,4 +243,4 @@ metadata/rope_support_overlap = 24.0
 metadata/branch_socket_id = &"cavern_branch"
 metadata/rejoin_socket_id = &"cavern_rejoin"
 metadata/recovery_id = &"CavernRecovery"
-metadata/return_rope_height = 620.0
+metadata/return_rope_height = 700.0

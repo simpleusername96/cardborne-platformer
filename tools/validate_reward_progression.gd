@@ -88,6 +88,7 @@ func _validate_level_choice() -> void:
 func _validate_health_preview() -> void:
 	_expect(_run_state.start_new_run(0, 44022), "health preview fixture run should start")
 	_run_state.current_health = 3
+	var maximum_health_before := int(_run_state.max_health)
 	var vitality: Dictionary = _run_state.preview_micro_upgrade(&"micro_vitality")
 	_expect(bool(vitality.get("ok", false)), "Vitality should provide an available preview")
 	_expect(
@@ -99,12 +100,17 @@ func _validate_health_preview() -> void:
 		"Vitality preview should include its immediate heal"
 	)
 	_expect(
-		int(vitality.get("max_health_after", -1)) == 6,
-		"Vitality preview should include its maximum-health increase"
+		int(vitality.get("max_health_after", -1)) == maximum_health_before + 1,
+		"Vitality preview should increase the equipped build's maximum health from %d to %d; got %d."
+		% [
+			maximum_health_before,
+			maximum_health_before + 1,
+			int(vitality.get("max_health_after", -1)),
+		]
 	)
 	var recovery: Dictionary = _run_state.preview_micro_upgrade(&"micro_recovery")
 	_expect(
-		int(recovery.get("current_health_after", -1)) == 5,
+		int(recovery.get("current_health_after", -1)) == mini(5, maximum_health_before),
 		"Recovery preview should use the same capped heal rule as commit"
 	)
 

@@ -4,6 +4,8 @@ extends Area2D
 @export var climbable_size: Vector2 = Vector2(42.0, 240.0)
 @export var visual_color: Color = Color(0.72, 0.78, 0.52, 0.82)
 
+var _route_enabled := true
+
 
 func _ready() -> void:
 	collision_layer = 256
@@ -11,6 +13,7 @@ func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 	body_exited.connect(_on_body_exited)
 	_ensure_shape_and_visual()
+	_apply_route_enabled()
 
 
 func _ensure_shape_and_visual() -> void:
@@ -47,3 +50,23 @@ func _on_body_exited(body: Node) -> void:
 
 func get_climb_axis_x() -> float:
 	return global_position.x
+
+
+func set_route_enabled(enabled: bool) -> void:
+	_route_enabled = enabled
+	_apply_route_enabled()
+
+
+func is_route_enabled() -> bool:
+	return _route_enabled
+
+
+func _apply_route_enabled() -> void:
+	visible = _route_enabled
+	monitoring = _route_enabled
+	monitorable = _route_enabled
+	collision_layer = 256 if _route_enabled else 0
+	collision_mask = 4 if _route_enabled else 0
+	var shape := get_node_or_null("CollisionShape2D") as CollisionShape2D
+	if shape != null:
+		shape.set_deferred("disabled", not _route_enabled)

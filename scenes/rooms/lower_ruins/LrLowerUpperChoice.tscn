@@ -130,7 +130,7 @@ position = Vector2(0, 620)
 [node name="Branch" type="Marker2D" parent="Anchors/Sockets"]
 position = Vector2(56, 720)
 [node name="LegacyRejoin" type="Marker2D" parent="Anchors/Sockets"]
-position = Vector2(1064, 720)
+position = Vector2(930, 720)
 metadata/socket_id = &"choice_optional_rejoin"
 metadata/compatibility_only = true
 [node name="Exit" type="Marker2D" parent="Anchors/Sockets"]

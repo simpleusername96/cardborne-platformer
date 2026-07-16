@@ -17,6 +17,7 @@ static func assemble(
 	var positions := _resolve_room_positions(plan, catalog, errors)
 	if not errors.is_empty():
 		return StageAssemblyResult.new(false, Rect2(), {}, positions, errors)
+	var active_exit_socket_ids := _active_exit_socket_ids(plan)
 	var hosts: Dictionary = {}
 	var bounds := Rect2()
 	var has_bounds := false
@@ -36,6 +37,9 @@ static func assemble(
 			for host_error in host_errors:
 				errors.append("Room '%s': %s" % [data.id, host_error])
 			break
+		host.configure_active_exit_routes(
+			active_exit_socket_ids.get(String(planned_room.id), [])
+		)
 		hosts[String(planned_room.id)] = host
 		var room_bounds := Rect2(host.position + data.bounds.position, data.bounds.size)
 		bounds = room_bounds if not has_bounds else bounds.merge(room_bounds)
@@ -45,6 +49,17 @@ static func assemble(
 		_cleanup_hosts(hosts)
 		return StageAssemblyResult.new(false, Rect2(), {}, positions, errors)
 	return StageAssemblyResult.new(true, bounds, hosts, positions, errors)
+
+
+static func _active_exit_socket_ids(plan: StagePlan) -> Dictionary:
+	var result: Dictionary = {}
+	for connection in plan.get_connections():
+		var room_key := String(connection.from_room_id)
+		var socket_ids: Array = result.get(room_key, [])
+		if not socket_ids.has(connection.from_socket_id):
+			socket_ids.append(connection.from_socket_id)
+		result[room_key] = socket_ids
+	return result
 
 
 static func _resolve_room_positions(

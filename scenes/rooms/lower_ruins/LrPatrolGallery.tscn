@@ -223,7 +223,7 @@ metadata/elevation_band_count = 2
 
 [node name="FieldPickups" type="Node2D" parent="."]
 [node name="PatrolIronBundle" parent="FieldPickups" instance=ExtResource("3_field_pickup")]
-position = Vector2(350, 550)
+position = Vector2(440, 550)
 pickup_id = &"ruin_patrol_iron_01"
 definition = ExtResource("5_iron_scrap")
 [node name="PatrolTimberBundle" parent="FieldPickups" instance=ExtResource("3_field_pickup")]
@@ -231,6 +231,6 @@ position = Vector2(160, 590)
 pickup_id = &"ruin_patrol_timber_01"
 definition = ExtResource("6_common_timber")
 [node name="PatrolVitalShard" parent="FieldPickups" instance=ExtResource("3_field_pickup")]
-position = Vector2(1010, 382)
+position = Vector2(920, 382)
 pickup_id = &"ruin_patrol_vital_01"
 definition = ExtResource("4_vital_shard")

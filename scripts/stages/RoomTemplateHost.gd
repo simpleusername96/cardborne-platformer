@@ -46,6 +46,14 @@ func get_exit_portal() -> ExitPortal:
 	return get_node_or_null("Anchors/Objective/ExitGate") as ExitPortal
 
 
+func configure_active_exit_routes(active_socket_ids: Array) -> void:
+	for child in find_children("*", "", true, false):
+		if not child is Climbable or child.get_meta("route_scope", &"") != &"cross_room":
+			continue
+		var socket_id := StringName(child.get_meta("socket_id", &""))
+		child.set_route_enabled(not socket_id.is_empty() and active_socket_ids.has(socket_id))
+
+
 func get_typed_anchors(group_name: StringName) -> Array[RoomAnchor]:
 	var anchors: Array[RoomAnchor] = []
 	var group := get_node_or_null("Anchors/%s" % group_name)
@@ -109,6 +117,16 @@ func _validate_scene_contract(data: RoomTemplateData, errors: PackedStringArray)
 	_validate_reward_anchor_contracts(data, errors)
 	_validate_moving_platform_contracts(data, errors)
 	_validate_safe_objective_clearance(data, errors)
+	for child in find_children("*", "", true, false):
+		if (
+			child is Climbable
+			and child.get_meta("route_scope", &"") == &"cross_room"
+			and StringName(child.get_meta("socket_id", &"")).is_empty()
+		):
+			errors.append(
+				"Room '%s' cross-room climbable '%s' needs a socket ID."
+				% [room_id, child.name]
+			)
 
 
 func _validate_socket_markers(data: RoomTemplateData, errors: PackedStringArray) -> void:

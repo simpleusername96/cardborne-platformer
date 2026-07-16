@@ -6,10 +6,10 @@
 script = ExtResource("1_archetype")
 id = &"leaper"
 display_name = "Leaper"
-content_version = 1
+content_version = 2
 tags = Array[StringName]([&"normal_enemy", &"grounded", &"telegraphed_vertical_burst"])
 behavior_owner = &"LeaperEnemy"
-pressure_roles = Array[StringName]([&"vertical", &"burst"])
+pressure_roles = Array[StringName]([&"vertical"])
 tell_contract = "A crouched warning and complete landing arc lock before contact damage activates."
 response_contract = "Leave the marked landing arc, change elevation, or interrupt the warning."
 punish_contract = "The fixed landing recovery exposes the Leaper after every committed arc."

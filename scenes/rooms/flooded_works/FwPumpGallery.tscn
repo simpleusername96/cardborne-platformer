@@ -113,7 +113,7 @@ polygon = PackedVector2Array(-40, -60, 40, -60, 40, 60, -40, 60)
 [node name="OneWay" type="Node2D" parent="."]
 
 [node name="OptionalRejoinCover" type="StaticBody2D" parent="OneWay"]
-position = Vector2(110, 620)
+position = Vector2(80, 620)
 collision_layer = 2
 collision_mask = 0
 metadata/surface_id = &"gallery_optional_rejoin"

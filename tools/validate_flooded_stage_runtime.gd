@@ -378,9 +378,15 @@ func _validate_pump_combat_cycles(stage: Variant) -> void:
 	var charger: Variant = _find_enemy(stage, &"fw_pump_gallery", &"charger")
 	var leaper: Variant = _find_enemy(stage, &"fw_pump_gallery", &"leaper")
 	var shooter: Variant = _find_enemy(stage, &"fw_pump_gallery", &"shooter")
+	var pump_archetypes: Array[String] = []
+	for enemy in stage.get_all_enemies():
+		if StringName(enemy.get_meta("planned_room_id", &"")) == &"fw_pump_gallery":
+			pump_archetypes.append(String(enemy.archetype_id))
+	pump_archetypes.sort()
 	_expect(
 		host != null and walker != null and charger != null and leaper != null and shooter != null,
-		"Pump Gallery should spawn walker, charger, leaper, and shooter."
+		"Pump Gallery should spawn walker, charger, leaper, and shooter; got %s."
+		% ",".join(pump_archetypes)
 	)
 	if host == null or walker == null or charger == null or leaper == null or shooter == null:
 		return

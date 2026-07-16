@@ -35,6 +35,21 @@ landing_width = 220.0
 headroom = 120.0
 recovery_id = &"CacheRecovery"
 
+[sub_resource type="Resource" id="LegacyRejoinSocket"]
+script = ExtResource("2")
+id = &"cache_legacy_rejoin"
+direction = &"up"
+route_role = &"return"
+local_position = Vector2(930, 0)
+opening_size = Vector2(112, 120)
+support_top = 620.0
+transition_type = &"rope"
+required_ability = &"climb"
+approach_width = 220.0
+landing_width = 220.0
+headroom = 120.0
+recovery_id = &"CacheRecovery"
+
 [sub_resource type="Resource" id="RewardAnchorCache"]
 script = ExtResource("4")
 id = &"cache_reward"
@@ -48,14 +63,14 @@ budget_cost = 1
 script = ExtResource("1")
 id = &"lr_destructible_cache"
 display_name = "Destructible Cache"
-content_version = 4
+content_version = 5
 scene = ExtResource("3")
 role = &"optional"
 stage_tags = Array[StringName]([&"ruin_approach"])
 required_route = false
 bounds = Rect2(0, 0, 1120, 720)
 entry_sockets = Array[ExtResource("2")]([SubResource("BranchSocket")])
-exit_sockets = Array[ExtResource("2")]([SubResource("RejoinSocket")])
+exit_sockets = Array[ExtResource("2")]([SubResource("LegacyRejoinSocket"), SubResource("RejoinSocket")])
 encounter_budget = Vector2i(0, 0)
 hazard_budget = Vector2i(0, 0)
 reward_budget = Vector2i(1, 1)

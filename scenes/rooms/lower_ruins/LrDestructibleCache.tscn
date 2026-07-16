@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/stages/RoomTemplateHost.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/stages/RoomAnchor.gd" id="2"]
@@ -17,6 +17,9 @@ size = Vector2(220, 280)
 
 [sub_resource type="RectangleShape2D" id="ReturnRopeShape"]
 size = Vector2(64, 720)
+
+[sub_resource type="RectangleShape2D" id="LegacyReturnRopeShape"]
+size = Vector2(64, 800)
 
 [node name="LrDestructibleCache" type="Node2D"]
 script = ExtResource("1")
@@ -112,6 +115,8 @@ polygon = PackedVector2Array(870, 380, 900, 380, 900, 580, 870, 580)
 position = Vector2(56, 0)
 [node name="Rejoin" type="Marker2D" parent="Anchors/Sockets"]
 position = Vector2(1120, -100)
+[node name="LegacyRejoin" type="Marker2D" parent="Anchors/Sockets"]
+position = Vector2(930, 0)
 
 [node name="Enemy" type="Node2D" parent="Anchors"]
 [node name="Hazard" type="Node2D" parent="Anchors"]
@@ -147,6 +152,9 @@ climbable_size = Vector2(64, 720)
 visual_color = Color(0.72, 0.78, 0.52, 0.82)
 metadata/entry_support = &"cache_rejoin"
 metadata/exit_support = &"broken_bridge_optional_rejoin"
+metadata/socket_id = &"cache_rejoin"
+metadata/support_overlap = 32.0
+metadata/route_scope = &"cross_room"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Anchors/Objective/ReturnRope"]
 shape = SubResource("ReturnRopeShape")
@@ -169,6 +177,40 @@ points = PackedVector2Array(-18, 0, 18, 0)
 width = 3.0
 default_color = Color(0.72, 0.78, 0.52, 0.82)
 points = PackedVector2Array(-18, 240, 18, 240)
+
+[node name="LegacyReturnRope" type="Area2D" parent="Anchors/Objective"]
+position = Vector2(930, 220)
+script = ExtResource("3")
+climbable_size = Vector2(64, 800)
+visual_color = Color(0.72, 0.78, 0.52, 0.38)
+metadata/entry_support = &"cache_rejoin"
+metadata/exit_support = &"choice_rejoin_pad"
+metadata/socket_id = &"cache_legacy_rejoin"
+metadata/support_overlap = 32.0
+metadata/route_scope = &"cross_room"
+metadata/compatibility_only = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Anchors/Objective/LegacyReturnRope"]
+shape = SubResource("LegacyReturnRopeShape")
+
+[node name="Visual" type="Polygon2D" parent="Anchors/Objective/LegacyReturnRope"]
+color = Color(0.72, 0.78, 0.52, 0.38)
+polygon = PackedVector2Array(-5, -400, 5, -400, 5, 400, -5, 400)
+
+[node name="RungA" type="Line2D" parent="Anchors/Objective/LegacyReturnRope"]
+width = 3.0
+default_color = Color(0.72, 0.78, 0.52, 0.38)
+points = PackedVector2Array(-18, -266, 18, -266)
+
+[node name="RungB" type="Line2D" parent="Anchors/Objective/LegacyReturnRope"]
+width = 3.0
+default_color = Color(0.72, 0.78, 0.52, 0.38)
+points = PackedVector2Array(-18, 0, 18, 0)
+
+[node name="RungC" type="Line2D" parent="Anchors/Objective/LegacyReturnRope"]
+width = 3.0
+default_color = Color(0.72, 0.78, 0.52, 0.38)
+points = PackedVector2Array(-18, 266, 18, 266)
 
 [node name="Recovery" type="Node2D" parent="Anchors"]
 [node name="CacheRecovery" type="Marker2D" parent="Anchors/Recovery"]

@@ -7,51 +7,54 @@ const FIXTURES: Array[Dictionary] = [
 		"scene": "res://scenes/rooms/flooded_works/FwSunkenCache.tscn",
 		"recovery": "Anchors/Recovery/SunkenRecovery",
 		"rope": "Anchors/Objective/BasinRope",
-		"exit_top": 520.0,
-		"exit_center_x": 984.0,
+		"exit_support": "Terrain/ExitShelfMass",
 	},
 	{
 		"id": "sanctum_material_crypt",
 		"scene": "res://scenes/rooms/broken_sanctum/BsMaterialCrypt.tscn",
 		"recovery": "Anchors/Recovery/CryptBasinRecovery",
 		"rope": "Anchors/Objective/BasinReturnRope",
-		"exit_top": 520.0,
-		"exit_center_x": 984.0,
+		"exit_support": "Terrain/GateEntryShelfMass",
 	},
 	{
 		"id": "sanctum_reliquary_drop",
 		"kind": &"drop",
 		"scene": "res://scenes/rooms/broken_sanctum/BsReliquaryCache.tscn",
-		"target_scene": "res://scenes/rooms/broken_sanctum/BsTwinReliquaryChoice.tscn",
+		"target_scene": "res://scenes/rooms/broken_sanctum/BsSentryCrossfire.tscn",
 		"recovery": "Anchors/Recovery/CacheReturnRecovery",
-		"target_landing": "OneWay/UpperReturnLanding",
+		"target_landing": "Terrain/WestFloorMass",
+		"source_offset": Vector2(-1280.0, -720.0),
+		"drop_target_x": 80.0,
 	},
 	{
 		"id": "ruin_cache_return_rope",
 		"kind": &"cross_room_rope",
 		"scene": "res://scenes/rooms/lower_ruins/LrDestructibleCache.tscn",
-		"target_scene": "res://scenes/rooms/lower_ruins/LrLowerUpperChoice.tscn",
+		"target_scene": "res://scenes/rooms/lower_ruins/LrBrokenBridge.tscn",
 		"recovery": "Anchors/Recovery/CacheRecovery",
 		"rope": "Anchors/Objective/ReturnRope",
-		"target_landing": "OneWay/ReturnShaftCover",
+		"target_landing": "OneWay/OptionalRejoinCover",
+		"source_offset": Vector2(-1120.0, 520.0),
 	},
 	{
 		"id": "flooded_cache_return_rope",
 		"kind": &"cross_room_rope",
 		"scene": "res://scenes/rooms/flooded_works/FwSunkenCache.tscn",
-		"target_scene": "res://scenes/rooms/flooded_works/FwLowerUpperChoice.tscn",
+		"target_scene": "res://scenes/rooms/flooded_works/FwPumpGallery.tscn",
 		"recovery": "Anchors/Recovery/SunkenExitRecovery",
 		"rope": "Anchors/Objective/ReturnRope",
-		"target_landing": "Terrain/ReturnShaftCover",
+		"target_landing": "OneWay/OptionalRejoinCover",
+		"source_offset": Vector2(-1280.0, 720.0),
 	},
 	{
 		"id": "sanctum_crypt_return_rope",
 		"kind": &"cross_room_rope",
 		"scene": "res://scenes/rooms/broken_sanctum/BsMaterialCrypt.tscn",
-		"target_scene": "res://scenes/rooms/broken_sanctum/BsTwinReliquaryChoice.tscn",
-		"recovery": "Anchors/Recovery/CryptReturnRecovery",
+		"target_scene": "res://scenes/rooms/broken_sanctum/BsVolatileNave.tscn",
+		"recovery": "Anchors/Recovery/CryptNaveReturnRecovery",
 		"rope": "Anchors/Objective/ReturnRope",
-		"target_landing": "Terrain/LowerReturnHatch",
+		"target_landing": "Terrain/EntryMass",
+		"source_offset": Vector2(-1280.0, 720.0),
 	},
 ]
 
@@ -129,8 +132,12 @@ func _validate_fixture(
 	_disable_pickups(room)
 	var recovery := room.get_node_or_null(String(fixture["recovery"])) as Marker2D
 	var rope := room.get_node_or_null(String(fixture["rope"])) as Area2D
-	_expect(recovery != null and rope != null, "%s runtime anchors should exist." % fixture["id"])
-	if recovery == null or rope == null:
+	var exit_support := room.get_node_or_null(String(fixture["exit_support"])) as StaticBody2D
+	_expect(
+		recovery != null and rope != null and exit_support != null,
+		"%s runtime route nodes should exist." % fixture["id"]
+	)
+	if recovery == null or rope == null or exit_support == null:
 		world.queue_free()
 		await process_frame
 		return
@@ -154,26 +161,38 @@ func _validate_fixture(
 		"%s profile %d should physically enter the basin rope." % [fixture["id"], profile_index]
 	)
 
+	var exit_top := _collision_top(exit_support)
+	var exit_half_width := _collision_half_width(exit_support)
+	var move_action := (
+		"move_right"
+		if exit_support.global_position.x >= rope.global_position.x
+		else "move_left"
+	)
 	Input.action_press("climb_up")
-	Input.action_press("move_right")
-	for _step in 110:
+	Input.action_press(move_action)
+	for _step in 180:
 		if (
-			player.global_position.y <= float(fixture["exit_top"]) + 1.0
-			and player.global_position.x >= float(fixture["exit_center_x"])
+			player.global_position.y <= exit_top + 1.0
+			and absf(player.global_position.x - exit_support.global_position.x)
+				<= exit_half_width - 14.0
 		):
 			break
 		await _physics_steps(1)
 	Input.action_release("climb_up")
-	Input.action_release("move_right")
-	await _physics_steps(10)
+	Input.action_release(move_action)
+	for _step in 30:
+		if player.is_on_floor() and absf(player.global_position.y - exit_top) <= 2.0:
+			break
+		await _physics_steps(1)
 	_expect(
-		player.global_position.y <= float(fixture["exit_top"]) + 2.0,
-		"%s profile %d should climb from basin to the return shelf; position=%s."
+		player.is_on_floor() and absf(player.global_position.y - exit_top) <= 2.0,
+		"%s profile %d should climb from basin onto the authored exit support; position=%s."
 		% [fixture["id"], profile_index, player.global_position]
 	)
 	_expect(
-		player.global_position.x >= float(fixture["exit_center_x"]),
-		"%s profile %d should dismount onto the return shelf; position=%s."
+		absf(player.global_position.x - exit_support.global_position.x)
+			<= exit_half_width - 14.0,
+		"%s profile %d should dismount inside the authored exit support; position=%s."
 		% [fixture["id"], profile_index, player.global_position]
 	)
 	world.queue_free()
@@ -205,7 +224,7 @@ func _validate_cross_room_rope(
 	var target_room := target_packed.instantiate() as Node2D
 	world.add_child(target_room)
 	var source_room := source_packed.instantiate() as Node2D
-	source_room.position = Vector2(0.0, 720.0)
+	source_room.position = fixture.get("source_offset", Vector2(0.0, 720.0)) as Vector2
 	world.add_child(source_room)
 	_disable_pickups(source_room)
 	_disable_pickups(target_room)
@@ -220,6 +239,10 @@ func _validate_cross_room_rope(
 		world.queue_free()
 		await process_frame
 		return
+	if source_room.has_method("configure_active_exit_routes"):
+		var socket_id := StringName(rope.get_meta("socket_id", &""))
+		if not socket_id.is_empty():
+			source_room.call("configure_active_exit_routes", [socket_id])
 	var player := packed_player.instantiate()
 	world.add_child(player)
 	var camera := player.get_node_or_null("Camera2D") as Camera2D
@@ -260,15 +283,7 @@ func _validate_cross_room_rope(
 		if player.is_on_floor() and absf(player.global_position.y - landing_top) <= 2.0:
 			break
 		await _physics_steps(1)
-	var landing_shape := landing.get_node_or_null("CollisionShape2D") as CollisionShape2D
-	var landing_rectangle := (
-		landing_shape.shape as RectangleShape2D
-		if landing_shape != null else null
-	)
-	var landing_half_width := (
-		landing_rectangle.size.x * 0.5
-		if landing_rectangle != null else 100.0
-	)
+	var landing_half_width := _collision_half_width(landing)
 	_expect(
 		player.is_on_floor() and absf(player.global_position.y - landing_top) <= 2.0,
 		"%s profile %d should dismount onto the target support; position=%s highest=%.2f release=%.2f climbing=%s count=%d mask=%d."
@@ -336,7 +351,7 @@ func _validate_drop_fixture(
 	var target_room := target_packed.instantiate() as Node2D
 	world.add_child(target_room)
 	var source_room := source_packed.instantiate() as Node2D
-	source_room.position = Vector2(0.0, -720.0)
+	source_room.position = fixture.get("source_offset", Vector2(0.0, -720.0)) as Vector2
 	world.add_child(source_room)
 	_disable_pickups(source_room)
 	_disable_pickups(target_room)
@@ -355,12 +370,17 @@ func _validate_drop_fixture(
 	player.global_position = recovery.global_position
 	await _physics_steps(4)
 
-	Input.action_press("move_left")
-	for _step in 90:
-		if player.global_position.x <= 1040.0:
+	var drop_target_x := float(fixture.get("drop_target_x", landing.global_position.x))
+	var move_action := "move_right" if drop_target_x >= player.global_position.x else "move_left"
+	Input.action_press(move_action)
+	for _step in 180:
+		if (
+			(move_action == "move_right" and player.global_position.x >= drop_target_x)
+			or (move_action == "move_left" and player.global_position.x <= drop_target_x)
+		):
 			break
 		await _physics_steps(1)
-	Input.action_release("move_left")
+	Input.action_release(move_action)
 	await _physics_steps(3)
 	Input.action_press("crouch")
 	await _physics_steps(2)
@@ -381,7 +401,8 @@ func _validate_drop_fixture(
 		% [fixture["id"], profile_index, player.global_position]
 	)
 	_expect(
-		absf(player.global_position.x - landing.global_position.x) <= 100.0,
+		absf(player.global_position.x - landing.global_position.x)
+			<= _collision_half_width(landing) - 14.0,
 		"%s profile %d should remain inside the return landing; position=%s."
 		% [fixture["id"], profile_index, player.global_position]
 	)
@@ -412,6 +433,12 @@ func _collision_top(body: StaticBody2D) -> float:
 		shape_node.global_position.y - rectangle.size.y * 0.5
 		if rectangle != null else body.global_position.y
 	)
+
+
+func _collision_half_width(body: StaticBody2D) -> float:
+	var shape_node := body.get_node_or_null("CollisionShape2D") as CollisionShape2D
+	var rectangle := shape_node.shape as RectangleShape2D if shape_node != null else null
+	return rectangle.size.x * 0.5 if rectangle != null else 100.0
 
 
 func _release_inputs() -> void:
