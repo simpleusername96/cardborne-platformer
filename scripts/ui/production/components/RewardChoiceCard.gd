@@ -22,6 +22,7 @@ var _glyph: Control
 var _art: TextureRect
 var _art_asset_id: StringName
 var _surface: ColorRect
+var _focus_marker: ColorRect
 var _title_label: Label
 var _description_label: Label
 var _value_label: Label
@@ -116,7 +117,8 @@ func has_visible_text_overflow() -> bool:
 
 
 func _build_content() -> void:
-	Styles.apply_button(self, _accent)
+	Styles.apply_theme(self)
+	theme_type_variation = &"ChoiceButton"
 	for color_name in [
 		"font_color",
 		"font_hover_color",
@@ -128,13 +130,16 @@ func _build_content() -> void:
 	add_theme_font_size_override("font_size", 1)
 	_surface = ColorRect.new()
 	_surface.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_surface.offset_left = 3.0
-	_surface.offset_top = 3.0
-	_surface.offset_right = -3.0
-	_surface.offset_bottom = -3.0
 	_surface.color = Styles.SURFACE
 	_surface.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_surface)
+	_focus_marker = ColorRect.new()
+	_focus_marker.name = "FocusMarker"
+	_focus_marker.anchor_bottom = 1.0
+	_focus_marker.offset_right = 4.0
+	_focus_marker.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_focus_marker.visible = false
+	add_child(_focus_marker)
 
 	_margin = MarginContainer.new()
 	_margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -242,20 +247,11 @@ func _refresh_state() -> void:
 	if not _built:
 		return
 	var highlighted := has_focus() or _pointer_inside or _selected
-	var border := _accent if highlighted else Styles.OUTLINE
-	var border_width := 3 if _selected else (2 if highlighted else 1)
 	# Opaque choice surfaces keep backdrop marks from reading as reward mechanics.
 	var background := Styles.SURFACE_RAISED if highlighted else Styles.SURFACE
 	_surface.color = background
-	add_theme_stylebox_override("normal", Styles.panel_style(background, border, border_width))
-	add_theme_stylebox_override("hover", Styles.panel_style(Styles.SURFACE_RAISED.lightened(0.04), _accent, 2))
-	add_theme_stylebox_override("pressed", Styles.panel_style(Styles.SURFACE_RAISED.darkened(0.05), _accent, 3))
-	add_theme_stylebox_override("focus", Styles.panel_style(background, _accent, 3))
-	var disabled_border := _accent if _selected else Color(Styles.OUTLINE, 0.48)
-	add_theme_stylebox_override(
-		"disabled",
-		Styles.panel_style(Styles.SURFACE, disabled_border, 3 if _selected else 1)
-	)
+	_focus_marker.color = _accent
+	_focus_marker.visible = highlighted
 	_rarity_label.add_theme_color_override("font_color", _accent)
 	_state_label.add_theme_color_override(
 		"font_color",

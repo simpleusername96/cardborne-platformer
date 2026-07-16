@@ -15,6 +15,7 @@ var _glyph: HUDGlyph
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	clip_contents = true
+	Styles.apply_theme(self)
 	custom_minimum_size = Vector2(92.0, 104.0)
 	_build_children()
 	_apply_view_model()
@@ -52,11 +53,11 @@ func _draw() -> void:
 	var available := bool(_view_model.get("available", false))
 	var cooldown := float(_view_model.get("cooldown", 0.0))
 	var active := bool(_view_model.get("active", false))
-	var border := accent if active else Styles.OUTLINE
-	var border_width := 2 if active else 1
+	var marker := accent if active else Styles.OUTLINE
+	var marker_width := 4 if active else 0
 	var background := Color(Styles.SURFACE_RAISED, 0.97 if available else 0.76)
 	draw_style_box(
-		Styles.panel_style(background, border, border_width),
+		Styles.panel_style(background, marker, marker_width),
 		Rect2(Vector2.ZERO, size)
 	)
 

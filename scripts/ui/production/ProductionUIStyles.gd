@@ -1,6 +1,8 @@
 class_name ProductionUIStyles
 extends RefCounted
 
+const PRODUCTION_THEME: Theme = preload("res://art/ui/production/production_ui_theme.tres")
+
 const BACKGROUND := Color("12171a")
 const SURFACE := Color("1c2428")
 const SURFACE_RAISED := Color("263136")
@@ -32,45 +34,93 @@ const TARGET_HEIGHT := 48
 
 static func panel_style(
 	background: Color = SURFACE,
-	border: Color = OUTLINE,
-	border_width: int = 1
+	marker: Color = OUTLINE,
+	marker_width: int = 0
 ) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	style.bg_color = background
-	style.border_color = border
-	style.set_border_width_all(border_width)
-	style.set_corner_radius_all(6)
+	# Reserve the marker lane so focus/selection never shifts child layout.
+	style.content_margin_left = 4.0
+	style.border_color = marker
+	style.set_border_width_all(0)
+	style.border_width_left = clampi(marker_width, 0, 4)
+	style.set_corner_radius_all(0)
 	return style
 
 
+static func flat_style(background: Color = SURFACE) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = background
+	style.set_border_width_all(0)
+	style.set_corner_radius_all(0)
+	return style
+
+
+static func apply_theme(control: Control) -> void:
+	control.theme = PRODUCTION_THEME
+
+
+static func apply_panel(
+	panel: PanelContainer,
+	variation: StringName = &"FlatPanel"
+) -> void:
+	apply_theme(panel)
+	panel.theme_type_variation = variation
+	panel.remove_theme_stylebox_override(&"panel")
+
+
 static func apply_button(button: Button, accent: Color = CYAN, quiet: bool = false) -> void:
-	var normal_bg := Color(SURFACE, 0.90) if quiet else SURFACE_RAISED
-	button.add_theme_stylebox_override("normal", panel_style(normal_bg, OUTLINE))
-	button.add_theme_stylebox_override("hover", panel_style(SURFACE_RAISED.lightened(0.08), accent))
-	button.add_theme_stylebox_override("pressed", panel_style(SURFACE_RAISED.darkened(0.08), accent, 2))
-	button.add_theme_stylebox_override("focus", panel_style(SURFACE_RAISED, accent, 2))
-	button.add_theme_stylebox_override("disabled", panel_style(Color(SURFACE, 0.55), Color(OUTLINE, 0.45)))
-	button.add_theme_color_override("font_color", TEXT)
-	button.add_theme_color_override("font_hover_color", TEXT)
-	button.add_theme_color_override("font_pressed_color", TEXT)
-	button.add_theme_color_override("font_focus_color", TEXT)
-	button.add_theme_color_override("font_disabled_color", Color(TEXT_MUTED, 0.55))
-	button.add_theme_font_size_override("font_size", TYPE_BUTTON)
+	apply_theme(button)
+	button.theme_type_variation = (
+		&"DangerButton"
+		if accent == CORAL
+		else (&"SecondaryButton" if quiet else &"PrimaryButton")
+	)
+	_clear_button_visual_overrides(button)
 	button.custom_minimum_size.y = maxf(button.custom_minimum_size.y, TARGET_HEIGHT)
 
 
-static func apply_character_card(button: Button, accent: Color, selected: bool) -> void:
-	var border := accent if selected else OUTLINE
-	var width := 3 if selected else 1
-	button.add_theme_stylebox_override("normal", panel_style(Color(SURFACE, 0.96), border, width))
-	button.add_theme_stylebox_override("hover", panel_style(SURFACE_RAISED, accent, 2))
-	button.add_theme_stylebox_override("pressed", panel_style(SURFACE_RAISED.darkened(0.06), accent, 3))
-	button.add_theme_stylebox_override("focus", panel_style(Color(SURFACE, 0.96), accent, 3))
+static func apply_character_card(button: Button, _accent: Color, selected: bool) -> void:
+	apply_choice_button(button)
+	button.button_pressed = selected
+
+
+static func apply_choice_button(button: Button) -> void:
+	apply_theme(button)
+	button.theme_type_variation = &"ChoiceButton"
+	_clear_button_visual_overrides(button)
+	button.custom_minimum_size.y = maxf(button.custom_minimum_size.y, TARGET_HEIGHT)
+
+
+static func _clear_button_visual_overrides(button: Button) -> void:
+	for style_name in [&"normal", &"hover", &"pressed", &"focus", &"disabled"]:
+		button.remove_theme_stylebox_override(style_name)
+	for color_name in [
+		&"font_color",
+		&"font_hover_color",
+		&"font_pressed_color",
+		&"font_focus_color",
+		&"font_disabled_color",
+	]:
+		button.remove_theme_color_override(color_name)
 
 
 static func configure_label(label: Label, size: int, color: Color = TEXT) -> void:
-	label.add_theme_font_size_override("font_size", size)
-	label.add_theme_color_override("font_color", color)
+	apply_theme(label)
+	var variation := &""
+	if size == TYPE_SECTION and color == AMBER:
+		variation = &"SectionTitle"
+	elif size == TYPE_CAPTION and color == TEXT_MUTED:
+		variation = &"SecondaryText"
+	elif size == TYPE_BUTTON and color == TEXT:
+		variation = &"NumericValue"
+	label.theme_type_variation = variation
+	if variation == &"":
+		label.add_theme_font_size_override("font_size", size)
+		label.add_theme_color_override("font_color", color)
+	else:
+		label.remove_theme_font_size_override(&"font_size")
+		label.remove_theme_color_override(&"font_color")
 
 
 static func action_accent(slot_role: StringName) -> Color:

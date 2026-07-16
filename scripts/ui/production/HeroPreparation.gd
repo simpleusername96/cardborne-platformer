@@ -72,6 +72,7 @@ var _status_source := "Select a model to inspect its next action."
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	Styles.apply_theme(self)
 	_cache_slot_buttons()
 	_configure_asset_slots()
 	_connect_controls()
@@ -160,17 +161,11 @@ func _connect_controls() -> void:
 
 
 func _apply_styles() -> void:
-	_loadout_panel.add_theme_stylebox_override(
-		"panel",
-		Styles.panel_style(Color(Styles.SURFACE, 0.96), Styles.OUTLINE)
-	)
-	_model_panel.add_theme_stylebox_override(
-		"panel",
-		Styles.panel_style(Color(Styles.SURFACE, 0.96), Styles.OUTLINE)
-	)
+	Styles.apply_panel(_loadout_panel)
+	Styles.apply_panel(_model_panel)
 	for button_value in _slot_buttons.values():
 		var button := button_value as Button
-		Styles.apply_button(button, Styles.CYAN, true)
+		Styles.apply_choice_button(button)
 		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	Styles.apply_button(_back_button, Styles.CYAN, true)
 	Styles.apply_button(_tutorial_button, Styles.MOSS, true)
@@ -374,12 +369,6 @@ func _update_slot_buttons() -> void:
 			else "%s\n%s" % [_t(SLOT_LABELS[String(slot_id)]), summary]
 		)
 		button.button_pressed = selected
-		Styles.apply_button(button, Styles.CYAN, not selected)
-		if selected:
-			button.add_theme_stylebox_override(
-				"normal",
-				Styles.panel_style(Styles.SURFACE_RAISED, Styles.CYAN, 2)
-			)
 
 
 func _slot_owner_id(slot_id: StringName) -> StringName:
@@ -529,13 +518,8 @@ func _make_model_button(
 	button.expand_icon = true
 	button.icon_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	button.add_theme_constant_override("icon_max_width", 42)
-	Styles.apply_button(button, Styles.AMBER if selected else Styles.CYAN, not selected)
+	Styles.apply_choice_button(button)
 	button.add_theme_font_size_override("font_size", Styles.TYPE_CAPTION)
-	if selected:
-		button.add_theme_stylebox_override(
-			"normal",
-			Styles.panel_style(Styles.SURFACE_RAISED, Styles.AMBER, 2)
-		)
 	return button
 
 

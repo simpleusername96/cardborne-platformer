@@ -98,7 +98,7 @@ catalog expansion.
 | Functional baseline | Use immutable snapshot `c72d98e`, which contains the functional/localization series and this plan, while implementation proceeds. | UI work on `d278184` would reintroduce fixed behavior, but moving `master` first would interfere with the other master-targeted task. | Baseline validators and captures in the isolated worktree. |
 | Implementation branch | Use `codex/master-ui-overhaul` in its own worktree; never continue UI implementation in the shared `codex/ui-readability-localization` checkout. | Separates UI writes from the resumable map task without rewriting shared history. | Worktree status, branch ancestry, and task-owned diff review. |
 | Final integration | Create a temporary integration branch from the then-current `master` and cherry-pick only scoped UI commits in order. Latest `master` behavior and map geometry win conflicts; the visual layer is reapplied around them. | Prevents the mixed source branch or stale visual branch from becoming an integration authority. | Milestone 7 full validation before merging the integration branch. |
-| UI visual spec | Keep `UI_VISUAL_SYSTEM.md` draft during the first cross-screen spike; promote it only after rendered evidence passes. | Prevents an unproven visual proposal from becoming canonical. | Milestone 2 evidence review. |
+| UI visual spec | `UI_VISUAL_SYSTEM.md` is already an active specification. Milestone 2 must prove its flat-plane, outline-free rules in the runtime rather than create a second promotion gate. | Keeps one visual authority and corrects the stale draft assumption recorded when this plan started. | Milestone 2 evidence review. |
 | Static backgrounds | Main Menu, Hero Preparation, and Run Result use full-screen art. Shell Settings may use its background; in-run Settings keeps the live scene. Forge uses the live Safe Intermission behind its centered modal, with `forge.png` used only as a restrained modal/content crop if it helps. | Blind one-to-one wiring would violate the active overlay contract. | Contextual captures for shell/in-run Settings and Forge. |
 | Font | Keep the current Godot font path for the first migration. Add a font only if Korean/English rendered evidence proves a real identity or legibility gap. | A new font is an external asset, license, import, and fallback decision. | Type-system spike at three viewports. |
 | Motion | Use immediate or short state feedback only; no large spatial panel transitions. | Preserves input responsiveness and the current reduced-motion boundary. | Focus/pressed/receipt captures and timing review. |
@@ -119,7 +119,8 @@ catalog expansion.
   reviewed independent raster illustrations with manifest metadata.
 - `ProductionBackdrop`, `CenteredModalShell`, `RewardChoiceCard`,
   `HeroPreparationDetail`, `HUDActionSlot`, and `HUDCombatDock` provide usable
-  ownership boundaries, even though their visuals still need migration.
+  ownership boundaries; Milestone 2 now gives the shared UI components one flat
+  Theme and marker-state contract.
 - Deterministic capture scripts exist for shell, progression, HUD, fixed-stage,
   and boss states.
 - The current post-functional normal-stage bounds have been measured rather than
@@ -137,13 +138,20 @@ catalog expansion.
 - The asset, shell, Hero Preparation, Card Reward, and Run Result validators pass.
   English and Korean rendered captures at all three supported viewports show the
   new assets without clipping, lost focus, or hidden required values.
+- Milestone 2 is implemented on the isolated branch. One project Theme now owns
+  fifteen semantic variations for buttons, flat/modal surfaces, meters, and text;
+  `ProductionUIStyles.gd` is narrowed to tokens and dynamic flat-state helpers.
+- Main Menu, Hero Preparation, Settings, Card Reward, and the gameplay HUD prove
+  the shared Theme/component vocabulary in English and Korean at all three
+  supported viewports. Focus and selection use a stable inside-left marker plus
+  fill/text state, primary targets remain at least 48 px, and no perimeter outline
+  or rounded corner is required for interaction state.
 
 ### Still Open
 
-- Replace bordered, rounded, code-local style construction with the approved flat
-  Theme system.
-- Migrate every current screen and HUD state without breaking commands, focus,
-  snapshots, localization, or viewport fit.
+- Complete Milestones 3-5 by migrating the remaining shell, progression, modal,
+  and gameplay surfaces away from screen-local composition/style ownership without
+  breaking commands, focus, snapshots, localization, or viewport fit.
 - Produce the measured world-asset manifest and complete one Flooded Works visual
   proof before broader world art.
 - Integrate scoped UI commits onto the latest reviewed `master` only after the
@@ -187,7 +195,6 @@ catalog expansion.
 - Replacing the proposed panorama panel/overlap/scroll contract after the first
   room proof rather than because of implementation convenience.
 - Introducing a third-party font, icon pack, UI kit, or other external asset.
-- Promoting `UI_VISUAL_SYSTEM.md` from draft to active.
 - Expanding from the accepted representative world room to all stage art.
 
 ## Current-State Map (Evidence)
@@ -195,13 +202,13 @@ catalog expansion.
 | Concern | Owner(s) today | Evidence inspected | Observed behavior / problem | Plan handling |
 | --- | --- | --- | --- | --- |
 | Functional UI contract | `docs/design/PRODUCTION_UI_CONTRACT.md`, `RunDirector`, `ProfileState`, `RunState` | Active spec, current branch diff, validators | Behavior is real and must not be replaced by the visual branch. | Preserve public signals, commands, snapshots, and focus semantics. |
-| Visual direction | `docs/design/UI_VISUAL_SYSTEM.md` | Draft spec and owner corrections | Direction is clear but not yet proven across the complete runtime. | Implement through a staged Theme migration; promote only after evidence. |
-| Shared styling | `scripts/ui/production/ProductionUIStyles.gd` | Current source and captures | Bordered/rounded `StyleBoxFlat` construction is repeated and screen-local. | Narrow it to tokens/helpers and move recurring properties to one Theme. |
-| UI assets | `art/ui/production/asset-manifest.json` | `master` SVG set and UI-branch v2 manifest | 28 SVG assets exist on `master`; 24 raster assets exist only on the visual branch; none of the detailed illustrations are runtime-wired. | Selectively import, resolve through one runtime owner, validate every ID. |
-| Static background rendering | `scripts/ui/production/ProductionBackdrop.gd` | Current procedural renderer and visual-branch cover renderer | Procedural fallback works; optional raster cover implementation already has a bounded proof. | Reapply cover behavior onto the functional baseline and keep fallback. |
+| Visual direction | `docs/design/UI_VISUAL_SYSTEM.md` | Active spec, owner corrections, and Milestone 2 captures | The flat-plane direction is proven across a representative shell, dense screen, modal, choice surface, and HUD; complete runtime migration remains open. | Keep the active spec authoritative and continue the staged Theme migration. |
+| Shared styling | `art/ui/production/production_ui_theme.tres`, `scripts/ui/production/ProductionUIStyles.gd` | Theme validator, current source, and Milestone 2 captures | One project Theme owns recurring variations; the helper owns only tokens and dynamic flat/left-marker construction. | Migrate remaining screen-local composition and overrides onto these owners. |
+| UI assets | `art/ui/production/asset-manifest.json`, `ProductionUIAssets.gd` | 52-ID validator, runtime screens, and Milestone 1 captures | Five backgrounds, nineteen illustrations, six structural shapes, and twenty-two icons now have explicit runtime/fallback/contextual/deferred disposition. | Keep one runtime resolver and validate every retained ID while remaining screens migrate. |
+| Static background rendering | `scripts/ui/production/ProductionBackdrop.gd` | Current cover renderer, procedural fallback, and shell captures | Four shell contexts use aspect-preserving cover; Forge correctly preserves the live world and the procedural fallback remains available. | Preserve context-sensitive cover behavior through shell migration. |
 | Screen composition | `.tscn` scenes plus screen scripts | Scene trees and capture scripts | Some screens are authored; Card/Level Reward and HUD still build substantial composition in code. | Move stable composition to scenes/components while presenters retain binding. |
 | Modal context | `CenteredModalShell.gd`, Settings/Pause, Merchant/Forge | Current localized branch and active contract | In-run overlays must preserve the live map and restore focus/input. | Reuse one modal owner; do not apply full-screen backgrounds in gameplay context. |
-| HUD | `ProductionHUD.gd/.tscn`, `HUDCombatDock.gd`, `HUDActionSlot.tscn` | Layout snapshots, guard captures, boss captures | Functionally dense and readable, but visually dominated by bordered boxes and text. | Scene-author the stable layout, use SVG at small scale, preserve center playfield. |
+| HUD | `ProductionHUD.gd/.tscn`, `HUDCombatDock.gd`, `HUDActionSlot.tscn` | Layout snapshots, Theme validator, guard captures, boss captures | The representative HUD now uses flat planes, semantic meters, and left-marker state while preserving the center playfield; broader composition migration remains Milestone 5. | Continue scene-authoring stable layout without reintroducing framed boxes or obscuring the world. |
 | World backdrop | `ProductionStageBackdrop.gd` | Current source, fixed-stage captures, measured assembly bounds | One procedural draw covers the whole stage; no accepted panorama renderer or assets. | Add a measured single-layer sequential panorama path with procedural fallback. |
 | World components | Room scenes, hazard catalog, world-art handoff | Current runtime data and rejected generation evidence | Visual families and exact chunk coverage are unresolved. | Inventory current geometry first; prove terrain plus two stateful components in one room. |
 
@@ -432,7 +439,8 @@ and do not hide missing IDs through layout changes.
 
 **Status 2026-07-16:** passed. The focused validators, English/Korean captures, and
 reference-versus-runtime review are recorded in `design-qa.md`. This completes
-asset adoption only; the Theme-wide visual migration remains Milestone 2.
+asset adoption only; the Theme work was tracked separately and is now passed in
+Milestone 2 below.
 
 ### Milestone 2 - Theme And Shared Component Foundation
 
@@ -444,28 +452,27 @@ screen independently.
 `RewardChoiceCard`, `HeroPreparationDetail`, `HUDActionSlot`, and
 `HUDCombatDock`.
 
-- [ ] Create one project Theme with the semantic variations defined in
+- [x] Create one project Theme with the semantic variations defined in
   `UI_VISUAL_SYSTEM.md`.
-- [ ] Move recurring color, spacing, type, control-height, meter, focus, selected,
+- [x] Move recurring color, spacing, type, control-height, meter, focus, selected,
   disabled, error, and success styling into Theme/tokens.
-- [ ] Narrow `ProductionUIStyles.gd` to semantic constants and unavoidable
+- [x] Narrow `ProductionUIStyles.gd` to semantic constants and unavoidable
   construction helpers; remove duplicated per-screen style ownership.
-- [ ] Replace default borders/radii with flat planes, spacing, type hierarchy,
+- [x] Replace default borders/radii with flat planes, spacing, type hierarchy,
   marker lanes, icons, and fill changes.
-- [ ] Preserve at least 48 px primary/confirm targets and stable bounds across all
+- [x] Preserve at least 48 px primary/confirm targets and stable bounds across all
   states.
-- [ ] Ensure focus is unmistakable through more than color and does not shift
+- [x] Ensure focus is unmistakable through more than color and does not shift
   layout.
-- [ ] Stabilize the shared modal, choice, detail, action-slot, and combat-dock
+- [x] Stabilize the shared modal, choice, detail, action-slot, and combat-dock
   component contracts before screen-wide migration.
-- [ ] Render one shell screen, one dense progression screen, one modal, and one HUD
+- [x] Render one shell screen, one dense progression screen, one modal, and one HUD
   state in KO/EN at all viewports.
-- [ ] If the spike passes, request owner approval to promote
-  `UI_VISUAL_SYSTEM.md` from draft to active; otherwise keep it draft and record
-  the failed rule.
+- [x] Confirm `UI_VISUAL_SYSTEM.md` is already active and record the passing spike
+  evidence instead of repeating the plan's stale promotion gate.
 
-**As-is:** shared helpers exist, but borders, rounding, local overrides, and script-
-built composition still define the look.
+**As-is at milestone start:** shared helpers existed, but borders, rounding, local
+overrides, and script-built composition still defined the look.
 
 **To-be:** a small semantic Theme/component vocabulary defines the system.
 
@@ -474,6 +481,11 @@ focus, fit, contrast, and state checks.
 
 **Guard:** do not replace every old border with another decorative container or
 make focus depend on a thin outline alone.
+
+**Status 2026-07-16:** passed. `production_ui_theme.tres` provides fifteen checked
+semantic variations, and representative shell, dense progression, modal, choice,
+and HUD captures pass in English and Korean at all three viewports. The bounded
+Level 4 rendered evidence and remaining warnings are recorded in `design-qa.md`.
 
 ### Milestone 3 - Shell, Pause, Settings, And Result Migration
 
@@ -692,8 +704,8 @@ The plan itself is valid when:
 - branch and asset source claims match Git history;
 - measured stage bounds and the initial panel-count calculation are reproducible;
 - the plan contains no arbitrary fixed background count;
-- active specs remain authoritative for behavior and the draft visual spec remains
-  non-canonical until its acceptance gate;
+- active behavior and visual specs remain authoritative, with Milestone 2 runtime
+  evidence recorded before the remaining screen migrations;
 - a future executor can start Milestone 0 without relying on conversation history;
 - the implementation branch and final integration strategy do not depend on a
   shared writable checkout or a stable `master` during UI development;
@@ -775,12 +787,19 @@ These are not blockers for Milestones 0-1 unless noted:
   for the retained SVG set, and three-viewport English/Korean rendered evidence.
 - 2026-07-16: `forge.png` remains deferred because a full-screen image breaks the
   live-world overlay contract; the existing centered modal and stage context win.
+- 2026-07-16: Milestone 2 passed with one project Theme, fifteen semantic
+  variations, zero-radius/no-perimeter styling, and a stable four-pixel inside-left
+  focus/selection marker. Representative shell, preparation, Settings, reward,
+  and HUD captures passed in English and Korean at every supported viewport.
+- 2026-07-16: `UI_VISUAL_SYSTEM.md` was already active when the Milestone 2 spike
+  completed. The earlier draft-promotion gate was stale and has been retired;
+  `design-qa.md` now records the proof instead.
 
 ## Next Steps
 
-1. Review the Milestone 1 captures and `design-qa.md` at the planned visual stop.
-2. If the easy-adoption direction is accepted, begin Milestone 2 with one Theme
-   and a shell/dense-screen/modal/HUD spike before migrating all surfaces.
+1. Review the Milestone 2 captures and `design-qa.md` at the planned visual stop.
+2. Begin Milestone 3 with the remaining Shell, Pause, Settings, and Run Result
+   composition/style migration while preserving shell-versus-live-world context.
 3. Leave `master` untouched until Milestone 7 creates a fresh integration branch
    from its then-current head.
 

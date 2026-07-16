@@ -44,6 +44,7 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	visible = false
 	mouse_filter = Control.MOUSE_FILTER_STOP
+	Styles.apply_theme(self)
 	_style_ui()
 	_configure_settings_controls()
 	_rebuild_binding_rows()
@@ -88,10 +89,7 @@ func _input(event: InputEvent) -> void:
 
 
 func _style_ui() -> void:
-	panel.add_theme_stylebox_override(
-		"panel",
-		Styles.panel_style(Color(Styles.SURFACE, 0.99), Styles.OUTLINE)
-	)
+	Styles.apply_panel(panel, &"ModalSurface")
 	Styles.configure_label(title_label, Styles.TYPE_TITLE, Styles.TEXT)
 	accent_rule.color = Styles.MOSS
 	Styles.apply_button(close_button, Styles.CYAN, true)

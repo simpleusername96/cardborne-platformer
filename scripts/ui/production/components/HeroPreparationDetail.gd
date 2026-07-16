@@ -62,10 +62,7 @@ var _art_asset_id: StringName
 
 
 func _ready() -> void:
-	add_theme_stylebox_override(
-		"panel",
-		Styles.panel_style(Color(Styles.SURFACE, 0.97), Styles.OUTLINE)
-	)
+	Styles.apply_panel(self)
 	Styles.apply_button(_action_button, Styles.AMBER)
 	_action_button.pressed.connect(_on_action_pressed)
 	_apply_density()

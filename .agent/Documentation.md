@@ -108,6 +108,12 @@ adding more content or random topology.
   Preparation, and Run Result use an aspect-preserving cover renderer, while
   Forge preserves the live stage behind its centered modal. The larger UI
   migration remains active in the master UI overhaul plan.
+- The UI overhaul branch now has one project-level flat Theme with fifteen
+  semantic variations for buttons, surfaces, meters, and recurring text roles.
+  `ProductionUIStyles.gd` owns only semantic tokens and dynamic flat-state helpers;
+  focus and selection use a stable inside-left marker rather than a perimeter
+  outline. Main Menu, Hero Preparation, Settings, Card Reward, and gameplay HUD
+  provide the Milestone 2 representative proof.
 - The first detailed UI illustration pack now provides 19 independent `512x512`
   RGBA assets for the Traveler, all active equipment and loadout items, the five
   active shared cards, Slime King, and the large Boss Core reward. The manifest,
@@ -147,7 +153,7 @@ Read in this order:
 .\tools\godot.ps1 --path . --headless --import
 .\tools\godot.ps1 --path . --headless --quit-after 2
 
-# Active release gates: 71 core checks, 76 with persistence/runtime extensions
+# Active release gates: 72 core checks, 77 with persistence/runtime extensions
 .\tools\validate_release_candidate.ps1
 .\tools\validate_release_candidate.ps1 -Full
 
@@ -176,6 +182,16 @@ release matrix and passed the asset, Shell UI, Hero Preparation, Card Reward, an
 Run Result gates. Real OpenGL captures cover all three supported viewports;
 Hero Preparation and reward captures additionally cover English and Korean. The
 full release suite and production Web export remain later plan gates.
+
+The 2026-07-16 Theme foundation pass added
+`tools/validate_production_ui_theme.gd` to the release matrix. It checks the
+project Theme path, all fifteen semantic variations, zero-radius/no-perimeter
+styleboxes, the reserved inside-left marker, flat meters, helper semantics, modal
+ownership, and 48 px button targets. Shell, preparation, reward, HUD, Forge,
+Merchant, intermission, result, boss, receipt, remap, pause, and production-boot
+focused gates passed; rendered evidence covers English and Korean at all three
+supported viewports. The full release suite and production Web export remain
+Milestone 7 gates.
 
 ## Risks
 

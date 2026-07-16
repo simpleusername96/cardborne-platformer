@@ -6,6 +6,7 @@ const PROGRESSION_CATALOG := preload("res://data/equipment/equipment_progression
 
 var _failures: Array[String] = []
 var _checkpoint := "initialize"
+var _previous_locale := "en"
 
 
 func _initialize() -> void:
@@ -14,6 +15,8 @@ func _initialize() -> void:
 
 
 func _run() -> void:
+	_previous_locale = TranslationServer.get_locale()
+	TranslationServer.set_locale("en")
 	_checkpoint = "load autoloads"
 	var profile_state := root.get_node_or_null("/root/ProfileState")
 	var run_state := root.get_node_or_null("/root/RunState")
@@ -129,6 +132,7 @@ func _expect(condition: bool, message: String) -> void:
 
 
 func _finish() -> void:
+	TranslationServer.set_locale(_previous_locale)
 	if _failures.is_empty():
 		print("REWARD_RECEIPT_VALIDATION_OK scenarios=6 viewport=960x540 queue=1")
 		quit(0)

@@ -16,6 +16,7 @@ func _init() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
+	Styles.apply_theme(self)
 
 	var dim := ColorRect.new()
 	dim.name = "ModalDim"
@@ -27,9 +28,7 @@ func _init() -> void:
 	panel = PanelContainer.new()
 	panel.name = "ModalPanel"
 	panel.clip_contents = true
-	panel.add_theme_stylebox_override(
-		"panel", Styles.panel_style(Color(Styles.SURFACE, 0.99), Styles.CYAN, 2)
-	)
+	Styles.apply_panel(panel, &"ModalSurface")
 	add_child(panel)
 
 	var margin := MarginContainer.new()

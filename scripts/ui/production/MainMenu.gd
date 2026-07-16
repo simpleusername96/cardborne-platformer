@@ -14,6 +14,7 @@ const Styles = preload("res://scripts/ui/production/ProductionUIStyles.gd")
 
 
 func _ready() -> void:
+	Styles.apply_theme(self)
 	_style_ui()
 	_apply_copy()
 	new_run_button.pressed.connect(func() -> void: new_run_requested.emit())

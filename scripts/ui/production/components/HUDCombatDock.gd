@@ -38,6 +38,7 @@ var _title_labels: Dictionary = {}
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	Styles.apply_theme(self)
 	_build_ui()
 	var localization := get_node_or_null("/root/UILocalization")
 	if localization != null:
@@ -103,7 +104,7 @@ func _build_ui() -> void:
 	_row.add_theme_constant_override("separation", 6)
 	add_child(_row)
 
-	_attack_panel = _panel(Styles.AMBER)
+	_attack_panel = _panel()
 	_row.add_child(_attack_panel)
 	var attack_margin := _margin(8, 6, 8, 6)
 	_attack_panel.add_child(attack_margin)
@@ -155,7 +156,7 @@ func _build_ui() -> void:
 
 
 func _attack_choice(icon_id: StringName, fallback_name: String) -> Dictionary:
-	var panel := _panel(Styles.OUTLINE)
+	var panel := _panel()
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var margin := _margin(4, 3, 4, 3)
 	panel.add_child(margin)
@@ -188,7 +189,7 @@ func _status_panel(
 	title: String,
 	accent: Color
 ) -> Dictionary:
-	var panel := _panel(accent)
+	var panel := _panel()
 	var margin := _margin(7, 6, 7, 5)
 	panel.add_child(margin)
 	var column := VBoxContainer.new()
@@ -337,7 +338,7 @@ func _apply_choice_style(panel: PanelContainer, accent: Color, active: bool) -> 
 		Styles.panel_style(
 			Color(Styles.SURFACE_RAISED, 0.98 if active else 0.72),
 			accent if active else Styles.OUTLINE,
-			2 if active else 1
+			4 if active else 0
 		)
 	)
 
@@ -364,7 +365,7 @@ func _apply_guard_style(
 ) -> void:
 	var outcome := StringName(feedback.get("outcome", &"")) if feedback_active else &""
 	var accent := Styles.OUTLINE
-	var width := 1
+	var width := 0
 	var title_color := Styles.TEXT
 	if phase in [&"startup", &"active"]:
 		accent = Styles.CYAN
@@ -423,11 +424,11 @@ func _percent(current: int, maximum: int) -> String:
 	return "%d%%" % int(round(clampf(float(current) / float(maximum), 0.0, 1.0) * 100.0))
 
 
-func _panel(border: Color) -> PanelContainer:
+func _panel() -> PanelContainer:
 	var panel := PanelContainer.new()
 	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	panel.add_theme_stylebox_override(
-		"panel", Styles.panel_style(Color(Styles.SURFACE, 0.96), border, 1)
+		"panel", Styles.panel_style(Color(Styles.SURFACE, 0.96))
 	)
 	return panel
 

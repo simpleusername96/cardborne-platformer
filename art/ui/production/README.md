@@ -84,6 +84,26 @@ mapping is in `asset-manifest.json`. Generation prompts and alpha-validation
 evidence are recorded in `docs/design/references/ui-assets/README.md`; the visual
 catalog is `docs/design/reports/ui-raster-asset-catalog.png`.
 
+## Production Theme
+
+`production_ui_theme.tres` is the project-level owner for recurring production UI
+styles. Its fifteen semantic variations cover primary, secondary, danger, icon,
+choice, action-slot, and prompt controls; flat/modal surfaces; health, resource,
+and boss meters; and recurring title, secondary, and numeric text roles.
+
+The Theme follows `docs/design/UI_VISUAL_SYSTEM.md`: square corners, flat planes,
+no decorative perimeter outlines, and at least 48 px primary targets. Focus and
+selection reserve a stable four-pixel inside-left marker lane and combine that
+marker with fill or live text, so state is not color-only and does not move the
+layout. `scripts/ui/production/ProductionUIStyles.gd` remains the narrow owner for
+semantic tokens and genuinely dynamic flat styles; screens should not rebuild the
+shared variations locally.
+
+`tools/validate_production_ui_theme.gd` checks the configured project Theme,
+variation/base-type coverage, zero-radius/no-perimeter rules, marker exception,
+meter styles, shared modal use, and button target height. It is part of the release
+candidate matrix.
+
 ## Runtime ownership and current adoption
 
 `scripts/ui/production/ProductionUIAssets.gd` is the only runtime path and
@@ -101,5 +121,5 @@ The first adoption batch uses:
 - Traveler, Slime King, and Boss Core art in the result summary.
 
 Structural SVGs and the remaining small semantic icons retain explicit deferred
-or fallback disposition in the manifest until the shared Theme, merchant, and HUD
-milestones measure their actual slots.
+or fallback disposition in the manifest until the merchant, remaining HUD, and
+screen-migration milestones measure their actual slots.

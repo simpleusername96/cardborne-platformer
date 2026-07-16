@@ -25,6 +25,10 @@ FeedbackDirector="*res://scripts/presentation/FeedbackDirector.gd"
 window/size/viewport_width=1280
 window/size/viewport_height=720
 
+[gui]
+
+theme/custom="res://art/ui/production/production_ui_theme.tres"
+
 [internationalization]
 
 locale/translations=PackedStringArray("res://localization/ui.en.po", "res://localization/ui.ko.po")

@@ -13,6 +13,7 @@ $godot = Join-Path $PSScriptRoot "godot.ps1"
 $releaseMatrix = @(
   "validate_design_catalogs.gd",
   "validate_production_ui_assets.gd",
+  "validate_production_ui_theme.gd",
   "validate_hero_definition.gd",
   "validate_hero_attack_definitions.gd",
   "validate_context_combat_contract.gd",

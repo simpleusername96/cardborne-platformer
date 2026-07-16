@@ -50,6 +50,7 @@ var _boss_snapshot: Dictionary = {}
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	Styles.apply_theme(self)
 	_build_ui()
 	SignalBus.player_health_changed.connect(_on_health_changed)
 	SignalBus.run_state_changed.connect(_on_run_state_changed)
@@ -131,7 +132,7 @@ func _build_ui() -> void:
 
 
 func _build_health_cluster() -> void:
-	health_panel = _hud_panel(Color(Styles.SURFACE, 0.95), Styles.OUTLINE)
+	health_panel = _hud_panel(Color(Styles.SURFACE, 0.95))
 	health_panel.name = "HealthCluster"
 	health_panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	add_child(health_panel)
@@ -179,12 +180,7 @@ func _build_health_cluster() -> void:
 	health_bar.name = "PlayerHealth"
 	health_bar.custom_minimum_size = Vector2(0.0, 12.0)
 	health_bar.show_percentage = false
-	health_bar.add_theme_stylebox_override(
-		"background", Styles.panel_style(Color("101518"), Color("3e4a4f"), 1)
-	)
-	health_bar.add_theme_stylebox_override(
-		"fill", Styles.panel_style(Styles.HEALTH, Styles.HEALTH, 1)
-	)
+	health_bar.theme_type_variation = &"HealthMeter"
 	details.add_child(health_bar)
 
 	level_xp_label = Label.new()
@@ -250,8 +246,9 @@ func _build_context_lane() -> void:
 	context_lane.set_anchors_preset(Control.PRESET_CENTER_TOP)
 	context_lane.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(context_lane)
-	prompt_panel = _hud_panel(Color(Styles.SURFACE_RAISED, 0.97), Styles.AMBER)
+	prompt_panel = _hud_panel(Color(Styles.SURFACE_RAISED, 0.97))
 	prompt_panel.name = "InteractionPrompt"
+	Styles.apply_panel(prompt_panel, &"PromptBadge")
 	prompt_panel.visible = false
 	prompt_panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	context_lane.add_child(prompt_panel)
@@ -263,9 +260,7 @@ func _build_context_lane() -> void:
 	margin.add_child(row)
 	var badge := PanelContainer.new()
 	badge.custom_minimum_size = Vector2(42.0, 28.0)
-	badge.add_theme_stylebox_override(
-		"panel", Styles.panel_style(Color("11171a"), Styles.AMBER, 1)
-	)
+	Styles.apply_panel(badge, &"PromptBadge")
 	row.add_child(badge)
 	prompt_binding_label = Label.new()
 	prompt_binding_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -289,7 +284,7 @@ func _build_context_lane() -> void:
 
 
 func _build_boss_panel() -> void:
-	boss_panel = _hud_panel(Color("20292d"), Styles.AMBER)
+	boss_panel = _hud_panel(Color("20292d"))
 	boss_panel.name = "BossPanel"
 	boss_panel.visible = false
 	boss_panel.set_anchors_preset(Control.PRESET_CENTER_TOP)
@@ -319,33 +314,22 @@ func _build_boss_panel() -> void:
 	boss_health_bar.name = "BossHealth"
 	boss_health_bar.custom_minimum_size = Vector2(0.0, 13.0)
 	boss_health_bar.show_percentage = false
-	boss_health_bar.add_theme_stylebox_override(
-		"background", Styles.panel_style(Color("11171a"), Color("414c51"), 1)
-	)
-	boss_health_bar.add_theme_stylebox_override(
-		"fill", Styles.panel_style(Styles.CORAL, Styles.HEALTH_LOW, 1)
-	)
+	boss_health_bar.theme_type_variation = &"BossMeter"
 	column.add_child(boss_health_bar)
 	boss_stagger_bar = ProgressBar.new()
 	boss_stagger_bar.name = "BossStagger"
 	boss_stagger_bar.custom_minimum_size = Vector2(0.0, 4.0)
 	boss_stagger_bar.show_percentage = false
-	boss_stagger_bar.add_theme_stylebox_override(
-		"background", Styles.panel_style(Color("11171a"), Color("354147"), 0)
-	)
-	boss_stagger_bar.add_theme_stylebox_override(
-		"fill", Styles.panel_style(Styles.CYAN, Styles.CYAN, 0)
-	)
+	boss_stagger_bar.theme_type_variation = &"ResourceMeter"
 	column.add_child(boss_stagger_bar)
 
 
 func _hud_panel(
-	background: Color = Styles.SURFACE,
-	border: Color = Styles.OUTLINE
+	background: Color = Styles.SURFACE
 ) -> PanelContainer:
 	var panel := PanelContainer.new()
 	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	panel.add_theme_stylebox_override("panel", Styles.panel_style(background, border))
+	panel.add_theme_stylebox_override("panel", Styles.flat_style(background))
 	return panel
 
 
@@ -371,7 +355,7 @@ func _layout_responsive() -> void:
 	objective_container.offset_top = 17.0
 	objective_container.offset_right = objective_width * 0.5
 	objective_container.offset_bottom = 78.0
-	var boss_width := 370.0 if compact else 500.0
+	var boss_width := 372.0 if compact else 500.0
 	var boss_shift := 70.0 if compact else 0.0
 	boss_panel.offset_left = -boss_width * 0.5 + boss_shift
 	boss_panel.offset_top = 14.0
@@ -440,7 +424,7 @@ func _refresh_health_cluster() -> void:
 	var low_health := float(current_health) / float(max_health) <= 0.3
 	var health_tone := Styles.HEALTH_LOW if low_health else Styles.HEALTH
 	health_bar.add_theme_stylebox_override(
-		"fill", Styles.panel_style(health_tone, health_tone, 1)
+		"fill", Styles.flat_style(health_tone)
 	)
 	level_xp_label.text = "LV %d   |   %d XP" % [
 		maxi(int(_run_snapshot.get("level", 1)), 1),
