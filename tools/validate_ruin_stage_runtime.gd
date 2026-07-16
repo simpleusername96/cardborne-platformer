@@ -276,6 +276,12 @@ func _validate_mobile_cycles(stage: Variant) -> void:
 	for _frame in 240:
 		await physics_frame
 		var warning := charger.get_node_or_null("LaneWarning") as Line2D
+		if warning != null and warning.visible:
+			_expect(
+				warning.points.size() == 2
+				and warning.points[1].length() <= 128.0 + 0.1,
+				"Ruin Charger warning should remain local."
+			)
 		warning_seen = warning_seen or (warning != null and warning.visible)
 		charge_seen = charge_seen or absf(charger.velocity.x) >= 240.0
 		recovery_seen = recovery_seen or bool(charger.get_combat_snapshot().get("recovery", false))

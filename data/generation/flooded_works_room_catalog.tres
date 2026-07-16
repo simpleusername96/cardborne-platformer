@@ -15,5 +15,5 @@
 script = ExtResource("1")
 id = &"flooded_works_rooms"
 display_name = "Flooded Works Rooms"
-content_version = 4
+content_version = 5
 rooms = Array[ExtResource("2")]([ExtResource("2"), ExtResource("3"), ExtResource("4"), ExtResource("5"), ExtResource("6"), ExtResource("7"), ExtResource("8"), ExtResource("9"), ExtResource("10")])

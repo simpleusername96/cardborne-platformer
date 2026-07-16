@@ -169,6 +169,7 @@ clearance = 180.0
 has_escape_route = false
 has_line_of_sight = false
 has_cover_or_elevation = false
+metadata/terrain_relation = &"occupy_lower_lane_behind_cover"
 [node name="ShooterA" type="Marker2D" parent="Anchors/Enemy"]
 position = Vector2(790, 378)
 script = ExtResource("2")
@@ -184,6 +185,7 @@ has_cover_or_elevation = true
 required = true
 metadata/line_of_sight = Rect2(120, 360, 920, 300)
 metadata/cover_id = &"CoverWall"
+metadata/terrain_relation = &"exposed_perch_over_solid_cover"
 [node name="Hazard" type="Node2D" parent="Anchors"]
 [node name="Reward" type="Node2D" parent="Anchors"]
 [node name="Objective" type="Node2D" parent="Anchors"]

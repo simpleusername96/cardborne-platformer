@@ -436,6 +436,12 @@ func _validate_pump_combat_cycles(stage: Variant) -> void:
 	for _frame in 300:
 		await physics_frame
 		var warning := charger.get_node_or_null("LaneWarning") as Line2D
+		if warning != null and warning.visible:
+			_expect(
+				warning.points.size() == 2
+				and warning.points[1].length() <= 128.0 + 0.1,
+				"Pump Charger warning should remain local."
+			)
 		charge_warning = charge_warning or (warning != null and warning.visible)
 		charge_active = charge_active or absf(charger.velocity.x) >= 240.0
 		charge_recovery = charge_recovery or bool(charger.get_combat_snapshot().get("recovery", false))

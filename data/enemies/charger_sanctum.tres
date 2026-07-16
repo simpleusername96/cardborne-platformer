@@ -6,7 +6,7 @@
 script = ExtResource("1_variant")
 id = &"charger_sanctum"
 display_name = "Sanctum Charger"
-content_version = 1
+content_version = 2
 tags = Array[StringName]([&"normal_enemy", &"broken_sanctum", &"compressed_recovery"])
 archetype_id = &"charger"
 stage_id = &"broken_sanctum"
@@ -19,7 +19,7 @@ recovery_time = 0.38
 charge_speed = 395.0
 stagger_capacity = 72
 presentation_key = &"enemy.charger.sanctum"
-presentation_description = "A heavy lane trail and sharp recovery pose distinguish the compressed punish window."
+presentation_description = "A heavy local direction flash and sharp recovery pose distinguish the compressed punish window."
 tuning_trait = &"compressed_recovery"
 budget_cost = 3
 drop_source_id = &"drop_charger"

@@ -9,19 +9,19 @@ const STAGES: Array[Dictionary] = [
 		"id": &"ruin_approach",
 		"catalog": "res://data/generation/lower_ruins_room_catalog.tres",
 		"rooms": "lr_start_shelf,lr_rise_steps,lr_patrol_gallery,lr_shooter_overlook,lr_lower_upper_choice,lr_broken_bridge,lr_charge_lane,lr_exit_ascent,lr_destructible_cache",
-		"signature": "6d6aee4913503fe48b8fe5f0f8c4c11781a7ae8f661d2d14a08feafc85458049",
+		"signature": "a92414fb7552c92b64ecebe9411268940e1d5b513f22eb00a0747bdba9219e8b",
 	},
 	{
 		"id": &"flooded_works",
 		"catalog": "res://data/generation/flooded_works_room_catalog.tres",
 		"rooms": "fw_flooded_entry,fw_rope_shaft,fw_poison_timing,fw_leaper_basin,fw_lower_upper_choice,fw_pump_gallery,fw_exit_shelter,fw_sunken_cache",
-		"signature": "dbf46b856f11079f84cbf37736359d550a595ef409fb5504ba23e392d110e44f",
+		"signature": "1f6e4e83711cc6c34f7b97505d1a8b66a301fe9f5f0b5b2e2d803bbdf10e295a",
 	},
 	{
 		"id": &"broken_sanctum",
 		"catalog": "res://data/generation/broken_sanctum_room_catalog.tres",
 		"rooms": "bs_breach_entry,bs_shield_choke,bs_gate_switch_loop,bs_volatile_nave,bs_twin_reliquary_choice,bs_fractured_gallery,bs_recovery_cloister,bs_sentry_crossfire,bs_exit_ascent,bs_material_crypt,bs_reliquary_cache",
-		"signature": "e1861bdcd27b4befda3eb7fb3d1da6f3286a99bec3e58fd7b72c3a6e2c08a52c",
+		"signature": "fbfb177d5bdfc0923b19c5d274cb8ac699185548a9835a93c53c45931e3c55c1",
 	},
 ]
 

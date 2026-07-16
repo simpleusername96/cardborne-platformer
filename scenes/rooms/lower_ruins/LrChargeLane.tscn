@@ -127,6 +127,7 @@ has_escape_route = true
 has_line_of_sight = false
 has_cover_or_elevation = false
 required = true
+metadata/terrain_relation = &"hold_center_with_side_escape"
 [node name="ChargerB" type="Marker2D" parent="Anchors/Enemy"]
 position = Vector2(560, 600)
 script = ExtResource("3")
@@ -139,6 +140,7 @@ clearance = 200.0
 has_escape_route = true
 has_line_of_sight = false
 has_cover_or_elevation = false
+metadata/terrain_relation = &"charge_lane_broken_by_escape_ledge"
 
 [node name="Hazard" type="Node2D" parent="Anchors"]
 [node name="Reward" type="Node2D" parent="Anchors"]

@@ -72,7 +72,10 @@ func _validate_flooded_presentations() -> void:
 		_expect(enemy.resolved_spec != null, "%s should consume ResolvedEnemySpec" % variant_id)
 		_expect(enemy.get_node_or_null("Visual/FloodedMark") != null, "%s needs a Flooded visual mark" % variant_id)
 		if variant_id == &"charger_flooded":
-			_expect(is_equal_approx(enemy.lane_warning_length, 620.0), "Flooded Charger needs a longer lane tell")
+			_expect(
+				is_equal_approx(enemy.lane_warning_length, 128.0),
+				"Flooded Charger should use a local direction cue."
+			)
 		if variant_id == &"shooter_flooded":
 			_expect(is_equal_approx(enemy.weapon_length, 38.0), "Flooded Shooter needs a longer weapon")
 		enemy.queue_free()

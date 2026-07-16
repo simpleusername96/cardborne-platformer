@@ -224,6 +224,7 @@ has_line_of_sight = false
 has_cover_or_elevation = true
 required = true
 metadata/support_id = &"gate_loop_step_west"
+metadata/terrain_relation = &"occupy_switch_approach"
 [node name="GateEastOccupier" type="Marker2D" parent="Anchors/Enemy"]
 position = Vector2(1100, 620)
 script = ExtResource("2")
@@ -237,6 +238,7 @@ has_escape_route = true
 has_line_of_sight = false
 has_cover_or_elevation = true
 metadata/support_id = &"gate_loop_exit"
+metadata/terrain_relation = &"occupy_opened_shortcut_exit"
 [node name="GateOverheadShooter" type="Marker2D" parent="Anchors/Enemy"]
 position = Vector2(1080, 200)
 script = ExtResource("2")
@@ -251,6 +253,7 @@ has_line_of_sight = true
 has_cover_or_elevation = true
 required = true
 metadata/support_id = &"gate_overhead_wait_east"
+metadata/terrain_relation = &"overhead_pressure_over_switch_route"
 [node name="Hazard" type="Node2D" parent="Anchors"]
 [node name="Reward" type="Node2D" parent="Anchors"]
 [node name="Objective" type="Node2D" parent="Anchors"]

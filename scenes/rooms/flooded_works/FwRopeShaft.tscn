@@ -168,6 +168,7 @@ has_cover_or_elevation = true
 required = true
 metadata/support_id = &"shaft_rope_top"
 metadata/line_of_sight = Rect2(420, 220, 620, 320)
+metadata/terrain_relation = &"upper_perch_over_rope_axis"
 
 [node name="ShaftMidLeaper" type="Marker2D" parent="Anchors/Enemy"]
 position = Vector2(920, 564)
@@ -182,6 +183,7 @@ has_escape_route = true
 has_cover_or_elevation = true
 required = true
 metadata/support_id = &"shaft_lower_recovery"
+metadata/terrain_relation = &"alternate_rope_landing_bands"
 
 [node name="ShaftLowerOccupier" type="Marker2D" parent="Anchors/Enemy"]
 position = Vector2(1160, 628)
@@ -196,6 +198,7 @@ has_escape_route = true
 has_cover_or_elevation = true
 required = true
 metadata/support_id = &"shaft_exit_floor"
+metadata/terrain_relation = &"guard_lower_dismount"
 
 [node name="Hazard" type="Node2D" parent="Anchors"]
 [node name="Reward" type="Node2D" parent="Anchors"]

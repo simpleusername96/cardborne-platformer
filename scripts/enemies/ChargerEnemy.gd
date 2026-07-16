@@ -14,7 +14,7 @@ extends EnemyBase
 @export var active_color: Color = Color(1.0, 0.22, 0.16, 1.0)
 @export var recovery_color: Color = Color(0.58, 0.42, 0.26, 1.0)
 @export var lane_warning_color: Color = Color(1.0, 0.72, 0.18, 0.72)
-@export var lane_warning_length: float = 520.0
+@export var lane_warning_length: float = 128.0
 
 var direction: int = -1
 var left_limit: float

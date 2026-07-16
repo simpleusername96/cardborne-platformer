@@ -458,6 +458,12 @@ func _validate_fractured_combat(stage: Variant) -> void:
 		await physics_frame
 		var snapshot: Dictionary = charger.get_combat_snapshot()
 		var warning := charger.get_node_or_null("LaneWarning") as Line2D
+		if warning != null and warning.visible:
+			_expect(
+				warning.points.size() == 2
+				and warning.points[1].length() <= 128.0 + 0.1,
+				"Fractured Charger warning should remain local."
+			)
 		warning_seen = warning_seen or (warning != null and warning.visible)
 		charge_seen = charge_seen or absf(charger.velocity.x) >= 240.0
 		recovery_seen = recovery_seen or bool(snapshot.get("recovery", false))
@@ -529,6 +535,10 @@ func _validate_sentry_cover(stage: Variant) -> void:
 	_expect(sentries.size() == 2, "Sentry Crossfire should spawn two staggered Sentries.")
 	if sentries.is_empty():
 		return
+	sentries.sort_custom(
+		func(left: Variant, right: Variant) -> bool:
+			return left.global_position.x < right.global_position.x
+	)
 	var sentry: Variant = sentries[0]
 	sentry.process_mode = Node.PROCESS_MODE_INHERIT
 	sentry.reset_enemy()

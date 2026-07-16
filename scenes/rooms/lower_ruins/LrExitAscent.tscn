@@ -135,6 +135,7 @@ has_escape_route = false
 has_line_of_sight = false
 has_cover_or_elevation = false
 required = true
+metadata/terrain_relation = &"lower_ascent_intercept"
 [node name="WalkerB" type="Marker2D" parent="Anchors/Enemy"]
 position = Vector2(970, 458)
 script = ExtResource("3")
@@ -148,6 +149,7 @@ has_escape_route = false
 has_line_of_sight = false
 has_cover_or_elevation = false
 required = true
+metadata/terrain_relation = &"upper_ascent_terminal_priority"
 
 [node name="Hazard" type="Node2D" parent="Anchors"]
 [node name="Reward" type="Node2D" parent="Anchors"]

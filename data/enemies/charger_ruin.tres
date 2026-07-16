@@ -6,7 +6,7 @@
 script = ExtResource("1_variant")
 id = &"charger_ruin"
 display_name = "Ruin Charger"
-content_version = 1
+content_version = 2
 tags = Array[StringName]([&"normal_enemy", &"ruin_approach", &"teaching_charge"])
 archetype_id = &"charger"
 stage_id = &"ruin_approach"
@@ -20,7 +20,7 @@ recovery_time = 0.42
 charge_speed = 360.0
 stagger_capacity = 60
 presentation_key = &"enemy.charger.ruin"
-presentation_description = "Long teaching windup, locked facing, and a visible lane flash before charging."
+presentation_description = "Long teaching windup, locked facing, and a short direction flash before charging."
 tuning_trait = &"teaching_charge"
 budget_cost = 2
 drop_source_id = &"drop_charger"

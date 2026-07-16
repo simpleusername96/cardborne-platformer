@@ -213,6 +213,7 @@ metadata/fire_lane = Rect2(400, 300, 760, 96)
 metadata/lane_id = &"upper_lane"
 metadata/cover_ids = Array[StringName]([&"crossfire_cover_west", &"crossfire_cover_east"])
 metadata/fire_phase = 0.0
+metadata/terrain_relation = &"upper_lane_over_west_cover"
 [node name="EastSentry" type="Marker2D" parent="Anchors/Enemy"]
 position = Vector2(1000, 492)
 script = ExtResource("2")
@@ -231,6 +232,7 @@ metadata/fire_lane = Rect2(420, 456, 740, 96)
 metadata/lane_id = &"lower_lane"
 metadata/cover_ids = Array[StringName]([&"crossfire_cover_west", &"crossfire_cover_east"])
 metadata/fire_phase = 0.7
+metadata/terrain_relation = &"lower_lane_over_east_cover"
 
 [node name="Hazard" type="Node2D" parent="Anchors"]
 [node name="Reward" type="Node2D" parent="Anchors"]

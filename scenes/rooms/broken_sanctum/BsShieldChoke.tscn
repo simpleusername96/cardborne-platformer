@@ -153,6 +153,7 @@ required = true
 metadata/support_id = &"shield_arena_floor"
 metadata/flank_route_id = &"shield_flank_bridge"
 metadata/no_single_exit_block = true
+metadata/terrain_relation = &"center_guard_with_upper_flank"
 [node name="FlankRanged" type="Marker2D" parent="Anchors/Enemy"]
 position = Vector2(700, 428)
 script = ExtResource("2")
@@ -167,6 +168,7 @@ has_line_of_sight = true
 has_cover_or_elevation = true
 metadata/support_id = &"shield_flank_bridge"
 metadata/line_of_sight = Rect2(300, 360, 760, 180)
+metadata/terrain_relation = &"flank_perch_over_guard_lane"
 [node name="EastOccupier" type="Marker2D" parent="Anchors/Enemy"]
 position = Vector2(1120, 492)
 script = ExtResource("2")

@@ -162,6 +162,7 @@ has_escape_route = false
 has_line_of_sight = false
 has_cover_or_elevation = false
 required = true
+metadata/terrain_relation = &"lower_patrol_between_transfer_steps"
 [node name="WalkerB" type="Marker2D" parent="Anchors/Enemy"]
 position = Vector2(1010, 412)
 script = ExtResource("2")
@@ -174,6 +175,7 @@ clearance = 180.0
 has_escape_route = false
 has_line_of_sight = false
 has_cover_or_elevation = false
+metadata/terrain_relation = &"upper_patrol_below_shooter_perch"
 [node name="PerchShooter" type="Marker2D" parent="Anchors/Enemy"]
 position = Vector2(790, 340)
 script = ExtResource("2")
@@ -186,6 +188,7 @@ clearance = 300.0
 has_escape_route = true
 has_line_of_sight = true
 has_cover_or_elevation = true
+metadata/terrain_relation = &"perch_over_two_level_patrol"
 
 [node name="Hazard" type="Node2D" parent="Anchors"]
 [node name="Reward" type="Node2D" parent="Anchors"]

@@ -163,6 +163,7 @@ required = true
 metadata/support_id = &"leaper_basin_lane"
 metadata/arc_clearance = 180.0
 metadata/landing_lane = Rect2(680, 256, 420, 180)
+metadata/terrain_relation = &"alternate_basin_supports"
 
 [node name="BasinRangedPerch" type="Marker2D" parent="Anchors/Enemy"]
 position = Vector2(880, 308)
@@ -179,6 +180,7 @@ has_cover_or_elevation = true
 required = true
 metadata/support_id = &"leaper_ranged_perch"
 metadata/line_of_sight = Rect2(500, 188, 620, 300)
+metadata/terrain_relation = &"perch_over_previewed_basin"
 
 [node name="BasinExitOccupier" type="Marker2D" parent="Anchors/Enemy"]
 position = Vector2(1160, 372)
@@ -194,6 +196,7 @@ has_line_of_sight = false
 has_cover_or_elevation = true
 required = true
 metadata/support_id = &"leaper_exit_floor"
+metadata/terrain_relation = &"guard_basin_exit"
 
 [node name="Hazard" type="Node2D" parent="Anchors"]
 [node name="Reward" type="Node2D" parent="Anchors"]

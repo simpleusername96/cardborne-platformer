@@ -120,6 +120,11 @@ adding more content or random topology.
   traverses both optional routes, preserves the active Cloister checkpoint on
   the minimap, exercises Charger/Leaper/Shooter/Sentry terrain roles, and opens
   the exit after only the terminal encounter.
+- The cross-stage cohesion pass assigns an authored terrain relation to all 30
+  active enemy placements, preserves a 240 px recovery-backed entry buffer for
+  every combat room, and confirms distinct assembled collision silhouettes.
+  Shooter/Sentry warnings remain 96 px, Charger warnings are 128 px, and no
+  ordinary enemy uses an activation-range trajectory overlay.
 - Normal-stage completion now follows typed terminal policy: Ruin and Sanctum
   require only their terminal-room encounter, while Flooded Works uses shelter
   arrival. Earlier and optional enemies no longer own the exit or HUD objective.

@@ -6,7 +6,7 @@
 script = ExtResource("1_variant")
 id = &"charger_flooded"
 display_name = "Flooded Charger"
-content_version = 1
+content_version = 2
 tags = Array[StringName]([&"normal_enemy", &"flooded_works", &"extended_lane"])
 archetype_id = &"charger"
 stage_id = &"flooded_works"
@@ -20,7 +20,7 @@ recovery_time = 0.42
 charge_speed = 375.0
 stagger_capacity = 66
 presentation_key = &"enemy.charger.flooded"
-presentation_description = "A long cyan lane trail preserves the charge warning against wet terrain."
+presentation_description = "A bright local direction flash preserves the charge warning against wet terrain."
 tuning_trait = &"extended_lane"
 budget_cost = 2
 drop_source_id = &"drop_charger"

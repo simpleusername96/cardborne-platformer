@@ -16,7 +16,7 @@ warning_color = Color(1, 0.78, 0.24, 1)
 active_color = Color(0.98, 0.28, 0.20, 1)
 recovery_color = Color(0.34, 0.3, 0.42, 1)
 lane_warning_color = Color(1, 0.64, 0.18, 0.78)
-lane_warning_length = 660.0
+lane_warning_length = 128.0
 defeat_below_y = 780.0
 auto_reset_on_defeat = false
 

@@ -147,6 +147,7 @@ has_line_of_sight = false
 has_cover_or_elevation = true
 required = true
 metadata/support_id = &"sanctum_exit_upper_approach"
+metadata/terrain_relation = &"upper_ascent_terminal_priority"
 [node name="Hazard" type="Node2D" parent="Anchors"]
 [node name="Reward" type="Node2D" parent="Anchors"]
 [node name="Objective" type="Node2D" parent="Anchors"]

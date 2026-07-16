@@ -113,7 +113,7 @@ Target waveform:
 Target time: 6–8 minutes. Landmarks: broken arch, shooter watchtower, gate
 beacon.
 
-### Current graph
+### Pre-enhancement baseline
 
 ```text
 start → rise → patrol → shooter → choice → broken bridge → charge → exit
@@ -123,7 +123,7 @@ start → rise → patrol → shooter → choice → broken bridge → charge �
                                   choice
 ```
 
-### Target graph
+### Implemented graph (fixed V6)
 
 ```text
 start → rise → patrol → shooter → choice → broken bridge → charge → exit
@@ -171,7 +171,7 @@ Target waveform:
 
 Target time: 7–9 minutes. Landmarks: flooded intake, pump spine, shelter lamp.
 
-### Current graph
+### Pre-enhancement baseline
 
 ```text
 entry → rope → poison → leaper → choice → pump → shelter
@@ -181,7 +181,7 @@ entry → rope → poison → leaper → choice → pump → shelter
                                 choice
 ```
 
-### Target graph
+### Implemented graph (fixed V6)
 
 ```text
 entry → rope → poison → leaper → choice → pump → shelter
@@ -230,7 +230,7 @@ Target waveform:
 Target time: 8–10 minutes. Landmarks: seal gate, fractured rose window,
 reliquary crown.
 
-### Current graph
+### Pre-enhancement baseline
 
 ```text
 breach → shield → gate → nave → twin hub → gallery → recovery → sentry → exit
@@ -240,7 +240,7 @@ breach → shield → gate → nave → twin hub → gallery → recovery → se
                                   twin hub
 ```
 
-### Target graph
+### Implemented graph (fixed V6)
 
 ```text
 breach → shield → gate → nave → transfer → gallery → recovery → sentry → exit
@@ -283,6 +283,36 @@ not a duplicate StagePlan edge.
 | `bs_reliquary_cache` — `BsReliquaryCache.tscn` | late optional | mastery line, reward, crossfire rejoin | reward after visit |
 | `bs_sentry_crossfire` — `BsSentryCrossfire.tscn` | tactical test | cover bands, transfer window, flank | room visit |
 | `bs_exit_ascent` — `BsExitAscent.tscn` | final test | known transfer, local priority, gate | exit always; lock badge until local clear |
+
+## Cross-stage implementation review
+
+| Stage | Signature verb | Teach → transform → test → release |
+| --- | --- | --- |
+| Ruin Approach | broken ascent | stepped climb → cover/exposure → charge and terminal ascent → broken-gallery/exit release |
+| Flooded Works | descend then pump up | bidirectional rope → poison/leaper basin → pump combine → shelter |
+| Broken Sanctum | distributed reversal | shield flank → gate and two forward loops → fractured/crossfire/exit test → cloister and terminal release |
+
+The fixed V6 implementation preserves three distinct collision silhouettes and
+height waveforms: Ruin is ascent-led with a controlled descent, Flooded is
+descent-led before its pump recovery, and Sanctum uses four direction reversals
+with two distributed optional routes. The runtime minimap uses one uniform scale
+per stage, so these differences are not created by independent-axis stretching.
+
+Every one of the 30 active enemy placements now has an authored
+`terrain_relation` on its scene anchor. Combat rooms also retain an entry
+recovery inside the first 240 px. Shared Shooter, Sentry, Charger, Shield Guard,
+and Leaper warnings are local facing or destination cues; ordinary enemies no
+longer use an activation-range trajectory line. Boss startup warnings remain
+separate because their visible startup/active/recovery contract is mandatory.
+
+The production camera remains the default player-owned camera. Active rooms have
+no `camera_id` metadata; preview/read/recovery geometry and the fixed capture
+set prove irreversible drops and encounter commitments without a second
+room-specific camera system.
+
+No normal-stage room contains Forge or Merchant interactables. The global
+required-enemy count remains a diagnostics/test fact only; HUD copy and exit
+eligibility use navigation, arrival, or terminal-local encounter state.
 
 ## Acceptance Criteria
 

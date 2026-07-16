@@ -181,6 +181,7 @@ has_line_of_sight = false
 has_cover_or_elevation = false
 required = true
 metadata/support_id = &"gallery_charge_lane"
+metadata/terrain_relation = &"occupy_charge_lane_with_west_escape"
 
 [node name="GalleryCenterCharger" type="Marker2D" parent="Anchors/Enemy"]
 position = Vector2(500, 620)
@@ -197,6 +198,7 @@ has_cover_or_elevation = true
 required = true
 metadata/support_id = &"gallery_charge_lane"
 metadata/escape_pad_ids = Array[StringName]([&"gallery_optional_rejoin", &"gallery_lower_rise"])
+metadata/terrain_relation = &"charge_lane_broken_by_two_escape_levels"
 
 [node name="GalleryLeaper" type="Marker2D" parent="Anchors/Enemy"]
 position = Vector2(680, 556)
@@ -213,6 +215,7 @@ has_cover_or_elevation = true
 required = true
 metadata/support_id = &"gallery_lower_rise"
 metadata/landing_lane = Rect2(520, 376, 520, 180)
+metadata/terrain_relation = &"alternate_pump_ascent_supports"
 
 [node name="GalleryShooterPerch" type="Marker2D" parent="Anchors/Enemy"]
 position = Vector2(920, 300)
@@ -229,6 +232,7 @@ has_cover_or_elevation = true
 required = true
 metadata/support_id = &"gallery_shooter_perch"
 metadata/line_of_sight = Rect2(120, 180, 1040, 380)
+metadata/terrain_relation = &"upper_perch_over_solid_cover"
 
 [node name="Hazard" type="Node2D" parent="Anchors"]
 [node name="Reward" type="Node2D" parent="Anchors"]

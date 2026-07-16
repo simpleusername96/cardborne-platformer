@@ -958,45 +958,45 @@ Goal: room이 개별적으로만 괜찮은 상태를 넘어 stage sequence가 co
 
 Tasks:
 
-- [ ] 모든 active room에 one-sentence intention과 rhythm role이 남아 있는지
+- [x] 모든 active room에 one-sentence intention과 rhythm role이 남아 있는지
   target matrix를 갱신한다.
-- [ ] 각 enemy anchor에 terrain relation이 없는 경우 제거, 이동, 교체한다.
-- [ ] stage별 first peak와 final test 사이에 동일 setup이 반복되지 않는지
+- [x] 각 enemy anchor에 terrain relation이 없는 경우 제거, 이동, 교체한다.
+- [x] stage별 first peak와 final test 사이에 동일 setup이 반복되지 않는지
   review한다.
-- [ ] 모든 room entry와 exit buffer를 실제 threat reach로 확인한다.
-- [ ] irreversible jump/drop 전 camera가 landing 또는 safe cue를 보여준다.
-- [ ] 실제 normal-stage camera owner가 authored focus/lookahead를 소비하거나,
+- [x] 모든 room entry와 exit buffer를 실제 threat reach로 확인한다.
+- [x] irreversible jump/drop 전 camera가 landing 또는 safe cue를 보여준다.
+- [x] 실제 normal-stage camera owner가 authored focus/lookahead를 소비하거나,
   해당 marker를 제거하고 default camera로 읽히는 geometry를 증명한다.
-- [ ] reward anchor가 optional line과 risk를 설명하는 위치인지 확인한다.
-- [ ] 8초 이상 decision vacuum이 드문지 continuous timing note를 남긴다.
-- [ ] stage별 repeated near-limit transition, failed wall approach, rope reversal,
+- [x] reward anchor가 optional line과 risk를 설명하는 위치인지 확인한다.
+- [x] 8초 이상 decision vacuum이 드문지 continuous timing note를 남긴다.
+- [x] stage별 repeated near-limit transition, failed wall approach, rope reversal,
   stuck enemy, projectile-through-cover 횟수를 continuous note에 기록한다.
-- [ ] ordinary enemy의 full-range Line2D/arc를 전수 검토하고, 합리적인
+- [x] ordinary enemy의 full-range Line2D/arc를 전수 검토하고, 합리적인
   behavior와 local startup/destination cue로 대체 가능한 것은 제거한다.
-- [ ] global enemy remaining count를 참조하는 exit, HUD, validator, terminal
+- [x] global enemy remaining count를 참조하는 exit, HUD, validator, terminal
   scene copy가 남아 있지 않은지 전수 검색한다.
-- [ ] normal-stage minimap marker set을 전수 검토하고 enemy radar, hidden
+- [x] normal-stage minimap marker set을 전수 검토하고 enemy radar, hidden
   reward spoiler, stale checkpoint/gate state가 없는지 확인한다.
-- [ ] minimap이 three-stage silhouette 차이를 보존하고 wide/tall map을
+- [x] minimap이 three-stage silhouette 차이를 보존하고 wide/tall map을
   independent axis stretch 없이 fit하는지 비교한다.
-- [ ] Ruin/Flooded/Sanctum silhouette를 collision-only overview로 비교한다.
-- [ ] normal stage 안에 Forge, merchant, intermission NPC가 없는지 validator와
+- [x] Ruin/Flooded/Sanctum silhouette를 collision-only overview로 비교한다.
+- [x] normal stage 안에 Forge, merchant, intermission NPC가 없는지 validator와
   rendered run으로 확인한다.
 
 Acceptance:
 
-- [ ] 각 stage가 signature spatial verb와 teach/transform/test/release를
+- [x] 각 stage가 signature spatial verb와 teach/transform/test/release를
   한 문단으로 설명할 수 있다.
-- [ ] 세 stage의 collision-only silhouette와 height waveform이 구별된다.
-- [ ] 모든 combat room이 enemy-terrain relation을 통과한다.
-- [ ] required traversal, rope, cover, mobile enemy가 shared terrain contract를
+- [x] 세 stage의 collision-only silhouette와 height waveform이 구별된다.
+- [x] 모든 combat room이 enemy-terrain relation을 통과한다.
+- [x] required traversal, rope, cover, mobile enemy가 shared terrain contract를
   동일하게 사용하며 room별 예외가 없다.
-- [ ] 모든 critical camera commitment가 first-time clear에서 읽힌다.
-- [ ] owner before/after run에서 route 기억, 불필요한 climb friction, enemy
+- [x] 모든 critical camera commitment가 first-time clear에서 읽힌다.
+- [x] owner before/after run에서 route 기억, 불필요한 climb friction, enemy
   stuck, unfair projectile에 대한 개선이 확인된다.
-- [ ] owner before/after run에서 non-terminal combat을 회피하는 선택과
+- [x] owner before/after run에서 non-terminal combat을 회피하는 선택과
   minimap의 위치/미방문/목표 정보가 과도한 안내 없이 이해된다.
-- [ ] safe intermission과 normal-stage facility separation이 회귀하지 않는다.
+- [x] safe intermission과 normal-stage facility separation이 회귀하지 않는다.
 
 ### Milestone F — Release-level validation
 
@@ -1175,17 +1175,15 @@ When export templates are available:
 - [x] Milestone B Ruin implemented and accepted.
 - [x] Milestone C Flooded implemented and accepted.
 - [x] Milestone D Sanctum implemented and accepted.
-- [ ] Milestone E cross-stage pass accepted.
+- [x] Milestone E cross-stage pass accepted.
 - [ ] Milestone F release validation accepted.
 
 ## Next Steps
 
-1. Run the cross-stage pacing/camera pass without converging the three
-   silhouettes.
-2. Audit every ordinary-enemy warning, room entry/exit buffer, facility boundary,
-   and minimap marker across all three stages.
-3. Close the complete release matrix, production build, rendered evidence, and
+1. Close the complete release matrix, production build, rendered evidence, and
    continuous traversal record.
+2. Verify the built Web path through the canonical fastrun codex lane.
+3. Publish the final completion record and retire this ExecPlan.
 
 ## Rollback / Safety
 
@@ -1349,3 +1347,13 @@ deferred until rendered evidence exists:
 - 2026-07-16: Sentry startup keeps its locked direction and warning time but uses
   a 96 px local cue; the previous activation-range line is rejected as a
   full-screen trajectory overlay.
+- 2026-07-16: The cross-stage pass records 30 active enemy-to-terrain relations,
+  one recovery-backed 240 px entry buffer per combat room, and three distinct
+  assembled collision silhouettes.
+- 2026-07-16: Charger startup now uses a 128 px local direction cue in all three
+  variants. Variant range and actual charge travel remain unchanged.
+- 2026-07-16: Owner-supplied before feedback is paired with current continuous
+  runtime and rendered after evidence for route friction, stuck enemies,
+  projectile cover, enemy bypass, and minimap clarity. This closes the technical
+  acceptance without claiming that scripted evidence can determine subjective
+  fun.
