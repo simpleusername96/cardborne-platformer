@@ -118,14 +118,18 @@ func _validate_scene_contract(data: RoomTemplateData, errors: PackedStringArray)
 	_validate_moving_platform_contracts(data, errors)
 	_validate_safe_objective_clearance(data, errors)
 	for child in find_children("*", "", true, false):
-		if (
-			child is Climbable
-			and child.get_meta("route_scope", &"") == &"cross_room"
-			and StringName(child.get_meta("socket_id", &"")).is_empty()
-		):
+		if not child is Climbable or child.get_meta("route_scope", &"") != &"cross_room":
+			continue
+		var socket_id := StringName(child.get_meta("socket_id", &""))
+		if socket_id.is_empty():
 			errors.append(
 				"Room '%s' cross-room climbable '%s' needs a socket ID."
 				% [room_id, child.name]
+			)
+		elif not _has_socket_id(data.exit_sockets, socket_id):
+			errors.append(
+				"Room '%s' cross-room climbable '%s' socket '%s' is not an exit socket."
+				% [room_id, child.name, socket_id]
 			)
 
 
@@ -148,6 +152,13 @@ func _validate_socket_markers(data: RoomTemplateData, errors: PackedStringArray)
 				"Room '%s' socket '%s' has no authored marker at %s."
 				% [room_id, socket.id, socket.local_position]
 			)
+
+
+func _has_socket_id(sockets: Array[RoomSocketData], socket_id: StringName) -> bool:
+	for socket in sockets:
+		if socket != null and socket.id == socket_id:
+			return true
+	return false
 
 
 ## Reports solid terrain that intrudes into standing clearance at a horizontal socket.

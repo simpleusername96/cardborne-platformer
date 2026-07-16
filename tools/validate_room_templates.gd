@@ -66,6 +66,8 @@ func _validate_room(data: RoomTemplateData) -> void:
 		enemy_anchor.position = original_position
 	if data.id == &"lr_patrol_gallery":
 		_validate_socket_blocker_rejection(room, data)
+	elif data.id == &"lr_destructible_cache":
+		_validate_cross_room_rope_socket_rejection(room, data)
 	room.queue_free()
 	await process_frame
 
@@ -95,6 +97,23 @@ func _validate_socket_blocker_rejection(
 	)
 	blocker.get_parent().remove_child(blocker)
 	blocker.queue_free()
+
+
+func _validate_cross_room_rope_socket_rejection(
+	room: RoomTemplateHost,
+	data: RoomTemplateData
+) -> void:
+	var rope := room.get_node_or_null("Anchors/Objective/ReturnRope") as Climbable
+	_expect(rope != null, "cache return route should expose its cross-room rope")
+	if rope == null:
+		return
+	var original_socket_id := StringName(rope.get_meta("socket_id", &""))
+	rope.set_meta("socket_id", &"missing_exit_socket")
+	_expect(
+		_has_error(room.configure(data), "is not an exit socket"),
+		"cross-room ropes should reject socket metadata that cannot activate a room exit"
+	)
+	rope.set_meta("socket_id", original_socket_id)
 
 
 func _anchor_has_support(anchor: RoomAnchor, surfaces: Array) -> bool:
