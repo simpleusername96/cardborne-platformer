@@ -95,6 +95,10 @@ adding more content or random topology.
 - Stage V6 composition is validated at Ruin `8 enemies / 720px`, Flooded
   `10 / 760px`, and Sanctum `12 / 740px`, with 9/9/11 meaningful elevation
   changes and 2/3/4 multi-elevation combat rooms respectively.
+- The fixed-stage enhancement pass has locked source-linked construction
+  blueprints for all three normal stages. They preserve current room counts and
+  stable IDs while defining forward rejoins, distinct height waveforms,
+  stage-specific terminal policies, and the assembled-plan minimap contract.
 - All three normal stages, six committed-return fixtures, enemy/hazard families,
   card rewards, boss flow, retry/settlement, intermission, and profile restart
   recovery are in the active release matrix.

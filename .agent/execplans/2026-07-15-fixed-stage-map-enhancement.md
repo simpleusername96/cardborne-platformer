@@ -625,7 +625,7 @@ blockout 결과가 더 나은 의도를 발견하면 Decision Notes에 이유를
 
 ## Tasks
 
-- [ ] Milestone 0에서 visual study를 current room graph와 movement envelope에
+- [x] Milestone 0에서 visual study를 current room graph와 movement envelope에
   맞는 stage별 construction blueprint로 번역하고 owner review를 받는다.
 - [ ] Milestone A에서 completion policy, minimap state, directionality,
   traversal comfort, rope, projectile cover, terrain-aware enemy behavior를
@@ -647,40 +647,40 @@ blueprint로 바꾸고, 이미지의 분위기와 실제 production scope를 분
 
 Tasks:
 
-- [ ] `docs/design/STAGE_MAP_BLUEPRINTS.md`에 Ruin, Flooded, Sanctum의 current
+- [x] `docs/design/STAGE_MAP_BLUEPRINTS.md`에 Ruin, Flooded, Sanctum의 current
   node/edge table과 target node/edge table을 나란히 기록한다.
-- [ ] `docs/design/visuals/`에 stage별 독립 map blueprint를 한 장씩 만든다.
+- [x] `docs/design/visuals/`에 stage별 독립 map blueprint를 한 장씩 만든다.
   비교용 composite 한 장으로 대체하지 않는다.
-- [ ] 모든 blueprint에 current room ID 경계, start/exit, critical route,
+- [x] 모든 blueprint에 current room ID 경계, start/exit, critical route,
   optional route, forward rejoin, shortcut, safe/combat/reward zone을 표시한다.
-- [ ] 각 blueprint에 terminal unlock policy, terminal local objective,
+- [x] 각 blueprint에 terminal unlock policy, terminal local objective,
   minimap room envelope, marker reveal point를 별도 layer로 표시한다.
-- [ ] 각 required room을 2–4개의 gameplay beat로 나누되 이것을 새 runtime
+- [x] 각 required room을 2–4개의 gameplay beat로 나누되 이것을 새 runtime
   room 또는 새 stable ID로 자동 승격하지 않는다.
-- [ ] 각 stage의 height waveform과 teach → transform → test → release 순서를
+- [x] 각 stage의 height waveform과 teach → transform → test → release 순서를
   blueprint 아래에 기록한다.
-- [ ] stage별 landmark 3개 이상을 정하고, later route에서 earlier landmark를
+- [x] stage별 landmark 3개 이상을 정하고, later route에서 earlier landmark를
   다른 높이 또는 방향으로 다시 보게 할 위치를 표시한다.
-- [ ] current `MovementMetrics.gd` envelope로 critical jump/drop/climb을
+- [x] current `MovementMetrics.gd` envelope로 critical jump/drop/climb을
   검토하고, 불확실한 gap에는 수치를 적지 말고 blockout 검증 대상으로 남긴다.
-- [ ] room당 20–60초, Ruin 6–8분, Flooded 7–9분, Sanctum 8–10분의 timing
+- [x] room당 20–60초, Ruin 6–8분, Flooded 7–9분, Sanctum 8–10분의 timing
   budget을 작성한다.
-- [ ] existing template로 목표를 만족할 수 없는 후보를 별도 목록화하되,
+- [x] existing template로 목표를 만족할 수 없는 후보를 별도 목록화하되,
   새 room 제작이나 active-room-count 증가는 이 milestone에서 승인하지 않는다.
-- [ ] owner review에서 세 blueprint의 구조적 방향과 Ruin pilot 범위를
+- [x] owner review에서 세 blueprint의 구조적 방향과 Ruin pilot 범위를
   확인한다.
 
 Acceptance:
 
-- [ ] 세 stage가 각각 독립 이미지와 source-linked room graph를 가진다.
-- [ ] first-time reviewer가 각 stage의 start, exit, main route, optional route,
+- [x] 세 stage가 각각 독립 이미지와 source-linked room graph를 가진다.
+- [x] first-time reviewer가 각 stage의 start, exit, main route, optional route,
   forward rejoin, shortcut, combat peak, recovery를 설명할 수 있다.
-- [ ] reviewer가 stage별 exit unlock requirement와 minimap의 unvisited,
+- [x] reviewer가 stage별 exit unlock requirement와 minimap의 unvisited,
   visited, current, locked/ready state를 source owner와 연결해 설명할 수 있다.
-- [ ] Ruin/Flooded/Sanctum의 silhouette와 height waveform이 서로 다르다.
-- [ ] blueprint의 모든 확정 항목이 current source owner에 대응하고, visual
+- [x] Ruin/Flooded/Sanctum의 silhouette와 height waveform이 서로 다르다.
+- [x] blueprint의 모든 확정 항목이 current source owner에 대응하고, visual
   study의 임의 요소가 requirement로 승격되지 않았다.
-- [ ] estimated timing이 PRD 범위에 있으며, room-count 확대는 evidence와
+- [x] estimated timing이 PRD 범위에 있으며, room-count 확대는 evidence와
   owner approval 없이는 다음 milestone에 들어가지 않는다.
 
 ### Milestone A — Progression, navigation, diagnostic, and shared terrain contract
@@ -1169,7 +1169,7 @@ When export templates are available:
 - [x] Official Nintendo/Ubisoft navigation patterns reviewed for enemy bypass,
   visited-space mapping, minimap placement, markers, and blocked/available path
   guidance.
-- [ ] Milestone 0 construction blueprints reconciled with current room IDs and approved.
+- [x] Milestone 0 construction blueprints reconciled with current room IDs and approved.
 - [ ] Milestone A completion, minimap, diagnostic, and shared terrain-interaction
   contract implemented.
 - [ ] Milestone B Ruin implemented and accepted.
