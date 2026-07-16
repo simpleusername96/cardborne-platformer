@@ -19,7 +19,13 @@ var _state: StringName = STATE_STABLE
 var _state_timer: float = 0.0
 var _state_elapsed: float = 0.0
 var _shape: CollisionShape2D
-var _visual: Polygon2D
+var _visual_root: Node2D
+var _base_visual: Sprite2D
+var _warning_overlay: Sprite2D
+var _disabled_overlay: Sprite2D
+var _respawning_overlay: Sprite2D
+var _fallback_visual: Polygon2D
+var _raster_visual_ready := false
 var _sensor: Area2D
 
 
@@ -69,6 +75,31 @@ func get_runtime_snapshot() -> Dictionary:
 	}
 
 
+func get_visual_snapshot() -> Dictionary:
+	return {
+		"state": _state,
+		"raster_visual_ready": _raster_visual_ready,
+		"base_instance_id": _base_visual.get_instance_id() if _base_visual != null else 0,
+		"base_texture_path": (
+			_base_visual.texture.resource_path
+			if _base_visual != null and _base_visual.texture != null
+			else ""
+		),
+		"base_local_position": _base_visual.position if _base_visual != null else Vector2.ZERO,
+		"visual_root_position": _visual_root.position if _visual_root != null else Vector2.ZERO,
+		"base_visible": _base_visual.visible if _base_visual != null else false,
+		"warning_overlay_visible": (
+			_warning_overlay.visible if _warning_overlay != null else false
+		),
+		"disabled_overlay_visible": (
+			_disabled_overlay.visible if _disabled_overlay != null else false
+		),
+		"respawning_overlay_visible": (
+			_respawning_overlay.visible if _respawning_overlay != null else false
+		),
+	}
+
+
 func _on_sensor_body_entered(body: Node) -> void:
 	if body.is_in_group("player"):
 		trigger_collapse()
@@ -97,25 +128,39 @@ func _set_state(next_state: StringName, duration: float) -> void:
 
 
 func _update_state_visual() -> void:
-	if _visual == null:
+	if _raster_visual_ready:
+		_visual_root.position = Vector2.ZERO
+		_base_visual.position = Vector2.ZERO
+		_base_visual.modulate = Color.WHITE
+		_base_visual.visible = _state != STATE_DISABLED
+		_warning_overlay.visible = _state == STATE_WARNING
+		_disabled_overlay.visible = _state == STATE_DISABLED
+		_respawning_overlay.visible = _state == STATE_RESPAWNING
+		if _state == STATE_RESPAWNING:
+			var progress := 1.0 - (_state_timer / maxf(respawn_time, 0.01))
+			_respawning_overlay.modulate.a = lerpf(0.35, 1.0, progress)
+		else:
+			_respawning_overlay.modulate = Color.WHITE
+		return
+	if _fallback_visual == null:
 		return
 	match _state:
 		STATE_STABLE:
-			_visual.visible = true
-			_visual.position = Vector2.ZERO
-			_visual.modulate = Color.WHITE
-			_visual.color = platform_color
+			_fallback_visual.visible = true
+			_fallback_visual.position = Vector2.ZERO
+			_fallback_visual.modulate = Color.WHITE
+			_fallback_visual.color = platform_color
 		STATE_WARNING:
-			_visual.visible = true
-			_visual.position.x = sin(_state_elapsed * 45.0) * 2.0
-			_visual.color = Color(0.90, 0.70, 0.34, 1.0)
+			_fallback_visual.visible = true
+			_fallback_visual.position.x = sin(_state_elapsed * 45.0) * 2.0
+			_fallback_visual.color = Color(0.90, 0.70, 0.34, 1.0)
 		STATE_DISABLED:
-			_visual.visible = false
+			_fallback_visual.visible = false
 		STATE_RESPAWNING:
-			_visual.visible = true
-			_visual.position = Vector2.ZERO
+			_fallback_visual.visible = true
+			_fallback_visual.position = Vector2.ZERO
 			var progress := 1.0 - (_state_timer / maxf(respawn_time, 0.01))
-			_visual.modulate.a = lerpf(0.35, 1.0, progress)
+			_fallback_visual.modulate.a = lerpf(0.35, 1.0, progress)
 
 
 func _ensure_shape_visual_and_sensor() -> void:
@@ -129,18 +174,36 @@ func _ensure_shape_visual_and_sensor() -> void:
 		rectangle.size = platform_size
 		_shape.shape = rectangle
 
-	_visual = get_node_or_null("Visual") as Polygon2D
-	if _visual == null:
-		_visual = Polygon2D.new()
-		_visual.name = "Visual"
-		add_child(_visual)
+	_visual_root = get_node_or_null("VisualRoot") as Node2D
+	if _visual_root == null:
+		_visual_root = Node2D.new()
+		_visual_root.name = "VisualRoot"
+		add_child(_visual_root)
+	_base_visual = _visual_root.get_node_or_null("Base") as Sprite2D
+	_warning_overlay = _visual_root.get_node_or_null("WarningOverlay") as Sprite2D
+	_disabled_overlay = _visual_root.get_node_or_null("DisabledOverlay") as Sprite2D
+	_respawning_overlay = _visual_root.get_node_or_null("RespawningOverlay") as Sprite2D
+	_raster_visual_ready = (
+		_base_visual != null
+		and _base_visual.texture != null
+		and _warning_overlay != null
+		and _disabled_overlay != null
+		and _respawning_overlay != null
+	)
+
+	_fallback_visual = get_node_or_null("Visual") as Polygon2D
+	if _fallback_visual == null:
+		_fallback_visual = Polygon2D.new()
+		_fallback_visual.name = "Visual"
+		add_child(_fallback_visual)
 	var half := platform_size * 0.5
-	_visual.polygon = PackedVector2Array([
+	_fallback_visual.polygon = PackedVector2Array([
 		Vector2(-half.x, -half.y),
 		Vector2(half.x, -half.y),
 		Vector2(half.x, half.y),
 		Vector2(-half.x, half.y),
 	])
+	_fallback_visual.visible = not _raster_visual_ready
 
 	_sensor = get_node_or_null("Sensor") as Area2D
 	if _sensor == null:

@@ -4,7 +4,7 @@ const STAGE_PATH := "res://scenes/stages/production/ProductionStageHost.tscn"
 const RUN_SEED := 2207
 const FIXED_LAYOUT_SEED_V1 := 0x43415244
 const REQUIRED_ROLES: Array[StringName] = [
-	&"start", &"traversal", &"hazard", &"combat", &"choice", &"combat", &"safe",
+	&"start", &"combat", &"hazard", &"combat", &"choice", &"combat", &"safe",
 ]
 
 var _failures: Array[String] = []

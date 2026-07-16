@@ -4,6 +4,9 @@ const ENEMY_CATALOG: EnemyCatalog = preload("res://data/enemies/enemy_catalog.tr
 const ENEMY_SCENES: EnemySceneCatalog = preload("res://data/enemies/enemy_scene_catalog.tres")
 const HAZARD_CATALOG: HazardCatalog = preload("res://data/hazards/hazard_catalog.tres")
 const TERRAIN_STYLER := preload("res://scripts/visuals/TerrainPresentationStyler.gd")
+const FLOODED_ROOM_SKIN := preload(
+	"res://scripts/presentation/world/FloodedWorksRoomSkin.gd"
+)
 const FIXED_LAYOUT_VERSION := 6
 const FALL_RESET_FAILSAFE_MARGIN := 360.0
 # Changing this seed intentionally versions every approved stage-content signature.
@@ -52,6 +55,7 @@ var _cleared_required_rooms: Dictionary = {}
 var _exit_portal: ExitPortal
 var _world_bounds := Rect2()
 var _terrain_presentation: Dictionary = {}
+var _world_visual_proof: Dictionary = {}
 var _composition_metrics: Dictionary = {}
 
 
@@ -96,6 +100,14 @@ func get_world_bounds() -> Rect2:
 
 func get_terrain_presentation_snapshot() -> Dictionary:
 	return _terrain_presentation.duplicate(true)
+
+
+func get_world_visual_proof_snapshot() -> Dictionary:
+	return _world_visual_proof.duplicate(true)
+
+
+func get_stage_visual_snapshot() -> Dictionary:
+	return backdrop.get_visual_snapshot() if backdrop != null else {}
 
 
 func get_composition_metrics() -> Dictionary:
@@ -238,6 +250,10 @@ func _setup_approved_stage() -> bool:
 		enemy.defeated.connect(_on_enemy_defeated)
 	_set_exit_enabled(_required_enemies.is_empty())
 	_terrain_presentation = TERRAIN_STYLER.apply(_room_hosts, StringName(stage_id))
+	if stage_id == "flooded_works":
+		_world_visual_proof = FLOODED_ROOM_SKIN.apply(_room_hosts)
+	else:
+		_world_visual_proof = {"applied": false, "reason": "stage_not_in_proof_scope"}
 	backdrop.configure(_world_bounds, StringName(stage_id))
 	return true
 

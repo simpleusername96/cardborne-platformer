@@ -1,6 +1,10 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/stages/TimedPoisonVent.gd" id="1"]
+[ext_resource type="Texture2D" path="res://art/world/flooded_works/components/poison_vent/base.png" id="2_base"]
+[ext_resource type="Texture2D" path="res://art/world/flooded_works/components/poison_vent/warning_overlay.png" id="3_warning"]
+[ext_resource type="Texture2D" path="res://art/world/flooded_works/components/poison_vent/active_overlay.png" id="4_active"]
+[ext_resource type="Texture2D" path="res://art/world/flooded_works/components/poison_vent/cooldown_overlay.png" id="5_cooldown"]
 
 [sub_resource type="RectangleShape2D" id="VentCollision"]
 size = Vector2(180, 96)
@@ -11,6 +15,27 @@ script = ExtResource("1")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("VentCollision")
 
+[node name="VisualRoot" type="Node2D" parent="."]
+
+[node name="Base" type="Sprite2D" parent="VisualRoot"]
+texture_filter = 1
+texture = ExtResource("2_base")
+
+[node name="WarningOverlay" type="Sprite2D" parent="VisualRoot"]
+texture_filter = 1
+texture = ExtResource("3_warning")
+
+[node name="ActiveOverlay" type="Sprite2D" parent="VisualRoot"]
+visible = false
+texture_filter = 1
+texture = ExtResource("4_active")
+
+[node name="CooldownOverlay" type="Sprite2D" parent="VisualRoot"]
+visible = false
+texture_filter = 1
+texture = ExtResource("5_cooldown")
+
 [node name="Visual" type="Polygon2D" parent="."]
+visible = false
 color = Color(0.98, 0.78, 0.22, 0.62)
 polygon = PackedVector2Array(-90, 48, -64.8, -14.4, -22.5, -48, 0, -21.6, 28.8, -48, 70.2, -9.6, 90, 48)

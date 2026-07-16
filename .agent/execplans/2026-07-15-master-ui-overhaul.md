@@ -146,14 +146,22 @@ catalog expansion.
   supported viewports. Focus and selection use a stable inside-left marker plus
   fill/text state, primary targets remain at least 48 px, and no perimeter outline
   or rounded corner is required for interaction state.
+- Milestones 3-5 are implemented in scoped commits. Shell, progression/economy,
+  HUD, feedback, Trial, retry/result, and modal surfaces now use the production
+  Theme/components while preserving their current commands, snapshots, focus,
+  localization, and supported-viewport behavior.
+- Milestone 6 is implemented and accepted on the isolated branch. Runtime-derived
+  coverage reports require eleven panels across the current six-location run but
+  load only the active location; the representative Flooded Works room uses two
+  connected `2048x1536` panels, five measured terrain types, and canonical
+  poison-vent/crumbling-platform bases with separate state overlays.
+- The real Flooded Works proof preserves collision and timing facts, keeps state
+  pivots/bases invariant, measures the active panorama at 24 MiB raw RGBA, and
+  records baseline, production, and collision-debug captures in the component
+  gallery.
 
 ### Still Open
 
-- Complete Milestones 3-5 by migrating the remaining shell, progression, modal,
-  and gameplay surfaces away from screen-local composition/style ownership without
-  breaking commands, focus, snapshots, localization, or viewport fit.
-- Produce the measured world-asset manifest and complete one Flooded Works visual
-  proof before broader world art.
 - Integrate scoped UI commits onto the latest reviewed `master` only after the
   other master-targeted task reaches a stable handoff.
 - Pass the production export and served-browser UI flow.
@@ -209,8 +217,8 @@ catalog expansion.
 | Screen composition | `.tscn` scenes plus screen scripts | Scene trees and capture scripts | Some screens are authored; Card/Level Reward and HUD still build substantial composition in code. | Move stable composition to scenes/components while presenters retain binding. |
 | Modal context | `CenteredModalShell.gd`, Settings/Pause, Merchant/Forge | Current localized branch and active contract | In-run overlays must preserve the live map and restore focus/input. | Reuse one modal owner; do not apply full-screen backgrounds in gameplay context. |
 | HUD | `ProductionHUD.gd/.tscn`, `HUDCombatDock.gd`, `HUDActionSlot.tscn` | Layout snapshots, Theme validator, guard captures, boss captures | The representative HUD now uses flat planes, semantic meters, and left-marker state while preserving the center playfield; broader composition migration remains Milestone 5. | Continue scene-authoring stable layout without reintroducing framed boxes or obscuring the world. |
-| World backdrop | `ProductionStageBackdrop.gd` | Current source, fixed-stage captures, measured assembly bounds | One procedural draw covers the whole stage; no accepted panorama renderer or assets. | Add a measured single-layer sequential panorama path with procedural fallback. |
-| World components | Room scenes, hazard catalog, world-art handoff | Current runtime data and rejected generation evidence | Visual families and exact chunk coverage are unresolved. | Inventory current geometry first; prove terrain plus two stateful components in one room. |
+| World backdrop | `ProductionStageBackdrop.gd`, typed stage-visual catalog | Runtime-derived coverage report, fixed-stage captures, Flooded proof | The active location lazy-loads its declared panels through one `Parallax2D` path; locations without accepted art retain the procedural fallback. | Preserve the accepted two-panel Flooded proof and use the measured manifest before any later expansion. |
+| World components | Room scenes, Flooded room skin, hazard catalog, asset manifest | Geometry inventory, before/after snapshots, state-overlay validator, debug capture | The representative room resolves five exact terrain signatures and two canonical stateful bases without changing collision or timing. | Treat broader terrain/world rollout as a later, separately accepted presentation batch. |
 
 ## Proposed Design
 
@@ -607,24 +615,24 @@ making world art a guessed UI batch.
 fixed-stage capture scripts, Flooded Works representative room, world-art docs and
 gallery.
 
-- [ ] Add `tools/report_stage_visual_coverage.gd` to emit current stage bounds,
+- [x] Add `tools/report_stage_visual_coverage.gd` to emit current stage bounds,
   viewport envelope, proposed scroll/overscan, required composite size, and panel
   count from runtime data.
-- [ ] Add a typed stage-visual definition/catalog and one panorama renderer path
+- [x] Add a typed stage-visual definition/catalog and one panorama renderer path
   with procedural fallback and per-location lazy loading.
-- [ ] Validate the proposed 4:3 panel, overlap, overscan, and `0.18` scroll default
+- [x] Validate the proposed 4:3 panel, overlap, overscan, and `0.18` scroll default
   in one representative Flooded Works room.
-- [ ] If accepted, produce the two sequential Flooded Works source panels using
+- [x] If accepted, produce the two sequential Flooded Works source panels using
   the accepted overlap as the next-panel reference, then clean/normalize them.
-- [ ] Extract current authored terrain/component usage before deciding the chunk
+- [x] Extract current authored terrain/component usage before deciding the chunk
   type count.
-- [ ] Build only the minimum Flooded Works terrain chunk/pattern family needed by
+- [x] Build only the minimum Flooded Works terrain chunk/pattern family needed by
   the representative room.
-- [ ] Build the canonical poison-vent and crumbling-platform bases and their
+- [x] Build the canonical poison-vent and crumbling-platform bases and their
   separate state overlays.
-- [ ] Compose background, terrain, components, player, HUD, and collision/debug
+- [x] Compose background, terrain, components, player, HUD, and collision/debug
   overlays in the real room; compare behavior snapshots before/after.
-- [ ] Recalculate the run-wide panel manifest. Do not generate the remaining nine
+- [x] Recalculate the run-wide panel manifest. Do not generate the remaining nine
   initial panels or broader components until the room proof is accepted.
 
 **Accept:** the representative room reads as one world, panels connect without a
@@ -634,6 +642,19 @@ timing is unchanged.
 
 **Guard:** the initial count of eleven does not authorize eleven immediate
 generation calls; expansion follows the accepted proof and recalculated manifest.
+
+**Status 2026-07-16:** passed. Runtime measurement reports eleven total panels
+(`2/2/3/2/1/1` by Ruin/Flooded/Sanctum/Trial/Safe/Boss) while the renderer loads
+only the active definition. The two Flooded panels use the accepted 192 px overlap
+and have a measured normalized exit mismatch of `0.001812`; current-stage raw
+RGBA cost is 24 MiB instead of the 132 MiB all-run total. The representative
+poison room requires five unique terrain signatures across six surface instances.
+Production raster terrain, a canonical poison vent, and a canonical crumbling
+platform retain authored collision, timing, base texture, local position, and
+pivot across state overlays. Baseline, production, and collision-debug captures
+plus the rebuilt HTML gallery were visually reviewed with no browser console or
+document-overflow error. The remaining nine panorama panels and broader world kit
+were intentionally not generated.
 
 ### Milestone 7 - Integration, Production Export, And Handoff
 
@@ -825,15 +846,25 @@ These are not blockers for Milestones 0-1 unless noted:
 - 2026-07-16: Milestone 5 removed `HUDGlyph.gd`, promoted the five live combat
   role SVGs, and retained the flat objective rule instead of adopting
   `banner_objective`; the latter obscured more world without adding state.
+- 2026-07-16: Milestone 6 accepted the proposed `2048x1536`, 192 px overlap,
+  `scroll_scale = 0.18` single-layer contract in the representative Flooded room.
+  The runtime-derived manifest remains eleven panels, but only the two current
+  Flooded panels were produced and lazy-loaded for this proof.
+- 2026-07-16: The authored representative room—not an arbitrary art-sheet count—
+  resolved to five terrain types. Poison vent and crumbling platform states use
+  one raster base each plus separate overlays; collision, timing, and pivots did
+  not change.
 
 ## Next Steps
 
-1. Begin Milestone 6 with measured stage coverage and the representative Flooded
-   Works room inventory before generating or choosing any terrain count.
-2. Implement one lazy panorama definition/renderer path with procedural fallback,
-   then prove the accepted overlap and component-state contract in the real room.
-3. Leave `master` untouched until Milestone 7 creates a fresh integration branch
-   from its then-current head.
+1. Confirm the other master-targeted worktree has a stable commit/handoff without
+   modifying or rewriting its branch.
+2. Create the Milestone 7 integration branch from then-current `master`, cherry-
+   pick only this plan's scoped commits, and preserve newer behavior/geometry in
+   every conflict.
+3. Run focused and full release gates, production Web export/served-app QA, final
+   KO/EN captures, asset disposition checks, and lifecycle closure before merging
+   the validated integration branch to `master`.
 
 ## Handoff Summary
 

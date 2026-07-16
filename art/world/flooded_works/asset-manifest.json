@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "stage_id": "flooded_works",
+  "status": "representative_room_runtime_proof",
+  "loading_policy": "current_location_only",
+  "background": {
+    "panel_size": [2048, 1536],
+    "overlap": 192,
+    "composite_size": [3904, 1536],
+    "scroll_scale": [0.18, 0.18],
+    "overscan": [192, 128],
+    "panels": [
+      "res://art/world/flooded_works/backgrounds/panel_01.png",
+      "res://art/world/flooded_works/backgrounds/panel_02.png"
+    ],
+    "entry_seam_mean_delta": 0.0,
+    "overlap_exit_mean_delta": 0.001812
+  },
+  "representative_room": {
+    "id": "fw_poison_timing",
+    "surface_instances": 6,
+    "terrain_types": [
+      {"signature": "layer_1_320x100", "path": "res://art/world/flooded_works/terrain/solid_320x100.png", "instances": 1},
+      {"signature": "layer_1_240x100", "path": "res://art/world/flooded_works/terrain/solid_240x100.png", "instances": 2},
+      {"signature": "layer_1_240x140", "path": "res://art/world/flooded_works/terrain/solid_240x140.png", "instances": 1},
+      {"signature": "layer_1_240x180", "path": "res://art/world/flooded_works/terrain/solid_240x180.png", "instances": 1},
+      {"signature": "layer_2_720x12", "path": "res://art/world/flooded_works/terrain/oneway_720x12.png", "instances": 1}
+    ]
+  },
+  "stateful_components": [
+    {
+      "id": "timed_poison_vent",
+      "base": "res://art/world/flooded_works/components/poison_vent/base.png",
+      "overlays": {
+        "warning": "res://art/world/flooded_works/components/poison_vent/warning_overlay.png",
+        "active": "res://art/world/flooded_works/components/poison_vent/active_overlay.png",
+        "cooldown": "res://art/world/flooded_works/components/poison_vent/cooldown_overlay.png"
+      }
+    },
+    {
+      "id": "crumbling_platform",
+      "base": "res://art/world/flooded_works/components/crumbling_platform/base.png",
+      "overlays": {
+        "warning": "res://art/world/flooded_works/components/crumbling_platform/warning_overlay.png",
+        "disabled": "res://art/world/flooded_works/components/crumbling_platform/disabled_overlay.png",
+        "respawning": "res://art/world/flooded_works/components/crumbling_platform/respawning_overlay.png"
+      }
+    }
+  ],
+  "source_boards": [
+    {"path": "res://art/source/flooded_works/terrain-component-source-sheet.png", "disposition": "direction_only_not_runtime_atlas"},
+    {"path": "res://art/source/flooded_works/state-component-source-sheet.png", "disposition": "direction_only_not_runtime_atlas"}
+  ],
+  "retired_reference": {
+    "path": "res://tools/component_gallery/assets/flooded-works-panorama-preview.png",
+    "disposition": "historical_unaccepted_reference_not_runtime"
+  }
+}

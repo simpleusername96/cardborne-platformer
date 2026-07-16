@@ -1,6 +1,10 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/stages/CrumblingPlatform.gd" id="1"]
+[ext_resource type="Texture2D" path="res://art/world/flooded_works/components/crumbling_platform/base.png" id="2_base"]
+[ext_resource type="Texture2D" path="res://art/world/flooded_works/components/crumbling_platform/warning_overlay.png" id="3_warning"]
+[ext_resource type="Texture2D" path="res://art/world/flooded_works/components/crumbling_platform/disabled_overlay.png" id="4_disabled"]
+[ext_resource type="Texture2D" path="res://art/world/flooded_works/components/crumbling_platform/respawning_overlay.png" id="5_respawning"]
 
 [sub_resource type="RectangleShape2D" id="PlatformCollision"]
 size = Vector2(220, 28)
@@ -11,6 +15,28 @@ script = ExtResource("1")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("PlatformCollision")
 
+[node name="VisualRoot" type="Node2D" parent="."]
+
+[node name="Base" type="Sprite2D" parent="VisualRoot"]
+texture_filter = 1
+texture = ExtResource("2_base")
+
+[node name="WarningOverlay" type="Sprite2D" parent="VisualRoot"]
+visible = false
+texture_filter = 1
+texture = ExtResource("3_warning")
+
+[node name="DisabledOverlay" type="Sprite2D" parent="VisualRoot"]
+visible = false
+texture_filter = 1
+texture = ExtResource("4_disabled")
+
+[node name="RespawningOverlay" type="Sprite2D" parent="VisualRoot"]
+visible = false
+texture_filter = 1
+texture = ExtResource("5_respawning")
+
 [node name="Visual" type="Polygon2D" parent="."]
+visible = false
 color = Color(0.38, 0.56, 0.58, 1)
 polygon = PackedVector2Array(-110, -14, 110, -14, 110, 14, -110, 14)

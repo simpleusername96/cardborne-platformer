@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="StageVisualDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/presentation/world/StageVisualDefinition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"flooded_works"
+panel_paths = PackedStringArray("res://art/world/flooded_works/backgrounds/panel_01.png", "res://art/world/flooded_works/backgrounds/panel_02.png")
+proof_room_id = &"fw_poison_timing"
+proof_status = &"runtime_proof_passed"

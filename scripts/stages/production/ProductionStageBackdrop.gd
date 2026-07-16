@@ -1,35 +1,127 @@
 class_name ProductionStageBackdrop
-extends Node2D
+extends Parallax2D
+
+const VISUAL_CATALOG: StageVisualCatalog = preload(
+	"res://data/presentation/stage_visual_catalog.tres"
+)
+const MAXIMUM_VIEWPORT := Vector2i(1920, 1080)
 
 var _world_bounds := Rect2(0.0, 0.0, 2400.0, 720.0)
+var _draw_bounds := _world_bounds.grow(240.0)
 var _stage_id: StringName = &"ruin_approach"
+var _definition: StageVisualDefinition
+var _loaded_panel_paths := PackedStringArray()
+var _loaded_source_bytes := 0
+var _fallback_active := true
 
 
 func _ready() -> void:
 	z_index = -20
+	repeat_size = Vector2.ZERO
+	repeat_times = 1
+	autoscroll = Vector2.ZERO
 	queue_redraw()
 
 
 func configure(world_bounds: Rect2, stage_id: StringName = &"ruin_approach") -> void:
 	if world_bounds.size.x > 0.0 and world_bounds.size.y > 0.0:
-		_world_bounds = world_bounds.grow(240.0)
+		_world_bounds = world_bounds
+		_draw_bounds = world_bounds.grow(240.0)
 	_stage_id = stage_id
+	_definition = VISUAL_CATALOG.get_definition(stage_id)
+	_clear_panels()
+	if _definition == null:
+		scroll_scale = Vector2.ONE
+		_fallback_active = true
+	else:
+		scroll_scale = _definition.scroll_scale
+		_load_current_location_panels()
 	queue_redraw()
 
 
+func get_visual_snapshot() -> Dictionary:
+	var minimum_count := 0
+	var composite := Vector2i.ZERO
+	var estimated_bytes := 0
+	if _definition != null:
+		minimum_count = _definition.minimum_panel_count(_world_bounds, MAXIMUM_VIEWPORT)
+		composite = _definition.composite_size(maxi(minimum_count, 0))
+		estimated_bytes = _definition.estimated_rgba_bytes(_loaded_panel_paths.size())
+	return {
+		"stage_id": String(_stage_id),
+		"definition_id": String(_definition.id) if _definition != null else "",
+		"world_bounds": _world_bounds,
+		"scroll_scale": scroll_scale,
+		"loaded_panel_paths": _loaded_panel_paths.duplicate(),
+		"loaded_panel_count": _loaded_panel_paths.size(),
+		"minimum_panel_count": minimum_count,
+		"panel_overlap": _definition.panel_overlap if _definition != null else 0,
+		"composite_size": composite,
+		"procedural_fallback_active": _fallback_active,
+		"estimated_loaded_rgba_bytes": estimated_bytes,
+		"loaded_source_bytes": _loaded_source_bytes,
+		"loading_policy": "current_location_only",
+	}
+
+
+func _clear_panels() -> void:
+	for child in get_children():
+		remove_child(child)
+		child.free()
+	_loaded_panel_paths.clear()
+	_loaded_source_bytes = 0
+	_fallback_active = true
+
+
+func _load_current_location_panels() -> void:
+	if _definition.panel_paths.is_empty():
+		_fallback_active = _definition.procedural_fallback
+		return
+	var expected_count := _definition.minimum_panel_count(_world_bounds, MAXIMUM_VIEWPORT)
+	if expected_count <= 0 or _definition.panel_paths.size() < expected_count:
+		_fallback_active = _definition.procedural_fallback
+		return
+	var origin := Vector2(
+		_world_bounds.position.x * scroll_scale.x - float(_definition.overscan.x),
+		_world_bounds.position.y * scroll_scale.y - float(_definition.overscan.y)
+	)
+	var stride := _definition.panel_size.x - _definition.panel_overlap
+	for panel_index in expected_count:
+		var panel_path := _definition.panel_paths[panel_index]
+		var texture := load(panel_path) as Texture2D
+		if texture == null:
+			_clear_panels()
+			_fallback_active = _definition.procedural_fallback
+			return
+		var sprite := Sprite2D.new()
+		sprite.name = "Panel%02d" % (panel_index + 1)
+		sprite.centered = false
+		sprite.position = origin + Vector2(float(panel_index * stride), 0.0)
+		sprite.texture = texture
+		sprite.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+		add_child(sprite)
+		_loaded_panel_paths.append(panel_path)
+		var source_image := texture.get_image()
+		if source_image != null:
+			_loaded_source_bytes += source_image.get_data_size()
+	_fallback_active = false
+
+
 func _draw() -> void:
-	var left := _world_bounds.position.x
-	var top := _world_bounds.position.y
-	var right := _world_bounds.end.x
-	var bottom := _world_bounds.end.y
-	var width := _world_bounds.size.x
-	var ridge_y := top + _world_bounds.size.y * 0.48
+	if not _fallback_active:
+		return
+	var left := _draw_bounds.position.x
+	var top := _draw_bounds.position.y
+	var right := _draw_bounds.end.x
+	var bottom := _draw_bounds.end.y
+	var width := _draw_bounds.size.x
+	var ridge_y := top + _draw_bounds.size.y * 0.48
 	var palette := _palette_for_stage()
 	var background: Color = palette["background"]
 	var distant: Color = palette["distant"]
 	var structure: Color = palette["structure"]
 	var trim: Color = palette["trim"]
-	draw_rect(_world_bounds, background)
+	draw_rect(_draw_bounds, background)
 	draw_colored_polygon(PackedVector2Array([
 		Vector2(left, ridge_y),
 		Vector2(left + width * 0.12, ridge_y - 70.0),

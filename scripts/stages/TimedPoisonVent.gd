@@ -20,7 +20,13 @@ const TIME_EPSILON := 0.000001
 var _state: StringName = STATE_WARNING
 var _state_timer: float = 0.0
 var _tick_timer: float = 0.0
-var _visual: Polygon2D
+var _visual_root: Node2D
+var _base_visual: Sprite2D
+var _warning_overlay: Sprite2D
+var _active_overlay: Sprite2D
+var _cooldown_overlay: Sprite2D
+var _fallback_visual: Polygon2D
+var _raster_visual_ready := false
 
 
 func _ready() -> void:
@@ -60,6 +66,29 @@ func get_runtime_snapshot() -> Dictionary:
 		"state_time_remaining": _state_timer,
 		"damage_active": _state == STATE_ACTIVE,
 		"tick_time_remaining": _tick_timer,
+	}
+
+
+func get_visual_snapshot() -> Dictionary:
+	return {
+		"state": _state,
+		"raster_visual_ready": _raster_visual_ready,
+		"base_instance_id": _base_visual.get_instance_id() if _base_visual != null else 0,
+		"base_texture_path": (
+			_base_visual.texture.resource_path
+			if _base_visual != null and _base_visual.texture != null
+			else ""
+		),
+		"base_local_position": _base_visual.position if _base_visual != null else Vector2.ZERO,
+		"visual_root_position": _visual_root.position if _visual_root != null else Vector2.ZERO,
+		"base_visible": _base_visual.visible if _base_visual != null else false,
+		"warning_overlay_visible": (
+			_warning_overlay.visible if _warning_overlay != null else false
+		),
+		"active_overlay_visible": _active_overlay.visible if _active_overlay != null else false,
+		"cooldown_overlay_visible": (
+			_cooldown_overlay.visible if _cooldown_overlay != null else false
+		),
 	}
 
 
@@ -121,13 +150,30 @@ func _ensure_shape_and_visual() -> void:
 		rectangle.size = vent_size
 		collision.shape = rectangle
 
-	_visual = get_node_or_null("Visual") as Polygon2D
-	if _visual == null:
-		_visual = Polygon2D.new()
-		_visual.name = "Visual"
-		add_child(_visual)
+	_visual_root = get_node_or_null("VisualRoot") as Node2D
+	if _visual_root == null:
+		_visual_root = Node2D.new()
+		_visual_root.name = "VisualRoot"
+		add_child(_visual_root)
+	_base_visual = _visual_root.get_node_or_null("Base") as Sprite2D
+	_warning_overlay = _visual_root.get_node_or_null("WarningOverlay") as Sprite2D
+	_active_overlay = _visual_root.get_node_or_null("ActiveOverlay") as Sprite2D
+	_cooldown_overlay = _visual_root.get_node_or_null("CooldownOverlay") as Sprite2D
+	_raster_visual_ready = (
+		_base_visual != null
+		and _base_visual.texture != null
+		and _warning_overlay != null
+		and _active_overlay != null
+		and _cooldown_overlay != null
+	)
+
+	_fallback_visual = get_node_or_null("Visual") as Polygon2D
+	if _fallback_visual == null:
+		_fallback_visual = Polygon2D.new()
+		_fallback_visual.name = "Visual"
+		add_child(_fallback_visual)
 	var half := vent_size * 0.5
-	_visual.polygon = PackedVector2Array([
+	_fallback_visual.polygon = PackedVector2Array([
 		Vector2(-half.x, half.y),
 		Vector2(-half.x * 0.72, -half.y * 0.3),
 		Vector2(-half.x * 0.25, -half.y),
@@ -136,14 +182,24 @@ func _ensure_shape_and_visual() -> void:
 		Vector2(half.x * 0.78, -half.y * 0.2),
 		Vector2(half.x, half.y),
 	])
+	_fallback_visual.visible = not _raster_visual_ready
 
 
 func _update_visual() -> void:
-	if _visual == null:
+	if _raster_visual_ready:
+		_visual_root.position = Vector2.ZERO
+		_base_visual.position = Vector2.ZERO
+		_base_visual.visible = true
+		_base_visual.modulate = Color.WHITE
+		_warning_overlay.visible = _state == STATE_WARNING
+		_active_overlay.visible = _state == STATE_ACTIVE
+		_cooldown_overlay.visible = _state == STATE_COOLDOWN
+		return
+	if _fallback_visual == null:
 		return
 	if _state == STATE_WARNING:
-		_visual.color = Color(0.98, 0.78, 0.22, 0.62)
+		_fallback_visual.color = Color(0.98, 0.78, 0.22, 0.62)
 	elif _state == STATE_ACTIVE:
-		_visual.color = Color(0.42, 0.95, 0.36, 0.88)
+		_fallback_visual.color = Color(0.42, 0.95, 0.36, 0.88)
 	else:
-		_visual.color = Color(0.22, 0.34, 0.24, 0.45)
+		_fallback_visual.color = Color(0.22, 0.34, 0.24, 0.45)

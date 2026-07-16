@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="StageVisualCatalog" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/presentation/world/StageVisualCatalog.gd" id="1"]
+[ext_resource type="Resource" path="res://data/presentation/stage_visuals/ruin_approach.tres" id="2"]
+[ext_resource type="Resource" path="res://data/presentation/stage_visuals/flooded_works.tres" id="3"]
+[ext_resource type="Resource" path="res://data/presentation/stage_visuals/broken_sanctum.tres" id="4"]
+[ext_resource type="Resource" path="res://data/presentation/stage_visuals/arsenal_trial.tres" id="5"]
+[ext_resource type="Resource" path="res://data/presentation/stage_visuals/safe_intermission.tres" id="6"]
+[ext_resource type="Resource" path="res://data/presentation/stage_visuals/slime_court.tres" id="7"]
+
+[resource]
+script = ExtResource("1")
+definitions = Array[ExtResource("2")]([ExtResource("2"), ExtResource("3"), ExtResource("4"), ExtResource("5"), ExtResource("6"), ExtResource("7")])

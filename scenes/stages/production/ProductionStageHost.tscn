@@ -8,7 +8,7 @@ script = ExtResource("1")
 stage_id = "ruin_approach"
 stage_display_name = "Ruin Approach"
 
-[node name="Backdrop" type="Node2D" parent="."]
+[node name="Backdrop" type="Parallax2D" parent="."]
 script = ExtResource("2")
 
 [node name="Rooms" type="Node2D" parent="."]

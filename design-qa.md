@@ -4,7 +4,7 @@ status: active
 owner: BK
 created: 2026-07-16
 last_reviewed: 2026-07-16
-topic: Milestones 1-5 production UI and gameplay HUD rendered QA
+topic: Milestones 1-6 production UI, gameplay HUD, and measured world-proof QA
 source: Owner-selected UI references, active visual spec, production asset catalog, Godot 4.7 validators, and deterministic OpenGL captures
 related:
   - ./.agent/execplans/2026-07-15-master-ui-overhaul.md
@@ -13,16 +13,16 @@ related:
   - ./docs/design/reports/ui-raster-asset-catalog.png
 ---
 
-# Production UI Milestones 1-5 Design QA
+# Production UI Milestones 1-6 Design QA
 
 ## Purpose
 
-Record the bounded rendered-acceptance evidence for Milestones 1 through 5 of the
+Record the bounded rendered-acceptance evidence for Milestones 1 through 6 of the
 master UI overhaul: centralized production asset ownership, real-screen image
 placements, the shared flat Theme/component foundation, all shell and economy
-surfaces, and the gameplay HUD/Trial migration. This document is evidence for the
-active ExecPlan, not a replacement for the remaining world proof and integration
-milestones.
+surfaces, the gameplay HUD/Trial migration, and one measured Flooded Works world
+proof. This document is evidence for the active ExecPlan, not a replacement for
+the remaining integration/export milestone.
 
 ## Sources
 
@@ -33,11 +33,11 @@ milestones.
 
 ## Result
 
-**Passed for Milestones 1-5.** This result approves the UI asset registry, shell,
+**Passed for Milestones 1-6.** This result approves the UI asset registry, shell,
 dense progression/economy surfaces, shared flat Theme/components, gameplay HUD,
-feedback presentation, and Arsenal Trial UI. It does not approve the complete UI
-overhaul: measured world presentation, production Web export, integration, and
-full-run QA remain open milestones.
+feedback presentation, Arsenal Trial UI, and the bounded Flooded Works panorama,
+terrain, and state-overlay proof. It does not approve the complete UI overhaul:
+production Web export, integration, and full-run QA remain open Milestone 7 work.
 
 ## Reviewed Scope
 
@@ -54,6 +54,9 @@ full-run QA remain open milestones.
   meters, and text.
 - Flat-plane and shared-component treatment across Main Menu, Hero Preparation,
   Settings, Card Reward, and gameplay HUD states.
+- Runtime-derived stage panorama coverage, current-location lazy loading, two
+  connected Flooded Works panels, five representative-room terrain types, and
+  poison-vent/crumbling-platform canonical bases with separate state overlays.
 
 ## Reference Comparison
 
@@ -68,6 +71,8 @@ Runtime captures:
 - `.codex-runtime/uiux/shell/{compact,desktop,hd}_{main_menu,settings,pause_settings,victory,defeat}.png`
 - `.codex-runtime/uiux/progression/{compact,desktop,hd}_{hero_preparation,card_reward,run_result}.png`
 - `.codex-runtime/uiux/gameplay_hud/{compact,desktop,hd}_*.png`
+- `tools/component_gallery/assets/flooded-poison-{baseline,proof,debug}.png`
+- `.codex-runtime/uiux/component-gallery.png`
 - `user://hero_preparation_ui_validation/hero_preparation_{en,ko}_{960x540,1280x720,1920x1080}.png`
 - `user://reward_choice_ui_validation/{card,level}_{offer,error,committed}_{en,ko}_{960x540,1280x720,1920x1080}.png`
 
@@ -81,6 +86,7 @@ Runtime captures:
 | Card Reward | EN/KO offer, reroll, error, committed, focus at all three viewports | Vignettes stay inside the cards; live copy and state remain readable and keyboard-operable. |
 | Run Result | Victory, defeat, stage retry, boss retry | Identity art supports the summary; Boss Core art is hidden when it was not secured. |
 | Shared Theme | Normal, focus, selected, disabled, error, committed, guard, boss, and modal states | Zero-radius flat planes remain coherent; focus/selection uses a stable inside-left marker plus fill/text state. |
+| Flooded Works room proof | Procedural baseline, production composite, collision debug, vent states, crumbling-platform states | Panorama seams remain visually quiet; five exact terrain signatures preserve collision; state overlays retain one body and pivot. |
 
 ## UIUX Gate Evidence
 
@@ -96,11 +102,11 @@ Runtime captures:
 - **Exception:** a left border property is used only as a reserved four-pixel
   inside marker lane for focus/selection/prompt state. It is not a perimeter
   outline and the lane exists in every state, so bounds remain stable.
-- **Remaining warnings:** Milestone 6 still owns measured world presentation and
-  Milestone 7 owns integration/export/full-run QA; compact Settings intentionally
-  scrolls internally; the
+- **Remaining warnings:** Milestone 7 owns integration/export/full-run QA; compact
+  Settings intentionally scrolls internally; the
   `1672x941` shell images remain modestly soft at 1920x1080.
-- **Result:** passed for the Milestones 1-5 production UI and gameplay HUD scope.
+- **Result:** passed for the Milestones 1-6 production UI, gameplay HUD, and
+  representative world-proof scope.
 
 ## Automated Evidence
 
@@ -116,6 +122,13 @@ Runtime captures:
 - `PRODUCTION_BOOT_VALIDATION_OK`
 - Real OpenGL capture scripts completed for shell, progression, and gameplay HUD
   surfaces; Hero Preparation and reward state captures completed in both locales.
+- `STAGE_VISUAL_COVERAGE_OK stages=6 panels=11`
+- `STAGE_VISUAL_RENDERER_VALIDATION_OK catalog=6 flooded_loaded=2 lazy=true`
+- `FLOODED_TERRAIN_INVENTORY_OK representative_types=5`
+- `FLOODED_WORLD_VISUAL_PROOF_OK panels=2 terrain_types=5 state_bases=2 memory_mib=24`
+- `FLOODED_WORLD_ASSET_MANIFEST_OK runtime_png=15 terrain=5 components=2`
+- Stage renderer, terrain presentation, hazard catalog/runtime, room composition,
+  stage composition, production stage, and curated-stage-plan validators pass.
 
 ## Findings
 
@@ -161,8 +174,31 @@ Runtime captures:
   `ARSENAL_TRIAL_VALIDATION_OK ... ui=960x540,1280x720,1920x1080`, and passing
   feedback/pickup/boot gates.
 
+## Milestone 6 World-Proof Evidence
+
+- The coverage report derives panel counts from actual assembly/world bounds,
+  supported viewport envelope, 192 px horizontal and 128 px vertical overscan,
+  `2048x1536` final panels, 192 px overlap, and `scroll_scale = 0.18`.
+- The current six-location manifest totals eleven panels: Ruin 2, Flooded 2,
+  Sanctum 3, Trial 2, Safe Intermission 1, and Slime Court 1. Only the current
+  location is loaded; Flooded uses 24 MiB raw RGBA versus 132 MiB for all panels.
+- Sequential Flooded source panels were normalized to exact runtime dimensions.
+  Their shared overlap has a measured exit mismatch of `0.001812`, and the real
+  camera proof shows no distracting seam.
+- The representative poison room inventory contains five unique terrain types
+  over six surface instances. The room skin maps only those exact signatures and
+  leaves authored collision geometry untouched.
+- Poison vent and crumbling platform each retain one raster base while warning,
+  active/disabled, cooldown/respawning states are separate overlays. Runtime
+  snapshots confirm invariant base texture, local position, pivot, and public
+  collision/timing behavior.
+- The rebuilt component gallery uses the actual production panels, terrain,
+  component states, measured coverage data, and real-room proof images. Browser
+  review at desktop and compact sizes found no console error, accidental document
+  horizontal overflow, or broken state/seam/debug control.
+
 ## Unrun Gates
 
 The full release matrix, production Web export, served-browser path, and complete
-run are intentionally not claimed here. They belong to later overhaul milestones
-after the remaining surfaces and world presentation change.
+run are intentionally not claimed here. They belong to Milestone 7 after the
+scoped UI/world commits are integrated onto then-current `master`.
