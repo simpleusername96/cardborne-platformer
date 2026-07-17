@@ -51,13 +51,29 @@ later proves worth recovering.
 ## Current Status
 
 - Active branch: `agent/isometric-arpg-pivot-plan`.
-- Runtime reset and research-backed plan: completed on 2026-07-17; gameplay
-  implementation has not started.
+- Runtime reset and research-backed plan: completed on 2026-07-17.
+- Phase 1 implementation is playable: `CombatSandbox` contains an authored
+  six-sided ground plane, matching boundary collision, two cover blocks, a
+  damageable dummy, a telegraphed pulse, and the Traveler.
+- Traveler input, movement, aim, dash, two-hit melee, solid-blocked ranged shot,
+  three-charge potion, damage, reset, action trace, and bounded camera are live.
+- The automated Phase 1 gate and 960x540, 1280x720, and 1920x1080 rendered
+  captures pass. The Web release exports and boots from the manager-provided
+  `codex` lane with focused dash input and no browser console warning or error.
+  Physical-gamepad and two-minute manual feel gates remain before Phase 1 is
+  closed.
 - Retained authority: root `AGENTS.md`, `.agent/Prompt.md`, the active ExecPlan,
-  and `docs/design/UI_VISUAL_SYSTEM.md` for art direction.
+  `docs/product/isometric_action_rpg_product_brief.md`, and
+  `docs/design/UI_VISUAL_SYSTEM.md` for art direction.
 
 ## Verification
 
-Use `./tools/godot.ps1 --path . --headless --import` and a short headless start to
-verify the empty baseline. Gameplay validation commands will be added beside the
-first playable slice rather than restoring the retired release matrix.
+Use these focused Phase 1 checks:
+
+- `./tools/godot.ps1 --path . --headless --import`
+- `./tools/godot.ps1 --path . --headless --script res://tools/validation/validate_movement_and_actions.gd`
+- `./tools/godot.ps1 --path . --script res://tools/validation/capture_movement_check.gd`
+- `./tools/export_web.ps1`
+
+The capture command intentionally uses the real display driver. It writes ignored
+review evidence under `build/validation/` at the three supported viewports.

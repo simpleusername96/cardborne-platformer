@@ -306,21 +306,21 @@ Source owners touched: `project.godot`, `scenes/main/PivotRoot.tscn`,
 `tools/validation/validate_movement_and_actions.gd`,
 `docs/product/isometric_action_rpg_product_brief.md`.
 
-- [ ] **1.1 Write the product brief from locked decisions.**
+- [x] **1.1 Write the product brief from locked decisions.**
   - As-is: `docs/product/README.md` says no replacement gameplay spec exists.
   - To-be: create an active spec that restates the locked route, controls,
     objectives, cards, boss, scope, and completion criteria without new choices.
   - Accept: its requirements map one-to-one to this plan and its local links resolve.
   - Guard: no research section, recommendation, broader content roadmap, or
     platform-era behavior enters the spec.
-- [ ] **1.2 Create the command/input boundary and InputMap.**
+- [x] **1.2 Create the command/input boundary and InputMap.**
   - As-is: no input actions or player scripts exist.
   - To-be: add the exact actions and device bindings in the decision table;
     `PlayerInput` emits one typed `PlayerCommandFrame` per physics tick.
   - Accept: keyboard/mouse and gamepad fixtures produce equivalent actions and
     explicit melee/ranged traces.
   - Guard: device code does not move the actor, select an attack, or deal damage.
-- [ ] **1.3 Implement motor, aim, dodge, and camera.**
+- [x] **1.3 Implement motor, aim, dodge, and camera.**
   - As-is: empty room root.
   - To-be: add `CharacterBody2D`, `PlayerMotor`, `AimResolver`, bounded `Camera2D`,
     walls, cover, and the locked movement/dash values.
@@ -328,7 +328,7 @@ Source owners touched: `project.godot`, `scenes/main/PivotRoot.tscn`,
     fallback, dash distance, invulnerability window, recovery, and cooldown.
   - Guard: no gravity, floor state, real height, target snap, or animation-driven
     translation exists.
-- [ ] **1.4 Implement actions, dummy, and action trace.**
+- [x] **1.4 Implement actions, dummy, and action trace.**
   - As-is: no attack or potion transaction.
   - To-be: implement two-hit melee, ranged projectile, three-charge potion,
     buffer, timings, hit/hurt areas, damage result, and a resettable dummy.
@@ -583,7 +583,8 @@ Rerun policy:
 - [x] Relevant repository, asset, policy, engine, and external development sources inspected.
 - [x] Material product/technical choices and rejected alternatives recorded.
 - [x] Godot 4.7 import and empty start validated.
-- [ ] Phase 1 — playable controls.
+- [ ] Phase 1 — playable controls: implementation and automated gate pass;
+  physical-gamepad and two-minute manual feel gates remain.
 - [ ] Phase 2 — readable combat exchange.
 - [ ] Phase 3 — authored route and behavior-changing reward.
 - [ ] Phase 4 — Slime King and integrated proof.
@@ -592,11 +593,11 @@ Rerun policy:
 
 ## Next Steps
 
-1. Start with Phase 1.1 and create the product brief by copying only locked
-   product behavior from this plan.
-2. Continue Phase 1 in order through the directly playable CombatSandbox and its
-   validator; commit only after the batch gate passes.
-3. Execute Phases 2–5 sequentially; no later phase starts while the prior batch
+1. Run the two-minute keyboard/mouse and physical-gamepad feel checks in
+   `CombatSandbox`; record the result and close the Phase 1 batch gate.
+2. After that gate passes, implement Phase 2 in order and do not introduce rooms,
+   cards, boss content, or production art during its combat-exchange fixture.
+3. Execute Phases 3–5 sequentially; no later phase starts while the prior batch
    acceptance or guard fails.
 
 ## Completion Criteria
