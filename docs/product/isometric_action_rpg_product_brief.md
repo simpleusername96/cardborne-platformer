@@ -37,10 +37,11 @@ and camera-facing actor sprites.
 ### Player control
 
 - Keyboard uses arrow-key movement, Space dash, Left Shift melee, `Z` ranged,
-  held `X` guard, `C` potion, and Esc pause. Non-zero movement sets persistent
-  combat facing; idle preserves it.
+  held `X` guard, `C` potion, `V` interact, and Esc pause. Non-zero movement sets
+  persistent combat facing; idle preserves it.
 - Gamepad uses left-stick movement, south-face dash, LB guard, RB melee, RT
-  ranged, north-face potion, and Menu pause. Right-stick aim remains deferred.
+  ranged, north-face potion, west-face interact, and Menu pause. Right-stick aim
+  remains deferred.
 - Melee and ranged resolve bounded soft assistance only when the attack starts.
   Candidates must be targetable, inside that attack's range and cone, and have
   unobstructed line of sight. With no candidate, the attack follows exact combat

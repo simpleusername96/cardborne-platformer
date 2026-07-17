@@ -2,11 +2,11 @@
 type: record
 status: active
 owner: BK
-last_reviewed: 2026-07-17
+last_reviewed: 2026-07-18
 topic: Current Cardborne isometric action RPG pivot state
 source: Owner pivot decision, repository reset, and active ExecPlan
 related:
-  - ./execplans/2026-07-17-native-3d-isometric-foundation.md
+  - ./execplans/2026-07-18-flooded-works-floor1-map-enemies.md
   - ../docs/design/UI_VISUAL_SYSTEM.md
 ---
 
@@ -28,8 +28,9 @@ Hades, the owner chose to reset the runtime and explore an isometric action RPG.
 - Traveler, weapons, defense, cards, equipment, forging, merchant, run/reward,
   persistence, and Slime King survive as product identities only; none of their
   deleted runtime behavior is implicitly accepted.
-- `.agent/execplans/2026-07-17-native-3d-isometric-foundation.md` is the active work
-  source until a replacement product spec is accepted.
+- `docs/product/isometric_action_rpg_product_brief.md` is the active proof
+  behavior source. `.agent/execplans/2026-07-18-flooded-works-floor1-map-enemies.md`
+  is the active implementation plan for the connected Floor 1 map/enemy slice.
 
 ## Rationale
 
@@ -50,9 +51,9 @@ later proves worth recovering.
 
 ## Current Status
 
-- Active branch: `agent/isometric-arpg-pivot-plan`.
+- Active branch: `master`.
 - Runtime reset and research-backed plan: completed on 2026-07-17.
-- Phase 1 native 3D implementation is playable: `CombatSandbox3D` contains an
+- The native 3D Movement Check is playable: `CombatSandbox3D` contains an
   imported CC0 dungeon room, explicit boundary collision, two cover blocks, a
   damageable dummy, a telegraphed pulse, and the Traveler.
 - Traveler arrow-key input, movement, facing, dash, damage-reducing guard, melee,
@@ -62,8 +63,14 @@ later proves worth recovering.
   captures pass, with additional 1280x720 guard and pause-state evidence. The
   Web release exports and boots from the manager-provided `codex` lane with
   focused action input and no browser console warning or error.
-  Physical-gamepad and two-minute manual feel gates remain before Phase 1 is
-  closed.
+  Dedicated lateral locomotion, dash presentation/afterimages, raster melee,
+  ranged, guard, and projectile presentation are also integrated.
+- The 2026-07-18 map/enemy pre-plan audit confirmed that no enemy AI, navigation,
+  room flow, boss runtime, drop runtime, audio stream, audio bus layout, or
+  settings store exists yet. The new active plan adds those in bounded phases.
+- Three Floor 1 visual direction images and a separate future progression/upgrade
+  specification now document the intended connected rooms, enemy/prop family,
+  and post-proof reward ownership.
 - Retained authority: root `AGENTS.md`, `.agent/Prompt.md`, the active ExecPlan,
   `docs/product/isometric_action_rpg_product_brief.md`, and
   `docs/design/UI_VISUAL_SYSTEM.md` for art direction.

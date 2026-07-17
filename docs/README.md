@@ -11,11 +11,13 @@ available through Git history and do not guide new work.
 | 1 | `../AGENTS.md` | Repository operating guidance and current project direction. |
 | 2 | `../.agent/Prompt.md` | Active pivot policy. |
 | 3 | `product/isometric_action_rpg_product_brief.md` | Active proof-build product behavior. |
-| 4 | `../.agent/execplans/2026-07-17-native-3d-isometric-foundation.md` | Active native 3D execution plan. |
-| 5 | `design/UI_VISUAL_SYSTEM.md` | Active UI and art-style contract. |
+| 4 | `../.agent/execplans/2026-07-18-flooded-works-floor1-map-enemies.md` | Active connected Floor 1 map/enemy execution plan. |
+| 5 | `product/progression_upgrade_system_spec.md` | Active future progression/reward boundary; not current implementation scope. |
+| 6 | `design/UI_VISUAL_SYSTEM.md` | Active UI and art-style contract. |
 
-The active product brief is intentionally limited to the proof build. Broader
-production behavior remains undefined until the proof receives an owner decision.
+The active product brief is intentionally limited to the proof build. The
+progression specification defines a future boundary only; implementation still
+waits for a Floor 1 owner decision and a separate active plan.
 
 ## Retained Evidence
 
