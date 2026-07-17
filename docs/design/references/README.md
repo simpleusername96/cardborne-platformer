@@ -3,86 +3,71 @@ type: evidence
 status: active
 owner: BK
 created: 2026-07-13
-last_reviewed: 2026-07-15
-topic: Generated visual exploration and component decomposition references
-scope: Mood boards and production-guide images for Cardborne world components and UI
-source: Owner feedback and generated reference images through 2026-07-13
+last_reviewed: 2026-07-17
+topic: Retained Cardborne visual references
+scope: Mood, palette, shell composition, and production UI asset evidence for the isometric action RPG pivot
+source: Owner-selected images and project-generated references through 2026-07-17
 related:
-  - ../GAME_COMPONENT_ART_SYSTEM.md
   - ../UI_VISUAL_SYSTEM.md
-  - ../../research/component_ui_foundation_research_2026-07-13.md
+  - ../../../art/ui/production/README.md
+  - ../../../.agent/execplans/2026-07-17-isometric-action-rpg-pivot.md
 ---
 
 # Visual Reference Index
 
-## Status
+## Purpose
 
-Most images in this folder are retained exploratory references, not production-ready runtime assets. They communicate candidate palette, silhouette, density, and modular decomposition. The owner-selected anchor and five selected shell backgrounds under `ui-shell/` are exceptions: they ground the active UI art direction, while their separately imported production copies live under `art/ui/production/backgrounds/`. `ui-assets/README.md` records the separately generated 19-file production UI illustration pack under `art/ui/production/illustrations/`.
+Preserve the accepted Cardborne art language while preventing old side-view
+layouts from becoming isometric gameplay geometry by accident.
 
-## UI Shell Art Direction
+## Sources
 
-| Path | Use | Runtime status |
-| --- | --- | --- |
-| `ui-shell/owner-reference-lower-ruins.png` | Primary owner-selected theme and structural mood anchor for shell UI imagery. | Reference only. |
-| `ui-shell/background-*.png` | Selected screen-specific source references generated from the active visual contract. | Production copies exist under `art/ui/production/backgrounds/`; four shell contexts are connected and Forge is deferred. |
-| `ui-shell/panel-*.png` | Shape-language reference sheets for deterministic SVG/NinePatch/Theme reconstruction. | Never crop or stretch directly into production. |
-| `ui-shell/README.md` | Batch roles, generation constraints, findings, and limitations. | Advisory evidence. |
+### Primary direction
 
-## Raster UI Illustrations
+- `ui-shell/owner-reference-lower-ruins.png` is the owner-selected structural and
+  palette anchor.
+- `visual-style-slate-cutout.png` is the simplification reference: broad shapes,
+  clean surfaces, no outlines, and restrained detail.
+- `visual-style-relic-print.png` and
+  `visual-style-forge-relic-hybrid.png` support the teal, rust, charcoal, gold,
+  and controlled-violet hierarchy.
 
-| Path | Use | Runtime status |
-| --- | --- | --- |
-| `ui-assets/README.md` | Exact raster/SVG boundary, 19 asset IDs, prompt family, generator source IDs, fallbacks, and alpha-validation record. | Production files exist but are not yet wired into screens. |
-| `../reports/ui-raster-asset-catalog.png` | Checkerboard transparency review plus 64 px readability samples. | Evidence only; never use as a runtime sheet. |
+### Shell and UI assets
 
-## Working Direction
+- `ui-shell/background-*.png` are source references for retained production
+  copies under `art/ui/production/backgrounds/`.
+- `ui-shell/panel-*.png` are shape-language evidence only; never crop them into
+  production controls.
+- `ui-assets/README.md` records the generated illustration family and asset IDs.
+- `../reports/ui-raster-asset-catalog.png` and
+  `../reports/ui-svg-asset-catalog.html` are inspection artifacts, not atlases.
 
-The working synthesis captured by these boards is:
+## Findings
 
-- steampunk plus post-apocalyptic flooded-foundry structure and mechanisms;
-- the stronger teal, rust, gold, charcoal, and controlled violet color language from the relic-print direction;
-- a saturated result, not pale or washed out;
-- simpler shapes and less micro-detail than the mood boards;
-- stage-specific skin kits over shared gameplay contracts;
-- borderless, flat-color UI.
+- The retained direction is a drowned ancient-industrial ruin built from large,
+  flat color masses and three to five readable depth planes.
+- Surfaces stay clean: no pointillism, dense cracks, hatching, speckle, repeated
+  micro-patterns, or visible outlines.
+- UI uses borderless flat planes, live typography, and semantic glyphs.
+- Detailed portraits, equipment, cards, backgrounds, and world objects remain
+  raster art; simple structural controls and glyph masks may remain SVG.
+- Side-view terrain sheets, platform silhouettes, and former map compositions are
+  not layout references for the new isometric ground plane.
 
-## Mood And Style Boards
+## Recommendations
 
-| File | Use | Do not use for |
-| --- | --- | --- |
-| `visual-style-slate-cutout.png` | Broad flat-shape direction and restrained detail. | Final palette or direct game assets. |
-| `visual-style-luminous-gouache.png` | Lighting and luminous pickup contrast. | Painterly runtime texture density. |
-| `visual-style-relic-print.png` | Teal/rust/gold/violet palette and graphic hierarchy. | Directly sliced sprites. |
-| `visual-style-forge-relic-hybrid.png` | Selected structural mood: flooded foundry, ruins, machinery, readable gameplay elements. | Exact tile dimensions; it is too detailed for production scale. |
-| `visual-style-modular-foundry.png` | Clearest high-level example of repeated blocks, modular traps, traversal space, and flat HUD. | Final TileSet; seams and dimensions are illustrative. |
+- Use these images to judge palette, silhouette, density, lighting, and material
+  language only.
+- Produce new isometric room chunks, actor direction sets, floor/wall occluders,
+  and cover props against a graybox gameplay contract.
+- Keep collision, navigation, interaction bounds, telegraphs, and state overlays
+  outside generated background images.
+- Review new world assets at gameplay scale and against Y-sorted actors before
+  accepting detail or lighting.
 
-## Component Guides
+## Limitations
 
-| File | Production question it answers | Required redraw work |
-| --- | --- | --- |
-| `component-guides/terrain-tile-kit.png` | Which semantic tile families are needed: fill, cap, side, corner, one-way, water edge, and assembled example. | Choose exact cell size; rebuild every tile on one grid; remove baked lighting/noise; verify all terrain peering combinations and collision. |
-| `component-guides/mechanical-trap-kit.png` | How a trap separates mount, pivot, connector, payload, telegraph, and motion envelope. | Lock chassis/payload dimensions and pivots; create stage skins; define collision/telegraph outside the art. |
-| `component-guides/traversal-interactable-kit.png` | State families for rope, moving/crumbling/destructible platform, spikes, vent, and chest. | Normalize dimensions and state frame counts; separate each component into its own transparent sprite/animation source. |
-| `component-guides/pickup-hud-kit.png` | Shared pickup silhouettes, icon scale variants, meters, action slots, cooldown, and disabled-state examples. | Rebuild icons with consistent optical boxes; remove any border-like framing; produce Theme-driven states rather than baking them into images. |
-
-## Mandatory Interpretation Rules
-
-- A reference object is not automatically one production asset. Decompose it by semantic role.
-- Tile images define appearance only; collision and gameplay tags are authored and validated separately.
-- Stateful traps and interactables remain reusable scenes even when their art fits a tile grid.
-- Chassis, connector, and payload art may vary by stage skin, but behavior dimensions do not change unless a typed gameplay variant declares them.
-- Do not introduce random cross-stage material mixing.
-- Do not reproduce the reference images' pointillism, speckle, dense hatching, or tiny surface marks.
-- Do not bake labels, key bindings, values, selection, cooldown, lock, or disabled states into UI images.
-- No generated `.png.import` sidecar under `docs/` is committed; documentation images are source references only.
-
-## Production Handoff Checklist
-
-- [ ] Exact logical cell size selected through the terrain spike.
-- [ ] Tile atlas grid, padding, naming, source IDs, and filtering documented.
-- [ ] Required terrain peering matrix has no missing edge/corner case.
-- [ ] Component pivots, sockets, motion envelope, collision bounds, and state frames documented.
-- [ ] One stage-skin kit completed without cross-region assets.
-- [ ] UI icon box, safe padding, display sizes, tint permission, and fallback IDs documented.
-- [ ] Generated micro-detail removed at gameplay scale.
-- [ ] Human review confirms silhouette readability at 960x540 gameplay capture.
+- None of these images proves isometric collision, navigation, occlusion, or
+  combat readability.
+- Retained platform-era subjects may be reused as identity or palette references,
+  but their camera angle and proportions are obsolete.

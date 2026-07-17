@@ -3,10 +3,10 @@ type: evidence
 status: active
 owner: BK
 created: 2026-07-15
-last_reviewed: 2026-07-15
+last_reviewed: 2026-07-17
 topic: Production raster UI illustration pack and generation provenance
 scope: Traveler, active equipment, Spirit Stones, consumable, active cards, Slime King, and large Boss Core reward art
-source: Active content catalogs, UI visual-system contract, owner-selected lower-ruins references, and built-in image generation
+source: Retired content catalogs at Git commit 7cc069c, the active UI visual-system contract, owner-selected lower-ruins references, and built-in image generation
 related:
   - ../../UI_VISUAL_SYSTEM.md
   - ../README.md
@@ -26,10 +26,8 @@ quantity, cooldown, lock, and disabled states stay in live Godot UI.
 
 - `../ui-shell/owner-reference-lower-ruins.png`: world palette and material family.
 - `../visual-style-slate-cutout.png`: broad flat-shape and low-noise reference.
-- `../../../product/2d_platform_action_card_game_prd.md`: vertical-slice boundary.
-- `../../../../data/equipment/equipment_progression_catalog.tres`: eight active equipment models and two Spirit Stones.
-- `../../../../data/cards/card_catalog.tres`: five active shared cards.
-- `../../../../scenes/player/Player.tscn` and `../../../../scenes/bosses/SlimeKing.tscn`: current Traveler and Slime King identity anchors.
+- Git commit `7cc069c`: retired catalogs and scenes used to establish the original
+  eight equipment, five card, Traveler, and Slime King identities.
 
 ## Findings
 
@@ -157,8 +155,8 @@ Slime King, and a broken-ring Boss Core relic.
 
 ## Limitations
 
-- These assets are generated production candidates and have not yet been wired
-  into runtime screens; that adoption is a separate UI change.
+- These assets are retained production candidates with no current runtime screen;
+  adoption belongs to the isometric pivot rather than the retired layouts.
 - A later native-art pass may simplify individual facets further without
   changing IDs, display contracts, or fallbacks.
 - Frame-consistent actor animation and seamless world art require dedicated

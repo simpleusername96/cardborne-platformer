@@ -3,30 +3,35 @@ type: spec
 status: active
 owner: BK
 created: 2026-07-13
-last_reviewed: 2026-07-15
+last_reviewed: 2026-07-17
 canonical_for: Cardborne UI art direction, shell backdrop roles, panel visual roles, and raster/vector asset boundaries
 scope: Accepted production UI visual language, asset roles, Theme ownership, reusable components, and validation
-source: Owner-approved UI direction through 2026-07-15, the active production UI contract, the original UI SVG kit, and component UI foundation research
+source: Owner-approved UI direction through 2026-07-17 and the retained project-original UI asset pack
 related:
-  - ./PRODUCTION_UI_CONTRACT.md
-  - ./COMBAT_EQUIPMENT_CRAFTING.md
-  - ./PLAYER_FACING_FLOW.md
-  - ./GAME_COMPONENT_ART_SYSTEM.md
-  - ../research/component_ui_foundation_research_2026-07-13.md
   - ./references/README.md
   - ../../art/ui/production/README.md
-  - ../../.agent/execplans/2026-07-13-component-ui-foundation.md
+  - ../research/third_party_adoption_ledger.md
+  - ../../.agent/execplans/2026-07-17-isometric-action-rpg-pivot.md
 ---
 
 # UI Visual System
 
 ## Purpose
 
-Define a coherent game UI system that replaces testbed-like panels and scattered code-local styling without replacing the working snapshot, intent, transaction, focus, and responsive-layout contracts in `PRODUCTION_UI_CONTRACT.md`.
+Preserve the accepted Cardborne visual language while the runtime is rebuilt as
+an isometric action RPG. This specification owns appearance and asset boundaries;
+the active pivot plan and later gameplay/UI contracts own behavior and screen flow.
 
 This specification locks the owner's visual direction. The five selected shell backgrounds have production copies under `art/ui/production/backgrounds/`; generated panel sheets remain reference-only until deterministically rebuilt.
 
-## Locked Direction
+## Scope
+
+This document governs the retained visual language, asset-medium decisions,
+shared UI tokens, and future screen/component acceptance criteria. It does not
+define combat rules, room objectives, progression balance, or the order in which
+the new runtime is rebuilt.
+
+## Requirements
 
 - No visible panel or button outlines by default.
 - No border frames around HUD clusters, cards, buttons, prompts, or modals.
@@ -334,16 +339,15 @@ Icons provide recognition; exact cooldown, charge, count, cost, and result value
 - Illustrations support the product/character/item and cannot replace mechanical information.
 - Confirmation and destructive actions remain explicit and idempotent.
 
-## Current-To-Target Mapping
+## Reset-To-Target Mapping
 
-| As-is | To-be |
+| Reset baseline | Future implementation |
 | --- | --- |
-| `ProductionUIStyles.panel_style()` defaults to border and radius. | Project Theme uses border width `0`, radius `0`, flat semantic fills. |
-| Button focus/selection is primarily a thicker border. | Reserved side/bottom marker, accent fill, icon, and text state show focus/selection. |
-| HUD node tree is substantially built in `ProductionHUD.gd`. | `ProductionHUD.tscn` owns composition; script binds snapshots and responsive state. |
-| Scene-local colors/sizes/separations are widespread. | Theme variations and token constants own recurring values; local overrides are audited exceptions. |
-| Procedural glyphs and placeholder shapes carry many identities. | Original manifest-backed SVG masks replace simple structural and semantic placeholders; expressive or detailed identities move to reviewed raster art. |
-| Panels group nearly every cluster. | Spacing, alignment, fill planes, and typography group content; panel containers exist only where interaction/layout needs them. |
+| The pivot has no runtime screens. | New screens compose the retained Theme, manifest-backed assets, and live controls. |
+| The retained art contains platform-era subject matter. | Reuse its palette, shape language, and independent illustrations; do not reuse side-view composition as isometric geometry. |
+| No HUD contract is active. | The combat proof introduces only health, immediate action/resource state, objective, and essential world-space cues. |
+| No UI binding owner exists. | Small presenters consume immutable snapshots and emit player intents without mutating domain state. |
+| The asset pack has stable source IDs but no runtime registry. | Recreate one manifest-backed resolver before more than one screen consumes the same asset family. |
 
 ## Asset Manifest Contract
 
@@ -362,12 +366,12 @@ Every production UI raster or SVG asset registers:
 
 Missing assets use a declared fallback without changing component size or gameplay state. Asset paths do not appear throughout screen scripts.
 
-## Validation
+## Acceptance Criteria
 
 ### Automated
 
-- Existing snapshot/intent and transaction validators remain green.
-- Render/layout validators cover 960x540, 1280x720, and 1920x1080.
+- Add focused render/layout checks as each new screen lands; do not restore the retired platformer validation matrix.
+- Render/layout checks cover 960x540, 1280x720, and 1920x1080.
 - Every interactive screen has initial focus, valid focus neighbors, and return-focus behavior.
 - Text and children remain inside containers with no clipping or overlap.
 - Components keep stable dimensions across normal, focus, selected, disabled, cooldown, loading, error, and success states.

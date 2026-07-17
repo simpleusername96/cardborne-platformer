@@ -1,116 +1,34 @@
 # Cardborne Documentation
 
-This index prevents plans, evidence, and old prototypes from competing with active
-game specifications.
-
-For a short explanation of the current combat decision, read
-`design/COMBAT_LOADOUT_DECISION_BRIEF.md`. It is a derived decision record; the
-product blueprint and detailed combat spec below remain authoritative.
-
-## Core Play Review Package
-
-The following documents are the current review package for shifting the next
-milestone from content breadth to a measured Core Play Proof. The audit is active
-evidence to consult; the foundation specification and roadmap remain drafts until
-the owner accepts their scope. The active PRD and production contracts continue to
-govern runtime behavior:
-
-- `audits/cardborne_gameplay_experience_audit_2026-07-16.md` diagnoses the current
-  repository from game-design and implementation perspectives, separates essential
-  foundations from direct enjoyment work and deferred polish, and defines the
-  prerequisites for procedural-generation re-entry.
-- `design/CORE_PLAY_FOUNDATIONS.md` proposes controls, movement, combat grammar,
-  shared enemy states, three build directions, stage rhythm, boss learning,
-  presentation requirements, and human acceptance gates.
-- `.agent/execplans/2026-07-16-core-play-experience-roadmap.md` divides the work into
-  small pull requests with hypotheses, fixtures, rollback boundaries, automated
-  checks, and human playtest gates.
+This index separates the active isometric-action pivot from retained visual
+evidence. Deleted platformer specifications and implementation records remain
+available through Git history and do not guide new work.
 
 ## Read First
 
 | Order | Document | Authority |
 | ---: | --- | --- |
-| 1 | `product/2d_platform_action_card_game_prd.md` | Canonical product and fun specification. |
-| 2 | `design/COMBAT_EQUIPMENT_CRAFTING.md` | Minimum complete one-hero combat, 6 tool models, blueprints, two material grades, crafting, repair, supply, and passive Spirit Stones. |
-| 3 | `design/PRODUCTION_UI_CONTRACT.md` | Current production screens, HUD, feedback, focus, and responsive behavior. |
-| 4 | `design/UI_VISUAL_SYSTEM.md` | Accepted UI art direction, asset boundaries, shell backgrounds, panels, state visuals, and validation. |
-| 5 | `design/PROCEDURAL_REGION_GENERATION.md` | Stage profiles, terrain, room catalog, and deferred generation. |
-| 6 | `design/2D_PLATFORMER_MAP_DESIGN_GUIDELINE.md` | Canonical room intention, gameplay verticality, routing, pacing, and map acceptance rules. |
-| 7 | `design/MAP_AUTHORING_PIPELINE_CONTRACT.md` | Room-template and anchor schema. |
-| 8 | `design/ENEMIES_TRAPS_GIMMICKS.md` | Enemy, hazard, encounter, and boss content. |
-| 9 | `architecture/FIRST_SLICE_ARCHITECTURE.md` | Current runtime ownership and retained compatibility boundaries. |
+| 1 | `../AGENTS.md` | Repository operating guidance and current project direction. |
+| 2 | `../.agent/Prompt.md` | Active pivot policy. |
+| 3 | `../.agent/execplans/2026-07-17-isometric-action-rpg-pivot.md` | Active implementation and decision plan. |
+| 4 | `design/UI_VISUAL_SYSTEM.md` | Active UI and art-style contract. |
 
-## Supporting Material
+There is no accepted replacement gameplay PRD yet. Creating and validating that
+short product contract is the first milestone of the active ExecPlan.
 
-- `data/RUNTIME_CATALOG_INDEX.md` maps gameplay domains to typed runtime owners.
-- `release/TRAVELER_EQUIPMENT_VERTICAL_SLICE.md` records the current playable
-  baseline and its verification evidence.
-- `release/FIXED_STAGE_MAP_ENHANCEMENT.md` records the completed normal-stage
-  topology, minimap, completion-policy, traversal, and Web release evidence.
-- `release/FIRST_COMPLETE_RUN_RC1.md` is the superseded three-class baseline.
-- `.agent/execplans/2026-07-14-minimum-equipment-progression-vertical-slice.md` is
-  the completed migration and validation record, not current work.
-- `.agent/execplans/2026-07-15-gameplay-validity-repair.md` is the completed
-  input, death/retry, guard, stage, safe-intermission, and browser-export record.
-- `.agent/execplans/2026-07-15-master-ui-overhaul.md` is the completed production
-  screen, HUD, asset, responsive-layout, and Web UI migration record.
-- `.agent/execplans/2026-07-15-fixed-stage-map-enhancement.md` is the completed
-  meaningful-verticality, minimap, completion-policy, encounter, and continuous
-  traversal record.
-- `.agent/execplans/2026-07-12-actual-game-production-roadmap.md` is the completed
-  first-run implementation record.
-- `design/PLAYER_CHARACTER_SYSTEMS.md`,
-  `design/PROGRESSION_EQUIPMENT_ECONOMY.md`,
-  `design/ARSENAL_EQUIPMENT_PROGRESSION.md`, `design/PLAYER_FACING_FLOW.md`, and the
-  2026-07-14 single-hero arsenal migration plan are superseded evidence.
-- `design/PLAYER_UIUX_REFINEMENT_PLAN.md` is superseded UI research. Its accepted
-  minimum UI work is incorporated into `design/PRODUCTION_UI_CONTRACT.md`.
-- `design/reports/arsenal-equipment-system.html` is a superseded interactive
-  snapshot of the former six-discipline direction. It is retained for comparison
-  and does not define current work.
-- `research/third_party_adoption_ledger.md` is the active external adoption record.
-- `research/combat_loadout_reference_review_2026-07-14.md` is archived evidence.
-  Its former three-active-skill recommendation was rejected and must not guide
-  current work.
-- `research/player_input_and_ui_followup_audit_2026-07-15.md` is archived evidence
-  from a rejected control recommendation; it does not define current work.
-- `research/plan_validity_audit_2026-07-15.md` is the archived evidence audit that
-  created the active gameplay-validity plan; it does not describe current gaps.
-- `research/2d_platformer_map_design_research_2026-07-15.md` is the active
-  cross-case evidence and current-stage diagnosis behind the canonical map
-  guideline and fixed-stage enhancement plan.
-- Dated surveys/deep dives are archived evidence; `references/` contains advisory
-  candidates. Neither is product authority.
-- `.agent/Documentation.md` records current project state and verification paths.
+## Retained Evidence
 
-## Preproduction Drafts
-
-These documents are intentionally non-canonical until the owner accepts the proposed
-production-art and UI foundation:
-
-- `design/GAME_COMPONENT_ART_SYSTEM.md` proposes the tile, reusable component,
-  stage-skin, decoration, actor, and unique-set-piece boundaries.
-- `design/WORLD_COMPONENT_IMAGE_PRODUCTION_PLAN.md` defines image-generation batch
-  size, per-family production order, candidate approval, cleanup, and temporary HTML
-  gallery review before Godot integration.
-- `research/component_ui_foundation_research_2026-07-13.md` records local and
-  external evidence behind those proposals.
-- `.agent/execplans/2026-07-13-component-ui-foundation.md` is the draft future
-  implementation sequence. It authorizes no work unless explicitly activated
-  against the current `master`.
-- `.agent/handoffs/2026-07-14-world-component-imagegen-session.md` is the active
-  continuation record for the latest terrain-first, canonical-base, and state-overlay
-  correction. Read it before executing the older image-generation call matrix.
-- `design/references/README.md` classifies generated boards as references rather
-  than production-ready atlases or sprites.
-- `tools/component_gallery/` is a static review prototype, not shipped UI. Its
-  background coverage model and inline SVG world objects are historical evidence;
-  production backgrounds and world components remain raster assets.
+- `design/references/` contains owner-selected visual and UI references.
+- `design/reports/ui-raster-asset-catalog.png` and
+  `design/reports/ui-svg-asset-catalog.html` show the retained production asset
+  inventory; they are not runtime atlases.
+- `design/visuals/player_experience_ui_concept.*` is historical UI evidence.
+- `research/third_party_adoption_ledger.md` preserves the font and dependency
+  provenance that still applies to retained assets.
 
 ## Lifecycle Rule
 
-Active specs define required product behavior; `.agent/Documentation.md`, the
-current release record, and validators distinguish what has landed. Completed
-ExecPlans are historical records and do not define new work. Evidence supports
-decisions but is not obeyed directly. Deleted prototype material is historical and
-should be recovered from Git only for a specific investigation.
+Active policy and specs govern their stated scope. The active plan defines work
+order only. Visual references are evidence, not implementation instructions.
+Platformer material deleted in the pivot must be recovered from Git only for a
+specific, reviewed need.

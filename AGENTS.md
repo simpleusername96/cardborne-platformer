@@ -1,23 +1,24 @@
 # AGENTS.md
 
 ## Project
-- This repository exists to build the Godot 4.x GDScript MVP described in `docs/product/2d_platform_action_card_game_prd.md`.
-- Treat that PRD as the active product specification unless the user explicitly supersedes it.
-- The MVP target is a compact playable vertical slice: three platform-action stages, one 3-card reward flow after normal stages, and one telegraphed two-phase boss fight.
-- Prioritize player-controller reliability before adding broad content. Movement feel, damage response, and no-soft-lock stage flow are the highest-risk areas.
-- Use placeholder shapes, simple sprites, and editor-friendly exported values. Do not add external asset dependencies for the MVP unless the user asks.
+- This repository is pivoting to a Godot 4.x GDScript isometric action RPG. The active transition plan is `.agent/execplans/2026-07-17-isometric-action-rpg-pivot.md` until a replacement product spec is accepted.
+- Preserve the accepted flat-color drowned-ruin art direction and the product identities of one Traveler, explicit weapons, cards, equipment, forging, merchants, run rewards, and persistent progression. Rebuild their runtime contracts for top-down combat instead of restoring the retired platformer implementation.
+- The first target is a short authored combat proof, not a complete content run: responsive eight-direction movement, independent aim, explicit attacks, dash/defense, three enemy roles, multiple encounter objectives, one behavior-changing reward, and one boss test.
+- Treat two-dimensional ground-plane simulation and isometric presentation as separate concerns. Do not add jumping, ropes, platform geometry, or stacked navigation levels unless a later accepted spec requires them.
+- Prioritize player intent, hit readability, enemy coordination, and a quick playable feedback loop before meta-system breadth or procedural generation.
+- Use placeholder shapes, simple sprites, and editor-friendly exported values. Do not add external asset dependencies unless the user asks.
 
 ## Operating Model
 - Use Godot 4.7 stable when available. The standard GDScript build is enough; do not switch to C#/.NET without explicit user direction.
 - Prefer `.\tools\godot.ps1` for local Godot commands so future agents use the same runtime resolution path.
-- Work milestone by milestone from the PRD. For moderate or larger implementation work, start with the relevant `.agent/*` context and create an ExecPlan only when `.agent/PLANS.md` says one is warranted.
+- Work milestone by milestone from the active pivot plan and the replacement product spec once it exists. For moderate or larger implementation work, start with the relevant `.agent/*` context and create an ExecPlan only when `.agent/PLANS.md` says one is warranted.
 - Keep gameplay systems responsibility-shaped:
-  - player movement/combat belongs under `scripts/player/`
+  - player movement and action intent belong under `scripts/player/`
   - damage helpers belong under `scripts/combat/`
   - enemy behavior belongs under `scripts/enemies/`
   - boss patterns belong under `scripts/bosses/`
   - card data/effects belong under `scripts/cards/` and `data/cards/`
-  - stage flow belongs under `scripts/stages/`
+  - room and encounter flow belongs under `scripts/rooms/` and `scripts/encounters/`
   - UI belongs under `scripts/ui/`
   - global run state/autoloads belong under `scripts/autoload/`
 - Do not hard-code cards directly into UI or player code. Card data and effect application should stay separate.

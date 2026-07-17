@@ -32,7 +32,7 @@ treatment.
 
 ## Icons
 
-The icon set covers the current production contract: navigation, the six Traveler
+The icon set covers the retained product vocabulary: navigation, the six Traveler
 loadout roles, forge materials and supplies, run rewards, and interaction. Every
 icon uses a `64 x 64` view box and fill-only geometry so it remains readable from
 approximately `24 px` through `64 px`.
@@ -45,7 +45,7 @@ The five files under `backgrounds/` are production copies of the owner-selected
 UI-shell candidates. They contain world atmosphere only; all panels, labels,
 icons, focus, and interaction state remain live Godot controls.
 
-| Asset | Runtime role |
+| Asset | Intended role |
 | --- | --- |
 | `backgrounds/main_menu.png` | Main Menu establishing view |
 | `backgrounds/settings.png` | Shell-only Settings view; in-run Settings keeps the live stage |
@@ -53,10 +53,9 @@ icons, focus, and interaction state remain live Godot controls.
 | `backgrounds/forge.png` | Contextual Forge artwork retained for a later measured slot; not a full-screen in-run backdrop |
 | `backgrounds/run_result.png` | Run Result gate view |
 
-`ProductionBackdrop` displays the four connected shell images with
-aspect-preserving cover behavior. Forge keeps the live stage behind its centered
-modal, so its raster remains an available asset rather than a forced backdrop.
-Do not stretch these files, tile them, or bake screen controls into replacements.
+No current runtime scene consumes these images after the isometric pivot reset.
+Future shell screens may reuse them with aspect-preserving cover behavior. Do not
+stretch these files, tile them, or bake screen controls into replacements.
 Source references and generation provenance remain under
 `docs/design/references/ui-shell/`.
 
@@ -96,9 +95,8 @@ The Theme follows `docs/design/UI_VISUAL_SYSTEM.md`: square corners, flat planes
 no decorative perimeter outlines, and at least 48 px primary targets. Focus and
 selection reserve a stable four-pixel inside-left marker lane and combine that
 marker with fill or live text, so state is not color-only and does not move the
-layout. `scripts/ui/production/ProductionUIStyles.gd` remains the narrow owner for
-semantic tokens and genuinely dynamic flat styles; screens should not rebuild the
-shared variations locally.
+layout. The future UI foundation must recreate one narrow semantic-token owner;
+screens must not rebuild shared variations locally.
 
 The Theme embeds `fonts/NotoSansKR-Variable.ttf` as its default font so Korean
 and English remain identical across desktop and Web exports instead of relying
@@ -108,21 +106,18 @@ normalized. Its copyright notice and OFL-1.1 terms are preserved in
 `fonts/NotoSansKR-OFL.txt`, and adoption evidence is recorded in
 `docs/research/third_party_adoption_ledger.md`.
 
-`tools/validate_production_ui_theme.gd` checks the configured project Theme,
-variation/base-type coverage, zero-radius/no-perimeter rules, marker exception,
-meter styles, shared modal use, button target height, bundled font ownership,
-and representative Korean/English glyph coverage. It is part of the release
-candidate matrix.
+The retired theme validator is available at Git commit `7cc069c`. The new UI pass
+must add a smaller replacement covering variation/base-type ownership,
+zero-radius/no-perimeter rules, button target height, bundled font ownership, and
+representative Korean/English glyph coverage.
 
-## Runtime ownership and current adoption
+## Pivot Status
 
-`scripts/ui/production/ProductionUIAssets.gd` is the only runtime path and
-fallback resolver. Screens request semantic IDs or content-owner IDs; they do not
-repeat raster paths. `tools/validate_production_ui_assets.gd` cross-checks all 52
-registry entries against this manifest, imported dimensions, fallbacks, owners,
-and disposition.
+`asset-manifest.json` remains the retained source inventory, but there is no
+current runtime resolver. Recreate one shared resolver before multiple screens
+consume the same family; screens must not repeat raster paths.
 
-The first adoption batch uses:
+The retired adoption batch used:
 
 - four shell background contexts: Main Menu, shell Settings, Hero Preparation,
   and Run Result;
@@ -130,6 +125,6 @@ The first adoption batch uses:
 - all five active card vignettes in Card Reward;
 - Traveler, Slime King, and Boss Core art in the result summary.
 
-Structural SVGs and the remaining small semantic icons retain explicit deferred
-or fallback disposition in the manifest until the merchant, remaining HUD, and
-screen-migration milestones measure their actual slots.
+Those placements are historical evidence, not accepted isometric layouts.
+Structural SVGs and small semantic icons retain explicit candidate or fallback
+roles in the manifest until new screens measure their actual slots.

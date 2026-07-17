@@ -1,44 +1,56 @@
-# Flooded Works World Art Proof
+---
+type: evidence
+status: active
+created: 2026-07-16
+last_reviewed: 2026-07-17
+owner: BK
+source: Owner-reviewed Flooded Works art proof
+topic: Retained world-art direction after the isometric action RPG reset
+related:
+  - ../../../docs/design/UI_VISUAL_SYSTEM.md
+  - ../../../.agent/execplans/2026-07-17-isometric-action-rpg-pivot.md
+---
 
-This directory contains the accepted first-room proof for the production world-art
-pipeline. It is intentionally smaller than a full stage kit.
+# Flooded Works World-Art Evidence
 
-## Visual direction
+## Purpose
 
-- Theme: an ancient flooded foundry built into a fortress ruin.
-- Medium: flat raster art with broad geometric planes and no outlines.
+Preserve the accepted visual language and source images without carrying the
+former side-view room, collision, hazard-state, or parallax contracts into the
+new isometric runtime.
+
+## Sources
+
+- `backgrounds/`: owner-reviewed sequential environment panels.
+- `terrain/` and `components/`: flat-color foreground studies from the retired
+  platformer implementation.
+- `art/source/flooded_works/`: image-generation direction boards; they are not
+  runtime atlases.
+
+## Findings
+
+- Theme: ancient flooded foundry inside a fortress ruin.
+- Medium: flat raster art built from broad geometric planes with no outlines.
 - Palette: charcoal, deep blue-green, muted verdigris, desaturated rust, and
-  restrained mustard light. Interactive terrain stays within the same family.
-- Detail budget: large silhouettes first; sparse structural seams only. Do not add
-  stippling, pointillism, speckles, grain, stains, dense hatching, tiny repeated
-  bolts, or AI microtexture.
-- Separation: distant images contain no playable platforms, hazards, characters,
-  UI, or text. Terrain and hazards are independent foreground components.
+  restrained mustard light.
+- Detail budget: large silhouettes first; no stippling, speckles, grain, stains,
+  dense hatching, tiny repeated bolts, or AI microtexture.
+- Backgrounds contain no baked characters, enemies, hazards, UI, or text.
+- Gameplay-significant terrain and props must remain separable from decorative
+  background art.
 
-## Background contract
+## Recommendations
 
-- Each source panel is `2048x1536` (`4:3`).
-- Adjacent panels overlap by `192 px` and form a `3904x1536` composite.
-- The second panel was generated from the first panel's right-edge reference, then
-  center-cropped, Lanczos-resized, and blended through the accepted overlap.
-- `Parallax2D.scroll_scale` is `0.18`; horizontal/vertical overscan is `192/128`.
-- Only the current location's string-addressed panels are loaded. Other stage
-  definitions retain the procedural fallback.
+- Reuse palette, value grouping, shape simplification, and material language.
+- Recompose future world art for the new camera and navigation plane; do not
+  interpret these side-view images as collision, room geometry, or scale truth.
+- Build a small isometric terrain/prop proof only after the graybox combat camera
+  and readable engagement distances are accepted.
 
-## Representative terrain contract
+## Limitations
 
-`fw_poison_timing` contains six surface instances but five unique collision
-signatures. The duplicate `240x100` masses reuse one raster type. The five runtime
-assets are not a tile grid and do not alter collision shapes, support metadata, or
-room placement.
-
-## Stateful component contract
-
-The poison vent and crumbling platform each own one canonical `base.png`. Runtime
-state changes only overlay visibility (and collision behavior already owned by the
-component). The base texture, base node, local position, and root pivot stay fixed.
-
-The two files under `art/source/flooded_works/` are image-generation direction
-boards. They are not atlases and are never sliced at runtime. Production PNGs in
-this directory are normalized, exact-size assets derived from the measured room
-contract.
+- The retained panels are not an isometric map kit.
+- Terrain and state-overlay images are visual studies only until a new asset
+  contract is approved.
+- Exact source dimensions and seams describe these files, not future runtime
+  streaming or camera behavior.

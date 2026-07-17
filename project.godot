@@ -5,20 +5,9 @@ config_version=5
 
 [application]
 
-config/name="Cardborne Platformer"
-run/main_scene="res://scenes/main/Main.tscn"
+config/name="Cardborne"
+run/main_scene="res://scenes/main/PivotRoot.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
-
-[autoload]
-
-SignalBus="*res://scripts/autoload/SignalBus.gd"
-ProfileState="*res://scripts/autoload/ProfileState.gd"
-RunState="*res://scripts/autoload/RunState.gd"
-InputBindings="*res://scripts/autoload/InputBindings.gd"
-UILocalization="*res://scripts/autoload/UILocalization.gd"
-Game="*res://scripts/autoload/Game.gd"
-RunDirector="*res://scripts/autoload/RunDirector.gd"
-FeedbackDirector="*res://scripts/presentation/FeedbackDirector.gd"
 
 [display]
 
@@ -29,21 +18,16 @@ window/size/viewport_height=720
 
 theme/custom="res://art/ui/production/production_ui_theme.tres"
 
-[internationalization]
-
-locale/translations=PackedStringArray("res://localization/ui.en.po", "res://localization/ui.ko.po")
-
 [layer_names]
 
 2d_physics/layer_1="World"
-2d_physics/layer_2="OneWayPlatform"
-2d_physics/layer_3="Player"
-2d_physics/layer_4="Enemy"
-2d_physics/layer_5="PlayerHitbox"
-2d_physics/layer_6="EnemyHitbox"
-2d_physics/layer_7="Hazard"
-2d_physics/layer_8="Projectile"
-2d_physics/layer_9="Interactable"
+2d_physics/layer_2="Player"
+2d_physics/layer_3="Enemy"
+2d_physics/layer_4="PlayerHitbox"
+2d_physics/layer_5="EnemyHitbox"
+2d_physics/layer_6="Projectile"
+2d_physics/layer_7="Interactable"
+2d_physics/layer_8="NavigationObstacle"
 
 [rendering]
 
