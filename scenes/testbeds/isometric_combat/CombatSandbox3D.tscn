@@ -1,4 +1,4 @@
-[gd_scene load_steps=26 format=3]
+[gd_scene load_steps=28 format=3]
 
 [ext_resource type="Script" path="res://scripts/testbeds/combat_sandbox_3d.gd" id="1_sandbox"]
 [ext_resource type="PackedScene" path="res://third_party/kenney_modular_dungeon/models/room-large.glb" id="2_room"]
@@ -81,6 +81,18 @@ roughness = 0.32
 [sub_resource type="BoxMesh" id="BoxMesh_sword"]
 material = SubResource("Material_blade")
 size = Vector3(0.12, 0.12, 1.35)
+
+[sub_resource type="StandardMaterial3D" id="Material_shield"]
+albedo_color = Color(0.25098, 0.596078, 0.631373, 1)
+emission_enabled = true
+emission = Color(0.160784, 0.419608, 0.45098, 1)
+emission_energy_multiplier = 0.35
+metallic = 0.22
+roughness = 0.62
+
+[sub_resource type="BoxMesh" id="BoxMesh_shield"]
+material = SubResource("Material_shield")
+size = Vector3(0.72, 0.9, 0.12)
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape_dummy"]
 radius = 0.5
@@ -265,6 +277,12 @@ position = Vector3(0.45, 0.95, -0.15)
 position = Vector3(0, 0, -0.62)
 mesh = SubResource("BoxMesh_sword")
 
+[node name="Shield" type="MeshInstance3D" parent="Traveler/Visual"]
+visible = false
+position = Vector3(-0.46, 0.88, -0.34)
+rotation_degrees = Vector3(0, -22, 0)
+mesh = SubResource("BoxMesh_shield")
+
 [node name="DamageableDummy" type="StaticBody3D" parent="."]
 position = Vector3(3.5, 0, -1.4)
 script = ExtResource("7_dummy")
@@ -393,5 +411,35 @@ grow_horizontal = 2
 grow_vertical = 0
 theme_override_colors/font_color = Color(0.631373, 0.721569, 0.713726, 1)
 theme_override_font_sizes/font_size = 14
-text = "ARROWS MOVE   ·   SHIFT DASH   ·   SPACE MELEE   ·   Z RANGED   ·   X INTERACT   ·   C POTION   ·   R RESET"
+text = "ARROWS MOVE   ·   SPACE DASH   ·   SHIFT GUARD   ·   Z MELEE   ·   X RANGED   ·   C POTION   ·   ESC PAUSE"
 horizontal_alignment = 1
+
+[node name="PauseOverlay" type="ColorRect" parent="HUD/Root"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.0196078, 0.0313726, 0.0352941, 0.86)
+
+[node name="Label" type="Label" parent="HUD/Root/PauseOverlay"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -180.0
+offset_top = -48.0
+offset_right = 180.0
+offset_bottom = 48.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.901961, 0.917647, 0.882353, 1)
+theme_override_font_sizes/font_size = 28
+text = "PAUSED\nESC TO RESUME"
+horizontal_alignment = 1
+vertical_alignment = 1

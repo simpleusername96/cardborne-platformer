@@ -55,11 +55,13 @@ later proves worth recovering.
 - Phase 1 native 3D implementation is playable: `CombatSandbox3D` contains an
   imported CC0 dungeon room, explicit boundary collision, two cover blocks, a
   damageable dummy, a telegraphed pulse, and the Traveler.
-- Traveler arrow-key input, movement, facing, dash, melee, solid-blocked ranged shot,
-  three-charge potion, damage, reset, action trace, and bounded camera are live.
+- Traveler arrow-key input, movement, facing, dash, damage-reducing guard, melee,
+  solid-blocked ranged shot, three-charge potion, damage, pause, reset, action
+  trace, and bounded camera are live.
 - The automated native 3D gate and 960x540, 1280x720, and 1920x1080 rendered
-  captures pass. The Web release exports and boots from the manager-provided
-  `codex` lane with focused dash input and no browser console warning or error.
+  captures pass, with additional 1280x720 guard and pause-state evidence. The
+  Web release exports and boots from the manager-provided `codex` lane with
+  focused action input and no browser console warning or error.
   Physical-gamepad and two-minute manual feel gates remain before Phase 1 is
   closed.
 - Retained authority: root `AGENTS.md`, `.agent/Prompt.md`, the active ExecPlan,

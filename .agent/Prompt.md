@@ -46,5 +46,5 @@ the durable gameplay contract.
 - Use Godot 4.7 GDScript. External assets require current owner approval, an
   adoption-ledger entry, a copied license, and a source that permits commercial
   modification and redistribution; prefer small selected imports over packages.
-- Primary keyboard actions are arrows for movement, Shift dash, Space melee,
-  Z ranged, X interact, C potion, and Esc pause. Gamepad remains secondary.
+- Primary keyboard actions are arrows for movement, Space dash, Shift guard,
+  Z melee, X ranged, C potion, and Esc pause. Gamepad remains secondary.

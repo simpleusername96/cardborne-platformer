@@ -32,15 +32,17 @@ fixed orthographic isometric camera.
 
 ### Player control
 
-- Keyboard uses arrow-key movement, Space melee, `Z` ranged, Left Shift dash,
-  `X` interact, `C` potion, and Esc pause. Attacks initially follow last movement.
-- Gamepad uses left-stick movement, RB melee, RT ranged, south-face dash,
-  west-face interact, north-face potion, and Menu pause. Right-stick or assisted
-  aiming is deferred until a real ranged-enemy fixture can validate the choice.
+- Keyboard uses arrow-key movement, Space dash, Left Shift guard, `Z` melee,
+  `X` ranged, `C` potion, and Esc pause. Attacks initially follow last movement.
+- Gamepad uses left-stick movement, south-face dash, LB guard, RB melee, RT
+  ranged, north-face potion, and Menu pause. Right-stick or assisted aiming is
+  deferred until a real ranged-enemy fixture can validate the choice.
 - Ground movement has normalized diagonals, `6 m/s` maximum speed,
   `28 m/s²` acceleration, and `34 m/s²` braking.
 - Dash moves at `14 m/s` for `0.18 s`, is invulnerable for its first `0.10 s`,
   recovers for `0.12 s`, and reuses after `0.55 s` from start.
+- Guard reduces incoming damage by 65% while held, slows movement to 45%, and
+  prevents attacks and dash until released.
 - Melee is an explicit buffered two-hit sword chain. Ranged is a separate
   straight projectile that stops on world collision and has no ammunition.
 - The Traveler has 100 health and three potion charges. A potion heals 35% after
@@ -76,8 +78,9 @@ fixed orthographic isometric camera.
 
 - The direct-start route completes from Movement Check through result, then
   replays immediately without stale card, potion, enemy, objective, or boss state.
-- Movement, melee, ranged, dash, potion, damage, cover, and objectives expose
-  their exact state and produce the same intent on both supported input families.
+- Movement, melee, ranged, dash, guard, potion, damage, cover, and objectives
+  expose their exact state and produce the same intent on both supported input
+  families.
 - Ordinary projectiles terminate on solid cover; no visual height changes
   collision, navigation, or damage truth.
 - Pump Gallery and Pressure Vault can complete with at least one enemy alive.

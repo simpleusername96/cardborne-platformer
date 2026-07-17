@@ -37,7 +37,8 @@ In scope:
 
 - one authored orthographic 3D room with a fixed isometric camera;
 - real `CharacterBody3D`, `StaticBody3D`, and `Area3D` collision;
-- arrow-key movement, Shift dash, Space melee, Z ranged, X interact, C potion;
+- arrow-key movement, Space dash, Shift guard, Z melee, X ranged, C potion,
+  and Esc pause;
 - solid cover that terminates ordinary projectiles;
 - one resettable target and one startup/active/recovery hazard;
 - responsive viewport captures and automated behavior validation.
@@ -74,7 +75,8 @@ Not yet in scope:
 - [x] Verify and adopt the CC0 Kenney Modular Dungeon Kit source.
 - [x] Build the authored 3D room, camera, collision, cover, and lighting.
 - [x] Implement requested keyboard controls and secondary gamepad bindings.
-- [x] Implement melee, ranged, dash, damage, potion, and pulse fixtures.
+- [x] Implement melee, ranged, dash, guard, damage, potion, pause, and pulse
+  fixtures.
 - [x] Remove the superseded 2D-only sandbox implementation.
 - [x] Pass automated behavior and three-viewport rendered checks.
 - [ ] Tune two minutes of keyboard feel with the owner.
@@ -83,9 +85,10 @@ Not yet in scope:
 ## Progress
 
 The native 3D foundation is implemented. Automated checks cover the scene,
-bindings, movement, dash invulnerability, melee, ranged impact, projectile cover,
-potion charges, and hazard damage. Rendered evidence exists at 960x540, 1280x720,
-and 1920x1080. The next product decision is combat feel, not engine choice.
+bindings, movement, dash invulnerability, guard mitigation, melee, ranged impact,
+projectile cover, potion charges, hazard damage, and pause. Rendered evidence
+exists at 960x540, 1280x720, and 1920x1080, plus 1280x720 guard and pause-state
+captures. The next product decision is combat feel, not engine choice.
 
 ## Next Steps
 

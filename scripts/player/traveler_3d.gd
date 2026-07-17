@@ -14,6 +14,8 @@ const DASH_COOLDOWN := 0.55
 const MELEE_DURATION := 0.38
 const MELEE_HIT_TIME := 0.10
 const RANGED_COOLDOWN := 0.45
+const GUARD_MOVE_MULTIPLIER := 0.45
+const GUARD_DAMAGE_MULTIPLIER := 0.35
 
 @export var max_health := 100
 
@@ -27,10 +29,12 @@ var dash_direction := Vector3.ZERO
 var melee_remaining := 0.0
 var melee_hit_fired := false
 var ranged_cooldown_remaining := 0.0
+var guarding := false
 
 @onready var camera: Camera3D = get_node("../CameraRig/Camera3D")
 @onready var visual: Node3D = $Visual
 @onready var sword_pivot: Node3D = $Visual/SwordPivot
+@onready var shield: MeshInstance3D = $Visual/Shield
 
 
 func _ready() -> void:
@@ -44,6 +48,11 @@ func _physics_process(delta: float) -> void:
 	dash_cooldown_remaining = maxf(0.0, dash_cooldown_remaining - delta)
 	ranged_cooldown_remaining = maxf(0.0, ranged_cooldown_remaining - delta)
 	_tick_melee(delta)
+	_set_guarding(
+		Input.is_action_pressed("guard")
+		and dash_remaining <= 0.0
+		and melee_remaining <= 0.0
+	)
 
 	if dash_remaining > 0.0:
 		dash_remaining = maxf(0.0, dash_remaining - delta)
@@ -53,20 +62,19 @@ func _physics_process(delta: float) -> void:
 		var move_direction := _camera_relative_direction(input_vector)
 		if move_direction.length_squared() > 0.0001:
 			facing = move_direction
-		var desired := move_direction * MOVE_SPEED if melee_remaining <= 0.0 else Vector3.ZERO
+		var move_speed := MOVE_SPEED * GUARD_MOVE_MULTIPLIER if guarding else MOVE_SPEED
+		var desired := move_direction * move_speed if melee_remaining <= 0.0 else Vector3.ZERO
 		var rate := ACCELERATION if desired.length_squared() > 0.0 else BRAKING
 		velocity.x = move_toward(velocity.x, desired.x, rate * delta)
 		velocity.z = move_toward(velocity.z, desired.z, rate * delta)
 		velocity.y = 0.0
-		if Input.is_action_just_pressed("dash") and dash_cooldown_remaining <= 0.0 and melee_remaining <= 0.0:
+		if Input.is_action_just_pressed("dash") and dash_cooldown_remaining <= 0.0 and melee_remaining <= 0.0 and not guarding:
 			_start_dash(move_direction)
 
-	if Input.is_action_just_pressed("melee") and melee_remaining <= 0.0 and dash_remaining <= 0.0:
+	if Input.is_action_just_pressed("melee") and melee_remaining <= 0.0 and dash_remaining <= 0.0 and not guarding:
 		_start_melee()
-	if Input.is_action_just_pressed("ranged") and ranged_cooldown_remaining <= 0.0 and dash_remaining <= 0.0:
+	if Input.is_action_just_pressed("ranged") and ranged_cooldown_remaining <= 0.0 and dash_remaining <= 0.0 and not guarding:
 		_fire_ranged()
-	if Input.is_action_just_pressed("interact"):
-		action_traced.emit("Interact")
 	if Input.is_action_just_pressed("potion"):
 		_use_potion()
 
@@ -78,9 +86,14 @@ func receive_damage(amount: int, source_id: StringName) -> bool:
 	if dash_remaining > DASH_DURATION - 0.10:
 		action_traced.emit("Dodged %s" % source_id)
 		return false
-	health = maxi(0, health - amount)
+	var applied_amount := amount
+	if guarding:
+		applied_amount = maxi(1, ceili(float(amount) * GUARD_DAMAGE_MULTIPLIER))
+		action_traced.emit("Guarded · -%d" % applied_amount)
+	health = maxi(0, health - applied_amount)
 	health_changed.emit(health, max_health)
-	action_traced.emit("-%d · %s" % [amount, source_id])
+	if not guarding:
+		action_traced.emit("-%d · %s" % [applied_amount, source_id])
 	if health <= 0:
 		reset_training()
 	return true
@@ -100,6 +113,7 @@ func reset_training() -> void:
 	dash_cooldown_remaining = 0.0
 	melee_remaining = 0.0
 	ranged_cooldown_remaining = 0.0
+	_set_guarding(false)
 	health_changed.emit(health, max_health)
 	potion_changed.emit(potion_charges)
 	action_traced.emit("Training reset")
@@ -122,6 +136,15 @@ func _start_dash(requested_direction: Vector3) -> void:
 	dash_remaining = DASH_DURATION
 	dash_cooldown_remaining = DASH_COOLDOWN
 	action_traced.emit("Dash")
+
+
+func _set_guarding(next_guarding: bool) -> void:
+	if guarding == next_guarding:
+		return
+	guarding = next_guarding
+	shield.visible = guarding
+	if guarding:
+		action_traced.emit("Guard")
 
 
 func _start_melee() -> void:

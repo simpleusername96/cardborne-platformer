@@ -25,13 +25,15 @@ func _run() -> void:
 	await _validate_melee(traveler, dummy)
 	await _validate_ranged(traveler, dummy)
 	await _validate_projectile_cover(traveler, dummy, sandbox.get_node("TallCover"))
+	await _validate_guard(traveler)
 	await _validate_potion(traveler)
 	await _validate_pulse(traveler, sandbox.training_pulse)
+	await _validate_pause(sandbox.get_node("HUD"))
 
 	pivot.queue_free()
 	await process_frame
 	if _failures.is_empty():
-		print("PASS: 3D map, keyboard, movement, dash, combat, cover, potion, and pulse contracts")
+		print("PASS: real key events, movement, dash, guard, combat, cover, potion, pulse, and pause contracts")
 		quit(0)
 	else:
 		for failure in _failures:
@@ -60,10 +62,10 @@ func _validate_input_contract() -> void:
 		&"move_right": KEY_RIGHT,
 		&"move_up": KEY_UP,
 		&"move_down": KEY_DOWN,
-		&"melee": KEY_SPACE,
-		&"ranged": KEY_Z,
-		&"dash": KEY_SHIFT,
-		&"interact": KEY_X,
+		&"melee": KEY_Z,
+		&"ranged": KEY_X,
+		&"dash": KEY_SPACE,
+		&"guard": KEY_SHIFT,
 		&"potion": KEY_C,
 		&"pause": KEY_ESCAPE,
 	}
@@ -82,23 +84,48 @@ func _validate_numeric_contract() -> void:
 
 
 func _validate_movement(traveler: Traveler3D) -> void:
+	var movement_keys: Array[Key] = [KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN]
+	for keycode in movement_keys:
+		traveler.reset_training()
+		var start := traveler.global_position
+		_key_down(keycode)
+		await _physics_frames(18)
+		_key_up(keycode)
+		await _physics_frames(2)
+		_expect(
+			traveler.global_position.distance_to(start) > 0.9,
+			"arrow key %s did not move the Traveler" % OS.get_keycode_string(keycode),
+		)
+		_expect(absf(traveler.global_position.y - start.y) < 0.05, "planar movement drifted vertically")
+
 	traveler.reset_training()
-	var start := traveler.global_position
-	Input.action_press("move_right")
+	var cardinal_start := traveler.global_position
+	_key_down(KEY_RIGHT)
 	await _physics_frames(18)
-	Input.action_release("move_right")
-	await _physics_frames(2)
-	_expect(traveler.global_position.distance_to(start) > 0.9, "arrow-key movement did not move the Traveler")
-	_expect(absf(traveler.global_position.y - start.y) < 0.05, "planar movement drifted vertically")
+	_key_up(KEY_RIGHT)
+	var cardinal_distance := traveler.global_position.distance_to(cardinal_start)
+	traveler.reset_training()
+	var diagonal_start := traveler.global_position
+	_key_down(KEY_RIGHT)
+	_key_down(KEY_UP)
+	await _physics_frames(18)
+	_key_up(KEY_RIGHT)
+	_key_up(KEY_UP)
+	var diagonal_distance := traveler.global_position.distance_to(diagonal_start)
+	_expect(
+		absf(diagonal_distance - cardinal_distance) < cardinal_distance * 0.1,
+		"diagonal arrow movement is not normalized (cardinal %.3f, diagonal %.3f)"
+		% [cardinal_distance, diagonal_distance],
+	)
 
 
 func _validate_dash(traveler: Traveler3D) -> void:
 	traveler.reset_training()
 	traveler.facing = Vector3.RIGHT
 	var start := traveler.global_position
-	Input.action_press("dash")
+	_key_down(KEY_SPACE)
 	await physics_frame
-	Input.action_release("dash")
+	_key_up(KEY_SPACE)
 	await physics_frame
 	var health_before := traveler.health
 	var damage_applied := traveler.receive_damage(20, &"dash_validator")
@@ -115,11 +142,11 @@ func _validate_melee(traveler: Traveler3D, dummy: DamageableDummy3D) -> void:
 	traveler.facing = Vector3.FORWARD
 	dummy.global_position = Vector3(0, 0, -1.65)
 	await _physics_frames(2)
-	Input.action_press("melee")
+	_key_down(KEY_Z)
 	await physics_frame
-	Input.action_release("melee")
+	_key_up(KEY_Z)
 	await _physics_frames(10)
-	_expect(dummy.health == DamageableDummy3D.MAX_HEALTH - 20, "Space melee did not hit exactly once")
+	_expect(dummy.health == DamageableDummy3D.MAX_HEALTH - 20, "Z melee did not hit exactly once")
 
 
 func _validate_ranged(traveler: Traveler3D, dummy: DamageableDummy3D) -> void:
@@ -130,11 +157,11 @@ func _validate_ranged(traveler: Traveler3D, dummy: DamageableDummy3D) -> void:
 	traveler.facing = Vector3.FORWARD
 	dummy.global_position = Vector3(0, 0, -4.0)
 	await _physics_frames(2)
-	Input.action_press("ranged")
+	_key_down(KEY_X)
 	await physics_frame
-	Input.action_release("ranged")
+	_key_up(KEY_X)
 	await _physics_frames(24)
-	_expect(dummy.health == DamageableDummy3D.MAX_HEALTH - 16, "Z ranged projectile did not hit exactly once")
+	_expect(dummy.health == DamageableDummy3D.MAX_HEALTH - 16, "X ranged projectile did not hit exactly once")
 
 
 func _validate_projectile_cover(
@@ -150,9 +177,9 @@ func _validate_projectile_cover(
 	traveler.facing = Vector3.RIGHT
 	dummy.global_position = cover.global_position + Vector3(3.2, -0.9, 0)
 	await _physics_frames(2)
-	Input.action_press("ranged")
+	_key_down(KEY_X)
 	await physics_frame
-	Input.action_release("ranged")
+	_key_up(KEY_X)
 	await _physics_frames(30)
 	_expect(dummy.health == DamageableDummy3D.MAX_HEALTH, "ordinary ranged projectile pierced solid 3D cover")
 	dummy.global_position = dummy_home
@@ -162,12 +189,49 @@ func _validate_potion(traveler: Traveler3D) -> void:
 	await _physics_frames(20)
 	traveler.reset_training()
 	traveler.receive_damage(50, &"validator")
-	Input.action_press("potion")
+	_key_down(KEY_C)
 	await physics_frame
-	Input.action_release("potion")
+	_key_up(KEY_C)
 	await _physics_frames(2)
 	_expect(traveler.health == 85, "C potion did not restore 35 health")
 	_expect(traveler.potion_charges == 2, "potion charge was not consumed exactly once")
+
+
+func _validate_guard(traveler: Traveler3D) -> void:
+	traveler.reset_training()
+	_key_down(KEY_SHIFT)
+	await _physics_frames(2)
+	_expect(traveler.guarding and traveler.shield.visible, "Shift did not enter the visible guard state")
+	_key_down(KEY_Z)
+	_key_down(KEY_X)
+	_key_down(KEY_SPACE)
+	await physics_frame
+	_key_up(KEY_Z)
+	_key_up(KEY_X)
+	_key_up(KEY_SPACE)
+	_expect(
+		traveler.melee_remaining <= 0.0
+		and traveler.ranged_cooldown_remaining <= 0.0
+		and traveler.dash_remaining <= 0.0,
+		"guard did not block melee, ranged, and dash actions",
+	)
+	traveler.receive_damage(20, &"guard_validator")
+	_expect(traveler.health == 93, "guard did not reduce 20 damage to 7")
+	var guarded_start := traveler.global_position
+	_key_down(KEY_RIGHT)
+	await _physics_frames(18)
+	_key_up(KEY_RIGHT)
+	var guarded_distance := traveler.global_position.distance_to(guarded_start)
+	_key_up(KEY_SHIFT)
+	await _physics_frames(2)
+	_expect(not traveler.guarding and not traveler.shield.visible, "guard state remained active after Shift release")
+	traveler.reset_training()
+	var normal_start := traveler.global_position
+	_key_down(KEY_RIGHT)
+	await _physics_frames(18)
+	_key_up(KEY_RIGHT)
+	var normal_distance := traveler.global_position.distance_to(normal_start)
+	_expect(guarded_distance < normal_distance * 0.7, "guard did not apply its movement-speed penalty")
 
 
 func _validate_pulse(traveler: Traveler3D, pulse: TrainingPulse3D) -> void:
@@ -180,9 +244,47 @@ func _validate_pulse(traveler: Traveler3D, pulse: TrainingPulse3D) -> void:
 	_expect(traveler.health == traveler.max_health - 18, "active pulse did not damage the overlapping player")
 
 
+func _validate_pause(hud: CombatSandboxHud3D) -> void:
+	_key_down(KEY_ESCAPE)
+	await process_frame
+	_key_up(KEY_ESCAPE)
+	await process_frame
+	_expect(paused and hud.pause_overlay.visible, "Esc did not pause the scene and reveal the pause overlay")
+	var paused_position := hud.traveler.global_position
+	_key_down(KEY_RIGHT)
+	for _index in 4:
+		await process_frame
+	_key_up(KEY_RIGHT)
+	_expect(
+		hud.traveler.global_position.is_equal_approx(paused_position),
+		"Traveler continued moving while the scene was paused",
+	)
+	_key_down(KEY_ESCAPE)
+	await process_frame
+	_key_up(KEY_ESCAPE)
+	await process_frame
+	_expect(not paused and not hud.pause_overlay.visible, "second Esc did not resume the scene")
+
+
 func _physics_frames(count: int) -> void:
 	for _index in count:
 		await physics_frame
+
+
+func _key_down(keycode: Key) -> void:
+	Input.parse_input_event(_key_event(keycode, true))
+
+
+func _key_up(keycode: Key) -> void:
+	Input.parse_input_event(_key_event(keycode, false))
+
+
+func _key_event(keycode: Key, pressed: bool) -> InputEventKey:
+	var event := InputEventKey.new()
+	event.keycode = keycode
+	event.physical_keycode = keycode
+	event.pressed = pressed
+	return event
 
 
 func _has_physical_key(action: StringName, keycode: Key) -> bool:

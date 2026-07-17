@@ -14,14 +14,28 @@ var trace_remaining := 0.0
 	$Root/Status/Potions/Potion3,
 ]
 @onready var trace_label: Label = $Root/ActionTrace
+@onready var pause_overlay: ColorRect = $Root/PauseOverlay
 
 
 func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	pause_overlay.visible = false
 	traveler.health_changed.connect(_on_health_changed)
 	traveler.potion_changed.connect(_on_potion_changed)
 	traveler.action_traced.connect(_on_action_traced)
 	_on_health_changed(traveler.health, traveler.max_health)
 	_on_potion_changed(traveler.potion_charges)
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("pause") and not event.is_echo():
+		get_tree().paused = not get_tree().paused
+		pause_overlay.visible = get_tree().paused
+		get_viewport().set_input_as_handled()
+
+
+func _exit_tree() -> void:
+	get_tree().paused = false
 
 
 func _process(delta: float) -> void:
