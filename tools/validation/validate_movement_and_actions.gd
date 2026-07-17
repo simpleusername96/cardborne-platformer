@@ -49,7 +49,8 @@ func _run() -> void:
 	await process_frame
 	if _failures.is_empty():
 		print(
-			"PASS: raster world, distance-driven locomotion, raster melee/ranged/guard, "
+			"PASS: raster world, diagonal/lateral locomotion, dedicated dash and afterimages, "
+			+ "raster melee/ranged/guard, "
 			+ "raster projectile, exact input, cutaway arena, follow camera, targeting, "
 			+ "cover, potion, pulse, and pause contracts"
 		)
@@ -194,6 +195,18 @@ func _validate_numeric_contract() -> void:
 		"Traveler distance-driven sprite cadence changed",
 	)
 	_expect(
+		TravelerSpritePresenter3D.LATERAL_DOMINANCE_RATIO == 1.5,
+		"Traveler lateral-sector threshold changed",
+	)
+	_expect(
+		TravelerSpritePresenter3D.DASH_AFTERIMAGE_SPACING == 0.65,
+		"Traveler dash afterimage spacing changed",
+	)
+	_expect(
+		TravelerSpritePresenter3D.DASH_AFTERIMAGE_LIFETIME == 0.16,
+		"Traveler dash afterimage lifetime changed",
+	)
+	_expect(
 		is_equal_approx(
 			TravelerSpritePresenter3D.MELEE_CONTACT_PROGRESS,
 			Traveler3D.MELEE_HIT_TIME / Traveler3D.MELEE_DURATION,
@@ -256,6 +269,16 @@ func _validate_raster_presentation(sandbox: CombatSandbox3D, traveler: Traveler3
 		"locomotion",
 	)
 	_assert_actor_sheet(
+		actor_sprite.lateral_locomotion_texture,
+		"res://art/world/flooded_works/isometric/actors/traveler-lateral-sheet-v1.png",
+		"lateral locomotion",
+	)
+	_assert_actor_sheet(
+		actor_sprite.dash_texture,
+		"res://art/world/flooded_works/isometric/actors/traveler-dash-sheet-v1.png",
+		"dash",
+	)
+	_assert_actor_sheet(
 		actor_sprite.melee_texture,
 		"res://art/world/flooded_works/isometric/actors/traveler-melee-sheet-v1.png",
 		"melee",
@@ -277,35 +300,68 @@ func _validate_raster_presentation(sandbox: CombatSandbox3D, traveler: Traveler3
 	var camera_away := -traveler.camera.global_basis.z
 	camera_away.y = 0.0
 	camera_away = camera_away.normalized()
-	actor_sprite.present_state(camera_away + camera_right, traveler.camera, 0.0, -1.0, -1.0, false, 0.0)
+	actor_sprite.present_state(
+		camera_away + camera_right, traveler.camera, 0.0, -1.0, -1.0, -1.0, false, 0.0
+	)
 	_expect(actor_sprite.current_row == 0 and not actor_sprite.flip_h, "away-right sprite mapping changed")
-	actor_sprite.present_state(camera_away - camera_right, traveler.camera, 0.0, -1.0, -1.0, false, 0.0)
+	_expect(not actor_sprite.current_lateral, "away-right diagonal incorrectly selected lateral art")
+	actor_sprite.present_state(
+		camera_away - camera_right, traveler.camera, 0.0, -1.0, -1.0, -1.0, false, 0.0
+	)
 	_expect(actor_sprite.current_row == 0 and actor_sprite.flip_h, "away-left sprite mirror mapping changed")
-	actor_sprite.present_state(-camera_away + camera_right, traveler.camera, 0.0, -1.0, -1.0, false, 0.0)
+	actor_sprite.present_state(
+		-camera_away + camera_right, traveler.camera, 0.0, -1.0, -1.0, -1.0, false, 0.0
+	)
 	_expect(actor_sprite.current_row == 1 and not actor_sprite.flip_h, "toward-right sprite mapping changed")
-	actor_sprite.present_state(-camera_away - camera_right, traveler.camera, 0.0, -1.0, -1.0, false, 0.0)
+	actor_sprite.present_state(
+		-camera_away - camera_right, traveler.camera, 0.0, -1.0, -1.0, -1.0, false, 0.0
+	)
 	_expect(actor_sprite.current_row == 1 and actor_sprite.flip_h, "toward-left sprite mirror mapping changed")
 
-	actor_sprite.present_state(camera_right, traveler.camera, 0.0, 0.5, -1.0, false, 0.0)
+	actor_sprite.present_state(camera_right, traveler.camera, 0.0, -1.0, -1.0, -1.0, false, 0.0)
+	_expect(
+		actor_sprite.current_lateral
+		and actor_sprite.current_row == 0
+		and not actor_sprite.flip_h
+		and actor_sprite.texture == actor_sprite.lateral_locomotion_texture,
+		"pure screen-right facing did not select the dedicated lateral sheet",
+	)
+	actor_sprite.present_state(-camera_right, traveler.camera, 0.0, -1.0, -1.0, -1.0, false, 0.0)
+	_expect(
+		actor_sprite.current_lateral
+		and actor_sprite.current_row == 0
+		and actor_sprite.flip_h
+		and actor_sprite.texture == actor_sprite.lateral_locomotion_texture,
+		"pure screen-left facing did not mirror the dedicated lateral sheet",
+	)
+
+	actor_sprite.present_state(camera_right, traveler.camera, 0.0, -1.0, 0.5, -1.0, false, 0.0)
 	_expect(
 		actor_sprite.current_state == TravelerSpritePresenter3D.SpriteState.MELEE
 		and actor_sprite.current_column == 2
 		and actor_sprite.texture == actor_sprite.melee_texture,
 		"melee contact state did not select its raster frame",
 	)
-	actor_sprite.present_state(camera_right, traveler.camera, 0.0, -1.0, 0.4, false, 0.0)
+	actor_sprite.present_state(camera_right, traveler.camera, 0.0, -1.0, -1.0, 0.4, false, 0.0)
 	_expect(
 		actor_sprite.current_state == TravelerSpritePresenter3D.SpriteState.RANGED
 		and actor_sprite.current_column == 2
 		and actor_sprite.texture == actor_sprite.ranged_texture,
 		"ranged release state did not select its raster frame",
 	)
-	actor_sprite.present_state(camera_right, traveler.camera, 0.0, -1.0, -1.0, true, 0.2)
+	actor_sprite.present_state(camera_right, traveler.camera, 0.0, -1.0, -1.0, -1.0, true, 0.2)
 	_expect(
 		actor_sprite.current_state == TravelerSpritePresenter3D.SpriteState.GUARD
 		and actor_sprite.current_column == 2
 		and actor_sprite.texture == actor_sprite.guard_texture,
 		"guard hold state did not select its raster frame",
+	)
+	actor_sprite.present_state(camera_right, traveler.camera, 0.0, 0.55, -1.0, -1.0, false, 0.0)
+	_expect(
+		actor_sprite.current_state == TravelerSpritePresenter3D.SpriteState.DASH
+		and actor_sprite.current_column == 2
+		and actor_sprite.texture == actor_sprite.dash_texture,
+		"dash progress did not select its dedicated raster frame",
 	)
 
 	traveler.reset_training()
@@ -329,11 +385,24 @@ func _validate_raster_presentation(sandbox: CombatSandbox3D, traveler: Traveler3
 		"moving Traveler did not advance its distance-driven walk frame (column=%d, phase=%.3f, distance=%.3f)"
 		% [maximum_walk_column, actor_sprite.locomotion_distance, traveler.global_position.distance_to(raster_start)],
 	)
+	_expect(
+		actor_sprite.current_lateral
+		and actor_sprite.texture == actor_sprite.lateral_locomotion_texture,
+		"real screen-right movement did not retain the lateral walk sheet",
+	)
 	_expect(actor_sprite.frame / 4 == actor_sprite.current_row, "sprite frame escaped its facing row")
 	await _physics_frames(20)
 	_expect(actor_sprite.current_column == 0, "stopped Traveler did not return to its idle column")
 	_expect(is_zero_approx(actor_sprite.locomotion_distance), "idle did not reset locomotion distance phase")
 	_expect(idle_row >= 0 and idle_row < 2, "idle sprite row escaped the two authored directions")
+	traveler.reset_training()
+	_key_down(KEY_UP)
+	await _physics_frames(3)
+	_key_up(KEY_UP)
+	_expect(
+		not actor_sprite.current_lateral and actor_sprite.texture == actor_sprite.locomotion_texture,
+		"depth movement incorrectly selected the lateral walk sheet",
+	)
 	traveler.reset_training()
 	var camera_rig := sandbox.get_node("CameraRig") as IsometricCameraRig3D
 	camera_rig.global_position = traveler.spawn_position
@@ -511,11 +580,35 @@ func _validate_dash_and_action_precedence(traveler: Traveler3D) -> void:
 		and traveler.ranged_action_remaining <= 0.0,
 		"accepted dash did not outrank simultaneous melee and ranged input",
 	)
+	_expect(
+		traveler.sprite_presenter.current_state == TravelerSpritePresenter3D.SpriteState.DASH
+		and traveler.sprite_presenter.texture == traveler.sprite_presenter.dash_texture,
+		"accepted Space dash did not enter the dedicated dash sheet",
+	)
+	var initial_afterimages := get_nodes_in_group(&"traveler_dash_afterimages")
+	_expect(not initial_afterimages.is_empty(), "dash did not emit its initial raster afterimage")
+	var first_afterimage := initial_afterimages[0] as Sprite3D if not initial_afterimages.is_empty() else null
+	var first_afterimage_position := (
+		first_afterimage.global_position if first_afterimage != null else Vector3.ZERO
+	)
 	var health_before := traveler.health
 	var damage_applied := traveler.receive_damage(20, &"dash_validator")
 	_expect(not damage_applied and traveler.health == health_before, "dash startup did not reject damage")
-	await _physics_frames(12)
+	await _physics_frames(4)
+	var active_afterimages := get_nodes_in_group(&"traveler_dash_afterimages")
+	_expect(active_afterimages.size() >= 2, "dash did not emit distance-spaced raster afterimages")
+	if first_afterimage != null and is_instance_valid(first_afterimage):
+		_expect(
+			first_afterimage.global_position.distance_to(first_afterimage_position) <= 0.001,
+			"dash afterimage followed the Traveler instead of staying in world space",
+		)
+	await _physics_frames(8)
 	_expect(traveler.global_position.distance_to(start) > 1.5, "dash displacement is too short")
+	await _process_seconds(0.25)
+	_expect(
+		get_nodes_in_group(&"traveler_dash_afterimages").is_empty(),
+		"expired dash afterimages did not clean themselves up",
+	)
 
 	traveler.reset_training()
 	_key_down(KEY_SHIFT)
@@ -784,7 +877,8 @@ func _validate_guard(
 	_expect(
 		not traveler.guarding
 		and traveler.sprite_presenter.current_state == TravelerSpritePresenter3D.SpriteState.LOCOMOTION
-		and traveler.sprite_presenter.texture == traveler.sprite_presenter.locomotion_texture,
+		and traveler.sprite_presenter.current_lateral
+		and traveler.sprite_presenter.texture == traveler.sprite_presenter.lateral_locomotion_texture,
 		"guard remained active after X release",
 	)
 	traveler.reset_training()

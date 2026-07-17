@@ -1,4 +1,4 @@
-[gd_scene load_steps=36 format=3]
+[gd_scene load_steps=38 format=3]
 
 [ext_resource type="Script" path="res://scripts/testbeds/combat_sandbox_3d.gd" id="1_sandbox"]
 [ext_resource type="PackedScene" path="res://third_party/kenney_modular_dungeon/models/room-large.glb" id="2_room"]
@@ -18,6 +18,8 @@
 [ext_resource type="Texture2D" path="res://art/world/flooded_works/isometric/actors/traveler-ranged-sheet-v1.png" id="16_ranged_sheet"]
 [ext_resource type="Texture2D" path="res://art/world/flooded_works/isometric/actors/traveler-guard-sheet-v1.png" id="17_guard_sheet"]
 [ext_resource type="Script" path="res://scripts/player/traveler_sprite_presenter_3d.gd" id="18_sprite_presenter"]
+[ext_resource type="Texture2D" path="res://art/world/flooded_works/isometric/actors/traveler-lateral-sheet-v1.png" id="19_lateral_sheet"]
+[ext_resource type="Texture2D" path="res://art/world/flooded_works/isometric/actors/traveler-dash-sheet-v1.png" id="20_dash_sheet"]
 
 [sub_resource type="Environment" id="Environment_main"]
 background_mode = 3
@@ -317,6 +319,8 @@ vframes = 2
 render_priority = 1
 script = ExtResource("18_sprite_presenter")
 locomotion_texture = ExtResource("13_locomotion_sheet")
+lateral_locomotion_texture = ExtResource("19_lateral_sheet")
+dash_texture = ExtResource("20_dash_sheet")
 melee_texture = ExtResource("15_melee_sheet")
 ranged_texture = ExtResource("16_ranged_sheet")
 guard_texture = ExtResource("17_guard_sheet")

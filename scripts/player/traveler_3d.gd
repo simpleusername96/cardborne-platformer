@@ -145,6 +145,9 @@ func _camera_relative_direction(input_vector: Vector2) -> Vector3:
 
 
 func _update_sprite_presentation(delta: float, traveled_distance: float) -> void:
+	var dash_progress := -1.0
+	if dash_remaining > 0.0:
+		dash_progress = 1.0 - dash_remaining / DASH_DURATION
 	var melee_progress := -1.0
 	if melee_remaining > 0.0:
 		melee_progress = 1.0 - melee_remaining / MELEE_DURATION
@@ -155,6 +158,7 @@ func _update_sprite_presentation(delta: float, traveled_distance: float) -> void
 		combat_facing,
 		camera,
 		traveled_distance,
+		dash_progress,
 		melee_progress,
 		ranged_progress,
 		guarding,

@@ -7,6 +7,8 @@ const READY_CAPTURES := {
 }
 const STATE_CAPTURES := {
 	"movement-check-facing-1280x720.png": &"moving_facing",
+	"movement-check-lateral-1280x720.png": &"lateral_walk",
+	"movement-check-dash-1280x720.png": &"dash",
 	"movement-check-melee-assist-1280x720.png": &"melee_assist",
 	"movement-check-ranged-assist-1280x720.png": &"ranged_assist",
 	"movement-check-guard-1280x720.png": &"guard",
@@ -46,6 +48,16 @@ func _capture(
 	sandbox.training_pulse.elapsed = 0.35
 	sandbox.traveler.action_traced.emit("Ready")
 	await _prepare_state(state, sandbox)
+	if state == &"dash":
+		if (
+			sandbox.traveler.sprite_presenter.current_state
+			!= TravelerSpritePresenter3D.SpriteState.DASH
+			or get_nodes_in_group(&"traveler_dash_afterimages").size() < 2
+		):
+			push_error("Dash capture requires an active dash and at least two raster afterimages")
+			quit(1)
+			return
+		paused = true
 	await process_frame
 	await process_frame
 	RenderingServer.force_draw(false)
@@ -82,6 +94,20 @@ func _prepare_state(state: StringName, sandbox: CombatSandbox3D) -> void:
 			_send_key(KEY_UP, true)
 			await _physics_frames(18)
 			traveler.action_traced.emit("Distance-driven walk · facing follows movement")
+		&"lateral_walk":
+			_park_targets(targets)
+			_send_key(KEY_RIGHT, true)
+			await _physics_frames(18)
+			traveler.action_traced.emit("Dedicated lateral walk · right profile")
+		&"dash":
+			_park_targets(targets)
+			_send_key(KEY_RIGHT, true)
+			await _physics_frames(4)
+			_send_key(KEY_SPACE, true)
+			await _physics_frames(1)
+			_send_key(KEY_SPACE, false)
+			await _physics_frames(5)
+			traveler.action_traced.emit("Dedicated dash · raster afterimages")
 		&"melee_assist":
 			_park_targets(targets)
 			traveler.global_position = Vector3.ZERO

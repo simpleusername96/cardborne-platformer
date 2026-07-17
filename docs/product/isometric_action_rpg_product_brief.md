@@ -3,7 +3,7 @@ type: spec
 status: active
 owner: BK
 created: 2026-07-17
-last_reviewed: 2026-07-17
+last_reviewed: 2026-07-18
 canonical_for: Cardborne five-to-eight-minute isometric action RPG proof behavior
 scope: Direct-start combat proof from movement room through Slime King and result
 source: ../../.agent/execplans/2026-07-17-rasterized-3d-presentation.md
@@ -11,6 +11,7 @@ related:
   - ../../.agent/Prompt.md
   - ../../.agent/execplans/2026-07-17-native-3d-isometric-foundation.md
   - ../../.agent/execplans/2026-07-17-rasterized-3d-presentation.md
+  - ../../.agent/execplans/2026-07-17-traveler-lateral-dash-presentation.md
   - ../design/UI_VISUAL_SYSTEM.md
 ---
 
@@ -87,9 +88,13 @@ and camera-facing actor sprites.
 - The current arena keeps 3D geometry and collision, uses a project-authored
   same-hue raster albedo through world-triplanar projection, and displays the
   approved Flooded Works panel only as a non-interactive far background.
-- Traveler locomotion uses two authored camera-relative directions plus
-  horizontal mirroring. Its four frames advance from actual ground distance,
-  not a free-running animation clock.
+- Traveler depth/diagonal locomotion uses two authored camera-relative
+  directions plus horizontal mirroring. Pure screen-left/right movement uses a
+  dedicated side-profile atlas, mirrored for left. All four-frame walk cycles
+  advance from actual ground distance, not a free-running animation clock.
+- Dash selects a dedicated compress/launch/glide/recovery atlas. Presentation
+  emits non-colliding world-stationary raster afterimages every 0.65 m that fade
+  over 0.16 s; those images never affect movement, invulnerability, or collision.
 - Melee, ranged, and guard each select a dedicated full-body `Sprite3D` atlas;
   the sword, bow, and shield are painted into those poses, and the ranged bolt
   is also raster art. Hidden primitive equipment is never gameplay feedback.
@@ -103,6 +108,9 @@ and camera-facing actor sprites.
 - Movement, melee, ranged, dash, guard, potion, damage, cover, and objectives
   expose their exact state and produce the same intent on both supported input
   families.
+- Pure screen-left/right movement visibly selects the profile gait, and an
+  accepted Space dash visibly selects the dash atlas and leaves a short raster
+  trail without changing its authoritative displacement or invulnerability.
 - Ordinary projectiles terminate on solid cover; no visual height changes
   collision, navigation, or damage truth.
 - The Traveler's world-space front notch, short-lived assisted-target marker,
@@ -125,5 +133,6 @@ and camera-facing actor sprites.
 
 - [Active raster presentation plan](../../.agent/execplans/2026-07-17-rasterized-3d-presentation.md)
 - [Completed native 3D foundation](../../.agent/execplans/2026-07-17-native-3d-isometric-foundation.md)
+- [Traveler lateral walk and dash plan](../../.agent/execplans/2026-07-17-traveler-lateral-dash-presentation.md)
 - [Pivot direction](../../.agent/Prompt.md)
 - [UI visual system](../design/UI_VISUAL_SYSTEM.md)
