@@ -9,6 +9,7 @@ topic: Flooded Works raster assets for the native 3D proof
 related:
   - ../README.md
   - ../../../../.agent/execplans/2026-07-17-rasterized-3d-presentation.md
+  - ../../../../.agent/execplans/2026-07-17-traveler-raster-action-correction.md
   - ../../../../docs/design/UI_VISUAL_SYSTEM.md
 ---
 
@@ -16,9 +17,10 @@ related:
 
 ## Purpose
 
-Record the first runtime-approved 2D raster assets used on the native 3D combat
-proof. These files prove the hybrid presentation path; they are not yet a full
-terrain, prop, enemy, or action-animation kit.
+Record the runtime-approved 2D raster assets used on the native 3D combat proof.
+The current slice covers stable Traveler locomotion, the three explicit combat
+actions, one ranged projectile, the arena surface, and the distant backdrop. It
+is not yet a full terrain, prop, enemy, boss, or effects kit.
 
 ## Sources
 
@@ -28,10 +30,13 @@ terrain, prop, enemy, or action-animation kit.
   through world-triplanar projection.
 - `../../../source/flooded_works/isometric/foundry-architecture-albedo-draft-v1.png`:
   generated 1254x1254 layout input retained for the final same-hue style pass.
-- `actors/traveler-walk-sheet-v1.png`: 1024x1024 alpha walk sheet with sixteen
-  256x256 cells.
-- `../../../source/flooded_works/isometric/traveler-walk-sheet-chroma-v1.png`:
-  1254x1254 generated chroma-key source retained for reproducibility.
+- `actors/traveler-locomotion-sheet-v2.png`: corrected 2048x1024 locomotion
+  atlas with eight 512x512 cells.
+- `actors/traveler-melee-sheet-v1.png`, `traveler-ranged-sheet-v1.png`, and
+  `traveler-guard-sheet-v1.png`: matching two-direction action atlases.
+- `effects/traveler-ranged-bolt-v1.png`: alpha ranged-projectile art.
+- `../../../source/flooded_works/isometric/actors/`: selected generated chroma
+  sources retained for reproducibility and excluded from Godot import.
 - `../../../ui/production/illustrations/characters/traveler.png`: Traveler
   identity reference; it remains a UI illustration rather than a runtime sprite.
 
@@ -45,21 +50,38 @@ generation path. No third-party visual asset was added by this slice.
 - One matte `StandardMaterial3D` applies the surface PNG to room, gate, corridor,
   and cover meshes. The texture uses only close charcoal/blue-green/teal values;
   accent colors and state variation remain separate future layers.
-- Traveler renders as a camera-facing `Sprite3D`. The primitive body and head are
-  retained but hidden; the capsule collision remains unchanged.
-- Runtime sprite rows are mapped explicitly rather than inferred from filenames:
+- Traveler renders as one camera-facing `Sprite3D`. Primitive body, head, sword,
+  and shield presentation remain in the scene only as hidden rollback geometry;
+  the capsule and gameplay queries are unchanged.
+- Movement frames advance from actual X/Z distance traveled, not elapsed time.
+  A stopped Traveler always returns to column zero, preventing feet from cycling
+  while blocked or idle.
+- Only two facings are authored. Left-facing states use horizontal mirroring, so
+  opposite directions cannot drift into independently generated proportions.
+- Every actor atlas is 2048x1024, four columns by two rows. Each 512x512 cell is
+  deterministically repacked at one scale with its foot baseline at y=482.
+
+Runtime direction mapping:
 
 | Row | Camera-relative facing | Columns |
 | ---: | --- | --- |
-| 0 | away-right | contact, passing, opposite contact, settle |
-| 1 | away-left | contact, passing, opposite contact, settle |
-| 2 | toward-right | contact, passing, opposite contact, settle |
-| 3 | toward-left | contact, passing, opposite contact, settle |
+| 0 | away-right; mirrored for away-left | selected by the active atlas |
+| 1 | toward-right; mirrored for toward-left | selected by the active atlas |
+
+Runtime column mapping:
+
+| Atlas | 0 | 1 | 2 | 3 |
+| --- | --- | --- | --- | --- |
+| Locomotion | contact / idle | passing | opposite contact | passing |
+| Melee | startup | swing | contact | recovery |
+| Ranged | ready | draw | release | recovery |
+| Guard | raise | settle | hold A | hold B |
 
 ## Generation Record
 
-Mode: built-in image generation. Runtime assets were copied into the repository;
-the generated defaults outside the repository are not runtime dependencies.
+Mode: built-in image generation, followed by deterministic local chroma removal
+and atlas normalization. Runtime assets were copied into the repository; the
+generated defaults outside the repository are not runtime dependencies.
 
 Final surface prompt:
 
@@ -76,44 +98,59 @@ Constraints: remove every yellow, mustard, brass, lime, moss-green, rust, orange
 Avoid: repeated decoration, small details, grain, stippling, speckles, high contrast, photorealism, visible focal elements
 ```
 
-Final Traveler prompt:
+Shared final Traveler generation contract:
 
 ```text
-Use case: stylized-concept
-Asset type: production 4-by-4 isometric game character walk-cycle sprite sheet for a Godot Sprite3D billboard
-Input images: Image 1 is the exact Traveler identity reference for hood, angular mask, teal/navy coat, and red scarf; Image 2 is the accepted full-body isometric scale and silhouette reference
-Primary request: create one consistent full-body Traveler walk-cycle sheet with exactly 16 equal cells arranged in four columns and four rows
-Subject: the same single hooded Traveler in every cell; off-white hood and angular mask, dark charcoal and muted teal long coat, restrained bright red scarf/sash, dark trousers and boots; hands empty; practical compact silhouette
+Use case: stylized-concept / targeted edit
+Asset type: production 4-column by 2-row isometric Traveler sprite sheet for a Godot Sprite3D billboard
+Primary request: preserve one exact Traveler identity and produce a readable four-phase sequence for [locomotion | sword melee | bow ranged | round-shield guard]
+Subject: the same hooded Traveler in every cell; off-white hood and angular mask, dark charcoal and muted teal long coat, restrained red scarf, dark trousers and boots; include only the action-appropriate sword, bow, or shield
 Style/medium: clean flat-color raster game sprite; broad geometric color planes; simplified hand-painted cutout; no outlines; no texture noise; not pixel art
-Composition/framing: exact 4 columns x 4 rows, equal invisible cells, one full-body character centered in every cell, identical scale and foot baseline within each row, generous padding, no character crosses a cell boundary
+Composition/framing: exact 4 columns x 2 rows, equal invisible cells, one full-body character centered in every cell, identical scale and foot baseline, generous padding, no figure or equipment crosses a cell boundary
 Camera/view: consistent high three-quarter isometric view in every cell, orthographic feel, feet fully visible
+Direction rows: top row faces away-right; bottom row faces toward-right; never create left-facing variants because runtime mirrors them
 Scene/backdrop: perfectly flat solid #ff00ff chroma-key background for local background removal
 Lighting/mood: simple neutral game lighting expressed only with two or three flat value planes on the character
 Color palette: off-white hood, charcoal/navy body, muted teal coat, controlled red scarf; do not use #ff00ff in the character
-Constraints: background must be one uniform #ff00ff color with no shadows, gradients, texture, reflections, floor plane, or lighting variation; no cast shadow; no contact shadow; crisp edges; exact same character identity and proportions in all 16 cells; no text; no logos; no watermark; no grid lines; no cell borders; no weapons; no extra objects
-Avoid: outline, grain, stippling, speckles, painterly smears, photorealism, animation notes, labels, duplicated limbs, cropped feet, changing costume, changing camera angle
+Constraints: uniform chroma background; no cast/contact shadow; crisp edges; exact same proportions in all eight cells; no text, logos, watermark, grid, cell borders, targets, hit markers, projectile, or extra objects
+Avoid: outline, grain, stippling, speckles, painterly smears, photorealism, duplicated limbs/equipment, cropped feet, changing costume, changing camera angle, four unrelated character illustrations
 ```
 
-The generated Traveler source used the installed chroma-removal helper with
-border auto-keying, soft matte, despill, thresholds 12/220, then ImageMagick
-Lanczos normalization to 1024x1024. The runtime sheet has transparent corner
-pixels and non-empty alpha content in every cell.
+The final locomotion, melee, and ranged selections each received one targeted
+edit that changed only a malformed direction row or missing bow while preserving
+the accepted cells. Guard was accepted from its first coherent selection.
+
+Final bolt generation contract:
+
+```text
+Create one small horizontal flat-color fantasy bolt/arrow projectile for the retained Traveler bow. Use a restrained off-white, muted teal, and tiny amber accent; broad clean shapes; no outline, glow, particles, text, shadow, floor, or extra objects. Center it with generous padding on a perfectly uniform #ff00ff chroma background.
+```
+
+Selected generated files were copied to the chroma source paths above. The
+installed image-generation chroma helper ran with border auto-keying, soft
+matte, despill, thresholds 12/220, then one retry with `--edge-contract 1`.
+`tools/art/normalize_sprite_sheet.py` selected the eight figure components,
+masked unrelated residue, applied a fixed 0.9 scale, and packed exact 512-square
+cells. Runtime atlases have transparent corners, non-empty cells, safe horizontal
+margins, and a shared foot baseline.
 
 ## Recommendations
 
 - Keep architecture variation close in hue. Add future moss, rust, warning, or
   state marks as separately controlled decals/overlays instead of baking them
   into the base albedo.
-- Create attack, ranged, guard, hit, and defeat sprite sheets only after the
-  four-direction locomotion scale and silhouette are owner-approved.
-- Retain world-space gameplay feedback until a replacement sprite/effect proves
-  the same startup, active, recovery, and targeting information.
+- Retain world-space facing and short-lived targeting feedback until equivalent
+  raster effects prove the same player-intent information.
+- Add hit, defeat, and weapon-specific variants only when those gameplay states
+  enter the accepted proof scope; reuse the locked cell and direction contract.
 
 ## Limitations
 
-- The sheet has locomotion poses only; sword and shield feedback remain 3D proof
-  geometry during their relevant actions.
 - `no_depth_test` keeps Traveler readable at the fixed foreground cutaway, so
   the sprite intentionally draws above cover/wall pixels in this proof.
+- Dash currently uses distance-driven locomotion frames rather than a dedicated
+  dash atlas. Hit reaction and defeat also have no authored raster state yet.
+- Two authored directions and mirroring assume the current fixed camera and no
+  mechanically significant left/right equipment hand.
 - One world-triplanar albedo is not a production modular terrain library and
   does not define room scale, collision, or navigation.

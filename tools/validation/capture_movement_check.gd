@@ -81,10 +81,7 @@ func _prepare_state(state: StringName, sandbox: CombatSandbox3D) -> void:
 			_send_key(KEY_RIGHT, true)
 			_send_key(KEY_UP, true)
 			await _physics_frames(18)
-			_send_key(KEY_RIGHT, false)
-			_send_key(KEY_UP, false)
-			await _physics_frames(2)
-			traveler.action_traced.emit("Facing follows movement")
+			traveler.action_traced.emit("Distance-driven walk · facing follows movement")
 		&"melee_assist":
 			_park_targets(targets)
 			traveler.global_position = Vector3.ZERO
@@ -106,10 +103,10 @@ func _prepare_state(state: StringName, sandbox: CombatSandbox3D) -> void:
 			_send_key(KEY_Z, true)
 			await _physics_frames(2)
 			_send_key(KEY_Z, false)
-			await _physics_frames(3)
+			await _physics_frames(8)
 		&"guard":
 			_send_key(KEY_X, true)
-			await _physics_frames(2)
+			await _physics_frames(12)
 		&"southeast_edge":
 			traveler.global_position = Vector3(9.2, 0, 9.2)
 			traveler.action_traced.emit("South / east cutaway")

@@ -49,8 +49,9 @@ func _run() -> void:
 	await process_frame
 	if _failures.is_empty():
 		print(
-			"PASS: raster world, sprite locomotion, exact input, cutaway arena, follow camera, "
-			+ "facing, attack-time targeting, cover, guard, potion, pulse, and pause contracts"
+			"PASS: raster world, distance-driven locomotion, raster melee/ranged/guard, "
+			+ "raster projectile, exact input, cutaway arena, follow camera, targeting, "
+			+ "cover, potion, pulse, and pause contracts"
 		)
 		quit(0)
 	else:
@@ -184,10 +185,28 @@ func _validate_numeric_contract() -> void:
 	_expect(TargetingAssist3D.STICKINESS_SECONDS == 0.45, "target stickiness changed")
 	_expect(TargetingAssist3D.ANGLE_SCORE_WEIGHT == 0.75, "target angle score weight changed")
 	_expect(TargetingAssist3D.DISTANCE_SCORE_WEIGHT == 0.25, "target distance score weight changed")
-	_expect(Traveler3D.SPRITE_FRAME_COLUMNS == 4, "Traveler walk sheet column contract changed")
-	_expect(Traveler3D.SPRITE_DIRECTION_ROWS == 4, "Traveler direction row contract changed")
-	_expect(Traveler3D.WALK_SPRITE_FPS == 8.0, "Traveler walk sprite rate changed")
-	_expect(Traveler3D.DASH_SPRITE_FPS == 12.0, "Traveler dash sprite rate changed")
+	_expect(Traveler3D.RANGED_ACTION_DURATION == 0.32, "ranged sprite action duration changed")
+	_expect(Traveler3D.RANGED_RELEASE_TIME == 0.10, "ranged projectile release time changed")
+	_expect(TravelerSpritePresenter3D.FRAME_COLUMNS == 4, "Traveler sheet column contract changed")
+	_expect(TravelerSpritePresenter3D.DIRECTION_ROWS == 2, "Traveler authored direction row contract changed")
+	_expect(
+		TravelerSpritePresenter3D.LOCOMOTION_FRAMES_PER_METER == 2.0,
+		"Traveler distance-driven sprite cadence changed",
+	)
+	_expect(
+		is_equal_approx(
+			TravelerSpritePresenter3D.MELEE_CONTACT_PROGRESS,
+			Traveler3D.MELEE_HIT_TIME / Traveler3D.MELEE_DURATION,
+		),
+		"melee contact sprite no longer matches the authoritative hit time",
+	)
+	_expect(
+		is_equal_approx(
+			TravelerSpritePresenter3D.RANGED_RELEASE_PROGRESS,
+			Traveler3D.RANGED_RELEASE_TIME / Traveler3D.RANGED_ACTION_DURATION,
+		),
+		"ranged release sprite no longer matches projectile spawn time",
+	)
 
 
 func _validate_raster_presentation(sandbox: CombatSandbox3D, traveler: Traveler3D) -> void:
@@ -222,34 +241,35 @@ func _validate_raster_presentation(sandbox: CombatSandbox3D, traveler: Traveler3
 	for root_path in surface_pass.surface_roots:
 		_assert_raster_material_recursive(surface_pass.get_node(root_path), surface_pass.surface_material)
 
-	var actor_sprite := traveler.actor_sprite
+	var actor_sprite: TravelerSpritePresenter3D = traveler.sprite_presenter
 	_expect(actor_sprite.visible, "Traveler raster sprite is hidden")
-	_expect(actor_sprite.texture != null, "Traveler raster sprite has no texture")
-	_expect(
-		actor_sprite.texture.resource_path
-		== "res://art/world/flooded_works/isometric/actors/traveler-walk-sheet-v1.png",
-		"Traveler raster sprite no longer uses the production walk sheet",
-	)
-	_expect(actor_sprite.texture.get_width() == 1024, "Traveler walk sheet is not 1024 px wide")
-	_expect(actor_sprite.texture.get_height() == 1024, "Traveler walk sheet is not 1024 px high")
-	_expect(actor_sprite.hframes == 4 and actor_sprite.vframes == 4, "Traveler walk sheet is not wired as 4x4")
+	_expect(actor_sprite.hframes == 4 and actor_sprite.vframes == 2, "Traveler sheets are not wired as 4x2")
+	_expect(is_equal_approx(actor_sprite.pixel_size, 0.005), "Traveler sprite scale changed")
 	_expect(actor_sprite.no_depth_test, "Traveler sprite can be hidden by the foreground cutaway")
 	_expect(not (traveler.get_node("Visual/Body") as MeshInstance3D).visible, "primitive Traveler body remains visible")
 	_expect(not (traveler.get_node("Visual/Head") as MeshInstance3D).visible, "primitive Traveler head remains visible")
-
-	var sprite_image := actor_sprite.texture.get_image()
-	_expect(sprite_image != null, "Traveler walk sheet pixels are unavailable")
-	if sprite_image != null:
-		_expect(sprite_image.detect_alpha() != Image.ALPHA_NONE, "Traveler walk sheet has no alpha channel")
-		_expect(sprite_image.get_pixel(0, 0).a <= 0.01, "Traveler walk sheet top-left is not transparent")
-		_expect(sprite_image.get_pixel(1023, 1023).a <= 0.01, "Traveler walk sheet bottom-right is not transparent")
-		for row in Traveler3D.SPRITE_DIRECTION_ROWS:
-			for column in Traveler3D.SPRITE_FRAME_COLUMNS:
-				var cell := sprite_image.get_region(Rect2i(column * 256, row * 256, 256, 256))
-				_expect(
-					cell.get_used_rect().has_area(),
-					"Traveler walk sheet cell %d,%d is empty" % [column, row],
-				)
+	_expect(not (traveler.get_node("Visual/SwordPivot") as Node3D).visible, "3D sword presentation remains visible")
+	_expect(not (traveler.get_node("Visual/Shield") as MeshInstance3D).visible, "3D shield presentation remains visible")
+	_assert_actor_sheet(
+		actor_sprite.locomotion_texture,
+		"res://art/world/flooded_works/isometric/actors/traveler-locomotion-sheet-v2.png",
+		"locomotion",
+	)
+	_assert_actor_sheet(
+		actor_sprite.melee_texture,
+		"res://art/world/flooded_works/isometric/actors/traveler-melee-sheet-v1.png",
+		"melee",
+	)
+	_assert_actor_sheet(
+		actor_sprite.ranged_texture,
+		"res://art/world/flooded_works/isometric/actors/traveler-ranged-sheet-v1.png",
+		"ranged",
+	)
+	_assert_actor_sheet(
+		actor_sprite.guard_texture,
+		"res://art/world/flooded_works/isometric/actors/traveler-guard-sheet-v1.png",
+		"guard",
+	)
 
 	var camera_right := traveler.camera.global_basis.x
 	camera_right.y = 0.0
@@ -257,40 +277,99 @@ func _validate_raster_presentation(sandbox: CombatSandbox3D, traveler: Traveler3
 	var camera_away := -traveler.camera.global_basis.z
 	camera_away.y = 0.0
 	camera_away = camera_away.normalized()
-	_expect(traveler._sprite_row_for_direction(camera_away + camera_right) == 0, "away-right sprite row changed")
-	_expect(traveler._sprite_row_for_direction(camera_away - camera_right) == 1, "away-left sprite row changed")
-	_expect(traveler._sprite_row_for_direction(-camera_away + camera_right) == 2, "toward-right sprite row changed")
-	_expect(traveler._sprite_row_for_direction(-camera_away - camera_right) == 3, "toward-left sprite row changed")
+	actor_sprite.present_state(camera_away + camera_right, traveler.camera, 0.0, -1.0, -1.0, false, 0.0)
+	_expect(actor_sprite.current_row == 0 and not actor_sprite.flip_h, "away-right sprite mapping changed")
+	actor_sprite.present_state(camera_away - camera_right, traveler.camera, 0.0, -1.0, -1.0, false, 0.0)
+	_expect(actor_sprite.current_row == 0 and actor_sprite.flip_h, "away-left sprite mirror mapping changed")
+	actor_sprite.present_state(-camera_away + camera_right, traveler.camera, 0.0, -1.0, -1.0, false, 0.0)
+	_expect(actor_sprite.current_row == 1 and not actor_sprite.flip_h, "toward-right sprite mapping changed")
+	actor_sprite.present_state(-camera_away - camera_right, traveler.camera, 0.0, -1.0, -1.0, false, 0.0)
+	_expect(actor_sprite.current_row == 1 and actor_sprite.flip_h, "toward-left sprite mirror mapping changed")
+
+	actor_sprite.present_state(camera_right, traveler.camera, 0.0, 0.5, -1.0, false, 0.0)
+	_expect(
+		actor_sprite.current_state == TravelerSpritePresenter3D.SpriteState.MELEE
+		and actor_sprite.current_column == 2
+		and actor_sprite.texture == actor_sprite.melee_texture,
+		"melee contact state did not select its raster frame",
+	)
+	actor_sprite.present_state(camera_right, traveler.camera, 0.0, -1.0, 0.4, false, 0.0)
+	_expect(
+		actor_sprite.current_state == TravelerSpritePresenter3D.SpriteState.RANGED
+		and actor_sprite.current_column == 2
+		and actor_sprite.texture == actor_sprite.ranged_texture,
+		"ranged release state did not select its raster frame",
+	)
+	actor_sprite.present_state(camera_right, traveler.camera, 0.0, -1.0, -1.0, true, 0.2)
+	_expect(
+		actor_sprite.current_state == TravelerSpritePresenter3D.SpriteState.GUARD
+		and actor_sprite.current_column == 2
+		and actor_sprite.texture == actor_sprite.guard_texture,
+		"guard hold state did not select its raster frame",
+	)
 
 	traveler.reset_training()
 	traveler.combat_facing = camera_right
 	traveler.velocity = Vector3.ZERO
-	traveler._update_sprite_presentation(0.0)
-	_expect(traveler.sprite_frame_column == 0, "idle Traveler does not hold sprite column zero")
-	var idle_row := traveler.sprite_facing_row
+	traveler._update_sprite_presentation(0.0, 0.0)
+	_expect(actor_sprite.current_column == 0, "idle Traveler does not hold sprite column zero")
+	var idle_row := actor_sprite.current_row
 	var raster_start := traveler.global_position
 	_key_down(KEY_RIGHT)
 	var saw_walk_frame := false
 	var maximum_walk_column := 0
 	for _index in 24:
 		await physics_frame
-		maximum_walk_column = maxi(maximum_walk_column, traveler.sprite_frame_column)
-		if traveler.sprite_frame_column != 0:
+		maximum_walk_column = maxi(maximum_walk_column, actor_sprite.current_column)
+		if actor_sprite.current_column != 0:
 			saw_walk_frame = true
 	_key_up(KEY_RIGHT)
 	_expect(
 		saw_walk_frame,
-		"moving Traveler did not advance its walk frame (column=%d, time=%.3f, distance=%.3f)"
-		% [maximum_walk_column, traveler.sprite_animation_time, traveler.global_position.distance_to(raster_start)],
+		"moving Traveler did not advance its distance-driven walk frame (column=%d, phase=%.3f, distance=%.3f)"
+		% [maximum_walk_column, actor_sprite.locomotion_distance, traveler.global_position.distance_to(raster_start)],
 	)
-	_expect(traveler.actor_sprite.frame / 4 == traveler.sprite_facing_row, "sprite frame escaped its facing row")
+	_expect(actor_sprite.frame / 4 == actor_sprite.current_row, "sprite frame escaped its facing row")
 	await _physics_frames(20)
-	_expect(traveler.sprite_frame_column == 0, "stopped Traveler did not return to its idle column")
-	_expect(idle_row >= 0 and idle_row < 4, "idle sprite row escaped the four-direction sheet")
+	_expect(actor_sprite.current_column == 0, "stopped Traveler did not return to its idle column")
+	_expect(is_zero_approx(actor_sprite.locomotion_distance), "idle did not reset locomotion distance phase")
+	_expect(idle_row >= 0 and idle_row < 2, "idle sprite row escaped the two authored directions")
 	traveler.reset_training()
 	var camera_rig := sandbox.get_node("CameraRig") as IsometricCameraRig3D
 	camera_rig.global_position = traveler.spawn_position
 	await process_frame
+
+
+func _assert_actor_sheet(texture: Texture2D, expected_path: String, label: String) -> void:
+	_expect(texture != null, "Traveler %s sheet is missing" % label)
+	if texture == null:
+		return
+	_expect(texture.resource_path == expected_path, "Traveler %s sheet path changed" % label)
+	_expect(texture.get_width() == 2048, "Traveler %s sheet is not 2048 px wide" % label)
+	_expect(texture.get_height() == 1024, "Traveler %s sheet is not 1024 px high" % label)
+	var sheet_image: Image = texture.get_image()
+	_expect(sheet_image != null, "Traveler %s sheet pixels are unavailable" % label)
+	if sheet_image == null:
+		return
+	_expect(sheet_image.detect_alpha() != Image.ALPHA_NONE, "Traveler %s sheet has no alpha" % label)
+	_expect(sheet_image.get_pixel(0, 0).a <= 0.01, "Traveler %s top-left is not transparent" % label)
+	_expect(sheet_image.get_pixel(2047, 1023).a <= 0.01, "Traveler %s bottom-right is not transparent" % label)
+	for row in TravelerSpritePresenter3D.DIRECTION_ROWS:
+		for column in TravelerSpritePresenter3D.FRAME_COLUMNS:
+			var cell: Image = sheet_image.get_region(Rect2i(column * 512, row * 512, 512, 512))
+			var bounds := cell.get_used_rect()
+			_expect(bounds.has_area(), "Traveler %s cell %d,%d is empty" % [label, column, row])
+			if bounds.has_area():
+				_expect(
+					bounds.position.x >= 48 and bounds.end.x <= 464,
+					"Traveler %s cell %d,%d crosses its horizontal safety margin"
+					% [label, column, row],
+				)
+				_expect(
+					absi(bounds.end.y - 482) <= 3,
+					"Traveler %s cell %d,%d lost the shared foot baseline (y=%d)"
+					% [label, column, row, bounds.end.y],
+				)
 
 
 func _assert_raster_material_recursive(node: Node, expected_material: Material) -> void:
@@ -388,11 +467,11 @@ func _validate_movement_and_facing(traveler: Traveler3D) -> void:
 		traveler.combat_facing.is_equal_approx(persisted_facing),
 		"idle state did not preserve the last non-zero movement facing",
 	)
-	var visual_forward := traveler.visual.global_basis * Vector3.FORWARD
+	var visual_forward := traveler.facing_feedback.global_basis * Vector3.FORWARD
 	visual_forward.y = 0.0
 	_expect(
 		visual_forward.normalized().dot(traveler.combat_facing) > 0.99,
-		"Traveler visual and world-facing notch point opposite combat_facing",
+		"world-facing notch points opposite combat_facing",
 	)
 
 	traveler.reset_training()
@@ -428,7 +507,8 @@ func _validate_dash_and_action_precedence(traveler: Traveler3D) -> void:
 	_expect(
 		traveler.dash_remaining > 0.0
 		and traveler.melee_remaining <= 0.0
-		and traveler.ranged_cooldown_remaining <= 0.0,
+		and traveler.ranged_cooldown_remaining <= 0.0
+		and traveler.ranged_action_remaining <= 0.0,
 		"accepted dash did not outrank simultaneous melee and ranged input",
 	)
 	var health_before := traveler.health
@@ -444,8 +524,19 @@ func _validate_dash_and_action_precedence(traveler: Traveler3D) -> void:
 	_key_up(KEY_SHIFT)
 	_key_up(KEY_Z)
 	_expect(
-		traveler.melee_remaining > 0.0 and traveler.ranged_cooldown_remaining <= 0.0,
+		traveler.melee_remaining > 0.0
+		and traveler.ranged_cooldown_remaining <= 0.0
+		and traveler.ranged_action_remaining <= 0.0,
 		"Shift melee did not outrank simultaneous Z ranged input",
+	)
+	_key_down(KEY_Z)
+	await _physics_frames(2)
+	_key_up(KEY_Z)
+	_expect(
+		traveler.melee_remaining > 0.0
+		and traveler.ranged_cooldown_remaining <= 0.0
+		and traveler.ranged_action_remaining <= 0.0,
+		"Z ranged started during a committed raster melee action",
 	)
 	await _physics_frames(24)
 
@@ -467,6 +558,11 @@ func _validate_melee_assist(
 	_key_down(KEY_SHIFT)
 	await _physics_frames(2)
 	_key_up(KEY_SHIFT)
+	_expect(
+		traveler.sprite_presenter.current_state == TravelerSpritePresenter3D.SpriteState.MELEE
+		and traveler.sprite_presenter.texture == traveler.sprite_presenter.melee_texture,
+		"Shift melee did not enter the raster melee sheet",
+	)
 	var cached_direction := traveler.resolved_attack_direction
 	_expect(cached_direction.dot(target_direction) > 0.99, "near melee did not use its 160-degree assist cone")
 	_expect(traveler.targeting_assist.target_marker.visible, "melee assist did not show the 0.35s target marker")
@@ -516,11 +612,32 @@ func _validate_ranged_assist(
 	_key_down(KEY_Z)
 	await _physics_frames(2)
 	_key_up(KEY_Z)
+	_expect(
+		traveler.sprite_presenter.current_state == TravelerSpritePresenter3D.SpriteState.RANGED
+		and traveler.sprite_presenter.texture == traveler.sprite_presenter.ranged_texture,
+		"Z ranged did not enter the raster bow sheet",
+	)
+	_expect(_find_projectile(traveler) == null, "ranged projectile spawned before its raster release frame")
 	var cached_direction := traveler.resolved_attack_direction
 	_expect(cached_direction.dot(target_direction) > 0.99, "Z ranged did not resolve inside its 50-degree assist cone")
 	_expect(traveler.targeting_assist.target_marker.visible, "ranged assist did not show the target marker")
+	await _physics_frames(8)
+	var projectile := _find_projectile(traveler)
+	_expect(projectile != null, "ranged projectile did not spawn on its raster release frame")
+	if projectile != null:
+		_expect(projectile.visual != null, "ranged projectile has no raster Sprite3D presentation")
+		if projectile.visual != null:
+			_expect(
+				projectile.visual.texture.resource_path
+				== "res://art/world/flooded_works/isometric/effects/traveler-ranged-bolt-v1.png",
+				"ranged projectile does not use the authored raster bolt",
+			)
+		_expect(
+			projectile.find_children("*", "MeshInstance3D", true, false).is_empty(),
+			"ranged projectile still exposes primitive 3D presentation",
+		)
 	traveler.combat_facing = Vector3.LEFT
-	await _physics_frames(28)
+	await _physics_frames(24)
 	_expect(target.health == DamageableDummy3D.MAX_HEALTH - 16, "Z ranged projectile did not hit its assisted target once")
 	_expect(
 		traveler.resolved_attack_direction.is_equal_approx(cached_direction),
@@ -633,8 +750,14 @@ func _validate_guard(
 	_park_targets(targets)
 	traveler.reset_training()
 	_key_down(KEY_X)
-	await _physics_frames(2)
-	_expect(traveler.guarding and traveler.shield.visible, "X did not enter the visible guard state")
+	await _physics_frames(12)
+	_expect(
+		traveler.guarding
+		and traveler.sprite_presenter.current_state == TravelerSpritePresenter3D.SpriteState.GUARD
+		and traveler.sprite_presenter.texture == traveler.sprite_presenter.guard_texture
+		and traveler.sprite_presenter.current_column >= 2,
+		"X did not enter the raster guard hold state",
+	)
 	_key_down(KEY_SHIFT)
 	_key_down(KEY_Z)
 	_key_down(KEY_SPACE)
@@ -645,6 +768,7 @@ func _validate_guard(
 	_expect(
 		traveler.melee_remaining <= 0.0
 		and traveler.ranged_cooldown_remaining <= 0.0
+		and traveler.ranged_action_remaining <= 0.0
 		and traveler.dash_remaining <= 0.0,
 		"held X guard did not outrank melee, ranged, and dash actions",
 	)
@@ -657,7 +781,12 @@ func _validate_guard(
 	var guarded_distance := traveler.global_position.distance_to(guarded_start)
 	_key_up(KEY_X)
 	await _physics_frames(2)
-	_expect(not traveler.guarding and not traveler.shield.visible, "guard remained active after X release")
+	_expect(
+		not traveler.guarding
+		and traveler.sprite_presenter.current_state == TravelerSpritePresenter3D.SpriteState.LOCOMOTION
+		and traveler.sprite_presenter.texture == traveler.sprite_presenter.locomotion_texture,
+		"guard remained active after X release",
+	)
 	traveler.reset_training()
 	var normal_start := traveler.global_position
 	_key_down(KEY_RIGHT)
@@ -714,6 +843,12 @@ func _validate_reset(
 	_expect(traveler.global_position.is_equal_approx(traveler.spawn_position), "R did not restore Traveler spawn")
 	_expect(traveler.health == traveler.max_health, "R did not restore Traveler health")
 	_expect(not traveler.targeting_assist.target_marker.visible, "R did not clear targeting feedback")
+	_expect(
+		traveler.ranged_action_remaining <= 0.0
+		and traveler.sprite_presenter.current_state == TravelerSpritePresenter3D.SpriteState.LOCOMOTION
+		and traveler.sprite_presenter.current_column == 0,
+		"R did not clear raster action state",
+	)
 	for target in targets:
 		_expect(target.health == DamageableDummy3D.MAX_HEALTH, "R did not reset %s health" % target.name)
 	_expect(
@@ -779,6 +914,13 @@ func _park_targets(targets: Array[DamageableDummy3D]) -> void:
 	for index in targets.size():
 		targets[index].global_position = Vector3(40.0 + index * 3.0, 0, 40.0)
 		targets[index].reset_dummy()
+
+
+func _find_projectile(traveler: Traveler3D) -> ProofProjectile3D:
+	for child in traveler.get_parent().get_children():
+		if child is ProofProjectile3D:
+			return child as ProofProjectile3D
+	return null
 
 
 func _physics_frames(count: int) -> void:

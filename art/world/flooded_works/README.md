@@ -40,8 +40,9 @@ new isometric runtime.
 - Gameplay-significant terrain and props must remain separable from decorative
   background art.
 - `isometric/` now contains the first runtime vertical slice: one restrained
-  same-hue surface albedo and one 4x4 Traveler locomotion sheet. It proves the
-  hybrid renderer but does not establish a complete production asset kit.
+  same-hue surface albedo, a corrected two-direction Traveler locomotion atlas,
+  melee/ranged/guard atlases, and a raster ranged bolt. It proves the hybrid
+  renderer but does not establish a complete production asset kit.
 
 ## Recommendations
 

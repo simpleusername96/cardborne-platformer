@@ -87,9 +87,14 @@ and camera-facing actor sprites.
 - The current arena keeps 3D geometry and collision, uses a project-authored
   same-hue raster albedo through world-triplanar projection, and displays the
   approved Flooded Works panel only as a non-interactive far background.
-- Traveler locomotion uses a four-direction, four-frame `Sprite3D` sheet selected
-  from camera-relative facing and actual velocity. Animation is presentation
-  only and never owns movement, hit timing, targeting, or collision.
+- Traveler locomotion uses two authored camera-relative directions plus
+  horizontal mirroring. Its four frames advance from actual ground distance,
+  not a free-running animation clock.
+- Melee, ranged, and guard each select a dedicated full-body `Sprite3D` atlas;
+  the sword, bow, and shield are painted into those poses, and the ranged bolt
+  is also raster art. Hidden primitive equipment is never gameplay feedback.
+- Animation remains presentation only. Movement, hit/release timing, targeting,
+  cover, damage, and collision stay authoritative in gameplay code.
 
 ## Acceptance Criteria
 

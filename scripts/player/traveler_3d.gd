@@ -14,12 +14,10 @@ const DASH_COOLDOWN := 0.55
 const MELEE_DURATION := 0.38
 const MELEE_HIT_TIME := 0.10
 const RANGED_COOLDOWN := 0.45
+const RANGED_ACTION_DURATION := 0.32
+const RANGED_RELEASE_TIME := 0.10
 const GUARD_MOVE_MULTIPLIER := 0.45
 const GUARD_DAMAGE_MULTIPLIER := 0.35
-const SPRITE_FRAME_COLUMNS := 4
-const SPRITE_DIRECTION_ROWS := 4
-const WALK_SPRITE_FPS := 8.0
-const DASH_SPRITE_FPS := 12.0
 
 @export var max_health := 100
 
@@ -35,33 +33,30 @@ var dash_direction := Vector3.ZERO
 var melee_remaining := 0.0
 var melee_hit_fired := false
 var ranged_cooldown_remaining := 0.0
+var ranged_action_remaining := 0.0
+var ranged_release_fired := false
+var ranged_direction := Vector3.FORWARD
 var guarding := false
-var sprite_animation_time := 0.0
-var sprite_facing_row := 0
-var sprite_frame_column := 0
 
 @onready var camera: Camera3D = get_node("../CameraRig/Camera3D")
-@onready var visual: Node3D = $Visual
 @onready var facing_feedback: Node3D = $FacingFeedback
 @onready var targeting_assist: TargetingAssist3D = $TargetingAssist
-@onready var sword_pivot: Node3D = $Visual/SwordPivot
-@onready var shield: MeshInstance3D = $Visual/Shield
-@onready var actor_sprite: Sprite3D = $ActorSprite
+@onready var sprite_presenter: TravelerSpritePresenter3D = $ActorSprite
 
 
 func _ready() -> void:
 	spawn_position = global_position
 	health = max_health
-	sword_pivot.visible = false
 	health_changed.emit(health, max_health)
 	potion_changed.emit(potion_charges)
-	_update_sprite_presentation(0.0)
+	sprite_presenter.reset_presentation()
 
 
 func _physics_process(delta: float) -> void:
 	dash_cooldown_remaining = maxf(0.0, dash_cooldown_remaining - delta)
 	ranged_cooldown_remaining = maxf(0.0, ranged_cooldown_remaining - delta)
 	_tick_melee(delta)
+	_tick_ranged(delta)
 
 	var input_vector := Input.get_vector("move_left", "move_right", "move_up", "move_down")
 	move_direction = _camera_relative_direction(input_vector)
@@ -83,11 +78,13 @@ func _physics_process(delta: float) -> void:
 	if Input.is_action_just_pressed("potion"):
 		_use_potion()
 
+	var position_before_move := global_position
 	move_and_slide()
+	var frame_displacement := global_position - position_before_move
+	var traveled_distance := Vector2(frame_displacement.x, frame_displacement.z).length()
 	var facing_yaw := atan2(-combat_facing.x, -combat_facing.z)
-	visual.rotation.y = facing_yaw
 	facing_feedback.rotation.y = facing_yaw
-	_update_sprite_presentation(delta)
+	_update_sprite_presentation(delta, traveled_distance)
 
 
 func receive_damage(amount: int, source_id: StringName) -> bool:
@@ -121,14 +118,15 @@ func reset_training() -> void:
 	dash_cooldown_remaining = 0.0
 	melee_remaining = 0.0
 	ranged_cooldown_remaining = 0.0
+	ranged_action_remaining = 0.0
+	ranged_release_fired = false
+	ranged_direction = Vector3.FORWARD
 	move_direction = Vector3.ZERO
 	combat_facing = Vector3.FORWARD
 	resolved_attack_direction = Vector3.FORWARD
-	sprite_animation_time = 0.0
-	sword_pivot.visible = false
 	targeting_assist.reset_assist()
 	_set_guarding(false)
-	_update_sprite_presentation(0.0)
+	sprite_presenter.reset_presentation()
 	health_changed.emit(health, max_health)
 	potion_changed.emit(potion_charges)
 	action_traced.emit("Training reset")
@@ -146,37 +144,22 @@ func _camera_relative_direction(input_vector: Vector2) -> Vector3:
 	return (camera_right * input_vector.x + camera_forward * -input_vector.y).normalized()
 
 
-func _update_sprite_presentation(delta: float) -> void:
-	sprite_facing_row = _sprite_row_for_direction(combat_facing)
-	var horizontal_speed := Vector2(velocity.x, velocity.z).length()
-	if horizontal_speed > 0.2:
-		var playback_rate := DASH_SPRITE_FPS if dash_remaining > 0.0 else WALK_SPRITE_FPS
-		sprite_animation_time += delta * playback_rate
-		sprite_frame_column = int(floor(sprite_animation_time)) % SPRITE_FRAME_COLUMNS
-	else:
-		sprite_animation_time = 0.0
-		sprite_frame_column = 0
-	actor_sprite.frame = sprite_facing_row * SPRITE_FRAME_COLUMNS + sprite_frame_column
-
-
-func _sprite_row_for_direction(direction: Vector3) -> int:
-	var normalized_direction := direction
-	normalized_direction.y = 0.0
-	if normalized_direction.length_squared() <= 0.0001:
-		normalized_direction = Vector3.FORWARD
-	normalized_direction = normalized_direction.normalized()
-
-	var camera_right := camera.global_basis.x
-	camera_right.y = 0.0
-	camera_right = camera_right.normalized()
-	var camera_away := -camera.global_basis.z
-	camera_away.y = 0.0
-	camera_away = camera_away.normalized()
-	var moves_right := normalized_direction.dot(camera_right) >= 0.0
-	var moves_away := normalized_direction.dot(camera_away) >= 0.0
-	if moves_away:
-		return 0 if moves_right else 1
-	return 2 if moves_right else 3
+func _update_sprite_presentation(delta: float, traveled_distance: float) -> void:
+	var melee_progress := -1.0
+	if melee_remaining > 0.0:
+		melee_progress = 1.0 - melee_remaining / MELEE_DURATION
+	var ranged_progress := -1.0
+	if ranged_action_remaining > 0.0:
+		ranged_progress = 1.0 - ranged_action_remaining / RANGED_ACTION_DURATION
+	sprite_presenter.present_state(
+		combat_facing,
+		camera,
+		traveled_distance,
+		melee_progress,
+		ranged_progress,
+		guarding,
+		delta,
+	)
 
 
 func _start_dash(requested_direction: Vector3) -> void:
@@ -187,7 +170,11 @@ func _start_dash(requested_direction: Vector3) -> void:
 
 
 func _resolve_action_requests() -> void:
-	var can_guard := dash_remaining <= 0.0 and melee_remaining <= 0.0
+	var can_guard := (
+		dash_remaining <= 0.0
+		and melee_remaining <= 0.0
+		and ranged_action_remaining <= 0.0
+	)
 	if Input.is_action_pressed("guard") and can_guard:
 		_set_guarding(true)
 		return
@@ -197,25 +184,31 @@ func _resolve_action_requests() -> void:
 		Input.is_action_just_pressed("dash")
 		and dash_cooldown_remaining <= 0.0
 		and melee_remaining <= 0.0
+		and ranged_action_remaining <= 0.0
 	):
 		_start_dash(move_direction)
 		return
-	if Input.is_action_just_pressed("melee") and melee_remaining <= 0.0 and dash_remaining <= 0.0:
+	if (
+		Input.is_action_just_pressed("melee")
+		and melee_remaining <= 0.0
+		and ranged_action_remaining <= 0.0
+		and dash_remaining <= 0.0
+	):
 		_start_melee()
 		return
 	if (
 		Input.is_action_just_pressed("ranged")
 		and ranged_cooldown_remaining <= 0.0
+		and melee_remaining <= 0.0
 		and dash_remaining <= 0.0
 	):
-		_fire_ranged()
+		_start_ranged()
 
 
 func _set_guarding(next_guarding: bool) -> void:
 	if guarding == next_guarding:
 		return
 	guarding = next_guarding
-	shield.visible = guarding
 	if guarding:
 		action_traced.emit("Guard")
 
@@ -227,19 +220,14 @@ func _start_melee() -> void:
 	)
 	melee_remaining = MELEE_DURATION
 	melee_hit_fired = false
-	sword_pivot.visible = true
 	action_traced.emit("Sword")
 
 
 func _tick_melee(delta: float) -> void:
 	if melee_remaining <= 0.0:
-		sword_pivot.visible = false
-		sword_pivot.rotation.y = lerpf(sword_pivot.rotation.y, 0.0, minf(1.0, delta * 18.0))
 		return
-	sword_pivot.visible = true
 	melee_remaining = maxf(0.0, melee_remaining - delta)
 	var progress := 1.0 - melee_remaining / MELEE_DURATION
-	sword_pivot.rotation.y = lerpf(-1.15, 1.2, progress)
 	if not melee_hit_fired and progress >= MELEE_HIT_TIME / MELEE_DURATION:
 		melee_hit_fired = true
 		_apply_melee_hit()
@@ -262,18 +250,35 @@ func _apply_melee_hit() -> void:
 			collider.receive_hit(20, 20, &"sword")
 
 
-func _fire_ranged() -> void:
+func _start_ranged() -> void:
 	resolved_attack_direction = _resolve_attack_direction(
 		&"ranged",
 		global_position + Vector3.UP * 0.75,
 	)
+	ranged_direction = resolved_attack_direction
+	ranged_action_remaining = RANGED_ACTION_DURATION
+	ranged_release_fired = false
+	ranged_cooldown_remaining = RANGED_COOLDOWN
+	action_traced.emit("Ranged draw")
+
+
+func _tick_ranged(delta: float) -> void:
+	if ranged_action_remaining <= 0.0:
+		return
+	ranged_action_remaining = maxf(0.0, ranged_action_remaining - delta)
+	var elapsed := RANGED_ACTION_DURATION - ranged_action_remaining
+	if not ranged_release_fired and elapsed >= RANGED_RELEASE_TIME:
+		ranged_release_fired = true
+		_spawn_ranged_projectile()
+
+
+func _spawn_ranged_projectile() -> void:
 	var projectile := ProofProjectile3D.new()
 	get_parent().add_child(projectile)
 	projectile.configure(
-		global_position + resolved_attack_direction * 0.8 + Vector3.UP * 0.75,
-		resolved_attack_direction,
+		global_position + ranged_direction * 0.8 + Vector3.UP * 0.75,
+		ranged_direction,
 	)
-	ranged_cooldown_remaining = RANGED_COOLDOWN
 	action_traced.emit("Ranged shot")
 
 

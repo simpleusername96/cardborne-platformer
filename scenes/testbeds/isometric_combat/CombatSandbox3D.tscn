@@ -1,4 +1,4 @@
-[gd_scene load_steps=32 format=3]
+[gd_scene load_steps=36 format=3]
 
 [ext_resource type="Script" path="res://scripts/testbeds/combat_sandbox_3d.gd" id="1_sandbox"]
 [ext_resource type="PackedScene" path="res://third_party/kenney_modular_dungeon/models/room-large.glb" id="2_room"]
@@ -12,8 +12,12 @@
 [ext_resource type="Script" path="res://scripts/player/targeting/targeting_assist_3d.gd" id="10_targeting"]
 [ext_resource type="Script" path="res://scripts/presentation/raster_surface_pass_3d.gd" id="11_raster_surface"]
 [ext_resource type="Texture2D" path="res://art/world/flooded_works/isometric/surfaces/foundry-architecture-albedo-v1.png" id="12_surface_texture"]
-[ext_resource type="Texture2D" path="res://art/world/flooded_works/isometric/actors/traveler-walk-sheet-v1.png" id="13_traveler_sheet"]
+[ext_resource type="Texture2D" path="res://art/world/flooded_works/isometric/actors/traveler-locomotion-sheet-v2.png" id="13_locomotion_sheet"]
 [ext_resource type="Texture2D" path="res://art/world/flooded_works/backgrounds/panel_01.png" id="14_backdrop"]
+[ext_resource type="Texture2D" path="res://art/world/flooded_works/isometric/actors/traveler-melee-sheet-v1.png" id="15_melee_sheet"]
+[ext_resource type="Texture2D" path="res://art/world/flooded_works/isometric/actors/traveler-ranged-sheet-v1.png" id="16_ranged_sheet"]
+[ext_resource type="Texture2D" path="res://art/world/flooded_works/isometric/actors/traveler-guard-sheet-v1.png" id="17_guard_sheet"]
+[ext_resource type="Script" path="res://scripts/player/traveler_sprite_presenter_3d.gd" id="18_sprite_presenter"]
 
 [sub_resource type="Environment" id="Environment_main"]
 background_mode = 3
@@ -303,16 +307,22 @@ mesh = SubResource("SphereMesh_head")
 
 [node name="ActorSprite" type="Sprite3D" parent="Traveler"]
 position = Vector3(0, 1, 0)
-texture = ExtResource("13_traveler_sheet")
-pixel_size = 0.01
+texture = ExtResource("13_locomotion_sheet")
+pixel_size = 0.005
 billboard = 1
 alpha_cut = 1
 no_depth_test = true
 hframes = 4
-vframes = 4
+vframes = 2
 render_priority = 1
+script = ExtResource("18_sprite_presenter")
+locomotion_texture = ExtResource("13_locomotion_sheet")
+melee_texture = ExtResource("15_melee_sheet")
+ranged_texture = ExtResource("16_ranged_sheet")
+guard_texture = ExtResource("17_guard_sheet")
 
 [node name="SwordPivot" type="Node3D" parent="Traveler/Visual"]
+visible = false
 position = Vector3(0.45, 0.95, -0.15)
 
 [node name="Sword" type="MeshInstance3D" parent="Traveler/Visual/SwordPivot"]
