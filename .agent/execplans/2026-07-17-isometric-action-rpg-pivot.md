@@ -1,6 +1,7 @@
 ---
 type: plan
-status: active
+status: superseded
+superseded_by: ./2026-07-17-native-3d-isometric-foundation.md
 owner: BK
 created: 2026-07-17
 last_reviewed: 2026-07-17

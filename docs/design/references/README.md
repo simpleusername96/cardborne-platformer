@@ -10,7 +10,7 @@ source: Owner-selected images and project-generated references through 2026-07-1
 related:
   - ../UI_VISUAL_SYSTEM.md
   - ../../../art/ui/production/README.md
-  - ../../../.agent/execplans/2026-07-17-isometric-action-rpg-pivot.md
+  - ../../../.agent/execplans/2026-07-17-native-3d-isometric-foundation.md
 ---
 
 # Visual Reference Index

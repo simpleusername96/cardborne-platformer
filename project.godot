@@ -31,6 +31,10 @@ theme/custom="res://art/ui/production/production_ui_theme.tres"
 2d_physics/layer_6="Projectile"
 2d_physics/layer_7="Interactable"
 2d_physics/layer_8="NavigationObstacle"
+3d_physics/layer_1="World"
+3d_physics/layer_2="Player"
+3d_physics/layer_3="Enemy"
+3d_physics/layer_6="Projectile"
 
 [rendering]
 

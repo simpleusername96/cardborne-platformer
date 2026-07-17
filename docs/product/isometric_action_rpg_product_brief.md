@@ -6,10 +6,10 @@ created: 2026-07-17
 last_reviewed: 2026-07-17
 canonical_for: Cardborne five-to-eight-minute isometric action RPG proof behavior
 scope: Direct-start combat proof from movement room through Slime King and result
-source: ../../.agent/execplans/2026-07-17-isometric-action-rpg-pivot.md
+source: ../../.agent/execplans/2026-07-17-native-3d-isometric-foundation.md
 related:
   - ../../.agent/Prompt.md
-  - ../../.agent/execplans/2026-07-17-isometric-action-rpg-pivot.md
+  - ../../.agent/execplans/2026-07-17-native-3d-isometric-foundation.md
   - ../design/UI_VISUAL_SYSTEM.md
 ---
 
@@ -25,19 +25,21 @@ combat is a better foundation for Cardborne than the retired platformer.
 The proof starts directly in play and follows one deterministic route:
 Movement Check → Foundry Approach → one three-card reward → Pump Gallery →
 Pressure Vault → Slime King → Run Result. It supports keyboard/mouse and gamepad,
-uses one top-down collision plane, and presents the world with isometric 2D art.
+uses one traversable ground elevation, and presents a native 3D world through a
+fixed orthographic isometric camera.
 
 ## Requirements
 
 ### Player control
 
-- Keyboard/mouse uses `WASD`, mouse aim, LMB melee, RMB ranged, Space dash,
-  `E` interact, `Q` potion, and Esc pause.
-- Gamepad uses left-stick movement, right-stick aim, RB melee, RT ranged,
-  south-face dash, west-face interact, north-face potion, and Menu pause.
-- Ground movement has normalized diagonals, `220 px/s` maximum speed,
-  `1600 px/s²` acceleration, and `2000 px/s²` braking.
-- Dash moves at `520 px/s` for `0.18 s`, is invulnerable for its first `0.10 s`,
+- Keyboard uses arrow-key movement, Space melee, `Z` ranged, Left Shift dash,
+  `X` interact, `C` potion, and Esc pause. Attacks initially follow last movement.
+- Gamepad uses left-stick movement, RB melee, RT ranged, south-face dash,
+  west-face interact, north-face potion, and Menu pause. Right-stick or assisted
+  aiming is deferred until a real ranged-enemy fixture can validate the choice.
+- Ground movement has normalized diagonals, `6 m/s` maximum speed,
+  `28 m/s²` acceleration, and `34 m/s²` braking.
+- Dash moves at `14 m/s` for `0.18 s`, is invulnerable for its first `0.10 s`,
   recovers for `0.12 s`, and reuses after `0.55 s` from start.
 - Melee is an explicit buffered two-hit sword chain. Ranged is a separate
   straight projectile that stops on world collision and has no ammunition.
@@ -87,13 +89,13 @@ uses one top-down collision plane, and presents the world with isometric 2D art.
 ## Non-Goals
 
 - Restoring platform jumping, ropes, one-way platforms, or old stage geometry.
-- True 3D, gameplay elevation, contextual replacement of explicit attacks, or
-  animation-owned movement and damage.
-- Broad content, randomized rooms, economy, persistent progression, or external
-  packages and assets.
+- Free camera rotation, gameplay elevation, contextual replacement of explicit
+  attacks, or animation-owned movement and damage.
+- Broad content, randomized rooms, economy, persistent progression, or unverified
+  external packages and assets.
 
 ## Related
 
-- [Active execution plan](../../.agent/execplans/2026-07-17-isometric-action-rpg-pivot.md)
+- [Active execution plan](../../.agent/execplans/2026-07-17-native-3d-isometric-foundation.md)
 - [Pivot direction](../../.agent/Prompt.md)
 - [UI visual system](../design/UI_VISUAL_SYSTEM.md)

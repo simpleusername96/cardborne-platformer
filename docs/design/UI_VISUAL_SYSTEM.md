@@ -11,7 +11,7 @@ related:
   - ./references/README.md
   - ../../art/ui/production/README.md
   - ../research/third_party_adoption_ledger.md
-  - ../../.agent/execplans/2026-07-17-isometric-action-rpg-pivot.md
+  - ../../.agent/execplans/2026-07-17-native-3d-isometric-foundation.md
 ---
 
 # UI Visual System

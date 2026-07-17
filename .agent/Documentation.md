@@ -6,7 +6,7 @@ last_reviewed: 2026-07-17
 topic: Current Cardborne isometric action RPG pivot state
 source: Owner pivot decision, repository reset, and active ExecPlan
 related:
-  - ./execplans/2026-07-17-isometric-action-rpg-pivot.md
+  - ./execplans/2026-07-17-native-3d-isometric-foundation.md
   - ../docs/design/UI_VISUAL_SYSTEM.md
 ---
 
@@ -22,12 +22,13 @@ Hades, the owner chose to reset the runtime and explore an isometric action RPG.
 
 - The retired platformer runtime, typed content, scenes, stage data, validators,
   release records, and obsolete plans were removed on the pivot branch.
-- Cardborne now targets a 2D top-down simulation with isometric presentation.
+- Cardborne now targets a Godot-native 3D world with fixed orthographic
+  isometric presentation and one traversable ground elevation for the proof.
 - The accepted art style and all project-owned art remain available.
 - Traveler, weapons, defense, cards, equipment, forging, merchant, run/reward,
   persistence, and Slime King survive as product identities only; none of their
   deleted runtime behavior is implicitly accepted.
-- `.agent/execplans/2026-07-17-isometric-action-rpg-pivot.md` is the active work
+- `.agent/execplans/2026-07-17-native-3d-isometric-foundation.md` is the active work
   source until a replacement product spec is accepted.
 
 ## Rationale
@@ -39,10 +40,9 @@ later proves worth recovering.
 
 ## Consequences
 
-- The project currently boots an intentionally empty `PivotRoot` scene; it is not
-  a playable game.
-- The first implementation milestone must be a graybox combat sandbox rather than
-  restoration of menus, persistence, or the former complete run.
+- The project boots directly into a playable native 3D combat foundation.
+- The first implementation milestone remains a focused combat sandbox rather
+  than restoration of menus, persistence, or the former complete run.
 - Old screenshots and world assets are references, not geometry or collision
   sources for the new game.
 - The pre-pivot runtime can be inspected at commit `7cc069c` without reintroducing
@@ -52,12 +52,12 @@ later proves worth recovering.
 
 - Active branch: `agent/isometric-arpg-pivot-plan`.
 - Runtime reset and research-backed plan: completed on 2026-07-17.
-- Phase 1 implementation is playable: `CombatSandbox` contains an authored
-  six-sided ground plane, matching boundary collision, two cover blocks, a
+- Phase 1 native 3D implementation is playable: `CombatSandbox3D` contains an
+  imported CC0 dungeon room, explicit boundary collision, two cover blocks, a
   damageable dummy, a telegraphed pulse, and the Traveler.
-- Traveler input, movement, aim, dash, two-hit melee, solid-blocked ranged shot,
+- Traveler arrow-key input, movement, facing, dash, melee, solid-blocked ranged shot,
   three-charge potion, damage, reset, action trace, and bounded camera are live.
-- The automated Phase 1 gate and 960x540, 1280x720, and 1920x1080 rendered
+- The automated native 3D gate and 960x540, 1280x720, and 1920x1080 rendered
   captures pass. The Web release exports and boots from the manager-provided
   `codex` lane with focused dash input and no browser console warning or error.
   Physical-gamepad and two-minute manual feel gates remain before Phase 1 is

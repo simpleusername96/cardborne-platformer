@@ -11,7 +11,7 @@ available through Git history and do not guide new work.
 | 1 | `../AGENTS.md` | Repository operating guidance and current project direction. |
 | 2 | `../.agent/Prompt.md` | Active pivot policy. |
 | 3 | `product/isometric_action_rpg_product_brief.md` | Active proof-build product behavior. |
-| 4 | `../.agent/execplans/2026-07-17-isometric-action-rpg-pivot.md` | Active decision-complete execution plan. |
+| 4 | `../.agent/execplans/2026-07-17-native-3d-isometric-foundation.md` | Active native 3D execution plan. |
 | 5 | `design/UI_VISUAL_SYSTEM.md` | Active UI and art-style contract. |
 
 The active product brief is intentionally limited to the proof build. Broader

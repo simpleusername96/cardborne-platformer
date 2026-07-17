@@ -1,0 +1,397 @@
+[gd_scene load_steps=26 format=3]
+
+[ext_resource type="Script" path="res://scripts/testbeds/combat_sandbox_3d.gd" id="1_sandbox"]
+[ext_resource type="PackedScene" path="res://third_party/kenney_modular_dungeon/models/room-large.glb" id="2_room"]
+[ext_resource type="PackedScene" path="res://third_party/kenney_modular_dungeon/models/gate.glb" id="3_gate"]
+[ext_resource type="PackedScene" path="res://third_party/kenney_modular_dungeon/models/corridor-wide.glb" id="4_corridor"]
+[ext_resource type="Script" path="res://scripts/presentation/isometric_camera_3d.gd" id="5_camera"]
+[ext_resource type="Script" path="res://scripts/player/traveler_3d.gd" id="6_traveler"]
+[ext_resource type="Script" path="res://scripts/combat/damageable_dummy_3d.gd" id="7_dummy"]
+[ext_resource type="Script" path="res://scripts/combat/training_pulse_3d.gd" id="8_pulse"]
+[ext_resource type="Script" path="res://scripts/ui/proof/combat_sandbox_hud_3d.gd" id="9_hud"]
+
+[sub_resource type="Environment" id="Environment_main"]
+background_mode = 1
+background_color = Color(0.027451, 0.0431373, 0.0509804, 1)
+ambient_light_source = 3
+ambient_light_color = Color(0.45098, 0.619608, 0.631373, 1)
+ambient_light_energy = 0.55
+reflected_light_source = 2
+tonemap_mode = 2
+
+[sub_resource type="BoxShape3D" id="BoxShape_floor"]
+size = Vector3(18, 0.2, 18)
+
+[sub_resource type="BoxShape3D" id="BoxShape_wall_long"]
+size = Vector3(19, 3, 0.8)
+
+[sub_resource type="BoxShape3D" id="BoxShape_wall_side"]
+size = Vector3(0.8, 3, 19)
+
+[sub_resource type="StandardMaterial3D" id="Material_cover"]
+albedo_color = Color(0.137255, 0.211765, 0.223529, 1)
+roughness = 0.9
+metallic = 0.08
+
+[sub_resource type="BoxMesh" id="BoxMesh_cover_tall"]
+material = SubResource("Material_cover")
+size = Vector3(1.8, 1.8, 3.4)
+
+[sub_resource type="BoxShape3D" id="BoxShape_cover_tall"]
+size = Vector3(1.8, 1.8, 3.4)
+
+[sub_resource type="BoxMesh" id="BoxMesh_cover_low"]
+material = SubResource("Material_cover")
+size = Vector3(3, 1.1, 1.4)
+
+[sub_resource type="BoxShape3D" id="BoxShape_cover_low"]
+size = Vector3(3, 1.1, 1.4)
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape_traveler"]
+radius = 0.42
+height = 1.8
+
+[sub_resource type="StandardMaterial3D" id="Material_traveler_body"]
+albedo_color = Color(0.737255, 0.309804, 0.235294, 1)
+roughness = 0.82
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_traveler"]
+material = SubResource("Material_traveler_body")
+radius = 0.38
+height = 1.25
+radial_segments = 8
+rings = 3
+
+[sub_resource type="StandardMaterial3D" id="Material_traveler_head"]
+albedo_color = Color(0.886275, 0.85098, 0.745098, 1)
+roughness = 0.88
+
+[sub_resource type="SphereMesh" id="SphereMesh_head"]
+material = SubResource("Material_traveler_head")
+radius = 0.32
+height = 0.64
+radial_segments = 8
+rings = 4
+
+[sub_resource type="StandardMaterial3D" id="Material_blade"]
+albedo_color = Color(0.768627, 0.831373, 0.819608, 1)
+metallic = 0.65
+roughness = 0.32
+
+[sub_resource type="BoxMesh" id="BoxMesh_sword"]
+material = SubResource("Material_blade")
+size = Vector3(0.12, 0.12, 1.35)
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape_dummy"]
+radius = 0.5
+height = 1.8
+
+[sub_resource type="StandardMaterial3D" id="Material_dummy"]
+albedo_color = Color(0.282353, 0.419608, 0.431373, 1)
+roughness = 0.88
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_dummy"]
+material = SubResource("Material_dummy")
+top_radius = 0.36
+bottom_radius = 0.5
+height = 1.5
+radial_segments = 8
+
+[sub_resource type="StandardMaterial3D" id="Material_health_back"]
+albedo_color = Color(0.0470588, 0.0705882, 0.0784314, 1)
+shading_mode = 0
+
+[sub_resource type="BoxMesh" id="BoxMesh_health_back"]
+material = SubResource("Material_health_back")
+size = Vector3(1.2, 0.08, 0.06)
+
+[sub_resource type="StandardMaterial3D" id="Material_health_fill"]
+albedo_color = Color(0.85098, 0.396078, 0.309804, 1)
+emission_enabled = true
+emission = Color(0.85098, 0.396078, 0.309804, 1)
+emission_energy_multiplier = 0.6
+shading_mode = 0
+
+[sub_resource type="BoxMesh" id="BoxMesh_health_fill"]
+material = SubResource("Material_health_fill")
+size = Vector3(1.2, 0.09, 0.07)
+
+[sub_resource type="CylinderShape3D" id="CylinderShape_pulse"]
+radius = 2.2
+height = 0.8
+
+[sub_resource type="StandardMaterial3D" id="Material_pulse"]
+transparency = 1
+albedo_color = Color(0.384314, 0.662745, 0.709804, 0.28)
+emission_enabled = true
+emission = Color(0.384314, 0.662745, 0.709804, 1)
+emission_energy_multiplier = 0.4
+shading_mode = 0
+
+[sub_resource type="TorusMesh" id="TorusMesh_pulse"]
+material = SubResource("Material_pulse")
+inner_radius = 2.0
+outer_radius = 2.18
+rings = 32
+ring_segments = 6
+
+[node name="CombatSandbox3D" type="Node3D"]
+script = ExtResource("1_sandbox")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_main")
+
+[node name="KeyLight" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(-58, -38, 0)
+light_color = Color(0.72549, 0.890196, 0.866667, 1)
+light_energy = 1.25
+shadow_enabled = true
+
+[node name="ForgeGlow" type="OmniLight3D" parent="."]
+position = Vector3(-5, 2.4, -4)
+light_color = Color(0.92549, 0.52549, 0.25098, 1)
+light_energy = 3.4
+omni_range = 7.5
+
+[node name="Architecture" type="Node3D" parent="."]
+
+[node name="RoomLarge" parent="Architecture" instance=ExtResource("2_room")]
+
+[node name="NorthGate" parent="Architecture" instance=ExtResource("3_gate")]
+position = Vector3(0, 0, -8.9)
+
+[node name="NorthCorridor" parent="Architecture" instance=ExtResource("4_corridor")]
+position = Vector3(0, 0, -13)
+
+[node name="Collision" type="Node3D" parent="."]
+
+[node name="Floor" type="StaticBody3D" parent="Collision"]
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Collision/Floor"]
+position = Vector3(0, -0.1, 0)
+shape = SubResource("BoxShape_floor")
+
+[node name="NorthWall" type="StaticBody3D" parent="Collision"]
+position = Vector3(0, 1.5, -9.4)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Collision/NorthWall"]
+shape = SubResource("BoxShape_wall_long")
+
+[node name="SouthWall" type="StaticBody3D" parent="Collision"]
+position = Vector3(0, 1.5, 9.4)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Collision/SouthWall"]
+shape = SubResource("BoxShape_wall_long")
+
+[node name="WestWall" type="StaticBody3D" parent="Collision"]
+position = Vector3(-9.4, 1.5, 0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Collision/WestWall"]
+shape = SubResource("BoxShape_wall_side")
+
+[node name="EastWall" type="StaticBody3D" parent="Collision"]
+position = Vector3(9.4, 1.5, 0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Collision/EastWall"]
+shape = SubResource("BoxShape_wall_side")
+
+[node name="TallCover" type="StaticBody3D" parent="."]
+position = Vector3(1.6, 0.9, 1.5)
+collision_layer = 1
+collision_mask = 0
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="TallCover"]
+mesh = SubResource("BoxMesh_cover_tall")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="TallCover"]
+shape = SubResource("BoxShape_cover_tall")
+
+[node name="LowCover" type="StaticBody3D" parent="."]
+position = Vector3(-3.2, 0.55, -2.4)
+collision_layer = 1
+collision_mask = 0
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="LowCover"]
+mesh = SubResource("BoxMesh_cover_low")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="LowCover"]
+shape = SubResource("BoxShape_cover_low")
+
+[node name="CameraRig" type="Node3D" parent="."]
+script = ExtResource("5_camera")
+
+[node name="Camera3D" type="Camera3D" parent="CameraRig"]
+position = Vector3(13, 16, 13)
+projection = 1
+size = 20.5
+near = 0.1
+far = 80.0
+current = true
+
+[node name="Traveler" type="CharacterBody3D" parent="."]
+position = Vector3(-3.5, 0, 3.4)
+collision_layer = 2
+collision_mask = 1
+script = ExtResource("6_traveler")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Traveler"]
+position = Vector3(0, 0.9, 0)
+shape = SubResource("CapsuleShape_traveler")
+
+[node name="Visual" type="Node3D" parent="Traveler"]
+
+[node name="Body" type="MeshInstance3D" parent="Traveler/Visual"]
+position = Vector3(0, 0.8, 0)
+mesh = SubResource("CapsuleMesh_traveler")
+
+[node name="Head" type="MeshInstance3D" parent="Traveler/Visual"]
+position = Vector3(0, 1.62, 0)
+mesh = SubResource("SphereMesh_head")
+
+[node name="SwordPivot" type="Node3D" parent="Traveler/Visual"]
+position = Vector3(0.45, 0.95, -0.15)
+
+[node name="Sword" type="MeshInstance3D" parent="Traveler/Visual/SwordPivot"]
+position = Vector3(0, 0, -0.62)
+mesh = SubResource("BoxMesh_sword")
+
+[node name="DamageableDummy" type="StaticBody3D" parent="."]
+position = Vector3(3.5, 0, -1.4)
+script = ExtResource("7_dummy")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DamageableDummy"]
+position = Vector3(0, 0.9, 0)
+shape = SubResource("CapsuleShape_dummy")
+
+[node name="Body" type="MeshInstance3D" parent="DamageableDummy"]
+position = Vector3(0, 0.75, 0)
+mesh = SubResource("CylinderMesh_dummy")
+
+[node name="HealthBack" type="MeshInstance3D" parent="DamageableDummy"]
+position = Vector3(0, 1.9, 0)
+mesh = SubResource("BoxMesh_health_back")
+
+[node name="HealthFill" type="MeshInstance3D" parent="DamageableDummy"]
+position = Vector3(0, 1.9, -0.04)
+mesh = SubResource("BoxMesh_health_fill")
+
+[node name="TrainingPulse" type="Area3D" parent="."]
+position = Vector3(4.6, 0.12, 4.2)
+script = ExtResource("8_pulse")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="TrainingPulse"]
+position = Vector3(0, 0.35, 0)
+shape = SubResource("CylinderShape_pulse")
+
+[node name="Ring" type="MeshInstance3D" parent="TrainingPulse"]
+mesh = SubResource("TorusMesh_pulse")
+material_override = SubResource("Material_pulse")
+
+[node name="HUD" type="CanvasLayer" parent="."]
+script = ExtResource("9_hud")
+
+[node name="Root" type="Control" parent="HUD"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Title" type="Label" parent="HUD/Root"]
+offset_left = 28.0
+offset_top = 22.0
+offset_right = 350.0
+offset_bottom = 55.0
+theme_override_colors/font_color = Color(0.768627, 0.858824, 0.85098, 1)
+theme_override_font_sizes/font_size = 21
+text = "CARDBORNE · 3D COMBAT PROOF"
+
+[node name="Status" type="Control" parent="HUD/Root"]
+layout_mode = 0
+offset_left = 28.0
+offset_top = 65.0
+offset_right = 330.0
+offset_bottom = 145.0
+
+[node name="HealthTrack" type="ColorRect" parent="HUD/Root/Status"]
+offset_top = 8.0
+offset_right = 240.0
+offset_bottom = 20.0
+color = Color(0.117647, 0.160784, 0.172549, 0.92)
+
+[node name="HealthFill" type="ColorRect" parent="HUD/Root/Status/HealthTrack"]
+offset_right = 240.0
+offset_bottom = 12.0
+color = Color(0.85098, 0.396078, 0.309804, 1)
+
+[node name="HealthValue" type="Label" parent="HUD/Root/Status"]
+offset_top = 27.0
+offset_right = 100.0
+offset_bottom = 50.0
+theme_override_colors/font_color = Color(0.901961, 0.917647, 0.882353, 1)
+theme_override_font_sizes/font_size = 14
+text = "100 / 100"
+
+[node name="Potions" type="HBoxContainer" parent="HUD/Root/Status"]
+offset_left = 120.0
+offset_top = 30.0
+offset_right = 196.0
+offset_bottom = 46.0
+theme_override_constants/separation = 7
+
+[node name="Potion1" type="ColorRect" parent="HUD/Root/Status/Potions"]
+custom_minimum_size = Vector2(18, 12)
+layout_mode = 2
+color = Color(0.831373, 0.639216, 0.247059, 1)
+
+[node name="Potion2" type="ColorRect" parent="HUD/Root/Status/Potions"]
+custom_minimum_size = Vector2(18, 12)
+layout_mode = 2
+color = Color(0.831373, 0.639216, 0.247059, 1)
+
+[node name="Potion3" type="ColorRect" parent="HUD/Root/Status/Potions"]
+custom_minimum_size = Vector2(18, 12)
+layout_mode = 2
+color = Color(0.831373, 0.639216, 0.247059, 1)
+
+[node name="ActionTrace" type="Label" parent="HUD/Root"]
+layout_mode = 0
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -130.0
+offset_top = 210.0
+offset_right = 130.0
+offset_bottom = 242.0
+theme_override_colors/font_color = Color(0.941176, 0.945098, 0.894118, 1)
+theme_override_font_sizes/font_size = 18
+text = "Ready"
+horizontal_alignment = 1
+
+[node name="Controls" type="Label" parent="HUD/Root"]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -50.0
+offset_bottom = -18.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_colors/font_color = Color(0.631373, 0.721569, 0.713726, 1)
+theme_override_font_sizes/font_size = 14
+text = "ARROWS MOVE   ·   SHIFT DASH   ·   SPACE MELEE   ·   Z RANGED   ·   X INTERACT   ·   C POTION   ·   R RESET"
+horizontal_alignment = 1

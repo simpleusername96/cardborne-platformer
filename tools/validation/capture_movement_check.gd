@@ -26,8 +26,8 @@ func _capture(file_name: String, viewport_size: Vector2i, output_dir: String) ->
 	root.add_child(pivot)
 	await process_frame
 	await physics_frame
-	var sandbox: CombatSandbox = pivot.get_node("CombatSandbox")
-	sandbox.training_pulse.state = TrainingPulse.PulseState.STARTUP
+	var sandbox: CombatSandbox3D = pivot.get_node("CombatSandbox3D")
+	sandbox.training_pulse.state = TrainingPulse3D.PulseState.STARTUP
 	sandbox.training_pulse.elapsed = 0.35
 	sandbox.traveler.action_traced.emit("Ready")
 	await process_frame
