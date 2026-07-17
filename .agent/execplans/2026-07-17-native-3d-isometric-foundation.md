@@ -1,6 +1,6 @@
 ---
 type: plan
-status: active
+status: done
 owner: BK
 created: 2026-07-17
 last_reviewed: 2026-07-17
@@ -287,7 +287,7 @@ Source owners touched: `scripts/main/pivot_root.gd`,
 `tools/validation/capture_movement_check.gd`,
 `docs/product/isometric_action_rpg_product_brief.md`.
 
-- [ ] **1.1 Replace only the keyboard events for semantic combat actions.**
+- [x] **1.1 Replace only the keyboard events for semantic combat actions.**
   - As-is: `melee=Z`, `ranged=X`, `guard=Shift`.
   - To-be: `melee=Shift`, `ranged=Z`, `guard=X`; keep gamepad events and all
     other keyboard events unchanged.
@@ -295,7 +295,7 @@ Source owners touched: `scripts/main/pivot_root.gd`,
     the matching action.
   - Guard: assert the three old key/action pairs are absent rather than retained
     as hidden aliases.
-- [ ] **1.2 Correct every visible and canonical statement of the controls.**
+- [x] **1.2 Correct every visible and canonical statement of the controls.**
   - As-is: HUD, active product brief, capture setup, and assertions state the
     old layout.
   - To-be: all state the new layout; guard capture holds X.
@@ -303,7 +303,7 @@ Source owners touched: `scripts/main/pivot_root.gd`,
     contract.
   - Guard: historical superseded documents remain historical and are not
     rewritten merely to erase context.
-- [ ] **1.3 Lock action precedence in `Traveler3D`.**
+- [x] **1.3 Lock action precedence in `Traveler3D`.**
   - As-is: processing order happens to make guard and dash win but has no direct
     regression assertion.
   - To-be: held X guard, then accepted dash, then melee, then ranged is the
@@ -311,7 +311,7 @@ Source owners touched: `scripts/main/pivot_root.gd`,
   - Accept: simultaneous-input tests produce one action and no damage/projectile
     side effect from suppressed actions.
   - Guard: potion and pause ownership remain unchanged.
-- [ ] **1.4 Record the accepted arena and camera contract in the product brief.**
+- [x] **1.4 Record the accepted arena and camera contract in the product brief.**
   - As-is: the active spec names a fixed orthographic camera but does not require
     a map larger than one frame, player following, or cutaway visibility.
   - To-be: add the locked 10% footprint increase, size-15.5 following camera,
@@ -337,7 +337,7 @@ Source owners touched: `scenes/testbeds/isometric_combat/CombatSandbox3D.tscn`,
 `scripts/presentation/isometric_camera_3d.gd`, `scripts/player/traveler_3d.gd`,
 and new `scripts/ui/world/combat_direction_feedback_3d.gd`.
 
-- [ ] **2.1 Expand the authored room and explicit collision footprint.**
+- [x] **2.1 Expand the authored room and explicit collision footprint.**
   - As-is: imported room scale is 1.0, floor collision is 18×18 m, and decorative
     gate/corridor placement matches the smaller footprint.
   - To-be: apply `RoomLarge` scale `(1.10,0.30,1.10)`, floor size 19.8×19.8 m,
@@ -347,7 +347,7 @@ and new `scripts/ui/world/combat_direction_feedback_3d.gd`.
     collision meet at every boundary, and reset/spawn/fixtures remain legal.
   - Guard: do not edit, duplicate, or destructively re-export the third-party
     GLB; retain one flat navigation plane.
-- [ ] **2.2 Lower physical foreground occluders.**
+- [x] **2.2 Lower physical foreground occluders.**
   - As-is: the combined imported room reaches 4.23 m and `TallCover` reaches
     1.80 m.
   - To-be: combined room height is approximately 1.27 m; perimeter collision is
@@ -358,7 +358,7 @@ and new `scripts/ui/world/combat_direction_feedback_3d.gd`.
     launch height 0.75 m.
   - Guard: no transparent material, shader fade, silhouette outline, near-plane
     clipping trick, or visual/collision mismatch is introduced.
-- [ ] **2.3 Add bounded player following to `IsometricCameraRig3D`.**
+- [x] **2.3 Add bounded player following to `IsometricCameraRig3D`.**
   - As-is: the camera calls `look_at()` once, stays centered on the room, and
     uses orthographic size 20.5.
   - To-be: keep offset `(13,16,13)` and fixed rotation, set size 15.5, follow the
@@ -370,7 +370,7 @@ and new `scripts/ui/world/combat_direction_feedback_3d.gd`.
     room edges.
   - Guard: camera code never changes Traveler position, input vectors, facing,
     target score, or attack direction; there is no user zoom/rotation.
-- [ ] **2.4 Split direction state in `Traveler3D`.**
+- [x] **2.4 Split direction state in `Traveler3D`.**
   - As-is: one `facing` vector serves every concern.
   - To-be: sample `move_direction`, persist normalized planar `combat_facing`,
     and cache `resolved_attack_direction` per accepted attack.
@@ -378,14 +378,14 @@ and new `scripts/ui/world/combat_direction_feedback_3d.gd`.
     and attack direction remains immutable after startup.
   - Guard: no gravity, free camera, root-motion ownership, or animation-owned
     damage enters the controller.
-- [ ] **2.5 Emit presentation events instead of creating UI meshes in player code.**
+- [x] **2.5 Emit presentation events instead of creating UI meshes in player code.**
   - As-is: `Traveler3D` rotates its own Visual and emits only text traces.
   - To-be: emit facing changes and short target-feedback events; keep Visual
     rotation authoritative in the player owner.
   - Accept: the world-feedback component can be removed without changing
     movement, target choice, or damage behavior.
   - Guard: UI scripts do not choose targets or mutate attack direction.
-- [ ] **2.6 Build the flat world-space feedback component.**
+- [x] **2.6 Build the flat world-space feedback component.**
   - As-is: no persistent front cue exists.
   - To-be: add the exact ring, notch, target ring, colors, heights, and durations
     defined above using unshaded Godot meshes.
@@ -414,7 +414,7 @@ Source owners touched: new
 `scenes/testbeds/isometric_combat/TargetDummy3D.tscn`, and
 `scenes/testbeds/isometric_combat/CombatSandbox3D.tscn`.
 
-- [ ] **3.1 Implement the reusable targeting component and typed result.**
+- [x] **3.1 Implement the reusable targeting component and typed result.**
   - As-is: attacks never enumerate candidates.
   - To-be: filter the target contract, apply exact profile angles/ranges, require
     line of sight, calculate the locked score, and maintain per-family 0.45-second
@@ -422,7 +422,7 @@ Source owners touched: new
   - Accept: the same arrangement always returns the same target and normalized
     planar direction; no candidate returns an unassisted intended direction.
   - Guard: the component neither moves the Traveler nor applies damage.
-- [ ] **3.2 Apply one resolved direction at each attack boundary.**
+- [x] **3.2 Apply one resolved direction at each attack boundary.**
   - As-is: melee and projectile read mutable `facing` directly.
   - To-be: Shift melee resolves before startup and uses the cached vector for its
     hit query; Z ranged resolves once and passes the cached vector to the
@@ -430,7 +430,7 @@ Source owners touched: new
   - Accept: movement after input cannot curve either attack; fallback behavior
     exactly matches intended direction.
   - Guard: ordinary projectiles stay non-homing and World-blocked.
-- [ ] **3.3 Give proof targets the explicit target contract.**
+- [x] **3.3 Give proof targets the explicit target contract.**
   - As-is: one inline dummy exposes only `receive_hit()`.
   - To-be: extract one reusable target-dummy scene, add `TargetPoint`, group
     membership, and targetable health/reset state, then instantiate three
@@ -439,7 +439,7 @@ Source owners touched: new
     reset; the covered target is never selected.
   - Guard: target fixtures do not chase, attack, navigate, or establish a future
     enemy-AI architecture.
-- [ ] **3.4 Connect targeting feedback without exposing hidden candidates.**
+- [x] **3.4 Connect targeting feedback without exposing hidden candidates.**
   - As-is: attack traces name only the action.
   - To-be: assisted results show the chosen target ring for 0.35 seconds;
     fallback, invalidated, and occluded results show none.
@@ -463,7 +463,7 @@ Source owners touched: `tools/validation/validate_movement_and_actions.gd`,
 `tools/validation/capture_movement_check.gd`, generated ignored
 `build/validation/*`, and generated ignored `build/web/*`.
 
-- [ ] **4.1 Extend deterministic headless cases.**
+- [x] **4.1 Extend deterministic headless cases.**
   - As-is: validation covers old keys and one forward target.
   - To-be: add all exact cases listed in Test Plan below.
   - Accept: the validator exits 0 and names input, arena extents, camera follow,
@@ -471,7 +471,7 @@ Source owners touched: `tools/validation/validate_movement_and_actions.gd`,
     and cover in its PASS line.
   - Guard: test setup restores positions, health, input state, and cached targets
     between cases.
-- [ ] **4.2 Capture the reachable visual states.**
+- [x] **4.2 Capture the reachable visual states.**
   - As-is: ready, Shift guard, and pause captures exist.
   - To-be: ready at three sizes plus 1280x720 moving-facing, Shift melee assist,
     Z ranged assist, X guard, south/east boundary visibility, north/west boundary
@@ -480,7 +480,7 @@ Source owners touched: `tools/validation/validate_movement_and_actions.gd`,
     Traveler head/torso; no marker clips, z-fights, disappears under the
     Traveler, or reads as an enemy warning; control text fits every viewport.
   - Guard: generated evidence stays under ignored build paths.
-- [ ] **4.3 Export, serve through the managed lane, and perform a two-minute pass.**
+- [x] **4.3 Export, serve through the managed lane, and perform a two-minute pass.**
   - As-is: Web export and fastrun route already exist.
   - To-be: export current code, use the fastrun-manager `codex` lane, and test the
     accepted keyboard sequence in the built artifact.
@@ -488,7 +488,7 @@ Source owners touched: `tools/validation/validate_movement_and_actions.gd`,
     movement, camera traversal to all boundaries, target changes, cover,
     pause/resume, and reset remain responsive.
   - Guard: do not invent a port or run an ad-hoc server under `D:\npjt`.
-- [ ] **4.4 Close documentation only after behavior passes.**
+- [x] **4.4 Close documentation only after behavior passes.**
   - As-is: this plan remains active.
   - To-be: record final commands/evidence, mark tasks complete, and set this plan
     to `done` only after all gates pass.
@@ -633,47 +633,72 @@ the responsible input, targeting, scene, or test setup changes.
 - Multi-target fixtures validate selection mechanics, not enemy combat feel.
   Enemy AI remains the next separate milestone after this plan completes.
 
+## Execution Evidence
+
+- Godot 4.7 import completed without script or resource errors.
+- `inspect_kenney_3d_assets.gd` confirmed the selected room, corridor, gate, and
+  stair GLBs still load with their expected mesh counts and bounds.
+- `validate_movement_and_actions.gd` exits 0 after checking exact InputMap
+  ownership, action precedence, all four camera clamp quadrants, incomplete-map
+  framing at three viewport sizes, facing persistence, score tie-breaking,
+  close/far cones, line of sight, sticky-target invalidation, committed attack
+  direction, projectile cover, held guard, potion, pulse, pause, and reset.
+- `capture_movement_check.gd` produced three ready-state sizes and seven
+  1280×720 interaction/edge states. Render synchronization uses
+  `RenderingServer.frame_post_draw`, and visual inspection confirmed the front
+  notch, assisted target ring, guard shield, low cutaway walls, camera edges,
+  control text, and pause overlay remain readable.
+- `tools/export_web.ps1` produced all four required Web files. The built artifact
+  was served at the fastrun-manager `codex` lane port `13029`; Chrome loaded one
+  active Godot canvas with no warning/error logs, and built Shift melee displayed
+  the Sword trace plus assisted-target marker after rapid Shift/Z/Space input.
+- Browser control exposes tap input but not a sustained key-down primitive.
+  Therefore held `X` and continuous edge traversal were proved by deterministic
+  Godot InputEvents and native edge/guard captures, while the identical exported
+  scene and action paths received built-Web smoke coverage. No runtime workaround
+  or alternate binding was added for automation.
+- `git diff --check` passed. The task added no package or external asset and did
+  not stage or alter the pre-existing user-owned `.import` changes.
+
 ## Progress
 
 - [x] Godot native 3D engine, camera, room, collision, movement, dash, guard,
   attacks, potion, pause, cover, and initial validation exist.
 - [x] Public implementations were inspected and the owner selected the revised
   keyboard ownership and attack-time assistance direction.
-- [ ] Phase 1: replace the input and product contract.
-- [ ] Phase 2: enlarge the cutaway arena, follow the Traveler, and make facing
+- [x] Phase 1: replace the input and product contract.
+- [x] Phase 2: enlarge the cutaway arena, follow the Traveler, and make facing
   visible and structurally separate.
-- [ ] Phase 3: add bounded attack-time assistance.
-- [ ] Phase 4: prove the built interaction and close documentation.
+- [x] Phase 3: add bounded attack-time assistance.
+- [x] Phase 4: prove the built interaction and close documentation.
 
-## Next Steps
+## Outcome
 
-1. Execute Phase 1 and run the complete current validator before adding new
-   targeting behavior.
-2. Execute Phase 2 and approve its three-size framing plus center/edge
-   visibility and direction-marker captures as the presentation baseline.
-3. Execute Phase 3 against the authored three-target fixture.
-4. Execute Phase 4, export Web, use the managed fastrun lane, and mark the plan
-   done only after every completion criterion passes.
+The combat proof now owns the accepted keyboard layout, a larger cutaway arena,
+a fixed-angle following camera, explicit world-facing feedback, three reusable
+target fixtures, and attack-time soft assistance. This plan has no remaining
+implementation task. Enemy AI, production character animation, mouse/right-stick
+aim, and broader encounter content remain separate future milestones.
 
 ## Completion Criteria
 
-- [ ] Shift performs only melee, Z performs only ranged, and held X performs
+- [x] Shift performs only melee, Z performs only ranged, and held X performs
   only guard on keyboard; existing gamepad semantics remain intact.
-- [ ] The playable footprint is 10% larger on X/Z and no tested frame shows all
+- [x] The playable footprint is 10% larger on X/Z and no tested frame shows all
   four walkable-room corners.
-- [ ] The fixed-angle camera follows and clamps to the locked contract, keeps the
+- [x] The fixed-angle camera follows and clamps to the locked contract, keeps the
   Traveler in the safe frame, and does not influence gameplay vectors.
-- [ ] South/east walls and both cover types preserve the Traveler head/torso
+- [x] South/east walls and both cover types preserve the Traveler head/torso
   while their collision remains visually truthful and blocks projectiles.
-- [ ] Movement and idle facing are visible on the actor without a HUD arrow.
-- [ ] Melee and ranged assistance obey their locked cones, ranges, score,
+- [x] Movement and idle facing are visible on the actor without a HUD arrow.
+- [x] Melee and ranged assistance obey their locked cones, ranges, score,
   visibility, stickiness, commitment, and fallback contracts.
-- [ ] No target is selected through cover or behind the player's intended lane.
-- [ ] Target feedback is short-lived and absent for fallback attacks.
-- [ ] All regression guards, exact automated cases, captures, Web export, and the
+- [x] No target is selected through cover or behind the player's intended lane.
+- [x] Target feedback is short-lived and absent for fallback attacks.
+- [x] All regression guards, exact automated cases, captures, Web export, and the
   built-artifact keyboard pass succeed.
-- [ ] Active product documentation, HUD text, runtime bindings, and tests agree.
-- [ ] No external dependency, unowned `.import` change, placeholder decision,
+- [x] Active product documentation, HUD text, runtime bindings, and tests agree.
+- [x] No external dependency, unowned `.import` change, placeholder decision,
   duplicate targeting owner, or stale old-binding alias remains.
 
 ## Stop Conditions
@@ -718,19 +743,15 @@ systems.
 ## Handoff
 
 ```text
-Goal: Land a larger cutaway arena, readable following camera, predictable
-keyboard facing, and attack-time targeting in the native 3D proof.
+State: Completed on 2026-07-17.
 
 Read first: AGENTS.md, docs/product/isometric_action_rpg_product_brief.md, and
-this plan.
+this plan's Locked Decisions and Execution Evidence.
 
-Execute exactly: Phase 1 input/spec contract, Phase 2 arena/camera/direction
-state/feedback, Phase 3 targeting/fixtures, then Phase 4 validation and Web proof.
-
-Validate with: tools/validation/validate_movement_and_actions.gd,
+Regression commands: tools/validation/validate_movement_and_actions.gd,
 tools/validation/capture_movement_check.gd, tools/export_web.ps1, and the managed
 fastrun-manager codex lane.
 
-Stop when: every completion criterion passes, active docs agree, task-owned
-changes are committed, and this plan is marked done.
+Do not reopen this plan for enemy AI, production animation, mouse/right-stick
+aim, or encounter content; create a successor spec or plan for that scope.
 ```

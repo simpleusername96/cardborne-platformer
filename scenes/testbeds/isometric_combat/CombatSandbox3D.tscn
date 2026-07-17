@@ -6,9 +6,10 @@
 [ext_resource type="PackedScene" path="res://third_party/kenney_modular_dungeon/models/corridor-wide.glb" id="4_corridor"]
 [ext_resource type="Script" path="res://scripts/presentation/isometric_camera_3d.gd" id="5_camera"]
 [ext_resource type="Script" path="res://scripts/player/traveler_3d.gd" id="6_traveler"]
-[ext_resource type="Script" path="res://scripts/combat/damageable_dummy_3d.gd" id="7_dummy"]
+[ext_resource type="PackedScene" path="res://scenes/testbeds/isometric_combat/TargetDummy3D.tscn" id="7_dummy"]
 [ext_resource type="Script" path="res://scripts/combat/training_pulse_3d.gd" id="8_pulse"]
 [ext_resource type="Script" path="res://scripts/ui/proof/combat_sandbox_hud_3d.gd" id="9_hud"]
+[ext_resource type="Script" path="res://scripts/player/targeting/targeting_assist_3d.gd" id="10_targeting"]
 
 [sub_resource type="Environment" id="Environment_main"]
 background_mode = 1
@@ -20,13 +21,13 @@ reflected_light_source = 2
 tonemap_mode = 2
 
 [sub_resource type="BoxShape3D" id="BoxShape_floor"]
-size = Vector3(18, 0.2, 18)
+size = Vector3(19.8, 0.2, 19.8)
 
 [sub_resource type="BoxShape3D" id="BoxShape_wall_long"]
-size = Vector3(19, 3, 0.8)
+size = Vector3(20.9, 1.4, 0.88)
 
 [sub_resource type="BoxShape3D" id="BoxShape_wall_side"]
-size = Vector3(0.8, 3, 19)
+size = Vector3(0.88, 1.4, 20.9)
 
 [sub_resource type="StandardMaterial3D" id="Material_cover"]
 albedo_color = Color(0.137255, 0.211765, 0.223529, 1)
@@ -35,10 +36,10 @@ metallic = 0.08
 
 [sub_resource type="BoxMesh" id="BoxMesh_cover_tall"]
 material = SubResource("Material_cover")
-size = Vector3(1.8, 1.8, 3.4)
+size = Vector3(1.8, 1.15, 3.4)
 
 [sub_resource type="BoxShape3D" id="BoxShape_cover_tall"]
-size = Vector3(1.8, 1.8, 3.4)
+size = Vector3(1.8, 1.15, 3.4)
 
 [sub_resource type="BoxMesh" id="BoxMesh_cover_low"]
 material = SubResource("Material_cover")
@@ -94,39 +95,38 @@ roughness = 0.62
 material = SubResource("Material_shield")
 size = Vector3(0.72, 0.9, 0.12)
 
-[sub_resource type="CapsuleShape3D" id="CapsuleShape_dummy"]
-radius = 0.5
-height = 1.8
-
-[sub_resource type="StandardMaterial3D" id="Material_dummy"]
-albedo_color = Color(0.282353, 0.419608, 0.431373, 1)
-roughness = 0.88
-
-[sub_resource type="CylinderMesh" id="CylinderMesh_dummy"]
-material = SubResource("Material_dummy")
-top_radius = 0.36
-bottom_radius = 0.5
-height = 1.5
-radial_segments = 8
-
-[sub_resource type="StandardMaterial3D" id="Material_health_back"]
-albedo_color = Color(0.0470588, 0.0705882, 0.0784314, 1)
+[sub_resource type="StandardMaterial3D" id="Material_facing_ring"]
+transparency = 1
+albedo_color = Color(0.498039, 0.65098, 0.635294, 0.55)
 shading_mode = 0
 
-[sub_resource type="BoxMesh" id="BoxMesh_health_back"]
-material = SubResource("Material_health_back")
-size = Vector3(1.2, 0.08, 0.06)
+[sub_resource type="TorusMesh" id="TorusMesh_facing_ring"]
+material = SubResource("Material_facing_ring")
+inner_radius = 0.48
+outer_radius = 0.56
+rings = 24
+ring_segments = 4
 
-[sub_resource type="StandardMaterial3D" id="Material_health_fill"]
-albedo_color = Color(0.85098, 0.396078, 0.309804, 1)
-emission_enabled = true
-emission = Color(0.85098, 0.396078, 0.309804, 1)
-emission_energy_multiplier = 0.6
+[sub_resource type="StandardMaterial3D" id="Material_facing_notch"]
+transparency = 1
+albedo_color = Color(0.831373, 0.639216, 0.247059, 0.85)
 shading_mode = 0
 
-[sub_resource type="BoxMesh" id="BoxMesh_health_fill"]
-material = SubResource("Material_health_fill")
-size = Vector3(1.2, 0.09, 0.07)
+[sub_resource type="BoxMesh" id="BoxMesh_facing_notch"]
+material = SubResource("Material_facing_notch")
+size = Vector3(0.32, 0.035, 0.46)
+
+[sub_resource type="StandardMaterial3D" id="Material_target_marker"]
+transparency = 1
+albedo_color = Color(0.831373, 0.639216, 0.247059, 0.8)
+shading_mode = 0
+
+[sub_resource type="TorusMesh" id="TorusMesh_target_marker"]
+material = SubResource("Material_target_marker")
+inner_radius = 0.55
+outer_radius = 0.65
+rings = 24
+ring_segments = 4
 
 [sub_resource type="CylinderShape3D" id="CylinderShape_pulse"]
 radius = 2.2
@@ -168,12 +168,13 @@ omni_range = 7.5
 [node name="Architecture" type="Node3D" parent="."]
 
 [node name="RoomLarge" parent="Architecture" instance=ExtResource("2_room")]
+scale = Vector3(1.1, 0.3, 1.1)
 
 [node name="NorthGate" parent="Architecture" instance=ExtResource("3_gate")]
-position = Vector3(0, 0, -8.9)
+position = Vector3(0, 0, -9.79)
 
 [node name="NorthCorridor" parent="Architecture" instance=ExtResource("4_corridor")]
-position = Vector3(0, 0, -13)
+position = Vector3(0, 0, -14.3)
 
 [node name="Collision" type="Node3D" parent="."]
 
@@ -186,7 +187,7 @@ position = Vector3(0, -0.1, 0)
 shape = SubResource("BoxShape_floor")
 
 [node name="NorthWall" type="StaticBody3D" parent="Collision"]
-position = Vector3(0, 1.5, -9.4)
+position = Vector3(0, 0.7, -10.34)
 collision_layer = 1
 collision_mask = 0
 
@@ -194,7 +195,7 @@ collision_mask = 0
 shape = SubResource("BoxShape_wall_long")
 
 [node name="SouthWall" type="StaticBody3D" parent="Collision"]
-position = Vector3(0, 1.5, 9.4)
+position = Vector3(0, 0.7, 10.34)
 collision_layer = 1
 collision_mask = 0
 
@@ -202,7 +203,7 @@ collision_mask = 0
 shape = SubResource("BoxShape_wall_long")
 
 [node name="WestWall" type="StaticBody3D" parent="Collision"]
-position = Vector3(-9.4, 1.5, 0)
+position = Vector3(-10.34, 0.7, 0)
 collision_layer = 1
 collision_mask = 0
 
@@ -210,7 +211,7 @@ collision_mask = 0
 shape = SubResource("BoxShape_wall_side")
 
 [node name="EastWall" type="StaticBody3D" parent="Collision"]
-position = Vector3(9.4, 1.5, 0)
+position = Vector3(10.34, 0.7, 0)
 collision_layer = 1
 collision_mask = 0
 
@@ -218,7 +219,7 @@ collision_mask = 0
 shape = SubResource("BoxShape_wall_side")
 
 [node name="TallCover" type="StaticBody3D" parent="."]
-position = Vector3(1.6, 0.9, 1.5)
+position = Vector3(1.6, 0.575, 1.5)
 collision_layer = 1
 collision_mask = 0
 
@@ -245,7 +246,7 @@ script = ExtResource("5_camera")
 [node name="Camera3D" type="Camera3D" parent="CameraRig"]
 position = Vector3(13, 16, 13)
 projection = 1
-size = 20.5
+size = 15.5
 near = 0.1
 far = 80.0
 current = true
@@ -283,25 +284,31 @@ position = Vector3(-0.46, 0.88, -0.34)
 rotation_degrees = Vector3(0, -22, 0)
 mesh = SubResource("BoxMesh_shield")
 
-[node name="DamageableDummy" type="StaticBody3D" parent="."]
-position = Vector3(3.5, 0, -1.4)
-script = ExtResource("7_dummy")
+[node name="FacingFeedback" type="Node3D" parent="Traveler"]
+position = Vector3(0, 0.03, 0)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="DamageableDummy"]
-position = Vector3(0, 0.9, 0)
-shape = SubResource("CapsuleShape_dummy")
+[node name="Ring" type="MeshInstance3D" parent="Traveler/FacingFeedback"]
+mesh = SubResource("TorusMesh_facing_ring")
 
-[node name="Body" type="MeshInstance3D" parent="DamageableDummy"]
-position = Vector3(0, 0.75, 0)
-mesh = SubResource("CylinderMesh_dummy")
+[node name="Notch" type="MeshInstance3D" parent="Traveler/FacingFeedback"]
+position = Vector3(0, 0, -0.76)
+mesh = SubResource("BoxMesh_facing_notch")
 
-[node name="HealthBack" type="MeshInstance3D" parent="DamageableDummy"]
-position = Vector3(0, 1.9, 0)
-mesh = SubResource("BoxMesh_health_back")
+[node name="TargetingAssist" type="Node3D" parent="Traveler"]
+script = ExtResource("10_targeting")
 
-[node name="HealthFill" type="MeshInstance3D" parent="DamageableDummy"]
-position = Vector3(0, 1.9, -0.04)
-mesh = SubResource("BoxMesh_health_fill")
+[node name="TargetMarker" type="MeshInstance3D" parent="Traveler/TargetingAssist"]
+visible = false
+mesh = SubResource("TorusMesh_target_marker")
+
+[node name="NearTarget" parent="." instance=ExtResource("7_dummy")]
+position = Vector3(-2.25, 0, 2.45)
+
+[node name="RangedTarget" parent="." instance=ExtResource("7_dummy")]
+position = Vector3(3.8, 0, -2.5)
+
+[node name="OccludedTarget" parent="." instance=ExtResource("7_dummy")]
+position = Vector3(4.3, 0, 1.5)
 
 [node name="TrainingPulse" type="Area3D" parent="."]
 position = Vector3(4.6, 0.12, 4.2)
@@ -411,7 +418,7 @@ grow_horizontal = 2
 grow_vertical = 0
 theme_override_colors/font_color = Color(0.631373, 0.721569, 0.713726, 1)
 theme_override_font_sizes/font_size = 14
-text = "ARROWS MOVE   ·   SPACE DASH   ·   SHIFT GUARD   ·   Z MELEE   ·   X RANGED   ·   C POTION   ·   ESC PAUSE"
+text = "ARROWS MOVE   ·   SPACE DASH   ·   SHIFT MELEE   ·   Z RANGED   ·   X GUARD   ·   C POTION   ·   ESC PAUSE"
 horizontal_alignment = 1
 
 [node name="PauseOverlay" type="ColorRect" parent="HUD/Root"]

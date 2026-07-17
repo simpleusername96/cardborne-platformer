@@ -31,6 +31,10 @@ func receive_hit(damage: int, _stagger: int, _source_id: StringName) -> void:
 		reset_remaining = 1.0
 
 
+func is_targetable() -> bool:
+	return health > 0 and reset_remaining <= 0.0
+
+
 func reset_dummy() -> void:
 	health = MAX_HEALTH
 	reset_remaining = 0.0

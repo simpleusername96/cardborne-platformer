@@ -2,7 +2,6 @@ class_name CombatSandbox3D
 extends Node3D
 
 @onready var traveler: Traveler3D = $Traveler
-@onready var dummy: DamageableDummy3D = $DamageableDummy
 @onready var training_pulse: TrainingPulse3D = $TrainingPulse
 
 
@@ -13,7 +12,9 @@ func _ready() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("reset_training"):
 		traveler.reset_training()
-		dummy.reset_dummy()
+		for target in get_tree().get_nodes_in_group(&"attack_targets"):
+			if target is DamageableDummy3D and is_ancestor_of(target):
+				target.reset_dummy()
 		training_pulse.reset_pulse()
 
 

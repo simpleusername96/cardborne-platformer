@@ -26,17 +26,21 @@ The proof starts directly in play and follows one deterministic route:
 Movement Check → Foundry Approach → one three-card reward → Pump Gallery →
 Pressure Vault → Slime King → Run Result. It supports keyboard/mouse and gamepad,
 uses one traversable ground elevation, and presents a native 3D world through a
-fixed orthographic isometric camera.
+fixed-angle, bounded-follow orthographic isometric camera.
 
 ## Requirements
 
 ### Player control
 
-- Keyboard uses arrow-key movement, Space dash, Left Shift guard, `Z` melee,
-  `X` ranged, `C` potion, and Esc pause. Attacks initially follow last movement.
+- Keyboard uses arrow-key movement, Space dash, Left Shift melee, `Z` ranged,
+  held `X` guard, `C` potion, and Esc pause. Non-zero movement sets persistent
+  combat facing; idle preserves it.
 - Gamepad uses left-stick movement, south-face dash, LB guard, RB melee, RT
-  ranged, north-face potion, and Menu pause. Right-stick or assisted aiming is
-  deferred until a real ranged-enemy fixture can validate the choice.
+  ranged, north-face potion, and Menu pause. Right-stick aim remains deferred.
+- Melee and ranged resolve bounded soft assistance only when the attack starts.
+  Candidates must be targetable, inside that attack's range and cone, and have
+  unobstructed line of sight. With no candidate, the attack follows exact combat
+  facing; later movement cannot bend a committed hit or projectile.
 - Ground movement has normalized diagonals, `6 m/s` maximum speed,
   `28 m/s²` acceleration, and `34 m/s²` braking.
 - Dash moves at `14 m/s` for `0.18 s`, is invulnerable for its first `0.10 s`,
@@ -50,8 +54,12 @@ fixed orthographic isometric camera.
 
 ### Encounters and route
 
-- Movement Check contains walls, two cover blocks, a resettable dummy, and one
-  timed damage pulse. It contains no enemy AI or reward.
+- Movement Check contains cutaway walls, two projectile-blocking cover blocks,
+  three resettable target fixtures, and one timed damage pulse. It contains no
+  enemy AI or reward.
+- The proof room has a 19.8×19.8 m walkable footprint and never fits completely
+  in one frame. Its fixed-angle camera follows the Traveler on X/Z, clamps its
+  center to ±3.5 m, and keeps camera-facing walls below the Traveler silhouette.
 - Foundry Approach is the only deliberate arena clear and contains five enemies
   across two fixed waves using Pursuer, Shooter, and Controller roles.
 - Pump Gallery completes after two one-second activations even if enemies live.
@@ -83,6 +91,8 @@ fixed orthographic isometric camera.
   families.
 - Ordinary projectiles terminate on solid cover; no visual height changes
   collision, navigation, or damage truth.
+- The Traveler's world-space front notch, short-lived assisted-target marker,
+  and attack direction agree without a persistent lock-on or trajectory line.
 - Pump Gallery and Pressure Vault can complete with at least one enemy alive.
 - All boss damage has a readable startup, active window, and recovery.
 - One successful run lasts five to eight minutes at the locked encounter counts.

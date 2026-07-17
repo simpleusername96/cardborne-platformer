@@ -21,7 +21,9 @@ const GUARD_DAMAGE_MULTIPLIER := 0.35
 
 var health := 100
 var potion_charges := 3
-var facing := Vector3(0, 0, -1)
+var move_direction := Vector3.ZERO
+var combat_facing := Vector3.FORWARD
+var resolved_attack_direction := Vector3.FORWARD
 var spawn_position := Vector3.ZERO
 var dash_remaining := 0.0
 var dash_cooldown_remaining := 0.0
@@ -33,6 +35,8 @@ var guarding := false
 
 @onready var camera: Camera3D = get_node("../CameraRig/Camera3D")
 @onready var visual: Node3D = $Visual
+@onready var facing_feedback: Node3D = $FacingFeedback
+@onready var targeting_assist: TargetingAssist3D = $TargetingAssist
 @onready var sword_pivot: Node3D = $Visual/SwordPivot
 @onready var shield: MeshInstance3D = $Visual/Shield
 
@@ -48,38 +52,31 @@ func _physics_process(delta: float) -> void:
 	dash_cooldown_remaining = maxf(0.0, dash_cooldown_remaining - delta)
 	ranged_cooldown_remaining = maxf(0.0, ranged_cooldown_remaining - delta)
 	_tick_melee(delta)
-	_set_guarding(
-		Input.is_action_pressed("guard")
-		and dash_remaining <= 0.0
-		and melee_remaining <= 0.0
-	)
+
+	var input_vector := Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	move_direction = _camera_relative_direction(input_vector)
+	if move_direction.length_squared() > 0.0001:
+		combat_facing = move_direction
+
+	_resolve_action_requests()
 
 	if dash_remaining > 0.0:
 		dash_remaining = maxf(0.0, dash_remaining - delta)
 		velocity = dash_direction * DASH_SPEED
 	else:
-		var input_vector := Input.get_vector("move_left", "move_right", "move_up", "move_down")
-		var move_direction := _camera_relative_direction(input_vector)
-		if move_direction.length_squared() > 0.0001:
-			facing = move_direction
 		var move_speed := MOVE_SPEED * GUARD_MOVE_MULTIPLIER if guarding else MOVE_SPEED
 		var desired := move_direction * move_speed if melee_remaining <= 0.0 else Vector3.ZERO
 		var rate := ACCELERATION if desired.length_squared() > 0.0 else BRAKING
 		velocity.x = move_toward(velocity.x, desired.x, rate * delta)
 		velocity.z = move_toward(velocity.z, desired.z, rate * delta)
 		velocity.y = 0.0
-		if Input.is_action_just_pressed("dash") and dash_cooldown_remaining <= 0.0 and melee_remaining <= 0.0 and not guarding:
-			_start_dash(move_direction)
-
-	if Input.is_action_just_pressed("melee") and melee_remaining <= 0.0 and dash_remaining <= 0.0 and not guarding:
-		_start_melee()
-	if Input.is_action_just_pressed("ranged") and ranged_cooldown_remaining <= 0.0 and dash_remaining <= 0.0 and not guarding:
-		_fire_ranged()
 	if Input.is_action_just_pressed("potion"):
 		_use_potion()
 
 	move_and_slide()
-	visual.rotation.y = atan2(facing.x, facing.z)
+	var facing_yaw := atan2(-combat_facing.x, -combat_facing.z)
+	visual.rotation.y = facing_yaw
+	facing_feedback.rotation.y = facing_yaw
 
 
 func receive_damage(amount: int, source_id: StringName) -> bool:
@@ -113,6 +110,10 @@ func reset_training() -> void:
 	dash_cooldown_remaining = 0.0
 	melee_remaining = 0.0
 	ranged_cooldown_remaining = 0.0
+	move_direction = Vector3.ZERO
+	combat_facing = Vector3.FORWARD
+	resolved_attack_direction = Vector3.FORWARD
+	targeting_assist.reset_assist()
 	_set_guarding(false)
 	health_changed.emit(health, max_health)
 	potion_changed.emit(potion_charges)
@@ -132,10 +133,35 @@ func _camera_relative_direction(input_vector: Vector2) -> Vector3:
 
 
 func _start_dash(requested_direction: Vector3) -> void:
-	dash_direction = requested_direction if requested_direction.length_squared() > 0.0001 else facing
+	dash_direction = requested_direction if requested_direction.length_squared() > 0.0001 else combat_facing
 	dash_remaining = DASH_DURATION
 	dash_cooldown_remaining = DASH_COOLDOWN
 	action_traced.emit("Dash")
+
+
+func _resolve_action_requests() -> void:
+	var can_guard := dash_remaining <= 0.0 and melee_remaining <= 0.0
+	if Input.is_action_pressed("guard") and can_guard:
+		_set_guarding(true)
+		return
+	_set_guarding(false)
+
+	if (
+		Input.is_action_just_pressed("dash")
+		and dash_cooldown_remaining <= 0.0
+		and melee_remaining <= 0.0
+	):
+		_start_dash(move_direction)
+		return
+	if Input.is_action_just_pressed("melee") and melee_remaining <= 0.0 and dash_remaining <= 0.0:
+		_start_melee()
+		return
+	if (
+		Input.is_action_just_pressed("ranged")
+		and ranged_cooldown_remaining <= 0.0
+		and dash_remaining <= 0.0
+	):
+		_fire_ranged()
 
 
 func _set_guarding(next_guarding: bool) -> void:
@@ -148,6 +174,10 @@ func _set_guarding(next_guarding: bool) -> void:
 
 
 func _start_melee() -> void:
+	resolved_attack_direction = _resolve_attack_direction(
+		&"melee",
+		global_position + Vector3.UP * 0.75,
+	)
 	melee_remaining = MELEE_DURATION
 	melee_hit_fired = false
 	action_traced.emit("Sword")
@@ -170,7 +200,10 @@ func _apply_melee_hit() -> void:
 	shape.radius = 1.15
 	var query := PhysicsShapeQueryParameters3D.new()
 	query.shape = shape
-	query.transform = Transform3D(Basis.IDENTITY, global_position + facing * 1.35 + Vector3.UP * 0.6)
+	query.transform = Transform3D(
+		Basis.IDENTITY,
+		global_position + resolved_attack_direction * 1.35 + Vector3.UP * 0.6,
+	)
 	query.collision_mask = 1 << 2
 	query.exclude = [get_rid()]
 	for hit in get_world_3d().direct_space_state.intersect_shape(query, 8):
@@ -180,11 +213,25 @@ func _apply_melee_hit() -> void:
 
 
 func _fire_ranged() -> void:
+	resolved_attack_direction = _resolve_attack_direction(
+		&"ranged",
+		global_position + Vector3.UP * 0.75,
+	)
 	var projectile := ProofProjectile3D.new()
 	get_parent().add_child(projectile)
-	projectile.configure(global_position + facing * 0.8 + Vector3.UP * 0.75, facing)
+	projectile.configure(
+		global_position + resolved_attack_direction * 0.8 + Vector3.UP * 0.75,
+		resolved_attack_direction,
+	)
 	ranged_cooldown_remaining = RANGED_COOLDOWN
 	action_traced.emit("Ranged shot")
+
+
+func _resolve_attack_direction(kind: StringName, origin: Vector3) -> Vector3:
+	var result := targeting_assist.resolve_attack(kind, origin, combat_facing)
+	if result.assisted:
+		combat_facing = result.direction
+	return result.direction
 
 
 func _use_potion() -> void:
