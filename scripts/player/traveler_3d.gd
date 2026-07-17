@@ -16,6 +16,10 @@ const MELEE_HIT_TIME := 0.10
 const RANGED_COOLDOWN := 0.45
 const GUARD_MOVE_MULTIPLIER := 0.45
 const GUARD_DAMAGE_MULTIPLIER := 0.35
+const SPRITE_FRAME_COLUMNS := 4
+const SPRITE_DIRECTION_ROWS := 4
+const WALK_SPRITE_FPS := 8.0
+const DASH_SPRITE_FPS := 12.0
 
 @export var max_health := 100
 
@@ -32,6 +36,9 @@ var melee_remaining := 0.0
 var melee_hit_fired := false
 var ranged_cooldown_remaining := 0.0
 var guarding := false
+var sprite_animation_time := 0.0
+var sprite_facing_row := 0
+var sprite_frame_column := 0
 
 @onready var camera: Camera3D = get_node("../CameraRig/Camera3D")
 @onready var visual: Node3D = $Visual
@@ -39,13 +46,16 @@ var guarding := false
 @onready var targeting_assist: TargetingAssist3D = $TargetingAssist
 @onready var sword_pivot: Node3D = $Visual/SwordPivot
 @onready var shield: MeshInstance3D = $Visual/Shield
+@onready var actor_sprite: Sprite3D = $ActorSprite
 
 
 func _ready() -> void:
 	spawn_position = global_position
 	health = max_health
+	sword_pivot.visible = false
 	health_changed.emit(health, max_health)
 	potion_changed.emit(potion_charges)
+	_update_sprite_presentation(0.0)
 
 
 func _physics_process(delta: float) -> void:
@@ -77,6 +87,7 @@ func _physics_process(delta: float) -> void:
 	var facing_yaw := atan2(-combat_facing.x, -combat_facing.z)
 	visual.rotation.y = facing_yaw
 	facing_feedback.rotation.y = facing_yaw
+	_update_sprite_presentation(delta)
 
 
 func receive_damage(amount: int, source_id: StringName) -> bool:
@@ -113,8 +124,11 @@ func reset_training() -> void:
 	move_direction = Vector3.ZERO
 	combat_facing = Vector3.FORWARD
 	resolved_attack_direction = Vector3.FORWARD
+	sprite_animation_time = 0.0
+	sword_pivot.visible = false
 	targeting_assist.reset_assist()
 	_set_guarding(false)
+	_update_sprite_presentation(0.0)
 	health_changed.emit(health, max_health)
 	potion_changed.emit(potion_charges)
 	action_traced.emit("Training reset")
@@ -130,6 +144,39 @@ func _camera_relative_direction(input_vector: Vector2) -> Vector3:
 	camera_forward.y = 0.0
 	camera_forward = camera_forward.normalized()
 	return (camera_right * input_vector.x + camera_forward * -input_vector.y).normalized()
+
+
+func _update_sprite_presentation(delta: float) -> void:
+	sprite_facing_row = _sprite_row_for_direction(combat_facing)
+	var horizontal_speed := Vector2(velocity.x, velocity.z).length()
+	if horizontal_speed > 0.2:
+		var playback_rate := DASH_SPRITE_FPS if dash_remaining > 0.0 else WALK_SPRITE_FPS
+		sprite_animation_time += delta * playback_rate
+		sprite_frame_column = int(floor(sprite_animation_time)) % SPRITE_FRAME_COLUMNS
+	else:
+		sprite_animation_time = 0.0
+		sprite_frame_column = 0
+	actor_sprite.frame = sprite_facing_row * SPRITE_FRAME_COLUMNS + sprite_frame_column
+
+
+func _sprite_row_for_direction(direction: Vector3) -> int:
+	var normalized_direction := direction
+	normalized_direction.y = 0.0
+	if normalized_direction.length_squared() <= 0.0001:
+		normalized_direction = Vector3.FORWARD
+	normalized_direction = normalized_direction.normalized()
+
+	var camera_right := camera.global_basis.x
+	camera_right.y = 0.0
+	camera_right = camera_right.normalized()
+	var camera_away := -camera.global_basis.z
+	camera_away.y = 0.0
+	camera_away = camera_away.normalized()
+	var moves_right := normalized_direction.dot(camera_right) >= 0.0
+	var moves_away := normalized_direction.dot(camera_away) >= 0.0
+	if moves_away:
+		return 0 if moves_right else 1
+	return 2 if moves_right else 3
 
 
 func _start_dash(requested_direction: Vector3) -> void:
@@ -180,13 +227,16 @@ func _start_melee() -> void:
 	)
 	melee_remaining = MELEE_DURATION
 	melee_hit_fired = false
+	sword_pivot.visible = true
 	action_traced.emit("Sword")
 
 
 func _tick_melee(delta: float) -> void:
 	if melee_remaining <= 0.0:
+		sword_pivot.visible = false
 		sword_pivot.rotation.y = lerpf(sword_pivot.rotation.y, 0.0, minf(1.0, delta * 18.0))
 		return
+	sword_pivot.visible = true
 	melee_remaining = maxf(0.0, melee_remaining - delta)
 	var progress := 1.0 - melee_remaining / MELEE_DURATION
 	sword_pivot.rotation.y = lerpf(-1.15, 1.2, progress)

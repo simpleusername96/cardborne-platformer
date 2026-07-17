@@ -1,4 +1,4 @@
-[gd_scene load_steps=28 format=3]
+[gd_scene load_steps=32 format=3]
 
 [ext_resource type="Script" path="res://scripts/testbeds/combat_sandbox_3d.gd" id="1_sandbox"]
 [ext_resource type="PackedScene" path="res://third_party/kenney_modular_dungeon/models/room-large.glb" id="2_room"]
@@ -10,9 +10,13 @@
 [ext_resource type="Script" path="res://scripts/combat/training_pulse_3d.gd" id="8_pulse"]
 [ext_resource type="Script" path="res://scripts/ui/proof/combat_sandbox_hud_3d.gd" id="9_hud"]
 [ext_resource type="Script" path="res://scripts/player/targeting/targeting_assist_3d.gd" id="10_targeting"]
+[ext_resource type="Script" path="res://scripts/presentation/raster_surface_pass_3d.gd" id="11_raster_surface"]
+[ext_resource type="Texture2D" path="res://art/world/flooded_works/isometric/surfaces/foundry-architecture-albedo-v1.png" id="12_surface_texture"]
+[ext_resource type="Texture2D" path="res://art/world/flooded_works/isometric/actors/traveler-walk-sheet-v1.png" id="13_traveler_sheet"]
+[ext_resource type="Texture2D" path="res://art/world/flooded_works/backgrounds/panel_01.png" id="14_backdrop"]
 
 [sub_resource type="Environment" id="Environment_main"]
-background_mode = 1
+background_mode = 3
 background_color = Color(0.027451, 0.0431373, 0.0509804, 1)
 ambient_light_source = 3
 ambient_light_color = Color(0.45098, 0.619608, 0.631373, 1)
@@ -150,6 +154,30 @@ ring_segments = 6
 [node name="CombatSandbox3D" type="Node3D"]
 script = ExtResource("1_sandbox")
 
+[node name="WorldBackdrop" type="CanvasLayer" parent="."]
+layer = -10
+
+[node name="Image" type="TextureRect" parent="WorldBackdrop"]
+modulate = Color(0.55, 0.64, 0.65, 1)
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("14_backdrop")
+expand_mode = 1
+stretch_mode = 4
+
+[node name="Dim" type="ColorRect" parent="WorldBackdrop"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.0196078, 0.0352941, 0.0392157, 0.24)
+
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_main")
 
@@ -264,12 +292,25 @@ shape = SubResource("CapsuleShape_traveler")
 [node name="Visual" type="Node3D" parent="Traveler"]
 
 [node name="Body" type="MeshInstance3D" parent="Traveler/Visual"]
+visible = false
 position = Vector3(0, 0.8, 0)
 mesh = SubResource("CapsuleMesh_traveler")
 
 [node name="Head" type="MeshInstance3D" parent="Traveler/Visual"]
+visible = false
 position = Vector3(0, 1.62, 0)
 mesh = SubResource("SphereMesh_head")
+
+[node name="ActorSprite" type="Sprite3D" parent="Traveler"]
+position = Vector3(0, 1, 0)
+texture = ExtResource("13_traveler_sheet")
+pixel_size = 0.01
+billboard = 1
+alpha_cut = 1
+no_depth_test = true
+hframes = 4
+vframes = 4
+render_priority = 1
 
 [node name="SwordPivot" type="Node3D" parent="Traveler/Visual"]
 position = Vector3(0.45, 0.95, -0.15)
@@ -321,6 +362,11 @@ shape = SubResource("CylinderShape_pulse")
 [node name="Ring" type="MeshInstance3D" parent="TrainingPulse"]
 mesh = SubResource("TorusMesh_pulse")
 material_override = SubResource("Material_pulse")
+
+[node name="RasterSurfacePass" type="Node" parent="."]
+script = ExtResource("11_raster_surface")
+albedo_texture = ExtResource("12_surface_texture")
+surface_roots = Array[NodePath]([NodePath("../Architecture"), NodePath("../TallCover"), NodePath("../LowCover")])
 
 [node name="HUD" type="CanvasLayer" parent="."]
 script = ExtResource("9_hud")

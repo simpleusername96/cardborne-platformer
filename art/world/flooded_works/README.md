@@ -9,6 +9,7 @@ topic: Retained world-art direction after the isometric action RPG reset
 related:
   - ../../../docs/design/UI_VISUAL_SYSTEM.md
   - ../../../.agent/execplans/2026-07-17-isometric-action-rpg-pivot.md
+  - ../../../.agent/execplans/2026-07-17-rasterized-3d-presentation.md
 ---
 
 # Flooded Works World-Art Evidence
@@ -38,6 +39,9 @@ new isometric runtime.
 - Backgrounds contain no baked characters, enemies, hazards, UI, or text.
 - Gameplay-significant terrain and props must remain separable from decorative
   background art.
+- `isometric/` now contains the first runtime vertical slice: one restrained
+  same-hue surface albedo and one 4x4 Traveler locomotion sheet. It proves the
+  hybrid renderer but does not establish a complete production asset kit.
 
 ## Recommendations
 
@@ -46,6 +50,8 @@ new isometric runtime.
   interpret these side-view images as collision, room geometry, or scale truth.
 - Build a small isometric terrain/prop proof only after the graybox combat camera
   and readable engagement distances are accepted.
+- Keep runtime base surfaces within one close hue family. Add rust, moss,
+  warnings, and other variation through separate controlled layers or decals.
 
 ## Limitations
 

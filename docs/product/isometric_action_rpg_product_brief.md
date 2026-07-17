@@ -6,10 +6,11 @@ created: 2026-07-17
 last_reviewed: 2026-07-17
 canonical_for: Cardborne five-to-eight-minute isometric action RPG proof behavior
 scope: Direct-start combat proof from movement room through Slime King and result
-source: ../../.agent/execplans/2026-07-17-native-3d-isometric-foundation.md
+source: ../../.agent/execplans/2026-07-17-rasterized-3d-presentation.md
 related:
   - ../../.agent/Prompt.md
   - ../../.agent/execplans/2026-07-17-native-3d-isometric-foundation.md
+  - ../../.agent/execplans/2026-07-17-rasterized-3d-presentation.md
   - ../design/UI_VISUAL_SYSTEM.md
 ---
 
@@ -26,7 +27,9 @@ The proof starts directly in play and follows one deterministic route:
 Movement Check → Foundry Approach → one three-card reward → Pump Gallery →
 Pressure Vault → Slime King → Run Result. It supports keyboard/mouse and gamepad,
 uses one traversable ground elevation, and presents a native 3D world through a
-fixed-angle, bounded-follow orthographic isometric camera.
+fixed-angle, bounded-follow orthographic isometric camera. Gameplay remains 3D,
+while the accepted presentation is a hybrid of 2D raster background/surface art
+and camera-facing actor sprites.
 
 ## Requirements
 
@@ -81,6 +84,12 @@ fixed-angle, bounded-follow orthographic isometric camera.
   equipment inventory, profile, procedural room graph, or permanent progression.
 - Art and UI follow the flat-color, borderless, low-noise drowned-foundry contract
   in `docs/design/UI_VISUAL_SYSTEM.md`.
+- The current arena keeps 3D geometry and collision, uses a project-authored
+  same-hue raster albedo through world-triplanar projection, and displays the
+  approved Flooded Works panel only as a non-interactive far background.
+- Traveler locomotion uses a four-direction, four-frame `Sprite3D` sheet selected
+  from camera-relative facing and actual velocity. Animation is presentation
+  only and never owns movement, hit timing, targeting, or collision.
 
 ## Acceptance Criteria
 
@@ -109,6 +118,7 @@ fixed-angle, bounded-follow orthographic isometric camera.
 
 ## Related
 
-- [Active execution plan](../../.agent/execplans/2026-07-17-native-3d-isometric-foundation.md)
+- [Active raster presentation plan](../../.agent/execplans/2026-07-17-rasterized-3d-presentation.md)
+- [Completed native 3D foundation](../../.agent/execplans/2026-07-17-native-3d-isometric-foundation.md)
 - [Pivot direction](../../.agent/Prompt.md)
 - [UI visual system](../design/UI_VISUAL_SYSTEM.md)

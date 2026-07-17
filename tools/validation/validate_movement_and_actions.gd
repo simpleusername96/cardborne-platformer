@@ -31,6 +31,7 @@ func _run() -> void:
 	_validate_scene_contract(sandbox, traveler, targets)
 	_validate_input_contract()
 	_validate_numeric_contract()
+	await _validate_raster_presentation(sandbox, traveler)
 	await _validate_camera_and_arena(sandbox, traveler)
 	_park_targets(targets)
 	await _validate_movement_and_facing(traveler)
@@ -48,8 +49,8 @@ func _run() -> void:
 	await process_frame
 	if _failures.is_empty():
 		print(
-			"PASS: exact input, cutaway arena, follow camera, facing, attack-time targeting, "
-			+ "cover, guard, potion, pulse, and pause contracts"
+			"PASS: raster world, sprite locomotion, exact input, cutaway arena, follow camera, "
+			+ "facing, attack-time targeting, cover, guard, potion, pulse, and pause contracts"
 		)
 		quit(0)
 	else:
@@ -71,6 +72,9 @@ func _validate_scene_contract(
 	_expect(traveler is CharacterBody3D, "Traveler is not a real 3D character body")
 	_expect(traveler.has_node("FacingFeedback/Notch"), "world-space facing notch is missing")
 	_expect(traveler.has_node("TargetingAssist/TargetMarker"), "attack target marker is missing")
+	_expect(sandbox.has_node("WorldBackdrop/Image"), "2D world backdrop is missing")
+	_expect(sandbox.has_node("RasterSurfacePass"), "raster surface pass is missing")
+	_expect(traveler.has_node("ActorSprite"), "Traveler Sprite3D presentation is missing")
 	_expect(
 		is_equal_approx(traveler.get_node("FacingFeedback").position.y, 0.03),
 		"facing feedback is not anchored at y=0.03",
@@ -180,16 +184,153 @@ func _validate_numeric_contract() -> void:
 	_expect(TargetingAssist3D.STICKINESS_SECONDS == 0.45, "target stickiness changed")
 	_expect(TargetingAssist3D.ANGLE_SCORE_WEIGHT == 0.75, "target angle score weight changed")
 	_expect(TargetingAssist3D.DISTANCE_SCORE_WEIGHT == 0.25, "target distance score weight changed")
+	_expect(Traveler3D.SPRITE_FRAME_COLUMNS == 4, "Traveler walk sheet column contract changed")
+	_expect(Traveler3D.SPRITE_DIRECTION_ROWS == 4, "Traveler direction row contract changed")
+	_expect(Traveler3D.WALK_SPRITE_FPS == 8.0, "Traveler walk sprite rate changed")
+	_expect(Traveler3D.DASH_SPRITE_FPS == 12.0, "Traveler dash sprite rate changed")
+
+
+func _validate_raster_presentation(sandbox: CombatSandbox3D, traveler: Traveler3D) -> void:
+	var backdrop := sandbox.get_node("WorldBackdrop/Image") as TextureRect
+	var backdrop_environment := (sandbox.get_node("WorldEnvironment") as WorldEnvironment).environment
+	_expect(backdrop.texture != null, "2D world backdrop has no texture")
+	_expect(
+		backdrop.texture.resource_path == "res://art/world/flooded_works/backgrounds/panel_01.png",
+		"2D world backdrop no longer uses the approved Flooded Works panel",
+	)
+	_expect(
+		backdrop_environment.background_mode == Environment.BG_CANVAS,
+		"3D environment does not reveal the negative-layer Canvas backdrop",
+	)
+
+	var surface_pass := sandbox.get_node("RasterSurfacePass") as RasterSurfacePass3D
+	_expect(surface_pass.albedo_texture != null, "raster surface pass has no albedo texture")
+	_expect(
+		surface_pass.albedo_texture.resource_path
+		== "res://art/world/flooded_works/isometric/surfaces/foundry-architecture-albedo-v1.png",
+		"raster surface pass no longer uses the project albedo",
+	)
+	_expect(surface_pass.albedo_texture.get_width() == 1024, "surface albedo is not 1024 px wide")
+	_expect(surface_pass.albedo_texture.get_height() == 1024, "surface albedo is not 1024 px high")
+	_expect(surface_pass.applied_mesh_count >= 5, "raster material did not reach all architecture and cover meshes")
+	_expect(surface_pass.surface_material != null, "raster surface material was not created")
+	_expect(surface_pass.surface_material.uv1_triplanar, "raster surface material lost triplanar projection")
+	_expect(
+		surface_pass.surface_material.uv1_world_triplanar,
+		"raster surface material lost world-space projection",
+	)
+	for root_path in surface_pass.surface_roots:
+		_assert_raster_material_recursive(surface_pass.get_node(root_path), surface_pass.surface_material)
+
+	var actor_sprite := traveler.actor_sprite
+	_expect(actor_sprite.visible, "Traveler raster sprite is hidden")
+	_expect(actor_sprite.texture != null, "Traveler raster sprite has no texture")
+	_expect(
+		actor_sprite.texture.resource_path
+		== "res://art/world/flooded_works/isometric/actors/traveler-walk-sheet-v1.png",
+		"Traveler raster sprite no longer uses the production walk sheet",
+	)
+	_expect(actor_sprite.texture.get_width() == 1024, "Traveler walk sheet is not 1024 px wide")
+	_expect(actor_sprite.texture.get_height() == 1024, "Traveler walk sheet is not 1024 px high")
+	_expect(actor_sprite.hframes == 4 and actor_sprite.vframes == 4, "Traveler walk sheet is not wired as 4x4")
+	_expect(actor_sprite.no_depth_test, "Traveler sprite can be hidden by the foreground cutaway")
+	_expect(not (traveler.get_node("Visual/Body") as MeshInstance3D).visible, "primitive Traveler body remains visible")
+	_expect(not (traveler.get_node("Visual/Head") as MeshInstance3D).visible, "primitive Traveler head remains visible")
+
+	var sprite_image := actor_sprite.texture.get_image()
+	_expect(sprite_image != null, "Traveler walk sheet pixels are unavailable")
+	if sprite_image != null:
+		_expect(sprite_image.detect_alpha() != Image.ALPHA_NONE, "Traveler walk sheet has no alpha channel")
+		_expect(sprite_image.get_pixel(0, 0).a <= 0.01, "Traveler walk sheet top-left is not transparent")
+		_expect(sprite_image.get_pixel(1023, 1023).a <= 0.01, "Traveler walk sheet bottom-right is not transparent")
+		for row in Traveler3D.SPRITE_DIRECTION_ROWS:
+			for column in Traveler3D.SPRITE_FRAME_COLUMNS:
+				var cell := sprite_image.get_region(Rect2i(column * 256, row * 256, 256, 256))
+				_expect(
+					cell.get_used_rect().has_area(),
+					"Traveler walk sheet cell %d,%d is empty" % [column, row],
+				)
+
+	var camera_right := traveler.camera.global_basis.x
+	camera_right.y = 0.0
+	camera_right = camera_right.normalized()
+	var camera_away := -traveler.camera.global_basis.z
+	camera_away.y = 0.0
+	camera_away = camera_away.normalized()
+	_expect(traveler._sprite_row_for_direction(camera_away + camera_right) == 0, "away-right sprite row changed")
+	_expect(traveler._sprite_row_for_direction(camera_away - camera_right) == 1, "away-left sprite row changed")
+	_expect(traveler._sprite_row_for_direction(-camera_away + camera_right) == 2, "toward-right sprite row changed")
+	_expect(traveler._sprite_row_for_direction(-camera_away - camera_right) == 3, "toward-left sprite row changed")
+
+	traveler.reset_training()
+	traveler.combat_facing = camera_right
+	traveler.velocity = Vector3.ZERO
+	traveler._update_sprite_presentation(0.0)
+	_expect(traveler.sprite_frame_column == 0, "idle Traveler does not hold sprite column zero")
+	var idle_row := traveler.sprite_facing_row
+	var raster_start := traveler.global_position
+	_key_down(KEY_RIGHT)
+	var saw_walk_frame := false
+	var maximum_walk_column := 0
+	for _index in 24:
+		await physics_frame
+		maximum_walk_column = maxi(maximum_walk_column, traveler.sprite_frame_column)
+		if traveler.sprite_frame_column != 0:
+			saw_walk_frame = true
+	_key_up(KEY_RIGHT)
+	_expect(
+		saw_walk_frame,
+		"moving Traveler did not advance its walk frame (column=%d, time=%.3f, distance=%.3f)"
+		% [maximum_walk_column, traveler.sprite_animation_time, traveler.global_position.distance_to(raster_start)],
+	)
+	_expect(traveler.actor_sprite.frame / 4 == traveler.sprite_facing_row, "sprite frame escaped its facing row")
+	await _physics_frames(20)
+	_expect(traveler.sprite_frame_column == 0, "stopped Traveler did not return to its idle column")
+	_expect(idle_row >= 0 and idle_row < 4, "idle sprite row escaped the four-direction sheet")
+	traveler.reset_training()
+	var camera_rig := sandbox.get_node("CameraRig") as IsometricCameraRig3D
+	camera_rig.global_position = traveler.spawn_position
+	await process_frame
+
+
+func _assert_raster_material_recursive(node: Node, expected_material: Material) -> void:
+	if node is MeshInstance3D:
+		var applied_material := (node as MeshInstance3D).material_override as StandardMaterial3D
+		_expect(
+			applied_material != null,
+			"%s did not receive the shared raster surface material" % node.get_path(),
+		)
+		if applied_material != null:
+			var applied_texture_path := (
+				applied_material.albedo_texture.resource_path
+				if applied_material.albedo_texture != null
+				else "<none>"
+			)
+			_expect(
+				applied_material.albedo_texture == (expected_material as StandardMaterial3D).albedo_texture
+				and applied_material.uv1_triplanar
+				and applied_material.uv1_world_triplanar,
+				"%s raster material mismatch (texture=%s, triplanar=%s, world=%s)"
+				% [
+					node.get_path(),
+					applied_texture_path,
+					applied_material.uv1_triplanar,
+					applied_material.uv1_world_triplanar,
+				],
+			)
+	for child in node.get_children():
+		_assert_raster_material_recursive(child, expected_material)
 
 
 func _validate_camera_and_arena(sandbox: CombatSandbox3D, traveler: Traveler3D) -> void:
 	var camera_rig: IsometricCameraRig3D = sandbox.get_node("CameraRig")
 	var camera: Camera3D = camera_rig.camera
 	traveler.global_position = Vector3(2.4, 0, -1.8)
-	await _process_frames(60)
+	await _process_seconds(1.0)
+	var settled_camera_error := camera_rig.global_position.distance_to(Vector3(2.4, 0, -1.8))
 	_expect(
-		camera_rig.global_position.distance_to(Vector3(2.4, 0, -1.8)) <= 0.15,
-		"camera center did not settle within 0.15m after one second",
+		settled_camera_error <= 0.15,
+		"camera center did not settle within 0.15m after one second (error=%.3f)" % settled_camera_error,
 	)
 	_expect_player_screen_ratio(camera, traveler, 0.15, 0.85, "free-follow position")
 
@@ -200,7 +341,7 @@ func _validate_camera_and_arena(sandbox: CombatSandbox3D, traveler: Traveler3D) 
 		Vector3(-9.2, 0, -9.2),
 	]:
 		traveler.global_position = edge_case
-		await _process_frames(60)
+		await _process_seconds(1.0)
 		_expect_player_screen_ratio(camera, traveler, 0.10, 0.90, "clamped edge %s" % edge_case)
 		_expect(
 			absf(camera_rig.global_position.x) <= 3.5001
@@ -648,6 +789,10 @@ func _physics_frames(count: int) -> void:
 func _process_frames(count: int) -> void:
 	for _index in count:
 		await process_frame
+
+
+func _process_seconds(duration: float) -> void:
+	await create_timer(duration).timeout
 
 
 func _key_down(keycode: Key) -> void:

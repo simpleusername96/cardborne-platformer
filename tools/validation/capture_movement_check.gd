@@ -113,11 +113,11 @@ func _prepare_state(state: StringName, sandbox: CombatSandbox3D) -> void:
 		&"southeast_edge":
 			traveler.global_position = Vector3(9.2, 0, 9.2)
 			traveler.action_traced.emit("South / east cutaway")
-			await _process_frames(60)
+			await _process_seconds(1.0)
 		&"northwest_edge":
 			traveler.global_position = Vector3(-9.2, 0, -9.2)
 			traveler.action_traced.emit("North / west camera clamp")
-			await _process_frames(60)
+			await _process_seconds(1.0)
 		&"pause":
 			_send_key(KEY_ESCAPE, true)
 			await process_frame
@@ -144,6 +144,10 @@ func _physics_frames(count: int) -> void:
 func _process_frames(count: int) -> void:
 	for _index in count:
 		await process_frame
+
+
+func _process_seconds(duration: float) -> void:
+	await create_timer(duration).timeout
 
 
 func _send_key(keycode: Key, pressed: bool) -> void:
