@@ -10,7 +10,7 @@ available through Git history and do not guide new work.
 | ---: | --- | --- |
 | 1 | `../AGENTS.md` | Repository operating guidance and current project direction. |
 | 2 | `../.agent/Prompt.md` | Active pivot policy. |
-| 3 | `../.agent/execplans/2026-07-17-isometric-action-rpg-pivot.md` | Active implementation and decision plan. |
+| 3 | `../.agent/execplans/2026-07-17-isometric-action-rpg-pivot.md` | Active decision-complete execution plan. |
 | 4 | `design/UI_VISUAL_SYSTEM.md` | Active UI and art-style contract. |
 
 There is no accepted replacement gameplay PRD yet. Creating and validating that

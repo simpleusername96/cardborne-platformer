@@ -5,8 +5,8 @@ owner: BK
 created: 2026-07-17
 last_reviewed: 2026-07-17
 topic: Cardborne isometric action RPG pivot
-scope: Reset baseline through the first five-to-eight-minute authored combat proof and go/no-go decision
-source: Owner pivot decision, repository inspection at 7cc069c, Godot 4.7 documentation, and Supergiant developer material
+scope: Empty reset baseline through one decision-complete five-to-eight-minute isometric combat proof
+source: Owner pivot decision, repository state at 8124394, Godot 4.7 documentation, and inspected Supergiant development material
 related:
   - ../Documentation.md
   - ../Prompt.md
@@ -14,461 +14,672 @@ related:
   - ../../docs/design/references/README.md
 ---
 
-# Cardborne Isometric Action RPG Pivot
+# Cardborne Isometric Action RPG Pivot — Execution Plan
+
+Cardborne currently boots an empty Godot 4.7 scene. Five remaining implementation
+phases produce one authored, five-to-eight-minute isometric action-RPG proof with
+explicit melee/ranged controls, three room objectives, one card choice, Slime
+King, retained visual identity, a Web build, and a recorded go/no-go outcome.
 
 ## Purpose
 
-Rebuild Cardborne around a short, responsive isometric action-RPG proof before
-restoring the former game's broad run, economy, and content systems. Checklist
-items name proposed owners and include an observable acceptance check; directories
-become durable only after their first working responsibility exists.
+- **Objective:** determine through a playable build whether top-down isometric
+  combat is a materially better foundation than the retired platformer.
+- **Final artifact:** a deterministic start-to-result proof that can be replayed
+  immediately with keyboard/mouse or gamepad.
+- **Completion state:** all automated and rendered gates pass and the owner records
+  `Go`, `Iterate`, or `No-go` against the continuous proof build.
 
 ## Why / Context
 
-The retired side-view build proved persistence, rewards, authored stages, UI, and
-release correctness but did not meet the owner's fun target. Bastion and Hades
-made a different target visible: free ground-plane movement, independent attack
-direction, short readable commitments, coordinated enemy pressure, room-scale
-encounters, and rewards that alter the next fight.
+The retired implementation proved persistence, rewards, stages, UI, and release
+flow, but it did not meet the owner's fun target. Porting its controller, ropes,
+platform rooms, contextual attacks, and enemy trajectories would preserve the
+wrong constraints. Commit `7cc069c` remains the read-only recovery boundary;
+commit `8124394` is the clean isometric reset baseline.
 
-Adapting the old player controller, platform rooms, rope traversal, contextual
-attack, and platform enemy trajectories would preserve the wrong constraints.
-The runtime was therefore reset. Git commit `7cc069c` is the recovery boundary;
-the active tree retains art and product identity, not legacy behavior.
+The target is not a feature-by-feature Bastion or Hades clone. The applicable
+lesson is to validate responsive movement, explicit attacks, readable enemy
+pressure, and behavior-changing rewards in one short playable route before
+rebuilding a broad economy or content catalog.
+
+## Pre-plan Evidence Already Verified
+
+| Source or path | Verified fact | Decision affected | Freshness or recheck boundary |
+| --- | --- | --- | --- |
+| Root `AGENTS.md`, `.agent/Prompt.md`, `.agent/Implement.md` | Godot 4.7 GDScript, 2D simulation, one ground plane, explicit intent, no external dependency, and combat-first delivery are active policy. | Engine, simulation model, dependency set, and work order. | Re-read before each phase; any policy edit supersedes this row. |
+| Git `8124394`; `project.godot`; `scenes/main/PivotRoot.tscn` | Runtime, data, localization, and old gameplay scenes are gone; the project boots an empty `Node2D` with the retained Theme. | Build from a clean root instead of adapting old runtime. | Recheck `git status`, main scene, and project settings before Phase 1. |
+| `art/ui/production/asset-manifest.json` | Stable retained IDs exist for Traveler, melee/ranged/shield/potion icons, three usable card images, Slime King, result art, and fallbacks. | Graybox UI can use retained assets without adding a package. Manifest disposition labels do not define new gameplay. | Revalidate IDs whenever the manifest changes. |
+| `art/world/flooded_works/README.md`; `docs/design/UI_VISUAL_SYSTEM.md` | Flat raster color masses, no outlines, low texture noise, drowned foundry palette, separate gameplay props, and live borderless UI are accepted. | Art and UI contract. Side-view dimensions and collision are rejected as runtime truth. | Recheck before Phase 5 and every new production-asset batch. |
+| Godot 4.7 runtime via `./tools/godot.ps1 --version` | `4.7.stable.official.5b4e0cb0f` is locally available; import and empty boot pass. | Pin the implementation to Godot 4.7 GDScript and GL Compatibility. | Rerun version/import checks before Phase 1 and final export. |
+| [Godot CharacterBody2D](https://docs.godotengine.org/en/4.7/tutorials/physics/using_character_body_2d.html), accessed 2026-07-17 | Scripted top-down movement belongs in the physics loop and `move_and_slide()` supports it. | `PlayerMotor` and `EnemyMotor` own movement. | Recheck only if the pinned engine changes. |
+| [Godot NavigationAgents](https://docs.godotengine.org/en/4.6/tutorials/navigation/navigation_using_navigationagents.html), accessed 2026-07-17 | An agent supplies path positions but does not move its parent. | `NavigationAgent2D` supplies paths; `EnemyMotor` remains authoritative. | Recheck against 4.7 docs if behavior differs locally. |
+| [Godot TileMaps](https://docs.godotengine.org/en/4.7/tutorials/2d/using_tilemaps.html) and [CanvasItem Y-sort](https://docs.godotengine.org/en/4.5/classes/class_canvasitem.html), accessed 2026-07-17 | Overlapping 2D navigation maps are unsafe; higher Y draws in front when Y-sort is enabled. | One navigation plane and foot-point actor sorting. | Recheck only if real elevation enters scope. |
+| [Godot AnimationTree](https://docs.godotengine.org/en/4.7/tutorials/animation/animation_tree.html), accessed 2026-07-17 | State machines and blend spaces can present directional locomotion and actions. | Presentation reflects authoritative action state. | Recheck only if the animation owner changes. |
+| [Bastion development interview](https://www.gamedeveloper.com/game-platforms/road-to-the-igf-supergiant-games-dynamically-narrated-i-bastion-i-) and [Hades FAQ](https://www.supergiantgames.com/blog/hades-faq/), accessed 2026-07-17 | Supergiant used playable iteration and feedback to discover and refine the combat product. | Short proof precedes broad systems. | Historical evidence; no scheduled recheck. |
+| [Hades High Speed update](https://www.supergiantgames.com/blog/hades-the-high-speed-update-patch-notes/) and [Superstar update](https://www.supergiantgames.com/blog/hades-superstar-update-patch-notes/), accessed 2026-07-17 | Input buffering, projectile/effect alignment, and playstyle-changing weapon variations were explicit refinement targets. | Buffering, collision clarity, and behavior-changing cards are first-slice requirements. | Historical evidence; no scheduled recheck. |
+
+## Decision Notes
+
+The owner locked the genre pivot, destructive reset, retained visual direction,
+and core product identities on 2026-07-17. The remaining product and technical
+choices formerly listed as experiments are now closed below so implementation
+does not perform product research or choose architecture.
+
+## Locked Decisions
+
+| Topic | Final decision | Rationale / source |
+| --- | --- | --- |
+| Simulation | Use Godot 2D top-down physics with isometric raster presentation and one walkable navigation plane per room. | Active policy and Godot navigation/Y-sort evidence. |
+| Delivery route | Start directly in a deterministic proof: movement room → arena room → one three-card reward → activation room → survival room → Slime King → result. | Gives one continuous user-testable path without a menu/economy tour. |
+| Input | Keyboard/mouse: `WASD`, mouse aim, LMB melee, RMB ranged, Space dash, `E` interact, `Q` potion, Esc pause. Gamepad: left stick, right-stick aim, RB melee, RT ranged, south-face dash, west-face interact, north-face potion, Menu pause. | Melee and ranged never share one contextual command. |
+| Aim | Mouse targets world position. Right stick supplies continuous aim and keeps the last non-zero vector. Controller assist may choose only a visible target within 12 degrees and 280 px of that vector; it cannot cross solid cover or redirect to another lane. | Preserves explicit intent while making controller aiming usable. |
+| Facing | Gameplay vectors remain continuous. Locomotion art uses four diagonal facings with horizontal mirroring; attacks quantize to eight sectors and rotate hit/effect geometry to the exact sector. | Keeps the first actor-art cost bounded without losing directional combat. |
+| Defense | The universal defensive action is dash/dodge. Shield guard and parry are equipment-specific systems and do not enter this proof. | A single fast universal defense keeps the control loop clear; shield identity remains preserved for later production. |
+| Dash baseline | Speed `520 px/s`, duration `0.18 s`, invulnerability during the first `0.10 s`, recovery `0.12 s`, and reuse after `0.55 s` from start. Direction uses current movement, then current aim, then last facing. | Provides an explicit damage-avoidance action with visible timing. |
+| Ground movement baseline | Maximum speed `220 px/s`, acceleration `1600 px/s²`, braking `2000 px/s²`, normalized diagonals, and no gravity/floor state. | Establishes a measurable first tuning point for 720p rooms. |
+| Melee | A two-strike sword chain with one buffered primary input. Attack state owns startup, active, recovery, cancel window, and facing; animation never owns damage. | Minimum expressive close-range rhythm without a large combo system. |
+| Ranged | A bow-like straight projectile on RMB/RT with a `0.45 s` reuse interval and no ammunition bookkeeping. Ordinary projectiles stop on `World`; only explicitly tagged boss/card projectiles may pierce. | Makes ranged combat reliably available and fixes the retired terrain-piercing failure. |
+| Potion | Three charges per proof run. Each heals 35% maximum health after a `0.45 s` committed use; damage before the heal frame cancels without consuming a charge. | Multiple readable uses without adding inventory systems. |
+| Enemy set | Exactly three ordinary roles: Pursuer, Shooter, Controller. All attacks have startup, active, recovery, and interruption/defeat cleanup. | Smallest mixed-pressure roster that tests spacing, cover, and attention. |
+| Rooms | `FoundryApproach` is a deliberate arena clear; `PumpGallery` opens after two one-second activations even if enemies remain; `PressureVault` opens after 45 seconds even if enemies remain. | Tests extermination, activation, and survival policies explicitly. |
+| Reward | After `FoundryApproach`, choose exactly one: `Dash Wake` leaves a 0.35-second once-per-enemy trail dealing 50% of first-sword-hit damage; `Perfect Punish` makes the next melee within 1.2 seconds after a successful dodge deal double stagger; `Split Focus` splits the first ranged hit into two non-splitting projectiles at ±18 degrees and 60% damage. | Each card visibly changes positioning, timing, or target handling. |
+| Boss | Slime King remains the first boss. It uses four ground-plane patterns: lane charge, landing slam, poison safe bands, and two priority-target pressure nodes. | Retains a core identity while replacing all platform-era behavior. |
+| UI | No main menu, Forge, merchant, loadout, minimap, or economy screen. Required surfaces are HUD, objective/boss band, three-card choice, pause/audio settings, and result replay/exit. | UI exists only where the proof needs a decision or exact state. |
+| Persistence | Run/card/potion state is memory-only. `user://cardborne_pivot_settings.cfg` stores master and SFX volume only. No old-save read or migration. | Keeps the proof deterministic and prevents legacy schema pressure. |
+| Art | Phases 1–4 use clear graybox shapes. Phase 5 creates a new isometric floor/wall/cover kit and actor sprites under the active visual contract; retained side-view art is palette/reference evidence only. | Combat scale and occlusion must be accepted before production art. |
+| Dependencies | Use built-in Godot 4.7 nodes/resources only. No plugin, package, copied code, or third-party asset enters the proof. | Active policy and smallest controllable surface. |
+| Tuning authority | Two focused tuning passes per phase may change movement/action numeric baselines by at most ±20% without changing input mapping, action ownership, objective rules, or content scope. | Allows feel refinement without reopening product decisions. |
+| Final decision | The owner reviews one continuous build and records `Go`, `Iterate`, or `No-go`. `Iterate` names one failed category and permits one scoped correction cycle; a second failure becomes `No-go` for expansion. | Prevents an indefinite prototype from becoming accidental production. |
+
+### Locked combat baselines
+
+All time values are seconds. Phase-owned values may move only under the bounded
+tuning rule; relationships and action ownership do not change.
+
+| Actor/action | Health / damage | Startup / active / recovery | Other locked behavior |
+| --- | ---: | --- | --- |
+| Traveler | 100 max health | — | damage during dodge invulnerability emits `dodge_succeeded(source_id)` once per hostile activation instead of a damage result |
+| Sword hit 1 | 20 damage, 20 stagger | `0.10 / 0.08 / 0.20` | hit 2 buffers during the final `0.15` of recovery; dash cancel begins after active ends |
+| Sword hit 2 | 28 damage, 36 stagger | `0.08 / 0.10 / 0.28` | returns to neutral; dash cancel begins after active ends |
+| Ranged shot | 16 damage, 8 stagger | `0.12 / projectile / 0.33` | speed `720 px/s`; `0.45` total reuse; dies on `World` or first hurtbox hit |
+| Pursuer | 48 health; 12 hit damage | `0.35 / 0.18 / 0.45` | closes to 72 px, commits one straight lunge, then yields the attention token |
+| Shooter | 36 health; 10 shot damage | `0.55 / projectile / 0.60` | holds 220–300 px; projectile speed `480 px/s`; ordinary cover terminates it |
+| Controller | 56 health; 8 zone damage | `0.80 / 1.50 / 0.80` | targets the player's sampled ground point; one hit per target per zone |
+| Slime King | 600 health | pattern-specific below | no contact damage outside an active pattern; defeated state clears every node/zone/projectile |
+
+### Locked encounter fixtures
+
+| Scene | Fixed content and timing | Completion |
+| --- | --- | --- |
+| `CombatSandbox` | walls, two cover blocks, dummy, one timed damage pulse | player-triggered reset/continue; no reward |
+| `FoundryApproach` | wave 1: two Pursuers; wave 2 after wave 1 defeat: one Pursuer, one Shooter, one Controller | all five enemies defeated |
+| `PumpGallery` | one Pursuer, one Shooter, one Controller; two pump interactions, each held for 1.0 second and interrupted by damage | both pumps active; living enemies do not block exit |
+| `PressureVault` | starts with one Pursuer and one Shooter; at 15 seconds add one Pursuer and one Controller; at 30 seconds add two Pursuers and one Shooter; cap six living enemies | 45-second timer; living enemies do not block exit |
+
+Slime King uses no overlapping major patterns and leaves at least `0.50` seconds
+of neutral read time between them:
+
+| Pattern | Startup / active / recovery | Damage and safe response |
+| --- | --- | --- |
+| Lane charge | `0.75 / 0.45 / 0.60` | 18 damage; telegraphed lane leaves both perpendicular sides open |
+| Landing slam | `0.80 / 0.12 / 0.70` | 20 damage; ring has one dashable edge and boss remains punishable in recovery |
+| Poison safe bands | `1.00 / 2.50 / 0.60` | 8 damage once per target per 0.50 seconds; at least 35% of walkable ground remains safe |
+| Pressure nodes | `0.70 / 6.00 node lifetime / 0.60` | two 30-health nodes fire 8-damage marked shots; destroying both ends the pattern early |
+
+The scheduler never repeats the same pattern twice, never starts a new pattern
+before recovery plus neutral read time, and introduces pressure nodes only after
+Slime King first reaches 70% health.
+
+### Locked proof asset mapping
+
+- Phases 1–4 use diagnostic shapes for world/actors and retained icons for live UI.
+- `Dash Wake` uses `card_dash_wake`; `Perfect Punish` uses
+  `card_perfect_punish`; `Split Focus` uses the `ranged` SVG fallback through
+  Phase 4.
+- Phase 5 adds `art/isometric_proof/cards/split_focus.png` and registers it in
+  `art/isometric_proof/asset-manifest.json` without changing the card ID/effect.
+- Slime King result UI uses `boss_slime_king`; gameplay sprite/telegraph art is
+  new under `art/isometric_proof/`.
+
+## Rejected Alternatives
+
+| Alternative | Why it was viable | Why it was rejected |
+| --- | --- | --- |
+| True 3D scene, camera, and physics | Natural elevation and conventional 3D occlusion. | Multiplies art, collision, camera, and navigation cost before combat is proven. |
+| Port the retired platformer runtime | Existing systems were broad and tested. | Gravity, ropes, contextual attacks, and stage assumptions encode the failed product. |
+| Universal hold-to-guard plus dodge | Preserves shield identity immediately. | Adds a second universal defense before the basic action loop is legible. |
+| Dash without invulnerability | Simpler collision behavior. | Fails to provide a dependable universal defensive response. |
+| Contextual melee/ranged substitution | Reduces button count. | Directly contradicts the owner's control feedback and explicit-intent policy. |
+| Eight fully authored locomotion facings | Highest sprite fidelity. | Doubles first-slice actor production before camera scale is accepted. |
+| Forge, merchant, ammunition, and durability in the proof | Preserves more of the former metagame. | Adds decisions before the combat reward has proved that a next-room build matters. |
+| Procedural rooms or visible tile assembly | Produces more layouts quickly. | Hides encounter-quality problems and risks repetitive map composition. |
+| External behavior-tree, camera, or test plugins | Could accelerate individual systems. | Adds compatibility and ownership risk without a verified built-in limitation. |
+| Reuse Flooded Works side-view terrain as runtime geometry | Assets already exist. | Their projection, collision assumptions, scale, and component states are wrong for isometric play. |
+
+## Current State
+
+Already true at commit `8124394`:
+
+- `project.godot` targets Godot 4.7 GL Compatibility and names collision layers.
+- `scenes/main/PivotRoot.tscn` is the only gameplay scene and boots cleanly.
+- no tracked gameplay script, content resource, localization, or legacy save owner remains;
+- project-owned art, UI Theme, asset manifests, font license, and wrappers remain;
+- the pre-pivot implementation is recoverable at `7cc069c`.
+
+Remaining implementation is exactly Phases 1–5 below. No product research,
+technology comparison, or architecture selection remains inside those phases.
 
 ## Scope / Non-scope
 
 In scope:
 
-- one Traveler on a two-dimensional top-down collision plane;
-- isometric presentation with foot-point Y-sort and explicit occluders;
-- independent movement and aim for keyboard/mouse and gamepad;
-- explicit primary attack, secondary/ranged attack, dash, defense experiment,
-  interact, potion, and pause commands;
-- one melee/ranged tool pair, three enemy roles, solid cover, projectiles, and
-  minimum impact feedback;
-- three authored rooms, at least two non-identical completion objectives, one
-  behavior-changing reward, and a Slime King proof encounter;
-- a five-to-eight-minute playable loop and direct owner go/no-go review;
-- the minimum UI, save boundary, and art slice needed to judge that loop.
+- one Traveler, fixed sword and ranged shot, dash, potion, interact, and pause;
+- three ordinary enemy roles and one Slime King boss;
+- three authored objective rooms plus one movement/sandbox entry and boss arena;
+- one three-card behavior-changing reward;
+- minimum live UI, settings persistence, new isometric proof art, Web export, and
+  owner decision evidence.
 
-Out of scope until the proof passes:
+Out of scope:
 
-- restoring the former three-stage run or its save schema;
-- jumping, ropes, one-way platforms, fall recovery, or stacked gameplay floors;
-- procedural room graphs, random terrain, or broad biome production;
-- all eight equipment models, all cards, full crafting economy, durability,
-  ammunition bookkeeping, material grades, or permanent stat trees;
-- multiple heroes/classes, active-skill bars, multiplayer, live service, or
-  commercial-scale narrative production;
-- final art for more than the proof rooms, proof actors, and proof boss.
+- jump, rope, one-way platform, falling, real elevation, or stacked navigation;
+- universal guard/parry, shield runtime, other weapons, ammunition, equipment
+  inventory, Forge, merchant, crafting, durability, material economy, or minimap;
+- procedural generation, multiple regions, multiple heroes, narrative pipeline,
+  permanent progression, profile migration, or full localization;
+- final commercial art beyond the proof route.
+
+Destructive or irreversible actions:
+
+- none in this plan; the retired runtime remains recoverable from `7cc069c`;
+- existing player-save paths are never read, migrated, or overwritten.
+
+Exact actions requiring owner approval:
+
+- adding any external dependency or third-party asset;
+- replacing 2D simulation with true 3D/elevation;
+- reading or migrating the retired save format;
+- expanding content after the final result;
+- merging to `master`, pushing, publishing, or deploying the build.
 
 ## Assumptions
 
-| Assumption | Why it matters | Guard |
-| --- | --- | --- |
-| “Isometric” means a visual projection over 2D gameplay, not a 3D simulation. | It keeps collision, aiming, navigation, and iteration tractable in Godot 2D. | No gameplay height or stacked navigation enters the first proof. |
-| The retained art direction is accepted, but old camera compositions are not. | Palette and shape language survive without forcing side-view geometry. | New world assets are reviewed in an isometric graybox before production. |
-| Traveler, cards, equipment, forging, merchants, rewards, persistence, and Slime King remain recognizable product identities. | The pivot is a new game built from Cardborne's useful identity, not a nameless clone. | Rebuild contracts only after the combat proof needs them. |
-| The owner needs a playable comparison more than genre vocabulary or paper metrics. | Fun cannot be accepted from a long document. | Every milestone after the baseline extends the same playable route. |
-| Godot 4.7 GL Compatibility remains the target. | Existing tooling, web export, and retained UI assets already fit it. | No engine or dependency change without owner approval. |
-
-## Research Sources
-
-Accessed 2026-07-17. Facts below come from primary engine documentation or
-developer-authored/interview material; recommendations are Cardborne-specific
-inferences.
-
-- [Godot 4.7 CharacterBody2D](https://docs.godotengine.org/en/4.7/tutorials/physics/using_character_body_2d.html): `CharacterBody2D` supports precise scripted movement; `move_and_slide()` is suitable for top-down motion, and movement belongs in the physics loop.
-- [Godot 4.7 TileMaps](https://docs.godotengine.org/en/4.7/tutorials/2d/using_tilemaps.html): `TileMapLayer` can carry collision, occlusion, and navigation, but overlapping 2D navigation meshes on one map produce logical errors. Cardborne should use one gameplay plane and treat tiles as optional authoring aids, not the visual unit.
-- [Godot NavigationAgents](https://docs.godotengine.org/en/4.6/tutorials/navigation/navigation_using_navigationagents.html): an agent returns path positions but never moves its actor; custom movement must call and consume path updates in the physics loop. Enemy locomotion therefore remains an explicit owner, not a black box.
-- [Godot CanvasItem Y-sort](https://docs.godotengine.org/en/4.5/classes/class_canvasitem.html): children with larger Y positions render in front when Y-sort is enabled. Actor sort anchors must be located at their feet.
-- [Godot 4.7 AnimationTree](https://docs.godotengine.org/en/4.7/tutorials/animation/animation_tree.html): state machines and 2D blend spaces can separate locomotion direction from action transitions.
-- [Supergiant on Bastion's development](https://www.gamedeveloper.com/game-platforms/road-to-the-igf-supergiant-games-dynamically-narrated-i-bastion-i-): Bastion started from a minimal seed; its distinctive combat, presentation, and narration emerged through months of playable prototyping rather than a complete paper design.
-- [Supergiant's Bastion announcement](https://www.supergiantgames.com/blog/this-is-bastion/): exploration, customizable weapons, powers, and a safe preparation home were part of the product identity, but the first public goal was a playable build.
-- [Hades FAQ](https://www.supergiantgames.com/blog/hades-faq/): Hades was structured to evolve from player feedback; modularity served iteration rather than existing as an architectural goal by itself.
-- [Hades High Speed update](https://www.supergiantgames.com/blog/hades-the-high-speed-update-patch-notes/): Supergiant explicitly tuned input buffering, weapon behavior, projectile interaction, and visual/effect timing to improve feel and clarity.
-- [Hades Superstar update](https://www.supergiantgames.com/blog/hades-superstar-update-patch-notes/): weapon aspects and upgrade combinations expanded playstyles instead of only increasing item count.
-- [Hades overview](https://www.supergiantgames.com/blog/hades-coming-soon-to-steam-early-access/): Hades intentionally combines Bastion's fast action with deeper atmosphere and run-to-run growth.
-
-## Research Findings Applied Here
-
-1. Build and repeatedly play one room before designing a complete run.
-2. Separate the ground-plane simulation from the isometric drawing illusion.
-3. Keep movement and action state explicit; animation reflects state rather than
-   deciding combat results.
-4. Use authored room chunks and one navigation plane. Do not rebuild a tile-heavy
-   procedural map before combat is accepted.
-5. Make weapon and card choices change range, timing, positioning, or target
-   priority; numeric-only upgrades wait.
-6. Treat input buffering, hitbox/effect alignment, solid-cover projectile
-   termination, and enemy recovery as core feel work.
-7. Prefer frequent playable owner review to speculative feature completion.
-
-## Decision Notes
-
-Locked by the owner on 2026-07-17:
-
-- Pivot from side-view action platformer to isometric action RPG.
-- Delete the old runtime while retaining art style and core product identities.
-- Search external implementations and production lessons before planning.
-
-Implementation defaults accepted by this plan unless the owner changes them:
-
-- Use Godot 2D, not a 3D camera or 3D physics world.
-- Use large authored floor/wall/cover chunks and independent props. `TileMapLayer`
-  is optional for graybox authoring and must not force repetitive visible tiles.
-- Use one walkable navigation plane per room during the proof.
-- Aim follows the mouse or right stick independently from movement; keyboard-only
-  fallback aims toward the last meaningful attack direction.
-- Melee and ranged/secondary actions remain explicit. No contextual resolver may
-  silently choose the other tool.
-- Room completion is objective-driven. “Kill every enemy” is allowed for a
-  deliberate arena, not as the universal progression rule.
-- The first proof uses authored rooms and deterministic encounter fixtures.
-- Meta progression waits until the room-to-room combat loop is fun.
+No material product, architecture, dependency, asset-source, control, or
+validation assumption remains unresolved. Numeric feel values are locked
+baselines with the bounded tuning rule above, not choose-later decisions.
 
 ## Open Questions
 
-| Question | Suggested first experiment | Decision gate |
-| --- | --- | --- |
-| Should defense be a universal guard or a weapon-specific secondary action? | Prototype a short guard/parry window beside a no-guard dodge-only configuration. | Keep only the version that creates an understandable decision without slowing the loop. |
-| How much invulnerability should dash provide? | Compare movement-only dash with a short, clearly signaled damage-avoidance window. | Select from damage traces and owner feel; never hide the window. |
-| Four or eight actor directions? | Four-direction locomotion with eight-direction attack facings in graybox. | Expand only if diagonal readability materially improves. |
-| Mouse aim, facing aim, or soft target assist on controller? | Mouse/right-stick aim plus a narrow controller assist cone. | No target snap may redirect an explicit attack to a different lane. |
-| How much of forging belongs in the proof? | One pre-run weapon choice and one post-room modification only. | Add the Forge screen only if it changes the next room's plan. |
-| Does Slime King remain the first boss identity? | Reuse the illustration and theme with entirely new ground-plane patterns. | Replace only if its silhouette cannot support readable isometric patterns. |
+None. New observations follow the predetermined contingencies and stop conditions
+below; they do not create research work inside an implementation phase.
 
 ## Proposed Design
 
-### Simulation and presentation
+The heading is retained for the repository ExecPlan standard; the design is
+locked for this proof.
 
 ```text
-RoomRoot
-  GroundArt                 large clean floor chunks; no gameplay state
-  NavigationRegion2D        one non-stacked walkable region
-  WorldCollision            walls and cover on the ground plane
-  YSortActors               player, enemies, pickups, low props; sort at feet
-  Occluders                 tall wall/foreground pieces with fade policy
-  ProjectilesAndEffects     explicit collision and visual-height presentation
-  EncounterRuntime          objective, spawns, completion, exits
-  CameraRig                 follow, bounds, restrained impulse
-  CanvasUI                  live HUD and pause/reward surfaces
+PivotRoot
+  ProofRunSession          memory-only route, reward, retry, result
+  RoomHost
+    GroundArt              large graybox/art chunks; no gameplay state
+    NavigationRegion2D     one non-stacked walkable region
+    WorldCollision         walls and solid cover
+    YSortActors            foot-point-sorted player, enemies, pickups
+    Occluders              tall pieces with deterministic fade/cutaway
+    ProjectilesAndEffects  explicit World/Hitbox collision
+    EncounterRuntime       typed objective, spawns, exit state
+  CameraRig                follow, bounds, restrained impulse
+  CanvasUI                 HUD, reward, pause/settings, result
 ```
 
-Logical position is always the actor's ground contact point. A future leap,
-knock-up, or projectile arc may use a visual-height offset, but collision and
-navigation remain on the ground plane unless a later spec explicitly introduces
-real elevation.
-
-### Proposed responsibility owners
-
-| Concern | Proposed owner | Must not own |
-| --- | --- | --- |
-| Raw commands and device state | `scripts/player/PlayerInput.gd` | movement physics, target selection, damage |
-| Ground movement and dash | `scripts/player/PlayerMotor.gd` | animation timing, rewards, enemy queries |
-| Action commitment and buffers | `scripts/player/PlayerActionController.gd` | UI or save mutations |
-| Aim and optional assist | `scripts/player/AimResolver.gd` | choosing melee versus ranged |
-| Attack data and execution | `scripts/combat/AttackDefinition.gd`, `AttackExecutor.gd` | reward or card UI |
-| Damage transaction | `scripts/combat/Hitbox.gd`, `Hurtbox.gd`, `DamageRequest.gd`, `DamageResult.gd` | actor-specific movement |
-| Player presentation | `scripts/presentation/PlayerPresenter.gd`, `AnimationTree` | authoritative hit timing |
-| Enemy intent | `scripts/enemies/EnemyBrain.gd` and role-specific states | room completion or rewards |
-| Enemy locomotion | `scripts/enemies/EnemyMotor.gd` with optional `NavigationAgent2D` | attack selection |
-| Room geometry | `scripts/rooms/RoomDefinition.gd`, authored `.tscn` | encounter win conditions |
-| Encounter objective | `scripts/encounters/EncounterRuntime.gd`, typed objective resources | global run settlement |
-| Run and reward state | `scripts/run/RunSession.gd`, `scripts/cards/` | rendering and scene-local collision |
-| UI | snapshot presenters under `scripts/ui/` | direct domain mutation |
-
-### First playable loop
+Route:
 
 ```text
-arrival / movement check
-  -> mixed melee + ranged encounter
-  -> choose one behavior-changing card
-  -> objective room: activate or survive while combat continues
-  -> Slime King proof
-  -> immediate replay / exit choice
+CombatSandbox
+  → FoundryApproach [arena clear]
+  → choose Dash Wake | Perfect Punish | Split Focus
+  → PumpGallery [activate two pumps; remaining enemies allowed]
+  → PressureVault [survive 45 s; remaining enemies allowed]
+  → SlimeKingArena
+  → RunResult [Replay | Exit]
 ```
 
-The proof contains no mandatory economy tour. A reward is present only to prove
-that the next room is played differently.
+Logical actor position is always the ground-contact point. Visual height may
+offset a sprite/effect but never changes navigation, cover, or hit ownership.
 
-### Minimum enemy roles
+## Architecture and Ownership
 
-- **Pursuer:** closes space and forces movement; clear startup and recovery.
-- **Shooter:** owns a sightline; projectiles stop on solid cover unless explicitly
-  tagged as piercing.
-- **Controller:** creates a temporary danger zone or displacement problem without
-  filling the whole room.
-
-The mixed encounter must remain readable with all three active. Enemies may
-reposition, reserve attack lanes, and yield when another high-attention tell is
-active; they must not behave as unrelated timers stacked together.
-
-### Minimum build proof
-
-Three cards are enough:
-
-- one changes dash positioning into an offensive opportunity;
-- one converts a precise defense or enemy recovery into a counter opportunity;
-- one changes ranged target priority, projectile behavior, or resource recovery.
-
-The observer should identify the changed behavior without reading damage numbers.
-
-## Current-State Map
-
-| Concern | Current state after reset | Plan handling |
-| --- | --- | --- |
-| Runtime | Intentionally empty `scenes/main/PivotRoot.tscn` | Build upward from one combat sandbox. |
-| Legacy code/data | Removed; recoverable at `7cc069c` | Consult only for a specific algorithm or identity mapping after review. |
-| Art | Project-owned UI/world assets and references retained | Reuse palette and shell assets; produce new isometric world/actor assets. |
-| UI Theme | `art/ui/production/production_ui_theme.tres` retained | Revalidate when the first live screen lands. |
-| Tooling | Godot setup/export wrappers and art-reference tools retained | Add narrow pivot validators beside implemented behavior. |
-| Product spec | No replacement gameplay PRD | Milestone 0 produces a short accepted brief from the playable hypothesis. |
-| Save compatibility | No active runtime or save schema | Do not promise migration until the new run data is known. |
+| Concern | Final owner | Interface or invariant | Existing owner to reuse or retire |
+| --- | --- | --- | --- |
+| Input sampling | `scripts/player/PlayerInput.gd`; `PlayerCommandFrame.gd` | One immutable physics-frame command: move vector, aim vector, and pressed/held action flags. | Add InputMap entries to `project.godot`; no autoload. |
+| Aim | `scripts/player/AimResolver.gd` | Returns explicit world aim and eight-sector attack direction; applies only the locked assist cone. | No target selection inside attacks. |
+| Movement/dash | `scripts/player/PlayerMotor.gd` | Consumes command frame; owns velocity, collision, dash motion, invulnerability timing, and recovery. | `CharacterBody2D`; no animation-owned motion. |
+| Action state | `scripts/player/PlayerActionController.gd` | Owns buffer, startup, active, recovery, cancel rules, potion commit, and action traces. | No contextual action substitution. |
+| Attack data/execution | `scripts/combat/AttackDefinition.gd`; `AttackExecutor.gd`; `data/attacks/proof/*.tres` | Resource fields include timing, range, shape, damage, stagger, projectile, collision behavior, and effect ID. | No attack constants in UI or animation clips. |
+| Damage | `scripts/combat/Hitbox.gd`; `Hurtbox.gd`; `DamageRequest.gd`; `DamageResult.gd` | One request produces at most one result per source/target activation; result names source and interruption. | Collision layers already exist in `project.godot`. |
+| Presentation | `scripts/presentation/ActorPresenter.gd`; `CombatFeedback.gd` | Reads state/results; owns animation, tint, hitstop request, particles, sound, and bounded camera impulse. | Never creates authoritative damage. |
+| Enemy decision | `scripts/enemies/EnemyBrain.gd`; role states under `scripts/enemies/states/` | Selects legal intent only when prior intent reaches recovery/interruption. | Exactly Pursuer, Shooter, Controller. |
+| Enemy movement | `scripts/enemies/EnemyMotor.gd`; child `NavigationAgent2D` | Agent supplies next path point; motor supplies velocity and separation. | One room navigation map; no stacked mesh. |
+| Encounter objectives | `scripts/encounters/EncounterRuntime.gd`; `objectives/*.gd`; `data/encounters/proof/*.tres` | Typed `ArenaClear`, `Activation`, and `Survival` objectives exclusively decide exits. | No global all-enemies-dead fallback. |
+| Cards | `scripts/cards/CardDefinition.gd`; `CardEffect.gd`; three effects under `scripts/cards/effects/` | Stable ID plus one bounded hook: after dash, after successful dodge, or after first ranged hit. | UI reads definitions; it does not implement effects. |
+| Run state | `scripts/run/ProofRunSession.gd`; `ProofRunSnapshot.gd` | In-memory route/card/potion/result snapshot; restart creates a new session. | Scene-owned by `PivotRoot`; no global profile. |
+| Settings | `scripts/settings/PivotSettingsStore.gd` | `ConfigFile` keys `audio/master_volume` and `audio/sfx_volume` only. | New path `user://cardborne_pivot_settings.cfg`. |
+| UI | presenters under `scripts/ui/`; scenes under `scenes/ui/proof/` | Presenters consume snapshots and emit intents; Theme and manifest IDs own visuals. | Reuse retained Theme/assets, not deleted UI runtime. |
+| Art manifest | `art/isometric_proof/asset-manifest.json` | Stable IDs, source path, native size, pivot, display size, fallback, provenance. | Retained Flooded Works art remains evidence only. |
 
 ## As-Is / To-Be Delta Map
 
-| Concern | As-is | To-be | Acceptance check | Guard |
+| Concern | As-is | To-be | Acceptance check | Guard / leftover check |
 | --- | --- | --- | --- | --- |
-| Movement | No runtime; old platform controller retired. | Normalized eight-direction ground movement with acceleration, braking, dash, and independent aim. | Circle, diagonal, wall-slide, dash-end, and device-parity fixture. | No gravity, floor checks, coyote time, rope, or one-way-platform remnants. |
-| Combat intent | Old contextual attack deleted. | Explicit primary and secondary actions with visible startup/active/recovery. | Requested tool and direction match every recorded attack. | No automatic melee/ranged substitution. |
-| Collision | Empty baseline. | Ground-plane bodies, solid cover, hit/hurt areas, and projectiles. | No projectile crosses solid cover unless tagged piercing. | Visual height never bypasses collision silently. |
-| Enemy movement | Platform trajectories deleted. | Role-specific steering/path following with recovery and lane ownership. | Actors reach legal targets, stop at range, and recover from obstruction. | NavigationAgent never becomes the behavior owner. |
-| Encounters | Former stage-clear policies deleted. | Typed objectives: arena clear plus at least one activation/survival/priority/escape objective. | Exits follow the declared objective while irrelevant enemies may remain alive. | No global `all_enemies_dead` fallback. |
-| Builds | Old card runtime deleted. | Three typed, bounded effects that change behavior. | Player and observer can name what changed in the next room. | No infinite dash, projectile, defense, or resource loop. |
-| Art | Side-view world art retained as reference. | New isometric floor, wall, cover, actor, telegraph, and occluder assets. | Crossing/Y-sort/occlusion captures remain readable at three viewports. | Background art never owns collision or gameplay state. |
-| Run/meta | Full former run deleted. | One short deterministic proof, then minimal session/reward/save contracts. | Start, replay, exit, and restart paths are deterministic. | Do not rebuild broad economy before the go decision. |
+| Boot | Empty `PivotRoot`. | Direct deterministic proof entry and replay. | Start, fail, replay, win, replay, and exit work without stale state. | No legacy main-menu/run director returns. |
+| Input | No actions. | Locked keyboard/mouse and gamepad map with explicit melee/ranged. | Trace records requested action and direction on both devices. | No shared attack action or contextual resolver. |
+| Movement | No actor. | Normalized top-down motion and locked dodge. | Diagonal speed, wall slide, dash endpoint, invulnerability, recovery, and cooldown fixtures pass. | No gravity, floor, coyote, rope, or one-way code. |
+| Combat | No runtime. | Typed melee/ranged/potion/damage transactions. | Timing trace matches hit/effect frames; ordinary projectile terminates on cover. | No animation-authored hit and no ammunition owner. |
+| Enemies | No runtime. | Three roles with navigation, spacing, tells, recovery, and cleanup. | Each reaches legal positions, attacks within role range, recovers from obstruction, and stops after defeat. | No fixed jump path or idle-after-first-action behavior. |
+| Objectives | No room flow. | Arena, activation, and survival owners. | Pump/Survival exits open with an irrelevant living enemy. | No global extermination fallback. |
+| Cards | No data. | Three exact behavior hooks and one reward. | Selection changes the next room and each hook fires once per legal trigger. | No numeric-only or recursive trigger loop. |
+| Boss | Illustration only. | Four-pattern ground-plane Slime King. | Every hit has startup/active/recovery and a reachable safe response. | No platform trajectory or unavoidable full-room overlap. |
+| Art/UI | Retained references and Theme. | New isometric gameplay kit plus minimal live proof UI. | Y-sort/occlusion/action timing and layout pass at three viewports. | Background never owns collision, actor, telegraph, or text. |
+| Persistence | None. | Two audio settings only. | Save/load and malformed-file fallback pass. | No retired save read/write. |
 
 ## Milestones
 
-1. Reset baseline and short product contract.
-2. One-room movement/attack sandbox.
-3. Three-role combat and impact proof.
-4. Three-room objective and reward loop.
-5. Slime King and integrated five-to-eight-minute run.
-6. Isometric art/UI slice and production-cost check.
-7. Owner go/no-go decision and only then broader production planning.
+0. **Completed reset:** commit `8124394`, empty boot, retained art/provenance.
+1. **Playable controls:** direct-launch movement, dodge, melee, ranged, potion, and target dummy.
+2. **Readable combat:** three enemies, cover, damage, feedback, defeat, and retry.
+3. **Meaningful route:** three objective rooms and one behavior-changing card choice.
+4. **Integrated proof:** Slime King, result, replay, audio settings, and full route.
+5. **Production evidence:** isometric art/UI, three-viewport captures, Web build, and owner decision.
 
 ## Tasks
 
-### Milestone 0 — Reset and product contract
+### Phase 1 — Playable controls
 
-- [x] Delete the platformer runtime, typed content, rooms, stage tooling, release
-  validators, obsolete plans, and obsolete product documents.
-- [x] Preserve project-owned art, UI Theme, visual references, font license
-  evidence, Godot wrapper, and export wrapper.
-- [x] Point `project.godot` at an empty loadable reset scene.
-- [ ] Create `docs/product/isometric_action_rpg_product_brief.md` after reviewing
-  this plan with the owner.
-  - As-is: no accepted gameplay spec.
-  - To-be: a short player-facing contract for the first proof only.
-  - Accept: owner can describe the intended 30-second combat exchange and
-    five-to-eight-minute loop without genre jargon.
-  - Guard: no full-game content inventory or inherited platform behavior.
+Goal: deliver a directly launchable room where movement and every locked player
+action can be judged without enemy pressure.
 
-### Milestone 1 — Movement and action sandbox
+Source owners touched: `project.godot`, `scenes/main/PivotRoot.tscn`,
+`scenes/testbeds/isometric_combat/CombatSandbox.tscn`, `scripts/player/`,
+`scripts/combat/`, `data/attacks/proof/`,
+`tools/validation/validate_movement_and_actions.gd`,
+`docs/product/isometric_action_rpg_product_brief.md`.
 
-- [ ] Create `scenes/testbeds/isometric_combat/CombatSandbox.tscn` with one room,
-  walls, cover, a target dummy, camera bounds, and debug overlay.
-- [ ] Implement `PlayerInput`, `PlayerMotor`, `AimResolver`, and
-  `PlayerActionController` with keyboard/mouse and gamepad parity.
-- [ ] Implement one primary melee arc, one explicit ranged/secondary shot, dash,
-  and the guard-versus-dodge experiment behind a development setting.
-- [ ] Add command/action trace output for requested action, aim, start frame,
-  commit frame, hit, cancellation, and recovery.
+- [ ] **1.1 Write the product brief from locked decisions.**
+  - As-is: `docs/product/README.md` says no replacement gameplay spec exists.
+  - To-be: create an active spec that restates the locked route, controls,
+    objectives, cards, boss, scope, and completion criteria without new choices.
+  - Accept: its requirements map one-to-one to this plan and its local links resolve.
+  - Guard: no research section, recommendation, broader content roadmap, or
+    platform-era behavior enters the spec.
+- [ ] **1.2 Create the command/input boundary and InputMap.**
+  - As-is: no input actions or player scripts exist.
+  - To-be: add the exact actions and device bindings in the decision table;
+    `PlayerInput` emits one typed `PlayerCommandFrame` per physics tick.
+  - Accept: keyboard/mouse and gamepad fixtures produce equivalent actions and
+    explicit melee/ranged traces.
+  - Guard: device code does not move the actor, select an attack, or deal damage.
+- [ ] **1.3 Implement motor, aim, dodge, and camera.**
+  - As-is: empty room root.
+  - To-be: add `CharacterBody2D`, `PlayerMotor`, `AimResolver`, bounded `Camera2D`,
+    walls, cover, and the locked movement/dash values.
+  - Accept: the movement validator passes normalized diagonal, wall slide, aim
+    fallback, dash distance, invulnerability window, recovery, and cooldown.
+  - Guard: no gravity, floor state, real height, target snap, or animation-driven
+    translation exists.
+- [ ] **1.4 Implement actions, dummy, and action trace.**
+  - As-is: no attack or potion transaction.
+  - To-be: implement two-hit melee, ranged projectile, three-charge potion,
+    buffer, timings, hit/hurt areas, damage result, and a resettable dummy.
+  - Accept: every requested action starts in the requested sector, buffers once
+    at the legal boundary, hits at most once per activation, and returns to idle.
+  - Guard: ranged has no ammo and ordinary shots stop on cover.
 
-*Accept:* movement feels controllable with no enemies; every action starts in the
-requested direction and tool; no action is lost at a legal recovery boundary.
+Batch acceptance: launch `CombatSandbox`, circle the dummy, use both attacks,
+dodge through its timed hit, take damage, use all three potions, and reset without
+an error or lost legal buffered action.
 
-*Guard:* source contains no gravity, floor, jump, rope, or contextual-attack
-resolver path.
+Batch guard: no enemy AI, reward, run state, production art, or broad UI is added.
 
-### Milestone 2 — Combat exchange
+### Phase 2 — Readable combat exchange
 
-- [ ] Add typed attack, hitbox, hurtbox, damage, defeat, hitstop, recoil, and
-  camera-impulse owners.
-- [ ] Add Pursuer, Shooter, and Controller fixtures with visible startup, active,
-  recovery, and defeat states.
-- [ ] Add one non-stacked `NavigationRegion2D`; implement enemy locomotion around
-  cover and separation from other actors.
-- [ ] Add projectile/cover collision and a separately tagged piercing fixture.
-- [ ] Add readable player damage source and concise retry.
+Goal: make one mixed encounter understandable, fair, and recoverable.
 
-*Accept:* the player can explain every received hit; the shooter cannot fire
-through ordinary cover; enemies do not remain stuck or spam overlapping
-high-attention attacks.
+Source owners touched: `scripts/enemies/`, `scripts/presentation/`,
+`scenes/enemies/proof/`, `data/enemies/proof/`,
+`scenes/testbeds/isometric_combat/MixedCombatFixture.tscn`,
+`tools/validation/validate_combat_exchange.gd`.
 
-*Guard:* animation events may request presentation but never become the only
-authoritative damage rule.
+- [ ] **2.1 Implement the three enemy roles and typed action states.**
+  - As-is: only dummy damage exists.
+  - To-be: add Pursuer, Shooter, and Controller with explicit approach/aim,
+    startup, active, recovery, interrupted, and defeated states.
+  - Accept: each role completes three action cycles, can be interrupted, and
+    cleans all hit/effect owners on defeat.
+  - Guard: no actor uses a fixed platform trajectory or attacks outside its state.
+- [ ] **2.2 Add path supply, motor steering, separation, and lane attention.**
+  - As-is: no navigation consumer.
+  - To-be: one `NavigationRegion2D`, one agent per enemy, motor-owned movement,
+    obstruction timer, separation, role range, and one high-attention tell token.
+  - Accept: enemies reach legal targets around cover, stop at role range, resume
+    after obstruction, and do not overlap simultaneous high-attention attacks.
+  - Guard: `NavigationAgent2D` never writes actor velocity or chooses attacks.
+- [ ] **2.3 Add combat feedback and concise retry.**
+  - As-is: trace/dummy feedback only.
+  - To-be: damage source label, hit flash, bounded hitstop, recoil, camera impulse,
+    defeat cleanup, player death, and one-command fixture retry.
+  - Accept: the player and trace identify every damage source; visual and damage
+    frames align; retry restores deterministic initial state.
+  - Guard: effect density never hides a startup or cover edge.
 
-### Milestone 3 — Room objectives and reward
+Batch acceptance: defeat a mixed group of two Pursuers, one Shooter, and one
+Controller; Shooter shots terminate on cover and no enemy stalls for more than
+one second outside an explicit recovery.
 
-- [ ] Create three authored room scenes from large graybox chunks.
-- [ ] Add typed encounter objectives: one deliberate arena clear and one
-  activation, survival, priority-target, or escape objective.
-- [ ] Add room entry, objective state, exit state, and quick restart snapshots.
-- [ ] Add a three-card reward with exactly the dash, counter, and ranged behavior
-  changes described above.
-- [ ] Record room duration, damage source, action mix, objective completion, card
-  selection, and first card use locally for development review.
+Batch guard: no rooms, cards, boss, or production art is introduced.
 
-*Accept:* an earlier or irrelevant enemy may remain alive when a non-extermination
-objective legitimately opens the exit; the chosen card visibly changes the next
-room.
+### Phase 3 — Authored route and behavior-changing reward
 
-*Guard:* no procedural graph, currency shop, durability, crafting grade, or
-permanent save is introduced here.
+Goal: prove objective variety and a card that visibly changes the next fight.
 
-### Milestone 4 — Boss and integrated proof
+Source owners touched: `scripts/encounters/`, `scripts/cards/`, `scripts/run/`,
+`data/encounters/proof/`, `data/cards/proof/`, `scenes/rooms/proof/`,
+`scenes/ui/proof/CardReward.tscn`,
+`tools/validation/validate_route_and_cards.gd`.
 
-- [ ] Rebuild Slime King as a ground-plane actor with three or four patterns:
-  committed lane attack, landing/recovery attack, safe-zone pattern, and add or
-  priority-target pressure.
-- [ ] Give each proof card one useful conversion without allowing any card to skip
-  all execution.
-- [ ] Connect start, three rooms, reward, boss, result, replay, and exit.
-- [ ] Add only the session state and persistence needed to restart the proof and
-  remember one accepted setting/loadout choice.
+- [ ] **3.1 Implement typed objectives and room transitions.**
+  - As-is: one isolated combat fixture.
+  - To-be: create exact FoundryApproach, PumpGallery, and PressureVault scenes,
+    definitions, spawn sets, objective runtime, exit state, and quick restart.
+  - Accept: arena exit requires defeat; pump exit requires two activations;
+    survival exit opens at 45 seconds; the latter two pass with one enemy alive.
+  - Guard: no shared `all_enemies_dead` fallback or procedural room graph exists.
+- [ ] **3.2 Implement one in-memory proof session.**
+  - As-is: fixture-local state.
+  - To-be: `ProofRunSession` owns route position, health, potion charges, card,
+    room entry snapshot, failure retry, and final result snapshot.
+  - Accept: retry returns to the current room snapshot; Replay creates a clean
+    session; Exit quits without persisting run state.
+  - Guard: no profile, currency, inventory, stage index, or legacy save access.
+- [ ] **3.3 Implement the exact reward and three bounded effects.**
+  - As-is: no card data/UI.
+  - To-be: add stable definitions/effects for Dash Wake, Perfect Punish, and Split
+    Focus; show one three-choice screen after FoundryApproach.
+  - Accept: each effect fires once per legal trigger, is visible in PumpGallery,
+    survives the room transition, and cannot trigger itself recursively.
+  - Guard: UI emits selection intent only; no effect logic lives in the card scene.
 
-*Accept:* a first successful run lasts roughly five to eight minutes; patterns are
-understood after exposure; replay begins without a menu/economy tour.
+Batch acceptance: complete all three rooms with each card in separate deterministic
+runs; observe the selected behavior in the next room and open non-arena exits with
+an irrelevant living enemy.
 
-*Guard:* no former save migration promise, stage index, platform checkpoint, or
-three-stage settlement contract returns automatically.
+Batch guard: no Forge, merchant, equipment inventory, random room, or permanent
+progression enters the route.
 
-### Milestone 5 — Art and UI proof
+### Phase 4 — Slime King and integrated proof
 
-- [ ] Produce one isometric floor/wall/cover kit from the active visual contract;
-  use large chunks rather than visible repeated tiles.
-- [ ] Produce Traveler and three enemy proof sprites with foot pivots and enough
-  facings to read movement and attacks.
-- [ ] Implement occluder fading or cutaway behavior for tall foreground walls.
-- [ ] Reintroduce only the required HUD, card choice, pause/settings, result, and
-  input glyph surfaces using the retained Theme/assets.
-- [ ] Capture 960x540, 1280x720, and 1920x1080 crossings, combat, reward, and boss
-  views.
+Goal: produce the complete graybox start-to-result route.
 
-*Accept:* actors sort correctly when crossing, foreground never hides an
-unavoidable threat, attack visuals match hit timing, and the game still reads as
-the accepted Cardborne art family.
+Source owners touched: `scripts/bosses/`, `scenes/bosses/SlimeKingArena.tscn`,
+`data/bosses/proof/`, `scenes/ui/proof/PauseMenu.tscn`,
+`scenes/ui/proof/RunResult.tscn`, `scripts/settings/PivotSettingsStore.gd`,
+`tools/validation/validate_integrated_proof.gd`.
 
-*Guard:* generated backgrounds do not contain actors, pickups, telegraphs,
-collision edges, text, or UI state.
+- [ ] **4.1 Implement four Slime King patterns and scheduler.**
+  - As-is: retained illustration only.
+  - To-be: add lane charge, landing slam, poison safe bands, and two pressure
+    nodes with explicit startup/active/recovery and bounded scheduler rules.
+  - Accept: every pattern exposes a reachable response; no overlapping pattern
+    removes all safe ground; each card provides one useful but non-skipping response.
+  - Guard: no platform jump path, unavoidable full-room damage, or animation-owned hit.
+- [ ] **4.2 Connect boot, route, pause/settings, result, replay, and exit.**
+  - As-is: direct sandbox/room fixtures.
+  - To-be: `PivotRoot` owns `ProofRunSession` and route host; pause exposes Resume,
+    Restart Room, audio Settings, and Exit; result exposes Replay and Exit.
+  - Accept: start, room transitions, death/retry, boss victory, Replay, and Exit
+    work twice consecutively with no stale card, potion, enemy, or objective state.
+  - Guard: no main menu, loadout, Forge, merchant, or profile screen appears.
+- [ ] **4.3 Persist only the two audio settings.**
+  - As-is: no save owner.
+  - To-be: write/read the exact `ConfigFile` path and keys; malformed or missing
+    files restore defaults and log one concise warning.
+  - Accept: both values survive restart; malformed input does not block boot.
+  - Guard: no run, card, result, player stat, or retired save field is serialized.
 
-### Milestone 6 — Go/no-go
+Batch acceptance: one successful graybox run lasts five to eight minutes on the
+reference machine, can be replayed immediately, and exposes no broken transition.
 
-- [ ] Give the owner a build and one continuous capture of the same proof path.
-- [ ] Ask only concrete questions: Did each button do what you intended? Which hit
-  felt unfair? Which card changed your next action? Did you want to replay? Is the
-  result materially closer to the Bastion/Hades appeal you identified?
-- [ ] Record `Go`, `Iterate`, or `No-go` with the exact failed category.
-- [ ] On `Go`, create the replacement product spec and a separate production
-  plan. On `Iterate`, change only the failed slice. On `No-go`, preserve the proof
-  commit and stop content expansion.
+Batch guard: duration is corrected only through encounter counts/timing within
+the locked route; no economy or extra room is added.
 
-## Progress
+### Phase 5 — Isometric art, UI, build, and decision evidence
 
-Completed on 2026-07-17:
+Goal: replace graybox presentation without changing combat truth, validate the
+production-style build, and record the owner outcome.
 
-- Created branch `agent/isometric-arpg-pivot-plan` from local `master`.
-- Inspected the former runtime owners, document authority, retained art, and Git
-  state.
-- Researched Godot 2D movement, navigation, Y-sort, TileMapLayer, AnimationTree,
-  and Supergiant's prototyping/iteration evidence.
-- Removed the platformer runtime and obsolete documentation/tooling while keeping
-  art and provenance.
-- Added the empty pivot boot scene and this active ExecPlan.
-- Validated the reset with Godot 4.7 import and a short headless start; no deleted
-  runtime reference or startup error remains.
+Source owners touched: `art/isometric_proof/`, `scripts/presentation/`,
+`scenes/ui/proof/`, `art/ui/production/production_ui_theme.tres`,
+`tools/validation/validate_art_ui_contract.gd`,
+`tools/validation/capture_proof_views.gd`, `tools/export_web.ps1`,
+`.agent/Documentation.md`.
 
-Not started:
+- [ ] **5.1 Produce the isometric proof asset set and manifest.**
+  - As-is: accepted style references but no isometric gameplay kit.
+  - To-be: create large floor, wall, cover, low-prop, occluder, Traveler, three
+    enemy, Slime King, Split Focus card, projectile, impact, and telegraph raster
+    assets with ground pivots and manifest metadata.
+  - Accept: every asset ID resolves or uses a declared fallback; no background
+    contains actors, collision edges, pickups, telegraphs, text, or UI state.
+  - Guard: no side-view terrain PNG is used as runtime collision or room geometry.
+- [ ] **5.2 Replace graybox visuals and implement occlusion.**
+  - As-is: diagnostic shapes.
+  - To-be: presenters bind state to four-facing locomotion/eight-sector attacks;
+    tall foreground occluders fade to 35% opacity while between camera and player
+    or an active high-attention threat, then restore over 0.15 seconds.
+  - Accept: crossing actors sort at feet; every tell and cover edge remains visible
+    at 960x540, 1280x720, and 1920x1080.
+  - Guard: visual height never alters hit, cover, or navigation state.
+- [ ] **5.3 Implement the minimum live UI with retained Theme/assets.**
+  - As-is: no runtime UI.
+  - To-be: HUD shows health, three potion pips, melee/ranged/dash state, objective,
+    boss health, and concise damage source; reward/pause/result expose only their
+    locked decisions and full keyboard/gamepad focus.
+  - Accept: layout/state checks pass at all three viewports with no clipping,
+    debug text, focus loss, nested ornamental frames, or baked labels.
+  - Guard: presenters consume snapshots and emit intents only.
+- [ ] **5.4 Run final validation, Web export, continuous review, and record outcome.**
+  - As-is: only empty baseline validation exists.
+  - To-be: run every validator, capture the route, export the production Web build,
+    play the built artifact, and record `Go`, `Iterate`, or `No-go` plus failed
+    category in `.agent/Documentation.md`.
+  - Accept: all final gates pass and one decision is recorded.
+  - Guard: `Go` authorizes a separate production plan, not unplanned expansion in
+    this document; merge/push/publish still require explicit owner instruction.
 
-- replacement gameplay product brief;
-- movement/combat sandbox;
-- isometric world or actor production;
-- new run, reward, UI, or save runtime.
+Batch acceptance: the same built artifact supplies the continuous capture and
+owner review; movement, damage, objective, reward, boss, replay, and UI remain
+legible without explanation.
 
-## Next Steps
-
-1. Review this plan's locked decisions and open questions with the owner.
-2. Write the short product brief from accepted decisions.
-3. Implement Milestone 1 as the first playable change; do not restore menus,
-   catalogs, or persistence first.
+Batch guard: presentation replacement cannot change action timings, collision,
+objective completion, card hooks, or boss scheduling.
 
 ## Test Plan
 
-Inner loop:
+### Validation Cadence
 
+Inner-loop commands:
+
+- `./tools/godot.ps1 --version`
 - `./tools/godot.ps1 --path . --headless --import`
 - `./tools/godot.ps1 --path . --headless --quit-after 2`
-- one focused headless validator beside each new subsystem;
-- a short live sandbox run after movement, action, enemy, or camera changes.
+- `./tools/godot.ps1 --path . --headless --script res://tools/validation/validate_movement_and_actions.gd`
+- `./tools/godot.ps1 --path . --headless --script res://tools/validation/validate_combat_exchange.gd`
+- `./tools/godot.ps1 --path . --headless --script res://tools/validation/validate_route_and_cards.gd`
+- `./tools/godot.ps1 --path . --headless --script res://tools/validation/validate_integrated_proof.gd`
+- `./tools/godot.ps1 --path . --headless --script res://tools/validation/validate_art_ui_contract.gd`
 
-Milestone gates:
+Run only validators whose owning phase has created them. Each validator exits
+non-zero with a named failed invariant; it never silently skips a missing fixture.
 
-| Gate | Evidence |
-| --- | --- |
-| Reset | clean Godot import/start, no references to deleted runtime paths |
-| Movement | normalized diagonal speed, wall slide, dash endpoint, input-device parity, action trace |
-| Combat | hit timing, cover termination, defeat cleanup, no duplicate damage, source trace |
-| Enemy | reachable navigation target, obstruction recovery, role spacing, attack-attention cap |
-| Encounter | each objective fixture, exit policy, quick retry, irrelevant enemy remaining where legal |
-| Build | bounded triggers, first-use trace, no infinite loop, observer-visible behavior change |
-| Boss | each pattern, legal safe response, each build, defeat cleanup, retry/replay |
-| Art/UI | Y-sort crossing, occlusion, telegraph readability, three viewports, keyboard/gamepad focus |
-| Final | production Web export and owner continuous-play review |
+Batch gates:
 
-Starting performance fixture: 1280x720, 12 ordinary enemies, and 32 simultaneous
-projectiles/effects should maintain the project target frame rate on the local
-reference machine. Tune the fixture after the first real actor/effect pass rather
-than treating placeholder performance as final evidence.
+| Phase | Automated gate | Manual gate |
+| --- | --- | --- |
+| 1 | movement/action validator | two minutes each on keyboard/mouse and gamepad in CombatSandbox |
+| 2 | combat-exchange validator | mixed encounter, cover, damage source, death/retry |
+| 3 | route/card validator for all three deterministic card fixtures | three-room route with living-enemy activation/survival exits |
+| 4 | integrated-proof validator twice consecutively | one uninterrupted five-to-eight-minute graybox run |
+| 5 | art/UI validator and fixed captures at 960x540, 1280x720, 1920x1080 | built Web artifact, keyboard/gamepad focus, continuous owner review |
 
-Human acceptance is mandatory. Automated correctness cannot mark movement,
-impact, card satisfaction, or replay desire as passed.
+Final gates:
+
+1. `./tools/godot.ps1 --path . --headless --import`
+2. run all five validation scripts above;
+3. `./tools/godot.ps1 --path . --headless --script res://tools/validation/capture_proof_views.gd`;
+4. `./tools/export_web.ps1` and verify `build/web/index.html`, `.js`, `.pck`, and
+   `.wasm` exist;
+5. before serving a path under `D:\npjt`, load `$npjt-port-guard`, resolve the
+   fastrun-manager `codex` lane, and use the command it reports. The serving port
+   is intentionally not hard-coded because the manager owns that dynamic value;
+6. inspect the built artifact and continuous route at the three target viewports;
+7. `git diff --check`, local Markdown-link check, lifecycle check, and task-owned
+   staging guard;
+8. record the owner decision and exact failed category, if any.
+
+Performance gate at 1280x720 on the local reference machine: a 30-second fixture
+with 12 ordinary enemies and 32 concurrent projectile/effect nodes maintains at
+least 60 average rendered FPS and 50 FPS one-percent-low. Failure blocks Phase 5
+completion and is corrected without reducing tell visibility or collision truth.
+
+Rerun policy:
+
+- rerun a failed narrow check only after a concrete code/data change or a new
+  named hypothesis;
+- rerun all final gates only after the suspected cause changes;
+- record known non-blocking warnings rather than rediscovering them;
+- never use repeated full validation as a substitute for implementing the next
+  unchecked task.
+
+## Predetermined Error Handling and Contingencies
+
+| Trigger | Required response | Limit / escalation point |
+| --- | --- | --- |
+| Missing or malformed settings file | Restore locked defaults, log one warning, and continue boot. | Any need to persist more than two audio keys is a scope change. |
+| Missing retained UI asset ID | Use the manifest-declared fallback while preserving component bounds and log the ID once. | Adding a third-party replacement requires owner approval. |
+| Enemy cannot reach a legal target for one second | Cancel current intent, request a fresh path, move to the nearest reachable role anchor, and re-enter decision state. | After two fixture-specific navigation fixes fail, stop Phase 2; do not switch navigation architecture silently. |
+| Several enemies request high-attention attacks | Grant the token to the oldest legal request; others reposition or remain in low-attention states. | More than one simultaneous token is forbidden in the proof. |
+| Card hook attempts to trigger itself | Reject the nested source ID, log the prevented cycle, and continue the action. | Any second-order card chain is out of scope. |
+| Foreground art hides player or active threat | Apply the locked 35% occluder fade; if the whole silhouette remains hidden, use the authored cutaway variant. | Do not alter collision or camera projection to solve one asset. |
+| Movement/action feel fails a manual gate | Change only phase-owned numeric baselines within ±20%, rerun the narrow validator, and perform at most two focused passes. | A required control/ownership change stops the phase for owner approval. |
+| Full route is shorter than five or longer than eight minutes | Adjust locked-room enemy counts, activation placement, survival spawn cadence, or boss health within the same route. | Adding/removing rooms or systems is forbidden. |
+| Web export templates are unavailable | Run `tools/setup-godot.ps1` only for the pinned runtime/templates, rerun export, and report the exact missing component. | No substitute build may mark the final gate passed. |
+| Final owner result is `Iterate` | Change the single named failed category, rerun its batch gate and all final gates once. | A second failed continuous review records `No-go` for expansion. |
+| Final owner result is `No-go` | Preserve the proof commit and evidence, mark this plan done, and stop content work. | No automatic redesign begins. |
+
+## Progress
+
+- [x] Reset baseline committed at `8124394`.
+- [x] Relevant repository, asset, policy, engine, and external development sources inspected.
+- [x] Material product/technical choices and rejected alternatives recorded.
+- [x] Godot 4.7 import and empty start validated.
+- [ ] Phase 1 — playable controls.
+- [ ] Phase 2 — readable combat exchange.
+- [ ] Phase 3 — authored route and behavior-changing reward.
+- [ ] Phase 4 — Slime King and integrated proof.
+- [ ] Phase 5 — art/UI, Web build, and owner decision.
+- [ ] Final gates.
+
+## Next Steps
+
+1. Start with Phase 1.1 and create the product brief by copying only locked
+   product behavior from this plan.
+2. Continue Phase 1 in order through the directly playable CombatSandbox and its
+   validator; commit only after the batch gate passes.
+3. Execute Phases 2–5 sequentially; no later phase starts while the prior batch
+   acceptance or guard fails.
+
+## Completion Criteria
+
+- [ ] The direct-start proof completes movement room, three objective rooms, one
+  card reward, Slime King, result, Replay, and Exit without stale state.
+- [ ] Explicit melee/ranged, dodge, potion, cover, objectives, cards, boss, and
+  settings satisfy their acceptance checks on both input families.
+- [ ] All regression guards and final validation gates pass on the built Web artifact.
+- [ ] New isometric art and live UI satisfy the active visual contract at all three viewports.
+- [ ] No retired runtime owner, duplicate path, placeholder decision, unresolved
+  material choice, external dependency, or legacy save access remains.
+- [ ] The owner outcome and durable run/verify commands are recorded in canonical documents.
 
 ## Rollback / Safety
 
-- Pre-pivot runtime recovery point: Git commit `7cc069c`.
-- Active work stays on `agent/isometric-arpg-pivot-plan` until the reset and plan
-  are reviewed; no force push or history rewrite is required.
-- Project-owned art and third-party license evidence remain untouched by runtime
-  deletion.
-- Do not copy entire retired directories back. Recover one inspected algorithm,
-  asset mapping, or text fragment only when the new owner needs it.
-- Do not migrate or overwrite existing player saves during the proof. Use a new
-  development-only path if persistence becomes necessary.
-- Each milestone ends in a coherent commit with its own playable entry point and
-  rollback boundary.
+- Pre-pivot recovery point: `7cc069c`.
+- Clean reset baseline: `8124394`.
+- Recover only one inspected algorithm or identity mapping when a new owner needs
+  it; never restore a retired directory wholesale.
+- Do not stage or normalize pre-existing `.import` working-tree changes unless
+  the owner assigns them to the current phase.
+- Each phase ends in one scoped commit after its batch gate passes.
+- Do not force-push, merge, push, publish, or deploy without explicit instruction.
 
 ## Risks
 
-- **The pivot imitates surface features without improving feel.** Mitigation:
-  judge the movement/attack sandbox before adding rooms or meta systems.
-- **Isometric art obscures ground truth.** Mitigation: feet anchors, one gameplay
-  plane, explicit cover collision, occluder captures, and no baked telegraphs.
-- **Navigation agents produce jitter or passive enemies.** Mitigation: custom
-  motors own motion, path updates occur in physics, and obstruction recovery is a
-  required fixture.
-- **Independent aim is awkward on one input device.** Mitigation: test mouse,
-  right stick, facing fallback, and narrow assist with identical encounters.
-- **Cards become number upgrades again.** Mitigation: accept only effects whose
-  changed behavior is visible in the next room.
-- **The former economy is rebuilt before fun is proven.** Mitigation: meta systems
-  remain out of scope until the integrated proof receives `Go`.
-- **The plan becomes another abstract document.** Mitigation: Milestone 1 is the
-  immediate next work and every later milestone extends the same playable path.
-- **The reset removed a useful implementation.** Mitigation: `7cc069c` is a stable
-  read-only recovery point; targeted recovery remains possible.
+- **Surface imitation without better feel:** Phase 1 and Phase 2 manual gates
+  block rooms and meta work; two bounded tuning passes are the maximum.
+- **Isometric art hides ground truth:** foot pivots, one plane, solid cover, fixed
+  occluder behavior, and three-viewport captures are mandatory.
+- **Navigation jitter or passive enemies:** custom motors, obstruction recovery,
+  role anchors, and the mixed fixture expose the failure before route work.
+- **Cards collapse into numbers or loops:** each card owns one visible bounded hook
+  and rejects nested self-sources.
+- **Content expands before fun is proven:** exact room/enemy/card counts and final
+  owner outcome gate all broader work.
+- **Prototype cannot ship as a Web proof:** the production export and built-app
+  review are completion gates, not deferred release work.
 
 ## Stop Conditions
 
-Stop and request an owner decision when:
+Complete when:
 
-- the owner wants true 3D elevation or stacked walkable floors;
-- a new external package or asset dependency appears necessary;
-- save compatibility with the deleted runtime becomes a requirement;
-- the first combat sandbox is not materially more promising after two focused
-  control/feel iterations;
-- expanding content is proposed before the five-to-eight-minute proof receives
-  an explicit `Go`.
+- every completion criterion passes and `Go`, `Iterate`, or `No-go` is recorded;
+- `No-go` also completes this proof plan because its objective is evidence for the
+  foundation decision, not guaranteed production approval.
+
+Escalate only when:
+
+- true 3D/elevation, an external dependency/asset, retired-save migration,
+  control ownership change, or content expansion becomes necessary;
+- the navigation or control contingency reaches its stated limit;
+- merge, push, publish, or deploy is requested.
+
+Do not stop when:
+
+- an implementation-local bug, validator failure, or bounded numeric tuning issue
+  remains inside the active phase;
+- a retained asset needs its declared fallback;
+- one manual pass fails before the allowed focused correction is applied.
+
+## Handoff
+
+```text
+Goal: Build the locked five-to-eight-minute Cardborne isometric combat proof.
+
+Read first:
+- AGENTS.md
+- .agent/Prompt.md
+- docs/design/UI_VISUAL_SYSTEM.md
+- .agent/execplans/2026-07-17-isometric-action-rpg-pivot.md
+
+Execute exactly:
+- Start at the first unchecked task in the active phase.
+- Do not introduce an item listed under Non-scope or Rejected Alternatives.
+- Commit only after the phase batch acceptance and guard pass.
+
+Validate with:
+- The phase validator and manual batch gate.
+- All final commands in Test Plan before completion.
+
+Stop when:
+- A stated escalation condition is reached, or
+- all completion criteria and the owner decision are recorded.
+```
