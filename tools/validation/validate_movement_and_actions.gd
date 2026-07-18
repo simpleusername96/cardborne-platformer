@@ -15,12 +15,13 @@ func _initialize() -> void:
 
 func _run() -> void:
 	root.size = Vector2i(1280, 720)
-	var packed: PackedScene = load("res://scenes/main/PivotRoot.tscn")
-	var pivot := packed.instantiate()
+	var pivot := PivotRoot.new()
 	root.add_child(pivot)
+	var packed: PackedScene = load("res://scenes/testbeds/isometric_combat/CombatSandbox3D.tscn")
+	var sandbox := packed.instantiate() as CombatSandbox3D
+	root.add_child(sandbox)
 	await _physics_frames(3)
 
-	var sandbox: CombatSandbox3D = pivot.get_node("CombatSandbox3D")
 	var traveler: Traveler3D = sandbox.get_node("Traveler")
 	var targets: Array[DamageableDummy3D] = [
 		sandbox.get_node("NearTarget"),
@@ -45,6 +46,7 @@ func _run() -> void:
 	await _validate_reset(sandbox, traveler, targets)
 	await _validate_pause(sandbox.get_node("HUD"))
 
+	sandbox.queue_free()
 	pivot.queue_free()
 	await process_frame
 	if _failures.is_empty():
@@ -162,6 +164,7 @@ func _validate_input_contract() -> void:
 		&"dash": KEY_SPACE,
 		&"guard": KEY_X,
 		&"potion": KEY_C,
+		&"interact": KEY_V,
 		&"pause": KEY_ESCAPE,
 	}
 	for action: StringName in expected_keys:
@@ -171,6 +174,7 @@ func _validate_input_contract() -> void:
 	_expect(_has_event_type(&"melee", "InputEventJoypadButton"), "melee gamepad binding is missing")
 	_expect(_has_event_type(&"guard", "InputEventJoypadButton"), "guard gamepad binding is missing")
 	_expect(_has_event_type(&"ranged", "InputEventJoypadMotion"), "ranged gamepad trigger is missing")
+	_expect(_has_event_type(&"interact", "InputEventJoypadButton"), "interact gamepad binding is missing")
 	_expect(not _has_physical_key(&"melee", KEY_Z), "stale Z melee alias remains in InputMap")
 	_expect(not _has_physical_key(&"ranged", KEY_X), "stale X ranged alias remains in InputMap")
 	_expect(not _has_physical_key(&"guard", KEY_SHIFT), "stale Shift guard alias remains in InputMap")

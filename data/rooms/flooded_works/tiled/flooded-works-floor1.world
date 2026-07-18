@@ -1,0 +1,40 @@
+{
+  "maps": [
+    {
+      "fileName": "movement-check.tmj",
+      "height": 1280,
+      "width": 1280,
+      "x": -640,
+      "y": 0
+    },
+    {
+      "fileName": "foundry-approach.tmj",
+      "height": 1408,
+      "width": 1792,
+      "x": -896,
+      "y": -1408
+    },
+    {
+      "fileName": "pump-gallery.tmj",
+      "height": 1536,
+      "width": 1920,
+      "x": -960,
+      "y": -2944
+    },
+    {
+      "fileName": "pressure-vault.tmj",
+      "height": 1664,
+      "width": 1664,
+      "x": -832,
+      "y": -4608
+    },
+    {
+      "fileName": "slime-king-reservoir.tmj",
+      "height": 1920,
+      "width": 1920,
+      "x": -960,
+      "y": -6528
+    }
+  ],
+  "type": "world"
+}

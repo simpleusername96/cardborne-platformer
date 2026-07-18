@@ -12,6 +12,7 @@ var visual: Sprite3D
 
 
 func _ready() -> void:
+	add_to_group(&"combat_projectiles")
 	collision_layer = 1 << 5
 	collision_mask = (1 << 0) | (1 << 2)
 	monitoring = true
@@ -48,7 +49,9 @@ func _physics_process(delta: float) -> void:
 
 
 func _on_body_entered(body: Node) -> void:
-	if body.has_method("receive_hit"):
+	if body.has_method("apply_damage"):
+		body.apply_damage(DamageRequest3D.new(16, 8, DamageRequest3D.Team.PLAYER, &"ranged"))
+	elif body.has_method("receive_hit"):
 		body.receive_hit(16, 8, &"ranged")
 	queue_free()
 

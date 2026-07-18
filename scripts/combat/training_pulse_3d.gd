@@ -22,7 +22,9 @@ func _physics_process(delta: float) -> void:
 	elif state == PulseState.STARTUP and elapsed >= 0.8:
 		_set_state(PulseState.ACTIVE)
 		for body in get_overlapping_bodies():
-			if body.has_method("receive_damage"):
+			if body.has_method("apply_damage"):
+				body.apply_damage(DamageRequest3D.new(18, 0, DamageRequest3D.Team.ENVIRONMENT, &"training_pulse", false))
+			elif body.has_method("receive_damage"):
 				body.receive_damage(18, &"training_pulse")
 	elif state == PulseState.ACTIVE and elapsed >= 0.18:
 		_set_state(PulseState.RECOVERY)

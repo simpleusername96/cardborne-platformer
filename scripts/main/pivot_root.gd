@@ -16,6 +16,7 @@ func _register_input_map() -> void:
 	_replace_action("dash", [_key(KEY_SPACE), _joy_button(JOY_BUTTON_A)])
 	_replace_action("guard", [_key(KEY_X), _joy_button(JOY_BUTTON_LEFT_SHOULDER)])
 	_replace_action("potion", [_key(KEY_C), _joy_button(JOY_BUTTON_Y)])
+	_replace_action("interact", [_key(KEY_V), _joy_button(JOY_BUTTON_X)])
 	_replace_action("pause", [_key(KEY_ESCAPE), _joy_button(JOY_BUTTON_START)])
 	_replace_action("reset_training", [_key(KEY_R)])
 

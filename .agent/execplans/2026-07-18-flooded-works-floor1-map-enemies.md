@@ -580,7 +580,7 @@ Source owners touched: `art/world/flooded_works/tiled/`,
   - Guard: add no Tiled binary, extension, script, package, runtime plugin, or
     package-manager change to the repository. Without explicit approval, perform
     no installation and do not begin map authoring.
-- [ ] **1.2 Implement the parser, build catalog, atomic builder, and validators.**
+- [x] **1.2 Implement the parser, build catalog, atomic builder, and validators.**
   - As-is: Godot cannot consume the landed authoring files and rooms are manually
     composed scenes.
   - To-be: parse `.tsx`/`.tmj`/`.world`, enforce the exact schema and reciprocal
@@ -591,7 +591,7 @@ Source owners touched: `art/world/flooded_works/tiled/`,
     source, changed catalog, missing output, and one manual generated-scene edit.
   - Guard: runtime scripts never parse `.tmj`; unknown data never degrades to a
     generic object; a failed all-room build leaves every prior output untouched.
-- [ ] **1.3 Reconcile controls and extract the persistent actor/camera/HUD runtime.**
+- [x] **1.3 Reconcile controls and extract the persistent actor/camera/HUD runtime.**
   - As-is: current runtime and product brief agree on Shift melee / Z ranged /
     X guard, but `.agent/Prompt.md` retains an obsolete mapping, no interact exists,
     and the room scene owns Traveler, camera, projectiles, and HUD.
@@ -602,7 +602,7 @@ Source owners touched: `art/world/flooded_works/tiled/`,
     identically after extraction, and the existing movement/action validator passes.
   - Guard: no contextual combat substitution enters interaction handling and
     generated room scenes contain no Traveler, camera, or duplicate global HUD.
-- [ ] **1.4 Author all five final floor shells and connect Movement Check to Foundry.**
+- [x] **1.4 Author all five final floor shells and connect Movement Check to Foundry.**
   - As-is: Movement Check geometry and markers live only in one `.tscn`; Foundry
     and the other four room shells have no source maps.
   - To-be: reproduce current Movement Check in `movement-check.tmj`, author the
@@ -618,7 +618,7 @@ Source owners touched: `art/world/flooded_works/tiled/`,
     stacked elevation, high camera-facing walls, and scene-local raw coordinates
     outside generated output are absent. Later phases may add registered anchors
     and components but do not replace these shells with temporary layouts.
-- [ ] **1.5 Implement transition, snapshot, and cleanup.**
+- [x] **1.5 Implement transition, snapshot, and cleanup.**
   - As-is: no room change.
   - To-be: lock input, fade, clear projectiles/effects, swap the generated scene,
     restore the Traveler snapshot, apply generated camera bounds, and place at the
@@ -646,7 +646,7 @@ Source owners touched: `scripts/combat/`, `scripts/enemies/`,
 `data/enemies/flooded_works/`, `foundry-approach.tmj`, generated
 `FoundryApproach3D.tscn`, validation fixtures.
 
-- [ ] **2.1 Introduce the typed 3D damage request.**
+- [x] **2.1 Introduce the typed 3D damage request.**
   - As-is: player/dummy/pulse methods pass positional integers and source IDs.
   - To-be: one typed request/result carries damage, stagger, team, source, and
     blockability; adapt Traveler, dummy, pulse, melee, and projectile without
@@ -654,14 +654,14 @@ Source owners touched: `scripts/combat/`, `scripts/enemies/`,
   - Accept: old fixtures produce the same health/stagger outcomes, guard reduces
     blockable damage by 65%, and non-blockable pressure damage bypasses guard.
   - Guard: presentation, animation, and UI cannot construct authoritative hits.
-- [ ] **2.2 Implement `EnemyActor3D`, `EnemyMotor3D`, and navigation contracts.**
+- [x] **2.2 Implement `EnemyActor3D`, `EnemyMotor3D`, and navigation contracts.**
   - As-is: no moving target or navigation region consumer.
   - To-be: add actor health/stagger/targetability, agent-supplied paths,
     motor-owned movement/separation, role anchors, and deterministic stuck recovery.
   - Accept: an obstruction fixture runs for 60 seconds with no enemy stationary
     over 1.5 seconds outside startup/active/recovery/stagger.
   - Guard: the agent never directly moves the parent and no Y-axis gameplay motion exists.
-- [ ] **2.3 Implement Pursuer, Shooter, and Controller state machines.**
+- [x] **2.3 Implement Pursuer, Shooter, and Controller state machines.**
   - As-is: static dummies only.
   - To-be: implement exact roster values/states, enemy projectile collision,
     Controller zone ownership, interruption, and defeat cleanup.
@@ -669,7 +669,7 @@ Source owners touched: `scripts/combat/`, `scripts/enemies/`,
     legal positioning, and leaves no hitbox/projectile/zone after defeat.
   - Guard: no passive contact damage, fixed jump track, trajectory overlay, or
     attack outside an active state.
-- [ ] **2.4 Add threat coordination and build Foundry Approach.**
+- [x] **2.4 Add threat coordination and build Foundry Approach.**
   - As-is: no mixed encounter or objective owner.
   - To-be: add close/pressure tokens and two fixed waves; finish the Foundry
     `.tmj` with permanent cover, spawn/objective anchors, and registered components;
@@ -693,21 +693,21 @@ Source owners touched: `scripts/rooms/props/`, `scenes/rooms/components/`,
 `data/items/pickups/`, `scripts/encounters/objectives/activation_objective_3d.gd`,
 `pump-gallery.tmj`, generated `PumpGallery3D.tscn`, validation.
 
-- [ ] **3.1 Implement generic prop damage and one-shot drop resolution.**
+- [x] **3.1 Implement generic prop damage and one-shot drop resolution.**
   - As-is: only permanent cover is damageable through dummy-specific methods.
   - To-be: create the crate component with 20 health, collision/avoidance state,
     one break signal, one authored drop slot, and snapshot reset.
   - Accept: one melee or two ranged shots break it; enemy attacks do not; its
     drop resolves once across repeated hit callbacks and once again after retry.
   - Guard: crate placement never closes a critical navigation corridor.
-- [ ] **3.2 Implement potion pickup and pump components.**
+- [x] **3.2 Implement potion pickup and pump components.**
   - As-is: potions are starting charges only and no interaction action exists.
   - To-be: add generic pickup definition/presenter with the potion-charge effect;
     add one-second interruptible pump activation and persistent room state.
   - Accept: potion increments below cap, remains at cap, cannot double-collect;
     damage cancels pump progress and completed pumps do not reset mid-room.
   - Guard: no material/card/equipment effect enters the pickup resolver.
-- [ ] **3.3 Build Pump Gallery and activation objective.**
+- [x] **3.3 Build Pump Gallery and activation objective.**
   - As-is: Foundry is the only live enemy room.
   - To-be: author `pump-gallery.tmj` with water-channel ground cells, two broad
     crossings, registered pump/cover/spawn/prop/objective anchors, reciprocal
@@ -730,14 +730,14 @@ Source owners touched: `pressure_vent_3d.gd`, survival objective, encounter wave
 resources, `pressure-vault.tmj`, generated `PressureVault3D.tscn`, route
 controller, HUD, validation.
 
-- [ ] **4.1 Implement the pressure vent state component.**
+- [x] **4.1 Implement the pressure vent state component.**
   - As-is: only the Movement Check pulse has a similar timing proof.
   - To-be: extract reusable warning/active/recovery ownership, non-blockable
     damage, per-activation hit limit, and cleanup while preserving safe ground.
   - Accept: each vent cycles with exact timing, hits at most once per activation,
     and becomes inert on objective completion/room exit.
   - Guard: vent visuals never become navigation or collision truth.
-- [ ] **4.2 Build the 45-second survival encounter.**
+- [x] **4.2 Build the 45-second survival encounter.**
   - As-is: fixed two-wave arena only.
   - To-be: author `pressure-vault.tmj` with the circular logical footprint,
     registered radial cover/vent/spawn/potion/objective anchors and reciprocal
@@ -745,7 +745,7 @@ controller, HUD, validation.
   - Accept: the timer completes at 45 s with living enemies; spawning stops,
     exit opens, and remaining actors unload only after transition.
   - Guard: no hidden kill count or global clear fallback gates completion.
-- [ ] **4.3 Run the full ordinary-room route and transition hooks.**
+- [x] **4.3 Run the full ordinary-room route and transition hooks.**
   - As-is: rooms validated mostly in isolation.
   - To-be: play Movement -> Foundry -> Pump -> Pressure with health/potions
     preserved, room retry snapshots, clean transition hooks, and no duplicate state.
@@ -770,7 +770,7 @@ Source owners touched: `scripts/bosses/`, `data/bosses/flooded_works/`,
 presentation scripts, new manifest-backed assets under
 `art/world/flooded_works/isometric/`, HUD, validation.
 
-- [ ] **5.1 Implement the boss scheduler and four patterns.**
+- [x] **5.1 Implement the boss scheduler and four patterns.**
   - As-is: retained Slime King illustration only.
   - To-be: implement 600 HP Slime King, lane charge, landing slam, poison safe
     bands, pressure nodes, explicit timing, neutral read time, and full cleanup.
@@ -778,7 +778,7 @@ presentation scripts, new manifest-backed assets under
     ground; scheduler never repeats a pattern or overlaps major patterns.
   - Guard: no platform arc, animation-owned hit, passive contact damage, or
     unavoidable full-room overlap.
-- [ ] **5.2 Author the reservoir room and boss objective.**
+- [x] **5.2 Author the reservoir room and boss objective.**
   - As-is: Pressure gate has no destination.
   - To-be: author `slime-king-reservoir.tmj` with the circular basin ground,
     registered low-ring/node/objective/reward anchors, reciprocal entry socket and
@@ -809,7 +809,7 @@ Source owners touched: `default_bus_layout.tres`,
 `scripts/autoload/pivot_settings_store.gd`, pause UI, settings validation,
 `tools/export_web.ps1`, route capture tools, project memory.
 
-- [ ] **6.1 Add Master/SFX defaults and settings persistence.**
+- [x] **6.1 Add Master/SFX defaults and settings persistence.**
   - As-is: no audio buses, streams, store, or setting controls.
   - To-be: define two buses at 1.0, persist two ConfigFile keys, restore malformed
     values, and expose live pause sliders with keyboard/gamepad focus.
@@ -986,47 +986,71 @@ Rerun policy:
   images, preview `.tmj`, manifest entry, and generation record landed at `b76c0fe`.
 - [x] Tiled/Godot source, conversion, validation, approval, and generated-output
   contracts integrated into this execution plan.
-- [ ] Phase 1: Tiled room builder, persistent runtime, and connected Movement Check.
-- [ ] Phase 2: moving enemies and Foundry Approach.
-- [ ] Phase 3: props, potion, pumps, and Pump Gallery.
-- [ ] Phase 4: Pressure Vault and ordinary route.
-- [ ] Phase 5: Slime King and raster presentation.
-- [ ] Phase 6: audio settings, built validation, and owner decision.
+- [x] Phase 1 runtime: deterministic Tiled parser/catalog/atomic builder, five
+  generated shells, persistent Traveler/camera/HUD, transitions, snapshots, and
+  cleanup. The optional Tiled 1.12.2 desktop installation remains unapproved and
+  is not required to build or run the committed sources.
+- [x] Phase 2: moving Pursuer/Shooter/Controller roles, typed damage, threat
+  coordination, navigation, obstruction recovery, and Foundry arena clear.
+- [x] Phase 3: destructible crates, potion pickup, hold-to-activate pumps, and a
+  Pump Gallery objective that can finish with enemies alive.
+- [x] Phase 4: warning/active/recovery vents, bounded timed waves, and a
+  45-second Pressure Vault objective that can finish with enemies alive.
+- [ ] Phase 5 is behavior-complete: Slime King room, scheduler, four readable
+  patterns, defeat/retry, and result hook pass; separate production raster
+  atlases for ordinary enemies and props await owner acceptance of the behavior.
+- [ ] Phase 6 is infrastructure/automation-complete: Master/SFX persistence,
+  all focused validators, Web export, production browser rendering, pause/settings,
+  and console review pass. Physical gamepad parity, viewport capture matrix,
+  continuous owner feel play, and the `Expand`/`Iterate`/`Stop` decision remain.
+
+Implementation evidence on 2026-07-18:
+
+- `--import`, generated-room `--check`, movement/action regression, five-room
+  contracts with 20 round trips, enemy navigation/action, complete encounter and
+  boss contracts, settings persistence/malformed fallback, and Web export all
+  exit with code 0.
+- The built Web app was served through the fastrun manager `codex` lane at its
+  assigned port. The revised partial-room camera, objective HUD, pause overlay,
+  and Master/SFX controls rendered without browser console warnings or errors.
+- The authoring atlas is not applied as a runtime floor texture; generated rooms
+  use merged broad flat-color surfaces. No Tiled runtime dependency is shipped.
 
 ## Next Steps
 
-1. Obtain exact approval for the signed Tiled 1.12.2 Windows authoring tool; do
-   not install an alternative tool, extension, or package.
-2. Execute Phase 1 only: implement parser/builder/validator, author all five final
-   floor shells in `.tmj`/`.world`, reproduce Movement Check exactly, extract the
-   persistent runtime, and connect Movement Check to the generated Foundry shell.
-3. Do not generate production enemy art until the Phase 2 diagnostic actors pass
-   navigation, coordination, and obstruction tests.
-4. Continue one phase at a time, committing authored and generated map owners
-   together only after each batch gate.
-5. Start progression implementation only after this floor receives an owner
-   `Expand` decision and a separate plan is activated.
+1. Owner plays the built route with keyboard and a physical gamepad, then records
+   `Expand`, `Iterate`, or `Stop` for map/enemy quality and names one failed
+   category when the result is not `Expand`.
+2. After behavior acceptance, produce and review the separate production raster
+   atlases for Pursuer, Shooter, Controller, crate, pump, vent, potion,
+   projectiles, impacts, and telegraphs without changing collision or timing.
+3. Complete the 960x540, 1280x720, and 1920x1080 room capture matrix plus two
+   consecutive continuous clears and a ten-minute feel pass.
+4. Install only the signed Tiled 1.12.2 Windows authoring tool if the owner gives
+   exact approval; the committed `.tmj`/`.world` pipeline remains usable without it.
+5. Start progression implementation only after an owner `Expand` decision and a
+   separate execution plan are active.
 
 ## Completion Criteria
 
-- [ ] All five rooms load through matching gates with one persistent Traveler,
+- [x] All five rooms load through matching gates with one persistent Traveler,
   camera, HUD, and clean transition state.
-- [ ] All five room layouts originate from finite orthogonal `.tmj` files sharing
+- [x] All five room layouts originate from finite orthogonal `.tmj` files sharing
   the committed `.tsx`; the `.world` shows aligned connections, generation is
   deterministic, `--check` passes, and no generated scene is hand-edited.
-- [ ] Runtime/native/Web builds contain no Tiled parser or Tiled dependency, and
+- [x] Runtime/native/Web builds contain no Tiled parser or Tiled dependency, and
   the authoring atlas is not used as a floor texture.
-- [ ] Terrain silhouettes differ while palette, scale, gate language, camera, and
+- [x] Terrain silhouettes differ while palette, scale, gate language, camera, and
   one-plane navigation remain coherent.
-- [ ] Pursuer, Shooter, and Controller move continuously, attack only through
+- [x] Pursuer, Shooter, and Controller move continuously, attack only through
   legal states, recover from obstruction, coordinate, and clean up on defeat.
-- [ ] Ordinary enemy projectiles stop on permanent cover and intact crates.
-- [ ] Foundry requires the fixed arena clear; Pump and Pressure complete with a
+- [x] Ordinary enemy projectiles stop on permanent cover and intact crates.
+- [x] Foundry requires the fixed arena clear; Pump and Pressure complete with a
   living enemy; Slime King requires boss defeat.
-- [ ] Crates, potion pickups, pumps, and vents satisfy every state/one-shot/reset check.
-- [ ] No material wallet, Forge, card effect, equipment mutation, or persistent
+- [x] Crates, potion pickups, pumps, and vents satisfy every state/one-shot/reset check.
+- [x] No material wallet, Forge, card effect, equipment mutation, or persistent
   progression code appears in the implementation diff.
-- [ ] Master/SFX settings default safely, persist, and render in a focused in-run panel.
+- [x] Master/SFX settings default safely, persist, and render in a focused in-run panel.
 - [ ] Every validator, viewport capture, Web export, and built continuous-play gate passes.
 - [ ] No retired runtime owner, duplicate path, placeholder room, or unresolved
   material decision remains in this plan's scope.

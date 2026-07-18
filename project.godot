@@ -9,6 +9,10 @@ config/name="Cardborne"
 run/main_scene="res://scenes/main/PivotRoot.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 
+[autoload]
+
+SettingsStore="*res://scripts/autoload/pivot_settings_store.gd"
+
 [display]
 
 window/size/viewport_width=1280

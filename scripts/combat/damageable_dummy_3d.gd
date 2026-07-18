@@ -23,12 +23,17 @@ func _process(delta: float) -> void:
 
 
 func receive_hit(damage: int, _stagger: int, _source_id: StringName) -> void:
+	apply_damage(DamageRequest3D.new(damage, _stagger, DamageRequest3D.Team.PLAYER, _source_id))
+
+
+func apply_damage(request: DamageRequest3D) -> DamageResult3D:
 	if health <= 0:
-		return
-	health = maxi(0, health - damage)
+		return DamageResult3D.rejected()
+	health = maxi(0, health - request.damage)
 	_update_health_fill()
 	if health <= 0:
 		reset_remaining = 1.0
+	return DamageResult3D.applied(request.damage, request.stagger, health <= 0)
 
 
 func is_targetable() -> bool:

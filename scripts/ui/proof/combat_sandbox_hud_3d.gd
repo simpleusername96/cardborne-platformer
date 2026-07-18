@@ -15,6 +15,8 @@ var trace_remaining := 0.0
 ]
 @onready var trace_label: Label = $Root/ActionTrace
 @onready var pause_overlay: ColorRect = $Root/PauseOverlay
+@onready var master_slider := get_node_or_null("Root/PauseOverlay/Settings/Master") as HSlider
+@onready var sfx_slider := get_node_or_null("Root/PauseOverlay/Settings/SFX") as HSlider
 
 
 func _ready() -> void:
@@ -25,12 +27,20 @@ func _ready() -> void:
 	traveler.action_traced.connect(_on_action_traced)
 	_on_health_changed(traveler.health, traveler.max_health)
 	_on_potion_changed(traveler.potion_charges)
+	if master_slider != null and sfx_slider != null:
+		var settings := get_node("/root/SettingsStore") as PivotSettingsStore
+		master_slider.value = settings.master_volume * 100.0
+		sfx_slider.value = settings.sfx_volume * 100.0
+		master_slider.value_changed.connect(func(value: float) -> void: settings.set_master_volume(value / 100.0))
+		sfx_slider.value_changed.connect(func(value: float) -> void: settings.set_sfx_volume(value / 100.0))
 
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("pause") and not event.is_echo():
 		get_tree().paused = not get_tree().paused
 		pause_overlay.visible = get_tree().paused
+		if get_tree().paused and master_slider != null:
+			master_slider.grab_focus()
 		get_viewport().set_input_as_handled()
 
 

@@ -4,6 +4,7 @@ extends CharacterBody3D
 signal health_changed(current: int, maximum: int)
 signal potion_changed(charges: int)
 signal action_traced(label: String)
+signal defeated
 
 const MOVE_SPEED := 6.0
 const ACCELERATION := 28.0
@@ -88,25 +89,39 @@ func _physics_process(delta: float) -> void:
 
 
 func receive_damage(amount: int, source_id: StringName) -> bool:
+	return apply_damage(DamageRequest3D.new(amount, 0, DamageRequest3D.Team.ENEMY, source_id)).accepted
+
+
+func apply_damage(request: DamageRequest3D) -> DamageResult3D:
 	if dash_remaining > DASH_DURATION - 0.10:
-		action_traced.emit("Dodged %s" % source_id)
-		return false
-	var applied_amount := amount
-	if guarding:
-		applied_amount = maxi(1, ceili(float(amount) * GUARD_DAMAGE_MULTIPLIER))
+		action_traced.emit("Dodged %s" % request.source_id)
+		return DamageResult3D.rejected()
+	var applied_amount := request.damage
+	if guarding and request.blockable:
+		applied_amount = maxi(1, ceili(float(request.damage) * GUARD_DAMAGE_MULTIPLIER))
 		action_traced.emit("Guarded · -%d" % applied_amount)
 	health = maxi(0, health - applied_amount)
 	health_changed.emit(health, max_health)
-	if not guarding:
-		action_traced.emit("-%d · %s" % [applied_amount, source_id])
-	if health <= 0:
+	if not guarding or not request.blockable:
+		action_traced.emit("-%d · %s" % [applied_amount, request.source_id])
+	var was_defeated := health <= 0
+	if was_defeated:
+		defeated.emit()
 		reset_training()
-	return true
+	return DamageResult3D.applied(applied_amount, request.stagger, was_defeated)
 
 
 func heal(amount: int) -> void:
 	health = mini(max_health, health + amount)
 	health_changed.emit(health, max_health)
+
+
+func add_potion_charge() -> bool:
+	if potion_charges >= 3:
+		return false
+	potion_charges += 1
+	potion_changed.emit(potion_charges)
+	return true
 
 
 func reset_training() -> void:
@@ -250,7 +265,9 @@ func _apply_melee_hit() -> void:
 	query.exclude = [get_rid()]
 	for hit in get_world_3d().direct_space_state.intersect_shape(query, 8):
 		var collider: Object = hit["collider"]
-		if collider.has_method("receive_hit"):
+		if collider.has_method("apply_damage"):
+			collider.apply_damage(DamageRequest3D.new(20, 20, DamageRequest3D.Team.PLAYER, &"sword"))
+		elif collider.has_method("receive_hit"):
 			collider.receive_hit(20, 20, &"sword")
 
 

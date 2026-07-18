@@ -1,9 +1,9 @@
 [gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/main/pivot_root.gd" id="1_root"]
-[ext_resource type="PackedScene" path="res://scenes/testbeds/isometric_combat/CombatSandbox3D.tscn" id="2_sandbox"]
+[ext_resource type="PackedScene" path="res://scenes/run/FloorRuntime3D.tscn" id="2_floor"]
 
 [node name="PivotRoot" type="Node"]
 script = ExtResource("1_root")
 
-[node name="CombatSandbox3D" parent="." instance=ExtResource("2_sandbox")]
+[node name="FloorRuntime3D" parent="." instance=ExtResource("2_floor")]
