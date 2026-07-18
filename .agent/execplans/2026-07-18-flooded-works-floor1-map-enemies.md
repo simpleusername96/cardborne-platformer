@@ -5,13 +5,14 @@ owner: BK
 created: 2026-07-18
 last_reviewed: 2026-07-18
 topic: Flooded Works Floor 1 connected rooms, moving enemies, props, pickups, and boss
-scope: Expand the current Movement Check into an authored five-room Floor 1 while preserving the native 3D combat foundation
-source: Owner direction on 2026-07-18, current master at fd42f96, the active proof spec, retained Flooded Works art evidence, and Godot 4.7 navigation/audio documentation
+scope: Expand the current Movement Check into a Tiled-authored five-room Floor 1 while preserving the native 3D combat foundation
+source: Owner direction on 2026-07-18, current master at b76c0fe, the active proof spec, the landed Tiled authoring kit, retained Flooded Works art evidence, and Tiled 1.12.2/Godot 4.7 documentation
 related:
   - ../../docs/product/isometric_action_rpg_product_brief.md
   - ../../docs/product/progression_upgrade_system_spec.md
   - ../../docs/design/UI_VISUAL_SYSTEM.md
   - ../../docs/design/concepts/flooded-works-floor1/README.md
+  - ../../art/world/flooded_works/tiled/flooded-works-authoring.tsx
   - ./2026-07-17-native-3d-isometric-foundation.md
   - ./2026-07-17-rasterized-3d-presentation.md
 ---
@@ -19,11 +20,14 @@ related:
 # Flooded Works Floor 1 Map and Enemy Foundation - Execution Plan
 
 The current 19.8 x 19.8 m Movement Check becomes the optional tutorial entry to
-one connected, authored Floor 1. Six executable phases add room streaming,
-three coordinated moving enemy roles, three terrain compositions, destructible
-props and potion pickups, Slime King, then audio settings and production-style
-validation. Progression spending remains outside this plan, but its reward and
-transition contracts are fixed in the related upgrade specification.
+one connected, authored Floor 1. Tiled `.tmj` maps become the editable source of
+truth for floor shape, sockets, bounds, and placement; a deterministic Godot
+build step produces the native 3D room scenes used at runtime. Six executable
+phases add that map pipeline, room streaming, three coordinated moving enemy
+roles, three terrain compositions, destructible props and potion pickups, Slime
+King, then audio settings and production-style validation. Progression spending
+remains outside this plan, but its reward and transition contracts are fixed in
+the related upgrade specification.
 
 ## Purpose
 
@@ -56,13 +60,18 @@ explicit non-extermination completion policies.
 
 | Source or path | Verified fact | Decision affected | Freshness or recheck boundary |
 | --- | --- | --- | --- |
-| `master` at `fd42f96`; `git status` on 2026-07-18 | Master is 17 commits ahead of `origin/master`; pre-existing `.import` changes are unrelated and must not be staged with this work. | Work in scoped commits and preserve unrelated import metadata. | Recheck before every commit. |
+| `master` at `b76c0fe`; `git status` on 2026-07-18 | The Tiled authoring kit is committed; pre-existing `.import` changes are unrelated and must not be staged with this work. | Work in scoped commits and preserve unrelated import metadata. | Recheck before every commit. |
 | `./tools/godot.ps1 --version` | Local engine is `4.7.stable.official.5b4e0cb0f`. | Use Godot 4.7 GDScript and current 3D APIs. | Recheck if the wrapper or project feature version changes. |
 | `validate_movement_and_actions.gd`, run 2026-07-18 | Current raster world, movement, lateral gait, dash, attacks, guard, projectile collision, camera, targeting, potion, pulse, and pause contracts pass. | Preserve the player foundation while extracting it from the one-room scene. | Rerun after each phase touching shared runtime. |
 | `CombatSandbox3D.tscn`; `combat_sandbox_3d.gd` | One room owns architecture, player, camera, fixtures, and HUD together; it has no room transition or navigation owner. | Extract persistent actors/camera/HUD from room-owned geometry before adding content. | Recheck before Phase 1. |
 | `traveler_3d.gd`; `proof_projectile_3d.gd` | Player attacks use direct method calls; ordinary ranged shots collide with `World` and `Enemy`. | Introduce a typed damage request without changing the accepted action timings or input. | Recheck after any player-combat refactor. |
 | `docs/product/isometric_action_rpg_product_brief.md` | Route, three ordinary roles, room objectives, controls, boss patterns, and non-extermination rules are already product requirements. | The plan implements that authored proof rather than inventing procedural breadth. | Recheck if the product brief is superseded. |
 | `art/world/flooded_works/README.md`; `docs/design/UI_VISUAL_SYSTEM.md` | Drowned foundry, broad flat color masses, no outlines/noise, close-hue foregrounds, and separable gameplay props are accepted. | All new rooms and actor assets stay in one art family and keep gameplay state separate. | Recheck before asset production. |
+| `art/world/flooded_works/tiled/`; commit `b76c0fe` | A 4x4, 64 px, orthogonal authoring atlas, external `.tsx`, 16 individual tiles, and a parseable preview `.tmj` exist; `meters_per_tile` is 1.0 and the atlas is explicitly authoring-only. | Reuse this exact palette and IDs as the initial Tiled contract; do not treat the atlas as runtime floor art. | Recheck when the `.tsx` or manifest changes. |
+| `Get-Command tiled` and standard install paths, checked 2026-07-18 | Tiled is not installed on this machine. | Installing the selected signed Tiled 1.12.2 Windows release is an exact owner-approval gate; no package or runtime dependency is added. | Recheck immediately before installation. |
+| [Tiled JSON map format](https://doc.mapeditor.org/en/stable/reference/json-map-format/) and [Worlds](https://doc.mapeditor.org/en/stable/manual/worlds/), accessed 2026-07-18 | Finite orthogonal maps can store readable tile arrays, object layers, custom properties, and external tilesets; `.world` stores maps and authoring positions. | Commit finite uncompressed `.tmj` room sources plus one `.world` overview. | Recheck if pinned Tiled changes. |
+| [Tiled Godot 4 export](https://doc.mapeditor.org/en/stable/manual/export-tscn/), accessed 2026-07-18 | The built-in exporter targets Godot 4's 2D TileMap format. | Do not use it for this native 3D runtime; own a project-local `.tmj` parser and room builder. | Recheck only if the project returns to 2D. |
+| [Godot NavigationMeshGenerator](https://docs.godotengine.org/en/4.7/classes/class_navigationmeshgenerator.html), accessed 2026-07-18 | Godot 4.7 can parse generated 3D source geometry and bake a `NavigationMesh`. | Bake and save one navmesh per generated room during the build step, never during gameplay. | Recheck if the pinned engine changes. |
 | `art/ui/production/asset-manifest.json` | Potion, material, card, equipment, Slime King, and boss-core illustrations already have stable IDs. | Reuse UI identity assets later; do not crop concept boards into runtime sprites. | Recheck when the manifest changes. |
 | Git `7cc069c`: `CardDefinition`, `RewardTable`, `RewardService`, equipment resources | The retired build separated data, resolution, transaction, and UI responsibilities. | Recover boundary ideas only; rewrite every runtime owner for current 3D combat. | Historical source; never cherry-pick wholesale. |
 | [Godot NavigationAgent3D](https://docs.godotengine.org/en/4.7/classes/class_navigationagent3d.html), accessed 2026-07-18 | Setting a target requests a path; `get_next_path_position()` must be advanced from the physics loop, while the parent remains responsible for movement. | `EnemyMotor3D` owns velocity and calls the agent once per physics frame. | Recheck only if the pinned engine changes. |
@@ -73,13 +82,20 @@ explicit non-extermination completion policies.
 
 | Topic | Final decision | Rationale / source |
 | --- | --- | --- |
-| World form | Use five authored room scenes loaded one at a time under a persistent floor runtime. | A single huge scene wastes memory, complicates reset/navigation, and is not required for connectedness. |
+| World form | Use five authored Tiled room sources whose generated 3D scenes load one at a time under a persistent floor runtime. | A single huge scene wastes memory, complicates reset/navigation, and is not required for connectedness. |
+| Map source of truth | Use finite, orthogonal, uncompressed Tiled `.tmj` files at 64 px per cell and 1 cell = 1 m. The `.tmj`, shared `.tsx`, and `.world` are authored sources; generated `.tscn` files are committed runtime outputs. | Makes floor shape and room continuity directly inspectable while preserving native 3D gameplay. |
+| Tiled scope | Tiled owns ground cells, non-walkable regions, structure footprints, paired connection sockets, camera bounds, and named encounter/prop/objective anchors. It never owns combat timing, AI state, collision height, materials, or reward logic. | Keeps level layout editable without turning a 2D editor into the runtime engine. |
+| Conversion | `tools/tiled/build_flooded_works_rooms.gd` parses `.tmj`/`.tsx`, validates the contract, greedily merges same-role cells into 3D chunks, instances registered structures/components, bakes navigation, and saves deterministic generated scenes. Runtime never parses Tiled files. | Removes hand-copied coordinates and runtime importer risk. |
+| Generated ownership | Files under `scenes/rooms/flooded_works/generated/` are build products and must not be hand-edited. Each stores source path, source SHA-256, generator version, and tile-contract version metadata. | A `--check` build can reject stale or manually modified generated scenes. |
+| Layer contract | Every room has exactly one `ground` tile layer and object layers named `structures`, `connections`, `spawns`, `props`, `objectives`, and `camera_bounds`; unused required object layers remain present and empty. No other gameplay layer is accepted. | Stable names keep parsing, review, and validation deterministic. |
+| Floor overview | `flooded-works-floor1.world` arranges the five maps for human continuity review only. Runtime route and transitions still come from room definitions and reciprocal door socket data. | Tiled can show the whole floor without making every room resident. |
+| Tool installation | Use the official signed Tiled 1.12.2 Windows release after explicit owner approval. Do not add a Node/Python exporter, editor plugin, package-manager dependency, or Tiled runtime binary to the repository. | Minimizes supply-chain and maintenance surface. |
 | Connection | Every room ends at a matching Flooded Works gate. Transition locks input, fades out in 0.18 s, swaps the room, places the Traveler at the paired entry marker, and fades in in 0.18 s; target total is under 0.60 s. | Reads as one facility while keeping each encounter testable. |
 | Route | Movement Check -> Foundry Approach -> Pump Gallery -> Pressure Vault -> Slime King Reservoir. A post-Foundry transition hook is reserved for the future card reward without blocking this map/enemy plan. | Matches the proof brief and keeps progression implementation separate. |
 | Tutorial gate | Movement Check remains optional practice. Its north gate is available from the start; no forced checklist blocks the run. | The player can practice or immediately reach moving enemies. |
-| Terrain | All gameplay stays on one X/Z ground plane. Rooms vary through footprint, permanent cover, non-walkable water channels, machinery, and hazard placement, not stacked floors. | Preserves the accepted simulation/presentation split. |
+| Terrain | All gameplay stays on one X/Z ground plane. Tiled cells define logical occupancy; the converter merges them into broad 3D chunks and applies project materials so the shipped floor never reads as a repeated square tilemap. Rooms vary through footprint, permanent cover, non-walkable water channels, machinery, and hazard placement, not stacked floors. | Preserves the accepted simulation/presentation split and avoids visible tile repetition. |
 | Camera | Reuse the fixed orthographic angle and actor scale. Each room supplies camera bounds; foreground walls remain absent or below the Traveler silhouette. | Prevents the visibility regression already identified by the owner. |
-| Navigation | Each room has one editor-baked `NavigationRegion3D`. Permanent walls/cover are baked; movable or destructible props never create the only route. | Deterministic, inspectable paths with no runtime rebake dependency. |
+| Navigation | Each generated room has one build-time-baked `NavigationRegion3D`. Walkable Tiled cells and permanent structure footprints produce the source geometry; movable or destructible props never create the only route. | Deterministic, inspectable paths with no runtime rebake dependency. |
 | Ordinary roster | Implement exactly three roles: Pursuer, Shooter, Controller. Variance comes from placement, objective pressure, and later data variants, not unrelated enemy systems in this slice. | Smallest roster that tests close pressure, cover, and area denial. |
 | Coordination | One close-commit token and one pressure-commit token exist per encounter. Pursuers share the close token; Shooter and Controller share the pressure token. Waiting enemies keep repositioning. | At most two meaningful simultaneous threats remain readable. |
 | Attacks | Every enemy attack has startup, active, recovery, interruption, and defeat cleanup. Only the active startup/impact warning is shown; paths and predicted trajectories stay hidden. | Behavior should be understandable without debug-like UI. |
@@ -99,6 +115,10 @@ explicit non-extermination completion policies.
 | One seamless Floor 1 scene | No loading fade and a single physical layout. | Couples all encounters, navigation, reset state, and art memory before the loop is proven. |
 | Procedural/chunk-generated rooms | Could create more layouts quickly. | Repetition and encounter-quality problems would be harder to diagnose; authored rooms are the current product requirement. |
 | Restore retired Flooded Works rooms | Existing room IDs and layouts were broad. | They encode platform traversal, ropes, verticality, and side-view collision. |
+| Hand-author every room coordinate in `.tscn` | Uses only the Godot editor and has no converter cost. | Floor silhouettes, connections, markers, collision, and review would drift across separate representations. |
+| Use Tiled's built-in Godot 4 exporter | It already emits `.tscn`. | It targets 2D TileMap output and cannot own this project's merged 3D geometry, collision, object registry, or navmesh contract. |
+| Parse `.tmj` in the shipped game | Avoids committing generated scenes. | Moves authoring errors and expensive geometry/navigation work into runtime and makes builds depend on editor data. |
+| Use Godot `GridMap` as the authoring source | Directly places 3D mesh-library cells. | It is weaker for top-down whole-floor review and still encourages visible per-cell construction for the exact problem being corrected. |
 | Bake props/enemies into room images | Fast visual fidelity. | Breaks collision/state ownership and prevents reuse, damage, drops, and readable movement. |
 | Runtime navigation rebake on every crate break | Opens exact geometry after destruction. | Unnecessary cost and complexity because crates do not gate critical paths. |
 | Independent enemy attacks with no coordinator | Simplest individual AI. | Mixed groups can produce unreadable overlapping startups and unavoidable damage. |
@@ -131,6 +151,14 @@ Pursuer, taller crossbow Shooter, wide/grounded Controller, and larger Slime Kin
 The lower row defines the prop family but must be regenerated as individual
 runtime assets with required states.
 
+![Flooded Works Tiled authoring atlas](../../art/world/flooded_works/tiled/flooded-works-authoring-tiles.png)
+
+This 4x4 atlas is the editor vocabulary, not final floor art. The top two rows
+mark surface occupancy; the third row marks wall/cover/connection footprints;
+the fourth row marks player, enemy, prop, and objective anchors. The converter
+uses the `.tsx` properties and local tile IDs, then replaces them with merged 3D
+chunks, live components, and named markers.
+
 ## Current State
 
 Already true:
@@ -142,6 +170,11 @@ Already true:
   guard, potion, damage, pause, reset, and raster presentation pass validation.
 - Player projectiles already stop on `World` collision.
 - The far Flooded Works panel and same-hue architecture albedo are in use.
+- The committed Tiled authoring kit contains a 256 x 256 atlas, sixteen 64 x 64
+  individual tiles, an external `.tsx` with stable `asset_id`/role properties,
+  and a 4 x 4 preview `.tmj`; XML, JSON, references, and image sizes validate.
+- No Tiled application, production room `.tmj`, `.world`, parser, converter,
+  generated room directory, or source/generated drift validator exists yet.
 - No enemy AI, navigation region, room host, encounter objective, drop component,
   boss runtime, audio stream, audio bus layout, or settings store exists.
 
@@ -153,7 +186,10 @@ adjacent future contract, not a hidden seventh phase.
 In scope:
 
 - persistent Traveler/camera/HUD plus single-room loading and paired gate flow;
-- Movement Check migration and four new authored room scenes;
+- Tiled 1.12.2 finite orthogonal room sources, one shared tileset, one Floor 1
+  `.world`, a deterministic Godot 3D builder, committed generated room scenes,
+  and source/generated drift validation;
+- Movement Check migration and four new Tiled-authored, Godot-generated room scenes;
 - one navigation plane per room and three moving ordinary enemy roles;
 - encounter coordination, projectiles, zones, interruption, defeat, and cleanup;
 - arena-clear, two-pump activation, 45-second survival, and boss-defeat objectives;
@@ -173,6 +209,8 @@ Out of scope:
   elevation, or a free camera;
 - importing new third-party assets, music, or sound effects;
 - using generated concept boards directly as production sprites or textures.
+- using the Tiled authoring atlas as a runtime floor texture, rendering one 3D
+  mesh per painted cell, Tiled runtime parsing, or Tiled's 2D Godot exporter.
 
 Destructive or irreversible actions:
 
@@ -182,6 +220,8 @@ Destructive or irreversible actions:
 Exact actions requiring owner approval:
 
 - any external asset/dependency, paid or free;
+- installing the official signed Tiled 1.12.2 Windows application; approval is
+  for that authoring tool only and does not authorize extensions or packages;
 - a change to accepted player controls other than the additive `V` interact;
 - a second ground elevation or seamless/open-world streaming;
 - implementing progression beyond the related specification;
@@ -194,16 +234,109 @@ Exact actions requiring owner approval:
 - The current camera angle, Traveler scale, combat timings, and close-hue raster
   world are the baseline to preserve.
 - Concept images communicate target composition, not pixel-accurate runtime art.
+- Tiled is an offline authoring tool. The game, native build, and Web export must
+  run without Tiled installed and without `.tmj` parsing at runtime.
 - Physical gamepad availability is not assumed for automated checks; input-map
   parity is validated structurally and a physical-device gate remains manual.
 
 ## Open Questions
 
-None. `V` interact, linear authored route, room-by-room loading, three ordinary
-roles, exact objectives, prop behavior, upgrade boundary, and audio-setting scope
-are fixed for execution. New owner feedback may supersede them before Phase 1.
+None. Tiled 1.12.2, finite orthogonal `.tmj`, 64 px cells, 1 m world cells,
+project-owned 3D conversion, generated-scene ownership, `V` interact, linear
+authored route, room-by-room loading, three ordinary roles, exact objectives,
+prop behavior, upgrade boundary, and audio-setting scope are fixed for execution.
+The exact Tiled installation is approval-gated, not an unresolved technology
+choice. New owner feedback may supersede these decisions before Phase 1.
 
 ## Proposed Design
+
+### Tiled authoring and Godot build contract
+
+The editable and generated owners are deliberately separate:
+
+```text
+art/world/flooded_works/tiled/flooded-works-authoring.tsx
+data/rooms/flooded_works/tiled/
+  movement-check.tmj
+  foundry-approach.tmj
+  pump-gallery.tmj
+  pressure-vault.tmj
+  slime-king-reservoir.tmj
+  flooded-works-floor1.world
+data/rooms/flooded_works/tiled-room-build-catalog.tres
+  -> tools/tiled/build_flooded_works_rooms.gd --write
+scenes/rooms/flooded_works/generated/
+  MovementCheck3D.tscn
+  FoundryApproach3D.tscn
+  PumpGallery3D.tscn
+  PressureVault3D.tscn
+  SlimeKingReservoir3D.tscn
+data/rooms/flooded_works/generated-room-build-manifest.json
+```
+
+Only the `.tmj`, `.tsx`, `.world`, build catalog, and converter are edited by
+hand. Generated scenes and their baked navigation resources are committed so the
+runtime and Web export need neither Tiled nor an importer. The build manifest
+records generator/schema versions plus SHA-256 values for every source, tileset,
+catalog, and generated output. `--check` rejects any stale source hash, missing
+output, output hash drift, hand-edited generated scene, or unknown build version.
+
+All maps use a fixed orthogonal grid, JSON array tile data without base64 or
+compression, 64 x 64 editor pixels, and 1 x 1 m world cells. Infinite maps,
+embedded tilesets, flipped/rotated GID flags, image layers, isometric projection,
+scripts, and custom Tiled extensions are rejected. Tiled top is north; cell
+center `(column + 0.5, row + 0.5)` maps to Godot `(X, Z)` in meters, with north
+facing `-Z`. All gameplay remains at Y=0.
+
+Every room source uses exactly this layer schema:
+
+| Layer | Tiled type | Allowed content | Required instance properties |
+| --- | --- | --- | --- |
+| `ground` | tile layer | Local IDs 0-7 only: floor, water, void, hazard occupancy | Tile `.tsx` owns `asset_id`, `walkable`, and `runtime_role` |
+| `structures` | object layer | Tile objects using wall/low-cover IDs 8-9, snapped to the grid and scaled in whole cells | `anchor_id`, `archetype_id`, `height_class` = `standard` or `cutaway` |
+| `connections` | object layer | Tile objects using door/gate IDs 10-11 | `socket_id`, `target_room_id`, `target_socket_id`, `facing` = north/east/south/west |
+| `spawns` | object layer | Tile objects using player/enemy IDs 12-13 | `anchor_id`; enemies also require `spawn_group` and `enemy_role` |
+| `props` | object layer | Prop-anchor ID 14 | `anchor_id`, `component_id`, `drop_slot_id`; empty string means no drop |
+| `objectives` | object layer | Objective-anchor ID 15 | `anchor_id`, `objective_role` |
+| `camera_bounds` | object layer | Exactly one axis-aligned rectangle named `room_bounds` | No custom property; rectangle must contain all walkable cells |
+
+The map root requires `room_id`, `schema_version = 1`, and
+`meters_per_tile = 1.0`. Object names are cosmetic; stable IDs live in the
+properties above. Unknown layers, properties, tile IDs, component IDs, enemy
+roles, or objective roles fail the source validator instead of being ignored.
+The catalog maps `archetype_id` and `component_id` to project-owned PackedScenes,
+materials, collision profiles, and presentation owners; `.tmj` files never store
+Godot scene paths or geometry heights.
+
+The converter processes each room in this fixed order:
+
+1. Parse the external `.tsx` with `XMLParser` and the finite `.tmj` with `JSON`;
+   clear no GID flags because any transform flag is a validation failure.
+2. Validate the map/layer/property schema, required anchors, registered catalog
+   IDs, map bounds, camera bounds, and at least one reciprocal connection except
+   at the route endpoints.
+3. Merge adjacent `ground` cells with identical `asset_id`, `walkable`, and
+   `runtime_role` using deterministic row-major maximal rectangles. Emit broad
+   surface meshes/colliders rather than one mesh per tile. `void` and deep water
+   produce no walkable collider; the authoring PNG is never assigned as albedo.
+4. Instance registered walls, cutaway walls, low cover, gates, props, and marker
+   nodes at snapped transforms. Camera-facing boundary structures must use the
+   `cutaway` catalog variant or be absent.
+5. Build one `NavigationRegion3D` from walkable surface geometry minus permanent
+   structures, bake its `NavigationMesh`, then verify every required entry,
+   objective, and enemy anchor can reach its room exit. Destructible props are
+   excluded from bake-source geometry.
+6. Save the generated scene and update the build manifest only if every room and
+   every cross-room connection passes. A failure writes no partial output.
+
+Connection correctness is data-enforced. Every non-terminal socket ID is unique
+within its room and points to exactly one reciprocal socket. Reciprocal sockets
+must point back, face opposite directions, use the same 1 m or 3 m width, sit on
+walkable boundary cells, and retain a clear 2 m-deep landing strip. The converter
+creates the runtime entry marker 1.5 m inward from the socket center. The
+`.world` places adjacent map rectangles so paired socket centers align within one
+editor pixel; this is a human continuity check and never supplies runtime global
+coordinates.
 
 ### Floor route and transition flow
 
@@ -237,7 +370,7 @@ PivotRoot
     HUD                      health, potion, objective, boss, pause/settings
 ```
 
-Each room scene owns only its environment and encounter contract:
+Each generated room scene owns only its environment and encounter contract:
 
 ```text
 FloodedWorksRoom3D
@@ -262,9 +395,10 @@ FloodedWorksRoom3D
 | Pressure Vault | 26 m diameter | Circular pressure chamber, radial permanent cover, four vent sockets | Start: Pursuer + Shooter. At 15 s: Pursuer + Controller. At 30 s: two Pursuers + Shooter; maximum six alive. | Four timed vents; one side potion pickup available at 20 s if below cap | 45 seconds; no new spawns after completion; enemies may live |
 | Slime King Reservoir | 30 m diameter | Open reservoir basin, low ring edge, two pressure-node sockets, clear safe lanes | Slime King only; lane charge, landing slam, poison safe bands, pressure nodes | No crates during boss; guaranteed future reward socket after defeat | Boss defeated |
 
-Room coordinates and spawn anchors are authored in scenes; encounter resources
-reference anchor IDs, not raw global positions. A validator rejects missing or
-duplicate anchors before runtime.
+Room coordinates and spawn anchors are authored in `.tmj` sources and generated
+into scenes; encounter resources reference anchor IDs, not raw global positions.
+The Tiled source validator rejects missing or duplicate anchors before the room
+builder writes runtime output.
 
 ### Enemy roster and movement contract
 
@@ -373,9 +507,14 @@ enemy or prop script branches on a card/equipment/material ID.
 | Concern | Final owner | Interface or invariant | Existing owner to reuse or retire |
 | --- | --- | --- | --- |
 | Input registration | `scripts/main/pivot_root.gd` | Existing controls plus `interact`; no gameplay behavior | Extend current `_register_input_map()` |
+| Tiled authoring palette | `art/world/flooded_works/tiled/flooded-works-authoring.tsx`; atlas and individual tiles | Stable local tile IDs and authoring properties; never runtime art | Landed kit at `b76c0fe` |
+| Room layout source | `data/rooms/flooded_works/tiled/*.tmj`; `flooded-works-floor1.world` | Finite orthogonal schema, 1 m cells, paired sockets, named anchors | Replaces scene-authored coordinates |
+| Tiled build catalog | `data/rooms/flooded_works/tiled-room-build-catalog.tres` | Maps registered authoring IDs to project scenes/material/collision profiles | New; no Godot paths inside `.tmj` |
+| Room generation | `tools/tiled/tiled_source_parser.gd`; `tools/tiled/build_flooded_works_rooms.gd`; generated build manifest | Validate all sources, merge cells, instance catalog entries, bake nav, then atomically write | New; do not use Tiled's 2D exporter |
+| Generated rooms | `scenes/rooms/flooded_works/generated/*.tscn` | Committed runtime output with source/output hashes; no hand edits | Replaces hand-authored environment scenes |
 | Persistent floor runtime | `scenes/run/FloorRuntime3D.tscn`; `scripts/rooms/floor_route_controller_3d.gd` | Exactly one active room; persistent Traveler/camera/HUD; transition lock | Extract from `CombatSandbox3D.tscn` |
 | Room data | `scripts/rooms/room_definition_3d.gd`; `data/rooms/flooded_works/*.tres` | Stable room ID, scene, entry/exit, camera bounds, next ID, transition hook | New; no retired `RoomTemplateData` port |
-| Room scene contract | `scripts/rooms/flooded_works_room_3d.gd` | One nav region, named anchors, encounter, exit door | Migrate current sandbox geometry |
+| Room scene contract | `scripts/rooms/flooded_works_room_3d.gd` | One generated nav region, named anchors, encounter, exit door | Migrate current sandbox geometry through the Tiled builder |
 | Camera | `isometric_camera_3d.gd` | Reads active room bounds; angle/size remain accepted | Reuse and remove hard-coded center limits |
 | Damage transaction | `scripts/combat/damage_request_3d.gd`; receiver methods | One source/target activation hit; blockable is explicit | Replace positional integer-only method calls |
 | Enemy actor | `scripts/enemies/enemy_actor_3d.gd` | Health, stagger, target point, interruption, defeat cleanup | New; dummy remains a fixture |
@@ -394,6 +533,7 @@ enemy or prop script branches on a card/equipment/material ID.
 | Concern | As-is | To-be | Acceptance check | Guard / leftover check |
 | --- | --- | --- | --- | --- |
 | World | One monolithic sandbox scene | Persistent runtime plus five room scenes | Traverse every gate twice without stale state | No duplicate Traveler/camera/HUD under rooms |
+| Map authoring | Coordinates embedded in one hand-authored `.tscn` | Five finite `.tmj` sources, one `.world`, generated committed scenes | Change one source cell/socket, rebuild, and observe only deterministic expected output | Runtime contains no `.tmj` parser; generated scenes show no hash drift |
 | Map variation | One dry square | Dry foundry, water-channel gallery, circular pressure/boss spaces | Each room silhouette is identifiable without palette changes | No stacked nav or platform geometry |
 | Enemies | Three static resettable dummies | Three moving roles plus Slime King | Each ordinary role performs three legal cycles and recovers from obstruction | No fixed jump path, passive contact damage, or indefinite idle |
 | Coordination | None | Close/pressure token lanes | Mixed encounter never commits more than two threats | Waiting enemies still reposition |
@@ -406,7 +546,8 @@ enemy or prop script branches on a card/equipment/material ID.
 
 ## Milestones
 
-1. Persistent runtime and two connected rooms prove loading, camera bounds, and reset.
+1. Tiled parser/builder plus persistent runtime and two connected rooms prove
+   source-of-truth generation, loading, camera bounds, connection validation, and reset.
 2. Foundry Approach proves three moving roles, cover, coordination, and arena clear.
 3. Pump Gallery proves props, potion, interaction, and non-extermination activation.
 4. Pressure Vault proves sustained spawning, vents, survival, and cleanup.
@@ -415,50 +556,85 @@ enemy or prop script branches on a card/equipment/material ID.
 
 ## Tasks
 
-### Phase 1: Extract the persistent floor runtime and connect Movement Check
+### Phase 1: Establish Tiled room generation and connect Movement Check
 
-Goal: preserve current combat behavior while making rooms replaceable.
+Goal: preserve current combat behavior while making Tiled the inspectable layout
+source and generated Godot rooms safely replaceable.
 
-Source owners touched: `PivotRoot.tscn`, `pivot_root.gd`,
+Source owners touched: `art/world/flooded_works/tiled/`,
+`data/rooms/flooded_works/tiled/`, `tiled-room-build-catalog.tres`,
+`tools/tiled/`, `tools/validation/validate_tiled_room_sources.gd`,
+`scenes/rooms/flooded_works/generated/`, `PivotRoot.tscn`, `pivot_root.gd`,
 `CombatSandbox3D.tscn`, `scripts/rooms/`, `scenes/run/`,
-`scenes/player/Traveler3D.tscn`, `isometric_camera_3d.gd`, room data, validation.
+`scenes/player/Traveler3D.tscn`, `isometric_camera_3d.gd`, and room data.
 
-- [ ] **1.1 Reconcile the control/authority docs and add interact.**
+- [ ] **1.1 Install the selected authoring tool and freeze the project contract.**
+  - As-is: the committed atlas/`.tsx`/preview map exist, but Tiled is not
+    installed and no production map folder or `.world` exists.
+  - To-be: after explicit owner approval, install only the official signed Tiled
+    1.12.2 Windows application; open the committed preview and initialize the
+    production source directory without creating placeholder room maps.
+  - Accept: the installed executable reports 1.12.2, opens the committed preview
+    and external `.tsx` without repair prompts, and saves a no-op copy without
+    changing tile IDs, encoding, orientation, or layer names.
+  - Guard: add no Tiled binary, extension, script, package, runtime plugin, or
+    package-manager change to the repository. Without explicit approval, perform
+    no installation and do not begin map authoring.
+- [ ] **1.2 Implement the parser, build catalog, atomic builder, and validators.**
+  - As-is: Godot cannot consume the landed authoring files and rooms are manually
+    composed scenes.
+  - To-be: parse `.tsx`/`.tmj`/`.world`, enforce the exact schema and reciprocal
+    sockets, merge ground cells, instance registered structures/markers, bake one
+    navmesh, write generated scenes atomically, and record source/output hashes.
+  - Accept: preview and deliberately invalid fixtures prove every rejection rule;
+    two consecutive `--write` runs are byte-stable, and `--check` detects a changed
+    source, changed catalog, missing output, and one manual generated-scene edit.
+  - Guard: runtime scripts never parse `.tmj`; unknown data never degrades to a
+    generic object; a failed all-room build leaves every prior output untouched.
+- [ ] **1.3 Reconcile controls and extract the persistent actor/camera/HUD runtime.**
   - As-is: current runtime and product brief agree on Shift melee / Z ranged /
-    X guard, but `.agent/Prompt.md` retains an obsolete mapping and no interact.
+    X guard, but `.agent/Prompt.md` retains an obsolete mapping, no interact exists,
+    and the room scene owns Traveler, camera, projectiles, and HUD.
   - To-be: align active documentation and InputMap; add `interact` on `V` and
-    gamepad west-face without changing existing actions.
-  - Accept: the input validator sees every exact binding and no duplicate
-    keyboard event across combat/interact actions.
-  - Guard: no contextual combat substitution enters interaction handling.
-- [ ] **1.2 Extract the persistent actor/camera/HUD runtime.**
-  - As-is: room scene owns Traveler, camera, projectiles, and HUD.
-  - To-be: create `FloorRuntime3D`, an instanced Traveler scene, RoomHost,
-    persistent camera/effects/HUD, and route controller.
-  - Accept: current Movement Check behaves identically after extraction and the
-    existing movement/action validator still passes.
-  - Guard: room scenes contain no Traveler, camera, or duplicate global HUD.
-- [ ] **1.3 Migrate the sandbox into `MovementCheck3D` and add room definitions.**
-  - As-is: one testbed with hard-coded reset traversal.
-  - To-be: move environment/fixtures into the first Flooded Works room, add
-    contract anchors/navigation/camera bounds/open north exit, and define the
-    five-room route resources.
-  - Accept: room-contract validation finds one nav region, unique markers, one
-    exit, and exact next-room IDs for every definition.
-  - Guard: the retained background remains decorative and no room resource stores
-    arbitrary absolute player positions.
-- [ ] **1.4 Implement transition, snapshot, and cleanup.**
+    gamepad west-face; create `FloorRuntime3D`, an instanced Traveler scene,
+    RoomHost, persistent camera/effects/HUD, and route controller.
+  - Accept: the input validator sees every exact binding, Movement Check behaves
+    identically after extraction, and the existing movement/action validator passes.
+  - Guard: no contextual combat substitution enters interaction handling and
+    generated room scenes contain no Traveler, camera, or duplicate global HUD.
+- [ ] **1.4 Author all five final floor shells and connect Movement Check to Foundry.**
+  - As-is: Movement Check geometry and markers live only in one `.tscn`; Foundry
+    and the other four room shells have no source maps.
+  - To-be: reproduce current Movement Check in `movement-check.tmj`, author the
+    final footprint, permanent structure footprints, connections, and camera
+    bounds for Foundry, Pump, Pressure, and Reservoir from the locked room matrix;
+    align all five in `flooded-works-floor1.world`, generate every shell, and make
+    only Movement Check and Foundry active in the Phase 1 route.
+  - Accept: generated Movement Check matches current walkable extents, fixtures,
+    camera bounds, and north gate; all five final terrain silhouettes are distinct;
+    every reciprocal socket aligns within one editor pixel and every shell entry
+    reaches its exit on the baked navmesh.
+  - Guard: authoring atlas pixels never appear in the runtime; one-cell meshes,
+    stacked elevation, high camera-facing walls, and scene-local raw coordinates
+    outside generated output are absent. Later phases may add registered anchors
+    and components but do not replace these shells with temporary layouts.
+- [ ] **1.5 Implement transition, snapshot, and cleanup.**
   - As-is: no room change.
-  - To-be: lock input, fade, clear projectiles/effects, swap scene, restore the
-    Traveler snapshot, apply room camera bounds, and place at paired entry.
-  - Accept: loop Movement Check -> temporary Foundry fixture -> Movement Check
-    20 times with one Traveler, one camera, one HUD, and no orphan projectiles.
-  - Guard: transition hooks cannot mutate combat or progression state directly.
+  - To-be: lock input, fade, clear projectiles/effects, swap the generated scene,
+    restore the Traveler snapshot, apply generated camera bounds, and place at the
+    builder-created paired entry marker.
+  - Accept: loop Movement Check -> Foundry shell -> Movement Check 20 times with
+    one Traveler, one camera, one HUD, valid source/output hashes, and no orphan
+    projectiles; each transition remains under 0.60 s in the native build.
+  - Guard: transition hooks cannot mutate combat or progression state directly;
+    no runtime code reads `.tmj`, `.tsx`, or `.world`.
 
-Batch acceptance: current movement/action checks pass, room contract checks pass,
-and the first gate transition remains under 0.60 s in the native build.
+Batch acceptance: Tiled source/build validation, deterministic generation,
+current movement/action checks, room contracts, reciprocal sockets, nav reachability,
+and the first gate transition all pass from a clean checkout.
 
-Batch guard: no enemy, drop, boss, card, wallet, or settings implementation yet.
+Batch guard: no enemy, drop, boss, card, wallet, settings implementation, runtime
+Tiled dependency, or hand-edited generated room enters this phase.
 
 ### Phase 2: Implement moving enemy foundations and Foundry Approach
 
@@ -467,7 +643,8 @@ position, attack, recover, and clean up.
 
 Source owners touched: `scripts/combat/`, `scripts/enemies/`,
 `scripts/encounters/`, `scenes/enemies/flooded_works/`,
-`data/enemies/flooded_works/`, `FoundryApproach3D.tscn`, validation fixtures.
+`data/enemies/flooded_works/`, `foundry-approach.tmj`, generated
+`FoundryApproach3D.tscn`, validation fixtures.
 
 - [ ] **2.1 Introduce the typed 3D damage request.**
   - As-is: player/dummy/pulse methods pass positional integers and source IDs.
@@ -494,8 +671,9 @@ Source owners touched: `scripts/combat/`, `scripts/enemies/`,
     attack outside an active state.
 - [ ] **2.4 Add threat coordination and build Foundry Approach.**
   - As-is: no mixed encounter or objective owner.
-  - To-be: add close/pressure tokens, two fixed waves, permanent cover, spawn
-    anchors, arena-clear objective, exit unlock, and deterministic retry.
+  - To-be: add close/pressure tokens and two fixed waves; finish the Foundry
+    `.tmj` with permanent cover, spawn/objective anchors, and registered components;
+    rebuild the generated room, arena-clear objective, exit unlock, and retry.
   - Accept: five enemies spawn in the exact matrix; only arena clear unlocks the
     gate; Shooter shots terminate on cover; no more than two threats commit.
   - Guard: enemy scripts do not decide room completion or spawn the next wave.
@@ -513,7 +691,7 @@ not through a larger extermination wave.
 
 Source owners touched: `scripts/rooms/props/`, `scenes/rooms/components/`,
 `data/items/pickups/`, `scripts/encounters/objectives/activation_objective_3d.gd`,
-`PumpGallery3D.tscn`, validation.
+`pump-gallery.tmj`, generated `PumpGallery3D.tscn`, validation.
 
 - [ ] **3.1 Implement generic prop damage and one-shot drop resolution.**
   - As-is: only permanent cover is damageable through dummy-specific methods.
@@ -531,8 +709,9 @@ Source owners touched: `scripts/rooms/props/`, `scenes/rooms/components/`,
   - Guard: no material/card/equipment effect enters the pickup resolver.
 - [ ] **3.3 Build Pump Gallery and activation objective.**
   - As-is: Foundry is the only live enemy room.
-  - To-be: author water-channel terrain, crossings, two pumps, cover, exact three
-    enemies, props, optional potion condition, and non-extermination exit.
+  - To-be: author `pump-gallery.tmj` with water-channel ground cells, two broad
+    crossings, registered pump/cover/spawn/prop/objective anchors, reciprocal
+    sockets and camera bounds; rebuild the room and non-extermination exit.
   - Accept: activate both pumps and leave while at least one enemy is alive;
     objective/door/HUD agree and new attacks cease after completion.
   - Guard: water has no hidden elevation or invisible slow effect in this phase.
@@ -548,7 +727,8 @@ Batch guard: no material wallet, random drop table, reward choice, or persistent
 Goal: prove sustained mixed pressure and a second non-extermination policy.
 
 Source owners touched: `pressure_vent_3d.gd`, survival objective, encounter wave
-resources, `PressureVault3D.tscn`, route controller, HUD, validation.
+resources, `pressure-vault.tmj`, generated `PressureVault3D.tscn`, route
+controller, HUD, validation.
 
 - [ ] **4.1 Implement the pressure vent state component.**
   - As-is: only the Movement Check pulse has a similar timing proof.
@@ -559,8 +739,9 @@ resources, `PressureVault3D.tscn`, route controller, HUD, validation.
   - Guard: vent visuals never become navigation or collision truth.
 - [ ] **4.2 Build the 45-second survival encounter.**
   - As-is: fixed two-wave arena only.
-  - To-be: add exact start/15 s/30 s waves, six-living cap, radial cover, vent
-    sockets, side potion condition, timer objective, and north exit.
+  - To-be: author `pressure-vault.tmj` with the circular logical footprint,
+    registered radial cover/vent/spawn/potion/objective anchors and reciprocal
+    sockets; add exact start/15 s/30 s waves, six-living cap, timer, and exit.
   - Accept: the timer completes at 45 s with living enemies; spawning stops,
     exit opens, and remaining actors unload only after transition.
   - Guard: no hidden kill count or global clear fallback gates completion.
@@ -585,8 +766,9 @@ Goal: close Floor 1 with the existing boss identity and replace diagnostic
 enemy/prop visuals only after behavior is accepted.
 
 Source owners touched: `scripts/bosses/`, `data/bosses/flooded_works/`,
-`SlimeKingReservoir3D.tscn`, enemy/prop presentation scripts, new manifest-backed
-assets under `art/world/flooded_works/isometric/`, HUD, validation.
+`slime-king-reservoir.tmj`, generated `SlimeKingReservoir3D.tscn`, enemy/prop
+presentation scripts, new manifest-backed assets under
+`art/world/flooded_works/isometric/`, HUD, validation.
 
 - [ ] **5.1 Implement the boss scheduler and four patterns.**
   - As-is: retained Slime King illustration only.
@@ -598,8 +780,9 @@ assets under `art/world/flooded_works/isometric/`, HUD, validation.
     unavoidable full-room overlap.
 - [ ] **5.2 Author the reservoir room and boss objective.**
   - As-is: Pressure gate has no destination.
-  - To-be: add circular basin, low ring, node sockets, boss HUD, defeat exit/result
-    hook, death/retry snapshot, and future reward source socket.
+  - To-be: author `slime-king-reservoir.tmj` with the circular basin ground,
+    registered low-ring/node/objective/reward anchors, reciprocal entry socket and
+    camera bounds; rebuild it and add boss HUD, result hook, and retry snapshot.
   - Accept: boss can be defeated, retried, and defeated again without stale
     nodes/zones/projectiles; result hook fires once.
   - Guard: no material/card/equipment grant is applied here.
@@ -660,11 +843,16 @@ Batch guard: completion authorizes no push/publish or content expansion by itsel
 Inner-loop commands:
 
 - `./tools/godot.ps1 --path . --headless --import`
+- `./tools/godot.ps1 --path . --headless --script res://tools/tiled/build_flooded_works_rooms.gd -- --check`
 - `./tools/godot.ps1 --path . --headless --script res://tools/validation/validate_movement_and_actions.gd`
 - phase-specific validators only after the owned behavior changes.
 
 Planned focused validators:
 
+- `validate_tiled_room_sources.gd`: `.tsx`/`.tmj`/`.world` schema, finite
+  uncompressed data, tile IDs, layer names, properties, catalog IDs, reciprocal
+  sockets, world alignment, camera bounds, clear landing strips, anchor IDs,
+  nav reachability, build hashes, and generated-output drift.
 - `validate_floor1_room_contracts.gd`: IDs, scene paths, one navigation region,
   paired markers, camera bounds, objectives, spawn/prop anchors, and next links.
 - `validate_enemy_navigation_and_actions.gd`: three roles, repeated cycles,
@@ -680,6 +868,8 @@ Planned focused validators:
 
 Batch gates:
 
+- Tiled source validation and generator `--check` after every atlas, catalog,
+  `.tmj`, `.world`, converter, or generated-room change.
 - Current movement/action validator after every shared player/combat change.
 - Room-contract and route validators after every room/transition change.
 - Enemy/action validator after every AI/navigation change.
@@ -688,6 +878,8 @@ Batch gates:
 Final gates:
 
 - Full import and every validator pass with exit code 0.
+- A clean-checkout room `--write` followed by `--check` produces no Git diff and
+  every generated output hash matches the committed build manifest.
 - Web export through `./tools/export_web.ps1`.
 - Production-style start through the fastrun manager `codex` lane after loading
   `$npjt-port-guard`.
@@ -706,6 +898,11 @@ Rerun policy:
 
 | Trigger | Required response | Limit / escalation point |
 | --- | --- | --- |
+| Tiled installation is not approved or the signed 1.12.2 build is unavailable | Do not install an alternative version, package, extension, or unsigned build; retain the landed kit and report Phase 1 as approval-blocked. | Resume only with exact owner approval or an owner-selected replacement version followed by plan revision. |
+| `.tmj` uses an unsupported layer, encoding, GID transform, property, or catalog ID | Reject the entire all-room build with file/layer/object context and preserve previous outputs. | Do not silently ignore, coerce, or invent a fallback object. |
+| Paired sockets fail reciprocity, width/facing, landing-strip, or `.world` alignment | Keep both rooms ungenerated and report both socket IDs and expected relation. | Do not compensate with runtime teleport offsets or unpaired coordinates. |
+| Generated scene or build hash drifts | Regenerate all affected rooms with the pinned generator; if a manual edit exists, move the intended change to `.tmj` or the build catalog and regenerate. | Never bless or preserve a hand edit under `generated/`. |
+| Navigation bake cannot reach a required anchor | Report source/target anchor IDs and the blocking merged cell/structure bounds; correct the `.tmj` or registered footprint. | Do not add straight-line movement, teleport, or runtime rebake fallback. |
 | Enemy lacks a valid path after map synchronization | Delay first target assignment one physics frame, verify the room map RID, then fail the room validator with actor/anchor IDs. | Do not add direct-through-wall fallback. |
 | Enemy stalls | Apply the exact refresh/lateral/role-anchor sequence and record the last state/path point. | Three failures in five seconds abort the action; repeated fixture failure blocks the phase. |
 | Dynamic crate avoidance causes crowding | Move the authored crate slot or increase side clearance; keep permanent nav mesh unchanged. | Never rely on a dynamic obstacle in a narrow corridor. |
@@ -721,6 +918,13 @@ Rerun policy:
 
 - Commit each phase separately after its batch gates pass.
 - Preserve unrelated `.import` changes and never stage them with plan-owned files.
+- Commit authored `.tmj`/`.world` sources, catalog/converter changes, generated
+  scenes, and the refreshed build manifest together. A source change without its
+  generated output, or generated output without its source, fails the commit gate.
+- Roll back a room by reverting its source and generated output together, then
+  rerun `--check`; never repair a generated `.tscn` directly.
+- Keep Tiled outside the shipped application and repository. Uninstalling the
+  authoring application must not change native/Web runtime behavior.
 - Keep the current player timings, targeting, and presentation isolated from room
   migration so a room/AI phase can be reverted without losing accepted controls.
 - Do not delete the original concept sources or generated-image originals.
@@ -734,6 +938,15 @@ Rerun policy:
   change node paths and initialization order; the existing validator is the guard.
 - Navigation avoidance can appear correct in open space but fail near props;
   permanent geometry and authored clearance remain primary.
+- Tiled can create a false sense that its square authoring cells are final art;
+  the builder must merge cells and assign broad runtime materials, and rendered
+  captures must reject obvious one-meter repetition.
+- A converter bug can reproduce the same wrong geometry in all five rooms;
+  source fixtures, Movement Check parity, reciprocal socket tests, and generated
+  output hashes are independent gates before further room authoring.
+- `.tmj` and generated-scene edits can conflict in Git if ownership is ignored;
+  generated files are never hand-merged semantically and must be regenerated from
+  the resolved source/catalog version.
 - Three roles can still feel repetitive if only their stats differ; room
   objectives, role distance, cover, and token behavior must create the variation.
 - The route concept image shows more resident world than the runtime will load;
@@ -756,6 +969,12 @@ Rerun policy:
   implementation inside this map/enemy plan.
 - 2026-07-18: verified that current master has no playable audio asset and limited
   settings to Master/SFX infrastructure.
+- 2026-07-18: selected Tiled 1.12.2 finite orthogonal `.tmj` maps as the editable
+  room-layout source and rejected the built-in 2D Godot exporter.
+- 2026-07-18: fixed a project-owned build-time `.tmj` -> merged native 3D scene
+  pipeline; runtime parsing and hand-edited generated scenes are prohibited.
+- 2026-07-18: landed the 16-tile Flooded Works authoring kit at `b76c0fe`; the
+  atlas is editor vocabulary and never a runtime surface texture.
 
 ## Progress
 
@@ -763,7 +982,11 @@ Rerun policy:
   progression boundaries, and Godot 4.7 navigation/audio evidence inspected.
 - [x] Three visual direction images generated and saved in the repository.
 - [x] Upgrade-system future contract documented separately.
-- [ ] Phase 1: persistent runtime and connected Movement Check.
+- [x] Initial 16-tile Tiled authoring atlas, external `.tsx`, individual tile
+  images, preview `.tmj`, manifest entry, and generation record landed at `b76c0fe`.
+- [x] Tiled/Godot source, conversion, validation, approval, and generated-output
+  contracts integrated into this execution plan.
+- [ ] Phase 1: Tiled room builder, persistent runtime, and connected Movement Check.
 - [ ] Phase 2: moving enemies and Foundry Approach.
 - [ ] Phase 3: props, potion, pumps, and Pump Gallery.
 - [ ] Phase 4: Pressure Vault and ordinary route.
@@ -772,18 +995,27 @@ Rerun policy:
 
 ## Next Steps
 
-1. Execute Phase 1 only: reconcile controls, extract the persistent runtime, and
-   connect Movement Check to a temporary Foundry fixture.
-2. Do not generate production enemy art until the Phase 2 diagnostic actors pass
+1. Obtain exact approval for the signed Tiled 1.12.2 Windows authoring tool; do
+   not install an alternative tool, extension, or package.
+2. Execute Phase 1 only: implement parser/builder/validator, author all five final
+   floor shells in `.tmj`/`.world`, reproduce Movement Check exactly, extract the
+   persistent runtime, and connect Movement Check to the generated Foundry shell.
+3. Do not generate production enemy art until the Phase 2 diagnostic actors pass
    navigation, coordination, and obstruction tests.
-3. Continue one phase at a time, committing only after each batch gate.
-4. Start progression implementation only after this floor receives an owner
+4. Continue one phase at a time, committing authored and generated map owners
+   together only after each batch gate.
+5. Start progression implementation only after this floor receives an owner
    `Expand` decision and a separate plan is activated.
 
 ## Completion Criteria
 
 - [ ] All five rooms load through matching gates with one persistent Traveler,
   camera, HUD, and clean transition state.
+- [ ] All five room layouts originate from finite orthogonal `.tmj` files sharing
+  the committed `.tsx`; the `.world` shows aligned connections, generation is
+  deterministic, `--check` passes, and no generated scene is hand-edited.
+- [ ] Runtime/native/Web builds contain no Tiled parser or Tiled dependency, and
+  the authoring atlas is not used as a floor texture.
 - [ ] Terrain silhouettes differ while palette, scale, gate language, camera, and
   one-plane navigation remain coherent.
 - [ ] Pursuer, Shooter, and Controller move continuously, attack only through
@@ -809,8 +1041,9 @@ Complete when:
 
 Escalate only when:
 
-- a required external asset/dependency, control change, extra elevation, route
-  expansion, or progression implementation becomes necessary;
+- approval for the exact signed Tiled 1.12.2 authoring installation is withheld,
+  or a required external asset/dependency, control change, extra elevation,
+  route expansion, or progression implementation becomes necessary;
 - the same pathfinding/transition/art blocker persists after the exact contingency
   and two concrete correction attempts.
 
@@ -832,14 +1065,18 @@ AGENTS.md
 docs/product/isometric_action_rpg_product_brief.md
 .agent/execplans/2026-07-18-flooded-works-floor1-map-enemies.md
 docs/design/concepts/flooded-works-floor1/README.md
+art/world/flooded_works/tiled/flooded-works-authoring.tsx
 
 Execute exactly:
-Start at Phase 1. Preserve current player behavior, extract the persistent runtime,
-and connect Movement Check before adding any enemy.
+Start at Phase 1. After exact Tiled installation approval, implement the source
+validator and atomic room builder, reproduce Movement Check in `.tmj`, author the
+final Foundry floor shell, preserve current player behavior, extract the persistent
+runtime, and connect the two generated rooms before adding any enemy.
 
 Validate with:
-The current movement/action validator plus the phase-specific validators and
-viewport/build gates listed above.
+The Tiled source validator and generator `--check`, then the current
+movement/action validator plus the phase-specific validators and viewport/build
+gates listed above.
 
 Stop when:
 The current phase batch passes and has a scoped commit, or an explicit escalation
