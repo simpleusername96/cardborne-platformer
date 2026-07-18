@@ -22,6 +22,14 @@
       "id": "state_component_direction_sheet",
       "output": "res://art/source/flooded_works/state-component-source-sheet.png",
       "prompt": "Create poison-vent and crumbling-platform component families on a removable flat magenta background. Each family has one isolated canonical base and separate isolated state overlays; the overlays never duplicate or change the base body/pivot. Use the Flooded flat palette with no outlines, text, noise, tiny repeated details, or perspective drift."
+    },
+    {
+      "id": "tiled_authoring_tileset",
+      "date": "2026-07-18",
+      "output": "res://art/world/flooded_works/tiled/flooded-works-authoring-tiles.png",
+      "derived_tiles": "res://art/world/flooded_works/tiled/tiles/",
+      "postprocess": "Normalize the generated 4x4 atlas to sixteen 64x64 cells, crop away separator pixels, and assemble a 256x256 atlas without changing tile order.",
+      "prompt": "Create exactly sixteen orthographic top-down Flooded Works authoring tiles in a strict 4x4 atlas: four floor surfaces; shallow water, deep water, void, and pressure hazard; wall, low cover, narrow door, and wide gate footprints; player, enemy, prop, and objective markers. Use broad outline-free flat charcoal, blue-green, slate teal, and muted verdigris planes with only restrained semantic cyan, coral, and mustard accents. No text, labels, perspective, characters, noise, microtexture, or objects crossing cells."
     }
   ]
 }

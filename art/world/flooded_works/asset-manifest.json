@@ -3,6 +3,15 @@
   "stage_id": "flooded_works",
   "status": "representative_room_runtime_proof",
   "loading_policy": "current_location_only",
+  "tiled_authoring": {
+    "atlas": "res://art/world/flooded_works/tiled/flooded-works-authoring-tiles.png",
+    "tileset": "res://art/world/flooded_works/tiled/flooded-works-authoring.tsx",
+    "preview_map": "res://art/world/flooded_works/tiled/flooded-works-authoring-kit-preview.tmj",
+    "tile_size_px": [64, 64],
+    "meters_per_tile": 1.0,
+    "tile_count": 16,
+    "disposition": "authoring metadata only; Godot 3D geometry remains runtime truth"
+  },
   "background": {
     "panel_size": [2048, 1536],
     "overlap": 192,
