@@ -40,8 +40,13 @@ func _run() -> void:
 	await create_timer(16.0).timeout
 	for enemy in wave_two:
 		_expect(int(cycles.get(enemy.get_instance_id(), 0)) >= 3, "%s did not complete three mixed-role cycles" % enemy.role)
+		var health_bar := enemy.get_node_or_null("HealthBar") as EnemyHealthBar3D
+		_expect(health_bar != null and health_bar.visible, "%s has no visible health bar" % enemy.role)
+		var previous_fill := health_bar.fill.scale.x if health_bar != null else 0.0
 		var stagger_result: DamageResult3D = enemy.apply_damage(DamageRequest3D.new(1, 20, DamageRequest3D.Team.PLAYER, &"interrupt"))
 		_expect(stagger_result.accepted and enemy.state == EnemyActor3D.State.STAGGER, "%s did not enter legal stagger interruption" % enemy.role)
+		if health_bar != null:
+			_expect(health_bar.fill.scale.x < previous_fill, "%s health bar did not reflect damage" % enemy.role)
 	await create_timer(0.35).timeout
 	_expect(get_nodes_in_group(&"combat_projectiles").size() <= 3, "enemy projectile count is unbounded")
 	pivot.queue_free()

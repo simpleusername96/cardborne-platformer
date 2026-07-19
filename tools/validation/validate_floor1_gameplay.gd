@@ -107,6 +107,8 @@ func _validate_boss(runtime: FloorRuntime3D) -> void:
 	await create_timer(0.35).timeout
 	var encounter := runtime.current_room.get_node("SlimeKingEncounter3D") as SlimeKingEncounter3D
 	_expect(encounter.boss != null and encounter.boss.health == SlimeKing3D.MAX_HEALTH, "Slime King did not spawn at 600 HP")
+	var boss_health_bar := encounter.boss.get_node_or_null("HealthBar") as EnemyHealthBar3D
+	_expect(boss_health_bar != null and boss_health_bar.visible, "Slime King has no visible health bar")
 	var first_boss_id := encounter.boss.get_instance_id()
 	runtime.traveler.defeated.emit()
 	await create_timer(0.65).timeout
@@ -117,6 +119,10 @@ func _validate_boss(runtime: FloorRuntime3D) -> void:
 	while patterns.size() < 4 and Time.get_ticks_msec() < deadline:
 		await create_timer(0.1).timeout
 	_expect(patterns.size() == 4 and patterns.duplicate().all(func(id: StringName) -> bool: return patterns.count(id) == 1), "boss scheduler did not expose four non-repeating patterns")
+	var previous_fill := boss_health_bar.fill.scale.x if boss_health_bar != null else 0.0
+	encounter.boss.apply_damage(DamageRequest3D.new(100, 0, DamageRequest3D.Team.PLAYER, &"validator"))
+	if boss_health_bar != null:
+		_expect(boss_health_bar.fill.scale.x < previous_fill, "Slime King health bar did not reflect damage")
 	encounter.boss.apply_damage(DamageRequest3D.new(999, 0, DamageRequest3D.Team.PLAYER, &"validator"))
 	await process_frame
 	_expect(encounter.encounter_completed and encounter.result_emitted, "boss defeat result hook did not fire exactly once")

@@ -1,6 +1,7 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/enemies/enemy_actor_3d.gd" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/ui/EnemyHealthBar3D.tscn" id="2"]
 [sub_resource type="CapsuleShape3D" id="1"]
 radius = 0.48
 height = 1.45
@@ -22,3 +23,5 @@ mesh = SubResource("2")
 [node name="NavigationAgent3D" type="NavigationAgent3D" parent="."]
 [node name="TargetPoint" type="Marker3D" parent="."]
 position = Vector3(0, 0.75, 0)
+[node name="HealthBar" parent="." instance=ExtResource("2")]
+position = Vector3(0, 1.7, 0)

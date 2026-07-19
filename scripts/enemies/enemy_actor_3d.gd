@@ -23,6 +23,7 @@ var combat_suspended := false
 
 @onready var agent: NavigationAgent3D = $NavigationAgent3D
 @onready var visual: MeshInstance3D = $Visual
+@onready var health_bar: EnemyHealthBar3D = $HealthBar
 
 
 func _ready() -> void:
@@ -38,6 +39,7 @@ func _ready() -> void:
 	agent.target_desired_distance = 0.75
 	motor = EnemyMotor3D.new(self, agent)
 	_apply_role_profile()
+	health_bar.set_health(health, max_health)
 
 
 func configure(next_target: Traveler3D, next_coordinator: ThreatCoordinator3D) -> void:
@@ -78,6 +80,7 @@ func apply_damage(request: DamageRequest3D) -> DamageResult3D:
 	if state == State.DEFEATED or request.team != DamageRequest3D.Team.PLAYER:
 		return DamageResult3D.rejected()
 	health = maxi(0, health - request.damage)
+	health_bar.set_health(health, max_health)
 	if health <= 0:
 		_defeat()
 		return DamageResult3D.applied(request.damage, request.stagger, true)

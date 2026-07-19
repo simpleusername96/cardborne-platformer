@@ -96,7 +96,7 @@ text = "CARDBORNE · FLOODED WORKS"
 [node name="Status" type="Control" parent="HUD/Root"]
 offset_left = 28.0
 offset_top = 65.0
-offset_right = 330.0
+offset_right = 390.0
 offset_bottom = 145.0
 
 [node name="HealthTrack" type="ColorRect" parent="HUD/Root/Status"]
@@ -136,6 +136,27 @@ color = Color(0.831373, 0.639216, 0.247059, 1)
 [node name="Potion3" type="ColorRect" parent="HUD/Root/Status/Potions"]
 custom_minimum_size = Vector2(18, 12)
 color = Color(0.831373, 0.639216, 0.247059, 1)
+
+[node name="RangedValue" type="Label" parent="HUD/Root/Status"]
+offset_left = 224.0
+offset_top = 27.0
+offset_right = 340.0
+offset_bottom = 50.0
+theme_override_colors/font_color = Color(0.768627, 0.858824, 0.85098, 1)
+theme_override_font_sizes/font_size = 14
+text = "Z  ARROW  ∞"
+
+[node name="RangedReadyTrack" type="ColorRect" parent="HUD/Root/Status"]
+offset_left = 224.0
+offset_top = 55.0
+offset_right = 312.0
+offset_bottom = 59.0
+color = Color(0.117647, 0.160784, 0.172549, 0.92)
+
+[node name="RangedReadyFill" type="ColorRect" parent="HUD/Root/Status/RangedReadyTrack"]
+offset_right = 88.0
+offset_bottom = 4.0
+color = Color(0.423529, 0.694118, 0.670588, 1)
 
 [node name="ActionTrace" type="Label" parent="HUD/Root"]
 anchor_left = 0.5
@@ -186,7 +207,7 @@ offset_bottom = -18.0
 grow_horizontal = 2
 theme_override_colors/font_color = Color(0.73, 0.80, 0.78, 1)
 theme_override_font_sizes/font_size = 14
-text = "ARROWS MOVE  ·  SPACE DASH  ·  SHIFT MELEE  ·  Z RANGED  ·  X GUARD  ·  C POTION  ·  V INTERACT  ·  ESC PAUSE"
+text = "ARROWS MOVE  ·  SPACE DASH  ·  SHIFT MELEE  ·  Z RANGED ∞  ·  X GUARD  ·  C POTION  ·  V INTERACT  ·  ESC PAUSE"
 horizontal_alignment = 1
 
 [node name="PauseOverlay" type="ColorRect" parent="HUD/Root"]

@@ -3,6 +3,7 @@ extends SceneTree
 const ParserScript := preload("res://tools/tiled/tiled_source_parser.gd")
 const RoomScript := preload("res://scripts/rooms/flooded_works_room_3d.gd")
 const GateScript := preload("res://scripts/rooms/room_gate_3d.gd")
+const FLOOR_ALBEDO := preload("res://art/world/flooded_works/isometric/surfaces/foundry-architecture-albedo-v1.png")
 
 const MAP_DIR := "res://data/rooms/flooded_works/tiled"
 const WORLD_PATH := MAP_DIR + "/flooded-works-floor1.world"
@@ -570,9 +571,15 @@ func _surface_material(local_id: int) -> StandardMaterial3D:
 	elif local_id == 7:
 		material.albedo_color = Color("59433b")
 	elif local_id == 3:
-		material.albedo_color = Color("38585a")
+		material.albedo_texture = FLOOR_ALBEDO
+		material.albedo_color = Color("b5cbc5")
 	else:
-		material.albedo_color = Color("29484a")
+		material.albedo_texture = FLOOR_ALBEDO
+		material.albedo_color = Color("9db7b2")
+	if material.albedo_texture != null:
+		material.uv1_triplanar = true
+		material.uv1_world_triplanar = true
+		material.uv1_scale = Vector3.ONE * 0.05
 	return material
 
 

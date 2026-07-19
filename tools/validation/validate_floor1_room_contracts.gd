@@ -47,6 +47,7 @@ func _validate_generated_rooms() -> void:
 			_expect(region.navigation_mesh.get_polygon_count() > 0, "%s navigation mesh has no polygons" % room_id)
 		var ground_count := room.get_node("Ground").get_child_count()
 		_expect(ground_count < int(room.map_size_m.x * room.map_size_m.y * 0.35), "%s still reads as per-cell geometry" % room_id)
+		_validate_entry_landing_strips(room)
 		silhouettes["%s:%s:%s" % [room.map_size_m, ground_count, room.get_node("Structures").get_child_count()]] = true
 		room.queue_free()
 	_expect(silhouettes.size() == ROOM_PATHS.size(), "room silhouettes are not structurally distinct")
@@ -62,6 +63,8 @@ func _validate_persistent_route() -> void:
 	var traveler_id := runtime.traveler.get_instance_id()
 	var camera_id := runtime.camera_rig.get_instance_id()
 	var hud_id := runtime.get_node("HUD").get_instance_id()
+	var ranged_value := runtime.get_node("HUD/Root/Status/RangedValue") as Label
+	_expect(ranged_value.text.contains("∞"), "ranged HUD does not communicate unlimited arrows")
 	_expect(runtime.current_room_id == &"movement_check", "floor did not start in Movement Check")
 	for _cycle in 20:
 		await runtime._on_transition_requested(&"foundry_approach", &"foundry_south")
@@ -75,6 +78,13 @@ func _validate_persistent_route() -> void:
 	_expect(get_nodes_in_group(&"combat_projectiles").is_empty(), "orphan projectiles remain")
 	pivot.queue_free()
 	await process_frame
+
+
+func _validate_entry_landing_strips(room: FloodedWorksRoom3D) -> void:
+	for entry: Marker3D in room.get_node("EntryMarkers").get_children():
+		for prop: Marker3D in room.get_node("Props").get_children():
+			var delta := Vector2(entry.position.x - prop.position.x, entry.position.z - prop.position.z)
+			_expect(delta.length() >= 4.0, "%s/%s has prop %s inside the 4 m landing strip" % [room.room_id, entry.name, prop.name])
 
 
 func _expect(condition: bool, message: String) -> void:

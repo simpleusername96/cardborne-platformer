@@ -2,6 +2,7 @@ class_name CombatSandboxHud3D
 extends CanvasLayer
 
 const HEALTH_WIDTH := 240.0
+const RANGED_READY_WIDTH := 88.0
 
 var trace_remaining := 0.0
 
@@ -14,6 +15,8 @@ var trace_remaining := 0.0
 	$Root/Status/Potions/Potion3,
 ]
 @onready var trace_label: Label = $Root/ActionTrace
+@onready var ranged_value := get_node_or_null("Root/Status/RangedValue") as Label
+@onready var ranged_ready_fill := get_node_or_null("Root/Status/RangedReadyTrack/RangedReadyFill") as ColorRect
 @onready var pause_overlay: ColorRect = $Root/PauseOverlay
 @onready var master_slider := get_node_or_null("Root/PauseOverlay/Settings/Master") as HSlider
 @onready var sfx_slider := get_node_or_null("Root/PauseOverlay/Settings/SFX") as HSlider
@@ -51,6 +54,10 @@ func _exit_tree() -> void:
 func _process(delta: float) -> void:
 	trace_remaining = maxf(0.0, trace_remaining - delta)
 	trace_label.modulate.a = clampf(trace_remaining / 0.25, 0.0, 1.0) if trace_remaining < 0.25 else 1.0
+	if ranged_value != null and ranged_ready_fill != null:
+		var ready_ratio := 1.0 - traveler.ranged_cooldown_remaining / Traveler3D.RANGED_COOLDOWN
+		ranged_ready_fill.size.x = RANGED_READY_WIDTH * clampf(ready_ratio, 0.0, 1.0)
+		ranged_value.modulate.a = 1.0 if ready_ratio >= 1.0 else 0.58
 
 
 func _on_health_changed(current: int, maximum: int) -> void:

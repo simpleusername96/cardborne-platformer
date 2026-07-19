@@ -18,6 +18,8 @@ var target: Traveler3D
 var charge_direction := Vector3.FORWARD
 var charge_hit := false
 
+@onready var health_bar: EnemyHealthBar3D = $HealthBar
+
 
 func configure(next_target: Traveler3D) -> void:
 	target = next_target
@@ -28,6 +30,7 @@ func _ready() -> void:
 	add_to_group(&"floor_enemies")
 	collision_layer = 1 << 2
 	collision_mask = 1 << 0
+	health_bar.set_health(health, MAX_HEALTH)
 
 
 func _physics_process(delta: float) -> void:
@@ -54,6 +57,7 @@ func apply_damage(request: DamageRequest3D) -> DamageResult3D:
 	if state == State.DEFEATED or request.team != DamageRequest3D.Team.PLAYER:
 		return DamageResult3D.rejected()
 	health = maxi(0, health - request.damage)
+	health_bar.set_health(health, MAX_HEALTH)
 	if health <= 0:
 		state = State.DEFEATED
 		collision_layer = 0
