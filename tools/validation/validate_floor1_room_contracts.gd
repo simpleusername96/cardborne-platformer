@@ -17,7 +17,7 @@ func _initialize() -> void:
 
 func _run() -> void:
 	root.size = Vector2i(1280, 720)
-	_validate_generated_rooms()
+	await _validate_generated_rooms()
 	await _validate_persistent_route()
 	if failures.is_empty():
 		print("PASS: five generated room contracts and 20 persistent Movement Check/Foundry round trips")
@@ -47,7 +47,7 @@ func _validate_generated_rooms() -> void:
 			_expect(region.navigation_mesh.get_polygon_count() > 0, "%s navigation mesh has no polygons" % room_id)
 		var ground_count := room.get_node("Ground").get_child_count()
 		_expect(ground_count < int(room.map_size_m.x * room.map_size_m.y * 0.35), "%s still reads as per-cell geometry" % room_id)
-		_validate_entry_landing_strips(room)
+		await _validate_entry_landing_strips(room)
 		silhouettes["%s:%s:%s" % [room.map_size_m, ground_count, room.get_node("Structures").get_child_count()]] = true
 		room.queue_free()
 	_expect(silhouettes.size() == ROOM_PATHS.size(), "room silhouettes are not structurally distinct")
@@ -81,10 +81,48 @@ func _validate_persistent_route() -> void:
 
 
 func _validate_entry_landing_strips(room: FloodedWorksRoom3D) -> void:
+	var gates_by_socket: Dictionary = {}
+	for gate: RoomGate3D in room.get_gates():
+		gates_by_socket[gate.socket_id] = gate
 	for entry: Marker3D in room.get_node("EntryMarkers").get_children():
 		for prop: Marker3D in room.get_node("Props").get_children():
 			var delta := Vector2(entry.position.x - prop.position.x, entry.position.z - prop.position.z)
 			_expect(delta.length() >= 4.0, "%s/%s has prop %s inside the 4 m landing strip" % [room.room_id, entry.name, prop.name])
+		var gate := gates_by_socket.get(StringName(entry.name)) as RoomGate3D
+		_expect(gate != null, "%s/%s has no matching gate" % [room.room_id, entry.name])
+		if gate == null:
+			continue
+		var probe := CharacterBody3D.new()
+		probe.name = "LandingProbe_%s" % entry.name
+		probe.collision_layer = 0
+		probe.collision_mask = 1
+		probe.safe_margin = 0.005
+		probe.position = entry.position + Vector3.UP * 0.02
+		var collision := CollisionShape3D.new()
+		collision.position.y = 0.9
+		var capsule := CapsuleShape3D.new()
+		capsule.radius = 0.42
+		capsule.height = 1.8
+		collision.shape = capsule
+		probe.add_child(collision)
+		room.add_child(probe)
+		await physics_frame
+		var start := probe.global_position
+		var inward := -_facing_vector(gate.facing)
+		for _step in 20:
+			probe.move_and_collide(inward * 0.2)
+		var traveled := Vector2(probe.global_position.x - start.x, probe.global_position.z - start.z).length()
+		_expect(traveled >= 3.9, "%s/%s blocks a Traveler-sized body after %.2f m of the required 4 m landing" % [room.room_id, entry.name, traveled])
+		probe.queue_free()
+		await physics_frame
+
+
+func _facing_vector(facing: StringName) -> Vector3:
+	match facing:
+		&"north": return Vector3(0.0, 0.0, -1.0)
+		&"south": return Vector3(0.0, 0.0, 1.0)
+		&"west": return Vector3(-1.0, 0.0, 0.0)
+		_: return Vector3(1.0, 0.0, 0.0)
 
 
 func _expect(condition: bool, message: String) -> void:

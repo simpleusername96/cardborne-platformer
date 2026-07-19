@@ -3,7 +3,7 @@ type: plan
 status: active
 owner: BK
 created: 2026-07-18
-last_reviewed: 2026-07-18
+last_reviewed: 2026-07-19
 topic: Flooded Works Floor 1 connected rooms, moving enemies, props, pickups, and boss
 scope: Expand the current Movement Check into a Tiled-authored five-room Floor 1 while preserving the native 3D combat foundation
 source: Owner direction on 2026-07-18, current master at b76c0fe, the active proof spec, the landed Tiled authoring kit, retained Flooded Works art evidence, and Tiled 1.12.2/Godot 4.7 documentation
@@ -332,7 +332,7 @@ The converter processes each room in this fixed order:
 Connection correctness is data-enforced. Every non-terminal socket ID is unique
 within its room and points to exactly one reciprocal socket. Reciprocal sockets
 must point back, face opposite directions, use the same 1 m or 3 m width, sit on
-walkable boundary cells, and retain a clear 2 m-deep landing strip. The converter
+walkable boundary cells, and retain a clear 4 m-deep landing strip. The converter
 creates the runtime entry marker 1.5 m inward from the socket center. The
 `.world` places adjacent map rectangles so paired socket centers align within one
 editor pixel; this is a human continuity check and never supplies runtime global
@@ -1015,6 +1015,17 @@ Implementation evidence on 2026-07-18:
   and Master/SFX controls rendered without browser console warnings or errors.
 - The authoring atlas is not applied as a runtime floor texture; generated rooms
   use merged broad flat-color surfaces. No Tiled runtime dependency is shipped.
+
+Corrective evidence on 2026-07-19:
+
+- Pump Gallery's north and south socket centers were incorrectly painted over
+  deep-water exclusions, so generated boundary collision boxed the Traveler at
+  the entry marker. The same audit found void boundary cells at both Pressure
+  Vault sockets and the Reservoir entrance; all affected sockets now use
+  five-cell reinforced landing aprons.
+- Source validation now rejects any non-walkable cell in the first four meters
+  behind every gate, and room-contract validation moves a Traveler-sized capsule
+  four meters inward instead of inferring clearance from prop placement alone.
 
 ## Next Steps
 

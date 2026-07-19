@@ -22,6 +22,7 @@ const ROOM_OUTPUTS := {
 }
 const CELL_SIZE := 1.0
 const TILE_PIXELS := 64.0
+const LANDING_DEPTH_CELLS := 4
 
 var _parser: TiledSourceParser = ParserScript.new()
 var _catalog: TiledRoomBuildCatalog
@@ -145,6 +146,7 @@ func _validate_cross_room_contract(sources: Dictionary) -> void:
 	for key: String in sockets:
 		var socket: Dictionary = sockets[key]
 		var properties: Dictionary = socket.properties
+		_validate_socket_landing(sources[socket.room_id], socket.object, properties)
 		var target_key := "%s/%s" % [properties.target_room_id, properties.target_socket_id]
 		if not sockets.has(target_key):
 			_fail("Socket %s targets missing %s" % [key, target_key])
@@ -159,6 +161,29 @@ func _validate_cross_room_contract(sources: Dictionary) -> void:
 		if not is_equal_approx(float(socket.object.width), float(target.object.width)):
 			_fail("Socket %s width differs from %s" % [key, target_key])
 	_validate_world_alignment(sources, sockets)
+
+
+func _validate_socket_landing(source: Dictionary, object: Dictionary, properties: Dictionary) -> void:
+	var facing := String(properties.facing)
+	if facing not in ["north", "south"]:
+		_fail("Socket %s/%s uses an unsupported non-horizontal map edge" % [source.properties.room_id, properties.socket_id])
+		return
+	var map: Dictionary = source.map
+	var width := int(map.width)
+	var height := int(map.height)
+	var start_x := int(round(float(object.x) / TILE_PIXELS))
+	var socket_width := int(round(float(object.width) / TILE_PIXELS))
+	var data: Array = source.layers.ground.data
+	var tiles: Dictionary = source.tileset.tiles
+	for depth in LANDING_DEPTH_CELLS:
+		var y := depth if facing == "north" else height - 1 - depth
+		for x in range(start_x, start_x + socket_width):
+			if x < 0 or x >= width or y < 0 or y >= height:
+				_fail("Socket %s/%s landing cell is outside the map at (%d, %d)" % [source.properties.room_id, properties.socket_id, x, y])
+				continue
+			var local_id := _parser.local_id_from_gid(int(data[y * width + x]))
+			if not bool(tiles[local_id].get("walkable", false)):
+				_fail("Socket %s/%s landing is blocked at depth %d, cell (%d, %d), tile %s" % [source.properties.room_id, properties.socket_id, depth + 1, x, y, tiles[local_id].get("asset_id", local_id)])
 
 
 func _validate_world_alignment(sources: Dictionary, sockets: Dictionary) -> void:

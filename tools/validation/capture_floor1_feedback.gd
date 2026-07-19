@@ -28,6 +28,12 @@ func _run() -> void:
 		"floor1-feedback-pressure-entry.png",
 		Vector3.INF,
 	)
+	await _capture_room(
+		&"pump_gallery",
+		&"pump_south",
+		"floor1-feedback-pump-entry.png",
+		Vector3.INF,
+	)
 	quit(0)
 
 
