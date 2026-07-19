@@ -130,9 +130,25 @@ func _validate_objects(source: Dictionary) -> void:
 						_fail("%s objective uses local tile ID %d" % [source.path, local_id])
 					if not _catalog.registered_objective_roles.has(String(properties.get("objective_role", ""))):
 						_fail("%s has unknown objective_role %s" % [source.path, properties.get("objective_role")])
+			if layer_name in ["spawns", "props", "objectives"]:
+				_validate_walkable_anchor(source, layer_name, object, anchor_id)
 	var bounds_objects: Array = source.layers.camera_bounds.get("objects", [])
 	if bounds_objects.size() != 1 or String(bounds_objects[0].get("name", "")) != "room_bounds":
 		_fail("%s must contain exactly one camera_bounds/room_bounds rectangle" % source.path)
+
+
+func _validate_walkable_anchor(source: Dictionary, layer_name: String, object: Dictionary, anchor_id: String) -> void:
+	var map: Dictionary = source.map
+	var x := int(floor((float(object.x) + float(object.get("width", 0.0)) * 0.5) / TILE_PIXELS))
+	var y := int(floor((float(object.y) + float(object.get("height", 0.0)) * 0.5) / TILE_PIXELS))
+	if x < 0 or x >= int(map.width) or y < 0 or y >= int(map.height):
+		_fail("%s/%s anchor %s is outside the map at (%d, %d)" % [source.path, layer_name, anchor_id, x, y])
+		return
+	var data: Array = source.layers.ground.data
+	var local_id := _parser.local_id_from_gid(int(data[y * int(map.width) + x]))
+	var tile: Dictionary = source.tileset.tiles[local_id]
+	if not bool(tile.get("walkable", false)):
+		_fail("%s/%s anchor %s is on non-walkable tile %s at (%d, %d)" % [source.path, layer_name, anchor_id, tile.get("asset_id", local_id), x, y])
 
 
 func _validate_cross_room_contract(sources: Dictionary) -> void:

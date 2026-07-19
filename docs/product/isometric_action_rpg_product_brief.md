@@ -3,7 +3,7 @@ type: spec
 status: active
 owner: BK
 created: 2026-07-17
-last_reviewed: 2026-07-18
+last_reviewed: 2026-07-19
 canonical_for: Cardborne five-to-eight-minute isometric action RPG proof behavior
 scope: Direct-start combat proof from movement room through Slime King and result
 source: ../../.agent/execplans/2026-07-17-rasterized-3d-presentation.md
@@ -65,8 +65,9 @@ and camera-facing actor sprites.
 - The proof room has a 19.8×19.8 m walkable footprint and never fits completely
   in one frame. Its fixed-angle camera follows the Traveler on X/Z, clamps its
   center to ±3.5 m, and keeps camera-facing walls below the Traveler silhouette.
-- Foundry Approach is the only deliberate arena clear and contains five enemies
-  across two fixed waves using Pursuer, Shooter, and Controller roles.
+- Foundry Approach contains five enemies across two fixed waves using Pursuer,
+  Shooter, and Controller roles. Its forward gate is open from the start; the
+  waves remain an optional combat objective and never block route progress.
 - Pump Gallery completes after two one-second activations even if enemies live.
 - Pressure Vault completes after 45 seconds even if enemies live.
 - One reward appears after Foundry Approach: Dash Wake, Perfect Punish, or Split
@@ -116,9 +117,12 @@ and camera-facing actor sprites.
   collision, navigation, or damage truth.
 - The Traveler's world-space front notch, short-lived assisted-target marker,
   and attack direction agree without a persistent lock-on or trajectory line.
-- Pump Gallery and Pressure Vault can complete with at least one enemy alive.
+- No ordinary-room exit depends on living enemy count. Foundry can be left
+  immediately; Pump Gallery and Pressure Vault can complete with enemies alive
+  after their activation and survival objectives respectively.
 - All boss damage has a readable startup, active window, and recovery.
-- One successful run lasts five to eight minutes at the locked encounter counts.
+- A full run that clears the optional Foundry waves lasts five to eight minutes
+  at the locked encounter counts; deliberately skipping them shortens the route.
 - The built Web artifact passes the plan's automated, viewport, focus, and
   continuous-play gates before an owner `Go`, `Iterate`, or `No-go` decision.
 

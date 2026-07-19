@@ -23,7 +23,7 @@ func _run() -> void:
 	pivot.queue_free()
 	await process_frame
 	if failures.is_empty():
-		print("PASS: damage, three enemy roles, Foundry clear, Pump activation, Pressure survival, and Slime King contracts")
+		print("PASS: damage, optional-enemy Foundry transition, Pump activation, Pressure survival, and Slime King contracts")
 		quit(0)
 	else:
 		for failure in failures:
@@ -49,6 +49,20 @@ func _validate_foundry(runtime: FloorRuntime3D) -> void:
 	await create_timer(0.35).timeout
 	var encounter := runtime.current_room.get_node("FoundryEncounter3D") as FoundryEncounter3D
 	_expect(encounter.active_enemies.size() == 2, "Foundry wave 1 is not exactly two Pursuers")
+	_expect(not _gate_to(runtime.current_room, &"pump_gallery").locked, "Foundry exit is locked while enemies are alive")
+	var abandoned_wave := encounter.active_enemies.duplicate()
+	await runtime._on_transition_requested(&"pump_gallery", &"pump_south")
+	_expect(runtime.current_room_id == &"pump_gallery", "living Foundry enemies blocked the forward transition")
+	await process_frame
+	var kept_stale_enemy := false
+	for enemy: Variant in abandoned_wave:
+		if is_instance_valid(enemy):
+			kept_stale_enemy = true
+	_expect(not kept_stale_enemy, "leaving living Foundry enemies kept stale actors")
+	await runtime._on_transition_requested(&"foundry_approach", &"foundry_north")
+	await create_timer(0.35).timeout
+	encounter = runtime.current_room.get_node("FoundryEncounter3D") as FoundryEncounter3D
+	_expect(encounter.active_enemies.size() == 2, "optional Foundry revisit did not restore wave 1")
 	for enemy in encounter.active_enemies.duplicate():
 		enemy.apply_damage(DamageRequest3D.new(999, 0, DamageRequest3D.Team.PLAYER, &"validator"))
 	await create_timer(1.05).timeout
@@ -60,8 +74,8 @@ func _validate_foundry(runtime: FloorRuntime3D) -> void:
 	for enemy in encounter.active_enemies.duplicate():
 		enemy.apply_damage(DamageRequest3D.new(999, 0, DamageRequest3D.Team.PLAYER, &"validator"))
 	await create_timer(0.35).timeout
-	_expect(encounter.encounter_completed, "Foundry did not complete after its fixed arena clear")
-	_expect(not _gate_to(runtime.current_room, &"pump_gallery").locked, "Foundry exit remained locked")
+	_expect(encounter.encounter_completed, "Foundry optional clear did not complete after both waves")
+	_expect(not _gate_to(runtime.current_room, &"pump_gallery").locked, "Foundry exit changed state after the optional clear")
 
 
 func _validate_pump(runtime: FloorRuntime3D) -> void:
@@ -70,6 +84,16 @@ func _validate_pump(runtime: FloorRuntime3D) -> void:
 	var encounter := runtime.current_room.get_node("PumpGalleryEncounter3D") as PumpGalleryEncounter3D
 	_expect(encounter.pumps.size() == 2, "Pump Gallery does not own exactly two pumps")
 	_expect(encounter.enemies.size() == 3, "Pump Gallery pressure roster is not three enemies")
+	var pursuer: EnemyActor3D
+	for enemy in encounter.enemies:
+		if enemy.role == &"pursuer":
+			pursuer = enemy
+			break
+	_expect(pursuer != null, "Pump Gallery has no Pursuer")
+	if pursuer != null:
+		var pursuer_start_distance := pursuer.global_position.distance_to(runtime.traveler.global_position)
+		await create_timer(3.0).timeout
+		_expect(pursuer.global_position.distance_to(runtime.traveler.global_position) < pursuer_start_distance - 1.0, "Pump Pursuer cannot leave its authored spawn toward the Traveler")
 	var crates := runtime.current_room.find_children("*", "WaterloggedCrate3D", true, false)
 	_expect(crates.size() == 2, "Pump Gallery does not own two waterlogged crates")
 	if crates.size() == 2:

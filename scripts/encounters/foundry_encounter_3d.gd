@@ -21,10 +21,9 @@ func configure(next_room: FloodedWorksRoom3D, next_traveler: Traveler3D, snapsho
 	room = next_room
 	traveler = next_traveler
 	encounter_completed = bool(snapshot.get("completed", false))
-	_set_exit_locked(not encounter_completed)
 	if not encounter_completed:
 		call_deferred("_spawn_wave", "wave_1")
-	_set_objective("FOUNDRY · CLEAR BOTH WAVES" if not encounter_completed else "FOUNDRY CLEAR · EXIT OPEN")
+	_set_objective("FOUNDRY · WAVES OPTIONAL · EXIT OPEN" if not encounter_completed else "FOUNDRY CLEAR · EXIT OPEN")
 
 
 func get_snapshot() -> Dictionary:
@@ -62,16 +61,9 @@ func _on_enemy_defeated(enemy: EnemyActor3D) -> void:
 			_spawn_wave("wave_2")
 	else:
 		encounter_completed = true
-		_set_exit_locked(false)
-		traveler.action_traced.emit("Foundry gate unlocked")
+		traveler.action_traced.emit("Foundry clear")
 		_set_objective("FOUNDRY CLEAR · EXIT OPEN")
 		completed.emit()
-
-
-func _set_exit_locked(value: bool) -> void:
-	for gate in room.get_gates():
-		if gate.target_room_id == &"pump_gallery":
-			gate.set_locked(value)
 
 
 func _set_objective(text: String) -> void:

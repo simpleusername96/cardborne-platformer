@@ -2746,1722 +2746,1722 @@ polygons = [PackedInt32Array(1, 0, 2), PackedInt32Array(2, 0, 4), PackedInt32Arr
 geometry_parsed_geometry_type = 1
 agent_height = 2.0
 
-[node name="PumpGallery3D" type="Node3D" unique_id=1431839098]
+[node name="PumpGallery3D" type="Node3D" unique_id=1867840224]
 script = ExtResource("1_1cqsc")
 room_id = &"pump_gallery"
 map_size_m = Vector2(30, 24)
 camera_bounds = Rect2(-14, -11, 28, 22)
 source_path = "res://data/rooms/flooded_works/tiled/pump-gallery.tmj"
-source_sha256 = "5a87fca651b93fc3cd5673ae7529beee92e751149eed06043521373a45c1f55a"
+source_sha256 = "747d5a9b50a959a9319d4101b2a7bdb145986374ddb6b89d891ffe239f3e68b2"
 metadata/generated_by = "build_flooded_works_rooms_v1"
 
-[node name="Ground" type="Node3D" parent="." unique_id=1752964187]
+[node name="Ground" type="Node3D" parent="." unique_id=1768669842]
 
-[node name="Surface_0_0" type="StaticBody3D" parent="Ground" unique_id=1067121971]
+[node name="Surface_0_0" type="StaticBody3D" parent="Ground" unique_id=592637882]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, -7.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Ground/Surface_0_0" unique_id=636997477]
+[node name="Mesh" type="MeshInstance3D" parent="Ground/Surface_0_0" unique_id=1982005051]
 mesh = SubResource("BoxMesh_7if2u")
 
-[node name="Collision" type="CollisionShape3D" parent="Ground/Surface_0_0" unique_id=1523003994]
+[node name="Collision" type="CollisionShape3D" parent="Ground/Surface_0_0" unique_id=2088070462]
 shape = SubResource("BoxShape3D_tl6m6")
 
-[node name="Surface_0_9" type="StaticBody3D" parent="Ground" unique_id=1918215502]
+[node name="Surface_0_9" type="StaticBody3D" parent="Ground" unique_id=1229105009]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, -0.1, -2)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Ground/Surface_0_9" unique_id=1665387741]
+[node name="Mesh" type="MeshInstance3D" parent="Ground/Surface_0_9" unique_id=1045264677]
 mesh = SubResource("BoxMesh_7w26e")
 
-[node name="Collision" type="CollisionShape3D" parent="Ground/Surface_0_9" unique_id=985668433]
+[node name="Collision" type="CollisionShape3D" parent="Ground/Surface_0_9" unique_id=810200857]
 shape = SubResource("BoxShape3D_tjjio")
 
-[node name="Water_14_9" type="MeshInstance3D" parent="Ground" unique_id=734548761]
+[node name="Water_14_9" type="MeshInstance3D" parent="Ground" unique_id=1156741226]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.18, 0.5)
 mesh = SubResource("BoxMesh_0p3w1")
 
-[node name="Surface_16_9" type="StaticBody3D" parent="Ground" unique_id=33243915]
+[node name="Surface_16_9" type="StaticBody3D" parent="Ground" unique_id=444767563]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, -0.1, -2)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Ground/Surface_16_9" unique_id=1976424411]
+[node name="Mesh" type="MeshInstance3D" parent="Ground/Surface_16_9" unique_id=617815069]
 mesh = SubResource("BoxMesh_3s4ak")
 
-[node name="Collision" type="CollisionShape3D" parent="Ground/Surface_16_9" unique_id=583075959]
+[node name="Collision" type="CollisionShape3D" parent="Ground/Surface_16_9" unique_id=1704412685]
 shape = SubResource("BoxShape3D_7snq8")
 
-[node name="Water_0_11" type="MeshInstance3D" parent="Ground" unique_id=41800508]
+[node name="Water_0_11" type="MeshInstance3D" parent="Ground" unique_id=1856799445]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13, -0.18, 0)
 mesh = SubResource("BoxMesh_fsedj")
 
-[node name="Surface_4_11" type="StaticBody3D" parent="Ground" unique_id=1415371913]
+[node name="Surface_4_11" type="StaticBody3D" parent="Ground" unique_id=2123115181]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.5, -0.1, 5.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Ground/Surface_4_11" unique_id=1216490358]
+[node name="Mesh" type="MeshInstance3D" parent="Ground/Surface_4_11" unique_id=221067044]
 mesh = SubResource("BoxMesh_p1ufx")
 
-[node name="Collision" type="CollisionShape3D" parent="Ground/Surface_4_11" unique_id=541585739]
+[node name="Collision" type="CollisionShape3D" parent="Ground/Surface_4_11" unique_id=1430462432]
 shape = SubResource("BoxShape3D_u6liw")
 
-[node name="Water_9_11" type="MeshInstance3D" parent="Ground" unique_id=437119591]
+[node name="Water_9_11" type="MeshInstance3D" parent="Ground" unique_id=1457488177]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.5, -0.18, 0)
 mesh = SubResource("BoxMesh_68qmc")
 
-[node name="Water_16_11" type="MeshInstance3D" parent="Ground" unique_id=396834348]
+[node name="Water_16_11" type="MeshInstance3D" parent="Ground" unique_id=1545222543]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, -0.18, 0)
 mesh = SubResource("BoxMesh_o3h20")
 
-[node name="Surface_21_11" type="StaticBody3D" parent="Ground" unique_id=594347798]
+[node name="Surface_21_11" type="StaticBody3D" parent="Ground" unique_id=530169671]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, -0.1, 5.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Ground/Surface_21_11" unique_id=678315935]
+[node name="Mesh" type="MeshInstance3D" parent="Ground/Surface_21_11" unique_id=1133295793]
 mesh = SubResource("BoxMesh_qn4ky")
 
-[node name="Collision" type="CollisionShape3D" parent="Ground/Surface_21_11" unique_id=1525296010]
+[node name="Collision" type="CollisionShape3D" parent="Ground/Surface_21_11" unique_id=259869523]
 shape = SubResource("BoxShape3D_mok44")
 
-[node name="Water_26_11" type="MeshInstance3D" parent="Ground" unique_id=772425185]
+[node name="Water_26_11" type="MeshInstance3D" parent="Ground" unique_id=1827882899]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, -0.18, 0)
 mesh = SubResource("BoxMesh_pnkxj")
 
-[node name="Surface_0_13" type="StaticBody3D" parent="Ground" unique_id=353118313]
+[node name="Surface_0_13" type="StaticBody3D" parent="Ground" unique_id=1599135310]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13, -0.1, 6.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Ground/Surface_0_13" unique_id=1075874536]
+[node name="Mesh" type="MeshInstance3D" parent="Ground/Surface_0_13" unique_id=398135503]
 mesh = SubResource("BoxMesh_r0xfx")
 
-[node name="Collision" type="CollisionShape3D" parent="Ground/Surface_0_13" unique_id=1991786659]
+[node name="Collision" type="CollisionShape3D" parent="Ground/Surface_0_13" unique_id=203860326]
 shape = SubResource("BoxShape3D_6iyqc")
 
-[node name="Surface_9_13" type="StaticBody3D" parent="Ground" unique_id=936784124]
+[node name="Surface_9_13" type="StaticBody3D" parent="Ground" unique_id=1892655500]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.5, -0.1, 6.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Ground/Surface_9_13" unique_id=495154810]
+[node name="Mesh" type="MeshInstance3D" parent="Ground/Surface_9_13" unique_id=2033124019]
 mesh = SubResource("BoxMesh_edf81")
 
-[node name="Collision" type="CollisionShape3D" parent="Ground/Surface_9_13" unique_id=1864535300]
+[node name="Collision" type="CollisionShape3D" parent="Ground/Surface_9_13" unique_id=1944950242]
 shape = SubResource("BoxShape3D_pn6b1")
 
-[node name="Surface_16_13" type="StaticBody3D" parent="Ground" unique_id=621362807]
+[node name="Surface_16_13" type="StaticBody3D" parent="Ground" unique_id=324711635]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, -0.1, 6.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Ground/Surface_16_13" unique_id=1994348002]
+[node name="Mesh" type="MeshInstance3D" parent="Ground/Surface_16_13" unique_id=1879479877]
 mesh = SubResource("BoxMesh_byp6u")
 
-[node name="Collision" type="CollisionShape3D" parent="Ground/Surface_16_13" unique_id=799733966]
+[node name="Collision" type="CollisionShape3D" parent="Ground/Surface_16_13" unique_id=1094118835]
 shape = SubResource("BoxShape3D_f33bb")
 
-[node name="Surface_26_13" type="StaticBody3D" parent="Ground" unique_id=2131808597]
+[node name="Surface_26_13" type="StaticBody3D" parent="Ground" unique_id=1119615608]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, -0.1, 6.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Ground/Surface_26_13" unique_id=1553464793]
+[node name="Mesh" type="MeshInstance3D" parent="Ground/Surface_26_13" unique_id=149636830]
 mesh = SubResource("BoxMesh_6k18s")
 
-[node name="Collision" type="CollisionShape3D" parent="Ground/Surface_26_13" unique_id=834820673]
+[node name="Collision" type="CollisionShape3D" parent="Ground/Surface_26_13" unique_id=1809874337]
 shape = SubResource("BoxShape3D_p64nv")
 
-[node name="Surface_14_16" type="StaticBody3D" parent="Ground" unique_id=464713808]
+[node name="Surface_14_16" type="StaticBody3D" parent="Ground" unique_id=357749550]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 8)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Ground/Surface_14_16" unique_id=341453016]
+[node name="Mesh" type="MeshInstance3D" parent="Ground/Surface_14_16" unique_id=354463051]
 mesh = SubResource("BoxMesh_chy2t")
 
-[node name="Collision" type="CollisionShape3D" parent="Ground/Surface_14_16" unique_id=1036847245]
+[node name="Collision" type="CollisionShape3D" parent="Ground/Surface_14_16" unique_id=1933029296]
 shape = SubResource("BoxShape3D_sibt6")
 
-[node name="Structures" type="Node3D" parent="." unique_id=831850382]
+[node name="Structures" type="Node3D" parent="." unique_id=1370096071]
 
-[node name="Boundary_north_0_0" type="StaticBody3D" parent="Structures" unique_id=1756687301]
+[node name="Boundary_north_0_0" type="StaticBody3D" parent="Structures" unique_id=1789106809]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.5, 0.225, -12)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_0_0" unique_id=1146206588]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_0_0" unique_id=2144021221]
 mesh = SubResource("BoxMesh_dki5p")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_0_0" unique_id=702073167]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_0_0" unique_id=1424801339]
 shape = SubResource("BoxShape3D_h8opk")
 
-[node name="Boundary_west_0_0" type="StaticBody3D" parent="Structures" unique_id=647893929]
+[node name="Boundary_west_0_0" type="StaticBody3D" parent="Structures" unique_id=1057320143]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 0.225, -11.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_0_0" unique_id=2073327278]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_0_0" unique_id=37434007]
 mesh = SubResource("BoxMesh_s23n5")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_0_0" unique_id=1392902698]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_0_0" unique_id=713247391]
 shape = SubResource("BoxShape3D_6evu7")
 
-[node name="Boundary_north_1_0" type="StaticBody3D" parent="Structures" unique_id=1444777025]
+[node name="Boundary_north_1_0" type="StaticBody3D" parent="Structures" unique_id=719849255]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13.5, 0.225, -12)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_1_0" unique_id=25476798]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_1_0" unique_id=1730080513]
 mesh = SubResource("BoxMesh_5wj8e")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_1_0" unique_id=1158566817]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_1_0" unique_id=330017742]
 shape = SubResource("BoxShape3D_ws1g3")
 
-[node name="Boundary_north_2_0" type="StaticBody3D" parent="Structures" unique_id=2063260829]
+[node name="Boundary_north_2_0" type="StaticBody3D" parent="Structures" unique_id=1496626464]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.5, 0.225, -12)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_2_0" unique_id=613685557]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_2_0" unique_id=1595131796]
 mesh = SubResource("BoxMesh_nmv6q")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_2_0" unique_id=1178674857]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_2_0" unique_id=776387591]
 shape = SubResource("BoxShape3D_2sckf")
 
-[node name="Boundary_north_3_0" type="StaticBody3D" parent="Structures" unique_id=1743005136]
+[node name="Boundary_north_3_0" type="StaticBody3D" parent="Structures" unique_id=1946197911]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.5, 0.225, -12)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_3_0" unique_id=1279430767]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_3_0" unique_id=948856297]
 mesh = SubResource("BoxMesh_epd1u")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_3_0" unique_id=535463350]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_3_0" unique_id=1645634073]
 shape = SubResource("BoxShape3D_8yuib")
 
-[node name="Boundary_north_4_0" type="StaticBody3D" parent="Structures" unique_id=1698212424]
+[node name="Boundary_north_4_0" type="StaticBody3D" parent="Structures" unique_id=599850296]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.5, 0.225, -12)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_4_0" unique_id=316304078]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_4_0" unique_id=1848906852]
 mesh = SubResource("BoxMesh_jr1d3")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_4_0" unique_id=2062981552]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_4_0" unique_id=339731624]
 shape = SubResource("BoxShape3D_h07vy")
 
-[node name="Boundary_north_5_0" type="StaticBody3D" parent="Structures" unique_id=717717965]
+[node name="Boundary_north_5_0" type="StaticBody3D" parent="Structures" unique_id=299435175]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.5, 0.225, -12)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_5_0" unique_id=1858181472]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_5_0" unique_id=351758582]
 mesh = SubResource("BoxMesh_fc1dy")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_5_0" unique_id=1959869002]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_5_0" unique_id=699179489]
 shape = SubResource("BoxShape3D_5bq26")
 
-[node name="Boundary_north_6_0" type="StaticBody3D" parent="Structures" unique_id=860157791]
+[node name="Boundary_north_6_0" type="StaticBody3D" parent="Structures" unique_id=1813042031]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.5, 0.225, -12)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_6_0" unique_id=1588091001]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_6_0" unique_id=1163170041]
 mesh = SubResource("BoxMesh_4mqq6")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_6_0" unique_id=1438570304]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_6_0" unique_id=1769595930]
 shape = SubResource("BoxShape3D_0k40r")
 
-[node name="Boundary_north_7_0" type="StaticBody3D" parent="Structures" unique_id=1604274522]
+[node name="Boundary_north_7_0" type="StaticBody3D" parent="Structures" unique_id=406965455]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5, 0.225, -12)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_7_0" unique_id=85455244]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_7_0" unique_id=2122628121]
 mesh = SubResource("BoxMesh_6r5yu")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_7_0" unique_id=1392736920]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_7_0" unique_id=2090986877]
 shape = SubResource("BoxShape3D_pm6l3")
 
-[node name="Boundary_north_8_0" type="StaticBody3D" parent="Structures" unique_id=544633806]
+[node name="Boundary_north_8_0" type="StaticBody3D" parent="Structures" unique_id=1416124571]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.5, 0.225, -12)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_8_0" unique_id=1529743437]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_8_0" unique_id=1748327375]
 mesh = SubResource("BoxMesh_uympf")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_8_0" unique_id=1968023227]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_8_0" unique_id=70928643]
 shape = SubResource("BoxShape3D_op8p1")
 
-[node name="Boundary_north_9_0" type="StaticBody3D" parent="Structures" unique_id=1594190710]
+[node name="Boundary_north_9_0" type="StaticBody3D" parent="Structures" unique_id=1699124187]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.5, 0.225, -12)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_9_0" unique_id=622268044]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_9_0" unique_id=1620007748]
 mesh = SubResource("BoxMesh_w4fsl")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_9_0" unique_id=2140885079]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_9_0" unique_id=1053629777]
 shape = SubResource("BoxShape3D_gi7lv")
 
-[node name="Boundary_north_10_0" type="StaticBody3D" parent="Structures" unique_id=1410667261]
+[node name="Boundary_north_10_0" type="StaticBody3D" parent="Structures" unique_id=1222111476]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.5, 0.225, -12)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_10_0" unique_id=1617244023]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_10_0" unique_id=1881346333]
 mesh = SubResource("BoxMesh_pfiti")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_10_0" unique_id=674435128]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_10_0" unique_id=2099597082]
 shape = SubResource("BoxShape3D_ink8j")
 
-[node name="Boundary_north_11_0" type="StaticBody3D" parent="Structures" unique_id=508704721]
+[node name="Boundary_north_11_0" type="StaticBody3D" parent="Structures" unique_id=490594747]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.5, 0.225, -12)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_11_0" unique_id=925218297]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_11_0" unique_id=1626279799]
 mesh = SubResource("BoxMesh_iu6ji")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_11_0" unique_id=192999529]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_11_0" unique_id=99661868]
 shape = SubResource("BoxShape3D_in3t0")
 
-[node name="Boundary_north_12_0" type="StaticBody3D" parent="Structures" unique_id=1256739376]
+[node name="Boundary_north_12_0" type="StaticBody3D" parent="Structures" unique_id=1908540036]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 0.225, -12)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_12_0" unique_id=521773381]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_12_0" unique_id=671957224]
 mesh = SubResource("BoxMesh_baq4p")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_12_0" unique_id=115382496]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_12_0" unique_id=1509662734]
 shape = SubResource("BoxShape3D_la15w")
 
-[node name="Boundary_north_13_0" type="StaticBody3D" parent="Structures" unique_id=1795672298]
+[node name="Boundary_north_13_0" type="StaticBody3D" parent="Structures" unique_id=1408005673]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0.225, -12)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_13_0" unique_id=1898053395]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_13_0" unique_id=198796063]
 mesh = SubResource("BoxMesh_ip630")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_13_0" unique_id=898458879]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_13_0" unique_id=1398672589]
 shape = SubResource("BoxShape3D_v3rga")
 
-[node name="Boundary_north_17_0" type="StaticBody3D" parent="Structures" unique_id=1978877390]
+[node name="Boundary_north_17_0" type="StaticBody3D" parent="Structures" unique_id=762565323]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 0.225, -12)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_17_0" unique_id=281502369]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_17_0" unique_id=1553521612]
 mesh = SubResource("BoxMesh_ue386")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_17_0" unique_id=163016521]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_17_0" unique_id=1524307521]
 shape = SubResource("BoxShape3D_xtgak")
 
-[node name="Boundary_north_18_0" type="StaticBody3D" parent="Structures" unique_id=1817830889]
+[node name="Boundary_north_18_0" type="StaticBody3D" parent="Structures" unique_id=956009004]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 0.225, -12)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_18_0" unique_id=1262180204]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_18_0" unique_id=704653120]
 mesh = SubResource("BoxMesh_sdqvr")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_18_0" unique_id=1125463437]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_18_0" unique_id=1661732978]
 shape = SubResource("BoxShape3D_rm5fq")
 
-[node name="Boundary_north_19_0" type="StaticBody3D" parent="Structures" unique_id=2088180840]
+[node name="Boundary_north_19_0" type="StaticBody3D" parent="Structures" unique_id=1003052615]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 0.225, -12)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_19_0" unique_id=1979176980]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_19_0" unique_id=1158605929]
 mesh = SubResource("BoxMesh_ppuw0")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_19_0" unique_id=1098321980]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_19_0" unique_id=496230196]
 shape = SubResource("BoxShape3D_fpo8s")
 
-[node name="Boundary_north_20_0" type="StaticBody3D" parent="Structures" unique_id=1055908398]
+[node name="Boundary_north_20_0" type="StaticBody3D" parent="Structures" unique_id=296684457]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 0.225, -12)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_20_0" unique_id=276009606]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_20_0" unique_id=1520355668]
 mesh = SubResource("BoxMesh_xepdf")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_20_0" unique_id=1027781905]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_20_0" unique_id=802976401]
 shape = SubResource("BoxShape3D_eobcm")
 
-[node name="Boundary_north_21_0" type="StaticBody3D" parent="Structures" unique_id=2051611672]
+[node name="Boundary_north_21_0" type="StaticBody3D" parent="Structures" unique_id=208817657]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.5, 0.225, -12)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_21_0" unique_id=1124646607]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_21_0" unique_id=1671754883]
 mesh = SubResource("BoxMesh_5bt04")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_21_0" unique_id=1501028015]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_21_0" unique_id=2022328000]
 shape = SubResource("BoxShape3D_t4ure")
 
-[node name="Boundary_north_22_0" type="StaticBody3D" parent="Structures" unique_id=1078190765]
+[node name="Boundary_north_22_0" type="StaticBody3D" parent="Structures" unique_id=248145914]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.5, 0.225, -12)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_22_0" unique_id=1125001718]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_22_0" unique_id=982431910]
 mesh = SubResource("BoxMesh_pal5y")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_22_0" unique_id=195295716]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_22_0" unique_id=2063974610]
 shape = SubResource("BoxShape3D_30ktk")
 
-[node name="Boundary_north_23_0" type="StaticBody3D" parent="Structures" unique_id=492325638]
+[node name="Boundary_north_23_0" type="StaticBody3D" parent="Structures" unique_id=175201630]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 0.225, -12)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_23_0" unique_id=402582965]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_23_0" unique_id=420077769]
 mesh = SubResource("BoxMesh_jvhli")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_23_0" unique_id=555309088]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_23_0" unique_id=1873919099]
 shape = SubResource("BoxShape3D_yr1tq")
 
-[node name="Boundary_north_24_0" type="StaticBody3D" parent="Structures" unique_id=1274230929]
+[node name="Boundary_north_24_0" type="StaticBody3D" parent="Structures" unique_id=726696349]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.5, 0.225, -12)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_24_0" unique_id=420557497]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_24_0" unique_id=1020484768]
 mesh = SubResource("BoxMesh_d3pl4")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_24_0" unique_id=1035947347]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_24_0" unique_id=1422936129]
 shape = SubResource("BoxShape3D_rgkrk")
 
-[node name="Boundary_north_25_0" type="StaticBody3D" parent="Structures" unique_id=1977620573]
+[node name="Boundary_north_25_0" type="StaticBody3D" parent="Structures" unique_id=1853150474]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.5, 0.225, -12)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_25_0" unique_id=1365285031]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_25_0" unique_id=1512245231]
 mesh = SubResource("BoxMesh_143qx")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_25_0" unique_id=410800539]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_25_0" unique_id=561619054]
 shape = SubResource("BoxShape3D_hpe8x")
 
-[node name="Boundary_north_26_0" type="StaticBody3D" parent="Structures" unique_id=576878645]
+[node name="Boundary_north_26_0" type="StaticBody3D" parent="Structures" unique_id=2021020104]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.5, 0.225, -12)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_26_0" unique_id=9741227]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_26_0" unique_id=761744274]
 mesh = SubResource("BoxMesh_1h03t")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_26_0" unique_id=1950760073]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_26_0" unique_id=1542237684]
 shape = SubResource("BoxShape3D_uhtpw")
 
-[node name="Boundary_north_27_0" type="StaticBody3D" parent="Structures" unique_id=1378314060]
+[node name="Boundary_north_27_0" type="StaticBody3D" parent="Structures" unique_id=898822435]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.5, 0.225, -12)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_27_0" unique_id=1721561251]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_27_0" unique_id=291678862]
 mesh = SubResource("BoxMesh_fbruo")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_27_0" unique_id=1848864919]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_27_0" unique_id=1042669520]
 shape = SubResource("BoxShape3D_xdrtn")
 
-[node name="Boundary_north_28_0" type="StaticBody3D" parent="Structures" unique_id=1571037832]
+[node name="Boundary_north_28_0" type="StaticBody3D" parent="Structures" unique_id=747994495]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.5, 0.225, -12)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_28_0" unique_id=813719951]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_28_0" unique_id=1435638637]
 mesh = SubResource("BoxMesh_07l0l")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_28_0" unique_id=690581667]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_28_0" unique_id=643003274]
 shape = SubResource("BoxShape3D_vrdkf")
 
-[node name="Boundary_north_29_0" type="StaticBody3D" parent="Structures" unique_id=1700623173]
+[node name="Boundary_north_29_0" type="StaticBody3D" parent="Structures" unique_id=843168596]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.5, 0.225, -12)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_29_0" unique_id=86448737]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_29_0" unique_id=2052302197]
 mesh = SubResource("BoxMesh_cvyps")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_29_0" unique_id=1965304648]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_29_0" unique_id=457425822]
 shape = SubResource("BoxShape3D_180lp")
 
-[node name="Boundary_east_29_0" type="StaticBody3D" parent="Structures" unique_id=1002487967]
+[node name="Boundary_east_29_0" type="StaticBody3D" parent="Structures" unique_id=156848978]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0.225, -11.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_29_0" unique_id=123216491]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_29_0" unique_id=13004267]
 mesh = SubResource("BoxMesh_lykmj")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_29_0" unique_id=1747211873]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_29_0" unique_id=1053756218]
 shape = SubResource("BoxShape3D_txjqm")
 
-[node name="Boundary_west_0_1" type="StaticBody3D" parent="Structures" unique_id=1854681209]
+[node name="Boundary_west_0_1" type="StaticBody3D" parent="Structures" unique_id=1857944039]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 0.225, -10.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_0_1" unique_id=988295428]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_0_1" unique_id=472199534]
 mesh = SubResource("BoxMesh_sdb3w")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_0_1" unique_id=741600773]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_0_1" unique_id=277474486]
 shape = SubResource("BoxShape3D_7kbvo")
 
-[node name="Boundary_east_29_1" type="StaticBody3D" parent="Structures" unique_id=228680681]
+[node name="Boundary_east_29_1" type="StaticBody3D" parent="Structures" unique_id=216281313]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0.225, -10.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_29_1" unique_id=1513199664]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_29_1" unique_id=441460674]
 mesh = SubResource("BoxMesh_pgjfx")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_29_1" unique_id=462538129]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_29_1" unique_id=1498159734]
 shape = SubResource("BoxShape3D_emeao")
 
-[node name="Boundary_west_0_2" type="StaticBody3D" parent="Structures" unique_id=1462125183]
+[node name="Boundary_west_0_2" type="StaticBody3D" parent="Structures" unique_id=1638733470]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 0.225, -9.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_0_2" unique_id=704990680]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_0_2" unique_id=185392443]
 mesh = SubResource("BoxMesh_4dnag")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_0_2" unique_id=368666130]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_0_2" unique_id=615969829]
 shape = SubResource("BoxShape3D_6a4ah")
 
-[node name="Boundary_east_29_2" type="StaticBody3D" parent="Structures" unique_id=1493756328]
+[node name="Boundary_east_29_2" type="StaticBody3D" parent="Structures" unique_id=954000800]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0.225, -9.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_29_2" unique_id=721189330]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_29_2" unique_id=562943455]
 mesh = SubResource("BoxMesh_c5cw8")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_29_2" unique_id=1143507032]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_29_2" unique_id=1343384550]
 shape = SubResource("BoxShape3D_8oary")
 
-[node name="Boundary_west_0_3" type="StaticBody3D" parent="Structures" unique_id=1455180596]
+[node name="Boundary_west_0_3" type="StaticBody3D" parent="Structures" unique_id=207066655]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 0.225, -8.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_0_3" unique_id=1966050913]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_0_3" unique_id=1215950286]
 mesh = SubResource("BoxMesh_5kwlp")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_0_3" unique_id=1377583287]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_0_3" unique_id=1870292541]
 shape = SubResource("BoxShape3D_88yjg")
 
-[node name="Boundary_east_29_3" type="StaticBody3D" parent="Structures" unique_id=1689395300]
+[node name="Boundary_east_29_3" type="StaticBody3D" parent="Structures" unique_id=1118212839]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0.225, -8.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_29_3" unique_id=809572601]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_29_3" unique_id=1942900180]
 mesh = SubResource("BoxMesh_sxtav")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_29_3" unique_id=1557996485]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_29_3" unique_id=244632034]
 shape = SubResource("BoxShape3D_r1h32")
 
-[node name="Boundary_west_0_4" type="StaticBody3D" parent="Structures" unique_id=488012628]
+[node name="Boundary_west_0_4" type="StaticBody3D" parent="Structures" unique_id=2114105995]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 0.225, -7.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_0_4" unique_id=515729082]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_0_4" unique_id=324607237]
 mesh = SubResource("BoxMesh_250h6")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_0_4" unique_id=1314241579]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_0_4" unique_id=727540729]
 shape = SubResource("BoxShape3D_aw6fl")
 
-[node name="Boundary_east_29_4" type="StaticBody3D" parent="Structures" unique_id=1405917827]
+[node name="Boundary_east_29_4" type="StaticBody3D" parent="Structures" unique_id=491441411]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0.225, -7.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_29_4" unique_id=33374360]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_29_4" unique_id=280693555]
 mesh = SubResource("BoxMesh_ko8up")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_29_4" unique_id=1014485622]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_29_4" unique_id=1780365942]
 shape = SubResource("BoxShape3D_q3vte")
 
-[node name="Boundary_west_0_5" type="StaticBody3D" parent="Structures" unique_id=584874469]
+[node name="Boundary_west_0_5" type="StaticBody3D" parent="Structures" unique_id=300166447]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 0.225, -6.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_0_5" unique_id=1718309758]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_0_5" unique_id=975002361]
 mesh = SubResource("BoxMesh_pqxn0")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_0_5" unique_id=443238088]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_0_5" unique_id=939415842]
 shape = SubResource("BoxShape3D_8sdsv")
 
-[node name="Boundary_east_29_5" type="StaticBody3D" parent="Structures" unique_id=123949310]
+[node name="Boundary_east_29_5" type="StaticBody3D" parent="Structures" unique_id=1191506705]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0.225, -6.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_29_5" unique_id=1546930549]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_29_5" unique_id=510328602]
 mesh = SubResource("BoxMesh_fn1dr")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_29_5" unique_id=987357632]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_29_5" unique_id=104672822]
 shape = SubResource("BoxShape3D_1xocm")
 
-[node name="Boundary_west_0_6" type="StaticBody3D" parent="Structures" unique_id=1987139126]
+[node name="Boundary_west_0_6" type="StaticBody3D" parent="Structures" unique_id=2061378843]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 0.225, -5.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_0_6" unique_id=1116413040]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_0_6" unique_id=2040985748]
 mesh = SubResource("BoxMesh_7y45o")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_0_6" unique_id=2042872375]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_0_6" unique_id=476852229]
 shape = SubResource("BoxShape3D_73yy4")
 
-[node name="Boundary_east_29_6" type="StaticBody3D" parent="Structures" unique_id=150416916]
+[node name="Boundary_east_29_6" type="StaticBody3D" parent="Structures" unique_id=491206595]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0.225, -5.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_29_6" unique_id=2123586437]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_29_6" unique_id=1669621493]
 mesh = SubResource("BoxMesh_f0w1g")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_29_6" unique_id=317374375]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_29_6" unique_id=1648314199]
 shape = SubResource("BoxShape3D_uxfe4")
 
-[node name="Boundary_west_0_7" type="StaticBody3D" parent="Structures" unique_id=22207651]
+[node name="Boundary_west_0_7" type="StaticBody3D" parent="Structures" unique_id=57243612]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 0.225, -4.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_0_7" unique_id=776476844]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_0_7" unique_id=414300762]
 mesh = SubResource("BoxMesh_j6lof")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_0_7" unique_id=85283736]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_0_7" unique_id=578780806]
 shape = SubResource("BoxShape3D_vb53t")
 
-[node name="Boundary_east_29_7" type="StaticBody3D" parent="Structures" unique_id=1615288032]
+[node name="Boundary_east_29_7" type="StaticBody3D" parent="Structures" unique_id=1253338974]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0.225, -4.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_29_7" unique_id=1673698379]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_29_7" unique_id=267106038]
 mesh = SubResource("BoxMesh_xnexs")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_29_7" unique_id=41136958]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_29_7" unique_id=1183348234]
 shape = SubResource("BoxShape3D_uqqgd")
 
-[node name="Boundary_west_0_8" type="StaticBody3D" parent="Structures" unique_id=1217651496]
+[node name="Boundary_west_0_8" type="StaticBody3D" parent="Structures" unique_id=317597777]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 0.225, -3.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_0_8" unique_id=1308637096]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_0_8" unique_id=307182929]
 mesh = SubResource("BoxMesh_u2f1c")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_0_8" unique_id=59784988]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_0_8" unique_id=245334195]
 shape = SubResource("BoxShape3D_mjg1m")
 
-[node name="Boundary_south_14_8" type="StaticBody3D" parent="Structures" unique_id=714660310]
+[node name="Boundary_south_14_8" type="StaticBody3D" parent="Structures" unique_id=783607980]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 0.225, -3)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_14_8" unique_id=423443656]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_14_8" unique_id=1386613505]
 mesh = SubResource("BoxMesh_5j56r")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_14_8" unique_id=1760361794]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_14_8" unique_id=1205432967]
 shape = SubResource("BoxShape3D_y7uby")
 
-[node name="Boundary_south_15_8" type="StaticBody3D" parent="Structures" unique_id=2051891985]
+[node name="Boundary_south_15_8" type="StaticBody3D" parent="Structures" unique_id=1302374421]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 0.225, -3)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_15_8" unique_id=2068028281]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_15_8" unique_id=1787416166]
 mesh = SubResource("BoxMesh_pak0c")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_15_8" unique_id=501152991]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_15_8" unique_id=1137625423]
 shape = SubResource("BoxShape3D_s3gpi")
 
-[node name="Boundary_east_29_8" type="StaticBody3D" parent="Structures" unique_id=1568717662]
+[node name="Boundary_east_29_8" type="StaticBody3D" parent="Structures" unique_id=1933002472]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0.225, -3.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_29_8" unique_id=740200770]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_29_8" unique_id=1055474371]
 mesh = SubResource("BoxMesh_b571a")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_29_8" unique_id=1755860323]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_29_8" unique_id=341575523]
 shape = SubResource("BoxShape3D_8cqfn")
 
-[node name="Boundary_west_0_9" type="StaticBody3D" parent="Structures" unique_id=201777401]
+[node name="Boundary_west_0_9" type="StaticBody3D" parent="Structures" unique_id=807355912]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 0.225, -2.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_0_9" unique_id=474408982]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_0_9" unique_id=267105166]
 mesh = SubResource("BoxMesh_ffqq2")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_0_9" unique_id=2114419686]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_0_9" unique_id=1005395065]
 shape = SubResource("BoxShape3D_jp55i")
 
-[node name="Boundary_east_13_9" type="StaticBody3D" parent="Structures" unique_id=946729039]
+[node name="Boundary_east_13_9" type="StaticBody3D" parent="Structures" unique_id=777423892]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0.225, -2.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_13_9" unique_id=1223408708]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_13_9" unique_id=1767872242]
 mesh = SubResource("BoxMesh_73uin")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_13_9" unique_id=1937243108]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_13_9" unique_id=186871085]
 shape = SubResource("BoxShape3D_eso1y")
 
-[node name="Boundary_west_16_9" type="StaticBody3D" parent="Structures" unique_id=556037890]
+[node name="Boundary_west_16_9" type="StaticBody3D" parent="Structures" unique_id=1211488692]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0.225, -2.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_16_9" unique_id=1767463212]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_16_9" unique_id=753168431]
 mesh = SubResource("BoxMesh_qr15w")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_16_9" unique_id=1805822825]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_16_9" unique_id=294516310]
 shape = SubResource("BoxShape3D_w6pbe")
 
-[node name="Boundary_east_29_9" type="StaticBody3D" parent="Structures" unique_id=1343435091]
+[node name="Boundary_east_29_9" type="StaticBody3D" parent="Structures" unique_id=630183900]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0.225, -2.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_29_9" unique_id=536762952]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_29_9" unique_id=1417078014]
 mesh = SubResource("BoxMesh_ywbfx")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_29_9" unique_id=339407966]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_29_9" unique_id=389070450]
 shape = SubResource("BoxShape3D_5est7")
 
-[node name="Boundary_south_0_10" type="StaticBody3D" parent="Structures" unique_id=538641251]
+[node name="Boundary_south_0_10" type="StaticBody3D" parent="Structures" unique_id=1843858741]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.5, 0.225, -1)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_0_10" unique_id=723944264]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_0_10" unique_id=1887514598]
 mesh = SubResource("BoxMesh_1jttc")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_0_10" unique_id=1021457977]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_0_10" unique_id=691252949]
 shape = SubResource("BoxShape3D_8u422")
 
-[node name="Boundary_west_0_10" type="StaticBody3D" parent="Structures" unique_id=203613480]
+[node name="Boundary_west_0_10" type="StaticBody3D" parent="Structures" unique_id=438099123]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 0.225, -1.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_0_10" unique_id=2012463017]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_0_10" unique_id=949151696]
 mesh = SubResource("BoxMesh_fr805")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_0_10" unique_id=84623032]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_0_10" unique_id=21627518]
 shape = SubResource("BoxShape3D_dq80p")
 
-[node name="Boundary_south_1_10" type="StaticBody3D" parent="Structures" unique_id=182578167]
+[node name="Boundary_south_1_10" type="StaticBody3D" parent="Structures" unique_id=729756241]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13.5, 0.225, -1)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_1_10" unique_id=253580102]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_1_10" unique_id=1138442609]
 mesh = SubResource("BoxMesh_6sta1")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_1_10" unique_id=300830319]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_1_10" unique_id=960008637]
 shape = SubResource("BoxShape3D_mtk22")
 
-[node name="Boundary_south_2_10" type="StaticBody3D" parent="Structures" unique_id=851614087]
+[node name="Boundary_south_2_10" type="StaticBody3D" parent="Structures" unique_id=1743859521]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.5, 0.225, -1)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_2_10" unique_id=1131884667]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_2_10" unique_id=494865516]
 mesh = SubResource("BoxMesh_dohxp")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_2_10" unique_id=1821626297]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_2_10" unique_id=739145715]
 shape = SubResource("BoxShape3D_myj8v")
 
-[node name="Boundary_south_3_10" type="StaticBody3D" parent="Structures" unique_id=390702780]
+[node name="Boundary_south_3_10" type="StaticBody3D" parent="Structures" unique_id=1716185220]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.5, 0.225, -1)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_3_10" unique_id=1303015728]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_3_10" unique_id=128355408]
 mesh = SubResource("BoxMesh_3t7k4")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_3_10" unique_id=1417149407]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_3_10" unique_id=1907243522]
 shape = SubResource("BoxShape3D_knolq")
 
-[node name="Boundary_south_9_10" type="StaticBody3D" parent="Structures" unique_id=1527916971]
+[node name="Boundary_south_9_10" type="StaticBody3D" parent="Structures" unique_id=1680171015]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.5, 0.225, -1)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_9_10" unique_id=678885644]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_9_10" unique_id=1172819789]
 mesh = SubResource("BoxMesh_vjvp3")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_9_10" unique_id=519407325]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_9_10" unique_id=1969160951]
 shape = SubResource("BoxShape3D_x5ryj")
 
-[node name="Boundary_south_10_10" type="StaticBody3D" parent="Structures" unique_id=785257125]
+[node name="Boundary_south_10_10" type="StaticBody3D" parent="Structures" unique_id=873217934]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.5, 0.225, -1)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_10_10" unique_id=1513326999]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_10_10" unique_id=1830866192]
 mesh = SubResource("BoxMesh_swhay")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_10_10" unique_id=1197485317]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_10_10" unique_id=943106288]
 shape = SubResource("BoxShape3D_bovil")
 
-[node name="Boundary_south_11_10" type="StaticBody3D" parent="Structures" unique_id=1844138751]
+[node name="Boundary_south_11_10" type="StaticBody3D" parent="Structures" unique_id=2096866509]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.5, 0.225, -1)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_11_10" unique_id=858454228]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_11_10" unique_id=1542711431]
 mesh = SubResource("BoxMesh_f15q0")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_11_10" unique_id=1435249618]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_11_10" unique_id=1740882408]
 shape = SubResource("BoxShape3D_vvd14")
 
-[node name="Boundary_south_12_10" type="StaticBody3D" parent="Structures" unique_id=2033570633]
+[node name="Boundary_south_12_10" type="StaticBody3D" parent="Structures" unique_id=1309211763]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 0.225, -1)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_12_10" unique_id=2081844057]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_12_10" unique_id=1746645322]
 mesh = SubResource("BoxMesh_57ufj")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_12_10" unique_id=179582766]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_12_10" unique_id=1689970073]
 shape = SubResource("BoxShape3D_nauik")
 
-[node name="Boundary_south_13_10" type="StaticBody3D" parent="Structures" unique_id=472051034]
+[node name="Boundary_south_13_10" type="StaticBody3D" parent="Structures" unique_id=110159265]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0.225, -1)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_13_10" unique_id=891256695]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_13_10" unique_id=557896554]
 mesh = SubResource("BoxMesh_q378h")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_13_10" unique_id=1158521590]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_13_10" unique_id=1161086151]
 shape = SubResource("BoxShape3D_ohjak")
 
-[node name="Boundary_east_13_10" type="StaticBody3D" parent="Structures" unique_id=247350306]
+[node name="Boundary_east_13_10" type="StaticBody3D" parent="Structures" unique_id=1647507346]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0.225, -1.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_13_10" unique_id=2145465261]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_13_10" unique_id=865712311]
 mesh = SubResource("BoxMesh_1emdg")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_13_10" unique_id=626707034]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_13_10" unique_id=1234824164]
 shape = SubResource("BoxShape3D_3sua8")
 
-[node name="Boundary_south_16_10" type="StaticBody3D" parent="Structures" unique_id=1280650724]
+[node name="Boundary_south_16_10" type="StaticBody3D" parent="Structures" unique_id=672405674]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 0.225, -1)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_16_10" unique_id=150696122]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_16_10" unique_id=56196538]
 mesh = SubResource("BoxMesh_uqe71")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_16_10" unique_id=101992398]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_16_10" unique_id=173207021]
 shape = SubResource("BoxShape3D_e5ho7")
 
-[node name="Boundary_west_16_10" type="StaticBody3D" parent="Structures" unique_id=1080006463]
+[node name="Boundary_west_16_10" type="StaticBody3D" parent="Structures" unique_id=1686409318]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0.225, -1.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_16_10" unique_id=230680882]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_16_10" unique_id=1461632206]
 mesh = SubResource("BoxMesh_8fnup")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_16_10" unique_id=1335048996]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_16_10" unique_id=1485009063]
 shape = SubResource("BoxShape3D_0ch3g")
 
-[node name="Boundary_south_17_10" type="StaticBody3D" parent="Structures" unique_id=1292442382]
+[node name="Boundary_south_17_10" type="StaticBody3D" parent="Structures" unique_id=1012242681]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 0.225, -1)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_17_10" unique_id=1879501545]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_17_10" unique_id=524705484]
 mesh = SubResource("BoxMesh_ev8l8")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_17_10" unique_id=1188252719]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_17_10" unique_id=97307933]
 shape = SubResource("BoxShape3D_tpg42")
 
-[node name="Boundary_south_18_10" type="StaticBody3D" parent="Structures" unique_id=430344645]
+[node name="Boundary_south_18_10" type="StaticBody3D" parent="Structures" unique_id=1351430976]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 0.225, -1)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_18_10" unique_id=85097728]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_18_10" unique_id=636696987]
 mesh = SubResource("BoxMesh_86u8b")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_18_10" unique_id=2107165521]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_18_10" unique_id=1114567604]
 shape = SubResource("BoxShape3D_1pq3c")
 
-[node name="Boundary_south_19_10" type="StaticBody3D" parent="Structures" unique_id=103114366]
+[node name="Boundary_south_19_10" type="StaticBody3D" parent="Structures" unique_id=1782521452]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 0.225, -1)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_19_10" unique_id=185237003]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_19_10" unique_id=589582018]
 mesh = SubResource("BoxMesh_54tjf")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_19_10" unique_id=1320551507]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_19_10" unique_id=2070710429]
 shape = SubResource("BoxShape3D_cd5nm")
 
-[node name="Boundary_south_20_10" type="StaticBody3D" parent="Structures" unique_id=586909951]
+[node name="Boundary_south_20_10" type="StaticBody3D" parent="Structures" unique_id=1926810509]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 0.225, -1)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_20_10" unique_id=1965706577]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_20_10" unique_id=1496447784]
 mesh = SubResource("BoxMesh_ao3bq")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_20_10" unique_id=1699984722]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_20_10" unique_id=1586846080]
 shape = SubResource("BoxShape3D_nr4fj")
 
-[node name="Boundary_south_26_10" type="StaticBody3D" parent="Structures" unique_id=84872430]
+[node name="Boundary_south_26_10" type="StaticBody3D" parent="Structures" unique_id=358229728]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.5, 0.225, -1)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_26_10" unique_id=1800252132]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_26_10" unique_id=2003140728]
 mesh = SubResource("BoxMesh_guuiv")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_26_10" unique_id=1591910612]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_26_10" unique_id=830555223]
 shape = SubResource("BoxShape3D_peuhc")
 
-[node name="Boundary_south_27_10" type="StaticBody3D" parent="Structures" unique_id=265118300]
+[node name="Boundary_south_27_10" type="StaticBody3D" parent="Structures" unique_id=1642031077]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.5, 0.225, -1)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_27_10" unique_id=268390665]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_27_10" unique_id=1689107943]
 mesh = SubResource("BoxMesh_8j8j3")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_27_10" unique_id=1268501974]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_27_10" unique_id=1200142383]
 shape = SubResource("BoxShape3D_724jl")
 
-[node name="Boundary_south_28_10" type="StaticBody3D" parent="Structures" unique_id=179137980]
+[node name="Boundary_south_28_10" type="StaticBody3D" parent="Structures" unique_id=1611560440]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.5, 0.225, -1)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_28_10" unique_id=795625774]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_28_10" unique_id=1810568930]
 mesh = SubResource("BoxMesh_b441o")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_28_10" unique_id=1950830947]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_28_10" unique_id=888874805]
 shape = SubResource("BoxShape3D_ovs8e")
 
-[node name="Boundary_south_29_10" type="StaticBody3D" parent="Structures" unique_id=553781724]
+[node name="Boundary_south_29_10" type="StaticBody3D" parent="Structures" unique_id=2048405586]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.5, 0.225, -1)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_29_10" unique_id=733951831]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_29_10" unique_id=1540995799]
 mesh = SubResource("BoxMesh_qt0iw")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_29_10" unique_id=655006657]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_29_10" unique_id=1299625025]
 shape = SubResource("BoxShape3D_e4vo7")
 
-[node name="Boundary_east_29_10" type="StaticBody3D" parent="Structures" unique_id=1771233050]
+[node name="Boundary_east_29_10" type="StaticBody3D" parent="Structures" unique_id=1936031683]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0.225, -1.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_29_10" unique_id=1439400271]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_29_10" unique_id=275653634]
 mesh = SubResource("BoxMesh_3hiqf")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_29_10" unique_id=977405608]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_29_10" unique_id=1636333601]
 shape = SubResource("BoxShape3D_vya0r")
 
-[node name="Boundary_west_4_11" type="StaticBody3D" parent="Structures" unique_id=1532238787]
+[node name="Boundary_west_4_11" type="StaticBody3D" parent="Structures" unique_id=103067590]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11, 0.225, -0.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_4_11" unique_id=781435443]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_4_11" unique_id=1737238699]
 mesh = SubResource("BoxMesh_064gb")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_4_11" unique_id=1787831405]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_4_11" unique_id=1270822058]
 shape = SubResource("BoxShape3D_lcg1e")
 
-[node name="Boundary_east_8_11" type="StaticBody3D" parent="Structures" unique_id=1340567270]
+[node name="Boundary_east_8_11" type="StaticBody3D" parent="Structures" unique_id=2082056014]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0.225, -0.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_8_11" unique_id=86041924]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_8_11" unique_id=1182277294]
 mesh = SubResource("BoxMesh_v52vv")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_8_11" unique_id=349833831]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_8_11" unique_id=1612965541]
 shape = SubResource("BoxShape3D_ockgp")
 
-[node name="Boundary_west_21_11" type="StaticBody3D" parent="Structures" unique_id=1781334050]
+[node name="Boundary_west_21_11" type="StaticBody3D" parent="Structures" unique_id=930990363]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0.225, -0.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_21_11" unique_id=612610291]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_21_11" unique_id=166267989]
 mesh = SubResource("BoxMesh_s410u")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_21_11" unique_id=1914496815]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_21_11" unique_id=92272765]
 shape = SubResource("BoxShape3D_6ia54")
 
-[node name="Boundary_east_25_11" type="StaticBody3D" parent="Structures" unique_id=1796457889]
+[node name="Boundary_east_25_11" type="StaticBody3D" parent="Structures" unique_id=1532411038]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0.225, -0.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_25_11" unique_id=1249052478]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_25_11" unique_id=1166236323]
 mesh = SubResource("BoxMesh_sygs2")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_25_11" unique_id=1402333556]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_25_11" unique_id=2004686304]
 shape = SubResource("BoxShape3D_2wpcr")
 
-[node name="Boundary_west_4_12" type="StaticBody3D" parent="Structures" unique_id=866063572]
+[node name="Boundary_west_4_12" type="StaticBody3D" parent="Structures" unique_id=640217424]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11, 0.225, 0.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_4_12" unique_id=379897840]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_4_12" unique_id=478977667]
 mesh = SubResource("BoxMesh_dgyff")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_4_12" unique_id=1257763380]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_4_12" unique_id=1085778136]
 shape = SubResource("BoxShape3D_0a4ba")
 
-[node name="Boundary_east_8_12" type="StaticBody3D" parent="Structures" unique_id=1215929752]
+[node name="Boundary_east_8_12" type="StaticBody3D" parent="Structures" unique_id=2016868199]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0.225, 0.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_8_12" unique_id=1931879172]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_8_12" unique_id=1896090481]
 mesh = SubResource("BoxMesh_nrb5i")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_8_12" unique_id=72792958]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_8_12" unique_id=45852910]
 shape = SubResource("BoxShape3D_ahxoq")
 
-[node name="Boundary_west_21_12" type="StaticBody3D" parent="Structures" unique_id=797524014]
+[node name="Boundary_west_21_12" type="StaticBody3D" parent="Structures" unique_id=507780016]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0.225, 0.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_21_12" unique_id=1429010281]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_21_12" unique_id=714596675]
 mesh = SubResource("BoxMesh_f4747")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_21_12" unique_id=211220398]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_21_12" unique_id=1793084900]
 shape = SubResource("BoxShape3D_lrhqp")
 
-[node name="Boundary_east_25_12" type="StaticBody3D" parent="Structures" unique_id=476995372]
+[node name="Boundary_east_25_12" type="StaticBody3D" parent="Structures" unique_id=907808930]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0.225, 0.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_25_12" unique_id=1114138932]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_25_12" unique_id=1581897635]
 mesh = SubResource("BoxMesh_1ao2b")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_25_12" unique_id=2065798458]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_25_12" unique_id=66952481]
 shape = SubResource("BoxShape3D_fk3q1")
 
-[node name="Boundary_north_0_13" type="StaticBody3D" parent="Structures" unique_id=219796650]
+[node name="Boundary_north_0_13" type="StaticBody3D" parent="Structures" unique_id=1612748397]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.5, 0.225, 1)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_0_13" unique_id=1611217531]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_0_13" unique_id=2068949210]
 mesh = SubResource("BoxMesh_1ikpm")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_0_13" unique_id=506226488]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_0_13" unique_id=1975845137]
 shape = SubResource("BoxShape3D_c18m1")
 
-[node name="Boundary_west_0_13" type="StaticBody3D" parent="Structures" unique_id=1338352888]
+[node name="Boundary_west_0_13" type="StaticBody3D" parent="Structures" unique_id=1547028970]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 0.225, 1.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_0_13" unique_id=1065871117]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_0_13" unique_id=352962745]
 mesh = SubResource("BoxMesh_ici2v")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_0_13" unique_id=132788510]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_0_13" unique_id=477729226]
 shape = SubResource("BoxShape3D_sbmpo")
 
-[node name="Boundary_north_1_13" type="StaticBody3D" parent="Structures" unique_id=143797440]
+[node name="Boundary_north_1_13" type="StaticBody3D" parent="Structures" unique_id=776334654]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13.5, 0.225, 1)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_1_13" unique_id=1010667278]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_1_13" unique_id=1210878939]
 mesh = SubResource("BoxMesh_j56p4")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_1_13" unique_id=1675332424]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_1_13" unique_id=1911712742]
 shape = SubResource("BoxShape3D_82cgl")
 
-[node name="Boundary_north_2_13" type="StaticBody3D" parent="Structures" unique_id=1227797768]
+[node name="Boundary_north_2_13" type="StaticBody3D" parent="Structures" unique_id=1698335981]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.5, 0.225, 1)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_2_13" unique_id=1752371500]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_2_13" unique_id=823707201]
 mesh = SubResource("BoxMesh_qmagw")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_2_13" unique_id=834802134]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_2_13" unique_id=848592166]
 shape = SubResource("BoxShape3D_t3yj4")
 
-[node name="Boundary_north_3_13" type="StaticBody3D" parent="Structures" unique_id=1040468613]
+[node name="Boundary_north_3_13" type="StaticBody3D" parent="Structures" unique_id=7400360]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.5, 0.225, 1)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_3_13" unique_id=1603696776]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_3_13" unique_id=107841102]
 mesh = SubResource("BoxMesh_e1uoy")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_3_13" unique_id=1213714095]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_3_13" unique_id=99551696]
 shape = SubResource("BoxShape3D_53j0h")
 
-[node name="Boundary_north_9_13" type="StaticBody3D" parent="Structures" unique_id=224484256]
+[node name="Boundary_north_9_13" type="StaticBody3D" parent="Structures" unique_id=1294114079]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.5, 0.225, 1)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_9_13" unique_id=877790616]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_9_13" unique_id=108975305]
 mesh = SubResource("BoxMesh_o5oeq")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_9_13" unique_id=1877795641]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_9_13" unique_id=2009233482]
 shape = SubResource("BoxShape3D_01wqn")
 
-[node name="Boundary_north_10_13" type="StaticBody3D" parent="Structures" unique_id=400085682]
+[node name="Boundary_north_10_13" type="StaticBody3D" parent="Structures" unique_id=1453307978]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.5, 0.225, 1)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_10_13" unique_id=152471412]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_10_13" unique_id=530002359]
 mesh = SubResource("BoxMesh_6wfyr")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_10_13" unique_id=1899782536]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_10_13" unique_id=1435033778]
 shape = SubResource("BoxShape3D_w8flp")
 
-[node name="Boundary_north_11_13" type="StaticBody3D" parent="Structures" unique_id=1419383889]
+[node name="Boundary_north_11_13" type="StaticBody3D" parent="Structures" unique_id=2021203175]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.5, 0.225, 1)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_11_13" unique_id=153943806]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_11_13" unique_id=2031276605]
 mesh = SubResource("BoxMesh_5p5pl")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_11_13" unique_id=1980111631]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_11_13" unique_id=883341529]
 shape = SubResource("BoxShape3D_o6ytb")
 
-[node name="Boundary_north_12_13" type="StaticBody3D" parent="Structures" unique_id=1785281858]
+[node name="Boundary_north_12_13" type="StaticBody3D" parent="Structures" unique_id=1587906260]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 0.225, 1)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_12_13" unique_id=962943192]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_12_13" unique_id=2042682719]
 mesh = SubResource("BoxMesh_qjwf8")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_12_13" unique_id=456552223]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_12_13" unique_id=254942415]
 shape = SubResource("BoxShape3D_r5tdm")
 
-[node name="Boundary_north_13_13" type="StaticBody3D" parent="Structures" unique_id=2138445989]
+[node name="Boundary_north_13_13" type="StaticBody3D" parent="Structures" unique_id=1361013301]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0.225, 1)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_13_13" unique_id=158839399]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_13_13" unique_id=1762040059]
 mesh = SubResource("BoxMesh_2r3a2")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_13_13" unique_id=376022067]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_13_13" unique_id=22516729]
 shape = SubResource("BoxShape3D_npah2")
 
-[node name="Boundary_east_13_13" type="StaticBody3D" parent="Structures" unique_id=1161586587]
+[node name="Boundary_east_13_13" type="StaticBody3D" parent="Structures" unique_id=1879447786]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0.225, 1.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_13_13" unique_id=1070874156]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_13_13" unique_id=653678795]
 mesh = SubResource("BoxMesh_pbko4")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_13_13" unique_id=1454559017]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_13_13" unique_id=32820251]
 shape = SubResource("BoxShape3D_vqqy6")
 
-[node name="Boundary_north_16_13" type="StaticBody3D" parent="Structures" unique_id=350519262]
+[node name="Boundary_north_16_13" type="StaticBody3D" parent="Structures" unique_id=321832234]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 0.225, 1)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_16_13" unique_id=1408342381]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_16_13" unique_id=1872482879]
 mesh = SubResource("BoxMesh_ojlgi")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_16_13" unique_id=1754890177]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_16_13" unique_id=918756287]
 shape = SubResource("BoxShape3D_ux7qj")
 
-[node name="Boundary_west_16_13" type="StaticBody3D" parent="Structures" unique_id=1861020270]
+[node name="Boundary_west_16_13" type="StaticBody3D" parent="Structures" unique_id=82824965]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0.225, 1.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_16_13" unique_id=1595558917]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_16_13" unique_id=1502870942]
 mesh = SubResource("BoxMesh_ctyvi")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_16_13" unique_id=190919883]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_16_13" unique_id=220223527]
 shape = SubResource("BoxShape3D_cub1s")
 
-[node name="Boundary_north_17_13" type="StaticBody3D" parent="Structures" unique_id=1294323626]
+[node name="Boundary_north_17_13" type="StaticBody3D" parent="Structures" unique_id=1132870809]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 0.225, 1)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_17_13" unique_id=460862695]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_17_13" unique_id=940590616]
 mesh = SubResource("BoxMesh_ukap3")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_17_13" unique_id=1102873612]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_17_13" unique_id=817312343]
 shape = SubResource("BoxShape3D_o07pt")
 
-[node name="Boundary_north_18_13" type="StaticBody3D" parent="Structures" unique_id=1030667683]
+[node name="Boundary_north_18_13" type="StaticBody3D" parent="Structures" unique_id=74644405]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 0.225, 1)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_18_13" unique_id=894712500]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_18_13" unique_id=1527057555]
 mesh = SubResource("BoxMesh_g3h1h")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_18_13" unique_id=737637133]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_18_13" unique_id=1823138435]
 shape = SubResource("BoxShape3D_3d6nr")
 
-[node name="Boundary_north_19_13" type="StaticBody3D" parent="Structures" unique_id=1772747520]
+[node name="Boundary_north_19_13" type="StaticBody3D" parent="Structures" unique_id=940932988]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 0.225, 1)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_19_13" unique_id=358705449]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_19_13" unique_id=1465075334]
 mesh = SubResource("BoxMesh_ekt00")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_19_13" unique_id=630170479]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_19_13" unique_id=384521369]
 shape = SubResource("BoxShape3D_yy64x")
 
-[node name="Boundary_north_20_13" type="StaticBody3D" parent="Structures" unique_id=1891515899]
+[node name="Boundary_north_20_13" type="StaticBody3D" parent="Structures" unique_id=1479236749]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 0.225, 1)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_20_13" unique_id=390422485]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_20_13" unique_id=142353388]
 mesh = SubResource("BoxMesh_p8ex1")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_20_13" unique_id=1905576890]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_20_13" unique_id=1386188456]
 shape = SubResource("BoxShape3D_tqio8")
 
-[node name="Boundary_north_26_13" type="StaticBody3D" parent="Structures" unique_id=1054272688]
+[node name="Boundary_north_26_13" type="StaticBody3D" parent="Structures" unique_id=609504649]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.5, 0.225, 1)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_26_13" unique_id=2078045689]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_26_13" unique_id=2046183820]
 mesh = SubResource("BoxMesh_q5uxy")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_26_13" unique_id=1782727191]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_26_13" unique_id=1001480426]
 shape = SubResource("BoxShape3D_ei0e2")
 
-[node name="Boundary_north_27_13" type="StaticBody3D" parent="Structures" unique_id=1072928697]
+[node name="Boundary_north_27_13" type="StaticBody3D" parent="Structures" unique_id=58681613]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.5, 0.225, 1)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_27_13" unique_id=1909394704]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_27_13" unique_id=1189228996]
 mesh = SubResource("BoxMesh_tuijn")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_27_13" unique_id=1626593232]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_27_13" unique_id=104001758]
 shape = SubResource("BoxShape3D_x04tf")
 
-[node name="Boundary_north_28_13" type="StaticBody3D" parent="Structures" unique_id=829425055]
+[node name="Boundary_north_28_13" type="StaticBody3D" parent="Structures" unique_id=1382415870]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.5, 0.225, 1)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_28_13" unique_id=765494411]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_28_13" unique_id=1061187647]
 mesh = SubResource("BoxMesh_ypmwb")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_28_13" unique_id=1058718844]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_28_13" unique_id=1113048580]
 shape = SubResource("BoxShape3D_22qu4")
 
-[node name="Boundary_north_29_13" type="StaticBody3D" parent="Structures" unique_id=1351550126]
+[node name="Boundary_north_29_13" type="StaticBody3D" parent="Structures" unique_id=1499235167]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.5, 0.225, 1)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_29_13" unique_id=2097947393]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_29_13" unique_id=1082236836]
 mesh = SubResource("BoxMesh_q7dei")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_29_13" unique_id=447042841]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_29_13" unique_id=457008023]
 shape = SubResource("BoxShape3D_lvh6x")
 
-[node name="Boundary_east_29_13" type="StaticBody3D" parent="Structures" unique_id=1144780836]
+[node name="Boundary_east_29_13" type="StaticBody3D" parent="Structures" unique_id=1299628640]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0.225, 1.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_29_13" unique_id=1154920655]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_29_13" unique_id=385838805]
 mesh = SubResource("BoxMesh_4ma5n")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_29_13" unique_id=100734629]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_29_13" unique_id=1149606384]
 shape = SubResource("BoxShape3D_m6odo")
 
-[node name="Boundary_west_0_14" type="StaticBody3D" parent="Structures" unique_id=1988859642]
+[node name="Boundary_west_0_14" type="StaticBody3D" parent="Structures" unique_id=827839726]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 0.225, 2.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_0_14" unique_id=623564767]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_0_14" unique_id=639035591]
 mesh = SubResource("BoxMesh_yvvg4")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_0_14" unique_id=1293094235]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_0_14" unique_id=1271521966]
 shape = SubResource("BoxShape3D_oinli")
 
-[node name="Boundary_east_13_14" type="StaticBody3D" parent="Structures" unique_id=1705909172]
+[node name="Boundary_east_13_14" type="StaticBody3D" parent="Structures" unique_id=1170020878]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0.225, 2.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_13_14" unique_id=2118619757]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_13_14" unique_id=1130776950]
 mesh = SubResource("BoxMesh_hin7y")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_13_14" unique_id=1000427075]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_13_14" unique_id=35969769]
 shape = SubResource("BoxShape3D_fic3l")
 
-[node name="Boundary_west_16_14" type="StaticBody3D" parent="Structures" unique_id=1398814337]
+[node name="Boundary_west_16_14" type="StaticBody3D" parent="Structures" unique_id=1801823551]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0.225, 2.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_16_14" unique_id=27436324]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_16_14" unique_id=1101497608]
 mesh = SubResource("BoxMesh_r3vgt")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_16_14" unique_id=980684491]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_16_14" unique_id=801112243]
 shape = SubResource("BoxShape3D_xumfd")
 
-[node name="Boundary_east_29_14" type="StaticBody3D" parent="Structures" unique_id=1034490456]
+[node name="Boundary_east_29_14" type="StaticBody3D" parent="Structures" unique_id=776824040]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0.225, 2.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_29_14" unique_id=1422820707]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_29_14" unique_id=2113399170]
 mesh = SubResource("BoxMesh_5ek1h")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_29_14" unique_id=1045580861]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_29_14" unique_id=501719495]
 shape = SubResource("BoxShape3D_ixq74")
 
-[node name="Boundary_west_0_15" type="StaticBody3D" parent="Structures" unique_id=460780727]
+[node name="Boundary_west_0_15" type="StaticBody3D" parent="Structures" unique_id=1561287275]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 0.225, 3.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_0_15" unique_id=1815546315]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_0_15" unique_id=1920020794]
 mesh = SubResource("BoxMesh_vdrab")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_0_15" unique_id=216491499]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_0_15" unique_id=1299761303]
 shape = SubResource("BoxShape3D_tg2k0")
 
-[node name="Boundary_east_13_15" type="StaticBody3D" parent="Structures" unique_id=1946561744]
+[node name="Boundary_east_13_15" type="StaticBody3D" parent="Structures" unique_id=1331311218]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0.225, 3.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_13_15" unique_id=1016194884]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_13_15" unique_id=1630047275]
 mesh = SubResource("BoxMesh_031ag")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_13_15" unique_id=1650774545]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_13_15" unique_id=1842769946]
 shape = SubResource("BoxShape3D_5ywcm")
 
-[node name="Boundary_west_16_15" type="StaticBody3D" parent="Structures" unique_id=1850591970]
+[node name="Boundary_west_16_15" type="StaticBody3D" parent="Structures" unique_id=288329461]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0.225, 3.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_16_15" unique_id=149073012]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_16_15" unique_id=281572422]
 mesh = SubResource("BoxMesh_6s2ub")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_16_15" unique_id=880065619]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_16_15" unique_id=2006022652]
 shape = SubResource("BoxShape3D_104ut")
 
-[node name="Boundary_east_29_15" type="StaticBody3D" parent="Structures" unique_id=42163007]
+[node name="Boundary_east_29_15" type="StaticBody3D" parent="Structures" unique_id=1170301280]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0.225, 3.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_29_15" unique_id=794252173]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_29_15" unique_id=929818407]
 mesh = SubResource("BoxMesh_qtg1e")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_29_15" unique_id=1434637942]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_29_15" unique_id=1549824072]
 shape = SubResource("BoxShape3D_jda6b")
 
-[node name="Boundary_west_0_16" type="StaticBody3D" parent="Structures" unique_id=1224146363]
+[node name="Boundary_west_0_16" type="StaticBody3D" parent="Structures" unique_id=1273499416]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 0.225, 4.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_0_16" unique_id=1589778994]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_0_16" unique_id=187486767]
 mesh = SubResource("BoxMesh_26bx1")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_0_16" unique_id=2112985628]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_0_16" unique_id=132762079]
 shape = SubResource("BoxShape3D_55aw7")
 
-[node name="Boundary_north_14_16" type="StaticBody3D" parent="Structures" unique_id=1668246577]
+[node name="Boundary_north_14_16" type="StaticBody3D" parent="Structures" unique_id=2091147631]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 0.225, 4)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_14_16" unique_id=1522379640]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_14_16" unique_id=358972480]
 mesh = SubResource("BoxMesh_cltl6")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_14_16" unique_id=530007590]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_14_16" unique_id=1429953648]
 shape = SubResource("BoxShape3D_f2ilf")
 
-[node name="Boundary_north_15_16" type="StaticBody3D" parent="Structures" unique_id=2024398732]
+[node name="Boundary_north_15_16" type="StaticBody3D" parent="Structures" unique_id=1963684436]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 0.225, 4)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_15_16" unique_id=1543089204]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_north_15_16" unique_id=533058903]
 mesh = SubResource("BoxMesh_f00xu")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_15_16" unique_id=1434157998]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_north_15_16" unique_id=924163006]
 shape = SubResource("BoxShape3D_rswub")
 
-[node name="Boundary_east_29_16" type="StaticBody3D" parent="Structures" unique_id=1120760994]
+[node name="Boundary_east_29_16" type="StaticBody3D" parent="Structures" unique_id=1869266553]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0.225, 4.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_29_16" unique_id=1138879804]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_29_16" unique_id=2082489546]
 mesh = SubResource("BoxMesh_s3eof")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_29_16" unique_id=1281311598]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_29_16" unique_id=794038026]
 shape = SubResource("BoxShape3D_p65sy")
 
-[node name="Boundary_west_0_17" type="StaticBody3D" parent="Structures" unique_id=1219928125]
+[node name="Boundary_west_0_17" type="StaticBody3D" parent="Structures" unique_id=167202137]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 0.225, 5.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_0_17" unique_id=1694386418]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_0_17" unique_id=1497276329]
 mesh = SubResource("BoxMesh_qtq5g")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_0_17" unique_id=1559239907]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_0_17" unique_id=1209478228]
 shape = SubResource("BoxShape3D_xtbyj")
 
-[node name="Boundary_east_29_17" type="StaticBody3D" parent="Structures" unique_id=775327337]
+[node name="Boundary_east_29_17" type="StaticBody3D" parent="Structures" unique_id=1795718484]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0.225, 5.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_29_17" unique_id=869576503]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_29_17" unique_id=2079772471]
 mesh = SubResource("BoxMesh_1l5vt")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_29_17" unique_id=1120111579]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_29_17" unique_id=1332582090]
 shape = SubResource("BoxShape3D_pfr4f")
 
-[node name="Boundary_west_0_18" type="StaticBody3D" parent="Structures" unique_id=607161119]
+[node name="Boundary_west_0_18" type="StaticBody3D" parent="Structures" unique_id=450439226]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 0.225, 6.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_0_18" unique_id=272290130]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_0_18" unique_id=1810431287]
 mesh = SubResource("BoxMesh_bosvl")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_0_18" unique_id=1481132465]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_0_18" unique_id=1917999650]
 shape = SubResource("BoxShape3D_tu8tt")
 
-[node name="Boundary_east_29_18" type="StaticBody3D" parent="Structures" unique_id=152293624]
+[node name="Boundary_east_29_18" type="StaticBody3D" parent="Structures" unique_id=1457090156]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0.225, 6.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_29_18" unique_id=392417373]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_29_18" unique_id=634708478]
 mesh = SubResource("BoxMesh_k0paj")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_29_18" unique_id=148253442]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_29_18" unique_id=1680351152]
 shape = SubResource("BoxShape3D_o7v84")
 
-[node name="Boundary_west_0_19" type="StaticBody3D" parent="Structures" unique_id=1506287170]
+[node name="Boundary_west_0_19" type="StaticBody3D" parent="Structures" unique_id=1447056403]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 0.225, 7.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_0_19" unique_id=848259081]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_0_19" unique_id=1173871086]
 mesh = SubResource("BoxMesh_ttrvm")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_0_19" unique_id=1203193932]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_0_19" unique_id=70134965]
 shape = SubResource("BoxShape3D_lsua6")
 
-[node name="Boundary_east_29_19" type="StaticBody3D" parent="Structures" unique_id=1556209655]
+[node name="Boundary_east_29_19" type="StaticBody3D" parent="Structures" unique_id=4759997]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0.225, 7.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_29_19" unique_id=1729823578]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_29_19" unique_id=347126886]
 mesh = SubResource("BoxMesh_mqshv")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_29_19" unique_id=1143206617]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_29_19" unique_id=360652589]
 shape = SubResource("BoxShape3D_jmbwg")
 
-[node name="Boundary_west_0_20" type="StaticBody3D" parent="Structures" unique_id=2026707118]
+[node name="Boundary_west_0_20" type="StaticBody3D" parent="Structures" unique_id=2013918085]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 0.225, 8.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_0_20" unique_id=503522916]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_0_20" unique_id=714193922]
 mesh = SubResource("BoxMesh_gioan")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_0_20" unique_id=1080361286]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_0_20" unique_id=1319497549]
 shape = SubResource("BoxShape3D_2xnqm")
 
-[node name="Boundary_east_29_20" type="StaticBody3D" parent="Structures" unique_id=2109879068]
+[node name="Boundary_east_29_20" type="StaticBody3D" parent="Structures" unique_id=1369162401]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0.225, 8.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_29_20" unique_id=550451090]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_29_20" unique_id=943664127]
 mesh = SubResource("BoxMesh_bs337")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_29_20" unique_id=626706944]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_29_20" unique_id=29545788]
 shape = SubResource("BoxShape3D_yorbj")
 
-[node name="Boundary_west_0_21" type="StaticBody3D" parent="Structures" unique_id=1683372374]
+[node name="Boundary_west_0_21" type="StaticBody3D" parent="Structures" unique_id=977403353]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 0.225, 9.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_0_21" unique_id=882022980]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_0_21" unique_id=1451415659]
 mesh = SubResource("BoxMesh_x5qga")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_0_21" unique_id=1137631532]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_0_21" unique_id=1951123523]
 shape = SubResource("BoxShape3D_jevwm")
 
-[node name="Boundary_east_29_21" type="StaticBody3D" parent="Structures" unique_id=258427080]
+[node name="Boundary_east_29_21" type="StaticBody3D" parent="Structures" unique_id=1565412146]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0.225, 9.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_29_21" unique_id=699947559]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_29_21" unique_id=1814197638]
 mesh = SubResource("BoxMesh_oayms")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_29_21" unique_id=636850878]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_29_21" unique_id=1236374822]
 shape = SubResource("BoxShape3D_4nkhw")
 
-[node name="Boundary_west_0_22" type="StaticBody3D" parent="Structures" unique_id=1558226973]
+[node name="Boundary_west_0_22" type="StaticBody3D" parent="Structures" unique_id=1829728248]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 0.225, 10.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_0_22" unique_id=1897276633]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_0_22" unique_id=430415962]
 mesh = SubResource("BoxMesh_ef7lu")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_0_22" unique_id=1262407151]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_0_22" unique_id=1080131791]
 shape = SubResource("BoxShape3D_vsf7a")
 
-[node name="Boundary_east_29_22" type="StaticBody3D" parent="Structures" unique_id=864097163]
+[node name="Boundary_east_29_22" type="StaticBody3D" parent="Structures" unique_id=1803477947]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0.225, 10.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_29_22" unique_id=469078578]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_29_22" unique_id=462237535]
 mesh = SubResource("BoxMesh_xwkf4")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_29_22" unique_id=1492663797]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_29_22" unique_id=963423414]
 shape = SubResource("BoxShape3D_51hp7")
 
-[node name="Boundary_south_0_23" type="StaticBody3D" parent="Structures" unique_id=835672354]
+[node name="Boundary_south_0_23" type="StaticBody3D" parent="Structures" unique_id=1394903349]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.5, 0.225, 12)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_0_23" unique_id=1478422326]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_0_23" unique_id=1627381725]
 mesh = SubResource("BoxMesh_3f7nm")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_0_23" unique_id=1479457011]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_0_23" unique_id=1915752271]
 shape = SubResource("BoxShape3D_vlplp")
 
-[node name="Boundary_west_0_23" type="StaticBody3D" parent="Structures" unique_id=1028108916]
+[node name="Boundary_west_0_23" type="StaticBody3D" parent="Structures" unique_id=128300078]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 0.225, 11.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_0_23" unique_id=2050430686]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_west_0_23" unique_id=178440977]
 mesh = SubResource("BoxMesh_1jlr4")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_0_23" unique_id=1493439517]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_west_0_23" unique_id=2074327531]
 shape = SubResource("BoxShape3D_4j4au")
 
-[node name="Boundary_south_1_23" type="StaticBody3D" parent="Structures" unique_id=911170314]
+[node name="Boundary_south_1_23" type="StaticBody3D" parent="Structures" unique_id=1783671804]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13.5, 0.225, 12)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_1_23" unique_id=10733681]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_1_23" unique_id=1016183164]
 mesh = SubResource("BoxMesh_6jutv")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_1_23" unique_id=1073581199]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_1_23" unique_id=266833442]
 shape = SubResource("BoxShape3D_x43fh")
 
-[node name="Boundary_south_2_23" type="StaticBody3D" parent="Structures" unique_id=1828077205]
+[node name="Boundary_south_2_23" type="StaticBody3D" parent="Structures" unique_id=77185688]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.5, 0.225, 12)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_2_23" unique_id=668108113]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_2_23" unique_id=1090741717]
 mesh = SubResource("BoxMesh_lbk75")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_2_23" unique_id=71389424]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_2_23" unique_id=2091986484]
 shape = SubResource("BoxShape3D_0tnbi")
 
-[node name="Boundary_south_3_23" type="StaticBody3D" parent="Structures" unique_id=1971178541]
+[node name="Boundary_south_3_23" type="StaticBody3D" parent="Structures" unique_id=909684123]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.5, 0.225, 12)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_3_23" unique_id=1039047599]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_3_23" unique_id=1441209455]
 mesh = SubResource("BoxMesh_ommty")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_3_23" unique_id=23365112]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_3_23" unique_id=1556641508]
 shape = SubResource("BoxShape3D_tidvf")
 
-[node name="Boundary_south_4_23" type="StaticBody3D" parent="Structures" unique_id=1112273888]
+[node name="Boundary_south_4_23" type="StaticBody3D" parent="Structures" unique_id=1938459535]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.5, 0.225, 12)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_4_23" unique_id=16838784]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_4_23" unique_id=660339186]
 mesh = SubResource("BoxMesh_umj1d")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_4_23" unique_id=135315867]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_4_23" unique_id=122257265]
 shape = SubResource("BoxShape3D_paa2i")
 
-[node name="Boundary_south_5_23" type="StaticBody3D" parent="Structures" unique_id=371362891]
+[node name="Boundary_south_5_23" type="StaticBody3D" parent="Structures" unique_id=349055831]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.5, 0.225, 12)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_5_23" unique_id=1774545756]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_5_23" unique_id=552831162]
 mesh = SubResource("BoxMesh_xdt2b")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_5_23" unique_id=1282703241]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_5_23" unique_id=719471867]
 shape = SubResource("BoxShape3D_csiuw")
 
-[node name="Boundary_south_6_23" type="StaticBody3D" parent="Structures" unique_id=1948622982]
+[node name="Boundary_south_6_23" type="StaticBody3D" parent="Structures" unique_id=2036781139]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.5, 0.225, 12)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_6_23" unique_id=680814489]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_6_23" unique_id=383426187]
 mesh = SubResource("BoxMesh_c8hrq")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_6_23" unique_id=1737764359]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_6_23" unique_id=917060885]
 shape = SubResource("BoxShape3D_7btgc")
 
-[node name="Boundary_south_7_23" type="StaticBody3D" parent="Structures" unique_id=1694149218]
+[node name="Boundary_south_7_23" type="StaticBody3D" parent="Structures" unique_id=1386994789]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5, 0.225, 12)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_7_23" unique_id=814159183]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_7_23" unique_id=891957078]
 mesh = SubResource("BoxMesh_5yxqa")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_7_23" unique_id=1485092653]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_7_23" unique_id=649794361]
 shape = SubResource("BoxShape3D_snxlx")
 
-[node name="Boundary_south_8_23" type="StaticBody3D" parent="Structures" unique_id=1754530022]
+[node name="Boundary_south_8_23" type="StaticBody3D" parent="Structures" unique_id=1141129494]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.5, 0.225, 12)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_8_23" unique_id=634662703]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_8_23" unique_id=1752337674]
 mesh = SubResource("BoxMesh_ubjnv")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_8_23" unique_id=1450631234]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_8_23" unique_id=1206155353]
 shape = SubResource("BoxShape3D_0sq40")
 
-[node name="Boundary_south_9_23" type="StaticBody3D" parent="Structures" unique_id=1515034909]
+[node name="Boundary_south_9_23" type="StaticBody3D" parent="Structures" unique_id=367919238]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.5, 0.225, 12)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_9_23" unique_id=221447434]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_9_23" unique_id=1118931873]
 mesh = SubResource("BoxMesh_h7wit")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_9_23" unique_id=361428800]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_9_23" unique_id=971080057]
 shape = SubResource("BoxShape3D_vt2td")
 
-[node name="Boundary_south_10_23" type="StaticBody3D" parent="Structures" unique_id=571848596]
+[node name="Boundary_south_10_23" type="StaticBody3D" parent="Structures" unique_id=176240977]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.5, 0.225, 12)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_10_23" unique_id=1580766838]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_10_23" unique_id=669743366]
 mesh = SubResource("BoxMesh_vf10k")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_10_23" unique_id=170353077]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_10_23" unique_id=977206716]
 shape = SubResource("BoxShape3D_850nj")
 
-[node name="Boundary_south_11_23" type="StaticBody3D" parent="Structures" unique_id=778749840]
+[node name="Boundary_south_11_23" type="StaticBody3D" parent="Structures" unique_id=1198584894]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.5, 0.225, 12)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_11_23" unique_id=168534902]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_11_23" unique_id=1286523156]
 mesh = SubResource("BoxMesh_dgwsi")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_11_23" unique_id=972132018]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_11_23" unique_id=505908291]
 shape = SubResource("BoxShape3D_y72en")
 
-[node name="Boundary_south_12_23" type="StaticBody3D" parent="Structures" unique_id=1043038700]
+[node name="Boundary_south_12_23" type="StaticBody3D" parent="Structures" unique_id=980282809]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 0.225, 12)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_12_23" unique_id=1535823559]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_12_23" unique_id=190752699]
 mesh = SubResource("BoxMesh_juktp")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_12_23" unique_id=695691575]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_12_23" unique_id=835567192]
 shape = SubResource("BoxShape3D_y47b1")
 
-[node name="Boundary_south_13_23" type="StaticBody3D" parent="Structures" unique_id=648854908]
+[node name="Boundary_south_13_23" type="StaticBody3D" parent="Structures" unique_id=2101094032]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0.225, 12)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_13_23" unique_id=473111888]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_13_23" unique_id=1162563910]
 mesh = SubResource("BoxMesh_q3n8y")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_13_23" unique_id=610305511]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_13_23" unique_id=730949617]
 shape = SubResource("BoxShape3D_lhonq")
 
-[node name="Boundary_south_17_23" type="StaticBody3D" parent="Structures" unique_id=1295339264]
+[node name="Boundary_south_17_23" type="StaticBody3D" parent="Structures" unique_id=60250508]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 0.225, 12)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_17_23" unique_id=92498328]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_17_23" unique_id=1190404762]
 mesh = SubResource("BoxMesh_sk4jd")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_17_23" unique_id=96185198]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_17_23" unique_id=1742185265]
 shape = SubResource("BoxShape3D_dsafi")
 
-[node name="Boundary_south_18_23" type="StaticBody3D" parent="Structures" unique_id=304132828]
+[node name="Boundary_south_18_23" type="StaticBody3D" parent="Structures" unique_id=941753377]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 0.225, 12)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_18_23" unique_id=440241442]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_18_23" unique_id=697498480]
 mesh = SubResource("BoxMesh_ua62r")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_18_23" unique_id=1385603485]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_18_23" unique_id=2126957161]
 shape = SubResource("BoxShape3D_510vb")
 
-[node name="Boundary_south_19_23" type="StaticBody3D" parent="Structures" unique_id=145425227]
+[node name="Boundary_south_19_23" type="StaticBody3D" parent="Structures" unique_id=1040563189]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 0.225, 12)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_19_23" unique_id=1516729696]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_19_23" unique_id=885167846]
 mesh = SubResource("BoxMesh_1tpqu")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_19_23" unique_id=393929214]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_19_23" unique_id=1121023604]
 shape = SubResource("BoxShape3D_d10p5")
 
-[node name="Boundary_south_20_23" type="StaticBody3D" parent="Structures" unique_id=1644722976]
+[node name="Boundary_south_20_23" type="StaticBody3D" parent="Structures" unique_id=803977512]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 0.225, 12)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_20_23" unique_id=1660472395]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_20_23" unique_id=1123630030]
 mesh = SubResource("BoxMesh_m4pa1")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_20_23" unique_id=389822690]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_20_23" unique_id=1833939848]
 shape = SubResource("BoxShape3D_qmiky")
 
-[node name="Boundary_south_21_23" type="StaticBody3D" parent="Structures" unique_id=695644880]
+[node name="Boundary_south_21_23" type="StaticBody3D" parent="Structures" unique_id=228858721]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.5, 0.225, 12)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_21_23" unique_id=442391682]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_21_23" unique_id=1429630301]
 mesh = SubResource("BoxMesh_ft07k")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_21_23" unique_id=1112116761]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_21_23" unique_id=1076627259]
 shape = SubResource("BoxShape3D_t3s7s")
 
-[node name="Boundary_south_22_23" type="StaticBody3D" parent="Structures" unique_id=643484247]
+[node name="Boundary_south_22_23" type="StaticBody3D" parent="Structures" unique_id=1562815786]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.5, 0.225, 12)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_22_23" unique_id=1332969215]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_22_23" unique_id=1199965496]
 mesh = SubResource("BoxMesh_7gipi")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_22_23" unique_id=1255552311]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_22_23" unique_id=973409581]
 shape = SubResource("BoxShape3D_oupvi")
 
-[node name="Boundary_south_23_23" type="StaticBody3D" parent="Structures" unique_id=361102553]
+[node name="Boundary_south_23_23" type="StaticBody3D" parent="Structures" unique_id=775531325]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 0.225, 12)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_23_23" unique_id=1910252413]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_23_23" unique_id=1552162874]
 mesh = SubResource("BoxMesh_j2rhg")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_23_23" unique_id=713092150]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_23_23" unique_id=599653480]
 shape = SubResource("BoxShape3D_xr3qe")
 
-[node name="Boundary_south_24_23" type="StaticBody3D" parent="Structures" unique_id=1073996932]
+[node name="Boundary_south_24_23" type="StaticBody3D" parent="Structures" unique_id=534540735]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.5, 0.225, 12)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_24_23" unique_id=1060643730]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_24_23" unique_id=2107871927]
 mesh = SubResource("BoxMesh_j2tgf")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_24_23" unique_id=1778038913]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_24_23" unique_id=263645240]
 shape = SubResource("BoxShape3D_xijf7")
 
-[node name="Boundary_south_25_23" type="StaticBody3D" parent="Structures" unique_id=446534900]
+[node name="Boundary_south_25_23" type="StaticBody3D" parent="Structures" unique_id=215883111]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.5, 0.225, 12)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_25_23" unique_id=642878713]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_25_23" unique_id=580227570]
 mesh = SubResource("BoxMesh_407lq")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_25_23" unique_id=353893693]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_25_23" unique_id=539670243]
 shape = SubResource("BoxShape3D_m54uw")
 
-[node name="Boundary_south_26_23" type="StaticBody3D" parent="Structures" unique_id=1603697219]
+[node name="Boundary_south_26_23" type="StaticBody3D" parent="Structures" unique_id=306253144]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.5, 0.225, 12)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_26_23" unique_id=460268519]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_26_23" unique_id=1809570463]
 mesh = SubResource("BoxMesh_8git2")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_26_23" unique_id=844585648]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_26_23" unique_id=406992467]
 shape = SubResource("BoxShape3D_e16oe")
 
-[node name="Boundary_south_27_23" type="StaticBody3D" parent="Structures" unique_id=1647621081]
+[node name="Boundary_south_27_23" type="StaticBody3D" parent="Structures" unique_id=1488957889]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.5, 0.225, 12)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_27_23" unique_id=328076332]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_27_23" unique_id=154955704]
 mesh = SubResource("BoxMesh_6hein")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_27_23" unique_id=1227531197]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_27_23" unique_id=843087195]
 shape = SubResource("BoxShape3D_hy5xb")
 
-[node name="Boundary_south_28_23" type="StaticBody3D" parent="Structures" unique_id=1839018713]
+[node name="Boundary_south_28_23" type="StaticBody3D" parent="Structures" unique_id=381553157]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.5, 0.225, 12)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_28_23" unique_id=361733341]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_28_23" unique_id=1918008861]
 mesh = SubResource("BoxMesh_s73qw")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_28_23" unique_id=2027588676]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_28_23" unique_id=395080689]
 shape = SubResource("BoxShape3D_a6kcn")
 
-[node name="Boundary_south_29_23" type="StaticBody3D" parent="Structures" unique_id=1634340349]
+[node name="Boundary_south_29_23" type="StaticBody3D" parent="Structures" unique_id=483539618]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.5, 0.225, 12)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_29_23" unique_id=20178826]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_south_29_23" unique_id=2137185061]
 mesh = SubResource("BoxMesh_1c5ux")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_29_23" unique_id=862337978]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_south_29_23" unique_id=372613345]
 shape = SubResource("BoxShape3D_nt5ww")
 
-[node name="Boundary_east_29_23" type="StaticBody3D" parent="Structures" unique_id=1248853668]
+[node name="Boundary_east_29_23" type="StaticBody3D" parent="Structures" unique_id=406943845]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0.225, 11.5)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_29_23" unique_id=2125337266]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/Boundary_east_29_23" unique_id=418286323]
 mesh = SubResource("BoxMesh_lfvgq")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_29_23" unique_id=1787491724]
+[node name="Collision" type="CollisionShape3D" parent="Structures/Boundary_east_29_23" unique_id=1596988664]
 shape = SubResource("BoxShape3D_x6nsy")
 
-[node name="cover_2" type="StaticBody3D" parent="Structures" unique_id=2037777786]
+[node name="cover_2" type="StaticBody3D" parent="Structures" unique_id=336376940]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.5, 0.55, -3)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/cover_2" unique_id=2135705653]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/cover_2" unique_id=1246372715]
 mesh = SubResource("BoxMesh_j02eg")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/cover_2" unique_id=678941435]
+[node name="Collision" type="CollisionShape3D" parent="Structures/cover_2" unique_id=743981796]
 shape = SubResource("BoxShape3D_gc8c8")
 
-[node name="cover_3" type="StaticBody3D" parent="Structures" unique_id=764838183]
+[node name="cover_3" type="StaticBody3D" parent="Structures" unique_id=1149227469]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 0.55, 3)
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Structures/cover_3" unique_id=1587123129]
+[node name="Mesh" type="MeshInstance3D" parent="Structures/cover_3" unique_id=1902165043]
 mesh = SubResource("BoxMesh_3ejci")
 
-[node name="Collision" type="CollisionShape3D" parent="Structures/cover_3" unique_id=2054373406]
+[node name="Collision" type="CollisionShape3D" parent="Structures/cover_3" unique_id=1583246243]
 shape = SubResource("BoxShape3D_mjmq2")
 
-[node name="Connections" type="Node3D" parent="." unique_id=1904080552]
+[node name="Connections" type="Node3D" parent="." unique_id=1530083616]
 
-[node name="pump_south" type="Area3D" parent="Connections" unique_id=301855463]
+[node name="pump_south" type="Area3D" parent="Connections" unique_id=1752297105]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 12)
 collision_layer = 0
 collision_mask = 2
@@ -4471,23 +4471,23 @@ target_room_id = &"foundry_approach"
 target_socket_id = &"foundry_north"
 facing = &"south"
 
-[node name="Trigger" type="CollisionShape3D" parent="Connections/pump_south" unique_id=1731228144]
+[node name="Trigger" type="CollisionShape3D" parent="Connections/pump_south" unique_id=1711926594]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
 shape = SubResource("BoxShape3D_te2qp")
 
-[node name="@MeshInstance3D@11" type="MeshInstance3D" parent="Connections/pump_south" unique_id=2022579812]
+[node name="@MeshInstance3D@11" type="MeshInstance3D" parent="Connections/pump_south" unique_id=1793672565]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.32, 0.9, 0)
 mesh = SubResource("BoxMesh_3gm68")
 
-[node name="@MeshInstance3D@12" type="MeshInstance3D" parent="Connections/pump_south" unique_id=1833598208]
+[node name="@MeshInstance3D@12" type="MeshInstance3D" parent="Connections/pump_south" unique_id=1700216152]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.32, 0.9, 0)
 mesh = SubResource("BoxMesh_2r36g")
 
-[node name="@MeshInstance3D@13" type="MeshInstance3D" parent="Connections/pump_south" unique_id=1730222829]
+[node name="@MeshInstance3D@13" type="MeshInstance3D" parent="Connections/pump_south" unique_id=1034700269]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.65, 0)
 mesh = SubResource("BoxMesh_aobvp")
 
-[node name="pump_north" type="Area3D" parent="Connections" unique_id=342581323]
+[node name="pump_north" type="Area3D" parent="Connections" unique_id=1091155960]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -12)
 collision_layer = 0
 collision_mask = 2
@@ -4497,93 +4497,93 @@ target_room_id = &"pressure_vault"
 target_socket_id = &"pressure_south"
 facing = &"north"
 
-[node name="Trigger" type="CollisionShape3D" parent="Connections/pump_north" unique_id=1972485987]
+[node name="Trigger" type="CollisionShape3D" parent="Connections/pump_north" unique_id=1696410993]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
 shape = SubResource("BoxShape3D_h10hu")
 
-[node name="@MeshInstance3D@14" type="MeshInstance3D" parent="Connections/pump_north" unique_id=1642064954]
+[node name="@MeshInstance3D@14" type="MeshInstance3D" parent="Connections/pump_north" unique_id=993346587]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.32, 0.9, 0)
 mesh = SubResource("BoxMesh_vhs58")
 
-[node name="@MeshInstance3D@15" type="MeshInstance3D" parent="Connections/pump_north" unique_id=1489994856]
+[node name="@MeshInstance3D@15" type="MeshInstance3D" parent="Connections/pump_north" unique_id=351592717]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.32, 0.9, 0)
 mesh = SubResource("BoxMesh_g2hrk")
 
-[node name="@MeshInstance3D@16" type="MeshInstance3D" parent="Connections/pump_north" unique_id=1101153320]
+[node name="@MeshInstance3D@16" type="MeshInstance3D" parent="Connections/pump_north" unique_id=1456920006]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.65, 0)
 mesh = SubResource("BoxMesh_p44f5")
 
-[node name="EntryMarkers" type="Node3D" parent="." unique_id=2042286834]
+[node name="EntryMarkers" type="Node3D" parent="." unique_id=796108821]
 
-[node name="pump_south" type="Marker3D" parent="EntryMarkers" unique_id=271932532]
+[node name="pump_south" type="Marker3D" parent="EntryMarkers" unique_id=1204736395]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 10.5)
 
-[node name="pump_north" type="Marker3D" parent="EntryMarkers" unique_id=895950449]
+[node name="pump_north" type="Marker3D" parent="EntryMarkers" unique_id=639494581]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -10.5)
 
-[node name="Spawns" type="Node3D" parent="." unique_id=1644676132]
+[node name="Spawns" type="Node3D" parent="." unique_id=813514936]
 
-[node name="pump_pursuer" type="Marker3D" parent="Spawns" unique_id=101127263]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 0, 1.5)
+[node name="pump_pursuer" type="Marker3D" parent="Spawns" unique_id=1658517884]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.5, 0, 1.5)
 metadata/anchor_id = "pump_pursuer"
 metadata/spawn_group = "start"
 metadata/enemy_role = "pursuer"
 
-[node name="pump_shooter" type="Marker3D" parent="Spawns" unique_id=892220320]
+[node name="pump_shooter" type="Marker3D" parent="Spawns" unique_id=1003231965]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 0, -7.5)
 metadata/anchor_id = "pump_shooter"
 metadata/spawn_group = "start"
 metadata/enemy_role = "shooter"
 
-[node name="pump_controller" type="Marker3D" parent="Spawns" unique_id=2107419751]
+[node name="pump_controller" type="Marker3D" parent="Spawns" unique_id=727898672]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 0, -1.5)
 metadata/anchor_id = "pump_controller"
 metadata/spawn_group = "start"
 metadata/enemy_role = "controller"
 
-[node name="Props" type="Node3D" parent="." unique_id=500227848]
+[node name="Props" type="Node3D" parent="." unique_id=6629276]
 
-[node name="pump_a" type="Marker3D" parent="Props" unique_id=707423880]
+[node name="pump_a" type="Marker3D" parent="Props" unique_id=1116675103]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.5, 0, 0.5)
 metadata/anchor_id = "pump_a"
 metadata/component_id = "pump_station"
 metadata/drop_slot_id = ""
 
-[node name="pump_b" type="Marker3D" parent="Props" unique_id=1621972492]
+[node name="pump_b" type="Marker3D" parent="Props" unique_id=363255599]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.5, 0, 0.5)
 metadata/anchor_id = "pump_b"
 metadata/component_id = "pump_station"
 metadata/drop_slot_id = ""
 
-[node name="pump_crate_west" type="Marker3D" parent="Props" unique_id=1028603268]
+[node name="pump_crate_west" type="Marker3D" parent="Props" unique_id=1884110955]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.5, 0, 6.5)
 metadata/anchor_id = "pump_crate_west"
 metadata/component_id = "waterlogged_crate"
 metadata/drop_slot_id = ""
 
-[node name="pump_crate_east" type="Marker3D" parent="Props" unique_id=1649143532]
+[node name="pump_crate_east" type="Marker3D" parent="Props" unique_id=911221318]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.5, 0, 6.5)
 metadata/anchor_id = "pump_crate_east"
 metadata/component_id = "waterlogged_crate"
 metadata/drop_slot_id = "potion_if_low"
 
-[node name="pump_vent_landmark" type="Marker3D" parent="Props" unique_id=1507042794]
+[node name="pump_vent_landmark" type="Marker3D" parent="Props" unique_id=1976762623]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 0, 6.5)
 metadata/anchor_id = "pump_vent_landmark"
 metadata/component_id = "pressure_vent_inert"
 metadata/drop_slot_id = ""
 
-[node name="Objectives" type="Node3D" parent="." unique_id=5413698]
+[node name="Objectives" type="Node3D" parent="." unique_id=904383520]
 
-[node name="activate_pump_a" type="Marker3D" parent="Objectives" unique_id=1082288469]
+[node name="activate_pump_a" type="Marker3D" parent="Objectives" unique_id=115134862]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.5, 0, 0.5)
 metadata/anchor_id = "activate_pump_a"
 metadata/objective_role = "pump_activation"
 
-[node name="activate_pump_b" type="Marker3D" parent="Objectives" unique_id=854452324]
+[node name="activate_pump_b" type="Marker3D" parent="Objectives" unique_id=987720803]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.5, 0, 0.5)
 metadata/anchor_id = "activate_pump_b"
 metadata/objective_role = "pump_activation"
 
-[node name="NavigationRegion3D" type="NavigationRegion3D" parent="." unique_id=1239655900]
+[node name="NavigationRegion3D" type="NavigationRegion3D" parent="." unique_id=1868217492]
 navigation_mesh = SubResource("NavigationMesh_ca81i")

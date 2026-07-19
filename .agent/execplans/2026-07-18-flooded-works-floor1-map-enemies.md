@@ -36,8 +36,8 @@ the related upgrade specification.
 - Final artifact: Movement Check -> Foundry Approach -> Pump Gallery -> Pressure
   Vault -> Slime King Reservoir, connected by in-world gates and short fades.
 - Completion state: the built game supports the full room route, every ordinary
-  enemy moves and completes repeated attacks without stalling, non-arena rooms
-  do not require extermination, props and potion pickups work exactly once, and
+  enemy moves and completes repeated attacks without stalling, no ordinary exit
+  requires extermination, props and potion pickups work exactly once, and
   the owner can judge whether the floor is worth expanding.
 
 ## Why / Context
@@ -93,6 +93,7 @@ explicit non-extermination completion policies.
 | Connection | Every room ends at a matching Flooded Works gate. Transition locks input, fades out in 0.18 s, swaps the room, places the Traveler at the paired entry marker, and fades in in 0.18 s; target total is under 0.60 s. | Reads as one facility while keeping each encounter testable. |
 | Route | Movement Check -> Foundry Approach -> Pump Gallery -> Pressure Vault -> Slime King Reservoir. A post-Foundry transition hook is reserved for the future card reward without blocking this map/enemy plan. | Matches the proof brief and keeps progression implementation separate. |
 | Tutorial gate | Movement Check remains optional practice. Its north gate is available from the start; no forced checklist blocks the run. | The player can practice or immediately reach moving enemies. |
+| Ordinary exit policy | No ordinary-room exit depends on living enemy count. Foundry's forward gate is open from the start; Pump and Pressure retain activation and survival gates only. | An unreachable or deliberately skipped enemy can never soft-lock the route. |
 | Terrain | All gameplay stays on one X/Z ground plane. Tiled cells define logical occupancy; the converter merges them into broad 3D chunks and applies project materials so the shipped floor never reads as a repeated square tilemap. Rooms vary through footprint, permanent cover, non-walkable water channels, machinery, and hazard placement, not stacked floors. | Preserves the accepted simulation/presentation split and avoids visible tile repetition. |
 | Camera | Reuse the fixed orthographic angle and actor scale. Each room supplies camera bounds; foreground walls remain absent or below the Traveler silhouette. | Prevents the visibility regression already identified by the owner. |
 | Navigation | Each generated room has one build-time-baked `NavigationRegion3D`. Walkable Tiled cells and permanent structure footprints produce the source geometry; movable or destructible props never create the only route. | Deterministic, inspectable paths with no runtime rebake dependency. |
@@ -192,7 +193,7 @@ In scope:
 - Movement Check migration and four new Tiled-authored, Godot-generated room scenes;
 - one navigation plane per room and three moving ordinary enemy roles;
 - encounter coordination, projectiles, zones, interruption, defeat, and cleanup;
-- arena-clear, two-pump activation, 45-second survival, and boss-defeat objectives;
+- optional Foundry clear, two-pump activation, 45-second survival, and boss-defeat objectives;
 - waterlogged crates, one-charge potion pickups, pump stations, pressure vents;
 - Slime King room and the four already specified boss patterns;
 - objective/boss UI needed to understand this floor;
@@ -343,7 +344,7 @@ coordinates.
 ```text
 Movement Check (optional practice; exit open)
   -> north gate / short fade
-Foundry Approach (five enemies, two waves, deliberate arena clear)
+Foundry Approach (five enemies, two optional waves; exit open)
   -> transition hook: card_reward (future owner; non-blocking in this plan)
 Pump Gallery (activate Pump A + Pump B; living enemies allowed)
   -> north gate
@@ -390,7 +391,7 @@ FloodedWorksRoom3D
 | Room | Footprint | Terrain silhouette | Objective and enemy placement | Props | Exit rule |
 | --- | --- | --- | --- | --- | --- |
 | Movement Check | Existing 19.8 x 19.8 m | Dry intake slab, two permanent cover blocks, cutaway edges | No live AI; targets/pulse remain optional practice | None | North gate available immediately |
-| Foundry Approach | 28 x 22 m | Broken press bases and two broad rail lanes; dry floor | Wave 1: two Pursuers from north corners. Wave 2: Pursuer center-north, Shooter west behind cover, Controller east with open escape lane. | Two margin crates; one authored loose potion if entry charges are below two | All five enemies defeated; the only ordinary arena clear |
+| Foundry Approach | 28 x 22 m | Broken press bases and two broad rail lanes; dry floor | Wave 1: two Pursuers from north corners. Wave 2: Pursuer center-north, Shooter west behind cover, Controller east with open escape lane. | Two margin crates; one authored loose potion if entry charges are below two | Forward gate open from entry; clearing both waves is optional |
 | Pump Gallery | 30 x 24 m | Crossed dark-teal water channel, two wide dry crossings, Pump A west and Pump B east | One Pursuer starts center, Shooter starts north with a cover-separated sightline, Controller guards the farther pump | Two margin crates, two pump stations, one inert vent landmark | Both one-second pump activations; damage interrupts; enemies may live |
 | Pressure Vault | 26 m diameter | Circular pressure chamber, radial permanent cover, four vent sockets | Start: Pursuer + Shooter. At 15 s: Pursuer + Controller. At 30 s: two Pursuers + Shooter; maximum six alive. | Four timed vents; one side potion pickup available at 20 s if below cap | 45 seconds; no new spawns after completion; enemies may live |
 | Slime King Reservoir | 30 m diameter | Open reservoir basin, low ring edge, two pressure-node sockets, clear safe lanes | Slime King only; lane charge, landing slam, poison safe bands, pressure nodes | No crates during boss; guaranteed future reward socket after defeat | Boss defeated |
@@ -548,7 +549,7 @@ enemy or prop script branches on a card/equipment/material ID.
 
 1. Tiled parser/builder plus persistent runtime and two connected rooms prove
    source-of-truth generation, loading, camera bounds, connection validation, and reset.
-2. Foundry Approach proves three moving roles, cover, coordination, and arena clear.
+2. Foundry Approach proves three moving roles, cover, coordination, and an optional full clear without blocking route progress.
 3. Pump Gallery proves props, potion, interaction, and non-extermination activation.
 4. Pressure Vault proves sustained spawning, vents, survival, and cleanup.
 5. Slime King Reservoir completes the floor and raster presentation target.
@@ -673,9 +674,9 @@ Source owners touched: `scripts/combat/`, `scripts/enemies/`,
   - As-is: no mixed encounter or objective owner.
   - To-be: add close/pressure tokens and two fixed waves; finish the Foundry
     `.tmj` with permanent cover, spawn/objective anchors, and registered components;
-    rebuild the generated room, arena-clear objective, exit unlock, and retry.
-  - Accept: five enemies spawn in the exact matrix; only arena clear unlocks the
-    gate; Shooter shots terminate on cover; no more than two threats commit.
+    rebuild the generated room, optional-clear objective, open exit, and retry.
+  - Accept: five enemies spawn in the exact matrix; the gate remains open with
+    living enemies; Shooter shots terminate on cover; no more than two threats commit.
   - Guard: enemy scripts do not decide room completion or spawn the next wave.
 
 Batch acceptance: complete Foundry three times using melee-heavy, ranged-heavy,
@@ -991,7 +992,7 @@ Rerun policy:
   cleanup. The optional Tiled 1.12.2 desktop installation remains unapproved and
   is not required to build or run the committed sources.
 - [x] Phase 2: moving Pursuer/Shooter/Controller roles, typed damage, threat
-  coordination, navigation, obstruction recovery, and Foundry arena clear.
+  coordination, navigation, obstruction recovery, and optional Foundry waves.
 - [x] Phase 3: destructible crates, potion pickup, hold-to-activate pumps, and a
   Pump Gallery objective that can finish with enemies alive.
 - [x] Phase 4: warning/active/recovery vents, bounded timed waves, and a
@@ -1026,6 +1027,10 @@ Corrective evidence on 2026-07-19:
 - Source validation now rejects any non-walkable cell in the first four meters
   behind every gate, and room-contract validation moves a Traveler-sized capsule
   four meters inward instead of inferring clearance from prop placement alone.
+- Pump Gallery's Pursuer spawn was also authored on deep water inside a generated
+  boundary pocket. It now starts on the west combat floor, all live anchors must
+  resolve to walkable source cells, and Foundry's forward gate no longer depends
+  on extermination.
 
 ## Next Steps
 
@@ -1056,8 +1061,8 @@ Corrective evidence on 2026-07-19:
 - [x] Pursuer, Shooter, and Controller move continuously, attack only through
   legal states, recover from obstruction, coordinate, and clean up on defeat.
 - [x] Ordinary enemy projectiles stop on permanent cover and intact crates.
-- [x] Foundry requires the fixed arena clear; Pump and Pressure complete with a
-  living enemy; Slime King requires boss defeat.
+- [x] Foundry can be left with either wave alive; Pump and Pressure complete with
+  living enemies after their own objectives; Slime King still requires defeat.
 - [x] Crates, potion pickups, pumps, and vents satisfy every state/one-shot/reset check.
 - [x] No material wallet, Forge, card effect, equipment mutation, or persistent
   progression code appears in the implementation diff.

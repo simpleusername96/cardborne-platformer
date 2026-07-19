@@ -23,7 +23,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		if locked:
 			var traveler := _traveler_in_gate()
 			if traveler != null:
-				traveler.action_traced.emit("Gate sealed · clear the foundry")
+				traveler.action_traced.emit("Gate sealed · objective incomplete")
 		else:
 			transition_requested.emit(target_room_id, target_socket_id)
 		get_viewport().set_input_as_handled()
