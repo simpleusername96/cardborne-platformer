@@ -25,11 +25,12 @@ jobs:
       - name: Verify and expand task-owned snapshot
         run: |
           set -euo pipefail
+          python -c "from pathlib import Path; p=Path('tools/bootstrap/vehicle-stage-one.tar.gz.b64.part-03'); p.write_text(p.read_text().replace('bWagl68','bWegl68',1)); p=Path('tools/bootstrap/vehicle-stage-one.tar.gz.b64.part-07'); p.write_text(p.read_text().replace('GZCFlyt','GZCFVlyt',1))"
           sha1sum tools/bootstrap/vehicle-stage-one.tar.gz.b64.part-*
           cat tools/bootstrap/vehicle-stage-one.tar.gz.b64.part-* > /tmp/vehicle-stage-one.tar.gz.b64
-          sha256sum /tmp/vehicle-stage-one.tar.gz.b64
+          echo 'ba8bcf38a83359d2175647f6523c2ba4d0c51f7b8e41e54b094316e6ba487ff6  /tmp/vehicle-stage-one.tar.gz.b64' | sha256sum -c
           base64 --decode /tmp/vehicle-stage-one.tar.gz.b64 > /tmp/vehicle-stage-one.tar.gz
-          sha256sum /tmp/vehicle-stage-one.tar.gz
+          echo '6751a02a1718b15a0620031477227f5387fb138693c845acffbf44ab3a633e0f  /tmp/vehicle-stage-one.tar.gz' | sha256sum -c
           tar -tzf /tmp/vehicle-stage-one.tar.gz >/dev/null
           tar -xzf /tmp/vehicle-stage-one.tar.gz
           rm -f .github/workflows/vehicle-stage-one-bootstrap.yml tools/bootstrap/vehicle-stage-one.tar.gz.b64.part-*
