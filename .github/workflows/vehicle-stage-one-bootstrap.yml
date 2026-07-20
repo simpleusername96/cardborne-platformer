@@ -4,6 +4,13 @@ on:
   push:
     branches:
       - agent/vehicle-stage-one
+  pull_request:
+    branches:
+      - master
+    types:
+      - opened
+      - reopened
+      - synchronize
 
 permissions:
   contents: write
