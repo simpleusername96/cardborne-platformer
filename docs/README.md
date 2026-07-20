@@ -22,6 +22,9 @@ waits for a Floor 1 owner decision and a separate active plan.
 ## Retained Evidence
 
 - `design/references/` contains owner-selected visual and UI references.
+- `research/vehicle_led_isometric_action_reference_analysis.md` compares vehicle
+  action references and records the evidence boundary for a possible future
+  product pivot; it is advisory and does not replace the active product brief.
 - `design/reports/ui-raster-asset-catalog.png` and
   `design/reports/ui-svg-asset-catalog.html` show the retained production asset
   inventory; they are not runtime atlases.
