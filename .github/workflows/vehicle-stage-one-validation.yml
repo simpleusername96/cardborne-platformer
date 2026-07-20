@@ -1,0 +1,166 @@
+name: Vehicle Stage One Validation
+
+on:
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-build-render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      GODOT_VERSION: 4.7.1
+      GODOT_STATUS: stable
+      GODOT_DIR: ${{ github.workspace }}/.ci-godot
+      EVIDENCE_DIR: ${{ github.workspace }}/build/vehicle-stage-one
+
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+
+      - name: Cache Godot editor and export templates
+        uses: actions/cache@v4
+        with:
+          path: .ci-godot/cache
+          key: godot-${{ runner.os }}-4.7.1-stable-editor-templates
+
+      - name: Install system render dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends xvfb libgl1 libglx-mesa0 libasound2t64
+
+      - name: Install official Godot editor and Web templates
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$GODOT_DIR/cache" "$GODOT_DIR/editor" "$RUNNER_TEMP/godot-templates"
+          editor_zip="$GODOT_DIR/cache/Godot_v${GODOT_VERSION}-${GODOT_STATUS}_linux.x86_64.zip"
+          templates_tpz="$GODOT_DIR/cache/Godot_v${GODOT_VERSION}-${GODOT_STATUS}_export_templates.tpz"
+          release_root="https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-${GODOT_STATUS}"
+          if [[ ! -s "$editor_zip" ]]; then
+            curl --fail --location --retry 4 --retry-all-errors \
+              "$release_root/Godot_v${GODOT_VERSION}-${GODOT_STATUS}_linux.x86_64.zip" \
+              --output "$editor_zip"
+          fi
+          if [[ ! -s "$templates_tpz" ]]; then
+            curl --fail --location --retry 4 --retry-all-errors \
+              "$release_root/Godot_v${GODOT_VERSION}-${GODOT_STATUS}_export_templates.tpz" \
+              --output "$templates_tpz"
+          fi
+          rm -rf "$GODOT_DIR/editor" "$RUNNER_TEMP/godot-templates"
+          mkdir -p "$GODOT_DIR/editor" "$RUNNER_TEMP/godot-templates"
+          unzip -q "$editor_zip" -d "$GODOT_DIR/editor"
+          godot_bin="$(find "$GODOT_DIR/editor" -maxdepth 1 -type f -name 'Godot*linux*x86_64' | head -n 1)"
+          test -n "$godot_bin"
+          chmod +x "$godot_bin"
+          echo "GODOT_BIN=$godot_bin" >> "$GITHUB_ENV"
+          template_dir="$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.${GODOT_STATUS}"
+          rm -rf "$template_dir"
+          mkdir -p "$template_dir"
+          unzip -q "$templates_tpz" -d "$RUNNER_TEMP/godot-templates"
+          cp -a "$RUNNER_TEMP/godot-templates/templates/." "$template_dir/"
+          "$godot_bin" --version | tee "$GODOT_DIR/godot-version.txt"
+
+      - name: Import project headlessly
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$EVIDENCE_DIR/logs"
+          "$GODOT_BIN" --path . --headless --import 2>&1 | tee "$EVIDENCE_DIR/logs/import.log"
+
+      - name: Validate generated-room sources remain consistent
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$GODOT_BIN" --path . --headless \
+            --script res://tools/tiled/build_flooded_works_rooms.gd -- --check \
+            2>&1 | tee "$EVIDENCE_DIR/logs/legacy-generated-room-check.log"
+
+      - name: Validate complete vehicle stage contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$GODOT_BIN" --path . --headless \
+            --script res://tools/validation/validate_vehicle_stage_one.gd \
+            2>&1 | tee "$EVIDENCE_DIR/logs/vehicle-stage-validator.log"
+
+      - name: Capture native rendered evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$EVIDENCE_DIR/captures"
+          xvfb-run -a "$GODOT_BIN" --path . --rendering-method gl_compatibility \
+            -- --capture-all="$EVIDENCE_DIR/captures" \
+            2>&1 | tee "$EVIDENCE_DIR/logs/native-capture.log"
+          test "$(find "$EVIDENCE_DIR/captures" -maxdepth 1 -name '*.png' | wc -l)" -ge 8
+
+      - name: Export Web release
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf build/web
+          mkdir -p build/web
+          "$GODOT_BIN" --path . --headless --export-release Web build/web/index.html \
+            2>&1 | tee "$EVIDENCE_DIR/logs/web-export.log"
+          for file in index.html index.js index.pck index.wasm; do
+            test -s "build/web/$file"
+          done
+
+      - name: Boot and render the built Web artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m http.server 8060 --directory build/web >"$EVIDENCE_DIR/logs/web-server.log" 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for _ in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:8060/index.html >/dev/null; then break; fi
+            sleep 1
+          done
+          browser="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
+          test -n "$browser"
+          "$browser" --headless=new --no-sandbox --hide-scrollbars \
+            --window-size=1280,720 --use-gl=swiftshader --enable-webgl --ignore-gpu-blocklist \
+            --virtual-time-budget=10000 \
+            --screenshot="$EVIDENCE_DIR/captures/09-web-build-boot.png" \
+            http://127.0.0.1:8060/ \
+            >"$EVIDENCE_DIR/logs/browser-boot.log" 2>&1
+          test -s "$EVIDENCE_DIR/captures/09-web-build-boot.png"
+          curl --fail --silent http://127.0.0.1:8060/index.pck >/dev/null
+
+      - name: Record evidence manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            echo "commit=${GITHUB_SHA}"
+            echo "godot=$($GODOT_BIN --version)"
+            echo "captures=$(find "$EVIDENCE_DIR/captures" -maxdepth 1 -name '*.png' | wc -l)"
+            echo "web_files=$(find build/web -maxdepth 1 -type f | wc -l)"
+            echo "generated_utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          } > "$EVIDENCE_DIR/manifest.txt"
+          find "$EVIDENCE_DIR" -maxdepth 2 -type f -printf '%P %s bytes\n' | sort
+
+      - name: Upload rendered evidence and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vehicle-stage-one-evidence
+          path: build/vehicle-stage-one
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Upload playable Web build
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vehicle-stage-one-web
+          path: build/web
+          if-no-files-found: warn
+          retention-days: 30
