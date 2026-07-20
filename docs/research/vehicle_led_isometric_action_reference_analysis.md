@@ -77,6 +77,24 @@ field, choose a firing angle and range, spend boost or defense at the right time
 then convert the opening into a weapon-specific payoff**. Exploration and module
 choices should change the conditions around that decision.
 
+### Visual concept sequence
+
+The following generated images visualize the same proposed game rather than three
+alternative art directions:
+
+| Image | Design question illustrated |
+| --- | --- |
+| [Exploration](../design/concepts/vehicle-led-isometric/01-exploration.png) | How a small hover skiff, low occluders, landmarks, shortcuts, salvage, repair, and partial minimap make a connected world readable beyond one viewport. |
+| [Combat](../design/concepts/vehicle-led-isometric/02-combat.png) | How independent hull/weapon direction, cover-blocked projectiles, three enemy roles, sparse telegraphs, circulation lanes, and an open exit create a fair spatial problem. |
+| [Boss and build payoff](../design/concepts/vehicle-led-isometric/03-boss-build.png) | How ricochet fire, orbiting defense, a damaging boost trail, boss safe lanes, impact state, and a weak-point recovery window make the assembled build visible in play. |
+
+The set was generated sequentially with the built-in image generator using the
+same prior image as the next image's visual anchor. The shared prompt contract was
+`stylized-concept`, wide isometric gameplay framing, one white-and-teal salvage
+skiff, flat colors, no outlines, minimal surface noise, icon-only HUD, low
+camera-facing walls, and no humanoids or baked text. These images are product
+intent evidence, not production assets or exact level layouts.
+
 ### Reference-by-reference functional analysis
 
 #### Minishoot' Adventures: the closest scope and actor reference

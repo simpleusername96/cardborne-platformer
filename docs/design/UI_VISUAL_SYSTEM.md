@@ -3,7 +3,7 @@ type: spec
 status: active
 owner: BK
 created: 2026-07-13
-last_reviewed: 2026-07-17
+last_reviewed: 2026-07-20
 canonical_for: Cardborne UI art direction, shell backdrop roles, panel visual roles, and raster/vector asset boundaries
 scope: Accepted production UI visual language, asset roles, Theme ownership, reusable components, and validation
 source: Owner-approved UI direction through 2026-07-17 and the retained project-original UI asset pack
@@ -22,7 +22,9 @@ Preserve the accepted Cardborne visual language while the runtime is rebuilt as
 an isometric action RPG. This specification owns appearance and asset boundaries;
 the active pivot plan and later gameplay/UI contracts own behavior and screen flow.
 
-This specification locks the owner's visual direction. The five selected shell backgrounds have production copies under `art/ui/production/backgrounds/`; generated panel sheets remain reference-only until deterministically rebuilt.
+This specification locks the owner's visual direction. The five selected shell
+backgrounds live once under `art/ui/production/backgrounds/`; generated panel
+sheets remain reference-only until deterministically rebuilt.
 
 ## Scope
 
@@ -79,7 +81,9 @@ Generated panel sheets are reference boards only. Production panels use project-
 
 - `references/ui-shell/owner-reference-lower-ruins.png` is the primary owner-selected theme and structural mood anchor.
 - `references/visual-style-slate-cutout.png` is a supporting simplification reference, not a competing palette.
-- `references/ui-shell/background-*.png` are the selected source references for the five production shell backgrounds under `art/ui/production/backgrounds/`.
+- `art/ui/production/backgrounds/*.png` are the single retained copies of the
+  five selected shell backgrounds; their generation provenance is recorded in
+  `references/ui-shell/README.md` without duplicate bitmap sources.
 - `references/ui-shell/panel-*.png` and the contact sheet remain review evidence. Presence in the reference folder alone never grants runtime approval.
 - `references/ui-assets/README.md` records the 19-file raster UI illustration pack, prompt family, post-processing, and SVG fallbacks. Production copies live under `art/ui/production/illustrations/`.
 - `reports/ui-raster-asset-catalog.png` is the checkerboard and 64 px review board for that pack; it is evidence, not a runtime sprite sheet.

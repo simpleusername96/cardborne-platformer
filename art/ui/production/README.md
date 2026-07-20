@@ -41,9 +41,9 @@ See `docs/design/reports/ui-svg-asset-catalog.html` for the rendered catalog.
 
 ## Raster shell backgrounds
 
-The five files under `backgrounds/` are production copies of the owner-selected
-UI-shell candidates. They contain world atmosphere only; all panels, labels,
-icons, focus, and interaction state remain live Godot controls.
+The five files under `backgrounds/` are the single retained bitmaps for the
+owner-selected UI-shell candidates. They contain world atmosphere only; all
+panels, labels, icons, focus, and interaction state remain live Godot controls.
 
 | Asset | Intended role |
 | --- | --- |
@@ -56,8 +56,8 @@ icons, focus, and interaction state remain live Godot controls.
 No current runtime scene consumes these images after the isometric pivot reset.
 Future shell screens may reuse them with aspect-preserving cover behavior. Do not
 stretch these files, tile them, or bake screen controls into replacements.
-Source references and generation provenance remain under
-`docs/design/references/ui-shell/`.
+Generation provenance remains in `docs/design/references/ui-shell/README.md`;
+byte-identical source copies are intentionally not retained.
 
 ## Raster UI illustrations
 

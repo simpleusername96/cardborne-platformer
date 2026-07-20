@@ -3,7 +3,7 @@ type: evidence
 status: active
 owner: BK
 created: 2026-07-13
-last_reviewed: 2026-07-17
+last_reviewed: 2026-07-20
 topic: Retained Cardborne visual references
 scope: Mood, palette, shell composition, and production UI asset evidence for the isometric action RPG pivot
 source: Owner-selected images and project-generated references through 2026-07-17
@@ -34,8 +34,9 @@ layouts from becoming isometric gameplay geometry by accident.
 
 ### Shell and UI assets
 
-- `ui-shell/background-*.png` are source references for retained production
-  copies under `art/ui/production/backgrounds/`.
+- The selected shell backgrounds live only under
+  `art/ui/production/backgrounds/`; `ui-shell/README.md` retains their generation
+  provenance without duplicate bitmap copies.
 - `ui-shell/panel-*.png` are shape-language evidence only; never crop them into
   production controls.
 - `ui-assets/README.md` records the generated illustration family and asset IDs.

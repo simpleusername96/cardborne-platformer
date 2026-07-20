@@ -3,7 +3,7 @@ type: evidence
 status: active
 owner: BK
 created: 2026-07-15
-last_reviewed: 2026-07-17
+last_reviewed: 2026-07-20
 topic: Selected UI shell backdrops and panel image-generation references
 scope: Main Menu, Settings, Hero Preparation, Forge, Run Result, and reusable panel references
 source: Owner-approved art direction, retired production UI layouts, and built-in image generation
@@ -16,9 +16,9 @@ related:
 
 ## Purpose
 
-Keep the accepted visual anchor, selected shell-backdrop sources, and generated
-panel-family references together. Reference files remain outside Godot import;
-selected backgrounds have retained copies in the production asset tree.
+Keep the accepted visual anchor, selected shell-backdrop provenance, and generated
+panel-family references together. Selected backgrounds live once in the
+production asset tree; this folder does not retain byte-identical source copies.
 
 ## Sources
 
@@ -31,23 +31,23 @@ selected backgrounds have retained copies in the production asset tree.
 
 | File | Role | Composition contract |
 | --- | --- | --- |
-| `background-main-menu-v01.png` | Main Menu backdrop | Dark quiet left field; architectural opening and depth concentrated on the right. |
-| `background-settings-v01.png` | Settings shell backdrop | Perimeter-weighted archive/control chamber; calm center for the large settings panel. |
-| `background-preparation-v01.png` | Hero Preparation backdrop | Subdued armory hall with detail confined to extreme edges and upper band. |
-| `background-forge-v01.png` | Forge backdrop | Ancient workshop with restrained amber heat at the perimeter and a quiet work surface. |
-| `background-run-result-v01.png` | Run Result backdrop | Monumental crown gate with a low-contrast central result zone and edge framing. |
+| `../../../../art/ui/production/backgrounds/main_menu.png` | Main Menu backdrop | Dark quiet left field; architectural opening and depth concentrated on the right. |
+| `../../../../art/ui/production/backgrounds/settings.png` | Settings shell backdrop | Perimeter-weighted archive/control chamber; calm center for the large settings panel. |
+| `../../../../art/ui/production/backgrounds/hero_preparation.png` | Hero Preparation backdrop | Subdued armory hall with detail confined to extreme edges and upper band. |
+| `../../../../art/ui/production/backgrounds/forge.png` | Forge backdrop | Ancient workshop with restrained amber heat at the perimeter and a quiet work surface. |
+| `../../../../art/ui/production/backgrounds/run_result.png` | Run Result backdrop | Monumental crown gate with a low-contrast central result zone and edge framing. |
 | `panel-shell-reference-v01.png` | Panel direction sheet | Large settings slab, pause slab, compact confirmation, and header/banner silhouettes. |
 | `panel-choice-reference-v01.png` | Panel direction sheet | Choice card, detail surface, result summary, receipt band, and action-band silhouettes. |
 | `ui-shell-candidates-contact-sheet.png` | Review board | One-page comparison of the seven generated candidates. |
 
-## Retained Production Copies
+## Retained Production Files
 
 The owner selected all five screen backgrounds for production consideration on
-2026-07-15. Their copies remain available below; no current runtime scene consumes
-them after the isometric pivot reset. Source files remain provenance and
-comparison evidence.
+2026-07-15. The files below are the single retained bitmaps; no current runtime
+scene consumes them after the isometric pivot reset. This document and the
+generator identifiers below retain provenance without duplicating each PNG.
 
-| Selected source | Production copy |
+| Prior candidate label | Retained file |
 | --- | --- |
 | `background-main-menu-v01.png` | `art/ui/production/backgrounds/main_menu.png` |
 | `background-settings-v01.png` | `art/ui/production/backgrounds/settings.png` |
@@ -86,10 +86,12 @@ interaction, and state live in Godot controls.
 
 ## Findings
 
-- All five backdrop candidates are `1672x941` 16:9 images, contain no baked text or UI, and preserve the required screen-specific quiet zones.
+- All five retained backdrops are `1672x941` 16:9 images, contain no baked text
+  or UI, and preserve the required screen-specific quiet zones.
 - The two panel sheets contain only related dark-navy silhouettes on a neutral review canvas. Their slight generated tonal variation is reference material, not a production texture treatment.
 - The retained files test whether one simplified art family can cover multiple shell screens while preserving the separation between bitmap backdrops and live UI panels.
-- All five background sources remain separate production copies; none is currently connected, and the two panel sheets remain non-runtime references.
+- The five backgrounds each have one retained production file; none is currently
+  connected, and the two panel sheets remain non-runtime references.
 
 ## Limitations
 

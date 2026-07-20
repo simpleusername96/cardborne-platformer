@@ -64,11 +64,11 @@
     "confirm": { "state": "runtime", "reason": "Default Level Reward semantic art and confirmation fallback." }
   },
   "backgrounds": [
-    { "id": "shell_main_menu", "file": "backgrounds/main_menu.png", "size": [1672, 941], "screen": "Main Menu", "source": "docs/design/references/ui-shell/background-main-menu-v01.png" },
-    { "id": "shell_settings", "file": "backgrounds/settings.png", "size": [1672, 941], "screen": "Shell Settings", "source": "docs/design/references/ui-shell/background-settings-v01.png" },
-    { "id": "shell_hero_preparation", "file": "backgrounds/hero_preparation.png", "size": [1672, 941], "screen": "Hero Preparation", "source": "docs/design/references/ui-shell/background-preparation-v01.png" },
-    { "id": "shell_forge", "file": "backgrounds/forge.png", "size": [1672, 941], "screen": "Forge contextual/deferred", "source": "docs/design/references/ui-shell/background-forge-v01.png" },
-    { "id": "shell_run_result", "file": "backgrounds/run_result.png", "size": [1672, 941], "screen": "Run Result", "source": "docs/design/references/ui-shell/background-run-result-v01.png" }
+    { "id": "shell_main_menu", "file": "backgrounds/main_menu.png", "size": [1672, 941], "screen": "Main Menu", "source": "docs/design/references/ui-shell/README.md#generation-record" },
+    { "id": "shell_settings", "file": "backgrounds/settings.png", "size": [1672, 941], "screen": "Shell Settings", "source": "docs/design/references/ui-shell/README.md#generation-record" },
+    { "id": "shell_hero_preparation", "file": "backgrounds/hero_preparation.png", "size": [1672, 941], "screen": "Hero Preparation", "source": "docs/design/references/ui-shell/README.md#generation-record" },
+    { "id": "shell_forge", "file": "backgrounds/forge.png", "size": [1672, 941], "screen": "Forge contextual/deferred", "source": "docs/design/references/ui-shell/README.md#generation-record" },
+    { "id": "shell_run_result", "file": "backgrounds/run_result.png", "size": [1672, 941], "screen": "Run Result", "source": "docs/design/references/ui-shell/README.md#generation-record" }
   ],
   "illustrations": [
     { "id": "portrait_traveler", "role": "character_portrait", "file": "illustrations/characters/traveler.png", "size": [512, 512], "display_sizes": [64, 160, 256], "safe_padding_px": 16, "fallback": "melee", "tint": false, "owner": "traveler", "source": "docs/design/references/ui-assets/README.md#traveler" },
