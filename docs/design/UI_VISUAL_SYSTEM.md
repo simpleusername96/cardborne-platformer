@@ -3,12 +3,13 @@ type: spec
 status: active
 owner: BK
 created: 2026-07-13
-last_reviewed: 2026-07-20
+last_reviewed: 2026-07-21
 canonical_for: Cardborne UI art direction, shell backdrop roles, panel visual roles, and raster/vector asset boundaries
 scope: Accepted production UI visual language, asset roles, Theme ownership, reusable components, and validation
 source: Owner-approved UI direction through 2026-07-17 and the retained project-original UI asset pack
 related:
   - ./references/README.md
+  - ./vehicle-stage-one-art-directions-v2/02-sunken-ceramic-fresco.png
   - ../../art/ui/production/README.md
   - ../research/third_party_adoption_ledger.md
   - ../../.agent/execplans/2026-07-17-native-3d-isometric-foundation.md
@@ -51,6 +52,33 @@ the new runtime is rebuilt.
 - Monumental stone masses, vertical shafts, arches, gates, chains, restrained oxidized metal, and sparse moss establish the place.
 - Pale cyan distance light creates depth; mustard amber marks rare machinery or guidance; coral and violet remain small semantic accents.
 - Different screens show different rooms or camera positions in the same architectural family. They do not repeat one composition or introduce a new palette per screen.
+
+### Vehicle Stage 1: Sunken Ceramic Fresco exception
+
+The current flat top-down vehicle experiment uses
+`vehicle-stage-one-art-directions-v2/02-sunken-ceramic-fresco.png` as its
+owner-selected visual anchor. This is a scoped world-presentation exception to
+the dark-dominant backdrop rule, not a replacement for the retained shell
+backgrounds or unrelated screens.
+
+- Warm ivory is the dominant traversable ground color.
+- Cobalt marks deep water, void, and the world beyond the authored route.
+- Deep ceramic green marks solid collision and projectile-blocking masonry.
+- Mustard identifies the player, route objectives, and rewards; coral identifies
+  enemies, damage, and active threat; mint identifies recovery and support.
+- Decorative color never reuses full-strength coral or mustard, so decoration
+  cannot be mistaken for danger or reward.
+- At 720p, the player renders at `72-88 px`, ordinary enemies at `64-80 px`,
+  installations at `96-128 px`, the field boss at `150-190 px`, the stage boss
+  at `200-260 px`, pickups at `56-72 px`, and major floor motifs at `240-500 px`.
+- Use no more than one major floor motif per camera-sized combat space. Reject
+  repeated dots, micro-tiles, tiny decorative fragments, and patterned carpets.
+- The world remains larger than the viewport. Build it from live semantic
+  geometry and stateful components; never ship the reference image as a baked
+  map texture or infer collision from decorative paint.
+- Shallow edge bands may imply ceramic thickness only along truly blocked or
+  out-of-bounds edges. Top-down simulation, aim, and projectile truth remain
+  unchanged.
 
 ## Image Construction Rules
 

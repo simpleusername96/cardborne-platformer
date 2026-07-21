@@ -9,6 +9,7 @@ extends Node2D
 
 const Rules = preload("res://scripts/vehicle/vehicle_stage_rules.gd")
 const StageUI = preload("res://scripts/ui/vehicle_stage_ui.gd")
+const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 
 enum RunMode {
 	DEPLOYMENT,
@@ -694,7 +695,7 @@ func _fire_primary() -> void:
 				960.0,
 				0
 			)
-	_add_effect("muzzle", origin, Rules.AMBER, 0.09, 24.0, player_aim_direction)
+	_add_effect("muzzle", origin, Art.MUSTARD, 0.09, 32.0, player_aim_direction)
 
 
 func _spawn_player_projectile(origin: Vector2, direction: Vector2, damage: float, speed: float, extra_pierce: int) -> void:
@@ -705,7 +706,7 @@ func _spawn_player_projectile(origin: Vector2, direction: Vector2, damage: float
 		"team": &"player",
 		"damage": damage,
 		"life": PRIMARY_RANGE / speed,
-		"color": Rules.CYAN,
+		"color": Art.MUSTARD,
 		"owner": "player_primary",
 		"pierce": extra_pierce + (1 if applied_upgrades.has(&"phase_lance") else 0),
 		"bounces": 1 if applied_upgrades.has(&"ricochet_matrix") else 0,
@@ -736,7 +737,7 @@ func _update_passive_secondary() -> void:
 			"team": &"player",
 			"damage": 25.0,
 			"life": 1.8,
-			"color": Rules.MOSS,
+			"color": Art.MINT,
 			"owner": "passive_seeker",
 			"pierce": 0,
 			"bounces": 0,
@@ -780,7 +781,7 @@ func _start_emp() -> void:
 	player_emp_cooldown = _emp_cooldown_max()
 	player_invulnerable = maxf(player_invulnerable, 0.24)
 	_play_sound(&"emp_start")
-	_add_effect("emp_start", player_position, Rules.VIOLET, EMP_STARTUP, EMP_RADIUS)
+	_add_effect("emp_start", player_position, Art.BOSS_MAGENTA, EMP_STARTUP, EMP_RADIUS)
 
 
 func _release_emp(is_aftershock: bool) -> void:
@@ -791,14 +792,14 @@ func _release_emp(is_aftershock: bool) -> void:
 	for enemy in enemies:
 		if bool(enemy["alive"]) and Vector2(enemy["pos"]).distance_to(player_position) <= radius:
 			enemy["stun"] = maxf(float(enemy["stun"]), 1.25 if is_aftershock else 2.1)
-	_add_effect("shock", player_position, Rules.VIOLET, 0.55, radius)
+	_add_effect("shock", player_position, Art.BOSS_MAGENTA, 0.55, radius)
 	camera_shake = maxf(camera_shake, 11.0 if not is_aftershock else 6.0)
 	_play_sound(&"emp", 1.2 if is_aftershock else 1.0)
 	if not is_aftershock and applied_upgrades.has(&"emp_aftershock"):
 		effects.append({
 			"kind": "scheduled_aftershock",
 			"pos": player_position,
-			"color": Rules.VIOLET,
+			"color": Art.BOSS_MAGENTA,
 			"time": 0.72,
 			"duration": 0.72,
 			"radius": radius * 0.68,
@@ -851,14 +852,14 @@ func _collect_pickup(pickup: Dictionary) -> void:
 func _pickup_color(kind: StringName) -> Color:
 	match kind:
 		&"repair":
-			return Rules.MOSS
+			return Art.MINT
 		&"attack":
-			return Rules.CORAL
+			return Art.CORAL
 		&"overdrive":
-			return Rules.AMBER
+			return Art.MUSTARD
 		&"barrier":
-			return Rules.CYAN
-	return Rules.OFF_WHITE
+			return Art.COBALT_WATER
+	return Art.IVORY_BRIGHT
 
 
 func _update_enemies(delta: float) -> void:
@@ -2078,9 +2079,13 @@ func _build_hud_snapshot() -> Dictionary:
 		"objective_detail": objective[1],
 		"primary_name": primary_name,
 		"primary_state": primary_state,
+		"primary_ratio": 0.0,
 		"dash_state": dash_state,
+		"dash_ratio": clampf(player_dash_cooldown / DASH_COOLDOWN, 0.0, 1.0),
 		"passive_state": passive_state,
+		"passive_ratio": clampf(player_passive_cooldown / PASSIVE_COOLDOWN, 0.0, 1.0),
 		"skill_state": skill_state,
+		"skill_ratio": clampf(player_emp_cooldown / _emp_cooldown_max(), 0.0, 1.0),
 		"buff_text": "  •  ".join(buffs),
 		"target": target_snapshot,
 		"boss": boss_snapshot,
@@ -2090,18 +2095,18 @@ func _build_hud_snapshot() -> Dictionary:
 
 func _objective_text() -> Array[String]:
 	if boss_started:
-		return ["BREAK THE FOUNDRY COLOSSUS", "Read the current tell, remove pylons, use recovery windows."]
+		return ["BREAK THE FOUNDRY COLOSSUS", "Read the tell. Remove pylons. Fire during recovery."]
 	if generators_destroyed < 2 and entered_installations:
 		return [
 			"DISABLE THE BARRIER GRID  %d / 2" % generators_destroyed,
-			"Upper route risks the Dredge Warden. Lower route holds traps and field power.",
+			"Upper route: Warden. Lower route: traps and field power.",
 		]
 	if generators_destroyed >= 2 and not chest_claimed:
 		return ["CLAIM THE SALVAGE CACHE", "Combat suspends at the amber cache. Choose one live circuit."]
 	if generators_destroyed >= 2 and chest_claimed:
 		return ["ENTER THE COLOSSUS BASIN", "The relay gate is open. Living ordinary enemies do not block it."]
 	if entered_approach:
-		return ["CROSS THE FOUNDRY APPROACH", "Moving enemies pressure the route, but extermination is optional."]
+		return ["CROSS THE FOUNDRY APPROACH", "The eastern route stays open; fighting is optional."]
 	var checklist := "MOVE %s  AIM %s  FIRE %s  DASH %s" % [
 		"✓" if tutorial_move else "—",
 		"✓" if tutorial_aim else "—",
@@ -2215,48 +2220,135 @@ func _draw() -> void:
 
 
 func _draw_world() -> void:
-	draw_rect(Rules.WORLD_RECT, Rules.CANVAS)
+	draw_rect(Rules.WORLD_RECT, Art.COBALT_VOID)
 	for region in Rules.get_floor_regions():
-		draw_rect(Rect2(region["rect"]), Color(region["color"]))
-	for x in range(220, 5100, 300):
-		draw_circle(Vector2(float(x), 1100.0), 5.0, Color(Rules.AMBER, 0.35))
+		var edge_rect := Rect2(region["rect"])
+		edge_rect.position += Art.COVER_EDGE_OFFSET
+		draw_colored_polygon(Art.stepped_rect(edge_rect, 52.0), Art.COBALT_DEEP)
+	for region in Rules.get_floor_regions():
+		draw_colored_polygon(Art.stepped_rect(Rect2(region["rect"]), 52.0), Art.IVORY)
+	_draw_major_motifs()
+
+
+func _draw_major_motifs() -> void:
+	for motif in Art.major_motifs():
+		var kind := StringName(motif["kind"])
+		var center := Vector2(motif["center"])
+		var radius := float(motif["radius"])
+		var rotation := float(motif["rotation"])
+		var color := Color(motif["color"])
+		match kind:
+			&"tide_curl":
+				_draw_tide_curl(center, radius, rotation, color)
+			&"split_current":
+				_draw_split_current(center, radius, rotation, color)
+			&"relay_flower":
+				_draw_relay_flower(center, radius, rotation, color)
+			&"sun_gate":
+				_draw_sun_gate(center, radius, rotation, color)
+
+
+func _draw_tide_curl(center: Vector2, radius: float, rotation: float, color: Color) -> void:
+	var sweep := PackedVector2Array()
+	for index in 18:
+		var progress := float(index) / 17.0
+		var angle := rotation + progress * PI * 1.55
+		var distance := lerpf(radius, radius * 0.16, progress)
+		sweep.append(center + Vector2.RIGHT.rotated(angle) * distance)
+	for index in range(sweep.size() - 1):
+		draw_line(sweep[index], sweep[index + 1], color, lerpf(58.0, 26.0, float(index) / 17.0), true)
+	draw_circle(center + Vector2.RIGHT.rotated(rotation + PI * 1.55) * radius * 0.16, radius * 0.13, color)
+
+
+func _draw_split_current(center: Vector2, radius: float, rotation: float, color: Color) -> void:
+	for side in [-1.0, 1.0]:
+		var points := PackedVector2Array([
+			Vector2(-radius * 0.82, side * radius * 0.16),
+			Vector2(-radius * 0.18, side * radius * 0.46),
+			Vector2(radius * 0.72, side * radius * 0.24),
+			Vector2(radius * 0.28, side * radius * 0.02),
+			Vector2(-radius * 0.12, side * radius * 0.12),
+		])
+		for index in points.size():
+			points[index] = center + points[index].rotated(rotation)
+		draw_colored_polygon(points, color)
+	draw_circle(center, radius * 0.18, Color(Art.IVORY, 0.86))
+
+
+func _draw_relay_flower(center: Vector2, radius: float, rotation: float, color: Color) -> void:
+	for index in 4:
+		var angle := rotation + TAU * float(index) / 4.0
+		var petal_center := center + Vector2.RIGHT.rotated(angle) * radius * 0.42
+		draw_colored_polygon(_regular_polygon(petal_center, radius * 0.42, 8, angle), color)
+	draw_circle(center, radius * 0.24, Color(Art.IVORY, 0.82))
+
+
+func _draw_sun_gate(center: Vector2, radius: float, rotation: float, color: Color) -> void:
+	draw_circle(center, radius * 0.68, color)
+	draw_circle(center, radius * 0.43, Color(Art.IVORY, 0.95))
+	for index in 8:
+		var angle := rotation + TAU * float(index) / 8.0
+		var direction := Vector2.RIGHT.rotated(angle)
+		var tangent := direction.rotated(PI * 0.5)
+		var root := center + direction * radius * 0.72
+		draw_colored_polygon(PackedVector2Array([
+			root - tangent * radius * 0.11,
+			center + direction * radius,
+			root + tangent * radius * 0.11,
+		]), color)
 
 
 func _draw_water_and_floor() -> void:
 	for water in Rules.get_water_rects():
-		draw_rect(water, Rules.WATER)
-		var y := water.position.y + 18.0
-		while y < water.end.y:
-			draw_line(Vector2(water.position.x + 14.0, y), Vector2(water.end.x - 14.0, y), Color(Rules.CYAN, 0.09), 2.0)
-			y += 54.0
-	# Broad foundry rails, not repeated micro-tiles.
-	draw_rect(Rect2(700.0, 1015.0, 1280.0, 26.0), Color("#34464A"))
-	draw_rect(Rect2(700.0, 1160.0, 1280.0, 26.0), Color("#34464A"))
-	draw_rect(Rect2(3310.0, 1045.0, 570.0, 30.0), Color("#34464A"))
-	draw_rect(Rect2(3310.0, 1195.0, 570.0, 30.0), Color("#34464A"))
+		var edge := water
+		edge.position += Vector2(10.0, 14.0)
+		draw_colored_polygon(Art.stepped_rect(edge, 30.0), Art.COBALT_DEEP)
+		draw_colored_polygon(Art.stepped_rect(water, 30.0), Art.COBALT_WATER)
+		var wave_y := water.get_center().y
+		draw_line(
+			Vector2(water.position.x + 28.0, wave_y),
+			Vector2(water.end.x - 28.0, wave_y),
+			Color(Art.IVORY_BRIGHT, 0.22),
+			8.0,
+			true
+		)
+	# Broad route inlays replace repeated rails and remain decorative only.
+	draw_rect(Rect2(720.0, 1010.0, 1240.0, 42.0), Color(Art.IVORY_SHADE, 0.82))
+	draw_rect(Rect2(720.0, 1150.0, 1240.0, 42.0), Color(Art.IVORY_SHADE, 0.82))
+	draw_rect(Rect2(3320.0, 1038.0, 540.0, 44.0), Color(Art.MINT, 0.42))
+	draw_rect(Rect2(3320.0, 1188.0, 540.0, 44.0), Color(Art.MINT, 0.42))
 
 
 func _draw_cover() -> void:
 	for rect in Rules.get_cover_rects(false):
-		draw_rect(rect, Rules.RAISED)
-		var inset := rect.grow(-10.0)
-		if inset.size.x > 8.0 and inset.size.y > 8.0:
-			draw_rect(inset, Color("#304044"))
+		var edge := rect
+		edge.position += Art.COVER_EDGE_OFFSET
+		draw_colored_polygon(Art.stepped_rect(edge, 24.0), Art.COBALT_DEEP)
+		draw_colored_polygon(Art.stepped_rect(rect, 24.0), Art.CERAMIC_GREEN)
+		var cap := rect.grow(-12.0)
+		if cap.size.x > 24.0 and cap.size.y > 24.0:
+			draw_colored_polygon(Art.stepped_rect(cap, 16.0), Art.CERAMIC_GREEN_MID)
 	if _boss_gate_closed():
-		draw_rect(Rules.BOSS_GATE, Color("#3A3432"))
-		for y in range(int(Rules.BOSS_GATE.position.y + 20.0), int(Rules.BOSS_GATE.end.y), 52):
-			draw_rect(Rect2(Rules.BOSS_GATE.position.x + 10.0, float(y), Rules.BOSS_GATE.size.x - 20.0, 12.0), Rules.AMBER)
+		draw_colored_polygon(Art.stepped_rect(Rules.BOSS_GATE, 18.0), Art.CERAMIC_GREEN)
+		var gate_center := Rules.BOSS_GATE.get_center()
+		for offset in [-150.0, -50.0, 50.0, 150.0]:
+			draw_rect(Rect2(gate_center + Vector2(-24.0, offset - 14.0), Vector2(48.0, 28.0)), Art.MUSTARD)
 
 
 func _draw_landmarks() -> void:
 	if not chest_claimed:
-		var chest_rect := Rect2(Rules.CHEST_POSITION - Vector2(45.0, 32.0), Vector2(90.0, 64.0))
-		draw_rect(chest_rect, Color("#594725"))
-		draw_rect(chest_rect.grow(-9.0), Rules.AMBER)
-		draw_circle(Rules.CHEST_POSITION, 8.0 + sin(run_time * 4.0) * 2.0, Rules.OFF_WHITE)
+		var chest_rect := Rect2(Rules.CHEST_POSITION - Art.CACHE_HALF_SIZE, Art.CACHE_HALF_SIZE * 2.0)
+		var edge := chest_rect
+		edge.position += Vector2(10.0, 14.0)
+		draw_colored_polygon(Art.stepped_rect(edge, 18.0), Art.MUSTARD_DARK)
+		draw_colored_polygon(Art.stepped_rect(chest_rect, 18.0), Art.MUSTARD)
+		draw_colored_polygon(_regular_polygon(Rules.CHEST_POSITION, 25.0, 4, PI / 4.0), Art.IVORY_BRIGHT)
+		draw_colored_polygon(_regular_polygon(Rules.CHEST_POSITION, 12.0, 4, PI / 4.0), Art.CERAMIC_GREEN)
 	if generators_destroyed >= 2 and chest_claimed and not boss_started:
-		draw_circle(Vector2(3860.0, 1100.0), 38.0 + sin(run_time * 3.0) * 6.0, Color(Rules.CYAN, 0.35))
-		draw_circle(Vector2(3860.0, 1100.0), 13.0, Rules.CYAN)
+		var exit_center := Vector2(3860.0, 1100.0)
+		var pulse := 54.0 + sin(run_time * 3.0) * 7.0
+		draw_circle(exit_center, pulse, Color(Art.MUSTARD, 0.28))
+		draw_colored_polygon(_regular_polygon(exit_center, 24.0, 4, PI / 4.0), Art.MUSTARD)
 
 
 func _draw_zones_and_trails() -> void:
@@ -2266,14 +2358,15 @@ func _draw_zones_and_trails() -> void:
 		var color := Color(zone["color"])
 		if float(zone["warning"]) > 0.0:
 			var progress := 1.0 - float(zone["warning"]) / 0.82
-			draw_arc(position, radius, 0.0, TAU * progress, 48, color, 5.0)
-			draw_circle(position, 8.0, color)
+			draw_circle(position, radius, Color(Art.CORAL, 0.10))
+			draw_arc(position, radius, -PI * 0.5, -PI * 0.5 + TAU * progress, 48, Art.CORAL, 11.0)
+			draw_colored_polygon(_regular_polygon(position, 13.0, 4, PI / 4.0), Art.CORAL)
 		else:
-			draw_circle(position, radius, Color(color, 0.24))
-			draw_arc(position, radius, 0.0, TAU, 48, color, 4.0)
+			draw_circle(position, radius, Color(Art.CORAL, 0.30))
+			draw_circle(position, radius * 0.70, Color(Art.CORAL_DARK, 0.16))
 	for trail in damaging_trails:
 		var alpha := clampf(float(trail["time"]) / float(trail["duration"]), 0.0, 1.0)
-		draw_circle(Vector2(trail["pos"]), float(trail["radius"]), Color(Rules.CYAN, alpha * 0.22))
+		draw_circle(Vector2(trail["pos"]), float(trail["radius"]), Color(Art.MUSTARD, alpha * 0.28))
 
 
 func _draw_pickups_and_crates() -> void:
@@ -2283,39 +2376,47 @@ func _draw_pickups_and_crates() -> void:
 		var position := Vector2(pickup["pos"])
 		var kind := StringName(pickup["kind"])
 		var color := _pickup_color(kind)
-		var bob := sin(float(pickup["pulse"])) * 5.0
+		var bob := sin(float(pickup["pulse"])) * 3.0
 		position.y += bob
-		draw_circle(position, 24.0, Color(color, 0.18))
+		var plinth_radius := Art.PICKUP_PLINTH_RADIUS
+		draw_circle(position + Vector2(7.0, 9.0), plinth_radius, Art.COBALT_DEEP)
+		draw_circle(position, plinth_radius, Art.IVORY_BRIGHT)
+		draw_circle(position, plinth_radius - 8.0, Art.CERAMIC_GREEN_MID)
 		match kind:
 			&"repair":
-				draw_rect(Rect2(position - Vector2(6.0, 18.0), Vector2(12.0, 36.0)), color)
-				draw_rect(Rect2(position - Vector2(18.0, 6.0), Vector2(36.0, 12.0)), color)
+				draw_rect(Rect2(position - Vector2(7.0, 22.0), Vector2(14.0, 44.0)), color)
+				draw_rect(Rect2(position - Vector2(22.0, 7.0), Vector2(44.0, 14.0)), color)
 			&"attack":
 				draw_colored_polygon(PackedVector2Array([
-					position + Vector2(0.0, -20.0),
-					position + Vector2(19.0, 16.0),
-					position + Vector2(-19.0, 16.0),
+					position + Vector2(0.0, -25.0),
+					position + Vector2(24.0, 20.0),
+					position + Vector2(-24.0, 20.0),
 				]), color)
 			&"overdrive":
 				draw_colored_polygon(PackedVector2Array([
-					position + Vector2(-18.0, -17.0),
+					position + Vector2(-24.0, -22.0),
 					position + Vector2(2.0, 0.0),
-					position + Vector2(-18.0, 17.0),
-					position + Vector2(4.0, 17.0),
-					position + Vector2(23.0, 0.0),
-					position + Vector2(4.0, -17.0),
+					position + Vector2(-24.0, 22.0),
+					position + Vector2(5.0, 22.0),
+					position + Vector2(28.0, 0.0),
+					position + Vector2(5.0, -22.0),
 				]), color)
 			&"barrier":
-				draw_arc(position, 20.0, 0.0, TAU, 32, color, 6.0)
-				draw_circle(position, 6.0, color)
+				draw_colored_polygon(_regular_polygon(position, 25.0, 6, PI / 6.0), color)
+				draw_colored_polygon(_regular_polygon(position, 14.0, 6, PI / 6.0), Art.IVORY_BRIGHT)
+				draw_circle(position, 7.0, color)
 	for crate in crates:
 		if not bool(crate["alive"]):
 			continue
 		var position := Vector2(crate["pos"])
-		var color := Rules.OFF_WHITE if float(crate["flash"]) > 0.0 else Color("#6A5934")
-		draw_rect(Rect2(position - Vector2(31.0, 31.0), Vector2(62.0, 62.0)), color)
-		draw_rect(Rect2(position - Vector2(20.0, 20.0), Vector2(40.0, 40.0)), Color("#3E3A2D"))
-		draw_line(position + Vector2(-18.0, -18.0), position + Vector2(18.0, 18.0), Rules.AMBER, 5.0)
+		var face := Art.IVORY_BRIGHT if float(crate["flash"]) > 0.0 else Art.IVORY_SHADE
+		var crate_rect := Rect2(position - Vector2(38.0, 38.0), Vector2(76.0, 76.0))
+		var edge := crate_rect
+		edge.position += Vector2(8.0, 10.0)
+		draw_colored_polygon(Art.stepped_rect(edge, 12.0), Art.MUSTARD_DARK)
+		draw_colored_polygon(Art.stepped_rect(crate_rect, 12.0), face)
+		draw_colored_polygon(_regular_polygon(position, 23.0, 4, PI / 4.0), Art.MUSTARD)
+		draw_colored_polygon(_regular_polygon(position, 11.0, 4, PI / 4.0), Art.CERAMIC_GREEN)
 
 
 func _draw_enemies() -> void:
@@ -2328,75 +2429,164 @@ func _draw_enemies() -> void:
 func _draw_enemy(enemy: Dictionary) -> void:
 	var role := StringName(enemy["role"])
 	var position := Vector2(enemy["pos"])
-	var radius := float(enemy["radius"])
-	var base_color := Rules.OFF_WHITE if float(enemy["flash"]) > 0.0 else _enemy_color(role)
+	var visual_radius := Art.enemy_visual_radius(role)
+	var base_color := Art.IVORY_BRIGHT if float(enemy["flash"]) > 0.0 else _enemy_color(role)
 	if bool(enemy["shielded"]):
-		draw_arc(position, radius + 10.0, 0.0, TAU, 32, Rules.CYAN, 4.0)
+		draw_circle(position, visual_radius + 14.0, Color(Art.MINT, 0.20))
+		draw_arc(position, visual_radius + 14.0, 0.0, TAU, 32, Art.MINT, 8.0)
 	match role:
 		&"chaser":
-			var direction := (player_position - position).normalized()
-			draw_colored_polygon(_rotated_polygon(position, [
-				Vector2(30.0, 0.0),
-				Vector2(-20.0, -22.0),
-				Vector2(-28.0, 0.0),
-				Vector2(-20.0, 22.0),
-			], direction.angle()), base_color)
+			_draw_chaser(position, visual_radius, (player_position - position).angle(), base_color)
 		&"shooter":
-			draw_rect(Rect2(position - Vector2(23.0, 17.0), Vector2(46.0, 34.0)), base_color)
-			var aim := (player_position - position).normalized()
-			draw_line(position, position + aim * 44.0, Rules.CORAL, 8.0)
+			_draw_shooter(position, visual_radius, (player_position - position).angle(), base_color)
 		&"controller":
-			draw_circle(position, 29.0, base_color)
-			for angle in [0.0, TAU / 3.0, TAU * 2.0 / 3.0]:
-				draw_circle(position + Vector2.RIGHT.rotated(float(angle)) * 37.0, 8.0, Rules.CORAL)
+			_draw_controller(position, visual_radius, base_color)
 		&"turret":
-			draw_rect(Rect2(position - Vector2(30.0, 30.0), Vector2(60.0, 60.0)), base_color)
 			var turret_dir := Vector2(enemy["committed_dir"]) if String(enemy["phase"]) != "move" else (player_position - position).normalized()
-			draw_line(position, position + turret_dir * 54.0, Rules.CORAL, 11.0)
+			_draw_turret(position, visual_radius, turret_dir.angle(), base_color)
 		&"mine":
-			draw_colored_polygon(_regular_polygon(position, 28.0, 6), base_color)
-			draw_circle(position, 9.0, Rules.CORAL)
+			_draw_mine(position, visual_radius, base_color)
 		&"generator":
-			draw_circle(position, 37.0, base_color)
-			draw_arc(position, 54.0 + sin(run_time * 2.5) * 4.0, 0.0, TAU, 36, Rules.CYAN, 5.0)
-			draw_rect(Rect2(position - Vector2(9.0, 28.0), Vector2(18.0, 56.0)), Rules.AMBER)
+			_draw_generator(position, visual_radius, base_color)
 		&"field_boss":
-			draw_colored_polygon(_regular_polygon(position, 54.0, 6, PI / 6.0), base_color)
-			draw_circle(position, 25.0, Rules.VIOLET)
-			draw_line(position, position + Vector2(enemy["committed_dir"]) * 72.0, Rules.CORAL, 12.0)
+			_draw_field_boss(position, visual_radius, Vector2(enemy["committed_dir"]).angle(), base_color)
 		&"boss_pylon":
-			draw_colored_polygon(_regular_polygon(position, 34.0, 4, PI / 4.0), base_color)
-			draw_circle(position, 14.0, Rules.VIOLET)
+			_draw_boss_pylon(position, visual_radius, base_color)
 		&"stage_boss":
-			draw_colored_polygon(_regular_polygon(position, 78.0, 8, PI / 8.0), base_color)
-			draw_circle(position, 48.0, Color("#3E2E43"))
-			draw_rect(Rect2(position - Vector2(18.0, 62.0), Vector2(36.0, 124.0)), Rules.VIOLET)
-			draw_line(position, position + (player_position - position).normalized() * 105.0, Rules.CORAL, 16.0)
+			_draw_stage_boss(position, visual_radius, (player_position - position).angle(), base_color)
 
 	_draw_enemy_telegraph(enemy)
 	if role != &"stage_boss":
 		var health_ratio := clampf(float(enemy["health"]) / float(enemy["max_health"]), 0.0, 1.0)
-		draw_rect(Rect2(position + Vector2(-radius, radius + 12.0), Vector2(radius * 2.0, 6.0)), Color("#0B1012"))
-		draw_rect(Rect2(position + Vector2(-radius, radius + 12.0), Vector2(radius * 2.0 * health_ratio, 6.0)), Rules.CORAL)
+		var bar_width := visual_radius * 1.6
+		var bar_position := position + Vector2(-bar_width * 0.5, visual_radius + 14.0)
+		draw_rect(Rect2(bar_position, Vector2(bar_width, 10.0)), Art.IVORY_SHADE)
+		draw_rect(Rect2(bar_position, Vector2(bar_width * health_ratio, 10.0)), Art.CORAL)
+
+
+func _draw_chaser(position: Vector2, radius: float, angle: float, color: Color) -> void:
+	draw_colored_polygon(_rotated_polygon(position + Vector2(7.0, 9.0), [
+		Vector2(radius, 0.0), Vector2(radius * 0.08, -radius),
+		Vector2(-radius * 0.94, -radius * 0.50), Vector2(-radius * 0.58, 0.0),
+		Vector2(-radius * 0.94, radius * 0.50), Vector2(radius * 0.08, radius),
+	], angle), Art.CORAL_DARK)
+	draw_colored_polygon(_rotated_polygon(position, [
+		Vector2(radius, 0.0), Vector2(radius * 0.08, -radius),
+		Vector2(-radius * 0.82, -radius * 0.42), Vector2(-radius * 0.48, 0.0),
+		Vector2(-radius * 0.82, radius * 0.42), Vector2(radius * 0.08, radius),
+	], angle), color)
+	draw_colored_polygon(_rotated_polygon(position, [
+		Vector2(radius * 0.52, 0.0), Vector2(-radius * 0.08, -radius * 0.30),
+		Vector2(-radius * 0.18, 0.0), Vector2(-radius * 0.08, radius * 0.30),
+	], angle), Art.IVORY_BRIGHT)
+
+
+func _draw_shooter(position: Vector2, radius: float, angle: float, color: Color) -> void:
+	draw_colored_polygon(_rotated_polygon(position + Vector2(7.0, 9.0), [
+		Vector2(radius * 0.72, 0.0), Vector2(0.0, -radius),
+		Vector2(-radius * 0.72, 0.0), Vector2(0.0, radius),
+	], angle), Art.CORAL_DARK)
+	draw_colored_polygon(_rotated_polygon(position, [
+		Vector2(radius * 0.72, 0.0), Vector2(0.0, -radius),
+		Vector2(-radius * 0.72, 0.0), Vector2(0.0, radius),
+	], angle), color)
+	var direction := Vector2.RIGHT.rotated(angle)
+	draw_line(position - direction * radius * 0.08, position + direction * radius * 1.35, Art.IVORY_BRIGHT, 15.0)
+	draw_circle(position, radius * 0.24, Art.CORAL_DARK)
+
+
+func _draw_controller(position: Vector2, radius: float, color: Color) -> void:
+	for index in 3:
+		var angle := run_time * 0.22 + TAU * float(index) / 3.0
+		var petal := position + Vector2.RIGHT.rotated(angle) * radius * 0.54
+		draw_colored_polygon(_regular_polygon(petal, radius * 0.48, 4, angle), color)
+	draw_circle(position + Vector2(6.0, 8.0), radius * 0.56, Art.CORAL_DARK)
+	draw_circle(position, radius * 0.56, Art.IVORY_BRIGHT)
+	draw_colored_polygon(_regular_polygon(position, radius * 0.30, 6, run_time * -0.25), Art.CORAL)
+
+
+func _draw_turret(position: Vector2, radius: float, angle: float, color: Color) -> void:
+	var base_rect := Rect2(position - Vector2.ONE * radius, Vector2.ONE * radius * 2.0)
+	var edge := base_rect
+	edge.position += Vector2(8.0, 10.0)
+	draw_colored_polygon(Art.stepped_rect(edge, 15.0), Art.COBALT_DEEP)
+	draw_colored_polygon(Art.stepped_rect(base_rect, 15.0), Art.CERAMIC_GREEN)
+	draw_circle(position, radius * 0.55, color)
+	var direction := Vector2.RIGHT.rotated(angle)
+	draw_line(position, position + direction * radius * 1.35, Art.IVORY_BRIGHT, 18.0)
+	draw_circle(position, radius * 0.22, Art.CORAL_DARK)
+
+
+func _draw_mine(position: Vector2, radius: float, color: Color) -> void:
+	var points := PackedVector2Array()
+	for index in 16:
+		var point_radius := radius if index % 2 == 0 else radius * 0.54
+		points.append(position + Vector2.RIGHT.rotated(TAU * float(index) / 16.0) * point_radius)
+	draw_colored_polygon(points, color)
+	draw_circle(position, radius * 0.42, Art.CORAL_DARK)
+	draw_colored_polygon(_regular_polygon(position, radius * 0.22, 4, PI / 4.0), Art.IVORY_BRIGHT)
+
+
+func _draw_generator(position: Vector2, radius: float, color: Color) -> void:
+	draw_colored_polygon(_regular_polygon(position + Vector2(8.0, 10.0), radius, 8, PI / 8.0), Art.COBALT_DEEP)
+	draw_colored_polygon(_regular_polygon(position, radius, 8, PI / 8.0), Art.CERAMIC_GREEN)
+	for index in 4:
+		var angle := TAU * float(index) / 4.0
+		var petal := position + Vector2.RIGHT.rotated(angle) * radius * 0.42
+		draw_circle(petal, radius * 0.29, Art.IVORY_BRIGHT)
+	draw_circle(position, radius * 0.36 + sin(run_time * 3.0) * 3.0, color)
+	draw_colored_polygon(_regular_polygon(position, radius * 0.20, 4, PI / 4.0), Art.MUSTARD)
+
+
+func _draw_field_boss(position: Vector2, radius: float, angle: float, color: Color) -> void:
+	draw_colored_polygon(_rotated_polygon(position + Vector2(10.0, 12.0), [
+		Vector2(radius, 0.0), Vector2(radius * 0.34, -radius * 0.74),
+		Vector2(-radius * 0.72, -radius), Vector2(-radius * 0.45, 0.0),
+		Vector2(-radius * 0.72, radius), Vector2(radius * 0.34, radius * 0.74),
+	], angle), Art.CORAL_DARK)
+	draw_colored_polygon(_rotated_polygon(position, [
+		Vector2(radius, 0.0), Vector2(radius * 0.34, -radius * 0.74),
+		Vector2(-radius * 0.72, -radius), Vector2(-radius * 0.45, 0.0),
+		Vector2(-radius * 0.72, radius), Vector2(radius * 0.34, radius * 0.74),
+	], angle), color)
+	draw_colored_polygon(_regular_polygon(position, radius * 0.42, 6, angle), Art.IVORY_BRIGHT)
+	draw_circle(position, radius * 0.22, Art.CORAL)
+
+
+func _draw_boss_pylon(position: Vector2, radius: float, color: Color) -> void:
+	draw_colored_polygon(_regular_polygon(position + Vector2(8.0, 10.0), radius, 4, PI / 4.0), Art.COBALT_DEEP)
+	draw_colored_polygon(_regular_polygon(position, radius, 4, PI / 4.0), color)
+	draw_colored_polygon(_regular_polygon(position, radius * 0.56, 4, PI / 4.0), Art.IVORY_BRIGHT)
+	draw_circle(position, radius * 0.22, Art.BOSS_MAGENTA)
+
+
+func _draw_stage_boss(position: Vector2, radius: float, angle: float, color: Color) -> void:
+	var mask := [
+		Vector2(radius, 0.0), Vector2(radius * 0.50, -radius * 0.36),
+		Vector2(radius * 0.25, -radius), Vector2(-radius * 0.12, -radius * 0.58),
+		Vector2(-radius * 0.66, -radius * 0.78), Vector2(-radius * 0.48, 0.0),
+		Vector2(-radius * 0.66, radius * 0.78), Vector2(-radius * 0.12, radius * 0.58),
+		Vector2(radius * 0.25, radius), Vector2(radius * 0.50, radius * 0.36),
+	]
+	draw_colored_polygon(_rotated_polygon(position + Vector2(12.0, 15.0), mask, angle), Art.CORAL_DARK)
+	draw_colored_polygon(_rotated_polygon(position, mask, angle), color)
+	draw_colored_polygon(_regular_polygon(position, radius * 0.45, 8, angle + PI / 8.0), Art.IVORY_BRIGHT)
+	draw_colored_polygon(_regular_polygon(position, radius * 0.24, 4, angle + PI / 4.0), Art.CORAL)
+	var direction := Vector2.RIGHT.rotated(angle)
+	draw_line(position, position + direction * radius * 1.12, Art.CORAL_DARK, 24.0)
 
 
 func _enemy_color(role: StringName) -> Color:
 	match role:
-		&"chaser":
-			return Color("#526D6D")
-		&"shooter":
-			return Color("#5B7378")
-		&"controller":
-			return Color("#455E62")
+		&"chaser", &"shooter", &"controller", &"mine":
+			return Art.CORAL
 		&"turret":
-			return Color("#6F6752")
-		&"mine":
-			return Color("#665148")
+			return Art.CORAL_DARK
 		&"generator":
-			return Color("#4D6E72")
+			return Art.MINT
 		&"field_boss", &"stage_boss", &"boss_pylon":
-			return Rules.VIOLET
-	return Rules.MUTED
+			return Art.BOSS_MAGENTA
+	return Art.INK_MUTED
 
 
 func _draw_enemy_telegraph(enemy: Dictionary) -> void:
@@ -2407,24 +2597,38 @@ func _draw_enemy_telegraph(enemy: Dictionary) -> void:
 		var direction := Vector2(enemy["committed_dir"])
 		match role:
 			&"chaser", &"field_boss":
-				draw_line(position, position + direction * 190.0, Rules.CORAL, 8.0)
+				_draw_warning_beam(position, direction, 190.0, 34.0, Art.CORAL)
 			&"shooter", &"turret":
-				draw_line(position, position + direction * 620.0, Color(Rules.CORAL, 0.75), 4.0)
+				_draw_warning_beam(position, direction, 620.0, 20.0, Color(Art.CORAL, 0.72))
 			&"controller":
-				draw_arc(Vector2(enemy["committed_target"]), 112.0, 0.0, TAU, 36, Rules.CORAL, 5.0)
+				draw_circle(Vector2(enemy["committed_target"]), 112.0, Color(Art.CORAL, 0.14))
+				draw_arc(Vector2(enemy["committed_target"]), 112.0, 0.0, TAU, 36, Art.CORAL, 10.0)
 			&"mine":
-				draw_arc(position, 190.0, 0.0, TAU, 40, Rules.CORAL, 5.0)
+				draw_circle(position, 190.0, Color(Art.CORAL, 0.12))
+				draw_arc(position, 190.0, 0.0, TAU, 40, Art.CORAL, 10.0)
 	if role == &"stage_boss" and phase == "boss_startup":
 		var pattern := String(enemy["pattern"])
 		if pattern == "charge" or pattern == "overload_combo":
-			draw_line(position, position + Vector2(enemy["committed_dir"]) * 850.0, Color(Rules.VIOLET, 0.8), 12.0)
+			_draw_warning_beam(position, Vector2(enemy["committed_dir"]), 850.0, 64.0, Color(Art.CORAL, 0.72))
 		if pattern == "lane_barrage" or pattern == "overload_combo":
 			for lane_y_variant in enemy["lane_centers"]:
 				var lane_y := float(lane_y_variant)
-				draw_rect(Rect2(Rules.BOSS_ARENA.position.x, lane_y - 34.0, Rules.BOSS_ARENA.size.x, 68.0), Color(Rules.VIOLET, 0.22))
+				draw_rect(Rect2(Rules.BOSS_ARENA.position.x, lane_y - 40.0, Rules.BOSS_ARENA.size.x, 80.0), Color(Art.CORAL, 0.22))
 		if pattern == "pylons":
 			for pylon_position in [Vector2(4320.0, 760.0), Vector2(4320.0, 1440.0)]:
-				draw_arc(pylon_position, 58.0, 0.0, TAU, 32, Rules.VIOLET, 6.0)
+				draw_circle(pylon_position, 68.0, Color(Art.BOSS_MAGENTA, 0.18))
+				draw_arc(pylon_position, 68.0, 0.0, TAU, 32, Art.BOSS_MAGENTA, 9.0)
+
+
+func _draw_warning_beam(origin: Vector2, direction: Vector2, length: float, width: float, color: Color) -> void:
+	var normalized := direction.normalized()
+	var tangent := normalized.rotated(PI * 0.5)
+	draw_colored_polygon(PackedVector2Array([
+		origin - tangent * width * 0.5,
+		origin + normalized * length - tangent * width * 0.18,
+		origin + normalized * length + tangent * width * 0.18,
+		origin + tangent * width * 0.5,
+	]), Color(color, color.a * 0.42))
 
 
 func _draw_projectiles() -> void:
@@ -2433,8 +2637,9 @@ func _draw_projectiles() -> void:
 		var velocity := Vector2(projectile["velocity"])
 		var color := Color(projectile["color"])
 		var direction := velocity.normalized()
-		draw_line(position - direction * 18.0, position + direction * 5.0, color, float(projectile["radius"]) * 1.15)
-		draw_circle(position, float(projectile["radius"]), color)
+		var radius := maxf(7.0, float(projectile["radius"]) * 1.35)
+		draw_line(position - direction * 40.0, position + direction * 7.0, Color(color, 0.50), radius * 1.5, true)
+		draw_colored_polygon(_regular_polygon(position, radius, 4, direction.angle() + PI / 4.0), color)
 
 
 func _draw_effects() -> void:
@@ -2447,21 +2652,24 @@ func _draw_effects() -> void:
 		var radius := float(effect["radius"])
 		match kind:
 			"impact", "muzzle":
-				draw_circle(position, lerpf(4.0, radius, progress), Color(color, 1.0 - progress))
+				draw_colored_polygon(_regular_polygon(position, lerpf(8.0, radius, progress), 4, PI / 4.0), Color(color, 1.0 - progress))
 			"destroy":
-				draw_arc(position, lerpf(radius * 0.3, radius, progress), 0.0, TAU, 30, Color(color, 1.0 - progress), 8.0)
+				draw_circle(position, lerpf(radius * 0.3, radius, progress), Color(color, (1.0 - progress) * 0.28))
+				draw_arc(position, lerpf(radius * 0.3, radius, progress), 0.0, TAU, 30, Color(color, 1.0 - progress), 12.0)
 			"shock", "pickup", "spawn":
-				draw_arc(position, lerpf(10.0, radius, progress), 0.0, TAU, 42, Color(color, 1.0 - progress), 7.0)
+				draw_circle(position, lerpf(10.0, radius, progress), Color(color, (1.0 - progress) * 0.18))
+				draw_arc(position, lerpf(10.0, radius, progress), 0.0, TAU, 42, Color(color, 1.0 - progress), 11.0)
 			"dash_start":
-				draw_arc(position, lerpf(radius, radius * 0.2, progress), 0.0, TAU, 24, Color(color, 1.0 - progress), 6.0)
+				draw_arc(position, lerpf(radius, radius * 0.2, progress), 0.0, TAU, 24, Color(color, 1.0 - progress), 12.0)
 			"afterimage":
 				draw_colored_polygon(_rotated_polygon(position, [
-					Vector2(28.0, 0.0),
-					Vector2(-22.0, -18.0),
-					Vector2(-18.0, 18.0),
-				], Vector2(effect["dir"]).angle()), Color(color, (1.0 - progress) * 0.35))
+					Vector2(Art.PLAYER_VISUAL_RADIUS, 0.0),
+					Vector2(-Art.PLAYER_VISUAL_RADIUS * 0.78, -Art.PLAYER_VISUAL_RADIUS * 0.62),
+					Vector2(-Art.PLAYER_VISUAL_RADIUS * 0.62, Art.PLAYER_VISUAL_RADIUS * 0.62),
+				], Vector2(effect["dir"]).angle()), Color(color, (1.0 - progress) * 0.28))
 			"emp_start":
-				draw_arc(position, radius * (0.45 + progress * 0.55), 0.0, TAU * progress, 48, Color(color, 0.8), 8.0)
+				draw_circle(position, radius * (0.45 + progress * 0.55), Color(color, 0.10))
+				draw_arc(position, radius * (0.45 + progress * 0.55), 0.0, TAU * progress, 48, Color(color, 0.8), 13.0)
 			"barrier_hit", "support":
 				draw_arc(position, lerpf(radius * 0.7, radius, progress), 0.0, TAU, 32, Color(color, 1.0 - progress), 5.0)
 			"scheduled_aftershock":
@@ -2469,28 +2677,34 @@ func _draw_effects() -> void:
 
 
 func _draw_player() -> void:
-	var hull_color := Rules.OFF_WHITE if player_hit_flash > 0.0 else Rules.CYAN
+	var hull_color := Art.IVORY_BRIGHT if player_hit_flash > 0.0 else Art.MUSTARD
 	var hull_angle := player_hull_direction.angle()
+	var radius := Art.PLAYER_VISUAL_RADIUS
+	var hull_points := [
+		Vector2(radius, 0.0),
+		Vector2(radius * 0.18, -radius * 0.74),
+		Vector2(-radius * 0.72, -radius),
+		Vector2(-radius * 0.48, -radius * 0.18),
+		Vector2(-radius, radius * 0.54),
+		Vector2(radius * 0.08, radius * 0.70),
+	]
+	draw_colored_polygon(_rotated_polygon(player_position + Vector2(8.0, 10.0), hull_points, hull_angle), Art.MUSTARD_DARK)
+	draw_colored_polygon(_rotated_polygon(player_position, hull_points, hull_angle), hull_color)
 	draw_colored_polygon(_rotated_polygon(player_position, [
-		Vector2(32.0, 0.0),
-		Vector2(7.0, -25.0),
-		Vector2(-25.0, -18.0),
-		Vector2(-32.0, 0.0),
-		Vector2(-25.0, 18.0),
-		Vector2(7.0, 25.0),
-	], hull_angle), hull_color)
-	draw_colored_polygon(_rotated_polygon(player_position, [
-		Vector2(30.0, 0.0),
-		Vector2(13.0, -7.0),
-		Vector2(13.0, 7.0),
-	], hull_angle), Rules.AMBER)
-	draw_circle(player_position, 13.0, Rules.RAISED)
-	draw_line(player_position, player_position + player_aim_direction * 48.0, Rules.OFF_WHITE, 9.0)
-	draw_circle(player_position + player_aim_direction * 51.0, 7.0 + player_muzzle_flash * 50.0, Rules.AMBER)
+		Vector2(radius * 0.58, 0.0),
+		Vector2(-radius * 0.12, -radius * 0.38),
+		Vector2(-radius * 0.38, 0.0),
+		Vector2(-radius * 0.12, radius * 0.38),
+	], hull_angle), Art.IVORY_BRIGHT)
+	draw_circle(player_position, 16.0, Art.CERAMIC_GREEN)
+	draw_line(player_position, player_position + player_aim_direction * 61.0, Art.INK, 17.0)
+	draw_line(player_position, player_position + player_aim_direction * 61.0, Art.IVORY_BRIGHT, 10.0)
+	draw_colored_polygon(_regular_polygon(player_position + player_aim_direction * 64.0, 9.0 + player_muzzle_flash * 58.0, 4, PI / 4.0), Art.MUSTARD)
 	if player_barrier_strength > 0.0:
-		draw_arc(player_position, 52.0 + sin(run_time * 5.0) * 3.0, 0.0, TAU, 36, Rules.CYAN, 5.0)
+		draw_circle(player_position, 61.0 + sin(run_time * 5.0) * 3.0, Color(Art.MINT, 0.14))
+		draw_arc(player_position, 61.0 + sin(run_time * 5.0) * 3.0, 0.0, TAU, 36, Art.MINT, 8.0)
 	if overdrive_timer > 0.0:
-		draw_arc(player_position, 62.0, -PI * 0.7, PI * 0.7, 24, Rules.AMBER, 5.0)
+		draw_arc(player_position, 72.0, -PI * 0.7, PI * 0.7, 24, Art.MUSTARD, 10.0)
 
 
 func _draw_aim_feedback() -> void:
@@ -2500,17 +2714,19 @@ func _draw_aim_feedback() -> void:
 	var mouse_direction := get_global_mouse_position() - player_position
 	if mouse_direction.length() > 8.0:
 		cursor_position = get_global_mouse_position()
-	draw_arc(cursor_position, 12.0, 0.0, TAU, 20, Rules.OFF_WHITE, 2.0)
-	draw_line(cursor_position + Vector2(-18.0, 0.0), cursor_position + Vector2(-7.0, 0.0), Rules.OFF_WHITE, 2.0)
-	draw_line(cursor_position + Vector2(7.0, 0.0), cursor_position + Vector2(18.0, 0.0), Rules.OFF_WHITE, 2.0)
-	draw_line(cursor_position + Vector2(0.0, -18.0), cursor_position + Vector2(0.0, -7.0), Rules.OFF_WHITE, 2.0)
-	draw_line(cursor_position + Vector2(0.0, 7.0), cursor_position + Vector2(0.0, 18.0), Rules.OFF_WHITE, 2.0)
+	for direction in [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]:
+		draw_colored_polygon(_regular_polygon(cursor_position + direction * 18.0, 6.0, 4, PI / 4.0), Art.MUSTARD)
+	draw_circle(cursor_position, 4.0, Art.IVORY_BRIGHT)
 	if not _aim_target_id.is_empty():
 		var target := _find_enemy_by_id(_aim_target_id)
 		if not target.is_empty() and bool(target["alive"]):
 			var target_position := Vector2(target["pos"])
-			var target_radius := float(target["radius"]) + 12.0
-			draw_arc(target_position, target_radius, 0.0, TAU, 28, Rules.AMBER, 4.0)
+			var target_radius := Art.enemy_visual_radius(StringName(target["role"])) + 16.0
+			for corner_variant in [Vector2(-1.0, -1.0), Vector2(1.0, -1.0), Vector2(1.0, 1.0), Vector2(-1.0, 1.0)]:
+				var corner: Vector2 = corner_variant
+				var anchor: Vector2 = target_position + corner * target_radius
+				draw_line(anchor, anchor - Vector2(corner.x, 0.0) * 18.0, Art.MUSTARD, 6.0)
+				draw_line(anchor, anchor - Vector2(0.0, corner.y) * 18.0, Art.MUSTARD, 6.0)
 
 
 func _rotated_polygon(origin: Vector2, local_points: Array, angle: float) -> PackedVector2Array:

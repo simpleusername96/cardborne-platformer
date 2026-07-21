@@ -1,0 +1,200 @@
+[gd_resource type="Theme" load_steps=25 format=3]
+
+[ext_resource type="FontFile" path="res://art/ui/production/fonts/NotoSansKR-Variable.ttf" id="1_font"]
+
+[sub_resource type="StyleBoxEmpty" id="Empty"]
+
+[sub_resource type="StyleBoxFlat" id="Modal"]
+bg_color = Color(0.952941, 0.909804, 0.788235, 0.99)
+
+[sub_resource type="StyleBoxFlat" id="Plate"]
+bg_color = Color(1, 0.964706, 0.862745, 0.96)
+
+[sub_resource type="StyleBoxFlat" id="ChoiceNormal"]
+content_margin_left = 20.0
+content_margin_top = 14.0
+content_margin_right = 20.0
+content_margin_bottom = 14.0
+bg_color = Color(0.027451, 0.337255, 0.298039, 1)
+
+[sub_resource type="StyleBoxFlat" id="ChoiceHover"]
+content_margin_left = 20.0
+content_margin_top = 14.0
+content_margin_right = 20.0
+content_margin_bottom = 14.0
+bg_color = Color(0.054902, 0.423529, 0.368627, 1)
+
+[sub_resource type="StyleBoxFlat" id="ChoicePressed"]
+content_margin_left = 20.0
+content_margin_top = 14.0
+content_margin_right = 20.0
+content_margin_bottom = 14.0
+bg_color = Color(0.05098, 0.239216, 0.215686, 1)
+
+[sub_resource type="StyleBoxFlat" id="ChoiceFocus"]
+content_margin_left = 20.0
+content_margin_top = 14.0
+content_margin_right = 20.0
+content_margin_bottom = 14.0
+bg_color = Color(0.054902, 0.423529, 0.368627, 1)
+border_width_left = 8
+border_color = Color(0.843137, 0.603922, 0.0901961, 1)
+
+[sub_resource type="StyleBoxFlat" id="Disabled"]
+content_margin_left = 20.0
+content_margin_top = 14.0
+content_margin_right = 20.0
+content_margin_bottom = 14.0
+bg_color = Color(0.305882, 0.427451, 0.403922, 0.55)
+
+[sub_resource type="StyleBoxFlat" id="PrimaryNormal"]
+content_margin_left = 20.0
+content_margin_top = 12.0
+content_margin_right = 20.0
+content_margin_bottom = 12.0
+bg_color = Color(0.843137, 0.603922, 0.0901961, 1)
+
+[sub_resource type="StyleBoxFlat" id="PrimaryHover"]
+content_margin_left = 20.0
+content_margin_top = 12.0
+content_margin_right = 20.0
+content_margin_bottom = 12.0
+bg_color = Color(0.952941, 0.72549, 0.176471, 1)
+
+[sub_resource type="StyleBoxFlat" id="PrimaryPressed"]
+content_margin_left = 20.0
+content_margin_top = 12.0
+content_margin_right = 20.0
+content_margin_bottom = 12.0
+bg_color = Color(0.541176, 0.356863, 0.0627451, 1)
+
+[sub_resource type="StyleBoxFlat" id="PrimaryFocus"]
+content_margin_left = 20.0
+content_margin_top = 12.0
+content_margin_right = 20.0
+content_margin_bottom = 12.0
+bg_color = Color(0.952941, 0.72549, 0.176471, 1)
+border_width_left = 8
+border_color = Color(0.027451, 0.337255, 0.298039, 1)
+
+[sub_resource type="StyleBoxFlat" id="DangerNormal"]
+content_margin_left = 20.0
+content_margin_top = 12.0
+content_margin_right = 20.0
+content_margin_bottom = 12.0
+bg_color = Color(0.788235, 0.184314, 0.305882, 1)
+
+[sub_resource type="StyleBoxFlat" id="DangerHover"]
+content_margin_left = 20.0
+content_margin_top = 12.0
+content_margin_right = 20.0
+content_margin_bottom = 12.0
+bg_color = Color(0.905882, 0.25098, 0.372549, 1)
+
+[sub_resource type="StyleBoxFlat" id="DangerPressed"]
+content_margin_left = 20.0
+content_margin_top = 12.0
+content_margin_right = 20.0
+content_margin_bottom = 12.0
+bg_color = Color(0.482353, 0.0901961, 0.2, 1)
+
+[sub_resource type="StyleBoxFlat" id="DangerFocus"]
+content_margin_left = 20.0
+content_margin_top = 12.0
+content_margin_right = 20.0
+content_margin_bottom = 12.0
+bg_color = Color(0.905882, 0.25098, 0.372549, 1)
+border_width_left = 8
+border_color = Color(1, 0.964706, 0.862745, 1)
+
+[sub_resource type="StyleBoxFlat" id="MeterBackground"]
+bg_color = Color(0.847059, 0.792157, 0.654902, 1)
+
+[sub_resource type="StyleBoxFlat" id="MeterHealth"]
+bg_color = Color(0.788235, 0.184314, 0.305882, 1)
+
+[sub_resource type="StyleBoxFlat" id="MeterBoss"]
+bg_color = Color(0.588235, 0.152941, 0.329412, 1)
+
+[sub_resource type="StyleBoxFlat" id="MeterResource"]
+bg_color = Color(0.843137, 0.603922, 0.0901961, 1)
+
+[sub_resource type="StyleBoxFlat" id="Slider"]
+content_margin_top = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(0.054902, 0.423529, 0.368627, 1)
+
+[sub_resource type="StyleBoxFlat" id="SliderActive"]
+content_margin_top = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(0.843137, 0.603922, 0.0901961, 1)
+
+[resource]
+default_font = ExtResource("1_font")
+default_font_size = 17
+Button/colors/font_color = Color(1, 0.964706, 0.862745, 1)
+Button/colors/font_hover_color = Color(1, 0.964706, 0.862745, 1)
+Button/colors/font_pressed_color = Color(1, 0.964706, 0.862745, 1)
+Button/colors/font_focus_color = Color(1, 0.964706, 0.862745, 1)
+Button/colors/font_disabled_color = Color(0.847059, 0.792157, 0.654902, 0.78)
+Button/constants/outline_size = 0
+Button/font_sizes/font_size = 18
+Button/styles/normal = SubResource("ChoiceNormal")
+Button/styles/hover = SubResource("ChoiceHover")
+Button/styles/pressed = SubResource("ChoicePressed")
+Button/styles/focus = SubResource("ChoiceFocus")
+Button/styles/disabled = SubResource("Disabled")
+Label/colors/font_color = Color(0.0823529, 0.231373, 0.227451, 1)
+Label/font_sizes/font_size = 17
+PanelContainer/styles/panel = SubResource("Plate")
+ProgressBar/styles/background = SubResource("MeterBackground")
+ProgressBar/styles/fill = SubResource("MeterResource")
+HBoxContainer/constants/separation = 12
+VBoxContainer/constants/separation = 10
+HSlider/styles/slider = SubResource("Slider")
+HSlider/styles/grabber_area = SubResource("SliderActive")
+HSlider/styles/grabber_area_highlight = SubResource("SliderActive")
+PrimaryButton/base_type = &"Button"
+PrimaryButton/colors/font_color = Color(0.0823529, 0.231373, 0.227451, 1)
+PrimaryButton/colors/font_hover_color = Color(0.0823529, 0.231373, 0.227451, 1)
+PrimaryButton/colors/font_pressed_color = Color(1, 0.964706, 0.862745, 1)
+PrimaryButton/colors/font_focus_color = Color(0.0823529, 0.231373, 0.227451, 1)
+PrimaryButton/styles/normal = SubResource("PrimaryNormal")
+PrimaryButton/styles/hover = SubResource("PrimaryHover")
+PrimaryButton/styles/pressed = SubResource("PrimaryPressed")
+PrimaryButton/styles/focus = SubResource("PrimaryFocus")
+PrimaryButton/styles/disabled = SubResource("Disabled")
+SecondaryButton/base_type = &"Button"
+SecondaryButton/styles/normal = SubResource("ChoiceNormal")
+SecondaryButton/styles/hover = SubResource("ChoiceHover")
+SecondaryButton/styles/pressed = SubResource("ChoicePressed")
+SecondaryButton/styles/focus = SubResource("ChoiceFocus")
+SecondaryButton/styles/disabled = SubResource("Disabled")
+DangerButton/base_type = &"Button"
+DangerButton/styles/normal = SubResource("DangerNormal")
+DangerButton/styles/hover = SubResource("DangerHover")
+DangerButton/styles/pressed = SubResource("DangerPressed")
+DangerButton/styles/focus = SubResource("DangerFocus")
+DangerButton/styles/disabled = SubResource("Disabled")
+ChoiceButton/base_type = &"Button"
+ChoiceButton/font_sizes/font_size = 17
+ChoiceButton/styles/normal = SubResource("ChoiceNormal")
+ChoiceButton/styles/hover = SubResource("ChoiceHover")
+ChoiceButton/styles/pressed = SubResource("ChoicePressed")
+ChoiceButton/styles/focus = SubResource("ChoiceFocus")
+ChoiceButton/styles/disabled = SubResource("Disabled")
+FlatPanel/base_type = &"PanelContainer"
+FlatPanel/styles/panel = SubResource("Plate")
+ModalSurface/base_type = &"PanelContainer"
+ModalSurface/styles/panel = SubResource("Modal")
+HUDTransparent/base_type = &"PanelContainer"
+HUDTransparent/styles/panel = SubResource("Empty")
+HealthMeter/base_type = &"ProgressBar"
+HealthMeter/styles/background = SubResource("MeterBackground")
+HealthMeter/styles/fill = SubResource("MeterHealth")
+ResourceMeter/base_type = &"ProgressBar"
+ResourceMeter/styles/background = SubResource("MeterBackground")
+ResourceMeter/styles/fill = SubResource("MeterResource")
+BossMeter/base_type = &"ProgressBar"
+BossMeter/styles/background = SubResource("MeterBackground")
+BossMeter/styles/fill = SubResource("MeterBoss")

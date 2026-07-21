@@ -1,0 +1,130 @@
+class_name VehicleStageVisualProfile
+extends RefCounted
+
+## Presentation-only contract for the Sunken Ceramic Fresco vehicle stage.
+## Gameplay code may consume these roles and sizes, but this profile owns no state,
+## collision, progression, input, or persistence behavior.
+
+const COBALT_VOID := Color("#0739A6")
+const COBALT_WATER := Color("#0755C7")
+const COBALT_DEEP := Color("#042B7B")
+const IVORY := Color("#F3E8C9")
+const IVORY_SHADE := Color("#D9CAA7")
+const IVORY_BRIGHT := Color("#FFF6DC")
+const CERAMIC_GREEN := Color("#07564C")
+const CERAMIC_GREEN_MID := Color("#0E6C5E")
+const CERAMIC_GREEN_LIGHT := Color("#2F8170")
+const MINT := Color("#75C4B2")
+const MINT_SOFT := Color("#A8DACB")
+const CORAL := Color("#C92F4E")
+const CORAL_DARK := Color("#7B1733")
+const MUSTARD := Color("#D79A17")
+const MUSTARD_DARK := Color("#8A5B10")
+const BOSS_MAGENTA := Color("#962754")
+const INK := Color("#153B3A")
+const INK_MUTED := Color("#4E6D67")
+const DIM := Color(0.02, 0.12, 0.28, 0.82)
+
+const PLAYER_VISUAL_RADIUS := 42.0
+const ORDINARY_ENEMY_RADIUS := 36.0
+const INSTALLATION_RADIUS := 54.0
+const FIELD_BOSS_RADIUS := 86.0
+const STAGE_BOSS_RADIUS := 122.0
+const PICKUP_PLINTH_RADIUS := 34.0
+const CACHE_HALF_SIZE := Vector2(70.0, 52.0)
+const COVER_EDGE_OFFSET := Vector2(14.0, 18.0)
+const MIN_MAJOR_MOTIF_RADIUS := 120.0
+const MAX_MAJOR_MOTIF_RADIUS := 250.0
+
+
+static func enemy_visual_radius(role: StringName) -> float:
+	match role:
+		&"turret", &"mine", &"generator", &"boss_pylon":
+			return INSTALLATION_RADIUS
+		&"field_boss":
+			return FIELD_BOSS_RADIUS
+		&"stage_boss":
+			return STAGE_BOSS_RADIUS
+	return ORDINARY_ENEMY_RADIUS
+
+
+static func stepped_rect(rect: Rect2, cut: float = 34.0) -> PackedVector2Array:
+	var safe_cut := minf(cut, minf(rect.size.x, rect.size.y) * 0.22)
+	return PackedVector2Array([
+		rect.position + Vector2(safe_cut, 0.0),
+		rect.end - Vector2(safe_cut, rect.size.y),
+		rect.end - Vector2(0.0, rect.size.y - safe_cut),
+		rect.end - Vector2(0.0, safe_cut),
+		rect.end - Vector2(safe_cut, 0.0),
+		rect.position + Vector2(safe_cut, rect.size.y),
+		rect.position + Vector2(0.0, rect.size.y - safe_cut),
+		rect.position + Vector2(0.0, safe_cut),
+	])
+
+
+static func major_motifs() -> Array[Dictionary]:
+	return [
+		{
+			"kind": &"tide_curl",
+			"center": Vector2(1260.0, 1090.0),
+			"radius": 210.0,
+			"rotation": -0.28,
+			"color": Color(MINT, 0.62),
+		},
+		{
+			"kind": &"split_current",
+			"center": Vector2(2480.0, 1110.0),
+			"radius": 245.0,
+			"rotation": 0.0,
+			"color": Color(MINT, 0.52),
+		},
+		{
+			"kind": &"relay_flower",
+			"center": Vector2(3480.0, 1110.0),
+			"radius": 135.0,
+			"rotation": PI / 4.0,
+			"color": Color(MINT_SOFT, 0.62),
+		},
+		{
+			"kind": &"sun_gate",
+			"center": Vector2(4580.0, 1090.0),
+			"radius": 235.0,
+			"rotation": 0.0,
+			"color": Color(MUSTARD, 0.34),
+		},
+	]
+
+
+static func required_color_roles() -> Dictionary:
+	return {
+		"walkable": IVORY,
+		"blocked": CERAMIC_GREEN,
+		"void": COBALT_VOID,
+		"player_reward": MUSTARD,
+		"threat": CORAL,
+		"recovery": MINT,
+		"boss": BOSS_MAGENTA,
+		"text_dark": INK,
+		"text_light": IVORY_BRIGHT,
+	}
+
+
+static func validate_contract() -> PackedStringArray:
+	var errors := PackedStringArray()
+	var roles := required_color_roles()
+	for role in ["walkable", "blocked", "void", "player_reward", "threat", "recovery", "boss"]:
+		if not roles.has(role):
+			errors.append("missing semantic color role: %s" % role)
+	if PLAYER_VISUAL_RADIUS * 2.0 < 72.0:
+		errors.append("player visual diameter is below the 72 px minimum")
+	if ORDINARY_ENEMY_RADIUS * 2.0 < 64.0:
+		errors.append("ordinary enemy diameter is below the 64 px minimum")
+	if PICKUP_PLINTH_RADIUS * 2.0 < 56.0:
+		errors.append("pickup plinth diameter is below the 56 px minimum")
+	if STAGE_BOSS_RADIUS * 2.0 < 200.0:
+		errors.append("stage boss diameter is below the 200 px minimum")
+	for motif in major_motifs():
+		var radius := float(motif["radius"])
+		if radius < MIN_MAJOR_MOTIF_RADIUS or radius > MAX_MAJOR_MOTIF_RADIUS:
+			errors.append("major motif radius is outside the sparse macro range")
+	return errors

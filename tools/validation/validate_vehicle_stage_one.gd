@@ -1,6 +1,7 @@
 extends SceneTree
 
 const Rules = preload("res://scripts/vehicle/vehicle_stage_rules.gd")
+const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const MAIN_SCENE := "res://scenes/main/PivotRoot.tscn"
 
 var failures: PackedStringArray = []
@@ -32,6 +33,7 @@ func _run_validation() -> void:
 		return
 
 	_check_input_contract()
+	_check_visual_contract(stage)
 	_check_layout_contract(stage)
 	_check_geometry_contract(stage)
 	_check_upgrade_contract(stage)
@@ -91,6 +93,37 @@ func _check_layout_contract(stage: Node) -> void:
 				minimum.x <= viewport_size.x and minimum.y <= viewport_size.y,
 				"%s surface fits %dx%d" % [surface_id, int(viewport_size.x), int(viewport_size.y)]
 			)
+
+
+func _check_visual_contract(stage: Node) -> void:
+	var art_errors := Art.validate_contract()
+	_expect(art_errors.is_empty(), "Sunken Ceramic Fresco semantic palette and scale contract is complete")
+	for error_message in art_errors:
+		failures.append("visual profile: %s" % error_message)
+	var roles := Art.required_color_roles()
+	_expect(roles["walkable"] != roles["blocked"], "walkable ground and blocked cover use distinct visual roles")
+	_expect(roles["player_reward"] != roles["threat"], "player/reward and threat colors remain semantically distinct")
+	_expect(Art.major_motifs().size() <= 4, "world decoration stays sparse at macro scale")
+
+	var ui := stage.get_node_or_null("VehicleStageUI")
+	_expect(ui != null, "vehicle UI exists for visual contract checks")
+	if ui == null:
+		return
+	for viewport_width in [960.0, 1280.0, 1920.0]:
+		var contract: Dictionary = ui.debug_ui_contract(viewport_width)
+		_expect(bool(contract["top_clusters_do_not_overlap"]), "top HUD clusters do not overlap at %d px" % int(viewport_width))
+		_expect(float(contract["command_min_height"]) >= 44.0, "command targets remain at least 44 px high")
+		_expect(Vector2(contract["action_medallion_size"]).x >= 96.0, "action medallions remain large enough to scan")
+		_expect(Vector2(contract["minimap_size"]).x >= 176.0, "minimap plaque remains legible")
+		_expect(
+			String(contract["theme_path"]) == "res://art/ui/production/vehicle_stage_theme.tres",
+			"vehicle UI uses the scoped ceramic theme"
+		)
+	_expect(int(ui.debug_ui_contract()["deployment_focusables"]) >= 2, "deployment exposes both focusable weapon choices")
+	_expect(int(ui.debug_ui_contract()["upgrade_focusables"]) >= 3, "upgrade exposes three focusable circuit choices")
+	_expect(int(ui.debug_ui_contract()["pause_focusables"]) >= 5, "pause exposes commands and both volume controls")
+	_expect(int(ui.debug_ui_contract()["result_focusables"]) >= 2, "result exposes garage and replay actions")
+	_expect(int(ui.debug_ui_contract()["garage_focusables"]) >= 4, "garage exposes loadout, launch, and both audio controls")
 
 
 func _check_geometry_contract(stage: Node) -> void:
