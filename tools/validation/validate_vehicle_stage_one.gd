@@ -41,6 +41,8 @@ func _run_validation() -> void:
 	_check_primary_charge_contract(stage)
 	_check_dash_contract(stage)
 	_check_progression_contract(stage)
+	_check_multistage_contract(stage)
+	_check_new_enemy_contract(stage)
 	_check_projectile_cover_contract(stage)
 	_check_passive_contract(stage)
 	_check_reset_contract(stage)
@@ -53,10 +55,12 @@ func _run_validation() -> void:
 
 
 func _check_blueprint() -> void:
-	var blueprint_errors := Rules.validate_blueprint()
-	_expect(blueprint_errors.is_empty(), "authored stage landmarks, spawns, routes, and boss path are reachable")
-	for error_message in blueprint_errors:
-		failures.append("blueprint: %s" % error_message)
+	var all_blueprints := Rules.validate_all_blueprints()
+	for stage_id in all_blueprints.keys():
+		var blueprint_errors: PackedStringArray = all_blueprints[stage_id]
+		_expect(blueprint_errors.is_empty(), "%s landmarks, spawns, routes, and boss path are reachable" % stage_id)
+		for error_message in blueprint_errors:
+			failures.append("%s blueprint: %s" % [stage_id, error_message])
 
 	var start := Rules.PLAYER_START
 	_expect(Rules.grid_reachable(start, Rules.GENERATOR_A_POSITION), "upper generator is reachable")
@@ -188,14 +192,16 @@ func _check_dash_contract(stage: Node) -> void:
 func _check_primary_charge_contract(stage: Node) -> void:
 	stage.call("_reset_run", false)
 	var contract: Dictionary = stage.debug_primary_charge_contract()
-	_expect(int(contract["capacity"]) == 6, "repeater exposes a finite six-round burst")
-	_expect(int(contract["depleted_rounds"]) == 0, "primary burst depletes instead of firing indefinitely")
-	_expect(bool(contract["locked_after_depletion"]), "depletion locks held fire until release")
-	_expect(int(contract["early_rounds"]) == 0, "primary does not refill before the three-second charge window")
-	_expect(int(contract["refilled_rounds"]) == int(contract["capacity"]), "primary refills completely after the three-second charge window")
-	_expect(bool(contract["remains_locked_when_refilled"]), "held fire does not restart automatically when charging completes")
-	_expect(bool(contract["held_restart_blocked"]), "the gameplay fire gate blocks a still-held trigger after recharge")
-	_expect(int(contract["rounds_after_release_fire"]) == int(contract["capacity"]) - 1, "a release-and-press cycle fires from the recharged burst")
+	_expect(is_equal_approx(float(contract["full_charge_seconds"]), 3.0), "primary attack energy reaches full power in three seconds")
+	_expect(bool(contract["immediate_blocked"]), "an empty primary cannot fire immediately")
+	_expect(bool(contract["early_blocked"]), "primary cannot fire before minimum attack energy")
+	_expect(bool(contract["quick_fired"]), "a deliberate press fires once minimum energy is available")
+	_expect(is_zero_approx(float(contract["energy_after_quick"])), "a shot consumes all stored attack energy")
+	_expect(bool(contract["held_second_blocked"]), "the fire gate cannot emit a second shot without recovered energy")
+	_expect(bool(contract["full_fired"]), "a full three-second charge produces a shot")
+	_expect(float(contract["full_damage"]) > float(contract["quick_damage"]) * 1.5, "waiting for full charge materially increases primary damage")
+	_expect(int(contract["full_pierce"]) >= 1, "full Repeater charge gains an explicit pierce benefit")
+	_expect(int(contract["full_scatter_count"]) == 5, "full Scatter charge expands to five readable pellets")
 
 
 func _check_progression_contract(stage: Node) -> void:
@@ -205,6 +211,22 @@ func _check_progression_contract(stage: Node) -> void:
 	_expect(bool(result["complete"]), "automated complete run reaches stage result")
 	_expect(int(result["mode"]) == 4, "boss defeat enters result flow")
 	_expect(int(result["upgrade_count"]) == 1, "complete run applies one chest card")
+
+
+func _check_multistage_contract(stage: Node) -> void:
+	var result: Dictionary = stage.debug_multistage_contract()
+	_expect(result["stage_ids"] == [&"flooded_works", &"tidal_archive", &"storm_drydock"], "one run advances through three authored stages in order")
+	_expect(&"artillery_spotter" in result["role_sets"][1] and &"interceptor_tower" in result["role_sets"][1], "Tidal Archive deploys artillery and interception roles")
+	_expect(&"shield_escort" in result["role_sets"][2], "Storm Drydock deploys shield escorts")
+	_expect(result["upgrade_counts"] == [1, 1, 1], "stage transitions preserve the selected run upgrade")
+	_expect(int(result["final_stage_index"]) == 2 and bool(result["final_complete"]), "the third boss resolves the final stage")
+
+
+func _check_new_enemy_contract(stage: Node) -> void:
+	var result: Dictionary = stage.debug_new_enemy_contract()
+	_expect(bool(result["intercepted"]) and int(result["charges_after"]) == int(result["charges_before"]) - 1, "Interceptor Tower visibly spends one charge to stop a player shot")
+	_expect(bool(result["artillery_zone_created"]), "Artillery Spotter resolves its warned attack into a denial zone")
+	_expect(bool(result["escort_shielded_ally"]), "Shield Escort protects a nearby ordinary ally")
 
 
 func _check_projectile_cover_contract(stage: Node) -> void:

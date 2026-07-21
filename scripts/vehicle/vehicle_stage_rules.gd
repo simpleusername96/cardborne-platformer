@@ -4,16 +4,18 @@ extends RefCounted
 ## Shared geometry, authored layout, and upgrade definitions for the vehicle Stage 1 slice.
 ## Gameplay and validation consume the same data so collision and progression checks cannot drift.
 
-const WORLD_RECT := Rect2(0.0, 0.0, 5200.0, 2200.0)
-const PLAYER_START := Vector2(330.0, 1100.0)
+const Catalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
+
+const WORLD_RECT := Catalog.WORLD_RECT
+const PLAYER_START := Catalog.PLAYER_START
 const PLAYER_RADIUS := 24.0
-const BOSS_ARENA := Rect2(3970.0, 420.0, 1100.0, 1360.0)
-const BOSS_GATE := Rect2(3890.0, 820.0, 70.0, 560.0)
-const CHEST_POSITION := Vector2(3470.0, 1120.0)
-const FIELD_BOSS_POSITION := Vector2(2860.0, 330.0)
-const STAGE_BOSS_POSITION := Vector2(4580.0, 1090.0)
-const GENERATOR_A_POSITION := Vector2(2300.0, 570.0)
-const GENERATOR_B_POSITION := Vector2(2880.0, 1650.0)
+const BOSS_ARENA := Catalog.BOSS_ARENA
+const BOSS_GATE := Catalog.BOSS_GATE
+const CHEST_POSITION := Catalog.CHEST_POSITION
+const FIELD_BOSS_POSITION := Catalog.FIELD_BOSS_POSITION
+const STAGE_BOSS_POSITION := Catalog.STAGE_BOSS_POSITION
+const GENERATOR_A_POSITION := Catalog.GENERATOR_A_POSITION
+const GENERATOR_B_POSITION := Catalog.GENERATOR_B_POSITION
 
 const CANVAS := Color("#12171A")
 const SURFACE := Color("#1C2428")
@@ -31,65 +33,19 @@ const FLOOR_MID := Color("#203437")
 const FLOOR_LIGHT := Color("#294247")
 
 
-static func get_cover_rects(include_boss_gate: bool = false) -> Array[Rect2]:
-	var rects: Array[Rect2] = [
-		Rect2(0.0, 0.0, 5200.0, 70.0),
-		Rect2(0.0, 2130.0, 5200.0, 70.0),
-		Rect2(0.0, 0.0, 70.0, 2200.0),
-		Rect2(5130.0, 0.0, 70.0, 2200.0),
-		# Deployment dock and opening channel.
-		Rect2(620.0, 70.0, 70.0, 650.0),
-		Rect2(620.0, 1480.0, 70.0, 650.0),
-		Rect2(980.0, 540.0, 190.0, 330.0),
-		Rect2(1260.0, 1230.0, 300.0, 180.0),
-		Rect2(1600.0, 670.0, 180.0, 340.0),
-		Rect2(1700.0, 1510.0, 250.0, 160.0),
-		# Installation fork: a large center mass creates the upper/lower route choice.
-		Rect2(2030.0, 760.0, 930.0, 680.0),
-		Rect2(2160.0, 180.0, 260.0, 210.0),
-		Rect2(2600.0, 430.0, 250.0, 170.0),
-		Rect2(2140.0, 1760.0, 300.0, 190.0),
-		Rect2(3040.0, 1510.0, 240.0, 220.0),
-		Rect2(3200.0, 530.0, 210.0, 310.0),
-		# Relay approach and chest court.
-		Rect2(3390.0, 680.0, 210.0, 210.0),
-		Rect2(3390.0, 1390.0, 210.0, 210.0),
-		Rect2(3660.0, 260.0, 160.0, 440.0),
-		Rect2(3660.0, 1500.0, 160.0, 440.0),
-		# Boss arena cover, placed to leave broad circulation lanes.
-		Rect2(4200.0, 610.0, 170.0, 230.0),
-		Rect2(4200.0, 1360.0, 170.0, 230.0),
-		Rect2(4740.0, 610.0, 170.0, 230.0),
-		Rect2(4740.0, 1360.0, 170.0, 230.0),
-	]
+static func get_cover_rects(include_boss_gate: bool = false, stage_id: StringName = &"flooded_works") -> Array[Rect2]:
+	var rects := Catalog.cover_rects(stage_id)
 	if include_boss_gate:
 		rects.append(BOSS_GATE)
 	return rects
 
 
-static func get_water_rects() -> Array[Rect2]:
-	return [
-		Rect2(690.0, 70.0, 330.0, 430.0),
-		Rect2(690.0, 1700.0, 330.0, 430.0),
-		Rect2(1220.0, 70.0, 250.0, 360.0),
-		Rect2(1500.0, 1750.0, 380.0, 380.0),
-		Rect2(1900.0, 70.0, 180.0, 650.0),
-		Rect2(1900.0, 1480.0, 180.0, 650.0),
-		Rect2(2960.0, 70.0, 200.0, 420.0),
-		Rect2(2960.0, 1780.0, 200.0, 350.0),
-		Rect2(3820.0, 70.0, 120.0, 640.0),
-		Rect2(3820.0, 1490.0, 120.0, 640.0),
-	]
+static func get_water_rects(stage_id: StringName = &"flooded_works") -> Array[Rect2]:
+	return Catalog.water_rects(stage_id)
 
 
-static func get_floor_regions() -> Array[Dictionary]:
-	return [
-		{"name": "Deployment Dock", "rect": Rect2(70.0, 720.0, 550.0, 760.0), "color": FLOOR_LIGHT},
-		{"name": "Foundry Approach", "rect": Rect2(620.0, 390.0, 1360.0, 1420.0), "color": FLOOR_MID},
-		{"name": "Drowned Installations", "rect": Rect2(1980.0, 120.0, 1460.0, 1960.0), "color": FLOOR_DARK},
-		{"name": "Relay Court", "rect": Rect2(3300.0, 610.0, 650.0, 980.0), "color": FLOOR_MID},
-		{"name": "Colossus Basin", "rect": BOSS_ARENA, "color": FLOOR_DARK},
-	]
+static func get_floor_regions(stage_id: StringName = &"flooded_works") -> Array[Dictionary]:
+	return Catalog.floor_regions(stage_id, {"light": FLOOR_LIGHT, "mid": FLOOR_MID, "dark": FLOOR_DARK})
 
 
 static func get_landmarks() -> Dictionary:
@@ -191,45 +147,16 @@ static func get_card_offer(run_index: int) -> Array[Dictionary]:
 	]
 
 
-static func get_enemy_blueprint() -> Array[Dictionary]:
-	return [
-		# Open combat field.
-		{"id": "approach_chaser_a", "role": "chaser", "pos": Vector2(900.0, 1110.0), "zone": "approach"},
-		{"id": "approach_shooter_a", "role": "shooter", "pos": Vector2(1240.0, 690.0), "zone": "approach"},
-		{"id": "approach_chaser_b", "role": "chaser", "pos": Vector2(1420.0, 1600.0), "zone": "approach"},
-		{"id": "approach_controller", "role": "controller", "pos": Vector2(1730.0, 1210.0), "zone": "approach"},
-		{"id": "approach_shooter_b", "role": "shooter", "pos": Vector2(1840.0, 520.0), "zone": "approach"},
-		# Installation field.
-		{"id": "upper_turret", "role": "turret", "pos": Vector2(2460.0, 370.0), "zone": "installations"},
-		{"id": "lower_turret", "role": "turret", "pos": Vector2(2670.0, 1830.0), "zone": "installations"},
-		{"id": "upper_arc_mine", "role": "mine", "pos": Vector2(3100.0, 710.0), "zone": "installations"},
-		{"id": "lower_arc_mine", "role": "mine", "pos": Vector2(2260.0, 1610.0), "zone": "installations"},
-		{"id": "generator_a", "role": "generator", "pos": GENERATOR_A_POSITION, "zone": "installations", "required": true},
-		{"id": "generator_b", "role": "generator", "pos": GENERATOR_B_POSITION, "zone": "installations", "required": true},
-		{"id": "install_chaser", "role": "chaser", "pos": Vector2(3160.0, 1110.0), "zone": "installations"},
-		{"id": "install_shooter", "role": "shooter", "pos": Vector2(3270.0, 1290.0), "zone": "installations"},
-		{"id": "install_controller", "role": "controller", "pos": Vector2(3030.0, 1030.0), "zone": "installations"},
-		# Optional upper-route elite.
-		{"id": "dredge_warden", "role": "field_boss", "pos": FIELD_BOSS_POSITION, "zone": "field_boss", "optional": true},
-	]
+static func get_enemy_blueprint(stage_id: StringName = &"flooded_works") -> Array[Dictionary]:
+	return Catalog.enemy_blueprint(stage_id)
 
 
-static func get_pickup_blueprint() -> Array[Dictionary]:
-	return [
-		{"id": "repair_open", "kind": "repair", "pos": Vector2(1500.0, 1050.0)},
-		{"id": "attack_upper", "kind": "attack", "pos": Vector2(2080.0, 470.0)},
-		{"id": "overdrive_lower", "kind": "overdrive", "pos": Vector2(2120.0, 1690.0)},
-		{"id": "barrier_lower", "kind": "barrier", "pos": Vector2(3170.0, 1780.0)},
-		{"id": "repair_relay", "kind": "repair", "pos": Vector2(3660.0, 1110.0)},
-	]
+static func get_pickup_blueprint(stage_id: StringName = &"flooded_works") -> Array[Dictionary]:
+	return Catalog.pickup_blueprint(stage_id)
 
 
-static func get_crate_blueprint() -> Array[Dictionary]:
-	return [
-		{"id": "crate_attack", "pos": Vector2(1110.0, 1510.0), "drop": "attack"},
-		{"id": "crate_repair", "pos": Vector2(1880.0, 1130.0), "drop": "repair"},
-		{"id": "crate_barrier", "pos": Vector2(3370.0, 1080.0), "drop": "barrier"},
-	]
+static func get_crate_blueprint(stage_id: StringName = &"flooded_works") -> Array[Dictionary]:
+	return Catalog.crate_blueprint(stage_id)
 
 
 static func circle_overlaps_rect(center: Vector2, radius: float, rect: Rect2) -> bool:
@@ -314,9 +241,9 @@ static func _inside_normal(point: Vector2, rect: Rect2) -> Vector2:
 	return distances[0]["n"]
 
 
-static func first_cover_hit(from: Vector2, to: Vector2, radius: float, include_boss_gate: bool = false) -> Dictionary:
+static func first_cover_hit(from: Vector2, to: Vector2, radius: float, include_boss_gate: bool = false, stage_id: StringName = &"flooded_works") -> Dictionary:
 	var best := {"hit": false, "t": 2.0}
-	for rect in get_cover_rects(include_boss_gate):
+	for rect in get_cover_rects(include_boss_gate, stage_id):
 		var hit := segment_rect_hit(from, to, rect, radius)
 		if bool(hit.get("hit", false)) and float(hit["t"]) < float(best["t"]):
 			best = hit
@@ -324,8 +251,8 @@ static func first_cover_hit(from: Vector2, to: Vector2, radius: float, include_b
 	return best
 
 
-static func has_line_of_sight(from: Vector2, to: Vector2, padding: float = 0.0, include_boss_gate: bool = false) -> bool:
-	return not bool(first_cover_hit(from, to, padding, include_boss_gate).get("hit", false))
+static func has_line_of_sight(from: Vector2, to: Vector2, padding: float = 0.0, include_boss_gate: bool = false, stage_id: StringName = &"flooded_works") -> bool:
+	return not bool(first_cover_hit(from, to, padding, include_boss_gate, stage_id).get("hit", false))
 
 
 static func point_segment_distance(point: Vector2, a: Vector2, b: Vector2) -> float:
@@ -337,8 +264,8 @@ static func point_segment_distance(point: Vector2, a: Vector2, b: Vector2) -> fl
 	return point.distance_to(a + segment * t)
 
 
-static func move_circle(position: Vector2, motion: Vector2, radius: float, include_boss_gate: bool = false) -> Vector2:
-	var rects := get_cover_rects(include_boss_gate)
+static func move_circle(position: Vector2, motion: Vector2, radius: float, include_boss_gate: bool = false, stage_id: StringName = &"flooded_works") -> Vector2:
+	var rects := get_cover_rects(include_boss_gate, stage_id)
 	var result := position
 	var attempt_x := Vector2(
 		clampf(position.x + motion.x, WORLD_RECT.position.x + radius, WORLD_RECT.end.x - radius),
@@ -366,7 +293,7 @@ static func move_circle(position: Vector2, motion: Vector2, radius: float, inclu
 	return result
 
 
-static func grid_reachable(start: Vector2, goal: Vector2, radius: float = PLAYER_RADIUS, cell_size: float = 70.0, include_boss_gate: bool = false) -> bool:
+static func grid_reachable(start: Vector2, goal: Vector2, radius: float = PLAYER_RADIUS, cell_size: float = 70.0, include_boss_gate: bool = false, stage_id: StringName = &"flooded_works") -> bool:
 	var min_cell := Vector2i(
 		floori((WORLD_RECT.position.x + radius) / cell_size),
 		floori((WORLD_RECT.position.y + radius) / cell_size)
@@ -380,7 +307,7 @@ static func grid_reachable(start: Vector2, goal: Vector2, radius: float = PLAYER
 	var queue: Array[Vector2i] = [start_cell]
 	var visited := {start_cell: true}
 	var directions: Array[Vector2i] = [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]
-	var rects := get_cover_rects(include_boss_gate)
+	var rects := get_cover_rects(include_boss_gate, stage_id)
 
 	while not queue.is_empty():
 		var current: Vector2i = queue.pop_front()
@@ -405,9 +332,9 @@ static func grid_reachable(start: Vector2, goal: Vector2, radius: float = PLAYER
 	return false
 
 
-static func validate_blueprint() -> PackedStringArray:
+static func validate_blueprint(stage_id: StringName = &"flooded_works") -> PackedStringArray:
 	var errors := PackedStringArray()
-	var cover := get_cover_rects(false)
+	var cover := get_cover_rects(false, stage_id)
 	for landmark_id in get_landmarks().keys():
 		var point: Vector2 = get_landmarks()[landmark_id]
 		for rect in cover:
@@ -415,33 +342,49 @@ static func validate_blueprint() -> PackedStringArray:
 				errors.append("Landmark %s overlaps solid cover" % landmark_id)
 				break
 
-	for enemy_spec in get_enemy_blueprint():
+	for enemy_spec in get_enemy_blueprint(stage_id):
 		var position: Vector2 = enemy_spec["pos"]
 		for rect in cover:
 			if circle_overlaps_rect(position, 28.0, rect):
 				errors.append("Enemy %s overlaps solid cover" % enemy_spec["id"])
 				break
 
-	for pickup_spec in get_pickup_blueprint():
+	for pickup_spec in get_pickup_blueprint(stage_id):
 		var position: Vector2 = pickup_spec["pos"]
 		for rect in cover:
 			if circle_overlaps_rect(position, 20.0, rect):
 				errors.append("Pickup %s overlaps solid cover" % pickup_spec["id"])
 				break
 
+	for crate_spec in get_crate_blueprint(stage_id):
+		var position: Vector2 = crate_spec["pos"]
+		for rect in cover:
+			if circle_overlaps_rect(position, 31.0, rect):
+				errors.append("Crate %s overlaps solid cover" % crate_spec["id"])
+				break
+
 	var start := PLAYER_START
 	for required_id in ["open_entry", "installation_entry", "generator_a", "generator_b", "chest", "boss_gate"]:
 		var point: Vector2 = get_landmarks()[required_id]
-		if not grid_reachable(start, point, PLAYER_RADIUS, 70.0, false):
+		if not grid_reachable(start, point, PLAYER_RADIUS, 70.0, false, stage_id):
 			errors.append("Required landmark %s is unreachable before boss lock" % required_id)
 
-	if not grid_reachable(start, get_landmarks()["lower_route"], PLAYER_RADIUS, 70.0, false):
+	if not grid_reachable(start, get_landmarks()["lower_route"], PLAYER_RADIUS, 70.0, false, stage_id):
 		errors.append("Safe lower route is unreachable")
-	if not grid_reachable(start, get_landmarks()["upper_route"], PLAYER_RADIUS, 70.0, false):
+	if not grid_reachable(start, get_landmarks()["upper_route"], PLAYER_RADIUS, 70.0, false, stage_id):
 		errors.append("Optional upper route is unreachable")
-	if not grid_reachable(get_landmarks()["boss_gate"], get_landmarks()["boss"], PLAYER_RADIUS, 70.0, false):
+	if not grid_reachable(start, get_landmarks()["field_boss"], PLAYER_RADIUS, 70.0, false, stage_id):
+		errors.append("Optional field boss is unreachable")
+	if not grid_reachable(get_landmarks()["boss_gate"], get_landmarks()["boss"], PLAYER_RADIUS, 70.0, false, stage_id):
 		errors.append("Boss arena center is unreachable after the gate opens")
 	return errors
+
+
+static func validate_all_blueprints() -> Dictionary:
+	var results := {}
+	for stage_id in Catalog.STAGE_IDS:
+		results[stage_id] = validate_blueprint(stage_id)
+	return results
 
 
 static func positive_mod(value: int, divisor: int) -> int:

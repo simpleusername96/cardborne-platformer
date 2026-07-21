@@ -10,6 +10,7 @@ signal resume_requested
 signal restart_requested
 signal garage_requested
 signal replay_requested
+signal advance_requested
 signal primary_changed(primary_id: StringName)
 
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
@@ -111,7 +112,8 @@ class ActionRailSlot:
 				draw_rect(Rect2(meter_rect.position, Vector2(meter_rect.size.x * cooldown_ratio, 2.0)), accent)
 		else:
 			draw_rect(meter_rect, Art.CERAMIC_GREEN_MID)
-			draw_rect(Rect2(meter_rect.position, Vector2(meter_rect.size.x * (1.0 - cooldown_ratio), meter_rect.size.y)), accent)
+			var fill_ratio := cooldown_ratio if is_primary else 1.0 - cooldown_ratio
+			draw_rect(Rect2(meter_rect.position, Vector2(meter_rect.size.x * fill_ratio, meter_rect.size.y)), accent)
 
 class StageMinimap:
 	extends Control
@@ -199,6 +201,7 @@ var _passive_slot: ActionRailSlot
 var _skill_slot: ActionRailSlot
 var _buff_label: Label
 var _minimap: StageMinimap
+var _minimap_title: Label
 var _notification: Label
 var _notification_timer := 0.0
 
@@ -213,6 +216,10 @@ var _deployment_command: Button
 var _upgrade_buttons: Array[Button] = []
 var _pause_first_button: Button
 var _result_first_button: Button
+var _result_kicker: Label
+var _result_title: Label
+var _result_continue_button: Button
+var _result_garage_button: Button
 var _garage_first_button: Button
 var _garage_primary_label: Label
 var _garage_passive_label: Label
@@ -332,8 +339,8 @@ func _build_hud() -> void:
 	_hud.add_child(_minimap_panel)
 	var minimap_box := VBoxContainer.new()
 	_minimap_panel.add_child(minimap_box)
-	var map_title := _label("UI_FLOODED_WORKS", 12, INK)
-	minimap_box.add_child(map_title)
+	_minimap_title = _label("UI_FLOODED_WORKS", 12, INK)
+	minimap_box.add_child(_minimap_title)
 	_minimap = StageMinimap.new()
 	_minimap.custom_minimum_size = Vector2(190.0, 104.0)
 	minimap_box.add_child(_minimap)
@@ -571,12 +578,12 @@ func _build_result() -> void:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 12)
 	panel.add_child(box)
-	var kicker := _label("RESULT_KICKER", 14, AMBER)
-	kicker.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	box.add_child(kicker)
-	var title := _label("RESULT_TITLE", 34, INK)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	box.add_child(title)
+	_result_kicker = _label("RESULT_KICKER", 14, AMBER)
+	_result_kicker.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(_result_kicker)
+	_result_title = _label("RESULT_TITLE", 34, INK)
+	_result_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(_result_title)
 	var summary := _label("", 16, MUTED)
 	summary.name = "RunSummary"
 	summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -584,10 +591,13 @@ func _build_result() -> void:
 	summary.custom_minimum_size.y = 190.0
 	box.add_child(summary)
 	box.set_meta("summary", summary)
-	var garage := _command_button("RESULT_REVIEW_GARAGE", &"PrimaryButton")
-	garage.pressed.connect(func() -> void: garage_requested.emit())
-	box.add_child(garage)
-	_result_first_button = garage
+	_result_continue_button = _command_button("RESULT_NEXT_STAGE", &"PrimaryButton")
+	_result_continue_button.pressed.connect(func() -> void: advance_requested.emit())
+	box.add_child(_result_continue_button)
+	_result_garage_button = _command_button("RESULT_REVIEW_GARAGE", &"PrimaryButton")
+	_result_garage_button.pressed.connect(func() -> void: garage_requested.emit())
+	box.add_child(_result_garage_button)
+	_result_first_button = _result_garage_button
 	var replay := _command_button("RESULT_REPLAY", &"SecondaryButton")
 	replay.pressed.connect(func() -> void: replay_requested.emit())
 	box.add_child(replay)
@@ -679,13 +689,12 @@ func update_hud(snapshot: Dictionary) -> void:
 	]
 	_objective_label.text = String(snapshot.get("objective", ""))
 	_objective_detail.text = String(snapshot.get("objective_detail", ""))
+	_minimap_title.text = String(snapshot.get("stage_title", tr("UI_FLOODED_WORKS")))
 
 	_primary_slot.action_name = String(snapshot.get("primary_name", "ACTION_PRIMARY"))
 	_primary_slot.set_state(
 		String(snapshot.get("primary_state", "STATE_LIVE")),
-		float(snapshot.get("primary_ratio", 0.0)),
-		int(snapshot.get("primary_rounds", 0)),
-		int(snapshot.get("primary_capacity", 0))
+		float(snapshot.get("primary_ratio", 0.0))
 	)
 	_dash_slot.set_state(String(snapshot.get("dash_state", "STATE_READY")), float(snapshot.get("dash_ratio", 0.0)))
 	_passive_slot.set_state(String(snapshot.get("passive_state", "STATE_READY")), float(snapshot.get("passive_ratio", 0.0)))
@@ -774,6 +783,12 @@ func show_result(summary: Dictionary) -> void:
 	_result_center.visible = true
 	_hud.visible = false
 	_latest_result_summary = summary.duplicate(true)
+	var has_next := bool(summary.get("has_next_stage", false))
+	_result_continue_button.visible = has_next
+	_result_continue_button.text = tr("RESULT_NEXT_STAGE").replace("%s", tr(String(summary.get("next_stage_key", "STAGE_TIDAL_ARCHIVE"))))
+	_result_kicker.text = tr("RESULT_STAGE_COMPLETE").replace("%d", str(int(summary.get("stage_number", 1)))).replace("%s", tr(String(summary.get("stage_title_key", "STAGE_FLOODED_WORKS"))))
+	_result_title.text = tr("RESULT_TITLE_CONTINUE") if has_next else tr("RESULT_TITLE_FINAL")
+	_result_first_button = _result_continue_button if has_next else _result_garage_button
 	_refresh_result_summary()
 	_result_first_button.grab_focus()
 
@@ -927,6 +942,8 @@ func _refresh_result_summary() -> void:
 	var summary_label: Label = _result_center.get_child(0).get_child(0).get_meta("summary")
 	var result := _latest_result_summary
 	var warden_state := tr("RESULT_DEFEATED") if bool(result.get("field_boss_defeated", false)) else tr("RESULT_BYPASSED")
+	var reward_heading := tr("RESULT_ROUTE_CONTINUES") if bool(result.get("has_next_stage", false)) else tr("RESULT_REWARD")
+	var reward_detail := tr(String(result.get("next_stage_key", ""))) if bool(result.get("has_next_stage", false)) else tr("RESULT_RELAY_MODULE")
 	summary_label.text = "%s\n%s\n%s\n%s\n%s\n\n%s\n%s  ·  %s  ·  %s\n\n%s\n✦  %s" % [
 		tr("RESULT_RUN"),
 		tr("RESULT_CLEAR_TIME") % String(result.get("time", "0:00")),
@@ -937,8 +954,8 @@ func _refresh_result_summary() -> void:
 		tr("RESULT_PRIMARY_HITS") % int(result.get("primary_hits", 0)),
 		tr("RESULT_DASH_USES") % int(result.get("dash_uses", 0)),
 		tr("RESULT_INSTALLATIONS") % int(result.get("installations", 0)),
-		tr("RESULT_REWARD"),
-		tr("RESULT_RELAY_MODULE"),
+		reward_heading,
+		reward_detail,
 	]
 
 

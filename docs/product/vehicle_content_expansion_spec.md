@@ -1,10 +1,11 @@
 ---
 type: spec
-status: draft
+status: active
 owner: BK
 created: 2026-07-21
 topic: Vehicle-led Cardborne stage, enemy, and upgrade expansion
-scope: Implementation-ready content boundaries after the accepted Stage 1 combat loop is playtested
+scope: Implemented three-stage vehicle run, enemy-role, upgrade, and future content boundaries
+last_reviewed: 2026-07-21
 related:
   - ./vehicle_stage_one_experimental_spec.md
   - ./progression_upgrade_system_spec.md
@@ -15,9 +16,9 @@ related:
 
 ## Purpose and authority
 
-This draft turns the broad future-direction notes into a concrete way to add stages, enemies, and upgrades without turning Cardborne into an undirected survival arena. It does not authorize Stage 2 production by itself. Stage 1 playtesting must first confirm that manual target priority, finite primary bursts, dash positioning, installation pressure, and one mid-stage card choice are enjoyable.
+This specification governs the implemented three-stage vehicle run and future additions without turning Cardborne into an undirected survival arena. Manual target priority, deliberate attack-energy timing, dash positioning, installation pressure, and one mid-stage card choice are the shared combat language.
 
-The requirements below are the proposed reusable content contract. Named Stage 2 and Stage 3 concepts are examples to evaluate, not accepted production commitments.
+Flooded Works, Tidal Archive, and Storm Drydock are implemented authored stages. Their first playable versions intentionally reuse the shared macro objective cadence and boss behavior while proving distinct layouts, environment rules, and enemy mixes. Further production polish remains subject to playtesting.
 
 ## Core run rhythm
 
@@ -46,18 +47,18 @@ Each stage definition owns:
 
 Route widths must accommodate the player collision radius, a full dash, and at least two ordinary enemies without creating accidental door blocks. Every entrance and exit gets an automated reachability check and a rendered spawn-safety capture.
 
-### Proposed Stage 2 example: Tidal Archive
+### Stage 2: Tidal Archive
 
 - **Spatial verb:** redirect slow water currents that push vehicles and projectiles along marked lanes.
-- **Installation problem:** two current regulators protect an artillery archivist; disabling either opens a safer line of sight but strengthens the other lane.
+- **Installation problem:** two current regulators share the field with artillery spotters and limited-charge interceptor towers; route choice changes the order in which those threats gain line of sight.
 - **Optional branch:** travel against the current to reach a field boss guarding a passive-module blueprint.
 - **Boss exam:** rotate current lanes, destroy exposed relay seals, and use cover while the boss fires committed archive beams.
 - **Reuse:** chasers and turrets return with changed placement; mines drift only inside clearly painted current lanes.
 
-### Proposed Stage 3 example: Storm Drydock
+### Stage 3: Storm Drydock
 
 - **Spatial verb:** move between grounded safe zones before broad electrical sweeps activate.
-- **Installation problem:** mobile shield escorts link to fixed lightning towers, forcing the player to break the link or reposition for a direct shot.
+- **Installation problem:** mobile shield escorts protect nearby ordinary enemies while artillery and interception roles contest the divided drydock lanes.
 - **Optional branch:** a timed salvage crane exposes a reward while temporarily removing cover.
 - **Boss exam:** alternating safe zones, destructible shield escorts, and a slow committed ram pattern; no unrelated bullet-wall phase.
 - **Reuse:** shooters and controllers return in smaller numbers so the stage-specific electrical timing remains dominant.
@@ -85,12 +86,13 @@ The standard roster is role-based:
 
 New enemies add one primary behavior, not several hidden exceptions. Silhouette, threat color, health bar, telegraph shape, projectile ownership, and death result must be readable at gameplay zoom. Ordinary enemy bullets collide with solid cover unless a clearly named elite/boss rule communicates otherwise.
 
-### Candidate additions
+### Implemented additions
 
-- **Shield Escort:** orbits a linked enemy and blocks shots only across the visible link arc. Destroying or separating it exposes the target.
-- **Artillery Spotter:** paints one large impact point, then fires after a long startup. Breaking line of sight cancels the accurate shot but produces a weaker fallback shell.
+- **Shield Escort:** circles the player-facing formation and grants a visible shield to nearby ordinary allies. Destroying or separating it exposes them.
+- **Artillery Spotter:** paints one large impact point, then resolves a denial zone after a long startup.
 - **Interceptor Tower:** consumes a limited number of player projectiles before overheating; its remaining intercept charges are shown as large pips.
-- **Salvage Thief:** steals an exposed temporary pickup and retreats toward a marked nest, creating a chase without permanently deleting critical progression.
+
+Salvage Thief remains an unimplemented future candidate and must not delete critical progression.
 
 ## Encounter composition
 
@@ -104,8 +106,8 @@ Run upgrades are cards that visibly change a behavior within the next encounter.
 
 | Family | Examples | Avoid |
 |---|---|---|
-| Primary geometry | ricochet, forked final round, tighter scatter at low rounds | invisible universal damage-only bonuses |
-| Charge cycle | larger burst with slower full charge; quick refill after a dash; final round overload | removing the finite-burst decision entirely |
+| Primary geometry | ricochet, full-charge pierce, five-pellet full Scatter | invisible universal damage-only bonuses |
+| Attack energy | altered minimum release, faster recovery after a dash, or a stronger full-charge behavior | restoring hold-to-fire or hiding the benefit of waiting |
 | Passive command | two weaker seekers; marked-target priority; pickup-triggered drone | passive screen clearing with no target relation |
 | Dash collision | ion wake, ram pulse, projectile erase with longer cooldown | unconditional invulnerability uptime |
 | EMP/control | aftershock, linked-installation disruption, pickup conversion | permanent stunlock or unreadable proc chains |
@@ -134,7 +136,7 @@ Cooldowns, charge counts, links, health, card copy, selection, and settings rema
 - Global run state owns current cards and route; persistent state owns unlocks and equipment.
 - Localization keys are stored with display data; stable IDs remain language-independent.
 
-The current monolithic Stage 1 script is acceptable for the proof but must be split along these boundaries before a second production stage duplicates it.
+Stage identity, layout, population, and environment data live in `vehicle_stage_catalog.gd`; attack energy lives in `vehicle_primary_charge.gd`. The shared runtime still owns encounter execution and should be decomposed further by enemy and environment responsibility before the roster grows again.
 
 ## Acceptance gates for adding a stage
 
