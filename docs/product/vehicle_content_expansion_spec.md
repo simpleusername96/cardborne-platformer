@@ -96,7 +96,7 @@ Salvage Thief remains an unimplemented future candidate and must not delete crit
 
 ## Encounter composition
 
-Use coordinated pressure, not raw enemy count alone. Flooded Works, Tidal Archive, and Storm Drydock contain exactly 204, 228, and 252 pre-boss enemies, while local mobile activation caps are 72, 78, and 84. Compact swarm units create visible density; a 6.5-point attack budget, three ranged commits, and two denial commits bound simultaneous danger. Enemy movement is 15% faster, hostile projectiles are 12% faster, enemy damage is 25% higher, and ordinary recovery is 20% faster than the original dense-combat baseline; startup warnings remain unchanged. Inactive groups do not move, attack, or create individual minimap noise. Fixed installations participate in the same coordination rules where applicable.
+Use coordinated pressure, not raw enemy count alone. Flooded Works, Tidal Archive, and Storm Drydock contain exactly 204, 228, and 252 pre-boss enemies, while hard local mobile activation caps are 48, 54, and 60. The scheduler retains committed attackers and then the nearest enemies, making distant groups dormant without deleting them. Compact swarm units create visible density; a 6.5-point attack budget, three ranged commits, and two denial commits bound simultaneous danger. Enemy movement is 15% faster, hostile projectiles are 12% faster, enemy damage is 25% higher, and ordinary recovery is 20% faster than the original dense-combat baseline; startup warnings remain unchanged. Inactive groups do not move, attack, draw, or create individual minimap noise. Fixed installations participate in the same coordination rules where applicable.
 
 Activation uses authored zones and proximity. Enemies may pursue across connected local spaces but return or reposition when navigation fails. Progress gates depend on installations, interaction, survival, or boss defeat—not total ordinary-enemy extermination.
 
@@ -127,7 +127,7 @@ Before a content milestone starts, list only assets that cannot be communicated 
 - large pickup/reward symbols with the existing semantic colors;
 - minimap marker and codex icon only when the role cannot reuse an existing symbol.
 
-Cooldowns, charge counts, links, health, card copy, selection, and settings remain live Godot UI. They are not baked into images. During play, a 156 px circular radar follows the projected player position and aggregates active threats into 24 directional sectors within 1,200 px; distance, density, priority, and current target remain readable without rendering one marker per enemy.
+Cooldowns, charge counts, links, health, card copy, selection, and settings remain live Godot UI. They are not baked into images. During play, a 208 px off-screen threat indicator follows the projected player position and aggregates threats outside the safe viewport into 12 short directional arcs within 1,200 px. Arc weight communicates density/proximity; priority and current target use distinct semantic treatments. On-screen enemies are not duplicated in this overlay, and contact sampling runs at 10 Hz while the player-centered projection remains current.
 
 ## Data and ownership
 

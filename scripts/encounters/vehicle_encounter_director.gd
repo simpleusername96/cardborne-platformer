@@ -21,9 +21,9 @@ const TARGET_COUNTS := {
 }
 
 const ACTIVE_CAPS := {
-	&"flooded_works": 72,
-	&"tidal_archive": 78,
-	&"storm_drydock": 84,
+	&"flooded_works": 48,
+	&"tidal_archive": 54,
+	&"storm_drydock": 60,
 }
 
 

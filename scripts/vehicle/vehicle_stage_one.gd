@@ -18,6 +18,7 @@ const UpgradeCatalog = preload("res://scripts/cards/vehicle_upgrade_catalog.gd")
 const RunBuild = preload("res://scripts/cards/vehicle_run_build.gd")
 const StatusRuntime = preload("res://scripts/combat/vehicle_status_runtime.gd")
 const AudioDirector = preload("res://scripts/presentation/vehicle_audio_director.gd")
+const StageBackdrop = preload("res://scripts/vehicle/vehicle_stage_backdrop.gd")
 
 enum RunMode {
 	DEPLOYMENT,
@@ -43,11 +44,14 @@ const EMP_STARTUP := 0.42
 const EMP_RADIUS := 285.0
 const MINIMAP_COLS := 13
 const MINIMAP_ROWS := 6
+const THREAT_SCAN_DISTANCE := 1200.0
+const THREAT_SAMPLE_INTERVAL := 0.10
 
 var mode := RunMode.DEPLOYMENT
 var mode_before_pause := RunMode.PLAYING
 var _ui: Variant
 var _camera: Camera2D
+var _backdrop
 var _rng := RandomNumberGenerator.new()
 
 var player_position := Rules.PLAYER_START
@@ -122,6 +126,8 @@ var environment_damage_tick := 0.0
 
 var visited_cells: Dictionary = {}
 var discovered_markers: Dictionary = {}
+var _threat_contact_cache: Array[Dictionary] = []
+var _threat_sample_timer := 0.0
 var camera_shake := 0.0
 var _camera_offset := Vector2.ZERO
 
@@ -145,6 +151,7 @@ var _capture_locale := ""
 func _ready() -> void:
 	_rng.seed = 0xC4A2B0
 	_parse_capture_arguments()
+	_build_backdrop()
 	_build_camera()
 	_build_ui()
 	_build_audio()
@@ -167,6 +174,7 @@ func _physics_process(delta: float) -> void:
 		_update_stage_environment(delta)
 		_update_pickups()
 		_update_enemies(delta)
+		_update_threat_contacts(delta)
 		_update_projectiles(delta)
 		_update_denied_zones(delta)
 		_update_trails(delta)
@@ -219,6 +227,13 @@ func _build_camera() -> void:
 	add_child(_camera)
 
 
+func _build_backdrop() -> void:
+	_backdrop = StageBackdrop.new()
+	_backdrop.name = "VehicleStageBackdrop"
+	add_child(_backdrop)
+	_backdrop.configure(current_stage_id)
+
+
 func _build_ui() -> void:
 	_ui = StageUI.new()
 	_ui.name = "VehicleStageUI"
@@ -251,6 +266,8 @@ func _reset_run(increment_index: bool = true, preserve_stage: bool = false, pres
 	if not preserve_stage:
 		current_stage_index = 0
 		current_stage_id = StageCatalog.STAGE_IDS[0]
+	if is_instance_valid(_backdrop):
+		_backdrop.configure(current_stage_id)
 	mode = RunMode.DEPLOYMENT
 	player_position = Rules.PLAYER_START
 	player_hull_direction = Vector2.RIGHT
@@ -337,6 +354,8 @@ func _reset_run(increment_index: bool = true, preserve_stage: bool = false, pres
 	environment_damage_tick = 0.0
 	visited_cells.clear()
 	discovered_markers.clear()
+	_threat_contact_cache.clear()
+	_threat_sample_timer = 0.0
 	if not preserve_upgrades:
 		stats_primary_hits = 0
 		stats_dash_uses = 0
@@ -968,6 +987,7 @@ func _launch_field_seekers(max_targets: int) -> void:
 
 
 func _update_enemies(delta: float) -> void:
+	_enforce_active_enemy_cap()
 	var committed_points := 0.0
 	var committed_ranged := 0
 	var committed_denial := 0
@@ -994,6 +1014,11 @@ func _update_enemies(delta: float) -> void:
 		var activated := _update_enemy_activation(enemy, active_capped < EncounterDirector.active_cap(current_stage_id))
 		if activated and bool(enemy.get("counts_active_cap", false)):
 			active_capped += 1
+
+	var shielded_ids := _build_enemy_shield_assignments()
+	for enemy in enemies:
+		if not bool(enemy["alive"]):
+			continue
 		if not bool(enemy["active"]):
 			continue
 		var status_damage := StatusRuntime.tick(enemy, delta)
@@ -1001,7 +1026,7 @@ func _update_enemies(delta: float) -> void:
 			_damage_enemy(enemy, status_damage, "status", 0.0)
 			if not bool(enemy["alive"]):
 				continue
-		_update_enemy_shield(enemy)
+		_apply_enemy_shield(enemy, shielded_ids)
 		var role := StringName(enemy["role"])
 		if role == &"stage_boss":
 			_update_stage_boss(enemy, delta)
@@ -1027,6 +1052,28 @@ func _update_enemies(delta: float) -> void:
 				&"denial": committed_denial += 1
 
 
+func _enforce_active_enemy_cap() -> void:
+	var active_mobile: Array[Dictionary] = []
+	for enemy in enemies:
+		if bool(enemy["alive"]) and bool(enemy["active"]) and bool(enemy.get("counts_active_cap", false)):
+			active_mobile.append(enemy)
+	var cap := EncounterDirector.active_cap(current_stage_id)
+	if active_mobile.size() <= cap:
+		return
+	active_mobile.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		var a_committed := String(a["phase"]) in ["startup", "active"]
+		var b_committed := String(b["phase"]) in ["startup", "active"]
+		if a_committed != b_committed:
+			return a_committed
+		return player_position.distance_squared_to(Vector2(a["pos"])) < player_position.distance_squared_to(Vector2(b["pos"]))
+	)
+	for index in range(cap, active_mobile.size()):
+		var enemy := active_mobile[index]
+		enemy["active"] = false
+		enemy["velocity"] = Vector2.ZERO
+		enemy["phase"] = "move"
+
+
 func _update_enemy_activation(enemy: Dictionary, capacity_available: bool) -> bool:
 	if bool(enemy["active"]):
 		return false
@@ -1045,33 +1092,44 @@ func _update_enemy_activation(enemy: Dictionary, capacity_available: bool) -> bo
 	return bool(enemy["active"])
 
 
-func _update_enemy_shield(enemy: Dictionary) -> void:
-	var role := StringName(enemy["role"])
-	if role in [&"generator", &"shield_escort", &"field_boss", &"stage_boss", &"boss_pylon"]:
-		enemy["shielded"] = false
-		return
-	enemy["shielded"] = false
-	for support in enemies:
-		if not bool(support["alive"]) or not bool(support["active"]) or StringName(support["role"]) not in [&"generator", &"shield_escort"]:
+func _build_enemy_shield_assignments() -> Dictionary:
+	var shielded_ids := {}
+	var candidates: Array[Dictionary] = []
+	var supports: Array[Dictionary] = []
+	for enemy in enemies:
+		if not bool(enemy["alive"]) or not bool(enemy["active"]):
 			continue
-		var shield_radius := 390.0 if StringName(support["role"]) == &"generator" else 300.0
-		if StringName(support["role"]) == &"shield_escort":
-			var closest_id := ""
-			var closest_distance := INF
-			for candidate in enemies:
-				if candidate == support or not bool(candidate["alive"]) or not bool(candidate["active"]):
-					continue
-				if StringName(candidate["role"]) in [&"generator", &"shield_escort", &"field_boss", &"stage_boss", &"boss_pylon"]:
-					continue
-				var candidate_distance := Vector2(support["pos"]).distance_to(Vector2(candidate["pos"]))
-				if candidate_distance <= shield_radius and candidate_distance < closest_distance:
-					closest_distance = candidate_distance
-					closest_id = String(candidate["id"])
-			if closest_id != String(enemy["id"]):
-				continue
-		if Vector2(support["pos"]).distance_to(Vector2(enemy["pos"])) <= shield_radius:
-			enemy["shielded"] = true
-			return
+		var role := StringName(enemy["role"])
+		if role in [&"generator", &"shield_escort"]:
+			supports.append(enemy)
+		elif role not in [&"field_boss", &"stage_boss", &"boss_pylon"]:
+			candidates.append(enemy)
+	for support in supports:
+		var support_position := Vector2(support["pos"])
+		if StringName(support["role"]) == &"generator":
+			for candidate in candidates:
+				if support_position.distance_squared_to(Vector2(candidate["pos"])) <= 390.0 * 390.0:
+					shielded_ids[String(candidate["id"])] = true
+			continue
+		var closest_id := ""
+		var closest_distance_squared := 300.0 * 300.0
+		for candidate in candidates:
+			var distance_squared := support_position.distance_squared_to(Vector2(candidate["pos"]))
+			if distance_squared <= closest_distance_squared:
+				closest_distance_squared = distance_squared
+				closest_id = String(candidate["id"])
+		if not closest_id.is_empty():
+			shielded_ids[closest_id] = true
+	return shielded_ids
+
+
+func _apply_enemy_shield(enemy: Dictionary, shielded_ids: Dictionary) -> void:
+	enemy["shielded"] = bool(shielded_ids.get(String(enemy["id"]), false))
+
+
+func _update_enemy_shield(enemy: Dictionary) -> void:
+	# Compatibility path for deterministic single-enemy contract checks.
+	_apply_enemy_shield(enemy, _build_enemy_shield_assignments())
 
 
 func _update_generator(enemy: Dictionary, delta: float) -> void:
@@ -2597,14 +2655,22 @@ func _is_world_position_visited(position: Vector2) -> bool:
 	return visited_cells.has(cell)
 
 
-func _threat_radar_snapshot() -> Dictionary:
-	const SCAN_DISTANCE := 1200.0
+func _update_threat_contacts(delta: float) -> void:
+	_threat_sample_timer -= delta
+	if _threat_sample_timer > 0.0:
+		return
+	_threat_sample_timer = THREAT_SAMPLE_INTERVAL
 	var contacts: Array[Dictionary] = []
+	var viewport_size := get_viewport_rect().size
+	var safe_viewport := Rect2(Vector2(90.0, 90.0), viewport_size - Vector2(180.0, 220.0))
+	var canvas_transform := get_canvas_transform()
 	for enemy in enemies:
 		if not bool(enemy["alive"]) or not bool(enemy["active"]):
 			continue
 		var offset := Vector2(enemy["pos"]) - player_position
-		if offset.length_squared() > SCAN_DISTANCE * SCAN_DISTANCE:
+		if offset.length_squared() > THREAT_SCAN_DISTANCE * THREAT_SCAN_DISTANCE:
+			continue
+		if safe_viewport.has_point(canvas_transform * Vector2(enemy["pos"])):
 			continue
 		var health_class := StringName(enemy.get("health_class", &"standard"))
 		contacts.append({
@@ -2612,18 +2678,20 @@ func _threat_radar_snapshot() -> Dictionary:
 			"priority": health_class in [&"priority", &"boss"],
 			"targeted": String(enemy["id"]) == _aim_target_id,
 		})
+	_threat_contact_cache = contacts
+
+
+func _threat_radar_snapshot() -> Dictionary:
 	return {
 		"visible": mode == RunMode.PLAYING,
 		"center": get_canvas_transform() * player_position,
-		"max_distance": SCAN_DISTANCE,
-		"contacts": contacts,
+		"max_distance": THREAT_SCAN_DISTANCE,
+		"contacts": _threat_contact_cache,
 	}
 
 
 func _draw() -> void:
-	_draw_world()
-	_draw_water_and_floor()
-	_draw_cover()
+	_draw_boss_gate()
 	_draw_landmarks()
 	_draw_zones_and_trails()
 	_draw_pickups_and_crates()
@@ -2634,123 +2702,7 @@ func _draw() -> void:
 	_draw_aim_feedback()
 
 
-func _draw_world() -> void:
-	draw_rect(Rules.WORLD_RECT, Art.COBALT_VOID)
-	for region in Rules.get_floor_regions(current_stage_id):
-		var edge_rect := Rect2(region["rect"])
-		edge_rect.position += Art.COVER_EDGE_OFFSET
-		draw_colored_polygon(Art.stepped_rect(edge_rect, 52.0), Art.COBALT_DEEP)
-	for region in Rules.get_floor_regions(current_stage_id):
-		draw_colored_polygon(Art.stepped_rect(Rect2(region["rect"]), 52.0), Art.IVORY)
-	_draw_major_motifs()
-
-
-func _draw_major_motifs() -> void:
-	for motif in Art.major_motifs():
-		var kind := StringName(motif["kind"])
-		var center := Vector2(motif["center"])
-		var radius := float(motif["radius"])
-		var rotation := float(motif["rotation"])
-		var color := Color(motif["color"])
-		if current_stage_id == &"tidal_archive":
-			center.y = Rules.WORLD_RECT.size.y - center.y
-			rotation += PI * 0.5
-			kind = &"split_current" if kind == &"tide_curl" else kind
-		elif current_stage_id == &"storm_drydock":
-			center += Vector2(90.0, -70.0)
-			rotation += PI * 0.25
-			kind = &"sun_gate" if kind in [&"tide_curl", &"split_current"] else &"relay_flower"
-		match kind:
-			&"tide_curl":
-				_draw_tide_curl(center, radius, rotation, color)
-			&"split_current":
-				_draw_split_current(center, radius, rotation, color)
-			&"relay_flower":
-				_draw_relay_flower(center, radius, rotation, color)
-			&"sun_gate":
-				_draw_sun_gate(center, radius, rotation, color)
-
-
-func _draw_tide_curl(center: Vector2, radius: float, rotation: float, color: Color) -> void:
-	var sweep := PackedVector2Array()
-	for index in 18:
-		var progress := float(index) / 17.0
-		var angle := rotation + progress * PI * 1.55
-		var distance := lerpf(radius, radius * 0.16, progress)
-		sweep.append(center + Vector2.RIGHT.rotated(angle) * distance)
-	for index in range(sweep.size() - 1):
-		draw_line(sweep[index], sweep[index + 1], color, lerpf(58.0, 26.0, float(index) / 17.0), true)
-	draw_circle(center + Vector2.RIGHT.rotated(rotation + PI * 1.55) * radius * 0.16, radius * 0.13, color)
-
-
-func _draw_split_current(center: Vector2, radius: float, rotation: float, color: Color) -> void:
-	for side in [-1.0, 1.0]:
-		var points := PackedVector2Array([
-			Vector2(-radius * 0.82, side * radius * 0.16),
-			Vector2(-radius * 0.18, side * radius * 0.46),
-			Vector2(radius * 0.72, side * radius * 0.24),
-			Vector2(radius * 0.28, side * radius * 0.02),
-			Vector2(-radius * 0.12, side * radius * 0.12),
-		])
-		for index in points.size():
-			points[index] = center + points[index].rotated(rotation)
-		draw_colored_polygon(points, color)
-	draw_circle(center, radius * 0.18, Color(Art.IVORY, 0.86))
-
-
-func _draw_relay_flower(center: Vector2, radius: float, rotation: float, color: Color) -> void:
-	for index in 4:
-		var angle := rotation + TAU * float(index) / 4.0
-		var petal_center := center + Vector2.RIGHT.rotated(angle) * radius * 0.42
-		draw_colored_polygon(_regular_polygon(petal_center, radius * 0.42, 8, angle), color)
-	draw_circle(center, radius * 0.24, Color(Art.IVORY, 0.82))
-
-
-func _draw_sun_gate(center: Vector2, radius: float, rotation: float, color: Color) -> void:
-	draw_circle(center, radius * 0.68, color)
-	draw_circle(center, radius * 0.43, Color(Art.IVORY, 0.95))
-	for index in 8:
-		var angle := rotation + TAU * float(index) / 8.0
-		var direction := Vector2.RIGHT.rotated(angle)
-		var tangent := direction.rotated(PI * 0.5)
-		var root := center + direction * radius * 0.72
-		draw_colored_polygon(PackedVector2Array([
-			root - tangent * radius * 0.11,
-			center + direction * radius,
-			root + tangent * radius * 0.11,
-		]), color)
-
-
-func _draw_water_and_floor() -> void:
-	for water in Rules.get_water_rects(current_stage_id):
-		var edge := water
-		edge.position += Vector2(10.0, 14.0)
-		draw_colored_polygon(Art.stepped_rect(edge, 30.0), Art.COBALT_DEEP)
-		draw_colored_polygon(Art.stepped_rect(water, 30.0), Art.COBALT_WATER)
-		var wave_y := water.get_center().y
-		draw_line(
-			Vector2(water.position.x + 28.0, wave_y),
-			Vector2(water.end.x - 28.0, wave_y),
-			Color(Art.IVORY_BRIGHT, 0.22),
-			8.0,
-			true
-		)
-	# Broad route inlays replace repeated rails and remain decorative only.
-	draw_rect(Rect2(720.0, 1010.0, 1240.0, 42.0), Color(Art.IVORY_SHADE, 0.82))
-	draw_rect(Rect2(720.0, 1150.0, 1240.0, 42.0), Color(Art.IVORY_SHADE, 0.82))
-	draw_rect(Rect2(3320.0, 1038.0, 540.0, 44.0), Color(Art.MINT, 0.42))
-	draw_rect(Rect2(3320.0, 1188.0, 540.0, 44.0), Color(Art.MINT, 0.42))
-
-
-func _draw_cover() -> void:
-	for rect in Rules.get_cover_rects(false, current_stage_id):
-		var edge := rect
-		edge.position += Art.COVER_EDGE_OFFSET
-		draw_colored_polygon(Art.stepped_rect(edge, 24.0), Art.COBALT_DEEP)
-		draw_colored_polygon(Art.stepped_rect(rect, 24.0), Art.CERAMIC_GREEN)
-		var cap := rect.grow(-12.0)
-		if cap.size.x > 24.0 and cap.size.y > 24.0:
-			draw_colored_polygon(Art.stepped_rect(cap, 16.0), Art.CERAMIC_GREEN_MID)
+func _draw_boss_gate() -> void:
 	if _boss_gate_closed():
 		draw_colored_polygon(Art.stepped_rect(Rules.BOSS_GATE, 18.0), Art.CERAMIC_GREEN)
 		var gate_center := Rules.BOSS_GATE.get_center()
@@ -2880,8 +2832,11 @@ func _draw_pickups_and_crates() -> void:
 
 
 func _draw_enemies() -> void:
+	var visible_world := _visible_world_rect(180.0)
 	for enemy in enemies:
 		if not bool(enemy["alive"]) or not bool(enemy["active"]):
+			continue
+		if not visible_world.has_point(Vector2(enemy["pos"])):
 			continue
 		_draw_enemy(enemy)
 
@@ -3181,8 +3136,11 @@ func _draw_warning_beam(origin: Vector2, direction: Vector2, length: float, widt
 
 
 func _draw_projectiles() -> void:
+	var visible_world := _visible_world_rect(80.0)
 	for projectile in projectiles:
 		var position := Vector2(projectile["pos"])
+		if not visible_world.has_point(position):
+			continue
 		var velocity := Vector2(projectile["velocity"])
 		var color := Color(projectile["color"])
 		var direction := velocity.normalized()
@@ -3192,9 +3150,12 @@ func _draw_projectiles() -> void:
 
 
 func _draw_effects() -> void:
+	var visible_world := _visible_world_rect(220.0)
 	for effect in effects:
 		var kind := String(effect["kind"])
 		var position := Vector2(effect["pos"])
+		if not visible_world.has_point(position):
+			continue
 		var color := Color(effect["color"])
 		var duration := maxf(0.001, float(effect["duration"]))
 		var progress := 1.0 - clampf(float(effect["time"]) / duration, 0.0, 1.0)
@@ -3223,6 +3184,14 @@ func _draw_effects() -> void:
 				draw_arc(position, lerpf(radius * 0.7, radius, progress), 0.0, TAU, 32, Color(color, 1.0 - progress), 5.0)
 			"scheduled_aftershock":
 				draw_arc(position, radius, 0.0, TAU * progress, 32, Color(color, 0.35), 3.0)
+
+
+func _visible_world_rect(margin: float = 0.0) -> Rect2:
+	var inverse_canvas := get_canvas_transform().affine_inverse()
+	var viewport_size := get_viewport_rect().size
+	var top_left := inverse_canvas * Vector2.ZERO
+	var bottom_right := inverse_canvas * viewport_size
+	return Rect2(top_left, bottom_right - top_left).abs().grow(margin)
 
 
 func _draw_player() -> void:
@@ -3350,7 +3319,7 @@ func _run_capture_sequence() -> void:
 	player_position = Vector2(120.0, 1080.0)
 	player_aim_direction = Vector2.RIGHT
 	await _settle_capture()
-	_save_capture("02e-radar-boundary.png")
+	_save_capture("02e-threat-boundary.png")
 
 	player_position = Vector2(2460.0, 520.0)
 	player_aim_direction = Vector2.RIGHT
@@ -3805,6 +3774,37 @@ func debug_enemy_pressure_contract() -> Dictionary:
 		"environment_damage": _scaled_incoming_damage(10.0, false),
 		"base_recovery": 0.55,
 		"runtime_recovery": _enemy_recovery_cooldown(&"chaser"),
+	}
+
+
+func debug_performance_contract() -> Dictionary:
+	current_stage_index = 2
+	current_stage_id = StageCatalog.STAGE_IDS[2]
+	_reset_run(false, true, false)
+	var committed_ids: Array[String] = []
+	for enemy in enemies:
+		if not bool(enemy.get("counts_active_cap", false)):
+			continue
+		enemy["active"] = true
+		if committed_ids.size() < 3:
+			enemy["phase"] = "startup"
+			committed_ids.append(String(enemy["id"]))
+	_enforce_active_enemy_cap()
+	var active_capped := 0
+	var committed_preserved := true
+	for enemy in enemies:
+		if bool(enemy["active"]) and bool(enemy.get("counts_active_cap", false)):
+			active_capped += 1
+		if String(enemy["id"]) in committed_ids and not bool(enemy["active"]):
+			committed_preserved = false
+	var backdrop_contract: Dictionary = _backdrop.debug_contract()
+	return {
+		"active_capped": active_capped,
+		"active_cap": EncounterDirector.active_cap(current_stage_id),
+		"committed_preserved": committed_preserved,
+		"backdrop_cached": bool(backdrop_contract["static_cached"]),
+		"backdrop_behind": bool(backdrop_contract["behind_gameplay"]),
+		"threat_sample_interval": THREAT_SAMPLE_INTERVAL,
 	}
 
 

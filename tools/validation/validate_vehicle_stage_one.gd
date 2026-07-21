@@ -58,14 +58,14 @@ func _run_validation() -> void:
 
 func _check_blueprint() -> void:
 	var expected_counts := {&"flooded_works": 204, &"tidal_archive": 228, &"storm_drydock": 252}
-	var expected_caps := {&"flooded_works": 72, &"tidal_archive": 78, &"storm_drydock": 84}
+	var expected_caps := {&"flooded_works": 48, &"tidal_archive": 54, &"storm_drydock": 60}
 	var all_blueprints := Rules.validate_all_blueprints()
 	for stage_id in all_blueprints.keys():
 		var blueprint_errors: PackedStringArray = all_blueprints[stage_id]
 		_expect(blueprint_errors.is_empty(), "%s landmarks, spawns, routes, and boss path are reachable" % stage_id)
 		_expect(Rules.get_enemy_blueprint(stage_id).size() == EncounterDirector.target_count(stage_id), "%s uses the locked dense enemy population" % stage_id)
 		_expect(EncounterDirector.target_count(stage_id) == int(expected_counts[stage_id]), "%s population is exactly triple the prior contract" % stage_id)
-		_expect(EncounterDirector.active_cap(stage_id) == int(expected_caps[stage_id]), "%s active cap is exactly triple the prior contract" % stage_id)
+		_expect(EncounterDirector.active_cap(stage_id) == int(expected_caps[stage_id]), "%s active cap preserves dense combat inside the performance budget" % stage_id)
 		for error_message in blueprint_errors:
 			failures.append("%s blueprint: %s" % [stage_id, error_message])
 
@@ -142,8 +142,9 @@ func _check_visual_contract(stage: Node) -> void:
 	_expect(int(ui.debug_ui_contract()["garage_focusables"]) >= 4, "garage exposes build summary, launch, locale, and both audio controls")
 	_expect(int(ui.debug_ui_contract()["locale_controls"]) == 6, "deployment, pause, and garage each expose Korean/English controls")
 	var radar_contract: Dictionary = ui.debug_threat_radar_contract()
-	_expect(is_equal_approx(float(radar_contract["diameter"]), 156.0), "threat radar preserves its compact player-centered diameter")
-	_expect(int(radar_contract["sector_count"]) == 24, "threat radar aggregates contacts into 24 readable sectors")
+	_expect(is_equal_approx(float(radar_contract["diameter"]), 208.0), "threat cues stay outside the vehicle silhouette")
+	_expect(int(radar_contract["sector_count"]) == 12 and int(radar_contract["maximum_markers"]) == 12, "threat cues aggregate into twelve readable directions")
+	_expect(bool(radar_contract["offscreen_arcs"]), "threat cues use off-screen arcs instead of a duplicate dot minimap")
 	_expect(bool(radar_contract["full_rect"]) and bool(radar_contract["mouse_ignored"]), "threat radar follows HUD space without intercepting input")
 	for surface in ["deployment", "upgrade", "pause", "result", "garage"]:
 		var modal_contract: Dictionary = ui.debug_modal_contract(surface)
@@ -248,6 +249,11 @@ func _check_enemy_pressure_contract(stage: Node) -> void:
 	_expect(is_equal_approx(float(runtime["runtime_damage"]), float(runtime["base_damage"]) * 1.25), "enemy attacks receive the locked damage multiplier")
 	_expect(is_equal_approx(float(runtime["environment_damage"]), float(runtime["base_damage"])), "environment damage is not accidentally scaled as enemy damage")
 	_expect(is_equal_approx(float(runtime["runtime_recovery"]), float(runtime["base_recovery"]) / 1.20), "ordinary enemy recovery uses the locked faster cadence")
+	var performance: Dictionary = stage.debug_performance_contract()
+	_expect(int(performance["active_capped"]) == int(performance["active_cap"]), "hard active scheduling cannot exceed the stage budget")
+	_expect(bool(performance["committed_preserved"]), "hard active scheduling keeps committed attacks alive")
+	_expect(bool(performance["backdrop_cached"]) and bool(performance["backdrop_behind"]), "static stage geometry is cached behind dynamic gameplay")
+	_expect(is_equal_approx(float(performance["threat_sample_interval"]), 0.10), "off-screen threat contacts sample at ten hertz")
 
 
 func _check_projectile_cover_contract(stage: Node) -> void:
