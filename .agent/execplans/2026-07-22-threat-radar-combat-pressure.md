@@ -1,8 +1,9 @@
 ---
 type: plan
-status: active
+status: done
 owner: BK
 created: 2026-07-22
+last_reviewed: 2026-07-22
 topic: Player-centered threat radar and triple-density combat pressure
 scope: Vehicle-stage threat radar, enemy population and activation density, enemy speed/damage/cadence tuning, validation, rendered evidence, and production build verification
 related:
@@ -86,10 +87,10 @@ Exact actions requiring owner/user approval: none within this plan; remote push 
 
 Goal: show nearby threat direction and density without obscuring combat.
 
-- [ ] **1.1 Add the snapshot-driven radar component.**
+- [x] **1.1 Add the snapshot-driven radar component.**
   - Accept: 24 or fewer stable contacts draw inside a 156 px ring around the projected player; target and priority threats are distinct.
   - Guard: no gameplay-node reads, input surface, text, panel, or minimap regression.
-- [ ] **1.2 Wire radar contacts and responsive HUD state.**
+- [x] **1.2 Wire radar contacts and responsive HUD state.**
   - Accept: radar follows the player near map/camera bounds, hides with modals, and fits 960×540, 1280×720, and 1920×1080.
   - Guard: action rail, target panel, boss strip, and notifications do not overlap or become hidden.
 
@@ -99,13 +100,13 @@ Batch acceptance: a dense combat capture makes attacks from every direction legi
 
 Goal: make the run materially harder while preserving readable telegraphs and progression bypass.
 
-- [ ] **2.1 Set exact population, active-cap, and formation contracts.**
+- [x] **2.1 Set exact population, active-cap, and formation contracts.**
   - Accept: stages contain exactly 204/228/252 pre-boss enemies and active caps are exactly 72/78/84; every spawn remains cover-safe and every required route remains reachable.
   - Guard: IDs stay unique, ordinary enemies still do not gate exit/rewards, and boss/installation counts do not multiply.
-- [ ] **2.2 Apply the locked speed, damage, projectile, recovery, and threat-budget tuning.**
+- [x] **2.2 Apply the locked speed, damage, projectile, recovery, and threat-budget tuning.**
   - Accept: runtime/debug snapshots prove ×1.15 movement, ×1.12 hostile projectile speed, ×1.25 enemy damage, ÷1.20 recovery, budget 6.5, ranged 3, denial 2.
   - Guard: startup telegraph duration, cover blocking, dash defense, projectile caps, environment damage, and boss warning windows remain intact.
-- [ ] **2.3 Align active specs and validators.**
+- [x] **2.3 Align active specs and validators.**
   - Accept: active product text and deterministic tests contain no retired 68/76/84 or 24/26/28 contract.
   - Guard: completed historical plans remain historical and are not rewritten.
 
@@ -115,9 +116,9 @@ Batch acceptance: all three stage blueprints and an automated full run pass at t
 
 Goal: prove the HUD and higher-density run in the shipped configuration.
 
-- [ ] **3.1 Capture Korean 1280×720 and English 960×540 combat, including camera-boundary radar placement and all three stage densities.**
-- [ ] **3.2 Run the task-scoped quality pass, focused/full validators, Web release export, canonical port 13029 boot, `git diff --check`, and staged-file audit.**
-- [ ] **3.3 Record final evidence, mark this plan `done`, and commit only task-owned changes.**
+- [x] **3.1 Capture Korean 1280×720 and English 960×540 combat, including camera-boundary radar placement and all three stage densities.**
+- [x] **3.2 Run the task-scoped quality pass, focused/full validators, Web release export, canonical port 13029 boot, `git diff --check`, and staged-file audit.**
+- [x] **3.3 Record final evidence, mark this plan `done`, and commit only task-owned changes.**
 
 Batch acceptance: radar remains readable under the maximum visible pressure and the production build boots locally.
 
@@ -148,16 +149,24 @@ Final gates:
 
 ## Progress
 
-- [ ] Phase 1: player-centered threat radar.
-- [ ] Phase 2: triple density and higher pressure.
-- [ ] Phase 3: rendered/production validation and lifecycle completion.
-- [ ] Final gates.
+- [x] Phase 1: player-centered threat radar.
+- [x] Phase 2: triple density and higher pressure.
+- [x] Phase 3: rendered/production validation and lifecycle completion.
+- [x] Final gates.
 
-## Next Steps
+## Completion Summary
 
-1. Implement and validate the radar vertical slice.
-2. Apply exact population and pressure tuning, then validate all stage blueprints/full-run progression.
-3. Capture both locales, export/boot the production build, close lifecycle, and commit scoped changes.
+- Added an input-transparent 156 px player-centered radar that aggregates local enemies into 24 directional sectors and distinguishes priority/current-target threats.
+- Raised exact pre-boss populations to 204/228/252 and active caps to 72/78/84 while preserving cover-safe deterministic spawns and non-extermination progression.
+- Applied the locked enemy speed, projectile speed, damage, recovery, and bounded attack-commit tuning, including field- and stage-boss movement.
+- Completed task-owned implementation in `f210ba5`; the plan baseline is `b8375c4`.
+
+## Final Evidence
+
+- Deterministic validators: primary weapon, upgrade system, vehicle stage, reward/UI/audio, and pivot settings all exited zero. Vehicle-stage validation reported 142 checks and zero failures.
+- Rendered evidence: `.godot/threat-radar-ko-final` at 1280×720 and `.godot/threat-radar-en-final` at 960×540 include open combat, all three stages, and `02e-radar-boundary.png` proving camera-boundary alignment.
+- Production evidence: Godot 4.7 Web release export completed; `index.html`, `index.js`, `index.wasm`, and `index.pck` all returned HTTP 200 from canonical Codex port 13029, which was released after the smoke test.
+- Scope evidence: staged-file audit contained only task-owned files and no unrelated `.import` churn.
 
 ## Risks
 
