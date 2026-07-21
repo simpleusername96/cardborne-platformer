@@ -37,7 +37,7 @@ const MINIMAP_ROWS := 6
 
 var mode := RunMode.DEPLOYMENT
 var mode_before_pause := RunMode.PLAYING
-var _ui: VehicleStageUI
+var _ui: Variant
 var _camera: Camera2D
 var _rng := RandomNumberGenerator.new()
 
