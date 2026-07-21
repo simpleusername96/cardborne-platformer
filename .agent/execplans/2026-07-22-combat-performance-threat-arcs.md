@@ -1,8 +1,9 @@
 ---
 type: plan
-status: active
+status: done
 owner: BK
 created: 2026-07-22
+last_reviewed: 2026-07-22
 topic: Vehicle combat performance recovery and reference-led threat indicators
 scope: Vehicle-stage active simulation budgets, shield assignment, static/dynamic drawing, threat indicator semantics, validation, rendered evidence, and Web build verification
 related:
@@ -59,14 +60,11 @@ The owner reports severe lag after simultaneous active caps were tripled to 72/7
 
 ## Current State
 
-Already true or landed:
+Completed state:
 
 - Three-times-larger total stage populations and stronger enemy tuning are committed.
-- A local one-pass shield-assignment prototype has demonstrated the expected CPU improvement but is not yet finalized or committed.
-
-Remaining implementation:
-
-- Enforce the new hard active caps, cache static drawing, cull dynamic drawing, redesign and throttle threat cues, align contracts, and complete rendered/production verification.
+- One-pass shield assignment, hard active scheduling, cached static drawing, dynamic culling, and the off-screen threat-arc HUD are implemented and committed.
+- Validation, bilingual rendered evidence, Web export, canonical local boot, and scoped-file audits passed.
 
 ## Scope / Non-scope
 
@@ -100,26 +98,26 @@ No material assumption remains. The current laptop and 1280×720 native compatib
 
 ### Phase 1: Performance recovery
 
-- [ ] **1.1 Finalize one-pass shield assignments and enforce hard active caps.**
+- [x] **1.1 Finalize one-pass shield assignments and enforce hard active caps.**
   - Accept: active capped enemies never exceed 48/54/60; committed attackers remain active; shield contract remains unchanged; pressure profile stays below 8 ms/step at the maximum cap.
   - Guard: total populations, enemy damage/speed, progression bypass, and boss/installation behavior remain unchanged.
-- [ ] **1.2 Cache static custom drawing and cull camera-external dynamic drawing.**
+- [x] **1.2 Cache static custom drawing and cull camera-external dynamic drawing.**
   - Accept: backdrop redraws only on stage configuration; off-screen enemies/projectiles/effects are not submitted; all camera-edge captures remain visually complete.
   - Guard: water, motifs, cover, boss gate, pickups, telegraphs, and collisions remain intact.
 
 ### Phase 2: Reference-led threat arcs
 
-- [ ] **2.1 Replace the dot radar with 12-sector off-screen threat arcs.**
+- [x] **2.1 Replace the dot radar with 12-sector off-screen threat arcs.**
   - Accept: on-screen enemies create no redundant indicator; off-screen density/direction, priority, and current target remain distinguishable at both supported widths.
   - Guard: no full opaque disc, labels, input capture, minimap replacement, or non-project asset.
-- [ ] **2.2 Throttle contact sampling and align product/test contracts.**
+- [x] **2.2 Throttle contact sampling and align product/test contracts.**
   - Accept: contact scans run at 10 Hz while the ring remains centered each frame; active documentation and validators contain the new cap/arc contracts.
   - Guard: modal hiding, localization, action rail, and target panel remain unchanged.
 
 ### Phase 3: Evidence and lifecycle
 
-- [ ] **3.1 Run full validators, pressure profile, bilingual native captures, quality pass, Web export, and canonical port 13029 boot.**
-- [ ] **3.2 Commit only task-owned files, record evidence, and mark this plan `done`.**
+- [x] **3.1 Run full validators, pressure profile, bilingual native captures, quality pass, Web export, and canonical port 13029 boot.**
+- [x] **3.2 Commit only task-owned files, record evidence, and mark this plan `done`.**
 
 ## Test Plan
 
@@ -164,22 +162,25 @@ No material question remains. Changes to total population, map/controls, depende
 
 ## Progress
 
-- [ ] Phase 1: performance recovery.
-- [ ] Phase 2: reference-led threat arcs.
-- [ ] Phase 3: evidence and lifecycle.
-- [ ] Final gates.
+- [x] Phase 1: performance recovery.
+- [x] Phase 2: reference-led threat arcs.
+- [x] Phase 3: evidence and lifecycle.
+- [x] Final gates.
 
-## Next Steps
+## Completion Summary
 
-1. Finalize simulation scheduling and cached/culling rendering.
-2. Implement off-screen threat arcs and 10 Hz contact sampling.
-3. Validate, render, export/boot, commit scoped changes, and close this plan.
+- Commit `308ad22` implements hard active scheduling, one-pass shield assignment, cached backdrop drawing, camera-near dynamic drawing, and reference-led threat arcs.
+- The repeatable 60-active-enemy pressure sample measured 3.716 ms/step, down from the original ~38.5 ms/step sample and below the 8 ms acceptance budget.
+- The stage validator passed all 147 checks; primary weapon, upgrade system, reward/UI/audio, and settings validators also exited zero.
+- Korean 1280×720 and English 960×540 native captures verified dense combat, camera-boundary arcs, preserved stage art, and no fixed-HUD overlap.
+- The Web release export succeeded. `index.html`, `index.js`, `index.wasm`, and `index.pck` each returned HTTP 200 on canonical port 13029, after which the exact task-owned server was stopped and the port released.
+- Only task-owned source, spec, validator, profiler, and Godot UID files entered the implementation commit; unrelated `.import` worktree changes remain untouched.
 
 ## Completion Criteria
 
-- [ ] Every milestone acceptance and regression guard passes.
-- [ ] Pressure profile, rendered evidence, and production build all pass on the current environment.
-- [ ] Only task-owned files are committed and this plan is `done`.
+- [x] Every milestone acceptance and regression guard passes.
+- [x] Pressure profile, rendered evidence, and production build all pass on the current environment.
+- [x] Only task-owned files are committed and this plan is `done`.
 
 ## Stop Conditions
 
