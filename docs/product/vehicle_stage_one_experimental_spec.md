@@ -89,11 +89,11 @@ The relay cache offers three cards from a ten-card pool. Each applies once and r
 
 ## UI and Persistence
 
-The HUD shows health, objective, boss state and health, selected/aimed target health, primary cadence, passive cadence, dash cooldown, EMP cooldown, active buffs, and a fogged minimap with discovered route objectives, rewards, field boss, and stage boss.
+The HUD shows health, objective, boss state and health, selected/aimed target health, primary rounds and recharge, passive cadence, dash cooldown, EMP cooldown, active buffs, and a fogged minimap with discovered route objectives, rewards, field boss, and stage boss.
 
 Korean is the deterministic first-run language. Deployment, pause/settings, and garage expose a persistent `한국어 / EN` selector that switches the complete Stage 1 interface immediately without restarting or resetting the run. Missing or unsupported locale preferences fall back to Korean.
 
-The combat safe frame anchors hull state at upper left, one concise objective at upper center, the explored minimap at upper right, a unified action rail at bottom center, and the current target at lower right. During the stage boss, one boss strip replaces the ordinary objective and minimap instead of stacking duplicate information.
+The combat safe frame anchors hull state at upper left, one concise objective at upper center, the explored minimap at upper right, a unified action rail at bottom center, and the current target at lower right. The action rail gives the finite primary burst and three-second full recharge more width than passive or cooldown actions. Depleting the burst requires releasing and pressing primary again after recharge; held input never restarts fire automatically. During the stage boss, one boss strip replaces the ordinary objective and minimap instead of stacking duplicate information.
 
 Pause retains the live game under a dim layer and provides functional Master/SFX controls through the existing settings store. Deployment, upgrade, pause, result, and garage hide the gameplay HUD while their modal is active. The result and garage allow primary inspection/selection, module review, repair/reset, Stage 1 replay, and settings access.
 

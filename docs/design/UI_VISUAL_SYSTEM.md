@@ -366,6 +366,8 @@ Icons provide recognition; exact cooldown, charge, count, cost, and result value
 
 - Korean is the default locale and English is the supported alternative. Language selection appears before deployment and remains available in pause/settings and garage.
 - Hull state occupies the upper-left safe area; one objective occupies upper center; the explored minimap occupies upper right; the unified action rail stays bottom center; the current target stays lower right.
+- The bottom action rail is a low flat band, not a row of equal medallions. The primary weapon owns the widest cell and exposes discrete rounds plus full-recharge progress; passive, dash, and active skill remain compact status cells.
+- Korean and English UI use the repository variable font at medium weight or heavier. Important commands and live resource states use a bold variation; low opacity or outline-only text is not a substitute for hierarchy.
 - A live stage-boss strip replaces the ordinary objective and minimap. Do not stack boss name, objective restatement, minimap, and duplicate zone notification in the same top band.
 - Deployment, upgrade, pause, result, and garage are exclusive modal surfaces: retain and dim the world, hide the gameplay HUD, and expose only the active modal's focusable controls.
 - Deployment cards select a loadout and a separate primary command commits it. Selected state uses a persistent side marker and check text in addition to color.

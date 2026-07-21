@@ -38,6 +38,7 @@ func _run_validation() -> void:
 	_check_geometry_contract(stage)
 	_check_upgrade_contract(stage)
 	_check_pickup_contract(stage)
+	_check_primary_charge_contract(stage)
 	_check_dash_contract(stage)
 	_check_progression_contract(stage)
 	_check_projectile_cover_contract(stage)
@@ -113,7 +114,10 @@ func _check_visual_contract(stage: Node) -> void:
 		var contract: Dictionary = ui.debug_ui_contract(viewport_width)
 		_expect(bool(contract["top_clusters_do_not_overlap"]), "top HUD clusters do not overlap at %d px" % int(viewport_width))
 		_expect(float(contract["command_min_height"]) >= 44.0, "command targets remain at least 44 px high")
-		_expect(Vector2(contract["action_medallion_size"]).x >= 96.0, "action medallions remain large enough to scan")
+		var rail_size := Vector2(contract["action_rail_size"])
+		_expect(rail_size.x <= viewport_width - 36.0 and rail_size.y <= 88.0, "bottom action rail stays inside the combat safe frame")
+		_expect(Vector2(contract["primary_slot_size"]).x > Vector2(contract["secondary_slot_size"]).x, "primary charge owns stronger visual hierarchy than utility actions")
+		_expect(float(contract["body_font_weight"]) >= 600.0, "shared Korean and English body type uses a real medium-or-bolder variable weight")
 		var minimum_map_width := 150.0 if viewport_width < 1100.0 else 176.0
 		_expect(Vector2(contract["minimap_size"]).x >= minimum_map_width, "minimap plaque remains legible")
 		_expect(
@@ -179,6 +183,19 @@ func _check_dash_contract(stage: Node) -> void:
 	_expect(bool(dash["invulnerable"]), "dash provides a reliable defensive window")
 	stage.debug_apply_upgrade(&"ram_pulse")
 	_expect(stage.applied_upgrades.has(&"ram_pulse"), "dash has an offensive behavior upgrade")
+
+
+func _check_primary_charge_contract(stage: Node) -> void:
+	stage.call("_reset_run", false)
+	var contract: Dictionary = stage.debug_primary_charge_contract()
+	_expect(int(contract["capacity"]) == 6, "repeater exposes a finite six-round burst")
+	_expect(int(contract["depleted_rounds"]) == 0, "primary burst depletes instead of firing indefinitely")
+	_expect(bool(contract["locked_after_depletion"]), "depletion locks held fire until release")
+	_expect(int(contract["early_rounds"]) == 0, "primary does not refill before the three-second charge window")
+	_expect(int(contract["refilled_rounds"]) == int(contract["capacity"]), "primary refills completely after the three-second charge window")
+	_expect(bool(contract["remains_locked_when_refilled"]), "held fire does not restart automatically when charging completes")
+	_expect(bool(contract["held_restart_blocked"]), "the gameplay fire gate blocks a still-held trigger after recharge")
+	_expect(int(contract["rounds_after_release_fire"]) == int(contract["capacity"]) - 1, "a release-and-press cycle fires from the recharged burst")
 
 
 func _check_progression_contract(stage: Node) -> void:

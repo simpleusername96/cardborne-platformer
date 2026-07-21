@@ -7,12 +7,15 @@ topic: Future vehicle-led Cardborne directions outside the Stage 1 pull request
 scope: Separate validated lessons from speculative post-experiment possibilities
 related:
   - ../product/vehicle_stage_one_experimental_spec.md
+  - ../product/vehicle_content_expansion_spec.md
   - ../../reports/vehicle-stage-one/README.md
 ---
 
 # Vehicle Stage One Future Directions
 
 This document is deliberately not an active implementation plan. It records what later work could explore without expanding the Stage 1 pull request.
+
+The concrete stage template, enemy-role limits, upgrade families, and acceptance gates proposed for future implementation now live in `../product/vehicle_content_expansion_spec.md`. This evidence note remains the broader idea inventory.
 
 ## Lessons the Stage 1 build is designed to validate
 

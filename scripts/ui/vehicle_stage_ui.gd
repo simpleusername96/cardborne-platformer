@@ -55,7 +55,7 @@ class HealthPips:
 				draw_circle(center, 4.0, Art.IVORY_BRIGHT)
 
 
-class ActionMedallion:
+class ActionRailSlot:
 	extends Control
 
 	var binding := ""
@@ -63,40 +63,55 @@ class ActionMedallion:
 	var state_text := "READY"
 	var accent := Art.MUSTARD
 	var cooldown_ratio := 0.0
+	var segment_count := 0
+	var filled_segments := 0
+	var is_primary := false
 
 	func _ready() -> void:
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
-		custom_minimum_size = Vector2(112.0, 92.0)
+		custom_minimum_size = Vector2(244.0, 72.0) if is_primary else Vector2(140.0, 72.0)
 
-	func configure(key_text: String, title: String, color: Color) -> void:
+	func configure(key_text: String, title: String, color: Color, primary: bool = false) -> void:
 		binding = key_text
 		action_name = title
 		accent = color
+		is_primary = primary
+		custom_minimum_size = Vector2(244.0, 72.0) if is_primary else Vector2(140.0, 72.0)
 		queue_redraw()
 
-	func set_state(value: String, ratio: float = 0.0) -> void:
+	func set_state(value: String, ratio: float = 0.0, current_segments: int = 0, maximum_segments: int = 0) -> void:
 		state_text = value
 		cooldown_ratio = clampf(ratio, 0.0, 1.0)
+		filled_segments = maxi(0, current_segments)
+		segment_count = maxi(0, maximum_segments)
 		queue_redraw()
 
 	func _draw() -> void:
-		var center := Vector2(size.x * 0.5, 44.0)
-		var radius := 38.0
-		var points := PackedVector2Array()
-		for index in 8:
-			points.append(center + Vector2.RIGHT.rotated(PI / 8.0 + TAU * float(index) / 8.0) * radius)
-		draw_colored_polygon(points, Art.COBALT_DEEP)
-		var inner := PackedVector2Array()
-		for index in 8:
-			inner.append(center + Vector2.RIGHT.rotated(PI / 8.0 + TAU * float(index) / 8.0) * (radius - 5.0))
-		draw_colored_polygon(inner, Art.IVORY_BRIGHT)
-		draw_circle(center, 25.0, Art.CERAMIC_GREEN)
-		if cooldown_ratio > 0.0:
-			draw_circle(center, 25.0 * cooldown_ratio, Art.INK_MUTED)
+		draw_rect(Rect2(Vector2.ZERO, size), Color(Art.IVORY_BRIGHT, 0.98))
+		draw_rect(Rect2(0.0, 0.0, 6.0, size.y), accent)
 		var font := get_theme_default_font()
-		draw_string(font, Vector2(0.0, 24.0), binding, HORIZONTAL_ALIGNMENT_CENTER, size.x, 15, accent)
-		draw_string(font, Vector2(0.0, 50.0), tr(action_name), HORIZONTAL_ALIGNMENT_CENTER, size.x, 14, Art.IVORY_BRIGHT)
-		draw_string(font, Vector2(0.0, 86.0), tr(state_text), HORIZONTAL_ALIGNMENT_CENTER, size.x, 12, Art.INK)
+		if is_primary:
+			draw_string(font, Vector2(14.0, 21.0), binding, HORIZONTAL_ALIGNMENT_LEFT, 88.0, 13, accent)
+			draw_string(font, Vector2(110.0, 22.0), tr(action_name), HORIZONTAL_ALIGNMENT_LEFT, size.x - 124.0, 16, Art.INK)
+		else:
+			draw_string(font, Vector2(14.0, 22.0), tr(action_name), HORIZONTAL_ALIGNMENT_LEFT, 66.0, 16, Art.INK)
+			draw_string(font, Vector2(80.0, 21.0), binding, HORIZONTAL_ALIGNMENT_RIGHT, size.x - 94.0, 13, accent)
+		draw_string(font, Vector2(14.0, 48.0), tr(state_text), HORIZONTAL_ALIGNMENT_LEFT, size.x - 28.0, 14, Art.INK)
+		var meter_rect := Rect2(14.0, size.y - 12.0, size.x - 28.0, 7.0)
+		if is_primary and segment_count > 0:
+			var gap := 4.0
+			var segment_width := (meter_rect.size.x - gap * float(segment_count - 1)) / float(segment_count)
+			for index in segment_count:
+				var segment_rect := Rect2(
+					meter_rect.position + Vector2(float(index) * (segment_width + gap), 0.0),
+					Vector2(segment_width, meter_rect.size.y)
+				)
+				draw_rect(segment_rect, accent if index < filled_segments else Art.CERAMIC_GREEN_MID)
+			if filled_segments < segment_count and cooldown_ratio > 0.0:
+				draw_rect(Rect2(meter_rect.position, Vector2(meter_rect.size.x * cooldown_ratio, 2.0)), accent)
+		else:
+			draw_rect(meter_rect, Art.CERAMIC_GREEN_MID)
+			draw_rect(Rect2(meter_rect.position, Vector2(meter_rect.size.x * (1.0 - cooldown_ratio), meter_rect.size.y)), accent)
 
 class StageMinimap:
 	extends Control
@@ -178,10 +193,10 @@ var _target_cluster: VBoxContainer
 var _target_name: Label
 var _target_bar: ProgressBar
 var _target_state: Label
-var _primary_slot: ActionMedallion
-var _dash_slot: ActionMedallion
-var _passive_slot: ActionMedallion
-var _skill_slot: ActionMedallion
+var _primary_slot: ActionRailSlot
+var _dash_slot: ActionRailSlot
+var _passive_slot: ActionRailSlot
+var _skill_slot: ActionRailSlot
 var _buff_label: Label
 var _minimap: StageMinimap
 var _notification: Label
@@ -378,13 +393,13 @@ func _build_hud() -> void:
 
 	_dock_panel = _flat_panel()
 	_dock_panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	_dock_panel.position = Vector2(380.0, 592.0)
-	_dock_panel.size = Vector2(520.0, 112.0)
+	_dock_panel.position = Vector2(278.0, 628.0)
+	_dock_panel.size = Vector2(724.0, 82.0)
 	_hud.add_child(_dock_panel)
 	var dock := HBoxContainer.new()
-	dock.add_theme_constant_override("separation", 12)
+	dock.add_theme_constant_override("separation", 6)
 	_dock_panel.add_child(dock)
-	_primary_slot = _action_slot(dock, "SHIFT", "ACTION_PRIMARY", AMBER)
+	_primary_slot = _action_slot(dock, "SHIFT / LMB", "ACTION_PRIMARY", AMBER, true)
 	_passive_slot = _action_slot(dock, "AUTO", "ACTION_SEEKER", MOSS)
 	_dash_slot = _action_slot(dock, "SPACE", "ACTION_DASH", CYAN)
 	_skill_slot = _action_slot(dock, "Z", "ACTION_EMP", VIOLET)
@@ -392,7 +407,7 @@ func _build_hud() -> void:
 	_buff_label = _label("", 13, OFF_WHITE)
 	_buff_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_buff_label.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	_buff_label.position = Vector2(340.0, 582.0)
+	_buff_label.position = Vector2(340.0, 596.0)
 	_buff_label.size = Vector2(600.0, 28.0)
 	_buff_label.add_theme_color_override("font_shadow_color", CANVAS)
 	_buff_label.add_theme_constant_override("shadow_offset_x", 2)
@@ -422,9 +437,11 @@ func _apply_responsive_layout() -> void:
 	_boss_bar.custom_minimum_size.x = boss_width
 	var target_size := Vector2(210.0, 108.0) if compact else Vector2(240.0, 124.0)
 	_target_panel.size = target_size
-	_target_panel.position = Vector2(_root.size.x - target_size.x - 18.0, _root.size.y - target_size.y - 142.0)
-	_dock_panel.position = Vector2((_root.size.x - 520.0) * 0.5, _root.size.y - 128.0)
-	_buff_label.position = Vector2((_root.size.x - 600.0) * 0.5, _root.size.y - 154.0)
+	_target_panel.position = Vector2(_root.size.x - target_size.x - 18.0, _root.size.y - target_size.y - 112.0)
+	var dock_width := minf(724.0, _root.size.x - 36.0)
+	_dock_panel.size = Vector2(dock_width, 82.0)
+	_dock_panel.position = Vector2((_root.size.x - dock_width) * 0.5, _root.size.y - 94.0)
+	_buff_label.position = Vector2((_root.size.x - 600.0) * 0.5, _root.size.y - 120.0)
 	_objective_detail.add_theme_font_size_override("font_size", 12 if compact else 13)
 	_notification.size.x = 420.0 if compact else 520.0
 	_notification.position.x = (_root.size.x - _notification.size.x) * 0.5
@@ -664,7 +681,12 @@ func update_hud(snapshot: Dictionary) -> void:
 	_objective_detail.text = String(snapshot.get("objective_detail", ""))
 
 	_primary_slot.action_name = String(snapshot.get("primary_name", "ACTION_PRIMARY"))
-	_primary_slot.set_state(String(snapshot.get("primary_state", "STATE_LIVE")), float(snapshot.get("primary_ratio", 0.0)))
+	_primary_slot.set_state(
+		String(snapshot.get("primary_state", "STATE_LIVE")),
+		float(snapshot.get("primary_ratio", 0.0)),
+		int(snapshot.get("primary_rounds", 0)),
+		int(snapshot.get("primary_capacity", 0))
+	)
 	_dash_slot.set_state(String(snapshot.get("dash_state", "STATE_READY")), float(snapshot.get("dash_ratio", 0.0)))
 	_passive_slot.set_state(String(snapshot.get("passive_state", "STATE_READY")), float(snapshot.get("passive_ratio", 0.0)))
 	_skill_slot.set_state(String(snapshot.get("skill_state", "STATE_READY")), float(snapshot.get("skill_ratio", 0.0)))
@@ -816,10 +838,16 @@ func debug_ui_contract(viewport_width: float = 1280.0) -> Dictionary:
 	var objective_start := viewport_width * 0.5 - objective_width * 0.5
 	var objective_end := objective_start + objective_width
 	var minimap_start := viewport_width - (198.0 if compact else 236.0)
+	var body_font_weight := 0.0
+	if _root.theme.default_font is FontVariation:
+		body_font_weight = float((_root.theme.default_font as FontVariation).variation_opentype.get("wght", 0.0))
 	return {
 		"theme_path": _root.theme.resource_path if _root.theme != null else "",
 		"command_min_height": _pause_first_button.custom_minimum_size.y,
-		"action_medallion_size": _primary_slot.custom_minimum_size,
+		"action_rail_size": Vector2(minf(724.0, viewport_width - 36.0), 82.0),
+		"primary_slot_size": _primary_slot.custom_minimum_size,
+		"secondary_slot_size": _dash_slot.custom_minimum_size,
+		"body_font_weight": body_font_weight,
 		"minimap_size": Vector2(150.0, 76.0) if compact else Vector2(190.0, 104.0),
 		"top_clusters_do_not_overlap": health_end <= objective_start and objective_end <= minimap_start,
 		"deployment_focusables": _deployment_center.find_children("*", "Button", true, false).size(),
@@ -1045,11 +1073,11 @@ func _label(text: String, font_size: int, color: Color) -> Label:
 	return label
 
 
-func _action_slot(parent: HBoxContainer, binding: String, title: String, color: Color) -> ActionMedallion:
-	var medallion := ActionMedallion.new()
-	medallion.configure(binding, title, color)
-	parent.add_child(medallion)
-	return medallion
+func _action_slot(parent: HBoxContainer, binding: String, title: String, color: Color, primary: bool = false) -> ActionRailSlot:
+	var slot := ActionRailSlot.new()
+	slot.configure(binding, title, color, primary)
+	parent.add_child(slot)
+	return slot
 
 
 func _choice_button(text: String, minimum_size: Vector2) -> Button:

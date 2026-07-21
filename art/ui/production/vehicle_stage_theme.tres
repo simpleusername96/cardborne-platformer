@@ -1,6 +1,20 @@
-[gd_resource type="Theme" load_steps=26 format=3]
+[gd_resource type="Theme" load_steps=28 format=3]
 
 [ext_resource type="FontFile" path="res://art/ui/production/fonts/NotoSansKR-Variable.ttf" id="1_font"]
+
+[sub_resource type="FontVariation" id="FontBody"]
+base_font = ExtResource("1_font")
+variation_embolden = 0.8
+variation_opentype = {
+"wght": 650.0
+}
+
+[sub_resource type="FontVariation" id="FontStrong"]
+base_font = ExtResource("1_font")
+variation_embolden = 1.2
+variation_opentype = {
+"wght": 800.0
+}
 
 [sub_resource type="StyleBoxEmpty" id="Empty"]
 
@@ -147,7 +161,7 @@ content_margin_bottom = 4.0
 bg_color = Color(0.843137, 0.603922, 0.0901961, 1)
 
 [resource]
-default_font = ExtResource("1_font")
+default_font = SubResource("FontBody")
 default_font_size = 17
 Button/colors/font_color = Color(1, 0.964706, 0.862745, 1)
 Button/colors/font_hover_color = Color(1, 0.964706, 0.862745, 1)
@@ -155,6 +169,7 @@ Button/colors/font_pressed_color = Color(1, 0.964706, 0.862745, 1)
 Button/colors/font_focus_color = Color(1, 0.964706, 0.862745, 1)
 Button/colors/font_disabled_color = Color(0.847059, 0.792157, 0.654902, 0.78)
 Button/constants/outline_size = 0
+Button/fonts/font = SubResource("FontStrong")
 Button/font_sizes/font_size = 18
 Button/styles/normal = SubResource("ChoiceNormal")
 Button/styles/hover = SubResource("ChoiceHover")
@@ -162,6 +177,7 @@ Button/styles/pressed = SubResource("ChoicePressed")
 Button/styles/focus = SubResource("ChoiceFocus")
 Button/styles/disabled = SubResource("Disabled")
 Label/colors/font_color = Color(0.0823529, 0.231373, 0.227451, 1)
+Label/fonts/font = SubResource("FontBody")
 Label/font_sizes/font_size = 17
 PanelContainer/styles/panel = SubResource("Plate")
 ProgressBar/styles/background = SubResource("MeterBackground")

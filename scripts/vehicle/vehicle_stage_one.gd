@@ -25,6 +25,9 @@ const PLAYER_MAX_HEALTH := 120.0
 const PLAYER_BASE_SPEED := 280.0
 const PRIMARY_RANGE := 1100.0
 const PRIMARY_PROJECTILE_SPEED := 1120.0
+const PRIMARY_RECHARGE_DURATION := 3.0
+const REPEATER_CAPACITY := 6
+const SCATTER_CAPACITY := 3
 const DASH_DURATION := 0.20
 const DASH_SPEED := 1220.0
 const DASH_COOLDOWN := 1.25
@@ -50,6 +53,9 @@ var player_invulnerable := 0.0
 var player_hit_flash := 0.0
 var player_primary_cooldown := 0.0
 var player_primary_shot_index := 0
+var player_primary_rounds := REPEATER_CAPACITY
+var player_primary_recharge_elapsed := PRIMARY_RECHARGE_DURATION
+var player_primary_trigger_locked := false
 var player_muzzle_flash := 0.0
 var player_dash_cooldown := 0.0
 var player_dash_timer := 0.0
@@ -288,6 +294,9 @@ func _reset_run(increment_index: bool = true) -> void:
 	player_hit_flash = 0.0
 	player_primary_cooldown = 0.0
 	player_primary_shot_index = 0
+	player_primary_rounds = _primary_capacity()
+	player_primary_recharge_elapsed = PRIMARY_RECHARGE_DURATION
+	player_primary_trigger_locked = false
 	player_dash_cooldown = 0.0
 	player_dash_timer = 0.0
 	player_passive_cooldown = 0.0
@@ -548,6 +557,7 @@ func _set_mouse_for_mode() -> void:
 func _update_player(delta: float) -> void:
 	player_invulnerable = maxf(0.0, player_invulnerable - delta)
 	player_primary_cooldown = maxf(0.0, player_primary_cooldown - delta)
+	_update_primary_charge(delta)
 	player_dash_cooldown = maxf(0.0, player_dash_cooldown - delta)
 	player_passive_cooldown = maxf(0.0, player_passive_cooldown - delta)
 	player_emp_cooldown = maxf(0.0, player_emp_cooldown - delta)
@@ -572,8 +582,11 @@ func _update_player(delta: float) -> void:
 		if Input.is_action_just_pressed("dash") and player_dash_cooldown <= 0.0:
 			_start_dash(move_input)
 
-	if Input.is_action_pressed("primary_fire") and player_primary_cooldown <= 0.0 and player_dash_timer <= 0.0:
-		_fire_primary()
+	var primary_pressed := Input.is_action_pressed("primary_fire")
+	if not primary_pressed:
+		player_primary_trigger_locked = false
+	if primary_pressed:
+		_try_fire_primary()
 
 	if Input.is_action_just_pressed("active_skill") and player_emp_cooldown <= 0.0 and player_emp_startup <= 0.0:
 		_start_emp()
@@ -655,8 +668,15 @@ func _update_dash(delta: float) -> void:
 
 
 func _fire_primary() -> void:
+	if player_primary_rounds <= 0:
+		player_primary_trigger_locked = true
+		return
 	tutorial_fire = true
 	player_primary_shot_index += 1
+	player_primary_rounds -= 1
+	player_primary_recharge_elapsed = 0.0
+	if player_primary_rounds <= 0:
+		player_primary_trigger_locked = true
 	player_muzzle_flash = 0.075
 	var attack_multiplier := 1.50 if attack_boost_timer > 0.0 else 1.0
 	var interval_multiplier := 0.72 if attack_boost_timer > 0.0 else 1.0
@@ -693,6 +713,31 @@ func _fire_primary() -> void:
 				0
 			)
 	_add_effect("muzzle", origin, Art.MUSTARD, 0.09, 32.0, player_aim_direction)
+
+
+func _try_fire_primary() -> bool:
+	if player_primary_trigger_locked or player_primary_cooldown > 0.0 or player_dash_timer > 0.0:
+		return false
+	if player_primary_rounds <= 0:
+		player_primary_trigger_locked = true
+		return false
+	_fire_primary()
+	return true
+
+
+func _primary_capacity() -> int:
+	return SCATTER_CAPACITY if selected_primary == &"scatter" else REPEATER_CAPACITY
+
+
+func _update_primary_charge(delta: float) -> void:
+	var capacity := _primary_capacity()
+	player_primary_rounds = mini(player_primary_rounds, capacity)
+	if player_primary_rounds >= capacity:
+		player_primary_recharge_elapsed = PRIMARY_RECHARGE_DURATION
+		return
+	player_primary_recharge_elapsed = minf(PRIMARY_RECHARGE_DURATION, player_primary_recharge_elapsed + delta)
+	if player_primary_recharge_elapsed >= PRIMARY_RECHARGE_DURATION:
+		player_primary_rounds = capacity
 
 
 func _spawn_player_projectile(origin: Vector2, direction: Vector2, damage: float, speed: float, extra_pierce: int) -> void:
@@ -2039,8 +2084,18 @@ func _build_hud_snapshot() -> Dictionary:
 	var dash_state := tr("STATE_READY") if player_dash_cooldown <= 0.0 else "%.1fs" % player_dash_cooldown
 	var passive_state := tr("STATE_READY") if player_passive_cooldown <= 0.0 else "%.1fs" % player_passive_cooldown
 	var skill_state := tr("STATE_STARTUP") if player_emp_startup > 0.0 else (tr("STATE_READY") if player_emp_cooldown <= 0.0 else "%.1fs" % player_emp_cooldown)
-	var primary_state := tr("STATE_FIRING") if player_primary_cooldown > 0.0 else tr("STATE_LIVE")
-	var primary_name := tr("ACTION_PRIMARY")
+	var primary_capacity := _primary_capacity()
+	var primary_ratio := 1.0 if player_primary_rounds >= primary_capacity else clampf(player_primary_recharge_elapsed / PRIMARY_RECHARGE_DURATION, 0.0, 1.0)
+	var primary_state := tr("STATE_PRIMARY_FULL")
+	if player_primary_rounds < primary_capacity:
+		primary_state = tr("STATE_PRIMARY_CHARGING") % [
+			player_primary_rounds,
+			primary_capacity,
+			maxf(0.0, PRIMARY_RECHARGE_DURATION - player_primary_recharge_elapsed),
+		]
+	elif player_primary_trigger_locked:
+		primary_state = tr("STATE_PRIMARY_RELEASE")
+	var primary_name := tr("PRIMARY_SCATTER") if selected_primary == &"scatter" else tr("PRIMARY_REPEATER")
 
 	var target_snapshot := {"visible": false}
 	if not _aim_target_id.is_empty():
@@ -2072,7 +2127,9 @@ func _build_hud_snapshot() -> Dictionary:
 		"objective_detail": objective[1],
 		"primary_name": primary_name,
 		"primary_state": primary_state,
-		"primary_ratio": 0.0,
+		"primary_ratio": primary_ratio,
+		"primary_rounds": player_primary_rounds,
+		"primary_capacity": primary_capacity,
 		"dash_state": dash_state,
 		"dash_ratio": clampf(player_dash_cooldown / DASH_COOLDOWN, 0.0, 1.0),
 		"passive_state": passive_state,
@@ -2802,6 +2859,8 @@ func _run_capture_sequence() -> void:
 	_ui.show_gameplay()
 	player_position = Vector2(1250.0, 1080.0)
 	player_aim_direction = Vector2(0.92, -0.38).normalized()
+	player_primary_rounds = 2
+	player_primary_recharge_elapsed = 1.2
 	_activate_capture_zone("approach")
 	await _settle_capture()
 	_save_capture("02-open-combat.png")
@@ -2911,7 +2970,46 @@ func debug_snapshot() -> Dictionary:
 		"boss_locked": boss_locked,
 		"stage_complete": stage_complete,
 		"applied_upgrades": applied_upgrades.duplicate(),
+		"primary_rounds": player_primary_rounds,
+		"primary_capacity": _primary_capacity(),
+		"primary_recharge_elapsed": player_primary_recharge_elapsed,
+		"primary_trigger_locked": player_primary_trigger_locked,
 		"living_ordinary": debug_living_ordinary_count(),
+	}
+
+
+func debug_primary_charge_contract() -> Dictionary:
+	var original_primary := selected_primary
+	selected_primary = &"repeater"
+	player_primary_rounds = _primary_capacity()
+	player_primary_recharge_elapsed = PRIMARY_RECHARGE_DURATION
+	player_primary_trigger_locked = false
+	projectiles.clear()
+	for shot in REPEATER_CAPACITY:
+		_fire_primary()
+	var depleted_rounds := player_primary_rounds
+	var locked_after_depletion := player_primary_trigger_locked
+	_update_primary_charge(PRIMARY_RECHARGE_DURATION - 0.01)
+	var early_rounds := player_primary_rounds
+	_update_primary_charge(0.02)
+	var refilled_rounds := player_primary_rounds
+	var remains_locked_when_refilled := player_primary_trigger_locked
+	player_primary_cooldown = 0.0
+	var held_restart_blocked := not _try_fire_primary() and player_primary_rounds == REPEATER_CAPACITY
+	player_primary_trigger_locked = false
+	player_primary_cooldown = 0.0
+	_try_fire_primary()
+	var rounds_after_release_fire := player_primary_rounds
+	selected_primary = original_primary
+	return {
+		"capacity": REPEATER_CAPACITY,
+		"depleted_rounds": depleted_rounds,
+		"locked_after_depletion": locked_after_depletion,
+		"early_rounds": early_rounds,
+		"refilled_rounds": refilled_rounds,
+		"remains_locked_when_refilled": remains_locked_when_refilled,
+		"held_restart_blocked": held_restart_blocked,
+		"rounds_after_release_fire": rounds_after_release_fire,
 	}
 
 
