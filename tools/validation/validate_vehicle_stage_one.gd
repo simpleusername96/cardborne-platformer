@@ -2,6 +2,7 @@ extends SceneTree
 
 const Rules = preload("res://scripts/vehicle/vehicle_stage_rules.gd")
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
+const EncounterDirector = preload("res://scripts/encounters/vehicle_encounter_director.gd")
 const MAIN_SCENE := "res://scenes/main/PivotRoot.tscn"
 
 var failures: PackedStringArray = []
@@ -59,6 +60,7 @@ func _check_blueprint() -> void:
 	for stage_id in all_blueprints.keys():
 		var blueprint_errors: PackedStringArray = all_blueprints[stage_id]
 		_expect(blueprint_errors.is_empty(), "%s landmarks, spawns, routes, and boss path are reachable" % stage_id)
+		_expect(Rules.get_enemy_blueprint(stage_id).size() == EncounterDirector.target_count(stage_id), "%s uses the locked dense enemy population" % stage_id)
 		for error_message in blueprint_errors:
 			failures.append("%s blueprint: %s" % [stage_id, error_message])
 
@@ -128,11 +130,11 @@ func _check_visual_contract(stage: Node) -> void:
 			String(contract["theme_path"]) == "res://art/ui/production/vehicle_stage_theme.tres",
 			"vehicle UI uses the scoped ceramic theme"
 		)
-	_expect(int(ui.debug_ui_contract()["deployment_focusables"]) >= 2, "deployment exposes both focusable weapon choices")
+	_expect(int(ui.debug_ui_contract()["deployment_focusables"]) >= 3, "deployment exposes one launch action and both locale controls")
 	_expect(int(ui.debug_ui_contract()["upgrade_focusables"]) >= 3, "upgrade exposes three focusable circuit choices")
 	_expect(int(ui.debug_ui_contract()["pause_focusables"]) >= 5, "pause exposes commands and both volume controls")
 	_expect(int(ui.debug_ui_contract()["result_focusables"]) >= 2, "result exposes garage and replay actions")
-	_expect(int(ui.debug_ui_contract()["garage_focusables"]) >= 4, "garage exposes loadout, launch, and both audio controls")
+	_expect(int(ui.debug_ui_contract()["garage_focusables"]) >= 4, "garage exposes build summary, launch, locale, and both audio controls")
 	_expect(int(ui.debug_ui_contract()["locale_controls"]) == 6, "deployment, pause, and garage each expose Korean/English controls")
 	for surface in ["deployment", "upgrade", "pause", "result", "garage"]:
 		var modal_contract: Dictionary = ui.debug_modal_contract(surface)
@@ -170,10 +172,10 @@ func _check_upgrade_contract(stage: Node) -> void:
 func _check_pickup_contract(stage: Node) -> void:
 	var repair: Dictionary = stage.debug_pickup_contract(&"repair")
 	_expect(bool(repair["collected_once"]) and float(repair["health"]) > 50.0, "repair pickup heals immediately")
-	var attack: Dictionary = stage.debug_pickup_contract(&"attack")
-	_expect(float(attack["attack_timer"]) >= 8.9, "attack pickup exposes an active duration")
+	var attack: Dictionary = stage.debug_pickup_contract(&"attack_boost")
+	_expect(float(attack["attack_timer"]) >= 7.9, "attack pickup exposes an active duration")
 	var overdrive: Dictionary = stage.debug_pickup_contract(&"overdrive")
-	_expect(float(overdrive["overdrive_timer"]) >= 8.9, "overdrive pickup exposes an active duration")
+	_expect(float(overdrive["overdrive_timer"]) >= 7.9, "overdrive pickup exposes an active duration")
 	var barrier: Dictionary = stage.debug_pickup_contract(&"barrier")
 	_expect(float(barrier["barrier"]) >= 48.0, "barrier pickup grants readable strength")
 
@@ -192,16 +194,14 @@ func _check_dash_contract(stage: Node) -> void:
 func _check_primary_charge_contract(stage: Node) -> void:
 	stage.call("_reset_run", false)
 	var contract: Dictionary = stage.debug_primary_charge_contract()
-	_expect(is_equal_approx(float(contract["full_charge_seconds"]), 3.0), "primary attack energy reaches full power in three seconds")
-	_expect(bool(contract["immediate_blocked"]), "an empty primary cannot fire immediately")
-	_expect(bool(contract["early_blocked"]), "primary cannot fire before minimum attack energy")
-	_expect(bool(contract["quick_fired"]), "a deliberate press fires once minimum energy is available")
-	_expect(is_zero_approx(float(contract["energy_after_quick"])), "a shot consumes all stored attack energy")
-	_expect(bool(contract["held_second_blocked"]), "the fire gate cannot emit a second shot without recovered energy")
-	_expect(bool(contract["full_fired"]), "a full three-second charge produces a shot")
-	_expect(float(contract["full_damage"]) > float(contract["quick_damage"]) * 1.5, "waiting for full charge materially increases primary damage")
-	_expect(int(contract["full_pierce"]) >= 1, "full Repeater charge gains an explicit pierce benefit")
-	_expect(int(contract["full_scatter_count"]) == 5, "full Scatter charge expands to five readable pellets")
+	_expect(is_equal_approx(float(contract["full_charge_seconds"]), 1.0), "opening shot reaches full power after one idle second")
+	_expect(bool(contract["immediate_fired"]), "ordinary primary fire is never charge-gated")
+	_expect(bool(contract["held_second_fired"]), "held fire repeats after the base cadence")
+	_expect(bool(contract["full_fired"]), "a full opening charge produces one shot")
+	_expect(float(contract["full_damage"]) >= float(contract["normal_damage"]) * 1.74, "full opening shot materially increases health damage")
+	_expect(float(contract["full_structure"]) >= float(contract["normal_damage"]) * 2.99, "full opening shot triples structure damage")
+	_expect(int(contract["full_pierce"]) >= 1, "full opening shot gains one temporary pierce")
+	_expect(bool(contract["normal_fire_available"]), "opening charge never disables normal fire")
 
 
 func _check_progression_contract(stage: Node) -> void:
@@ -210,7 +210,7 @@ func _check_progression_contract(stage: Node) -> void:
 	_expect(bool(result["boss_started_with_living"]), "ordinary exit works while enemies remain alive")
 	_expect(bool(result["complete"]), "automated complete run reaches stage result")
 	_expect(int(result["mode"]) == 4, "boss defeat enters result flow")
-	_expect(int(result["upgrade_count"]) == 1, "complete run applies one chest card")
+	_expect(int(result["upgrade_count"]) == 3, "complete stage applies calibration, relay, and boss upgrades")
 
 
 func _check_multistage_contract(stage: Node) -> void:
@@ -218,7 +218,7 @@ func _check_multistage_contract(stage: Node) -> void:
 	_expect(result["stage_ids"] == [&"flooded_works", &"tidal_archive", &"storm_drydock"], "one run advances through three authored stages in order")
 	_expect(&"artillery_spotter" in result["role_sets"][1] and &"interceptor_tower" in result["role_sets"][1], "Tidal Archive deploys artillery and interception roles")
 	_expect(&"shield_escort" in result["role_sets"][2], "Storm Drydock deploys shield escorts")
-	_expect(result["upgrade_counts"] == [1, 1, 1], "stage transitions preserve the selected run upgrade")
+	_expect(result["upgrade_counts"] == [0, 3, 6], "stage transitions preserve the accumulated run upgrades")
 	_expect(int(result["final_stage_index"]) == 2 and bool(result["final_complete"]), "the third boss resolves the final stage")
 
 

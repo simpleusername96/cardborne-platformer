@@ -1,8 +1,8 @@
 class_name VehicleStageRules
 extends RefCounted
 
-## Shared geometry, authored layout, and upgrade definitions for the vehicle Stage 1 slice.
-## Gameplay and validation consume the same data so collision and progression checks cannot drift.
+## Shared geometry and authored-layout helpers for the vehicle run.
+## Gameplay and validation consume the same data so collision checks cannot drift.
 
 const Catalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
 
@@ -62,89 +62,6 @@ static func get_landmarks() -> Dictionary:
 		"boss_gate": Vector2(3860.0, 1100.0),
 		"boss": STAGE_BOSS_POSITION,
 	}
-
-
-static func get_upgrade_pool() -> Array[Dictionary]:
-	return [
-		{
-			"id": "ricochet_matrix",
-			"title_key": "UPGRADE_RICOCHET_TITLE",
-			"family_key": "UPGRADE_FAMILY_PRIMARY",
-			"description_key": "UPGRADE_RICOCHET_DESC",
-		},
-		{
-			"id": "phase_lance",
-			"title_key": "UPGRADE_PHASE_LANCE_TITLE",
-			"family_key": "UPGRADE_FAMILY_PRIMARY",
-			"description_key": "UPGRADE_PHASE_LANCE_DESC",
-		},
-		{
-			"id": "forked_muzzle",
-			"title_key": "UPGRADE_FORKED_MUZZLE_TITLE",
-			"family_key": "UPGRADE_FAMILY_PRIMARY",
-			"description_key": "UPGRADE_FORKED_MUZZLE_DESC",
-		},
-		{
-			"id": "twin_seekers",
-			"title_key": "UPGRADE_TWIN_SEEKERS_TITLE",
-			"family_key": "UPGRADE_FAMILY_PASSIVE",
-			"description_key": "UPGRADE_TWIN_SEEKERS_DESC",
-		},
-		{
-			"id": "hunter_firmware",
-			"title_key": "UPGRADE_HUNTER_FIRMWARE_TITLE",
-			"family_key": "UPGRADE_FAMILY_PASSIVE",
-			"description_key": "UPGRADE_HUNTER_FIRMWARE_DESC",
-		},
-		{
-			"id": "ion_wake",
-			"title_key": "UPGRADE_ION_WAKE_TITLE",
-			"family_key": "UPGRADE_FAMILY_DASH",
-			"description_key": "UPGRADE_ION_WAKE_DESC",
-		},
-		{
-			"id": "ram_pulse",
-			"title_key": "UPGRADE_RAM_PULSE_TITLE",
-			"family_key": "UPGRADE_FAMILY_DASH",
-			"description_key": "UPGRADE_RAM_PULSE_DESC",
-		},
-		{
-			"id": "emp_aftershock",
-			"title_key": "UPGRADE_EMP_AFTERSHOCK_TITLE",
-			"family_key": "UPGRADE_FAMILY_SKILL",
-			"description_key": "UPGRADE_EMP_AFTERSHOCK_DESC",
-		},
-		{
-			"id": "circuit_harvest",
-			"title_key": "UPGRADE_CIRCUIT_HARVEST_TITLE",
-			"family_key": "UPGRADE_FAMILY_BRIDGE",
-			"description_key": "UPGRADE_CIRCUIT_HARVEST_DESC",
-		},
-		{
-			"id": "field_converter",
-			"title_key": "UPGRADE_FIELD_CONVERTER_TITLE",
-			"family_key": "UPGRADE_FAMILY_BRIDGE",
-			"description_key": "UPGRADE_FIELD_CONVERTER_DESC",
-		},
-	]
-
-
-static func get_upgrade(upgrade_id: StringName) -> Dictionary:
-	for upgrade in get_upgrade_pool():
-		if StringName(upgrade["id"]) == upgrade_id:
-			return upgrade
-	return {}
-
-
-static func get_card_offer(run_index: int) -> Array[Dictionary]:
-	var pool := get_upgrade_pool()
-	var starts := [0, 3, 6, 1]
-	var start_index: int = int(starts[positive_mod(run_index, starts.size())])
-	return [
-		pool[start_index % pool.size()],
-		pool[(start_index + 3) % pool.size()],
-		pool[(start_index + 6) % pool.size()],
-	]
 
 
 static func get_enemy_blueprint(stage_id: StringName = &"flooded_works") -> Array[Dictionary]:

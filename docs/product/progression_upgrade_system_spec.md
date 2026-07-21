@@ -3,7 +3,7 @@ type: spec
 status: active
 owner: BK
 created: 2026-07-18
-last_reviewed: 2026-07-18
+last_reviewed: 2026-07-22
 canonical_for: Cardborne post-proof reward, upgrade, and progression ownership boundaries
 scope: Future cards, materials, skills/stats, equipment, Forge, reward sources, and persistence after the Floor 1 map/enemy foundation
 source: Owner direction on 2026-07-18, retained asset manifest, active isometric proof contract, and reviewed pre-pivot progression boundaries at Git 7cc069c
@@ -28,9 +28,8 @@ authorization to implement progression during the current map/enemy plan.
 This specification covers reward-source ownership, run-local versus persistent
 state, material and card roles, equipment/Forge behavior, skill/stat upgrades,
 reward transactions, UI boundaries, and the reviewed concepts that may be
-recovered from the retired platformer. It begins only after the connected Floor 1
-map/enemy foundation receives an owner `Expand` decision and a separate active
-execution plan.
+recovered from the retired platformer. The vehicle run-local layer is now active;
+persistent materials, equipment, Forge, and mastery remain future scope.
 
 ## Requirements
 
@@ -89,7 +88,8 @@ materials until another region/weapon creates a real, non-overlapping need.
 | Required encounter completion | One concise settlement bundle | Fixed `rusted_scrap` range from an authored table; transaction applies once |
 | Waterlogged supply crate | Small loose pickup | If potion charges are below cap, authored supply crates may produce one potion charge; otherwise their progression table may produce `rusted_scrap x1` after the upgrade system exists |
 | Authored salvage cache/material node | In-world claim, then receipt | Guaranteed `rusted_scrap`; optional and never required for route completion |
-| Foundry Approach completion | Full three-card choice over the dimmed live room | Exactly one compatible run card; cannot be skipped in a progression-enabled run |
+| Calibration/relay/boss cache | Full three-card choice over the dimmed live field | Exactly one compatible run upgrade; mandatory and applied once per transaction |
+| Optional field-boss cache | Full three-card choice with explicit leave action | One compatible run upgrade or one confirmed decline |
 | Elite encounter/cache | Full reward receipt | Card, blueprint, or equipment discovery according to an authored table; never all three at once |
 | Slime King defeat | Boss receipt | Guaranteed `boss_core x1`, bounded `slime_residue`, and one authored boss blueprint/unlock; no random ordinary loot burst |
 
@@ -102,13 +102,12 @@ Only potion charges and common material bundles use proximity pickup presentatio
   trigger, bounded effects, maximum stacks, and optional internal cooldown.
 - UI reads card definitions and emits one choice. It never implements effects.
 - The effect runtime subscribes to typed combat events and cannot trigger itself.
-- Every initial card changes a visible behavior, timing decision, target pattern,
-  defense window, or resource loop. A raw unconditional damage percentage alone
-  is not a valid first-slice card.
-- The first three cards remain `Dash Wake`, `Perfect Punish`, and `Split Focus`
-  from the active proof brief. Retained `card_dash_wake` and
-  `card_perfect_punish` art IDs may be reused; `Split Focus` needs a new manifest
-  illustration or the existing ranged SVG fallback.
+- The implemented 34-definition catalog permits bounded numeric foundations when
+  exact previews and maximum levels are shown. Source filtering still guarantees
+  visible behavior-changing geometry, element, passive, dash, or EMP choices
+  during the run rather than offering only percentage accumulation.
+- Burn, poison, and slow cores are mutually exclusive for a run. Prerequisites,
+  exclusions, stack caps, and floors are validated before an offer or apply.
 - Cards reset at run end and never modify persistent equipment definitions.
 
 ### Equipment and Forge contract
@@ -213,8 +212,8 @@ only with an approved music asset and implementation plan.
   sinks; no unused currency appears in the first implementation.
 - Ordinary enemies do not create random loot clutter; encounter settlements and
   authored caches remain visible and attributable.
-- Foundry Approach can present one of the exact three initial behavior-changing
-  cards without card logic in UI or room code.
+- Vehicle reward sources can present compatible entries from the 34-definition
+  catalog without card logic in UI or room code.
 - Forge recipes show exact costs and outcomes, never fail randomly, and apply once.
 - Base equipment and zero mastery can clear Floor 1.
 - Every mastery branch begins with behavior and caps its supporting numerical gains.
@@ -227,7 +226,7 @@ only with an approved music asset and implementation plan.
 
 ## Non-Goals
 
-- Implementing any progression runtime during the current map/enemy plan.
+- Persistent material, Forge, equipment, or mastery runtime beyond the current run-local build.
 - Final economy costs, drop rates, node counts, or complete equipment catalog.
 - Random item rarity, procedural affixes, durability, repair, ammunition economy,
   gacha, battle pass, or online inventory.

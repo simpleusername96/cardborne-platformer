@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="VehicleUpgradeDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/cards/vehicle_upgrade_definition.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+id = &"ion_wake"
+title_key = "UPGRADE_ION_WAKE_TITLE"
+description_key = "UPGRADE_ION_WAKE_DESC"
+family = &"dash"
+max_level = 1
+source_tags = Array[StringName]([&"relay", &"field_boss", &"boss"])
+behavior_ids = Array[StringName]([&"ion_wake"])

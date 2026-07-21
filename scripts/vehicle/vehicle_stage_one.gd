@@ -10,8 +10,14 @@ extends Node2D
 const Rules = preload("res://scripts/vehicle/vehicle_stage_rules.gd")
 const StageUI = preload("res://scripts/ui/vehicle_stage_ui.gd")
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
-const PrimaryCharge = preload("res://scripts/vehicle/vehicle_primary_charge.gd")
+const PrimaryWeapon = preload("res://scripts/player/vehicle_primary_weapon.gd")
 const StageCatalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
+const EnemyArchetypes = preload("res://scripts/enemies/vehicle_enemy_archetypes.gd")
+const EncounterDirector = preload("res://scripts/encounters/vehicle_encounter_director.gd")
+const UpgradeCatalog = preload("res://scripts/cards/vehicle_upgrade_catalog.gd")
+const RunBuild = preload("res://scripts/cards/vehicle_run_build.gd")
+const StatusRuntime = preload("res://scripts/combat/vehicle_status_runtime.gd")
+const AudioDirector = preload("res://scripts/presentation/vehicle_audio_director.gd")
 
 enum RunMode {
 	DEPLOYMENT,
@@ -50,9 +56,8 @@ var player_aim_direction := Vector2.RIGHT
 var player_health := PLAYER_MAX_HEALTH
 var player_invulnerable := 0.0
 var player_hit_flash := 0.0
-var player_primary_cooldown := 0.0
 var player_primary_shot_index := 0
-var player_primary_charge := PrimaryCharge.new()
+var player_primary_weapon := PrimaryWeapon.new()
 var player_muzzle_flash := 0.0
 var player_dash_cooldown := 0.0
 var player_dash_timer := 0.0
@@ -64,14 +69,27 @@ var player_emp_startup := 0.0
 var player_barrier_strength := 0.0
 var player_barrier_timer := 0.0
 var attack_boost_timer := 0.0
+var coolant_timer := 0.0
 var overdrive_timer := 0.0
+var magnet_field_timer := 0.0
+var capacitor_cell_timer := 0.0
+var capacitor_opening_shots := 0
+var capacitor_force_next_shot := false
+var _last_primary_tier: StringName = &"ready"
 var _aim_target_id := ""
 var _last_damage_source := ""
 
-var selected_primary := &"repeater"
+var selected_primary := &"pulse_cannon"
 var selected_upgrade_title_key := "UPGRADE_NONE"
-var applied_upgrades: Dictionary = {}
+var upgrade_catalog := UpgradeCatalog.new()
+var run_build := RunBuild.new(upgrade_catalog)
+var applied_upgrades: Dictionary = run_build.levels
 var current_card_offer: Array[Dictionary] = []
+var current_reward_source: StringName = &""
+var current_reward_optional := false
+var claimed_reward_sources: Dictionary = {}
+var completed_group_rewards: Dictionary = {}
+var pending_stage_completion := false
 
 var enemies: Array[Dictionary] = []
 var projectiles: Array[Dictionary] = []
@@ -117,9 +135,7 @@ var persistent_clear_count := 0
 var persistent_relay_module := false
 var persistent_field_module := false
 
-var _sound_players: Array[AudioStreamPlayer] = []
-var _sound_cursor := 0
-var _sounds: Dictionary = {}
+var _audio: VehicleAudioDirector
 
 var _capture_directory := ""
 var _capture_mode := false
@@ -140,14 +156,8 @@ func _ready() -> void:
 
 
 func _exit_tree() -> void:
-	# Procedural streams are runtime-owned; release active playback references so
-	# headless validation and scene replacement do not retain audio resources.
-	for player in _sound_players:
-		if is_instance_valid(player):
-			player.stop()
-			player.stream = null
-	_sound_players.clear()
-	_sounds.clear()
+	if is_instance_valid(_audio):
+		_audio.stop_all()
 
 
 func _physics_process(delta: float) -> void:
@@ -173,6 +183,8 @@ func _process(delta: float) -> void:
 	camera_shake = maxf(0.0, camera_shake - delta * 18.0)
 	if is_instance_valid(_ui):
 		_ui.update_hud(_build_hud_snapshot())
+	if is_instance_valid(_audio):
+		_audio.update_primary(mode == RunMode.PLAYING and Input.is_action_pressed("primary_fire"))
 	queue_redraw()
 
 
@@ -180,26 +192,17 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("pause"):
 		if mode == RunMode.PLAYING:
 			_pause_run()
+			get_viewport().set_input_as_handled()
+			return
 		elif mode == RunMode.PAUSED:
 			_resume_run()
-		get_viewport().set_input_as_handled()
-		return
-
-	if mode == RunMode.UPGRADE and event is InputEventKey and event.pressed and not event.echo:
-		var key_event := event as InputEventKey
-		if key_event.keycode >= KEY_1 and key_event.keycode <= KEY_3:
-			var index := int(key_event.keycode - KEY_1)
-			if index < current_card_offer.size():
-				_on_upgrade_selected(StringName(current_card_offer[index]["id"]))
-				get_viewport().set_input_as_handled()
-				return
+			get_viewport().set_input_as_handled()
+			return
 
 	if mode == RunMode.DEPLOYMENT and event is InputEventKey and event.pressed and not event.echo:
 		var deployment_event := event as InputEventKey
-		if deployment_event.keycode == KEY_1:
-			_on_deployment_selected(&"repeater")
-		elif deployment_event.keycode == KEY_2:
-			_on_deployment_selected(&"scatter")
+		if deployment_event.keycode in [KEY_ENTER, KEY_SPACE]:
+			_on_deployment_selected(&"pulse_cannon")
 
 
 func _build_camera() -> void:
@@ -222,67 +225,24 @@ func _build_ui() -> void:
 	add_child(_ui)
 	_ui.deployment_selected.connect(_on_deployment_selected)
 	_ui.upgrade_selected.connect(_on_upgrade_selected)
+	_ui.upgrade_declined.connect(_on_upgrade_declined)
+	_ui.upgrade_previewed.connect(func(_upgrade_id: StringName) -> void: _play_sound(&"upgrade_select"))
 	_ui.resume_requested.connect(_resume_run)
 	_ui.restart_requested.connect(_restart_stage)
 	_ui.garage_requested.connect(_show_garage)
 	_ui.replay_requested.connect(_replay_stage)
 	_ui.advance_requested.connect(_advance_stage)
-	_ui.primary_changed.connect(_on_primary_changed)
 
 
 func _build_audio() -> void:
-	for index in 10:
-		var player := AudioStreamPlayer.new()
-		player.name = "ProceduralSFX%d" % index
-		player.bus = &"SFX" if AudioServer.get_bus_index("SFX") >= 0 else &"Master"
-		add_child(player)
-		_sound_players.append(player)
-	_sounds = {
-		"primary": _make_tone(640.0, 0.055, 0.25, -120.0),
-		"scatter": _make_tone(410.0, 0.085, 0.28, -180.0),
-		"impact": _make_tone(180.0, 0.07, 0.22, -80.0),
-		"dash": _make_tone(260.0, 0.18, 0.32, 720.0),
-		"missile": _make_tone(330.0, 0.13, 0.23, 220.0),
-		"emp_start": _make_tone(140.0, 0.38, 0.27, 480.0),
-		"emp": _make_tone(90.0, 0.48, 0.38, -25.0),
-		"pickup": _make_tone(520.0, 0.18, 0.26, 420.0),
-		"hurt": _make_tone(115.0, 0.19, 0.30, -65.0),
-		"destroy": _make_tone(95.0, 0.30, 0.34, -45.0),
-		"boss": _make_tone(72.0, 0.62, 0.42, 35.0),
-		"card": _make_tone(390.0, 0.30, 0.25, 360.0),
-	}
-
-
-func _make_tone(frequency: float, duration: float, volume: float, sweep: float) -> AudioStreamWAV:
-	var sample_rate := 22050
-	var sample_count := maxi(1, int(duration * sample_rate))
-	var data := PackedByteArray()
-	data.resize(sample_count * 2)
-	for index in sample_count:
-		var progress := float(index) / float(sample_count)
-		var current_frequency := frequency + sweep * progress
-		var envelope := sin(progress * PI)
-		var phase := TAU * current_frequency * float(index) / float(sample_rate)
-		var sample := clampi(int(sin(phase) * envelope * volume * 32767.0), -32768, 32767)
-		var unsigned := sample & 0xFFFF
-		data[index * 2] = unsigned & 0xFF
-		data[index * 2 + 1] = (unsigned >> 8) & 0xFF
-	var stream := AudioStreamWAV.new()
-	stream.format = AudioStreamWAV.FORMAT_16_BITS
-	stream.mix_rate = sample_rate
-	stream.stereo = false
-	stream.data = data
-	return stream
+	_audio = AudioDirector.new()
+	_audio.name = "VehicleAudioDirector"
+	add_child(_audio)
 
 
 func _play_sound(sound_id: StringName, pitch: float = 1.0) -> void:
-	if not _sounds.has(sound_id) or _sound_players.is_empty():
-		return
-	var player := _sound_players[_sound_cursor % _sound_players.size()]
-	_sound_cursor += 1
-	player.stream = _sounds[sound_id]
-	player.pitch_scale = pitch
-	player.play()
+	if is_instance_valid(_audio):
+		_audio.play(sound_id, pitch)
 
 
 func _reset_run(increment_index: bool = true, preserve_stage: bool = false, preserve_upgrades: bool = false) -> void:
@@ -295,12 +255,12 @@ func _reset_run(increment_index: bool = true, preserve_stage: bool = false, pres
 	player_position = Rules.PLAYER_START
 	player_hull_direction = Vector2.RIGHT
 	player_aim_direction = Vector2.RIGHT
-	player_health = PLAYER_MAX_HEALTH
+	player_health = _player_max_health()
 	player_invulnerable = 0.0
 	player_hit_flash = 0.0
-	player_primary_cooldown = 0.0
 	player_primary_shot_index = 0
-	player_primary_charge.reset(true)
+	player_primary_weapon.set_full_opening_seconds(_opening_charge_seconds())
+	player_primary_weapon.reset(true)
 	player_dash_cooldown = 0.0
 	player_dash_timer = 0.0
 	player_passive_cooldown = 0.0
@@ -309,13 +269,21 @@ func _reset_run(increment_index: bool = true, preserve_stage: bool = false, pres
 	player_barrier_strength = 0.0
 	player_barrier_timer = 0.0
 	attack_boost_timer = 0.0
+	coolant_timer = 0.0
 	overdrive_timer = 0.0
+	magnet_field_timer = 0.0
+	capacitor_cell_timer = 0.0
+	capacitor_opening_shots = 0
+	capacitor_force_next_shot = false
+	_last_primary_tier = &"ready"
 	_aim_target_id = ""
 	_last_damage_source = ""
 
 	if not preserve_upgrades:
-		applied_upgrades.clear()
+		run_build.reset()
 		selected_upgrade_title_key = "UPGRADE_NONE"
+		claimed_reward_sources.clear()
+	player_health = _player_max_health()
 	current_card_offer.clear()
 	enemies.clear()
 	projectiles.clear()
@@ -359,6 +327,10 @@ func _reset_run(increment_index: bool = true, preserve_stage: bool = false, pres
 	boss_locked = false
 	boss_phase_two_announced = false
 	stage_complete = false
+	pending_stage_completion = false
+	current_reward_source = &""
+	current_reward_optional = false
+	completed_group_rewards.clear()
 	if not preserve_upgrades:
 		run_time = 0.0
 	environment_time = 0.0
@@ -379,85 +351,30 @@ func _reset_run(increment_index: bool = true, preserve_stage: bool = false, pres
 
 
 func _make_enemy(spec: Dictionary) -> Dictionary:
-	var role := StringName(spec["role"])
-	var health := 60.0
-	var speed := 170.0
-	var radius := 25.0
-	var display_name := "ENEMY_THREAT"
+	var archetype := StringName(spec["role"])
+	var definition := EnemyArchetypes.definition(archetype)
+	var role := StringName(definition["behavior"])
 	var attack_cooldown := _rng.randf_range(0.4, 1.2)
-	match role:
-		&"chaser":
-			health = 72.0
-			speed = 205.0
-			radius = 26.0
-			display_name = "ENEMY_RIVET_CHASER"
-		&"shooter":
-			health = 58.0
-			speed = 155.0
-			radius = 24.0
-			display_name = "ENEMY_LANE_SKIRMISHER"
-		&"controller":
-			health = 84.0
-			speed = 135.0
-			radius = 29.0
-			display_name = "ENEMY_FLOOD_CONTROLLER"
-		&"turret":
-			health = 110.0
-			speed = 0.0
-			radius = 31.0
-			display_name = "ENEMY_FOUNDRY_TURRET"
-		&"mine":
-			health = 65.0
-			speed = 0.0
-			radius = 27.0
-			display_name = "ENEMY_ARC_MINE"
-		&"shield_escort":
-			health = 96.0
-			speed = 165.0
-			radius = 30.0
-			display_name = "ENEMY_SHIELD_ESCORT"
-		&"artillery_spotter":
-			health = 82.0
-			speed = 115.0
-			radius = 29.0
-			display_name = "ENEMY_ARTILLERY_SPOTTER"
-		&"interceptor_tower":
-			health = 125.0
-			speed = 0.0
-			radius = 34.0
-			display_name = "ENEMY_INTERCEPTOR_TOWER"
-		&"generator":
-			health = 155.0
-			speed = 0.0
-			radius = 37.0
-			display_name = "ENEMY_BARRIER_GENERATOR"
-		&"field_boss":
-			health = 620.0
-			speed = 185.0
-			radius = 52.0
-			display_name = "ENEMY_DREDGE_WARDEN"
-		&"boss_pylon":
-			health = 120.0
-			speed = 0.0
-			radius = 33.0
-			display_name = "ENEMY_COLOSSUS_PYLON"
-		&"stage_boss":
-			health = 1450.0
-			speed = 150.0
-			radius = 76.0
-			display_name = "ENEMY_FOUNDRY_COLOSSUS"
+	var health := float(definition["health"])
 	var position: Vector2 = spec["pos"]
 	return {
 		"id": String(spec.get("id", role)),
 		"role": role,
-		"name": String(spec.get("name_key", display_name)),
+		"archetype": archetype,
+		"name": String(spec.get("name_key", definition["name_key"])),
 		"pos": position,
 		"home": position,
 		"velocity": Vector2.ZERO,
 		"health": health,
 		"max_health": health,
-		"speed": speed,
-		"radius": radius,
+		"speed": float(definition["speed"]),
+		"radius": float(definition["radius"]),
+		"visual_radius": float(definition["visual_radius"]),
+		"health_class": StringName(definition["health_class"]),
+		"health_visible_timer": 0.0,
+		"threat_cost": float(definition["threat_cost"]),
+		"threat_kind": StringName(definition["threat_kind"]),
+		"counts_active_cap": bool(definition["active_cap"]),
 		"alive": true,
 		"active": role == &"generator" or role == &"turret" or role == &"mine",
 		"phase": "move",
@@ -480,6 +397,9 @@ func _make_enemy(spec: Dictionary) -> Dictionary:
 		"reposition_time": 0.0,
 		"reposition_dir": Vector2.ZERO,
 		"zone": String(spec.get("zone", "")),
+		"group_id": String(spec.get("group_id", "")),
+		"activation_rect": Rect2(spec.get("activation_rect", Rect2())),
+		"leash_rect": Rect2(spec.get("leash_rect", Rect2())),
 		"required": bool(spec.get("required", false)),
 		"optional": bool(spec.get("optional", false)),
 		"ram_cooldown": 0.0,
@@ -509,17 +429,27 @@ func _on_upgrade_selected(upgrade_id: StringName) -> void:
 	if mode != RunMode.UPGRADE:
 		return
 	if not apply_upgrade(upgrade_id):
+		_ui.upgrade_apply_failed(tr("UPGRADE_APPLY_FAILED"))
 		return
+	_resolve_reward_transaction()
 	mode = RunMode.PLAYING
 	_ui.show_gameplay()
 	_ui.notify(tr("NOTIFY_MODULE_ONLINE") % tr(selected_upgrade_title_key), 3.0, Rules.AMBER)
 	_play_sound(&"card", 1.0)
 	_set_mouse_for_mode()
+	if pending_stage_completion:
+		_finalize_stage_completion()
 
 
-func _on_primary_changed(primary_id: StringName) -> void:
-	selected_primary = primary_id
-	_save_persistence()
+func _on_upgrade_declined() -> void:
+	if mode != RunMode.UPGRADE or not current_reward_optional:
+		return
+	claimed_reward_sources[_reward_transaction_id(current_reward_source)] = &"declined"
+	_resolve_reward_transaction()
+	mode = RunMode.PLAYING
+	_ui.show_gameplay()
+	_ui.notify(tr("NOTIFY_REWARD_DECLINED"), 2.2, Rules.MUTED)
+	_set_mouse_for_mode()
 
 
 func _pause_run() -> void:
@@ -576,7 +506,7 @@ func _advance_stage() -> void:
 
 func _show_garage() -> void:
 	mode = RunMode.GARAGE
-	player_health = PLAYER_MAX_HEALTH
+	player_health = _player_max_health()
 	projectiles.clear()
 	denied_zones.clear()
 	_ui.show_garage({
@@ -584,6 +514,7 @@ func _show_garage() -> void:
 		"clear_count": persistent_clear_count,
 		"relay_module_unlocked": persistent_relay_module,
 		"field_module_unlocked": persistent_field_module,
+		"build_summary": _run_build_summary(),
 	})
 	_set_mouse_for_mode()
 
@@ -597,14 +528,26 @@ func _set_mouse_for_mode() -> void:
 
 func _update_player(delta: float) -> void:
 	player_invulnerable = maxf(0.0, player_invulnerable - delta)
-	player_primary_cooldown = maxf(0.0, player_primary_cooldown - delta)
-	_update_primary_charge(delta)
+	var primary_held := Input.is_action_pressed("primary_fire")
+	if Input.is_action_just_pressed("primary_fire") and capacitor_cell_timer > 0.0 and capacitor_opening_shots > 0:
+		capacitor_force_next_shot = true
+	player_primary_weapon.tick(delta, primary_held, player_dash_timer <= 0.0)
+	var primary_tier := player_primary_weapon.tier()
+	if primary_tier == &"ready" and _last_primary_tier != &"ready":
+		_play_sound(&"opening_ready")
+	_last_primary_tier = primary_tier
 	player_dash_cooldown = maxf(0.0, player_dash_cooldown - delta)
 	player_passive_cooldown = maxf(0.0, player_passive_cooldown - delta)
 	player_emp_cooldown = maxf(0.0, player_emp_cooldown - delta)
 	player_barrier_timer = maxf(0.0, player_barrier_timer - delta)
 	attack_boost_timer = maxf(0.0, attack_boost_timer - delta)
+	coolant_timer = maxf(0.0, coolant_timer - delta)
 	overdrive_timer = maxf(0.0, overdrive_timer - delta)
+	magnet_field_timer = maxf(0.0, magnet_field_timer - delta)
+	capacitor_cell_timer = maxf(0.0, capacitor_cell_timer - delta)
+	if capacitor_cell_timer <= 0.0:
+		capacitor_opening_shots = 0
+		capacitor_force_next_shot = false
 	if player_barrier_timer <= 0.0:
 		player_barrier_strength = 0.0
 
@@ -618,12 +561,12 @@ func _update_player(delta: float) -> void:
 		_update_dash(delta)
 	else:
 		var speed_multiplier := 1.35 if overdrive_timer > 0.0 else 1.0
-		var motion := move_input * PLAYER_BASE_SPEED * speed_multiplier * delta
+		var motion := move_input * _player_move_speed() * speed_multiplier * delta
 		player_position = _move_actor(player_position, motion, Rules.PLAYER_RADIUS, true)
 		if Input.is_action_just_pressed("dash") and player_dash_cooldown <= 0.0:
 			_start_dash(move_input)
 
-	if Input.is_action_just_pressed("primary_fire"):
+	if primary_held:
 		_try_fire_primary()
 
 	if Input.is_action_just_pressed("active_skill") and player_emp_cooldown <= 0.0 and player_emp_startup <= 0.0:
@@ -666,7 +609,7 @@ func _start_dash(move_input: Vector2) -> void:
 	if player_dash_direction.length_squared() <= 0.01:
 		player_dash_direction = player_hull_direction
 	player_dash_timer = DASH_DURATION
-	player_dash_cooldown = DASH_COOLDOWN
+	player_dash_cooldown = _dash_cooldown_max()
 	player_invulnerable = DASH_DURATION + 0.08
 	player_dash_trail_timer = 0.0
 	stats_dash_uses += 1
@@ -705,65 +648,61 @@ func _update_dash(delta: float) -> void:
 			_play_sound(&"emp", 1.55)
 
 
-func _fire_primary(released_energy: float) -> void:
+func _fire_primary(shot: Dictionary) -> void:
 	tutorial_fire = true
 	player_primary_shot_index += 1
 	player_muzzle_flash = 0.075
-	var attack_multiplier := player_primary_charge.damage_scale(released_energy)
+	var attack_multiplier := float(shot["damage_scale"]) * run_build.stat(&"primary_damage_multiplier", 1.0)
 	attack_multiplier *= 1.50 if attack_boost_timer > 0.0 else 1.0
 	var origin := player_position + player_aim_direction * 39.0
-	var is_full_charge := released_energy >= PrimaryCharge.FULL_EPSILON
-	if selected_primary == &"scatter":
-		player_primary_cooldown = 0.12
-		var offsets := [-0.12, 0.0, 0.12]
-		if is_full_charge:
-			offsets = [-0.24, -0.12, 0.0, 0.12, 0.24]
-		for offset in offsets:
-			_spawn_player_projectile(
-				origin,
-				player_aim_direction.rotated(float(offset)),
-				18.0 * attack_multiplier,
-				780.0,
-				0,
-				7.0 if is_full_charge else 5.5
-			)
-		_play_sound(&"scatter", _rng.randf_range(0.92, 1.02) + released_energy * 0.08)
-	else:
-		player_primary_cooldown = 0.12
+	var is_full_opening := bool(shot["full_opening"])
+	var projectile_count := 1 + run_build.level_of(&"forked_muzzle")
+	var per_projectile_scale: float = [1.0, 0.70, 0.55][projectile_count - 1]
+	var spread_step := deg_to_rad(7.0) * run_build.stat(&"primary_spread", 1.0)
+	var projectile_speed := run_build.stat(&"primary_projectile_speed", PRIMARY_PROJECTILE_SPEED)
+	var projectile_radius := run_build.stat(&"primary_radius", 5.5) * float(shot["radius_scale"])
+	var structure_multiplier := run_build.stat(&"primary_structure", 1.0)
+	if float(shot["bonus_ratio"]) > 0.0:
+		structure_multiplier *= run_build.stat(&"opening_breach_multiplier", 1.0)
+	var range := run_build.stat(&"primary_range", PRIMARY_RANGE)
+	for index in projectile_count:
+		var centered_index := float(index) - float(projectile_count - 1) * 0.5
 		_spawn_player_projectile(
 			origin,
-			player_aim_direction,
-			44.0 * attack_multiplier,
-			PRIMARY_PROJECTILE_SPEED,
-			1 if is_full_charge else 0,
-			8.5 if is_full_charge else lerpf(5.5, 7.0, released_energy)
+			player_aim_direction.rotated(centered_index * spread_step),
+			18.0 * attack_multiplier * per_projectile_scale,
+			projectile_speed,
+			run_build.level_of(&"phase_lance") + (1 if is_full_opening else 0),
+			projectile_radius,
+			18.0 * float(shot["structure_scale"]) * structure_multiplier * per_projectile_scale,
+			5.0 * float(shot["stagger_scale"]) * run_build.stat(&"opening_breach_multiplier", 1.0),
+			is_full_opening,
+			range,
+			StatusRuntime.payload(run_build)
 		)
-		_play_sound(&"primary", _rng.randf_range(0.92, 1.00) + released_energy * 0.10)
-
-	if applied_upgrades.has(&"forked_muzzle") and player_primary_shot_index % 5 == 0:
-		for offset in [-0.20, 0.20]:
-			_spawn_player_projectile(
-				origin,
-				player_aim_direction.rotated(float(offset)),
-				7.0 * attack_multiplier,
-				960.0,
-				0
-			)
+	if is_full_opening:
+		_play_sound(&"opening_fire", _rng.randf_range(0.97, 1.03))
 	_add_effect("muzzle", origin, Art.MUSTARD, 0.09, 32.0, player_aim_direction)
 
 
 func _try_fire_primary() -> bool:
-	if player_primary_cooldown > 0.0 or player_dash_timer > 0.0:
+	if not player_primary_weapon.can_fire(player_dash_timer <= 0.0):
 		return false
-	var released_energy := player_primary_charge.release()
-	if released_energy <= 0.0:
-		return false
-	_fire_primary(released_energy)
+	var interval := maxf(PrimaryWeapon.MIN_INTERVAL, run_build.stat(&"primary_interval", PrimaryWeapon.BASE_INTERVAL))
+	if coolant_timer > 0.0:
+		interval = maxf(PrimaryWeapon.MIN_INTERVAL, interval * 0.75)
+	var shot := player_primary_weapon.consume_shot(interval)
+	if capacitor_force_next_shot:
+		shot["bonus_ratio"] = 1.0
+		shot["damage_scale"] = PrimaryWeapon.FULL_HEALTH_SCALE
+		shot["structure_scale"] = PrimaryWeapon.FULL_STRUCTURE_SCALE
+		shot["stagger_scale"] = PrimaryWeapon.FULL_STAGGER_SCALE
+		shot["radius_scale"] = PrimaryWeapon.FULL_RADIUS_SCALE
+		shot["full_opening"] = true
+		capacitor_opening_shots -= 1
+		capacitor_force_next_shot = false
+	_fire_primary(shot)
 	return true
-
-
-func _update_primary_charge(delta: float) -> void:
-	player_primary_charge.tick(delta * (1.35 if attack_boost_timer > 0.0 else 1.0))
 
 
 func _update_stage_environment(delta: float) -> void:
@@ -788,53 +727,77 @@ func _update_stage_environment(delta: float) -> void:
 				_damage_player(10.0, "Drydock storm strip", false)
 
 
-func _spawn_player_projectile(origin: Vector2, direction: Vector2, damage: float, speed: float, extra_pierce: int, radius: float = 5.0) -> void:
+func _spawn_player_projectile(origin: Vector2, direction: Vector2, damage: float, speed: float, extra_pierce: int, radius: float = 5.0, structure_damage: float = -1.0, stagger: float = 5.0, opening: bool = false, projectile_range: float = PRIMARY_RANGE, status_payload: Dictionary = {}) -> void:
+	_enforce_player_projectile_cap()
 	projectiles.append({
 		"pos": origin,
 		"velocity": direction.normalized() * speed,
 		"radius": radius,
 		"team": &"player",
 		"damage": damage,
-		"life": PRIMARY_RANGE / speed,
+		"life": projectile_range / speed,
 		"color": Art.MUSTARD,
 		"owner": "player_primary",
-		"pierce": extra_pierce + (1 if applied_upgrades.has(&"phase_lance") else 0),
-		"bounces": 1 if applied_upgrades.has(&"ricochet_matrix") else 0,
+		"pierce": extra_pierce,
+		"bounces": 1 if run_build.has(&"ricochet_matrix") else 0,
 		"homing": false,
 		"target_id": "",
 		"explosive": false,
-		"stagger": 5.0,
+		"stagger": stagger,
+		"structure_damage": damage if structure_damage < 0.0 else structure_damage,
+		"opening": opening,
+		"status_payload": status_payload.duplicate(true),
 	})
+
+
+func _enforce_player_projectile_cap() -> void:
+	var player_count := 0
+	for projectile in projectiles:
+		if StringName(projectile["team"]) == &"player":
+			player_count += 1
+	if player_count < EncounterDirector.PLAYER_PROJECTILE_CAP:
+		return
+	for index in projectiles.size():
+		var projectile: Dictionary = projectiles[index]
+		if StringName(projectile["team"]) == &"player" and not bool(projectile.get("opening", false)):
+			projectiles.remove_at(index)
+			return
 
 
 func _update_passive_secondary() -> void:
 	if player_passive_cooldown > 0.0 or player_emp_startup > 0.0:
 		return
-	var targets := _find_passive_targets(2 if applied_upgrades.has(&"twin_seekers") else 1)
+	var targets := _find_passive_targets(1 + run_build.level_of(&"twin_seekers"))
 	if targets.is_empty():
 		return
-	var cooldown := PASSIVE_COOLDOWN
+	var cooldown := maxf(PASSIVE_COOLDOWN * 0.60, run_build.stat(&"passive_interval", PASSIVE_COOLDOWN))
 	if persistent_field_module:
 		cooldown *= 0.85
 	player_passive_cooldown = cooldown
 	for target in targets:
 		var enemy: Dictionary = target
 		var direction := (Vector2(enemy["pos"]) - player_position).normalized()
+		var seeker_count := 1 + run_build.level_of(&"twin_seekers")
+		var seeker_scale: float = [1.0, 0.85, 0.70][seeker_count - 1]
+		_enforce_player_projectile_cap()
 		projectiles.append({
 			"pos": player_position + direction * 33.0,
 			"velocity": direction * 490.0,
 			"radius": 8.0,
 			"team": &"player",
-			"damage": 25.0,
+			"damage": 25.0 * run_build.stat(&"passive_damage_multiplier", 1.0) * seeker_scale,
 			"life": 1.8,
 			"color": Art.MINT,
 			"owner": "passive_seeker",
-			"pierce": 0,
+			"pierce": run_build.level_of(&"phase_seeker"),
 			"bounces": 0,
 			"homing": true,
 			"target_id": String(enemy["id"]),
 			"explosive": applied_upgrades.has(&"hunter_firmware"),
 			"stagger": 12.0,
+			"structure_damage": 25.0,
+			"opening": false,
+			"status_payload": {},
 		})
 	_play_sound(&"missile")
 
@@ -871,12 +834,12 @@ func _start_emp() -> void:
 	player_emp_cooldown = _emp_cooldown_max()
 	player_invulnerable = maxf(player_invulnerable, 0.24)
 	_play_sound(&"emp_start")
-	_add_effect("emp_start", player_position, Art.BOSS_MAGENTA, EMP_STARTUP, EMP_RADIUS)
+	_add_effect("emp_start", player_position, Art.BOSS_MAGENTA, EMP_STARTUP, _emp_radius())
 
 
 func _release_emp(is_aftershock: bool) -> void:
-	var radius := EMP_RADIUS * (0.68 if is_aftershock else 1.0)
-	var damage := 34.0 if is_aftershock else 62.0
+	var radius := _emp_radius() * (0.68 if is_aftershock else 1.0)
+	var damage := (34.0 if is_aftershock else 62.0) * run_build.stat(&"emp_damage_multiplier", 1.0)
 	_damage_enemies_in_radius(player_position, radius, damage, 42.0, "EMP Aftershock" if is_aftershock else "EMP Nova")
 	_clear_hostile_projectiles(player_position, radius + 40.0)
 	for enemy in enemies:
@@ -898,7 +861,28 @@ func _release_emp(is_aftershock: bool) -> void:
 
 
 func _emp_cooldown_max() -> float:
-	return EMP_COOLDOWN - (1.5 if persistent_relay_module else 0.0)
+	var base := EMP_COOLDOWN - (1.5 if persistent_relay_module else 0.0)
+	return maxf(EMP_COOLDOWN * 0.70, run_build.stat(&"emp_cooldown_multiplier", base))
+
+
+func _emp_radius() -> float:
+	return run_build.stat(&"emp_radius_multiplier", EMP_RADIUS)
+
+
+func _player_move_speed() -> float:
+	return run_build.stat(&"move_speed_multiplier", PLAYER_BASE_SPEED)
+
+
+func _dash_cooldown_max() -> float:
+	return maxf(DASH_COOLDOWN * 0.75, run_build.stat(&"dash_cooldown_multiplier", DASH_COOLDOWN))
+
+
+func _player_max_health() -> float:
+	return run_build.stat(&"max_health_bonus", PLAYER_MAX_HEALTH)
+
+
+func _opening_charge_seconds() -> float:
+	return run_build.stat(&"opening_seconds_multiplier", PrimaryWeapon.FULL_OPENING_SECONDS)
 
 
 func _update_pickups() -> void:
@@ -906,7 +890,8 @@ func _update_pickups() -> void:
 		if not bool(pickup["active"]):
 			continue
 		pickup["pulse"] = float(pickup["pulse"]) + 0.06
-		if player_position.distance_to(Vector2(pickup["pos"])) <= 48.0:
+		var field_bonus := 250.0 if magnet_field_timer > 0.0 else 0.0
+		if player_position.distance_to(Vector2(pickup["pos"])) <= 48.0 + field_bonus + run_build.stat(&"pickup_radius_bonus", 0.0):
 			_collect_pickup(pickup)
 
 
@@ -915,50 +900,88 @@ func _collect_pickup(pickup: Dictionary) -> void:
 		return
 	pickup["active"] = false
 	var kind := StringName(pickup["kind"])
-	var duration := 12.0 if applied_upgrades.has(&"field_converter") else 9.0
+	var duration_multiplier := run_build.stat(&"field_duration_multiplier", 1.0)
 	match kind:
 		&"repair":
 			var before := player_health
-			player_health = minf(PLAYER_MAX_HEALTH, player_health + 34.0)
+			player_health = minf(_player_max_health(), player_health + 35.0)
 			_ui.notify(tr("NOTIFY_REPAIR") % roundi(player_health - before), 2.0, Rules.MOSS)
-		&"attack":
-			attack_boost_timer = maxf(attack_boost_timer, duration)
+		&"major_repair":
+			var before := player_health
+			player_health = minf(_player_max_health(), player_health + 70.0)
+			_ui.notify(tr("NOTIFY_MAJOR_REPAIR") % roundi(player_health - before), 2.2, Rules.MOSS)
+		&"attack_boost":
+			attack_boost_timer = maxf(attack_boost_timer, 8.0 * duration_multiplier)
 			_ui.notify(tr("NOTIFY_ATTACK_BOOST"), 2.2, Rules.CORAL)
+		&"coolant":
+			coolant_timer = maxf(coolant_timer, 8.0 * duration_multiplier)
+			_ui.notify(tr("NOTIFY_COOLANT"), 2.2, Rules.CYAN)
 		&"overdrive":
-			overdrive_timer = maxf(overdrive_timer, duration)
+			overdrive_timer = maxf(overdrive_timer, 8.0 * duration_multiplier)
 			_ui.notify(tr("NOTIFY_OVERDRIVE"), 2.2, Rules.AMBER)
 		&"barrier":
-			player_barrier_strength = maxf(player_barrier_strength, 48.0)
-			if applied_upgrades.has(&"field_converter"):
-				player_barrier_strength += 10.0
-			player_barrier_timer = maxf(player_barrier_timer, duration + 2.0)
+			player_barrier_strength = maxf(player_barrier_strength, 50.0 + run_build.stat(&"barrier_bonus", 0.0))
+			player_barrier_timer = maxf(player_barrier_timer, 10.0 * duration_multiplier)
 			_clear_hostile_projectiles(player_position, 210.0)
 			_repel_nearby_enemies(240.0)
 			_ui.notify(tr("NOTIFY_BARRIER"), 2.2, Rules.CYAN)
+		&"seeker_battery":
+			_launch_field_seekers(3)
+			player_passive_cooldown = 0.0
+			_ui.notify(tr("NOTIFY_SEEKER_BATTERY"), 2.2, Rules.MOSS)
+		&"capacitor_cell":
+			capacitor_cell_timer = maxf(capacitor_cell_timer, 8.0 * duration_multiplier)
+			capacitor_opening_shots = maxi(capacitor_opening_shots, 3)
+			_ui.notify(tr("NOTIFY_CAPACITOR_CELL"), 2.2, Rules.AMBER)
+		&"magnet_field":
+			magnet_field_timer = maxf(magnet_field_timer, 10.0 * duration_multiplier)
+			_ui.notify(tr("NOTIFY_MAGNET_FIELD"), 2.2, Rules.CYAN)
 	_add_effect("pickup", Vector2(pickup["pos"]), _pickup_color(kind), 0.40, 65.0)
 	_play_sound(&"pickup")
 
 
 func _pickup_color(kind: StringName) -> Color:
 	match kind:
-		&"repair":
+		&"repair", &"major_repair", &"seeker_battery":
 			return Art.MINT
-		&"attack":
+		&"attack_boost":
 			return Art.CORAL
-		&"overdrive":
+		&"overdrive", &"capacitor_cell":
 			return Art.MUSTARD
-		&"barrier":
+		&"barrier", &"coolant", &"magnet_field":
 			return Art.COBALT_WATER
 	return Art.IVORY_BRIGHT
 
 
+func _launch_field_seekers(max_targets: int) -> void:
+	for target in _find_passive_targets(max_targets):
+		var enemy: Dictionary = target
+		var direction := (Vector2(enemy["pos"]) - player_position).normalized()
+		_enforce_player_projectile_cap()
+		projectiles.append({
+			"pos": player_position + direction * 33.0, "velocity": direction * 520.0,
+			"radius": 8.0, "team": &"player", "damage": 25.0, "life": 1.8,
+			"color": Art.MINT, "owner": "field_seeker", "pierce": 0, "bounces": 0,
+			"homing": true, "target_id": String(enemy["id"]), "explosive": false,
+			"stagger": 12.0, "structure_damage": 25.0, "opening": false, "status_payload": {},
+		})
+
+
 func _update_enemies(delta: float) -> void:
-	var committed_threats := 0
+	var committed_points := 0.0
+	var committed_ranged := 0
+	var committed_denial := 0
+	var active_capped := 0
 	for enemy in enemies:
 		if not bool(enemy["alive"]):
 			continue
+		if bool(enemy["active"]) and bool(enemy.get("counts_active_cap", false)):
+			active_capped += 1
 		if String(enemy["phase"]) in ["startup", "active"] and StringName(enemy["role"]) not in [&"stage_boss", &"field_boss", &"generator", &"boss_pylon"]:
-			committed_threats += 1
+			committed_points += float(enemy.get("threat_cost", 1.0))
+			match StringName(enemy.get("threat_kind", &"melee")):
+				&"ranged": committed_ranged += 1
+				&"denial": committed_denial += 1
 
 	for enemy in enemies:
 		if not bool(enemy["alive"]):
@@ -967,9 +990,17 @@ func _update_enemies(delta: float) -> void:
 		enemy["stun"] = maxf(0.0, float(enemy["stun"]) - delta)
 		enemy["ram_cooldown"] = maxf(0.0, float(enemy["ram_cooldown"]) - delta)
 		enemy["vulnerable"] = maxf(0.0, float(enemy["vulnerable"]) - delta)
-		_update_enemy_activation(enemy)
+		enemy["health_visible_timer"] = maxf(0.0, float(enemy.get("health_visible_timer", 0.0)) - delta)
+		var activated := _update_enemy_activation(enemy, active_capped < EncounterDirector.active_cap(current_stage_id))
+		if activated and bool(enemy.get("counts_active_cap", false)):
+			active_capped += 1
 		if not bool(enemy["active"]):
 			continue
+		var status_damage := StatusRuntime.tick(enemy, delta)
+		if status_damage > 0.0:
+			_damage_enemy(enemy, status_damage, "status", 0.0)
+			if not bool(enemy["alive"]):
+				continue
 		_update_enemy_shield(enemy)
 		var role := StringName(enemy["role"])
 		if role == &"stage_boss":
@@ -987,20 +1018,31 @@ func _update_enemies(delta: float) -> void:
 		if float(enemy["stun"]) > 0.0:
 			enemy["velocity"] = Vector2.ZERO
 			continue
-		var started := _update_ordinary_enemy(enemy, delta, committed_threats < 2)
+		var can_commit := EncounterDirector.can_commit(committed_points, committed_ranged, committed_denial, enemy)
+		var started := _update_ordinary_enemy(enemy, delta, can_commit)
 		if started:
-			committed_threats += 1
+			committed_points += float(enemy.get("threat_cost", 1.0))
+			match StringName(enemy.get("threat_kind", &"melee")):
+				&"ranged": committed_ranged += 1
+				&"denial": committed_denial += 1
 
 
-func _update_enemy_activation(enemy: Dictionary) -> void:
+func _update_enemy_activation(enemy: Dictionary, capacity_available: bool) -> bool:
 	if bool(enemy["active"]):
-		return
+		return false
 	var role := StringName(enemy["role"])
 	var distance := player_position.distance_to(Vector2(enemy["pos"]))
 	if role == &"field_boss":
 		enemy["active"] = player_position.x > 2380.0 and player_position.y < 820.0
-	elif distance < 920.0:
+		return bool(enemy["active"])
+	if not capacity_available and bool(enemy.get("counts_active_cap", false)):
+		return false
+	var activation := Rect2(enemy.get("activation_rect", Rect2()))
+	if activation.has_area() and activation.has_point(player_position):
 		enemy["active"] = true
+	elif not activation.has_area() and distance < 920.0:
+		enemy["active"] = true
+	return bool(enemy["active"])
 
 
 func _update_enemy_shield(enemy: Dictionary) -> void:
@@ -1062,12 +1104,23 @@ func _update_boss_pylon(enemy: Dictionary, delta: float) -> void:
 
 
 func _update_ordinary_enemy(enemy: Dictionary, delta: float, can_commit: bool) -> bool:
+	var leash := Rect2(enemy.get("leash_rect", Rect2()))
+	if leash.has_area() and not leash.has_point(player_position):
+		enemy["phase"] = "move"
+		enemy["attack_cooldown"] = maxf(float(enemy["attack_cooldown"]), 0.35)
+		var to_home := Vector2(enemy["home"]) - Vector2(enemy["pos"])
+		if to_home.length() <= 18.0:
+			enemy["pos"] = Vector2(enemy["home"])
+			enemy["active"] = false
+		else:
+			_move_enemy_with_recovery(enemy, to_home.normalized() * float(enemy["speed"]), delta)
+		return false
 	if StringName(enemy["role"]) == &"interceptor_tower":
 		enemy["intercept_recharge"] = maxf(0.0, float(enemy["intercept_recharge"]) - delta)
 		if int(enemy["intercept_charges"]) < 3 and float(enemy["intercept_recharge"]) <= 0.0:
 			enemy["intercept_charges"] = int(enemy["intercept_charges"]) + 1
 			enemy["intercept_recharge"] = 4.0
-	enemy["attack_cooldown"] = maxf(0.0, float(enemy["attack_cooldown"]) - delta)
+	enemy["attack_cooldown"] = maxf(0.0, float(enemy["attack_cooldown"]) - delta * StatusRuntime.speed_multiplier(enemy))
 	var phase := String(enemy["phase"])
 	if phase == "startup":
 		if StringName(enemy["role"]) == &"artillery_spotter" and not Rules.has_line_of_sight(Vector2(enemy["pos"]), player_position, 5.0, _boss_gate_closed(), current_stage_id):
@@ -1303,7 +1356,7 @@ func _move_enemy_role(enemy: Dictionary, delta: float, recovering: bool) -> void
 				desired = direction_to_player
 			else:
 				desired = direction_to_player.rotated(float(enemy["strafe_sign"]) * PI * 0.5)
-	var velocity := desired.normalized() * float(enemy["speed"])
+	var velocity := desired.normalized() * float(enemy["speed"]) * StatusRuntime.speed_multiplier(enemy)
 	_move_enemy_with_recovery(enemy, velocity, delta)
 
 
@@ -1356,7 +1409,7 @@ func _move_actor(position: Vector2, motion: Vector2, radius: float, is_player: b
 
 
 func _spawn_hostile_projectile(origin: Vector2, direction: Vector2, damage: float, speed: float, source: String, color: Color) -> void:
-	if _count_hostile_projectiles() >= 42:
+	if _count_hostile_projectiles() >= EncounterDirector.HOSTILE_PROJECTILE_CAP:
 		return
 	projectiles.append({
 		"pos": origin,
@@ -1410,6 +1463,7 @@ func _update_projectiles(delta: float) -> void:
 				_add_effect("impact", Vector2(projectile["pos"]), Rules.CYAN, 0.15, 18.0)
 				continue
 			_add_effect("impact", Vector2(cover_hit["point"]), Color(projectile["color"]), 0.14, 20.0)
+			_play_sound(&"cover", _rng.randf_range(0.96, 1.04))
 			projectiles.remove_at(index)
 			continue
 
@@ -1429,12 +1483,22 @@ func _update_projectiles(delta: float) -> void:
 			var hit_enemy := _first_enemy_on_segment(from, to, float(projectile["radius"]))
 			if not hit_enemy.is_empty():
 				var hit_position := Vector2(hit_enemy["pos"])
+				var enemy_damage := float(projectile["damage"])
+				if StringName(hit_enemy["role"]) in [&"turret", &"mine", &"generator", &"interceptor_tower", &"boss_pylon"]:
+					enemy_damage = float(projectile.get("structure_damage", enemy_damage))
+				var opening_result := {"bonus_damage": 0.0, "splash_radius": 0.0}
+				if bool(projectile.get("opening", false)):
+					opening_result = StatusRuntime.resolve_opening(hit_enemy, run_build, enemy_damage)
+				enemy_damage += float(opening_result["bonus_damage"])
 				_damage_enemy(
 					hit_enemy,
-					float(projectile["damage"]),
+					enemy_damage,
 					String(projectile["owner"]),
 					float(projectile["stagger"])
 				)
+				if float(opening_result["splash_radius"]) > 0.0:
+					_damage_enemies_in_radius(hit_position, float(opening_result["splash_radius"]), float(opening_result["bonus_damage"]), 0.0, "Flashover", String(hit_enemy["id"]))
+				StatusRuntime.apply(hit_enemy, Dictionary(projectile.get("status_payload", {})))
 				stats_primary_hits += 1 if String(projectile["owner"]) == "player_primary" else 0
 				_add_effect("impact", hit_position, Color(projectile["color"]), 0.18, 24.0)
 				_play_sound(&"impact", _rng.randf_range(0.92, 1.08))
@@ -1470,7 +1534,7 @@ func _projectile_hits_crate(projectile: Dictionary, from: Vector2, to: Vector2) 
 		if not bool(crate["alive"]):
 			continue
 		if Rules.point_segment_distance(Vector2(crate["pos"]), from, to) <= 31.0 + float(projectile["radius"]):
-			_damage_crate(crate, float(projectile["damage"]))
+			_damage_crate(crate, float(projectile.get("structure_damage", projectile["damage"])))
 			_add_effect("impact", Vector2(crate["pos"]), Rules.AMBER, 0.16, 22.0)
 			return true
 	return false
@@ -1563,6 +1627,11 @@ func _update_effects(delta: float) -> void:
 
 
 func _add_effect(kind: String, position: Vector2, color: Color, duration: float, radius: float, direction: Vector2 = Vector2.ZERO) -> void:
+	if effects.size() >= EncounterDirector.EFFECT_CAP:
+		for index in effects.size():
+			if String(effects[index]["kind"]) != "scheduled_aftershock":
+				effects.remove_at(index)
+				break
 	effects.append({
 		"kind": kind,
 		"pos": position,
@@ -1597,6 +1666,7 @@ func _damage_enemy(enemy: Dictionary, amount: float, source: String, stagger: fl
 			_play_sound(&"boss", 1.35)
 	enemy["health"] = float(enemy["health"]) - amount * multiplier
 	enemy["flash"] = 0.11
+	enemy["health_visible_timer"] = 1.0 if StringName(enemy.get("health_class", &"standard")) == &"swarm" else 1.5
 	if float(enemy["health"]) <= 0.0:
 		_defeat_enemy(enemy, source)
 
@@ -1604,15 +1674,13 @@ func _damage_enemy(enemy: Dictionary, amount: float, source: String, stagger: fl
 func _defeat_enemy(enemy: Dictionary, source: String) -> void:
 	if not bool(enemy["alive"]):
 		return
+	var had_poison := Dictionary(enemy.get("statuses", {})).has(&"poison")
 	enemy["alive"] = false
 	enemy["active"] = false
 	stats_enemies_defeated += 1
 	var role := StringName(enemy["role"])
 	if role in [&"generator", &"turret", &"mine", &"boss_pylon"]:
 		stats_installations += 1
-		if applied_upgrades.has(&"circuit_harvest"):
-			player_passive_cooldown = maxf(0.0, player_passive_cooldown - 0.75)
-			player_emp_cooldown = maxf(0.0, player_emp_cooldown - 2.0)
 	if role == &"generator" and bool(enemy["required"]):
 		generators_destroyed += 1
 		_ui.notify(
@@ -1628,11 +1696,39 @@ func _defeat_enemy(enemy: Dictionary, source: String) -> void:
 		player_passive_cooldown = 0.0
 		_save_persistence()
 		_ui.notify(tr("NOTIFY_DREDGE_CAPACITOR"), 4.0, Rules.AMBER)
+		pickups.append({
+			"id": "%s_major_repair" % String(enemy["id"]), "kind": &"major_repair",
+			"pos": Vector2(enemy["pos"]) + Vector2(-72.0, 0.0), "active": true, "pulse": 0.0,
+		})
+		_open_upgrade_reward(&"field_boss", true)
 	if role == &"stage_boss":
 		_complete_stage()
+	var defeated_group := String(enemy.get("group_id", ""))
+	if not defeated_group.is_empty():
+		_try_group_completion_reward(defeated_group, Vector2(enemy["pos"]))
+	if had_poison and run_build.has(&"contagion"):
+		var poison_payload := StatusRuntime.payload(run_build)
+		for target in enemies:
+			if target != enemy and bool(target["alive"]) and Vector2(target["pos"]).distance_to(Vector2(enemy["pos"])) <= 100.0:
+				StatusRuntime.apply(target, poison_payload)
 	_add_effect("destroy", Vector2(enemy["pos"]), _enemy_color(role), 0.65 if role in [&"field_boss", &"stage_boss"] else 0.38, float(enemy["radius"]) * 1.8)
-	_play_sound(&"destroy", 0.72 if role in [&"field_boss", &"stage_boss"] else 1.0)
+	_play_sound(&"destroy_priority" if role in [&"field_boss", &"stage_boss", &"generator", &"interceptor_tower"] else &"destroy", 1.0)
 	_clear_zones_owned_by_defeated_role(role)
+
+
+func _try_group_completion_reward(group_id: String, position: Vector2) -> void:
+	if completed_group_rewards.has(group_id):
+		return
+	for candidate in enemies:
+		if String(candidate.get("group_id", "")) == group_id and bool(candidate["alive"]):
+			return
+	completed_group_rewards[group_id] = true
+	var roll := absi(hash("%d:%s:%s" % [run_index, String(current_stage_id), group_id])) % 100
+	if roll >= 35:
+		return
+	var reward_table: Array[StringName] = [&"repair", &"attack_boost", &"coolant", &"overdrive", &"barrier", &"seeker_battery", &"capacitor_cell", &"magnet_field"]
+	var kind := reward_table[absi(hash(group_id)) % reward_table.size()]
+	pickups.append({"id": "%s_group_reward" % group_id, "kind": kind, "pos": position, "active": true, "pulse": 0.0})
 
 
 func _clear_zones_owned_by_defeated_role(role: StringName) -> void:
@@ -1756,8 +1852,11 @@ func _update_stage_progression() -> void:
 		entered_installations = true
 		discovered_markers["generators"] = true
 
+	if player_position.x >= 1600.0 and not _reward_claimed(&"calibration"):
+		_open_upgrade_reward(&"calibration", false)
+
 	if not chest_claimed and generators_destroyed >= 2 and player_position.distance_to(Rules.CHEST_POSITION) <= 78.0:
-		_open_upgrade_cache()
+		_open_upgrade_reward(&"relay", false)
 
 	if generators_destroyed >= 2 and chest_claimed and not boss_started and Rules.BOSS_ARENA.grow(10.0).has_point(player_position):
 		_start_stage_boss()
@@ -1774,29 +1873,89 @@ func _update_stage_progression() -> void:
 
 
 func _open_upgrade_cache() -> void:
-	if chest_claimed or mode != RunMode.PLAYING:
+	_open_upgrade_reward(&"relay", false)
+
+
+func _open_upgrade_reward(source_id: StringName, optional: bool) -> void:
+	if mode != RunMode.PLAYING or _reward_claimed(source_id):
 		return
 	mode = RunMode.UPGRADE
-	current_card_offer = Rules.get_card_offer(run_index)
-	_ui.show_upgrade(current_card_offer)
+	current_reward_source = source_id
+	current_reward_optional = optional
+	current_card_offer = _build_card_offer(source_id)
+	_ui.show_upgrade(current_card_offer, optional)
 	_play_sound(&"card", 0.9)
 	_set_mouse_for_mode()
 
 
+func _run_build_summary() -> String:
+	var parts: PackedStringArray = []
+	for upgrade_id in applied_upgrades.keys():
+		var definition := upgrade_catalog.get_definition(StringName(upgrade_id))
+		if definition != null:
+			parts.append("%s %d" % [tr(definition.title_key), run_build.level_of(StringName(upgrade_id))])
+	parts.sort()
+	return "  ·  ".join(parts)
+
+
 func apply_upgrade(upgrade_id: StringName) -> bool:
-	if applied_upgrades.has(upgrade_id):
+	var receipt := run_build.apply(upgrade_id)
+	if not bool(receipt.get("applied", false)):
 		return false
-	var definition := Rules.get_upgrade(upgrade_id)
-	if definition.is_empty():
-		return false
-	applied_upgrades[upgrade_id] = true
-	chest_claimed = true
-	selected_upgrade_title_key = String(definition["title_key"])
+	var definition := upgrade_catalog.get_definition(upgrade_id)
+	selected_upgrade_title_key = definition.title_key
 	if upgrade_id == &"field_converter" and player_barrier_strength > 0.0:
 		player_barrier_strength += 10.0
 	if upgrade_id == &"twin_seekers":
 		player_passive_cooldown = 0.0
+	if upgrade_id == &"reinforced_hull":
+		player_health = minf(_player_max_health(), player_health + 15.0)
+	player_primary_weapon.set_full_opening_seconds(_opening_charge_seconds())
 	return true
+
+
+func _reward_transaction_id(source_id: StringName) -> StringName:
+	return StringName("%s:%s" % [String(current_stage_id), String(source_id)])
+
+
+func _reward_claimed(source_id: StringName) -> bool:
+	return claimed_reward_sources.has(_reward_transaction_id(source_id))
+
+
+func _resolve_reward_transaction() -> void:
+	if current_reward_source == &"":
+		return
+	claimed_reward_sources[_reward_transaction_id(current_reward_source)] = &"claimed"
+	if current_reward_source == &"relay":
+		chest_claimed = true
+	current_reward_source = &""
+	current_reward_optional = false
+	current_card_offer.clear()
+
+
+func _build_card_offer(source_id: StringName) -> Array[Dictionary]:
+	var cards: Array[Dictionary] = []
+	for definition in upgrade_catalog.offer(run_build, run_index, current_stage_index, source_id):
+		var value_previews: Array[Dictionary] = []
+		var current_level := run_build.level_of(definition.id)
+		for modifier in definition.modifiers:
+			value_previews.append({
+				"stat_key": "UPGRADE_STAT_%s" % String(modifier.stat_id).to_upper(),
+				"operation": modifier.operation,
+				"current": modifier.value_at(current_level),
+				"next": modifier.value_at(current_level + 1),
+			})
+		cards.append({
+			"id": definition.id,
+			"title_key": definition.title_key,
+			"description_key": definition.description_key,
+			"family_key": "UPGRADE_FAMILY_%s" % String(definition.family).to_upper(),
+			"current_level": current_level,
+			"next_level": current_level + 1,
+			"max_level": definition.max_level,
+			"value_previews": value_previews,
+		})
+	return cards
 
 
 func _boss_gate_closed() -> bool:
@@ -2142,9 +2301,20 @@ func _field_boss_execute(enemy: Dictionary) -> void:
 
 
 func _complete_stage() -> void:
+	if stage_complete or pending_stage_completion:
+		return
+	pending_stage_completion = true
+	boss_locked = false
+	projectiles.clear()
+	denied_zones.clear()
+	_open_upgrade_reward(&"boss", false)
+
+
+func _finalize_stage_completion() -> void:
 	if stage_complete:
 		return
 	stage_complete = true
+	pending_stage_completion = false
 	boss_locked = false
 	var has_next_stage := current_stage_index < StageCatalog.STAGE_IDS.size() - 1
 	if not has_next_stage:
@@ -2162,7 +2332,7 @@ func _complete_stage() -> void:
 		"has_next_stage": has_next_stage,
 		"next_stage_key": String(next_profile.get("title_key", "")),
 		"time": _format_time(run_time),
-		"health_ratio": player_health / PLAYER_MAX_HEALTH,
+		"health_ratio": player_health / _player_max_health(),
 		"upgrade": selected_upgrade_title_key,
 		"field_boss_defeated": field_boss_defeated,
 		"primary_hits": stats_primary_hits,
@@ -2215,29 +2385,34 @@ func _build_hud_snapshot() -> Dictionary:
 	var buffs: Array[String] = []
 	if attack_boost_timer > 0.0:
 		buffs.append(tr("BUFF_ATTACK") % attack_boost_timer)
+	if coolant_timer > 0.0:
+		buffs.append(tr("BUFF_COOLANT") % coolant_timer)
 	if overdrive_timer > 0.0:
 		buffs.append(tr("BUFF_OVERDRIVE") % overdrive_timer)
+	if magnet_field_timer > 0.0:
+		buffs.append(tr("BUFF_MAGNET") % magnet_field_timer)
+	if capacitor_opening_shots > 0:
+		buffs.append(tr("BUFF_CAPACITOR") % capacitor_opening_shots)
 	if player_barrier_strength > 0.0:
 		buffs.append(tr("BUFF_BARRIER") % roundi(player_barrier_strength))
-	for upgrade_id in applied_upgrades.keys():
-		var definition := Rules.get_upgrade(StringName(upgrade_id))
-		if not definition.is_empty():
-			buffs.append(tr(String(definition["title_key"])))
+	if run_build.total_levels() > 0:
+		buffs.append(tr("BUFF_UPGRADES") % run_build.total_levels())
 
 	var dash_state := tr("STATE_READY") if player_dash_cooldown <= 0.0 else "%.1fs" % player_dash_cooldown
 	var passive_state := tr("STATE_READY") if player_passive_cooldown <= 0.0 else "%.1fs" % player_passive_cooldown
 	var skill_state := tr("STATE_STARTUP") if player_emp_startup > 0.0 else (tr("STATE_READY") if player_emp_cooldown <= 0.0 else "%.1fs" % player_emp_cooldown)
-	var primary_ratio := player_primary_charge.energy
-	var primary_state_key := "STATE_PRIMARY_UNAVAILABLE"
-	match player_primary_charge.tier():
-		&"quick":
-			primary_state_key = "STATE_PRIMARY_QUICK"
-		&"charged":
-			primary_state_key = "STATE_PRIMARY_CHARGED"
-		&"full":
-			primary_state_key = "STATE_PRIMARY_FULL_POWER"
+	var primary_snapshot := player_primary_weapon.snapshot()
+	var primary_ratio := float(primary_snapshot["charge_ratio"])
+	var primary_state_key := "STATE_PRIMARY_IDLE"
+	match StringName(primary_snapshot["tier"]):
+		&"firing":
+			primary_state_key = "STATE_PRIMARY_FIRING"
+		&"charging":
+			primary_state_key = "STATE_PRIMARY_CHARGING"
+		&"ready":
+			primary_state_key = "STATE_PRIMARY_OPENING_READY"
 	var primary_state := tr(primary_state_key).replace("%d", str(roundi(primary_ratio * 100.0)))
-	var primary_name := tr("PRIMARY_SCATTER") if selected_primary == &"scatter" else tr("PRIMARY_REPEATER")
+	var primary_name := tr("PRIMARY_PULSE_CANNON")
 
 	var target_snapshot := {"visible": false}
 	if not _aim_target_id.is_empty():
@@ -2264,7 +2439,7 @@ func _build_hud_snapshot() -> Dictionary:
 
 	return {
 		"health": player_health,
-		"max_health": PLAYER_MAX_HEALTH,
+		"max_health": _player_max_health(),
 		"objective": "%s · %s" % [tr(String(stage_profile["title_key"])), objective[0]],
 		"objective_detail": objective[1],
 		"stage_title": tr(String(stage_profile["title_key"])),
@@ -2272,7 +2447,7 @@ func _build_hud_snapshot() -> Dictionary:
 		"primary_state": primary_state,
 		"primary_ratio": primary_ratio,
 		"dash_state": dash_state,
-		"dash_ratio": clampf(player_dash_cooldown / DASH_COOLDOWN, 0.0, 1.0),
+		"dash_ratio": clampf(player_dash_cooldown / _dash_cooldown_max(), 0.0, 1.0),
 		"passive_state": passive_state,
 		"passive_ratio": clampf(player_passive_cooldown / PASSIVE_COOLDOWN, 0.0, 1.0),
 		"skill_state": skill_state,
@@ -2624,10 +2799,12 @@ func _draw_pickups_and_crates() -> void:
 		draw_circle(position, plinth_radius, Art.IVORY_BRIGHT)
 		draw_circle(position, plinth_radius - 8.0, Art.CERAMIC_GREEN_MID)
 		match kind:
-			&"repair":
+			&"repair", &"major_repair":
 				draw_rect(Rect2(position - Vector2(7.0, 22.0), Vector2(14.0, 44.0)), color)
 				draw_rect(Rect2(position - Vector2(22.0, 7.0), Vector2(44.0, 14.0)), color)
-			&"attack":
+				if kind == &"major_repair":
+					draw_arc(position, 29.0, 0.0, TAU, 24, color, 6.0)
+			&"attack_boost":
 				draw_colored_polygon(PackedVector2Array([
 					position + Vector2(0.0, -25.0),
 					position + Vector2(24.0, 20.0),
@@ -2646,6 +2823,19 @@ func _draw_pickups_and_crates() -> void:
 				draw_colored_polygon(_regular_polygon(position, 25.0, 6, PI / 6.0), color)
 				draw_colored_polygon(_regular_polygon(position, 14.0, 6, PI / 6.0), Art.IVORY_BRIGHT)
 				draw_circle(position, 7.0, color)
+			&"coolant":
+				draw_circle(position, 21.0, color)
+				draw_colored_polygon(_regular_polygon(position, 12.0, 6, 0.0), Art.IVORY_BRIGHT)
+			&"seeker_battery":
+				for angle in [-PI * 0.5, PI / 6.0, PI * 5.0 / 6.0]:
+					draw_colored_polygon(_rotated_polygon(position, [Vector2(25.0, 0.0), Vector2(-13.0, -9.0), Vector2(-13.0, 9.0)], angle), color)
+			&"capacitor_cell":
+				draw_colored_polygon(_regular_polygon(position, 25.0, 4, PI / 4.0), color)
+				draw_rect(Rect2(position - Vector2(5.0, 17.0), Vector2(10.0, 34.0)), Art.IVORY_BRIGHT)
+			&"magnet_field":
+				draw_arc(position, 23.0, PI * 0.15, PI * 0.85, 18, color, 9.0)
+				draw_rect(Rect2(position + Vector2(-25.0, 10.0), Vector2(10.0, 14.0)), color)
+				draw_rect(Rect2(position + Vector2(15.0, 10.0), Vector2(10.0, 14.0)), color)
 	for crate in crates:
 		if not bool(crate["alive"]):
 			continue
@@ -2669,13 +2859,20 @@ func _draw_enemies() -> void:
 
 func _draw_enemy(enemy: Dictionary) -> void:
 	var role := StringName(enemy["role"])
+	var archetype := StringName(enemy.get("archetype", role))
 	var position := Vector2(enemy["pos"])
-	var visual_radius := Art.enemy_visual_radius(role)
+	var visual_radius := float(enemy.get("visual_radius", Art.enemy_visual_radius(role)))
 	var base_color := Art.IVORY_BRIGHT if float(enemy["flash"]) > 0.0 else _enemy_color(role)
 	if bool(enemy["shielded"]):
 		draw_circle(position, visual_radius + 14.0, Color(Art.MINT, 0.20))
 		draw_arc(position, visual_radius + 14.0, 0.0, TAU, 32, Art.MINT, 8.0)
-	match role:
+	match archetype:
+		&"scrap_drone":
+			_draw_scrap_drone(position, visual_radius, (player_position - position).angle(), base_color)
+		&"needle_drone":
+			_draw_needle_drone(position, visual_radius, (player_position - position).angle(), base_color)
+		&"spark_minelet":
+			_draw_spark_minelet(position, visual_radius, base_color)
 		&"chaser":
 			_draw_chaser(position, visual_radius, (player_position - position).angle(), base_color)
 		&"shooter":
@@ -2701,14 +2898,60 @@ func _draw_enemy(enemy: Dictionary) -> void:
 			_draw_boss_pylon(position, visual_radius, base_color)
 		&"stage_boss":
 			_draw_stage_boss(position, visual_radius, (player_position - position).angle(), base_color)
+	_draw_enemy_statuses(enemy, position, visual_radius)
 
 	_draw_enemy_telegraph(enemy)
-	if role != &"stage_boss":
+	var health_class := StringName(enemy.get("health_class", &"standard"))
+	var show_health := health_class == &"priority" or String(enemy["id"]) == _aim_target_id or float(enemy.get("health_visible_timer", 0.0)) > 0.0
+	if role != &"stage_boss" and show_health:
 		var health_ratio := clampf(float(enemy["health"]) / float(enemy["max_health"]), 0.0, 1.0)
 		var bar_width := visual_radius * 1.6
 		var bar_position := position + Vector2(-bar_width * 0.5, visual_radius + 14.0)
 		draw_rect(Rect2(bar_position, Vector2(bar_width, 10.0)), Art.IVORY_SHADE)
 		draw_rect(Rect2(bar_position, Vector2(bar_width * health_ratio, 10.0)), Art.CORAL)
+
+
+func _draw_enemy_statuses(enemy: Dictionary, position: Vector2, radius: float) -> void:
+	var statuses: Dictionary = enemy.get("statuses", {})
+	if statuses.has(&"burn"):
+		draw_arc(position, radius + 9.0, -PI * 0.9, PI * 0.2, 18, Art.CORAL, 6.0)
+		draw_colored_polygon(PackedVector2Array([position + Vector2(0.0, -radius - 18.0), position + Vector2(8.0, -radius - 5.0), position + Vector2(-8.0, -radius - 5.0)]), Art.MUSTARD)
+	if statuses.has(&"poison"):
+		draw_arc(position, radius + 10.0, PI * 0.1, PI * 1.25, 18, Art.MINT, 6.0)
+		draw_circle(position + Vector2(radius + 7.0, -radius * 0.4), 6.0, Art.MINT)
+	if statuses.has(&"slow"):
+		draw_arc(position, radius + 11.0, 0.0, TAU, 20, Art.COBALT_WATER, 5.0)
+		for direction in [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]:
+			draw_rect(Rect2(position + direction * (radius + 10.0) - Vector2(4.0, 4.0), Vector2(8.0, 8.0)), Art.IVORY_BRIGHT)
+
+
+func _draw_scrap_drone(position: Vector2, radius: float, angle: float, color: Color) -> void:
+	var points := [
+		Vector2(radius, 0.0), Vector2(-radius * 0.45, -radius * 0.72),
+		Vector2(-radius * 0.18, 0.0), Vector2(-radius * 0.45, radius * 0.72),
+	]
+	draw_colored_polygon(_rotated_polygon(position + Vector2(4.0, 5.0), points, angle), Art.CORAL_DARK)
+	draw_colored_polygon(_rotated_polygon(position, points, angle), color)
+	draw_circle(position, radius * 0.24, Art.IVORY_BRIGHT)
+
+
+func _draw_needle_drone(position: Vector2, radius: float, angle: float, color: Color) -> void:
+	var points := [
+		Vector2(radius * 1.2, 0.0), Vector2(0.0, -radius * 0.62),
+		Vector2(-radius * 0.72, 0.0), Vector2(0.0, radius * 0.62),
+	]
+	draw_colored_polygon(_rotated_polygon(position + Vector2(4.0, 5.0), points, angle), Art.CORAL_DARK)
+	draw_colored_polygon(_rotated_polygon(position, points, angle), color)
+	draw_line(position, position + Vector2.RIGHT.rotated(angle) * radius * 1.35, Art.IVORY_BRIGHT, 5.0)
+
+
+func _draw_spark_minelet(position: Vector2, radius: float, color: Color) -> void:
+	var points := PackedVector2Array()
+	for index in 12:
+		var point_radius := radius if index % 2 == 0 else radius * 0.46
+		points.append(position + Vector2.RIGHT.rotated(TAU * float(index) / 12.0) * point_radius)
+	draw_colored_polygon(points, color)
+	draw_circle(position, radius * 0.28, Art.IVORY_BRIGHT)
 
 
 func _draw_chaser(position: Vector2, radius: float, angle: float, color: Color) -> void:
@@ -3028,8 +3271,8 @@ func _load_persistence() -> void:
 	persistent_clear_count = maxi(0, int(config.get_value("progress", "clear_count", 0)))
 	persistent_relay_module = bool(config.get_value("progress", "relay_module", false))
 	persistent_field_module = bool(config.get_value("progress", "field_module", false))
-	var primary_value := StringName(config.get_value("loadout", "primary", "repeater"))
-	selected_primary = primary_value if primary_value in [&"repeater", &"scatter"] else &"repeater"
+	# Legacy weapon-choice values are accepted but normalized to the neutral cannon.
+	selected_primary = &"pulse_cannon"
 
 
 func _save_persistence() -> void:
@@ -3069,10 +3312,11 @@ func _run_capture_sequence() -> void:
 	_ui.show_gameplay()
 	player_position = Vector2(1250.0, 1080.0)
 	player_aim_direction = Vector2(0.92, -0.38).normalized()
-	player_primary_charge.energy = 0.52
+	player_primary_weapon.idle_seconds = 0.52
 	_activate_capture_zone("approach")
 	await _settle_capture()
 	_save_capture("02-open-combat.png")
+	await _capture_element_states()
 
 	player_position = Vector2(2460.0, 520.0)
 	player_aim_direction = Vector2.RIGHT
@@ -3087,6 +3331,9 @@ func _run_capture_sequence() -> void:
 	_open_upgrade_cache()
 	await _settle_capture()
 	_save_capture("04-upgrade-choice.png")
+	_ui.debug_select_upgrade(0)
+	await _settle_capture()
+	_save_capture("04b-upgrade-selected.png")
 
 	apply_upgrade(&"ion_wake")
 	mode = RunMode.PLAYING
@@ -3101,6 +3348,13 @@ func _run_capture_sequence() -> void:
 	player_aim_direction = (Rules.FIELD_BOSS_POSITION - player_position).normalized()
 	await _settle_capture()
 	_save_capture("05-optional-field-boss.png")
+	current_card_offer = _build_card_offer(&"field_boss")
+	mode = RunMode.UPGRADE
+	_ui.show_upgrade(current_card_offer, true)
+	await _settle_capture()
+	_save_capture("05b-optional-reward.png")
+	mode = RunMode.PLAYING
+	_ui.show_gameplay()
 
 	chest_claimed = true
 	player_position = Vector2(4190.0, 1110.0)
@@ -3175,6 +3429,7 @@ func _run_capture_sequence() -> void:
 		"clear_count": 1,
 		"relay_module_unlocked": true,
 		"field_module_unlocked": true,
+		"build_summary": _run_build_summary(),
 	})
 	await _settle_capture()
 	_save_capture("12-garage.png")
@@ -3186,6 +3441,28 @@ func _activate_capture_zone(zone: String) -> void:
 	for enemy in enemies:
 		if String(enemy["zone"]) == zone:
 			enemy["active"] = true
+
+
+func _capture_element_states() -> void:
+	var target: Dictionary = {}
+	for enemy in enemies:
+		if bool(enemy["alive"]) and bool(enemy["active"]):
+			target = enemy
+			break
+	if target.is_empty():
+		return
+	target["pos"] = player_position + Vector2(150.0, 0.0)
+	var states := {
+		"02b-element-burn.png": {&"burn": {"dps": 6.0, "time": 3.0, "tick": 0.25}},
+		"02c-element-poison.png": {&"poison": {"dps": 3.0, "time": 5.0, "tick": 0.25, "stacks": 2}},
+		"02d-element-slow.png": {&"slow": {"magnitude": 0.34, "time": 2.5}},
+	}
+	for file_name in states:
+		target["statuses"] = states[file_name]
+		_aim_target_id = String(target["id"])
+		await _settle_capture()
+		_save_capture(file_name)
+	target["statuses"] = {}
 
 
 func _settle_capture() -> void:
@@ -3216,54 +3493,40 @@ func debug_snapshot() -> Dictionary:
 		"boss_locked": boss_locked,
 		"stage_complete": stage_complete,
 		"applied_upgrades": applied_upgrades.duplicate(),
-		"primary_energy": player_primary_charge.energy,
-		"primary_tier": player_primary_charge.tier(),
+		"primary_energy": player_primary_weapon.charge_ratio(),
+		"primary_tier": player_primary_weapon.tier(),
 		"living_ordinary": debug_living_ordinary_count(),
 	}
 
 
 func debug_primary_charge_contract() -> Dictionary:
-	var original_primary := selected_primary
-	selected_primary = &"repeater"
-	player_primary_charge.reset(false)
+	player_primary_weapon.reset(false)
+	player_primary_weapon.tick(0.0, true, true)
 	projectiles.clear()
-	var immediate_blocked := not _try_fire_primary()
-	_update_primary_charge(PrimaryCharge.FULL_CHARGE_SECONDS * PrimaryCharge.MIN_FIRE_ENERGY - 0.01)
-	var early_blocked := not _try_fire_primary()
-	_update_primary_charge(0.02)
-	player_primary_cooldown = 0.0
-	var quick_fired := _try_fire_primary()
-	var quick_projectile: Dictionary = projectiles[0] if not projectiles.is_empty() else {}
-	var quick_damage := float(quick_projectile.get("damage", 0.0))
-	var energy_after_quick := player_primary_charge.energy
-	var held_second_blocked := not _try_fire_primary()
+	var immediate_fired := _try_fire_primary()
+	var normal_projectile: Dictionary = projectiles[0] if not projectiles.is_empty() else {}
+	var normal_damage := float(normal_projectile.get("damage", 0.0))
+	player_primary_weapon.tick(PrimaryWeapon.BASE_INTERVAL, true, true)
+	var held_second_fired := _try_fire_primary()
 	projectiles.clear()
-	_update_primary_charge(PrimaryCharge.FULL_CHARGE_SECONDS)
-	player_primary_cooldown = 0.0
+	player_primary_weapon.tick(PrimaryWeapon.FULL_OPENING_SECONDS, false, true)
+	player_primary_weapon.tick(0.0, true, true)
 	var full_fired := _try_fire_primary()
 	var full_projectile: Dictionary = projectiles[0] if not projectiles.is_empty() else {}
 	var full_damage := float(full_projectile.get("damage", 0.0))
+	var full_structure := float(full_projectile.get("structure_damage", 0.0))
 	var full_pierce := int(full_projectile.get("pierce", 0))
-	projectiles.clear()
-	selected_primary = &"scatter"
-	player_primary_charge.reset(true)
-	player_primary_cooldown = 0.0
-	_try_fire_primary()
-	var full_scatter_count := projectiles.size()
-	selected_primary = original_primary
 	return {
-		"minimum_energy": PrimaryCharge.MIN_FIRE_ENERGY,
-		"full_charge_seconds": PrimaryCharge.FULL_CHARGE_SECONDS,
-		"immediate_blocked": immediate_blocked,
-		"early_blocked": early_blocked,
-		"quick_fired": quick_fired,
-		"energy_after_quick": energy_after_quick,
-		"held_second_blocked": held_second_blocked,
-		"quick_damage": quick_damage,
+		"minimum_energy": 0.0,
+		"full_charge_seconds": PrimaryWeapon.FULL_OPENING_SECONDS,
+		"immediate_fired": immediate_fired,
+		"held_second_fired": held_second_fired,
+		"normal_damage": normal_damage,
 		"full_fired": full_fired,
 		"full_damage": full_damage,
+		"full_structure": full_structure,
 		"full_pierce": full_pierce,
-		"full_scatter_count": full_scatter_count,
+		"normal_fire_available": true,
 	}
 
 
@@ -3280,11 +3543,15 @@ func debug_apply_upgrade(upgrade_id: StringName) -> bool:
 
 
 func debug_force_required_progression() -> Dictionary:
+	player_position = Vector2(1760.0, 1100.0)
+	_update_stage_progression()
+	_debug_accept_current_reward()
 	for enemy in enemies:
 		if bool(enemy["alive"]) and StringName(enemy["role"]) == &"generator":
 			_damage_enemy(enemy, 9999.0, "validation", 0.0)
-	if not chest_claimed:
-		apply_upgrade(&"ion_wake")
+	player_position = Rules.CHEST_POSITION
+	_update_stage_progression()
+	_debug_accept_current_reward()
 	player_position = Rules.BOSS_ARENA.get_center()
 	_update_stage_progression()
 	return debug_snapshot()
@@ -3296,7 +3563,14 @@ func debug_defeat_stage_boss() -> Dictionary:
 		_start_stage_boss()
 		boss = _find_enemy_by_id("stage_boss")
 	_damage_enemy(boss, 99999.0, "validation", 999.0)
+	_debug_accept_current_reward()
 	return debug_snapshot()
+
+
+func _debug_accept_current_reward() -> void:
+	if mode != RunMode.UPGRADE or current_card_offer.is_empty():
+		return
+	_on_upgrade_selected(StringName(current_card_offer[0]["id"]))
 
 
 func debug_full_run() -> Dictionary:
@@ -3320,7 +3594,6 @@ func debug_full_run() -> Dictionary:
 func debug_multistage_contract() -> Dictionary:
 	_reset_run(false)
 	mode = RunMode.PLAYING
-	apply_upgrade(&"ion_wake")
 	var stage_ids: Array[StringName] = []
 	var role_sets: Array = []
 	var upgrade_counts: Array[int] = []
@@ -3332,7 +3605,7 @@ func debug_multistage_contract() -> Dictionary:
 			if role not in roles:
 				roles.append(role)
 		role_sets.append(roles)
-		upgrade_counts.append(applied_upgrades.size())
+		upgrade_counts.append(run_build.total_levels())
 		debug_force_required_progression()
 		debug_defeat_stage_boss()
 		if stage_number < StageCatalog.STAGE_IDS.size() - 1:
@@ -3344,6 +3617,8 @@ func debug_multistage_contract() -> Dictionary:
 		"final_stage_index": current_stage_index,
 		"final_complete": stage_complete,
 		"final_mode": mode,
+		"final_upgrade_count": run_build.total_levels(),
+		"claimed_reward_count": claimed_reward_sources.size(),
 	}
 
 
@@ -3446,7 +3721,13 @@ func debug_pickup_contract(kind: StringName) -> Dictionary:
 	player_barrier_strength = 0.0
 	player_barrier_timer = 0.0
 	attack_boost_timer = 0.0
+	coolant_timer = 0.0
 	overdrive_timer = 0.0
+	magnet_field_timer = 0.0
+	capacitor_cell_timer = 0.0
+	capacitor_opening_shots = 0
+	player_passive_cooldown = PASSIVE_COOLDOWN
+	var projectiles_before := projectiles.size()
 	var pickup := {"active": true, "kind": kind, "pos": player_position}
 	_collect_pickup(pickup)
 	return {
@@ -3454,7 +3735,12 @@ func debug_pickup_contract(kind: StringName) -> Dictionary:
 		"health": player_health,
 		"barrier": player_barrier_strength,
 		"attack_timer": attack_boost_timer,
+		"coolant_timer": coolant_timer,
 		"overdrive_timer": overdrive_timer,
+		"magnet_timer": magnet_field_timer,
+		"capacitor_shots": capacitor_opening_shots,
+		"passive_reset": is_zero_approx(player_passive_cooldown),
+		"seekers_launched": projectiles.size() - projectiles_before,
 	}
 
 

@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="VehicleUpgradeDefinition" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/cards/vehicle_upgrade_definition.gd" id="1_def"]
+[ext_resource type="Script" path="res://scripts/cards/vehicle_stat_modifier.gd" id="2_mod"]
+
+[sub_resource type="Resource" id="Modifier_1"]
+script = ExtResource("2_mod")
+stat_id = &"primary_radius"
+operation = "multiply"
+values_by_level = Array[float]([1.18, 1.3924, 1.643032])
+
+[sub_resource type="Resource" id="Modifier_2"]
+script = ExtResource("2_mod")
+stat_id = &"primary_structure"
+operation = "multiply"
+values_by_level = Array[float]([1.25, 1.5625, 1.953125])
+
+[resource]
+script = ExtResource("1_def")
+id = &"mass_driver"
+title_key = "UPGRADE_MASS_DRIVER_TITLE"
+description_key = "UPGRADE_MASS_DRIVER_DESC"
+family = &"primary"
+max_level = 3
+source_tags = Array[StringName]([&"calibration", &"relay", &"field_boss", &"boss"])
+modifiers = Array[ExtResource("2_mod")]([SubResource("Modifier_1"), SubResource("Modifier_2")])

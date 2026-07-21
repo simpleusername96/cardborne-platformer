@@ -1,6 +1,8 @@
 class_name VehicleStageCatalog
 extends RefCounted
 
+const EncounterDirector = preload("res://scripts/encounters/vehicle_encounter_director.gd")
+
 ## Authored data for the continuous vehicle run. Simulation code consumes these
 ## profiles instead of cloning scenes or stage scripts.
 
@@ -134,6 +136,13 @@ static func floor_regions(stage_id: StringName, colors: Dictionary) -> Array[Dic
 
 
 static func enemy_blueprint(stage_id: StringName) -> Array[Dictionary]:
+	var normalized := normalized_id(stage_id)
+	var result := _base_enemy_blueprint(normalized)
+	result.append_array(EncounterDirector.expand_groups(_swarm_groups(normalized)))
+	return result
+
+
+static func _base_enemy_blueprint(stage_id: StringName) -> Array[Dictionary]:
 	match normalized_id(stage_id):
 		&"tidal_archive":
 			return [
@@ -182,24 +191,73 @@ static func enemy_blueprint(stage_id: StringName) -> Array[Dictionary]:
 	]
 
 
+static func _swarm_groups(stage_id: StringName) -> Array[Dictionary]:
+	match normalized_id(stage_id):
+		&"tidal_archive":
+			return [
+				{"id":"archive_swarm_a", "anchor":Vector2(880,1120), "count":9, "roles":[&"scrap_drone", &"needle_drone"], "zone":"approach", "angle":0.15},
+				{"id":"archive_swarm_b", "anchor":Vector2(1270,650), "count":8, "roles":[&"needle_drone", &"spark_minelet"], "zone":"approach", "angle":0.4},
+				{"id":"archive_swarm_c", "anchor":Vector2(1460,1600), "count":8, "roles":[&"scrap_drone", &"needle_drone"], "zone":"approach", "angle":0.75},
+				{"id":"archive_swarm_d", "anchor":Vector2(1740,1120), "count":8, "roles":[&"needle_drone", &"scrap_drone"], "zone":"approach", "angle":0.1},
+				{"id":"archive_swarm_e", "anchor":Vector2(2350,410), "count":8, "roles":[&"spark_minelet", &"needle_drone"], "zone":"installations", "angle":0.65},
+				{"id":"archive_swarm_f", "anchor":Vector2(2830,1810), "count":8, "roles":[&"scrap_drone", &"spark_minelet"], "zone":"installations", "angle":0.2},
+				{"id":"archive_swarm_g", "anchor":Vector2(3160,1110), "count":8, "roles":[&"needle_drone", &"scrap_drone"], "zone":"installations", "angle":0.9},
+				{"id":"archive_swarm_h", "anchor":Vector2(3320,1280), "count":8, "roles":[&"scrap_drone", &"needle_drone", &"spark_minelet"], "zone":"installations", "angle":0.35},
+			]
+		&"storm_drydock":
+			return [
+				{"id":"drydock_swarm_a", "anchor":Vector2(860,660), "count":10, "roles":[&"scrap_drone", &"needle_drone"], "zone":"approach", "angle":0.1},
+				{"id":"drydock_swarm_b", "anchor":Vector2(1090,1120), "count":9, "roles":[&"scrap_drone", &"spark_minelet"], "zone":"approach", "angle":0.45},
+				{"id":"drydock_swarm_c", "anchor":Vector2(1450,1080), "count":9, "roles":[&"needle_drone", &"scrap_drone"], "zone":"approach", "angle":0.8},
+				{"id":"drydock_swarm_d", "anchor":Vector2(1730,1160), "count":9, "roles":[&"spark_minelet", &"scrap_drone"], "zone":"approach", "angle":0.15},
+				{"id":"drydock_swarm_e", "anchor":Vector2(2340,680), "count":9, "roles":[&"needle_drone", &"spark_minelet"], "zone":"installations", "angle":0.55},
+				{"id":"drydock_swarm_f", "anchor":Vector2(3060,1180), "count":9, "roles":[&"scrap_drone", &"needle_drone"], "zone":"installations", "angle":0.25},
+				{"id":"drydock_swarm_g", "anchor":Vector2(3290,1050), "count":9, "roles":[&"needle_drone", &"spark_minelet"], "zone":"installations", "angle":0.7},
+				{"id":"drydock_swarm_h", "anchor":Vector2(3200,1840), "count":9, "roles":[&"scrap_drone", &"needle_drone", &"spark_minelet"], "zone":"installations", "angle":0.3},
+			]
+	return [
+		{"id":"works_swarm_a", "anchor":Vector2(900,1110), "count":8, "roles":[&"scrap_drone", &"needle_drone"], "zone":"approach", "angle":0.1},
+		{"id":"works_swarm_b", "anchor":Vector2(1330,650), "count":8, "roles":[&"needle_drone", &"spark_minelet"], "zone":"approach", "angle":0.5},
+		{"id":"works_swarm_c", "anchor":Vector2(1420,1600), "count":8, "roles":[&"scrap_drone", &"needle_drone"], "zone":"approach", "angle":0.8},
+		{"id":"works_swarm_d", "anchor":Vector2(1730,1210), "count":8, "roles":[&"scrap_drone", &"spark_minelet"], "zone":"approach", "angle":0.2},
+		{"id":"works_swarm_e", "anchor":Vector2(2520,300), "count":7, "roles":[&"needle_drone", &"spark_minelet"], "zone":"installations", "angle":0.6},
+		{"id":"works_swarm_f", "anchor":Vector2(2670,1830), "count":7, "roles":[&"scrap_drone", &"spark_minelet"], "zone":"installations", "angle":0.25},
+		{"id":"works_swarm_g", "anchor":Vector2(3160,1110), "count":7, "roles":[&"scrap_drone", &"needle_drone"], "zone":"installations", "angle":0.9},
+	]
+
+
 static func pickup_blueprint(stage_id: StringName) -> Array[Dictionary]:
 	var offset := Vector2(0.0, 0.0) if normalized_id(stage_id) == &"flooded_works" else Vector2(40.0, -60.0)
 	return [
 		{"id":"repair_open", "kind":"repair", "pos":Vector2(1500,1050) + offset},
-		{"id":"attack_upper", "kind":"attack", "pos":Vector2(2080,470) + offset},
+		{"id":"attack_upper", "kind":"attack_boost", "pos":Vector2(2080,470) + offset},
+		{"id":"coolant_upper", "kind":"coolant", "pos":Vector2(2540,430) + offset},
 		{"id":"overdrive_lower", "kind":"overdrive", "pos":Vector2(2120,1690) - offset},
 		{"id":"barrier_lower", "kind":"barrier", "pos":Vector2(3170,1780) - offset},
-		{"id":"repair_relay", "kind":"repair", "pos":Vector2(3660,1110)},
+		{"id":"seeker_relay", "kind":"seeker_battery", "pos":Vector2(3660,920)},
+		{"id":"capacitor_relay", "kind":"capacitor_cell", "pos":Vector2(3660,1110)},
+		{"id":"magnet_boss_lane", "kind":"magnet_field", "pos":Vector2(4070,1510) - offset},
 	]
 
 
 static func crate_blueprint(stage_id: StringName) -> Array[Dictionary]:
 	var shifted := normalized_id(stage_id) != &"flooded_works"
 	return [
-		{"id":"crate_attack", "pos":Vector2(1080,1510) if shifted else Vector2(1110,1510), "drop":"attack"},
+		{"id":"crate_attack", "pos":Vector2(1080,1510) if shifted else Vector2(1110,1510), "drop":"attack_boost"},
 		{"id":"crate_repair", "pos":Vector2(1810,1080) if shifted else Vector2(1880,1130), "drop":"repair"},
 		{"id":"crate_barrier", "pos":Vector2(3360,1120) if shifted else Vector2(3370,1080), "drop":"barrier"},
+		{"id":"crate_coolant", "pos":Vector2(1580,1050) if shifted else Vector2(1580,1050), "drop":"coolant"},
+		{"id":"crate_seeker", "pos":Vector2(3980,680) if shifted else Vector2(4030,700), "drop":"seeker_battery"},
 	]
+
+
+static func reward_anchors(_stage_id: StringName) -> Dictionary:
+	return {
+		&"calibration_cache": Vector2(1760.0, 1100.0),
+		&"field_boss_cache": FIELD_BOSS_POSITION,
+		&"relay_cache": CHEST_POSITION,
+		&"boss_reward": STAGE_BOSS_POSITION,
+	}
 
 
 static func environment_zones(stage_id: StringName) -> Array[Dictionary]:

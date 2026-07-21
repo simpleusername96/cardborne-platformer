@@ -6,15 +6,17 @@ extends CanvasLayer
 
 signal deployment_selected(primary_id: StringName)
 signal upgrade_selected(upgrade_id: StringName)
+signal upgrade_declined
+signal upgrade_previewed(upgrade_id: StringName)
 signal resume_requested
 signal restart_requested
 signal garage_requested
 signal replay_requested
 signal advance_requested
-signal primary_changed(primary_id: StringName)
 
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const VEHICLE_THEME = preload("res://art/ui/production/vehicle_stage_theme.tres")
+const UpgradeChoicePanel = preload("res://scripts/ui/vehicle_upgrade_choice_panel.gd")
 
 const CANVAS := Art.COBALT_VOID
 const SURFACE := Art.IVORY
@@ -208,10 +210,10 @@ var _notification_timer := 0.0
 var _dim: ColorRect
 var _deployment_center: CenterContainer
 var _upgrade_center: CenterContainer
+var _upgrade_panel: VehicleUpgradeChoicePanel
 var _pause_center: CenterContainer
 var _result_center: CenterContainer
 var _garage_center: CenterContainer
-var _deployment_buttons: Array[Button] = []
 var _deployment_command: Button
 var _upgrade_buttons: Array[Button] = []
 var _pause_first_button: Button
@@ -226,9 +228,10 @@ var _garage_passive_label: Label
 var _garage_active_label: Label
 var _garage_unlock_label: Label
 var _garage_summary_label: Label
-var _selected_primary := &"repeater"
+var _selected_primary := &"pulse_cannon"
 var _locale_buttons: Array[Button] = []
 var _latest_upgrade_cards: Array[Dictionary] = []
+var _latest_upgrade_optional := false
 var _latest_result_summary: Dictionary = {}
 var _latest_garage_data: Dictionary = {}
 
@@ -327,7 +330,7 @@ func _build_hud() -> void:
 	_objective_label = _label("OBJECTIVE_CALIBRATE", 19, INK)
 	_objective_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	objective_box.add_child(_objective_label)
-	_objective_detail = _label("DEPLOY_SELECT_PROMPT", 13, MUTED)
+	_objective_detail = _label("DEPLOY_CONTROLS", 13, MUTED)
 	_objective_detail.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_objective_detail.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	objective_box.add_child(_objective_detail)
@@ -473,20 +476,12 @@ func _build_deployment() -> void:
 	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	body.custom_minimum_size.y = 36.0
 	box.add_child(body)
-	var choice_row := HBoxContainer.new()
-	choice_row.add_theme_constant_override("separation", 12)
-	choice_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	box.add_child(choice_row)
-	var repeater := _choice_button("", Vector2(380.0, 174.0))
-	repeater.set_meta("primary_id", &"repeater")
-	repeater.pressed.connect(_on_deployment_choice.bind(&"repeater"))
-	choice_row.add_child(repeater)
-	_deployment_buttons.append(repeater)
-	var scatter := _choice_button("", Vector2(380.0, 174.0))
-	scatter.set_meta("primary_id", &"scatter")
-	scatter.pressed.connect(_on_deployment_choice.bind(&"scatter"))
-	choice_row.add_child(scatter)
-	_deployment_buttons.append(scatter)
+	var cannon := _label("DEPLOY_PULSE_CANNON_SUMMARY", 19, RAISED)
+	cannon.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	cannon.custom_minimum_size.y = 174.0
+	cannon.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	cannon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(cannon)
 	_deployment_command = _command_button("DEPLOY_COMMAND", &"PrimaryButton")
 	_deployment_command.pressed.connect(_on_deployment_confirmed)
 	box.add_child(_deployment_command)
@@ -499,31 +494,14 @@ func _build_upgrade() -> void:
 	_upgrade_center = CenterContainer.new()
 	_upgrade_center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_root.add_child(_upgrade_center)
-	var panel := _modal_panel(Vector2(900.0, 470.0))
+	var panel := _modal_panel(Vector2(900.0, 520.0))
 	_upgrade_center.add_child(panel)
-	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 12)
-	panel.add_child(box)
-	var kicker := _label("UPGRADE_KICKER", 14, AMBER)
-	kicker.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	box.add_child(kicker)
-	var title := _label("UPGRADE_TITLE", 27, INK)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	box.add_child(title)
-	var detail := _label("UPGRADE_DETAIL", 14, MUTED)
-	detail.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	box.add_child(detail)
-	var row := HBoxContainer.new()
-	row.name = "UpgradeButtons"
-	row.add_theme_constant_override("separation", 10)
-	row.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	box.add_child(row)
-	for index in 3:
-		var button := _choice_button("", Vector2(272.0, 278.0))
-		button.name = "UpgradeCard%d" % (index + 1)
-		button.pressed.connect(_on_upgrade_button_pressed.bind(button))
-		row.add_child(button)
-		_upgrade_buttons.append(button)
+	_upgrade_panel = UpgradeChoicePanel.new()
+	_upgrade_panel.confirmed.connect(func(upgrade_id: StringName) -> void: upgrade_selected.emit(upgrade_id))
+	_upgrade_panel.declined.connect(func() -> void: upgrade_declined.emit())
+	_upgrade_panel.selected.connect(func(upgrade_id: StringName) -> void: upgrade_previewed.emit(upgrade_id))
+	panel.add_child(_upgrade_panel)
+	_upgrade_buttons = _upgrade_panel.buttons()
 
 
 func _build_pause() -> void:
@@ -665,10 +643,6 @@ func _build_garage() -> void:
 	var footer := HBoxContainer.new()
 	footer.add_theme_constant_override("separation", 12)
 	box.add_child(footer)
-	var toggle := _command_button("GARAGE_SWAP_PRIMARY", &"SecondaryButton")
-	toggle.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	toggle.pressed.connect(_on_toggle_primary)
-	footer.add_child(toggle)
 	var replay := _command_button("GARAGE_LAUNCH", &"PrimaryButton")
 	replay.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	replay.pressed.connect(func() -> void: replay_requested.emit())
@@ -724,49 +698,31 @@ func update_hud(snapshot: Dictionary) -> void:
 	_minimap.set_snapshot(snapshot.get("minimap", {}))
 
 
-func show_deployment(selected_primary: StringName = &"repeater") -> void:
+func show_deployment(_selected: StringName = &"pulse_cannon") -> void:
 	hide_all_modals()
-	_selected_primary = selected_primary
+	_selected_primary = &"pulse_cannon"
 	_dim.visible = true
 	_deployment_center.visible = true
 	_hud.visible = false
-	for button in _deployment_buttons:
-		button.disabled = false
-	_refresh_deployment_selection()
-	if not _deployment_buttons.is_empty():
-		var index := 0 if selected_primary == &"repeater" else 1
-		_deployment_buttons[index].grab_focus()
+	_deployment_command.grab_focus()
 
 
-func show_upgrade(cards: Array[Dictionary]) -> void:
+func show_upgrade(cards: Array[Dictionary], optional: bool = false) -> void:
 	hide_all_modals()
 	_dim.visible = true
 	_upgrade_center.visible = true
 	_hud.visible = false
 	_latest_upgrade_cards = cards.duplicate(true)
-	_refresh_upgrade_cards()
+	_latest_upgrade_optional = optional
+	_upgrade_panel.open(cards, optional)
+
+
+func upgrade_apply_failed(reason: String) -> void:
+	_upgrade_panel.apply_failed(reason)
 
 
 func _refresh_upgrade_cards() -> void:
-	for index in _upgrade_buttons.size():
-		var button := _upgrade_buttons[index]
-		if index >= _latest_upgrade_cards.size():
-			button.visible = false
-			continue
-		var card: Dictionary = _latest_upgrade_cards[index]
-		button.visible = true
-		button.disabled = false
-		button.set_meta("upgrade_id", StringName(card["id"]))
-		button.text = "%s\n\n%s\n\n%s\n\n%s" % [
-			tr(String(card["family_key"])),
-			tr(String(card["title_key"])),
-			tr(String(card["description_key"])),
-			tr("UPGRADE_SHORTCUT") % (index + 1),
-		]
-	for button in _upgrade_buttons:
-		if button.visible:
-			button.grab_focus()
-			break
+	_upgrade_panel.open(_latest_upgrade_cards, _latest_upgrade_optional)
 
 
 func show_pause() -> void:
@@ -799,7 +755,7 @@ func show_garage(data: Dictionary) -> void:
 	_garage_center.visible = true
 	_hud.visible = false
 	_latest_garage_data = data.duplicate(true)
-	_selected_primary = StringName(data.get("selected_primary", "repeater"))
+	_selected_primary = &"pulse_cannon"
 	_refresh_garage_content()
 	_garage_first_button.grab_focus()
 
@@ -839,7 +795,7 @@ func is_modal_visible() -> bool:
 func debug_layout_minimums() -> Dictionary:
 	return {
 		"deployment": Vector2(840.0, 500.0),
-		"upgrade": Vector2(900.0, 470.0),
+		"upgrade": Vector2(900.0, 520.0),
 		"pause": Vector2(560.0, 500.0),
 		"result": Vector2(720.0, 510.0),
 		"garage": Vector2(860.0, 510.0),
@@ -894,46 +850,13 @@ func debug_modal_contract(surface: String) -> Dictionary:
 	return {"surface": surface, "hud_hidden": not _hud.visible, "dim_visible": _dim.visible}
 
 
-func _on_upgrade_button_pressed(button: Button) -> void:
-	if button.disabled:
-		return
-	for other in _upgrade_buttons:
-		other.disabled = true
-	upgrade_selected.emit(StringName(button.get_meta("upgrade_id", "")))
-
-
-func _on_toggle_primary() -> void:
-	_selected_primary = &"scatter" if _selected_primary == &"repeater" else &"repeater"
-	_refresh_garage_primary()
-	primary_changed.emit(_selected_primary)
-
-
-func _on_deployment_choice(primary_id: StringName) -> void:
-	_selected_primary = primary_id
-	_refresh_deployment_selection()
+func debug_select_upgrade(index: int) -> void:
+	_upgrade_panel.call("_process", 0.36)
+	_upgrade_panel.call("_select", index)
 
 
 func _on_deployment_confirmed() -> void:
-	deployment_selected.emit(_selected_primary)
-
-
-func _refresh_deployment_selection() -> void:
-	for button in _deployment_buttons:
-		var primary_id := StringName(button.get_meta("primary_id", &"repeater"))
-		var selected := primary_id == _selected_primary
-		button.theme_type_variation = &"SelectedChoiceButton" if selected else &"ChoiceButton"
-		button.text = _deployment_card_text(primary_id, selected)
-
-
-func _deployment_card_text(primary_id: StringName, selected: bool) -> String:
-	var prefix := "✓  " if selected else ""
-	if primary_id == &"scatter":
-		return "%sII  %s\n\n%s\n%s" % [
-			prefix, tr("DEPLOY_SCATTER_TITLE"), tr("DEPLOY_SCATTER_META"), tr("DEPLOY_SCATTER_DESC"),
-		]
-	return "%sI  %s\n\n%s\n%s" % [
-		prefix, tr("DEPLOY_REPEATER_TITLE"), tr("DEPLOY_REPEATER_META"), tr("DEPLOY_REPEATER_DESC"),
-	]
+	deployment_selected.emit(&"pulse_cannon")
 
 
 func _refresh_result_summary() -> void:
@@ -980,13 +903,13 @@ func _refresh_garage_content() -> void:
 	else:
 		_garage_unlock_label.text = "%s  ·  %s" % [tr("GARAGE_MODULE"), "  •  ".join(unlocks)]
 		_garage_unlock_label.add_theme_color_override("font_color", AMBER)
+	var build_summary := String(_latest_garage_data.get("build_summary", ""))
+	if not build_summary.is_empty():
+		_garage_unlock_label.text += "\n%s  ·  %s" % [tr("GARAGE_RUN_BUILD"), build_summary]
 
 
 func _refresh_garage_primary() -> void:
-	if _selected_primary == &"scatter":
-		_garage_primary_label.text = "%s  ·  %s" % [tr("GARAGE_PRIMARY"), tr("PRIMARY_SCATTER")]
-	else:
-		_garage_primary_label.text = "%s  ·  %s" % [tr("GARAGE_PRIMARY"), tr("PRIMARY_REPEATER")]
+	_garage_primary_label.text = "%s  ·  %s" % [tr("GARAGE_PRIMARY"), tr("PRIMARY_PULSE_CANNON")]
 
 
 func _language_selector() -> HBoxContainer:
@@ -1020,7 +943,6 @@ func _on_locale_changed(_locale: String) -> void:
 
 
 func _refresh_localized_content() -> void:
-	_refresh_deployment_selection()
 	_refresh_garage_content()
 	_refresh_result_summary()
 	_refresh_locale_buttons()
