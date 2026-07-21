@@ -252,7 +252,7 @@ func _build_hud() -> void:
 	_boss_cluster.visible = false
 
 	var target_panel := _flat_panel()
-	target_panel.set_anchors_preset(Control.PRESET_RIGHT_WIDE)
+	target_panel.set_anchors_preset(Control.PRESET_CENTER_RIGHT)
 	target_panel.position = Vector2(-238.0, -76.0)
 	target_panel.size = Vector2(218.0, 152.0)
 	_hud.add_child(target_panel)
@@ -310,7 +310,7 @@ func _build_deployment() -> void:
 	var title := _label("DEPLOY THE SALVAGE SKIFF", 30, OFF_WHITE)
 	box.add_child(title)
 	var body := _label(
-		"Move with arrows or WASD. Aim with the mouse. Hold left mouse or Left Shift to fire. "
+		"Move with arrows or WASD. Aim with the mouse. Hold left mouse or Left Shift to fire. " +
 		"Space dashes through pressure; Z releases an EMP Nova. The seeker launcher fires automatically at visible targets.",
 		16,
 		MUTED
@@ -525,6 +525,7 @@ func update_hud(snapshot: Dictionary) -> void:
 
 	var boss: Dictionary = snapshot.get("boss", {})
 	_boss_cluster.visible = bool(boss.get("visible", false))
+	_notification.position.y = 188.0 if _boss_cluster.visible else 110.0
 	if _boss_cluster.visible:
 		_boss_name.text = String(boss.get("name", "BOSS"))
 		_boss_bar.max_value = maxf(1.0, float(boss.get("max_health", 1.0)))

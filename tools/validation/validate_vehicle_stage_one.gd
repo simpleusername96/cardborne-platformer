@@ -42,7 +42,9 @@ func _run_validation() -> void:
 	_check_passive_contract(stage)
 	_check_reset_contract(stage)
 
-	root_instance.queue_free()
+	root_instance.free()
+	stage = null
+	await process_frame
 	await process_frame
 	_finish()
 

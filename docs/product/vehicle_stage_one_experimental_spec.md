@@ -1,9 +1,8 @@
 ---
 type: spec
-status: experimental
+status: draft
 owner: BK
 created: 2026-07-20
-canonical_for: Vehicle-led Stage 1 behavior on the agent/vehicle-stage-one branch
 scope: Complete manually targeted vehicle-shooter experiment replacing the humanoid proof on this feature branch
 source: Owner authorization on 2026-07-20 plus the vehicle-shooter pivot handoff
 related:

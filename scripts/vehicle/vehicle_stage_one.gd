@@ -130,6 +130,17 @@ func _ready() -> void:
 	queue_redraw()
 
 
+func _exit_tree() -> void:
+	# Procedural streams are runtime-owned; release active playback references so
+	# headless validation and scene replacement do not retain audio resources.
+	for player in _sound_players:
+		if is_instance_valid(player):
+			player.stop()
+			player.stream = null
+	_sound_players.clear()
+	_sounds.clear()
+
+
 func _physics_process(delta: float) -> void:
 	if mode == RunMode.PLAYING:
 		run_time += delta
@@ -1901,8 +1912,8 @@ func _update_field_boss(enemy: Dictionary, delta: float) -> void:
 
 	_field_boss_orbit(enemy, delta)
 	if float(enemy["attack_cooldown"]) <= 0.0:
-		var patterns := ["fan", "charge", "zone"]
-		var pattern := patterns[int(enemy["pattern_index"]) % patterns.size()]
+		var patterns: Array[StringName] = [&"fan", &"charge", &"zone"]
+		var pattern: StringName = patterns[int(enemy["pattern_index"]) % patterns.size()]
 		enemy["pattern_index"] = int(enemy["pattern_index"]) + 1
 		enemy["pattern"] = pattern
 		enemy["phase"] = "startup"
@@ -2209,12 +2220,6 @@ func _draw_world() -> void:
 		draw_rect(Rect2(region["rect"]), Color(region["color"]))
 	for x in range(220, 5100, 300):
 		draw_circle(Vector2(float(x), 1100.0), 5.0, Color(Rules.AMBER, 0.35))
-	var font := ThemeDB.fallback_font
-	draw_string(font, Vector2(150.0, 760.0), "DEPLOYMENT DOCK", HORIZONTAL_ALIGNMENT_LEFT, -1.0, 18, Rules.MUTED)
-	draw_string(font, Vector2(760.0, 440.0), "FOUNDRY APPROACH", HORIZONTAL_ALIGNMENT_LEFT, -1.0, 18, Rules.MUTED)
-	draw_string(font, Vector2(2050.0, 160.0), "UPPER RISK ROUTE", HORIZONTAL_ALIGNMENT_LEFT, -1.0, 16, Rules.VIOLET)
-	draw_string(font, Vector2(2050.0, 2070.0), "LOWER POWER ROUTE", HORIZONTAL_ALIGNMENT_LEFT, -1.0, 16, Rules.AMBER)
-	draw_string(font, Vector2(4060.0, 480.0), "COLOSSUS BASIN", HORIZONTAL_ALIGNMENT_LEFT, -1.0, 18, Rules.VIOLET)
 
 
 func _draw_water_and_floor() -> void:
@@ -2737,23 +2742,34 @@ func debug_projectile_cover_contract() -> Dictionary:
 
 
 func debug_passive_line_of_sight_contract() -> Dictionary:
+	var original_player_position := player_position
+	var original_enemies := enemies
+	player_position = Vector2(900.0, 700.0)
 	var open_target := _make_enemy({
 		"id": "debug_open_target",
 		"role": "shooter",
-		"pos": player_position + Vector2(300.0, 0.0),
+		"pos": Vector2(900.0, 950.0),
 		"zone": "debug",
 	})
 	open_target["active"] = true
 	var blocked_target := _make_enemy({
 		"id": "debug_blocked_target",
 		"role": "shooter",
-		"pos": Vector2(1090.0, 700.0),
+		"pos": Vector2(1250.0, 700.0),
 		"zone": "debug",
 	})
 	blocked_target["active"] = true
-	var open_los := Rules.has_line_of_sight(player_position, Vector2(open_target["pos"]), 6.0, false)
-	var blocked_los := Rules.has_line_of_sight(Vector2(900.0, 700.0), Vector2(1250.0, 700.0), 6.0, false)
-	return {"open": open_los, "blocked": blocked_los}
+	enemies = [open_target, blocked_target]
+	var targets := _find_passive_targets(2)
+	var open_detected := targets.any(func(enemy: Dictionary) -> bool:
+		return String(enemy["id"]) == "debug_open_target"
+	)
+	var blocked_detected := targets.any(func(enemy: Dictionary) -> bool:
+		return String(enemy["id"]) == "debug_blocked_target"
+	)
+	player_position = original_player_position
+	enemies = original_enemies
+	return {"open": open_detected, "blocked": blocked_detected}
 
 
 func debug_dash_contract() -> Dictionary:
