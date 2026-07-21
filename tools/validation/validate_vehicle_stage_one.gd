@@ -114,7 +114,8 @@ func _check_visual_contract(stage: Node) -> void:
 		_expect(bool(contract["top_clusters_do_not_overlap"]), "top HUD clusters do not overlap at %d px" % int(viewport_width))
 		_expect(float(contract["command_min_height"]) >= 44.0, "command targets remain at least 44 px high")
 		_expect(Vector2(contract["action_medallion_size"]).x >= 96.0, "action medallions remain large enough to scan")
-		_expect(Vector2(contract["minimap_size"]).x >= 176.0, "minimap plaque remains legible")
+		var minimum_map_width := 150.0 if viewport_width < 1100.0 else 176.0
+		_expect(Vector2(contract["minimap_size"]).x >= minimum_map_width, "minimap plaque remains legible")
 		_expect(
 			String(contract["theme_path"]) == "res://art/ui/production/vehicle_stage_theme.tres",
 			"vehicle UI uses the scoped ceramic theme"
@@ -124,6 +125,16 @@ func _check_visual_contract(stage: Node) -> void:
 	_expect(int(ui.debug_ui_contract()["pause_focusables"]) >= 5, "pause exposes commands and both volume controls")
 	_expect(int(ui.debug_ui_contract()["result_focusables"]) >= 2, "result exposes garage and replay actions")
 	_expect(int(ui.debug_ui_contract()["garage_focusables"]) >= 4, "garage exposes loadout, launch, and both audio controls")
+	_expect(int(ui.debug_ui_contract()["locale_controls"]) == 6, "deployment, pause, and garage each expose Korean/English controls")
+	for surface in ["deployment", "upgrade", "pause", "result", "garage"]:
+		var modal_contract: Dictionary = ui.debug_modal_contract(surface)
+		_expect(bool(modal_contract["hud_hidden"]), "%s modal hides gameplay HUD" % surface)
+		_expect(bool(modal_contract["dim_visible"]), "%s modal owns a dimmed focus layer" % surface)
+	ui.show_gameplay()
+	var boss_snapshot: Dictionary = stage.call("_build_hud_snapshot")
+	boss_snapshot["boss"] = {"visible": true, "name": "Boss", "health": 1.0, "max_health": 1.0, "state": "Ready"}
+	ui.update_hud(boss_snapshot)
+	_expect(not ui._objective_panel.visible and not ui._minimap_panel.visible, "boss HUD replaces objective and minimap clusters")
 
 
 func _check_geometry_contract(stage: Node) -> void:

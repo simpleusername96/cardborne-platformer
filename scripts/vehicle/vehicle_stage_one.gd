@@ -66,7 +66,7 @@ var _aim_target_id := ""
 var _last_damage_source := ""
 
 var selected_primary := &"repeater"
-var selected_upgrade_title := "None"
+var selected_upgrade_title_key := "UPGRADE_NONE"
 var applied_upgrades: Dictionary = {}
 var current_card_offer: Array[Dictionary] = []
 
@@ -116,10 +116,12 @@ var _sounds: Dictionary = {}
 
 var _capture_directory := ""
 var _capture_mode := false
+var _capture_locale := ""
 
 
 func _ready() -> void:
 	_rng.seed = 0xC4A2B0
+	_parse_capture_arguments()
 	_build_camera()
 	_build_ui()
 	_build_audio()
@@ -127,7 +129,6 @@ func _ready() -> void:
 	_reset_run(false)
 	_ui.show_deployment(selected_primary)
 	_set_mouse_for_mode()
-	_parse_capture_arguments()
 	queue_redraw()
 
 
@@ -300,7 +301,7 @@ func _reset_run(increment_index: bool = true) -> void:
 	_last_damage_source = ""
 
 	applied_upgrades.clear()
-	selected_upgrade_title = "None"
+	selected_upgrade_title_key = "UPGRADE_NONE"
 	current_card_offer.clear()
 	enemies.clear()
 	projectiles.clear()
@@ -364,54 +365,54 @@ func _make_enemy(spec: Dictionary) -> Dictionary:
 	var health := 60.0
 	var speed := 170.0
 	var radius := 25.0
-	var display_name := "Threat"
+	var display_name := "ENEMY_THREAT"
 	var attack_cooldown := _rng.randf_range(0.4, 1.2)
 	match role:
 		&"chaser":
 			health = 72.0
 			speed = 205.0
 			radius = 26.0
-			display_name = "Rivet Chaser"
+			display_name = "ENEMY_RIVET_CHASER"
 		&"shooter":
 			health = 58.0
 			speed = 155.0
 			radius = 24.0
-			display_name = "Lane Skirmisher"
+			display_name = "ENEMY_LANE_SKIRMISHER"
 		&"controller":
 			health = 84.0
 			speed = 135.0
 			radius = 29.0
-			display_name = "Flood Controller"
+			display_name = "ENEMY_FLOOD_CONTROLLER"
 		&"turret":
 			health = 110.0
 			speed = 0.0
 			radius = 31.0
-			display_name = "Foundry Turret"
+			display_name = "ENEMY_FOUNDRY_TURRET"
 		&"mine":
 			health = 65.0
 			speed = 0.0
 			radius = 27.0
-			display_name = "Arc Proximity Mine"
+			display_name = "ENEMY_ARC_MINE"
 		&"generator":
 			health = 155.0
 			speed = 0.0
 			radius = 37.0
-			display_name = "Barrier Generator"
+			display_name = "ENEMY_BARRIER_GENERATOR"
 		&"field_boss":
 			health = 620.0
 			speed = 185.0
 			radius = 52.0
-			display_name = "Dredge Warden"
+			display_name = "ENEMY_DREDGE_WARDEN"
 		&"boss_pylon":
 			health = 120.0
 			speed = 0.0
 			radius = 33.0
-			display_name = "Colossus Pylon"
+			display_name = "ENEMY_COLOSSUS_PYLON"
 		&"stage_boss":
 			health = 1450.0
 			speed = 150.0
 			radius = 76.0
-			display_name = "Foundry Colossus"
+			display_name = "ENEMY_FOUNDRY_COLOSSUS"
 	var position: Vector2 = spec["pos"]
 	return {
 		"id": String(spec.get("id", role)),
@@ -464,11 +465,7 @@ func _on_deployment_selected(primary_id: StringName) -> void:
 	selected_primary = primary_id
 	mode = RunMode.PLAYING
 	_ui.show_gameplay()
-	_ui.notify(
-		"DEPLOYED // Aim at installations before their pressure overlaps.",
-		3.2,
-		Rules.CYAN
-	)
+	_ui.notify(tr("NOTIFY_DEPLOYED"), 3.2, Rules.CYAN)
 	_play_sound(&"card", 1.15)
 	_set_mouse_for_mode()
 
@@ -480,7 +477,7 @@ func _on_upgrade_selected(upgrade_id: StringName) -> void:
 		return
 	mode = RunMode.PLAYING
 	_ui.show_gameplay()
-	_ui.notify("MODULE ONLINE // %s" % selected_upgrade_title, 3.0, Rules.AMBER)
+	_ui.notify(tr("NOTIFY_MODULE_ONLINE") % tr(selected_upgrade_title_key), 3.0, Rules.AMBER)
 	_play_sound(&"card", 1.0)
 	_set_mouse_for_mode()
 
@@ -513,7 +510,7 @@ func _restart_stage() -> void:
 	selected_primary = primary
 	mode = RunMode.PLAYING
 	_ui.show_gameplay()
-	_ui.notify("STAGE RESET // Build and one-shot rewards cleared.", 2.6, Rules.MUTED)
+	_ui.notify(tr("NOTIFY_STAGE_RESET"), 2.6, Rules.MUTED)
 	_set_mouse_for_mode()
 
 
@@ -523,7 +520,7 @@ func _replay_stage() -> void:
 	selected_primary = primary
 	mode = RunMode.PLAYING
 	_ui.show_gameplay()
-	_ui.notify("REDEPLOYED // Try another route or card combination.", 2.8, Rules.CYAN)
+	_ui.notify(tr("NOTIFY_REDEPLOYED"), 2.8, Rules.CYAN)
 	_set_mouse_for_mode()
 
 
@@ -593,7 +590,7 @@ func _update_player(delta: float) -> void:
 
 	if tutorial_move and tutorial_aim and tutorial_fire and tutorial_dash and not tutorial_announced:
 		tutorial_announced = true
-		_ui.notify("CALIBRATION COMPLETE // The north gate was never kill-locked.", 3.0, Rules.MOSS)
+		_ui.notify(tr("NOTIFY_CALIBRATION_COMPLETE"), 3.0, Rules.MOSS)
 
 
 func _update_player_aim() -> void:
@@ -830,13 +827,13 @@ func _collect_pickup(pickup: Dictionary) -> void:
 		&"repair":
 			var before := player_health
 			player_health = minf(PLAYER_MAX_HEALTH, player_health + 34.0)
-			_ui.notify("REPAIR FOAM // +%d hull" % roundi(player_health - before), 2.0, Rules.MOSS)
+			_ui.notify(tr("NOTIFY_REPAIR") % roundi(player_health - before), 2.0, Rules.MOSS)
 		&"attack":
 			attack_boost_timer = maxf(attack_boost_timer, duration)
-			_ui.notify("ATTACK BOOST // Damage and cadence increased", 2.2, Rules.CORAL)
+			_ui.notify(tr("NOTIFY_ATTACK_BOOST"), 2.2, Rules.CORAL)
 		&"overdrive":
 			overdrive_timer = maxf(overdrive_timer, duration)
-			_ui.notify("OVERDRIVE // Faster movement, safe ramming", 2.2, Rules.AMBER)
+			_ui.notify(tr("NOTIFY_OVERDRIVE"), 2.2, Rules.AMBER)
 		&"barrier":
 			player_barrier_strength = maxf(player_barrier_strength, 48.0)
 			if applied_upgrades.has(&"field_converter"):
@@ -844,7 +841,7 @@ func _collect_pickup(pickup: Dictionary) -> void:
 			player_barrier_timer = maxf(player_barrier_timer, duration + 2.0)
 			_clear_hostile_projectiles(player_position, 210.0)
 			_repel_nearby_enemies(240.0)
-			_ui.notify("REPULSION BARRIER // Projectiles cleared", 2.2, Rules.CYAN)
+			_ui.notify(tr("NOTIFY_BARRIER"), 2.2, Rules.CYAN)
 	_add_effect("pickup", Vector2(pickup["pos"]), _pickup_color(kind), 0.40, 65.0)
 	_play_sound(&"pickup")
 
@@ -1416,9 +1413,9 @@ func _damage_enemy(enemy: Dictionary, amount: float, source: String, stagger: fl
 			enemy["stagger"] = 0.0
 			enemy["phase"] = "staggered"
 			enemy["phase_time"] = 3.0
-			enemy["pattern"] = "STAGGER WINDOW"
+			enemy["pattern"] = "stagger_window"
 			enemy["vulnerable"] = 3.0
-			_ui.notify("COLOSSUS STAGGERED // Commit damage now", 2.8, Rules.AMBER)
+			_ui.notify(tr("NOTIFY_COLOSSUS_STAGGERED"), 2.8, Rules.AMBER)
 			_play_sound(&"boss", 1.35)
 	enemy["health"] = float(enemy["health"]) - amount * multiplier
 	enemy["flash"] = 0.11
@@ -1441,7 +1438,7 @@ func _defeat_enemy(enemy: Dictionary, source: String) -> void:
 	if role == &"generator" and bool(enemy["required"]):
 		generators_destroyed += 1
 		_ui.notify(
-			"GENERATOR %d / 2 DESTROYED // Nearby shields collapsed" % generators_destroyed,
+			tr("NOTIFY_GENERATOR_DESTROYED") % generators_destroyed,
 			2.8,
 			Rules.AMBER
 		)
@@ -1452,7 +1449,7 @@ func _defeat_enemy(enemy: Dictionary, source: String) -> void:
 		player_barrier_timer = maxf(player_barrier_timer, 10.0)
 		player_passive_cooldown = 0.0
 		_save_persistence()
-		_ui.notify("DREDGE CAPACITOR ACQUIRED // Seeker cadence improved", 4.0, Rules.AMBER)
+		_ui.notify(tr("NOTIFY_DREDGE_CAPACITOR"), 4.0, Rules.AMBER)
 	if role == &"stage_boss":
 		_complete_stage()
 	_add_effect("destroy", Vector2(enemy["pos"]), _enemy_color(role), 0.65 if role in [&"field_boss", &"stage_boss"] else 0.38, float(enemy["radius"]) * 1.8)
@@ -1477,7 +1474,7 @@ func _damage_player(amount: float, source: String, blockable: bool) -> void:
 		remaining -= absorbed
 		_add_effect("barrier_hit", player_position, Rules.CYAN, 0.20, 70.0)
 		if player_barrier_strength <= 0.0:
-			_ui.notify("BARRIER DEPLETED", 1.6, Rules.CORAL)
+			_ui.notify(tr("NOTIFY_BARRIER_DEPLETED"), 1.6, Rules.CORAL)
 	if remaining <= 0.0:
 		return
 	if overdrive_timer > 0.0 and source.contains("lunge"):
@@ -1488,7 +1485,6 @@ func _damage_player(amount: float, source: String, blockable: bool) -> void:
 	player_invulnerable = 0.28
 	camera_shake = maxf(camera_shake, 8.0)
 	_last_damage_source = source
-	_ui.notify("HIT // %s  -%d" % [source, roundi(remaining)], 1.45, Rules.CORAL)
 	_play_sound(&"hurt")
 	if player_health <= 0.0:
 		_handle_player_defeat()
@@ -1498,7 +1494,7 @@ func _handle_player_defeat() -> void:
 	mode = RunMode.GARAGE
 	projectiles.clear()
 	denied_zones.clear()
-	_ui.notify("HULL DISABLED // Salvage tow returned the skiff", 3.0, Rules.CORAL)
+	_ui.notify(tr("NOTIFY_HULL_DISABLED"), 3.0, Rules.CORAL)
 	_ui.show_garage({
 		"selected_primary": selected_primary,
 		"clear_count": persistent_clear_count,
@@ -1578,11 +1574,9 @@ func _update_aim_target() -> void:
 func _update_stage_progression() -> void:
 	if not entered_approach and player_position.x > 700.0:
 		entered_approach = true
-		_ui.notify("FOUNDRY APPROACH // Cross or fight; the route remains open", 3.0, Rules.CYAN)
 	if not entered_installations and player_position.x > 1950.0:
 		entered_installations = true
 		discovered_markers["generators"] = true
-		_ui.notify("INSTALLATION FIELD // Two generators power the boss relay", 3.0, Rules.AMBER)
 
 	if not chest_claimed and generators_destroyed >= 2 and player_position.distance_to(Rules.CHEST_POSITION) <= 78.0:
 		_open_upgrade_cache()
@@ -1619,7 +1613,7 @@ func apply_upgrade(upgrade_id: StringName) -> bool:
 		return false
 	applied_upgrades[upgrade_id] = true
 	chest_claimed = true
-	selected_upgrade_title = String(definition["title"])
+	selected_upgrade_title_key = String(definition["title_key"])
 	if upgrade_id == &"field_converter" and player_barrier_strength > 0.0:
 		player_barrier_strength += 10.0
 	if upgrade_id == &"twin_seekers":
@@ -1648,11 +1642,10 @@ func _start_stage_boss() -> void:
 	boss["active"] = true
 	boss["phase"] = "boss_read"
 	boss["phase_time"] = 1.35
-	boss["pattern"] = "SYSTEM WAKE"
+	boss["pattern"] = "system_wake"
 	enemies.append(boss)
 	projectiles.clear()
 	denied_zones.clear()
-	_ui.notify("BOSS ARENA SEALED // Read startup, active, recovery", 3.6, Rules.VIOLET)
 	_play_sound(&"boss")
 	camera_shake = 12.0
 
@@ -1665,10 +1658,10 @@ func _update_stage_boss(boss: Dictionary, delta: float) -> void:
 		boss["boss_phase"] = 2
 		boss["phase"] = "boss_read"
 		boss["phase_time"] = 1.8
-		boss["pattern"] = "PHASE TWO // COMBINED PRESSURE"
+		boss["pattern"] = "phase_two"
 		boss["pattern_index"] = 0
 		boss_phase_two_announced = true
-		_ui.notify("COLOSSUS PHASE TWO // Learned threats now overlap", 3.4, Rules.VIOLET)
+		_ui.notify(tr("NOTIFY_COLOSSUS_PHASE_TWO"), 3.4, Rules.VIOLET)
 		_play_sound(&"boss", 0.78)
 
 	if String(boss["phase"]) == "staggered":
@@ -1676,7 +1669,7 @@ func _update_stage_boss(boss: Dictionary, delta: float) -> void:
 		if float(boss["phase_time"]) <= 0.0:
 			boss["phase"] = "boss_read"
 			boss["phase_time"] = 0.85
-			boss["pattern"] = "RECOVERING CONTROL"
+			boss["pattern"] = "recovering_control"
 		return
 
 	var phase := String(boss["phase"])
@@ -1700,7 +1693,7 @@ func _update_stage_boss(boss: Dictionary, delta: float) -> void:
 		if float(boss["phase_time"]) <= 0.0:
 			boss["phase"] = "boss_read"
 			boss["phase_time"] = 0.70 if int(boss["boss_phase"]) == 2 else 0.95
-			boss["pattern"] = "READING THE ARENA"
+			boss["pattern"] = "reading_arena"
 
 
 func _boss_select_pattern(boss: Dictionary) -> void:
@@ -1816,7 +1809,7 @@ func _boss_update_active(boss: Dictionary, delta: float) -> void:
 		boss["phase"] = "boss_recovery"
 		boss["phase_time"] = 1.05 if pattern != "charge" else 1.30
 		boss["vulnerable"] = 1.55 if pattern in ["charge", "overload_combo"] else 0.65
-		boss["pattern"] = "RECOVERY // DAMAGE WINDOW"
+		boss["pattern"] = "recovery_window"
 
 
 func _boss_reposition(boss: Dictionary, delta: float) -> void:
@@ -1855,7 +1848,7 @@ func _spawn_boss_pylons() -> void:
 		pylon["active"] = true
 		enemies.append(pylon)
 		_add_effect("spawn", position, Rules.VIOLET, 0.55, 78.0)
-	_ui.notify("COLOSSUS PYLONS ONLINE // Destroy priority targets", 2.8, Rules.VIOLET)
+	_ui.notify(tr("NOTIFY_COLOSSUS_PYLONS"), 2.8, Rules.VIOLET)
 
 
 func _boss_has_live_pylons() -> bool:
@@ -1983,7 +1976,7 @@ func _complete_stage() -> void:
 	_ui.show_result({
 		"time": _format_time(run_time),
 		"health_ratio": player_health / PLAYER_MAX_HEALTH,
-		"upgrade": selected_upgrade_title,
+		"upgrade": selected_upgrade_title_key,
 		"field_boss_defeated": field_boss_defeated,
 		"primary_hits": stats_primary_hits,
 		"dash_uses": stats_dash_uses,
@@ -2033,21 +2026,21 @@ func _build_hud_snapshot() -> Dictionary:
 	var objective := _objective_text()
 	var buffs: Array[String] = []
 	if attack_boost_timer > 0.0:
-		buffs.append("ATTACK %.1fs" % attack_boost_timer)
+		buffs.append(tr("BUFF_ATTACK") % attack_boost_timer)
 	if overdrive_timer > 0.0:
-		buffs.append("OVERDRIVE %.1fs" % overdrive_timer)
+		buffs.append(tr("BUFF_OVERDRIVE") % overdrive_timer)
 	if player_barrier_strength > 0.0:
-		buffs.append("BARRIER %d" % roundi(player_barrier_strength))
+		buffs.append(tr("BUFF_BARRIER") % roundi(player_barrier_strength))
 	for upgrade_id in applied_upgrades.keys():
 		var definition := Rules.get_upgrade(StringName(upgrade_id))
 		if not definition.is_empty():
-			buffs.append(String(definition["title"]).to_upper())
+			buffs.append(tr(String(definition["title_key"])))
 
-	var dash_state := "READY" if player_dash_cooldown <= 0.0 else "%.1fs" % player_dash_cooldown
-	var passive_state := "READY" if player_passive_cooldown <= 0.0 else "%.1fs" % player_passive_cooldown
-	var skill_state := "STARTUP" if player_emp_startup > 0.0 else ("READY" if player_emp_cooldown <= 0.0 else "%.1fs" % player_emp_cooldown)
-	var primary_state := "FIRING" if player_primary_cooldown > 0.0 else "LIVE"
-	var primary_name := "SCATTER" if selected_primary == &"scatter" else "REPEATER"
+	var dash_state := tr("STATE_READY") if player_dash_cooldown <= 0.0 else "%.1fs" % player_dash_cooldown
+	var passive_state := tr("STATE_READY") if player_passive_cooldown <= 0.0 else "%.1fs" % player_passive_cooldown
+	var skill_state := tr("STATE_STARTUP") if player_emp_startup > 0.0 else (tr("STATE_READY") if player_emp_cooldown <= 0.0 else "%.1fs" % player_emp_cooldown)
+	var primary_state := tr("STATE_FIRING") if player_primary_cooldown > 0.0 else tr("STATE_LIVE")
+	var primary_name := tr("ACTION_PRIMARY")
 
 	var target_snapshot := {"visible": false}
 	if not _aim_target_id.is_empty():
@@ -2055,7 +2048,7 @@ func _build_hud_snapshot() -> Dictionary:
 		if not target.is_empty() and bool(target["alive"]):
 			target_snapshot = {
 				"visible": true,
-				"name": String(target["name"]).to_upper(),
+				"name": tr(String(target["name"])),
 				"health": float(target["health"]),
 				"max_health": float(target["max_health"]),
 				"state": _enemy_state_text(target),
@@ -2066,7 +2059,7 @@ func _build_hud_snapshot() -> Dictionary:
 	if not boss.is_empty() and bool(boss["alive"]):
 		boss_snapshot = {
 			"visible": true,
-			"name": "FOUNDRY COLOSSUS // PHASE %d" % int(boss["boss_phase"]),
+			"name": tr("ENEMY_BOSS_PHASE") % [tr("ENEMY_FOUNDRY_COLOSSUS"), int(boss["boss_phase"])],
 			"health": float(boss["health"]),
 			"max_health": float(boss["max_health"]),
 			"state": _boss_state_text(boss),
@@ -2095,53 +2088,70 @@ func _build_hud_snapshot() -> Dictionary:
 
 func _objective_text() -> Array[String]:
 	if boss_started:
-		return ["BREAK THE FOUNDRY COLOSSUS", "Read the tell. Remove pylons. Fire during recovery."]
+		return [tr("OBJECTIVE_BOSS"), tr("OBJECTIVE_BOSS_DETAIL")]
 	if generators_destroyed < 2 and entered_installations:
 		return [
-			"DISABLE THE BARRIER GRID  %d / 2" % generators_destroyed,
-			"Upper route: Warden. Lower route: traps and field power.",
+			tr("OBJECTIVE_GENERATORS") % generators_destroyed,
+			tr("OBJECTIVE_GENERATORS_DETAIL"),
 		]
 	if generators_destroyed >= 2 and not chest_claimed:
-		return ["CLAIM THE SALVAGE CACHE", "Combat suspends at the amber cache. Choose one live circuit."]
+		return [tr("OBJECTIVE_CACHE"), tr("OBJECTIVE_CACHE_DETAIL")]
 	if generators_destroyed >= 2 and chest_claimed:
-		return ["ENTER THE COLOSSUS BASIN", "The relay gate is open. Living ordinary enemies do not block it."]
+		return [tr("OBJECTIVE_BASIN"), tr("OBJECTIVE_BASIN_DETAIL")]
 	if entered_approach:
-		return ["CROSS THE FOUNDRY APPROACH", "The eastern route stays open; fighting is optional."]
-	var checklist := "MOVE %s  AIM %s  FIRE %s  DASH %s" % [
+		return [tr("OBJECTIVE_APPROACH"), tr("OBJECTIVE_APPROACH_DETAIL")]
+	return [tr("OBJECTIVE_CALIBRATE"), tr("OBJECTIVE_CALIBRATE_DETAIL") % [
 		"✓" if tutorial_move else "—",
 		"✓" if tutorial_aim else "—",
 		"✓" if tutorial_fire else "—",
 		"✓" if tutorial_dash else "—",
-	]
-	return ["CALIBRATE THE SALVAGE SKIFF", checklist]
+	]]
 
 
 func _enemy_state_text(enemy: Dictionary) -> String:
 	var parts: Array[String] = []
 	if bool(enemy["shielded"]):
-		parts.append("GENERATOR SHIELD")
+		parts.append(tr("ENEMY_STATE_GENERATOR_SHIELD"))
 	if float(enemy["stun"]) > 0.0:
-		parts.append("STUNNED")
+		parts.append(tr("ENEMY_STATE_STUNNED"))
 	var phase := String(enemy["phase"])
 	if phase == "startup":
-		parts.append("ATTACK STARTUP")
+		parts.append(tr("ENEMY_STATE_STARTUP"))
 	elif phase == "active":
-		parts.append("ATTACK ACTIVE")
+		parts.append(tr("ENEMY_STATE_ACTIVE"))
 	elif phase == "recovery":
-		parts.append("RECOVERING")
+		parts.append(tr("ENEMY_STATE_RECOVERY"))
 	elif StringName(enemy["role"]) == &"generator":
-		parts.append("SHIELDS + REPAIRS")
+		parts.append(tr("ENEMY_STATE_SUPPORT"))
 	if parts.is_empty():
-		parts.append("REPOSITIONING")
+		parts.append(tr("ENEMY_STATE_REPOSITION"))
 	return "  •  ".join(parts)
 
 
 func _boss_state_text(boss: Dictionary) -> String:
+	var pattern := _localized_pattern(String(boss["pattern"]))
 	if _boss_has_live_pylons():
-		return "%s  •  PYLON SHIELD ACTIVE" % String(boss["pattern"]).to_upper()
+		return tr("BOSS_STATE_PYLON_SHIELD") % pattern
 	if float(boss["vulnerable"]) > 0.0 or String(boss["phase"]) == "staggered":
-		return "%s  •  DAMAGE WINDOW" % String(boss["pattern"]).to_upper()
-	return String(boss["pattern"]).to_upper()
+		return tr("BOSS_STATE_DAMAGE_WINDOW") % pattern
+	return pattern
+
+
+func _localized_pattern(pattern: String) -> String:
+	var key: String = {
+		"lane_barrage": "PATTERN_LANE_BARRAGE",
+		"charge": "PATTERN_CHARGE",
+		"pylons": "PATTERN_PYLONS",
+		"overload_combo": "PATTERN_OVERLOAD_COMBO",
+		"fan": "PATTERN_FAN",
+		"system_wake": "PATTERN_SYSTEM_WAKE",
+		"phase_two": "PATTERN_PHASE_TWO",
+		"recovering_control": "PATTERN_RECOVERING_CONTROL",
+		"reading_arena": "PATTERN_READING_ARENA",
+		"stagger_window": "PATTERN_STAGGER_WINDOW",
+		"recovery_window": "PATTERN_RECOVERY_WINDOW",
+	}.get(pattern, pattern)
+	return tr(String(key))
 
 
 func _minimap_snapshot() -> Dictionary:
@@ -2773,8 +2783,12 @@ func _parse_capture_arguments() -> void:
 		if argument.begins_with("--capture-all="):
 			_capture_directory = argument.trim_prefix("--capture-all=")
 			_capture_mode = true
-			call_deferred("_run_capture_sequence")
-			return
+		elif argument.begins_with("--capture-locale="):
+			_capture_locale = argument.trim_prefix("--capture-locale=")
+	if _capture_locale in ["ko", "en"]:
+		TranslationServer.set_locale(_capture_locale)
+	if _capture_mode:
+		call_deferred("_run_capture_sequence")
 
 
 func _run_capture_sequence() -> void:
@@ -2833,18 +2847,23 @@ func _run_capture_sequence() -> void:
 	await _settle_capture()
 	_save_capture("06-stage-boss.png")
 
+	mode = RunMode.PAUSED
+	_ui.show_pause()
+	await _settle_capture()
+	_save_capture("07-pause-settings.png")
+
 	mode = RunMode.RESULT
 	_ui.show_result({
 		"time": "6:42",
 		"health_ratio": 0.68,
-		"upgrade": "Ion Wake",
+		"upgrade": "UPGRADE_ION_WAKE_TITLE",
 		"field_boss_defeated": true,
 		"primary_hits": 214,
 		"dash_uses": 17,
 		"installations": 8,
 	})
 	await _settle_capture()
-	_save_capture("07-result.png")
+	_save_capture("08-result.png")
 
 	_ui.show_garage({
 		"selected_primary": selected_primary,
@@ -2853,7 +2872,7 @@ func _run_capture_sequence() -> void:
 		"field_module_unlocked": true,
 	})
 	await _settle_capture()
-	_save_capture("08-garage.png")
+	_save_capture("09-garage.png")
 	print("VEHICLE_STAGE_CAPTURE_COMPLETE dir=%s" % _capture_directory)
 	get_tree().quit(0)
 

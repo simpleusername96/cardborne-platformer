@@ -1,11 +1,17 @@
 class_name PivotSettingsStore
 extends Node
 
+signal locale_changed(locale: String)
+
 const SETTINGS_PATH := "user://pivot-settings.cfg"
-const SECTION := "audio"
+const AUDIO_SECTION := "audio"
+const UI_SECTION := "ui"
+const DEFAULT_LOCALE := "ko"
+const SUPPORTED_LOCALES := ["ko", "en"]
 
 var master_volume := 1.0
 var sfx_volume := 1.0
+var ui_locale := DEFAULT_LOCALE
 
 
 func _ready() -> void:
@@ -15,14 +21,17 @@ func _ready() -> void:
 func load_settings() -> void:
 	master_volume = 1.0
 	sfx_volume = 1.0
+	ui_locale = DEFAULT_LOCALE
 	var config := ConfigFile.new()
 	var result := config.load(SETTINGS_PATH)
 	if result == OK:
-		master_volume = _safe_volume(config.get_value(SECTION, "master", 1.0))
-		sfx_volume = _safe_volume(config.get_value(SECTION, "sfx", 1.0))
+		master_volume = _safe_volume(config.get_value(AUDIO_SECTION, "master", 1.0))
+		sfx_volume = _safe_volume(config.get_value(AUDIO_SECTION, "sfx", 1.0))
+		ui_locale = _safe_locale(config.get_value(UI_SECTION, "locale", DEFAULT_LOCALE))
 	elif result != ERR_FILE_NOT_FOUND:
-		push_warning("Audio settings were malformed; restored defaults")
+		push_warning("Settings file was malformed; restored defaults")
 	apply_audio()
+	apply_locale()
 
 
 func set_master_volume(value: float) -> void:
@@ -37,9 +46,23 @@ func set_sfx_volume(value: float) -> void:
 	_save()
 
 
+func set_ui_locale(value: String) -> void:
+	var next_locale := _safe_locale(value)
+	if ui_locale == next_locale:
+		return
+	ui_locale = next_locale
+	apply_locale()
+	_save()
+	locale_changed.emit(ui_locale)
+
+
 func apply_audio() -> void:
 	_set_bus_volume("Master", master_volume)
 	_set_bus_volume("SFX", sfx_volume)
+
+
+func apply_locale() -> void:
+	TranslationServer.set_locale(ui_locale)
 
 
 func _set_bus_volume(bus_name: String, linear: float) -> void:
@@ -56,10 +79,20 @@ func _safe_volume(value: Variant) -> float:
 	return 1.0
 
 
+func _safe_locale(value: Variant) -> String:
+	var locale := String(value)
+	if SUPPORTED_LOCALES.has(locale):
+		return locale
+	if not locale.is_empty():
+		push_warning("Unsupported UI locale; restored Korean default")
+	return DEFAULT_LOCALE
+
+
 func _save() -> void:
 	var config := ConfigFile.new()
-	config.set_value(SECTION, "master", master_volume)
-	config.set_value(SECTION, "sfx", sfx_volume)
+	config.set_value(AUDIO_SECTION, "master", master_volume)
+	config.set_value(AUDIO_SECTION, "sfx", sfx_volume)
+	config.set_value(UI_SECTION, "locale", ui_locale)
 	var result := config.save(SETTINGS_PATH)
 	if result != OK:
-		push_warning("Could not save audio settings: %s" % error_string(result))
+		push_warning("Could not save settings: %s" % error_string(result))

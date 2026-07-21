@@ -362,6 +362,16 @@ Preserve the current functional layout contract while restyling:
 
 Icons provide recognition; exact cooldown, charge, count, cost, and result values remain text where precision matters.
 
+### Vehicle Stage 1 layout and localization
+
+- Korean is the default locale and English is the supported alternative. Language selection appears before deployment and remains available in pause/settings and garage.
+- Hull state occupies the upper-left safe area; one objective occupies upper center; the explored minimap occupies upper right; the unified action rail stays bottom center; the current target stays lower right.
+- A live stage-boss strip replaces the ordinary objective and minimap. Do not stack boss name, objective restatement, minimap, and duplicate zone notification in the same top band.
+- Deployment, upgrade, pause, result, and garage are exclusive modal surfaces: retain and dim the world, hide the gameplay HUD, and expose only the active modal's focusable controls.
+- Deployment cards select a loadout and a separate primary command commits it. Selected state uses a persistent side marker and check text in addition to color.
+- At the compact `960x540` target, shorten secondary copy and reflow groups before reducing type. Routine command height remains at least `44 px`, and visible text remains at least `13 px`.
+- Runtime-composed objectives, enemy states, cooldowns, results, and module summaries translate at the presentation boundary; stable gameplay IDs never become translated identifiers.
+
 ## Menu And Choice Contract
 
 - The first viewport exposes the actual decision, not explanatory feature copy.
@@ -427,4 +437,4 @@ Missing assets use a declared fallback without changing component size or gamepl
 - Creating one-off button/panel styles per screen.
 - Using color alone for focus, selection, cooldown, lock, threat, or reward.
 - Shipping generated reference-board crops as production UI assets.
-- Adding touch/mobile UI or localization in the first visual-system migration.
+- Adding touch/mobile UI or locales beyond the accepted Korean/English Stage 1 catalog.

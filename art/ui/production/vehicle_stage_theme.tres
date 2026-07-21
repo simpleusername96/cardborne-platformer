@@ -1,13 +1,21 @@
-[gd_resource type="Theme" load_steps=25 format=3]
+[gd_resource type="Theme" load_steps=26 format=3]
 
 [ext_resource type="FontFile" path="res://art/ui/production/fonts/NotoSansKR-Variable.ttf" id="1_font"]
 
 [sub_resource type="StyleBoxEmpty" id="Empty"]
 
 [sub_resource type="StyleBoxFlat" id="Modal"]
+content_margin_left = 24.0
+content_margin_top = 22.0
+content_margin_right = 24.0
+content_margin_bottom = 22.0
 bg_color = Color(0.952941, 0.909804, 0.788235, 0.99)
 
 [sub_resource type="StyleBoxFlat" id="Plate"]
+content_margin_left = 14.0
+content_margin_top = 10.0
+content_margin_right = 14.0
+content_margin_bottom = 10.0
 bg_color = Color(1, 0.964706, 0.862745, 0.96)
 
 [sub_resource type="StyleBoxFlat" id="ChoiceNormal"]
@@ -32,6 +40,15 @@ content_margin_bottom = 14.0
 bg_color = Color(0.05098, 0.239216, 0.215686, 1)
 
 [sub_resource type="StyleBoxFlat" id="ChoiceFocus"]
+content_margin_left = 20.0
+content_margin_top = 14.0
+content_margin_right = 20.0
+content_margin_bottom = 14.0
+bg_color = Color(0.054902, 0.423529, 0.368627, 1)
+border_width_left = 8
+border_color = Color(0.843137, 0.603922, 0.0901961, 1)
+
+[sub_resource type="StyleBoxFlat" id="ChoiceSelected"]
 content_margin_left = 20.0
 content_margin_top = 14.0
 content_margin_right = 20.0
@@ -183,6 +200,13 @@ ChoiceButton/styles/hover = SubResource("ChoiceHover")
 ChoiceButton/styles/pressed = SubResource("ChoicePressed")
 ChoiceButton/styles/focus = SubResource("ChoiceFocus")
 ChoiceButton/styles/disabled = SubResource("Disabled")
+SelectedChoiceButton/base_type = &"Button"
+SelectedChoiceButton/font_sizes/font_size = 17
+SelectedChoiceButton/styles/normal = SubResource("ChoiceSelected")
+SelectedChoiceButton/styles/hover = SubResource("ChoiceFocus")
+SelectedChoiceButton/styles/pressed = SubResource("ChoicePressed")
+SelectedChoiceButton/styles/focus = SubResource("ChoiceFocus")
+SelectedChoiceButton/styles/disabled = SubResource("Disabled")
 FlatPanel/base_type = &"PanelContainer"
 FlatPanel/styles/panel = SubResource("Plate")
 ModalSurface/base_type = &"PanelContainer"

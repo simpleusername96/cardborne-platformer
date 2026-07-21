@@ -25,6 +25,11 @@ window/stretch/mode="canvas_items"
 
 theme/custom="res://art/ui/production/production_ui_theme.tres"
 
+[internationalization]
+
+locale/fallback="ko"
+locale/translations=PackedStringArray("res://localization/vehicle_stage.ko.translation", "res://localization/vehicle_stage.en.translation")
+
 [layer_names]
 
 2d_physics/layer_1="World"

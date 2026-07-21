@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://chapbgui1h8yf"
+
+[deps]
+
+files=["res://localization/vehicle_stage.ko.translation", "res://localization/vehicle_stage.en.translation"]
+
+source_file="res://localization/vehicle_stage.csv"
+dest_files=["res://localization/vehicle_stage.ko.translation", "res://localization/vehicle_stage.en.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true
