@@ -44,6 +44,7 @@ func _run_validation() -> void:
 	_check_progression_contract(stage)
 	_check_multistage_contract(stage)
 	_check_new_enemy_contract(stage)
+	_check_enemy_pressure_contract(stage)
 	_check_projectile_cover_contract(stage)
 	_check_passive_contract(stage)
 	_check_reset_contract(stage)
@@ -56,11 +57,15 @@ func _run_validation() -> void:
 
 
 func _check_blueprint() -> void:
+	var expected_counts := {&"flooded_works": 204, &"tidal_archive": 228, &"storm_drydock": 252}
+	var expected_caps := {&"flooded_works": 72, &"tidal_archive": 78, &"storm_drydock": 84}
 	var all_blueprints := Rules.validate_all_blueprints()
 	for stage_id in all_blueprints.keys():
 		var blueprint_errors: PackedStringArray = all_blueprints[stage_id]
 		_expect(blueprint_errors.is_empty(), "%s landmarks, spawns, routes, and boss path are reachable" % stage_id)
 		_expect(Rules.get_enemy_blueprint(stage_id).size() == EncounterDirector.target_count(stage_id), "%s uses the locked dense enemy population" % stage_id)
+		_expect(EncounterDirector.target_count(stage_id) == int(expected_counts[stage_id]), "%s population is exactly triple the prior contract" % stage_id)
+		_expect(EncounterDirector.active_cap(stage_id) == int(expected_caps[stage_id]), "%s active cap is exactly triple the prior contract" % stage_id)
 		for error_message in blueprint_errors:
 			failures.append("%s blueprint: %s" % [stage_id, error_message])
 
@@ -136,6 +141,10 @@ func _check_visual_contract(stage: Node) -> void:
 	_expect(int(ui.debug_ui_contract()["result_focusables"]) >= 2, "result exposes garage and replay actions")
 	_expect(int(ui.debug_ui_contract()["garage_focusables"]) >= 4, "garage exposes build summary, launch, locale, and both audio controls")
 	_expect(int(ui.debug_ui_contract()["locale_controls"]) == 6, "deployment, pause, and garage each expose Korean/English controls")
+	var radar_contract: Dictionary = ui.debug_threat_radar_contract()
+	_expect(is_equal_approx(float(radar_contract["diameter"]), 156.0), "threat radar preserves its compact player-centered diameter")
+	_expect(int(radar_contract["sector_count"]) == 24, "threat radar aggregates contacts into 24 readable sectors")
+	_expect(bool(radar_contract["full_rect"]) and bool(radar_contract["mouse_ignored"]), "threat radar follows HUD space without intercepting input")
 	for surface in ["deployment", "upgrade", "pause", "result", "garage"]:
 		var modal_contract: Dictionary = ui.debug_modal_contract(surface)
 		_expect(bool(modal_contract["hud_hidden"]), "%s modal hides gameplay HUD" % surface)
@@ -227,6 +236,18 @@ func _check_new_enemy_contract(stage: Node) -> void:
 	_expect(bool(result["intercepted"]) and int(result["charges_after"]) == int(result["charges_before"]) - 1, "Interceptor Tower visibly spends one charge to stop a player shot")
 	_expect(bool(result["artillery_zone_created"]), "Artillery Spotter resolves its warned attack into a denial zone")
 	_expect(bool(result["escort_shielded_ally"]), "Shield Escort protects a nearby ordinary ally")
+
+
+func _check_enemy_pressure_contract(stage: Node) -> void:
+	var tuning := EncounterDirector.tuning_contract()
+	_expect(is_equal_approx(float(tuning["threat_budget"]), 6.5), "enemy attack coordination uses the raised bounded threat budget")
+	_expect(int(tuning["max_ranged"]) == 3 and int(tuning["max_denial"]) == 2, "ranged and denial commit ceilings remain explicit")
+	var runtime: Dictionary = stage.debug_enemy_pressure_contract()
+	_expect(is_equal_approx(float(runtime["runtime_speed"]), float(runtime["base_speed"]) * 1.15), "enemy movement receives the locked speed multiplier")
+	_expect(is_equal_approx(float(runtime["runtime_projectile_speed"]), float(runtime["base_projectile_speed"]) * 1.12), "hostile projectiles receive the locked speed multiplier")
+	_expect(is_equal_approx(float(runtime["runtime_damage"]), float(runtime["base_damage"]) * 1.25), "enemy attacks receive the locked damage multiplier")
+	_expect(is_equal_approx(float(runtime["environment_damage"]), float(runtime["base_damage"])), "environment damage is not accidentally scaled as enemy damage")
+	_expect(is_equal_approx(float(runtime["runtime_recovery"]), float(runtime["base_recovery"]) / 1.20), "ordinary enemy recovery uses the locked faster cadence")
 
 
 func _check_projectile_cover_contract(stage: Node) -> void:

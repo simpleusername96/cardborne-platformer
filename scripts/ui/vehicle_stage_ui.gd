@@ -17,6 +17,7 @@ signal advance_requested
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const VEHICLE_THEME = preload("res://art/ui/production/vehicle_stage_theme.tres")
 const UpgradeChoicePanel = preload("res://scripts/ui/vehicle_upgrade_choice_panel.gd")
+const ThreatRadar = preload("res://scripts/ui/vehicle_threat_radar.gd")
 
 const CANVAS := Art.COBALT_VOID
 const SURFACE := Art.IVORY
@@ -206,6 +207,7 @@ var _minimap: StageMinimap
 var _minimap_title: Label
 var _notification: Label
 var _notification_timer := 0.0
+var _threat_radar
 
 var _dim: ColorRect
 var _deployment_center: CenterContainer
@@ -299,6 +301,9 @@ func _build_hud() -> void:
 	_hud.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_hud.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_root.add_child(_hud)
+	_threat_radar = ThreatRadar.new()
+	_threat_radar.name = "ThreatRadar"
+	_hud.add_child(_threat_radar)
 
 	_health_panel = _flat_panel()
 	_health_panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
@@ -696,6 +701,7 @@ func update_hud(snapshot: Dictionary) -> void:
 		_target_state.text = String(target.get("state", ""))
 
 	_minimap.set_snapshot(snapshot.get("minimap", {}))
+	_threat_radar.set_snapshot(snapshot.get("threat_radar", {}))
 
 
 func show_deployment(_selected: StringName = &"pulse_cannon") -> void:
@@ -853,6 +859,10 @@ func debug_modal_contract(surface: String) -> Dictionary:
 func debug_select_upgrade(index: int) -> void:
 	_upgrade_panel.call("_process", 0.36)
 	_upgrade_panel.call("_select", index)
+
+
+func debug_threat_radar_contract() -> Dictionary:
+	return _threat_radar.debug_contract()
 
 
 func _on_deployment_confirmed() -> void:

@@ -354,7 +354,7 @@ func _make_enemy(spec: Dictionary) -> Dictionary:
 	var archetype := StringName(spec["role"])
 	var definition := EnemyArchetypes.definition(archetype)
 	var role := StringName(definition["behavior"])
-	var attack_cooldown := _rng.randf_range(0.4, 1.2)
+	var attack_cooldown := _rng.randf_range(0.4, 1.2) / EncounterDirector.ENEMY_RECOVERY_RATE
 	var health := float(definition["health"])
 	var position: Vector2 = spec["pos"]
 	return {
@@ -367,7 +367,7 @@ func _make_enemy(spec: Dictionary) -> Dictionary:
 		"velocity": Vector2.ZERO,
 		"health": health,
 		"max_health": health,
-		"speed": float(definition["speed"]),
+		"speed": float(definition["speed"]) * EncounterDirector.ENEMY_SPEED_MULTIPLIER,
 		"radius": float(definition["radius"]),
 		"visual_radius": float(definition["visual_radius"]),
 		"health_class": StringName(definition["health_class"]),
@@ -724,7 +724,7 @@ func _update_stage_environment(delta: float) -> void:
 			var phase := fmod(environment_time + float(zone["phase"]), 5.2)
 			if phase >= 1.4 and phase < 2.2 and Rect2(zone["rect"]).has_point(player_position) and environment_damage_tick <= 0.0:
 				environment_damage_tick = 0.55
-				_damage_player(10.0, "Drydock storm strip", false)
+				_damage_player(10.0, "Drydock storm strip", false, false)
 
 
 func _spawn_player_projectile(origin: Vector2, direction: Vector2, damage: float, speed: float, extra_pierce: int, radius: float = 5.0, structure_damage: float = -1.0, stagger: float = 5.0, opening: bool = false, projectile_range: float = PRIMARY_RANGE, status_payload: Dictionary = {}) -> void:
@@ -1152,22 +1152,23 @@ func _update_ordinary_enemy(enemy: Dictionary, delta: float, can_commit: bool) -
 
 
 func _enemy_recovery_cooldown(role: StringName) -> float:
+	var cooldown := 0.8
 	match role:
 		&"chaser":
-			return 0.55
+			cooldown = 0.55
 		&"shooter":
-			return 0.78
+			cooldown = 0.78
 		&"controller":
-			return 1.15
+			cooldown = 1.15
 		&"turret":
-			return 1.05
+			cooldown = 1.05
 		&"mine":
-			return 1.8
+			cooldown = 1.8
 		&"artillery_spotter":
-			return 1.65
+			cooldown = 1.65
 		&"interceptor_tower":
-			return 1.25
-	return 0.8
+			cooldown = 1.25
+	return cooldown / EncounterDirector.ENEMY_RECOVERY_RATE
 
 
 func _enemy_can_attack(enemy: Dictionary) -> bool:
@@ -1278,7 +1279,7 @@ func _update_enemy_active(enemy: Dictionary, delta: float) -> void:
 			var before := Vector2(enemy["pos"])
 			enemy["pos"] = _move_actor(
 				before,
-				Vector2(enemy["committed_dir"]) * 570.0 * delta,
+				Vector2(enemy["committed_dir"]) * 570.0 * EncounterDirector.ENEMY_SPEED_MULTIPLIER * delta,
 				float(enemy["radius"]),
 				false
 			)
@@ -1413,7 +1414,7 @@ func _spawn_hostile_projectile(origin: Vector2, direction: Vector2, damage: floa
 		return
 	projectiles.append({
 		"pos": origin,
-		"velocity": direction.normalized() * speed,
+		"velocity": direction.normalized() * speed * EncounterDirector.HOSTILE_PROJECTILE_SPEED_MULTIPLIER,
 		"radius": 7.0,
 		"team": &"enemy",
 		"damage": damage,
@@ -1738,10 +1739,10 @@ func _clear_zones_owned_by_defeated_role(role: StringName) -> void:
 				denied_zones.remove_at(index)
 
 
-func _damage_player(amount: float, source: String, blockable: bool) -> void:
+func _damage_player(amount: float, source: String, blockable: bool, enemy_source: bool = true) -> void:
 	if mode != RunMode.PLAYING or player_invulnerable > 0.0 or stage_complete:
 		return
-	var remaining := amount
+	var remaining := _scaled_incoming_damage(amount, enemy_source)
 	if player_barrier_strength > 0.0 and player_barrier_timer > 0.0:
 		var absorbed := minf(player_barrier_strength, remaining)
 		player_barrier_strength -= absorbed
@@ -1762,6 +1763,10 @@ func _damage_player(amount: float, source: String, blockable: bool) -> void:
 	_play_sound(&"hurt")
 	if player_health <= 0.0:
 		_handle_player_defeat()
+
+
+func _scaled_incoming_damage(amount: float, enemy_source: bool) -> float:
+	return amount * EncounterDirector.ENEMY_DAMAGE_MULTIPLIER if enemy_source else amount
 
 
 func _handle_player_defeat() -> void:
@@ -2113,7 +2118,7 @@ func _boss_update_active(boss: Dictionary, delta: float) -> void:
 			var before := Vector2(boss["pos"])
 			boss["pos"] = _move_actor(
 				before,
-				Vector2(boss["committed_dir"]) * 770.0 * delta,
+				Vector2(boss["committed_dir"]) * 770.0 * EncounterDirector.ENEMY_SPEED_MULTIPLIER * delta,
 				float(boss["radius"]),
 				false
 			)
@@ -2135,7 +2140,7 @@ func _boss_update_active(boss: Dictionary, delta: float) -> void:
 			if float(boss["phase_time"]) < 0.72:
 				boss["pos"] = _move_actor(
 					Vector2(boss["pos"]),
-					Vector2(boss["committed_dir"]) * 530.0 * delta,
+					Vector2(boss["committed_dir"]) * 530.0 * EncounterDirector.ENEMY_SPEED_MULTIPLIER * delta,
 					float(boss["radius"]),
 					false
 				)
@@ -2223,7 +2228,7 @@ func _update_field_boss(enemy: Dictionary, delta: float) -> void:
 		if String(enemy["pattern"]) == "charge":
 			enemy["pos"] = _move_actor(
 				Vector2(enemy["pos"]),
-				Vector2(enemy["committed_dir"]) * 660.0 * delta,
+				Vector2(enemy["committed_dir"]) * 660.0 * EncounterDirector.ENEMY_SPEED_MULTIPLIER * delta,
 				float(enemy["radius"]),
 				false
 			)
@@ -2456,6 +2461,7 @@ func _build_hud_snapshot() -> Dictionary:
 		"target": target_snapshot,
 		"boss": boss_snapshot,
 		"minimap": _minimap_snapshot(),
+		"threat_radar": _threat_radar_snapshot(),
 	}
 
 
@@ -2589,6 +2595,29 @@ func _is_world_position_visited(position: Vector2) -> bool:
 	var cell_height := Rules.WORLD_RECT.size.y / float(MINIMAP_ROWS)
 	var cell := Vector2i(floori(position.x / cell_width), floori(position.y / cell_height))
 	return visited_cells.has(cell)
+
+
+func _threat_radar_snapshot() -> Dictionary:
+	const SCAN_DISTANCE := 1200.0
+	var contacts: Array[Dictionary] = []
+	for enemy in enemies:
+		if not bool(enemy["alive"]) or not bool(enemy["active"]):
+			continue
+		var offset := Vector2(enemy["pos"]) - player_position
+		if offset.length_squared() > SCAN_DISTANCE * SCAN_DISTANCE:
+			continue
+		var health_class := StringName(enemy.get("health_class", &"standard"))
+		contacts.append({
+			"offset": offset,
+			"priority": health_class in [&"priority", &"boss"],
+			"targeted": String(enemy["id"]) == _aim_target_id,
+		})
+	return {
+		"visible": mode == RunMode.PLAYING,
+		"center": get_canvas_transform() * player_position,
+		"max_distance": SCAN_DISTANCE,
+		"contacts": contacts,
+	}
 
 
 func _draw() -> void:
@@ -3318,6 +3347,11 @@ func _run_capture_sequence() -> void:
 	_save_capture("02-open-combat.png")
 	await _capture_element_states()
 
+	player_position = Vector2(120.0, 1080.0)
+	player_aim_direction = Vector2.RIGHT
+	await _settle_capture()
+	_save_capture("02e-radar-boundary.png")
+
 	player_position = Vector2(2460.0, 520.0)
 	player_aim_direction = Vector2.RIGHT
 	_activate_capture_zone("installations")
@@ -3444,9 +3478,15 @@ func _run_capture_sequence() -> void:
 
 
 func _activate_capture_zone(zone: String) -> void:
+	var active_capped := 0
 	for enemy in enemies:
-		if String(enemy["zone"]) == zone:
-			enemy["active"] = true
+		if String(enemy["zone"]) != zone:
+			continue
+		if bool(enemy.get("counts_active_cap", false)):
+			if active_capped >= EncounterDirector.active_cap(current_stage_id):
+				continue
+			active_capped += 1
+		enemy["active"] = true
 
 
 func _capture_element_states() -> void:
@@ -3650,6 +3690,8 @@ func debug_new_enemy_contract() -> Dictionary:
 	current_stage_index = 2
 	current_stage_id = StageCatalog.STAGE_IDS[2]
 	_reset_run(false, true, false)
+	for enemy in enemies:
+		enemy["active"] = false
 	var escort := _find_enemy_by_id("drydock_escort_a")
 	var protected := _find_enemy_by_id("drydock_shooter_a")
 	escort["active"] = true
@@ -3747,6 +3789,22 @@ func debug_pickup_contract(kind: StringName) -> Dictionary:
 		"capacitor_shots": capacitor_opening_shots,
 		"passive_reset": is_zero_approx(player_passive_cooldown),
 		"seekers_launched": projectiles.size() - projectiles_before,
+	}
+
+
+func debug_enemy_pressure_contract() -> Dictionary:
+	var definition := EnemyArchetypes.definition(&"chaser")
+	var sample := _make_enemy({"id": "debug_pressure_chaser", "role": &"chaser", "pos": Vector2.ZERO})
+	return {
+		"base_speed": float(definition["speed"]),
+		"runtime_speed": float(sample["speed"]),
+		"base_projectile_speed": 100.0,
+		"runtime_projectile_speed": 100.0 * EncounterDirector.HOSTILE_PROJECTILE_SPEED_MULTIPLIER,
+		"base_damage": 10.0,
+		"runtime_damage": _scaled_incoming_damage(10.0, true),
+		"environment_damage": _scaled_incoming_damage(10.0, false),
+		"base_recovery": 0.55,
+		"runtime_recovery": _enemy_recovery_cooldown(&"chaser"),
 	}
 
 

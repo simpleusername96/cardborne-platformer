@@ -138,8 +138,63 @@ static func floor_regions(stage_id: StringName, colors: Dictionary) -> Array[Dic
 static func enemy_blueprint(stage_id: StringName) -> Array[Dictionary]:
 	var normalized := normalized_id(stage_id)
 	var result := _base_enemy_blueprint(normalized)
-	result.append_array(EncounterDirector.expand_groups(_swarm_groups(normalized)))
+	var swarms := EncounterDirector.expand_groups(_swarm_groups(normalized))
+	_fit_swarm_spawns(normalized, swarms, result)
+	result.append_array(swarms)
 	return result
+
+
+static func _fit_swarm_spawns(stage_id: StringName, swarms: Array[Dictionary], base_spawns: Array[Dictionary]) -> void:
+	var cover := cover_rects(stage_id)
+	var occupied: Array[Vector2] = []
+	for spec in base_spawns:
+		occupied.append(Vector2(spec["pos"]))
+	var radius_offsets := [0.0, -18.0, 18.0, -36.0, 36.0, 54.0]
+	for index in swarms.size():
+		var spec: Dictionary = swarms[index]
+		var original := Vector2(spec["pos"])
+		if _spawn_position_clear(original, cover, occupied):
+			occupied.append(original)
+			continue
+		var anchor := Vector2(spec["formation_anchor"])
+		var base_offset := original - anchor
+		var resolved := original
+		var found := false
+		for radius_offset in radius_offsets:
+			var candidate_radius := maxf(34.0, base_offset.length() + float(radius_offset))
+			for angle_step in 24:
+				var candidate_angle := base_offset.angle() + TAU * float(angle_step + 1) / 24.0
+				var candidate := anchor + Vector2.RIGHT.rotated(candidate_angle) * candidate_radius
+				if _spawn_position_clear(candidate, cover, occupied):
+					resolved = candidate
+					found = true
+					break
+			if found:
+				break
+		spec["pos"] = resolved
+		swarms[index] = spec
+		occupied.append(resolved)
+
+
+static func _spawn_position_clear(position: Vector2, cover: Array[Rect2], occupied: Array[Vector2]) -> bool:
+	const VALIDATION_RADIUS := 28.0
+	if not WORLD_RECT.grow(-VALIDATION_RADIUS).has_point(position):
+		return false
+	for rect in cover:
+		if _circle_overlaps_rect(position, VALIDATION_RADIUS, rect):
+			return false
+	for other in occupied:
+		if position.distance_to(other) < 25.0:
+			return false
+	return true
+
+
+static func _circle_overlaps_rect(center: Vector2, radius: float, rect: Rect2) -> bool:
+	var closest := Vector2(
+		clampf(center.x, rect.position.x, rect.end.x),
+		clampf(center.y, rect.position.y, rect.end.y)
+	)
+	return center.distance_squared_to(closest) < radius * radius
 
 
 static func _base_enemy_blueprint(stage_id: StringName) -> Array[Dictionary]:
@@ -195,34 +250,34 @@ static func _swarm_groups(stage_id: StringName) -> Array[Dictionary]:
 	match normalized_id(stage_id):
 		&"tidal_archive":
 			return [
-				{"id":"archive_swarm_a", "anchor":Vector2(880,1120), "count":9, "roles":[&"scrap_drone", &"needle_drone"], "zone":"approach", "angle":0.15},
-				{"id":"archive_swarm_b", "anchor":Vector2(1270,650), "count":8, "roles":[&"needle_drone", &"spark_minelet"], "zone":"approach", "angle":0.4},
-				{"id":"archive_swarm_c", "anchor":Vector2(1460,1600), "count":8, "roles":[&"scrap_drone", &"needle_drone"], "zone":"approach", "angle":0.75},
-				{"id":"archive_swarm_d", "anchor":Vector2(1740,1120), "count":8, "roles":[&"needle_drone", &"scrap_drone"], "zone":"approach", "angle":0.1},
-				{"id":"archive_swarm_e", "anchor":Vector2(2350,410), "count":8, "roles":[&"spark_minelet", &"needle_drone"], "zone":"installations", "angle":0.65},
-				{"id":"archive_swarm_f", "anchor":Vector2(2830,1810), "count":8, "roles":[&"scrap_drone", &"spark_minelet"], "zone":"installations", "angle":0.2},
-				{"id":"archive_swarm_g", "anchor":Vector2(3160,1110), "count":8, "roles":[&"needle_drone", &"scrap_drone"], "zone":"installations", "angle":0.9},
-				{"id":"archive_swarm_h", "anchor":Vector2(3320,1280), "count":8, "roles":[&"scrap_drone", &"needle_drone", &"spark_minelet"], "zone":"installations", "angle":0.35},
+				{"id":"archive_swarm_a", "anchor":Vector2(880,1120), "count":28, "roles":[&"scrap_drone", &"needle_drone"], "zone":"approach", "angle":0.15},
+				{"id":"archive_swarm_b", "anchor":Vector2(1270,650), "count":27, "roles":[&"needle_drone", &"spark_minelet"], "zone":"approach", "angle":0.85},
+				{"id":"archive_swarm_c", "anchor":Vector2(1460,1600), "count":27, "roles":[&"scrap_drone", &"needle_drone"], "zone":"approach", "angle":0.75},
+				{"id":"archive_swarm_d", "anchor":Vector2(1740,1120), "count":27, "roles":[&"needle_drone", &"scrap_drone"], "zone":"approach", "angle":0.1},
+				{"id":"archive_swarm_e", "anchor":Vector2(2350,410), "count":27, "roles":[&"spark_minelet", &"needle_drone"], "zone":"installations", "angle":0.65},
+				{"id":"archive_swarm_f", "anchor":Vector2(2830,1810), "count":27, "roles":[&"scrap_drone", &"spark_minelet"], "zone":"installations", "angle":0.2},
+				{"id":"archive_swarm_g", "anchor":Vector2(3160,1110), "count":27, "roles":[&"needle_drone", &"scrap_drone"], "zone":"installations", "angle":0.9},
+				{"id":"archive_swarm_h", "anchor":Vector2(3320,1280), "count":27, "roles":[&"scrap_drone", &"needle_drone", &"spark_minelet"], "zone":"installations", "angle":0.35},
 			]
 		&"storm_drydock":
 			return [
-				{"id":"drydock_swarm_a", "anchor":Vector2(860,660), "count":10, "roles":[&"scrap_drone", &"needle_drone"], "zone":"approach", "angle":0.1},
-				{"id":"drydock_swarm_b", "anchor":Vector2(1090,1120), "count":9, "roles":[&"scrap_drone", &"spark_minelet"], "zone":"approach", "angle":0.45},
-				{"id":"drydock_swarm_c", "anchor":Vector2(1450,1080), "count":9, "roles":[&"needle_drone", &"scrap_drone"], "zone":"approach", "angle":0.8},
-				{"id":"drydock_swarm_d", "anchor":Vector2(1730,1160), "count":9, "roles":[&"spark_minelet", &"scrap_drone"], "zone":"approach", "angle":0.15},
-				{"id":"drydock_swarm_e", "anchor":Vector2(2340,680), "count":9, "roles":[&"needle_drone", &"spark_minelet"], "zone":"installations", "angle":0.55},
-				{"id":"drydock_swarm_f", "anchor":Vector2(3060,1180), "count":9, "roles":[&"scrap_drone", &"needle_drone"], "zone":"installations", "angle":0.25},
-				{"id":"drydock_swarm_g", "anchor":Vector2(3290,1050), "count":9, "roles":[&"needle_drone", &"spark_minelet"], "zone":"installations", "angle":0.7},
-				{"id":"drydock_swarm_h", "anchor":Vector2(3200,1840), "count":9, "roles":[&"scrap_drone", &"needle_drone", &"spark_minelet"], "zone":"installations", "angle":0.3},
+				{"id":"drydock_swarm_a", "anchor":Vector2(860,660), "count":31, "roles":[&"scrap_drone", &"needle_drone"], "zone":"approach", "angle":0.1},
+				{"id":"drydock_swarm_b", "anchor":Vector2(1090,1120), "count":30, "roles":[&"scrap_drone", &"spark_minelet"], "zone":"approach", "angle":1.0},
+				{"id":"drydock_swarm_c", "anchor":Vector2(1450,1080), "count":30, "roles":[&"needle_drone", &"scrap_drone"], "zone":"approach", "angle":0.8},
+				{"id":"drydock_swarm_d", "anchor":Vector2(1730,1160), "count":30, "roles":[&"spark_minelet", &"scrap_drone"], "zone":"approach", "angle":0.15},
+				{"id":"drydock_swarm_e", "anchor":Vector2(2340,680), "count":30, "roles":[&"needle_drone", &"spark_minelet"], "zone":"installations", "angle":1.05},
+				{"id":"drydock_swarm_f", "anchor":Vector2(3060,1180), "count":30, "roles":[&"scrap_drone", &"needle_drone"], "zone":"installations", "angle":0.25},
+				{"id":"drydock_swarm_g", "anchor":Vector2(3290,1050), "count":30, "roles":[&"needle_drone", &"spark_minelet"], "zone":"installations", "angle":0.7},
+				{"id":"drydock_swarm_h", "anchor":Vector2(3200,1840), "count":30, "roles":[&"scrap_drone", &"needle_drone", &"spark_minelet"], "zone":"installations", "angle":0.95},
 			]
 	return [
-		{"id":"works_swarm_a", "anchor":Vector2(900,1110), "count":8, "roles":[&"scrap_drone", &"needle_drone"], "zone":"approach", "angle":0.1},
-		{"id":"works_swarm_b", "anchor":Vector2(1330,650), "count":8, "roles":[&"needle_drone", &"spark_minelet"], "zone":"approach", "angle":0.5},
-		{"id":"works_swarm_c", "anchor":Vector2(1420,1600), "count":8, "roles":[&"scrap_drone", &"needle_drone"], "zone":"approach", "angle":0.8},
-		{"id":"works_swarm_d", "anchor":Vector2(1730,1210), "count":8, "roles":[&"scrap_drone", &"spark_minelet"], "zone":"approach", "angle":0.2},
-		{"id":"works_swarm_e", "anchor":Vector2(2520,300), "count":7, "roles":[&"needle_drone", &"spark_minelet"], "zone":"installations", "angle":0.6},
-		{"id":"works_swarm_f", "anchor":Vector2(2670,1830), "count":7, "roles":[&"scrap_drone", &"spark_minelet"], "zone":"installations", "angle":0.25},
-		{"id":"works_swarm_g", "anchor":Vector2(3160,1110), "count":7, "roles":[&"scrap_drone", &"needle_drone"], "zone":"installations", "angle":0.9},
+		{"id":"works_swarm_a", "anchor":Vector2(900,1110), "count":27, "roles":[&"scrap_drone", &"needle_drone"], "zone":"approach", "angle":0.1},
+		{"id":"works_swarm_b", "anchor":Vector2(1330,650), "count":27, "roles":[&"needle_drone", &"spark_minelet"], "zone":"approach", "angle":0.5},
+		{"id":"works_swarm_c", "anchor":Vector2(1420,1600), "count":27, "roles":[&"scrap_drone", &"needle_drone"], "zone":"approach", "angle":0.8},
+		{"id":"works_swarm_d", "anchor":Vector2(1730,1210), "count":27, "roles":[&"scrap_drone", &"spark_minelet"], "zone":"approach", "angle":0.2},
+		{"id":"works_swarm_e", "anchor":Vector2(2520,300), "count":27, "roles":[&"needle_drone", &"spark_minelet"], "zone":"installations", "angle":1.15},
+		{"id":"works_swarm_f", "anchor":Vector2(2670,1830), "count":27, "roles":[&"scrap_drone", &"spark_minelet"], "zone":"installations", "angle":0.25},
+		{"id":"works_swarm_g", "anchor":Vector2(3160,1110), "count":27, "roles":[&"scrap_drone", &"needle_drone"], "zone":"installations", "angle":0.9},
 	]
 
 
