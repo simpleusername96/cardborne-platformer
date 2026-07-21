@@ -3334,6 +3334,9 @@ func _run_capture_sequence() -> void:
 	_ui.debug_select_upgrade(0)
 	await _settle_capture()
 	_save_capture("04b-upgrade-selected.png")
+	_on_upgrade_selected(StringName(current_card_offer[0]["id"]))
+	await _settle_capture()
+	_save_capture("04c-upgrade-confirmed.png")
 
 	apply_upgrade(&"ion_wake")
 	mode = RunMode.PLAYING
@@ -3349,12 +3352,15 @@ func _run_capture_sequence() -> void:
 	await _settle_capture()
 	_save_capture("05-optional-field-boss.png")
 	current_card_offer = _build_card_offer(&"field_boss")
+	current_reward_source = &"field_boss"
+	current_reward_optional = true
 	mode = RunMode.UPGRADE
 	_ui.show_upgrade(current_card_offer, true)
 	await _settle_capture()
 	_save_capture("05b-optional-reward.png")
-	mode = RunMode.PLAYING
-	_ui.show_gameplay()
+	_on_upgrade_declined()
+	await _settle_capture()
+	_save_capture("05c-optional-declined.png")
 
 	chest_claimed = true
 	player_position = Vector2(4190.0, 1110.0)

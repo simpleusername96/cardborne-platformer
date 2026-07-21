@@ -1,8 +1,9 @@
 ---
 type: plan
-status: active
+status: done
 owner: BK
 created: 2026-07-21
+last_reviewed: 2026-07-22
 topic: High-density vehicle combat, one-second opening shot, and map-driven run upgrades
 scope: Continuous primary fire, compact enemy populations, upgrade data/runtime/UI, map reward cadence, field items, stored SFX assets, validation, and specification alignment
 related:
@@ -303,17 +304,17 @@ Goal: make the Flooded Works approach immediately demonstrate held fire, a one-s
 
 Source owners: `vehicle_primary_weapon.gd`, `vehicle_enemy_archetypes.gd`, `vehicle_encounter_director.gd`, `vehicle_stage_catalog.gd`, `vehicle_stage_one.gd`, `vehicle_stage_visual_profile.gd`, focused validators.
 
-- [ ] **1.1 Replace attack energy with continuous fire and idle opening state.**
+- [x] **1.1 Replace attack energy with continuous fire and idle opening state.**
   - As-is: `VehiclePrimaryCharge` gates every shot and input uses `just_pressed`.
   - To-be: `VehiclePrimaryWeapon` exposes the exact baseline and one-second opening contract; runtime uses held input.
   - Accept: cadence, partial/full opener, one-shot consumption, dash suppression, reset, and snapshot tests pass.
   - Guard: no ammo/heat/release latch appears and passive/EMP/dash input remains unchanged.
-- [ ] **1.2 Add compact archetype data and one Flooded Works swarm group.**
+- [x] **1.2 Add compact archetype data and one Flooded Works swarm group.**
   - As-is: role values are a match block and ordinary visual radius is globally 36 px.
   - To-be: new archetype owner supplies exact swarm/standard/installation sizes and one deterministic 18-enemy approach group.
   - Accept: rendered 1280×720 approach shows at least 12 small enemies, a distinguishable player, and truthful hit radii.
   - Guard: no enemy spawns in cover, the entry lane, or a reward anchor.
-- [ ] **1.3 Add attack-budget and cap enforcement.**
+- [x] **1.3 Add attack-budget and cap enforcement.**
   - As-is: two ordinary startup/active states are allowed regardless of role weight.
   - To-be: the 4.0-point budget and projectile/effect caps govern the slice.
   - Accept: stress validation never exceeds budget/caps and telegraphed priority attacks are not deleted.
@@ -329,15 +330,15 @@ Goal: convert all three sparse blueprints into authored groups at the locked pop
 
 Source owners: `vehicle_stage_catalog.gd`, `vehicle_enemy_archetypes.gd`, `vehicle_encounter_director.gd`, `vehicle_stage_one.gd`, `vehicle_stage_visual_profile.gd`, minimap/HUD snapshot code.
 
-- [ ] **2.1 Define and validate every encounter group.**
+- [x] **2.1 Define and validate every encounter group.**
   - To-be: 7/8/8 groups expand to exactly 68/76/84 pre-boss enemies with stable IDs and deterministic positions.
   - Accept: every expanded spawn passes cover, entrance, reward-anchor, boss-gate, and reachability validation.
   - Guard: required installations and optional/stage bosses retain stable IDs and progression semantics.
-- [ ] **2.2 Apply role-specific activation, leash, and coordination.**
+- [x] **2.2 Apply role-specific activation, leash, and coordination.**
   - To-be: groups activate by authored rectangles, leash locally, and enforce 24/26/28 active caps plus the shared threat budget.
   - Accept: skipped enemies cannot follow across the entire stage or block any later reward/exit.
   - Guard: moving enemies continue repositioning instead of remaining stuck.
-- [ ] **2.3 Recompose dense enemy feedback.**
+- [x] **2.3 Recompose dense enemy feedback.**
   - To-be: compact silhouette families, targeted/damaged health timing, group/priority minimap markers, and small/priority destruction effects replace always-large feedback.
   - Accept: role and danger remain readable at 960×540 and 1280×720 without displaying every health bar/minimap dot.
   - Guard: color is not the sole role cue and visual bodies do not imply larger damage areas.
@@ -352,19 +353,19 @@ Goal: replace Boolean effects with a typed, stackable, previewable run build and
 
 Source owners: new `scripts/cards/*`, `data/cards/vehicle/*.tres`, `vehicle_status_runtime.gd`, `vehicle_stage_one.gd`, localization CSV/translations, validators.
 
-- [ ] **3.1 Add typed definitions, modifier resources, catalog validation, and all 34 `.tres` entries.**
+- [x] **3.1 Add typed definitions, modifier resources, catalog validation, and all 34 `.tres` entries.**
   - Accept: IDs, families, localization keys, max levels, prerequisites, exclusions, source tags, modifier lengths, and behavior IDs validate uniquely.
   - Guard: definitions contain no UI nodes, runtime references, or localized stable IDs.
-- [ ] **3.2 Add `VehicleRunBuild`, preview, apply receipt, and reset/stage-preserve behavior.**
+- [x] **3.2 Add `VehicleRunBuild`, preview, apply receipt, and reset/stage-preserve behavior.**
   - Accept: each stack changes exact derived values, max levels reject safely, preview has no mutation, apply is idempotent per reward transaction, stage changes preserve, and new run clears.
   - Guard: UI and projectile code cannot mutate the level dictionary directly.
-- [ ] **3.3 Add deterministic compatible offers.**
+- [x] **3.3 Add deterministic compatible offers.**
   - Accept: family quota, first-offer composition, source guarantees, max filtering, prerequisites, element exclusivity, and stable run/stage/source seeds pass repeated tests.
   - Guard: no offer has duplicates, three maxed choices, incompatible cores, or a dependent card without its core.
-- [ ] **3.4 Implement primary/passive/mobility/dash/EMP modifiers.**
+- [x] **3.4 Implement primary/passive/mobility/dash/EMP modifiers.**
   - Accept: all 25 non-element upgrade rows produce their documented numeric or behavior change in the next encounter.
   - Guard: fire-rate/dash/passive/EMP floors and projectile caps cannot be bypassed by stacks or items.
-- [ ] **3.5 Implement Burn, Poison, Slow, and their six mutations.**
+- [x] **3.5 Implement Burn, Poison, Slow, and their six mutations.**
   - Accept: tick rate, duration, stack/refresh, propagation, detonation, shatter, boss resistance, death cleanup, and structure interaction are deterministic.
   - Guard: status effects cannot recursively trigger themselves, spread without a source cap, permanently slow a boss, or continue after death.
 
@@ -378,14 +379,14 @@ Goal: make build decisions and temporary combat tools part of the authored map r
 
 Source owners: `vehicle_stage_catalog.gd`, `vehicle_stage_one.gd`, `vehicle_upgrade_catalog.gd`, `vehicle_run_build.gd`, UI intent boundary, localization, validators.
 
-- [ ] **4.1 Add calibration, field-boss, relay, and boss reward sources to every stage.**
+- [x] **4.1 Add calibration, field-boss, relay, and boss reward sources to every stage.**
   - Accept: source IDs/positions/unlock rules produce nine mandatory and up to three optional transactions across a full run.
   - Guard: only installations and the active boss gate movement; living ordinary enemies never gate a reward or transition.
-- [ ] **4.2 Replace the deployment weapon choice and garage toggle.**
+- [x] **4.2 Replace the deployment weapon choice and garage toggle.**
   - To-be: deployment is a one-action briefing; garage shows the current/latest build summary without changing a weapon type.
   - Accept: a fresh or old save always launches the neutral Pulse Cannon and the first map choice begins build identity.
   - Guard: locale/settings/persistent module fields remain compatible and old primary keys cause no error.
-- [ ] **4.3 Implement all nine item families and authored placement.**
+- [x] **4.3 Implement all nine item families and authored placement.**
   - Accept: each stage has eight loose items, five crates, deterministic group reward rolls, and a guaranteed field-boss repair.
   - Guard: effects reset on stage/run boundaries as specified, never become permanent upgrades, and do not add ammo UI.
 
@@ -399,13 +400,13 @@ Goal: make every upgrade choice hard to trigger accidentally and easy to underst
 
 Source owners: new `vehicle_upgrade_choice_panel.gd`, `vehicle_stage_ui.gd`, vehicle Theme, localization, UI debug contract, validators.
 
-- [ ] **5.1 Extract and implement the upgrade-choice component.**
+- [x] **5.1 Extract and implement the upgrade-choice component.**
   - Accept: 0.35 second guard, focus/selection separation, 1–3 selection, explicit confirmation, disabled pending state, receipt/error return, and optional decline work by mouse, keyboard, and gamepad.
   - Guard: one interaction cannot both select and apply; duplicate confirmation emits once.
-- [ ] **5.2 Add current-to-next preview and compatibility copy.**
+- [x] **5.2 Add current-to-next preview and compatibility copy.**
   - Accept: exact levels/values/triggers and selected element consequences fit all target viewports/locales.
   - Guard: UI reads catalog/build snapshots and contains no effect implementation or offer filtering.
-- [ ] **5.3 Replace attack-energy HUD with opening-shot readiness.**
+- [x] **5.3 Replace attack-energy HUD with opening-shot readiness.**
   - To-be: primary rail communicates `연사 중 / Firing`, partial capacitor, and `강공격 준비 / Opening ready`; it does not imply ammo or disabled normal fire.
   - Accept: a player can tell when the next first shot is full without reading instructional prose.
   - Guard: passive/dash/EMP/buff/target states remain visible and non-overlapping.
@@ -420,10 +421,10 @@ Goal: replace temporary synthesized beeps with stored, layered feedback for cont
 
 Source owners: `tools/audio/generate_vehicle_sfx.py`, `art/audio/vehicle/sfx/*.wav`, `vehicle_audio_director.gd`, `vehicle_stage_one.gd`, settings/audio validation.
 
-- [ ] **6.1 Generate and commit the thirteen locked WAV assets.**
+- [x] **6.1 Generate and commit the thirteen locked WAV assets.**
   - Accept: files are deterministic, non-empty, mono PCM, normalized below clipping, and import in Godot without warnings.
   - Guard: no downloaded sample, external license, package, or generated cache is staged as source.
-- [ ] **6.2 Add playback routing and retire runtime synthesis.**
+- [x] **6.2 Add playback routing and retire runtime synthesis.**
   - Accept: held fire has clean start/loop/end, full readiness/fire are distinct, impacts use a two-voice limiter, and upgrade select/confirm are different cues.
   - Guard: Master/SFX settings still control all sounds; no Music bus or voice line is added.
 
@@ -437,24 +438,24 @@ Goal: prove the complete loop and leave one truthful implementation contract.
 
 Source owners: active product specs, validators, capture tooling, all task-owned code/assets, this plan.
 
-- [ ] **7.1 Align active product and design contracts.**
+- [x] **7.1 Align active product and design contracts.**
   - Update `vehicle_content_expansion_spec.md` for continuous fire, compact groups, reward cadence, and the catalog contract.
   - Update `progression_upgrade_system_spec.md` so bounded stackable vehicle-run fundamentals and behavior mutations coexist without changing persistent Forge/mastery scope.
   - Accept: no active spec still requires three-second attack energy, Repeater/Scatter deployment, one cache per stage, or Boolean-only cards.
   - Guard: do not promote this run-local system into permanent progression or rewrite protected `AGENTS.md`.
-- [ ] **7.2 Extend deterministic and full-route validation.**
+- [x] **7.2 Extend deterministic and full-route validation.**
   - Accept: primary, populations, formations, reachability, threat budget, caps, all upgrades, statuses, offers, items, UI, audio, stage preservation, run reset, settings, localization, and ordinary-enemy bypass pass.
   - Guard: never weaken an existing assertion to make the new behavior pass; replace only assertions whose accepted contract changed.
-- [ ] **7.3 Run rendered UI/gameplay evidence.**
+- [x] **7.3 Run rendered UI/gameplay evidence.**
   - Capture deployment, dense Stage 1 approach, each elemental state, upgrade unselected/selected/confirmed states, optional decline, Stage 2 density, Stage 3 density, boss reward, result, and garage/build summary at 1280×720; capture Korean and English upgrade/combat at 960×540.
   - Accept: no clipping, unreadable tiny threat, hidden route, misleading collision, health-bar flood, accidental modal exit, or HUD overlap remains.
   - Guard: rendered evidence must come from the built/current implementation, not mockups or DOM-only inspection.
-- [ ] **7.4 Run production and task-scoped quality gates.**
+- [x] **7.4 Run production and task-scoped quality gates.**
   - Use `$codebase-quality-auditor` after multi-file implementation; correct only safe task-scoped findings.
   - Run headless import, focused validators, Web export, canonical fastrun Codex-lane boot, staged-file audit, and `git diff --check`.
   - Accept: all gates pass and only task-owned source/assets/docs are committed.
   - Guard: pre-existing `.import` churn remains unstaged; no remote push occurs without a new request.
-- [ ] **7.5 Complete lifecycle.**
+- [x] **7.5 Complete lifecycle.**
   - Record final evidence and deviations that stay within locked tuning floors/caps, check every completed phase, set this plan to `done`, and commit the final scoped batch.
   - Guard: do not mark done if any catalog effect, required reward source, UI flow, audio ID, build, or regression gate remains incomplete.
 
@@ -519,35 +520,49 @@ Rerun policy:
 
 ## Progress
 
-- [ ] Phase 1: playable dense-combat vertical slice.
-- [ ] Phase 2: complete all-stage enemy density and presentation.
-- [ ] Phase 3: data-driven build, statuses, and 34-upgrade catalog.
-- [ ] Phase 4: map reward cadence and expanded field items.
-- [ ] Phase 5: deliberate upgrade selection UI and combat HUD.
-- [ ] Phase 6: stored audio feedback.
-- [ ] Phase 7: specifications, quality, production validation, and lifecycle completion.
-- [ ] Final gates.
+- [x] Phase 1: playable dense-combat vertical slice.
+- [x] Phase 2: complete all-stage enemy density and presentation.
+- [x] Phase 3: data-driven build, statuses, and 34-upgrade catalog.
+- [x] Phase 4: map reward cadence and expanded field items.
+- [x] Phase 5: deliberate upgrade selection UI and combat HUD.
+- [x] Phase 6: stored audio feedback.
+- [x] Phase 7: specifications, quality, production validation, and lifecycle completion.
+- [x] Final gates.
 
-## Next Steps
+## Completion Summary
 
-1. Start with Phase 1 only and hand back a playable Flooded Works approach showing held fire, a one-second opening shot, and the compact swarm before broadening the data migration.
-2. Complete enemy density, then the typed upgrade runtime/statuses, then reward placement and UI in the listed order so each batch remains playable.
-3. Finish with stored audio, spec alignment, complete rendered evidence, production build/boot, quality audit, lifecycle update, and scoped commits.
+1. Replaced attack energy and the Repeater/Scatter deployment split with one neutral Pulse Cannon, held 0.12-second fire, and a one-second opening shot.
+2. Completed deterministic encounter groups with 68/76/84 pre-boss enemies, compact swarm roles, local activation caps, cover-blocked projectiles, readable priority health, and ordinary-enemy bypass.
+3. Added 34 typed run upgrades, elemental status/mutations, nine item families, nine mandatory and up to three optional reward transactions, deliberate confirmation UI, and thirteen stored WAV cues.
+4. Aligned active product specs, added focused validators, captured the complete Korean/English flow, exported the Web release, and verified its canonical local boot.
+
+## Final Evidence
+
+- Implementation commit: `db1fc7c` (`feat: implement dense vehicle combat upgrade loop`).
+- Final Godot import/parse: `./tools/godot.ps1 --path . --headless --quit-after 2` passed.
+- Focused validators passed: `VEHICLE_PRIMARY_WEAPON_VALIDATION_OK`, `VEHICLE_UPGRADE_SYSTEM_VALIDATION_OK`, `VEHICLE_STAGE_VALIDATION_OK` with 126 checks, `VEHICLE_REWARDS_UI_AUDIO_VALIDATION_OK`, and the pivot settings pass token.
+- Data/asset contract: exactly 34 `.tres` upgrade definitions, nine field-item IDs including field-boss-only `major_repair`, and thirteen stored mono PCM WAV cues loaded through the SFX route.
+- Rendered evidence: 19 Korean 1280×720 captures under `.godot/dense-combat-ko-final-v3` and 19 English 960×540 captures under `.godot/dense-combat-en-final-v4`. The sequence includes deployment, dense combat, Burn/Poison/Slow, installations, upgrade unselected/selected/confirmed, field boss, optional reward/decline, stage boss/transition, Stages 2/3, pause, result, and garage.
+- Responsive contract: automated 960×540, 1280×720, and 1920×1080 UI bounds/control checks passed; inspected Korean and English final captures showed no modal, HUD, long-copy, or control clipping.
+- Production artifact: Web release export produced non-empty `index.html`, `index.js`, `index.wasm`, and `index.pck`; all returned HTTP 200 on canonical Codex-lane port 13029 and the exact task-owned preview process released the port.
+- Quality/staging: task-scoped quality pass removed stale weapon-choice UI/localization and the retired attack-energy owner; `git diff --check` passed; staged audit found no unrelated `.import` file.
+- Non-blocking test-runner diagnostics: isolated SceneTree validators still print Godot ObjectDB/resource-in-use exit diagnostics after successful assertions, and the malformed-settings test intentionally prints its fallback warnings. No parser, resource-load, gameplay, or export failure is associated with them.
+- Validation deviation: the installed in-app Browser bundle lacks its required `scripts/browser-client.mjs`, so an automated browser-canvas interaction pass was infeasible. Native Godot rendered states plus a production Web export HTTP boot were used as the strongest available substitute; no alternate browser stack was introduced.
 
 ## Completion Criteria
 
-- [ ] Held primary continuously fires at the documented cadence and normal fire is never charge-gated.
-- [ ] Exactly one full opening shot becomes ready after the documented 1.0 second idle and applies the documented health/stagger/structure/radius/pierce effects.
-- [ ] Stages contain exactly 68/76/84 pre-boss enemies with compact scale, local caps, attack budget, and readable presentation.
-- [ ] All 34 upgrades load from data, obey exact levels/prerequisites/exclusions/floors, preview accurately, apply once per transaction, persist across stages, and reset with the run.
-- [ ] Burn, Poison, Slow, elemental exclusivity, passive upgrades, mobility, opening, dash, and EMP upgrades behave exactly as cataloged.
-- [ ] Nine mandatory and up to three optional upgrade choices occur at the locked map/run beats without ordinary-enemy extermination gates.
-- [ ] All nine field items, authored placements, crates, group reward policy, and no-loot-spray guard pass.
-- [ ] No single click, number key, or carried input can accidentally apply or skip an upgrade; Korean and English layouts pass all viewports.
-- [ ] Thirteen stored WAV files replace runtime synthesis with clean continuous-fire and limited impact playback.
-- [ ] Active product specs describe the implemented behavior and do not retain conflicting attack-energy/class-choice/card constraints.
-- [ ] All automated, rendered, build, production-style boot, quality, lifecycle, and staged-file gates pass.
-- [ ] No retired owner, duplicate runtime path, unresolved material decision, placeholder, or unrelated staged change remains.
+- [x] Held primary continuously fires at the documented cadence and normal fire is never charge-gated.
+- [x] Exactly one full opening shot becomes ready after the documented 1.0 second idle and applies the documented health/stagger/structure/radius/pierce effects.
+- [x] Stages contain exactly 68/76/84 pre-boss enemies with compact scale, local caps, attack budget, and readable presentation.
+- [x] All 34 upgrades load from data, obey exact levels/prerequisites/exclusions/floors, preview accurately, apply once per transaction, persist across stages, and reset with the run.
+- [x] Burn, Poison, Slow, elemental exclusivity, passive upgrades, mobility, opening, dash, and EMP upgrades behave exactly as cataloged.
+- [x] Nine mandatory and up to three optional upgrade choices occur at the locked map/run beats without ordinary-enemy extermination gates.
+- [x] All nine field items, authored placements, crates, group reward policy, and no-loot-spray guard pass.
+- [x] No single click, number key, or carried input can accidentally apply or skip an upgrade; Korean and English layouts pass all viewports.
+- [x] Thirteen stored WAV files replace runtime synthesis with clean continuous-fire and limited impact playback.
+- [x] Active product specs describe the implemented behavior and do not retain conflicting attack-energy/class-choice/card constraints.
+- [x] All automated, rendered, build, production-style boot, quality, lifecycle, and staged-file gates pass.
+- [x] No retired owner, duplicate runtime path, unresolved material decision, placeholder, or unrelated staged change remains.
 
 ## Rollback / Safety
 
