@@ -1,35 +1,25 @@
 # Cardborne
 
-Godot 4.7 GDScript action project. The current executable is a flat top-down
-vehicle run that preserves the project's flat-color drowned-ruin art direction.
+Cardborne is a Godot 4.7 top-down vehicle action shooter built around manual
+targeting, held primary fire, a one-second opening shot, dash movement, passive
+seekers, EMP, map pickups, and card upgrades.
 
-## Current Runtime
+## Current Game
 
-- `project.godot` boots `scenes/main/PivotRoot.tscn`, which instantiates
-  `scenes/run/VehicleStageOne.tscn`.
-- The playable run contains Flooded Works, Tidal Archive, and Storm Drydock,
-  manual aim and held primary fire, dash, passive seekers, EMP, field pickups,
-  card upgrades, fixed installations, ordinary enemies, field bosses, and stage
-  bosses.
-- Korean is the default UI language and can be switched to English in runtime
-  settings.
-- The earlier humanoid native-3D proof remains in the repository as retained
-  implementation evidence, but it is not the main boot path.
-
-The implemented vehicle behavior is documented in
-`docs/product/vehicle_content_expansion_spec.md`. Repository policy still
-contains older humanoid-proof language that requires an explicit owner decision
-before it can be rewritten; `docs/README.md` records that authority boundary.
+- `project.godot` boots `scenes/main/GameRoot.tscn` and the connected
+  `scenes/run/VehicleRun.tscn` campaign.
+- The run covers Flooded Works, Tidal Archive, and Storm Drydock.
+- Ordinary enemies may be bypassed; installations and bosses own progression
+  gates.
+- Korean is the default UI language and English can be selected in settings.
+- The active product and visual contracts are indexed in `docs/README.md`.
 
 ## Local Godot
 
 ```powershell
-.\tools\godot.ps1 --version
+.\tools\setup-godot.ps1
 .\tools\godot.ps1 --path . --editor
 .\tools\godot.ps1 --path . --headless --import
 .\tools\godot.ps1 --path . --headless --quit-after 2
-.\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_stage_one.gd
+.\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_run.gd
 ```
-
-Use `docs/README.md` for current document authority, known conflicts, and retained
-references.

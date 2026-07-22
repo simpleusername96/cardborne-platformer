@@ -1,8 +1,0 @@
-[gd_resource type="Resource" script_class="TiledRoomBuildCatalog" load_steps=3 format=3]
-
-[ext_resource type="Script" path="res://scripts/rooms/tiled_room_build_catalog.gd" id="1_catalog"]
-[ext_resource type="Texture2D" path="res://art/world/flooded_works/isometric/surfaces/foundry-architecture-albedo-v1.png" id="2_albedo"]
-
-[resource]
-script = ExtResource("1_catalog")
-surface_albedo = ExtResource("2_albedo")

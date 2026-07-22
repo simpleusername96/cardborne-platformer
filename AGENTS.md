@@ -1,28 +1,19 @@
 # AGENTS.md
 
 ## Project
-- This repository is pivoting to a Godot 4.x GDScript isometric action RPG. The active transition plan is `.agent/execplans/2026-07-17-isometric-action-rpg-pivot.md` until a replacement product spec is accepted.
-- Preserve the accepted flat-color drowned-ruin art direction and the product identities of one Traveler, explicit weapons, cards, equipment, forging, merchants, run rewards, and persistent progression. Rebuild their runtime contracts for top-down combat instead of restoring the retired platformer implementation.
-- The first target is a short authored combat proof, not a complete content run: responsive eight-direction movement, independent aim, explicit attacks, dash/defense, three enemy roles, multiple encounter objectives, one behavior-changing reward, and one boss test.
-- Treat two-dimensional ground-plane simulation and isometric presentation as separate concerns. Do not add jumping, ropes, platform geometry, or stacked navigation levels unless a later accepted spec requires them.
-- Prioritize player intent, hit readability, enemy coordination, and a quick playable feedback loop before meta-system breadth or procedural generation.
-- Use placeholder shapes, simple sprites, and editor-friendly exported values. Do not add external asset dependencies unless the user asks.
+- Cardborne is a Godot 4.7 GDScript top-down vehicle action shooter.
+- The current product is the connected three-stage run defined in `docs/product/vehicle_game_spec.md`.
+- Preserve manual aim, held primary fire, the one-second opening shot, dash, passive seekers, EMP, authored encounters, map pickups, card upgrades, optional field bosses, and stage bosses.
+- Korean is the default language; Korean and English must remain complete on every user-facing surface.
+- Preserve the flat-color Sunken Ceramic Fresco visual system in `docs/design/UI_VISUAL_SYSTEM.md`.
+- Prioritize first-clear readability, fair pressure, responsive control, target priority, and reliable performance before adding content breadth.
 
 ## Operating Model
-- Use Godot 4.7 stable when available. The standard GDScript build is enough; do not switch to C#/.NET without explicit user direction.
-- Prefer `.\tools\godot.ps1` for local Godot commands so future agents use the same runtime resolution path.
-- Work milestone by milestone from the active pivot plan and the replacement product spec once it exists. For moderate or larger implementation work, start with the relevant `.agent/*` context and create an ExecPlan only when `.agent/PLANS.md` says one is warranted.
-- Keep gameplay systems responsibility-shaped:
-  - player movement and action intent belong under `scripts/player/`
-  - damage helpers belong under `scripts/combat/`
-  - enemy behavior belongs under `scripts/enemies/`
-  - boss patterns belong under `scripts/bosses/`
-  - card data/effects belong under `scripts/cards/` and `data/cards/`
-  - room and encounter flow belongs under `scripts/rooms/` and `scripts/encounters/`
-  - UI belongs under `scripts/ui/`
-  - global run state/autoloads belong under `scripts/autoload/`
-- Do not hard-code cards directly into UI or player code. Card data and effect application should stay separate.
-- Every damaging boss attack needs a visible startup warning, active damage window, and recovery, even with placeholder rectangles.
+- Use Godot 4.7 stable and GDScript. Do not switch engines or add production dependencies without explicit user direction.
+- Prefer `./tools/godot.ps1` for local Godot commands.
+- Keep stage definitions, enemy roles, encounter coordination, card data, combat state, UI, settings, and audio in their existing responsibility owners.
+- Keep card behavior out of UI code and keep visual geometry independent from collision truth.
+- Run the focused validators under `tools/validation/` after relevant changes. Run the Web export before handing off broad runtime changes.
 
 ## Living Guidance
 - This file is project-specific operating guidance.
@@ -44,7 +35,7 @@
 ### FE
 - Prefer a component-driven UI so design and behavior stay consistent.
 - Check alignment, typography, spacing, and padding/gap explicitly.
-- Check overflow and clipping explicitly; no child element should be visibly cut off or exceed its container at supported browser viewport sizes.
+- Check overflow and clipping explicitly; no child element should be visibly cut off or exceed its container at supported desktop/mobile widths.
 - Avoid unnecessary explanatory or guideline text.
 - Keep non-essential elements visually restrained.
 
@@ -57,9 +48,9 @@
 - Ask before running broad or intensive database reads unless the need is already explicit.
 
 ## Project Memory
-- Before broad, risky, or multi-file governance work, read the relevant files under `.agent/`.
-- Use an ExecPlan only for work that matches the ExecPlan Standard in `.agent/PLANS.md`; do not create one for simple questions, single-note judgments, or small one-file edits.
-- Use `.agent/*` for durable project memory, evolving plans, workflow notes, and recurring gotchas that do not need a separate skill.
+- Before broad, risky, or multi-file governance work, read the relevant files under `.agents/`.
+- Use an ExecPlan only for work that matches the ExecPlan Standard in `.agents/PLANS.md`; do not create one for simple questions, single-note judgments, or small one-file edits.
+- Use `.agents/*` for durable project memory, evolving plans, workflow notes, recurring gotchas, and repo-local skills.
 - Keep transient discoveries and in-progress status there instead of in root `AGENTS.md`.
 
 ## Documentation Lifecycle
@@ -68,7 +59,7 @@
 - Do not frontmatter-stamp protected instruction files such as `AGENTS.md`; audit them and propose minimal changes instead.
 
 ## Local Skills
-- Repo-local skills may exist under `.agent/skills/`.
+- Repo-local skills live under `.agents/skills/`, where Codex can discover them natively.
 - Use them when the task matches their workflow boundary.
 - If the repo actually has stable local skills worth surfacing repeatedly, record:
   - the skill name
@@ -79,7 +70,7 @@
 ## Placement Rules
 - Put stable repo-wide guidance in this file.
 - Put subtree-specific placement or operating rules in the nearest local `AGENTS.md`.
-- Put durable supporting memory and evolving notes in `.agent/*`.
+- Put durable supporting memory and evolving notes in `.agents/*`.
 - Prefer purpose-revealing naming over root-level structure prose where naming can carry the meaning.
 - Create a repo-local skill only when a workflow repeats and needs its own trigger, stop conditions, or artifact contract.
 - Do not fill root `AGENTS.md` with directory maps, transient inventories, or guidance that only describes the current layout.

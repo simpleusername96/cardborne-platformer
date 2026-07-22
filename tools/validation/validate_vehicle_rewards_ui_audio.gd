@@ -3,7 +3,7 @@ extends SceneTree
 const StageCatalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
 const UpgradePanel = preload("res://scripts/ui/vehicle_upgrade_choice_panel.gd")
 const AudioDirector = preload("res://scripts/presentation/vehicle_audio_director.gd")
-const StageScene = preload("res://scenes/run/VehicleStageOne.tscn")
+const StageScene = preload("res://scenes/run/VehicleRun.tscn")
 
 var failures: Array[String] = []
 var confirmed_count := 0

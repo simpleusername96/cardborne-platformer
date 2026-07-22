@@ -5,6 +5,8 @@ extends SceneTree
 
 const StageCatalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
 const EncounterDirector = preload("res://scripts/encounters/vehicle_encounter_director.gd")
+const WARMUP_STEPS := 30
+const MEASURED_STEPS := 300
 
 
 func _initialize() -> void:
@@ -12,7 +14,7 @@ func _initialize() -> void:
 
 
 func _run() -> void:
-	var packed := load("res://scenes/run/VehicleStageOne.tscn") as PackedScene
+	var packed := load("res://scenes/run/VehicleRun.tscn") as PackedScene
 	var stage := packed.instantiate()
 	root.add_child(stage)
 	await process_frame
@@ -25,9 +27,12 @@ func _run() -> void:
 	for enemy in stage.enemies:
 		enemy["active"] = false
 	stage.call("_activate_capture_zone", "approach")
+	for _index in WARMUP_STEPS:
+		stage.call("_update_enemies", 1.0 / 60.0)
+		stage.call("_update_projectiles", 1.0 / 60.0)
 
 	var started := Time.get_ticks_usec()
-	for _index in 300:
+	for _index in MEASURED_STEPS:
 		stage.call("_update_enemies", 1.0 / 60.0)
 		stage.call("_update_projectiles", 1.0 / 60.0)
 	var elapsed := Time.get_ticks_usec() - started
@@ -35,10 +40,11 @@ func _run() -> void:
 	for enemy in stage.enemies:
 		if bool(enemy["alive"]) and bool(enemy["active"]) and bool(enemy.get("counts_active_cap", false)):
 			active_capped += 1
-	var step_ms := elapsed / 300.0 / 1000.0
-	print("VEHICLE_PRESSURE_PROFILE active_capped=%d cap=%d steps=300 step_ms=%.3f within_8ms=%s" % [
+	var step_ms := elapsed / float(MEASURED_STEPS) / 1000.0
+	print("VEHICLE_PRESSURE_PROFILE active_capped=%d cap=%d steps=%d step_ms=%.3f within_8ms=%s" % [
 		active_capped,
 		EncounterDirector.active_cap(StageCatalog.STAGE_IDS[2]),
+		MEASURED_STEPS,
 		step_ms,
 		str(step_ms < 8.0),
 	])

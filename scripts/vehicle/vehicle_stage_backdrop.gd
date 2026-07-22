@@ -1,7 +1,7 @@
 class_name VehicleStageBackdrop
 extends Node2D
 
-## Cached stage geometry. Combat state stays in VehicleStageOne so this canvas
+## Cached stage geometry. Combat state stays in VehicleRun so this canvas
 ## only redraws when the authored stage theme changes.
 
 const Rules = preload("res://scripts/vehicle/vehicle_stage_rules.gd")

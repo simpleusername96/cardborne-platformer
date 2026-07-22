@@ -1,7 +1,7 @@
 class_name VehicleStageUI
 extends CanvasLayer
 
-## Runtime-built HUD and modal surfaces for the vehicle Stage 1 slice.
+## Runtime-built HUD and modal surfaces for the vehicle run.
 ## The UI presents snapshots and emits intents; the stage remains the gameplay owner.
 
 signal deployment_selected(primary_id: StringName)
