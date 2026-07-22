@@ -4,7 +4,6 @@ extends RefCounted
 ## Validated facade over responsibility-shaped authored stage definitions.
 ## Runtime consumers never silently receive a partial registered stage.
 
-const EncounterDirector = preload("res://scripts/encounters/vehicle_encounter_director.gd")
 const FloodedWorks = preload("res://scripts/vehicle/stages/flooded_works.gd")
 const TidalArchive = preload("res://scripts/vehicle/stages/tidal_archive.gd")
 const StormDrydock = preload("res://scripts/vehicle/stages/storm_drydock.gd")
@@ -149,62 +148,38 @@ static func floor_regions(stage_id: StringName, colors: Dictionary) -> Array[Dic
 
 
 static func enemy_blueprint(stage_id: StringName) -> Array[Dictionary]:
-	var data := definition(stage_id)
-	var result: Array[Dictionary] = []
-	for spec in data["static_enemies"]:
-		result.append(Dictionary(spec).duplicate(true))
-	var legacy_groups: Array[Dictionary] = []
-	for group in data.get("legacy_swarm_groups", []):
-		legacy_groups.append(Dictionary(group).duplicate(true))
-	var swarms := EncounterDirector.expand_groups(legacy_groups)
-	_fit_swarm_spawns(stage_id, swarms, result)
-	result.append_array(swarms)
+	var result := static_enemy_blueprint(stage_id)
+	result.append_array(packet_enemy_blueprint(stage_id))
 	return result
 
 
-static func _fit_swarm_spawns(stage_id: StringName, swarms: Array[Dictionary], base_spawns: Array[Dictionary]) -> void:
-	var cover := cover_rects(stage_id)
-	var occupied: Array[Vector2] = []
-	for spec in base_spawns:
-		occupied.append(Vector2(spec["pos"]))
-	var radius_offsets := [0.0, -18.0, 18.0, -36.0, 36.0, 54.0, 72.0]
-	for index in swarms.size():
-		var spec: Dictionary = swarms[index]
-		var original := Vector2(spec["pos"])
-		if _spawn_position_clear(stage_id, original, cover, occupied):
-			occupied.append(original)
-			continue
-		var anchor := Vector2(spec["formation_anchor"])
-		var base_offset := original - anchor
-		var resolved := original
-		var found := false
-		for radius_offset in radius_offsets:
-			var candidate_radius := maxf(34.0, base_offset.length() + float(radius_offset))
-			for angle_step in 32:
-				var candidate_angle := base_offset.angle() + TAU * float(angle_step + 1) / 32.0
-				var candidate := anchor + Vector2.RIGHT.rotated(candidate_angle) * candidate_radius
-				if _spawn_position_clear(stage_id, candidate, cover, occupied):
-					resolved = candidate
-					found = true
-					break
-			if found:
-				break
-		spec["pos"] = resolved
-		swarms[index] = spec
-		occupied.append(resolved)
+static func static_enemy_blueprint(stage_id: StringName) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	for spec in definition(stage_id)["static_enemies"]:
+		result.append(Dictionary(spec).duplicate(true))
+	return result
 
 
-static func _spawn_position_clear(stage_id: StringName, position: Vector2, cover: Array[Rect2], occupied: Array[Vector2]) -> bool:
-	const VALIDATION_RADIUS := 28.0
-	if not position_is_walkable(stage_id, position, VALIDATION_RADIUS):
-		return false
-	for rect in cover:
-		if _circle_overlaps_rect(position, VALIDATION_RADIUS, rect):
-			return false
-	for other in occupied:
-		if position.distance_to(other) < 25.0:
-			return false
-	return true
+static func packet_enemy_blueprint(stage_id: StringName) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	for packet in packets(stage_id):
+		var packet_id := String(packet["id"])
+		var anchor := Vector2(packet["anchor"])
+		var squads: Array = packet["squads"]
+		for squad_index in squads.size():
+			var squad: Array = squads[squad_index]
+			for unit_index in squad.size():
+				result.append({
+					"id":"%s_s%02d_u%02d" % [packet_id, squad_index + 1, unit_index + 1],
+					"role":StringName(squad[unit_index]), "pos":anchor, "zone":String(packet["zone"]),
+					"group_id":"%s_s%02d" % [packet_id, squad_index + 1],
+					"formation_anchor":anchor, "leash_rect":Rect2(packet["leash"]),
+				})
+	return result
+
+
+static func authored_population(stage_id: StringName) -> int:
+	return enemy_blueprint(stage_id).size()
 
 
 static func position_is_walkable(stage_id: StringName, position: Vector2, radius: float = 0.0) -> bool:

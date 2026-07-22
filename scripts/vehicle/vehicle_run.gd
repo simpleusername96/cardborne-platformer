@@ -10,6 +10,7 @@ const PrimaryWeapon = preload("res://scripts/player/vehicle_primary_weapon.gd")
 const StageCatalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
 const EnemyArchetypes = preload("res://scripts/enemies/vehicle_enemy_archetypes.gd")
 const EncounterDirector = preload("res://scripts/encounters/vehicle_encounter_director.gd")
+const EncounterRuntime = preload("res://scripts/encounters/vehicle_encounter_runtime.gd")
 const UpgradeCatalog = preload("res://scripts/cards/vehicle_upgrade_catalog.gd")
 const RunBuild = preload("res://scripts/cards/vehicle_run_build.gd")
 const StatusRuntime = preload("res://scripts/combat/vehicle_status_runtime.gd")
@@ -49,6 +50,7 @@ var _ui: Variant
 var _camera: Camera2D
 var _backdrop
 var _rng := RandomNumberGenerator.new()
+var encounter_runtime := EncounterRuntime.new()
 
 var player_position := Vector2.ZERO
 var player_hull_direction := Vector2.RIGHT
@@ -169,6 +171,7 @@ func _physics_process(delta: float) -> void:
 		_update_player(delta)
 		_update_stage_environment(delta)
 		_update_pickups()
+		_update_encounter(delta)
 		_update_enemies(delta)
 		_update_threat_contacts(delta)
 		_update_projectiles(delta)
@@ -324,8 +327,9 @@ func _reset_run(increment_index: bool = true, preserve_stage: bool = false, pres
 	denied_zones.clear()
 	effects.clear()
 	damaging_trails.clear()
-	for spec in Rules.get_enemy_blueprint(current_stage_id):
+	for spec in StageCatalog.static_enemy_blueprint(current_stage_id):
 		enemies.append(_make_enemy(spec))
+	encounter_runtime.configure(current_stage_id, StageCatalog.packets(current_stage_id), _combat_preset())
 	for spec in Rules.get_pickup_blueprint(current_stage_id):
 		pickups.append({
 			"id": String(spec["id"]),
@@ -410,7 +414,7 @@ func _make_enemy(spec: Dictionary) -> Dictionary:
 		"threat_kind": StringName(definition["threat_kind"]),
 		"counts_active_cap": bool(definition["active_cap"]),
 		"alive": true,
-		"active": role == &"generator" or role == &"turret" or role == &"mine",
+		"active": bool(spec.get("active", false)),
 		"phase": "move",
 		"phase_time": 0.0,
 		"attack_cooldown": attack_cooldown,
@@ -432,7 +436,13 @@ func _make_enemy(spec: Dictionary) -> Dictionary:
 		"reposition_dir": Vector2.ZERO,
 		"zone": String(spec.get("zone", "")),
 		"group_id": String(spec.get("group_id", "")),
-		"activation_rect": Rect2(spec.get("activation_rect", Rect2())),
+		"squad_id": String(spec.get("squad_id", "")),
+		"squad_leader": bool(spec.get("squad_leader", false)),
+		"formation_slot": int(spec.get("formation_slot", 0)),
+		"formation_size": int(spec.get("formation_size", 1)),
+		"formation_offset": Vector2(spec.get("formation_offset", Vector2.ZERO)),
+		"target_sector": Vector2(spec.get("target_sector", Vector2.RIGHT)),
+		"packet_beat": int(spec.get("packet_beat", 0)),
 		"leash_rect": Rect2(spec.get("leash_rect", Rect2())),
 		"required": bool(spec.get("required", false)),
 		"optional": bool(spec.get("optional", false)),
@@ -445,6 +455,44 @@ func _make_enemy(spec: Dictionary) -> Dictionary:
 		"vulnerable": 0.0,
 		"lane_centers": [],
 	}
+
+
+func _combat_preset() -> StringName:
+	var settings := get_node_or_null("/root/SettingsStore")
+	return StringName(settings.combat_preset) if settings != null else &"standard"
+
+
+func _update_encounter(delta: float) -> void:
+	var requests := encounter_runtime.tick(delta, _active_mobile_count(), _active_attack_families())
+	for cue in requests["cues"]:
+		_add_effect("spawn", Vector2(cue["anchor"]), Art.MUSTARD, 0.9, 126.0)
+		_play_sound(&"boss", 0.72)
+		if int(cue["beat"]) == 0:
+			_ui.notify(tr("NOTIFY_CONTACT_INBOUND"), 1.2, Art.MUSTARD)
+	for spawn_spec in requests["spawns"]:
+		var enemy := _make_enemy(spawn_spec)
+		enemies.append(enemy)
+		_add_effect("spawn", Vector2(enemy["pos"]), Art.CORAL, 0.42, 68.0)
+
+
+func _active_mobile_count() -> int:
+	var count := 0
+	for enemy in enemies:
+		if bool(enemy.get("alive", false)) and bool(enemy.get("active", false)) and bool(enemy.get("counts_active_cap", false)):
+			count += 1
+	return count
+
+
+func _active_attack_families() -> Array[StringName]:
+	var families: Array[StringName] = []
+	for enemy in enemies:
+		if not bool(enemy.get("alive", false)) or not bool(enemy.get("active", false)):
+			continue
+		var family := StringName(enemy.get("threat_kind", &"melee"))
+		if family in [&"support", &"boss"] or family in families:
+			continue
+		families.append(family)
+	return families
 
 
 func _on_deployment_selected(primary_id: StringName) -> void:
@@ -1026,7 +1074,7 @@ func _update_enemies(delta: float) -> void:
 		enemy["ram_cooldown"] = maxf(0.0, float(enemy["ram_cooldown"]) - delta)
 		enemy["vulnerable"] = maxf(0.0, float(enemy["vulnerable"]) - delta)
 		enemy["health_visible_timer"] = maxf(0.0, float(enemy.get("health_visible_timer", 0.0)) - delta)
-		var activated := _update_enemy_activation(enemy, active_capped < EncounterDirector.active_cap(current_stage_id))
+		var activated := _update_enemy_activation(enemy, active_capped < encounter_runtime.active_cap())
 		if activated and bool(enemy.get("counts_active_cap", false)):
 			active_capped += 1
 
@@ -1058,7 +1106,15 @@ func _update_enemies(delta: float) -> void:
 		if float(enemy["stun"]) > 0.0:
 			enemy["velocity"] = Vector2.ZERO
 			continue
-		var can_commit := EncounterDirector.can_commit(committed_points, committed_ranged, committed_denial, enemy)
+		var can_commit := EncounterDirector.can_commit(
+			committed_points,
+			committed_ranged,
+			committed_denial,
+			enemy,
+			encounter_runtime.threat_budget(),
+			encounter_runtime.ranged_commit_cap(),
+			encounter_runtime.denial_commit_cap()
+		)
 		var started := _update_ordinary_enemy(enemy, delta, can_commit)
 		if started:
 			committed_points += float(enemy.get("threat_cost", 1.0))
@@ -1072,7 +1128,7 @@ func _enforce_active_enemy_cap() -> void:
 	for enemy in enemies:
 		if bool(enemy["alive"]) and bool(enemy["active"]) and bool(enemy.get("counts_active_cap", false)):
 			active_mobile.append(enemy)
-	var cap := EncounterDirector.active_cap(current_stage_id)
+	var cap := encounter_runtime.active_cap()
 	if active_mobile.size() <= cap:
 		return
 	active_mobile.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
@@ -1092,17 +1148,16 @@ func _enforce_active_enemy_cap() -> void:
 func _update_enemy_activation(enemy: Dictionary, capacity_available: bool) -> bool:
 	if bool(enemy["active"]):
 		return false
+	if encounter_runtime.elapsed < EncounterRuntime.ARRIVAL_GRACE:
+		return false
 	var role := StringName(enemy["role"])
 	var distance := player_position.distance_to(Vector2(enemy["pos"]))
 	if role == &"field_boss":
-		enemy["active"] = player_position.x > 2380.0 and player_position.y < 820.0
+		enemy["active"] = distance < 560.0
 		return bool(enemy["active"])
 	if not capacity_available and bool(enemy.get("counts_active_cap", false)):
 		return false
-	var activation := Rect2(enemy.get("activation_rect", Rect2()))
-	if activation.has_area() and activation.has_point(player_position):
-		enemy["active"] = true
-	elif not activation.has_area() and distance < 920.0:
+	if distance < 760.0 and (entered_approach or entered_installations or encounter_runtime.current_beat >= 1):
 		enemy["active"] = true
 	return bool(enemy["active"])
 
@@ -1438,6 +1493,8 @@ func _move_enemy_with_recovery(enemy: Dictionary, velocity: Vector2, delta: floa
 	if float(enemy["reposition_time"]) > 0.0:
 		enemy["reposition_time"] = maxf(0.0, float(enemy["reposition_time"]) - delta)
 		velocity = Vector2(enemy["reposition_dir"]) * float(enemy["speed"])
+	else:
+		velocity = EncounterDirector.cohesion_velocity(enemy, enemies, velocity)
 	var before := Vector2(enemy["pos"])
 	var attempt := _move_actor(before, velocity * delta, float(enemy["radius"]), false)
 	var moved := before.distance_to(attempt)
@@ -1757,6 +1814,8 @@ func _defeat_enemy(enemy: Dictionary, source: String) -> void:
 		stats_installations += 1
 	if role == &"generator" and bool(enemy["required"]):
 		generators_destroyed += 1
+		if generators_destroyed >= 2:
+			encounter_runtime.signal_event(&"generators_complete")
 		_ui.notify(
 			tr("NOTIFY_GENERATOR_DESTROYED") % generators_destroyed,
 			2.8,
@@ -1825,6 +1884,7 @@ func _damage_player(amount: float, source: String, blockable: bool, enemy_source
 			_ui.notify(tr("NOTIFY_BARRIER_DEPLETED"), 1.6, Rules.CORAL)
 	if remaining <= 0.0:
 		return
+	encounter_runtime.record_player_damage(_damage_source_family(source, enemy_source))
 	if overdrive_timer > 0.0 and source.contains("lunge"):
 		remaining *= 0.20
 	player_health = maxf(0.0, player_health - remaining)
@@ -1840,6 +1900,17 @@ func _damage_player(amount: float, source: String, blockable: bool, enemy_source
 
 func _scaled_incoming_damage(amount: float, enemy_source: bool) -> float:
 	return amount * EncounterDirector.ENEMY_DAMAGE_MULTIPLIER if enemy_source else amount
+
+
+func _damage_source_family(source: String, enemy_source: bool) -> StringName:
+	if not enemy_source:
+		return &"environment"
+	var normalized := source.to_lower()
+	if "bolt" in normalized or "shot" in normalized or "volley" in normalized:
+		return &"projectile"
+	if "mine" in normalized or "burst" in normalized or "zone" in normalized:
+		return &"denial"
+	return &"contact"
 
 
 func _handle_player_defeat() -> void:
@@ -1927,9 +1998,15 @@ func _update_stage_progression() -> void:
 	var triggers := Rules.objective_triggers(current_stage_id)
 	if not entered_approach and _trigger_contains(triggers.get("approach"), player_position):
 		entered_approach = true
+		encounter_runtime.signal_event(&"approach_entered")
 	if not entered_installations and _trigger_contains(triggers.get("installations"), player_position):
 		entered_installations = true
+		encounter_runtime.signal_event(&"installations_entered")
 		discovered_markers["generators"] = true
+	if not encounter_runtime.has_event(&"upper_route_entered") and _trigger_contains(triggers.get("upper_route_event"), player_position):
+		encounter_runtime.signal_event(&"upper_route_entered")
+	if not encounter_runtime.has_event(&"lower_route_entered") and _trigger_contains(triggers.get("lower_route_event"), player_position):
+		encounter_runtime.signal_event(&"lower_route_entered")
 
 	if entered_approach and tutorial_announced and _trigger_contains(triggers.get("calibration"), player_position) and not _reward_claimed(&"calibration"):
 		_open_upgrade_reward(&"calibration", false)
@@ -2015,6 +2092,9 @@ func _resolve_reward_transaction() -> void:
 	if current_reward_source == &"":
 		return
 	claimed_reward_sources[_reward_transaction_id(current_reward_source)] = &"claimed"
+	encounter_runtime.record_reward()
+	if current_reward_source == &"calibration":
+		encounter_runtime.signal_event(&"calibration_claimed")
 	if current_reward_source == &"relay":
 		chest_claimed = true
 	current_reward_source = &""
@@ -3480,7 +3560,7 @@ func _activate_capture_zone(zone: String) -> void:
 		if String(enemy["zone"]) != zone:
 			continue
 		if bool(enemy.get("counts_active_cap", false)):
-			if active_capped >= EncounterDirector.active_cap(current_stage_id):
+			if active_capped >= encounter_runtime.active_cap():
 				continue
 			active_capped += 1
 		enemy["active"] = true
@@ -3581,6 +3661,17 @@ func debug_living_ordinary_count() -> int:
 	return count
 
 
+func _debug_append_packet_enemies(limit: int) -> void:
+	var appended := 0
+	for spec in StageCatalog.packet_enemy_blueprint(current_stage_id):
+		if appended >= limit:
+			break
+		var enemy := _make_enemy(spec)
+		enemy["active"] = true
+		enemies.append(enemy)
+		appended += 1
+
+
 func debug_apply_upgrade(upgrade_id: StringName) -> bool:
 	return apply_upgrade(upgrade_id)
 
@@ -3627,6 +3718,7 @@ func debug_full_run() -> Dictionary:
 	_reset_run(false)
 	selected_primary = primary
 	mode = RunMode.PLAYING
+	_debug_append_packet_enemies(12)
 	var living_before := debug_living_ordinary_count()
 	var progress := debug_force_required_progression()
 	var boss_started_with_living := bool(progress["boss_started"]) and debug_living_ordinary_count() > 0
@@ -3649,8 +3741,9 @@ func debug_multistage_contract() -> Dictionary:
 	for stage_number in StageCatalog.STAGE_IDS.size():
 		stage_ids.append(current_stage_id)
 		var roles: Array[StringName] = []
-		for enemy in enemies:
-			var role := StringName(enemy["role"])
+		for spec in StageCatalog.enemy_blueprint(current_stage_id):
+			var definition := EnemyArchetypes.definition(StringName(spec["role"]))
+			var role := StringName(definition["behavior"])
 			if role not in roles:
 				roles.append(role)
 		role_sets.append(roles)
@@ -3683,7 +3776,8 @@ func debug_new_enemy_contract() -> Dictionary:
 	var probe := {"team": &"player", "radius": 5.0}
 	var intercepted := _projectile_intercepted(probe, intercept_pos - Vector2(180.0, 0.0), intercept_pos + Vector2(10.0, 0.0))
 	var charges_after := int(interceptor["intercept_charges"])
-	var spotter := _find_enemy_by_id("archive_spotter_a")
+	var spotter := _make_enemy({"id":"debug_archive_spotter", "role":&"artillery_spotter", "pos":Vector2(1400,1100)})
+	enemies.append(spotter)
 	spotter["active"] = true
 	spotter["committed_target"] = Vector2(1400.0, 1100.0)
 	denied_zones.clear()
@@ -3695,8 +3789,10 @@ func debug_new_enemy_contract() -> Dictionary:
 	_reset_run(false, true, false)
 	for enemy in enemies:
 		enemy["active"] = false
-	var escort := _find_enemy_by_id("drydock_escort_a")
-	var protected := _find_enemy_by_id("drydock_shooter_a")
+	var escort := _make_enemy({"id":"debug_drydock_escort", "role":&"shield_escort", "pos":Vector2(1520,1100)})
+	var protected := _make_enemy({"id":"debug_drydock_shooter", "role":&"shooter", "pos":Vector2(1640,1100)})
+	enemies.append(escort)
+	enemies.append(protected)
 	escort["active"] = true
 	protected["active"] = true
 	escort["pos"] = Vector2(protected["pos"]) + Vector2(120.0, 0.0)
@@ -3818,6 +3914,8 @@ func debug_performance_contract() -> Dictionary:
 	current_stage_index = 2
 	current_stage_id = StageCatalog.STAGE_IDS[2]
 	_reset_run(false, true, false)
+	encounter_runtime.current_beat = 4
+	_debug_append_packet_enemies(encounter_runtime.active_cap() + 12)
 	var committed_ids: Array[String] = []
 	for enemy in enemies:
 		if not bool(enemy.get("counts_active_cap", false)):
@@ -3837,7 +3935,7 @@ func debug_performance_contract() -> Dictionary:
 	var backdrop_contract: Dictionary = _backdrop.debug_contract()
 	return {
 		"active_capped": active_capped,
-		"active_cap": EncounterDirector.active_cap(current_stage_id),
+		"active_cap": encounter_runtime.active_cap(),
 		"committed_preserved": committed_preserved,
 		"backdrop_cached": bool(backdrop_contract["static_cached"]),
 		"backdrop_behind": bool(backdrop_contract["behind_gameplay"]),

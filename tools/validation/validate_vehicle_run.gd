@@ -3,6 +3,7 @@ extends SceneTree
 const Rules = preload("res://scripts/vehicle/vehicle_stage_rules.gd")
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const EncounterDirector = preload("res://scripts/encounters/vehicle_encounter_director.gd")
+const StageCatalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
 const MAIN_SCENE := "res://scenes/main/GameRoot.tscn"
 
 var failures: PackedStringArray = []
@@ -57,15 +58,15 @@ func _run_validation() -> void:
 
 
 func _check_blueprint() -> void:
-	var expected_counts := {&"flooded_works": 204, &"tidal_archive": 228, &"storm_drydock": 252}
-	var expected_caps := {&"flooded_works": 48, &"tidal_archive": 54, &"storm_drydock": 60}
 	var all_blueprints := Rules.validate_all_blueprints()
 	for stage_id in all_blueprints.keys():
 		var blueprint_errors: PackedStringArray = all_blueprints[stage_id]
 		_expect(blueprint_errors.is_empty(), "%s landmarks, spawns, routes, and boss path are reachable" % stage_id)
-		_expect(Rules.get_enemy_blueprint(stage_id).size() == EncounterDirector.target_count(stage_id), "%s uses the locked dense enemy population" % stage_id)
-		_expect(EncounterDirector.target_count(stage_id) == int(expected_counts[stage_id]), "%s uses the authored population" % stage_id)
-		_expect(EncounterDirector.active_cap(stage_id) == int(expected_caps[stage_id]), "%s active cap preserves dense combat inside the performance budget" % stage_id)
+		var population := Rules.get_enemy_blueprint(stage_id).size()
+		var band := EncounterDirector.population_band(stage_id)
+		_expect(population == StageCatalog.authored_population(stage_id), "%s packet population and validation blueprint agree" % stage_id)
+		_expect(population >= band.x and population <= band.y, "%s uses the authored population band" % stage_id)
+		_expect(EncounterDirector.active_cap_for(4, &"standard") == 24, "%s Standard final active cap remains 24" % stage_id)
 		for error_message in blueprint_errors:
 			failures.append("%s blueprint: %s" % [stage_id, error_message])
 

@@ -394,14 +394,14 @@ Source owners touched: `scripts/encounters/vehicle_encounter_runtime.gd`,
 `tools/validation/validate_vehicle_encounter_pacing.gd`,
 `tools/validation/profile_vehicle_pressure.gd`
 
-- [ ] **3.1 Implement deterministic packet state outside VehicleRun.**
+- [x] **3.1 Implement deterministic packet state outside VehicleRun.**
   - As-is: reset builds every enemy and activation happens per enemy.
   - To-be: encounter runtime owns arrival grace, gateway unlocks, packet queues,
     unit/squad intervals, active caps, and debug snapshots; it returns spawn specs.
   - Accept: fixed-step simulation reproduces an identical timeline for a seed and
     never emits more than one unit on a spawn tick.
   - Guard: encounter runtime owns no drawing, damage, UI, or enemy attack logic.
-- [ ] **3.2 Author the Stage 1 six-beat packet curriculum.**
+- [x] **3.2 Author the Stage 1 six-beat packet curriculum.**
   - As-is: six threat languages can appear before the first upgrade.
   - To-be: one scout after grace; 3-unit single-language squads; 4-unit mixed
     squads and early calibration reward; 5-unit fork/compound squads; isolated boss.
@@ -409,14 +409,14 @@ Source owners touched: `scripts/encounters/vehicle_encounter_runtime.gd`,
     first behavior card arrives 45–75 seconds along the critical route.
   - Guard: field boss packets cannot activate from the critical route and stop at
     their leash when the player retreats.
-- [ ] **3.3 Add squad identity and cohesion steering.**
+- [x] **3.3 Add squad identity and cohesion steering.**
   - As-is: active enemies independently converge and become an unreadable clump.
   - To-be: assign leader/slot/centroid/sector/leash metadata and blend cohesion
     only during non-committed movement.
   - Accept: squad debug simulation meets the 220-pixel cohesion contract and
     preserves each role's startup lane/target after commitment.
   - Guard: cover avoidance and stuck recovery still use shared movement rules.
-- [ ] **3.4 Add large spawn cues and first-clear metrics.**
+- [x] **3.4 Add large spawn cues and first-clear metrics.**
   - As-is: activation has no shared gateway presentation or pacing evidence.
   - To-be: pulse a marked anchor for 0.9 seconds; record time to first spawn,
     first damage, active count percentile, attack-family overlap, first reward,
@@ -424,7 +424,7 @@ Source owners touched: `scripts/encounters/vehicle_encounter_runtime.gd`,
   - Accept: capture sequence shows safe arrival, gate cue, first scout, 3-unit
     squad, and later 5-unit squad as distinct readable states.
   - Guard: metrics remain local/debug data and never block or alter gameplay.
-- [ ] **3.5 Add Standard and Onslaught through the same packet data.**
+- [x] **3.5 Add Standard and Onslaught through the same packet data.**
   - As-is: one high-pressure tuning is always active.
   - To-be: preset changes caps, budgets, and gaps only; map, enemy behaviors,
     rewards, and safe arrival are shared.
@@ -738,7 +738,7 @@ list requires owner change control.
 
 - [x] Phase 1: Remappable combat controls and shared settings
 - [x] Phase 2: Per-stage geometry and central Stage 1 map
-- [ ] Phase 3: Sequential encounter packets and cohesive squads
+- [x] Phase 3: Sequential encounter packets and cohesive squads
 - [ ] Phase 4: Correct Stage 2 and Stage 3 composition
 - [ ] Phase 5: Four enemy roles and twelve upgrades
 - [ ] Phase 6: Coral Switchyard and Abyssal Observatory

@@ -73,9 +73,10 @@ static func definition() -> Dictionary:
 			"field_boss_discovery": Rect2(420,360,1000,760),
 			"relay_discovery": Rect2(3060,880,700,1040),
 			"boss_discovery": Rect2(3420,520,940,1760),
+			"upper_route_event": Rect2(2460,300,980,820),
+			"lower_route_event": Rect2(2460,1680,980,820),
 		},
 		"static_enemies": _static_enemies(generator_a, generator_b, field_boss),
-		"legacy_swarm_groups": _legacy_swarm_groups(),
 		"pickups": _pickups(),
 		"crates": _crates(),
 		"reward_anchors": {
@@ -85,40 +86,49 @@ static func definition() -> Dictionary:
 			&"boss_reward": boss_position,
 		},
 		"environment_zones": [],
-		"packets": [],
+		"packets": _packets(),
 	}
 
 
 static func _static_enemies(generator_a: Vector2, generator_b: Vector2, field_boss: Vector2) -> Array[Dictionary]:
 	return [
-		{"id":"approach_chaser_a", "role":"chaser", "pos":Vector2(1450,1000), "zone":"approach"},
-		{"id":"approach_shooter_a", "role":"shooter", "pos":Vector2(1320,700), "zone":"approach"},
-		{"id":"approach_chaser_b", "role":"chaser", "pos":Vector2(1420,1800), "zone":"approach"},
-		{"id":"approach_controller", "role":"controller", "pos":Vector2(1000,2120), "zone":"approach"},
-		{"id":"approach_shooter_b", "role":"shooter", "pos":Vector2(720,1120), "zone":"approach"},
 		{"id":"upper_turret", "role":"turret", "pos":Vector2(3050,950), "zone":"installations"},
 		{"id":"lower_turret", "role":"turret", "pos":Vector2(3050,1810), "zone":"installations"},
 		{"id":"upper_arc_mine", "role":"mine", "pos":Vector2(2720,590), "zone":"installations"},
 		{"id":"lower_arc_mine", "role":"mine", "pos":Vector2(2720,2210), "zone":"installations"},
 		{"id":"generator_a", "role":"generator", "pos":generator_a, "zone":"installations", "required":true},
 		{"id":"generator_b", "role":"generator", "pos":generator_b, "zone":"installations", "required":true},
-		{"id":"install_chaser", "role":"chaser", "pos":Vector2(3360,980), "zone":"installations"},
-		{"id":"install_shooter", "role":"shooter", "pos":Vector2(3360,1820), "zone":"installations"},
-		{"id":"install_controller", "role":"controller", "pos":Vector2(3480,1400), "zone":"installations"},
 		{"id":"dredge_warden", "role":"field_boss", "pos":field_boss, "zone":"field_boss", "optional":true},
 	]
 
 
-static func _legacy_swarm_groups() -> Array[Dictionary]:
+static func _packets() -> Array[Dictionary]:
 	return [
-		{"id":"works_swarm_a", "anchor":Vector2(1480,1050), "count":27, "roles":[&"scrap_drone", &"needle_drone"], "zone":"approach", "angle":0.1},
-		{"id":"works_swarm_b", "anchor":Vector2(970,700), "count":27, "roles":[&"needle_drone", &"spark_minelet"], "zone":"approach", "angle":0.5},
-		{"id":"works_swarm_c", "anchor":Vector2(1030,2060), "count":27, "roles":[&"scrap_drone", &"needle_drone"], "zone":"approach", "angle":0.8},
-		{"id":"works_swarm_d", "anchor":Vector2(1450,1740), "count":27, "roles":[&"scrap_drone", &"spark_minelet"], "zone":"approach", "angle":0.2},
-		{"id":"works_swarm_e", "anchor":Vector2(2820,620), "count":27, "roles":[&"needle_drone", &"spark_minelet"], "zone":"installations", "angle":1.15},
-		{"id":"works_swarm_f", "anchor":Vector2(2820,2180), "count":27, "roles":[&"scrap_drone", &"spark_minelet"], "zone":"installations", "angle":0.25},
-		{"id":"works_swarm_g", "anchor":Vector2(3350,1400), "count":27, "roles":[&"scrap_drone", &"needle_drone"], "zone":"installations", "angle":0.9},
+		_packet("arrival_scout", 0, {"kind":&"time", "at":5.1}, Vector2(1680,1400), [[&"scrap_drone"]], 0.90, 8.0, "arrival"),
+		_packet("west_learning", 1, {"kind":&"event", "id":&"approach_entered"}, Vector2(1420,1080), _squads(6, 3, [&"scrap_drone", &"needle_drone"]), 0.80, 8.0, "approach"),
+		_packet("calibration_return", 2, {"kind":&"event", "id":&"calibration_claimed"}, Vector2(1500,1740), _squads(6, 4, [&"needle_drone", &"scrap_drone"]), 0.65, 6.0, "approach"),
+		_packet("north_generator", 3, {"kind":&"event", "id":&"upper_route_entered"}, Vector2(2630,620), _squads(3, 5, [&"needle_drone", &"spark_minelet", &"scrap_drone"]), 0.50, 4.5, "installations"),
+		_packet("south_generator", 3, {"kind":&"event", "id":&"lower_route_entered"}, Vector2(2630,2180), _squads(3, 5, [&"scrap_drone", &"spark_minelet", &"needle_drone"]), 0.50, 4.5, "installations"),
+		_packet("relay_compound", 4, {"kind":&"event", "id":&"generators_complete"}, Vector2(3380,1400), _squads(7, 5, [&"scrap_drone", &"needle_drone", &"spark_minelet", &"chaser", &"shooter"]), 0.50, 4.5, "relay"),
 	]
+
+
+static func _packet(id: String, beat: int, trigger: Dictionary, anchor: Vector2, squads: Array, unit_spacing: float, squad_gap: float, zone: String) -> Dictionary:
+	return {
+		"id":id, "beat":beat, "trigger":trigger, "anchor":anchor, "squads":squads,
+		"unit_spacing":unit_spacing, "squad_gap":squad_gap, "cue_lead":0.9,
+		"zone":zone, "leash":Rect2(anchor - Vector2(520,420), Vector2(1040,840)),
+	}
+
+
+static func _squads(count: int, size: int, roles: Array[StringName]) -> Array:
+	var result := []
+	for squad_index in count:
+		var squad: Array[StringName] = []
+		for unit_index in size:
+			squad.append(roles[(squad_index + unit_index) % roles.size()])
+		result.append(squad)
+	return result
 
 
 static func _pickups() -> Array[Dictionary]:

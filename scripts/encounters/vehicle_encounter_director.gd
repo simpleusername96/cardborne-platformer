@@ -1,7 +1,7 @@
 class_name VehicleEncounterDirector
 extends RefCounted
 
-## Deterministic formation expansion and shared dense-combat pressure rules.
+## Shared squad steering and beat-aware combat-pressure limits.
 
 const THREAT_BUDGET := 6.5
 const MAX_RANGED_COMMITS := 3
@@ -14,70 +14,85 @@ const PLAYER_PROJECTILE_CAP := 240
 const HOSTILE_PROJECTILE_CAP := 120
 const EFFECT_CAP := 96
 
-const TARGET_COUNTS := {
-	&"flooded_works": 204,
-	&"tidal_archive": 228,
-	&"storm_drydock": 252,
+const STANDARD_ACTIVE_CAPS := [1, 12, 16, 20, 24]
+const ONSLAUGHT_ACTIVE_CAPS := [1, 16, 24, 32, 40]
+const STANDARD_THREAT_BUDGETS := [1.0, 2.5, 3.5, 4.0, 5.0]
+
+const POPULATION_BANDS := {
+	&"flooded_works": Vector2i(112,128),
+	&"tidal_archive": Vector2i(128,148),
+	&"storm_drydock": Vector2i(144,164),
+	&"coral_switchyard": Vector2i(152,176),
+	&"abyssal_observatory": Vector2i(160,184),
 }
 
-const ACTIVE_CAPS := {
-	&"flooded_works": 48,
-	&"tidal_archive": 54,
-	&"storm_drydock": 60,
-}
+
+static func active_cap_for(beat: int, preset: StringName = &"standard") -> int:
+	var caps := ONSLAUGHT_ACTIVE_CAPS if preset == &"onslaught" else STANDARD_ACTIVE_CAPS
+	return int(caps[clampi(beat, 0, caps.size() - 1)])
 
 
-static func expand_groups(groups: Array[Dictionary]) -> Array[Dictionary]:
-	var result: Array[Dictionary] = []
-	for group in groups:
-		var count := int(group["count"])
-		var roles: Array = group["roles"]
-		var anchor := Vector2(group["anchor"])
-		var angle_offset := float(group.get("angle", 0.0))
-		var activation := Rect2(anchor - Vector2(620.0, 430.0), Vector2(1240.0, 860.0))
-		var leash := activation.grow(360.0)
-		for index in count:
-			var ring := index / 10
-			var slot := index % 10
-			var slots_in_ring := mini(10, count - ring * 10)
-			var radius := 48.0 + float(ring) * 36.0
-			var angle := angle_offset + TAU * float(slot) / float(maxi(1, slots_in_ring))
-			result.append({
-				"id": "%s_%02d" % [String(group["id"]), index + 1],
-				"role": StringName(roles[index % roles.size()]),
-				"pos": anchor + Vector2.RIGHT.rotated(angle) * radius,
-				"zone": String(group["zone"]),
-				"group_id": String(group["id"]),
-				"formation_anchor": anchor,
-				"activation_rect": activation,
-				"leash_rect": leash,
-			})
-	return result
+static func active_cap(_stage_id: StringName = &"flooded_works") -> int:
+	return active_cap_for(4, &"standard")
 
 
-static func active_cap(stage_id: StringName) -> int:
-	return int(ACTIVE_CAPS.get(stage_id, 24))
+static func threat_budget_for(beat: int, preset: StringName = &"standard") -> float:
+	if preset == &"onslaught" and beat >= 2:
+		return THREAT_BUDGET
+	return float(STANDARD_THREAT_BUDGETS[clampi(beat, 0, STANDARD_THREAT_BUDGETS.size() - 1)])
 
 
-static func target_count(stage_id: StringName) -> int:
-	return int(TARGET_COUNTS.get(stage_id, 68))
+static func squad_gap_multiplier(beat: int, preset: StringName) -> float:
+	return 0.78 if preset == &"onslaught" and beat >= 2 else 1.0
 
 
-static func can_commit(current_points: float, ranged_count: int, denial_count: int, enemy: Dictionary) -> bool:
+static func population_band(stage_id: StringName) -> Vector2i:
+	return Vector2i(POPULATION_BANDS.get(stage_id, Vector2i(1, 999)))
+
+
+static func can_commit(current_points: float, ranged_count: int, denial_count: int, enemy: Dictionary, budget: float = THREAT_BUDGET, ranged_cap: int = MAX_RANGED_COMMITS, denial_cap: int = MAX_DENIAL_COMMITS) -> bool:
 	var cost := float(enemy.get("threat_cost", 1.0))
 	var kind := StringName(enemy.get("threat_kind", &"melee"))
-	if current_points + cost > THREAT_BUDGET + 0.001:
+	if current_points + cost > budget + 0.001:
 		return false
-	if kind == &"ranged" and ranged_count >= MAX_RANGED_COMMITS:
+	if kind == &"ranged" and ranged_count >= ranged_cap:
 		return false
-	if kind == &"denial" and denial_count >= MAX_DENIAL_COMMITS:
+	if kind == &"denial" and denial_count >= denial_cap:
 		return false
 	return true
+
+
+static func cohesion_velocity(enemy: Dictionary, active_enemies: Array[Dictionary], role_velocity: Vector2) -> Vector2:
+	if String(enemy.get("phase", "move")) in ["startup", "active"]:
+		return role_velocity
+	var squad_id := String(enemy.get("squad_id", ""))
+	if squad_id.is_empty() or role_velocity.length_squared() <= 0.001:
+		return role_velocity
+	var centroid := Vector2.ZERO
+	var members := 0
+	for candidate in active_enemies:
+		if bool(candidate.get("alive", false)) and bool(candidate.get("active", false)) and String(candidate.get("squad_id", "")) == squad_id:
+			centroid += Vector2(candidate["pos"])
+			members += 1
+	if members <= 1:
+		return role_velocity
+	centroid /= float(members)
+	var slot_target := centroid + Vector2(enemy.get("formation_offset", Vector2.ZERO))
+	var to_slot := slot_target - Vector2(enemy["pos"])
+	if Vector2(enemy["pos"]).distance_to(centroid) > 220.0:
+		to_slot = centroid - Vector2(enemy["pos"])
+	if to_slot.length_squared() <= 1.0:
+		return role_velocity
+	var cohesion := to_slot.normalized() * role_velocity.length()
+	return (role_velocity * 0.70 + cohesion * 0.30).limit_length(role_velocity.length())
 
 
 static func tuning_contract() -> Dictionary:
 	return {
 		"threat_budget": THREAT_BUDGET,
+		"standard_caps": STANDARD_ACTIVE_CAPS,
+		"onslaught_caps": ONSLAUGHT_ACTIVE_CAPS,
+		"standard_budgets": STANDARD_THREAT_BUDGETS,
 		"max_ranged": MAX_RANGED_COMMITS,
 		"max_denial": MAX_DENIAL_COMMITS,
 		"enemy_speed_multiplier": ENEMY_SPEED_MULTIPLIER,
