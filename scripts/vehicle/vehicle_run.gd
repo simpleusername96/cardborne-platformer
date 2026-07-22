@@ -50,7 +50,7 @@ var _camera: Camera2D
 var _backdrop
 var _rng := RandomNumberGenerator.new()
 
-var player_position := Rules.PLAYER_START
+var player_position := Vector2.ZERO
 var player_hull_direction := Vector2.RIGHT
 var player_aim_direction := Vector2.RIGHT
 var player_health := PLAYER_MAX_HEALTH
@@ -213,14 +213,31 @@ func _build_camera() -> void:
 	_camera = Camera2D.new()
 	_camera.name = "VehicleCamera"
 	_camera.enabled = true
-	_camera.position = Rules.PLAYER_START
+	_camera.position = Rules.player_start(current_stage_id)
 	_camera.position_smoothing_enabled = true
 	_camera.position_smoothing_speed = 8.0
-	_camera.limit_left = int(Rules.WORLD_RECT.position.x)
-	_camera.limit_top = int(Rules.WORLD_RECT.position.y)
-	_camera.limit_right = int(Rules.WORLD_RECT.end.x)
-	_camera.limit_bottom = int(Rules.WORLD_RECT.end.y)
+	_apply_camera_stage_limits()
 	add_child(_camera)
+
+
+func _apply_camera_stage_limits() -> void:
+	var bounds := Rules.world_rect(current_stage_id)
+	_camera.limit_left = int(bounds.position.x)
+	_camera.limit_top = int(bounds.position.y)
+	_camera.limit_right = int(bounds.end.x)
+	_camera.limit_bottom = int(bounds.end.y)
+
+
+func _stage_landmark(landmark_id: String) -> Vector2:
+	return Rules.landmark(landmark_id, current_stage_id)
+
+
+func _stage_boss_arena() -> Rect2:
+	return Rules.boss_arena(current_stage_id)
+
+
+func _stage_boss_gate() -> Rect2:
+	return Rules.boss_gate(current_stage_id)
 
 
 func _build_backdrop() -> void:
@@ -264,8 +281,10 @@ func _reset_run(increment_index: bool = true, preserve_stage: bool = false, pres
 		current_stage_id = StageCatalog.STAGE_IDS[0]
 	if is_instance_valid(_backdrop):
 		_backdrop.configure(current_stage_id)
+	if is_instance_valid(_camera):
+		_apply_camera_stage_limits()
 	mode = RunMode.DEPLOYMENT
-	player_position = Rules.PLAYER_START
+	player_position = Rules.player_start(current_stage_id)
 	player_hull_direction = Vector2.RIGHT
 	player_aim_direction = Vector2.RIGHT
 	player_health = _player_max_health()
@@ -1458,7 +1477,7 @@ func _move_actor(position: Vector2, motion: Vector2, radius: float, is_player: b
 				result = y_attempt
 			else:
 				result = position
-	if is_player and boss_locked and not Rules.BOSS_ARENA.grow(-20.0).has_point(result):
+	if is_player and boss_locked and not _stage_boss_arena().grow(-20.0).has_point(result):
 		result = position
 	return result
 
@@ -1905,30 +1924,41 @@ func _update_aim_target() -> void:
 
 
 func _update_stage_progression() -> void:
-	if not entered_approach and player_position.x > 700.0:
+	var triggers := Rules.objective_triggers(current_stage_id)
+	if not entered_approach and _trigger_contains(triggers.get("approach"), player_position):
 		entered_approach = true
-	if not entered_installations and player_position.x > 1950.0:
+	if not entered_installations and _trigger_contains(triggers.get("installations"), player_position):
 		entered_installations = true
 		discovered_markers["generators"] = true
 
-	if player_position.x >= 1600.0 and not _reward_claimed(&"calibration"):
+	if entered_approach and tutorial_announced and _trigger_contains(triggers.get("calibration"), player_position) and not _reward_claimed(&"calibration"):
 		_open_upgrade_reward(&"calibration", false)
 
-	if not chest_claimed and generators_destroyed >= 2 and player_position.distance_to(Rules.CHEST_POSITION) <= 78.0:
+	if not chest_claimed and generators_destroyed >= 2 and player_position.distance_to(_stage_landmark("chest")) <= 78.0:
 		_open_upgrade_reward(&"relay", false)
 
-	if generators_destroyed >= 2 and chest_claimed and not boss_started and Rules.BOSS_ARENA.grow(10.0).has_point(player_position):
+	if generators_destroyed >= 2 and chest_claimed and not boss_started and _trigger_contains(triggers.get("boss_start"), player_position):
 		_start_stage_boss()
 
-	if boss_started and boss_locked and not Rules.BOSS_ARENA.grow(-20.0).has_point(player_position):
-		player_position = Rules.BOSS_ARENA.get_center()
+	if boss_started and boss_locked and not _stage_boss_arena().grow(-20.0).has_point(player_position):
+		player_position = _stage_boss_arena().get_center()
 
-	if player_position.distance_to(Rules.FIELD_BOSS_POSITION) < 560.0:
+	if _trigger_contains(triggers.get("field_boss_discovery"), player_position):
 		discovered_markers["field_boss"] = true
-	if player_position.distance_to(Rules.CHEST_POSITION) < 620.0:
+	if _trigger_contains(triggers.get("relay_discovery"), player_position):
 		discovered_markers["chest"] = true
-	if player_position.x > 3500.0:
+	if _trigger_contains(triggers.get("boss_discovery"), player_position):
 		discovered_markers["stage_boss"] = true
+
+
+func _trigger_contains(trigger: Variant, point: Vector2) -> bool:
+	if trigger is Rect2:
+		return Rect2(trigger).has_point(point)
+	if trigger is Array:
+		for region in trigger:
+			if region is Rect2 and Rect2(region).has_point(point):
+				return true
+	return false
 
 
 func _open_upgrade_cache() -> void:
@@ -2032,7 +2062,7 @@ func _start_stage_boss() -> void:
 	var boss := _make_enemy({
 		"id": "stage_boss",
 		"role": "stage_boss",
-		"pos": Rules.STAGE_BOSS_POSITION,
+		"pos": _stage_landmark("boss"),
 		"zone": "boss",
 		"name_key": StageCatalog.profile(current_stage_id)["boss_name_key"],
 	})
@@ -2109,7 +2139,7 @@ func _boss_select_pattern(boss: Dictionary) -> void:
 	match pattern:
 		"lane_barrage":
 			boss["phase_time"] = 0.95
-			var base_y := clampf(player_position.y, Rules.BOSS_ARENA.position.y + 180.0, Rules.BOSS_ARENA.end.y - 180.0)
+			var base_y := clampf(player_position.y, _stage_boss_arena().position.y + 180.0, _stage_boss_arena().end.y - 180.0)
 			boss["lane_centers"] = [base_y - 170.0, base_y + 170.0]
 		"charge":
 			boss["phase_time"] = 0.86
@@ -2119,7 +2149,7 @@ func _boss_select_pattern(boss: Dictionary) -> void:
 		"overload_combo":
 			boss["phase_time"] = 1.10
 			boss["committed_dir"] = (player_position - Vector2(boss["pos"])).normalized()
-			var base_y := clampf(player_position.y, Rules.BOSS_ARENA.position.y + 220.0, Rules.BOSS_ARENA.end.y - 220.0)
+			var base_y := clampf(player_position.y, _stage_boss_arena().position.y + 220.0, _stage_boss_arena().end.y - 220.0)
 			boss["lane_centers"] = [base_y - 210.0, base_y + 210.0]
 
 
@@ -2161,7 +2191,7 @@ func _boss_update_active(boss: Dictionary, delta: float) -> void:
 				for lane_y_variant in boss["lane_centers"]:
 					var lane_y := float(lane_y_variant)
 					_spawn_hostile_projectile(
-						Vector2(Rules.BOSS_ARENA.end.x - 70.0, lane_y),
+						Vector2(_stage_boss_arena().end.x - 70.0, lane_y),
 						Vector2.LEFT,
 						11.0,
 						690.0,
@@ -2184,7 +2214,7 @@ func _boss_update_active(boss: Dictionary, delta: float) -> void:
 				boss["pattern_tick"] = 0.30
 				for lane_y_variant in boss["lane_centers"]:
 					_spawn_hostile_projectile(
-						Vector2(Rules.BOSS_ARENA.end.x - 70.0, float(lane_y_variant)),
+						Vector2(_stage_boss_arena().end.x - 70.0, float(lane_y_variant)),
 						Vector2.LEFT,
 						10.0,
 						650.0,
@@ -2210,7 +2240,7 @@ func _boss_update_active(boss: Dictionary, delta: float) -> void:
 
 
 func _boss_reposition(boss: Dictionary, delta: float) -> void:
-	var center := Rules.BOSS_ARENA.get_center() + Vector2(220.0, 0.0)
+	var center := _stage_boss_arena().get_center() + Vector2(220.0, 0.0)
 	var desired := center + Vector2(
 		cos(run_time * 0.55) * 180.0,
 		sin(run_time * 0.72) * 310.0
@@ -2409,8 +2439,9 @@ func _format_time(seconds: float) -> String:
 
 
 func _mark_visited() -> void:
-	var cell_width := Rules.WORLD_RECT.size.x / float(MINIMAP_COLS)
-	var cell_height := Rules.WORLD_RECT.size.y / float(MINIMAP_ROWS)
+	var stage_world := Rules.world_rect(current_stage_id)
+	var cell_width := stage_world.size.x / float(MINIMAP_COLS)
+	var cell_height := stage_world.size.y / float(MINIMAP_ROWS)
 	var cell := Vector2i(
 		clampi(floori(player_position.x / cell_width), 0, MINIMAP_COLS - 1),
 		clampi(floori(player_position.y / cell_height), 0, MINIMAP_ROWS - 1)
@@ -2597,31 +2628,31 @@ func _minimap_snapshot() -> Dictionary:
 	var markers: Array[Dictionary] = [
 		{
 			"kind": "objective",
-			"position": Rules.GENERATOR_A_POSITION,
+			"position": _stage_landmark("generator_a"),
 			"color": Rules.AMBER,
 			"discovered": bool(discovered_markers.get("generators", false)),
 		},
 		{
 			"kind": "objective",
-			"position": Rules.GENERATOR_B_POSITION,
+			"position": _stage_landmark("generator_b"),
 			"color": Rules.AMBER,
 			"discovered": bool(discovered_markers.get("generators", false)),
 		},
 		{
 			"kind": "boss",
-			"position": Rules.FIELD_BOSS_POSITION,
+			"position": _stage_landmark("field_boss"),
 			"color": Rules.VIOLET,
 			"discovered": bool(discovered_markers.get("field_boss", false)),
 		},
 		{
 			"kind": "reward",
-			"position": Rules.CHEST_POSITION,
+			"position": _stage_landmark("chest"),
 			"color": Rules.AMBER,
 			"discovered": bool(discovered_markers.get("chest", false)),
 		},
 		{
 			"kind": "boss",
-			"position": Rules.STAGE_BOSS_POSITION,
+			"position": _stage_landmark("boss"),
 			"color": Rules.CORAL,
 			"discovered": bool(discovered_markers.get("stage_boss", false)),
 		},
@@ -2639,14 +2670,15 @@ func _minimap_snapshot() -> Dictionary:
 		"rows": MINIMAP_ROWS,
 		"visited": visited,
 		"player": player_position,
-		"world_size": Rules.WORLD_RECT.size,
+		"world_size": Rules.world_rect(current_stage_id).size,
 		"markers": markers,
 	}
 
 
 func _is_world_position_visited(position: Vector2) -> bool:
-	var cell_width := Rules.WORLD_RECT.size.x / float(MINIMAP_COLS)
-	var cell_height := Rules.WORLD_RECT.size.y / float(MINIMAP_ROWS)
+	var stage_world := Rules.world_rect(current_stage_id)
+	var cell_width := stage_world.size.x / float(MINIMAP_COLS)
+	var cell_height := stage_world.size.y / float(MINIMAP_ROWS)
 	var cell := Vector2i(floori(position.x / cell_width), floori(position.y / cell_height))
 	return visited_cells.has(cell)
 
@@ -2700,21 +2732,22 @@ func _draw() -> void:
 
 func _draw_boss_gate() -> void:
 	if _boss_gate_closed():
-		draw_colored_polygon(Art.stepped_rect(Rules.BOSS_GATE, 18.0), Art.CERAMIC_GREEN)
-		var gate_center := Rules.BOSS_GATE.get_center()
+		draw_colored_polygon(Art.stepped_rect(_stage_boss_gate(), 18.0), Art.CERAMIC_GREEN)
+		var gate_center := _stage_boss_gate().get_center()
 		for offset in [-150.0, -50.0, 50.0, 150.0]:
 			draw_rect(Rect2(gate_center + Vector2(-24.0, offset - 14.0), Vector2(48.0, 28.0)), Art.MUSTARD)
 
 
 func _draw_landmarks() -> void:
 	if not chest_claimed:
-		var chest_rect := Rect2(Rules.CHEST_POSITION - Art.CACHE_HALF_SIZE, Art.CACHE_HALF_SIZE * 2.0)
+		var chest_position := _stage_landmark("chest")
+		var chest_rect := Rect2(chest_position - Art.CACHE_HALF_SIZE, Art.CACHE_HALF_SIZE * 2.0)
 		var edge := chest_rect
 		edge.position += Vector2(10.0, 14.0)
 		draw_colored_polygon(Art.stepped_rect(edge, 18.0), Art.MUSTARD_DARK)
 		draw_colored_polygon(Art.stepped_rect(chest_rect, 18.0), Art.MUSTARD)
-		draw_colored_polygon(_regular_polygon(Rules.CHEST_POSITION, 25.0, 4, PI / 4.0), Art.IVORY_BRIGHT)
-		draw_colored_polygon(_regular_polygon(Rules.CHEST_POSITION, 12.0, 4, PI / 4.0), Art.CERAMIC_GREEN)
+		draw_colored_polygon(_regular_polygon(chest_position, 25.0, 4, PI / 4.0), Art.IVORY_BRIGHT)
+		draw_colored_polygon(_regular_polygon(chest_position, 12.0, 4, PI / 4.0), Art.CERAMIC_GREEN)
 	if generators_destroyed >= 2 and chest_claimed and not boss_started:
 		var exit_center := Vector2(3860.0, 1100.0)
 		var pulse := 54.0 + sin(run_time * 3.0) * 7.0
@@ -3113,7 +3146,7 @@ func _draw_enemy_telegraph(enemy: Dictionary) -> void:
 		if pattern == "lane_barrage" or pattern == "overload_combo":
 			for lane_y_variant in enemy["lane_centers"]:
 				var lane_y := float(lane_y_variant)
-				draw_rect(Rect2(Rules.BOSS_ARENA.position.x, lane_y - 40.0, Rules.BOSS_ARENA.size.x, 80.0), Color(Art.CORAL, 0.22))
+				draw_rect(Rect2(_stage_boss_arena().position.x, lane_y - 40.0, _stage_boss_arena().size.x, 80.0), Color(Art.CORAL, 0.22))
 		if pattern == "pylons":
 			for pylon_position in [Vector2(4320.0, 760.0), Vector2(4320.0, 1440.0)]:
 				draw_circle(pylon_position, 68.0, Color(Art.BOSS_MAGENTA, 0.18))
@@ -3325,7 +3358,7 @@ func _run_capture_sequence() -> void:
 	_save_capture("03-installations-route.png")
 
 	generators_destroyed = 2
-	player_position = Rules.CHEST_POSITION - Vector2(140.0, 0.0)
+	player_position = _stage_landmark("chest") - Vector2(140.0, 0.0)
 	_open_upgrade_cache()
 	await _settle_capture()
 	_save_capture("04-upgrade-choice.png")
@@ -3346,7 +3379,7 @@ func _run_capture_sequence() -> void:
 		field_boss["phase"] = "startup"
 		field_boss["pattern"] = "fan"
 		field_boss["phase_time"] = 0.5
-	player_aim_direction = (Rules.FIELD_BOSS_POSITION - player_position).normalized()
+	player_aim_direction = (_stage_landmark("field_boss") - player_position).normalized()
 	await _settle_capture()
 	_save_capture("05-optional-field-boss.png")
 	current_card_offer = _build_card_offer(&"field_boss")
@@ -3369,7 +3402,7 @@ func _run_capture_sequence() -> void:
 		boss["pattern"] = "lane_barrage"
 		boss["phase_time"] = 0.6
 		boss["lane_centers"] = [850.0, 1300.0]
-	player_aim_direction = (Rules.STAGE_BOSS_POSITION - player_position).normalized()
+	player_aim_direction = (_stage_landmark("boss") - player_position).normalized()
 	await _settle_capture()
 	_save_capture("06-stage-boss.png")
 	mode = RunMode.RESULT
@@ -3553,16 +3586,22 @@ func debug_apply_upgrade(upgrade_id: StringName) -> bool:
 
 
 func debug_force_required_progression() -> Dictionary:
-	player_position = Vector2(1760.0, 1100.0)
+	tutorial_move = true
+	tutorial_aim = true
+	tutorial_fire = true
+	tutorial_dash = true
+	tutorial_announced = true
+	entered_approach = true
+	player_position = _stage_landmark("calibration_cache")
 	_update_stage_progression()
 	_debug_accept_current_reward()
 	for enemy in enemies:
 		if bool(enemy["alive"]) and StringName(enemy["role"]) == &"generator":
 			_damage_enemy(enemy, 9999.0, "validation", 0.0)
-	player_position = Rules.CHEST_POSITION
+	player_position = _stage_landmark("chest")
 	_update_stage_progression()
 	_debug_accept_current_reward()
-	player_position = Rules.BOSS_ARENA.get_center()
+	player_position = _stage_boss_arena().get_center()
 	_update_stage_progression()
 	return debug_snapshot()
 
@@ -3685,18 +3724,20 @@ func debug_projectile_cover_contract() -> Dictionary:
 func debug_passive_line_of_sight_contract() -> Dictionary:
 	var original_player_position := player_position
 	var original_enemies := enemies
-	player_position = Vector2(900.0, 700.0)
+	var original_stage_id := current_stage_id
+	current_stage_id = &"flooded_works"
+	player_position = Vector2(1200.0, 1400.0)
 	var open_target := _make_enemy({
 		"id": "debug_open_target",
 		"role": "shooter",
-		"pos": Vector2(900.0, 950.0),
+		"pos": Vector2(1000.0, 1400.0),
 		"zone": "debug",
 	})
 	open_target["active"] = true
 	var blocked_target := _make_enemy({
 		"id": "debug_blocked_target",
 		"role": "shooter",
-		"pos": Vector2(1250.0, 700.0),
+		"pos": Vector2(1700.0, 1400.0),
 		"zone": "debug",
 	})
 	blocked_target["active"] = true
@@ -3710,6 +3751,7 @@ func debug_passive_line_of_sight_contract() -> Dictionary:
 	)
 	player_position = original_player_position
 	enemies = original_enemies
+	current_stage_id = original_stage_id
 	return {"open": open_detected, "blocked": blocked_detected}
 
 

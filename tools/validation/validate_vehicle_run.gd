@@ -69,13 +69,14 @@ func _check_blueprint() -> void:
 		for error_message in blueprint_errors:
 			failures.append("%s blueprint: %s" % [stage_id, error_message])
 
-	var start := Rules.PLAYER_START
-	_expect(Rules.grid_reachable(start, Rules.GENERATOR_A_POSITION), "upper generator is reachable")
-	_expect(Rules.grid_reachable(start, Rules.GENERATOR_B_POSITION), "lower generator is reachable")
-	_expect(Rules.grid_reachable(start, Rules.CHEST_POSITION), "upgrade cache is reachable")
+	var start := Rules.player_start(&"flooded_works")
+	var landmarks := Rules.get_landmarks(&"flooded_works")
+	_expect(Rules.grid_reachable(start, landmarks["generator_a"]), "upper generator is reachable")
+	_expect(Rules.grid_reachable(start, landmarks["generator_b"]), "lower generator is reachable")
+	_expect(Rules.grid_reachable(start, landmarks["chest"]), "upgrade cache is reachable")
 	_expect(
-		Rules.grid_reachable(start, Rules.get_landmarks()["upper_route"])
-		and Rules.grid_reachable(start, Rules.get_landmarks()["lower_route"]),
+		Rules.grid_reachable(start, landmarks["upper_route"])
+		and Rules.grid_reachable(start, landmarks["lower_route"]),
 		"both risk routes are traversable"
 	)
 

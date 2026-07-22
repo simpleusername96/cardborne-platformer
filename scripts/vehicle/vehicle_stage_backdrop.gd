@@ -29,7 +29,7 @@ func _draw() -> void:
 
 
 func _draw_world() -> void:
-	draw_rect(Rules.WORLD_RECT, Art.COBALT_VOID)
+	draw_rect(Rules.world_rect(stage_id), Art.COBALT_VOID)
 	for region in Rules.get_floor_regions(stage_id):
 		var edge_rect := Rect2(region["rect"])
 		edge_rect.position += Art.COVER_EDGE_OFFSET
@@ -47,13 +47,15 @@ func _draw_major_motifs() -> void:
 		var rotation := float(motif["rotation"])
 		var color := Color(motif["color"])
 		if stage_id == &"tidal_archive":
-			center.y = Rules.WORLD_RECT.size.y - center.y
+			center.y = Rules.world_rect(stage_id).size.y - center.y
 			rotation += PI * 0.5
 			kind = &"split_current" if kind == &"tide_curl" else kind
 		elif stage_id == &"storm_drydock":
 			center += Vector2(90.0, -70.0)
 			rotation += PI * 0.25
 			kind = &"sun_gate" if kind in [&"tide_curl", &"split_current"] else &"relay_flower"
+		if not Rules.is_position_walkable(center, radius, stage_id):
+			continue
 		match kind:
 			&"tide_curl": _draw_tide_curl(center, radius, rotation, color)
 			&"split_current": _draw_split_current(center, radius, rotation, color)
@@ -119,10 +121,6 @@ func _draw_water_and_floor() -> void:
 		draw_colored_polygon(Art.stepped_rect(water, 30.0), Art.COBALT_WATER)
 		var wave_y := water.get_center().y
 		draw_line(Vector2(water.position.x + 28.0, wave_y), Vector2(water.end.x - 28.0, wave_y), Color(Art.IVORY_BRIGHT, 0.22), 8.0, true)
-	draw_rect(Rect2(720.0, 1010.0, 1240.0, 42.0), Color(Art.IVORY_SHADE, 0.82))
-	draw_rect(Rect2(720.0, 1150.0, 1240.0, 42.0), Color(Art.IVORY_SHADE, 0.82))
-	draw_rect(Rect2(3320.0, 1038.0, 540.0, 44.0), Color(Art.MINT, 0.42))
-	draw_rect(Rect2(3320.0, 1188.0, 540.0, 44.0), Color(Art.MINT, 0.42))
 
 
 func _draw_cover() -> void:
@@ -148,4 +146,7 @@ func debug_contract() -> Dictionary:
 		"stage_id": stage_id,
 		"static_cached": not is_processing() and not is_physics_processing(),
 		"behind_gameplay": show_behind_parent and z_index < 0,
+		"world_rect": Rules.world_rect(stage_id),
+		"walkable_count": Rules.get_floor_regions(stage_id).size(),
+		"cover_count": Rules.get_cover_rects(false, stage_id).size(),
 	}

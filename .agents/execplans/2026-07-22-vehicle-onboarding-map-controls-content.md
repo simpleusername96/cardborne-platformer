@@ -339,27 +339,27 @@ Source owners touched: `scripts/vehicle/stages/flooded_works.gd`,
 `scripts/vehicle/vehicle_run.gd`,
 `tools/validation/validate_vehicle_stage_layouts.gd`
 
-- [ ] **2.1 Split current stage definitions behind the catalog facade.**
+- [x] **2.1 Split current stage definitions behind the catalog facade.**
   - As-is: world/start/landmark geometry is global and layout data is centralized.
   - To-be: create one current-stage definition per file and a schema validator;
     keep public catalog lookups stage-aware.
   - Accept: all three existing IDs load and expose every required field.
   - Guard: no caller receives a default stage silently for a registered bad ID.
-- [ ] **2.2 Author the locked central Flooded Works layout.**
+- [x] **2.2 Author the locked central Flooded Works layout.**
   - As-is: long `5200x2200` west-to-east strip and west-edge start.
   - To-be: `4400x2800`, center start and plaza, west learning loop, central
     reward return, north/south generator fork, northwest optional branch, east boss.
   - Accept: start, critical path, both generators, reward, field boss, boss gate,
     boss center, retreat loop, and return shortcuts pass reachability.
   - Guard: no blocker/hazard/spawn lies inside the 360-pixel start clearance.
-- [ ] **2.3 Make walkability shared simulation truth.**
+- [x] **2.3 Make walkability shared simulation truth.**
   - As-is: visual floor regions do not fully constrain actors.
   - To-be: update movement and grid reachability to require a circle to remain
     in walkable regions and outside cover; draw those exact regions.
   - Accept: test probes cannot move into cobalt void/water or ceramic cover and
     can traverse every critical lane with the player radius plus dash clearance.
   - Guard: cover still blocks both teams' ordinary projectiles and line of sight.
-- [ ] **2.4 Strengthen floor/blocker presentation.**
+- [x] **2.4 Strengthen floor/blocker presentation.**
   - As-is: semantic colors exist, but map composition and collision boundaries
     do not consistently expose elevation and traversability.
   - To-be: uninterrupted ivory floor, ceramic-green top, cobalt side/shadow,
@@ -367,7 +367,7 @@ Source owners touched: `scripts/vehicle/stages/flooded_works.gd`,
   - Accept: 960x540 and 1280x720 captures allow a reviewer to trace the critical
     path and identify every blocker without collision-debug overlays.
   - Guard: no outline, microtexture, speckling, or new semantic color is added.
-- [ ] **2.5 Replace coordinate-threshold progression with authored events.**
+- [x] **2.5 Replace coordinate-threshold progression with authored events.**
   - As-is: calibration and discovery use player X thresholds.
   - To-be: encounter/interaction completion IDs drive reward, landmark discovery,
     generator completion, relay access, and boss gate state.
@@ -737,7 +737,7 @@ list requires owner change control.
 ## Progress
 
 - [x] Phase 1: Remappable combat controls and shared settings
-- [ ] Phase 2: Per-stage geometry and central Stage 1 map
+- [x] Phase 2: Per-stage geometry and central Stage 1 map
 - [ ] Phase 3: Sequential encounter packets and cohesive squads
 - [ ] Phase 4: Correct Stage 2 and Stage 3 composition
 - [ ] Phase 5: Four enemy roles and twelve upgrades

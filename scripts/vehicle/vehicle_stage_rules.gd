@@ -6,16 +6,7 @@ extends RefCounted
 
 const Catalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
 
-const WORLD_RECT := Catalog.WORLD_RECT
-const PLAYER_START := Catalog.PLAYER_START
 const PLAYER_RADIUS := 24.0
-const BOSS_ARENA := Catalog.BOSS_ARENA
-const BOSS_GATE := Catalog.BOSS_GATE
-const CHEST_POSITION := Catalog.CHEST_POSITION
-const FIELD_BOSS_POSITION := Catalog.FIELD_BOSS_POSITION
-const STAGE_BOSS_POSITION := Catalog.STAGE_BOSS_POSITION
-const GENERATOR_A_POSITION := Catalog.GENERATOR_A_POSITION
-const GENERATOR_B_POSITION := Catalog.GENERATOR_B_POSITION
 
 const CANVAS := Color("#12171A")
 const SURFACE := Color("#1C2428")
@@ -36,8 +27,32 @@ const FLOOR_LIGHT := Color("#294247")
 static func get_cover_rects(include_boss_gate: bool = false, stage_id: StringName = &"flooded_works") -> Array[Rect2]:
 	var rects := Catalog.cover_rects(stage_id)
 	if include_boss_gate:
-		rects.append(BOSS_GATE)
+		rects.append(boss_gate(stage_id))
 	return rects
+
+
+static func world_rect(stage_id: StringName = &"flooded_works") -> Rect2:
+	return Catalog.world_rect(stage_id)
+
+
+static func player_start(stage_id: StringName = &"flooded_works") -> Vector2:
+	return Catalog.player_start(stage_id)
+
+
+static func boss_arena(stage_id: StringName = &"flooded_works") -> Rect2:
+	return Catalog.boss_arena(stage_id)
+
+
+static func boss_gate(stage_id: StringName = &"flooded_works") -> Rect2:
+	return Catalog.boss_gate(stage_id)
+
+
+static func landmark(landmark_id: String, stage_id: StringName = &"flooded_works") -> Vector2:
+	return Catalog.landmark(stage_id, landmark_id)
+
+
+static func objective_triggers(stage_id: StringName = &"flooded_works") -> Dictionary:
+	return Catalog.objective_triggers(stage_id)
 
 
 static func get_water_rects(stage_id: StringName = &"flooded_works") -> Array[Rect2]:
@@ -48,20 +63,17 @@ static func get_floor_regions(stage_id: StringName = &"flooded_works") -> Array[
 	return Catalog.floor_regions(stage_id, {"light": FLOOR_LIGHT, "mid": FLOOR_MID, "dark": FLOOR_DARK})
 
 
-static func get_landmarks() -> Dictionary:
-	return {
-		"start": PLAYER_START,
-		"open_entry": Vector2(760.0, 1100.0),
-		"installation_entry": Vector2(1940.0, 1100.0),
-		"upper_route": Vector2(2500.0, 520.0),
-		"lower_route": Vector2(2500.0, 1670.0),
-		"generator_a": GENERATOR_A_POSITION,
-		"generator_b": GENERATOR_B_POSITION,
-		"field_boss": FIELD_BOSS_POSITION,
-		"chest": CHEST_POSITION,
-		"boss_gate": Vector2(3860.0, 1100.0),
-		"boss": STAGE_BOSS_POSITION,
-	}
+static func is_position_walkable(position: Vector2, radius: float = 0.0, stage_id: StringName = &"flooded_works") -> bool:
+	if not Catalog.position_is_walkable(stage_id, position, radius):
+		return false
+	for rect in get_cover_rects(false, stage_id):
+		if circle_overlaps_rect(position, radius, rect):
+			return false
+	return true
+
+
+static func get_landmarks(stage_id: StringName = &"flooded_works") -> Dictionary:
+	return Catalog.landmarks(stage_id)
 
 
 static func get_enemy_blueprint(stage_id: StringName = &"flooded_works") -> Array[Dictionary]:
@@ -183,12 +195,13 @@ static func point_segment_distance(point: Vector2, a: Vector2, b: Vector2) -> fl
 
 static func move_circle(position: Vector2, motion: Vector2, radius: float, include_boss_gate: bool = false, stage_id: StringName = &"flooded_works") -> Vector2:
 	var rects := get_cover_rects(include_boss_gate, stage_id)
+	var bounds := world_rect(stage_id)
 	var result := position
 	var attempt_x := Vector2(
-		clampf(position.x + motion.x, WORLD_RECT.position.x + radius, WORLD_RECT.end.x - radius),
+		clampf(position.x + motion.x, bounds.position.x + radius, bounds.end.x - radius),
 		position.y
 	)
-	var blocked_x := false
+	var blocked_x := not Catalog.position_is_walkable(stage_id, attempt_x, radius)
 	for rect in rects:
 		if circle_overlaps_rect(attempt_x, radius, rect):
 			blocked_x = true
@@ -198,9 +211,9 @@ static func move_circle(position: Vector2, motion: Vector2, radius: float, inclu
 
 	var attempt_y := Vector2(
 		result.x,
-		clampf(position.y + motion.y, WORLD_RECT.position.y + radius, WORLD_RECT.end.y - radius)
+		clampf(position.y + motion.y, bounds.position.y + radius, bounds.end.y - radius)
 	)
-	var blocked_y := false
+	var blocked_y := not Catalog.position_is_walkable(stage_id, attempt_y, radius)
 	for rect in rects:
 		if circle_overlaps_rect(attempt_y, radius, rect):
 			blocked_y = true
@@ -211,13 +224,14 @@ static func move_circle(position: Vector2, motion: Vector2, radius: float, inclu
 
 
 static func grid_reachable(start: Vector2, goal: Vector2, radius: float = PLAYER_RADIUS, cell_size: float = 70.0, include_boss_gate: bool = false, stage_id: StringName = &"flooded_works") -> bool:
+	var bounds := world_rect(stage_id)
 	var min_cell := Vector2i(
-		floori((WORLD_RECT.position.x + radius) / cell_size),
-		floori((WORLD_RECT.position.y + radius) / cell_size)
+		floori((bounds.position.x + radius) / cell_size),
+		floori((bounds.position.y + radius) / cell_size)
 	)
 	var max_cell := Vector2i(
-		floori((WORLD_RECT.end.x - radius) / cell_size),
-		floori((WORLD_RECT.end.y - radius) / cell_size)
+		floori((bounds.end.x - radius) / cell_size),
+		floori((bounds.end.y - radius) / cell_size)
 	)
 	var start_cell := Vector2i(floori(start.x / cell_size), floori(start.y / cell_size))
 	var goal_cell := Vector2i(floori(goal.x / cell_size), floori(goal.y / cell_size))
@@ -237,7 +251,7 @@ static func grid_reachable(start: Vector2, goal: Vector2, radius: float = PLAYER
 			if visited.has(next):
 				continue
 			var point := (Vector2(next) + Vector2(0.5, 0.5)) * cell_size
-			var blocked := false
+			var blocked := not Catalog.position_is_walkable(stage_id, point, radius)
 			for rect in rects:
 				if circle_overlaps_rect(point, radius, rect):
 					blocked = true
@@ -252,8 +266,11 @@ static func grid_reachable(start: Vector2, goal: Vector2, radius: float = PLAYER
 static func validate_blueprint(stage_id: StringName = &"flooded_works") -> PackedStringArray:
 	var errors := PackedStringArray()
 	var cover := get_cover_rects(false, stage_id)
-	for landmark_id in get_landmarks().keys():
-		var point: Vector2 = get_landmarks()[landmark_id]
+	var landmarks := get_landmarks(stage_id)
+	for landmark_id in landmarks.keys():
+		var point: Vector2 = landmarks[landmark_id]
+		if not Catalog.position_is_walkable(stage_id, point, PLAYER_RADIUS):
+			errors.append("Landmark %s is outside walkable floor" % landmark_id)
 		for rect in cover:
 			if circle_overlaps_rect(point, PLAYER_RADIUS, rect):
 				errors.append("Landmark %s overlaps solid cover" % landmark_id)
@@ -261,6 +278,8 @@ static func validate_blueprint(stage_id: StringName = &"flooded_works") -> Packe
 
 	for enemy_spec in get_enemy_blueprint(stage_id):
 		var position: Vector2 = enemy_spec["pos"]
+		if not Catalog.position_is_walkable(stage_id, position, 28.0):
+			errors.append("Enemy %s is outside walkable floor" % enemy_spec["id"])
 		for rect in cover:
 			if circle_overlaps_rect(position, 28.0, rect):
 				errors.append("Enemy %s overlaps solid cover" % enemy_spec["id"])
@@ -268,6 +287,8 @@ static func validate_blueprint(stage_id: StringName = &"flooded_works") -> Packe
 
 	for pickup_spec in get_pickup_blueprint(stage_id):
 		var position: Vector2 = pickup_spec["pos"]
+		if not Catalog.position_is_walkable(stage_id, position, 20.0):
+			errors.append("Pickup %s is outside walkable floor" % pickup_spec["id"])
 		for rect in cover:
 			if circle_overlaps_rect(position, 20.0, rect):
 				errors.append("Pickup %s overlaps solid cover" % pickup_spec["id"])
@@ -275,24 +296,26 @@ static func validate_blueprint(stage_id: StringName = &"flooded_works") -> Packe
 
 	for crate_spec in get_crate_blueprint(stage_id):
 		var position: Vector2 = crate_spec["pos"]
+		if not Catalog.position_is_walkable(stage_id, position, 31.0):
+			errors.append("Crate %s is outside walkable floor" % crate_spec["id"])
 		for rect in cover:
 			if circle_overlaps_rect(position, 31.0, rect):
 				errors.append("Crate %s overlaps solid cover" % crate_spec["id"])
 				break
 
-	var start := PLAYER_START
+	var start := player_start(stage_id)
 	for required_id in ["open_entry", "installation_entry", "generator_a", "generator_b", "chest", "boss_gate"]:
-		var point: Vector2 = get_landmarks()[required_id]
+		var point: Vector2 = landmarks[required_id]
 		if not grid_reachable(start, point, PLAYER_RADIUS, 70.0, false, stage_id):
 			errors.append("Required landmark %s is unreachable before boss lock" % required_id)
 
-	if not grid_reachable(start, get_landmarks()["lower_route"], PLAYER_RADIUS, 70.0, false, stage_id):
+	if not grid_reachable(start, landmarks["lower_route"], PLAYER_RADIUS, 70.0, false, stage_id):
 		errors.append("Safe lower route is unreachable")
-	if not grid_reachable(start, get_landmarks()["upper_route"], PLAYER_RADIUS, 70.0, false, stage_id):
+	if not grid_reachable(start, landmarks["upper_route"], PLAYER_RADIUS, 70.0, false, stage_id):
 		errors.append("Optional upper route is unreachable")
-	if not grid_reachable(start, get_landmarks()["field_boss"], PLAYER_RADIUS, 70.0, false, stage_id):
+	if not grid_reachable(start, landmarks["field_boss"], PLAYER_RADIUS, 70.0, false, stage_id):
 		errors.append("Optional field boss is unreachable")
-	if not grid_reachable(get_landmarks()["boss_gate"], get_landmarks()["boss"], PLAYER_RADIUS, 70.0, false, stage_id):
+	if not grid_reachable(landmarks["boss_gate"], landmarks["boss"], PLAYER_RADIUS, 70.0, false, stage_id):
 		errors.append("Boss arena center is unreachable after the gate opens")
 	return errors
 
