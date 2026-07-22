@@ -45,6 +45,7 @@ const MINIMAP_COLS := 13
 const MINIMAP_ROWS := 6
 const THREAT_SCAN_DISTANCE := 1200.0
 const THREAT_SAMPLE_INTERVAL := 0.10
+const HUD_REFRESH_INTERVAL := 0.05
 
 var mode := RunMode.DEPLOYMENT
 var mode_before_pause := RunMode.PLAYING
@@ -60,7 +61,6 @@ var player_aim_direction := Vector2.RIGHT
 var player_health := PLAYER_MAX_HEALTH
 var player_invulnerable := 0.0
 var player_hit_flash := 0.0
-var player_primary_shot_index := 0
 var player_primary_weapon := PrimaryWeapon.new()
 var player_muzzle_flash := 0.0
 var player_dash_cooldown := 0.0
@@ -79,9 +79,8 @@ var magnet_field_timer := 0.0
 var capacitor_cell_timer := 0.0
 var capacitor_opening_shots := 0
 var capacitor_force_next_shot := false
-var seeker_launch_index := 0
 var salvage_boost_timer := 0.0
-var emergency_vector_used := false
+var coolant_surge_timer := 0.0
 var _last_primary_tier: StringName = &"ready"
 var _aim_target_id := ""
 var _last_damage_source := ""
@@ -105,7 +104,6 @@ var crates: Array[Dictionary] = []
 var denied_zones: Array[Dictionary] = []
 var effects: Array[Dictionary] = []
 var damaging_trails: Array[Dictionary] = []
-var coolant_wakes: Array[Dictionary] = []
 
 var tutorial_move := false
 var tutorial_aim := false
@@ -132,6 +130,7 @@ var reflector_orientations: Dictionary = {}
 var _mechanic_contact_latches: Dictionary = {}
 var _stage_environment_zones: Array[Dictionary] = []
 var _runtime_cover_cache: Array[Rect2] = []
+var _objective_trigger_cache: Dictionary = {}
 var _vault_alignment_announced := false
 var optional_branch_active := false
 var optional_branch_failed := false
@@ -141,6 +140,8 @@ var visited_cells: Dictionary = {}
 var discovered_markers: Dictionary = {}
 var _threat_contact_cache: Array[Dictionary] = []
 var _threat_sample_timer := 0.0
+var _squad_motion_snapshot: Dictionary = {}
+var _hud_refresh_timer := 0.0
 var camera_shake := 0.0
 var _camera_offset := Vector2.ZERO
 
@@ -204,11 +205,17 @@ func _process(delta: float) -> void:
 	player_hit_flash = maxf(0.0, player_hit_flash - delta)
 	player_muzzle_flash = maxf(0.0, player_muzzle_flash - delta)
 	camera_shake = maxf(0.0, camera_shake - delta * 18.0)
-	if is_instance_valid(_ui):
-		_ui.update_hud(_build_hud_snapshot())
+	if is_instance_valid(_ui) and (mode == RunMode.PLAYING or _capture_mode):
+		_hud_refresh_timer -= delta
+		if _hud_refresh_timer <= 0.0:
+			_hud_refresh_timer = HUD_REFRESH_INTERVAL
+			_ui.update_hud(_build_hud_snapshot())
+	else:
+		_hud_refresh_timer = 0.0
 	if is_instance_valid(_audio):
 		_audio.update_primary(mode == RunMode.PLAYING and Input.is_action_pressed("primary_fire"))
-	queue_redraw()
+	if mode == RunMode.PLAYING or _capture_mode or not effects.is_empty() or player_hit_flash > 0.0 or player_muzzle_flash > 0.0:
+		queue_redraw()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -309,7 +316,6 @@ func _reset_run(increment_index: bool = true, preserve_stage: bool = false, pres
 	player_health = _player_max_health()
 	player_invulnerable = 0.0
 	player_hit_flash = 0.0
-	player_primary_shot_index = 0
 	player_primary_weapon.set_full_opening_seconds(_opening_charge_seconds())
 	player_primary_weapon.reset(true)
 	player_dash_cooldown = 0.0
@@ -326,9 +332,8 @@ func _reset_run(increment_index: bool = true, preserve_stage: bool = false, pres
 	capacitor_cell_timer = 0.0
 	capacitor_opening_shots = 0
 	capacitor_force_next_shot = false
-	seeker_launch_index = 0
 	salvage_boost_timer = 0.0
-	emergency_vector_used = false
+	coolant_surge_timer = 0.0
 	_last_primary_tier = &"ready"
 	_aim_target_id = ""
 	_last_damage_source = ""
@@ -346,7 +351,6 @@ func _reset_run(increment_index: bool = true, preserve_stage: bool = false, pres
 	denied_zones.clear()
 	effects.clear()
 	damaging_trails.clear()
-	coolant_wakes.clear()
 	for spec in StageCatalog.static_enemy_blueprint(current_stage_id):
 		enemies.append(_make_enemy(spec))
 	encounter_runtime.configure(current_stage_id, StageCatalog.packets(current_stage_id), _combat_preset())
@@ -392,10 +396,13 @@ func _reset_run(increment_index: bool = true, preserve_stage: bool = false, pres
 	environment_time = 0.0
 	environment_damage_tick = 0.0
 	_reset_stage_mechanics()
+	_objective_trigger_cache = Rules.objective_triggers(current_stage_id)
 	visited_cells.clear()
 	discovered_markers.clear()
 	_threat_contact_cache.clear()
 	_threat_sample_timer = 0.0
+	_squad_motion_snapshot.clear()
+	_hud_refresh_timer = 0.0
 	if not preserve_upgrades:
 		stats_primary_hits = 0
 		stats_dash_uses = 0
@@ -415,6 +422,9 @@ func _make_enemy(spec: Dictionary) -> Dictionary:
 	var role := StringName(definition["behavior"])
 	var attack_cooldown := _rng.randf_range(0.4, 1.2) / EncounterDirector.ENEMY_RECOVERY_RATE
 	var health := float(definition["health"])
+	var health_class := StringName(definition["health_class"])
+	if health_class in [&"swarm", &"standard"]:
+		health *= EncounterDirector.ENEMY_HEALTH_MULTIPLIER
 	var position: Vector2 = spec["pos"]
 	return {
 		"id": String(spec.get("id", role)),
@@ -429,7 +439,7 @@ func _make_enemy(spec: Dictionary) -> Dictionary:
 		"speed": float(definition["speed"]) * EncounterDirector.ENEMY_SPEED_MULTIPLIER,
 		"radius": float(definition["radius"]),
 		"visual_radius": float(definition["visual_radius"]),
-		"health_class": StringName(definition["health_class"]),
+		"health_class": health_class,
 		"health_visible_timer": 0.0,
 		"threat_cost": float(definition["threat_cost"]),
 		"threat_kind": StringName(definition["threat_kind"]),
@@ -657,6 +667,7 @@ func _update_player(delta: float) -> void:
 	magnet_field_timer = maxf(0.0, magnet_field_timer - delta)
 	capacitor_cell_timer = maxf(0.0, capacitor_cell_timer - delta)
 	salvage_boost_timer = maxf(0.0, salvage_boost_timer - delta)
+	coolant_surge_timer = maxf(0.0, coolant_surge_timer - delta)
 	if capacitor_cell_timer <= 0.0:
 		capacitor_opening_shots = 0
 		capacitor_force_next_shot = false
@@ -746,8 +757,6 @@ func _update_dash(delta: float) -> void:
 	if player_dash_trail_timer <= 0.0:
 		player_dash_trail_timer = 0.035
 		_add_effect("afterimage", before, Rules.CYAN, 0.20, 30.0, player_dash_direction)
-		if run_build.has(&"coolant_wake"):
-			coolant_wakes.append({"pos":before, "radius":48.0, "time":2.0, "duration":2.0})
 		if applied_upgrades.has(&"ion_wake"):
 			damaging_trails.append({
 				"pos": before,
@@ -757,8 +766,8 @@ func _update_dash(delta: float) -> void:
 				"hit_ids": {},
 			})
 	if player_dash_timer <= 0.0:
-		if run_build.has(&"reserve_charge"):
-			player_primary_weapon.advance_opening(0.35 * run_build.level_of(&"reserve_charge"))
+		if run_build.has(&"coolant_wake"):
+			coolant_surge_timer = 2.0
 		if applied_upgrades.has(&"ram_pulse"):
 			_damage_enemies_in_radius(player_position, 145.0, 32.0, 24.0, "Ram Pulse")
 			_clear_hostile_projectiles(player_position, 170.0)
@@ -781,16 +790,14 @@ func _apply_phase_shear(from: Vector2, to: Vector2) -> void:
 
 func _fire_primary(shot: Dictionary) -> void:
 	tutorial_fire = true
-	player_primary_shot_index += 1
 	player_muzzle_flash = 0.075
 	var attack_multiplier := float(shot["damage_scale"]) * run_build.stat(&"primary_damage_multiplier", 1.0)
 	attack_multiplier *= 1.50 if attack_boost_timer > 0.0 else 1.0
 	var origin := player_position + player_aim_direction * 39.0
 	var is_full_opening := bool(shot["full_opening"])
-	var burst_round := run_build.has(&"burst_capacitor") and player_primary_shot_index % 8 == 0
-	var projectile_count := 3 if burst_round else 1 + run_build.level_of(&"forked_muzzle")
-	var per_projectile_scale: float = 0.70 if burst_round else [1.0, 0.70, 0.55][projectile_count - 1]
-	var spread_step := deg_to_rad(3.0 if burst_round else 7.0) * run_build.stat(&"primary_spread", 1.0)
+	var projectile_count := 1 + run_build.level_of(&"forked_muzzle")
+	var per_projectile_scale: float = [1.0, 0.70, 0.55][projectile_count - 1]
+	var spread_step := deg_to_rad(7.0) * run_build.stat(&"primary_spread", 1.0)
 	var projectile_speed := run_build.stat(&"primary_projectile_speed", PRIMARY_PROJECTILE_SPEED)
 	var projectile_radius := run_build.stat(&"primary_radius", 5.5) * float(shot["radius_scale"])
 	var structure_multiplier := run_build.stat(&"primary_structure", 1.0)
@@ -839,16 +846,9 @@ func _primary_fire_interval() -> float:
 	var interval := maxf(PrimaryWeapon.MIN_INTERVAL, run_build.stat(&"primary_interval", PrimaryWeapon.BASE_INTERVAL))
 	if coolant_timer > 0.0:
 		interval = maxf(PrimaryWeapon.MIN_INTERVAL, interval * 0.75)
-	if _inside_coolant_wake():
+	if coolant_surge_timer > 0.0:
 		interval = maxf(PrimaryWeapon.MIN_INTERVAL, interval * 0.85)
 	return interval
-
-
-func _inside_coolant_wake() -> bool:
-	for wake in coolant_wakes:
-		if player_position.distance_to(Vector2(wake["pos"])) <= float(wake["radius"]):
-			return true
-	return false
 
 
 func _reset_stage_mechanics() -> void:
@@ -1001,7 +1001,6 @@ func _spawn_player_projectile(origin: Vector2, direction: Vector2, damage: float
 		"stagger": stagger,
 		"structure_damage": damage if structure_damage < 0.0 else structure_damage,
 		"opening": opening,
-		"relay_amplified": false,
 		"reflected": false,
 		"reflector_lock": &"",
 		"reflector_lock_time": 0.0,
@@ -1039,8 +1038,6 @@ func _update_passive_secondary() -> void:
 		var seeker_count := 1 + run_build.level_of(&"twin_seekers")
 		var seeker_scale: float = [1.0, 0.85, 0.70][seeker_count - 1]
 		_enforce_player_projectile_cap()
-		if _next_seeker_is_guardian():
-			_guardian_seeker_intercept()
 		var marked_multiplier := 1.25 if float(enemy.get("marked_time", 0.0)) > 0.0 else 1.0
 		projectiles.append({
 			"pos": player_position + direction * 33.0,
@@ -1105,11 +1102,10 @@ func _release_emp(is_aftershock: bool) -> void:
 	var radius := _emp_radius() * (0.68 if is_aftershock else 1.0)
 	var damage := (34.0 if is_aftershock else 62.0) * run_build.stat(&"emp_damage_multiplier", 1.0)
 	_damage_enemies_in_radius(player_position, radius, damage, 42.0, "EMP Aftershock" if is_aftershock else "EMP Nova")
-	var cleared_projectiles := _clear_hostile_projectiles(player_position, radius + 40.0)
+	_clear_hostile_projectiles(player_position, radius + 40.0)
 	if not is_aftershock and run_build.has(&"static_aegis"):
-		var aegis_cap := 24 if run_build.level_of(&"static_aegis") >= 2 else 18
-		var barrier_gain := mini(cleared_projectiles, aegis_cap)
-		player_barrier_strength += barrier_gain
+		var barrier_strength := 24.0 if run_build.level_of(&"static_aegis") >= 2 else 18.0
+		player_barrier_strength = maxf(player_barrier_strength, barrier_strength)
 		player_barrier_timer = maxf(player_barrier_timer, 10.0)
 	for enemy in enemies:
 		if bool(enemy["alive"]) and Vector2(enemy["pos"]).distance_to(player_position) <= radius:
@@ -1235,8 +1231,6 @@ func _launch_field_seekers(max_targets: int) -> void:
 		var enemy: Dictionary = target
 		var direction := (Vector2(enemy["pos"]) - player_position).normalized()
 		_enforce_player_projectile_cap()
-		if _next_seeker_is_guardian():
-			_guardian_seeker_intercept()
 		projectiles.append({
 			"pos": player_position + direction * 33.0, "velocity": direction * 520.0,
 			"radius": 8.0, "team": &"player", "damage": 25.0, "life": 1.8,
@@ -1244,31 +1238,6 @@ func _launch_field_seekers(max_targets: int) -> void:
 			"homing": true, "target_id": String(enemy["id"]), "explosive": false,
 			"stagger": 12.0, "structure_damage": 25.0, "opening": false, "status_payload": {},
 		})
-
-
-func _guardian_seeker_intercept() -> bool:
-	var best_index := -1
-	var best_distance := PASSIVE_RANGE * PASSIVE_RANGE
-	for index in projectiles.size():
-		var projectile: Dictionary = projectiles[index]
-		if StringName(projectile["team"]) != &"enemy":
-			continue
-		var distance := player_position.distance_squared_to(Vector2(projectile["pos"]))
-		if distance < best_distance:
-			best_distance = distance
-			best_index = index
-	if best_index < 0:
-		return false
-	var intercept_position := Vector2(projectiles[best_index]["pos"])
-	projectiles.remove_at(best_index)
-	_add_effect("shock", intercept_position, Art.MINT, 0.24, 44.0)
-	return true
-
-
-func _next_seeker_is_guardian() -> bool:
-	seeker_launch_index += 1
-	return run_build.has(&"guardian_seeker") and seeker_launch_index % 3 == 0
-
 
 func _update_enemies(delta: float) -> void:
 	_enforce_active_enemy_cap()
@@ -1301,6 +1270,7 @@ func _update_enemies(delta: float) -> void:
 		if activated and bool(enemy.get("counts_active_cap", false)):
 			active_capped += 1
 
+	_squad_motion_snapshot = EncounterDirector.squad_motion_snapshot(enemies)
 	var shielded_ids := _build_enemy_shield_assignments()
 	for enemy in enemies:
 		if not bool(enemy["alive"]):
@@ -1827,7 +1797,7 @@ func _move_enemy_with_recovery(enemy: Dictionary, velocity: Vector2, delta: floa
 		enemy["reposition_time"] = maxf(0.0, float(enemy["reposition_time"]) - delta)
 		velocity = Vector2(enemy["reposition_dir"]) * float(enemy["speed"])
 	else:
-		velocity = EncounterDirector.cohesion_velocity(enemy, enemies, velocity)
+		velocity = EncounterDirector.cohesion_velocity(enemy, _squad_motion_snapshot, velocity)
 	var before := Vector2(enemy["pos"])
 	var attempt := _move_actor(before, velocity * delta, float(enemy["radius"]), false)
 	var moved := before.distance_to(attempt)
@@ -1935,14 +1905,12 @@ func _update_projectiles(delta: float) -> void:
 			projectile["reflector_lock"] = reflector_id
 			projectile["reflector_lock_time"] = 0.16
 			projectile["reflected"] = true
-			_amplify_relay_round(projectile)
 			_add_effect("reflect", Vector2(projectile["pos"]), Art.MINT, 0.24, 34.0, Vector2(projectile["velocity"]).normalized())
 			_play_sound(&"cover", 1.28)
 			continue
 		if bool(cover_hit.get("hit", false)):
 			if int(projectile["bounces"]) > 0:
 				projectile["bounces"] = int(projectile["bounces"]) - 1
-				_amplify_relay_round(projectile)
 				var normal: Vector2 = cover_hit["normal"]
 				projectile["velocity"] = Vector2(projectile["velocity"]).bounce(normal)
 				projectile["pos"] = Vector2(cover_hit["point"]) + normal * (float(projectile["radius"]) + 2.0)
@@ -2003,15 +1971,6 @@ func _update_projectiles(delta: float) -> void:
 					projectile["pos"] = to + Vector2(projectile["velocity"]).normalized() * 8.0
 				else:
 					projectiles.remove_at(index)
-
-
-func _amplify_relay_round(projectile: Dictionary) -> void:
-	if not run_build.has(&"relay_rounds") or bool(projectile.get("relay_amplified", false)) or StringName(projectile.get("team", &"")) != &"player":
-		return
-	projectile["relay_amplified"] = true
-	projectile["damage"] = float(projectile["damage"]) * 1.35
-	projectile["structure_damage"] = float(projectile.get("structure_damage", projectile["damage"])) + 20.0
-
 
 func _mark_enemy(target: Dictionary) -> void:
 	for enemy in enemies:
@@ -2110,10 +2069,6 @@ func _update_denied_zones(delta: float) -> void:
 
 
 func _update_trails(delta: float) -> void:
-	for index in range(coolant_wakes.size() - 1, -1, -1):
-		coolant_wakes[index]["time"] = float(coolant_wakes[index]["time"]) - delta
-		if float(coolant_wakes[index]["time"]) <= 0.0:
-			coolant_wakes.remove_at(index)
 	for index in range(damaging_trails.size() - 1, -1, -1):
 		var trail: Dictionary = damaging_trails[index]
 		trail["time"] = float(trail["time"]) - delta
@@ -2288,11 +2243,6 @@ func _damage_player(amount: float, source: String, blockable: bool, enemy_source
 	stats_damage_taken += remaining
 	player_hit_flash = 0.22
 	player_invulnerable = 0.28
-	if run_build.has(&"emergency_vector") and not emergency_vector_used and player_health > 0.0 and player_health < _player_max_health() * 0.30:
-		emergency_vector_used = true
-		player_dash_cooldown = 0.0
-		player_invulnerable = 0.4
-		_add_effect("shock", player_position, Art.MINT, 0.34, 74.0)
 	camera_shake = maxf(camera_shake, 8.0)
 	_last_damage_source = source
 	_play_sound(&"hurt")
@@ -2397,7 +2347,7 @@ func _update_aim_target() -> void:
 
 
 func _update_stage_progression() -> void:
-	var triggers := Rules.objective_triggers(current_stage_id)
+	var triggers := _objective_trigger_cache
 	if not entered_approach and _trigger_contains(triggers.get("approach"), player_position):
 		entered_approach = true
 		encounter_runtime.signal_event(&"approach_entered")
@@ -2476,8 +2426,6 @@ func apply_upgrade(upgrade_id: StringName) -> bool:
 		return false
 	var definition := upgrade_catalog.get_definition(upgrade_id)
 	selected_upgrade_title_key = definition.title_key
-	if upgrade_id == &"field_converter" and player_barrier_strength > 0.0:
-		player_barrier_strength += 10.0
 	if upgrade_id == &"twin_seekers":
 		player_passive_cooldown = 0.0
 	if upgrade_id == &"reinforced_hull":
@@ -2817,7 +2765,7 @@ func _boss_has_live_pylons() -> bool:
 func _update_field_boss(enemy: Dictionary, delta: float) -> void:
 	var leash := Rect2(enemy.get("leash_rect", Rect2()))
 	if not leash.has_area():
-		var trigger: Variant = Rules.objective_triggers(current_stage_id).get("field_boss_discovery")
+		var trigger: Variant = _objective_trigger_cache.get("field_boss_discovery")
 		if trigger is Rect2:
 			leash = Rect2(trigger)
 	if leash.has_area() and not leash.grow(80.0).has_point(player_position):
@@ -3041,10 +2989,14 @@ func _build_hud_snapshot() -> Dictionary:
 		buffs.append(tr("BUFF_ATTACK") % attack_boost_timer)
 	if coolant_timer > 0.0:
 		buffs.append(tr("BUFF_COOLANT") % coolant_timer)
+	if coolant_surge_timer > 0.0:
+		buffs.append(tr("BUFF_COOLANT_SURGE") % coolant_surge_timer)
 	if overdrive_timer > 0.0:
 		buffs.append(tr("BUFF_OVERDRIVE") % overdrive_timer)
 	if magnet_field_timer > 0.0:
 		buffs.append(tr("BUFF_MAGNET") % magnet_field_timer)
+	if salvage_boost_timer > 0.0:
+		buffs.append(tr("BUFF_SALVAGE") % salvage_boost_timer)
 	if capacitor_opening_shots > 0:
 		buffs.append(tr("BUFF_CAPACITOR") % capacitor_opening_shots)
 	if player_barrier_strength > 0.0:
@@ -3422,9 +3374,6 @@ func _draw_zones_and_trails() -> void:
 		else:
 			draw_circle(position, radius, Color(Art.CORAL, 0.30))
 			draw_circle(position, radius * 0.70, Color(Art.CORAL_DARK, 0.16))
-	for wake in coolant_wakes:
-		var wake_alpha := clampf(float(wake["time"]) / float(wake["duration"]), 0.0, 1.0)
-		draw_circle(Vector2(wake["pos"]), float(wake["radius"]), Color(Art.MINT, wake_alpha * 0.16))
 	for trail in damaging_trails:
 		var alpha := clampf(float(trail["time"]) / float(trail["duration"]), 0.0, 1.0)
 		draw_circle(Vector2(trail["pos"]), float(trail["radius"]), Color(Art.MUSTARD, alpha * 0.28))
@@ -4077,6 +4026,9 @@ func _run_capture_sequence() -> void:
 	_save_capture("01f-three-unit-squad.png")
 	mode = RunMode.PLAYING
 	_capture_clear_packet_enemies()
+	# Isolate the later squad fixture so faster earlier packets cannot consume the
+	# capture-only one-spawn-per-update budget.
+	encounter_runtime.configure(current_stage_id, StageCatalog.packets(current_stage_id), _combat_preset())
 	encounter_runtime.signal_event(&"upper_route_entered")
 	_update_encounter(0.01)
 	_update_encounter(0.9)
@@ -4451,7 +4403,7 @@ func debug_full_run() -> Dictionary:
 		"boss_started_with_living": boss_started_with_living,
 		"complete": stage_complete,
 		"mode": mode,
-		"upgrade_count": applied_upgrades.size(),
+		"upgrade_count": run_build.total_levels(),
 	}
 
 
@@ -4750,23 +4702,26 @@ func debug_specialist_enemy_contract() -> Dictionary:
 func debug_new_upgrade_contract() -> Dictionary:
 	_reset_run(false)
 	mode = RunMode.PLAYING
-	for upgrade_id in [&"burst_capacitor", &"relay_rounds", &"shock_breach", &"reserve_charge", &"marked_salvo", &"guardian_seeker", &"phase_shear", &"coolant_wake", &"static_aegis", &"relay_overload", &"emergency_vector", &"salvage_booster"]:
+	var retired_ids: Array[StringName] = [&"burst_capacitor", &"relay_rounds", &"reserve_charge", &"guardian_seeker", &"emergency_vector"]
+	var retired_missing := true
+	var retired_rejected := true
+	for upgrade_id in retired_ids:
+		retired_missing = retired_missing and upgrade_catalog.get_definition(upgrade_id) == null
+		retired_rejected = retired_rejected and not apply_upgrade(upgrade_id)
+	for upgrade_id in [&"shock_breach", &"marked_salvo", &"phase_shear", &"coolant_wake", &"static_aegis", &"relay_overload", &"salvage_booster", &"forked_muzzle", &"field_converter"]:
 		apply_upgrade(upgrade_id)
 	player_primary_weapon.reset(false)
 	player_primary_weapon.tick(0.0, true, true)
-	player_primary_shot_index = 7
 	projectiles.clear()
 	_try_fire_primary()
-	var burst_projectiles := projectiles.size()
-	var relay_probe := {"team":&"player", "damage":10.0, "structure_damage":10.0, "relay_amplified":false}
-	_amplify_relay_round(relay_probe)
-	var shock_breach_damage := _shock_breach_damage(100.0)
+	var forked_level_one_projectiles := projectiles.size()
+	apply_upgrade(&"forked_muzzle")
 	player_primary_weapon.reset(false)
-	enemies.clear()
-	player_dash_timer = DASH_DURATION
-	player_dash_direction = Vector2.RIGHT
-	_update_dash(DASH_DURATION)
-	var reserve_charge_seconds := float(player_primary_weapon.snapshot()["idle_seconds"])
+	player_primary_weapon.tick(0.0, true, true)
+	projectiles.clear()
+	_try_fire_primary()
+	var forked_level_two_projectiles := projectiles.size()
+	var shock_breach_damage := _shock_breach_damage(100.0)
 
 	var target := _make_enemy({"id":"debug_upgrade_target", "role":&"chaser", "pos":player_position + Vector2(100,0), "active":true})
 	enemies = [target]
@@ -4777,21 +4732,15 @@ func debug_new_upgrade_contract() -> Dictionary:
 	_damage_enemy(target, 10.0, "validation")
 	var shear_damage := health_before_shear - float(target["health"])
 
-	projectiles = [{"team":&"enemy", "pos":player_position + Vector2(50,0)}]
-	seeker_launch_index = 0
-	var guardian_cadence := [
-		_next_seeker_is_guardian(), _next_seeker_is_guardian(), _next_seeker_is_guardian(),
-	]
-	var guardian_intercepted := guardian_cadence == [false, false, true] and _guardian_seeker_intercept()
-	coolant_wakes = [{"pos":player_position, "radius":48.0, "time":2.0, "duration":2.0}]
-	var inside_coolant := _inside_coolant_wake()
+	player_dash_timer = DASH_DURATION
+	player_dash_direction = Vector2.RIGHT
+	_update_dash(DASH_DURATION)
+	var coolant_surge_seconds := coolant_surge_timer
 	var coolant_interval := _primary_fire_interval()
 
 	var support := _make_enemy({"id":"debug_support", "role":&"repair_tender", "pos":player_position + Vector2(80,0), "active":true})
 	enemies = [support]
 	projectiles = []
-	for index in 20:
-		projectiles.append({"team":&"enemy", "pos":player_position + Vector2(index * 2,0)})
 	player_barrier_strength = 0.0
 	player_barrier_timer = 0.0
 	_release_emp(false)
@@ -4800,19 +4749,15 @@ func debug_new_upgrade_contract() -> Dictionary:
 	apply_upgrade(&"static_aegis")
 	player_barrier_strength = 0.0
 	projectiles.clear()
-	for index in 30:
-		projectiles.append({"team":&"enemy", "pos":player_position + Vector2(index * 2,0)})
 	_release_emp(false)
 	var aegis_level_two_barrier := player_barrier_strength
 
-	player_health = _player_max_health() * 0.35
-	player_dash_cooldown = 1.0
-	player_invulnerable = 0.0
-	player_barrier_strength = 0.0
-	player_barrier_timer = 0.0
-	emergency_vector_used = false
-	_damage_player(_player_max_health() * 0.10, "validation contact", true)
-	var emergency_triggered := emergency_vector_used and is_zero_approx(player_dash_cooldown) and player_invulnerable >= 0.39
+	var field_duration_level_one := run_build.stat(&"field_duration_multiplier", 1.0)
+	var field_barrier_level_one := run_build.stat(&"barrier_bonus", 0.0)
+	apply_upgrade(&"field_converter")
+	var field_duration_level_two := run_build.stat(&"field_duration_multiplier", 1.0)
+	var field_barrier_level_two := run_build.stat(&"barrier_bonus", 0.0)
+
 	var pickup := {"active":true, "kind":&"repair", "pos":player_position}
 	_collect_pickup(pickup)
 	var salvage_level_one_speed := _player_move_speed()
@@ -4820,20 +4765,22 @@ func debug_new_upgrade_contract() -> Dictionary:
 	var salvage_level_two_speed := _player_move_speed()
 	return {
 		"catalog_count":upgrade_catalog.definitions.size(),
-		"burst_projectiles":burst_projectiles,
-		"relay_damage":float(relay_probe["damage"]),
-		"relay_structure":float(relay_probe["structure_damage"]),
+		"retired_missing":retired_missing,
+		"retired_rejected":retired_rejected,
+		"forked_level_one_projectiles":forked_level_one_projectiles,
+		"forked_level_two_projectiles":forked_level_two_projectiles,
 		"shock_breach_damage":shock_breach_damage,
-		"reserve_charge_seconds":reserve_charge_seconds,
 		"marked_time":marked_time,
 		"shear_damage":shear_damage,
-		"guardian_intercepted":guardian_intercepted,
-		"inside_coolant":inside_coolant,
+		"coolant_surge_timer":coolant_surge_seconds,
 		"coolant_interval":coolant_interval,
 		"aegis_barrier":aegis_barrier,
 		"aegis_level_two_barrier":aegis_level_two_barrier,
 		"overload_stun":overload_stun,
-		"emergency_triggered":emergency_triggered,
+		"field_duration_level_one":field_duration_level_one,
+		"field_duration_level_two":field_duration_level_two,
+		"field_barrier_level_one":field_barrier_level_one,
+		"field_barrier_level_two":field_barrier_level_two,
 		"salvage_timer":salvage_boost_timer,
 		"salvage_speed":salvage_level_one_speed,
 		"salvage_level_two_speed":salvage_level_two_speed,
@@ -4931,7 +4878,13 @@ func debug_pickup_contract(kind: StringName) -> Dictionary:
 func debug_enemy_pressure_contract() -> Dictionary:
 	var definition := EnemyArchetypes.definition(&"chaser")
 	var sample := _make_enemy({"id": "debug_pressure_chaser", "role": &"chaser", "pos": Vector2.ZERO})
+	var boss_definition := EnemyArchetypes.definition(&"field_boss")
+	var boss_sample := _make_enemy({"id": "debug_pressure_boss", "role": &"field_boss", "pos": Vector2.ZERO})
 	return {
+		"base_health": float(definition["health"]),
+		"runtime_health": float(sample["max_health"]),
+		"base_boss_health": float(boss_definition["health"]),
+		"runtime_boss_health": float(boss_sample["max_health"]),
 		"base_speed": float(definition["speed"]),
 		"runtime_speed": float(sample["speed"]),
 		"base_projectile_speed": 100.0,
@@ -4974,6 +4927,8 @@ func debug_performance_contract() -> Dictionary:
 		"backdrop_cached": bool(backdrop_contract["static_cached"]),
 		"backdrop_behind": bool(backdrop_contract["behind_gameplay"]),
 		"threat_sample_interval": THREAT_SAMPLE_INTERVAL,
+		"hud_refresh_interval": HUD_REFRESH_INTERVAL,
+		"stage_definition_build_count": int(StageCatalog.debug_cache_contract(current_stage_id)["definition_build_count"]),
 	}
 
 

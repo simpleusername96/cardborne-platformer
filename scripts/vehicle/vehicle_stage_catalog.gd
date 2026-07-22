@@ -22,6 +22,13 @@ const REQUIRED_FIELDS := [
 	"environment_zones", "packets",
 ]
 
+# Registered definitions and geometry are immutable after validation. Callers
+# duplicate values before appending runtime blockers or returning mutable maps.
+static var _definition_cache: Dictionary = {}
+static var _definition_build_counts: Dictionary = {}
+static var _cover_rect_cache: Dictionary = {}
+static var _water_rect_cache: Dictionary = {}
+
 
 static func normalized_id(stage_id: StringName) -> StringName:
 	return stage_id if stage_id in STAGE_IDS else STAGE_IDS[0]
@@ -33,6 +40,8 @@ static func index_of(stage_id: StringName) -> int:
 
 static func definition(stage_id: StringName) -> Dictionary:
 	var normalized := normalized_id(stage_id)
+	if _definition_cache.has(normalized):
+		return _definition_cache[normalized]
 	var result: Dictionary
 	match normalized:
 		&"tidal_archive":
@@ -49,6 +58,8 @@ static func definition(stage_id: StringName) -> Dictionary:
 	if not errors.is_empty():
 		push_error("Registered stage %s is invalid: %s" % [normalized, "; ".join(errors)])
 		return {}
+	_definition_cache[normalized] = result
+	_definition_build_counts[normalized] = int(_definition_build_counts.get(normalized, 0)) + 1
 	return result
 
 
@@ -123,17 +134,37 @@ static func walkable_regions(stage_id: StringName) -> Array[Dictionary]:
 
 
 static func cover_rects(stage_id: StringName) -> Array[Rect2]:
+	var normalized := normalized_id(stage_id)
+	if _cover_rect_cache.has(normalized):
+		return _cover_rect_cache[normalized]
 	var result: Array[Rect2] = []
-	for rect in definition(stage_id)["cover_rects"]:
+	for rect in definition(normalized)["cover_rects"]:
 		result.append(Rect2(rect))
+	_cover_rect_cache[normalized] = result
 	return result
 
 
 static func water_rects(stage_id: StringName) -> Array[Rect2]:
+	var normalized := normalized_id(stage_id)
+	if _water_rect_cache.has(normalized):
+		return _water_rect_cache[normalized]
 	var result: Array[Rect2] = []
-	for rect in definition(stage_id)["water_rects"]:
+	for rect in definition(normalized)["water_rects"]:
 		result.append(Rect2(rect))
+	_water_rect_cache[normalized] = result
 	return result
+
+
+static func debug_cache_contract(stage_id: StringName) -> Dictionary:
+	var normalized := normalized_id(stage_id)
+	definition(normalized)
+	definition(normalized)
+	return {
+		"stage_id": normalized,
+		"definition_build_count": int(_definition_build_counts.get(normalized, 0)),
+		"cover_count": cover_rects(normalized).size(),
+		"water_count": water_rects(normalized).size(),
+	}
 
 
 static func hazard_regions(stage_id: StringName) -> Array[Dictionary]:

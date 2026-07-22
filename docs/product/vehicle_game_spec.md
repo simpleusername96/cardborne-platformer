@@ -74,7 +74,10 @@ Every stage uses the same deterministic onboarding and encounter language:
 1. Arrival is safe from active damaging enemies for six seconds.
 2. A visible entry cue begins at 5.1 seconds and one scout enters at 6.0 seconds.
 3. Later packets activate from authored route events. Units enter sequentially,
-   then cohere into squads of three, four, and five as the stage advances.
+   then cohere into squads of three, four, and five as the stage advances. After
+   arrival, Standard uses 0.34x authored unit and squad gaps; Onslaught uses
+   0.28x, so authored groups arrive roughly three times as quickly without
+   changing the safe opening or spawning the whole map at once.
 4. Calibration, two route installations, a relay cache, an optional field-boss
    branch, and a stage boss provide the macro decisions.
 5. Ordinary enemies may remain alive when an authored exit opens. Installations,
@@ -141,15 +144,24 @@ Authored population bands are:
 | Abyssal Observatory | 160–184 |
 
 Population does not equal simultaneous pressure. Standard active caps progress
-through 1/12/16/20/24 units; Onslaught uses 1/16/24/32/40 and shortens later
-squad gaps. A 6.5-point threat budget, at most three ranged commits, and at most
-two denial commits bound attacks. Committed attackers are retained when caps are
+through 1/14/20/26/30 units; Onslaught uses 1/20/30/40/48. The faster packet
+timing fills those bounded caps while total authored population remains
+unchanged. Standard threat budgets progress through 1.0/3.0/4.25/5.0/6.0;
+Onslaught uses a 7.5 budget behind its beat-aware active caps. At most three
+ranged commits and two
+denial commits may overlap. Committed attackers are retained when caps are
 enforced. Distant and optional packets remain dormant rather than being deleted
 or globally activated.
 
+Ordinary swarm and standard enemies use 1.12x health, 1.20x movement speed,
+1.18x hostile projectile speed, 1.35x contact and projectile damage, and 1.28x
+recovery rate. Priority enemies, field bosses, and stage bosses do not receive
+the ordinary health multiplier. These multipliers increase active pressure while
+preserving authored telegraphs and boss time-to-kill.
+
 ## Rewards, items, and upgrades
 
-The catalog contains 46 typed card definitions. Offers contain three compatible,
+The catalog contains 41 typed card definitions. Offers contain three compatible,
 non-duplicate choices; selection and application are separate actions behind a
 short input guard, and no card is applied before explicit confirmation. Card
 data lives under `data/cards/vehicle/`; gameplay owners apply behavior while UI
@@ -158,16 +170,17 @@ only presents the offer.
 Upgrade families cover:
 
 - primary cadence and geometry: cadence, projectile count, ricochet, pierce,
-  range, and the periodic Burst Capacitor;
-- opening attacks: faster readiness, structure breach, Shock Breach, and dash-
-  driven Reserve Charge;
+  range, projectile scale, and an always-on reduced-damage Forked Muzzle side
+  round per level;
+- opening attacks: faster readiness, structure breach, and Shock Breach;
 - mutually exclusive burn, poison, or slow cores and their bounded follow-ups;
-- passive targeting and protection: Marked Salvo, Phase Shear, Guardian Seeker,
-  and seeker cadence/warhead changes;
-- dash and movement: wake damage, ram pulse, mobility, Emergency Vector, and
-  Salvage Booster;
+- passive targeting: Marked Salvo plus seeker count, cadence, pierce, target
+  priority, and warhead changes;
+- dash and movement: Ion Wake, Ram Pulse, Phase Shear, direct mobility, a visible
+  two-second Coolant Surge fire-rate buff, and a visible Salvage Booster timer;
 - EMP, barrier, and stage interaction: aftershock, Relay Overload, Static Aegis,
-  Coolant Wake, and reflected Relay Rounds.
+  and Field Converter. Static Aegis grants a fixed 18/24 barrier for 10 seconds;
+  Field Converter states its exact pickup-duration and barrier-strength bonuses.
 
 Each stage authors eight field pickups, five breakable crates, and four reward
 anchors. Field items produce immediate, legible effects such as repair, temporary
@@ -182,6 +195,8 @@ dash, EMP, minimap, and exceptional buffs. The minimap distinguishes discovered
 walkable space, blockers, objectives, rewards, bosses, and the player; unvisited
 space stays concealed. A separate 12-direction off-screen threat arc aggregates
 nearby off-screen enemies at 10 Hz rather than duplicating visible enemies.
+Semantic HUD snapshots refresh at 20 Hz; world motion, aiming, projectiles, and
+telegraphs continue to render every frame.
 
 Deployment, settings, upgrade, pause, result, and garage are explicit modal focus
 layers. Gameplay HUD is hidden behind them, each exposes a clear primary action,
@@ -218,7 +233,9 @@ stage catalog, settings store, card catalog, or presentation system.
   English copy, audio, and difficulty settings pass focused validation.
 - The full run resolves 15 mandatory reward transactions and preserves the build
   through the fifth boss.
-- Standard and Onslaught fixed-step pressure profiles stay at or below 8ms.
+- Standard and Onslaught fixed-step pressure profiles cover 30 and 48 moving
+  actors respectively, a saturated scheduler, and the live HUD, and stay at or
+  below 8ms.
 - 960x540, 1280x720, and 1920x1080 rendered reviews show no clipped modal, HUD
   overlap, hidden route, ambiguous blocker, or unreadable objective.
 - Native boot, Web export, and a browser boot of the built artifact all succeed.

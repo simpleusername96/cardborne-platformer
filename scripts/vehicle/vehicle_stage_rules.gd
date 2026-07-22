@@ -25,8 +25,9 @@ const FLOOR_LIGHT := Color("#294247")
 
 
 static func get_cover_rects(include_boss_gate: bool = false, stage_id: StringName = &"flooded_works") -> Array[Rect2]:
-	var rects := Catalog.cover_rects(stage_id)
+	var rects: Array[Rect2] = Catalog.cover_rects(stage_id)
 	if include_boss_gate:
+		rects = rects.duplicate()
 		rects.append(boss_gate(stage_id))
 	return rects
 
@@ -177,6 +178,8 @@ static func first_cover_hit(from: Vector2, to: Vector2, radius: float, include_b
 static func first_cover_hit_with_extra(from: Vector2, to: Vector2, radius: float, include_boss_gate: bool, stage_id: StringName, extra_cover: Array) -> Dictionary:
 	var best := {"hit": false, "t": 2.0}
 	var rects: Array[Rect2] = get_cover_rects(include_boss_gate, stage_id)
+	if not extra_cover.is_empty():
+		rects = rects.duplicate()
 	for value in extra_cover:
 		rects.append(Rect2(value))
 	for rect in rects:
@@ -210,6 +213,8 @@ static func move_circle(position: Vector2, motion: Vector2, radius: float, inclu
 
 static func move_circle_with_extra(position: Vector2, motion: Vector2, radius: float, include_boss_gate: bool, stage_id: StringName, extra_cover: Array) -> Vector2:
 	var rects: Array[Rect2] = get_cover_rects(include_boss_gate, stage_id)
+	if not extra_cover.is_empty():
+		rects = rects.duplicate()
 	for value in extra_cover:
 		rects.append(Rect2(value))
 	var bounds := world_rect(stage_id)
@@ -260,6 +265,8 @@ static func grid_reachable_with_extra(start: Vector2, goal: Vector2, radius: flo
 	var visited := {start_cell: true}
 	var directions: Array[Vector2i] = [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]
 	var rects: Array[Rect2] = get_cover_rects(include_boss_gate, stage_id)
+	if not extra_cover.is_empty():
+		rects = rects.duplicate()
 	for value in extra_cover:
 		rects.append(Rect2(value))
 

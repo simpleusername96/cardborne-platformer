@@ -8,6 +8,8 @@ const Director = preload("res://scripts/encounters/vehicle_encounter_director.gd
 
 const ARRIVAL_GRACE := 6.0
 const CUE_LEAD := 0.9
+const METRIC_SAMPLE_INTERVAL := 0.10
+const MAX_ACTIVE_COUNT_SAMPLES := 4096
 
 var stage_id: StringName = &"flooded_works"
 var preset: StringName = &"standard"
@@ -28,6 +30,8 @@ var _first_reward_time := -1.0
 var _active_count_samples: Array[int] = []
 var _max_attack_family_overlap := 0
 var _damage_source_families: Dictionary = {}
+var _schedule_delay_total := 0.0
+var _next_metric_sample := 0.0
 
 
 func configure(next_stage_id: StringName, packets: Array[Dictionary], combat_preset: StringName) -> void:
@@ -51,6 +55,8 @@ func configure(next_stage_id: StringName, packets: Array[Dictionary], combat_pre
 	_active_count_samples.clear()
 	_max_attack_family_overlap = 0
 	_damage_source_families.clear()
+	_schedule_delay_total = 0.0
+	_next_metric_sample = 0.0
 
 
 func signal_event(event_id: StringName) -> void:
@@ -66,29 +72,31 @@ func has_event(event_id: StringName) -> bool:
 
 func tick(delta: float, active_mobile_count: int, active_attack_families: Array[StringName] = []) -> Dictionary:
 	elapsed += maxf(0.0, delta)
-	_active_count_samples.append(active_mobile_count)
+	_record_active_count_sample(active_mobile_count)
 	_max_attack_family_overlap = maxi(_max_attack_family_overlap, active_attack_families.size())
 	_activate_ready_packets()
 	var cues: Array[Dictionary] = []
-	while not _cue_queue.is_empty() and float(_cue_queue[0]["time"]) <= elapsed + 0.0001:
+	while not _cue_queue.is_empty() and _effective_time(_cue_queue[0]) <= elapsed + 0.0001:
 		var cue: Dictionary = _cue_queue.pop_front()
 		cues.append(cue)
+		var cue_time := _effective_time(cue)
 		if _first_cue_time < 0.0:
-			_first_cue_time = float(cue["time"])
-		_timeline.append({"kind":&"cue", "id":cue["squad_id"], "time":float(cue["time"])})
+			_first_cue_time = cue_time
+		_timeline.append({"kind":&"cue", "id":cue["squad_id"], "time":cue_time})
 
 	var spawns: Array[Dictionary] = []
-	if not _spawn_queue.is_empty() and float(_spawn_queue[0]["time"]) <= elapsed + 0.0001:
+	if not _spawn_queue.is_empty() and _effective_time(_spawn_queue[0]) <= elapsed + 0.0001:
 		if active_mobile_count < active_cap():
 			var request: Dictionary = _spawn_queue.pop_front()
 			spawns.append(request["spec"])
 			var squad_id := String(request["spec"]["squad_id"])
 			_spawned_by_squad[squad_id] = int(_spawned_by_squad.get(squad_id, 0)) + 1
+			var spawn_time := _effective_time(request)
 			if _first_spawn_time < 0.0:
-				_first_spawn_time = float(request["time"])
-			_timeline.append({"kind":&"spawn", "id":request["spec"]["id"], "squad_id":squad_id, "time":float(request["time"])})
+				_first_spawn_time = spawn_time
+			_timeline.append({"kind":&"spawn", "id":request["spec"]["id"], "squad_id":squad_id, "time":spawn_time})
 		else:
-			_delay_pending_schedule(maxf(0.0, delta))
+			_schedule_delay_total += maxf(0.0, delta)
 	return {"cues":cues, "spawns":spawns}
 
 
@@ -139,6 +147,8 @@ func debug_snapshot() -> Dictionary:
 		"damage_source_families":_damage_source_families.duplicate(true),
 		"spawned_by_squad":_spawned_by_squad.duplicate(true),
 		"timeline":_timeline.duplicate(true),
+		"schedule_delay":_schedule_delay_total,
+		"active_count_samples":_active_count_samples.size(),
 	}
 
 
@@ -151,11 +161,21 @@ func _active_count_percentile(percentile: float) -> int:
 	return sorted[index]
 
 
-func _delay_pending_schedule(delay: float) -> void:
-	for request in _spawn_queue:
-		request["time"] = float(request["time"]) + delay
-	for cue in _cue_queue:
-		cue["time"] = float(cue["time"]) + delay
+func _record_active_count_sample(active_mobile_count: int) -> void:
+	if elapsed + 0.0001 < _next_metric_sample:
+		return
+	_active_count_samples.append(active_mobile_count)
+	if _active_count_samples.size() > MAX_ACTIVE_COUNT_SAMPLES:
+		_active_count_samples.pop_front()
+	_next_metric_sample = elapsed + METRIC_SAMPLE_INTERVAL
+
+
+func _effective_time(entry: Dictionary) -> float:
+	return float(entry["time"]) + _schedule_delay_total - float(entry.get("delay_base", 0.0))
+
+
+func _scheduled_key(entry: Dictionary) -> float:
+	return float(entry["time"]) - float(entry.get("delay_base", 0.0))
 
 
 func _activate_ready_packets() -> void:
@@ -182,14 +202,15 @@ func _schedule_packet(packet: Dictionary) -> void:
 	var beat := int(packet["beat"])
 	var anchor := Vector2(packet["anchor"])
 	var squads: Array = packet["squads"]
-	var unit_spacing := float(packet.get("unit_spacing", 0.5))
+	var pace_multiplier := Director.spawn_pace_multiplier(beat, preset)
+	var unit_spacing := float(packet.get("unit_spacing", 0.5)) * pace_multiplier
 	var gap := float(packet.get("squad_gap", 4.5)) * Director.squad_gap_multiplier(beat, preset)
 	var cue_lead := float(packet.get("cue_lead", CUE_LEAD))
 	var cursor := elapsed + cue_lead
 	for squad_index in squads.size():
 		var squad: Array = squads[squad_index]
 		var squad_id := "%s_s%02d" % [packet_id, squad_index + 1]
-		_cue_queue.append({"time":cursor - cue_lead, "anchor":anchor, "squad_id":squad_id, "beat":beat})
+		_cue_queue.append({"time":cursor - cue_lead, "delay_base":_schedule_delay_total, "anchor":anchor, "squad_id":squad_id, "beat":beat})
 		for unit_index in squad.size():
 			var role := StringName(squad[unit_index])
 			var formation_angle := TAU * float(unit_index) / float(maxi(1, squad.size()))
@@ -211,7 +232,7 @@ func _schedule_packet(packet: Dictionary) -> void:
 				"active":true,
 				"packet_beat":beat,
 			}
-			_spawn_queue.append({"time":cursor + float(unit_index) * unit_spacing, "spec":spec})
+			_spawn_queue.append({"time":cursor + float(unit_index) * unit_spacing, "delay_base":_schedule_delay_total, "spec":spec})
 		cursor += gap
-	_cue_queue.sort_custom(func(a:Dictionary,b:Dictionary)->bool: return float(a["time"]) < float(b["time"]))
-	_spawn_queue.sort_custom(func(a:Dictionary,b:Dictionary)->bool: return float(a["time"]) < float(b["time"]))
+	_cue_queue.sort_custom(func(a:Dictionary,b:Dictionary)->bool: return _scheduled_key(a) < _scheduled_key(b))
+	_spawn_queue.sort_custom(func(a:Dictionary,b:Dictionary)->bool: return _scheduled_key(a) < _scheduled_key(b))

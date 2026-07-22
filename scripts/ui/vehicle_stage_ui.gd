@@ -134,7 +134,9 @@ class StageMinimap:
 		custom_minimum_size = Vector2(176.0, 98.0)
 
 	func set_snapshot(value: Dictionary) -> void:
-		snapshot = value.duplicate(true)
+		# Gameplay hands over a fresh immutable snapshot; retaining it avoids a
+		# deep copy of minimap cells and markers on every HUD refresh.
+		snapshot = value
 		queue_redraw()
 
 	func _draw() -> void:

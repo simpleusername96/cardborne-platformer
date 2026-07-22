@@ -16,9 +16,10 @@ func _run() -> void:
 	_check_packet_timeline()
 	_check_presets_and_populations()
 	_check_cohesion_contract()
+	_check_scheduler_saturation_contract()
 	_check_metrics_contract()
 	if failures.is_empty():
-		print("PASS: six-second grace, sequential squads, beat caps, deterministic packets, populations, and cohesion")
+		print("PASS: grace, sequential squads, beat caps, deterministic packets, cohesion, and bounded saturation")
 		quit(0)
 	else:
 		for failure in failures:
@@ -54,10 +55,10 @@ func _check_packet_timeline() -> void:
 	var west_times := _spawn_times_for_squad(timeline, "west_learning_s01")
 	_expect(west_times.size() == 3, "Beat 1 first squad has three units")
 	if west_times.size() == 3:
-		_expect(is_equal_approx(west_times[1] - west_times[0], 0.8) and is_equal_approx(west_times[2] - west_times[1], 0.8), "Beat 1 units enter at 0.80-second spacing")
+		_expect(is_equal_approx(west_times[1] - west_times[0], 0.272) and is_equal_approx(west_times[2] - west_times[1], 0.272), "Beat 1 Standard units enter at 0.272-second spacing")
 	var west_next := _spawn_times_for_squad(timeline, "west_learning_s02")
 	if not west_times.is_empty() and not west_next.is_empty():
-		_expect(west_next[0] - west_times[0] >= 8.0 - 0.001, "Beat 1 squad starts remain at least eight seconds apart")
+		_expect(is_equal_approx(west_next[0] - west_times[0], 2.72), "Beat 1 Standard squad starts are 2.72 seconds apart")
 	var calibration_times := _spawn_times_for_squad(timeline, "calibration_return_s01")
 	_expect(calibration_times.size() == 4, "Beat 2 first squad has four units")
 	var upper_times := _spawn_times_for_squad(timeline, "north_generator_s01")
@@ -92,8 +93,8 @@ func _spawn_times_for_squad(timeline: Array, squad_id: String) -> Array[float]:
 
 
 func _check_presets_and_populations() -> void:
-	var expected_standard := [1,12,16,20,24]
-	var expected_onslaught := [1,16,24,32,40]
+	var expected_standard := [1,14,20,26,30]
+	var expected_onslaught := [1,20,30,40,48]
 	for beat in 5:
 		_expect(Director.active_cap_for(beat, &"standard") == expected_standard[beat], "Standard beat %d cap matches" % beat)
 		_expect(Director.active_cap_for(beat, &"onslaught") == expected_onslaught[beat], "Onslaught beat %d cap matches" % beat)
@@ -101,6 +102,9 @@ func _check_presets_and_populations() -> void:
 		var population := Catalog.authored_population(stage_id)
 		var band := Director.population_band(stage_id)
 		_expect(population >= band.x and population <= band.y, "%s authored population stays inside %d-%d" % [stage_id, band.x, band.y])
+	_expect(is_equal_approx(Director.spawn_pace_multiplier(0, &"standard"), 1.0), "arrival scout pacing remains unchanged")
+	_expect(is_equal_approx(Director.spawn_pace_multiplier(1, &"standard"), 0.34), "Standard post-arrival pacing is 0.34x")
+	_expect(is_equal_approx(Director.spawn_pace_multiplier(1, &"onslaught"), 0.28), "Onslaught post-arrival pacing is 0.28x")
 
 
 func _check_cohesion_contract() -> void:
@@ -113,11 +117,37 @@ func _check_cohesion_contract() -> void:
 	enemy["phase"] = "move"
 	enemy["formation_offset"] = Vector2.ZERO
 	var role_velocity := Vector2(0,100)
-	var blended := Director.cohesion_velocity(enemy, members, role_velocity)
+	var snapshot := Director.squad_motion_snapshot(members)
+	var blended := Director.cohesion_velocity(enemy, snapshot, role_velocity)
 	var centroid := Vector2(100.0/3.0,100.0/3.0)
 	_expect(blended.dot(centroid - Vector2(enemy["pos"])) > 0.0, "non-committed movement receives inward cohesion steering")
 	enemy["phase"] = "startup"
-	_expect(Director.cohesion_velocity(enemy, members, role_velocity) == role_velocity, "committed startup is never bent by formation steering")
+	_expect(Director.cohesion_velocity(enemy, snapshot, role_velocity) == role_velocity, "committed startup is never bent by formation steering")
+
+
+func _check_scheduler_saturation_contract() -> void:
+	var runtime := EncounterRuntime.new()
+	runtime.configure(&"flooded_works", Catalog.packets(&"flooded_works"), &"standard")
+	runtime.tick(5.1, 0)
+	for _blocked_tick in 180:
+		runtime.tick(1.0 / 60.0, 999)
+	var delayed_snapshot := runtime.debug_snapshot()
+	_expect(float(delayed_snapshot["schedule_delay"]) >= 2.0, "a saturated cap accumulates scheduler delay without dropping requests")
+	var activation_time := float(delayed_snapshot["elapsed"])
+	runtime.signal_event(&"approach_entered")
+	runtime.tick(0.0, 999)
+	var west_cue_time := -1.0
+	for entry in runtime.debug_snapshot()["timeline"]:
+		if StringName(entry.get("kind", &"")) == &"cue" and String(entry.get("id", "")) == "west_learning_s01":
+			west_cue_time = float(entry["time"])
+			break
+	_expect(is_equal_approx(west_cue_time, activation_time), "a newly activated packet does not inherit earlier cap delay")
+
+	var metrics_runtime := EncounterRuntime.new()
+	metrics_runtime.configure(&"flooded_works", Catalog.packets(&"flooded_works"), &"standard")
+	for _sample in 5000:
+		metrics_runtime.tick(0.1, 0)
+	_expect(int(metrics_runtime.debug_snapshot()["active_count_samples"]) == 4096, "long-session metric history remains bounded")
 
 
 func _check_metrics_contract() -> void:

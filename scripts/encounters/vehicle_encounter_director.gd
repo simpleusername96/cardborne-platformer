@@ -3,20 +3,21 @@ extends RefCounted
 
 ## Shared squad steering and beat-aware combat-pressure limits.
 
-const THREAT_BUDGET := 6.5
+const THREAT_BUDGET := 7.5
 const MAX_RANGED_COMMITS := 3
 const MAX_DENIAL_COMMITS := 2
-const ENEMY_SPEED_MULTIPLIER := 1.15
-const HOSTILE_PROJECTILE_SPEED_MULTIPLIER := 1.12
-const ENEMY_DAMAGE_MULTIPLIER := 1.25
-const ENEMY_RECOVERY_RATE := 1.20
+const ENEMY_HEALTH_MULTIPLIER := 1.12
+const ENEMY_SPEED_MULTIPLIER := 1.20
+const HOSTILE_PROJECTILE_SPEED_MULTIPLIER := 1.18
+const ENEMY_DAMAGE_MULTIPLIER := 1.35
+const ENEMY_RECOVERY_RATE := 1.28
 const PLAYER_PROJECTILE_CAP := 240
 const HOSTILE_PROJECTILE_CAP := 120
 const EFFECT_CAP := 96
 
-const STANDARD_ACTIVE_CAPS := [1, 12, 16, 20, 24]
-const ONSLAUGHT_ACTIVE_CAPS := [1, 16, 24, 32, 40]
-const STANDARD_THREAT_BUDGETS := [1.0, 2.5, 3.5, 4.0, 5.0]
+const STANDARD_ACTIVE_CAPS := [1, 14, 20, 26, 30]
+const ONSLAUGHT_ACTIVE_CAPS := [1, 20, 30, 40, 48]
+const STANDARD_THREAT_BUDGETS := [1.0, 3.0, 4.25, 5.0, 6.0]
 
 const POPULATION_BANDS := {
 	&"flooded_works": Vector2i(112,128),
@@ -43,7 +44,13 @@ static func threat_budget_for(beat: int, preset: StringName = &"standard") -> fl
 
 
 static func squad_gap_multiplier(beat: int, preset: StringName) -> float:
-	return 0.78 if preset == &"onslaught" and beat >= 2 else 1.0
+	return spawn_pace_multiplier(beat, preset)
+
+
+static func spawn_pace_multiplier(beat: int, preset: StringName) -> float:
+	if beat <= 0:
+		return 1.0
+	return 0.28 if preset == &"onslaught" else 0.34
 
 
 static func population_band(stage_id: StringName) -> Vector2i:
@@ -62,21 +69,37 @@ static func can_commit(current_points: float, ranged_count: int, denial_count: i
 	return true
 
 
-static func cohesion_velocity(enemy: Dictionary, active_enemies: Array[Dictionary], role_velocity: Vector2) -> Vector2:
+static func squad_motion_snapshot(active_enemies: Array[Dictionary]) -> Dictionary:
+	var snapshot := {}
+	for candidate in active_enemies:
+		if not bool(candidate.get("alive", false)) or not bool(candidate.get("active", false)):
+			continue
+		var squad_id := String(candidate.get("squad_id", ""))
+		if squad_id.is_empty():
+			continue
+		var summary: Dictionary = snapshot.get(squad_id, {"position_sum":Vector2.ZERO, "members":0})
+		summary["position_sum"] = Vector2(summary["position_sum"]) + Vector2(candidate["pos"])
+		summary["members"] = int(summary["members"]) + 1
+		snapshot[squad_id] = summary
+	for squad_id in snapshot:
+		var summary: Dictionary = snapshot[squad_id]
+		summary["centroid"] = Vector2(summary["position_sum"]) / float(maxi(1, int(summary["members"])))
+		summary.erase("position_sum")
+		snapshot[squad_id] = summary
+	return snapshot
+
+
+static func cohesion_velocity(enemy: Dictionary, squad_snapshot: Dictionary, role_velocity: Vector2) -> Vector2:
 	if String(enemy.get("phase", "move")) in ["startup", "active"]:
 		return role_velocity
 	var squad_id := String(enemy.get("squad_id", ""))
 	if squad_id.is_empty() or role_velocity.length_squared() <= 0.001:
 		return role_velocity
-	var centroid := Vector2.ZERO
-	var members := 0
-	for candidate in active_enemies:
-		if bool(candidate.get("alive", false)) and bool(candidate.get("active", false)) and String(candidate.get("squad_id", "")) == squad_id:
-			centroid += Vector2(candidate["pos"])
-			members += 1
+	var summary: Dictionary = squad_snapshot.get(squad_id, {})
+	var members := int(summary.get("members", 0))
 	if members <= 1:
 		return role_velocity
-	centroid /= float(members)
+	var centroid := Vector2(summary["centroid"])
 	var slot_target := centroid + Vector2(enemy.get("formation_offset", Vector2.ZERO))
 	var to_slot := slot_target - Vector2(enemy["pos"])
 	if Vector2(enemy["pos"]).distance_to(centroid) > 220.0:
@@ -95,8 +118,11 @@ static func tuning_contract() -> Dictionary:
 		"standard_budgets": STANDARD_THREAT_BUDGETS,
 		"max_ranged": MAX_RANGED_COMMITS,
 		"max_denial": MAX_DENIAL_COMMITS,
+		"enemy_health_multiplier": ENEMY_HEALTH_MULTIPLIER,
 		"enemy_speed_multiplier": ENEMY_SPEED_MULTIPLIER,
 		"projectile_speed_multiplier": HOSTILE_PROJECTILE_SPEED_MULTIPLIER,
 		"enemy_damage_multiplier": ENEMY_DAMAGE_MULTIPLIER,
 		"enemy_recovery_rate": ENEMY_RECOVERY_RATE,
+		"standard_spawn_pace": spawn_pace_multiplier(1, &"standard"),
+		"onslaught_spawn_pace": spawn_pace_multiplier(1, &"onslaught"),
 	}

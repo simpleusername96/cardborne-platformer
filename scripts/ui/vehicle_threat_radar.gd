@@ -22,8 +22,9 @@ func _ready() -> void:
 
 
 func set_snapshot(value: Dictionary) -> void:
-	# The stage creates a fresh snapshot and the UI never mutates contact data.
-	snapshot = value.duplicate()
+	# The stage creates a fresh snapshot and replaces contact arrays rather than
+	# mutating them, so the presentation layer can retain the reference safely.
+	snapshot = value
 	queue_redraw()
 
 
