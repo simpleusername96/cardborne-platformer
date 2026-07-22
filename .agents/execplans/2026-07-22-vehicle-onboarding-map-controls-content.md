@@ -493,7 +493,7 @@ helpers under `scripts/enemies/`, `scripts/cards/vehicle_upgrade_catalog.gd`,
 `tools/validation/validate_vehicle_upgrade_system.gd`,
 `tools/validation/validate_vehicle_run.gd`
 
-- [ ] **5.1 Implement and validate the four locked enemy roles.**
+- [x] **5.1 Implement and validate the four locked enemy roles.**
   - As-is: no ram recovery target, explicit repair link, bounded carrier, or beam
     installation exists.
   - To-be: implement exactly the contracts in “New enemy roles,” with large
@@ -502,7 +502,7 @@ helpers under `scripts/enemies/`, `scripts/cards/vehicle_upgrade_catalog.gd`,
     death cleanup, LOS, child caps, and concurrency limits for every role.
   - Guard: ordinary projectiles/beams do not pass through cover and no role gains
     hidden immunity.
-- [ ] **5.2 Add the twelve locked card definitions and behavior hooks.**
+- [x] **5.2 Add the twelve locked card definitions and behavior hooks.**
   - As-is: 34 cards.
   - To-be: 46 cards using existing families, resource validation, exclusion,
     requirement, preview, and application flow.
@@ -510,7 +510,7 @@ helpers under `scripts/enemies/`, `scripts/cards/vehicle_upgrade_catalog.gd`,
     and English copy, and appears only in compatible offers.
   - Guard: no effect is implemented in UI and no offer contains duplicates or
     incompatible element cores.
-- [ ] **5.3 Protect early reward comprehension.**
+- [x] **5.3 Protect early reward comprehension.**
   - As-is: the full catalog is broadly available.
   - To-be: Stage 1's first calibration offer remains curated to one primary,
     one element/opening, and one passive/mobility behavior; advanced new cards
@@ -740,7 +740,7 @@ list requires owner change control.
 - [x] Phase 2: Per-stage geometry and central Stage 1 map
 - [x] Phase 3: Sequential encounter packets and cohesive squads
 - [x] Phase 4: Correct Stage 2 and Stage 3 composition
-- [ ] Phase 5: Four enemy roles and twelve upgrades
+- [x] Phase 5: Four enemy roles and twelve upgrades
 - [ ] Phase 6: Coral Switchyard and Abyssal Observatory
 - [ ] Phase 7: Production validation, specification update, and plan retirement
 - [ ] Final gates
@@ -767,9 +767,9 @@ list requires owner change control.
 - [ ] Mouse 1 primary, Space dash, and Left Shift EMP are the fresh defaults; all
   three remap, reset, persist, reject conflicts, and update live UI copy.
 - [ ] Stages 1–3 meet safe-start, map, packet, squad, and isolated-boss contracts.
-- [ ] Rammer, Repair Tender, Drone Carrier, and Beam Sentinel pass all behavior,
+- [x] Rammer, Repair Tender, Drone Carrier, and Beam Sentinel pass all behavior,
   telegraph, cover, cap, and cleanup checks.
-- [ ] All twelve new cards behave as specified; catalog count is 46.
+- [x] All twelve new cards behave as specified; catalog count is 46.
 - [ ] Coral Switchyard and Abyssal Observatory are complete, distinct, localized,
   reachable, and connected as Stages 4 and 5.
 - [ ] Five-stage full-run, reward, save, UI, performance, native capture, Web

@@ -2,7 +2,7 @@ class_name VehicleUpgradeCatalog
 extends RefCounted
 
 const CARD_PATH := "res://data/cards/vehicle"
-const EXPECTED_COUNT := 34
+const EXPECTED_COUNT := 46
 
 var definitions: Dictionary = {}
 

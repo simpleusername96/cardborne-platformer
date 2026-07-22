@@ -85,6 +85,8 @@ static func _objective_triggers() -> Dictionary:
 static func _static_enemies(generator_a: Vector2, generator_b: Vector2, field_boss: Vector2) -> Array[Dictionary]:
 	return [
 		{"id":"drydock_interceptor", "role":"interceptor_tower", "pos":Vector2(2380,760), "zone":"installations"},
+		{"id":"drydock_beam_upper", "role":"beam_sentinel", "pos":Vector2(3100,720), "zone":"installations"},
+		{"id":"drydock_beam_lower", "role":"beam_sentinel", "pos":Vector2(3100,2080), "zone":"installations"},
 		{"id":"generator_a", "role":"generator", "pos":generator_a, "zone":"installations", "required":true},
 		{"id":"generator_b", "role":"generator", "pos":generator_b, "zone":"installations", "required":true},
 		{"id":"storm_foreman", "role":"field_boss", "pos":field_boss, "zone":"field_boss", "optional":true, "name_key":"ENEMY_STORM_FOREMAN"},
@@ -94,8 +96,8 @@ static func _static_enemies(generator_a: Vector2, generator_b: Vector2, field_bo
 static func _packets() -> Array[Dictionary]:
 	return [
 		_packet("drydock_arrival",0,{"kind":&"time","at":5.1},Vector2(1080,1400),[[&"scrap_drone"]],0.90,8.0,"arrival"),
-		_packet("drydock_service",1,{"kind":&"event","id":&"approach_entered"},Vector2(1320,1400),_squads(9,3,[&"scrap_drone",&"needle_drone"]),0.80,8.0,"approach"),
-		_packet("drydock_calibration",2,{"kind":&"event","id":&"calibration_claimed"},Vector2(1640,1400),_squads(9,4,[&"needle_drone",&"shield_escort",&"shooter",&"scrap_drone"]),0.65,6.0,"approach"),
+		_packet("drydock_service",1,{"kind":&"event","id":&"approach_entered"},Vector2(1320,1400),_squads_with_specialist(9,3,[&"scrap_drone",&"needle_drone"],&"rammer",3),0.80,8.0,"approach"),
+		_packet("drydock_calibration",2,{"kind":&"event","id":&"calibration_claimed"},Vector2(1640,1400),_squads_with_specialist(9,4,[&"needle_drone",&"shield_escort",&"shooter",&"scrap_drone"],&"drone_carrier",4),0.65,6.0,"approach"),
 		_packet("drydock_upper",3,{"kind":&"event","id":&"upper_route_entered"},Vector2(2180,760),_squads(5,5,[&"spark_minelet",&"needle_drone",&"scrap_drone"]),0.50,4.5,"installations"),
 		_packet("drydock_lower",3,{"kind":&"event","id":&"lower_route_entered"},Vector2(2180,2040),_squads(5,5,[&"scrap_drone",&"needle_drone",&"spark_minelet"]),0.50,4.5,"installations"),
 		_packet("drydock_relay",4,{"kind":&"event","id":&"generators_complete"},Vector2(3460,1400),_squads(6,5,[&"needle_drone",&"scrap_drone",&"spark_minelet"]),0.50,4.5,"relay"),
@@ -113,6 +115,14 @@ static func _squads(count:int, size:int, roles:Array[StringName]) -> Array:
 		for unit_index in size:
 			squad.append(roles[(squad_index+unit_index)%roles.size()])
 		result.append(squad)
+	return result
+
+
+static func _squads_with_specialist(count:int, size:int, roles:Array[StringName], specialist:StringName, every:int) -> Array:
+	var result := _squads(count, size, roles)
+	for squad_index in count:
+		if squad_index % every == 0:
+			result[squad_index][0] = specialist
 	return result
 
 

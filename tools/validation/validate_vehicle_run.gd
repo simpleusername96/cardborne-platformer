@@ -45,6 +45,8 @@ func _run_validation() -> void:
 	_check_progression_contract(stage)
 	_check_multistage_contract(stage)
 	_check_new_enemy_contract(stage)
+	_check_specialist_enemy_contract(stage)
+	_check_new_upgrade_runtime(stage)
 	_check_enemy_pressure_contract(stage)
 	_check_projectile_cover_contract(stage)
 	_check_passive_contract(stage)
@@ -248,6 +250,41 @@ func _check_new_enemy_contract(stage: Node) -> void:
 	_expect(bool(result["intercepted"]) and int(result["charges_after"]) == int(result["charges_before"]) - 1, "Interceptor Tower visibly spends one charge to stop a player shot")
 	_expect(bool(result["artillery_zone_created"]), "Artillery Spotter resolves its warned attack into a denial zone")
 	_expect(bool(result["escort_shielded_ally"]), "Shield Escort protects a nearby ordinary ally")
+
+
+func _check_specialist_enemy_contract(stage: Node) -> void:
+	var result: Dictionary = stage.debug_specialist_enemy_contract()
+	_expect(int(result["archetype_count"]) == 19, "enemy catalog contains exactly nineteen archetypes")
+	_expect(is_equal_approx(float(result["rammer_startup"]), 0.9), "Rammer paints its lane for 0.9 seconds")
+	_expect(bool(result["rammer_recovered"]) and float(result["rammer_vulnerability_damage"]) >= 14.9, "Rammer crashes into cover and exposes a vulnerable recovery")
+	_expect(bool(result["rammer_same_squad_blocked"]) and bool(result["rammer_second_global_allowed"]), "Rammer concurrency allows at most one per squad and two globally")
+	_expect(is_equal_approx(float(result["repair_amount"]), 2.0) and String(result["repair_target"]) == "debug_ally", "Repair Tender maintains one four-hull-per-second ally link")
+	_expect(bool(result["repair_respects_cover"]), "Repair Tender cannot repair through solid cover")
+	_expect(int(result["carrier_first_release"]) == 1 and bool(result["carrier_holds_spacing"]) and int(result["carrier_second_release"]) == 2, "Drone Carrier releases children at 0.65-second spacing")
+	_expect(int(result["carrier_children"]) == 6 and bool(result["carrier_queue_cancelled"]), "Drone Carrier respects its six-child cap and death cancels releases")
+	_expect(bool(result["beam_blocked_by_cover"]) and bool(result["cover_prevented_damage"]), "Beam Sentinel lane terminates at solid cover")
+	_expect(bool(result["beam_dealt_damage"]), "Beam Sentinel active lane damages an exposed player")
+	_expect(bool(result["beam_recovered"]), "Beam Sentinel exits its 0.6-second active window into recovery")
+
+
+func _check_new_upgrade_runtime(stage: Node) -> void:
+	var result: Dictionary = stage.debug_new_upgrade_contract()
+	_expect(int(result["catalog_count"]) == 46, "upgrade catalog contains exactly forty-six cards")
+	_expect(int(result["burst_projectiles"]) == 3, "Burst Capacitor replaces the eighth round with three projectiles")
+	_expect(is_equal_approx(float(result["relay_damage"]), 13.5) and is_equal_approx(float(result["relay_structure"]), 30.0), "Relay Rounds amplifies one reflected flight")
+	_expect(is_equal_approx(float(result["shock_breach_damage"]), 45.0), "Shock Breach emits forty-five percent opening damage per level")
+	_expect(float(result["reserve_charge_seconds"]) >= 0.349, "Reserve Charge advances opening charge on dash completion")
+	_expect(float(result["marked_time"]) >= 2.49, "Marked Salvo stores a 2.5-second priority mark")
+	_expect(float(result["shear_damage"]) >= 11.9, "Phase Shear raises incoming damage by twenty percent")
+	_expect(bool(result["guardian_intercepted"]), "Guardian Seeker removes a hostile projectile")
+	_expect(bool(result["inside_coolant"]), "Coolant Wake exposes its two-second firing zone")
+	_expect(is_equal_approx(float(result["coolant_interval"]), 0.102), "Coolant Wake fires fifteen percent faster while inside")
+	_expect(is_equal_approx(float(result["aegis_barrier"]), 18.0), "Static Aegis caps level-one barrier gain at eighteen")
+	_expect(is_equal_approx(float(result["aegis_level_two_barrier"]), 24.0), "Static Aegis raises its level-two barrier cap to twenty-four")
+	_expect(float(result["overload_stun"]) >= 4.59, "Relay Overload extends support and installation shutdown")
+	_expect(bool(result["emergency_triggered"]), "Emergency Vector triggers once below thirty percent hull")
+	_expect(float(result["salvage_timer"]) >= 3.99 and float(result["salvage_speed"]) >= 321.9, "Salvage Booster grants its four-second movement bonus")
+	_expect(float(result["salvage_level_two_speed"]) >= 341.5, "Salvage Booster level two raises its movement bonus to twenty-two percent")
 
 
 func _check_enemy_pressure_contract(stage: Node) -> void:

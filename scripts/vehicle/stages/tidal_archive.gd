@@ -116,7 +116,7 @@ static func _packets() -> Array[Dictionary]:
 		_packet("archive_calibration",2,{"kind":&"event","id":&"calibration_claimed"},Vector2(1840,1400),_squads(8,4,[&"needle_drone",&"artillery_spotter",&"scrap_drone",&"spark_minelet"]),0.65,6.0,"approach"),
 		_packet("archive_upper",3,{"kind":&"event","id":&"upper_route_entered"},Vector2(1900,740),_squads(4,5,[&"spark_minelet",&"needle_drone",&"scrap_drone"]),0.50,4.5,"installations"),
 		_packet("archive_lower",3,{"kind":&"event","id":&"lower_route_entered"},Vector2(1900,2060),_squads(4,5,[&"scrap_drone",&"needle_drone",&"spark_minelet"]),0.50,4.5,"installations"),
-		_packet("archive_relay",4,{"kind":&"event","id":&"generators_complete"},Vector2(3500,1400),_squads(6,5,[&"needle_drone",&"scrap_drone",&"spark_minelet"]),0.50,4.5,"relay"),
+		_packet("archive_relay",4,{"kind":&"event","id":&"generators_complete"},Vector2(3500,1400),_squads_with_specialist(6,5,[&"needle_drone",&"scrap_drone",&"spark_minelet"],&"repair_tender",3),0.50,4.5,"relay"),
 	]
 
 
@@ -131,6 +131,14 @@ static func _squads(count:int, size:int, roles:Array[StringName]) -> Array:
 		for unit_index in size:
 			squad.append(roles[(squad_index+unit_index)%roles.size()])
 		result.append(squad)
+	return result
+
+
+static func _squads_with_specialist(count:int, size:int, roles:Array[StringName], specialist:StringName, every:int) -> Array:
+	var result := _squads(count, size, roles)
+	for squad_index in count:
+		if squad_index % every == 0:
+			result[squad_index][0] = specialist
 	return result
 
 

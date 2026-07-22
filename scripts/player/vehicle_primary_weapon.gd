@@ -65,6 +65,10 @@ func set_full_opening_seconds(seconds: float) -> void:
 	idle_seconds = minf(idle_seconds, full_opening_seconds)
 
 
+func advance_opening(seconds: float) -> void:
+	idle_seconds = minf(full_opening_seconds, idle_seconds + maxf(0.0, seconds))
+
+
 func tier() -> StringName:
 	if input_held:
 		return &"firing"
