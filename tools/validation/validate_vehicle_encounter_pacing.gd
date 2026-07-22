@@ -3,6 +3,7 @@ extends SceneTree
 const Catalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
 const Director = preload("res://scripts/encounters/vehicle_encounter_director.gd")
 const EncounterRuntime = preload("res://scripts/encounters/vehicle_encounter_runtime.gd")
+const Difficulty = preload("res://scripts/enemies/vehicle_stage_difficulty.gd")
 
 var failures: Array[String] = []
 
@@ -93,11 +94,20 @@ func _spawn_times_for_squad(timeline: Array, squad_id: String) -> Array[float]:
 
 
 func _check_presets_and_populations() -> void:
-	var expected_standard := [1,14,20,26,30]
-	var expected_onslaught := [1,20,30,40,48]
+	var expected_standard := [1,15,22,28,32]
+	var expected_onslaught := [1,22,33,44,52]
 	for beat in 5:
 		_expect(Director.active_cap_for(beat, &"standard") == expected_standard[beat], "Standard beat %d cap matches" % beat)
 		_expect(Director.active_cap_for(beat, &"onslaught") == expected_onslaught[beat], "Onslaught beat %d cap matches" % beat)
+	var expected_health := [1.0, 1.04, 1.08, 1.12, 1.16]
+	var expected_damage := [1.0, 1.03, 1.06, 1.09, 1.12]
+	var expected_speed := [1.0, 1.01, 1.02, 1.03, 1.04]
+	for stage_index in 5:
+		var multipliers := Difficulty.multipliers(stage_index)
+		_expect(is_equal_approx(float(multipliers["health"]), expected_health[stage_index]), "stage %d uses the bounded health curve" % (stage_index + 1))
+		_expect(is_equal_approx(float(multipliers["damage"]), expected_damage[stage_index]), "stage %d uses the bounded damage curve" % (stage_index + 1))
+		_expect(is_equal_approx(float(multipliers["speed"]), expected_speed[stage_index]), "stage %d uses the bounded speed curve" % (stage_index + 1))
+	_expect(Director.STANDARD_THREAT_BUDGETS == [1.0,3.0,4.5,5.25,6.25], "Standard threat budgets use the locked bounded curve")
 	for stage_id in Catalog.STAGE_IDS:
 		var population := Catalog.authored_population(stage_id)
 		var band := Director.population_band(stage_id)

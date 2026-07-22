@@ -83,10 +83,11 @@ Every stage uses the same deterministic onboarding and encounter language:
 5. Ordinary enemies may remain alive when an authored exit opens. Installations,
    interactions, and bosses—not total kills—own progression gates.
 
-Each stage grants three mandatory card choices: calibration, relay, and boss.
-The optional field-boss route can add one more. A full campaign therefore grants
-15 mandatory and up to five optional upgrades without discarding the current
-run build between stages.
+Calibration and relay caches release 18/30 collectible experience instead of
+opening fixed card choices. The shared level curve produces four to six mandatory
+level-up choices on a full-clear stage, and the stage boss adds one mandatory
+choice. The optional field-boss route can add one more. The current run build is
+preserved between stages.
 
 ## Authored stages
 
@@ -144,9 +145,9 @@ Authored population bands are:
 | Abyssal Observatory | 160–184 |
 
 Population does not equal simultaneous pressure. Standard active caps progress
-through 1/14/20/26/30 units; Onslaught uses 1/20/30/40/48. The faster packet
+through 1/15/22/28/32 units; Onslaught uses 1/22/33/44/52. The faster packet
 timing fills those bounded caps while total authored population remains
-unchanged. Standard threat budgets progress through 1.0/3.0/4.25/5.0/6.0;
+unchanged. Standard threat budgets progress through 1.0/3.0/4.5/5.25/6.25;
 Onslaught uses a 7.5 budget behind its beat-aware active caps. At most three
 ranged commits and two
 denial commits may overlap. Committed attackers are retained when caps are
@@ -159,9 +160,16 @@ recovery rate. Priority enemies, field bosses, and stage bosses do not receive
 the ordinary health multiplier. These multipliers increase active pressure while
 preserving authored telegraphs and boss time-to-kill.
 
+Authored non-boss enemies receive a small additional stage curve after their
+archetype values: health progresses through 1.00/1.04/1.08/1.12/1.16, damage
+through 1.00/1.03/1.06/1.09/1.12, and movement through
+1.00/1.01/1.02/1.03/1.04. Projectile speed, startup, recovery, denial duration,
+and ranged/denial commit ceilings do not scale by stage. Field and stage bosses
+use explicit stage profiles rather than this curve.
+
 ## Rewards, items, and upgrades
 
-The catalog contains 41 typed card definitions. Offers contain three compatible,
+The catalog contains 43 typed card definitions. Offers contain three compatible,
 non-duplicate choices; selection and application are separate actions behind a
 short input guard, and no card is applied before explicit confirmation. Card
 data lives under `data/cards/vehicle/`; gameplay owners apply behavior while UI
@@ -176,27 +184,54 @@ Upgrade families cover:
 - mutually exclusive burn, poison, or slow cores and their bounded follow-ups;
 - passive targeting: Marked Salvo plus seeker count, cadence, pierce, target
   priority, and warhead changes;
-- dash and movement: Ion Wake, Ram Pulse, Phase Shear, direct mobility, a visible
-  two-second Coolant Surge fire-rate buff, and a visible Salvage Booster timer;
-- EMP, barrier, and stage interaction: aftershock, Relay Overload, Static Aegis,
-  and Field Converter. Static Aegis grants a fixed 18/24 barrier for 10 seconds;
-  Field Converter states its exact pickup-duration and barrier-strength bonuses.
+- dash and movement: Ion Wake, Ram Pulse, Phase Shear, direct mobility, and a
+  visible two-second Coolant Surge fire-rate buff;
+- EMP and barrier: aftershock, Relay Overload, Static Aegis, and Aegis Cycle;
+- recurring cycle effects: Aegis every 14 seconds, Overclock every 12 seconds,
+  and Thruster every 10 seconds, each with an exact active window shown around
+  the player;
+- sustain: Siphon Matrix heals 2%/3.5% of actual player-owned health damage,
+  capped at six hull per second and excluding overkill or non-health structure
+  damage such as crates.
 
-Each stage authors eight field pickups, five breakable crates, and four reward
-anchors. Field items produce immediate, legible effects such as repair, temporary
-attack/cadence/mobility, barrier, seeker refresh, opening-shot reserve, or pickup
-magnetism. Important upgrades remain deliberate card rewards rather than tiny
-random floor drops.
+Enemy defeats grant no experience directly. One collectible experience shard is
+left at the defeat position for every authored enemy: swarm enemies are worth 1,
+standard enemies 2, priority enemies and installations 4, field bosses 18, and
+stage bosses 24. Summons grant zero experience. At most 192 shard entries remain
+live; merging preserves their total value. Experience is added only when a shard
+is collected by proximity or by an experience-recall pickup.
+
+Run level starts at one. The next level requires
+`min(72, 26 + 3 * (run_level - 1))` experience and carries excess experience.
+Each reached level queues one mandatory three-card select-then-confirm offer.
+Calibration and relay caches release collectible 18/30 experience clusters
+instead of fixed card modals. A full-clear stage yields four to six level-up
+offers, one mandatory stage-boss offer, and at most one optional field-boss offer.
+
+Exactly two field pickup behaviors exist. `repair` heals its authored amount;
+`experience_recall` pulls every active experience shard to the player over 0.65
+seconds without collecting repairs, crates, caches, or objectives. Each stage
+authors two repairs and one experience recall, while five breakable crates hold
+four repairs and one experience recall. Temporary attack, cadence, movement,
+barrier, seeker, capacitor, and magnet field items are retired into the card
+build. Individual experience shards do not appear on the minimap.
 
 ## UI, audio, and persistence
 
-The live HUD prioritizes hull, objective, primary opening state, passive seeker,
-dash, EMP, minimap, and exceptional buffs. The minimap distinguishes discovered
+The live HUD prioritizes compact hull and experience, objective, primary opening
+state, passive seeker, dash, EMP, minimap, and exceptional buffs. The minimap distinguishes discovered
 walkable space, blockers, objectives, rewards, bosses, and the player; unvisited
 space stays concealed. A separate 12-direction off-screen threat arc aggregates
 nearby off-screen enemies at 10 Hz rather than duplicating visible enemies.
 Semantic HUD snapshots refresh at 20 Hz; world motion, aiming, projectiles, and
 telegraphs continue to render every frame.
+
+At 960x540 opaque combat HUD panels occupy at most 12% of the viewport and stay
+outside the central 60% by 60% combat rectangle. The hull/XP cluster is at most
+184x54, the objective chip 360x44, minimap 168x112, action cluster 276x60,
+target panel 184x64, and boss strip 520x40, with smaller 960-pixel variants.
+Recurring cycle effects use three shape-distinct 24-pixel radial badges around
+the projected vehicle; reduced motion preserves arc state without pulsing.
 
 Deployment, settings, upgrade, pause, result, and garage are explicit modal focus
 layers. Gameplay HUD is hidden behind them, each exposes a clear primary action,
@@ -231,9 +266,10 @@ stage catalog, settings store, card catalog, or presentation system.
   sequence remains deterministic in both presets.
 - Fresh controls, remapping, conflict rejection, reset, persistence, Korean/
   English copy, audio, and difficulty settings pass focused validation.
-- The full run resolves 15 mandatory reward transactions and preserves the build
-  through the fifth boss.
-- Standard and Onslaught fixed-step pressure profiles cover 30 and 48 moving
+- A full-clear route resolves four to six collectible-experience levels per
+  stage plus five mandatory stage-boss reward transactions and preserves the
+  build through the fifth boss.
+- Standard and Onslaught fixed-step pressure profiles cover 32 and 52 moving
   actors respectively, a saturated scheduler, and the live HUD, and stay at or
   below 8ms.
 - 960x540, 1280x720, and 1920x1080 rendered reviews show no clipped modal, HUD
@@ -247,4 +283,6 @@ stage catalog, settings store, card catalog, or presentation system.
 - ammo limits or charge gates on ordinary primary fire;
 - screen-filling passive proc chains or permanent control locks;
 - realistic materials, dense micro-texture, or an unrelated asset-pack style;
+- a black-floor/white-blocker or matching actor redesign before a separate
+  monochrome readability decision is accepted;
 - a walkable base filled with chores.

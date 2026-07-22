@@ -5,6 +5,7 @@ extends RefCounted
 ## Gameplay and validation consume the same data so collision checks cannot drift.
 
 const Catalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
+const Geometry = preload("res://scripts/vehicle/vehicle_stage_geometry.gd")
 
 const PLAYER_RADIUS := 24.0
 
@@ -30,6 +31,14 @@ static func get_cover_rects(include_boss_gate: bool = false, stage_id: StringNam
 		rects = rects.duplicate()
 		rects.append(boss_gate(stage_id))
 	return rects
+
+
+static func get_cover_polygons(include_boss_gate: bool = false, stage_id: StringName = &"flooded_works") -> Array:
+	var polygons: Array = Catalog.cover_polygons(stage_id)
+	if include_boss_gate:
+		polygons = polygons.duplicate()
+		polygons.append(Geometry.rect_polygon(boss_gate(stage_id)))
+	return polygons
 
 
 static func world_rect(stage_id: StringName = &"flooded_works") -> Rect2:
@@ -67,8 +76,8 @@ static func get_floor_regions(stage_id: StringName = &"flooded_works") -> Array[
 static func is_position_walkable(position: Vector2, radius: float = 0.0, stage_id: StringName = &"flooded_works") -> bool:
 	if not Catalog.position_is_walkable(stage_id, position, radius):
 		return false
-	for rect in get_cover_rects(false, stage_id):
-		if circle_overlaps_rect(position, radius, rect):
+	for polygon in get_cover_polygons(false, stage_id):
+		if Geometry.circle_overlaps_polygon(position, radius, polygon):
 			return false
 	return true
 
@@ -90,74 +99,11 @@ static func get_crate_blueprint(stage_id: StringName = &"flooded_works") -> Arra
 
 
 static func circle_overlaps_rect(center: Vector2, radius: float, rect: Rect2) -> bool:
-	var closest := Vector2(
-		clampf(center.x, rect.position.x, rect.end.x),
-		clampf(center.y, rect.position.y, rect.end.y)
-	)
-	return center.distance_squared_to(closest) < radius * radius
+	return Geometry.circle_overlaps_polygon(center, radius, Geometry.rect_polygon(rect))
 
 
 static func segment_rect_hit(from: Vector2, to: Vector2, rect: Rect2, padding: float = 0.0) -> Dictionary:
-	var target := rect.grow(padding)
-	if target.has_point(from):
-		return {"hit": true, "t": 0.0, "normal": _inside_normal(from, target), "point": from}
-	var delta := to - from
-	var t_min := 0.0
-	var t_max := 1.0
-	var entering_normal := Vector2.ZERO
-
-	if absf(delta.x) < 0.00001:
-		if from.x < target.position.x or from.x > target.end.x:
-			return {"hit": false}
-	else:
-		var tx1 := (target.position.x - from.x) / delta.x
-		var tx2 := (target.end.x - from.x) / delta.x
-		var nx1 := Vector2(-1.0, 0.0)
-		var nx2 := Vector2(1.0, 0.0)
-		if tx1 > tx2:
-			var swap_t := tx1
-			tx1 = tx2
-			tx2 = swap_t
-			var swap_n := nx1
-			nx1 = nx2
-			nx2 = swap_n
-		if tx1 > t_min:
-			t_min = tx1
-			entering_normal = nx1
-		t_max = minf(t_max, tx2)
-		if t_min > t_max:
-			return {"hit": false}
-
-	if absf(delta.y) < 0.00001:
-		if from.y < target.position.y or from.y > target.end.y:
-			return {"hit": false}
-	else:
-		var ty1 := (target.position.y - from.y) / delta.y
-		var ty2 := (target.end.y - from.y) / delta.y
-		var ny1 := Vector2(0.0, -1.0)
-		var ny2 := Vector2(0.0, 1.0)
-		if ty1 > ty2:
-			var swap_t := ty1
-			ty1 = ty2
-			ty2 = swap_t
-			var swap_n := ny1
-			ny1 = ny2
-			ny2 = swap_n
-		if ty1 > t_min:
-			t_min = ty1
-			entering_normal = ny1
-		t_max = minf(t_max, ty2)
-		if t_min > t_max:
-			return {"hit": false}
-
-	if t_min < 0.0 or t_min > 1.0:
-		return {"hit": false}
-	return {
-		"hit": true,
-		"t": t_min,
-		"normal": entering_normal,
-		"point": from + delta * t_min,
-	}
+	return Geometry.segment_rect_hit(from, to, rect, padding)
 
 
 static func _inside_normal(point: Vector2, rect: Rect2) -> Vector2:
@@ -177,16 +123,17 @@ static func first_cover_hit(from: Vector2, to: Vector2, radius: float, include_b
 
 static func first_cover_hit_with_extra(from: Vector2, to: Vector2, radius: float, include_boss_gate: bool, stage_id: StringName, extra_cover: Array) -> Dictionary:
 	var best := {"hit": false, "t": 2.0}
-	var rects: Array[Rect2] = get_cover_rects(include_boss_gate, stage_id)
+	var polygons: Array = get_cover_polygons(include_boss_gate, stage_id)
 	if not extra_cover.is_empty():
-		rects = rects.duplicate()
+		polygons = polygons.duplicate()
 	for value in extra_cover:
-		rects.append(Rect2(value))
-	for rect in rects:
-		var hit := segment_rect_hit(from, to, rect, radius)
+		polygons.append(Geometry.rect_polygon(Rect2(value)))
+	for polygon in polygons:
+		var hit := Geometry.segment_polygon_hit(from, to, polygon, radius)
 		if bool(hit.get("hit", false)) and float(hit["t"]) < float(best["t"]):
 			best = hit
-			best["rect"] = rect
+			best["rect"] = Geometry.polygon_bounds(polygon)
+			best["polygon"] = polygon
 	return best
 
 
@@ -212,11 +159,11 @@ static func move_circle(position: Vector2, motion: Vector2, radius: float, inclu
 
 
 static func move_circle_with_extra(position: Vector2, motion: Vector2, radius: float, include_boss_gate: bool, stage_id: StringName, extra_cover: Array) -> Vector2:
-	var rects: Array[Rect2] = get_cover_rects(include_boss_gate, stage_id)
+	var polygons: Array = get_cover_polygons(include_boss_gate, stage_id)
 	if not extra_cover.is_empty():
-		rects = rects.duplicate()
+		polygons = polygons.duplicate()
 	for value in extra_cover:
-		rects.append(Rect2(value))
+		polygons.append(Geometry.rect_polygon(Rect2(value)))
 	var bounds := world_rect(stage_id)
 	var result := position
 	var attempt_x := Vector2(
@@ -224,8 +171,8 @@ static func move_circle_with_extra(position: Vector2, motion: Vector2, radius: f
 		position.y
 	)
 	var blocked_x := not Catalog.position_is_walkable(stage_id, attempt_x, radius)
-	for rect in rects:
-		if circle_overlaps_rect(attempt_x, radius, rect):
+	for polygon in polygons:
+		if Geometry.circle_overlaps_polygon(attempt_x, radius, polygon):
 			blocked_x = true
 			break
 	if not blocked_x:
@@ -236,8 +183,8 @@ static func move_circle_with_extra(position: Vector2, motion: Vector2, radius: f
 		clampf(position.y + motion.y, bounds.position.y + radius, bounds.end.y - radius)
 	)
 	var blocked_y := not Catalog.position_is_walkable(stage_id, attempt_y, radius)
-	for rect in rects:
-		if circle_overlaps_rect(attempt_y, radius, rect):
+	for polygon in polygons:
+		if Geometry.circle_overlaps_polygon(attempt_y, radius, polygon):
 			blocked_y = true
 			break
 	if not blocked_y:
@@ -264,11 +211,11 @@ static func grid_reachable_with_extra(start: Vector2, goal: Vector2, radius: flo
 	var queue: Array[Vector2i] = [start_cell]
 	var visited := {start_cell: true}
 	var directions: Array[Vector2i] = [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]
-	var rects: Array[Rect2] = get_cover_rects(include_boss_gate, stage_id)
+	var polygons: Array = get_cover_polygons(include_boss_gate, stage_id)
 	if not extra_cover.is_empty():
-		rects = rects.duplicate()
+		polygons = polygons.duplicate()
 	for value in extra_cover:
-		rects.append(Rect2(value))
+		polygons.append(Geometry.rect_polygon(Rect2(value)))
 
 	while not queue.is_empty():
 		var current: Vector2i = queue.pop_front()
@@ -282,8 +229,8 @@ static func grid_reachable_with_extra(start: Vector2, goal: Vector2, radius: flo
 				continue
 			var point := (Vector2(next) + Vector2(0.5, 0.5)) * cell_size
 			var blocked := not Catalog.position_is_walkable(stage_id, point, radius)
-			for rect in rects:
-				if circle_overlaps_rect(point, radius, rect):
+			for polygon in polygons:
+				if Geometry.circle_overlaps_polygon(point, radius, polygon):
 					blocked = true
 					break
 			if blocked:
@@ -317,14 +264,14 @@ static func first_reflector_hit(from: Vector2, to: Vector2, radius: float, orien
 
 static func validate_blueprint(stage_id: StringName = &"flooded_works") -> PackedStringArray:
 	var errors := PackedStringArray()
-	var cover := get_cover_rects(false, stage_id)
+	var cover := get_cover_polygons(false, stage_id)
 	var landmarks := get_landmarks(stage_id)
 	for landmark_id in landmarks.keys():
 		var point: Vector2 = landmarks[landmark_id]
 		if not Catalog.position_is_walkable(stage_id, point, PLAYER_RADIUS):
 			errors.append("Landmark %s is outside walkable floor" % landmark_id)
-		for rect in cover:
-			if circle_overlaps_rect(point, PLAYER_RADIUS, rect):
+		for polygon in cover:
+			if Geometry.circle_overlaps_polygon(point, PLAYER_RADIUS, polygon):
 				errors.append("Landmark %s overlaps solid cover" % landmark_id)
 				break
 
@@ -332,8 +279,8 @@ static func validate_blueprint(stage_id: StringName = &"flooded_works") -> Packe
 		var position: Vector2 = enemy_spec["pos"]
 		if not Catalog.position_is_walkable(stage_id, position, 28.0):
 			errors.append("Enemy %s is outside walkable floor" % enemy_spec["id"])
-		for rect in cover:
-			if circle_overlaps_rect(position, 28.0, rect):
+		for polygon in cover:
+			if Geometry.circle_overlaps_polygon(position, 28.0, polygon):
 				errors.append("Enemy %s overlaps solid cover" % enemy_spec["id"])
 				break
 
@@ -341,8 +288,8 @@ static func validate_blueprint(stage_id: StringName = &"flooded_works") -> Packe
 		var position: Vector2 = pickup_spec["pos"]
 		if not Catalog.position_is_walkable(stage_id, position, 20.0):
 			errors.append("Pickup %s is outside walkable floor" % pickup_spec["id"])
-		for rect in cover:
-			if circle_overlaps_rect(position, 20.0, rect):
+		for polygon in cover:
+			if Geometry.circle_overlaps_polygon(position, 20.0, polygon):
 				errors.append("Pickup %s overlaps solid cover" % pickup_spec["id"])
 				break
 
@@ -350,8 +297,8 @@ static func validate_blueprint(stage_id: StringName = &"flooded_works") -> Packe
 		var position: Vector2 = crate_spec["pos"]
 		if not Catalog.position_is_walkable(stage_id, position, 31.0):
 			errors.append("Crate %s is outside walkable floor" % crate_spec["id"])
-		for rect in cover:
-			if circle_overlaps_rect(position, 31.0, rect):
+		for polygon in cover:
+			if Geometry.circle_overlaps_polygon(position, 31.0, polygon):
 				errors.append("Crate %s overlaps solid cover" % crate_spec["id"])
 				break
 

@@ -69,7 +69,7 @@ func _check_blueprint() -> void:
 		var band := EncounterDirector.population_band(stage_id)
 		_expect(population == StageCatalog.authored_population(stage_id), "%s packet population and validation blueprint agree" % stage_id)
 		_expect(population >= band.x and population <= band.y, "%s uses the authored population band" % stage_id)
-		_expect(EncounterDirector.active_cap_for(4, &"standard") == 30, "%s Standard final active cap is 30" % stage_id)
+		_expect(EncounterDirector.active_cap_for(4, &"standard") == 32, "%s Standard final active cap is 32" % stage_id)
 		for error_message in blueprint_errors:
 			failures.append("%s blueprint: %s" % [stage_id, error_message])
 
@@ -135,7 +135,9 @@ func _check_visual_contract(stage: Node) -> void:
 		_expect(rail_size.x <= viewport_width - 36.0 and rail_size.y <= 88.0, "bottom action rail stays inside the combat safe frame")
 		_expect(Vector2(contract["primary_slot_size"]).x > Vector2(contract["secondary_slot_size"]).x, "primary charge owns stronger visual hierarchy than utility actions")
 		_expect(float(contract["body_font_weight"]) >= 600.0, "shared Korean and English body type uses a real medium-or-bolder variable weight")
-		var minimum_map_width := 150.0 if viewport_width < 1100.0 else 176.0
+		_expect(float(contract["opaque_combat_area_ratio"]) <= 0.12, "opaque combat HUD stays within the twelve-percent budget")
+		_expect(bool(contract["central_safe_clear"]), "opaque combat panels stay outside the central combat frame")
+		var minimum_map_width := 144.0 if viewport_width < 1100.0 else 168.0
 		_expect(Vector2(contract["minimap_size"]).x >= minimum_map_width, "minimap plaque remains legible")
 		_expect(
 			String(contract["theme_path"]) == "res://art/ui/production/vehicle_stage_theme.tres",
@@ -151,6 +153,7 @@ func _check_visual_contract(stage: Node) -> void:
 	_expect(int(settings_contract["tabs"]) == 4, "shared settings exposes Audio, Controls, Gameplay, and Language pages")
 	_expect(int(settings_contract["binding_controls"]) == 3, "shared settings exposes all three remappable actions")
 	_expect(int(settings_contract["focusables"]) >= 10, "shared settings remains keyboard reachable")
+	_expect(bool(settings_contract["reduced_motion_control"]), "shared settings exposes a keyboard-sized reduced-motion control")
 	var radar_contract: Dictionary = ui.debug_threat_radar_contract()
 	_expect(is_equal_approx(float(radar_contract["diameter"]), 208.0), "threat cues stay outside the vehicle silhouette")
 	_expect(int(radar_contract["sector_count"]) == 12 and int(radar_contract["maximum_markers"]) == 12, "threat cues aggregate into twelve readable directions")
@@ -164,7 +167,7 @@ func _check_visual_contract(stage: Node) -> void:
 	var boss_snapshot: Dictionary = stage.call("_build_hud_snapshot")
 	boss_snapshot["boss"] = {"visible": true, "name": "Boss", "health": 1.0, "max_health": 1.0, "state": "Ready"}
 	ui.update_hud(boss_snapshot)
-	_expect(not ui._objective_panel.visible and not ui._minimap_panel.visible, "boss HUD replaces objective and minimap clusters")
+	_expect(not ui._objective_panel.visible and ui._minimap_panel.visible, "boss HUD replaces objective detail while preserving navigation")
 
 
 func _check_geometry_contract(stage: Node) -> void:
@@ -173,10 +176,10 @@ func _check_geometry_contract(stage: Node) -> void:
 	_expect(not bool(contract["miss"]), "segment collision does not invent cover")
 	_expect(Vector2(contract["normal"]).is_equal_approx(Vector2.LEFT), "cover hit reports a stable reflection normal")
 
-	var movement_start := Vector2(900.0, 700.0)
-	var movement_end := Rules.move_circle(movement_start, Vector2(220.0, 0.0), Rules.PLAYER_RADIUS)
-	_expect(movement_end.x < 970.0, "vehicle cannot enter solid cover")
-	_expect(movement_end.distance_to(movement_start) < 100.0, "blocked movement remains predictable")
+	var movement_start := Vector2(600.0, 845.0)
+	var movement_end := Rules.move_circle(movement_start, Vector2(100.0, 0.0), Rules.PLAYER_RADIUS)
+	_expect(movement_end.is_equal_approx(movement_start), "vehicle cannot enter shared solid-cover geometry")
+	_expect(Rules.is_position_walkable(movement_start, Rules.PLAYER_RADIUS), "movement probe begins in a valid visible lane")
 
 
 func _check_upgrade_contract(stage: Node) -> void:
@@ -192,12 +195,8 @@ func _check_upgrade_contract(stage: Node) -> void:
 func _check_pickup_contract(stage: Node) -> void:
 	var repair: Dictionary = stage.debug_pickup_contract(&"repair")
 	_expect(bool(repair["collected_once"]) and float(repair["health"]) > 50.0, "repair pickup heals immediately")
-	var attack: Dictionary = stage.debug_pickup_contract(&"attack_boost")
-	_expect(float(attack["attack_timer"]) >= 7.9, "attack pickup exposes an active duration")
-	var overdrive: Dictionary = stage.debug_pickup_contract(&"overdrive")
-	_expect(float(overdrive["overdrive_timer"]) >= 7.9, "overdrive pickup exposes an active duration")
-	var barrier: Dictionary = stage.debug_pickup_contract(&"barrier")
-	_expect(float(barrier["barrier"]) >= 48.0, "barrier pickup grants readable strength")
+	var recall: Dictionary = stage.debug_pickup_contract(&"experience_recall")
+	_expect(bool(recall["collected_once"]) and float(recall["recall_timer"]) >= 0.65, "experience recall starts the map-wide XP sweep")
 
 
 func _check_dash_contract(stage: Node) -> void:
@@ -230,7 +229,7 @@ func _check_progression_contract(stage: Node) -> void:
 	_expect(bool(result["boss_started_with_living"]), "ordinary exit works while enemies remain alive")
 	_expect(bool(result["complete"]), "automated complete run reaches stage result")
 	_expect(int(result["mode"]) == 4, "boss defeat enters result flow")
-	_expect(int(result["upgrade_count"]) == 3, "complete stage applies calibration, relay, and boss upgrades")
+	_expect(int(result["upgrade_count"]) == 3, "required route XP levels and boss reward produce three upgrades")
 
 
 func _check_multistage_contract(stage: Node) -> void:
@@ -244,7 +243,10 @@ func _check_multistage_contract(stage: Node) -> void:
 	_expect(result["packet_counts"] == [6, 6, 6, 6, 6], "all five stages record complete six-beat packet tables")
 	for reward_set in result["reward_ids"]:
 		_expect(reward_set.size() == 4, "each authored stage records four reward anchors")
-	_expect(result["upgrade_counts"] == [0, 3, 6, 9, 12], "five-stage transitions preserve the accumulated run upgrades")
+	var upgrades_preserved := int(result["upgrade_counts"][0]) == 0
+	for index in range(1, result["upgrade_counts"].size()):
+		upgrades_preserved = upgrades_preserved and int(result["upgrade_counts"][index]) > int(result["upgrade_counts"][index - 1])
+	_expect(upgrades_preserved, "five-stage transitions preserve and extend the accumulated run upgrades")
 	_expect(int(result["final_stage_index"]) == 4 and bool(result["final_complete"]) and int(result["final_upgrade_count"]) == 15, "the fifth boss resolves the final stage with the accumulated build")
 
 
@@ -253,12 +255,12 @@ func _check_added_stage_mechanics_contract(stage: Node) -> void:
 	_expect(int(result["switch_cover_count"]) == 2 and int(result["switch_state"]) == 1 and bool(result["switch_covers_moved"]), "three Switchyard pads drive one visible paired-gate state")
 	_expect(int(result["switch_minimap_markers"]) >= 5, "Switchyard pads and live blockers appear on the minimap")
 	_expect(bool(result["convoy_failure_optional"]), "escaped Switchyard convoy removes only its optional reward")
-	_expect(result["switch_boss_patterns"] == ["switch_charge", "switch_charge"], "Switchyard Behemoth uses only the learned open-lane charge")
+	_expect(result["switch_boss_patterns"] == ["open_lane_charge", "gate_shockwave", "ricochet_volley", "switch_sweep"], "Switchyard Behemoth owns four distinct arena attacks")
 	_expect(float(result["behemoth_lane_y"]) in [825.0, 2175.0] and bool(result["behemoth_crash_recovery"]), "Switchyard Behemoth follows the open lane into a vulnerable cover crash")
 	_expect(bool(result["vault_closed_before"]) and bool(result["vault_open_after_alignment"]), "Observatory vault gate follows the two-reflector alignment")
 	_expect(bool(result["ninety_degree_turn"]), "Observatory reflector resolves a deterministic visible ninety-degree turn")
 	_expect(bool(result["direct_round_rejected"]) and bool(result["reflected_round_damaged_relay"]), "Crown shield relay accepts reflected rounds and rejects direct fire")
-	_expect(result["observatory_boss_patterns"] == ["crown_beam", "crown_carrier"], "Crown Engine separates beam and carrier windows")
+	_expect(result["observatory_boss_patterns"] == ["crown_beam", "mirror_cross", "carrier_wave", "relay_pulse"], "Crown Engine owns four distinct arena attacks")
 	_expect(int(result["reflector_minimap_markers"]) == 2, "both live Observatory reflector orientations appear on the minimap")
 	_expect(int(result["crown_relay_count"]) == 2, "Crown Engine begins behind two reflector-only shield relays")
 	_expect(bool(result["beam_spawned_no_children"]) and int(result["crown_carrier_children"]) == 3, "Crown Engine beam never overlaps its one bounded three-drone release")
@@ -280,7 +282,7 @@ func _check_specialist_enemy_contract(stage: Node) -> void:
 	_expect(is_equal_approx(float(result["repair_amount"]), 2.0) and String(result["repair_target"]) == "debug_ally", "Repair Tender maintains one four-hull-per-second ally link")
 	_expect(bool(result["repair_respects_cover"]), "Repair Tender cannot repair through solid cover")
 	_expect(int(result["carrier_first_release"]) == 1 and bool(result["carrier_holds_spacing"]) and int(result["carrier_second_release"]) == 2, "Drone Carrier releases children at 0.65-second spacing")
-	_expect(int(result["carrier_children"]) == 6 and bool(result["carrier_queue_cancelled"]), "Drone Carrier respects its six-child cap and death cancels releases")
+	_expect(int(result["carrier_children"]) == 3 and bool(result["carrier_queue_cancelled"]), "Drone Carrier respects its three-child cap and death cancels releases")
 	_expect(bool(result["beam_blocked_by_cover"]) and bool(result["cover_prevented_damage"]), "Beam Sentinel lane terminates at solid cover")
 	_expect(bool(result["beam_dealt_damage"]), "Beam Sentinel active lane damages an exposed player")
 	_expect(bool(result["beam_recovered"]), "Beam Sentinel exits its 0.6-second active window into recovery")
@@ -288,8 +290,8 @@ func _check_specialist_enemy_contract(stage: Node) -> void:
 
 func _check_new_upgrade_runtime(stage: Node) -> void:
 	var result: Dictionary = stage.debug_new_upgrade_contract()
-	_expect(int(result["catalog_count"]) == 41, "upgrade catalog contains exactly forty-one cards")
-	_expect(bool(result["retired_missing"]) and bool(result["retired_rejected"]), "five hidden or context-only upgrades stay retired")
+	_expect(int(result["catalog_count"]) == 43, "upgrade catalog contains exactly forty-three cards")
+	_expect(bool(result["retired_missing"]) and bool(result["retired_rejected"]), "all seven retired upgrades stay unavailable")
 	_expect(int(result["forked_level_one_projectiles"]) == 2 and int(result["forked_level_two_projectiles"]) == 3, "Forked Muzzle adds one always-on side round per level")
 	_expect(is_equal_approx(float(result["shock_breach_damage"]), 45.0), "Shock Breach emits forty-five percent opening damage per level")
 	_expect(float(result["marked_time"]) >= 2.49, "Marked Salvo stores a 2.5-second priority mark")
@@ -298,10 +300,10 @@ func _check_new_upgrade_runtime(stage: Node) -> void:
 	_expect(is_equal_approx(float(result["aegis_barrier"]), 18.0), "Static Aegis creates a fixed level-one barrier")
 	_expect(is_equal_approx(float(result["aegis_level_two_barrier"]), 24.0), "Static Aegis creates a fixed level-two barrier")
 	_expect(float(result["overload_stun"]) >= 4.59, "Relay Overload extends support and installation shutdown")
-	_expect(is_equal_approx(float(result["field_duration_level_one"]), 1.2) and is_equal_approx(float(result["field_duration_level_two"]), 1.44), "Field Converter exposes exact pickup-duration levels")
-	_expect(is_equal_approx(float(result["field_barrier_level_one"]), 10.0) and is_equal_approx(float(result["field_barrier_level_two"]), 20.0), "Field Converter exposes exact barrier-pickup levels")
-	_expect(float(result["salvage_timer"]) >= 3.99 and float(result["salvage_speed"]) >= 321.9, "Salvage Booster grants its four-second movement bonus")
-	_expect(float(result["salvage_level_two_speed"]) >= 341.5, "Salvage Booster level two raises its movement bonus to twenty-two percent")
+	_expect(bool(result["cycle_immediate"]) and int(result["cycle_count"]) == 3, "all three recurring upgrades activate immediately and share one orbit")
+	_expect(float(result["siphon_healing"]) >= 1.99 and float(result["siphon_healing"]) <= 2.01, "Siphon Matrix heals from actual post-mitigation damage")
+	_expect(is_equal_approx(float(result["siphon_capped_healing"]), 6.0), "Siphon Matrix respects its six-hull-per-second budget")
+	_expect(is_equal_approx(float(result["siphon_overkill_healing"]), 0.35), "Siphon Matrix never heals from overkill damage")
 
 
 func _check_enemy_pressure_contract(stage: Node) -> void:
@@ -310,10 +312,15 @@ func _check_enemy_pressure_contract(stage: Node) -> void:
 	_expect(int(tuning["max_ranged"]) == 3 and int(tuning["max_denial"]) == 2, "ranged and denial commit ceilings remain explicit")
 	var runtime: Dictionary = stage.debug_enemy_pressure_contract()
 	_expect(is_equal_approx(float(runtime["runtime_health"]), float(runtime["base_health"]) * 1.12), "ordinary enemies receive the locked health multiplier")
-	_expect(is_equal_approx(float(runtime["runtime_boss_health"]), float(runtime["base_boss_health"])), "priority bosses do not become health sponges")
+	_expect(is_equal_approx(float(runtime["runtime_boss_health"]), 560.0), "stage-one field bosses use their explicit bounded health profile")
+	_expect(is_equal_approx(float(runtime["stage_five_health"]), float(runtime["base_health"]) * 1.12 * 1.16), "stage-five ordinary health applies the bounded curve exactly once")
+	_expect(is_equal_approx(float(runtime["stage_one_priority_health"]), float(runtime["base_priority_health"])) and is_equal_approx(float(runtime["stage_five_priority_health"]), float(runtime["base_priority_health"]) * 1.16), "priority health receives only the bounded stage curve")
 	_expect(is_equal_approx(float(runtime["runtime_speed"]), float(runtime["base_speed"]) * 1.20), "enemy movement receives the locked speed multiplier")
+	_expect(is_equal_approx(float(runtime["stage_five_speed"]), float(runtime["base_speed"]) * 1.20 * 1.04), "stage-five movement applies the bounded curve exactly once")
 	_expect(is_equal_approx(float(runtime["runtime_projectile_speed"]), float(runtime["base_projectile_speed"]) * 1.18), "hostile projectiles receive the locked speed multiplier")
 	_expect(is_equal_approx(float(runtime["runtime_damage"]), float(runtime["base_damage"]) * 1.35), "enemy attacks receive the locked damage multiplier")
+	_expect(is_equal_approx(float(runtime["stage_five_damage"]), float(runtime["base_damage"]) * 1.35 * 1.12), "stage-five damage applies the bounded curve exactly once")
+	_expect(is_equal_approx(float(runtime["boss_final_damage"]), 34.0), "boss pattern damage bypasses ordinary and stage scaling")
 	_expect(is_equal_approx(float(runtime["environment_damage"]), float(runtime["base_damage"])), "environment damage is not accidentally scaled as enemy damage")
 	_expect(is_equal_approx(float(runtime["runtime_recovery"]), float(runtime["base_recovery"]) / 1.28), "ordinary enemy recovery uses the locked faster cadence")
 	var performance: Dictionary = stage.debug_performance_contract()
@@ -326,18 +333,20 @@ func _check_enemy_pressure_contract(stage: Node) -> void:
 
 
 func _check_projectile_cover_contract(stage: Node) -> void:
-	stage.call("_reset_run", false)
+	stage.current_stage_index = 0
+	stage.current_stage_id = &"flooded_works"
+	stage.call("_reset_run", false, true, false)
 	stage.mode = 1
-	stage.player_position = Vector2(900.0, 700.0)
+	stage.player_position = Vector2(500.0, 845.0)
 	stage.projectiles.clear()
-	stage.call("_spawn_player_projectile", Vector2(900.0, 700.0), Vector2.RIGHT, 12.0, 1000.0, 0)
-	stage.call("_update_projectiles", 0.35)
+	stage.call("_spawn_player_projectile", Vector2(500.0, 845.0), Vector2.RIGHT, 12.0, 1000.0, 0)
+	stage.call("_update_projectiles", 0.70)
 	_expect(stage.projectiles.is_empty(), "primary projectile stops at ordinary solid cover")
 
 	stage.projectiles.clear()
 	stage.call(
 		"_spawn_hostile_projectile",
-		Vector2(1250.0, 700.0),
+		Vector2(1100.0, 845.0),
 		Vector2.LEFT,
 		10.0,
 		1000.0,
@@ -345,7 +354,7 @@ func _check_projectile_cover_contract(stage: Node) -> void:
 		Rules.CORAL
 	)
 	var health_before := float(stage.player_health)
-	stage.call("_update_projectiles", 0.35)
+	stage.call("_update_projectiles", 0.70)
 	_expect(stage.projectiles.is_empty(), "enemy projectile stops at ordinary solid cover")
 	_expect(is_equal_approx(float(stage.player_health), health_before), "cover prevents enemy projectile damage")
 

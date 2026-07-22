@@ -23,18 +23,23 @@ func _expect(condition: bool, message: String) -> void:
 
 func _run() -> void:
 	for stage_id in StageCatalog.STAGE_IDS:
-		_expect(StageCatalog.pickup_blueprint(stage_id).size() == 8, "%s has eight authored pickups" % stage_id)
+		var stage_pickups := StageCatalog.pickup_blueprint(stage_id)
+		var stage_crates := StageCatalog.crate_blueprint(stage_id)
+		_expect(stage_pickups.size() == 3, "%s has two repairs and one experience recall" % stage_id)
 		_expect(StageCatalog.crate_blueprint(stage_id).size() == 5, "%s has five authored crates" % stage_id)
 		_expect(StageCatalog.reward_anchors(stage_id).size() == 4, "%s has four reward anchors" % stage_id)
+		_expect(stage_pickups.filter(func(item: Dictionary) -> bool: return StringName(item["kind"]) == &"repair").size() == 2, "%s pickup set contains exactly two repairs" % stage_id)
+		_expect(stage_pickups.filter(func(item: Dictionary) -> bool: return StringName(item["kind"]) == &"experience_recall").size() == 1, "%s pickup set contains exactly one experience recall" % stage_id)
+		_expect(stage_crates.filter(func(item: Dictionary) -> bool: return StringName(item["drop"]) == &"repair").size() == 4, "%s crate set contains exactly four repairs" % stage_id)
+		_expect(stage_crates.filter(func(item: Dictionary) -> bool: return StringName(item["drop"]) == &"experience_recall").size() == 1, "%s crate set contains exactly one experience recall" % stage_id)
 	var kinds: Dictionary = {}
 	for item in StageCatalog.pickup_blueprint(&"flooded_works"):
 		kinds[StringName(item["kind"])] = true
 	for crate in StageCatalog.crate_blueprint(&"flooded_works"):
 		kinds[StringName(crate["drop"])] = true
-	for required_kind in [&"repair", &"attack_boost", &"coolant", &"overdrive", &"barrier", &"seeker_battery", &"capacitor_cell", &"magnet_field"]:
+	for required_kind in [&"repair", &"experience_recall"]:
 		_expect(kinds.has(required_kind), "field catalog exposes %s" % required_kind)
-	kinds[&"major_repair"] = true # Field-boss-only reward, intentionally absent from loose placement.
-	_expect(kinds.size() == 9, "field item contract exposes exactly nine families")
+	_expect(kinds.size() == 2, "field item contract exposes exactly two families")
 
 	var panel := UpgradePanel.new()
 	root.add_child(panel)
@@ -64,15 +69,20 @@ func _run() -> void:
 	var stage := StageScene.instantiate()
 	root.add_child(stage)
 	await process_frame
-	var major_repair: Dictionary = stage.debug_pickup_contract(&"major_repair")
-	_expect(float(major_repair["health"]) >= 100.0, "major repair restores its field-boss health grant")
-	_expect(float(stage.debug_pickup_contract(&"coolant")["coolant_timer"]) >= 8.0, "coolant grants its firing cadence window")
-	_expect(bool(stage.debug_pickup_contract(&"seeker_battery")["passive_reset"]), "seeker battery resets the passive cooldown")
-	_expect(int(stage.debug_pickup_contract(&"capacitor_cell")["capacitor_shots"]) == 3, "capacitor cell grants three opening shots")
-	_expect(float(stage.debug_pickup_contract(&"magnet_field")["magnet_timer"]) >= 10.0, "magnet field grants its collection window")
-	var route: Dictionary = stage.debug_multistage_contract()
-	_expect(int(route["final_upgrade_count"]) == 15, "full route grants fifteen mandatory upgrades")
-	_expect(int(route["claimed_reward_count"]) == 15, "full route resolves fifteen mandatory reward transactions")
+	stage.set("player_health", 20.0)
+	stage.call("_collect_pickup", {"active": true, "kind": &"repair", "pos": Vector2.ZERO, "heal_amount": 35.0})
+	_expect(is_equal_approx(float(stage.get("player_health")), 55.0), "repair restores its authored hull amount")
+	stage.call("_collect_pickup", {"active": true, "kind": &"experience_recall", "pos": Vector2.ZERO})
+	_expect(float(stage.get("experience_recall_timer")) >= 0.65, "experience recall starts the global shard pull window")
+	var experience_runtime: RefCounted = stage.get("experience_runtime")
+	_expect(int(experience_runtime.call("required_experience")) == 26, "a fresh run starts with a 26-XP level threshold")
+	var stage_ui: CanvasLayer = stage.get("_ui")
+	var ui_contract: Dictionary = stage_ui.call("debug_ui_contract", 1280.0)
+	_expect(Vector2(ui_contract["action_rail_size"]) == Vector2(276.0, 60.0), "action rail uses the compact dock contract")
+	_expect(Vector2(ui_contract["health_cluster_size"]) == Vector2(184.0, 54.0), "health and XP share the compact hull cluster")
+	_expect(bool(ui_contract["top_clusters_do_not_overlap"]), "top HUD clusters do not overlap at 1280 pixels")
+	var orbit_contract: Dictionary = stage_ui.call("debug_status_orbit_contract")
+	_expect(int(orbit_contract["maximum_badges"]) == 3, "status orbit exposes at most three badges")
 	stage.free()
 	stage = null
 	audio = null

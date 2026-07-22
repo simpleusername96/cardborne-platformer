@@ -56,12 +56,25 @@ and runtime systems.
 Do not assign a new color when an existing semantic role already communicates the
 state.
 
+All collision-bearing static cover, closed boss gates, active switch gates, and
+closed vault gates use one exact blocker fill: `#07564C`. Alternate green caps,
+colored wall faces, and blocker shadows are not used to imply collision. Dynamic
+state uses a large shape or motion cue without changing the blocker fill.
+
 ### Map and actor readability
 
 - Traversable floor and collision-blocking geometry must be distinguishable
   before the player touches them.
-- Cover geometry must use the same shape for movement, projectile collision, line
-  of sight, minimap blocking, and rendered presentation.
+- Floor and cover geometry must use the same polygon for movement, projectile
+  collision, line of sight, minimap blocking, validation, and rendered
+  presentation. A chamfer visible in the world must be the same chamfer used by
+  collision.
+- Every opening presented as passable is at least 168 pixels edge-to-edge; main
+  travel and combat lanes are at least 320 pixels wide, and bends/branches provide
+  a 240x240 turning pocket. Smaller gaps are visually sealed rather than shown as
+  unusable slits.
+- Static interior cover remains sparse: stages 1-5 use at most 9/10/9/9/8 static
+  cover shapes respectively, excluding their named dynamic blockers.
 - Keep major floor motifs between 120 and 250 pixels in radius and use them
   sparingly.
 - The player, ordinary enemies, installations, field bosses, stage bosses,
@@ -92,10 +105,13 @@ signals, not decorative icons.
 
 - Korean is the default language. Korean and English use the same layout and a
   real medium-or-heavier Noto Sans KR weight.
-- Live combat prioritizes hull, current objective, primary-fire state, dash, EMP,
-  passive support, minimap, and exceptional buffs.
-- Primary fire owns the strongest bottom-rail hierarchy. Utility actions remain
-  secondary.
+- Live combat prioritizes compact hull/experience, current objective,
+  primary-fire state, dash, EMP, passive support, minimap, and exceptional buffs.
+- Primary fire owns the strongest icon in a compact action cluster. Utility
+  actions remain secondary and use radial readiness rather than wide text slots.
+- A maximum of three 24-pixel status badges sits at a 62-pixel radius around the
+  projected player. Shape identifies shield, attack, and movement cycles; a
+  clockwise arc distinguishes recharge from active duration without color alone.
 - Boss state replaces competing objective/minimap clusters while the boss is
   active.
 - Deployment, upgrade, pause, result, and garage are modal focus layers. They hide
@@ -122,6 +138,8 @@ signals, not decorative icons.
 
 - At 960x540, 1280x720, and 1920x1080, HUD clusters do not overlap, modal content
   is not clipped, and every command target remains at least 44 pixels high.
+- At 960x540, opaque live-combat panels cover at most 12% of the viewport and no
+  opaque panel enters the central 60% by 60% combat rectangle.
 - Korean and English expose the same reachable controls and complete copy.
 - Walkable, blocked, threat, player/reward, recovery, and boss roles pass the
   visual-profile contract validator.
@@ -139,3 +157,5 @@ signals, not decorative icons.
 - UI-baked screenshots used as runtime screens.
 - Visual effects that obscure hostile telegraphs, collision boundaries, or the
   player's silhouette.
+- Black walkable ground, white blockers, and a matching monochrome actor redesign
+  until that separate visual direction is explicitly accepted.

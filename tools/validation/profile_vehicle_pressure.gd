@@ -49,13 +49,17 @@ func _profile_preset(preset: StringName) -> bool:
 			mobile_index += 1
 	stage.player_invulnerable = 999.0
 	stage.call("_enforce_active_enemy_cap")
+	for shard_index in 192:
+		stage.experience_runtime.spawn_shard(Vector2(4200.0 + float(shard_index % 12), 2600.0 + float(shard_index / 12)), 1)
 	for _index in WARMUP_STEPS:
 		stage.call("_update_enemies", FIXED_DELTA)
 		stage.call("_update_projectiles", FIXED_DELTA)
+		stage.call("_update_experience", FIXED_DELTA)
 
 	var moving_ms := _measure_steps(func() -> void:
 		stage.call("_update_enemies", FIXED_DELTA)
 		stage.call("_update_projectiles", FIXED_DELTA)
+		stage.call("_update_experience", FIXED_DELTA)
 	)
 	var ui = stage.get("_ui")
 	var hud_ms := _measure_steps(func() -> void:
@@ -69,10 +73,13 @@ func _profile_preset(preset: StringName) -> bool:
 	var scheduler_ms := float(scheduler["step_ms"])
 	var combined_ms := moving_ms + hud_ms + scheduler_ms
 	var cap: int = int(stage.encounter_runtime.active_cap())
-	print("VEHICLE_PRESSURE_PROFILE preset=%s active_capped=%d cap=%d queued=%d steps=%d moving_ms=%.3f hud_ms=%.3f scheduler_ms=%.3f combined_ms=%.3f within_8ms=%s" % [
+	var shard_count: int = stage.experience_runtime.shards.size()
+	var result := active_capped == cap and shard_count == 192 and int(scheduler["queued_spawns"]) > 0 and combined_ms < 8.0
+	print("VEHICLE_PRESSURE_PROFILE preset=%s active_capped=%d cap=%d shards=%d queued=%d steps=%d moving_ms=%.3f hud_ms=%.3f scheduler_ms=%.3f combined_ms=%.3f within_8ms=%s" % [
 		preset,
 		active_capped,
 		cap,
+		shard_count,
 		int(scheduler["queued_spawns"]),
 		MEASURED_STEPS,
 		moving_ms,
@@ -83,7 +90,7 @@ func _profile_preset(preset: StringName) -> bool:
 	])
 	stage.queue_free()
 	await process_frame
-	return active_capped == cap and int(scheduler["queued_spawns"]) > 0 and combined_ms < 8.0
+	return result
 
 
 func _measure_steps(action: Callable) -> float:

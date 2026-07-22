@@ -19,6 +19,7 @@ func _run() -> void:
 	var previous_locale := store.ui_locale
 	var previous_bindings := store.control_bindings.duplicate(true)
 	var previous_preset := store.combat_preset
+	var previous_reduced_motion := store.reduced_motion
 	store.set_master_volume(0.37)
 	store.set_sfx_volume(0.61)
 	store.master_volume = 1.0
@@ -32,9 +33,11 @@ func _run() -> void:
 	_expect(tr("PAUSE_TITLE") == "Paused", "English translation catalog is available")
 	_expect(store.set_control_binding(&"dash", "key:%d" % KEY_Q), "valid dash rebind was rejected")
 	store.set_combat_preset(&"onslaught")
+	store.set_reduced_motion(true)
 	store.load_settings()
 	_expect(store.control_bindings[&"dash"] == "key:%d" % KEY_Q, "dash binding did not survive reload")
 	_expect(store.combat_preset == &"onslaught", "Onslaught preset did not survive reload")
+	_expect(store.reduced_motion, "reduced-motion preference did not survive reload")
 	_expect(not store.set_control_binding(&"active_skill", store.control_bindings[&"dash"]), "conflicting binding was accepted")
 	var malformed := ConfigFile.new()
 	malformed.set_value("audio", "master", "invalid")
@@ -50,11 +53,13 @@ func _run() -> void:
 	_expect(store.control_bindings[&"primary_fire"] == InputProfile.default_descriptors()[&"primary_fire"], "malformed primary binding did not restore only its default")
 	_expect(store.control_bindings[&"dash"] == "key:%d" % KEY_Q, "valid sibling binding was discarded during repair")
 	_expect(store.combat_preset == &"standard", "invalid combat preset did not restore Standard")
+	_expect(not store.reduced_motion, "missing reduced-motion setting restores its default")
 	store.master_volume = previous_master
 	store.sfx_volume = previous_sfx
 	store.ui_locale = previous_locale
 	store.control_bindings = previous_bindings
 	store.combat_preset = previous_preset
+	store.reduced_motion = previous_reduced_motion
 	store.apply_audio()
 	store.apply_locale()
 	store.call("_save")

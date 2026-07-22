@@ -9,6 +9,7 @@ const TidalArchive = preload("res://scripts/vehicle/stages/tidal_archive.gd")
 const StormDrydock = preload("res://scripts/vehicle/stages/storm_drydock.gd")
 const CoralSwitchyard = preload("res://scripts/vehicle/stages/coral_switchyard.gd")
 const AbyssalObservatory = preload("res://scripts/vehicle/stages/abyssal_observatory.gd")
+const Geometry = preload("res://scripts/vehicle/vehicle_stage_geometry.gd")
 
 const STAGE_IDS: Array[StringName] = [
 	&"flooded_works", &"tidal_archive", &"storm_drydock",
@@ -28,6 +29,9 @@ static var _definition_cache: Dictionary = {}
 static var _definition_build_counts: Dictionary = {}
 static var _cover_rect_cache: Dictionary = {}
 static var _water_rect_cache: Dictionary = {}
+static var _floor_polygon_cache: Dictionary = {}
+static var _cover_polygon_cache: Dictionary = {}
+static var _water_polygon_cache: Dictionary = {}
 
 
 static func normalized_id(stage_id: StringName) -> StringName:
@@ -133,6 +137,17 @@ static func walkable_regions(stage_id: StringName) -> Array[Dictionary]:
 	return result
 
 
+static func floor_polygons(stage_id: StringName) -> Array:
+	var normalized := normalized_id(stage_id)
+	if _floor_polygon_cache.has(normalized):
+		return _floor_polygon_cache[normalized]
+	var result: Array = []
+	for region in definition(normalized)["walkable_regions"]:
+		result.append(Geometry.rect_polygon(Rect2(region["rect"])))
+	_floor_polygon_cache[normalized] = result
+	return result
+
+
 static func cover_rects(stage_id: StringName) -> Array[Rect2]:
 	var normalized := normalized_id(stage_id)
 	if _cover_rect_cache.has(normalized):
@@ -141,6 +156,17 @@ static func cover_rects(stage_id: StringName) -> Array[Rect2]:
 	for rect in definition(normalized)["cover_rects"]:
 		result.append(Rect2(rect))
 	_cover_rect_cache[normalized] = result
+	return result
+
+
+static func cover_polygons(stage_id: StringName) -> Array:
+	var normalized := normalized_id(stage_id)
+	if _cover_polygon_cache.has(normalized):
+		return _cover_polygon_cache[normalized]
+	var result: Array = []
+	for rect in cover_rects(normalized):
+		result.append(Geometry.rect_polygon(rect))
+	_cover_polygon_cache[normalized] = result
 	return result
 
 
@@ -155,6 +181,17 @@ static func water_rects(stage_id: StringName) -> Array[Rect2]:
 	return result
 
 
+static func water_polygons(stage_id: StringName) -> Array:
+	var normalized := normalized_id(stage_id)
+	if _water_polygon_cache.has(normalized):
+		return _water_polygon_cache[normalized]
+	var result: Array = []
+	for rect in water_rects(normalized):
+		result.append(Geometry.rect_polygon(rect))
+	_water_polygon_cache[normalized] = result
+	return result
+
+
 static func debug_cache_contract(stage_id: StringName) -> Dictionary:
 	var normalized := normalized_id(stage_id)
 	definition(normalized)
@@ -162,6 +199,7 @@ static func debug_cache_contract(stage_id: StringName) -> Dictionary:
 	return {
 		"stage_id": normalized,
 		"definition_build_count": int(_definition_build_counts.get(normalized, 0)),
+		"floor_count": floor_polygons(normalized).size(),
 		"cover_count": cover_rects(normalized).size(),
 		"water_count": water_rects(normalized).size(),
 	}
@@ -182,6 +220,7 @@ static func floor_regions(stage_id: StringName, colors: Dictionary) -> Array[Dic
 			"id": region.get("id", "floor"),
 			"name": region.get("name", "Floor"),
 			"rect": Rect2(region["rect"]),
+			"polygon": Geometry.rect_polygon(Rect2(region["rect"])),
 			"color": colors.get(tone, colors["mid"]),
 		})
 	return result
@@ -223,25 +262,12 @@ static func authored_population(stage_id: StringName) -> int:
 
 
 static func position_is_walkable(stage_id: StringName, position: Vector2, radius: float = 0.0) -> bool:
-	var inside_floor := false
-	for region in definition(stage_id)["walkable_regions"]:
-		var floor_rect := Rect2(region["rect"])
-		if floor_rect.size.x < radius * 2.0 or floor_rect.size.y < radius * 2.0:
-			continue
-		if floor_rect.grow(-radius).has_point(position):
-			inside_floor = true
-			break
-	if not inside_floor:
+	if not Geometry.circle_inside_polygon_union(position, radius, floor_polygons(stage_id)):
 		return false
-	for water in water_rects(stage_id):
-		if _circle_overlaps_rect(position, radius, water):
+	for water in water_polygons(stage_id):
+		if Geometry.circle_overlaps_polygon(position, radius, water):
 			return false
 	return true
-
-
-static func _circle_overlaps_rect(center: Vector2, radius: float, rect: Rect2) -> bool:
-	var closest := Vector2(clampf(center.x, rect.position.x, rect.end.x), clampf(center.y, rect.position.y, rect.end.y))
-	return center.distance_squared_to(closest) < radius * radius
 
 
 static func pickup_blueprint(stage_id: StringName) -> Array[Dictionary]:

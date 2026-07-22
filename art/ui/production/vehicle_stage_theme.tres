@@ -1,4 +1,4 @@
-[gd_resource type="Theme" load_steps=28 format=3]
+[gd_resource type="Theme" load_steps=32 format=3]
 
 [ext_resource type="FontFile" path="res://art/ui/production/fonts/NotoSansKR-Variable.ttf" id="1_font"]
 
@@ -160,6 +160,34 @@ content_margin_top = 4.0
 content_margin_bottom = 4.0
 bg_color = Color(0.843137, 0.603922, 0.0901961, 1)
 
+[sub_resource type="StyleBoxFlat" id="TabPanel"]
+content_margin_left = 10.0
+content_margin_top = 10.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+bg_color = Color(1, 0.964706, 0.862745, 1)
+
+[sub_resource type="StyleBoxFlat" id="TabUnselected"]
+content_margin_left = 14.0
+content_margin_top = 8.0
+content_margin_right = 14.0
+content_margin_bottom = 8.0
+bg_color = Color(0.027451, 0.337255, 0.298039, 1)
+
+[sub_resource type="StyleBoxFlat" id="TabHovered"]
+content_margin_left = 14.0
+content_margin_top = 8.0
+content_margin_right = 14.0
+content_margin_bottom = 8.0
+bg_color = Color(0.054902, 0.423529, 0.368627, 1)
+
+[sub_resource type="StyleBoxFlat" id="TabSelected"]
+content_margin_left = 14.0
+content_margin_top = 8.0
+content_margin_right = 14.0
+content_margin_bottom = 8.0
+bg_color = Color(0.843137, 0.603922, 0.0901961, 1)
+
 [resource]
 default_font = SubResource("FontBody")
 default_font_size = 17
@@ -187,6 +215,35 @@ VBoxContainer/constants/separation = 10
 HSlider/styles/slider = SubResource("Slider")
 HSlider/styles/grabber_area = SubResource("SliderActive")
 HSlider/styles/grabber_area_highlight = SubResource("SliderActive")
+TabContainer/styles/panel = SubResource("TabPanel")
+TabContainer/colors/font_unselected_color = Color(1, 0.964706, 0.862745, 1)
+TabContainer/colors/font_hovered_color = Color(1, 0.964706, 0.862745, 1)
+TabContainer/colors/font_selected_color = Color(0.0823529, 0.231373, 0.227451, 1)
+TabContainer/fonts/font = SubResource("FontStrong")
+TabContainer/font_sizes/font_size = 17
+TabContainer/styles/tab_unselected = SubResource("TabUnselected")
+TabContainer/styles/tab_hovered = SubResource("TabHovered")
+TabContainer/styles/tab_selected = SubResource("TabSelected")
+TabContainer/styles/tab_focus = SubResource("TabSelected")
+TabBar/colors/font_unselected_color = Color(1, 0.964706, 0.862745, 1)
+TabBar/colors/font_hovered_color = Color(1, 0.964706, 0.862745, 1)
+TabBar/colors/font_selected_color = Color(0.0823529, 0.231373, 0.227451, 1)
+TabBar/fonts/font = SubResource("FontStrong")
+TabBar/font_sizes/font_size = 17
+TabBar/styles/tab_unselected = SubResource("TabUnselected")
+TabBar/styles/tab_hovered = SubResource("TabHovered")
+TabBar/styles/tab_selected = SubResource("TabSelected")
+TabBar/styles/tab_focus = SubResource("TabSelected")
+OptionButton/colors/font_color = Color(1, 0.964706, 0.862745, 1)
+OptionButton/colors/font_hover_color = Color(1, 0.964706, 0.862745, 1)
+OptionButton/colors/font_pressed_color = Color(1, 0.964706, 0.862745, 1)
+OptionButton/styles/normal = SubResource("ChoiceNormal")
+OptionButton/styles/hover = SubResource("ChoiceHover")
+OptionButton/styles/pressed = SubResource("ChoicePressed")
+OptionButton/styles/focus = SubResource("ChoiceFocus")
+CheckButton/colors/font_color = Color(0.0823529, 0.231373, 0.227451, 1)
+CheckButton/colors/font_hover_color = Color(0.0823529, 0.231373, 0.227451, 1)
+CheckButton/font_sizes/font_size = 17
 PrimaryButton/base_type = &"Button"
 PrimaryButton/colors/font_color = Color(0.0823529, 0.231373, 0.227451, 1)
 PrimaryButton/colors/font_hover_color = Color(0.0823529, 0.231373, 0.227451, 1)

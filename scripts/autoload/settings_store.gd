@@ -4,6 +4,7 @@ extends Node
 signal locale_changed(locale: String)
 signal controls_changed(action: StringName)
 signal combat_preset_changed(preset: StringName)
+signal reduced_motion_changed(enabled: bool)
 
 const InputProfile = preload("res://scripts/input/vehicle_input_profile.gd")
 
@@ -22,6 +23,7 @@ var sfx_volume := 1.0
 var ui_locale := DEFAULT_LOCALE
 var control_bindings: Dictionary = InputProfile.default_descriptors()
 var combat_preset: StringName = DEFAULT_COMBAT_PRESET
+var reduced_motion := false
 
 
 func _ready() -> void:
@@ -34,6 +36,7 @@ func load_settings() -> void:
 	ui_locale = DEFAULT_LOCALE
 	control_bindings = InputProfile.default_descriptors()
 	combat_preset = DEFAULT_COMBAT_PRESET
+	reduced_motion = false
 	var config := ConfigFile.new()
 	var result := config.load(SETTINGS_PATH)
 	var repaired := false
@@ -41,6 +44,7 @@ func load_settings() -> void:
 		master_volume = _safe_volume(config.get_value(AUDIO_SECTION, "master", 1.0))
 		sfx_volume = _safe_volume(config.get_value(AUDIO_SECTION, "sfx", 1.0))
 		ui_locale = _safe_locale(config.get_value(UI_SECTION, "locale", DEFAULT_LOCALE))
+		reduced_motion = bool(config.get_value(UI_SECTION, "reduced_motion", false))
 		for action in InputProfile.REMAPPABLE_ACTIONS:
 			var raw_value: Variant = config.get_value(CONTROLS_SECTION, String(action), control_bindings[action])
 			var descriptor := InputProfile.normalize_descriptor(raw_value)
@@ -112,6 +116,14 @@ func set_combat_preset(value: StringName) -> void:
 	combat_preset_changed.emit(combat_preset)
 
 
+func set_reduced_motion(value: bool) -> void:
+	if reduced_motion == value:
+		return
+	reduced_motion = value
+	_save()
+	reduced_motion_changed.emit(reduced_motion)
+
+
 func apply_audio() -> void:
 	_set_bus_volume("Master", master_volume)
 	_set_bus_volume("SFX", sfx_volume)
@@ -158,6 +170,7 @@ func _save() -> void:
 	config.set_value(AUDIO_SECTION, "master", master_volume)
 	config.set_value(AUDIO_SECTION, "sfx", sfx_volume)
 	config.set_value(UI_SECTION, "locale", ui_locale)
+	config.set_value(UI_SECTION, "reduced_motion", reduced_motion)
 	for action in InputProfile.REMAPPABLE_ACTIONS:
 		config.set_value(CONTROLS_SECTION, String(action), control_bindings[action])
 	config.set_value(GAMEPLAY_SECTION, "combat_preset", String(combat_preset))

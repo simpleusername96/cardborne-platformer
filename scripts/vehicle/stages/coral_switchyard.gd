@@ -28,11 +28,11 @@ static func definition() -> Dictionary:
 
 static func _walkable_regions() -> Array[Dictionary]:
 	return [
-		{"id":"maintenance_court", "name":"Maintenance Court", "rect":Rect2(160,1040,900,920), "tone":&"light"},
+		{"id":"maintenance_court", "name":"Maintenance Court", "rect":Rect2(160,1040,1040,920), "tone":&"light"},
 		{"id":"switch_gallery", "name":"Switch Gallery", "rect":Rect2(820,600,1200,1800), "tone":&"mid"},
-		{"id":"upper_flank", "name":"Upper Gate Flank", "rect":Rect2(1800,400,1660,850), "tone":&"dark"},
-		{"id":"lower_flank", "name":"Lower Gate Flank", "rect":Rect2(1800,1750,1660,850), "tone":&"dark"},
-		{"id":"service_spine", "name":"Service Spine", "rect":Rect2(1800,1120,1880,760), "tone":&"light"},
+		{"id":"upper_flank", "name":"Upper Gate Flank", "rect":Rect2(1700,400,1760,850), "tone":&"dark"},
+		{"id":"lower_flank", "name":"Lower Gate Flank", "rect":Rect2(1700,1750,1760,850), "tone":&"dark"},
+		{"id":"service_spine", "name":"Service Spine", "rect":Rect2(1700,1120,1980,760), "tone":&"light"},
 		{"id":"convoy_dock", "name":"Convoy Side Dock", "rect":Rect2(3040,140,920,620), "tone":&"light"},
 		{"id":"relay_court", "name":"Relay Court", "rect":Rect2(3360,760,820,1480), "tone":&"mid"},
 		{"id":"behemoth_link", "name":"Behemoth Link", "rect":Rect2(4040,1080,260,840), "tone":&"light"},
@@ -42,12 +42,9 @@ static func _walkable_regions() -> Array[Dictionary]:
 
 static func _cover_rects() -> Array[Rect2]:
 	return [
-		Rect2(1080,760,260,190), Rect2(1080,2050,260,190),
 		Rect2(1440,1160,220,220), Rect2(1440,1620,220,220),
 		Rect2(2050,1020,260,170), Rect2(2050,1810,260,170),
-		Rect2(2780,1120,260,160), Rect2(2780,1720,260,160),
-		Rect2(3440,920,180,250), Rect2(3440,1830,180,250),
-		Rect2(4380,720,170,240), Rect2(4380,2040,170,240),
+		Rect2(3440,920,180,250),
 		Rect2(4820,720,170,240), Rect2(4820,2040,170,240),
 	]
 
@@ -138,16 +135,15 @@ static func _squads_with_specialist(count:int, size:int, roles:Array[StringName]
 
 static func _pickups() -> Array[Dictionary]:
 	return [
-		{"id":"repair_entry","kind":"repair","pos":Vector2(1480,990)}, {"id":"attack_upper","kind":"attack_boost","pos":Vector2(2260,520)},
-		{"id":"coolant_upper","kind":"coolant","pos":Vector2(3140,600)}, {"id":"overdrive_lower","kind":"overdrive","pos":Vector2(2260,2380)},
-		{"id":"barrier_lower","kind":"barrier","pos":Vector2(3140,2380)}, {"id":"seeker_relay","kind":"seeker_battery","pos":Vector2(3860,920)},
-		{"id":"capacitor_relay","kind":"capacitor_cell","pos":Vector2(3860,2080)}, {"id":"magnet_boss","kind":"magnet_field","pos":Vector2(4380,1500)},
+		{"id":"repair_entry","kind":"repair","heal_amount":35.0,"pos":Vector2(1480,990)},
+		{"id":"experience_recall","kind":"experience_recall","pos":Vector2(3140,600)},
+		{"id":"repair_boss_lane","kind":"repair","heal_amount":70.0,"pos":Vector2(4380,1500)},
 	]
 
 
 static func _crates() -> Array[Dictionary]:
 	return [
-		{"id":"crate_attack","pos":Vector2(1120,1640),"drop":"attack_boost"}, {"id":"crate_repair","pos":Vector2(1760,1040),"drop":"repair"},
-		{"id":"crate_barrier","pos":Vector2(3500,1320),"drop":"barrier"}, {"id":"crate_coolant","pos":Vector2(1760,1960),"drop":"coolant"},
-		{"id":"crate_seeker","pos":Vector2(4380,660),"drop":"seeker_battery"},
+		{"id":"crate_repair_entry","pos":Vector2(1120,1640),"drop":"repair"}, {"id":"crate_repair","pos":Vector2(1760,1040),"drop":"repair"},
+		{"id":"crate_repair_relay","pos":Vector2(3500,1320),"drop":"repair"}, {"id":"crate_repair_lower","pos":Vector2(1760,1960),"drop":"repair"},
+		{"id":"crate_recall","pos":Vector2(4380,660),"drop":"experience_recall"},
 	]

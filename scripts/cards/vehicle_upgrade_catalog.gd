@@ -2,7 +2,7 @@ class_name VehicleUpgradeCatalog
 extends RefCounted
 
 const CARD_PATH := "res://data/cards/vehicle"
-const EXPECTED_COUNT := 41
+const EXPECTED_COUNT := 43
 
 var definitions: Dictionary = {}
 
@@ -65,7 +65,8 @@ func compatible(definition: VehicleUpgradeDefinition, build: VehicleRunBuild) ->
 func offer(build: VehicleRunBuild, run_index: int, stage_index: int, source_id: StringName) -> Array[VehicleUpgradeDefinition]:
 	var available: Array[VehicleUpgradeDefinition] = []
 	for definition in all_definitions():
-		if compatible(definition, build) and (definition.source_tags.is_empty() or source_id in definition.source_tags):
+		var source_matches := source_id == &"level_up" or definition.source_tags.is_empty() or source_id in definition.source_tags
+		if compatible(definition, build) and source_matches:
 			available.append(definition)
 	var seed_value := hash("%d:%d:%s" % [run_index, stage_index, source_id])
 	var rng := RandomNumberGenerator.new()
@@ -76,7 +77,7 @@ func offer(build: VehicleRunBuild, run_index: int, stage_index: int, source_id: 
 		available[index] = available[swap_index]
 		available[swap_index] = temporary
 	var result: Array[VehicleUpgradeDefinition] = []
-	if source_id == &"calibration" and stage_index == 0 and build.levels.is_empty():
+	if source_id == &"level_up" and stage_index == 0 and build.levels.is_empty():
 		_append_first_family(result, available, [&"primary"])
 		_append_first_family(result, available, [&"element"])
 		_append_first_family(result, available, [&"passive", &"mobility"])

@@ -36,13 +36,10 @@ static func definition() -> Dictionary:
 			{"id":"colossus_basin", "name":"Colossus Basin", "rect":Rect2(3560,580,800,1640), "tone":&"dark"},
 		],
 		"cover_rects": [
-			Rect2(650,760,300,170), Rect2(1030,520,190,260),
-			Rect2(650,1880,300,170), Rect2(1050,2020,210,220),
+			Rect2(650,760,300,170), Rect2(650,1880,300,170),
 			Rect2(1320,1260,250,280),
-			Rect2(2130,460,170,240), Rect2(2730,760,260,150), Rect2(3120,500,150,260),
-			Rect2(2130,2100,170,240), Rect2(2730,1890,260,150), Rect2(3120,2040,150,260),
+			Rect2(2730,760,260,150), Rect2(2730,1890,260,150),
 			Rect2(3310,1080,170,180), Rect2(3310,1540,170,180),
-			Rect2(3750,780,150,220), Rect2(3750,1800,150,220),
 			Rect2(4090,780,150,220), Rect2(4090,1800,150,220),
 		],
 		"water_rects": [
@@ -53,7 +50,7 @@ static func definition() -> Dictionary:
 		"hazard_regions": [],
 		"landmarks": {
 			"start": Vector2(2200,1400),
-			"open_entry": Vector2(1640,1400),
+			"open_entry": Vector2(1740,1400),
 			"installation_entry": Vector2(2380,1040),
 			"upper_route": Vector2(2380,720),
 			"lower_route": Vector2(2380,2080),
@@ -133,22 +130,17 @@ static func _squads(count: int, size: int, roles: Array[StringName]) -> Array:
 
 static func _pickups() -> Array[Dictionary]:
 	return [
-		{"id":"repair_open", "kind":"repair", "pos":Vector2(1700,1400)},
-		{"id":"attack_upper", "kind":"attack_boost", "pos":Vector2(2350,560)},
-		{"id":"coolant_upper", "kind":"coolant", "pos":Vector2(3040,570)},
-		{"id":"overdrive_lower", "kind":"overdrive", "pos":Vector2(2350,2240)},
-		{"id":"barrier_lower", "kind":"barrier", "pos":Vector2(3040,2230)},
-		{"id":"seeker_relay", "kind":"seeker_battery", "pos":Vector2(3390,980)},
-		{"id":"capacitor_relay", "kind":"capacitor_cell", "pos":Vector2(3390,1820)},
-		{"id":"magnet_boss_lane", "kind":"magnet_field", "pos":Vector2(3680,2050)},
+		{"id":"repair_entry", "kind":"repair", "heal_amount":35.0, "pos":Vector2(1700,1400)},
+		{"id":"experience_recall", "kind":"experience_recall", "pos":Vector2(3040,570)},
+		{"id":"repair_boss_lane", "kind":"repair", "heal_amount":70.0, "pos":Vector2(3680,2050)},
 	]
 
 
 static func _crates() -> Array[Dictionary]:
 	return [
-		{"id":"crate_attack", "pos":Vector2(730,1700), "drop":"attack_boost"},
+		{"id":"crate_repair_west", "pos":Vector2(730,1700), "drop":"repair"},
 		{"id":"crate_repair", "pos":Vector2(1610,1510), "drop":"repair"},
-		{"id":"crate_barrier", "pos":Vector2(3260,1410), "drop":"barrier"},
-		{"id":"crate_coolant", "pos":Vector2(1420,1160), "drop":"coolant"},
-		{"id":"crate_seeker", "pos":Vector2(3700,690), "drop":"seeker_battery"},
+		{"id":"crate_repair_relay", "pos":Vector2(3260,1410), "drop":"repair"},
+		{"id":"crate_repair_loop", "pos":Vector2(1420,1160), "drop":"repair"},
+		{"id":"crate_recall", "pos":Vector2(3700,690), "drop":"experience_recall"},
 	]

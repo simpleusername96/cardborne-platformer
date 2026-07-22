@@ -31,11 +31,7 @@ func _draw() -> void:
 func _draw_world() -> void:
 	draw_rect(Rules.world_rect(stage_id), Art.COBALT_VOID)
 	for region in Rules.get_floor_regions(stage_id):
-		var edge_rect := Rect2(region["rect"])
-		edge_rect.position += Art.COVER_EDGE_OFFSET
-		draw_colored_polygon(Art.stepped_rect(edge_rect, 52.0), Art.COBALT_DEEP)
-	for region in Rules.get_floor_regions(stage_id):
-		draw_colored_polygon(Art.stepped_rect(Rect2(region["rect"]), 52.0), Art.IVORY)
+		draw_colored_polygon(PackedVector2Array(region["polygon"]), Art.IVORY)
 	_draw_major_motifs()
 
 
@@ -124,23 +120,14 @@ func _draw_sun_gate(center: Vector2, radius: float, rotation: float, color: Colo
 
 func _draw_water_and_floor() -> void:
 	for water in Rules.get_water_rects(stage_id):
-		var edge := water
-		edge.position += Vector2(10.0, 14.0)
-		draw_colored_polygon(Art.stepped_rect(edge, 30.0), Art.COBALT_DEEP)
-		draw_colored_polygon(Art.stepped_rect(water, 30.0), Art.COBALT_WATER)
+		draw_rect(water, Art.COBALT_WATER)
 		var wave_y := water.get_center().y
 		draw_line(Vector2(water.position.x + 28.0, wave_y), Vector2(water.end.x - 28.0, wave_y), Color(Art.IVORY_BRIGHT, 0.22), 8.0, true)
 
 
 func _draw_cover() -> void:
-	for rect in Rules.get_cover_rects(false, stage_id):
-		var edge := rect
-		edge.position += Art.COVER_EDGE_OFFSET
-		draw_colored_polygon(Art.stepped_rect(edge, 24.0), Art.COBALT_DEEP)
-		draw_colored_polygon(Art.stepped_rect(rect, 24.0), Art.CERAMIC_GREEN)
-		var cap := rect.grow(-12.0)
-		if cap.size.x > 24.0 and cap.size.y > 24.0:
-			draw_colored_polygon(Art.stepped_rect(cap, 16.0), Art.CERAMIC_GREEN_MID)
+	for polygon in Rules.get_cover_polygons(false, stage_id):
+		draw_colored_polygon(PackedVector2Array(polygon), Art.BLOCKER_FILL)
 
 
 func _regular_polygon(center: Vector2, radius: float, sides: int, rotation: float = 0.0) -> PackedVector2Array:

@@ -63,10 +63,7 @@ static func _cover_rects() -> Array[Rect2]:
 		Rect2(1040,720,240,220), Rect2(1040,1840,240,220),
 		Rect2(1420,1040,260,180), Rect2(1420,1580,260,180),
 		Rect2(2140,660,260,150), Rect2(2140,1990,260,150),
-		Rect2(2620,930,300,130), Rect2(2620,1740,300,130),
 		Rect2(3150,980,170,250), Rect2(3150,1570,170,250),
-		Rect2(3500,880,170,220), Rect2(3500,1700,170,220),
-		Rect2(4160,800,150,220), Rect2(4160,1780,150,220),
 		Rect2(4580,800,150,220), Rect2(4580,1780,150,220),
 	]
 
@@ -74,7 +71,7 @@ static func _cover_rects() -> Array[Rect2]:
 static func _water_rects() -> Array[Rect2]:
 	return [
 		Rect2(40,160,1380,720), Rect2(40,1920,1380,720),
-		Rect2(1960,1120,1000,560),
+		Rect2(2080,1120,880,560),
 		Rect2(3320,140,460,520), Rect2(3320,2140,460,520),
 	]
 
@@ -144,22 +141,17 @@ static func _squads_with_specialist(count:int, size:int, roles:Array[StringName]
 
 static func _pickups() -> Array[Dictionary]:
 	return [
-		{"id":"repair_open", "kind":"repair", "pos":Vector2(1540,990)},
-		{"id":"attack_upper", "kind":"attack_boost", "pos":Vector2(2300,520)},
-		{"id":"coolant_upper", "kind":"coolant", "pos":Vector2(2580,370)},
-		{"id":"overdrive_lower", "kind":"overdrive", "pos":Vector2(2280,1810)},
-		{"id":"barrier_lower", "kind":"barrier", "pos":Vector2(3260,1840)},
-		{"id":"seeker_relay", "kind":"seeker_battery", "pos":Vector2(3740,920)},
-		{"id":"capacitor_relay", "kind":"capacitor_cell", "pos":Vector2(3740,1260)},
-		{"id":"magnet_boss_lane", "kind":"magnet_field", "pos":Vector2(4030,1570)},
+		{"id":"repair_entry", "kind":"repair", "heal_amount":35.0, "pos":Vector2(1540,990)},
+		{"id":"experience_recall", "kind":"experience_recall", "pos":Vector2(2580,370)},
+		{"id":"repair_boss_lane", "kind":"repair", "heal_amount":70.0, "pos":Vector2(4030,1570)},
 	]
 
 
 static func _crates() -> Array[Dictionary]:
 	return [
-		{"id":"crate_attack", "pos":Vector2(1080,1510), "drop":"attack_boost"},
+		{"id":"crate_repair_intake", "pos":Vector2(1080,1510), "drop":"repair"},
 		{"id":"crate_repair", "pos":Vector2(1810,1080), "drop":"repair"},
-		{"id":"crate_barrier", "pos":Vector2(3360,1120), "drop":"barrier"},
-		{"id":"crate_coolant", "pos":Vector2(1740,1100), "drop":"coolant"},
-		{"id":"crate_seeker", "pos":Vector2(4040,680), "drop":"seeker_battery"},
+		{"id":"crate_repair_court", "pos":Vector2(3360,1120), "drop":"repair"},
+		{"id":"crate_repair_gallery", "pos":Vector2(1740,1100), "drop":"repair"},
+		{"id":"crate_recall", "pos":Vector2(4040,680), "drop":"experience_recall"},
 	]

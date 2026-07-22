@@ -44,9 +44,6 @@ static func _cover_rects() -> Array[Rect2]:
 		Rect2(1080,740,260,210), Rect2(1080,2050,260,210),
 		Rect2(1440,1120,220,230), Rect2(1440,1650,220,230),
 		Rect2(2160,940,260,170), Rect2(2160,1890,260,170),
-		Rect2(2740,1120,260,150), Rect2(2740,1730,260,150),
-		Rect2(3540,760,180,240), Rect2(3540,2000,180,240),
-		Rect2(4460,760,170,220), Rect2(4460,2020,170,220),
 		Rect2(5080,760,120,220), Rect2(5080,2020,120,220),
 	]
 
@@ -135,16 +132,15 @@ static func _squads_with_specialist(count:int, size:int, roles:Array[StringName]
 
 static func _pickups() -> Array[Dictionary]:
 	return [
-		{"id":"repair_entry","kind":"repair","pos":Vector2(1460,1000)}, {"id":"attack_upper","kind":"attack_boost","pos":Vector2(2220,520)},
-		{"id":"coolant_upper","kind":"coolant","pos":Vector2(3040,620)}, {"id":"overdrive_lower","kind":"overdrive","pos":Vector2(2220,2460)},
-		{"id":"barrier_lower","kind":"barrier","pos":Vector2(3040,2380)}, {"id":"seeker_crown","kind":"seeker_battery","pos":Vector2(3820,900)},
-		{"id":"capacitor_crown","kind":"capacitor_cell","pos":Vector2(3820,2100)}, {"id":"magnet_boss","kind":"magnet_field","pos":Vector2(4480,1500)},
+		{"id":"repair_entry","kind":"repair","heal_amount":35.0,"pos":Vector2(1460,1000)},
+		{"id":"experience_recall","kind":"experience_recall","pos":Vector2(3040,620)},
+		{"id":"repair_boss_lane","kind":"repair","heal_amount":70.0,"pos":Vector2(4480,1500)},
 	]
 
 
 static func _crates() -> Array[Dictionary]:
 	return [
-		{"id":"crate_attack","pos":Vector2(1120,1660),"drop":"attack_boost"}, {"id":"crate_repair","pos":Vector2(1760,1040),"drop":"repair"},
-		{"id":"crate_barrier","pos":Vector2(3180,1400),"drop":"barrier"}, {"id":"crate_coolant","pos":Vector2(1760,1960),"drop":"coolant"},
-		{"id":"crate_seeker","pos":Vector2(4580,620),"drop":"seeker_battery"},
+		{"id":"crate_repair_entry","pos":Vector2(1120,1660),"drop":"repair"}, {"id":"crate_repair","pos":Vector2(1760,1040),"drop":"repair"},
+		{"id":"crate_repair_crown","pos":Vector2(3180,1400),"drop":"repair"}, {"id":"crate_repair_lower","pos":Vector2(1760,1960),"drop":"repair"},
+		{"id":"crate_recall","pos":Vector2(4580,620),"drop":"experience_recall"},
 	]

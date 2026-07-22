@@ -27,6 +27,7 @@ var _binding_buttons: Dictionary = {}
 var _master_slider: HSlider
 var _sfx_slider: HSlider
 var _preset_selector: OptionButton
+var _reduced_motion_toggle: CheckButton
 var _language_buttons: Dictionary = {}
 var _status_label: Label
 var _capturing_action: StringName = &""
@@ -72,6 +73,7 @@ func refresh_from_store() -> void:
 	if _preset_selector.item_count > 0:
 		var preset_index := 1 if settings.combat_preset == &"onslaught" else 0
 		_preset_selector.select(preset_index)
+	_reduced_motion_toggle.set_pressed_no_signal(settings.reduced_motion)
 	_refresh_localized_content()
 
 
@@ -84,6 +86,7 @@ func debug_contract() -> Dictionary:
 			func(control: Control) -> bool: return control.focus_mode != Control.FOCUS_NONE
 		).size(),
 		"capturing": is_capturing_binding(),
+		"reduced_motion_control": is_instance_valid(_reduced_motion_toggle) and _reduced_motion_toggle.custom_minimum_size.y >= 44.0,
 	}
 
 
@@ -131,6 +134,7 @@ func _build() -> void:
 	_tabs.custom_minimum_size.y = 312.0
 	_tabs.focus_mode = Control.FOCUS_ALL
 	add_child(_tabs)
+	_style_tab_bar()
 	_build_audio_page()
 	_build_controls_page()
 	_build_gameplay_page()
@@ -183,6 +187,12 @@ func _build_gameplay_page() -> void:
 	_preset_selector.focus_mode = Control.FOCUS_ALL
 	_preset_selector.item_selected.connect(_on_preset_selected)
 	box.add_child(_preset_selector)
+	_reduced_motion_toggle = CheckButton.new()
+	_reduced_motion_toggle.text = tr("SETTINGS_REDUCED_MOTION")
+	_reduced_motion_toggle.custom_minimum_size.y = 44.0
+	_reduced_motion_toggle.focus_mode = Control.FOCUS_ALL
+	_reduced_motion_toggle.toggled.connect(_on_reduced_motion_toggled)
+	box.add_child(_reduced_motion_toggle)
 	var detail := _label("SETTINGS_PRESET_DETAIL", 14, Art.INK_MUTED)
 	detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	detail.custom_minimum_size.y = 72.0
@@ -227,6 +237,38 @@ func _page(page_name: String) -> VBoxContainer:
 
 func _section_title(key: String) -> Label:
 	return _label(key, 19, Art.MUSTARD)
+
+
+func _style_tab_bar() -> void:
+	_tabs.add_theme_font_override("font", get_theme_default_font())
+	_tabs.add_theme_font_size_override("font_size", 17)
+	_tabs.add_theme_color_override("font_unselected_color", Art.IVORY_BRIGHT)
+	_tabs.add_theme_color_override("font_hovered_color", Art.IVORY_BRIGHT)
+	_tabs.add_theme_color_override("font_selected_color", Art.INK)
+	_tabs.add_theme_stylebox_override("tab_unselected", _tab_style(Art.BLOCKER_FILL))
+	_tabs.add_theme_stylebox_override("tab_hovered", _tab_style(Art.CERAMIC_GREEN_MID))
+	_tabs.add_theme_stylebox_override("tab_selected", _tab_style(Art.MUSTARD))
+	_tabs.add_theme_stylebox_override("tab_focus", _tab_style(Art.MUSTARD))
+	var tab_bar := _tabs.get_tab_bar()
+	tab_bar.add_theme_font_override("font", get_theme_default_font())
+	tab_bar.add_theme_font_size_override("font_size", 17)
+	tab_bar.add_theme_color_override("font_unselected_color", Art.IVORY_BRIGHT)
+	tab_bar.add_theme_color_override("font_hovered_color", Art.IVORY_BRIGHT)
+	tab_bar.add_theme_color_override("font_selected_color", Art.INK)
+	tab_bar.add_theme_stylebox_override("tab_unselected", _tab_style(Art.BLOCKER_FILL))
+	tab_bar.add_theme_stylebox_override("tab_hovered", _tab_style(Art.CERAMIC_GREEN_MID))
+	tab_bar.add_theme_stylebox_override("tab_selected", _tab_style(Art.MUSTARD))
+	tab_bar.add_theme_stylebox_override("tab_focus", _tab_style(Art.MUSTARD))
+
+
+func _tab_style(color: Color) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = color
+	style.content_margin_left = 14.0
+	style.content_margin_top = 8.0
+	style.content_margin_right = 14.0
+	style.content_margin_bottom = 8.0
+	return style
 
 
 func _label(text: String, font_size: int, color: Color) -> Label:
@@ -342,6 +384,12 @@ func _on_preset_selected(index: int) -> void:
 		settings.set_combat_preset(&"onslaught" if index == 1 else &"standard")
 
 
+func _on_reduced_motion_toggled(enabled: bool) -> void:
+	var settings := _settings_store()
+	if settings != null:
+		settings.set_reduced_motion(enabled)
+
+
 func _on_locale_selected(locale: String) -> void:
 	var settings := _settings_store()
 	if settings != null:
@@ -370,6 +418,7 @@ func _refresh_localized_content() -> void:
 	_preset_selector.clear()
 	_preset_selector.add_item(tr("SETTINGS_PRESET_STANDARD"), 0)
 	_preset_selector.add_item(tr("SETTINGS_PRESET_ONSLAUGHT"), 1)
+	_reduced_motion_toggle.text = tr("SETTINGS_REDUCED_MOTION")
 	var settings := _settings_store()
 	if settings != null:
 		_preset_selector.select(1 if settings.combat_preset == &"onslaught" else 0)

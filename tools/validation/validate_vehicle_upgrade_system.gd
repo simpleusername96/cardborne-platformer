@@ -10,28 +10,27 @@ var failures := PackedStringArray()
 func _initialize() -> void:
 	var catalog := Catalog.new()
 	for error in catalog.validate_contract(): failures.append(error)
-	_expect(catalog.definitions.size() == 41, "catalog contains exactly 41 upgrades")
-	var advanced_ids: Array[StringName] = [&"shock_breach", &"marked_salvo", &"phase_shear", &"coolant_wake", &"static_aegis", &"relay_overload", &"salvage_booster"]
+	_expect(catalog.definitions.size() == 43, "catalog contains exactly 43 upgrades")
+	var advanced_ids: Array[StringName] = [&"shock_breach", &"marked_salvo", &"phase_shear", &"coolant_wake", &"static_aegis", &"relay_overload", &"aegis_cycle", &"overclock_cycle", &"thruster_cycle", &"siphon_matrix"]
 	var retired_ids: Array[StringName] = [&"burst_capacitor", &"relay_rounds", &"reserve_charge", &"guardian_seeker", &"emergency_vector"]
+	retired_ids.append_array([&"field_converter", &"salvage_booster"])
 	for upgrade_id in retired_ids:
 		_expect(catalog.get_definition(upgrade_id) == null, "%s remains retired" % upgrade_id)
 	for upgrade_id in advanced_ids:
 		var definition := catalog.get_definition(upgrade_id)
 		_expect(definition != null and not definition.behavior_ids.is_empty(), "%s is a valid behavior card" % upgrade_id)
-		_expect(&"calibration" not in definition.source_tags, "%s stays out of the first calibration pool" % upgrade_id)
 	var build := RunBuild.new(catalog)
-	var first_offer := catalog.offer(build, 0, 0, &"calibration")
-	_expect(first_offer.size() == 3, "first calibration offer contains three choices")
+	var first_offer := catalog.offer(build, 0, 0, &"level_up")
+	_expect(first_offer.size() == 3, "first level-up offer contains three choices")
 	var first_families := first_offer.map(func(card): return card.family)
 	_expect(&"primary" in first_families and &"element" in first_families and (&"passive" in first_families or &"mobility" in first_families), "first offer contains primary, element, and passive or mobility choices")
 	var first_ids := {}
 	for card in first_offer:
 		first_ids[card.id] = true
-	_expect(first_ids.size() == 3, "first calibration offer contains no duplicate IDs")
-	_expect(first_offer.all(func(card): return card.id not in advanced_ids), "first calibration offer remains free of advanced cards")
+	_expect(first_ids.size() == 3, "first level-up offer contains no duplicate IDs")
 	var surfaced := {}
 	for seed in 160:
-		for source_id in [&"relay", &"field_boss", &"boss"]:
+		for source_id in [&"level_up", &"field_boss", &"boss"]:
 			for card in catalog.offer(build, seed, 2, source_id):
 				if card.id in advanced_ids:
 					surfaced[card.id] = true
@@ -69,7 +68,7 @@ func _initialize() -> void:
 	StatusRuntime.apply(enemy, StatusRuntime.payload(build))
 	_expect(StatusRuntime.speed_multiplier(enemy) < 0.75, "deep freeze produces a readable slow")
 	build.reset()
-	for upgrade_id in [&"shock_breach", &"static_aegis", &"relay_overload", &"salvage_booster", &"forked_muzzle", &"field_converter"]:
+	for upgrade_id in [&"shock_breach", &"static_aegis", &"relay_overload", &"forked_muzzle", &"aegis_cycle", &"overclock_cycle", &"thruster_cycle", &"siphon_matrix"]:
 		var definition := catalog.get_definition(upgrade_id)
 		for level in definition.max_level:
 			_expect(bool(build.apply(upgrade_id).get("applied", false)), "%s level %d applies" % [upgrade_id, level + 1])
