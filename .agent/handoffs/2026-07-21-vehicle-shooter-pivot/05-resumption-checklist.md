@@ -1,8 +1,9 @@
 ---
 type: handoff
-status: active
+status: done
 owner: BK
 created: 2026-07-21
+last_reviewed: 2026-07-22
 expires: 2026-08-21
 source: Synthesis of current repository state and unresolved owner decisions
 related:

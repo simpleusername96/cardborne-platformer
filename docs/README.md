@@ -1,30 +1,44 @@
 # Cardborne Documentation
 
-This index separates the active isometric-action pivot from retained visual
-evidence. Deleted platformer specifications and implementation records remain
-available through Git history and do not guide new work.
+This index separates the implemented vehicle runtime, unresolved durable-product
+authority, future specifications, and retained evidence. Deleted platformer
+material remains available through Git history and does not guide new work.
 
 ## Read First
 
 | Order | Document | Authority |
 | ---: | --- | --- |
 | 1 | `../AGENTS.md` | Repository operating guidance and current project direction. |
-| 2 | `../.agent/Prompt.md` | Active pivot policy. |
-| 3 | `product/isometric_action_rpg_product_brief.md` | Active proof-build product behavior. |
-| 4 | `../.agent/execplans/2026-07-18-flooded-works-floor1-map-enemies.md` | Active connected Floor 1 map/enemy execution plan. |
+| 2 | `../.agent/Prompt.md` | Protected active pivot policy; currently contains older humanoid-proof rules. |
+| 3 | `product/vehicle_content_expansion_spec.md` | Active contract for the implemented three-stage vehicle runtime. |
+| 4 | `design/UI_VISUAL_SYSTEM.md` | Active UI and art-style contract. |
 | 5 | `product/progression_upgrade_system_spec.md` | Active future progression/reward boundary; not current implementation scope. |
-| 6 | `design/UI_VISUAL_SYSTEM.md` | Active UI and art-style contract. |
+| 6 | `research/vehicle_stage_one_difficulty_usability_enemy_map_benchmark.md` | Advisory first-clear difficulty and encounter evidence; not a specification. |
 
-The active product brief is intentionally limited to the proof build. The
-progression specification defines a future boundary only; implementation still
-waits for a Floor 1 owner decision and a separate active plan.
+## Known Authority Conflict
+
+The executable main scene and active vehicle-content specification describe the
+vehicle run. Root `AGENTS.md`, `.agent/Prompt.md`, and
+`product/isometric_action_rpg_product_brief.md` still retain humanoid-proof
+product language. This audit does not silently supersede protected policy or an
+active specification. Until the owner explicitly resolves that conflict:
+
+- use the vehicle specification to understand and validate current runtime
+  behavior;
+- do not treat the retained humanoid brief as a description of the current main
+  scene;
+- do not infer a permanent product-identity decision from either side.
+
+Completed and superseded plans under `.agent/execplans/` are historical work
+records, not current task queues. New implementation work needs the current user
+goal and, when required by `.agent/PLANS.md`, a new active ExecPlan.
 
 ## Retained Evidence
 
 - `design/references/` contains owner-selected visual and UI references.
 - `research/vehicle_led_isometric_action_reference_analysis.md` compares vehicle
-  action references and records the evidence boundary for a possible future
-  product pivot; it is advisory and does not replace the active product brief.
+  action references and records the evidence behind the implemented experiment;
+  it remains advisory and does not replace an active specification.
 - `design/reports/ui-raster-asset-catalog.png` and
   `design/reports/ui-svg-asset-catalog.html` show the retained production asset
   inventory; they are not runtime atlases.
@@ -34,7 +48,7 @@ waits for a Floor 1 owner decision and a separate active plan.
 
 ## Lifecycle Rule
 
-Active policy and specs govern their stated scope. The active plan defines work
-order only. Visual references are evidence, not implementation instructions.
-Platformer material deleted in the pivot must be recovered from Git only for a
-specific, reviewed need.
+Active policy and specs govern only their stated scope. Active plans define work
+order only. Visual references and research are evidence, not implementation
+instructions. A `done`, `superseded`, or `archived` document does not define
+current work.

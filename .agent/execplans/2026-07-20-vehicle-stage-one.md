@@ -1,8 +1,9 @@
 ---
 type: plan
-status: active
+status: done
 owner: BK
 created: 2026-07-20
+last_reviewed: 2026-07-22
 topic: Vehicle-led Stage 1 experimental replacement
 scope: Implement, validate, build, and publish one complete manually targeted vehicle shooter stage
 related:

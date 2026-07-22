@@ -2,15 +2,21 @@
 type: record
 status: active
 owner: BK
-last_reviewed: 2026-07-18
-topic: Current Cardborne isometric action RPG pivot state
+last_reviewed: 2026-07-22
+topic: Cardborne humanoid isometric action RPG pivot state recorded on 2026-07-18
 source: Owner pivot decision, repository reset, and active ExecPlan
 related:
   - ./execplans/2026-07-18-flooded-works-floor1-map-enemies.md
+  - ../docs/README.md
+  - ../docs/product/vehicle_content_expansion_spec.md
   - ../docs/design/UI_VISUAL_SYSTEM.md
 ---
 
 # Project Documentation Memory
+
+> Historical boundary: this record describes the humanoid proof state captured
+> on 2026-07-18. It does not describe the current vehicle main scene. Use
+> `../docs/README.md` for current document authority and known conflicts.
 
 ## Context
 
@@ -49,7 +55,7 @@ later proves worth recovering.
 - The pre-pivot runtime can be inspected at commit `7cc069c` without reintroducing
   it into the active tree.
 
-## Current Status
+## State Recorded on 2026-07-18
 
 - Active branch: `master`.
 - Runtime reset and research-backed plan: completed on 2026-07-17.

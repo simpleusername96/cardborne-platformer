@@ -164,7 +164,7 @@ func _ready() -> void:
 
 func _exit_tree() -> void:
 	if is_instance_valid(_audio):
-		_audio.stop_all()
+		_audio.shutdown()
 
 
 func _physics_process(delta: float) -> void:

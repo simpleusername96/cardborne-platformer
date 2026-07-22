@@ -1,19 +1,25 @@
 # Cardborne
 
-Godot 4.7 GDScript project being rebuilt as an isometric action RPG: a
-two-dimensional top-down combat simulation presented with the existing
-flat-color drowned-ruin art direction.
+Godot 4.7 GDScript action project. The current executable is a flat top-down
+vehicle run that preserves the project's flat-color drowned-ruin art direction.
 
-## Current State
+## Current Runtime
 
-The former action-platform runtime was deliberately removed. The project boots an
-empty reset scene while the first combat proof is implemented. The accepted art,
-font, UI shapes, illustrations, backgrounds, and visual references remain under
-`art/` and `docs/design/references/`.
+- `project.godot` boots `scenes/main/PivotRoot.tscn`, which instantiates
+  `scenes/run/VehicleStageOne.tscn`.
+- The playable run contains Flooded Works, Tidal Archive, and Storm Drydock,
+  manual aim and held primary fire, dash, passive seekers, EMP, field pickups,
+  card upgrades, fixed installations, ordinary enemies, field bosses, and stage
+  bosses.
+- Korean is the default UI language and can be switched to English in runtime
+  settings.
+- The earlier humanoid native-3D proof remains in the repository as retained
+  implementation evidence, but it is not the main boot path.
 
-The active implementation plan is
-`.agent/execplans/2026-07-17-isometric-action-rpg-pivot.md`. The removed runtime is
-recoverable from Git commit `7cc069c` for targeted reference only.
+The implemented vehicle behavior is documented in
+`docs/product/vehicle_content_expansion_spec.md`. Repository policy still
+contains older humanoid-proof language that requires an explicit owner decision
+before it can be rewritten; `docs/README.md` records that authority boundary.
 
 ## Local Godot
 
@@ -22,6 +28,8 @@ recoverable from Git commit `7cc069c` for targeted reference only.
 .\tools\godot.ps1 --path . --editor
 .\tools\godot.ps1 --path . --headless --import
 .\tools\godot.ps1 --path . --headless --quit-after 2
+.\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_stage_one.gd
 ```
 
-Use `docs/README.md` for current document authority and retained references.
+Use `docs/README.md` for current document authority, known conflicts, and retained
+references.

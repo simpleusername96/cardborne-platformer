@@ -46,7 +46,7 @@ The recommended direction is therefore:
 5. Add optional usability controls—light aim friction, game-speed adjustment, hold/toggle fire, stronger damage-source feedback, and checkpoint/adaptive-resilience assists—without changing the default identity of manual targeting.
 6. Instrument first-run failures before broad tuning. The project currently has no natural-play telemetry, so exact population and damage values should remain provisional.
 
-## Sources and Method
+## Sources
 
 ### Current project evidence
 
@@ -148,17 +148,17 @@ The current settings surface mainly covers language and master/SFX volume. It do
 
 ## Comparative Genre Analysis
 
-## 1. Handcrafted Top-Down Ship Action: *Minishoot' Adventures*
+### 1. Handcrafted Top-Down Ship Action: *Minishoot' Adventures*
 
-### Pattern
+#### Pattern
 
 This is the closest broad reference because it combines a small vehicle silhouette, manually directed shooting, authored navigation, progression-gated routes, and accessible difficulty controls. Its official feature list includes three difficulty modes, aim assistance, auto-fire, and game-speed options.
 
-### Why it matters here
+#### Why it matters here
 
 The reference shows that manual aim and authored exploration do not require a single uncompromising input or speed profile. Assistance can reduce motor demand while leaving target priority, positioning, and route choice intact.
 
-### Application
+#### Application
 
 - Preserve free manual aim as the default combat identity.
 - Add a narrow, line-of-sight-respecting aim-friction cone rather than a full forced lock-on.
@@ -166,17 +166,17 @@ The reference shows that manual aim and authored exploration do not require a si
 - Offer 100% / 90% / 80% game speed as an explicit assist, while keeping timers and telegraphs internally consistent.
 - Use upgrades to open visible shortcuts and optional branches, not just to raise damage numbers.
 
-## 2. Failure-Integrated Action Roguelikes: *Hades* and *Dead Cells*
+### 2. Failure-Integrated Action Roguelikes: *Hades* and *Dead Cells*
 
-### Pattern
+#### Pattern
 
 *Hades* treats failure as part of the progression loop and offers an opt-in God Mode whose resilience grows with repeated deaths. *Dead Cells* exposes granular Assist Mode values, including enemy health/damage and continuation behavior. Neither approach requires deleting enemy patterns or replacing the player's actions.
 
-### Why it matters here
+#### Why it matters here
 
 The owner is enjoying the fight but cannot clear Stage 1. That is exactly the case where a transparent, optional bridge is preferable to secretly weakening the combat for everyone.
 
-### Application
+#### Application
 
 - Add an optional **Adaptive Hull** assist: after each failed Stage 1 attempt, grant +5% incoming-damage resistance, capped at 30%. Make the current value visible, reversible, and resettable.
 - Add a checkpoint-assist option after the first upgrade or relay objective. On defeat, let the player choose “Fresh Deployment” or “Resume from Relay.”
@@ -185,68 +185,68 @@ The owner is enjoying the fight but cannot clear Stage 1. That is exactly the ca
 
 This does not mean every default clear should use assistance. It means a player who already enjoys the core does not have to abandon it because one pressure curve is mismatched.
 
-## 3. Dense Twin-Stick Combat: *Assault Android Cactus*
+### 3. Dense Twin-Stick Combat: *Assault Android Cactus*
 
-### Pattern
+#### Pattern
 
 The game creates intensity with many enemies, but its developers explicitly identified the readability problem caused by numerous fast, independent small bullets. Designed projectile series produce recognizable safe and dangerous zones. Transforming stages also change the positioning question rather than only adding more health.
 
-### Why it matters here
+#### Why it matters here
 
 The current Stage 1 visual captures show a large, close cluster of small enemies. If each unit also makes independent movement and attack decisions, density becomes noise instead of strategy.
 
-### Application
+#### Application
 
 - Convert ranged swarms from independent random shots into short, authored volleys: fan, sweep, alternating lane, or delayed pair.
 - Ensure a volley creates at least one readable safe route.
 - Change arena conditions at authored beats—open a shortcut, retract a barrier, disable a turret lane, flood/clear a channel—instead of using additional population as the only escalation tool.
 - Keep small fodder numerous only when their behavior is visually and mechanically compressible. A flock that moves as one pressure mass costs less attention than 20 individually improvising attackers.
 
-## 4. Aggressive Arena Combat: *DOOM (2016)*
+### 4. Aggressive Arena Combat: *DOOM (2016)*
 
-### Pattern
+#### Pattern
 
 The push-forward loop rewards aggression with resources. AI coordination limits how many enemies can perform particular attack types simultaneously, producing rhythm inside apparent chaos.
 
-### Why it matters here
+#### Why it matters here
 
 The current game already has a threat budget and commit limits, which is the right foundation. The problem is that the budget is tuned for a high-pressure state and does not yet coordinate spatial occupation.
 
-### Application
+#### Application
 
 - Preserve the director, but add separate token pools for contact commit, ranged lane, denial, and offscreen attack.
 - Scale token availability by encounter beat, not merely stage number.
 - Reward destroying high-risk targets with immediate tactical relief: repair shard, EMP charge, opening-shot refresh, or a brief movement boost.
 - Make aggression a survival option. A player who identifies and destroys a needle drone or tower should regain space, not merely reduce a distant total counter.
 
-## 5. Structured Bullet-Hell Rooms: *Enter the Gungeon*
+### 5. Structured Bullet-Hell Rooms: *Enter the Gungeon*
 
-### Pattern
+#### Pattern
 
 The developers describe the need to teach procedural generation a structured room grammar. Environmental defense such as table flipping provides an immediate answer to nearby bullets. The larger lesson is that fair action rooms are authored spatial arguments, not empty rectangles populated by random threats.
 
-### Why it matters here
+#### Why it matters here
 
 The current map has many rectangular cover pieces and a very large central obstruction. Cover exists, but encounter activation and enemy steering do not consistently turn that geometry into readable tactical choices.
 
-### Application
+#### Application
 
 - Give every combat pocket one obvious first cover relationship, one escape loop, and one risky flank.
 - Avoid narrow entrances that let the player or enemies become stuck at the boundary.
 - Tie spawns and role positions to the pocket's spatial grammar: shooters own lanes, chasers own approach arcs, controllers own anchors, and fodder circulates.
 - Allow a limited environmental defensive interaction—for example, breaking a coolant pod clears nearby hostile projectiles—if it reinforces the map rather than adding another UI system.
 
-## 6. Large-Group Enemy Coordination
+### 6. Large-Group Enemy Coordination
 
-### Pattern
+#### Pattern
 
 Modern group-AI practice separates encounter activity, group coordination, and individual agent behavior. Combat-design interviews also emphasize tells, limited attack slots, and restrictions on unfair offscreen attacks.
 
-### Why it matters here
+#### Why it matters here
 
 The current enemies have useful individual startup, active, and recovery phases, but most mobile roles steer directly from their relationship to the player. Without sector ownership or separation, several agents can collapse into the same screen region and obscure one another.
 
-### Application
+#### Application
 
 Use four coordination layers:
 
@@ -285,7 +285,7 @@ The code knows at least the last damage source, but the player receives little e
 
 ## Recommendations
 
-## A. Establish Two Pressure Presets
+### A. Establish Two Pressure Presets
 
 Do not discard the current tuning. Reframe it.
 
@@ -306,11 +306,11 @@ These Standard values are starting hypotheses. In particular, total population s
 
 The Standard preset should still demand aiming, movement, target selection, and dash timing. It simply presents those tests in a sequence that a first-time player can parse. Onslaught can preserve the current crowd pressure for later mastery and for players who already understand the threat languages.
 
-## B. Re-author Stage 1 as a Continuous Six-Beat Curriculum
+### B. Re-author Stage 1 as a Continuous Six-Beat Curriculum
 
 The whole level can remain one connected map. “Combat pocket” describes an authored pressure region, not a separate loading screen.
 
-### Beat 0 — Arrival and calibration
+#### Beat 0 — Arrival and calibration
 
 - Duration target: 15–25 seconds before incoming damage is possible.
 - No live enemy activation at deployment.
@@ -318,7 +318,7 @@ The whole level can remain one connected map. “Combat pocket” describes an a
 - Use one or two inert destructible targets to demonstrate structure damage.
 - Show the first objective and the route landmark from the deployment point.
 
-### Beat 1 — First contact
+#### Beat 1 — First contact
 
 - Introduce 10–14 scrap drones as a simple movement-and-spacing problem.
 - After a short recovery seam, introduce 6–8 needle drones with a single repeated volley language.
@@ -326,14 +326,14 @@ The whole level can remain one connected map. “Combat pocket” describes an a
 - Cap active pressure near 12.
 - Drop a deterministic repair after the learning beat.
 
-### Beat 2 — Mixed approach and first build choice
+#### Beat 2 — Mixed approach and first build choice
 
 - Use 16–20 total enemies, with scrap/needle fodder plus either one standard chaser or one standard shooter.
 - Cap active pressure near 16–18.
 - Deliver the first upgrade after this beat, ideally 45–75 seconds into natural play.
 - Offer a curated starter pool with immediately visible behaviors rather than the full card catalog.
 
-### Beat 3 — Readable route fork
+#### Beat 3 — Readable route fork
 
 - Upper route: turret or shooter lane plus mobile fodder.
 - Lower route: minelet or chaser pressure plus mobile fodder.
@@ -341,7 +341,7 @@ The whole level can remain one connected map. “Combat pocket” describes an a
 - The route choice should be visible before commitment, and neither branch should pull critical-path enemies from the other.
 - Cap active pressure near 20.
 
-### Beat 4 — Generator compounds and relay
+#### Beat 4 — Generator compounds and relay
 
 - Introduce one controller/support language with familiar fodder.
 - Cap active pressure near 24.
@@ -349,62 +349,62 @@ The whole level can remain one connected map. “Combat pocket” describes an a
 - Place a deterministic repair or defensive pickup before the boss route.
 - Keep ordinary enemies from hard-gating progression once the field objective is complete.
 
-### Beat 5 — Optional field boss and boss exam
+#### Beat 5 — Optional field boss and boss exam
 
 - Make the field boss visibly optional and retreatable. Its activation boundary must not overlap the critical path.
 - Isolate the stage boss from residual ordinary mobs.
 - The boss should examine learned actions: aiming under movement, one clear dash test, one priority target or structure break, and one punish window after a readable recovery.
 - Do not introduce an entirely new screen-wide rule in the final phase unless the previous arena has foreshadowed it.
 
-## C. Redesign Enemy Movement by Role
+### C. Redesign Enemy Movement by Role
 
-### Scrap drones and other contact fodder
+#### Scrap drones and other contact fodder
 
 - Move as loose flocks with separation and a preferred approach sector.
 - Reserve at least one low-density hemisphere around the player.
 - Commit in small waves rather than all converging on the exact player coordinate.
 - After a missed rush, travel past the player and recover before turning. This creates a readable punish window.
 
-### Needle drones and shooters
+#### Needle drones and shooters
 
 - Select authored firing anchors or lanes instead of orbiting purely from a preferred radius.
 - Fire recognizable bursts, then relocate during recovery.
 - Early Stage 1 should permit at most two active ranged lanes and at most one offscreen commit.
 - A damaging offscreen projectile must have a distinct directional cue and enough travel time to react.
 
-### Minelets and denial enemies
+#### Minelets and denial enemies
 
 - Treat a denial placement as a group-level token, not an individual entitlement.
 - Never allow denial to close every escape route.
 - Use a strong pre-placement marker and a stable active-area color.
 - Early combinations should pair denial with fodder, not denial plus multiple ranged and lunge threats.
 
-### Controllers and supports
+#### Controllers and supports
 
 - Hold an authored anchor instead of continuously drifting with the player.
 - Show the supported relationship through one bold tether or shared pulse.
 - Breaking the controller should immediately and visibly weaken the group.
 
-### Towers and installations
+#### Towers and installations
 
 - Aim through readable arcs or lanes tied to floor markings.
 - Projectiles from basic towers should collide with solid cover.
 - If an advanced tower can bypass cover, that exception needs a distinct silhouette, telegraph, and projectile language.
 
-### Bosses
+#### Bosses
 
 - Every damaging attack already needs startup, active, and recovery states; preserve this rule.
 - Also budget boss adds and boss attacks together. A boss phase should not independently schedule screen-filling pressure while a full ordinary-enemy budget remains active.
 
-## D. Make Map Geometry Teach Combat
+### D. Make Map Geometry Teach Combat
 
-### Replace broad activation rectangles with authored gateways
+#### Replace broad activation rectangles with authored gateways
 
 - Use polygons or explicit gateway volumes aligned to bridges, thresholds, sightline reveals, and objective interactions.
 - Activation should occur after the player has enough visible space to enter the pocket, not while standing in the previous pocket or deployment zone.
 - Neighboring optional regions should not activate from small lateral movement on the critical path.
 
-### Give each pocket a readable spatial sentence
+#### Give each pocket a readable spatial sentence
 
 Every major combat area should provide:
 
@@ -415,26 +415,26 @@ Every major combat area should provide:
 5. one landmark visible from the previous area,
 6. one clean return route after completion.
 
-### Establish a lane-width test
+#### Establish a lane-width test
 
 As a starting hypothesis, critical movement lanes should provide approximately 420–480 pixels of usable width where the player is expected to dash while enemies are present. The actual value should be validated against vehicle collision radius, dash distance, and enemy body sizes. The important rule is behavioral: a player should be able to pass a stalled enemy cluster without relying on perfect collision threading.
 
-### Use cover as a relationship, not decoration
+#### Use cover as a relationship, not decoration
 
 - A cover block should explain which threat it answers.
 - Avoid one massive central block if it creates two long channels with poor cross-reading.
 - Prefer convex corners and staggered smaller masses that allow the player to enter, rotate around a threat, and rejoin the main route.
 - Keep floor markings, walkable color, blocking edges, and hazard colors consistent so navigation is readable before collision.
 
-### Separate optional risk from critical progress
+#### Separate optional risk from critical progress
 
 - The field boss branch, treasure branch, and critical generator route should have visibly different landmarks.
 - Optional threat activation should stop at a clear leash boundary.
 - A retreating player should not drag an optional boss into the main objective pocket.
 
-## E. Improve Usability Without Automating the Game
+### E. Improve Usability Without Automating the Game
 
-### Aim support
+#### Aim support
 
 Default to **Light Aim Friction**:
 
@@ -446,19 +446,19 @@ Default to **Light Aim Friction**:
 
 Expose Off / Light / Strong settings. Full lock-on can remain a separate optional mode if later testing justifies it.
 
-### Fire input
+#### Fire input
 
 - Preserve hold-to-fire as the default because the owner finds it more enjoyable.
 - Offer toggle fire for accessibility.
 - Make the one-second opening-shot charge unmistakable through a single bold ring, reticle change, or vehicle pulse—not several small indicators.
 
-### Damage and defeat feedback
+#### Damage and defeat feedback
 
 - Add a directional hit indicator that distinguishes contact, projectile, denial, and hazard damage.
 - On defeat, show the last and largest recent damage source, one concise counter-tip, furthest objective reached, and whether a retry preserves the current build.
 - Use existing damage-source data rather than adding a speculative analytics service first.
 
-### Combat readability controls
+#### Combat readability controls
 
 Expose:
 
@@ -473,18 +473,18 @@ Expose:
 
 The UI should label assist-modified clears transparently if that matters to later challenge records, but should not shame the player or remove progression.
 
-### Navigation clarity
+#### Navigation clarity
 
 - Keep the minimap's visited-cell fog.
 - Add a compact legend for player, critical objective, optional boss, upgrade/reward, repair, and unopened cache.
 - Use an edge-of-screen objective arrow when the critical landmark is outside the camera.
 - Dim completed objectives rather than removing all spatial context.
 
-## F. Turn Rewards into the Teaching Rhythm
+### F. Turn Rewards into the Teaching Rhythm
 
 The project already has a broad card catalog with primary, opening-shot, elemental, passive, dash, skill, and mobility families. The problem is less the number of cards than the timing and first-run comprehension burden.
 
-### First-clear reward cadence
+#### First-clear reward cadence
 
 - First behavior-changing card after Beat 2, not after several overlapping combat languages.
 - One reward at the relay/generator milestone.
@@ -493,7 +493,7 @@ The project already has a broad card catalog with primary, opening-shot, element
 
 This avoids turning a short stage into nine mandatory modal interruptions while still letting the player feel a build emerge.
 
-### Curated starter pool
+#### Curated starter pool
 
 Use six to eight cards whose effects are immediately visible:
 
@@ -508,11 +508,11 @@ Use six to eight cards whose effects are immediately visible:
 
 Do not show several mathematically similar percentage upgrades together during the first choice. Broaden the pool after the first clear or after the player has seen the associated system.
 
-## G. Add Transparent Assistance, Not Hidden Dynamic Difficulty
+### G. Add Transparent Assistance, Not Hidden Dynamic Difficulty
 
 Recommended optional systems:
 
-### Adaptive Hull
+#### Adaptive Hull
 
 - +5% incoming-damage resistance after each failed Stage 1 attempt.
 - Maximum 30%.
@@ -520,13 +520,13 @@ Recommended optional systems:
 - Toggleable and resettable at any time.
 - Explain that enemy behaviors and rewards remain unchanged.
 
-### Relay resume
+#### Relay resume
 
 - In Assist Mode, unlock a checkpoint after the first major upgrade or relay.
 - On defeat, offer Fresh Deployment or Resume from Relay.
 - Clearly state which build, objectives, and consumables are restored.
 
-### Independent sliders/presets
+#### Independent sliders/presets
 
 - Enemy damage: 50–100%.
 - Enemy health: 75–100% if needed after testing.

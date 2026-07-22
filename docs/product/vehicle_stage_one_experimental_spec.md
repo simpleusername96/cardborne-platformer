@@ -18,6 +18,23 @@ related:
 
 Test whether Cardborne is stronger as a manually targeted vehicle action shooter with passive support fire and card-based upgrades. This document governs only the feature branch experiment. It does not rewrite the history of the humanoid proof or make a permanent product decision before owner review.
 
+## Scope
+
+This draft records the original one-stage experiment boundary: vehicle controls,
+one authored world, combat roles, pickups, run cards, UI, small persistence, and
+validation. It does not describe later held-fire, three-stage, dense-combat, or
+expanded-card changes; those implemented contracts belong to
+`vehicle_content_expansion_spec.md`.
+
+## Requirements
+
+Within the original experiment, the sections below require direct vehicle
+movement and aim, explicit primary fire, dash, passive support, one active skill,
+cover-consistent projectiles, non-extermination progression, readable enemy
+telegraphs, a complete stage route, and Korean/English UI. Because this document
+remains a draft, conflicting current behavior must be resolved through the active
+vehicle-content specification rather than by silently updating this history.
+
 ## Presentation Decision
 
 Stage 1 uses a flat top-down 2D ground plane. The choice deliberately retires fake isometric collision and occlusion from this experiment while retaining the drowned-ruin/flooded-foundry setting, flat color families, simple silhouettes, minimal texture noise, and borderless live UI.

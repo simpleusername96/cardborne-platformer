@@ -1,9 +1,10 @@
 ---
 type: plan
-status: active
+status: superseded
+superseded_by: ./2026-07-20-vehicle-stage-one.md
 owner: BK
 created: 2026-07-18
-last_reviewed: 2026-07-19
+last_reviewed: 2026-07-22
 topic: Flooded Works Floor 1 connected rooms, moving enemies, props, pickups, and boss
 scope: Expand the current Movement Check into a Tiled-authored five-room Floor 1 while preserving the native 3D combat foundation
 source: Owner direction on 2026-07-18, current master at b76c0fe, the active proof spec, the landed Tiled authoring kit, retained Flooded Works art evidence, and Tiled 1.12.2/Godot 4.7 documentation

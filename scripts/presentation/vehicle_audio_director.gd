@@ -21,11 +21,15 @@ var _voice_cursor := 0
 var _impact_cursor := 0
 var _primary_active := false
 var _primary_loop: AudioStreamPlayer
+var _playback_available := true
 
 
 func _ready() -> void:
 	for sound_id in FILES:
 		_streams[sound_id] = load(ROOT + String(FILES[sound_id]))
+	_playback_available = AudioServer.get_driver_name() != "Dummy"
+	if not _playback_available:
+		return
 	for index in 6:
 		_voices.append(_make_player("SFXVoice%d" % index))
 	for index in 2:
@@ -43,6 +47,9 @@ func _make_player(node_name: String) -> AudioStreamPlayer:
 
 
 func update_primary(active: bool) -> void:
+	if not _playback_available:
+		_primary_active = active
+		return
 	if active == _primary_active:
 		return
 	_primary_active = active
@@ -61,6 +68,8 @@ func _continue_primary_loop() -> void:
 
 
 func play(sound_id: StringName, pitch: float = 1.0) -> void:
+	if not _playback_available:
+		return
 	var resolved := _resolve(sound_id)
 	if not _streams.has(resolved):
 		return
@@ -78,9 +87,20 @@ func play(sound_id: StringName, pitch: float = 1.0) -> void:
 
 func stop_all() -> void:
 	_primary_active = false
-	_primary_loop.stop()
+	if is_instance_valid(_primary_loop):
+		_primary_loop.stop()
 	for player in _voices + _impact_voices:
 		player.stop()
+
+
+## Releases playback and stream references before the owning tree exits.
+func shutdown() -> void:
+	stop_all()
+	if is_instance_valid(_primary_loop):
+		_primary_loop.stream = null
+	for player in _voices + _impact_voices:
+		player.stream = null
+	_streams.clear()
 
 
 func has_all_required() -> bool:

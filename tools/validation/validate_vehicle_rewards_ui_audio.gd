@@ -51,14 +51,15 @@ func _run() -> void:
 	panel.call("_confirm_selected")
 	panel.call("_confirm_selected")
 	_expect(confirmed_count == 1, "duplicate confirmation emits once")
-	panel.queue_free()
+	panel.free()
 
 	var audio := AudioDirector.new()
 	root.add_child(audio)
 	await process_frame
 	_expect(audio.has_all_required(), "all thirteen stored WAV streams load")
 	_expect(AudioDirector.FILES.size() == 13, "audio contract contains exactly thirteen stored sounds")
-	audio.queue_free()
+	audio.shutdown()
+	audio.free()
 
 	var stage := StageScene.instantiate()
 	root.add_child(stage)
@@ -72,7 +73,11 @@ func _run() -> void:
 	var route: Dictionary = stage.debug_multistage_contract()
 	_expect(int(route["final_upgrade_count"]) == 9, "full route grants nine mandatory upgrades")
 	_expect(int(route["claimed_reward_count"]) == 9, "full route resolves nine mandatory reward transactions")
-	stage.queue_free()
+	stage.free()
+	stage = null
+	audio = null
+	panel = null
+	await process_frame
 	await process_frame
 	if failures.is_empty():
 		print("VEHICLE_REWARDS_UI_AUDIO_VALIDATION_OK")

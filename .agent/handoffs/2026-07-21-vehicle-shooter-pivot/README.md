@@ -1,8 +1,9 @@
 ---
 type: handoff
-status: active
+status: done
 owner: BK
 created: 2026-07-21
+last_reviewed: 2026-07-22
 expires: 2026-08-21
 source: Codex session 019f5f8c-1961-7fb0-950e-4adda7545294 and repository state at 4884ff4
 related:

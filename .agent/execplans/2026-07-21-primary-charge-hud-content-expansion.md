@@ -1,6 +1,6 @@
 ---
 type: plan
-status: complete
+status: done
 owner: BK
 created: 2026-07-21
 topic: Primary charge cycle, combat HUD hierarchy, and future content expansion contract

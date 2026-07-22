@@ -14,11 +14,34 @@ related:
 
 # Vehicle Content Expansion Spec
 
-## Purpose and authority
+## Purpose
 
 This specification governs the implemented three-stage vehicle run and future additions without turning Cardborne into an undirected survival arena. Manual target priority, held Pulse Cannon fire, a one-second idle-powered opening shot, dash positioning, installation pressure, and map-acquired build choices are the shared combat language.
 
 Flooded Works, Tidal Archive, and Storm Drydock are implemented authored stages. Their first playable versions intentionally reuse the shared macro objective cadence and boss behavior while proving distinct layouts, environment rules, and enemy mixes. Further production polish remains subject to playtesting.
+
+## Scope
+
+This specification applies to the current vehicle run, its stage definitions,
+enemy-role composition, run-card behavior, presentation needs, and compatible
+future additions. It does not supersede the retained humanoid-proof product brief
+or protected repository policy, and it does not authorize the broader persistent
+economy described by the progression specification.
+
+## Requirements
+
+The detailed contracts below are normative within this scope. In summary:
+
+- retain manual target priority, held primary fire, the one-second opening shot,
+  dash, passive support, and one explicit active skill;
+- keep navigation and combat in one authored field while making ordinary-enemy
+  extermination unnecessary for progression;
+- give each stage one new spatial verb, one new threat relationship, and one new
+  reward interaction;
+- coordinate simultaneous pressure and preserve readable startup, active, and
+  recovery windows;
+- keep card definitions, run state, enemy behavior, stage data, UI, and
+  persistence under their existing responsibility owners.
 
 ## Core run rhythm
 
@@ -139,7 +162,7 @@ Cooldowns, charge counts, links, health, card copy, selection, and settings rema
 
 Stage identity, layout, population, rewards, and environment data live in `vehicle_stage_catalog.gd`; continuous cadence and opening charge live in `vehicle_primary_weapon.gd`; formation/pressure limits live in `vehicle_encounter_director.gd`; card/status/audio/UI responsibilities use their dedicated owners. The shared runtime orchestrates those owners and should not absorb another catalog or presentation system.
 
-## Acceptance gates for adding a stage
+## Acceptance Criteria
 
 A proposed stage can enter implementation only when:
 
