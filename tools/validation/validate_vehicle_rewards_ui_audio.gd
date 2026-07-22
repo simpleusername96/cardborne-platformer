@@ -71,8 +71,8 @@ func _run() -> void:
 	_expect(int(stage.debug_pickup_contract(&"capacitor_cell")["capacitor_shots"]) == 3, "capacitor cell grants three opening shots")
 	_expect(float(stage.debug_pickup_contract(&"magnet_field")["magnet_timer"]) >= 10.0, "magnet field grants its collection window")
 	var route: Dictionary = stage.debug_multistage_contract()
-	_expect(int(route["final_upgrade_count"]) == 9, "full route grants nine mandatory upgrades")
-	_expect(int(route["claimed_reward_count"]) == 9, "full route resolves nine mandatory reward transactions")
+	_expect(int(route["final_upgrade_count"]) == 15, "full route grants fifteen mandatory upgrades")
+	_expect(int(route["claimed_reward_count"]) == 15, "full route resolves fifteen mandatory reward transactions")
 	stage.free()
 	stage = null
 	audio = null

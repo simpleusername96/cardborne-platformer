@@ -44,6 +44,7 @@ func _run_validation() -> void:
 	_check_dash_contract(stage)
 	_check_progression_contract(stage)
 	_check_multistage_contract(stage)
+	_check_added_stage_mechanics_contract(stage)
 	_check_new_enemy_contract(stage)
 	_check_specialist_enemy_contract(stage)
 	_check_new_upgrade_runtime(stage)
@@ -234,15 +235,33 @@ func _check_progression_contract(stage: Node) -> void:
 
 func _check_multistage_contract(stage: Node) -> void:
 	var result: Dictionary = stage.debug_multistage_contract()
-	_expect(result["stage_ids"] == [&"flooded_works", &"tidal_archive", &"storm_drydock"], "one run advances through three authored stages in order")
+	_expect(result["stage_ids"] == [&"flooded_works", &"tidal_archive", &"storm_drydock", &"coral_switchyard", &"abyssal_observatory"], "one run advances through five authored stages in order")
 	_expect(&"artillery_spotter" in result["role_sets"][1] and &"interceptor_tower" in result["role_sets"][1], "Tidal Archive deploys artillery and interception roles")
 	_expect(&"shield_escort" in result["role_sets"][2], "Storm Drydock deploys shield escorts")
-	_expect(result["environments"] == [&"none", &"current", &"storm"], "the first three stages record distinct environment verbs")
-	_expect(result["packet_counts"] == [6, 6, 6], "the first three stages record complete six-beat packet tables")
+	_expect(&"rammer" in result["role_sets"][3] and &"repair_tender" in result["role_sets"][3], "Coral Switchyard combines rammers with repair support")
+	_expect(&"drone_carrier" in result["role_sets"][4] and &"beam_sentinel" in result["role_sets"][4], "Abyssal Observatory combines carriers with beam installations")
+	_expect(result["environments"] == [&"none", &"current", &"storm", &"switchyard", &"observatory"], "all five stages record distinct environment verbs")
+	_expect(result["packet_counts"] == [6, 6, 6, 6, 6], "all five stages record complete six-beat packet tables")
 	for reward_set in result["reward_ids"]:
-		_expect(reward_set.size() == 4, "each current stage records four authored reward anchors")
-	_expect(result["upgrade_counts"] == [0, 3, 6], "stage transitions preserve the accumulated run upgrades")
-	_expect(int(result["final_stage_index"]) == 2 and bool(result["final_complete"]), "the third boss resolves the final stage")
+		_expect(reward_set.size() == 4, "each authored stage records four reward anchors")
+	_expect(result["upgrade_counts"] == [0, 3, 6, 9, 12], "five-stage transitions preserve the accumulated run upgrades")
+	_expect(int(result["final_stage_index"]) == 4 and bool(result["final_complete"]) and int(result["final_upgrade_count"]) == 15, "the fifth boss resolves the final stage with the accumulated build")
+
+
+func _check_added_stage_mechanics_contract(stage: Node) -> void:
+	var result: Dictionary = stage.debug_added_stage_mechanics_contract()
+	_expect(int(result["switch_cover_count"]) == 2 and int(result["switch_state"]) == 1 and bool(result["switch_covers_moved"]), "three Switchyard pads drive one visible paired-gate state")
+	_expect(int(result["switch_minimap_markers"]) >= 5, "Switchyard pads and live blockers appear on the minimap")
+	_expect(bool(result["convoy_failure_optional"]), "escaped Switchyard convoy removes only its optional reward")
+	_expect(result["switch_boss_patterns"] == ["switch_charge", "switch_charge"], "Switchyard Behemoth uses only the learned open-lane charge")
+	_expect(float(result["behemoth_lane_y"]) in [825.0, 2175.0] and bool(result["behemoth_crash_recovery"]), "Switchyard Behemoth follows the open lane into a vulnerable cover crash")
+	_expect(bool(result["vault_closed_before"]) and bool(result["vault_open_after_alignment"]), "Observatory vault gate follows the two-reflector alignment")
+	_expect(bool(result["ninety_degree_turn"]), "Observatory reflector resolves a deterministic visible ninety-degree turn")
+	_expect(bool(result["direct_round_rejected"]) and bool(result["reflected_round_damaged_relay"]), "Crown shield relay accepts reflected rounds and rejects direct fire")
+	_expect(result["observatory_boss_patterns"] == ["crown_beam", "crown_carrier"], "Crown Engine separates beam and carrier windows")
+	_expect(int(result["reflector_minimap_markers"]) == 2, "both live Observatory reflector orientations appear on the minimap")
+	_expect(int(result["crown_relay_count"]) == 2, "Crown Engine begins behind two reflector-only shield relays")
+	_expect(bool(result["beam_spawned_no_children"]) and int(result["crown_carrier_children"]) == 3, "Crown Engine beam never overlaps its one bounded three-drone release")
 
 
 func _check_new_enemy_contract(stage: Node) -> void:

@@ -540,7 +540,7 @@ Source owners touched: `scripts/vehicle/stages/coral_switchyard.gd`,
 `tools/validation/validate_vehicle_stage_layouts.gd`,
 `tools/validation/validate_vehicle_run.gd`
 
-- [ ] **6.1 Author Coral Switchyard.**
+- [x] **6.1 Author Coral Switchyard.**
   - As-is: no Stage 4.
   - To-be: implement the locked switches, safe routes, packet tables, Rammer/
     Repair Tender relationship, optional convoy, field boss, and Behemoth boss.
@@ -548,7 +548,7 @@ Source owners touched: `scripts/vehicle/stages/coral_switchyard.gd`,
     objective; no state traps the player; population remains in the Stage 4 band.
   - Guard: switch state uses large live geometry and minimap feedback, not text-only
     instructions or invisible collision changes.
-- [ ] **6.2 Author Abyssal Observatory.**
+- [x] **6.2 Author Abyssal Observatory.**
   - As-is: no Stage 5.
   - To-be: implement the locked reflectors, safe routes, Carrier/Beam relationship,
     optional vault, field boss, and Crown Engine boss.
@@ -556,7 +556,7 @@ Source owners touched: `scripts/vehicle/stages/coral_switchyard.gd`,
     projectile paths match their visible angle; population remains in Stage 5 band.
   - Guard: non-reflector cover keeps current collision behavior and the boss never
     combines carrier reinforcements with its active beam pattern.
-- [ ] **6.3 Extend run progression and rewards to five stages.**
+- [x] **6.3 Extend run progression and rewards to five stages.**
   - As-is: Stage 3 is final.
   - To-be: Stage 3 result advances to Stage 4, Stage 4 to Stage 5, and Stage 5 to
     final garage/result; run upgrades persist and new reward source tags resolve.
@@ -741,7 +741,7 @@ list requires owner change control.
 - [x] Phase 3: Sequential encounter packets and cohesive squads
 - [x] Phase 4: Correct Stage 2 and Stage 3 composition
 - [x] Phase 5: Four enemy roles and twelve upgrades
-- [ ] Phase 6: Coral Switchyard and Abyssal Observatory
+- [x] Phase 6: Coral Switchyard and Abyssal Observatory
 - [ ] Phase 7: Production validation, specification update, and plan retirement
 - [ ] Final gates
 
@@ -770,7 +770,7 @@ list requires owner change control.
 - [x] Rammer, Repair Tender, Drone Carrier, and Beam Sentinel pass all behavior,
   telegraph, cover, cap, and cleanup checks.
 - [x] All twelve new cards behave as specified; catalog count is 46.
-- [ ] Coral Switchyard and Abyssal Observatory are complete, distinct, localized,
+- [x] Coral Switchyard and Abyssal Observatory are complete, distinct, localized,
   reachable, and connected as Stages 4 and 5.
 - [ ] Five-stage full-run, reward, save, UI, performance, native capture, Web
   export, and built-Web boot gates pass.

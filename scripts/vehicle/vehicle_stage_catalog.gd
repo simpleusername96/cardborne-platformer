@@ -7,8 +7,13 @@ extends RefCounted
 const FloodedWorks = preload("res://scripts/vehicle/stages/flooded_works.gd")
 const TidalArchive = preload("res://scripts/vehicle/stages/tidal_archive.gd")
 const StormDrydock = preload("res://scripts/vehicle/stages/storm_drydock.gd")
+const CoralSwitchyard = preload("res://scripts/vehicle/stages/coral_switchyard.gd")
+const AbyssalObservatory = preload("res://scripts/vehicle/stages/abyssal_observatory.gd")
 
-const STAGE_IDS: Array[StringName] = [&"flooded_works", &"tidal_archive", &"storm_drydock"]
+const STAGE_IDS: Array[StringName] = [
+	&"flooded_works", &"tidal_archive", &"storm_drydock",
+	&"coral_switchyard", &"abyssal_observatory",
+]
 const REQUIRED_FIELDS := [
 	"id", "title_key", "number", "field_boss_name_key", "boss_name_key", "environment",
 	"world_rect", "player_start", "start_clearance", "boss_arena", "boss_gate",
@@ -34,6 +39,10 @@ static func definition(stage_id: StringName) -> Dictionary:
 			result = TidalArchive.definition()
 		&"storm_drydock":
 			result = StormDrydock.definition()
+		&"coral_switchyard":
+			result = CoralSwitchyard.definition()
+		&"abyssal_observatory":
+			result = AbyssalObservatory.definition()
 		_:
 			result = FloodedWorks.definition()
 	var errors := validate_definition(result, normalized)

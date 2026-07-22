@@ -25,8 +25,8 @@ func _profile_preset(preset: StringName) -> bool:
 	await process_frame
 	stage.set_process(false)
 	stage.set_physics_process(false)
-	stage.current_stage_index = 2
-	stage.current_stage_id = StageCatalog.STAGE_IDS[2]
+	stage.current_stage_index = StageCatalog.STAGE_IDS.size() - 1
+	stage.current_stage_id = StageCatalog.STAGE_IDS[-1]
 	stage.call("_reset_run", false, true, false)
 	stage.mode = 1
 	stage.encounter_runtime.preset = preset

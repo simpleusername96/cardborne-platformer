@@ -100,3 +100,38 @@ func _check_later_stage_verbs() -> void:
 		_expect(not Rect2(zone["rect"]).has_point(Vector2(Catalog.packets(&"storm_drydock")[0]["anchor"])), "Storm Drydock first spawn never overlaps an electrical sweep")
 
 	_expect(Catalog.walkable_regions(&"tidal_archive") != Catalog.walkable_regions(&"storm_drydock"), "Stage 2 and Stage 3 use distinct authored compositions")
+
+	var switch_zones := Catalog.environment_zones(&"coral_switchyard")
+	var switch_pads := switch_zones.filter(func(zone: Dictionary) -> bool: return StringName(zone.get("kind", &"")) == &"switch_pad")
+	var switch_gates := switch_zones.filter(func(zone: Dictionary) -> bool: return StringName(zone.get("kind", &"")) == &"switch_gate")
+	_expect(switch_pads.size() == 3 and switch_gates.size() == 2, "Coral Switchyard owns three large pads and a paired live gate")
+	var switch_start := Catalog.player_start(&"coral_switchyard")
+	var switch_landmarks := Catalog.landmarks(&"coral_switchyard")
+	for state in 2:
+		var active_cover: Array[Rect2] = []
+		for gate in switch_gates:
+			var positions: Array = gate["positions"]
+			_expect(positions.size() == 2, "each Switchyard gate owns two painted positions")
+			active_cover.append(Rect2(positions[state]))
+		_expect(Rules.grid_reachable_with_extra(switch_start, switch_landmarks["chest"], Rules.PLAYER_RADIUS, 70.0, false, &"coral_switchyard", active_cover), "Switchyard state %d preserves a critical route" % state)
+		var upper_hit := Rules.first_cover_hit_with_extra(Vector2(2200,820), Vector2(3300,820), Rules.PLAYER_RADIUS, false, &"coral_switchyard", active_cover)
+		var lower_hit := Rules.first_cover_hit_with_extra(Vector2(2200,2180), Vector2(3300,2180), Rules.PLAYER_RADIUS, false, &"coral_switchyard", active_cover)
+		_expect(bool(upper_hit["hit"]) != bool(lower_hit["hit"]), "Switchyard state %d closes exactly one direct flank" % state)
+	_expect(Rect2(Catalog.walkable_regions(&"coral_switchyard")[2]["rect"]).size.y >= 480.0, "Switchyard open flank retains at least 480 pixels of width")
+
+	var observatory_zones := Catalog.environment_zones(&"abyssal_observatory")
+	var reflectors := observatory_zones.filter(func(zone: Dictionary) -> bool: return StringName(zone.get("kind", &"")) == &"reflector")
+	var consoles := observatory_zones.filter(func(zone: Dictionary) -> bool: return StringName(zone.get("kind", &"")) == &"reflector_console")
+	var vault_gates := observatory_zones.filter(func(zone: Dictionary) -> bool: return StringName(zone.get("kind", &"")) == &"vault_gate")
+	_expect(reflectors.size() == 2 and consoles.size() == 2 and vault_gates.size() == 1, "Abyssal Observatory owns two reflectors, two consoles, and one optional vault gate")
+	var orientations := {}
+	for reflector in reflectors:
+		orientations[StringName(reflector["id"])] = int(reflector["vault_orientation"])
+		var rect := Rect2(reflector["rect"])
+		var hit := Rules.first_reflector_hit(Vector2(rect.position.x-200.0,rect.get_center().y),Vector2(rect.end.x+200.0,rect.get_center().y),5.0,orientations,&"abyssal_observatory")
+		_expect(bool(hit["hit"]) and absf(Vector2.RIGHT.dot(Vector2(hit["out_direction"]))) <= 0.001, "%s visibly turns projectiles ninety degrees" % reflector["id"])
+	var obs_start := Catalog.player_start(&"abyssal_observatory")
+	var obs_field_boss := Vector2(Catalog.landmarks(&"abyssal_observatory")["field_boss"])
+	_expect(not Rules.grid_reachable_with_extra(obs_start, obs_field_boss, Rules.PLAYER_RADIUS, 70.0, true, &"abyssal_observatory", [Rect2(vault_gates[0]["rect"])]), "unaligned Observatory reflectors keep only the optional vault closed")
+	_expect(Rules.grid_reachable(obs_start, obs_field_boss, Rules.PLAYER_RADIUS, 70.0, true, &"abyssal_observatory"), "aligned Observatory reflectors open a dedicated returnable vault route")
+	_expect(Catalog.walkable_regions(&"coral_switchyard") != Catalog.walkable_regions(&"abyssal_observatory"), "Stages 4 and 5 use distinct authored compositions")

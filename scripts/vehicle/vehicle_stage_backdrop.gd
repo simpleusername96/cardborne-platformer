@@ -54,6 +54,15 @@ func _draw_major_motifs() -> void:
 			center += Vector2(90.0, -70.0)
 			rotation += PI * 0.25
 			kind = &"sun_gate" if kind in [&"tide_curl", &"split_current"] else &"relay_flower"
+		elif stage_id == &"coral_switchyard":
+			center += Vector2(170.0, 90.0)
+			rotation += PI * 0.5
+			kind = &"split_current" if kind == &"relay_flower" else &"sun_gate"
+		elif stage_id == &"abyssal_observatory":
+			center.x = Rules.world_rect(stage_id).size.x - center.x
+			center += Vector2(-120.0, 50.0)
+			rotation -= PI * 0.25
+			kind = &"relay_flower" if kind in [&"tide_curl", &"split_current"] else &"sun_gate"
 		if not Rules.is_position_walkable(center, radius, stage_id):
 			continue
 		match kind:

@@ -171,8 +171,15 @@ static func _inside_normal(point: Vector2, rect: Rect2) -> Vector2:
 
 
 static func first_cover_hit(from: Vector2, to: Vector2, radius: float, include_boss_gate: bool = false, stage_id: StringName = &"flooded_works") -> Dictionary:
+	return first_cover_hit_with_extra(from, to, radius, include_boss_gate, stage_id, [])
+
+
+static func first_cover_hit_with_extra(from: Vector2, to: Vector2, radius: float, include_boss_gate: bool, stage_id: StringName, extra_cover: Array) -> Dictionary:
 	var best := {"hit": false, "t": 2.0}
-	for rect in get_cover_rects(include_boss_gate, stage_id):
+	var rects: Array[Rect2] = get_cover_rects(include_boss_gate, stage_id)
+	for value in extra_cover:
+		rects.append(Rect2(value))
+	for rect in rects:
 		var hit := segment_rect_hit(from, to, rect, radius)
 		if bool(hit.get("hit", false)) and float(hit["t"]) < float(best["t"]):
 			best = hit
@@ -182,6 +189,10 @@ static func first_cover_hit(from: Vector2, to: Vector2, radius: float, include_b
 
 static func has_line_of_sight(from: Vector2, to: Vector2, padding: float = 0.0, include_boss_gate: bool = false, stage_id: StringName = &"flooded_works") -> bool:
 	return not bool(first_cover_hit(from, to, padding, include_boss_gate, stage_id).get("hit", false))
+
+
+static func has_line_of_sight_with_extra(from: Vector2, to: Vector2, padding: float, include_boss_gate: bool, stage_id: StringName, extra_cover: Array) -> bool:
+	return not bool(first_cover_hit_with_extra(from, to, padding, include_boss_gate, stage_id, extra_cover).get("hit", false))
 
 
 static func point_segment_distance(point: Vector2, a: Vector2, b: Vector2) -> float:
@@ -194,7 +205,13 @@ static func point_segment_distance(point: Vector2, a: Vector2, b: Vector2) -> fl
 
 
 static func move_circle(position: Vector2, motion: Vector2, radius: float, include_boss_gate: bool = false, stage_id: StringName = &"flooded_works") -> Vector2:
-	var rects := get_cover_rects(include_boss_gate, stage_id)
+	return move_circle_with_extra(position, motion, radius, include_boss_gate, stage_id, [])
+
+
+static func move_circle_with_extra(position: Vector2, motion: Vector2, radius: float, include_boss_gate: bool, stage_id: StringName, extra_cover: Array) -> Vector2:
+	var rects: Array[Rect2] = get_cover_rects(include_boss_gate, stage_id)
+	for value in extra_cover:
+		rects.append(Rect2(value))
 	var bounds := world_rect(stage_id)
 	var result := position
 	var attempt_x := Vector2(
@@ -224,6 +241,10 @@ static func move_circle(position: Vector2, motion: Vector2, radius: float, inclu
 
 
 static func grid_reachable(start: Vector2, goal: Vector2, radius: float = PLAYER_RADIUS, cell_size: float = 70.0, include_boss_gate: bool = false, stage_id: StringName = &"flooded_works") -> bool:
+	return grid_reachable_with_extra(start, goal, radius, cell_size, include_boss_gate, stage_id, [])
+
+
+static func grid_reachable_with_extra(start: Vector2, goal: Vector2, radius: float, cell_size: float, include_boss_gate: bool, stage_id: StringName, extra_cover: Array) -> bool:
 	var bounds := world_rect(stage_id)
 	var min_cell := Vector2i(
 		floori((bounds.position.x + radius) / cell_size),
@@ -238,7 +259,9 @@ static func grid_reachable(start: Vector2, goal: Vector2, radius: float = PLAYER
 	var queue: Array[Vector2i] = [start_cell]
 	var visited := {start_cell: true}
 	var directions: Array[Vector2i] = [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]
-	var rects := get_cover_rects(include_boss_gate, stage_id)
+	var rects: Array[Rect2] = get_cover_rects(include_boss_gate, stage_id)
+	for value in extra_cover:
+		rects.append(Rect2(value))
 
 	while not queue.is_empty():
 		var current: Vector2i = queue.pop_front()
@@ -261,6 +284,28 @@ static func grid_reachable(start: Vector2, goal: Vector2, radius: float = PLAYER
 			visited[next] = true
 			queue.append(next)
 	return false
+
+
+static func first_reflector_hit(from: Vector2, to: Vector2, radius: float, orientations: Dictionary, stage_id: StringName, environment_zones: Array = []) -> Dictionary:
+	var best := {"hit":false, "t":2.0}
+	if stage_id != &"abyssal_observatory":
+		return best
+	var zones := environment_zones if not environment_zones.is_empty() else Catalog.environment_zones(stage_id)
+	for zone in zones:
+		if StringName(zone.get("kind", &"")) != &"reflector":
+			continue
+		var hit := segment_rect_hit(from, to, Rect2(zone["rect"]), radius)
+		if not bool(hit.get("hit", false)) or float(hit["t"]) >= float(best["t"]):
+			continue
+		var reflector_id := StringName(zone["id"])
+		var orientation := positive_mod(int(orientations.get(reflector_id, zone.get("initial_orientation", 0))), 4)
+		var turn_sign := 1.0 if orientation in [0, 1] else -1.0
+		best = hit
+		best["reflector_id"] = reflector_id
+		best["orientation"] = orientation
+		best["turn_sign"] = turn_sign
+		best["out_direction"] = (to - from).normalized().rotated(turn_sign * PI * 0.5)
+	return best
 
 
 static func validate_blueprint(stage_id: StringName = &"flooded_works") -> PackedStringArray:

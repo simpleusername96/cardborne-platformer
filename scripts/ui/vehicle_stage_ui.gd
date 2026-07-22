@@ -167,6 +167,12 @@ class StageMinimap:
 				draw_rect(Rect2(point - Vector2(3.5, 3.5), Vector2(7.0, 7.0)), marker_color)
 			elif kind == "reward":
 				draw_colored_polygon(_diamond(point, 5.0), marker_color)
+			elif kind == "mechanic":
+				var direction := Vector2.RIGHT.rotated(float(int(marker.get("orientation", 0))) * PI * 0.5)
+				draw_circle(point, 5.0, marker_color)
+				draw_line(point - direction * 6.0, point + direction * 6.0, Art.IVORY_BRIGHT, 2.5)
+			elif kind == "blocker":
+				draw_rect(Rect2(point - Vector2(5.0, 2.5), Vector2(10.0, 5.0)), marker_color)
 			else:
 				draw_circle(point, 4.0, marker_color)
 		var player: Vector2 = snapshot.get("player", Vector2.ZERO)
