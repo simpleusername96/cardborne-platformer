@@ -80,10 +80,14 @@ jobs:
           set -euo pipefail
           validators=(
             validate_settings_store.gd
+            validate_vehicle_input_bindings.gd
             validate_vehicle_primary_weapon.gd
             validate_vehicle_upgrade_system.gd
+            validate_vehicle_stage_layouts.gd
+            validate_vehicle_encounter_pacing.gd
             validate_vehicle_run.gd
             validate_vehicle_rewards_ui_audio.gd
+            profile_vehicle_pressure.gd
           )
           for validator in "${validators[@]}"; do
             "$GODOT_BIN" --path . --headless \
@@ -97,9 +101,9 @@ jobs:
           set -euo pipefail
           mkdir -p "$EVIDENCE_DIR/captures"
           xvfb-run -a "$GODOT_BIN" --path . --rendering-method gl_compatibility \
-            -- --capture-all="$EVIDENCE_DIR/captures" \
+            -- --capture-all="$EVIDENCE_DIR/captures" --capture-locale=ko --capture-size=1280x720 \
             2>&1 | tee "$EVIDENCE_DIR/logs/native-capture.log"
-          test "$(find "$EVIDENCE_DIR/captures" -maxdepth 1 -name '*.png' | wc -l)" -ge 8
+          test "$(find "$EVIDENCE_DIR/captures" -maxdepth 1 -name '*.png' | wc -l)" -ge 20
 
       - name: Export Web release
         shell: bash
@@ -129,10 +133,10 @@ jobs:
           "$browser" --headless=new --no-sandbox --hide-scrollbars \
             --window-size=1280,720 --use-gl=swiftshader --enable-webgl --ignore-gpu-blocklist \
             --virtual-time-budget=10000 \
-            --screenshot="$EVIDENCE_DIR/captures/09-web-build-boot.png" \
+            --screenshot="$EVIDENCE_DIR/captures/99-web-build-boot.png" \
             http://127.0.0.1:8060/ \
             >"$EVIDENCE_DIR/logs/browser-boot.log" 2>&1
-          test -s "$EVIDENCE_DIR/captures/09-web-build-boot.png"
+          test -s "$EVIDENCE_DIR/captures/99-web-build-boot.png"
           curl --fail --silent http://127.0.0.1:8060/index.pck >/dev/null
 
       - name: Record evidence manifest

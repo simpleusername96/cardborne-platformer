@@ -159,6 +159,7 @@ var _audio: VehicleAudioDirector
 var _capture_directory := ""
 var _capture_mode := false
 var _capture_locale := ""
+var _capture_size := Vector2i.ZERO
 
 
 func _ready() -> void:
@@ -4027,6 +4028,10 @@ func _parse_capture_arguments() -> void:
 			_capture_mode = true
 		elif argument.begins_with("--capture-locale="):
 			_capture_locale = argument.trim_prefix("--capture-locale=")
+		elif argument.begins_with("--capture-size="):
+			var parts := argument.trim_prefix("--capture-size=").split("x")
+			if parts.size() == 2:
+				_capture_size = Vector2i(maxi(640, int(parts[0])), maxi(360, int(parts[1])))
 	if _capture_locale in ["ko", "en"]:
 		TranslationServer.set_locale(_capture_locale)
 	if _capture_mode:
@@ -4035,11 +4040,55 @@ func _parse_capture_arguments() -> void:
 
 func _run_capture_sequence() -> void:
 	DirAccess.make_dir_recursive_absolute(_capture_directory)
+	if _capture_size.x > 0 and _capture_size.y > 0:
+		get_window().size = _capture_size
 	_camera.position_smoothing_enabled = false
 	await get_tree().process_frame
 	await get_tree().process_frame
 	_save_capture("01-deployment.png")
+	_ui.debug_modal_contract("settings")
+	await _settle_capture()
+	_save_capture("01b-shared-settings.png")
 
+	_reset_run(false, true, true)
+	mode = RunMode.PLAYING
+	_ui.show_gameplay()
+	player_position = Rules.player_start(current_stage_id)
+	await _settle_capture()
+	_save_capture("01c-safe-arrival.png")
+	_update_encounter(5.1)
+	await _settle_capture()
+	_save_capture("01d-first-gate-cue.png")
+	_update_encounter(0.9)
+	mode = RunMode.PAUSED
+	assert(_capture_spread_squad("arrival_scout_s01") == 1)
+	await _settle_capture()
+	_save_capture("01e-first-scout.png")
+	mode = RunMode.PLAYING
+	_capture_clear_packet_enemies()
+	encounter_runtime.signal_event(&"approach_entered")
+	_update_encounter(0.01)
+	_update_encounter(0.9)
+	_update_encounter(0.8)
+	_update_encounter(0.8)
+	mode = RunMode.PAUSED
+	assert(_capture_spread_squad("west_learning_s01") == 3)
+	await _settle_capture()
+	_save_capture("01f-three-unit-squad.png")
+	mode = RunMode.PLAYING
+	_capture_clear_packet_enemies()
+	encounter_runtime.signal_event(&"upper_route_entered")
+	_update_encounter(0.01)
+	_update_encounter(0.9)
+	for _spawn_tick in 4:
+		_update_encounter(0.5)
+	mode = RunMode.PAUSED
+	assert(_capture_spread_squad("north_generator_s01") == 5)
+	await _settle_capture()
+	_save_capture("01g-five-unit-squad.png")
+	mode = RunMode.PLAYING
+
+	_reset_run(false, true, true)
 	mode = RunMode.PLAYING
 	_ui.show_gameplay()
 	player_position = Vector2(1250.0, 1080.0)
@@ -4144,10 +4193,35 @@ func _run_capture_sequence() -> void:
 	await _settle_capture()
 	_save_capture("09-storm-drydock.png")
 
+	current_stage_index = 3
+	current_stage_id = StageCatalog.STAGE_IDS[3]
+	_reset_run(false, true, true)
+	mode = RunMode.PLAYING
+	_ui.show_gameplay()
+	player_position = Vector2(1280.0, 820.0)
+	_update_stage_interactions()
+	player_aim_direction = Vector2.RIGHT
+	_activate_capture_zone("approach")
+	await _settle_capture()
+	_save_capture("10-coral-switchyard.png")
+
+	current_stage_index = 4
+	current_stage_id = StageCatalog.STAGE_IDS[4]
+	_reset_run(false, true, true)
+	mode = RunMode.PLAYING
+	_ui.show_gameplay()
+	player_position = Vector2(3700.0, 1500.0)
+	for zone in _stage_mechanic_zones(&"reflector"):
+		reflector_orientations[StringName(zone["id"])] = int(zone["vault_orientation"])
+	_refresh_runtime_cover_cache()
+	_activate_capture_zone("relay")
+	await _settle_capture()
+	_save_capture("11-abyssal-observatory.png")
+
 	mode = RunMode.PAUSED
 	_ui.show_pause()
 	await _settle_capture()
-	_save_capture("10-pause-settings.png")
+	_save_capture("12-pause.png")
 
 	mode = RunMode.RESULT
 	var profile := StageCatalog.profile(current_stage_id)
@@ -4165,7 +4239,7 @@ func _run_capture_sequence() -> void:
 		"installations": 8,
 	})
 	await _settle_capture()
-	_save_capture("11-result.png")
+	_save_capture("13-result.png")
 
 	_ui.show_garage({
 		"selected_primary": selected_primary,
@@ -4175,9 +4249,32 @@ func _run_capture_sequence() -> void:
 		"build_summary": _run_build_summary(),
 	})
 	await _settle_capture()
-	_save_capture("12-garage.png")
+	_save_capture("14-garage.png")
 	print("VEHICLE_STAGE_CAPTURE_COMPLETE dir=%s" % _capture_directory)
 	get_tree().quit(0)
+
+
+func _capture_clear_packet_enemies() -> void:
+	for enemy in enemies:
+		if not String(enemy.get("squad_id", "")).is_empty():
+			enemy["alive"] = false
+			enemy["active"] = false
+
+
+func _capture_spread_squad(squad_id: String) -> int:
+	var arranged := 0
+	for enemy in enemies:
+		if String(enemy.get("squad_id", "")) == squad_id:
+			var formation_offset := Vector2(enemy.get("formation_offset", Vector2.ZERO)) * 2.2
+			var position := player_position + Vector2(220.0, 0.0) + formation_offset
+			enemy["pos"] = position
+			enemy["home"] = position
+			enemy["health_visible_timer"] = 99.0
+			if arranged == 0:
+				_aim_target_id = String(enemy["id"])
+			arranged += 1
+	print("CAPTURE_SQUAD squad=%s members=%d" % [squad_id, arranged])
+	return arranged
 
 
 func _activate_capture_zone(zone: String) -> void:

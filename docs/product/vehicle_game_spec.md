@@ -4,7 +4,7 @@ status: active
 owner: BK
 created: 2026-07-21
 topic: Cardborne vehicle game
-scope: Current three-stage vehicle run, combat, enemies, rewards, UI needs, and compatible future additions
+scope: Current five-stage vehicle campaign, combat, encounters, rewards, settings, and compatible future additions
 last_reviewed: 2026-07-22
 canonical_for: Cardborne gameplay and product behavior
 related:
@@ -15,168 +15,219 @@ related:
 
 ## Purpose
 
-This specification governs the implemented three-stage vehicle run and future additions without turning Cardborne into an undirected survival arena. Manual target priority, held Pulse Cannon fire, a one-second idle-powered opening shot, dash positioning, installation pressure, and map-acquired build choices are the shared combat language.
+Cardborne is a top-down vehicle action shooter built around manual target
+priority, held Pulse Cannon fire, a stronger opening shot after one idle second,
+dash positioning, passive seekers, one explicit EMP skill, field items, and
+card-defined run builds. Exploration and combat share one authored field;
+ordinary-enemy extermination is never a stage-exit requirement.
 
-Flooded Works, Tidal Archive, and Storm Drydock are authored stages with a shared macro objective cadence and boss behavior. Each stage owns a distinct layout, environment rule, and enemy mix.
+This specification describes the shipped five-stage campaign. It is the sole
+product contract for the current executable.
 
 ## Scope
 
-This specification applies to the current vehicle run, its stage definitions,
-enemy-role composition, run-card behavior, presentation needs, and compatible
-future additions. It is the sole product contract for the current executable.
+This contract covers the connected vehicle campaign, controls, encounter pacing,
+stage progression, enemies, bosses, items, cards, HUD and modal flows, audio,
+localization, settings, persistence, and the validation required to ship them.
+Future ideas are outside scope until accepted here.
 
 ## Requirements
 
-The detailed contracts below are normative within this scope. In summary:
+- Preserve independent movement and aim, held primary fire, the one-second
+  opening shot, dash, passive support, and one explicit active skill.
+- Keep navigation and combat in the same authored field while allowing ordinary
+  enemies to be bypassed.
+- Give every stage a readable spatial rule, target-priority problem, optional
+  reward, and boss exam without forking the common control or UI contracts.
+- Keep stage data, encounter pacing, enemy behavior, boss patterns, cards, UI,
+  and persistence under their named responsibility owners.
 
-- retain manual target priority, held primary fire, the one-second opening shot,
-  dash, passive support, and one explicit active skill;
-- keep navigation and combat in one authored field while making ordinary-enemy
-  extermination unnecessary for progression;
-- give each stage one new spatial verb, one new threat relationship, and one new
-  reward interaction;
-- coordinate simultaneous pressure and preserve readable startup, active, and
-  recovery windows;
-- keep card definitions, run state, enemy behavior, stage data, UI, and
-  persistence under their existing responsibility owners.
+## Controls and settings
 
-## Core run rhythm
+Fresh defaults are:
 
-Every authored stage combines navigation and combat in one continuous field. A stage should take roughly 8–12 minutes on a successful first clear and contain five beats:
+| Intent | Default |
+| --- | --- |
+| Move | Arrow keys or WASD |
+| Aim | Mouse position, independent of movement |
+| Primary fire | Hold Mouse 1 |
+| Dash | Space |
+| EMP | Left Shift |
+| Pause | Escape |
 
-1. **Safe read:** a short arrival space reveals the stage's dominant landmark and one new hazard without damage pressure.
-2. **Open pressure:** mobile enemies teach the local movement problem while the player can choose a target and route.
-3. **Installation decision:** two or more fixed threats create a priority problem. Destroying every ordinary enemy is never required to advance.
-4. **Reward decision:** an authored cache, elite, or field boss offers a meaningful card or module after a visible achievement.
-5. **Boss exam:** the final arena recombines the stage's movement problem, one installation rule, and known enemy pressure with readable startup, active, and recovery windows.
+Normal primary fire repeats while held and is never charge-gated. Releasing it
+for one second primes the next shot as an opening attack with stronger health and
+structure damage plus temporary pierce. Dash is a short defensive repositioning
+tool; passive seekers fire without another command; EMP is the only explicit
+cooldown skill.
 
-A stage is not a recolored arena. It must add one new spatial verb, one new threat relationship, and one new reward interaction while reusing enough existing language to remain immediately readable.
+Deployment and pause open one shared settings surface. Primary fire, dash, and
+EMP can be rebound, reset, persisted, and reflected immediately in HUD copy.
+Conflicting bindings are rejected rather than silently swapping or unbinding an
+action. Korean is the default language; English, audio levels, and the Standard
+or Onslaught combat preset persist in the same settings contract.
 
-## Stage construction contract
+## Campaign rhythm
 
-Each stage definition owns:
+Every stage uses the same deterministic onboarding and encounter language:
 
-- a stable ID, display-name key, theme ID, world bounds, player entry, and boss arena;
-- one critical route plus at least one optional risk/reward branch;
-- landmark positions visible from adjacent combat spaces;
-- solid-cover geometry shared by movement, hostile projectiles, player projectiles, aim assist, and passive target selection;
-- encounter groups with activation bounds rather than global timed spawning;
-- required installations, optional field-boss trigger, reward cache, and exit condition;
-- minimap marker roles and discovery bounds;
-- a stage-specific palette subset that preserves global player/reward/threat semantics.
+1. Arrival is safe from active damaging enemies for six seconds.
+2. A visible entry cue begins at 5.1 seconds and one scout enters at 6.0 seconds.
+3. Later packets activate from authored route events. Units enter sequentially,
+   then cohere into squads of three, four, and five as the stage advances.
+4. Calibration, two route installations, a relay cache, an optional field-boss
+   branch, and a stage boss provide the macro decisions.
+5. Ordinary enemies may remain alive when an authored exit opens. Installations,
+   interactions, and bosses—not total kills—own progression gates.
 
-Route widths must accommodate the player collision radius, a full dash, and at least two ordinary enemies without creating accidental door blocks. Every entrance and exit gets an automated reachability check and a rendered spawn-safety capture.
+Each stage grants three mandatory card choices: calibration, relay, and boss.
+The optional field-boss route can add one more. A full campaign therefore grants
+15 mandatory and up to five optional upgrades without discarding the current
+run build between stages.
 
-### Stage 2: Tidal Archive
+## Authored stages
 
-- **Spatial verb:** redirect slow water currents that push vehicles and projectiles along marked lanes.
-- **Installation problem:** two current regulators share the field with artillery spotters and limited-charge interceptor towers; route choice changes the order in which those threats gain line of sight.
-- **Optional branch:** travel against the current to reach a field boss guarding a passive-module blueprint.
-- **Boss exam:** rotate current lanes, destroy exposed relay seals, and use cover while the boss fires committed archive beams.
-- **Reuse:** chasers and turrets return with changed placement; mines drift only inside clearly painted current lanes.
+Stages run in this fixed order:
 
-### Stage 3: Storm Drydock
+| # | Stage | Spatial rule and target-priority problem | Boss exam |
+| --- | --- | --- | --- |
+| 1 | Flooded Works | Central safe plaza, two generator routes, solid cover, and an optional foundry pocket teach map semantics and installation priority. | Foundry Colossus recombines committed attacks, cover, and barrier pylons. |
+| 2 | Tidal Archive | Marked current lanes push vehicles and projectiles while interceptor towers and artillery change route order. | Archive Leviathan tests current-lane positioning, relay seals, and cover. |
+| 3 | Storm Drydock | Alternating electrical sweeps make grounded lanes and safe islands the movement read; shield escorts and beam sentinels change target order. | Drydock Titan tests safe-zone timing, escorts, and a committed ram. |
+| 4 | Coral Switchyard | Three drive-over pads toggle one paired gate state. The open flank is always traversable; a timed salvage convoy is optional. | Switchyard Behemoth charges only through the learned open lane and becomes vulnerable after a cover crash. |
+| 5 | Abyssal Observatory | Two drive-over consoles rotate two reflectors. Their orientations open the optional vault and redirect both friendly and hostile rounds. | Crown Engine starts behind two reflection-only shield relays and separates beam and carrier windows. |
 
-- **Spatial verb:** move between grounded safe zones before broad electrical sweeps activate.
-- **Installation problem:** mobile shield escorts protect nearby ordinary enemies while artillery and interception roles contest the divided drydock lanes.
-- **Optional branch:** a timed salvage crane exposes a reward while temporarily removing cover.
-- **Boss exam:** alternating safe zones, destructible shield escorts, and a slow committed ram pattern; no unrelated bullet-wall phase.
-- **Reuse:** shooters and controllers return in smaller numbers so the stage-specific electrical timing remains dominant.
+Every stage definition owns its world bounds, safe start, walkable regions, solid
+cover, water/void, hazards, landmarks, objective triggers, static threats,
+encounter packets, field items, crates, and four reward anchors. The same data is
+consumed by movement, projectile collision, line of sight, minimap rendering,
+spawn validation, and backdrop drawing. Visual-only corridors and collision-only
+blockers are invalid.
 
-## Enemy role contract
+Flooded Works starts at the exact map center with a 360-pixel clear radius. Later
+stages use authored entry plazas with the same clearance. Critical routes,
+optional branches, boss entrances, and return paths must remain reachable for
+the player collision radius.
 
-Every enemy must answer four questions in data and presentation:
+## Encounter and difficulty contract
 
-1. What space does it claim?
-2. Why might the player target it before the nearest enemy?
-3. What visible cue announces damage?
-4. What movement, aim, dash, or timing response defeats it?
+The campaign contains 19 data-defined archetypes spanning compact drones,
+chasers, shooters, denial units, support vehicles, installations, field bosses,
+and stage bosses. Enemy behavior must answer what space it claims, why it should
+be targeted, what announces damage, and what response defeats it.
 
-The standard roster is role-based:
+Important target-priority roles include:
 
-| Role | Purpose | Required counter/read | Coordination limit |
-|---|---|---|---|
-| Pursuer | Dislodge stationary firing | sidestep or dash a committed approach | at most two attacking simultaneously |
-| Skirmisher | Contest open lanes | use cover, close distance, or pre-aim | burst windows do not overlap continuously |
-| Controller | Deny a marked area | leave the shape before activation | one major denial zone near the player at a time |
-| Installation | Create target priority | break line of sight or destroy its support relation | placement must leave one safe approach |
-| Support | Shield, repair, spot, or redirect | identify and sever a visible link | never make an off-screen target invulnerable |
-| Elite/field boss | Guard optional value | learn two combined role rules; retreat remains possible | isolated from the required stage boss gate |
-| Stage boss | Test taught rules | read startup/active/recovery and exploit a vulnerability window | phases recombine known verbs instead of replacing them |
+- Shield Escort: protects one nearby ordinary ally with a visible relation.
+- Artillery Spotter: paints a large impact area before denial becomes active.
+- Interceptor Tower: visibly spends three charges to stop player projectiles.
+- Rammer: paints one committed lane, crashes into cover, and exposes recovery.
+- Repair Tender: restores one damaged ally through an unobstructed link.
+- Drone Carrier: releases children sequentially under a six-child cap.
+- Beam Sentinel: warns, activates for 0.6 seconds, stops at cover, then recovers.
 
-New enemies add one primary behavior, not several hidden exceptions. Silhouette, threat color, health bar, telegraph shape, projectile ownership, and death result must be readable at gameplay zoom. Ordinary enemy bullets collide with solid cover unless a clearly named elite/boss rule communicates otherwise.
+Player and enemy projectiles collide with ordinary solid cover. An exception is
+allowed only when a named boss or stage mechanic communicates it, such as an
+Observatory reflector.
 
-### Implemented additions
+Authored population bands are:
 
-- **Shield Escort:** circles the player-facing formation and grants a visible shield to nearby ordinary allies. Destroying or separating it exposes them.
-- **Artillery Spotter:** paints one large impact point, then resolves a denial zone after a long startup.
-- **Interceptor Tower:** consumes a limited number of player projectiles before overheating; its remaining intercept charges are shown as large pips.
+| Stage | Total authored enemies before dynamic carrier children |
+| --- | ---: |
+| Flooded Works | 112–128 |
+| Tidal Archive | 128–148 |
+| Storm Drydock | 144–164 |
+| Coral Switchyard | 152–176 |
+| Abyssal Observatory | 160–184 |
 
-Salvage Thief remains an unimplemented future candidate and must not delete critical progression.
+Population does not equal simultaneous pressure. Standard active caps progress
+through 1/12/16/20/24 units; Onslaught uses 1/16/24/32/40 and shortens later
+squad gaps. A 6.5-point threat budget, at most three ranged commits, and at most
+two denial commits bound attacks. Committed attackers are retained when caps are
+enforced. Distant and optional packets remain dormant rather than being deleted
+or globally activated.
 
-## Encounter composition
+## Rewards, items, and upgrades
 
-Use coordinated pressure, not raw enemy count alone. Flooded Works, Tidal Archive, and Storm Drydock contain exactly 204, 228, and 252 pre-boss enemies, while hard local mobile activation caps are 48, 54, and 60. The scheduler retains committed attackers and then the nearest enemies, making distant groups dormant without deleting them. Compact swarm units create visible density; a 6.5-point attack budget, three ranged commits, and two denial commits bound simultaneous danger. Runtime enemy movement, hostile projectile speed, enemy damage, and ordinary recovery use explicit multipliers of 1.15, 1.12, 1.25, and 1.20 respectively; startup warnings retain their authored timing. Inactive groups do not move, attack, draw, or create individual minimap noise. Fixed installations participate in the same coordination rules where applicable.
+The catalog contains 46 typed card definitions. Offers contain three compatible,
+non-duplicate choices; selection and application are separate actions behind a
+short input guard, and no card is applied before explicit confirmation. Card
+data lives under `data/cards/vehicle/`; gameplay owners apply behavior while UI
+only presents the offer.
 
-Activation uses authored zones and proximity. Enemies may pursue across connected local spaces but return or reposition when navigation fails. Progress gates depend on installations, interaction, survival, or boss defeat—not total ordinary-enemy extermination.
+Upgrade families cover:
 
-## Upgrade contract
+- primary cadence and geometry: cadence, projectile count, ricochet, pierce,
+  range, and the periodic Burst Capacitor;
+- opening attacks: faster readiness, structure breach, Shock Breach, and dash-
+  driven Reserve Charge;
+- mutually exclusive burn, poison, or slow cores and their bounded follow-ups;
+- passive targeting and protection: Marked Salvo, Phase Shear, Guardian Seeker,
+  and seeker cadence/warhead changes;
+- dash and movement: wake damage, ram pulse, mobility, Emergency Vector, and
+  Salvage Booster;
+- EMP, barrier, and stage interaction: aftershock, Relay Overload, Static Aegis,
+  Coolant Wake, and reflected Relay Rounds.
 
-Run upgrades are cards that visibly change a behavior within the next encounter. A card must belong to one family and state its trigger, effect, and meaningful tradeoff:
+Each stage authors eight field pickups, five breakable crates, and four reward
+anchors. Field items produce immediate, legible effects such as repair, temporary
+attack/cadence/mobility, barrier, seeker refresh, opening-shot reserve, or pickup
+magnetism. Important upgrades remain deliberate card rewards rather than tiny
+random floor drops.
 
-| Family | Examples | Avoid |
-|---|---|---|
-| Primary cadence/geometry | faster held fire, extra projectiles, ricochet, pierce, range | ammo limits or charge-gating ordinary fire |
-| Opening shot | faster one-second recharge, stronger breach/stagger, elemental payoff | forcing the player to stop firing for ordinary damage |
-| Element | mutually exclusive burn, poison, or slow cores and their follow-ups | unreadable multi-element stacking |
-| Passive command | two weaker seekers; marked-target priority; pickup-triggered drone | passive screen clearing with no target relation |
-| Dash collision | ion wake, ram pulse, projectile erase with longer cooldown | unconditional invulnerability uptime |
-| EMP/control | aftershock, linked-installation disruption, pickup conversion | permanent stunlock or unreadable proc chains |
+## UI, audio, and persistence
 
-The current catalog contains 34 typed, bounded definitions. An offer contains three compatible, non-duplicate cards. Every stage presents mandatory calibration, relay, and post-boss offers plus an optional field-boss offer, for nine mandatory and up to three optional choices per run. Selection and application are separate actions behind a 0.35-second input guard. Cards never implement effects in UI code; definitions live in data, run state owns levels and elemental exclusion, and gameplay owners read derived values and behavior IDs.
+The live HUD prioritizes hull, objective, primary opening state, passive seeker,
+dash, EMP, minimap, and exceptional buffs. The minimap distinguishes discovered
+walkable space, blockers, objectives, rewards, bosses, and the player; unvisited
+space stays concealed. A separate 12-direction off-screen threat arc aggregates
+nearby off-screen enemies at 10 Hz rather than duplicating visible enemies.
 
-Persistent progression unlocks sidegrades, new card families, route choices, or equipment options. It must not add mandatory permanent damage grinding that invalidates authored encounter tuning. Important cards, blueprints, and equipment use deliberate reward presentation, never tiny floor drops.
+Deployment, settings, upgrade, pause, result, and garage are explicit modal focus
+layers. Gameplay HUD is hidden behind them, each exposes a clear primary action,
+and keyboard focus remains deterministic. Boss state replaces competing top-HUD
+clusters while active.
 
-## Asset and UI needs
+Thirteen stored WAV effects cover firing, impacts, rewards, destruction, and boss
+warnings. Audio is enabled by default and controlled from the shared settings
+surface. Persistent data keeps locale, audio, bindings, difficulty preset,
+selected equipment, and earned persistent modules; replay resets the active run
+build and stage pickups without corrupting settings.
 
-Before a content milestone starts, list only assets that cannot be communicated by current geometry and theme controls:
+## Ownership
 
-- one large stage landmark/background motif and a restrained ground-surface set;
-- one readable silhouette per new vehicle/enemy/installation role;
-- startup, active, recovery, hit, disabled, and destroyed states where behavior requires them;
-- large pickup/reward symbols with the existing semantic colors;
-- minimap marker and codex icon only when the role cannot reuse an existing symbol.
+- Stage data: `scripts/vehicle/stages/` behind `vehicle_stage_catalog.gd`.
+- Movement and action intent: `scripts/player/` and the vehicle runtime.
+- Encounter pacing and pressure: `scripts/encounters/`.
+- Enemy definitions and specialist behavior: `scripts/enemies/`.
+- Boss patterns: `scripts/bosses/`.
+- Card definitions/effects: `data/cards/vehicle/` and `scripts/cards/`.
+- UI and settings surfaces: `scripts/ui/`.
+- Persistent settings: `scripts/autoload/settings_store.gd`.
 
-Cooldowns, charge counts, links, health, card copy, selection, and settings remain live Godot UI. They are not baked into images. During play, a 208 px off-screen threat indicator follows the projected player position and aggregates threats outside the safe viewport into 12 short directional arcs within 1,200 px. Arc weight communicates density/proximity; priority and current target use distinct semantic treatments. On-screen enemies are not duplicated in this overlay, and contact sampling runs at 10 Hz while the player-centered projection remains current.
+The shared vehicle runtime orchestrates these owners. It must not become a second
+stage catalog, settings store, card catalog, or presentation system.
 
-## Data and ownership
+## Acceptance criteria
 
-- Stage layout and encounter definitions belong under stage/encounter data owners, not the UI.
-- Enemy movement and attacks remain under enemy behavior owners; stage scripts activate groups but do not implement role logic.
-- Card definitions and effects remain separate from presentation and player input.
-- Global run state owns current cards and route; persistent state owns unlocks and equipment.
-- Localization keys are stored with display data; stable IDs remain language-independent.
-
-Stage identity, layout, population, rewards, and environment data live in `vehicle_stage_catalog.gd`; continuous cadence and opening charge live in `vehicle_primary_weapon.gd`; formation/pressure limits live in `vehicle_encounter_director.gd`; card/status/audio/UI responsibilities use their dedicated owners. The shared runtime orchestrates those owners and should not absorb another catalog or presentation system.
-
-## Acceptance Criteria
-
-A proposed stage can enter implementation only when:
-
-- its new spatial verb and target-priority problem are stated in one sentence each;
-- a route diagram identifies entry, critical path, optional branch, reward, field boss, boss, cover, and exit;
-- all critical points pass reachability and spawn-safety checks;
-- the enemy composition respects coordination limits and cover collision rules;
-- at least one new reward changes a visible combat behavior;
-- Korean and English names/copy exist before rendered UI review;
-- 960x540 and 1280x720 captures show readable terrain, threats, rewards, telegraphs, and HUD;
-- direct playtesting records time-to-first-decision, avoidable damage causes, target-priority clarity, and whether the boss tests taught rules.
+- All five stages pass schema, reachability, clearance, packet-population, boss,
+  transition, reward, and mechanic validators.
+- First cue is 5.1 seconds, first scout is 6.0 seconds, and the 3/4/5 squad
+  sequence remains deterministic in both presets.
+- Fresh controls, remapping, conflict rejection, reset, persistence, Korean/
+  English copy, audio, and difficulty settings pass focused validation.
+- The full run resolves 15 mandatory reward transactions and preserves the build
+  through the fifth boss.
+- Standard and Onslaught fixed-step pressure profiles stay at or below 8ms.
+- 960x540, 1280x720, and 1920x1080 rendered reviews show no clipped modal, HUD
+  overlap, hidden route, ambiguous blocker, or unreadable objective.
+- Native boot, Web export, and a browser boot of the built artifact all succeed.
 
 ## Non-goals
 
-- endless global wave spawning;
-- procedural maps before two authored stages are replayable and enjoyable;
-- mandatory full-map extermination;
-- screen-filling passive proc chains;
-- a walkable base filled with errands;
-- large asset-pack adoption without a separate license and visual-fit review.
+- endless global wave spawning or mandatory full-map extermination;
+- procedural maps before the authored campaign is replayable and enjoyable;
+- ammo limits or charge gates on ordinary primary fire;
+- screen-filling passive proc chains or permanent control locks;
+- realistic materials, dense micro-texture, or an unrelated asset-pack style;
+- a walkable base filled with chores.

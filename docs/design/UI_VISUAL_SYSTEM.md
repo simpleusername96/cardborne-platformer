@@ -24,7 +24,7 @@ this specification rather than from the reference image's depicted objects.
 ## Scope
 
 This contract applies to every reachable screen and every gameplay object in the
-current three-stage run. Gameplay rules remain owned by the product specification
+current five-stage campaign. Gameplay rules remain owned by the product specification
 and runtime systems.
 
 ## Requirements
@@ -71,6 +71,23 @@ state.
 - Off-screen threat arcs supplement the field; they must not duplicate enemies
   already visible on screen.
 
+### Stage identity
+
+All stages use the same semantic palette. Identity comes from macro composition
+and one large mechanic, not recoloring or added surface noise:
+
+| Stage | Large-shape identity |
+| --- | --- |
+| Flooded Works | Centered ivory plaza, split generator routes, green foundry cover, and broad cobalt voids. |
+| Tidal Archive | Long current channels with large directional water marks and counter-current branch. |
+| Storm Drydock | Grounded islands, broad electrical sweep lanes, and a restrained safe spine. |
+| Coral Switchyard | Three mustard switch circles and one paired green gate that visibly changes flank ownership. |
+| Abyssal Observatory | Two large mint reflector diamonds, readable orientation bars, consoles, and a symmetrical crown chamber. |
+
+Mechanics that change collision must update world drawing and minimap in the
+same frame. Switch gates and reflector orientations are large navigational
+signals, not decorative icons.
+
 ### UI hierarchy
 
 - Korean is the default language. Korean and English use the same layout and a
@@ -98,6 +115,8 @@ state.
   state remains in the vehicle run.
 - New raster assets are justified only when procedural shapes cannot communicate
   the required silhouette or landmark at gameplay size.
+- Generated capture and build folders contain `.gdignore` boundaries so QA
+  evidence never enters the shipped resource graph.
 
 ## Acceptance Criteria
 

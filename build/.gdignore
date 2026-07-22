@@ -1,0 +1,1 @@
+# Keep generated builds and QA evidence outside Godot's resource import graph.

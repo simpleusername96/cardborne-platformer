@@ -19,7 +19,8 @@ Thumbs.db
 *.log
 dist/
 exports/
-build/
+/build/*
+!/build/.gdignore
 
 # Godot import metadata for generated documentation images
 docs/**/*.import
