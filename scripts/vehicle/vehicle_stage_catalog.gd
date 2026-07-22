@@ -185,7 +185,10 @@ static func authored_population(stage_id: StringName) -> int:
 static func position_is_walkable(stage_id: StringName, position: Vector2, radius: float = 0.0) -> bool:
 	var inside_floor := false
 	for region in definition(stage_id)["walkable_regions"]:
-		if Rect2(region["rect"]).grow(-radius).has_point(position):
+		var floor_rect := Rect2(region["rect"])
+		if floor_rect.size.x < radius * 2.0 or floor_rect.size.y < radius * 2.0:
+			continue
+		if floor_rect.grow(-radius).has_point(position):
 			inside_floor = true
 			break
 	if not inside_floor:

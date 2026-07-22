@@ -235,6 +235,10 @@ func _check_multistage_contract(stage: Node) -> void:
 	_expect(result["stage_ids"] == [&"flooded_works", &"tidal_archive", &"storm_drydock"], "one run advances through three authored stages in order")
 	_expect(&"artillery_spotter" in result["role_sets"][1] and &"interceptor_tower" in result["role_sets"][1], "Tidal Archive deploys artillery and interception roles")
 	_expect(&"shield_escort" in result["role_sets"][2], "Storm Drydock deploys shield escorts")
+	_expect(result["environments"] == [&"none", &"current", &"storm"], "the first three stages record distinct environment verbs")
+	_expect(result["packet_counts"] == [6, 6, 6], "the first three stages record complete six-beat packet tables")
+	for reward_set in result["reward_ids"]:
+		_expect(reward_set.size() == 4, "each current stage records four authored reward anchors")
 	_expect(result["upgrade_counts"] == [0, 3, 6], "stage transitions preserve the accumulated run upgrades")
 	_expect(int(result["final_stage_index"]) == 2 and bool(result["final_complete"]), "the third boss resolves the final stage")
 

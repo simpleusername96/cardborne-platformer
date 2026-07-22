@@ -2829,7 +2829,7 @@ func _draw_landmarks() -> void:
 		draw_colored_polygon(_regular_polygon(chest_position, 25.0, 4, PI / 4.0), Art.IVORY_BRIGHT)
 		draw_colored_polygon(_regular_polygon(chest_position, 12.0, 4, PI / 4.0), Art.CERAMIC_GREEN)
 	if generators_destroyed >= 2 and chest_claimed and not boss_started:
-		var exit_center := Vector2(3860.0, 1100.0)
+		var exit_center := _stage_landmark("boss_gate")
 		var pulse := 54.0 + sin(run_time * 3.0) * 7.0
 		draw_circle(exit_center, pulse, Color(Art.MUSTARD, 0.28))
 		draw_colored_polygon(_regular_polygon(exit_center, 24.0, 4, PI / 4.0), Art.MUSTARD)
@@ -3738,8 +3738,14 @@ func debug_multistage_contract() -> Dictionary:
 	var stage_ids: Array[StringName] = []
 	var role_sets: Array = []
 	var upgrade_counts: Array[int] = []
+	var environments: Array[StringName] = []
+	var packet_counts: Array[int] = []
+	var reward_ids: Array = []
 	for stage_number in StageCatalog.STAGE_IDS.size():
 		stage_ids.append(current_stage_id)
+		environments.append(StringName(StageCatalog.profile(current_stage_id)["environment"]))
+		packet_counts.append(StageCatalog.packets(current_stage_id).size())
+		reward_ids.append(StageCatalog.reward_anchors(current_stage_id).keys())
 		var roles: Array[StringName] = []
 		for spec in StageCatalog.enemy_blueprint(current_stage_id):
 			var definition := EnemyArchetypes.definition(StringName(spec["role"]))
@@ -3755,6 +3761,9 @@ func debug_multistage_contract() -> Dictionary:
 	return {
 		"stage_ids": stage_ids,
 		"role_sets": role_sets,
+		"environments": environments,
+		"packet_counts": packet_counts,
+		"reward_ids": reward_ids,
 		"upgrade_counts": upgrade_counts,
 		"final_stage_index": current_stage_index,
 		"final_complete": stage_complete,

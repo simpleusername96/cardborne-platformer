@@ -452,21 +452,21 @@ Source owners touched: `scripts/vehicle/stages/tidal_archive.gd`,
 `tools/validation/validate_vehicle_stage_layouts.gd`,
 `tools/validation/validate_vehicle_encounter_pacing.gd`
 
-- [ ] **4.1 Re-author Tidal Archive around current lanes.**
+- [x] **4.1 Re-author Tidal Archive around current lanes.**
   - As-is: it reuses the shared macro layout and population-first pressure.
   - To-be: safe intake plaza, two visible current lanes, one counter-current
     optional branch, sequential 3/4/5-unit packets, and isolated boss vault.
   - Accept: current direction is readable before entry; every packet anchor and
     retreat path is reachable; population remains inside the Stage 2 band.
   - Guard: currents never push the player into non-walkable space or through cover.
-- [ ] **4.2 Re-author Storm Drydock around grounded safe zones.**
+- [x] **4.2 Re-author Storm Drydock around grounded safe zones.**
   - As-is: it reuses the shared macro layout and dense swarm expansion.
   - To-be: safe service plaza, large grounded islands, visible sweep timing,
     shield-support packet sequencing, and isolated boss cradle.
   - Accept: every electrical sweep leaves one reachable safe region and Stage 3
     population remains inside its band.
   - Guard: electrical timing cannot overlap an unavoidable spawn entrance.
-- [ ] **4.3 Validate cross-stage escalation.**
+- [x] **4.3 Validate cross-stage escalation.**
   - As-is: later difficulty is mainly a higher count and cap.
   - To-be: Stage 2 adds current/installation relationships; Stage 3 adds
     safe-zone/shield relationships; squad timing escalates within each stage.
@@ -739,7 +739,7 @@ list requires owner change control.
 - [x] Phase 1: Remappable combat controls and shared settings
 - [x] Phase 2: Per-stage geometry and central Stage 1 map
 - [x] Phase 3: Sequential encounter packets and cohesive squads
-- [ ] Phase 4: Correct Stage 2 and Stage 3 composition
+- [x] Phase 4: Correct Stage 2 and Stage 3 composition
 - [ ] Phase 5: Four enemy roles and twelve upgrades
 - [ ] Phase 6: Coral Switchyard and Abyssal Observatory
 - [ ] Phase 7: Production validation, specification update, and plan retirement
