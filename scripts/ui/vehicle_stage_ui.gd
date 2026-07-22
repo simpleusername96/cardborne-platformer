@@ -18,6 +18,8 @@ const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const VEHICLE_THEME = preload("res://art/ui/production/vehicle_stage_theme.tres")
 const UpgradeChoicePanel = preload("res://scripts/ui/vehicle_upgrade_choice_panel.gd")
 const ThreatRadar = preload("res://scripts/ui/vehicle_threat_radar.gd")
+const SettingsPanel = preload("res://scripts/ui/vehicle_settings_panel.gd")
+const InputProfile = preload("res://scripts/input/vehicle_input_profile.gd")
 
 const CANVAS := Art.COBALT_VOID
 const SURFACE := Art.IVORY
@@ -88,6 +90,10 @@ class ActionRailSlot:
 		cooldown_ratio = clampf(ratio, 0.0, 1.0)
 		filled_segments = maxi(0, current_segments)
 		segment_count = maxi(0, maximum_segments)
+		queue_redraw()
+
+	func set_binding(value: String) -> void:
+		binding = value
 		queue_redraw()
 
 	func _draw() -> void:
@@ -216,7 +222,10 @@ var _upgrade_panel: VehicleUpgradeChoicePanel
 var _pause_center: CenterContainer
 var _result_center: CenterContainer
 var _garage_center: CenterContainer
+var _settings_center: CenterContainer
+var _settings_panel: VehicleSettingsPanel
 var _deployment_command: Button
+var _deployment_controls_label: Label
 var _upgrade_buttons: Array[Button] = []
 var _pause_first_button: Button
 var _result_first_button: Button
@@ -231,7 +240,7 @@ var _garage_active_label: Label
 var _garage_unlock_label: Label
 var _garage_summary_label: Label
 var _selected_primary := &"pulse_cannon"
-var _locale_buttons: Array[Button] = []
+var _settings_return_surface := "deployment"
 var _latest_upgrade_cards: Array[Dictionary] = []
 var _latest_upgrade_optional := false
 var _latest_result_summary: Dictionary = {}
@@ -247,10 +256,14 @@ func _ready() -> void:
 	_build_pause()
 	_build_result()
 	_build_garage()
+	_build_settings()
 	var settings := get_node_or_null("/root/SettingsStore")
 	if settings != null and settings.has_signal("locale_changed"):
 		settings.locale_changed.connect(_on_locale_changed)
+	if settings != null and settings.has_signal("controls_changed"):
+		settings.controls_changed.connect(_on_controls_changed)
 	_refresh_localized_content()
+	_refresh_input_bindings()
 	hide_all_modals()
 	_hud.visible = false
 
@@ -414,10 +427,10 @@ func _build_hud() -> void:
 	var dock := HBoxContainer.new()
 	dock.add_theme_constant_override("separation", 6)
 	_dock_panel.add_child(dock)
-	_primary_slot = _action_slot(dock, "SHIFT / LMB", "ACTION_PRIMARY", AMBER, true)
+	_primary_slot = _action_slot(dock, "LMB", "ACTION_PRIMARY", AMBER, true)
 	_passive_slot = _action_slot(dock, "AUTO", "ACTION_SEEKER", MOSS)
 	_dash_slot = _action_slot(dock, "SPACE", "ACTION_DASH", CYAN)
-	_skill_slot = _action_slot(dock, "Z", "ACTION_EMP", VIOLET)
+	_skill_slot = _action_slot(dock, "SHIFT", "ACTION_EMP", VIOLET)
 
 	_buff_label = _label("", 13, OFF_WHITE)
 	_buff_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -472,15 +485,14 @@ func _build_deployment() -> void:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 8)
 	panel.add_child(box)
-	box.add_child(_language_selector())
 	var kicker := _label("DEPLOY_KICKER", 14, AMBER)
 	box.add_child(kicker)
 	var title := _label("DEPLOY_TITLE", 30, INK)
 	box.add_child(title)
-	var body := _label("DEPLOY_CONTROLS", 15, MUTED)
-	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	body.custom_minimum_size.y = 36.0
-	box.add_child(body)
+	_deployment_controls_label = _label("DEPLOY_CONTROLS", 15, MUTED)
+	_deployment_controls_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_deployment_controls_label.custom_minimum_size.y = 36.0
+	box.add_child(_deployment_controls_label)
 	var cannon := _label("DEPLOY_PULSE_CANNON_SUMMARY", 19, RAISED)
 	cannon.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	cannon.custom_minimum_size.y = 174.0
@@ -490,6 +502,9 @@ func _build_deployment() -> void:
 	_deployment_command = _command_button("DEPLOY_COMMAND", &"PrimaryButton")
 	_deployment_command.pressed.connect(_on_deployment_confirmed)
 	box.add_child(_deployment_command)
+	var settings_button := _command_button("SETTINGS_OPEN", &"SecondaryButton")
+	settings_button.pressed.connect(_show_settings.bind("deployment"))
+	box.add_child(settings_button)
 	var footer := _label("DEPLOY_FOOTER", 13, MUTED)
 	footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(footer)
@@ -527,26 +542,9 @@ func _build_pause() -> void:
 	var restart := _command_button("PAUSE_RESTART", &"SecondaryButton")
 	restart.pressed.connect(func() -> void: restart_requested.emit())
 	box.add_child(restart)
-	box.add_child(_label("PAUSE_SETTINGS", 15, AMBER))
-	box.add_child(_label("PAUSE_MASTER_VOLUME", 13, INK))
-	var master := HSlider.new()
-	master.name = "MasterVolume"
-	master.min_value = 0.0
-	master.max_value = 1.0
-	master.step = 0.05
-	master.value = _settings_value("master_volume", 1.0)
-	master.value_changed.connect(_on_master_volume_changed)
-	box.add_child(master)
-	box.add_child(_label("PAUSE_EFFECTS_VOLUME", 13, INK))
-	var sfx := HSlider.new()
-	sfx.name = "SFXVolume"
-	sfx.min_value = 0.0
-	sfx.max_value = 1.0
-	sfx.step = 0.05
-	sfx.value = _settings_value("sfx_volume", 1.0)
-	sfx.value_changed.connect(_on_sfx_volume_changed)
-	box.add_child(sfx)
-	box.add_child(_language_selector())
+	var settings_button := _command_button("PAUSE_SETTINGS", &"SecondaryButton")
+	settings_button.pressed.connect(_show_settings.bind("pause"))
+	box.add_child(settings_button)
 	var garage := _command_button("PAUSE_ABORT", &"DangerButton")
 	garage.pressed.connect(func() -> void: garage_requested.emit())
 	box.add_child(garage)
@@ -620,31 +618,6 @@ func _build_garage() -> void:
 	_garage_unlock_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	loadout_box.add_child(_garage_unlock_label)
 
-	var settings_box := VBoxContainer.new()
-	settings_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	settings_box.add_theme_constant_override("separation", 8)
-	sections.add_child(settings_box)
-	settings_box.add_child(_label("GARAGE_SETTINGS", 16, AMBER))
-	settings_box.add_child(_label("PAUSE_MASTER_VOLUME", 13, MUTED))
-	var master := HSlider.new()
-	master.min_value = 0.0
-	master.max_value = 1.0
-	master.step = 0.05
-	master.value = _settings_value("master_volume", 1.0)
-	master.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	master.value_changed.connect(_on_master_volume_changed)
-	settings_box.add_child(master)
-	settings_box.add_child(_label("PAUSE_EFFECTS_VOLUME", 13, MUTED))
-	var sfx := HSlider.new()
-	sfx.min_value = 0.0
-	sfx.max_value = 1.0
-	sfx.step = 0.05
-	sfx.value = _settings_value("sfx_volume", 1.0)
-	sfx.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	sfx.value_changed.connect(_on_sfx_volume_changed)
-	settings_box.add_child(sfx)
-	settings_box.add_child(_language_selector())
-
 	var footer := HBoxContainer.new()
 	footer.add_theme_constant_override("separation", 12)
 	box.add_child(footer)
@@ -652,7 +625,22 @@ func _build_garage() -> void:
 	replay.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	replay.pressed.connect(func() -> void: replay_requested.emit())
 	footer.add_child(replay)
+	var settings_button := _command_button("GARAGE_SETTINGS", &"SecondaryButton")
+	settings_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	settings_button.pressed.connect(_show_settings.bind("garage"))
+	footer.add_child(settings_button)
 	_garage_first_button = replay
+
+
+func _build_settings() -> void:
+	_settings_center = CenterContainer.new()
+	_settings_center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_root.add_child(_settings_center)
+	var panel := _modal_panel(Vector2(840.0, 500.0))
+	_settings_center.add_child(panel)
+	_settings_panel = SettingsPanel.new()
+	_settings_panel.close_requested.connect(_close_settings)
+	panel.add_child(_settings_panel)
 
 
 func update_hud(snapshot: Dictionary) -> void:
@@ -771,6 +759,25 @@ func show_gameplay() -> void:
 	_hud.visible = true
 
 
+func _show_settings(return_surface: String) -> void:
+	_settings_return_surface = return_surface
+	hide_all_modals()
+	_dim.visible = true
+	_settings_center.visible = true
+	_hud.visible = false
+	_settings_panel.open()
+
+
+func _close_settings() -> void:
+	match _settings_return_surface:
+		"pause":
+			show_pause()
+		"garage":
+			show_garage(_latest_garage_data)
+		_:
+			show_deployment(_selected_primary)
+
+
 func hide_all_modals() -> void:
 	if not is_instance_valid(_dim):
 		return
@@ -780,6 +787,7 @@ func hide_all_modals() -> void:
 	_pause_center.visible = false
 	_result_center.visible = false
 	_garage_center.visible = false
+	_settings_center.visible = false
 
 
 func notify(message: String, duration: float = 2.4, color: Color = OFF_WHITE) -> void:
@@ -805,6 +813,7 @@ func debug_layout_minimums() -> Dictionary:
 		"pause": Vector2(560.0, 500.0),
 		"result": Vector2(720.0, 510.0),
 		"garage": Vector2(860.0, 510.0),
+		"settings": Vector2(840.0, 500.0),
 	}
 
 
@@ -837,7 +846,7 @@ func debug_ui_contract(viewport_width: float = 1280.0) -> Dictionary:
 			func(control: Control) -> bool: return control.focus_mode != Control.FOCUS_NONE
 		).size(),
 		"locale": TranslationServer.get_locale().left(2),
-		"locale_controls": _locale_buttons.size(),
+		"settings": _settings_panel.debug_contract(),
 	}
 
 
@@ -853,6 +862,8 @@ func debug_modal_contract(surface: String) -> Dictionary:
 			show_result({"upgrade": "UPGRADE_NONE"})
 		"garage":
 			show_garage({})
+		"settings":
+			_show_settings("deployment")
 	return {"surface": surface, "hud_hidden": not _hud.visible, "dim_visible": _dim.visible}
 
 
@@ -922,32 +933,6 @@ func _refresh_garage_primary() -> void:
 	_garage_primary_label.text = "%s  ·  %s" % [tr("GARAGE_PRIMARY"), tr("PRIMARY_PULSE_CANNON")]
 
 
-func _language_selector() -> HBoxContainer:
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 8)
-	row.add_child(_label("LANGUAGE_LABEL", 13, MUTED))
-	var spacer := Control.new()
-	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(spacer)
-	for locale in ["ko", "en"]:
-		var button := _command_button("LANGUAGE_KO" if locale == "ko" else "LANGUAGE_EN", &"SecondaryButton")
-		button.custom_minimum_size = Vector2(76.0, 34.0)
-		button.set_meta("locale", locale)
-		button.pressed.connect(_on_locale_button_pressed.bind(locale))
-		row.add_child(button)
-		_locale_buttons.append(button)
-	return row
-
-
-func _on_locale_button_pressed(locale: String) -> void:
-	var settings := get_node_or_null("/root/SettingsStore")
-	if settings != null and settings.has_method("set_ui_locale"):
-		settings.call("set_ui_locale", locale)
-	else:
-		TranslationServer.set_locale(locale)
-		_refresh_localized_content()
-
-
 func _on_locale_changed(_locale: String) -> void:
 	_refresh_localized_content()
 
@@ -955,7 +940,7 @@ func _on_locale_changed(_locale: String) -> void:
 func _refresh_localized_content() -> void:
 	_refresh_garage_content()
 	_refresh_result_summary()
-	_refresh_locale_buttons()
+	_refresh_input_bindings()
 	_primary_slot.queue_redraw()
 	_passive_slot.queue_redraw()
 	_dash_slot.queue_redraw()
@@ -963,33 +948,26 @@ func _refresh_localized_content() -> void:
 	if not _latest_upgrade_cards.is_empty() and _upgrade_center.visible:
 		_refresh_upgrade_cards()
 
-
-func _refresh_locale_buttons() -> void:
-	var current := TranslationServer.get_locale().left(2)
-	for button in _locale_buttons:
-		button.theme_type_variation = &"SelectedChoiceButton" if String(button.get_meta("locale", "")) == current else &"SecondaryButton"
+func _on_controls_changed(_action: StringName) -> void:
+	_refresh_input_bindings()
 
 
-func _on_master_volume_changed(value: float) -> void:
+func _refresh_input_bindings() -> void:
+	if not is_instance_valid(_primary_slot):
+		return
 	var settings := get_node_or_null("/root/SettingsStore")
-	if settings != null and settings.has_method("set_master_volume"):
-		settings.call("set_master_volume", value)
-
-
-func _on_sfx_volume_changed(value: float) -> void:
-	var settings := get_node_or_null("/root/SettingsStore")
-	if settings != null and settings.has_method("set_sfx_volume"):
-		settings.call("set_sfx_volume", value)
-
-
-func _settings_value(property_name: StringName, fallback: float) -> float:
-	var settings := get_node_or_null("/root/SettingsStore")
-	if settings == null:
-		return fallback
-	var value: Variant = settings.get(property_name)
-	if value is float or value is int:
-		return float(value)
-	return fallback
+	var bindings := InputProfile.default_descriptors()
+	if settings != null:
+		bindings = settings.control_bindings
+	_primary_slot.set_binding(InputProfile.action_display_name(&"primary_fire", bindings))
+	_dash_slot.set_binding(InputProfile.action_display_name(&"dash", bindings))
+	_skill_slot.set_binding(InputProfile.action_display_name(&"active_skill", bindings))
+	if is_instance_valid(_deployment_controls_label):
+		_deployment_controls_label.text = tr("DEPLOY_CONTROLS_TEMPLATE") % [
+			InputProfile.action_display_name(&"primary_fire", bindings),
+			InputProfile.action_display_name(&"dash", bindings),
+			InputProfile.action_display_name(&"active_skill", bindings),
+		]
 
 
 func _flat_panel() -> PanelContainer:

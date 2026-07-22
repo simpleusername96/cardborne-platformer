@@ -290,28 +290,28 @@ Source owners touched: `scripts/input/vehicle_input_profile.gd`,
 `localization/vehicle_stage.csv`, `tools/validation/validate_settings_store.gd`,
 `tools/validation/validate_vehicle_input_bindings.gd`
 
-- [ ] **1.1 Define the input profile and apply order.**
+- [x] **1.1 Define the input profile and apply order.**
   - As-is: `game_root.gd` replaces every action with literal defaults.
   - To-be: create allowlisted event descriptors, register defaults, load saved
     overrides, and append unchanged gamepad defaults.
   - Accept: Mouse 1 fires, Space dashes, Left Shift triggers EMP, and Z triggers
     nothing in a fresh profile.
   - Guard: movement, Escape, and gamepad controls retain their current events.
-- [ ] **1.2 Persist validated control and gameplay settings.**
+- [x] **1.2 Persist validated control and gameplay settings.**
   - As-is: SettingsStore persists audio and locale only.
   - To-be: add `[controls]` descriptors, `combat_preset`, change signals, per-key
     malformed fallback, reset defaults, and atomic save through the current file.
   - Accept: all three bindings and Standard/Onslaught survive reload; one corrupt
     descriptor restores only its action.
   - Guard: existing audio/locale persistence and Korean default remain intact.
-- [ ] **1.3 Build the reusable settings panel.**
+- [x] **1.3 Build the reusable settings panel.**
   - As-is: pause and garage build duplicate sliders and language rows.
   - To-be: one scroll-safe panel with Audio, Controls, Gameplay, and Language
     pages; deployment opens it before launch; key capture shows cancel/conflict/reset.
   - Accept: keyboard, mouse, and focus navigation reach every control at 960x540;
     gameplay input is blocked while capture is active.
   - Guard: modal dismissal cannot carry a fire, dash, or EMP event into gameplay.
-- [ ] **1.4 Derive all input copy from live bindings.**
+- [x] **1.4 Derive all input copy from live bindings.**
   - As-is: action rail and deployment copy contain literal old keys.
   - To-be: format labels from `VehicleInputProfile` and use localized control
     templates rather than localized key names.
@@ -736,7 +736,7 @@ list requires owner change control.
 
 ## Progress
 
-- [ ] Phase 1: Remappable combat controls and shared settings
+- [x] Phase 1: Remappable combat controls and shared settings
 - [ ] Phase 2: Per-stage geometry and central Stage 1 map
 - [ ] Phase 3: Sequential encounter packets and cohesive squads
 - [ ] Phase 4: Correct Stage 2 and Stage 3 composition

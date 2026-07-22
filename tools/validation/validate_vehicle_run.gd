@@ -86,9 +86,10 @@ func _check_input_contract() -> void:
 	_expect(_action_has_key(&"move_right", KEY_RIGHT), "right arrow movement preserved")
 	_expect(_action_has_key(&"move_up", KEY_W), "WASD vertical movement supported")
 	_expect(_action_has_mouse(&"primary_fire", MOUSE_BUTTON_LEFT), "left mouse primary fire registered")
-	_expect(_action_has_key(&"primary_fire", KEY_SHIFT), "Left Shift primary fallback registered")
+	_expect(not _action_has_key(&"primary_fire", KEY_SHIFT), "Left Shift no longer duplicates primary fire")
 	_expect(_action_has_key(&"dash", KEY_SPACE), "Space dash registered")
-	_expect(_action_has_key(&"active_skill", KEY_Z), "Z active skill registered")
+	_expect(_action_has_key(&"active_skill", KEY_SHIFT), "Left Shift active skill registered")
+	_expect(not _action_has_key(&"active_skill", KEY_Z), "Z has no default vehicle binding")
 	_expect(_action_has_key(&"pause", KEY_ESCAPE), "Escape pause registered")
 
 
@@ -135,18 +136,22 @@ func _check_visual_contract(stage: Node) -> void:
 			String(contract["theme_path"]) == "res://art/ui/production/vehicle_stage_theme.tres",
 			"vehicle UI uses the scoped ceramic theme"
 		)
-	_expect(int(ui.debug_ui_contract()["deployment_focusables"]) >= 3, "deployment exposes one launch action and both locale controls")
+	var ui_contract: Dictionary = ui.debug_ui_contract()
+	_expect(int(ui_contract["deployment_focusables"]) >= 2, "deployment exposes launch and settings actions")
 	_expect(int(ui.debug_ui_contract()["upgrade_focusables"]) >= 3, "upgrade exposes three focusable circuit choices")
-	_expect(int(ui.debug_ui_contract()["pause_focusables"]) >= 5, "pause exposes commands and both volume controls")
+	_expect(int(ui.debug_ui_contract()["pause_focusables"]) >= 4, "pause exposes resume, restart, settings, and garage actions")
 	_expect(int(ui.debug_ui_contract()["result_focusables"]) >= 2, "result exposes garage and replay actions")
-	_expect(int(ui.debug_ui_contract()["garage_focusables"]) >= 4, "garage exposes build summary, launch, locale, and both audio controls")
-	_expect(int(ui.debug_ui_contract()["locale_controls"]) == 6, "deployment, pause, and garage each expose Korean/English controls")
+	_expect(int(ui.debug_ui_contract()["garage_focusables"]) >= 2, "garage exposes launch and shared settings actions")
+	var settings_contract: Dictionary = ui_contract["settings"]
+	_expect(int(settings_contract["tabs"]) == 4, "shared settings exposes Audio, Controls, Gameplay, and Language pages")
+	_expect(int(settings_contract["binding_controls"]) == 3, "shared settings exposes all three remappable actions")
+	_expect(int(settings_contract["focusables"]) >= 10, "shared settings remains keyboard reachable")
 	var radar_contract: Dictionary = ui.debug_threat_radar_contract()
 	_expect(is_equal_approx(float(radar_contract["diameter"]), 208.0), "threat cues stay outside the vehicle silhouette")
 	_expect(int(radar_contract["sector_count"]) == 12 and int(radar_contract["maximum_markers"]) == 12, "threat cues aggregate into twelve readable directions")
 	_expect(bool(radar_contract["offscreen_arcs"]), "threat cues use off-screen arcs instead of a duplicate dot minimap")
 	_expect(bool(radar_contract["full_rect"]) and bool(radar_contract["mouse_ignored"]), "threat radar follows HUD space without intercepting input")
-	for surface in ["deployment", "upgrade", "pause", "result", "garage"]:
+	for surface in ["deployment", "upgrade", "pause", "result", "garage", "settings"]:
 		var modal_contract: Dictionary = ui.debug_modal_contract(surface)
 		_expect(bool(modal_contract["hud_hidden"]), "%s modal hides gameplay HUD" % surface)
 		_expect(bool(modal_contract["dim_visible"]), "%s modal owns a dimmed focus layer" % surface)

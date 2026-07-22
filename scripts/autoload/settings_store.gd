@@ -2,16 +2,26 @@ class_name SettingsStoreService
 extends Node
 
 signal locale_changed(locale: String)
+signal controls_changed(action: StringName)
+signal combat_preset_changed(preset: StringName)
+
+const InputProfile = preload("res://scripts/input/vehicle_input_profile.gd")
 
 const SETTINGS_PATH := "user://cardborne-settings.cfg"
 const AUDIO_SECTION := "audio"
 const UI_SECTION := "ui"
+const CONTROLS_SECTION := "controls"
+const GAMEPLAY_SECTION := "gameplay"
 const DEFAULT_LOCALE := "ko"
 const SUPPORTED_LOCALES := ["ko", "en"]
+const DEFAULT_COMBAT_PRESET := &"standard"
+const COMBAT_PRESETS: Array[StringName] = [&"standard", &"onslaught"]
 
 var master_volume := 1.0
 var sfx_volume := 1.0
 var ui_locale := DEFAULT_LOCALE
+var control_bindings: Dictionary = InputProfile.default_descriptors()
+var combat_preset: StringName = DEFAULT_COMBAT_PRESET
 
 
 func _ready() -> void:
@@ -22,16 +32,33 @@ func load_settings() -> void:
 	master_volume = 1.0
 	sfx_volume = 1.0
 	ui_locale = DEFAULT_LOCALE
+	control_bindings = InputProfile.default_descriptors()
+	combat_preset = DEFAULT_COMBAT_PRESET
 	var config := ConfigFile.new()
 	var result := config.load(SETTINGS_PATH)
+	var repaired := false
 	if result == OK:
 		master_volume = _safe_volume(config.get_value(AUDIO_SECTION, "master", 1.0))
 		sfx_volume = _safe_volume(config.get_value(AUDIO_SECTION, "sfx", 1.0))
 		ui_locale = _safe_locale(config.get_value(UI_SECTION, "locale", DEFAULT_LOCALE))
+		for action in InputProfile.REMAPPABLE_ACTIONS:
+			var raw_value: Variant = config.get_value(CONTROLS_SECTION, String(action), control_bindings[action])
+			var descriptor := InputProfile.normalize_descriptor(raw_value)
+			if descriptor.is_empty() or not InputProfile.conflict_action(descriptor, control_bindings, action).is_empty():
+				if config.has_section_key(CONTROLS_SECTION, String(action)):
+					push_warning("Invalid %s binding; restored its default" % action)
+					repaired = true
+				descriptor = InputProfile.default_descriptors()[action]
+			control_bindings[action] = descriptor
+		combat_preset = _safe_combat_preset(config.get_value(GAMEPLAY_SECTION, "combat_preset", DEFAULT_COMBAT_PRESET))
 	elif result != ERR_FILE_NOT_FOUND:
 		push_warning("Settings file was malformed; restored defaults")
 	apply_audio()
 	apply_locale()
+	if repaired:
+		_save()
+	controls_changed.emit(&"")
+	combat_preset_changed.emit(combat_preset)
 
 
 func set_master_volume(value: float) -> void:
@@ -54,6 +81,35 @@ func set_ui_locale(value: String) -> void:
 	apply_locale()
 	_save()
 	locale_changed.emit(ui_locale)
+
+
+func set_control_binding(action: StringName, descriptor_value: Variant) -> bool:
+	if not InputProfile.is_remappable(action):
+		return false
+	var descriptor := InputProfile.normalize_descriptor(descriptor_value)
+	if descriptor.is_empty() or not InputProfile.conflict_action(descriptor, control_bindings, action).is_empty():
+		return false
+	if control_bindings.get(action, "") == descriptor:
+		return true
+	control_bindings[action] = descriptor
+	_save()
+	controls_changed.emit(action)
+	return true
+
+
+func reset_control_bindings() -> void:
+	control_bindings = InputProfile.default_descriptors()
+	_save()
+	controls_changed.emit(&"")
+
+
+func set_combat_preset(value: StringName) -> void:
+	var next_preset := _safe_combat_preset(value)
+	if combat_preset == next_preset:
+		return
+	combat_preset = next_preset
+	_save()
+	combat_preset_changed.emit(combat_preset)
 
 
 func apply_audio() -> void:
@@ -88,11 +144,23 @@ func _safe_locale(value: Variant) -> String:
 	return DEFAULT_LOCALE
 
 
+func _safe_combat_preset(value: Variant) -> StringName:
+	var preset := StringName(String(value).to_lower())
+	if COMBAT_PRESETS.has(preset):
+		return preset
+	if not String(value).is_empty():
+		push_warning("Unsupported combat preset; restored Standard")
+	return DEFAULT_COMBAT_PRESET
+
+
 func _save() -> void:
 	var config := ConfigFile.new()
 	config.set_value(AUDIO_SECTION, "master", master_volume)
 	config.set_value(AUDIO_SECTION, "sfx", sfx_volume)
 	config.set_value(UI_SECTION, "locale", ui_locale)
+	for action in InputProfile.REMAPPABLE_ACTIONS:
+		config.set_value(CONTROLS_SECTION, String(action), control_bindings[action])
+	config.set_value(GAMEPLAY_SECTION, "combat_preset", String(combat_preset))
 	var result := config.save(SETTINGS_PATH)
 	if result != OK:
 		push_warning("Could not save settings: %s" % error_string(result))
