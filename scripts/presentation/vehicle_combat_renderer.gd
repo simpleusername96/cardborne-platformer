@@ -290,15 +290,18 @@ func _sync_projectiles(
 		var position := projectile.pos
 		if not visible_world.has_point(position):
 			continue
-		var radius := maxf(7.0, projectile.radius * 1.35)
+		var hostile := team == &"enemy"
+		var minimum_radius := 7.0 if not hostile or projectile.final_damage else 6.0
+		var radius := maxf(minimum_radius, projectile.radius * 1.15)
 		var direction := projectile.velocity.normalized()
-		# Preserve the original visual contract: a fixed 40 px back/7 px front
-		# streak, with only its width and diamond head scaling by hit radius.
+		var trail_length := 36.0 if hostile else 47.0
+		var trail_offset := trail_length * 0.5 - radius
+		var trail_width := radius * (1.25 if hostile else 1.5)
 		_write_instance_basis(
 			trail_batch,
-			position - direction * 16.5,
+			position - direction * trail_offset,
 			direction,
-			Vector2(47.0, radius * 1.5),
+			Vector2(trail_length, trail_width),
 			Color(projectile.color, 0.50)
 		)
 		_write_instance_basis(
@@ -374,11 +377,36 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 	var player_position := Vector2(state["player_position"])
 	var hull_direction := Vector2(state["hull_direction"])
 	var aim_direction := Vector2(state["aim_direction"])
+	var reduced_motion := bool(state.get("reduced_motion", false))
+	var hit_remaining := float(state.get("player_hit_remaining", 0.0))
+	var invulnerable_remaining := float(state.get("player_invulnerable_remaining", 0.0))
+	var displayed_player_position := player_position
+	var player_color := Color.WHITE
+	if hit_remaining > 0.0:
+		var hit_progress := 1.0 - clampf(hit_remaining / 0.20, 0.0, 1.0)
+		player_color = Color(Art.CORAL).lerp(Art.IVORY_BRIGHT, 0.24)
+		if not reduced_motion:
+			var amplitude := 5.0 * (1.0 - hit_progress)
+			var jitter_direction := Vector2(
+				sin(float(state.get("run_time", 0.0)) * 91.0),
+				cos(float(state.get("run_time", 0.0)) * 73.0)
+			).normalized()
+			displayed_player_position += jitter_direction * amplitude
+	elif invulnerable_remaining > 0.0:
+		if reduced_motion:
+			player_color = Color(Art.CORAL).lerp(Art.IVORY_BRIGHT, 0.56)
+		else:
+			var pale_coral := Color(Art.CORAL).lerp(Art.IVORY_BRIGHT, 0.62)
+			pale_coral.a = 0.78
+			if int(floor(float(state.get("run_time", 0.0)) * 16.0)) % 2 == 0:
+				player_color = pale_coral
 	_write_instance(
-		_overlay_batches[&"player"], player_position,
+		_overlay_batches[&"player"], displayed_player_position,
 		hull_direction.angle(), Vector2.ONE * Art.PLAYER_VISUAL_RADIUS,
-		Color(1.18, 1.18, 1.18) if bool(state.get("player_hit", false)) else Color.WHITE
+		player_color
 	)
+	if invulnerable_remaining > 0.0:
+		_write_ring(player_position, Art.PLAYER_VISUAL_RADIUS + 12.0, Color(Art.CORAL, 0.78))
 	_write_beam(player_position, player_position + aim_direction * 61.0, 17.0, Art.INK)
 	_write_beam(player_position, player_position + aim_direction * 61.0, 10.0, Art.IVORY_BRIGHT)
 	_write_diamond(
@@ -388,7 +416,7 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 	)
 	if float(state.get("barrier_strength", 0.0)) > 0.0:
 		var barrier_radius := 61.0
-		if not bool(state.get("reduced_motion", false)):
+		if not reduced_motion:
 			barrier_radius += sin(float(state.get("run_time", 0.0)) * 5.0) * 3.0
 		_write_ring(player_position, barrier_radius, Color(Art.MINT, 0.86))
 	var ion_level := int(state.get("ion_level", 0))

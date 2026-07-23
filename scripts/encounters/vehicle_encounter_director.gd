@@ -9,7 +9,7 @@ const MAX_RANGED_COMMITS := 3
 const MAX_DENIAL_COMMITS := 2
 const ENEMY_HEALTH_MULTIPLIER := 1.12
 const ENEMY_SPEED_MULTIPLIER := 1.20
-const HOSTILE_PROJECTILE_SPEED_MULTIPLIER := 1.18
+const HOSTILE_PROJECTILE_SPEED_MULTIPLIER := 1.0
 const ENEMY_DAMAGE_MULTIPLIER := 1.35
 const ENEMY_RECOVERY_RATE := 1.28
 const PLAYER_PROJECTILE_CAP := 240
@@ -41,6 +41,10 @@ static func spawn_pace_multiplier(beat: int) -> float:
 	if beat <= 0:
 		return 1.0
 	return 0.34
+
+
+static func effective_hostile_projectile_speed(base_speed: float) -> float:
+	return maxf(0.0, base_speed) * HOSTILE_PROJECTILE_SPEED_MULTIPLIER
 
 
 static func can_commit(current_points: float, ranged_count: int, denial_count: int, enemy: EnemyState, budget: float = THREAT_BUDGET, ranged_cap: int = MAX_RANGED_COMMITS, denial_cap: int = MAX_DENIAL_COMMITS) -> bool:

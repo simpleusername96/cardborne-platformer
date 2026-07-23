@@ -11,7 +11,7 @@ const FILES := {
 	&"impact_cover": "impact_cover.wav", &"enemy_destroy_small": "enemy_destroy_small.wav",
 	&"enemy_destroy_priority": "enemy_destroy_priority.wav", &"pickup": "pickup.wav",
 	&"upgrade_select": "upgrade_select.wav", &"upgrade_confirm": "upgrade_confirm.wav",
-	&"boss_warning": "boss_warning.wav",
+	&"boss_warning": "boss_warning.wav", &"player_hull_hit": "player_hull_hit.wav",
 }
 
 var _streams: Dictionary = {}
@@ -117,5 +117,6 @@ func _resolve(sound_id: StringName) -> StringName:
 		&"card": return &"upgrade_confirm"
 		&"boss": return &"boss_warning"
 		&"missile", &"dash", &"emp_start": return &"upgrade_select"
-		&"emp", &"hurt": return &"impact_cover"
+		&"emp": return &"impact_cover"
+		&"hurt": return &"player_hull_hit"
 	return sound_id

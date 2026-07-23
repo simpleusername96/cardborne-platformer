@@ -73,6 +73,8 @@ const CRATE_COLLISION_CELL_SIZE := 320.0
 # Prime relative to the six-way enemy decision buckets so profiling eventually
 # observes every scheduling phase without timing every physics tick.
 const PERFORMANCE_DETAIL_SAMPLE_STRIDE := 7
+const PLAYER_HIT_FLASH_DURATION := 0.20
+const PLAYER_HIT_INVULNERABILITY := 1.0
 
 var mode := RunMode.DEPLOYMENT
 var mode_before_pause := RunMode.PLAYING
@@ -1968,8 +1970,8 @@ func _move_actor(position: Vector2, motion: Vector2, radius: float, is_player: b
 func _spawn_hostile_projectile(origin: Vector2, direction: Vector2, damage: float, speed: float, source: String, color: Color, final_damage: bool = false) -> void:
 	projectile_store.add_hostile({
 		"pos": origin,
-		"velocity": direction.normalized() * speed * EncounterDirector.HOSTILE_PROJECTILE_SPEED_MULTIPLIER,
-		"radius": 7.0,
+		"velocity": direction.normalized() * EncounterDirector.effective_hostile_projectile_speed(speed),
+		"radius": 6.0 if final_damage else 5.0,
 		"damage": damage,
 		"final_damage": final_damage,
 		"life": 2.2,
@@ -2434,9 +2436,10 @@ func _damage_player(amount: float, source: String, blockable: bool, enemy_source
 	encounter_runtime.record_player_damage(_damage_source_family(source, enemy_source))
 	player_health = maxf(0.0, player_health - remaining)
 	stats_damage_taken += remaining
-	player_hit_flash = 0.22
-	player_invulnerable = 0.28
-	camera_shake = maxf(camera_shake, 8.0)
+	player_hit_flash = PLAYER_HIT_FLASH_DURATION
+	player_invulnerable = maxf(player_invulnerable, PLAYER_HIT_INVULNERABILITY)
+	if not _reduced_motion_enabled():
+		camera_shake = maxf(camera_shake, 3.0)
 	_last_damage_source = source
 	_play_sound(&"hurt")
 	if player_health <= 0.0:
@@ -2876,7 +2879,8 @@ func _boss_commit_predictive_aim(boss: EnemyState, projectile_speed: float) -> v
 
 
 func _boss_predicted_target(origin: Vector2, projectile_speed: float) -> Vector2:
-	var travel_time := clampf(origin.distance_to(player_position) / maxf(projectile_speed, 1.0), 0.0, 0.55)
+	var effective_speed := EncounterDirector.effective_hostile_projectile_speed(projectile_speed)
+	var travel_time := clampf(origin.distance_to(player_position) / maxf(effective_speed, 1.0), 0.0, 0.55)
 	return player_position + player_velocity * travel_time * 0.72
 
 
@@ -3112,6 +3116,7 @@ func _build_hud_snapshot(include_world_channels: bool = true, include_guidebook:
 		"level": int(experience_snapshot["level"]),
 		"experience": int(experience_snapshot["experience"]),
 		"experience_required": int(experience_snapshot["required"]),
+		"reduced_motion": _reduced_motion_enabled(),
 		"objective": "%s · %s" % [tr(String(stage_profile["title_key"])), objective[0]],
 		"objective_detail": objective[1],
 		"stage_title": tr(String(stage_profile["title_key"])),
@@ -3298,6 +3303,8 @@ func _combat_presentation_snapshot() -> Dictionary:
 		"hull_direction": player_hull_direction,
 		"aim_direction": player_aim_direction,
 		"player_hit": player_hit_flash > 0.0,
+		"player_hit_remaining": player_hit_flash,
+		"player_invulnerable_remaining": player_invulnerable,
 		"muzzle_flash": player_muzzle_flash,
 		"barrier_strength": player_barrier_strength,
 		"reduced_motion": _reduced_motion_enabled(),

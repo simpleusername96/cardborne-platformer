@@ -42,20 +42,62 @@ class HealthPips:
 
 	var health := 120.0
 	var maximum := 120.0
+	var trailing_health := 120.0
 	var run_level := 1
 	var experience := 0.0
 	var experience_required := 26.0
+	var reduced_motion := false
+	var _trail_from := 120.0
+	var _trail_hold := 0.0
+	var _trail_elapsed := 0.0
+	var _trail_duration := 0.45
+	var _pulse_time := 0.0
 
 	func _ready() -> void:
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
 		custom_minimum_size = Vector2(160.0, 42.0)
+		set_process(false)
 
-	func set_values(value: float, max_value: float, level_value: int = 1, experience_value: float = 0.0, required_value: float = 26.0) -> void:
-		health = value
+	func set_values(
+		value: float,
+		max_value: float,
+		level_value: int = 1,
+		experience_value: float = 0.0,
+		required_value: float = 26.0,
+		reduced_motion_value: bool = false
+	) -> void:
+		var next_health := clampf(value, 0.0, maxf(1.0, max_value))
+		reduced_motion = reduced_motion_value
+		if next_health < health:
+			if reduced_motion:
+				trailing_health = next_health
+				_pulse_time = 0.20
+			else:
+				_trail_from = maxf(health, trailing_health)
+				trailing_health = _trail_from
+				_trail_hold = 0.18
+				_trail_elapsed = 0.0
+			set_process(true)
+		elif next_health > health:
+			trailing_health = next_health
+		health = next_health
 		maximum = maxf(1.0, max_value)
 		run_level = level_value
 		experience = experience_value
 		experience_required = maxf(1.0, required_value)
+		queue_redraw()
+
+	func _process(delta: float) -> void:
+		if _pulse_time > 0.0:
+			_pulse_time = maxf(0.0, _pulse_time - delta)
+		if _trail_hold > 0.0:
+			_trail_hold = maxf(0.0, _trail_hold - delta)
+		elif trailing_health > health:
+			_trail_elapsed = minf(_trail_duration, _trail_elapsed + delta)
+			trailing_health = lerpf(_trail_from, health, _trail_elapsed / _trail_duration)
+		if _pulse_time <= 0.0 and _trail_hold <= 0.0 and trailing_health <= health + 0.001:
+			trailing_health = health
+			set_process(false)
 		queue_redraw()
 
 	func _draw() -> void:
@@ -64,7 +106,16 @@ class HealthPips:
 		draw_string(font, Vector2(54.0, 14.0), "%d / %d" % [roundi(health), roundi(maximum)], HORIZONTAL_ALIGNMENT_RIGHT, size.x - 54.0, 14, Art.INK)
 		var hull_rect := Rect2(0.0, 18.0, size.x, 12.0)
 		draw_rect(hull_rect, Art.IVORY_SHADE)
+		draw_rect(
+			Rect2(
+				hull_rect.position,
+				Vector2(hull_rect.size.x * clampf(trailing_health / maximum, 0.0, 1.0), hull_rect.size.y)
+			),
+			Color(Art.CORAL).lerp(Art.IVORY_BRIGHT, 0.55)
+		)
 		draw_rect(Rect2(hull_rect.position, Vector2(hull_rect.size.x * clampf(health / maximum, 0.0, 1.0), hull_rect.size.y)), Art.CORAL)
+		if _pulse_time > 0.0:
+			draw_rect(hull_rect.grow(2.0), Art.CORAL, false, 2.0)
 		var xp_rect := Rect2(0.0, 35.0, size.x, 6.0)
 		draw_rect(xp_rect, Art.CERAMIC_GREEN_MID)
 		draw_rect(Rect2(xp_rect.position, Vector2(xp_rect.size.x * clampf(experience / experience_required, 0.0, 1.0), xp_rect.size.y)), Art.MUSTARD)
@@ -798,7 +849,8 @@ func update_hud(snapshot: Dictionary) -> void:
 			maxf(1.0, float(snapshot.get("max_health", 1.0))),
 			int(snapshot.get("level", 1)),
 			float(snapshot.get("experience", 0.0)),
-			float(snapshot.get("experience_required", 26.0))
+			float(snapshot.get("experience_required", 26.0)),
+			bool(snapshot.get("reduced_motion", false))
 		)
 	if snapshot.has("objective"):
 		var next_objective := String(snapshot["objective"])

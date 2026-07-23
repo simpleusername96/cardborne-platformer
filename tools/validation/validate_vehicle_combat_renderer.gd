@@ -42,6 +42,12 @@ func _run() -> void:
 		"radius":5.0, "team":&"player", "color":Color.WHITE,
 	}, &"player", 1)
 	var projectiles: Array[ProjectileState] = [projectile]
+	var hostile_projectile := ProjectileState.new()
+	hostile_projectile.configure({
+		"pos":Vector2(390.0,300.0), "velocity":Vector2.LEFT * 180.0,
+		"radius":5.0, "team":&"enemy", "color":Color.WHITE,
+	}, &"enemy", 2)
+	var hostile_projectiles: Array[ProjectileState] = [hostile_projectile]
 	var no_projectiles: Array[ProjectileState] = []
 	var shard := ExperienceShard.new()
 	shard.configure(1, Vector2(340.0, 320.0), 1, &"")
@@ -51,7 +57,7 @@ func _run() -> void:
 		"radius":20.0, "kind":"impact", "color":Color.WHITE,
 	}]
 	renderer.sync(
-		enemies, projectiles, no_projectiles, shards, effects, Rect2(0,0,1280,720),
+		enemies, projectiles, hostile_projectiles, shards, effects, Rect2(0,0,1280,720),
 		Vector2(260.0,300.0), 1.0, true, "renderer_enemy",
 		{
 			"zones":[], "trails":[], "player_position":Vector2(260.0,300.0),
@@ -105,6 +111,30 @@ func _run() -> void:
 	_expect(
 		is_equal_approx(trail_buffer[11], 0.5),
 		"projectile trail remains translucent"
+	)
+	var hostile_head := renderer.get_node("Projectile_head_enemy") as MultiMeshInstance2D
+	var hostile_trail := renderer.get_node("Projectile_trail_enemy") as MultiMeshInstance2D
+	var hostile_head_buffer := hostile_head.multimesh.buffer
+	var hostile_trail_buffer := hostile_trail.multimesh.buffer
+	_expect(
+		Vector2(hostile_head_buffer[0], hostile_head_buffer[4]).is_equal_approx(Vector2.LEFT * 6.0),
+		"ordinary hostile projectile renders with a six-pixel readable head"
+	)
+	_expect(
+		Vector2(hostile_trail_buffer[0], hostile_trail_buffer[4]).is_equal_approx(Vector2.LEFT * 36.0),
+		"hostile projectile trail uses the shorter 36-pixel contract"
+	)
+	_expect(
+		Vector2(hostile_trail_buffer[3], hostile_trail_buffer[7]).is_equal_approx(
+			Vector2(390.0, 300.0) - Vector2.LEFT * 12.0
+		),
+		"hostile projectile trail remains attached behind its six-pixel head"
+	)
+	_expect(
+		Vector2(hostile_trail_buffer[1], hostile_trail_buffer[5]).is_equal_approx(
+			Vector2.LEFT.rotated(PI * 0.5) * 7.5
+		),
+		"hostile projectile trail width follows the reduced collision family"
 	)
 	renderer.sync([], no_projectiles, no_projectiles, [], [], Rect2(0,0,1280,720), Vector2.ZERO, 0.0, false)
 	_expect(int(renderer.debug_snapshot()["visible_instances"]) == 0, "inactive presentation hides all retained instances")

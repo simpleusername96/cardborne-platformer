@@ -61,8 +61,8 @@ func _run() -> void:
 	var audio := AudioDirector.new()
 	root.add_child(audio)
 	await process_frame
-	_expect(audio.has_all_required(), "all thirteen stored WAV streams load")
-	_expect(AudioDirector.FILES.size() == 13, "audio contract contains exactly thirteen stored sounds")
+	_expect(audio.has_all_required(), "all fourteen stored WAV streams load")
+	_expect(AudioDirector.FILES.size() == 14, "audio contract contains exactly fourteen stored sounds")
 	audio.shutdown()
 	audio.free()
 
