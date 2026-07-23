@@ -8,6 +8,8 @@ canonical_for: Cardborne gameplay and product behavior
 scope: Current shared-field five-stage vehicle campaign
 related:
   - ../design/UI_VISUAL_SYSTEM.md
+  - ../../.agents/vehicle-performance-architecture-audit.md
+  - ../../.agents/execplans/2026-07-23-vehicle-performance-architecture-stabilization.md
 ---
 
 # Cardborne Vehicle Game Specification
@@ -157,8 +159,11 @@ exactly 0.75 seconds before the boss resumes its pattern loop.
   no more than three are active, and their bounded simulations pass tests.
 - Guide discovery persists, locked entries expose only `???`, settings and pause
   both reach the guide, and Korean/English copy is complete.
-- Godot import, all focused validators, the pressure profile at no more than 8ms,
-  native boot, Web export, and rendered review at supported sizes succeed.
+- Godot import, all focused validators, native boot, Web export, and rendered
+  review at supported sizes succeed. Release performance is governed by the
+  active vehicle-performance architecture plan's complete native/Web
+  frame-pacing, capacity, draw-call, and lifecycle gates; the legacy headless
+  pressure microbenchmark is diagnostic only and cannot establish smooth play.
 
 ## Non-Goals
 

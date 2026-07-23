@@ -6,6 +6,8 @@ created: 2026-07-23
 scope: Enlarged single-field five-stage combat loop, roaming bosses, secondary weapons, simple movement upgrade, and encounter-driven guidebook
 related:
   - ../PLANS.md
+  - ../vehicle-performance-architecture-audit.md
+  - ./2026-07-23-vehicle-performance-architecture-stabilization.md
   - ../../docs/product/vehicle_game_spec.md
   - ../../docs/design/UI_VISUAL_SYSTEM.md
 ---
@@ -58,7 +60,7 @@ discovery state records what the player has actually encountered.
 | Source or path | Verified fact | Decision affected | Freshness / recheck boundary |
 | --- | --- | --- | --- |
 | `AGENTS.md`, `.agents/AGENTS.md`, `.agents/PLANS.md` | Cross-system gameplay, persistence, UI, and schema work requires an active ExecPlan; completed plans are deleted after accepted behavior is incorporated into the active specs. | Plan placement, lifecycle, ownership, and final cleanup. | Re-read if repository instructions change. |
-| `docs/product/vehicle_game_spec.md` | The shipped contract currently defines five authored maps, installation-owned gates, passive seekers, 43 cards, two field pickup types, five bosses, and an 8 ms fixed-step performance gate. | Existing behaviors to preserve, replace, or retire explicitly. | Re-read before Phase 6 spec reconciliation. |
+| `docs/product/vehicle_game_spec.md` | At plan creation, the shipped contract defined five authored maps, installation-owned gates, passive seekers, 43 cards, two field pickup types, five bosses, and an 8 ms fixed-step performance gate. The document now reflects the implemented campaign and reopens release performance under the active stabilization plan. | Historical behaviors to preserve, replace, or retire explicitly; current performance authority. | Re-read before Phase 6 spec reconciliation. |
 | `docs/design/UI_VISUAL_SYSTEM.md` | The accepted visual language is flat-color Sunken Ceramic Fresco with large shapes, Noto Sans KR, Korean default, 44 px commands, and modal/focus requirements at 960×540, 1280×720, and 1920×1080. | Guidebook layout and secondary-weapon feedback must reuse the current system. | Recheck after any shared theme change. |
 | `scripts/vehicle/vehicle_stage_catalog.gd`, `scripts/vehicle/stages/*.gd` | Five stage IDs currently select five separate geometry, hazard, landmark, packet, pickup, and boss-arena definitions. | Split one field definition from five combat-stage profiles and retire duplicate geometry owners. | Recheck immediately before deleting migrated stage files. |
 | `scripts/vehicle/vehicle_run.gd` | `_advance_stage()` reloads a map and opens gameplay manually from a result; `_update_stage_progression()` uses generators/cache/zone gates; bosses are arena-locked; `_update_passive_secondary()` only creates seeker shots; `_player_move_speed()` reads permanent and periodic movement modifiers. | Stage-flow, boss, passive-runtime, and movement changes. | Recheck after each phase that touches the orchestrator. |
@@ -416,7 +418,7 @@ Discovery rules are exact:
 | Use chain lightning as the fifth family instead of an Escort Drone. | Familiar multi-target passive. | It overlaps Seeker auto-targeting and Ion Field crowd clearing; the drone adds displaced-origin positioning and better fits the vehicle identity. |
 | Store guide discovery in `SettingsStore`. | Existing autoload already writes a config file. | Discovery is game progression, not a user preference; mixing them would broaden the settings owner and make resets unsafe. |
 | Put the full guidebook in a fifth Settings tab. | Fewer modal types. | The content density and current-build state exceed the compact settings surface and would bury both settings and reference tasks. |
-| Run one A* search per pursuing enemy. | Straightforward routes. | Current actor counts and the 8 ms budget require one shared low-frequency field instead. |
+| Run one A* search per pursuing enemy. | Straightforward routes. | Current actor counts and the active rendered-performance contract require one shared low-frequency field instead. |
 
 ## Current State
 
@@ -809,13 +811,16 @@ all relevant validators and capture helpers.
     secondary count, card count, or result flow.
   - **Guard:** accepted flat-color art direction, primary controls, Korean default,
     and performance/accessibility contracts stay intact.
-- [x] **6.3 Run focused, full, performance, build, and rendered gates.**
+- [ ] **6.3 Run focused, full, performance, build, and rendered gates.**
   - **As-is:** validators assume five layouts and current progression.
   - **To-be:** add focused single-field, secondary, and guidebook validators;
     update existing run, upgrade, settings, reward, boss, navigation, pressure,
     and capture contracts.
   - **Accept:** every command in Test Plan passes from a clean process and all
-    required captures receive a human visual review.
+    required captures receive a human visual review. The functional, build, and
+    rendered-content checks have passed, but the performance subgate is reopened:
+    `2026-07-23-vehicle-performance-architecture-stabilization.md` must pass its
+    rendered native/Web frame-pacing and lifecycle contract.
   - **Guard:** no ignored validation error, malformed save warning, orphaned
     runtime helper, generated capture, or build artifact enters the commit.
 - [ ] **6.4 Retire this ExecPlan after implementation acceptance.**
@@ -853,7 +858,7 @@ rendered evidence describe and demonstrate the same game.
 - Phase 3: full five-stage debug run, five boss pattern cycles, shared geometry
   fingerprint, and navigation clearance.
 - Phase 4: all five passive families at levels 1–3, slot compatibility, damage
-  attribution, cover behavior, entity bounds, and pressure profile.
+  attribution, cover behavior, entity bounds, and performance scenario.
 - Phase 5: locked/partial/full guide persistence, truthful stat snapshot, modal
   focus/return, locale parity, and three viewport captures.
 - Phase 6: complete suite, native boot, Web export, performance, rendered review,
@@ -870,13 +875,18 @@ Get-ChildItem tools/validation -Filter *.gd | Sort-Object Name | ForEach-Object 
 }
 ```
 
-Performance and boot:
+Legacy subsystem microbenchmark and boot:
 
 ```powershell
 .\tools\godot.ps1 --path . --headless --script res://tools/validation/profile_vehicle_pressure.gd
 .\tools\godot.ps1 --path . --headless --quit-after 2
 .\tools\export_web.ps1
 ```
+
+The headless pressure command is diagnostic only. Release performance requires
+the complete rendered native/Web scenarios, thresholds, lifecycle soak, and
+evidence defined by
+`2026-07-23-vehicle-performance-architecture-stabilization.md`.
 
 Rendered evidence:
 
@@ -915,8 +925,9 @@ contracts.
   new hypothesis.
 - Rerun full gates only after the suspected cause changed.
 - Treat native/Web boot failures, save corruption, stage-transition deadlock,
-  guidebook hidden-data leaks, invalid boss spawn, and frame time above 8 ms as
-  blockers, not warnings.
+  guidebook hidden-data leaks, invalid boss spawn, and any failed rendered
+  performance threshold in the active stabilization plan as blockers, not
+  warnings.
 
 ## Rollback / Safety
 
@@ -966,7 +977,8 @@ contracts.
   six-region extension instead of uniform scaling, sixteen distributed spawn
   anchors, a `3640 px` maximum center-to-anchor route, unchanged combat scale,
   cached `96 px` pursuit cells rebuilt only on the existing triggers, and the
-  locked `≤8 ms` pressure profile.
+  rendered native/Web capacity contract in the active performance-stabilization
+  plan.
 
 ## Open Questions
 
@@ -1006,13 +1018,18 @@ this plan before implementation continues.
 - [x] Phase 4 complete.
 - [x] Phase 5 complete.
 - [ ] Phase 6 complete.
-- [x] Final gates complete.
+- [ ] Final gates complete.
 
 ## Next Steps
 
-1. Obtain user acceptance of the implemented behavior and rendered result.
-2. After that explicit acceptance, delete this completed ExecPlan as required by
-   the repository documentation lifecycle. No implementation work remains.
+1. Complete
+   `2026-07-23-vehicle-performance-architecture-stabilization.md`; its rendered
+   native/Web and lifecycle gates are a prerequisite for this plan's Phase 6.3.
+2. Rerun this plan's complete functional, build, rendered-content, and new
+   performance gates from one clean commit.
+3. Obtain user acceptance of the implemented behavior and rendered result.
+4. After that explicit acceptance, delete this ExecPlan as required by the
+   repository documentation lifecycle.
 
 ## Implementation Outcome — 2026-07-23
 
@@ -1022,10 +1039,12 @@ this plan before implementation continues.
   persistent localized guidebook are implemented.
 - Legacy five-map, fixed-gate, arena-lock, field-boss, intermediate-result, and
   periodic movement-cycle owners are removed.
-- All 13 vehicle validators and the settings validator pass. Repeated Standard
-  and Onslaught pressure samples stay at or below `4.507 ms` and `6.602 ms`;
-  native boot succeeds, Web export succeeds, and the three required viewport
-  captures were reviewed without clipping or modal overlap.
+- All 13 vehicle validators and the settings validator passed at implementation
+  time; native boot and Web export succeeded, and the three required viewport
+  captures were reviewed without clipping or modal overlap. Repeated Standard
+  and Onslaught headless microbenchmark samples reported `4.507 ms` and
+  `6.602 ms`, but subsequent user-observed lag proved that this selected-method,
+  non-rendered average was not valid release-performance evidence.
 - **2026-07-23 density amendments:** post-implementation play feedback replaced
   single-squad arrivals with eight-squad surges, increased finite mobile reserves
   to 260/300/340/380/420, expanded quotas to 96/128/160/192/224, and bounded both
@@ -1055,8 +1074,10 @@ this plan before implementation continues.
 - [x] The guidebook shows truthful current build data, persists discoveries, and
   hides unencountered entries as `???` without hidden-data leakage.
 - [x] Korean and English modal/focus/copy parity and all three viewports pass.
-- [x] Full validators, ≤8 ms pressure profile, native boot, Web export, built-app
-  review, save checks, `git diff --check`, and leftover search pass.
+- [ ] Full validators, native boot, Web export, built-app review, save checks,
+  `git diff --check`, leftover search, and every rendered native/Web/lifecycle
+  threshold in the active performance-stabilization plan pass from one clean
+  commit.
 - [x] Canonical product/visual specs and README describe the implemented game.
 - [x] Legacy five-map, gate/arena, field-boss, periodic movement, Seeker-only,
   and intermediate result owners are gone.
