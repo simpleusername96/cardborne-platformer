@@ -12,8 +12,10 @@ secondary weapons, EMP, collectible experience, and card upgrades.
   explored minimap cells persist while the player returns to the center between
   stages.
 - Encounter packets begin with a six-second safe arrival, then grow from one
-  scout into eight-squad surges. Standard reaches 48 active enemies on the first
-  combat beat and both presets remain bounded at a measured 72-enemy ceiling.
+  scout into eight-squad surges. Hard preserves the current 48-to-72 active-enemy
+  baseline; Normal and Easy reduce combined count and combat-stat pressure.
+- Easy, Normal, or Hard is selected before deployment and remains locked for the
+  complete run.
 - Substantial ordinary-defeat quotas summon a roaming boss into the same field;
   neither elapsed time nor a direct boss call can bypass that gate. Surviving
   enemies never lock travel or force a full clear.

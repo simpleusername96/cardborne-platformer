@@ -5,6 +5,7 @@ extends RefCounted
 ## order, beat caps, and metrics, but never draws or mutates combat actors.
 
 const Director = preload("res://scripts/encounters/vehicle_encounter_director.gd")
+const RunDifficulty = preload("res://scripts/vehicle/vehicle_run_difficulty.gd")
 
 const ARRIVAL_GRACE := 6.0
 const CUE_LEAD := 0.9
@@ -12,7 +13,7 @@ const METRIC_SAMPLE_INTERVAL := 0.10
 const MAX_ACTIVE_COUNT_SAMPLES := 4096
 
 var stage_id: StringName = &"stage_1"
-var preset: StringName = &"standard"
+var difficulty: StringName = RunDifficulty.DEFAULT
 var elapsed := 0.0
 var current_beat := 0
 
@@ -35,9 +36,9 @@ var _next_metric_sample := 0.0
 var _spawning_enabled := true
 
 
-func configure(next_stage_id: StringName, packets: Array[Dictionary], combat_preset: StringName) -> void:
+func configure(next_stage_id: StringName, packets: Array[Dictionary], run_difficulty: StringName) -> void:
 	stage_id = next_stage_id
-	preset = &"onslaught" if combat_preset == &"onslaught" else &"standard"
+	difficulty = RunDifficulty.normalize(run_difficulty)
 	elapsed = 0.0
 	current_beat = 0
 	_packets.clear()
@@ -114,11 +115,11 @@ func tick(delta: float, active_mobile_count: int, active_attack_families: Array[
 
 
 func active_cap() -> int:
-	return Director.active_cap_for(current_beat, preset)
+	return RunDifficulty.scaled_active_cap(Director.active_cap_for(current_beat), difficulty)
 
 
 func threat_budget() -> float:
-	return Director.threat_budget_for(current_beat, preset)
+	return Director.threat_budget_for(current_beat)
 
 
 func ranged_commit_cap() -> int:
@@ -143,7 +144,7 @@ func record_reward() -> void:
 func debug_snapshot() -> Dictionary:
 	return {
 		"stage_id":stage_id,
-		"preset":preset,
+		"difficulty":difficulty,
 		"elapsed":elapsed,
 		"beat":current_beat,
 		"active_cap":active_cap(),
@@ -216,9 +217,9 @@ func _schedule_packet(packet: Dictionary) -> void:
 	var beat := int(packet["beat"])
 	var anchor := Vector2(packet["anchor"])
 	var squads: Array = packet["squads"]
-	var pace_multiplier := Director.spawn_pace_multiplier(beat, preset)
+	var pace_multiplier := Director.spawn_pace_multiplier(beat)
 	var unit_spacing := float(packet.get("unit_spacing", 0.5)) * pace_multiplier
-	var gap := float(packet.get("squad_gap", 4.5)) * Director.squad_gap_multiplier(beat, preset)
+	var gap := float(packet.get("squad_gap", 4.5)) * Director.squad_gap_multiplier(beat)
 	var cue_lead := float(packet.get("cue_lead", CUE_LEAD))
 	var cursor := elapsed + cue_lead
 	for squad_index in squads.size():

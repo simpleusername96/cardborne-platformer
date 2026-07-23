@@ -4,6 +4,7 @@ const StageCatalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
 const UpgradePanel = preload("res://scripts/ui/vehicle_upgrade_choice_panel.gd")
 const AudioDirector = preload("res://scripts/presentation/vehicle_audio_director.gd")
 const StageScene = preload("res://scenes/run/VehicleRun.tscn")
+const RunDifficulty = preload("res://scripts/vehicle/vehicle_run_difficulty.gd")
 
 var failures: Array[String] = []
 var confirmed_count := 0
@@ -76,10 +77,17 @@ func _run() -> void:
 	var experience_runtime: RefCounted = stage.get("experience_runtime")
 	_expect(int(experience_runtime.call("required_experience")) == 26, "a fresh run starts with a 26-XP level threshold")
 	var stage_ui: CanvasLayer = stage.get("_ui")
+	stage_ui.call("show_deployment", &"pulse_cannon", RunDifficulty.HARD)
 	var ui_contract: Dictionary = stage_ui.call("debug_ui_contract", 1280.0)
 	_expect(Vector2(ui_contract["action_rail_size"]) == Vector2(276.0, 60.0), "action rail uses the compact dock contract")
 	_expect(Vector2(ui_contract["health_cluster_size"]) == Vector2(184.0, 54.0), "health and XP share the compact hull cluster")
 	_expect(bool(ui_contract["top_clusters_do_not_overlap"]), "top HUD clusters do not overlap at 1280 pixels")
+	_expect(int(ui_contract["deployment_difficulty_choices"]) == 3, "deployment exposes exactly three difficulty choices")
+	_expect(float(ui_contract["deployment_difficulty_min_height"]) >= 44.0, "difficulty choices meet the minimum interaction height")
+	_expect(StringName(ui_contract["deployment_difficulty"]) == RunDifficulty.HARD, "deployment renders Hard as the selected baseline")
+	var settings_contract: Dictionary = stage_ui.call("debug_gameplay_settings_contract")
+	_expect(int(settings_contract["difficulty_controls"]) == 0, "in-run settings expose no difficulty selector")
+	_expect(bool(settings_contract["difficulty_lock_visible"]), "in-run settings explain the deployment lock")
 	var orbit_contract: Dictionary = stage_ui.call("debug_status_orbit_contract")
 	_expect(int(orbit_contract["maximum_badges"]) == 2, "status orbit exposes only the two retained cycle badges")
 	experience_runtime = null

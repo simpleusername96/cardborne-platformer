@@ -5,6 +5,7 @@ extends SceneTree
 
 const StageCatalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
 const EncounterRuntime = preload("res://scripts/encounters/vehicle_encounter_runtime.gd")
+const RunDifficulty = preload("res://scripts/vehicle/vehicle_run_difficulty.gd")
 const WARMUP_STEPS := 30
 const MEASURED_STEPS := 300
 const FIXED_DELTA := 1.0 / 60.0
@@ -15,12 +16,11 @@ func _initialize() -> void:
 
 
 func _run() -> void:
-	var standard_ok := bool(await _profile_preset(&"standard"))
-	var onslaught_ok := bool(await _profile_preset(&"onslaught"))
-	quit(0 if standard_ok and onslaught_ok else 1)
+	var hard_ok := bool(await _profile_difficulty(RunDifficulty.HARD))
+	quit(0 if hard_ok else 1)
 
 
-func _profile_preset(preset: StringName) -> bool:
+func _profile_difficulty(difficulty: StringName) -> bool:
 	var packed := load("res://scenes/run/VehicleRun.tscn") as PackedScene
 	var stage := packed.instantiate()
 	root.add_child(stage)
@@ -29,9 +29,9 @@ func _profile_preset(preset: StringName) -> bool:
 	stage.set_physics_process(false)
 	stage.current_stage_index = StageCatalog.STAGE_IDS.size() - 1
 	stage.current_stage_id = StageCatalog.STAGE_IDS[-1]
+	stage.selected_run_difficulty = difficulty
 	stage.call("_reset_run", false, true, false)
 	stage.mode = 1
-	stage.encounter_runtime.preset = preset
 	stage.encounter_runtime.current_beat = 4
 	stage.call("_debug_append_packet_enemies", stage.encounter_runtime.active_cap() + 12)
 	var mobile_index := 0
@@ -64,7 +64,7 @@ func _profile_preset(preset: StringName) -> bool:
 	var hud_ms := _measure_steps(func() -> void:
 		ui.call("update_hud", stage.call("_build_hud_snapshot"))
 	)
-	var scheduler := _profile_saturated_scheduler(preset)
+	var scheduler := _profile_saturated_scheduler(difficulty)
 	var active_capped := 0
 	for enemy in stage.enemies:
 		if enemy.alive and enemy.active and enemy.counts_active_cap:
@@ -75,8 +75,8 @@ func _profile_preset(preset: StringName) -> bool:
 	var shard_count: int = stage.experience_runtime.shards.size()
 	var result := active_capped == cap and shard_count == 192 and int(scheduler["queued_spawns"]) > 0
 	print("WARNING vehicle_pressure_microbenchmark excludes rendering and complete frame orchestration")
-	print("vehicle_pressure_microbenchmark preset=%s active_capped=%d cap=%d shards=%d queued=%d steps=%d moving_ms=%.3f hud_ms=%.3f scheduler_ms=%.3f combined_ms=%.3f" % [
-		preset,
+	print("vehicle_pressure_microbenchmark difficulty=%s active_capped=%d cap=%d shards=%d queued=%d steps=%d moving_ms=%.3f hud_ms=%.3f scheduler_ms=%.3f combined_ms=%.3f" % [
+		difficulty,
 		active_capped,
 		cap,
 		shard_count,
@@ -99,9 +99,9 @@ func _measure_steps(action: Callable) -> float:
 	return (Time.get_ticks_usec() - started) / float(MEASURED_STEPS) / 1000.0
 
 
-func _profile_saturated_scheduler(preset: StringName) -> Dictionary:
+func _profile_saturated_scheduler(difficulty: StringName) -> Dictionary:
 	var runtime := EncounterRuntime.new()
-	runtime.configure(StageCatalog.STAGE_IDS[-1], StageCatalog.packets(StageCatalog.STAGE_IDS[-1]), preset)
+	runtime.configure(StageCatalog.STAGE_IDS[-1], StageCatalog.packets(StageCatalog.STAGE_IDS[-1]), difficulty)
 	for event_id in [&"approach_entered", &"calibration_claimed", &"upper_route_entered", &"lower_route_entered", &"generators_complete"]:
 		runtime.signal_event(event_id)
 	runtime.tick(6.0, 999)

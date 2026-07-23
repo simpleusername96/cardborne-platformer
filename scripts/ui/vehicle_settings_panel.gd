@@ -27,8 +27,8 @@ var _close_button: Button
 var _binding_buttons: Dictionary = {}
 var _master_slider: HSlider
 var _sfx_slider: HSlider
-var _preset_selector: OptionButton
 var _reduced_motion_toggle: CheckButton
+var _difficulty_lock_label: Label
 var _language_buttons: Dictionary = {}
 var _status_label: Label
 var _capturing_action: StringName = &""
@@ -71,9 +71,6 @@ func refresh_from_store() -> void:
 		var button: Button = _binding_buttons.get(action)
 		if is_instance_valid(button):
 			button.text = InputProfile.action_display_name(action, settings.control_bindings)
-	if _preset_selector.item_count > 0:
-		var preset_index := 1 if settings.combat_preset == &"onslaught" else 0
-		_preset_selector.select(preset_index)
 	_reduced_motion_toggle.set_pressed_no_signal(settings.reduced_motion)
 	_refresh_localized_content()
 
@@ -88,7 +85,13 @@ func debug_contract() -> Dictionary:
 		).size(),
 		"capturing": is_capturing_binding(),
 		"reduced_motion_control": is_instance_valid(_reduced_motion_toggle) and _reduced_motion_toggle.custom_minimum_size.y >= 44.0,
+		"difficulty_controls": find_children("*", "OptionButton", true, false).size(),
+		"difficulty_lock_visible": is_instance_valid(_difficulty_lock_label) and not _difficulty_lock_label.text.is_empty(),
 	}
+
+
+func debug_show_gameplay_page() -> void:
+	_tabs.current_tab = 2
 
 
 func _input(event: InputEvent) -> void:
@@ -188,22 +191,16 @@ func _build_controls_page() -> void:
 func _build_gameplay_page() -> void:
 	var box := _page("Gameplay")
 	box.add_child(_section_title("SETTINGS_GAMEPLAY_HEADING"))
-	box.add_child(_label("SETTINGS_COMBAT_PRESET", 16, Art.INK))
-	_preset_selector = OptionButton.new()
-	_preset_selector.custom_minimum_size.y = 44.0
-	_preset_selector.focus_mode = Control.FOCUS_ALL
-	_preset_selector.item_selected.connect(_on_preset_selected)
-	box.add_child(_preset_selector)
 	_reduced_motion_toggle = CheckButton.new()
 	_reduced_motion_toggle.text = tr("SETTINGS_REDUCED_MOTION")
 	_reduced_motion_toggle.custom_minimum_size.y = 44.0
 	_reduced_motion_toggle.focus_mode = Control.FOCUS_ALL
 	_reduced_motion_toggle.toggled.connect(_on_reduced_motion_toggled)
 	box.add_child(_reduced_motion_toggle)
-	var detail := _label("SETTINGS_PRESET_DETAIL", 14, Art.INK_MUTED)
-	detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	detail.custom_minimum_size.y = 72.0
-	box.add_child(detail)
+	_difficulty_lock_label = _label("SETTINGS_DIFFICULTY_LOCKED", 14, Art.INK_MUTED)
+	_difficulty_lock_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_difficulty_lock_label.custom_minimum_size.y = 72.0
+	box.add_child(_difficulty_lock_label)
 
 
 func _build_language_page() -> void:
@@ -317,8 +314,6 @@ func _connect_store() -> void:
 		return
 	if settings.has_signal("controls_changed"):
 		settings.controls_changed.connect(_on_controls_changed)
-	if settings.has_signal("combat_preset_changed"):
-		settings.combat_preset_changed.connect(_on_combat_preset_changed)
 	if settings.has_signal("locale_changed"):
 		settings.locale_changed.connect(_on_locale_changed)
 
@@ -385,12 +380,6 @@ func _on_sfx_volume_changed(value: float) -> void:
 		settings.set_sfx_volume(value)
 
 
-func _on_preset_selected(index: int) -> void:
-	var settings := _settings_store()
-	if settings != null:
-		settings.set_combat_preset(&"onslaught" if index == 1 else &"standard")
-
-
 func _on_reduced_motion_toggled(enabled: bool) -> void:
 	var settings := _settings_store()
 	if settings != null:
@@ -407,10 +396,6 @@ func _on_controls_changed(_action: StringName) -> void:
 	refresh_from_store()
 
 
-func _on_combat_preset_changed(_preset: StringName) -> void:
-	refresh_from_store()
-
-
 func _on_locale_changed(_locale: String) -> void:
 	_refresh_localized_content()
 	refresh_from_store()
@@ -422,13 +407,9 @@ func _refresh_localized_content() -> void:
 	var tab_keys := ["SETTINGS_AUDIO_TAB", "SETTINGS_CONTROLS_TAB", "SETTINGS_GAMEPLAY_TAB", "SETTINGS_LANGUAGE_TAB"]
 	for index in mini(_tabs.get_tab_count(), tab_keys.size()):
 		_tabs.set_tab_title(index, tr(tab_keys[index]))
-	_preset_selector.clear()
-	_preset_selector.add_item(tr("SETTINGS_PRESET_STANDARD"), 0)
-	_preset_selector.add_item(tr("SETTINGS_PRESET_ONSLAUGHT"), 1)
 	_reduced_motion_toggle.text = tr("SETTINGS_REDUCED_MOTION")
 	var settings := _settings_store()
 	if settings != null:
-		_preset_selector.select(1 if settings.combat_preset == &"onslaught" else 0)
 		for locale in _language_buttons:
 			var button := _language_buttons[locale] as Button
 			button.theme_type_variation = &"SelectedChoiceButton" if locale == settings.ui_locale else &"SecondaryButton"

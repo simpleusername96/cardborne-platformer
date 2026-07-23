@@ -22,6 +22,7 @@ const CombatRenderer = preload("res://scripts/presentation/vehicle_combat_render
 const StageBackdrop = preload("res://scripts/vehicle/vehicle_stage_backdrop.gd")
 const BossPatterns = preload("res://scripts/bosses/vehicle_boss_patterns.gd")
 const StageDifficulty = preload("res://scripts/enemies/vehicle_stage_difficulty.gd")
+const RunDifficulty = preload("res://scripts/vehicle/vehicle_run_difficulty.gd")
 const FieldDropRules = preload("res://scripts/rewards/vehicle_field_drop_rules.gd")
 const ExperienceRuntime = preload("res://scripts/progression/vehicle_experience_runtime.gd")
 const CycleRuntime = preload("res://scripts/cards/vehicle_cycle_runtime.gd")
@@ -113,6 +114,7 @@ var _sheared_enemy_id := ""
 var _last_damage_source := ""
 
 var selected_primary := &"pulse_cannon"
+var selected_run_difficulty: StringName = RunDifficulty.DEFAULT
 var selected_upgrade_title_key := "UPGRADE_NONE"
 var upgrade_catalog := UpgradeCatalog.new()
 var run_build := RunBuild.new(upgrade_catalog)
@@ -210,8 +212,9 @@ func _ready() -> void:
 	_build_ui()
 	_build_audio()
 	_load_persistence()
+	selected_run_difficulty = _preferred_run_difficulty()
 	_reset_run(false)
-	_ui.show_deployment(selected_primary)
+	_ui.show_deployment(selected_primary, selected_run_difficulty)
 	_set_mouse_for_mode()
 	queue_redraw()
 	if not _performance_request.is_empty():
@@ -360,13 +363,6 @@ func _process(delta: float) -> void:
 		_finish_performance_scenario()
 
 
-func _unhandled_input(event: InputEvent) -> void:
-	if mode == RunMode.DEPLOYMENT and event is InputEventKey and event.pressed and not event.echo:
-		var deployment_event := event as InputEventKey
-		if deployment_event.keycode in [KEY_ENTER, KEY_SPACE]:
-			_on_deployment_selected(&"pulse_cannon")
-
-
 func _build_camera() -> void:
 	_camera = Camera2D.new()
 	_camera.name = "VehicleCamera"
@@ -485,8 +481,11 @@ func _reset_run(increment_index: bool = true, preserve_stage: bool = false, pres
 	damaging_trails.clear()
 	for spec in StageCatalog.static_enemy_blueprint(current_stage_id):
 		_append_enemy(_make_enemy(spec))
-	encounter_runtime.configure(current_stage_id, StageCatalog.packets(current_stage_id), _combat_preset())
-	stage_flow.configure(current_stage_index, StageCatalog.quota(current_stage_id))
+	encounter_runtime.configure(current_stage_id, StageCatalog.packets(current_stage_id), selected_run_difficulty)
+	stage_flow.configure(
+		current_stage_index,
+		RunDifficulty.scaled_quota(StageCatalog.quota(current_stage_id), selected_run_difficulty)
+	)
 	pursuit_field.reset(current_stage_id)
 	for spec in Rules.get_pickup_blueprint(current_stage_id):
 		pickups.append({
@@ -565,14 +564,19 @@ func _make_enemy(spec: Dictionary) -> EnemyState:
 	var health := float(definition["health"])
 	var health_class := StringName(definition["health_class"])
 	var stage_curve := StageDifficulty.multipliers(current_stage_index)
+	var difficulty_profile := RunDifficulty.profile(selected_run_difficulty)
 	if health_class in [&"swarm", &"standard"]:
 		health *= EncounterDirector.ENEMY_HEALTH_MULTIPLIER
 	if archetype == &"stage_boss":
-		health = StageDifficulty.boss_health(current_stage_index)
+		health = StageDifficulty.boss_health(current_stage_index) * float(difficulty_profile["boss_health"])
 	else:
-		health *= float(stage_curve["health"])
+		health *= float(stage_curve["health"]) * float(difficulty_profile["health"])
 	var position: Vector2 = spec["pos"]
-	var speed := float(definition["speed"]) * EncounterDirector.ENEMY_SPEED_MULTIPLIER
+	var speed := (
+		float(definition["speed"])
+		* EncounterDirector.ENEMY_SPEED_MULTIPLIER
+		* float(difficulty_profile["speed"])
+	)
 	if archetype not in [&"stage_boss"]:
 		speed *= float(stage_curve["speed"])
 	enemy.id = String(spec.get("id", role))
@@ -670,9 +674,9 @@ func _rebuild_enemy_runtime_indexes() -> void:
 	enemy_grid.rebuild(enemies)
 
 
-func _combat_preset() -> StringName:
+func _preferred_run_difficulty() -> StringName:
 	var settings := get_node_or_null("/root/SettingsStore")
-	return StringName(settings.combat_preset) if settings != null else &"standard"
+	return RunDifficulty.normalize(settings.run_difficulty) if settings != null else RunDifficulty.DEFAULT
 
 
 func _update_encounter(delta: float) -> void:
@@ -708,8 +712,16 @@ func _active_attack_families() -> Array[StringName]:
 	return families
 
 
-func _on_deployment_selected(primary_id: StringName) -> void:
+func _on_deployment_selected(primary_id: StringName, difficulty_id: StringName) -> void:
+	var settings := get_node_or_null("/root/SettingsStore")
+	if settings != null:
+		settings.set_run_difficulty(RunDifficulty.normalize(difficulty_id))
+	_start_deployed_run(primary_id, difficulty_id)
+
+
+func _start_deployed_run(primary_id: StringName, difficulty_id: StringName) -> void:
 	selected_primary = primary_id
+	selected_run_difficulty = RunDifficulty.normalize(difficulty_id)
 	_save_persistence()
 	_reset_run(false)
 	selected_primary = primary_id
@@ -779,12 +791,9 @@ func _restart_stage() -> void:
 
 
 func _replay_stage() -> void:
-	var primary := selected_primary
-	_reset_run(true)
-	selected_primary = primary
-	mode = RunMode.PLAYING
-	_ui.show_gameplay()
-	_ui.notify(tr("NOTIFY_REDEPLOYED"), 2.8, Rules.CYAN)
+	run_index += 1
+	mode = RunMode.DEPLOYMENT
+	_ui.show_deployment(selected_primary, selected_run_difficulty)
 	_set_mouse_for_mode()
 
 
@@ -2435,9 +2444,17 @@ func _damage_player(amount: float, source: String, blockable: bool, enemy_source
 
 
 func _scaled_incoming_damage(amount: float, enemy_source: bool, final_effective: bool = false) -> float:
-	if not enemy_source or final_effective:
+	if not enemy_source:
 		return amount
-	return amount * EncounterDirector.ENEMY_DAMAGE_MULTIPLIER * float(StageDifficulty.multipliers(current_stage_index)["damage"])
+	var difficulty_damage := RunDifficulty.factor(selected_run_difficulty, "damage")
+	if final_effective:
+		return amount * difficulty_damage
+	return (
+		amount
+		* EncounterDirector.ENEMY_DAMAGE_MULTIPLIER
+		* float(StageDifficulty.multipliers(current_stage_index)["damage"])
+		* difficulty_damage
+	)
 
 
 func _damage_source_family(source: String, enemy_source: bool) -> StringName:
@@ -3672,12 +3689,16 @@ func _run_capture_sequence() -> void:
 	if _capture_size.x > 0 and _capture_size.y > 0:
 		get_window().size = _capture_size
 	_camera.position_smoothing_enabled = false
+	_ui.show_deployment(selected_primary, RunDifficulty.HARD)
 	await get_tree().process_frame
 	await get_tree().process_frame
 	_save_capture("01-deployment.png")
 	_ui.debug_modal_contract("settings")
 	await _settle_capture()
 	_save_capture("01b-shared-settings.png")
+	_ui.debug_gameplay_settings_contract()
+	await _settle_capture()
+	_save_capture("01d-gameplay-settings.png")
 	_ui.debug_modal_contract("guidebook")
 	await _settle_capture()
 	_save_capture("01c-guidebook.png")
@@ -3743,7 +3764,7 @@ func _capture_pressure_evidence() -> void:
 	_capture_prepare_stage(0)
 	_clear_enemies()
 	var roles: Array[StringName] = [&"scrap_drone", &"needle_drone", &"spark_minelet", &"chaser", &"shooter", &"controller"]
-	for index in EncounterDirector.STANDARD_ACTIVE_CAPS[-1]:
+	for index in EncounterDirector.ACTIVE_CAPS[-1]:
 		var position := Vector2(
 			2440.0 + float(index % 10) * 80.0,
 			1320.0 + float(index / 10) * 108.0

@@ -9,6 +9,7 @@ const Rules = preload("res://scripts/vehicle/vehicle_stage_rules.gd")
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 const ProjectileStore = preload("res://scripts/combat/vehicle_projectile_store.gd")
 const ExperienceRuntime = preload("res://scripts/progression/vehicle_experience_runtime.gd")
+const RunDifficulty = preload("res://scripts/vehicle/vehicle_run_difficulty.gd")
 
 const VALID_SCENARIOS: Array[StringName] = [
 	&"current_pressure", &"capacity_pressure", &"lifecycle_pressure", &"boss_pressure",
@@ -39,7 +40,7 @@ func configure(id: StringName) -> bool:
 
 
 func activate(run: Node) -> void:
-	run.call("_on_deployment_selected", &"pulse_cannon")
+	run.call("_start_deployed_run", &"pulse_cannon", RunDifficulty.HARD)
 	run.encounter_runtime.stop_spawning()
 	run.player_barrier_strength = 1.0e9
 	run.player_barrier_timer = 1.0e9

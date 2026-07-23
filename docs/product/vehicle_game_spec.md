@@ -50,8 +50,33 @@ maps, a base stage, exploration puzzles, or content beyond the five-stage run.
 - Dash is a fast defensive repositioning action. EMP is the sole explicit skill
   button. Secondary weapons operate automatically.
 - Primary fire, dash, and EMP are rebindable. Conflicting bindings are rejected.
-- Korean is the default locale; Korean and English, audio, difficulty, and input
-  settings persist.
+- Korean is the default locale. Korean and English, audio, reduced motion, input,
+  and the preferred next-run difficulty persist.
+
+### Fixed run difficulty
+
+- Deployment exposes exactly three run difficulties: Easy, Normal, and Hard.
+  Hard is the default and reproduces the combat balance that existed before this
+  selector.
+- Confirming deployment snapshots the selected difficulty for the complete
+  five-stage run. Stage transitions and stage restarts preserve that snapshot.
+  Pause/settings has no difficulty control, and another run always returns to
+  deployment before combat begins.
+- The saved value is only the preference shown on the next deployment. Changing
+  saved settings cannot mutate an active run.
+- Run difficulty composes with the shallow stage curve. It does not alter attack
+  cadence, telegraph duration, hostile projectile speed, threat budgets, drops,
+  experience value, or reward quality.
+
+| Mode | Quota | Active cap | Ordinary health | Boss health | Damage | Movement speed | Approximate simultaneous pressure |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Easy | 0.81 | 0.8836 | 0.9216 | 0.81 | 0.9216 | 0.9604 | 0.72 |
+| Normal | 0.90 | 0.94 | 0.96 | 0.90 | 0.96 | 0.98 | 0.85 |
+| Hard | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 |
+
+The factors are deliberately distributed. Normal is approximately 15% below
+Hard in combined simultaneous pressure, and Easy applies the same reduction a
+second time; no individual stat is described as exactly 15% lower.
 
 ### One shared field
 
@@ -75,9 +100,10 @@ maps, a base stage, exploration puzzles, or content beyond the five-stage run.
    6.0 seconds.
 3. Later arrivals are eight-squad surges. Each squad contains three to five
    enemies, so the first surge schedules at least 24 enemies and later surges
-   grow toward 40. Standard can sustain 48 active enemies from the first combat
-   beat; both presets remain hard-capped at the measured 72-enemy ceiling. The
-   excess stays in the deterministic scheduler queue.
+   grow toward 40. Hard can sustain 48 active enemies from the first combat
+   beat and remains capped at the measured 72-enemy ceiling. Normal scales those
+   caps to 45 and 68; Easy scales them to 42 and 64. Excess enemies stay in the
+   deterministic scheduler queue.
 4. Every mobile enemy joins a shared low-frequency pursuit field and can route
    around cover toward the player. Stationary roles hold authored anchors.
 5. Ordinary defeats advance the stage quota. Living enemies never block travel
@@ -96,13 +122,13 @@ maps, a base stage, exploration puzzles, or content beyond the five-stage run.
    stages 1–4 automatically preserve the build and explored minimap, return the
    ship to the center, and begin the next stage. Stage 5 opens the final result.
 
-| Stage | Ordinary quota | Authored mobile population | Boss |
-| ---: | ---: | ---: | --- |
-| 1 | 96 | 260 | Foundry Colossus |
-| 2 | 128 | 300 | Archive Leviathan |
-| 3 | 160 | 340 | Drydock Titan |
-| 4 | 192 | 380 | Switchyard Behemoth |
-| 5 | 224 | 420 | Crown Engine |
+| Stage | Hard quota | Normal quota | Easy quota | Authored mobile population | Boss |
+| ---: | ---: | ---: | ---: | ---: | --- |
+| 1 | 96 | 86 | 78 | 260 | Foundry Colossus |
+| 2 | 128 | 115 | 104 | 300 | Archive Leviathan |
+| 3 | 160 | 144 | 130 | 340 | Drydock Titan |
+| 4 | 192 | 173 | 156 | 380 | Switchyard Behemoth |
+| 5 | 224 | 202 | 181 | 420 | Crown Engine |
 
 Four stationary threats are added per stage. Ordinary hostile projectiles stop
 at 96 so 24 of the global 120-shot cap remain reserved for boss attacks. Enemy
@@ -148,6 +174,8 @@ exactly 0.75 seconds before the boss resumes its pattern loop.
   their name or description.
 - Deployment, upgrade, pause/settings, guidebook, result, and garage are modal
   focus layers. They block carried input and provide deterministic keyboard focus.
+  Deployment includes three clearly selected, keyboard-focusable difficulty
+  choices with concise Korean and English pressure descriptions.
 
 ### Runtime capacity and performance
 
@@ -177,6 +205,9 @@ exactly 0.75 seconds before the boss resumes its pattern loop.
 - The first cue/scout timing, stage quotas, eight-squad surge growth, spawn stop,
   1.5-second boss warning, roaming boss, preserved build/exploration, automatic
   stages 1–4 transition, and stage 5 result pass focused tests.
+- Hard preserves the previous baseline, Normal and Easy use the specified profile
+  factors, the active run keeps its deployment snapshot, and no pause/settings
+  control can change difficulty.
 - Tuned Thrusters has the exact three values, the five secondary families load,
   no more than three are active, and their bounded simulations pass tests.
 - Guide discovery persists, locked entries expose only `???`, settings and pause

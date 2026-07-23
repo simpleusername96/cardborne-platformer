@@ -4,7 +4,7 @@ extends CanvasLayer
 ## Runtime-built HUD and modal surfaces for the vehicle run.
 ## The UI presents snapshots and emits intents; the stage remains the gameplay owner.
 
-signal deployment_selected(primary_id: StringName)
+signal deployment_selected(primary_id: StringName, difficulty_id: StringName)
 signal upgrade_selected(upgrade_id: StringName)
 signal upgrade_declined
 signal upgrade_previewed(upgrade_id: StringName)
@@ -22,6 +22,7 @@ const StatusOrbit = preload("res://scripts/ui/vehicle_status_orbit.gd")
 const SettingsPanel = preload("res://scripts/ui/vehicle_settings_panel.gd")
 const GuidebookPanel = preload("res://scripts/ui/vehicle_guidebook_panel.gd")
 const InputProfile = preload("res://scripts/input/vehicle_input_profile.gd")
+const RunDifficulty = preload("res://scripts/vehicle/vehicle_run_difficulty.gd")
 
 const CANVAS := Art.COBALT_VOID
 const SURFACE := Art.IVORY
@@ -309,6 +310,8 @@ var _guide_center: CenterContainer
 var _guide_panel: VehicleGuidebookPanel
 var _deployment_command: Button
 var _deployment_controls_label: Label
+var _deployment_difficulty_detail: Label
+var _deployment_difficulty_buttons: Dictionary = {}
 var _upgrade_buttons: Array[Button] = []
 var _pause_first_button: Button
 var _result_first_button: Button
@@ -322,6 +325,7 @@ var _garage_active_label: Label
 var _garage_unlock_label: Label
 var _garage_summary_label: Label
 var _selected_primary := &"pulse_cannon"
+var _selected_run_difficulty: StringName = RunDifficulty.DEFAULT
 var _settings_return_surface := "deployment"
 var _guide_return_surface := "pause"
 var _latest_guidebook_snapshot: Dictionary = {}
@@ -581,7 +585,7 @@ func _build_deployment() -> void:
 	_deployment_center = CenterContainer.new()
 	_deployment_center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_root.add_child(_deployment_center)
-	var panel := _modal_panel(Vector2(840.0, 500.0))
+	var panel := _modal_panel(Vector2(840.0, 620.0))
 	_deployment_center.add_child(panel)
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 8)
@@ -596,10 +600,30 @@ func _build_deployment() -> void:
 	box.add_child(_deployment_controls_label)
 	var cannon := _label("DEPLOY_PULSE_CANNON_SUMMARY", 19, RAISED)
 	cannon.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	cannon.custom_minimum_size.y = 174.0
+	cannon.custom_minimum_size.y = 104.0
 	cannon.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	cannon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(cannon)
+	var difficulty_label := _label("DEPLOY_DIFFICULTY_LABEL", 16, INK)
+	box.add_child(difficulty_label)
+	var difficulty_row := HBoxContainer.new()
+	difficulty_row.add_theme_constant_override("separation", 10)
+	box.add_child(difficulty_row)
+	for difficulty_id in RunDifficulty.IDS:
+		var button := _command_button(
+			_difficulty_title_key(difficulty_id),
+			&"SecondaryButton"
+		)
+		button.alignment = HORIZONTAL_ALIGNMENT_CENTER
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.pressed.connect(_select_run_difficulty.bind(difficulty_id))
+		difficulty_row.add_child(button)
+		_deployment_difficulty_buttons[difficulty_id] = button
+	_deployment_difficulty_detail = _label("DEPLOY_DIFFICULTY_HARD_DETAIL", 14, MUTED)
+	_deployment_difficulty_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_deployment_difficulty_detail.custom_minimum_size.y = 38.0
+	_deployment_difficulty_detail.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(_deployment_difficulty_detail)
 	_deployment_command = _command_button("DEPLOY_COMMAND", &"PrimaryButton")
 	_deployment_command.pressed.connect(_on_deployment_confirmed)
 	box.add_child(_deployment_command)
@@ -820,9 +844,14 @@ func update_hud(snapshot: Dictionary) -> void:
 		_status_orbit.set_snapshot(snapshot["status_orbit"])
 
 
-func show_deployment(_selected: StringName = &"pulse_cannon") -> void:
+func show_deployment(
+	_selected: StringName = &"pulse_cannon",
+	difficulty_id: StringName = RunDifficulty.DEFAULT
+) -> void:
 	hide_all_modals()
 	_selected_primary = &"pulse_cannon"
+	_selected_run_difficulty = RunDifficulty.normalize(difficulty_id)
+	_refresh_difficulty_selection()
 	_dim.visible = true
 	_deployment_center.visible = true
 	_hud.visible = false
@@ -901,7 +930,7 @@ func _close_settings() -> void:
 		"garage":
 			show_garage(_latest_garage_data)
 		_:
-			show_deployment(_selected_primary)
+			show_deployment(_selected_primary, _selected_run_difficulty)
 
 
 func _show_guidebook(return_surface: String) -> void:
@@ -976,7 +1005,7 @@ func is_modal_visible() -> bool:
 
 func debug_layout_minimums() -> Dictionary:
 	return {
-		"deployment": Vector2(840.0, 500.0),
+		"deployment": Vector2(840.0, 620.0),
 		"upgrade": Vector2(900.0, 520.0),
 		"pause": Vector2(560.0, 500.0),
 		"result": Vector2(720.0, 510.0),
@@ -1031,6 +1060,9 @@ func debug_ui_contract(viewport_width: float = 1280.0) -> Dictionary:
 		"central_safe_clear": central_safe_clear,
 		"top_clusters_do_not_overlap": health_end <= objective_start and objective_end <= minimap_start,
 		"deployment_focusables": _deployment_center.find_children("*", "Button", true, false).size(),
+		"deployment_difficulty_choices": _deployment_difficulty_buttons.size(),
+		"deployment_difficulty_min_height": _minimum_difficulty_button_height(),
+		"deployment_difficulty": _selected_run_difficulty,
 		"upgrade_focusables": _upgrade_center.find_children("*", "Button", true, false).size(),
 		"pause_focusables": _pause_center.find_children("*", "Control", true, false).filter(
 			func(control: Control) -> bool: return control.focus_mode != Control.FOCUS_NONE
@@ -1047,7 +1079,7 @@ func debug_ui_contract(viewport_width: float = 1280.0) -> Dictionary:
 func debug_modal_contract(surface: String) -> Dictionary:
 	match surface:
 		"deployment":
-			show_deployment(_selected_primary)
+			show_deployment(_selected_primary, _selected_run_difficulty)
 		"upgrade":
 			show_upgrade([])
 		"pause":
@@ -1061,6 +1093,12 @@ func debug_modal_contract(surface: String) -> Dictionary:
 		"guidebook":
 			_show_guidebook("settings")
 	return {"surface": surface, "hud_hidden": not _hud.visible, "dim_visible": _dim.visible}
+
+
+func debug_gameplay_settings_contract() -> Dictionary:
+	_show_settings("deployment")
+	_settings_panel.debug_show_gameplay_page()
+	return _settings_panel.debug_contract()
 
 
 func debug_select_upgrade(index: int) -> void:
@@ -1077,7 +1115,51 @@ func debug_status_orbit_contract() -> Dictionary:
 
 
 func _on_deployment_confirmed() -> void:
-	deployment_selected.emit(&"pulse_cannon")
+	deployment_selected.emit(&"pulse_cannon", _selected_run_difficulty)
+
+
+func _select_run_difficulty(difficulty_id: StringName) -> void:
+	_selected_run_difficulty = RunDifficulty.normalize(difficulty_id)
+	_refresh_difficulty_selection()
+
+
+func _refresh_difficulty_selection() -> void:
+	if not is_instance_valid(_deployment_difficulty_detail):
+		return
+	for difficulty_id in _deployment_difficulty_buttons:
+		var button := _deployment_difficulty_buttons[difficulty_id] as Button
+		button.text = tr(_difficulty_title_key(difficulty_id))
+		button.theme_type_variation = (
+			&"SelectedChoiceButton"
+			if difficulty_id == _selected_run_difficulty
+			else &"SecondaryButton"
+		)
+	_deployment_difficulty_detail.text = tr(_difficulty_detail_key(_selected_run_difficulty))
+
+
+func _difficulty_title_key(difficulty_id: StringName) -> String:
+	match RunDifficulty.normalize(difficulty_id):
+		RunDifficulty.EASY:
+			return "DIFFICULTY_EASY"
+		RunDifficulty.NORMAL:
+			return "DIFFICULTY_NORMAL"
+	return "DIFFICULTY_HARD"
+
+
+func _difficulty_detail_key(difficulty_id: StringName) -> String:
+	match RunDifficulty.normalize(difficulty_id):
+		RunDifficulty.EASY:
+			return "DEPLOY_DIFFICULTY_EASY_DETAIL"
+		RunDifficulty.NORMAL:
+			return "DEPLOY_DIFFICULTY_NORMAL_DETAIL"
+	return "DEPLOY_DIFFICULTY_HARD_DETAIL"
+
+
+func _minimum_difficulty_button_height() -> float:
+	var minimum_height := INF
+	for button_variant in _deployment_difficulty_buttons.values():
+		minimum_height = minf(minimum_height, (button_variant as Button).custom_minimum_size.y)
+	return 0.0 if is_inf(minimum_height) else minimum_height
 
 
 func _refresh_result_summary() -> void:
@@ -1139,6 +1221,7 @@ func _on_locale_changed(_locale: String) -> void:
 func _refresh_localized_content() -> void:
 	_refresh_garage_content()
 	_refresh_result_summary()
+	_refresh_difficulty_selection()
 	_refresh_input_bindings()
 	_primary_slot.queue_redraw()
 	_passive_slot.queue_redraw()

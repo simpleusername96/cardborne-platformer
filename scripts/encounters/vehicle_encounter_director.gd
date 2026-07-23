@@ -17,34 +17,30 @@ const HOSTILE_PROJECTILE_CAP := 120
 const BOSS_PROJECTILE_RESERVE := 24
 const EFFECT_CAP := 96
 
-const STANDARD_ACTIVE_CAPS := [1, 48, 60, 68, 72]
-const ONSLAUGHT_ACTIVE_CAPS := [1, 52, 64, 68, 72]
-const STANDARD_THREAT_BUDGETS := [1.0, 3.0, 4.5, 5.25, 6.25]
+const ACTIVE_CAPS := [1, 48, 60, 68, 72]
+const THREAT_BUDGETS := [1.0, 3.0, 4.5, 5.25, 6.25]
 
 
-static func active_cap_for(beat: int, preset: StringName = &"standard") -> int:
-	var caps := ONSLAUGHT_ACTIVE_CAPS if preset == &"onslaught" else STANDARD_ACTIVE_CAPS
-	return int(caps[clampi(beat, 0, caps.size() - 1)])
+static func active_cap_for(beat: int) -> int:
+	return int(ACTIVE_CAPS[clampi(beat, 0, ACTIVE_CAPS.size() - 1)])
 
 
 static func active_cap(_stage_id: StringName = &"stage_1") -> int:
-	return active_cap_for(4, &"standard")
+	return active_cap_for(4)
 
 
-static func threat_budget_for(beat: int, preset: StringName = &"standard") -> float:
-	if preset == &"onslaught" and beat >= 2:
-		return THREAT_BUDGET
-	return float(STANDARD_THREAT_BUDGETS[clampi(beat, 0, STANDARD_THREAT_BUDGETS.size() - 1)])
+static func threat_budget_for(beat: int) -> float:
+	return float(THREAT_BUDGETS[clampi(beat, 0, THREAT_BUDGETS.size() - 1)])
 
 
-static func squad_gap_multiplier(beat: int, preset: StringName) -> float:
-	return spawn_pace_multiplier(beat, preset)
+static func squad_gap_multiplier(beat: int) -> float:
+	return spawn_pace_multiplier(beat)
 
 
-static func spawn_pace_multiplier(beat: int, preset: StringName) -> float:
+static func spawn_pace_multiplier(beat: int) -> float:
 	if beat <= 0:
 		return 1.0
-	return 0.28 if preset == &"onslaught" else 0.34
+	return 0.34
 
 
 static func can_commit(current_points: float, ranged_count: int, denial_count: int, enemy: EnemyState, budget: float = THREAT_BUDGET, ranged_cap: int = MAX_RANGED_COMMITS, denial_cap: int = MAX_DENIAL_COMMITS) -> bool:
@@ -103,9 +99,8 @@ static func cohesion_velocity(enemy: EnemyState, squad_snapshot: Dictionary, rol
 static func tuning_contract() -> Dictionary:
 	return {
 		"threat_budget": THREAT_BUDGET,
-		"standard_caps": STANDARD_ACTIVE_CAPS,
-		"onslaught_caps": ONSLAUGHT_ACTIVE_CAPS,
-		"standard_budgets": STANDARD_THREAT_BUDGETS,
+		"active_caps": ACTIVE_CAPS,
+		"threat_budgets": THREAT_BUDGETS,
 		"max_ranged": MAX_RANGED_COMMITS,
 		"max_denial": MAX_DENIAL_COMMITS,
 		"enemy_health_multiplier": ENEMY_HEALTH_MULTIPLIER,
@@ -114,6 +109,5 @@ static func tuning_contract() -> Dictionary:
 		"boss_projectile_reserve": BOSS_PROJECTILE_RESERVE,
 		"enemy_damage_multiplier": ENEMY_DAMAGE_MULTIPLIER,
 		"enemy_recovery_rate": ENEMY_RECOVERY_RATE,
-		"standard_spawn_pace": spawn_pace_multiplier(1, &"standard"),
-		"onslaught_spawn_pace": spawn_pace_multiplier(1, &"onslaught"),
+		"spawn_pace": spawn_pace_multiplier(1),
 	}
