@@ -68,6 +68,7 @@ var pursuit_field := PursuitField.new()
 var secondary_runtime := SecondaryRuntime.new()
 
 var player_position := Vector2.ZERO
+var player_velocity := Vector2.ZERO
 var player_hull_direction := Vector2.RIGHT
 var player_aim_direction := Vector2.RIGHT
 var player_health := PLAYER_MAX_HEALTH
@@ -295,6 +296,7 @@ func _reset_run(increment_index: bool = true, preserve_stage: bool = false, pres
 		_ui.clear_notifications()
 	mode = RunMode.DEPLOYMENT
 	player_position = Rules.player_start(current_stage_id)
+	player_velocity = Vector2.ZERO
 	player_hull_direction = Vector2.RIGHT
 	player_aim_direction = Vector2.RIGHT
 	player_health = _player_max_health()
@@ -481,6 +483,7 @@ func _make_enemy(spec: Dictionary) -> Dictionary:
 		"pattern": "",
 		"pattern_timer": 0.0,
 		"pattern_tick": 0.0,
+		"pattern_volleys": 0,
 		"vulnerable": 0.0,
 		"lane_centers": [],
 	}
@@ -639,6 +642,7 @@ func _set_mouse_for_mode() -> void:
 
 
 func _update_player(delta: float) -> void:
+	var previous_position := player_position
 	lifesteal_budget = minf(6.0, lifesteal_budget + 6.0 * delta)
 	experience_recall_timer = maxf(0.0, experience_recall_timer - delta)
 	player_invulnerable = maxf(0.0, player_invulnerable - delta)
@@ -685,6 +689,7 @@ func _update_player(delta: float) -> void:
 	_update_aim_target()
 	_mark_visited()
 	_apply_dash_collision()
+	player_velocity = (player_position - previous_position) / maxf(delta, 0.0001)
 
 	if tutorial_move and tutorial_aim and tutorial_fire and tutorial_dash and not tutorial_announced:
 		tutorial_announced = true
@@ -2365,6 +2370,8 @@ func _update_stage_boss(boss: Dictionary, delta: float) -> void:
 		return
 	if phase == "boss_startup":
 		boss["phase_time"] = maxf(0.0, float(boss["phase_time"]) - delta)
+		_boss_track_player(boss, delta)
+		_boss_combat_move(boss, delta, BossPatterns.STARTUP_MOVE_SCALE)
 		if float(boss["phase_time"]) <= 0.0:
 			_boss_begin_active(boss)
 		return
@@ -2405,7 +2412,7 @@ func _boss_begin_active(boss: Dictionary) -> void:
 	boss["pattern_tick"] = 0.0
 	var pattern := String(boss["pattern"])
 	boss["phase_time"] = BossPatterns.active_seconds(pattern)
-	boss["pattern_fired"] = false
+	boss["pattern_volleys"] = 0
 	var kind := BossPatterns.kind(pattern)
 	if kind == &"pylons":
 		_spawn_boss_pylons()
@@ -2420,19 +2427,29 @@ func _boss_update_active(boss: Dictionary, delta: float) -> void:
 	var pattern := String(boss["pattern"])
 	var kind := BossPatterns.kind(pattern)
 	var damage := BossPatterns.damage(pattern)
-	if kind == &"lanes" and float(boss["pattern_tick"]) <= 0.0:
-		boss["pattern_tick"] = 0.32
-		var lane_direction := Vector2(boss["committed_dir"])
-		var lane_tangent := lane_direction.rotated(PI * 0.5)
-		for lane_offset in boss["lane_centers"]:
-			var origin := Vector2(boss["pos"]) + lane_direction * 86.0 + lane_tangent * float(lane_offset)
-			_spawn_hostile_projectile(origin, lane_direction, damage, 690.0, pattern, Rules.VIOLET, true)
-	elif kind in [&"fan", &"cross"] and not bool(boss["pattern_fired"]):
-		boss["pattern_fired"] = true
-		var offsets := [-0.34, -0.17, 0.0, 0.17, 0.34] if kind == &"fan" else [0.0, PI * 0.5, PI, PI * 1.5]
-		for offset in offsets:
-			_spawn_hostile_projectile(Vector2(boss["pos"]) + Vector2(boss["committed_dir"]) * 72.0, Vector2(boss["committed_dir"]).rotated(float(offset)), damage, 560.0, pattern, Rules.VIOLET, true)
+	var phase_two := int(boss["boss_phase"]) == 2
+	if kind != &"charge":
+		var move_scale := 0.28 if kind == &"beam" else BossPatterns.ACTIVE_MOVE_SCALE
+		_boss_combat_move(boss, delta, move_scale)
+	if kind in [&"lanes", &"fan", &"cross"] and float(boss["pattern_tick"]) <= 0.0 and int(boss["pattern_volleys"]) < BossPatterns.volley_limit(pattern, phase_two):
+		if int(boss["pattern_volleys"]) == 0:
+			_boss_commit_predictive_aim(boss, BossPatterns.projectile_speed(pattern))
+		boss["pattern_tick"] = BossPatterns.volley_interval(pattern)
+		boss["pattern_volleys"] = int(boss["pattern_volleys"]) + 1
+		var aimed_direction := Vector2(boss["committed_dir"])
+		if kind == &"lanes":
+			var lane_tangent := aimed_direction.rotated(PI * 0.5)
+			for lane_offset in boss["lane_centers"]:
+				var origin := Vector2(boss["pos"]) + aimed_direction * 86.0 + lane_tangent * float(lane_offset)
+				_spawn_hostile_projectile(origin, aimed_direction, damage, BossPatterns.projectile_speed(pattern), pattern, Rules.VIOLET, true)
+		else:
+			var offsets := [-0.34, -0.17, 0.0, 0.17, 0.34] if kind == &"fan" else [0.0, PI * 0.5, PI, PI * 1.5]
+			for offset in offsets:
+				var direction := aimed_direction.rotated(float(offset))
+				_spawn_hostile_projectile(Vector2(boss["pos"]) + direction * 72.0, direction, damage, BossPatterns.projectile_speed(pattern), pattern, Rules.VIOLET, true)
 	elif kind == &"charge":
+		if int(boss["pattern_volleys"]) == 0:
+			_boss_fire_aimed_burst(boss, pattern, damage * 0.55)
 		var before := Vector2(boss["pos"])
 		var requested := Vector2(boss["committed_dir"]) * 790.0 * EncounterDirector.ENEMY_SPEED_MULTIPLIER * delta
 		boss["pos"] = _move_actor(before, requested, float(boss["radius"]), false)
@@ -2445,8 +2462,10 @@ func _boss_update_active(boss: Dictionary, delta: float) -> void:
 		if not bool(boss["hit_committed"]) and Rules.point_segment_distance(player_position, Vector2(boss["pos"]), Vector2(boss["beam_end"])) <= Rules.PLAYER_RADIUS + BossPatterns.width(pattern) * 0.5:
 			boss["hit_committed"] = true
 			_damage_player(damage, pattern, true, true, true)
-	elif kind in [&"area", &"pylons", &"summon"] and damage > 0.0:
-		if not bool(boss["hit_committed"]) and player_position.distance_to(Vector2(boss["committed_target"])) <= BossPatterns.radius(pattern):
+	elif kind in [&"area", &"pylons", &"summon"]:
+		if int(boss["pattern_volleys"]) == 0:
+			_boss_fire_aimed_burst(boss, pattern, maxf(12.0, damage * 0.55))
+		if damage > 0.0 and not bool(boss["hit_committed"]) and player_position.distance_to(Vector2(boss["committed_target"])) <= BossPatterns.radius(pattern):
 			boss["hit_committed"] = true
 			_damage_player(damage, pattern, false, true, true)
 
@@ -2458,18 +2477,83 @@ func _boss_update_active(boss: Dictionary, delta: float) -> void:
 		boss["pattern"] = "recovery_window"
 
 
+func _boss_track_player(boss: Dictionary, delta: float) -> void:
+	var pattern := String(boss["pattern"])
+	var desired_target := _boss_predicted_target(Vector2(boss["pos"]), BossPatterns.projectile_speed(pattern))
+	var desired_direction := (desired_target - Vector2(boss["pos"])).normalized()
+	var current_direction := Vector2(boss["committed_dir"]).normalized()
+	if current_direction.is_zero_approx():
+		current_direction = desired_direction
+	boss["committed_dir"] = current_direction.lerp(
+		desired_direction,
+		clampf(delta * BossPatterns.AIM_TRACK_RATE, 0.0, 1.0)
+	).normalized()
+	boss["committed_target"] = desired_target
+	if BossPatterns.kind(pattern) == &"beam":
+		boss["beam_end"] = SpecialistRuntime.beam_end(
+			Vector2(boss["pos"]),
+			Vector2(boss["committed_dir"]),
+			current_stage_id,
+			false,
+			_runtime_cover_rects()
+		)
+
+
+func _boss_commit_predictive_aim(boss: Dictionary, projectile_speed: float) -> void:
+	var target := _boss_predicted_target(Vector2(boss["pos"]), projectile_speed)
+	boss["committed_target"] = target
+	boss["committed_dir"] = (target - Vector2(boss["pos"])).normalized()
+
+
+func _boss_predicted_target(origin: Vector2, projectile_speed: float) -> Vector2:
+	var travel_time := clampf(origin.distance_to(player_position) / maxf(projectile_speed, 1.0), 0.0, 0.55)
+	return player_position + player_velocity * travel_time * 0.72
+
+
+func _boss_fire_aimed_burst(boss: Dictionary, pattern: String, damage: float) -> void:
+	boss["pattern_volleys"] = 1
+	_boss_commit_predictive_aim(boss, BossPatterns.projectile_speed(pattern))
+	for offset in [-0.13, 0.0, 0.13]:
+		var direction := Vector2(boss["committed_dir"]).rotated(float(offset))
+		_spawn_hostile_projectile(
+			Vector2(boss["pos"]) + direction * 76.0,
+			direction,
+			damage,
+			BossPatterns.projectile_speed(pattern),
+			pattern,
+			Rules.VIOLET,
+			true
+		)
+
+
 func _boss_reposition(boss: Dictionary, delta: float) -> void:
+	_boss_combat_move(boss, delta, 1.0)
+
+
+func _boss_combat_move(boss: Dictionary, delta: float, speed_scale: float) -> void:
 	var position := Vector2(boss["pos"])
 	var to_player := player_position - position
+	var distance := maxf(1.0, to_player.length())
+	var direction_to_player := to_player / distance
 	var direction := pursuit_field.direction_at(position, float(boss["radius"]))
-	if direction.is_zero_approx() or (to_player.length() < 460.0 and _runtime_has_line_of_sight(position, player_position, float(boss["radius"]) * 0.4)):
-		direction = to_player.normalized()
+	var has_line_of_sight := _runtime_has_line_of_sight(position, player_position, float(boss["radius"]) * 0.4)
+	if has_line_of_sight:
+		if distance > 560.0:
+			direction = direction_to_player
+		elif distance < 340.0:
+			direction = -direction_to_player
+		else:
+			var strafe_sign := -1.0 if int(boss["pattern_index"]) % 2 == 0 else 1.0
+			direction = direction_to_player.rotated(strafe_sign * PI * 0.5)
+	elif direction.is_zero_approx():
+		direction = direction_to_player
 	boss["pos"] = _move_actor(
 		position,
-		direction * float(boss["speed"]) * delta,
+		direction * float(boss["speed"]) * speed_scale * delta,
 		float(boss["radius"]),
 		false
 	)
+	boss["velocity"] = (Vector2(boss["pos"]) - position) / maxf(delta, 0.0001)
 
 
 func _spawn_boss_pylons() -> void:
@@ -3322,10 +3406,11 @@ func _draw_enemy_telegraph(enemy: Dictionary) -> void:
 		if boss_kind == &"summon":
 			draw_arc(position, 112.0, 0.0, TAU, 40, Art.MINT, 13.0)
 		if boss_kind == &"lanes":
-			for lane_y_variant in enemy["lane_centers"]:
-				var lane_y := float(lane_y_variant)
-				var world := Rules.world_rect(current_stage_id)
-				draw_rect(Rect2(world.position.x, lane_y - 40.0, world.size.x, 80.0), Color(Art.CORAL, 0.22))
+			var lane_direction := Vector2(enemy["committed_dir"])
+			var lane_tangent := lane_direction.rotated(PI * 0.5)
+			for lane_offset in enemy["lane_centers"]:
+				var origin := position + lane_direction * 86.0 + lane_tangent * float(lane_offset)
+				_draw_warning_beam(origin, lane_direction, 820.0, 44.0, Color(Art.CORAL, 0.62))
 		if boss_kind in [&"area", &"pylons"]:
 			var target := Vector2(enemy["committed_target"])
 			draw_circle(target, BossPatterns.radius(pattern), Color(Art.CORAL, 0.14))

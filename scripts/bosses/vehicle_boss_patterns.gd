@@ -7,6 +7,9 @@ extends RefCounted
 const STAGGER_THRESHOLD := 35.0
 const STAGGER_WINDOW := 0.75
 const STAGGER_RECOVERY_READ := 0.35
+const AIM_TRACK_RATE := 7.0
+const STARTUP_MOVE_SCALE := 0.48
+const ACTIVE_MOVE_SCALE := 0.62
 
 const PATTERNS := {
 	&"twin_foundry_lanes":{"kind":&"lanes", "startup":0.90, "active":0.80, "recovery":1.00, "damage":20.0},
@@ -81,3 +84,30 @@ static func radius(pattern: String) -> float:
 
 static func width(pattern: String) -> float:
 	return float(definition(pattern).get("width", 68.0))
+
+
+static func volley_interval(pattern: String) -> float:
+	match kind(pattern):
+		&"lanes":
+			return 0.16
+		&"fan", &"cross":
+			return 0.20
+	return 0.0
+
+
+static func volley_limit(pattern: String, phase_two: bool) -> int:
+	match kind(pattern):
+		&"lanes":
+			return 5 if phase_two else 4
+		&"fan", &"cross":
+			return 4 if phase_two else 3
+	return 0
+
+
+static func projectile_speed(pattern: String) -> float:
+	match kind(pattern):
+		&"lanes":
+			return 720.0
+		&"fan", &"cross":
+			return 620.0
+	return 590.0

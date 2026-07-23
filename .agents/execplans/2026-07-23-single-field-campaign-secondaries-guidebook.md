@@ -212,22 +212,24 @@ discovery state records what the player has actually encountered.
 
 | Stage | Non-boss defeat quota | Mobile roles introduced or emphasized | Stationary threats | Roaming boss |
 | ---: | ---: | --- | --- | --- |
-| 1 | 20 | Scrap Drone, Needle Drone, Rivet Chaser, Lane Skirmisher | Foundry Turret, Arc Mine | Foundry Colossus |
-| 2 | 28 | Flood Controller, Shield Escort | Interceptor Tower, Barrier Generator | Archive Leviathan |
-| 3 | 36 | Artillery Spotter, Rammer | Beam Sentinel plus earlier threats | Drydock Titan |
-| 4 | 44 | Repair Tender, Drone Carrier | Mixed support and denial anchors | Switchyard Behemoth |
-| 5 | 52 | All discovered mobile roles in mixed squads | Mixed stationary threats | Crown Engine |
+| 1 | 48 | Scrap Drone, Needle Drone, Rivet Chaser, Lane Skirmisher | Foundry Turret, Arc Mine | Foundry Colossus |
+| 2 | 64 | Flood Controller, Shield Escort | Interceptor Tower, Barrier Generator | Archive Leviathan |
+| 3 | 80 | Artillery Spotter, Rammer | Beam Sentinel plus earlier threats | Drydock Titan |
+| 4 | 96 | Repair Tender, Drone Carrier | Mixed support and denial anchors | Switchyard Behemoth |
+| 5 | 112 | All discovered mobile roles in mixed squads | Mixed stationary threats | Crown Engine |
 
 - Every stage starts at the field center with the current six-second safe arrival.
 - Time-authored packets spawn from distributed anchors. After the opening scout,
-  each cue schedules five squads of three to five units, producing roughly five
-  times the former wave volume. All packets use time triggers; route-entry events
-  no longer gate the availability of combat.
+  each cue schedules eight squads of three to five units. The first surge
+  schedules at least 24 enemies, later surges grow toward 40, and surge cues are
+  spaced 2.4 seconds apart. All packets use time triggers; route-entry events no
+  longer gate the availability of combat.
 - Each stage profile authors at least `quota + active_cap` countable enemies so a
   boss cannot become impossible because the finite schedule ran dry.
-- Standard and Onslaught hard-cap active simulation at 64 and 68 enemies while
-  retaining the existing attack-family budgets. Excess authored population stays
-  queued, so stage profiles change density without breaking the frame budget.
+- Standard reaches 48 active enemies on the first combat beat. Both Standard and
+  Onslaught hard-cap active simulation at 72 enemies while retaining the existing
+  attack-family budgets. Excess authored population stays queued, so stage
+  profiles change density without breaking the frame budget.
 - Once the quota is reached, the scheduler stops issuing new ordinary enemies.
   Already living non-boss enemies remain active during the boss warning and boss
   fight, but no reinforcements are added.
@@ -264,6 +266,11 @@ discovery state records what the player has actually encountered.
 - The warning appears in the world, on the minimap, and in the off-screen threat
   arc. The boss is registered in the guidebook when this named arrival starts.
 - The boss globally pursues the player and is never clamped to a boss arena.
+- Boss startup aim tracks the moving player while the boss approaches, retreats,
+  or strafes. Projectile patterns lock one predictively aimed lane and repeat
+  volleys along it; charge, area, pylon, and summon patterns add one aimed
+  three-shot pressure burst. Startup remains the visible warning and active
+  attacks retain bounded recovery.
 - Every attack still has startup, active, and recovery windows. Map-specific
   names may remain, but their effects become local to the boss/player and solid
   cover:
@@ -578,10 +585,10 @@ expanding it to all five stages.
   - **As-is:** later packets depend on route events and mobile actors retain a
     home leash.
   - **To-be:** keep the six-second opening, schedule all Stage 1 groups by time
-    from distributed anchors, and stop the scheduler at 20 countable defeats.
+    from distributed anchors, and stop the scheduler at 48 countable defeats.
   - **Accept:** an idle-player simulation observes the first scout at 6.0 seconds
     and arrivals from at least three distinct anchors before the quota.
-  - **Guard:** active caps, bounded unit spacing, and five-squad surge cohesion
+  - **Guard:** active caps, bounded unit spacing, and eight-squad surge cohesion
     remain deterministic in both presets.
 - [x] **2.2 Add shared global pursuit.**
   - **As-is:** mobile enemies return home or become dormant outside a leash.
@@ -629,7 +636,7 @@ map-specific progression.
 
 - [x] **3.1 Connect the Stage 2–5 quota profiles.**
   - **As-is:** each later stage changes field geometry and adds map mechanics.
-  - **To-be:** use the exact 28/36/44/52 quotas and role table on the same field;
+  - **To-be:** use the exact 64/80/96/112 quotas and role table on the same field;
     reset static threats, items, crates, packets, and dynamic markers only.
   - **Accept:** every stage reaches its quota with ordinary enemies available and
     begins its boss without player location input.
@@ -961,7 +968,7 @@ contracts.
 ## Open Questions
 
 None. The implementation contract is decision-complete. Any request to change
-the five total secondary families, three-family active limit, 20/28/36/44/52
+the five total secondary families, three-family active limit, 48/64/80/96/112
 quotas, five-stage length, `5600×3400` field geometry, `16×10` minimap, shared
 field identity, or guide discovery semantics is change control and must update
 this plan before implementation continues.
@@ -1013,14 +1020,15 @@ this plan before implementation continues.
 - Legacy five-map, fixed-gate, arena-lock, field-boss, intermediate-result, and
   periodic movement-cycle owners are removed.
 - All 13 vehicle validators and the settings validator pass. Repeated Standard
-  and Onslaught pressure samples stay at or below `3.700 ms` and `3.911 ms`;
+  and Onslaught pressure samples stay at or below `4.137 ms` and `5.652 ms`;
   native boot succeeds, Web export succeeds, and the three required viewport
   captures were reviewed without clipping or modal overlap.
-- **2026-07-23 density amendment:** post-implementation play feedback replaced
-  single-squad arrivals with five-squad surges, increased finite mobile reserves
-  to 260/300/340/380/420, bounded active simulation at 64/68, reserved 24
-  hostile-projectile slots for bosses, and
-  limited boss stagger to a 0.75-second recovery-window interrupt.
+- **2026-07-23 density amendments:** post-implementation play feedback replaced
+  single-squad arrivals with eight-squad surges, increased finite mobile reserves
+  to 260/300/340/380/420, expanded quotas to 48/64/80/96/112, and bounded both
+  presets at a repeatedly measured 72 active enemies. Bosses reserve 24 hostile
+  projectile slots, track and move during startup, fire predictively aimed
+  repeated volleys, and limit stagger to a 0.75-second recovery-window interrupt.
 - Phase 6.4 remains intentionally open because plan deletion requires explicit
   user acceptance under the documentation lifecycle policy.
 

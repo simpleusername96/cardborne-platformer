@@ -12,9 +12,14 @@ secondary weapons, EMP, collectible experience, and card upgrades.
   explored minimap cells persist while the player returns to the center between
   stages.
 - Encounter packets begin with a six-second safe arrival, then grow from one
-  scout into five-squad surges under measured 64/68 Standard/Onslaught caps.
+  scout into eight-squad surges. Standard reaches 48 active enemies on the first
+  combat beat and both presets remain bounded at a measured 72-enemy ceiling.
 - Ordinary defeat quotas summon a roaming boss into the same field; surviving
   enemies never lock travel or force a full clear.
+- Bosses pursue and strafe around the player, track movement during visible
+  startup warnings, and fire repeated volleys along a predictively aimed lane
+  before bounded
+  recovery windows.
 - The current build includes 46 card upgrades and five automatic secondary
   families, with at most three active at once.
 - The persistent `?` guidebook reveals only enemies, bosses, objects, and ship

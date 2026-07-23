@@ -18,6 +18,9 @@ func _initialize() -> void:
 			_expect(Patterns.startup_seconds(pattern) >= 0.8, "%s startup is visible" % pattern)
 			_expect(Patterns.active_seconds(pattern) >= 0.4, "%s active window is explicit" % pattern)
 			_expect(Patterns.recovery_seconds(pattern) >= 0.9, "%s recovery is explicit" % pattern)
+			if Patterns.kind(pattern) in [&"lanes", &"fan", &"cross"]:
+				_expect(Patterns.volley_interval(pattern) > 0.0 and Patterns.volley_limit(pattern, false) >= 3, "%s repeats aimed projectile volleys" % pattern)
+				_expect(Patterns.volley_limit(pattern, true) > Patterns.volley_limit(pattern, false), "%s adds one phase-two volley" % pattern)
 		_expect(Difficulty.boss_health(stage_index) > 0.0, "%s has bounded boss health" % stage_id)
 	_finish()
 

@@ -67,6 +67,23 @@ func _check_boss_hit_recovery(run) -> void:
 	_expect(String(boss["phase"]) == "boss_read", "boss exits stagger on its bounded timer")
 
 	run.projectiles.clear()
+	boss["pos"] = run.player_position + Vector2(-420.0, 0.0)
+	boss["phase"] = "boss_startup"
+	boss["phase_time"] = 0.8
+	boss["pattern"] = "current_fan"
+	boss["pattern_index"] = 1
+	boss["committed_dir"] = Vector2.UP
+	run.player_velocity = Vector2(0.0, 180.0)
+	var before_track_position := Vector2(boss["pos"])
+	run.call("_update_stage_boss", boss, 0.1)
+	_expect(Vector2(boss["pos"]).distance_to(before_track_position) > 0.1, "boss moves while tracking during attack startup")
+	_expect(Vector2(boss["committed_dir"]).dot((run.player_position - Vector2(boss["pos"])).normalized()) > 0.0, "boss startup aim turns toward the moving player")
+	run.call("_boss_begin_active", boss)
+	run.call("_boss_update_active", boss, 0.01)
+	run.call("_boss_update_active", boss, BossPatterns.volley_interval("current_fan") + 0.01)
+	_expect(run.call("_count_hostile_projectiles") >= 10, "boss fires repeated predictive volleys instead of one inert shot")
+
+	run.projectiles.clear()
 	var ordinary_limit := Director.HOSTILE_PROJECTILE_CAP - Director.BOSS_PROJECTILE_RESERVE
 	for index in ordinary_limit + 8:
 		run.call("_spawn_hostile_projectile", boss["pos"], Vector2.LEFT, 1.0, 100.0, "validation_ordinary", Color.WHITE)
