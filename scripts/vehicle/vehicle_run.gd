@@ -2011,8 +2011,8 @@ func _defeat_enemy(enemy: Dictionary, source: String) -> void:
 	if role in [&"generator", &"turret", &"mine", &"interceptor_tower", &"beam_sentinel", &"boss_pylon"]:
 		stats_installations += 1
 	if role == &"stage_boss":
-		stage_flow.record_boss_defeat()
-		_complete_stage()
+		if stage_flow.record_boss_defeat():
+			_complete_stage()
 	var defeated_group := String(enemy.get("group_id", ""))
 	if not defeated_group.is_empty():
 		_try_group_completion_reward(defeated_group, Vector2(enemy["pos"]))
@@ -2289,7 +2289,7 @@ func _build_card_offer(source_id: StringName) -> Array[Dictionary]:
 
 
 func _start_stage_boss() -> void:
-	if boss_started:
+	if boss_started or not stage_flow.boss_entry_ready():
 		return
 	boss_started = true
 	discovered_markers["stage_boss"] = true
@@ -3858,6 +3858,8 @@ func _capture_prepare_boss(stage_index: int) -> Dictionary:
 	denied_zones.clear()
 	player_position = Rules.player_start(current_stage_id)
 	boss_arrival_position = StageCatalog.boss_arrival_anchors(current_stage_id)[0]
+	stage_flow.defeats = stage_flow.quota
+	stage_flow.state = StageFlow.State.BOSS_ACTIVE
 	_start_stage_boss()
 	var boss := _find_enemy_by_id("stage_boss")
 	if boss.is_empty():

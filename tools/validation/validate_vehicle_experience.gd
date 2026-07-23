@@ -91,7 +91,7 @@ func _validate_route_level_cadence() -> void:
 		runtime.spawn_shard(Vector2.ZERO, stage_experience)
 		runtime.advance(0.0, Vector2.ZERO, 100.0, false)
 		var levels_gained := runtime.run_level - level_before
-		_expect(levels_gained >= 2 and levels_gained <= 5, "%s quota-path XP yields %d level-ups" % [stage_id, levels_gained])
+		_expect(levels_gained >= 3 and levels_gained <= 8, "%s extended quota-path XP yields %d level-ups" % [stage_id, levels_gained])
 		while runtime.consume_pending_level():
 			pass
 

@@ -81,7 +81,8 @@ maps, a base stage, exploration puzzles, or content beyond the five-stage run.
    or stage completion and summons do not count toward the quota.
 6. On reaching the quota, ordinary spawning stops and a 1.5-second boss warning
    identifies a reachable arrival anchor at least 1200 pixels from the player
-   when the field permits it.
+   when the field permits it. Boss creation and boss-defeat completion reject
+   calls unless the quota has been reached and the warning has resolved.
 7. The boss enters the same field and pursues the player. It does not wait in a
    sealed arena. During visible startup it tracks the moving player while
    approaching, retreating, or strafing at a readable speed. Projectile attacks
@@ -94,11 +95,11 @@ maps, a base stage, exploration puzzles, or content beyond the five-stage run.
 
 | Stage | Ordinary quota | Authored mobile population | Boss |
 | ---: | ---: | ---: | --- |
-| 1 | 48 | 260 | Foundry Colossus |
-| 2 | 64 | 300 | Archive Leviathan |
-| 3 | 80 | 340 | Drydock Titan |
-| 4 | 96 | 380 | Switchyard Behemoth |
-| 5 | 112 | 420 | Crown Engine |
+| 1 | 96 | 260 | Foundry Colossus |
+| 2 | 128 | 300 | Archive Leviathan |
+| 3 | 160 | 340 | Drydock Titan |
+| 4 | 192 | 380 | Switchyard Behemoth |
+| 5 | 224 | 420 | Crown Engine |
 
 Four stationary threats are added per stage. Ordinary hostile projectiles stop
 at 96 so 24 of the global 120-shot cap remain reserved for boss attacks. Enemy

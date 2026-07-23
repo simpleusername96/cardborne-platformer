@@ -38,12 +38,15 @@ func _check_stage_flow() -> void:
 	for index in Catalog.STAGE_IDS.size():
 		var flow := StageFlow.new()
 		flow.configure(index, Catalog.quota(Catalog.STAGE_IDS[index]))
+		_expect(not flow.tick(999.0), "elapsed time alone cannot start a boss warning")
+		_expect(not flow.record_boss_defeat(), "boss defeat cannot complete an ordinary encounter")
 		for defeat in flow.quota:
 			var triggered := flow.record_countable_defeat()
 			_expect(triggered == (defeat == flow.quota - 1), "boss warning starts on exact quota")
 		_expect(flow.stop_ordinary_spawning(), "quota stops ordinary spawning")
 		_expect(flow.tick(1.5), "warning resolves after 1.5 seconds")
-		flow.record_boss_defeat()
+		_expect(flow.boss_entry_ready(), "boss entry requires the exact defeat quota")
+		_expect(flow.record_boss_defeat(), "active boss defeat begins rewards")
 		flow.record_rewards_complete()
 		_expect(flow.state == StageFlow.State.COMPLETE, "stage flow reaches complete without a map trigger")
 

@@ -5,7 +5,7 @@ const Runtime = preload("res://scripts/encounters/vehicle_encounter_runtime.gd")
 const Director = preload("res://scripts/encounters/vehicle_encounter_director.gd")
 
 const EXPECTED_MOBILE_COUNTS := [260, 300, 340, 380, 420]
-const EXPECTED_QUOTAS := [48, 64, 80, 96, 112]
+const EXPECTED_QUOTAS := [96, 128, 160, 192, 224]
 
 var failures: Array[String] = []
 

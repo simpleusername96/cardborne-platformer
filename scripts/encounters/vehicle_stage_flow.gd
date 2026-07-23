@@ -6,7 +6,7 @@ extends RefCounted
 enum State { ORDINARY, BOSS_WARNING, BOSS_ACTIVE, REWARDS, COMPLETE }
 
 var stage_index := 0
-var quota := 20
+var quota := 96
 var defeats := 0
 var state := State.ORDINARY
 var warning_remaining := 0.0
@@ -41,9 +41,15 @@ func tick(delta: float) -> bool:
 	return false
 
 
-func record_boss_defeat() -> void:
-	if state == State.BOSS_ACTIVE:
-		state = State.REWARDS
+func boss_entry_ready() -> bool:
+	return state == State.BOSS_ACTIVE and defeats >= quota
+
+
+func record_boss_defeat() -> bool:
+	if not boss_entry_ready():
+		return false
+	state = State.REWARDS
+	return true
 
 
 func record_rewards_complete() -> void:

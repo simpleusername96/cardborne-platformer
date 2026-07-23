@@ -14,7 +14,8 @@ secondary weapons, EMP, collectible experience, and card upgrades.
 - Encounter packets begin with a six-second safe arrival, then grow from one
   scout into eight-squad surges. Standard reaches 48 active enemies on the first
   combat beat and both presets remain bounded at a measured 72-enemy ceiling.
-- Ordinary defeat quotas summon a roaming boss into the same field; surviving
+- Substantial ordinary-defeat quotas summon a roaming boss into the same field;
+  neither elapsed time nor a direct boss call can bypass that gate. Surviving
   enemies never lock travel or force a full clear.
 - Bosses pursue and strafe around the player, track movement during visible
   startup warnings, and fire repeated volleys along a predictively aimed lane

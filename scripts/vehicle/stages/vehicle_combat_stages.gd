@@ -6,7 +6,7 @@ extends RefCounted
 const Field = preload("res://scripts/vehicle/stages/drowned_ruin_field.gd")
 
 const STAGE_IDS: Array[StringName] = [&"stage_1", &"stage_2", &"stage_3", &"stage_4", &"stage_5"]
-const QUOTAS := [48, 64, 80, 96, 112]
+const QUOTAS := [96, 128, 160, 192, 224]
 const AUTHORED_COUNTS := [260, 300, 340, 380, 420]
 const SURGE_SQUADS := 8
 const TITLE_KEYS := [

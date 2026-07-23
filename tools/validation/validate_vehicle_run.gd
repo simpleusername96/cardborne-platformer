@@ -41,10 +41,23 @@ func _run() -> void:
 		_expect(hud["minimap"]["cols"] == 16 and hud["guidebook"].has("categories"), "HUD exposes minimap and guide snapshots")
 		var ui = run.get_node_or_null("VehicleStageUI")
 		_expect(ui != null and ui._guide_panel.debug_contract()["categories"] == 5, "guidebook modal is connected")
+		_check_boss_progression_gate(run)
+		run.call("_reset_run", false, true, true)
 		_check_boss_hit_recovery(run)
 	root.queue_free()
 	await process_frame
 	_finish()
+
+
+func _check_boss_progression_gate(run) -> void:
+	run.call("_start_stage_boss")
+	_expect(run.call("_find_enemy_by_id", "stage_boss").is_empty(), "boss cannot spawn before ordinary defeats")
+	run.stage_flow.defeats = run.stage_flow.quota - 1
+	run.call("_start_stage_boss")
+	_expect(run.call("_find_enemy_by_id", "stage_boss").is_empty(), "boss remains blocked one defeat before quota")
+	_expect(run.stage_flow.record_countable_defeat(), "final ordinary defeat begins the boss warning")
+	run.call("_update_stage_progression", 1.5)
+	_expect(not run.call("_find_enemy_by_id", "stage_boss").is_empty(), "boss spawns only after quota and warning")
 
 
 func _check_boss_hit_recovery(run) -> void:
