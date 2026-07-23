@@ -9,7 +9,6 @@ scope: Evidence and decision checklist for whether Cardborne should rely on fixe
 source: User feedback and the current local implementation
 related:
   - ../docs/product/vehicle_game_spec.md
-  - ./execplans/2026-07-24-combat-readability-seeded-field-progression.md
   - ./vehicle-performance-stabilization-evidence.md
 ---
 
@@ -22,11 +21,12 @@ progress that survives death. This document is advisory evidence and a bounded
 decision checklist, not an implementation plan or an accepted product
 specification.
 
-The decision must wait until the combat-readability, projectile, encounter,
-field-layout, XP, and elemental-stack changes in the related active ExecPlan are
-playable. Those changes alter effective survivability and upgrade cadence, so
-balancing persistent growth against the current build would measure a moving
-target.
+The combat-readability, projectile, encounter, field-layout, XP, and
+elemental-stack baseline is now implemented in commit `1c7a2b0`. The decision
+must still wait for structured play evidence from that baseline: those changes
+alter effective survivability and upgrade cadence, so selecting persistent
+growth from code inspection alone would substitute an assumption for observed
+play.
 
 ## Scope
 
@@ -45,7 +45,7 @@ target.
 - Changing current difficulty values now.
 - Adding a save schema, currency, card archive, loadout screen, adaptive
   difficulty, or retained cards before a later accepted execution plan.
-- Tuning enemy stats while the active combat-readability plan is incomplete.
+- Tuning enemy stats as part of this unresolved decision study.
 - Treating this evidence document as authority over
   `docs/product/vehicle_game_spec.md`.
 
@@ -60,8 +60,8 @@ target.
 | `scripts/vehicle/vehicle_run.gd::_finalize_stage_completion()` | A full clear increments clear count and unlocks the relay module. No current runtime path sets the field-module flag to true. | Shows that a small persistent-power precedent exists, but it is incomplete and not death progression. |
 | `scripts/cards/vehicle_upgrade_catalog.gd` and `data/cards/vehicle/` | The run currently has 46 cards, three-card offers, maximum levels, prerequisites, and bounded secondary slots. | Defines the build-diversity system persistent growth must not erase. |
 | `docs/product/vehicle_game_spec.md` | Hard is the default; difficulty is fixed at deployment; the run is currently specified around run-scoped cards and five stages. | Defines current authority until a later decision changes it. |
-| `.agents/execplans/2026-07-24-combat-readability-seeded-field-progression.md` | Accepted damage, hostile projectiles, spawn distribution, layout variation, early XP, and element stacking are scheduled to change. | Establishes why balance evidence must be collected after that work. |
-| 2026-07-24 baseline validators | Sixteen relevant current validators passed before implementation of the related ExecPlan. | Establishes a clean pre-change technical baseline, not a balance conclusion. |
+| Commit `1c7a2b0` and `docs/product/vehicle_game_spec.md` | Damage feedback, hostile projectiles, distributed spawns, run-seeded layout variation, early XP, and independent element stacking are implemented and documented. | Establishes the candidate mechanics whose balance must now be observed in play. |
+| 2026-07-24 validation pass | The complete focused validator suite, native boot, Web export, fixed-seed captures, and bounded current/boss pressure regressions passed on the implemented baseline. | Establishes a clean technical baseline, not a balance conclusion. |
 
 ## Findings
 
@@ -89,10 +89,10 @@ target.
 
 ### Inferences
 
-- The post-ExecPlan game will probably feel easier in short damage bursts
+- The implemented baseline will probably feel easier in short damage bursts
   because accepted hits gain a one-second invulnerability and hostile shots
-  become slower/smaller. Faster early XP may offset that by producing stronger
-  builds sooner. The net result cannot be inferred reliably without play.
+  are slower/smaller. Faster early XP may also produce stronger builds sooner.
+  The net result cannot be inferred reliably without play.
 - If fresh Hard remains the default, any persistent power system should not be
   required to make Normal or a first Hard attempt technically viable.
 - Option unlocks are less likely than uncapped stats to invalidate encounter
@@ -100,8 +100,8 @@ target.
 
 ## Decision Question
 
-After the active combat plan is implemented, which progression contract gives
-the desired balance of mastery, accessibility, long-term motivation, and run
+Using the implemented combat baseline, which progression contract gives the
+desired balance of mastery, accessibility, long-term motivation, and run
 variety without making Hard a grind gate or making in-run card choices trivial?
 
 The owner decision must explicitly answer:
@@ -172,7 +172,7 @@ Score every still-viable option against the same criteria:
 
 ### Phase 1 — Establish the post-change game
 
-- [ ] Complete and validate the related combat-readability ExecPlan.
+- [x] Complete and validate the combat-readability baseline.
 - [ ] Freeze one candidate build for balance observation; do not change
   difficulty or persistence during the sample.
 - [ ] Record five Normal and five Hard attempts using the evidence fields above.
@@ -227,7 +227,7 @@ product preference; present the measured tradeoff and request that decision.
   combat-readability implementation.
 - Do not retain all cards or a random subset without a hard starting-power cap.
 - Test bounded memory loadout, fixed-difficulty-only, and explicit opt-in assist
-  as the first three options after the new combat baseline is playable.
+  as the first three options after the required play evidence is collected.
 - Treat a permanent stat grid as viable only if fresh-save play remains fully
   supported and the cap is demonstrably shallow.
 
@@ -235,7 +235,7 @@ These are investigation priorities, not accepted features.
 
 ## Limitations
 
-- No post-ExecPlan play data exists yet.
+- No structured post-change play-attempt data exists yet.
 - No external comparison source has been added in this pass; the future source
   budget is deliberately bounded.
 - The current persistence implementation contains a field-module flag with no

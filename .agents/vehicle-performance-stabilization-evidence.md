@@ -89,9 +89,10 @@ aliasing with the six ordinary-decision buckets.
 ### Bounded measurements
 
 These are diagnostic implementation snapshots, not a completed release matrix.
-Every result came from a dirty implementation worktree. Embedded threshold
-objects produced before the final gate correction used a looser draw-call
-limit; the values below are judged against the active plan instead.
+Early results came from dirty implementation worktrees. The final two seeded
+field regressions came from clean commit `1c7a2b0`. Embedded threshold objects
+produced before the final gate correction used a looser draw-call limit; the
+values below are judged against the active plan instead.
 
 | Result | Qualification | Key observations |
 | --- | --- | --- |
@@ -100,8 +101,8 @@ limit; the values below are judged against the active plan instead.
 | `final4-throughput.json`, latest current-pressure 120 FPS probe, 2 s + 10 s | Short and partly unfocused; CPU-throughput diagnostic only | Frame median 8.33 ms, p95 17.26 ms; physics p95 9.24 ms; presentation p95 4.46 ms; zero consecutive frames over 33.3 ms |
 | Built Web current-pressure probe | Disqualified by automated browser scheduling | Counts valid at 76 enemies and 140/72 shots; the rendered scene, HUD, projectiles, and effects were visually present |
 | `post-ui-current.json`, final focused current-pressure 120 FPS smoke, 2 s + 10 s | Foreground and scheduler-qualified, but intentionally too short for release authority | 76 enemies and 212 total projectiles; frame median/p95/p99 8.33/8.33/9.09 ms; physics p95 6.23 ms; presentation p95 2.97 ms; draw-call p95 165; every applicable threshold check passed |
-| `2026-07-24/current-pressure-30s.json`, seeded-layout current pressure, 10 s + 30 s | Focused and scheduler-qualified implementation regression; non-authoritative because it is shorter than 60 s and the tree is dirty | 76 enemies, 140/72 player/hostile shots, eight runtime covers; frame median/p95/p99 16.67/16.67/16.67 ms; physics p95/p99 5.04/6.11 ms; presentation p95 1.75 ms; draw-call p95 161; no frame over 20 ms |
-| `2026-07-24/boss-pressure-30s.json`, seeded-layout boss pressure, 10 s + 30 s | Focused and scheduler-qualified implementation regression; non-authoritative because it is shorter than 60 s and the tree is dirty | 77 enemies including one boss, 140/100 player/hostile shots, eight runtime covers; frame median/p95/p99 16.67/16.67/16.67 ms; physics p95/p99 5.35/6.43 ms; presentation p95 1.88 ms; draw-call p95 164; no frame over 20 ms |
+| `2026-07-24-clean/current-pressure-30s.json`, seeded-layout current pressure, 10 s + 30 s | Clean commit `1c7a2b0`; focused and scheduler-qualified implementation regression; non-authoritative only because it is shorter than 60 s | 76 enemies, 140/72 player/hostile shots, eight runtime covers; frame median/p95/p99 16.67/16.67/16.67 ms; physics p95/p99 4.98/6.06 ms; presentation p95/p99 1.76/2.33 ms; draw-call p95 161; no frame over 20 ms |
+| `2026-07-24-clean/boss-pressure-30s.json`, seeded-layout boss pressure, 10 s + 30 s | Clean commit `1c7a2b0`; focused and scheduler-qualified implementation regression; non-authoritative only because it is shorter than 60 s | 77 enemies including one boss, 140/100 player/hostile shots, eight runtime covers; frame median/p95/p99 16.67/16.67/16.67 ms; physics p95/p99 5.90/7.36 ms; presentation p95/p99 2.33/3.04 ms; draw-call p95 164; one 22.04 ms frame and no frame over 25 ms |
 
 The final short smoke meets the user's current development stop condition:
 ordinary maximum pressure remains functional and has enough measured headroom
@@ -111,11 +112,12 @@ The latest full-duration sample is still non-authoritative because focus was
 lost, so no release guarantee is claimed.
 
 The 2026-07-24 seeded-field regression keeps that development condition under
-both current and boss pressure. Both foreground samples remained at the
-60 Hz frame cadence with zero post-warmup frame above 20 ms, no rejected
-actors/projectiles, and draw-call p95 below 165. These results cover the new
-runtime cover broadphase and retained status batches, but their 30-second dirty
-build duration remains development evidence rather than release certification.
+both current and boss pressure. Both clean foreground samples held a 16.67 ms
+frame p99. Current pressure had no post-warmup frame above 20 ms; boss pressure
+had one 22.04 ms frame and none above 25 ms. Neither sample rejected an actor
+or projectile, and draw-call p95 stayed below 165. These results cover the new
+runtime cover broadphase and retained status batches, but their 30-second
+duration remains development evidence rather than release certification.
 
 ## Recommendations
 
@@ -139,8 +141,9 @@ the gameplay/content contract reaches a release-candidate state:
   non-authoritative; the recorder now labels those conditions explicitly.
 - The latest code has not completed the three-run platform/resolution matrix or
   the ten-minute soak.
-- The 2026-07-24 current/boss regressions are focused 30-second samples from a
-  dirty implementation tree and therefore are deliberately non-authoritative.
+- The 2026-07-24 current/boss regressions are focused 30-second samples from
+  clean commit `1c7a2b0`, but are deliberately non-authoritative because the
+  release gate requires at least 60 seconds.
 - The draw-call ceiling passes the final focused short smoke, but strict
   full-duration frame-tail gates are not release-qualified.
 - This evidence proves bounded ownership and functional behavior, not unlimited
