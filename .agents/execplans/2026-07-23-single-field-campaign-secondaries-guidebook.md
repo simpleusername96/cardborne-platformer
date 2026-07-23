@@ -3,7 +3,7 @@ type: plan
 status: active
 owner: BK
 created: 2026-07-23
-scope: Single-field five-stage combat loop, roaming bosses, secondary weapons, simple movement upgrade, and encounter-driven guidebook
+scope: Enlarged single-field five-stage combat loop, roaming bosses, secondary weapons, simple movement upgrade, and encounter-driven guidebook
 related:
   - ../PLANS.md
   - ../../docs/product/vehicle_game_spec.md
@@ -12,13 +12,13 @@ related:
 
 # Single-Field Campaign, Secondary Arsenal, and Guidebook — Execution Plan
 
-This plan replaces the current five-map progression with one persistent Drowned
-Ruins field, five escalating combat stages, quota-triggered roaming bosses, five
-bounded passive secondary weapon families, one simple base-speed upgrade, and a
-persistent encounter-driven guidebook. The work is divided into six executable
-phases and is complete only when all five stages run consecutively on the same
-field and the native, Web, performance, localization, save, and rendered UI gates
-pass.
+This plan replaces the current five-map progression with one persistent,
+`5600×3400` Drowned Ruins field, five escalating combat stages, quota-triggered
+roaming bosses, five bounded passive secondary weapon families, one simple
+base-speed upgrade, and a persistent encounter-driven guidebook. The work is
+divided into six executable phases and is complete only when all five stages run
+consecutively on the same enlarged field and the native, Web, performance,
+localization, save, and rendered UI gates pass.
 
 ## Purpose
 
@@ -26,9 +26,9 @@ pass.
   run in which enemies come to the player, each stage culminates in a roaming
   boss, build choices materially change passive offense, and discovered game
   knowledge is available from the pause/settings flow.
-- **Final artifact:** one five-stage Godot campaign using one shared field,
-  five secondary weapon families, a simplified movement card, and a localized
-  guidebook with persistent discovery.
+- **Final artifact:** one five-stage Godot campaign using one shared `5600×3400`
+  field, five secondary weapon families, a simplified movement card, and a
+  localized guidebook with persistent discovery.
 - **Completion state:** stages 1–4 advance automatically after their boss reward;
   stage 5 opens the final result; all obsolete map-gate, arena-lock, temporary
   movement-cycle, and inter-stage result code is retired.
@@ -62,6 +62,7 @@ discovery state records what the player has actually encountered.
 | `docs/design/UI_VISUAL_SYSTEM.md` | The accepted visual language is flat-color Sunken Ceramic Fresco with large shapes, Noto Sans KR, Korean default, 44 px commands, and modal/focus requirements at 960×540, 1280×720, and 1920×1080. | Guidebook layout and secondary-weapon feedback must reuse the current system. | Recheck after any shared theme change. |
 | `scripts/vehicle/vehicle_stage_catalog.gd`, `scripts/vehicle/stages/*.gd` | Five stage IDs currently select five separate geometry, hazard, landmark, packet, pickup, and boss-arena definitions. | Split one field definition from five combat-stage profiles and retire duplicate geometry owners. | Recheck immediately before deleting migrated stage files. |
 | `scripts/vehicle/vehicle_run.gd` | `_advance_stage()` reloads a map and opens gameplay manually from a result; `_update_stage_progression()` uses generators/cache/zone gates; bosses are arena-locked; `_update_passive_secondary()` only creates seeker shots; `_player_move_speed()` reads permanent and periodic movement modifiers. | Stage-flow, boss, passive-runtime, and movement changes. | Recheck after each phase that touches the orchestrator. |
+| `scripts/vehicle/stages/flooded_works.gd`, `scripts/vehicle/vehicle_run.gd`, `project.godot`, `tools/validation/validate_vehicle_stage_layouts.gd` | The reusable source field is `4400×2800`, centered at `(2200,1400)`, with nine cover rectangles; gameplay uses a `1280×720` viewport, camera zoom `1.0`, and a `13×6` minimap grid. The layout validator hard-codes the old dimensions and center. | Enlarge the field without scaling combat, update camera/minimap bounds, and replace stale layout assertions. | Verify the exact replacement geometry and metrics in Phase 1. |
 | `scripts/encounters/vehicle_encounter_runtime.gd` | Packets already spawn units sequentially from authored anchors, but event-only activation and per-packet leash rectangles prevent a global timed pursuit loop. | Keep deterministic packets and caps; replace activation/leash semantics. | Recheck after Phase 2. |
 | `scripts/enemies/vehicle_enemy_archetypes.gd`, `scripts/bosses/vehicle_boss_patterns.gd` | Nineteen roles and five stage-boss pattern sets exist; stationary roles are already distinguishable from mobile roles, but some boss patterns assume map-specific lanes, gates, or reflectors. | Reuse enemy identities and five bosses while making boss patterns field-portable. | Recheck before Phase 3 boss migration. |
 | `scripts/cards/vehicle_upgrade_catalog.gd`, `data/cards/vehicle/*.tres` | The runtime expects 43 card resources. `tuned_thrusters` and `thruster_cycle` both affect movement; seeker modifiers do not create other secondary weapon families. | Retire the movement cycle, add four secondary unlock/level cards, and update validation counts. | Recheck after card additions/removals. |
@@ -71,13 +72,28 @@ discovery state records what the player has actually encountered.
 | [Nova Drift official patch notes](https://blog.novadrift.io/patch-notes/) (accessed 2026-07-23) | Drones, mines, turrets, and seeking attacks are established build families; construct/projectile counts require explicit caps and performance care. | Select drones and mines, and bound every passive entity count. | Revisit only if performance architecture changes. |
 | [SPACEFIGHTER developer Steam page](https://store.steampowered.com/app/4451950/) (accessed 2026-07-23) | A current top-down vehicle survivor uses homing rockets, Tesla/kill auras, floating mines, minions, orbital drones, manual targeting, bosses, and a discovery bestiary. | Confirms the five selected secondary archetypes and encounter-driven guidebook are familiar for the subgenre. No names, assets, or exact balance values are copied. | Revisit only if secondary scope changes. |
 
+## Execution Readiness
+
+- Discovery, current-state inspection, option comparison, and product decisions
+  are complete before Phase 1. Phases 1–6 contain implementation and post-change
+  verification only; none contains a search, research, comparison, selection, or
+  deferred design task.
+- This plan authorizes exactly one implementation solution: the locked contracts
+  in this document. Rejected Alternatives records why prior options are closed;
+  it is not a menu for the implementer.
+- A freshness check means verifying that a named current owner has not changed
+  before editing or deleting it. It does not reopen product discovery. If the
+  checked source contradicts a locked contract materially, stop under change
+  control instead of adding an exploratory task to this plan.
+
 ## Assumptions — Locked Interpretations
 
 - “Five secondary weapon types” means **five total families including the
   existing Seeker Launcher**, not five additions on top of it.
 - “The same map” means the current Flooded Works geometry and accepted visual
   theme become one persistent `drowned_ruin_field`; stage identity comes from
-  enemies and bosses, not geometry or recoloring.
+  enemies and bosses, not geometry or recoloring. The field is enlarged to the
+  exact dimensions and geometry contract in Locked Decision 1.
 - The campaign remains five stages because five boss identities and reward steps
   already exist. A change to campaign length is owner-level scope change.
 - “Non-boss enemies” means non-summoned mobile enemies and stationary threats.
@@ -89,22 +105,102 @@ discovery state records what the player has actually encountered.
 
 ## Locked Decisions
 
-### 1. One persistent field and five combat stages
+### 1. One enlarged persistent field and five combat stages
 
-- The shared field is named `drowned_ruin_field` and is migrated from the current
-  Flooded Works walkable floor, cover, void/water, art motifs, center start, item
-  anchors, and camera bounds.
+- The shared field is named `drowned_ruin_field`. Its exact world rectangle is
+  `Rect2(0, 0, 5600, 3400)`, its exact center respawn is
+  `Vector2(2800, 1700)`, and the center has a `480 px` clear radius with no
+  cover, stationary threat, item, crate, ordinary spawn, or boss arrival anchor.
+- Do not uniformly scale the current map, actor sprites, movement, weapon range,
+  camera, cover, or combat spacing. Translate the ten accepted Flooded Works
+  walkable regions and its nine cover rectangles by exactly
+  `Vector2(600, 300)`, then union the translated floor with these six new broad
+  walkable rectangles:
+
+  | Region ID | Exact rectangle | Function |
+  | --- | --- | --- |
+  | `northwest_court` | `Rect2(240, 300, 1400, 900)` | broad northwest combat court |
+  | `southwest_court` | `Rect2(240, 2200, 1400, 900)` | broad southwest combat court |
+  | `northeast_court` | `Rect2(3960, 300, 1400, 900)` | broad northeast combat court |
+  | `southeast_court` | `Rect2(3960, 2200, 1400, 900)` | broad southeast combat court |
+  | `north_outer_lane` | `Rect2(1380, 500, 2840, 520)` | upper cross-field route joining both north courts |
+  | `south_outer_lane` | `Rect2(1380, 2380, 2840, 520)` | lower cross-field route joining both south courts |
+
+- Translate all nine cover rectangles, then widen the translated lower-west
+  rectangle from `Rect2(1250,2180,300,170)` to exactly
+  `Rect2(1190,2180,360,170)` so the `122 px` stage-boss radius cannot enter a
+  one-cell pocket that it cannot leave. Add exactly four sparse outer-court
+  cover rectangles: `Rect2(640,690,280,180)`,
+  `Rect2(640,2530,280,180)`, `Rect2(4680,690,280,180)`, and
+  `Rect2(4680,2530,280,180)`. The final field therefore has exactly thirteen
+  cover rectangles.
+- Do not translate the five old water rectangles because they would overlap the
+  new courts and falsely present walkable floor as water. Replace them with four
+  non-walkable border-water rectangles: `Rect2(80,60,2400,180)`,
+  `Rect2(3120,60,2400,180)`, `Rect2(80,3160,2400,180)`, and
+  `Rect2(3120,3160,2400,180)`. All other space outside the walkable union remains
+  cobalt void.
+- Reuse the four accepted large motif kinds, radii, rotations, and semantic
+  colors, but place them at exact valid centers rather than translating centers
+  that would collide with cover or land in void: Tide Curl `(1120,560)`, radius
+  `210`, rotation `-0.28`; Split Current `(1250,2850)`, radius `245`, rotation
+  `0`; Relay Flower `(4440,900)`, radius `135`, rotation `PI/4`; Sun Gate
+  `(4360,2520)`, radius `235`, rotation `0`. Add no smaller repeated floor motif.
+- The enlarged field is `54.5%` larger by area than Flooded Works. At the
+  unchanged `1280×720` gameplay viewport and camera zoom `1.0`, it spans exactly
+  `4.375` view widths by `4.722` view heights (`20.66` viewport areas), so the
+  whole field cannot appear on one gameplay screen. At base speed `280`, the
+  straight center-to-edge times are `10.00 s` horizontally and `6.07 s`
+  vertically; center-to-corner is `11.70 s`. No validated center-to-arrival-anchor
+  navigation route may exceed `3640 px` (`13.0 s` at base speed).
+- Preserve the current movement-readability geometry contracts: passable
+  openings are at least `168 px`, primary travel/combat lanes are at least
+  `320 px`, and turning pockets are at least `240×240 px`. Every outer court has
+  two walkable routes back to the central network; no new dead-end combat pocket
+  or visually open but colliding slit is allowed.
+- Replace the `13×6` minimap with an exact `16×10` grid. Each cell represents
+  `350×340` world pixels; entering a cell keeps the current one-cell-neighbor
+  reveal (`3×3`, clipped at edges). Explored cells still persist across stages.
+- Use exactly sixteen ordinary-enemy spawn anchors and eight boss arrival
+  anchors. They are immutable field data and use these exact positions:
+
+  ```text
+  ordinary: (480,520), (880,480), (1280,560), (4320,520),
+            (4800,480), (5200,640), (480,2860), (880,2920),
+            (1280,2820), (4320,2860), (4800,2920), (5200,2760),
+            (1900,700), (3600,700), (1900,2700), (3600,2700)
+  boss:     (520,960), (1280,440), (4320,440), (5080,960),
+            (520,2440), (1280,2960), (4320,2960), (5080,2440)
+  ```
+
+- Reuse the four non-progression stationary-threat positions and all current
+  field pickup/crate positions after the same `(600,300)` translation. Their
+  exact field anchors are:
+
+  ```text
+  stationary: (3650,1250), (3650,2110), (3320,890), (3320,2510)
+  pickups:    repair (2300,1700), recall (3640,870), repair (4280,2350)
+  crates:     (1330,2000), (2210,1810), (3860,1710), (2020,1460),
+              (4300,990)
+  ```
+
+- A pre-implementation `96 px` sampled-grid sanity check of these exact
+  rectangles reaches all `999/999` ordinary-radius (`36 px`) cells and all
+  `651/651` stage-boss-radius (`122 px`) cells. Every listed anchor is valid;
+  the longest sampled center-to-anchor paths are `3174.2 px` for ordinary
+  enemies and `3475.9 px` for bosses. Phase 1 must reproduce this with the
+  engine geometry validator; this arithmetic check is evidence, not a substitute
+  for acceptance.
+
 - Fixed boss gates, boss chambers, generator progression gates, relay-cache
-  progression, optional field-boss branches, current lanes, electrical sweep
-  islands, switch gates, and reflectors do not survive as stage-flow contracts.
+  progression, optional field-boss branches, electrical-current lane hazards,
+  sweep islands, switch gates, and reflectors do not survive as stage-flow
+  contracts.
 - The field exposes:
-  - one exact center respawn point;
-  - at least twelve validated ordinary-enemy spawn anchors distributed around
-    the field;
-  - eight validated boss arrival anchors;
-  - stationary-threat anchors separated from the center and from required travel
-    lanes;
-  - item and crate anchors reused and restocked at each stage reset.
+  - the exact center, sixteen ordinary spawn anchors, and eight boss anchors
+    listed above;
+  - the exact four stationary-threat, three pickup, and five crate anchors listed
+    above, with pickups and crates restocked at each stage reset.
 - Walkable space, solid cover, line of sight, minimap blockers, backdrop drawing,
   spawn validation, and pursuit navigation continue to consume one geometry
   source.
@@ -162,8 +258,8 @@ discovery state records what the player has actually encountered.
   zone-entry, chest, generator, or ordinary-enemy-clear requirement.
 - The boss anchor is chosen from the eight validated anchors by maximum path
   distance from the player, with the stage/run seed breaking ties. The chosen
-  point must be walkable, reachable, and at least 900 px from the player. If no
-  point satisfies 900 px, the farthest valid point is used.
+  point must be walkable, reachable, and at least 1200 px from the player. If no
+  point satisfies 1200 px, the farthest valid point is used.
 - The warning appears in the world, on the minimap, and in the off-screen threat
   arc. The boss is registered in the guidebook when this named arrival starts.
 - The boss globally pursues the player and is never clamped to a boss arena.
@@ -300,6 +396,8 @@ Discovery rules are exact:
 | --- | --- | --- |
 | Load Flooded Works for all five existing stage IDs without changing the catalog. | Smallest apparent patch. | Leaves map-specific gates, hazards, landmarks, validation, and boss assumptions attached to misleading stage IDs. |
 | Preserve all five maps and only teleport the player to each map center. | Reuses shipped content. | Directly conflicts with the single-map requirement and keeps the current navigation/readability cost. |
+| Uniformly scale Flooded Works from `4400×2800` to `5600×3400`. | Keeps the same topology with little authoring. | Scales lane widths, cover, travel gaps, and motif proportions while leaving combat ranges and actor size unchanged; the result is emptier and less legible rather than meaningfully larger. |
+| Zoom the camera out to show the enlarged field. | Exposes more geography at once. | Defeats the requirement that the field extend beyond one screen and makes small enemies, pickups, and telegraphs harder to read. Gameplay zoom remains `1.0`. |
 | Require all ordinary enemies to die before the boss. | Simple counter. | Recreates the prior hidden/stuck-enemy failure; a finite quota gives a clear, recoverable objective. |
 | Keep the boss in a fixed arena. | Existing patterns and gates already support it. | Directly conflicts with roaming boss arrival and global pursuit. |
 | Add five new secondaries in addition to the Seeker. | Maximizes content breadth. | The request is satisfied by five total families; six families would expand balance, UI, card-pool, and performance cost without a distinct missing tactical role. |
@@ -319,6 +417,9 @@ Already true or reusable:
   radar, fixed-step profiler, native boot, and Web export exist.
 - [x] Flooded Works has a centered start and accepted Sunken Ceramic Fresco field
   art suitable for the shared map.
+- [x] The current field is `4400×2800`; the gameplay camera is `1280×720` at
+  zoom `1.0`; the minimap is `13×6`; and the current validator owns hard-coded
+  old dimensions that Phase 1 must replace.
 - [x] Primary fire, opening attack, dash, EMP, Seeker Launcher, card confirmation,
   and run-build persistence already provide the core combat loop.
 
@@ -338,7 +439,8 @@ Remaining implementation:
 
 In scope:
 
-- one shared map for all five stages;
+- one shared `5600×3400` map for all five stages, with the exact expansion,
+  camera, minimap, route, cover, and anchor contract in Locked Decision 1;
 - stage-specific enemy composition, quota, stationary threats, boss, and rewards;
 - ordinary mobile and boss global pursuit;
 - automatic stages 1–4 transition and final stage result;
@@ -350,7 +452,8 @@ In scope:
 
 Out of scope:
 
-- a new map, procedural map generation, or map recoloring per stage;
+- any second map, procedural map generation, per-stage geometry, or map
+  recoloring;
 - new manual attack buttons, ammunition, defense action, or primary-weapon input
   changes;
 - new enemy art assets, external asset packs, external packages, or realistic
@@ -375,7 +478,7 @@ Exact actions requiring owner/user approval:
 
 | Concern | Final owner | Interface / invariant | Existing owner to reuse or retire |
 | --- | --- | --- | --- |
-| Shared field geometry and anchors | `scripts/vehicle/stages/drowned_ruin_field.gd` | Immutable field definition consumed by drawing, collision, minimap, spawning, and validation. | Migrate Flooded Works geometry; retire all five map-definition files after migration. |
+| Shared field geometry and anchors | `scripts/vehicle/stages/drowned_ruin_field.gd` | Immutable `5600×3400` field with center `(2800,1700)`, translated core, six exact extensions, thirteen covers, four waters, four motif placements, sixteen ordinary anchors, and eight boss anchors; consumed by drawing, collision, minimap, spawning, camera, and validation. | Migrate and enlarge Flooded Works geometry; reuse motif drawing from `vehicle_stage_visual_profile.gd`, retire stage-specific backdrop transforms, and retire all five map-definition files after migration. |
 | Five combat-stage profiles | `scripts/vehicle/stages/vehicle_combat_stages.gd` behind `vehicle_stage_catalog.gd` | Stage ID maps to quota, packets, static threats, boss profile, rewards; every profile references the same field ID. | Replace geometry-bearing stage definitions. |
 | Quota/boss/reward/transition state | `scripts/encounters/vehicle_stage_flow.gd` | Records only countable defeats, emits boss warning/start/reward/advance events, and exposes a read-only snapshot. | Extract progression flags from `vehicle_run.gd`; retire generator/cache/boss-gate state. |
 | Timed packet scheduling | `scripts/encounters/vehicle_encounter_runtime.gd` | Deterministic time packets, active caps, stop-spawning contract, and metrics. | Reuse scheduler; retire route-event-only activation and home leashes for mobile actors. |
@@ -393,7 +496,8 @@ Exact actions requiring owner/user approval:
 
 | Concern | As-is | To-be | Acceptance check | Guard / leftover check |
 | --- | --- | --- | --- | --- |
-| Map | Five geometry definitions reload in order. | One `drowned_ruin_field` persists for all five stages. | Geometry fingerprint and field ID are identical before/after every stage transition. | No stage-specific walkable/cover/water owner remains. |
+| Map | Five geometry definitions reload in order; Flooded Works is `4400×2800`. | One exact `5600×3400` `drowned_ruin_field` persists for all five stages. | World/center equal `Rect2(0,0,5600,3400)` / `(2800,1700)`; geometry fingerprint and field ID are identical across transitions. | No stage-specific walkable/cover/water owner or old `4400×2800` layout assertion remains. |
+| Camera/minimap | Gameplay zoom is `1.0`; exploration uses a coarse `13×6` grid. | Keep zoom `1.0` and use a `16×10` grid with `350×340` world-pixel cells. | At `1280×720`, the field spans `4.375×4.722` screens; cell mapping and `3×3` reveal pass at all edges. | No gameplay fit-to-world zoom or stale 13/6 constant remains. |
 | Progress | Generators, cache, zone, boss arena, and result button. | Countable defeat quota, roaming boss, reward queue, automatic center reset. | Boss starts at quota without any location interaction; stage increments after reward confirmation. | No `boss_gate`, `boss_arena`, `chest_claimed`, or `advance_requested` progression dependency remains. |
 | Pursuit | Packet leashes return mobile enemies home and can deactivate them. | Mobile actors and bosses globally path toward the player. | Simulated mobile and boss path distances decrease around cover; stationary roles do not move. | No mobile role uses spawn-home deactivation. |
 | Movement | Permanent and periodic movement upgrades. | One permanent three-level Tuned Thrusters card. | Runtime speeds equal 280/302.4/324.8/347.2. | No Thruster Cycle resource, timer, badge, copy, or validator expectation remains. |
@@ -410,18 +514,32 @@ Exact actions requiring owner/user approval:
 **Source owners touched:** `scripts/vehicle/stages/`,
 `scripts/vehicle/vehicle_stage_catalog.gd`,
 `scripts/vehicle/vehicle_stage_rules.gd`,
+`scripts/vehicle/vehicle_stage_backdrop.gd`,
+`scripts/vehicle/vehicle_stage_visual_profile.gd`,
+`scripts/vehicle/vehicle_run.gd`,
 `scripts/encounters/vehicle_stage_flow.gd`, validation scripts.
 
 - [ ] **1.1 Create the immutable shared field.**
   - **As-is:** Flooded Works mixes reusable geometry with stage gates, field boss,
-    installations, pickups, packets, and boss chamber data.
-  - **To-be:** move only accepted shared geometry/art, center, spawn anchors,
-    stationary anchors, item anchors, and boss anchors into
-    `drowned_ruin_field.gd`; remove the fixed boss gate from collision and art.
-  - **Accept:** one field schema validates every anchor as walkable, reachable,
-    non-overlapping, and at the required center/boss distance.
+    installations, pickups, packets, and boss chamber data in a `4400×2800`
+    world; the minimap and layout validator encode that old size.
+  - **To-be:** create the exact `5600×3400` field in Locked Decision 1: translate
+    the accepted core by `(600,300)`, apply the exact lower-west cover correction,
+    add the six listed walkable rectangles and four listed outer covers, replace
+    water with the four listed border rectangles, place the four listed large
+    motifs, set center `(2800,1700)` and clearance `480`, install the sixteen
+    ordinary/eight boss anchors, remove the fixed boss gate, retain camera zoom
+    `1.0`, and change minimap resolution to `16×10`.
+  - **Accept:** one field schema validates exact bounds/center/counts/coordinates,
+    all anchors as walkable and reachable at their `36 px` ordinary or `122 px`
+    stage-boss radius, every center-to-anchor route at
+    `≤3640 px`, minimum `168/320/240×240` clearances, two routes per outer court,
+    thirteen cover rectangles, four water rectangles disjoint from walkable
+    floor, four valid large motif bounds, `350×340` minimap cells, and no
+    one-screen fit at all three supported viewports.
   - **Guard:** world drawing, collision, projectiles, LOS, minimap, pursuit, and
-    validators consume the same polygons.
+    validators consume the same polygons; actor scale, weapon range, movement
+    values, and gameplay camera zoom do not change.
 - [ ] **1.2 Create five combat-stage profiles.**
   - **As-is:** each stage owns a complete map.
   - **To-be:** `vehicle_combat_stages.gd` owns the exact quota table, timed
@@ -476,7 +594,7 @@ expanding it to all five stages.
   - **As-is:** boss start requires authored progression and an arena trigger.
   - **To-be:** exactly the 20th countable defeat starts the 1.5-second warning,
     chooses a valid distant anchor, and starts a globally pursuing boss.
-  - **Accept:** the boss spawns at least 900 px away when possible, appears on
+  - **Accept:** the boss spawns at least 1200 px away when possible, appears on
     minimap/threat radar, reaches the player around cover, and executes only
     startup/active/recovery attacks.
   - **Guard:** no boss gate, boss chamber, cache contact, or location trigger is
@@ -717,7 +835,8 @@ rendered evidence describe and demonstrate the same game.
 
 ### Batch gates
 
-- Phase 1: shared field/schema/state-flow validators.
+- Phase 1: exact `5600×3400` field/schema/state-flow, route-clearance,
+  anchor-coordinate, camera-bound, and `16×10` minimap validators.
 - Phase 2: Stage 1 quota, pursuit, boss anchor/path, reward, and automatic
   transition validator plus one 1280×720 rendered slice.
 - Phase 3: full five-stage debug run, five boss pattern cycles, shared geometry
@@ -751,12 +870,17 @@ Performance and boot:
 Rendered evidence:
 
 - Capture 960×540, 1280×720, and 1920×1080 in Korean and English.
-- Required states: Stage 1 ordinary pressure, boss arrival from an off-screen
-  anchor, roaming boss near shared cover, three active secondary families,
-  pause with `?`, guide locked state, guide partial state, guide current ship
-  state, upgrade selection, Stage 1 → 2 center reset, and final result.
+- Required states: a debug full-field capture proving the six extensions and
+  connected routes, gameplay at center and all four outer courts, Stage 1
+  ordinary pressure, boss arrival from an off-screen anchor, roaming boss near
+  shared cover, three active secondary families, pause with `?`, guide locked
+  state, guide partial state, guide current ship state, upgrade selection,
+  Stage 1 → 2 center reset, and final result.
 - Verify no clipping, overlap, hidden command, opaque central obstruction, tiny
   Korean copy, unreadable `???`, passive/hostile effect confusion, or focus loss.
+- At gameplay zoom `1.0`, verify the whole `5600×3400` field cannot fit inside
+  any supported viewport, floor/void boundaries remain legible, and no new lane
+  looks passable while rejecting a player-radius traversal.
 - Before any browser server is started under `D:\npjt`, load `npjt-port-guard`
   and use the fastrun manager Codex lane. Native built-app review is still
   required even when Web review passes.
@@ -796,7 +920,7 @@ contracts.
 - Stage transition advances only after every queued mandatory reward resolves.
   If applying a reward fails, keep the modal open, report the existing localized
   error, and do not increment the stage.
-- Boss arrival never chooses an invalid/unreachable point. If the 900 px filter
+- Boss arrival never chooses an invalid/unreachable point. If the 1200 px filter
   removes every anchor, use the farthest validated anchor and retain the full
   warning.
 - Passive entity caps are hard invariants. At cap, Wake Mine Layer retires the
@@ -826,13 +950,20 @@ contracts.
   enemy-role introduction, different stationary threat sets, five portable boss
   exams, evolving passive builds, and persistent minimap knowledge—not cosmetic
   recolors or added texture noise.
+- **Larger-field downtime and navigation cost:** more area can separate the
+  player from pressure and increases pursuit-grid cells. Mitigation is the exact
+  six-region extension instead of uniform scaling, sixteen distributed spawn
+  anchors, a `3640 px` maximum center-to-anchor route, unchanged combat scale,
+  cached `96 px` pursuit cells rebuilt only on the existing triggers, and the
+  locked `≤8 ms` pressure profile.
 
 ## Open Questions
 
 None. The implementation contract is decision-complete. Any request to change
 the five total secondary families, three-family active limit, 20/28/36/44/52
-quotas, five-stage length, shared field identity, or guide discovery semantics is
-change control and must update this plan before implementation continues.
+quotas, five-stage length, `5600×3400` field geometry, `16×10` minimap, shared
+field identity, or guide discovery semantics is change control and must update
+this plan before implementation continues.
 
 ## Decision Notes
 
@@ -848,6 +979,9 @@ change control and must update this plan before implementation continues.
   Tuned Thrusters card.
 - **2026-07-23:** selected a separate persistent guidebook modal entered by `?`,
   with live ship stats and encounter-gated enemies, towers, bosses, and items.
+- **2026-07-23:** enlarged the persistent field from `4400×2800` to exactly
+  `5600×3400` by translating the accepted core and adding four outer courts plus
+  two broad connector lanes; combat scale and camera zoom remain unchanged.
 
 ## Progress
 
@@ -874,7 +1008,11 @@ change control and must update this plan before implementation continues.
 
 ## Completion Criteria
 
-- [ ] All five stages use the same field geometry and explored minimap state.
+- [ ] All five stages use the exact `5600×3400` field geometry and persistent
+  `16×10` explored minimap state.
+- [ ] The translated core, six exact extension rectangles, thirteen covers,
+  center `(2800,1700)`, sixteen ordinary anchors, eight boss anchors, route
+  limits, and camera visibility metrics pass automated and rendered checks.
 - [ ] Mobile enemies and every stage boss pursue globally; stationary threats do
   not move.
 - [ ] Bosses appear at the exact quotas from valid distant anchors without a
@@ -904,7 +1042,8 @@ policy.
 
 **Escalate only when:** an implementation result would require changing a locked
 quota, weapon family, active slot count, five-stage length, field identity,
-persistence ownership, user data, dependency set, or visible discovery rule.
+`5600×3400` geometry/minimap contract, persistence ownership, user data,
+dependency set, or visible discovery rule.
 
 **Do not stop when:** a stage-specific legacy helper is difficult to remove, a
 boss pattern needs local reprojection, a focused validator exposes a defect, or
@@ -914,8 +1053,9 @@ performance needs task-scoped optimization within the locked behavior.
 
 ```text
 Goal:
-Implement the single-field five-stage vehicle campaign, five bounded secondary
-families, simple Tuned Thrusters progression, and persistent encounter guidebook.
+Implement the enlarged `5600×3400` single-field five-stage vehicle campaign,
+five bounded secondary families, simple Tuned Thrusters progression, and
+persistent encounter guidebook.
 
 Read first:
 AGENTS.md
