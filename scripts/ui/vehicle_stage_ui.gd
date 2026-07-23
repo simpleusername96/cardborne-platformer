@@ -8,6 +8,7 @@ signal deployment_selected(primary_id: StringName)
 signal upgrade_selected(upgrade_id: StringName)
 signal upgrade_declined
 signal upgrade_previewed(upgrade_id: StringName)
+signal pause_requested
 signal resume_requested
 signal restart_requested
 signal garage_requested
@@ -367,13 +368,15 @@ func _process(delta: float) -> void:
 
 
 func _input(event: InputEvent) -> void:
-	if (
-		is_instance_valid(_pause_center)
-		and _pause_center.visible
-		and event.is_action_pressed(&"pause")
-	):
+	if not event.is_action_pressed(&"pause"):
+		return
+	if is_instance_valid(_pause_center) and _pause_center.visible:
 		resume_requested.emit()
-		get_viewport().set_input_as_handled()
+	elif is_instance_valid(_hud) and _hud.visible:
+		pause_requested.emit()
+	else:
+		return
+	get_viewport().set_input_as_handled()
 
 
 func _build_root() -> void:

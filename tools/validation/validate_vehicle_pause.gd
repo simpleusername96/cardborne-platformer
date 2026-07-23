@@ -33,21 +33,28 @@ class PauseProbe:
 			return
 
 		run.mode = run.RunMode.PLAYING
+		ui.show_gameplay()
 		Input.mouse_mode = Input.MOUSE_MODE_HIDDEN
-		_send_escape(true)
-		await get_tree().process_frame
-		_send_escape(false)
-		await get_tree().process_frame
+		await _tap_escape()
 		_expect(get_tree().paused, "Escape pause freezes the complete scene tree")
 		_expect(run.mode == run.RunMode.PAUSED, "pause enters the paused run mode")
 		_expect(Input.mouse_mode == Input.MOUSE_MODE_VISIBLE, "pause restores the system cursor")
+		_expect(ui._pause_center.visible, "pause surface is visible")
 
-		_send_escape(true)
-		await get_tree().process_frame
-		_send_escape(false)
-		await get_tree().process_frame
+		ui.call("_show_settings", "pause")
+		await _tap_escape()
+		_expect(get_tree().paused, "closing pause settings keeps gameplay frozen")
+		_expect(ui._pause_center.visible, "Escape returns from settings to pause")
+
+		ui.call("_show_guidebook", "pause")
+		await _tap_escape()
+		_expect(get_tree().paused, "closing the guidebook keeps gameplay frozen")
+		_expect(ui._pause_center.visible, "Escape returns from the guidebook to pause")
+
+		await _tap_escape()
 		_expect(not get_tree().paused, "Escape resumes the scene tree from the pause surface")
 		_expect(run.mode == run.RunMode.PLAYING, "Escape returns to gameplay mode")
+		_expect(ui._hud.visible, "gameplay HUD returns after resume")
 		if get_tree().paused:
 			run.call("_resume_run")
 		game_root.queue_free()
@@ -55,11 +62,19 @@ class PauseProbe:
 		_finish()
 
 
+	func _tap_escape() -> void:
+		_send_escape(true)
+		await get_tree().process_frame
+		_send_escape(false)
+		await get_tree().process_frame
+
+
 	func _send_escape(pressed: bool) -> void:
-		var escape := InputEventAction.new()
-		escape.action = &"pause"
+		var escape := InputEventKey.new()
+		escape.keycode = KEY_ESCAPE
+		escape.physical_keycode = KEY_ESCAPE
 		escape.pressed = pressed
-		Input.parse_input_event(escape)
+		get_tree().root.push_input(escape)
 
 
 	func _expect(condition: bool, message: String) -> void:

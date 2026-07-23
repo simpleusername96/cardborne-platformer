@@ -28,7 +28,14 @@ func open(snapshot: Dictionary) -> void:
 
 
 func _input(event: InputEvent) -> void:
-	if visible and event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_ESCAPE:
+	if (
+		is_inside_tree()
+		and is_visible_in_tree()
+		and event is InputEventKey
+		and event.pressed
+		and not event.echo
+		and event.keycode == KEY_ESCAPE
+	):
 		close_requested.emit()
 		get_viewport().set_input_as_handled()
 

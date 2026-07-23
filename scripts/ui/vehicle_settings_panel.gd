@@ -92,7 +92,7 @@ func debug_contract() -> Dictionary:
 
 
 func _input(event: InputEvent) -> void:
-	if not visible or not is_inside_tree():
+	if not is_inside_tree() or not is_visible_in_tree():
 		return
 	if not _capturing_action.is_empty():
 		if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_ESCAPE:

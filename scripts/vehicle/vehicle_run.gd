@@ -361,16 +361,6 @@ func _process(delta: float) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("pause"):
-		if mode == RunMode.PLAYING:
-			_pause_run()
-			get_viewport().set_input_as_handled()
-			return
-		elif mode == RunMode.PAUSED:
-			_resume_run()
-			get_viewport().set_input_as_handled()
-			return
-
 	if mode == RunMode.DEPLOYMENT and event is InputEventKey and event.pressed and not event.echo:
 		var deployment_event := event as InputEventKey
 		if deployment_event.keycode in [KEY_ENTER, KEY_SPACE]:
@@ -417,6 +407,7 @@ func _build_ui() -> void:
 	_ui.upgrade_selected.connect(_on_upgrade_selected)
 	_ui.upgrade_declined.connect(_on_upgrade_declined)
 	_ui.upgrade_previewed.connect(func(_upgrade_id: StringName) -> void: _play_sound(&"upgrade_select"))
+	_ui.pause_requested.connect(_pause_run)
 	_ui.resume_requested.connect(_resume_run)
 	_ui.restart_requested.connect(_restart_stage)
 	_ui.garage_requested.connect(_show_garage)
