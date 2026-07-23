@@ -14,17 +14,21 @@ const SECTOR_COUNT := 12
 const ARC_HALF_WIDTH := PI / 18.0
 
 var snapshot: Dictionary = {}
+var _threat_mesh: ArrayMesh
+var _mesh_dirty := true
 
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	resized.connect(_invalidate_mesh)
 
 
 func set_snapshot(value: Dictionary) -> void:
 	# The stage creates a fresh snapshot and replaces contact arrays rather than
 	# mutating them, so the presentation layer can retain the reference safely.
 	snapshot = value
+	_mesh_dirty = true
 	queue_redraw()
 
 
@@ -35,8 +39,15 @@ func _draw() -> void:
 	center.x = clampf(center.x, OUTER_RADIUS + 8.0, size.x - OUTER_RADIUS - 8.0)
 	center.y = clampf(center.y, OUTER_RADIUS + 8.0, size.y - OUTER_RADIUS - 8.0)
 	var sectors := _aggregate_contacts(snapshot.get("contacts", []), float(snapshot.get("max_distance", 1200.0)))
-	for sector in sectors:
-		_draw_threat_arc(center, sector, float(snapshot.get("max_distance", 1200.0)))
+	if _mesh_dirty:
+		_threat_mesh = _build_threat_mesh(
+			center,
+			sectors,
+			float(snapshot.get("max_distance", 1200.0))
+		)
+		_mesh_dirty = false
+	if _threat_mesh != null:
+		draw_mesh(_threat_mesh, null)
 
 
 func _aggregate_contacts(contacts: Array, maximum_distance: float) -> Array[Dictionary]:
@@ -75,28 +86,120 @@ func _aggregate_contacts(contacts: Array, maximum_distance: float) -> Array[Dict
 	return result
 
 
-func _draw_threat_arc(center: Vector2, sector: Dictionary, maximum_distance: float) -> void:
-	var angle := float(sector["angle"])
-	var proximity := 1.0 - clampf(float(sector["distance"]) / maxf(1.0, maximum_distance), 0.0, 1.0)
-	var density := minf(1.0, float(int(sector["count"]) - 1) / 5.0)
-	var width := 5.0 + density * 6.0 + proximity * 2.0
-	var color := Art.MUSTARD if bool(sector["priority"]) else Art.CORAL
-	if bool(sector["targeted"]):
-		color = Art.IVORY_BRIGHT
-	var alpha := 0.58 + proximity * 0.30
-	draw_arc(center, ARC_RADIUS + 2.0, angle - ARC_HALF_WIDTH, angle + ARC_HALF_WIDTH, 12, Color(Art.COBALT_DEEP, 0.82), width + 4.0, true)
-	draw_arc(center, ARC_RADIUS, angle - ARC_HALF_WIDTH, angle + ARC_HALF_WIDTH, 12, Color(color, alpha), width, true)
-	var direction := Vector2.RIGHT.rotated(angle)
-	var tangent := direction.rotated(PI * 0.5)
-	var tip := center + direction * (ARC_RADIUS - 10.0)
-	if bool(sector["priority"]) or bool(sector["targeted"]):
-		draw_colored_polygon(PackedVector2Array([
-			tip,
-			tip - direction * 13.0 + tangent * 8.0,
-			tip - direction * 13.0 - tangent * 8.0,
-		]), Art.MUSTARD if not bool(sector["targeted"]) else Art.IVORY_BRIGHT)
-	if bool(sector["targeted"]):
-		draw_arc(center, ARC_RADIUS + 9.0, angle - ARC_HALF_WIDTH * 0.72, angle + ARC_HALF_WIDTH * 0.72, 10, Art.MUSTARD, 3.0, true)
+func _build_threat_mesh(
+	center: Vector2,
+	sectors: Array[Dictionary],
+	maximum_distance: float
+) -> ArrayMesh:
+	var vertices := PackedVector3Array()
+	var colors := PackedColorArray()
+	var indices := PackedInt32Array()
+	for sector in sectors:
+		var angle := float(sector["angle"])
+		var proximity := 1.0 - clampf(
+			float(sector["distance"]) / maxf(1.0, maximum_distance),
+			0.0,
+			1.0
+		)
+		var density := minf(1.0, float(int(sector["count"]) - 1) / 5.0)
+		var width := 5.0 + density * 6.0 + proximity * 2.0
+		var color := Art.MUSTARD if bool(sector["priority"]) else Art.CORAL
+		if bool(sector["targeted"]):
+			color = Art.IVORY_BRIGHT
+		var alpha := 0.58 + proximity * 0.30
+		_append_arc_band(
+			vertices, colors, indices, center, ARC_RADIUS + 2.0,
+			angle - ARC_HALF_WIDTH, angle + ARC_HALF_WIDTH, width + 4.0,
+			Color(Art.COBALT_DEEP, 0.82), 12
+		)
+		_append_arc_band(
+			vertices, colors, indices, center, ARC_RADIUS,
+			angle - ARC_HALF_WIDTH, angle + ARC_HALF_WIDTH, width,
+			Color(color, alpha), 12
+		)
+		var direction := Vector2.RIGHT.rotated(angle)
+		var tangent := direction.rotated(PI * 0.5)
+		var tip := center + direction * (ARC_RADIUS - 10.0)
+		if bool(sector["priority"]) or bool(sector["targeted"]):
+			_append_triangle(
+				vertices,
+				colors,
+				indices,
+				tip,
+				tip - direction * 13.0 + tangent * 8.0,
+				tip - direction * 13.0 - tangent * 8.0,
+				Art.MUSTARD if not bool(sector["targeted"]) else Art.IVORY_BRIGHT
+			)
+		if bool(sector["targeted"]):
+			_append_arc_band(
+				vertices, colors, indices, center, ARC_RADIUS + 9.0,
+				angle - ARC_HALF_WIDTH * 0.72, angle + ARC_HALF_WIDTH * 0.72,
+				3.0, Art.MUSTARD, 10
+			)
+	if vertices.is_empty():
+		return null
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = vertices
+	arrays[Mesh.ARRAY_COLOR] = colors
+	arrays[Mesh.ARRAY_INDEX] = indices
+	var mesh := ArrayMesh.new()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	return mesh
+
+
+func _append_arc_band(
+	vertices: PackedVector3Array,
+	colors: PackedColorArray,
+	indices: PackedInt32Array,
+	center: Vector2,
+	radius: float,
+	from_angle: float,
+	to_angle: float,
+	width: float,
+	color: Color,
+	segments: int
+) -> void:
+	var inner_radius := maxf(0.0, radius - width * 0.5)
+	var outer_radius := radius + width * 0.5
+	for segment in segments:
+		var ratio_a := float(segment) / float(segments)
+		var ratio_b := float(segment + 1) / float(segments)
+		var direction_a := Vector2.RIGHT.rotated(lerpf(from_angle, to_angle, ratio_a))
+		var direction_b := Vector2.RIGHT.rotated(lerpf(from_angle, to_angle, ratio_b))
+		var offset := vertices.size()
+		for point in [
+			center + direction_a * inner_radius,
+			center + direction_a * outer_radius,
+			center + direction_b * outer_radius,
+			center + direction_b * inner_radius,
+		]:
+			vertices.append(Vector3(point.x, point.y, 0.0))
+			colors.append(color)
+		for local_index in [0, 1, 2, 0, 2, 3]:
+			indices.append(offset + local_index)
+
+
+func _append_triangle(
+	vertices: PackedVector3Array,
+	colors: PackedColorArray,
+	indices: PackedInt32Array,
+	point_a: Vector2,
+	point_b: Vector2,
+	point_c: Vector2,
+	color: Color
+) -> void:
+	var offset := vertices.size()
+	for point in [point_a, point_b, point_c]:
+		vertices.append(Vector3(point.x, point.y, 0.0))
+		colors.append(color)
+	for local_index in [0, 1, 2]:
+		indices.append(offset + local_index)
+
+
+func _invalidate_mesh() -> void:
+	_mesh_dirty = true
+	queue_redraw()
 
 
 func debug_contract() -> Dictionary:
@@ -105,6 +208,7 @@ func debug_contract() -> Dictionary:
 		"sector_count": SECTOR_COUNT,
 		"maximum_markers": SECTOR_COUNT,
 		"offscreen_arcs": true,
+		"batched_mesh": true,
 		"full_rect": is_zero_approx(anchor_left) and is_zero_approx(anchor_top) and is_equal_approx(anchor_right, 1.0) and is_equal_approx(anchor_bottom, 1.0),
 		"mouse_ignored": mouse_filter == Control.MOUSE_FILTER_IGNORE,
 	}

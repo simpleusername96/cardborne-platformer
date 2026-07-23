@@ -6,20 +6,32 @@ extends RefCounted
 const MAX_SHARDS := 192
 const BASE_PICKUP_RADIUS := 34.0
 const ATTRACT_SPEED := 520.0
+const ExperienceShard = preload("res://scripts/progression/vehicle_experience_shard.gd")
 
 var run_level := 1
 var experience := 0
 var pending_level_ups := 0
-var shards: Array[Dictionary] = []
+var shards: Array[ExperienceShard] = []
 var _next_shard_id := 1
+var _pool: Array[ExperienceShard] = []
+
+
+func _init() -> void:
+	for _index in MAX_SHARDS:
+		_pool.append(ExperienceShard.new())
 
 
 func reset() -> void:
 	run_level = 1
 	experience = 0
 	pending_level_ups = 0
-	shards.clear()
+	clear_shards()
 	_next_shard_id = 1
+
+
+func clear_shards() -> void:
+	while not shards.is_empty():
+		_pool.append(shards.pop_back())
 
 
 func required_experience() -> int:
@@ -29,20 +41,15 @@ func required_experience() -> int:
 func spawn_shard(position: Vector2, value: int, reward_source: StringName = &"") -> void:
 	if value <= 0:
 		return
-	var reward_sources: Array[StringName] = []
-	if reward_source != &"":
-		reward_sources.append(reward_source)
 	if shards.size() >= MAX_SHARDS:
 		var merge_index := _nearest_shard_index(position)
-		shards[merge_index]["value"] = int(shards[merge_index]["value"]) + value
-		for source in reward_sources:
-			if source not in shards[merge_index]["reward_sources"]:
-				shards[merge_index]["reward_sources"].append(source)
+		shards[merge_index].value += value
+		if reward_source != &"" and reward_source not in shards[merge_index].reward_sources:
+			shards[merge_index].reward_sources.append(reward_source)
 		return
-	shards.append({
-		"id":_next_shard_id, "pos":position, "value":value,
-		"reward_sources":reward_sources, "pulse":0.0,
-	})
+	var shard: ExperienceShard = _pool.pop_back()
+	shard.configure(_next_shard_id, position, value, reward_source)
+	shards.append(shard)
 	_next_shard_id += 1
 
 
@@ -61,26 +68,36 @@ func advance(delta: float, player_position: Vector2, attraction_radius: float, r
 	var collected_sources: Array[StringName] = []
 	var attraction_radius_squared := attraction_radius * attraction_radius
 	var collection_radius_squared := BASE_PICKUP_RADIUS * BASE_PICKUP_RADIUS
-	for index in range(shards.size() - 1, -1, -1):
-		var shard := shards[index]
-		shard["pulse"] = fmod(float(shard["pulse"]) + delta, 1.0)
-		var position := Vector2(shard["pos"])
+	var index := 0
+	while index < shards.size():
+		var shard: ExperienceShard = shards[index]
+		var position := shard.pos
 		var distance_squared := position.distance_squared_to(player_position)
 		if recall_active or distance_squared <= attraction_radius_squared:
 			var distance := sqrt(distance_squared)
 			var speed := maxf(ATTRACT_SPEED, distance / 0.22) if recall_active else ATTRACT_SPEED
 			position = position.move_toward(player_position, speed * delta)
-			shard["pos"] = position
+			shard.pos = position
 			distance_squared = position.distance_squared_to(player_position)
 		if distance_squared > collection_radius_squared:
+			index += 1
 			continue
-		collected_xp += int(shard["value"])
-		for source in shard["reward_sources"]:
+		collected_xp += shard.value
+		for source in shard.reward_sources:
 			if source not in collected_sources:
 				collected_sources.append(source)
-		shards.remove_at(index)
+		_swap_remove(index)
 	var levels_gained := _award_experience(collected_xp)
 	return {"experience":collected_xp, "levels":levels_gained, "reward_sources":collected_sources}
+
+
+func _swap_remove(index: int) -> void:
+	var retired: ExperienceShard = shards[index]
+	var last_index := shards.size() - 1
+	if index != last_index:
+		shards[index] = shards[last_index]
+	shards.pop_back()
+	_pool.append(retired)
 
 
 func _award_experience(value: int) -> int:
@@ -107,13 +124,18 @@ func snapshot() -> Dictionary:
 	return {
 		"level":run_level, "experience":experience, "required":required_experience(),
 		"pending_levels":pending_level_ups, "shard_count":shards.size(),
+		"shard_pool":_pool.size(),
 	}
+
+
+func validate_capacity() -> bool:
+	return shards.size() + _pool.size() == MAX_SHARDS
 
 
 func total_uncollected_experience() -> int:
 	var total := 0
 	for shard in shards:
-		total += int(shard["value"])
+		total += shard.value
 	return total
 
 
@@ -121,7 +143,7 @@ func _nearest_shard_index(position: Vector2) -> int:
 	var best_index := 0
 	var best_distance := INF
 	for index in shards.size():
-		var distance := position.distance_squared_to(Vector2(shards[index]["pos"]))
+		var distance := position.distance_squared_to(shards[index].pos)
 		if distance < best_distance:
 			best_distance = distance
 			best_index = index

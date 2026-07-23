@@ -24,6 +24,14 @@ static var _water_rect_cache: Array[Rect2] = []
 static var _floor_polygon_cache: Array = []
 static var _cover_polygon_cache: Array = []
 static var _water_polygon_cache: Array = []
+static var _floor_cells: Dictionary = {}
+static var _cover_cells: Dictionary = {}
+static var _water_cells: Dictionary = {}
+static var _safe_motion_cells_36: Dictionary = {}
+static var _spatial_cache_ready := false
+
+const COLLISION_CELL_SIZE := 80.0
+const COLLISION_CACHE_MARGIN := 96.0
 
 
 static func normalized_id(stage_id: StringName) -> StringName:
@@ -181,7 +189,9 @@ static func floor_regions(stage_id: StringName, colors: Dictionary) -> Array[Dic
 
 
 static func position_is_walkable(stage_id: StringName, position: Vector2, radius: float = 0.0) -> bool:
-	var floor_rectangles := walkable_rects(stage_id)
+	var floor_rectangles := _nearby_rects(_floor_cells, position, stage_id)
+	if radius > COLLISION_CACHE_MARGIN:
+		floor_rectangles = walkable_rects(stage_id)
 	if not _point_in_any_rect(position, floor_rectangles):
 		return false
 	if radius > 0.0:
@@ -193,15 +203,127 @@ static func position_is_walkable(stage_id: StringName, position: Vector2, radius
 				return not _circle_overlaps_any_rect(position, radius, water_rects(stage_id))
 		for sample_index in Geometry.CIRCLE_UNION_SAMPLES:
 			var sample := position + Vector2.RIGHT.rotated(TAU * float(sample_index) / float(Geometry.CIRCLE_UNION_SAMPLES)) * radius * 0.999
-			if not _point_in_any_rect(sample, floor_rectangles):
+			var sample_rectangles := _nearby_rects(_floor_cells, sample, stage_id)
+			if not _point_in_any_rect(sample, sample_rectangles):
 				return false
-	for water in water_rects(stage_id):
+	var nearby_water := _nearby_rects(_water_cells, position, stage_id)
+	if radius > COLLISION_CACHE_MARGIN:
+		nearby_water = water_rects(stage_id)
+	for water in nearby_water:
 		if _circle_overlaps_rect(position, radius, water):
 			return false
 	return true
 
 
-static func _point_in_any_rect(point: Vector2, rectangles: Array[Rect2]) -> bool:
+static func circle_overlaps_cover(stage_id: StringName, position: Vector2, radius: float) -> bool:
+	var nearby_cover := _nearby_rects(_cover_cells, position, stage_id)
+	if radius > COLLISION_CACHE_MARGIN:
+		nearby_cover = cover_rects(stage_id)
+	return _circle_overlaps_any_rect(position, radius, nearby_cover)
+
+
+static func cover_rects_near_motion(stage_id: StringName, from: Vector2, to: Vector2, radius: float) -> Array:
+	# A short swept circle can only touch rectangles registered around its
+	# midpoint. Long traces retain the complete authored-cover fallback.
+	if from.distance_to(to) * 0.5 + radius > COLLISION_CACHE_MARGIN:
+		return cover_rects(stage_id)
+	return _nearby_rects(_cover_cells, (from + to) * 0.5, stage_id)
+
+
+static func motion_may_touch_cover(stage_id: StringName, from: Vector2, to: Vector2, radius: float) -> bool:
+	var swept_bounds := Rect2(from, Vector2.ZERO).expand(to).grow(radius)
+	for value in cover_rects_near_motion(stage_id, from, to, radius):
+		if swept_bounds.intersects(Rect2(value).grow(radius), true):
+			return true
+	return false
+
+
+static func is_fast_motion_clear(stage_id: StringName, from: Vector2, to: Vector2, radius: float) -> bool:
+	if radius > 36.0:
+		return false
+	_ensure_spatial_cache()
+	var from_cell := Vector2i(floori(from.x / COLLISION_CELL_SIZE), floori(from.y / COLLISION_CELL_SIZE))
+	var to_cell := Vector2i(floori(to.x / COLLISION_CELL_SIZE), floori(to.y / COLLISION_CELL_SIZE))
+	return from_cell == to_cell and bool(_safe_motion_cells_36.get(from_cell, false))
+
+
+static func _nearby_rects(cache: Dictionary, position: Vector2, _stage_id: StringName) -> Array:
+	_ensure_spatial_cache()
+	var cell := Vector2i(floori(position.x / COLLISION_CELL_SIZE), floori(position.y / COLLISION_CELL_SIZE))
+	return cache.get(cell, [])
+
+
+static func _ensure_spatial_cache() -> void:
+	if _spatial_cache_ready:
+		return
+	_register_rects(_floor_cells, walkable_rects())
+	_register_rects(_cover_cells, cover_rects())
+	_register_rects(_water_cells, water_rects())
+	_build_safe_motion_cells()
+	_spatial_cache_ready = true
+
+
+static func _register_rects(cache: Dictionary, rectangles: Array[Rect2]) -> void:
+	for rectangle in rectangles:
+		var expanded := rectangle.grow(COLLISION_CACHE_MARGIN)
+		var min_cell := Vector2i(
+			floori(expanded.position.x / COLLISION_CELL_SIZE),
+			floori(expanded.position.y / COLLISION_CELL_SIZE)
+		)
+		var max_cell := Vector2i(
+			floori(expanded.end.x / COLLISION_CELL_SIZE),
+			floori(expanded.end.y / COLLISION_CELL_SIZE)
+		)
+		for y in range(min_cell.y, max_cell.y + 1):
+			for x in range(min_cell.x, max_cell.x + 1):
+				var cell := Vector2i(x, y)
+				if not cache.has(cell):
+					cache[cell] = []
+				var bucket: Array = cache[cell]
+				bucket.append(rectangle)
+
+
+static func _build_safe_motion_cells() -> void:
+	var bounds := Field.WORLD_RECT
+	var min_cell := Vector2i(
+		floori(bounds.position.x / COLLISION_CELL_SIZE),
+		floori(bounds.position.y / COLLISION_CELL_SIZE)
+	)
+	var max_cell := Vector2i(
+		floori((bounds.end.x - 1.0) / COLLISION_CELL_SIZE),
+		floori((bounds.end.y - 1.0) / COLLISION_CELL_SIZE)
+	)
+	var floors := walkable_rects()
+	var covers := cover_rects()
+	var waters := water_rects()
+	for y in range(min_cell.y, max_cell.y + 1):
+		for x in range(min_cell.x, max_cell.x + 1):
+			var cell := Vector2i(x, y)
+			var cell_rect := Rect2(Vector2(cell) * COLLISION_CELL_SIZE, Vector2.ONE * COLLISION_CELL_SIZE)
+			var clearance_rect := cell_rect.grow(36.0)
+			var inside_floor := false
+			for floor_rect in floors:
+				if floor_rect.encloses(clearance_rect):
+					inside_floor = true
+					break
+			if not inside_floor:
+				continue
+			var blocked := false
+			for cover in covers:
+				if clearance_rect.intersects(cover, true):
+					blocked = true
+					break
+			if blocked:
+				continue
+			for water in waters:
+				if clearance_rect.intersects(water, true):
+					blocked = true
+					break
+			if not blocked:
+				_safe_motion_cells_36[cell] = true
+
+
+static func _point_in_any_rect(point: Vector2, rectangles: Array) -> bool:
 	for rectangle in rectangles:
 		if rectangle.has_point(point):
 			return true
@@ -216,7 +338,7 @@ static func _circle_overlaps_rect(center: Vector2, radius: float, rectangle: Rec
 	return center.distance_squared_to(closest) < radius * radius
 
 
-static func _circle_overlaps_any_rect(center: Vector2, radius: float, rectangles: Array[Rect2]) -> bool:
+static func _circle_overlaps_any_rect(center: Vector2, radius: float, rectangles: Array) -> bool:
 	for rectangle in rectangles:
 		if _circle_overlaps_rect(center, radius, rectangle):
 			return true

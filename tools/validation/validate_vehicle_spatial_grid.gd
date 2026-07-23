@@ -1,0 +1,74 @@
+extends SceneTree
+
+const Grid = preload("res://scripts/combat/vehicle_spatial_grid.gd")
+const Rules = preload("res://scripts/vehicle/vehicle_stage_rules.gd")
+const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
+
+var failures: Array[String] = []
+
+
+func _initialize() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 0x51A71A1
+	var live: Array[EnemyState] = []
+	for index in 96:
+		var enemy := EnemyState.new()
+		enemy.id = "grid_%d" % index
+		enemy.runtime_slot = index
+		enemy.alive = true
+		enemy.active = index % 11 != 0
+		enemy.pos = Vector2(rng.randf_range(0.0, 5600.0), rng.randf_range(0.0, 3400.0))
+		enemy.radius = rng.randf_range(8.0, 86.0)
+		live.append(enemy)
+	var grid := Grid.new()
+	grid.configure(Rect2(0.0, 0.0, 5600.0, 3400.0), 160.0)
+	grid.rebuild(live)
+	_expect(grid.columns == 35 and grid.rows == 22, "grid uses the locked 35x22 dimensions")
+
+	var candidates: Array[EnemyState] = []
+	for query_index in 120:
+		var center := Vector2(rng.randf_range(-80.0, 5680.0), rng.randf_range(-80.0, 3480.0))
+		var radius := rng.randf_range(24.0, 520.0)
+		grid.query_radius_into(center, radius, live, candidates)
+		_expect_unique(candidates, "radius query %d" % query_index)
+		for enemy in live:
+			if not bool(enemy["alive"]) or not bool(enemy["active"]):
+				continue
+			if center.distance_to(Vector2(enemy["pos"])) <= radius + float(enemy["radius"]):
+				_expect(enemy in candidates, "radius query %d contains every exact hit" % query_index)
+
+	for query_index in 120:
+		var from := Vector2(rng.randf_range(-80.0, 5680.0), rng.randf_range(-80.0, 3480.0))
+		var to := Vector2(rng.randf_range(-80.0, 5680.0), rng.randf_range(-80.0, 3480.0))
+		var padding := rng.randf_range(2.0, 32.0)
+		grid.query_segment_into(from, to, padding, live, candidates)
+		_expect_unique(candidates, "segment query %d" % query_index)
+		for enemy in live:
+			if not bool(enemy["alive"]) or not bool(enemy["active"]):
+				continue
+			if Rules.point_segment_distance(Vector2(enemy["pos"]), from, to) <= padding + float(enemy["radius"]):
+				_expect(enemy in candidates, "segment query %d contains every exact hit" % query_index)
+	_finish()
+
+
+func _expect_unique(candidates: Array[EnemyState], context: String) -> void:
+	var seen := {}
+	for enemy in candidates:
+		var enemy_id := enemy.id
+		_expect(not seen.has(enemy_id), "%s has no duplicate candidate" % context)
+		seen[enemy_id] = true
+
+
+func _expect(condition: bool, message: String) -> void:
+	if not condition:
+		failures.append(message)
+
+
+func _finish() -> void:
+	if failures.is_empty():
+		print("VEHICLE_SPATIAL_GRID_VALIDATION_OK")
+		quit(0)
+		return
+	for failure in failures:
+		push_error(failure)
+	quit(1)

@@ -3,6 +3,7 @@ extends SceneTree
 const Catalog = preload("res://scripts/cards/vehicle_upgrade_catalog.gd")
 const RunBuild = preload("res://scripts/cards/vehicle_run_build.gd")
 const Runtime = preload("res://scripts/player/vehicle_secondary_runtime.gd")
+const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 
 var failures: Array[String] = []
 
@@ -25,8 +26,14 @@ func _initialize() -> void:
 		_expect(not catalog.compatible(catalog.get_definition(upgrade_id), build), "fourth family is incompatible")
 	var state := runtime.snapshot(build)
 	_expect(Array(state["equipped"]).size() == 3, "runtime reports seeker plus two optional families")
-	var target := {"id":"target", "alive":true, "active":true, "pos":Vector2(100,0), "radius":18.0}
-	var result := runtime.update(0.25, Vector2.ZERO, Vector2.RIGHT, build, [target], Callable(self, "_los"))
+	var target := EnemyState.new()
+	target.id = "target"
+	target.alive = true
+	target.active = true
+	target.pos = Vector2(100.0, 0.0)
+	target.radius = 18.0
+	var enemies: Array[EnemyState] = [target]
+	var result := runtime.update(0.25, Vector2.ZERO, Vector2.RIGHT, build, enemies, Callable(self, "_los"))
 	_expect(Array(result["damage"]).size() >= 1, "equipped passive simulation emits bounded damage intent")
 	_finish()
 

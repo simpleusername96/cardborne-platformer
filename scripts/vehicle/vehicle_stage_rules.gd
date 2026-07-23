@@ -51,10 +51,7 @@ static func get_floor_regions(stage_id: StringName = &"stage_1") -> Array[Dictio
 static func is_position_walkable(position: Vector2, radius: float = 0.0, stage_id: StringName = &"stage_1") -> bool:
 	if not Catalog.position_is_walkable(stage_id, position, radius):
 		return false
-	for polygon in get_cover_polygons(false, stage_id):
-		if Geometry.circle_overlaps_polygon(position, radius, polygon):
-			return false
-	return true
+	return not Catalog.circle_overlaps_cover(stage_id, position, radius)
 
 
 static func get_enemy_blueprint(stage_id: StringName = &"stage_1") -> Array[Dictionary]:
@@ -87,17 +84,21 @@ static func first_cover_hit(from: Vector2, to: Vector2, radius: float, _unused_d
 
 static func first_cover_hit_with_extra(from: Vector2, to: Vector2, radius: float, _unused_dynamic_blocker: bool, stage_id: StringName, extra_cover: Array) -> Dictionary:
 	var best := {"hit": false, "t": 2.0}
-	var polygons: Array = get_cover_polygons(false, stage_id)
+	var blockers: Array = Catalog.cover_rects_near_motion(stage_id, from, to, radius)
 	if not extra_cover.is_empty():
-		polygons = polygons.duplicate()
+		blockers = blockers.duplicate()
 	for value in extra_cover:
-		polygons.append(Geometry.rect_polygon(Rect2(value)))
-	for polygon in polygons:
-		var hit := Geometry.segment_polygon_hit(from, to, polygon, radius)
+		blockers.append(Rect2(value))
+	var swept_bounds := Rect2(from, Vector2.ZERO).expand(to).grow(radius)
+	for blocker_value in blockers:
+		var blocker := Rect2(blocker_value)
+		if not swept_bounds.intersects(blocker.grow(radius), true):
+			continue
+		var hit := Geometry.segment_rect_hit(from, to, blocker, radius)
 		if bool(hit.get("hit", false)) and float(hit["t"]) < float(best["t"]):
 			best = hit
-			best["rect"] = Geometry.polygon_bounds(polygon)
-			best["polygon"] = polygon
+			best["rect"] = blocker
+			best["polygon"] = Geometry.rect_polygon(blocker)
 	return best
 
 
@@ -118,6 +119,8 @@ static func move_circle(position: Vector2, motion: Vector2, radius: float, _unus
 
 
 static func move_circle_with_extra(position: Vector2, motion: Vector2, radius: float, _unused_dynamic_blocker: bool, stage_id: StringName, extra_cover: Array) -> Vector2:
+	if extra_cover.is_empty() and Catalog.is_fast_motion_clear(stage_id, position, position + motion, radius):
+		return position + motion
 	var blockers: Array[Rect2] = get_cover_rects(false, stage_id)
 	if not extra_cover.is_empty():
 		blockers = blockers.duplicate()
@@ -143,6 +146,8 @@ static func move_circle_with_extra(position: Vector2, motion: Vector2, radius: f
 static func _position_clear(position: Vector2, radius: float, stage_id: StringName, blockers: Array[Rect2]) -> bool:
 	if not Catalog.position_is_walkable(stage_id, position, radius):
 		return false
+	if blockers.size() == get_cover_rects(false, stage_id).size():
+		return not Catalog.circle_overlaps_cover(stage_id, position, radius)
 	for blocker in blockers:
 		if circle_overlaps_rect(position, radius, blocker):
 			return false

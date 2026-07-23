@@ -8,6 +8,7 @@ const DEFINITION_PATH := "res://data/weapons/vehicle/secondary"
 const ION_TICK := 0.25
 const ORBIT_HIT_COOLDOWN := 0.55
 const MINE_LIFETIME := 8.0
+const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 
 var definitions: Dictionary = {}
 var timers: Dictionary = {}
@@ -15,6 +16,7 @@ var orbit_angle := 0.0
 var orbit_target_cooldowns: Dictionary = {}
 var mines: Array[Dictionary] = []
 var drone_position := Vector2.ZERO
+var _candidate_buffer: Array[EnemyState] = []
 
 
 func _init() -> void:
@@ -33,16 +35,16 @@ func reset(player_position: Vector2) -> void:
 	drone_position = player_position
 
 
-func update(delta: float, player_position: Vector2, player_direction: Vector2, build: VehicleRunBuild, enemies: Array[Dictionary], line_of_sight: Callable) -> Dictionary:
+func update(delta: float, player_position: Vector2, player_direction: Vector2, build: VehicleRunBuild, enemies: Array[EnemyState], line_of_sight: Callable, query_radius: Callable = Callable()) -> Dictionary:
 	var damage: Array[Dictionary] = []
 	var effects: Array[Dictionary] = []
 	orbit_angle = fmod(orbit_angle + delta * 2.45, TAU)
 	for enemy_id in orbit_target_cooldowns.keys():
 		orbit_target_cooldowns[enemy_id] = maxf(0.0, float(orbit_target_cooldowns[enemy_id]) - delta)
-	_update_ion(delta, player_position, build, enemies, line_of_sight, damage)
-	_update_orbit(player_position, build, enemies, line_of_sight, damage)
-	_update_mines(delta, player_position, player_direction, build, enemies, line_of_sight, damage, effects)
-	_update_drone(delta, player_position, build, enemies, line_of_sight, damage, effects)
+	_update_ion(delta, player_position, build, enemies, line_of_sight, query_radius, damage)
+	_update_orbit(player_position, build, enemies, line_of_sight, query_radius, damage)
+	_update_mines(delta, player_position, player_direction, build, enemies, line_of_sight, query_radius, damage, effects)
+	_update_drone(delta, player_position, build, enemies, line_of_sight, query_radius, damage, effects)
 	return {"damage":damage, "effects":effects}
 
 
@@ -67,7 +69,7 @@ func equipped_families(build: VehicleRunBuild) -> Array[Dictionary]:
 	return result
 
 
-func _update_ion(delta: float, origin: Vector2, build: VehicleRunBuild, enemies: Array[Dictionary], line_of_sight: Callable, output: Array[Dictionary]) -> void:
+func _update_ion(delta: float, origin: Vector2, build: VehicleRunBuild, enemies: Array[EnemyState], line_of_sight: Callable, query_radius: Callable, output: Array[Dictionary]) -> void:
 	var definition: VehicleSecondaryDefinition = definitions.get(&"ion_field")
 	var level := build.level_of(definition.upgrade_id) if definition != null else 0
 	if level <= 0:
@@ -75,12 +77,13 @@ func _update_ion(delta: float, origin: Vector2, build: VehicleRunBuild, enemies:
 	if not _timer_ready(&"ion_field", delta, ION_TICK):
 		return
 	var radius := definition.auxiliary(level)
-	for enemy in enemies:
-		if _eligible(enemy) and origin.distance_to(Vector2(enemy["pos"])) <= radius + float(enemy["radius"]) and line_of_sight.call(origin, Vector2(enemy["pos"]), 3.0):
-			output.append({"enemy_id":String(enemy["id"]), "damage":definition.value(level) * ION_TICK, "source":"Ion Field"})
+	_query_candidates(origin, radius, enemies, query_radius)
+	for enemy in _candidate_buffer:
+		if _eligible(enemy) and origin.distance_to(enemy.pos) <= radius + enemy.radius and line_of_sight.call(origin, enemy.pos, 3.0):
+			output.append({"enemy_id":enemy.id, "damage":definition.value(level) * ION_TICK, "source":"Ion Field"})
 
 
-func _update_orbit(origin: Vector2, build: VehicleRunBuild, enemies: Array[Dictionary], line_of_sight: Callable, output: Array[Dictionary]) -> void:
+func _update_orbit(origin: Vector2, build: VehicleRunBuild, enemies: Array[EnemyState], line_of_sight: Callable, query_radius: Callable, output: Array[Dictionary]) -> void:
 	var definition: VehicleSecondaryDefinition = definitions.get(&"orbit_blades")
 	var level := build.level_of(definition.upgrade_id) if definition != null else 0
 	if level <= 0:
@@ -88,16 +91,17 @@ func _update_orbit(origin: Vector2, build: VehicleRunBuild, enemies: Array[Dicti
 	var count := definition.cap(level)
 	for blade_index in count:
 		var blade_position := origin + Vector2.RIGHT.rotated(orbit_angle + TAU * float(blade_index) / float(count)) * 78.0
-		for enemy in enemies:
-			var enemy_id := String(enemy.get("id", ""))
+		_query_candidates(blade_position, 22.0, enemies, query_radius)
+		for enemy in _candidate_buffer:
+			var enemy_id := enemy.id
 			if not _eligible(enemy) or float(orbit_target_cooldowns.get(enemy_id, 0.0)) > 0.0:
 				continue
-			if blade_position.distance_to(Vector2(enemy["pos"])) <= 22.0 + float(enemy["radius"]) and line_of_sight.call(blade_position, Vector2(enemy["pos"]), 2.0):
+			if blade_position.distance_to(enemy.pos) <= 22.0 + enemy.radius and line_of_sight.call(blade_position, enemy.pos, 2.0):
 				orbit_target_cooldowns[enemy_id] = ORBIT_HIT_COOLDOWN
 				output.append({"enemy_id":enemy_id, "damage":definition.value(level), "source":"Orbit Blades"})
 
 
-func _update_mines(delta: float, origin: Vector2, direction: Vector2, build: VehicleRunBuild, enemies: Array[Dictionary], line_of_sight: Callable, output: Array[Dictionary], effects: Array[Dictionary]) -> void:
+func _update_mines(delta: float, origin: Vector2, direction: Vector2, build: VehicleRunBuild, enemies: Array[EnemyState], line_of_sight: Callable, query_radius: Callable, output: Array[Dictionary], effects: Array[Dictionary]) -> void:
 	var definition: VehicleSecondaryDefinition = definitions.get(&"wake_mines")
 	var level := build.level_of(definition.upgrade_id) if definition != null else 0
 	if level <= 0:
@@ -112,21 +116,23 @@ func _update_mines(delta: float, origin: Vector2, direction: Vector2, build: Veh
 		mine["life"] = float(mine["life"]) - delta
 		var detonate := float(mine["life"]) <= 0.0
 		if not detonate:
-			for enemy in enemies:
-				if _eligible(enemy) and Vector2(mine["pos"]).distance_to(Vector2(enemy["pos"])) <= 54.0 + float(enemy["radius"]):
+			_query_candidates(Vector2(mine["pos"]), 54.0, enemies, query_radius)
+			for enemy in _candidate_buffer:
+				if _eligible(enemy) and Vector2(mine["pos"]).distance_to(enemy.pos) <= 54.0 + enemy.radius:
 					detonate = true
 					break
 		if not detonate:
 			continue
 		var radius := 84.0 + float(level) * 12.0
-		for enemy in enemies:
-			if _eligible(enemy) and Vector2(mine["pos"]).distance_to(Vector2(enemy["pos"])) <= radius + float(enemy["radius"]) and line_of_sight.call(Vector2(mine["pos"]), Vector2(enemy["pos"]), 3.0):
-				output.append({"enemy_id":String(enemy["id"]), "damage":definition.value(level), "source":"Wake Mine"})
+		_query_candidates(Vector2(mine["pos"]), radius, enemies, query_radius)
+		for enemy in _candidate_buffer:
+			if _eligible(enemy) and Vector2(mine["pos"]).distance_to(enemy.pos) <= radius + enemy.radius and line_of_sight.call(Vector2(mine["pos"]), enemy.pos, 3.0):
+				output.append({"enemy_id":enemy.id, "damage":definition.value(level), "source":"Wake Mine"})
 		effects.append({"pos":Vector2(mine["pos"]), "radius":radius})
 		mines.remove_at(index)
 
 
-func _update_drone(delta: float, origin: Vector2, build: VehicleRunBuild, enemies: Array[Dictionary], line_of_sight: Callable, output: Array[Dictionary], effects: Array[Dictionary]) -> void:
+func _update_drone(delta: float, origin: Vector2, build: VehicleRunBuild, enemies: Array[EnemyState], line_of_sight: Callable, query_radius: Callable, output: Array[Dictionary], effects: Array[Dictionary]) -> void:
 	var definition: VehicleSecondaryDefinition = definitions.get(&"escort_drone")
 	var level := build.level_of(definition.upgrade_id) if definition != null else 0
 	if level <= 0:
@@ -136,18 +142,19 @@ func _update_drone(delta: float, origin: Vector2, build: VehicleRunBuild, enemie
 	drone_position = drone_position.lerp(desired, clampf(delta * 8.0, 0.0, 1.0))
 	if not _timer_ready(&"escort_drone", delta, definition.auxiliary(level)):
 		return
-	var best: Dictionary = {}
+	var best: EnemyState
 	var best_distance := 480.0
-	for enemy in enemies:
+	_query_candidates(drone_position, best_distance, enemies, query_radius)
+	for enemy in _candidate_buffer:
 		if not _eligible(enemy):
 			continue
-		var distance := drone_position.distance_to(Vector2(enemy["pos"]))
-		if distance < best_distance and line_of_sight.call(drone_position, Vector2(enemy["pos"]), 3.0):
+		var distance := drone_position.distance_to(enemy.pos)
+		if distance < best_distance and line_of_sight.call(drone_position, enemy.pos, 3.0):
 			best = enemy
 			best_distance = distance
-	if not best.is_empty():
-		output.append({"enemy_id":String(best["id"]), "damage":definition.value(level), "source":"Escort Drone"})
-		effects.append({"pos":drone_position, "target":Vector2(best["pos"])})
+	if best != null:
+		output.append({"enemy_id":best.id, "damage":definition.value(level), "source":"Escort Drone"})
+		effects.append({"pos":drone_position, "target":best.pos})
 
 
 func _timer_ready(timer_id: StringName, delta: float, interval: float) -> bool:
@@ -159,5 +166,15 @@ func _timer_ready(timer_id: StringName, delta: float, interval: float) -> bool:
 	return true
 
 
-func _eligible(enemy: Dictionary) -> bool:
-	return bool(enemy.get("alive", false)) and bool(enemy.get("active", false))
+func _eligible(enemy: EnemyState) -> bool:
+	return enemy.alive and enemy.active
+
+
+func _query_candidates(center: Vector2, radius: float, enemies: Array[EnemyState], query_radius: Callable) -> void:
+	_candidate_buffer.clear()
+	if query_radius.is_valid():
+		query_radius.call(center, radius, _candidate_buffer)
+		return
+	for enemy in enemies:
+		if _eligible(enemy):
+			_candidate_buffer.append(enemy)

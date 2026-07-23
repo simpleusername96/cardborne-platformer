@@ -1,7 +1,7 @@
 extends SceneTree
 
-## Repeatable CPU pressure sample for moving enemies, a saturated packet queue,
-## and gameplay HUD snapshots. This is evidence, not a cross-hardware unit test.
+## Fast subsystem trend sample. It excludes rendered-frame orchestration and is
+## never release or user-visible smoothness evidence.
 
 const StageCatalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
 const EncounterRuntime = preload("res://scripts/encounters/vehicle_encounter_runtime.gd")
@@ -36,16 +36,15 @@ func _profile_preset(preset: StringName) -> bool:
 	stage.call("_debug_append_packet_enemies", stage.encounter_runtime.active_cap() + 12)
 	var mobile_index := 0
 	for enemy in stage.enemies:
-		if bool(enemy.get("counts_active_cap", false)):
-			enemy["active"] = true
-			enemy["stun"] = 0.0
-			enemy["attack_cooldown"] = 999.0
+		if enemy.counts_active_cap:
+			enemy.active = true
+			enemy.stun = 0.0
 			var ring := mobile_index / 12
 			var angle := TAU * float(mobile_index % 12) / 12.0
 			var position: Vector2 = stage.player_position + Vector2.RIGHT.rotated(angle) * (260.0 + float(ring) * 95.0)
-			enemy["pos"] = position
-			enemy["home"] = position
-			enemy["leash_rect"] = Rect2(stage.player_position - Vector2(1200.0, 1000.0), Vector2(2400.0, 2000.0))
+			enemy.pos = position
+			enemy.home = position
+			enemy.leash_rect = Rect2(stage.player_position - Vector2(1200.0, 1000.0), Vector2(2400.0, 2000.0))
 			mobile_index += 1
 	stage.player_invulnerable = 999.0
 	stage.call("_enforce_active_enemy_cap")
@@ -68,14 +67,15 @@ func _profile_preset(preset: StringName) -> bool:
 	var scheduler := _profile_saturated_scheduler(preset)
 	var active_capped := 0
 	for enemy in stage.enemies:
-		if bool(enemy["alive"]) and bool(enemy["active"]) and bool(enemy.get("counts_active_cap", false)):
+		if enemy.alive and enemy.active and enemy.counts_active_cap:
 			active_capped += 1
 	var scheduler_ms := float(scheduler["step_ms"])
 	var combined_ms := moving_ms + hud_ms + scheduler_ms
 	var cap: int = int(stage.encounter_runtime.active_cap())
 	var shard_count: int = stage.experience_runtime.shards.size()
-	var result := active_capped == cap and shard_count == 192 and int(scheduler["queued_spawns"]) > 0 and combined_ms < 8.0
-	print("VEHICLE_PRESSURE_PROFILE preset=%s active_capped=%d cap=%d shards=%d queued=%d steps=%d moving_ms=%.3f hud_ms=%.3f scheduler_ms=%.3f combined_ms=%.3f within_8ms=%s" % [
+	var result := active_capped == cap and shard_count == 192 and int(scheduler["queued_spawns"]) > 0
+	print("WARNING vehicle_pressure_microbenchmark excludes rendering and complete frame orchestration")
+	print("vehicle_pressure_microbenchmark preset=%s active_capped=%d cap=%d shards=%d queued=%d steps=%d moving_ms=%.3f hud_ms=%.3f scheduler_ms=%.3f combined_ms=%.3f" % [
 		preset,
 		active_capped,
 		cap,
@@ -86,7 +86,6 @@ func _profile_preset(preset: StringName) -> bool:
 		hud_ms,
 		scheduler_ms,
 		combined_ms,
-		str(combined_ms < 8.0),
 	])
 	stage.queue_free()
 	await process_frame

@@ -1,13 +1,13 @@
 class_name VehicleStatusRuntime
 extends RefCounted
 
-## Applies bounded elemental state to enemy dictionaries and returns explicit DOT.
+## Applies bounded elemental state to typed live enemies and returns explicit DOT.
+
+const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 
 
-static func ensure(enemy: Dictionary) -> Dictionary:
-	if not enemy.has("statuses"):
-		enemy["statuses"] = {}
-	return enemy["statuses"]
+static func ensure(enemy: EnemyState) -> Dictionary:
+	return enemy.statuses
 
 
 static func payload(build: VehicleRunBuild) -> Dictionary:
@@ -20,7 +20,7 @@ static func payload(build: VehicleRunBuild) -> Dictionary:
 	return {}
 
 
-static func apply(enemy: Dictionary, effect: Dictionary) -> void:
+static func apply(enemy: EnemyState, effect: Dictionary) -> void:
 	if effect.is_empty(): return
 	var statuses := ensure(enemy)
 	var kind := StringName(effect["kind"])
@@ -34,12 +34,14 @@ static func apply(enemy: Dictionary, effect: Dictionary) -> void:
 		poison["max_stacks"] = int(effect["max_stacks"])
 		statuses[&"poison"] = poison
 	elif kind == &"slow":
-		var boss_scale := 0.5 if StringName(enemy["role"]) == &"stage_boss" else 1.0
+		var boss_scale := 0.5 if enemy.role == &"stage_boss" else 1.0
 		statuses[&"slow"] = {"magnitude": float(effect["magnitude"]) * boss_scale, "time": float(effect["duration"]) * boss_scale}
 
 
-static func tick(enemy: Dictionary, delta: float) -> float:
-	var statuses := ensure(enemy)
+static func tick(enemy: EnemyState, delta: float) -> float:
+	var statuses := enemy.statuses
+	if statuses.is_empty():
+		return 0.0
 	var damage := 0.0
 	for kind in [&"burn", &"poison"]:
 		if not statuses.has(kind): continue
@@ -59,14 +61,14 @@ static func tick(enemy: Dictionary, delta: float) -> float:
 	return damage
 
 
-static func speed_multiplier(enemy: Dictionary) -> float:
-	var statuses: Dictionary = enemy.get("statuses", {})
+static func speed_multiplier(enemy: EnemyState) -> float:
+	var statuses := enemy.statuses
 	if statuses.has(&"slow"): return 1.0 - float(statuses[&"slow"]["magnitude"])
 	return 1.0
 
 
-static func resolve_opening(enemy: Dictionary, build: VehicleRunBuild, base_damage: float) -> Dictionary:
-	var statuses: Dictionary = enemy.get("statuses", {})
+static func resolve_opening(enemy: EnemyState, build: VehicleRunBuild, base_damage: float) -> Dictionary:
+	var statuses := enemy.statuses
 	if build.has(&"flashover") and statuses.has(&"burn"):
 		var burn: Dictionary = statuses[&"burn"]
 		var bonus := float(burn["dps"]) * float(burn["time"]) * 1.25

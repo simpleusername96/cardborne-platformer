@@ -126,15 +126,24 @@ class StageMinimap:
 	extends Control
 
 	var snapshot: Dictionary = {}
+	var _static_map_mesh: ArrayMesh
+	var _static_mesh_size := Vector2.ZERO
 
 	func _ready() -> void:
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
 		custom_minimum_size = Vector2(144.0, 80.0)
 
 	func set_snapshot(value: Dictionary) -> void:
-		# Gameplay hands over a fresh immutable snapshot; retaining it avoids a
-		# deep copy of minimap cells and markers on every HUD refresh.
-		snapshot = value
+		# Static geometry arrives once; position/discovery channels merge at 10 Hz.
+		for key in value:
+			snapshot[key] = value[key]
+		if (
+			value.has("floor_polygons")
+			or value.has("water_polygons")
+			or value.has("blocker_polygons")
+			or value.has("world_size")
+		):
+			_static_map_mesh = null
 		queue_redraw()
 
 	func _draw() -> void:
@@ -144,24 +153,39 @@ class StageMinimap:
 		var rows: int = int(snapshot.get("rows", 6))
 		var cell_size := Vector2(size.x / float(cols), size.y / float(rows))
 		var world_size: Vector2 = snapshot.get("world_size", Vector2(5200.0, 2200.0))
-		for polygon_variant in snapshot.get("floor_polygons", []):
-			var floor_polygon: PackedVector2Array = polygon_variant
-			draw_colored_polygon(_scaled_polygon(floor_polygon, world_size), Art.IVORY_SHADE)
-		for polygon_variant in snapshot.get("water_polygons", []):
-			var water_polygon: PackedVector2Array = polygon_variant
-			draw_colored_polygon(_scaled_polygon(water_polygon, world_size), Art.COBALT_WATER)
-		for polygon_variant in snapshot.get("blocker_polygons", []):
-			var blocker_polygon: PackedVector2Array = polygon_variant
-			draw_colored_polygon(_scaled_polygon(blocker_polygon, world_size), Art.BLOCKER_FILL)
+		if _static_map_mesh == null or not _static_mesh_size.is_equal_approx(size):
+			_static_map_mesh = _build_static_map_mesh(world_size)
+			_static_mesh_size = size
+		if _static_map_mesh != null:
+			draw_mesh(_static_map_mesh, null)
 		var visited: Array = snapshot.get("visited", [])
 		var visited_lookup: Dictionary = {}
 		for cell_variant in visited:
 			visited_lookup[Vector2i(cell_variant)] = true
+		var concealment_color := Color(Art.COBALT_VOID, 0.82)
 		for row in rows:
-			for column in cols:
-				if visited_lookup.has(Vector2i(column, row)):
-					continue
-				draw_rect(Rect2(Vector2(column, row) * cell_size, cell_size + Vector2.ONE), Color(Art.COBALT_VOID, 0.82))
+			# Merge adjacent concealed cells so the 16x10 exploration mask costs
+			# one draw per row run instead of one draw per undiscovered cell.
+			var concealed_run_start := -1
+			for column in range(cols + 1):
+				var concealed := (
+					column < cols
+					and not visited_lookup.has(Vector2i(column, row))
+				)
+				if concealed and concealed_run_start < 0:
+					concealed_run_start = column
+				elif not concealed and concealed_run_start >= 0:
+					draw_rect(
+						Rect2(
+							Vector2(concealed_run_start, row) * cell_size,
+							Vector2(
+								float(column - concealed_run_start) * cell_size.x,
+								cell_size.y
+							) + Vector2.ONE
+						),
+						concealment_color
+					)
+					concealed_run_start = -1
 		for marker_variant in snapshot.get("markers", []):
 			var marker: Dictionary = marker_variant
 			if not bool(marker.get("discovered", false)):
@@ -195,6 +219,35 @@ class StageMinimap:
 			player_point + Vector2(5.0, 5.0),
 			player_point + Vector2(-5.0, 5.0),
 		]), Art.MUSTARD)
+
+	func _build_static_map_mesh(world_size: Vector2) -> ArrayMesh:
+		var vertices := PackedVector3Array()
+		var colors := PackedColorArray()
+		var indices := PackedInt32Array()
+		for layer in [
+			{"key": "floor_polygons", "color": Art.IVORY_SHADE},
+			{"key": "water_polygons", "color": Art.COBALT_WATER},
+			{"key": "blocker_polygons", "color": Art.BLOCKER_FILL},
+		]:
+			for polygon_variant in snapshot.get(layer["key"], []):
+				var points := _scaled_polygon(PackedVector2Array(polygon_variant), world_size)
+				var triangles := Geometry2D.triangulate_polygon(points)
+				var vertex_offset := vertices.size()
+				for point in points:
+					vertices.append(Vector3(point.x, point.y, 0.0))
+					colors.append(Color(layer["color"]))
+				for index in triangles:
+					indices.append(vertex_offset + index)
+		if vertices.is_empty():
+			return null
+		var arrays := []
+		arrays.resize(Mesh.ARRAY_MAX)
+		arrays[Mesh.ARRAY_VERTEX] = vertices
+		arrays[Mesh.ARRAY_COLOR] = colors
+		arrays[Mesh.ARRAY_INDEX] = indices
+		var mesh := ArrayMesh.new()
+		mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+		return mesh
 
 	func _scaled_polygon(polygon: PackedVector2Array, world_size: Vector2) -> PackedVector2Array:
 		var result := PackedVector2Array()
@@ -700,56 +753,58 @@ func _build_guidebook() -> void:
 func update_hud(snapshot: Dictionary) -> void:
 	if not is_instance_valid(_hud):
 		return
-	_latest_guidebook_snapshot = Dictionary(snapshot.get("guidebook", {})).duplicate(true)
-	_health_bar.set_values(
-		float(snapshot.get("health", 0.0)),
-		maxf(1.0, float(snapshot.get("max_health", 1.0))),
-		int(snapshot.get("level", 1)),
-		float(snapshot.get("experience", 0.0)),
-		float(snapshot.get("experience_required", 26.0))
-	)
-	var next_objective := String(snapshot.get("objective", ""))
-	if next_objective != _last_objective_text:
-		_last_objective_text = next_objective
-		_objective_detail_timer = 3.0
-		_objective_detail.visible = true
-	_objective_label.text = next_objective
-	_objective_detail.text = String(snapshot.get("objective_detail", ""))
-	_minimap_title.text = String(snapshot.get("stage_title", tr("UI_FLOODED_WORKS")))
-
-	_primary_slot.action_name = String(snapshot.get("primary_name", "ACTION_PRIMARY"))
-	_primary_slot.set_state(
-		String(snapshot.get("primary_state", "STATE_LIVE")),
-		float(snapshot.get("primary_ratio", 0.0))
-	)
-	_dash_slot.set_state(String(snapshot.get("dash_state", "STATE_READY")), float(snapshot.get("dash_ratio", 0.0)))
-	_passive_slot.set_state(String(snapshot.get("passive_state", "STATE_READY")), float(snapshot.get("passive_ratio", 0.0)))
-	_skill_slot.set_state(String(snapshot.get("skill_state", "STATE_READY")), float(snapshot.get("skill_ratio", 0.0)))
-	_buff_label.text = String(snapshot.get("buff_text", ""))
-
-	var boss: Dictionary = snapshot.get("boss", {})
-	_boss_cluster.visible = bool(boss.get("visible", false))
-	_objective_panel.visible = not _boss_cluster.visible
-	_minimap_panel.visible = true
-	_notification.position.y = 68.0 if _boss_cluster.visible else 72.0
-	if _boss_cluster.visible:
-		_boss_name.text = String(boss.get("name", "BOSS"))
-		_boss_bar.max_value = maxf(1.0, float(boss.get("max_health", 1.0)))
-		_boss_bar.value = float(boss.get("health", 0.0))
-		_boss_state.text = String(boss.get("state", ""))
-
-	var target: Dictionary = snapshot.get("target", {})
-	var target_panel: Control = _target_cluster.get_meta("panel")
-	target_panel.visible = bool(target.get("visible", false))
-	if target_panel.visible:
-		_target_name.text = String(target.get("name", "TARGET"))
-		_target_bar.max_value = maxf(1.0, float(target.get("max_health", 1.0)))
-		_target_bar.value = float(target.get("health", 0.0))
-		_target_state.text = String(target.get("state", ""))
-
-	_minimap.set_snapshot(snapshot.get("minimap", {}))
-	_threat_radar.set_snapshot(snapshot.get("threat_radar", {}))
-	_status_orbit.set_snapshot(snapshot.get("status_orbit", {}))
+	if snapshot.has("guidebook"):
+		_latest_guidebook_snapshot = Dictionary(snapshot["guidebook"]).duplicate(true)
+	if snapshot.has("health"):
+		_health_bar.set_values(
+			float(snapshot["health"]),
+			maxf(1.0, float(snapshot.get("max_health", 1.0))),
+			int(snapshot.get("level", 1)),
+			float(snapshot.get("experience", 0.0)),
+			float(snapshot.get("experience_required", 26.0))
+		)
+	if snapshot.has("objective"):
+		var next_objective := String(snapshot["objective"])
+		if next_objective != _last_objective_text:
+			_last_objective_text = next_objective
+			_objective_detail_timer = 3.0
+			_objective_detail.visible = true
+		_objective_label.text = next_objective
+		_objective_detail.text = String(snapshot.get("objective_detail", ""))
+		_minimap_title.text = String(snapshot.get("stage_title", tr("UI_FLOODED_WORKS")))
+	if snapshot.has("primary_state"):
+		_primary_slot.action_name = String(snapshot.get("primary_name", "ACTION_PRIMARY"))
+		_primary_slot.set_state(String(snapshot["primary_state"]), float(snapshot.get("primary_ratio", 0.0)))
+		_dash_slot.set_state(String(snapshot.get("dash_state", "STATE_READY")), float(snapshot.get("dash_ratio", 0.0)))
+		_passive_slot.set_state(String(snapshot.get("passive_state", "STATE_READY")), float(snapshot.get("passive_ratio", 0.0)))
+		_skill_slot.set_state(String(snapshot.get("skill_state", "STATE_READY")), float(snapshot.get("skill_ratio", 0.0)))
+		_buff_label.text = String(snapshot.get("buff_text", ""))
+	if snapshot.has("boss"):
+		var boss: Dictionary = snapshot["boss"]
+		_boss_cluster.visible = bool(boss.get("visible", false))
+		_objective_panel.visible = not _boss_cluster.visible
+		_minimap_panel.visible = true
+		_notification.position.y = 68.0 if _boss_cluster.visible else 72.0
+		if _boss_cluster.visible:
+			_boss_name.text = String(boss.get("name", "BOSS"))
+			_boss_bar.max_value = maxf(1.0, float(boss.get("max_health", 1.0)))
+			_boss_bar.value = float(boss.get("health", 0.0))
+			_boss_state.text = String(boss.get("state", ""))
+	if snapshot.has("target"):
+		var target: Dictionary = snapshot["target"]
+		var target_panel: Control = _target_cluster.get_meta("panel")
+		target_panel.visible = bool(target.get("visible", false))
+		if target_panel.visible:
+			_target_name.text = String(target.get("name", "TARGET"))
+			_target_bar.max_value = maxf(1.0, float(target.get("max_health", 1.0)))
+			_target_bar.value = float(target.get("health", 0.0))
+			_target_state.text = String(target.get("state", ""))
+	if snapshot.has("minimap"):
+		_minimap.set_snapshot(snapshot["minimap"])
+	if snapshot.has("threat_radar"):
+		_threat_radar.set_snapshot(snapshot["threat_radar"])
+	if snapshot.has("status_orbit"):
+		_status_orbit.set_snapshot(snapshot["status_orbit"])
 
 
 func show_deployment(_selected: StringName = &"pulse_cannon") -> void:

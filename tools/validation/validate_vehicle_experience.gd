@@ -7,6 +7,7 @@ const UpgradeCatalog = preload("res://scripts/cards/vehicle_upgrade_catalog.gd")
 const RunBuild = preload("res://scripts/cards/vehicle_run_build.gd")
 const CycleRuntime = preload("res://scripts/cards/vehicle_cycle_runtime.gd")
 const EnemyArchetypes = preload("res://scripts/enemies/vehicle_enemy_archetypes.gd")
+const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 
 var failures := PackedStringArray()
 
@@ -26,12 +27,12 @@ func _initialize() -> void:
 
 
 func _validate_drop_values() -> void:
-	_expect(FieldDropRules.experience_for_enemy({"health_class":&"swarm", "role":&"chaser"}) == 1, "swarm XP is 1")
-	_expect(FieldDropRules.experience_for_enemy({"health_class":&"standard", "role":&"chaser"}) == 2, "standard XP is 2")
-	_expect(FieldDropRules.experience_for_enemy({"health_class":&"priority", "role":&"turret"}) == 4, "priority XP is 4")
-	_expect(FieldDropRules.experience_for_enemy({"health_class":&"boss", "role":&"stage_boss"}) == 24, "stage boss XP is 24")
-	_expect(FieldDropRules.experience_for_enemy({"health_class":&"swarm", "role":&"chaser", "carrier_id":"carrier"}) == 0, "carrier children grant no XP")
-	_expect(FieldDropRules.experience_for_enemy({"health_class":&"priority", "role":&"boss_pylon"}) == 0, "boss pylons grant no XP")
+	_expect(FieldDropRules.experience_for_enemy(_enemy(&"swarm", &"chaser")) == 1, "swarm XP is 1")
+	_expect(FieldDropRules.experience_for_enemy(_enemy(&"standard", &"chaser")) == 2, "standard XP is 2")
+	_expect(FieldDropRules.experience_for_enemy(_enemy(&"priority", &"turret")) == 4, "priority XP is 4")
+	_expect(FieldDropRules.experience_for_enemy(_enemy(&"boss", &"stage_boss")) == 24, "stage boss XP is 24")
+	_expect(FieldDropRules.experience_for_enemy(_enemy(&"swarm", &"chaser", "carrier")) == 0, "carrier children grant no XP")
+	_expect(FieldDropRules.experience_for_enemy(_enemy(&"priority", &"boss_pylon")) == 0, "boss pylons grant no XP")
 
 
 func _validate_stage_items() -> void:
@@ -52,7 +53,13 @@ func _validate_experience_runtime() -> void:
 		runtime.spawn_shard(Vector2(float(index), 0.0), 1)
 	_expect(runtime.shards.size() == ExperienceRuntime.MAX_SHARDS, "shard cap merges overflow")
 	_expect(runtime.total_uncollected_experience() == ExperienceRuntime.MAX_SHARDS + 20, "shard merging preserves XP")
+	_expect(runtime.validate_capacity(), "live shards and the preallocated pool preserve fixed capacity")
 	runtime.reset()
+	_expect(
+		runtime.validate_capacity()
+		and int(runtime.snapshot()["shard_pool"]) == ExperienceRuntime.MAX_SHARDS,
+		"reset retires every shard to the preallocated pool"
+	)
 	runtime.spawn_shard(Vector2.ZERO, 28, &"boss")
 	var result := runtime.advance(0.016, Vector2.ZERO, 100.0, false)
 	_expect(runtime.run_level == 2 and runtime.experience == 2, "level threshold carries excess XP")
@@ -81,10 +88,10 @@ func _validate_route_level_cadence() -> void:
 			if counted_enemies >= Catalog.quota(stage_id):
 				break
 			var definition := EnemyArchetypes.definition(StringName(spec["role"]))
-			var enemy := {
-				"role":StringName(definition["behavior"]),
-				"health_class":StringName(definition["health_class"]),
-			}
+			var enemy := _enemy(
+				StringName(definition["health_class"]),
+				StringName(definition["behavior"])
+			)
 			stage_experience += FieldDropRules.experience_for_enemy(enemy)
 			counted_enemies += 1
 		var level_before := runtime.run_level
@@ -94,6 +101,14 @@ func _validate_route_level_cadence() -> void:
 		_expect(levels_gained >= 3 and levels_gained <= 8, "%s extended quota-path XP yields %d level-ups" % [stage_id, levels_gained])
 		while runtime.consume_pending_level():
 			pass
+
+
+func _enemy(health_class: StringName, role: StringName, carrier_id: String = "") -> EnemyState:
+	var enemy := EnemyState.new()
+	enemy.health_class = health_class
+	enemy.role = role
+	enemy.carrier_id = carrier_id
+	return enemy
 
 
 func _validate_level_up_cards() -> void:
