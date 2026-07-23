@@ -57,11 +57,7 @@ func compatible(definition: VehicleUpgradeDefinition, build: VehicleRunBuild) ->
 		return false
 	if definition.requirement != &"" and build.level_of(definition.requirement) <= 0:
 		return false
-	if definition.exclusion_group == &"element_core" and build.element_core != &"" and build.element_core != definition.id:
-		return false
 	if definition.id in SECONDARY_FAMILY_IDS and build.level_of(definition.id) == 0 and build.active_optional_secondaries() >= OPTIONAL_SECONDARY_SLOTS:
-		return false
-	if definition.requirement != &"" and build.element_core != &"" and _core_for(definition.id) != &"" and _core_for(definition.id) != build.element_core:
 		return false
 	return true
 
@@ -90,6 +86,10 @@ func offer(build: VehicleRunBuild, run_index: int, stage_index: int, source_id: 
 		_append_first_family(result, available, [&"element"])
 		_append_first_family(result, available, [&"passive", &"mobility"])
 	else:
+		if source_id == &"level_up":
+			var branch_child := _eligible_branch_child(build, available)
+			if branch_child != null:
+				result.append(branch_child)
 		_append_first_behavior(result, available)
 		for definition in available:
 			if result.size() >= 3: break
@@ -115,8 +115,38 @@ func _append_first_behavior(result: Array[VehicleUpgradeDefinition], available: 
 			return
 
 
-func _core_for(upgrade_id: StringName) -> StringName:
-	if upgrade_id in [&"thermal_compound", &"flashover"]: return &"incendiary_core"
-	if upgrade_id in [&"concentrated_toxin", &"contagion"]: return &"toxin_core"
-	if upgrade_id in [&"deep_freeze", &"shatter"]: return &"cryo_core"
-	return &""
+func _eligible_branch_child(
+	build: VehicleRunBuild,
+	available: Array[VehicleUpgradeDefinition]
+) -> VehicleUpgradeDefinition:
+	var branches := [
+		[&"incendiary_core", &"thermal_compound", &"flashover"],
+		[&"toxin_core", &"concentrated_toxin", &"contagion"],
+		[&"cryo_core", &"deep_freeze", &"shatter"],
+	]
+	var candidates: Array[Dictionary] = []
+	for branch in branches:
+		if not build.has(branch[0]):
+			continue
+		var child: VehicleUpgradeDefinition
+		if build.level_of(branch[1]) <= 0:
+			child = get_definition(branch[1])
+		elif not build.has(branch[2]):
+			child = get_definition(branch[2])
+		elif build.level_of(branch[1]) < get_definition(branch[1]).max_level:
+			child = get_definition(branch[1])
+		if child != null and child in available:
+			candidates.append({
+				"definition":child,
+				"progress":build.level_of(branch[0]) + build.level_of(branch[1]) + build.level_of(branch[2]),
+				"seeded_order":available.find(child),
+			})
+	if candidates.is_empty():
+		return null
+	candidates.sort_custom(
+		func(a: Dictionary, b: Dictionary) -> bool:
+			if int(a["progress"]) != int(b["progress"]):
+				return int(a["progress"]) < int(b["progress"])
+			return int(a["seeded_order"]) < int(b["seeded_order"])
+	)
+	return candidates[0]["definition"] as VehicleUpgradeDefinition

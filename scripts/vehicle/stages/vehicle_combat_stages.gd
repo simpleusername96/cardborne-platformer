@@ -72,11 +72,12 @@ static func definition(stage_id: StringName) -> Dictionary:
 
 static func _static_enemies(stage_index: int) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
-	for index in Field.STATIONARY_ANCHORS.size():
+	var quadrants: Array[StringName] = [&"nw", &"ne", &"sw", &"se"]
+	for index in quadrants.size():
 		result.append({
 			"id":"stage_%d_stationary_%02d" % [stage_index + 1, index + 1],
 			"role":STATIONARY_ROLES[stage_index][index],
-			"pos":Field.STATIONARY_ANCHORS[index],
+			"pos":Vector2(Field.STATIONARY_CANDIDATES[quadrants[index]][0]),
 			"zone":"field",
 			"active":true,
 		})
@@ -104,16 +105,13 @@ static func _packets(stage_index: int) -> Array[Dictionary]:
 				squad[0] = &"scrap_drone"
 			squads.append(squad)
 			authored += squad_size
-		var anchor := Field.ORDINARY_SPAWN_ANCHORS[(packet_index + stage_index * 3) % Field.ORDINARY_SPAWN_ANCHORS.size()]
 		var at_time := 5.1 if packet_index == 0 else 8.0 + float(packet_index - 1) * 2.4
 		result.append({
 			"id":"stage_%d_packet_%02d" % [stage_index + 1, packet_index + 1],
 			"beat":0 if packet_index == 0 else mini(4, 1 + floori(float(packet_index - 1) / 2.0)),
 			"trigger":{"kind":&"time", "at":at_time},
-			"anchor":anchor,
 			"squads":squads,
 			"unit_spacing":0.16,
-			"squad_gap":0.55,
 			"cue_lead":0.9,
 			"zone":"field",
 			"leash":Field.WORLD_RECT,

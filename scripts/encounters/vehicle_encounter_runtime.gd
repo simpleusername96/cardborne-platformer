@@ -6,6 +6,8 @@ extends RefCounted
 
 const Director = preload("res://scripts/encounters/vehicle_encounter_director.gd")
 const RunDifficulty = preload("res://scripts/vehicle/vehicle_run_difficulty.gd")
+const SpawnAllocator = preload("res://scripts/encounters/vehicle_spawn_allocator.gd")
+const Field = preload("res://scripts/vehicle/stages/drowned_ruin_field.gd")
 
 const ARRIVAL_GRACE := 6.0
 const CUE_LEAD := 0.9
@@ -34,9 +36,17 @@ var _damage_source_families: Dictionary = {}
 var _schedule_delay_total := 0.0
 var _next_metric_sample := 0.0
 var _spawning_enabled := true
+var _spawn_allocator := SpawnAllocator.new()
+var _allocation_debug: Array[Dictionary] = []
 
 
-func configure(next_stage_id: StringName, packets: Array[Dictionary], run_difficulty: StringName) -> void:
+func configure(
+	next_stage_id: StringName,
+	packets: Array[Dictionary],
+	run_difficulty: StringName,
+	spawn_anchors: Array[Vector2] = Field.ORDINARY_SPAWN_CANDIDATES,
+	encounter_seed: int = 0
+) -> void:
 	stage_id = next_stage_id
 	difficulty = RunDifficulty.normalize(run_difficulty)
 	elapsed = 0.0
@@ -60,6 +70,8 @@ func configure(next_stage_id: StringName, packets: Array[Dictionary], run_diffic
 	_schedule_delay_total = 0.0
 	_next_metric_sample = 0.0
 	_spawning_enabled = true
+	_allocation_debug.clear()
+	_spawn_allocator.configure(encounter_seed, spawn_anchors)
 
 
 func stop_spawning() -> void:
@@ -83,12 +95,18 @@ func has_event(event_id: StringName) -> bool:
 	return _events.has(event_id)
 
 
-func tick(delta: float, active_mobile_count: int, active_attack_families: Array[StringName] = []) -> Dictionary:
+func tick(
+	delta: float,
+	active_mobile_count: int,
+	active_attack_families: Array[StringName] = [],
+	player_position: Vector2 = Field.CENTER,
+	visible_world: Rect2 = Rect2()
+) -> Dictionary:
 	elapsed += maxf(0.0, delta)
 	_record_active_count_sample(active_mobile_count)
 	_max_attack_family_overlap = maxi(_max_attack_family_overlap, active_attack_families.size())
 	if _spawning_enabled:
-		_activate_ready_packets()
+		_activate_ready_packets(player_position, visible_world)
 	var cues: Array[Dictionary] = []
 	while not _cue_queue.is_empty() and _effective_time(_cue_queue[0]) <= elapsed + 0.0001:
 		var cue: Dictionary = _cue_queue.pop_front()
@@ -164,6 +182,7 @@ func debug_snapshot() -> Dictionary:
 		"schedule_delay":_schedule_delay_total,
 		"active_count_samples":_active_count_samples.size(),
 		"spawning_enabled":_spawning_enabled,
+		"allocations":_allocation_debug.duplicate(true),
 	}
 
 
@@ -193,14 +212,14 @@ func _scheduled_key(entry: Dictionary) -> float:
 	return float(entry["time"]) - float(entry.get("delay_base", 0.0))
 
 
-func _activate_ready_packets() -> void:
+func _activate_ready_packets(player_position: Vector2, visible_world: Rect2) -> void:
 	for packet in _packets:
 		var packet_id := String(packet["id"])
 		if _activated_packets.has(packet_id) or not _trigger_ready(packet["trigger"]):
 			continue
 		_activated_packets[packet_id] = elapsed
 		current_beat = maxi(current_beat, int(packet["beat"]))
-		_schedule_packet(packet)
+		_schedule_packet(packet, player_position, visible_world)
 
 
 func _trigger_ready(trigger: Dictionary) -> bool:
@@ -212,20 +231,34 @@ func _trigger_ready(trigger: Dictionary) -> bool:
 	return false
 
 
-func _schedule_packet(packet: Dictionary) -> void:
+func _schedule_packet(packet: Dictionary, player_position: Vector2, visible_world: Rect2) -> void:
 	var packet_id := String(packet["id"])
 	var beat := int(packet["beat"])
-	var anchor := Vector2(packet["anchor"])
 	var squads: Array = packet["squads"]
-	var pace_multiplier := Director.spawn_pace_multiplier(beat)
-	var unit_spacing := float(packet.get("unit_spacing", 0.5)) * pace_multiplier
-	var gap := float(packet.get("squad_gap", 4.5)) * Director.squad_gap_multiplier(beat)
+	var allocations := _spawn_allocator.allocate(packet, player_position, visible_world)
+	var unit_spacing := float(packet.get("unit_spacing", 0.16))
+	var gap := 0.90 if beat <= 1 else 0.65
 	var cue_lead := float(packet.get("cue_lead", CUE_LEAD))
-	var cursor := elapsed + cue_lead
 	for squad_index in squads.size():
-		var squad: Array = squads[squad_index]
+		var allocation: Dictionary = allocations[squad_index]
+		var squad: Array = allocation["roles"]
+		var anchor := Vector2(allocation["anchor"])
 		var squad_id := "%s_s%02d" % [packet_id, squad_index + 1]
-		_cue_queue.append({"time":cursor - cue_lead, "delay_base":_schedule_delay_total, "anchor":anchor, "squad_id":squad_id, "beat":beat})
+		var cursor := elapsed + cue_lead + float(allocation["group_index"]) * gap
+		var cue := {
+			"time":cursor - cue_lead,
+			"delay_base":_schedule_delay_total,
+			"anchor":anchor,
+			"squad_id":squad_id,
+			"beat":beat,
+			"player_distance":allocation["player_distance"],
+			"outside_visible_margin":allocation["outside_visible_margin"],
+			"sector":allocation["sector"],
+			"group_index":allocation["group_index"],
+			"roles":squad.duplicate(),
+		}
+		_cue_queue.append(cue)
+		_allocation_debug.append(cue.duplicate(true))
 		for unit_index in squad.size():
 			var role := StringName(squad[unit_index])
 			var formation_angle := TAU * float(unit_index) / float(maxi(1, squad.size()))
@@ -248,6 +281,5 @@ func _schedule_packet(packet: Dictionary) -> void:
 				"packet_beat":beat,
 			}
 			_spawn_queue.append({"time":cursor + float(unit_index) * unit_spacing, "delay_base":_schedule_delay_total, "spec":spec})
-		cursor += gap
 	_cue_queue.sort_custom(func(a:Dictionary,b:Dictionary)->bool: return _scheduled_key(a) < _scheduled_key(b))
 	_spawn_queue.sort_custom(func(a:Dictionary,b:Dictionary)->bool: return _scheduled_key(a) < _scheduled_key(b))

@@ -8,12 +8,14 @@ secondary weapons, EMP, collectible experience, and card upgrades.
 
 - `project.godot` boots `scenes/main/GameRoot.tscn` and the connected
   `scenes/run/VehicleRun.tscn` campaign.
-- Five escalating stages reuse one enlarged drowned-ruin field. Builds and
-  explored minimap cells persist while the player returns to the center between
-  stages.
+- Each new run selects one validated arrangement of eight large cover modules,
+  four stationary threats, three pickups, and five crates per stage. Five
+  escalating stages and exact retries reuse that same enlarged drowned-ruin
+  field while builds and explored minimap cells persist.
 - Encounter packets begin with a six-second safe arrival, then grow from one
-  scout into eight-squad surges. Hard preserves the current 48-to-72 active-enemy
-  baseline; Normal and Easy reduce combined count and combat-stat pressure.
+  scout into eight-squad surges distributed across distinct, telegraphed field
+  anchors. Hard preserves the current 48-to-72 active-enemy baseline; Normal
+  and Easy reduce combined count and combat-stat pressure.
 - Easy, Normal, or Hard is selected before deployment and remains locked for the
   complete run.
 - Substantial ordinary-defeat quotas summon a roaming boss into the same field;
@@ -24,7 +26,8 @@ secondary weapons, EMP, collectible experience, and card upgrades.
   before bounded
   recovery windows.
 - The current build includes 46 card upgrades and five automatic secondary
-  families, with at most three active at once.
+  families, with at most three active at once. Fire, poison, and chill upgrade
+  branches can coexist and apply independent bounded stacks.
 - The persistent `?` guidebook reveals only enemies, bosses, objects, and ship
   details the player has encountered.
 - Korean is the default UI language and English can be selected in settings.
@@ -57,7 +60,8 @@ an argument array keeps PowerShell from consuming it:
 $captureDir = Join-Path (Resolve-Path .).Path "build\captures"
 $godotArgs = @(
   "--rendering-method", "gl_compatibility", "--",
-  "--capture-all=$captureDir", "--capture-locale=ko", "--capture-size=1280x720"
+  "--capture-all=$captureDir", "--capture-locale=ko", "--capture-size=1280x720",
+  "--layout-seed=12886704"
 )
 .\tools\godot.ps1 @godotArgs
 ```

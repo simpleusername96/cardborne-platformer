@@ -35,6 +35,11 @@ func _run() -> void:
 	_expect(int(contract["categories"]) == 5 and int(contract["command_height"]) >= 44, "guide modal has five accessible categories")
 	panel.queue_free()
 	await process_frame
+	store.free()
+	loaded.free()
+	panel = null
+	store = null
+	loaded = null
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(TEST_PATH))
 	_finish()
 

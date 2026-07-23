@@ -30,13 +30,13 @@ func _run() -> void:
 		_expect(run.MINIMAP_COLS == 16 and run.MINIMAP_ROWS == 10, "run uses 16x10 explored minimap")
 		_expect(run.ORDINARY_DECISION_BUCKET_COUNT == 6, "ordinary high-cost decisions are distributed at 10 Hz")
 		_expect(run._camera.zoom == Vector2.ONE, "gameplay camera keeps zoom 1")
-		var initial_fingerprint := Catalog.geometry_fingerprint(run.current_stage_id)
+		var initial_fingerprint := int(run.field_layout.fingerprint)
 		run.run_build.apply(&"tuned_thrusters")
 		run.visited_cells[Vector2i(2,2)] = true
 		run.current_stage_index = 1
 		run.current_stage_id = Catalog.STAGE_IDS[1]
 		run.call("_reset_run", false, true, true)
-		_expect(Catalog.geometry_fingerprint(run.current_stage_id) == initial_fingerprint, "stage transition preserves field geometry")
+		_expect(int(run.field_layout.fingerprint) == initial_fingerprint, "stage transition preserves run-scoped field geometry")
 		_expect(run.run_build.has(&"tuned_thrusters") and run.visited_cells.has(Vector2i(2,2)), "stage transition preserves build and exploration")
 		_expect(run.player_position == Vector2(2800,1700), "stage transition respawns at center")
 		var hud: Dictionary = run.call("_build_hud_snapshot")

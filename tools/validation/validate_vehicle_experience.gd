@@ -8,6 +8,7 @@ const RunBuild = preload("res://scripts/cards/vehicle_run_build.gd")
 const CycleRuntime = preload("res://scripts/cards/vehicle_cycle_runtime.gd")
 const EnemyArchetypes = preload("res://scripts/enemies/vehicle_enemy_archetypes.gd")
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
+const LayoutGenerator = preload("res://scripts/vehicle/vehicle_field_layout_generator.gd")
 
 var failures := PackedStringArray()
 
@@ -36,12 +37,13 @@ func _validate_drop_values() -> void:
 
 
 func _validate_stage_items() -> void:
+	var layout := LayoutGenerator.generate(0xC4A2B0, Catalog.STAGE_IDS)
 	for stage_id in Catalog.STAGE_IDS:
-		var pickups := Catalog.pickup_blueprint(stage_id)
+		var pickups := layout.pickup_blueprint(stage_id)
 		_expect(pickups.size() == 3, "%s has exactly three authored field pickups" % stage_id)
 		_expect(pickups.filter(func(item): return StringName(item["kind"]) == &"repair").size() == 2, "%s has two repair pickups" % stage_id)
 		_expect(pickups.filter(func(item): return StringName(item["kind"]) == &"experience_recall").size() == 1, "%s has one recall pickup" % stage_id)
-		var crates := Catalog.crate_blueprint(stage_id)
+		var crates := layout.crate_blueprint(stage_id)
 		_expect(crates.size() == 5, "%s has five crates" % stage_id)
 		_expect(crates.filter(func(item): return StringName(item["drop"]) == &"repair").size() == 4, "%s crates contain four repairs" % stage_id)
 		_expect(crates.filter(func(item): return StringName(item["drop"]) == &"experience_recall").size() == 1, "%s crates contain one recall" % stage_id)
@@ -60,20 +62,20 @@ func _validate_experience_runtime() -> void:
 		and int(runtime.snapshot()["shard_pool"]) == ExperienceRuntime.MAX_SHARDS,
 		"reset retires every shard to the preallocated pool"
 	)
-	runtime.spawn_shard(Vector2.ZERO, 28, &"boss")
+	runtime.spawn_shard(Vector2.ZERO, 13, &"boss")
 	var result := runtime.advance(0.016, Vector2.ZERO, 100.0, false)
-	_expect(runtime.run_level == 2 and runtime.experience == 2, "level threshold carries excess XP")
+	_expect(runtime.run_level == 2 and runtime.experience == 1, "level threshold carries excess XP")
 	_expect(runtime.pending_level_ups == 1 and int(result["levels"]) == 1, "collected XP queues a level")
 	_expect(&"boss" in result["reward_sources"], "boss reward source survives shard collection")
 	_expect(runtime.consume_pending_level() and runtime.pending_level_ups == 0, "one confirmed card consumes one queued level")
-	_expect(runtime.required_experience() == 29, "level two requirement follows the locked curve")
+	_expect(runtime.required_experience() == 16, "level two requirement follows the locked curve")
 	runtime.reset()
 	runtime.spawn_shard(Vector2(900.0, 0.0), 2)
 	_expect(int(runtime.advance(0.1, Vector2.ZERO, 92.0, false)["experience"]) == 0, "distant XP is not awarded before collection")
 	_expect(int(runtime.advance(0.65, Vector2.ZERO, 92.0, true)["experience"]) == 2, "experience recall collects distant XP without collecting other items")
 	runtime.spawn_shard(Vector2.ZERO, 100, &"boss")
 	result = runtime.advance(0.0, Vector2.ZERO, 92.0, false)
-	_expect(int(result["levels"]) == 3 and runtime.pending_level_ups == 3, "one collection safely queues multiple level-ups")
+	_expect(int(result["levels"]) == 4 and runtime.pending_level_ups == 4, "one collection safely queues multiple level-ups")
 	_expect(&"boss" in result["reward_sources"], "boss reward remains queued behind simultaneous levels")
 	runtime.reset()
 	_expect(runtime.run_level == 1 and runtime.experience == 0 and runtime.pending_level_ups == 0 and runtime.shards.is_empty(), "run reset clears XP, levels, choices, and shards")
@@ -81,7 +83,9 @@ func _validate_experience_runtime() -> void:
 
 func _validate_route_level_cadence() -> void:
 	var runtime := ExperienceRuntime.new()
-	for stage_id in Catalog.STAGE_IDS:
+	var expected_levels := [6, 4, 2, 4, 3]
+	for stage_index in Catalog.STAGE_IDS.size():
+		var stage_id := Catalog.STAGE_IDS[stage_index]
 		var stage_experience := 24 # Stage-boss core plus the minimum quota path.
 		var counted_enemies := 0
 		for spec in Catalog.enemy_blueprint(stage_id):
@@ -98,9 +102,13 @@ func _validate_route_level_cadence() -> void:
 		runtime.spawn_shard(Vector2.ZERO, stage_experience)
 		runtime.advance(0.0, Vector2.ZERO, 100.0, false)
 		var levels_gained := runtime.run_level - level_before
-		_expect(levels_gained >= 3 and levels_gained <= 8, "%s extended quota-path XP yields %d level-ups" % [stage_id, levels_gained])
+		_expect(
+			levels_gained == expected_levels[stage_index],
+			"%s quota-path XP yields the locked %d level-ups" % [stage_id, expected_levels[stage_index]]
+		)
 		while runtime.consume_pending_level():
 			pass
+	_expect(runtime.run_level == 20, "the five-stage quota path ends at run level twenty")
 
 
 func _enemy(health_class: StringName, role: StringName, carrier_id: String = "") -> EnemyState:

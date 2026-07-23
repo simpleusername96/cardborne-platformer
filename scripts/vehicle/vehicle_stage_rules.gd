@@ -54,18 +54,6 @@ static func is_position_walkable(position: Vector2, radius: float = 0.0, stage_i
 	return not Catalog.circle_overlaps_cover(stage_id, position, radius)
 
 
-static func get_enemy_blueprint(stage_id: StringName = &"stage_1") -> Array[Dictionary]:
-	return Catalog.enemy_blueprint(stage_id)
-
-
-static func get_pickup_blueprint(stage_id: StringName = &"stage_1") -> Array[Dictionary]:
-	return Catalog.pickup_blueprint(stage_id)
-
-
-static func get_crate_blueprint(stage_id: StringName = &"stage_1") -> Array[Dictionary]:
-	return Catalog.crate_blueprint(stage_id)
-
-
 static func circle_overlaps_rect(center: Vector2, radius: float, rect: Rect2) -> bool:
 	var closest := Vector2(
 		clampf(center.x, rect.position.x, rect.end.x),
@@ -84,22 +72,33 @@ static func first_cover_hit(from: Vector2, to: Vector2, radius: float, _unused_d
 
 static func first_cover_hit_with_extra(from: Vector2, to: Vector2, radius: float, _unused_dynamic_blocker: bool, stage_id: StringName, extra_cover: Array) -> Dictionary:
 	var best := {"hit": false, "t": 2.0}
-	var blockers: Array = Catalog.cover_rects_near_motion(stage_id, from, to, radius)
-	if not extra_cover.is_empty():
-		blockers = blockers.duplicate()
-	for value in extra_cover:
-		blockers.append(Rect2(value))
 	var swept_bounds := Rect2(from, Vector2.ZERO).expand(to).grow(radius)
+	if not Catalog.cover_rects(stage_id).is_empty():
+		_consider_cover_hits(
+			from, to, radius, swept_bounds,
+			Catalog.cover_rects_near_motion(stage_id, from, to, radius), best
+		)
+	_consider_cover_hits(from, to, radius, swept_bounds, extra_cover, best)
+	return best
+
+
+static func _consider_cover_hits(
+	from: Vector2,
+	to: Vector2,
+	radius: float,
+	swept_bounds: Rect2,
+	blockers: Array,
+	best: Dictionary
+) -> void:
 	for blocker_value in blockers:
 		var blocker := Rect2(blocker_value)
 		if not swept_bounds.intersects(blocker.grow(radius), true):
 			continue
 		var hit := Geometry.segment_rect_hit(from, to, blocker, radius)
 		if bool(hit.get("hit", false)) and float(hit["t"]) < float(best["t"]):
-			best = hit
+			best.merge(hit, true)
 			best["rect"] = blocker
 			best["polygon"] = Geometry.rect_polygon(blocker)
-	return best
 
 
 static func has_line_of_sight(from: Vector2, to: Vector2, padding: float = 0.0, _unused_dynamic_blocker: bool = false, stage_id: StringName = &"stage_1") -> bool:
@@ -121,35 +120,35 @@ static func move_circle(position: Vector2, motion: Vector2, radius: float, _unus
 static func move_circle_with_extra(position: Vector2, motion: Vector2, radius: float, _unused_dynamic_blocker: bool, stage_id: StringName, extra_cover: Array) -> Vector2:
 	if extra_cover.is_empty() and Catalog.is_fast_motion_clear(stage_id, position, position + motion, radius):
 		return position + motion
-	var blockers: Array[Rect2] = get_cover_rects(false, stage_id)
-	if not extra_cover.is_empty():
-		blockers = blockers.duplicate()
-	for value in extra_cover:
-		blockers.append(Rect2(value))
 	var bounds := world_rect(stage_id)
 	var result := position
 	var attempt_x := Vector2(
 		clampf(position.x + motion.x, bounds.position.x + radius, bounds.end.x - radius),
 		position.y
 	)
-	if _position_clear(attempt_x, radius, stage_id, blockers):
+	if _position_clear_with_extra(attempt_x, radius, stage_id, extra_cover):
 		result.x = attempt_x.x
 	var attempt_y := Vector2(
 		result.x,
 		clampf(position.y + motion.y, bounds.position.y + radius, bounds.end.y - radius)
 	)
-	if _position_clear(attempt_y, radius, stage_id, blockers):
+	if _position_clear_with_extra(attempt_y, radius, stage_id, extra_cover):
 		result.y = attempt_y.y
 	return result
 
 
-static func _position_clear(position: Vector2, radius: float, stage_id: StringName, blockers: Array[Rect2]) -> bool:
+static func _position_clear_with_extra(
+	position: Vector2,
+	radius: float,
+	stage_id: StringName,
+	extra_cover: Array
+) -> bool:
 	if not Catalog.position_is_walkable(stage_id, position, radius):
 		return false
-	if blockers.size() == get_cover_rects(false, stage_id).size():
-		return not Catalog.circle_overlaps_cover(stage_id, position, radius)
-	for blocker in blockers:
-		if circle_overlaps_rect(position, radius, blocker):
+	if Catalog.circle_overlaps_cover(stage_id, position, radius):
+		return false
+	for blocker_value in extra_cover:
+		if circle_overlaps_rect(position, radius, Rect2(blocker_value)):
 			return false
 	return true
 

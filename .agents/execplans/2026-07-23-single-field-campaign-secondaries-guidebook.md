@@ -1,9 +1,10 @@
 ---
 type: plan
-status: active
+status: superseded
 owner: BK
 created: 2026-07-23
-last_reviewed: 2026-07-23
+last_reviewed: 2026-07-24
+superseded_by: ../../docs/product/vehicle_game_spec.md
 scope: Enlarged single-field five-stage combat loop, roaming bosses, secondary weapons, simple movement upgrade, and encounter-driven guidebook
 related:
   - ../PLANS.md
@@ -15,6 +16,11 @@ related:
 ---
 
 # Single-Field Campaign, Secondary Arsenal, and Guidebook — Execution Plan
+
+This plan is no longer executable. Its implemented product behavior now lives
+in `docs/product/vehicle_game_spec.md`, while unresolved release-performance
+work remains solely in
+`2026-07-23-vehicle-performance-architecture-stabilization.md`.
 
 This plan replaces the current five-map progression with one persistent,
 `5600×3400` Drowned Ruins field, five escalating combat stages, quota-triggered

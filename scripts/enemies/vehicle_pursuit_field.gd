@@ -18,10 +18,12 @@ var _costs_by_radius: Dictionary = {}
 var _walkable_by_radius: Dictionary = {}
 var _rebuild_count := 0
 var _large_rebuild_pending := false
+var _runtime_cover_rects: Array[Rect2] = []
 
 
-func reset(stage_id: StringName) -> void:
+func reset(stage_id: StringName, runtime_cover_rects: Array[Rect2] = []) -> void:
 	_stage_id = stage_id
+	_runtime_cover_rects = runtime_cover_rects
 	_player_cell = Vector2i(-99999, -99999)
 	_player_position = Vector2.ZERO
 	_rebuild_cooldown = 0.0
@@ -149,7 +151,13 @@ func _build_walkable_cells(radius: float) -> Dictionary:
 	for y in range(min_cell.y, max_cell.y + 1):
 		for x in range(min_cell.x, max_cell.x + 1):
 			var cell := Vector2i(x, y)
-			if Rules.is_position_walkable(_cell_center(cell), radius, _stage_id):
+			var center := _cell_center(cell)
+			var blocked := false
+			for cover in _runtime_cover_rects:
+				if Rules.circle_overlaps_rect(center, radius, cover):
+					blocked = true
+					break
+			if not blocked and Rules.is_position_walkable(center, radius, _stage_id):
 				result[cell] = true
 	return result
 

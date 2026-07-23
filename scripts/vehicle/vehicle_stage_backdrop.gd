@@ -7,8 +7,11 @@ extends Node2D
 const Rules = preload("res://scripts/vehicle/vehicle_stage_rules.gd")
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const StageCatalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
+const StageGeometry = preload("res://scripts/vehicle/vehicle_stage_geometry.gd")
 
 var stage_id: StringName = &"stage_1"
+var _layout: VehicleFieldLayout
+var _layout_fingerprint := 0
 
 
 func _ready() -> void:
@@ -16,10 +19,13 @@ func _ready() -> void:
 	show_behind_parent = true
 
 
-func configure(value: StringName) -> void:
-	if stage_id == value and is_node_ready():
+func configure(value: StringName, layout: VehicleFieldLayout = null) -> void:
+	var next_fingerprint := layout.fingerprint if layout != null else 0
+	if stage_id == value and _layout_fingerprint == next_fingerprint and is_node_ready():
 		return
 	stage_id = value
+	_layout = layout
+	_layout_fingerprint = next_fingerprint
 	queue_redraw()
 
 
@@ -121,6 +127,12 @@ func _draw_water_and_floor() -> void:
 func _draw_cover() -> void:
 	for polygon in Rules.get_cover_polygons(false, stage_id):
 		draw_colored_polygon(PackedVector2Array(polygon), Art.BLOCKER_FILL)
+	if _layout != null:
+		for rectangle in _layout.cover_rects:
+			draw_colored_polygon(
+				PackedVector2Array(StageGeometry.rect_polygon(rectangle)),
+				Art.BLOCKER_FILL
+			)
 
 
 func _regular_polygon(center: Vector2, radius: float, sides: int, rotation: float = 0.0) -> PackedVector2Array:
@@ -138,4 +150,6 @@ func debug_contract() -> Dictionary:
 		"world_rect": Rules.world_rect(stage_id),
 		"walkable_count": Rules.get_floor_regions(stage_id).size(),
 		"cover_count": Rules.get_cover_rects(false, stage_id).size(),
+		"layout_fingerprint":_layout_fingerprint,
+		"runtime_cover_count":_layout.cover_rects.size() if _layout != null else 0,
 	}

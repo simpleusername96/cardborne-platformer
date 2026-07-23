@@ -45,7 +45,7 @@ class HealthPips:
 	var trailing_health := 120.0
 	var run_level := 1
 	var experience := 0.0
-	var experience_required := 26.0
+	var experience_required := 12.0
 	var reduced_motion := false
 	var _trail_from := 120.0
 	var _trail_hold := 0.0
@@ -63,7 +63,7 @@ class HealthPips:
 		max_value: float,
 		level_value: int = 1,
 		experience_value: float = 0.0,
-		required_value: float = 26.0,
+		required_value: float = 12.0,
 		reduced_motion_value: bool = false
 	) -> void:
 		var next_health := clampf(value, 0.0, maxf(1.0, max_value))
@@ -849,7 +849,7 @@ func update_hud(snapshot: Dictionary) -> void:
 			maxf(1.0, float(snapshot.get("max_health", 1.0))),
 			int(snapshot.get("level", 1)),
 			float(snapshot.get("experience", 0.0)),
-			float(snapshot.get("experience_required", 26.0)),
+			float(snapshot.get("experience_required", 12.0)),
 			bool(snapshot.get("reduced_motion", false))
 		)
 	if snapshot.has("objective"):

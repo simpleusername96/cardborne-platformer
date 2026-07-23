@@ -9,6 +9,5 @@ title_key = "UPGRADE_INCENDIARY_CORE_TITLE"
 description_key = "UPGRADE_INCENDIARY_CORE_DESC"
 family = &"element"
 max_level = 1
-exclusion_group = &"element_core"
 source_tags = Array[StringName]([&"level_up", &"boss"])
 behavior_ids = Array[StringName]([&"incendiary_core"])

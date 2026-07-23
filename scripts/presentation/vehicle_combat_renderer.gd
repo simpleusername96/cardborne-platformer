@@ -15,6 +15,7 @@ const PROJECTILE_CAPACITY := 240
 const HOSTILE_PROJECTILE_CAPACITY := 120
 const EXPERIENCE_CAPACITY := 192
 const EFFECT_CAPACITY := 96
+const STATUS_ARC_CAPACITY := ENEMY_CAPACITY * 3
 const BUFFER_FLOATS_PER_INSTANCE := 12
 const CUSTOM_BATCH_AABB := AABB(Vector3(-8192.0, -8192.0, -1.0), Vector3(16384.0, 16384.0, 2.0))
 
@@ -206,6 +207,10 @@ func _build_batches() -> void:
 	_overlay_batches[&"player"] = _create_batch(
 		"Overlay_player", Visuals.player_mesh(), 1, 4, &"overlay_player"
 	)
+	_overlay_batches[&"status_arc"] = _create_batch(
+		"Overlay_status_arc", Visuals.status_arc_mesh(),
+		STATUS_ARC_CAPACITY, 3, &"overlay_status_arc"
+	)
 	_reset_counts()
 	_apply_visible_counts()
 
@@ -275,8 +280,29 @@ func _sync_enemies(enemies: Array[EnemyState], visible_world: Rect2, player_posi
 				0.0, Vector2(bar_width * health_ratio, 10.0), Art.CORAL
 			)
 		_sync_enemy_telegraph(enemy, role, position)
+		_sync_status_arcs(enemy, position, radius)
 		if enemy.id == aim_target_id:
 			_sync_target_brackets(position, radius + 16.0)
+
+
+func _sync_status_arcs(enemy: EnemyState, position: Vector2, radius: float) -> void:
+	var statuses := enemy.statuses
+	var arc_radius := radius + 11.0
+	if statuses.has(&"burn"):
+		_write_instance(
+			_overlay_batches[&"status_arc"], position, deg_to_rad(-120.0),
+			Vector2.ONE * arc_radius, Art.CORAL
+		)
+	if statuses.has(&"poison"):
+		_write_instance(
+			_overlay_batches[&"status_arc"], position, 0.0,
+			Vector2.ONE * arc_radius, Art.MINT
+		)
+	if statuses.has(&"chill"):
+		_write_instance(
+			_overlay_batches[&"status_arc"], position, deg_to_rad(120.0),
+			Vector2.ONE * arc_radius, Art.COBALT_WATER
+		)
 
 
 func _sync_projectiles(

@@ -3,7 +3,7 @@ type: spec
 status: active
 owner: BK
 created: 2026-07-21
-last_reviewed: 2026-07-23
+last_reviewed: 2026-07-24
 canonical_for: Cardborne gameplay and product behavior
 scope: Current shared-field five-stage vehicle campaign
 related:
@@ -19,9 +19,10 @@ related:
 
 Cardborne is a top-down vehicle action shooter about steering through one large
 drowned-ruin field while manually aiming a held primary weapon, dashing through
-pressure, and building a compact set of automatic secondary weapons. Five combat
-stages reuse the same physical field. Pressure, enemy composition, boss patterns,
-and rewards change; the map does not reload into a different layout.
+pressure, and building a compact set of automatic secondary weapons. A new run
+selects one validated arrangement of large internal cover and content sockets.
+All five combat stages and retries reuse that arrangement while pressure, enemy
+composition, boss patterns, and rewards change.
 
 This is the canonical product contract for the current executable.
 
@@ -29,8 +30,9 @@ This is the canonical product contract for the current executable.
 
 This specification covers controls, the shared field, stage flow, enemies,
 bosses, items, upgrades, HUD and modal flows, the guidebook, localization,
-settings, persistence, and release validation. It does not promise procedural
-maps, a base stage, exploration puzzles, or content beyond the five-stage run.
+settings, persistence, and release validation. It does not promise unconstrained
+procedural topology, a base stage, exploration puzzles, or content beyond the
+five-stage run.
 
 ## Requirements
 
@@ -78,18 +80,49 @@ The factors are deliberately distributed. Normal is approximately 15% below
 Hard in combined simultaneous pressure, and Easy applies the same reduction a
 second time; no individual stat is described as exactly 15% lower.
 
+### Damage readability and hostile projectiles
+
+- Accepted hull damage starts exactly one second of post-hit invulnerability.
+  For the first 0.18 seconds the ship uses a coral hit tint and a deterministic
+  presentation-only recoil of at most five pixels. The camera response is
+  bounded to three pixels. A fully absorbed barrier hit remains a distinct
+  event and starts neither hull feedback nor hull invulnerability.
+- During the remainder of invulnerability the ship alternates between its
+  normal and pale-coral state without becoming transparent. Reduced motion
+  replaces recoil, camera shake, and flicker with a steady pale-coral state and
+  a thin ring.
+- Hull UI applies current damage immediately, holds the lost segment for 0.18
+  seconds, then closes it over 0.45 seconds. This animation processes only while
+  active.
+- Hostile projectile motion and predictive aim share one effective-speed
+  calculation with a multiplier of `1.00`. Ordinary hostile shots use a
+  five-pixel collision radius and a minimum six-pixel head; boss-reserved shots
+  use a six-pixel collision radius and a minimum seven-pixel head. Both retain a
+  36-pixel readable trail. Damage, cadence, telegraphs, and capacity are not
+  changed by this readability rule.
+
 ### One shared field
 
 - Every stage uses `drowned_ruin_field` with a `5600x3400` world rectangle and
   respawns the player at `(2800, 1700)`.
 - The center has a 480-pixel safe clearance. The camera remains at zoom 1, so the
   field is larger than one screen and exploration state matters.
-- Sixteen walkable regions, thirteen solid cover shapes, four water/void regions,
-  and sparse large motifs define the field. The same geometry drives rendering,
-  movement, projectile collision, line of sight, pursuit, minimap, and validation.
-- Sixteen ordinary spawn anchors, eight boss arrival anchors, and four stationary
-  anchors are reusable content sockets. No stage owns a separate map, boss room,
+- Sixteen walkable regions, four water/void regions, and sparse large motifs
+  define the immutable floor. A run selects exactly two large cover candidates
+  in each quadrant from sixteen authored candidates, for eight internal cover
+  shapes. The selected cover is validated for the ordinary 36-pixel and boss
+  76-pixel actor radii before play.
+- Rendering, movement, projectile collision, line of sight, pursuit, minimap,
+  and validation consume the same run layout. The layout remains unchanged
+  across stages and exact retries; only a new run selects another arrangement.
+- Twenty-four ordinary arrival candidates, eight boss arrival anchors, twelve
+  stationary candidates, and twenty-four item sockets are reusable authored
+  positions. Each stage selects four stationary threats, three pickups, and
+  five crates from valid sockets. No stage owns a separate map, boss room,
   closed progression gate, switch maze, or reflector puzzle.
+- Capture, validation, and performance paths accept `--layout-seed=<integer>`;
+  their default is `0xC4A2B0`, and debug/performance snapshots expose the
+  selected seed and layout fingerprint.
 - The explored minimap uses a 16x10 grid. Unvisited cells remain concealed; the
   player, discovered pickups, boss warning, and active boss are marked.
 
@@ -100,10 +133,16 @@ second time; no individual stat is described as exactly 15% lower.
    6.0 seconds.
 3. Later arrivals are eight-squad surges. Each squad contains three to five
    enemies, so the first surge schedules at least 24 enemies and later surges
-   grow toward 40. Hard can sustain 48 active enemies from the first combat
-   beat and remains capped at the measured 72-enemy ceiling. Normal scales those
-   caps to 45 and 68; Easy scales them to 42 and 64. Excess enemies stay in the
-   deterministic scheduler queue.
+   grow toward 40. Every squad receives its own deterministic valid anchor.
+   Arrivals prefer positions at least 960 pixels from the player and 160 pixels
+   beyond the visible world, avoid the four most recent anchors, and use groups
+   of at most two squads in beats 0–1 or three squads later. Group gaps are
+   0.90 seconds early and 0.65 seconds later. Existing role totals are preserved
+   while direct-projectile pressure is distributed between squads.
+   Hard can sustain 48 active enemies from the first combat beat and remains
+   capped at the measured 72-enemy ceiling. Normal scales those caps to 45 and
+   68; Easy scales them to 42 and 64. Excess enemies stay in the deterministic
+   scheduler queue.
 4. Every mobile enemy joins a shared low-frequency pursuit field and can route
    around cover toward the player. Stationary roles hold authored anchors.
 5. Ordinary defeats advance the stage quota. Living enemies never block travel
@@ -145,12 +184,24 @@ exactly 0.75 seconds before the boss resumes its pattern loop.
 - Exactly two field item behaviors exist: repair restores hull and experience
   recall pulls all live shards toward the player. Breakable crates contain one
   of those two items.
-- Level thresholds are intentionally frequent. Each level and boss reward opens
-  a guarded three-card selection that requires an explicit choice and confirm.
+- Level thresholds use
+  `min(160, 12 + round(3n + 0.55n²))`, where `n` is the zero-based level
+  progression index. This makes early choices frequent while restoring a rising
+  late-run requirement. Each level and boss reward opens a guarded three-card
+  selection that requires an explicit choice and confirm.
 - `Tuned Thrusters` is the direct movement upgrade and changes base movement to
   1.08x, 1.16x, then 1.24x. There is no recurring movement-speed cycle.
 - Upgrades cover primary cadence, count, damage, opening-shot behavior, status
   payloads, dash, EMP, barrier, sustain, pickup reach, and automatic secondaries.
+- Fire, poison, and chill roots are independent and may all coexist. Each uses
+  a root → intermediate → capstone chain, and an owned branch guarantees one
+  eligible least-progressed child in a normal level-up offer when available.
+  Burn, poison, and chill accumulate bounded stacks rather than replacing one
+  another. Flashover consumes only burn, Shatter consumes only chill, and
+  an eligible opening shot resolves both capstones when both statuses are
+  present. Contagion spreads poison to at most eight nearby targets in
+  deterministic distance order. World arcs and Korean/English target text
+  expose active stack counts.
 - The ship always has Seeker support. Up to two additional optional secondary
   families may be active, for three total:
 
@@ -200,16 +251,21 @@ exactly 0.75 seconds before the boss resumes its pattern loop.
 
 ## Acceptance Criteria
 
-- The shared field, all anchors, 480-pixel start clearance, player and boss
-  reachability, and geometry identity across all five stages pass validation.
-- The first cue/scout timing, stage quotas, eight-squad surge growth, spawn stop,
-  1.5-second boss warning, roaming boss, preserved build/exploration, automatic
-  stages 1–4 transition, and stage 5 result pass focused tests.
+- The immutable field, 480-pixel start clearance, all 1,296 cover masks, both
+  actor radii, 256 seeded complete layouts, and one-layout identity across all
+  five stages and retries pass validation.
+- The first cue/scout timing, stage quotas, distributed eight-squad surge
+  growth, arrival fairness, spawn stop, 1.5-second boss warning, roaming boss,
+  preserved build/exploration, automatic stages 1–4 transition, and stage 5
+  result pass focused tests.
 - Hard preserves the previous baseline, Normal and Easy use the specified profile
   factors, the active run keeps its deployment snapshot, and no pause/settings
   control can change difficulty.
 - Tuned Thrusters has the exact three values, the five secondary families load,
   no more than three are active, and their bounded simulations pass tests.
+- Accepted-hit, barrier-only, reduced-motion, projectile-size, effective-speed,
+  status-stack, elemental-prerequisite, and XP-cadence contracts pass focused
+  tests.
 - Guide discovery persists, locked entries expose only `???`, settings and pause
   both reach the guide, and Korean/English copy is complete.
 - Godot import, all focused validators, native boot, Web export, and rendered
@@ -225,4 +281,5 @@ exactly 0.75 seconds before the boss resumes its pattern loop.
 - Boss rooms, boss gates, ropes, jumping, stacked navigation, or platforming.
 - Ammo limits or a charge gate on ordinary held primary fire.
 - More than three simultaneous secondary families.
-- Procedural generation, a chore-filled base, or exploration puzzles in this run.
+- Unconstrained procedural topology, per-stage layout rerolls, a chore-filled
+  base, or exploration puzzles in this run.

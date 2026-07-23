@@ -9,6 +9,6 @@ title_key = "UPGRADE_SHATTER_TITLE"
 description_key = "UPGRADE_SHATTER_DESC"
 family = &"element"
 max_level = 1
-requirement = &"cryo_core"
+requirement = &"deep_freeze"
 source_tags = Array[StringName]([&"level_up", &"boss"])
 behavior_ids = Array[StringName]([&"shatter"])

@@ -35,7 +35,14 @@ func clear_shards() -> void:
 
 
 func required_experience() -> int:
-	return mini(72, 26 + 3 * (run_level - 1))
+	var progression_index := run_level - 1
+	return mini(
+		160,
+		12 + roundi(
+			3.0 * float(progression_index)
+			+ 0.55 * float(progression_index * progression_index)
+		)
+	)
 
 
 func spawn_shard(position: Vector2, value: int, reward_source: StringName = &"") -> void:

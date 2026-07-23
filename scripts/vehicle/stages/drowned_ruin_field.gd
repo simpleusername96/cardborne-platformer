@@ -1,18 +1,20 @@
 class_name DrownedRuinField
 extends RefCounted
 
-## Immutable geometry and field-object anchors shared by every combat stage.
+## Immutable floor topology and authored sockets used by the run layout generator.
 
 const FIELD_ID := &"drowned_ruin_field"
 const WORLD_RECT := Rect2(0.0, 0.0, 5600.0, 3400.0)
 const CENTER := Vector2(2800.0, 1700.0)
 const START_CLEARANCE := 480.0
 
-const ORDINARY_SPAWN_ANCHORS: Array[Vector2] = [
+const ORDINARY_SPAWN_CANDIDATES: Array[Vector2] = [
 	Vector2(480,520), Vector2(880,480), Vector2(1280,560), Vector2(4320,520),
 	Vector2(4800,480), Vector2(5200,640), Vector2(480,2860), Vector2(880,2920),
 	Vector2(1280,2820), Vector2(4320,2860), Vector2(4800,2920), Vector2(5200,2760),
 	Vector2(1900,700), Vector2(3600,700), Vector2(1900,2700), Vector2(3600,2700),
+	Vector2(1540,620), Vector2(2380,620), Vector2(3220,620), Vector2(4060,620),
+	Vector2(1540,2780), Vector2(2380,2780), Vector2(3220,2780), Vector2(4060,2780),
 ]
 
 const BOSS_ARRIVAL_ANCHORS: Array[Vector2] = [
@@ -20,8 +22,44 @@ const BOSS_ARRIVAL_ANCHORS: Array[Vector2] = [
 	Vector2(520,2440), Vector2(1280,2960), Vector2(4320,2960), Vector2(5080,2440),
 ]
 
-const STATIONARY_ANCHORS: Array[Vector2] = [
-	Vector2(3650,1250), Vector2(3650,2110), Vector2(3320,890), Vector2(3320,2510),
+const COVER_CANDIDATES: Array[Dictionary] = [
+	{"id":&"nw_a", "quadrant":&"nw", "rect":Rect2(600,650,260,150)},
+	{"id":&"nw_b", "quadrant":&"nw", "rect":Rect2(1200,1020,300,150)},
+	{"id":&"nw_c", "quadrant":&"nw", "rect":Rect2(1760,780,240,160)},
+	{"id":&"nw_d", "quadrant":&"nw", "rect":Rect2(1870,1160,220,160)},
+	{"id":&"ne_a", "quadrant":&"ne", "rect":Rect2(4740,650,260,150)},
+	{"id":&"ne_b", "quadrant":&"ne", "rect":Rect2(4100,1020,300,150)},
+	{"id":&"ne_c", "quadrant":&"ne", "rect":Rect2(3600,780,240,160)},
+	{"id":&"ne_d", "quadrant":&"ne", "rect":Rect2(3510,1160,220,160)},
+	{"id":&"sw_a", "quadrant":&"sw", "rect":Rect2(600,2600,260,150)},
+	{"id":&"sw_b", "quadrant":&"sw", "rect":Rect2(1200,2230,300,150)},
+	{"id":&"sw_c", "quadrant":&"sw", "rect":Rect2(1760,2460,240,160)},
+	{"id":&"sw_d", "quadrant":&"sw", "rect":Rect2(1870,2080,220,160)},
+	{"id":&"se_a", "quadrant":&"se", "rect":Rect2(4740,2600,260,150)},
+	{"id":&"se_b", "quadrant":&"se", "rect":Rect2(4100,2230,300,150)},
+	{"id":&"se_c", "quadrant":&"se", "rect":Rect2(3600,2460,240,160)},
+	{"id":&"se_d", "quadrant":&"se", "rect":Rect2(3510,2080,220,160)},
+]
+
+const FALLBACK_COVER_IDS: Array[StringName] = [
+	&"nw_a", &"nw_c", &"ne_b", &"ne_d",
+	&"sw_b", &"sw_d", &"se_a", &"se_c",
+]
+
+const STATIONARY_CANDIDATES := {
+	&"nw":[Vector2(1120,1340), Vector2(1640,1180), Vector2(1940,1400)],
+	&"ne":[Vector2(4480,1340), Vector2(3960,1180), Vector2(4060,1500)],
+	&"sw":[Vector2(1120,2060), Vector2(1640,2220), Vector2(1940,2000)],
+	&"se":[Vector2(4480,2060), Vector2(3960,2220), Vector2(4060,1900)],
+}
+
+const ITEM_SOCKET_CANDIDATES: Array[Vector2] = [
+	Vector2(1080,920), Vector2(1420,1420), Vector2(1420,1980), Vector2(1080,2480),
+	Vector2(1900,920), Vector2(2180,1460), Vector2(2180,1940), Vector2(1900,2480),
+	Vector2(2300,1540), Vector2(2300,1860), Vector2(2680,920), Vector2(2920,920),
+	Vector2(2680,2480), Vector2(2920,2480), Vector2(3300,920), Vector2(3300,2480),
+	Vector2(3740,920), Vector2(3740,2480), Vector2(4020,1500), Vector2(4020,1900),
+	Vector2(4520,1100), Vector2(4520,2300), Vector2(5000,850), Vector2(5000,2550),
 ]
 
 
@@ -32,14 +70,11 @@ static func definition() -> Dictionary:
 		"player_start": CENTER,
 		"start_clearance": START_CLEARANCE,
 		"walkable_regions": _walkable_regions(),
-		"cover_rects": _cover_rects(),
+		"cover_rects": [],
 		"water_rects": _water_rects(),
 		"motifs": _motifs(),
-		"ordinary_spawn_anchors": ORDINARY_SPAWN_ANCHORS.duplicate(),
+		"ordinary_spawn_anchors": ORDINARY_SPAWN_CANDIDATES.duplicate(),
 		"boss_arrival_anchors": BOSS_ARRIVAL_ANCHORS.duplicate(),
-		"stationary_anchors": STATIONARY_ANCHORS.duplicate(),
-		"pickups": _pickups(),
-		"crates": _crates(),
 	}
 
 
@@ -64,18 +99,6 @@ static func _walkable_regions() -> Array[Dictionary]:
 	]
 
 
-static func _cover_rects() -> Array[Rect2]:
-	return [
-		Rect2(1250,1060,300,170), Rect2(1190,2180,360,170),
-		Rect2(1920,1560,250,280),
-		Rect2(3330,1060,260,150), Rect2(3330,2190,260,150),
-		Rect2(3910,1380,170,180), Rect2(3910,1840,170,180),
-		Rect2(4690,1080,150,220), Rect2(4690,2100,150,220),
-		Rect2(640,690,280,180), Rect2(640,2530,280,180),
-		Rect2(4680,690,280,180), Rect2(4680,2530,280,180),
-	]
-
-
 static func _water_rects() -> Array[Rect2]:
 	return [
 		Rect2(80,60,2400,180), Rect2(3120,60,2400,180),
@@ -89,22 +112,4 @@ static func _motifs() -> Array[Dictionary]:
 		{"kind":&"split_current", "center":Vector2(1250,2850), "radius":245.0, "rotation":0.0},
 		{"kind":&"relay_flower", "center":Vector2(4440,900), "radius":135.0, "rotation":PI / 4.0},
 		{"kind":&"sun_gate", "center":Vector2(4360,2520), "radius":235.0, "rotation":0.0},
-	]
-
-
-static func _pickups() -> Array[Dictionary]:
-	return [
-		{"id":"repair_center", "kind":&"repair", "heal_amount":35.0, "pos":Vector2(2300,1700)},
-		{"id":"experience_recall_north", "kind":&"experience_recall", "pos":Vector2(3640,870)},
-		{"id":"repair_east", "kind":&"repair", "heal_amount":70.0, "pos":Vector2(4280,2350)},
-	]
-
-
-static func _crates() -> Array[Dictionary]:
-	return [
-		{"id":"crate_repair_west", "pos":Vector2(1330,2000), "drop":&"repair"},
-		{"id":"crate_repair_center", "pos":Vector2(2210,1810), "drop":&"repair"},
-		{"id":"crate_repair_relay", "pos":Vector2(3860,1710), "drop":&"repair"},
-		{"id":"crate_repair_loop", "pos":Vector2(2020,1460), "drop":&"repair"},
-		{"id":"crate_recall", "pos":Vector2(4300,990), "drop":&"experience_recall"},
 	]

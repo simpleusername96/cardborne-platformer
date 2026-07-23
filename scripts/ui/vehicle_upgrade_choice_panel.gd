@@ -146,7 +146,7 @@ func _select(index: int) -> void:
 	var card: Dictionary = _cards[index]
 	_detail.text = "%s  ·  %s" % [tr(String(card["title_key"])), tr(String(card["description_key"]))]
 	if String(card.get("family_key", "")) == "UPGRADE_FAMILY_ELEMENT":
-		_detail.text += "  ·  %s" % tr("UPGRADE_ELEMENT_LOCK_NOTICE")
+		_detail.text += "  ·  %s" % tr("UPGRADE_ELEMENT_STACK_NOTICE")
 	_message.text = ""
 	_refresh_controls()
 	selected.emit(StringName(card["id"]))

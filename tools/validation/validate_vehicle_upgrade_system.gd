@@ -24,6 +24,18 @@ func _initialize() -> void:
 	var second_offer := catalog.offer(build, 0, 0, &"level_up")
 	_expect(second_offer.any(func(card): return card.id == &"tuned_thrusters"), "second level-up offers Tuned Thrusters")
 	build.reset()
+	_expect(bool(build.apply(&"incendiary_core").get("applied", false)), "fire root applies")
+	_expect(bool(build.apply(&"toxin_core").get("applied", false)), "poison root stacks with fire")
+	_expect(bool(build.apply(&"cryo_core").get("applied", false)), "chill root stacks with fire and poison")
+	_expect(not catalog.compatible(catalog.get_definition(&"flashover"), build), "Flashover remains locked before Thermal Compound")
+	build.apply(&"thermal_compound")
+	_expect(catalog.compatible(catalog.get_definition(&"flashover"), build), "Flashover unlocks from Thermal Compound")
+	var branch_offer := catalog.offer(build, 4, 1, &"level_up")
+	_expect(
+		branch_offer.any(func(card): return card.id in [&"flashover", &"concentrated_toxin", &"deep_freeze"]),
+		"level-up reserves an eligible child from an owned least-progressed branch"
+	)
+	build.reset()
 	build.apply(&"ion_field")
 	build.apply(&"orbit_blades")
 	_expect(build.active_optional_secondaries() == 2, "two optional secondary slots are occupied")

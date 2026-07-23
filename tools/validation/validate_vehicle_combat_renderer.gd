@@ -32,6 +32,11 @@ func _run() -> void:
 	enemy.max_health = 40.0
 	enemy.health_visible_timer = 1.0
 	enemy.phase = &"startup"
+	enemy.statuses = {
+		&"burn":{"stacks":3},
+		&"poison":{"stacks":2},
+		&"chill":{"stacks":1},
+	}
 	enemy.committed_dir = Vector2.RIGHT
 	enemy.committed_target = Vector2(500.0, 300.0)
 	var enemies: Array[EnemyState] = [enemy]
@@ -112,6 +117,9 @@ func _run() -> void:
 		is_equal_approx(trail_buffer[11], 0.5),
 		"projectile trail remains translucent"
 	)
+	var status_batch := renderer.get_node("Overlay_status_arc") as MultiMeshInstance2D
+	_expect(status_batch.multimesh.instance_count == 384, "one retained status arc batch reserves exactly 128 by three instances")
+	_expect(status_batch.multimesh.visible_instance_count == 3, "three simultaneous elements render as three large retained arcs")
 	var hostile_head := renderer.get_node("Projectile_head_enemy") as MultiMeshInstance2D
 	var hostile_trail := renderer.get_node("Projectile_trail_enemy") as MultiMeshInstance2D
 	var hostile_head_buffer := hostile_head.multimesh.buffer

@@ -21,7 +21,7 @@ var stagger := 0.0
 var opening := false
 var reflected := false
 var final_damage := false
-var status_payload: Dictionary = {}
+var status_profile: VehicleStatusProfile
 var team: StringName = &""
 var spawn_serial := 0
 var uses_boss_reserve := false
@@ -50,7 +50,7 @@ func configure(
 	opening = bool(spec.get("opening", false))
 	reflected = bool(spec.get("reflected", false))
 	final_damage = bool(spec.get("final_damage", false))
-	status_payload = Dictionary(spec.get("status_payload", {}))
+	status_profile = spec.get("status_profile") as VehicleStatusProfile
 	team = team_value
 	spawn_serial = serial
 	uses_boss_reserve = boss_reserve

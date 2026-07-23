@@ -2,7 +2,7 @@
 type: spec
 status: active
 owner: BK
-last_reviewed: 2026-07-23
+last_reviewed: 2026-07-24
 canonical_for: Cardborne vehicle-game art direction and UI presentation
 related:
   - ../product/vehicle_game_spec.md
@@ -48,7 +48,9 @@ rules remain owned by the product specification.
 - The map is larger than the viewer. The camera shows only a local combat area;
   the explored 16x10 minimap communicates the persistent whole.
 - Stage identity comes from population, pacing, boss, and UI state on the same
-  drowned-ruin field. Do not recolor or rearrange the field between stages.
+  drowned-ruin field. A new run may select eight large modules from the authored
+  cover candidates, but that result must not recolor or rearrange between stages
+  or retries.
 - Motifs are large and sparse. Do not add tiny debris or repeated decoration to
   fake variation.
 
@@ -60,6 +62,17 @@ rules remain owned by the product specification.
 - All dangerous attacks show startup, damage area or projectile, and recovery.
   Enemy intent is communicated through authored motion and telegraphs, not
   permanent trajectory overlays.
+- Accepted hull damage must be legible at the ship without reading the HUD:
+  coral hit tint, small presentation-only recoil, bounded camera response,
+  pale-coral invulnerability state, and a dedicated impact sound. Fully
+  absorbed barrier damage remains visually distinct.
+- Ordinary hostile projectiles retain a visible coral head and 36-pixel trail
+  around their five-pixel collision radius. Boss projectiles remain slightly
+  larger and magenta. Rendered danger may exceed collision size but may never be
+  smaller than it.
+- Burn, poison, and chill use three retained, shape-distinct status arcs around
+  an affected enemy. Stack counts belong in localized target/boss text rather
+  than tiny floating labels.
 - Boss warning and boss health replace competing top-level information while
   active. Off-screen threat arcs supplement the field and never duplicate
   visible enemies.
@@ -75,6 +88,10 @@ rules remain owned by the product specification.
   explanatory panels.
 - Timed effects use shape-distinct radial badges around the ship. Cooldown and
   active duration are distinguishable without color alone.
+- Hull loss updates the main fill immediately and uses one restrained trailing
+  segment. Reduced motion replaces recoil, shake, and flicker with steady tint,
+  ring, and outline-pulse feedback; gameplay invulnerability duration is
+  unchanged.
 - Deployment, upgrade, pause/settings, guidebook, result, and garage hide
   conflicting live HUD, block gameplay input, have one clear primary action,
   and never clip at the supported minimum viewport.
@@ -89,8 +106,10 @@ rules remain owned by the product specification.
 - Typography and reusable control states belong in the production Godot theme.
 - Values, labels, cooldowns, focus, selection, localization, and guide discovery
   remain live UI state; do not bake them into raster assets.
-- Static world presentation belongs to `vehicle_stage_backdrop.gd`; shared field
-  geometry belongs to `drowned_ruin_field.gd`; dynamic combat belongs to the run.
+- Static world presentation belongs to `vehicle_stage_backdrop.gd`; immutable
+  floor/candidate data belongs to `drowned_ruin_field.gd`; the run-scoped
+  `VehicleFieldLayout` owns selected cover and sockets; dynamic combat belongs
+  to the run.
 - Raster assets are justified only when procedural flat shapes cannot communicate
   the required silhouette at gameplay size.
 
@@ -103,6 +122,8 @@ rules remain owned by the product specification.
   distinguishable without relying on fine detail.
 - The player, current objective, opening-shot state, active secondaries, and boss
   warning remain locatable at maximum supported enemy pressure.
+- Accepted damage is readable at the ship and hull bar in both motion modes;
+  status arcs and stack text remain legible without adding per-enemy nodes.
 - Rendered review shows one persistent field across all stage states, no fake
   passable gaps, no retired boss gate, and no hidden guidebook controls.
 

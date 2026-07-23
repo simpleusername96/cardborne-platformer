@@ -16,6 +16,7 @@ const EncounterRuntime = preload("res://scripts/encounters/vehicle_encounter_run
 const UpgradeCatalog = preload("res://scripts/cards/vehicle_upgrade_catalog.gd")
 const RunBuild = preload("res://scripts/cards/vehicle_run_build.gd")
 const StatusRuntime = preload("res://scripts/combat/vehicle_status_runtime.gd")
+const StatusProfile = preload("res://scripts/combat/vehicle_status_profile.gd")
 const SpatialGrid = preload("res://scripts/combat/vehicle_spatial_grid.gd")
 const AudioDirector = preload("res://scripts/presentation/vehicle_audio_director.gd")
 const CombatRenderer = preload("res://scripts/presentation/vehicle_combat_renderer.gd")
@@ -37,6 +38,7 @@ const ProjectileStore = preload("res://scripts/combat/vehicle_projectile_store.g
 const ProjectileState = preload("res://scripts/combat/vehicle_projectile_state.gd")
 const PerformanceRecorder = preload("res://scripts/performance/vehicle_performance_recorder.gd")
 const PerformanceScenario = preload("res://scripts/performance/vehicle_performance_scenario.gd")
+const FieldLayoutGenerator = preload("res://scripts/vehicle/vehicle_field_layout_generator.gd")
 
 enum RunMode {
 	DEPLOYMENT,
@@ -75,6 +77,7 @@ const CRATE_COLLISION_CELL_SIZE := 320.0
 const PERFORMANCE_DETAIL_SAMPLE_STRIDE := 7
 const PLAYER_HIT_FLASH_DURATION := 0.20
 const PLAYER_HIT_INVULNERABILITY := 1.0
+const FIXED_LAYOUT_SEED := 0xC4A2B0
 
 var mode := RunMode.DEPLOYMENT
 var mode_before_pause := RunMode.PLAYING
@@ -85,6 +88,11 @@ var _camera: Camera2D
 var _backdrop
 var _combat_renderer: VehicleCombatRenderer
 var _rng := RandomNumberGenerator.new()
+var _layout_session_rng := RandomNumberGenerator.new()
+var _layout_session_seed := 0
+var _layout_seed_override := 0
+var _has_layout_seed_override := false
+var field_layout: VehicleFieldLayout
 var encounter_runtime := EncounterRuntime.new()
 var stage_flow := StageFlow.new()
 var pursuit_field := PursuitField.new()
@@ -120,6 +128,7 @@ var selected_run_difficulty: StringName = RunDifficulty.DEFAULT
 var selected_upgrade_title_key := "UPGRADE_NONE"
 var upgrade_catalog := UpgradeCatalog.new()
 var run_build := RunBuild.new(upgrade_catalog)
+var _status_profile: VehicleStatusProfile = StatusProfile.from_build(run_build)
 var experience_runtime := ExperienceRuntime.new()
 var cycle_runtime := CycleRuntime.new()
 var applied_upgrades: Dictionary = run_build.levels
@@ -147,6 +156,7 @@ var denied_zones: Array[Dictionary] = []
 var effects: Array[Dictionary] = []
 var damaging_trails: Array[Dictionary] = []
 var _empty_cover_rects: Array[Rect2] = []
+var _projectile_cover_query: Array[Rect2] = []
 
 var tutorial_move := false
 var tutorial_aim := false
@@ -206,8 +216,13 @@ var _performance_detail_sample_active := false
 
 func _ready() -> void:
 	_rng.seed = 0xC4A2B0
+	_layout_session_rng.randomize()
+	_layout_session_seed = _layout_session_rng.seed
 	_parse_capture_arguments()
 	_performance_request = _parse_performance_request()
+	if (_capture_mode or not _performance_request.is_empty()) and not _has_layout_seed_override:
+		_layout_seed_override = FIXED_LAYOUT_SEED
+		_has_layout_seed_override = true
 	_build_backdrop()
 	_build_combat_renderer()
 	_build_camera()
@@ -319,7 +334,12 @@ func _process(delta: float) -> void:
 	else:
 		_hud_presenter.reset()
 	if is_instance_valid(_audio):
-		_audio.update_primary(mode == RunMode.PLAYING and Input.is_action_pressed("primary_fire"))
+		var primary_held := (
+			mode == RunMode.PLAYING
+			and InputMap.has_action("primary_fire")
+			and Input.is_action_pressed("primary_fire")
+		)
+		_audio.update_primary(primary_held)
 	var presentation_active := mode == RunMode.PLAYING or _capture_mode
 	if (
 		is_instance_valid(_combat_renderer)
@@ -388,7 +408,7 @@ func _build_backdrop() -> void:
 	_backdrop = StageBackdrop.new()
 	_backdrop.name = "VehicleStageBackdrop"
 	add_child(_backdrop)
-	_backdrop.configure(current_stage_id)
+	_backdrop.configure(current_stage_id, field_layout)
 
 
 func _build_combat_renderer() -> void:
@@ -429,8 +449,11 @@ func _reset_run(increment_index: bool = true, preserve_stage: bool = false, pres
 	if not preserve_stage:
 		current_stage_index = 0
 		current_stage_id = StageCatalog.STAGE_IDS[0]
+		_generate_field_layout()
+	elif field_layout == null:
+		_generate_field_layout()
 	if is_instance_valid(_backdrop):
-		_backdrop.configure(current_stage_id)
+		_backdrop.configure(current_stage_id, field_layout)
 	if is_instance_valid(_camera):
 		_apply_camera_stage_limits()
 	if is_instance_valid(_ui):
@@ -467,6 +490,7 @@ func _reset_run(increment_index: bool = true, preserve_stage: bool = false, pres
 	else:
 		experience_runtime.clear_shards()
 		experience_runtime.pending_level_ups = 0
+	_status_profile = StatusProfile.from_build(run_build)
 	cycle_runtime.reset()
 	secondary_runtime.reset(player_position)
 	_sync_cycle_upgrades()
@@ -481,15 +505,21 @@ func _reset_run(increment_index: bool = true, preserve_stage: bool = false, pres
 	denied_zones.clear()
 	effects.clear()
 	damaging_trails.clear()
-	for spec in StageCatalog.static_enemy_blueprint(current_stage_id):
+	for spec in field_layout.stationary_blueprint(current_stage_id):
 		_append_enemy(_make_enemy(spec))
-	encounter_runtime.configure(current_stage_id, StageCatalog.packets(current_stage_id), selected_run_difficulty)
+	encounter_runtime.configure(
+		current_stage_id,
+		StageCatalog.packets(current_stage_id),
+		selected_run_difficulty,
+		field_layout.ordinary_spawn_anchors,
+		field_layout.encounter_seed(current_stage_id)
+	)
 	stage_flow.configure(
 		current_stage_index,
 		RunDifficulty.scaled_quota(StageCatalog.quota(current_stage_id), selected_run_difficulty)
 	)
-	pursuit_field.reset(current_stage_id)
-	for spec in Rules.get_pickup_blueprint(current_stage_id):
+	pursuit_field.reset(current_stage_id, _runtime_cover_rects())
+	for spec in field_layout.pickup_blueprint(current_stage_id):
 		pickups.append({
 			"id": String(spec["id"]),
 			"kind": StringName(spec["kind"]),
@@ -498,7 +528,7 @@ func _reset_run(increment_index: bool = true, preserve_stage: bool = false, pres
 			"pulse": _rng.randf_range(0.0, TAU),
 			"heal_amount": float(spec.get("heal_amount", 35.0)),
 		})
-	for spec in Rules.get_crate_blueprint(current_stage_id):
+	for spec in field_layout.crate_blueprint(current_stage_id):
 		crates.append({
 			"id": String(spec["id"]),
 			"pos": Vector2(spec["pos"]),
@@ -553,6 +583,17 @@ func _reset_run(increment_index: bool = true, preserve_stage: bool = false, pres
 		player_passive_cooldown = 0.0
 	enemy_grid.configure(Rules.world_rect(current_stage_id), SpatialGrid.DEFAULT_CELL_SIZE)
 	enemy_grid.rebuild(enemies)
+
+
+func _generate_field_layout() -> void:
+	var layout_seed := (
+		_layout_seed_override
+		if _has_layout_seed_override
+		else hash("field:v1:%d:%d" % [_layout_session_seed, run_index])
+	)
+	field_layout = FieldLayoutGenerator.generate(layout_seed, StageCatalog.STAGE_IDS)
+	if field_layout == null:
+		push_error("Could not generate the required run field layout")
 
 
 func _make_enemy(spec: Dictionary) -> EnemyState:
@@ -682,7 +723,13 @@ func _preferred_run_difficulty() -> StringName:
 
 
 func _update_encounter(delta: float) -> void:
-	var requests := encounter_runtime.tick(delta, _active_mobile_count(), _active_attack_families())
+	var requests := encounter_runtime.tick(
+		delta,
+		_active_mobile_count(),
+		_active_attack_families(),
+		player_position,
+		_visible_world_rect(0.0)
+	)
 	for cue in requests["cues"]:
 		_add_effect("spawn", Vector2(cue["anchor"]), Art.MUSTARD, 0.9, 126.0)
 		_play_sound(&"boss", 0.72)
@@ -1018,7 +1065,7 @@ func _fire_primary(shot: Dictionary) -> void:
 			5.0 * float(shot["stagger_scale"]) * run_build.stat(&"opening_breach_multiplier", 1.0),
 			is_full_opening,
 			range,
-			StatusRuntime.payload(run_build)
+			_status_profile
 		)
 	if is_full_opening:
 		_play_sound(&"opening_fire", _rng.randf_range(0.97, 1.03))
@@ -1042,22 +1089,31 @@ func _primary_fire_interval() -> float:
 
 
 func _runtime_cover_rects() -> Array[Rect2]:
-	return _empty_cover_rects
+	return field_layout.cover_rects if field_layout != null else _empty_cover_rects
 
 
-func _runtime_projectile_cover_rects() -> Array[Rect2]:
-	return _empty_cover_rects
+func _runtime_projectile_cover_rects(from: Vector2, to: Vector2, radius: float) -> Array[Rect2]:
+	return (
+		field_layout.covers_near_motion_into(
+			from, to, radius, _projectile_cover_query
+		)
+		if field_layout != null
+		else _empty_cover_rects
+	)
 
 
 func _runtime_first_cover_hit(from: Vector2, to: Vector2, padding: float) -> Dictionary:
-	return Rules.first_cover_hit_with_extra(from, to, padding, false, current_stage_id, [])
+	return Rules.first_cover_hit_with_extra(
+		from, to, padding, false, current_stage_id,
+		_runtime_projectile_cover_rects(from, to, padding)
+	)
 
 
 func _runtime_has_line_of_sight(from: Vector2, to: Vector2, padding: float) -> bool:
-	return Rules.has_line_of_sight_with_extra(from, to, padding, false, current_stage_id, [])
+	return not bool(_runtime_first_cover_hit(from, to, padding).get("hit", false))
 
 
-func _spawn_player_projectile(origin: Vector2, direction: Vector2, damage: float, speed: float, extra_pierce: int, radius: float = 5.0, structure_damage: float = -1.0, stagger: float = 5.0, opening: bool = false, projectile_range: float = PRIMARY_RANGE, status_payload: Dictionary = {}) -> void:
+func _spawn_player_projectile(origin: Vector2, direction: Vector2, damage: float, speed: float, extra_pierce: int, radius: float = 5.0, structure_damage: float = -1.0, stagger: float = 5.0, opening: bool = false, projectile_range: float = PRIMARY_RANGE, status_profile: VehicleStatusProfile = null) -> void:
 	projectile_store.add_player({
 		"pos": origin,
 		"velocity": direction.normalized() * speed,
@@ -1077,7 +1133,7 @@ func _spawn_player_projectile(origin: Vector2, direction: Vector2, damage: float
 		"reflected": false,
 		"reflector_lock": &"",
 		"reflector_lock_time": 0.0,
-		"status_payload": status_payload.duplicate(true),
+		"status_profile": status_profile,
 	})
 
 
@@ -1102,7 +1158,7 @@ func _update_passive_secondary(delta: float) -> void:
 					"life":1.8, "color":Art.MINT, "owner":"passive_seeker",
 					"pierce":run_build.level_of(&"phase_seeker"), "bounces":0, "homing":true,
 					"target_id":enemy.id, "explosive":applied_upgrades.has(&"hunter_firmware"),
-					"stagger":12.0, "structure_damage":25.0, "opening":false, "status_payload":{},
+					"stagger":12.0, "structure_damage":25.0, "opening":false, "status_profile":null,
 				})
 			_play_sound(&"missile")
 	var secondary_result := secondary_runtime.update(
@@ -2026,21 +2082,20 @@ func _update_projectile_buffer(
 				projectile.velocity = steered * projectile.velocity.length()
 		var to := from + projectile.velocity * simulation_delta
 		var radius := projectile.radius
-		if StageCatalog.motion_may_touch_cover(current_stage_id, from, to, radius):
-			var cover_hit := Rules.first_cover_hit_with_extra(from, to, radius, false, current_stage_id, _runtime_projectile_cover_rects())
-			if bool(cover_hit.get("hit", false)):
-				if projectile.bounces > 0:
-					projectile.bounces -= 1
-					var normal: Vector2 = cover_hit["normal"]
-					projectile.velocity = projectile.velocity.bounce(normal)
-					projectile.pos = Vector2(cover_hit["point"]) + normal * (radius + 2.0)
-					_add_effect("impact", projectile.pos, Rules.CYAN, 0.15, 18.0)
-					index += 1
-					continue
-				_add_effect("impact", Vector2(cover_hit["point"]), projectile.color, 0.14, 20.0)
-				_play_sound(&"cover", _rng.randf_range(0.96, 1.04))
-				_remove_projectile_at(hostile, index)
+		var cover_hit := _runtime_first_cover_hit(from, to, radius)
+		if bool(cover_hit.get("hit", false)):
+			if projectile.bounces > 0:
+				projectile.bounces -= 1
+				var normal: Vector2 = cover_hit["normal"]
+				projectile.velocity = projectile.velocity.bounce(normal)
+				projectile.pos = Vector2(cover_hit["point"]) + normal * (radius + 2.0)
+				_add_effect("impact", projectile.pos, Rules.CYAN, 0.15, 18.0)
+				index += 1
 				continue
+			_add_effect("impact", Vector2(cover_hit["point"]), projectile.color, 0.14, 20.0)
+			_play_sound(&"cover", _rng.randf_range(0.96, 1.04))
+			_remove_projectile_at(hostile, index)
+			continue
 
 		projectile.pos = to
 		if hostile:
@@ -2076,9 +2131,15 @@ func _update_projectile_buffer(
 				var enemy_damage := projectile.damage
 				if hit_enemy.role in [&"turret", &"mine", &"generator", &"interceptor_tower", &"beam_sentinel", &"boss_pylon"]:
 					enemy_damage = projectile.structure_damage
-				var opening_result := {"bonus_damage": 0.0, "splash_radius": 0.0}
+				var opening_result := {
+					"bonus_damage":0.0,
+					"splash_damage":0.0,
+					"splash_radius":0.0,
+				}
 				if projectile.opening:
-					opening_result = StatusRuntime.resolve_opening(hit_enemy, run_build, enemy_damage)
+					opening_result = StatusRuntime.resolve_opening(
+						hit_enemy, projectile.status_profile, enemy_damage
+					)
 				enemy_damage += float(opening_result["bonus_damage"])
 				var damage_source := "reflected_%s" % projectile.owner if projectile.reflected else projectile.owner
 				_damage_enemy(
@@ -2094,8 +2155,15 @@ func _update_projectile_buffer(
 					_damage_enemies_in_radius(hit_position, 90.0, shock_damage, 8.0, "Shock Breach", hit_enemy.id)
 					_add_effect("shock", hit_position, Art.MUSTARD, 0.24, 90.0)
 				if float(opening_result["splash_radius"]) > 0.0:
-					_damage_enemies_in_radius(hit_position, float(opening_result["splash_radius"]), float(opening_result["bonus_damage"]), 0.0, "Flashover", hit_enemy.id)
-				StatusRuntime.apply(hit_enemy, projectile.status_payload)
+					_damage_enemies_in_radius(
+						hit_position,
+						float(opening_result["splash_radius"]),
+						float(opening_result["splash_damage"]),
+						0.0,
+						"Flashover",
+						hit_enemy.id
+					)
+				StatusRuntime.apply(hit_enemy, projectile.status_profile)
 				stats_primary_hits += 1 if projectile.owner == "player_primary" else 0
 				_add_effect("impact", hit_position, projectile.color, 0.18, 24.0)
 				_play_sound(&"impact", _rng.randf_range(0.92, 1.08))
@@ -2354,7 +2422,7 @@ func _apply_lifesteal(applied_damage: float, source: String, _role: StringName) 
 func _defeat_enemy(enemy: EnemyState, source: String) -> void:
 	if not enemy.alive:
 		return
-	var had_poison := enemy.statuses.has(&"poison")
+	var spreads_poison := StatusRuntime.contagion_enabled(enemy)
 	enemy.alive = false
 	enemy.active = false
 	enemy_store.queue_defeat(enemy)
@@ -2380,13 +2448,24 @@ func _defeat_enemy(enemy: EnemyState, source: String) -> void:
 	var defeated_group := enemy.group_id
 	if not defeated_group.is_empty():
 		_try_group_completion_reward(defeated_group, enemy.pos)
-	if had_poison and run_build.has(&"contagion"):
-		var poison_payload := StatusRuntime.payload(run_build)
+	if spreads_poison:
 		var nearby: Array[EnemyState] = []
 		enemy_grid.query_radius_into(enemy.pos, 100.0, enemies, nearby)
+		nearby.sort_custom(
+			func(a: EnemyState, b: EnemyState) -> bool:
+				var a_distance := a.pos.distance_squared_to(enemy.pos)
+				var b_distance := b.pos.distance_squared_to(enemy.pos)
+				if not is_equal_approx(a_distance, b_distance):
+					return a_distance < b_distance
+				return a.id < b.id
+		)
+		var spread_count := 0
 		for target in nearby:
 			if target != enemy and target.alive and target.pos.distance_to(enemy.pos) <= 100.0:
-				StatusRuntime.apply(target, poison_payload)
+				StatusRuntime.spread_poison(enemy, target)
+				spread_count += 1
+				if spread_count >= 8:
+					break
 	_add_effect("destroy", enemy.pos, _enemy_color(role), 0.65 if role in [&"stage_boss"] else 0.38, enemy.radius * 1.8)
 	_play_sound(
 		&"destroy_priority"
@@ -2590,6 +2669,7 @@ func apply_upgrade(upgrade_id: StringName) -> bool:
 		player_passive_cooldown = 0.0
 	if upgrade_id == &"reinforced_hull":
 		player_health = minf(_player_max_health(), player_health + 15.0)
+	_status_profile = StatusProfile.from_build(run_build)
 	_sync_cycle_upgrades()
 	player_primary_weapon.set_full_opening_seconds(_opening_charge_seconds())
 	_hud_presenter.mark_guidebook_dirty()
@@ -2687,7 +2767,11 @@ func _start_stage_boss() -> void:
 
 
 func _choose_boss_arrival_anchor() -> Vector2:
-	var anchors := StageCatalog.boss_arrival_anchors(current_stage_id)
+	var anchors := (
+		field_layout.boss_arrival_anchors
+		if field_layout != null
+		else StageCatalog.boss_arrival_anchors(current_stage_id)
+	)
 	var candidates: Array[Vector2] = []
 	for anchor in anchors:
 		if player_position.distance_to(anchor) >= 1200.0 and pursuit_field.path_cost(anchor, 76.0) >= 0:
@@ -3196,6 +3280,7 @@ func _enemy_state_text(enemy: EnemyState) -> String:
 		parts.append(tr("ENEMY_STATE_RECOVERY"))
 	elif StringName(enemy.role) == &"generator":
 		parts.append(tr("ENEMY_STATE_SUPPORT"))
+	parts.append_array(_localized_status_parts(enemy))
 	if parts.is_empty():
 		parts.append(tr("ENEMY_STATE_REPOSITION"))
 	return "  •  ".join(parts)
@@ -3203,11 +3288,28 @@ func _enemy_state_text(enemy: EnemyState) -> String:
 
 func _boss_state_text(boss: EnemyState) -> String:
 	var pattern := _localized_pattern(String(boss.pattern))
+	var base_state := pattern
 	if _boss_has_live_pylons():
-		return tr("BOSS_STATE_PYLON_SHIELD") % pattern
-	if float(boss.vulnerable) > 0.0 or String(boss.phase) == "staggered":
-		return tr("BOSS_STATE_DAMAGE_WINDOW") % pattern
-	return pattern
+		base_state = tr("BOSS_STATE_PYLON_SHIELD") % pattern
+	elif float(boss.vulnerable) > 0.0 or String(boss.phase) == "staggered":
+		base_state = tr("BOSS_STATE_DAMAGE_WINDOW") % pattern
+	var parts: Array[String] = [base_state]
+	parts.append_array(_localized_status_parts(boss))
+	return "  •  ".join(parts)
+
+
+func _localized_status_parts(enemy: EnemyState) -> Array[String]:
+	var parts: Array[String] = []
+	var burn_stacks := StatusRuntime.stack_count(enemy, &"burn")
+	var poison_stacks := StatusRuntime.stack_count(enemy, &"poison")
+	var chill_stacks := StatusRuntime.stack_count(enemy, &"chill")
+	if burn_stacks > 0:
+		parts.append(tr("STATUS_BURN_STACKS") % burn_stacks)
+	if poison_stacks > 0:
+		parts.append(tr("STATUS_POISON_STACKS") % poison_stacks)
+	if chill_stacks > 0:
+		parts.append(tr("STATUS_CHILL_STACKS") % chill_stacks)
+	return parts
 
 
 func _localized_pattern(pattern: String) -> String:
@@ -3454,29 +3556,18 @@ func _draw_enemy_overlay(enemy: EnemyState) -> void:
 		var repair_target := _find_enemy_by_id(String(enemy.repair_target_id))
 		if repair_target != null and repair_target.alive:
 			draw_line(position, repair_target.pos, Color(Art.MINT, 0.82), 14.0, true)
-	_draw_enemy_statuses(enemy, position, visual_radius)
+		_draw_enemy_marks(enemy, position, visual_radius)
 	if enemy.vulnerable > 0.0:
 		draw_arc(position, visual_radius + 12.0, 0.0, TAU, 28, Art.MUSTARD, 7.0)
 	if role == &"stage_boss":
 		_draw_boss_telegraph(enemy)
 
 
-func _draw_enemy_statuses(enemy: EnemyState, position: Vector2, radius: float) -> void:
-	var statuses := enemy.statuses
+func _draw_enemy_marks(enemy: EnemyState, position: Vector2, radius: float) -> void:
 	if enemy.marked_time > 0.0:
 		draw_arc(position, radius + 15.0, -PI * 0.3, PI * 1.3, 22, Art.MUSTARD, 6.0)
 	if enemy.shear_time > 0.0:
 		draw_arc(position, radius + 10.0, PI * 0.7, PI * 2.3, 22, Art.MINT, 6.0)
-	if statuses.has(&"burn"):
-		draw_arc(position, radius + 9.0, -PI * 0.9, PI * 0.2, 18, Art.CORAL, 6.0)
-		draw_colored_polygon(PackedVector2Array([position + Vector2(0.0, -radius - 18.0), position + Vector2(8.0, -radius - 5.0), position + Vector2(-8.0, -radius - 5.0)]), Art.MUSTARD)
-	if statuses.has(&"poison"):
-		draw_arc(position, radius + 10.0, PI * 0.1, PI * 1.25, 18, Art.MINT, 6.0)
-		draw_circle(position + Vector2(radius + 7.0, -radius * 0.4), 6.0, Art.MINT)
-	if statuses.has(&"slow"):
-		draw_arc(position, radius + 11.0, 0.0, TAU, 20, Art.COBALT_WATER, 5.0)
-		for direction in [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]:
-			draw_rect(Rect2(position + direction * (radius + 10.0) - Vector2(4.0, 4.0), Vector2(8.0, 8.0)), Art.IVORY_BRIGHT)
 
 
 func _enemy_color(role: StringName) -> Color:
@@ -3671,6 +3762,7 @@ func _performance_counts() -> Dictionary:
 		"effects": effects.size(),
 		"zones": denied_zones.size(),
 		"trails": damaging_trails.size(),
+		"layout":field_layout.debug_snapshot() if field_layout != null else {},
 	}
 
 
@@ -3685,6 +3777,13 @@ func _parse_capture_arguments() -> void:
 			var parts := argument.trim_prefix("--capture-size=").split("x")
 			if parts.size() == 2:
 				_capture_size = Vector2i(maxi(640, int(parts[0])), maxi(360, int(parts[1])))
+		elif argument.begins_with("--layout-seed="):
+			_layout_seed_override = int(argument.trim_prefix("--layout-seed="))
+			_has_layout_seed_override = true
+	for argument in OS.get_cmdline_args():
+		if argument.begins_with("--layout-seed="):
+			_layout_seed_override = int(argument.trim_prefix("--layout-seed="))
+			_has_layout_seed_override = true
 	if _capture_locale in ["ko", "en"]:
 		TranslationServer.set_locale(_capture_locale)
 	if _capture_mode:
@@ -3724,6 +3823,7 @@ func _run_capture_sequence() -> void:
 	await _capture_boss_preview()
 	await _capture_stage_map_evidence()
 	if _capture_full_evidence():
+		await _capture_damage_feedback_evidence()
 		await _capture_collision_overlay_evidence()
 		await _capture_all_boss_evidence()
 
@@ -3880,6 +3980,50 @@ func _capture_stage_map_evidence() -> void:
 	_camera.zoom = Vector2.ONE
 
 
+func _capture_damage_feedback_evidence() -> void:
+	var settings := get_node_or_null("/root/SettingsStore")
+	var original_reduced_motion := bool(settings.reduced_motion) if settings != null else false
+	for reduced_motion in [false, true]:
+		_capture_prepare_stage(0, true)
+		_clear_enemies()
+		if settings != null:
+			settings.reduced_motion = reduced_motion
+		player_health = _player_max_health()
+		player_invulnerable = 0.0
+		player_hit_flash = 0.0
+		player_barrier_strength = 0.0
+		player_barrier_timer = 0.0
+		mode = RunMode.PLAYING
+		_damage_player(34.0, "capture hull hit", false, false)
+		if reduced_motion:
+			player_hit_flash = 0.0
+			player_invulnerable = 0.72
+		mode = RunMode.PAUSED
+		await _settle_capture()
+		_save_capture(
+			"08-player-hit-reduced-motion.png"
+			if reduced_motion
+			else "08-player-hit-standard.png"
+		)
+
+	_capture_prepare_stage(0, true)
+	_clear_enemies()
+	if settings != null:
+		settings.reduced_motion = false
+	player_health = _player_max_health()
+	player_invulnerable = 0.0
+	player_hit_flash = 0.0
+	player_barrier_strength = 100.0
+	player_barrier_timer = 1.0
+	mode = RunMode.PLAYING
+	_damage_player(34.0, "capture barrier hit", true, false)
+	mode = RunMode.PAUSED
+	await _settle_capture()
+	_save_capture("08-player-barrier-only.png")
+	if settings != null:
+		settings.reduced_motion = original_reduced_motion
+
+
 func _capture_collision_overlay_evidence() -> void:
 	for stage_index in StageCatalog.STAGE_IDS.size():
 		_capture_prepare_stage(stage_index, true)
@@ -3935,7 +4079,11 @@ func _capture_prepare_boss(stage_index: int) -> EnemyState:
 	_clear_projectiles()
 	denied_zones.clear()
 	player_position = Rules.player_start(current_stage_id)
-	boss_arrival_position = StageCatalog.boss_arrival_anchors(current_stage_id)[0]
+	boss_arrival_position = (
+		field_layout.boss_arrival_anchors[0]
+		if field_layout != null
+		else StageCatalog.boss_arrival_anchors(current_stage_id)[0]
+	)
 	stage_flow.defeats = stage_flow.quota
 	stage_flow.state = StageFlow.State.BOSS_ACTIVE
 	_start_stage_boss()

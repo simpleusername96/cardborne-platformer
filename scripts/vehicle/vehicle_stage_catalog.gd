@@ -1,7 +1,7 @@
 class_name VehicleStageCatalog
 extends RefCounted
 
-## Validated facade joining one immutable field with five combat profiles.
+## Validated facade joining one immutable floor topology with five combat profiles.
 
 const Field = preload("res://scripts/vehicle/stages/drowned_ruin_field.gd")
 const CombatStages = preload("res://scripts/vehicle/stages/vehicle_combat_stages.gd")
@@ -12,8 +12,7 @@ const REQUIRED_FIELDS := [
 	"id", "field_id", "title_key", "number", "boss_name_key", "quota",
 	"world_rect", "player_start", "start_clearance", "walkable_regions",
 	"cover_rects", "water_rects", "motifs", "ordinary_spawn_anchors",
-	"boss_arrival_anchors", "stationary_anchors", "static_enemies", "pickups",
-	"crates", "packets",
+	"boss_arrival_anchors", "static_enemies", "packets",
 ]
 
 static var _definition_cache: Dictionary = {}
@@ -75,8 +74,8 @@ static func validate_definition(value: Dictionary, expected_id: StringName = &""
 		errors.append("quota must be positive")
 	if not value["walkable_regions"] is Array or value["walkable_regions"].is_empty():
 		errors.append("walkable_regions must not be empty")
-	if Array(value["ordinary_spawn_anchors"]).size() != 16:
-		errors.append("field requires sixteen ordinary spawn anchors")
+	if Array(value["ordinary_spawn_anchors"]).size() != 24:
+		errors.append("field requires twenty-four ordinary spawn candidates")
 	if Array(value["boss_arrival_anchors"]).size() != 8:
 		errors.append("field requires eight boss arrival anchors")
 	return errors
@@ -107,15 +106,11 @@ static func quota(stage_id: StringName) -> int:
 
 
 static func ordinary_spawn_anchors(_stage_id: StringName = &"stage_1") -> Array[Vector2]:
-	return Field.ORDINARY_SPAWN_ANCHORS.duplicate()
+	return Field.ORDINARY_SPAWN_CANDIDATES.duplicate()
 
 
 static func boss_arrival_anchors(_stage_id: StringName = &"stage_1") -> Array[Vector2]:
 	return Field.BOSS_ARRIVAL_ANCHORS.duplicate()
-
-
-static func stationary_anchors(_stage_id: StringName = &"stage_1") -> Array[Vector2]:
-	return Field.STATIONARY_ANCHORS.duplicate()
 
 
 static func motifs(_stage_id: StringName = &"stage_1") -> Array[Dictionary]:
@@ -363,7 +358,7 @@ static func packet_enemy_blueprint(stage_id: StringName) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 	for packet in packets(stage_id):
 		var packet_id := String(packet["id"])
-		var anchor := Vector2(packet["anchor"])
+		var anchor := Field.CENTER
 		for squad_index in Array(packet["squads"]).size():
 			var squad: Array = packet["squads"][squad_index]
 			for unit_index in squad.size():
@@ -386,24 +381,11 @@ static func authored_population(stage_id: StringName) -> int:
 	return enemy_blueprint(stage_id).size()
 
 
-static func pickup_blueprint(_stage_id: StringName = &"stage_1") -> Array[Dictionary]:
-	var result: Array[Dictionary] = []
-	for spec in definition(&"stage_1")["pickups"]:
-		result.append(Dictionary(spec).duplicate(true))
-	return result
-
-
-static func crate_blueprint(_stage_id: StringName = &"stage_1") -> Array[Dictionary]:
-	var result: Array[Dictionary] = []
-	for spec in definition(&"stage_1")["crates"]:
-		result.append(Dictionary(spec).duplicate(true))
-	return result
-
-
 static func geometry_fingerprint(_stage_id: StringName = &"stage_1") -> int:
 	return hash(var_to_str([
 		Field.WORLD_RECT, walkable_regions(), cover_rects(), water_rects(), motifs(),
-		ordinary_spawn_anchors(), boss_arrival_anchors(), stationary_anchors(),
+		Field.COVER_CANDIDATES, ordinary_spawn_anchors(), boss_arrival_anchors(),
+		Field.STATIONARY_CANDIDATES, Field.ITEM_SOCKET_CANDIDATES,
 	]))
 
 

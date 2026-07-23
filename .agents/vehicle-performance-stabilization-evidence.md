@@ -3,7 +3,7 @@ type: evidence
 status: active
 owner: BK
 created: 2026-07-23
-last_reviewed: 2026-07-23
+last_reviewed: 2026-07-24
 topic: Vehicle runtime performance stabilization
 scope: Implemented runtime boundaries, deterministic workload evidence, validation, and remaining release limits
 source: ./execplans/2026-07-23-vehicle-performance-architecture-stabilization.md
@@ -60,8 +60,8 @@ could not establish smooth play.
 | Projectiles | Separate fixed pools of 240 player and 120 hostile shots; 24 hostile slots reserved for bosses |
 | Experience | 192 preallocated typed shards with bounded reuse |
 | Dynamic queries | Reused `35x22` uniform grid at 160 world pixels; exact geometry after broadphase |
-| Static queries | Cached stage collision geometry and a 320-pixel crate grid |
-| Presentation | 35 retained MultiMesh families with prebuilt flat-color meshes and fixed visible counts |
+| Static queries | Cached immutable floor geometry, one run-scoped eight-cover broadphase, and a 320-pixel crate grid |
+| Presentation | 38 retained MultiMesh families with prebuilt flat-color meshes, fixed visible counts, and one three-family elemental-status batch |
 | HUD | Dirty channels; static minimap once, radar at 10 Hz, action state at 20 Hz, guidebook on invalidation |
 | Cadence | Critical combat at 60 Hz; ordinary decisions 10 Hz; non-committed motion 30/20 Hz; far projectiles, grid, XP, and repeated effects 30 Hz |
 | Measurement | Four deterministic scenarios, focus/visibility/scheduler qualification, complete frame distributions, subsystem samples, counts, draw calls, render timing, and memory |
@@ -76,6 +76,9 @@ aliasing with the six ordinary-decision buckets.
 - Typed-store, spatial-grid, projectile-pool, retained-renderer, HUD presenter,
   experience, five-secondary, stage, boss, upgrade, settings, localization,
   guidebook, campaign, and integrated run validators pass.
+- The exhaustive layout gate passes all 1,296 cover masks and 256 complete
+  seeded layouts; distributed-spawn, hull-feedback, and independent elemental
+  stack validators also pass.
 - Deterministic setup reaches the requested counts for `current_pressure`,
   `capacity_pressure`, `lifecycle_pressure`, and `boss_pressure`.
 - Lifecycle validation performs 300 retire/reuse cycles before saturation and
@@ -97,6 +100,8 @@ limit; the values below are judged against the active plan instead.
 | `final4-throughput.json`, latest current-pressure 120 FPS probe, 2 s + 10 s | Short and partly unfocused; CPU-throughput diagnostic only | Frame median 8.33 ms, p95 17.26 ms; physics p95 9.24 ms; presentation p95 4.46 ms; zero consecutive frames over 33.3 ms |
 | Built Web current-pressure probe | Disqualified by automated browser scheduling | Counts valid at 76 enemies and 140/72 shots; the rendered scene, HUD, projectiles, and effects were visually present |
 | `post-ui-current.json`, final focused current-pressure 120 FPS smoke, 2 s + 10 s | Foreground and scheduler-qualified, but intentionally too short for release authority | 76 enemies and 212 total projectiles; frame median/p95/p99 8.33/8.33/9.09 ms; physics p95 6.23 ms; presentation p95 2.97 ms; draw-call p95 165; every applicable threshold check passed |
+| `2026-07-24/current-pressure-30s.json`, seeded-layout current pressure, 10 s + 30 s | Focused and scheduler-qualified implementation regression; non-authoritative because it is shorter than 60 s and the tree is dirty | 76 enemies, 140/72 player/hostile shots, eight runtime covers; frame median/p95/p99 16.67/16.67/16.67 ms; physics p95/p99 5.04/6.11 ms; presentation p95 1.75 ms; draw-call p95 161; no frame over 20 ms |
+| `2026-07-24/boss-pressure-30s.json`, seeded-layout boss pressure, 10 s + 30 s | Focused and scheduler-qualified implementation regression; non-authoritative because it is shorter than 60 s and the tree is dirty | 77 enemies including one boss, 140/100 player/hostile shots, eight runtime covers; frame median/p95/p99 16.67/16.67/16.67 ms; physics p95/p99 5.35/6.43 ms; presentation p95 1.88 ms; draw-call p95 164; no frame over 20 ms |
 
 The final short smoke meets the user's current development stop condition:
 ordinary maximum pressure remains functional and has enough measured headroom
@@ -104,6 +109,13 @@ to continue game-design work. Minimap static polygons and threat-radar arcs now
 use one retained mesh each, reducing draw calls from roughly 254 to 165 at p95.
 The latest full-duration sample is still non-authoritative because focus was
 lost, so no release guarantee is claimed.
+
+The 2026-07-24 seeded-field regression keeps that development condition under
+both current and boss pressure. Both foreground samples remained at the
+60 Hz frame cadence with zero post-warmup frame above 20 ms, no rejected
+actors/projectiles, and draw-call p95 below 165. These results cover the new
+runtime cover broadphase and retained status batches, but their 30-second dirty
+build duration remains development evidence rather than release certification.
 
 ## Recommendations
 
@@ -127,6 +139,8 @@ the gameplay/content contract reaches a release-candidate state:
   non-authoritative; the recorder now labels those conditions explicitly.
 - The latest code has not completed the three-run platform/resolution matrix or
   the ten-minute soak.
+- The 2026-07-24 current/boss regressions are focused 30-second samples from a
+  dirty implementation tree and therefore are deliberately non-authoritative.
 - The draw-call ceiling passes the final focused short smoke, but strict
   full-duration frame-tail gates are not release-qualified.
 - This evidence proves bounded ownership and functional behavior, not unlimited

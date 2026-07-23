@@ -3,7 +3,6 @@ extends RefCounted
 
 var catalog: VehicleUpgradeCatalog
 var levels: Dictionary = {}
-var element_core: StringName = &""
 
 
 func _init(source_catalog: VehicleUpgradeCatalog = null) -> void:
@@ -12,7 +11,6 @@ func _init(source_catalog: VehicleUpgradeCatalog = null) -> void:
 
 func reset() -> void:
 	levels.clear()
-	element_core = &""
 
 
 func level_of(upgrade_id: StringName) -> int:
@@ -71,8 +69,6 @@ func apply(upgrade_id: StringName) -> Dictionary:
 	var receipt := preview(upgrade_id)
 	if not bool(receipt.get("valid", false)): return receipt
 	levels[upgrade_id] = int(receipt["new_level"])
-	var definition := catalog.get_definition(upgrade_id)
-	if definition.exclusion_group == &"element_core": element_core = upgrade_id
 	receipt["applied"] = true
 	return receipt
 

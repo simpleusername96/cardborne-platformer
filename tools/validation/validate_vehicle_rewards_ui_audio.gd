@@ -5,6 +5,7 @@ const UpgradePanel = preload("res://scripts/ui/vehicle_upgrade_choice_panel.gd")
 const AudioDirector = preload("res://scripts/presentation/vehicle_audio_director.gd")
 const StageScene = preload("res://scenes/run/VehicleRun.tscn")
 const RunDifficulty = preload("res://scripts/vehicle/vehicle_run_difficulty.gd")
+const LayoutGenerator = preload("res://scripts/vehicle/vehicle_field_layout_generator.gd")
 
 var failures: Array[String] = []
 var confirmed_count := 0
@@ -23,19 +24,20 @@ func _expect(condition: bool, message: String) -> void:
 
 
 func _run() -> void:
+	var layout := LayoutGenerator.generate(0xC4A2B0, StageCatalog.STAGE_IDS)
 	for stage_id in StageCatalog.STAGE_IDS:
-		var stage_pickups := StageCatalog.pickup_blueprint(stage_id)
-		var stage_crates := StageCatalog.crate_blueprint(stage_id)
+		var stage_pickups := layout.pickup_blueprint(stage_id)
+		var stage_crates := layout.crate_blueprint(stage_id)
 		_expect(stage_pickups.size() == 3, "%s has two repairs and one experience recall" % stage_id)
-		_expect(StageCatalog.crate_blueprint(stage_id).size() == 5, "%s has five authored crates" % stage_id)
+		_expect(layout.crate_blueprint(stage_id).size() == 5, "%s has five authored crates" % stage_id)
 		_expect(stage_pickups.filter(func(item: Dictionary) -> bool: return StringName(item["kind"]) == &"repair").size() == 2, "%s pickup set contains exactly two repairs" % stage_id)
 		_expect(stage_pickups.filter(func(item: Dictionary) -> bool: return StringName(item["kind"]) == &"experience_recall").size() == 1, "%s pickup set contains exactly one experience recall" % stage_id)
 		_expect(stage_crates.filter(func(item: Dictionary) -> bool: return StringName(item["drop"]) == &"repair").size() == 4, "%s crate set contains exactly four repairs" % stage_id)
 		_expect(stage_crates.filter(func(item: Dictionary) -> bool: return StringName(item["drop"]) == &"experience_recall").size() == 1, "%s crate set contains exactly one experience recall" % stage_id)
 	var kinds: Dictionary = {}
-	for item in StageCatalog.pickup_blueprint(&"stage_1"):
+	for item in layout.pickup_blueprint(&"stage_1"):
 		kinds[StringName(item["kind"])] = true
-	for crate in StageCatalog.crate_blueprint(&"stage_1"):
+	for crate in layout.crate_blueprint(&"stage_1"):
 		kinds[StringName(crate["drop"])] = true
 	for required_kind in [&"repair", &"experience_recall"]:
 		_expect(kinds.has(required_kind), "field catalog exposes %s" % required_kind)
@@ -75,7 +77,7 @@ func _run() -> void:
 	stage.call("_collect_pickup", {"active": true, "kind": &"experience_recall", "pos": Vector2.ZERO})
 	_expect(float(stage.get("experience_recall_timer")) >= 0.65, "experience recall starts the global shard pull window")
 	var experience_runtime: RefCounted = stage.get("experience_runtime")
-	_expect(int(experience_runtime.call("required_experience")) == 26, "a fresh run starts with a 26-XP level threshold")
+	_expect(int(experience_runtime.call("required_experience")) == 12, "a fresh run starts with a 12-XP level threshold")
 	var stage_ui: CanvasLayer = stage.get("_ui")
 	stage_ui.call("show_deployment", &"pulse_cannon", RunDifficulty.HARD)
 	var ui_contract: Dictionary = stage_ui.call("debug_ui_contract", 1280.0)
