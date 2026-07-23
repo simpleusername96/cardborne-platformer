@@ -9,5 +9,5 @@ title_key = "UPGRADE_SHOCK_BREACH_TITLE"
 description_key = "UPGRADE_SHOCK_BREACH_DESC"
 family = &"opening"
 max_level = 2
-source_tags = Array[StringName]([&"relay", &"field_boss", &"boss"])
+source_tags = Array[StringName]([&"level_up", &"boss"])
 behavior_ids = Array[StringName]([&"shock_breach"])

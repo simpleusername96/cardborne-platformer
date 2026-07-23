@@ -22,5 +22,5 @@ title_key = "UPGRADE_MASS_DRIVER_TITLE"
 description_key = "UPGRADE_MASS_DRIVER_DESC"
 family = &"primary"
 max_level = 3
-source_tags = Array[StringName]([&"calibration", &"relay", &"field_boss", &"boss"])
+source_tags = Array[StringName]([&"level_up", &"boss"])
 modifiers = Array[ExtResource("2_mod")]([SubResource("Modifier_1"), SubResource("Modifier_2")])

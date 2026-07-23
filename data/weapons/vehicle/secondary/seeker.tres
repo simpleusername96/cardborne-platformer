@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="VehicleSecondaryDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/player/vehicle_secondary_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"seeker"
+name_key = "SECONDARY_SEEKER_NAME"
+description_key = "SECONDARY_SEEKER_DESC"
+behavior = &"projectile"
+values_by_level = Array[float]([25.0])
+auxiliary_by_level = Array[float]([1.35])
+cap_by_level = Array[int]([1])

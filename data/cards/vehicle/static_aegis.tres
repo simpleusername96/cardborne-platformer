@@ -9,5 +9,5 @@ title_key = "UPGRADE_STATIC_AEGIS_TITLE"
 description_key = "UPGRADE_STATIC_AEGIS_DESC"
 family = &"skill"
 max_level = 2
-source_tags = Array[StringName]([&"relay", &"field_boss", &"boss"])
+source_tags = Array[StringName]([&"level_up", &"boss"])
 behavior_ids = Array[StringName]([&"static_aegis"])

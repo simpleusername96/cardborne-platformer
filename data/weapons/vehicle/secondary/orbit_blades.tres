@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="VehicleSecondaryDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/player/vehicle_secondary_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"orbit_blades"
+upgrade_id = &"orbit_blades"
+name_key = "SECONDARY_ORBIT_BLADES_NAME"
+description_key = "SECONDARY_ORBIT_BLADES_DESC"
+behavior = &"orbit"
+values_by_level = Array[float]([14.0, 18.0, 22.0])
+auxiliary_by_level = Array[float]([78.0, 78.0, 78.0])
+cap_by_level = Array[int]([2, 3, 4])

@@ -33,7 +33,7 @@ static func rammer_can_commit(rammer: Dictionary, enemies: Array[Dictionary]) ->
 	return global_committed < 2 and squad_committed < 1
 
 
-static func repair_target_id(tender: Dictionary, enemies: Array[Dictionary], stage_id: StringName, include_boss_gate: bool, extra_cover: Array = []) -> String:
+static func repair_target_id(tender: Dictionary, enemies: Array[Dictionary], stage_id: StringName, include_dynamic_cover: bool, extra_cover: Array = []) -> String:
 	var best_id := ""
 	var best_ratio := 1.0
 	var origin := Vector2(tender["pos"])
@@ -41,7 +41,7 @@ static func repair_target_id(tender: Dictionary, enemies: Array[Dictionary], sta
 		if target == tender or not bool(target.get("alive", false)) or not bool(target.get("active", false)):
 			continue
 		var role := StringName(target.get("role", &""))
-		if role in [&"repair_tender", &"field_boss", &"stage_boss", &"boss_pylon"]:
+		if role in [&"repair_tender", &"stage_boss", &"boss_pylon"]:
 			continue
 		var maximum := float(target.get("max_health", 0.0))
 		if maximum <= 0.0 or float(target.get("health", maximum)) >= maximum:
@@ -49,7 +49,7 @@ static func repair_target_id(tender: Dictionary, enemies: Array[Dictionary], sta
 		var target_position := Vector2(target["pos"])
 		if origin.distance_to(target_position) > REPAIR_RANGE:
 			continue
-		if not Rules.has_line_of_sight_with_extra(origin, target_position, 5.0, include_boss_gate, stage_id, extra_cover):
+		if not Rules.has_line_of_sight_with_extra(origin, target_position, 5.0, include_dynamic_cover, stage_id, extra_cover):
 			continue
 		var ratio := float(target["health"]) / maximum
 		if ratio < best_ratio:
@@ -66,9 +66,9 @@ static func living_children(carrier_id: String, enemies: Array[Dictionary]) -> i
 	return count
 
 
-static func beam_end(origin: Vector2, direction: Vector2, stage_id: StringName, include_boss_gate: bool, extra_cover: Array = []) -> Vector2:
+static func beam_end(origin: Vector2, direction: Vector2, stage_id: StringName, include_dynamic_cover: bool, extra_cover: Array = []) -> Vector2:
 	var desired := origin + direction.normalized() * BEAM_RANGE
-	var hit := Rules.first_cover_hit_with_extra(origin, desired, 5.0, include_boss_gate, stage_id, extra_cover)
+	var hit := Rules.first_cover_hit_with_extra(origin, desired, 5.0, include_dynamic_cover, stage_id, extra_cover)
 	return Vector2(hit["point"]) if bool(hit.get("hit", false)) else desired
 
 

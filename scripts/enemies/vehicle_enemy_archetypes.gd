@@ -21,7 +21,6 @@ const DEFINITIONS := {
 	&"drone_carrier": {"behavior": &"drone_carrier", "health": 126.0, "speed": 105.0, "radius": 30.0, "visual_radius": 44.0, "name_key": "ENEMY_DRONE_CARRIER", "health_class": &"priority", "threat_cost": 1.5, "threat_kind": &"support", "active_cap": true},
 	&"beam_sentinel": {"behavior": &"beam_sentinel", "health": 138.0, "speed": 0.0, "radius": 34.0, "visual_radius": 50.0, "name_key": "ENEMY_BEAM_SENTINEL", "health_class": &"priority", "threat_cost": 1.5, "threat_kind": &"ranged", "active_cap": false},
 	&"generator": {"behavior": &"generator", "health": 155.0, "speed": 0.0, "radius": 36.0, "visual_radius": 52.0, "name_key": "ENEMY_BARRIER_GENERATOR", "health_class": &"priority", "threat_cost": 0.0, "threat_kind": &"support", "active_cap": false},
-	&"field_boss": {"behavior": &"field_boss", "health": 620.0, "speed": 185.0, "radius": 50.0, "visual_radius": 80.0, "name_key": "ENEMY_DREDGE_WARDEN", "health_class": &"priority", "threat_cost": 0.0, "threat_kind": &"boss", "active_cap": false},
 	&"boss_pylon": {"behavior": &"boss_pylon", "health": 120.0, "speed": 0.0, "radius": 33.0, "visual_radius": 48.0, "name_key": "ENEMY_COLOSSUS_PYLON", "health_class": &"priority", "threat_cost": 0.0, "threat_kind": &"support", "active_cap": false},
 	&"stage_boss": {"behavior": &"stage_boss", "health": 1450.0, "speed": 150.0, "radius": 76.0, "visual_radius": 112.0, "name_key": "ENEMY_FOUNDRY_COLOSSUS", "health_class": &"boss", "threat_cost": 0.0, "threat_kind": &"boss", "active_cap": false},
 }
@@ -33,7 +32,7 @@ static func definition(archetype: StringName) -> Dictionary:
 
 static func validate_contract() -> PackedStringArray:
 	var errors := PackedStringArray()
-	for required in [&"scrap_drone", &"needle_drone", &"spark_minelet", &"chaser", &"shooter", &"controller", &"rammer", &"repair_tender", &"drone_carrier", &"beam_sentinel", &"generator", &"field_boss", &"stage_boss"]:
+	for required in [&"scrap_drone", &"needle_drone", &"spark_minelet", &"chaser", &"shooter", &"controller", &"rammer", &"repair_tender", &"drone_carrier", &"beam_sentinel", &"generator", &"stage_boss"]:
 		if not DEFINITIONS.has(required):
 			errors.append("missing vehicle enemy archetype: %s" % required)
 	for archetype in DEFINITIONS:

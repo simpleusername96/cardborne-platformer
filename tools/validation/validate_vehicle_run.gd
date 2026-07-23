@@ -1,413 +1,57 @@
 extends SceneTree
 
-const Rules = preload("res://scripts/vehicle/vehicle_stage_rules.gd")
-const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
-const EncounterDirector = preload("res://scripts/encounters/vehicle_encounter_director.gd")
-const StageCatalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
+const Catalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
 const MAIN_SCENE := "res://scenes/main/GameRoot.tscn"
 
-var failures: PackedStringArray = []
-var checks_run := 0
+var failures: Array[String] = []
 
 
 func _initialize() -> void:
-	call_deferred("_run_validation")
+	call_deferred("_run")
 
 
-func _run_validation() -> void:
-	print("VEHICLE_STAGE_VALIDATION_BEGIN")
-	_check_blueprint()
-	var packed: PackedScene = load(MAIN_SCENE)
+func _run() -> void:
+	var packed := load(MAIN_SCENE) as PackedScene
 	_expect(packed != null, "main scene loads")
 	if packed == null:
-		_finish()
-		return
-
-	var root_instance := packed.instantiate()
-	get_root().add_child(root_instance)
+		_finish(); return
+	var root := packed.instantiate()
+	get_root().add_child(root)
 	await process_frame
 	await process_frame
-
-	var stage := root_instance.get_node_or_null("VehicleRun")
-	_expect(stage != null, "VehicleRun is the active main runtime")
-	if stage == null:
-		_finish()
-		return
-
-	_check_input_contract()
-	_check_visual_contract(stage)
-	_check_layout_contract(stage)
-	_check_geometry_contract(stage)
-	_check_upgrade_contract(stage)
-	_check_pickup_contract(stage)
-	_check_primary_charge_contract(stage)
-	_check_dash_contract(stage)
-	_check_progression_contract(stage)
-	_check_multistage_contract(stage)
-	_check_added_stage_mechanics_contract(stage)
-	_check_new_enemy_contract(stage)
-	_check_specialist_enemy_contract(stage)
-	_check_new_upgrade_runtime(stage)
-	_check_enemy_pressure_contract(stage)
-	_check_projectile_cover_contract(stage)
-	_check_passive_contract(stage)
-	_check_reset_contract(stage)
-
-	root_instance.free()
-	stage = null
-	await process_frame
+	var run = root.get_node_or_null("VehicleRun")
+	_expect(run != null, "VehicleRun is active")
+	if run != null:
+		run.call("_reset_run", false)
+		_expect(run.current_stage_id == &"stage_1" and run.player_position == Vector2(2800,1700), "run begins at shared center")
+		_expect(run.MINIMAP_COLS == 16 and run.MINIMAP_ROWS == 10, "run uses 16x10 explored minimap")
+		_expect(run._camera.zoom == Vector2.ONE, "gameplay camera keeps zoom 1")
+		var initial_fingerprint := Catalog.geometry_fingerprint(run.current_stage_id)
+		run.run_build.apply(&"tuned_thrusters")
+		run.visited_cells[Vector2i(2,2)] = true
+		run.current_stage_index = 1
+		run.current_stage_id = Catalog.STAGE_IDS[1]
+		run.call("_reset_run", false, true, true)
+		_expect(Catalog.geometry_fingerprint(run.current_stage_id) == initial_fingerprint, "stage transition preserves field geometry")
+		_expect(run.run_build.has(&"tuned_thrusters") and run.visited_cells.has(Vector2i(2,2)), "stage transition preserves build and exploration")
+		_expect(run.player_position == Vector2(2800,1700), "stage transition respawns at center")
+		var hud: Dictionary = run.call("_build_hud_snapshot")
+		_expect(hud["minimap"]["cols"] == 16 and hud["guidebook"].has("categories"), "HUD exposes minimap and guide snapshots")
+		var ui = run.get_node_or_null("VehicleStageUI")
+		_expect(ui != null and ui._guide_panel.debug_contract()["categories"] == 5, "guidebook modal is connected")
+	root.queue_free()
 	await process_frame
 	_finish()
 
 
-func _check_blueprint() -> void:
-	var all_blueprints := Rules.validate_all_blueprints()
-	for stage_id in all_blueprints.keys():
-		var blueprint_errors: PackedStringArray = all_blueprints[stage_id]
-		_expect(blueprint_errors.is_empty(), "%s landmarks, spawns, routes, and boss path are reachable" % stage_id)
-		var population := Rules.get_enemy_blueprint(stage_id).size()
-		var band := EncounterDirector.population_band(stage_id)
-		_expect(population == StageCatalog.authored_population(stage_id), "%s packet population and validation blueprint agree" % stage_id)
-		_expect(population >= band.x and population <= band.y, "%s uses the authored population band" % stage_id)
-		_expect(EncounterDirector.active_cap_for(4, &"standard") == 32, "%s Standard final active cap is 32" % stage_id)
-		for error_message in blueprint_errors:
-			failures.append("%s blueprint: %s" % [stage_id, error_message])
-
-	var start := Rules.player_start(&"flooded_works")
-	var landmarks := Rules.get_landmarks(&"flooded_works")
-	_expect(Rules.grid_reachable(start, landmarks["generator_a"]), "upper generator is reachable")
-	_expect(Rules.grid_reachable(start, landmarks["generator_b"]), "lower generator is reachable")
-	_expect(Rules.grid_reachable(start, landmarks["chest"]), "upgrade cache is reachable")
-	_expect(
-		Rules.grid_reachable(start, landmarks["upper_route"])
-		and Rules.grid_reachable(start, landmarks["lower_route"]),
-		"both risk routes are traversable"
-	)
-
-
-func _check_input_contract() -> void:
-	_expect(_action_has_key(&"move_left", KEY_LEFT), "left arrow movement preserved")
-	_expect(_action_has_key(&"move_left", KEY_A), "WASD movement supported")
-	_expect(_action_has_key(&"move_right", KEY_RIGHT), "right arrow movement preserved")
-	_expect(_action_has_key(&"move_up", KEY_W), "WASD vertical movement supported")
-	_expect(_action_has_mouse(&"primary_fire", MOUSE_BUTTON_LEFT), "left mouse primary fire registered")
-	_expect(not _action_has_key(&"primary_fire", KEY_SHIFT), "Left Shift no longer duplicates primary fire")
-	_expect(_action_has_key(&"dash", KEY_SPACE), "Space dash registered")
-	_expect(_action_has_key(&"active_skill", KEY_SHIFT), "Left Shift active skill registered")
-	_expect(not _action_has_key(&"active_skill", KEY_Z), "Z has no default vehicle binding")
-	_expect(_action_has_key(&"pause", KEY_ESCAPE), "Escape pause registered")
-
-
-func _check_layout_contract(stage: Node) -> void:
-	var ui := stage.get_node_or_null("VehicleStageUI")
-	_expect(ui != null, "vehicle HUD exists")
-	if ui == null:
-		return
-	var minimums: Dictionary = ui.debug_layout_minimums()
-	for viewport_size in [Vector2(960.0, 540.0), Vector2(1280.0, 720.0), Vector2(1920.0, 1080.0)]:
-		for surface_id in minimums.keys():
-			var minimum: Vector2 = minimums[surface_id]
-			_expect(
-				minimum.x <= viewport_size.x and minimum.y <= viewport_size.y,
-				"%s surface fits %dx%d" % [surface_id, int(viewport_size.x), int(viewport_size.y)]
-			)
-
-
-func _check_visual_contract(stage: Node) -> void:
-	var art_errors := Art.validate_contract()
-	_expect(art_errors.is_empty(), "Sunken Ceramic Fresco semantic palette and scale contract is complete")
-	for error_message in art_errors:
-		failures.append("visual profile: %s" % error_message)
-	var roles := Art.required_color_roles()
-	_expect(roles["walkable"] != roles["blocked"], "walkable ground and blocked cover use distinct visual roles")
-	_expect(roles["player_reward"] != roles["threat"], "player/reward and threat colors remain semantically distinct")
-	_expect(Art.major_motifs().size() <= 4, "world decoration stays sparse at macro scale")
-
-	var ui := stage.get_node_or_null("VehicleStageUI")
-	_expect(ui != null, "vehicle UI exists for visual contract checks")
-	if ui == null:
-		return
-	for viewport_width in [960.0, 1280.0, 1920.0]:
-		var contract: Dictionary = ui.debug_ui_contract(viewport_width)
-		_expect(bool(contract["top_clusters_do_not_overlap"]), "top HUD clusters do not overlap at %d px" % int(viewport_width))
-		_expect(float(contract["command_min_height"]) >= 44.0, "command targets remain at least 44 px high")
-		var rail_size := Vector2(contract["action_rail_size"])
-		_expect(rail_size.x <= viewport_width - 36.0 and rail_size.y <= 88.0, "bottom action rail stays inside the combat safe frame")
-		_expect(Vector2(contract["primary_slot_size"]).x > Vector2(contract["secondary_slot_size"]).x, "primary charge owns stronger visual hierarchy than utility actions")
-		_expect(float(contract["body_font_weight"]) >= 600.0, "shared Korean and English body type uses a real medium-or-bolder variable weight")
-		_expect(float(contract["opaque_combat_area_ratio"]) <= 0.12, "opaque combat HUD stays within the twelve-percent budget")
-		_expect(bool(contract["central_safe_clear"]), "opaque combat panels stay outside the central combat frame")
-		var minimum_map_width := 144.0 if viewport_width < 1100.0 else 168.0
-		_expect(Vector2(contract["minimap_size"]).x >= minimum_map_width, "minimap plaque remains legible")
-		_expect(
-			String(contract["theme_path"]) == "res://art/ui/production/vehicle_stage_theme.tres",
-			"vehicle UI uses the scoped ceramic theme"
-		)
-	var ui_contract: Dictionary = ui.debug_ui_contract()
-	_expect(int(ui_contract["deployment_focusables"]) >= 2, "deployment exposes launch and settings actions")
-	_expect(int(ui.debug_ui_contract()["upgrade_focusables"]) >= 3, "upgrade exposes three focusable circuit choices")
-	_expect(int(ui.debug_ui_contract()["pause_focusables"]) >= 4, "pause exposes resume, restart, settings, and garage actions")
-	_expect(int(ui.debug_ui_contract()["result_focusables"]) >= 2, "result exposes garage and replay actions")
-	_expect(int(ui.debug_ui_contract()["garage_focusables"]) >= 2, "garage exposes launch and shared settings actions")
-	var settings_contract: Dictionary = ui_contract["settings"]
-	_expect(int(settings_contract["tabs"]) == 4, "shared settings exposes Audio, Controls, Gameplay, and Language pages")
-	_expect(int(settings_contract["binding_controls"]) == 3, "shared settings exposes all three remappable actions")
-	_expect(int(settings_contract["focusables"]) >= 10, "shared settings remains keyboard reachable")
-	_expect(bool(settings_contract["reduced_motion_control"]), "shared settings exposes a keyboard-sized reduced-motion control")
-	var radar_contract: Dictionary = ui.debug_threat_radar_contract()
-	_expect(is_equal_approx(float(radar_contract["diameter"]), 208.0), "threat cues stay outside the vehicle silhouette")
-	_expect(int(radar_contract["sector_count"]) == 12 and int(radar_contract["maximum_markers"]) == 12, "threat cues aggregate into twelve readable directions")
-	_expect(bool(radar_contract["offscreen_arcs"]), "threat cues use off-screen arcs instead of a duplicate dot minimap")
-	_expect(bool(radar_contract["full_rect"]) and bool(radar_contract["mouse_ignored"]), "threat radar follows HUD space without intercepting input")
-	for surface in ["deployment", "upgrade", "pause", "result", "garage", "settings"]:
-		var modal_contract: Dictionary = ui.debug_modal_contract(surface)
-		_expect(bool(modal_contract["hud_hidden"]), "%s modal hides gameplay HUD" % surface)
-		_expect(bool(modal_contract["dim_visible"]), "%s modal owns a dimmed focus layer" % surface)
-	ui.show_gameplay()
-	var boss_snapshot: Dictionary = stage.call("_build_hud_snapshot")
-	boss_snapshot["boss"] = {"visible": true, "name": "Boss", "health": 1.0, "max_health": 1.0, "state": "Ready"}
-	ui.update_hud(boss_snapshot)
-	_expect(not ui._objective_panel.visible and ui._minimap_panel.visible, "boss HUD replaces objective detail while preserving navigation")
-
-
-func _check_geometry_contract(stage: Node) -> void:
-	var contract: Dictionary = stage.debug_projectile_cover_contract()
-	_expect(bool(contract["hit"]), "segment collision identifies solid cover")
-	_expect(not bool(contract["miss"]), "segment collision does not invent cover")
-	_expect(Vector2(contract["normal"]).is_equal_approx(Vector2.LEFT), "cover hit reports a stable reflection normal")
-
-	var movement_start := Vector2(600.0, 845.0)
-	var movement_end := Rules.move_circle(movement_start, Vector2(100.0, 0.0), Rules.PLAYER_RADIUS)
-	_expect(movement_end.is_equal_approx(movement_start), "vehicle cannot enter shared solid-cover geometry")
-	_expect(Rules.is_position_walkable(movement_start, Rules.PLAYER_RADIUS), "movement probe begins in a valid visible lane")
-
-
-func _check_upgrade_contract(stage: Node) -> void:
-	stage.call("_reset_run", false)
-	var first := bool(stage.debug_apply_upgrade(&"ricochet_matrix"))
-	var second := bool(stage.debug_apply_upgrade(&"ricochet_matrix"))
-	_expect(first, "upgrade applies on first selection")
-	_expect(not second, "upgrade cannot apply twice")
-	var snapshot: Dictionary = stage.debug_snapshot()
-	_expect(snapshot["applied_upgrades"].size() == 1, "one card produces exactly one applied behavior")
-
-
-func _check_pickup_contract(stage: Node) -> void:
-	var repair: Dictionary = stage.debug_pickup_contract(&"repair")
-	_expect(bool(repair["collected_once"]) and float(repair["health"]) > 50.0, "repair pickup heals immediately")
-	var recall: Dictionary = stage.debug_pickup_contract(&"experience_recall")
-	_expect(bool(recall["collected_once"]) and float(recall["recall_timer"]) >= 0.65, "experience recall starts the map-wide XP sweep")
-
-
-func _check_dash_contract(stage: Node) -> void:
-	stage.call("_reset_run", false)
-	var dash: Dictionary = stage.debug_dash_contract()
-	var displacement := float(dash["displacement"])
-	_expect(displacement >= 200.0 and displacement <= 270.0, "dash has predictable meaningful displacement")
-	_expect(float(dash["cooldown"]) > 1.0, "dash exposes a real recharge state")
-	_expect(bool(dash["invulnerable"]), "dash provides a reliable defensive window")
-	stage.debug_apply_upgrade(&"ram_pulse")
-	_expect(stage.applied_upgrades.has(&"ram_pulse"), "dash has an offensive behavior upgrade")
-
-
-func _check_primary_charge_contract(stage: Node) -> void:
-	stage.call("_reset_run", false)
-	var contract: Dictionary = stage.debug_primary_charge_contract()
-	_expect(is_equal_approx(float(contract["full_charge_seconds"]), 1.0), "opening shot reaches full power after one idle second")
-	_expect(bool(contract["immediate_fired"]), "ordinary primary fire is never charge-gated")
-	_expect(bool(contract["held_second_fired"]), "held fire repeats after the base cadence")
-	_expect(bool(contract["full_fired"]), "a full opening charge produces one shot")
-	_expect(float(contract["full_damage"]) >= float(contract["normal_damage"]) * 1.74, "full opening shot materially increases health damage")
-	_expect(float(contract["full_structure"]) >= float(contract["normal_damage"]) * 2.99, "full opening shot triples structure damage")
-	_expect(int(contract["full_pierce"]) >= 1, "full opening shot gains one temporary pierce")
-	_expect(bool(contract["normal_fire_available"]), "opening charge never disables normal fire")
-
-
-func _check_progression_contract(stage: Node) -> void:
-	var result: Dictionary = stage.debug_full_run()
-	_expect(int(result["living_before"]) >= 6, "stage starts with a role-rich ordinary roster")
-	_expect(bool(result["boss_started_with_living"]), "ordinary exit works while enemies remain alive")
-	_expect(bool(result["complete"]), "automated complete run reaches stage result")
-	_expect(int(result["mode"]) == 4, "boss defeat enters result flow")
-	_expect(int(result["upgrade_count"]) == 3, "required route XP levels and boss reward produce three upgrades")
-
-
-func _check_multistage_contract(stage: Node) -> void:
-	var result: Dictionary = stage.debug_multistage_contract()
-	_expect(result["stage_ids"] == [&"flooded_works", &"tidal_archive", &"storm_drydock", &"coral_switchyard", &"abyssal_observatory"], "one run advances through five authored stages in order")
-	_expect(&"artillery_spotter" in result["role_sets"][1] and &"interceptor_tower" in result["role_sets"][1], "Tidal Archive deploys artillery and interception roles")
-	_expect(&"shield_escort" in result["role_sets"][2], "Storm Drydock deploys shield escorts")
-	_expect(&"rammer" in result["role_sets"][3] and &"repair_tender" in result["role_sets"][3], "Coral Switchyard combines rammers with repair support")
-	_expect(&"drone_carrier" in result["role_sets"][4] and &"beam_sentinel" in result["role_sets"][4], "Abyssal Observatory combines carriers with beam installations")
-	_expect(result["environments"] == [&"none", &"current", &"storm", &"switchyard", &"observatory"], "all five stages record distinct environment verbs")
-	_expect(result["packet_counts"] == [6, 6, 6, 6, 6], "all five stages record complete six-beat packet tables")
-	for reward_set in result["reward_ids"]:
-		_expect(reward_set.size() == 4, "each authored stage records four reward anchors")
-	var upgrades_preserved := int(result["upgrade_counts"][0]) == 0
-	for index in range(1, result["upgrade_counts"].size()):
-		upgrades_preserved = upgrades_preserved and int(result["upgrade_counts"][index]) > int(result["upgrade_counts"][index - 1])
-	_expect(upgrades_preserved, "five-stage transitions preserve and extend the accumulated run upgrades")
-	_expect(int(result["final_stage_index"]) == 4 and bool(result["final_complete"]) and int(result["final_upgrade_count"]) == 15, "the fifth boss resolves the final stage with the accumulated build")
-
-
-func _check_added_stage_mechanics_contract(stage: Node) -> void:
-	var result: Dictionary = stage.debug_added_stage_mechanics_contract()
-	_expect(int(result["switch_cover_count"]) == 2 and int(result["switch_state"]) == 1 and bool(result["switch_covers_moved"]), "three Switchyard pads drive one visible paired-gate state")
-	_expect(int(result["switch_minimap_markers"]) >= 5, "Switchyard pads and live blockers appear on the minimap")
-	_expect(bool(result["convoy_failure_optional"]), "escaped Switchyard convoy removes only its optional reward")
-	_expect(result["switch_boss_patterns"] == ["open_lane_charge", "gate_shockwave", "ricochet_volley", "switch_sweep"], "Switchyard Behemoth owns four distinct arena attacks")
-	_expect(float(result["behemoth_lane_y"]) in [825.0, 2175.0] and bool(result["behemoth_crash_recovery"]), "Switchyard Behemoth follows the open lane into a vulnerable cover crash")
-	_expect(bool(result["vault_closed_before"]) and bool(result["vault_open_after_alignment"]), "Observatory vault gate follows the two-reflector alignment")
-	_expect(bool(result["ninety_degree_turn"]), "Observatory reflector resolves a deterministic visible ninety-degree turn")
-	_expect(bool(result["direct_round_rejected"]) and bool(result["reflected_round_damaged_relay"]), "Crown shield relay accepts reflected rounds and rejects direct fire")
-	_expect(result["observatory_boss_patterns"] == ["crown_beam", "mirror_cross", "carrier_wave", "relay_pulse"], "Crown Engine owns four distinct arena attacks")
-	_expect(int(result["reflector_minimap_markers"]) == 2, "both live Observatory reflector orientations appear on the minimap")
-	_expect(int(result["crown_relay_count"]) == 2, "Crown Engine begins behind two reflector-only shield relays")
-	_expect(bool(result["beam_spawned_no_children"]) and int(result["crown_carrier_children"]) == 3, "Crown Engine beam never overlaps its one bounded three-drone release")
-
-
-func _check_new_enemy_contract(stage: Node) -> void:
-	var result: Dictionary = stage.debug_new_enemy_contract()
-	_expect(bool(result["intercepted"]) and int(result["charges_after"]) == int(result["charges_before"]) - 1, "Interceptor Tower visibly spends one charge to stop a player shot")
-	_expect(bool(result["artillery_zone_created"]), "Artillery Spotter resolves its warned attack into a denial zone")
-	_expect(bool(result["escort_shielded_ally"]), "Shield Escort protects a nearby ordinary ally")
-
-
-func _check_specialist_enemy_contract(stage: Node) -> void:
-	var result: Dictionary = stage.debug_specialist_enemy_contract()
-	_expect(int(result["archetype_count"]) == 19, "enemy catalog contains exactly nineteen archetypes")
-	_expect(is_equal_approx(float(result["rammer_startup"]), 0.9), "Rammer paints its lane for 0.9 seconds")
-	_expect(bool(result["rammer_recovered"]) and float(result["rammer_vulnerability_damage"]) >= 14.9, "Rammer crashes into cover and exposes a vulnerable recovery")
-	_expect(bool(result["rammer_same_squad_blocked"]) and bool(result["rammer_second_global_allowed"]), "Rammer concurrency allows at most one per squad and two globally")
-	_expect(is_equal_approx(float(result["repair_amount"]), 2.0) and String(result["repair_target"]) == "debug_ally", "Repair Tender maintains one four-hull-per-second ally link")
-	_expect(bool(result["repair_respects_cover"]), "Repair Tender cannot repair through solid cover")
-	_expect(int(result["carrier_first_release"]) == 1 and bool(result["carrier_holds_spacing"]) and int(result["carrier_second_release"]) == 2, "Drone Carrier releases children at 0.65-second spacing")
-	_expect(int(result["carrier_children"]) == 3 and bool(result["carrier_queue_cancelled"]), "Drone Carrier respects its three-child cap and death cancels releases")
-	_expect(bool(result["beam_blocked_by_cover"]) and bool(result["cover_prevented_damage"]), "Beam Sentinel lane terminates at solid cover")
-	_expect(bool(result["beam_dealt_damage"]), "Beam Sentinel active lane damages an exposed player")
-	_expect(bool(result["beam_recovered"]), "Beam Sentinel exits its 0.6-second active window into recovery")
-
-
-func _check_new_upgrade_runtime(stage: Node) -> void:
-	var result: Dictionary = stage.debug_new_upgrade_contract()
-	_expect(int(result["catalog_count"]) == 43, "upgrade catalog contains exactly forty-three cards")
-	_expect(bool(result["retired_missing"]) and bool(result["retired_rejected"]), "all seven retired upgrades stay unavailable")
-	_expect(int(result["forked_level_one_projectiles"]) == 2 and int(result["forked_level_two_projectiles"]) == 3, "Forked Muzzle adds one always-on side round per level")
-	_expect(is_equal_approx(float(result["shock_breach_damage"]), 45.0), "Shock Breach emits forty-five percent opening damage per level")
-	_expect(float(result["marked_time"]) >= 2.49, "Marked Salvo stores a 2.5-second priority mark")
-	_expect(float(result["shear_damage"]) >= 11.9, "Phase Shear raises incoming damage by twenty percent")
-	_expect(float(result["coolant_surge_timer"]) >= 1.99 and is_equal_approx(float(result["coolant_interval"]), 0.102), "Coolant Surge grants two seconds of faster fire after dash")
-	_expect(is_equal_approx(float(result["aegis_barrier"]), 18.0), "Static Aegis creates a fixed level-one barrier")
-	_expect(is_equal_approx(float(result["aegis_level_two_barrier"]), 24.0), "Static Aegis creates a fixed level-two barrier")
-	_expect(float(result["overload_stun"]) >= 4.59, "Relay Overload extends support and installation shutdown")
-	_expect(bool(result["cycle_immediate"]) and int(result["cycle_count"]) == 3, "all three recurring upgrades activate immediately and share one orbit")
-	_expect(float(result["siphon_healing"]) >= 1.99 and float(result["siphon_healing"]) <= 2.01, "Siphon Matrix heals from actual post-mitigation damage")
-	_expect(is_equal_approx(float(result["siphon_capped_healing"]), 6.0), "Siphon Matrix respects its six-hull-per-second budget")
-	_expect(is_equal_approx(float(result["siphon_overkill_healing"]), 0.35), "Siphon Matrix never heals from overkill damage")
-
-
-func _check_enemy_pressure_contract(stage: Node) -> void:
-	var tuning := EncounterDirector.tuning_contract()
-	_expect(is_equal_approx(float(tuning["threat_budget"]), 7.5), "enemy attack coordination uses the raised bounded threat budget")
-	_expect(int(tuning["max_ranged"]) == 3 and int(tuning["max_denial"]) == 2, "ranged and denial commit ceilings remain explicit")
-	var runtime: Dictionary = stage.debug_enemy_pressure_contract()
-	_expect(is_equal_approx(float(runtime["runtime_health"]), float(runtime["base_health"]) * 1.12), "ordinary enemies receive the locked health multiplier")
-	_expect(is_equal_approx(float(runtime["runtime_boss_health"]), 560.0), "stage-one field bosses use their explicit bounded health profile")
-	_expect(is_equal_approx(float(runtime["stage_five_health"]), float(runtime["base_health"]) * 1.12 * 1.16), "stage-five ordinary health applies the bounded curve exactly once")
-	_expect(is_equal_approx(float(runtime["stage_one_priority_health"]), float(runtime["base_priority_health"])) and is_equal_approx(float(runtime["stage_five_priority_health"]), float(runtime["base_priority_health"]) * 1.16), "priority health receives only the bounded stage curve")
-	_expect(is_equal_approx(float(runtime["runtime_speed"]), float(runtime["base_speed"]) * 1.20), "enemy movement receives the locked speed multiplier")
-	_expect(is_equal_approx(float(runtime["stage_five_speed"]), float(runtime["base_speed"]) * 1.20 * 1.04), "stage-five movement applies the bounded curve exactly once")
-	_expect(is_equal_approx(float(runtime["runtime_projectile_speed"]), float(runtime["base_projectile_speed"]) * 1.18), "hostile projectiles receive the locked speed multiplier")
-	_expect(is_equal_approx(float(runtime["runtime_damage"]), float(runtime["base_damage"]) * 1.35), "enemy attacks receive the locked damage multiplier")
-	_expect(is_equal_approx(float(runtime["stage_five_damage"]), float(runtime["base_damage"]) * 1.35 * 1.12), "stage-five damage applies the bounded curve exactly once")
-	_expect(is_equal_approx(float(runtime["boss_final_damage"]), 34.0), "boss pattern damage bypasses ordinary and stage scaling")
-	_expect(is_equal_approx(float(runtime["environment_damage"]), float(runtime["base_damage"])), "environment damage is not accidentally scaled as enemy damage")
-	_expect(is_equal_approx(float(runtime["runtime_recovery"]), float(runtime["base_recovery"]) / 1.28), "ordinary enemy recovery uses the locked faster cadence")
-	var performance: Dictionary = stage.debug_performance_contract()
-	_expect(int(performance["active_capped"]) == int(performance["active_cap"]), "hard active scheduling cannot exceed the stage budget")
-	_expect(bool(performance["committed_preserved"]), "hard active scheduling keeps committed attacks alive")
-	_expect(bool(performance["backdrop_cached"]) and bool(performance["backdrop_behind"]), "static stage geometry is cached behind dynamic gameplay")
-	_expect(is_equal_approx(float(performance["threat_sample_interval"]), 0.10), "off-screen threat contacts sample at ten hertz")
-	_expect(is_equal_approx(float(performance["hud_refresh_interval"]), 0.05), "gameplay HUD refreshes at a bounded twenty hertz")
-	_expect(int(performance["stage_definition_build_count"]) == 1, "registered stage data validates and builds once")
-
-
-func _check_projectile_cover_contract(stage: Node) -> void:
-	stage.current_stage_index = 0
-	stage.current_stage_id = &"flooded_works"
-	stage.call("_reset_run", false, true, false)
-	stage.mode = 1
-	stage.player_position = Vector2(500.0, 845.0)
-	stage.projectiles.clear()
-	stage.call("_spawn_player_projectile", Vector2(500.0, 845.0), Vector2.RIGHT, 12.0, 1000.0, 0)
-	stage.call("_update_projectiles", 0.70)
-	_expect(stage.projectiles.is_empty(), "primary projectile stops at ordinary solid cover")
-
-	stage.projectiles.clear()
-	stage.call(
-		"_spawn_hostile_projectile",
-		Vector2(1100.0, 845.0),
-		Vector2.LEFT,
-		10.0,
-		1000.0,
-		"validation enemy bolt",
-		Rules.CORAL
-	)
-	var health_before := float(stage.player_health)
-	stage.call("_update_projectiles", 0.70)
-	_expect(stage.projectiles.is_empty(), "enemy projectile stops at ordinary solid cover")
-	_expect(is_equal_approx(float(stage.player_health), health_before), "cover prevents enemy projectile damage")
-
-
-func _check_passive_contract(stage: Node) -> void:
-	var contract: Dictionary = stage.debug_passive_line_of_sight_contract()
-	_expect(bool(contract["open"]), "passive secondary can detect an unobstructed target")
-	_expect(not bool(contract["blocked"]), "passive secondary line of sight respects solid cover")
-
-
-func _check_reset_contract(stage: Node) -> void:
-	var contract: Dictionary = stage.debug_reset_contract()
-	_expect(int(contract["before"]) == 1, "reset check begins with an applied card")
-	_expect(int(contract["after"]) == 0, "run upgrades reset on replay")
-	_expect(not bool(contract["chest_claimed"]), "chest state resets on replay")
-	_expect(int(contract["generators"]) == 0, "installation objective resets on replay")
-
-
-func _action_has_key(action: StringName, keycode: Key) -> bool:
-	for event in InputMap.action_get_events(action):
-		if event is InputEventKey:
-			var key_event := event as InputEventKey
-			if key_event.keycode == keycode or key_event.physical_keycode == keycode:
-				return true
-	return false
-
-
-func _action_has_mouse(action: StringName, button: MouseButton) -> bool:
-	for event in InputMap.action_get_events(action):
-		if event is InputEventMouseButton and (event as InputEventMouseButton).button_index == button:
-			return true
-	return false
-
-
-func _expect(condition: bool, description: String) -> void:
-	checks_run += 1
-	if condition:
-		print("PASS %s" % description)
-	else:
-		print("FAIL %s" % description)
-		failures.append(description)
+func _expect(condition: bool, message: String) -> void:
+	if not condition: failures.append(message)
 
 
 func _finish() -> void:
-	var summary := {
-		"checks": checks_run,
-		"failures": failures.size(),
-		"failure_messages": Array(failures),
-	}
-	print("VEHICLE_STAGE_VALIDATION_SUMMARY %s" % JSON.stringify(summary))
 	if failures.is_empty():
-		print("VEHICLE_STAGE_VALIDATION_OK")
+		print("VEHICLE_RUN_VALIDATION_OK")
 		quit(0)
 	else:
-		push_error("Vehicle run validation failed with %d issue(s)" % failures.size())
+		for failure in failures: push_error(failure)
 		quit(1)

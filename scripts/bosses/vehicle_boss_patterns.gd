@@ -32,31 +32,15 @@ const PATTERNS := {
 }
 
 const STAGE_SEQUENCES := {
-	&"flooded_works":[&"twin_foundry_lanes", &"foundry_ram", &"furnace_ring", &"pylon_overload"],
-	&"tidal_archive":[&"current_fan", &"undertow_sweep", &"depth_charge", &"archive_ram"],
-	&"storm_drydock":[&"arc_lanes", &"grounded_ring", &"thunder_drop", &"escort_surge"],
-	&"coral_switchyard":[&"open_lane_charge", &"gate_shockwave", &"ricochet_volley", &"switch_sweep"],
-	&"abyssal_observatory":[&"crown_beam", &"mirror_cross", &"carrier_wave", &"relay_pulse"],
+	&"stage_1":[&"twin_foundry_lanes", &"foundry_ram", &"furnace_ring", &"pylon_overload"],
+	&"stage_2":[&"current_fan", &"undertow_sweep", &"depth_charge", &"archive_ram"],
+	&"stage_3":[&"arc_lanes", &"grounded_ring", &"thunder_drop", &"escort_surge"],
+	&"stage_4":[&"open_lane_charge", &"gate_shockwave", &"ricochet_volley", &"switch_sweep"],
+	&"stage_5":[&"crown_beam", &"mirror_cross", &"carrier_wave", &"relay_pulse"],
 }
-
-const FIELD_PATTERNS := {
-	&"field_ram":{"kind":&"charge", "startup":1.05, "active":0.55, "recovery":1.05, "damage":30.0, "radius":170.0},
-	&"field_pressure":{"kind":&"area", "startup":0.90, "active":0.55, "recovery":0.95, "damage":28.0, "radius":155.0},
-	&"foundry_fan":{"kind":&"fan", "startup":1.10, "active":0.55, "recovery":0.95, "damage":26.0, "radius":170.0},
-	&"current_wake":{"kind":&"fan", "startup":1.10, "active":0.60, "recovery":1.00, "damage":28.0, "radius":175.0},
-	&"arc_drop":{"kind":&"area", "startup":1.10, "active":0.50, "recovery":1.10, "damage":32.0, "radius":165.0},
-	&"switch_shock":{"kind":&"area", "startup":1.10, "active":0.55, "recovery":1.00, "damage":28.0, "radius":180.0},
-	&"mirror_fan":{"kind":&"fan", "startup":1.10, "active":0.60, "recovery":1.05, "damage":30.0, "radius":175.0},
-}
-
-const FIELD_STAGE_VERB := {
-	&"flooded_works":&"foundry_fan", &"tidal_archive":&"current_wake", &"storm_drydock":&"arc_drop",
-	&"coral_switchyard":&"switch_shock", &"abyssal_observatory":&"mirror_fan",
-}
-
 
 static func sequence(stage_id: StringName, phase_two: bool) -> Array[String]:
-	var base: Array = STAGE_SEQUENCES.get(stage_id, STAGE_SEQUENCES[&"flooded_works"])
+	var base: Array = STAGE_SEQUENCES.get(stage_id, STAGE_SEQUENCES[&"stage_1"])
 	var ordered: Array = [base[2], base[0], base[3], base[1]] if phase_two else base
 	var result: Array[String] = []
 	for value in ordered: result.append(String(value))
@@ -93,11 +77,3 @@ static func radius(pattern: String) -> float:
 
 static func width(pattern: String) -> float:
 	return float(definition(pattern).get("width", 68.0))
-
-
-static func field_sequence(stage_id: StringName) -> Array[StringName]:
-	return [&"field_ram", &"field_pressure", StringName(FIELD_STAGE_VERB.get(stage_id, &"foundry_fan"))]
-
-
-static func field_definition(pattern: String) -> Dictionary:
-	return Dictionary(FIELD_PATTERNS.get(StringName(pattern), FIELD_PATTERNS[&"field_ram"]))

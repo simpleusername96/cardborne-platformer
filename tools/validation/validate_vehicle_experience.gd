@@ -29,7 +29,6 @@ func _validate_drop_values() -> void:
 	_expect(FieldDropRules.experience_for_enemy({"health_class":&"swarm", "role":&"chaser"}) == 1, "swarm XP is 1")
 	_expect(FieldDropRules.experience_for_enemy({"health_class":&"standard", "role":&"chaser"}) == 2, "standard XP is 2")
 	_expect(FieldDropRules.experience_for_enemy({"health_class":&"priority", "role":&"turret"}) == 4, "priority XP is 4")
-	_expect(FieldDropRules.experience_for_enemy({"health_class":&"priority", "role":&"field_boss"}) == 18, "field boss XP is 18")
 	_expect(FieldDropRules.experience_for_enemy({"health_class":&"boss", "role":&"stage_boss"}) == 24, "stage boss XP is 24")
 	_expect(FieldDropRules.experience_for_enemy({"health_class":&"swarm", "role":&"chaser", "carrier_id":"carrier"}) == 0, "carrier children grant no XP")
 	_expect(FieldDropRules.experience_for_enemy({"health_class":&"priority", "role":&"boss_pylon"}) == 0, "boss pylons grant no XP")
@@ -65,10 +64,10 @@ func _validate_experience_runtime() -> void:
 	runtime.spawn_shard(Vector2(900.0, 0.0), 2)
 	_expect(int(runtime.advance(0.1, Vector2.ZERO, 92.0, false)["experience"]) == 0, "distant XP is not awarded before collection")
 	_expect(int(runtime.advance(0.65, Vector2.ZERO, 92.0, true)["experience"]) == 2, "experience recall collects distant XP without collecting other items")
-	runtime.spawn_shard(Vector2.ZERO, 100, &"field_boss")
+	runtime.spawn_shard(Vector2.ZERO, 100, &"boss")
 	result = runtime.advance(0.0, Vector2.ZERO, 92.0, false)
 	_expect(int(result["levels"]) == 3 and runtime.pending_level_ups == 3, "one collection safely queues multiple level-ups")
-	_expect(&"field_boss" in result["reward_sources"], "milestone reward remains queued behind simultaneous levels")
+	_expect(&"boss" in result["reward_sources"], "boss reward remains queued behind simultaneous levels")
 	runtime.reset()
 	_expect(runtime.run_level == 1 and runtime.experience == 0 and runtime.pending_level_ups == 0 and runtime.shards.is_empty(), "run reset clears XP, levels, choices, and shards")
 
@@ -76,7 +75,7 @@ func _validate_experience_runtime() -> void:
 func _validate_route_level_cadence() -> void:
 	var runtime := ExperienceRuntime.new()
 	for stage_id in Catalog.STAGE_IDS:
-		var stage_experience := 48 + 24 # Calibration/relay caches and the stage-boss core.
+		var stage_experience := 24 # Stage-boss core plus defeated authored enemies.
 		var stage_boss_authored := false
 		for spec in Catalog.enemy_blueprint(stage_id):
 			var definition := EnemyArchetypes.definition(StringName(spec["role"]))
@@ -92,7 +91,7 @@ func _validate_route_level_cadence() -> void:
 		runtime.spawn_shard(Vector2.ZERO, stage_experience)
 		runtime.advance(0.0, Vector2.ZERO, 100.0, false)
 		var levels_gained := runtime.run_level - level_before
-		_expect(levels_gained >= 4 and levels_gained <= 6, "%s full-clear XP yields %d level-ups" % [stage_id, levels_gained])
+		_expect(levels_gained >= 3 and levels_gained <= 5, "%s authored XP yields %d level-ups" % [stage_id, levels_gained])
 		while runtime.consume_pending_level():
 			pass
 

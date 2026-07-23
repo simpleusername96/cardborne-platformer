@@ -2,7 +2,9 @@ class_name VehicleUpgradeCatalog
 extends RefCounted
 
 const CARD_PATH := "res://data/cards/vehicle"
-const EXPECTED_COUNT := 43
+const EXPECTED_COUNT := 46
+const SECONDARY_FAMILY_IDS: Array[StringName] = [&"ion_field", &"orbit_blades", &"wake_mines", &"escort_drone"]
+const OPTIONAL_SECONDARY_SLOTS := 2
 
 var definitions: Dictionary = {}
 
@@ -57,6 +59,8 @@ func compatible(definition: VehicleUpgradeDefinition, build: VehicleRunBuild) ->
 		return false
 	if definition.exclusion_group == &"element_core" and build.element_core != &"" and build.element_core != definition.id:
 		return false
+	if definition.id in SECONDARY_FAMILY_IDS and build.level_of(definition.id) == 0 and build.active_optional_secondaries() >= OPTIONAL_SECONDARY_SLOTS:
+		return false
 	if definition.requirement != &"" and build.element_core != &"" and _core_for(definition.id) != &"" and _core_for(definition.id) != build.element_core:
 		return false
 	return true
@@ -77,6 +81,10 @@ func offer(build: VehicleRunBuild, run_index: int, stage_index: int, source_id: 
 		available[index] = available[swap_index]
 		available[swap_index] = temporary
 	var result: Array[VehicleUpgradeDefinition] = []
+	if source_id == &"level_up" and build.total_levels() == 1 and not build.has(&"tuned_thrusters"):
+		var tuned := get_definition(&"tuned_thrusters")
+		if tuned != null and tuned in available:
+			result.append(tuned)
 	if source_id == &"level_up" and stage_index == 0 and build.levels.is_empty():
 		_append_first_family(result, available, [&"primary"])
 		_append_first_family(result, available, [&"element"])

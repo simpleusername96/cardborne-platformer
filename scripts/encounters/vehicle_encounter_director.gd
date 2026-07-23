@@ -20,11 +20,11 @@ const ONSLAUGHT_ACTIVE_CAPS := [1, 22, 33, 44, 52]
 const STANDARD_THREAT_BUDGETS := [1.0, 3.0, 4.5, 5.25, 6.25]
 
 const POPULATION_BANDS := {
-	&"flooded_works": Vector2i(112,128),
-	&"tidal_archive": Vector2i(128,148),
-	&"storm_drydock": Vector2i(144,164),
-	&"coral_switchyard": Vector2i(152,176),
-	&"abyssal_observatory": Vector2i(160,184),
+	&"stage_1": Vector2i(56,56),
+	&"stage_2": Vector2i(64,64),
+	&"stage_3": Vector2i(72,72),
+	&"stage_4": Vector2i(80,80),
+	&"stage_5": Vector2i(88,88),
 }
 
 
@@ -33,7 +33,7 @@ static func active_cap_for(beat: int, preset: StringName = &"standard") -> int:
 	return int(caps[clampi(beat, 0, caps.size() - 1)])
 
 
-static func active_cap(_stage_id: StringName = &"flooded_works") -> int:
+static func active_cap(_stage_id: StringName = &"stage_1") -> int:
 	return active_cap_for(4, &"standard")
 
 

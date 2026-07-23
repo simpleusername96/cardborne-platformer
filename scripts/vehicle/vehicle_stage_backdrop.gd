@@ -6,8 +6,9 @@ extends Node2D
 
 const Rules = preload("res://scripts/vehicle/vehicle_stage_rules.gd")
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
+const StageCatalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
 
-var stage_id: StringName = &"flooded_works"
+var stage_id: StringName = &"stage_1"
 
 
 func _ready() -> void:
@@ -36,29 +37,12 @@ func _draw_world() -> void:
 
 
 func _draw_major_motifs() -> void:
-	for motif in Art.major_motifs():
+	for motif in StageCatalog.motifs(stage_id):
 		var kind := StringName(motif["kind"])
 		var center := Vector2(motif["center"])
 		var radius := float(motif["radius"])
 		var rotation := float(motif["rotation"])
-		var color := Color(motif["color"])
-		if stage_id == &"tidal_archive":
-			center.y = Rules.world_rect(stage_id).size.y - center.y
-			rotation += PI * 0.5
-			kind = &"split_current" if kind == &"tide_curl" else kind
-		elif stage_id == &"storm_drydock":
-			center += Vector2(90.0, -70.0)
-			rotation += PI * 0.25
-			kind = &"sun_gate" if kind in [&"tide_curl", &"split_current"] else &"relay_flower"
-		elif stage_id == &"coral_switchyard":
-			center += Vector2(170.0, 90.0)
-			rotation += PI * 0.5
-			kind = &"split_current" if kind == &"relay_flower" else &"sun_gate"
-		elif stage_id == &"abyssal_observatory":
-			center.x = Rules.world_rect(stage_id).size.x - center.x
-			center += Vector2(-120.0, 50.0)
-			rotation -= PI * 0.25
-			kind = &"relay_flower" if kind in [&"tide_curl", &"split_current"] else &"sun_gate"
+		var color := _motif_color(kind)
 		if not Rules.is_position_walkable(center, radius, stage_id):
 			continue
 		match kind:
@@ -66,6 +50,15 @@ func _draw_major_motifs() -> void:
 			&"split_current": _draw_split_current(center, radius, rotation, color)
 			&"relay_flower": _draw_relay_flower(center, radius, rotation, color)
 			&"sun_gate": _draw_sun_gate(center, radius, rotation, color)
+
+
+func _motif_color(kind: StringName) -> Color:
+	match kind:
+		&"tide_curl": return Art.MINT
+		&"split_current": return Art.CORAL
+		&"relay_flower": return Art.CERAMIC_GREEN_LIGHT
+		&"sun_gate": return Art.MUSTARD
+	return Art.MINT
 
 
 func _draw_tide_curl(center: Vector2, radius: float, rotation: float, color: Color) -> void:

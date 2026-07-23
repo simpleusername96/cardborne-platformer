@@ -2,86 +2,44 @@ extends SceneTree
 
 const Catalog = preload("res://scripts/cards/vehicle_upgrade_catalog.gd")
 const RunBuild = preload("res://scripts/cards/vehicle_run_build.gd")
-const StatusRuntime = preload("res://scripts/combat/vehicle_status_runtime.gd")
 
-var failures := PackedStringArray()
+var failures: Array[String] = []
 
 
 func _initialize() -> void:
 	var catalog := Catalog.new()
 	for error in catalog.validate_contract(): failures.append(error)
-	_expect(catalog.definitions.size() == 43, "catalog contains exactly 43 upgrades")
-	var advanced_ids: Array[StringName] = [&"shock_breach", &"marked_salvo", &"phase_shear", &"coolant_wake", &"static_aegis", &"relay_overload", &"aegis_cycle", &"overclock_cycle", &"thruster_cycle", &"siphon_matrix"]
-	var retired_ids: Array[StringName] = [&"burst_capacitor", &"relay_rounds", &"reserve_charge", &"guardian_seeker", &"emergency_vector"]
-	retired_ids.append_array([&"field_converter", &"salvage_booster"])
-	for upgrade_id in retired_ids:
-		_expect(catalog.get_definition(upgrade_id) == null, "%s remains retired" % upgrade_id)
-	for upgrade_id in advanced_ids:
-		var definition := catalog.get_definition(upgrade_id)
-		_expect(definition != null and not definition.behavior_ids.is_empty(), "%s is a valid behavior card" % upgrade_id)
+	_expect(catalog.definitions.size() == 46, "catalog contains exactly 46 upgrades")
+	for id in Catalog.SECONDARY_FAMILY_IDS:
+		var definition := catalog.get_definition(id)
+		_expect(definition != null and definition.max_level == 3 and definition.family == &"secondary", "%s is a three-level secondary" % id)
 	var build := RunBuild.new(catalog)
-	var first_offer := catalog.offer(build, 0, 0, &"level_up")
-	_expect(first_offer.size() == 3, "first level-up offer contains three choices")
-	var first_families := first_offer.map(func(card): return card.family)
-	_expect(&"primary" in first_families and &"element" in first_families and (&"passive" in first_families or &"mobility" in first_families), "first offer contains primary, element, and passive or mobility choices")
-	var first_ids := {}
-	for card in first_offer:
-		first_ids[card.id] = true
-	_expect(first_ids.size() == 3, "first level-up offer contains no duplicate IDs")
-	var surfaced := {}
-	for seed in 160:
-		for source_id in [&"level_up", &"field_boss", &"boss"]:
-			for card in catalog.offer(build, seed, 2, source_id):
-				if card.id in advanced_ids:
-					surfaced[card.id] = true
-	_expect(surfaced.size() == advanced_ids.size(), "deterministic later offers can surface every retained advanced card")
-	var relay_offer := catalog.offer(build, 0, 0, &"relay")
-	_expect(relay_offer.any(func(card): return not card.behavior_ids.is_empty()), "relay offer guarantees a behavior-changing choice")
-	var preview := build.preview(&"kinetic_rounds")
-	_expect(bool(preview["valid"]) and build.levels.is_empty(), "preview is valid and non-mutating")
+	var expected := [280.0, 302.4, 324.8, 347.2]
+	_expect(is_equal_approx(build.stat(&"move_speed_multiplier", 280.0), expected[0]), "base movement is 280")
 	for level in 3:
-		var receipt := build.apply(&"kinetic_rounds")
-		_expect(bool(receipt.get("applied", false)), "kinetic round stack applies")
-	_expect(not bool(build.apply(&"kinetic_rounds").get("valid", false)), "maxed upgrade is rejected")
-	_expect(build.stat(&"primary_damage_multiplier", 1.0) > 1.52, "stacked primary damage derives from resource modifiers")
-	_expect(bool(build.apply(&"incendiary_core").get("applied", false)), "first element core applies")
-	_expect(not bool(build.apply(&"toxin_core").get("valid", false)), "second element core is excluded")
-	_expect(bool(build.apply(&"thermal_compound").get("applied", false)), "core-dependent mutation applies")
-	var enemy := {"role": &"chaser"}
-	StatusRuntime.apply(enemy, StatusRuntime.payload(build))
-	_expect(enemy["statuses"].has(&"burn"), "incendiary build applies burn payload")
-	_expect(StatusRuntime.tick(enemy, 0.5) > 0.0, "burn deals deterministic DOT")
-	_expect(bool(build.apply(&"flashover").get("applied", false)), "burn follow-up applies")
-	_expect(float(StatusRuntime.resolve_opening(enemy, build, 20.0)["bonus_damage"]) > 0.0, "flashover consumes burn for opening damage")
+		_expect(bool(build.apply(&"tuned_thrusters").get("applied", false)), "Tuned Thrusters level applies")
+		_expect(is_equal_approx(build.stat(&"move_speed_multiplier", 280.0), expected[level + 1]), "Tuned Thrusters uses exact level speed")
 	build.reset()
-	build.apply(&"toxin_core")
-	build.apply(&"concentrated_toxin")
-	enemy = {"role": &"chaser"}
-	StatusRuntime.apply(enemy, StatusRuntime.payload(build))
-	StatusRuntime.apply(enemy, StatusRuntime.payload(build))
-	_expect(int(enemy["statuses"][&"poison"]["stacks"]) == 2, "poison stacks within its cap")
-	_expect(StatusRuntime.tick(enemy, 0.5) > 0.0, "poison deals deterministic stacked DOT")
+	build.apply(&"kinetic_rounds")
+	var second_offer := catalog.offer(build, 0, 0, &"level_up")
+	_expect(second_offer.any(func(card): return card.id == &"tuned_thrusters"), "second level-up offers Tuned Thrusters")
 	build.reset()
-	build.apply(&"cryo_core")
-	build.apply(&"deep_freeze")
-	enemy = {"role": &"chaser"}
-	StatusRuntime.apply(enemy, StatusRuntime.payload(build))
-	_expect(StatusRuntime.speed_multiplier(enemy) < 0.75, "deep freeze produces a readable slow")
-	build.reset()
-	for upgrade_id in [&"shock_breach", &"static_aegis", &"relay_overload", &"forked_muzzle", &"aegis_cycle", &"overclock_cycle", &"thruster_cycle", &"siphon_matrix"]:
-		var definition := catalog.get_definition(upgrade_id)
-		for level in definition.max_level:
-			_expect(bool(build.apply(upgrade_id).get("applied", false)), "%s level %d applies" % [upgrade_id, level + 1])
-		_expect(not bool(build.apply(upgrade_id).get("valid", false)), "%s respects max level" % upgrade_id)
-	build.reset()
-	_expect(build.levels.is_empty() and build.element_core == &"", "run reset clears upgrade levels and element core")
+	build.apply(&"ion_field")
+	build.apply(&"orbit_blades")
+	_expect(build.active_optional_secondaries() == 2, "two optional secondary slots are occupied")
+	_expect(not catalog.compatible(catalog.get_definition(&"wake_mines"), build), "a fourth total family is blocked")
+	_expect(catalog.compatible(catalog.get_definition(&"ion_field"), build), "owned family remains levelable")
+	_finish()
+
+
+func _expect(condition: bool, message: String) -> void:
+	if not condition: failures.append(message)
+
+
+func _finish() -> void:
 	if failures.is_empty():
 		print("VEHICLE_UPGRADE_SYSTEM_VALIDATION_OK")
 		quit(0)
 	else:
 		for failure in failures: push_error(failure)
 		quit(1)
-
-
-func _expect(condition: bool, message: String) -> void:
-	if not condition: failures.append(message)

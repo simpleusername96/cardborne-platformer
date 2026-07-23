@@ -12,6 +12,7 @@ config/features=PackedStringArray("4.7", "GL Compatibility")
 [autoload]
 
 SettingsStore="*res://scripts/autoload/settings_store.gd"
+VehicleGuidebookStore="*res://scripts/autoload/vehicle_guidebook_store.gd"
 
 [display]
 

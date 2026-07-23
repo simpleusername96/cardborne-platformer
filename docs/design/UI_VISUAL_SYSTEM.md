@@ -2,7 +2,7 @@
 type: spec
 status: active
 owner: BK
-last_reviewed: 2026-07-22
+last_reviewed: 2026-07-23
 canonical_for: Cardborne vehicle-game art direction and UI presentation
 related:
   - ../product/vehicle_game_spec.md
@@ -13,149 +13,103 @@ related:
 
 ## Purpose
 
-Define one readable visual language for the current vehicle game across the map,
-actors, combat feedback, HUD, deployment, upgrades, pause/settings, results, and
-garage.
-
-`sunken-ceramic-fresco.png` is the visual reference for palette, large-shape
-rhythm, and restrained detail. Runtime layout and gameplay semantics come from
-this specification rather than from the reference image's depicted objects.
+Define one readable flat-color visual language for the current shared-field
+vehicle game. `sunken-ceramic-fresco.png` supplies palette, large-shape rhythm,
+and restrained detail; gameplay meaning comes from this specification.
 
 ## Scope
 
-This contract applies to every reachable screen and every gameplay object in the
-current five-stage campaign. Gameplay rules remain owned by the product specification
-and runtime systems.
+This contract applies to the shared field, actors, combat feedback, HUD,
+deployment, upgrades, pause/settings, guidebook, result, and garage. Gameplay
+rules remain owned by the product specification.
 
 ## Requirements
 
-### Art language
+### Art language and semantic palette
 
-- Use flat color, large geometric masses, sparse monumental motifs, and clean
-  silhouettes.
-- Avoid outlines, fine texture, speckling, repeated micro-patterns, and decorative
-  detail that competes with combat information.
-- A screen should read first as walkable space, blockers, player, threats,
-  rewards, and objectives; atmosphere comes after those roles.
-- Reuse a small set of strong shapes. Variation comes from composition, scale,
-  rotation, and state—not unrelated colors or surface noise.
+- Use flat color, large geometric masses, clean silhouettes, and sparse
+  monumental motifs. Avoid outlines, fine texture, speckling, micro-patterns,
+  surface stains, and decorative detail that competes with combat.
+- A frame must read in this order: walkable floor, solid cover/void, player,
+  threats and telegraphs, pickups/rewards, then atmosphere.
+- Ivory means walkable ground, ceramic green means solid cover/installations,
+  cobalt means water or void, mustard means player/reward/progress, coral means
+  ordinary danger, magenta means boss danger, and mint means recovery/support.
+- All solid static cover uses the same blocker fill. State is communicated by a
+  large shape, animation, or icon—not by inventing a new wall color.
 
-### Semantic palette
+### Shared-field readability
 
-| Role | Color family | Use |
-| --- | --- | --- |
-| Walkable ground | Ivory | Traversable floor and modal surfaces |
-| Blocking geometry | Ceramic green | Cover, walls, installations |
-| Water and void | Cobalt | Non-walkable field and depth |
-| Player, reward, progress | Mustard | Vehicle focus, pickups, active progress |
-| Ordinary danger | Coral | Enemies, hostile attacks, damage |
-| Boss danger | Magenta | Boss-only hierarchy |
-| Recovery and support | Mint | Healing, safe state, assistance |
-| Text | Deep green/ivory | High-contrast copy only |
+- Rendering and collision use the exact same floor and cover polygons. A visible
+  opening must be traversable and a visible barrier must block movement,
+  projectiles, line of sight, pursuit, and minimap space.
+- Main lanes remain broad enough for the player and pursuing groups to pass one
+  another. Small unusable gaps are visually sealed.
+- The map is larger than the viewer. The camera shows only a local combat area;
+  the explored 16x10 minimap communicates the persistent whole.
+- Stage identity comes from population, pacing, boss, and UI state on the same
+  drowned-ruin field. Do not recolor or rearrange the field between stages.
+- Motifs are large and sparse. Do not add tiny debris or repeated decoration to
+  fake variation.
 
-Do not assign a new color when an existing semantic role already communicates the
-state.
+### Actor and combat readability
 
-All collision-bearing static cover, closed boss gates, active switch gates, and
-closed vault gates use one exact blocker fill: `#07564C`. Alternate green caps,
-colored wall faces, and blocker shadows are not used to imply collision. Dynamic
-state uses a large shape or motion cue without changing the blocker fill.
+- The player, swarm units, mobile specialists, stationary threats, bosses,
+  experience shards, repair, recall, and crates have distinct silhouettes and
+  scale classes.
+- All dangerous attacks show startup, damage area or projectile, and recovery.
+  Enemy intent is communicated through authored motion and telegraphs, not
+  permanent trajectory overlays.
+- Boss warning and boss health replace competing top-level information while
+  active. Off-screen threat arcs supplement the field and never duplicate
+  visible enemies.
+- Automatic secondaries use bounded, recognizable shapes: seeker projectile,
+  mint ion ring, mustard orbit blades, coral wake mines, and a following drone.
 
-### Map and actor readability
+### HUD and modal hierarchy
 
-- Traversable floor and collision-blocking geometry must be distinguishable
-  before the player touches them.
-- Floor and cover geometry must use the same polygon for movement, projectile
-  collision, line of sight, minimap blocking, validation, and rendered
-  presentation. A chamfer visible in the world must be the same chamfer used by
-  collision.
-- Every opening presented as passable is at least 168 pixels edge-to-edge; main
-  travel and combat lanes are at least 320 pixels wide, and bends/branches provide
-  a 240x240 turning pocket. Smaller gaps are visually sealed rather than shown as
-  unusable slits.
-- Static interior cover remains sparse: stages 1-5 use at most 9/10/9/9/8 static
-  cover shapes respectively, excluding their named dynamic blockers.
-- Keep major floor motifs between 120 and 250 pixels in radius and use them
-  sparingly.
-- The player, ordinary enemies, installations, field bosses, stage bosses,
-  pickups, and caches need visibly different scale and silhouette classes.
-- Startup, active, recovery, disabled, shielded, targeted, and destroyed states
-  must remain readable at gameplay zoom.
-- Off-screen threat arcs supplement the field; they must not duplicate enemies
-  already visible on screen.
-
-### Stage identity
-
-All stages use the same semantic palette. Identity comes from macro composition
-and one large mechanic, not recoloring or added surface noise:
-
-| Stage | Large-shape identity |
-| --- | --- |
-| Flooded Works | Centered ivory plaza, split generator routes, green foundry cover, and broad cobalt voids. |
-| Tidal Archive | Long current channels with large directional water marks and counter-current branch. |
-| Storm Drydock | Grounded islands, broad electrical sweep lanes, and a restrained safe spine. |
-| Coral Switchyard | Three mustard switch circles and one paired green gate that visibly changes flank ownership. |
-| Abyssal Observatory | Two large mint reflector diamonds, readable orientation bars, consoles, and a symmetrical crown chamber. |
-
-Mechanics that change collision must update world drawing and minimap in the
-same frame. Switch gates and reflector orientations are large navigational
-signals, not decorative icons.
-
-### UI hierarchy
-
-- Korean is the default language. Korean and English use the same layout and a
-  real medium-or-heavier Noto Sans KR weight.
-- Live combat prioritizes compact hull/experience, current objective,
-  primary-fire state, dash, EMP, passive support, minimap, and exceptional buffs.
-- Primary fire owns the strongest icon in a compact action cluster. Utility
-  actions remain secondary and use radial readiness rather than wide text slots.
-- A maximum of three 24-pixel status badges sits at a 62-pixel radius around the
-  projected player. Shape identifies shield, attack, and movement cycles; a
-  clockwise arc distinguishes recharge from active duration without color alone.
-- Boss state replaces competing objective/minimap clusters while the boss is
-  active.
-- Deployment, upgrade, pause, result, and garage are modal focus layers. They hide
-  gameplay HUD content, block carried input, expose one clear primary action, and
-  never apply a selection before explicit confirmation.
-- Use short labels and strong numerals. Do not solve hierarchy with small gray
-  explanatory text.
+- Korean is the default. Korean and English use the same layout and a real
+  medium-or-heavier Noto Sans KR font weight.
+- Keep live HUD clusters compact and outside the central combat rectangle.
+  Prefer icons, strong numerals, radial cooldowns, and short labels over wide
+  explanatory panels.
+- Timed effects use shape-distinct radial badges around the ship. Cooldown and
+  active duration are distinguishable without color alone.
+- Deployment, upgrade, pause/settings, guidebook, result, and garage hide
+  conflicting live HUD, block gameplay input, have one clear primary action,
+  and never clip at the supported minimum viewport.
+- Upgrade selection uses a two-step choose-and-confirm flow. No timeout, hover,
+  or accidental carried click applies a card.
+- The guidebook is reachable through `?`, uses five stable categories, clearly
+  separates discovered content from `???`, and shows current ship statistics
+  without exposing future entries.
 
 ### Implementation boundaries
 
-- Recurring typography and control states belong in
-  `art/ui/production/vehicle_stage_theme.tres`.
-- Live values, labels, cooldowns, health, selection, focus, and localization stay
-  in Godot UI; do not bake them into images.
-- `vehicle_stage_visual_profile.gd` owns semantic colors and presentation scale.
-- `vehicle_stage_backdrop.gd` owns cached static world drawing. Dynamic combat
-  state remains in the vehicle run.
-- New raster assets are justified only when procedural shapes cannot communicate
-  the required silhouette or landmark at gameplay size.
-- Generated capture and build folders contain `.gdignore` boundaries so QA
-  evidence never enters the shipped resource graph.
+- Typography and reusable control states belong in the production Godot theme.
+- Values, labels, cooldowns, focus, selection, localization, and guide discovery
+  remain live UI state; do not bake them into raster assets.
+- Static world presentation belongs to `vehicle_stage_backdrop.gd`; shared field
+  geometry belongs to `drowned_ruin_field.gd`; dynamic combat belongs to the run.
+- Raster assets are justified only when procedural flat shapes cannot communicate
+  the required silhouette at gameplay size.
 
 ## Acceptance Criteria
 
 - At 960x540, 1280x720, and 1920x1080, HUD clusters do not overlap, modal content
-  is not clipped, and every command target remains at least 44 pixels high.
-- At 960x540, opaque live-combat panels cover at most 12% of the viewport and no
-  opaque panel enters the central 60% by 60% combat rectangle.
-- Korean and English expose the same reachable controls and complete copy.
-- Walkable, blocked, threat, player/reward, recovery, and boss roles pass the
-  visual-profile contract validator.
-- The player and objective remain locatable during maximum supported enemy
-  pressure.
-- Every modal has deterministic initial focus, disabled state, confirmation, and
-  dismissal behavior.
-- Visual changes pass `tools/validation/validate_vehicle_run.gd` and a rendered
-  review at the supported viewport sizes.
+  is not clipped, and command targets remain at least 44 pixels high.
+- Korean and English expose identical reachable controls and complete copy.
+- Walkable, blocker, void, player/reward, danger, support, and boss semantics are
+  distinguishable without relying on fine detail.
+- The player, current objective, opening-shot state, active secondaries, and boss
+  warning remain locatable at maximum supported enemy pressure.
+- Rendered review shows one persistent field across all stage states, no fake
+  passable gaps, no retired boss gate, and no hidden guidebook controls.
 
 ## Non-Goals
 
-- Realistic materials, dense texture detail, or ornamental borders.
-- Per-screen component forks that duplicate an existing visual role.
-- UI-baked screenshots used as runtime screens.
-- Visual effects that obscure hostile telegraphs, collision boundaries, or the
-  player's silhouette.
-- Black walkable ground, white blockers, and a matching monochrome actor redesign
-  until that separate visual direction is explicitly accepted.
+- Realistic materials, ornamental borders, dense texture, or micro-decoration.
+- Per-stage field recolors or geometry variants.
+- Text baked into screenshots or image assets.
+- Black-floor/white-wall conversion without a separately accepted actor and
+  telegraph contrast system.

@@ -10,5 +10,5 @@ description_key = "UPGRADE_CONCENTRATED_TOXIN_DESC"
 family = &"element"
 max_level = 2
 requirement = &"toxin_core"
-source_tags = Array[StringName]([&"calibration", &"relay", &"field_boss", &"boss"])
+source_tags = Array[StringName]([&"level_up", &"boss"])
 behavior_ids = Array[StringName]([&"concentrated_toxin"])

@@ -1,12 +1,12 @@
 class_name VehicleStatusOrbit
 extends Control
 
-## Three shape-coded recurring upgrade timers placed inside the threat radar.
+## Two shape-coded recurring upgrade timers placed inside the threat radar.
 
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const BADGE_RADIUS := 12.0
 const ORBIT_RADIUS := 62.0
-const ANGLES := [-2.22, -1.57, -0.92]
+const ANGLES := [-2.05, -1.10]
 
 var snapshot: Dictionary = {}
 
@@ -28,7 +28,7 @@ func _draw() -> void:
 	var center: Vector2 = snapshot.get("center", size * 0.5)
 	center.x = clampf(center.x, 112.0, size.x - 112.0)
 	center.y = clampf(center.y, 112.0, size.y - 112.0)
-	for index in mini(3, states.size()):
+	for index in mini(2, states.size()):
 		var state: Dictionary = states[index]
 		var badge_center := center + Vector2.RIGHT.rotated(float(ANGLES[index])) * ORBIT_RADIUS
 		_draw_badge(badge_center, state)
@@ -52,11 +52,6 @@ func _draw_badge(center: Vector2, state: Dictionary) -> void:
 				center + Vector2(0.0, -8.0), center + Vector2(7.0, 6.0), center,
 				center + Vector2(-7.0, 6.0),
 			]), color)
-		&"thruster_cycle":
-			draw_colored_polygon(PackedVector2Array([
-				center + Vector2(-7.0, -6.0), center + Vector2(1.0, 0.0), center + Vector2(-7.0, 6.0),
-				center + Vector2(0.0, 6.0), center + Vector2(8.0, 0.0), center + Vector2(0.0, -6.0),
-			]), color)
 
 
 func _polygon(center: Vector2, radius: float, sides: int, rotation: float) -> PackedVector2Array:
@@ -67,4 +62,4 @@ func _polygon(center: Vector2, radius: float, sides: int, rotation: float) -> Pa
 
 
 func debug_contract() -> Dictionary:
-	return {"maximum_badges":3, "badge_diameter":24.0, "orbit_radius":ORBIT_RADIUS, "shape_coded":true}
+	return {"maximum_badges":2, "badge_diameter":24.0, "orbit_radius":ORBIT_RADIUS, "shape_coded":true}

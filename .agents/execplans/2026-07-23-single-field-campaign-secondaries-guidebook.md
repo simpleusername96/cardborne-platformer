@@ -425,14 +425,14 @@ Already true or reusable:
 
 Remaining implementation:
 
-- [ ] Separate shared field geometry from combat-stage profiles.
-- [ ] Replace route/installation progression with countable-defeat quotas.
-- [ ] Add shared pursuit and roaming boss arrival.
-- [ ] Replace manual intermediate result transitions with the automatic reward
+- [x] Separate shared field geometry from combat-stage profiles.
+- [x] Replace route/installation progression with countable-defeat quotas.
+- [x] Add shared pursuit and roaming boss arrival.
+- [x] Replace manual intermediate result transitions with the automatic reward
   and center-reset flow.
-- [ ] Simplify movement upgrades and add four secondary families.
-- [ ] Add guidebook catalog, persistence, discovery hooks, UI, and localization.
-- [ ] Remove obsolete stage/map mechanics and reconcile specs, README, tests, and
+- [x] Simplify movement upgrades and add four secondary families.
+- [x] Add guidebook catalog, persistence, discovery hooks, UI, and localization.
+- [x] Remove obsolete stage/map mechanics and reconcile specs, README, tests, and
   generated evidence.
 
 ## Scope
@@ -519,7 +519,7 @@ Exact actions requiring owner/user approval:
 `scripts/vehicle/vehicle_run.gd`,
 `scripts/encounters/vehicle_stage_flow.gd`, validation scripts.
 
-- [ ] **1.1 Create the immutable shared field.**
+- [x] **1.1 Create the immutable shared field.**
   - **As-is:** Flooded Works mixes reusable geometry with stage gates, field boss,
     installations, pickups, packets, and boss chamber data in a `4400×2800`
     world; the minimap and layout validator encode that old size.
@@ -540,7 +540,7 @@ Exact actions requiring owner/user approval:
   - **Guard:** world drawing, collision, projectiles, LOS, minimap, pursuit, and
     validators consume the same polygons; actor scale, weapon range, movement
     values, and gameplay camera zoom do not change.
-- [ ] **1.2 Create five combat-stage profiles.**
+- [x] **1.2 Create five combat-stage profiles.**
   - **As-is:** each stage owns a complete map.
   - **To-be:** `vehicle_combat_stages.gd` owns the exact quota table, timed
     packets, static threats, boss identity/pattern profile, pickups, crates, and
@@ -549,7 +549,7 @@ Exact actions requiring owner/user approval:
     `quota + active_cap` countable enemies.
   - **Guard:** no profile contains walkable, cover, water, boss gate, boss arena,
     or stage-environment geometry.
-- [ ] **1.3 Add a stage-flow state machine.**
+- [x] **1.3 Add a stage-flow state machine.**
   - **As-is:** progression booleans and reward flags are spread through
     `vehicle_run.gd`.
   - **To-be:** `vehicle_stage_flow.gd` owns stage index, quota progress,
@@ -573,7 +573,7 @@ expanding it to all five stages.
 `scripts/enemies/vehicle_pursuit_field.gd`, `scripts/vehicle/vehicle_run.gd`,
 `scripts/ui/vehicle_stage_ui.gd`.
 
-- [ ] **2.1 Convert Stage 1 packets to timed distributed arrivals.**
+- [x] **2.1 Convert Stage 1 packets to timed distributed arrivals.**
   - **As-is:** later packets depend on route events and mobile actors retain a
     home leash.
   - **To-be:** keep the six-second opening, schedule all Stage 1 groups by time
@@ -582,7 +582,7 @@ expanding it to all five stages.
     and arrivals from at least three distinct anchors before the quota.
   - **Guard:** active caps, sequential unit spacing, and 3/4/5 squad cohesion
     remain deterministic in both presets.
-- [ ] **2.2 Add shared global pursuit.**
+- [x] **2.2 Add shared global pursuit.**
   - **As-is:** mobile enemies return home or become dormant outside a leash.
   - **To-be:** mobile Stage 1 roles sample the shared 96 px pursuit field and use
     local role movement when close enough to attack.
@@ -590,7 +590,7 @@ expanding it to all five stages.
     from every enemy anchor without crossing solid cover.
   - **Guard:** turret and Arc Mine positions remain unchanged for 30 simulated
     seconds.
-- [ ] **2.3 Spawn and run the Foundry Colossus in the open field.**
+- [x] **2.3 Spawn and run the Foundry Colossus in the open field.**
   - **As-is:** boss start requires authored progression and an arena trigger.
   - **To-be:** exactly the 20th countable defeat starts the 1.5-second warning,
     chooses a valid distant anchor, and starts a globally pursuing boss.
@@ -599,7 +599,7 @@ expanding it to all five stages.
     startup/active/recovery attacks.
   - **Guard:** no boss gate, boss chamber, cache contact, or location trigger is
     read.
-- [ ] **2.4 Complete the Stage 1 → Stage 2 automatic transition.**
+- [x] **2.4 Complete the Stage 1 → Stage 2 automatic transition.**
   - **As-is:** a result modal requires a Next Stage command.
   - **To-be:** boss death runs cleanup, XP recall, pending level-up choices,
     mandatory boss choice, fade, full repair, center reset, and Stage 2 safe
@@ -626,7 +626,7 @@ map-specific progression.
 `scripts/enemies/vehicle_enemy_specialist_runtime.gd`,
 `scripts/vehicle/vehicle_run.gd`.
 
-- [ ] **3.1 Connect the Stage 2–5 quota profiles.**
+- [x] **3.1 Connect the Stage 2–5 quota profiles.**
   - **As-is:** each later stage changes field geometry and adds map mechanics.
   - **To-be:** use the exact 28/36/44/52 quotas and role table on the same field;
     reset static threats, items, crates, packets, and dynamic markers only.
@@ -634,7 +634,7 @@ map-specific progression.
     begins its boss without player location input.
   - **Guard:** field geometry fingerprint, camera bounds, backdrop resource, and
     explored minimap cells remain constant across all transitions.
-- [ ] **3.2 Make all five boss profiles field-portable.**
+- [x] **3.2 Make all five boss profiles field-portable.**
   - **As-is:** some patterns assume currents, grounded lanes, switches, reflectors,
     or a fixed arena.
   - **To-be:** preserve each boss’s four-pattern identity while expressing every
@@ -643,7 +643,7 @@ map-specific progression.
     all eight boss anchors without leaving walkable space or losing pursuit.
   - **Guard:** every damaging pattern retains visible startup, active, recovery,
     damage, and cover behavior.
-- [ ] **3.3 Finalize run completion.**
+- [x] **3.3 Finalize run completion.**
   - **As-is:** every stage enters result mode.
   - **To-be:** only Stage 5 enters final result/garage; stages 1–4 use automatic
     transitions.
@@ -668,7 +668,7 @@ simulation.
 `scripts/cards/`, `data/cards/vehicle/`, `scripts/vehicle/vehicle_run.gd`,
 `scripts/ui/vehicle_stage_ui.gd`, `scripts/ui/vehicle_status_orbit.gd`.
 
-- [ ] **4.1 Reduce movement progression to Tuned Thrusters.**
+- [x] **4.1 Reduce movement progression to Tuned Thrusters.**
   - **As-is:** permanent and periodic movement upgrades coexist.
   - **To-be:** apply exact 1.08/1.16/1.24 permanent multipliers, guarantee the
     second-level-up offer when unowned, and remove Thruster Cycle behavior/data/UI.
@@ -676,7 +676,7 @@ simulation.
     ordinary-movement card exists.
   - **Guard:** dash speed, dash cooldown, dash behavior cards, and current input
     stay unchanged.
-- [ ] **4.2 Add typed secondary definitions and runtime.**
+- [x] **4.2 Add typed secondary definitions and runtime.**
   - **As-is:** `vehicle_run.gd` directly schedules Seeker projectiles.
   - **To-be:** define Seeker, Ion Field, Orbit Blades, Wake Mine Layer, and Escort
     Drone resources and run them through one bounded secondary runtime.
@@ -684,7 +684,7 @@ simulation.
     attribution, target rules, and hard entity cap.
   - **Guard:** no family allocates unbounded projectiles, particles, target maps,
     mines, blades, or drones.
-- [ ] **4.3 Add four family cards and the three-family slot contract.**
+- [x] **4.3 Add four family cards and the three-family slot contract.**
   - **As-is:** Seeker modifiers are always compatible and no passive slot count
     exists.
   - **To-be:** the four new max-level-3 family cards consume one optional passive
@@ -694,7 +694,7 @@ simulation.
     never silently replaces an equipped family.
   - **Guard:** first level-up still contains primary and element choices; the
     second level-up Tuned Thrusters guarantee remains intact.
-- [ ] **4.4 Expose passive state without enlarging combat HUD.**
+- [x] **4.4 Expose passive state without enlarging combat HUD.**
   - **As-is:** HUD and garage label the passive as Seeker only.
   - **To-be:** keep Seeker cooldown in the dock, draw other families in-world,
     and list equipped family names/levels in garage and guide snapshots.
@@ -719,7 +719,7 @@ unencountered content.
 `scripts/ui/vehicle_guidebook_panel.gd`, `vehicle_stage_ui.gd`,
 `vehicle_settings_panel.gd`, enemy/boss/item catalogs, localization.
 
-- [ ] **5.1 Define stable guide entries and versioned discovery persistence.**
+- [x] **5.1 Define stable guide entries and versioned discovery persistence.**
   - **As-is:** names exist in separate catalogs and no discovery state exists.
   - **To-be:** register current ship sections, mobile roles, stationary roles,
     five bosses, and four field objects under stable IDs; store sanitized known
@@ -729,7 +729,7 @@ unencountered content.
     settings or run progress.
   - **Guard:** UI receives entry snapshots and never becomes the metadata or save
     owner.
-- [ ] **5.2 Wire exact encounter discovery events.**
+- [x] **5.2 Wire exact encounter discovery events.**
   - **As-is:** visibility, attacks, damage, boss arrival, pickups, and crate breaks
     do not record discovery.
   - **To-be:** emit the locked discovery event for each source and update the
@@ -738,7 +738,7 @@ unencountered content.
     and minimap-only ordinary markers do not unlock hidden entries.
   - **Guard:** hidden names/descriptions are absent from locked UI snapshots, not
     merely visually obscured.
-- [ ] **5.3 Build the localized guidebook flow.**
+- [x] **5.3 Build the localized guidebook flow.**
   - **As-is:** pause and shared settings have no guide entry.
   - **To-be:** add the two `?` controls, one responsive guide modal, category/list/
     detail navigation, `???` locked state, return-surface tracking, and Escape/
@@ -748,7 +748,7 @@ unencountered content.
     least 44 px.
   - **Guard:** settings remains four focused configuration tabs; guide content is
     not duplicated inside them.
-- [ ] **5.4 Feed truthful current-ship stats.**
+- [x] **5.4 Feed truthful current-ship stats.**
   - **As-is:** garage shows a summary string and fixed Seeker/EMP labels.
   - **To-be:** build one semantic runtime snapshot containing the exact derived
     stats and acquired/equipped levels listed in the guide contract.
@@ -772,7 +772,7 @@ origin and cannot leave two modal layers visible.
 `docs/product/vehicle_game_spec.md`, `docs/design/UI_VISUAL_SYSTEM.md`, `README.md`,
 all relevant validators and capture helpers.
 
-- [ ] **6.1 Delete migrated five-map and fixed-gate owners.**
+- [x] **6.1 Delete migrated five-map and fixed-gate owners.**
   - **As-is:** five stage files, environment branches, boss arena/gate helpers,
     field-boss progression, relay/generator gates, and intermediate result advance
     paths remain.
@@ -786,7 +786,7 @@ all relevant validators and capture helpers.
     `thruster_cycle`, or intermediate `advance_requested` behavior.
   - **Guard:** five boss identities, shared-field art, current settings, final
     result, garage, and persistent clear count remain.
-- [ ] **6.2 Reconcile canonical product and visual contracts.**
+- [x] **6.2 Reconcile canonical product and visual contracts.**
   - **As-is:** specs describe five maps, installation gates, field bosses,
     periodic movement speed, Seeker-only passive support, and result after every
     stage.
@@ -798,7 +798,7 @@ all relevant validators and capture helpers.
     secondary count, card count, or result flow.
   - **Guard:** accepted flat-color art direction, primary controls, Korean default,
     and performance/accessibility contracts stay intact.
-- [ ] **6.3 Run focused, full, performance, build, and rendered gates.**
+- [x] **6.3 Run focused, full, performance, build, and rendered gates.**
   - **As-is:** validators assume five layouts and current progression.
   - **To-be:** add focused single-field, secondary, and guidebook validators;
     update existing run, upgrade, settings, reward, boss, navigation, pressure,
@@ -989,47 +989,59 @@ this plan before implementation continues.
   documentation policy, tests, and bounded external genre references.
 - [x] Product, architecture, data, UI, persistence, balance, retirement, and
   validation decisions locked.
-- [ ] Phase 1 complete.
-- [ ] Phase 2 complete.
-- [ ] Phase 3 complete.
-- [ ] Phase 4 complete.
-- [ ] Phase 5 complete.
+- [x] Phase 1 complete.
+- [x] Phase 2 complete.
+- [x] Phase 3 complete.
+- [x] Phase 4 complete.
+- [x] Phase 5 complete.
 - [ ] Phase 6 complete.
-- [ ] Final gates complete.
+- [x] Final gates complete.
 
 ## Next Steps
 
-1. Implement Phase 1 and stop at its batch gate if shared geometry/profile
-   validation fails.
-2. Implement and play the complete Stage 1 vertical slice in Phase 2 before
-   migrating any later stage.
-3. Expand to five bosses, then add the secondary arsenal, guidebook, cleanup, and
-   release gates in the recorded order.
+1. Obtain user acceptance of the implemented behavior and rendered result.
+2. After that explicit acceptance, delete this completed ExecPlan as required by
+   the repository documentation lifecycle. No implementation work remains.
+
+## Implementation Outcome — 2026-07-23
+
+- One immutable `5600×3400` Drowned Ruins field now backs all five combat stages.
+- Quota-driven encounters, global pursuit, roaming bosses, automatic reward
+  transitions, five passive secondary families, Tuned Thrusters, and the
+  persistent localized guidebook are implemented.
+- Legacy five-map, fixed-gate, arena-lock, field-boss, intermediate-result, and
+  periodic movement-cycle owners are removed.
+- All 13 vehicle validators and the settings validator pass. Standard and
+  Onslaught pressure samples complete in `2.101 ms` and `3.013 ms`, native boot
+  succeeds, Web export succeeds, and the three required viewport captures were
+  reviewed without clipping or modal overlap.
+- Phase 6.4 remains intentionally open because plan deletion requires explicit
+  user acceptance under the documentation lifecycle policy.
 
 ## Completion Criteria
 
-- [ ] All five stages use the exact `5600×3400` field geometry and persistent
+- [x] All five stages use the exact `5600×3400` field geometry and persistent
   `16×10` explored minimap state.
-- [ ] The translated core, six exact extension rectangles, thirteen covers,
+- [x] The translated core, six exact extension rectangles, thirteen covers,
   center `(2800,1700)`, sixteen ordinary anchors, eight boss anchors, route
   limits, and camera visibility metrics pass automated and rendered checks.
-- [ ] Mobile enemies and every stage boss pursue globally; stationary threats do
+- [x] Mobile enemies and every stage boss pursue globally; stationary threats do
   not move.
-- [ ] Bosses appear at the exact quotas from valid distant anchors without a
+- [x] Bosses appear at the exact quotas from valid distant anchors without a
   location or full-clear requirement.
-- [ ] Stages 1–4 advance automatically after all rewards and restart at center;
+- [x] Stages 1–4 advance automatically after all rewards and restart at center;
   Stage 5 alone opens final result.
-- [ ] Tuned Thrusters is the only ordinary movement-speed card and returns the
+- [x] Tuned Thrusters is the only ordinary movement-speed card and returns the
   exact four speed values.
-- [ ] Five secondary families exist, at most three can operate, and every family
+- [x] Five secondary families exist, at most three can operate, and every family
   passes behavior, cap, cover, offer, attribution, performance, and visual checks.
-- [ ] The guidebook shows truthful current build data, persists discoveries, and
+- [x] The guidebook shows truthful current build data, persists discoveries, and
   hides unencountered entries as `???` without hidden-data leakage.
-- [ ] Korean and English modal/focus/copy parity and all three viewports pass.
-- [ ] Full validators, ≤8 ms pressure profile, native boot, Web export, built-app
+- [x] Korean and English modal/focus/copy parity and all three viewports pass.
+- [x] Full validators, ≤8 ms pressure profile, native boot, Web export, built-app
   review, save checks, `git diff --check`, and leftover search pass.
-- [ ] Canonical product/visual specs and README describe the implemented game.
-- [ ] Legacy five-map, gate/arena, field-boss, periodic movement, Seeker-only,
+- [x] Canonical product/visual specs and README describe the implemented game.
+- [x] Legacy five-map, gate/arena, field-boss, periodic movement, Seeker-only,
   and intermediate result owners are gone.
 - [ ] This completed ExecPlan is deleted after durable decisions land in the
   canonical specs.

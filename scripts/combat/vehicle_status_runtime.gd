@@ -34,7 +34,7 @@ static func apply(enemy: Dictionary, effect: Dictionary) -> void:
 		poison["max_stacks"] = int(effect["max_stacks"])
 		statuses[&"poison"] = poison
 	elif kind == &"slow":
-		var boss_scale := 0.5 if StringName(enemy["role"]) in [&"field_boss", &"stage_boss"] else 1.0
+		var boss_scale := 0.5 if StringName(enemy["role"]) == &"stage_boss" else 1.0
 		statuses[&"slow"] = {"magnitude": float(effect["magnitude"]) * boss_scale, "time": float(effect["duration"]) * boss_scale}
 
 

@@ -11,7 +11,7 @@ const CUE_LEAD := 0.9
 const METRIC_SAMPLE_INTERVAL := 0.10
 const MAX_ACTIVE_COUNT_SAMPLES := 4096
 
-var stage_id: StringName = &"flooded_works"
+var stage_id: StringName = &"stage_1"
 var preset: StringName = &"standard"
 var elapsed := 0.0
 var current_beat := 0
@@ -32,6 +32,7 @@ var _max_attack_family_overlap := 0
 var _damage_source_families: Dictionary = {}
 var _schedule_delay_total := 0.0
 var _next_metric_sample := 0.0
+var _spawning_enabled := true
 
 
 func configure(next_stage_id: StringName, packets: Array[Dictionary], combat_preset: StringName) -> void:
@@ -57,6 +58,17 @@ func configure(next_stage_id: StringName, packets: Array[Dictionary], combat_pre
 	_damage_source_families.clear()
 	_schedule_delay_total = 0.0
 	_next_metric_sample = 0.0
+	_spawning_enabled = true
+
+
+func stop_spawning() -> void:
+	_spawning_enabled = false
+	_cue_queue.clear()
+	_spawn_queue.clear()
+
+
+func spawning_enabled() -> bool:
+	return _spawning_enabled
 
 
 func signal_event(event_id: StringName) -> void:
@@ -74,7 +86,8 @@ func tick(delta: float, active_mobile_count: int, active_attack_families: Array[
 	elapsed += maxf(0.0, delta)
 	_record_active_count_sample(active_mobile_count)
 	_max_attack_family_overlap = maxi(_max_attack_family_overlap, active_attack_families.size())
-	_activate_ready_packets()
+	if _spawning_enabled:
+		_activate_ready_packets()
 	var cues: Array[Dictionary] = []
 	while not _cue_queue.is_empty() and _effective_time(_cue_queue[0]) <= elapsed + 0.0001:
 		var cue: Dictionary = _cue_queue.pop_front()
@@ -85,7 +98,7 @@ func tick(delta: float, active_mobile_count: int, active_attack_families: Array[
 		_timeline.append({"kind":&"cue", "id":cue["squad_id"], "time":cue_time})
 
 	var spawns: Array[Dictionary] = []
-	if not _spawn_queue.is_empty() and _effective_time(_spawn_queue[0]) <= elapsed + 0.0001:
+	if _spawning_enabled and not _spawn_queue.is_empty() and _effective_time(_spawn_queue[0]) <= elapsed + 0.0001:
 		if active_mobile_count < active_cap():
 			var request: Dictionary = _spawn_queue.pop_front()
 			spawns.append(request["spec"])
@@ -149,6 +162,7 @@ func debug_snapshot() -> Dictionary:
 		"timeline":_timeline.duplicate(true),
 		"schedule_delay":_schedule_delay_total,
 		"active_count_samples":_active_count_samples.size(),
+		"spawning_enabled":_spawning_enabled,
 	}
 
 

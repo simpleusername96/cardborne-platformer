@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="VehicleSecondaryDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/player/vehicle_secondary_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"wake_mines"
+upgrade_id = &"wake_mines"
+name_key = "SECONDARY_WAKE_MINES_NAME"
+description_key = "SECONDARY_WAKE_MINES_DESC"
+behavior = &"mine"
+values_by_level = Array[float]([48.0, 60.0, 72.0])
+auxiliary_by_level = Array[float]([3.2, 2.8, 2.4])
+cap_by_level = Array[int]([3, 4, 5])

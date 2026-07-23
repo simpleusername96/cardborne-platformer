@@ -1,0 +1,65 @@
+class_name VehicleStageFlow
+extends RefCounted
+
+## Deterministic quota -> boss warning -> reward -> transition state owner.
+
+enum State { ORDINARY, BOSS_WARNING, BOSS_ACTIVE, REWARDS, COMPLETE }
+
+var stage_index := 0
+var quota := 20
+var defeats := 0
+var state := State.ORDINARY
+var warning_remaining := 0.0
+
+
+func configure(next_stage_index: int, next_quota: int) -> void:
+	stage_index = next_stage_index
+	quota = maxi(1, next_quota)
+	defeats = 0
+	state = State.ORDINARY
+	warning_remaining = 0.0
+
+
+func record_countable_defeat() -> bool:
+	if state != State.ORDINARY:
+		return false
+	defeats = mini(quota, defeats + 1)
+	if defeats >= quota:
+		state = State.BOSS_WARNING
+		warning_remaining = 1.5
+		return true
+	return false
+
+
+func tick(delta: float) -> bool:
+	if state != State.BOSS_WARNING:
+		return false
+	warning_remaining = maxf(0.0, warning_remaining - maxf(0.0, delta))
+	if warning_remaining <= 0.0:
+		state = State.BOSS_ACTIVE
+		return true
+	return false
+
+
+func record_boss_defeat() -> void:
+	if state == State.BOSS_ACTIVE:
+		state = State.REWARDS
+
+
+func record_rewards_complete() -> void:
+	if state == State.REWARDS:
+		state = State.COMPLETE
+
+
+func stop_ordinary_spawning() -> bool:
+	return state != State.ORDINARY
+
+
+func snapshot() -> Dictionary:
+	return {
+		"stage_index":stage_index,
+		"quota":quota,
+		"defeats":defeats,
+		"state":state,
+		"warning_remaining":warning_remaining,
+	}

@@ -10,5 +10,5 @@ description_key = "UPGRADE_CRYO_CORE_DESC"
 family = &"element"
 max_level = 1
 exclusion_group = &"element_core"
-source_tags = Array[StringName]([&"calibration", &"relay", &"field_boss", &"boss"])
+source_tags = Array[StringName]([&"level_up", &"boss"])
 behavior_ids = Array[StringName]([&"cryo_core"])

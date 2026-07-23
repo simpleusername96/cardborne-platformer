@@ -1,66 +1,47 @@
 class_name VehicleStageCatalog
 extends RefCounted
 
-## Validated facade over responsibility-shaped authored stage definitions.
-## Runtime consumers never silently receive a partial registered stage.
+## Validated facade joining one immutable field with five combat profiles.
 
-const FloodedWorks = preload("res://scripts/vehicle/stages/flooded_works.gd")
-const TidalArchive = preload("res://scripts/vehicle/stages/tidal_archive.gd")
-const StormDrydock = preload("res://scripts/vehicle/stages/storm_drydock.gd")
-const CoralSwitchyard = preload("res://scripts/vehicle/stages/coral_switchyard.gd")
-const AbyssalObservatory = preload("res://scripts/vehicle/stages/abyssal_observatory.gd")
+const Field = preload("res://scripts/vehicle/stages/drowned_ruin_field.gd")
+const CombatStages = preload("res://scripts/vehicle/stages/vehicle_combat_stages.gd")
 const Geometry = preload("res://scripts/vehicle/vehicle_stage_geometry.gd")
 
-const STAGE_IDS: Array[StringName] = [
-	&"flooded_works", &"tidal_archive", &"storm_drydock",
-	&"coral_switchyard", &"abyssal_observatory",
-]
+const STAGE_IDS: Array[StringName] = CombatStages.STAGE_IDS
 const REQUIRED_FIELDS := [
-	"id", "title_key", "number", "field_boss_name_key", "boss_name_key", "environment",
-	"world_rect", "player_start", "start_clearance", "boss_arena", "boss_gate",
-	"walkable_regions", "cover_rects", "water_rects", "hazard_regions", "landmarks",
-	"objective_triggers", "static_enemies", "pickups", "crates", "reward_anchors",
-	"environment_zones", "packets",
+	"id", "field_id", "title_key", "number", "boss_name_key", "quota",
+	"world_rect", "player_start", "start_clearance", "walkable_regions",
+	"cover_rects", "water_rects", "motifs", "ordinary_spawn_anchors",
+	"boss_arrival_anchors", "stationary_anchors", "static_enemies", "pickups",
+	"crates", "packets",
 ]
 
-# Registered definitions and geometry are immutable after validation. Callers
-# duplicate values before appending runtime blockers or returning mutable maps.
 static var _definition_cache: Dictionary = {}
 static var _definition_build_counts: Dictionary = {}
-static var _cover_rect_cache: Dictionary = {}
-static var _water_rect_cache: Dictionary = {}
-static var _floor_polygon_cache: Dictionary = {}
-static var _cover_polygon_cache: Dictionary = {}
-static var _water_polygon_cache: Dictionary = {}
+static var _walkable_rect_cache: Array[Rect2] = []
+static var _cover_rect_cache: Array[Rect2] = []
+static var _water_rect_cache: Array[Rect2] = []
+static var _floor_polygon_cache: Array = []
+static var _cover_polygon_cache: Array = []
+static var _water_polygon_cache: Array = []
 
 
 static func normalized_id(stage_id: StringName) -> StringName:
-	return stage_id if stage_id in STAGE_IDS else STAGE_IDS[0]
+	return CombatStages.normalized_id(stage_id)
 
 
 static func index_of(stage_id: StringName) -> int:
-	return maxi(0, STAGE_IDS.find(normalized_id(stage_id)))
+	return CombatStages.index_of(stage_id)
 
 
 static func definition(stage_id: StringName) -> Dictionary:
 	var normalized := normalized_id(stage_id)
 	if _definition_cache.has(normalized):
 		return _definition_cache[normalized]
-	var result: Dictionary
-	match normalized:
-		&"tidal_archive":
-			result = TidalArchive.definition()
-		&"storm_drydock":
-			result = StormDrydock.definition()
-		&"coral_switchyard":
-			result = CoralSwitchyard.definition()
-		&"abyssal_observatory":
-			result = AbyssalObservatory.definition()
-		_:
-			result = FloodedWorks.definition()
+	var result := CombatStages.definition(normalized)
 	var errors := validate_definition(result, normalized)
 	if not errors.is_empty():
-		push_error("Registered stage %s is invalid: %s" % [normalized, "; ".join(errors)])
+		push_error("Registered combat stage %s is invalid: %s" % [normalized, "; ".join(errors)])
 		return {}
 	_definition_cache[normalized] = result
 	_definition_build_counts[normalized] = int(_definition_build_counts.get(normalized, 0)) + 1
@@ -76,140 +57,113 @@ static func validate_definition(value: Dictionary, expected_id: StringName = &""
 		return errors
 	if not expected_id.is_empty() and StringName(value["id"]) != expected_id:
 		errors.append("id does not match registry")
-	if not value["world_rect"] is Rect2 or Rect2(value["world_rect"]).size.x <= 0.0 or Rect2(value["world_rect"]).size.y <= 0.0:
-		errors.append("world_rect must be a positive Rect2")
-	if not value["player_start"] is Vector2:
-		errors.append("player_start must be Vector2")
-	if not value["landmarks"] is Dictionary:
-		errors.append("landmarks must be a Dictionary")
-	else:
-		for landmark in ["start", "open_entry", "installation_entry", "upper_route", "lower_route", "generator_a", "generator_b", "field_boss", "chest", "boss_gate", "boss"]:
-			if not value["landmarks"].has(landmark):
-				errors.append("missing landmark %s" % landmark)
+	if StringName(value["field_id"]) != Field.FIELD_ID:
+		errors.append("stage does not reference the shared field")
+	if Rect2(value["world_rect"]) != Field.WORLD_RECT:
+		errors.append("world_rect differs from the shared field")
+	if Vector2(value["player_start"]) != Field.CENTER:
+		errors.append("player_start differs from the shared center")
+	if int(value["quota"]) <= 0:
+		errors.append("quota must be positive")
 	if not value["walkable_regions"] is Array or value["walkable_regions"].is_empty():
 		errors.append("walkable_regions must not be empty")
+	if Array(value["ordinary_spawn_anchors"]).size() != 16:
+		errors.append("field requires sixteen ordinary spawn anchors")
+	if Array(value["boss_arrival_anchors"]).size() != 8:
+		errors.append("field requires eight boss arrival anchors")
 	return errors
 
 
 static func profile(stage_id: StringName) -> Dictionary:
-	var data := definition(stage_id)
-	return {
-		"title_key": data.get("title_key", ""),
-		"number": data.get("number", 0),
-		"field_boss_name_key": data.get("field_boss_name_key", ""),
-		"boss_name_key": data.get("boss_name_key", ""),
-		"environment": data.get("environment", &"none"),
-	}
+	return CombatStages.profile(stage_id)
 
 
-static func world_rect(stage_id: StringName) -> Rect2:
-	return Rect2(definition(stage_id)["world_rect"])
+static func field_id(_stage_id: StringName = &"stage_1") -> StringName:
+	return Field.FIELD_ID
 
 
-static func player_start(stage_id: StringName) -> Vector2:
-	return Vector2(definition(stage_id)["player_start"])
+static func world_rect(_stage_id: StringName = &"stage_1") -> Rect2:
+	return Field.WORLD_RECT
 
 
-static func boss_arena(stage_id: StringName) -> Rect2:
-	return Rect2(definition(stage_id)["boss_arena"])
+static func player_start(_stage_id: StringName = &"stage_1") -> Vector2:
+	return Field.CENTER
 
 
-static func boss_gate(stage_id: StringName) -> Rect2:
-	return Rect2(definition(stage_id)["boss_gate"])
+static func start_clearance(_stage_id: StringName = &"stage_1") -> float:
+	return Field.START_CLEARANCE
 
 
-static func landmarks(stage_id: StringName) -> Dictionary:
-	return Dictionary(definition(stage_id)["landmarks"]).duplicate(true)
+static func quota(stage_id: StringName) -> int:
+	return int(profile(stage_id)["quota"])
 
 
-static func landmark(stage_id: StringName, landmark_id: String) -> Vector2:
-	return Vector2(definition(stage_id)["landmarks"].get(landmark_id, Vector2.ZERO))
+static func ordinary_spawn_anchors(_stage_id: StringName = &"stage_1") -> Array[Vector2]:
+	return Field.ORDINARY_SPAWN_ANCHORS.duplicate()
 
 
-static func objective_triggers(stage_id: StringName) -> Dictionary:
-	return Dictionary(definition(stage_id)["objective_triggers"]).duplicate(true)
+static func boss_arrival_anchors(_stage_id: StringName = &"stage_1") -> Array[Vector2]:
+	return Field.BOSS_ARRIVAL_ANCHORS.duplicate()
 
 
-static func walkable_regions(stage_id: StringName) -> Array[Dictionary]:
+static func stationary_anchors(_stage_id: StringName = &"stage_1") -> Array[Vector2]:
+	return Field.STATIONARY_ANCHORS.duplicate()
+
+
+static func motifs(_stage_id: StringName = &"stage_1") -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
-	for region in definition(stage_id)["walkable_regions"]:
+	for motif in definition(&"stage_1")["motifs"]:
+		result.append(Dictionary(motif).duplicate(true))
+	return result
+
+
+static func walkable_regions(_stage_id: StringName = &"stage_1") -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	for region in definition(&"stage_1")["walkable_regions"]:
 		result.append(Dictionary(region).duplicate(true))
 	return result
 
 
-static func floor_polygons(stage_id: StringName) -> Array:
-	var normalized := normalized_id(stage_id)
-	if _floor_polygon_cache.has(normalized):
-		return _floor_polygon_cache[normalized]
-	var result: Array = []
-	for region in definition(normalized)["walkable_regions"]:
-		result.append(Geometry.rect_polygon(Rect2(region["rect"])))
-	_floor_polygon_cache[normalized] = result
-	return result
+static func walkable_rects(_stage_id: StringName = &"stage_1") -> Array[Rect2]:
+	if _walkable_rect_cache.is_empty():
+		for region in definition(&"stage_1")["walkable_regions"]:
+			_walkable_rect_cache.append(Rect2(region["rect"]))
+	return _walkable_rect_cache
 
 
-static func cover_rects(stage_id: StringName) -> Array[Rect2]:
-	var normalized := normalized_id(stage_id)
-	if _cover_rect_cache.has(normalized):
-		return _cover_rect_cache[normalized]
-	var result: Array[Rect2] = []
-	for rect in definition(normalized)["cover_rects"]:
-		result.append(Rect2(rect))
-	_cover_rect_cache[normalized] = result
-	return result
+static func floor_polygons(_stage_id: StringName = &"stage_1") -> Array:
+	if _floor_polygon_cache.is_empty():
+		for region in definition(&"stage_1")["walkable_regions"]:
+			_floor_polygon_cache.append(Geometry.rect_polygon(Rect2(region["rect"])))
+	return _floor_polygon_cache
 
 
-static func cover_polygons(stage_id: StringName) -> Array:
-	var normalized := normalized_id(stage_id)
-	if _cover_polygon_cache.has(normalized):
-		return _cover_polygon_cache[normalized]
-	var result: Array = []
-	for rect in cover_rects(normalized):
-		result.append(Geometry.rect_polygon(rect))
-	_cover_polygon_cache[normalized] = result
-	return result
+static func cover_rects(_stage_id: StringName = &"stage_1") -> Array[Rect2]:
+	if _cover_rect_cache.is_empty():
+		for rect in definition(&"stage_1")["cover_rects"]:
+			_cover_rect_cache.append(Rect2(rect))
+	return _cover_rect_cache
 
 
-static func water_rects(stage_id: StringName) -> Array[Rect2]:
-	var normalized := normalized_id(stage_id)
-	if _water_rect_cache.has(normalized):
-		return _water_rect_cache[normalized]
-	var result: Array[Rect2] = []
-	for rect in definition(normalized)["water_rects"]:
-		result.append(Rect2(rect))
-	_water_rect_cache[normalized] = result
-	return result
+static func cover_polygons(_stage_id: StringName = &"stage_1") -> Array:
+	if _cover_polygon_cache.is_empty():
+		for rect in cover_rects():
+			_cover_polygon_cache.append(Geometry.rect_polygon(rect))
+	return _cover_polygon_cache
 
 
-static func water_polygons(stage_id: StringName) -> Array:
-	var normalized := normalized_id(stage_id)
-	if _water_polygon_cache.has(normalized):
-		return _water_polygon_cache[normalized]
-	var result: Array = []
-	for rect in water_rects(normalized):
-		result.append(Geometry.rect_polygon(rect))
-	_water_polygon_cache[normalized] = result
-	return result
+static func water_rects(_stage_id: StringName = &"stage_1") -> Array[Rect2]:
+	if _water_rect_cache.is_empty():
+		for rect in definition(&"stage_1")["water_rects"]:
+			_water_rect_cache.append(Rect2(rect))
+	return _water_rect_cache
 
 
-static func debug_cache_contract(stage_id: StringName) -> Dictionary:
-	var normalized := normalized_id(stage_id)
-	definition(normalized)
-	definition(normalized)
-	return {
-		"stage_id": normalized,
-		"definition_build_count": int(_definition_build_counts.get(normalized, 0)),
-		"floor_count": floor_polygons(normalized).size(),
-		"cover_count": cover_rects(normalized).size(),
-		"water_count": water_rects(normalized).size(),
-	}
-
-
-static func hazard_regions(stage_id: StringName) -> Array[Dictionary]:
-	var result: Array[Dictionary] = []
-	for region in definition(stage_id)["hazard_regions"]:
-		result.append(Dictionary(region).duplicate(true))
-	return result
+static func water_polygons(_stage_id: StringName = &"stage_1") -> Array:
+	if _water_polygon_cache.is_empty():
+		for rect in water_rects():
+			_water_polygon_cache.append(Geometry.rect_polygon(rect))
+	return _water_polygon_cache
 
 
 static func floor_regions(stage_id: StringName, colors: Dictionary) -> Array[Dictionary]:
@@ -217,19 +171,56 @@ static func floor_regions(stage_id: StringName, colors: Dictionary) -> Array[Dic
 	for region in walkable_regions(stage_id):
 		var tone := StringName(region.get("tone", &"mid"))
 		result.append({
-			"id": region.get("id", "floor"),
-			"name": region.get("name", "Floor"),
-			"rect": Rect2(region["rect"]),
-			"polygon": Geometry.rect_polygon(Rect2(region["rect"])),
-			"color": colors.get(tone, colors["mid"]),
+			"id":region.get("id", "floor"),
+			"name":region.get("name", "Floor"),
+			"rect":Rect2(region["rect"]),
+			"polygon":Geometry.rect_polygon(Rect2(region["rect"])),
+			"color":colors.get(tone, colors["mid"]),
 		})
 	return result
 
 
-static func enemy_blueprint(stage_id: StringName) -> Array[Dictionary]:
-	var result := static_enemy_blueprint(stage_id)
-	result.append_array(packet_enemy_blueprint(stage_id))
-	return result
+static func position_is_walkable(stage_id: StringName, position: Vector2, radius: float = 0.0) -> bool:
+	var floor_rectangles := walkable_rects(stage_id)
+	if not _point_in_any_rect(position, floor_rectangles):
+		return false
+	if radius > 0.0:
+		# Most actors are wholly inside one authored rectangle. Resolve that exact
+		# common case before sampling only the overlapping seams of the union.
+		for rectangle in floor_rectangles:
+			if position.x - radius >= rectangle.position.x and position.x + radius <= rectangle.end.x \
+					and position.y - radius >= rectangle.position.y and position.y + radius <= rectangle.end.y:
+				return not _circle_overlaps_any_rect(position, radius, water_rects(stage_id))
+		for sample_index in Geometry.CIRCLE_UNION_SAMPLES:
+			var sample := position + Vector2.RIGHT.rotated(TAU * float(sample_index) / float(Geometry.CIRCLE_UNION_SAMPLES)) * radius * 0.999
+			if not _point_in_any_rect(sample, floor_rectangles):
+				return false
+	for water in water_rects(stage_id):
+		if _circle_overlaps_rect(position, radius, water):
+			return false
+	return true
+
+
+static func _point_in_any_rect(point: Vector2, rectangles: Array[Rect2]) -> bool:
+	for rectangle in rectangles:
+		if rectangle.has_point(point):
+			return true
+	return false
+
+
+static func _circle_overlaps_rect(center: Vector2, radius: float, rectangle: Rect2) -> bool:
+	var closest := Vector2(
+		clampf(center.x, rectangle.position.x, rectangle.end.x),
+		clampf(center.y, rectangle.position.y, rectangle.end.y)
+	)
+	return center.distance_squared_to(closest) < radius * radius
+
+
+static func _circle_overlaps_any_rect(center: Vector2, radius: float, rectangles: Array[Rect2]) -> bool:
+	for rectangle in rectangles:
+		if _circle_overlaps_rect(center, radius, rectangle):
+			return true
+	return false
 
 
 static func static_enemy_blueprint(stage_id: StringName) -> Array[Dictionary]:
@@ -239,21 +230,33 @@ static func static_enemy_blueprint(stage_id: StringName) -> Array[Dictionary]:
 	return result
 
 
+static func packets(stage_id: StringName) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	for packet in definition(stage_id)["packets"]:
+		result.append(Dictionary(packet).duplicate(true))
+	return result
+
+
 static func packet_enemy_blueprint(stage_id: StringName) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 	for packet in packets(stage_id):
 		var packet_id := String(packet["id"])
 		var anchor := Vector2(packet["anchor"])
-		var squads: Array = packet["squads"]
-		for squad_index in squads.size():
-			var squad: Array = squads[squad_index]
+		for squad_index in Array(packet["squads"]).size():
+			var squad: Array = packet["squads"][squad_index]
 			for unit_index in squad.size():
 				result.append({
 					"id":"%s_s%02d_u%02d" % [packet_id, squad_index + 1, unit_index + 1],
-					"role":StringName(squad[unit_index]), "pos":anchor, "zone":String(packet["zone"]),
+					"role":StringName(squad[unit_index]), "pos":anchor, "zone":"field",
 					"group_id":"%s_s%02d" % [packet_id, squad_index + 1],
-					"formation_anchor":anchor, "leash_rect":Rect2(packet["leash"]),
+					"formation_anchor":anchor, "leash_rect":Field.WORLD_RECT,
 				})
+	return result
+
+
+static func enemy_blueprint(stage_id: StringName) -> Array[Dictionary]:
+	var result := static_enemy_blueprint(stage_id)
+	result.append_array(packet_enemy_blueprint(stage_id))
 	return result
 
 
@@ -261,42 +264,37 @@ static func authored_population(stage_id: StringName) -> int:
 	return enemy_blueprint(stage_id).size()
 
 
-static func position_is_walkable(stage_id: StringName, position: Vector2, radius: float = 0.0) -> bool:
-	if not Geometry.circle_inside_polygon_union(position, radius, floor_polygons(stage_id)):
-		return false
-	for water in water_polygons(stage_id):
-		if Geometry.circle_overlaps_polygon(position, radius, water):
-			return false
-	return true
-
-
-static func pickup_blueprint(stage_id: StringName) -> Array[Dictionary]:
+static func pickup_blueprint(_stage_id: StringName = &"stage_1") -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
-	for spec in definition(stage_id)["pickups"]:
+	for spec in definition(&"stage_1")["pickups"]:
 		result.append(Dictionary(spec).duplicate(true))
 	return result
 
 
-static func crate_blueprint(stage_id: StringName) -> Array[Dictionary]:
+static func crate_blueprint(_stage_id: StringName = &"stage_1") -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
-	for spec in definition(stage_id)["crates"]:
+	for spec in definition(&"stage_1")["crates"]:
 		result.append(Dictionary(spec).duplicate(true))
 	return result
 
 
-static func reward_anchors(stage_id: StringName) -> Dictionary:
-	return Dictionary(definition(stage_id)["reward_anchors"]).duplicate(true)
+static func geometry_fingerprint(_stage_id: StringName = &"stage_1") -> int:
+	return hash(var_to_str([
+		Field.WORLD_RECT, walkable_regions(), cover_rects(), water_rects(), motifs(),
+		ordinary_spawn_anchors(), boss_arrival_anchors(), stationary_anchors(),
+	]))
 
 
-static func environment_zones(stage_id: StringName) -> Array[Dictionary]:
-	var result: Array[Dictionary] = []
-	for zone in definition(stage_id)["environment_zones"]:
-		result.append(Dictionary(zone).duplicate(true))
-	return result
-
-
-static func packets(stage_id: StringName) -> Array[Dictionary]:
-	var result: Array[Dictionary] = []
-	for packet in definition(stage_id)["packets"]:
-		result.append(Dictionary(packet).duplicate(true))
-	return result
+static func debug_cache_contract(stage_id: StringName) -> Dictionary:
+	var normalized := normalized_id(stage_id)
+	definition(normalized)
+	definition(normalized)
+	return {
+		"stage_id":normalized,
+		"field_id":Field.FIELD_ID,
+		"definition_build_count":int(_definition_build_counts.get(normalized, 0)),
+		"floor_count":floor_polygons().size(),
+		"cover_count":cover_rects().size(),
+		"water_count":water_rects().size(),
+		"geometry_fingerprint":geometry_fingerprint(),
+	}

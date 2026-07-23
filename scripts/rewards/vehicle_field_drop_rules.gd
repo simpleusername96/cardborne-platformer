@@ -15,8 +15,6 @@ static func experience_for_enemy(enemy: Dictionary) -> int:
 		return 0
 	if role == &"stage_boss":
 		return 24
-	if role == &"field_boss":
-		return 18
 	match StringName(enemy.get("health_class", &"standard")):
 		&"swarm": return 1
 		&"priority": return 4

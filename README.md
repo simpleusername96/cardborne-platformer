@@ -1,21 +1,24 @@
 # Cardborne
 
 Cardborne is a Godot 4.7 top-down vehicle action shooter built around manual
-targeting, held primary fire, a one-second opening shot, dash movement, passive
-seekers, EMP, map pickups, and card upgrades.
+targeting, held primary fire, a one-second opening shot, dash movement, automatic
+secondary weapons, EMP, collectible experience, and card upgrades.
 
 ## Current Game
 
 - `project.godot` boots `scenes/main/GameRoot.tscn` and the connected
   `scenes/run/VehicleRun.tscn` campaign.
-- The run covers Flooded Works, Tidal Archive, Storm Drydock, Coral Switchyard,
-  and Abyssal Observatory in order.
+- Five escalating stages reuse one enlarged drowned-ruin field. Builds and
+  explored minimap cells persist while the player returns to the center between
+  stages.
 - Encounter packets begin with a six-second safe arrival, then grow from one
   scout into sequential 3/4/5-unit squads under Standard or Onslaught caps.
-- The current data set contains 19 enemy archetypes and 46 card upgrades; a full
-  run grants 15 mandatory and up to five optional choices.
-- Ordinary enemies may be bypassed; installations and bosses own progression
-  gates.
+- Ordinary defeat quotas summon a roaming boss into the same field; surviving
+  enemies never lock travel or force a full clear.
+- The current build includes 46 card upgrades and five automatic secondary
+  families, with at most three active at once.
+- The persistent `?` guidebook reveals only enemies, bosses, objects, and ship
+  details the player has encountered.
 - Korean is the default UI language and English can be selected in settings.
 - The active product and visual contracts are indexed in `docs/README.md`.
 

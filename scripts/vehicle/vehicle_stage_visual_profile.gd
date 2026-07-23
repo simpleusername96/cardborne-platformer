@@ -29,7 +29,6 @@ const DIM := Color(0.02, 0.12, 0.28, 0.82)
 const PLAYER_VISUAL_RADIUS := 42.0
 const ORDINARY_ENEMY_RADIUS := 36.0
 const INSTALLATION_RADIUS := 54.0
-const FIELD_BOSS_RADIUS := 86.0
 const STAGE_BOSS_RADIUS := 122.0
 const PICKUP_PLINTH_RADIUS := 34.0
 const CACHE_HALF_SIZE := Vector2(70.0, 52.0)
@@ -42,8 +41,6 @@ static func enemy_visual_radius(role: StringName) -> float:
 	match role:
 		&"turret", &"mine", &"generator", &"boss_pylon":
 			return INSTALLATION_RADIUS
-		&"field_boss":
-			return FIELD_BOSS_RADIUS
 		&"stage_boss":
 			return STAGE_BOSS_RADIUS
 	return ORDINARY_ENEMY_RADIUS

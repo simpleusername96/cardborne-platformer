@@ -27,15 +27,14 @@ func _run() -> void:
 		var stage_crates := StageCatalog.crate_blueprint(stage_id)
 		_expect(stage_pickups.size() == 3, "%s has two repairs and one experience recall" % stage_id)
 		_expect(StageCatalog.crate_blueprint(stage_id).size() == 5, "%s has five authored crates" % stage_id)
-		_expect(StageCatalog.reward_anchors(stage_id).size() == 4, "%s has four reward anchors" % stage_id)
 		_expect(stage_pickups.filter(func(item: Dictionary) -> bool: return StringName(item["kind"]) == &"repair").size() == 2, "%s pickup set contains exactly two repairs" % stage_id)
 		_expect(stage_pickups.filter(func(item: Dictionary) -> bool: return StringName(item["kind"]) == &"experience_recall").size() == 1, "%s pickup set contains exactly one experience recall" % stage_id)
 		_expect(stage_crates.filter(func(item: Dictionary) -> bool: return StringName(item["drop"]) == &"repair").size() == 4, "%s crate set contains exactly four repairs" % stage_id)
 		_expect(stage_crates.filter(func(item: Dictionary) -> bool: return StringName(item["drop"]) == &"experience_recall").size() == 1, "%s crate set contains exactly one experience recall" % stage_id)
 	var kinds: Dictionary = {}
-	for item in StageCatalog.pickup_blueprint(&"flooded_works"):
+	for item in StageCatalog.pickup_blueprint(&"stage_1"):
 		kinds[StringName(item["kind"])] = true
-	for crate in StageCatalog.crate_blueprint(&"flooded_works"):
+	for crate in StageCatalog.crate_blueprint(&"stage_1"):
 		kinds[StringName(crate["drop"])] = true
 	for required_kind in [&"repair", &"experience_recall"]:
 		_expect(kinds.has(required_kind), "field catalog exposes %s" % required_kind)
@@ -82,8 +81,10 @@ func _run() -> void:
 	_expect(Vector2(ui_contract["health_cluster_size"]) == Vector2(184.0, 54.0), "health and XP share the compact hull cluster")
 	_expect(bool(ui_contract["top_clusters_do_not_overlap"]), "top HUD clusters do not overlap at 1280 pixels")
 	var orbit_contract: Dictionary = stage_ui.call("debug_status_orbit_contract")
-	_expect(int(orbit_contract["maximum_badges"]) == 3, "status orbit exposes at most three badges")
-	stage.free()
+	_expect(int(orbit_contract["maximum_badges"]) == 2, "status orbit exposes only the two retained cycle badges")
+	experience_runtime = null
+	stage_ui = null
+	stage.queue_free()
 	stage = null
 	audio = null
 	panel = null

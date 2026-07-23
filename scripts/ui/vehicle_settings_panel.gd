@@ -6,6 +6,7 @@ extends VBoxContainer
 ## truth and GameRoot applies the resulting InputMap.
 
 signal close_requested
+signal guide_requested
 
 const InputProfile = preload("res://scripts/input/vehicle_input_profile.gd")
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
@@ -118,6 +119,12 @@ func _build() -> void:
 	var title := _label("SETTINGS_TITLE", 28, Art.INK)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(title)
+	var guide := _button("?", &"SecondaryButton")
+	guide.tooltip_text = tr("GUIDE_TITLE")
+	guide.accessibility_name = tr("GUIDE_TITLE")
+	guide.custom_minimum_size = Vector2(44.0, 44.0)
+	guide.pressed.connect(func() -> void: guide_requested.emit())
+	header.add_child(guide)
 	_close_button = _button("SETTINGS_CLOSE", &"SecondaryButton")
 	_close_button.custom_minimum_size.x = 112.0
 	_close_button.pressed.connect(func() -> void: close_requested.emit())

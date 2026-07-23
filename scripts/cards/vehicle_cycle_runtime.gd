@@ -3,9 +3,9 @@ extends RefCounted
 
 ## Owns the three recurring upgrade cycles and exposes compact HUD state.
 
-const ORDER: Array[StringName] = [&"aegis_cycle", &"overclock_cycle", &"thruster_cycle"]
-const PERIODS := {&"aegis_cycle":14.0, &"overclock_cycle":12.0, &"thruster_cycle":10.0}
-const DURATIONS := {&"aegis_cycle":5.0, &"overclock_cycle":4.0, &"thruster_cycle":3.5}
+const ORDER: Array[StringName] = [&"aegis_cycle", &"overclock_cycle"]
+const PERIODS := {&"aegis_cycle":14.0, &"overclock_cycle":12.0}
+const DURATIONS := {&"aegis_cycle":5.0, &"overclock_cycle":4.0}
 
 var states: Dictionary = {}
 

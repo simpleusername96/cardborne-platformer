@@ -12,7 +12,6 @@ signal resume_requested
 signal restart_requested
 signal garage_requested
 signal replay_requested
-signal advance_requested
 
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const VEHICLE_THEME = preload("res://art/ui/production/vehicle_stage_theme.tres")
@@ -20,6 +19,7 @@ const UpgradeChoicePanel = preload("res://scripts/ui/vehicle_upgrade_choice_pane
 const ThreatRadar = preload("res://scripts/ui/vehicle_threat_radar.gd")
 const StatusOrbit = preload("res://scripts/ui/vehicle_status_orbit.gd")
 const SettingsPanel = preload("res://scripts/ui/vehicle_settings_panel.gd")
+const GuidebookPanel = preload("res://scripts/ui/vehicle_guidebook_panel.gd")
 const InputProfile = preload("res://scripts/input/vehicle_input_profile.gd")
 
 const CANVAS := Art.COBALT_VOID
@@ -251,6 +251,8 @@ var _result_center: CenterContainer
 var _garage_center: CenterContainer
 var _settings_center: CenterContainer
 var _settings_panel: VehicleSettingsPanel
+var _guide_center: CenterContainer
+var _guide_panel: VehicleGuidebookPanel
 var _deployment_command: Button
 var _deployment_controls_label: Label
 var _upgrade_buttons: Array[Button] = []
@@ -258,7 +260,6 @@ var _pause_first_button: Button
 var _result_first_button: Button
 var _result_kicker: Label
 var _result_title: Label
-var _result_continue_button: Button
 var _result_garage_button: Button
 var _garage_first_button: Button
 var _garage_primary_label: Label
@@ -268,6 +269,8 @@ var _garage_unlock_label: Label
 var _garage_summary_label: Label
 var _selected_primary := &"pulse_cannon"
 var _settings_return_surface := "deployment"
+var _guide_return_surface := "pause"
+var _latest_guidebook_snapshot: Dictionary = {}
 var _latest_upgrade_cards: Array[Dictionary] = []
 var _latest_upgrade_optional := false
 var _latest_result_summary: Dictionary = {}
@@ -284,6 +287,7 @@ func _ready() -> void:
 	_build_result()
 	_build_garage()
 	_build_settings()
+	_build_guidebook()
 	var settings := get_node_or_null("/root/SettingsStore")
 	if settings != null and settings.has_signal("locale_changed"):
 		settings.locale_changed.connect(_on_locale_changed)
@@ -564,8 +568,18 @@ func _build_pause() -> void:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 12)
 	panel.add_child(box)
+	var header := HBoxContainer.new()
+	header.add_theme_constant_override("separation", 12)
+	box.add_child(header)
 	var title := _label("PAUSE_TITLE", 30, INK)
-	box.add_child(title)
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	header.add_child(title)
+	var guide := _command_button("?", &"SecondaryButton")
+	guide.tooltip_text = tr("GUIDE_TITLE")
+	guide.accessibility_name = tr("GUIDE_TITLE")
+	guide.custom_minimum_size = Vector2(44.0, 44.0)
+	guide.pressed.connect(_show_guidebook.bind("pause"))
+	header.add_child(guide)
 	var resume := _command_button("PAUSE_RESUME", &"PrimaryButton")
 	resume.pressed.connect(func() -> void: resume_requested.emit())
 	box.add_child(resume)
@@ -603,9 +617,6 @@ func _build_result() -> void:
 	summary.custom_minimum_size.y = 190.0
 	box.add_child(summary)
 	box.set_meta("summary", summary)
-	_result_continue_button = _command_button("RESULT_NEXT_STAGE", &"PrimaryButton")
-	_result_continue_button.pressed.connect(func() -> void: advance_requested.emit())
-	box.add_child(_result_continue_button)
 	_result_garage_button = _command_button("RESULT_REVIEW_GARAGE", &"PrimaryButton")
 	_result_garage_button.pressed.connect(func() -> void: garage_requested.emit())
 	box.add_child(_result_garage_button)
@@ -671,12 +682,25 @@ func _build_settings() -> void:
 	_settings_center.add_child(panel)
 	_settings_panel = SettingsPanel.new()
 	_settings_panel.close_requested.connect(_close_settings)
+	_settings_panel.guide_requested.connect(_show_guidebook.bind("settings"))
 	panel.add_child(_settings_panel)
+
+
+func _build_guidebook() -> void:
+	_guide_center = CenterContainer.new()
+	_guide_center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_root.add_child(_guide_center)
+	var panel := _modal_panel(Vector2(920.0, 540.0))
+	_guide_center.add_child(panel)
+	_guide_panel = GuidebookPanel.new()
+	_guide_panel.close_requested.connect(_close_guidebook)
+	panel.add_child(_guide_panel)
 
 
 func update_hud(snapshot: Dictionary) -> void:
 	if not is_instance_valid(_hud):
 		return
+	_latest_guidebook_snapshot = Dictionary(snapshot.get("guidebook", {})).duplicate(true)
 	_health_bar.set_values(
 		float(snapshot.get("health", 0.0)),
 		maxf(1.0, float(snapshot.get("max_health", 1.0))),
@@ -769,12 +793,10 @@ func show_result(summary: Dictionary) -> void:
 	_result_center.visible = true
 	_hud.visible = false
 	_latest_result_summary = summary.duplicate(true)
-	var has_next := bool(summary.get("has_next_stage", false))
-	_result_continue_button.visible = has_next
-	_result_continue_button.text = tr("RESULT_NEXT_STAGE").replace("%s", tr(String(summary.get("next_stage_key", "STAGE_TIDAL_ARCHIVE"))))
+	var has_next := false
 	_result_kicker.text = tr("RESULT_STAGE_COMPLETE").replace("%d", str(int(summary.get("stage_number", 1)))).replace("%s", tr(String(summary.get("stage_title_key", "STAGE_FLOODED_WORKS"))))
-	_result_title.text = tr("RESULT_TITLE_CONTINUE") if has_next else tr("RESULT_TITLE_FINAL")
-	_result_first_button = _result_continue_button if has_next else _result_garage_button
+	_result_title.text = tr("RESULT_TITLE_FINAL")
+	_result_first_button = _result_garage_button
 	_refresh_result_summary()
 	_result_first_button.grab_focus()
 
@@ -814,9 +836,28 @@ func _close_settings() -> void:
 			show_deployment(_selected_primary)
 
 
+func _show_guidebook(return_surface: String) -> void:
+	_guide_return_surface = return_surface
+	hide_all_modals()
+	_dim.visible = true
+	_guide_center.visible = true
+	_hud.visible = false
+	_guide_panel.open(_latest_guidebook_snapshot)
+
+
+func _close_guidebook() -> void:
+	if _guide_return_surface == "settings":
+		_show_settings(_settings_return_surface)
+	else:
+		show_pause()
+
+
 func hide_all_modals() -> void:
 	if not is_instance_valid(_dim):
 		return
+	# Modal layers own attention; transient combat notifications must not peek
+	# above their top edge at compact resolutions.
+	_notification.visible = false
 	_dim.visible = false
 	_deployment_center.visible = false
 	_upgrade_center.visible = false
@@ -824,6 +865,7 @@ func hide_all_modals() -> void:
 	_result_center.visible = false
 	_garage_center.visible = false
 	_settings_center.visible = false
+	_guide_center.visible = false
 
 
 func notify(message: String, duration: float = 2.4, color: Color = OFF_WHITE) -> void:
@@ -872,6 +914,7 @@ func debug_layout_minimums() -> Dictionary:
 		"result": Vector2(720.0, 510.0),
 		"garage": Vector2(860.0, 510.0),
 		"settings": Vector2(840.0, 500.0),
+		"guidebook": Vector2(860.0, 500.0),
 	}
 
 
@@ -947,6 +990,8 @@ func debug_modal_contract(surface: String) -> Dictionary:
 			show_garage({})
 		"settings":
 			_show_settings("deployment")
+		"guidebook":
+			_show_guidebook("settings")
 	return {"surface": surface, "hud_hidden": not _hud.visible, "dim_visible": _dim.visible}
 
 
@@ -972,27 +1017,26 @@ func _refresh_result_summary() -> void:
 		return
 	var summary_label: Label = _result_center.get_child(0).get_child(0).get_meta("summary")
 	var result := _latest_result_summary
-	var warden_state := tr("RESULT_DEFEATED") if bool(result.get("field_boss_defeated", false)) else tr("RESULT_BYPASSED")
-	var reward_heading := tr("RESULT_ROUTE_CONTINUES") if bool(result.get("has_next_stage", false)) else tr("RESULT_REWARD")
-	var reward_detail := tr(String(result.get("next_stage_key", ""))) if bool(result.get("has_next_stage", false)) else tr("RESULT_RELAY_MODULE")
-	summary_label.text = "%s\n%s\n%s\n%s\n%s\n\n%s\n%s  ·  %s  ·  %s\n\n%s\n✦  %s" % [
+	summary_label.text = "%s\n%s\n%s\n%s\n\n%s\n%s  ·  %s  ·  %s\n\n%s\n✦  %s" % [
 		tr("RESULT_RUN"),
 		tr("RESULT_CLEAR_TIME") % String(result.get("time", "0:00")),
 		tr("RESULT_HULL") % roundi(float(result.get("health_ratio", 0.0)) * 100.0),
 		tr("RESULT_UPGRADE") % tr(String(result.get("upgrade", "UPGRADE_NONE"))),
-		tr("RESULT_WARDEN") % warden_state,
 		tr("RESULT_PERFORMANCE"),
 		tr("RESULT_PRIMARY_HITS") % int(result.get("primary_hits", 0)),
 		tr("RESULT_DASH_USES") % int(result.get("dash_uses", 0)),
 		tr("RESULT_INSTALLATIONS") % int(result.get("installations", 0)),
-		reward_heading,
-		reward_detail,
+		tr("RESULT_REWARD"),
+		tr("RESULT_RELAY_MODULE"),
 	]
 
 
 func _refresh_garage_content() -> void:
 	_refresh_garage_primary()
-	_garage_passive_label.text = "%s  ·  %s" % [tr("GARAGE_PASSIVE"), tr("GARAGE_PASSIVE_SEEKER")]
+	var secondary_names: Array[String] = []
+	for family in _latest_garage_data.get("secondaries", []):
+		secondary_names.append("%s Lv.%d" % [tr(String(family["name_key"])), int(family["level"])])
+	_garage_passive_label.text = "%s  ·  %s" % [tr("GARAGE_PASSIVE"), ", ".join(secondary_names)]
 	_garage_active_label.text = "%s  ·  %s" % [tr("GARAGE_ACTIVE"), tr("GARAGE_ACTIVE_EMP")]
 	if _latest_garage_data.is_empty():
 		_garage_summary_label.text = tr("GARAGE_HULL_RESET")

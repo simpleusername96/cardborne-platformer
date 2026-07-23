@@ -14,9 +14,9 @@ static func multipliers(stage_index: int) -> Dictionary:
 	return {"health":HEALTH[index], "damage":DAMAGE[index], "speed":SPEED[index]}
 
 
-static func boss_health(stage_index: int, field_boss: bool = false) -> float:
+static func boss_health(stage_index: int) -> float:
 	var index := clampi(stage_index, 0, 4)
-	return [560.0, 590.0, 620.0, 650.0, 680.0][index] if field_boss else [1250.0, 1350.0, 1450.0, 1550.0, 1650.0][index]
+	return [1250.0, 1350.0, 1450.0, 1550.0, 1650.0][index]
 
 
 static func debug_contract() -> Dictionary:
