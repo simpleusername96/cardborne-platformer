@@ -34,15 +34,18 @@ class PauseProbe:
 
 		run.mode = run.RunMode.PLAYING
 		Input.mouse_mode = Input.MOUSE_MODE_HIDDEN
-		run.call("_pause_run")
+		_send_escape(true)
+		await get_tree().process_frame
+		_send_escape(false)
+		await get_tree().process_frame
 		_expect(get_tree().paused, "Escape pause freezes the complete scene tree")
 		_expect(run.mode == run.RunMode.PAUSED, "pause enters the paused run mode")
 		_expect(Input.mouse_mode == Input.MOUSE_MODE_VISIBLE, "pause restores the system cursor")
 
-		var escape := InputEventAction.new()
-		escape.action = &"pause"
-		escape.pressed = true
-		ui.call("_unhandled_input", escape)
+		_send_escape(true)
+		await get_tree().process_frame
+		_send_escape(false)
+		await get_tree().process_frame
 		_expect(not get_tree().paused, "Escape resumes the scene tree from the pause surface")
 		_expect(run.mode == run.RunMode.PLAYING, "Escape returns to gameplay mode")
 		if get_tree().paused:
@@ -50,6 +53,13 @@ class PauseProbe:
 		game_root.queue_free()
 		await get_tree().process_frame
 		_finish()
+
+
+	func _send_escape(pressed: bool) -> void:
+		var escape := InputEventAction.new()
+		escape.action = &"pause"
+		escape.pressed = pressed
+		Input.parse_input_event(escape)
 
 
 	func _expect(condition: bool, message: String) -> void:

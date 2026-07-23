@@ -366,7 +366,7 @@ func _process(delta: float) -> void:
 		_objective_detail.visible = _objective_detail_timer > 0.0
 
 
-func _unhandled_input(event: InputEvent) -> void:
+func _input(event: InputEvent) -> void:
 	if (
 		is_instance_valid(_pause_center)
 		and _pause_center.visible
