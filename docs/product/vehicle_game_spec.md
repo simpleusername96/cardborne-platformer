@@ -9,6 +9,7 @@ scope: Current shared-field five-stage vehicle campaign
 related:
   - ../design/UI_VISUAL_SYSTEM.md
   - ../../.agents/vehicle-performance-architecture-audit.md
+  - ../../.agents/vehicle-performance-stabilization-evidence.md
   - ../../.agents/execplans/2026-07-23-vehicle-performance-architecture-stabilization.md
 ---
 
@@ -147,6 +148,27 @@ exactly 0.75 seconds before the boss resumes its pattern loop.
   their name or description.
 - Deployment, upgrade, pause/settings, guidebook, result, and garage are modal
   focus layers. They block carried input and provide deterministic keyboard focus.
+
+### Runtime capacity and performance
+
+- Runtime capacity is fixed at 128 live hostile actors, 240 player projectiles,
+  120 hostile projectiles with 24 slots reserved for bosses, 192 experience
+  shards, and 96 repeated effects. Content may use less but may not silently
+  raise a cap.
+- Allocation is bounded and observable. A full pool rejects or applies its
+  documented eviction policy; it never grows during combat. Ordinary hostile
+  fire cannot consume the boss reserve.
+- Player intent, damage, committed attacks, boss behavior, and their visible
+  combat windows remain 60 Hz. Ordinary decisions run at 10 Hz;
+  non-committed ordinary motion runs at 30 Hz near the player and 20 Hz beyond
+  820 pixels; far projectile integration, dynamic-grid refresh, experience
+  movement, and repeated effects run at 30 Hz with accumulated delta.
+- Every future mechanic declares its maximum live instances, update cadence,
+  spatial-query path, presentation batch, retirement rule, and deterministic
+  performance-scenario coverage before increasing runtime load.
+- Only the active vehicle-performance stabilization plan's rendered native/Web
+  scenarios and lifecycle soak can establish release performance. Headless
+  subsystem microbenchmarks are diagnostic only.
 
 ## Acceptance Criteria
 

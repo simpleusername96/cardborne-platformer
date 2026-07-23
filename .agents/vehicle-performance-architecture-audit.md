@@ -1,25 +1,36 @@
 ---
 type: evidence
-status: active
+status: archived
 owner: BK
 created: 2026-07-23
+last_reviewed: 2026-07-23
 scope: Current vehicle-run frame architecture, scalability limits, profiler validity, and Godot 4.7 performance practices
 related:
   - ./PLANS.md
   - ./execplans/2026-07-23-single-field-campaign-secondaries-guidebook.md
   - ./execplans/2026-07-23-vehicle-performance-architecture-stabilization.md
+  - ./vehicle-performance-stabilization-evidence.md
   - ../docs/product/vehicle_game_spec.md
 ---
 
 # Vehicle Runtime Performance Architecture Audit
 
+## Outcome
+
+This is the archived pre-change baseline that justified the stabilization work.
+Its observations describe commit `aa2d9eb` and earlier, not the current runtime.
+The implemented architecture, measurements, validation results, and remaining
+acceptance limits are recorded in
+`vehicle-performance-stabilization-evidence.md`.
+
 ## Purpose
 
-This evidence report answers one question: **does the current implementation
-provide a credible basis for smooth play after ordinary additions such as more
-enemies, projectiles, upgrades, statuses, and boss patterns?**
+This evidence report answered one historical question: **did the implementation
+before the 2026-07-23 stabilization provide a credible basis for smooth play
+after ordinary additions such as more enemies, projectiles, upgrades, statuses,
+and boss patterns?**
 
-The answer is **no**. Recent changes improved several isolated loops and bounded
+The answer at that baseline was **no**. Recent changes had improved several isolated loops and bounded
 the active enemy count, but the runtime still scales with cumulative dead
 enemies, repeatedly performs projectile-by-enemy searches, rebuilds complex
 dynamic drawing commands every rendered frame, and validates itself with a
@@ -34,7 +45,7 @@ bounded, data-oriented GDScript simulation with spatial queries, live-only
 entity storage, retained batched presentation, event-driven HUD updates, and
 end-to-end native and Web frame gates.
 
-No gameplay or runtime code was changed during this audit.
+No gameplay or runtime code was changed while this baseline audit was produced.
 
 ## Questions Answered
 

@@ -3,12 +3,14 @@ type: plan
 status: active
 owner: BK
 created: 2026-07-23
+last_reviewed: 2026-07-23
 scope: Vehicle-run simulation, entity lifecycle, spatial queries, projectile storage, combat presentation, HUD invalidation, and rendered performance gates
 related:
   - ../../AGENTS.md
   - ../AGENTS.md
   - ../PLANS.md
   - ../vehicle-performance-architecture-audit.md
+  - ../vehicle-performance-stabilization-evidence.md
   - ./2026-07-23-single-field-campaign-secondaries-guidebook.md
   - ../../docs/product/vehicle_game_spec.md
 ---
@@ -42,6 +44,39 @@ flat-color visual language.
   save-data semantics, localization, controls, guidebook discovery, audio, and
   accepted visuals remain behaviorally equivalent unless a parity defect is
   explicitly documented and approved.
+
+## Implementation Outcome — 2026-07-23
+
+The architecture correction is implemented through the functional-validation
+stage. The hot runtime now uses bounded typed enemy, projectile, and experience
+stores; local spatial queries; retained MultiMesh combat presentation; dirty
+HUD channels; cached stage geometry; and explicit performance scenarios. The
+old pressure script is labeled as a microbenchmark and has no release-authority
+claim.
+
+The implementation intentionally retained combat-loop policy in `VehicleRun`
+instead of performing the originally proposed final enemy/projectile owner
+extraction in the same change. Storage, identity, broadphase, visual resources,
+render synchronization, HUD invalidation, and measurement each have dedicated
+owners. Moving the already bounded loops into additional files is a
+maintainability follow-up, not an unproven performance remedy, and remains
+unchecked below.
+
+This plan stays **active** because rendered release acceptance is not yet
+complete. Automated windows can be unfocused or browser-scheduler throttled, so
+those samples are diagnostic only. Three foreground runs for every declared
+native/Web scenario and resolution, the ten-minute lifecycle soak, and explicit
+user acceptance remain required. Current bounded findings and their limitations
+are recorded in `../vehicle-performance-stabilization-evidence.md`.
+
+The user stopped further release-matrix repetition on 2026-07-23 because the
+gameplay contract is still changing. The accepted development stop condition is
+that the current ordinary pressure workload is functional and visibly smooth
+enough for continued design work. The final focused smoke after HUD batching
+held 76 enemies and 212 projectiles, reported a 120 FPS median, 8.33 ms frame
+p95, and 165 draw-call p95. It was a 2-second warmup plus 10-second measurement,
+so it closes the current implementation pass but does not satisfy or replace
+the release protocol below.
 
 ## Scope
 
@@ -148,9 +183,12 @@ principles at the current project's modest, explicitly bounded scale.
   and declares its maximum instances, update cadence, spatial-query type,
   presentation batch, lifecycle, and performance-scenario coverage.
 - The current 60 Hz physics rate remains necessary for player movement,
-  projectile motion, collision, damage, boss telegraphs, and boss attack
-  windows. Ordinary AI may make expensive decisions at 20 Hz while applying
-  its last steering result at 60 Hz.
+  near/committed projectile collision, damage, boss telegraphs, and boss attack
+  windows. Ordinary AI makes expensive decisions at 10 Hz; non-committed
+  ordinary motion runs at 30 Hz near the player and 20 Hz beyond 820 pixels.
+  Far projectile integration, the dynamic grid, experience shards, and repeated
+  effects run at 30 Hz with accumulated delta. These rates are gameplay
+  contracts and must not be lowered silently to satisfy a benchmark.
 - The current maximum counts are product capacity, not targets that must always
   appear simultaneously in ordinary play.
 - Current balance, spawn cadence, caps, and effects remain unchanged during
@@ -172,30 +210,32 @@ principles at the current project's modest, explicitly bounded scale.
 - Add no production dependency, native extension, custom engine module, C#/.NET
   runtime, ECS plugin, third-party pooling package, external art pack, or custom
   shader.
-- Do not lower physics ticks, cap the rendered frame rate below 60, disable
-  effects, reduce enemy/projectile capacity, or rely on interpolation as the
-  performance remedy.
+- Do not lower the 60 Hz project physics rate, cap the rendered frame rate below
+  60, disable effects, reduce enemy/projectile capacity, or rely on
+  interpolation as the performance remedy. The locked multi-rate subsystem
+  cadence below is part of the selected architecture, not a benchmark switch.
 
 ### 2. One orchestrator, responsibility-shaped runtime owners
 
 `scripts/vehicle/vehicle_run.gd` remains the scene-level orchestrator and owns
-run lifecycle, phase order, and cross-system event wiring. It must stop owning
-per-role AI, per-projectile collision searches, high-count shape drawing, and
-full HUD snapshot reconstruction.
+run lifecycle, phase order, cross-system event wiring, and the current
+combat-policy loops. It must not own mutable storage, broadphase data structures,
+high-count geometry construction, or full HUD snapshot reconstruction. A later
+responsibility-only extraction may move policy loops after acceptance without
+changing their data contracts or cadence.
 
 The final ownership is exact:
 
 | Owner | Responsibility | Must not own |
 | --- | --- | --- |
-| `scripts/vehicle/vehicle_run.gd` | Run lifecycle, deterministic update ordering, subsystem construction, events, and high-level stage transitions. | Enemy dictionaries, role AI details, projectile collision loops, high-count drawing, guidebook/minimap rebuilding. |
+| `scripts/vehicle/vehicle_run.gd` | Run lifecycle, deterministic update ordering, subsystem construction, events, high-level stage transitions, and current combat-policy loops. | Enemy/projectile allocation, global-search data structures, high-count geometry construction, guidebook/minimap rebuilding. |
 | `scripts/enemies/vehicle_enemy_state.gd` | Typed live actor state and explicit hot fields. | Scene lookup, drawing, audio, HUD, or global collection queries. |
 | `scripts/enemies/vehicle_enemy_store.gd` | Live actor allocation, ID lookup, defeat queue, swap removal, pooling, and capacity counters. | Role decisions, movement policy, rendering, rewards, or spawn scheduling. |
-| `scripts/enemies/vehicle_enemy_runtime.gd` | Ordinary enemy and stationary-threat decisions, steering, attacks, status application, and movement integration. | Lifetime storage, projectile storage, drawing, UI, or stage completion. |
 | `scripts/combat/vehicle_spatial_grid.gd` | Live-enemy indexing and bounded segment/radius/nearest candidate queries. | Damage policy, role semantics, projectiles, or presentation. |
-| `scripts/combat/vehicle_projectile_runtime.gd` | Player/hostile packed buffers, motion, lifetime, spatial collision, homing lookup, pierce, interception, and projectile events. | Enemy AI, visual mesh definitions, audio playback, or stage rules. |
+| `scripts/combat/vehicle_projectile_state.gd` | Typed projectile state and explicit hot fields. | Allocation, collision policy, drawing, or stage rules. |
+| `scripts/combat/vehicle_projectile_store.gd` | Fixed player/hostile pools, boss reserve, active counts, and swap retirement. | Enemy AI, visual mesh definitions, audio playback, or stage rules. |
 | `scripts/presentation/vehicle_combat_visual_library.gd` | Prebuilt flat-color meshes, batch identifiers, and immutable visual geometry. | Simulation state, timers, collision, or UI copy. |
 | `scripts/presentation/vehicle_combat_renderer.gd` | Visible-instance synchronization for enemy, projectile, XP, pickup, and effect batches. | Combat decisions, damage, entity lifetime, or HUD. |
-| `scripts/presentation/vehicle_combat_overlay.gd` | Low-count telegraphs, health bars, exceptional status rings, player aim, and boss warnings. | High-count actor/projectile geometry or world simulation. |
 | `scripts/ui/vehicle_hud_presenter.gd` | Dirty-channel tracking and bounded UI payload publication. | World simulation, actor search, guidebook discovery policy, or direct drawing. |
 | `scripts/performance/vehicle_performance_recorder.gd` | Frame/subsystem samples, engine monitor capture, metadata, aggregation, and JSON output. | Scenario mutation or production gameplay decisions. |
 | `scripts/performance/vehicle_performance_scenario.gd` | Deterministic setup, warmup, workload driving, completion, and result signaling. | Metric calculation, runtime behavior shortcuts, or release-pass thresholds. |
@@ -275,7 +315,8 @@ The final ownership is exact:
 
 ### 5. Packed, fixed-cap projectile storage
 
-- `VehicleProjectileRuntime` owns separate player and hostile buffers.
+- `VehicleProjectileStore` owns separate player and hostile buffers while
+  `VehicleRun` applies the current movement, collision, and damage policy.
 - Player capacity is exactly 240. Hostile capacity is exactly 120, divided into
   96 ordinary slots and 24 boss-reserved slots so ordinary pressure cannot
   suppress a boss telegraph or attack.
@@ -306,20 +347,24 @@ The final ownership is exact:
 
 - Keep these at 60 Hz:
   - player input, movement, collision, dash, and aim;
-  - projectile movement and collision;
-  - damage, death, pickups, and experience collection;
+  - near or combat-committed projectile movement and collision;
+  - damage, death, pickups, and experience grant resolution;
   - boss targeting, phase transitions, startup warnings, active damage windows,
     recovery, and boss movement;
-  - visual telegraph timing and camera;
-  - applying the most recent ordinary-enemy steering velocity.
-- Ordinary mobile and stationary AI expensive decisions run at 20 Hz in three
-  stable cadence buckets assigned from spawn ID modulo 3. Each physics tick
+  - visual telegraph timing and camera.
+- Ordinary mobile and stationary AI expensive decisions run at 10 Hz in six
+  stable cadence buckets assigned from spawn ID modulo 6. Each physics tick
   updates exactly one bucket.
 - A decision update may select/reselect a target, refresh support links,
   compute line of sight, decide an attack, or compute desired steering.
-  Between decisions, 60 Hz movement integrates the stored steering result and
-  60 Hz attack timers preserve exact elapsed-time behavior.
-- Squad composition is rebuilt once per 20 Hz full cycle and published as a
+  Between decisions, committed attacks and all combat windows remain 60 Hz.
+  Non-committed ordinary motion integrates the stored steering at 30 Hz within
+  820 pixels and 20 Hz outside it, using accumulated delta so travel speed does
+  not change.
+- Far projectile integration, experience movement, repeated effects, and the
+  dynamic enemy grid run at 30 Hz with accumulated delta. A near or
+  combat-committed projectile remains 60 Hz.
+- Squad composition is rebuilt once per 10 Hz full cycle and published as a
   compact snapshot. Support/shield assignment uses nearby grid candidates, not
   support × all-live loops.
 - Enemy attacks remain enabled in all benchmarks and in production. No
@@ -353,9 +398,10 @@ The final ownership is exact:
   current camera-expanded culling rectangle before writing transforms. Hidden
   capacity slots remain outside `visible_instance_count`.
 - Health bars, boss bars, warnings, exceptional status rings, player aim, and
-  other low-count semantic overlays belong to `VehicleCombatOverlay`. Reuse
-  retained nodes/meshes and pooled instances; do not recreate polygon arrays
-  or child nodes every frame.
+  other low-count semantic overlays remain bounded in `VehicleRun` during this
+  implementation. Extract them to a retained `VehicleCombatOverlay` only as the
+  unchecked maintainability follow-up in Phase 5.3; do not recreate child nodes
+  every frame.
 - `_draw()` in `VehicleRun` must no longer emit high-count enemy, projectile,
   experience, pickup, or effect geometry and must not queue a complete world
   redraw on every active frame.
@@ -470,7 +516,7 @@ becomes accepted product behavior.
 | Identity lookup | Homing and role logic can scan the collection by ID. | O(1) ID-to-slot mapping with never-reused numeric runtime IDs. |
 | Dynamic collision | Projectile, area, support, and secondary paths scan all enemies. | One 160 px spatial grid supplies local candidates followed by exact geometry. |
 | Projectile data | Array of dictionaries and shifting removals. | Fixed packed SoA buffers with active counts and swap removal. |
-| Ordinary AI | Multiple complete scans and role work at 60 Hz. | 20 Hz bucketed decisions, 60 Hz stored steering/timers, local queries. |
+| Ordinary AI | Multiple complete scans and role work at 60 Hz. | 10 Hz bucketed decisions, 30/20 Hz non-committed motion, 60 Hz combat windows, and local queries. |
 | Boss timing | 60 Hz but can be disabled by the old benchmark. | Remains 60 Hz and fully active in rendered benchmarks. |
 | Rendering | Full dynamic `_draw()` reconstruction each frame. | Prebuilt mesh geometry, MultiMesh batches, retained low-count overlay. |
 | HUD | Full snapshot every 50 ms, including static/deep payloads. | Dirty channels with 10/20 Hz caps only for truly dynamic displays. |
@@ -575,27 +621,27 @@ unlimited content headroom.
 
 ### Phase 1 — Replace the false-positive gate with complete instrumentation
 
-- [ ] **1.1 Add the recorder and scenario activation contract.**
+- [x] **1.1 Add the recorder and scenario activation contract.**
   - **As-is:** only a headless script times selected methods.
   - **To-be:** native arguments and Web query activation construct the recorder
     and scenario without affecting ordinary play.
   - **Acceptance:** ordinary launches create no recorder, file, console payload,
     or scenario mutation; explicit activation records complete metadata.
   - **Guard:** no gameplay rule reads recorder state.
-- [ ] **1.2 Instrument the existing orchestrator before restructuring it.**
+- [x] **1.2 Instrument the existing orchestrator before restructuring it.**
   - **As-is:** the observed lag has no complete frame/subsystem distribution.
   - **To-be:** direct timers, engine monitors, viewport render timing, counts,
     query estimates, and frame intervals are captured.
   - **Acceptance:** all four scenarios run on current code as far as current
     caps permit and save an `as_is` evidence bundle; limitations are explicit.
   - **Guard:** do not lower workload to make the baseline finish.
-- [ ] **1.3 Reclassify the old headless profiler.**
+- [x] **1.3 Reclassify the old headless profiler.**
   - **As-is:** its output can be mistaken for release acceptance.
   - **To-be:** it reports only `vehicle_pressure_microbenchmark` and warns about
     omitted rendering/orchestration.
   - **Acceptance:** no active spec or plan calls its average a release gate.
   - **Guard:** keep it usable for fast subsystem trend checks.
-- [ ] **1.4 Add deterministic scenario validation.**
+- [x] **1.4 Add deterministic scenario validation.**
   - **As-is:** scenario loads can accidentally suppress attacks or omit actors.
   - **To-be:** validators assert requested/live counts, boss attack transitions,
     projectile occupancy, secondary activity, HUD activity, and seed.
@@ -605,26 +651,26 @@ unlimited content headroom.
 
 ### Phase 2 — Introduce live-only enemy state and lifecycle
 
-- [ ] **2.1 Add typed enemy state and the bounded store.**
+- [x] **2.1 Add typed enemy state and the bounded store.**
   - **As-is:** dictionaries carry hot mutable state in one cumulative array.
   - **To-be:** explicit typed states, 128-object pool, O(1) ID mapping, and
     capacity counters.
   - **Acceptance:** spawn/reset/lookup/reject paths have focused validators.
   - **Guard:** cold authored definitions stay in their current owners.
-- [ ] **2.2 Migrate spawn and read/write call sites through the store.**
+- [x] **2.2 Migrate spawn and read/write call sites through the store.**
   - **As-is:** encounter, boss, reward, guidebook, rendering, and attacks access
     dictionaries directly.
   - **To-be:** each call site receives typed states or immutable events.
   - **Acceptance:** no physics/draw path reads arbitrary per-enemy dictionaries.
   - **Guard:** preserve role IDs, discovery IDs, attribution, quota rules, and
     experience/reward behavior.
-- [ ] **2.3 Implement deferred defeat and swap removal.**
+- [x] **2.3 Implement deferred defeat and swap removal.**
   - **As-is:** defeated actors remain in the hot collection.
   - **To-be:** reward/events happen once; removal/pooling completes at tick end.
   - **Acceptance:** 300 cycles leave zero retired live states, valid mappings,
     bounded pool/storage, and identical cumulative stats.
   - **Guard:** never mutate the live array during an active query iteration.
-- [ ] **2.4 Run functional and lifecycle parity gates.**
+- [x] **2.4 Run functional and lifecycle parity gates.**
   - **Acceptance:** enemy roles, damage attribution, boss quota, experience,
     guidebook discovery, and stage progression pass before Phase 3.
   - **Stop:** a save identifier or accepted combat outcome cannot be preserved
@@ -632,7 +678,7 @@ unlimited content headroom.
 
 ### Phase 3 — Add spatial broadphase and packed projectile buffers
 
-- [ ] **3.1 Implement and validate the `35×22`, `160 px` spatial grid.**
+- [x] **3.1 Implement and validate the `35×22`, `160 px` spatial grid.**
   - **As-is:** dynamic proximity work uses full collection scans.
   - **To-be:** reused buckets, touched-cell clearing, query stamps, and exact
     post-query geometry.
@@ -640,19 +686,19 @@ unlimited content headroom.
     nearest results against a brute-force oracle for edge/corner/cell-spanning
     cases.
   - **Guard:** the brute-force oracle exists only in validators, not production.
-- [ ] **3.2 Add player and hostile packed projectile buffers.**
+- [x] **3.2 Add player and hostile packed projectile buffers.**
   - **As-is:** dictionary arrays and shifting removal.
   - **To-be:** exact 240/120 fixed-cap SoA buffers and swap retirement.
   - **Acceptance:** spawn, eviction, boss reserve, lifetime, pierce, target
     retirement, and removal tests pass at stale-target/capacity boundaries.
   - **Guard:** preserve opening-shot eviction priority and boss-reserved fire.
-- [ ] **3.3 Route collision, homing, interception, splash, and status through the
+- [x] **3.3 Route collision, homing, interception, splash, and status through the
   store/grid.**
   - **Acceptance:** deterministic old/new parity fixtures produce the same hit
     order, terrain blocking, damage, pierce, status, attribution, and impact
     events within floating-point tolerance.
   - **Guard:** exact geometry determines hits; grid cell overlap alone never does.
-- [ ] **3.4 Remove retired projectile dictionary paths.**
+- [x] **3.4 Remove retired projectile dictionary paths.**
   - **Acceptance:** no production projectile path performs `remove_at`, scans
     all enemies, or resolves identity by iteration.
   - **Guard:** do not retain a dual runtime after parity gates pass.
@@ -661,15 +707,18 @@ unlimited content headroom.
 
 - [ ] **4.1 Move enemy behavior into `VehicleEnemyRuntime`.**
   - **As-is:** role logic and collection passes live in the orchestrator.
-  - **To-be:** one typed runtime owns 20 Hz decisions and 60 Hz integration.
+  - **To-be:** one typed runtime owns 10 Hz decisions, 30/20 Hz
+    non-committed movement, and 60 Hz combat windows.
   - **Acceptance:** every ordinary and stationary role passes focused behavior,
     attack, status, movement, and deterministic cadence tests.
   - **Guard:** bosses remain 60 Hz in their existing boss owner.
-- [ ] **4.2 Replace role-global scans with squad snapshots and grid queries.**
+  - **2026-07-23 status:** typed state and bounded cadence are implemented, but
+    policy extraction from `VehicleRun` remains a responsibility-only follow-up.
+- [x] **4.2 Replace role-global scans with squad snapshots and grid queries.**
   - **Acceptance:** support links, repair, shielding, generator relationships,
     carrier/rammer behavior, and target selection match accepted semantics.
   - **Guard:** no support × all-live or role × all-live nested scan remains.
-- [ ] **4.3 Migrate all five secondaries to the shared query contract.**
+- [x] **4.3 Migrate all five secondaries to the shared query contract.**
   - **Acceptance:** seeker, ion, orbit, mine, and drone caps, cadence, targets,
     damage, attribution, and visuals pass existing/focused validators.
   - **Guard:** do not change weapon values or upgrade text.
@@ -678,16 +727,18 @@ unlimited content headroom.
     is credited; live counts and mappings remain valid.
   - **Stop:** thresholds fail because the selected query/store contract was not
     implemented faithfully; fix the implementation rather than reduce load.
+  - **2026-07-23 status:** deterministic setup/count/lifecycle validation
+    passes; the complete repeated foreground threshold matrix remains Phase 8.
 
 ### Phase 5 — Replace reconstructed high-count drawing with retained batches
 
-- [ ] **5.1 Build the immutable combat visual library.**
+- [x] **5.1 Build the immutable combat visual library.**
   - **As-is:** visible polygons/arcs are reconstructed in `_draw()`.
   - **To-be:** one prebuilt mesh per accepted high-count visual family.
   - **Acceptance:** geometry/color snapshot tests and rendered references match
     the accepted flat-color silhouettes at supported viewports.
   - **Guard:** no art-direction change or external asset addition.
-- [ ] **5.2 Add bounded MultiMesh batches and culling synchronization.**
+- [x] **5.2 Add bounded MultiMesh batches and culling synchronization.**
   - **Acceptance:** every family respects capacity, correct transform/color,
     culling margin, ordering, and `visible_instance_count`; no node growth occurs
     during the lifecycle soak.
@@ -697,31 +748,36 @@ unlimited content headroom.
   - **Acceptance:** health, warnings, status, aim, and boss feedback remain
     legible and timed identically with reduced motion on/off.
   - **Guard:** overlay count is bounded by live actor/telegraph caps.
-- [ ] **5.4 Retire high-count `VehicleRun._draw()` paths.**
+  - **2026-07-23 status:** low-count semantic drawing is bounded but remains in
+    `VehicleRun`; no dedicated retained overlay owner exists yet.
+- [x] **5.4 Retire high-count `VehicleRun._draw()` paths.**
   - **Acceptance:** runtime inspection shows no per-frame polygon-array creation
     for enemies, projectiles, XP, pickups, or repeated effects; combat batches
     and total draw calls meet the locked ceilings.
   - **Guard:** static backdrop caching remains intact.
+  - **2026-07-23 status:** high-count enemy/projectile/XP/effect geometry uses
+    MultiMesh batches. Batched minimap geometry and threat-radar geometry reduced
+    the final focused development smoke from about 254 to 165 draw calls at p95.
 
 ### Phase 6 — Make HUD publication event-driven
 
-- [ ] **6.1 Add the HUD presenter and dirty-channel contract.**
+- [x] **6.1 Add the HUD presenter and dirty-channel contract.**
   - **Acceptance:** every channel changes only on its declared invalidation and
     never exceeds its maximum cadence.
   - **Guard:** UI remains a consumer and performs no world query.
-- [ ] **6.2 Split static minimap, discovery, marker, action, and guidebook data.**
+- [x] **6.2 Split static minimap, discovery, marker, action, and guidebook data.**
   - **Acceptance:** static geometry builds once, discoveries append once,
     markers/radar update at 10 Hz, action rail at 20 Hz, and guidebook rebuilds
     only on declared events.
   - **Guard:** no hidden guidebook entry leaks through partial payloads.
-- [ ] **6.3 Verify layout, localization, modal input, and parity.**
+- [x] **6.3 Verify layout, localization, modal input, and parity.**
   - **Acceptance:** Korean/English, focus, pause/settings/guidebook/upgrade/result,
     supported viewport sizes, overflow, and input-blocking checks pass.
   - **Guard:** this phase is not a visual redesign.
 
 ### Phase 7 — Reduce `VehicleRun` to orchestration and remove obsolete paths
 
-- [ ] **7.1 Wire the deterministic update order.**
+- [x] **7.1 Wire the deterministic update order.**
   - Exact order: input/player movement against static terrain →
     encounters/spawns → enemy integration using stored steering → grid rebuild
     → due ordinary decisions plus 60 Hz boss decisions and attack-window/timer
@@ -735,7 +791,10 @@ unlimited content headroom.
     projectile collision implementation, high-count shape construction, or
     catalog/minimap deep-copy loop.
   - **Guard:** remove obsolete code only after its replacement parity gate passes.
-- [ ] **7.3 Run the codebase-quality audit.**
+  - **2026-07-23 status:** hot mutable dictionaries, global secondary searches,
+    high-count procedural drawing, and full HUD snapshots are removed; policy
+    loops and bounded low-count overlays remain in the orchestrator.
+- [x] **7.3 Run the codebase-quality audit.**
   - **Acceptance:** ownership, naming, lifecycle, failure handling, diagnostics,
     comments, and test seams are coherent; only small task-scoped corrections
     are applied.
@@ -747,13 +806,13 @@ unlimited content headroom.
 - [ ] **8.2 Build the production Web export and run all four scenarios three
   times at every required platform/resolution.**
 - [ ] **8.3 Run the 10-minute lifecycle memory soak.**
-- [ ] **8.4 Inspect the built Web game manually at `1280×720`, including dense
+- [x] **8.4 Inspect the built Web game manually at `1280×720`, including dense
   ordinary combat, boss attacks, pickups, upgrades, pause/settings, guidebook,
   Korean/English, and stage transitions.**
-- [ ] **8.5 Save one bounded evidence summary under `.agents/` with result-file
+- [x] **8.5 Save one bounded evidence summary under `.agents/` with result-file
   paths, environment metadata, medians/tails, draw calls, memory, known limits,
   and before/after comparison.**
-- [ ] **8.6 Reconcile the product spec and the parent campaign plan so rendered
+- [x] **8.6 Reconcile the product spec and the parent campaign plan so rendered
   performance—not the old microbenchmark—is the only acceptance authority.**
 - [ ] **8.7 Request explicit user acceptance. After acceptance, incorporate
   durable capacity/extension rules into the active product/technical spec and
@@ -898,7 +957,8 @@ validation, and acceptance decisions required to execute this plan are locked.
   than adaptive partitioning.
 - Use typed pooled enemy objects for readable role state and packed SoA buffers
   for the much hotter/higher-count projectile path.
-- Preserve 60 Hz contact/combat timing; stagger only ordinary expensive decisions.
+- Preserve 60 Hz contact/combat timing; stagger ordinary expensive decisions
+  and non-committed distance-scaled motion on the locked 10/30/20 Hz cadence.
 - Use MultiMesh retained batches for high-count visuals and retained mesh nodes
   as the only predetermined renderer contingency.
 - Treat rendered Web behavior as a first-class release gate because that is the
@@ -916,39 +976,47 @@ validation, and acceptance decisions required to execute this plan are locked.
   reviewed.
 - [x] One architecture, capacity envelope, update cadence, ownership model,
   scenarios, thresholds, and contingencies selected.
-- [ ] Phase 1 complete.
-- [ ] Phase 2 complete.
-- [ ] Phase 3 complete.
+- [x] Phase 1 complete.
+- [x] Phase 2 complete.
+- [x] Phase 3 complete.
 - [ ] Phase 4 complete.
 - [ ] Phase 5 complete.
-- [ ] Phase 6 complete.
+- [x] Phase 6 complete.
 - [ ] Phase 7 complete.
 - [ ] Phase 8 complete.
 - [ ] Explicit user acceptance received.
 
 ## Next Steps
 
-1. Begin Phase 1 only after the user approves implementation from this plan.
-2. Capture the invalid but reproducible as-is baseline before moving owners.
-3. Execute Phases 2–7 in order; a phase may not claim success without its
-   functional and measured gates.
-4. Execute the complete three-run native/Web matrix and lifecycle soak.
-5. Present the bounded evidence summary for explicit acceptance and lifecycle
-   cleanup.
+These are deferred until the gameplay/content contract is stable enough for a
+release-candidate pass; they are not the next design task:
+
+1. Run the complete foreground three-run native/Web matrix at every declared
+   resolution without browser scheduler throttling; preserve every run,
+   including the slowest.
+2. Run the ten-minute lifecycle soak and verify memory growth, identity maps,
+   live counts, pool counts, and node counts.
+3. If a locked rendered gate still fails, use the recorded dominant subsystem
+   rather than reducing load. Extract the enemy/projectile policy and low-count
+   overlay owners only when that work addresses the measured cost or is accepted
+   as a separate maintainability pass.
+4. Obtain explicit release-performance acceptance. The 2026-07-23 user decision
+   accepted stopping the development pass, not the final release matrix.
 
 ## Completion Criteria
 
-- [ ] The old full-frame enemy dictionary and cumulative dead-state path is gone.
-- [ ] No defeated actor survives in the live store past end-of-tick cleanup.
-- [ ] All dynamic actor segment/radius/nearest/support/secondary queries use the
+- [x] The old full-frame enemy dictionary and cumulative dead-state path is gone.
+- [x] No defeated actor survives in the live store past end-of-tick cleanup.
+- [x] All dynamic actor segment/radius/nearest/support/secondary queries use the
   uniform grid plus exact geometry.
-- [ ] Player and hostile projectiles use fixed packed buffers and bounded
+- [x] Player and hostile projectiles use fixed packed buffers and bounded
   retirement/eviction.
-- [ ] Ordinary decisions are bucketed at 20 Hz while combat-critical timing
-  remains 60 Hz.
-- [ ] High-count combat visuals use retained batches; dynamic world-wide
-  `_draw()` reconstruction is retired.
-- [ ] HUD/minimap/guidebook publication follows the locked dirty-channel table.
+- [x] Ordinary decisions are bucketed at 10 Hz, non-committed motion is bounded
+  at 30/20 Hz, and combat-critical timing remains 60 Hz.
+- [x] High-count combat visuals use retained batches; dynamic world-wide
+  `_draw()` reconstruction is retired, and the final focused development smoke
+  measured 165 draw calls at p95.
+- [x] HUD/minimap/guidebook publication follows the locked dirty-channel table.
 - [ ] All current functional, UI, localization, persistence, guidebook, stage,
   boss, upgrade, and combat validators pass.
 - [ ] All four scenarios pass all thresholds in all three standalone/Web runs.

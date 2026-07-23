@@ -3,10 +3,12 @@ type: plan
 status: active
 owner: BK
 created: 2026-07-23
+last_reviewed: 2026-07-23
 scope: Enlarged single-field five-stage combat loop, roaming bosses, secondary weapons, simple movement upgrade, and encounter-driven guidebook
 related:
   - ../PLANS.md
   - ../vehicle-performance-architecture-audit.md
+  - ../vehicle-performance-stabilization-evidence.md
   - ./2026-07-23-vehicle-performance-architecture-stabilization.md
   - ../../docs/product/vehicle_game_spec.md
   - ../../docs/design/UI_VISUAL_SYSTEM.md
