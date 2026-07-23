@@ -35,9 +35,10 @@ func _run() -> void:
 	enemy.committed_dir = Vector2.RIGHT
 	enemy.committed_target = Vector2(500.0, 300.0)
 	var enemies: Array[EnemyState] = [enemy]
+	var projectile_direction := Vector2(3.0, 4.0).normalized()
 	var projectile := ProjectileState.new()
 	projectile.configure({
-		"pos":Vector2(330.0,300.0), "velocity":Vector2.RIGHT * 200.0,
+		"pos":Vector2(330.0,300.0), "velocity":projectile_direction * 200.0,
 		"radius":5.0, "team":&"player", "color":Color.WHITE,
 	}, &"player", 1)
 	var projectiles: Array[ProjectileState] = [projectile]
@@ -70,8 +71,40 @@ func _run() -> void:
 		"batched buffer preserves enemy position"
 	)
 	_expect(
-		is_equal_approx(Vector2(enemy_buffer[0], enemy_buffer[1]).length(), 26.0),
+		is_equal_approx(Vector2(enemy_buffer[0], enemy_buffer[4]).length(), 26.0),
 		"batched buffer preserves enemy visual scale"
+	)
+	var projectile_head := renderer.get_node("Projectile_head_player") as MultiMeshInstance2D
+	var projectile_trail := renderer.get_node("Projectile_trail_player") as MultiMeshInstance2D
+	var head_buffer := projectile_head.multimesh.buffer
+	var trail_buffer := projectile_trail.multimesh.buffer
+	_expect(
+		Vector2(head_buffer[3], head_buffer[7]).is_equal_approx(Vector2(330.0, 300.0)),
+		"projectile head remains centered on collision state"
+	)
+	_expect(
+		Vector2(head_buffer[0], head_buffer[4]).is_equal_approx(projectile_direction * 7.0),
+		"projectile head preserves direction and the minimum seven-pixel visual radius"
+	)
+	_expect(
+		Vector2(trail_buffer[3], trail_buffer[7]).is_equal_approx(
+			Vector2(330.0, 300.0) - projectile_direction * 16.5
+		),
+		"projectile trail preserves the original 40 px back and 7 px front span"
+	)
+	_expect(
+		Vector2(trail_buffer[0], trail_buffer[4]).is_equal_approx(projectile_direction * 47.0),
+		"projectile trail preserves direction and fixed length"
+	)
+	_expect(
+		Vector2(trail_buffer[1], trail_buffer[5]).is_equal_approx(
+			projectile_direction.rotated(PI * 0.5) * 10.5
+		),
+		"projectile trail width remains perpendicular and follows the visual radius"
+	)
+	_expect(
+		is_equal_approx(trail_buffer[11], 0.5),
+		"projectile trail remains translucent"
 	)
 	renderer.sync([], no_projectiles, no_projectiles, [], [], Rect2(0,0,1280,720), Vector2.ZERO, 0.0, false)
 	_expect(int(renderer.debug_snapshot()["visible_instances"]) == 0, "inactive presentation hides all retained instances")

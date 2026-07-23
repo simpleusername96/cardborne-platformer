@@ -26,21 +26,21 @@ static func enemy_mesh(archetype: StringName) -> ArrayMesh:
 	])
 
 
-static func projectile_mesh() -> ArrayMesh:
-	return polygon_mesh([
-		{
-			"points": PackedVector2Array([
-				Vector2(-5.7, -0.72), Vector2(0.9, -0.72),
-				Vector2(1.15, 0.0), Vector2(0.9, 0.72),
-				Vector2(-5.7, 0.72),
-			]),
-			"color": Color(1.0, 1.0, 1.0, 0.50),
-		},
-		{
-			"points": _regular_polygon(Vector2.ZERO, 1.0, 4, PI / 4.0),
-			"color": Color.WHITE,
-		},
-	])
+static func projectile_head_mesh() -> ArrayMesh:
+	return polygon_mesh([{
+		"points": _regular_polygon(Vector2.ZERO, 1.0, 4, PI / 4.0),
+		"color": Color.WHITE,
+	}])
+
+
+static func projectile_trail_mesh() -> ArrayMesh:
+	return polygon_mesh([{
+		"points": PackedVector2Array([
+			Vector2(-0.5, -0.5), Vector2(0.5, -0.5),
+			Vector2(0.5, 0.5), Vector2(-0.5, 0.5),
+		]),
+		"color": Color.WHITE,
+	}])
 
 
 static func health_bar_mesh() -> ArrayMesh:

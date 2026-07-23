@@ -50,12 +50,13 @@ class BatchBuffer:
 		color: Color
 	) -> void:
 		var offset := instance_index * BUFFER_FLOATS_PER_INSTANCE
-		# Godot's 2D MultiMesh buffer is two padded Vector4 rows followed by RGBA.
+		# Godot's 2D MultiMesh buffer stores row-major Transform2D values:
+		# [x.x, y.x, 0, origin.x, x.y, y.y, 0, origin.y], then RGBA.
 		values[offset] = x_axis.x * scale.x
-		values[offset + 1] = x_axis.y * scale.x
+		values[offset + 1] = -x_axis.y * scale.y
 		values[offset + 2] = 0.0
 		values[offset + 3] = position.x
-		values[offset + 4] = -x_axis.y * scale.y
+		values[offset + 4] = x_axis.y * scale.x
 		values[offset + 5] = x_axis.x * scale.y
 		values[offset + 6] = 0.0
 		values[offset + 7] = position.y
@@ -87,7 +88,8 @@ class BatchHandle:
 
 
 var _enemy_batches: Dictionary = {}
-var _projectile_batches: Dictionary = {}
+var _projectile_head_batches: Dictionary = {}
+var _projectile_trail_batches: Dictionary = {}
 var _experience_batches: Dictionary = {}
 var _effect_batches: Dictionary = {}
 var _overlay_batches: Dictionary = {}
@@ -142,20 +144,26 @@ func _build_batches() -> void:
 			0,
 			archetype
 		)
-	_projectile_batches[&"player"] = _create_batch(
-		"Projectile_player",
-		Visuals.projectile_mesh(),
-		PROJECTILE_CAPACITY,
-		1,
-		&"projectile_player"
-	)
-	_projectile_batches[&"enemy"] = _create_batch(
-		"Projectile_enemy",
-		Visuals.projectile_mesh(),
-		HOSTILE_PROJECTILE_CAPACITY,
-		1,
-		&"projectile_enemy"
-	)
+	for team in [&"player", &"enemy"]:
+		var capacity := (
+			PROJECTILE_CAPACITY
+			if team == &"player"
+			else HOSTILE_PROJECTILE_CAPACITY
+		)
+		_projectile_trail_batches[team] = _create_batch(
+			"Projectile_trail_%s" % String(team),
+			Visuals.projectile_trail_mesh(),
+			capacity,
+			1,
+			StringName("projectile_trail_%s" % String(team))
+		)
+		_projectile_head_batches[team] = _create_batch(
+			"Projectile_head_%s" % String(team),
+			Visuals.projectile_head_mesh(),
+			capacity,
+			2,
+			StringName("projectile_head_%s" % String(team))
+		)
 	for kind in [&"small", &"medium", &"large"]:
 		var family := StringName("experience_%s" % String(kind))
 		_experience_batches[kind] = _create_batch(
@@ -276,17 +284,27 @@ func _sync_projectiles(
 	team: StringName,
 	visible_world: Rect2
 ) -> void:
-	var batch: BatchHandle = _projectile_batches[team]
+	var head_batch: BatchHandle = _projectile_head_batches[team]
+	var trail_batch: BatchHandle = _projectile_trail_batches[team]
 	for projectile in projectiles:
 		var position := projectile.pos
 		if not visible_world.has_point(position):
 			continue
 		var radius := maxf(7.0, projectile.radius * 1.35)
-		var velocity := projectile.velocity
+		var direction := projectile.velocity.normalized()
+		# Preserve the original visual contract: a fixed 40 px back/7 px front
+		# streak, with only its width and diamond head scaling by hit radius.
 		_write_instance_basis(
-			batch,
+			trail_batch,
+			position - direction * 16.5,
+			direction,
+			Vector2(47.0, radius * 1.5),
+			Color(projectile.color, 0.50)
+		)
+		_write_instance_basis(
+			head_batch,
 			position,
-			velocity.normalized(),
+			direction,
 			Vector2.ONE * radius,
 			projectile.color
 		)
