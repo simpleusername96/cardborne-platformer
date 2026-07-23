@@ -70,9 +70,10 @@ maps, a base stage, exploration puzzles, or content beyond the five-stage run.
 1. Each stage begins at the shared center with no mobile damaging enemy active.
 2. The first arrival cue begins at 5.1 seconds and the first scout arrives at
    6.0 seconds.
-3. Later arrivals are sequential squads. Early squads contain three to five
-   enemies; later pressure arrives more frequently without spawning the full
-   authored population simultaneously.
+3. Later arrivals are five-squad surges. Each squad contains three to five
+   enemies, so one cue introduces roughly five times the former wave volume.
+   Active simulation remains hard-capped at 64 enemies on Standard and 68 on
+   Onslaught; the excess stays in the deterministic scheduler queue.
 4. Every mobile enemy joins a shared low-frequency pursuit field and can route
    around cover toward the player. Stationary roles hold authored anchors.
 5. Ordinary defeats advance the stage quota. Living enemies never block travel
@@ -88,16 +89,19 @@ maps, a base stage, exploration puzzles, or content beyond the five-stage run.
 
 | Stage | Ordinary quota | Authored mobile population | Boss |
 | ---: | ---: | ---: | --- |
-| 1 | 20 | 52 | Foundry Colossus |
-| 2 | 28 | 60 | Archive Leviathan |
-| 3 | 36 | 68 | Drydock Titan |
-| 4 | 44 | 76 | Switchyard Behemoth |
-| 5 | 52 | 84 | Crown Engine |
+| 1 | 20 | 260 | Foundry Colossus |
+| 2 | 28 | 300 | Archive Leviathan |
+| 3 | 36 | 340 | Drydock Titan |
+| 4 | 44 | 380 | Switchyard Behemoth |
+| 5 | 52 | 420 | Crown Engine |
 
-Four stationary threats are added per stage. Enemy health, damage, and movement
-rise only on a shallow stage curve; boss behavior changes through authored
-patterns rather than unchecked stat inflation. Every damaging boss pattern has a
-visible startup, active window, and recovery.
+Four stationary threats are added per stage. Ordinary hostile projectiles stop
+at 96 so 24 of the global 120-shot cap remain reserved for boss attacks. Enemy
+health, damage, and movement rise only on a shallow stage curve; boss behavior
+changes through authored patterns rather than unchecked stat inflation. Every
+damaging boss pattern has a visible startup, active window, and recovery. Routine
+hits cannot interrupt an attack; stagger can build only during recovery and lasts
+exactly 0.75 seconds before the boss resumes its pattern loop.
 
 ### Items, experience, and upgrades
 
@@ -140,7 +144,7 @@ visible startup, active window, and recovery.
 
 - The shared field, all anchors, 480-pixel start clearance, player and boss
   reachability, and geometry identity across all five stages pass validation.
-- The first cue/scout timing, stage quotas, 3–5 unit squad growth, spawn stop,
+- The first cue/scout timing, stage quotas, five-squad surge growth, spawn stop,
   1.5-second boss warning, roaming boss, preserved build/exploration, automatic
   stages 1–4 transition, and stage 5 result pass focused tests.
 - Tuned Thrusters has the exact three values, the five secondary families load,

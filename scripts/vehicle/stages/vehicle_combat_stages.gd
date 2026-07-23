@@ -7,7 +7,8 @@ const Field = preload("res://scripts/vehicle/stages/drowned_ruin_field.gd")
 
 const STAGE_IDS: Array[StringName] = [&"stage_1", &"stage_2", &"stage_3", &"stage_4", &"stage_5"]
 const QUOTAS := [20, 28, 36, 44, 52]
-const AUTHORED_COUNTS := [52, 60, 68, 76, 84]
+const AUTHORED_COUNTS := [260, 300, 340, 380, 420]
+const SURGE_SQUADS := 5
 const TITLE_KEYS := [
 	"STAGE_DROWNED_RUINS_1", "STAGE_DROWNED_RUINS_2", "STAGE_DROWNED_RUINS_3",
 	"STAGE_DROWNED_RUINS_4", "STAGE_DROWNED_RUINS_5",
@@ -89,27 +90,33 @@ static func _packets(stage_index: int) -> Array[Dictionary]:
 	var authored := 0
 	var packet_index := 0
 	while authored < target_count:
-		var squad_size: int = 1 if packet_index == 0 else mini(5, 3 + floori(float(packet_index) / 5.0))
-		squad_size = mini(squad_size, target_count - authored)
-		var squad: Array[StringName] = []
-		for unit_index in squad_size:
-			squad.append(roles[(packet_index + unit_index) % roles.size()])
-		if packet_index == 0:
-			squad[0] = &"scrap_drone"
+		var squads: Array[Array] = []
+		var squads_in_packet := 1 if packet_index == 0 else SURGE_SQUADS
+		for squad_index in squads_in_packet:
+			if authored >= target_count:
+				break
+			var squad_size := 1 if packet_index == 0 else mini(5, 3 + floori(float(packet_index + squad_index) / 6.0))
+			squad_size = mini(squad_size, target_count - authored)
+			var squad: Array[StringName] = []
+			for unit_index in squad_size:
+				squad.append(roles[(packet_index + squad_index + unit_index) % roles.size()])
+			if packet_index == 0:
+				squad[0] = &"scrap_drone"
+			squads.append(squad)
+			authored += squad_size
 		var anchor := Field.ORDINARY_SPAWN_ANCHORS[(packet_index + stage_index * 3) % Field.ORDINARY_SPAWN_ANCHORS.size()]
-		var at_time := 5.1 if packet_index == 0 else 9.0 + float(packet_index - 1) * 3.8
+		var at_time := 5.1 if packet_index == 0 else 8.0 + float(packet_index - 1) * 3.2
 		result.append({
 			"id":"stage_%d_packet_%02d" % [stage_index + 1, packet_index + 1],
-			"beat":0 if packet_index == 0 else mini(4, 1 + floori(float(packet_index) / 5.0)),
+			"beat":0 if packet_index == 0 else mini(4, 1 + floori(float(packet_index - 1) / 2.0)),
 			"trigger":{"kind":&"time", "at":at_time},
 			"anchor":anchor,
-			"squads":[squad],
-			"unit_spacing":0.80 if squad_size <= 3 else 0.65,
-			"squad_gap":4.5,
+			"squads":squads,
+			"unit_spacing":0.22,
+			"squad_gap":0.95,
 			"cue_lead":0.9,
 			"zone":"field",
 			"leash":Field.WORLD_RECT,
 		})
-		authored += squad_size
 		packet_index += 1
 	return result

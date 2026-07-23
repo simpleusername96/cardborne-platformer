@@ -4,6 +4,10 @@ extends RefCounted
 ## Data-owned boss exams. Damage values are final Standard damage and therefore
 ## bypass ordinary enemy and stage multipliers in VehicleRun.
 
+const STAGGER_THRESHOLD := 35.0
+const STAGGER_WINDOW := 0.75
+const STAGGER_RECOVERY_READ := 0.35
+
 const PATTERNS := {
 	&"twin_foundry_lanes":{"kind":&"lanes", "startup":0.90, "active":0.80, "recovery":1.00, "damage":20.0},
 	&"foundry_ram":{"kind":&"charge", "startup":1.10, "active":0.65, "recovery":1.30, "damage":34.0},

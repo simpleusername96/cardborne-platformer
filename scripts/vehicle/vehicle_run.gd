@@ -1668,7 +1668,9 @@ func _move_actor(position: Vector2, motion: Vector2, radius: float, is_player: b
 
 
 func _spawn_hostile_projectile(origin: Vector2, direction: Vector2, damage: float, speed: float, source: String, color: Color, final_damage: bool = false) -> void:
-	if _count_hostile_projectiles() >= EncounterDirector.HOSTILE_PROJECTILE_CAP:
+	var hostile_count := _count_hostile_projectiles()
+	var ordinary_limit := EncounterDirector.HOSTILE_PROJECTILE_CAP - EncounterDirector.BOSS_PROJECTILE_RESERVE
+	if hostile_count >= EncounterDirector.HOSTILE_PROJECTILE_CAP or (not final_damage and hostile_count >= ordinary_limit):
 		return
 	projectiles.append({
 		"pos": origin,
@@ -1945,14 +1947,16 @@ func _damage_enemy(enemy: Dictionary, amount: float, source: String, stagger: fl
 			multiplier *= 0.28
 		if float(enemy["vulnerable"]) > 0.0 or String(enemy["phase"]) == "staggered":
 			multiplier *= 1.55
-		enemy["stagger"] = float(enemy["stagger"]) + stagger
-		if float(enemy["stagger"]) >= 100.0 and String(enemy["phase"]) != "staggered":
+		var can_stagger := String(enemy["phase"]) == "boss_recovery" and float(enemy["vulnerable"]) > 0.0
+		if can_stagger:
+			enemy["stagger"] = float(enemy["stagger"]) + stagger
+		if can_stagger and float(enemy["stagger"]) >= BossPatterns.STAGGER_THRESHOLD:
 			enemy["stagger"] = 0.0
 			enemy["phase"] = "staggered"
-			enemy["phase_time"] = 3.0
+			enemy["phase_time"] = BossPatterns.STAGGER_WINDOW
 			enemy["pattern"] = "stagger_window"
-			enemy["vulnerable"] = 3.0
-			_ui.notify(tr("NOTIFY_COLOSSUS_STAGGERED"), 2.8, Rules.AMBER)
+			enemy["vulnerable"] = BossPatterns.STAGGER_WINDOW
+			_ui.notify(tr("NOTIFY_COLOSSUS_STAGGERED"), BossPatterns.STAGGER_WINDOW, Rules.AMBER)
 			_play_sound(&"boss", 1.35)
 	var health_before := float(enemy["health"])
 	var applied_damage := minf(health_before, maxf(0.0, amount * multiplier))
@@ -2348,7 +2352,7 @@ func _update_stage_boss(boss: Dictionary, delta: float) -> void:
 		boss["phase_time"] = maxf(0.0, float(boss["phase_time"]) - delta)
 		if float(boss["phase_time"]) <= 0.0:
 			boss["phase"] = "boss_read"
-			boss["phase_time"] = 0.85
+			boss["phase_time"] = BossPatterns.STAGGER_RECOVERY_READ
 			boss["pattern"] = "recovering_control"
 		return
 
@@ -2385,6 +2389,7 @@ func _boss_select_pattern(boss: Dictionary) -> void:
 	boss["pattern"] = pattern
 	boss["phase"] = "boss_startup"
 	boss["phase_time"] = BossPatterns.startup_seconds(pattern)
+	boss["stagger"] = 0.0
 	boss["hit_committed"] = false
 	var kind := BossPatterns.kind(pattern)
 	boss["committed_target"] = player_position
@@ -3607,11 +3612,14 @@ func _capture_pressure_evidence() -> void:
 	_capture_prepare_stage(0)
 	enemies.clear()
 	var roles: Array[StringName] = [&"scrap_drone", &"needle_drone", &"spark_minelet", &"chaser", &"shooter", &"controller"]
-	for index in 32:
-		var position := Vector2(1900.0 + float(index % 8) * 85.0, 1140.0 + float(index / 8) * 170.0)
+	for index in EncounterDirector.STANDARD_ACTIVE_CAPS[-1]:
+		var position := Vector2(
+			2440.0 + float(index % 10) * 80.0,
+			1320.0 + float(index / 10) * 108.0
+		)
 		var enemy := _make_enemy({"id":"capture_pressure_%02d" % index, "role":roles[index % roles.size()], "pos":position, "active":true})
 		enemy["active"] = true
-		enemy["health_visible_timer"] = 99.0
+		enemy["health_visible_timer"] = 99.0 if index < 12 else 0.0
 		enemy["committed_dir"] = (player_position - position).normalized()
 		if index < 3:
 			enemy["phase"] = "startup"
@@ -3769,6 +3777,7 @@ func _capture_prepare_boss(stage_index: int) -> Dictionary:
 	var boss := _find_enemy_by_id("stage_boss")
 	if boss.is_empty():
 		return {}
+	boss["pos"] = player_position + Vector2(240.0, -100.0)
 	player_aim_direction = (Vector2(boss["pos"]) - player_position).normalized()
 	return boss
 

@@ -12,7 +12,7 @@ secondary weapons, EMP, collectible experience, and card upgrades.
   explored minimap cells persist while the player returns to the center between
   stages.
 - Encounter packets begin with a six-second safe arrival, then grow from one
-  scout into sequential 3/4/5-unit squads under Standard or Onslaught caps.
+  scout into five-squad surges under measured 64/68 Standard/Onslaught caps.
 - Ordinary defeat quotas summon a roaming boss into the same field; surviving
   enemies never lock travel or force a full clear.
 - The current build includes 46 card upgrades and five automatic secondary

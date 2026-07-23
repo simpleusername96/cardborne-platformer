@@ -219,14 +219,15 @@ discovery state records what the player has actually encountered.
 | 5 | 52 | All discovered mobile roles in mixed squads | Mixed stationary threats | Crown Engine |
 
 - Every stage starts at the field center with the current six-second safe arrival.
-- Time-authored packets spawn from distributed anchors one unit at a time, then
-  form squads of three to five. All packets use time triggers; route-entry events
+- Time-authored packets spawn from distributed anchors. After the opening scout,
+  each cue schedules five squads of three to five units, producing roughly five
+  times the former wave volume. All packets use time triggers; route-entry events
   no longer gate the availability of combat.
 - Each stage profile authors at least `quota + active_cap` countable enemies so a
   boss cannot become impossible because the finite schedule ran dry.
-- Existing Standard and Onslaught active-count and attack-family budgets remain
-  the upper pressure limits. Stage profiles change composition, not the safety
-  contract.
+- Standard and Onslaught hard-cap active simulation at 64 and 68 enemies while
+  retaining the existing attack-family budgets. Excess authored population stays
+  queued, so stage profiles change density without breaking the frame budget.
 - Once the quota is reached, the scheduler stops issuing new ordinary enemies.
   Already living non-boss enemies remain active during the boss warning and boss
   fight, but no reinforcements are added.
@@ -580,7 +581,7 @@ expanding it to all five stages.
     from distributed anchors, and stop the scheduler at 20 countable defeats.
   - **Accept:** an idle-player simulation observes the first scout at 6.0 seconds
     and arrivals from at least three distinct anchors before the quota.
-  - **Guard:** active caps, sequential unit spacing, and 3/4/5 squad cohesion
+  - **Guard:** active caps, bounded unit spacing, and five-squad surge cohesion
     remain deterministic in both presets.
 - [x] **2.2 Add shared global pursuit.**
   - **As-is:** mobile enemies return home or become dormant outside a leash.
@@ -1011,10 +1012,15 @@ this plan before implementation continues.
   persistent localized guidebook are implemented.
 - Legacy five-map, fixed-gate, arena-lock, field-boss, intermediate-result, and
   periodic movement-cycle owners are removed.
-- All 13 vehicle validators and the settings validator pass. Standard and
-  Onslaught pressure samples complete in `2.101 ms` and `3.013 ms`, native boot
-  succeeds, Web export succeeds, and the three required viewport captures were
-  reviewed without clipping or modal overlap.
+- All 13 vehicle validators and the settings validator pass. Repeated Standard
+  and Onslaught pressure samples stay at or below `3.700 ms` and `3.911 ms`;
+  native boot succeeds, Web export succeeds, and the three required viewport
+  captures were reviewed without clipping or modal overlap.
+- **2026-07-23 density amendment:** post-implementation play feedback replaced
+  single-squad arrivals with five-squad surges, increased finite mobile reserves
+  to 260/300/340/380/420, bounded active simulation at 64/68, reserved 24
+  hostile-projectile slots for bosses, and
+  limited boss stagger to a 0.75-second recovery-window interrupt.
 - Phase 6.4 remains intentionally open because plan deletion requires explicit
   user acceptance under the documentation lifecycle policy.
 

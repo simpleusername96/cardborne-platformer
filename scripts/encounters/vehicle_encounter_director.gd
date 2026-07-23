@@ -13,19 +13,12 @@ const ENEMY_DAMAGE_MULTIPLIER := 1.35
 const ENEMY_RECOVERY_RATE := 1.28
 const PLAYER_PROJECTILE_CAP := 240
 const HOSTILE_PROJECTILE_CAP := 120
+const BOSS_PROJECTILE_RESERVE := 24
 const EFFECT_CAP := 96
 
-const STANDARD_ACTIVE_CAPS := [1, 15, 22, 28, 32]
-const ONSLAUGHT_ACTIVE_CAPS := [1, 22, 33, 44, 52]
+const STANDARD_ACTIVE_CAPS := [1, 32, 44, 56, 64]
+const ONSLAUGHT_ACTIVE_CAPS := [1, 40, 52, 60, 68]
 const STANDARD_THREAT_BUDGETS := [1.0, 3.0, 4.5, 5.25, 6.25]
-
-const POPULATION_BANDS := {
-	&"stage_1": Vector2i(56,56),
-	&"stage_2": Vector2i(64,64),
-	&"stage_3": Vector2i(72,72),
-	&"stage_4": Vector2i(80,80),
-	&"stage_5": Vector2i(88,88),
-}
 
 
 static func active_cap_for(beat: int, preset: StringName = &"standard") -> int:
@@ -51,10 +44,6 @@ static func spawn_pace_multiplier(beat: int, preset: StringName) -> float:
 	if beat <= 0:
 		return 1.0
 	return 0.28 if preset == &"onslaught" else 0.34
-
-
-static func population_band(stage_id: StringName) -> Vector2i:
-	return Vector2i(POPULATION_BANDS.get(stage_id, Vector2i(1, 999)))
 
 
 static func can_commit(current_points: float, ranged_count: int, denial_count: int, enemy: Dictionary, budget: float = THREAT_BUDGET, ranged_cap: int = MAX_RANGED_COMMITS, denial_cap: int = MAX_DENIAL_COMMITS) -> bool:
@@ -121,6 +110,7 @@ static func tuning_contract() -> Dictionary:
 		"enemy_health_multiplier": ENEMY_HEALTH_MULTIPLIER,
 		"enemy_speed_multiplier": ENEMY_SPEED_MULTIPLIER,
 		"projectile_speed_multiplier": HOSTILE_PROJECTILE_SPEED_MULTIPLIER,
+		"boss_projectile_reserve": BOSS_PROJECTILE_RESERVE,
 		"enemy_damage_multiplier": ENEMY_DAMAGE_MULTIPLIER,
 		"enemy_recovery_rate": ENEMY_RECOVERY_RATE,
 		"standard_spawn_pace": spawn_pace_multiplier(1, &"standard"),

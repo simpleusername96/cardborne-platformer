@@ -75,23 +75,23 @@ func _validate_experience_runtime() -> void:
 func _validate_route_level_cadence() -> void:
 	var runtime := ExperienceRuntime.new()
 	for stage_id in Catalog.STAGE_IDS:
-		var stage_experience := 24 # Stage-boss core plus defeated authored enemies.
-		var stage_boss_authored := false
+		var stage_experience := 24 # Stage-boss core plus the minimum quota path.
+		var counted_enemies := 0
 		for spec in Catalog.enemy_blueprint(stage_id):
+			if counted_enemies >= Catalog.quota(stage_id):
+				break
 			var definition := EnemyArchetypes.definition(StringName(spec["role"]))
 			var enemy := {
 				"role":StringName(definition["behavior"]),
 				"health_class":StringName(definition["health_class"]),
 			}
-			stage_boss_authored = stage_boss_authored or StringName(enemy["role"]) == &"stage_boss"
 			stage_experience += FieldDropRules.experience_for_enemy(enemy)
-		if stage_boss_authored:
-			stage_experience -= 24
+			counted_enemies += 1
 		var level_before := runtime.run_level
 		runtime.spawn_shard(Vector2.ZERO, stage_experience)
 		runtime.advance(0.0, Vector2.ZERO, 100.0, false)
 		var levels_gained := runtime.run_level - level_before
-		_expect(levels_gained >= 3 and levels_gained <= 5, "%s authored XP yields %d level-ups" % [stage_id, levels_gained])
+		_expect(levels_gained >= 2 and levels_gained <= 5, "%s quota-path XP yields %d level-ups" % [stage_id, levels_gained])
 		while runtime.consume_pending_level():
 			pass
 
