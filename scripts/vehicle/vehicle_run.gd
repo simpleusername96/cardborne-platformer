@@ -75,6 +75,7 @@ const PERFORMANCE_DETAIL_SAMPLE_STRIDE := 7
 
 var mode := RunMode.DEPLOYMENT
 var mode_before_pause := RunMode.PLAYING
+var _tree_pause_owned := false
 var _ui: Variant
 var _hud_presenter := HudPresenter.new()
 var _camera: Camera2D
@@ -218,6 +219,7 @@ func _ready() -> void:
 
 
 func _exit_tree() -> void:
+	_release_tree_pause()
 	if is_instance_valid(_audio):
 		_audio.shutdown()
 
@@ -761,18 +763,21 @@ func _pause_run() -> void:
 	mode = RunMode.PAUSED
 	_ui.update_hud({"guidebook": _guidebook_snapshot()})
 	_ui.show_pause()
+	_acquire_tree_pause()
 	_set_mouse_for_mode()
 
 
 func _resume_run() -> void:
 	if mode != RunMode.PAUSED:
 		return
+	_release_tree_pause()
 	mode = mode_before_pause
 	_ui.show_gameplay()
 	_set_mouse_for_mode()
 
 
 func _restart_stage() -> void:
+	_release_tree_pause()
 	var primary := selected_primary
 	_reset_run(false, true, true)
 	selected_primary = primary
@@ -808,6 +813,7 @@ func _advance_stage() -> void:
 
 
 func _show_garage() -> void:
+	_release_tree_pause()
 	mode = RunMode.GARAGE
 	player_health = _player_max_health()
 	_clear_projectiles()
@@ -828,6 +834,23 @@ func _set_mouse_for_mode() -> void:
 		Input.mouse_mode = Input.MOUSE_MODE_HIDDEN
 		return
 	Input.mouse_mode = Input.MOUSE_MODE_HIDDEN if mode == RunMode.PLAYING else Input.MOUSE_MODE_VISIBLE
+
+
+func _acquire_tree_pause() -> void:
+	var tree := get_tree()
+	if tree == null:
+		return
+	_tree_pause_owned = true
+	tree.paused = true
+
+
+func _release_tree_pause() -> void:
+	if not _tree_pause_owned:
+		return
+	var tree := get_tree()
+	if tree != null:
+		tree.paused = false
+	_tree_pause_owned = false
 
 
 func _update_player(delta: float) -> void:

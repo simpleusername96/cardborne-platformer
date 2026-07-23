@@ -366,6 +366,16 @@ func _process(delta: float) -> void:
 		_objective_detail.visible = _objective_detail_timer > 0.0
 
 
+func _unhandled_input(event: InputEvent) -> void:
+	if (
+		is_instance_valid(_pause_center)
+		and _pause_center.visible
+		and event.is_action_pressed(&"pause")
+	):
+		resume_requested.emit()
+		get_viewport().set_input_as_handled()
+
+
 func _build_root() -> void:
 	_root = Control.new()
 	_root.name = "VehicleStageUIRoot"
