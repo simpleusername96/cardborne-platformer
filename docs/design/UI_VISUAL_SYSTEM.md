@@ -49,6 +49,9 @@ rules remain owned by the product specification.
 - Rendering and collision use the exact same floor and cover polygons. A visible
   opening must be traversable and a visible barrier must block movement,
   projectiles, line of sight, pursuit, and minimap space.
+- Functional-terrain shapes never overlap one another or generated cover,
+  actors, rewards, or spawn markers. Their visible footprint matches the
+  reserved gameplay rectangle or radius used by layout validation.
 - Main lanes remain broad enough for the player and pursuing groups to pass one
   another. Small unusable gaps are visually sealed.
 - The map is larger than the viewer. The camera shows only a local combat area;

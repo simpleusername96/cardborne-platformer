@@ -144,6 +144,10 @@ second time; no individual stat is described as exactly 15% lower.
   that field's immutable compiled layout.
 - Every registered field uses a `7200x4320` world rectangle and respawns the
   player at `(3600, 2160)`.
+- Functional-terrain footprints are mutually disjoint and remain outside the
+  player-start clearance. The generator treats their exact rectangles or effect
+  radii as reserved space for random cover, stationary threats, crates, field
+  items, ordinary spawn anchors, and boss arrival anchors.
 - The center has a 560-pixel safe clearance. The camera remains at zoom 1, so the
   field is larger than one screen and exploration state matters.
 - At least twenty broad walkable regions define each immutable floor. A run

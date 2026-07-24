@@ -6,6 +6,7 @@ extends RefCounted
 const FieldRegistry = preload("res://scripts/vehicle/vehicle_field_registry.gd")
 const CombatStages = preload("res://scripts/vehicle/stages/vehicle_combat_stages.gd")
 const Layout = preload("res://scripts/vehicle/vehicle_field_layout.gd")
+const TerrainRuntime = preload("res://scripts/vehicle/vehicle_terrain_runtime.gd")
 
 const MAX_ATTEMPTS := 32
 const GRID_SIZE := 96.0
@@ -16,6 +17,8 @@ const SOCKET_COVER_CLEARANCE := 64.0
 const ITEM_PAIR_CLEARANCE := 180.0
 const STATIONARY_ITEM_CLEARANCE := 120.0
 const RECALL_CLEARANCE := 1200.0
+const STATIONARY_FEATURE_RADIUS := 54.0
+const SOCKET_FEATURE_RADIUS := 54.0
 const SECTORS: Array[StringName] = [&"nw", &"n", &"ne", &"sw", &"s", &"se"]
 
 static var _field: Dictionary = {}
@@ -35,6 +38,10 @@ static func generate(
 		else FieldRegistry.normalized_id(field_id_override)
 	)
 	_configure_field(FieldRegistry.definition(field_id))
+	var feature_errors := _validate_feature_contract()
+	if not feature_errors.is_empty():
+		push_error("Field features are invalid: %s" % "; ".join(feature_errors))
+		return null
 	var cover_rng := _rng_for(layout_seed, "cover:v1")
 	for _attempt in MAX_ATTEMPTS:
 		var selected_ids := _random_cover_ids(cover_rng)
@@ -60,6 +67,32 @@ static func generate(
 
 static func validate_cover_ids(cover_ids: Array[StringName]) -> PackedStringArray:
 	return _validate_cover_selection(_rects_for_ids(cover_ids))
+
+
+static func validate_feature_contract(definition: Dictionary) -> PackedStringArray:
+	_configure_field(definition)
+	return _validate_feature_contract()
+
+
+static func feature_overlaps_circle(
+	definition: Dictionary,
+	position: Vector2,
+	radius: float
+) -> bool:
+	for value in Array(definition.get("features", [])):
+		if _single_feature_overlaps_circle(Dictionary(value), position, radius):
+			return true
+	return false
+
+
+static func feature_overlaps_rect(
+	definition: Dictionary,
+	rectangle: Rect2
+) -> bool:
+	for value in Array(definition.get("features", [])):
+		if _single_feature_overlaps_rect(Dictionary(value), rectangle):
+			return true
+	return false
 
 
 static func cover_ids_for_mask(mask: Array[int]) -> Array[StringName]:
@@ -126,6 +159,9 @@ static func _build_stage_objects(layout_seed: int, stage_id: StringName, covers:
 			if (
 				candidate.distance_to(Vector2(_field["player_start"])) >= float(_field["start_clearance"])
 				and _point_has_cover_clearance(candidate, SOCKET_COVER_CLEARANCE, covers)
+				and not feature_overlaps_circle(
+					_field, candidate, STATIONARY_FEATURE_RADIUS
+				)
 				and _is_walkable(candidate, ORDINARY_RADIUS, covers)
 				and _reachable_has(ordinary_reachable, candidate)
 			):
@@ -197,10 +233,15 @@ static func _build_stage_objects(layout_seed: int, stage_id: StringName, covers:
 
 static func _random_cover_ids(rng: RandomNumberGenerator) -> Array[StringName]:
 	var result: Array[StringName] = []
-	var second_sectors: Array = Array(SECTORS).duplicate()
+	var second_sectors: Array[StringName] = []
+	for sector in SECTORS:
+		if _cover_candidates_for(sector).size() > 1:
+			second_sectors.append(sector)
 	_shuffle(second_sectors, rng)
 	for sector in SECTORS:
 		var candidates := _cover_candidates_for(sector)
+		if candidates.is_empty():
+			return []
 		_shuffle(candidates, rng)
 		result.append(StringName(candidates[0]["id"]))
 		if sector in second_sectors.slice(0, 2):
@@ -212,8 +253,12 @@ static func _random_cover_ids(rng: RandomNumberGenerator) -> Array[StringName]:
 static func _cover_candidates_for(sector: StringName) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 	for candidate in Array(_field["cover_candidates"]):
-		if StringName(candidate["sector"]) == sector:
-			result.append(Dictionary(candidate))
+		if StringName(candidate["sector"]) != sector:
+			continue
+		var typed := Dictionary(candidate)
+		if feature_overlaps_rect(_field, Rect2(typed["rect"])):
+			continue
+		result.append(typed)
 	result.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return String(a["id"]) < String(b["id"]))
 	return result
 
@@ -245,6 +290,8 @@ static func _validate_cover_selection(covers: Array[Rect2]) -> PackedStringArray
 		for water in _water_rects():
 			if _rect_distance(cover, water) < COVER_CLEARANCE:
 				errors.append("cover %d is too close to water" % index)
+		if feature_overlaps_rect(_field, cover):
+			errors.append("cover %d overlaps functional terrain" % index)
 		for other_index in range(index + 1, covers.size()):
 			if _rect_distance(cover, covers[other_index]) < COVER_CLEARANCE:
 				errors.append("covers %d and %d are too close" % [index, other_index])
@@ -265,7 +312,11 @@ static func _valid_reachable_points(
 			and candidate.distance_to(Vector2(_field["player_start"])) < float(_field["start_clearance"])
 		):
 			continue
-		if _is_walkable(candidate, radius, covers) and _reachable_has(reachable, candidate):
+		if (
+			_is_walkable(candidate, radius, covers)
+			and not feature_overlaps_circle(_field, candidate, radius)
+			and _reachable_has(reachable, candidate)
+		):
 			result.append(candidate)
 	return result
 
@@ -280,6 +331,8 @@ static func _is_valid_item_socket(
 	if not _is_walkable(candidate, 24.0, covers):
 		return false
 	if not _point_has_cover_clearance(candidate, SOCKET_COVER_CLEARANCE, covers):
+		return false
+	if feature_overlaps_circle(_field, candidate, SOCKET_FEATURE_RADIUS):
 		return false
 	if not _reachable_has(reachable, candidate):
 		return false
@@ -446,6 +499,101 @@ static func _point_has_cover_clearance(point: Vector2, clearance: float, covers:
 		if _circle_overlaps_rect(point, clearance, cover):
 			return false
 	return true
+
+
+static func _validate_feature_contract() -> PackedStringArray:
+	var errors := PackedStringArray()
+	var features: Array = _field.get("features", [])
+	var start := Vector2(_field["player_start"])
+	var start_clearance := float(_field["start_clearance"])
+	for index in features.size():
+		var feature := Dictionary(features[index])
+		var feature_id := String(feature.get("id", "feature_%d" % index))
+		if _feature_has_rect(feature):
+			var rectangle := Rect2(feature["rect"])
+			if not _rect_inside_floor_union(rectangle):
+				errors.append("%s leaves the walkable floor" % feature_id)
+			for water in _water_rects():
+				if rectangle.intersects(water, true):
+					errors.append("%s overlaps water" % feature_id)
+		else:
+			var radius := _feature_radius(feature)
+			var position := Vector2(feature.get("pos", Vector2.ZERO))
+			if radius <= 0.0:
+				errors.append("%s has no reserved footprint" % feature_id)
+			elif not _circle_inside_floor_union(position, radius):
+				errors.append("%s leaves the walkable floor" % feature_id)
+			for water in _water_rects():
+				if _circle_overlaps_rect(position, radius, water):
+					errors.append("%s overlaps water" % feature_id)
+		if _single_feature_overlaps_circle(feature, start, start_clearance):
+			errors.append("%s breaches player start clearance" % feature_id)
+		for other_index in range(index + 1, features.size()):
+			var other := Dictionary(features[other_index])
+			if _features_overlap(feature, other):
+				errors.append(
+					"%s overlaps %s" % [
+						feature_id,
+						String(other.get("id", "feature_%d" % other_index)),
+					]
+				)
+	return errors
+
+
+static func _features_overlap(first: Dictionary, second: Dictionary) -> bool:
+	if _feature_has_rect(first):
+		return (
+			Rect2(first["rect"]).intersects(Rect2(second["rect"]), true)
+			if _feature_has_rect(second)
+			else _single_feature_overlaps_rect(second, Rect2(first["rect"]))
+		)
+	if _feature_has_rect(second):
+		return _single_feature_overlaps_rect(first, Rect2(second["rect"]))
+	return (
+		Vector2(first["pos"]).distance_to(Vector2(second["pos"]))
+		< _feature_radius(first) + _feature_radius(second)
+	)
+
+
+static func _single_feature_overlaps_circle(
+	feature: Dictionary,
+	position: Vector2,
+	radius: float
+) -> bool:
+	if _feature_has_rect(feature):
+		return _circle_overlaps_rect(position, radius, Rect2(feature["rect"]))
+	return (
+		Vector2(feature.get("pos", Vector2.ZERO)).distance_to(position)
+		< _feature_radius(feature) + radius
+	)
+
+
+static func _single_feature_overlaps_rect(
+	feature: Dictionary,
+	rectangle: Rect2
+) -> bool:
+	if _feature_has_rect(feature):
+		return Rect2(feature["rect"]).intersects(rectangle, true)
+	return _circle_overlaps_rect(
+		Vector2(feature.get("pos", Vector2.ZERO)),
+		_feature_radius(feature),
+		rectangle
+	)
+
+
+static func _feature_has_rect(feature: Dictionary) -> bool:
+	return feature.has("rect") and Rect2(feature["rect"]).has_area()
+
+
+static func _feature_radius(feature: Dictionary) -> float:
+	match StringName(feature.get("kind", &"")):
+		&"transit_gate":
+			return TerrainRuntime.GATE_RADIUS
+		&"repair_basin":
+			return TerrainRuntime.REPAIR_RADIUS
+		&"overdrive_field":
+			return TerrainRuntime.OVERDRIVE_RADIUS
+	return 0.0
 
 
 static func _water_rects() -> Array[Rect2]:

@@ -54,7 +54,7 @@ const COVER_CANDIDATES: Array[Dictionary] = [
 ]
 
 const FALLBACK_COVER_IDS: Array[StringName] = [
-	&"nw_a", &"nw_c", &"n_b", &"ne_b", &"sw_b", &"s_c", &"se_a", &"se_c",
+	&"n_d", &"ne_b", &"nw_b", &"nw_c", &"s_a", &"s_c", &"se_d", &"sw_c",
 ]
 
 const STATIONARY_CANDIDATES := {

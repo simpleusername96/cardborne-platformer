@@ -26,6 +26,19 @@ func _validate_field(field_id: StringName) -> void:
 	_expect(Array(definition["cover_candidates"]).size() == 24, "%s has 24 cover candidates" % field_id)
 	_expect(Array(definition["item_socket_candidates"]).size() >= 32, "%s has at least 32 item sockets" % field_id)
 	_expect(Dictionary(definition["stationary_candidates"]).size() == 6, "%s has six stationary groups" % field_id)
+	_expect(
+		Generator.validate_feature_contract(definition).is_empty(),
+		"%s functional terrain has valid disjoint footprints" % field_id
+	)
+	var fallback_errors := Generator.validate_cover_ids(
+		Array(definition["fallback_cover_ids"])
+	)
+	_expect(
+		fallback_errors.is_empty(),
+		"%s fallback cover set avoids functional terrain: %s" % [
+			field_id, "; ".join(fallback_errors)
+		]
+	)
 
 	var fixed := Generator.generate(FIXED_SEED, Catalog.STAGE_IDS, field_id)
 	var replay := Generator.generate(FIXED_SEED, Catalog.STAGE_IDS, field_id)
@@ -37,6 +50,7 @@ func _validate_field(field_id: StringName) -> void:
 	_expect(fixed.cover_rects.size() == 8, "%s selects exactly eight covers" % field_id)
 	_expect(fixed.ordinary_spawn_anchors.size() >= 20, "%s retains at least 20 ordinary anchors" % field_id)
 	_expect(fixed.boss_arrival_anchors.size() >= 8, "%s retains at least eight boss anchors" % field_id)
+	_validate_no_feature_overlaps(fixed, definition)
 	for stage_id in Catalog.STAGE_IDS:
 		_expect(fixed.stationary_blueprint(stage_id).size() == 4, "%s/%s has four stationary threats" % [field_id, stage_id])
 		_expect(fixed.pickup_blueprint(stage_id).size() == 3, "%s/%s has three pickups" % [field_id, stage_id])
@@ -50,10 +64,60 @@ func _validate_field(field_id: StringName) -> void:
 		_expect(layout != null, "%s seed fixture %d generates" % [field_id, seed_offset])
 		if layout == null:
 			continue
+		_validate_no_feature_overlaps(layout, definition)
 		if layout.fingerprint != previous_fingerprint:
 			varied += 1
 		previous_fingerprint = layout.fingerprint
 	_expect(varied >= 42, "%s adjacent seed fixtures vary" % field_id)
+
+
+func _validate_no_feature_overlaps(
+	layout: VehicleFieldLayout,
+	definition: Dictionary
+) -> void:
+	for rectangle in layout.cover_rects:
+		_expect(
+			not Generator.feature_overlaps_rect(definition, rectangle),
+			"%s generated cover avoids functional terrain" % layout.field_id
+		)
+	for anchor in layout.ordinary_spawn_anchors:
+		_expect(
+			not Generator.feature_overlaps_circle(definition, anchor, 36.0),
+			"%s ordinary spawn avoids functional terrain" % layout.field_id
+		)
+	for anchor in layout.boss_arrival_anchors:
+		_expect(
+			not Generator.feature_overlaps_circle(definition, anchor, 76.0),
+			"%s boss spawn avoids functional terrain" % layout.field_id
+		)
+	for stage_id in Catalog.STAGE_IDS:
+		for spec in layout.stationary_blueprint(stage_id):
+			_expect(
+				not Generator.feature_overlaps_circle(
+					definition, Vector2(spec["pos"]), 54.0
+				),
+				"%s/%s stationary threat avoids functional terrain" % [
+					layout.field_id, stage_id
+				]
+			)
+		for spec in layout.pickup_blueprint(stage_id):
+			_expect(
+				not Generator.feature_overlaps_circle(
+					definition, Vector2(spec["pos"]), 54.0
+				),
+				"%s/%s pickup avoids functional terrain" % [
+					layout.field_id, stage_id
+				]
+			)
+		for spec in layout.crate_blueprint(stage_id):
+			_expect(
+				not Generator.feature_overlaps_circle(
+					definition, Vector2(spec["pos"]), 54.0
+				),
+				"%s/%s crate avoids functional terrain" % [
+					layout.field_id, stage_id
+				]
+			)
 
 
 func _validate_stage_objects(layout: VehicleFieldLayout, stage_id: StringName) -> void:

@@ -72,8 +72,8 @@ func _choose_anchor(
 ) -> Vector2:
 	var tiers: Array[Dictionary] = [
 		{"ring":true, "offscreen":true, "recent":true, "arc":true},
-		{"ring":true, "offscreen":true, "recent":false, "arc":true},
 		{"ring":false, "offscreen":true, "recent":true, "arc":true},
+		{"ring":true, "offscreen":true, "recent":false, "arc":true},
 		{"ring":false, "offscreen":true, "recent":false, "arc":true},
 		{"distance":false, "offscreen":false, "recent":false, "arc":false},
 	]

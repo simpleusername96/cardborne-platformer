@@ -54,7 +54,7 @@ const COVER_CANDIDATES: Array[Dictionary] = [
 ]
 
 const FALLBACK_COVER_IDS: Array[StringName] = [
-	&"nw_a", &"nw_d", &"n_c", &"ne_a", &"sw_c", &"s_b", &"se_b", &"se_d",
+	&"n_a", &"n_d", &"ne_d", &"nw_c", &"s_c", &"s_d", &"se_d", &"sw_b",
 ]
 
 const STATIONARY_CANDIDATES := {
@@ -133,13 +133,13 @@ static func _features() -> Array[Dictionary]:
 	return [
 		{"id":&"flow_1", "kind":&"flow_channel", "rect":Rect2(3420,520,360,980), "vector":Vector2(0,72)},
 		{"id":&"surge_1", "kind":&"arc_surge", "rect":Rect2(1120,1980,760,360)},
-		{"id":&"surge_2", "kind":&"arc_surge", "rect":Rect2(5320,1980,760,360)},
+		{"id":&"surge_2", "kind":&"arc_surge", "rect":Rect2(6100,1980,760,360)},
 		{"id":&"bulkhead_1", "kind":&"breakable_bulkhead", "rect":Rect2(2100,2040,180,240)},
 		{"id":&"bulkhead_2", "kind":&"breakable_bulkhead", "rect":Rect2(4920,2040,180,240)},
 		{"id":&"gate_a_1", "kind":&"transit_gate", "pair":&"a", "pos":Vector2(720,900)},
 		{"id":&"gate_a_2", "kind":&"transit_gate", "pair":&"a", "pos":Vector2(6480,3420)},
 		{"id":&"gate_b_1", "kind":&"transit_gate", "pair":&"b", "pos":Vector2(6480,900)},
 		{"id":&"gate_b_2", "kind":&"transit_gate", "pair":&"b", "pos":Vector2(720,3420)},
-		{"id":&"repair_1", "kind":&"repair_basin", "pos":Vector2(1660,2160)},
+		{"id":&"repair_1", "kind":&"repair_basin", "pos":Vector2(2460,2160)},
 		{"id":&"overdrive_1", "kind":&"overdrive_field", "pos":Vector2(5540,2160)},
 	]

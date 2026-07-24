@@ -128,9 +128,9 @@ static func _water_rects() -> Array[Rect2]:
 
 static func _features() -> Array[Dictionary]:
 	return [
-		{"id":&"flow_1", "kind":&"flow_channel", "rect":Rect2(2360,780,2480,340), "vector":Vector2(72,0)},
-		{"id":&"flow_2", "kind":&"flow_channel", "rect":Rect2(2360,3200,2480,340), "vector":Vector2(-72,0)},
-		{"id":&"surge_1", "kind":&"arc_surge", "rect":Rect2(3420,1720,360,880)},
+		{"id":&"flow_1", "kind":&"flow_channel", "rect":Rect2(3570,780,300,340), "vector":Vector2(72,0)},
+		{"id":&"flow_2", "kind":&"flow_channel", "rect":Rect2(3570,3200,300,340), "vector":Vector2(-72,0)},
+		{"id":&"surge_1", "kind":&"arc_surge", "rect":Rect2(6000,1720,360,880)},
 		{"id":&"bulkhead_1", "kind":&"breakable_bulkhead", "rect":Rect2(2140,2040,180,240)},
 		{"id":&"bulkhead_2", "kind":&"breakable_bulkhead", "rect":Rect2(4880,2040,180,240)},
 		{"id":&"gate_a_1", "kind":&"transit_gate", "pair":&"a", "pos":Vector2(720,900)},
