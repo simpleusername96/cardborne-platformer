@@ -2,6 +2,7 @@ extends SceneTree
 
 const Catalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
 const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd")
+const AttackTelegraphs = preload("res://scripts/combat/vehicle_attack_telegraph_builder.gd")
 const BossPatterns = preload("res://scripts/bosses/vehicle_boss_patterns.gd")
 const Director = preload("res://scripts/encounters/vehicle_encounter_director.gd")
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
@@ -127,11 +128,34 @@ func _check_boss_hit_recovery(run) -> void:
 	boss["pattern"] = "current_fan"
 	boss["pattern_index"] = 1
 	boss["committed_dir"] = Vector2.UP
+	boss["committed_target"] = run.player_position + Vector2(0.0, -240.0)
+	AttackTelegraphs.refresh_boss(
+		boss,
+		"current_fan",
+		Callable(run, "_runtime_attack_path_end"),
+		Callable(run, "_runtime_charge_path_end")
+	)
+	run.call("_update_stage_boss", boss, 0.0)
+	var warned_position := Vector2(boss["pos"])
+	var warned_direction := Vector2(boss["committed_dir"])
+	var warned_target := Vector2(boss["committed_target"])
+	var warned_endpoint := Vector2(boss.attack_telegraphs[0]["to"])
+	var player_before_warning_test := Vector2(run.player_position)
+	run.player_position += Vector2(180.0, 120.0)
 	run.player_velocity = Vector2(0.0, 180.0)
-	var before_track_position := Vector2(boss["pos"])
 	run.call("_update_stage_boss", boss, 0.1)
-	_expect(Vector2(boss["pos"]).distance_to(before_track_position) > 0.1, "boss moves while tracking during attack startup")
-	_expect(Vector2(boss["committed_dir"]).dot((run.player_position - Vector2(boss["pos"])).normalized()) > 0.0, "boss startup aim turns toward the moving player")
+	_expect(
+		Vector2(boss["pos"]).is_equal_approx(warned_position)
+			and Vector2(boss["committed_dir"]).is_equal_approx(warned_direction)
+			and Vector2(boss["committed_target"]).is_equal_approx(warned_target)
+			and Vector2(boss.attack_telegraphs[0]["to"]).is_equal_approx(warned_endpoint),
+		"boss attack geometry remains fixed after its warning becomes visible"
+	)
+	_expect(
+		float(boss.attack_telegraphs[0]["readiness"]) > 0.0,
+		"boss warning readiness advances without moving its footprint"
+	)
+	run.player_position = player_before_warning_test
 	run.call("_boss_begin_active", boss)
 	var committed_origin := Vector2(boss["pos"])
 	run.call("_boss_update_active", boss, 0.01)

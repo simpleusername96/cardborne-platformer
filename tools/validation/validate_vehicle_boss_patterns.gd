@@ -5,6 +5,7 @@ const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd"
 const Patterns = preload("res://scripts/bosses/vehicle_boss_patterns.gd")
 const Difficulty = preload("res://scripts/enemies/vehicle_stage_difficulty.gd")
 const EncounterDirector = preload("res://scripts/encounters/vehicle_encounter_director.gd")
+const PLAYER_BASE_SPEED := 280.0
 
 var failures: Array[String] = []
 
@@ -32,10 +33,24 @@ func _initialize() -> void:
 			if Patterns.kind(pattern) in [&"lanes", &"fan", &"cross"]:
 				_expect(Patterns.volley_interval(pattern) > 0.0 and Patterns.volley_limit(pattern, false) >= 3, "%s repeats aimed projectile volleys" % pattern)
 				_expect(Patterns.volley_limit(pattern, true) > Patterns.volley_limit(pattern, false), "%s adds one phase-two volley" % pattern)
+			if (
+				Patterns.damage(pattern) > 0.0
+				and Patterns.kind(pattern) in [&"area", &"pylons", &"summon"]
+			):
+				_expect(
+					Patterns.startup_seconds(pattern) * PLAYER_BASE_SPEED
+						>= Patterns.radius(pattern)
+							+ Patterns.MIN_BASE_WALK_ESCAPE_MARGIN,
+					"%s can be escaped from its center with ordinary movement" % pattern
+				)
 		_expect(Difficulty.boss_health(stage_index) > 0.0, "%s has bounded boss health" % stage_id)
 	_expect(
 		is_equal_approx(EncounterDirector.effective_hostile_projectile_speed(500.0), 410.0),
 		"boss prediction and projectile motion share the reduced hostile speed contract"
+	)
+	_expect(
+		Patterns.AREA_TARGET_MAX_LEAD == 96.0,
+		"boss circular attacks keep their committed center close to the player"
 	)
 	_expect(
 		Patterns.affinity("twin_foundry_lanes") == AttackContract.THERMAL

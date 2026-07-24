@@ -109,13 +109,18 @@ second time; no individual stat is described as exactly 15% lower.
   area radius. Swept projectile and charge corridors include their rounded
   endpoint caps. A footprint is rendered whenever it intersects the viewer even
   if its owner is off-screen. Projectile and beam corridors stop at the same
-  current wall or live crate as collision, and damaging boss attacks hold their
-  warned origin and direction throughout the active window.
+  current wall or live crate as collision. From the first visible startup frame,
+  damaging boss attacks hold their warned origin, direction, and target through
+  impact; only warning readiness changes.
 - Boss charge, area, pylon, and damaging summon warnings include their aimed
   three-shot burst as separate corridors. Active beams retain both their
   physical beam body and the expanded player-center danger boundary. Persistent
-  damage zones keep their exact outer boundary visible during warning and
-  damage.
+  damage zones and boss area attacks keep their exact outer boundary visible
+  for the complete damaging window. Hostile circular damage falls linearly from
+  100% at the center to 45% at that boundary and stops outside it.
+- Warning readiness progresses monotonically from a pale, restrained footprint
+  to a darker and stronger affinity cue at impact. It never pulses, follows the
+  player, or changes the committed damage geometry after appearing.
 - `Affinity` is an attack's impact family and controls large color and trail
   shape cues: kinetic, thermal, toxin, cryo, arc, hybrid, or support.
   `Condition` means a real persistent burn, poison, or chill payload. Thermal,
@@ -185,12 +190,15 @@ second time; no individual stat is described as exactly 15% lower.
    when the field permits it. Boss creation and boss-defeat completion reject
    calls unless the quota has been reached and the warning has resolved.
 7. The boss enters the same field and pursues the player. It does not wait in a
-   sealed arena. During visible startup it tracks the moving player while
-   approaching, retreating, or strafing at a readable speed. Projectile attacks
-   lock a predictively aimed lane and repeat volleys along it; charge, area,
-   pylon, and damaging summon patterns add one aimed three-shot pressure burst.
-   A damaging active window holds the warned origin and direction before its
-   bounded recovery; repositioning never silently shifts committed damage.
+   sealed arena. It repositions during its read state, predicts the player once
+   when selecting an attack, then freezes its position and committed geometry
+   while startup is visible. Circular target prediction is capped to 96 pixels
+   from the player's commitment-time position. Every damaging circular pattern
+   allows the base 280-pixel-per-second ship to clear the radius with at least
+   40 pixels of margin during startup. Projectile attacks lock a predictively
+   aimed lane and repeat volleys along it; charge, area, pylon, and damaging
+   summon patterns add one aimed three-shot pressure burst. Recovery resumes
+   repositioning only after the committed attack ends.
 8. Boss defeat recalls experience, resolves mandatory reward choices, then
    stages 1–4 automatically preserve the build and explored minimap, return the
    ship to the center, and begin the next stage. Stage 5 opens the final result.
@@ -217,7 +225,9 @@ exactly 0.75 seconds before the boss resumes its pattern loop.
   granted only when a shard is collected; summons grant none.
 - Exactly two field item behaviors exist: repair restores hull and experience
   recall pulls all live shards toward the player. Breakable crates contain one
-  of those two items.
+  of those two items. Recall retargets the ship's current position every physics
+  frame and guarantees all live shards reach it before the 0.65-second recall
+  window expires, including while the ship dashes.
 - Level thresholds use
   `min(160, 12 + round(3n + 0.55n²))`, where `n` is the zero-based level
   progression index. This makes early choices frequent while restoring a rising

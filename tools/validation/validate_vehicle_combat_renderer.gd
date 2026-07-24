@@ -197,6 +197,7 @@ func _run() -> void:
 		"radius":175.0,
 		"damage":24.0,
 		"affinity":AttackContract.THERMAL,
+		"readiness":0.0,
 	}]
 	renderer.sync(
 		[offscreen_enemy], no_projectiles, no_projectiles, [], [],
@@ -210,11 +211,47 @@ func _run() -> void:
 		"off-screen attacker body remains culled"
 	)
 	_expect(
-		area_disk.multimesh.visible_instance_count == 1
+		area_disk.multimesh.visible_instance_count == 2
 			and area_ring.multimesh.visible_instance_count >= 2,
-		"an on-screen danger footprint renders independently of its off-screen owner"
+		"an on-screen center-weighted danger footprint renders independently of its off-screen owner"
+	)
+	var early_area_buffer := area_disk.multimesh.buffer
+	var early_area_color := Color(
+		early_area_buffer[8],
+		early_area_buffer[9],
+		early_area_buffer[10],
+		early_area_buffer[11]
+	)
+	offscreen_enemy.attack_telegraphs[0]["readiness"] = 1.0
+	renderer.sync(
+		[offscreen_enemy], no_projectiles, no_projectiles, [], [],
+		Rect2(0,0,1280,720), Vector2.ZERO, 0.0, true
+	)
+	var late_area_buffer := area_disk.multimesh.buffer
+	var late_area_color := Color(
+		late_area_buffer[8],
+		late_area_buffer[9],
+		late_area_buffer[10],
+		late_area_buffer[11]
+	)
+	_expect(
+		late_area_color.get_luminance() < early_area_color.get_luminance()
+			and late_area_color.a > early_area_color.a,
+		"area warning continuously darkens and gains contrast toward impact"
+	)
+	offscreen_enemy.role = &"stage_boss"
+	offscreen_enemy.phase = &"boss_active"
+	renderer.sync(
+		[offscreen_enemy], no_projectiles, no_projectiles, [], [],
+		Rect2(0,0,1280,720), Vector2.ZERO, 0.0, true
+	)
+	_expect(
+		area_disk.multimesh.visible_instance_count == 2
+			and area_ring.multimesh.visible_instance_count >= 2,
+		"boss area footprint stays visible for its complete damaging window"
 	)
 	offscreen_enemy.phase = &"active"
+	offscreen_enemy.role = &"controller"
 	offscreen_enemy.attack_telegraphs = [{
 		"shape":&"corridor",
 		"from":Vector2(-120.0, 360.0),

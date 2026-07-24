@@ -204,7 +204,7 @@ func _build_batches() -> void:
 	)
 	_overlay_batches[&"danger_ring"] = _create_batch(
 		"Overlay_danger_ring",
-		Visuals.annulus_mesh(48, 0.94),
+		Visuals.annulus_mesh(48, 0.975),
 		256,
 		3,
 		&"overlay_danger_ring"
@@ -382,6 +382,13 @@ func _sync_attack_telegraphs(
 			elif startup and shape == &"support":
 				_sync_support_telegraph(telegraph)
 			elif (
+				enemy.phase == &"boss_active"
+				and shape == &"area"
+			):
+				# Boss area damage can remain live for its authored active window.
+				# Keep the committed footprint visible until it is no longer harmful.
+				_sync_area_telegraph(telegraph)
+			elif (
 				active
 				and shape == &"corridor"
 				and float(telegraph.get("active_width", 0.0)) > 0.0
@@ -420,39 +427,44 @@ func _sync_corridor_telegraph(telegraph: Dictionary) -> void:
 	var tangent := direction.rotated(PI * 0.5)
 	var half_width := maxf(1.0, float(telegraph["half_width"]))
 	var affinity := AttackContract.normalize_affinity(StringName(telegraph["affinity"]))
-	var color := Art.attack_color(affinity)
+	var readiness := clampf(float(telegraph.get("readiness", 1.0)), 0.0, 1.0)
+	var intensity := smoothstep(0.0, 1.0, readiness)
+	var color := Art.attack_warning_color(affinity, readiness)
 	var damage := float(telegraph.get("damage", 0.0))
-	var boundary_width := 8.0 if AttackContract.power_tier(damage) == &"heavy" else 6.0
+	var boundary_width := 4.0 if AttackContract.power_tier(damage) == &"heavy" else 3.0
 	var boundary_offset := maxf(0.0, half_width - boundary_width * 0.5)
+	var fill_alpha := lerpf(0.035, 0.11, intensity)
+	var boundary_alpha := lerpf(0.36, 0.88, intensity)
+	var accent_alpha := lerpf(0.24, 0.68, intensity)
 	# A swept circle produces a capsule, not a rectangle. These endpoint disks
 	# make the warning footprint match the same point-to-segment hit test.
-	_write_beam(from, to, half_width * 2.0, Color(color, 0.16))
-	_write_disk(from, half_width, Color(color, 0.16))
-	_write_disk(to, half_width, Color(color, 0.16))
-	_write_beam(from + tangent * boundary_offset, to + tangent * boundary_offset, boundary_width, Color(color, 0.90))
-	_write_beam(from - tangent * boundary_offset, to - tangent * boundary_offset, boundary_width, Color(color, 0.90))
-	_write_danger_ring(from, half_width, Color(color, 0.90))
-	_write_danger_ring(to, half_width, Color(color, 0.90))
+	_write_beam(from, to, half_width * 2.0, Color(color, fill_alpha))
+	_write_disk(from, half_width, Color(color, fill_alpha))
+	_write_disk(to, half_width, Color(color, fill_alpha))
+	_write_beam(from + tangent * boundary_offset, to + tangent * boundary_offset, boundary_width, Color(color, boundary_alpha))
+	_write_beam(from - tangent * boundary_offset, to - tangent * boundary_offset, boundary_width, Color(color, boundary_alpha))
+	_write_danger_ring(from, half_width, Color(color, boundary_alpha))
+	_write_danger_ring(to, half_width, Color(color, boundary_alpha))
 	match affinity:
 		AttackContract.KINETIC:
-			_write_beam(from, to, 4.0, Color(color, 0.68))
+			_write_beam(from, to, 2.0, Color(color, accent_alpha))
 		AttackContract.THERMAL:
-			_write_beam(from, to, 5.0, Color(color, 0.74))
+			_write_beam(from, to, 2.5, Color(color, accent_alpha))
 		AttackContract.TOXIN:
 			for progress in [0.34, 0.68]:
-				_write_diamond(from.lerp(to, float(progress)), 12.0, Color(color, 0.82))
+				_write_diamond(from.lerp(to, float(progress)), 9.0, Color(color, accent_alpha))
 		AttackContract.CRYO:
 			for offset in [-0.42, 0.42]:
 				_write_beam(
 					from,
 					to + tangent * half_width * float(offset),
-					4.0,
-					Color(color, 0.72)
+					2.0,
+					Color(color, accent_alpha)
 				)
 		AttackContract.ARC:
-			_write_diamond(to, 14.0, color)
+			_write_diamond(to, 11.0, Color(color, accent_alpha))
 		AttackContract.HYBRID:
-			_write_diamond(from.lerp(to, 0.5), 15.0, color)
+			_write_diamond(from.lerp(to, 0.5), 12.0, Color(color, accent_alpha))
 
 
 func _sync_active_beam(telegraph: Dictionary) -> void:
@@ -471,37 +483,42 @@ func _sync_area_telegraph(telegraph: Dictionary) -> void:
 	var center := Vector2(telegraph["center"])
 	var radius := maxf(1.0, float(telegraph["radius"]))
 	var affinity := AttackContract.normalize_affinity(StringName(telegraph["affinity"]))
-	var color := Art.attack_color(affinity)
+	var readiness := clampf(float(telegraph.get("readiness", 1.0)), 0.0, 1.0)
+	var intensity := smoothstep(0.0, 1.0, readiness)
+	var color := Art.attack_warning_color(affinity, readiness)
 	var damage := float(telegraph.get("damage", 0.0))
-	var boundary_width := 9.0 if AttackContract.power_tier(damage) == &"heavy" else 7.0
-	_write_disk(center, radius, Color(color, 0.13))
-	_write_danger_ring(center, radius, Color(color, 0.94))
+	var boundary_width := 4.0 if AttackContract.power_tier(damage) == &"heavy" else 3.0
+	var boundary_alpha := lerpf(0.38, 0.90, intensity)
+	var accent_alpha := lerpf(0.24, 0.66, intensity)
+	_write_disk(center, radius, Color(color, lerpf(0.025, 0.075, intensity)))
+	_write_disk(center, radius * 0.55, Color(color, lerpf(0.045, 0.15, intensity)))
+	_write_danger_ring(center, radius, Color(color, boundary_alpha))
 	match affinity:
 		AttackContract.THERMAL:
-			_write_danger_ring(center, radius * 0.62, Color(color, 0.68))
+			_write_danger_ring(center, radius * 0.62, Color(color, accent_alpha))
 		AttackContract.TOXIN:
-			_write_danger_ring(center, radius * 0.70, Color(color, 0.64))
-			_write_diamond(center, maxf(14.0, radius * 0.13), color)
+			_write_danger_ring(center, radius * 0.70, Color(color, accent_alpha))
+			_write_diamond(center, maxf(11.0, radius * 0.10), Color(color, accent_alpha))
 		AttackContract.CRYO:
-			_write_diamond(center, maxf(14.0, radius * 0.16), color)
+			_write_diamond(center, maxf(11.0, radius * 0.12), Color(color, accent_alpha))
 		AttackContract.ARC:
 			_write_beam(
 				center - Vector2.RIGHT * radius * 0.68,
 				center + Vector2.RIGHT * radius * 0.68,
 				boundary_width,
-				Color(color, 0.72)
+				Color(color, accent_alpha)
 			)
 			_write_beam(
 				center - Vector2.DOWN * radius * 0.68,
 				center + Vector2.DOWN * radius * 0.68,
 				boundary_width,
-				Color(color, 0.72)
+				Color(color, accent_alpha)
 			)
 		AttackContract.HYBRID:
-			_write_danger_ring(center, radius * 0.55, Color(color, 0.74))
-			_write_diamond(center, maxf(14.0, radius * 0.14), color)
+			_write_danger_ring(center, radius * 0.55, Color(color, accent_alpha))
+			_write_diamond(center, maxf(11.0, radius * 0.11), Color(color, accent_alpha))
 		_:
-			_write_diamond(center, maxf(12.0, radius * 0.12), color)
+			_write_diamond(center, maxf(10.0, radius * 0.09), Color(color, accent_alpha))
 
 
 func _sync_support_telegraph(telegraph: Dictionary) -> void:
@@ -571,8 +588,18 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 			"radius": radius,
 			"damage": damage,
 			"affinity": affinity,
+			"readiness": 1.0,
 		}
-		if float(zone["warning"]) > 0.0:
+		var warning := float(zone["warning"])
+		if warning > 0.0:
+			var warning_total := maxf(
+				warning,
+				float(zone.get("warning_total", warning))
+			)
+			descriptor["readiness"] = AttackContract.warning_readiness(
+				warning,
+				warning_total
+			)
 			_sync_area_telegraph(descriptor)
 		else:
 			var color := Art.attack_color(affinity)

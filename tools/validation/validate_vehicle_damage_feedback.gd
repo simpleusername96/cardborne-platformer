@@ -331,6 +331,22 @@ func _check_attack_telegraphs(stage: Node) -> void:
 		"mine warning uses its exact proximity damage radius"
 	)
 
+	var controller = stage.call("_make_enemy", {
+		"id":"telegraph_controller",
+		"role":&"controller",
+		"pos":stage.player_position + Vector2(300.0, 0.0),
+		"active":true,
+	})
+	controller.phase = &"startup"
+	controller.committed_target = stage.player_position
+	stage.denied_zones.clear()
+	stage.call("_begin_enemy_active", controller)
+	_expect(
+		stage.denied_zones.size() == 1
+			and is_zero_approx(float(stage.denied_zones[0]["warning"])),
+		"committed area startup flows directly into its fixed damaging zone"
+	)
+
 
 func _expect(condition: bool, message: String) -> void:
 	if not condition:

@@ -78,6 +78,20 @@ func _run() -> void:
 	_expect(float(stage.get("experience_recall_timer")) >= 0.65, "experience recall starts the global shard pull window")
 	var experience_runtime: RefCounted = stage.get("experience_runtime")
 	_expect(int(experience_runtime.call("required_experience")) == 12, "a fresh run starts with a 12-XP level threshold")
+	var recall_start := Vector2(stage.get("player_position"))
+	experience_runtime.call("spawn_shard", recall_start + Vector2(900.0, 0.0), 2)
+	for recall_frame in 40:
+		if recall_frame == 10:
+			stage.set("player_position", recall_start + Vector2(240.0, -90.0))
+		elif recall_frame == 26:
+			stage.set("player_position", recall_start + Vector2(420.0, 110.0))
+		stage.call("_update_experience", 1.0 / 60.0)
+	var recall_snapshot: Dictionary = experience_runtime.call("snapshot")
+	_expect(
+		int(recall_snapshot["shard_count"]) == 0
+			and int(recall_snapshot["experience"]) == 2,
+		"stage recall collects at the ship's current position after dash-like movement"
+	)
 	var stage_ui: CanvasLayer = stage.get("_ui")
 	stage_ui.call("show_deployment", &"pulse_cannon", RunDifficulty.HARD)
 	var ui_contract: Dictionary = stage_ui.call("debug_ui_contract", 1280.0)

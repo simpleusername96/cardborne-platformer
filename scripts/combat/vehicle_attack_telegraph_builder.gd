@@ -27,8 +27,7 @@ static func refresh_ordinary(
 	var attack := AttackContract.ordinary_attack(enemy.role)
 	if not attack.is_empty():
 		_append_ordinary_attack(enemy, attack, resolve_path, charge_path)
-		return
-	if enemy.role == &"rammer":
+	elif enemy.role == &"rammer":
 		_append_charge(
 			enemy,
 			SpecialistRuntime.RAMMER_SPEED * SpecialistRuntime.RAMMER_ACTIVE,
@@ -54,6 +53,19 @@ static func refresh_ordinary(
 			AttackContract.ARC,
 			SpecialistRuntime.BEAM_WIDTH
 		))
+	update_ordinary_readiness(enemy)
+
+
+static func update_ordinary_readiness(enemy: EnemyState) -> void:
+	if enemy.phase != &"startup":
+		return
+	_stamp_readiness(
+		enemy,
+		AttackContract.warning_readiness(
+			enemy.phase_time,
+			_ordinary_startup_seconds(enemy)
+		)
+	)
 
 
 static func refresh_boss(
@@ -156,6 +168,19 @@ static func refresh_boss(
 			"affinity":AttackContract.SUPPORT,
 			"damage":0.0,
 		})
+	update_boss_readiness(enemy, pattern)
+
+
+static func update_boss_readiness(enemy: EnemyState, pattern: String) -> void:
+	if enemy.phase != &"boss_startup":
+		return
+	_stamp_readiness(
+		enemy,
+		AttackContract.warning_readiness(
+			enemy.phase_time,
+			BossPatterns.startup_seconds(pattern)
+		)
+	)
 
 
 static func _append_ordinary_attack(
@@ -321,3 +346,20 @@ static func _area(
 		"damage":damage,
 		"affinity":AttackContract.normalize_affinity(affinity),
 	}
+
+
+static func _ordinary_startup_seconds(enemy: EnemyState) -> float:
+	var attack := AttackContract.ordinary_attack(enemy.role)
+	if not attack.is_empty():
+		return float(attack["startup"])
+	if enemy.role == &"rammer":
+		return SpecialistRuntime.RAMMER_STARTUP
+	if enemy.role == &"beam_sentinel":
+		return SpecialistRuntime.BEAM_STARTUP
+	return 0.0
+
+
+static func _stamp_readiness(enemy: EnemyState, readiness: float) -> void:
+	var normalized := clampf(readiness, 0.0, 1.0)
+	for descriptor in enemy.attack_telegraphs:
+		descriptor["readiness"] = normalized

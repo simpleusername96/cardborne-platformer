@@ -70,11 +70,17 @@ func spawn_cluster(position: Vector2, total_value: int, reward_source: StringNam
 		remaining -= value
 
 
-func advance(delta: float, player_position: Vector2, attraction_radius: float, recall_active: bool) -> Dictionary:
+func advance(
+	delta: float,
+	player_position: Vector2,
+	attraction_radius: float,
+	recall_remaining: float
+) -> Dictionary:
 	var collected_xp := 0
 	var collected_sources: Array[StringName] = []
 	var attraction_radius_squared := attraction_radius * attraction_radius
 	var collection_radius_squared := BASE_PICKUP_RADIUS * BASE_PICKUP_RADIUS
+	var recall_active := recall_remaining > 0.0
 	var index := 0
 	while index < shards.size():
 		var shard: ExperienceShard = shards[index]
@@ -82,7 +88,12 @@ func advance(delta: float, player_position: Vector2, attraction_radius: float, r
 		var distance_squared := position.distance_squared_to(player_position)
 		if recall_active or distance_squared <= attraction_radius_squared:
 			var distance := sqrt(distance_squared)
-			var speed := maxf(ATTRACT_SPEED, distance / 0.22) if recall_active else ATTRACT_SPEED
+			var travel_time := maxf(delta, recall_remaining)
+			var speed := (
+				maxf(ATTRACT_SPEED, distance / maxf(travel_time, 0.0001))
+				if recall_active
+				else ATTRACT_SPEED
+			)
 			position = position.move_toward(player_position, speed * delta)
 			shard.pos = position
 			distance_squared = position.distance_squared_to(player_position)

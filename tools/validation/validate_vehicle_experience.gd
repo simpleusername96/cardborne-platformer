@@ -63,7 +63,7 @@ func _validate_experience_runtime() -> void:
 		"reset retires every shard to the preallocated pool"
 	)
 	runtime.spawn_shard(Vector2.ZERO, 13, &"boss")
-	var result := runtime.advance(0.016, Vector2.ZERO, 100.0, false)
+	var result := runtime.advance(0.016, Vector2.ZERO, 100.0, 0.0)
 	_expect(runtime.run_level == 2 and runtime.experience == 1, "level threshold carries excess XP")
 	_expect(runtime.pending_level_ups == 1 and int(result["levels"]) == 1, "collected XP queues a level")
 	_expect(&"boss" in result["reward_sources"], "boss reward source survives shard collection")
@@ -71,10 +71,32 @@ func _validate_experience_runtime() -> void:
 	_expect(runtime.required_experience() == 16, "level two requirement follows the locked curve")
 	runtime.reset()
 	runtime.spawn_shard(Vector2(900.0, 0.0), 2)
-	_expect(int(runtime.advance(0.1, Vector2.ZERO, 92.0, false)["experience"]) == 0, "distant XP is not awarded before collection")
-	_expect(int(runtime.advance(0.65, Vector2.ZERO, 92.0, true)["experience"]) == 2, "experience recall collects distant XP without collecting other items")
+	_expect(int(runtime.advance(0.1, Vector2.ZERO, 92.0, 0.0)["experience"]) == 0, "distant XP is not awarded before collection")
+	var recall_remaining := 0.65
+	var recalled_experience := 0
+	var moving_player := Vector2.ZERO
+	var recall_frame := 0
+	while recall_remaining > 0.0 and recall_frame < 60:
+		if recall_frame == 9:
+			moving_player += Vector2(240.0, -80.0)
+		elif recall_frame == 24:
+			moving_player += Vector2(180.0, 120.0)
+		var recall_delta := minf(1.0 / 60.0, recall_remaining)
+		var recall_result := runtime.advance(
+			recall_delta,
+			moving_player,
+			92.0,
+			recall_remaining
+		)
+		recalled_experience += int(recall_result["experience"])
+		recall_remaining = maxf(0.0, recall_remaining - recall_delta)
+		recall_frame += 1
+	_expect(
+		recalled_experience == 2 and runtime.shards.is_empty(),
+		"experience recall reaches the ship's current position through dash-like movement"
+	)
 	runtime.spawn_shard(Vector2.ZERO, 100, &"boss")
-	result = runtime.advance(0.0, Vector2.ZERO, 92.0, false)
+	result = runtime.advance(0.0, Vector2.ZERO, 92.0, 0.0)
 	_expect(int(result["levels"]) == 4 and runtime.pending_level_ups == 4, "one collection safely queues multiple level-ups")
 	_expect(&"boss" in result["reward_sources"], "boss reward remains queued behind simultaneous levels")
 	runtime.reset()
@@ -100,7 +122,7 @@ func _validate_route_level_cadence() -> void:
 			counted_enemies += 1
 		var level_before := runtime.run_level
 		runtime.spawn_shard(Vector2.ZERO, stage_experience)
-		runtime.advance(0.0, Vector2.ZERO, 100.0, false)
+		runtime.advance(0.0, Vector2.ZERO, 100.0, 0.0)
 		var levels_gained := runtime.run_level - level_before
 		_expect(
 			levels_gained == expected_levels[stage_index],

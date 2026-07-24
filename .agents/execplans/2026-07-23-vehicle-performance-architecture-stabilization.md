@@ -3,7 +3,7 @@ type: plan
 status: active
 owner: BK
 created: 2026-07-23
-last_reviewed: 2026-07-23
+last_reviewed: 2026-07-24
 scope: Vehicle-run simulation, entity lifecycle, spatial queries, projectile storage, combat presentation, HUD invalidation, and rendered performance gates
 related:
   - ../../AGENTS.md
@@ -186,8 +186,10 @@ principles at the current project's modest, explicitly bounded scale.
   near/committed projectile collision, damage, boss telegraphs, and boss attack
   windows. Ordinary AI makes expensive decisions at 10 Hz; non-committed
   ordinary motion runs at 30 Hz near the player and 20 Hz beyond 820 pixels.
-  Far projectile integration, the dynamic grid, experience shards, and repeated
-  effects run at 30 Hz with accumulated delta. These rates are gameplay
+  Far projectile integration, the dynamic grid, ordinary experience attraction,
+  and repeated effects run at 30 Hz with accumulated delta. The bounded
+  0.65-second global experience-recall window runs at 60 Hz so moving-player
+  collection cannot miss its final frame. These rates are gameplay
   contracts and must not be lowered silently to satisfy a benchmark.
 - The current maximum counts are product capacity, not targets that must always
   appear simultaneously in ordinary play.
@@ -361,8 +363,9 @@ The final ownership is exact:
   Non-committed ordinary motion integrates the stored steering at 30 Hz within
   820 pixels and 20 Hz outside it, using accumulated delta so travel speed does
   not change.
-- Far projectile integration, experience movement, repeated effects, and the
-  dynamic enemy grid run at 30 Hz with accumulated delta. A near or
+- Far projectile integration, ordinary experience movement, repeated effects,
+  and the dynamic enemy grid run at 30 Hz with accumulated delta. Global
+  experience recall is the bounded 60 Hz exception. A near or
   combat-committed projectile remains 60 Hz.
 - Squad composition is rebuilt once per 10 Hz full cycle and published as a
   compact snapshot. Support/shield assignment uses nearby grid candidates, not

@@ -21,10 +21,9 @@ secondary weapons, EMP, collectible experience, and card upgrades.
 - Substantial ordinary-defeat quotas summon a roaming boss into the same field;
   neither elapsed time nor a direct boss call can bypass that gate. Surviving
   enemies never lock travel or force a full clear.
-- Bosses pursue and strafe around the player, track movement during visible
-  startup warnings, and fire repeated volleys along a predictively aimed lane
-  before bounded
-  recovery windows.
+- Bosses pursue and strafe during read and recovery, then commit one predicted
+  target when a startup warning appears. Its position and damage footprint stay
+  fixed through impact before a bounded recovery window.
 - The current build includes 46 card upgrades and five automatic secondary
   families, with at most three active at once. Fire, poison, and chill upgrade
   branches can coexist and apply independent bounded stacks.

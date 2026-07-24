@@ -29,6 +29,7 @@ const HEAVY_DAMAGE_MIN := 20.0
 const LIGHT_PROJECTILE_RADIUS := 5.0
 const STANDARD_PROJECTILE_RADIUS := 6.0
 const HEAVY_PROJECTILE_RADIUS := 7.0
+const RADIAL_EDGE_DAMAGE_SCALE := 0.45
 
 const ORDINARY_ATTACKS := {
 	&"chaser":{
@@ -104,6 +105,19 @@ static func beam_danger_half_width(beam_width: float) -> float:
 	return Rules.PLAYER_RADIUS + beam_width * 0.5
 
 
+static func warning_readiness(remaining: float, total: float) -> float:
+	if total <= 0.0:
+		return 1.0
+	return 1.0 - clampf(remaining / total, 0.0, 1.0)
+
+
+static func radial_damage(base_damage: float, distance: float, radius: float) -> float:
+	if base_damage <= 0.0 or radius <= 0.0 or distance > radius:
+		return 0.0
+	var normalized_distance := clampf(distance / radius, 0.0, 1.0)
+	return base_damage * lerpf(1.0, RADIAL_EDGE_DAMAGE_SCALE, normalized_distance)
+
+
 static func segment_circle_first_t(
 	from: Vector2,
 	to: Vector2,
@@ -171,6 +185,15 @@ static func validate_contract() -> PackedStringArray:
 		errors.append("projectile warning must expose the player-center hit footprint")
 	if affinity_for_condition_mask(CONDITION_BURN | CONDITION_POISON) != HYBRID:
 		errors.append("multi-condition projectiles must use the hybrid affinity")
+	if not (
+		is_equal_approx(radial_damage(20.0, 0.0, 100.0), 20.0)
+		and is_equal_approx(
+			radial_damage(20.0, 100.0, 100.0),
+			20.0 * RADIAL_EDGE_DAMAGE_SCALE
+		)
+		and is_zero_approx(radial_damage(20.0, 100.1, 100.0))
+	):
+		errors.append("radial damage must fall from full center damage to its bounded edge")
 	for role in ORDINARY_ATTACKS:
 		var attack: Dictionary = ORDINARY_ATTACKS[role]
 		if normalize_affinity(StringName(attack.get("affinity", &""))) != attack.get("affinity"):

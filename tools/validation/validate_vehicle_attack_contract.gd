@@ -39,6 +39,28 @@ func _initialize() -> void:
 		"beam danger corridor exactly expands by the player radius"
 	)
 	_expect(
+		is_zero_approx(AttackContract.warning_readiness(0.8, 0.8))
+			and is_equal_approx(AttackContract.warning_readiness(0.4, 0.8), 0.5)
+			and is_equal_approx(AttackContract.warning_readiness(0.0, 0.8), 1.0),
+		"warning readiness advances monotonically from startup to impact"
+	)
+	_expect(
+		is_equal_approx(AttackContract.radial_damage(20.0, 0.0, 100.0), 20.0),
+		"radial damage is full strength at its center"
+	)
+	_expect(
+		is_equal_approx(AttackContract.radial_damage(20.0, 50.0, 100.0), 14.5),
+		"radial damage falls linearly at its midpoint"
+	)
+	_expect(
+		is_equal_approx(AttackContract.radial_damage(20.0, 100.0, 100.0), 9.0),
+		"radial damage retains forty-five percent strength at its visible edge"
+	)
+	_expect(
+		is_zero_approx(AttackContract.radial_damage(20.0, 100.1, 100.0)),
+		"radial damage ends outside its visible boundary"
+	)
+	_expect(
 		is_equal_approx(
 			AttackContract.segment_circle_first_t(
 				Vector2.ZERO,

@@ -70,6 +70,10 @@ rules remain owned by the product specification.
   footprint, not a decorative approximation. Any on-screen portion remains
   visible when the attacker is off-screen. Enemy intent is communicated through
   authored motion and bounded telegraphs, not permanent trajectory overlays.
+- A warning's position and geometry are fixed from its first visible frame.
+  Readiness changes continuously and monotonically from a pale, low-opacity
+  affinity tint to a darker, higher-contrast tint at impact; it never flashes,
+  pulses, or chases the ship.
 - Accepted hull damage must be legible at the ship without reading the HUD:
   coral hit tint, small presentation-only recoil, bounded camera response,
   pale-coral invulnerability state, and a dedicated impact sound. Fully
@@ -88,9 +92,14 @@ rules remain owned by the product specification.
 - Corridor fill reaches the exact expanded collision boundary, including the
   swept circle's rounded start and end caps. Boundary rails sit inside that
   edge, and projectile or beam warnings end at the same live wall or crate
-  contact as simulation. Area warnings and active persistent zones keep their
-  exact outer radius visible. Thermal, toxin, cryo, and arc variations add large
-  interior rhythms without changing the damage footprint.
+  contact as simulation. Area warnings, active persistent zones, and boss area
+  attacks keep their exact outer radius visible for the complete damaging
+  window. Ordinary rails are 3 pixels and heavy rails are 4 pixels; center
+  accents remain 2–3 pixels so paths do not dominate the field. Area fill is
+  strongest inside the central 55% to communicate center-weighted damage while
+  the thin outer ring remains the exact cutoff. Thermal, toxin, cryo, and arc
+  variations add restrained, large interior rhythms without changing the
+  damage footprint.
 - `Affinity` describes immediate impact presentation. Burn, poison, and chill
   are separate real `condition` payloads; no color promises a damage-over-time
   effect that gameplay does not apply. Multi-condition player rounds use the

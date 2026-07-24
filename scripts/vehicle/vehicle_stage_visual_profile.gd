@@ -70,6 +70,14 @@ static func attack_color(affinity: StringName, friendly: bool = false) -> Color:
 	return color.lerp(IVORY_BRIGHT, 0.16) if friendly and affinity != &"kinetic" else color
 
 
+static func attack_warning_color(affinity: StringName, readiness: float) -> Color:
+	var progress := smoothstep(0.0, 1.0, clampf(readiness, 0.0, 1.0))
+	var base := attack_color(affinity)
+	var early := base.lerp(IVORY_BRIGHT, 0.52)
+	var imminent := base.lerp(INK, 0.12)
+	return early.lerp(imminent, progress)
+
+
 static func stepped_rect(rect: Rect2, cut: float = 34.0) -> PackedVector2Array:
 	var safe_cut := minf(cut, minf(rect.size.x, rect.size.y) * 0.22)
 	return PackedVector2Array([

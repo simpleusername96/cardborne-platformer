@@ -63,7 +63,7 @@ could not establish smooth play.
 | Static queries | Cached immutable floor geometry, one run-scoped eight-cover broadphase, and a 320-pixel crate grid |
 | Presentation | 49 retained MultiMesh families with prebuilt flat-color meshes, six shape-distinct projectile-affinity trails per team, one exact thin danger-ring family, fixed visible counts, and one three-family elemental-status batch |
 | HUD | Dirty channels; static minimap once, radar at 10 Hz, action state at 20 Hz, guidebook on invalidation |
-| Cadence | Critical combat at 60 Hz; ordinary decisions 10 Hz; non-committed motion 30/20 Hz; far projectiles, grid, XP, and repeated effects 30 Hz |
+| Cadence | Critical combat at 60 Hz; ordinary decisions 10 Hz; non-committed motion 30/20 Hz; far projectiles, grid, ordinary XP attraction, and repeated effects 30 Hz; the bounded 0.65-second global XP recall runs at 60 Hz |
 | Measurement | Four deterministic scenarios, focus/visibility/scheduler qualification, complete frame distributions, subsystem samples, counts, draw calls, render timing, and memory |
 
 Pool exhaustion is explicit and counted. Ordinary hostile shots cannot consume

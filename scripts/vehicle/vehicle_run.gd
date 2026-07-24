@@ -273,7 +273,9 @@ func _physics_process(delta: float) -> void:
 		_update_player(delta)
 		_update_cycle_upgrades(delta)
 		_update_pickups()
-		if _simulation_lod_bucket == 0:
+		if experience_recall_timer > 0.0:
+			_update_experience(delta)
+		elif _simulation_lod_bucket == 0:
 			_update_experience(delta * 2.0)
 		if _performance_detail_sample_active:
 			subsystem_ms["player_and_rewards"] = _elapsed_ms(section_started)
@@ -911,7 +913,6 @@ func _release_tree_pause() -> void:
 func _update_player(delta: float) -> void:
 	var previous_position := player_position
 	lifesteal_budget = minf(6.0, lifesteal_budget + 6.0 * delta)
-	experience_recall_timer = maxf(0.0, experience_recall_timer - delta)
 	player_invulnerable = maxf(0.0, player_invulnerable - delta)
 	var primary_held := Input.is_action_pressed("primary_fire")
 	player_primary_weapon.tick(delta, primary_held, player_dash_timer <= 0.0)
@@ -1426,7 +1427,13 @@ func _pickup_color(kind: StringName) -> Color:
 
 func _update_experience(delta: float) -> void:
 	var attraction_radius := 92.0 + run_build.stat(&"pickup_radius_bonus", 0.0)
-	var result := experience_runtime.advance(delta, player_position, attraction_radius, experience_recall_timer > 0.0)
+	var result := experience_runtime.advance(
+		delta,
+		player_position,
+		attraction_radius,
+		experience_recall_timer
+	)
+	experience_recall_timer = maxf(0.0, experience_recall_timer - delta)
 	if int(result["experience"]) > 0:
 		_discover_guide(&"object_experience")
 		_play_sound(&"pickup", 1.22)
@@ -1696,6 +1703,7 @@ func _update_boss_pylon(enemy: EnemyState, delta: float) -> void:
 			"pos": enemy.pos,
 			"radius": 125.0,
 			"warning": 0.80,
+			"warning_total": 0.80,
 			"duration": 1.8,
 			"tick": 0.0,
 			"damage": 9.0,
@@ -1751,16 +1759,12 @@ func _update_ordinary_enemy(
 	enemy.attack_cooldown = maxf(0.0, enemy.attack_cooldown - delta * StatusRuntime.speed_multiplier(enemy))
 	var phase := enemy.phase
 	if phase == &"startup":
-		AttackTelegraphs.refresh_ordinary(
-			enemy,
-			Callable(self, "_runtime_attack_path_end"),
-			Callable(self, "_runtime_charge_path_end")
-		)
 		if enemy.role == &"artillery_spotter" and not _runtime_has_line_of_sight(enemy.pos, player_position, 5.0):
 			enemy.phase = &"recovery"
 			enemy.phase_time = 0.65
 			return false
 		enemy.phase_time = maxf(0.0, enemy.phase_time - delta)
+		AttackTelegraphs.update_ordinary_readiness(enemy)
 		if enemy.phase_time <= 0.0:
 			_begin_enemy_active(enemy)
 		return false
@@ -1880,7 +1884,7 @@ func _begin_enemy_active(enemy: EnemyState) -> void:
 			denied_zones.append({
 				"pos": enemy.committed_target,
 				"radius": float(controller_attack["radius"]),
-				"warning": float(controller_attack["startup"]),
+				"warning": 0.0,
 				"duration": 2.15,
 				"tick": 0.0,
 				"damage": float(controller_attack["damage"]),
@@ -1896,8 +1900,14 @@ func _begin_enemy_active(enemy: EnemyState) -> void:
 		&"mine":
 			var mine_attack: Dictionary = AttackContract.ORDINARY_ATTACKS[role]
 			enemy.phase_time = 0.15
-			if player_position.distance_to(enemy.pos) <= float(mine_attack["radius"]):
-				_damage_player(float(mine_attack["damage"]), "Arc proximity burst", true)
+			var mine_distance := player_position.distance_to(enemy.pos)
+			var mine_damage := AttackContract.radial_damage(
+				float(mine_attack["damage"]),
+				mine_distance,
+				float(mine_attack["radius"])
+			)
+			if mine_damage > 0.0:
+				_damage_player(mine_damage, "Arc proximity burst", true)
 			_add_effect(
 				"shock",
 				enemy.pos,
@@ -1909,7 +1919,8 @@ func _begin_enemy_active(enemy: EnemyState) -> void:
 			var artillery_attack: Dictionary = AttackContract.ORDINARY_ATTACKS[role]
 			denied_zones.append({
 				"pos": enemy.committed_target, "radius": float(artillery_attack["radius"]),
-				"warning": 0.35, "duration": 1.35, "tick": 0.0,
+				"warning": 0.0,
+				"duration": 1.35, "tick": 0.0,
 				"damage": float(artillery_attack["damage"]),
 				"source": "Artillery impact",
 				"affinity": StringName(artillery_attack["affinity"]),
@@ -2488,9 +2499,21 @@ func _update_denied_zones(delta: float) -> void:
 		if float(zone["duration"]) <= 0.0:
 			denied_zones.remove_at(index)
 			continue
-		if player_position.distance_to(Vector2(zone["pos"])) <= float(zone["radius"]) and float(zone["tick"]) <= 0.0:
+		var distance := player_position.distance_to(Vector2(zone["pos"]))
+		var damage := AttackContract.radial_damage(
+			float(zone["damage"]),
+			distance,
+			float(zone["radius"])
+		)
+		if damage > 0.0 and float(zone["tick"]) <= 0.0:
 			zone["tick"] = 0.62
-			_damage_player(float(zone["damage"]), String(zone["source"]), false, true, bool(zone.get("final_damage", false)))
+			_damage_player(
+				damage,
+				String(zone["source"]),
+				false,
+				true,
+				bool(zone.get("final_damage", false))
+			)
 
 
 func _update_trails(delta: float) -> void:
@@ -3017,8 +3040,7 @@ func _update_stage_boss(boss: EnemyState, delta: float) -> void:
 		return
 	if phase == "boss_startup":
 		boss.phase_time = maxf(0.0, float(boss.phase_time) - delta)
-		_boss_combat_move(boss, delta, BossPatterns.STARTUP_MOVE_SCALE)
-		_boss_track_player(boss, delta)
+		AttackTelegraphs.update_boss_readiness(boss, String(boss.pattern))
 		if float(boss.phase_time) <= 0.0:
 			_boss_begin_active(boss)
 		return
@@ -3046,8 +3068,23 @@ func _boss_select_pattern(boss: EnemyState) -> void:
 	boss.stagger = 0.0
 	boss.hit_committed = false
 	var kind := BossPatterns.kind(pattern)
-	boss.committed_target = player_position
-	boss.committed_dir = (player_position - Vector2(boss.pos)).normalized()
+	var predicted_target := _boss_predicted_target(
+		Vector2(boss.pos),
+		BossPatterns.projectile_speed(pattern)
+	)
+	if (
+		kind in [&"area", &"pylons", &"summon"]
+		and BossPatterns.damage(pattern) > 0.0
+	):
+		var lead := predicted_target - player_position
+		predicted_target = (
+			player_position
+			+ lead.limit_length(BossPatterns.AREA_TARGET_MAX_LEAD)
+		)
+	boss.committed_target = predicted_target
+	boss.committed_dir = (predicted_target - Vector2(boss.pos)).normalized()
+	if Vector2(boss.committed_dir).is_zero_approx():
+		boss.committed_dir = Vector2.RIGHT
 	if kind == &"lanes":
 		boss.lane_centers = [-135.0, 135.0]
 	AttackTelegraphs.refresh_boss(
@@ -3148,9 +3185,14 @@ func _boss_update_active(boss: EnemyState, delta: float) -> void:
 	elif kind in [&"area", &"pylons", &"summon"]:
 		if int(boss.pattern_volleys) == 0:
 			_boss_fire_aimed_burst(boss, pattern, maxf(12.0, damage * 0.55))
-		if damage > 0.0 and not bool(boss.hit_committed) and player_position.distance_to(Vector2(boss.committed_target)) <= BossPatterns.radius(pattern):
+		var area_damage := AttackContract.radial_damage(
+			damage,
+			player_position.distance_to(Vector2(boss.committed_target)),
+			BossPatterns.radius(pattern)
+		)
+		if area_damage > 0.0 and not bool(boss.hit_committed):
 			boss.hit_committed = true
-			_damage_player(damage, pattern, false, true, true)
+			_damage_player(area_damage, pattern, false, true, true)
 
 	if float(boss.phase_time) <= 0.0:
 		boss.phase = "boss_recovery"
@@ -3158,26 +3200,6 @@ func _boss_update_active(boss: EnemyState, delta: float) -> void:
 		boss.vulnerable = 1.55 if kind in [&"charge", &"area"] else 0.65
 		boss.last_pattern = pattern
 		boss.pattern = "recovery_window"
-
-
-func _boss_track_player(boss: EnemyState, delta: float) -> void:
-	var pattern := String(boss.pattern)
-	var desired_target := _boss_predicted_target(Vector2(boss.pos), BossPatterns.projectile_speed(pattern))
-	var desired_direction := (desired_target - Vector2(boss.pos)).normalized()
-	var current_direction := Vector2(boss.committed_dir).normalized()
-	if current_direction.is_zero_approx():
-		current_direction = desired_direction
-	boss.committed_dir = current_direction.lerp(
-		desired_direction,
-		clampf(delta * BossPatterns.AIM_TRACK_RATE, 0.0, 1.0)
-	).normalized()
-	boss.committed_target = desired_target
-	AttackTelegraphs.refresh_boss(
-		boss,
-		pattern,
-		Callable(self, "_runtime_attack_path_end"),
-		Callable(self, "_runtime_charge_path_end")
-	)
 
 
 func _boss_predicted_target(origin: Vector2, projectile_speed: float) -> Vector2:
@@ -4220,6 +4242,16 @@ func _capture_all_boss_evidence() -> void:
 		await _settle_capture()
 		_save_capture("30-boss-%02d-%s-startup.png" % [stage_index + 1, stage_slug])
 
+		boss.phase_time = BossPatterns.startup_seconds(String(boss.pattern)) * 0.12
+		AttackTelegraphs.update_boss_readiness(boss, String(boss.pattern))
+		await _settle_capture()
+		_save_capture(
+			"30-boss-%02d-%s-startup-imminent.png"
+			% [stage_index + 1, stage_slug]
+		)
+
+		boss.phase_time = 0.0
+		AttackTelegraphs.update_boss_readiness(boss, String(boss.pattern))
 		_boss_begin_active(boss)
 		_boss_update_active(boss, 0.05)
 		await _settle_capture()
@@ -4257,6 +4289,20 @@ func _capture_all_boss_evidence() -> void:
 			_camera.position = player_position
 			await _settle_capture()
 			_save_capture("30-boss-01-stage-1-offscreen-furnace.png")
+			boss.phase_time = BossPatterns.startup_seconds("furnace_ring") * 0.12
+			AttackTelegraphs.update_boss_readiness(boss, "furnace_ring")
+			await _settle_capture()
+			_save_capture(
+				"30-boss-01-stage-1-offscreen-furnace-imminent.png"
+			)
+			boss.phase_time = 0.0
+			AttackTelegraphs.update_boss_readiness(boss, "furnace_ring")
+			_boss_begin_active(boss)
+			_boss_update_active(boss, 0.05)
+			await _settle_capture()
+			_save_capture(
+				"30-boss-01-stage-1-offscreen-furnace-active.png"
+			)
 
 
 func _capture_prepare_boss(stage_index: int) -> EnemyState:
