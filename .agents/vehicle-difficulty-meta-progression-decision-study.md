@@ -10,6 +10,7 @@ source: User feedback and the current local implementation
 related:
   - ../docs/product/vehicle_game_spec.md
   - ./vehicle-performance-stabilization-evidence.md
+  - ./execplans/2026-07-24-vehicle-world-combat-expansion.md
 ---
 
 # Difficulty and Death-Persistent Progression — Decision Study
@@ -38,6 +39,8 @@ play.
 - Whether cards should persist directly, become unlockable starter modules, or
   reset completely.
 - Caps and safeguards needed to preserve run identity and meaningful difficulty.
+- Whether a voluntary whole-run risk contract has a distinct role after fixed
+  difficulty and persistent rewards are decided.
 - Evidence required before selecting one model.
 
 ### Out of scope
@@ -48,6 +51,8 @@ play.
 - Tuning enemy stats as part of this unresolved decision study.
 - Treating this evidence document as authority over
   `docs/product/vehicle_game_spec.md`.
+- Implementing a same-stage repeat, optional danger wave, or reward-bearing
+  practice mode.
 
 ## Sources
 
@@ -98,6 +103,33 @@ play.
 - Option unlocks are less likely than uncapped stats to invalidate encounter
   tuning, but an equipped starter loadout still needs a strict power budget.
 
+### Related candidate: a whole-run risk contract
+
+The earlier “optional danger event” label implied a harder wave or another copy
+of the same stage in exchange for a reward. Repeating the same stage conflicts
+with the accepted five-stage forward progression and is removed from
+consideration.
+
+The only coherent form still worth evaluating is a deployment-time
+**whole-run risk contract**:
+
+- it is selected once before Stage 1 and remains fixed through Stage 5;
+- it never restarts, duplicates, or branches a stage;
+- it may change authored pressure through already-readable levers such as one
+  additional elite reservation per stage or a faster neutral-hazard cadence;
+- it cannot add hidden projectile speed, remove telegraphs, or exceed
+  performance capacity; and
+- it must name a persistent reward or unlock that is not already supplied by
+  Easy/Normal/Hard.
+
+This is not yet a viable implementation contract. Without an accepted
+persistent reward economy it is merely a less legible fourth difficulty, and
+Boss Practice is explicitly rewardless QA rather than a source of progression.
+The risk contract therefore remains subordinate to this study: evaluate it only
+after the owner selects what, if anything, persists across death. If the
+selected progression model has no reward that justifies voluntary added
+pressure, reject the risk contract entirely.
+
 ## Decision Question
 
 Using the implemented combat baseline, which progression contract gives the
@@ -112,6 +144,9 @@ The owner decision must explicitly answer:
 3. How much starting-build control is desirable before it weakens run discovery?
 4. Should persistent progress reward reaching milestones, time spent, repeated
    deaths, or some bounded combination?
+5. If a persistent reward exists, does a whole-run risk contract add a
+   meaningful voluntary goal beyond choosing Hard, or should it be rejected as
+   duplicate difficulty?
 
 ## Evidence Contract
 
@@ -122,7 +157,7 @@ The owner decision must explicitly answer:
 | Persistent-power bounds | Deterministic loadout simulation | Same upgrade formulas as tested build | Starting damage, survivability, mobility, and secondary increase for each proposed cap | Fresh build and maximum proposed starter build compared on the same scenarios |
 | Save and migration risk | Current persistence owner and validator prototype | Current Godot/save code | New fields, versioning, malformed-save fallback, reset behavior, and capture isolation | One written schema candidate per still-viable persistence model |
 | Comparable design evidence | Current official developer documentation, talks, or postmortems for recent action roguelites | Rechecked when this study resumes | How comparable games separate named difficulty, assist, unlock breadth, and permanent power | Maximum six primary sources; stop earlier when no option ranking changes |
-| Player preference | BK's explicit response to the four owner questions | Current after post-change play | Desired role of mastery versus accumulation | One explicit answer per question |
+| Player preference | BK's explicit response to the five owner questions | Current after post-change play | Desired role of mastery versus accumulation and whether voluntary whole-run risk has a distinct purpose | One explicit answer per question |
 
 - Label measured runtime results as **fact**, cross-game transfer as
   **inference**, a proposed model as **recommendation**, and the final choice as
@@ -190,7 +225,7 @@ that issue before interpreting balance.
 - [ ] Model the maximum starting power of every still-viable option.
 - [ ] Draft one save-schema candidate only for options that survive power and
   clarity checks.
-- [ ] Obtain BK's explicit answer to the four owner questions.
+- [ ] Obtain BK's explicit answer to the five owner questions.
 
 **Success check:** every option has measured or primary-source evidence for its
 main benefit and risk.
@@ -226,6 +261,8 @@ product preference; present the measured tradeoff and request that decision.
 - Do not tune current difficulty profiles or add death persistence in the
   combat-readability implementation.
 - Do not retain all cards or a random subset without a hard starting-power cap.
+- Do not implement a danger wave or whole-run risk contract until a distinct
+  persistent reward and its relationship to named difficulty are accepted.
 - Test bounded memory loadout, fixed-difficulty-only, and explicit opt-in assist
   as the first three options after the required play evidence is collected.
 - Treat a permanent stat grid as viable only if fresh-save play remains fully

@@ -4,12 +4,13 @@ status: active
 owner: BK
 created: 2026-07-24
 last_reviewed: 2026-07-24
-topic: Vehicle field, terrain, enemy, boss, Breach Shot, run-status, and stage-report expansion
+topic: Enlarged vehicle fields, terrain/facilities, enemy elites, bosses and practice QA, Breach Shot, run status, and stage-report expansion
 scope: Current repository evidence, recovered history, external design findings, owner corrections, and the accepted direction for the next execution plan
 source: ./execplans/2026-07-24-vehicle-world-combat-expansion.md
 related:
   - ./execplans/2026-07-24-vehicle-world-combat-expansion.md
   - ./execplans/2026-07-23-vehicle-performance-architecture-stabilization.md
+  - ./vehicle-difficulty-meta-progression-decision-study.md
   - ../docs/product/vehicle_game_spec.md
   - ../docs/design/UI_VISUAL_SYSTEM.md
 ---
@@ -23,7 +24,7 @@ This document is evidence and design rationale, not product authority. The
 execution-ready decisions live in the related ExecPlan and, when implemented,
 must be reflected in the canonical product and visual specifications.
 
-The investigation answers seven user concerns:
+The investigation answers ten user concerns:
 
 1. whether directional and periodic-damage terrain previously existed;
 2. why the current map has no functional terrain;
@@ -31,11 +32,16 @@ The investigation answers seven user concerns:
 4. why the one-second opening shot and stationary mine lack a clear tactical
    role without allowing boss stun-lock or unavoidable mine damage;
 5. why five bosses still feel similar and weak despite having separate pattern
-   lists; and
+   lists;
 6. how more maps, enemy types, guidebook visuals, and genre-standard learning
-   aids can be added without returning to the previous performance problem; and
+   aids can be added without returning to the previous performance problem;
 7. what currently exists for run statistics, acquired upgrades, per-stage
-   defeats, and outgoing damage attribution.
+   defeats, and outgoing damage attribution;
+8. how far the field can grow without recreating frame spikes or empty combat;
+9. how traversal, recovery, and damage-support spaces can remain readable and
+   bounded; and
+10. how elite variants and an isolated boss QA surface can reuse current
+    runtime owners without becoming progression or duplicate boss code.
 
 ## Sources
 
@@ -44,6 +50,7 @@ The investigation answers seven user concerns:
 - Current branch implementation, especially:
   - `scripts/vehicle/stages/drowned_ruin_field.gd`
   - `scripts/vehicle/vehicle_field_layout_generator.gd`
+  - `scripts/enemies/vehicle_pursuit_field.gd`
   - `scripts/vehicle/vehicle_stage_catalog.gd`
   - `scripts/vehicle/vehicle_stage_backdrop.gd`
   - `scripts/player/vehicle_primary_weapon.gd`
@@ -56,6 +63,8 @@ The investigation answers seven user concerns:
   - `scripts/cards/vehicle_run_build.gd`
   - `scripts/presentation/vehicle_combat_visual_library.gd`
   - `scripts/vehicle/vehicle_run.gd`
+- The separate advisory
+  `vehicle-difficulty-meta-progression-decision-study.md`.
 - `git show 278be30`, which introduced distinct current and storm terrain.
 - `git show cb40059`, which replaced five physical stage maps with one shared
   field and removed their functional terrain.
@@ -319,11 +328,88 @@ use bounded spatial queries, and all repeated visuals must use the existing mesh
 and MultiMesh architecture. No design in this pass justifies raising the active
 enemy or projectile envelopes.
 
+### 11. A larger field must change navigation work and spawn selection together
+
+The current world is `5600x3400`. At the shared `96 px` navigation-cell size,
+the current reverse pursuit field spans `59x36 = 2124` cells for each supported
+actor radius. The accepted `7200x4320` world spans `75x45 = 3375` cells, a
+`58.9%` increase in worst-case cell count. The current pursuit owner stores
+walkability and costs in Dictionaries and completes a whole ordinary-radius
+rebuild in one call when the player changes cells; it defers only the
+boss-radius rebuild by one physics tick.
+
+Expanding only the authored rectangles would therefore increase a known
+intermittent workload and make distant spawn anchors more likely to produce
+off-screen travel. The safe paired change is:
+
+- exact `7200x4320` field dimensions, whose `20x12` exploration cells are
+  square `360x360 px`;
+- retained packed navigation buffers and a fixed per-tick rebuild work ceiling;
+- the prior complete pursuit field remains active until replacement;
+- ordinary and boss arrivals are selected in player-relative off-camera
+  distance rings; and
+- active, authored, and projectile capacities do not increase.
+
+Long-distance Transit Gates can make the larger space useful to the player, but
+they should not become AI graph edges: enemy gate use would require a new
+teleport-aware navigation and attack-commitment contract. Player-only gates are
+the bounded first implementation.
+
+### 12. The opening shot needs one semantic role, not more unrelated bonuses
+
+At base values, held primary fire deals `18` every `0.12 s`; deliberately
+waiting a second for a `1.85x` Breach cannot compete with uninterrupted fire
+against an exposed target. That is desirable. The shot becomes meaningful when
+all of its exclusive interactions answer one question: **what protection or
+priority target should I open after I stop firing to reposition?**
+
+The coherent division is:
+
+- held primary fire owns sustained direct damage;
+- Breach removes structure/armor, triggers a tactical mine fuse, or creates a
+  short non-stopping focus window on a priority target;
+- `shock_breach` optionally converts the precision hit into area damage;
+- Flashover and Shatter optionally turn prepared elemental stacks into a
+  finisher; and
+- EMP/secondaries retain emergency clearing and passive coverage.
+
+This also exposes a current content issue: `breach_round` multiplies structure
+damage even though the planned baseline already one-shots every designed
+`72`-structure object. Leaving it unchanged would create a mostly redundant
+card. Its resource ID can remain save-compatible while its visible effect
+strengthens Breach health/exposure values instead. The accepted plan retires
+`opening_breach_multiplier` and uses additive health-scale
+`[0.20,0.40]` and exposure `[0.05,0.10]` modifiers.
+
+### 13. Boss Practice and elites can be QA/content layers without new economies
+
+`VehicleRun` already contains deterministic capture helpers that prepare every
+stage boss and force startup, active, recovery, and later-phase screenshots.
+This proves that boss selection and state preparation are feasible, but those
+helpers are not an interactive session: they live inside capture flow, skip
+normal failure/restart navigation, and have no explicit persistence/reward
+isolation contract.
+
+After boss execution is extracted to `VehicleBossRuntime`, a debug-only
+practice session can reuse the exact runtime, stores, field snapshot,
+telegraphs, renderer, audio, and HUD. The session should own only selection,
+reset, pattern-loop cleanup, and progression isolation. A second boss executor
+would invalidate the QA value.
+
+Elite variants are similarly bounded when they replace eligible authored units
+instead of being spawned in addition to them. One trait field on an existing
+enemy state, three shared shape overlays, fixed `1/2/3/4/5` stage counts, and a
+two-live limit preserve quota, active cap, projectile count, and renderer
+families. Armored creates a recurring Breach target; Overclocked changes
+response time without adding bullets; Heavy changes kiting distance without a
+new attack grammar.
+
 ## Accepted Direction
 
 The related ExecPlan fixes one implementation direction:
 
-1. Three total run-level field layouts in the same Sunken Ceramic Fresco theme:
+1. Three total `7200x4320` run-level field layouts in the same Sunken Ceramic
+   Fresco theme:
    `drowned_ruin_field`, `tidal_archive_field`, and
    `storm_drydock_field`. One is selected at run creation and retained for all
    five stages and retries.
@@ -332,13 +418,17 @@ The related ExecPlan fixes one implementation direction:
 3. One wall material for every impassable map boundary and internal solid:
    ceramic-green fill, one common shadow, and a `48 px` boundary rail whose
    floor-side edge matches the `24 px` base ship clearance.
-4. Three initial functional-terrain families:
+4. Six initial field-feature families:
    - Flow Channel;
-   - Arc Surge Strip; and
-   - Breakable Bulkhead.
+   - Arc Surge Strip;
+   - Breakable Bulkhead;
+   - two Transit Gate pairs;
+   - one stage-budgeted Repair Basin; and
+   - one exposed Overdrive Field.
 5. The current opening shot becomes `Breach Shot` / `돌파탄`, with exclusive
-   structure, mine, protected-enemy, and non-stopping boss-exposure
-   interactions.
+   structure, mine, armor, priority-enemy, and non-stopping boss-exposure
+   interactions. Held fire remains best sustained damage; baseline Breach has
+   no area damage.
 6. Stationary and mobile mines become one-shot, fuse-driven threats whose
    player-triggered explosions can damage enemies and credit their defeats.
    Stationary activation/damage radii are `230/160 px`; Minelet radii are
@@ -346,15 +436,21 @@ The related ExecPlan fixes one implementation direction:
 7. The existing minelet is activated and two non-projectile enemy roles are
    added: Bulkhead Guard and Splitter Barge. No enemy steals, carries, deletes,
    or denies collected or uncollected experience.
-8. Each boss receives a unique silhouette, three-phase behavior, and an authored
+8. Stages contain exactly `1/2/3/4/5` elite replacements with Armored,
+   Overclocked, or Heavy traits, never more than two live, and never an extra
+   projectile or quota unit.
+9. Each boss receives a unique silhouette, three-phase behavior, and an authored
    stage-specific spatial exam while remaining avoidable at base movement speed.
-9. The guidebook renders actual discovered silhouettes and concise
+10. A debug-only Boss Practice setup reuses the exact production boss runtime
+    for full-fight and individual-pattern QA, with no progression, persistence,
+    reward, discovery, or production telemetry path.
+11. The guidebook renders actual discovered silhouettes and concise
    movement/attack/counterplay hints.
-10. Settings gains a read-only Ship Status page showing current effective stats
+12. Settings gains a read-only Ship Status page showing current effective stats
     and every acquired upgrade through a shared build snapshot.
-11. Every cleared stage gains a localized Stage Report showing enemy defeats by
+13. Every cleared stage gains a localized Stage Report showing enemy defeats by
     archetype and outgoing damage share by attack unit.
-12. Failure results add a localized last-hit and top-three incoming-damage
+14. Failure results add a localized last-hit and top-three incoming-damage
     recap alongside partial stage statistics, without adding permanent HUD
     clutter.
 
@@ -365,29 +461,33 @@ The related ExecPlan fixes one implementation direction:
 | Idea | Why it belongs now |
 | --- | --- |
 | Teach-combine-test encounter rollout | A new enemy or terrain appears alone, then with one familiar pressure source, then in a boss exam. Variety becomes learnable instead of noisy. |
-| Environment damages both sides | Hazards become positioning tools rather than arbitrary player taxes. |
+| Neutral environment damages both sides | Hazards become positioning tools rather than arbitrary player taxes; explicitly player-owned facilities remain the visible exception. |
 | Damage-source recap | It exposes whether a mine, terrain pulse, contact hit, or boss pattern caused failure and improves tuning evidence. |
 | Discovered counterplay in the guidebook | The visual preview answers “what was that?” and the three short hints answer “how do I respond?” |
 | Run-level field identity on deployment | The player knows which persistent field was selected without implying that stages change maps. |
+| Long-distance Transit Gates | They make a 63% larger field traversable without shrinking the map or changing enemy AI into teleport navigation. |
+| Bounded Repair and exposed Overdrive spaces | They create readable map destinations without adding more pickup types or permanent HUD panels. |
+| Fixed elite replacements | They add recognizable target-priority variation without raising quota, active cap, or projectile count. |
+| Debug-only Boss Practice | It turns the exact production boss runtime into a repeatable QA surface without creating a reward loop. |
 | Ship Status in paused Settings | The player can verify what the current build actually does without inferring it from card names. |
 | Stage Report | Enemy counts and outgoing damage share make upgrades and encounter composition legible after every stage. |
 
-### Removed brainstorming terms
+### Deferred to the difficulty/meta-progression study
 
-These labels appeared only as optional future brainstorming, were never accepted
-requirements, and are not part of this plan:
+The following concept is not an implementation task in this plan:
 
 | Term | What it meant | Disposition |
 | --- | --- | --- |
-| Boss practice mode | A rewardless isolated replay of a previously encountered boss | Removed; no separate practice mode is planned |
-| Optional danger event | A player-triggered harder wave that would grant an extra reward | Removed; no optional encounter economy is planned |
-| Elite variant | A normal enemy with an added visible modifier such as armor or speed | Removed; new behavior belongs to explicit archetypes instead |
+| Optional danger event | A voluntary increase in pressure for an additional reward | Reframe only as a deployment-time whole-run risk contract; never repeat the same stage. Do not implement until the separate study selects difficulty, persistent reward, and unlock contracts. Without a reward economy it is redundant with Hard. |
 
 ### Rejected for this pass
 
 - A different physical map for every stage.
 - Unbounded procedural topology.
 - More than `72` simultaneous ordinary enemies.
+- A same-stage replay loop or reward-bearing Boss Practice.
+- Elite traits that stack, add projectiles, change projectile-wall behavior, or
+  spawn on top of the authored count.
 - Any enemy that steals, stores, destroys, or denies experience.
 - Restoring projectile drift inside currents.
 - Enemy-only or player-only environmental damage.
@@ -400,9 +500,15 @@ requirements, and are not part of this plan:
 
 The user's remembered terrain was real, but it belonged to the discarded
 multi-map implementation and should not be copied back. The coherent revision
-is a persistent run-level field selected from three authored layouts, with one
-wall truth, zero decorative motifs, three mutually interactive terrain
-families, and combat roles that teach the player how to exploit those systems.
-The revision also gives the Breach Shot a non-stopping boss interaction, makes
-mines visibly avoidable, and supplies the missing Ship Status and per-stage
-combat report surfaces.
+is a larger persistent run-level field selected from three authored layouts,
+with one wall truth, zero decorative motifs, three neutral terrain families,
+and three explicitly player-owned facilities. Packed bounded pursuit work and
+player-relative arrival rings are inseparable from that enlargement.
+
+The Breach Shot is not a second generic DPS button: it turns natural movement
+and evasion downtime into one precision chance to open armor, structures,
+mines, priority targets, or a boss recovery. Fixed elite replacements reinforce
+that lesson without raising capacity. Debug-only Boss Practice then makes the
+same production boss runtime repeatable for QA, while optional reward-bearing
+risk belongs to the unresolved difficulty/meta-progression decision rather than
+this execution plan.
