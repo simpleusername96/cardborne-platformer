@@ -24,8 +24,8 @@ func _initialize() -> void:
 				_expect(Patterns.volley_limit(pattern, true) > Patterns.volley_limit(pattern, false), "%s adds one phase-two volley" % pattern)
 		_expect(Difficulty.boss_health(stage_index) > 0.0, "%s has bounded boss health" % stage_id)
 	_expect(
-		is_equal_approx(EncounterDirector.effective_hostile_projectile_speed(500.0), 500.0),
-		"boss prediction and projectile motion share the one-to-one hostile speed contract"
+		is_equal_approx(EncounterDirector.effective_hostile_projectile_speed(500.0), 410.0),
+		"boss prediction and projectile motion share the reduced hostile speed contract"
 	)
 	_finish()
 

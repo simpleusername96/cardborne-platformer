@@ -54,6 +54,7 @@ const PLAYER_MAX_HEALTH := 120.0
 const PLAYER_BASE_SPEED := 280.0
 const PRIMARY_RANGE := 1100.0
 const PRIMARY_PROJECTILE_SPEED := 1120.0
+const PRIMARY_PROJECTILE_RADIUS := 7.0
 const DASH_DURATION := 0.20
 const DASH_SPEED := 1220.0
 const DASH_COOLDOWN := 1.25
@@ -71,6 +72,7 @@ const ORDINARY_DECISION_BUCKET_COUNT := 6
 const FAR_SIMULATION_DISTANCE := 820.0
 const FAR_SIMULATION_DISTANCE_SQUARED := FAR_SIMULATION_DISTANCE * FAR_SIMULATION_DISTANCE
 const FAR_ENEMY_SIMULATION_BUCKET_COUNT := 3
+const CRATE_COLLISION_RADIUS := 31.0
 const CRATE_COLLISION_CELL_SIZE := 320.0
 # Prime relative to the six-way enemy decision buckets so profiling eventually
 # observes every scheduling phase without timing every physics tick.
@@ -1047,7 +1049,7 @@ func _fire_primary(shot: Dictionary) -> void:
 	var per_projectile_scale: float = [1.0, 0.70, 0.55][projectile_count - 1]
 	var spread_step := deg_to_rad(7.0) * run_build.stat(&"primary_spread", 1.0)
 	var projectile_speed := run_build.stat(&"primary_projectile_speed", PRIMARY_PROJECTILE_SPEED)
-	var projectile_radius := run_build.stat(&"primary_radius", 5.5) * float(shot["radius_scale"])
+	var projectile_radius := run_build.stat(&"primary_radius", PRIMARY_PROJECTILE_RADIUS) * float(shot["radius_scale"])
 	var structure_multiplier := run_build.stat(&"primary_structure", 1.0)
 	if float(shot["bonus_ratio"]) > 0.0:
 		structure_multiplier *= run_build.stat(&"opening_breach_multiplier", 1.0)
@@ -1110,10 +1112,25 @@ func _runtime_first_cover_hit(from: Vector2, to: Vector2, padding: float) -> Dic
 
 
 func _runtime_has_line_of_sight(from: Vector2, to: Vector2, padding: float) -> bool:
-	return not bool(_runtime_first_cover_hit(from, to, padding).get("hit", false))
+	if bool(_runtime_first_cover_hit(from, to, padding).get("hit", false)):
+		return false
+	return not _segment_hits_live_crate(from, to, padding)
 
 
-func _spawn_player_projectile(origin: Vector2, direction: Vector2, damage: float, speed: float, extra_pierce: int, radius: float = 5.0, structure_damage: float = -1.0, stagger: float = 5.0, opening: bool = false, projectile_range: float = PRIMARY_RANGE, status_profile: VehicleStatusProfile = null) -> void:
+func _spawn_player_projectile(
+	origin: Vector2,
+	direction: Vector2,
+	damage: float,
+	speed: float,
+	extra_pierce: int,
+	radius: float = PRIMARY_PROJECTILE_RADIUS,
+	structure_damage: float = -1.0,
+	stagger: float = 5.0,
+	opening: bool = false,
+	projectile_range: float = PRIMARY_RANGE,
+	status_profile: VehicleStatusProfile = null,
+	wall_piercing: bool = false
+) -> void:
 	projectile_store.add_player({
 		"pos": origin,
 		"velocity": direction.normalized() * speed,
@@ -1131,6 +1148,7 @@ func _spawn_player_projectile(origin: Vector2, direction: Vector2, damage: float
 		"structure_damage": damage if structure_damage < 0.0 else structure_damage,
 		"opening": opening,
 		"reflected": false,
+		"wall_piercing": wall_piercing,
 		"reflector_lock": &"",
 		"reflector_lock_time": 0.0,
 		"status_profile": status_profile,
@@ -1159,6 +1177,7 @@ func _update_passive_secondary(delta: float) -> void:
 					"pierce":run_build.level_of(&"phase_seeker"), "bounces":0, "homing":true,
 					"target_id":enemy.id, "explosive":applied_upgrades.has(&"hunter_firmware"),
 					"stagger":12.0, "structure_damage":25.0, "opening":false, "status_profile":null,
+					"wall_piercing":false,
 				})
 			_play_sound(&"missile")
 	var secondary_result := secondary_runtime.update(
@@ -2010,7 +2029,7 @@ func _move_actor(position: Vector2, motion: Vector2, radius: float, is_player: b
 		if not bool(crate["alive"]):
 			continue
 		var crate_position := Vector2(crate["pos"])
-		var clearance := radius + 31.0
+		var clearance := radius + CRATE_COLLISION_RADIUS
 		if result.distance_squared_to(crate_position) < clearance * clearance:
 			var x_attempt := Vector2(result.x, position.y)
 			var y_attempt := Vector2(position.x, result.y)
@@ -2023,7 +2042,16 @@ func _move_actor(position: Vector2, motion: Vector2, radius: float, is_player: b
 	return result
 
 
-func _spawn_hostile_projectile(origin: Vector2, direction: Vector2, damage: float, speed: float, source: String, color: Color, final_damage: bool = false) -> void:
+func _spawn_hostile_projectile(
+	origin: Vector2,
+	direction: Vector2,
+	damage: float,
+	speed: float,
+	source: String,
+	color: Color,
+	final_damage: bool = false,
+	wall_piercing: bool = false
+) -> void:
 	projectile_store.add_hostile({
 		"pos": origin,
 		"velocity": direction.normalized() * EncounterDirector.effective_hostile_projectile_speed(speed),
@@ -2042,6 +2070,7 @@ func _spawn_hostile_projectile(origin: Vector2, direction: Vector2, damage: floa
 		"reflected": false,
 		"reflector_lock": &"",
 		"reflector_lock_time": 0.0,
+		"wall_piercing": wall_piercing,
 	}, final_damage)
 
 
@@ -2082,20 +2111,24 @@ func _update_projectile_buffer(
 				projectile.velocity = steered * projectile.velocity.length()
 		var to := from + projectile.velocity * simulation_delta
 		var radius := projectile.radius
-		var cover_hit := _runtime_first_cover_hit(from, to, radius)
-		if bool(cover_hit.get("hit", false)):
-			if projectile.bounces > 0:
-				projectile.bounces -= 1
-				var normal: Vector2 = cover_hit["normal"]
-				projectile.velocity = projectile.velocity.bounce(normal)
-				projectile.pos = Vector2(cover_hit["point"]) + normal * (radius + 2.0)
-				_add_effect("impact", projectile.pos, Rules.CYAN, 0.15, 18.0)
-				index += 1
+		if not projectile.wall_piercing:
+			var cover_hit := _runtime_first_cover_hit(from, to, radius)
+			if bool(cover_hit.get("hit", false)):
+				if projectile.bounces > 0:
+					projectile.bounces -= 1
+					var normal: Vector2 = cover_hit["normal"]
+					projectile.velocity = projectile.velocity.bounce(normal)
+					projectile.pos = Vector2(cover_hit["point"]) + normal * (radius + 2.0)
+					_add_effect("impact", projectile.pos, Rules.CYAN, 0.15, 18.0)
+					index += 1
+					continue
+				_add_effect("impact", Vector2(cover_hit["point"]), projectile.color, 0.14, 20.0)
+				_play_sound(&"cover", _rng.randf_range(0.96, 1.04))
+				_remove_projectile_at(hostile, index)
 				continue
-			_add_effect("impact", Vector2(cover_hit["point"]), projectile.color, 0.14, 20.0)
-			_play_sound(&"cover", _rng.randf_range(0.96, 1.04))
-			_remove_projectile_at(hostile, index)
-			continue
+			if _projectile_hits_crate(projectile, from, to, not hostile):
+				_remove_projectile_at(hostile, index)
+				continue
 
 		projectile.pos = to
 		if hostile:
@@ -2120,9 +2153,6 @@ func _update_projectile_buffer(
 				_enemy_query_buffer
 			)
 			if contact is bool:
-				projectile_store.remove_player_at_swap(index)
-				continue
-			if _projectile_hits_crate(projectile, from, to):
 				projectile_store.remove_player_at_swap(index)
 				continue
 			var hit_enemy := contact as EnemyState
@@ -2228,12 +2258,20 @@ func _player_projectile_contact(
 	return best
 
 
-func _projectile_hits_crate(projectile: ProjectileState, from: Vector2, to: Vector2) -> bool:
-	var padding := 31.0 + projectile.radius
-	var minimum := Vector2(minf(from.x, to.x), minf(from.y, to.y)) - Vector2.ONE * padding
-	var maximum := Vector2(maxf(from.x, to.x), maxf(from.y, to.y)) + Vector2.ONE * padding
+func _segment_hits_live_crate(from: Vector2, to: Vector2, padding: float) -> bool:
+	return _first_live_crate_hit(from, to, padding) != null
+
+
+func _first_live_crate_hit(from: Vector2, to: Vector2, padding: float) -> Variant:
+	var clearance := CRATE_COLLISION_RADIUS + padding
+	var minimum := Vector2(minf(from.x, to.x), minf(from.y, to.y)) - Vector2.ONE * clearance
+	var maximum := Vector2(maxf(from.x, to.x), maxf(from.y, to.y)) + Vector2.ONE * clearance
 	var min_cell := Vector2i(floori(minimum.x / CRATE_COLLISION_CELL_SIZE), floori(minimum.y / CRATE_COLLISION_CELL_SIZE))
 	var max_cell := Vector2i(floori(maximum.x / CRATE_COLLISION_CELL_SIZE), floori(maximum.y / CRATE_COLLISION_CELL_SIZE))
+	var motion := to - from
+	var motion_length_squared := motion.length_squared()
+	var best_t := 2.0
+	var best_crate: Variant = null
 	for cell_y in range(min_cell.y, max_cell.y + 1):
 		for cell_x in range(min_cell.x, max_cell.x + 1):
 			var cell := Vector2i(cell_x, cell_y)
@@ -2243,11 +2281,43 @@ func _projectile_hits_crate(projectile: ProjectileState, from: Vector2, to: Vect
 			for crate in bucket:
 				if not bool(crate["alive"]):
 					continue
-				if Rules.point_segment_distance(Vector2(crate["pos"]), from, to) <= padding:
-					_damage_crate(crate, projectile.structure_damage)
-					_add_effect("impact", Vector2(crate["pos"]), Rules.AMBER, 0.16, 22.0)
-					return true
-	return false
+				var crate_position := Vector2(crate["pos"])
+				var hit_t := (
+					clampf((crate_position - from).dot(motion) / motion_length_squared, 0.0, 1.0)
+					if motion_length_squared > 0.001
+					else 0.0
+				)
+				var closest := from + motion * hit_t
+				if closest.distance_squared_to(crate_position) > clearance * clearance:
+					continue
+				if hit_t < best_t:
+					best_t = hit_t
+					best_crate = crate
+	return best_crate
+
+
+func _projectile_hits_crate(
+	projectile: ProjectileState,
+	from: Vector2,
+	to: Vector2,
+	damage_crate: bool
+) -> bool:
+	var crate_hit: Variant = _first_live_crate_hit(from, to, projectile.radius)
+	if crate_hit == null:
+		return false
+	var crate_position := Vector2(crate_hit["pos"])
+	var motion := to - from
+	var motion_length_squared := motion.length_squared()
+	var hit_t := (
+		clampf((crate_position - from).dot(motion) / motion_length_squared, 0.0, 1.0)
+		if motion_length_squared > 0.001
+		else 0.0
+	)
+	if damage_crate:
+		_damage_crate(crate_hit, projectile.structure_damage)
+	_add_effect("impact", from + motion * hit_t, projectile.color, 0.16, 22.0)
+	_play_sound(&"cover", _rng.randf_range(0.96, 1.04))
+	return true
 
 
 func _rebuild_crate_collision_cells() -> void:

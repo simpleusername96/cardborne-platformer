@@ -19,8 +19,8 @@ const BOSS_NAME_KEYS := [
 ]
 const MOBILE_ROLES := [
 	[&"scrap_drone", &"needle_drone", &"chaser", &"shooter"],
-	[&"scrap_drone", &"needle_drone", &"controller", &"shield_escort", &"shooter"],
-	[&"needle_drone", &"chaser", &"artillery_spotter", &"rammer", &"shooter"],
+	[&"scrap_drone", &"needle_drone", &"controller", &"shield_escort", &"shooter", &"chaser"],
+	[&"needle_drone", &"chaser", &"artillery_spotter", &"rammer", &"shooter", &"scrap_drone"],
 	[&"chaser", &"rammer", &"repair_tender", &"drone_carrier", &"needle_drone"],
 	[&"scrap_drone", &"needle_drone", &"controller", &"rammer", &"repair_tender", &"drone_carrier", &"artillery_spotter"],
 ]

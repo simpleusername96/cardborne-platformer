@@ -45,7 +45,7 @@ func _initialize() -> void:
 				"%s gives every squad a mobile pressure role" % stage_id
 			)
 			_expect(
-				roles.filter(func(role: StringName) -> bool: return role in Allocator.DIRECT_PROJECTILE_ROLES).size() <= 2,
+				roles.filter(func(role: StringName) -> bool: return role in Allocator.PROJECTILE_FIRING_ARCHETYPES).size() <= 2,
 				"%s limits direct projectile roles per squad" % stage_id
 			)
 			for role in roles:

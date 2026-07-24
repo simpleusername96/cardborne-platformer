@@ -4,6 +4,10 @@ extends RefCounted
 ## Immutable combat/presentation values for vehicle-stage enemy roles.
 ## The stage owns instances; this catalog prevents role tuning from spreading.
 
+const PROJECTILE_FIRING_ARCHETYPES: Array[StringName] = [
+	&"needle_drone", &"shooter", &"turret", &"interceptor_tower", &"stage_boss",
+]
+
 const DEFINITIONS := {
 	&"scrap_drone": {"behavior": &"chaser", "health": 18.0, "speed": 225.0, "radius": 12.0, "visual_radius": 18.0, "name_key": "ENEMY_SCRAP_DRONE", "health_class": &"swarm", "threat_cost": 0.25, "threat_kind": &"melee", "active_cap": true},
 	&"needle_drone": {"behavior": &"shooter", "health": 14.0, "speed": 170.0, "radius": 11.0, "visual_radius": 17.0, "name_key": "ENEMY_NEEDLE_DRONE", "health_class": &"swarm", "threat_cost": 0.5, "threat_kind": &"ranged", "active_cap": true},
@@ -30,8 +34,15 @@ static func definition(archetype: StringName) -> Dictionary:
 	return Dictionary(DEFINITIONS.get(archetype, DEFINITIONS[&"chaser"])).duplicate(true)
 
 
+static func fires_projectiles(archetype: StringName) -> bool:
+	return archetype in PROJECTILE_FIRING_ARCHETYPES
+
+
 static func validate_contract() -> PackedStringArray:
 	var errors := PackedStringArray()
+	for archetype in PROJECTILE_FIRING_ARCHETYPES:
+		if not DEFINITIONS.has(archetype):
+			errors.append("unknown projectile-firing archetype: %s" % archetype)
 	for required in [&"scrap_drone", &"needle_drone", &"spark_minelet", &"chaser", &"shooter", &"controller", &"rammer", &"repair_tender", &"drone_carrier", &"beam_sentinel", &"generator", &"stage_boss"]:
 		if not DEFINITIONS.has(required):
 			errors.append("missing vehicle enemy archetype: %s" % required)

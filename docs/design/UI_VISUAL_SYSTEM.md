@@ -70,6 +70,11 @@ rules remain owned by the product specification.
   around their five-pixel collision radius. Boss projectiles remain slightly
   larger and magenta. Rendered danger may exceed collision size but may never be
   smaller than it.
+- The unmodified Pulse Cannon starts from a seven-pixel collision radius and a
+  rendered head at least that large. Solid-cover impacts must terminate the
+  visible trail at the same blocker used by collision; a projectile may appear
+  beyond cover only when its state explicitly carries the exceptional
+  `wall_piercing` capability.
 - Burn, poison, and chill use three retained, shape-distinct status arcs around
   an affected enemy. Stack counts belong in localized target/boss text rather
   than tiny floating labels.

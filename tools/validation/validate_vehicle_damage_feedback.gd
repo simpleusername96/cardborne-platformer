@@ -2,6 +2,7 @@ extends SceneTree
 
 const StageScene = preload("res://scenes/run/VehicleRun.tscn")
 const RunDifficulty = preload("res://scripts/vehicle/vehicle_run_difficulty.gd")
+const EncounterDirector = preload("res://scripts/encounters/vehicle_encounter_director.gd")
 
 var failures: Array[String] = []
 
@@ -82,12 +83,61 @@ func _run() -> void:
 	_expect(hostile_projectiles.size() == 1, "ordinary hostile projectile enters the retained store")
 	if hostile_projectiles.size() == 1:
 		_expect(is_equal_approx(float(hostile_projectiles[0].radius), 5.0), "ordinary hostile projectile uses a five-pixel collision radius")
-		_expect(is_equal_approx(Vector2(hostile_projectiles[0].velocity).length(), 500.0), "ordinary hostile projectile uses the effective speed contract")
+		_expect(is_equal_approx(Vector2(hostile_projectiles[0].velocity).length(), 410.0), "ordinary hostile projectile uses the reduced effective speed contract")
+		_expect(not bool(hostile_projectiles[0].wall_piercing), "ordinary hostile projectile cannot cross solid blockers")
 	projectile_store.call("clear")
 	stage.call("_spawn_hostile_projectile", Vector2.ZERO, Vector2.RIGHT, 4.0, 500.0, "validation boss", Color.WHITE, true)
 	hostile_projectiles = projectile_store.get("hostile_live")
 	if hostile_projectiles.size() == 1:
 		_expect(is_equal_approx(float(hostile_projectiles[0].radius), 6.0), "boss hostile projectile keeps a larger collision radius")
+		_expect(is_equal_approx(Vector2(hostile_projectiles[0].velocity).length(), 410.0), "boss prediction and motion share the reduced speed contract")
+
+	projectile_store.call("clear")
+	stage.call("_spawn_player_projectile", Vector2.ZERO, Vector2.RIGHT, 4.0, 500.0, 0)
+	var player_projectiles: Array = projectile_store.get("player_live")
+	_expect(player_projectiles.size() == 1, "default player projectile enters the retained store")
+	if player_projectiles.size() == 1:
+		_expect(is_equal_approx(float(player_projectiles[0].radius), 7.0), "default player projectile uses the larger seven-pixel collision radius")
+		_expect(not bool(player_projectiles[0].wall_piercing), "default player projectile cannot cross solid blockers")
+
+	var field_layout: Variant = stage.get("field_layout")
+	var cover: Rect2 = field_layout.cover_rects[0]
+	var cover_from := cover.get_center() - Vector2(cover.size.x * 0.5 + 80.0, 0.0)
+	stage.set("player_position", cover.get_center() + Vector2(0.0, 250.0))
+	projectile_store.call("clear")
+	stage.call("_spawn_hostile_projectile", cover_from, Vector2.RIGHT, 4.0, 500.0, "validation cover", Color.WHITE)
+	stage.call("_update_projectiles", 0.5)
+	_expect(projectile_store.call("hostile_count") == 0, "default hostile projectile stops at runtime cover")
+
+	projectile_store.call("clear")
+	stage.call("_spawn_hostile_projectile", cover_from, Vector2.RIGHT, 4.0, 500.0, "validation phase shot", Color.WHITE, false, true)
+	stage.call("_update_projectiles", 0.5)
+	_expect(projectile_store.call("hostile_count") == 1, "explicit wall-piercing projectile can cross runtime cover")
+
+	var crates: Array = stage.get("crates")
+	var crate: Dictionary = crates[0]
+	var crate_position := Vector2(crate["pos"])
+	var crate_health := float(crate["health"])
+	var crate_from := crate_position - Vector2(100.0, 0.0)
+	stage.set("player_position", crate_position + Vector2(0.0, 200.0))
+	_expect(
+		bool(stage.call("_segment_hits_live_crate", crate_from, crate_position + Vector2(100.0, 0.0), 5.0)),
+		"crate broadphase reports the live movement blocker"
+	)
+	projectile_store.call("clear")
+	stage.call("_spawn_hostile_projectile", crate_from, Vector2.RIGHT, 4.0, 500.0, "validation crate", Color.WHITE)
+	stage.call("_update_projectiles", 0.5)
+	_expect(projectile_store.call("hostile_count") == 0, "default hostile projectile stops at a live crate")
+	_expect(is_equal_approx(float(crate["health"]), crate_health), "hostile projectile uses a crate as cover without destroying the reward")
+	_expect(
+		not bool(stage.call("_runtime_has_line_of_sight", crate_from, crate_position + Vector2(100.0, 0.0), 5.0)),
+		"live crate blocks enemy projectile line of sight"
+	)
+
+	_expect(
+		is_equal_approx(EncounterDirector.HOSTILE_PROJECTILE_SPEED_MULTIPLIER, 0.82),
+		"hostile projectile speed is reduced by the accepted global factor"
+	)
 
 	if settings != null:
 		settings.reduced_motion = original_reduced_motion

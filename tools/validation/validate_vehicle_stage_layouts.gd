@@ -3,6 +3,7 @@ extends SceneTree
 const Catalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
 const Rules = preload("res://scripts/vehicle/vehicle_stage_rules.gd")
 const Generator = preload("res://scripts/vehicle/vehicle_field_layout_generator.gd")
+const EnemyArchetypes = preload("res://scripts/enemies/vehicle_enemy_archetypes.gd")
 
 var failures: Array[String] = []
 
@@ -19,6 +20,24 @@ func _initialize() -> void:
 		_expect(layout.pickup_blueprint(stage_id).size() == 3, "%s restocks three pickups" % stage_id)
 		_expect(layout.crate_blueprint(stage_id).size() == 5, "%s restocks five crates" % stage_id)
 		_expect(Catalog.packets(stage_id).all(func(packet: Dictionary) -> bool: return StringName(packet["trigger"]["kind"]) == &"time"), "%s uses only timed arrivals" % stage_id)
+		var mobile_blueprint := Catalog.packet_enemy_blueprint(stage_id)
+		var mobile_projectile_count := mobile_blueprint.filter(
+			func(spec: Dictionary) -> bool:
+				return EnemyArchetypes.fires_projectiles(StringName(spec["role"]))
+		).size()
+		_expect(
+			float(mobile_projectile_count) / float(maxi(1, mobile_blueprint.size())) <= 0.50,
+			"%s keeps projectile-firing mobile enemies at or below half" % stage_id
+		)
+		var stationary_blueprint := layout.stationary_blueprint(stage_id)
+		var stationary_projectile_count := stationary_blueprint.filter(
+			func(spec: Dictionary) -> bool:
+				return EnemyArchetypes.fires_projectiles(StringName(spec["role"]))
+		).size()
+		_expect(
+			float(stationary_projectile_count) / float(maxi(1, stationary_blueprint.size())) <= 0.50,
+			"%s keeps projectile-firing stationary enemies at or below half" % stage_id
+		)
 	var center := Catalog.player_start()
 	_expect(Rules.is_position_walkable(center, Rules.PLAYER_RADIUS, &"stage_1"), "center is walkable")
 	for cover in layout.cover_rects:

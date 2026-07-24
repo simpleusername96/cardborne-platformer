@@ -3,6 +3,8 @@ extends RefCounted
 
 ## Deterministically assigns one validated arrival anchor to each authored squad.
 
+const EnemyArchetypes = preload("res://scripts/enemies/vehicle_enemy_archetypes.gd")
+
 const MIN_PLAYER_DISTANCE := 960.0
 const OFFSCREEN_MARGIN := 160.0
 const RECENT_ANCHOR_LIMIT := 4
@@ -11,7 +13,7 @@ const PURSUIT_ROLES: Array[StringName] = [
 	&"controller", &"shield_escort", &"artillery_spotter",
 	&"repair_tender", &"drone_carrier",
 ]
-const DIRECT_PROJECTILE_ROLES: Array[StringName] = [&"needle_drone", &"shooter"]
+const PROJECTILE_FIRING_ARCHETYPES: Array[StringName] = EnemyArchetypes.PROJECTILE_FIRING_ARCHETYPES
 
 var _seed := 0
 var _anchors: Array[Vector2] = []
@@ -132,7 +134,7 @@ func _reorder_roles(squads: Array, packet_id: String) -> Array[Array]:
 		var pursuit_index := _find_role_index(bag, PURSUIT_ROLES)
 		if pursuit_index >= 0:
 			result[squad_index].append(bag.pop_at(pursuit_index))
-	var direct_index := _find_role_index(bag, DIRECT_PROJECTILE_ROLES)
+	var direct_index := _find_role_index(bag, PROJECTILE_FIRING_ARCHETYPES)
 	var direct_cursor := 0
 	while direct_index >= 0:
 		var squad_index := _next_available_squad(result, sizes, direct_cursor, true)
@@ -140,7 +142,7 @@ func _reorder_roles(squads: Array, packet_id: String) -> Array[Array]:
 			break
 		result[squad_index].append(bag.pop_at(direct_index))
 		direct_cursor = squad_index + 1
-		direct_index = _find_role_index(bag, DIRECT_PROJECTILE_ROLES)
+		direct_index = _find_role_index(bag, PROJECTILE_FIRING_ARCHETYPES)
 	var fill_cursor := 0
 	while not bag.is_empty():
 		var squad_index := _next_available_squad(result, sizes, fill_cursor, false)
@@ -162,7 +164,7 @@ func _next_available_squad(
 		if squads[index].size() >= sizes[index]:
 			continue
 		if direct_role and squads[index].filter(
-			func(role: StringName) -> bool: return role in DIRECT_PROJECTILE_ROLES
+			func(role: StringName) -> bool: return role in PROJECTILE_FIRING_ARCHETYPES
 		).size() >= 2:
 			continue
 		return index

@@ -21,6 +21,7 @@ var stagger := 0.0
 var opening := false
 var reflected := false
 var final_damage := false
+var wall_piercing := false
 var status_profile: VehicleStatusProfile
 var team: StringName = &""
 var spawn_serial := 0
@@ -50,6 +51,7 @@ func configure(
 	opening = bool(spec.get("opening", false))
 	reflected = bool(spec.get("reflected", false))
 	final_damage = bool(spec.get("final_damage", false))
+	wall_piercing = bool(spec.get("wall_piercing", false))
 	status_profile = spec.get("status_profile") as VehicleStatusProfile
 	team = team_value
 	spawn_serial = serial

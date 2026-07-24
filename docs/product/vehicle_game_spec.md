@@ -95,11 +95,17 @@ second time; no individual stat is described as exactly 15% lower.
   seconds, then closes it over 0.45 seconds. This animation processes only while
   active.
 - Hostile projectile motion and predictive aim share one effective-speed
-  calculation with a multiplier of `1.00`. Ordinary hostile shots use a
+  calculation with a multiplier of `0.82`. Ordinary hostile shots use a
   five-pixel collision radius and a minimum six-pixel head; boss-reserved shots
   use a six-pixel collision radius and a minimum seven-pixel head. Both retain a
-  36-pixel readable trail. Damage, cadence, telegraphs, and capacity are not
-  changed by this readability rule.
+  36-pixel readable trail. The Pulse Cannon's unmodified projectile uses a
+  seven-pixel collision radius, and upgrades scale from that base.
+- Every projectile stops at the same static or run-selected cover that blocks
+  the ship. A live crate also blocks line of sight and both projectile teams;
+  hostile fire is absorbed without destroying the reward crate, while player
+  fire can break it. `wall_piercing` is an explicit projectile capability whose
+  default is false. No current ordinary enemy, boss pattern, primary shot, or
+  secondary shot receives that capability implicitly.
 
 ### One shared field
 
@@ -139,6 +145,10 @@ second time; no individual stat is described as exactly 15% lower.
    of at most two squads in beats 0–1 or three squads later. Group gaps are
    0.90 seconds early and 0.65 seconds later. Existing role totals are preserved
    while direct-projectile pressure is distributed between squads.
+   Projectile-firing archetypes are capped at 50% of both the authored mobile
+   population and the four stationary threats in every stage. A stage already
+   below the cap is not inflated to reach it; area, beam, charge, and support
+   roles remain separate classifications.
    Hard can sustain 48 active enemies from the first combat beat and remains
    capped at the measured 72-enemy ceiling. Normal scales those caps to 45 and
    68; Easy scales them to 42 and 64. Excess enemies stay in the deterministic
@@ -264,6 +274,7 @@ exactly 0.75 seconds before the boss resumes its pattern loop.
 - Tuned Thrusters has the exact three values, the five secondary families load,
   no more than three are active, and their bounded simulations pass tests.
 - Accepted-hit, barrier-only, reduced-motion, projectile-size, effective-speed,
+  default-cover collision, explicit wall-piercing, projectile-role share,
   status-stack, elemental-prerequisite, and XP-cadence contracts pass focused
   tests.
 - Guide discovery persists, locked entries expose only `???`, settings and pause
