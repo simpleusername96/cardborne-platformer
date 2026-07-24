@@ -5,7 +5,7 @@ owner: BK
 created: 2026-07-24
 last_reviewed: 2026-07-24
 topic: Enlarged vehicle fields, terrain/facilities, enemy elites, bosses and practice QA, Breach Shot, run status, and stage-report expansion
-scope: Current repository evidence, recovered history, external design findings, owner corrections, and the accepted direction for the next execution plan
+scope: Current repository evidence, recovered history, external design findings, owner corrections, and the accepted direction for the active execution plan
 source: ./execplans/2026-07-24-vehicle-world-combat-expansion.md
 related:
   - ./execplans/2026-07-24-vehicle-world-combat-expansion.md
@@ -19,7 +19,8 @@ related:
 
 ## Purpose
 
-Record the facts behind the next field and combat revision before implementation.
+Record the facts behind the active field and combat revision before
+implementation.
 This document is evidence and design rationale, not product authority. The
 execution-ready decisions live in the related ExecPlan and, when implemented,
 must be reflected in the canonical product and visual specifications.
@@ -30,7 +31,8 @@ The investigation answers ten user concerns:
 2. why the current map has no functional terrain;
 3. why walls and floor motifs contradict collision readability;
 4. why the one-second opening shot and stationary mine lack a clear tactical
-   role without allowing boss stun-lock or unavoidable mine damage;
+   role, and how startup-only interruption avoids idle stun-lock or complete
+   boss shutdown;
 5. why five bosses still feel similar and weak despite having separate pattern
    lists;
 6. how more maps, enemy types, guidebook visuals, and genre-standard learning
@@ -197,13 +199,28 @@ The opening shot needs named, exclusive interactions:
 - breach a designed structure;
 - intentionally detonate a mine;
 - break a protected enemy plate; and
-- expose a boss during a readable recovery window without changing its
+- cancel one metadata-approved attack while it is still preparing;
+- expose a priority enemy when no interrupt occurs; and
+- expose a boss during a readable natural recovery window without changing its
   movement, attack timer, phase, or committed pattern.
 
 This makes waiting one second a tactical choice without replacing held fire.
-The current hard `staggered` phase must be retired for bosses: limiting it to
-once per attack would still let the player stop the boss after nearly every
-attack.
+The current accumulated `staggered` phase must be retired for bosses. A
+replacement can be safe only when every boss owns exactly one nonadjacent
+interruptible signature attack, interruption lasts a fixed short recovery,
+the next direct pattern is committed, and already spawned or autonomous
+pressure survives.
+
+Current implementation evidence makes that distinction necessary:
+
+- every ordinary attack with a tell uses `startup`, but no attack declares
+  whether Breach may cancel it;
+- ordinary `stun` stops behavior independent of attack phase, so reusing it
+  would create the idle-lock behavior the owner rejected;
+- every boss pattern currently enters `boss_startup`, so checking phase alone
+  would make the complete boss repertoire cancellable; and
+- telegraphs already carry exact geometry and continuous readiness, but no
+  interruptible/committed/autonomous semantic metadata.
 
 ### 5. The current mine is a reusable stationary player hazard
 
@@ -266,7 +283,10 @@ the fights richer. The higher-value changes are:
 - one authored phase-three combination per boss;
 - persistent pursuit/repositioning outside committed attacks;
 - unique boss silhouettes; and
-- no generic hit reaction that stops movement and attacks.
+- no generic hit reaction that stops movement and attacks;
+- exactly one readable interruptible signature per boss cycle; and
+- autonomous world systems that keep their exact warnings and remain active
+  even when the signature is interrupted.
 
 Threat should come from sustained, legible pressure and changing decisions, not
 unavoidable hits or inflated health.
@@ -366,12 +386,27 @@ priority target should I open after I stop firing to reposition?**
 The coherent division is:
 
 - held primary fire owns sustained direct damage;
-- Breach removes structure/armor, triggers a tactical mine fuse, or creates a
-  short non-stopping focus window on a priority target;
+- Breach removes structure/armor, triggers a tactical mine fuse, cancels one
+  metadata-approved pre-commit attack, or creates a short focus window on a
+  priority target;
 - `shock_breach` optionally converts the precision hit into area damage;
 - Flashover and Shatter optionally turn prepared elemental stacks into a
   finisher; and
 - EMP/secondaries retain emergency clearing and passive coverage.
+
+The first direct contact must consume the one Breach interaction even when the
+projectile pierces. An interrupting hit must not also apply the focus-window
+bonus. Side projectiles, splash, statuses, and later pierced contacts cannot
+duplicate interruption. These limits preserve target selection rather than
+turning a precision mechanic into crowd control.
+
+The current Forked Muzzle implementation needs one adjacent correction before
+that contract is possible: level 1 emits two shots symmetrically around the aim
+axis, so neither is a true center projectile, and every emitted projectile
+inherits the `opening` flag. Preserve the existing `1.0/1.4/1.65` total neutral
+damage and `1/2/3` shot counts by using a full-strength center plus one
+alternating `0.40` side shot at level 1 and two `0.325` side shots at level 2.
+Only the center owns Breach, Shock Breach, and opening-capstone resolution.
 
 This also exposes a current content issue: `breach_round` multiplies structure
 damage even though the planned baseline already one-shots every designed
@@ -426,9 +461,12 @@ The related ExecPlan fixes one implementation direction:
    - one stage-budgeted Repair Basin; and
    - one exposed Overdrive Field.
 5. The current opening shot becomes `Breach Shot` / `돌파탄`, with exclusive
-   structure, mine, armor, priority-enemy, and non-stopping boss-exposure
-   interactions. Held fire remains best sustained damage; baseline Breach has
-   no area damage.
+   structure, mine, armor, conditional startup-interrupt, priority-enemy, and
+   natural boss-recovery exposure interactions. Only the first direct contact
+   owns the interaction, an interrupt cannot also expose, and every boss has
+   exactly one nonadjacent interruptible signature while autonomous systems
+   continue. Held fire remains best sustained damage; baseline Breach has no
+   area damage.
 6. Stationary and mobile mines become one-shot, fuse-driven threats whose
    player-triggered explosions can damage enemies and credit their defeats.
    Stationary activation/damage radii are `230/160 px`; Minelet radii are
@@ -505,10 +543,14 @@ with one wall truth, zero decorative motifs, three neutral terrain families,
 and three explicitly player-owned facilities. Packed bounded pursuit work and
 player-relative arrival rings are inseparable from that enlargement.
 
-The Breach Shot is not a second generic DPS button: it turns natural movement
-and evasion downtime into one precision chance to open armor, structures,
-mines, priority targets, or a boss recovery. Fixed elite replacements reinforce
-that lesson without raising capacity. Debug-only Boss Practice then makes the
-same production boss runtime repeatable for QA, while optional reward-bearing
-risk belongs to the unresolved difficulty/meta-progression decision rather than
-this execution plan.
+The Breach Shot is not a second generic DPS button or a general stun: it turns
+natural movement and evasion downtime into one precision chance to open armor,
+structures, mines, priority targets, or an explicitly readable attack startup.
+Ordinary idle/active states and all committed payloads remain unaffected.
+Bosses expose one nonadjacent signature interruption while committed and
+autonomous systems preserve pressure; natural recovery remains the separate
+offensive exposure opportunity. Fixed elite replacements reinforce that lesson
+without raising capacity. Debug-only Boss Practice then makes the same
+production boss runtime repeatable for QA, while optional reward-bearing risk
+belongs to the unresolved difficulty/meta-progression decision rather than this
+execution plan.

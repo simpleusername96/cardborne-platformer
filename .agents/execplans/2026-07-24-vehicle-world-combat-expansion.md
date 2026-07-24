@@ -4,7 +4,7 @@ status: active
 owner: BK
 created: 2026-07-24
 last_reviewed: 2026-07-24
-scope: Implement three enlarged persistent run-level fields, unified wall truth, six functional field-feature families, tactical non-stopping Breach Shot interactions, avoidable mines, additional and elite enemy roles, distinct bosses, a debug-only boss-practice harness, visual guidebook entries, Ship Status, and per-stage combat reports
+scope: Implement three enlarged persistent run-level fields, unified wall truth, six functional field-feature families, startup-selective Breach Shot interrupts, avoidable mines, additional and elite enemy roles, distinct bosses, a debug-only boss-practice harness, visual guidebook entries, Ship Status, and per-stage combat reports
 related:
   - ../../AGENTS.md
   - ../AGENTS.md
@@ -37,12 +37,15 @@ terrain affects both sides, while three explicitly player-owned field
 facilities provide traversal, bounded recovery, and exposed-position damage
 advantages. The opening shot becomes a precision Breach Shot whose job is to
 open protected or priority targets after the player naturally stops firing to
-move or evade; it never stops boss behavior. Mines, new roles, deterministic
-elite traits, and five distinct bosses create learnable combat interactions. A
-debug-only practice surface reuses those exact bosses for QA without touching
-progression. The guidebook shows what discovered threats actually look like,
-paused Settings shows the current build, and every stage ends with a combat
-report.
+move or evade. Its first direct hit can cancel an explicitly interruptible
+attack startup, but it never creates idle stun-lock and cannot erase an attack
+that has already committed. Each boss exposes only one interruptible signature
+attack while committed and autonomous systems preserve pressure. Mines, new
+roles, deterministic elite traits, and five distinct bosses create learnable
+combat interactions. A debug-only practice surface reuses those exact bosses
+for QA without touching progression. The guidebook shows what discovered
+threats actually look like, paused Settings shows the current build, and every
+stage ends with a combat report.
 
 ## Scope
 
@@ -85,7 +88,9 @@ report.
   of the same stage. The unresolved difficulty/meta-progression study owns that
   separate decision.
 - Enemies that steal, carry, delete, or deny experience.
-- Any Breach Shot behavior that pauses a boss phase, timer, movement, or attack.
+- Generic Breach stun, stagger accumulation, or idle/move-state hit reactions.
+- More than one interruptible signature attack per stage boss, adjacent
+  interruptible boss patterns, or cancellation of committed/autonomous attacks.
 - Rebalancing all existing enemy health and damage.
 
 ## Success Criteria
@@ -101,9 +106,10 @@ report.
   player-owned facilities with exact visible footprints, bounded benefits, and
   no hidden collision.
 - Breach Shot turns natural firing downtime into one precision opportunity to
-  break protection or expose a priority target. It has reliable bulkhead, mine,
-  armor, priority-enemy, and boss-recovery interactions without replacing held
-  fire as the best sustained damage or interrupting boss behavior.
+  break protection, cancel one readable startup, or expose a priority target.
+  It has reliable bulkhead, mine, armor, ordinary-startup, priority-enemy,
+  boss-signature, and boss-recovery interactions without replacing held fire as
+  the best sustained damage or creating a repeatable stun-lock.
 - Mines are readable one-shot state machines, can damage enemies, cannot damage
   through walls, trigger before the player enters their blast radius, are
   escapable without dash, and never lose quota or XP attribution.
@@ -113,7 +119,9 @@ report.
   live at once; each trait reads from silhouette as well as color and adds no
   projectile count.
 - Each of the five bosses has a distinguishable silhouette, three behavioral
-  phases, one unique spatial mechanic, and one base-speed-avoidable final exam.
+  phases, exactly one interruptible signature, committed direct pressure,
+  autonomous system pressure, one unique spatial mechanic, and one
+  base-speed-avoidable final exam.
 - Every discovered enemy, boss, mine, and terrain entry has a matching visual
   preview and concise Korean/English counterplay; locked entries leak nothing.
 - Paused Settings shows the current effective ship stats and every acquired
@@ -165,6 +173,16 @@ these facts:
   covers, and live crates, but those blockers do not share one rendered wall
   language;
 - the current opening shot cannot cross the `35` boss stagger threshold;
+- ordinary attacks expose readable `startup` phases but carry no
+  interruptibility metadata, while the generic `stun` field stops ordinary
+  enemies regardless of whether they were attacking;
+- every current boss pattern enters `boss_startup`, so a phase-only interrupt
+  rule would incorrectly make every boss attack cancellable;
+- attack telegraphs carry exact geometry and continuous `readiness` but no
+  color-independent interruptible/committed/autonomous classification;
+- Forked Muzzle level 1 currently places two projectiles on opposite sides of
+  the aim axis, and every projectile inherits the current `opening` flag, so no
+  unique center interaction owner exists;
 - the stationary mine is repeatable and damages only the player;
 - `spark_minelet` exists in data and visuals but is unused by stage role sets;
 - current populations already reach `420` authored enemies and `72` active
@@ -436,13 +454,14 @@ consumes the primed state on the next primary shot. Existing card modifiers may
 shorten that baseline only through the established
 `opening_seconds_multiplier`; this plan adds no second charge timer.
 
-Its combat identity is **priority opening**, not generic burst damage. Held fire
-remains the correct answer to an already exposed target. The player earns a
-Breach Shot while naturally ceasing fire to dash, cross the field, evade a
-committed attack, or reacquire aim; the next precise shot converts that downtime
-into an opportunity to remove protection or focus a high-value target. Waiting
-only to repeat Breach against an unprotected target must always lose sustained
-damage to uninterrupted held fire.
+Its combat identity is **priority opening and conditional interrupt**, not
+generic burst damage or generic crowd control. Held fire remains the correct
+answer to an already exposed target. The player earns a Breach Shot while
+naturally ceasing fire to dash, cross the field, evade a committed attack, or
+reacquire aim; the next precise shot converts that downtime into an opportunity
+to remove protection, cancel one readable attack preparation, or focus a
+high-value target. Waiting only to repeat Breach against an unprotected target
+must always lose sustained damage to uninterrupted held fire.
 
 Use these final modifiers:
 
@@ -452,7 +471,7 @@ Use these final modifiers:
 | structure damage | `4.0x`, equal to `72` at the current base |
 | radius | `1.75x`, equal to `12.25 px` at the current base |
 | pierce | `+1` |
-| ordinary-enemy stagger | `40`; never applied as a boss pause |
+| successful interrupt stop | `0.45 s` `interrupted_recovery` |
 
 Its exclusive jobs are:
 
@@ -460,28 +479,103 @@ Its exclusive jobs are:
 - force an Arc Mine into its `0.75 s` short fuse;
 - remove a full-health Bulkhead Guard front plate or Armored elite shell in one
   hit;
-- apply `Breach Exposed` to one unprotected priority enemy; and
-- apply the same exposure during a boss recovery window.
+- cancel one explicitly interruptible ordinary or boss attack before it
+  commits;
+- apply `Breach Exposed` to one unprotected priority enemy when no interrupt
+  occurs; and
+- apply the same exposure during a boss's natural recovery window.
 
-The center projectile owns the Breach interaction. Its structure damage is
-never reduced below `72` by Forked Muzzle's per-projectile falloff, and its
-ordinary-enemy stagger is never reduced below `40`; side projectiles keep their
-normal scaled values. This prevents an acquired multishot upgrade from
-disabling the bulkhead, armor, mine, or exposure purpose.
+The center projectile owns one Breach interaction token. Its first direct enemy,
+mine, plate, shell, bulkhead, or structure contact consumes that token. The
+projectile may continue through its remaining pierce with the same health
+damage, radius, and normal elemental-stack application, but consumption clears
+its token, Breach visual, Shock Breach/opening-capstone ownership, and resets
+remaining structure damage to the unprimed center-shot value. It therefore
+cannot interrupt, expose, short-fuse, or one-shot a second structure. Forked
+Muzzle side projectiles, Shock Breach splash, Flashover splash, passive
+secondaries, reflected damage, and status ticks never receive an interrupt
+token. The center projectile's first-contact structure damage is never reduced
+below `72` by Forked Muzzle's per-projectile falloff. This keeps Breach one
+precision decision even after multishot, pierce, or area upgrades.
+
+Forked Muzzle must always preserve one projectile on the exact aim axis. Keep
+its current total shot counts and total neutral direct-damage scales:
+
+| Forked Muzzle level | Projectile layout and neutral scales |
+| --- | --- |
+| `0` | center `0° @ 1.0` |
+| `1` | center `0° @ 1.0`, one side `±7° @ 0.40`; side alternates left/right by shot serial |
+| `2` | center `0° @ 1.0`, sides `-7°/+7° @ 0.325` each |
+
+These totals remain `1.0/1.4/1.65`, matching the current
+`1x1.0/2x0.70/3x0.55` neutral output. On a primed trigger, only the center
+projectile receives Breach health/radius/structure/pierce, the first-contact
+token, Shock Breach ownership, and Flashover/Shatter opening resolution. Side
+projectiles remain ordinary scaled primary shots and may apply their normal new
+elemental stacks. Replace `VehicleProjectileState.opening` with explicit
+`breach_token_available` and `breach_visual` fields; projectile-store eviction
+protects only the live token owner.
+
+Resolve the first-contact interaction in this fixed order:
+
+1. Apply the direct hit and any structure/plate/shell damage.
+2. If the target is an Arc Mine, force its short fuse and stop; a live fuse is
+   not an attack startup and cannot be cancelled.
+3. If the still-living target is in an explicitly interruptible startup,
+   cancel only that not-yet-committed attack, clear its startup telegraphs, and
+   enter `interrupted_recovery` for exactly `0.45 s`. The same hit does not
+   apply `Breach Exposed`.
+4. Otherwise, apply `Breach Exposed` only when the target satisfies the
+   priority-enemy or natural boss-recovery rule below.
+5. In every other state, deal normal Breach damage without changing phase,
+   movement, timers, projectiles, zones, summons, or cooldowns.
+
+An ordinary successful interrupt sets velocity to zero, clears only the
+cancelled startup's temporary descriptors, and does not spawn its projectile,
+zone, burst, charge, beam, or summon. After `0.45 s`, the target returns to
+`move` with its full normal post-attack cooldown. Breach never writes the
+existing generic `stun` field. The following direct attack startups are
+interruptible:
+
+| Interruptible startup | Cancelled before commit |
+| --- | --- |
+| `chaser`, `rammer` | charge movement and contact window |
+| `shooter`, `turret`, `interceptor_tower` | the complete pending shot or pre-burst |
+| `controller`, `artillery_spotter` | the pending fixed damage zone |
+| `drone_carrier` | the pending child-release sequence |
+| `beam_sentinel` | the pending beam |
+
+`mine` fuse startup is short-fused rather than interrupted. Contact-only
+movement, repair ticks, generator behavior, boss-pylon behavior, already active
+bursts, existing projectiles, active beams, placed zones, and released summons
+are never interrupted. Planned Bulkhead Guard and Splitter Barge movement
+remains contact pressure without an invented Breach window.
+
+At the commit boundary, damage resolution reads the target's current phase. If
+the target is still in `startup`, the interrupt wins; once its active transition
+has executed, the attack is committed and cannot be rolled back. Validators
+must cover `commit - epsilon`, exact commit, and `commit + epsilon` without
+depending on wall-clock timing.
 
 `Breach Exposed` is a `1.25 s`, nonstacking `+20%` effective health-damage
 window from player-owned sources. The eligible non-boss archetypes are
 `repair_tender`, `drone_carrier`, `turret`, `interceptor_tower`,
 `beam_sentinel`, and `generator`; one full center Breach applies exposure if no
-plate/shell absorbed that shot. Mines, neutral structures, and
-reflection-locked boss pylons never receive exposure. It cannot stack or
-refresh while active. For a boss, it can be applied only once during each
-recovery and cannot be refreshed until the boss commits its next attack.
-Applying it never changes phase, phase time, velocity, pursuit, pattern,
-startup, active time, recovery time, or attack sequence. The hit may play a
-`0.12 s` material crack/flash while the simulation continues. Retire the current
-boss `STAGGER_THRESHOLD`, `STAGGER_WINDOW`, `staggered` phase, and all boss
-hard-stop transitions.
+plate/shell absorbed that shot and no interrupt occurred. Mines, neutral
+structures, and reflection-locked boss pylons never receive exposure. It cannot
+stack or refresh while active. For a boss, exposure can be applied only once
+during each natural `boss_recovery`; it cannot be applied by an interrupting
+hit and cannot refresh until the boss commits its next attack. Exposure never
+changes phase, phase time, velocity, pursuit, pattern, startup, active time,
+recovery time, or attack sequence. The hit may play a `0.12 s` material
+crack/flash while the simulation continues.
+
+Retire the current accumulated boss `STAGGER_THRESHOLD`, `STAGGER_WINDOW`,
+`STAGGER_RECOVERY_READ`, `staggered` phase, and all damage-threshold hard-stop
+transitions. The new `interrupted_recovery` state is entered only by one direct
+Breach hit during metadata-approved startup; it is not a meter and cannot
+accumulate. Preserve generic `stun` only for EMP and other systems that already
+own explicit crowd-control behavior.
 
 The baseline Breach has no area damage. Area clearing remains a secondary/EMP
 job and is added to Breach only by the existing `shock_breach` card. Preserve
@@ -491,8 +585,8 @@ and make the current opening-family interactions explicit:
 | --- | --- |
 | `fast_capacitor` | Prime time becomes `0.85 s` and `0.75 s` at levels 1 and 2 |
 | `breach_round` | Keep the resource ID; replace `opening_breach_multiplier` with additive `breach_health_scale_bonus=[0.20,0.40]` and `breach_exposure_bonus=[0.05,0.10]`, producing center health `2.05x/2.25x` and exposure `+25%/+30%`; the `72` structure minimum remains |
-| `shock_breach` | The struck target remains excluded; `90 px` impact damage is `45%` of center Breach health damage per level |
-| Flashover/Shatter | Resolve against stacks already on the target before the Breach projectile applies its new elemental stack |
+| `shock_breach` | Center-token contact only; the struck target remains excluded and `90 px` impact damage is `45%` of center Breach health damage per level; splash cannot interrupt or expose |
+| Flashover/Shatter | Center-token contact only; resolve against stacks already on the target before the center Breach applies its new elemental stack |
 
 These interactions provide three build paths—faster access, stronger
 single-target opening, and optional area conversion—without giving every
@@ -500,6 +594,10 @@ Breach all three jobs by default. Save-compatible IDs remain unchanged.
 
 Presentation uses:
 
+- every startup/world-warning descriptor receives a gameplay-owned
+  `commit_mode` from `VehicleAttackContract` or `VehicleBossPatterns`;
+  `VehicleAttackTelegraphBuilder` forwards it and the renderer never infers
+  interruptibility from phase, role, color, or pattern name;
 - a collision head exactly matching the `12.25 px` damaging radius;
 - a mustard/ivory double-diamond head;
 - a `48 px` tapered trail distinct from normal fire;
@@ -507,7 +605,15 @@ Presentation uses:
 - a complete primed ring near the ship/reticle plus the existing HUD readiness
   channel;
 - one large fracture bracket on a currently aimed breachable/priority target
-  and one continuous crack ring during `Breach Exposed`; and
+  and one continuous crack ring during `Breach Exposed`;
+- one broken-diamond bracket and telegraph-edge notch for an interruptible
+  startup, a closed diamond for a committed/noninterruptible startup, and no
+  boss-body bracket for an autonomous system warning;
+- affinity color continues to describe attack type; interruptibility is always
+  communicated by shape and never by color alone;
+- a successful interrupt collapses the cancelled warning inward and plays one
+  short crack/recoil cue, while a late hit leaves the committed warning intact;
+  and
 - a short localized guidebook counterplay line.
 
 Held fire resumes at the existing repeat cadence after the Breach Shot. No new
@@ -654,8 +760,9 @@ and keep presentation dependent only on a boss snapshot.
   stage-specific preferred range. Normal hits never stop movement or attack
   timers.
 - Phase sequence gaps are `0.55 s`, `0.42 s`, and `0.32 s`.
-- Every direct attack retains its authored startup tell; phase escalation comes
-  from combinations and reduced dead time, not removed warning.
+- Every direct attack retains its authored startup tell; every autonomous
+  system owns an independent world warning. Phase escalation comes from
+  combinations and reduced dead time, not removed warning.
 - No immediate attack repeat.
 - Phase 2 may layer one low-reaction space-control pattern with one direct
   response pattern.
@@ -666,19 +773,46 @@ and keep presentation dependent only on a boss snapshot.
   chase the player afterward.
 - Base movement has a valid escape route with at least `40 px` margin.
 - Boss projectile reserve remains at most `24`.
+- Every pattern declares exactly one `commit_mode`:
+  `interruptible_signature`, `committed`, or `autonomous`.
+- Each boss owns exactly one `interruptible_signature`; it appears at most once
+  in a four-pattern direct cycle and never follows another signature.
+- A center Breach during that signature's `boss_startup` cancels only the
+  not-yet-committed signature, clears its startup telegraphs, and enters
+  `boss_interrupted_recovery` for `0.45 s`. The boss then enters the normal
+  phase-specific `boss_read` gap, and its next direct pattern must come from the
+  `committed` pool.
+- The interrupting Breach does not apply `Breach Exposed`. A Breach during
+  movement, read, committed startup, active time, autonomous warning, or
+  interrupted recovery deals damage without changing boss state.
+- Projectiles, zones, mines, pylons, summons, and system layers that already
+  exist continue after an interrupt. No cleanup path may infer ownership from
+  the boss's changed phase.
+- Autonomous systems are scheduled and telegraphed independently of the boss
+  body. They continue while the boss pursues, uses a direct attack, recovers,
+  or has its signature interrupted.
 - One Breach Shot during recovery may apply `Breach Exposed` once per committed
   attack, but never pauses or retimes the boss.
-- Phase transitions do not erase excess damage.
+- A health-threshold phase transition preserves excess damage and outranks an
+  interrupt caused by the same hit: the boss enters its normal phase-transition
+  read without an additional `0.45 s` stop.
 
 #### Stage-specific identities
 
-| Boss | Phase-1 vocabulary | Phase-2 layer | Phase-3 exam |
-| --- | --- | --- | --- |
-| Foundry Colossus | Furnace Gates: two slow projectile walls with one `180 px` gap; Foundry Ram: locked charge | Slag Ring plus two overload pylons | Furnace Gates establish the gap, then Foundry Ram crosses it along a separately warned line |
-| Archive Leviathan | Current Fan: slow gapped fan; Archive Lunge: locked pursuit burst | Undertow Lanes add temporary Flow vectors; three sequential Depth Charges lock their circles | Undertow moves the player while three fixed Depth Charges demand route choice |
-| Drydock Titan | Titan Pulse: radial ring plus one aimed pair; Grounding Grid: two warned Arc strips with one safe lane | Thunder Chain places three fixed circles in order; at most two Beam Sentinels are called | Grounding Grid activates, then Titan Pulse tests the remaining safe lane |
-| Switchyard Behemoth | Breaker Charge; Ricochet Volley with its single-bounce path fully warned | Four one-shot mines establish space; two fixed Switch Sweeps cross afterward | Minefield arms first, then the two sweeps leave one base-speed route through it |
-| Crown Engine | Crown Lattice: four ordered lanes; Relay Pulse: timed concentric rings | Carrier Wave calls one carrier and two escorts; Mirror Cross adds direct pressure | Royal Overload combines ordered lattice lanes with concentric timing, never overlapping all exits |
+| Boss | Interruptible signature | Committed direct pressure | Autonomous system pressure | Phase-3 exam |
+| --- | --- | --- | --- | --- |
+| Foundry Colossus | `foundry_ram`: locked charge | `furnace_gates`: two slow projectile walls with one `180 px` gap | `slag_ring` and two `overload_pylons` | Furnace Gates establish the gap; Foundry Ram crosses it, but interrupting the ram does not erase the moving gates |
+| Archive Leviathan | `archive_lunge`: locked pursuit burst | `current_fan`: slow gapped fan | `undertow_lanes` and three fixed `depth_charges` | Undertow moves the player while three fixed Depth Charges demand route choice; neither depends on a body cast |
+| Drydock Titan | `titan_pulse`: radial ring plus one aimed pair | `grounding_grid`: two warned Arc strips with one safe lane | `thunder_chain` and a bounded `beam_sentinel_call` | Grounding Grid activates before Titan Pulse; interrupting the pulse leaves the grid active |
+| Switchyard Behemoth | `ricochet_volley`: one fully warned bounce path | `breaker_charge`: locked forward line | four one-shot `switchyard_mines` and two fixed `switch_sweeps` | Mines arm first, then autonomous sweeps leave one base-speed route through them |
+| Crown Engine | `carrier_wave`: one carrier and two escorts released on commit | `mirror_cross`: direct cross pressure | `crown_lattice` and timed `relay_pulse` rings | `royal_overload` combines lattice lanes with concentric timing; interrupting a later Carrier Wave cannot clear either layer |
+
+The interruptible signature always reads as a deliberate boss-body wind-up. A
+committed direct attack may also animate the body but uses the closed-diamond
+contract and must be dodged. An autonomous system warning originates from its
+world emitter or exact footprint rather than a cancellable boss-body motion.
+All three modes remain fully telegraphed; “autonomous” never means invisible,
+instant, or detached from exact damage geometry.
 
 Give every boss a distinct `boss_variant` mesh in
 `VehicleCombatVisualLibrary`, using large flat-color masses and no micro-detail:
@@ -704,17 +838,22 @@ release deployment and production Web UI. A secondary
 - one of the three registered fields;
 - start phase `1`, `2`, or `3`;
 - `전체 전투 / Full Fight` or `패턴 반복 / Pattern Loop`;
-- one exact pattern from that boss when Pattern Loop is selected; and
+- one exact pattern from that boss with its signature/committed/autonomous
+  shape label when Pattern Loop is selected; and
 - `피해 무시 / Invulnerable` off by default.
 
 The full-fight session uses normal boss health, phase transitions, pursuit,
 attacks, wall collision, terrain, telegraphs, and failure. Pattern Loop fixes
-boss health at `80%`, `50%`, or `20%` for phases 1–3, runs the selected startup,
-active, and recovery unchanged, removes only that pattern's temporary
-summons/zones after recovery, waits `1.5 s`, and starts it again. It does not
-reset player position between loops. The invulnerable option still resolves
-accepted-hit visuals and incoming telemetry but clamps hull to a minimum of
-`1`; it never suppresses attack collision.
+boss health at `80%`, `50%`, or `20%` for phases 1–3. Signature and committed
+patterns run their selected startup, active, and recovery unchanged.
+Autonomous patterns run their independent warning, active, and lifetime while
+the boss remains in production pursuit/read behavior. A successful signature
+interrupt follows the production `boss_interrupted_recovery` path. After the
+selected lifecycle completes or is interrupted, the session removes only
+payload IDs registered to that practice iteration, waits `1.5 s`, and starts it
+again. It does not reset player position between loops. The invulnerable option
+still resolves accepted-hit visuals and incoming telemetry but clamps hull to a
+minimum of `1`; it never suppresses attack collision.
 
 Practice starts the player at field center and the boss at the nearest valid
 boss anchor between `1000` and `1400 px` from center. It creates no ordinary
@@ -763,6 +902,8 @@ Unlocked enemy and boss entries contain:
 - `preview_archetype` and optional `boss_variant`;
 - one `176x176` desktop preview with a `128x128` minimum;
 - localized Movement, Attack, and Counter rows;
+- the same broken-diamond, closed-diamond, or autonomous-emitter shape beside
+  any described attack mode; and
 - no raw health, speed, damage, quota, or hidden spawn data.
 
 Locked entries show:
@@ -792,7 +933,12 @@ never reveals an unseen base archetype.
 
 The guidebook remains a modal focus layer. Verify Korean and English text,
 keyboard/gamepad focus order, locked/unlocked states, reduced motion, and no
-clipping at every supported size.
+clipping at every supported size. The first discovered interruptible attack
+adds one concise legend entry:
+`깨진 마름모: 돌파탄으로 준비 취소 / Broken diamond: Breach cancels startup`.
+The legend also shows a closed diamond as “committed—evade” and an
+emitter-centered mark as “system attack—disable or evade”; it never relies on
+affinity color to communicate interruptibility.
 
 ### 9. Ship Status in Settings
 
@@ -821,7 +967,7 @@ Ship Status shows:
 | Run | difficulty, stage, level, experience/current requirement, hull/current maximum |
 | Movement and defense | effective move speed, dash distance and cooldown, hit invulnerability, active barrier, lifesteal, pickup radius |
 | Primary | applied base damage per center projectile, shots per second, projectile count, speed, radius, pierce, bounce |
-| Breach Shot | current prime time, health damage, structure damage, radius, pierce, boss exposure duration and bonus |
+| Breach Shot | current prime time, health damage, first-contact structure damage, radius, pierce, `0.45 s` interrupt recovery, eligible startup rule, boss exposure duration and bonus |
 | EMP | effective cooldown, startup, radius, and damage |
 | Secondaries | every installed family, level, effective damage, interval/tick, radius/range, and family-specific count |
 | Acquired upgrades | localized title, current/max level, family, and current localized effect description |
@@ -952,12 +1098,14 @@ carried-input guard. Neither report adds live-HUD text.
 | Terrain/facility definitions and low-count execution | new `scripts/vehicle/vehicle_terrain_catalog.gd`, `vehicle_terrain_runtime.gd` | Backdrop drawing, enemy rendering, per-zone nodes |
 | Static field presentation | `vehicle_stage_backdrop.gd`, `vehicle_stage_visual_profile.gd` | Collision decisions |
 | Primary and Breach Shot state | `scripts/player/vehicle_primary_weapon.gd` and run-build modifiers | UI layout, bulkhead lifecycle |
+| Attack metadata and interrupt classification | `scripts/combat/vehicle_attack_contract.gd`, `scripts/bosses/vehicle_boss_patterns.gd` | Runtime mutation, telegraph styling |
+| Ordinary attack phases and cancellation | performance-plan owner `VehicleEnemyRuntime` in new `scripts/enemies/vehicle_enemy_runtime.gd`, using `vehicle_enemy_specialist_runtime.gd` constants | Boss state, structures, card logic |
 | Enemy definitions and specialist behavior | `vehicle_enemy_archetypes.gd`, `vehicle_enemy_specialist_runtime.gd` | Boss state, stage flow |
 | Elite trait values and deterministic assignment | new `scripts/enemies/vehicle_elite_trait_catalog.gd`, encounter coordinator | Base-role behavior, renderer geometry, quota inflation |
 | Mine and enemy lifecycle | enemy runtime/store plus bounded query services | Guidebook discovery |
-| Boss data and state | `vehicle_boss_patterns.gd`, new `vehicle_boss_runtime.gd` | General enemy store, HUD controls |
+| Boss direct/system data and state | `vehicle_boss_patterns.gd`, new `vehicle_boss_runtime.gd` | General enemy store, HUD controls, duplicated system cleanup |
 | Debug practice lifecycle and argument validation | new `scripts/bosses/vehicle_boss_practice_session.gd`, new `scripts/ui/vehicle_boss_practice_panel.gd` | Duplicate boss attacks, persistence, rewards |
-| Shared meshes/batched presentation | `vehicle_combat_visual_library.gd`, `vehicle_combat_renderer.gd` | Gameplay damage or collision |
+| Shared telegraphs/meshes/batched presentation | `vehicle_attack_telegraph_builder.gd`, `vehicle_combat_visual_library.gd`, `vehicle_combat_renderer.gd` | Gameplay damage, collision, or inferred interrupt rules |
 | Guidebook metadata/persistence/UI | `vehicle_guidebook_catalog.gd`, `vehicle_guidebook_store.gd`, `vehicle_guidebook_panel.gd`, new preview control | Enemy behavior |
 | Effective build snapshot | new `scripts/presentation/vehicle_build_snapshot_builder.gd` | Gameplay mutation, card application, settings persistence |
 | Reusable Ship Status UI | new `scripts/ui/vehicle_build_summary_panel.gd`, `vehicle_settings_panel.gd`, guidebook composition | Stat calculation or card behavior |
@@ -965,9 +1113,14 @@ carried-input guard. Neither report adds live-HUD text.
 | Stage/failure report UI | new `scripts/ui/vehicle_stage_report_panel.gd`, `vehicle_stage_ui.gd` | Damage calculation, enemy lifecycle |
 | Orchestration only | `vehicle_run.gd` | New catalogs, per-role algorithms, or presentation geometry |
 
-Before implementation, identify each extracted block currently in
-`vehicle_run.gd`; move behavior into the owner above instead of adding another
-large branch to the orchestrator.
+Move the existing ordinary attack functions
+`_update_ordinary_enemy`, `_start_enemy_attack`, `_begin_enemy_active`,
+`_update_enemy_active`, and `_enemy_recovery_cooldown` into
+`VehicleEnemyRuntime`. Move `_update_stage_boss`, `_boss_select_pattern`,
+`_boss_begin_active`, `_boss_update_active`, `_boss_reposition`, and
+`_boss_combat_move` into `VehicleBossRuntime`. `VehicleRun` retains only
+service callbacks and ordered orchestration; implementation must not add the
+new interrupt or autonomous-system branches back to that orchestrator.
 
 ## Tasks
 
@@ -1044,11 +1197,25 @@ plan, and no performance threshold was relaxed.
       contract, paired discovery, and debug snapshots.
 - [ ] Implement the stage-budgeted Repair Basin and accepted-hit pause.
 - [ ] Implement Overdrive membership and damage-source ownership exclusions.
+- [ ] Complete the active performance plan's selected
+      `VehicleEnemyRuntime` extraction before adding Breach behavior: it owns
+      ordinary `move/startup/active/recovery/interrupted_recovery` transitions
+      at the already accepted decision and simulation cadences.
 - [ ] Rename and rebalance the opening shot as Breach Shot.
 - [ ] Add exact Breach visuals, readiness feedback, audio use, KR/EN copy, and
       guidebook metadata.
-- [ ] Add the bulkhead/armor one-shot and priority/boss non-stopping
-      `Breach Exposed` contracts; retire boss hard-stagger state and constants.
+- [ ] Add one first-contact Breach token to the center projectile and consume it
+      deterministically across structure, mine, interrupt, and exposure
+      resolution; side/pierced/splash/status hits never duplicate the token.
+- [ ] Recenter Forked Muzzle with the locked alternating/symmetric layouts and
+      `1.0/1.4/1.65` neutral totals; retire projectile `opening` in favor of
+      explicit token/visual fields and keep opening capstones center-only.
+- [ ] Add ordinary attack interruptibility metadata, exact `0.45 s`
+      cancellation recovery, full post-attack cooldown, and the locked
+      noninterruptible exclusions without writing generic `stun`.
+- [ ] Add the bulkhead/armor one-shot, priority `Breach Exposed`, conditional
+      boss-signature interrupt, and natural boss-recovery exposure contracts;
+      retire accumulated boss hard-stagger state and constants.
 - [ ] Preserve the existing `fast_capacitor`, `breach_round`, `shock_breach`,
       Flashover, and Shatter IDs while applying the locked, nonredundant Breach
       interactions.
@@ -1074,10 +1241,19 @@ plan, and no performance threshold was relaxed.
 - one full Breach Shot breaks a full-health bulkhead;
 - Forked Muzzle and other existing upgrades cannot remove the center
   projectile's Breach interaction;
+- Forked Muzzle levels emit the exact locked angles/scales, preserve current
+  neutral total damage, and produce exactly one center Breach token;
 - normal primary fire can eventually break a bulkhead;
 - one full Breach removes an Armored elite shell or Guard plate;
 - one Breach against an unprotected priority target applies one nonstacking
-  exposure window;
+  exposure window only when that hit did not interrupt an attack;
+- one direct center Breach during each listed ordinary startup cancels the
+  attack before payload creation, stops the target for `0.45 s`, then applies
+  its full post-attack cooldown;
+- the same hit during move, idle, active, ordinary recovery, an existing mine
+  fuse, or an unlisted behavior causes no phase or velocity change;
+- the first direct contact consumes the only special interaction even when the
+  projectile continues through its extra pierce;
 - one Breach in boss recovery applies one `1.25 s` exposure window without
   changing boss movement, timers, phase, or attack;
 - uninterrupted held fire remains higher sustained damage than intentionally
@@ -1141,12 +1317,18 @@ plan, and no performance threshold was relaxed.
 - [ ] Extract the boss state machine and attack execution from
       `vehicle_run.gd` into `VehicleBossRuntime`.
 - [ ] Replace the two-phase reorder with the locked three-phase sequence model.
-- [ ] Implement each named pattern and exact telegraph footprint in the boss
-      table above.
+- [ ] Add mandatory `commit_mode` metadata and implement each named signature,
+      committed direct pattern, autonomous system, and exact telegraph
+      footprint in the boss table above.
+- [ ] Schedule autonomous systems independently from boss-body
+      `boss_startup/active/recovery`; retain their own low-count warning,
+      lifetime, cleanup owner, and damage attribution.
 - [ ] Ensure pursuit/repositioning continues after normal hits and outside
       committed attacks.
-- [ ] Implement one non-stopping `Breach Exposed` application per boss attack
-      and remove the old boss hard-stagger transitions.
+- [ ] Implement the one-signature-per-boss Breach cancellation,
+      `boss_interrupted_recovery`, committed next-pattern guard, and natural
+      recovery-only `Breach Exposed`; remove the old accumulated boss
+      hard-stagger transitions.
 - [ ] Add five unique boss meshes/variants and reuse them in combat, minimap,
       HUD, and guidebook.
 - [ ] Keep projectile reserve at or below `24` and add bounded summon handling.
@@ -1163,10 +1345,19 @@ plan, and no performance threshold was relaxed.
 
 - every boss reaches and executes every phase deterministically;
 - normal hits never freeze boss movement or attack timers;
-- Breach hits never freeze, pause, or retime boss movement or attack timers;
+- a Breach hit stops a boss only during its one metadata-approved signature
+  startup and only for the locked `0.45 s` recovery;
+- the interrupting shot grants no `Breach Exposed`, the next direct pattern is
+  committed, and a phase-threshold hit does not add interrupt downtime;
+- Breach during read, movement, committed startup, active, autonomous warning,
+  interrupted recovery, or an already spawned payload never freezes, deletes,
+  pauses, or retimes that behavior;
+- every boss cycle contains exactly one nonadjacent signature attack;
 - no immediate pattern repeats;
 - all warnings stop tracking after lock;
 - warning and damage geometry are identical;
+- autonomous layers remain fully warned and continue through a signature
+  interrupt without depending on a boss-body animation;
 - every pattern and phase-three combo is escapable at base speed with `40 px`
   margin;
 - damage remains inside the locked light/standard/heavy bands;
@@ -1175,7 +1366,8 @@ plan, and no performance threshold was relaxed.
 - boss capacity does not exceed the current projectile/summon envelope;
 - every boss/field/phase/pattern combination starts from the debug UI and
   command path with the selected exact production behavior;
-- Pattern Loop cleans only its temporary objects, waits `1.5 s`, and repeats
+- Pattern Loop runs the selected direct or autonomous production lifecycle,
+  cleans only its iteration-owned temporary objects, waits `1.5 s`, and repeats
   without moving the player;
 - practice accepted hits remain visually testable with invulnerability enabled;
 - practice cannot alter save bytes, difficulty preference, guidebook discovery,
@@ -1305,6 +1497,7 @@ Add responsibility-shaped validators rather than expanding one catch-all:
 
 - `validate_vehicle_terrain_runtime.gd`
 - `validate_vehicle_wall_contract.gd`
+- `validate_vehicle_breach_interrupts.gd`
 - `validate_vehicle_mines.gd`
 - `validate_vehicle_enemy_expansion.gd`
 - `validate_vehicle_elite_traits.gd`
@@ -1335,10 +1528,24 @@ Every test has a fixed seed and no wall-clock dependency:
   fixed shell on all difficulties, one-trait limit, XP rounding, and report
   aggregation;
 - every boss pattern in every phase and the five phase-three combos;
-- Breach during every boss phase, proving no change to phase, timer, velocity,
-  or attack sequence;
+- every listed ordinary interrupt at `commit - epsilon`, exact commit, and
+  `commit + epsilon`, proving pre-commit cancellation, zero payload creation,
+  exact `0.45 s` stop, and full post-attack cooldown;
+- Breach during ordinary move, active, recovery, mine fuse, contact-only
+  movement, repair, generator, and pylon behavior, proving no generic stun or
+  phase change;
+- every boss pattern declares one valid commit mode; every boss has exactly one
+  signature per nonadjacent four-pattern cycle;
+- Breach during every boss signature startup, committed startup, autonomous
+  warning, active, natural recovery, interrupted recovery, and phase threshold,
+  proving the exact cancel/expose/no-op matrix;
+- interrupting a signature while its phase combo has live projectiles, zones,
+  mines, pylons, summons, or system layers leaves those payloads and their
+  cleanup/attribution unchanged;
 - Breach against plain, priority, plated, elite-shell, mined, Flashover,
-  Shatter, Shock Breach, multishot, and continuous-fire comparison fixtures;
+  Shatter, Shock Breach, both Forked Muzzle layouts and alternating serial,
+  pierce-first/pierce-second, and
+  continuous-fire comparison fixtures;
 - debug practice full-fight and pattern-loop launch for every boss/field/phase,
   malformed arguments, loop cleanup, invulnerable accepted-hit feedback, and
   byte-identical persistence before/after;
@@ -1388,12 +1595,12 @@ Final rendered evidence must include:
 | --- | --- |
 | deployment | separate seeded captures for each of the three read-only selected field names; debug build with Boss Practice action and release build without it; KR/EN; keyboard focus |
 | gameplay field | all three enlarged layouts; shared walls; zero motifs; `20x12` minimap exploration; every terrain/facility warning, active, cooldown, depleted, and discovered state |
-| Breach Shot | unprimed, charging, ready, fired, bulkhead/plate/shell hit, priority exposure, mine hit, non-stopping boss exposure, Shock Breach |
+| Breach Shot | unprimed, charging, ready, fired, first-contact token consumed, bulkhead/plate/shell hit, ordinary interrupt, priority exposure, mine hit, boss-signature interrupt, committed late hit, natural-recovery exposure, Shock Breach |
 | mine | separate activation/damage rings; dormant, normal fuse, short fuse, chained fuse, explosion with enemy inside |
 | elites | all three traits on representative base meshes; monochrome silhouette; minimap diamond; Stage Report secondary count |
-| bosses | each silhouette; every phase; phase-three combo; boss HUD/minimap identity |
+| bosses | each silhouette; every phase; broken-diamond signature, closed-diamond committed attack, emitter-owned autonomous warning, successful interrupt with surviving system layer, phase-three combo, boss HUD/minimap identity |
 | Boss Practice | debug setup full/pattern modes, field/boss/phase/pattern selection, invalid state, invulnerability, pause/failure actions, pattern loop; release absence |
-| guidebook | locked/unlocked enemy, boss, mine, terrain, facility, and elite trait; KR/EN; focus; reduced motion |
+| guidebook | locked/unlocked enemy, boss, mine, terrain, facility, and elite trait; interrupt/committed/autonomous legend; KR/EN; focus; reduced motion |
 | Settings Ship Status | active-run filled state, no-run empty state, long upgrade list, KR/EN, keyboard focus, 200% text scaling |
 | Stage Report | two-column desktop, tabbed `960x540`, zero/one/eight-plus damage sources, long enemy/attack labels, focus and carried-input guard |
 | failure | partial stage report plus last hit and one/two/three-source recap in KR/EN |
@@ -1431,6 +1638,15 @@ No screenshot with debug-only labels may be used as final evidence.
   reservation for the next eligible unit. If the stage fixture cannot place
   every reserved elite before the boss quota, fail the authored encounter
   validator; never add post-quota enemies or hold the boss gate at runtime.
+- If an attack lacks `commit_mode`, fail its catalog validator and make it
+  non-runnable; never infer interruptibility from `startup`, role, name, or
+  telegraph color.
+- If a Breach collision resolves after the active transition on the same
+  physics tick, treat the attack as committed. Never destroy an active payload
+  or rewind to startup.
+- If a signature interrupt occurs while autonomous or already committed child
+  payloads are live, clear only startup-owned descriptors registered to that
+  signature. Never clear by boss ID, phase name, or broad effect type.
 - If a boss combo cannot prove base-speed escape, increase warning or gap
   geometry before reducing damage. Dash never becomes mandatory.
 - If a practice request contains an unknown stage, field, phase, or pattern,
@@ -1479,11 +1695,13 @@ No screenshot with debug-only labels may be used as final evidence.
 | A larger field feels empty | Player-relative `1000–1800 px` ordinary arrival ring, off-camera fallback, unchanged active cap, and two long-distance gate pairs |
 | A common wall rail visually shrinks corridors | Lock `320 px` minimum corridor and align the `24 px` floor-side edge with player-center collision |
 | Friendly-fire mines solve encounters automatically | Enemy proximity cannot arm them; player approach or damage creates the event |
-| Breach Shot becomes mandatory DPS | Baseline has no area damage; unprotected sustained-fire fixture must beat intentional re-priming; exposure is short/nonstacking and never interrupts behavior |
+| Breach Shot becomes mandatory DPS | Baseline has no area damage; unprotected sustained-fire fixture must beat intentional re-priming; an interrupting hit cannot also expose |
+| Breach Shot stun-locks ordinary enemies | Only metadata-approved startup is cancellable; one first-contact token, `0.45 s` recovery, full post-attack cooldown, and no generic `stun` write |
+| Breach Shot trivializes bosses | Exactly one signature per boss cycle, no adjacent signature, forced committed next pattern, autonomous layers survive, and natural-recovery exposure is mutually exclusive with interrupt |
 | Repair or Overdrive becomes a camping bunker | Both have large cover/spawn clearance; Repair pauses on hit and exhausts at `24` hull; Overdrive is exposed to converging enemies |
 | Transit Gate trivializes pressure | `0.35 s` dwell, `10.0 s` pair cooldown, no enemy transport, no required connectivity, and only `0.45 s` arrival protection |
 | A mine detonates before the player can understand it | Activation is `70/60 px` outside damage, fuse is continuous, and placement proves a base-speed escape route |
-| Boss layering becomes unreadable | One low-reaction layer plus one direct response; exact warnings and base-speed escape proof |
+| Boss layering becomes unreadable | One low-reaction autonomous layer plus one direct response; exact warnings, commit-mode shapes, and base-speed escape proof |
 | New roles reintroduce lag | Bounded live caps, local queries, existing active cap, MultiMesh presentation |
 | Elite variants multiply content or projectiles | One trait field on an existing unit, three shared geometry overlays, fixed stage replacements, two-live cap, no added projectile |
 | Practice diverges from production bosses | It owns session/reset only and imports the exact production runtime, stores, telegraphs, renderer, and HUD; no duplicate pattern executor |
@@ -1500,6 +1718,9 @@ No screenshot with debug-only labels may be used as final evidence.
       boss-pattern, guidebook, and performance contracts.
 - [x] Audited map-size effects on pursuit/minimap, current boss capture reuse,
       elite insertion boundaries, and the separate difficulty/meta decision.
+- [x] Audited ordinary and boss startup/active/recovery transitions, generic
+      stun behavior, damage resolution order, and telegraph metadata; locked
+      the conditional interrupt matrix before revising this plan.
 - [x] Reviewed current primary external design and engine references.
 - [x] Locked one implementation direction with no deferred design choice.
 - [ ] Milestone 0 implementation baseline and canonical-spec update.
@@ -1514,12 +1735,13 @@ No screenshot with debug-only labels may be used as final evidence.
 ## Open Questions
 
 None. The map count, `7200x4320` dimensions, persistence, wall contract, six
-field-feature families, Breach role, mine safety geometry, enemy/elite roster,
-boss behavior, debug practice isolation, Ship Status, telemetry attribution,
-report flow, localization, performance envelope, and validation gates are
-locked. A run-risk contract remains outside this execution plan in the separate
-difficulty/meta evidence study. A change to any in-plan contract is change
-control from the owner, not an implementation-time choice.
+field-feature families, first-contact Breach token, ordinary interrupt table,
+one-signature boss rule, committed/autonomous boss pressure, mine safety
+geometry, enemy/elite roster, debug practice isolation, Ship Status, telemetry
+attribution, report flow, localization, performance envelope, and validation
+gates are locked. A run-risk contract remains outside this execution plan in
+the separate difficulty/meta evidence study. A change to any in-plan contract
+is change control from the owner, not an implementation-time choice.
 
 ## Decision Notes
 
@@ -1530,8 +1752,8 @@ control from the owner, not an implementation-time choice.
   it from compiled collision geometry.
 - 2026-07-24: Rebuild, rather than restore, the old current and storm mechanics
   so terrain affects both sides and never changes projectile flight.
-- 2026-07-24: Give the one-second shot structure, mine, protected-enemy, and
-  non-stopping boss-exposure jobs; keep held fire.
+- 2026-07-24: Give the one-second shot structure, mine, protected-enemy,
+  startup-interrupt, and natural boss-recovery exposure jobs; keep held fire.
 - 2026-07-24: Define Breach as a precision priority-opening tool earned during
   natural firing downtime. Baseline Breach does not clear groups; existing
   cards own faster, stronger, or area-conversion branches.
@@ -1539,8 +1761,13 @@ control from the owner, not an implementation-time choice.
   existing active-cap envelope.
 - 2026-07-24: Reuse combat meshes for guidebook visuals instead of creating
   separate image assets.
-- 2026-07-24: Bosses never enter a paused/staggered state from Breach Shot;
-  exposure changes received damage only.
+- 2026-07-24: Replace generic and accumulated Breach stagger with one direct,
+  metadata-approved pre-commit cancellation. Ordinary and boss interrupts last
+  `0.45 s`, grant no exposure, and cannot affect committed or autonomous
+  payloads.
+- 2026-07-24: Give each boss exactly one interruptible signature per
+  nonadjacent four-pattern cycle. Force a committed next pattern after success
+  and run space-control systems independently from boss-body attack phases.
 - 2026-07-24: Remove Relay Scavenger and every experience-stealing/denial
   behavior without replacement.
 - 2026-07-24: Make mine activation visibly larger than its damaging radius and
@@ -1570,13 +1797,15 @@ control from the owner, not an implementation-time choice.
       declared viewports and states.
 - [ ] Focused, full-suite, production Web, performance, and lifecycle gates
       pass without relaxing the existing envelope.
-- [ ] No motif path, boss hard-stagger transition, experience-denial role,
+- [ ] No motif path, accumulated boss hard-stagger transition, generic
+      Breach-to-`stun` write, experience-denial role,
       duplicate build calculation, display-string damage grouping, stale
       localization, or temporary instrumentation remains.
 - [ ] No `5600x3400`/`16x10` field assumption, full-grid Dictionary pursuit
       rebuild, duplicated boss-practice attack path, reward-capable practice
-      path, role-by-trait elite mesh duplication, or retired
-      `opening_breach_multiplier` stat remains.
+      path, role-by-trait elite mesh duplication, phase/name/color-inferred
+      interruptibility, multi-contact Breach token, projectile `opening` field,
+      or retired `opening_breach_multiplier` stat remains.
 - [ ] This active ExecPlan is deleted after its durable decisions and final
       evidence are incorporated into the canonical specs, as required by
       `.agents/PLANS.md`.
