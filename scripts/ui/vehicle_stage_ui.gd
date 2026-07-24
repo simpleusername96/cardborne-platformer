@@ -14,6 +14,7 @@ signal resume_requested
 signal restart_requested
 signal garage_requested
 signal replay_requested
+signal stage_report_continued
 
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const VEHICLE_THEME = preload("res://art/ui/production/vehicle_stage_theme.tres")
@@ -22,6 +23,7 @@ const ThreatRadar = preload("res://scripts/ui/vehicle_threat_radar.gd")
 const StatusOrbit = preload("res://scripts/ui/vehicle_status_orbit.gd")
 const SettingsPanel = preload("res://scripts/ui/vehicle_settings_panel.gd")
 const GuidebookPanel = preload("res://scripts/ui/vehicle_guidebook_panel.gd")
+const StageReportPanel = preload("res://scripts/ui/vehicle_stage_report_panel.gd")
 const InputProfile = preload("res://scripts/input/vehicle_input_profile.gd")
 const RunDifficulty = preload("res://scripts/vehicle/vehicle_run_difficulty.gd")
 const StageCatalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
@@ -381,6 +383,8 @@ var _upgrade_center: CenterContainer
 var _upgrade_panel: VehicleUpgradeChoicePanel
 var _pause_center: CenterContainer
 var _result_center: CenterContainer
+var _report_center: CenterContainer
+var _report_panel: VehicleStageReportPanel
 var _garage_center: CenterContainer
 var _settings_center: CenterContainer
 var _settings_panel: VehicleSettingsPanel
@@ -431,6 +435,7 @@ func _ready() -> void:
 		_build_boss_practice()
 	_build_upgrade()
 	_build_pause()
+	_build_stage_report()
 	_build_result()
 	_build_garage()
 	_build_settings()
@@ -904,6 +909,18 @@ func _build_result() -> void:
 	box.add_child(replay)
 
 
+func _build_stage_report() -> void:
+	_report_center = CenterContainer.new()
+	_report_center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_root.add_child(_report_center)
+	var panel := _modal_panel(Vector2(900.0, 500.0))
+	_report_center.add_child(panel)
+	_report_panel = StageReportPanel.new()
+	_report_panel.continued.connect(func() -> void: stage_report_continued.emit())
+	_report_panel.garage_requested.connect(func() -> void: garage_requested.emit())
+	panel.add_child(_report_panel)
+
+
 func _build_garage() -> void:
 	_garage_center = CenterContainer.new()
 	_garage_center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -1110,6 +1127,14 @@ func show_gameplay() -> void:
 	_hud.visible = true
 
 
+func show_stage_report(snapshot: Dictionary) -> void:
+	hide_all_modals()
+	_dim.visible = true
+	_report_center.visible = true
+	_hud.visible = false
+	_report_panel.open(snapshot)
+
+
 func _show_settings(return_surface: String) -> void:
 	_settings_return_surface = return_surface
 	hide_all_modals()
@@ -1159,6 +1184,7 @@ func hide_all_modals() -> void:
 	_upgrade_center.visible = false
 	_pause_center.visible = false
 	_result_center.visible = false
+	_report_center.visible = false
 	_garage_center.visible = false
 	_settings_center.visible = false
 	_guide_center.visible = false

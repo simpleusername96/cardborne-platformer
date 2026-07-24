@@ -1789,6 +1789,19 @@ localized effective stats, secondary families, upgrade levels, maxima, and
 effects. Focused telemetry, snapshot, guidebook, UI/audio, and integrated-run
 validators pass; report presentation consumes these snapshots in Milestone 6.
 
+2026-07-24 Milestone 6 progress: stage completion now freezes telemetry and
+opens a guarded `STAGE_REPORT` before advancing, while defeat opens a partial
+`FAILURE_REPORT` with the last accepted hit and three-source incoming recap.
+Added responsive two-column/tabbed report presentation, exact
+largest-remainder `100.0%` damage shares, bounded seven-plus-Other source rows,
+base-archetype defeat rows, and secondary elite counts. Expanded the
+append-only guide catalog with new roles, all terrain/facility families, elite
+traits, shared combat-mesh previews, nonleaking locked snapshots, counterplay
+rows, and camera-visible discovery. Focused report, telemetry, snapshot,
+guidebook, UI/audio, localization, and integrated-run validators pass; final
+multi-resolution rendering and complete release validation remain in
+Milestone 7.
+
 ## Open Questions
 
 None. The map count, `7200x4320` dimensions, persistence, wall contract, six

@@ -48,12 +48,15 @@ const TerrainRuntime = preload("res://scripts/vehicle/vehicle_terrain_runtime.gd
 const DamageSourceCatalog = preload("res://scripts/combat/vehicle_damage_source_catalog.gd")
 const StageTelemetry = preload("res://scripts/combat/vehicle_stage_telemetry.gd")
 const BuildSnapshotBuilder = preload("res://scripts/cards/vehicle_build_snapshot_builder.gd")
+const StageReportBuilder = preload("res://scripts/combat/vehicle_stage_report_builder.gd")
 
 enum RunMode {
 	DEPLOYMENT,
 	PLAYING,
 	UPGRADE,
 	PAUSED,
+	STAGE_REPORT,
+	FAILURE_REPORT,
 	RESULT,
 	GARAGE,
 }
@@ -236,6 +239,7 @@ var _performance_finishing := false
 var _performance_enemy_sections: Dictionary = {}
 var _performance_detail_sample_active := false
 var _practice_request: Dictionary = {}
+var _pending_stage_report: Dictionary = {}
 
 
 func _ready() -> void:
@@ -471,6 +475,7 @@ func _build_ui() -> void:
 	_ui.restart_requested.connect(_restart_stage)
 	_ui.garage_requested.connect(_show_garage)
 	_ui.replay_requested.connect(_replay_stage)
+	_ui.stage_report_continued.connect(_continue_stage_report)
 
 
 func _build_audio() -> void:
@@ -612,6 +617,7 @@ func _reset_run(
 	current_reward_source = &""
 	current_reward_optional = false
 	completed_group_rewards.clear()
+	_pending_stage_report.clear()
 	if not preserve_upgrades:
 		run_time = 0.0
 	if not preserve_upgrades:
@@ -949,7 +955,11 @@ func _pause_run() -> void:
 		return
 	mode_before_pause = mode
 	mode = RunMode.PAUSED
-	_ui.update_hud({"guidebook": _guidebook_snapshot()})
+	var build_snapshot := _build_snapshot()
+	_ui.update_hud({
+		"build_snapshot":build_snapshot,
+		"guidebook":_guidebook_snapshot(build_snapshot),
+	})
 	_ui.show_pause()
 	_acquire_tree_pause()
 	_set_mouse_for_mode()
@@ -3316,16 +3326,21 @@ func _damage_source_family(source: String, enemy_source: bool) -> StringName:
 
 
 func _handle_player_defeat() -> void:
-	mode = RunMode.GARAGE
 	_clear_projectiles()
 	denied_zones.clear()
 	_ui.notify(tr("NOTIFY_HULL_DISABLED"), 3.0, Rules.CORAL)
-	_ui.show_garage({
-		"selected_primary": selected_primary,
-		"clear_count": persistent_clear_count,
-		"relay_module_unlocked": persistent_relay_module,
-		"field_module_unlocked": persistent_field_module,
-	})
+	if boss_practice.active:
+		mode = RunMode.GARAGE
+		_ui.show_garage({})
+		_set_mouse_for_mode()
+		return
+	mode = RunMode.FAILURE_REPORT
+	_pending_stage_report = StageReportBuilder.build(
+		stage_telemetry.freeze_stage(),
+		_stage_report_context(false),
+		true
+	)
+	_ui.show_stage_report(_pending_stage_report)
 	_set_mouse_for_mode()
 
 
@@ -3858,24 +3873,49 @@ func _finalize_stage_completion() -> void:
 	stage_complete = true
 	pending_stage_completion = false
 	stage_flow.record_rewards_complete()
-	var has_next_stage := current_stage_index < StageCatalog.STAGE_IDS.size() - 1
-	if has_next_stage:
-		_advance_stage()
-		return
-	else:
-		persistent_clear_count += 1
-		persistent_relay_module = true
-		_save_persistence()
 	_clear_projectiles()
 	denied_zones.clear()
+	mode = RunMode.STAGE_REPORT
+	_pending_stage_report = StageReportBuilder.build(
+		stage_telemetry.freeze_stage(),
+		_stage_report_context(
+			current_stage_index < StageCatalog.STAGE_IDS.size() - 1
+		)
+	)
+	_ui.show_stage_report(_pending_stage_report)
+	_play_sound(&"card", 0.72)
+	_set_mouse_for_mode()
+
+
+func _stage_report_context(has_next_stage: bool) -> Dictionary:
+	var profile := StageCatalog.profile(current_stage_id)
+	return {
+		"number":int(profile["number"]),
+		"title_key":String(profile["title_key"]),
+		"has_next_stage":has_next_stage,
+	}
+
+
+func _continue_stage_report() -> void:
+	if mode != RunMode.STAGE_REPORT:
+		return
+	if bool(_pending_stage_report.get("has_next_stage", false)):
+		_advance_stage()
+		return
+	persistent_clear_count += 1
+	persistent_relay_module = true
+	_save_persistence()
+	_show_final_result()
+
+
+func _show_final_result() -> void:
 	mode = RunMode.RESULT
 	var profile := StageCatalog.profile(current_stage_id)
-	var next_profile := StageCatalog.profile(StageCatalog.STAGE_IDS[current_stage_index + 1]) if has_next_stage else {}
 	_ui.show_result({
 		"stage_number": int(profile["number"]),
 		"stage_title_key": String(profile["title_key"]),
-		"has_next_stage": has_next_stage,
-		"next_stage_key": String(next_profile.get("title_key", "")),
+		"has_next_stage": false,
+		"next_stage_key": "",
 		"time": _format_time(run_time),
 		"health_ratio": player_health / _player_max_health(),
 		"upgrade": selected_upgrade_title_key,
@@ -4290,12 +4330,31 @@ func _update_threat_contacts(delta: float) -> void:
 	var viewport_size := get_viewport_rect().size
 	var safe_viewport := Rect2(Vector2(90.0, 90.0), viewport_size - Vector2(180.0, 220.0))
 	var canvas_transform := get_canvas_transform()
+	for feature in terrain_runtime.features:
+		var feature_position := (
+			feature.rect.get_center()
+			if feature.rect.has_area()
+			else feature.pos
+		)
+		if safe_viewport.has_point(canvas_transform * feature_position):
+			var terrain_entry := StringName({
+				&"flow_channel":&"object_flow_channel",
+				&"arc_surge":&"object_arc_surge",
+				&"breakable_bulkhead":&"object_breakable_bulkhead",
+				&"transit_gate":&"object_transit_gate",
+				&"repair_basin":&"object_repair_basin",
+				&"overdrive_field":&"object_overdrive_field",
+			}.get(feature.kind, &""))
+			if terrain_entry != &"":
+				_discover_guide(terrain_entry)
 	for enemy in enemies:
 		if not bool(enemy.alive) or not bool(enemy.active):
 			continue
 		var enemy_screen := canvas_transform * Vector2(enemy.pos)
 		if safe_viewport.has_point(enemy_screen):
 			_discover_guide(GuidebookCatalog.entry_id_for_enemy(enemy.archetype, enemy.role))
+			if enemy.elite_trait != &"":
+				_discover_guide(StringName("object_elite_%s" % String(enemy.elite_trait)))
 		var offset := Vector2(enemy.pos) - player_position
 		if offset.length_squared() > THREAT_SCAN_DISTANCE * THREAT_SCAN_DISTANCE:
 			continue

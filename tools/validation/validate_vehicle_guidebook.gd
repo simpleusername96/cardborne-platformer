@@ -21,14 +21,35 @@ func _run() -> void:
 	_expect(not store.discover(&"unknown_entry"), "unknown IDs are discarded")
 	_expect(Catalog.entry_id_for_enemy(&"spark_minelet", &"mine") == &"mobile_spark_minelet", "moving minelets stay in the mobile guide category")
 	_expect(Catalog.entry_id_for_enemy(&"mine", &"mine") == &"stationary_mine", "authored mines stay in the stationary guide category")
+	_expect(Catalog.valid_ids().has(&"mobile_bulkhead_guard"), "Bulkhead Guard has a stable guide entry")
+	_expect(Catalog.valid_ids().has(&"object_transit_gate"), "Transit Gate has a stable guide entry")
 	var locked := store.snapshot({"health":120.0})
 	var mobile: Array = locked["categories"][&"mobile"]
 	var hidden := mobile.filter(func(entry: Dictionary) -> bool: return bool(entry["locked"]))
 	_expect(hidden.all(func(entry: Dictionary) -> bool: return entry.keys().all(func(key): return key in ["id", "locked", "name", "description"]) and entry["name"] == "???" and entry["description"] == ""), "locked entries contain no hidden copy")
+	store.discover(&"stationary_mine")
+	store.discover(&"boss_stage_2")
+	store.discover(&"object_transit_gate")
+	var visual := store.snapshot({})
+	for category in [&"stationary", &"bosses", &"objects"]:
+		var unlocked: Array = visual["categories"][category].filter(
+			func(entry: Dictionary) -> bool: return not bool(entry["locked"])
+		)
+		var complete := true
+		for entry in unlocked:
+			complete = (
+				complete
+				and not Dictionary(entry.get("preview", {})).is_empty()
+				and not String(entry.get("counter_key", "")).is_empty()
+			)
+		_expect(
+			complete,
+			"%s unlocked entries expose preview and counterplay metadata" % category
+		)
 	var loaded := Store.new()
 	loaded.save_path = TEST_PATH
 	loaded.load_discovery()
-	_expect(loaded.known.has(&"mobile_chaser") and loaded.known.size() == 1, "discovery save round-trips sanitized IDs")
+	_expect(loaded.known.has(&"mobile_chaser") and loaded.known.size() == 4, "discovery save round-trips sanitized IDs")
 	var panel := GuidePanel.new()
 	get_root().add_child(panel)
 	var contract := panel.debug_contract()

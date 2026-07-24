@@ -5,6 +5,7 @@ signal close_requested
 
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const BuildSummaryPanel = preload("res://scripts/ui/vehicle_build_summary_panel.gd")
+const GuidebookPreview = preload("res://scripts/ui/vehicle_guidebook_preview.gd")
 
 var _snapshot: Dictionary = {}
 var _category_rail: VBoxContainer
@@ -12,6 +13,8 @@ var _entry_list: VBoxContainer
 var _detail_title: Label
 var _detail_body: Label
 var _build_summary: VehicleBuildSummaryPanel
+var _preview: VehicleGuidebookPreview
+var _counterplay: Label
 var _close_button: Button
 var _active_category: StringName = &"ship"
 
@@ -73,16 +76,26 @@ func _build() -> void:
 	_entry_list.add_theme_constant_override("separation", 6)
 	list_scroll.add_child(_entry_list)
 	content.add_child(VSeparator.new())
+	var detail_scroll := ScrollContainer.new()
+	detail_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	detail_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	detail_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	content.add_child(detail_scroll)
 	var detail := VBoxContainer.new()
 	detail.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	detail.add_theme_constant_override("separation", 12)
-	content.add_child(detail)
+	detail_scroll.add_child(detail)
 	_detail_title = _label("GUIDE_CURRENT_SHIP", 25, Art.INK)
 	detail.add_child(_detail_title)
+	_preview = GuidebookPreview.new()
+	detail.add_child(_preview)
 	_detail_body = _label("", 16, Art.INK)
 	_detail_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_detail_body.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	detail.add_child(_detail_body)
+	_counterplay = _label("", 14, Art.INK_MUTED)
+	_counterplay.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	detail.add_child(_counterplay)
 	_build_summary = BuildSummaryPanel.new()
 	_build_summary.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	detail.add_child(_build_summary)
@@ -122,17 +135,28 @@ func _show_entry(entry: Dictionary) -> void:
 		_detail_title.text = "???"
 		_detail_body.visible = true
 		_detail_body.text = ""
+		_counterplay.visible = false
+		_preview.show_preview({})
 		_build_summary.visible = false
 		return
 	_detail_title.text = tr(String(entry.get("name_key", "GUIDE_CURRENT_SHIP")))
 	if entry.has("ship"):
 		_detail_body.visible = false
+		_counterplay.visible = false
+		_preview.show_preview({})
 		_build_summary.visible = true
 		_build_summary.set_snapshot(Dictionary(entry["ship"]))
 	else:
 		_detail_body.visible = true
+		_counterplay.visible = true
 		_build_summary.visible = false
 		_detail_body.text = tr(String(entry.get("description_key", "")))
+		_preview.show_preview(Dictionary(entry.get("preview", {})))
+		_counterplay.text = "%s  %s\n%s  %s\n%s  %s" % [
+			tr("GUIDE_ROW_MOVEMENT"), tr(String(entry.get("movement_key", "GUIDE_ROW_MOVEMENT_DEFAULT"))),
+			tr("GUIDE_ROW_ATTACK"), tr(String(entry.get("attack_key", "GUIDE_ROW_ATTACK_DEFAULT"))),
+			tr("GUIDE_ROW_COUNTER"), tr(String(entry.get("counter_key", "GUIDE_ROW_COUNTER_DEFAULT"))),
+		]
 
 
 func _button(key_or_text: String) -> Button:
