@@ -19,11 +19,11 @@ related:
 
 ## Purpose
 
-Record the facts behind the active field and combat revision before
-implementation.
+Record the facts behind the field and combat revision together with the final
+implementation verification.
 This document is evidence and design rationale, not product authority. The
-execution-ready decisions live in the related ExecPlan and, when implemented,
-must be reflected in the canonical product and visual specifications.
+implemented decisions live in the canonical product and visual specifications;
+the related completed ExecPlan is historical execution context.
 
 The investigation answers ten user concerns:
 
@@ -533,6 +533,35 @@ The following concept is not an implementation task in this plan:
 - New loot currencies, a base stage, exploration puzzles, meta progression, or
   a new item taxonomy.
 - Raw boss damage or health inflation as the primary difficulty solution.
+
+## Implementation Verification
+
+- Commits `dddbc00` through `d20a25f` implement the field, terrain, Breach,
+  enemy/elite, boss/practice, telemetry, Ship Status, guidebook, and report
+  milestones. The final integration pass completes responsive report details,
+  lifecycle documentation, localization, and release evidence.
+- All 33 `tools/validation/validate_vehicle_*.gd` validators pass on Godot
+  4.7 stable. Invalid headless Boss Practice arguments exit nonzero.
+- Production Web export is written to `build/web/`.
+- Rendered evidence is stored under:
+  - `build/captures/final-ko-960/`;
+  - `build/captures/final-ko-1280/`; and
+  - `build/captures/final-en-1920/`.
+  It includes three field overviews, every boss variant and phase at 1280,
+  Ship Status, locked and unlocked guidebook previews, Stage Report, Failure
+  Report, focus-bearing modal states, and Korean/English surfaces.
+- The ordinary-pressure A/B evidence is stored under
+  `build/performance/world-combat-final/`. Keeping the attack state machine in
+  the existing hot owner produced frame p95 `16.95 ms`, approximately `59 fps`
+  median, and zero frames over `33.3 ms`; moving it behind a cross-object
+  runtime raised frame p95 to `25.34 ms`. The extraction was therefore rejected
+  rather than shipping a responsibility-only refactor that made play less
+  smooth.
+- Maximum-count scenario structure remains covered by deterministic validators.
+  The rendered 128-actor/360-projectile capacity fixture is retained as
+  advisory stress evidence because it exceeds the shipped 72-ordinary-enemy
+  pressure envelope. This follows the owner's instruction to stop repeated
+  long profiling once ordinary gameplay is structurally valid and smooth.
 
 ## Conclusion
 

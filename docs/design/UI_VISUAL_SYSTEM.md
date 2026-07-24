@@ -132,7 +132,15 @@ rules remain owned by the product specification.
   or accidental carried click applies a card.
 - The guidebook is reachable through `?`, uses five stable categories, clearly
   separates discovered content from `???`, and shows current ship statistics
-  without exposing future entries.
+  without exposing future entries. Discovered actors reuse the combat mesh;
+  locked entries use one neutral muted silhouette.
+- Settings places Ship Status first and renders dense read-only values inside a
+  vertical scroll region. Its no-run state contains no empty group headings or
+  stale values.
+- Stage and failure reports are full modal focus layers with one bottom primary
+  action. At 1280 pixels and wider, defeats and damage use two columns; at 960
+  pixels, keyboard-accessible tabs expose one list at a time. Percentage,
+  amount, and count columns remain readable in both Korean and English.
 
 ### Implementation boundaries
 
@@ -153,7 +161,7 @@ rules remain owned by the product specification.
 - Korean and English expose identical reachable controls and complete copy.
 - Walkable, blocker, void, player/reward, danger, support, and boss semantics are
   distinguishable without relying on fine detail.
-- The player, current objective, opening-shot state, active secondaries, and boss
+- The player, current objective, Breach Shot state, active secondaries, and boss
   warning remain locatable at maximum supported enemy pressure.
 - Accepted damage is readable at the ship and hull bar in both motion modes;
   status arcs and stack text remain legible without adding per-enemy nodes.

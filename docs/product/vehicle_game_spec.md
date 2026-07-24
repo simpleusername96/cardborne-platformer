@@ -48,8 +48,9 @@ five-stage run.
 | EMP | Left Shift |
 | Pause and settings | Escape |
 
-- Primary fire repeats while held. Releasing it for one second primes a stronger
-  opening shot with extra structure damage and temporary pierce.
+- Primary fire repeats while held. Releasing it for one second primes Breach
+  Shot: a larger first-contact projectile with extra structure damage,
+  temporary pierce, and explicit interrupt/counterplay rules.
 - Dash is a fast defensive repositioning action. EMP is the sole explicit skill
   button. Secondary weapons operate automatically.
 - Primary fire, dash, and EMP are rebindable. Conflicting bindings are rejected.
@@ -163,6 +164,29 @@ second time; no individual stat is described as exactly 15% lower.
 - The explored minimap uses a 20x12 grid. Unvisited cells remain concealed; the
   player, discovered pickups, boss warning, and active boss are marked.
 
+### Functional terrain, facilities, and Breach Shot
+
+- Every field authors one Flow Channel, one Arc Surge Strip, two paired Transit
+  Gate routes, one Repair Basin, one Overdrive Field, and persistent Breakable
+  Bulkheads. Their large visible footprints match the simulation exactly.
+- Flow moves the player and mobile enemies without changing projectiles or
+  pushing an actor through a wall. Arc Surge uses a continuous warning, hits
+  each actor at most once per active window, can damage either team, and keeps
+  stable damage attribution.
+- Transit Gates require a dwell, preserve aim, clear velocity, share a
+  ten-second pair cooldown, and move only the player. Repair Basin restores at
+  most 24 hull per stage and pauses after accepted damage. Overdrive applies
+  1.20x player damage only while the ship center remains inside it.
+- A full Breach Shot destroys a full-health Breakable Bulkhead, arms a mine
+  with a short fuse, breaks a Bulkhead Guard plate, or cancels an ordinary
+  enemy attack only during a metadata-approved startup. Cancellation enters a
+  fixed 0.45-second interrupted recovery; Breach never creates idle stun-lock.
+- Each boss exposes exactly one nonadjacent signature startup per fight to a
+  Breach cancellation. Autonomous systems and already committed attacks remain
+  active. Breach otherwise creates a short damage-exposure opportunity during
+  a valid natural recovery and never freezes boss locomotion or its pattern
+  state.
+
 ### Encounter and stage flow
 
 1. Each stage begins at the shared center with no mobile damaging enemy active.
@@ -217,10 +241,12 @@ second time; no individual stat is described as exactly 15% lower.
 Four stationary threats are added per stage. Ordinary hostile projectiles stop
 at 96 so 24 of the global 120-shot cap remain reserved for boss attacks. Enemy
 health, damage, and movement rise only on a shallow stage curve; boss behavior
-changes through authored patterns rather than unchecked stat inflation. Every
-damaging boss pattern has a visible startup, active window, and recovery. Routine
-hits cannot interrupt an attack; stagger can build only during recovery and lasts
-exactly 0.75 seconds before the boss resumes its pattern loop.
+changes through authored patterns rather than unchecked stat inflation. Each
+boss uses a distinct three-phase direct-pattern sequence plus independently
+scheduled autonomous pressure. Every damaging pattern has a visible startup,
+active window, and recovery. Routine hits never interrupt or stop the boss;
+only the one metadata-approved signature startup can be cancelled by a ready
+Breach Shot.
 
 ### Items, experience, and upgrades
 
@@ -268,8 +294,18 @@ exactly 0.75 seconds before the boss resumes its pattern loop.
 - Pause and settings expose a `?` entry to the guidebook. The guidebook has ship,
   mobile enemies, stationary enemies, bosses, and objects categories.
 - The current ship page shows derived stats and equipped secondaries. Encountered
-  entries persist across runs; unseen entries show only `???` and never leak
-  their name or description.
+  entries persist across runs and reuse the same combat meshes for visual
+  identification. Unseen entries show only `???` and one neutral silhouette;
+  they never leak a name, color, description, or counterplay.
+- Settings places read-only Ship Status first. During a paused run it shows
+  effective movement, defense, primary/Breach, EMP, secondary, level, and
+  acquired-upgrade values from one frozen gameplay-owned snapshot. Outside a
+  run it shows one localized empty state.
+- Confirming a boss reward opens a frozen Stage Report before progression. It
+  lists actual defeat counts and effective outgoing damage by stable source,
+  with percentages that total exactly 100.0%. A failed attempt opens the same
+  report in failure mode with the last hit and the three largest incoming
+  sources before Garage.
 - Deployment, upgrade, pause/settings, guidebook, result, and garage are modal
   focus layers. They block carried input and provide deterministic keyboard focus.
   Deployment includes three clearly selected, keyboard-focusable difficulty
