@@ -57,7 +57,10 @@ func record_defeat(archetype_id: StringName, elite_trait: StringName = &"") -> v
 	_add_bounded(stage_defeats, archetype_id, 1, MAX_ARCHETYPES)
 	_add_bounded(run_defeats, archetype_id, 1, MAX_ARCHETYPES)
 	if elite_trait != &"":
-		_add_bounded(stage_elites, elite_trait, 1, MAX_ARCHETYPES)
+		var elite_key := StringName(
+			"%s:%s" % [String(archetype_id), String(elite_trait)]
+		)
+		_add_bounded(stage_elites, elite_key, 1, MAX_ARCHETYPES)
 
 
 func freeze_stage() -> Dictionary:

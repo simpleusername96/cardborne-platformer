@@ -12,14 +12,23 @@ static func build(
 	stage_data: Dictionary,
 	failure: bool = false
 ) -> Dictionary:
+	var defeat_rows := _defeat_rows(Dictionary(telemetry.get("defeats", {})))
+	var outgoing_values := Dictionary(telemetry.get("outgoing", {}))
+	_attach_elite_counts(
+		defeat_rows,
+		Dictionary(telemetry.get("elites", {}))
+	)
 	return {
 		"failure":failure,
 		"stage_number":int(stage_data.get("number", 1)),
 		"stage_title_key":String(stage_data.get("title_key", "")),
 		"has_next_stage":bool(stage_data.get("has_next_stage", false)),
-		"defeats":_defeat_rows(Dictionary(telemetry.get("defeats", {}))),
-		"elites":_elite_rows(Dictionary(telemetry.get("elites", {}))),
-		"outgoing":_damage_rows(Dictionary(telemetry.get("outgoing", {})), false, 8),
+		"clear_time":maxf(0.0, float(stage_data.get("clear_time", 0.0))),
+		"hull":maxf(0.0, float(stage_data.get("hull", 0.0))),
+		"max_hull":maxf(0.0, float(stage_data.get("max_hull", 0.0))),
+		"defeats":defeat_rows,
+		"outgoing":_damage_rows(outgoing_values, false, 8),
+		"total_outgoing":_sum_damage(outgoing_values),
 		"incoming":_damage_rows(Dictionary(telemetry.get("incoming", {})), true, 3),
 		"last_incoming_source":StringName(telemetry.get("last_incoming_source", &"")),
 		"last_incoming_damage":float(telemetry.get("last_incoming_damage", 0.0)),
@@ -45,20 +54,22 @@ static func _defeat_rows(values: Dictionary) -> Array[Dictionary]:
 	return rows
 
 
-static func _elite_rows(values: Dictionary) -> Array[Dictionary]:
-	var rows: Array[Dictionary] = []
-	for trait_value in values:
-		var trait_id := StringName(trait_value)
-		rows.append({
-			"id":trait_id,
-			"name_key":"ELITE_%s" % String(trait_id).to_upper(),
-			"count":int(values[trait_id]),
-		})
-	rows.sort_custom(
-		func(a: Dictionary, b: Dictionary) -> bool:
-			return String(a["id"]) < String(b["id"])
-	)
-	return rows
+static func _attach_elite_counts(
+	rows: Array[Dictionary],
+	values: Dictionary
+) -> void:
+	var counts := {}
+	for composite_value in values:
+		var composite := String(composite_value)
+		var separator := composite.find(":")
+		if separator <= 0:
+			continue
+		var archetype := StringName(composite.left(separator))
+		counts[archetype] = int(counts.get(archetype, 0)) + int(
+			values[composite_value]
+		)
+	for row in rows:
+		row["elite_count"] = int(counts.get(StringName(row["id"]), 0))
 
 
 static func _damage_rows(
@@ -96,6 +107,13 @@ static func _damage_rows(
 		rows = retained
 	_assign_percentages(rows)
 	return rows
+
+
+static func _sum_damage(values: Dictionary) -> float:
+	var total := 0.0
+	for damage in values.values():
+		total += maxf(0.0, float(damage))
+	return total
 
 
 static func _assign_percentages(rows: Array[Dictionary]) -> void:

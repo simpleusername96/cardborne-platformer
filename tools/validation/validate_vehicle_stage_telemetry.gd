@@ -17,7 +17,10 @@ func _init() -> void:
 	var frozen := telemetry.freeze_stage()
 	_expect(is_equal_approx(float(frozen["outgoing"][&"primary"]), 24.5), "applied outgoing damage accumulates exactly")
 	_expect(int(frozen["defeats"][&"needle_drone"]) == 1, "base archetype defeat is counted")
-	_expect(int(frozen["elites"][&"armored"]) == 1, "elite trait remains a secondary count")
+	_expect(
+		int(frozen["elites"][&"needle_drone:armored"]) == 1,
+		"elite trait remains nested under its base archetype"
+	)
 	_expect(StringName(frozen["last_incoming_source"]) == &"projectile", "last incoming source is retained")
 	telemetry.record_outgoing(&"primary", 99.0)
 	_expect(is_equal_approx(float(telemetry.stage_snapshot()["outgoing"][&"primary"]), 24.5), "frozen stage snapshot is immutable")

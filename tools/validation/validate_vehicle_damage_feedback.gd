@@ -271,16 +271,16 @@ func _check_attack_telegraphs(stage: Node) -> void:
 
 	AttackTelegraphs.refresh_boss(
 		boss,
-		"pylon_overload",
+		"overload_pylons",
 		resolve_path,
 		resolve_charge_path
 	)
-	_expect(boss.attack_telegraphs.size() == 4, "pylon startup exposes its area and three aimed projectiles")
+	_expect(boss.attack_telegraphs.size() == 4, "autonomous pylon warning exposes its area and three aimed projectiles")
 	_expect(
 		boss.attack_telegraphs.all(
 			func(warning): return StringName(warning["affinity"]) == AttackContract.ARC
 		),
-		"pylon overload components use the arc visual family"
+		"autonomous pylon components use the arc visual family"
 	)
 
 	var beam = stage.call("_make_enemy", {

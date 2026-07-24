@@ -194,6 +194,7 @@ var boss_phase_two_announced := false
 var boss_arrival_position := Vector2.ZERO
 var stage_complete := false
 var run_time := 0.0
+var stage_started_at := 0.0
 var run_index := 0
 var current_stage_index := 0
 var current_stage_id: StringName = StageCatalog.STAGE_IDS[0]
@@ -239,6 +240,7 @@ var _performance_finishing := false
 var _performance_enemy_sections: Dictionary = {}
 var _performance_detail_sample_active := false
 var _practice_request: Dictionary = {}
+var _practice_request_invalid := false
 var _pending_stage_report: Dictionary = {}
 
 
@@ -249,6 +251,9 @@ func _ready() -> void:
 	_parse_capture_arguments()
 	_performance_request = _parse_performance_request()
 	_practice_request = _parse_boss_practice_request()
+	if _practice_request_invalid and DisplayServer.get_name() == "headless":
+		get_tree().quit(2)
+		return
 	if (
 		_capture_mode
 		or not _performance_request.is_empty()
@@ -620,6 +625,7 @@ func _reset_run(
 	_pending_stage_report.clear()
 	if not preserve_upgrades:
 		run_time = 0.0
+	stage_started_at = run_time
 	if not preserve_upgrades:
 		visited_cells.clear()
 	discovered_markers.clear()
@@ -1768,7 +1774,9 @@ func _update_enemies(delta: float) -> void:
 			)
 			if role == &"rammer" and not SpecialistRuntime.rammer_can_commit(enemy, enemies):
 				can_commit = false
-		var started := _update_ordinary_enemy(enemy, delta, can_commit, decision_due, motion_delta)
+		var started := _update_ordinary_enemy(
+			enemy, delta, can_commit, decision_due, motion_delta
+		)
 		if started:
 			committed_points += enemy.threat_cost
 			match enemy.threat_kind:
@@ -2302,7 +2310,6 @@ func _update_enemy_active(enemy: EnemyState, delta: float) -> void:
 		_:
 			enemy.phase = &"recovery"
 			enemy.phase_time = 0.6
-
 
 func _move_enemy_role(enemy: EnemyState, delta: float, recovering: bool, decision_due: bool = true) -> void:
 	var role := enemy.role
@@ -3893,6 +3900,9 @@ func _stage_report_context(has_next_stage: bool) -> Dictionary:
 		"number":int(profile["number"]),
 		"title_key":String(profile["title_key"]),
 		"has_next_stage":has_next_stage,
+		"clear_time":maxf(0.0, run_time - stage_started_at),
+		"hull":player_health,
+		"max_hull":_player_max_health(),
 	}
 
 
@@ -4619,6 +4629,7 @@ func _parse_boss_practice_request() -> Dictionary:
 	var validator := BossPracticeSession.new()
 	var errors := validator.configure(values)
 	if not errors.is_empty():
+		_practice_request_invalid = true
 		for message in errors:
 			push_error(message)
 		return {}
@@ -4802,10 +4813,34 @@ func _run_capture_sequence() -> void:
 	_ui.debug_modal_contract("guidebook")
 	await _settle_capture()
 	_save_capture("01c-guidebook.png")
+	var all_known := GuidebookCatalog.valid_ids()
+	_ui.debug_guide_entry(
+		GuidebookCatalog.snapshot(all_known, _build_snapshot()),
+		&"bosses",
+		&"boss_stage_2"
+	)
+	await _settle_capture()
+	_save_capture("01e-guidebook-boss-preview.png")
+	_ui.debug_guide_entry(
+		GuidebookCatalog.snapshot({}, _build_snapshot()),
+		&"mobile",
+		&"mobile_scrap_drone"
+	)
+	await _settle_capture()
+	_save_capture("01f-guidebook-locked.png")
 
 	_capture_prepare_stage(0)
 	await _settle_capture()
 	_save_capture("02-safe-arrival.png")
+	var active_build := _build_snapshot()
+	_ui.update_hud({
+		"build_snapshot":active_build,
+		"guidebook":_guidebook_snapshot(active_build),
+	})
+	_ui.debug_active_settings_contract()
+	await _settle_capture()
+	_save_capture("02c-ship-status-active.png")
+	_ui.show_gameplay()
 	_update_encounter(5.1)
 	await _settle_capture()
 	_save_capture("02b-first-contact-cue.png")
@@ -4827,6 +4862,46 @@ func _run_capture_sequence() -> void:
 	await _settle_capture()
 	_save_capture("90-pause.png")
 
+	var report_fixture := StageTelemetry.new()
+	report_fixture.record_outgoing(&"primary", 418.0)
+	report_fixture.record_outgoing(&"passive_seeker", 126.0)
+	report_fixture.record_outgoing(&"arc_surge", 44.0)
+	report_fixture.record_incoming(&"projectile", 32.0)
+	report_fixture.record_incoming(&"contact", 18.0)
+	report_fixture.record_defeat(&"scrap_drone")
+	report_fixture.record_defeat(&"scrap_drone")
+	report_fixture.record_defeat(&"needle_drone", &"armored")
+	_ui.show_stage_report(StageReportBuilder.build(
+		report_fixture.freeze_stage(),
+		{
+			"number":1,
+			"title_key":"STAGE_DROWNED_RUINS_1",
+			"has_next_stage":true,
+			"clear_time":74.8,
+			"hull":88.0,
+			"max_hull":120.0,
+		}
+	))
+	await get_tree().create_timer(0.36).timeout
+	await _settle_capture()
+	_save_capture("91-stage-report.png")
+
+	_ui.show_stage_report(StageReportBuilder.build(
+		report_fixture.stage_snapshot(),
+		{
+			"number":1,
+			"title_key":"STAGE_DROWNED_RUINS_1",
+			"has_next_stage":false,
+			"clear_time":74.8,
+			"hull":0.0,
+			"max_hull":120.0,
+		},
+		true
+	))
+	await get_tree().create_timer(0.36).timeout
+	await _settle_capture()
+	_save_capture("92-failure-report.png")
+
 	mode = RunMode.RESULT
 	_ui.show_result({
 		"stage_number": 1, "stage_title_key": "STAGE_DROWNED_RUINS_1",
@@ -4835,7 +4910,7 @@ func _run_capture_sequence() -> void:
 		"primary_hits": 42, "dash_uses": 11, "installations": 5,
 	})
 	await _settle_capture()
-	_save_capture("91-stage-transition.png")
+	_save_capture("93-final-result.png")
 
 	_ui.show_garage({
 		"selected_primary": selected_primary,
@@ -4845,7 +4920,7 @@ func _run_capture_sequence() -> void:
 		"build_summary": _run_build_summary(),
 	})
 	await _settle_capture()
-	_save_capture("92-garage.png")
+	_save_capture("94-garage.png")
 	print("VEHICLE_STAGE_CAPTURE_COMPLETE dir=%s" % _capture_directory)
 	get_tree().quit(0)
 
@@ -4968,15 +5043,23 @@ func _capture_boss_preview() -> void:
 
 
 func _capture_stage_map_evidence() -> void:
-	for stage_index in StageCatalog.STAGE_IDS.size():
-		_capture_prepare_stage(stage_index, true)
+	var original_override := _field_id_override
+	for field_id in VehicleFieldRegistry.FIELD_IDS:
+		_field_id_override = field_id
+		field_layout = null
+		_reset_run(false, false, true)
+		current_stage_index = 0
+		current_stage_id = StageCatalog.STAGE_IDS[0]
+		if is_instance_valid(_backdrop):
+			_backdrop.configure(current_stage_id, field_layout)
 		mode = RunMode.PAUSED
 		var bounds := Rules.world_rect(current_stage_id)
 		player_position = bounds.get_center()
 		_fit_camera_to_stage(bounds)
 		await _settle_capture()
-		_save_capture("10-map-%02d-%s.png" % [stage_index + 1, String(current_stage_id).replace("_", "-")])
+		_save_capture("10-field-%s.png" % String(field_id).replace("_", "-"))
 	_camera.zoom = Vector2.ONE
+	_field_id_override = original_override
 
 
 func _capture_damage_feedback_evidence() -> void:

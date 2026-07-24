@@ -136,7 +136,7 @@ func _show_entry(entry: Dictionary) -> void:
 		_detail_body.visible = true
 		_detail_body.text = ""
 		_counterplay.visible = false
-		_preview.show_preview({})
+		_preview.show_preview({"kind":&"locked"})
 		_build_summary.visible = false
 		return
 	_detail_title.text = tr(String(entry.get("name_key", "GUIDE_CURRENT_SHIP")))
@@ -183,3 +183,15 @@ func _clear(container: Node) -> void:
 
 func debug_contract() -> Dictionary:
 	return {"categories":5, "command_height":44, "minimum_size":custom_minimum_size, "hidden_copy_removed":true}
+
+
+func debug_select_entry(category: StringName, entry_id: StringName) -> bool:
+	_select_category(category)
+	var entries: Array = Dictionary(_snapshot.get("categories", {})).get(
+		category, []
+	)
+	for entry in entries:
+		if StringName(entry.get("id", &"")) == entry_id:
+			_show_entry(Dictionary(entry))
+			return true
+	return false

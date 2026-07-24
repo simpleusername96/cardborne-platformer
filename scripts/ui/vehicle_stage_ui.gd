@@ -223,7 +223,7 @@ class StageMinimap:
 			visited_lookup[Vector2i(cell_variant)] = true
 		var concealment_color := Color(Art.COBALT_VOID, 0.82)
 		for row in rows:
-			# Merge adjacent concealed cells so the 16x10 exploration mask costs
+			# Merge adjacent concealed cells so the 20x12 exploration mask costs
 			# one draw per row run instead of one draw per undiscovered cell.
 			var concealed_run_start := -1
 			for column in range(cols + 1):
@@ -1326,6 +1326,21 @@ func debug_gameplay_settings_contract() -> Dictionary:
 	_show_settings("deployment")
 	_settings_panel.debug_show_gameplay_page()
 	return _settings_panel.debug_contract()
+
+
+func debug_active_settings_contract() -> Dictionary:
+	_show_settings("pause")
+	return _settings_panel.debug_contract()
+
+
+func debug_guide_entry(
+	snapshot: Dictionary,
+	category: StringName,
+	entry_id: StringName
+) -> bool:
+	_latest_guidebook_snapshot = snapshot.duplicate(true)
+	_show_guidebook("settings")
+	return _guide_panel.debug_select_entry(category, entry_id)
 
 
 func debug_select_upgrade(index: int) -> void:

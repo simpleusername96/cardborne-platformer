@@ -52,6 +52,7 @@ func open() -> void:
 	visible = true
 	_cancel_capture(false)
 	refresh_from_store()
+	_tabs.current_tab = 0
 	_build_summary.set_snapshot(_build_snapshot)
 	if is_instance_valid(_close_button):
 		_close_button.grab_focus()

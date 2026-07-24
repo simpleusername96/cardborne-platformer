@@ -10,6 +10,8 @@ var _empty_label: Label
 var _stat_grid: GridContainer
 var _secondary_box: VBoxContainer
 var _upgrade_box: VBoxContainer
+var _secondary_title: Label
+var _upgrade_title: Label
 
 
 func _ready() -> void:
@@ -23,11 +25,13 @@ func _ready() -> void:
 	_stat_grid.add_theme_constant_override("h_separation", 20)
 	_stat_grid.add_theme_constant_override("v_separation", 8)
 	add_child(_stat_grid)
-	add_child(_section("SHIP_STATUS_SECONDARIES"))
+	_secondary_title = _section("SHIP_STATUS_SECONDARIES")
+	add_child(_secondary_title)
 	_secondary_box = VBoxContainer.new()
 	_secondary_box.add_theme_constant_override("separation", 5)
 	add_child(_secondary_box)
-	add_child(_section("SHIP_STATUS_UPGRADES"))
+	_upgrade_title = _section("SHIP_STATUS_UPGRADES")
+	add_child(_upgrade_title)
 	_upgrade_box = VBoxContainer.new()
 	_upgrade_box.add_theme_constant_override("separation", 7)
 	add_child(_upgrade_box)
@@ -43,6 +47,8 @@ func set_snapshot(snapshot: Dictionary) -> void:
 	_stat_grid.visible = active
 	_secondary_box.visible = active
 	_upgrade_box.visible = active
+	_secondary_title.visible = active
+	_upgrade_title.visible = active
 	_clear(_stat_grid)
 	_clear(_secondary_box)
 	_clear(_upgrade_box)
@@ -63,7 +69,9 @@ func set_snapshot(snapshot: Dictionary) -> void:
 			var row := Dictionary(secondary)
 			var text := "%s  ·  %s" % [
 				tr(String(row.get("name_key", ""))),
-				tr("SHIP_STATUS_LEVEL") % int(row.get("level", 1)),
+				tr("SHIP_STATUS_LEVEL").replace(
+					"%d", str(int(row.get("level", 1)))
+				),
 			]
 			var label := _label("", 15, Art.INK)
 			label.text = text
@@ -77,10 +85,11 @@ func set_snapshot(snapshot: Dictionary) -> void:
 			var label := _label("", 15, Art.INK)
 			label.text = "%s  ·  %s\n%s" % [
 				tr(String(row.get("title_key", ""))),
-				tr("SHIP_STATUS_LEVEL_MAX") % [
-					int(row.get("level", 0)),
-					int(row.get("max_level", 1)),
-				],
+				tr("SHIP_STATUS_LEVEL_MAX").replace(
+					"%level%", str(int(row.get("level", 0)))
+				).replace(
+					"%max%", str(int(row.get("max_level", 1)))
+				),
 				tr(String(row.get("description_key", ""))),
 			]
 			label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

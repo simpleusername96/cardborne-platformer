@@ -26,6 +26,12 @@ func show_preview(preview: Dictionary) -> void:
 	var kind := StringName(preview.get("kind", &"enemy"))
 	var preview_id := StringName(preview.get("id", &"chaser"))
 	match kind:
+		&"locked":
+			_add_instance(
+				Visuals.enemy_mesh(&"chaser"),
+				Art.INK_MUTED,
+				Vector2(44.0, 44.0)
+			)
 		&"boss":
 			_add_instance(
 				Visuals.boss_mesh(preview_id),

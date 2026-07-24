@@ -15,20 +15,39 @@ func _init() -> void:
 		},
 		"incoming":{&"projectile":20.0, &"contact":5.0},
 		"defeats":{&"scrap_drone":12, &"needle_drone":4},
-		"elites":{&"armored":1},
+		"elites":{&"needle_drone:armored":1},
 		"last_incoming_source":&"projectile",
 		"last_incoming_damage":7.0,
 	}
 	var report := Builder.build(
 		telemetry,
-		{"number":2, "title_key":"STAGE_2_TITLE", "has_next_stage":true}
+		{
+			"number":2,
+			"title_key":"STAGE_2_TITLE",
+			"has_next_stage":true,
+			"clear_time":83.0,
+			"hull":72.0,
+			"max_hull":120.0,
+		}
 	)
 	var percentage_total := 0
 	for row in report["outgoing"]:
 		percentage_total += int(row["percentage_tenths"])
 	_expect(percentage_total == 1000, "largest-remainder percentages sum to exactly 100.0 percent")
+	_expect(
+		is_equal_approx(float(report["total_outgoing"]), 67.0),
+		"report exposes exact total applied outgoing damage"
+	)
 	_expect(report["defeats"].size() == 2, "defeat rows preserve base archetypes")
-	_expect(report["elites"].size() == 1, "elite count remains secondary")
+	_expect(
+		int(report["defeats"][1]["elite_count"]) == 1,
+		"elite count is nested under the defeated base archetype"
+	)
+	_expect(
+		is_equal_approx(float(report["clear_time"]), 83.0)
+			and is_equal_approx(float(report["hull"]), 72.0),
+		"report freezes clear time and remaining hull"
+	)
 	_expect(report["incoming"].size() == 2, "incoming recap is bounded and present")
 	var crowded := {}
 	for index in 12:

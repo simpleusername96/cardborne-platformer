@@ -6,12 +6,14 @@ signal garage_requested
 
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const DamageSources = preload("res://scripts/combat/vehicle_damage_source_catalog.gd")
+const CombatMeshIcon = preload("res://scripts/ui/vehicle_combat_mesh_icon.gd")
 
 const INPUT_GUARD_SECONDS := 0.35
 
 var _snapshot: Dictionary = {}
 var _title: Label
 var _kicker: Label
+var _summary: Label
 var _content: HBoxContainer
 var _tabs: TabContainer
 var _defeat_box: VBoxContainer
@@ -44,9 +46,18 @@ func open(snapshot: Dictionary) -> void:
 	).replace(
 		"%s", tr(String(_snapshot.get("stage_title_key", "")))
 	)
+	var seconds := maxi(0, roundi(float(_snapshot.get("clear_time", 0.0))))
+	_summary.text = tr("REPORT_SUMMARY").replace(
+		"%time%", "%02d:%02d" % [floori(float(seconds) / 60.0), seconds % 60]
+	).replace(
+		"%hull%", str(roundi(float(_snapshot.get("hull", 0.0))))
+	).replace(
+		"%max%", str(roundi(float(_snapshot.get("max_hull", 0.0))))
+	)
 	_rebuild()
 	_tabs.set_tab_title(0, tr("REPORT_DEFEATS"))
 	_tabs.set_tab_title(1, tr("REPORT_OUTGOING"))
+	_apply_responsive_layout()
 	visible = true
 	_continue_button.grab_focus()
 
@@ -61,9 +72,13 @@ func _process(delta: float) -> void:
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED and is_instance_valid(_tabs):
-		var compact := get_viewport_rect().size.x <= 1000.0
-		_tabs.visible = compact
-		_content.visible = not compact
+		_apply_responsive_layout()
+
+
+func _apply_responsive_layout() -> void:
+	var compact := get_window().size.x <= 1000
+	_tabs.visible = compact
+	_content.visible = not compact
 
 
 func _build() -> void:
@@ -71,6 +86,8 @@ func _build() -> void:
 	add_child(_kicker)
 	_title = _label("", 28, Art.INK)
 	add_child(_title)
+	_summary = _label("", 14, Art.INK_MUTED)
+	add_child(_summary)
 	_content = HBoxContainer.new()
 	_content.add_theme_constant_override("separation", 18)
 	_content.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -132,14 +149,25 @@ func _fill_defeats(box: VBoxContainer) -> void:
 		box.add_child(_label("REPORT_NONE", 15, Art.INK_MUTED))
 	for row in rows:
 		var data := Dictionary(row)
+		var row_box := HBoxContainer.new()
+		row_box.add_theme_constant_override("separation", 8)
+		row_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var icon := CombatMeshIcon.new()
+		icon.set_enemy(StringName(data["id"]))
+		row_box.add_child(icon)
 		var label := _label("", 15, Art.INK)
+		label.autowrap_mode = TextServer.AUTOWRAP_OFF
+		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		label.text = "%s  ×%d" % [tr(String(data["name_key"])), int(data["count"])]
-		box.add_child(label)
-	for row in _snapshot.get("elites", []):
-		var data := Dictionary(row)
-		var label := _label("", 14, Art.BOSS_MAGENTA)
-		label.text = "◇ %s  ×%d" % [tr(String(data["name_key"])), int(data["count"])]
-		box.add_child(label)
+		var elite_count := int(data.get("elite_count", 0))
+		if elite_count > 0:
+			label.text += tr("REPORT_ELITE_COUNT").replace(
+				"%count%", str(elite_count)
+			)
+			label.add_theme_color_override("font_color", Art.BOSS_MAGENTA)
+		label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		row_box.add_child(label)
+		box.add_child(row_box)
 
 
 func _fill_damage(box: VBoxContainer) -> void:
@@ -149,6 +177,13 @@ func _fill_damage(box: VBoxContainer) -> void:
 		box.add_child(_label("REPORT_ZERO_DAMAGE", 15, Art.INK_MUTED))
 	for row in rows:
 		box.add_child(_damage_row(Dictionary(row), true))
+	var total := float(_snapshot.get("total_outgoing", 0.0))
+	if total > 0.0:
+		var total_label := _label("", 16, Art.MUSTARD)
+		total_label.text = tr("REPORT_TOTAL_DAMAGE").replace(
+			"%damage%", "%.1f" % total
+		)
+		box.add_child(total_label)
 
 
 func _damage_row(row: Dictionary, show_percentage: bool) -> Label:
@@ -164,6 +199,7 @@ func _damage_row(row: Dictionary, show_percentage: bool) -> Label:
 func _scroll_column(title_key: String) -> VBoxContainer:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 6)
+	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	box.set_meta("heading_key", title_key)
 	box.add_child(_section(title_key))
 	return box

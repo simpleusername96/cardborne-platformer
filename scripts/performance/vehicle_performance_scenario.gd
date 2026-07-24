@@ -21,7 +21,9 @@ const MOBILE_ARCHETYPES: Array[StringName] = [
 	&"drone_carrier",
 ]
 const STATIONARY_ARCHETYPES: Array[StringName] = [
-	&"turret", &"mine", &"interceptor_tower", &"beam_sentinel",
+	# One-shot mines retire themselves during long samples, so the fixed-count
+	# capacity fixture uses non-retiring installations.
+	&"turret", &"generator", &"interceptor_tower", &"beam_sentinel",
 ]
 
 var scenario_id: StringName
