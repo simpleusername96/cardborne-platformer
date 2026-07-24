@@ -22,6 +22,10 @@ const CORAL_DARK := Color("#7B1733")
 const MUSTARD := Color("#D79A17")
 const MUSTARD_DARK := Color("#8A5B10")
 const BOSS_MAGENTA := Color("#962754")
+const ATTACK_THERMAL := Color("#E45F36")
+const ATTACK_TOXIN := Color("#769A32")
+const ATTACK_CRYO := Color("#3E91B7")
+const ATTACK_ARC := Color("#9B59B6")
 const INK := Color("#153B3A")
 const INK_MUTED := Color("#4E6D67")
 const DIM := Color(0.02, 0.12, 0.28, 0.82)
@@ -44,6 +48,26 @@ static func enemy_visual_radius(role: StringName) -> float:
 		&"stage_boss":
 			return STAGE_BOSS_RADIUS
 	return ORDINARY_ENEMY_RADIUS
+
+
+static func attack_color(affinity: StringName, friendly: bool = false) -> Color:
+	var color := CORAL
+	match affinity:
+		&"thermal":
+			color = ATTACK_THERMAL
+		&"toxin":
+			color = ATTACK_TOXIN
+		&"cryo":
+			color = ATTACK_CRYO
+		&"arc":
+			color = ATTACK_ARC
+		&"hybrid":
+			color = IVORY_BRIGHT
+		&"support":
+			color = MINT
+		_:
+			color = MUSTARD if friendly else CORAL
+	return color.lerp(IVORY_BRIGHT, 0.16) if friendly and affinity != &"kinetic" else color
 
 
 static func stepped_rect(rect: Rect2, cut: float = 34.0) -> PackedVector2Array:
@@ -113,6 +137,9 @@ static func validate_contract() -> PackedStringArray:
 	for role in ["walkable", "blocked", "void", "player_reward", "threat", "recovery", "boss"]:
 		if not roles.has(role):
 			errors.append("missing semantic color role: %s" % role)
+	for affinity in [&"kinetic", &"thermal", &"toxin", &"cryo", &"arc", &"hybrid"]:
+		if attack_color(affinity).a < 1.0:
+			errors.append("attack affinity color must remain opaque: %s" % affinity)
 	if PLAYER_VISUAL_RADIUS * 2.0 < 72.0:
 		errors.append("player visual diameter is below the 72 px minimum")
 	if ORDINARY_ENEMY_RADIUS * 2.0 < 64.0:

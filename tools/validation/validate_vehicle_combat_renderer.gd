@@ -1,6 +1,7 @@
 extends SceneTree
 
 const Renderer = preload("res://scripts/presentation/vehicle_combat_renderer.gd")
+const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd")
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 const ProjectileState = preload("res://scripts/combat/vehicle_projectile_state.gd")
 const ExperienceShard = preload("res://scripts/progression/vehicle_experience_shard.gd")
@@ -17,7 +18,17 @@ func _run() -> void:
 	root.add_child(renderer)
 	await process_frame
 	var snapshot: Dictionary = renderer.debug_snapshot()
-	_expect(int(snapshot["batches"]) <= 40, "combat presentation stays within the retained batch ceiling")
+	_expect(int(snapshot["batches"]) <= 50, "combat presentation stays within the retained batch ceiling")
+	for team in [&"player", &"enemy"]:
+		for affinity in AttackContract.AFFINITIES:
+			if affinity == AttackContract.SUPPORT:
+				continue
+			_expect(
+				renderer.get_node_or_null(
+					"Projectile_trail_%s_%s" % [String(team), String(affinity)]
+				) != null,
+				"%s %s projectile trail batch exists" % [team, affinity]
+			)
 	var enemy := EnemyState.new()
 	enemy.id = "renderer_enemy"
 	enemy.role = &"chaser"
@@ -39,18 +50,29 @@ func _run() -> void:
 	}
 	enemy.committed_dir = Vector2.RIGHT
 	enemy.committed_target = Vector2(500.0, 300.0)
+	enemy.attack_telegraphs = [{
+		"shape":&"corridor",
+		"from":Vector2(300.0, 300.0),
+		"to":Vector2(500.0, 300.0),
+		"half_width":31.0,
+		"damage":14.0,
+		"affinity":AttackContract.KINETIC,
+		"active_width":0.0,
+	}]
 	var enemies: Array[EnemyState] = [enemy]
 	var projectile_direction := Vector2(3.0, 4.0).normalized()
 	var projectile := ProjectileState.new()
 	projectile.configure({
 		"pos":Vector2(330.0,300.0), "velocity":projectile_direction * 200.0,
 		"radius":5.0, "team":&"player", "color":Color.WHITE,
+		"affinity":AttackContract.TOXIN,
 	}, &"player", 1)
 	var projectiles: Array[ProjectileState] = [projectile]
 	var hostile_projectile := ProjectileState.new()
 	hostile_projectile.configure({
 		"pos":Vector2(390.0,300.0), "velocity":Vector2.LEFT * 180.0,
 		"radius":5.0, "team":&"enemy", "color":Color.WHITE,
+		"affinity":AttackContract.ARC,
 	}, &"enemy", 2)
 	var hostile_projectiles: Array[ProjectileState] = [hostile_projectile]
 	var no_projectiles: Array[ProjectileState] = []
@@ -75,6 +97,23 @@ func _run() -> void:
 	)
 	snapshot = renderer.debug_snapshot()
 	_expect(int(snapshot["visible_instances"]) >= 10, "renderer publishes bodies and semantic overlays as retained instances")
+	var corridor_caps := renderer.get_node("Overlay_disk") as MultiMeshInstance2D
+	var corridor_boundaries := renderer.get_node("Overlay_danger_ring") as MultiMeshInstance2D
+	var corridor_cap_buffer := corridor_caps.multimesh.buffer
+	_expect(
+		corridor_caps.multimesh.visible_instance_count == 2
+			and corridor_boundaries.multimesh.visible_instance_count == 2,
+		"corridor warning uses two endpoint disks and rings for an exact capsule footprint"
+	)
+	_expect(
+		Vector2(corridor_cap_buffer[3], corridor_cap_buffer[7]).is_equal_approx(
+			Vector2(300.0, 300.0)
+		)
+			and Vector2(corridor_cap_buffer[15], corridor_cap_buffer[19]).is_equal_approx(
+				Vector2(500.0, 300.0)
+			),
+		"corridor warning caps stay centered on the simulated segment endpoints"
+	)
 	var enemy_batch := renderer.get_node("Enemy_chaser") as MultiMeshInstance2D
 	var enemy_buffer := enemy_batch.multimesh.buffer
 	_expect(
@@ -86,7 +125,7 @@ func _run() -> void:
 		"batched buffer preserves enemy visual scale"
 	)
 	var projectile_head := renderer.get_node("Projectile_head_player") as MultiMeshInstance2D
-	var projectile_trail := renderer.get_node("Projectile_trail_player") as MultiMeshInstance2D
+	var projectile_trail := renderer.get_node("Projectile_trail_player_toxin") as MultiMeshInstance2D
 	var head_buffer := projectile_head.multimesh.buffer
 	var trail_buffer := projectile_trail.multimesh.buffer
 	_expect(
@@ -94,14 +133,14 @@ func _run() -> void:
 		"projectile head remains centered on collision state"
 	)
 	_expect(
-		Vector2(head_buffer[0], head_buffer[4]).is_equal_approx(projectile_direction * 7.0),
-		"projectile head preserves direction and the minimum seven-pixel visual radius"
+		Vector2(head_buffer[0], head_buffer[4]).is_equal_approx(projectile_direction * 5.0),
+		"projectile head radius exactly matches its collision radius"
 	)
 	_expect(
 		Vector2(trail_buffer[3], trail_buffer[7]).is_equal_approx(
-			Vector2(330.0, 300.0) - projectile_direction * 16.5
+			Vector2(330.0, 300.0) - projectile_direction * 18.5
 		),
-		"projectile trail preserves the original 40 px back and 7 px front span"
+		"player affinity trail stays attached behind the five-pixel head"
 	)
 	_expect(
 		Vector2(trail_buffer[0], trail_buffer[4]).is_equal_approx(projectile_direction * 47.0),
@@ -109,9 +148,9 @@ func _run() -> void:
 	)
 	_expect(
 		Vector2(trail_buffer[1], trail_buffer[5]).is_equal_approx(
-			projectile_direction.rotated(PI * 0.5) * 10.5
+			projectile_direction.rotated(PI * 0.5) * 7.5
 		),
-		"projectile trail width remains perpendicular and follows the visual radius"
+		"player affinity trail width follows the collision radius"
 	)
 	_expect(
 		is_equal_approx(trail_buffer[11], 0.5),
@@ -121,12 +160,12 @@ func _run() -> void:
 	_expect(status_batch.multimesh.instance_count == 384, "one retained status arc batch reserves exactly 128 by three instances")
 	_expect(status_batch.multimesh.visible_instance_count == 3, "three simultaneous elements render as three large retained arcs")
 	var hostile_head := renderer.get_node("Projectile_head_enemy") as MultiMeshInstance2D
-	var hostile_trail := renderer.get_node("Projectile_trail_enemy") as MultiMeshInstance2D
+	var hostile_trail := renderer.get_node("Projectile_trail_enemy_arc") as MultiMeshInstance2D
 	var hostile_head_buffer := hostile_head.multimesh.buffer
 	var hostile_trail_buffer := hostile_trail.multimesh.buffer
 	_expect(
-		Vector2(hostile_head_buffer[0], hostile_head_buffer[4]).is_equal_approx(Vector2.LEFT * 6.0),
-		"ordinary hostile projectile renders with a six-pixel readable head"
+		Vector2(hostile_head_buffer[0], hostile_head_buffer[4]).is_equal_approx(Vector2.LEFT * 5.0),
+		"hostile projectile head radius exactly matches its collision radius"
 	)
 	_expect(
 		Vector2(hostile_trail_buffer[0], hostile_trail_buffer[4]).is_equal_approx(Vector2.LEFT * 36.0),
@@ -134,15 +173,65 @@ func _run() -> void:
 	)
 	_expect(
 		Vector2(hostile_trail_buffer[3], hostile_trail_buffer[7]).is_equal_approx(
-			Vector2(390.0, 300.0) - Vector2.LEFT * 12.0
+			Vector2(390.0, 300.0) - Vector2.LEFT * 13.0
 		),
-		"hostile projectile trail remains attached behind its six-pixel head"
+		"hostile affinity trail remains attached behind its five-pixel head"
 	)
 	_expect(
 		Vector2(hostile_trail_buffer[1], hostile_trail_buffer[5]).is_equal_approx(
-			Vector2.LEFT.rotated(PI * 0.5) * 7.5
+			Vector2.LEFT.rotated(PI * 0.5) * 6.25
 		),
 		"hostile projectile trail width follows the reduced collision family"
+	)
+	var offscreen_enemy := EnemyState.new()
+	offscreen_enemy.id = "offscreen_attacker"
+	offscreen_enemy.role = &"controller"
+	offscreen_enemy.archetype = &"controller"
+	offscreen_enemy.pos = Vector2(1800.0, 300.0)
+	offscreen_enemy.alive = true
+	offscreen_enemy.active = true
+	offscreen_enemy.phase = &"startup"
+	offscreen_enemy.attack_telegraphs = [{
+		"shape":&"area",
+		"center":Vector2(640.0, 360.0),
+		"radius":175.0,
+		"damage":24.0,
+		"affinity":AttackContract.THERMAL,
+	}]
+	renderer.sync(
+		[offscreen_enemy], no_projectiles, no_projectiles, [], [],
+		Rect2(0,0,1280,720), Vector2.ZERO, 0.0, true
+	)
+	var offscreen_enemy_batch := renderer.get_node("Enemy_controller") as MultiMeshInstance2D
+	var area_disk := renderer.get_node("Overlay_disk") as MultiMeshInstance2D
+	var area_ring := renderer.get_node("Overlay_danger_ring") as MultiMeshInstance2D
+	_expect(
+		offscreen_enemy_batch.multimesh.visible_instance_count == 0,
+		"off-screen attacker body remains culled"
+	)
+	_expect(
+		area_disk.multimesh.visible_instance_count == 1
+			and area_ring.multimesh.visible_instance_count >= 2,
+		"an on-screen danger footprint renders independently of its off-screen owner"
+	)
+	offscreen_enemy.phase = &"active"
+	offscreen_enemy.attack_telegraphs = [{
+		"shape":&"corridor",
+		"from":Vector2(-120.0, 360.0),
+		"to":Vector2(900.0, 360.0),
+		"half_width":58.0,
+		"damage":28.0,
+		"affinity":AttackContract.ARC,
+		"active_width":54.0,
+	}]
+	renderer.sync(
+		[offscreen_enemy], no_projectiles, no_projectiles, [], [],
+		Rect2(0,0,1280,720), Vector2.ZERO, 0.0, true
+	)
+	var beam_batch := renderer.get_node("Overlay_beam") as MultiMeshInstance2D
+	_expect(
+		beam_batch.multimesh.visible_instance_count >= 5,
+		"active off-screen beam keeps its exact danger boundary and beam body visible"
 	)
 	renderer.sync([], no_projectiles, no_projectiles, [], [], Rect2(0,0,1280,720), Vector2.ZERO, 0.0, false)
 	_expect(int(renderer.debug_snapshot()["visible_instances"]) == 0, "inactive presentation hides all retained instances")

@@ -239,7 +239,7 @@ func _threshold_result(result: Dictionary) -> Dictionary:
 			or _metric_or(physics, "p99", INF) <= 8.0
 		),
 		"draw_calls_p95": _metric_or(draw_stats, "p95", INF) <= 200.0,
-		"combat_batches": int(renderer.get("batches", 999)) <= 40,
+		"combat_batches": int(renderer.get("batches", 999)) <= 50,
 		"lifecycle_soak_duration": lifecycle_soak_complete,
 		"lifecycle_memory_growth": lifecycle_memory_within_limit,
 		"scenario_counts": bool(validation.get("valid", false)),
@@ -261,6 +261,7 @@ func _threshold_result(result: Dictionary) -> Dictionary:
 			"capacity_simulation_p95_ms": 6.0 if capacity_scenario else null,
 			"capacity_simulation_p99_ms": 8.0 if capacity_scenario else null,
 			"draw_calls_p95": 200.0,
+			"combat_batches": 50,
 			"lifecycle_sample_seconds": 600.0 if lifecycle_scenario else null,
 			"lifecycle_memory_growth_bytes": 8.0 * 1024.0 * 1024.0 if lifecycle_scenario else null,
 		},

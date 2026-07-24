@@ -61,7 +61,7 @@ could not establish smooth play.
 | Experience | 192 preallocated typed shards with bounded reuse |
 | Dynamic queries | Reused `35x22` uniform grid at 160 world pixels; exact geometry after broadphase |
 | Static queries | Cached immutable floor geometry, one run-scoped eight-cover broadphase, and a 320-pixel crate grid |
-| Presentation | 38 retained MultiMesh families with prebuilt flat-color meshes, fixed visible counts, and one three-family elemental-status batch |
+| Presentation | 49 retained MultiMesh families with prebuilt flat-color meshes, six shape-distinct projectile-affinity trails per team, one exact thin danger-ring family, fixed visible counts, and one three-family elemental-status batch |
 | HUD | Dirty channels; static minimap once, radar at 10 Hz, action state at 20 Hz, guidebook on invalidation |
 | Cadence | Critical combat at 60 Hz; ordinary decisions 10 Hz; non-committed motion 30/20 Hz; far projectiles, grid, XP, and repeated effects 30 Hz |
 | Measurement | Four deterministic scenarios, focus/visibility/scheduler qualification, complete frame distributions, subsystem samples, counts, draw calls, render timing, and memory |
@@ -103,6 +103,8 @@ values below are judged against the active plan instead.
 | `post-ui-current.json`, final focused current-pressure 120 FPS smoke, 2 s + 10 s | Foreground and scheduler-qualified, but intentionally too short for release authority | 76 enemies and 212 total projectiles; frame median/p95/p99 8.33/8.33/9.09 ms; physics p95 6.23 ms; presentation p95 2.97 ms; draw-call p95 165; every applicable threshold check passed |
 | `2026-07-24-clean/current-pressure-30s.json`, seeded-layout current pressure, 10 s + 30 s | Clean commit `1c7a2b0`; focused and scheduler-qualified implementation regression; non-authoritative only because it is shorter than 60 s | 76 enemies, 140/72 player/hostile shots, eight runtime covers; frame median/p95/p99 16.67/16.67/16.67 ms; physics p95/p99 4.98/6.06 ms; presentation p95/p99 1.76/2.33 ms; draw-call p95 161; no frame over 20 ms |
 | `2026-07-24-clean/boss-pressure-30s.json`, seeded-layout boss pressure, 10 s + 30 s | Clean commit `1c7a2b0`; focused and scheduler-qualified implementation regression; non-authoritative only because it is shorter than 60 s | 77 enemies including one boss, 140/100 player/hostile shots, eight runtime covers; frame median/p95/p99 16.67/16.67/16.67 ms; physics p95/p99 5.90/7.36 ms; presentation p95/p99 2.33/3.04 ms; draw-call p95 164; one 22.04 ms frame and no frame over 25 ms |
+| `2026-07-24-attack-telegraph-current.json`, affinity-telegraph current pressure, 2 s + 10 s | Dirty implementation smoke; continuously unfocused and intentionally too short for authority | Counts valid at 76 enemies and 140/72 shots; 49 retained batches; frame median/p95/p99 16.67/16.67/18.06 ms; physics p95 7.11 ms; presentation p95 2.99 ms; draw-call p95 162; no frame over 33.3 ms |
+| `2026-07-24-attack-telegraph-boss.json`, affinity-telegraph boss pressure, 2 s + 10 s | Dirty implementation smoke; continuously unfocused and intentionally too short for authority | Counts valid at 77 enemies including one boss and 140/100 shots; 49 retained batches; frame median/p95/p99 16.67/16.67/18.06 ms; physics p95 7.31 ms; presentation p95 3.17 ms; draw-call p95 165; no frame over 33.3 ms |
 
 The final short smoke meets the user's current development stop condition:
 ordinary maximum pressure remains functional and has enough measured headroom
@@ -118,6 +120,13 @@ had one 22.04 ms frame and none above 25 ms. Neither sample rejected an actor
 or projectile, and draw-call p95 stayed below 165. These results cover the new
 runtime cover broadphase and retained status batches, but their 30-second
 duration remains development evidence rather than release certification.
+
+The later attack-telegraph smoke confirms that six affinity trail families per
+team plus one exact danger-ring family raise the retained family count from 38
+to 49 without exceeding the revised ceiling of 50 or the 200 draw-call limit.
+Both short samples kept a 16.67 ms frame p95 with no frame above 33.3 ms. They
+were continuously unfocused and are recorded only as workload and regression
+diagnostics, not as evidence that replaces either clean 30-second sample.
 
 ## Recommendations
 

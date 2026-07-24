@@ -1,6 +1,7 @@
 extends SceneTree
 
 const Catalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
+const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd")
 const BossPatterns = preload("res://scripts/bosses/vehicle_boss_patterns.gd")
 const Director = preload("res://scripts/encounters/vehicle_encounter_director.gd")
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
@@ -132,17 +133,39 @@ func _check_boss_hit_recovery(run) -> void:
 	_expect(Vector2(boss["pos"]).distance_to(before_track_position) > 0.1, "boss moves while tracking during attack startup")
 	_expect(Vector2(boss["committed_dir"]).dot((run.player_position - Vector2(boss["pos"])).normalized()) > 0.0, "boss startup aim turns toward the moving player")
 	run.call("_boss_begin_active", boss)
+	var committed_origin := Vector2(boss["pos"])
 	run.call("_boss_update_active", boss, 0.01)
 	run.call("_boss_update_active", boss, BossPatterns.volley_interval("current_fan") + 0.01)
-	_expect(run.call("_count_hostile_projectiles") >= 10, "boss fires repeated predictive volleys instead of one inert shot")
+	_expect(run.call("_count_hostile_projectiles") >= 10, "boss fires repeated committed volleys instead of one inert shot")
+	_expect(
+		Vector2(boss["pos"]).is_equal_approx(committed_origin),
+		"damaging boss attacks do not drift away from their warned origin"
+	)
 
 	run.call("_clear_projectiles")
 	var ordinary_limit := Director.HOSTILE_PROJECTILE_CAP - Director.BOSS_PROJECTILE_RESERVE
 	for index in ordinary_limit + 8:
-		run.call("_spawn_hostile_projectile", boss["pos"], Vector2.LEFT, 1.0, 100.0, "validation_ordinary", Color.WHITE)
+		run.call(
+			"_spawn_hostile_projectile",
+			boss["pos"],
+			Vector2.LEFT,
+			1.0,
+			100.0,
+			"validation_ordinary",
+			AttackContract.KINETIC
+		)
 	_expect(run.call("_count_hostile_projectiles") == ordinary_limit, "ordinary hostile shots preserve the boss projectile reserve")
 	var before_boss_shot := int(run.call("_count_hostile_projectiles"))
-	run.call("_spawn_hostile_projectile", boss["pos"], Vector2.LEFT, 1.0, 100.0, "validation_boss", Color.WHITE, true)
+	run.call(
+		"_spawn_hostile_projectile",
+		boss["pos"],
+		Vector2.LEFT,
+		1.0,
+		100.0,
+		"validation_boss",
+		AttackContract.KINETIC,
+		true
+	)
 	_expect(run.call("_count_hostile_projectiles") == before_boss_shot + 1, "boss attacks still fire when ordinary projectile pressure is saturated")
 
 

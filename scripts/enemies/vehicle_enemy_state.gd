@@ -74,6 +74,7 @@ var pattern_tick := 0.0
 var pattern_volleys := 0
 var vulnerable := 0.0
 var lane_centers: Array = []
+var attack_telegraphs: Array[Dictionary] = []
 var decision_bucket := 0
 var statuses: Dictionary = {}
 var runtime_slot := -1
@@ -83,4 +84,5 @@ var passive_score := 0.0
 func reset_runtime_collections() -> void:
 	statuses.clear()
 	lane_centers.clear()
+	attack_telegraphs.clear()
 	passive_score = 0.0

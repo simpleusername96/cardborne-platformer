@@ -1,6 +1,10 @@
 extends SceneTree
 
 const StageScene = preload("res://scenes/run/VehicleRun.tscn")
+const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd")
+const AttackTelegraphs = preload("res://scripts/combat/vehicle_attack_telegraph_builder.gd")
+const BossPatterns = preload("res://scripts/bosses/vehicle_boss_patterns.gd")
+const SpecialistRuntime = preload("res://scripts/enemies/vehicle_enemy_specialist_runtime.gd")
 const RunDifficulty = preload("res://scripts/vehicle/vehicle_run_difficulty.gd")
 const EncounterDirector = preload("res://scripts/encounters/vehicle_encounter_director.gd")
 
@@ -78,7 +82,16 @@ func _run() -> void:
 
 	var projectile_store: RefCounted = stage.get("projectile_store")
 	projectile_store.call("clear")
-	stage.call("_spawn_hostile_projectile", Vector2.ZERO, Vector2.RIGHT, 4.0, 500.0, "validation ordinary", Color.WHITE, false)
+	stage.call(
+		"_spawn_hostile_projectile",
+		Vector2.ZERO,
+		Vector2.RIGHT,
+		4.0,
+		500.0,
+		"validation ordinary",
+		AttackContract.KINETIC,
+		false
+	)
 	var hostile_projectiles: Array = projectile_store.get("hostile_live")
 	_expect(hostile_projectiles.size() == 1, "ordinary hostile projectile enters the retained store")
 	if hostile_projectiles.size() == 1:
@@ -86,11 +99,37 @@ func _run() -> void:
 		_expect(is_equal_approx(Vector2(hostile_projectiles[0].velocity).length(), 410.0), "ordinary hostile projectile uses the reduced effective speed contract")
 		_expect(not bool(hostile_projectiles[0].wall_piercing), "ordinary hostile projectile cannot cross solid blockers")
 	projectile_store.call("clear")
-	stage.call("_spawn_hostile_projectile", Vector2.ZERO, Vector2.RIGHT, 4.0, 500.0, "validation boss", Color.WHITE, true)
+	stage.call(
+		"_spawn_hostile_projectile",
+		Vector2.ZERO,
+		Vector2.RIGHT,
+		12.0,
+		500.0,
+		"validation standard",
+		AttackContract.THERMAL,
+		true
+	)
 	hostile_projectiles = projectile_store.get("hostile_live")
 	if hostile_projectiles.size() == 1:
-		_expect(is_equal_approx(float(hostile_projectiles[0].radius), 6.0), "boss hostile projectile keeps a larger collision radius")
+		_expect(is_equal_approx(float(hostile_projectiles[0].radius), 6.0), "standard hostile damage uses a six-pixel collision radius")
 		_expect(is_equal_approx(Vector2(hostile_projectiles[0].velocity).length(), 410.0), "boss prediction and motion share the reduced speed contract")
+		_expect(hostile_projectiles[0].affinity == AttackContract.THERMAL, "hostile projectile retains its authored affinity")
+
+	projectile_store.call("clear")
+	stage.call(
+		"_spawn_hostile_projectile",
+		Vector2.ZERO,
+		Vector2.RIGHT,
+		20.0,
+		500.0,
+		"validation heavy",
+		AttackContract.ARC,
+		true
+	)
+	hostile_projectiles = projectile_store.get("hostile_live")
+	if hostile_projectiles.size() == 1:
+		_expect(is_equal_approx(float(hostile_projectiles[0].radius), 7.0), "heavy hostile damage uses a seven-pixel collision radius")
+		_expect(hostile_projectiles[0].affinity == AttackContract.ARC, "heavy projectile retains its distinct affinity")
 
 	projectile_store.call("clear")
 	stage.call("_spawn_player_projectile", Vector2.ZERO, Vector2.RIGHT, 4.0, 500.0, 0)
@@ -105,12 +144,22 @@ func _run() -> void:
 	var cover_from := cover.get_center() - Vector2(cover.size.x * 0.5 + 80.0, 0.0)
 	stage.set("player_position", cover.get_center() + Vector2(0.0, 250.0))
 	projectile_store.call("clear")
-	stage.call("_spawn_hostile_projectile", cover_from, Vector2.RIGHT, 4.0, 500.0, "validation cover", Color.WHITE)
+	stage.call("_spawn_hostile_projectile", cover_from, Vector2.RIGHT, 4.0, 500.0, "validation cover")
 	stage.call("_update_projectiles", 0.5)
 	_expect(projectile_store.call("hostile_count") == 0, "default hostile projectile stops at runtime cover")
 
 	projectile_store.call("clear")
-	stage.call("_spawn_hostile_projectile", cover_from, Vector2.RIGHT, 4.0, 500.0, "validation phase shot", Color.WHITE, false, true)
+	stage.call(
+		"_spawn_hostile_projectile",
+		cover_from,
+		Vector2.RIGHT,
+		4.0,
+		500.0,
+		"validation phase shot",
+		AttackContract.KINETIC,
+		false,
+		true
+	)
 	stage.call("_update_projectiles", 0.5)
 	_expect(projectile_store.call("hostile_count") == 1, "explicit wall-piercing projectile can cross runtime cover")
 
@@ -125,7 +174,7 @@ func _run() -> void:
 		"crate broadphase reports the live movement blocker"
 	)
 	projectile_store.call("clear")
-	stage.call("_spawn_hostile_projectile", crate_from, Vector2.RIGHT, 4.0, 500.0, "validation crate", Color.WHITE)
+	stage.call("_spawn_hostile_projectile", crate_from, Vector2.RIGHT, 4.0, 500.0, "validation crate")
 	stage.call("_update_projectiles", 0.5)
 	_expect(projectile_store.call("hostile_count") == 0, "default hostile projectile stops at a live crate")
 	_expect(is_equal_approx(float(crate["health"]), crate_health), "hostile projectile uses a crate as cover without destroying the reward")
@@ -133,6 +182,18 @@ func _run() -> void:
 		not bool(stage.call("_runtime_has_line_of_sight", crate_from, crate_position + Vector2(100.0, 0.0), 5.0)),
 		"live crate blocks enemy projectile line of sight"
 	)
+	var crate_path_end := Vector2(stage.call(
+		"_runtime_attack_path_end",
+		crate_from,
+		Vector2.RIGHT,
+		200.0,
+		5.0
+	))
+	_expect(
+		is_equal_approx(crate_path_end.x, crate_position.x - 36.0),
+		"projectile warning stops at the same live-crate contact boundary"
+	)
+	_check_attack_telegraphs(stage)
 
 	_expect(
 		is_equal_approx(EncounterDirector.HOSTILE_PROJECTILE_SPEED_MULTIPLIER, 0.82),
@@ -144,6 +205,131 @@ func _run() -> void:
 	stage.queue_free()
 	await process_frame
 	_finish()
+
+
+func _check_attack_telegraphs(stage: Node) -> void:
+	var resolve_path := Callable(stage, "_runtime_attack_path_end")
+	var resolve_charge_path := Callable(stage, "_runtime_charge_path_end")
+	var boss = stage.call("_make_enemy", {
+		"id":"telegraph_boss",
+		"role":&"stage_boss",
+		"pos":stage.player_position + Vector2(-520.0, 0.0),
+		"active":true,
+	})
+	boss.phase = &"boss_startup"
+	boss.committed_dir = Vector2.RIGHT
+	boss.committed_target = stage.player_position
+	boss.lane_centers = [-135.0, 135.0]
+
+	AttackTelegraphs.refresh_boss(
+		boss,
+		"furnace_ring",
+		resolve_path,
+		resolve_charge_path
+	)
+	_expect(boss.attack_telegraphs.size() == 4, "furnace startup exposes its area and three aimed projectiles")
+	_expect(
+		StringName(boss.attack_telegraphs[0]["shape"]) == &"area"
+			and is_equal_approx(float(boss.attack_telegraphs[0]["radius"]), 230.0),
+		"furnace warning uses the exact direct-damage radius"
+	)
+	for warning in boss.attack_telegraphs:
+		_expect(
+			StringName(warning["affinity"]) == AttackContract.THERMAL,
+			"furnace components share one truthful thermal affinity"
+		)
+
+	AttackTelegraphs.refresh_boss(
+		boss,
+		"foundry_ram",
+		resolve_path,
+		resolve_charge_path
+	)
+	_expect(boss.attack_telegraphs.size() == 4, "ram startup exposes contact travel and three aimed projectiles")
+	_expect(
+		is_equal_approx(
+			float(boss.attack_telegraphs[0]["half_width"]),
+			AttackContract.contact_danger_half_width(
+				float(boss.radius),
+				BossPatterns.BOSS_CONTACT_PADDING
+			)
+		),
+		"ram corridor uses the exact player-center contact footprint"
+	)
+	var ram_endpoint := Vector2(resolve_charge_path.call(
+		boss.pos,
+		boss.committed_dir,
+		BossPatterns.BOSS_CHARGE_SPEED
+			* EncounterDirector.ENEMY_SPEED_MULTIPLIER
+			* BossPatterns.active_seconds("foundry_ram"),
+		boss.radius
+	))
+	_expect(
+		Vector2(boss.attack_telegraphs[0]["to"]).is_equal_approx(ram_endpoint),
+		"ram warning and committed straight-line movement share one blocker endpoint"
+	)
+
+	AttackTelegraphs.refresh_boss(
+		boss,
+		"pylon_overload",
+		resolve_path,
+		resolve_charge_path
+	)
+	_expect(boss.attack_telegraphs.size() == 4, "pylon startup exposes its area and three aimed projectiles")
+	_expect(
+		boss.attack_telegraphs.all(
+			func(warning): return StringName(warning["affinity"]) == AttackContract.ARC
+		),
+		"pylon overload components use the arc visual family"
+	)
+
+	var beam = stage.call("_make_enemy", {
+		"id":"telegraph_beam",
+		"role":&"beam_sentinel",
+		"pos":stage.player_position + Vector2(-400.0, 0.0),
+		"active":true,
+	})
+	beam.phase = &"startup"
+	beam.committed_dir = Vector2.RIGHT
+	AttackTelegraphs.refresh_ordinary(
+		beam,
+		resolve_path,
+		resolve_charge_path
+	)
+	_expect(
+		beam.attack_telegraphs.size() == 1
+			and is_equal_approx(
+				float(beam.attack_telegraphs[0]["half_width"]),
+				AttackContract.beam_danger_half_width(SpecialistRuntime.BEAM_WIDTH)
+			)
+			and is_equal_approx(
+				float(beam.attack_telegraphs[0]["active_width"]),
+				SpecialistRuntime.BEAM_WIDTH
+			),
+		"beam startup and active body share one exact collision footprint"
+	)
+
+	var mine = stage.call("_make_enemy", {
+		"id":"telegraph_mine",
+		"role":&"mine",
+		"pos":stage.player_position + Vector2(280.0, 0.0),
+		"active":true,
+	})
+	mine.phase = &"startup"
+	mine.committed_dir = Vector2.LEFT
+	AttackTelegraphs.refresh_ordinary(
+		mine,
+		resolve_path,
+		resolve_charge_path
+	)
+	_expect(
+		mine.attack_telegraphs.size() == 1
+			and is_equal_approx(
+				float(mine.attack_telegraphs[0]["radius"]),
+				float(AttackContract.ORDINARY_ATTACKS[&"mine"]["radius"])
+			),
+		"mine warning uses its exact proximity damage radius"
+	)
 
 
 func _expect(condition: bool, message: String) -> void:

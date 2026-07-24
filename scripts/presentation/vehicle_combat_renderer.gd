@@ -6,6 +6,7 @@ extends Node2D
 
 const Visuals = preload("res://scripts/presentation/vehicle_combat_visual_library.gd")
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
+const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd")
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 const ProjectileState = preload("res://scripts/combat/vehicle_projectile_state.gd")
 const ExperienceShard = preload("res://scripts/progression/vehicle_experience_shard.gd")
@@ -117,6 +118,7 @@ func sync(
 ) -> void:
 	_reset_counts()
 	if active:
+		_sync_attack_telegraphs(enemies, visible_world)
 		_sync_enemies(enemies, visible_world, player_position, run_time, aim_target_id)
 		_sync_projectiles(player_projectiles, &"player", visible_world)
 		_sync_projectiles(hostile_projectiles, &"enemy", visible_world)
@@ -151,13 +153,18 @@ func _build_batches() -> void:
 			if team == &"player"
 			else HOSTILE_PROJECTILE_CAPACITY
 		)
-		_projectile_trail_batches[team] = _create_batch(
-			"Projectile_trail_%s" % String(team),
-			Visuals.projectile_trail_mesh(),
-			capacity,
-			1,
-			StringName("projectile_trail_%s" % String(team))
-		)
+		var affinity_batches := {}
+		for affinity in AttackContract.AFFINITIES:
+			if affinity == AttackContract.SUPPORT:
+				continue
+			affinity_batches[affinity] = _create_batch(
+				"Projectile_trail_%s_%s" % [String(team), String(affinity)],
+				Visuals.projectile_trail_mesh(affinity),
+				capacity,
+				1,
+				StringName("projectile_trail_%s_%s" % [String(team), String(affinity)])
+			)
+		_projectile_trail_batches[team] = affinity_batches
 		_projectile_head_batches[team] = _create_batch(
 			"Projectile_head_%s" % String(team),
 			Visuals.projectile_head_mesh(),
@@ -194,6 +201,13 @@ func _build_batches() -> void:
 	)
 	_overlay_batches[&"ring"] = _create_batch(
 		"Overlay_ring", Visuals.effect_mesh(&"ring"), 256, 3, &"overlay_ring"
+	)
+	_overlay_batches[&"danger_ring"] = _create_batch(
+		"Overlay_danger_ring",
+		Visuals.annulus_mesh(48, 0.94),
+		256,
+		3,
+		&"overlay_danger_ring"
 	)
 	_overlay_batches[&"beam"] = _create_batch(
 		"Overlay_beam", Visuals.effect_mesh(&"beam"), 256, 3, &"overlay_beam"
@@ -279,7 +293,6 @@ func _sync_enemies(enemies: Array[EnemyState], visible_world: Rect2, player_posi
 				bar_position + Vector2(-bar_width * (1.0 - health_ratio) * 0.5, 0.0),
 				0.0, Vector2(bar_width * health_ratio, 10.0), Art.CORAL
 			)
-		_sync_enemy_telegraph(enemy, role, position)
 		_sync_status_arcs(enemy, position, radius)
 		if enemy.id == aim_target_id:
 			_sync_target_brackets(position, radius + 16.0)
@@ -311,32 +324,191 @@ func _sync_projectiles(
 	visible_world: Rect2
 ) -> void:
 	var head_batch: BatchHandle = _projectile_head_batches[team]
-	var trail_batch: BatchHandle = _projectile_trail_batches[team]
 	for projectile in projectiles:
 		var position := projectile.pos
 		if not visible_world.has_point(position):
 			continue
 		var hostile := team == &"enemy"
-		var minimum_radius := 7.0 if not hostile or projectile.final_damage else 6.0
-		var radius := maxf(minimum_radius, projectile.radius * 1.15)
+		var affinity := AttackContract.normalize_affinity(projectile.affinity)
+		if affinity == AttackContract.SUPPORT:
+			affinity = AttackContract.KINETIC
+		var affinity_batches: Dictionary = _projectile_trail_batches[team]
+		var trail_batch: BatchHandle = affinity_batches[affinity]
+		var radius := maxf(1.0, projectile.radius)
 		var direction := projectile.velocity.normalized()
-		var trail_length := 36.0 if hostile else 47.0
+		var trail_length := (
+			36.0 + maxf(0.0, radius - 5.0) * 5.0
+			if hostile
+			else 47.0 + maxf(0.0, radius - 7.0) * 3.0
+		)
 		var trail_offset := trail_length * 0.5 - radius
 		var trail_width := radius * (1.25 if hostile else 1.5)
+		var color := projectile.color
+		if hostile or affinity != AttackContract.KINETIC:
+			color = Art.attack_color(affinity, not hostile)
 		_write_instance_basis(
 			trail_batch,
 			position - direction * trail_offset,
 			direction,
 			Vector2(trail_length, trail_width),
-			Color(projectile.color, 0.50)
+			Color(color, 0.50)
 		)
 		_write_instance_basis(
 			head_batch,
 			position,
 			direction,
 			Vector2.ONE * radius,
-			projectile.color
+			color
 		)
+
+
+func _sync_attack_telegraphs(
+	enemies: Array[EnemyState],
+	visible_world: Rect2
+) -> void:
+	for enemy in enemies:
+		if not enemy.alive or not enemy.active:
+			continue
+		var startup := enemy.phase in [&"startup", &"boss_startup"]
+		var active := enemy.phase in [&"active", &"boss_active"]
+		for telegraph in enemy.attack_telegraphs:
+			if not _telegraph_intersects_view(telegraph, visible_world):
+				continue
+			var shape := StringName(telegraph.get("shape", &""))
+			if startup and shape == &"corridor":
+				_sync_corridor_telegraph(telegraph)
+			elif startup and shape == &"area":
+				_sync_area_telegraph(telegraph)
+			elif startup and shape == &"support":
+				_sync_support_telegraph(telegraph)
+			elif (
+				active
+				and shape == &"corridor"
+				and float(telegraph.get("active_width", 0.0)) > 0.0
+			):
+				_sync_active_beam(telegraph)
+
+
+func _telegraph_intersects_view(
+	telegraph: Dictionary,
+	visible_world: Rect2
+) -> bool:
+	var shape := StringName(telegraph.get("shape", &""))
+	if shape == &"corridor":
+		var from := Vector2(telegraph["from"])
+		var to := Vector2(telegraph["to"])
+		var half_width := maxf(0.0, float(telegraph.get("half_width", 0.0)))
+		return Rect2(from, to - from).abs().grow(half_width).intersects(
+			visible_world,
+			true
+		)
+	if shape in [&"area", &"support"]:
+		var center := Vector2(telegraph["center"])
+		var radius := maxf(0.0, float(telegraph.get("radius", 0.0)))
+		return visible_world.grow(radius).has_point(center)
+	return false
+
+
+func _sync_corridor_telegraph(telegraph: Dictionary) -> void:
+	var from := Vector2(telegraph["from"])
+	var to := Vector2(telegraph["to"])
+	var vector := to - from
+	var length := vector.length()
+	if length <= 0.001:
+		return
+	var direction := vector / length
+	var tangent := direction.rotated(PI * 0.5)
+	var half_width := maxf(1.0, float(telegraph["half_width"]))
+	var affinity := AttackContract.normalize_affinity(StringName(telegraph["affinity"]))
+	var color := Art.attack_color(affinity)
+	var damage := float(telegraph.get("damage", 0.0))
+	var boundary_width := 8.0 if AttackContract.power_tier(damage) == &"heavy" else 6.0
+	var boundary_offset := maxf(0.0, half_width - boundary_width * 0.5)
+	# A swept circle produces a capsule, not a rectangle. These endpoint disks
+	# make the warning footprint match the same point-to-segment hit test.
+	_write_beam(from, to, half_width * 2.0, Color(color, 0.16))
+	_write_disk(from, half_width, Color(color, 0.16))
+	_write_disk(to, half_width, Color(color, 0.16))
+	_write_beam(from + tangent * boundary_offset, to + tangent * boundary_offset, boundary_width, Color(color, 0.90))
+	_write_beam(from - tangent * boundary_offset, to - tangent * boundary_offset, boundary_width, Color(color, 0.90))
+	_write_danger_ring(from, half_width, Color(color, 0.90))
+	_write_danger_ring(to, half_width, Color(color, 0.90))
+	match affinity:
+		AttackContract.KINETIC:
+			_write_beam(from, to, 4.0, Color(color, 0.68))
+		AttackContract.THERMAL:
+			_write_beam(from, to, 5.0, Color(color, 0.74))
+		AttackContract.TOXIN:
+			for progress in [0.34, 0.68]:
+				_write_diamond(from.lerp(to, float(progress)), 12.0, Color(color, 0.82))
+		AttackContract.CRYO:
+			for offset in [-0.42, 0.42]:
+				_write_beam(
+					from,
+					to + tangent * half_width * float(offset),
+					4.0,
+					Color(color, 0.72)
+				)
+		AttackContract.ARC:
+			_write_diamond(to, 14.0, color)
+		AttackContract.HYBRID:
+			_write_diamond(from.lerp(to, 0.5), 15.0, color)
+
+
+func _sync_active_beam(telegraph: Dictionary) -> void:
+	# Keep the exact player-center danger boundary visible around the beam body.
+	_sync_corridor_telegraph(telegraph)
+	var from := Vector2(telegraph["from"])
+	var to := Vector2(telegraph["to"])
+	var width := maxf(1.0, float(telegraph["active_width"]))
+	var affinity := AttackContract.normalize_affinity(StringName(telegraph["affinity"]))
+	var color := Art.attack_color(affinity)
+	_write_beam(from, to, width, Color(color, 0.92))
+	_write_beam(from, to, minf(11.0, width * 0.24), Art.IVORY_BRIGHT)
+
+
+func _sync_area_telegraph(telegraph: Dictionary) -> void:
+	var center := Vector2(telegraph["center"])
+	var radius := maxf(1.0, float(telegraph["radius"]))
+	var affinity := AttackContract.normalize_affinity(StringName(telegraph["affinity"]))
+	var color := Art.attack_color(affinity)
+	var damage := float(telegraph.get("damage", 0.0))
+	var boundary_width := 9.0 if AttackContract.power_tier(damage) == &"heavy" else 7.0
+	_write_disk(center, radius, Color(color, 0.13))
+	_write_danger_ring(center, radius, Color(color, 0.94))
+	match affinity:
+		AttackContract.THERMAL:
+			_write_danger_ring(center, radius * 0.62, Color(color, 0.68))
+		AttackContract.TOXIN:
+			_write_danger_ring(center, radius * 0.70, Color(color, 0.64))
+			_write_diamond(center, maxf(14.0, radius * 0.13), color)
+		AttackContract.CRYO:
+			_write_diamond(center, maxf(14.0, radius * 0.16), color)
+		AttackContract.ARC:
+			_write_beam(
+				center - Vector2.RIGHT * radius * 0.68,
+				center + Vector2.RIGHT * radius * 0.68,
+				boundary_width,
+				Color(color, 0.72)
+			)
+			_write_beam(
+				center - Vector2.DOWN * radius * 0.68,
+				center + Vector2.DOWN * radius * 0.68,
+				boundary_width,
+				Color(color, 0.72)
+			)
+		AttackContract.HYBRID:
+			_write_danger_ring(center, radius * 0.55, Color(color, 0.74))
+			_write_diamond(center, maxf(14.0, radius * 0.14), color)
+		_:
+			_write_diamond(center, maxf(12.0, radius * 0.12), color)
+
+
+func _sync_support_telegraph(telegraph: Dictionary) -> void:
+	var center := Vector2(telegraph["center"])
+	var radius := maxf(1.0, float(telegraph["radius"]))
+	_write_ring(center, radius, Color(Art.MINT, 0.88))
+	_write_diamond(center, maxf(13.0, radius * 0.14), Art.MINT)
 
 
 func _sync_experience(shards: Array[ExperienceShard], visible_world: Rect2) -> void:
@@ -387,14 +559,25 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 		return
 	for zone in Array(state.get("zones", [])):
 		var position := Vector2(zone["pos"])
-		if not visible_world.has_point(position):
-			continue
 		var radius := float(zone["radius"])
+		if not visible_world.grow(radius).has_point(position):
+			continue
+		var affinity := AttackContract.normalize_affinity(
+			StringName(zone.get("affinity", AttackContract.KINETIC))
+		)
+		var damage := float(zone.get("damage", 0.0))
+		var descriptor := {
+			"center": position,
+			"radius": radius,
+			"damage": damage,
+			"affinity": affinity,
+		}
 		if float(zone["warning"]) > 0.0:
-			_write_ring(position, radius, Color(Art.CORAL, 0.88))
-			_write_diamond(position, 13.0, Art.CORAL)
+			_sync_area_telegraph(descriptor)
 		else:
-			_write_disk(position, radius, Color(Art.CORAL, 0.26))
+			var color := Art.attack_color(affinity)
+			_sync_area_telegraph(descriptor)
+			_write_disk(position, radius, Color(color, 0.18))
 	for trail in Array(state.get("trails", [])):
 		var position := Vector2(trail["pos"])
 		if visible_world.has_point(position):
@@ -468,44 +651,12 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 	_write_diamond(cursor_position, 4.0, Art.IVORY_BRIGHT)
 
 
-func _sync_enemy_telegraph(enemy: EnemyState, role: StringName, position: Vector2) -> void:
-	var phase := enemy.phase
-	var direction := enemy.committed_dir
-	if phase == &"startup":
-		match role:
-			&"chaser":
-				_write_warning_beam(position, direction, 190.0, 34.0, Art.CORAL)
-			&"shooter", &"turret":
-				_write_warning_beam(position, direction, 620.0, 20.0, Color(Art.CORAL, 0.72))
-			&"controller":
-				_write_ring(enemy.committed_target, 112.0, Art.CORAL)
-			&"mine":
-				_write_ring(position, 190.0, Art.CORAL)
-			&"artillery_spotter":
-				_write_ring(enemy.committed_target, 175.0, Art.CORAL)
-			&"interceptor_tower":
-				_write_warning_beam(position, direction, 700.0, 18.0, Color(Art.BOSS_MAGENTA, 0.72))
-			&"rammer":
-				_write_warning_beam(position, direction, 640.0, 54.0, Art.CORAL)
-			&"drone_carrier":
-				_write_ring(position, 86.0, Art.MINT)
-			&"beam_sentinel":
-				_write_warning_beam(position, direction, 920.0, 54.0, Color(Art.CORAL, 0.78))
-	if role == &"beam_sentinel" and phase == &"active":
-		_write_beam(position, enemy.beam_end, 54.0, Art.CORAL)
-		_write_beam(position, enemy.beam_end, 9.0, Art.IVORY_BRIGHT)
-
-
 func _sync_target_brackets(position: Vector2, radius: float) -> void:
 	for corner in [Vector2(-1.0, -1.0), Vector2(1.0, -1.0), Vector2(1.0, 1.0), Vector2(-1.0, 1.0)]:
 		var typed_corner := Vector2(corner)
 		var anchor: Vector2 = position + typed_corner * radius
 		_write_beam(anchor, anchor - Vector2(typed_corner.x, 0.0) * 18.0, 6.0, Art.MUSTARD)
 		_write_beam(anchor, anchor - Vector2(0.0, typed_corner.y) * 18.0, 6.0, Art.MUSTARD)
-
-
-func _write_warning_beam(origin: Vector2, direction: Vector2, length: float, width: float, color: Color) -> void:
-	_write_beam(origin, origin + direction.normalized() * length, width, Color(color, color.a * 0.62))
 
 
 func _write_beam(from: Vector2, to: Vector2, width: float, color: Color) -> void:
@@ -523,6 +674,20 @@ func _write_ring(position: Vector2, radius: float, color: Color) -> void:
 	_write_instance(
 		_overlay_batches[&"ring"], position, 0.0,
 		Vector2.ONE * radius, color
+	)
+
+
+func _write_danger_ring(
+	position: Vector2,
+	radius: float,
+	color: Color
+) -> void:
+	_write_instance(
+		_overlay_batches[&"danger_ring"],
+		position,
+		0.0,
+		Vector2.ONE * radius,
+		color
 	)
 
 

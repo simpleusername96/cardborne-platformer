@@ -1,6 +1,7 @@
 extends SceneTree
 
 const Catalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
+const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd")
 const Patterns = preload("res://scripts/bosses/vehicle_boss_patterns.gd")
 const Difficulty = preload("res://scripts/enemies/vehicle_stage_difficulty.gd")
 const EncounterDirector = preload("res://scripts/encounters/vehicle_encounter_director.gd")
@@ -19,6 +20,15 @@ func _initialize() -> void:
 			_expect(Patterns.startup_seconds(pattern) >= 0.8, "%s startup is visible" % pattern)
 			_expect(Patterns.active_seconds(pattern) >= 0.4, "%s active window is explicit" % pattern)
 			_expect(Patterns.recovery_seconds(pattern) >= 0.9, "%s recovery is explicit" % pattern)
+			_expect(
+				Patterns.affinity(pattern) in AttackContract.AFFINITIES,
+				"%s declares a supported attack affinity" % pattern
+			)
+			if Patterns.damage(pattern) > 0.0:
+				_expect(
+					Patterns.affinity(pattern) != AttackContract.SUPPORT,
+					"%s does not present damage as support" % pattern
+				)
 			if Patterns.kind(pattern) in [&"lanes", &"fan", &"cross"]:
 				_expect(Patterns.volley_interval(pattern) > 0.0 and Patterns.volley_limit(pattern, false) >= 3, "%s repeats aimed projectile volleys" % pattern)
 				_expect(Patterns.volley_limit(pattern, true) > Patterns.volley_limit(pattern, false), "%s adds one phase-two volley" % pattern)
@@ -26,6 +36,13 @@ func _initialize() -> void:
 	_expect(
 		is_equal_approx(EncounterDirector.effective_hostile_projectile_speed(500.0), 410.0),
 		"boss prediction and projectile motion share the reduced hostile speed contract"
+	)
+	_expect(
+		Patterns.affinity("twin_foundry_lanes") == AttackContract.THERMAL
+			and Patterns.affinity("foundry_ram") == AttackContract.KINETIC
+			and Patterns.affinity("furnace_ring") == AttackContract.THERMAL
+			and Patterns.affinity("pylon_overload") == AttackContract.ARC,
+		"stage-one boss patterns expose distinct thermal, kinetic, and arc families"
 	)
 	_finish()
 

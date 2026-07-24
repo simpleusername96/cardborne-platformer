@@ -4,6 +4,8 @@ extends RefCounted
 ## Reusable hot-path projectile state. Every field is initialized on acquire so
 ## pooled objects never carry behavior from a previous shot.
 
+const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd")
+
 var pos := Vector2.ZERO
 var velocity := Vector2.ZERO
 var radius := 5.0
@@ -22,6 +24,8 @@ var opening := false
 var reflected := false
 var final_damage := false
 var wall_piercing := false
+var affinity: StringName = AttackContract.KINETIC
+var condition_mask := 0
 var status_profile: VehicleStatusProfile
 var team: StringName = &""
 var spawn_serial := 0
@@ -52,6 +56,8 @@ func configure(
 	reflected = bool(spec.get("reflected", false))
 	final_damage = bool(spec.get("final_damage", false))
 	wall_piercing = bool(spec.get("wall_piercing", false))
+	affinity = AttackContract.normalize_affinity(StringName(spec.get("affinity", AttackContract.KINETIC)))
+	condition_mask = int(spec.get("condition_mask", 0)) & AttackContract.CONDITION_MASK
 	status_profile = spec.get("status_profile") as VehicleStatusProfile
 	team = team_value
 	spawn_serial = serial

@@ -95,11 +95,34 @@ second time; no individual stat is described as exactly 15% lower.
   seconds, then closes it over 0.45 seconds. This animation processes only while
   active.
 - Hostile projectile motion and predictive aim share one effective-speed
-  calculation with a multiplier of `0.82`. Ordinary hostile shots use a
-  five-pixel collision radius and a minimum six-pixel head; boss-reserved shots
-  use a six-pixel collision radius and a minimum seven-pixel head. Both retain a
-  36-pixel readable trail. The Pulse Cannon's unmodified projectile uses a
-  seven-pixel collision radius, and upgrades scale from that base.
+  calculation with a multiplier of `0.82`. Authored damage determines both
+  collision and rendered head size: light damage at or below `10` uses a
+  five-pixel radius, standard damage below `20` uses six pixels, and heavy
+  damage uses seven pixels. The head boundary is the collision boundary; the
+  36-pixel trail is a non-damaging direction and affinity cue. The Pulse
+  Cannon's unmodified projectile uses a seven-pixel collision radius, and
+  upgrades scale from that base.
+- Every hostile attack has a startup descriptor produced from simulation
+  values. Its `danger footprint` is the exact set of player-center positions
+  that can receive damage: projectile radius plus player radius, contact
+  colliders plus padding, beam half-width plus player radius, or the authored
+  area radius. Swept projectile and charge corridors include their rounded
+  endpoint caps. A footprint is rendered whenever it intersects the viewer even
+  if its owner is off-screen. Projectile and beam corridors stop at the same
+  current wall or live crate as collision, and damaging boss attacks hold their
+  warned origin and direction throughout the active window.
+- Boss charge, area, pylon, and damaging summon warnings include their aimed
+  three-shot burst as separate corridors. Active beams retain both their
+  physical beam body and the expanded player-center danger boundary. Persistent
+  damage zones keep their exact outer boundary visible during warning and
+  damage.
+- `Affinity` is an attack's impact family and controls large color and trail
+  shape cues: kinetic, thermal, toxin, cryo, arc, hybrid, or support.
+  `Condition` means a real persistent burn, poison, or chill payload. Thermal,
+  toxin, or cryo presentation alone never invents a condition. Current hostile
+  attacks apply direct damage only; player primary rounds derive affinity from
+  their actual stackable condition payload, with multi-condition rounds shown
+  as hybrid.
 - Every projectile stops at the same static or run-selected cover that blocks
   the ship. A live crate also blocks line of sight and both projectile teams;
   hostile fire is absorbed without destroying the reward crate, while player
@@ -165,8 +188,9 @@ second time; no individual stat is described as exactly 15% lower.
    sealed arena. During visible startup it tracks the moving player while
    approaching, retreating, or strafing at a readable speed. Projectile attacks
    lock a predictively aimed lane and repeat volleys along it; charge, area,
-   pylon, and summon patterns add one aimed three-shot pressure burst. The
-   active attack preserves the telegraphed direction before its bounded recovery.
+   pylon, and damaging summon patterns add one aimed three-shot pressure burst.
+   A damaging active window holds the warned origin and direction before its
+   bounded recovery; repositioning never silently shifts committed damage.
 8. Boss defeat recalls experience, resolves mandatory reward choices, then
    stages 1–4 automatically preserve the build and explored minimap, return the
    ship to the center, and begin the next stage. Stage 5 opens the final result.

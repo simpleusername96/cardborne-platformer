@@ -10,32 +10,36 @@ const STAGGER_RECOVERY_READ := 0.35
 const AIM_TRACK_RATE := 7.0
 const STARTUP_MOVE_SCALE := 0.48
 const ACTIVE_MOVE_SCALE := 0.62
+const BOSS_CHARGE_SPEED := 790.0
+const BOSS_CONTACT_PADDING := 10.0
+const BEAM_RANGE := 920.0
+const BEAM_COVER_PADDING := 5.0
 
 const PATTERNS := {
-	&"twin_foundry_lanes":{"kind":&"lanes", "startup":0.90, "active":0.80, "recovery":1.00, "damage":20.0},
-	&"foundry_ram":{"kind":&"charge", "startup":1.10, "active":0.65, "recovery":1.30, "damage":34.0},
-	&"furnace_ring":{"kind":&"area", "startup":0.90, "active":0.60, "recovery":1.00, "damage":26.0, "radius":230.0},
-	&"pylon_overload":{"kind":&"pylons", "startup":0.85, "active":0.55, "recovery":1.15, "damage":24.0, "radius":205.0},
+	&"twin_foundry_lanes":{"kind":&"lanes", "affinity":&"thermal", "startup":0.90, "active":0.80, "recovery":1.00, "damage":20.0},
+	&"foundry_ram":{"kind":&"charge", "affinity":&"kinetic", "startup":1.10, "active":0.65, "recovery":1.30, "damage":34.0},
+	&"furnace_ring":{"kind":&"area", "affinity":&"thermal", "startup":0.90, "active":0.60, "recovery":1.00, "damage":26.0, "radius":230.0},
+	&"pylon_overload":{"kind":&"pylons", "affinity":&"arc", "startup":0.85, "active":0.55, "recovery":1.15, "damage":24.0, "radius":205.0},
 
-	&"current_fan":{"kind":&"fan", "startup":0.85, "active":0.65, "recovery":0.95, "damage":20.0},
-	&"undertow_sweep":{"kind":&"beam", "startup":0.95, "active":0.75, "recovery":1.10, "damage":28.0, "width":70.0},
-	&"depth_charge":{"kind":&"area", "startup":1.10, "active":0.55, "recovery":1.25, "damage":32.0, "radius":185.0},
-	&"archive_ram":{"kind":&"charge", "startup":1.10, "active":0.65, "recovery":1.35, "damage":34.0},
+	&"current_fan":{"kind":&"fan", "affinity":&"kinetic", "startup":0.85, "active":0.65, "recovery":0.95, "damage":20.0},
+	&"undertow_sweep":{"kind":&"beam", "affinity":&"kinetic", "startup":0.95, "active":0.75, "recovery":1.10, "damage":28.0, "width":70.0},
+	&"depth_charge":{"kind":&"area", "affinity":&"kinetic", "startup":1.10, "active":0.55, "recovery":1.25, "damage":32.0, "radius":185.0},
+	&"archive_ram":{"kind":&"charge", "affinity":&"kinetic", "startup":1.10, "active":0.65, "recovery":1.35, "damage":34.0},
 
-	&"arc_lanes":{"kind":&"lanes", "startup":0.85, "active":0.80, "recovery":0.95, "damage":22.0},
-	&"grounded_ring":{"kind":&"area", "startup":0.95, "active":0.65, "recovery":1.10, "damage":28.0, "radius":235.0},
-	&"thunder_drop":{"kind":&"area", "startup":1.10, "active":0.50, "recovery":1.35, "damage":34.0, "radius":175.0},
-	&"escort_surge":{"kind":&"summon", "startup":0.85, "active":0.80, "recovery":1.20, "damage":24.0, "radius":190.0},
+	&"arc_lanes":{"kind":&"lanes", "affinity":&"arc", "startup":0.85, "active":0.80, "recovery":0.95, "damage":22.0},
+	&"grounded_ring":{"kind":&"area", "affinity":&"arc", "startup":0.95, "active":0.65, "recovery":1.10, "damage":28.0, "radius":235.0},
+	&"thunder_drop":{"kind":&"area", "affinity":&"arc", "startup":1.10, "active":0.50, "recovery":1.35, "damage":34.0, "radius":175.0},
+	&"escort_surge":{"kind":&"summon", "affinity":&"arc", "startup":0.85, "active":0.80, "recovery":1.20, "damage":24.0, "radius":190.0},
 
-	&"open_lane_charge":{"kind":&"charge", "startup":1.10, "active":0.70, "recovery":1.45, "damage":36.0},
-	&"gate_shockwave":{"kind":&"area", "startup":0.90, "active":0.55, "recovery":1.05, "damage":28.0, "radius":240.0},
-	&"ricochet_volley":{"kind":&"fan", "startup":0.85, "active":0.70, "recovery":1.00, "damage":22.0},
-	&"switch_sweep":{"kind":&"beam", "startup":1.00, "active":0.80, "recovery":1.20, "damage":30.0, "width":78.0},
+	&"open_lane_charge":{"kind":&"charge", "affinity":&"kinetic", "startup":1.10, "active":0.70, "recovery":1.45, "damage":36.0},
+	&"gate_shockwave":{"kind":&"area", "affinity":&"kinetic", "startup":0.90, "active":0.55, "recovery":1.05, "damage":28.0, "radius":240.0},
+	&"ricochet_volley":{"kind":&"fan", "affinity":&"kinetic", "startup":0.85, "active":0.70, "recovery":1.00, "damage":22.0},
+	&"switch_sweep":{"kind":&"beam", "affinity":&"arc", "startup":1.00, "active":0.80, "recovery":1.20, "damage":30.0, "width":78.0},
 
-	&"crown_beam":{"kind":&"beam", "startup":1.15, "active":0.80, "recovery":1.30, "damage":34.0, "width":82.0},
-	&"mirror_cross":{"kind":&"cross", "startup":0.95, "active":0.65, "recovery":1.10, "damage":28.0},
-	&"carrier_wave":{"kind":&"summon", "startup":0.85, "active":0.85, "recovery":1.25, "damage":0.0},
-	&"relay_pulse":{"kind":&"area", "startup":0.95, "active":0.60, "recovery":1.10, "damage":30.0, "radius":225.0},
+	&"crown_beam":{"kind":&"beam", "affinity":&"arc", "startup":1.15, "active":0.80, "recovery":1.30, "damage":34.0, "width":82.0},
+	&"mirror_cross":{"kind":&"cross", "affinity":&"arc", "startup":0.95, "active":0.65, "recovery":1.10, "damage":28.0},
+	&"carrier_wave":{"kind":&"summon", "affinity":&"support", "startup":0.85, "active":0.85, "recovery":1.25, "damage":0.0},
+	&"relay_pulse":{"kind":&"area", "affinity":&"arc", "startup":0.95, "active":0.60, "recovery":1.10, "damage":30.0, "radius":225.0},
 }
 
 const STAGE_SEQUENCES := {
@@ -76,6 +80,10 @@ static func recovery_seconds(pattern: String) -> float:
 
 static func damage(pattern: String) -> float:
 	return float(definition(pattern)["damage"])
+
+
+static func affinity(pattern: String) -> StringName:
+	return StringName(definition(pattern).get("affinity", &"kinetic"))
 
 
 static func radius(pattern: String) -> float:

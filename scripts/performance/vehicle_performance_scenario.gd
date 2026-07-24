@@ -6,6 +6,7 @@ extends RefCounted
 
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const Rules = preload("res://scripts/vehicle/vehicle_stage_rules.gd")
+const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd")
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 const ProjectileStore = preload("res://scripts/combat/vehicle_projectile_store.gd")
 const ExperienceRuntime = preload("res://scripts/progression/vehicle_experience_runtime.gd")
@@ -44,6 +45,8 @@ func activate(run: Node) -> void:
 	run.encounter_runtime.stop_spawning()
 	run.player_barrier_strength = 1.0e9
 	run.player_barrier_timer = 1.0e9
+	# Synthetic projectile pressure already owns the exact workload count.
+	run.player_passive_cooldown = 1.0e9
 	run.call("_clear_enemies")
 	run.call("_clear_projectiles")
 	run.experience_runtime.clear_shards()
@@ -128,7 +131,7 @@ func validation_snapshot(run: Node) -> Dictionary:
 		and run.experience_runtime.validate_capacity()
 		and run.effects.size() <= 96
 		and run.denied_zones.size() + run.damaging_trails.size() <= 16
-		and int(renderer_snapshot["batches"]) <= 40
+		and int(renderer_snapshot["batches"]) <= 50
 		and boss_valid
 		and (scenario_id != &"lifecycle_pressure" or lifecycle_cycles >= 300)
 	)
@@ -271,7 +274,16 @@ func _fill_projectiles(run: Node, initial: bool) -> void:
 		var origin := _spawn_points[_shot_serial % _spawn_points.size()]
 		var direction: Vector2 = (run.player_position - origin).normalized()
 		var uses_reserve: bool = run.projectile_store.hostile_count() >= ProjectileStore.HOSTILE_CAPACITY - ProjectileStore.HOSTILE_BOSS_RESERVE
-		run.call("_spawn_hostile_projectile", origin, direction, 1.0, 420.0, "performance_volley", Art.CORAL, uses_reserve)
+		run.call(
+			"_spawn_hostile_projectile",
+			origin,
+			direction,
+			1.0,
+			420.0,
+			"performance_volley",
+			AttackContract.KINETIC,
+			uses_reserve
+		)
 		_shot_serial += 1
 		hostile_budget -= 1
 

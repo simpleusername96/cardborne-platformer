@@ -7,7 +7,11 @@ const Rules = preload("res://scripts/vehicle/vehicle_stage_rules.gd")
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 
 const RAMMER_STARTUP := 0.9
+const RAMMER_ACTIVE := 0.85
 const RAMMER_RECOVERY := 1.2
+const RAMMER_SPEED := 760.0
+const RAMMER_CONTACT_PADDING := 8.0
+const RAMMER_DAMAGE := 20.0
 const REPAIR_RANGE := 360.0
 const REPAIR_PER_SECOND := 4.0
 const CARRIER_CHILD_CAP := 3
@@ -18,6 +22,8 @@ const BEAM_ACTIVE := 0.6
 const BEAM_RECOVERY := 2.4
 const BEAM_RANGE := 920.0
 const BEAM_WIDTH := 54.0
+const BEAM_COVER_PADDING := 5.0
+const BEAM_DAMAGE := 18.0
 
 
 static func rammer_can_commit(rammer: EnemyState, enemies: Array[EnemyState]) -> bool:
@@ -65,12 +71,6 @@ static func living_children(carrier_id: String, enemies: Array[EnemyState]) -> i
 		if enemy.alive and enemy.carrier_id == carrier_id:
 			count += 1
 	return count
-
-
-static func beam_end(origin: Vector2, direction: Vector2, stage_id: StringName, include_dynamic_cover: bool, extra_cover: Array = []) -> Vector2:
-	var desired := origin + direction.normalized() * BEAM_RANGE
-	var hit := Rules.first_cover_hit_with_extra(origin, desired, 5.0, include_dynamic_cover, stage_id, extra_cover)
-	return Vector2(hit["point"]) if bool(hit.get("hit", false)) else desired
 
 
 static func is_support_or_installation(role: StringName) -> bool:

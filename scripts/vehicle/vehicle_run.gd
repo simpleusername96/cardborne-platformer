@@ -17,6 +17,8 @@ const UpgradeCatalog = preload("res://scripts/cards/vehicle_upgrade_catalog.gd")
 const RunBuild = preload("res://scripts/cards/vehicle_run_build.gd")
 const StatusRuntime = preload("res://scripts/combat/vehicle_status_runtime.gd")
 const StatusProfile = preload("res://scripts/combat/vehicle_status_profile.gd")
+const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd")
+const AttackTelegraphs = preload("res://scripts/combat/vehicle_attack_telegraph_builder.gd")
 const SpatialGrid = preload("res://scripts/combat/vehicle_spatial_grid.gd")
 const AudioDirector = preload("res://scripts/presentation/vehicle_audio_director.gd")
 const CombatRenderer = preload("res://scripts/presentation/vehicle_combat_renderer.gd")
@@ -74,6 +76,8 @@ const FAR_SIMULATION_DISTANCE_SQUARED := FAR_SIMULATION_DISTANCE * FAR_SIMULATIO
 const FAR_ENEMY_SIMULATION_BUCKET_COUNT := 3
 const CRATE_COLLISION_RADIUS := 31.0
 const CRATE_COLLISION_CELL_SIZE := 320.0
+const CHARGE_PATH_SAMPLE_STEP := 8.0
+const CHARGE_PATH_BINARY_STEPS := 8
 # Prime relative to the six-way enemy decision buckets so profiling eventually
 # observes every scheduling phase without timing every physics tick.
 const PERFORMANCE_DETAIL_SAMPLE_STRIDE := 7
@@ -1117,6 +1121,72 @@ func _runtime_has_line_of_sight(from: Vector2, to: Vector2, padding: float) -> b
 	return not _segment_hits_live_crate(from, to, padding)
 
 
+func _runtime_attack_path_end(
+	origin: Vector2,
+	direction: Vector2,
+	distance: float,
+	padding: float
+) -> Vector2:
+	var normalized := direction.normalized()
+	if normalized.is_zero_approx() or distance <= 0.0:
+		return origin
+	var desired := origin + normalized * distance
+	var cover_hit := _runtime_first_cover_hit(origin, desired, padding)
+	var result := (
+		Vector2(cover_hit["point"])
+		if bool(cover_hit.get("hit", false))
+		else desired
+	)
+	var crate_hit: Variant = _first_live_crate_hit(origin, result, padding)
+	if crate_hit == null:
+		return result
+	var hit_t := AttackContract.segment_circle_first_t(
+		origin,
+		result,
+		Vector2(crate_hit["pos"]),
+		CRATE_COLLISION_RADIUS + padding
+	)
+	return origin.lerp(result, hit_t) if hit_t != INF else result
+
+
+func _runtime_charge_path_end(
+	origin: Vector2,
+	direction: Vector2,
+	distance: float,
+	radius: float
+) -> Vector2:
+	var cover_end := _runtime_attack_path_end(
+		origin,
+		direction,
+		distance,
+		radius
+	)
+	var path_length := origin.distance_to(cover_end)
+	if path_length <= 0.001:
+		return origin
+	var steps := maxi(1, ceili(path_length / CHARGE_PATH_SAMPLE_STEP))
+	var last_clear_t := 0.0
+	for step_index in range(1, steps + 1):
+		var candidate_t := float(step_index) / float(steps)
+		var candidate := origin.lerp(cover_end, candidate_t)
+		if Rules.is_position_walkable(candidate, radius, current_stage_id):
+			last_clear_t = candidate_t
+			continue
+		var blocked_t := candidate_t
+		for _iteration in CHARGE_PATH_BINARY_STEPS:
+			var middle_t := (last_clear_t + blocked_t) * 0.5
+			if Rules.is_position_walkable(
+				origin.lerp(cover_end, middle_t),
+				radius,
+				current_stage_id
+			):
+				last_clear_t = middle_t
+			else:
+				blocked_t = middle_t
+		return origin.lerp(cover_end, last_clear_t)
+	return cover_end
+
+
 func _spawn_player_projectile(
 	origin: Vector2,
 	direction: Vector2,
@@ -1131,13 +1201,15 @@ func _spawn_player_projectile(
 	status_profile: VehicleStatusProfile = null,
 	wall_piercing: bool = false
 ) -> void:
+	var condition_mask := AttackContract.condition_mask_for_profile(status_profile)
+	var affinity := AttackContract.affinity_for_condition_mask(condition_mask)
 	projectile_store.add_player({
 		"pos": origin,
 		"velocity": direction.normalized() * speed,
 		"radius": radius,
 		"damage": damage,
 		"life": projectile_range / speed,
-		"color": Art.MUSTARD,
+		"color": Art.attack_color(affinity, true),
 		"owner": "player_primary",
 		"pierce": extra_pierce,
 		"bounces": 1 if run_build.has(&"ricochet_matrix") else 0,
@@ -1149,6 +1221,8 @@ func _spawn_player_projectile(
 		"opening": opening,
 		"reflected": false,
 		"wall_piercing": wall_piercing,
+		"affinity": affinity,
+		"condition_mask": condition_mask,
 		"reflector_lock": &"",
 		"reflector_lock_time": 0.0,
 		"status_profile": status_profile,
@@ -1627,7 +1701,7 @@ func _update_boss_pylon(enemy: EnemyState, delta: float) -> void:
 			"damage": 9.0,
 			"final_damage": true,
 			"source": "Colossus pylon field",
-			"color": Rules.VIOLET,
+			"affinity": AttackContract.ARC,
 		})
 
 
@@ -1677,6 +1751,11 @@ func _update_ordinary_enemy(
 	enemy.attack_cooldown = maxf(0.0, enemy.attack_cooldown - delta * StatusRuntime.speed_multiplier(enemy))
 	var phase := enemy.phase
 	if phase == &"startup":
+		AttackTelegraphs.refresh_ordinary(
+			enemy,
+			Callable(self, "_runtime_attack_path_end"),
+			Callable(self, "_runtime_charge_path_end")
+		)
 		if enemy.role == &"artillery_spotter" and not _runtime_has_line_of_sight(enemy.pos, player_position, 5.0):
 			enemy.phase = &"recovery"
 			enemy.phase_time = 0.65
@@ -1764,27 +1843,18 @@ func _start_enemy_attack(enemy: EnemyState) -> void:
 	enemy.hit_committed = false
 	enemy.committed_dir = (player_position - enemy.pos).normalized()
 	enemy.committed_target = player_position
-	match role:
-		&"chaser":
-			enemy.phase_time = 0.42
-		&"shooter":
-			enemy.phase_time = 0.62
-		&"controller":
-			enemy.phase_time = 0.82
-		&"turret":
-			enemy.phase_time = 0.68
-		&"mine":
-			enemy.phase_time = 0.62
-		&"artillery_spotter":
-			enemy.phase_time = 1.15
-		&"interceptor_tower":
-			enemy.phase_time = 0.78
-		&"rammer":
-			enemy.phase_time = SpecialistRuntime.RAMMER_STARTUP
-		&"drone_carrier":
-			enemy.phase_time = 0.82
-		&"beam_sentinel":
-			enemy.phase_time = SpecialistRuntime.BEAM_STARTUP
+	var attack := AttackContract.ordinary_attack(role)
+	if not attack.is_empty():
+		enemy.phase_time = float(attack["startup"])
+	elif role == &"rammer":
+		enemy.phase_time = SpecialistRuntime.RAMMER_STARTUP
+	elif role == &"beam_sentinel":
+		enemy.phase_time = SpecialistRuntime.BEAM_STARTUP
+	AttackTelegraphs.refresh_ordinary(
+		enemy,
+		Callable(self, "_runtime_attack_path_end"),
+		Callable(self, "_runtime_charge_path_end")
+	)
 
 
 func _begin_enemy_active(enemy: EnemyState) -> void:
@@ -1792,28 +1862,30 @@ func _begin_enemy_active(enemy: EnemyState) -> void:
 	enemy.phase = &"active"
 	match role:
 		&"chaser":
-			enemy.phase_time = 0.24
+			enemy.phase_time = float(AttackContract.ORDINARY_ATTACKS[role]["active"])
 		&"shooter":
+			var shooter_attack: Dictionary = AttackContract.ORDINARY_ATTACKS[role]
 			_spawn_hostile_projectile(
-				enemy.pos + enemy.committed_dir * 30.0,
+				enemy.pos + enemy.committed_dir * float(shooter_attack["origin_offset"]),
 				enemy.committed_dir,
-				10.0,
-				500.0,
+				float(shooter_attack["damage"]),
+				float(shooter_attack["speed"]),
 				"Mobile shooter bolt",
-				Rules.CORAL
+				StringName(shooter_attack["affinity"])
 			)
 			enemy.phase = &"recovery"
 			enemy.phase_time = 0.72
 		&"controller":
+			var controller_attack: Dictionary = AttackContract.ORDINARY_ATTACKS[role]
 			denied_zones.append({
 				"pos": enemy.committed_target,
-				"radius": 112.0,
-				"warning": 0.82,
+				"radius": float(controller_attack["radius"]),
+				"warning": float(controller_attack["startup"]),
 				"duration": 2.15,
 				"tick": 0.0,
-				"damage": 9.0,
+				"damage": float(controller_attack["damage"]),
 				"source": "Controller flood zone",
-				"color": Rules.CORAL,
+				"affinity": StringName(controller_attack["affinity"]),
 			})
 			enemy.phase = &"recovery"
 			enemy.phase_time = 0.88
@@ -1822,27 +1894,42 @@ func _begin_enemy_active(enemy: EnemyState) -> void:
 			enemy.burst_timer = 0.0
 			enemy.phase_time = 0.55
 		&"mine":
+			var mine_attack: Dictionary = AttackContract.ORDINARY_ATTACKS[role]
 			enemy.phase_time = 0.15
-			if player_position.distance_to(enemy.pos) <= 205.0:
-				_damage_player(16.0, "Arc proximity burst", true)
-			_add_effect("shock", enemy.pos, Rules.CORAL, 0.36, 205.0)
+			if player_position.distance_to(enemy.pos) <= float(mine_attack["radius"]):
+				_damage_player(float(mine_attack["damage"]), "Arc proximity burst", true)
+			_add_effect(
+				"shock",
+				enemy.pos,
+				Art.attack_color(StringName(mine_attack["affinity"])),
+				0.36,
+				float(mine_attack["radius"])
+			)
 		&"artillery_spotter":
+			var artillery_attack: Dictionary = AttackContract.ORDINARY_ATTACKS[role]
 			denied_zones.append({
-				"pos": enemy.committed_target, "radius": 175.0,
+				"pos": enemy.committed_target, "radius": float(artillery_attack["radius"]),
 				"warning": 0.35, "duration": 1.35, "tick": 0.0,
-				"damage": 15.0, "source": "Artillery impact", "color": Rules.CORAL,
+				"damage": float(artillery_attack["damage"]),
+				"source": "Artillery impact",
+				"affinity": StringName(artillery_attack["affinity"]),
 			})
 			enemy.phase = &"recovery"
 			enemy.phase_time = 1.05
 		&"interceptor_tower":
+			var interceptor_attack: Dictionary = AttackContract.ORDINARY_ATTACKS[role]
 			_spawn_hostile_projectile(
-				enemy.pos + enemy.committed_dir * 40.0,
-				enemy.committed_dir, 12.0, 470.0, "Interceptor bolt", Rules.VIOLET
+				enemy.pos + enemy.committed_dir * float(interceptor_attack["origin_offset"]),
+				enemy.committed_dir,
+				float(interceptor_attack["damage"]),
+				float(interceptor_attack["speed"]),
+				"Interceptor bolt",
+				StringName(interceptor_attack["affinity"])
 			)
 			enemy.phase = &"recovery"
 			enemy.phase_time = 0.9
 		&"rammer":
-			enemy.phase_time = 0.85
+			enemy.phase_time = SpecialistRuntime.RAMMER_ACTIVE
 		&"drone_carrier":
 			enemy.burst_left = mini(3, SpecialistRuntime.CARRIER_CHILD_CAP - SpecialistRuntime.living_children(enemy.id, enemies))
 			enemy.burst_timer = 0.0
@@ -1850,7 +1937,12 @@ func _begin_enemy_active(enemy: EnemyState) -> void:
 		&"beam_sentinel":
 			enemy.phase_time = SpecialistRuntime.BEAM_ACTIVE
 			enemy.hit_committed = false
-			enemy.beam_end = SpecialistRuntime.beam_end(enemy.pos, enemy.committed_dir, current_stage_id, false, _runtime_cover_rects())
+			enemy.beam_end = _runtime_attack_path_end(
+				enemy.pos,
+				enemy.committed_dir,
+				SpecialistRuntime.BEAM_RANGE,
+				SpecialistRuntime.BEAM_COVER_PADDING
+			)
 
 
 func _update_enemy_active(enemy: EnemyState, delta: float) -> void:
@@ -1858,32 +1950,43 @@ func _update_enemy_active(enemy: EnemyState, delta: float) -> void:
 	enemy.phase_time = maxf(0.0, enemy.phase_time - delta)
 	match role:
 		&"chaser":
+			var chaser_attack: Dictionary = AttackContract.ORDINARY_ATTACKS[role]
 			var before := enemy.pos
-			enemy.pos = _move_actor(
+			enemy.pos = _runtime_charge_path_end(
 				before,
-				enemy.committed_dir * 570.0 * EncounterDirector.ENEMY_SPEED_MULTIPLIER * delta,
-				enemy.radius,
-				false
+				enemy.committed_dir,
+				float(chaser_attack["speed"])
+					* EncounterDirector.ENEMY_SPEED_MULTIPLIER
+					* delta,
+				enemy.radius
 			)
-			if not enemy.hit_committed and player_position.distance_to(enemy.pos) <= Rules.PLAYER_RADIUS + enemy.radius + 8.0:
+			if (
+				not enemy.hit_committed
+				and player_position.distance_to(enemy.pos)
+					<= AttackContract.contact_danger_half_width(
+						enemy.radius,
+						float(chaser_attack["contact_padding"])
+					)
+			):
 				enemy.hit_committed = true
-				_damage_player(14.0, "Rivet Chaser lunge", true)
+				_damage_player(float(chaser_attack["damage"]), "Rivet Chaser lunge", true)
 			if enemy.phase_time <= 0.0:
 				enemy.phase = &"recovery"
 				enemy.phase_time = 0.52
 		&"turret":
+			var turret_attack: Dictionary = AttackContract.ORDINARY_ATTACKS[role]
 			enemy.burst_timer -= delta
 			if enemy.burst_left > 0 and enemy.burst_timer <= 0.0:
 				enemy.burst_timer = 0.14
 				enemy.burst_left -= 1
-				var direction := enemy.committed_dir.rotated(_rng.randf_range(-0.025, 0.025))
+				var direction := enemy.committed_dir
 				_spawn_hostile_projectile(
-					enemy.pos + direction * 38.0,
+					enemy.pos + direction * float(turret_attack["origin_offset"]),
 					direction,
-					9.0,
-					590.0,
+					float(turret_attack["damage"]),
+					float(turret_attack["speed"]),
 					"Foundry turret burst",
-					Rules.CORAL
+					StringName(turret_attack["affinity"])
 				)
 			if enemy.burst_left <= 0:
 				enemy.phase = &"recovery"
@@ -1894,13 +1997,25 @@ func _update_enemy_active(enemy: EnemyState, delta: float) -> void:
 				enemy.phase_time = 1.2
 		&"rammer":
 			var before := enemy.pos
-			var requested := enemy.committed_dir * 760.0 * delta
-			var after := _move_actor(before, requested, enemy.radius, false)
+			var requested := enemy.committed_dir * SpecialistRuntime.RAMMER_SPEED * delta
+			var after := _runtime_charge_path_end(
+				before,
+				enemy.committed_dir,
+				requested.length(),
+				enemy.radius
+			)
 			enemy.pos = after
 			var struck_cover := before.distance_to(after) + 1.0 < requested.length()
-			if not enemy.hit_committed and player_position.distance_to(after) <= Rules.PLAYER_RADIUS + enemy.radius + 8.0:
+			if (
+				not enemy.hit_committed
+				and player_position.distance_to(after)
+					<= AttackContract.contact_danger_half_width(
+						enemy.radius,
+						SpecialistRuntime.RAMMER_CONTACT_PADDING
+					)
+			):
 				enemy.hit_committed = true
-				_damage_player(20.0, "Rammer charge", true)
+				_damage_player(SpecialistRuntime.RAMMER_DAMAGE, "Rammer charge", true)
 			if struck_cover or enemy.phase_time <= 0.0:
 				enemy.phase = &"recovery"
 				enemy.phase_time = SpecialistRuntime.RAMMER_RECOVERY
@@ -1918,7 +2033,7 @@ func _update_enemy_active(enemy: EnemyState, delta: float) -> void:
 			var beam_end := enemy.beam_end
 			if not enemy.hit_committed and Rules.point_segment_distance(player_position, enemy.pos, beam_end) <= Rules.PLAYER_RADIUS + SpecialistRuntime.BEAM_WIDTH * 0.5:
 				enemy.hit_committed = true
-				_damage_player(18.0, "Beam Sentinel sweep", true)
+				_damage_player(SpecialistRuntime.BEAM_DAMAGE, "Beam Sentinel sweep", true)
 			if enemy.phase_time <= 0.0:
 				enemy.phase = &"recovery"
 				enemy.phase_time = SpecialistRuntime.BEAM_RECOVERY
@@ -2048,18 +2163,19 @@ func _spawn_hostile_projectile(
 	damage: float,
 	speed: float,
 	source: String,
-	color: Color,
+	affinity: StringName = AttackContract.KINETIC,
 	final_damage: bool = false,
 	wall_piercing: bool = false
 ) -> void:
+	var normalized_affinity := AttackContract.normalize_affinity(affinity)
 	projectile_store.add_hostile({
 		"pos": origin,
 		"velocity": direction.normalized() * EncounterDirector.effective_hostile_projectile_speed(speed),
-		"radius": 6.0 if final_damage else 5.0,
+		"radius": AttackContract.hostile_projectile_radius(damage),
 		"damage": damage,
 		"final_damage": final_damage,
-		"life": 2.2,
-		"color": color,
+		"life": AttackContract.HOSTILE_PROJECTILE_LIFETIME,
+		"color": Art.attack_color(normalized_affinity),
 		"owner": source,
 		"pierce": 0,
 		"bounces": 0,
@@ -2071,6 +2187,8 @@ func _spawn_hostile_projectile(
 		"reflector_lock": &"",
 		"reflector_lock_time": 0.0,
 		"wall_piercing": wall_piercing,
+		"affinity": normalized_affinity,
+		"condition_mask": 0,
 	}, final_damage)
 
 
@@ -2268,9 +2386,7 @@ func _first_live_crate_hit(from: Vector2, to: Vector2, padding: float) -> Varian
 	var maximum := Vector2(maxf(from.x, to.x), maxf(from.y, to.y)) + Vector2.ONE * clearance
 	var min_cell := Vector2i(floori(minimum.x / CRATE_COLLISION_CELL_SIZE), floori(minimum.y / CRATE_COLLISION_CELL_SIZE))
 	var max_cell := Vector2i(floori(maximum.x / CRATE_COLLISION_CELL_SIZE), floori(maximum.y / CRATE_COLLISION_CELL_SIZE))
-	var motion := to - from
-	var motion_length_squared := motion.length_squared()
-	var best_t := 2.0
+	var best_t := INF
 	var best_crate: Variant = null
 	for cell_y in range(min_cell.y, max_cell.y + 1):
 		for cell_x in range(min_cell.x, max_cell.x + 1):
@@ -2282,14 +2398,12 @@ func _first_live_crate_hit(from: Vector2, to: Vector2, padding: float) -> Varian
 				if not bool(crate["alive"]):
 					continue
 				var crate_position := Vector2(crate["pos"])
-				var hit_t := (
-					clampf((crate_position - from).dot(motion) / motion_length_squared, 0.0, 1.0)
-					if motion_length_squared > 0.001
-					else 0.0
+				var hit_t := AttackContract.segment_circle_first_t(
+					from,
+					to,
+					crate_position,
+					clearance
 				)
-				var closest := from + motion * hit_t
-				if closest.distance_squared_to(crate_position) > clearance * clearance:
-					continue
 				if hit_t < best_t:
 					best_t = hit_t
 					best_crate = crate
@@ -2307,15 +2421,21 @@ func _projectile_hits_crate(
 		return false
 	var crate_position := Vector2(crate_hit["pos"])
 	var motion := to - from
-	var motion_length_squared := motion.length_squared()
-	var hit_t := (
-		clampf((crate_position - from).dot(motion) / motion_length_squared, 0.0, 1.0)
-		if motion_length_squared > 0.001
-		else 0.0
+	var hit_t := AttackContract.segment_circle_first_t(
+		from,
+		to,
+		crate_position,
+		CRATE_COLLISION_RADIUS + projectile.radius
 	)
 	if damage_crate:
 		_damage_crate(crate_hit, projectile.structure_damage)
-	_add_effect("impact", from + motion * hit_t, projectile.color, 0.16, 22.0)
+	_add_effect(
+		"impact",
+		from + motion * hit_t if hit_t != INF else crate_position,
+		projectile.color,
+		0.16,
+		22.0
+	)
 	_play_sound(&"cover", _rng.randf_range(0.96, 1.04))
 	return true
 
@@ -2897,8 +3017,8 @@ func _update_stage_boss(boss: EnemyState, delta: float) -> void:
 		return
 	if phase == "boss_startup":
 		boss.phase_time = maxf(0.0, float(boss.phase_time) - delta)
-		_boss_track_player(boss, delta)
 		_boss_combat_move(boss, delta, BossPatterns.STARTUP_MOVE_SCALE)
+		_boss_track_player(boss, delta)
 		if float(boss.phase_time) <= 0.0:
 			_boss_begin_active(boss)
 		return
@@ -2930,8 +3050,12 @@ func _boss_select_pattern(boss: EnemyState) -> void:
 	boss.committed_dir = (player_position - Vector2(boss.pos)).normalized()
 	if kind == &"lanes":
 		boss.lane_centers = [-135.0, 135.0]
-	if kind == &"beam":
-		boss.beam_end = SpecialistRuntime.beam_end(Vector2(boss.pos), Vector2(boss.committed_dir), current_stage_id, false, _runtime_cover_rects())
+	AttackTelegraphs.refresh_boss(
+		boss,
+		pattern,
+		Callable(self, "_runtime_attack_path_end"),
+		Callable(self, "_runtime_charge_path_end")
+	)
 
 
 func _boss_begin_active(boss: EnemyState) -> void:
@@ -2955,12 +3079,11 @@ func _boss_update_active(boss: EnemyState, delta: float) -> void:
 	var kind := BossPatterns.kind(pattern)
 	var damage := BossPatterns.damage(pattern)
 	var phase_two := int(boss.boss_phase) == 2
-	if kind != &"charge":
-		var move_scale := 0.28 if kind == &"beam" else BossPatterns.ACTIVE_MOVE_SCALE
-		_boss_combat_move(boss, delta, move_scale)
+	# Damaging boss patterns commit to the startup footprint. Repositioning
+	# resumes in recovery so the warned origin cannot drift before impact.
+	if damage <= 0.0:
+		_boss_combat_move(boss, delta, BossPatterns.ACTIVE_MOVE_SCALE)
 	if kind in [&"lanes", &"fan", &"cross"] and float(boss.pattern_tick) <= 0.0 and int(boss.pattern_volleys) < BossPatterns.volley_limit(pattern, phase_two):
-		if int(boss.pattern_volleys) == 0:
-			_boss_commit_predictive_aim(boss, BossPatterns.projectile_speed(pattern))
 		boss.pattern_tick = BossPatterns.volley_interval(pattern)
 		boss.pattern_volleys = int(boss.pattern_volleys) + 1
 		var aimed_direction := Vector2(boss.committed_dir)
@@ -2968,19 +3091,52 @@ func _boss_update_active(boss: EnemyState, delta: float) -> void:
 			var lane_tangent := aimed_direction.rotated(PI * 0.5)
 			for lane_offset in boss.lane_centers:
 				var origin := Vector2(boss.pos) + aimed_direction * 86.0 + lane_tangent * float(lane_offset)
-				_spawn_hostile_projectile(origin, aimed_direction, damage, BossPatterns.projectile_speed(pattern), pattern, Rules.VIOLET, true)
+				_spawn_hostile_projectile(
+					origin,
+					aimed_direction,
+					damage,
+					BossPatterns.projectile_speed(pattern),
+					pattern,
+					BossPatterns.affinity(pattern),
+					true
+				)
 		else:
 			var offsets := [-0.34, -0.17, 0.0, 0.17, 0.34] if kind == &"fan" else [0.0, PI * 0.5, PI, PI * 1.5]
 			for offset in offsets:
 				var direction := aimed_direction.rotated(float(offset))
-				_spawn_hostile_projectile(Vector2(boss.pos) + direction * 72.0, direction, damage, BossPatterns.projectile_speed(pattern), pattern, Rules.VIOLET, true)
+				_spawn_hostile_projectile(
+					Vector2(boss.pos) + direction * 72.0,
+					direction,
+					damage,
+					BossPatterns.projectile_speed(pattern),
+					pattern,
+					BossPatterns.affinity(pattern),
+					true
+				)
 	elif kind == &"charge":
 		if int(boss.pattern_volleys) == 0:
 			_boss_fire_aimed_burst(boss, pattern, damage * 0.55)
 		var before := Vector2(boss.pos)
-		var requested := Vector2(boss.committed_dir) * 790.0 * EncounterDirector.ENEMY_SPEED_MULTIPLIER * delta
-		boss.pos = _move_actor(before, requested, float(boss.radius), false)
-		if not bool(boss.hit_committed) and player_position.distance_to(Vector2(boss.pos)) <= Rules.PLAYER_RADIUS + float(boss.radius) + 10.0:
+		var requested := (
+			Vector2(boss.committed_dir)
+			* BossPatterns.BOSS_CHARGE_SPEED
+			* EncounterDirector.ENEMY_SPEED_MULTIPLIER
+			* delta
+		)
+		boss.pos = _runtime_charge_path_end(
+			before,
+			boss.committed_dir,
+			requested.length(),
+			float(boss.radius)
+		)
+		if (
+			not bool(boss.hit_committed)
+			and player_position.distance_to(Vector2(boss.pos))
+				<= AttackContract.contact_danger_half_width(
+					float(boss.radius),
+					BossPatterns.BOSS_CONTACT_PADDING
+				)
+		):
 			boss.hit_committed = true
 			_damage_player(damage, pattern, true, true, true)
 		if before.distance_to(Vector2(boss.pos)) + 1.0 < requested.length():
@@ -3016,20 +3172,12 @@ func _boss_track_player(boss: EnemyState, delta: float) -> void:
 		clampf(delta * BossPatterns.AIM_TRACK_RATE, 0.0, 1.0)
 	).normalized()
 	boss.committed_target = desired_target
-	if BossPatterns.kind(pattern) == &"beam":
-		boss.beam_end = SpecialistRuntime.beam_end(
-			Vector2(boss.pos),
-			Vector2(boss.committed_dir),
-			current_stage_id,
-			false,
-			_runtime_cover_rects()
-		)
-
-
-func _boss_commit_predictive_aim(boss: EnemyState, projectile_speed: float) -> void:
-	var target := _boss_predicted_target(Vector2(boss.pos), projectile_speed)
-	boss.committed_target = target
-	boss.committed_dir = (target - Vector2(boss.pos)).normalized()
+	AttackTelegraphs.refresh_boss(
+		boss,
+		pattern,
+		Callable(self, "_runtime_attack_path_end"),
+		Callable(self, "_runtime_charge_path_end")
+	)
 
 
 func _boss_predicted_target(origin: Vector2, projectile_speed: float) -> Vector2:
@@ -3040,7 +3188,6 @@ func _boss_predicted_target(origin: Vector2, projectile_speed: float) -> Vector2
 
 func _boss_fire_aimed_burst(boss: EnemyState, pattern: String, damage: float) -> void:
 	boss.pattern_volleys = 1
-	_boss_commit_predictive_aim(boss, BossPatterns.projectile_speed(pattern))
 	for offset in [-0.13, 0.0, 0.13]:
 		var direction := Vector2(boss.committed_dir).rotated(float(offset))
 		_spawn_hostile_projectile(
@@ -3049,7 +3196,7 @@ func _boss_fire_aimed_burst(boss: EnemyState, pattern: String, damage: float) ->
 			damage,
 			BossPatterns.projectile_speed(pattern),
 			pattern,
-			Rules.VIOLET,
+			BossPatterns.affinity(pattern),
 			true
 		)
 
@@ -3629,8 +3776,6 @@ func _draw_enemy_overlay(enemy: EnemyState) -> void:
 		_draw_enemy_marks(enemy, position, visual_radius)
 	if enemy.vulnerable > 0.0:
 		draw_arc(position, visual_radius + 12.0, 0.0, TAU, 28, Art.MUSTARD, 7.0)
-	if role == &"stage_boss":
-		_draw_boss_telegraph(enemy)
 
 
 func _draw_enemy_marks(enemy: EnemyState, position: Vector2, radius: float) -> void:
@@ -3651,56 +3796,6 @@ func _enemy_color(role: StringName) -> Color:
 		&"stage_boss", &"boss_pylon":
 			return Art.BOSS_MAGENTA
 	return Art.INK_MUTED
-
-
-func _draw_boss_telegraph(enemy: EnemyState) -> void:
-	var phase := String(enemy.phase)
-	var position := Vector2(enemy.pos)
-	if phase == "boss_startup":
-		var pattern := String(enemy.pattern)
-		var boss_kind := BossPatterns.kind(pattern)
-		if boss_kind == &"charge":
-			_draw_warning_beam(position, Vector2(enemy.committed_dir), 850.0, 64.0, Color(Art.CORAL, 0.72))
-		if boss_kind == &"beam":
-			_draw_warning_beam(position, Vector2(enemy.committed_dir), position.distance_to(Vector2(enemy.beam_end)), BossPatterns.width(pattern), Color(Art.BOSS_MAGENTA, 0.76))
-		if boss_kind == &"summon":
-			draw_arc(position, 112.0, 0.0, TAU, 40, Art.MINT, 13.0)
-		if boss_kind == &"lanes":
-			var lane_direction := Vector2(enemy.committed_dir)
-			var lane_tangent := lane_direction.rotated(PI * 0.5)
-			for lane_offset in enemy.lane_centers:
-				var origin := position + lane_direction * 86.0 + lane_tangent * float(lane_offset)
-				_draw_warning_beam(origin, lane_direction, 820.0, 44.0, Color(Art.CORAL, 0.62))
-		if boss_kind in [&"area", &"pylons"]:
-			var target := Vector2(enemy.committed_target)
-			draw_circle(target, BossPatterns.radius(pattern), Color(Art.CORAL, 0.14))
-			draw_arc(target, BossPatterns.radius(pattern), 0.0, TAU, 48, Art.CORAL, 11.0)
-		if boss_kind == &"fan":
-			for offset in [-0.34, -0.17, 0.0, 0.17, 0.34]:
-				_draw_warning_beam(position, Vector2(enemy.committed_dir).rotated(float(offset)), 620.0, 18.0, Color(Art.CORAL, 0.58))
-		if boss_kind == &"cross":
-			for offset in [0.0, PI * 0.5, PI, PI * 1.5]:
-				_draw_warning_beam(position, Vector2(enemy.committed_dir).rotated(float(offset)), 620.0, 28.0, Color(Art.BOSS_MAGENTA, 0.62))
-		if boss_kind == &"pylons":
-			for pylon in enemies:
-				if pylon.role == &"boss_pylon" and pylon.alive:
-					var pylon_position := pylon.pos
-					draw_circle(pylon_position, 68.0, Color(Art.BOSS_MAGENTA, 0.18))
-					draw_arc(pylon_position, 68.0, 0.0, TAU, 32, Art.BOSS_MAGENTA, 9.0)
-	if phase == "boss_active" and BossPatterns.kind(String(enemy.pattern)) == &"beam":
-		draw_line(position, Vector2(enemy.beam_end), Art.BOSS_MAGENTA, BossPatterns.width(String(enemy.pattern)), true)
-		draw_line(position, Vector2(enemy.beam_end), Art.IVORY_BRIGHT, 11.0, true)
-
-
-func _draw_warning_beam(origin: Vector2, direction: Vector2, length: float, width: float, color: Color) -> void:
-	var normalized := direction.normalized()
-	var tangent := normalized.rotated(PI * 0.5)
-	draw_colored_polygon(PackedVector2Array([
-		origin - tangent * width * 0.5,
-		origin + normalized * length - tangent * width * 0.18,
-		origin + normalized * length + tangent * width * 0.18,
-		origin + tangent * width * 0.5,
-	]), Color(color, color.a * 0.42))
 
 
 func _visible_world_rect(margin: float = 0.0) -> Rect2:
@@ -3747,7 +3842,9 @@ func _elapsed_ms(started_usec: int) -> float:
 
 func _parse_performance_request() -> Dictionary:
 	var values := {}
-	for argument in OS.get_cmdline_args():
+	var arguments := OS.get_cmdline_args()
+	arguments.append_array(OS.get_cmdline_user_args())
+	for argument in arguments:
 		if argument.begins_with("--performance-scenario="):
 			values["scenario"] = argument.trim_prefix("--performance-scenario=")
 		elif argument.begins_with("--performance-output="):
@@ -3837,7 +3934,9 @@ func _performance_counts() -> Dictionary:
 
 
 func _parse_capture_arguments() -> void:
-	for argument in OS.get_cmdline_user_args():
+	var arguments := OS.get_cmdline_args()
+	arguments.append_array(OS.get_cmdline_user_args())
+	for argument in arguments:
 		if argument.begins_with("--capture-all="):
 			_capture_directory = argument.trim_prefix("--capture-all=")
 			_capture_mode = true
@@ -3848,10 +3947,6 @@ func _parse_capture_arguments() -> void:
 			if parts.size() == 2:
 				_capture_size = Vector2i(maxi(640, int(parts[0])), maxi(360, int(parts[1])))
 		elif argument.begins_with("--layout-seed="):
-			_layout_seed_override = int(argument.trim_prefix("--layout-seed="))
-			_has_layout_seed_override = true
-	for argument in OS.get_cmdline_args():
-		if argument.begins_with("--layout-seed="):
 			_layout_seed_override = int(argument.trim_prefix("--layout-seed="))
 			_has_layout_seed_override = true
 	if _capture_locale in ["ko", "en"]:
@@ -3955,6 +4050,11 @@ func _capture_pressure_evidence() -> void:
 		if index < 3:
 			enemy.phase = "startup"
 			enemy.committed_target = player_position
+			AttackTelegraphs.refresh_ordinary(
+				enemy,
+				Callable(self, "_runtime_attack_path_end"),
+				Callable(self, "_runtime_charge_path_end")
+			)
 		_append_enemy(enemy)
 	experience_runtime.clear_shards()
 	for index in ExperienceRuntime.MAX_SHARDS:
@@ -4141,6 +4241,22 @@ func _capture_all_boss_evidence() -> void:
 		_boss_select_pattern(boss)
 		await _settle_capture()
 		_save_capture("30-boss-%02d-%s-phase-two.png" % [stage_index + 1, stage_slug])
+		if stage_index == 0:
+			boss.pos = player_position + Vector2(920.0, 0.0)
+			boss.phase = &"boss_startup"
+			boss.phase_time = BossPatterns.startup_seconds("furnace_ring")
+			boss.pattern = "furnace_ring"
+			boss.committed_target = player_position
+			boss.committed_dir = (player_position - Vector2(boss.pos)).normalized()
+			AttackTelegraphs.refresh_boss(
+				boss,
+				"furnace_ring",
+				Callable(self, "_runtime_attack_path_end"),
+				Callable(self, "_runtime_charge_path_end")
+			)
+			_camera.position = player_position
+			await _settle_capture()
+			_save_capture("30-boss-01-stage-1-offscreen-furnace.png")
 
 
 func _capture_prepare_boss(stage_index: int) -> EnemyState:

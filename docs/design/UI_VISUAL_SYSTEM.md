@@ -35,6 +35,12 @@ rules remain owned by the product specification.
 - Ivory means walkable ground, ceramic green means solid cover/installations,
   cobalt means water or void, mustard means player/reward/progress, coral means
   ordinary danger, magenta means boss danger, and mint means recovery/support.
+- Attack affinity may override the general danger fill: kinetic is coral
+  (mustard for friendly fire), thermal is orange, toxin is olive, cryo is blue,
+  arc is violet, and a multi-condition hybrid is bright ivory. Affinity is also
+  encoded by a large trail or interior shape, never by color alone. Boss body,
+  warning ownership, and health remain magenta even when a specific boss attack
+  uses another affinity.
 - All solid static cover uses the same blocker fill. State is communicated by a
   large shape, animation, or icon—not by inventing a new wall color.
 
@@ -60,21 +66,35 @@ rules remain owned by the product specification.
   experience shards, repair, recall, and crates have distinct silhouettes and
   scale classes.
 - All dangerous attacks show startup, damage area or projectile, and recovery.
-  Enemy intent is communicated through authored motion and telegraphs, not
-  permanent trajectory overlays.
+  Startup fill and its outer boundary show the exact player-center danger
+  footprint, not a decorative approximation. Any on-screen portion remains
+  visible when the attacker is off-screen. Enemy intent is communicated through
+  authored motion and bounded telegraphs, not permanent trajectory overlays.
 - Accepted hull damage must be legible at the ship without reading the HUD:
   coral hit tint, small presentation-only recoil, bounded camera response,
   pale-coral invulnerability state, and a dedicated impact sound. Fully
   absorbed barrier damage remains visually distinct.
-- Ordinary hostile projectiles retain a visible coral head and 36-pixel trail
-  around their five-pixel collision radius. Boss projectiles remain slightly
-  larger and magenta. Rendered danger may exceed collision size but may never be
-  smaller than it.
+- A projectile head ends exactly at its circular collision radius. Light,
+  standard, and heavy hostile damage use five-, six-, and seven-pixel heads;
+  power therefore changes visible and physical size together. A 36-pixel
+  non-damaging trail communicates direction and uses a shape-distinct kinetic,
+  thermal, toxin, cryo, arc, or hybrid silhouette. Attack affinity, not enemy
+  ownership alone, determines projectile color.
 - The unmodified Pulse Cannon starts from a seven-pixel collision radius and a
-  rendered head at least that large. Solid-cover impacts must terminate the
+  rendered head exactly that large. Solid-cover impacts must terminate the
   visible trail at the same blocker used by collision; a projectile may appear
   beyond cover only when its state explicitly carries the exceptional
   `wall_piercing` capability.
+- Corridor fill reaches the exact expanded collision boundary, including the
+  swept circle's rounded start and end caps. Boundary rails sit inside that
+  edge, and projectile or beam warnings end at the same live wall or crate
+  contact as simulation. Area warnings and active persistent zones keep their
+  exact outer radius visible. Thermal, toxin, cryo, and arc variations add large
+  interior rhythms without changing the damage footprint.
+- `Affinity` describes immediate impact presentation. Burn, poison, and chill
+  are separate real `condition` payloads; no color promises a damage-over-time
+  effect that gameplay does not apply. Multi-condition player rounds use the
+  hybrid family.
 - Burn, poison, and chill use three retained, shape-distinct status arcs around
   an affected enemy. Stack counts belong in localized target/boss text rather
   than tiny floating labels.

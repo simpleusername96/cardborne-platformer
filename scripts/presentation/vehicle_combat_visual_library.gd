@@ -5,6 +5,7 @@ extends RefCounted
 ## presentation changes transforms and instance colors, never polygon vertices.
 
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
+const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd")
 
 const ENEMY_ARCHETYPES: Array[StringName] = [
 	&"scrap_drone", &"needle_drone", &"spark_minelet", &"chaser",
@@ -28,19 +29,74 @@ static func enemy_mesh(archetype: StringName) -> ArrayMesh:
 
 static func projectile_head_mesh() -> ArrayMesh:
 	return polygon_mesh([{
-		"points": _regular_polygon(Vector2.ZERO, 1.0, 4, PI / 4.0),
+		"points": _regular_polygon(Vector2.ZERO, 1.0, 20),
 		"color": Color.WHITE,
 	}])
 
 
-static func projectile_trail_mesh() -> ArrayMesh:
-	return polygon_mesh([{
-		"points": PackedVector2Array([
-			Vector2(-0.5, -0.5), Vector2(0.5, -0.5),
-			Vector2(0.5, 0.5), Vector2(-0.5, 0.5),
-		]),
-		"color": Color.WHITE,
-	}])
+static func projectile_trail_mesh(affinity: StringName) -> ArrayMesh:
+	var polygons: Array[Dictionary] = []
+	match AttackContract.normalize_affinity(affinity):
+		AttackContract.THERMAL:
+			polygons.append({
+				"points":PackedVector2Array([
+					Vector2(-0.5, -0.5), Vector2(0.5, -0.18),
+					Vector2(0.5, 0.18), Vector2(-0.5, 0.5),
+				]),
+				"color":Color.WHITE,
+			})
+		AttackContract.TOXIN:
+			for center_x in [-0.28, 0.28]:
+				polygons.append({
+					"points":PackedVector2Array([
+						Vector2(center_x - 0.22, 0.0), Vector2(center_x, -0.46),
+						Vector2(center_x + 0.22, 0.0), Vector2(center_x, 0.46),
+					]),
+					"color":Color.WHITE,
+				})
+		AttackContract.CRYO:
+			polygons.append({
+				"points":PackedVector2Array([
+					Vector2(-0.5, -0.48), Vector2(0.5, -0.08),
+					Vector2(0.5, 0.05), Vector2(-0.5, -0.16),
+				]),
+				"color":Color.WHITE,
+			})
+			polygons.append({
+				"points":PackedVector2Array([
+					Vector2(-0.5, 0.16), Vector2(0.5, -0.05),
+					Vector2(0.5, 0.08), Vector2(-0.5, 0.48),
+				]),
+				"color":Color.WHITE,
+			})
+		AttackContract.ARC:
+			polygons.append({
+				"points":PackedVector2Array([
+					Vector2(-0.5, -0.18), Vector2(-0.18, -0.5),
+					Vector2(-0.04, -0.12), Vector2(0.24, -0.42),
+					Vector2(0.12, -0.03), Vector2(0.5, 0.18),
+					Vector2(0.18, 0.5), Vector2(0.04, 0.12),
+					Vector2(-0.24, 0.42), Vector2(-0.12, 0.03),
+				]),
+				"color":Color.WHITE,
+			})
+		AttackContract.HYBRID:
+			polygons.append({
+				"points":PackedVector2Array([
+					Vector2(-0.5, 0.0), Vector2(-0.08, -0.5),
+					Vector2(0.5, 0.0), Vector2(-0.08, 0.5),
+				]),
+				"color":Color.WHITE,
+			})
+		_:
+			polygons.append({
+				"points":PackedVector2Array([
+					Vector2(-0.5, -0.5), Vector2(0.5, -0.5),
+					Vector2(0.5, 0.5), Vector2(-0.5, 0.5),
+				]),
+				"color":Color.WHITE,
+			})
+	return polygon_mesh(polygons)
 
 
 static func health_bar_mesh() -> ArrayMesh:
