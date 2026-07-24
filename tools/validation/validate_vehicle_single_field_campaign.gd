@@ -10,6 +10,7 @@ var failures: Array[String] = []
 
 func _initialize() -> void:
 	var layout := Generator.generate(0xC4A2B0, Catalog.STAGE_IDS)
+	Catalog.activate_field(layout.field_id)
 	var fingerprints := {}
 	for index in Catalog.STAGE_IDS.size():
 		var stage_id := Catalog.STAGE_IDS[index]
@@ -18,16 +19,14 @@ func _initialize() -> void:
 		_expect(Catalog.authored_population(stage_id) >= Catalog.quota(stage_id) + 32, "%s finite population exceeds quota plus active cap" % stage_id)
 		fingerprints[Catalog.geometry_fingerprint(stage_id)] = true
 	_expect(fingerprints.size() == 1, "all five stages share one geometry fingerprint")
-	_expect(Catalog.world_rect() == Rect2(0, 0, 5600, 3400), "world is exactly 5600x3400")
-	_expect(Catalog.player_start() == Vector2(2800, 1700), "start is exact field center")
-	_expect(Catalog.walkable_regions().size() == 16, "translated core and six extensions are present")
+	_expect(Catalog.world_rect() == Rect2(0, 0, 7200, 4320), "world is exactly 7200x4320")
+	_expect(Catalog.player_start() == Vector2(3600, 2160), "start is exact field center")
+	_expect(Catalog.walkable_regions().size() >= 20, "field has at least twenty broad regions")
 	_expect(Catalog.cover_rects().is_empty(), "static field leaves internal cover to the run layout")
 	_expect(layout.cover_rects.size() == 8, "run layout has eight modular blockers")
-	_expect(Catalog.water_rects().size() == 4, "field has four border-water regions")
-	_expect(Catalog.motifs().size() == 4, "field has four macro motifs")
-	_expect(Catalog.ordinary_spawn_anchors().size() == 24, "field has twenty-four ordinary candidates")
-	_expect(layout.ordinary_spawn_anchors.size() >= 16, "run layout retains at least sixteen ordinary anchors")
-	_expect(Catalog.boss_arrival_anchors().size() == 8, "field has eight boss anchors")
+	_expect(Catalog.ordinary_spawn_anchors().size() == 32, "field has thirty-two ordinary candidates")
+	_expect(layout.ordinary_spawn_anchors.size() >= 20, "run layout retains at least twenty ordinary anchors")
+	_expect(Catalog.boss_arrival_anchors().size() == 12, "field has twelve boss anchors")
 	for anchor in layout.ordinary_spawn_anchors:
 		_expect(Rules.grid_reachable_with_extra(Catalog.player_start(), anchor, 36.0, 96.0, false, &"stage_1", layout.cover_rects), "ordinary anchor reaches center")
 	for anchor in layout.boss_arrival_anchors:

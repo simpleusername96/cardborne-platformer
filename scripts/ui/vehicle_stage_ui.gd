@@ -361,6 +361,7 @@ var _guide_center: CenterContainer
 var _guide_panel: VehicleGuidebookPanel
 var _deployment_command: Button
 var _deployment_controls_label: Label
+var _deployment_field_label: Label
 var _deployment_difficulty_detail: Label
 var _deployment_difficulty_buttons: Dictionary = {}
 var _upgrade_buttons: Array[Button] = []
@@ -378,6 +379,7 @@ var _garage_summary_label: Label
 var _selected_primary := &"pulse_cannon"
 var _selected_run_difficulty: StringName = RunDifficulty.DEFAULT
 var _settings_return_surface := "deployment"
+var _selected_field_name_key := "FIELD_DROWNED_RUIN"
 var _guide_return_surface := "pause"
 var _latest_guidebook_snapshot: Dictionary = {}
 var _latest_upgrade_cards: Array[Dictionary] = []
@@ -645,6 +647,9 @@ func _build_deployment() -> void:
 	box.add_child(kicker)
 	var title := _label("DEPLOY_TITLE", 30, INK)
 	box.add_child(title)
+	_deployment_field_label = _label("DEPLOY_FIELD_TEMPLATE", 16, RAISED)
+	_deployment_field_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(_deployment_field_label)
 	_deployment_controls_label = _label("DEPLOY_CONTROLS", 15, MUTED)
 	_deployment_controls_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_deployment_controls_label.custom_minimum_size.y = 36.0
@@ -898,11 +903,16 @@ func update_hud(snapshot: Dictionary) -> void:
 
 func show_deployment(
 	_selected: StringName = &"pulse_cannon",
-	difficulty_id: StringName = RunDifficulty.DEFAULT
+	difficulty_id: StringName = RunDifficulty.DEFAULT,
+	field_name_key: String = "FIELD_DROWNED_RUIN"
 ) -> void:
 	hide_all_modals()
 	_selected_primary = &"pulse_cannon"
 	_selected_run_difficulty = RunDifficulty.normalize(difficulty_id)
+	_selected_field_name_key = field_name_key
+	_deployment_field_label.text = tr("DEPLOY_FIELD_TEMPLATE").replace(
+		"%s", tr(_selected_field_name_key)
+	)
 	_refresh_difficulty_selection()
 	_dim.visible = true
 	_deployment_center.visible = true
@@ -982,7 +992,7 @@ func _close_settings() -> void:
 		"garage":
 			show_garage(_latest_garage_data)
 		_:
-			show_deployment(_selected_primary, _selected_run_difficulty)
+			show_deployment(_selected_primary, _selected_run_difficulty, _selected_field_name_key)
 
 
 func _show_guidebook(return_surface: String) -> void:
@@ -1131,7 +1141,7 @@ func debug_ui_contract(viewport_width: float = 1280.0) -> Dictionary:
 func debug_modal_contract(surface: String) -> Dictionary:
 	match surface:
 		"deployment":
-			show_deployment(_selected_primary, _selected_run_difficulty)
+			show_deployment(_selected_primary, _selected_run_difficulty, _selected_field_name_key)
 		"upgrade":
 			show_upgrade([])
 		"pause":

@@ -5,9 +5,13 @@ extends RefCounted
 
 const BROADPHASE_CELL_SIZE := 320.0
 const BROADPHASE_MARGIN := 96.0
+const GeometrySnapshot = preload("res://scripts/vehicle/vehicle_field_geometry_snapshot.gd")
 
 var seed := 0
 var fingerprint := 0
+var field_id: StringName = &""
+var field_definition: Dictionary = {}
+var geometry_snapshot: RefCounted
 var cover_ids: Array[StringName] = []
 var cover_rects: Array[Rect2] = []
 var ordinary_spawn_anchors: Array[Vector2] = []
@@ -24,6 +28,8 @@ var _empty_cover_indices: Array[int] = []
 
 func configure(
 	layout_seed: int,
+	selected_field_id: StringName,
+	selected_field_definition: Dictionary,
 	selected_cover_ids: Array[StringName],
 	selected_cover_rects: Array[Rect2],
 	ordinary_anchors: Array[Vector2],
@@ -33,6 +39,8 @@ func configure(
 	fallback: bool
 ) -> void:
 	seed = layout_seed
+	field_id = selected_field_id
+	field_definition = selected_field_definition.duplicate(true)
 	cover_ids = selected_cover_ids.duplicate()
 	cover_rects = selected_cover_rects.duplicate()
 	ordinary_spawn_anchors = ordinary_anchors.duplicate()
@@ -40,6 +48,8 @@ func configure(
 	stage_objects = objects_by_stage.duplicate(true)
 	encounter_seeds = seeds_by_stage.duplicate(true)
 	used_fallback = fallback
+	geometry_snapshot = GeometrySnapshot.new()
+	geometry_snapshot.configure(field_definition, cover_rects)
 	_build_cover_broadphase()
 	fingerprint = hash(var_to_str(_fingerprint_blueprint()))
 
@@ -103,6 +113,7 @@ func canonical_blueprint() -> Dictionary:
 		})
 	return {
 		"seed":seed,
+		"field_id":String(field_id),
 		"cover_ids":Array(cover_ids),
 		"covers":Array(cover_rects),
 		"ordinary_anchors":Array(ordinary_spawn_anchors),
@@ -116,6 +127,7 @@ func debug_snapshot() -> Dictionary:
 	return {
 		"seed":seed,
 		"fingerprint":fingerprint,
+		"field_id":field_id,
 		"cover_ids":cover_ids.duplicate(),
 		"cover_count":cover_rects.size(),
 		"ordinary_anchor_count":ordinary_spawn_anchors.size(),
@@ -137,6 +149,7 @@ func _fingerprint_blueprint() -> Dictionary:
 			"crates":_canonical_specs(stage_id, "crates"),
 		})
 	return {
+		"field_id":String(field_id),
 		"cover_ids":Array(cover_ids),
 		"covers":Array(cover_rects),
 		"ordinary_anchors":Array(ordinary_spawn_anchors),

@@ -5,8 +5,9 @@ extends RefCounted
 
 const EnemyArchetypes = preload("res://scripts/enemies/vehicle_enemy_archetypes.gd")
 
-const MIN_PLAYER_DISTANCE := 960.0
-const OFFSCREEN_MARGIN := 160.0
+const MIN_PLAYER_DISTANCE := 1000.0
+const MAX_PLAYER_DISTANCE := 1800.0
+const OFFSCREEN_MARGIN := 220.0
 const RECENT_ANCHOR_LIMIT := 4
 const PURSUIT_ROLES: Array[StringName] = [
 	&"scrap_drone", &"chaser", &"rammer", &"spark_minelet",
@@ -69,10 +70,10 @@ func _choose_anchor(
 	squad_index: int
 ) -> Vector2:
 	var tiers: Array[Dictionary] = [
-		{"distance":true, "offscreen":true, "recent":true, "arc":true},
-		{"distance":true, "offscreen":false, "recent":true, "arc":true},
-		{"distance":true, "offscreen":false, "recent":false, "arc":true},
-		{"distance":false, "offscreen":false, "recent":false, "arc":true},
+		{"ring":true, "offscreen":true, "recent":true, "arc":true},
+		{"ring":true, "offscreen":true, "recent":false, "arc":true},
+		{"ring":false, "offscreen":true, "recent":true, "arc":true},
+		{"ring":false, "offscreen":true, "recent":false, "arc":true},
 		{"distance":false, "offscreen":false, "recent":false, "arc":false},
 	]
 	for tier in tiers:
@@ -80,8 +81,10 @@ func _choose_anchor(
 		for anchor in _anchors:
 			if anchor in used and used.size() < _anchors.size():
 				continue
-			if bool(tier["distance"]) and anchor.distance_to(player_position) < MIN_PLAYER_DISTANCE:
-				continue
+			if bool(tier.get("ring", false)):
+				var distance := anchor.distance_to(player_position)
+				if distance < MIN_PLAYER_DISTANCE or distance > MAX_PLAYER_DISTANCE:
+					continue
 			if bool(tier["offscreen"]) and visible_world.grow(OFFSCREEN_MARGIN).has_point(anchor):
 				continue
 			if bool(tier["recent"]) and anchor in _recent_anchors:
@@ -97,9 +100,8 @@ func _choose_anchor(
 			continue
 		candidates.sort_custom(
 			func(a: Vector2, b: Vector2) -> bool:
-				return (
-					_anchor_score(a, player_position, packet_id, squad_index)
-					> _anchor_score(b, player_position, packet_id, squad_index)
+				return _anchor_score(a, player_position, packet_id, squad_index) < _anchor_score(
+					b, player_position, packet_id, squad_index
 				)
 		)
 		return candidates[0]
@@ -115,7 +117,7 @@ func _anchor_score(
 	var tie_break := absf(float(hash(
 		"%d:%s:%d:%d:%d" % [_seed, packet_id, squad_index, roundi(anchor.x), roundi(anchor.y)]
 	) % 10000)) / 10000.0
-	return anchor.distance_to(player_position) + tie_break
+	return absf(anchor.distance_to(player_position) - 1400.0) + tie_break
 
 
 func _reorder_roles(squads: Array, packet_id: String) -> Array[Array]:

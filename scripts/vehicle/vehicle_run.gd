@@ -65,8 +65,8 @@ const PASSIVE_COOLDOWN := 1.35
 const EMP_COOLDOWN := 13.0
 const EMP_STARTUP := 0.42
 const EMP_RADIUS := 285.0
-const MINIMAP_COLS := 16
-const MINIMAP_ROWS := 10
+const MINIMAP_COLS := 20
+const MINIMAP_ROWS := 12
 const THREAT_SCAN_DISTANCE := 1200.0
 const THREAT_SAMPLE_INTERVAL := 0.10
 const LOW_COUNT_OVERLAY_INTERVAL := 0.05
@@ -98,6 +98,7 @@ var _layout_session_rng := RandomNumberGenerator.new()
 var _layout_session_seed := 0
 var _layout_seed_override := 0
 var _has_layout_seed_override := false
+var _field_id_override: StringName = &""
 var field_layout: VehicleFieldLayout
 var encounter_runtime := EncounterRuntime.new()
 var stage_flow := StageFlow.new()
@@ -237,7 +238,11 @@ func _ready() -> void:
 	_load_persistence()
 	selected_run_difficulty = _preferred_run_difficulty()
 	_reset_run(false)
-	_ui.show_deployment(selected_primary, selected_run_difficulty)
+	_ui.show_deployment(
+		selected_primary,
+		selected_run_difficulty,
+		String(field_layout.field_definition["name_key"])
+	)
 	_set_mouse_for_mode()
 	queue_redraw()
 	if not _performance_request.is_empty():
@@ -599,9 +604,13 @@ func _generate_field_layout() -> void:
 		if _has_layout_seed_override
 		else hash("field:v1:%d:%d" % [_layout_session_seed, run_index])
 	)
-	field_layout = FieldLayoutGenerator.generate(layout_seed, StageCatalog.STAGE_IDS)
+	field_layout = FieldLayoutGenerator.generate(
+		layout_seed, StageCatalog.STAGE_IDS, _field_id_override
+	)
 	if field_layout == null:
 		push_error("Could not generate the required run field layout")
+		return
+	StageCatalog.activate_field(field_layout.field_id)
 
 
 func _make_enemy(spec: Dictionary) -> EnemyState:
@@ -850,7 +859,11 @@ func _restart_stage() -> void:
 func _replay_stage() -> void:
 	run_index += 1
 	mode = RunMode.DEPLOYMENT
-	_ui.show_deployment(selected_primary, selected_run_difficulty)
+	_ui.show_deployment(
+		selected_primary,
+		selected_run_difficulty,
+		String(field_layout.field_definition["name_key"])
+	)
 	_set_mouse_for_mode()
 
 
@@ -2986,24 +2999,30 @@ func _choose_boss_arrival_anchor() -> Vector2:
 		else StageCatalog.boss_arrival_anchors(current_stage_id)
 	)
 	var candidates: Array[Vector2] = []
+	var excluded_view := _visible_world_rect(240.0)
 	for anchor in anchors:
-		if player_position.distance_to(anchor) >= 1200.0 and pursuit_field.path_cost(anchor, 76.0) >= 0:
+		var distance := player_position.distance_to(anchor)
+		if (
+			distance >= 900.0
+			and distance <= 1500.0
+			and not excluded_view.has_point(anchor)
+			and pursuit_field.path_cost(anchor, 76.0) >= 0
+		):
 			candidates.append(anchor)
 	if candidates.is_empty():
 		for anchor in anchors:
-			if pursuit_field.path_cost(anchor, 76.0) >= 0:
+			if (
+				not excluded_view.has_point(anchor)
+				and pursuit_field.path_cost(anchor, 76.0) >= 0
+			):
 				candidates.append(anchor)
 	if candidates.is_empty():
 		candidates = anchors.duplicate()
 	candidates.sort_custom(func(a: Vector2, b: Vector2) -> bool:
-		var a_cost := pursuit_field.path_cost(a, 76.0)
-		var b_cost := pursuit_field.path_cost(b, 76.0)
-		if a_cost != b_cost:
-			return a_cost > b_cost
-		var a_distance := player_position.distance_squared_to(a)
-		var b_distance := player_position.distance_squared_to(b)
+		var a_distance := absf(player_position.distance_to(a) - 1200.0)
+		var b_distance := absf(player_position.distance_to(b) - 1200.0)
 		if not is_equal_approx(a_distance, b_distance):
-			return a_distance > b_distance
+			return a_distance < b_distance
 		return int(a.x + a.y + run_index * 31 + current_stage_index * 17) < int(b.x + b.y + run_index * 31 + current_stage_index * 17)
 	)
 	return candidates[0] if not candidates.is_empty() else Rules.player_start(current_stage_id)
@@ -3971,6 +3990,8 @@ func _parse_capture_arguments() -> void:
 		elif argument.begins_with("--layout-seed="):
 			_layout_seed_override = int(argument.trim_prefix("--layout-seed="))
 			_has_layout_seed_override = true
+		elif argument.begins_with("--field-id="):
+			_field_id_override = StringName(argument.trim_prefix("--field-id="))
 	if _capture_locale in ["ko", "en"]:
 		TranslationServer.set_locale(_capture_locale)
 	if _capture_mode:
@@ -3982,7 +4003,11 @@ func _run_capture_sequence() -> void:
 	if _capture_size.x > 0 and _capture_size.y > 0:
 		get_window().size = _capture_size
 	_camera.position_smoothing_enabled = false
-	_ui.show_deployment(selected_primary, RunDifficulty.HARD)
+	_ui.show_deployment(
+		selected_primary,
+		RunDifficulty.HARD,
+		String(field_layout.field_definition["name_key"])
+	)
 	await get_tree().process_frame
 	await get_tree().process_frame
 	_save_capture("01-deployment.png")

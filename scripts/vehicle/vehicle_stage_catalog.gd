@@ -1,9 +1,9 @@
 class_name VehicleStageCatalog
 extends RefCounted
 
-## Validated facade joining one immutable floor topology with five combat profiles.
+## Validated facade joining the active run field with five combat profiles.
 
-const Field = preload("res://scripts/vehicle/stages/drowned_ruin_field.gd")
+const FieldRegistry = preload("res://scripts/vehicle/vehicle_field_registry.gd")
 const CombatStages = preload("res://scripts/vehicle/stages/vehicle_combat_stages.gd")
 const Geometry = preload("res://scripts/vehicle/vehicle_stage_geometry.gd")
 
@@ -11,10 +11,12 @@ const STAGE_IDS: Array[StringName] = CombatStages.STAGE_IDS
 const REQUIRED_FIELDS := [
 	"id", "field_id", "title_key", "number", "boss_name_key", "quota",
 	"world_rect", "player_start", "start_clearance", "walkable_regions",
-	"cover_rects", "water_rects", "motifs", "ordinary_spawn_anchors",
+	"cover_rects", "water_rects", "ordinary_spawn_anchors",
 	"boss_arrival_anchors", "static_enemies", "packets",
 ]
 
+static var _active_field_id: StringName = FieldRegistry.FIELD_IDS[0]
+static var _active_field: Dictionary = FieldRegistry.definition(_active_field_id)
 static var _definition_cache: Dictionary = {}
 static var _definition_build_counts: Dictionary = {}
 static var _walkable_rect_cache: Array[Rect2] = []
@@ -45,7 +47,7 @@ static func definition(stage_id: StringName) -> Dictionary:
 	var normalized := normalized_id(stage_id)
 	if _definition_cache.has(normalized):
 		return _definition_cache[normalized]
-	var result := CombatStages.definition(normalized)
+	var result := CombatStages.definition(normalized, _active_field)
 	var errors := validate_definition(result, normalized)
 	if not errors.is_empty():
 		push_error("Registered combat stage %s is invalid: %s" % [normalized, "; ".join(errors)])
@@ -64,41 +66,41 @@ static func validate_definition(value: Dictionary, expected_id: StringName = &""
 		return errors
 	if not expected_id.is_empty() and StringName(value["id"]) != expected_id:
 		errors.append("id does not match registry")
-	if StringName(value["field_id"]) != Field.FIELD_ID:
+	if StringName(value["field_id"]) != _active_field_id:
 		errors.append("stage does not reference the shared field")
-	if Rect2(value["world_rect"]) != Field.WORLD_RECT:
+	if Rect2(value["world_rect"]) != Rect2(_active_field["world_rect"]):
 		errors.append("world_rect differs from the shared field")
-	if Vector2(value["player_start"]) != Field.CENTER:
+	if Vector2(value["player_start"]) != Vector2(_active_field["player_start"]):
 		errors.append("player_start differs from the shared center")
 	if int(value["quota"]) <= 0:
 		errors.append("quota must be positive")
 	if not value["walkable_regions"] is Array or value["walkable_regions"].is_empty():
 		errors.append("walkable_regions must not be empty")
-	if Array(value["ordinary_spawn_anchors"]).size() != 24:
-		errors.append("field requires twenty-four ordinary spawn candidates")
-	if Array(value["boss_arrival_anchors"]).size() != 8:
-		errors.append("field requires eight boss arrival anchors")
+	if Array(value["ordinary_spawn_anchors"]).size() != 32:
+		errors.append("field requires thirty-two ordinary spawn candidates")
+	if Array(value["boss_arrival_anchors"]).size() != 12:
+		errors.append("field requires twelve boss arrival anchors")
 	return errors
 
 
 static func profile(stage_id: StringName) -> Dictionary:
-	return CombatStages.profile(stage_id)
+	return CombatStages.profile(stage_id, _active_field_id)
 
 
 static func field_id(_stage_id: StringName = &"stage_1") -> StringName:
-	return Field.FIELD_ID
+	return _active_field_id
 
 
 static func world_rect(_stage_id: StringName = &"stage_1") -> Rect2:
-	return Field.WORLD_RECT
+	return Rect2(_active_field["world_rect"])
 
 
 static func player_start(_stage_id: StringName = &"stage_1") -> Vector2:
-	return Field.CENTER
+	return Vector2(_active_field["player_start"])
 
 
 static func start_clearance(_stage_id: StringName = &"stage_1") -> float:
-	return Field.START_CLEARANCE
+	return float(_active_field["start_clearance"])
 
 
 static func quota(stage_id: StringName) -> int:
@@ -106,17 +108,14 @@ static func quota(stage_id: StringName) -> int:
 
 
 static func ordinary_spawn_anchors(_stage_id: StringName = &"stage_1") -> Array[Vector2]:
-	return Field.ORDINARY_SPAWN_CANDIDATES.duplicate()
+	var result: Array[Vector2] = []
+	result.assign(_active_field["ordinary_spawn_anchors"])
+	return result
 
 
 static func boss_arrival_anchors(_stage_id: StringName = &"stage_1") -> Array[Vector2]:
-	return Field.BOSS_ARRIVAL_ANCHORS.duplicate()
-
-
-static func motifs(_stage_id: StringName = &"stage_1") -> Array[Dictionary]:
-	var result: Array[Dictionary] = []
-	for motif in definition(&"stage_1")["motifs"]:
-		result.append(Dictionary(motif).duplicate(true))
+	var result: Array[Vector2] = []
+	result.assign(_active_field["boss_arrival_anchors"])
 	return result
 
 
@@ -279,7 +278,7 @@ static func _register_rects(cache: Dictionary, rectangles: Array[Rect2]) -> void
 
 
 static func _build_safe_motion_cells() -> void:
-	var bounds := Field.WORLD_RECT
+	var bounds := world_rect()
 	var min_cell := Vector2i(
 		floori(bounds.position.x / COLLISION_CELL_SIZE),
 		floori(bounds.position.y / COLLISION_CELL_SIZE)
@@ -358,7 +357,7 @@ static func packet_enemy_blueprint(stage_id: StringName) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 	for packet in packets(stage_id):
 		var packet_id := String(packet["id"])
-		var anchor := Field.CENTER
+		var anchor := player_start()
 		for squad_index in Array(packet["squads"]).size():
 			var squad: Array = packet["squads"][squad_index]
 			for unit_index in squad.size():
@@ -366,7 +365,7 @@ static func packet_enemy_blueprint(stage_id: StringName) -> Array[Dictionary]:
 					"id":"%s_s%02d_u%02d" % [packet_id, squad_index + 1, unit_index + 1],
 					"role":StringName(squad[unit_index]), "pos":anchor, "zone":"field",
 					"group_id":"%s_s%02d" % [packet_id, squad_index + 1],
-					"formation_anchor":anchor, "leash_rect":Field.WORLD_RECT,
+					"formation_anchor":anchor, "leash_rect":world_rect(),
 				})
 	return result
 
@@ -383,9 +382,9 @@ static func authored_population(stage_id: StringName) -> int:
 
 static func geometry_fingerprint(_stage_id: StringName = &"stage_1") -> int:
 	return hash(var_to_str([
-		Field.WORLD_RECT, walkable_regions(), cover_rects(), water_rects(), motifs(),
-		Field.COVER_CANDIDATES, ordinary_spawn_anchors(), boss_arrival_anchors(),
-		Field.STATIONARY_CANDIDATES, Field.ITEM_SOCKET_CANDIDATES,
+		world_rect(), walkable_regions(), cover_rects(), water_rects(),
+		_active_field["cover_candidates"], ordinary_spawn_anchors(), boss_arrival_anchors(),
+		_active_field["stationary_candidates"], _active_field["item_socket_candidates"],
 	]))
 
 
@@ -395,10 +394,39 @@ static func debug_cache_contract(stage_id: StringName) -> Dictionary:
 	definition(normalized)
 	return {
 		"stage_id":normalized,
-		"field_id":Field.FIELD_ID,
+		"field_id":_active_field_id,
 		"definition_build_count":int(_definition_build_counts.get(normalized, 0)),
 		"floor_count":floor_polygons().size(),
 		"cover_count":cover_rects().size(),
 		"water_count":water_rects().size(),
 		"geometry_fingerprint":geometry_fingerprint(),
 	}
+
+
+static func activate_field(field_id_value: StringName) -> void:
+	var normalized := FieldRegistry.normalized_id(field_id_value)
+	if normalized == _active_field_id:
+		return
+	_active_field_id = normalized
+	_active_field = FieldRegistry.definition(normalized)
+	_clear_geometry_caches()
+
+
+static func active_field_definition() -> Dictionary:
+	return _active_field.duplicate(true)
+
+
+static func _clear_geometry_caches() -> void:
+	_definition_cache.clear()
+	_definition_build_counts.clear()
+	_walkable_rect_cache.clear()
+	_cover_rect_cache.clear()
+	_water_rect_cache.clear()
+	_floor_polygon_cache.clear()
+	_cover_polygon_cache.clear()
+	_water_polygon_cache.clear()
+	_floor_cells.clear()
+	_cover_cells.clear()
+	_water_cells.clear()
+	_safe_motion_cells_36.clear()
+	_spatial_cache_ready = false

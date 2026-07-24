@@ -1,4 +1,8 @@
 keys,ko,en
+DEPLOY_FIELD_TEMPLATE,"작전 구역 · %s","Operation field · %s"
+FIELD_DROWNED_RUIN,"침수 유적","Drowned Ruins"
+FIELD_TIDAL_ARCHIVE,"조수 기록고","Tidal Archive"
+FIELD_STORM_DRYDOCK,"폭풍 건선거","Storm Drydock"
 LANGUAGE_LABEL,"언어","Language"
 LANGUAGE_KO,"한국어","한국어"
 LANGUAGE_EN,"EN","EN"

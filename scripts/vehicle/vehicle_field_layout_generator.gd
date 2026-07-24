@@ -3,7 +3,7 @@ extends RefCounted
 
 ## Builds one bounded field variant before play and rejects invalid placements.
 
-const Field = preload("res://scripts/vehicle/stages/drowned_ruin_field.gd")
+const FieldRegistry = preload("res://scripts/vehicle/vehicle_field_registry.gd")
 const CombatStages = preload("res://scripts/vehicle/stages/vehicle_combat_stages.gd")
 const Layout = preload("res://scripts/vehicle/vehicle_field_layout.gd")
 
@@ -12,21 +12,29 @@ const GRID_SIZE := 96.0
 const ORDINARY_RADIUS := 36.0
 const BOSS_RADIUS := 76.0
 const COVER_CLEARANCE := 176.0
-const SOCKET_COVER_CLEARANCE := 96.0
-const ITEM_PAIR_CLEARANCE := 200.0
-const STATIONARY_ITEM_CLEARANCE := 180.0
+const SOCKET_COVER_CLEARANCE := 64.0
+const ITEM_PAIR_CLEARANCE := 180.0
+const STATIONARY_ITEM_CLEARANCE := 120.0
 const RECALL_CLEARANCE := 1200.0
-const QUADRANTS: Array[StringName] = [&"nw", &"ne", &"sw", &"se"]
-const OUTER_COURTS: Array[Vector2] = [
-	Vector2(520,960), Vector2(5080,960), Vector2(520,2440), Vector2(5080,2440),
-]
+const SECTORS: Array[StringName] = [&"nw", &"n", &"ne", &"sw", &"s", &"se"]
 
+static var _field: Dictionary = {}
 static var _walkable_rects_cache: Array[Rect2] = []
 static var _water_rects_cache: Array[Rect2] = []
 static var _grid_cache_by_radius: Dictionary = {}
 
 
-static func generate(layout_seed: int, stage_ids: Array[StringName] = CombatStages.STAGE_IDS) -> VehicleFieldLayout:
+static func generate(
+	layout_seed: int,
+	stage_ids: Array[StringName] = CombatStages.STAGE_IDS,
+	field_id_override: StringName = &""
+) -> VehicleFieldLayout:
+	var field_id := (
+		FieldRegistry.select_id(layout_seed)
+		if field_id_override.is_empty()
+		else FieldRegistry.normalized_id(field_id_override)
+	)
+	_configure_field(FieldRegistry.definition(field_id))
 	var cover_rng := _rng_for(layout_seed, "cover:v1")
 	for _attempt in MAX_ATTEMPTS:
 		var selected_ids := _random_cover_ids(cover_rng)
@@ -35,13 +43,15 @@ static func generate(layout_seed: int, stage_ids: Array[StringName] = CombatStag
 			var generated := _build_layout(layout_seed, selected_ids, selected_rects, stage_ids, false)
 			if generated != null:
 				return generated
-	var fallback_rects := _rects_for_ids(Field.FALLBACK_COVER_IDS)
+	var fallback_ids: Array[StringName] = []
+	fallback_ids.assign(_field["fallback_cover_ids"])
+	var fallback_rects := _rects_for_ids(fallback_ids)
 	var fallback_errors := _validate_cover_selection(fallback_rects)
 	if not fallback_errors.is_empty():
 		push_error("Field layout fallback is invalid: %s" % "; ".join(fallback_errors))
 		return null
 	var fallback := _build_layout(
-		layout_seed, Field.FALLBACK_COVER_IDS, fallback_rects, stage_ids, true
+		layout_seed, fallback_ids, fallback_rects, stage_ids, true
 	)
 	if fallback == null:
 		push_error("Field layout fallback could not place required stage objects")
@@ -54,12 +64,16 @@ static func validate_cover_ids(cover_ids: Array[StringName]) -> PackedStringArra
 
 static func cover_ids_for_mask(mask: Array[int]) -> Array[StringName]:
 	var result: Array[StringName] = []
-	for quadrant_index in QUADRANTS.size():
-		var candidates := _cover_candidates_for(QUADRANTS[quadrant_index])
-		var combinations := [[0,1], [0,2], [0,3], [1,2], [1,3], [2,3]]
-		var pair: Array = combinations[clampi(mask[quadrant_index], 0, combinations.size() - 1)]
-		result.append(StringName(candidates[int(pair[0])]["id"]))
-		result.append(StringName(candidates[int(pair[1])]["id"]))
+	if _field.is_empty():
+		_configure_field(FieldRegistry.definition(FieldRegistry.FIELD_IDS[0]))
+	for sector_index in SECTORS.size():
+		var candidates := _cover_candidates_for(SECTORS[sector_index])
+		var choice := mask[sector_index] if sector_index < mask.size() else 0
+		result.append(StringName(candidates[posmod(choice, candidates.size())]["id"]))
+	for sector_index in [0, 5]:
+		var candidates := _cover_candidates_for(SECTORS[sector_index])
+		var choice := mask[sector_index] if sector_index < mask.size() else 0
+		result.append(StringName(candidates[posmod(choice + 1, candidates.size())]["id"]))
 	result.sort_custom(func(a: StringName, b: StringName) -> bool: return String(a) < String(b))
 	return result
 
@@ -72,12 +86,12 @@ static func _build_layout(
 	used_fallback: bool
 ) -> VehicleFieldLayout:
 	var ordinary := _valid_reachable_points(
-		Field.ORDINARY_SPAWN_CANDIDATES, ORDINARY_RADIUS, cover_rects, true
+		_field["ordinary_spawn_anchors"], ORDINARY_RADIUS, cover_rects, true
 	)
 	var bosses := _valid_reachable_points(
-		Field.BOSS_ARRIVAL_ANCHORS, BOSS_RADIUS, cover_rects, false
+		_field["boss_arrival_anchors"], BOSS_RADIUS, cover_rects, false
 	)
-	if ordinary.size() < 16 or bosses.size() != Field.BOSS_ARRIVAL_ANCHORS.size():
+	if ordinary.size() < 20 or bosses.size() < 8:
 		return null
 	var objects_by_stage := {}
 	var encounter_seeds := {}
@@ -89,7 +103,7 @@ static func _build_layout(
 		encounter_seeds[stage_id] = _sub_seed(layout_seed, "%s:encounter:v1" % String(stage_id))
 	var layout := Layout.new()
 	layout.configure(
-		layout_seed, cover_ids, cover_rects, ordinary, bosses,
+		layout_seed, StringName(_field["id"]), _field, cover_ids, cover_rects, ordinary, bosses,
 		objects_by_stage, encounter_seeds, used_fallback
 	)
 	return layout
@@ -97,16 +111,20 @@ static func _build_layout(
 
 static func _build_stage_objects(layout_seed: int, stage_id: StringName, covers: Array[Rect2]) -> Dictionary:
 	var stationary_rng := _rng_for(layout_seed, "%s:stationary:v1" % String(stage_id))
-	var ordinary_reachable := _reachable_cells(Field.CENTER, ORDINARY_RADIUS, covers)
+	var ordinary_reachable := _reachable_cells(Vector2(_field["player_start"]), ORDINARY_RADIUS, covers)
 	var stationary_points: Array[Vector2] = []
-	for quadrant in QUADRANTS:
-		var candidates: Array = Array(Field.STATIONARY_CANDIDATES[quadrant]).duplicate()
+	var stationary_sectors: Array = Array(SECTORS).duplicate()
+	_shuffle(stationary_sectors, stationary_rng)
+	for sector_value in stationary_sectors.slice(0, 4):
+		var sector := StringName(sector_value)
+		var groups: Dictionary = _field["stationary_candidates"]
+		var candidates: Array = Array(groups[sector]).duplicate()
 		_shuffle(candidates, stationary_rng)
 		var selected := Vector2.INF
 		for value in candidates:
 			var candidate := Vector2(value)
 			if (
-				candidate.distance_to(Field.CENTER) >= Field.START_CLEARANCE
+				candidate.distance_to(Vector2(_field["player_start"])) >= float(_field["start_clearance"])
 				and _point_has_cover_clearance(candidate, SOCKET_COVER_CLEARANCE, covers)
 				and _is_walkable(candidate, ORDINARY_RADIUS, covers)
 				and _reachable_has(ordinary_reachable, candidate)
@@ -114,6 +132,7 @@ static func _build_stage_objects(layout_seed: int, stage_id: StringName, covers:
 				selected = candidate
 				break
 		if selected == Vector2.INF:
+			push_warning("layout stationary placement failed for %s/%s" % [_field["id"], stage_id])
 			return {}
 		stationary_points.append(selected)
 	var roles: Array = Array(CombatStages.profile(stage_id)["stationary_roles"]).duplicate()
@@ -129,7 +148,7 @@ static func _build_stage_objects(layout_seed: int, stage_id: StringName, covers:
 		})
 
 	var item_rng := _rng_for(layout_seed, "%s:items:v1" % String(stage_id))
-	var item_candidates: Array = Array(Field.ITEM_SOCKET_CANDIDATES).duplicate()
+	var item_candidates: Array = Array(_field["item_socket_candidates"]).duplicate()
 	_shuffle(item_candidates, item_rng)
 	var sockets: Array[Vector2] = []
 	for value in item_candidates:
@@ -142,9 +161,11 @@ static func _build_stage_objects(layout_seed: int, stage_id: StringName, covers:
 		if sockets.size() == 8:
 			break
 	if sockets.size() != 8:
+		push_warning("layout item placement failed for %s/%s (%d sockets)" % [_field["id"], stage_id, sockets.size()])
 		return {}
 	var recall_pair := _farthest_pair(sockets)
 	if recall_pair.x < 0 or sockets[recall_pair.x].distance_to(sockets[recall_pair.y]) < RECALL_CLEARANCE:
+		push_warning("layout recall placement failed for %s/%s" % [_field["id"], stage_id])
 		return {}
 	var pickup_sockets: Array[Vector2] = []
 	pickup_sockets.append(sockets[recall_pair.x])
@@ -176,19 +197,22 @@ static func _build_stage_objects(layout_seed: int, stage_id: StringName, covers:
 
 static func _random_cover_ids(rng: RandomNumberGenerator) -> Array[StringName]:
 	var result: Array[StringName] = []
-	for quadrant in QUADRANTS:
-		var candidates := _cover_candidates_for(quadrant)
+	var second_sectors: Array = Array(SECTORS).duplicate()
+	_shuffle(second_sectors, rng)
+	for sector in SECTORS:
+		var candidates := _cover_candidates_for(sector)
 		_shuffle(candidates, rng)
 		result.append(StringName(candidates[0]["id"]))
-		result.append(StringName(candidates[1]["id"]))
+		if sector in second_sectors.slice(0, 2):
+			result.append(StringName(candidates[1]["id"]))
 	result.sort_custom(func(a: StringName, b: StringName) -> bool: return String(a) < String(b))
 	return result
 
 
-static func _cover_candidates_for(quadrant: StringName) -> Array[Dictionary]:
+static func _cover_candidates_for(sector: StringName) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
-	for candidate in Field.COVER_CANDIDATES:
-		if StringName(candidate["quadrant"]) == quadrant:
+	for candidate in Array(_field["cover_candidates"]):
+		if StringName(candidate["sector"]) == sector:
 			result.append(Dictionary(candidate))
 	result.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return String(a["id"]) < String(b["id"]))
 	return result
@@ -196,7 +220,7 @@ static func _cover_candidates_for(quadrant: StringName) -> Array[Dictionary]:
 
 static func _rects_for_ids(ids: Array[StringName]) -> Array[Rect2]:
 	var by_id := {}
-	for candidate in Field.COVER_CANDIDATES:
+	for candidate in Array(_field["cover_candidates"]):
 		by_id[StringName(candidate["id"])] = Rect2(candidate["rect"])
 	var result: Array[Rect2] = []
 	for id in ids:
@@ -214,7 +238,9 @@ static func _validate_cover_selection(covers: Array[Rect2]) -> PackedStringArray
 		var cover := covers[index]
 		if not _rect_inside_floor_union(cover):
 			errors.append("cover %d leaves the walkable floor" % index)
-		if _circle_overlaps_rect(Field.CENTER, Field.START_CLEARANCE, cover):
+		if _circle_overlaps_rect(
+			Vector2(_field["player_start"]), float(_field["start_clearance"]), cover
+		):
 			errors.append("cover %d breaches center clearance" % index)
 		for water in _water_rects():
 			if _rect_distance(cover, water) < COVER_CLEARANCE:
@@ -222,12 +248,6 @@ static func _validate_cover_selection(covers: Array[Rect2]) -> PackedStringArray
 		for other_index in range(index + 1, covers.size()):
 			if _rect_distance(cover, covers[other_index]) < COVER_CLEARANCE:
 				errors.append("covers %d and %d are too close" % [index, other_index])
-	for radius in [ORDINARY_RADIUS, BOSS_RADIUS]:
-		var reachable := _reachable_cells(Field.CENTER, radius, covers)
-		for court in OUTER_COURTS:
-			if not _is_walkable(court, radius, covers) or not _reachable_has(reachable, court):
-				errors.append("radius %d cannot reach outer court" % roundi(radius))
-				break
 	return errors
 
 
@@ -238,9 +258,12 @@ static func _valid_reachable_points(
 	enforce_center_clearance: bool
 ) -> Array[Vector2]:
 	var result: Array[Vector2] = []
-	var reachable := _reachable_cells(Field.CENTER, radius, covers)
+	var reachable := _reachable_cells(Vector2(_field["player_start"]), radius, covers)
 	for candidate in candidates:
-		if enforce_center_clearance and candidate.distance_to(Field.CENTER) < Field.START_CLEARANCE:
+		if (
+			enforce_center_clearance
+			and candidate.distance_to(Vector2(_field["player_start"])) < float(_field["start_clearance"])
+		):
 			continue
 		if _is_walkable(candidate, radius, covers) and _reachable_has(reachable, candidate):
 			result.append(candidate)
@@ -353,14 +376,15 @@ static func _grid_contract(radius: float) -> Dictionary:
 	var key := roundi(radius)
 	if _grid_cache_by_radius.has(key):
 		return _grid_cache_by_radius[key]
-	var width := ceili(Field.WORLD_RECT.size.x / GRID_SIZE)
-	var height := ceili(Field.WORLD_RECT.size.y / GRID_SIZE)
+	var bounds := Rect2(_field["world_rect"])
+	var width := ceili(bounds.size.x / GRID_SIZE)
+	var height := ceili(bounds.size.y / GRID_SIZE)
 	var walkable := PackedByteArray()
 	walkable.resize(width * height)
 	for y in height:
 		for x in width:
 			var point := _cell_center(Vector2i(x, y))
-			if Field.WORLD_RECT.has_point(point) and _is_static_walkable(point, radius):
+			if bounds.has_point(point) and _is_static_walkable(point, radius):
 				walkable[y * width + x] = 1
 	var contract := {"width":width, "height":height, "walkable":walkable}
 	_grid_cache_by_radius[key] = contract
@@ -426,16 +450,23 @@ static func _point_has_cover_clearance(point: Vector2, clearance: float, covers:
 
 static func _water_rects() -> Array[Rect2]:
 	if _water_rects_cache.is_empty():
-		for value in Field.definition()["water_rects"]:
+		for value in Array(_field["water_rects"]):
 			_water_rects_cache.append(Rect2(value))
 	return _water_rects_cache
 
 
 static func _walkable_rects() -> Array[Rect2]:
 	if _walkable_rects_cache.is_empty():
-		for region in Field.definition()["walkable_regions"]:
+		for region in Array(_field["walkable_regions"]):
 			_walkable_rects_cache.append(Rect2(region["rect"]))
 	return _walkable_rects_cache
+
+
+static func _configure_field(definition: Dictionary) -> void:
+	_field = definition.duplicate(true)
+	_walkable_rects_cache.clear()
+	_water_rects_cache.clear()
+	_grid_cache_by_radius.clear()
 
 
 static func _circle_overlaps_rect(center: Vector2, radius: float, rectangle: Rect2) -> bool:

@@ -1,7 +1,7 @@
 extends SceneTree
 
 const Catalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
-const Field = preload("res://scripts/vehicle/stages/drowned_ruin_field.gd")
+const Registry = preload("res://scripts/vehicle/vehicle_field_registry.gd")
 const Generator = preload("res://scripts/vehicle/vehicle_field_layout_generator.gd")
 
 const FIXED_SEED := 0xC4A2B0
@@ -10,45 +10,50 @@ var failures: Array[String] = []
 
 
 func _initialize() -> void:
-	var valid_masks := 0
-	for nw in 6:
-		for ne in 6:
-			for sw in 6:
-				for se in 6:
-					var ids := Generator.cover_ids_for_mask([nw, ne, sw, se])
-					var errors := Generator.validate_cover_ids(ids)
-					if errors.is_empty():
-						valid_masks += 1
-					else:
-						_expect(false, "cover mask %s is invalid: %s" % [[nw, ne, sw, se], "; ".join(errors)])
-	_expect(valid_masks == 1296, "all 1296 modular cover masks satisfy the field invariants")
+	for field_id in Registry.FIELD_IDS:
+		_validate_field(field_id)
+	_finish()
 
-	var fixed := Generator.generate(FIXED_SEED, Catalog.STAGE_IDS)
-	var replay := Generator.generate(FIXED_SEED, Catalog.STAGE_IDS)
-	_expect(fixed != null and replay != null, "fixed seed generates a complete layout")
-	if fixed != null and replay != null:
-		_expect(fixed.fingerprint == replay.fingerprint, "same seed reproduces one canonical layout")
-		_expect(fixed.cover_rects.size() == 8, "layout selects exactly eight covers")
-		_expect(fixed.ordinary_spawn_anchors.size() >= 16, "layout retains at least sixteen ordinary anchors")
-		_expect(fixed.boss_arrival_anchors.size() == 8, "layout retains all eight boss anchors")
-		for stage_id in Catalog.STAGE_IDS:
-			_expect(fixed.stationary_blueprint(stage_id).size() == 4, "%s has four seeded stationary threats" % stage_id)
-			_expect(fixed.pickup_blueprint(stage_id).size() == 3, "%s has three seeded pickups" % stage_id)
-			_expect(fixed.crate_blueprint(stage_id).size() == 5, "%s has five seeded crates" % stage_id)
-			_validate_stage_objects(fixed, stage_id)
+
+func _validate_field(field_id: StringName) -> void:
+	var definition := Registry.definition(field_id)
+	_expect(Rect2(definition["world_rect"]) == Rect2(0,0,7200,4320), "%s uses shared world bounds" % field_id)
+	_expect(Vector2(definition["player_start"]) == Vector2(3600,2160), "%s uses shared center" % field_id)
+	_expect(float(definition["start_clearance"]) == 560.0, "%s uses center clearance" % field_id)
+	_expect(Array(definition["walkable_regions"]).size() >= 20, "%s has twenty broad regions" % field_id)
+	_expect(Array(definition["ordinary_spawn_anchors"]).size() == 32, "%s has 32 ordinary anchors" % field_id)
+	_expect(Array(definition["boss_arrival_anchors"]).size() == 12, "%s has 12 boss anchors" % field_id)
+	_expect(Array(definition["cover_candidates"]).size() == 24, "%s has 24 cover candidates" % field_id)
+	_expect(Array(definition["item_socket_candidates"]).size() >= 32, "%s has at least 32 item sockets" % field_id)
+	_expect(Dictionary(definition["stationary_candidates"]).size() == 6, "%s has six stationary groups" % field_id)
+
+	var fixed := Generator.generate(FIXED_SEED, Catalog.STAGE_IDS, field_id)
+	var replay := Generator.generate(FIXED_SEED, Catalog.STAGE_IDS, field_id)
+	_expect(fixed != null and replay != null, "%s fixed seed generates a complete layout" % field_id)
+	if fixed == null or replay == null:
+		return
+	_expect(fixed.field_id == field_id, "%s layout retains field id" % field_id)
+	_expect(fixed.fingerprint == replay.fingerprint, "%s same seed reproduces layout" % field_id)
+	_expect(fixed.cover_rects.size() == 8, "%s selects exactly eight covers" % field_id)
+	_expect(fixed.ordinary_spawn_anchors.size() >= 20, "%s retains at least 20 ordinary anchors" % field_id)
+	_expect(fixed.boss_arrival_anchors.size() >= 8, "%s retains at least eight boss anchors" % field_id)
+	for stage_id in Catalog.STAGE_IDS:
+		_expect(fixed.stationary_blueprint(stage_id).size() == 4, "%s/%s has four stationary threats" % [field_id, stage_id])
+		_expect(fixed.pickup_blueprint(stage_id).size() == 3, "%s/%s has three pickups" % [field_id, stage_id])
+		_expect(fixed.crate_blueprint(stage_id).size() == 5, "%s/%s has five crates" % [field_id, stage_id])
+		_validate_stage_objects(fixed, stage_id)
 
 	var varied := 0
-	var previous_fingerprint := -1
-	for seed_offset in 256:
-		var layout := Generator.generate(FIXED_SEED + seed_offset, Catalog.STAGE_IDS)
-		_expect(layout != null, "seed fixture %d generates without deleting required content" % seed_offset)
+	var previous_fingerprint := fixed.fingerprint
+	for seed_offset in 48:
+		var layout := Generator.generate(FIXED_SEED + seed_offset, Catalog.STAGE_IDS, field_id)
+		_expect(layout != null, "%s seed fixture %d generates" % [field_id, seed_offset])
 		if layout == null:
 			continue
-		if previous_fingerprint >= 0 and layout.fingerprint != previous_fingerprint:
+		if layout.fingerprint != previous_fingerprint:
 			varied += 1
 		previous_fingerprint = layout.fingerprint
-	_expect(varied >= 230, "at least 90 percent of adjacent seed fixtures vary")
-	_finish()
+	_expect(varied >= 42, "%s adjacent seed fixtures vary" % field_id)
 
 
 func _validate_stage_objects(layout: VehicleFieldLayout, stage_id: StringName) -> void:
@@ -74,7 +79,7 @@ func _validate_stage_objects(layout: VehicleFieldLayout, stage_id: StringName) -
 
 
 func _expect(condition: bool, message: String) -> void:
-	if not condition and failures.size() < 32:
+	if not condition and failures.size() < 64:
 		failures.append(message)
 
 

@@ -1,9 +1,9 @@
 class_name VehicleCombatStages
 extends RefCounted
 
-## Stage pressure data. Geometry is owned exclusively by DrownedRuinField.
+## Stage pressure data. Geometry is supplied by the run-selected field.
 
-const Field = preload("res://scripts/vehicle/stages/drowned_ruin_field.gd")
+const FieldRegistry = preload("res://scripts/vehicle/vehicle_field_registry.gd")
 
 const STAGE_IDS: Array[StringName] = [&"stage_1", &"stage_2", &"stage_3", &"stage_4", &"stage_5"]
 const QUOTAS := [96, 128, 160, 192, 224]
@@ -41,11 +41,11 @@ static func index_of(stage_id: StringName) -> int:
 	return maxi(0, STAGE_IDS.find(normalized_id(stage_id)))
 
 
-static func profile(stage_id: StringName) -> Dictionary:
+static func profile(stage_id: StringName, field_id: StringName = &"drowned_ruin_field") -> Dictionary:
 	var index := index_of(stage_id)
 	return {
 		"id": STAGE_IDS[index],
-		"field_id": Field.FIELD_ID,
+		"field_id": FieldRegistry.normalized_id(field_id),
 		"number": index + 1,
 		"title_key": TITLE_KEYS[index],
 		"boss_name_key": BOSS_NAME_KEYS[index],
@@ -56,35 +56,39 @@ static func profile(stage_id: StringName) -> Dictionary:
 	}
 
 
-static func definition(stage_id: StringName) -> Dictionary:
-	var result := Field.definition().duplicate(true)
-	var stage := profile(stage_id)
+static func definition(
+	stage_id: StringName,
+	field_definition: Dictionary = FieldRegistry.definition(&"drowned_ruin_field")
+) -> Dictionary:
+	var result := field_definition.duplicate(true)
+	var stage := profile(stage_id, StringName(field_definition["id"]))
 	result["id"] = stage["id"]
 	result["field_id"] = stage["field_id"]
 	result["number"] = stage["number"]
 	result["title_key"] = stage["title_key"]
 	result["boss_name_key"] = stage["boss_name_key"]
 	result["quota"] = stage["quota"]
-	result["static_enemies"] = _static_enemies(index_of(stage_id))
-	result["packets"] = _packets(index_of(stage_id))
+	result["static_enemies"] = _static_enemies(index_of(stage_id), field_definition)
+	result["packets"] = _packets(index_of(stage_id), field_definition)
 	return result
 
 
-static func _static_enemies(stage_index: int) -> Array[Dictionary]:
+static func _static_enemies(stage_index: int, field_definition: Dictionary) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
-	var quadrants: Array[StringName] = [&"nw", &"ne", &"sw", &"se"]
-	for index in quadrants.size():
+	var sectors: Array[StringName] = [&"nw", &"n", &"ne", &"sw"]
+	var candidate_groups: Dictionary = field_definition["stationary_candidates"]
+	for index in sectors.size():
 		result.append({
 			"id":"stage_%d_stationary_%02d" % [stage_index + 1, index + 1],
 			"role":STATIONARY_ROLES[stage_index][index],
-			"pos":Vector2(Field.STATIONARY_CANDIDATES[quadrants[index]][0]),
+			"pos":Vector2(candidate_groups[sectors[index]][0]),
 			"zone":"field",
 			"active":true,
 		})
 	return result
 
 
-static func _packets(stage_index: int) -> Array[Dictionary]:
+static func _packets(stage_index: int, field_definition: Dictionary) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 	var roles: Array = MOBILE_ROLES[stage_index]
 	var target_count: int = int(AUTHORED_COUNTS[stage_index])
@@ -114,7 +118,7 @@ static func _packets(stage_index: int) -> Array[Dictionary]:
 			"unit_spacing":0.16,
 			"cue_lead":0.9,
 			"zone":"field",
-			"leash":Field.WORLD_RECT,
+			"leash":Rect2(field_definition["world_rect"]),
 		})
 		packet_index += 1
 	return result

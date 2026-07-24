@@ -13,13 +13,13 @@ related:
 
 ## Purpose
 
-Define one readable flat-color visual language for the current shared-field
+Define one readable flat-color visual language for the current run-selected-field
 vehicle game. `sunken-ceramic-fresco.png` supplies palette, large-shape rhythm,
 and restrained detail; gameplay meaning comes from this specification.
 
 ## Scope
 
-This contract applies to the shared field, actors, combat feedback, HUD,
+This contract applies to the run-selected field, actors, combat feedback, HUD,
 deployment, upgrades, pause/settings, guidebook, result, and garage. Gameplay
 rules remain owned by the product specification.
 
@@ -27,8 +27,8 @@ rules remain owned by the product specification.
 
 ### Art language and semantic palette
 
-- Use flat color, large geometric masses, clean silhouettes, and sparse
-  monumental motifs. Avoid outlines, fine texture, speckling, micro-patterns,
+- Use flat color, large geometric masses, and clean silhouettes. Avoid
+  decorative floor motifs, outlines, fine texture, speckling, micro-patterns,
   surface stains, and decorative detail that competes with combat.
 - A frame must read in this order: walkable floor, solid cover/void, player,
   threats and telegraphs, pickups/rewards, then atmosphere.
@@ -52,13 +52,12 @@ rules remain owned by the product specification.
 - Main lanes remain broad enough for the player and pursuing groups to pass one
   another. Small unusable gaps are visually sealed.
 - The map is larger than the viewer. The camera shows only a local combat area;
-  the explored 16x10 minimap communicates the persistent whole.
-- Stage identity comes from population, pacing, boss, and UI state on the same
-  drowned-ruin field. A new run may select eight large modules from the authored
-  cover candidates, but that result must not recolor or rearrange between stages
-  or retries.
-- Motifs are large and sparse. Do not add tiny debris or repeated decoration to
-  fake variation.
+  the explored 20x12 minimap communicates the persistent whole.
+- A new run selects one of three registered fields and eight large modules from
+  its authored cover candidates. The result must not recolor or rearrange
+  between stages or retries.
+- Functional terrain uses one large readable shape. Do not add decorative
+  motifs, tiny debris, or repeated decoration to fake variation.
 
 ### Actor and combat readability
 
@@ -141,9 +140,9 @@ rules remain owned by the product specification.
 - Values, labels, cooldowns, focus, selection, localization, and guide discovery
   remain live UI state; do not bake them into raster assets.
 - Static world presentation belongs to `vehicle_stage_backdrop.gd`; immutable
-  floor/candidate data belongs to `drowned_ruin_field.gd`; the run-scoped
-  `VehicleFieldLayout` owns selected cover and sockets; dynamic combat belongs
-  to the run.
+  floor/candidate data belongs to the three registered field definitions; the
+  run-scoped `VehicleFieldLayout` owns the selected field, compiled geometry,
+  cover, and sockets; dynamic combat belongs to the run.
 - Raster assets are justified only when procedural flat shapes cannot communicate
   the required silhouette at gameplay size.
 

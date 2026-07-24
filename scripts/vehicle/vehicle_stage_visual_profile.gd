@@ -37,8 +37,10 @@ const STAGE_BOSS_RADIUS := 122.0
 const PICKUP_PLINTH_RADIUS := 34.0
 const CACHE_HALF_SIZE := Vector2(70.0, 52.0)
 const COVER_EDGE_OFFSET := Vector2(14.0, 18.0)
-const MIN_MAJOR_MOTIF_RADIUS := 120.0
-const MAX_MAJOR_MOTIF_RADIUS := 250.0
+const WALL_FILL := CERAMIC_GREEN
+const WALL_SHADOW := COBALT_DEEP
+const WALL_RAIL_WIDTH := 48.0
+const WALL_SHADOW_OFFSET := Vector2(0.0, 12.0)
 
 
 static func enemy_visual_radius(role: StringName) -> float:
@@ -92,39 +94,6 @@ static func stepped_rect(rect: Rect2, cut: float = 34.0) -> PackedVector2Array:
 	])
 
 
-static func major_motifs() -> Array[Dictionary]:
-	return [
-		{
-			"kind": &"tide_curl",
-			"center": Vector2(1260.0, 1090.0),
-			"radius": 210.0,
-			"rotation": -0.28,
-			"color": Color(MINT, 0.62),
-		},
-		{
-			"kind": &"split_current",
-			"center": Vector2(2480.0, 1110.0),
-			"radius": 245.0,
-			"rotation": 0.0,
-			"color": Color(MINT, 0.52),
-		},
-		{
-			"kind": &"relay_flower",
-			"center": Vector2(3480.0, 1110.0),
-			"radius": 135.0,
-			"rotation": PI / 4.0,
-			"color": Color(MINT_SOFT, 0.62),
-		},
-		{
-			"kind": &"sun_gate",
-			"center": Vector2(4580.0, 1090.0),
-			"radius": 235.0,
-			"rotation": 0.0,
-			"color": Color(MUSTARD, 0.34),
-		},
-	]
-
-
 static func required_color_roles() -> Dictionary:
 	return {
 		"walkable": IVORY,
@@ -156,8 +125,4 @@ static func validate_contract() -> PackedStringArray:
 		errors.append("pickup plinth diameter is below the 56 px minimum")
 	if STAGE_BOSS_RADIUS * 2.0 < 200.0:
 		errors.append("stage boss diameter is below the 200 px minimum")
-	for motif in major_motifs():
-		var radius := float(motif["radius"])
-		if radius < MIN_MAJOR_MOTIF_RADIUS or radius > MAX_MAJOR_MOTIF_RADIUS:
-			errors.append("major motif radius is outside the sparse macro range")
 	return errors

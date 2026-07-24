@@ -1126,13 +1126,13 @@ new interrupt or autonomous-system branches back to that orchestrator.
 
 ### Milestone 0 — Baseline, authority, and extension budgets
 
-- [ ] Run the current focused vehicle validators and Web export before edits;
+- [x] Run the current focused vehicle validators and Web export before edits;
       save results under ignored `build/evidence/world-combat-expansion/baseline/`.
 - [ ] Capture deterministic standalone and Web `1280x720` performance scenarios
       using the active performance plan's recorder.
-- [ ] Record current guidebook, all five bosses, current motifs/walls, and one
+- [x] Record current guidebook, all five bosses, current motifs/walls, and one
       complete Stage 1 run at `1280x720`.
-- [ ] Add the accepted contracts in this plan to
+- [x] Add the accepted contracts in this plan to
       `docs/product/vehicle_game_spec.md` and `docs/design/UI_VISUAL_SYSTEM.md`
       before gameplay code.
 - [ ] Add a short implementation progress entry to this plan after every
@@ -1143,27 +1143,27 @@ plan, and no performance threshold was relaxed.
 
 ### Milestone 1 — Field registry and unified wall geometry
 
-- [ ] Introduce the three-field registry and deterministic `field:v1`
+- [x] Introduce the three-field registry and deterministic `field:v1`
       selection with `--field-id`.
-- [ ] Expand all registered definitions to the locked `7200x4320` rectangle,
+- [x] Expand all registered definitions to the locked `7200x4320` rectangle,
       `(3600,2160)` center, and exact anchor/socket/candidate counts.
 - [ ] Make `VehicleFieldLayout` retain `field_id`, field definition, compiled
       geometry, terrain blueprint, and persistent bulkhead state.
 - [ ] Replace global single-field caches in `VehicleStageCatalog` and layout
       generation with field-keyed immutable caches.
-- [ ] Author and validate `tidal_archive_field` and `storm_drydock_field`.
+- [x] Author and validate `tidal_archive_field` and `storm_drydock_field`.
 - [ ] Compile merged walkable boundaries and one wall snapshot consumed by
       movement, projectiles, LOS, navigation, minimap, and backdrop.
-- [ ] Replace full-grid Dictionary pursuit costs with the locked `75x45`
+- [x] Replace full-grid Dictionary pursuit costs with the locked `75x45`
       preallocated buffers, `1024`-cell multi-tick rebuild, atomic swap, and
       boss-live radius policy.
 - [ ] Change explored minimap sampling from `16x10` to `20x12`, preserving
       square `360x360 px` world cells and field-keyed static geometry.
-- [ ] Enforce the locked player-relative ordinary and boss arrival rings so the
+- [x] Enforce the locked player-relative ordinary and boss arrival rings so the
       larger field does not lower on-screen encounter pressure.
-- [ ] Remove all motif data, rendering, profile constants, localization copy,
+- [x] Remove all motif data, rendering, profile constants, localization copy,
       validators, and canonical references.
-- [ ] Render every boundary and solid island with the locked shared wall
+- [x] Render every boundary and solid island with the locked shared wall
       material, rail, and shadow.
 - [ ] Preserve the chosen field across stages/restarts and preserve broken
       bulkheads across successful stage transitions; a stage restart/replay
@@ -1723,7 +1723,9 @@ No screenshot with debug-only labels may be used as final evidence.
       the conditional interrupt matrix before revising this plan.
 - [x] Reviewed current primary external design and engine references.
 - [x] Locked one implementation direction with no deferred design choice.
-- [ ] Milestone 0 implementation baseline and canonical-spec update.
+- [ ] Milestone 0 implementation baseline and canonical-spec update (focused
+      baseline and specs complete; deterministic rendered baseline capture
+      remains for the integrated UI pass).
 - [ ] Milestone 1 field registry and wall truth.
 - [ ] Milestone 2 terrain and Breach Shot.
 - [ ] Milestone 3 mines and enemy expansion.
@@ -1731,6 +1733,15 @@ No screenshot with debug-only labels may be used as final evidence.
 - [ ] Milestone 5 combat telemetry and Ship Status.
 - [ ] Milestone 6 guidebook and stage/failure reports.
 - [ ] Milestone 7 integration and release evidence.
+
+2026-07-24 implementation progress: added the three-field registry, common
+`7200x4320`/`(3600,2160)` contracts, deterministic run selection and debug
+override, run-owned field/geometry snapshots, `20x12` exploration, exact
+player-relative arrival rings, motif removal, one wall presentation, and the
+bounded packed `75x45` pursuit rebuild. Seven focused validators pass. The
+remaining Milestone 1 work is to move the catalog's active-field caches and all
+collision/minimap consumers fully onto the compiled snapshot, then add
+bulkhead persistence while implementing functional terrain.
 
 ## Open Questions
 

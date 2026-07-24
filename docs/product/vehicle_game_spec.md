@@ -5,7 +5,7 @@ owner: BK
 created: 2026-07-21
 last_reviewed: 2026-07-24
 canonical_for: Cardborne gameplay and product behavior
-scope: Current shared-field five-stage vehicle campaign
+scope: Current run-selected-field five-stage vehicle campaign
 related:
   - ../design/UI_VISUAL_SYSTEM.md
   - ../../.agents/vehicle-performance-architecture-audit.md
@@ -18,17 +18,18 @@ related:
 ## Purpose
 
 Cardborne is a top-down vehicle action shooter about steering through one large
-drowned-ruin field while manually aiming a held primary weapon, dashing through
+run-selected field while manually aiming a held primary weapon, dashing through
 pressure, and building a compact set of automatic secondary weapons. A new run
-selects one validated arrangement of large internal cover and content sockets.
-All five combat stages and retries reuse that arrangement while pressure, enemy
-composition, boss patterns, and rewards change.
+selects one of three registered fields plus one validated arrangement of large
+internal cover and content sockets. All five combat stages and retries reuse
+that field and arrangement while pressure, enemy composition, boss patterns,
+and rewards change.
 
 This is the canonical product contract for the current executable.
 
 ## Scope
 
-This specification covers controls, the shared field, stage flow, enemies,
+This specification covers controls, the run-selected field, stage flow, enemies,
 bosses, items, upgrades, HUD and modal flows, the guidebook, localization,
 settings, persistence, and release validation. It does not promise unconstrained
 procedural topology, a base stage, exploration puzzles, or content beyond the
@@ -135,29 +136,31 @@ second time; no individual stat is described as exactly 15% lower.
   default is false. No current ordinary enemy, boss pattern, primary shot, or
   secondary shot receives that capability implicitly.
 
-### One shared field
+### One run-selected field
 
-- Every stage uses `drowned_ruin_field` with a `5600x3400` world rectangle and
-  respawns the player at `(2800, 1700)`.
-- The center has a 480-pixel safe clearance. The camera remains at zoom 1, so the
+- A new run deterministically selects `drowned_ruin_field`,
+  `tidal_archive_field`, or `storm_drydock_field`. Every stage and retry keeps
+  that field's immutable compiled layout.
+- Every registered field uses a `7200x4320` world rectangle and respawns the
+  player at `(3600, 2160)`.
+- The center has a 560-pixel safe clearance. The camera remains at zoom 1, so the
   field is larger than one screen and exploration state matters.
-- Sixteen walkable regions, four water/void regions, and sparse large motifs
-  define the immutable floor. A run selects exactly two large cover candidates
-  in each quadrant from sixteen authored candidates, for eight internal cover
-  shapes. The selected cover is validated for the ordinary 36-pixel and boss
-  76-pixel actor radii before play.
+- At least twenty broad walkable regions define each immutable floor. A run
+  selects eight large cover candidates from twenty-four candidates spread
+  across six sectors. The selected cover is validated for the ordinary
+  36-pixel and boss 76-pixel actor radii before play.
 - Rendering, movement, projectile collision, line of sight, pursuit, minimap,
   and validation consume the same run layout. The layout remains unchanged
   across stages and exact retries; only a new run selects another arrangement.
-- Twenty-four ordinary arrival candidates, eight boss arrival anchors, twelve
-  stationary candidates, and twenty-four item sockets are reusable authored
-  positions. Each stage selects four stationary threats, three pickups, and
+- Thirty-two ordinary arrival candidates, twelve boss arrival anchors, six
+  stationary candidate groups, and at least thirty-two item sockets are
+  reusable authored positions. Each stage selects four stationary threats, three pickups, and
   five crates from valid sockets. No stage owns a separate map, boss room,
   closed progression gate, switch maze, or reflector puzzle.
-- Capture, validation, and performance paths accept `--layout-seed=<integer>`;
-  their default is `0xC4A2B0`, and debug/performance snapshots expose the
-  selected seed and layout fingerprint.
-- The explored minimap uses a 16x10 grid. Unvisited cells remain concealed; the
+- Capture, validation, and performance paths accept `--layout-seed=<integer>`
+  and `--field-id=<id>`; their default layout seed is `0xC4A2B0`, and
+  debug/performance snapshots expose the selected field, seed, and fingerprint.
+- The explored minimap uses a 20x12 grid. Unvisited cells remain concealed; the
   player, discovered pickups, boss warning, and active boss are marked.
 
 ### Encounter and stage flow
@@ -168,7 +171,7 @@ second time; no individual stat is described as exactly 15% lower.
 3. Later arrivals are eight-squad surges. Each squad contains three to five
    enemies, so the first surge schedules at least 24 enemies and later surges
    grow toward 40. Every squad receives its own deterministic valid anchor.
-   Arrivals prefer positions at least 960 pixels from the player and 160 pixels
+   Arrivals prefer positions 1000–1800 pixels from the player and 220 pixels
    beyond the visible world, avoid the four most recent anchors, and use groups
    of at most two squads in beats 0–1 or three squads later. Group gaps are
    0.90 seconds early and 0.65 seconds later. Existing role totals are preserved
@@ -295,9 +298,9 @@ exactly 0.75 seconds before the boss resumes its pattern loop.
 
 ## Acceptance Criteria
 
-- The immutable field, 480-pixel start clearance, all 1,296 cover masks, both
-  actor radii, 256 seeded complete layouts, and one-layout identity across all
-  five stages and retries pass validation.
+- All three immutable fields, the 560-pixel start clearance, both actor radii,
+  seeded complete layouts, and one-layout identity across all five stages and
+  retries pass validation.
 - The first cue/scout timing, stage quotas, distributed eight-squad surge
   growth, arrival fairness, spawn stop, 1.5-second boss warning, roaming boss,
   preserved build/exploration, automatic stages 1–4 transition, and stage 5
