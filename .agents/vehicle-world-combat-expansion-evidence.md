@@ -4,8 +4,8 @@ status: active
 owner: BK
 created: 2026-07-24
 last_reviewed: 2026-07-24
-topic: Vehicle field, terrain, enemy, boss, opening-shot, and guidebook expansion
-scope: Current repository evidence, recovered history, external design findings, and the accepted direction for the next execution plan
+topic: Vehicle field, terrain, enemy, boss, Breach Shot, run-status, and stage-report expansion
+scope: Current repository evidence, recovered history, external design findings, owner corrections, and the accepted direction for the next execution plan
 source: ./execplans/2026-07-24-vehicle-world-combat-expansion.md
 related:
   - ./execplans/2026-07-24-vehicle-world-combat-expansion.md
@@ -23,17 +23,19 @@ This document is evidence and design rationale, not product authority. The
 execution-ready decisions live in the related ExecPlan and, when implemented,
 must be reflected in the canonical product and visual specifications.
 
-The investigation answers six user concerns:
+The investigation answers seven user concerns:
 
 1. whether directional and periodic-damage terrain previously existed;
 2. why the current map has no functional terrain;
 3. why walls and floor motifs contradict collision readability;
 4. why the one-second opening shot and stationary mine lack a clear tactical
-   role;
+   role without allowing boss stun-lock or unavoidable mine damage;
 5. why five bosses still feel similar and weak despite having separate pattern
    lists; and
 6. how more maps, enemy types, guidebook visuals, and genre-standard learning
-   aids can be added without returning to the previous performance problem.
+   aids can be added without returning to the previous performance problem; and
+7. what currently exists for run statistics, acquired upgrades, per-stage
+   defeats, and outgoing damage attribution.
 
 ## Sources
 
@@ -49,6 +51,9 @@ The investigation answers six user concerns:
   - `scripts/bosses/vehicle_boss_patterns.gd`
   - `scripts/progression/vehicle_guidebook_catalog.gd`
   - `scripts/ui/vehicle_guidebook_panel.gd`
+  - `scripts/ui/vehicle_settings_panel.gd`
+  - `scripts/ui/vehicle_stage_ui.gd`
+  - `scripts/cards/vehicle_run_build.gd`
   - `scripts/presentation/vehicle_combat_visual_library.gd`
   - `scripts/vehicle/vehicle_run.gd`
 - `git show 278be30`, which introduced distinct current and storm terrain.
@@ -183,9 +188,13 @@ The opening shot needs named, exclusive interactions:
 - breach a designed structure;
 - intentionally detonate a mine;
 - break a protected enemy plate; and
-- stagger a boss during a readable recovery window.
+- expose a boss during a readable recovery window without changing its
+  movement, attack timer, phase, or committed pattern.
 
 This makes waiting one second a tactical choice without replacing held fire.
+The current hard `staggered` phase must be retired for bosses: limiting it to
+once per attack would still let the player stop the boss after nearly every
+attack.
 
 ### 5. The current mine is a reusable stationary player hazard
 
@@ -205,9 +214,11 @@ explode. It cannot become a tactical tool against enemies. The mobile
 sets, so it is effectively dormant content.
 
 A one-shot mine with a readable fuse, player-caused short-fuse detonation, and
-enemy friendly fire is both more intuitive and more interactive. Enemy
-proximity alone should not arm it: that would resolve encounters without player
-intent. The player creates the opportunity by approaching or shooting it.
+enemy friendly fire is both more intuitive and more interactive. Its activation
+ring must be larger than its damaging ring, so the first trigger frame leaves
+the player outside the blast. Enemy proximity alone should not arm it: that
+would resolve encounters without player intent. The player creates the
+opportunity by approaching or shooting it.
 
 ### 6. Enemy quantity is already high; decision variety is the missing dimension
 
@@ -263,7 +274,36 @@ same meshes. It avoids duplicate raster assets, keeps the guidebook synchronized
 with actual combat silhouettes, and can show a neutral placeholder without
 leaking locked entries.
 
-### 9. Performance constraints are a design input
+### 9. Current run status and result UI are insufficient
+
+`VehicleSettingsPanel` currently has four tabs: Audio, Controls, Gameplay, and
+Language. It receives only `SettingsStore` data. It has no run-build snapshot
+and cannot show current effective ship statistics or acquired upgrades.
+
+The guidebook's Ship category does show current hull, level, experience, base
+and current speed, secondary names, and a flat upgrade-name list. It does not
+show effective primary values, Breach values, dash/EMP values, secondary
+effects, upgrade descriptions, or a structured build summary. A shared,
+read-only build-status component should become the single presenter used by
+both Settings and the guidebook.
+
+`VehicleRun` currently counts only aggregate primary hits, dash uses,
+installation defeats, damage taken, and total enemy defeats. Stages 1–4 advance
+immediately after their boss reward; only stage 5 opens the existing result
+screen. There is no per-archetype defeat counter and no outgoing-damage
+attribution.
+
+The accepted reporting contract is:
+
+- one Stage Report after every boss reward and before the next stage;
+- actual defeated-enemy counts grouped by archetype;
+- actual applied enemy-health damage grouped by stable attack-source ID;
+- a percentage denominator that excludes overkill, crates, and neutral
+  structures;
+- one compact failure report using the same current-attempt data; and
+- no per-hit UI update or high-count event object allocation.
+
+### 10. Performance constraints are a design input
 
 The active performance plan still requires final rendered repetitions and a
 ten-minute lifecycle soak. Its capacity gates include:
@@ -297,17 +337,25 @@ The related ExecPlan fixes one implementation direction:
    - Arc Surge Strip; and
    - Breakable Bulkhead.
 5. The current opening shot becomes `Breach Shot` / `돌파탄`, with exclusive
-   structure, mine, protected-enemy, and boss-recovery interactions.
+   structure, mine, protected-enemy, and non-stopping boss-exposure
+   interactions.
 6. Stationary and mobile mines become one-shot, fuse-driven threats whose
    player-triggered explosions can damage enemies and credit their defeats.
-7. The existing minelet is activated and three non-projectile enemy roles are
-   added: Bulkhead Guard, Relay Scavenger, and Splitter Barge.
+   Stationary activation/damage radii are `230/160 px`; Minelet radii are
+   `160/100 px`, so the first warning occurs outside the damaging area.
+7. The existing minelet is activated and two non-projectile enemy roles are
+   added: Bulkhead Guard and Splitter Barge. No enemy steals, carries, deletes,
+   or denies collected or uncollected experience.
 8. Each boss receives a unique silhouette, three-phase behavior, and an authored
    stage-specific spatial exam while remaining avoidable at base movement speed.
 9. The guidebook renders actual discovered silhouettes and concise
    movement/attack/counterplay hints.
-10. Failure results add a localized last-hit and top-three damage-source recap,
-    making hazards and boss patterns learnable without adding permanent HUD
+10. Settings gains a read-only Ship Status page showing current effective stats
+    and every acquired upgrade through a shared build snapshot.
+11. Every cleared stage gains a localized Stage Report showing enemy defeats by
+    archetype and outgoing damage share by attack unit.
+12. Failure results add a localized last-hit and top-three incoming-damage
+    recap alongside partial stage statistics, without adding permanent HUD
     clutter.
 
 ## Additional Ideas and Disposition
@@ -321,22 +369,26 @@ The related ExecPlan fixes one implementation direction:
 | Damage-source recap | It exposes whether a mine, terrain pulse, contact hit, or boss pattern caused failure and improves tuning evidence. |
 | Discovered counterplay in the guidebook | The visual preview answers “what was that?” and the three short hints answer “how do I respond?” |
 | Run-level field identity on deployment | The player knows which persistent field was selected without implying that stages change maps. |
+| Ship Status in paused Settings | The player can verify what the current build actually does without inferring it from card names. |
+| Stage Report | Enemy counts and outgoing damage share make upgrades and encounter composition legible after every stage. |
 
-### Worth a later plan, but deliberately excluded from this implementation
+### Removed brainstorming terms
 
-| Candidate | Potential value | Why deferred |
+These labels appeared only as optional future brainstorming, were never accepted
+requirements, and are not part of this plan:
+
+| Term | What it meant | Disposition |
 | --- | --- | --- |
-| Boss practice terminal after first encounter | Lets players learn patterns without replaying a complete run. | Requires a separate mode, save-state rules, and reward exclusions. |
-| Optional danger beacon | Lets the player voluntarily trigger a dense elite encounter for an extra card choice. | Reward economy and encounter-placement work should follow the core field revision. |
-| One-modifier elite enemies | Adds recognizable variants such as armored, fast, or spawning. | Needs strict visual vocabulary and budget rules after the three new base roles prove readable. |
-| End-of-run tactical timeline | Could show upgrades, bosses, damage, and cause of death. | The compact damage recap supplies the immediate learning need first. |
-| Accessibility presets for telegraph shape and screen shake | Broadens readability and comfort. | Existing reduced-motion and settings behavior should be audited as a separate accessibility pass. |
+| Boss practice mode | A rewardless isolated replay of a previously encountered boss | Removed; no separate practice mode is planned |
+| Optional danger event | A player-triggered harder wave that would grant an extra reward | Removed; no optional encounter economy is planned |
+| Elite variant | A normal enemy with an added visible modifier such as armor or speed | Removed; new behavior belongs to explicit archetypes instead |
 
 ### Rejected for this pass
 
 - A different physical map for every stage.
 - Unbounded procedural topology.
 - More than `72` simultaneous ordinary enemies.
+- Any enemy that steals, stores, destroys, or denies experience.
 - Restoring projectile drift inside currents.
 - Enemy-only or player-only environmental damage.
 - Per-enemy guidebook scenes or duplicated raster portraits.
@@ -351,5 +403,6 @@ multi-map implementation and should not be copied back. The coherent revision
 is a persistent run-level field selected from three authored layouts, with one
 wall truth, zero decorative motifs, three mutually interactive terrain
 families, and combat roles that teach the player how to exploit those systems.
-This also gives the Breach Shot, mines, bosses, and guidebook purposes that the
-current implementation does not express.
+The revision also gives the Breach Shot a non-stopping boss interaction, makes
+mines visibly avoidable, and supplies the missing Ship Status and per-stage
+combat report surfaces.

@@ -4,8 +4,10 @@ status: active
 owner: BK
 created: 2026-07-24
 last_reviewed: 2026-07-24
-scope: Implement three persistent run-level fields, unified wall truth, functional terrain, meaningful Breach Shot interactions, interactive mines, additional enemy roles, distinct bosses, visual guidebook entries, and a damage recap
+scope: Implement three persistent run-level fields, unified wall truth, functional terrain, non-stopping Breach Shot interactions, avoidable mines, additional enemy roles, distinct bosses, visual guidebook entries, Ship Status, and per-stage combat reports
 related:
+  - ../../AGENTS.md
+  - ../AGENTS.md
   - ../PLANS.md
   - ../vehicle-world-combat-expansion-evidence.md
   - ./2026-07-23-vehicle-performance-architecture-stabilization.md
@@ -30,9 +32,11 @@ This plan expands the game without reversing the persistent-field decision or
 raising the active-enemy capacity. After completion, a new run selects one of
 three authored field layouts and keeps it for all five stages and retries.
 Every solid boundary has one visual and collision truth. Functional terrain
-affects both sides. The opening shot becomes a tactical Breach Shot. Mines,
-new enemy roles, and five distinct bosses create learnable combat interactions.
-The guidebook shows what discovered threats actually look like.
+affects both sides. The opening shot becomes a tactical Breach Shot without
+stopping boss behavior. Mines, new enemy roles, and five distinct bosses create
+learnable combat interactions. The guidebook shows what discovered threats
+actually look like, paused Settings shows the current build, and every stage
+ends with a combat report.
 
 ## Scope
 
@@ -44,10 +48,14 @@ The guidebook shows what discovered threats actually look like.
 - Flow Channel, Arc Surge Strip, and Breakable Bulkhead terrain.
 - Breach Shot behavior, presentation, localization, and counterplay.
 - One-shot friendly-fire stationary mines and active mobile minelets.
-- Three additional non-projectile enemy roles.
+- Two additional non-projectile enemy roles plus the existing unused Minelet.
 - Three-phase, stage-specific boss behaviors and silhouettes.
 - Visual guidebook previews and concise counterplay hints.
-- A localized damage-source recap on failure.
+- A read-only Ship Status page in Settings with effective stats and acquired
+  upgrades.
+- A Stage Report after every cleared stage with per-archetype defeats and
+  outgoing damage contribution.
+- A localized incoming-damage recap and partial combat report on failure.
 - Canonical product/design documentation, Korean/English localization, focused
   validation, production Web export, and rendered evidence.
 - Performance evidence inside the current declared capacity envelope.
@@ -61,7 +69,10 @@ The guidebook shows what discovered threats actually look like.
 - New currencies, base stage, exploration puzzles, meta progression, equipment
   repair, or an expanded pickup taxonomy.
 - Redesigning current card progression or difficulty selection.
-- Adding boss practice, optional challenge rooms, or elite modifiers.
+- A boss practice mode, optional reward-triggered encounters, or modifier-based
+  elite variants.
+- Enemies that steal, carry, delete, or deny experience.
+- Any Breach Shot behavior that pauses a boss phase, timer, movement, or attack.
 - Rebalancing all existing enemy health and damage.
 
 ## Success Criteria
@@ -73,18 +84,24 @@ The guidebook shows what discovered threats actually look like.
   impassable static boundary solely from the shared wall fill, rail, and shadow.
 - Flow Channels and Arc Surge Strips visibly match their exact simulation and
   create intentional interactions with both the player and enemies.
-- Breach Shot has four reliable purposes—bulkhead, mine, guard plate, and boss
-  recovery—without interrupting held primary fire.
+- Breach Shot has four reliable purposes—bulkhead, mine, guard plate, and a
+  temporary boss damage-exposure window—without interrupting held primary fire
+  or boss behavior.
 - Mines are readable one-shot state machines, can damage enemies, cannot damage
-  through walls, and never lose quota or XP attribution.
-- Spark Minelets and the three new roles add stage-by-stage decisions without
+  through walls, trigger before the player enters their blast radius, are
+  escapable without dash, and never lose quota or XP attribution.
+- Spark Minelets and the two new roles add stage-by-stage decisions without
   raising the active enemy or projectile envelope.
 - Each of the five bosses has a distinguishable silhouette, three behavioral
   phases, one unique spatial mechanic, and one base-speed-avoidable final exam.
 - Every discovered enemy, boss, mine, and terrain entry has a matching visual
   preview and concise Korean/English counterplay; locked entries leak nothing.
-- Failure recap, focused validators, production Web export, rendered UI/UX
-  evidence, and all active performance gates pass.
+- Paused Settings shows the current effective ship stats and every acquired
+  upgrade from gameplay-owned values rather than UI-side calculations.
+- Every stage report shows actual enemy defeats and applied-health-damage share
+  by attack unit; failure shows the same partial data plus incoming causes.
+- Focused validators, production Web export, rendered UI/UX evidence, and all
+  active performance gates pass.
 
 ## Locked Assumptions and Constraints
 
@@ -126,7 +143,10 @@ these facts:
 - `spark_minelet` exists in data and visuals but is unused by stage role sets;
 - current populations already reach `420` authored enemies and `72` active
   ordinary enemies;
-- the guidebook snapshot contains no preview metadata; and
+- the guidebook snapshot contains no preview metadata;
+- Settings has four configuration-only tabs and no run-build data;
+- stages 1–4 advance without a report, and no current runtime records
+  per-archetype defeats or outgoing damage by source; and
 - boss pattern names vary, but several kinds share generic execution.
 
 ## Accepted Product Design
@@ -295,24 +315,28 @@ Use these final modifiers:
 | structure damage | `4.0x`, equal to `72` at the current base |
 | radius | `1.75x`, equal to `12.25 px` at the current base |
 | pierce | `+1` |
-| stagger | `40` |
+| ordinary-enemy stagger | `40`; never applied as a boss pause |
 
 Its exclusive jobs are:
 
 - break a full-health Breakable Bulkhead in one hit;
-- force an Arc Mine into its `0.40 s` short fuse;
+- force an Arc Mine into its `0.75 s` short fuse;
 - remove a full-health Bulkhead Guard front plate in one hit;
-- cross the current `35` boss stagger threshold with one hit during recovery.
+- apply `Breach Exposed` during a boss recovery window.
 
 The center projectile owns the Breach interaction. Its structure damage is
 never reduced below `72` by Forked Muzzle's per-projectile falloff, and its
-stagger is never reduced below `40`; side projectiles keep their normal scaled
-values. This prevents an acquired multishot upgrade from disabling the
-bulkhead, guard, mine, or boss-recovery purpose.
+ordinary-enemy stagger is never reduced below `40`; side projectiles keep their
+normal scaled values. This prevents an acquired multishot upgrade from
+disabling the bulkhead, guard, mine, or boss-exposure purpose.
 
-A boss accepts at most one Breach stagger per committed attack. Further stagger
-is locked until the boss begins another attack, preventing a permanent loop.
-Outside boss recovery, stagger accumulates no hidden carry-over.
+`Breach Exposed` is a `1.25 s`, nonstacking `+20%` effective health-damage
+window. It can be applied once during each boss recovery and cannot be refreshed
+until the boss commits its next attack. Applying it never changes boss phase,
+phase time, velocity, pursuit, pattern, startup, active time, recovery time, or
+attack sequence. The hit may play a `0.12 s` visual recoil/flash, but simulation
+continues. Retire the current boss `STAGGER_THRESHOLD`, `STAGGER_WINDOW`,
+`staggered` phase, and all boss hard-stop transitions.
 
 Presentation uses:
 
@@ -337,54 +361,57 @@ Replace the reusable cycle with:
 
 | Transition or effect | Locked behavior |
 | --- | --- |
-| player enters `190 px` | Arms with a `1.25 s` fuse |
-| player damage reduces health to zero | Arms or shortens the fuse to `0.40 s`; never disappears silently |
+| player enters `230 px` | Arms with a `1.25 s` fuse while still outside the damaging ring |
+| player damage reduces health to zero | Arms or shortens the fuse to `0.75 s`; never disappears silently |
 | enemy proximity alone | Does not arm the mine |
-| explosion radius | `205 px`, shown exactly |
+| explosion radius | `160 px`, shown exactly and separately from activation |
 | center damage | `26`, linearly tapering to `45%` at the edge |
 | targets | Player and every enemy except the source mine |
 | boss multiplier | `0.25x` |
 | ownership | Player proximity or player damage marks the mine as player-triggered; enemy casualties credit quota/XP while player damage received still names `arc_mine` |
 | lifecycle | Retires after one explosion |
 
-An armed ring fills continuously and holds the exact explosion boundary. A mine
-hit by another mine does not explode in the same frame. It is armed with at
-least `0.35 s` remaining fuse, inherits the originating player trigger, and one
-explosion may arm at most six other mines, selected by deterministic distance
-order.
+Render a thin `230 px` activation ring and a stronger `160 px` damage ring.
+The damage ring fills continuously over the fuse and plays one spatial audio
+cue on arm plus a faster cue at `75%` fuse. At the first proximity-trigger
+frame, the player has a `70 px` non-damaging buffer.
+
+Every authored stationary-mine center requires `260 px` clearance from static
+walls, live bulkheads, crates, and terrain footprints, plus `360 px` from
+another stationary mine. This leaves the complete trigger ring on walkable
+floor and proves a base-speed reverse route without dash. A mine hit by another
+mine does not explode in the same frame. It is armed with at least `0.80 s`
+remaining fuse, inherits the originating player trigger, and one explosion may
+arm at most six other mines in deterministic distance order.
 
 #### Mobile Spark Minelet
 
 Activate the existing archetype from stage 2 onward:
 
-- trigger radius `110 px`;
-- fuse `0.85 s`;
-- explosion radius `120 px`;
+- trigger radius `160 px`;
+- fuse `1.0 s`;
+- explosion radius `100 px`;
 - center damage `14`;
 - same all-team damage and ownership rules;
 - no ranged projectile;
 - no more than twelve live minelets; and
 - no more than six may be in `Armed` state simultaneously.
 
-Mine explosions stop at neither ordinary enemies nor the player, but they do
-not pass through static walls: exposure is checked against the same line-of-
-sight/wall snapshot before damage.
+An armed Minelet stops and locks its explosion position, leaving a `60 px`
+buffer at first trigger. Mine explosions stop at neither ordinary enemies nor
+the player, but they do not pass through static walls: exposure is checked
+against the same line-of-sight/wall snapshot before damage.
 
 ### 6. Enemy variety inside the existing capacity
 
 Do not change current authored stage populations, quotas, or the `72` active
 ordinary-enemy cap in this plan. Activate the existing Spark Minelet and add
-three roles:
+two roles:
 
 | Role | Base contract | Tactical decision | Capacity rule |
 | --- | --- | --- | --- |
 | Bulkhead Guard | `90` health, `140 px/s`, `24 px` radius, melee; frontal plate has `72` structure and blocks frontal health damage | Reposition around it or use one primed Breach Shot to remove the plate | Maximum `8` live |
-| Relay Scavenger | `55` health, `190 px/s`, `18 px` radius; seeks nearby XP instead of firing | Kill it before it escapes with collected XP | Maximum `4` live; target query at `5 Hz` within `360 px` |
 | Splitter Barge | `96` health, `120 px/s`, `26 px` radius, melee | Control space before it dies and splits | Maximum `6` live; spawns exactly two summon-only Scrap Drones when capacity permits |
-
-Relay Scavengers never delete player-owned experience. They hold the exact
-collected value and drop it plus three experience on death. If retired by a
-stage transition, held experience is returned at the transition center.
 
 Splitter children do not add quota or experience and use the existing summon
 capacity. No more than twelve splitter children may be live. If capacity is
@@ -397,11 +424,12 @@ Roll out the mechanics as:
 | 1 | Existing baseline plus one terrain family at a time | Mine friendly fire appears in an authored low-pressure packet |
 | 2 | Spark Minelet | Flow Channel changes minelet approach vectors |
 | 3 | Bulkhead Guard | Arc Surge and guard positioning |
-| 4 | Relay Scavenger | Player chooses between threat removal and XP denial |
+| 4 | Prior roles in denser authored combinations | Guard, Minelet, support, and ranged pressure combine |
 | 5 | Splitter Barge and all prior roles | Terrain, support, melee, and ranged roles combine under the existing cap |
 
 Projectile-firing ordinary roles remain no more than `50%` of active ordinary
-enemies. The three additions are non-projectile roles.
+enemies. Minelet, Guard, and Splitter are non-projectile roles. No role may
+target, move, consume, store, destroy, or suppress experience shards.
 
 ### 7. Five distinct boss exams
 
@@ -429,7 +457,8 @@ and keep presentation dependent only on a boss snapshot.
   chase the player afterward.
 - Base movement has a valid escape route with at least `40 px` margin.
 - Boss projectile reserve remains at most `24`.
-- One Breach Shot during recovery can stagger once per committed attack.
+- One Breach Shot during recovery may apply `Breach Exposed` once per committed
+  attack, but never pauses or retimes the boss.
 - Phase transitions do not erase excess damage.
 
 #### Stage-specific identities
@@ -437,7 +466,7 @@ and keep presentation dependent only on a boss snapshot.
 | Boss | Phase-1 vocabulary | Phase-2 layer | Phase-3 exam |
 | --- | --- | --- | --- |
 | Foundry Colossus | Furnace Gates: two slow projectile walls with one `180 px` gap; Foundry Ram: locked charge | Slag Ring plus two overload pylons | Furnace Gates establish the gap, then Foundry Ram crosses it along a separately warned line |
-| Archive Leviathan | Current Fan: slow gapped fan; Archive Lunge: locked pursuit burst | Undertow Lanes add temporary Flow vectors; three staggered Depth Charges lock their circles | Undertow moves the player while three fixed Depth Charges demand route choice |
+| Archive Leviathan | Current Fan: slow gapped fan; Archive Lunge: locked pursuit burst | Undertow Lanes add temporary Flow vectors; three sequential Depth Charges lock their circles | Undertow moves the player while three fixed Depth Charges demand route choice |
 | Drydock Titan | Titan Pulse: radial ring plus one aimed pair; Grounding Grid: two warned Arc strips with one safe lane | Thunder Chain places three fixed circles in order; at most two Beam Sentinels are called | Grounding Grid activates, then Titan Pulse tests the remaining safe lane |
 | Switchyard Behemoth | Breaker Charge; Ricochet Volley with its single-bounce path fully warned | Four one-shot mines establish space; two fixed Switch Sweeps cross afterward | Minefield arms first, then the two sweeps leave one base-speed route through it |
 | Crown Engine | Crown Lattice: four ordered lanes; Relay Pulse: timed concentric rings | Carrier Wave calls one carrier and two escorts; Mirror Cross adds direct pressure | Royal Overload combines ordered lattice lanes with concentric timing, never overlapping all exits |
@@ -490,9 +519,139 @@ The guidebook remains a modal focus layer. Verify Korean and English text,
 keyboard/gamepad focus order, locked/unlocked states, reduced motion, and no
 clipping at every supported size.
 
-### 9. Failure damage recap
+### 9. Ship Status in Settings
 
-The failure/result panel adds a compact localized learning block:
+Add a first Settings tab named `기체 현황 / Ship Status`. Keep the existing
+Audio, Controls, Gameplay, and Language tabs after it. The tab is read-only and
+contains no controls that can mutate the run.
+
+Create one gameplay-owned `VehicleBuildSnapshotBuilder` and one reusable
+`VehicleBuildSummaryPanel`. The builder reads `VehicleRunBuild`, primary,
+secondary, cycle, experience, player, dash, and EMP runtime values and emits a
+deep immutable snapshot only when:
+
+- a run starts or restarts;
+- an upgrade is applied;
+- Settings or the guidebook is about to open; or
+- a stage report is finalized.
+
+Do not build the snapshot every HUD frame. The same summary panel and snapshot
+feed the Settings Ship Status tab and the guidebook Ship entry, preventing two
+different stat calculations.
+
+Ship Status shows:
+
+| Group | Visible values |
+| --- | --- |
+| Run | difficulty, stage, level, experience/current requirement, hull/current maximum |
+| Movement and defense | effective move speed, dash distance and cooldown, hit invulnerability, active barrier, lifesteal, pickup radius |
+| Primary | applied base damage per center projectile, shots per second, projectile count, speed, radius, pierce, bounce |
+| Breach Shot | current prime time, health damage, structure damage, radius, pierce, boss exposure duration and bonus |
+| EMP | effective cooldown, startup, radius, and damage |
+| Secondaries | every installed family, level, effective damage, interval/tick, radius/range, and family-specific count |
+| Acquired upgrades | localized title, current/max level, family, and current localized effect description |
+
+Sort acquired upgrades by the fixed family order `primary`, `element`,
+`secondary`, `mobility`, `defense`, `skill`, then stable catalog ID. Do not show
+unacquired upgrades on this page. Values are formatted from gameplay units:
+damage as an integer when exact, time in seconds, speed in `px/s`, rates in
+shots/ticks per second, and percentages with at most one decimal.
+
+The Settings surface is used from deployment, pause, and garage. During an
+active paused run it shows the live snapshot. Outside a run it keeps the tab
+visible and shows one localized empty state—`진행 중인 런이 없습니다 / No run
+in progress`—without stale values. Opening Settings from pause keeps the tree
+paused, makes the cursor visible, and returns focus to the Settings button on
+close.
+
+### 10. Stage Report and outgoing damage attribution
+
+Add `VehicleStageTelemetry`, a compact attempt-scoped data owner. It contains
+bounded dictionaries keyed by stable `StringName` IDs and records:
+
+- actual player/environment-caused defeats by enemy archetype;
+- actual applied enemy-health damage by attack source; and
+- incoming applied hull damage by source for failure learning.
+
+It does not allocate one event object per hit, update UI during combat, retain
+enemy references, or scan the live enemy array. Reset stage counters at stage
+start/restart and freeze one immutable snapshot at stage completion. Append only
+confirmed cleared-stage snapshots to `completed_stage_reports`; a manual stage
+restart discards its current counters. Final-run totals are derived from the
+completed snapshots, plus the current partial snapshot only on failure, so a
+restarted attempt is never counted twice.
+
+Use these outgoing attack-source families:
+
+| Source ID | Includes |
+| --- | --- |
+| `primary` | normal center/side shots, pierce, and ricochet direct damage |
+| `breach` | Breach direct damage and Shock Breach |
+| `passive_seeker` | passive seeker direct and burst damage |
+| `ion_field` | Ion Field ticks |
+| `orbit_blades` | Orbit Blade contacts |
+| `wake_mines` | player secondary Wake Mine damage |
+| `escort_drone` | Escort Drone fire |
+| `emp` | EMP and EMP Aftershock |
+| `dash` | Dash impact and its upgrade effects |
+| `burn` | burn damage over time |
+| `poison` | poison damage over time and Contagion |
+| `elemental_burst` | Flashover and Shatter burst damage |
+| `reflected_shot` | reflected hostile projectiles |
+| `arc_mine` | player-triggered world Arc Mine damage to enemies |
+| `arc_surge` | Arc Surge environmental damage to enemies |
+| `other` | validated fallback; never an internal function or node name |
+
+Migrate outgoing damage calls and projectile/secondary state to carry one stable
+source ID. Do not infer reporting groups by parsing display strings. Record the
+actual value returned by `_damage_enemy` after modifiers and overkill capping.
+The damage denominator is effective enemy-health damage only; it excludes
+crates, Breakable Bulkheads, Guard plate structure, invulnerable hits, and
+overkill. Status damage remains its own visible source so elemental upgrades
+are measurable.
+
+Record a defeat only when `_defeat_enemy` resolves an actual combat death.
+Include ordinary, stationary, summoned, field-boss, and stage-boss archetypes;
+mark summoned rows with a localized secondary label. Do not count enemies
+silently retired during stage cleanup. Sort defeat rows by count descending,
+then stable archetype ID.
+
+After the boss reward is confirmed, change the flow to:
+
+`boss reward -> freeze Stage Report -> player confirms Continue -> next stage`.
+
+Stage 5 uses:
+
+`boss reward -> Stage Report -> Continue -> final run result`.
+
+The new `RunMode.STAGE_REPORT` stops simulation, hides the live HUD, clears
+carried combat input, shows the cursor, and owns focus. It cannot be closed with
+Escape into gameplay. The single primary action is
+`다음 스테이지 / Continue` for stages 1–4 and
+`최종 결과 / Final Result` for stage 5. It becomes enabled after `0.35 s` to
+reject the carried reward-confirm input.
+
+The report displays:
+
+- stage number, localized title, clear time, and remaining hull;
+- `40x40` shared combat silhouettes, localized enemy names, and actual defeat
+  counts;
+- attack-source icon/name, actual applied damage, and percentage of total; and
+- a total-damage row.
+
+On `1280x720` and wider, defeats and damage use two aligned columns. At
+`960x540`, the same modal uses two keyboard-accessible tabs, `처치 / Defeats`
+and `피해 / Damage`, inside one vertical scroll region. Show at most eight
+damage rows; fold the remainder into localized `기타 / Other`. Calculate
+tenths-of-a-percent with largest-remainder allocation so visible percentages
+sum to exactly `100.0%`. When total damage is zero, show `—` instead of a
+percentage.
+
+### 11. Failure report and incoming damage recap
+
+Before the existing Garage transition, `RunMode.FAILURE_REPORT` uses the same
+panel in failure mode and shows the current partial Stage Report plus a compact
+localized learning block:
 
 - `마지막 피해 / Last hit`: source display name and amount;
 - `가장 큰 피해원 / Top damage sources`: at most three source names with
@@ -504,7 +663,9 @@ internal node names. Reset the accumulator at the start of every attempt.
 Environmental friendly-fire kills remain attributed correctly for quota and XP,
 but the player's recap records only damage received by the player.
 
-This information appears only on failure. It does not add live-HUD text.
+The failure report stops simulation, cannot close back into gameplay, and has
+one primary `격납고로 / Continue to Garage` action with the same `0.35 s`
+carried-input guard. Neither report adds live-HUD text.
 
 ## Ownership and File Boundaries
 
@@ -520,7 +681,10 @@ This information appears only on failure. It does not add live-HUD text.
 | Boss data and state | `vehicle_boss_patterns.gd`, new `vehicle_boss_runtime.gd` | General enemy store, HUD controls |
 | Shared meshes/batched presentation | `vehicle_combat_visual_library.gd`, `vehicle_combat_renderer.gd` | Gameplay damage or collision |
 | Guidebook metadata/persistence/UI | `vehicle_guidebook_catalog.gd`, `vehicle_guidebook_store.gd`, `vehicle_guidebook_panel.gd`, new preview control | Enemy behavior |
-| Damage receipt and result summary | combat damage source IDs, run-attempt accumulator, result UI | Enemy quota attribution |
+| Effective build snapshot | new `scripts/presentation/vehicle_build_snapshot_builder.gd` | Gameplay mutation, card application, settings persistence |
+| Reusable Ship Status UI | new `scripts/ui/vehicle_build_summary_panel.gd`, `vehicle_settings_panel.gd`, guidebook composition | Stat calculation or card behavior |
+| Combat telemetry | new `scripts/combat/vehicle_stage_telemetry.gd`, stable source IDs carried by damage/projectile state | Encounter scheduling, live UI updates |
+| Stage/failure report UI | new `scripts/ui/vehicle_stage_report_panel.gd`, `vehicle_stage_ui.gd` | Damage calculation, enemy lifecycle |
 | Orchestration only | `vehicle_run.gd` | New catalogs, per-role algorithms, or presentation geometry |
 
 Before implementation, identify each extracted block currently in
@@ -587,7 +751,8 @@ plan, and no performance threshold was relaxed.
 - [ ] Rename and rebalance the opening shot as Breach Shot.
 - [ ] Add exact Breach visuals, readiness feedback, audio use, KR/EN copy, and
       guidebook metadata.
-- [ ] Add the bulkhead one-shot and boss-recovery stagger contracts.
+- [ ] Add the bulkhead one-shot and non-stopping boss `Breach Exposed`
+      contracts; retire boss hard-stagger state and constants.
 - [ ] Preserve the Breach contract under every existing primary-projectile,
       charge-time, pierce, and status upgrade combination.
 - [ ] Add terrain discovery events without per-frame deep guidebook snapshots.
@@ -602,7 +767,8 @@ plan, and no performance threshold was relaxed.
 - Forked Muzzle and other existing upgrades cannot remove the center
   projectile's Breach interaction;
 - normal primary fire can eventually break a bulkhead;
-- one Breach Shot in boss recovery causes one stagger and cannot loop the boss;
+- one Breach Shot in boss recovery applies one `1.25 s` exposure window without
+  changing boss movement, timers, phase, or attack;
 - broken bulkheads remain broken through later successful stages and reset on a
   stage restart/replay; and
 - no terrain creates a required path narrower than `320 px`.
@@ -613,9 +779,10 @@ plan, and no performance threshold was relaxed.
 - [ ] Apply mine damage to player and enemies with wall occlusion.
 - [ ] Implement player-caused short fuse, deterministic bounded chain arming,
       quota, XP, and damage-source attribution.
+- [ ] Enforce the `230/160 px` stationary and `160/100 px` Minelet
+      activation/damage-ring contracts plus authored clearance.
 - [ ] Activate Spark Minelets from stage 2 within their locked caps.
 - [ ] Implement Bulkhead Guard plate ownership and Breach counterplay.
-- [ ] Implement Relay Scavenger bounded XP query, storage, return, and drop.
 - [ ] Implement Splitter Barge children inside summon capacity.
 - [ ] Update authored encounter packets to the locked teach-combine-test rollout
       without changing active/population envelopes.
@@ -625,12 +792,17 @@ plan, and no performance threshold was relaxed.
 
 - mines retire after one explosion;
 - approaching or destroying a mine produces the correct fuse;
+- a proximity-triggered mine leaves the player outside the damage ring and a
+  base-speed reverse route clears it without dash;
+- stationary mine placement has the locked wall/terrain/mine clearance;
+- an armed Minelet stops, locks its position, and leaves the player outside its
+  damage ring on the first trigger frame;
 - enemy proximity alone does not arm a mine;
 - explosions cannot hit through a wall;
 - at most six chain mines arm per source explosion;
 - quota/XP attribution is correct for approach-triggered and shot-triggered
   explosions;
-- no XP is lost when a Relay Scavenger dies or a stage ends;
+- no enemy behavior reads or mutates experience shards;
 - splitter children never increase quota/XP and never exceed cap;
 - every new role uses local/bounded queries; and
 - the active cap remains `72`.
@@ -644,7 +816,8 @@ plan, and no performance threshold was relaxed.
       table above.
 - [ ] Ensure pursuit/repositioning continues after normal hits and outside
       committed attacks.
-- [ ] Implement one-stagger-per-attack Breach recovery interaction.
+- [ ] Implement one non-stopping `Breach Exposed` application per boss attack
+      and remove the old boss hard-stagger transitions.
 - [ ] Add five unique boss meshes/variants and reuse them in combat, minimap,
       HUD, and guidebook.
 - [ ] Keep projectile reserve at or below `24` and add bounded summon handling.
@@ -654,6 +827,7 @@ plan, and no performance threshold was relaxed.
 
 - every boss reaches and executes every phase deterministically;
 - normal hits never freeze boss movement or attack timers;
+- Breach hits never freeze, pause, or retime boss movement or attack timers;
 - no immediate pattern repeats;
 - all warnings stop tracking after lock;
 - warning and damage geometry are identical;
@@ -664,7 +838,40 @@ plan, and no performance threshold was relaxed.
 - all five variants are visually distinguishable in monochrome silhouette; and
 - boss capacity does not exceed the current projectile/summon envelope.
 
-### Milestone 5 — Guidebook previews and damage recap
+### Milestone 5 — Combat telemetry and Ship Status
+
+- [ ] Add stable outgoing and incoming damage-source IDs to gameplay state;
+      remove report grouping by display-string parsing.
+- [ ] Add `VehicleStageTelemetry` with stage/reset/run-total lifecycle and
+      bounded source/archetype dictionaries.
+- [ ] Record only actual applied enemy-health damage after modifiers and
+      overkill capping.
+- [ ] Record actual combat defeats by archetype without counting stage cleanup.
+- [ ] Add `VehicleBuildSnapshotBuilder` using gameplay-owned effective values.
+- [ ] Add reusable `VehicleBuildSummaryPanel`.
+- [ ] Add the first Settings `Ship Status` tab, its paused-run snapshot, and its
+      no-run empty state.
+- [ ] Reuse the same summary panel/snapshot in the guidebook Ship entry.
+- [ ] Add complete Korean/English stat labels, units, upgrade names, levels, and
+      current effect descriptions.
+
+**Acceptance:**
+
+- every direct, secondary, elemental, reflected, mine, and surge damage path
+  records one stable source ID and its exact applied damage;
+- percentages exclude overkill, neutral structures, and invulnerable hits;
+- stage restart resets stage counters while a successful transition freezes the
+  prior snapshot and preserves run totals;
+- no telemetry owner stores enemy references or allocates one object per hit;
+- Settings shows gameplay-equal effective values after every upgrade;
+- all acquired upgrades appear once with current/max level and effect;
+- outside a run, Ship Status shows only the localized empty state;
+- Settings remains paused, scroll-safe, keyboard-operable, and returns focus;
+  and
+- the guidebook and Settings cannot disagree because they consume the same
+  immutable build snapshot.
+
+### Milestone 6 — Guidebook previews and stage/failure reports
 
 - [ ] Extend guidebook snapshots with nonleaking preview and counterplay
       metadata.
@@ -673,7 +880,14 @@ plan, and no performance threshold was relaxed.
 - [ ] Add Movement, Attack, and Counter rows in Korean and English.
 - [ ] Preserve neutral locked silhouettes and `???` without hidden metadata.
 - [ ] Add discovery triggers for terrain and new roles.
-- [ ] Add attempt-scoped damage-source accumulation and the failure recap.
+- [ ] Add `RunMode.STAGE_REPORT`, report snapshot freezing, and the
+      reward-report-next-stage/final-result transitions.
+- [ ] Add `VehicleStageReportPanel` with defeat and outgoing-damage views,
+      responsive two-column/tab layouts, and the `0.35 s` carried-input guard.
+- [ ] Add `RunMode.FAILURE_REPORT`, the partial report, incoming
+      last-hit/top-three summary, and explicit Garage continuation.
+- [ ] Add deterministic `100.0%` largest-remainder formatting and zero-damage
+      empty state.
 - [ ] Verify modal pause/input blocking and deterministic focus.
 
 **Acceptance:**
@@ -683,23 +897,30 @@ plan, and no performance threshold was relaxed.
 - every text key exists and fits in Korean and English;
 - preview controls clip neither mesh nor focus indicator;
 - reduced motion produces a static but complete preview;
+- every cleared stage stops on its own report after the boss reward;
+- defeat rows match actual combat deaths by archetype and never include cleanup;
+- outgoing damage rows match telemetry values and visible percentages sum to
+  exactly `100.0%`;
+- Stage 1–4 Continue advances once, while Stage 5 Continue opens final result;
 - the failure recap shows the correct last hit and no more than three aggregate
   sources; and
 - no new persistent live-HUD text is introduced.
 
-### Milestone 6 — Integration, performance, rendered QA, and cleanup
+### Milestone 7 — Integration, performance, rendered QA, and cleanup
 
 - [ ] Run every focused validator listed below.
 - [ ] Run the complete current vehicle validation suite.
 - [ ] Export the production Web build.
 - [ ] Run deterministic capacity scenarios for all three fields, all five
-      bosses, each terrain family, mine chains, and all three new roles.
+      bosses, each terrain family, mine chains, the activated Minelet, and both
+      new roles.
 - [ ] Complete three foreground standalone/Web repetitions at the required
       resolutions and the active performance plan's ten-minute lifecycle soak.
 - [ ] Capture UI/UX evidence at `960x540`, `1280x720`, and `1920x1080` in Korean
       and English.
 - [ ] Review field walls, all terrain states, every boss phase, Breach readiness,
-      mine fuses, guidebook locked/unlocked entries, focus, and failure recap.
+      mine fuses, Ship Status, per-stage reports, guidebook locked/unlocked
+      entries, focus, and failure recap.
 - [ ] Remove superseded branches, dead motif code, unused generic boss
       execution, stale localization, and temporary instrumentation.
 - [ ] Run `$codebase-quality-auditor` and apply only safe task-scoped findings.
@@ -736,7 +957,9 @@ Add responsibility-shaped validators rather than expanding one catch-all:
 - `validate_vehicle_mines.gd`
 - `validate_vehicle_enemy_expansion.gd`
 - `validate_vehicle_boss_runtime.gd`
-- `validate_vehicle_damage_recap.gd`
+- `validate_vehicle_build_snapshot.gd`
+- `validate_vehicle_stage_telemetry.gd`
+- `validate_vehicle_stage_report.gd`
 
 ### Deterministic fixtures
 
@@ -748,10 +971,19 @@ Every test has a fixed seed and no wall-clock dependency:
 - Flow entry/exit for player, ordinary enemy, boss, stationary enemy, and
   projectile;
 - bulkhead normal-fire and Breach destruction;
-- mine approach, health-zero, chain, wall occlusion, and attribution;
-- each new enemy at capacity and stage transition;
+- mine proximity while outside the blast, health-zero, chain, placement
+  clearance, wall occlusion, and attribution;
+- Minelet, Guard, and Splitter at capacity and stage transition;
 - every boss pattern in every phase and the five phase-three combos;
-- guidebook locked/unlocked snapshot equivalence; and
+- Breach during every boss phase, proving no change to phase, timer, velocity,
+  or attack sequence;
+- build snapshots before a run and after representative primary, elemental,
+  secondary, mobility, defense, and skill upgrades;
+- guidebook locked/unlocked snapshot equivalence;
+- stage telemetry with direct, overkill, invulnerable, status, reflected,
+  structure, cleanup, summoned, and environmental cases;
+- Stage 1–4 Continue, Stage 5 Continue, failure-to-Garage, carried input, zero
+  damage, more-than-eight sources, and percentage rounding; and
 - last-hit/top-three aggregation ties resolved by damage descending, then stable
   source ID.
 
@@ -791,11 +1023,13 @@ Final rendered evidence must include:
 | --- | --- |
 | deployment | separate seeded captures for each of the three read-only selected field names; KR/EN; keyboard focus |
 | gameplay field | all three layouts; shared walls; zero motifs; every terrain warning/active state |
-| Breach Shot | unprimed, charging, ready, fired, bulkhead hit, mine hit, boss recovery hit |
-| mine | dormant, normal fuse, short fuse, chained fuse, explosion with enemy inside |
+| Breach Shot | unprimed, charging, ready, fired, bulkhead hit, mine hit, non-stopping boss exposure |
+| mine | separate activation/damage rings; dormant, normal fuse, short fuse, chained fuse, explosion with enemy inside |
 | bosses | each silhouette; every phase; phase-three combo; boss HUD/minimap identity |
 | guidebook | locked/unlocked enemy, boss, mine, and terrain; KR/EN; focus; reduced motion |
-| failure | last hit and one/two/three-source recap in KR/EN |
+| Settings Ship Status | active-run filled state, no-run empty state, long upgrade list, KR/EN, keyboard focus, 200% text scaling |
+| Stage Report | two-column desktop, tabbed `960x540`, zero/one/eight-plus damage sources, long enemy/attack labels, focus and carried-input guard |
+| failure | partial stage report plus last hit and one/two/three-source recap in KR/EN |
 
 Capture at `960x540`, `1280x720`, and `1920x1080`. Check alignment,
 typography, spacing, focus, overflow, clipping, central combat occlusion,
@@ -813,12 +1047,24 @@ No screenshot with debug-only labels may be used as final evidence.
   socket. Do not auto-open it at runtime.
 - If mine-chain demand exceeds six targets, arm the six nearest by distance then
   stable ID; leave the rest dormant.
+- If generated stationary-mine placement cannot satisfy the full `260 px`
+  solid/terrain clearance and `360 px` mine separation, use that field's
+  authored fallback mine sockets. If fallback fails, omit the mine and fail the
+  layout validator; never shrink the activation buffer or require dash.
 - If a splitter cannot allocate both children, spawn only the available count;
   do not queue delayed hidden spawns.
 - If a boss combo cannot prove base-speed escape, increase warning or gap
   geometry before reducing damage. Dash never becomes mandatory.
 - If a guidebook mesh is too large for its preview, scale the shared mesh
   uniformly inside a `16 px` inset; do not crop or author a separate portrait.
+- If an attack source lacks a catalog ID, record it as visible localized
+  `other`, fail the focused source-coverage validator, and fix the source before
+  release. Never expose an internal display string.
+- If more than eight outgoing sources have nonzero damage, show the seven
+  largest and combine the remainder into `Other`; telemetry retains exact
+  individual values for validation.
+- If Ship Status opens without an active-run snapshot, show the defined no-run
+  empty state. Never reuse the previous run's snapshot.
 - If a new repeated visual cannot use MultiMesh ordering correctly, use a fixed
   retained `MeshInstance2D` pool. Do not return to per-frame procedural
   high-count drawing.
@@ -850,10 +1096,13 @@ No screenshot with debug-only labels may be used as final evidence.
 | Three fields multiply cache and validation bugs | Key every immutable cache by `field_id`; run every fixture across all fields |
 | A common wall rail visually shrinks corridors | Lock `320 px` minimum corridor and align the `24 px` floor-side edge with player-center collision |
 | Friendly-fire mines solve encounters automatically | Enemy proximity cannot arm them; player approach or damage creates the event |
-| Breach Shot becomes mandatory DPS | Its health multiplier stays modest; exclusive strength is structure and recovery stagger |
+| Breach Shot becomes mandatory DPS | Its health multiplier stays modest; boss exposure is only `+20%` for `1.25 s` and never interrupts behavior |
+| A mine detonates before the player can understand it | Activation is `70/60 px` outside damage, fuse is continuous, and placement proves a base-speed escape route |
 | Boss layering becomes unreadable | One low-reaction layer plus one direct response; exact warnings and base-speed escape proof |
 | New roles reintroduce lag | Bounded live caps, local queries, existing active cap, MultiMesh presentation |
 | Guidebook leaks unseen content | Neutral locked preview and snapshots that omit hidden metadata |
+| Combat reporting slows gameplay | Bounded numeric dictionaries update in the existing damage/defeat path; UI snapshot freezes only at report/open events |
+| Settings and guidebook show different stats | Both render the same immutable gameplay-owned build snapshot and shared summary component |
 | Run-level field variation is mistaken for stage map switching | Field name shown on deployment and field ID immutable through stage flow |
 
 ## Progress
@@ -868,8 +1117,17 @@ No screenshot with debug-only labels may be used as final evidence.
 - [ ] Milestone 2 terrain and Breach Shot.
 - [ ] Milestone 3 mines and enemy expansion.
 - [ ] Milestone 4 boss runtime and exams.
-- [ ] Milestone 5 guidebook and damage recap.
-- [ ] Milestone 6 integration and release evidence.
+- [ ] Milestone 5 combat telemetry and Ship Status.
+- [ ] Milestone 6 guidebook and stage/failure reports.
+- [ ] Milestone 7 integration and release evidence.
+
+## Open Questions
+
+None. The map count and persistence, wall contract, terrain families, Breach
+behavior, mine safety geometry, enemy roster, boss behavior, Ship Status,
+telemetry attribution, report flow, localization, performance envelope, and
+validation gates are locked. A change to any of those is change control from
+the owner, not an implementation-time choice.
 
 ## Decision Notes
 
@@ -881,13 +1139,47 @@ No screenshot with debug-only labels may be used as final evidence.
 - 2026-07-24: Rebuild, rather than restore, the old current and storm mechanics
   so terrain affects both sides and never changes projectile flight.
 - 2026-07-24: Give the one-second shot structure, mine, protected-enemy, and
-  boss-recovery jobs; keep held fire.
+  non-stopping boss-exposure jobs; keep held fire.
 - 2026-07-24: Increase enemy and boss decision variety without increasing the
   existing active-cap envelope.
 - 2026-07-24: Reuse combat meshes for guidebook visuals instead of creating
   separate image assets.
-- 2026-07-24: Include a compact damage recap now; defer practice mode, optional
-  danger events, and elite modifiers to later plans.
+- 2026-07-24: Bosses never enter a paused/staggered state from Breach Shot;
+  exposure changes received damage only.
+- 2026-07-24: Remove Relay Scavenger and every experience-stealing/denial
+  behavior without replacement.
+- 2026-07-24: Make mine activation visibly larger than its damaging radius and
+  validate a base-speed, no-dash escape.
+- 2026-07-24: Add shared Ship Status to paused Settings and the guidebook.
+- 2026-07-24: Add a Stage Report after every boss reward with per-archetype
+  defeats and applied-health-damage contribution by stable attack source.
+- 2026-07-24: Remove boss practice, optional danger events, and elite variants
+  from the roadmap; they were unaccepted brainstorming terms.
+
+## Completion Criteria
+
+- [ ] Every Success Criterion and milestone acceptance statement passes.
+- [ ] The canonical product and visual specifications contain the implemented
+      durable behavior.
+- [ ] Korean and English UI evidence passes the Level 4 UIUX gate at all
+      declared viewports and states.
+- [ ] Focused, full-suite, production Web, performance, and lifecycle gates
+      pass without relaxing the existing envelope.
+- [ ] No motif path, boss hard-stagger transition, experience-denial role,
+      duplicate build calculation, display-string damage grouping, stale
+      localization, or temporary instrumentation remains.
+- [ ] This active ExecPlan is deleted after its durable decisions and final
+      evidence are incorporated into the canonical specs, as required by
+      `.agents/PLANS.md`.
+
+## Stop Conditions
+
+Complete only when every Completion Criterion passes. Escalate only if the owner
+changes a locked product rule, a required existing owner cannot support the
+specified interface without architectural expansion, or a measured performance
+gate fails after the predetermined bounded remedies. A narrow test failure,
+layout rejection, or report overflow is not a stop condition; apply the
+predetermined contingency and continue.
 
 ## Next Steps
 
