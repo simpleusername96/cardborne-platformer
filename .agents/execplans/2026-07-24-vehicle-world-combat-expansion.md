@@ -1755,6 +1755,17 @@ and run validators pass. Enemy-runtime extraction, boss-signature ownership,
 guidebook discovery presentation, and full rendered/audio evidence remain in
 their owning later integration passes.
 
+2026-07-24 Milestone 3 progress: converted stationary and mobile mines to
+bounded one-shot fuse lifecycles with separate activation/damage rings,
+all-team wall-occluded damage, short-fuse Breach handling, and deterministic
+six-target chain arming. Activated Minelets from Stage 2, added capped
+Bulkhead Guards and Splitter Barges, and added deterministic `1/2/3/4/5`
+one-trait elite reservations with fixed shells, summon-only splitter children,
+shape overlays, hollow minimap diamonds, and rounded experience. Authored
+stage role sets keep projectile-firing roles at or below half. Focused enemy,
+field-generation, renderer, and integrated run validators pass; final rendered
+clearance evidence remains in Milestone 7.
+
 ## Open Questions
 
 None. The map count, `7200x4320` dimensions, persistence, wall contract, six

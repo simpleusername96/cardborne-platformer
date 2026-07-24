@@ -257,6 +257,15 @@ class StageMinimap:
 				draw_rect(Rect2(point - Vector2(3.5, 3.5), Vector2(7.0, 7.0)), marker_color)
 			elif kind == "reward":
 				draw_colored_polygon(_diamond(point, 5.0), marker_color)
+			elif kind == "elite":
+				var elite_diamond := _diamond(point, 6.0)
+				for index in elite_diamond.size():
+					draw_line(
+						elite_diamond[index],
+						elite_diamond[(index + 1) % elite_diamond.size()],
+						marker_color,
+						2.0
+					)
 			elif kind == "mechanic":
 				var direction := Vector2.RIGHT.rotated(float(int(marker.get("orientation", 0))) * PI * 0.5)
 				draw_circle(point, 5.0, marker_color)

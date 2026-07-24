@@ -6,6 +6,7 @@ const AttackTelegraphs = preload("res://scripts/combat/vehicle_attack_telegraph_
 const BossPatterns = preload("res://scripts/bosses/vehicle_boss_patterns.gd")
 const Director = preload("res://scripts/encounters/vehicle_encounter_director.gd")
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
+const ProjectileState = preload("res://scripts/combat/vehicle_projectile_state.gd")
 const MAIN_SCENE := "res://scenes/main/GameRoot.tscn"
 
 var failures: Array[String] = []
@@ -49,6 +50,8 @@ func _run() -> void:
 		_check_boss_progression_gate(run)
 		run.call("_reset_run", false, true, true)
 		_check_boss_hit_recovery(run)
+		run.call("_reset_run", false, true, true)
+		_check_enemy_expansion(run)
 	root.queue_free()
 	await process_frame
 	_finish()
@@ -194,6 +197,50 @@ func _check_boss_hit_recovery(run) -> void:
 		true
 	)
 	_expect(run.call("_count_hostile_projectiles") == before_boss_shot + 1, "boss attacks still fire when ordinary projectile pressure is saturated")
+
+
+func _check_enemy_expansion(run) -> void:
+	var mine: EnemyState = run.call("_make_enemy", {
+		"id":"validation_mine", "role":&"mine",
+		"pos":run.player_position + Vector2(229.0, 0.0), "active":true,
+	})
+	run.call("_append_enemy", mine)
+	var health_before := float(run.player_health)
+	run.call("_update_mine", mine, 0.0, 0.0, true)
+	_expect(
+		mine.phase == &"mine_armed"
+			and is_equal_approx(mine.phase_time, 1.25)
+			and is_equal_approx(float(run.player_health), health_before),
+		"stationary mine arms outside its separate damage ring"
+	)
+	run.player_position += Vector2(800.0, 0.0)
+	run.call("_update_mine", mine, 1.26, 0.0, true)
+	_expect(not mine.alive, "stationary mine retires after one explosion")
+
+	var guard: EnemyState = run.call("_make_enemy", {
+		"id":"validation_guard", "role":&"bulkhead_guard",
+		"pos":run.player_position + Vector2(300.0, 0.0), "active":true,
+	})
+	var breach := ProjectileState.new()
+	breach.velocity = Vector2.RIGHT
+	breach.structure_damage = 72.0
+	_expect(
+		bool(run.call("_try_absorb_protective_structure", guard, breach))
+			and is_zero_approx(guard.guard_plate_structure),
+		"one full Breach removes the Guard plate"
+	)
+
+	var splitter: EnemyState = run.call("_make_enemy", {
+		"id":"validation_splitter", "role":&"splitter_barge",
+		"pos":run.player_position + Vector2(-300.0, 0.0), "active":true,
+	})
+	run.call("_append_enemy", splitter)
+	run.call("_defeat_enemy", splitter, "player_primary")
+	var children := 0
+	for enemy in run.enemies:
+		if enemy.alive and enemy.carrier_id == "splitter:validation_splitter":
+			children += 1
+	_expect(children == 2, "Splitter Barge emits exactly two summon-only children when capacity permits")
 
 
 func _expect(condition: bool, message: String) -> void:

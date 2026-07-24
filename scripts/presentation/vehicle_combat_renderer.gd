@@ -140,6 +140,11 @@ func debug_snapshot() -> Dictionary:
 
 func _build_batches() -> void:
 	for archetype in Visuals.ENEMY_ARCHETYPES:
+		if archetype in [
+			&"artillery_spotter", &"beam_sentinel", &"boss_pylon",
+			&"shield_escort", &"repair_tender", &"interceptor_tower",
+		]:
+			continue
 		_enemy_batches[archetype] = _create_batch(
 			"Enemy_%s" % String(archetype),
 			Visuals.enemy_mesh(archetype),
@@ -147,6 +152,12 @@ func _build_batches() -> void:
 			0,
 			archetype
 		)
+	_enemy_batches[&"artillery_spotter"] = _enemy_batches[&"shooter"]
+	_enemy_batches[&"beam_sentinel"] = _enemy_batches[&"shooter"]
+	_enemy_batches[&"boss_pylon"] = _enemy_batches[&"shooter"]
+	_enemy_batches[&"shield_escort"] = _enemy_batches[&"controller"]
+	_enemy_batches[&"repair_tender"] = _enemy_batches[&"controller"]
+	_enemy_batches[&"interceptor_tower"] = _enemy_batches[&"turret"]
 	for team in [&"player", &"enemy"]:
 		var capacity := (
 			PROJECTILE_CAPACITY
@@ -294,8 +305,75 @@ func _sync_enemies(enemies: Array[EnemyState], visible_world: Rect2, player_posi
 				0.0, Vector2(bar_width * health_ratio, 10.0), Art.CORAL
 			)
 		_sync_status_arcs(enemy, position, radius)
+		_sync_enemy_semantic_overlays(enemy, position, radius, angle)
 		if enemy.id == aim_target_id:
 			_sync_target_brackets(position, radius + 16.0)
+
+
+func _sync_enemy_semantic_overlays(
+	enemy: EnemyState,
+	position: Vector2,
+	radius: float,
+	angle: float
+) -> void:
+	var forward := Vector2.RIGHT.rotated(angle)
+	var side := forward.rotated(PI * 0.5)
+	if enemy.guard_plate_structure > 0.0:
+		for sign_value in [-1.0, 1.0]:
+			_write_instance_basis(
+				_overlay_batches[&"beam"],
+				position + forward * radius * 0.58 + side * sign_value * radius * 0.48,
+				side,
+				Vector2(radius * 0.48, 9.0),
+				Art.IVORY_BRIGHT
+			)
+	if enemy.elite_trait == &"armored" and enemy.armor_structure > 0.0:
+		for sign_value in [-1.0, 1.0]:
+			_write_instance_basis(
+				_overlay_batches[&"beam"],
+				position + side * sign_value * radius * 0.72,
+				forward,
+				Vector2(radius * 0.58, 10.0),
+				Art.IVORY_BRIGHT
+			)
+	elif enemy.elite_trait == &"overclocked":
+		for sign_value in [-1.0, 1.0]:
+			_write_instance_basis(
+				_overlay_batches[&"diamond"],
+				position - forward * radius * 0.70 + side * sign_value * radius * 0.62,
+				forward,
+				Vector2(radius * 0.42, radius * 0.22),
+				Art.MUSTARD
+			)
+		_write_instance(
+			_overlay_batches[&"ring"], position, 0.0,
+			Vector2.ONE * (radius + 11.0), Art.MUSTARD
+		)
+	elif enemy.elite_trait == &"heavy":
+		_write_instance(
+			_overlay_batches[&"ring"], position, 0.0,
+			Vector2.ONE * (radius * 0.72), Art.IVORY_BRIGHT
+		)
+	if enemy.role != &"mine":
+		return
+	var mobile := enemy.archetype == &"spark_minelet"
+	var activation_radius := 160.0 if mobile else 230.0
+	var damage_radius := 100.0 if mobile else 160.0
+	_write_instance(
+		_overlay_batches[&"ring"], position, 0.0,
+		Vector2.ONE * activation_radius, Color(Art.MUSTARD, 0.38)
+	)
+	_write_instance(
+		_overlay_batches[&"danger_ring"], position, 0.0,
+		Vector2.ONE * damage_radius, Color(Art.CORAL, 0.82)
+	)
+	if enemy.phase == &"mine_armed":
+		var fuse := 1.0 if mobile else 1.25
+		var readiness := 1.0 - clampf(enemy.phase_time / fuse, 0.0, 1.0)
+		_write_instance(
+			_overlay_batches[&"disk"], position, 0.0,
+			Vector2.ONE * damage_radius * readiness, Color(Art.CORAL, 0.16 + readiness * 0.22)
+		)
 
 
 func _sync_status_arcs(enemy: EnemyState, position: Vector2, radius: float) -> void:
@@ -756,7 +834,11 @@ func _write_diamond(position: Vector2, radius: float, color: Color) -> void:
 
 
 func _enemy_angle(archetype: StringName, enemy: EnemyState, player_position: Vector2, run_time: float) -> float:
-	if archetype in [&"scrap_drone", &"needle_drone", &"chaser", &"shooter", &"artillery_spotter", &"stage_boss"]:
+	if archetype in [
+		&"scrap_drone", &"needle_drone", &"spark_minelet", &"chaser",
+		&"shooter", &"artillery_spotter", &"bulkhead_guard",
+		&"splitter_barge", &"stage_boss",
+	]:
 		return (player_position - enemy.pos).angle()
 	if archetype in [&"turret", &"rammer", &"beam_sentinel"]:
 		return enemy.committed_dir.angle()

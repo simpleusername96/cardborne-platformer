@@ -21,6 +21,8 @@ const DEFINITIONS := {
 	&"mine": {"behavior": &"mine", "health": 65.0, "speed": 0.0, "radius": 27.0, "visual_radius": 42.0, "name_key": "ENEMY_ARC_MINE", "health_class": &"priority", "threat_cost": 1.25, "threat_kind": &"melee", "active_cap": false},
 	&"interceptor_tower": {"behavior": &"interceptor_tower", "health": 125.0, "speed": 0.0, "radius": 34.0, "visual_radius": 50.0, "name_key": "ENEMY_INTERCEPTOR_TOWER", "health_class": &"priority", "threat_cost": 1.25, "threat_kind": &"ranged", "active_cap": false},
 	&"rammer": {"behavior": &"rammer", "health": 82.0, "speed": 185.0, "radius": 23.0, "visual_radius": 33.0, "name_key": "ENEMY_RAMMER", "health_class": &"standard", "threat_cost": 1.5, "threat_kind": &"melee", "active_cap": true},
+	&"bulkhead_guard": {"behavior": &"bulkhead_guard", "health": 90.0, "speed": 140.0, "radius": 24.0, "visual_radius": 35.0, "name_key": "ENEMY_BULKHEAD_GUARD", "health_class": &"standard", "threat_cost": 1.5, "threat_kind": &"melee", "active_cap": true},
+	&"splitter_barge": {"behavior": &"splitter_barge", "health": 96.0, "speed": 120.0, "radius": 26.0, "visual_radius": 38.0, "name_key": "ENEMY_SPLITTER_BARGE", "health_class": &"standard", "threat_cost": 1.5, "threat_kind": &"melee", "active_cap": true},
 	&"repair_tender": {"behavior": &"repair_tender", "health": 74.0, "speed": 145.0, "radius": 22.0, "visual_radius": 32.0, "name_key": "ENEMY_REPAIR_TENDER", "health_class": &"priority", "threat_cost": 0.0, "threat_kind": &"support", "active_cap": true},
 	&"drone_carrier": {"behavior": &"drone_carrier", "health": 126.0, "speed": 105.0, "radius": 30.0, "visual_radius": 44.0, "name_key": "ENEMY_DRONE_CARRIER", "health_class": &"priority", "threat_cost": 1.5, "threat_kind": &"support", "active_cap": true},
 	&"beam_sentinel": {"behavior": &"beam_sentinel", "health": 138.0, "speed": 0.0, "radius": 34.0, "visual_radius": 50.0, "name_key": "ENEMY_BEAM_SENTINEL", "health_class": &"priority", "threat_cost": 1.5, "threat_kind": &"ranged", "active_cap": false},
@@ -43,7 +45,7 @@ static func validate_contract() -> PackedStringArray:
 	for archetype in PROJECTILE_FIRING_ARCHETYPES:
 		if not DEFINITIONS.has(archetype):
 			errors.append("unknown projectile-firing archetype: %s" % archetype)
-	for required in [&"scrap_drone", &"needle_drone", &"spark_minelet", &"chaser", &"shooter", &"controller", &"rammer", &"repair_tender", &"drone_carrier", &"beam_sentinel", &"generator", &"stage_boss"]:
+	for required in [&"scrap_drone", &"needle_drone", &"spark_minelet", &"chaser", &"shooter", &"controller", &"rammer", &"bulkhead_guard", &"splitter_barge", &"repair_tender", &"drone_carrier", &"beam_sentinel", &"generator", &"stage_boss"]:
 		if not DEFINITIONS.has(required):
 			errors.append("missing vehicle enemy archetype: %s" % required)
 	for archetype in DEFINITIONS:

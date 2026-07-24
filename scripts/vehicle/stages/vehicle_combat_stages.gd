@@ -19,10 +19,10 @@ const BOSS_NAME_KEYS := [
 ]
 const MOBILE_ROLES := [
 	[&"scrap_drone", &"needle_drone", &"chaser", &"shooter"],
-	[&"scrap_drone", &"needle_drone", &"controller", &"shield_escort", &"shooter", &"chaser"],
-	[&"needle_drone", &"chaser", &"artillery_spotter", &"rammer", &"shooter", &"scrap_drone"],
-	[&"chaser", &"rammer", &"repair_tender", &"drone_carrier", &"needle_drone"],
-	[&"scrap_drone", &"needle_drone", &"controller", &"rammer", &"repair_tender", &"drone_carrier", &"artillery_spotter"],
+	[&"scrap_drone", &"spark_minelet", &"controller", &"shield_escort", &"shooter", &"chaser"],
+	[&"spark_minelet", &"chaser", &"artillery_spotter", &"rammer", &"bulkhead_guard", &"scrap_drone"],
+	[&"chaser", &"rammer", &"bulkhead_guard", &"repair_tender", &"spark_minelet", &"needle_drone"],
+	[&"scrap_drone", &"spark_minelet", &"controller", &"rammer", &"bulkhead_guard", &"splitter_barge", &"repair_tender", &"needle_drone"],
 ]
 const STATIONARY_ROLES := [
 	[&"turret", &"mine", &"turret", &"mine"],

@@ -11,7 +11,8 @@ const ENEMY_ARCHETYPES: Array[StringName] = [
 	&"scrap_drone", &"needle_drone", &"spark_minelet", &"chaser",
 	&"shooter", &"controller", &"turret", &"mine", &"generator",
 	&"shield_escort", &"artillery_spotter", &"interceptor_tower",
-	&"rammer", &"repair_tender", &"drone_carrier", &"beam_sentinel",
+	&"rammer", &"bulkhead_guard", &"splitter_barge",
+	&"repair_tender", &"drone_carrier", &"beam_sentinel",
 	&"boss_pylon", &"stage_boss",
 ]
 
@@ -300,6 +301,18 @@ static func _enemy_polygon(archetype: StringName) -> PackedVector2Array:
 			return _regular_polygon(Vector2.ZERO, 1.0, 6, PI / 6.0)
 		&"rammer":
 			return PackedVector2Array([Vector2(1.2, 0.0), Vector2(-0.45, -1.0), Vector2(-1.0, 0.0), Vector2(-0.45, 1.0)])
+		&"bulkhead_guard":
+			return PackedVector2Array([
+				Vector2(1.0, 0.0), Vector2(0.62, -0.88), Vector2(-0.38, -0.72),
+				Vector2(-1.0, -0.24), Vector2(-1.0, 0.24), Vector2(-0.38, 0.72),
+				Vector2(0.62, 0.88),
+			])
+		&"splitter_barge":
+			return PackedVector2Array([
+				Vector2(1.0, 0.0), Vector2(0.42, -0.62), Vector2(-0.16, -1.0),
+				Vector2(-0.82, -0.48), Vector2(-0.56, 0.0), Vector2(-0.82, 0.48),
+				Vector2(-0.16, 1.0), Vector2(0.42, 0.62),
+			])
 		&"drone_carrier":
 			return PackedVector2Array([
 				Vector2(-0.82, -0.72), Vector2(0.82, -0.72), Vector2(1.0, -0.50),

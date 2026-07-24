@@ -10,6 +10,7 @@ const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const PrimaryWeapon = preload("res://scripts/player/vehicle_primary_weapon.gd")
 const StageCatalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
 const EnemyArchetypes = preload("res://scripts/enemies/vehicle_enemy_archetypes.gd")
+const EliteTraits = preload("res://scripts/enemies/vehicle_elite_trait_catalog.gd")
 const SpecialistRuntime = preload("res://scripts/enemies/vehicle_enemy_specialist_runtime.gd")
 const EncounterDirector = preload("res://scripts/encounters/vehicle_encounter_director.gd")
 const EncounterRuntime = preload("res://scripts/encounters/vehicle_encounter_runtime.gd")
@@ -168,6 +169,9 @@ var effects: Array[Dictionary] = []
 var damaging_trails: Array[Dictionary] = []
 var _empty_cover_rects: Array[Rect2] = []
 var _projectile_cover_query: Array[Rect2] = []
+var _elite_pending := 0
+var _elite_spawned := 0
+var _elite_threshold_cursor := 0
 
 var tutorial_move := false
 var tutorial_aim := false
@@ -505,6 +509,9 @@ func _reset_run(
 	_marked_enemy_id = ""
 	_sheared_enemy_id = ""
 	_last_damage_source = ""
+	_elite_pending = 0
+	_elite_spawned = 0
+	_elite_threshold_cursor = 0
 
 	if not preserve_upgrades:
 		run_build.reset()
@@ -725,6 +732,14 @@ func _make_enemy(spec: Dictionary) -> EnemyState:
 	enemy.pattern_tick = 0.0
 	enemy.pattern_volleys = 0
 	enemy.vulnerable = 0.0
+	enemy.breach_exposed = 0.0
+	enemy.breach_exposed_recovery_used = false
+	enemy.elite_trait = &""
+	enemy.armor_structure = 0.0
+	enemy.guard_plate_structure = 72.0 if archetype == &"bulkhead_guard" else 0.0
+	enemy.mine_armed_by_player = false
+	enemy.mine_fast_cue_played = false
+	enemy.splitter_spawned = false
 	enemy.reset_runtime_collections()
 	enemy.decision_bucket = absi(enemy.id.hash()) % ORDINARY_DECISION_BUCKET_COUNT
 	return enemy
@@ -757,6 +772,7 @@ func _preferred_run_difficulty() -> StringName:
 
 
 func _update_encounter(delta: float) -> void:
+	_refresh_elite_reservations()
 	var requests := encounter_runtime.tick(
 		delta,
 		_active_mobile_count(),
@@ -770,9 +786,66 @@ func _update_encounter(delta: float) -> void:
 		if int(cue["beat"]) == 0:
 			_ui.notify(tr("NOTIFY_CONTACT_INBOUND"), 1.2, Art.MUSTARD)
 	for spawn_spec in requests["spawns"]:
-		var enemy := _make_enemy(spawn_spec)
+		var bounded_spec := _bounded_spawn_spec(Dictionary(spawn_spec))
+		var enemy := _make_enemy(bounded_spec)
+		_apply_pending_elite(enemy)
 		if _append_enemy(enemy):
 			_add_effect("spawn", Vector2(enemy.pos), Art.CORAL, 0.42, 68.0)
+
+
+func _refresh_elite_reservations() -> void:
+	var thresholds: Array = EliteTraits.thresholds(current_stage_index)
+	var progress := float(stage_flow.defeats) / maxf(1.0, float(stage_flow.quota))
+	while (
+		_elite_threshold_cursor < thresholds.size()
+		and progress >= float(thresholds[_elite_threshold_cursor])
+	):
+		_elite_pending += 1
+		_elite_threshold_cursor += 1
+
+
+func _apply_pending_elite(enemy: EnemyState) -> void:
+	if (
+		enemy == null
+		or _elite_pending <= 0
+		or not EliteTraits.eligible(enemy.archetype)
+		or _live_elite_count() >= 2
+	):
+		return
+	var elite_kind: StringName = EliteTraits.trait_for(
+		current_stage_index, _elite_spawned, field_layout.layout_seed
+	)
+	EliteTraits.apply(enemy, elite_kind)
+	_elite_pending -= 1
+	_elite_spawned += 1
+
+
+func _live_elite_count() -> int:
+	var count := 0
+	for enemy in enemies:
+		if enemy.alive and not enemy.elite_trait.is_empty():
+			count += 1
+	return count
+
+
+func _bounded_spawn_spec(spec: Dictionary) -> Dictionary:
+	var archetype := StringName(spec.get("role", &"chaser"))
+	var cap: int = int({
+		&"spark_minelet":12,
+		&"bulkhead_guard":8,
+		&"splitter_barge":6,
+	}.get(archetype, -1))
+	if cap < 0:
+		return spec
+	var live_count := 0
+	for enemy in enemies:
+		if enemy.alive and enemy.archetype == archetype:
+			live_count += 1
+	if live_count < cap:
+		return spec
+	var substitute := spec.duplicate(true)
+	substitute["role"] = &"chaser"
+	return substitute
 
 
 func _active_mobile_count() -> int:
@@ -1858,19 +1931,34 @@ func _update_ordinary_enemy(
 		_update_repair_tender(enemy, delta, decision_due)
 		_move_enemy_role(enemy, motion_delta, false, decision_due)
 		return false
+	if enemy.role == &"mine":
+		_update_mine(enemy, delta, motion_delta, decision_due)
+		return false
 	if enemy.role == &"interceptor_tower":
 		enemy.intercept_recharge = maxf(0.0, enemy.intercept_recharge - delta)
 		if enemy.intercept_charges < 3 and enemy.intercept_recharge <= 0.0:
 			enemy.intercept_charges += 1
 			enemy.intercept_recharge = 4.0
 	enemy.attack_cooldown = maxf(0.0, enemy.attack_cooldown - delta * StatusRuntime.speed_multiplier(enemy))
+	if enemy.role in [&"bulkhead_guard", &"splitter_barge"]:
+		_move_enemy_role(enemy, motion_delta, false, decision_due)
+		if (
+			enemy.attack_cooldown <= 0.0
+			and enemy.pos.distance_to(player_position)
+				<= enemy.radius + Rules.PLAYER_RADIUS + 12.0
+		):
+			_damage_player(
+				_enemy_contact_damage(enemy, 12.0), "Enemy hull impact", true
+			)
+			enemy.attack_cooldown = 0.8
+		return false
 	var phase := enemy.phase
 	if phase == &"interrupted_recovery":
 		enemy.phase_time = maxf(0.0, enemy.phase_time - delta)
 		enemy.velocity = Vector2.ZERO
 		if enemy.phase_time <= 0.0:
 			enemy.phase = &"move"
-			enemy.attack_cooldown = _enemy_recovery_cooldown(enemy.role)
+			enemy.attack_cooldown = _enemy_recovery_cooldown(enemy)
 		return false
 	if phase == &"startup":
 		if enemy.role == &"artillery_spotter" and not _runtime_has_line_of_sight(enemy.pos, player_position, 5.0):
@@ -1890,7 +1978,7 @@ func _update_ordinary_enemy(
 		_move_enemy_role(enemy, motion_delta, true, decision_due)
 		if enemy.phase_time <= 0.0:
 			enemy.phase = &"move"
-			enemy.attack_cooldown = _enemy_recovery_cooldown(enemy.role)
+			enemy.attack_cooldown = _enemy_recovery_cooldown(enemy)
 		return false
 
 	_move_enemy_role(enemy, motion_delta, false, decision_due)
@@ -1902,7 +1990,8 @@ func _update_ordinary_enemy(
 	return false
 
 
-func _enemy_recovery_cooldown(role: StringName) -> float:
+func _enemy_recovery_cooldown(enemy: EnemyState) -> float:
+	var role := enemy.role
 	var cooldown := 0.8
 	match role:
 		&"chaser":
@@ -1925,7 +2014,8 @@ func _enemy_recovery_cooldown(role: StringName) -> float:
 			cooldown = SpecialistRuntime.CARRIER_RECOVERY
 		&"beam_sentinel":
 			cooldown = SpecialistRuntime.BEAM_RECOVERY
-	return cooldown / EncounterDirector.ENEMY_RECOVERY_RATE
+	var elite_scale := 0.85 if enemy.elite_trait == &"overclocked" else 1.0
+	return cooldown * elite_scale / EncounterDirector.ENEMY_RECOVERY_RATE
 
 
 func _enemy_can_attack(enemy: EnemyState) -> bool:
@@ -2094,7 +2184,11 @@ func _update_enemy_active(enemy: EnemyState, delta: float) -> void:
 					)
 			):
 				enemy.hit_committed = true
-				_damage_player(float(chaser_attack["damage"]), "Rivet Chaser lunge", true)
+				_damage_player(
+					_enemy_contact_damage(enemy, float(chaser_attack["damage"])),
+					"Rivet Chaser lunge",
+					true
+				)
 			if enemy.phase_time <= 0.0:
 				enemy.phase = &"recovery"
 				enemy.phase_time = 0.52
@@ -2140,7 +2234,11 @@ func _update_enemy_active(enemy: EnemyState, delta: float) -> void:
 					)
 			):
 				enemy.hit_committed = true
-				_damage_player(SpecialistRuntime.RAMMER_DAMAGE, "Rammer charge", true)
+				_damage_player(
+					_enemy_contact_damage(enemy, SpecialistRuntime.RAMMER_DAMAGE),
+					"Rammer charge",
+					true
+				)
 			if struck_cover or enemy.phase_time <= 0.0:
 				enemy.phase = &"recovery"
 				enemy.phase_time = SpecialistRuntime.RAMMER_RECOVERY
@@ -2169,7 +2267,10 @@ func _update_enemy_active(enemy: EnemyState, delta: float) -> void:
 
 func _move_enemy_role(enemy: EnemyState, delta: float, recovering: bool, decision_due: bool = true) -> void:
 	var role := enemy.role
-	if role in [&"turret", &"mine", &"interceptor_tower", &"beam_sentinel", &"generator", &"boss_pylon"]:
+	if (
+		role in [&"turret", &"interceptor_tower", &"beam_sentinel", &"generator", &"boss_pylon"]
+		or (role == &"mine" and enemy.archetype != &"spark_minelet")
+	):
 		return
 	if decision_due or enemy.desired_velocity.is_zero_approx():
 		enemy.desired_velocity = _desired_enemy_velocity(enemy, recovering)
@@ -2218,6 +2319,10 @@ func _desired_enemy_velocity(enemy: EnemyState, recovering: bool) -> Vector2:
 				desired = direction_to_player.rotated(enemy.strafe_sign * PI * 0.5)
 		&"rammer":
 			desired = direction_to_player if not recovering else -direction_to_player
+		&"bulkhead_guard", &"splitter_barge":
+			desired = direction_to_player
+		&"mine":
+			desired = direction_to_player
 		&"repair_tender", &"drone_carrier":
 			if distance < 430.0:
 				desired = -direction_to_player
@@ -2242,7 +2347,8 @@ func _move_enemy_with_recovery(enemy: EnemyState, velocity: Vector2, delta: floa
 	var flow := terrain_runtime.flow_vector_at(
 		before,
 		enemy.role == &"stage_boss",
-		enemy.role in [&"turret", &"mine", &"generator", &"interceptor_tower", &"beam_sentinel"]
+		enemy.role in [&"turret", &"generator", &"interceptor_tower", &"beam_sentinel"]
+			or (enemy.role == &"mine" and enemy.archetype != &"spark_minelet")
 	)
 	var attempt := _move_actor(before, (velocity + flow) * delta, enemy.radius, false)
 	var moved_squared := before.distance_squared_to(attempt)
@@ -2266,6 +2372,124 @@ func _move_enemy_with_recovery(enemy: EnemyState, velocity: Vector2, delta: floa
 		enemy.stuck_time = 0.0
 	enemy.pos = attempt
 	enemy.velocity = (attempt - before) / maxf(delta, 0.0001)
+
+
+func _update_mine(
+	enemy: EnemyState,
+	delta: float,
+	motion_delta: float,
+	decision_due: bool
+) -> void:
+	var mobile := enemy.archetype == &"spark_minelet"
+	var trigger_radius := 160.0 if mobile else 230.0
+	if enemy.phase != &"mine_armed":
+		if mobile:
+			_move_enemy_role(enemy, motion_delta, false, decision_due)
+		if enemy.pos.distance_to(player_position) <= trigger_radius:
+			if mobile and _armed_minelet_count() >= 6:
+				return
+			_arm_mine(enemy, 1.0 if mobile else 1.25, true)
+		return
+	enemy.velocity = Vector2.ZERO
+	enemy.phase_time = maxf(0.0, enemy.phase_time - delta)
+	if not enemy.mine_fast_cue_played and enemy.phase_time <= (0.25 if mobile else 0.3125):
+		enemy.mine_fast_cue_played = true
+		_play_sound(&"impact", 1.16)
+	if enemy.phase_time <= 0.0:
+		_explode_mine(enemy)
+
+
+func _armed_minelet_count() -> int:
+	var count := 0
+	for enemy in enemies:
+		if (
+			enemy.alive
+			and enemy.archetype == &"spark_minelet"
+			and enemy.phase == &"mine_armed"
+		):
+			count += 1
+	return count
+
+
+func _arm_mine(enemy: EnemyState, fuse: float, player_owned: bool) -> void:
+	if enemy == null or not enemy.alive:
+		return
+	if enemy.phase == &"mine_armed":
+		enemy.phase_time = minf(enemy.phase_time, fuse)
+	else:
+		enemy.phase = &"mine_armed"
+		enemy.phase_time = fuse
+		enemy.committed_target = enemy.pos
+		enemy.velocity = Vector2.ZERO
+		enemy.mine_fast_cue_played = false
+		_play_sound(&"boss", 0.64)
+	enemy.mine_armed_by_player = enemy.mine_armed_by_player or player_owned
+
+
+func _explode_mine(enemy: EnemyState) -> void:
+	if enemy == null or not enemy.alive:
+		return
+	var mobile := enemy.archetype == &"spark_minelet"
+	var radius := 100.0 if mobile else 160.0
+	var center_damage := 14.0 if mobile else 26.0
+	var origin := enemy.pos
+	var source := "player_spark_minelet" if mobile else "player_arc_mine"
+	if (
+		_runtime_has_line_of_sight(origin, player_position, 2.0)
+		and origin.distance_to(player_position) <= radius
+	):
+		var player_damage := AttackContract.radial_damage(
+			center_damage, origin.distance_to(player_position), radius
+		)
+		if player_damage > 0.0:
+			_damage_player(player_damage, "Spark Minelet" if mobile else "Arc Mine", true)
+	var nearby: Array[EnemyState] = []
+	enemy_grid.query_radius_into(origin, radius, enemies, nearby)
+	for target in nearby:
+		if (
+			target == enemy
+			or not target.alive
+			or not target.active
+			or not _runtime_has_line_of_sight(origin, target.pos, 2.0)
+		):
+			continue
+		var damage := AttackContract.radial_damage(
+			center_damage, origin.distance_to(target.pos), radius
+		)
+		if target.role == &"stage_boss":
+			damage *= 0.25
+		if damage > 0.0:
+			_damage_enemy(target, damage, source)
+	_arm_chain_mines(enemy, origin, mobile)
+	_add_effect("shock", origin, Art.ATTACK_ARC, 0.36, radius)
+	_defeat_enemy(enemy, source)
+
+
+func _arm_chain_mines(source_mine: EnemyState, origin: Vector2, mobile: bool) -> void:
+	var candidates: Array[EnemyState] = []
+	enemy_grid.query_radius_into(origin, 320.0, enemies, candidates)
+	candidates = candidates.filter(
+		func(target: EnemyState) -> bool:
+			return (
+				target != source_mine
+				and target.alive
+				and target.role == &"mine"
+				and target.phase != &"mine_armed"
+			)
+	)
+	candidates.sort_custom(
+		func(a: EnemyState, b: EnemyState) -> bool:
+			var ad := a.pos.distance_squared_to(origin)
+			var bd := b.pos.distance_squared_to(origin)
+			return a.id < b.id if is_equal_approx(ad, bd) else ad < bd
+	)
+	for index in mini(6, candidates.size()):
+		var target := candidates[index]
+		_arm_mine(target, maxf(0.8, 0.9 if mobile else 1.0), true)
+
+
+func _enemy_contact_damage(enemy: EnemyState, base_damage: float) -> float:
+	return base_damage * (1.15 if enemy.elite_trait == &"heavy" else 1.0)
 
 
 func _move_actor(position: Vector2, motion: Vector2, radius: float, is_player: bool) -> Vector2:
@@ -2417,6 +2641,20 @@ func _update_projectile_buffer(
 			var hit_enemy := contact as EnemyState
 			if hit_enemy != null:
 				var hit_position := hit_enemy.pos
+				if _try_absorb_protective_structure(hit_enemy, projectile):
+					if projectile.breach_token_available:
+						_consume_breach_token(projectile)
+					stats_primary_hits += 1 if projectile.owner == "player_primary" else 0
+					_add_effect("barrier_hit", hit_position, Art.IVORY_BRIGHT, 0.20, hit_enemy.radius * 1.35)
+					_play_sound(&"cover", 1.06)
+					if projectile.pierce > 0:
+						projectile.pierce -= 1
+						projectile.pos = to + projectile.velocity.normalized() * 8.0
+					else:
+						projectile_store.remove_player_at_swap(index)
+						continue
+					index += 1
+					continue
 				var enemy_damage := projectile.damage
 				if hit_enemy.role in [&"turret", &"mine", &"generator", &"interceptor_tower", &"beam_sentinel", &"boss_pylon"]:
 					enemy_damage = projectile.structure_damage
@@ -2473,6 +2711,25 @@ func _update_projectile_buffer(
 		index += 1
 
 
+func _try_absorb_protective_structure(
+	enemy: EnemyState,
+	projectile: ProjectileState
+) -> bool:
+	if enemy.armor_structure > 0.0:
+		enemy.armor_structure = maxf(0.0, enemy.armor_structure - projectile.structure_damage)
+		return true
+	if enemy.guard_plate_structure <= 0.0:
+		return false
+	var facing := (player_position - enemy.pos).normalized()
+	var incoming_origin := -projectile.velocity.normalized()
+	if facing.dot(incoming_origin) < 0.25:
+		return false
+	enemy.guard_plate_structure = maxf(
+		0.0, enemy.guard_plate_structure - projectile.structure_damage
+	)
+	return true
+
+
 func _consume_breach_token(projectile: ProjectileState) -> void:
 	projectile.breach_token_available = false
 	projectile.breach_visual = false
@@ -2483,17 +2740,7 @@ func _resolve_breach_contact(enemy: EnemyState) -> void:
 	if not enemy.alive:
 		return
 	if enemy.role == &"mine":
-		enemy.phase = &"startup"
-		enemy.phase_time = 0.75
-		enemy.attack_cooldown = 0.0
-		enemy.committed_target = player_position
-		enemy.committed_dir = (player_position - enemy.pos).normalized()
-		enemy.attack_telegraphs.clear()
-		AttackTelegraphs.refresh_ordinary(
-			enemy,
-			Callable(self, "_runtime_attack_path_end"),
-			Callable(self, "_runtime_charge_path_end")
-		)
+		_arm_mine(enemy, 0.75, true)
 		return
 	if enemy.phase == &"startup" and AttackContract.startup_is_interruptible(enemy.role):
 		enemy.phase = &"interrupted_recovery"
@@ -2795,6 +3042,17 @@ func _damage_enemy(enemy: EnemyState, amount: float, source: String, stagger: fl
 		if enemy.vulnerable > 0.0:
 			multiplier *= 1.55
 	var health_before := enemy.health
+	if (
+		role == &"mine"
+		and source != "Arc Surge"
+		and amount * multiplier >= health_before
+	):
+		var mine_applied := maxf(0.0, health_before - 1.0)
+		enemy.health = 1.0
+		enemy.flash = 0.11
+		enemy.health_visible_timer = 1.5
+		_arm_mine(enemy, 0.75, true)
+		return mine_applied
 	var applied_damage := minf(health_before, maxf(0.0, amount * multiplier))
 	enemy.health = health_before - applied_damage
 	enemy.flash = 0.11
@@ -2834,6 +3092,14 @@ func _defeat_enemy(enemy: EnemyState, source: String) -> void:
 	if not enemy.alive:
 		return
 	var spreads_poison := StatusRuntime.contagion_enabled(enemy)
+	var split_on_defeat := (
+		enemy.archetype == &"splitter_barge"
+		and not enemy.summoned
+		and not enemy.splitter_spawned
+	)
+	if split_on_defeat:
+		enemy.splitter_spawned = true
+		_spawn_splitter_children(enemy)
 	enemy.alive = false
 	enemy.active = false
 	enemy_store.queue_defeat(enemy)
@@ -2885,6 +3151,37 @@ func _defeat_enemy(enemy: EnemyState, source: String) -> void:
 		1.0
 	)
 	_clear_zones_owned_by_defeated_role(role)
+
+
+func _spawn_splitter_children(parent: EnemyState) -> void:
+	var existing := 0
+	for enemy in enemies:
+		if (
+			enemy.alive
+			and enemy.summoned
+			and enemy.carrier_id.begins_with("splitter:")
+		):
+			existing += 1
+	var available := mini(
+		2,
+		mini(12 - existing, 72 - _active_mobile_count())
+	)
+	for child_index in maxi(0, available):
+		var direction := Vector2.RIGHT.rotated(
+			TAU * float(child_index) / maxf(1.0, float(available))
+			+ float(absi(parent.id.hash()) % 17) * 0.11
+		)
+		var child := _make_enemy({
+			"id":"%s_split_%d" % [parent.id, child_index],
+			"role":&"scrap_drone",
+			"pos":_move_actor(parent.pos, direction * 44.0, 12.0, false),
+			"active":true,
+			"summoned":true,
+			"carrier_id":"splitter:%s" % parent.id,
+			"leash_rect":parent.leash_rect,
+		})
+		if not _append_enemy(child):
+			break
 
 
 func _is_countable_stage_enemy(enemy: EnemyState) -> bool:
@@ -3797,6 +4094,19 @@ func _minimap_snapshot(include_static_geometry: bool = true) -> Dictionary:
 	var stage_boss := _find_enemy_by_id("stage_boss")
 	if stage_boss != null and stage_boss.alive:
 		markers.append({"kind":"boss", "position":stage_boss.pos, "color":Rules.CORAL, "discovered":true})
+	for enemy in enemies:
+		if (
+			enemy.alive
+			and enemy.active
+			and not enemy.elite_trait.is_empty()
+			and _is_world_position_visited(enemy.pos)
+		):
+			markers.append({
+				"kind":"elite",
+				"position":enemy.pos,
+				"color":Rules.CORAL,
+				"discovered":true,
+			})
 	for pickup in pickups:
 		if bool(pickup["active"]) and _is_world_position_visited(Vector2(pickup["pos"])):
 			markers.append({
