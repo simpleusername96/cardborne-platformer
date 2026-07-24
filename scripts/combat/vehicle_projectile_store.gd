@@ -41,7 +41,7 @@ func clear() -> void:
 
 
 func add_player(projectile: Dictionary) -> bool:
-	if player_live.size() >= PLAYER_CAPACITY and not _retire_oldest_non_opening_player():
+	if player_live.size() >= PLAYER_CAPACITY and not _retire_oldest_non_breach_player():
 		rejected_player += 1
 		return false
 	if _player_pool.is_empty():
@@ -178,12 +178,12 @@ func _remove_at_swap(
 	return retired
 
 
-func _retire_oldest_non_opening_player() -> bool:
+func _retire_oldest_non_breach_player() -> bool:
 	var oldest_index := -1
 	var oldest_serial := 0x7FFFFFFFFFFFFFFF
 	for index in player_live.size():
 		var projectile := player_live[index]
-		if projectile.opening:
+		if projectile.breach_token_available:
 			continue
 		var serial := projectile.spawn_serial
 		if serial < oldest_serial:

@@ -111,15 +111,18 @@ func _check_boss_hit_recovery(run) -> void:
 	boss["phase"] = "boss_startup"
 	boss["phase_time"] = 1.0
 	run.call("_append_enemy", boss)
-	run.call("_damage_enemy", boss, 1.0, "validation", BossPatterns.STAGGER_THRESHOLD + 1.0)
+	run.call("_damage_enemy", boss, 1.0, "validation", 999.0)
 	_expect(String(boss["phase"]) == "boss_startup" and is_zero_approx(float(boss["stagger"])), "routine hits cannot interrupt a boss attack")
 
 	boss["phase"] = "boss_recovery"
 	boss["vulnerable"] = 1.0
-	run.call("_damage_enemy", boss, 1.0, "validation", BossPatterns.STAGGER_THRESHOLD)
-	_expect(String(boss["phase"]) == "staggered", "recovery-window pressure can stagger the boss")
-	run.call("_update_stage_boss", boss, BossPatterns.STAGGER_WINDOW + 0.01)
-	_expect(String(boss["phase"]) == "boss_read", "boss exits stagger on its bounded timer")
+	run.call("_damage_enemy", boss, 1.0, "validation", 999.0)
+	_expect(String(boss["phase"]) == "boss_recovery", "accumulated damage never hard-staggers a boss")
+	run.call("_resolve_breach_contact", boss)
+	_expect(
+		String(boss["phase"]) == "boss_recovery" and float(boss["breach_exposed"]) > 0.0,
+		"a Breach contact exposes a natural recovery without stopping the boss"
+	)
 
 	run.call("_clear_projectiles")
 	boss["pos"] = run.player_position + Vector2(-420.0, 0.0)

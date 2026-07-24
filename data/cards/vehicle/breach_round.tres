@@ -5,9 +5,9 @@
 
 [sub_resource type="Resource" id="Modifier_1"]
 script = ExtResource("2_mod")
-stat_id = &"opening_breach_multiplier"
-operation = "multiply"
-values_by_level = Array[float]([1.5, 2])
+stat_id = &"breach_health_scale_bonus"
+operation = "add"
+values_by_level = Array[float]([0.2, 0.4])
 
 [resource]
 script = ExtResource("1_def")

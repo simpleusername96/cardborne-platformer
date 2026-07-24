@@ -4,9 +4,6 @@ extends RefCounted
 ## Data-owned boss exams. Damage values are final Standard damage and therefore
 ## bypass ordinary enemy and stage multipliers in VehicleRun.
 
-const STAGGER_THRESHOLD := 35.0
-const STAGGER_WINDOW := 0.75
-const STAGGER_RECOVERY_READ := 0.35
 const ACTIVE_MOVE_SCALE := 0.62
 const AREA_TARGET_MAX_LEAD := 96.0
 const MIN_BASE_WALK_ESCAPE_MARGIN := 40.0

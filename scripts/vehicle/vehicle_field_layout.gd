@@ -18,6 +18,7 @@ var ordinary_spawn_anchors: Array[Vector2] = []
 var boss_arrival_anchors: Array[Vector2] = []
 var stage_objects: Dictionary = {}
 var encounter_seeds: Dictionary = {}
+var persistent_bulkhead_health: Dictionary = {}
 var used_fallback := false
 
 var _cover_cells: Dictionary = {}

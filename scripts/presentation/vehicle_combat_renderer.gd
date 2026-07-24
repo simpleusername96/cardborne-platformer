@@ -346,6 +346,29 @@ func _sync_projectiles(
 		var color := projectile.color
 		if hostile or affinity != AttackContract.KINETIC:
 			color = Art.attack_color(affinity, not hostile)
+		if team == &"player" and projectile.breach_visual:
+			_write_instance_basis(
+				trail_batch,
+				position - direction * (trail_length * 0.5 - radius),
+				direction,
+				Vector2(maxf(48.0, trail_length), maxf(10.0, radius * 1.7)),
+				Color(Art.MUSTARD, 0.72)
+			)
+			_write_instance_basis(
+				_overlay_batches[&"diamond"],
+				position,
+				direction,
+				Vector2(radius * 1.35, radius),
+				Art.IVORY_BRIGHT
+			)
+			_write_instance_basis(
+				_overlay_batches[&"diamond"],
+				position,
+				direction,
+				Vector2(radius * 0.62, radius * 0.46),
+				Art.COBALT_DEEP
+			)
+			continue
 		_write_instance_basis(
 			trail_batch,
 			position - direction * trail_offset,

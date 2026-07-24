@@ -53,6 +53,7 @@ static func refresh_ordinary(
 			AttackContract.ARC,
 			SpecialistRuntime.BEAM_WIDTH
 		))
+	_stamp_commit_mode(enemy, AttackContract.ordinary_commit_mode(enemy.role))
 	update_ordinary_readiness(enemy)
 
 
@@ -363,3 +364,8 @@ static func _stamp_readiness(enemy: EnemyState, readiness: float) -> void:
 	var normalized := clampf(readiness, 0.0, 1.0)
 	for descriptor in enemy.attack_telegraphs:
 		descriptor["readiness"] = normalized
+
+
+static func _stamp_commit_mode(enemy: EnemyState, commit_mode: StringName) -> void:
+	for descriptor in enemy.attack_telegraphs:
+		descriptor["commit_mode"] = commit_mode

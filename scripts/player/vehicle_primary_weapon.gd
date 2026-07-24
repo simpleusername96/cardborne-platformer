@@ -1,7 +1,7 @@
 class_name VehiclePrimaryWeapon
 extends RefCounted
 
-## Owns the neutral Pulse Cannon cadence and the idle-powered opening shot.
+## Owns the neutral Pulse Cannon cadence and the idle-powered Breach Shot.
 ## Charge only strengthens the next shot; it never gates ordinary held fire.
 
 const BASE_INTERVAL := 0.12
@@ -9,10 +9,10 @@ const MIN_INTERVAL := 0.085
 const FULL_OPENING_SECONDS := 1.0
 const BONUS_START_SECONDS := 0.25
 const FULL_EPSILON := 0.999
-const FULL_HEALTH_SCALE := 1.75
-const FULL_STRUCTURE_SCALE := 3.0
+const FULL_HEALTH_SCALE := 1.85
+const FULL_STRUCTURE_SCALE := 4.0
 const FULL_STAGGER_SCALE := 3.0
-const FULL_RADIUS_SCALE := 1.5
+const FULL_RADIUS_SCALE := 1.75
 
 var cooldown := 0.0
 var idle_seconds := FULL_OPENING_SECONDS

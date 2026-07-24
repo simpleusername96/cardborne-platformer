@@ -24,8 +24,8 @@ func _initialize() -> void:
 	weapon.tick(0.0, true, true)
 	var full := weapon.consume_shot()
 	_expect(bool(full["full_opening"]), "full charge marks exactly one opening shot")
-	_expect(is_equal_approx(float(full["damage_scale"]), 1.75), "full opening health multiplier is exact")
-	_expect(is_equal_approx(float(full["structure_scale"]), 3.0), "full opening structure multiplier is exact")
+	_expect(is_equal_approx(float(full["damage_scale"]), 1.85), "full Breach health multiplier is exact")
+	_expect(is_equal_approx(float(full["structure_scale"]), 4.0), "full Breach structure multiplier is exact")
 	_expect(is_zero_approx(weapon.charge_ratio()), "opening charge is consumed by the shot")
 	if failures.is_empty():
 		print("VEHICLE_PRIMARY_WEAPON_VALIDATION_OK")

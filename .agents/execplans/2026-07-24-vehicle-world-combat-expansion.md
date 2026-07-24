@@ -1743,6 +1743,18 @@ remaining Milestone 1 work is to move the catalog's active-field caches and all
 collision/minimap consumers fully onto the compiled snapshot, then add
 bulkhead persistence while implementing functional terrain.
 
+2026-07-24 Milestone 2 progress: added typed feature definitions and one
+central terrain runtime; connected Flow, Arc Surge, persistent Bulkheads,
+Transit, Repair, and Overdrive to player/enemy simulation and exact world
+footprints. Replaced the projectile `opening` flag with a center-only
+first-contact Breach token, recentered Forked Muzzle, added selective ordinary
+startup cancellation and priority/recovery exposure, removed accumulated boss
+hard stagger, and added the Breach double-diamond/long-trail presentation.
+Focused terrain, primary, projectile-store, attack-contract, status, renderer,
+and run validators pass. Enemy-runtime extraction, boss-signature ownership,
+guidebook discovery presentation, and full rendered/audio evidence remain in
+their owning later integration passes.
+
 ## Open Questions
 
 None. The map count, `7200x4320` dimensions, persistence, wall contract, six

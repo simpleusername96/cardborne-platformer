@@ -12,7 +12,7 @@ func _initialize() -> void:
 	_expect(store.player_count() == ProjectileStore.PLAYER_CAPACITY, "player capacity fills exactly")
 	store.add_player(_projectile(true, Vector2.ZERO))
 	_expect(store.player_count() == ProjectileStore.PLAYER_CAPACITY, "player overflow retires one ordinary projectile")
-	_expect(store.player_live.any(func(item) -> bool: return item.opening), "opening projectile survives ordinary eviction")
+	_expect(store.player_live.any(func(item) -> bool: return item.breach_token_available), "Breach projectile survives ordinary eviction")
 
 	var ordinary_limit := ProjectileStore.HOSTILE_CAPACITY - ProjectileStore.HOSTILE_BOSS_RESERVE
 	for index in ordinary_limit + 8:
@@ -60,12 +60,13 @@ func _initialize() -> void:
 	_finish()
 
 
-func _projectile(opening: bool, position: Vector2) -> Dictionary:
+func _projectile(breach_token: bool, position: Vector2) -> Dictionary:
 	return {
 		"pos": position,
 		"velocity": Vector2.RIGHT,
 		"radius": 5.0,
-		"opening": opening,
+		"breach_token_available": breach_token,
+		"breach_visual": breach_token,
 	}
 
 
