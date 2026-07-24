@@ -415,6 +415,7 @@ var _settings_return_surface := "deployment"
 var _selected_field_name_key := "FIELD_DROWNED_RUIN"
 var _guide_return_surface := "pause"
 var _latest_guidebook_snapshot: Dictionary = {}
+var _latest_build_snapshot: Dictionary = {}
 var _latest_upgrade_cards: Array[Dictionary] = []
 var _latest_upgrade_optional := false
 var _latest_result_summary: Dictionary = {}
@@ -979,6 +980,8 @@ func update_hud(snapshot: Dictionary) -> void:
 		return
 	if snapshot.has("guidebook"):
 		_latest_guidebook_snapshot = Dictionary(snapshot["guidebook"]).duplicate(true)
+	if snapshot.has("build_snapshot"):
+		_latest_build_snapshot = Dictionary(snapshot["build_snapshot"]).duplicate(true)
 	if snapshot.has("health"):
 		_health_bar.set_values(
 			float(snapshot["health"]),
@@ -1113,6 +1116,9 @@ func _show_settings(return_surface: String) -> void:
 	_dim.visible = true
 	_settings_center.visible = true
 	_hud.visible = false
+	_settings_panel.set_build_snapshot(
+		_latest_build_snapshot if return_surface == "pause" else {}
+	)
 	_settings_panel.open()
 
 

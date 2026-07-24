@@ -1777,6 +1777,18 @@ paths that reuse production stores and execution. Focused boss catalog,
 runtime, practice-isolation, renderer, and integrated-run validators pass;
 release absence and rendered pattern/escape evidence remain in Milestone 7.
 
+2026-07-24 Milestone 5 progress: added a stable outgoing/incoming damage-source
+catalog and bounded `VehicleStageTelemetry` with independent stage, frozen, and
+run-total lifecycles. The combat path now records post-mitigation,
+overkill-capped applied health damage, actual defeats by base archetype,
+secondary elite-trait counts, and accepted incoming damage without retaining
+actor references. Added gameplay-owned immutable build snapshots and one
+shared, scroll-safe `VehicleBuildSummaryPanel` used by the first Settings
+`Ship Status` tab and the guidebook Ship entry, including a no-run state and
+localized effective stats, secondary families, upgrade levels, maxima, and
+effects. Focused telemetry, snapshot, guidebook, UI/audio, and integrated-run
+validators pass; report presentation consumes these snapshots in Milestone 6.
+
 ## Open Questions
 
 None. The map count, `7200x4320` dimensions, persistence, wall contract, six

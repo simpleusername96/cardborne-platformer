@@ -45,6 +45,9 @@ const PerformanceRecorder = preload("res://scripts/performance/vehicle_performan
 const PerformanceScenario = preload("res://scripts/performance/vehicle_performance_scenario.gd")
 const FieldLayoutGenerator = preload("res://scripts/vehicle/vehicle_field_layout_generator.gd")
 const TerrainRuntime = preload("res://scripts/vehicle/vehicle_terrain_runtime.gd")
+const DamageSourceCatalog = preload("res://scripts/combat/vehicle_damage_source_catalog.gd")
+const StageTelemetry = preload("res://scripts/combat/vehicle_stage_telemetry.gd")
+const BuildSnapshotBuilder = preload("res://scripts/cards/vehicle_build_snapshot_builder.gd")
 
 enum RunMode {
 	DEPLOYMENT,
@@ -109,6 +112,7 @@ var stage_flow := StageFlow.new()
 var pursuit_field := PursuitField.new()
 var secondary_runtime := SecondaryRuntime.new()
 var terrain_runtime := TerrainRuntime.new()
+var stage_telemetry := StageTelemetry.new()
 var boss_runtime := BossRuntime.new()
 var boss_practice := BossPracticeSession.new()
 var _runtime_blockers: Array[Rect2] = []
@@ -530,10 +534,12 @@ func _reset_run(
 
 	if not preserve_upgrades:
 		run_build.reset()
+		stage_telemetry.reset_run()
 		experience_runtime.reset()
 		selected_upgrade_title_key = "UPGRADE_NONE"
 		claimed_reward_sources.clear()
 	else:
+		stage_telemetry.reset_stage()
 		experience_runtime.clear_shards()
 		experience_runtime.pending_level_ups = 0
 	_status_profile = StatusProfile.from_build(run_build)
@@ -3085,6 +3091,11 @@ func _damage_enemy(enemy: EnemyState, amount: float, source: String, stagger: fl
 		return mine_applied
 	var applied_damage := minf(health_before, maxf(0.0, amount * multiplier))
 	enemy.health = health_before - applied_damage
+	if not boss_practice.active and source != "validation":
+		stage_telemetry.record_outgoing(
+			DamageSourceCatalog.outgoing_id(source),
+			applied_damage
+		)
 	enemy.flash = 0.11
 	enemy.health_visible_timer = 1.0 if enemy.health_class == &"swarm" else 1.5
 	_apply_lifesteal(applied_damage, source, role)
@@ -3141,6 +3152,7 @@ func _defeat_enemy(enemy: EnemyState, source: String) -> void:
 	enemy_store.queue_defeat(enemy)
 	stats_enemies_defeated += 1
 	var role := enemy.role
+	stage_telemetry.record_defeat(enemy.archetype, enemy.elite_trait)
 	var reward_source := &""
 	if role == &"stage_boss": reward_source = &"boss"
 	if not enemy.summoned and role != &"boss_pylon":
@@ -3263,6 +3275,11 @@ func _damage_player(amount: float, source: String, blockable: bool, enemy_source
 		player_health - remaining
 	)
 	stats_damage_taken += remaining
+	if not boss_practice.active:
+		stage_telemetry.record_incoming(
+			DamageSourceCatalog.incoming_id(source, enemy_source),
+			remaining
+		)
 	player_hit_flash = PLAYER_HIT_FLASH_DURATION
 	player_invulnerable = maxf(player_invulnerable, PLAYER_HIT_INVULNERABILITY)
 	if not _reduced_motion_enabled():
@@ -3986,7 +4003,9 @@ func _build_hud_snapshot(include_world_channels: bool = true, include_guidebook:
 		snapshot["threat_radar"] = _threat_radar_snapshot()
 		snapshot["status_orbit"] = _status_orbit_snapshot()
 	if include_guidebook:
-		snapshot["guidebook"] = _guidebook_snapshot()
+		var build_snapshot := _build_snapshot()
+		snapshot["build_snapshot"] = build_snapshot
+		snapshot["guidebook"] = _guidebook_snapshot(build_snapshot)
 	return snapshot
 
 
@@ -3994,23 +4013,45 @@ func _build_fast_hud_snapshot() -> Dictionary:
 	return _build_hud_snapshot(false, false)
 
 
-func _guidebook_snapshot() -> Dictionary:
+func _guidebook_snapshot(build_snapshot: Dictionary = {}) -> Dictionary:
 	var store := get_node_or_null("/root/VehicleGuidebookStore")
 	if store == null:
 		return {}
+	if build_snapshot.is_empty():
+		build_snapshot = _build_snapshot()
+	return store.snapshot(build_snapshot)
+
+
+func _build_snapshot() -> Dictionary:
 	var experience := experience_runtime.snapshot()
-	var upgrades: Array[Dictionary] = []
-	for upgrade_id in run_build.levels.keys():
-		var definition := upgrade_catalog.get_definition(StringName(upgrade_id))
-		if definition != null:
-			upgrades.append({"id":StringName(upgrade_id), "title_key":definition.title_key, "level":run_build.level_of(StringName(upgrade_id))})
-	return store.snapshot({
-		"health":player_health, "max_health":_player_max_health(),
-		"level":int(experience["level"]), "experience":int(experience["experience"]),
-		"experience_required":int(experience["required"]),
-		"base_speed":PLAYER_BASE_SPEED, "current_speed":_player_move_speed(),
-		"secondaries":secondary_runtime.equipped_families(run_build), "upgrades":upgrades,
-	})
+	var primary_interval := maxf(
+		PrimaryWeapon.MIN_INTERVAL,
+		run_build.stat(&"primary_interval", PrimaryWeapon.BASE_INTERVAL)
+	)
+	var effective_stats: Array[Dictionary] = [
+		{"id":&"hull", "label_key":"SHIP_STAT_HULL", "value":_player_max_health(), "decimals":0, "unit_key":"SHIP_UNIT_HP"},
+		{"id":&"speed", "label_key":"SHIP_STAT_SPEED", "value":_player_move_speed(), "decimals":0, "unit_key":"SHIP_UNIT_PX_S"},
+		{"id":&"primary_damage", "label_key":"SHIP_STAT_PRIMARY_DAMAGE", "value":18.0 * run_build.stat(&"primary_damage_multiplier", 1.0), "decimals":1, "unit_key":"SHIP_UNIT_DAMAGE"},
+		{"id":&"fire_rate", "label_key":"SHIP_STAT_FIRE_RATE", "value":1.0 / primary_interval, "decimals":2, "unit_key":"SHIP_UNIT_PER_SECOND"},
+		{"id":&"projectile_speed", "label_key":"SHIP_STAT_PROJECTILE_SPEED", "value":run_build.stat(&"primary_projectile_speed", PRIMARY_PROJECTILE_SPEED), "decimals":0, "unit_key":"SHIP_UNIT_PX_S"},
+		{"id":&"breach_charge", "label_key":"SHIP_STAT_BREACH_CHARGE", "value":_opening_charge_seconds(), "decimals":2, "unit_key":"SHIP_UNIT_SECONDS"},
+		{"id":&"dash_cooldown", "label_key":"SHIP_STAT_DASH_COOLDOWN", "value":_dash_cooldown_max(), "decimals":2, "unit_key":"SHIP_UNIT_SECONDS"},
+		{"id":&"emp_damage", "label_key":"SHIP_STAT_EMP_DAMAGE", "value":62.0 * run_build.stat(&"emp_damage_multiplier", 1.0), "decimals":1, "unit_key":"SHIP_UNIT_DAMAGE"},
+		{"id":&"emp_cooldown", "label_key":"SHIP_STAT_EMP_COOLDOWN", "value":_emp_cooldown_max(), "decimals":2, "unit_key":"SHIP_UNIT_SECONDS"},
+	]
+	return BuildSnapshotBuilder.build(
+		run_build,
+		upgrade_catalog,
+		effective_stats,
+		secondary_runtime.equipped_families(run_build),
+		{
+			"health":player_health,
+			"max_health":_player_max_health(),
+			"level":int(experience["level"]),
+			"experience":int(experience["experience"]),
+			"experience_required":int(experience["required"]),
+		}
+	)
 
 
 func _discover_guide(entry_id: StringName) -> void:

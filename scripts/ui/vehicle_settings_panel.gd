@@ -10,6 +10,7 @@ signal guide_requested
 
 const InputProfile = preload("res://scripts/input/vehicle_input_profile.gd")
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
+const BuildSummaryPanel = preload("res://scripts/ui/vehicle_build_summary_panel.gd")
 
 const ACTION_TITLE_KEYS := {
 	&"primary_fire": "ACTION_PRIMARY",
@@ -31,6 +32,8 @@ var _reduced_motion_toggle: CheckButton
 var _difficulty_lock_label: Label
 var _language_buttons: Dictionary = {}
 var _status_label: Label
+var _build_summary: VehicleBuildSummaryPanel
+var _build_snapshot: Dictionary = {}
 var _capturing_action: StringName = &""
 
 
@@ -49,8 +52,15 @@ func open() -> void:
 	visible = true
 	_cancel_capture(false)
 	refresh_from_store()
+	_build_summary.set_snapshot(_build_snapshot)
 	if is_instance_valid(_close_button):
 		_close_button.grab_focus()
+
+
+func set_build_snapshot(snapshot: Dictionary) -> void:
+	_build_snapshot = snapshot.duplicate(true)
+	if is_instance_valid(_build_summary):
+		_build_summary.set_snapshot(_build_snapshot)
 
 
 func first_focus() -> Control:
@@ -87,11 +97,12 @@ func debug_contract() -> Dictionary:
 		"reduced_motion_control": is_instance_valid(_reduced_motion_toggle) and _reduced_motion_toggle.custom_minimum_size.y >= 44.0,
 		"difficulty_controls": find_children("*", "OptionButton", true, false).size(),
 		"difficulty_lock_visible": is_instance_valid(_difficulty_lock_label) and not _difficulty_lock_label.text.is_empty(),
+		"ship_status":_build_summary.debug_contract() if is_instance_valid(_build_summary) else {},
 	}
 
 
 func debug_show_gameplay_page() -> void:
-	_tabs.current_tab = 2
+	_tabs.current_tab = 3
 
 
 func _input(event: InputEvent) -> void:
@@ -145,10 +156,18 @@ func _build() -> void:
 	_tabs.focus_mode = Control.FOCUS_ALL
 	add_child(_tabs)
 	_style_tab_bar()
+	_build_ship_status_page()
 	_build_audio_page()
 	_build_controls_page()
 	_build_gameplay_page()
 	_build_language_page()
+
+
+func _build_ship_status_page() -> void:
+	var box := _page("ShipStatus")
+	box.add_child(_section_title("SHIP_STATUS_HEADING"))
+	_build_summary = BuildSummaryPanel.new()
+	box.add_child(_build_summary)
 
 
 func _build_audio_page() -> void:
@@ -404,7 +423,13 @@ func _on_locale_changed(_locale: String) -> void:
 func _refresh_localized_content() -> void:
 	if not is_instance_valid(_tabs):
 		return
-	var tab_keys := ["SETTINGS_AUDIO_TAB", "SETTINGS_CONTROLS_TAB", "SETTINGS_GAMEPLAY_TAB", "SETTINGS_LANGUAGE_TAB"]
+	var tab_keys := [
+		"SHIP_STATUS_TAB",
+		"SETTINGS_AUDIO_TAB",
+		"SETTINGS_CONTROLS_TAB",
+		"SETTINGS_GAMEPLAY_TAB",
+		"SETTINGS_LANGUAGE_TAB",
+	]
 	for index in mini(_tabs.get_tab_count(), tab_keys.size()):
 		_tabs.set_tab_title(index, tr(tab_keys[index]))
 	_reduced_motion_toggle.text = tr("SETTINGS_REDUCED_MOTION")

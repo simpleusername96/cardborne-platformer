@@ -4,12 +4,14 @@ extends VBoxContainer
 signal close_requested
 
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
+const BuildSummaryPanel = preload("res://scripts/ui/vehicle_build_summary_panel.gd")
 
 var _snapshot: Dictionary = {}
 var _category_rail: VBoxContainer
 var _entry_list: VBoxContainer
 var _detail_title: Label
 var _detail_body: Label
+var _build_summary: VehicleBuildSummaryPanel
 var _close_button: Button
 var _active_category: StringName = &"ship"
 
@@ -81,6 +83,9 @@ func _build() -> void:
 	_detail_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_detail_body.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	detail.add_child(_detail_body)
+	_build_summary = BuildSummaryPanel.new()
+	_build_summary.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	detail.add_child(_build_summary)
 
 
 func _rebuild_categories() -> void:
@@ -115,28 +120,19 @@ func _select_category(category: StringName) -> void:
 func _show_entry(entry: Dictionary) -> void:
 	if bool(entry.get("locked", false)):
 		_detail_title.text = "???"
+		_detail_body.visible = true
 		_detail_body.text = ""
+		_build_summary.visible = false
 		return
 	_detail_title.text = tr(String(entry.get("name_key", "GUIDE_CURRENT_SHIP")))
 	if entry.has("ship"):
-		_detail_body.text = _format_ship(Dictionary(entry["ship"]))
+		_detail_body.visible = false
+		_build_summary.visible = true
+		_build_summary.set_snapshot(Dictionary(entry["ship"]))
 	else:
+		_detail_body.visible = true
+		_build_summary.visible = false
 		_detail_body.text = tr(String(entry.get("description_key", "")))
-
-
-func _format_ship(ship: Dictionary) -> String:
-	var secondaries: Array[String] = []
-	for family in ship.get("secondaries", []):
-		secondaries.append("%s Lv.%d" % [tr(String(family["name_key"])), int(family["level"])])
-	var upgrades: Array[String] = []
-	for upgrade in ship.get("upgrades", []):
-		upgrades.append("%s Lv.%d" % [tr(String(upgrade["title_key"])), int(upgrade["level"])])
-	return tr("GUIDE_SHIP_STATS") % [
-		roundi(float(ship.get("health", 0.0))), roundi(float(ship.get("max_health", 0.0))),
-		int(ship.get("level", 1)), int(ship.get("experience", 0)), int(ship.get("experience_required", 0)),
-		float(ship.get("base_speed", 280.0)), float(ship.get("current_speed", 280.0)),
-		", ".join(secondaries), "\n".join(upgrades),
-	]
 
 
 func _button(key_or_text: String) -> Button:
