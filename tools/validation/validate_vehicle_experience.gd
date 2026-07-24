@@ -105,7 +105,7 @@ func _validate_experience_runtime() -> void:
 
 func _validate_route_level_cadence() -> void:
 	var runtime := ExperienceRuntime.new()
-	var expected_levels := [6, 4, 2, 3, 3]
+	var expected_levels := [7, 4, 3, 3, 4]
 	for stage_index in Catalog.STAGE_IDS.size():
 		var stage_id := Catalog.STAGE_IDS[stage_index]
 		var stage_experience := 24 # Stage-boss core plus the minimum quota path.
@@ -126,11 +126,13 @@ func _validate_route_level_cadence() -> void:
 		var levels_gained := runtime.run_level - level_before
 		_expect(
 			levels_gained == expected_levels[stage_index],
-			"%s quota-path XP yields the locked %d level-ups" % [stage_id, expected_levels[stage_index]]
+			"%s quota-path XP yields %d level-ups; expected %d" % [
+				stage_id, levels_gained, expected_levels[stage_index]
+			]
 		)
 		while runtime.consume_pending_level():
 			pass
-	_expect(runtime.run_level == 19, "the expanded five-stage quota path ends at run level nineteen")
+	_expect(runtime.run_level == 22, "the enlarged-field quota path ends at run level twenty-two")
 
 
 func _enemy(health_class: StringName, role: StringName, carrier_id: String = "") -> EnemyState:

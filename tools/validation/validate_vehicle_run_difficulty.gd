@@ -19,9 +19,9 @@ func _run() -> void:
 	_expect(_near(RunDifficulty.simultaneous_pressure(RunDifficulty.EASY), 0.72, 0.01), "Easy ordinary pressure applies the reduction a second time")
 	_expect(_near(RunDifficulty.simultaneous_pressure(RunDifficulty.NORMAL, true), 0.85, 0.01), "Normal boss pressure is approximately fifteen percent lower")
 	_expect(_near(RunDifficulty.simultaneous_pressure(RunDifficulty.EASY, true), 0.72, 0.01), "Easy boss pressure applies the reduction a second time")
-	_expect(RunDifficulty.scaled_quota(96, RunDifficulty.HARD) == 96, "Hard preserves the stage-one quota")
-	_expect(RunDifficulty.scaled_quota(96, RunDifficulty.NORMAL) == 86, "Normal scales the stage-one quota")
-	_expect(RunDifficulty.scaled_quota(96, RunDifficulty.EASY) == 78, "Easy scales the stage-one quota")
+	_expect(RunDifficulty.scaled_quota(125, RunDifficulty.HARD) == 125, "Hard preserves the enlarged stage-one quota")
+	_expect(RunDifficulty.scaled_quota(125, RunDifficulty.NORMAL) == 113, "Normal scales the enlarged stage-one quota")
+	_expect(RunDifficulty.scaled_quota(125, RunDifficulty.EASY) == 101, "Easy scales the enlarged stage-one quota")
 	var previous_locale := TranslationServer.get_locale()
 	for locale in ["ko", "en"]:
 		TranslationServer.set_locale(locale)

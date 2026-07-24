@@ -195,8 +195,9 @@ second time; no individual stat is described as exactly 15% lower.
 3. Later arrivals are eight-squad surges. Each squad contains three to five
    enemies, so the first surge schedules at least 24 enemies and later surges
    grow toward 40. Every squad receives its own deterministic valid anchor.
-   Arrivals prefer positions 1000–1800 pixels from the player and 220 pixels
-   beyond the visible world, avoid the four most recent anchors, and use groups
+   Arrivals prefer seeded distance lanes at 1200, 1650, or 2100 pixels from the
+   player within a valid 900–2400-pixel ring and remain 220 pixels beyond the
+   visible world. They avoid the sixteen most recent anchors and use groups
    of at most two squads in beats 0–1 or three squads later. Group gaps are
    0.90 seconds early and 0.65 seconds later. Existing role totals are preserved
    while direct-projectile pressure is distributed between squads.
@@ -204,10 +205,13 @@ second time; no individual stat is described as exactly 15% lower.
    population and the four stationary threats in every stage. A stage already
    below the cap is not inflated to reach it; area, beam, charge, and support
    roles remain separate classifications.
-   Hard can sustain 48 active enemies from the first combat beat and remains
-   capped at the measured 72-enemy ceiling. Normal scales those caps to 45 and
-   68; Easy scales them to 42 and 64. Excess enemies stay in the deterministic
-   scheduler queue.
+   Hard can sustain 62 active enemies from the first combat beat and reaches 92
+   at peak pressure. Normal scales those caps to 58 and 86; Easy scales them to
+   55 and 81. The hard peak plus four stationary threats occupies the
+   96-ordinary-enemy production budget without spilling into the global
+   boss/auxiliary reserve. Excess enemies stay in the deterministic scheduler
+   queue. These quotas and caps are approximately 30% above the pre-enlargement
+   field values.
 4. Every mobile enemy joins a shared low-frequency pursuit field and can route
    around cover toward the player. Stationary roles hold authored anchors.
 5. Ordinary defeats advance the stage quota. Living enemies never block travel
@@ -232,11 +236,11 @@ second time; no individual stat is described as exactly 15% lower.
 
 | Stage | Hard quota | Normal quota | Easy quota | Authored mobile population | Boss |
 | ---: | ---: | ---: | ---: | ---: | --- |
-| 1 | 96 | 86 | 78 | 260 | Foundry Colossus |
-| 2 | 128 | 115 | 104 | 300 | Archive Leviathan |
-| 3 | 160 | 144 | 130 | 340 | Drydock Titan |
-| 4 | 192 | 173 | 156 | 380 | Switchyard Behemoth |
-| 5 | 224 | 202 | 181 | 420 | Crown Engine |
+| 1 | 125 | 113 | 101 | 260 | Foundry Colossus |
+| 2 | 166 | 149 | 134 | 300 | Archive Leviathan |
+| 3 | 208 | 187 | 168 | 340 | Drydock Titan |
+| 4 | 250 | 225 | 203 | 380 | Switchyard Behemoth |
+| 5 | 291 | 262 | 236 | 420 | Crown Engine |
 
 Four stationary threats are added per stage. Ordinary hostile projectiles stop
 at 96 so 24 of the global 120-shot cap remain reserved for boss attacks. Enemy
@@ -308,6 +312,9 @@ Breach Shot.
   sources before Garage.
 - Deployment, upgrade, pause/settings, guidebook, result, and garage are modal
   focus layers. They block carried input and provide deterministic keyboard focus.
+- One upgrade offer contains at most one instance of each card ID. Selection
+  diversity rules may prefer families or unlocked branches but never duplicate
+  a card within the same three-card choice.
   Deployment includes three clearly selected, keyboard-focusable difficulty
   choices with concise Korean and English pressure descriptions.
 

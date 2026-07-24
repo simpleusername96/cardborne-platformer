@@ -14,6 +14,16 @@ func _initialize() -> void:
 		var definition := catalog.get_definition(id)
 		_expect(definition != null and definition.max_level == 3 and definition.family == &"secondary", "%s is a three-level secondary" % id)
 	var build := RunBuild.new(catalog)
+	for run_index in 24:
+		for source_id in [&"level_up", &"boss", &"cache"]:
+			var offer := catalog.offer(build, run_index, run_index % 5, source_id)
+			var offered_ids := {}
+			for card in offer:
+				offered_ids[card.id] = true
+			_expect(
+				offered_ids.size() == offer.size(),
+				"one offer never repeats an upgrade card"
+			)
 	var expected := [280.0, 302.4, 324.8, 347.2]
 	_expect(is_equal_approx(build.stat(&"move_speed_multiplier", 280.0), expected[0]), "base movement is 280")
 	for level in 3:

@@ -5,10 +5,11 @@ extends RefCounted
 
 const EnemyArchetypes = preload("res://scripts/enemies/vehicle_enemy_archetypes.gd")
 
-const MIN_PLAYER_DISTANCE := 1000.0
-const MAX_PLAYER_DISTANCE := 1800.0
+const MIN_PLAYER_DISTANCE := 900.0
+const MAX_PLAYER_DISTANCE := 2400.0
 const OFFSCREEN_MARGIN := 220.0
-const RECENT_ANCHOR_LIMIT := 4
+const RECENT_ANCHOR_LIMIT := 16
+const TARGET_DISTANCES := [1200.0, 1650.0, 2100.0]
 const PURSUIT_ROLES: Array[StringName] = [
 	&"scrap_drone", &"chaser", &"rammer", &"spark_minelet",
 	&"controller", &"shield_escort", &"artillery_spotter",
@@ -117,7 +118,13 @@ func _anchor_score(
 	var tie_break := absf(float(hash(
 		"%d:%s:%d:%d:%d" % [_seed, packet_id, squad_index, roundi(anchor.x), roundi(anchor.y)]
 	) % 10000)) / 10000.0
-	return absf(anchor.distance_to(player_position) - 1400.0) + tie_break
+	var distance_lane := wrapi(
+		hash("%d:%s:%d:distance" % [_seed, packet_id, squad_index]),
+		0,
+		TARGET_DISTANCES.size()
+	)
+	var target_distance := float(TARGET_DISTANCES[distance_lane])
+	return absf(anchor.distance_to(player_position) - target_distance) + tie_break
 
 
 func _reorder_roles(squads: Array, packet_id: String) -> Array[Array]:

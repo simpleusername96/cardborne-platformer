@@ -3227,9 +3227,13 @@ func _spawn_splitter_children(parent: EnemyState) -> void:
 			and enemy.carrier_id.begins_with("splitter:")
 		):
 			existing += 1
+	var summon_cap := RunDifficulty.scaled_active_cap(
+		EncounterDirector.active_cap(current_stage_id),
+		selected_run_difficulty
+	)
 	var available := mini(
 		2,
-		mini(12 - existing, 72 - _active_mobile_count())
+		mini(12 - existing, summon_cap - _active_mobile_count())
 	)
 	for child_index in maxi(0, available):
 		var direction := Vector2.RIGHT.rotated(
@@ -4423,6 +4427,14 @@ func _draw_terrain() -> void:
 				var color := Art.ATTACK_ARC
 				draw_rect(rectangle, Color(color, 0.12 + readiness * 0.38))
 				draw_rect(rectangle, color, false, 12.0)
+				for index in 3:
+					_draw_terrain_bolt(
+						rectangle.position + rectangle.size * Vector2(
+							0.25 + float(index) * 0.25, 0.5
+						),
+						54.0,
+						Color(Art.IVORY_BRIGHT, 0.56 + readiness * 0.44)
+					)
 			&"breakable_bulkhead":
 				if float(feature.get("health", 0.0)) <= 0.0:
 					continue
@@ -4438,14 +4450,23 @@ func _draw_terrain() -> void:
 				var center := Vector2(feature["pos"])
 				var progress := clampf(float(feature.get("progress", 0.0)), 0.0, 1.0)
 				var cooldown := float(feature.get("cooldown", 0.0))
-				draw_circle(center, TerrainRuntime.GATE_RADIUS, Color(Art.CERAMIC_GREEN_MID, 0.72))
-				draw_arc(center, TerrainRuntime.GATE_RADIUS, -PI * 0.5, -PI * 0.5 + TAU * progress, 40, Art.IVORY_BRIGHT, 14.0)
+				var available := cooldown <= 0.0
+				var gate_color := Art.MUSTARD if available else Art.INK_MUTED
+				draw_circle(center, TerrainRuntime.GATE_RADIUS, Color(gate_color, 0.24))
+				draw_arc(center, TerrainRuntime.GATE_RADIUS, 0.0, TAU, 40, gate_color, 12.0)
+				_draw_terrain_chevron(center - Vector2(20.0, 0.0), Vector2.LEFT, 32.0, Art.IVORY_BRIGHT, 12.0)
+				_draw_terrain_chevron(center + Vector2(20.0, 0.0), Vector2.RIGHT, 32.0, Art.IVORY_BRIGHT, 12.0)
+				draw_arc(center, TerrainRuntime.GATE_RADIUS - 18.0, -PI * 0.5, -PI * 0.5 + TAU * progress, 40, Art.IVORY_BRIGHT, 10.0)
 				if cooldown > 0.0:
 					draw_arc(center, 72.0, 0.0, TAU * (1.0 - cooldown / TerrainRuntime.GATE_COOLDOWN), 32, Art.INK_MUTED, 10.0)
 			&"repair_basin":
 				var center := Vector2(feature["pos"])
 				var budget_ratio := clampf(float(feature.get("budget", 0.0)) / TerrainRuntime.REPAIR_BUDGET, 0.0, 1.0)
-				draw_circle(center, TerrainRuntime.REPAIR_RADIUS, Color(Art.MINT, 0.18))
+				var repair_color := Art.MINT if budget_ratio > 0.0 else Art.INK_MUTED
+				draw_circle(center, TerrainRuntime.REPAIR_RADIUS, Color(repair_color, 0.18))
+				draw_arc(center, TerrainRuntime.REPAIR_RADIUS, 0.0, TAU, 48, repair_color, 10.0)
+				draw_circle(center, 54.0, Color(Art.CERAMIC_GREEN_MID, 0.88))
+				_draw_terrain_plus(center, 36.0, Art.IVORY_BRIGHT)
 				for index in 6:
 					if float(index) / 6.0 >= budget_ratio:
 						continue
@@ -4456,7 +4477,54 @@ func _draw_terrain() -> void:
 				var active := bool(feature.get("active", false))
 				draw_circle(center, TerrainRuntime.OVERDRIVE_RADIUS, Color(Art.MUSTARD, 0.16 if not active else 0.32))
 				draw_arc(center, TerrainRuntime.OVERDRIVE_RADIUS, 0.0, TAU, 48, Art.MUSTARD, 12.0)
-				draw_circle(center, 42.0, Art.MUSTARD)
+				draw_circle(center, 58.0, Art.MUSTARD)
+				for index in 3:
+					_draw_terrain_chevron(
+						center + Vector2(0.0, 24.0 - float(index) * 24.0),
+						Vector2.UP,
+						25.0,
+						Art.IVORY_BRIGHT,
+						10.0
+					)
+
+
+func _draw_terrain_plus(center: Vector2, half_extent: float, color: Color) -> void:
+	var arm := half_extent * 0.34
+	draw_rect(
+		Rect2(center - Vector2(arm, half_extent), Vector2(arm * 2.0, half_extent * 2.0)),
+		color
+	)
+	draw_rect(
+		Rect2(center - Vector2(half_extent, arm), Vector2(half_extent * 2.0, arm * 2.0)),
+		color
+	)
+
+
+func _draw_terrain_chevron(
+	center: Vector2,
+	direction: Vector2,
+	extent: float,
+	color: Color,
+	width: float
+) -> void:
+	var forward := direction.normalized()
+	var side := forward.rotated(PI * 0.5)
+	draw_polyline(PackedVector2Array([
+		center - forward * extent * 0.55 - side * extent * 0.58,
+		center + forward * extent * 0.55,
+		center - forward * extent * 0.55 + side * extent * 0.58,
+	]), color, width, true)
+
+
+func _draw_terrain_bolt(center: Vector2, extent: float, color: Color) -> void:
+	draw_colored_polygon(PackedVector2Array([
+		center + Vector2(-0.18, -1.0) * extent,
+		center + Vector2(0.50, -0.22) * extent,
+		center + Vector2(0.12, -0.18) * extent,
+		center + Vector2(0.28, 0.86) * extent,
+		center + Vector2(-0.54, 0.10) * extent,
+		center + Vector2(-0.12, 0.06) * extent,
+	]), color)
 
 
 func _draw_debug_collision_overlay() -> void:

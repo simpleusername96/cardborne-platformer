@@ -17,7 +17,7 @@ const HOSTILE_PROJECTILE_CAP := 120
 const BOSS_PROJECTILE_RESERVE := 24
 const EFFECT_CAP := 96
 
-const ACTIVE_CAPS := [1, 48, 60, 68, 72]
+const ACTIVE_CAPS := [1, 62, 78, 88, 92]
 const THREAT_BUDGETS := [1.0, 3.0, 4.5, 5.25, 6.25]
 
 

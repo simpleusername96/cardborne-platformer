@@ -56,8 +56,13 @@ rules remain owned by the product specification.
 - A new run selects one of three registered fields and eight large modules from
   its authored cover candidates. The result must not recolor or rearrange
   between stages or retries.
-- Functional terrain uses one large readable shape. Do not add decorative
-  motifs, tiny debris, or repeated decoration to fake variation.
+- Functional terrain uses one large readable shape and a shape-coded purpose:
+  mint plus for repair, mustard outward arrows for transit, mustard stacked
+  chevrons for overdrive, violet lightning for an arc hazard, directional
+  chevrons for flow, and blocker-fill walls with one large fracture for a
+  breakable bulkhead. Helpful, hazardous, traversable-utility, directional, and
+  blocking roles must remain distinguishable without reading color. Do not add
+  decorative motifs, tiny debris, or repeated decoration to fake variation.
 
 ### Actor and combat readability
 

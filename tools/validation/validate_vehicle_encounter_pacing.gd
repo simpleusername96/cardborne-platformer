@@ -6,7 +6,7 @@ const Director = preload("res://scripts/encounters/vehicle_encounter_director.gd
 const RunDifficulty = preload("res://scripts/vehicle/vehicle_run_difficulty.gd")
 
 const EXPECTED_MOBILE_COUNTS := [260, 300, 340, 380, 420]
-const EXPECTED_QUOTAS := [96, 128, 160, 192, 224]
+const EXPECTED_QUOTAS := [125, 166, 208, 250, 291]
 
 var failures: Array[String] = []
 
@@ -32,10 +32,10 @@ func _initialize() -> void:
 		_expect(first["spawns"].size() == 1 and StringName(first["spawns"][0]["role"]) == &"scrap_drone", "%s spawns one scout at six seconds" % stage_id)
 		runtime.stop_spawning()
 		_expect(not runtime.spawning_enabled() and runtime.debug_snapshot()["queued_spawns"] == 0, "%s quota can stop future arrivals" % stage_id)
-	_expect(Director.active_cap_for(1) == 48, "Hard first surge can sustain forty-eight active enemies")
-	_expect(Director.active_cap_for(4) == 72, "Hard density remains capped at seventy-two active enemies")
-	_expect(RunDifficulty.scaled_active_cap(72, RunDifficulty.NORMAL) == 68, "Normal density scales to sixty-eight active enemies")
-	_expect(RunDifficulty.scaled_active_cap(72, RunDifficulty.EASY) == 64, "Easy density scales to sixty-four active enemies")
+	_expect(Director.active_cap_for(1) == 62, "Hard first surge sustains the thirty-percent density increase")
+	_expect(Director.active_cap_for(4) == 92, "Hard density uses the enlarged-field ceiling")
+	_expect(RunDifficulty.scaled_active_cap(92, RunDifficulty.NORMAL) == 86, "Normal density scales from the enlarged-field ceiling")
+	_expect(RunDifficulty.scaled_active_cap(92, RunDifficulty.EASY) == 81, "Easy density scales from the enlarged-field ceiling")
 	_finish()
 
 

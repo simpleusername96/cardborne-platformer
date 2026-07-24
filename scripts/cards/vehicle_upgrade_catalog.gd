@@ -80,7 +80,7 @@ func offer(build: VehicleRunBuild, run_index: int, stage_index: int, source_id: 
 	if source_id == &"level_up" and build.total_levels() == 1 and not build.has(&"tuned_thrusters"):
 		var tuned := get_definition(&"tuned_thrusters")
 		if tuned != null and tuned in available:
-			result.append(tuned)
+			_append_unique(result, tuned)
 	if source_id == &"level_up" and stage_index == 0 and build.levels.is_empty():
 		_append_first_family(result, available, [&"primary"])
 		_append_first_family(result, available, [&"element"])
@@ -89,30 +89,57 @@ func offer(build: VehicleRunBuild, run_index: int, stage_index: int, source_id: 
 		if source_id == &"level_up":
 			var branch_child := _eligible_branch_child(build, available)
 			if branch_child != null:
-				result.append(branch_child)
+				_append_unique(result, branch_child)
 		_append_first_behavior(result, available)
 		for definition in available:
-			if result.size() >= 3: break
-			if result.is_empty() or definition.family != result[0].family or available.size() <= 3:
-				result.append(definition)
+			if result.size() >= 3:
+				break
+			if (
+				(result.is_empty() or definition.family != result[0].family or available.size() <= 3)
+				and not _contains_upgrade_id(result, definition.id)
+			):
+				_append_unique(result, definition)
 		for definition in available:
-			if result.size() >= 3: break
-			if definition not in result: result.append(definition)
+			if result.size() >= 3:
+				break
+			_append_unique(result, definition)
 	return result
 
 
 func _append_first_family(result: Array[VehicleUpgradeDefinition], available: Array[VehicleUpgradeDefinition], families: Array[StringName]) -> void:
 	for definition in available:
-		if definition.family in families and definition not in result:
-			result.append(definition)
+		if definition.family in families and not _contains_upgrade_id(result, definition.id):
+			_append_unique(result, definition)
 			return
 
 
 func _append_first_behavior(result: Array[VehicleUpgradeDefinition], available: Array[VehicleUpgradeDefinition]) -> void:
 	for definition in available:
-		if not definition.behavior_ids.is_empty() and definition not in result:
-			result.append(definition)
+		if not definition.behavior_ids.is_empty() and not _contains_upgrade_id(result, definition.id):
+			_append_unique(result, definition)
 			return
+
+
+func _append_unique(
+	result: Array[VehicleUpgradeDefinition],
+	definition: VehicleUpgradeDefinition
+) -> void:
+	if (
+		definition != null
+		and not _contains_upgrade_id(result, definition.id)
+		and result.size() < 3
+	):
+		result.append(definition)
+
+
+func _contains_upgrade_id(
+	result: Array[VehicleUpgradeDefinition],
+	upgrade_id: StringName
+) -> bool:
+	return result.any(
+		func(candidate: VehicleUpgradeDefinition) -> bool:
+			return candidate.id == upgrade_id
+	)
 
 
 func _eligible_branch_child(

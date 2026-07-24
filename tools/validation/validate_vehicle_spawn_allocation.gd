@@ -22,6 +22,7 @@ func _initialize() -> void:
 		var allocator := Allocator.new()
 		allocator.configure(layout.encounter_seed(stage_id), layout.ordinary_spawn_anchors)
 		var allocations := allocator.allocate(packet, Catalog.player_start(), VISIBLE_WORLD)
+		var second_allocations := allocator.allocate(packet, Catalog.player_start(), VISIBLE_WORLD)
 		var replay_allocator := Allocator.new()
 		replay_allocator.configure(layout.encounter_seed(stage_id), layout.ordinary_spawn_anchors)
 		var replay := replay_allocator.allocate(packet, Catalog.player_start(), VISIBLE_WORLD)
@@ -51,6 +52,13 @@ func _initialize() -> void:
 			for role in roles:
 				allocated_roles.append(StringName(role))
 		_expect(unique_anchors.size() == 8, "%s uses eight distinct anchors when the pool permits" % stage_id)
+		var two_wave_anchors := unique_anchors.duplicate()
+		for allocation in second_allocations:
+			two_wave_anchors[Vector2(allocation["anchor"])] = true
+		_expect(
+			two_wave_anchors.size() >= 14,
+			"%s distributes consecutive arrivals across the enlarged field" % stage_id
+		)
 		original_roles.sort()
 		allocated_roles.sort()
 		_expect(original_roles == allocated_roles, "%s preserves the authored role multiset" % stage_id)

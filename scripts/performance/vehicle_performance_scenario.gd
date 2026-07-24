@@ -11,6 +11,7 @@ const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 const ProjectileStore = preload("res://scripts/combat/vehicle_projectile_store.gd")
 const ExperienceRuntime = preload("res://scripts/progression/vehicle_experience_runtime.gd")
 const RunDifficulty = preload("res://scripts/vehicle/vehicle_run_difficulty.gd")
+const EncounterDirector = preload("res://scripts/encounters/vehicle_encounter_director.gd")
 
 const VALID_SCENARIOS: Array[StringName] = [
 	&"current_pressure", &"capacity_pressure", &"lifecycle_pressure", &"boss_pressure",
@@ -58,7 +59,7 @@ func activate(run: Node) -> void:
 	_spawn_points = _walkable_ring_points(run, 160)
 	if scenario_id == &"lifecycle_pressure":
 		_run_lifecycle_cycles(run, 300)
-	var enemy_target := 76 if scenario_id == &"current_pressure" else 128
+	var enemy_target := EncounterDirector.active_cap_for(4) + 4 if scenario_id == &"current_pressure" else 128
 	if scenario_id == &"boss_pressure":
 		enemy_target = 77
 	_fill_enemies(run, enemy_target, scenario_id == &"boss_pressure")
@@ -94,7 +95,7 @@ func after_physics(run: Node) -> void:
 
 
 func validation_snapshot(run: Node) -> Dictionary:
-	var expected_enemies := 76 if scenario_id == &"current_pressure" else 128
+	var expected_enemies := EncounterDirector.active_cap_for(4) + 4 if scenario_id == &"current_pressure" else 128
 	if scenario_id == &"boss_pressure":
 		expected_enemies = 77
 	var player_target := 140 if scenario_id in [&"current_pressure", &"boss_pressure"] else ProjectileStore.PLAYER_CAPACITY
