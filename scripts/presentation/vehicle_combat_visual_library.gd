@@ -28,6 +28,17 @@ static func enemy_mesh(archetype: StringName) -> ArrayMesh:
 	])
 
 
+static func boss_mesh(variant: StringName) -> ArrayMesh:
+	var body := _boss_polygon(variant)
+	var shadow := PackedVector2Array()
+	for point in body:
+		shadow.append(point + Vector2(0.14, 0.18))
+	return polygon_mesh([
+		{"points":shadow, "color":Color(0.22, 0.18, 0.22, 0.92)},
+		{"points":body, "color":Color.WHITE},
+	])
+
+
 static func projectile_head_mesh() -> ArrayMesh:
 	return polygon_mesh([{
 		"points": _regular_polygon(Vector2.ZERO, 1.0, 20),
@@ -327,6 +338,33 @@ static func _enemy_polygon(archetype: StringName) -> PackedVector2Array:
 				Vector2(0.50, 0.36),
 			])
 	return _regular_polygon(Vector2.ZERO, 1.0, 6)
+
+
+static func _boss_polygon(variant: StringName) -> PackedVector2Array:
+	match variant:
+		&"leviathan":
+			return PackedVector2Array([
+				Vector2(1.25, 0.0), Vector2(0.40, -0.42), Vector2(-0.65, -0.78),
+				Vector2(-1.0, -0.30), Vector2(-0.35, 0.0), Vector2(-1.0, 0.30),
+				Vector2(-0.65, 0.78), Vector2(0.40, 0.42),
+			])
+		&"titan":
+			return _stepped_square()
+		&"behemoth":
+			return PackedVector2Array([
+				Vector2(1.30, 0.0), Vector2(0.35, -0.82), Vector2(-0.62, -1.0),
+				Vector2(-1.0, -0.32), Vector2(-0.72, 0.0), Vector2(-1.0, 0.32),
+				Vector2(-0.62, 1.0), Vector2(0.35, 0.82),
+			])
+		&"crown":
+			return _alternating_polygon(16, 1.15, 0.68, -PI * 0.5)
+		_:
+			return PackedVector2Array([
+				Vector2(1.0, 0.0), Vector2(0.45, -0.46), Vector2(0.24, -1.15),
+				Vector2(-0.22, -0.72), Vector2(-0.90, -0.92), Vector2(-0.62, 0.0),
+				Vector2(-0.90, 0.92), Vector2(-0.22, 0.72), Vector2(0.24, 1.15),
+				Vector2(0.45, 0.46),
+			])
 
 
 static func _regular_polygon(origin: Vector2, radius: float, sides: int, rotation: float = 0.0) -> PackedVector2Array:

@@ -13,50 +13,81 @@ const BEAM_RANGE := 920.0
 const BEAM_COVER_PADDING := 5.0
 
 const PATTERNS := {
-	&"twin_foundry_lanes":{"kind":&"lanes", "affinity":&"thermal", "startup":0.90, "active":0.80, "recovery":1.00, "damage":20.0},
-	&"foundry_ram":{"kind":&"charge", "affinity":&"kinetic", "startup":1.10, "active":0.65, "recovery":1.30, "damage":34.0},
-	&"furnace_ring":{"kind":&"area", "affinity":&"thermal", "startup":1.00, "active":0.60, "recovery":1.00, "damage":26.0, "radius":230.0},
-	&"pylon_overload":{"kind":&"pylons", "affinity":&"arc", "startup":0.90, "active":0.55, "recovery":1.15, "damage":24.0, "radius":205.0},
+	&"furnace_gates":{"kind":&"lanes", "commit_mode":&"committed", "affinity":&"thermal", "startup":1.00, "active":0.90, "recovery":0.90, "damage":22.0},
+	&"foundry_ram":{"kind":&"charge", "commit_mode":&"interruptible_signature", "affinity":&"kinetic", "startup":1.10, "active":0.65, "recovery":1.30, "damage":34.0},
+	&"foundry_burst":{"kind":&"fan", "commit_mode":&"committed", "affinity":&"thermal", "startup":0.85, "active":0.70, "recovery":0.90, "damage":20.0},
+	&"furnace_ring":{"kind":&"area", "commit_mode":&"committed", "affinity":&"thermal", "startup":1.00, "active":0.60, "recovery":1.00, "damage":28.0, "radius":230.0},
+	&"slag_ring":{"kind":&"area", "commit_mode":&"autonomous", "affinity":&"thermal", "startup":1.15, "active":0.70, "recovery":0.0, "damage":20.0, "radius":210.0},
+	&"overload_pylons":{"kind":&"pylons", "commit_mode":&"autonomous", "affinity":&"arc", "startup":1.00, "active":2.4, "recovery":0.0, "damage":20.0, "radius":190.0},
 
-	&"current_fan":{"kind":&"fan", "affinity":&"kinetic", "startup":0.85, "active":0.65, "recovery":0.95, "damage":20.0},
-	&"undertow_sweep":{"kind":&"beam", "affinity":&"kinetic", "startup":0.95, "active":0.75, "recovery":1.10, "damage":28.0, "width":70.0},
-	&"depth_charge":{"kind":&"area", "affinity":&"kinetic", "startup":1.10, "active":0.55, "recovery":1.25, "damage":32.0, "radius":185.0},
-	&"archive_ram":{"kind":&"charge", "affinity":&"kinetic", "startup":1.10, "active":0.65, "recovery":1.35, "damage":34.0},
+	&"current_fan":{"kind":&"fan", "commit_mode":&"committed", "affinity":&"kinetic", "startup":0.90, "active":0.70, "recovery":0.90, "damage":20.0},
+	&"archive_lunge":{"kind":&"charge", "commit_mode":&"interruptible_signature", "affinity":&"kinetic", "startup":1.10, "active":0.65, "recovery":1.25, "damage":34.0},
+	&"archive_cross":{"kind":&"cross", "commit_mode":&"committed", "affinity":&"kinetic", "startup":0.95, "active":0.70, "recovery":0.95, "damage":26.0},
+	&"archive_depth":{"kind":&"area", "commit_mode":&"committed", "affinity":&"kinetic", "startup":1.10, "active":0.55, "recovery":1.10, "damage":32.0, "radius":185.0},
+	&"undertow_lanes":{"kind":&"lanes", "commit_mode":&"autonomous", "affinity":&"kinetic", "startup":1.10, "active":1.4, "recovery":0.0, "damage":20.0},
+	&"depth_charges":{"kind":&"area", "commit_mode":&"autonomous", "affinity":&"kinetic", "startup":1.15, "active":0.60, "recovery":0.0, "damage":30.0, "radius":175.0},
 
-	&"arc_lanes":{"kind":&"lanes", "affinity":&"arc", "startup":0.85, "active":0.80, "recovery":0.95, "damage":22.0},
-	&"grounded_ring":{"kind":&"area", "affinity":&"arc", "startup":1.00, "active":0.65, "recovery":1.10, "damage":28.0, "radius":235.0},
-	&"thunder_drop":{"kind":&"area", "affinity":&"arc", "startup":1.10, "active":0.50, "recovery":1.35, "damage":34.0, "radius":175.0},
-	&"escort_surge":{"kind":&"summon", "affinity":&"arc", "startup":0.85, "active":0.80, "recovery":1.20, "damage":24.0, "radius":190.0},
+	&"grounding_grid":{"kind":&"lanes", "commit_mode":&"committed", "affinity":&"arc", "startup":1.00, "active":0.85, "recovery":0.95, "damage":22.0},
+	&"titan_pulse":{"kind":&"area", "commit_mode":&"interruptible_signature", "affinity":&"arc", "startup":1.15, "active":0.60, "recovery":1.20, "damage":30.0, "radius":235.0},
+	&"titan_burst":{"kind":&"fan", "commit_mode":&"committed", "affinity":&"arc", "startup":0.90, "active":0.70, "recovery":0.90, "damage":22.0},
+	&"titan_ram":{"kind":&"charge", "commit_mode":&"committed", "affinity":&"kinetic", "startup":1.10, "active":0.62, "recovery":1.20, "damage":34.0},
+	&"thunder_chain":{"kind":&"area", "commit_mode":&"autonomous", "affinity":&"arc", "startup":1.20, "active":0.55, "recovery":0.0, "damage":32.0, "radius":170.0},
+	&"beam_sentinel_call":{"kind":&"summon", "commit_mode":&"autonomous", "affinity":&"support", "startup":1.00, "active":2.5, "recovery":0.0, "damage":0.0},
 
-	&"open_lane_charge":{"kind":&"charge", "affinity":&"kinetic", "startup":1.10, "active":0.70, "recovery":1.45, "damage":36.0},
-	&"gate_shockwave":{"kind":&"area", "affinity":&"kinetic", "startup":1.00, "active":0.55, "recovery":1.05, "damage":28.0, "radius":240.0},
-	&"ricochet_volley":{"kind":&"fan", "affinity":&"kinetic", "startup":0.85, "active":0.70, "recovery":1.00, "damage":22.0},
-	&"switch_sweep":{"kind":&"beam", "affinity":&"arc", "startup":1.00, "active":0.80, "recovery":1.20, "damage":30.0, "width":78.0},
+	&"breaker_charge":{"kind":&"charge", "commit_mode":&"committed", "affinity":&"kinetic", "startup":1.10, "active":0.70, "recovery":1.20, "damage":36.0},
+	&"ricochet_volley":{"kind":&"fan", "commit_mode":&"interruptible_signature", "affinity":&"kinetic", "startup":1.00, "active":0.75, "recovery":1.05, "damage":22.0},
+	&"gate_shockwave":{"kind":&"area", "commit_mode":&"committed", "affinity":&"kinetic", "startup":1.00, "active":0.55, "recovery":1.05, "damage":28.0, "radius":240.0},
+	&"switch_sweep":{"kind":&"beam", "commit_mode":&"committed", "affinity":&"arc", "startup":1.05, "active":0.80, "recovery":1.15, "damage":30.0, "width":78.0},
+	&"switchyard_mines":{"kind":&"area", "commit_mode":&"autonomous", "affinity":&"arc", "startup":1.15, "active":0.60, "recovery":0.0, "damage":26.0, "radius":145.0},
+	&"switch_sweeps":{"kind":&"beam", "commit_mode":&"autonomous", "affinity":&"arc", "startup":1.15, "active":0.75, "recovery":0.0, "damage":28.0, "width":72.0},
 
-	&"crown_beam":{"kind":&"beam", "affinity":&"arc", "startup":1.15, "active":0.80, "recovery":1.30, "damage":34.0, "width":82.0},
-	&"mirror_cross":{"kind":&"cross", "affinity":&"arc", "startup":0.95, "active":0.65, "recovery":1.10, "damage":28.0},
-	&"carrier_wave":{"kind":&"summon", "affinity":&"support", "startup":0.85, "active":0.85, "recovery":1.25, "damage":0.0},
-	&"relay_pulse":{"kind":&"area", "affinity":&"arc", "startup":0.95, "active":0.60, "recovery":1.10, "damage":30.0, "radius":225.0},
+	&"mirror_cross":{"kind":&"cross", "commit_mode":&"committed", "affinity":&"arc", "startup":0.95, "active":0.65, "recovery":1.00, "damage":28.0},
+	&"carrier_wave":{"kind":&"summon", "commit_mode":&"interruptible_signature", "affinity":&"support", "startup":1.10, "active":0.85, "recovery":1.25, "damage":0.0},
+	&"crown_beam":{"kind":&"beam", "commit_mode":&"committed", "affinity":&"arc", "startup":1.15, "active":0.80, "recovery":1.25, "damage":34.0, "width":82.0},
+	&"crown_burst":{"kind":&"fan", "commit_mode":&"committed", "affinity":&"arc", "startup":0.90, "active":0.70, "recovery":0.90, "damage":22.0},
+	&"crown_lattice":{"kind":&"lanes", "commit_mode":&"autonomous", "affinity":&"arc", "startup":1.20, "active":1.4, "recovery":0.0, "damage":22.0},
+	&"relay_pulse_rings":{"kind":&"area", "commit_mode":&"autonomous", "affinity":&"arc", "startup":1.15, "active":0.60, "recovery":0.0, "damage":30.0, "radius":225.0},
 }
 
 const STAGE_SEQUENCES := {
-	&"stage_1":[&"twin_foundry_lanes", &"foundry_ram", &"furnace_ring", &"pylon_overload"],
-	&"stage_2":[&"current_fan", &"undertow_sweep", &"depth_charge", &"archive_ram"],
-	&"stage_3":[&"arc_lanes", &"grounded_ring", &"thunder_drop", &"escort_surge"],
-	&"stage_4":[&"open_lane_charge", &"gate_shockwave", &"ricochet_volley", &"switch_sweep"],
-	&"stage_5":[&"crown_beam", &"mirror_cross", &"carrier_wave", &"relay_pulse"],
+	&"stage_1":[&"furnace_gates", &"foundry_ram", &"foundry_burst", &"furnace_ring"],
+	&"stage_2":[&"current_fan", &"archive_lunge", &"archive_cross", &"archive_depth"],
+	&"stage_3":[&"grounding_grid", &"titan_pulse", &"titan_burst", &"titan_ram"],
+	&"stage_4":[&"breaker_charge", &"ricochet_volley", &"gate_shockwave", &"switch_sweep"],
+	&"stage_5":[&"mirror_cross", &"carrier_wave", &"crown_beam", &"crown_burst"],
+}
+const AUTONOMOUS_SEQUENCES := {
+	&"stage_1":[&"slag_ring", &"overload_pylons"],
+	&"stage_2":[&"undertow_lanes", &"depth_charges"],
+	&"stage_3":[&"thunder_chain", &"beam_sentinel_call"],
+	&"stage_4":[&"switchyard_mines", &"switch_sweeps"],
+	&"stage_5":[&"crown_lattice", &"relay_pulse_rings"],
 }
 
-static func sequence(stage_id: StringName, phase_two: bool) -> Array[String]:
+static func sequence(stage_id: StringName, phase_value: Variant = 1) -> Array[String]:
 	var base: Array = STAGE_SEQUENCES.get(stage_id, STAGE_SEQUENCES[&"stage_1"])
-	var ordered: Array = [base[2], base[0], base[3], base[1]] if phase_two else base
+	var phase := (
+		2
+		if phase_value is bool and bool(phase_value)
+		else int(phase_value)
+	)
+	var ordered: Array = [base[2], base[0], base[3], base[1]] if phase == 2 else base
+	if phase >= 3:
+		ordered = [base[0], base[2], base[1], base[3]]
 	var result: Array[String] = []
 	for value in ordered: result.append(String(value))
 	return result
 
 
+static func autonomous_sequence(stage_id: StringName) -> Array[StringName]:
+	var result: Array[StringName] = []
+	for value in Array(AUTONOMOUS_SEQUENCES.get(stage_id, AUTONOMOUS_SEQUENCES[&"stage_1"])):
+		result.append(StringName(value))
+	return result
+
+
 static func definition(pattern: String) -> Dictionary:
-	return Dictionary(PATTERNS.get(StringName(pattern), PATTERNS[&"twin_foundry_lanes"]))
+	return Dictionary(PATTERNS.get(StringName(pattern), PATTERNS[&"furnace_gates"]))
 
 
 static func kind(pattern: String) -> StringName:
@@ -81,6 +112,14 @@ static func damage(pattern: String) -> float:
 
 static func affinity(pattern: String) -> StringName:
 	return StringName(definition(pattern).get("affinity", &"kinetic"))
+
+
+static func commit_mode(pattern: String) -> StringName:
+	return StringName(definition(pattern).get("commit_mode", &""))
+
+
+static func is_signature(pattern: String) -> bool:
+	return commit_mode(pattern) == &"interruptible_signature"
 
 
 static func radius(pattern: String) -> float:

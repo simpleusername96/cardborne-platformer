@@ -1766,6 +1766,17 @@ stage role sets keep projectile-firing roles at or below half. Focused enemy,
 field-generation, renderer, and integrated run validators pass; final rendered
 clearance evidence remains in Milestone 7.
 
+2026-07-24 Milestone 4 progress: extracted boss sequencing and active attack
+execution into `VehicleBossRuntime`; added three health phases, mandatory
+signature/committed/autonomous metadata, one startup-only Breach interrupt,
+forced committed follow-up, independently scheduled arena systems, and five
+silhouette-distinct boss variants shared by combat and minimap presentation.
+Added a debug-only, rewardless `VehicleBossPracticeSession` with exact
+field/boss/phase/pattern selection, invulnerability, full-fight and pattern-loop
+paths that reuse production stores and execution. Focused boss catalog,
+runtime, practice-isolation, renderer, and integrated-run validators pass;
+release absence and rendered pattern/escape evidence remain in Milestone 7.
+
 ## Open Questions
 
 None. The map count, `7200x4320` dimensions, persistence, wall contract, six

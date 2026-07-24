@@ -169,6 +169,7 @@ static func refresh_boss(
 			"affinity":AttackContract.SUPPORT,
 			"damage":0.0,
 		})
+	_stamp_commit_mode(enemy, BossPatterns.commit_mode(pattern))
 	update_boss_readiness(enemy, pattern)
 
 

@@ -67,6 +67,7 @@ var optional := false
 var ram_cooldown := 0.0
 var pattern_index := 0
 var boss_phase := 1
+var boss_variant: StringName = &"colossus"
 var pattern: StringName = &""
 var last_pattern: StringName = &""
 var pattern_timer := 0.0

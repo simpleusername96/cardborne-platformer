@@ -131,7 +131,21 @@ func _check_boss_hit_recovery(run) -> void:
 	boss["pos"] = run.player_position + Vector2(-420.0, 0.0)
 	boss["phase"] = "boss_startup"
 	boss["phase_time"] = 0.8
+	boss["pattern"] = "foundry_ram"
+	run.call("_resolve_breach_contact", boss)
+	_expect(
+		boss.phase == &"boss_interrupted_recovery"
+			and is_equal_approx(boss.phase_time, 0.45),
+		"Breach cancels only the boss signature startup"
+	)
+	boss["phase"] = "boss_startup"
+	boss["phase_time"] = 0.8
 	boss["pattern"] = "current_fan"
+	run.call("_resolve_breach_contact", boss)
+	_expect(
+		boss.phase == &"boss_startup",
+		"Breach cannot cancel a committed boss startup"
+	)
 	boss["pattern_index"] = 1
 	boss["committed_dir"] = Vector2.UP
 	boss["committed_target"] = run.player_position + Vector2(0.0, -240.0)

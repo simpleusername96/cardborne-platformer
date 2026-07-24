@@ -15,8 +15,11 @@ func _initialize() -> void:
 		var stage_id := Catalog.STAGE_IDS[stage_index]
 		var phase_one := Patterns.sequence(stage_id, false)
 		var phase_two := Patterns.sequence(stage_id, true)
+		var phase_three := Patterns.sequence(stage_id, 3)
 		_expect(phase_one.size() == 4 and phase_one.duplicate().all(func(pattern): return phase_one.count(pattern) == 1), "%s has four distinct attacks" % stage_id)
 		_expect(phase_two.size() == 4 and phase_two != phase_one, "%s changes order in phase two" % stage_id)
+		_expect(phase_three.size() == 4 and phase_three != phase_two, "%s has an authored phase-three order" % stage_id)
+		var signatures := 0
 		for pattern in phase_one:
 			_expect(Patterns.startup_seconds(pattern) >= 0.8, "%s startup is visible" % pattern)
 			_expect(Patterns.active_seconds(pattern) >= 0.4, "%s active window is explicit" % pattern)
@@ -25,6 +28,12 @@ func _initialize() -> void:
 				Patterns.affinity(pattern) in AttackContract.AFFINITIES,
 				"%s declares a supported attack affinity" % pattern
 			)
+			_expect(
+				Patterns.commit_mode(pattern) in [&"interruptible_signature", &"committed"],
+				"%s declares a direct commit mode" % pattern
+			)
+			if Patterns.is_signature(pattern):
+				signatures += 1
 			if Patterns.damage(pattern) > 0.0:
 				_expect(
 					Patterns.affinity(pattern) != AttackContract.SUPPORT,
@@ -43,6 +52,14 @@ func _initialize() -> void:
 							+ Patterns.MIN_BASE_WALK_ESCAPE_MARGIN,
 					"%s can be escaped from its center with ordinary movement" % pattern
 				)
+		_expect(signatures == 1, "%s owns exactly one signature per direct cycle" % stage_id)
+		var autonomous := Patterns.autonomous_sequence(stage_id)
+		_expect(autonomous.size() == 2, "%s owns two bounded autonomous systems" % stage_id)
+		for pattern in autonomous:
+			_expect(
+				Patterns.commit_mode(pattern) == &"autonomous",
+				"%s remains independent of boss-body state" % pattern
+			)
 		_expect(Difficulty.boss_health(stage_index) > 0.0, "%s has bounded boss health" % stage_id)
 	_expect(
 		is_equal_approx(EncounterDirector.effective_hostile_projectile_speed(500.0), 410.0),
@@ -53,10 +70,10 @@ func _initialize() -> void:
 		"boss circular attacks keep their committed center close to the player"
 	)
 	_expect(
-		Patterns.affinity("twin_foundry_lanes") == AttackContract.THERMAL
+		Patterns.affinity("furnace_gates") == AttackContract.THERMAL
 			and Patterns.affinity("foundry_ram") == AttackContract.KINETIC
 			and Patterns.affinity("furnace_ring") == AttackContract.THERMAL
-			and Patterns.affinity("pylon_overload") == AttackContract.ARC,
+			and Patterns.affinity("overload_pylons") == AttackContract.ARC,
 		"stage-one boss patterns expose distinct thermal, kinetic, and arc families"
 	)
 	_finish()

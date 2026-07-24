@@ -25,6 +25,8 @@ const AudioDirector = preload("res://scripts/presentation/vehicle_audio_director
 const CombatRenderer = preload("res://scripts/presentation/vehicle_combat_renderer.gd")
 const StageBackdrop = preload("res://scripts/vehicle/vehicle_stage_backdrop.gd")
 const BossPatterns = preload("res://scripts/bosses/vehicle_boss_patterns.gd")
+const BossRuntime = preload("res://scripts/bosses/vehicle_boss_runtime.gd")
+const BossPracticeSession = preload("res://scripts/bosses/vehicle_boss_practice_session.gd")
 const StageDifficulty = preload("res://scripts/enemies/vehicle_stage_difficulty.gd")
 const RunDifficulty = preload("res://scripts/vehicle/vehicle_run_difficulty.gd")
 const FieldDropRules = preload("res://scripts/rewards/vehicle_field_drop_rules.gd")
@@ -107,6 +109,8 @@ var stage_flow := StageFlow.new()
 var pursuit_field := PursuitField.new()
 var secondary_runtime := SecondaryRuntime.new()
 var terrain_runtime := TerrainRuntime.new()
+var boss_runtime := BossRuntime.new()
+var boss_practice := BossPracticeSession.new()
 var _runtime_blockers: Array[Rect2] = []
 
 var player_position := Vector2.ZERO
@@ -227,6 +231,7 @@ var _performance_scenario: VehiclePerformanceScenario
 var _performance_finishing := false
 var _performance_enemy_sections: Dictionary = {}
 var _performance_detail_sample_active := false
+var _practice_request: Dictionary = {}
 
 
 func _ready() -> void:
@@ -235,7 +240,12 @@ func _ready() -> void:
 	_layout_session_seed = _layout_session_rng.seed
 	_parse_capture_arguments()
 	_performance_request = _parse_performance_request()
-	if (_capture_mode or not _performance_request.is_empty()) and not _has_layout_seed_override:
+	_practice_request = _parse_boss_practice_request()
+	if (
+		_capture_mode
+		or not _performance_request.is_empty()
+		or not _practice_request.is_empty()
+	) and not _has_layout_seed_override:
 		_layout_seed_override = FIXED_LAYOUT_SEED
 		_has_layout_seed_override = true
 	_build_backdrop()
@@ -243,7 +253,8 @@ func _ready() -> void:
 	_build_camera()
 	_build_ui()
 	_build_audio()
-	_load_persistence()
+	if _practice_request.is_empty():
+		_load_persistence()
 	selected_run_difficulty = _preferred_run_difficulty()
 	_reset_run(false)
 	_ui.show_deployment(
@@ -253,7 +264,9 @@ func _ready() -> void:
 	)
 	_set_mouse_for_mode()
 	queue_redraw()
-	if not _performance_request.is_empty():
+	if not _practice_request.is_empty():
+		call_deferred("_start_boss_practice")
+	elif not _performance_request.is_empty():
 		call_deferred("_start_performance_scenario")
 
 
@@ -444,6 +457,8 @@ func _build_ui() -> void:
 	_ui.name = "VehicleStageUI"
 	add_child(_ui)
 	_ui.deployment_selected.connect(_on_deployment_selected)
+	if _ui.has_signal("boss_practice_selected"):
+		_ui.boss_practice_selected.connect(_on_boss_practice_selected)
 	_ui.upgrade_selected.connect(_on_upgrade_selected)
 	_ui.upgrade_declined.connect(_on_upgrade_declined)
 	_ui.upgrade_previewed.connect(func(_upgrade_id: StringName) -> void: _play_sound(&"upgrade_select"))
@@ -726,6 +741,7 @@ func _make_enemy(spec: Dictionary) -> EnemyState:
 	enemy.ram_cooldown = 0.0
 	enemy.pattern_index = 0
 	enemy.boss_phase = 1
+	enemy.boss_variant = StringName(spec.get("boss_variant", &"colossus"))
 	enemy.pattern = &""
 	enemy.last_pattern = &""
 	enemy.pattern_timer = 0.0
@@ -873,6 +889,13 @@ func _on_deployment_selected(primary_id: StringName, difficulty_id: StringName) 
 	if settings != null:
 		settings.set_run_difficulty(RunDifficulty.normalize(difficulty_id))
 	_start_deployed_run(primary_id, difficulty_id)
+
+
+func _on_boss_practice_selected(request: Dictionary) -> void:
+	if not OS.is_debug_build():
+		return
+	_practice_request = request.duplicate(true)
+	_start_boss_practice()
 
 
 func _start_deployed_run(primary_id: StringName, difficulty_id: StringName) -> void:
@@ -2742,6 +2765,13 @@ func _resolve_breach_contact(enemy: EnemyState) -> void:
 	if enemy.role == &"mine":
 		_arm_mine(enemy, 0.75, true)
 		return
+	if enemy.role == &"stage_boss":
+		if boss_runtime.update_phase_transition(enemy):
+			return
+		if boss_runtime.try_interrupt_signature(enemy):
+			_add_effect("impact", enemy.pos, Art.MUSTARD, 0.24, enemy.radius * 1.45)
+			_play_sound(&"impact", 0.78)
+			return
 	if enemy.phase == &"startup" and AttackContract.startup_is_interruptible(enemy.role):
 		enemy.phase = &"interrupted_recovery"
 		enemy.phase_time = 0.45
@@ -3091,6 +3121,12 @@ func _apply_lifesteal(applied_damage: float, source: String, _role: StringName) 
 func _defeat_enemy(enemy: EnemyState, source: String) -> void:
 	if not enemy.alive:
 		return
+	if boss_practice.active:
+		enemy.alive = false
+		enemy.active = false
+		enemy_store.queue_defeat(enemy)
+		_add_effect("destroy", enemy.pos, _enemy_color(enemy.role), 0.38, enemy.radius * 1.8)
+		return
 	var spreads_poison := StatusRuntime.contagion_enabled(enemy)
 	var split_on_defeat := (
 		enemy.archetype == &"splitter_barge"
@@ -3222,7 +3258,10 @@ func _damage_player(amount: float, source: String, blockable: bool, enemy_source
 		return
 	terrain_runtime.record_player_damage()
 	encounter_runtime.record_player_damage(_damage_source_family(source, enemy_source))
-	player_health = maxf(0.0, player_health - remaining)
+	player_health = maxf(
+		1.0 if boss_practice.active and boss_practice.invulnerable else 0.0,
+		player_health - remaining
+	)
 	stats_damage_taken += remaining
 	player_hit_flash = PLAYER_HIT_FLASH_DURATION
 	player_invulnerable = maxf(player_invulnerable, PLAYER_HIT_INVULNERABILITY)
@@ -3458,6 +3497,7 @@ func _start_stage_boss() -> void:
 		"pos": boss_arrival_position,
 		"zone": "boss",
 		"name_key": StageCatalog.profile(current_stage_id)["boss_name_key"],
+		"boss_variant": [&"colossus", &"leviathan", &"titan", &"behemoth", &"crown"][current_stage_index],
 	})
 	if boss == null:
 		boss_started = false
@@ -3466,6 +3506,7 @@ func _start_stage_boss() -> void:
 	boss.phase = "boss_read"
 	boss.phase_time = 1.35
 	boss.pattern = "system_wake"
+	boss_runtime.configure(current_stage_id)
 	if not _append_enemy(boss):
 		boss_started = false
 		return
@@ -3514,18 +3555,34 @@ func _choose_boss_arrival_anchor() -> Vector2:
 func _update_stage_boss(boss: EnemyState, delta: float) -> void:
 	if not bool(boss.alive):
 		return
-	var health_ratio := float(boss.health) / float(boss.max_health)
-	if health_ratio <= 0.5 and int(boss.boss_phase) == 1:
-		boss.boss_phase = 2
-		boss.phase = "boss_read"
-		boss.phase_time = 1.8
-		boss.pattern = "phase_two"
-		boss.pattern_index = 0
+	if (
+		boss_practice.is_pattern_loop()
+		and BossPatterns.commit_mode(boss_practice.pattern) == &"autonomous"
+	):
+		boss_practice.loop_wait -= delta
+		_boss_reposition(boss, delta)
+		if boss_practice.loop_wait <= 0.0:
+			_execute_boss_autonomous(_practice_autonomous_event(boss))
+			boss_practice.loop_wait = (
+				BossPatterns.startup_seconds(boss_practice.pattern)
+				+ BossPatterns.active_seconds(boss_practice.pattern)
+				+ 1.5
+			)
+		return
+	if boss_runtime.update_phase_transition(boss):
 		boss_phase_two_announced = true
 		_ui.notify(tr("NOTIFY_COLOSSUS_PHASE_TWO"), 3.4, Rules.VIOLET)
 		_play_sound(&"boss", 0.78)
+	if not boss_practice.is_pattern_loop():
+		for event in boss_runtime.advance_autonomous(delta, boss, player_position):
+			_execute_boss_autonomous(event)
 
 	var phase := String(boss.phase)
+	if phase == "boss_interrupted_recovery":
+		boss.phase_time = maxf(0.0, boss.phase_time - delta)
+		if boss.phase_time <= 0.0:
+			boss_runtime.finish_interrupted_recovery(boss)
+		return
 	if phase == "boss_read":
 		boss.phase_time = maxf(0.0, float(boss.phase_time) - delta)
 		_boss_reposition(boss, delta)
@@ -3546,16 +3603,20 @@ func _update_stage_boss(boss: EnemyState, delta: float) -> void:
 		_boss_reposition(boss, delta)
 		if float(boss.phase_time) <= 0.0:
 			boss.phase = "boss_read"
-			boss.phase_time = 0.60 if int(boss.boss_phase) == 2 else 0.75
+			boss.phase_time = (
+				1.5
+				if boss_practice.is_pattern_loop()
+				else boss_runtime.read_gap(boss.boss_phase)
+			)
 			boss.pattern = "reading_arena"
 
 
 func _boss_select_pattern(boss: EnemyState) -> void:
-	var phase_two := int(boss.boss_phase) == 2
-	var patterns: Array[String] = BossPatterns.sequence(current_stage_id, phase_two)
-	var index := int(boss.pattern_index) % patterns.size()
-	var pattern := patterns[index]
-	boss.pattern_index = int(boss.pattern_index) + 1
+	var pattern := (
+		boss_practice.pattern
+		if boss_practice.is_pattern_loop()
+		else boss_runtime.select_direct(boss)
+	)
 	boss.pattern = pattern
 	boss.phase = "boss_startup"
 	boss.phase_time = BossPatterns.startup_seconds(pattern)
@@ -3588,112 +3649,28 @@ func _boss_select_pattern(boss: EnemyState) -> void:
 	)
 
 
+func _practice_autonomous_event(boss: EnemyState) -> Dictionary:
+	var pattern := boss_practice.pattern
+	return {
+		"id":"practice_system",
+		"pattern":pattern,
+		"origin":boss.pos,
+		"target":player_position,
+		"startup":BossPatterns.startup_seconds(pattern),
+		"duration":BossPatterns.active_seconds(pattern),
+		"damage":BossPatterns.damage(pattern),
+		"radius":BossPatterns.radius(pattern),
+		"affinity":BossPatterns.affinity(pattern),
+		"commit_mode":&"autonomous",
+	}
+
+
 func _boss_begin_active(boss: EnemyState) -> void:
-	boss.phase = "boss_active"
-	boss.breach_exposed_recovery_used = false
-	boss.pattern_tick = 0.0
-	var pattern := String(boss.pattern)
-	boss.phase_time = BossPatterns.active_seconds(pattern)
-	boss.pattern_volleys = 0
-	var kind := BossPatterns.kind(pattern)
-	if kind == &"pylons":
-		_spawn_boss_pylons()
-	elif kind == &"summon":
-		for child_index in 3:
-			_spawn_carrier_child(boss)
+	boss_runtime.begin_active(boss, self)
 
 
 func _boss_update_active(boss: EnemyState, delta: float) -> void:
-	boss.phase_time = maxf(0.0, float(boss.phase_time) - delta)
-	boss.pattern_tick = float(boss.pattern_tick) - delta
-	var pattern := String(boss.pattern)
-	var kind := BossPatterns.kind(pattern)
-	var damage := BossPatterns.damage(pattern)
-	var phase_two := int(boss.boss_phase) == 2
-	# Damaging boss patterns commit to the startup footprint. Repositioning
-	# resumes in recovery so the warned origin cannot drift before impact.
-	if damage <= 0.0:
-		_boss_combat_move(boss, delta, BossPatterns.ACTIVE_MOVE_SCALE)
-	if kind in [&"lanes", &"fan", &"cross"] and float(boss.pattern_tick) <= 0.0 and int(boss.pattern_volleys) < BossPatterns.volley_limit(pattern, phase_two):
-		boss.pattern_tick = BossPatterns.volley_interval(pattern)
-		boss.pattern_volleys = int(boss.pattern_volleys) + 1
-		var aimed_direction := Vector2(boss.committed_dir)
-		if kind == &"lanes":
-			var lane_tangent := aimed_direction.rotated(PI * 0.5)
-			for lane_offset in boss.lane_centers:
-				var origin := Vector2(boss.pos) + aimed_direction * 86.0 + lane_tangent * float(lane_offset)
-				_spawn_hostile_projectile(
-					origin,
-					aimed_direction,
-					damage,
-					BossPatterns.projectile_speed(pattern),
-					pattern,
-					BossPatterns.affinity(pattern),
-					true
-				)
-		else:
-			var offsets := [-0.34, -0.17, 0.0, 0.17, 0.34] if kind == &"fan" else [0.0, PI * 0.5, PI, PI * 1.5]
-			for offset in offsets:
-				var direction := aimed_direction.rotated(float(offset))
-				_spawn_hostile_projectile(
-					Vector2(boss.pos) + direction * 72.0,
-					direction,
-					damage,
-					BossPatterns.projectile_speed(pattern),
-					pattern,
-					BossPatterns.affinity(pattern),
-					true
-				)
-	elif kind == &"charge":
-		if int(boss.pattern_volleys) == 0:
-			_boss_fire_aimed_burst(boss, pattern, damage * 0.55)
-		var before := Vector2(boss.pos)
-		var requested := (
-			Vector2(boss.committed_dir)
-			* BossPatterns.BOSS_CHARGE_SPEED
-			* EncounterDirector.ENEMY_SPEED_MULTIPLIER
-			* delta
-		)
-		boss.pos = _runtime_charge_path_end(
-			before,
-			boss.committed_dir,
-			requested.length(),
-			float(boss.radius)
-		)
-		if (
-			not bool(boss.hit_committed)
-			and player_position.distance_to(Vector2(boss.pos))
-				<= AttackContract.contact_danger_half_width(
-					float(boss.radius),
-					BossPatterns.BOSS_CONTACT_PADDING
-				)
-		):
-			boss.hit_committed = true
-			_damage_player(damage, pattern, true, true, true)
-		if before.distance_to(Vector2(boss.pos)) + 1.0 < requested.length():
-			boss.phase_time = 0.0
-	elif kind == &"beam":
-		if not bool(boss.hit_committed) and Rules.point_segment_distance(player_position, Vector2(boss.pos), Vector2(boss.beam_end)) <= Rules.PLAYER_RADIUS + BossPatterns.width(pattern) * 0.5:
-			boss.hit_committed = true
-			_damage_player(damage, pattern, true, true, true)
-	elif kind in [&"area", &"pylons", &"summon"]:
-		if int(boss.pattern_volleys) == 0:
-			_boss_fire_aimed_burst(boss, pattern, maxf(12.0, damage * 0.55))
-		var area_damage := AttackContract.radial_damage(
-			damage,
-			player_position.distance_to(Vector2(boss.committed_target)),
-			BossPatterns.radius(pattern)
-		)
-		if area_damage > 0.0 and not bool(boss.hit_committed):
-			boss.hit_committed = true
-			_damage_player(area_damage, pattern, false, true, true)
-
-	if float(boss.phase_time) <= 0.0:
-		boss.phase = "boss_recovery"
-		boss.phase_time = BossPatterns.recovery_seconds(pattern)
-		boss.vulnerable = 1.55 if kind in [&"charge", &"area"] else 0.65
-		boss.last_pattern = pattern
-		boss.pattern = "recovery_window"
+	boss_runtime.update_active(boss, delta, self)
 
 
 func _boss_predicted_target(origin: Vector2, projectile_speed: float) -> Vector2:
@@ -3715,6 +3692,57 @@ func _boss_fire_aimed_burst(boss: EnemyState, pattern: String, damage: float) ->
 			BossPatterns.affinity(pattern),
 			true
 		)
+
+
+func _execute_boss_autonomous(event: Dictionary) -> void:
+	var pattern := String(event["pattern"])
+	if pattern == "overload_pylons":
+		_spawn_boss_pylons()
+		return
+	if pattern == "beam_sentinel_call":
+		var sentinel := _make_enemy({
+			"id":String(event["id"]),
+			"role":&"beam_sentinel",
+			"pos":_move_actor(Vector2(event["target"]), Vector2.ZERO, 34.0, false),
+			"active":true,
+			"summoned":true,
+			"zone":"boss_system",
+		})
+		if _append_enemy(sentinel):
+			_add_effect("spawn", sentinel.pos, Art.ATTACK_ARC, 0.55, 76.0)
+		return
+	if pattern == "switchyard_mines":
+		for index in 4:
+			var direction := Vector2.RIGHT.rotated(TAU * float(index) / 4.0)
+			var mine := _make_enemy({
+				"id":"%s_mine_%d" % [String(event["id"]), index],
+				"role":&"mine",
+				"pos":_move_actor(
+					Vector2(event["target"]),
+					direction * 150.0,
+					27.0,
+					false
+				),
+				"active":true,
+				"summoned":true,
+				"zone":"boss_system",
+			})
+			if _append_enemy(mine):
+				_add_effect("spawn", mine.pos, Art.ATTACK_ARC, 0.45, 58.0)
+		return
+	denied_zones.append({
+		"id":event["id"],
+		"pos":Vector2(event["target"]),
+		"radius":float(event["radius"]),
+		"warning":float(event["startup"]),
+		"duration":maxf(0.62, float(event["duration"])),
+		"tick":0.0,
+		"damage":float(event["damage"]),
+		"source":pattern,
+		"affinity":StringName(event["affinity"]),
+		"commit_mode":&"autonomous",
+		"final_damage":true,
+	})
 
 
 func _boss_reposition(boss: EnemyState, delta: float) -> void:
@@ -3986,6 +4014,8 @@ func _guidebook_snapshot() -> Dictionary:
 
 
 func _discover_guide(entry_id: StringName) -> void:
+	if boss_practice.active:
+		return
 	var store := get_node_or_null("/root/VehicleGuidebookStore")
 	if store != null and bool(store.discover(entry_id)):
 		_hud_presenter.mark_guidebook_dirty()
@@ -4027,7 +4057,7 @@ func _boss_state_text(boss: EnemyState) -> String:
 	var base_state := pattern
 	if _boss_has_live_pylons():
 		base_state = tr("BOSS_STATE_PYLON_SHIELD") % pattern
-	elif float(boss.vulnerable) > 0.0 or String(boss.phase) == "staggered":
+	elif float(boss.vulnerable) > 0.0:
 		base_state = tr("BOSS_STATE_DAMAGE_WINDOW") % pattern
 	var parts: Array[String] = [base_state]
 	parts.append_array(_localized_status_parts(boss))
@@ -4063,23 +4093,46 @@ func _localized_pattern(pattern: String) -> String:
 		"twin_foundry_lanes": "PATTERN_TWIN_FOUNDRY_LANES",
 		"foundry_ram": "PATTERN_FOUNDRY_RAM",
 		"furnace_ring": "PATTERN_FURNACE_RING",
+		"furnace_gates": "PATTERN_FURNACE_GATES",
+		"foundry_burst": "PATTERN_FOUNDRY_BURST",
+		"slag_ring": "PATTERN_SLAG_RING",
+		"overload_pylons": "PATTERN_OVERLOAD_PYLONS",
 		"pylon_overload": "PATTERN_PYLON_OVERLOAD",
 		"current_fan": "PATTERN_CURRENT_FAN",
+		"archive_lunge": "PATTERN_ARCHIVE_LUNGE",
+		"archive_cross": "PATTERN_ARCHIVE_CROSS",
+		"archive_depth": "PATTERN_ARCHIVE_DEPTH",
+		"undertow_lanes": "PATTERN_UNDERTOW_LANES",
+		"depth_charges": "PATTERN_DEPTH_CHARGES",
 		"undertow_sweep": "PATTERN_UNDERTOW_SWEEP",
 		"depth_charge": "PATTERN_DEPTH_CHARGE",
 		"archive_ram": "PATTERN_ARCHIVE_RAM",
 		"arc_lanes": "PATTERN_ARC_LANES",
 		"grounded_ring": "PATTERN_GROUNDED_RING",
 		"thunder_drop": "PATTERN_THUNDER_DROP",
+		"grounding_grid": "PATTERN_GROUNDING_GRID",
+		"titan_pulse": "PATTERN_TITAN_PULSE",
+		"titan_burst": "PATTERN_TITAN_BURST",
+		"titan_ram": "PATTERN_TITAN_RAM",
+		"thunder_chain": "PATTERN_THUNDER_CHAIN",
+		"beam_sentinel_call": "PATTERN_BEAM_SENTINEL_CALL",
 		"escort_surge": "PATTERN_ESCORT_SURGE",
 		"open_lane_charge": "PATTERN_OPEN_LANE_CHARGE",
+		"breaker_charge": "PATTERN_BREAKER_CHARGE",
 		"gate_shockwave": "PATTERN_GATE_SHOCKWAVE",
 		"ricochet_volley": "PATTERN_RICOCHET_VOLLEY",
 		"switch_sweep": "PATTERN_SWITCH_SWEEP",
+		"switchyard_mines": "PATTERN_SWITCHYARD_MINES",
+		"switch_sweeps": "PATTERN_SWITCH_SWEEPS",
 		"crown_beam": "PATTERN_CROWN_BEAM",
 		"mirror_cross": "PATTERN_MIRROR_CROSS",
 		"carrier_wave": "PATTERN_CARRIER_WAVE",
 		"relay_pulse": "PATTERN_RELAY_PULSE",
+		"crown_burst": "PATTERN_CROWN_BURST",
+		"crown_lattice": "PATTERN_CROWN_LATTICE",
+		"relay_pulse_rings": "PATTERN_RELAY_PULSE_RINGS",
+		"signature_interrupted": "PATTERN_SIGNATURE_INTERRUPTED",
+		"phase_transition": "PATTERN_PHASE_TRANSITION",
 	}.get(pattern, pattern)
 	return tr(String(key))
 
@@ -4090,10 +4143,17 @@ func _minimap_snapshot(include_static_geometry: bool = true) -> Dictionary:
 		visited.append(cell)
 	var markers: Array[Dictionary] = []
 	if stage_flow.state == StageFlow.State.BOSS_WARNING:
-		markers.append({"kind":"boss", "position":boss_arrival_position, "color":Rules.CORAL, "discovered":true})
+		markers.append({
+			"kind":"boss", "position":boss_arrival_position,
+			"color":Rules.CORAL, "discovered":true,
+			"variant":[&"colossus", &"leviathan", &"titan", &"behemoth", &"crown"][current_stage_index],
+		})
 	var stage_boss := _find_enemy_by_id("stage_boss")
 	if stage_boss != null and stage_boss.alive:
-		markers.append({"kind":"boss", "position":stage_boss.pos, "color":Rules.CORAL, "discovered":true})
+		markers.append({
+			"kind":"boss", "position":stage_boss.pos, "color":Rules.CORAL,
+			"discovered":true, "variant":stage_boss.boss_variant,
+		})
 	for enemy in enemies:
 		if (
 			enemy.alive
@@ -4417,7 +4477,7 @@ func _load_persistence() -> void:
 
 
 func _save_persistence() -> void:
-	if _capture_mode:
+	if _capture_mode or boss_practice.active:
 		return
 	var config := ConfigFile.new()
 	config.set_value("progress", "clear_count", persistent_clear_count)
@@ -4431,6 +4491,76 @@ func _save_persistence() -> void:
 
 func _elapsed_ms(started_usec: int) -> float:
 	return float(Time.get_ticks_usec() - started_usec) / 1000.0
+
+
+func _parse_boss_practice_request() -> Dictionary:
+	if not OS.is_debug_build():
+		return {}
+	var values := {}
+	var arguments := OS.get_cmdline_args()
+	arguments.append_array(OS.get_cmdline_user_args())
+	for argument in arguments:
+		if argument.begins_with("--boss-practice="):
+			values["stage_id"] = StringName(argument.trim_prefix("--boss-practice="))
+		elif argument.begins_with("--practice-field="):
+			values["field_id"] = StringName(argument.trim_prefix("--practice-field="))
+		elif argument.begins_with("--practice-phase="):
+			values["phase"] = int(argument.trim_prefix("--practice-phase="))
+		elif argument.begins_with("--practice-pattern="):
+			values["pattern"] = argument.trim_prefix("--practice-pattern=")
+		elif argument == "--practice-invulnerable":
+			values["invulnerable"] = true
+	if not values.has("stage_id"):
+		return {}
+	values["field_id"] = values.get("field_id", &"drowned_ruin_field")
+	values["phase"] = values.get("phase", 1)
+	values["pattern"] = values.get("pattern", "full")
+	values["invulnerable"] = values.get("invulnerable", false)
+	var validator := BossPracticeSession.new()
+	var errors := validator.configure(values)
+	if not errors.is_empty():
+		for message in errors:
+			push_error(message)
+		return {}
+	return values
+
+
+func _start_boss_practice() -> void:
+	var errors := boss_practice.configure(_practice_request)
+	if not errors.is_empty():
+		return
+	current_stage_index = StageCatalog.STAGE_IDS.find(boss_practice.stage_id)
+	current_stage_id = boss_practice.stage_id
+	_field_id_override = boss_practice.field_id
+	field_layout = null
+	_reset_run(false, true, false, false)
+	encounter_runtime.stop_spawning()
+	_clear_enemies()
+	_clear_projectiles()
+	mode = RunMode.PLAYING
+	_ui.show_gameplay()
+	player_position = Rules.player_start(current_stage_id)
+	boss_runtime.configure(current_stage_id)
+	var boss := _make_enemy({
+		"id":"stage_boss",
+		"role":&"stage_boss",
+		"pos":_choose_boss_arrival_anchor(),
+		"zone":"practice",
+		"name_key":StageCatalog.profile(current_stage_id)["boss_name_key"],
+		"boss_variant":[&"colossus", &"leviathan", &"titan", &"behemoth", &"crown"][current_stage_index],
+		"active":true,
+	})
+	boss.active = true
+	boss.boss_phase = boss_practice.phase
+	boss.health = boss.max_health * boss_practice.health_ratio()
+	boss.phase = &"boss_read"
+	boss.phase_time = 0.8
+	boss.pattern = &"practice"
+	_append_enemy(boss)
+	boss_started = true
+	stage_flow.state = StageFlow.State.BOSS_ACTIVE
+	_ui.notify("PRACTICE", 1.5, Art.MUSTARD)
+	_set_mouse_for_mode()
 
 
 func _parse_performance_request() -> Dictionary:

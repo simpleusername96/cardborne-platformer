@@ -90,6 +90,7 @@ class BatchHandle:
 
 
 var _enemy_batches: Dictionary = {}
+var _boss_variant_batches: Dictionary = {}
 var _projectile_head_batches: Dictionary = {}
 var _projectile_trail_batches: Dictionary = {}
 var _experience_batches: Dictionary = {}
@@ -143,6 +144,7 @@ func _build_batches() -> void:
 		if archetype in [
 			&"artillery_spotter", &"beam_sentinel", &"boss_pylon",
 			&"shield_escort", &"repair_tender", &"interceptor_tower",
+			&"stage_boss",
 		]:
 			continue
 		_enemy_batches[archetype] = _create_batch(
@@ -158,6 +160,14 @@ func _build_batches() -> void:
 	_enemy_batches[&"shield_escort"] = _enemy_batches[&"controller"]
 	_enemy_batches[&"repair_tender"] = _enemy_batches[&"controller"]
 	_enemy_batches[&"interceptor_tower"] = _enemy_batches[&"turret"]
+	for variant in [&"colossus", &"leviathan", &"titan", &"behemoth", &"crown"]:
+		_boss_variant_batches[variant] = _create_batch(
+			"Boss_%s" % String(variant),
+			Visuals.boss_mesh(variant),
+			1,
+			0,
+			StringName("boss_%s" % String(variant))
+		)
 	for team in [&"player", &"enemy"]:
 		var capacity := (
 			PROJECTILE_CAPACITY
@@ -273,7 +283,11 @@ func _sync_enemies(enemies: Array[EnemyState], visible_world: Rect2, player_posi
 			continue
 		var role := enemy.role
 		var archetype := enemy.archetype
-		var batch: BatchHandle = _enemy_batches.get(archetype)
+		var batch: BatchHandle = (
+			_boss_variant_batches.get(enemy.boss_variant)
+			if archetype == &"stage_boss"
+			else _enemy_batches.get(archetype)
+		)
 		if batch == null:
 			continue
 		var angle := _enemy_angle(archetype, enemy, player_position, run_time)
@@ -495,6 +509,38 @@ func _sync_attack_telegraphs(
 				and float(telegraph.get("active_width", 0.0)) > 0.0
 			):
 				_sync_active_beam(telegraph)
+			if startup:
+				_sync_commit_marker(telegraph)
+
+
+func _sync_commit_marker(telegraph: Dictionary) -> void:
+	var commit_mode := StringName(telegraph.get("commit_mode", &""))
+	if commit_mode.is_empty():
+		return
+	var center := (
+		Vector2(telegraph.get("center", Vector2.ZERO))
+		if telegraph.has("center")
+		else Vector2(telegraph.get("from", Vector2.ZERO))
+	)
+	if commit_mode == &"interruptible_signature":
+		for side in [-1.0, 1.0]:
+			_write_instance(
+				_overlay_batches[&"diamond"],
+				center + Vector2(side * 19.0, 0.0),
+				0.0,
+				Vector2(10.0, 16.0),
+				Art.MUSTARD
+			)
+	elif commit_mode == &"committed":
+		_write_instance(
+			_overlay_batches[&"diamond"], center, 0.0,
+			Vector2.ONE * 18.0, Art.CORAL
+		)
+	elif commit_mode == &"autonomous":
+		_write_instance(
+			_overlay_batches[&"ring"], center, 0.0,
+			Vector2.ONE * 22.0, Art.ATTACK_ARC
+		)
 
 
 func _telegraph_intersects_view(

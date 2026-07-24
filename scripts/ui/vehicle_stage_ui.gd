@@ -5,6 +5,7 @@ extends CanvasLayer
 ## The UI presents snapshots and emits intents; the stage remains the gameplay owner.
 
 signal deployment_selected(primary_id: StringName, difficulty_id: StringName)
+signal boss_practice_selected(request: Dictionary)
 signal upgrade_selected(upgrade_id: StringName)
 signal upgrade_declined
 signal upgrade_previewed(upgrade_id: StringName)
@@ -23,6 +24,9 @@ const SettingsPanel = preload("res://scripts/ui/vehicle_settings_panel.gd")
 const GuidebookPanel = preload("res://scripts/ui/vehicle_guidebook_panel.gd")
 const InputProfile = preload("res://scripts/input/vehicle_input_profile.gd")
 const RunDifficulty = preload("res://scripts/vehicle/vehicle_run_difficulty.gd")
+const StageCatalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
+const FieldRegistry = preload("res://scripts/vehicle/vehicle_field_registry.gd")
+const BossPatterns = preload("res://scripts/bosses/vehicle_boss_patterns.gd")
 
 const CANVAS := Art.COBALT_VOID
 const SURFACE := Art.IVORY
@@ -248,11 +252,25 @@ class StageMinimap:
 			var marker_color: Color = marker.get("color", Art.MUSTARD)
 			var kind := String(marker.get("kind", "point"))
 			if kind == "boss":
-				draw_colored_polygon(PackedVector2Array([
-					point + Vector2(0.0, -5.0),
-					point + Vector2(5.0, 4.0),
-					point + Vector2(-5.0, 4.0),
-				]), marker_color)
+				var variant := StringName(marker.get("variant", &"colossus"))
+				if variant == &"titan":
+					draw_rect(Rect2(point - Vector2(5.0, 5.0), Vector2(10.0, 10.0)), marker_color)
+				elif variant == &"crown":
+					draw_colored_polygon(_diamond(point, 7.0), marker_color)
+					draw_circle(point, 2.0, Art.INK_MUTED)
+				elif variant in [&"leviathan", &"behemoth"]:
+					draw_colored_polygon(PackedVector2Array([
+						point + Vector2(7.0, 0.0),
+						point + Vector2(-5.0, -5.0),
+						point + Vector2(-2.0, 0.0),
+						point + Vector2(-5.0, 5.0),
+					]), marker_color)
+				else:
+					draw_colored_polygon(PackedVector2Array([
+						point + Vector2(0.0, -5.0),
+						point + Vector2(5.0, 4.0),
+						point + Vector2(-5.0, 4.0),
+					]), marker_color)
 			elif kind == "objective":
 				draw_rect(Rect2(point - Vector2(3.5, 3.5), Vector2(7.0, 7.0)), marker_color)
 			elif kind == "reward":
@@ -368,6 +386,12 @@ var _settings_center: CenterContainer
 var _settings_panel: VehicleSettingsPanel
 var _guide_center: CenterContainer
 var _guide_panel: VehicleGuidebookPanel
+var _practice_center: CenterContainer
+var _practice_stage: OptionButton
+var _practice_field: OptionButton
+var _practice_phase: OptionButton
+var _practice_pattern: OptionButton
+var _practice_invulnerable: CheckBox
 var _deployment_command: Button
 var _deployment_controls_label: Label
 var _deployment_field_label: Label
@@ -402,6 +426,8 @@ func _ready() -> void:
 	_build_root()
 	_build_hud()
 	_build_deployment()
+	if OS.is_debug_build():
+		_build_boss_practice()
 	_build_upgrade()
 	_build_pause()
 	_build_result()
@@ -695,9 +721,105 @@ func _build_deployment() -> void:
 	var settings_button := _command_button("SETTINGS_OPEN", &"SecondaryButton")
 	settings_button.pressed.connect(_show_settings.bind("deployment"))
 	box.add_child(settings_button)
+	if OS.is_debug_build():
+		var practice_button := _command_button("BOSS_PRACTICE_OPEN", &"SecondaryButton")
+		practice_button.pressed.connect(_show_boss_practice)
+		box.add_child(practice_button)
 	var footer := _label("DEPLOY_FOOTER", 13, MUTED)
 	footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(footer)
+
+
+func _build_boss_practice() -> void:
+	_practice_center = CenterContainer.new()
+	_practice_center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_root.add_child(_practice_center)
+	var panel := _modal_panel(Vector2(720.0, 610.0))
+	_practice_center.add_child(panel)
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 10)
+	panel.add_child(box)
+	box.add_child(_label("BOSS_PRACTICE_KICKER", 14, AMBER))
+	box.add_child(_label("BOSS_PRACTICE_TITLE", 28, INK))
+	_practice_stage = _practice_option(box, "BOSS_PRACTICE_BOSS")
+	for stage_index in StageCatalog.STAGE_IDS.size():
+		var profile := StageCatalog.profile(StageCatalog.STAGE_IDS[stage_index])
+		_practice_stage.add_item(tr(String(profile["boss_name_key"])))
+		_practice_stage.set_item_metadata(stage_index, StageCatalog.STAGE_IDS[stage_index])
+	_practice_stage.item_selected.connect(func(_index: int) -> void: _refresh_practice_patterns())
+	_practice_field = _practice_option(box, "BOSS_PRACTICE_FIELD")
+	for field_id in FieldRegistry.FIELD_IDS:
+		var definition := FieldRegistry.definition(field_id)
+		_practice_field.add_item(tr(String(definition["name_key"])))
+		_practice_field.set_item_metadata(_practice_field.item_count - 1, field_id)
+	_practice_phase = _practice_option(box, "BOSS_PRACTICE_PHASE")
+	for phase in [1, 2, 3]:
+		_practice_phase.add_item(
+			tr("BOSS_PRACTICE_PHASE_VALUE").replace("%d", str(phase))
+		)
+		_practice_phase.set_item_metadata(_practice_phase.item_count - 1, phase)
+	_practice_pattern = _practice_option(box, "BOSS_PRACTICE_MODE")
+	_practice_invulnerable = CheckBox.new()
+	_practice_invulnerable.text = tr("BOSS_PRACTICE_INVULNERABLE")
+	_practice_invulnerable.add_theme_font_size_override("font_size", 16)
+	box.add_child(_practice_invulnerable)
+	var start := _command_button("BOSS_PRACTICE_START", &"PrimaryButton")
+	start.pressed.connect(_confirm_boss_practice)
+	box.add_child(start)
+	var back := _command_button("COMMON_BACK", &"SecondaryButton")
+	back.pressed.connect(show_deployment.bind(
+		_selected_primary, _selected_run_difficulty, _selected_field_name_key
+	))
+	box.add_child(back)
+	_refresh_practice_patterns()
+
+
+func _practice_option(parent: VBoxContainer, label_key: String) -> OptionButton:
+	parent.add_child(_label(label_key, 15, MUTED))
+	var option := OptionButton.new()
+	option.custom_minimum_size.y = 46.0
+	option.add_theme_font_size_override("font_size", 16)
+	parent.add_child(option)
+	return option
+
+
+func _refresh_practice_patterns() -> void:
+	if not is_instance_valid(_practice_pattern) or not is_instance_valid(_practice_stage):
+		return
+	_practice_pattern.clear()
+	_practice_pattern.add_item(tr("BOSS_PRACTICE_FULL"))
+	_practice_pattern.set_item_metadata(0, "full")
+	var stage_id := StringName(_practice_stage.get_item_metadata(_practice_stage.selected))
+	var pattern_ids: Array[StringName] = []
+	for value in BossPatterns.sequence(stage_id, 1):
+		pattern_ids.append(StringName(value))
+	pattern_ids.append_array(BossPatterns.autonomous_sequence(stage_id))
+	for pattern_id in pattern_ids:
+		_practice_pattern.add_item("%s · %s" % [
+			String(BossPatterns.commit_mode(String(pattern_id))).replace("_", " "),
+			String(pattern_id).replace("_", " "),
+		])
+		_practice_pattern.set_item_metadata(
+			_practice_pattern.item_count - 1, String(pattern_id)
+		)
+
+
+func _show_boss_practice() -> void:
+	hide_all_modals()
+	_dim.visible = true
+	_practice_center.visible = true
+	_hud.visible = false
+	_practice_stage.grab_focus()
+
+
+func _confirm_boss_practice() -> void:
+	boss_practice_selected.emit({
+		"stage_id":StringName(_practice_stage.get_item_metadata(_practice_stage.selected)),
+		"field_id":StringName(_practice_field.get_item_metadata(_practice_field.selected)),
+		"phase":int(_practice_phase.get_item_metadata(_practice_phase.selected)),
+		"pattern":String(_practice_pattern.get_item_metadata(_practice_pattern.selected)),
+		"invulnerable":_practice_invulnerable.button_pressed,
+	})
 
 
 func _build_upgrade() -> void:
@@ -1034,6 +1156,8 @@ func hide_all_modals() -> void:
 	_garage_center.visible = false
 	_settings_center.visible = false
 	_guide_center.visible = false
+	if is_instance_valid(_practice_center):
+		_practice_center.visible = false
 
 
 func notify(message: String, duration: float = 2.4, color: Color = OFF_WHITE) -> void:
