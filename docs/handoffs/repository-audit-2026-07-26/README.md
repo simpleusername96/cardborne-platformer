@@ -40,8 +40,10 @@ remain read-only and distinguish verified facts from inference.
 
 ## Next Steps
 
-1. Claude reads the package and current repository.
-2. Its unedited response is saved as `external-review-raw.md`.
+1. Retry the same read-only Claude request after the reported session reset at
+   2026-07-26 05:30 Asia/Seoul.
+2. Replace the rate-limit-only `external-review-raw.md` with the complete
+   unedited response while retaining the failed-attempt record.
 3. Codex checks material claims against current files and records verdicts in
    `external-review-validation.md`.
 
@@ -53,4 +55,5 @@ remain read-only and distinguish verified facts from inference.
   complete runtime coverage.
 - External feedback is advisory and cannot override current code, tests,
   `AGENTS.md`, or the canonical product/design specifications.
-
+- The first Claude call at 2026-07-26 01:08 Asia/Seoul was rejected by the
+  provider's five-hour session limit before any audit content was returned.
