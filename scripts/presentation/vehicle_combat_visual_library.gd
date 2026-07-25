@@ -165,6 +165,20 @@ static func disk_mesh(segments: int = 32) -> ArrayMesh:
 	}])
 
 
+static func support_timer_segment_mesh() -> ArrayMesh:
+	var half_sweep := deg_to_rad(6.5)
+	var inner_radius := 0.80
+	return polygon_mesh([{
+		"points":PackedVector2Array([
+			Vector2.RIGHT.rotated(-half_sweep),
+			Vector2.RIGHT.rotated(half_sweep),
+			Vector2.RIGHT.rotated(half_sweep) * inner_radius,
+			Vector2.RIGHT.rotated(-half_sweep) * inner_radius,
+		]),
+		"color":Color.WHITE,
+	}])
+
+
 static func player_hull_mesh() -> ArrayMesh:
 	var hull := PackedVector2Array([
 		Vector2(1.0, 0.0), Vector2(0.18, -0.74),

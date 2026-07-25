@@ -92,18 +92,28 @@ func _run() -> void:
 			"player_hit":false, "muzzle_flash":0.0, "barrier_strength":10.0,
 			"reduced_motion":true, "run_time":1.0, "ion_level":0,
 			"blade_level":0, "escort_drone":false, "secondary":{},
+			"support_fields":[{
+				"state":&"active", "position":Vector2(600.0, 300.0),
+				"radius":120.0, "kind":&"repair",
+				"phase_progress":0.5, "effect_active":true,
+			}],
 			"cursor_position":Vector2(460.0,300.0),
 		}
 	)
 	snapshot = renderer.debug_snapshot()
 	_expect(int(snapshot["visible_instances"]) >= 10, "renderer publishes bodies and semantic overlays as retained instances")
+	var support_timer := renderer.get_node("Overlay_support_timer_segment") as MultiMeshInstance2D
+	_expect(
+		support_timer.multimesh.visible_instance_count == 12,
+		"support-field lifetime uses one retained 24-step timer batch"
+	)
 	var corridor_caps := renderer.get_node("Overlay_disk") as MultiMeshInstance2D
 	var corridor_boundaries := renderer.get_node("Overlay_danger_ring") as MultiMeshInstance2D
 	var corridor_cap_buffer := corridor_caps.multimesh.buffer
 	_expect(
-		corridor_caps.multimesh.visible_instance_count == 2
+		corridor_caps.multimesh.visible_instance_count >= 4
 			and corridor_boundaries.multimesh.visible_instance_count == 2,
-		"corridor warning uses two endpoint disks and rings for an exact capsule footprint"
+		"corridor warning keeps its two endpoint disks and rings alongside support overlays"
 	)
 	_expect(
 		Vector2(corridor_cap_buffer[3], corridor_cap_buffer[7]).is_equal_approx(

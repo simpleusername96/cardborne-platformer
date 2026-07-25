@@ -4480,6 +4480,7 @@ func _combat_presentation_snapshot() -> Dictionary:
 			run_build.level_of(&"seeker_warhead"),
 			run_build.level_of(&"escort_drone")
 		),
+		"support_fields":terrain_runtime.snapshot().get("support_fields", []),
 		"ion_level": run_build.level_of(&"ion_field"),
 		"blade_level": run_build.level_of(&"orbit_blades"),
 		"escort_drone": run_build.has(&"escort_drone"),
@@ -4619,58 +4620,6 @@ func _draw_terrain() -> void:
 				draw_arc(center, TerrainRuntime.GATE_RADIUS - 18.0, -PI * 0.5, -PI * 0.5 + TAU * progress, 40, Art.IVORY_BRIGHT, 10.0)
 				if cooldown > 0.0:
 					draw_arc(center, 72.0, 0.0, TAU * (1.0 - cooldown / TerrainRuntime.GATE_COOLDOWN), 32, Art.INK_MUTED, 10.0)
-	for support in Array(snapshot.get("support_fields", [])):
-		_draw_support_field(Dictionary(support))
-
-
-func _draw_support_field(support: Dictionary) -> void:
-	var state := StringName(support["state"])
-	if state in [&"initial_delay", &"depleted"]:
-		return
-	var center := Vector2(support["position"])
-	var radius := float(support["radius"])
-	var kind := StringName(support["kind"])
-	var progress := clampf(float(support["phase_progress"]), 0.0, 1.0)
-	var active := bool(support["effect_active"])
-	var color := Art.MINT if kind == &"repair" else Art.MUSTARD
-	var opacity := 0.26 if active else (0.14 if state == &"warning" else 0.07)
-	draw_circle(center, radius, Color(color, opacity))
-	draw_arc(center, radius, 0.0, TAU, 56, Color(color, 0.76), 8.0)
-	var remaining_arc := TAU * (1.0 - progress)
-	if remaining_arc > 0.0:
-		draw_arc(center, radius - 12.0, -PI * 0.5, -PI * 0.5 + remaining_arc, 52, color, 12.0)
-		if remaining_arc <= TAU * 0.2:
-			draw_arc(center, radius - 26.0, -PI * 0.5, -PI * 0.5 + remaining_arc, 24, color, 16.0)
-	draw_circle(
-		center,
-		48.0,
-		Color(Art.CERAMIC_GREEN_MID if kind == &"repair" else Art.MUSTARD_DARK, 0.92)
-	)
-	if kind == &"repair":
-		_draw_terrain_plus(center, 30.0, Art.IVORY_BRIGHT)
-	else:
-		for index in 2:
-			_draw_terrain_chevron(
-				center + Vector2(0.0, 12.0 - index * 25.0),
-				Vector2.UP,
-				24.0,
-				Art.IVORY_BRIGHT,
-				9.0
-			)
-
-
-func _draw_terrain_plus(center: Vector2, half_extent: float, color: Color) -> void:
-	var arm := half_extent * 0.34
-	draw_rect(
-		Rect2(center - Vector2(arm, half_extent), Vector2(arm * 2.0, half_extent * 2.0)),
-		color
-	)
-	draw_rect(
-		Rect2(center - Vector2(half_extent, arm), Vector2(half_extent * 2.0, arm * 2.0)),
-		color
-	)
-
-
 func _draw_terrain_chevron(
 	center: Vector2,
 	direction: Vector2,

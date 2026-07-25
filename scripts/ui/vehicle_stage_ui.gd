@@ -24,6 +24,7 @@ const StatusOrbit = preload("res://scripts/ui/vehicle_status_orbit.gd")
 const SettingsPanel = preload("res://scripts/ui/vehicle_settings_panel.gd")
 const GuidebookPanel = preload("res://scripts/ui/vehicle_guidebook_panel.gd")
 const StageReportPanel = preload("res://scripts/ui/vehicle_stage_report_panel.gd")
+const MinimapMeshBuilder = preload("res://scripts/ui/vehicle_minimap_mesh_builder.gd")
 const InputProfile = preload("res://scripts/input/vehicle_input_profile.gd")
 const RunDifficulty = preload("res://scripts/vehicle/vehicle_run_difficulty.gd")
 const StageCatalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
@@ -186,6 +187,8 @@ class StageMinimap:
 	var snapshot: Dictionary = {}
 	var _static_map_mesh: ArrayMesh
 	var _static_mesh_size := Vector2.ZERO
+	var _dynamic_map_mesh: ArrayMesh
+	var _dynamic_mesh_size := Vector2.ZERO
 
 	func _ready() -> void:
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -202,140 +205,23 @@ class StageMinimap:
 			or value.has("world_size")
 		):
 			_static_map_mesh = null
+		_dynamic_map_mesh = null
 		queue_redraw()
 
 	func _draw() -> void:
 		var panel_rect := Rect2(Vector2.ZERO, size)
 		draw_rect(panel_rect, Art.COBALT_DEEP)
-		var cols: int = int(snapshot.get("cols", 13))
-		var rows: int = int(snapshot.get("rows", 6))
-		var cell_size := Vector2(size.x / float(cols), size.y / float(rows))
 		var world_size: Vector2 = snapshot.get("world_size", Vector2(5200.0, 2200.0))
 		if _static_map_mesh == null or not _static_mesh_size.is_equal_approx(size):
 			_static_map_mesh = _build_static_map_mesh(world_size)
 			_static_mesh_size = size
 		if _static_map_mesh != null:
 			draw_mesh(_static_map_mesh, null)
-		var visited: Array = snapshot.get("visited", [])
-		var visited_lookup: Dictionary = {}
-		for cell_variant in visited:
-			visited_lookup[Vector2i(cell_variant)] = true
-		var concealment_color := Color(Art.COBALT_VOID, 0.82)
-		for row in rows:
-			# Merge adjacent concealed cells so the 20x12 exploration mask costs
-			# one draw per row run instead of one draw per undiscovered cell.
-			var concealed_run_start := -1
-			for column in range(cols + 1):
-				var concealed := (
-					column < cols
-					and not visited_lookup.has(Vector2i(column, row))
-				)
-				if concealed and concealed_run_start < 0:
-					concealed_run_start = column
-				elif not concealed and concealed_run_start >= 0:
-					draw_rect(
-						Rect2(
-							Vector2(concealed_run_start, row) * cell_size,
-							Vector2(
-								float(column - concealed_run_start) * cell_size.x,
-								cell_size.y
-							) + Vector2.ONE
-						),
-						concealment_color
-					)
-					concealed_run_start = -1
-		for marker_variant in snapshot.get("markers", []):
-			var marker: Dictionary = marker_variant
-			if not bool(marker.get("discovered", false)):
-				continue
-			var world: Vector2 = marker.get("position", Vector2.ZERO)
-			var point := Vector2(world.x / world_size.x * size.x, world.y / world_size.y * size.y)
-			var marker_color: Color = marker.get("color", Art.MUSTARD)
-			var kind := String(marker.get("kind", "point"))
-			if kind == "boss":
-				var variant := StringName(marker.get("variant", &"colossus"))
-				if variant == &"titan":
-					draw_rect(Rect2(point - Vector2(5.0, 5.0), Vector2(10.0, 10.0)), marker_color)
-				elif variant == &"crown":
-					draw_colored_polygon(_diamond(point, 7.0), marker_color)
-					draw_circle(point, 2.0, Art.INK_MUTED)
-				elif variant in [&"leviathan", &"behemoth"]:
-					draw_colored_polygon(PackedVector2Array([
-						point + Vector2(7.0, 0.0),
-						point + Vector2(-5.0, -5.0),
-						point + Vector2(-2.0, 0.0),
-						point + Vector2(-5.0, 5.0),
-					]), marker_color)
-				else:
-					draw_colored_polygon(PackedVector2Array([
-						point + Vector2(0.0, -5.0),
-						point + Vector2(5.0, 4.0),
-						point + Vector2(-5.0, 4.0),
-					]), marker_color)
-			elif kind == "objective":
-				draw_rect(Rect2(point - Vector2(3.5, 3.5), Vector2(7.0, 7.0)), marker_color)
-			elif kind == "reward":
-				draw_colored_polygon(_diamond(point, 5.0), marker_color)
-			elif kind == "elite":
-				draw_colored_polygon(_diamond(point, 7.0), marker_color)
-				draw_rect(Rect2(point - Vector2.ONE, Vector2(2.0, 2.0)), Art.IVORY_BRIGHT)
-			elif kind == "stationary":
-				draw_rect(Rect2(point - Vector2(2.5, 2.5), Vector2(5.0, 5.0)), marker_color)
-			elif kind == "crate":
-				draw_rect(Rect2(point - Vector2(3.0, 3.0), Vector2(6.0, 6.0)), Art.INK_MUTED)
-			elif kind == "pickup":
-				draw_circle(point, 5.0, marker_color)
-			elif kind == "mechanic":
-				var direction := Vector2.RIGHT.rotated(float(int(marker.get("orientation", 0))) * PI * 0.5)
-				draw_circle(point, 5.0, marker_color)
-				draw_line(point - direction * 6.0, point + direction * 6.0, Art.IVORY_BRIGHT, 2.5)
-			elif kind == "blocker":
-				draw_rect(Rect2(point - Vector2(5.0, 2.5), Vector2(10.0, 5.0)), marker_color)
-			else:
-				draw_circle(point, 4.0, marker_color)
-		for cluster_variant in snapshot.get("enemy_clusters", []):
-			var cluster: Dictionary = cluster_variant
-			var cell := Vector2i(cluster["cell"])
-			var point := (Vector2(cell) + Vector2(0.5, 0.5)) * cell_size
-			var count := int(cluster["count"])
-			var radius := 2.5 if count == 1 else (4.0 if count <= 4 else 5.5)
-			draw_circle(point, radius, Art.CORAL)
-			var average_velocity := Vector2(cluster.get("average_velocity", Vector2.ZERO))
-			if average_velocity.length_squared() > 1.0:
-				var tick := average_velocity.normalized() * clampf(average_velocity.length() / 42.0, 4.0, 7.0)
-				draw_line(point, point + tick, Art.IVORY_BRIGHT, 1.5)
-		for support_variant in snapshot.get("support_fields", []):
-			var support: Dictionary = support_variant
-			var state := StringName(support["state"])
-			if state in [&"initial_delay", &"depleted"]:
-				continue
-			var world := Vector2(support["position"])
-			var point := Vector2(world.x / world_size.x * size.x, world.y / world_size.y * size.y)
-			var kind := StringName(support["kind"])
-			var color := Art.MINT if kind == &"repair" else Art.MUSTARD
-			var progress := clampf(float(support["phase_progress"]), 0.0, 1.0)
-			draw_arc(point, 7.0, -PI * 0.5, -PI * 0.5 + TAU * (1.0 - progress), 18, color, 2.0)
-			if kind == &"repair":
-				draw_line(point - Vector2(3.0, 0.0), point + Vector2(3.0, 0.0), Art.IVORY_BRIGHT, 2.0)
-				draw_line(point - Vector2(0.0, 3.0), point + Vector2(0.0, 3.0), Art.IVORY_BRIGHT, 2.0)
-			else:
-				draw_polyline(PackedVector2Array([
-					point + Vector2(-3.0, 2.0),
-					point + Vector2(0.0, -2.0),
-					point + Vector2(3.0, 2.0),
-				]), Art.IVORY_BRIGHT, 2.0)
-		var player: Vector2 = snapshot.get("player", Vector2.ZERO)
-		var player_point := Vector2(player.x / world_size.x * size.x, player.y / world_size.y * size.y)
-		var facing := Vector2(snapshot.get("player_facing", Vector2.UP)).normalized()
-		if facing.is_zero_approx():
-			facing = Vector2.UP
-		draw_line(player_point, player_point + facing * 9.0, Art.MUSTARD, 2.0)
-		var side := facing.rotated(PI * 0.5)
-		draw_colored_polygon(PackedVector2Array([
-			player_point + facing * 6.0,
-			player_point - facing * 4.0 + side * 4.0,
-			player_point - facing * 4.0 - side * 4.0,
-		]), Art.MUSTARD)
+		if _dynamic_map_mesh == null or not _dynamic_mesh_size.is_equal_approx(size):
+			_dynamic_map_mesh = MinimapMeshBuilder.build(snapshot, size)
+			_dynamic_mesh_size = size
+		if _dynamic_map_mesh != null:
+			draw_mesh(_dynamic_map_mesh, null)
 
 	func _build_static_map_mesh(world_size: Vector2) -> ArrayMesh:
 		var vertices := PackedVector3Array()
@@ -371,13 +257,6 @@ class StageMinimap:
 		for point in polygon:
 			result.append(Vector2(point.x / world_size.x * size.x, point.y / world_size.y * size.y))
 		return result
-
-	func _diamond(center: Vector2, radius: float) -> PackedVector2Array:
-		return PackedVector2Array([
-			center + Vector2(0.0, -radius), center + Vector2(radius, 0.0),
-			center + Vector2(0.0, radius), center + Vector2(-radius, 0.0),
-		])
-
 
 var _root: Control
 var _hud: Control

@@ -246,6 +246,13 @@ func _build_batches() -> void:
 		"Overlay_status_arc", Visuals.status_arc_mesh(),
 		STATUS_ARC_CAPACITY, 3, &"overlay_status_arc"
 	)
+	_overlay_batches[&"support_timer_segment"] = _create_batch(
+		"Overlay_support_timer_segment",
+		Visuals.support_timer_segment_mesh(),
+		96,
+		3,
+		&"overlay_support_timer_segment"
+	)
 	_reset_counts()
 	_apply_visible_counts()
 
@@ -772,6 +779,7 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 	var secondary_color := _upgrade_shade(
 		Art.MINT, Art.CERAMIC_GREEN, int(state.get("secondary_visual_tier", 0))
 	)
+	_sync_support_fields(Array(state.get("support_fields", [])))
 	var feedback_color := Color.TRANSPARENT
 	if hit_remaining > 0.0:
 		var hit_progress := 1.0 - clampf(hit_remaining / 0.20, 0.0, 1.0)
@@ -864,6 +872,73 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 	for direction in [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]:
 		_write_diamond(cursor_position + direction * 18.0, 6.0, Art.MUSTARD)
 	_write_diamond(cursor_position, 4.0, Art.IVORY_BRIGHT)
+
+
+func _sync_support_fields(support_fields: Array) -> void:
+	const TIMER_SEGMENTS := 24
+	for support_variant in support_fields:
+		var support := Dictionary(support_variant)
+		var state := StringName(support.get("state", &"initial_delay"))
+		if state in [&"initial_delay", &"depleted"]:
+			continue
+		var center := Vector2(support["position"])
+		var radius := float(support["radius"])
+		var kind := StringName(support["kind"])
+		var progress := clampf(float(support["phase_progress"]), 0.0, 1.0)
+		var active := bool(support["effect_active"])
+		var color := Art.MINT if kind == &"repair" else Art.MUSTARD
+		var opacity := 0.26 if active else (0.14 if state == &"warning" else 0.07)
+		_write_disk(center, radius, Color(color, opacity))
+		_write_ring(center, radius, Color(color, 0.76))
+		var visible_segments := clampi(
+			ceili((1.0 - progress) * TIMER_SEGMENTS),
+			0,
+			TIMER_SEGMENTS
+		)
+		for segment in visible_segments:
+			_write_instance(
+				_overlay_batches[&"support_timer_segment"],
+				center,
+				-PI * 0.5 + TAU * float(segment) / float(TIMER_SEGMENTS),
+				Vector2.ONE * (radius - 12.0),
+				color
+			)
+		_write_disk(
+			center,
+			48.0,
+			Color(
+				Art.CERAMIC_GREEN_MID if kind == &"repair" else Art.MUSTARD_DARK,
+				0.92
+			)
+		)
+		if kind == &"repair":
+			_write_beam(
+				center - Vector2(0.0, 30.0),
+				center + Vector2(0.0, 30.0),
+				20.0,
+				Art.IVORY_BRIGHT
+			)
+			_write_beam(
+				center - Vector2(30.0, 0.0),
+				center + Vector2(30.0, 0.0),
+				20.0,
+				Art.IVORY_BRIGHT
+			)
+		else:
+			for index in 2:
+				var point := center + Vector2(0.0, 12.0 - index * 25.0)
+				_write_beam(
+					point + Vector2(-14.0, 8.0),
+					point,
+					9.0,
+					Art.IVORY_BRIGHT
+				)
+				_write_beam(
+					point,
+					point + Vector2(14.0, 8.0),
+					9.0,
+					Art.IVORY_BRIGHT
+				)
 
 
 func _upgrade_shade(base: Color, target: Color, tier: int) -> Color:
