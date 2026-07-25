@@ -23,14 +23,16 @@ func _initialize() -> void:
 	_expect(Catalog.player_start() == Vector2(3600, 2160), "start is exact field center")
 	_expect(Catalog.walkable_regions().size() >= 20, "field has at least twenty broad regions")
 	_expect(Catalog.cover_rects().is_empty(), "static field leaves internal cover to the run layout")
-	_expect(layout.cover_rects.size() == 8, "run layout has eight modular blockers")
 	_expect(Catalog.ordinary_spawn_anchors().size() == 32, "field has thirty-two ordinary candidates")
-	_expect(layout.ordinary_spawn_anchors.size() >= 20, "run layout retains at least twenty ordinary anchors")
 	_expect(Catalog.boss_arrival_anchors().size() == 12, "field has twelve boss anchors")
-	for anchor in layout.ordinary_spawn_anchors:
-		_expect(Rules.grid_reachable_with_extra(Catalog.player_start(), anchor, 36.0, 96.0, false, &"stage_1", layout.cover_rects), "ordinary anchor reaches center")
-	for anchor in layout.boss_arrival_anchors:
-		_expect(Rules.grid_reachable_with_extra(Catalog.player_start(), anchor, 76.0, 96.0, false, &"stage_1", layout.cover_rects), "boss anchor reaches center")
+	for stage_id in Catalog.STAGE_IDS:
+		var tactical := layout.tactical_layout(stage_id)
+		_expect(tactical.cover_rects.size() == 8, "%s has eight modular blockers" % stage_id)
+		_expect(tactical.ordinary_spawn_anchors.size() >= 20, "%s retains twenty ordinary anchors" % stage_id)
+		for anchor in tactical.ordinary_spawn_anchors:
+			_expect(Rules.grid_reachable_with_extra(Catalog.player_start(), anchor, 36.0, 96.0, false, stage_id, tactical.cover_rects), "%s ordinary anchor reaches center" % stage_id)
+		for anchor in tactical.boss_arrival_anchors:
+			_expect(Rules.grid_reachable_with_extra(Catalog.player_start(), anchor, 76.0, 96.0, false, stage_id, tactical.cover_rects), "%s boss anchor reaches center" % stage_id)
 	_check_stage_flow()
 	_finish()
 

@@ -140,7 +140,7 @@ func _run() -> void:
 		_expect(not bool(player_projectiles[0].wall_piercing), "default player projectile cannot cross solid blockers")
 
 	var field_layout: Variant = stage.get("field_layout")
-	var cover: Rect2 = field_layout.cover_rects[0]
+	var cover: Rect2 = field_layout.tactical_layout(&"stage_1").cover_rects[0]
 	var cover_from := cover.get_center() - Vector2(cover.size.x * 0.5 + 80.0, 0.0)
 	stage.set("player_position", cover.get_center() + Vector2(0.0, 250.0))
 	projectile_store.call("clear")

@@ -44,6 +44,7 @@ const ProjectileState = preload("res://scripts/combat/vehicle_projectile_state.g
 const PerformanceRecorder = preload("res://scripts/performance/vehicle_performance_recorder.gd")
 const PerformanceScenario = preload("res://scripts/performance/vehicle_performance_scenario.gd")
 const FieldLayoutGenerator = preload("res://scripts/vehicle/vehicle_field_layout_generator.gd")
+const StageTacticalLayout = preload("res://scripts/vehicle/vehicle_stage_tactical_layout.gd")
 const TerrainRuntime = preload("res://scripts/vehicle/vehicle_terrain_runtime.gd")
 const DamageSourceCatalog = preload("res://scripts/combat/vehicle_damage_source_catalog.gd")
 const StageTelemetry = preload("res://scripts/combat/vehicle_stage_telemetry.gd")
@@ -110,6 +111,7 @@ var _layout_seed_override := 0
 var _has_layout_seed_override := false
 var _field_id_override: StringName = &""
 var field_layout: VehicleFieldLayout
+var _active_tactical_layout: StageTacticalLayout
 var encounter_runtime := EncounterRuntime.new()
 var stage_flow := StageFlow.new()
 var pursuit_field := PursuitField.new()
@@ -456,7 +458,7 @@ func _build_backdrop() -> void:
 	_backdrop = StageBackdrop.new()
 	_backdrop.name = "VehicleStageBackdrop"
 	add_child(_backdrop)
-	_backdrop.configure(current_stage_id, field_layout)
+	_backdrop.configure(current_stage_id, _active_tactical_layout)
 
 
 func _build_combat_renderer() -> void:
@@ -508,8 +510,16 @@ func _reset_run(
 		_generate_field_layout()
 	elif field_layout == null:
 		_generate_field_layout()
+	_active_tactical_layout = (
+		field_layout.tactical_layout(current_stage_id)
+		if field_layout != null
+		else null
+	)
+	if _active_tactical_layout == null:
+		push_error("Missing tactical layout for %s" % current_stage_id)
+		return
 	if is_instance_valid(_backdrop):
-		_backdrop.configure(current_stage_id, field_layout)
+		_backdrop.configure(current_stage_id, _active_tactical_layout)
 	if is_instance_valid(_camera):
 		_apply_camera_stage_limits()
 	if is_instance_valid(_ui):
@@ -567,14 +577,14 @@ func _reset_run(
 	denied_zones.clear()
 	effects.clear()
 	damaging_trails.clear()
-	for spec in field_layout.stationary_blueprint(current_stage_id):
+	for spec in _active_tactical_layout.stationary_blueprint():
 		_append_enemy(_make_enemy(spec))
 	encounter_runtime.configure(
 		current_stage_id,
 		StageCatalog.packets(current_stage_id),
 		selected_run_difficulty,
-		field_layout.ordinary_spawn_anchors,
-		field_layout.encounter_seed(current_stage_id)
+		_active_tactical_layout.ordinary_spawn_anchors,
+		_active_tactical_layout.encounter_seed
 	)
 	stage_flow.configure(
 		current_stage_index,
@@ -587,7 +597,7 @@ func _reset_run(
 	)
 	_rebuild_runtime_blockers()
 	pursuit_field.reset(current_stage_id, _runtime_cover_rects())
-	for spec in field_layout.pickup_blueprint(current_stage_id):
+	for spec in _active_tactical_layout.pickup_blueprint():
 		pickups.append({
 			"id": String(spec["id"]),
 			"kind": StringName(spec["kind"]),
@@ -596,7 +606,7 @@ func _reset_run(
 			"pulse": _rng.randf_range(0.0, TAU),
 			"heal_amount": float(spec.get("heal_amount", 35.0)),
 		})
-	for spec in field_layout.crate_blueprint(current_stage_id):
+	for spec in _active_tactical_layout.crate_blueprint():
 		crates.append({
 			"id": String(spec["id"]),
 			"pos": Vector2(spec["pos"]),
@@ -847,7 +857,7 @@ func _apply_pending_elite(enemy: EnemyState) -> void:
 	):
 		return
 	var elite_kind: StringName = EliteTraits.trait_for(
-		current_stage_index, _elite_spawned, field_layout.layout_seed
+		current_stage_index, _elite_spawned, field_layout.seed
 	)
 	EliteTraits.apply(enemy, elite_kind)
 	_elite_pending -= 1
@@ -1302,7 +1312,7 @@ func _runtime_cover_rects() -> Array[Rect2]:
 func _runtime_projectile_cover_rects(from: Vector2, to: Vector2, radius: float) -> Array[Rect2]:
 	_projectile_cover_query.clear()
 	if field_layout != null:
-		field_layout.covers_near_motion_into(
+		_active_tactical_layout.covers_near_motion_into(
 			from, to, radius, _projectile_cover_query
 		)
 	for bulkhead in terrain_runtime.live_bulkhead_rects():
@@ -1313,7 +1323,7 @@ func _runtime_projectile_cover_rects(from: Vector2, to: Vector2, radius: float) 
 func _rebuild_runtime_blockers() -> void:
 	_runtime_blockers.clear()
 	if field_layout != null:
-		_runtime_blockers.append_array(field_layout.cover_rects)
+		_runtime_blockers.append_array(_active_tactical_layout.cover_rects)
 	_runtime_blockers.append_array(terrain_runtime.live_bulkhead_rects())
 
 
@@ -3561,7 +3571,7 @@ func _start_stage_boss() -> void:
 
 func _choose_boss_arrival_anchor() -> Vector2:
 	var anchors := (
-		field_layout.boss_arrival_anchors
+		_active_tactical_layout.boss_arrival_anchors
 		if field_layout != null
 		else StageCatalog.boss_arrival_anchors(current_stage_id)
 	)
@@ -4831,7 +4841,7 @@ func _performance_counts() -> Dictionary:
 		"effects": effects.size(),
 		"zones": denied_zones.size(),
 		"trails": damaging_trails.size(),
-		"layout":field_layout.debug_snapshot() if field_layout != null else {},
+		"layout":field_layout.debug_snapshot(current_stage_id) if field_layout != null else {},
 	}
 
 
@@ -5119,7 +5129,7 @@ func _capture_stage_map_evidence() -> void:
 		current_stage_index = 0
 		current_stage_id = StageCatalog.STAGE_IDS[0]
 		if is_instance_valid(_backdrop):
-			_backdrop.configure(current_stage_id, field_layout)
+			_backdrop.configure(current_stage_id, _active_tactical_layout)
 		mode = RunMode.PAUSED
 		var bounds := Rules.world_rect(current_stage_id)
 		player_position = bounds.get_center()
@@ -5270,7 +5280,7 @@ func _capture_prepare_boss(stage_index: int) -> EnemyState:
 	denied_zones.clear()
 	player_position = Rules.player_start(current_stage_id)
 	boss_arrival_position = (
-		field_layout.boss_arrival_anchors[0]
+		_active_tactical_layout.boss_arrival_anchors[0]
 		if field_layout != null
 		else StageCatalog.boss_arrival_anchors(current_stage_id)[0]
 	)

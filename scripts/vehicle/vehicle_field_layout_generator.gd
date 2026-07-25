@@ -6,6 +6,7 @@ extends RefCounted
 const FieldRegistry = preload("res://scripts/vehicle/vehicle_field_registry.gd")
 const CombatStages = preload("res://scripts/vehicle/stages/vehicle_combat_stages.gd")
 const Layout = preload("res://scripts/vehicle/vehicle_field_layout.gd")
+const TacticalLayout = preload("res://scripts/vehicle/vehicle_stage_tactical_layout.gd")
 const TerrainRuntime = preload("res://scripts/vehicle/vehicle_terrain_runtime.gd")
 
 const MAX_ATTEMPTS := 32
@@ -42,27 +43,27 @@ static func generate(
 	if not feature_errors.is_empty():
 		push_error("Field features are invalid: %s" % "; ".join(feature_errors))
 		return null
-	var cover_rng := _rng_for(layout_seed, "cover:v1")
-	for _attempt in MAX_ATTEMPTS:
-		var selected_ids := _random_cover_ids(cover_rng)
-		var selected_rects := _rects_for_ids(selected_ids)
-		if _validate_cover_selection(selected_rects).is_empty():
-			var generated := _build_layout(layout_seed, selected_ids, selected_rects, stage_ids, false)
-			if generated != null:
-				return generated
-	var fallback_ids: Array[StringName] = []
-	fallback_ids.assign(_field["fallback_cover_ids"])
-	var fallback_rects := _rects_for_ids(fallback_ids)
-	var fallback_errors := _validate_cover_selection(fallback_rects)
-	if not fallback_errors.is_empty():
-		push_error("Field layout fallback is invalid: %s" % "; ".join(fallback_errors))
-		return null
-	var fallback := _build_layout(
-		layout_seed, fallback_ids, fallback_rects, stage_ids, true
+	var layouts_by_stage := {}
+	var previous_cover_ids: Array[StringName] = []
+	for stage_id in stage_ids:
+		var tactical := _build_stage_layout(
+			layout_seed, stage_id, previous_cover_ids
+		)
+		if tactical == null:
+			push_error(
+				"Field layout could not compile %s/%s" % [_field["id"], stage_id]
+			)
+			return null
+		layouts_by_stage[stage_id] = tactical
+		previous_cover_ids = tactical.cover_ids.duplicate()
+	var layout := Layout.new()
+	layout.configure(
+		layout_seed,
+		StringName(_field["id"]),
+		_field,
+		layouts_by_stage
 	)
-	if fallback == null:
-		push_error("Field layout fallback could not place required stage objects")
-	return fallback
+	return layout
 
 
 static func validate_cover_ids(cover_ids: Array[StringName]) -> PackedStringArray:
@@ -111,13 +112,74 @@ static func cover_ids_for_mask(mask: Array[int]) -> Array[StringName]:
 	return result
 
 
-static func _build_layout(
+static func _build_stage_layout(
 	layout_seed: int,
+	stage_id: StringName,
+	previous_cover_ids: Array[StringName]
+) -> TacticalLayout:
+	var cover_rng := _rng_for(
+		layout_seed, "%s:cover:v2" % String(stage_id)
+	)
+	for _attempt in MAX_ATTEMPTS:
+		var selected_ids := _random_cover_ids(cover_rng)
+		if selected_ids == previous_cover_ids:
+			continue
+		var selected_rects := _rects_for_ids(selected_ids)
+		if _validate_cover_selection(selected_rects).is_empty():
+			var generated := _compile_stage_layout(
+				layout_seed, stage_id, selected_ids, selected_rects, false
+			)
+			if generated != null:
+				return generated
+	return _enumerated_stage_fallback(
+		layout_seed, stage_id, previous_cover_ids
+	)
+
+
+static func _enumerated_stage_fallback(
+	layout_seed: int,
+	stage_id: StringName,
+	previous_cover_ids: Array[StringName]
+) -> TacticalLayout:
+	var candidate_counts: Array[int] = []
+	var combination_count := 1
+	for sector in SECTORS:
+		var count := _cover_candidates_for(sector).size()
+		if count <= 0:
+			return null
+		candidate_counts.append(count)
+		combination_count *= count
+	var start := posmod(
+		_sub_seed(layout_seed, "%s:cover-fallback:v2" % String(stage_id)),
+		combination_count
+	)
+	for offset in combination_count:
+		var encoded := posmod(start + offset, combination_count)
+		var mask: Array[int] = []
+		for count in candidate_counts:
+			mask.append(encoded % count)
+			encoded = floori(float(encoded) / float(count))
+		var selected_ids := cover_ids_for_mask(mask)
+		if selected_ids == previous_cover_ids:
+			continue
+		var selected_rects := _rects_for_ids(selected_ids)
+		if not _validate_cover_selection(selected_rects).is_empty():
+			continue
+		var generated := _compile_stage_layout(
+			layout_seed, stage_id, selected_ids, selected_rects, true
+		)
+		if generated != null:
+			return generated
+	return null
+
+
+static func _compile_stage_layout(
+	layout_seed: int,
+	stage_id: StringName,
 	cover_ids: Array[StringName],
 	cover_rects: Array[Rect2],
-	stage_ids: Array[StringName],
 	used_fallback: bool
-) -> VehicleFieldLayout:
+) -> TacticalLayout:
 	var ordinary := _valid_reachable_points(
 		_field["ordinary_spawn_anchors"], ORDINARY_RADIUS, cover_rects, true
 	)
@@ -126,18 +188,26 @@ static func _build_layout(
 	)
 	if ordinary.size() < 20 or bosses.size() < 8:
 		return null
-	var objects_by_stage := {}
-	var encounter_seeds := {}
-	for stage_id in stage_ids:
-		var stage_objects := _build_stage_objects(layout_seed, stage_id, cover_rects)
-		if stage_objects.is_empty():
-			return null
-		objects_by_stage[stage_id] = stage_objects
-		encounter_seeds[stage_id] = _sub_seed(layout_seed, "%s:encounter:v1" % String(stage_id))
-	var layout := Layout.new()
+	var stage_objects := _build_stage_objects(
+		layout_seed, stage_id, cover_rects
+	)
+	if stage_objects.is_empty():
+		return null
+	var support_sockets: Array[Vector2] = []
+	support_sockets.assign(stage_objects.get("support_sockets", []))
+	stage_objects.erase("support_sockets")
+	var layout := TacticalLayout.new()
 	layout.configure(
-		layout_seed, StringName(_field["id"]), _field, cover_ids, cover_rects, ordinary, bosses,
-		objects_by_stage, encounter_seeds, used_fallback
+		stage_id,
+		_field,
+		cover_ids,
+		cover_rects,
+		ordinary,
+		bosses,
+		stage_objects,
+		support_sockets,
+		_sub_seed(layout_seed, "%s:encounter:v2" % String(stage_id)),
+		used_fallback
 	)
 	return layout
 
@@ -228,7 +298,40 @@ static func _build_stage_objects(layout_seed: int, stage_id: StringName, covers:
 			"pos":crate_sockets[index],
 			"drop":&"experience_recall" if index == 0 else &"repair",
 		})
-	return {"stationary":stationary, "pickups":pickups, "crates":crates}
+	var boss_reachable := _reachable_cells(
+		Vector2(_field["player_start"]), BOSS_RADIUS, covers
+	)
+	var support_sockets: Array[Vector2] = []
+	for value in item_candidates:
+		var candidate := Vector2(value)
+		if candidate in sockets:
+			continue
+		if not _is_valid_support_socket(
+			candidate,
+			sockets,
+			stationary_points,
+			support_sockets,
+			covers,
+			ordinary_reachable,
+			boss_reachable
+		):
+			continue
+		support_sockets.append(candidate)
+		if support_sockets.size() == 12:
+			break
+	if support_sockets.size() != 12:
+		push_warning(
+			"layout support placement failed for %s/%s (%d sockets)" % [
+				_field["id"], stage_id, support_sockets.size()
+			]
+		)
+		return {}
+	return {
+		"stationary":stationary,
+		"pickups":pickups,
+		"crates":crates,
+		"support_sockets":support_sockets,
+	}
 
 
 static func _random_cover_ids(rng: RandomNumberGenerator) -> Array[StringName]:
@@ -345,6 +448,49 @@ static func _is_valid_item_socket(
 	return true
 
 
+static func _is_valid_support_socket(
+	candidate: Vector2,
+	item_sockets: Array[Vector2],
+	stationary: Array[Vector2],
+	selected: Array[Vector2],
+	covers: Array[Rect2],
+	ordinary_reachable: Dictionary,
+	boss_reachable: Dictionary
+) -> bool:
+	if (
+		candidate.distance_to(Vector2(_field["player_start"]))
+		< float(_field["start_clearance"])
+	):
+		return false
+	if not _is_walkable(candidate, TerrainRuntime.OVERDRIVE_RADIUS, covers):
+		return false
+	if not _point_has_cover_clearance(
+		candidate,
+		TerrainRuntime.OVERDRIVE_RADIUS,
+		covers
+	):
+		return false
+	if feature_overlaps_circle(
+		_field, candidate, TerrainRuntime.OVERDRIVE_RADIUS
+	):
+		return false
+	if (
+		not _reachable_has(ordinary_reachable, candidate)
+		or not _reachable_has(boss_reachable, candidate)
+	):
+		return false
+	for hostile in stationary:
+		if candidate.distance_to(hostile) < TerrainRuntime.OVERDRIVE_RADIUS:
+			return false
+	for item in item_sockets:
+		if candidate.is_equal_approx(item):
+			return false
+	for other in selected:
+		if candidate.distance_to(other) < TerrainRuntime.OVERDRIVE_RADIUS:
+			return false
+	return true
+
+
 static func _farthest_pair(points: Array[Vector2]) -> Vector2i:
 	var result := Vector2i(-1, -1)
 	var best := -1.0
@@ -374,7 +520,9 @@ static func _reachable_cells(start: Vector2, radius: float, covers: Array[Rect2]
 	var width := int(contract["width"])
 	var height := int(contract["height"])
 	var allowed: PackedByteArray = PackedByteArray(contract["walkable"]).duplicate()
-	for cover in covers:
+	var blockers := covers.duplicate()
+	blockers.append_array(_intact_bulkhead_rects())
+	for cover in blockers:
 		var min_cell := _world_to_cell(cover.position - Vector2.ONE * radius)
 		var max_cell := _world_to_cell(cover.end + Vector2.ONE * radius)
 		for y in range(maxi(0, min_cell.y), mini(height - 1, max_cell.y) + 1):
@@ -411,6 +559,15 @@ static func _reachable_cells(start: Vector2, radius: float, covers: Array[Rect2]
 			queue[queue_size] = next_index
 			queue_size += 1
 	return {"width":width, "height":height, "visited":visited}
+
+
+static func _intact_bulkhead_rects() -> Array[Rect2]:
+	var result: Array[Rect2] = []
+	for value in Array(_field.get("features", [])):
+		var feature := Dictionary(value)
+		if StringName(feature.get("kind", &"")) == &"breakable_bulkhead":
+			result.append(Rect2(feature["rect"]))
+	return result
 
 
 static func _reachable_has(reachable: Dictionary, position: Vector2) -> bool:

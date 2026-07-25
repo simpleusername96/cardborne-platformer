@@ -47,11 +47,20 @@ func _validate_field(field_id: StringName) -> void:
 		return
 	_expect(fixed.field_id == field_id, "%s layout retains field id" % field_id)
 	_expect(fixed.fingerprint == replay.fingerprint, "%s same seed reproduces layout" % field_id)
-	_expect(fixed.cover_rects.size() == 8, "%s selects exactly eight covers" % field_id)
-	_expect(fixed.ordinary_spawn_anchors.size() >= 20, "%s retains at least 20 ordinary anchors" % field_id)
-	_expect(fixed.boss_arrival_anchors.size() >= 8, "%s retains at least eight boss anchors" % field_id)
 	_validate_no_feature_overlaps(fixed, definition)
+	var previous_cover_ids: Array[StringName] = []
 	for stage_id in Catalog.STAGE_IDS:
+		var tactical := fixed.tactical_layout(stage_id)
+		_expect(tactical != null, "%s/%s has a tactical layout" % [field_id, stage_id])
+		if tactical == null:
+			continue
+		_expect(tactical.cover_rects.size() == 8, "%s/%s selects exactly eight covers" % [field_id, stage_id])
+		_expect(tactical.ordinary_spawn_anchors.size() >= 20, "%s/%s retains at least 20 ordinary anchors" % [field_id, stage_id])
+		_expect(tactical.boss_arrival_anchors.size() >= 8, "%s/%s retains at least eight boss anchors" % [field_id, stage_id])
+		_expect(tactical.support_sockets.size() >= 12, "%s/%s retains twelve support sockets" % [field_id, stage_id])
+		if not previous_cover_ids.is_empty():
+			_expect(tactical.cover_ids != previous_cover_ids, "%s/%s changes cover from the previous stage" % [field_id, stage_id])
+		previous_cover_ids = tactical.cover_ids.duplicate()
 		_expect(fixed.stationary_blueprint(stage_id).size() == 4, "%s/%s has four stationary threats" % [field_id, stage_id])
 		_expect(fixed.pickup_blueprint(stage_id).size() == 3, "%s/%s has three pickups" % [field_id, stage_id])
 		_expect(fixed.crate_blueprint(stage_id).size() == 5, "%s/%s has five crates" % [field_id, stage_id])
@@ -75,22 +84,16 @@ func _validate_no_feature_overlaps(
 	layout: VehicleFieldLayout,
 	definition: Dictionary
 ) -> void:
-	for rectangle in layout.cover_rects:
-		_expect(
-			not Generator.feature_overlaps_rect(definition, rectangle),
-			"%s generated cover avoids functional terrain" % layout.field_id
-		)
-	for anchor in layout.ordinary_spawn_anchors:
-		_expect(
-			not Generator.feature_overlaps_circle(definition, anchor, 36.0),
-			"%s ordinary spawn avoids functional terrain" % layout.field_id
-		)
-	for anchor in layout.boss_arrival_anchors:
-		_expect(
-			not Generator.feature_overlaps_circle(definition, anchor, 76.0),
-			"%s boss spawn avoids functional terrain" % layout.field_id
-		)
 	for stage_id in Catalog.STAGE_IDS:
+		var tactical := layout.tactical_layout(stage_id)
+		if tactical == null:
+			continue
+		for rectangle in tactical.cover_rects:
+			_expect(not Generator.feature_overlaps_rect(definition, rectangle), "%s/%s generated cover avoids functional terrain" % [layout.field_id, stage_id])
+		for anchor in tactical.ordinary_spawn_anchors:
+			_expect(not Generator.feature_overlaps_circle(definition, anchor, 36.0), "%s/%s ordinary spawn avoids functional terrain" % [layout.field_id, stage_id])
+		for anchor in tactical.boss_arrival_anchors:
+			_expect(not Generator.feature_overlaps_circle(definition, anchor, 76.0), "%s/%s boss spawn avoids functional terrain" % [layout.field_id, stage_id])
 		for spec in layout.stationary_blueprint(stage_id):
 			_expect(
 				not Generator.feature_overlaps_circle(

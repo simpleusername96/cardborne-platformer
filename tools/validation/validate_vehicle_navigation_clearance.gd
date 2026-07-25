@@ -12,25 +12,27 @@ func _initialize() -> void:
 	var layout := Generator.generate(0xC4A2B0, Catalog.STAGE_IDS)
 	Catalog.activate_field(layout.field_id)
 	var pursuit := Pursuit.new()
-	pursuit.reset(&"stage_1", layout.cover_rects)
-	for _step in 8:
-		pursuit.update(0.2, Catalog.player_start())
-	for anchor in layout.ordinary_spawn_anchors:
-		_expect(pursuit.path_cost(anchor, 36.0) >= 0, "ordinary pursuit reaches a spawn anchor")
-	if not layout.boss_arrival_anchors.is_empty():
-		pursuit.path_cost(layout.boss_arrival_anchors[0], 76.0)
-	for _step in 8:
-		pursuit.update(0.2, Catalog.player_start())
-	for anchor in layout.boss_arrival_anchors:
-		_expect(pursuit.path_cost(anchor, 76.0) >= 0, "boss pursuit reaches an arrival anchor")
-	for cover in layout.cover_rects:
-		_expect(
-			Rules.move_circle_with_extra(
-				cover.get_center() - Vector2(200.0, 0.0), Vector2(200.0, 0.0),
-				24.0, false, &"stage_1", layout.cover_rects
-			) != cover.get_center(),
-			"visible runtime cover rejects movement"
-		)
+	for stage_id in Catalog.STAGE_IDS:
+		var tactical := layout.tactical_layout(stage_id)
+		pursuit.reset(stage_id, tactical.cover_rects)
+		for _step in 8:
+			pursuit.update(0.2, Catalog.player_start())
+		for anchor in tactical.ordinary_spawn_anchors:
+			_expect(pursuit.path_cost(anchor, 36.0) >= 0, "%s ordinary pursuit reaches a spawn anchor" % stage_id)
+		if not tactical.boss_arrival_anchors.is_empty():
+			pursuit.path_cost(tactical.boss_arrival_anchors[0], 76.0)
+		for _step in 8:
+			pursuit.update(0.2, Catalog.player_start())
+		for anchor in tactical.boss_arrival_anchors:
+			_expect(pursuit.path_cost(anchor, 76.0) >= 0, "%s boss pursuit reaches an arrival anchor" % stage_id)
+		for cover in tactical.cover_rects:
+			_expect(
+				Rules.move_circle_with_extra(
+					cover.get_center() - Vector2(200.0, 0.0), Vector2(200.0, 0.0),
+					24.0, false, stage_id, tactical.cover_rects
+				) != cover.get_center(),
+				"%s visible runtime cover rejects movement" % stage_id
+			)
 	var snapshot := pursuit.debug_snapshot()
 	_expect(
 		is_equal_approx(float(snapshot["cell_size"]), 96.0)

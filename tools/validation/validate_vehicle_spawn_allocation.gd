@@ -17,14 +17,15 @@ func _initialize() -> void:
 		_finish()
 		return
 	for stage_id in Catalog.STAGE_IDS:
+		var tactical := layout.tactical_layout(stage_id)
 		var packet: Dictionary = Catalog.packets(stage_id)[1]
 		_expect(not packet.has("anchor"), "%s keeps spatial allocation out of stage content" % stage_id)
 		var allocator := Allocator.new()
-		allocator.configure(layout.encounter_seed(stage_id), layout.ordinary_spawn_anchors)
+		allocator.configure(tactical.encounter_seed, tactical.ordinary_spawn_anchors)
 		var allocations := allocator.allocate(packet, Catalog.player_start(), VISIBLE_WORLD)
 		var second_allocations := allocator.allocate(packet, Catalog.player_start(), VISIBLE_WORLD)
 		var replay_allocator := Allocator.new()
-		replay_allocator.configure(layout.encounter_seed(stage_id), layout.ordinary_spawn_anchors)
+		replay_allocator.configure(tactical.encounter_seed, tactical.ordinary_spawn_anchors)
 		var replay := replay_allocator.allocate(packet, Catalog.player_start(), VISIBLE_WORLD)
 		_expect(var_to_str(allocations) == var_to_str(replay), "%s allocation replays from the same seed" % stage_id)
 		_expect(allocations.size() == 8, "%s allocates all eight surge squads" % stage_id)

@@ -7,9 +7,10 @@ extends Node2D
 const Rules = preload("res://scripts/vehicle/vehicle_stage_rules.gd")
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const StageGeometry = preload("res://scripts/vehicle/vehicle_stage_geometry.gd")
+const TacticalLayout = preload("res://scripts/vehicle/vehicle_stage_tactical_layout.gd")
 
 var stage_id: StringName = &"stage_1"
-var _layout: VehicleFieldLayout
+var _layout: TacticalLayout
 var _layout_fingerprint := 0
 
 
@@ -18,7 +19,7 @@ func _ready() -> void:
 	show_behind_parent = true
 
 
-func configure(value: StringName, layout: VehicleFieldLayout = null) -> void:
+func configure(value: StringName, layout: TacticalLayout = null) -> void:
 	var next_fingerprint := layout.fingerprint if layout != null else 0
 	if stage_id == value and _layout_fingerprint == next_fingerprint and is_node_ready():
 		return

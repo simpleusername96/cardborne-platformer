@@ -15,6 +15,7 @@ func _initialize() -> void:
 	Catalog.activate_field(layout.field_id)
 	fingerprint = Catalog.geometry_fingerprint(&"stage_1")
 	for stage_id in Catalog.STAGE_IDS:
+		var tactical := layout.tactical_layout(stage_id)
 		_expect(Catalog.geometry_fingerprint(stage_id) == fingerprint, "%s shares immutable field" % stage_id)
 		_expect(Catalog.world_rect(stage_id) == Rect2(0,0,7200,4320), "%s world bounds" % stage_id)
 		_expect(Catalog.player_start(stage_id) == Vector2(3600,2160), "%s center spawn" % stage_id)
@@ -42,15 +43,18 @@ func _initialize() -> void:
 		)
 	var center := Catalog.player_start()
 	_expect(Rules.is_position_walkable(center, Rules.PLAYER_RADIUS, &"stage_1"), "center is walkable")
-	for cover in layout.cover_rects:
-		_expect(not Rules.circle_overlaps_rect(center, 560.0, cover), "center clearance contains no cover")
+	for stage_id in Catalog.STAGE_IDS:
+		var tactical := layout.tactical_layout(stage_id)
+		for cover in tactical.cover_rects:
+			_expect(not Rules.circle_overlaps_rect(center, 560.0, cover), "%s center clearance contains no cover" % stage_id)
 	for water in Catalog.water_rects():
 		_expect(not Rules.circle_overlaps_rect(center, 560.0, water), "center clearance contains no water")
 	for stage_id in Catalog.STAGE_IDS:
 		for spec in layout.stationary_blueprint(stage_id):
 			_expect(center.distance_to(Vector2(spec["pos"])) >= 560.0, "center clearance contains no stationary threat")
 	_expect(Catalog.cover_rects().is_empty(), "static catalog owns no internal cover")
-	_expect(layout.cover_rects.size() == 8, "runtime blocker count is exact")
+	for stage_id in Catalog.STAGE_IDS:
+		_expect(layout.tactical_layout(stage_id).cover_rects.size() == 8, "%s runtime blocker count is exact" % stage_id)
 	_expect(7200.0 / 1280.0 > 5.0 and 4320.0 / 720.0 >= 6.0, "field cannot fit in one gameplay viewport")
 	_finish()
 
