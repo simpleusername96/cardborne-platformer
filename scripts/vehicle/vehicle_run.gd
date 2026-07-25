@@ -4435,7 +4435,7 @@ func _minimap_snapshot(include_static_geometry: bool = true) -> Dictionary:
 		"world_size": Rules.world_rect(current_stage_id).size,
 		"markers": markers,
 		"enemy_clusters":enemy_clusters,
-		"support_fields":terrain_runtime.snapshot().get("support_fields", []),
+		"support_fields":terrain_runtime.support_snapshot(),
 	}
 	if include_static_geometry:
 		var blocker_polygons: Array = Rules.get_cover_polygons(false, current_stage_id).duplicate()
@@ -4480,7 +4480,7 @@ func _combat_presentation_snapshot() -> Dictionary:
 			run_build.level_of(&"seeker_warhead"),
 			run_build.level_of(&"escort_drone")
 		),
-		"support_fields":terrain_runtime.snapshot().get("support_fields", []),
+		"support_fields":terrain_runtime.support_snapshot(),
 		"ion_level": run_build.level_of(&"ion_field"),
 		"blade_level": run_build.level_of(&"orbit_blades"),
 		"escort_drone": run_build.has(&"escort_drone"),

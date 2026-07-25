@@ -181,15 +181,19 @@ func snapshot() -> Dictionary:
 			feature["progress"] = float(_gate_progress.get(pair, 0.0)) / GATE_DWELL
 			feature["cooldown"] = float(_gate_cooldowns.get(pair, 0.0))
 		feature_snapshots.append(feature)
-	var support_snapshots: Array[Dictionary] = []
-	for slot in support_fields:
-		support_snapshots.append(_support_snapshot(slot))
 	return {
 		"features":feature_snapshots,
-		"support_fields":support_snapshots,
+		"support_fields":support_snapshot(),
 		"overdrive_active":overdrive_active,
 		"repair_budget":repair_budget,
 	}
+
+
+func support_snapshot() -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	for slot in support_fields:
+		result.append(_support_snapshot(slot))
+	return result
 
 
 func _advance_repair(
