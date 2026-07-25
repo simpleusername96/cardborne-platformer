@@ -79,6 +79,8 @@ func _init() -> void:
 	_expect(is_equal_approx(float(contract["guard"]), 0.35), "report blocks carried input for 0.35 seconds")
 	_expect(int(contract["defeats"]) == 2, "panel receives frozen defeat rows")
 	_expect(int(contract["attributes"]) == 3, "panel receives all attribute rows")
+	_expect(Vector2(contract["continue_size"]) == Vector2(300.0, 48.0), "report continuation uses one compact primary action")
+	_expect(int(contract["wide_dividers"]) == 2, "wide report keeps two restrained column dividers")
 	panel.queue_free()
 	_finish()
 

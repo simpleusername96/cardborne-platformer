@@ -9,6 +9,7 @@ signal declined
 signal selected(upgrade_id: StringName)
 
 const GUARD_SECONDS := 0.35
+const UpgradeChoiceCard = preload("res://scripts/ui/vehicle_upgrade_choice_card.gd")
 
 var _cards: Array[Dictionary] = []
 var _buttons: Array[Button] = []
@@ -51,14 +52,8 @@ func _build() -> void:
 	row.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	add_child(row)
 	for index in 3:
-		var button := Button.new()
+		var button := UpgradeChoiceCard.new()
 		button.name = "UpgradeCard%d" % (index + 1)
-		button.custom_minimum_size = Vector2(272.0, 244.0)
-		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		button.size_flags_stretch_ratio = 1.0
-		button.focus_mode = Control.FOCUS_ALL
-		button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		button.pressed.connect(_select.bind(index))
 		row.add_child(button)
 		_buttons.append(button)
@@ -69,15 +64,17 @@ func _build() -> void:
 	add_child(_message)
 	var commands := HBoxContainer.new()
 	commands.add_theme_constant_override("separation", 12)
+	commands.alignment = BoxContainer.ALIGNMENT_CENTER
 	add_child(commands)
 	_decline = Button.new()
 	_decline.custom_minimum_size = Vector2(210.0, 48.0)
+	_decline.theme_type_variation = &"SecondaryButton"
 	_decline.text = tr("UPGRADE_LEAVE_REWARD")
 	_decline.pressed.connect(_request_decline)
 	commands.add_child(_decline)
 	_confirm = Button.new()
-	_confirm.custom_minimum_size = Vector2(250.0, 48.0)
-	_confirm.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_confirm.custom_minimum_size = Vector2(300.0, 48.0)
+	_confirm.theme_type_variation = &"PrimaryButton"
 	_confirm.text = tr("UPGRADE_EQUIP")
 	_confirm.pressed.connect(_confirm_selected)
 	commands.add_child(_confirm)
@@ -100,15 +97,8 @@ func open(cards: Array[Dictionary], optional: bool) -> void:
 		button.disabled = true
 		if button.visible:
 			var card: Dictionary = _cards[index]
-			var values := _value_preview_text(card.get("value_previews", []))
-			button.text = "%s  ·  %s\n\n%s%s\n\n%s" % [
-				tr(String(card["family_key"])),
-				tr(String(card["title_key"])),
-				tr(String(card["description_key"])),
-				values,
-				tr("UPGRADE_LEVEL_PREVIEW") % [int(card["current_level"]), int(card["next_level"]), int(card["max_level"])],
-			]
-			button.set_meta("upgrade_id", StringName(card["id"]))
+			(button as VehicleUpgradeChoiceCard).set_offer(card)
+			(button as VehicleUpgradeChoiceCard).set_selected_state(false)
 	_refresh_controls()
 
 
@@ -183,19 +173,6 @@ func buttons() -> Array[Button]:
 	return _buttons
 
 
-func _value_preview_text(previews: Array) -> String:
-	var lines: PackedStringArray = []
-	for preview_variant in previews:
-		var preview: Dictionary = preview_variant
-		var operation := String(preview["operation"])
-		var current := float(preview["current"])
-		var next := float(preview["next"])
-		var current_text := "×%.2f" % current if operation == "multiply" else "%+.0f" % current
-		var next_text := "×%.2f" % next if operation == "multiply" else "%+.0f" % next
-		lines.append("%s %s → %s" % [tr(String(preview["stat_key"])), current_text, next_text])
-	return "\n" + "\n".join(lines) if not lines.is_empty() else ""
-
-
 func _refresh_controls() -> void:
 	var guarded := _guard_remaining > 0.0
 	for index in _buttons.size():
@@ -203,9 +180,26 @@ func _refresh_controls() -> void:
 		# Cards stay visually readable during the guard; selection handlers discard
 		# carried input until the guard expires.
 		button.disabled = _pending or not button.visible
-		button.theme_type_variation = &"SelectedChoiceButton" if index == _selected_index else &"ChoiceButton"
+		(button as VehicleUpgradeChoiceCard).set_selected_state(index == _selected_index)
 	_confirm.disabled = guarded or _pending or _selected_index < 0
 	_decline.disabled = guarded or _pending
+
+
+func debug_contract() -> Dictionary:
+	var structured := true
+	var card_contracts: Array[Dictionary] = []
+	for button in _buttons:
+		if button is VehicleUpgradeChoiceCard:
+			card_contracts.append((button as VehicleUpgradeChoiceCard).debug_contract())
+		else:
+			structured = false
+	return {
+		"structured_cards":structured,
+		"card_count":_buttons.size(),
+		"confirm_size":_confirm.custom_minimum_size,
+		"guard_seconds":GUARD_SECONDS,
+		"cards":card_contracts,
+	}
 
 
 func _label(key: String, size: int, color: Color) -> Label:

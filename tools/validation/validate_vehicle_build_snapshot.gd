@@ -3,11 +3,16 @@ extends SceneTree
 const Catalog = preload("res://scripts/cards/vehicle_upgrade_catalog.gd")
 const RunBuild = preload("res://scripts/cards/vehicle_run_build.gd")
 const Builder = preload("res://scripts/cards/vehicle_build_snapshot_builder.gd")
+const SummaryPanel = preload("res://scripts/ui/vehicle_build_summary_panel.gd")
 
 var _failures: Array[String] = []
 
 
-func _init() -> void:
+func _initialize() -> void:
+	call_deferred("_run")
+
+
+func _run() -> void:
 	var catalog := Catalog.new()
 	var build := RunBuild.new(catalog)
 	_expect(bool(build.apply(&"tuned_thrusters").get("applied", false)), "fixture upgrade applies")
@@ -30,6 +35,38 @@ func _init() -> void:
 	var original_value := float(snapshot["stats"][0]["value"])
 	stats[0]["value"] = 1.0
 	_expect(is_equal_approx(float(snapshot["stats"][0]["value"]), original_value), "snapshot does not alias gameplay input")
+	var panel := SummaryPanel.new()
+	get_root().add_child(panel)
+	await process_frame
+	var original_locale := TranslationServer.get_locale()
+	TranslationServer.set_locale("ko")
+	await process_frame
+	panel.set_snapshot(snapshot)
+	var active_contract := panel.debug_contract()
+	_expect(int(active_contract["stat_groups"]) == 3, "active build uses three stable stat groups")
+	_expect(int(active_contract["rendered_stats"]) == 1, "every supplied stat renders exactly once")
+	_expect(bool(active_contract["summary_visible"]), "active build exposes the level, hull, and XP summary")
+	_expect(
+		String(active_contract["summary_level_text"]).begins_with("레벨")
+			and String(active_contract["first_group_title"]).begins_with("기체"),
+		"active build renders Korean summary and group copy"
+	)
+	TranslationServer.set_locale("en")
+	await process_frame
+	panel.set_snapshot(snapshot)
+	var english_contract := panel.debug_contract()
+	_expect(
+		String(english_contract["summary_level_text"]).begins_with("Level")
+			and String(english_contract["first_group_title"]).begins_with("Hull"),
+		"active build refreshes dynamic and static copy in English"
+	)
+	panel.set_snapshot({})
+	var empty_contract := panel.debug_contract()
+	_expect(bool(empty_contract["empty_only"]), "no-run build exposes one empty state without stale groups")
+	_expect(int(empty_contract["rendered_stats"]) == 0, "no-run build retains no rendered stat rows")
+	TranslationServer.set_locale(original_locale)
+	panel.queue_free()
+	await process_frame
 	_finish()
 
 

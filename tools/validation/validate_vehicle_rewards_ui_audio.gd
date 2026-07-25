@@ -47,9 +47,38 @@ func _run() -> void:
 	root.add_child(panel)
 	var cards: Array[Dictionary] = []
 	for index in 3:
-		cards.append({"id": StringName("card_%d" % index), "title_key": "UPGRADE_KINETIC_ROUNDS_TITLE", "description_key": "UPGRADE_KINETIC_ROUNDS_DESC", "family_key": "UPGRADE_FAMILY_PRIMARY", "current_level": 0, "next_level": 1, "max_level": 3})
+		cards.append({
+			"id":StringName("card_%d" % index),
+			"title_key":"UPGRADE_KINETIC_ROUNDS_TITLE",
+			"description_key":"UPGRADE_KINETIC_ROUNDS_DESC",
+			"family_key":"UPGRADE_FAMILY_PRIMARY",
+			"current_level":0,
+			"next_level":1,
+			"max_level":3,
+			"value_previews":[{
+				"stat_key":"UPGRADE_STAT_PRIMARY_DAMAGE_MULTIPLIER",
+				"operation":"multiply",
+				"current":1.0,
+				"next":1.15,
+			}],
+		})
 	panel.confirmed.connect(func(_id: StringName) -> void: confirmed_count += 1)
 	panel.open(cards, false)
+	var choice_contract := panel.debug_contract()
+	_expect(bool(choice_contract["structured_cards"]), "upgrade offers render through structured card components")
+	var card_contracts_valid := true
+	for card_variant in Array(choice_contract["cards"]):
+		var card := Dictionary(card_variant)
+		card_contracts_valid = (
+			card_contracts_valid
+			and int(card["value_rows"]) == 1
+			and int(card["pip_slots"]) == 3
+			and bool(card["mouse_passthrough"])
+		)
+	_expect(
+		card_contracts_valid,
+		"every card exposes one numeric delta, three pips, and parent-owned pointer input"
+	)
 	_expect((panel.get("_confirm") as Button).disabled, "upgrade confirm begins disabled")
 	panel.call("_process", 0.36)
 	panel.call("_select", 0)

@@ -10,13 +10,18 @@ const GuidebookPreview = preload("res://scripts/ui/vehicle_guidebook_preview.gd"
 var _snapshot: Dictionary = {}
 var _category_rail: VBoxContainer
 var _entry_list: VBoxContainer
+var _entry_scroll: ScrollContainer
+var _entry_separator: VSeparator
 var _detail_title: Label
 var _detail_body: Label
 var _build_summary: VehicleBuildSummaryPanel
 var _preview: VehicleGuidebookPreview
-var _counterplay: Label
+var _counterplay_rows: VBoxContainer
 var _close_button: Button
 var _active_category: StringName = &"ship"
+var _active_entry_id: StringName = &""
+var _category_buttons: Dictionary = {}
+var _entry_buttons: Dictionary = {}
 
 
 func _ready() -> void:
@@ -67,15 +72,16 @@ func _build() -> void:
 	content.add_child(_category_rail)
 	var separator := VSeparator.new()
 	content.add_child(separator)
-	var list_scroll := ScrollContainer.new()
-	list_scroll.custom_minimum_size.x = 200.0
-	list_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	content.add_child(list_scroll)
+	_entry_scroll = ScrollContainer.new()
+	_entry_scroll.custom_minimum_size.x = 200.0
+	_entry_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	content.add_child(_entry_scroll)
 	_entry_list = VBoxContainer.new()
 	_entry_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_entry_list.add_theme_constant_override("separation", 6)
-	list_scroll.add_child(_entry_list)
-	content.add_child(VSeparator.new())
+	_entry_scroll.add_child(_entry_list)
+	_entry_separator = VSeparator.new()
+	content.add_child(_entry_separator)
 	var detail_scroll := ScrollContainer.new()
 	detail_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	detail_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -93,41 +99,65 @@ func _build() -> void:
 	_detail_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_detail_body.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	detail.add_child(_detail_body)
-	_counterplay = _label("", 14, Art.INK_MUTED)
-	_counterplay.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	detail.add_child(_counterplay)
+	_counterplay_rows = VBoxContainer.new()
+	_counterplay_rows.add_theme_constant_override("separation", 6)
+	detail.add_child(_counterplay_rows)
 	_build_summary = BuildSummaryPanel.new()
 	_build_summary.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	detail.add_child(_build_summary)
+	_apply_category_layout()
 
 
 func _rebuild_categories() -> void:
 	_clear(_category_rail)
+	_category_buttons.clear()
 	var keys := {
 		&"ship":"GUIDE_CATEGORY_SHIP", &"mobile":"GUIDE_CATEGORY_MOBILE",
 		&"stationary":"GUIDE_CATEGORY_STATIONARY", &"bosses":"GUIDE_CATEGORY_BOSSES",
 		&"objects":"GUIDE_CATEGORY_OBJECTS",
 	}
 	for category in _snapshot.get("category_order", []):
-		var button := _button(String(keys.get(StringName(category), "???")))
+		var category_id := StringName(category)
+		var button := _button(String(keys.get(category_id, "???")))
 		button.custom_minimum_size.y = 44.0
-		button.pressed.connect(_select_category.bind(StringName(category)))
+		button.pressed.connect(_select_category.bind(category_id))
 		_category_rail.add_child(button)
+		_category_buttons[category_id] = button
+	_update_category_states()
 
 
 func _select_category(category: StringName) -> void:
 	_active_category = category
+	_active_entry_id = &""
+	_apply_category_layout()
+	_update_category_states()
 	_clear(_entry_list)
+	_entry_buttons.clear()
 	var entries: Array = Dictionary(_snapshot.get("categories", {})).get(category, [])
 	for entry in entries:
 		var title := "???" if bool(entry.get("locked", true)) else tr(String(entry.get("name_key", "")))
 		var button := _button(title)
 		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		button.custom_minimum_size.y = 44.0
-		button.pressed.connect(_show_entry.bind(Dictionary(entry)))
+		var entry_data := Dictionary(entry)
+		var entry_id := StringName(entry_data.get("id", &""))
+		button.pressed.connect(_select_entry.bind(entry_data))
 		_entry_list.add_child(button)
+		_entry_buttons[entry_id] = button
 	if not entries.is_empty():
-		_show_entry(Dictionary(entries[0]))
+		_select_entry(Dictionary(entries[0]))
+
+
+func _select_entry(entry: Dictionary) -> void:
+	_active_entry_id = StringName(entry.get("id", &""))
+	for entry_id in _entry_buttons:
+		var button := _entry_buttons[entry_id] as Button
+		button.theme_type_variation = (
+			&"SelectedChoiceButton"
+			if StringName(entry_id) == _active_entry_id
+			else &"SecondaryButton"
+		)
+	_show_entry(entry)
 
 
 func _show_entry(entry: Dictionary) -> void:
@@ -135,28 +165,61 @@ func _show_entry(entry: Dictionary) -> void:
 		_detail_title.text = "???"
 		_detail_body.visible = true
 		_detail_body.text = ""
-		_counterplay.visible = false
+		_counterplay_rows.visible = false
 		_preview.show_preview({"kind":&"locked"})
 		_build_summary.visible = false
 		return
 	_detail_title.text = tr(String(entry.get("name_key", "GUIDE_CURRENT_SHIP")))
 	if entry.has("ship"):
 		_detail_body.visible = false
-		_counterplay.visible = false
+		_counterplay_rows.visible = false
 		_preview.show_preview({})
 		_build_summary.visible = true
 		_build_summary.set_snapshot(Dictionary(entry["ship"]))
 	else:
 		_detail_body.visible = true
-		_counterplay.visible = true
+		_counterplay_rows.visible = true
 		_build_summary.visible = false
 		_detail_body.text = tr(String(entry.get("description_key", "")))
 		_preview.show_preview(Dictionary(entry.get("preview", {})))
-		_counterplay.text = "%s  %s\n%s  %s\n%s  %s" % [
-			tr("GUIDE_ROW_MOVEMENT"), tr(String(entry.get("movement_key", "GUIDE_ROW_MOVEMENT_DEFAULT"))),
-			tr("GUIDE_ROW_ATTACK"), tr(String(entry.get("attack_key", "GUIDE_ROW_ATTACK_DEFAULT"))),
-			tr("GUIDE_ROW_COUNTER"), tr(String(entry.get("counter_key", "GUIDE_ROW_COUNTER_DEFAULT"))),
-		]
+		_set_counterplay_rows(entry)
+
+
+func _set_counterplay_rows(entry: Dictionary) -> void:
+	_clear(_counterplay_rows)
+	for definition in [
+		["GUIDE_ROW_MOVEMENT", String(entry.get("movement_key", "GUIDE_ROW_MOVEMENT_DEFAULT"))],
+		["GUIDE_ROW_ATTACK", String(entry.get("attack_key", "GUIDE_ROW_ATTACK_DEFAULT"))],
+		["GUIDE_ROW_COUNTER", String(entry.get("counter_key", "GUIDE_ROW_COUNTER_DEFAULT"))],
+	]:
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 12)
+		var heading := _label(String(definition[0]), 16, Art.MUSTARD)
+		heading.custom_minimum_size.x = 82.0
+		row.add_child(heading)
+		var body := _label(String(definition[1]), 14, Art.INK_MUTED)
+		body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(body)
+		_counterplay_rows.add_child(row)
+
+
+func _apply_category_layout() -> void:
+	var show_entry_column := _active_category != &"ship"
+	if is_instance_valid(_entry_scroll):
+		_entry_scroll.visible = show_entry_column
+	if is_instance_valid(_entry_separator):
+		_entry_separator.visible = show_entry_column
+
+
+func _update_category_states() -> void:
+	for category_id in _category_buttons:
+		var button := _category_buttons[category_id] as Button
+		button.theme_type_variation = (
+			&"SelectedChoiceButton"
+			if StringName(category_id) == _active_category
+			else &"SecondaryButton"
+		)
 
 
 func _button(key_or_text: String) -> Button:
@@ -173,16 +236,31 @@ func _label(key: String, size: int, color: Color) -> Label:
 	label.text = tr(key)
 	label.add_theme_font_size_override("font_size", size)
 	label.add_theme_color_override("font_color", color)
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return label
 
 
 func _clear(container: Node) -> void:
 	for child in container.get_children():
+		container.remove_child(child)
 		child.queue_free()
 
 
 func debug_contract() -> Dictionary:
-	return {"categories":5, "command_height":44, "minimum_size":custom_minimum_size, "hidden_copy_removed":true}
+	return {
+		"categories":5,
+		"command_height":44,
+		"minimum_size":custom_minimum_size,
+		"hidden_copy_removed":true,
+		"active_category":_active_category,
+		"ship_entry_column_hidden":(
+			_active_category == &"ship"
+			and not _entry_scroll.visible
+			and not _entry_separator.visible
+		),
+		"entry_column_visible":_entry_scroll.visible and _entry_separator.visible,
+		"structured_counterplay":is_instance_valid(_counterplay_rows),
+	}
 
 
 func debug_select_entry(category: StringName, entry_id: StringName) -> bool:
@@ -192,6 +270,6 @@ func debug_select_entry(category: StringName, entry_id: StringName) -> bool:
 	)
 	for entry in entries:
 		if StringName(entry.get("id", &"")) == entry_id:
-			_show_entry(Dictionary(entry))
+			_select_entry(Dictionary(entry))
 			return true
 	return false

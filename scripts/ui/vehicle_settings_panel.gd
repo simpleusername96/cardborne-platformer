@@ -204,6 +204,8 @@ func _build_controls_page() -> void:
 		_binding_buttons[action] = binding_button
 		box.add_child(row)
 	var reset := _button("SETTINGS_RESET_BINDINGS", &"SecondaryButton")
+	reset.custom_minimum_size.x = 260.0
+	reset.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	reset.pressed.connect(_reset_bindings)
 	box.add_child(reset)
 
@@ -231,7 +233,7 @@ func _build_language_page() -> void:
 	box.add_child(row)
 	for locale in ["ko", "en"]:
 		var button := _button("LANGUAGE_KO" if locale == "ko" else "LANGUAGE_EN", &"SecondaryButton")
-		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.custom_minimum_size.x = 220.0
 		button.pressed.connect(_on_locale_selected.bind(locale))
 		row.add_child(button)
 		_language_buttons[locale] = button
@@ -318,8 +320,8 @@ func _slider() -> HSlider:
 	slider.min_value = 0.0
 	slider.max_value = 1.0
 	slider.step = 0.05
-	slider.custom_minimum_size.y = 44.0
-	slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	slider.custom_minimum_size = Vector2(480.0, 44.0)
+	slider.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	slider.focus_mode = Control.FOCUS_ALL
 	return slider
 
@@ -419,6 +421,8 @@ func _on_controls_changed(_action: StringName) -> void:
 func _on_locale_changed(_locale: String) -> void:
 	_refresh_localized_content()
 	refresh_from_store()
+	if is_instance_valid(_build_summary):
+		_build_summary.set_snapshot(_build_snapshot)
 
 
 func _refresh_localized_content() -> void:

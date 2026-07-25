@@ -1,4 +1,4 @@
-[gd_resource type="Theme" load_steps=32 format=3]
+[gd_resource type="Theme" load_steps=42 format=3]
 
 [ext_resource type="FontFile" path="res://art/ui/production/fonts/NotoSansKR-Variable.ttf" id="1_font"]
 
@@ -78,6 +78,55 @@ content_margin_right = 20.0
 content_margin_bottom = 14.0
 bg_color = Color(0.305882, 0.427451, 0.403922, 0.55)
 
+[sub_resource type="StyleBoxFlat" id="UpgradeCardNormal"]
+content_margin_left = 18.0
+content_margin_top = 14.0
+content_margin_right = 18.0
+content_margin_bottom = 14.0
+bg_color = Color(0.027451, 0.337255, 0.298039, 1)
+
+[sub_resource type="StyleBoxFlat" id="UpgradeCardHover"]
+content_margin_left = 18.0
+content_margin_top = 14.0
+content_margin_right = 18.0
+content_margin_bottom = 14.0
+bg_color = Color(0.054902, 0.423529, 0.368627, 1)
+
+[sub_resource type="StyleBoxFlat" id="UpgradeCardPressed"]
+content_margin_left = 18.0
+content_margin_top = 14.0
+content_margin_right = 18.0
+content_margin_bottom = 14.0
+bg_color = Color(0.05098, 0.239216, 0.215686, 1)
+
+[sub_resource type="StyleBoxFlat" id="UpgradeCardFocus"]
+content_margin_left = 18.0
+content_margin_top = 14.0
+content_margin_right = 18.0
+content_margin_bottom = 14.0
+bg_color = Color(0.027451, 0.337255, 0.298039, 1)
+border_width_left = 8
+border_color = Color(0.843137, 0.603922, 0.0901961, 1)
+
+[sub_resource type="StyleBoxFlat" id="UpgradeCardSelected"]
+content_margin_left = 18.0
+content_margin_top = 14.0
+content_margin_right = 18.0
+content_margin_bottom = 14.0
+bg_color = Color(0.027451, 0.337255, 0.298039, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.843137, 0.603922, 0.0901961, 1)
+
+[sub_resource type="StyleBoxFlat" id="UpgradeCardDisabled"]
+content_margin_left = 18.0
+content_margin_top = 14.0
+content_margin_right = 18.0
+content_margin_bottom = 14.0
+bg_color = Color(0.05098, 0.239216, 0.215686, 0.82)
+
 [sub_resource type="StyleBoxFlat" id="PrimaryNormal"]
 content_margin_left = 20.0
 content_margin_top = 12.0
@@ -137,6 +186,36 @@ content_margin_bottom = 12.0
 bg_color = Color(0.905882, 0.25098, 0.372549, 1)
 border_width_left = 8
 border_color = Color(1, 0.964706, 0.862745, 1)
+
+[sub_resource type="StyleBoxFlat" id="TertiaryDangerNormal"]
+content_margin_left = 20.0
+content_margin_top = 12.0
+content_margin_right = 20.0
+content_margin_bottom = 12.0
+bg_color = Color(1, 0.964706, 0.862745, 0.56)
+
+[sub_resource type="StyleBoxFlat" id="TertiaryDangerHover"]
+content_margin_left = 20.0
+content_margin_top = 12.0
+content_margin_right = 20.0
+content_margin_bottom = 12.0
+bg_color = Color(0.788235, 0.184314, 0.305882, 0.18)
+
+[sub_resource type="StyleBoxFlat" id="TertiaryDangerPressed"]
+content_margin_left = 20.0
+content_margin_top = 12.0
+content_margin_right = 20.0
+content_margin_bottom = 12.0
+bg_color = Color(0.482353, 0.0901961, 0.2, 0.28)
+
+[sub_resource type="StyleBoxFlat" id="TertiaryDangerFocus"]
+content_margin_left = 20.0
+content_margin_top = 12.0
+content_margin_right = 20.0
+content_margin_bottom = 12.0
+bg_color = Color(1, 0.964706, 0.862745, 0.56)
+border_width_left = 8
+border_color = Color(0.788235, 0.184314, 0.305882, 1)
 
 [sub_resource type="StyleBoxFlat" id="MeterBackground"]
 bg_color = Color(0.847059, 0.792157, 0.654902, 1)
@@ -280,6 +359,28 @@ SelectedChoiceButton/styles/hover = SubResource("ChoiceFocus")
 SelectedChoiceButton/styles/pressed = SubResource("ChoicePressed")
 SelectedChoiceButton/styles/focus = SubResource("ChoiceFocus")
 SelectedChoiceButton/styles/disabled = SubResource("Disabled")
+UpgradeChoiceCard/base_type = &"Button"
+UpgradeChoiceCard/styles/normal = SubResource("UpgradeCardNormal")
+UpgradeChoiceCard/styles/hover = SubResource("UpgradeCardHover")
+UpgradeChoiceCard/styles/pressed = SubResource("UpgradeCardPressed")
+UpgradeChoiceCard/styles/focus = SubResource("UpgradeCardFocus")
+UpgradeChoiceCard/styles/disabled = SubResource("UpgradeCardDisabled")
+SelectedUpgradeChoiceCard/base_type = &"Button"
+SelectedUpgradeChoiceCard/styles/normal = SubResource("UpgradeCardSelected")
+SelectedUpgradeChoiceCard/styles/hover = SubResource("UpgradeCardSelected")
+SelectedUpgradeChoiceCard/styles/pressed = SubResource("UpgradeCardPressed")
+SelectedUpgradeChoiceCard/styles/focus = SubResource("UpgradeCardSelected")
+SelectedUpgradeChoiceCard/styles/disabled = SubResource("UpgradeCardDisabled")
+TertiaryDangerButton/base_type = &"Button"
+TertiaryDangerButton/colors/font_color = Color(0.788235, 0.184314, 0.305882, 1)
+TertiaryDangerButton/colors/font_hover_color = Color(0.482353, 0.0901961, 0.2, 1)
+TertiaryDangerButton/colors/font_pressed_color = Color(0.482353, 0.0901961, 0.2, 1)
+TertiaryDangerButton/colors/font_focus_color = Color(0.788235, 0.184314, 0.305882, 1)
+TertiaryDangerButton/styles/normal = SubResource("TertiaryDangerNormal")
+TertiaryDangerButton/styles/hover = SubResource("TertiaryDangerHover")
+TertiaryDangerButton/styles/pressed = SubResource("TertiaryDangerPressed")
+TertiaryDangerButton/styles/focus = SubResource("TertiaryDangerFocus")
+TertiaryDangerButton/styles/disabled = SubResource("Disabled")
 FlatPanel/base_type = &"PanelContainer"
 FlatPanel/styles/panel = SubResource("Plate")
 ModalSurface/base_type = &"PanelContainer"

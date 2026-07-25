@@ -147,7 +147,9 @@ func _build() -> void:
 	_damage_box = _scroll_column("REPORT_OUTGOING")
 	_attribute_box = _scroll_column("REPORT_ATTRIBUTES")
 	_content.add_child(_wrap_panel(_defeat_box))
+	_content.add_child(VSeparator.new())
 	_content.add_child(_wrap_panel(_damage_box))
+	_content.add_child(VSeparator.new())
 	_content.add_child(_wrap_panel(_attribute_box))
 	_tabs = TabContainer.new()
 	_tabs.focus_mode = Control.FOCUS_ALL
@@ -166,12 +168,14 @@ func _build() -> void:
 	_incoming_box = VBoxContainer.new()
 	_incoming_box.add_theme_constant_override("separation", 5)
 	add_child(_incoming_box)
+	var continue_lane := CenterContainer.new()
+	add_child(continue_lane)
 	_continue_button = Button.new()
 	_continue_button.theme_type_variation = &"PrimaryButton"
-	_continue_button.custom_minimum_size.y = 48.0
+	_continue_button.custom_minimum_size = Vector2(300.0, 48.0)
 	_continue_button.focus_mode = Control.FOCUS_ALL
 	_continue_button.pressed.connect(_on_continue)
-	add_child(_continue_button)
+	continue_lane.add_child(_continue_button)
 
 
 func _rebuild() -> void:
@@ -216,18 +220,28 @@ func _fill_defeats(box: VBoxContainer) -> void:
 		var icon := CombatMeshIcon.new()
 		icon.set_enemy(StringName(data["id"]))
 		row_box.add_child(icon)
+		var name_box := VBoxContainer.new()
+		name_box.add_theme_constant_override("separation", 1)
+		name_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		var label := _label("", 15, Art.INK)
-		label.autowrap_mode = TextServer.AUTOWRAP_OFF
-		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		label.text = "%s  ×%d" % [tr(String(data["name_key"])), int(data["count"])]
+		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		label.text = tr(String(data["name_key"]))
+		label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		name_box.add_child(label)
 		var elite_count := int(data.get("elite_count", 0))
 		if elite_count > 0:
-			label.text += tr("REPORT_ELITE_COUNT").replace(
+			var elite := _label("", 13, Art.BOSS_MAGENTA)
+			elite.text = tr("REPORT_ELITE_COUNT").replace(
 				"%count%", str(elite_count)
 			)
-			label.add_theme_color_override("font_color", Art.BOSS_MAGENTA)
-		label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		row_box.add_child(label)
+			name_box.add_child(elite)
+		row_box.add_child(name_box)
+		var count := _label("", 15, Art.INK)
+		count.text = "×%d" % int(data["count"])
+		count.custom_minimum_size.x = 48.0
+		count.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		count.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		row_box.add_child(count)
 		box.add_child(row_box)
 
 
@@ -240,11 +254,12 @@ func _fill_damage(box: VBoxContainer) -> void:
 		box.add_child(_damage_row(Dictionary(row), true))
 	var total := float(_snapshot.get("total_outgoing", 0.0))
 	if total > 0.0:
-		var total_label := _label("", 16, Art.MUSTARD)
-		total_label.text = tr("REPORT_TOTAL_DAMAGE").replace(
-			"%damage%", "%.1f" % total
-		)
-		box.add_child(total_label)
+		box.add_child(_metric_row(
+			tr("REPORT_TOTAL_DAMAGE_LABEL"),
+			"%.1f" % total,
+			"",
+			Art.MUSTARD
+		))
 
 
 func _fill_attributes(box: VBoxContainer) -> void:
@@ -259,25 +274,61 @@ func _fill_attributes(box: VBoxContainer) -> void:
 		var icon := AttributeIcon.new()
 		icon.set_attribute(StringName(row["id"]))
 		line.add_child(icon)
-		var label := _damage_row(row, true)
-		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var content := VBoxContainer.new()
+		content.add_theme_constant_override("separation", 1)
+		content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		content.add_child(_damage_row(row, true))
 		var applications := int(row.get("applications", 0))
 		if applications > 0:
-			label.text += "\n" + tr("REPORT_ATTRIBUTE_APPLICATIONS").replace(
+			var applications_label := _label("", 13, Art.INK_MUTED)
+			applications_label.text = tr("REPORT_ATTRIBUTE_APPLICATIONS").replace(
 				"%count%", str(applications)
 			)
-		line.add_child(label)
+			applications_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+			content.add_child(applications_label)
+		line.add_child(content)
 		box.add_child(line)
 
 
-func _damage_row(row: Dictionary, show_percentage: bool) -> Label:
-	var label := _label("", 15, Art.INK)
-	label.text = "%s  ·  %.1f%s" % [
+func _damage_row(row: Dictionary, show_percentage: bool) -> HBoxContainer:
+	return _metric_row(
 		tr(String(row["title_key"])),
-		float(row["damage"]),
-		("  ·  %.1f%%" % (float(row.get("percentage_tenths", 0)) / 10.0)) if show_percentage else "",
-	]
-	return label
+		"%.1f" % float(row["damage"]),
+		(
+			"%.1f%%" % (float(row.get("percentage_tenths", 0)) / 10.0)
+			if show_percentage
+			else ""
+		),
+		Art.INK
+	)
+
+
+func _metric_row(
+	title: String,
+	value: String,
+	percentage: String,
+	color: Color
+) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var title_label := _label("", 15, color)
+	title_label.text = title
+	title_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(title_label)
+	var value_label := _label("", 15, color)
+	value_label.text = value
+	value_label.custom_minimum_size.x = 72.0
+	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	row.add_child(value_label)
+	if not percentage.is_empty():
+		var percentage_label := _label("", 15, color)
+		percentage_label.text = percentage
+		percentage_label.custom_minimum_size.x = 68.0
+		percentage_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		row.add_child(percentage_label)
+	return row
 
 
 func _scroll_column(title_key: String) -> VBoxContainer:
@@ -316,6 +367,7 @@ func _clear_rows(box: VBoxContainer) -> void:
 
 func _clear(node: Node) -> void:
 	for child in node.get_children():
+		node.remove_child(child)
 		child.queue_free()
 
 
@@ -348,4 +400,6 @@ func debug_contract() -> Dictionary:
 		"outgoing":_snapshot.get("outgoing", []).size(),
 		"attributes":_snapshot.get("attributes", []).size(),
 		"failure":bool(_snapshot.get("failure", false)),
+		"continue_size":_continue_button.custom_minimum_size,
+		"wide_dividers":_content.find_children("*", "VSeparator", true, false).size(),
 	}

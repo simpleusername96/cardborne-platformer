@@ -17,6 +17,23 @@ func _initialize() -> void:
 		_expect(bool(contract["action_rail_icon_only"]), "action rail contains icons only at %d" % width)
 		_expect(bool(contract["top_clusters_do_not_overlap"]), "top clusters do not overlap at %d" % width)
 		_expect(bool(contract["central_safe_clear"]), "central play space remains clear at %d" % width)
+		var upgrade_contract := Dictionary(contract["upgrade_choice"])
+		_expect(bool(upgrade_contract["structured_cards"]), "upgrade choices use structured card components at %d" % width)
+		_expect(int(upgrade_contract["card_count"]) == 3, "upgrade choice keeps exactly three card slots at %d" % width)
+		_expect(Vector2(upgrade_contract["confirm_size"]) == Vector2(300.0, 48.0), "upgrade confirmation uses the compact command contract at %d" % width)
+		_expect(bool(contract["has_upgrade_card_theme"]), "upgrade cards use dedicated shared theme states at %d" % width)
+		_expect(bool(contract["has_tertiary_danger_theme"]), "tertiary danger uses a shared theme state at %d" % width)
+		_expect(Vector2(contract["deployment_primary_size"]) == Vector2(300.0, 48.0), "deployment uses one compact primary action at %d" % width)
+		var deployment_surface := Vector2(contract["deployment_surface_size"])
+		_expect(
+			deployment_surface.x <= width - 48.0
+				and deployment_surface.y <= width * 9.0 / 16.0 - 24.0,
+			"deployment surface stays inside the supported viewport at %d" % width
+		)
+		_expect(
+			StringName(contract["pause_abort_variation"]) == &"TertiaryDangerButton",
+			"pause abort remains a restrained tertiary action at %d" % width
+		)
 		var minimap_size := Vector2(contract["minimap_size"])
 		_expect(minimap_size.x >= 160.0 and minimap_size.y >= 98.0, "minimap keeps tactical area at %d" % width)
 	var tactical_mesh := MinimapMeshBuilder.build({
