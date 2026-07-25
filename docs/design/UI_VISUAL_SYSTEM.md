@@ -72,6 +72,10 @@ rules remain owned by the product specification.
 - The player, swarm units, mobile specialists, stationary threats, bosses,
   experience shards, repair, recall, and crates have distinct silhouettes and
   scale classes.
+- Tactically different enemy roles do not share one outer contour. A role uses
+  one large directional mass, cut, or center accent that remains recognizable
+  in grayscale at gameplay scale; role color and simulation radius remain
+  independent from that silhouette.
 - All dangerous attacks show startup, damage area or projectile, and recovery.
   Startup fill and its outer boundary show the exact player-center danger
   footprint, not a decorative approximation. Any on-screen portion remains
@@ -87,11 +91,15 @@ rules remain owned by the product specification.
   absorbed barrier damage remains visually distinct.
 - A projectile head ends exactly at its circular collision radius. Light,
   standard, and heavy hostile damage use five-, six-, and seven-pixel heads;
-  power therefore changes visible and physical size together. A 36-pixel
+  power therefore changes visible and physical size together. A short
   non-damaging hostile trail communicates direction and uses a shape-distinct
   kinetic, thermal, toxin, cryo, arc, or hybrid silhouette. Player projectiles
   always use a mustard ownership shell with a dark cobalt core; hostile
   projectiles keep affinity color and shape.
+- Hostile affinity heads use large, distinct silhouettes: kinetic disk, thermal
+  ember, toxin drop, cryo shard, arc bolt, and split hybrid diamond. Head and
+  trail may share one static vertex-colored mesh and retained batch, but the
+  head's farthest vertex must still equal the projectile collision radius.
 - The unmodified Pulse Cannon starts from a seven-pixel collision radius and a
   rendered head exactly that large. Solid-cover impacts must terminate the
   visible trail at the same blocker used by collision; a projectile may appear
@@ -146,24 +154,48 @@ rules remain owned by the product specification.
 - Deployment, upgrade, pause/settings, guidebook, result, and garage hide
   conflicting live HUD, block gameplay input, have one clear primary action,
   and never clip at the supported minimum viewport.
-- Upgrade selection uses a two-step choose-and-confirm flow. No timeout, hover,
-  or accidental carried click applies a card.
+- Deployment uses a centered header above a two-column body: controls and
+  primary-weapon truth on the left, run difficulty and its lock explanation on
+  the right. Deploy is the single centered `300x48` primary action; settings is
+  secondary and Boss Practice remains debug-only.
+- Upgrade selection uses three equal structured cards with family, title,
+  effect, existing numeric deltas, and three level pips. Selection uses a
+  four-pixel mustard frame plus a diamond marker, keyboard focus uses a separate
+  rail, and a centered `300x48` Equip action confirms the choice. No timeout,
+  hover, or accidental carried click applies a card.
+- Pause keeps Resume as the only filled primary action. Restart and Settings
+  remain secondary; aborting to the garage is a restrained tertiary danger
+  action. Garage uses the same primary/secondary hierarchy and explicitly shows
+  `없음` / `None` when no passive weapon is installed.
 - The guidebook is reachable through `?`, uses five stable categories, clearly
   separates discovered content from `???`, and shows current ship statistics
   without exposing future entries. Discovered actors reuse the combat mesh;
   locked entries use one neutral muted silhouette.
+- The Guidebook hides its redundant entry column only for Current Ship. Other
+  categories retain category, entry, and detail columns with explicit selected
+  states; discovered details render separate Movement, Attack, and Counter
+  rows.
 - Settings places Ship Status first and renders dense read-only values inside a
-  vertical scroll region. Its no-run state contains no empty group headings or
-  stale values.
+  vertical scroll region. An active run shows one level/hull/experience summary,
+  then Hull/Mobility, Primary/Breach, and EMP stat groups before secondary
+  weapons and upgrades. Its no-run state contains only the localized empty
+  state—no empty group headings or stale values.
 - Stage and failure reports are full modal focus layers with one bottom primary
   action. At 1180 pixels and wider, defeats, damage source, and damage attribute
   use three columns; below that, keyboard-accessible tabs expose one list at a
-  time. Percentage,
-  amount, and count columns remain readable in both Korean and English.
+  time. Light dividers separate the wide columns; names, amounts, percentages,
+  and counts align independently, and the bottom primary action is `300x48`.
+  Percentage, amount, and count columns remain readable in both Korean and
+  English.
 
 ### Implementation boundaries
 
 - Typography and reusable control states belong in the production Godot theme.
+- `VehicleUpgradeChoiceCard` owns presentation of one frozen offer only.
+  `VehicleUpgradeChoicePanel` owns selection, guard, decline, and confirmation;
+  card compatibility and application stay outside UI code.
+- `VehicleBuildSummaryPanel` renders only a frozen build snapshot shared by
+  Settings and Guidebook. It never queries or mutates gameplay state.
 - Values, labels, cooldowns, focus, selection, localization, and guide discovery
   remain live UI state; do not bake them into raster assets.
 - Static world presentation belongs to `vehicle_stage_backdrop.gd`; immutable
@@ -179,6 +211,26 @@ rules remain owned by the product specification.
   per-field scene nodes.
 - Raster assets are justified only when procedural flat shapes cannot communicate
   the required silhouette at gameplay size.
+
+## Verification
+
+Run the focused UI and presentation validators after relevant changes:
+
+```powershell
+.\tools\godot.ps1 --path . --headless --import
+.\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_stage_ui_layout.gd
+.\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_rewards_ui_audio.gd
+.\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_build_snapshot.gd
+.\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_guidebook.gd
+.\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_stage_report.gd
+.\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_combat_renderer.gd
+.\tools\export_web.ps1
+```
+
+Rendered review covers Korean and English at `960x540`, `1280x720`, and
+`1920x1080`, including Deployment, upgrade default/selected, Pause, active and
+empty Ship Status, discovered and locked Guidebook entries, wide and compact
+reports, Garage, maximum combat pressure, and actor/projectile catalogs.
 
 ## Acceptance Criteria
 
