@@ -18,7 +18,7 @@ func _run() -> void:
 	root.add_child(renderer)
 	await process_frame
 	var snapshot: Dictionary = renderer.debug_snapshot()
-	_expect(int(snapshot["batches"]) <= 53, "combat presentation stays within the retained batch ceiling")
+	_expect(int(snapshot["batches"]) <= 50, "combat presentation stays within the established retained batch ceiling")
 	for team in [&"player", &"enemy"]:
 		for affinity in AttackContract.AFFINITIES:
 			if affinity == AttackContract.SUPPORT:

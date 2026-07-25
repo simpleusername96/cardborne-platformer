@@ -242,15 +242,6 @@ func _build_batches() -> void:
 	_overlay_batches[&"player_hull"] = _create_batch(
 		"Overlay_player_hull", Visuals.player_hull_mesh(), 1, 4, &"overlay_player_hull"
 	)
-	_overlay_batches[&"player_primary"] = _create_batch(
-		"Overlay_player_primary", Visuals.player_primary_mesh(), 1, 5, &"overlay_player_primary"
-	)
-	_overlay_batches[&"player_engine"] = _create_batch(
-		"Overlay_player_engine", Visuals.player_engine_mesh(), 3, 3, &"overlay_player_engine"
-	)
-	_overlay_batches[&"player_secondary_core"] = _create_batch(
-		"Overlay_player_secondary_core", Visuals.player_secondary_core_mesh(), 1, 5, &"overlay_player_secondary_core"
-	)
 	_overlay_batches[&"status_arc"] = _create_batch(
 		"Overlay_status_arc", Visuals.status_arc_mesh(),
 		STATUS_ARC_CAPACITY, 3, &"overlay_status_arc"
@@ -811,10 +802,10 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 	for engine_index in engine_count:
 		var offset_index := float(engine_index) - float(engine_count - 1) * 0.5
 		_write_instance(
-			_overlay_batches[&"player_engine"],
+			_overlay_batches[&"diamond"],
 			displayed_player_position + rear * 31.0 + side * offset_index * 18.0,
 			hull_angle,
-			Vector2(24.0, 16.0),
+			Vector2(18.0, 12.0),
 			hull_color
 		)
 	_write_instance(
@@ -822,27 +813,28 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 		hull_angle, Vector2.ONE * Art.PLAYER_VISUAL_RADIUS,
 		hull_color
 	)
-	_write_instance(
-		_overlay_batches[&"player_primary"],
-		displayed_player_position + aim_direction * 18.0,
-		aim_direction.angle(),
-		Vector2(48.0, 20.0),
-		primary_color
-	)
 	if int(state.get("secondary_visual_tier", 0)) > 0:
-		_write_instance(
-			_overlay_batches[&"player_secondary_core"],
+		_write_diamond(
 			displayed_player_position - hull_direction * 5.0 - side * 25.0,
-			0.0,
-			Vector2.ONE * 12.0,
+			12.0,
 			secondary_color
 		)
 	if invulnerable_remaining > 0.0:
 		_write_ring(player_position, Art.PLAYER_VISUAL_RADIUS + 12.0, Color(Art.CORAL, 0.78))
-	_write_beam(player_position, player_position + aim_direction * 61.0, 17.0, Art.INK)
-	_write_beam(player_position, player_position + aim_direction * 61.0, 10.0, Art.IVORY_BRIGHT)
+	_write_beam(
+		displayed_player_position,
+		displayed_player_position + aim_direction * 61.0,
+		17.0,
+		Art.INK
+	)
+	_write_beam(
+		displayed_player_position,
+		displayed_player_position + aim_direction * 61.0,
+		10.0,
+		primary_color
+	)
 	_write_diamond(
-		player_position + aim_direction * 64.0,
+		displayed_player_position + aim_direction * 64.0,
 		9.0 + float(state.get("muzzle_flash", 0.0)) * 58.0,
 		Art.MUSTARD
 	)
