@@ -18,7 +18,7 @@ class LevelPips:
 
 
 	func _ready() -> void:
-		custom_minimum_size = Vector2(104.0, 24.0)
+		custom_minimum_size = Vector2(132.0, 32.0)
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 
@@ -38,8 +38,8 @@ class LevelPips:
 
 
 	func _draw() -> void:
-		var radius := 7.0
-		var gap := 30.0
+		var radius := 9.0
+		var gap := 38.0
 		var start_x := (size.x - gap * 2.0) * 0.5
 		for index in 3:
 			var center := Vector2(start_x + gap * index, size.y * 0.5)
@@ -56,6 +56,8 @@ var _selected := false
 var _family: Label
 var _title: Label
 var _effect: Label
+var _impact_title: Label
+var _impact: Label
 var _values: VBoxContainer
 var _pips: LevelPips
 
@@ -63,7 +65,7 @@ var _pips: LevelPips
 func _ready() -> void:
 	text = ""
 	clip_contents = true
-	custom_minimum_size = Vector2(272.0, 244.0)
+	custom_minimum_size = Vector2(282.0, 336.0)
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	size_flags_stretch_ratio = 1.0
 	focus_mode = Control.FOCUS_ALL
@@ -101,7 +103,10 @@ func debug_contract() -> Dictionary:
 	return {
 		"structured":true,
 		"minimum_size":custom_minimum_size,
-		"value_rows":_values.get_child_count() if is_instance_valid(_values) else 0,
+		"value_rows":(
+			(_values.get_child_count() if is_instance_valid(_values) else 0)
+			+ (1 if is_instance_valid(_impact) and not _impact.text.is_empty() else 0)
+		),
 		"pip_slots":3,
 		"selected":_selected,
 		"mouse_passthrough":(
@@ -114,32 +119,53 @@ func debug_contract() -> Dictionary:
 func _build() -> void:
 	var margin := MarginContainer.new()
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	margin.add_theme_constant_override("margin_left", 18)
-	margin.add_theme_constant_override("margin_top", 14)
-	margin.add_theme_constant_override("margin_right", 18)
-	margin.add_theme_constant_override("margin_bottom", 14)
+	margin.add_theme_constant_override("margin_left", 20)
+	margin.add_theme_constant_override("margin_top", 18)
+	margin.add_theme_constant_override("margin_right", 20)
+	margin.add_theme_constant_override("margin_bottom", 18)
 	margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(margin)
 
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 8)
+	box.add_theme_constant_override("separation", 10)
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	margin.add_child(box)
 
-	_family = _label(14, Art.MINT_SOFT)
+	var family_lane := CenterContainer.new()
+	family_lane.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.add_child(family_lane)
+	var family_badge := PanelContainer.new()
+	family_badge.theme_type_variation = &"FamilyBadge"
+	family_badge.custom_minimum_size = Vector2(118.0, 32.0)
+	family_badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	family_lane.add_child(family_badge)
+	_family = _label(15, Art.INK)
+	_family.theme_type_variation = &"MetricLabel"
 	_family.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	box.add_child(_family)
-	_title = _label(23, Art.IVORY_BRIGHT)
+	_family.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	family_badge.add_child(_family)
+	_title = _label(30, Art.IVORY_BRIGHT)
+	_title.theme_type_variation = &"TitleLabel"
 	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_title.custom_minimum_size.y = 46.0
 	box.add_child(_title)
-	_effect = _label(15, Art.IVORY_BRIGHT)
+	_effect = _label(17, Art.IVORY_BRIGHT)
 	_effect.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_effect.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_effect.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_effect.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_effect.custom_minimum_size.y = 64.0
+	_effect.custom_minimum_size.y = 82.0
 	box.add_child(_effect)
+	_impact_title = _label(14, Art.MINT_SOFT)
+	_impact_title.theme_type_variation = &"MetricLabel"
+	_impact_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(_impact_title)
+	_impact = _label(28, Art.IVORY_BRIGHT)
+	_impact.theme_type_variation = &"TitleLabel"
+	_impact.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_impact.custom_minimum_size.y = 42.0
+	box.add_child(_impact)
 	_values = VBoxContainer.new()
 	_values.add_theme_constant_override("separation", 3)
 	_values.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -154,7 +180,20 @@ func _refresh() -> void:
 	_effect.text = tr(String(_offer.get("description_key", "")))
 	_clear(_values)
 	var accessible_values := PackedStringArray()
-	for preview_variant in _offer.get("value_previews", []):
+	var previews: Array = _offer.get("value_previews", [])
+	if previews.is_empty():
+		_impact_title.text = tr("UPGRADE_CARD_LEVEL")
+		_impact.text = tr("UPGRADE_CARD_LEVEL_VALUE").replace(
+			"%level%",
+			str(int(_offer.get("next_level", 1)))
+		)
+	else:
+		var primary_preview := Dictionary(previews[0])
+		_impact_title.text = tr(String(primary_preview.get("stat_key", "")))
+		_impact.text = _preview_value(primary_preview)
+		accessible_values.append("%s %s" % [_impact_title.text, _impact.text])
+	for preview_index in range(1, previews.size()):
+		var preview_variant = previews[preview_index]
 		var preview := Dictionary(preview_variant)
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 8)
@@ -195,15 +234,15 @@ func _preview_value(preview: Dictionary) -> String:
 
 func _draw() -> void:
 	if _selected:
-		var center := Vector2(size.x - 17.0, 17.0)
+		var center := Vector2(size.x - 20.0, 20.0)
 		draw_colored_polygon(PackedVector2Array([
-			center + Vector2(0.0, -7.0),
-			center + Vector2(7.0, 0.0),
-			center + Vector2(0.0, 7.0),
-			center + Vector2(-7.0, 0.0),
+			center + Vector2(0.0, -9.0),
+			center + Vector2(9.0, 0.0),
+			center + Vector2(0.0, 9.0),
+			center + Vector2(-9.0, 0.0),
 		]), Art.MUSTARD)
 	if has_focus():
-		draw_rect(Rect2(6.0, 8.0, 5.0, size.y - 16.0), Art.IVORY_BRIGHT)
+		draw_rect(Rect2(7.0, 10.0, 5.0, size.y - 20.0), Art.IVORY_BRIGHT)
 
 
 func _label(font_size: int, color: Color) -> Label:

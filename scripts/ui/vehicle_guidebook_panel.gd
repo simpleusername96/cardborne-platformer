@@ -7,6 +7,53 @@ const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const BuildSummaryPanel = preload("res://scripts/ui/vehicle_build_summary_panel.gd")
 const GuidebookPreview = preload("res://scripts/ui/vehicle_guidebook_preview.gd")
 
+
+class CounterplayGlyph:
+	extends Control
+
+	var kind: StringName = &"movement"
+
+
+	func _ready() -> void:
+		custom_minimum_size = Vector2(44.0, 44.0)
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+
+	func configure(value: StringName) -> void:
+		kind = value
+		queue_redraw()
+
+
+	func _draw() -> void:
+		var center := size * 0.5
+		match kind:
+			&"attack":
+				draw_circle(center + Vector2(-8.0, 3.0), 7.0, Art.BOSS_MAGENTA)
+				draw_circle(center + Vector2(4.0, -7.0), 6.0, Art.BOSS_MAGENTA)
+				draw_circle(center + Vector2(8.0, 8.0), 6.0, Art.BOSS_MAGENTA)
+			&"counter":
+				draw_colored_polygon(PackedVector2Array([
+					center + Vector2(0.0, -16.0),
+					center + Vector2(13.0, -10.0),
+					center + Vector2(11.0, 7.0),
+					center + Vector2(0.0, 17.0),
+					center + Vector2(-11.0, 7.0),
+					center + Vector2(-13.0, -10.0),
+				]), Art.MINT)
+				draw_line(
+					center + Vector2(0.0, -13.0),
+					center + Vector2(0.0, 13.0),
+					Art.IVORY_BRIGHT,
+					3.0
+				)
+			_:
+				draw_arc(center, 13.0, -PI * 0.15, PI * 1.45, 28, Art.CERAMIC_GREEN_LIGHT, 5.0, true)
+				draw_colored_polygon(PackedVector2Array([
+					center + Vector2(-15.0, -3.0),
+					center + Vector2(-6.0, -10.0),
+					center + Vector2(-5.0, 2.0),
+				]), Art.CERAMIC_GREEN_LIGHT)
+
 var _snapshot: Dictionary = {}
 var _category_rail: VBoxContainer
 var _entry_list: VBoxContainer
@@ -51,29 +98,30 @@ func _input(event: InputEvent) -> void:
 
 
 func _build() -> void:
-	custom_minimum_size = Vector2(860.0, 500.0)
-	add_theme_constant_override("separation", 12)
+	custom_minimum_size = Vector2(1104.0, 580.0)
+	add_theme_constant_override("separation", 14)
 	var header := HBoxContainer.new()
 	add_child(header)
-	var title := _label("GUIDE_TITLE", 30, Art.INK)
+	var title := _label("GUIDE_TITLE", 40, Art.INK)
+	title.theme_type_variation = &"DisplayLabel"
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(title)
 	_close_button = _button("SETTINGS_CLOSE")
-	_close_button.custom_minimum_size = Vector2(112.0, 44.0)
+	_close_button.custom_minimum_size = Vector2(136.0, 48.0)
 	_close_button.pressed.connect(func() -> void: close_requested.emit())
 	header.add_child(_close_button)
 	var content := HBoxContainer.new()
-	content.add_theme_constant_override("separation", 16)
+	content.add_theme_constant_override("separation", 18)
 	content.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	add_child(content)
 	_category_rail = VBoxContainer.new()
-	_category_rail.custom_minimum_size.x = 136.0
+	_category_rail.custom_minimum_size.x = 198.0
 	_category_rail.add_theme_constant_override("separation", 8)
 	content.add_child(_category_rail)
 	var separator := VSeparator.new()
 	content.add_child(separator)
 	_entry_scroll = ScrollContainer.new()
-	_entry_scroll.custom_minimum_size.x = 200.0
+	_entry_scroll.custom_minimum_size.x = 230.0
 	_entry_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	content.add_child(_entry_scroll)
 	_entry_list = VBoxContainer.new()
@@ -91,11 +139,13 @@ func _build() -> void:
 	detail.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	detail.add_theme_constant_override("separation", 12)
 	detail_scroll.add_child(detail)
-	_detail_title = _label("GUIDE_CURRENT_SHIP", 25, Art.INK)
+	_detail_title = _label("GUIDE_CURRENT_SHIP", 32, Art.INK)
+	_detail_title.theme_type_variation = &"TitleLabel"
 	detail.add_child(_detail_title)
 	_preview = GuidebookPreview.new()
+	_preview.custom_minimum_size.y = 210.0
 	detail.add_child(_preview)
-	_detail_body = _label("", 16, Art.INK)
+	_detail_body = _label("", 17, Art.INK)
 	_detail_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_detail_body.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	detail.add_child(_detail_body)
@@ -119,7 +169,7 @@ func _rebuild_categories() -> void:
 	for category in _snapshot.get("category_order", []):
 		var category_id := StringName(category)
 		var button := _button(String(keys.get(category_id, "???")))
-		button.custom_minimum_size.y = 44.0
+		button.custom_minimum_size.y = 56.0
 		button.pressed.connect(_select_category.bind(category_id))
 		_category_rail.add_child(button)
 		_category_buttons[category_id] = button
@@ -138,7 +188,7 @@ func _select_category(category: StringName) -> void:
 		var title := "???" if bool(entry.get("locked", true)) else tr(String(entry.get("name_key", "")))
 		var button := _button(title)
 		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		button.custom_minimum_size.y = 44.0
+		button.custom_minimum_size.y = 56.0
 		var entry_data := Dictionary(entry)
 		var entry_id := StringName(entry_data.get("id", &""))
 		button.pressed.connect(_select_entry.bind(entry_data))
@@ -188,20 +238,30 @@ func _show_entry(entry: Dictionary) -> void:
 func _set_counterplay_rows(entry: Dictionary) -> void:
 	_clear(_counterplay_rows)
 	for definition in [
-		["GUIDE_ROW_MOVEMENT", String(entry.get("movement_key", "GUIDE_ROW_MOVEMENT_DEFAULT"))],
-		["GUIDE_ROW_ATTACK", String(entry.get("attack_key", "GUIDE_ROW_ATTACK_DEFAULT"))],
-		["GUIDE_ROW_COUNTER", String(entry.get("counter_key", "GUIDE_ROW_COUNTER_DEFAULT"))],
+		[&"movement", "GUIDE_ROW_MOVEMENT", String(entry.get("movement_key", "GUIDE_ROW_MOVEMENT_DEFAULT"))],
+		[&"attack", "GUIDE_ROW_ATTACK", String(entry.get("attack_key", "GUIDE_ROW_ATTACK_DEFAULT"))],
+		[&"counter", "GUIDE_ROW_COUNTER", String(entry.get("counter_key", "GUIDE_ROW_COUNTER_DEFAULT"))],
 	]:
+		var plate := PanelContainer.new()
+		plate.theme_type_variation = &"SummaryBand"
+		plate.custom_minimum_size.y = 56.0
+		_counterplay_rows.add_child(plate)
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 12)
-		var heading := _label(String(definition[0]), 16, Art.MUSTARD)
-		heading.custom_minimum_size.x = 82.0
+		plate.add_child(row)
+		var glyph := CounterplayGlyph.new()
+		glyph.configure(StringName(definition[0]))
+		row.add_child(glyph)
+		var heading := _label(String(definition[1]), 18, Art.INK)
+		heading.theme_type_variation = &"SectionLabel"
+		heading.custom_minimum_size.x = 86.0
+		heading.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		row.add_child(heading)
-		var body := _label(String(definition[1]), 14, Art.INK_MUTED)
+		var body := _label(String(definition[2]), 15, Art.INK_MUTED)
 		body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		body.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		row.add_child(body)
-		_counterplay_rows.add_child(row)
 
 
 func _apply_category_layout() -> void:
@@ -216,7 +276,7 @@ func _update_category_states() -> void:
 	for category_id in _category_buttons:
 		var button := _category_buttons[category_id] as Button
 		button.theme_type_variation = (
-			&"SelectedChoiceButton"
+			&"SelectedRailButton"
 			if StringName(category_id) == _active_category
 			else &"SecondaryButton"
 		)
@@ -227,7 +287,7 @@ func _button(key_or_text: String) -> Button:
 	button.text = tr(key_or_text) if key_or_text.begins_with("GUIDE_") or key_or_text == "SETTINGS_CLOSE" else key_or_text
 	button.theme_type_variation = &"SecondaryButton"
 	button.focus_mode = Control.FOCUS_ALL
-	button.add_theme_font_size_override("font_size", 17)
+	button.add_theme_font_size_override("font_size", 19)
 	return button
 
 

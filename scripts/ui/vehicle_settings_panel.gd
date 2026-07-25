@@ -125,13 +125,14 @@ func _input(event: InputEvent) -> void:
 
 
 func _build() -> void:
-	custom_minimum_size = Vector2(760.0, 410.0)
-	add_theme_constant_override("separation", 10)
+	custom_minimum_size = Vector2(856.0, 500.0)
+	add_theme_constant_override("separation", 12)
 
 	var header := HBoxContainer.new()
 	header.add_theme_constant_override("separation", 12)
 	add_child(header)
-	var title := _label("SETTINGS_TITLE", 28, Art.INK)
+	var title := _label("SETTINGS_TITLE", 36, Art.INK)
+	title.theme_type_variation = &"TitleLabel"
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(title)
 	var guide := _button("?", &"SecondaryButton")
@@ -145,15 +146,15 @@ func _build() -> void:
 	_close_button.pressed.connect(func() -> void: close_requested.emit())
 	header.add_child(_close_button)
 
-	_status_label = _label("SETTINGS_STATUS_READY", 14, Art.INK_MUTED)
-	_status_label.custom_minimum_size.y = 24.0
+	_status_label = _label("", 14, Art.INK_MUTED)
 	_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_status_label.visible = false
 	add_child(_status_label)
 
 	_tabs = TabContainer.new()
 	_tabs.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_tabs.custom_minimum_size.y = 312.0
+	_tabs.custom_minimum_size.y = 420.0
 	_tabs.focus_mode = Control.FOCUS_ALL
 	add_child(_tabs)
 	_style_tab_bar()
@@ -166,7 +167,6 @@ func _build() -> void:
 
 func _build_ship_status_page() -> void:
 	var box := _page("ShipStatus")
-	box.add_child(_section_title("SHIP_STATUS_HEADING"))
 	_build_summary = BuildSummaryPanel.new()
 	box.add_child(_build_summary)
 
@@ -249,25 +249,27 @@ func _page(page_name: String) -> VBoxContainer:
 	_tabs.add_child(scroll)
 	var margin := MarginContainer.new()
 	margin.add_theme_constant_override("margin_left", 16)
-	margin.add_theme_constant_override("margin_top", 16)
+	margin.add_theme_constant_override("margin_top", 18)
 	margin.add_theme_constant_override("margin_right", 16)
-	margin.add_theme_constant_override("margin_bottom", 16)
+	margin.add_theme_constant_override("margin_bottom", 18)
 	margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(margin)
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 12)
+	box.add_theme_constant_override("separation", 14)
 	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	margin.add_child(box)
 	return box
 
 
 func _section_title(key: String) -> Label:
-	return _label(key, 19, Art.MUSTARD)
+	var label := _label(key, 21, Art.MUSTARD)
+	label.theme_type_variation = &"SectionLabel"
+	return label
 
 
 func _style_tab_bar() -> void:
 	_tabs.add_theme_font_override("font", get_theme_default_font())
-	_tabs.add_theme_font_size_override("font_size", 17)
+	_tabs.add_theme_font_size_override("font_size", 18)
 	_tabs.add_theme_color_override("font_unselected_color", Art.IVORY_BRIGHT)
 	_tabs.add_theme_color_override("font_hovered_color", Art.IVORY_BRIGHT)
 	_tabs.add_theme_color_override("font_selected_color", Art.INK)
@@ -277,7 +279,7 @@ func _style_tab_bar() -> void:
 	_tabs.add_theme_stylebox_override("tab_focus", _tab_style(Art.MUSTARD))
 	var tab_bar := _tabs.get_tab_bar()
 	tab_bar.add_theme_font_override("font", get_theme_default_font())
-	tab_bar.add_theme_font_size_override("font_size", 17)
+	tab_bar.add_theme_font_size_override("font_size", 18)
 	tab_bar.add_theme_color_override("font_unselected_color", Art.IVORY_BRIGHT)
 	tab_bar.add_theme_color_override("font_hovered_color", Art.IVORY_BRIGHT)
 	tab_bar.add_theme_color_override("font_selected_color", Art.INK)
@@ -343,6 +345,7 @@ func _connect_store() -> void:
 func _begin_capture(action: StringName) -> void:
 	_capturing_action = action
 	_status_label.text = tr("SETTINGS_CAPTURE_PROMPT") % tr(String(ACTION_TITLE_KEYS[action]))
+	_status_label.visible = true
 	for button_variant in _binding_buttons.values():
 		var button := button_variant as Button
 		button.disabled = button != _binding_buttons[action]
@@ -359,6 +362,7 @@ func _commit_captured_binding(descriptor: String) -> void:
 	if not conflict.is_empty():
 		var title_key := String(ACTION_TITLE_KEYS.get(conflict, "SETTINGS_RESERVED_CONTROL"))
 		_status_label.text = tr("SETTINGS_BINDING_CONFLICT") % tr(title_key)
+		_status_label.visible = true
 		_cancel_capture(false, false)
 		return
 	var action := _capturing_action
@@ -367,6 +371,7 @@ func _commit_captured_binding(descriptor: String) -> void:
 			tr(String(ACTION_TITLE_KEYS[action])),
 			InputProfile.display_name(descriptor),
 		]
+		_status_label.visible = true
 	_cancel_capture(false, false)
 	refresh_from_store()
 
@@ -377,8 +382,10 @@ func _cancel_capture(show_message: bool, restore_ready: bool = true) -> void:
 		(button_variant as Button).disabled = false
 	if show_message:
 		_status_label.text = tr("SETTINGS_CAPTURE_CANCELLED")
+		_status_label.visible = true
 	elif restore_ready:
-		_status_label.text = tr("SETTINGS_STATUS_READY")
+		_status_label.text = ""
+		_status_label.visible = false
 	refresh_from_store()
 
 
@@ -387,6 +394,7 @@ func _reset_bindings() -> void:
 	if settings != null:
 		settings.reset_control_bindings()
 	_status_label.text = tr("SETTINGS_BINDINGS_RESET")
+	_status_label.visible = true
 	refresh_from_store()
 
 

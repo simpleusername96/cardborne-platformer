@@ -43,6 +43,17 @@ const MUTED := Art.INK_MUTED
 const VIOLET := Art.BOSS_MAGENTA
 const INK := Art.INK
 
+const MODAL_MINIMUMS := {
+	"deployment":Vector2(1176.0, 636.0),
+	"upgrade":Vector2(960.0, 626.0),
+	"pause":Vector2(640.0, 380.0),
+	"result":Vector2(900.0, 560.0),
+	"report":Vector2(1120.0, 600.0),
+	"garage":Vector2(960.0, 560.0),
+	"settings":Vector2(920.0, 570.0),
+	"guidebook":Vector2(1160.0, 636.0),
+}
+
 
 class HealthPips:
 	extends Control
@@ -181,6 +192,79 @@ class ActionRailSlot:
 			_:
 				draw_colored_polygon(PackedVector2Array([center + Vector2(0.0, -7.0), center + Vector2(6.0, 5.0), center, center + Vector2(-6.0, 5.0)]), accent)
 
+
+class ControlHintGlyph:
+	extends Control
+
+	var kind: StringName = &"move"
+	var accent := Art.MINT
+
+
+	func _ready() -> void:
+		if custom_minimum_size == Vector2.ZERO:
+			custom_minimum_size = Vector2(40.0, 40.0)
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+
+	func configure(value: StringName, color: Color = Art.MINT) -> void:
+		kind = value
+		accent = color
+		queue_redraw()
+
+
+	func _draw() -> void:
+		var center := size * 0.5
+		draw_circle(center, 19.0, accent)
+		match kind:
+			&"move":
+				for direction_variant in [Vector2.UP, Vector2.RIGHT, Vector2.DOWN, Vector2.LEFT]:
+					var direction: Vector2 = direction_variant
+					var tip: Vector2 = center + direction * 12.0
+					var side: Vector2 = direction.rotated(PI * 0.5) * 4.0
+					draw_colored_polygon(PackedVector2Array([
+						tip,
+						center + direction * 5.0 + side,
+						center + direction * 5.0 - side,
+					]), Art.IVORY_BRIGHT)
+			&"aim":
+				draw_arc(center, 8.0, 0.0, TAU, 24, Art.IVORY_BRIGHT, 3.0, true)
+				draw_circle(center, 2.5, Art.IVORY_BRIGHT)
+				for direction_variant in [Vector2.UP, Vector2.RIGHT, Vector2.DOWN, Vector2.LEFT]:
+					var direction: Vector2 = direction_variant
+					draw_line(
+						center + direction * 10.0,
+						center + direction * 15.0,
+						Art.IVORY_BRIGHT,
+						3.0
+					)
+			&"primary":
+				for angle in 6:
+					var direction: Vector2 = Vector2.RIGHT.rotated(float(angle) * TAU / 6.0)
+					draw_line(
+						center + direction * 5.0,
+						center + direction * 14.0,
+						Art.IVORY_BRIGHT,
+						3.0
+					)
+				draw_circle(center, 4.0, Art.IVORY_BRIGHT)
+			&"dash":
+				for offset in [-5.0, 4.0]:
+					draw_polyline(PackedVector2Array([
+						center + Vector2(offset - 5.0, -8.0),
+						center + Vector2(offset + 3.0, 0.0),
+						center + Vector2(offset - 5.0, 8.0),
+					]), Art.IVORY_BRIGHT, 3.0, true)
+			_:
+				draw_colored_polygon(PackedVector2Array([
+					center + Vector2(-3.0, -13.0),
+					center + Vector2(8.0, -3.0),
+					center + Vector2(2.0, -1.0),
+					center + Vector2(6.0, 12.0),
+					center + Vector2(-9.0, 2.0),
+					center + Vector2(-2.0, 0.0),
+				]), Art.IVORY_BRIGHT)
+
+
 class StageMinimap:
 	extends Control
 
@@ -314,7 +398,7 @@ var _practice_phase: OptionButton
 var _practice_pattern: OptionButton
 var _practice_invulnerable: CheckBox
 var _deployment_command: Button
-var _deployment_controls_label: Label
+var _deployment_control_binding_labels: Dictionary = {}
 var _deployment_field_label: Label
 var _deployment_difficulty_detail: Label
 var _deployment_difficulty_buttons: Dictionary = {}
@@ -324,12 +408,16 @@ var _result_first_button: Button
 var _result_kicker: Label
 var _result_title: Label
 var _result_garage_button: Button
+var _result_metric_labels: Array[Label] = []
+var _result_performance_label: Label
+var _result_reward_label: Label
 var _garage_first_button: Button
 var _garage_primary_label: Label
 var _garage_passive_label: Label
 var _garage_active_label: Label
 var _garage_unlock_label: Label
 var _garage_summary_label: Label
+var _garage_build_label: Label
 var _selected_primary := &"pulse_cannon"
 var _selected_run_difficulty: StringName = RunDifficulty.DEFAULT
 var _settings_return_surface := "deployment"
@@ -588,13 +676,13 @@ func _apply_responsive_layout() -> void:
 	_notification.position.y = 68.0 if _boss_cluster.visible else 72.0
 	if is_instance_valid(_report_surface):
 		_report_surface.custom_minimum_size = Vector2(
-			minf(1120.0, _root.size.x - 48.0),
-			minf(560.0, _root.size.y - 40.0)
+			minf(MODAL_MINIMUMS["report"].x, _root.size.x - 48.0),
+			minf(MODAL_MINIMUMS["report"].y, _root.size.y - 32.0)
 		)
 	if is_instance_valid(_deployment_surface):
 		_deployment_surface.custom_minimum_size = Vector2(
-			minf(900.0 if compact else 920.0, _root.size.x - 48.0),
-			minf(500.0 if compact else 560.0, _root.size.y - 24.0)
+			minf(MODAL_MINIMUMS["deployment"].x, _root.size.x - 48.0),
+			minf(MODAL_MINIMUMS["deployment"].y, _root.size.y - 24.0)
 		)
 
 
@@ -602,52 +690,94 @@ func _build_deployment() -> void:
 	_deployment_center = CenterContainer.new()
 	_deployment_center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_root.add_child(_deployment_center)
-	_deployment_surface = _modal_panel(Vector2(920.0, 560.0))
+	_deployment_surface = _modal_panel(MODAL_MINIMUMS["deployment"])
 	_deployment_center.add_child(_deployment_surface)
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 8)
+	box.add_theme_constant_override("separation", 6)
 	_deployment_surface.add_child(box)
-	var kicker := _label("DEPLOY_KICKER", 14, AMBER)
-	kicker.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	box.add_child(kicker)
-	var title := _label("DEPLOY_TITLE", 30, INK)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	box.add_child(title)
 	_deployment_field_label = _label("DEPLOY_FIELD_TEMPLATE", 16, RAISED)
+	_deployment_field_label.theme_type_variation = &"MetricLabel"
 	_deployment_field_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(_deployment_field_label)
+	var title := _label("DEPLOY_TITLE", 42, INK)
+	title.theme_type_variation = &"DisplayLabel"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(title)
+	var header_rule := ColorRect.new()
+	header_rule.color = RAISED
+	header_rule.custom_minimum_size.y = 7.0
+	header_rule.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.add_child(header_rule)
 
 	var body := HBoxContainer.new()
-	body.add_theme_constant_override("separation", 24)
-	body.custom_minimum_size.y = 226.0
+	body.add_theme_constant_override("separation", 28)
+	body.custom_minimum_size.y = 322.0
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	box.add_child(body)
 	var controls_box := VBoxContainer.new()
-	controls_box.custom_minimum_size.x = 410.0
+	controls_box.custom_minimum_size.x = 522.0
 	controls_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	controls_box.add_theme_constant_override("separation", 8)
+	controls_box.add_theme_constant_override("separation", 3)
 	body.add_child(controls_box)
-	controls_box.add_child(_label("DEPLOY_CONTROLS_HEADING", 17, AMBER))
-	_deployment_controls_label = _label("DEPLOY_CONTROLS", 15, MUTED)
-	_deployment_controls_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_deployment_controls_label.custom_minimum_size.y = 70.0
-	controls_box.add_child(_deployment_controls_label)
+	controls_box.add_child(_section_heading("DEPLOY_CONTROLS_HEADING"))
+	_deployment_control_row(
+		controls_box,
+		&"move",
+		"SETTINGS_MOVEMENT_RESERVED",
+		"DEPLOY_CONTROL_MOVE_BINDING"
+	)
+	_deployment_control_row(
+		controls_box,
+		&"aim",
+		"DEPLOY_CONTROL_AIM",
+		"DEPLOY_CONTROL_AIM_BINDING"
+	)
+	_deployment_control_row(
+		controls_box,
+		&"primary",
+		"ACTION_PRIMARY",
+		"DEPLOY_CONTROL_PRIMARY_BINDING",
+		&"primary_fire"
+	)
+	_deployment_control_row(
+		controls_box,
+		&"dash",
+		"ACTION_DASH",
+		"DEPLOY_CONTROL_ACTION_BINDING",
+		&"dash"
+	)
+	_deployment_control_row(
+		controls_box,
+		&"emp",
+		"ACTION_EMP",
+		"DEPLOY_CONTROL_ACTION_BINDING",
+		&"active_skill"
+	)
 	controls_box.add_child(HSeparator.new())
-	controls_box.add_child(_label("DEPLOY_PRIMARY_HEADING", 17, AMBER))
-	var cannon := _label("DEPLOY_PULSE_CANNON_SUMMARY", 19, RAISED)
+	controls_box.add_child(_section_heading("DEPLOY_PRIMARY_HEADING"))
+	var weapon_row := HBoxContainer.new()
+	weapon_row.add_theme_constant_override("separation", 14)
+	controls_box.add_child(weapon_row)
+	var weapon_glyph := ControlHintGlyph.new()
+	weapon_glyph.configure(&"primary", AMBER)
+	weapon_glyph.custom_minimum_size = Vector2(48.0, 48.0)
+	weapon_row.add_child(weapon_glyph)
+	var cannon := _label("DEPLOY_PULSE_CANNON_SUMMARY", 16, INK)
+	cannon.theme_type_variation = &"MetricLabel"
 	cannon.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	cannon.custom_minimum_size.y = 92.0
+	cannon.custom_minimum_size.y = 64.0
 	cannon.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	controls_box.add_child(cannon)
+	cannon.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	weapon_row.add_child(cannon)
 
+	var body_divider := VSeparator.new()
+	body.add_child(body_divider)
 	var difficulty_box := VBoxContainer.new()
-	difficulty_box.custom_minimum_size.x = 370.0
+	difficulty_box.custom_minimum_size.x = 520.0
 	difficulty_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	difficulty_box.add_theme_constant_override("separation", 12)
 	body.add_child(difficulty_box)
-	var difficulty_label := _label("DEPLOY_DIFFICULTY_LABEL", 16, INK)
-	difficulty_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	difficulty_box.add_child(difficulty_label)
+	difficulty_box.add_child(_section_heading("DEPLOY_DIFFICULTY_LABEL"))
 	var difficulty_row := HBoxContainer.new()
 	difficulty_row.add_theme_constant_override("separation", 10)
 	difficulty_box.add_child(difficulty_row)
@@ -658,12 +788,14 @@ func _build_deployment() -> void:
 		)
 		button.alignment = HORIZONTAL_ALIGNMENT_CENTER
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.custom_minimum_size.y = 72.0
+		button.add_theme_font_size_override("font_size", 20)
 		button.pressed.connect(_select_run_difficulty.bind(difficulty_id))
 		difficulty_row.add_child(button)
 		_deployment_difficulty_buttons[difficulty_id] = button
-	_deployment_difficulty_detail = _label("DEPLOY_DIFFICULTY_HARD_DETAIL", 14, MUTED)
+	_deployment_difficulty_detail = _label("DEPLOY_DIFFICULTY_HARD_DETAIL", 16, MUTED)
 	_deployment_difficulty_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_deployment_difficulty_detail.custom_minimum_size.y = 78.0
+	_deployment_difficulty_detail.custom_minimum_size.y = 96.0
 	_deployment_difficulty_detail.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_deployment_difficulty_detail.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	difficulty_box.add_child(_deployment_difficulty_detail)
@@ -672,15 +804,16 @@ func _build_deployment() -> void:
 	box.add_child(deploy_lane)
 	_deployment_command = _command_button("DEPLOY_COMMAND", &"PrimaryButton")
 	_deployment_command.custom_minimum_size = Vector2(300.0, 48.0)
+	_deployment_command.add_theme_font_size_override("font_size", 22)
 	_deployment_command.pressed.connect(_on_deployment_confirmed)
 	deploy_lane.add_child(_deployment_command)
 
 	var secondary_actions := HBoxContainer.new()
 	secondary_actions.alignment = BoxContainer.ALIGNMENT_CENTER
-	secondary_actions.add_theme_constant_override("separation", 12)
+	secondary_actions.add_theme_constant_override("separation", 14)
 	box.add_child(secondary_actions)
 	var settings_button := _command_button("SETTINGS_OPEN", &"SecondaryButton")
-	settings_button.custom_minimum_size.x = 180.0
+	settings_button.custom_minimum_size.x = 140.0
 	settings_button.pressed.connect(_show_settings.bind("deployment"))
 	secondary_actions.add_child(settings_button)
 	if OS.is_debug_build():
@@ -688,10 +821,6 @@ func _build_deployment() -> void:
 		practice_button.custom_minimum_size.x = 180.0
 		practice_button.pressed.connect(_show_boss_practice)
 		secondary_actions.add_child(practice_button)
-	var footer := _label("DEPLOY_FOOTER", 13, MUTED)
-	footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	footer.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	box.add_child(footer)
 
 
 func _build_boss_practice() -> void:
@@ -790,7 +919,7 @@ func _build_upgrade() -> void:
 	_upgrade_center = CenterContainer.new()
 	_upgrade_center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_root.add_child(_upgrade_center)
-	var panel := _modal_panel(Vector2(900.0, 520.0))
+	var panel := _modal_panel(MODAL_MINIMUMS["upgrade"])
 	_upgrade_center.add_child(panel)
 	_upgrade_panel = UpgradeChoicePanel.new()
 	_upgrade_panel.confirmed.connect(func(upgrade_id: StringName) -> void: upgrade_selected.emit(upgrade_id))
@@ -804,74 +933,136 @@ func _build_pause() -> void:
 	_pause_center = CenterContainer.new()
 	_pause_center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_root.add_child(_pause_center)
-	var panel := _modal_panel(Vector2(560.0, 500.0))
+	var panel := _modal_panel(MODAL_MINIMUMS["pause"])
 	_pause_center.add_child(panel)
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 12)
+	box.add_theme_constant_override("separation", 16)
 	panel.add_child(box)
 	var header := HBoxContainer.new()
 	header.add_theme_constant_override("separation", 12)
 	box.add_child(header)
-	var title := _label("PAUSE_TITLE", 30, INK)
+	var title := _label("PAUSE_TITLE", 38, INK)
+	title.theme_type_variation = &"TitleLabel"
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(title)
 	var guide := _command_button("?", &"SecondaryButton")
 	guide.tooltip_text = tr("GUIDE_TITLE")
 	guide.accessibility_name = tr("GUIDE_TITLE")
-	guide.custom_minimum_size = Vector2(44.0, 44.0)
+	guide.custom_minimum_size = Vector2(48.0, 48.0)
 	guide.pressed.connect(_show_guidebook.bind("pause"))
 	header.add_child(guide)
+	box.add_child(HSeparator.new())
+	var resume_lane := CenterContainer.new()
+	resume_lane.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	box.add_child(resume_lane)
 	var resume := _command_button("PAUSE_RESUME", &"PrimaryButton")
+	resume.custom_minimum_size = Vector2(300.0, 48.0)
+	resume.add_theme_font_size_override("font_size", 22)
 	resume.pressed.connect(func() -> void: resume_requested.emit())
-	box.add_child(resume)
+	resume_lane.add_child(resume)
 	_pause_first_button = resume
+	var secondary_row := HBoxContainer.new()
+	secondary_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	secondary_row.add_theme_constant_override("separation", 14)
+	box.add_child(secondary_row)
 	var restart := _command_button("PAUSE_RESTART", &"SecondaryButton")
+	restart.custom_minimum_size.x = 220.0
 	restart.pressed.connect(func() -> void: restart_requested.emit())
-	box.add_child(restart)
+	secondary_row.add_child(restart)
 	var settings_button := _command_button("PAUSE_SETTINGS", &"SecondaryButton")
+	settings_button.custom_minimum_size.x = 220.0
 	settings_button.pressed.connect(_show_settings.bind("pause"))
-	box.add_child(settings_button)
+	secondary_row.add_child(settings_button)
+	var abort_lane := CenterContainer.new()
+	box.add_child(abort_lane)
 	_pause_abort_button = _command_button("PAUSE_ABORT", &"TertiaryDangerButton")
+	_pause_abort_button.custom_minimum_size.x = 240.0
 	_pause_abort_button.pressed.connect(func() -> void: garage_requested.emit())
-	box.add_child(_pause_abort_button)
+	abort_lane.add_child(_pause_abort_button)
 
 
 func _build_result() -> void:
 	_result_center = CenterContainer.new()
 	_result_center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_root.add_child(_result_center)
-	var panel := _modal_panel(Vector2(720.0, 510.0))
+	var panel := _modal_panel(MODAL_MINIMUMS["result"])
 	_result_center.add_child(panel)
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 12)
+	box.add_theme_constant_override("separation", 14)
 	panel.add_child(box)
-	_result_kicker = _label("RESULT_KICKER", 14, AMBER)
+	_result_kicker = _label("RESULT_KICKER", 16, AMBER)
+	_result_kicker.theme_type_variation = &"MetricLabel"
 	_result_kicker.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(_result_kicker)
-	_result_title = _label("RESULT_TITLE", 34, INK)
+	_result_title = _label("RESULT_TITLE", 38, INK)
+	_result_title.theme_type_variation = &"TitleLabel"
 	_result_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(_result_title)
-	var summary := _label("", 16, MUTED)
-	summary.name = "RunSummary"
-	summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	summary.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	summary.custom_minimum_size.y = 190.0
-	box.add_child(summary)
-	box.set_meta("summary", summary)
+	box.add_child(HSeparator.new())
+	var summary_band := PanelContainer.new()
+	summary_band.theme_type_variation = &"SummaryBand"
+	box.add_child(summary_band)
+	var summary_row := HBoxContainer.new()
+	summary_row.add_theme_constant_override("separation", 16)
+	summary_band.add_child(summary_row)
+	for index in 3:
+		if index > 0:
+			summary_row.add_child(VSeparator.new())
+		var metric := _label("", 17, INK)
+		metric.theme_type_variation = &"MetricLabel"
+		metric.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		metric.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		metric.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		summary_row.add_child(metric)
+		_result_metric_labels.append(metric)
+	var detail_row := HBoxContainer.new()
+	detail_row.add_theme_constant_override("separation", 22)
+	detail_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	box.add_child(detail_row)
+	var performance_box := VBoxContainer.new()
+	performance_box.add_theme_constant_override("separation", 10)
+	performance_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	detail_row.add_child(performance_box)
+	var performance_title := _label("RESULT_PERFORMANCE", 20, AMBER)
+	performance_title.theme_type_variation = &"SectionLabel"
+	performance_box.add_child(performance_title)
+	_result_performance_label = _label("", 18, INK)
+	_result_performance_label.theme_type_variation = &"MetricLabel"
+	_result_performance_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	performance_box.add_child(_result_performance_label)
+	detail_row.add_child(VSeparator.new())
+	var reward_box := VBoxContainer.new()
+	reward_box.add_theme_constant_override("separation", 10)
+	reward_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	detail_row.add_child(reward_box)
+	var reward_title := _label("RESULT_REWARD", 20, AMBER)
+	reward_title.theme_type_variation = &"SectionLabel"
+	reward_box.add_child(reward_title)
+	_result_reward_label = _label("", 18, INK)
+	_result_reward_label.theme_type_variation = &"MetricLabel"
+	_result_reward_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	reward_box.add_child(_result_reward_label)
+	var actions := HBoxContainer.new()
+	actions.alignment = BoxContainer.ALIGNMENT_CENTER
+	actions.add_theme_constant_override("separation", 14)
+	box.add_child(actions)
 	_result_garage_button = _command_button("RESULT_REVIEW_GARAGE", &"PrimaryButton")
+	_result_garage_button.custom_minimum_size = Vector2(300.0, 48.0)
+	_result_garage_button.add_theme_font_size_override("font_size", 22)
 	_result_garage_button.pressed.connect(func() -> void: garage_requested.emit())
-	box.add_child(_result_garage_button)
+	actions.add_child(_result_garage_button)
 	_result_first_button = _result_garage_button
 	var replay := _command_button("RESULT_REPLAY", &"SecondaryButton")
+	replay.custom_minimum_size.x = 210.0
 	replay.pressed.connect(func() -> void: replay_requested.emit())
-	box.add_child(replay)
+	actions.add_child(replay)
 
 
 func _build_stage_report() -> void:
 	_report_center = CenterContainer.new()
 	_report_center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_root.add_child(_report_center)
-	_report_surface = _modal_panel(Vector2(900.0, 500.0))
+	_report_surface = _modal_panel(MODAL_MINIMUMS["report"])
 	_report_center.add_child(_report_surface)
 	_report_panel = StageReportPanel.new()
 	_report_panel.continued.connect(func() -> void: stage_report_continued.emit())
@@ -883,35 +1074,64 @@ func _build_garage() -> void:
 	_garage_center = CenterContainer.new()
 	_garage_center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_root.add_child(_garage_center)
-	_garage_surface = _modal_panel(Vector2(860.0, 510.0))
+	_garage_surface = _modal_panel(MODAL_MINIMUMS["garage"])
 	_garage_center.add_child(_garage_surface)
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 10)
+	box.add_theme_constant_override("separation", 14)
 	_garage_surface.add_child(box)
-	var kicker := _label("GARAGE_KICKER", 14, AMBER)
+	var kicker := _label("GARAGE_KICKER", 16, AMBER)
+	kicker.theme_type_variation = &"MetricLabel"
 	box.add_child(kicker)
-	var title := _label("GARAGE_TITLE", 30, INK)
+	var title := _label("GARAGE_TITLE", 38, INK)
+	title.theme_type_variation = &"TitleLabel"
 	box.add_child(title)
-	_garage_summary_label = _label("GARAGE_HULL_RESET", 15, MUTED)
-	box.add_child(_garage_summary_label)
+	var summary_band := PanelContainer.new()
+	summary_band.theme_type_variation = &"SummaryBand"
+	box.add_child(summary_band)
+	_garage_summary_label = _label("GARAGE_HULL_RESET", 17, INK)
+	_garage_summary_label.theme_type_variation = &"MetricLabel"
+	_garage_summary_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	summary_band.add_child(_garage_summary_label)
 	var sections := HBoxContainer.new()
 	sections.add_theme_constant_override("separation", 28)
 	sections.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	box.add_child(sections)
 	var loadout_box := VBoxContainer.new()
-	loadout_box.custom_minimum_size.x = 420.0
-	loadout_box.add_theme_constant_override("separation", 12)
+	loadout_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	loadout_box.add_theme_constant_override("separation", 14)
 	sections.add_child(loadout_box)
-	loadout_box.add_child(_label("GARAGE_LOADOUT", 16, AMBER))
-	_garage_primary_label = _label("", 19, INK)
+	var loadout_title := _label("GARAGE_LOADOUT", 20, AMBER)
+	loadout_title.theme_type_variation = &"SectionLabel"
+	loadout_box.add_child(loadout_title)
+	loadout_box.add_child(HSeparator.new())
+	_garage_primary_label = _label("", 20, INK)
+	_garage_primary_label.theme_type_variation = &"MetricLabel"
 	loadout_box.add_child(_garage_primary_label)
-	_garage_passive_label = _label("", 16, RAISED)
+	_garage_passive_label = _label("", 18, RAISED)
+	_garage_passive_label.theme_type_variation = &"MetricLabel"
 	loadout_box.add_child(_garage_passive_label)
-	_garage_active_label = _label("", 16, VIOLET)
+	_garage_active_label = _label("", 18, VIOLET)
+	_garage_active_label.theme_type_variation = &"MetricLabel"
 	loadout_box.add_child(_garage_active_label)
-	_garage_unlock_label = _label("", 15, MUTED)
+	sections.add_child(VSeparator.new())
+	var recovery_box := VBoxContainer.new()
+	recovery_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	recovery_box.add_theme_constant_override("separation", 12)
+	sections.add_child(recovery_box)
+	var module_title := _label("GARAGE_MODULE", 20, AMBER)
+	module_title.theme_type_variation = &"SectionLabel"
+	recovery_box.add_child(module_title)
+	recovery_box.add_child(HSeparator.new())
+	_garage_unlock_label = _label("", 17, MUTED)
 	_garage_unlock_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	loadout_box.add_child(_garage_unlock_label)
+	recovery_box.add_child(_garage_unlock_label)
+	var build_title := _label("GARAGE_RUN_BUILD", 20, AMBER)
+	build_title.theme_type_variation = &"SectionLabel"
+	recovery_box.add_child(build_title)
+	recovery_box.add_child(HSeparator.new())
+	_garage_build_label = _label("", 17, INK)
+	_garage_build_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	recovery_box.add_child(_garage_build_label)
 
 	var footer := HBoxContainer.new()
 	footer.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -919,6 +1139,7 @@ func _build_garage() -> void:
 	box.add_child(footer)
 	var replay := _command_button("GARAGE_LAUNCH", &"PrimaryButton")
 	replay.custom_minimum_size = Vector2(300.0, 48.0)
+	replay.add_theme_font_size_override("font_size", 22)
 	replay.pressed.connect(func() -> void: replay_requested.emit())
 	footer.add_child(replay)
 	var settings_button := _command_button("GARAGE_SETTINGS", &"SecondaryButton")
@@ -932,7 +1153,7 @@ func _build_settings() -> void:
 	_settings_center = CenterContainer.new()
 	_settings_center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_root.add_child(_settings_center)
-	var panel := _modal_panel(Vector2(840.0, 500.0))
+	var panel := _modal_panel(MODAL_MINIMUMS["settings"])
 	_settings_center.add_child(panel)
 	_settings_panel = SettingsPanel.new()
 	_settings_panel.close_requested.connect(_close_settings)
@@ -944,7 +1165,7 @@ func _build_guidebook() -> void:
 	_guide_center = CenterContainer.new()
 	_guide_center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_root.add_child(_guide_center)
-	var panel := _modal_panel(Vector2(920.0, 540.0))
+	var panel := _modal_panel(MODAL_MINIMUMS["guidebook"])
 	_guide_center.add_child(panel)
 	_guide_panel = GuidebookPanel.new()
 	_guide_panel.close_requested.connect(_close_guidebook)
@@ -1061,9 +1282,9 @@ func show_result(summary: Dictionary) -> void:
 	_result_center.visible = true
 	_hud.visible = false
 	_latest_result_summary = summary.duplicate(true)
-	var has_next := false
+	var has_next := bool(summary.get("has_next_stage", false))
 	_result_kicker.text = tr("RESULT_STAGE_COMPLETE").replace("%d", str(int(summary.get("stage_number", 1)))).replace("%s", tr(String(summary.get("stage_title_key", "STAGE_FLOODED_WORKS"))))
-	_result_title.text = tr("RESULT_TITLE_FINAL")
+	_result_title.text = tr("RESULT_TITLE_CONTINUE" if has_next else "RESULT_TITLE_FINAL")
 	_result_first_button = _result_garage_button
 	_refresh_result_summary()
 	_result_first_button.grab_focus()
@@ -1189,15 +1410,7 @@ func is_modal_visible() -> bool:
 
 
 func debug_layout_minimums() -> Dictionary:
-	return {
-		"deployment": Vector2(920.0, 560.0),
-		"upgrade": Vector2(900.0, 520.0),
-		"pause": Vector2(560.0, 500.0),
-		"result": Vector2(720.0, 510.0),
-		"garage": Vector2(860.0, 510.0),
-		"settings": Vector2(840.0, 500.0),
-		"guidebook": Vector2(860.0, 500.0),
-	}
+	return MODAL_MINIMUMS.duplicate(true)
 
 
 func debug_ui_contract(viewport_width: float = 1280.0) -> Dictionary:
@@ -1209,8 +1422,8 @@ func debug_ui_contract(viewport_width: float = 1280.0) -> Dictionary:
 	var minimap_size := Vector2(160.0, 98.0) if compact else Vector2(176.0, 108.0)
 	var target_size := Vector2(168.0, 60.0) if compact else Vector2(184.0, 64.0)
 	var deployment_surface_size := Vector2(
-		minf(900.0 if compact else 920.0, viewport_width - 48.0),
-		minf(500.0 if compact else 560.0, viewport_height - 24.0)
+		minf(MODAL_MINIMUMS["deployment"].x, viewport_width - 48.0),
+		minf(MODAL_MINIMUMS["deployment"].y, viewport_height - 24.0)
 	)
 	var dock_size := Vector2(154.0, 34.0)
 	var health_end := 18.0 + (168.0 if compact else 184.0)
@@ -1256,6 +1469,8 @@ func debug_ui_contract(viewport_width: float = 1280.0) -> Dictionary:
 		"deployment_difficulty": _selected_run_difficulty,
 		"deployment_primary_size":_deployment_command.custom_minimum_size,
 		"deployment_surface_size":deployment_surface_size,
+		"display_font_size":_root.theme.get_font_size(&"font_size", &"DisplayLabel"),
+		"modal_minimums":debug_layout_minimums(),
 		"upgrade_focusables": _upgrade_center.find_children("*", "Button", true, false).size(),
 		"upgrade_choice": _upgrade_panel.debug_contract(),
 		"has_upgrade_card_theme":(
@@ -1382,19 +1597,23 @@ func _minimum_difficulty_button_height() -> float:
 func _refresh_result_summary() -> void:
 	if _latest_result_summary.is_empty():
 		return
-	var summary_label: Label = _result_center.get_child(0).get_child(0).get_meta("summary")
 	var result := _latest_result_summary
-	summary_label.text = "%s\n%s\n%s\n%s\n\n%s\n%s  ·  %s  ·  %s\n\n%s\n✦  %s" % [
-		tr("RESULT_RUN"),
-		tr("RESULT_CLEAR_TIME") % String(result.get("time", "0:00")),
-		tr("RESULT_HULL") % roundi(float(result.get("health_ratio", 0.0)) * 100.0),
-		tr("RESULT_UPGRADE") % tr(String(result.get("upgrade", "UPGRADE_NONE"))),
-		tr("RESULT_PERFORMANCE"),
+	if _result_metric_labels.size() == 3:
+		_result_metric_labels[0].text = tr("RESULT_CLEAR_TIME") % String(result.get("time", "0:00"))
+		_result_metric_labels[1].text = tr("RESULT_HULL") % roundi(
+			float(result.get("health_ratio", 0.0)) * 100.0
+		)
+		_result_metric_labels[2].text = tr("RESULT_UPGRADE") % tr(
+			String(result.get("upgrade", "UPGRADE_NONE"))
+		)
+	_result_performance_label.text = "%s\n%s\n%s" % [
 		tr("RESULT_PRIMARY_HITS") % int(result.get("primary_hits", 0)),
 		tr("RESULT_DASH_USES") % int(result.get("dash_uses", 0)),
 		tr("RESULT_INSTALLATIONS") % int(result.get("installations", 0)),
-		tr("RESULT_REWARD"),
+	]
+	_result_reward_label.text = "%s\n%s" % [
 		tr("RESULT_RELAY_MODULE"),
+		tr("RESULT_ROUTE_CONTINUES"),
 	]
 
 
@@ -1411,6 +1630,7 @@ func _refresh_garage_content() -> void:
 	if _latest_garage_data.is_empty():
 		_garage_summary_label.text = tr("GARAGE_HULL_RESET")
 		_garage_unlock_label.text = "%s  ·  %s" % [tr("GARAGE_MODULE"), tr("GARAGE_NO_MODULE")]
+		_garage_build_label.text = tr("SHIP_STATUS_NONE")
 		return
 	var clear_count := int(_latest_garage_data.get("clear_count", 0))
 	_garage_summary_label.text = "%s  ·  %s" % [tr("GARAGE_STAGE_CLEARS") % clear_count, tr("GARAGE_HULL_RESET")]
@@ -1426,8 +1646,7 @@ func _refresh_garage_content() -> void:
 		_garage_unlock_label.text = "%s  ·  %s" % [tr("GARAGE_MODULE"), "  •  ".join(unlocks)]
 		_garage_unlock_label.add_theme_color_override("font_color", AMBER)
 	var build_summary := String(_latest_garage_data.get("build_summary", ""))
-	if not build_summary.is_empty():
-		_garage_unlock_label.text += "\n%s  ·  %s" % [tr("GARAGE_RUN_BUILD"), build_summary]
+	_garage_build_label.text = tr("SHIP_STATUS_NONE") if build_summary.is_empty() else build_summary
 
 
 func _refresh_garage_primary() -> void:
@@ -1464,12 +1683,17 @@ func _refresh_input_bindings() -> void:
 	_primary_slot.set_binding(InputProfile.action_display_name(&"primary_fire", bindings))
 	_dash_slot.set_binding(InputProfile.action_display_name(&"dash", bindings))
 	_skill_slot.set_binding(InputProfile.action_display_name(&"active_skill", bindings))
-	if is_instance_valid(_deployment_controls_label):
-		_deployment_controls_label.text = tr("DEPLOY_CONTROLS_TEMPLATE") % [
-			InputProfile.action_display_name(&"primary_fire", bindings),
-			InputProfile.action_display_name(&"dash", bindings),
-			InputProfile.action_display_name(&"active_skill", bindings),
-		]
+	for action_variant in _deployment_control_binding_labels:
+		var action := StringName(action_variant)
+		var label := _deployment_control_binding_labels[action] as Label
+		if not is_instance_valid(label):
+			continue
+		var binding := InputProfile.action_display_name(action, bindings)
+		label.text = (
+			tr("DEPLOY_CONTROL_PRIMARY_BINDING") % binding
+			if action == &"primary_fire"
+			else tr("DEPLOY_CONTROL_ACTION_BINDING") % binding
+		)
 
 
 func _flat_panel() -> PanelContainer:
@@ -1510,6 +1734,51 @@ func _label(text: String, font_size: int, color: Color) -> Label:
 	label.add_theme_color_override("font_color", color)
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return label
+
+
+func _section_heading(key: String) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 12)
+	var left_rule := HSeparator.new()
+	left_rule.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(left_rule)
+	var heading := _label(key, 19, AMBER)
+	heading.theme_type_variation = &"SectionLabel"
+	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	row.add_child(heading)
+	var right_rule := HSeparator.new()
+	right_rule.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(right_rule)
+	return row
+
+
+func _deployment_control_row(
+	parent: VBoxContainer,
+	glyph_kind: StringName,
+	title_key: String,
+	binding_key: String,
+	action: StringName = &""
+) -> void:
+	var row := HBoxContainer.new()
+	row.custom_minimum_size.y = 36.0
+	row.add_theme_constant_override("separation", 10)
+	parent.add_child(row)
+	var glyph := ControlHintGlyph.new()
+	glyph.configure(glyph_kind, MOSS)
+	glyph.custom_minimum_size = Vector2(34.0, 34.0)
+	row.add_child(glyph)
+	var title := _label(title_key, 16, INK)
+	title.theme_type_variation = &"MetricLabel"
+	title.custom_minimum_size.x = 132.0
+	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	row.add_child(title)
+	var binding := _label(binding_key, 15, MUTED)
+	binding.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	binding.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	binding.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	row.add_child(binding)
+	if not action.is_empty():
+		_deployment_control_binding_labels[action] = binding
 
 
 func _action_slot(parent: HBoxContainer, binding: String, title: String, color: Color, primary: bool = false) -> ActionRailSlot:

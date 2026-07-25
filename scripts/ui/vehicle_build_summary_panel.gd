@@ -24,6 +24,7 @@ const STAT_GROUPS: Array[Dictionary] = [
 
 var _snapshot: Dictionary = {}
 var _empty_label: Label
+var _summary_band: PanelContainer
 var _summary_strip: HBoxContainer
 var _summary_labels: Array[Label] = []
 var _stat_groups: HBoxContainer
@@ -37,24 +38,14 @@ var _rendered_stat_count := 0
 
 func _ready() -> void:
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	add_theme_constant_override("separation", 12)
-	_empty_label = _label("SHIP_STATUS_EMPTY", 16, Art.INK_MUTED)
+	add_theme_constant_override("separation", 16)
+	_empty_label = _label("SHIP_STATUS_EMPTY", 17, Art.INK_MUTED)
 	_empty_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_empty_label.custom_minimum_size.y = 54.0
 	_empty_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	add_child(_empty_label)
 	_build_summary_strip()
 	_build_stat_groups()
-	_secondary_title = _section("SHIP_STATUS_SECONDARIES")
-	add_child(_secondary_title)
-	_secondary_box = VBoxContainer.new()
-	_secondary_box.add_theme_constant_override("separation", 5)
-	add_child(_secondary_box)
-	_upgrade_title = _section("SHIP_STATUS_UPGRADES")
-	add_child(_upgrade_title)
-	_upgrade_box = VBoxContainer.new()
-	_upgrade_box.add_theme_constant_override("separation", 7)
-	add_child(_upgrade_box)
 	set_snapshot({})
 
 
@@ -64,7 +55,7 @@ func set_snapshot(snapshot: Dictionary) -> void:
 		return
 	var active := bool(_snapshot.get("active", false))
 	_empty_label.visible = not active
-	_summary_strip.visible = active
+	_summary_band.visible = active
 	_stat_groups.visible = active
 	_secondary_box.visible = active
 	_upgrade_box.visible = active
@@ -84,14 +75,19 @@ func set_snapshot(snapshot: Dictionary) -> void:
 
 
 func _build_summary_strip() -> void:
+	_summary_band = PanelContainer.new()
+	_summary_band.theme_type_variation = &"SummaryBand"
+	_summary_band.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	add_child(_summary_band)
 	_summary_strip = HBoxContainer.new()
-	_summary_strip.add_theme_constant_override("separation", 14)
+	_summary_strip.add_theme_constant_override("separation", 18)
 	_summary_strip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	add_child(_summary_strip)
+	_summary_band.add_child(_summary_strip)
 	for index in 3:
 		if index > 0:
 			_summary_strip.add_child(VSeparator.new())
-		var label := _label("", 16, Art.INK)
+		var label := _label("", 18, Art.INK)
+		label.theme_type_variation = &"MetricLabel"
 		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		_summary_strip.add_child(label)
@@ -100,23 +96,44 @@ func _build_summary_strip() -> void:
 
 func _build_stat_groups() -> void:
 	_stat_groups = HBoxContainer.new()
-	_stat_groups.add_theme_constant_override("separation", 18)
+	_stat_groups.add_theme_constant_override("separation", 28)
 	_stat_groups.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	add_child(_stat_groups)
-	for group in STAT_GROUPS:
+	var left_column := VBoxContainer.new()
+	left_column.add_theme_constant_override("separation", 14)
+	left_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	left_column.size_flags_stretch_ratio = 1.0
+	_stat_groups.add_child(left_column)
+	_stat_groups.add_child(VSeparator.new())
+	var right_column := VBoxContainer.new()
+	right_column.add_theme_constant_override("separation", 14)
+	right_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	right_column.size_flags_stretch_ratio = 1.0
+	_stat_groups.add_child(right_column)
+	for group_index in STAT_GROUPS.size():
+		var group: Dictionary = STAT_GROUPS[group_index]
 		var box := VBoxContainer.new()
-		box.add_theme_constant_override("separation", 6)
+		box.add_theme_constant_override("separation", 8)
 		box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		box.size_flags_stretch_ratio = 1.0
 		box.add_child(_section(String(group["key"])))
 		var grid := GridContainer.new()
 		grid.columns = 2
-		grid.add_theme_constant_override("h_separation", 10)
-		grid.add_theme_constant_override("v_separation", 6)
+		grid.add_theme_constant_override("h_separation", 14)
+		grid.add_theme_constant_override("v_separation", 8)
 		grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		box.add_child(grid)
-		_stat_groups.add_child(box)
+		(left_column if group_index < 2 else right_column).add_child(box)
 		_stat_grids.append(grid)
+	_secondary_title = _section("SHIP_STATUS_SECONDARIES")
+	right_column.add_child(_secondary_title)
+	_secondary_box = VBoxContainer.new()
+	_secondary_box.add_theme_constant_override("separation", 6)
+	right_column.add_child(_secondary_box)
+	_upgrade_title = _section("SHIP_STATUS_UPGRADES")
+	right_column.add_child(_upgrade_title)
+	_upgrade_box = VBoxContainer.new()
+	_upgrade_box.add_theme_constant_override("separation", 7)
+	right_column.add_child(_upgrade_box)
 
 
 func _refresh_summary() -> void:
@@ -158,10 +175,11 @@ func _refresh_stats() -> void:
 
 
 func _append_stat_row(grid: GridContainer, stat: Dictionary) -> void:
-	var key_label := _label(String(stat.get("label_key", "")), 14, Art.INK_MUTED)
+	var key_label := _label(String(stat.get("label_key", "")), 16, Art.INK_MUTED)
 	key_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	key_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var value_label := _label("", 15, Art.INK)
+	var value_label := _label("", 17, Art.INK)
+	value_label.theme_type_variation = &"MetricLabel"
 	value_label.text = _format_value(stat)
 	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	grid.add_child(key_label)
@@ -172,11 +190,11 @@ func _append_stat_row(grid: GridContainer, stat: Dictionary) -> void:
 func _refresh_secondaries() -> void:
 	var secondaries: Array = _snapshot.get("secondaries", [])
 	if secondaries.is_empty():
-		_secondary_box.add_child(_label("SHIP_STATUS_NONE", 15, Art.INK_MUTED))
+		_secondary_box.add_child(_label("SHIP_STATUS_NONE", 16, Art.INK_MUTED))
 		return
 	for secondary_variant in secondaries:
 		var row := Dictionary(secondary_variant)
-		var label := _label("", 15, Art.INK)
+		var label := _label("", 17, Art.INK)
 		label.text = "%s  ·  %s" % [
 			tr(String(row.get("name_key", ""))),
 			tr("SHIP_STATUS_LEVEL").replace(
@@ -189,19 +207,18 @@ func _refresh_secondaries() -> void:
 func _refresh_upgrades() -> void:
 	var upgrades: Array = _snapshot.get("upgrades", [])
 	if upgrades.is_empty():
-		_upgrade_box.add_child(_label("SHIP_STATUS_NONE", 15, Art.INK_MUTED))
+		_upgrade_box.add_child(_label("SHIP_STATUS_NONE", 16, Art.INK_MUTED))
 		return
 	for upgrade_variant in upgrades:
 		var row := Dictionary(upgrade_variant)
-		var label := _label("", 15, Art.INK)
-		label.text = "%s  ·  %s\n%s" % [
+		var label := _label("", 16, Art.INK)
+		label.text = "%s  ·  %s" % [
 			tr(String(row.get("title_key", ""))),
 			tr("SHIP_STATUS_LEVEL_MAX").replace(
 				"%level%", str(int(row.get("level", 0)))
 			).replace(
 				"%max%", str(int(row.get("max_level", 1)))
 			),
-			tr(String(row.get("description_key", ""))),
 		]
 		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		_upgrade_box.add_child(label)
@@ -216,7 +233,9 @@ func _format_value(stat: Dictionary) -> String:
 
 
 func _section(key: String) -> Label:
-	return _label(key, 17, Art.MUSTARD)
+	var label := _label(key, 19, Art.MUSTARD)
+	label.theme_type_variation = &"SectionLabel"
+	return label
 
 
 func _label(key: String, size: int, color: Color) -> Label:
@@ -243,11 +262,11 @@ func debug_contract() -> Dictionary:
 		"stats":_snapshot.get("stats", []).size(),
 		"rendered_stats":_rendered_stat_count,
 		"stat_groups":_stat_grids.size(),
-		"summary_visible":is_instance_valid(_summary_strip) and _summary_strip.visible,
+		"summary_visible":is_instance_valid(_summary_band) and _summary_band.visible,
 		"empty_only":(
 			not active
 			and _empty_label.visible
-			and not _summary_strip.visible
+			and not _summary_band.visible
 			and not _stat_groups.visible
 		),
 		"summary_level_text":(
@@ -256,7 +275,14 @@ func debug_contract() -> Dictionary:
 			else ""
 		),
 		"first_group_title":(
-			tr(((_stat_groups.get_child(0) as VBoxContainer).get_child(0) as Label).text)
+			tr(
+				(
+					(
+						(_stat_groups.get_child(0) as VBoxContainer).get_child(0)
+						as VBoxContainer
+					).get_child(0) as Label
+				).text
+			)
 			if is_instance_valid(_stat_groups) and _stat_groups.get_child_count() > 0
 			else ""
 		),

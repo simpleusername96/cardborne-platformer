@@ -21,8 +21,16 @@ func _initialize() -> void:
 		_expect(bool(upgrade_contract["structured_cards"]), "upgrade choices use structured card components at %d" % width)
 		_expect(int(upgrade_contract["card_count"]) == 3, "upgrade choice keeps exactly three card slots at %d" % width)
 		_expect(Vector2(upgrade_contract["confirm_size"]) == Vector2(300.0, 48.0), "upgrade confirmation uses the compact command contract at %d" % width)
+		for card_variant in upgrade_contract["cards"]:
+			var card := Dictionary(card_variant)
+			var card_size := Vector2(card["minimum_size"])
+			_expect(
+				card_size.x >= 280.0 and card_size.y >= 330.0,
+				"upgrade cards preserve the selected large-card hierarchy at %d" % width
+			)
 		_expect(bool(contract["has_upgrade_card_theme"]), "upgrade cards use dedicated shared theme states at %d" % width)
 		_expect(bool(contract["has_tertiary_danger_theme"]), "tertiary danger uses a shared theme state at %d" % width)
+		_expect(int(contract["display_font_size"]) >= 40, "display typography remains legible at %d" % width)
 		_expect(Vector2(contract["deployment_primary_size"]) == Vector2(300.0, 48.0), "deployment uses one compact primary action at %d" % width)
 		var deployment_surface := Vector2(contract["deployment_surface_size"])
 		_expect(
@@ -30,6 +38,16 @@ func _initialize() -> void:
 				and deployment_surface.y <= width * 9.0 / 16.0 - 24.0,
 			"deployment surface stays inside the supported viewport at %d" % width
 		)
+		if is_equal_approx(width, 1280.0):
+			_expect(
+				deployment_surface == Vector2(1176.0, 636.0),
+				"deployment uses the approved broad 1280x720 composition"
+			)
+			var modal_minimums := Dictionary(contract["modal_minimums"])
+			_expect(Vector2(modal_minimums["upgrade"]) == Vector2(960.0, 626.0), "upgrade modal keeps approved scale")
+			_expect(Vector2(modal_minimums["pause"]) == Vector2(640.0, 380.0), "pause modal avoids the old empty panel")
+			_expect(Vector2(modal_minimums["settings"]) == Vector2(920.0, 570.0), "settings modal keeps approved scale")
+			_expect(Vector2(modal_minimums["guidebook"]) == Vector2(1160.0, 636.0), "guidebook modal keeps approved scale")
 		_expect(
 			StringName(contract["pause_abort_variation"]) == &"TertiaryDangerButton",
 			"pause abort remains a restrained tertiary action at %d" % width

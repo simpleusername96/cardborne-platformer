@@ -77,7 +77,7 @@ func _ready() -> void:
 	set_process(true)
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	size_flags_vertical = Control.SIZE_EXPAND_FILL
-	add_theme_constant_override("separation", 10)
+	add_theme_constant_override("separation", 12)
 	_build()
 
 
@@ -132,12 +132,15 @@ func _apply_responsive_layout() -> void:
 
 
 func _build() -> void:
-	_kicker = _label("", 14, Art.MUSTARD)
+	_kicker = _label("", 16, Art.MUSTARD)
+	_kicker.theme_type_variation = &"MetricLabel"
 	add_child(_kicker)
-	_title = _label("", 28, Art.INK)
+	_title = _label("", 34, Art.INK)
+	_title.theme_type_variation = &"TitleLabel"
 	add_child(_title)
-	_summary = _label("", 14, Art.INK_MUTED)
+	_summary = _label("", 17, Art.INK_MUTED)
 	add_child(_summary)
+	add_child(HSeparator.new())
 	_content = HBoxContainer.new()
 	_content.focus_mode = Control.FOCUS_ALL
 	_content.add_theme_constant_override("separation", 18)
@@ -173,6 +176,7 @@ func _build() -> void:
 	_continue_button = Button.new()
 	_continue_button.theme_type_variation = &"PrimaryButton"
 	_continue_button.custom_minimum_size = Vector2(300.0, 48.0)
+	_continue_button.add_theme_font_size_override("font_size", 22)
 	_continue_button.focus_mode = Control.FOCUS_ALL
 	_continue_button.pressed.connect(_on_continue)
 	continue_lane.add_child(_continue_button)
@@ -211,7 +215,7 @@ func _fill_defeats(box: VBoxContainer) -> void:
 	_clear_rows(box)
 	var rows: Array = _snapshot.get("defeats", [])
 	if rows.is_empty():
-		box.add_child(_label("REPORT_NONE", 15, Art.INK_MUTED))
+		box.add_child(_label("REPORT_NONE", 17, Art.INK_MUTED))
 	for row in rows:
 		var data := Dictionary(row)
 		var row_box := HBoxContainer.new()
@@ -223,20 +227,22 @@ func _fill_defeats(box: VBoxContainer) -> void:
 		var name_box := VBoxContainer.new()
 		name_box.add_theme_constant_override("separation", 1)
 		name_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		var label := _label("", 15, Art.INK)
+		var label := _label("", 17, Art.INK)
+		label.theme_type_variation = &"MetricLabel"
 		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		label.text = tr(String(data["name_key"]))
 		label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		name_box.add_child(label)
 		var elite_count := int(data.get("elite_count", 0))
 		if elite_count > 0:
-			var elite := _label("", 13, Art.BOSS_MAGENTA)
+			var elite := _label("", 14, Art.BOSS_MAGENTA)
 			elite.text = tr("REPORT_ELITE_COUNT").replace(
 				"%count%", str(elite_count)
 			)
 			name_box.add_child(elite)
 		row_box.add_child(name_box)
-		var count := _label("", 15, Art.INK)
+		var count := _label("", 17, Art.INK)
+		count.theme_type_variation = &"MetricLabel"
 		count.text = "×%d" % int(data["count"])
 		count.custom_minimum_size.x = 48.0
 		count.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
@@ -249,7 +255,7 @@ func _fill_damage(box: VBoxContainer) -> void:
 	_clear_rows(box)
 	var rows: Array = _snapshot.get("outgoing", [])
 	if rows.is_empty():
-		box.add_child(_label("REPORT_ZERO_DAMAGE", 15, Art.INK_MUTED))
+		box.add_child(_label("REPORT_ZERO_DAMAGE", 17, Art.INK_MUTED))
 	for row in rows:
 		box.add_child(_damage_row(Dictionary(row), true))
 	var total := float(_snapshot.get("total_outgoing", 0.0))
@@ -266,7 +272,7 @@ func _fill_attributes(box: VBoxContainer) -> void:
 	_clear_rows(box)
 	var rows: Array = _snapshot.get("attributes", [])
 	if rows.is_empty():
-		box.add_child(_label("REPORT_NONE", 15, Art.INK_MUTED))
+		box.add_child(_label("REPORT_NONE", 17, Art.INK_MUTED))
 	for row_variant in rows:
 		var row := Dictionary(row_variant)
 		var line := HBoxContainer.new()
@@ -280,7 +286,7 @@ func _fill_attributes(box: VBoxContainer) -> void:
 		content.add_child(_damage_row(row, true))
 		var applications := int(row.get("applications", 0))
 		if applications > 0:
-			var applications_label := _label("", 13, Art.INK_MUTED)
+			var applications_label := _label("", 14, Art.INK_MUTED)
 			applications_label.text = tr("REPORT_ATTRIBUTE_APPLICATIONS").replace(
 				"%count%", str(applications)
 			)
@@ -312,18 +318,20 @@ func _metric_row(
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var title_label := _label("", 15, color)
+	var title_label := _label("", 17, color)
 	title_label.text = title
 	title_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(title_label)
-	var value_label := _label("", 15, color)
+	var value_label := _label("", 17, color)
+	value_label.theme_type_variation = &"MetricLabel"
 	value_label.text = value
 	value_label.custom_minimum_size.x = 72.0
 	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	row.add_child(value_label)
 	if not percentage.is_empty():
-		var percentage_label := _label("", 15, color)
+		var percentage_label := _label("", 17, color)
+		percentage_label.theme_type_variation = &"MetricLabel"
 		percentage_label.text = percentage
 		percentage_label.custom_minimum_size.x = 68.0
 		percentage_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
@@ -333,7 +341,7 @@ func _metric_row(
 
 func _scroll_column(title_key: String) -> VBoxContainer:
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 6)
+	box.add_theme_constant_override("separation", 9)
 	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	box.set_meta("heading_key", title_key)
 	box.add_child(_section(title_key))
@@ -372,7 +380,9 @@ func _clear(node: Node) -> void:
 
 
 func _section(key: String) -> Label:
-	return _label(key, 17, Art.MUSTARD)
+	var label := _label(key, 20, Art.MUSTARD)
+	label.theme_type_variation = &"SectionLabel"
+	return label
 
 
 func _label(key: String, size: int, color: Color) -> Label:

@@ -26,29 +26,31 @@ var _decline: Button
 
 
 func _ready() -> void:
-	add_theme_constant_override("separation", 12)
+	add_theme_constant_override("separation", 8)
 	_build()
 	set_process(true)
 
 
 func _build() -> void:
-	var kicker := _label("UPGRADE_KICKER", 14, Color("d49b27"))
+	var kicker := _label("UPGRADE_KICKER", 16, Color("d49b27"))
+	kicker.theme_type_variation = &"MetricLabel"
 	kicker.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	add_child(kicker)
-	var title := _label("UPGRADE_TITLE", 28, Color("102e38"))
-	title.custom_minimum_size.x = 800.0
+	var title := _label("UPGRADE_TITLE", 38, Color("102e38"))
+	title.theme_type_variation = &"DisplayLabel"
+	title.custom_minimum_size.x = 900.0
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	add_child(title)
-	_detail = _label("UPGRADE_SELECT_DETAIL", 15, Color("315963"))
-	_detail.custom_minimum_size.x = 800.0
+	_detail = _label("UPGRADE_SELECT_DETAIL", 17, Color("315963"))
+	_detail.custom_minimum_size.x = 900.0
 	_detail.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_detail.custom_minimum_size.y = 44.0
+	_detail.custom_minimum_size.y = 34.0
 	_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	add_child(_detail)
 
 	var row := HBoxContainer.new()
 	row.name = "UpgradeButtons"
-	row.add_theme_constant_override("separation", 10)
+	row.add_theme_constant_override("separation", 18)
 	row.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	add_child(row)
 	for index in 3:
@@ -58,9 +60,9 @@ func _build() -> void:
 		row.add_child(button)
 		_buttons.append(button)
 
-	_message = _label("", 14, Color("7b2444"))
+	_message = _label("", 15, Color("7b2444"))
 	_message.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_message.custom_minimum_size.y = 24.0
+	_message.custom_minimum_size.y = 20.0
 	add_child(_message)
 	var commands := HBoxContainer.new()
 	commands.add_theme_constant_override("separation", 12)
@@ -76,6 +78,7 @@ func _build() -> void:
 	_confirm.custom_minimum_size = Vector2(300.0, 48.0)
 	_confirm.theme_type_variation = &"PrimaryButton"
 	_confirm.text = tr("UPGRADE_EQUIP")
+	_confirm.add_theme_font_size_override("font_size", 22)
 	_confirm.pressed.connect(_confirm_selected)
 	commands.add_child(_confirm)
 
