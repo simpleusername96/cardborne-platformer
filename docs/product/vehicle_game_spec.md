@@ -3,7 +3,7 @@ type: spec
 status: active
 owner: BK
 created: 2026-07-21
-last_reviewed: 2026-07-24
+last_reviewed: 2026-07-25
 canonical_for: Cardborne gameplay and product behavior
 scope: Current run-selected-field five-stage vehicle campaign
 related:
@@ -345,6 +345,10 @@ Breach Shot.
 - Every future mechanic declares its maximum live instances, update cadence,
   spatial-query path, presentation batch, retirement rule, and deterministic
   performance-scenario coverage before increasing runtime load.
+- Static minimap geometry and each bounded dynamic tactical snapshot use one
+  vertex-colored mesh surface. Scheduled support fields reuse retained world
+  batches and one shared 24-segment timer batch; neither system creates
+  per-actor canvas draws or per-field scene nodes.
 - Only the active vehicle-performance stabilization plan's rendered native/Web
   scenarios and lifecycle soak can establish release performance. Headless
   subsystem microbenchmarks are diagnostic only.

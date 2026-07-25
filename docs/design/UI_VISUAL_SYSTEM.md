@@ -2,7 +2,7 @@
 type: spec
 status: active
 owner: BK
-last_reviewed: 2026-07-24
+last_reviewed: 2026-07-25
 canonical_for: Cardborne vehicle-game art direction and UI presentation
 related:
   - ../product/vehicle_game_spec.md
@@ -171,6 +171,12 @@ rules remain owned by the product specification.
   run-scoped `VehicleFieldLayout` owns the selected field and immutable
   stage-tactical children; `VehicleTerrainRuntime` owns scheduled support
   fields; dynamic combat belongs to the run.
+- Static minimap geometry and each bounded dynamic tactical snapshot render as
+  one vertex-colored mesh surface. Do not reintroduce per-actor or per-marker
+  canvas draw commands.
+- World support fields use retained disk, ring, and beam batches plus one shared
+  24-segment timer batch. They do not use per-field immediate canvas drawing or
+  per-field scene nodes.
 - Raster assets are justified only when procedural flat shapes cannot communicate
   the required silhouette at gameplay size.
 

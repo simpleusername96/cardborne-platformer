@@ -59,9 +59,21 @@ presentation budgets.
   contract; close the stage-layout, support-lifecycle, and damage-ownership
   contradictions found by that audit.
 - [x] Lock the implementation decisions and acceptance thresholds below.
+- [x] Implement Milestones 1–5 in scoped commits.
+- [x] Pass all 36 validators, regenerate the native capture matrix, export the
+  production Web build, and manually verify the built Korean gameplay/pause
+  flow at `1280×720`.
+- [x] Reduce the task-owned rendered pressure regression from roughly 279 to
+  191 p95 draw calls while preserving the 50-batch ceiling.
+- [ ] Close the authoritative native pressure gate. The valid 60-second sample
+  passed draw calls, batches, p99, and long-stall limits, but recorded
+  18.003222 ms p95 against 18.0 ms and 39.3973 one-percent-low FPS against 55.
+  Per the stop condition, the remaining frame-tail work belongs to the active
+  performance-architecture plan; thresholds were not weakened.
 - [ ] Execute Milestones 1–6 in order.
-- [ ] Incorporate accepted behavior into both active specifications, mark this
-  plan done, then delete it after its durable decisions have been absorbed.
+- [x] Incorporate accepted behavior into both active specifications.
+- [ ] Mark this plan done, then delete it after the remaining performance gate
+  passes and no unchecked implementation work remains.
 
 ## Why / Context
 
@@ -515,36 +527,36 @@ dividers inside the one modal surface rather than nested bordered cards.
 
 ### Milestone 1 — Canonical contracts and stage layout ownership
 
-- [ ] Correct the one stale root `AGENTS.md` phrase from “connected three-stage
+- [x] Correct the one stale root `AGENTS.md` phrase from “connected three-stage
   run” to “connected five-stage run”; make no other protected-instruction
   changes.
   - **Protected-file approval gate:** execute this exact one-phrase correction
     only after the user explicitly authorizes executing all tasks in this plan
     or separately approves the quoted diff. Otherwise leave `AGENTS.md`
     untouched and report the stale phrase.
-- [ ] Update `docs/product/vehicle_game_spec.md` and
+- [x] Update `docs/product/vehicle_game_spec.md` and
   `docs/design/UI_VISUAL_SYSTEM.md` to replace run-fixed tactical placement,
   fixed support facilities, Flow Channel, hybrid player projectile color,
   bottom action dock, two-column report, and limited minimap markers with this
   plan's locked contracts.
-- [ ] Add `scripts/vehicle/vehicle_stage_tactical_layout.gd` with immutable
+- [x] Add `scripts/vehicle/vehicle_stage_tactical_layout.gd` with immutable
   stage-local cover, geometry snapshot/broadphase, ordinary/boss anchors,
   objects, support sockets, encounter seed, canonical blueprint, and
   fingerprint; reduce `VehicleFieldLayout` to the run aggregate and accessor
   described above.
-- [ ] Extend `scripts/vehicle/vehicle_field_layout_generator.gd` to compile and
+- [x] Extend `scripts/vehicle/vehicle_field_layout_generator.gd` to compile and
   validate one tactical layout per stage, including distinct-adjacent-stage and
   exact-retry invariants and complete deterministic fallback enumeration.
-- [ ] Remove authored Flow Channel and fixed repair/overdrive entries from
+- [x] Remove authored Flow Channel and fixed repair/overdrive entries from
   `scripts/vehicle/stages/drowned_ruin_field.gd`,
   `scripts/vehicle/stages/tidal_archive_field.gd`, and
   `scripts/vehicle/stages/storm_drydock_field.gd`; derive support sockets from
   each field's existing authored `item_socket_candidates`.
-- [ ] Update `scripts/vehicle/vehicle_field_geometry_snapshot.gd`,
+- [x] Update `scripts/vehicle/vehicle_field_geometry_snapshot.gd`,
   `scripts/vehicle/vehicle_stage_backdrop.gd`, and
   `scripts/enemies/vehicle_pursuit_field.gd` only as required to consume the
   active stage geometry.
-- [ ] Update `scripts/vehicle/vehicle_run.gd` so stage activation switches all
+- [x] Update `scripts/vehicle/vehicle_run.gd` so stage activation switches all
   geometry consumers atomically before encounter state begins, same-stage
   restart restores bulkheads/objects, and next-stage activation preserves only
   the current persistent bulkhead-health contract.
@@ -558,17 +570,17 @@ persistence between stages, and all encounter/balance values remain unchanged.
 
 ### Milestone 2 — Dynamic support-field runtime
 
-- [ ] Extend `scripts/vehicle/vehicle_terrain_definition.gd` with scheduled
+- [x] Extend `scripts/vehicle/vehicle_terrain_definition.gd` with scheduled
   support-slot identity and lifecycle snapshot fields.
-- [ ] Refactor `scripts/vehicle/vehicle_terrain_runtime.gd` to own the four
+- [x] Refactor `scripts/vehicle/vehicle_terrain_runtime.gd` to own the four
   fixed slots, independent state machines, dormant old-site markers, shared
   relocation arbiter, repair depletion, non-stacking overdrive, deterministic
   socket history, and modal freeze/reset behavior.
-- [ ] Remove `flow_vector_at()` callers and Flow Channel rendering/discovery
+- [x] Remove `flow_vector_at()` callers and Flow Channel rendering/discovery
   paths from `scripts/vehicle/vehicle_run.gd`.
-- [ ] Render warning, active fill, exact boundary, and remaining-time arc in
+- [x] Render warning, active fill, exact boundary, and remaining-time arc in
   `scripts/vehicle/vehicle_run.gd` without text or per-field scene nodes.
-- [ ] Remove the Flow Channel guide entry from
+- [x] Remove the Flow Channel guide entry from
   `scripts/progression/vehicle_guidebook_catalog.gd`,
   `scripts/ui/vehicle_guidebook_preview.gd`, and
   `localization/vehicle_stage.csv`; update repair and overdrive copy for
@@ -584,18 +596,18 @@ new gameplay clock is introduced.
 
 ### Milestone 3 — Compact HUD and tactical minimap
 
-- [ ] Update `scripts/ui/vehicle_stage_ui.gd` to remove the bottom dock, create
+- [x] Update `scripts/ui/vehicle_stage_ui.gd` to remove the bottom dock, create
   the icon-only top-left rail, remove the minimap title row, draw clustered
   mobile velocity markers, priority actors, items, support fields, and lifetime
   arcs.
-- [ ] Extend `scripts/ui/vehicle_hud_presenter.gd` only with dirty channels
+- [x] Extend `scripts/ui/vehicle_hud_presenter.gd` only with dirty channels
   needed for stage-layout invalidation and 10 Hz tactical data.
-- [ ] Extend `scripts/vehicle/vehicle_run.gd::_minimap_snapshot()` to emit
+- [x] Extend `scripts/vehicle/vehicle_run.gd::_minimap_snapshot()` to emit
   bounded cell clusters, `player_facing`, tactical items/crates, and the four
   support snapshots; do not send one ordinary marker per enemy.
-- [ ] Preserve the current world threat radar and status-orbit ownership; do
+- [x] Preserve the current world threat radar and status-orbit ownership; do
   not duplicate visible enemies in both threat radar and off-screen arcs.
-- [ ] Update Korean and English HUD/guide copy in
+- [x] Update Korean and English HUD/guide copy in
   `localization/vehicle_stage.csv`.
 
 **Accept:** `960×540`, `1280×720`, and `1920×1080` layouts contain the compact
@@ -608,20 +620,21 @@ non-interactive presentation rather than a second input surface.
 
 ### Milestone 4 — Vehicle and projectile visual contract
 
-- [ ] Split player geometry in
+- [x] Split player geometry in
   `scripts/presentation/vehicle_combat_visual_library.gd` into the four retained
   mesh parts without changing collision truth.
-- [ ] Extend `scripts/vehicle/vehicle_run.gd::_combat_presentation_snapshot()`
+- [x] Extend `scripts/vehicle/vehicle_run.gd::_combat_presentation_snapshot()`
   with only the bounded visual levels needed by the renderer.
-- [ ] Extend `scripts/presentation/vehicle_combat_renderer.gd` with one-instance
-  hull/primary/core batches, a three-instance engine batch, tier shades, and
-  hit-feedback composition.
-- [ ] Keep count/radius-readable secondaries free of shade tiers; apply only the
+- [x] Extend `scripts/presentation/vehicle_combat_renderer.gd` with a retained
+  hull batch while routing primary/core and up to three engine instances
+  through existing retained overlay batches to preserve the 50-batch ceiling;
+  apply tier shades and hit-feedback composition.
+- [x] Keep count/radius-readable secondaries free of shade tiers; apply only the
   exact table above.
-- [ ] Force player projectile head/trail ownership colors in
+- [x] Force player projectile head/trail ownership colors in
   `scripts/presentation/vehicle_combat_renderer.gd` while preserving hostile
   affinity presentation and all collision/size contracts.
-- [ ] Regenerate
+- [x] Regenerate
   `docs/design/vehicle-hud-upgrade-direction/03-runtime-vehicle-upgrade-sheet.png`
   with `tools/design/vehicle_upgrade_sheet_capture.gd`.
 
@@ -634,17 +647,17 @@ and count/radius-readable secondary behavior do not change.
 
 ### Milestone 5 — Attribute telemetry and report UI
 
-- [ ] Extend `scripts/combat/vehicle_stage_telemetry.gd` with bounded stage/run
+- [x] Extend `scripts/combat/vehicle_stage_telemetry.gd` with bounded stage/run
   attribute totals and condition-application counters.
-- [ ] Split status results in
+- [x] Split status results in
   `scripts/combat/vehicle_status_runtime.gd`; pass explicit ownership and
   attribute from every `_damage_enemy()` call site, and exclude terrain-owned
   Arc Surge from outgoing telemetry.
-- [ ] Extend `scripts/combat/vehicle_stage_report_builder.gd` with sorted,
+- [x] Extend `scripts/combat/vehicle_stage_report_builder.gd` with sorted,
   percentage-assigned attribute rows and the source-total equality invariant.
-- [ ] Extend `scripts/ui/vehicle_stage_report_panel.gd` to three columns at wide
+- [x] Extend `scripts/ui/vehicle_stage_report_panel.gd` to three columns at wide
   width and three tabs at compact width.
-- [ ] Add complete Korean/English attribute labels and accessibility text to
+- [x] Add complete Korean/English attribute labels and accessibility text to
   `localization/vehicle_stage.csv`.
 
 **Accept:** success, failure, and zero-data fixtures produce equal source and
@@ -656,25 +669,27 @@ and terrain-owned Arc Surge behavior remain unchanged.
 
 ### Milestone 6 — Validation, rendered QA, and lifecycle close
 
-- [ ] Add or extend focused validators listed in Test Plan.
-- [ ] Update the deterministic capture fixture in
+- [x] Add or extend focused validators listed in Test Plan.
+- [x] Update the deterministic capture fixture in
   `scripts/vehicle/vehicle_run.gd` to stage all four support phases, tactical
   minimap markers, vehicle visual tiers, and source/attribute report rows
   without treating Arc Surge as player-owned.
-- [ ] Run every focused validator with zero errors and zero orphan-node or
+- [x] Run every focused validator with zero errors and zero orphan-node or
   leaked-resource warnings.
-- [ ] Export the production Web build with `tools/export_web.ps1`.
-- [ ] Capture deterministic native Korean and English gameplay, minimap, pause,
+- [x] Export the production Web build with `tools/export_web.ps1`.
+- [x] Capture deterministic native Korean and English gameplay, minimap, pause,
   and report states at `960×540`, `1280×720`, and `1920×1080`; then inspect the
   production Web export at `1280×720` through the registered fastrun-manager
   Codex lane.
-- [ ] Verify a fixed seed through two exact retries and two adjacent stages.
-- [ ] Run one standalone `current_pressure` sample at `1280×720`, using the
+- [x] Verify a fixed seed through two exact retries and two adjacent stages.
+- [x] Run one standalone `current_pressure` sample at `1280×720`, using the
   active performance plan's 10-second warmup, 60-second sample, caps, and
   standalone frame thresholds. This is a task-scoped regression gate, not the
-  unfinished three-run native/Web release matrix.
-- [ ] Record material behavior in the active specs, set this plan to `done`,
-  and remove it once no unchecked implementation work remains.
+  unfinished three-run native/Web release matrix. The sample was authoritative
+  and scenario-valid but did not pass both locked frame-tail thresholds.
+- [x] Record material behavior in the active specs.
+- [ ] Set this plan to `done` and remove it once no unchecked implementation
+  work remains.
 
 **Accept:** every command and rendered check in Test Plan passes, the
 authoritative task-scoped pressure result passes, the Web export opens through
@@ -870,29 +885,62 @@ capture paths, accepted exceptions, remaining warnings, and pass/blocked
 result. Rendered captures, not node-tree inspection alone, are the visual
 authority.
 
+## Execution Evidence — 2026-07-25
+
+- **Surface / task / depth:** Godot gameplay HUD, minimap, world support fields,
+  vehicle/projectiles, pause flow, and stage report; Level 4 UIUX implementation
+  and rendered review.
+- **Files / screens:** the responsibility owners named in Milestones 1–5;
+  live gameplay, maximum-pressure gameplay, two-field state, pause, wide report,
+  and compact report.
+- **Viewports / locales:** native Korean and English captures at `960×540`,
+  `1280×720`, and `1920×1080` under
+  `build/captures/tactical-ui`; the two adjacent fields also have Korean
+  `1280×720` evidence.
+- **States:** warning, active, dormant, depleted, empty report, populated
+  report, selected/focus, paused, vehicle upgrade tiers, and mixed status icons
+  are covered by deterministic fixtures and focused validators.
+- **Input / non-color:** focused validators cover keyboard-reachable compact
+  report tabs and shape-distinct support markers. Built Web QA confirmed Korean
+  deployment, gameplay start, enemy-marker publication, Escape pause, visible
+  cursor, and no browser console errors at `1280×720`.
+- **Build / validation:** all 36 repository validators passed; production Web
+  export succeeded at `build/web/index.html`.
+- **Performance:** the authoritative, focused, valid 60-second
+  `current_pressure` evidence is
+  `build/performance/tactical-ui-current-pressure.json`. P95 draw calls `191`,
+  batches `50`, p99 `22.7273 ms`, and zero consecutive frames above `33.3 ms`
+  pass. P95 `18.003222 ms` and one-percent-low `39.3973 FPS` miss their locked
+  thresholds, so Milestone 6 and this plan remain active.
+- **Accepted exception / remaining warning:** no UI clipping, localization,
+  ownership, or draw-budget exception is accepted. Only the separate
+  performance-architecture frame-tail gate remains open; its thresholds were
+  not weakened.
+
 ## Completion Criteria
 
 - [ ] All six milestone outcomes are complete in coherent scoped commits.
-- [ ] The current stage count/order, field IDs, combat caps, balance values, and
+- [x] The current stage count/order, field IDs, combat caps, balance values, and
   collision truth remain unchanged except for the explicitly retired Flow
   Channel and moving support-field placement.
-- [ ] Every catalog stage and selectable field passes deterministic layout,
+- [x] Every catalog stage and selectable field passes deterministic layout,
   intact-bulkhead clearance, restart, and adjacent-stage variation assertions.
-- [ ] Four support slots pass schedule, staggering, pause, depletion, and effect
+- [x] Four support slots pass schedule, staggering, pause, depletion, and effect
   limits with no per-field scene nodes or unbounded dynamic arrays.
-- [ ] HUD/minimap/report behavior passes at all three supported capture sizes in
+- [x] HUD/minimap/report behavior passes at all three supported capture sizes in
   Korean and English, and every referenced image is inspected at actual
   gameplay scale.
-- [ ] Source and attribute totals agree within `0.01` for stage completion and
+- [x] Source and attribute totals agree within `0.01` for stage completion and
   failure reports; environment damage cannot enter either player partition.
 - [ ] The authoritative `current_pressure` JSON reports
   `scenario_validation.valid == true` and `thresholds.passed == true`.
-- [ ] The production Web export succeeds and the registered built-app flow is
+- [x] The production Web export succeeds and the registered built-app flow is
   manually checked at `1280×720`.
-- [ ] Accepted durable behavior is incorporated into
+- [x] Accepted durable behavior is incorporated into
   `docs/product/vehicle_game_spec.md` and
-  `docs/design/UI_VISUAL_SYSTEM.md`; this plan is marked `done` and then deleted
-  after no unchecked work remains.
+  `docs/design/UI_VISUAL_SYSTEM.md`.
+- [ ] This plan is marked `done` and then deleted after no unchecked work
+  remains.
 
 ## Stop Conditions
 
