@@ -128,8 +128,6 @@ static func _water_rects() -> Array[Rect2]:
 
 static func _features() -> Array[Dictionary]:
 	return [
-		{"id":&"flow_1", "kind":&"flow_channel", "rect":Rect2(3570,780,300,340), "vector":Vector2(72,0)},
-		{"id":&"flow_2", "kind":&"flow_channel", "rect":Rect2(3570,3200,300,340), "vector":Vector2(-72,0)},
 		{"id":&"surge_1", "kind":&"arc_surge", "rect":Rect2(6000,1720,360,880)},
 		{"id":&"bulkhead_1", "kind":&"breakable_bulkhead", "rect":Rect2(2140,2040,180,240)},
 		{"id":&"bulkhead_2", "kind":&"breakable_bulkhead", "rect":Rect2(4880,2040,180,240)},
@@ -137,6 +135,4 @@ static func _features() -> Array[Dictionary]:
 		{"id":&"gate_a_2", "kind":&"transit_gate", "pair":&"a", "pos":Vector2(6480,3420)},
 		{"id":&"gate_b_1", "kind":&"transit_gate", "pair":&"b", "pos":Vector2(6480,900)},
 		{"id":&"gate_b_2", "kind":&"transit_gate", "pair":&"b", "pos":Vector2(720,3420)},
-		{"id":&"repair_1", "kind":&"repair_basin", "pos":Vector2(1640,2160)},
-		{"id":&"overdrive_1", "kind":&"overdrive_field", "pos":Vector2(5560,2160)},
 	]

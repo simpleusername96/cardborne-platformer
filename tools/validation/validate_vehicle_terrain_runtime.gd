@@ -7,21 +7,26 @@ var _failures: Array[String] = []
 
 func _init() -> void:
 	var persistent := {}
+	var sockets: Array[Vector2] = []
+	for row in 3:
+		for column in 4:
+			sockets.append(Vector2(column * 720.0, row * 720.0))
 	var runtime := TerrainRuntime.new()
 	runtime.configure([
-		{"id":&"flow", "kind":&"flow_channel", "rect":Rect2(0, 0, 400, 400), "vector":Vector2(72, 0)},
 		{"id":&"arc", "kind":&"arc_surge", "rect":Rect2(500, 0, 400, 400)},
 		{"id":&"wall", "kind":&"breakable_bulkhead", "rect":Rect2(1000, 0, 120, 400)},
 		{"id":&"gate_a_1", "kind":&"transit_gate", "pair":&"a", "pos":Vector2(0, 800)},
 		{"id":&"gate_a_2", "kind":&"transit_gate", "pair":&"a", "pos":Vector2(3200, 800)},
-		{"id":&"repair", "kind":&"repair_basin", "pos":Vector2(0, 1400)},
-		{"id":&"overdrive", "kind":&"overdrive_field", "pos":Vector2(800, 1400)},
-	], persistent, false)
-	_expect(runtime.flow_vector_at(Vector2(100, 100)) == Vector2(72, 0), "flow applies to mobile actors")
-	_expect(runtime.flow_vector_at(Vector2(100, 100), true) == Vector2(36, 0), "flow halves for bosses")
-	_expect(runtime.flow_vector_at(Vector2(100, 100), false, true) == Vector2.ZERO, "flow excludes stationary actors")
+	], persistent, false, sockets, 9981, &"stage_1")
 
-	runtime.advance(4.5, Vector2.ZERO, 100.0, 100.0)
+	_expect(runtime.support_fields.size() == 4, "four independent support slots exist")
+	var opening: Array = runtime.snapshot()["support_fields"]
+	_expect(StringName(opening[0]["state"]) == &"warning", "repair A starts with warning")
+	_expect(StringName(opening[1]["state"]) == &"initial_delay", "repair B keeps its initial offset")
+	_expect(StringName(opening[2]["state"]) == &"initial_delay", "overdrive A keeps its initial offset")
+	_expect(StringName(opening[3]["state"]) == &"initial_delay", "overdrive B keeps its initial offset")
+
+	runtime.advance(4.5, Vector2(4000, 4000), 100.0, 100.0)
 	var first_arc := runtime.surge_damage_for("enemy", Vector2(600, 100), &"enemy")
 	var repeated_arc := runtime.surge_damage_for("enemy", Vector2(600, 100), &"enemy")
 	_expect(first_arc == 18.0 and repeated_arc == 0.0, "arc surge hits once per active window")
@@ -29,7 +34,7 @@ func _init() -> void:
 	_expect(runtime.damage_bulkhead(&"wall", 72.0), "one full Breach breaks a bulkhead")
 	_expect(runtime.live_bulkhead_rects().is_empty(), "broken bulkhead leaves blocker snapshot")
 	var next_stage := TerrainRuntime.new()
-	next_stage.configure([], persistent, true)
+	next_stage.configure([], persistent, true, sockets, 9981, &"stage_2")
 	_expect(float(persistent.get(&"wall", -1.0)) == 0.0, "bulkhead health persists across stages")
 
 	var transit_events: Array[Dictionary] = []
@@ -40,14 +45,22 @@ func _init() -> void:
 		"transit fires after dwell"
 	)
 
+	var repair_position := Vector2(runtime.support_fields[0]["position"])
 	var healed := 0.0
 	for _step in 20:
-		for event in runtime.advance(0.1, Vector2(0, 1400), 50.0 + healed, 100.0):
+		for event in runtime.advance(0.1, repair_position, 50.0 + healed, 100.0):
 			if event.get("kind") == &"heal":
 				healed += float(event["amount"])
-	_expect(healed > 0.0 and healed <= TerrainRuntime.REPAIR_BUDGET, "repair is dwell-gated and budgeted")
-	runtime.advance(0.1, Vector2(800, 1400), 100.0, 100.0)
-	_expect(runtime.overdrive_active, "overdrive uses exact player membership")
+	_expect(healed > 0.0 and healed <= TerrainRuntime.REPAIR_BUDGET, "active repair is dwell-gated and budgeted")
+
+	var overdrive_position := Vector2(runtime.support_fields[2]["position"])
+	for _step in 30:
+		runtime.advance(0.1, overdrive_position, 100.0, 100.0)
+	_expect(runtime.overdrive_active, "active overdrive uses exact player membership")
+
+	var before_pause := var_to_str(runtime.snapshot()["support_fields"])
+	var after_pause := var_to_str(runtime.snapshot()["support_fields"])
+	_expect(before_pause == after_pause, "support state is stable when gameplay does not advance")
 	_finish()
 
 

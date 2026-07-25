@@ -10,6 +10,54 @@ const CombatMeshIcon = preload("res://scripts/ui/vehicle_combat_mesh_icon.gd")
 
 const INPUT_GUARD_SECONDS := 0.35
 
+class AttributeIcon:
+	extends Control
+
+	var attribute: StringName = &"kinetic"
+
+	func _ready() -> void:
+		custom_minimum_size = Vector2(30.0, 30.0)
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	func set_attribute(value: StringName) -> void:
+		attribute = value
+		queue_redraw()
+
+	func _draw() -> void:
+		var center := size * 0.5
+		var color: Color = {
+			&"kinetic":Art.MUSTARD,
+			&"thermal":Art.CORAL,
+			&"toxin":Art.MINT,
+			&"cryo":Art.COBALT_WATER,
+			&"arc":Art.BOSS_MAGENTA,
+		}.get(attribute, Art.INK_MUTED)
+		match attribute:
+			&"thermal":
+				draw_colored_polygon(PackedVector2Array([
+					center + Vector2(0, -11), center + Vector2(8, 7),
+					center, center + Vector2(-8, 7),
+				]), color)
+			&"toxin":
+				draw_circle(center, 10.0, color)
+				draw_circle(center, 4.0, Art.IVORY_BRIGHT)
+			&"cryo":
+				for angle in [0.0, PI / 3.0, PI * 2.0 / 3.0]:
+					var axis := Vector2.RIGHT.rotated(angle) * 11.0
+					draw_line(center - axis, center + axis, color, 3.0)
+			&"arc":
+				draw_colored_polygon(PackedVector2Array([
+					center + Vector2(-4, -12), center + Vector2(7, -2),
+					center + Vector2(1, 0), center + Vector2(5, 12),
+					center + Vector2(-8, 2), center + Vector2(-2, 0),
+				]), color)
+			_:
+				draw_colored_polygon(PackedVector2Array([
+					center + Vector2(11, 0), center + Vector2(0, 8),
+					center + Vector2(-11, 0), center + Vector2(0, -8),
+				]), color)
+
+
 var _snapshot: Dictionary = {}
 var _title: Label
 var _kicker: Label
@@ -18,6 +66,7 @@ var _content: HBoxContainer
 var _tabs: TabContainer
 var _defeat_box: VBoxContainer
 var _damage_box: VBoxContainer
+var _attribute_box: VBoxContainer
 var _incoming_box: VBoxContainer
 var _continue_button: Button
 var _guard := 0.0
@@ -57,9 +106,10 @@ func open(snapshot: Dictionary) -> void:
 	_rebuild()
 	_tabs.set_tab_title(0, tr("REPORT_DEFEATS"))
 	_tabs.set_tab_title(1, tr("REPORT_OUTGOING"))
+	_tabs.set_tab_title(2, tr("REPORT_ATTRIBUTES"))
 	_apply_responsive_layout()
 	visible = true
-	_continue_button.grab_focus()
+	(_tabs if _tabs.visible else _content).grab_focus()
 
 
 func _process(delta: float) -> void:
@@ -76,7 +126,7 @@ func _notification(what: int) -> void:
 
 
 func _apply_responsive_layout() -> void:
-	var compact := get_window().size.x <= 1000
+	var compact := get_window().size.x < 1180
 	_tabs.visible = compact
 	_content.visible = not compact
 
@@ -89,22 +139,30 @@ func _build() -> void:
 	_summary = _label("", 14, Art.INK_MUTED)
 	add_child(_summary)
 	_content = HBoxContainer.new()
+	_content.focus_mode = Control.FOCUS_ALL
 	_content.add_theme_constant_override("separation", 18)
 	_content.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	add_child(_content)
 	_defeat_box = _scroll_column("REPORT_DEFEATS")
 	_damage_box = _scroll_column("REPORT_OUTGOING")
+	_attribute_box = _scroll_column("REPORT_ATTRIBUTES")
 	_content.add_child(_wrap_panel(_defeat_box))
 	_content.add_child(_wrap_panel(_damage_box))
+	_content.add_child(_wrap_panel(_attribute_box))
 	_tabs = TabContainer.new()
+	_tabs.focus_mode = Control.FOCUS_ALL
+	_tabs.custom_minimum_size.y = 220.0
 	_tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	add_child(_tabs)
 	var compact_defeats := _scroll_column("REPORT_DEFEATS")
 	var compact_damage := _scroll_column("REPORT_OUTGOING")
+	var compact_attributes := _scroll_column("REPORT_ATTRIBUTES")
 	_tabs.add_child(_wrap_panel(compact_defeats, "Defeats"))
 	_tabs.add_child(_wrap_panel(compact_damage, "Damage"))
+	_tabs.add_child(_wrap_panel(compact_attributes, "Attributes"))
 	_tabs.set_meta("defeats", compact_defeats)
 	_tabs.set_meta("damage", compact_damage)
+	_tabs.set_meta("attributes", compact_attributes)
 	_incoming_box = VBoxContainer.new()
 	_incoming_box.add_theme_constant_override("separation", 5)
 	add_child(_incoming_box)
@@ -119,10 +177,13 @@ func _build() -> void:
 func _rebuild() -> void:
 	var compact_defeats := _tabs.get_meta("defeats") as VBoxContainer
 	var compact_damage := _tabs.get_meta("damage") as VBoxContainer
+	var compact_attributes := _tabs.get_meta("attributes") as VBoxContainer
 	for box in [_defeat_box, compact_defeats]:
 		_fill_defeats(box)
 	for box in [_damage_box, compact_damage]:
 		_fill_damage(box)
+	for box in [_attribute_box, compact_attributes]:
+		_fill_attributes(box)
 	_clear(_incoming_box)
 	var failure := bool(_snapshot.get("failure", false))
 	_incoming_box.visible = failure
@@ -184,6 +245,29 @@ func _fill_damage(box: VBoxContainer) -> void:
 			"%damage%", "%.1f" % total
 		)
 		box.add_child(total_label)
+
+
+func _fill_attributes(box: VBoxContainer) -> void:
+	_clear_rows(box)
+	var rows: Array = _snapshot.get("attributes", [])
+	if rows.is_empty():
+		box.add_child(_label("REPORT_NONE", 15, Art.INK_MUTED))
+	for row_variant in rows:
+		var row := Dictionary(row_variant)
+		var line := HBoxContainer.new()
+		line.add_theme_constant_override("separation", 8)
+		var icon := AttributeIcon.new()
+		icon.set_attribute(StringName(row["id"]))
+		line.add_child(icon)
+		var label := _damage_row(row, true)
+		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var applications := int(row.get("applications", 0))
+		if applications > 0:
+			label.text += "\n" + tr("REPORT_ATTRIBUTE_APPLICATIONS").replace(
+				"%count%", str(applications)
+			)
+		line.add_child(label)
+		box.add_child(line)
 
 
 func _damage_row(row: Dictionary, show_percentage: bool) -> Label:
@@ -262,5 +346,6 @@ func debug_contract() -> Dictionary:
 		"guard":INPUT_GUARD_SECONDS,
 		"defeats":_snapshot.get("defeats", []).size(),
 		"outgoing":_snapshot.get("outgoing", []).size(),
+		"attributes":_snapshot.get("attributes", []).size(),
 		"failure":bool(_snapshot.get("failure", false)),
 	}

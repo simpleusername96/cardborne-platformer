@@ -114,12 +114,12 @@ func _check_boss_hit_recovery(run) -> void:
 	boss["phase"] = "boss_startup"
 	boss["phase_time"] = 1.0
 	run.call("_append_enemy", boss)
-	run.call("_damage_enemy", boss, 1.0, "validation", 999.0)
+	run.call("_damage_enemy", boss, 1.0, "validation", 999.0, &"kinetic", false)
 	_expect(String(boss["phase"]) == "boss_startup" and is_zero_approx(float(boss["stagger"])), "routine hits cannot interrupt a boss attack")
 
 	boss["phase"] = "boss_recovery"
 	boss["vulnerable"] = 1.0
-	run.call("_damage_enemy", boss, 1.0, "validation", 999.0)
+	run.call("_damage_enemy", boss, 1.0, "validation", 999.0, &"kinetic", false)
 	_expect(String(boss["phase"]) == "boss_recovery", "accumulated damage never hard-staggers a boss")
 	run.call("_resolve_breach_contact", boss)
 	_expect(

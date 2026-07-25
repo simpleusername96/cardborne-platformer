@@ -56,13 +56,13 @@ rules remain owned by the product specification.
   another. Small unusable gaps are visually sealed.
 - The map is larger than the viewer. The camera shows only a local combat area;
   the explored 20x12 minimap communicates the persistent whole.
-- A new run selects one of three registered fields and eight large modules from
-  its authored cover candidates. The result must not recolor or rearrange
-  between stages or retries.
+- A new run selects one of three registered macro fields. Each stage activates
+  eight deterministic large modules and tactical sockets from that field;
+  exact retries reproduce them and adjacent stages use a different valid set.
 - Functional terrain uses one large readable shape and a shape-coded purpose:
   mint plus for repair, mustard outward arrows for transit, mustard stacked
-  chevrons for overdrive, violet lightning for an arc hazard, directional
-  chevrons for flow, and blocker-fill walls with one large fracture for a
+  chevrons for overdrive, violet lightning for an arc hazard, and blocker-fill
+  walls with one large fracture for a
   breakable bulkhead. Helpful, hazardous, traversable-utility, directional, and
   blocking roles must remain distinguishable without reading color. Do not add
   decorative motifs, tiny debris, or repeated decoration to fake variation.
@@ -88,9 +88,10 @@ rules remain owned by the product specification.
 - A projectile head ends exactly at its circular collision radius. Light,
   standard, and heavy hostile damage use five-, six-, and seven-pixel heads;
   power therefore changes visible and physical size together. A 36-pixel
-  non-damaging trail communicates direction and uses a shape-distinct kinetic,
-  thermal, toxin, cryo, arc, or hybrid silhouette. Attack affinity, not enemy
-  ownership alone, determines projectile color.
+  non-damaging hostile trail communicates direction and uses a shape-distinct
+  kinetic, thermal, toxin, cryo, arc, or hybrid silhouette. Player projectiles
+  always use a mustard ownership shell with a dark cobalt core; hostile
+  projectiles keep affinity color and shape.
 - The unmodified Pulse Cannon starts from a seven-pixel collision radius and a
   rendered head exactly that large. Solid-cover impacts must terminate the
   visible trail at the same blocker used by collision; a projectile may appear
@@ -119,6 +120,11 @@ rules remain owned by the product specification.
   visible enemies.
 - Automatic secondaries use bounded, recognizable shapes: seeker projectile,
   mint ion ring, mustard orbit blades, coral wake mines, and a following drone.
+- Persistent glance cues use four fixed tiers. Reinforced Hull darkens the
+  mustard hull, Tuned Thrusters shows zero to three rear engine modules,
+  Kinetic Rounds darkens the primary cannon, and passive-damage upgrades darken
+  one mint secondary core. Count- or radius-readable secondary upgrades do not
+  receive a redundant shade tier.
 
 ### HUD and modal hierarchy
 
@@ -127,6 +133,10 @@ rules remain owned by the product specification.
 - Keep live HUD clusters compact and outside the central combat rectangle.
   Prefer icons, strong numerals, radial cooldowns, and short labels over wide
   explanatory panels.
+- Hull/experience remains at the top left with a 154x34 icon-only action rail
+  directly below it. The bottom center remains free. The title-free 176x108
+  minimap uses player facing, clustered moving enemies, shape-coded priority
+  actors/items/crates, and support-field lifetime arcs.
 - Timed effects use shape-distinct radial badges around the ship. Cooldown and
   active duration are distinguishable without color alone.
 - Hull loss updates the main fill immediately and uses one restrained trailing
@@ -146,8 +156,9 @@ rules remain owned by the product specification.
   vertical scroll region. Its no-run state contains no empty group headings or
   stale values.
 - Stage and failure reports are full modal focus layers with one bottom primary
-  action. At 1280 pixels and wider, defeats and damage use two columns; at 960
-  pixels, keyboard-accessible tabs expose one list at a time. Percentage,
+  action. At 1180 pixels and wider, defeats, damage source, and damage attribute
+  use three columns; below that, keyboard-accessible tabs expose one list at a
+  time. Percentage,
   amount, and count columns remain readable in both Korean and English.
 
 ### Implementation boundaries
@@ -157,8 +168,9 @@ rules remain owned by the product specification.
   remain live UI state; do not bake them into raster assets.
 - Static world presentation belongs to `vehicle_stage_backdrop.gd`; immutable
   floor/candidate data belongs to the three registered field definitions; the
-  run-scoped `VehicleFieldLayout` owns the selected field, compiled geometry,
-  cover, and sockets; dynamic combat belongs to the run.
+  run-scoped `VehicleFieldLayout` owns the selected field and immutable
+  stage-tactical children; `VehicleTerrainRuntime` owns scheduled support
+  fields; dynamic combat belongs to the run.
 - Raster assets are justified only when procedural flat shapes cannot communicate
   the required silhouette at gameplay size.
 

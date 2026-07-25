@@ -56,7 +56,7 @@ static func outgoing_id(source: String) -> StringName:
 			return &"emp_aftershock"
 		"dash impact":
 			return &"dash_impact"
-		"status":
+		"status", "flashover", "shatter":
 			return &"elemental_status"
 		"arc surge":
 			return &"arc_surge"

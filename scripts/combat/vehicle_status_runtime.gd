@@ -40,11 +40,11 @@ static func apply(enemy: EnemyState, profile: VehicleStatusProfile) -> void:
 		enemy.statuses[&"chill"] = status
 
 
-static func tick(enemy: EnemyState, delta: float) -> float:
+static func tick(enemy: EnemyState, delta: float) -> Dictionary:
 	var statuses := enemy.statuses
+	var damage := {"burn":0.0, "poison":0.0}
 	if statuses.is_empty():
-		return 0.0
-	var damage := 0.0
+		return damage
 	for kind in DOT_KINDS:
 		if not statuses.has(kind):
 			continue
@@ -53,7 +53,7 @@ static func tick(enemy: EnemyState, delta: float) -> float:
 		status["tick"] = float(status["tick"]) - delta
 		while float(status["tick"]) <= 0.0 and float(status["time"]) > 0.0:
 			status["tick"] = float(status["tick"]) + TICK_SECONDS
-			damage += (
+			damage[kind] = float(damage[kind]) + (
 				float(status["dps_per_stack"])
 				* float(status["stacks"])
 				* TICK_SECONDS
@@ -88,7 +88,8 @@ static func resolve_opening(
 	base_damage: float
 ) -> Dictionary:
 	var result := {
-		"bonus_damage":0.0,
+		"thermal_bonus":0.0,
+		"cryo_bonus":0.0,
 		"splash_damage":0.0,
 		"splash_radius":0.0,
 		"flashover":false,
@@ -105,7 +106,7 @@ static func resolve_opening(
 			* 1.25
 		)
 		enemy.statuses.erase(&"burn")
-		result["bonus_damage"] = bonus
+		result["thermal_bonus"] = bonus
 		result["splash_damage"] = bonus
 		result["splash_radius"] = 70.0
 		result["flashover"] = true
@@ -113,7 +114,7 @@ static func resolve_opening(
 		var chill: Dictionary = enemy.statuses[&"chill"]
 		if int(chill["stacks"]) >= 3:
 			enemy.statuses.erase(&"chill")
-			result["bonus_damage"] = float(result["bonus_damage"]) + base_damage * 0.40
+			result["cryo_bonus"] = base_damage * 0.40
 			result["shatter"] = true
 	return result
 

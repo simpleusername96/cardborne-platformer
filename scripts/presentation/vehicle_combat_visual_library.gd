@@ -46,6 +46,13 @@ static func projectile_head_mesh() -> ArrayMesh:
 	}])
 
 
+static func player_projectile_head_mesh() -> ArrayMesh:
+	return polygon_mesh([
+		{"points":_regular_polygon(Vector2.ZERO, 1.0, 20), "color":Art.MUSTARD},
+		{"points":_regular_polygon(Vector2.ZERO, 0.46, 16), "color":Art.COBALT_DEEP},
+	])
+
+
 static func projectile_trail_mesh(affinity: StringName) -> ArrayMesh:
 	var polygons: Array[Dictionary] = []
 	match AttackContract.normalize_affinity(affinity):
@@ -158,7 +165,7 @@ static func disk_mesh(segments: int = 32) -> ArrayMesh:
 	}])
 
 
-static func player_mesh() -> ArrayMesh:
+static func player_hull_mesh() -> ArrayMesh:
 	var hull := PackedVector2Array([
 		Vector2(1.0, 0.0), Vector2(0.18, -0.74),
 		Vector2(-0.72, -1.0), Vector2(-0.48, -0.18),
@@ -168,17 +175,41 @@ static func player_mesh() -> ArrayMesh:
 	for point in hull:
 		shadow.append(point + Vector2(0.20, 0.25))
 	return polygon_mesh([
-		{"points": shadow, "color": Art.MUSTARD_DARK},
-		{"points": hull, "color": Art.MUSTARD},
-		{
-			"points": PackedVector2Array([
-				Vector2(0.58, 0.0), Vector2(-0.12, -0.38),
-				Vector2(-0.38, 0.0), Vector2(-0.12, 0.38),
-			]),
-			"color": Art.IVORY_BRIGHT,
-		},
-		{"points": _regular_polygon(Vector2.ZERO, 0.28, 20), "color": Art.CERAMIC_GREEN},
+		{"points": shadow, "color": Color(0.42, 0.34, 0.18, 0.88)},
+		{"points": hull, "color": Color.WHITE},
 	])
+
+
+static func player_primary_mesh() -> ArrayMesh:
+	return polygon_mesh([
+		{"points":PackedVector2Array([
+			Vector2(-0.18, -0.18), Vector2(1.0, -0.18),
+			Vector2(1.0, 0.18), Vector2(-0.18, 0.18),
+		]), "color":Color.WHITE},
+		{"points":_regular_polygon(Vector2(-0.14, 0.0), 0.26, 16), "color":Color.WHITE},
+	])
+
+
+static func player_engine_mesh() -> ArrayMesh:
+	return polygon_mesh([{
+		"points":PackedVector2Array([
+			Vector2(0.28, -0.34), Vector2(0.38, 0.34),
+			Vector2(-0.72, 0.24), Vector2(-1.0, 0.0),
+			Vector2(-0.72, -0.24),
+		]),
+		"color":Color.WHITE,
+	}])
+
+
+static func player_secondary_core_mesh() -> ArrayMesh:
+	return polygon_mesh([
+		{"points":_regular_polygon(Vector2.ZERO, 1.0, 16), "color":Color.WHITE},
+		{"points":_regular_polygon(Vector2.ZERO, 0.46, 12), "color":Art.IVORY_BRIGHT},
+	])
+
+
+static func player_mesh() -> ArrayMesh:
+	return player_hull_mesh()
 
 
 static func experience_mesh(kind: StringName) -> ArrayMesh:

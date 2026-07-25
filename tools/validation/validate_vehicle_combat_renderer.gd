@@ -18,7 +18,7 @@ func _run() -> void:
 	root.add_child(renderer)
 	await process_frame
 	var snapshot: Dictionary = renderer.debug_snapshot()
-	_expect(int(snapshot["batches"]) <= 50, "combat presentation stays within the retained batch ceiling")
+	_expect(int(snapshot["batches"]) <= 53, "combat presentation stays within the retained batch ceiling")
 	for team in [&"player", &"enemy"]:
 		for affinity in AttackContract.AFFINITIES:
 			if affinity == AttackContract.SUPPORT:
@@ -125,7 +125,7 @@ func _run() -> void:
 		"batched buffer preserves enemy visual scale"
 	)
 	var projectile_head := renderer.get_node("Projectile_head_player") as MultiMeshInstance2D
-	var projectile_trail := renderer.get_node("Projectile_trail_player_toxin") as MultiMeshInstance2D
+	var projectile_trail := renderer.get_node("Projectile_trail_player_kinetic") as MultiMeshInstance2D
 	var head_buffer := projectile_head.multimesh.buffer
 	var trail_buffer := projectile_trail.multimesh.buffer
 	_expect(
@@ -140,7 +140,7 @@ func _run() -> void:
 		Vector2(trail_buffer[3], trail_buffer[7]).is_equal_approx(
 			Vector2(330.0, 300.0) - projectile_direction * 18.5
 		),
-		"player affinity trail stays attached behind the five-pixel head"
+		"player ownership trail stays attached behind the five-pixel head"
 	)
 	_expect(
 		Vector2(trail_buffer[0], trail_buffer[4]).is_equal_approx(projectile_direction * 47.0),
@@ -150,7 +150,7 @@ func _run() -> void:
 		Vector2(trail_buffer[1], trail_buffer[5]).is_equal_approx(
 			projectile_direction.rotated(PI * 0.5) * 7.5
 		),
-		"player affinity trail width follows the collision radius"
+		"player ownership trail width follows the collision radius"
 	)
 	_expect(
 		is_equal_approx(trail_buffer[11], 0.5),

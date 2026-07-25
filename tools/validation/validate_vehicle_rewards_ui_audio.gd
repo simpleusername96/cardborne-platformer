@@ -95,7 +95,7 @@ func _run() -> void:
 	var stage_ui: CanvasLayer = stage.get("_ui")
 	stage_ui.call("show_deployment", &"pulse_cannon", RunDifficulty.HARD)
 	var ui_contract: Dictionary = stage_ui.call("debug_ui_contract", 1280.0)
-	_expect(Vector2(ui_contract["action_rail_size"]) == Vector2(276.0, 60.0), "action rail uses the compact dock contract")
+	_expect(Vector2(ui_contract["action_rail_size"]) == Vector2(154.0, 34.0), "action rail uses the compact top-left contract")
 	_expect(Vector2(ui_contract["health_cluster_size"]) == Vector2(184.0, 54.0), "health and XP share the compact hull cluster")
 	_expect(bool(ui_contract["top_clusters_do_not_overlap"]), "top HUD clusters do not overlap at 1280 pixels")
 	_expect(int(ui_contract["deployment_difficulty_choices"]) == 3, "deployment exposes exactly three difficulty choices")

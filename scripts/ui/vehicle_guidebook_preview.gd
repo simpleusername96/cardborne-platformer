@@ -69,15 +69,6 @@ func _draw() -> void:
 
 func _add_terrain(terrain_id: StringName) -> void:
 	match terrain_id:
-		&"flow_channel":
-			_add_instance(
-				Visuals.polygon_mesh([{"points":PackedVector2Array([
-					Vector2(-1.0, -0.40), Vector2(1.0, -0.40),
-					Vector2(1.0, 0.40), Vector2(-1.0, 0.40),
-				]), "color":Color.WHITE}]),
-				Art.COBALT_WATER,
-				Vector2(72.0, 44.0)
-			)
 		&"arc_surge":
 			_add_instance(Visuals.effect_mesh(&"beam"), Art.BOSS_MAGENTA, Vector2(78.0, 42.0))
 		&"breakable_bulkhead":

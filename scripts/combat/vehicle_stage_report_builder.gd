@@ -5,6 +5,13 @@ extends RefCounted
 
 const EnemyArchetypes = preload("res://scripts/enemies/vehicle_enemy_archetypes.gd")
 const DamageSources = preload("res://scripts/combat/vehicle_damage_source_catalog.gd")
+const ATTRIBUTE_KEYS := {
+	&"kinetic":"REPORT_ATTRIBUTE_KINETIC",
+	&"thermal":"REPORT_ATTRIBUTE_THERMAL",
+	&"toxin":"REPORT_ATTRIBUTE_TOXIN",
+	&"cryo":"REPORT_ATTRIBUTE_CRYO",
+	&"arc":"REPORT_ATTRIBUTE_ARC",
+}
 
 
 static func build(
@@ -14,6 +21,7 @@ static func build(
 ) -> Dictionary:
 	var defeat_rows := _defeat_rows(Dictionary(telemetry.get("defeats", {})))
 	var outgoing_values := Dictionary(telemetry.get("outgoing", {}))
+	var attribute_values := Dictionary(telemetry.get("attributes", {}))
 	_attach_elite_counts(
 		defeat_rows,
 		Dictionary(telemetry.get("elites", {}))
@@ -29,10 +37,48 @@ static func build(
 		"defeats":defeat_rows,
 		"outgoing":_damage_rows(outgoing_values, false, 8),
 		"total_outgoing":_sum_damage(outgoing_values),
+		"attributes":_attribute_rows(
+			attribute_values,
+			Dictionary(telemetry.get("status_applications", {}))
+		),
+		"total_attributes":_sum_damage(attribute_values),
 		"incoming":_damage_rows(Dictionary(telemetry.get("incoming", {})), true, 3),
 		"last_incoming_source":StringName(telemetry.get("last_incoming_source", &"")),
 		"last_incoming_damage":float(telemetry.get("last_incoming_damage", 0.0)),
 	}
+
+
+static func _attribute_rows(
+	values: Dictionary,
+	status_applications: Dictionary
+) -> Array[Dictionary]:
+	var rows: Array[Dictionary] = []
+	for attribute in ATTRIBUTE_KEYS:
+		var damage := maxf(0.0, float(values.get(attribute, 0.0)))
+		var applications := 0
+		match StringName(attribute):
+			&"thermal":
+				applications = int(status_applications.get(&"burn", 0))
+			&"toxin":
+				applications = int(status_applications.get(&"poison", 0))
+			&"cryo":
+				applications = int(status_applications.get(&"chill", 0))
+		if damage <= 0.0 and applications <= 0:
+			continue
+		rows.append({
+			"id":StringName(attribute),
+			"title_key":String(ATTRIBUTE_KEYS[attribute]),
+			"damage":damage,
+			"applications":applications,
+		})
+	rows.sort_custom(
+		func(a: Dictionary, b: Dictionary) -> bool:
+			if not is_equal_approx(float(a["damage"]), float(b["damage"])):
+				return float(a["damage"]) > float(b["damage"])
+			return String(a["id"]) < String(b["id"])
+	)
+	_assign_percentages(rows)
+	return rows
 
 
 static func _defeat_rows(values: Dictionary) -> Array[Dictionary]:
@@ -121,6 +167,8 @@ static func _assign_percentages(rows: Array[Dictionary]) -> void:
 	for row in rows:
 		total += float(row["damage"])
 	if total <= 0.0:
+		for row in rows:
+			row["percentage_tenths"] = 0
 		return
 	var assigned := 0
 	var remainders: Array[Dictionary] = []

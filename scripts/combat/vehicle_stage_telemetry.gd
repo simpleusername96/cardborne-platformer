@@ -5,12 +5,19 @@ extends RefCounted
 
 const MAX_DAMAGE_SOURCES := 32
 const MAX_ARCHETYPES := 32
+const DAMAGE_ATTRIBUTES: Array[StringName] = [
+	&"kinetic", &"thermal", &"toxin", &"cryo", &"arc",
+]
 
 var stage_outgoing: Dictionary = {}
+var stage_attributes: Dictionary = {}
+var stage_status_applications: Dictionary = {}
 var stage_incoming: Dictionary = {}
 var stage_defeats: Dictionary = {}
 var stage_elites: Dictionary = {}
 var run_outgoing: Dictionary = {}
+var run_attributes: Dictionary = {}
+var run_status_applications: Dictionary = {}
 var run_incoming: Dictionary = {}
 var run_defeats: Dictionary = {}
 var last_incoming_source: StringName = &""
@@ -20,6 +27,8 @@ var _frozen_stage: Dictionary = {}
 
 func reset_run() -> void:
 	run_outgoing.clear()
+	run_attributes.clear()
+	run_status_applications.clear()
 	run_incoming.clear()
 	run_defeats.clear()
 	reset_stage()
@@ -27,6 +36,8 @@ func reset_run() -> void:
 
 func reset_stage() -> void:
 	stage_outgoing.clear()
+	stage_attributes.clear()
+	stage_status_applications.clear()
 	stage_incoming.clear()
 	stage_defeats.clear()
 	stage_elites.clear()
@@ -35,11 +46,27 @@ func reset_stage() -> void:
 	_frozen_stage.clear()
 
 
-func record_outgoing(source_id: StringName, applied_damage: float) -> void:
+func record_outgoing(
+	source_id: StringName,
+	attribute: StringName,
+	applied_damage: float
+) -> void:
 	if applied_damage <= 0.0:
+		return
+	if attribute not in DAMAGE_ATTRIBUTES:
+		push_error("Unknown player damage attribute: %s" % attribute)
 		return
 	_add_bounded(stage_outgoing, source_id, applied_damage, MAX_DAMAGE_SOURCES)
 	_add_bounded(run_outgoing, source_id, applied_damage, MAX_DAMAGE_SOURCES)
+	_add_bounded(stage_attributes, attribute, applied_damage, DAMAGE_ATTRIBUTES.size())
+	_add_bounded(run_attributes, attribute, applied_damage, DAMAGE_ATTRIBUTES.size())
+
+
+func record_status_application(kind: StringName) -> void:
+	if kind not in [&"burn", &"poison", &"chill"]:
+		return
+	_add_bounded(stage_status_applications, kind, 1, 3)
+	_add_bounded(run_status_applications, kind, 1, 3)
 
 
 func record_incoming(source_id: StringName, applied_damage: float) -> void:
@@ -77,6 +104,8 @@ func stage_snapshot() -> Dictionary:
 func run_snapshot() -> Dictionary:
 	return {
 		"outgoing":run_outgoing.duplicate(),
+		"attributes":run_attributes.duplicate(),
+		"status_applications":run_status_applications.duplicate(),
 		"incoming":run_incoming.duplicate(),
 		"defeats":run_defeats.duplicate(),
 	}
@@ -85,6 +114,8 @@ func run_snapshot() -> Dictionary:
 func _stage_snapshot() -> Dictionary:
 	return {
 		"outgoing":stage_outgoing.duplicate(),
+		"attributes":stage_attributes.duplicate(),
+		"status_applications":stage_status_applications.duplicate(),
 		"incoming":stage_incoming.duplicate(),
 		"defeats":stage_defeats.duplicate(),
 		"elites":stage_elites.duplicate(),

@@ -12,6 +12,15 @@ var pair: StringName
 var time := 0.0
 
 
+static func support_schedule() -> Array[Dictionary]:
+	return [
+		{"slot_id":&"repair_a", "kind":&"repair", "radius":150.0, "warning":1.5, "active":18.0, "dormant":10.0, "initial":0.0},
+		{"slot_id":&"repair_b", "kind":&"repair", "radius":150.0, "warning":1.5, "active":23.0, "dormant":11.0, "initial":12.0},
+		{"slot_id":&"overdrive_a", "kind":&"overdrive", "radius":180.0, "warning":1.5, "active":12.0, "dormant":14.0, "initial":5.0},
+		{"slot_id":&"overdrive_b", "kind":&"overdrive", "radius":180.0, "warning":1.5, "active":15.0, "dormant":16.0, "initial":19.0},
+	]
+
+
 static func from_blueprint(value: Dictionary) -> VehicleTerrainDefinition:
 	var result := VehicleTerrainDefinition.new()
 	result.id = StringName(value.get("id", &""))

@@ -46,11 +46,14 @@ func _initialize() -> void:
 	_expect(StatusRuntime.stack_count(enemy, &"poison") == 3, "poison stacks independently without erasing burn")
 	_expect(StatusRuntime.stack_count(enemy, &"chill") == 3, "chill stacks independently without erasing other elements")
 	_expect(is_equal_approx(StatusRuntime.speed_multiplier(enemy), 0.70), "three upgraded chill stacks produce the bounded slow")
-	_expect(is_equal_approx(StatusRuntime.tick(enemy, 0.25), 5.625), "burn and poison DOT add together on the shared tick")
+	var dot := StatusRuntime.tick(enemy, 0.25)
+	_expect(is_equal_approx(float(dot["burn"]), 2.625), "burn DOT remains an independent thermal amount")
+	_expect(is_equal_approx(float(dot["poison"]), 3.0), "poison DOT remains an independent toxin amount")
 
 	var opening := StatusRuntime.resolve_opening(enemy, profile, 20.0)
 	_expect(is_equal_approx(float(opening["splash_damage"]), 49.21875), "Flashover consumes remaining burn stacks using exact time")
-	_expect(is_equal_approx(float(opening["bonus_damage"]), 57.21875), "one opening shot resolves Flashover and Shatter together")
+	_expect(is_equal_approx(float(opening["thermal_bonus"]), 49.21875), "Flashover reports thermal bonus separately")
+	_expect(is_equal_approx(float(opening["cryo_bonus"]), 8.0), "Shatter reports cryo bonus separately")
 	_expect(bool(opening["flashover"]) and bool(opening["shatter"]), "coexisting capstones both trigger")
 	_expect(
 		not enemy.statuses.has(&"burn")

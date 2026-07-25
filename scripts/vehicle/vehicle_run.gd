@@ -593,7 +593,10 @@ func _reset_run(
 	terrain_runtime.configure(
 		field_layout.field_definition.get("features", []),
 		field_layout.persistent_bulkhead_health,
-		preserve_field_state
+		preserve_field_state,
+		_active_tactical_layout.support_sockets,
+		field_layout.seed,
+		current_stage_id
 	)
 	_rebuild_runtime_blockers()
 	pursuit_field.reset(current_stage_id, _runtime_cover_rects())
@@ -1095,8 +1098,7 @@ func _update_player(delta: float) -> void:
 	if player_dash_timer > 0.0:
 		_update_dash(delta)
 	else:
-		var flow := terrain_runtime.flow_vector_at(player_position)
-		var motion := (move_input * _player_move_speed() + flow) * delta
+		var motion := move_input * _player_move_speed() * delta
 		player_position = _move_actor(player_position, motion, Rules.PLAYER_RADIUS, true)
 		if Input.is_action_just_pressed("dash") and player_dash_cooldown <= 0.0:
 			_start_dash(move_input)
@@ -1186,10 +1188,7 @@ func _update_dash(delta: float) -> void:
 	var before := player_position
 	player_position = _move_actor(
 		player_position,
-		(
-			player_dash_direction * DASH_SPEED
-			+ terrain_runtime.flow_vector_at(player_position)
-		) * delta,
+		player_dash_direction * DASH_SPEED * delta,
 		Rules.PLAYER_RADIUS,
 		true
 	)
@@ -1211,7 +1210,9 @@ func _update_dash(delta: float) -> void:
 		if run_build.has(&"coolant_wake"):
 			coolant_surge_timer = 2.0
 		if applied_upgrades.has(&"ram_pulse"):
-			_damage_enemies_in_radius(player_position, 145.0, 32.0, 24.0, "Ram Pulse")
+			_damage_enemies_in_radius(
+				player_position, 145.0, 32.0, 24.0, "Ram Pulse", &"kinetic", true
+			)
 			_clear_hostile_projectiles(player_position, 170.0)
 			_add_effect("shock", player_position, Rules.AMBER, 0.38, 170.0)
 			_play_sound(&"emp", 1.55)
@@ -1491,7 +1492,15 @@ func _update_passive_secondary(delta: float) -> void:
 	for intent in secondary_result["damage"]:
 		var target := _find_enemy_by_id(String(intent["enemy_id"]))
 		if target != null:
-			_damage_enemy(target, float(intent["damage"]), String(intent["source"]), 6.0)
+			var secondary_source := String(intent["source"])
+			_damage_enemy(
+				target,
+				float(intent["damage"]),
+				secondary_source,
+				6.0,
+				&"arc" if secondary_source == "Ion Field" else &"kinetic",
+				true
+			)
 	for effect in secondary_result["effects"]:
 		_add_effect("secondary", Vector2(effect["pos"]), Art.MINT, 0.18, float(effect.get("radius", 24.0)), (Vector2(effect.get("target", effect["pos"])) - Vector2(effect["pos"])).normalized())
 
@@ -1539,7 +1548,15 @@ func _start_emp() -> void:
 func _release_emp(is_aftershock: bool) -> void:
 	var radius := _emp_radius() * (0.68 if is_aftershock else 1.0)
 	var damage := (34.0 if is_aftershock else 62.0) * run_build.stat(&"emp_damage_multiplier", 1.0)
-	_damage_enemies_in_radius(player_position, radius, damage, 42.0, "EMP Aftershock" if is_aftershock else "EMP Nova")
+	_damage_enemies_in_radius(
+		player_position,
+		radius,
+		damage,
+		42.0,
+		"EMP Aftershock" if is_aftershock else "EMP Nova",
+		&"arc",
+		true
+	)
 	_clear_hostile_projectiles(player_position, radius + 40.0)
 	if not is_aftershock and run_build.has(&"static_aegis"):
 		var barrier_strength := 24.0 if run_build.level_of(&"static_aegis") >= 2 else 18.0
@@ -1748,12 +1765,14 @@ func _update_enemies(delta: float) -> void:
 			&"boss" if enemy.role == &"stage_boss" else &"ordinary"
 		)
 		if terrain_damage > 0.0:
-			_damage_enemy(enemy, terrain_damage, "Arc Surge", 0.0)
+			_damage_enemy(enemy, terrain_damage, "Arc Surge", 0.0, &"arc", false)
 			if not enemy.alive:
 				continue
 		var status_damage := StatusRuntime.tick(enemy, delta)
-		if status_damage > 0.0:
-			_damage_enemy(enemy, status_damage, "status", 0.0)
+		if float(status_damage["burn"]) > 0.0:
+			_damage_enemy(enemy, float(status_damage["burn"]), "status", 0.0, &"thermal", true)
+		if enemy.alive and float(status_damage["poison"]) > 0.0:
+			_damage_enemy(enemy, float(status_damage["poison"]), "status", 0.0, &"toxin", true)
 			if not enemy.alive:
 				continue
 		var role := enemy.role
@@ -2400,13 +2419,7 @@ func _move_enemy_with_recovery(enemy: EnemyState, velocity: Vector2, delta: floa
 		enemy.reposition_time = maxf(0.0, enemy.reposition_time - delta)
 		velocity = enemy.reposition_dir * enemy.speed
 	var before := enemy.pos
-	var flow := terrain_runtime.flow_vector_at(
-		before,
-		enemy.role == &"stage_boss",
-		enemy.role in [&"turret", &"generator", &"interceptor_tower", &"beam_sentinel"]
-			or (enemy.role == &"mine" and enemy.archetype != &"spark_minelet")
-	)
-	var attempt := _move_actor(before, (velocity + flow) * delta, enemy.radius, false)
+	var attempt := _move_actor(before, velocity * delta, enemy.radius, false)
 	var moved_squared := before.distance_squared_to(attempt)
 	var velocity_squared := velocity.length_squared()
 	if moved_squared < 0.35 * 0.35 and velocity_squared > 1.0:
@@ -2515,7 +2528,14 @@ func _explode_mine(enemy: EnemyState) -> void:
 		if target.role == &"stage_boss":
 			damage *= 0.25
 		if damage > 0.0:
-			_damage_enemy(target, damage, source)
+			_damage_enemy(
+				target,
+				damage,
+				source,
+				0.0,
+				&"arc",
+				enemy.mine_armed_by_player
+			)
 	_arm_chain_mines(enemy, origin, mobile)
 	_add_effect("shock", origin, Art.ATTACK_ARC, 0.36, radius)
 	_defeat_enemy(enemy, source)
@@ -2715,7 +2735,8 @@ func _update_projectile_buffer(
 				if hit_enemy.role in [&"turret", &"mine", &"generator", &"interceptor_tower", &"beam_sentinel", &"boss_pylon"]:
 					enemy_damage = projectile.structure_damage
 				var opening_result := {
-					"bonus_damage":0.0,
+					"thermal_bonus":0.0,
+					"cryo_bonus":0.0,
 					"splash_damage":0.0,
 					"splash_radius":0.0,
 				}
@@ -2724,21 +2745,48 @@ func _update_projectile_buffer(
 					opening_result = StatusRuntime.resolve_opening(
 						hit_enemy, projectile.status_profile, enemy_damage
 					)
-				enemy_damage += float(opening_result["bonus_damage"])
 				var damage_source := "reflected_%s" % projectile.owner if projectile.reflected else projectile.owner
+				var direct_attribute := (
+					_telemetry_attribute_for_affinity(projectile.affinity)
+					if projectile.reflected
+					else &"kinetic"
+				)
 				_damage_enemy(
 					hit_enemy,
 					enemy_damage,
 					damage_source,
-					projectile.stagger
+					projectile.stagger,
+					direct_attribute,
+					true
 				)
+				if float(opening_result["thermal_bonus"]) > 0.0:
+					_damage_enemy(
+						hit_enemy,
+						float(opening_result["thermal_bonus"]),
+						"Flashover",
+						0.0,
+						&"thermal",
+						true
+					)
+				if float(opening_result["cryo_bonus"]) > 0.0:
+					_damage_enemy(
+						hit_enemy,
+						float(opening_result["cryo_bonus"]),
+						"Shatter",
+						0.0,
+						&"cryo",
+						true
+					)
 				if breach_contact:
 					_resolve_breach_contact(hit_enemy)
 				if projectile.owner == "player_primary" and run_build.has(&"marked_salvo"):
 					_mark_enemy(hit_enemy)
 				if breach_contact and run_build.has(&"shock_breach"):
 					var shock_damage := _shock_breach_damage(enemy_damage)
-					_damage_enemies_in_radius(hit_position, 90.0, shock_damage, 8.0, "Shock Breach", hit_enemy.id)
+					_damage_enemies_in_radius(
+						hit_position, 90.0, shock_damage, 8.0,
+						"Shock Breach", &"arc", true, hit_enemy.id
+					)
 					_add_effect("shock", hit_position, Art.MUSTARD, 0.24, 90.0)
 				if float(opening_result["splash_radius"]) > 0.0:
 					_damage_enemies_in_radius(
@@ -2747,16 +2795,22 @@ func _update_projectile_buffer(
 						float(opening_result["splash_damage"]),
 						0.0,
 						"Flashover",
+						&"thermal",
+						true,
 						hit_enemy.id
 					)
 				StatusRuntime.apply(hit_enemy, projectile.status_profile)
+				_record_status_applications(projectile.status_profile)
 				if breach_contact:
 					_consume_breach_token(projectile)
 				stats_primary_hits += 1 if projectile.owner == "player_primary" else 0
 				_add_effect("impact", hit_position, projectile.color, 0.18, 24.0)
 				_play_sound(&"impact", _rng.randf_range(0.92, 1.08))
 				if projectile.explosive:
-					_damage_enemies_in_radius(hit_position, 95.0, 12.0, 8.0, "Seeker burst", hit_enemy.id)
+					_damage_enemies_in_radius(
+						hit_position, 95.0, 12.0, 8.0,
+						"Seeker burst", &"kinetic", true, hit_enemy.id
+					)
 					_add_effect("shock", hit_position, Rules.MOSS, 0.28, 95.0)
 				if projectile.pierce > 0:
 					projectile.pierce -= 1
@@ -3030,7 +3084,7 @@ func _update_trails(delta: float) -> void:
 				continue
 			if enemy.pos.distance_to(Vector2(trail["pos"])) <= float(trail["radius"]) + enemy.radius:
 				hit_ids[enemy.id] = true
-				_damage_enemy(enemy, 18.0, "Ion Wake", 12.0)
+				_damage_enemy(enemy, 18.0, "Ion Wake", 12.0, &"arc", true)
 
 
 func _update_effects(delta: float) -> void:
@@ -3074,7 +3128,14 @@ func _swap_remove_dictionary(collection: Array[Dictionary], index: int) -> void:
 	collection.pop_back()
 
 
-func _damage_enemy(enemy: EnemyState, amount: float, source: String, stagger: float = 0.0) -> float:
+func _damage_enemy(
+	enemy: EnemyState,
+	amount: float,
+	source: String,
+	stagger: float,
+	attribute: StringName,
+	player_owned: bool
+) -> float:
 	if not enemy.alive:
 		return 0.0
 	var role := enemy.role
@@ -3084,11 +3145,11 @@ func _damage_enemy(enemy: EnemyState, amount: float, source: String, stagger: fl
 		return 0.0
 	if (
 		terrain_runtime.overdrive_active
-		and _is_player_owned_damage_source(source)
+		and player_owned
 		and not _is_structure_role(role)
 	):
 		amount *= 1.20
-	if cycle_runtime.is_active(&"overclock_cycle"):
+	if player_owned and cycle_runtime.is_active(&"overclock_cycle"):
 		amount *= 1.35 if cycle_runtime.level(&"overclock_cycle") >= 2 else 1.25
 	var multiplier := 1.0
 	if enemy.shielded:
@@ -3115,24 +3176,26 @@ func _damage_enemy(enemy: EnemyState, amount: float, source: String, stagger: fl
 		enemy.flash = 0.11
 		enemy.health_visible_timer = 1.5
 		_arm_mine(enemy, 0.75, true)
+		if player_owned and not boss_practice.active and source != "validation":
+			stage_telemetry.record_outgoing(
+				DamageSourceCatalog.outgoing_id(source), attribute, mine_applied
+			)
+		_apply_lifesteal(mine_applied, source, role, player_owned)
 		return mine_applied
 	var applied_damage := minf(health_before, maxf(0.0, amount * multiplier))
 	enemy.health = health_before - applied_damage
-	if not boss_practice.active and source != "validation":
+	if player_owned and not boss_practice.active and source != "validation":
 		stage_telemetry.record_outgoing(
 			DamageSourceCatalog.outgoing_id(source),
+			attribute,
 			applied_damage
 		)
 	enemy.flash = 0.11
 	enemy.health_visible_timer = 1.0 if enemy.health_class == &"swarm" else 1.5
-	_apply_lifesteal(applied_damage, source, role)
+	_apply_lifesteal(applied_damage, source, role, player_owned)
 	if enemy.health <= 0.0:
 		_defeat_enemy(enemy, source)
 	return applied_damage
-
-
-func _is_player_owned_damage_source(source: String) -> bool:
-	return source not in ["Arc Surge", "enemy_mine", "validation"]
 
 
 func _is_structure_role(role: StringName) -> bool:
@@ -3142,10 +3205,44 @@ func _is_structure_role(role: StringName) -> bool:
 	]
 
 
-func _apply_lifesteal(applied_damage: float, source: String, _role: StringName) -> void:
-	if applied_damage <= 0.0 or not run_build.has(&"siphon_matrix") or lifesteal_budget <= 0.0:
+func _telemetry_attribute_for_affinity(affinity: StringName) -> StringName:
+	match AttackContract.normalize_affinity(affinity):
+		AttackContract.THERMAL:
+			return &"thermal"
+		AttackContract.TOXIN:
+			return &"toxin"
+		AttackContract.CRYO:
+			return &"cryo"
+		AttackContract.ARC:
+			return &"arc"
+	return &"kinetic"
+
+
+func _record_status_applications(profile: StatusProfile) -> void:
+	if profile == null or boss_practice.active:
 		return
-	if source == "validation" or source.begins_with("reflected_"):
+	if profile.burn_enabled:
+		stage_telemetry.record_status_application(&"burn")
+	if profile.poison_enabled:
+		stage_telemetry.record_status_application(&"poison")
+	if profile.chill_enabled:
+		stage_telemetry.record_status_application(&"chill")
+
+
+func _apply_lifesteal(
+	applied_damage: float,
+	source: String,
+	_role: StringName,
+	player_owned: bool
+) -> void:
+	if (
+		not player_owned
+		or applied_damage <= 0.0
+		or not run_build.has(&"siphon_matrix")
+		or lifesteal_budget <= 0.0
+	):
+		return
+	if source == "validation":
 		return
 	var ratio := 0.035 if run_build.level_of(&"siphon_matrix") >= 2 else 0.02
 	var healing := minf(minf(applied_damage * ratio, lifesteal_budget), _player_max_health() - player_health)
@@ -3374,7 +3471,7 @@ func _apply_dash_collision() -> void:
 			continue
 		if player_position.distance_to(enemy.pos) <= Rules.PLAYER_RADIUS + enemy.radius + 5.0:
 			enemy.ram_cooldown = 0.35
-			_damage_enemy(enemy, 16.0, "Dash impact", 18.0)
+			_damage_enemy(enemy, 16.0, "Dash impact", 18.0, &"kinetic", true)
 			var push := (enemy.pos - player_position).normalized()
 			enemy.pos = _move_actor(enemy.pos, push * 45.0, enemy.radius, false)
 			_add_effect("impact", enemy.pos, Rules.AMBER, 0.20, 34.0)
@@ -3390,13 +3487,22 @@ func _repel_nearby_enemies(radius: float) -> void:
 			enemy.stun = maxf(enemy.stun, 0.75)
 
 
-func _damage_enemies_in_radius(center: Vector2, radius: float, damage: float, stagger: float, source: String, excluded_id: String = "") -> void:
+func _damage_enemies_in_radius(
+	center: Vector2,
+	radius: float,
+	damage: float,
+	stagger: float,
+	source: String,
+	attribute: StringName,
+	player_owned: bool,
+	excluded_id: String = ""
+) -> void:
 	enemy_grid.query_radius_into(center, radius, enemies, _enemy_query_buffer)
 	for enemy in _enemy_query_buffer:
 		if enemy.id == excluded_id:
 			continue
 		if enemy.pos.distance_to(center) <= radius + enemy.radius:
-			_damage_enemy(enemy, damage, source, stagger)
+			_damage_enemy(enemy, damage, source, stagger, attribute, player_owned)
 
 
 func _clear_hostile_projectiles(center: Vector2, radius: float) -> int:
@@ -3821,10 +3927,7 @@ func _boss_combat_move(boss: EnemyState, delta: float, speed_scale: float) -> vo
 		direction = direction_to_player
 	boss.pos = _move_actor(
 		position,
-		(
-			direction * float(boss.speed) * speed_scale
-			+ terrain_runtime.flow_vector_at(position, true)
-		) * delta,
+		direction * float(boss.speed) * speed_scale * delta,
 		float(boss.radius),
 		false
 	)
@@ -4247,6 +4350,7 @@ func _minimap_snapshot(include_static_geometry: bool = true) -> Dictionary:
 	for cell in visited_cells.keys():
 		visited.append(cell)
 	var markers: Array[Dictionary] = []
+	var enemy_cluster_cells := {}
 	if stage_flow.state == StageFlow.State.BOSS_WARNING:
 		markers.append({
 			"kind":"boss", "position":boss_arrival_position,
@@ -4260,33 +4364,78 @@ func _minimap_snapshot(include_static_geometry: bool = true) -> Dictionary:
 			"discovered":true, "variant":stage_boss.boss_variant,
 		})
 	for enemy in enemies:
-		if (
-			enemy.alive
-			and enemy.active
-			and not enemy.elite_trait.is_empty()
-			and _is_world_position_visited(enemy.pos)
-		):
+		if not enemy.alive or not enemy.active or enemy.role == &"stage_boss":
+			continue
+		var stationary := enemy.role in [
+			&"turret", &"generator", &"interceptor_tower", &"beam_sentinel"
+		] or (enemy.role == &"mine" and enemy.archetype != &"spark_minelet")
+		if stationary:
+			markers.append({
+				"kind":"stationary",
+				"position":enemy.pos,
+				"color":Rules.CORAL,
+				"discovered":true,
+			})
+		elif not enemy.elite_trait.is_empty() or enemy.health_class == &"priority":
 			markers.append({
 				"kind":"elite",
 				"position":enemy.pos,
 				"color":Rules.CORAL,
 				"discovered":true,
 			})
+		else:
+			var stage_world := Rules.world_rect(current_stage_id)
+			var cell := Vector2i(
+				clampi(floori(enemy.pos.x / stage_world.size.x * MINIMAP_COLS), 0, MINIMAP_COLS - 1),
+				clampi(floori(enemy.pos.y / stage_world.size.y * MINIMAP_ROWS), 0, MINIMAP_ROWS - 1)
+			)
+			var cluster: Dictionary = enemy_cluster_cells.get(
+				cell, {"cell":cell, "count":0, "velocity_sum":Vector2.ZERO}
+			)
+			cluster["count"] = int(cluster["count"]) + 1
+			cluster["velocity_sum"] = Vector2(cluster["velocity_sum"]) + enemy.velocity
+			enemy_cluster_cells[cell] = cluster
 	for pickup in pickups:
-		if bool(pickup["active"]) and _is_world_position_visited(Vector2(pickup["pos"])):
+		if bool(pickup["active"]):
 			markers.append({
-				"kind": "reward",
+				"kind": "pickup",
 				"position": Vector2(pickup["pos"]),
 				"color": _pickup_color(StringName(pickup["kind"])),
 				"discovered": true,
 			})
+	for crate in crates:
+		if bool(crate["alive"]):
+			markers.append({
+				"kind":"crate",
+				"position":Vector2(crate["pos"]),
+				"color":Art.INK_MUTED,
+				"discovered":true,
+			})
+	var enemy_clusters: Array[Dictionary] = []
+	for cluster_value in enemy_cluster_cells.values():
+		var cluster := Dictionary(cluster_value)
+		var count := maxi(1, int(cluster["count"]))
+		enemy_clusters.append({
+			"cell":Vector2i(cluster["cell"]),
+			"count":count,
+			"average_velocity":Vector2(cluster["velocity_sum"]) / float(count),
+		})
+	enemy_clusters.sort_custom(
+		func(a: Dictionary, b: Dictionary) -> bool:
+			var a_cell := Vector2i(a["cell"])
+			var b_cell := Vector2i(b["cell"])
+			return a_cell.y < b_cell.y or (a_cell.y == b_cell.y and a_cell.x < b_cell.x)
+	)
 	var snapshot := {
 		"cols": MINIMAP_COLS,
 		"rows": MINIMAP_ROWS,
 		"visited": visited,
 		"player": player_position,
+		"player_facing": player_aim_direction,
 		"world_size": Rules.world_rect(current_stage_id).size,
 		"markers": markers,
+		"enemy_clusters":enemy_clusters,
+		"support_fields":terrain_runtime.snapshot().get("support_fields", []),
 	}
 	if include_static_geometry:
 		var blocker_polygons: Array = Rules.get_cover_polygons(false, current_stage_id).duplicate()
@@ -4324,6 +4473,13 @@ func _combat_presentation_snapshot() -> Dictionary:
 		"barrier_strength": player_barrier_strength,
 		"reduced_motion": _reduced_motion_enabled(),
 		"run_time": run_time,
+		"hull_visual_tier":run_build.level_of(&"reinforced_hull"),
+		"engine_visual_count":run_build.level_of(&"tuned_thrusters"),
+		"primary_visual_tier":run_build.level_of(&"kinetic_rounds"),
+		"secondary_visual_tier":maxi(
+			run_build.level_of(&"seeker_warhead"),
+			run_build.level_of(&"escort_drone")
+		),
 		"ion_level": run_build.level_of(&"ion_field"),
 		"blade_level": run_build.level_of(&"orbit_blades"),
 		"escort_drone": run_build.has(&"escort_drone"),
@@ -4362,15 +4518,23 @@ func _update_threat_contacts(delta: float) -> void:
 		)
 		if safe_viewport.has_point(canvas_transform * feature_position):
 			var terrain_entry := StringName({
-				&"flow_channel":&"object_flow_channel",
 				&"arc_surge":&"object_arc_surge",
 				&"breakable_bulkhead":&"object_breakable_bulkhead",
 				&"transit_gate":&"object_transit_gate",
-				&"repair_basin":&"object_repair_basin",
-				&"overdrive_field":&"object_overdrive_field",
 			}.get(feature.kind, &""))
 			if terrain_entry != &"":
 				_discover_guide(terrain_entry)
+	for support in Array(terrain_runtime.snapshot().get("support_fields", [])):
+		var state := StringName(support["state"])
+		if state in [&"initial_delay", &"depleted"]:
+			continue
+		var support_position := Vector2(support["position"])
+		if safe_viewport.has_point(canvas_transform * support_position):
+			_discover_guide(
+				&"object_repair_basin"
+				if StringName(support["kind"]) == &"repair"
+				else &"object_overdrive_field"
+			)
 	for enemy in enemies:
 		if not bool(enemy.alive) or not bool(enemy.active):
 			continue
@@ -4417,20 +4581,6 @@ func _draw_terrain() -> void:
 	for feature in Array(snapshot.get("features", [])):
 		var kind := StringName(feature["kind"])
 		match kind:
-			&"flow_channel":
-				var rectangle := Rect2(feature["rect"])
-				draw_rect(rectangle, Color(Art.MINT, 0.30))
-				var vector := Vector2(feature["vector"]).normalized()
-				for index in 3:
-					var center := rectangle.position + rectangle.size * Vector2(
-						0.25 + float(index) * 0.25, 0.5
-					)
-					var side := vector.rotated(PI * 0.5)
-					draw_polyline(PackedVector2Array([
-						center - vector * 34.0 + side * 26.0,
-						center + vector * 10.0,
-						center - vector * 34.0 - side * 26.0,
-					]), Art.IVORY_BRIGHT, 14.0, true)
 			&"arc_surge":
 				var rectangle := Rect2(feature["rect"])
 				var readiness := float(feature.get("readiness", 0.0))
@@ -4469,33 +4619,44 @@ func _draw_terrain() -> void:
 				draw_arc(center, TerrainRuntime.GATE_RADIUS - 18.0, -PI * 0.5, -PI * 0.5 + TAU * progress, 40, Art.IVORY_BRIGHT, 10.0)
 				if cooldown > 0.0:
 					draw_arc(center, 72.0, 0.0, TAU * (1.0 - cooldown / TerrainRuntime.GATE_COOLDOWN), 32, Art.INK_MUTED, 10.0)
-			&"repair_basin":
-				var center := Vector2(feature["pos"])
-				var budget_ratio := clampf(float(feature.get("budget", 0.0)) / TerrainRuntime.REPAIR_BUDGET, 0.0, 1.0)
-				var repair_color := Art.MINT if budget_ratio > 0.0 else Art.INK_MUTED
-				draw_circle(center, TerrainRuntime.REPAIR_RADIUS, Color(repair_color, 0.18))
-				draw_arc(center, TerrainRuntime.REPAIR_RADIUS, 0.0, TAU, 48, repair_color, 10.0)
-				draw_circle(center, 54.0, Color(Art.CERAMIC_GREEN_MID, 0.88))
-				_draw_terrain_plus(center, 36.0, Art.IVORY_BRIGHT)
-				for index in 6:
-					if float(index) / 6.0 >= budget_ratio:
-						continue
-					var start := -PI * 0.5 + TAU * float(index) / 6.0
-					draw_arc(center, 118.0, start, start + TAU / 7.2, 12, Art.MINT, 18.0)
-			&"overdrive_field":
-				var center := Vector2(feature["pos"])
-				var active := bool(feature.get("active", false))
-				draw_circle(center, TerrainRuntime.OVERDRIVE_RADIUS, Color(Art.MUSTARD, 0.16 if not active else 0.32))
-				draw_arc(center, TerrainRuntime.OVERDRIVE_RADIUS, 0.0, TAU, 48, Art.MUSTARD, 12.0)
-				draw_circle(center, 58.0, Art.MUSTARD)
-				for index in 3:
-					_draw_terrain_chevron(
-						center + Vector2(0.0, 24.0 - float(index) * 24.0),
-						Vector2.UP,
-						25.0,
-						Art.IVORY_BRIGHT,
-						10.0
-					)
+	for support in Array(snapshot.get("support_fields", [])):
+		_draw_support_field(Dictionary(support))
+
+
+func _draw_support_field(support: Dictionary) -> void:
+	var state := StringName(support["state"])
+	if state in [&"initial_delay", &"depleted"]:
+		return
+	var center := Vector2(support["position"])
+	var radius := float(support["radius"])
+	var kind := StringName(support["kind"])
+	var progress := clampf(float(support["phase_progress"]), 0.0, 1.0)
+	var active := bool(support["effect_active"])
+	var color := Art.MINT if kind == &"repair" else Art.MUSTARD
+	var opacity := 0.26 if active else (0.14 if state == &"warning" else 0.07)
+	draw_circle(center, radius, Color(color, opacity))
+	draw_arc(center, radius, 0.0, TAU, 56, Color(color, 0.76), 8.0)
+	var remaining_arc := TAU * (1.0 - progress)
+	if remaining_arc > 0.0:
+		draw_arc(center, radius - 12.0, -PI * 0.5, -PI * 0.5 + remaining_arc, 52, color, 12.0)
+		if remaining_arc <= TAU * 0.2:
+			draw_arc(center, radius - 26.0, -PI * 0.5, -PI * 0.5 + remaining_arc, 24, color, 16.0)
+	draw_circle(
+		center,
+		48.0,
+		Color(Art.CERAMIC_GREEN_MID if kind == &"repair" else Art.MUSTARD_DARK, 0.92)
+	)
+	if kind == &"repair":
+		_draw_terrain_plus(center, 30.0, Art.IVORY_BRIGHT)
+	else:
+		for index in 2:
+			_draw_terrain_chevron(
+				center + Vector2(0.0, 12.0 - index * 25.0),
+				Vector2.UP,
+				24.0,
+				Art.IVORY_BRIGHT,
+				9.0
+			)
 
 
 func _draw_terrain_plus(center: Vector2, half_extent: float, color: Color) -> void:
@@ -4941,9 +5102,11 @@ func _run_capture_sequence() -> void:
 	_save_capture("90-pause.png")
 
 	var report_fixture := StageTelemetry.new()
-	report_fixture.record_outgoing(&"primary", 418.0)
-	report_fixture.record_outgoing(&"passive_seeker", 126.0)
-	report_fixture.record_outgoing(&"arc_surge", 44.0)
+	report_fixture.record_outgoing(&"primary", &"kinetic", 418.0)
+	report_fixture.record_outgoing(&"passive_seeker", &"kinetic", 126.0)
+	report_fixture.record_outgoing(&"elemental_status", &"thermal", 44.0)
+	report_fixture.record_status_application(&"burn")
+	report_fixture.record_status_application(&"chill")
 	report_fixture.record_incoming(&"projectile", 32.0)
 	report_fixture.record_incoming(&"contact", 18.0)
 	report_fixture.record_defeat(&"scrap_drone")

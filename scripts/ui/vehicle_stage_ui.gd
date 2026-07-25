@@ -141,14 +141,15 @@ class ActionRailSlot:
 
 	func _ready() -> void:
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
-		custom_minimum_size = Vector2(64.0, 56.0) if is_primary else Vector2(52.0, 56.0)
+		focus_mode = Control.FOCUS_NONE
+		custom_minimum_size = Vector2(34.0, 34.0)
 
 	func configure(key_text: String, title: String, color: Color, primary: bool = false) -> void:
 		binding = key_text
 		action_name = title
 		accent = color
 		is_primary = primary
-		custom_minimum_size = Vector2(64.0, 56.0) if is_primary else Vector2(52.0, 56.0)
+		custom_minimum_size = Vector2(34.0, 34.0)
 		queue_redraw()
 
 	func set_state(value: String, ratio: float = 0.0, current_segments: int = 0, maximum_segments: int = 0) -> void:
@@ -163,23 +164,21 @@ class ActionRailSlot:
 		queue_redraw()
 
 	func _draw() -> void:
-		var font := get_theme_default_font()
-		var center := Vector2(size.x * 0.5, 23.0)
-		var radius := 21.0 if is_primary else 19.0
-		draw_circle(center + Vector2(2.0, 3.0), radius + 2.0, Color(Art.COBALT_DEEP, 0.90))
+		var center := size * 0.5
+		var radius := 15.0
+		draw_circle(center + Vector2(1.0, 2.0), radius + 1.0, Color(Art.COBALT_DEEP, 0.82))
 		draw_circle(center, radius, Art.IVORY_BRIGHT)
 		var progress := cooldown_ratio if is_primary else 1.0 - cooldown_ratio
-		draw_arc(center, radius - 1.0, -PI * 0.5, -PI * 0.5 + TAU * clampf(progress, 0.0, 1.0), 24, accent, 4.0, true)
+		draw_arc(center, radius - 1.0, -PI * 0.5, -PI * 0.5 + TAU * clampf(progress, 0.0, 1.0), 24, accent, 3.0, true)
 		match action_name:
 			"ACTION_PRIMARY":
-				draw_colored_polygon(PackedVector2Array([center + Vector2(9.0, 0.0), center + Vector2(-7.0, -6.0), center + Vector2(-7.0, 6.0)]), accent)
+				draw_colored_polygon(PackedVector2Array([center + Vector2(7.0, 0.0), center + Vector2(-5.0, -4.0), center + Vector2(-5.0, 4.0)]), accent)
 			"ACTION_SEEKER":
-				for offset in [-7.0, 0.0, 7.0]: draw_circle(center + Vector2(offset, 0.0), 3.0, accent)
+				for offset in [-6.0, 0.0, 6.0]: draw_circle(center + Vector2(offset, 0.0), 2.3, accent)
 			"ACTION_DASH":
-				draw_colored_polygon(PackedVector2Array([center + Vector2(-8.0, -7.0), center + Vector2(2.0, 0.0), center + Vector2(-8.0, 7.0), center + Vector2(9.0, 0.0)]), accent)
+				draw_colored_polygon(PackedVector2Array([center + Vector2(-6.0, -5.0), center + Vector2(1.0, 0.0), center + Vector2(-6.0, 5.0), center + Vector2(7.0, 0.0)]), accent)
 			_:
-				draw_colored_polygon(PackedVector2Array([center + Vector2(0.0, -9.0), center + Vector2(8.0, 7.0), center, center + Vector2(-8.0, 7.0)]), accent)
-		draw_string(font, Vector2(0.0, size.y - 6.0), binding, HORIZONTAL_ALIGNMENT_CENTER, size.x, 13, Art.INK)
+				draw_colored_polygon(PackedVector2Array([center + Vector2(0.0, -7.0), center + Vector2(6.0, 5.0), center, center + Vector2(-6.0, 5.0)]), accent)
 
 class StageMinimap:
 	extends Control
@@ -278,14 +277,14 @@ class StageMinimap:
 			elif kind == "reward":
 				draw_colored_polygon(_diamond(point, 5.0), marker_color)
 			elif kind == "elite":
-				var elite_diamond := _diamond(point, 6.0)
-				for index in elite_diamond.size():
-					draw_line(
-						elite_diamond[index],
-						elite_diamond[(index + 1) % elite_diamond.size()],
-						marker_color,
-						2.0
-					)
+				draw_colored_polygon(_diamond(point, 7.0), marker_color)
+				draw_rect(Rect2(point - Vector2.ONE, Vector2(2.0, 2.0)), Art.IVORY_BRIGHT)
+			elif kind == "stationary":
+				draw_rect(Rect2(point - Vector2(2.5, 2.5), Vector2(5.0, 5.0)), marker_color)
+			elif kind == "crate":
+				draw_rect(Rect2(point - Vector2(3.0, 3.0), Vector2(6.0, 6.0)), Art.INK_MUTED)
+			elif kind == "pickup":
+				draw_circle(point, 5.0, marker_color)
 			elif kind == "mechanic":
 				var direction := Vector2.RIGHT.rotated(float(int(marker.get("orientation", 0))) * PI * 0.5)
 				draw_circle(point, 5.0, marker_color)
@@ -294,12 +293,48 @@ class StageMinimap:
 				draw_rect(Rect2(point - Vector2(5.0, 2.5), Vector2(10.0, 5.0)), marker_color)
 			else:
 				draw_circle(point, 4.0, marker_color)
+		for cluster_variant in snapshot.get("enemy_clusters", []):
+			var cluster: Dictionary = cluster_variant
+			var cell := Vector2i(cluster["cell"])
+			var point := (Vector2(cell) + Vector2(0.5, 0.5)) * cell_size
+			var count := int(cluster["count"])
+			var radius := 2.5 if count == 1 else (4.0 if count <= 4 else 5.5)
+			draw_circle(point, radius, Art.CORAL)
+			var average_velocity := Vector2(cluster.get("average_velocity", Vector2.ZERO))
+			if average_velocity.length_squared() > 1.0:
+				var tick := average_velocity.normalized() * clampf(average_velocity.length() / 42.0, 4.0, 7.0)
+				draw_line(point, point + tick, Art.IVORY_BRIGHT, 1.5)
+		for support_variant in snapshot.get("support_fields", []):
+			var support: Dictionary = support_variant
+			var state := StringName(support["state"])
+			if state in [&"initial_delay", &"depleted"]:
+				continue
+			var world := Vector2(support["position"])
+			var point := Vector2(world.x / world_size.x * size.x, world.y / world_size.y * size.y)
+			var kind := StringName(support["kind"])
+			var color := Art.MINT if kind == &"repair" else Art.MUSTARD
+			var progress := clampf(float(support["phase_progress"]), 0.0, 1.0)
+			draw_arc(point, 7.0, -PI * 0.5, -PI * 0.5 + TAU * (1.0 - progress), 18, color, 2.0)
+			if kind == &"repair":
+				draw_line(point - Vector2(3.0, 0.0), point + Vector2(3.0, 0.0), Art.IVORY_BRIGHT, 2.0)
+				draw_line(point - Vector2(0.0, 3.0), point + Vector2(0.0, 3.0), Art.IVORY_BRIGHT, 2.0)
+			else:
+				draw_polyline(PackedVector2Array([
+					point + Vector2(-3.0, 2.0),
+					point + Vector2(0.0, -2.0),
+					point + Vector2(3.0, 2.0),
+				]), Art.IVORY_BRIGHT, 2.0)
 		var player: Vector2 = snapshot.get("player", Vector2.ZERO)
 		var player_point := Vector2(player.x / world_size.x * size.x, player.y / world_size.y * size.y)
+		var facing := Vector2(snapshot.get("player_facing", Vector2.UP)).normalized()
+		if facing.is_zero_approx():
+			facing = Vector2.UP
+		draw_line(player_point, player_point + facing * 9.0, Art.MUSTARD, 2.0)
+		var side := facing.rotated(PI * 0.5)
 		draw_colored_polygon(PackedVector2Array([
-			player_point + Vector2(0.0, -6.0),
-			player_point + Vector2(5.0, 5.0),
-			player_point + Vector2(-5.0, 5.0),
+			player_point + facing * 6.0,
+			player_point - facing * 4.0 + side * 4.0,
+			player_point - facing * 4.0 - side * 4.0,
 		]), Art.MUSTARD)
 
 	func _build_static_map_mesh(world_size: Vector2) -> ArrayMesh:
@@ -350,7 +385,7 @@ var _health_panel: PanelContainer
 var _objective_panel: PanelContainer
 var _minimap_panel: PanelContainer
 var _target_panel: PanelContainer
-var _dock_panel: PanelContainer
+var _dock_panel: Control
 var _health_bar: HealthPips
 var _objective_label: Label
 var _objective_detail: Label
@@ -370,7 +405,6 @@ var _passive_slot: ActionRailSlot
 var _skill_slot: ActionRailSlot
 var _buff_label: Label
 var _minimap: StageMinimap
-var _minimap_title: Label
 var _notification: Label
 var _notification_timer := 0.0
 var _notification_queue: Array[Dictionary] = []
@@ -384,6 +418,7 @@ var _upgrade_panel: VehicleUpgradeChoicePanel
 var _pause_center: CenterContainer
 var _result_center: CenterContainer
 var _report_center: CenterContainer
+var _report_surface: PanelContainer
 var _report_panel: VehicleStageReportPanel
 var _garage_center: CenterContainer
 var _settings_center: CenterContainer
@@ -550,18 +585,14 @@ func _build_hud() -> void:
 	objective_box.add_child(_objective_detail)
 
 	_minimap_panel = _flat_panel()
-	_set_panel_margins(_minimap_panel, 8, 5, 8, 5)
+	_set_panel_margins(_minimap_panel, 4, 4, 4, 4)
 	_minimap_panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	_minimap_panel.position = Vector2(1094.0, 16.0)
-	_minimap_panel.size = Vector2(168.0, 112.0)
+	_minimap_panel.position = Vector2(1086.0, 16.0)
+	_minimap_panel.size = Vector2(176.0, 108.0)
 	_hud.add_child(_minimap_panel)
-	var minimap_box := VBoxContainer.new()
-	_minimap_panel.add_child(minimap_box)
-	_minimap_title = _label("UI_FLOODED_WORKS", 12, INK)
-	minimap_box.add_child(_minimap_title)
 	_minimap = StageMinimap.new()
-	_minimap.custom_minimum_size = Vector2(144.0, 80.0)
-	minimap_box.add_child(_minimap)
+	_minimap.custom_minimum_size = Vector2(168.0, 100.0)
+	_minimap_panel.add_child(_minimap)
 
 	_boss_cluster = VBoxContainer.new()
 	_boss_cluster.name = "BossCluster"
@@ -616,14 +647,15 @@ func _build_hud() -> void:
 	_target_panel.visible = false
 	_target_cluster.set_meta("panel", _target_panel)
 
-	_dock_panel = _flat_panel()
-	_set_panel_margins(_dock_panel, 4, 2, 4, 2)
+	_dock_panel = Control.new()
+	_dock_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_dock_panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	_dock_panel.position = Vector2(502.0, 644.0)
-	_dock_panel.size = Vector2(276.0, 60.0)
+	_dock_panel.position = Vector2(18.0, 76.0)
+	_dock_panel.size = Vector2(154.0, 34.0)
 	_hud.add_child(_dock_panel)
 	var dock := HBoxContainer.new()
 	dock.add_theme_constant_override("separation", 6)
+	dock.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_dock_panel.add_child(dock)
 	_primary_slot = _action_slot(dock, "LMB", "ACTION_PRIMARY", AMBER, true)
 	_passive_slot = _action_slot(dock, "AUTO", "ACTION_SEEKER", MOSS)
@@ -654,10 +686,10 @@ func _apply_responsive_layout() -> void:
 	_objective_panel.position = Vector2((_root.size.x - objective_width) * 0.5, 16.0)
 	_objective_panel.custom_minimum_size = Vector2(objective_width, objective_height)
 	_objective_panel.size = Vector2(objective_width, objective_height)
-	var minimap_size := Vector2(144.0, 96.0) if compact else Vector2(168.0, 112.0)
+	var minimap_size := Vector2(160.0, 98.0) if compact else Vector2(176.0, 108.0)
 	_minimap_panel.size = minimap_size
 	_minimap_panel.position = Vector2(_root.size.x - minimap_size.x - 18.0, 16.0)
-	_minimap.custom_minimum_size = Vector2(120.0, 64.0) if compact else Vector2(144.0, 80.0)
+	_minimap.custom_minimum_size = minimap_size - Vector2(8.0, 8.0)
 	var boss_width := minf(520.0, _root.size.x - health_size.x - minimap_size.x - 72.0)
 	var boss_left := (_root.size.x - boss_width) * 0.5
 	_boss_cluster.position = Vector2(boss_left, 16.0)
@@ -666,13 +698,17 @@ func _apply_responsive_layout() -> void:
 	var target_size := Vector2(168.0, 60.0) if compact else Vector2(184.0, 64.0)
 	_target_panel.size = target_size
 	_target_panel.position = Vector2(_root.size.x - target_size.x - 18.0, _root.size.y - target_size.y - 82.0)
-	var dock_width := 276.0
-	_dock_panel.size = Vector2(dock_width, 60.0)
-	_dock_panel.position = Vector2((_root.size.x - dock_width) * 0.5, _root.size.y - 72.0)
+	_dock_panel.size = Vector2(154.0, 34.0)
+	_dock_panel.position = Vector2(18.0, 76.0)
 	_objective_detail.add_theme_font_size_override("font_size", 12 if compact else 13)
 	_notification.size.x = 320.0 if compact else 360.0
 	_notification.position.x = (_root.size.x - _notification.size.x) * 0.5
 	_notification.position.y = 68.0 if _boss_cluster.visible else 72.0
+	if is_instance_valid(_report_surface):
+		_report_surface.custom_minimum_size = Vector2(
+			minf(1120.0, _root.size.x - 48.0),
+			minf(560.0, _root.size.y - 40.0)
+		)
 
 
 func _build_deployment() -> void:
@@ -913,12 +949,12 @@ func _build_stage_report() -> void:
 	_report_center = CenterContainer.new()
 	_report_center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_root.add_child(_report_center)
-	var panel := _modal_panel(Vector2(900.0, 500.0))
-	_report_center.add_child(panel)
+	_report_surface = _modal_panel(Vector2(900.0, 500.0))
+	_report_center.add_child(_report_surface)
 	_report_panel = StageReportPanel.new()
 	_report_panel.continued.connect(func() -> void: stage_report_continued.emit())
 	_report_panel.garage_requested.connect(func() -> void: garage_requested.emit())
-	panel.add_child(_report_panel)
+	_report_surface.add_child(_report_panel)
 
 
 func _build_garage() -> void:
@@ -1016,7 +1052,6 @@ func update_hud(snapshot: Dictionary) -> void:
 			_objective_detail.visible = true
 		_objective_label.text = next_objective
 		_objective_detail.text = String(snapshot.get("objective_detail", ""))
-		_minimap_title.text = String(snapshot.get("stage_title", tr("UI_FLOODED_WORKS")))
 	if snapshot.has("primary_state"):
 		_primary_slot.action_name = String(snapshot.get("primary_name", "ACTION_PRIMARY"))
 		_primary_slot.set_state(String(snapshot["primary_state"]), float(snapshot.get("primary_ratio", 0.0)))
@@ -1248,13 +1283,13 @@ func debug_ui_contract(viewport_width: float = 1280.0) -> Dictionary:
 	var objective_width := 300.0 if compact else 360.0
 	var objective_height := 40.0 if compact else 44.0
 	var health_size := Vector2(168.0, 50.0) if compact else Vector2(184.0, 54.0)
-	var minimap_size := Vector2(144.0, 96.0) if compact else Vector2(168.0, 112.0)
+	var minimap_size := Vector2(160.0, 98.0) if compact else Vector2(176.0, 108.0)
 	var target_size := Vector2(168.0, 60.0) if compact else Vector2(184.0, 64.0)
-	var dock_size := Vector2(276.0, 60.0)
+	var dock_size := Vector2(154.0, 34.0)
 	var health_end := 18.0 + (168.0 if compact else 184.0)
 	var objective_start := viewport_width * 0.5 - objective_width * 0.5
 	var objective_end := objective_start + objective_width
-	var minimap_start := viewport_width - (162.0 if compact else 186.0)
+	var minimap_start := viewport_width - minimap_size.x - 18.0
 	var body_font_weight := 0.0
 	if _root.theme.default_font is FontVariation:
 		body_font_weight = float((_root.theme.default_font as FontVariation).variation_opentype.get("wght", 0.0))
@@ -1263,7 +1298,7 @@ func debug_ui_contract(viewport_width: float = 1280.0) -> Dictionary:
 		Rect2(Vector2(objective_start, 16.0), Vector2(objective_width, objective_height)),
 		Rect2(Vector2(viewport_width - minimap_size.x - 18.0, 16.0), minimap_size),
 		Rect2(Vector2(viewport_width - target_size.x - 18.0, viewport_height - target_size.y - 82.0), target_size),
-		Rect2(Vector2((viewport_width - dock_size.x) * 0.5, viewport_height - 72.0), dock_size),
+		Rect2(Vector2(18.0, 76.0), dock_size),
 	]
 	var opaque_area := 0.0
 	var central_safe := Rect2(Vector2(viewport_width * 0.20, viewport_height * 0.20), Vector2(viewport_width * 0.60, viewport_height * 0.60))
@@ -1274,7 +1309,9 @@ func debug_ui_contract(viewport_width: float = 1280.0) -> Dictionary:
 	return {
 		"theme_path": _root.theme.resource_path if _root.theme != null else "",
 		"command_min_height": _pause_first_button.custom_minimum_size.y,
-		"action_rail_size": Vector2(276.0, 60.0),
+		"action_rail_size": Vector2(154.0, 34.0),
+		"action_rail_position":Vector2(18.0, 76.0),
+		"action_rail_icon_only":true,
 		"primary_slot_size": _primary_slot.custom_minimum_size,
 		"secondary_slot_size": _dash_slot.custom_minimum_size,
 		"body_font_weight": body_font_weight,

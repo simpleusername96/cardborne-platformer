@@ -20,10 +20,11 @@ related:
 Cardborne is a top-down vehicle action shooter about steering through one large
 run-selected field while manually aiming a held primary weapon, dashing through
 pressure, and building a compact set of automatic secondary weapons. A new run
-selects one of three registered fields plus one validated arrangement of large
-internal cover and content sockets. All five combat stages and retries reuse
-that field and arrangement while pressure, enemy composition, boss patterns,
-and rewards change.
+selects one of three registered macro fields plus five deterministic
+stage-tactical arrangements of large internal cover and content sockets. All
+five combat stages reuse that field's floor and boundary while each stage
+activates its own validated cover, stationary threats, items, crates, and
+support sockets.
 
 This is the canonical product contract for the current executable.
 
@@ -141,7 +142,7 @@ second time; no individual stat is described as exactly 15% lower.
 
 - A new run deterministically selects `drowned_ruin_field`,
   `tidal_archive_field`, or `storm_drydock_field`. Every stage and retry keeps
-  that field's immutable compiled layout.
+  that macro field while each stage resolves one immutable tactical child.
 - Every registered field uses a `7200x4320` world rectangle and respawns the
   player at `(3600, 2160)`.
 - Functional-terrain footprints are mutually disjoint and remain outside the
@@ -155,8 +156,8 @@ second time; no individual stat is described as exactly 15% lower.
   across six sectors. The selected cover is validated for the ordinary
   36-pixel and boss 76-pixel actor radii before play.
 - Rendering, movement, projectile collision, line of sight, pursuit, minimap,
-  and validation consume the same run layout. The layout remains unchanged
-  across stages and exact retries; only a new run selects another arrangement.
+  and validation consume the same active stage-tactical layout. Exact retries
+  reproduce it; adjacent stages activate a different validated tactical set.
 - Thirty-two ordinary arrival candidates, twelve boss arrival anchors, six
   stationary candidate groups, and at least thirty-two item sockets are
   reusable authored positions. Each stage selects four stationary threats, three pickups, and
@@ -165,22 +166,25 @@ second time; no individual stat is described as exactly 15% lower.
 - Capture, validation, and performance paths accept `--layout-seed=<integer>`
   and `--field-id=<id>`; their default layout seed is `0xC4A2B0`, and
   debug/performance snapshots expose the selected field, seed, and fingerprint.
-- The explored minimap uses a 20x12 grid. Unvisited cells remain concealed; the
-  player, discovered pickups, boss warning, and active boss are marked.
+- The explored minimap uses a 20x12 grid. Unvisited geometry remains concealed,
+  while player facing, moving-enemy clusters, stationary threats, elites, boss
+  state, live pickups, unopened crates, and scheduled support fields remain
+  visible as tactical markers.
 
 ### Functional terrain, facilities, and Breach Shot
 
-- Every field authors one Flow Channel, one Arc Surge Strip, two paired Transit
-  Gate routes, one Repair Basin, one Overdrive Field, and persistent Breakable
-  Bulkheads. Their large visible footprints match the simulation exactly.
-- Flow moves the player and mobile enemies without changing projectiles or
-  pushing an actor through a wall. Arc Surge uses a continuous warning, hits
+- Every field authors Arc Surge Strips, two paired Transit Gate routes, and
+  persistent Breakable Bulkheads. Every stage schedules two repair fields and
+  two overdrive fields from validated tactical sockets.
+- Arc Surge uses a continuous warning, hits
   each actor at most once per active window, can damage either team, and keeps
   stable damage attribution.
 - Transit Gates require a dwell, preserve aim, clear velocity, share a
-  ten-second pair cooldown, and move only the player. Repair Basin restores at
-  most 24 hull per stage and pauses after accepted damage. Overdrive applies
-  1.20x player damage only while the ship center remains inside it.
+  ten-second pair cooldown, and move only the player. Both repair fields share
+  a 24-hull stage budget and pause after accepted damage. Overdrive applies a
+  non-stacking 1.20x player-damage multiplier only while the ship center
+  remains inside an active field. The four independent schedules use different
+  active/dormant durations and space relocation grants by at least three seconds.
 - A full Breach Shot destroys a full-health Breakable Bulkhead, arms a mine
   with a short fuse, breaks a Bulkhead Guard plate, or cancels an ordinary
   enemy attack only during a metadata-approved startup. Cancellation enters a
@@ -298,7 +302,8 @@ Breach Shot.
 
 - The live HUD prioritizes hull/experience, stage quota, opening-shot readiness,
   dash, EMP, active secondary families, minimap, boss health, and exceptional
-  timed effects. It must not cover the central combat area.
+  timed effects. Its 154x34 icon-only action rail sits below hull/experience;
+  no bottom-center dock covers the field.
 - Pause and settings expose a `?` entry to the guidebook. The guidebook has ship,
   mobile enemies, stationary enemies, bosses, and objects categories.
 - The current ship page shows derived stats and equipped secondaries. Encountered
@@ -311,9 +316,10 @@ Breach Shot.
   run it shows one localized empty state.
 - Confirming a boss reward opens a frozen Stage Report before progression. It
   lists actual defeat counts and effective outgoing damage by stable source,
-  with percentages that total exactly 100.0%. A failed attempt opens the same
-  report in failure mode with the last hit and the three largest incoming
-  sources before Garage.
+  plus a second partition by kinetic, thermal, toxin, cryo, or arc attribute.
+  Both outgoing totals agree within 0.01 and environmental Arc Surge is
+  excluded. A failed attempt opens the same report in failure mode with the
+  last hit and the three largest incoming sources before Garage.
 - Deployment, upgrade, pause/settings, guidebook, result, and garage are modal
   focus layers. They block carried input and provide deterministic keyboard focus.
 - One upgrade offer contains at most one instance of each card ID. Selection
@@ -345,9 +351,9 @@ Breach Shot.
 
 ## Acceptance Criteria
 
-- All three immutable fields, the 560-pixel start clearance, both actor radii,
-  seeded complete layouts, and one-layout identity across all five stages and
-  retries pass validation.
+- All three immutable macro fields, the 560-pixel start clearance, both actor
+  radii, five deterministic tactical children, exact-retry identity, and
+  adjacent-stage variation pass validation.
 - The first cue/scout timing, stage quotas, distributed eight-squad surge
   growth, arrival fairness, spawn stop, 1.5-second boss warning, roaming boss,
   preserved build/exploration, automatic stages 1–4 transition, and stage 5

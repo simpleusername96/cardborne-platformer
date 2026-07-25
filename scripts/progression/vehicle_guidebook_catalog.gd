@@ -33,7 +33,6 @@ const ENTRIES: Array[Dictionary] = [
 	{"id":&"object_repair", "category":&"objects", "name_key":"GUIDE_OBJECT_REPAIR_NAME", "description_key":"GUIDE_OBJECT_REPAIR_DESC", "preview":{"kind":&"pickup", "id":&"repair"}},
 	{"id":&"object_recall", "category":&"objects", "name_key":"GUIDE_OBJECT_RECALL_NAME", "description_key":"GUIDE_OBJECT_RECALL_DESC"},
 	{"id":&"object_crate", "category":&"objects", "name_key":"GUIDE_OBJECT_CRATE_NAME", "description_key":"GUIDE_OBJECT_CRATE_DESC"},
-	{"id":&"object_flow_channel", "category":&"objects", "name_key":"GUIDE_TERRAIN_FLOW_NAME", "description_key":"GUIDE_TERRAIN_FLOW_DESC", "preview":{"kind":&"terrain", "id":&"flow_channel"}},
 	{"id":&"object_arc_surge", "category":&"objects", "name_key":"GUIDE_TERRAIN_SURGE_NAME", "description_key":"GUIDE_TERRAIN_SURGE_DESC", "preview":{"kind":&"terrain", "id":&"arc_surge"}},
 	{"id":&"object_breakable_bulkhead", "category":&"objects", "name_key":"GUIDE_TERRAIN_BULKHEAD_NAME", "description_key":"GUIDE_TERRAIN_BULKHEAD_DESC", "preview":{"kind":&"terrain", "id":&"breakable_bulkhead"}},
 	{"id":&"object_transit_gate", "category":&"objects", "name_key":"GUIDE_FACILITY_GATE_NAME", "description_key":"GUIDE_FACILITY_GATE_DESC", "preview":{"kind":&"facility", "id":&"transit_gate"}},

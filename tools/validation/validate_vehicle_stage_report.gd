@@ -13,6 +13,11 @@ func _init() -> void:
 			&"passive_seeker":17.0,
 			&"emp":9.0,
 		},
+		"attributes":{
+			&"kinetic":58.0,
+			&"arc":9.0,
+		},
+		"status_applications":{&"chill":3},
 		"incoming":{&"projectile":20.0, &"contact":5.0},
 		"defeats":{&"scrap_drone":12, &"needle_drone":4},
 		"elites":{&"needle_drone:armored":1},
@@ -37,6 +42,14 @@ func _init() -> void:
 	_expect(
 		is_equal_approx(float(report["total_outgoing"]), 67.0),
 		"report exposes exact total applied outgoing damage"
+	)
+	_expect(
+		is_equal_approx(float(report["total_outgoing"]), float(report["total_attributes"])),
+		"source and attribute totals are identical partitions"
+	)
+	_expect(
+		report["attributes"].size() == 3,
+		"attribute report preserves two damage rows and control-only cryo"
 	)
 	_expect(report["defeats"].size() == 2, "defeat rows preserve base archetypes")
 	_expect(
@@ -65,6 +78,7 @@ func _init() -> void:
 	var contract := panel.debug_contract()
 	_expect(is_equal_approx(float(contract["guard"]), 0.35), "report blocks carried input for 0.35 seconds")
 	_expect(int(contract["defeats"]) == 2, "panel receives frozen defeat rows")
+	_expect(int(contract["attributes"]) == 3, "panel receives all attribute rows")
 	panel.queue_free()
 	_finish()
 

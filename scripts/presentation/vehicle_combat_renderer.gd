@@ -188,7 +188,7 @@ func _build_batches() -> void:
 		_projectile_trail_batches[team] = affinity_batches
 		_projectile_head_batches[team] = _create_batch(
 			"Projectile_head_%s" % String(team),
-			Visuals.projectile_head_mesh(),
+			Visuals.player_projectile_head_mesh() if team == &"player" else Visuals.projectile_head_mesh(),
 			capacity,
 			2,
 			StringName("projectile_head_%s" % String(team))
@@ -239,8 +239,17 @@ func _build_batches() -> void:
 	_overlay_batches[&"diamond"] = _create_batch(
 		"Overlay_diamond", Visuals.effect_mesh(&"diamond"), 96, 4, &"overlay_diamond"
 	)
-	_overlay_batches[&"player"] = _create_batch(
-		"Overlay_player", Visuals.player_mesh(), 1, 4, &"overlay_player"
+	_overlay_batches[&"player_hull"] = _create_batch(
+		"Overlay_player_hull", Visuals.player_hull_mesh(), 1, 4, &"overlay_player_hull"
+	)
+	_overlay_batches[&"player_primary"] = _create_batch(
+		"Overlay_player_primary", Visuals.player_primary_mesh(), 1, 5, &"overlay_player_primary"
+	)
+	_overlay_batches[&"player_engine"] = _create_batch(
+		"Overlay_player_engine", Visuals.player_engine_mesh(), 3, 3, &"overlay_player_engine"
+	)
+	_overlay_batches[&"player_secondary_core"] = _create_batch(
+		"Overlay_player_secondary_core", Visuals.player_secondary_core_mesh(), 1, 5, &"overlay_player_secondary_core"
 	)
 	_overlay_batches[&"status_arc"] = _create_batch(
 		"Overlay_status_arc", Visuals.status_arc_mesh(),
@@ -424,8 +433,9 @@ func _sync_projectiles(
 		var affinity := AttackContract.normalize_affinity(projectile.affinity)
 		if affinity == AttackContract.SUPPORT:
 			affinity = AttackContract.KINETIC
+		var render_affinity := AttackContract.KINETIC if team == &"player" else affinity
 		var affinity_batches: Dictionary = _projectile_trail_batches[team]
-		var trail_batch: BatchHandle = affinity_batches[affinity]
+		var trail_batch: BatchHandle = affinity_batches[render_affinity]
 		var radius := maxf(1.0, projectile.radius)
 		var direction := projectile.velocity.normalized()
 		var trail_length := (
@@ -435,9 +445,7 @@ func _sync_projectiles(
 		)
 		var trail_offset := trail_length * 0.5 - radius
 		var trail_width := radius * (1.25 if hostile else 1.5)
-		var color := projectile.color
-		if hostile or affinity != AttackContract.KINETIC:
-			color = Art.attack_color(affinity, not hostile)
+		var color := Art.attack_color(affinity) if hostile else Art.MUSTARD
 		if team == &"player" and projectile.breach_visual:
 			_write_instance_basis(
 				trail_batch,
@@ -473,7 +481,7 @@ func _sync_projectiles(
 			position,
 			direction,
 			Vector2.ONE * radius,
-			color
+			Color.WHITE if team == &"player" else color
 		)
 
 
@@ -764,10 +772,19 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 	var hit_remaining := float(state.get("player_hit_remaining", 0.0))
 	var invulnerable_remaining := float(state.get("player_invulnerable_remaining", 0.0))
 	var displayed_player_position := player_position
-	var player_color := Color.WHITE
+	var hull_color := _upgrade_shade(
+		Art.MUSTARD, Art.MUSTARD_DARK, int(state.get("hull_visual_tier", 0))
+	)
+	var primary_color := _upgrade_shade(
+		Art.MUSTARD, Art.MUSTARD_DARK, int(state.get("primary_visual_tier", 0))
+	)
+	var secondary_color := _upgrade_shade(
+		Art.MINT, Art.CERAMIC_GREEN, int(state.get("secondary_visual_tier", 0))
+	)
+	var feedback_color := Color.TRANSPARENT
 	if hit_remaining > 0.0:
 		var hit_progress := 1.0 - clampf(hit_remaining / 0.20, 0.0, 1.0)
-		player_color = Color(Art.CORAL).lerp(Art.IVORY_BRIGHT, 0.24)
+		feedback_color = Color(Art.CORAL).lerp(Art.IVORY_BRIGHT, 0.24)
 		if not reduced_motion:
 			var amplitude := 5.0 * (1.0 - hit_progress)
 			var jitter_direction := Vector2(
@@ -777,17 +794,49 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 			displayed_player_position += jitter_direction * amplitude
 	elif invulnerable_remaining > 0.0:
 		if reduced_motion:
-			player_color = Color(Art.CORAL).lerp(Art.IVORY_BRIGHT, 0.56)
+			feedback_color = Color(Art.CORAL).lerp(Art.IVORY_BRIGHT, 0.56)
 		else:
 			var pale_coral := Color(Art.CORAL).lerp(Art.IVORY_BRIGHT, 0.62)
 			pale_coral.a = 0.78
 			if int(floor(float(state.get("run_time", 0.0)) * 16.0)) % 2 == 0:
-				player_color = pale_coral
+				feedback_color = pale_coral
+	if feedback_color.a > 0.0:
+		hull_color = feedback_color
+		primary_color = feedback_color
+		secondary_color = feedback_color
+	var hull_angle := hull_direction.angle()
+	var engine_count := clampi(int(state.get("engine_visual_count", 0)), 0, 3)
+	var rear := -hull_direction.normalized()
+	var side := rear.rotated(PI * 0.5)
+	for engine_index in engine_count:
+		var offset_index := float(engine_index) - float(engine_count - 1) * 0.5
+		_write_instance(
+			_overlay_batches[&"player_engine"],
+			displayed_player_position + rear * 31.0 + side * offset_index * 18.0,
+			hull_angle,
+			Vector2(24.0, 16.0),
+			hull_color
+		)
 	_write_instance(
-		_overlay_batches[&"player"], displayed_player_position,
-		hull_direction.angle(), Vector2.ONE * Art.PLAYER_VISUAL_RADIUS,
-		player_color
+		_overlay_batches[&"player_hull"], displayed_player_position,
+		hull_angle, Vector2.ONE * Art.PLAYER_VISUAL_RADIUS,
+		hull_color
 	)
+	_write_instance(
+		_overlay_batches[&"player_primary"],
+		displayed_player_position + aim_direction * 18.0,
+		aim_direction.angle(),
+		Vector2(48.0, 20.0),
+		primary_color
+	)
+	if int(state.get("secondary_visual_tier", 0)) > 0:
+		_write_instance(
+			_overlay_batches[&"player_secondary_core"],
+			displayed_player_position - hull_direction * 5.0 - side * 25.0,
+			0.0,
+			Vector2.ONE * 12.0,
+			secondary_color
+		)
 	if invulnerable_remaining > 0.0:
 		_write_ring(player_position, Art.PLAYER_VISUAL_RADIUS + 12.0, Color(Art.CORAL, 0.78))
 	_write_beam(player_position, player_position + aim_direction * 61.0, 17.0, Art.INK)
@@ -823,6 +872,11 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 	for direction in [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]:
 		_write_diamond(cursor_position + direction * 18.0, 6.0, Art.MUSTARD)
 	_write_diamond(cursor_position, 4.0, Art.IVORY_BRIGHT)
+
+
+func _upgrade_shade(base: Color, target: Color, tier: int) -> Color:
+	var mix_values := [0.0, 0.28, 0.52, 0.72]
+	return base.lerp(target, mix_values[clampi(tier, 0, 3)])
 
 
 func _sync_target_brackets(position: Vector2, radius: float) -> void:

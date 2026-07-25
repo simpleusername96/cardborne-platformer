@@ -39,7 +39,7 @@ func _build_sheet(canvas: Node2D) -> void:
 	_label(canvas, "기체 · HUD · 동적 장판 최종 시각 계약", Vector2(64, 34), 36, Art.INK)
 	_label(
 		canvas,
-		"현재 player_mesh() 실루엣 유지 · 보이는 수량은 수량으로 · 보이지 않는 영구 강화만 색 농도로",
+		"실제 분리형 기체 메시 · 보이는 수량은 수량으로 · 보이지 않는 영구 강화만 색 농도로",
 		Vector2(66, 86),
 		20,
 		Art.INK_MUTED
@@ -126,17 +126,13 @@ func _ship(
 	hull_tier: int = 0
 ) -> void:
 	var ship := MeshInstance2D.new()
-	ship.mesh = Visuals.player_mesh()
+	ship.mesh = Visuals.player_hull_mesh()
 	ship.position = center
 	ship.scale = Vector2.ONE * SHIP_SCALE * scale_multiplier
-	if hull_tier > 0:
-		var tier_colors := [
-			Color.WHITE,
-			Color("#E8D4A0"),
-			Color("#C5A86B"),
-			Color("#9A7540"),
-		]
-		ship.modulate = tier_colors[clampi(hull_tier, 0, 3)]
+	var mixes := [0.0, 0.28, 0.52, 0.72]
+	ship.modulate = Art.MUSTARD.lerp(
+		Art.MUSTARD_DARK, mixes[clampi(hull_tier, 0, 3)]
+	)
 	canvas.add_child(ship)
 
 
@@ -147,10 +143,12 @@ func _thrusters(canvas: Node2D, center: Vector2, level: int) -> void:
 	elif level >= 3:
 		offsets = [Vector2(-34, -24), Vector2(-43, 0), Vector2(-34, 24)]
 	for offset in offsets:
-		_polygon(canvas, center + offset, PackedVector2Array([
-			Vector2(5, -7), Vector2(-14, -10), Vector2(-20, 0),
-			Vector2(-14, 10), Vector2(5, 7),
-		]), Art.CERAMIC_GREEN_MID)
+		var engine := MeshInstance2D.new()
+		engine.mesh = Visuals.player_engine_mesh()
+		engine.position = center + offset
+		engine.scale = Vector2(24.0, 16.0)
+		engine.modulate = Art.MUSTARD_DARK
+		canvas.add_child(engine)
 		_line(
 			canvas,
 			center + offset + Vector2(-14, 0),
@@ -161,15 +159,15 @@ func _thrusters(canvas: Node2D, center: Vector2, level: int) -> void:
 
 
 func _primary_cannon(canvas: Node2D, center: Vector2, level: int) -> void:
-	var tier_colors := [Art.MUSTARD, Color("#B97B12"), Art.MUSTARD_DARK, Color("#5F3B0C")]
-	_polygon(canvas, center, PackedVector2Array([
-		Vector2(27, -10),
-		Vector2(51, -8),
-		Vector2(61, 0),
-		Vector2(51, 8),
-		Vector2(27, 10),
-		Vector2(36, 0),
-	]), tier_colors[clampi(level, 0, 3)])
+	var cannon := MeshInstance2D.new()
+	cannon.mesh = Visuals.player_primary_mesh()
+	cannon.position = center + Vector2(18.0, 0.0)
+	cannon.scale = Vector2(48.0, 20.0)
+	var mixes := [0.0, 0.28, 0.52, 0.72]
+	cannon.modulate = Art.MUSTARD.lerp(
+		Art.MUSTARD_DARK, mixes[clampi(level, 0, 3)]
+	)
+	canvas.add_child(cannon)
 
 
 func _seeker_pods(canvas: Node2D, center: Vector2, level: int) -> void:
