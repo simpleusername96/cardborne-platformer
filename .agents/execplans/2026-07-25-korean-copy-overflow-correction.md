@@ -1,6 +1,6 @@
 ---
 type: plan
-status: active
+status: done
 owner: BK
 created: 2026-07-25
 last_reviewed: 2026-07-25
@@ -332,7 +332,7 @@ validators into localization catch-alls. It must:
 
 ## Milestones / Implementation Checklist
 
-- [ ] **Task 1: Add Missing Keys and Update Copy in CSV**
+- [x] **Task 1: Add Missing Keys and Update Copy in CSV**
   - **As-is**: `localization/vehicle_stage.csv` lacks 3 upgrade-derived keys
     and 3 boss-practice commit-mode keys, and contains legacy copy in 7 rows.
   - **To-be**: Add the 6 missing keys with the locked values above, and update
@@ -343,7 +343,7 @@ validators into localization catch-alls. It must:
     changed rows exactly match the AS-IS / TO-BE inventory.
   - **Guard**: Headless Godot CSV import test passes cleanly.
 
-- [ ] **Task 2: Replace Raw Boss-Practice and HUD Presentation Paths**
+- [x] **Task 2: Replace Raw Boss-Practice and HUD Presentation Paths**
   - **As-is**: The practice picker humanizes pattern IDs and commit-mode enums;
     practice startup exposes `practice` and `PRACTICE`; generic pattern and
     target-name fallbacks can print raw values.
@@ -355,13 +355,13 @@ validators into localization catch-alls. It must:
     Korean and English; no reachable visible path returns its internal ID.
   - **Guard**: Boss-pattern, boss-practice, and UI-localization validators pass.
 
-- [ ] **Task 3: Fix Stat Preview Value Formatting in Choice Card**
+- [x] **Task 3: Fix Stat Preview Value Formatting in Choice Card**
   - **As-is**: `_preview_value()` in `scripts/ui/vehicle_upgrade_choice_card.gd` uses `%+.0f` for all additive stats, rendering `breach_round` values as `+0 → +0`.
   - **To-be**: Give `UPGRADE_STAT_BREACH_HEALTH_SCALE_BONUS` the locked percentage presentation while leaving multiplier and flat-add formats unchanged.
   - **Accept**: `breach_round` displays `+0% → +20%` at level 0 and `+20% → +40%` at level 1; integer flat additions and multipliers retain their existing output.
   - **Guard**: Unit test / validator assertion for `_preview_value()` outputs.
 
-- [ ] **Task 4: Enforce Slot-Invariant Card and Modal Containment**
+- [x] **Task 4: Enforce Slot-Invariant Card and Modal Containment**
   - **As-is**: Stat labels can widen descendant containers, the modal retains a
     900px content minimum, compact viewport sizing is not applied to the
     upgrade surface, and `clip_contents = true` hides rather than prevents
@@ -374,7 +374,7 @@ validators into localization catch-alls. It must:
   - **Guard**: The layout validator fails if the supplied broken-key fixture is
     reintroduced and passes only after all geometry assertions hold.
 
-- [ ] **Task 5: Implement Complete UI Localization Closure Validator**
+- [x] **Task 5: Implement Complete UI Localization Closure Validator**
   - **As-is**: Current validators all pass while 3 generated upgrade keys and
     multiple practice UI values still leak.
   - **To-be**: Add the focused localization validator described above and keep
@@ -384,7 +384,7 @@ validators into localization catch-alls. It must:
     required translation returns its key.
   - **Guard**: Execute script in headless Godot mode.
 
-- [ ] **Task 6: Execute Rendered Evidence & Suite Gates**
+- [x] **Task 6: Execute Rendered Evidence & Suite Gates**
   - **As-is**: The capture sequence covers one generated three-card offer and no
     localized practice-pattern matrix.
   - **To-be**: Extract the shared card-snapshot builder, add all 91
@@ -410,12 +410,23 @@ validators into localization catch-alls. It must:
 - [x] Preview formatting defect (`+0 → +0`) identified and percentage display
   specification defined.
 - [x] Plan updated to decision-complete active state with `last_reviewed: 2026-07-25`.
-- [ ] Task 1: CSV copy updates and missing key additions executed.
-- [ ] Task 2: Raw boss-practice/HUD presentation paths replaced.
-- [ ] Task 3: Choice card stat preview formatting fix executed.
-- [ ] Task 4: Card/modal containment and responsive layout fix executed.
-- [ ] Task 5: Complete UI localization validator created and executed.
-- [ ] Task 6: 91-state rendered captures and Web export build executed.
+- [x] Task 1: CSV copy updates and missing key additions executed.
+- [x] Task 2: Raw boss-practice/HUD presentation paths replaced.
+- [x] Task 3: Choice card stat preview formatting fix executed.
+- [x] Task 4: Card/modal containment and responsive layout fix executed.
+- [x] Task 5: Complete UI localization validator created and executed.
+- [x] Task 6: The 3,276-state rendered-geometry matrix, targeted Korean
+  960×540 and English 1280×720 captures, full validator suite, and Web export
+  executed successfully.
+
+Completion evidence:
+
+- `build/captures/korean-copy-correction/ko-960x540/06d-localization-third-slot.png`
+- `build/captures/korean-copy-correction/en-1280x720/06d-localization-third-slot.png`
+- `VEHICLE_STAGE_UI_LAYOUT_VALIDATION_OK`
+- `VEHICLE_UI_LOCALIZATION_VALIDATION_OK`
+- `ALL_VEHICLE_VALIDATORS_OK`
+- `WEB_EXPORT_OK path=D:\npjt\cardborne-platformer\build\web\index.html files=4`
 
 ## Test Plan / Verification Commands
 
@@ -538,10 +549,6 @@ and acceptance matrix are decision-complete for this correction.
 
 ## Next Steps
 
-1. Apply Task 1's thirteen exact CSV additions or replacements.
-2. Implement Tasks 2–5 in their locked presentation and validation owners without
-   changing card data or combat calculations.
-3. Add the deterministic 91-state card fixture and localized boss-practice
-   fixture to the existing capture sequence, run the focused checks, inspect
-   the Korean/English contact sheets and full-modal third-slot captures, then
-   run the full validator suite and Web export.
+1. No implementation work remains in this plan.
+2. Preserve the localization and measured-containment validators as regression
+   gates for future card, copy, and modal changes.

@@ -18,9 +18,14 @@ var _guard_remaining := 0.0
 var _pending := false
 var _optional := false
 var _decline_armed := false
+var _compact := false
 
+var _kicker: Label
+var _title: Label
 var _detail: Label
+var _row: HBoxContainer
 var _message: Label
+var _commands: HBoxContainer
 var _confirm: Button
 var _decline: Button
 
@@ -32,15 +37,15 @@ func _ready() -> void:
 
 
 func _build() -> void:
-	var kicker := _label("UPGRADE_KICKER", 16, Color("d49b27"))
-	kicker.theme_type_variation = &"MetricLabel"
-	kicker.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	add_child(kicker)
-	var title := _label("UPGRADE_TITLE", 38, Color("102e38"))
-	title.theme_type_variation = &"DisplayLabel"
-	title.custom_minimum_size.x = 900.0
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	add_child(title)
+	_kicker = _label("UPGRADE_KICKER", 16, Color("d49b27"))
+	_kicker.theme_type_variation = &"MetricLabel"
+	_kicker.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	add_child(_kicker)
+	_title = _label("UPGRADE_TITLE", 38, Color("102e38"))
+	_title.theme_type_variation = &"DisplayLabel"
+	_title.custom_minimum_size.x = 900.0
+	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	add_child(_title)
 	_detail = _label("UPGRADE_SELECT_DETAIL", 17, Color("315963"))
 	_detail.custom_minimum_size.x = 900.0
 	_detail.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -48,39 +53,58 @@ func _build() -> void:
 	_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	add_child(_detail)
 
-	var row := HBoxContainer.new()
-	row.name = "UpgradeButtons"
-	row.add_theme_constant_override("separation", 18)
-	row.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	add_child(row)
+	_row = HBoxContainer.new()
+	_row.name = "UpgradeButtons"
+	_row.add_theme_constant_override("separation", 18)
+	_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	add_child(_row)
 	for index in 3:
 		var button := UpgradeChoiceCard.new()
 		button.name = "UpgradeCard%d" % (index + 1)
 		button.pressed.connect(_select.bind(index))
-		row.add_child(button)
+		_row.add_child(button)
 		_buttons.append(button)
 
 	_message = _label("", 15, Color("7b2444"))
 	_message.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_message.custom_minimum_size.y = 20.0
 	add_child(_message)
-	var commands := HBoxContainer.new()
-	commands.add_theme_constant_override("separation", 12)
-	commands.alignment = BoxContainer.ALIGNMENT_CENTER
-	add_child(commands)
+	_commands = HBoxContainer.new()
+	_commands.add_theme_constant_override("separation", 12)
+	_commands.alignment = BoxContainer.ALIGNMENT_CENTER
+	add_child(_commands)
 	_decline = Button.new()
 	_decline.custom_minimum_size = Vector2(210.0, 48.0)
 	_decline.theme_type_variation = &"SecondaryButton"
 	_decline.text = tr("UPGRADE_LEAVE_REWARD")
 	_decline.pressed.connect(_request_decline)
-	commands.add_child(_decline)
+	_commands.add_child(_decline)
 	_confirm = Button.new()
 	_confirm.custom_minimum_size = Vector2(300.0, 48.0)
 	_confirm.theme_type_variation = &"PrimaryButton"
 	_confirm.text = tr("UPGRADE_EQUIP")
 	_confirm.add_theme_font_size_override("font_size", 22)
 	_confirm.pressed.connect(_confirm_selected)
-	commands.add_child(_confirm)
+	_commands.add_child(_confirm)
+
+
+func set_compact_mode(value: bool) -> void:
+	_compact = value
+	add_theme_constant_override("separation", 5 if value else 8)
+	if not is_node_ready():
+		return
+	_title.custom_minimum_size.x = 0.0 if value else 900.0
+	_title.add_theme_font_size_override("font_size", 30 if value else 38)
+	_detail.custom_minimum_size.x = 0.0 if value else 900.0
+	_detail.custom_minimum_size.y = 26.0 if value else 34.0
+	_detail.add_theme_font_size_override("font_size", 14 if value else 17)
+	_row.add_theme_constant_override("separation", 12 if value else 18)
+	_message.custom_minimum_size.y = 16.0 if value else 20.0
+	_decline.custom_minimum_size = Vector2(190.0, 42.0) if value else Vector2(210.0, 48.0)
+	_confirm.custom_minimum_size = Vector2(260.0, 42.0) if value else Vector2(300.0, 48.0)
+	_confirm.add_theme_font_size_override("font_size", 19 if value else 22)
+	for button in _buttons:
+		(button as VehicleUpgradeChoiceCard).set_compact_mode(value)
 
 
 func open(cards: Array[Dictionary], optional: bool) -> void:
@@ -201,7 +225,24 @@ func debug_contract() -> Dictionary:
 		"card_count":_buttons.size(),
 		"confirm_size":_confirm.custom_minimum_size,
 		"guard_seconds":GUARD_SECONDS,
+		"compact":_compact,
 		"cards":card_contracts,
+	}
+
+
+func debug_geometry_contract() -> Dictionary:
+	var card_contracts: Array[Dictionary] = []
+	for button in _buttons:
+		if button.visible:
+			card_contracts.append(
+				(button as VehicleUpgradeChoiceCard).debug_geometry_contract()
+			)
+	return {
+		"rect":get_global_rect(),
+		"cards":card_contracts,
+		"detail_rect":_detail.get_global_rect(),
+		"detail_lines":_detail.get_line_count(),
+		"detail_visible_lines":_detail.get_visible_line_count(),
 	}
 
 

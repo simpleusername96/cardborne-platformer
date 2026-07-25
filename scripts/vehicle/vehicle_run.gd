@@ -25,6 +25,7 @@ const AudioDirector = preload("res://scripts/presentation/vehicle_audio_director
 const CombatRenderer = preload("res://scripts/presentation/vehicle_combat_renderer.gd")
 const StageBackdrop = preload("res://scripts/vehicle/vehicle_stage_backdrop.gd")
 const BossPatterns = preload("res://scripts/bosses/vehicle_boss_patterns.gd")
+const UpgradeOfferPresenter = preload("res://scripts/cards/vehicle_upgrade_offer_presenter.gd")
 const BossRuntime = preload("res://scripts/bosses/vehicle_boss_runtime.gd")
 const BossPracticeSession = preload("res://scripts/bosses/vehicle_boss_practice_session.gd")
 const StageDifficulty = preload("res://scripts/enemies/vehicle_stage_difficulty.gd")
@@ -3621,25 +3622,8 @@ func _advance_reward_queue() -> void:
 func _build_card_offer(source_id: StringName) -> Array[Dictionary]:
 	var cards: Array[Dictionary] = []
 	for definition in upgrade_catalog.offer(run_build, run_index, current_stage_index, source_id):
-		var value_previews: Array[Dictionary] = []
 		var current_level := run_build.level_of(definition.id)
-		for modifier in definition.modifiers:
-			value_previews.append({
-				"stat_key": "UPGRADE_STAT_%s" % String(modifier.stat_id).to_upper(),
-				"operation": modifier.operation,
-				"current": modifier.value_at(current_level),
-				"next": modifier.value_at(current_level + 1),
-			})
-		cards.append({
-			"id": definition.id,
-			"title_key": definition.title_key,
-			"description_key": definition.description_key,
-			"family_key": "UPGRADE_FAMILY_%s" % String(definition.family).to_upper(),
-			"current_level": current_level,
-			"next_level": current_level + 1,
-			"max_level": definition.max_level,
-			"value_previews": value_previews,
-		})
+		cards.append(UpgradeOfferPresenter.snapshot(definition, current_level))
 	return cards
 
 
@@ -4263,7 +4247,9 @@ func _enemy_state_text(enemy: EnemyState) -> String:
 func _boss_state_text(boss: EnemyState) -> String:
 	var pattern := _localized_pattern(String(boss.pattern))
 	var base_state := pattern
-	if _boss_has_live_pylons():
+	if pattern.is_empty():
+		base_state = tr("PATTERN_READING_ARENA")
+	elif _boss_has_live_pylons():
 		base_state = tr("BOSS_STATE_PYLON_SHIELD") % pattern
 	elif float(boss.vulnerable) > 0.0:
 		base_state = tr("BOSS_STATE_DAMAGE_WINDOW") % pattern
@@ -4287,62 +4273,11 @@ func _localized_status_parts(enemy: EnemyState) -> Array[String]:
 
 
 func _localized_pattern(pattern: String) -> String:
-	var key: String = {
-		"lane_barrage": "PATTERN_LANE_BARRAGE",
-		"charge": "PATTERN_CHARGE",
-		"pylons": "PATTERN_PYLONS",
-		"overload_combo": "PATTERN_OVERLOAD_COMBO",
-		"fan": "PATTERN_FAN",
-		"system_wake": "PATTERN_SYSTEM_WAKE",
-		"phase_two": "PATTERN_PHASE_TWO",
-		"recovering_control": "PATTERN_RECOVERING_CONTROL",
-		"reading_arena": "PATTERN_READING_ARENA",
-		"recovery_window": "PATTERN_RECOVERY_WINDOW",
-		"twin_foundry_lanes": "PATTERN_TWIN_FOUNDRY_LANES",
-		"foundry_ram": "PATTERN_FOUNDRY_RAM",
-		"furnace_ring": "PATTERN_FURNACE_RING",
-		"furnace_gates": "PATTERN_FURNACE_GATES",
-		"foundry_burst": "PATTERN_FOUNDRY_BURST",
-		"slag_ring": "PATTERN_SLAG_RING",
-		"overload_pylons": "PATTERN_OVERLOAD_PYLONS",
-		"pylon_overload": "PATTERN_PYLON_OVERLOAD",
-		"current_fan": "PATTERN_CURRENT_FAN",
-		"archive_lunge": "PATTERN_ARCHIVE_LUNGE",
-		"archive_cross": "PATTERN_ARCHIVE_CROSS",
-		"archive_depth": "PATTERN_ARCHIVE_DEPTH",
-		"undertow_lanes": "PATTERN_UNDERTOW_LANES",
-		"depth_charges": "PATTERN_DEPTH_CHARGES",
-		"undertow_sweep": "PATTERN_UNDERTOW_SWEEP",
-		"depth_charge": "PATTERN_DEPTH_CHARGE",
-		"archive_ram": "PATTERN_ARCHIVE_RAM",
-		"arc_lanes": "PATTERN_ARC_LANES",
-		"grounded_ring": "PATTERN_GROUNDED_RING",
-		"thunder_drop": "PATTERN_THUNDER_DROP",
-		"grounding_grid": "PATTERN_GROUNDING_GRID",
-		"titan_pulse": "PATTERN_TITAN_PULSE",
-		"titan_burst": "PATTERN_TITAN_BURST",
-		"titan_ram": "PATTERN_TITAN_RAM",
-		"thunder_chain": "PATTERN_THUNDER_CHAIN",
-		"beam_sentinel_call": "PATTERN_BEAM_SENTINEL_CALL",
-		"escort_surge": "PATTERN_ESCORT_SURGE",
-		"open_lane_charge": "PATTERN_OPEN_LANE_CHARGE",
-		"breaker_charge": "PATTERN_BREAKER_CHARGE",
-		"gate_shockwave": "PATTERN_GATE_SHOCKWAVE",
-		"ricochet_volley": "PATTERN_RICOCHET_VOLLEY",
-		"switch_sweep": "PATTERN_SWITCH_SWEEP",
-		"switchyard_mines": "PATTERN_SWITCHYARD_MINES",
-		"switch_sweeps": "PATTERN_SWITCH_SWEEPS",
-		"crown_beam": "PATTERN_CROWN_BEAM",
-		"mirror_cross": "PATTERN_MIRROR_CROSS",
-		"carrier_wave": "PATTERN_CARRIER_WAVE",
-		"relay_pulse": "PATTERN_RELAY_PULSE",
-		"crown_burst": "PATTERN_CROWN_BURST",
-		"crown_lattice": "PATTERN_CROWN_LATTICE",
-		"relay_pulse_rings": "PATTERN_RELAY_PULSE_RINGS",
-		"signature_interrupted": "PATTERN_SIGNATURE_INTERRUPTED",
-		"phase_transition": "PATTERN_PHASE_TRANSITION",
-	}.get(pattern, pattern)
-	return tr(String(key))
+	var key := BossPatterns.display_key(pattern)
+	if key.is_empty():
+		push_error("Missing boss pattern presentation key: %s" % pattern)
+		return ""
+	return tr(key)
 
 
 func _minimap_snapshot(include_static_geometry: bool = true) -> Dictionary:
@@ -4854,11 +4789,11 @@ func _start_boss_practice() -> void:
 	boss.health = boss.max_health * boss_practice.health_ratio()
 	boss.phase = &"boss_read"
 	boss.phase_time = 0.8
-	boss.pattern = &"practice"
+	boss.pattern = &"reading_arena"
 	_append_enemy(boss)
 	boss_started = true
 	stage_flow.state = StageFlow.State.BOSS_ACTIVE
-	_ui.notify("PRACTICE", 1.5, Art.MUSTARD)
+	_ui.notify(tr("BOSS_PRACTICE_START"), 1.5, Art.MUSTARD)
 	_set_mouse_for_mode()
 
 
@@ -5220,6 +5155,16 @@ func _capture_level_up_evidence() -> void:
 	_on_upgrade_selected(StringName(current_card_offer[0]["id"]))
 	await _settle_capture()
 	_save_capture("06c-level-up-confirmed.png")
+	var localization_fixture: Array[Dictionary] = []
+	for upgrade_id in [&"ion_field", &"aegis_cycle", &"breach_round"]:
+		var definition := upgrade_catalog.get_definition(upgrade_id)
+		if definition != null:
+			localization_fixture.append(UpgradeOfferPresenter.snapshot(definition, 0))
+	if localization_fixture.size() == 3:
+		_ui.show_upgrade(localization_fixture)
+		_ui.debug_select_upgrade(2)
+		await _settle_capture()
+		_save_capture("06d-localization-third-slot.png")
 
 
 func _capture_boss_preview() -> void:

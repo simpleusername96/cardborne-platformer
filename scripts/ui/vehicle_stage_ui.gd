@@ -378,6 +378,7 @@ var _dim: ColorRect
 var _deployment_center: CenterContainer
 var _deployment_surface: PanelContainer
 var _upgrade_center: CenterContainer
+var _upgrade_surface: PanelContainer
 var _upgrade_panel: VehicleUpgradeChoicePanel
 var _pause_center: CenterContainer
 var _pause_abort_button: Button
@@ -684,6 +685,12 @@ func _apply_responsive_layout() -> void:
 			minf(MODAL_MINIMUMS["deployment"].x, _root.size.x - 48.0),
 			minf(MODAL_MINIMUMS["deployment"].y, _root.size.y - 24.0)
 		)
+	if is_instance_valid(_upgrade_surface):
+		_upgrade_surface.custom_minimum_size = Vector2(
+			minf(MODAL_MINIMUMS["upgrade"].x, _root.size.x - 24.0),
+			minf(MODAL_MINIMUMS["upgrade"].y, _root.size.y - 24.0)
+		)
+		_upgrade_panel.set_compact_mode(compact)
 
 
 func _build_deployment() -> void:
@@ -888,10 +895,14 @@ func _refresh_practice_patterns() -> void:
 		pattern_ids.append(StringName(value))
 	pattern_ids.append_array(BossPatterns.autonomous_sequence(stage_id))
 	for pattern_id in pattern_ids:
-		_practice_pattern.add_item("%s · %s" % [
-			String(BossPatterns.commit_mode(String(pattern_id))).replace("_", " "),
-			String(pattern_id).replace("_", " "),
-		])
+		var mode_key := BossPatterns.commit_mode_display_key(
+			BossPatterns.commit_mode(String(pattern_id))
+		)
+		var pattern_key := BossPatterns.display_key(String(pattern_id))
+		if mode_key.is_empty() or pattern_key.is_empty():
+			push_error("Missing boss practice presentation for %s" % pattern_id)
+			continue
+		_practice_pattern.add_item("%s · %s" % [tr(mode_key), tr(pattern_key)])
 		_practice_pattern.set_item_metadata(
 			_practice_pattern.item_count - 1, String(pattern_id)
 		)
@@ -919,13 +930,13 @@ func _build_upgrade() -> void:
 	_upgrade_center = CenterContainer.new()
 	_upgrade_center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_root.add_child(_upgrade_center)
-	var panel := _modal_panel(MODAL_MINIMUMS["upgrade"])
-	_upgrade_center.add_child(panel)
+	_upgrade_surface = _modal_panel(MODAL_MINIMUMS["upgrade"])
+	_upgrade_center.add_child(_upgrade_surface)
 	_upgrade_panel = UpgradeChoicePanel.new()
 	_upgrade_panel.confirmed.connect(func(upgrade_id: StringName) -> void: upgrade_selected.emit(upgrade_id))
 	_upgrade_panel.declined.connect(func() -> void: upgrade_declined.emit())
 	_upgrade_panel.selected.connect(func(upgrade_id: StringName) -> void: upgrade_previewed.emit(upgrade_id))
-	panel.add_child(_upgrade_panel)
+	_upgrade_surface.add_child(_upgrade_panel)
 	_upgrade_buttons = _upgrade_panel.buttons()
 
 
@@ -1205,21 +1216,23 @@ func update_hud(snapshot: Dictionary) -> void:
 		_buff_label.text = String(snapshot.get("buff_text", ""))
 	if snapshot.has("boss"):
 		var boss: Dictionary = snapshot["boss"]
-		_boss_cluster.visible = bool(boss.get("visible", false))
+		var boss_name := String(boss.get("name", "")).strip_edges()
+		_boss_cluster.visible = bool(boss.get("visible", false)) and not boss_name.is_empty()
 		_objective_panel.visible = not _boss_cluster.visible
 		_minimap_panel.visible = true
 		_notification.position.y = 68.0 if _boss_cluster.visible else 72.0
 		if _boss_cluster.visible:
-			_boss_name.text = String(boss.get("name", "BOSS"))
+			_boss_name.text = boss_name
 			_boss_bar.max_value = maxf(1.0, float(boss.get("max_health", 1.0)))
 			_boss_bar.value = float(boss.get("health", 0.0))
 			_boss_state.text = String(boss.get("state", ""))
 	if snapshot.has("target"):
 		var target: Dictionary = snapshot["target"]
 		var target_panel: Control = _target_cluster.get_meta("panel")
-		target_panel.visible = bool(target.get("visible", false))
+		var target_name := String(target.get("name", "")).strip_edges()
+		target_panel.visible = bool(target.get("visible", false)) and not target_name.is_empty()
 		if target_panel.visible:
-			_target_name.text = String(target.get("name", "TARGET"))
+			_target_name.text = target_name
 			_target_bar.max_value = maxf(1.0, float(target.get("max_health", 1.0)))
 			_target_bar.value = float(target.get("health", 0.0))
 			_target_state.text = String(target.get("state", ""))
@@ -1538,6 +1551,23 @@ func debug_select_upgrade(index: int) -> void:
 	_upgrade_panel.call("_select", index)
 
 
+func debug_upgrade_geometry() -> Dictionary:
+	return {
+		"viewport_rect":Rect2(Vector2.ZERO, _root.size),
+		"surface_rect":_upgrade_surface.get_global_rect(),
+		"panel":_upgrade_panel.debug_geometry_contract(),
+	}
+
+
+func debug_practice_option_texts() -> PackedStringArray:
+	var result := PackedStringArray()
+	if not is_instance_valid(_practice_pattern):
+		return result
+	for index in _practice_pattern.item_count:
+		result.append(_practice_pattern.get_item_text(index))
+	return result
+
+
 func debug_threat_radar_contract() -> Dictionary:
 	return _threat_radar.debug_contract()
 
@@ -1668,6 +1698,8 @@ func _refresh_localized_content() -> void:
 	_skill_slot.queue_redraw()
 	if not _latest_upgrade_cards.is_empty() and _upgrade_center.visible:
 		_refresh_upgrade_cards()
+	if is_instance_valid(_practice_pattern):
+		_refresh_practice_patterns()
 
 func _on_controls_changed(_action: StringName) -> void:
 	_refresh_input_bindings()

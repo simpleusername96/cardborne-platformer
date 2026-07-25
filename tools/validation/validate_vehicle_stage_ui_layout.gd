@@ -2,6 +2,8 @@ extends SceneTree
 
 const StageUI = preload("res://scripts/ui/vehicle_stage_ui.gd")
 const MinimapMeshBuilder = preload("res://scripts/ui/vehicle_minimap_mesh_builder.gd")
+const Catalog = preload("res://scripts/cards/vehicle_upgrade_catalog.gd")
+const OfferPresenter = preload("res://scripts/cards/vehicle_upgrade_offer_presenter.gd")
 
 var failures: Array[String] = []
 
@@ -11,6 +13,10 @@ func _initialize() -> void:
 	get_root().add_child(ui)
 	await process_frame
 	for width in [960.0, 1280.0, 1920.0]:
+		var viewport_size := Vector2i(roundi(width), roundi(width * 9.0 / 16.0))
+		get_root().content_scale_size = viewport_size
+		get_root().size = viewport_size
+		await process_frame
 		var contract := ui.debug_ui_contract(width)
 		_expect(Vector2(contract["action_rail_size"]) == Vector2(154.0, 34.0), "action rail size is fixed at %d" % width)
 		_expect(Vector2(contract["action_rail_position"]) == Vector2(18.0, 76.0), "action rail stays below hull at %d" % width)
@@ -20,13 +26,22 @@ func _initialize() -> void:
 		var upgrade_contract := Dictionary(contract["upgrade_choice"])
 		_expect(bool(upgrade_contract["structured_cards"]), "upgrade choices use structured card components at %d" % width)
 		_expect(int(upgrade_contract["card_count"]) == 3, "upgrade choice keeps exactly three card slots at %d" % width)
-		_expect(Vector2(upgrade_contract["confirm_size"]) == Vector2(300.0, 48.0), "upgrade confirmation uses the compact command contract at %d" % width)
+		_expect(
+			Vector2(upgrade_contract["confirm_size"]) == (
+				Vector2(260.0, 42.0) if width < 1100.0 else Vector2(300.0, 48.0)
+			),
+			"upgrade confirmation uses the supported command contract at %d" % width
+		)
 		for card_variant in upgrade_contract["cards"]:
 			var card := Dictionary(card_variant)
 			var card_size := Vector2(card["minimum_size"])
 			_expect(
-				card_size.x >= 280.0 and card_size.y >= 330.0,
-				"upgrade cards preserve the selected large-card hierarchy at %d" % width
+				(
+					card_size == Vector2(276.0, 290.0)
+					if width < 1100.0
+					else card_size.x >= 280.0 and card_size.y >= 330.0
+				),
+				"upgrade cards use the supported hierarchy at %d" % width
 			)
 		_expect(bool(contract["has_upgrade_card_theme"]), "upgrade cards use dedicated shared theme states at %d" % width)
 		_expect(bool(contract["has_tertiary_danger_theme"]), "tertiary danger uses a shared theme state at %d" % width)
@@ -54,6 +69,7 @@ func _initialize() -> void:
 		)
 		var minimap_size := Vector2(contract["minimap_size"])
 		_expect(minimap_size.x >= 160.0 and minimap_size.y >= 98.0, "minimap keeps tactical area at %d" % width)
+	await _validate_upgrade_matrix(ui)
 	var tactical_mesh := MinimapMeshBuilder.build({
 		"cols":13,
 		"rows":6,
@@ -85,6 +101,76 @@ func _initialize() -> void:
 	ui.queue_free()
 	await process_frame
 	_finish()
+
+
+func _validate_upgrade_matrix(ui: VehicleStageUI) -> void:
+	var catalog := Catalog.new()
+	var snapshots: Array[Dictionary] = []
+	for definition in catalog.all_definitions():
+		for current_level in definition.max_level:
+			snapshots.append(OfferPresenter.snapshot(definition, current_level))
+	_expect(snapshots.size() == 91, "layout matrix contains all 91 card/level states")
+	var safe_card := snapshots[0]
+	var original_locale := TranslationServer.get_locale()
+	for locale in ["ko", "en"]:
+		TranslationServer.set_locale(locale)
+		for viewport in [Vector2i(960, 540), Vector2i(1280, 720), Vector2i(1920, 1080)]:
+			get_root().content_scale_size = viewport
+			get_root().size = viewport
+			await process_frame
+			for snapshot in snapshots:
+				for slot in 3:
+					var offer: Array[Dictionary] = [
+						safe_card.duplicate(true),
+						safe_card.duplicate(true),
+						safe_card.duplicate(true),
+					]
+					offer[slot] = snapshot
+					ui.show_upgrade(offer)
+					await process_frame
+					_expect_upgrade_geometry(
+						ui.debug_upgrade_geometry(),
+						"%s %s slot %d unselected" % [locale, snapshot["id"], slot + 1]
+					)
+					ui.debug_select_upgrade(slot)
+					await process_frame
+					_expect_upgrade_geometry(
+						ui.debug_upgrade_geometry(),
+						"%s %s slot %d selected" % [locale, snapshot["id"], slot + 1]
+					)
+	TranslationServer.set_locale(original_locale)
+
+
+func _expect_upgrade_geometry(contract: Dictionary, context: String) -> void:
+	var viewport_rect := Rect2(contract["viewport_rect"]).grow(0.5)
+	var surface_rect := Rect2(contract["surface_rect"])
+	_expect(viewport_rect.encloses(surface_rect), "%s modal stays inside viewport" % context)
+	var panel := Dictionary(contract["panel"])
+	var panel_rect := Rect2(panel["rect"]).grow(0.5)
+	_expect(surface_rect.grow(0.5).encloses(panel_rect), "%s content stays inside modal" % context)
+	_expect(
+		int(panel["detail_visible_lines"]) == int(panel["detail_lines"]),
+		"%s selected detail keeps every wrapped line visible" % context
+	)
+	var prior_card := Rect2()
+	for card_variant in panel["cards"]:
+		var card := Dictionary(card_variant)
+		var card_rect := Rect2(card["rect"])
+		_expect(panel_rect.encloses(card_rect), "%s card stays inside panel" % context)
+		if prior_card.has_area():
+			_expect(not prior_card.intersects(card_rect), "%s cards do not overlap" % context)
+		prior_card = card_rect
+		for label_variant in card["labels"]:
+			var label := Dictionary(label_variant)
+			var label_rect := Rect2(label["rect"])
+			_expect(
+				card_rect.grow(0.5).encloses(label_rect),
+				"%s card text stays inside card: %s" % [context, label["text"]]
+			)
+			_expect(
+				int(label["visible_line_count"]) == int(label["line_count"]),
+				"%s card keeps every wrapped line visible: %s" % [context, label["text"]]
+			)
 
 
 func _expect(condition: bool, message: String) -> void:
