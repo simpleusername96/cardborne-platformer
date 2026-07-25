@@ -1,6 +1,7 @@
 extends SceneTree
 
 const Renderer = preload("res://scripts/presentation/vehicle_combat_renderer.gd")
+const Visuals = preload("res://scripts/presentation/vehicle_combat_visual_library.gd")
 const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd")
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 const ProjectileState = preload("res://scripts/combat/vehicle_projectile_state.gd")
@@ -18,17 +19,44 @@ func _run() -> void:
 	root.add_child(renderer)
 	await process_frame
 	var snapshot: Dictionary = renderer.debug_snapshot()
-	_expect(int(snapshot["batches"]) <= 50, "combat presentation stays within the established retained batch ceiling")
-	for team in [&"player", &"enemy"]:
-		for affinity in AttackContract.AFFINITIES:
-			if affinity == AttackContract.SUPPORT:
-				continue
-			_expect(
-				renderer.get_node_or_null(
-					"Projectile_trail_%s_%s" % [String(team), String(affinity)]
-				) != null,
-				"%s %s projectile trail batch exists" % [team, affinity]
-			)
+	_expect(int(snapshot["batches"]) == 50, "combat presentation preserves the established retained batch count")
+	_expect(
+		renderer.get_node_or_null("Projectile_trail_player_kinetic") != null,
+		"player ownership uses its one rendered kinetic trail batch"
+	)
+	for affinity in AttackContract.AFFINITIES:
+		_expect(
+			absf(Visuals.debug_projectile_head_extent(affinity) - 1.0) <= 0.001,
+			"%s hostile head remains bounded by its collision radius" % affinity
+		)
+		if affinity == AttackContract.SUPPORT:
+			continue
+		_expect(
+			renderer.get_node_or_null(
+				"Projectile_trail_enemy_%s" % String(affinity)
+			) != null,
+			"enemy %s combined head and trail batch exists" % affinity
+		)
+	_expect(
+		renderer.get_node_or_null("Projectile_head_enemy") == null,
+		"hostile heads reuse affinity batches instead of adding a draw batch"
+	)
+	for pair in [
+		[&"shooter", &"artillery_spotter"],
+		[&"shooter", &"beam_sentinel"],
+		[&"controller", &"shield_escort"],
+		[&"controller", &"repair_tender"],
+		[&"turret", &"interceptor_tower"],
+	]:
+		_expect(
+			Visuals.debug_enemy_signature(pair[0]) != Visuals.debug_enemy_signature(pair[1]),
+			"%s and %s have distinct outer silhouettes" % pair
+		)
+		_expect(
+			renderer.get_node("Enemy_%s" % String(pair[0]))
+				!= renderer.get_node("Enemy_%s" % String(pair[1])),
+			"%s and %s retain independent static batches" % pair
+		)
 	var enemy := EnemyState.new()
 	enemy.id = "renderer_enemy"
 	enemy.role = &"chaser"
@@ -169,29 +197,27 @@ func _run() -> void:
 	var status_batch := renderer.get_node("Overlay_status_arc") as MultiMeshInstance2D
 	_expect(status_batch.multimesh.instance_count == 384, "one retained status arc batch reserves exactly 128 by three instances")
 	_expect(status_batch.multimesh.visible_instance_count == 3, "three simultaneous elements render as three large retained arcs")
-	var hostile_head := renderer.get_node("Projectile_head_enemy") as MultiMeshInstance2D
 	var hostile_trail := renderer.get_node("Projectile_trail_enemy_arc") as MultiMeshInstance2D
-	var hostile_head_buffer := hostile_head.multimesh.buffer
 	var hostile_trail_buffer := hostile_trail.multimesh.buffer
 	_expect(
-		Vector2(hostile_head_buffer[0], hostile_head_buffer[4]).is_equal_approx(Vector2.LEFT * 5.0),
-		"hostile projectile head radius exactly matches its collision radius"
-	)
-	_expect(
-		Vector2(hostile_trail_buffer[0], hostile_trail_buffer[4]).is_equal_approx(Vector2.LEFT * 36.0),
-		"hostile projectile trail uses the shorter 36-pixel contract"
+		Vector2(hostile_trail_buffer[0], hostile_trail_buffer[4]).is_equal_approx(Vector2.LEFT * 5.0),
+		"hostile combined mesh uses the exact collision radius"
 	)
 	_expect(
 		Vector2(hostile_trail_buffer[3], hostile_trail_buffer[7]).is_equal_approx(
-			Vector2(390.0, 300.0) - Vector2.LEFT * 13.0
+			Vector2(390.0, 300.0)
 		),
-		"hostile affinity trail remains attached behind its five-pixel head"
+		"hostile affinity head remains centered on collision state"
 	)
 	_expect(
 		Vector2(hostile_trail_buffer[1], hostile_trail_buffer[5]).is_equal_approx(
-			Vector2.LEFT.rotated(PI * 0.5) * 6.25
+			Vector2.LEFT.rotated(PI * 0.5) * 5.0
 		),
-		"hostile projectile trail width follows the reduced collision family"
+		"hostile combined mesh preserves uniform collision-radius scaling"
+	)
+	_expect(
+		hostile_trail.multimesh.mesh.get_surface_count() == 1,
+		"hostile head and trail share one vertex-colored mesh surface"
 	)
 	var offscreen_enemy := EnemyState.new()
 	offscreen_enemy.id = "offscreen_attacker"

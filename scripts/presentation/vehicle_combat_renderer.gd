@@ -141,11 +141,7 @@ func debug_snapshot() -> Dictionary:
 
 func _build_batches() -> void:
 	for archetype in Visuals.ENEMY_ARCHETYPES:
-		if archetype in [
-			&"artillery_spotter", &"beam_sentinel", &"boss_pylon",
-			&"shield_escort", &"repair_tender", &"interceptor_tower",
-			&"stage_boss",
-		]:
+		if archetype == &"stage_boss":
 			continue
 		_enemy_batches[archetype] = _create_batch(
 			"Enemy_%s" % String(archetype),
@@ -154,12 +150,6 @@ func _build_batches() -> void:
 			0,
 			archetype
 		)
-	_enemy_batches[&"artillery_spotter"] = _enemy_batches[&"shooter"]
-	_enemy_batches[&"beam_sentinel"] = _enemy_batches[&"shooter"]
-	_enemy_batches[&"boss_pylon"] = _enemy_batches[&"shooter"]
-	_enemy_batches[&"shield_escort"] = _enemy_batches[&"controller"]
-	_enemy_batches[&"repair_tender"] = _enemy_batches[&"controller"]
-	_enemy_batches[&"interceptor_tower"] = _enemy_batches[&"turret"]
 	for variant in [&"colossus", &"leviathan", &"titan", &"behemoth", &"crown"]:
 		_boss_variant_batches[variant] = _create_batch(
 			"Boss_%s" % String(variant),
@@ -175,24 +165,34 @@ func _build_batches() -> void:
 			else HOSTILE_PROJECTILE_CAPACITY
 		)
 		var affinity_batches := {}
-		for affinity in AttackContract.AFFINITIES:
+		var rendered_affinities: Array[StringName] = []
+		if team == &"player":
+			rendered_affinities.append(AttackContract.KINETIC)
+		else:
+			rendered_affinities.append_array(AttackContract.AFFINITIES)
+		for affinity in rendered_affinities:
 			if affinity == AttackContract.SUPPORT:
 				continue
 			affinity_batches[affinity] = _create_batch(
 				"Projectile_trail_%s_%s" % [String(team), String(affinity)],
-				Visuals.projectile_trail_mesh(affinity),
+				(
+					Visuals.projectile_trail_mesh(affinity)
+					if team == &"player"
+					else Visuals.hostile_projectile_mesh(affinity)
+				),
 				capacity,
 				1,
 				StringName("projectile_trail_%s_%s" % [String(team), String(affinity)])
 			)
 		_projectile_trail_batches[team] = affinity_batches
-		_projectile_head_batches[team] = _create_batch(
-			"Projectile_head_%s" % String(team),
-			Visuals.player_projectile_head_mesh() if team == &"player" else Visuals.projectile_head_mesh(),
-			capacity,
-			2,
-			StringName("projectile_head_%s" % String(team))
-		)
+		if team == &"player":
+			_projectile_head_batches[team] = _create_batch(
+				"Projectile_head_%s" % String(team),
+				Visuals.player_projectile_head_mesh(),
+				capacity,
+				2,
+				StringName("projectile_head_%s" % String(team))
+			)
 	for kind in [&"small", &"medium", &"large"]:
 		var family := StringName("experience_%s" % String(kind))
 		_experience_batches[kind] = _create_batch(
@@ -422,28 +422,38 @@ func _sync_projectiles(
 	team: StringName,
 	visible_world: Rect2
 ) -> void:
-	var head_batch: BatchHandle = _projectile_head_batches[team]
+	var hostile := team == &"enemy"
+	var affinity_batches: Dictionary = _projectile_trail_batches[team]
 	for projectile in projectiles:
 		var position := projectile.pos
 		if not visible_world.has_point(position):
 			continue
-		var hostile := team == &"enemy"
 		var affinity := AttackContract.normalize_affinity(projectile.affinity)
 		if affinity == AttackContract.SUPPORT:
 			affinity = AttackContract.KINETIC
 		var render_affinity := AttackContract.KINETIC if team == &"player" else affinity
-		var affinity_batches: Dictionary = _projectile_trail_batches[team]
 		var trail_batch: BatchHandle = affinity_batches[render_affinity]
 		var radius := maxf(1.0, projectile.radius)
 		var direction := projectile.velocity.normalized()
+		if direction.is_zero_approx():
+			direction = Vector2.RIGHT
+		var color := Art.attack_color(affinity) if hostile else Art.MUSTARD
+		if hostile:
+			# Each existing enemy-affinity trail batch now carries both its
+			# collision-bounded head and its fixed-ratio ownership trail.
+			_write_instance_basis(
+				trail_batch,
+				position,
+				direction,
+				Vector2.ONE * radius,
+				color
+			)
+			continue
 		var trail_length := (
-			36.0 + maxf(0.0, radius - 5.0) * 5.0
-			if hostile
-			else 47.0 + maxf(0.0, radius - 7.0) * 3.0
+			47.0 + maxf(0.0, radius - 7.0) * 3.0
 		)
 		var trail_offset := trail_length * 0.5 - radius
-		var trail_width := radius * (1.25 if hostile else 1.5)
-		var color := Art.attack_color(affinity) if hostile else Art.MUSTARD
+		var trail_width := radius * 1.5
 		if team == &"player" and projectile.breach_visual:
 			_write_instance_basis(
 				trail_batch,
@@ -475,11 +485,11 @@ func _sync_projectiles(
 			Color(color, 0.50)
 		)
 		_write_instance_basis(
-			head_batch,
+			_projectile_head_batches[team],
 			position,
 			direction,
 			Vector2.ONE * radius,
-			Color.WHITE if team == &"player" else color
+			Color.WHITE
 		)
 
 
