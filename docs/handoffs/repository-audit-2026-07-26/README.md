@@ -1,6 +1,6 @@
 ---
 type: handoff
-status: active
+status: done
 created: 2026-07-26
 scope: Read-only external review of the current Cardborne repository
 related:
@@ -40,12 +40,11 @@ remain read-only and distinguish verified facts from inference.
 
 ## Next Steps
 
-1. Retry the same read-only Claude request after the reported session reset at
-   2026-07-26 05:30 Asia/Seoul.
-2. Replace the rate-limit-only `external-review-raw.md` with the complete
-   unedited response while retaining the failed-attempt record.
-3. Codex checks material claims against current files and records verdicts in
-   `external-review-validation.md`.
+1. Read Claude's complete response in `external-review-raw.md`.
+2. Use `external-review-validation.md` for the locally verified verdicts; do
+   not treat the raw external report as repository truth.
+3. If implementation is authorized later, start with the accepted
+   release-confidence gaps rather than Claude's rejected validator claims.
 
 ## Risks
 
@@ -56,4 +55,11 @@ remain read-only and distinguish verified facts from inference.
 - External feedback is advisory and cannot override current code, tests,
   `AGENTS.md`, or the canonical product/design specifications.
 - The first Claude call at 2026-07-26 01:08 Asia/Seoul was rejected by the
-  provider's five-hour session limit before any audit content was returned.
+  provider's five-hour session limit before any audit content was returned; a
+  later continuation completed successfully.
+
+## Outcome
+
+- Complete Claude response: `external-review-raw.md`
+- Codex evidence reconciliation: `external-review-validation.md`
+- Repository changes: documentation only; no game code was modified.
