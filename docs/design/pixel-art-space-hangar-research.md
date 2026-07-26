@@ -9,6 +9,7 @@ scope: Research-backed candidate direction for the map, ship, world assets, and 
 related:
   - ./UI_VISUAL_SYSTEM.md
   - ./pixel-art-space-hangar-experiment/README.md
+  - ./pixel-art-space-hangar-experiment/single-asset-grid/README.md
   - ../product/vehicle_game_spec.md
 ---
 
@@ -199,25 +200,30 @@ Recommended asset masters:
 
 ### Image-generation and pixel cleanup workflow
 
-Use a `512 x 512` guide for all image-generation direction work. A `256 x 256`
-guide is too cramped for a ship family or connected-tile grammar and provides no
-benefit when the output must be redrawn anyway.
+Use one blank `512 x 512` grid image per generated asset. The grid is a
+coordinate template for one ship, tile, prop, or animation frame—not a board
+that divides one generation into many named asset slots. Choose a logical grid
+density that divides 512 exactly. The first verified experiment uses `32 x 32`
+logical cells at 16 image pixels per cell; a production player craft should also
+test `64 x 64` before its final native resolution is accepted.
 
 The deterministic workflow is:
 
-1. Prepare a `512 x 512` guide with named cells, safe zones, palette swatches,
-   view direction, and explicit forbidden detail.
-2. Generate a small number of concept candidates using that guide and the
-   approved reference image only.
-3. Select by silhouette and material language, not by small generated detail.
-4. Redraw the selected concept on the native `24 px` or `48 px` grid.
-5. Quantize to the approved palette with dithering disabled.
-6. Encode the cleaned source as integer-grid SVG with merged color runs.
-7. Inspect and edit individual pixels at the SVG source grid.
+1. Script a white `512 x 512` canvas with uniform logical-pixel grid lines.
+2. Give that single grid image to ImageGen as the edit target for exactly one
+   asset and require silhouette and color boundaries to follow whole cells.
+3. Normalize the returned square image to `512 x 512`.
+4. Sample the center of each logical cell to remove the guide lines and reduce
+   the image to its native logical resolution.
+5. Quantize the sampled pixels to the approved palette with dithering disabled.
+6. Convert opaque pixels into an integer-grid SVG with merged horizontal color
+   runs.
+7. Correct symmetry, silhouette, palette ownership, and functional anchors by
+   editing SVG pixels or integer-coordinate shapes.
 8. Export lossless PNG at an exact integer scale with nearest sampling.
-9. Add a one-pixel extruded gutter around atlas cells.
-10. Run a `3 x 3` seam test, pivot overlay, silhouette test, and gameplay-scale
-    composite before importing the atlas.
+9. For atlases, add an extruded gutter and run seam tests; for actors, run pivot,
+   direction, and silhouette tests.
+10. Render the corrected asset at gameplay scale before importing it.
 
 No generated bitmap is copied directly into the game, and no automatic vector
 trace is accepted as finished source.
@@ -337,12 +343,12 @@ only when:
 
 ## Decision
 
-Proceed with a pixel-art orbital-drydock proof using `512 x 512` generation
-guides, manually reconstructed integer-grid SVG source, and lossless PNG runtime
-atlases. Use a `24 px` native tile master exported to a `48`-world-unit
-`TileMapLayer` grid generated from existing gameplay geometry. Keep stateful
-terrain separate, rebuild the player as a layered 16-direction craft, and retain
-the current batched high-count renderer.
+Proceed with a pixel-art orbital-drydock proof using one `512 x 512` coordinate
+grid per generated asset, manually corrected integer-grid SVG source, and
+lossless PNG runtime atlases. Use a `24 px` native tile master exported to a
+`48`-world-unit `TileMapLayer` grid generated from existing gameplay geometry.
+Keep stateful terrain separate, rebuild the player as a layered 16-direction
+craft, and retain the current batched high-count renderer.
 
 Do not yet replace the current visual specification or live assets. The next
 design action is the four-artifact proof package above; approval of that package

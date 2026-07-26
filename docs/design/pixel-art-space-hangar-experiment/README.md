@@ -10,13 +10,24 @@ source: ../pixel-art-space-hangar-research.md
 related:
   - ../UI_VISUAL_SYSTEM.md
   - ../pixel-art-space-hangar-research.md
+  - ./single-asset-grid/README.md
 ---
 
 # Space-Hangar Pixel-Atlas Experiment
 
+## Corrected Interpretation
+
+This `4 x 4` semantic tile-sheet experiment is retained as evidence of an
+incorrect interpretation. BK requested a `512 x 512` coordinate grid applied to
+one individual generated image, not sixteen named asset slots inside one image.
+
+Do not use `01-grid-template.*` as the asset-generation grid. The corrected
+single-asset workflow and current evidence are in
+[`single-asset-grid/README.md`](./single-asset-grid/README.md).
+
 ## Purpose
 
-Test the proposed production path with real artifacts:
+Test the rejected multi-slot interpretation with real artifacts:
 
 1. make a constrained `512 x 512` grid template;
 2. use it as an ImageGen layout and palette reference;
@@ -24,8 +35,8 @@ Test the proposed production path with real artifacts:
 4. reconstruct it as an editable integer-grid SVG;
 5. export deterministic PNGs and test repeated seams.
 
-This experiment does not replace live Cardborne assets or the active visual
-specification.
+This historical experiment does not replace live Cardborne assets or the active
+visual specification.
 
 ## Artifacts
 
