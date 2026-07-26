@@ -67,8 +67,10 @@ below.
 
 ## Recommended Priority
 
-1. Obtain a release-qualified rendered performance sample using the recorder
-   already in the repository.
+1. Preserve the existing rendered performance recorder and obtain a
+   release-qualified sample when the gameplay/content contract reaches a
+   release-candidate state. Do not repeat the full matrix while design is still
+   changing.
 2. Decide and reconcile the three real behavioral contracts: hit-flash
    duration, boss arrival minimum, and one-signature-per-fight semantics.
 3. Replace field-agnostic `DROWNED_RUINS` stage labels with naming derived from
@@ -77,4 +79,26 @@ below.
    when a concrete subsystem is being changed; do not begin a broad rewrite
    from Claude's line-count argument.
 
-No implementation was authorized or performed as part of this validation.
+The initial validation phase made no implementation changes.
+
+## Application Result
+
+The user subsequently authorized the locally validated findings:
+
+- boss arrival now prefers reachable off-screen anchors at least 1200 pixels
+  away and relaxes that requirement only through explicit fallback tiers;
+- each production boss exposes at most one interruptible signature per fight,
+  while rewardless boss-practice pattern loops may repeat the same QA exam;
+- all three fields now provide distinct Korean and English titles for all five
+  stages across gameplay, reports, results, and capture evidence;
+- the active product specification now matches the intentionally visible
+  0.20-second player hit tint;
+- the full rendered performance matrix remains deferred until the gameplay and
+  content contract reaches a release-candidate state.
+
+Verification completed on 2026-07-26:
+
+- all 37 `validate_*.gd` scripts passed;
+- Korean and English 960x540 rendered captures showed no title clipping or
+  container overflow;
+- the Web release export produced all four required output files.

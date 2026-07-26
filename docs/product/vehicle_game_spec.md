@@ -3,7 +3,7 @@ type: spec
 status: active
 owner: BK
 created: 2026-07-21
-last_reviewed: 2026-07-25
+last_reviewed: 2026-07-26
 canonical_for: Cardborne gameplay and product behavior
 scope: Current run-selected-field five-stage vehicle campaign
 related:
@@ -86,7 +86,7 @@ second time; no individual stat is described as exactly 15% lower.
 ### Damage readability and hostile projectiles
 
 - Accepted hull damage starts exactly one second of post-hit invulnerability.
-  For the first 0.18 seconds the ship uses a coral hit tint and a deterministic
+  For the first 0.20 seconds the ship uses a coral hit tint and a deterministic
   presentation-only recoil of at most five pixels. The camera response is
   bounded to three pixels. A fully absorbed barrier hit remains a distinct
   event and starts neither hull feedback nor hull invulnerability.
@@ -143,6 +143,8 @@ second time; no individual stat is described as exactly 15% lower.
 - A new run deterministically selects `drowned_ruin_field`,
   `tidal_archive_field`, or `storm_drydock_field`. Every stage and retry keeps
   that macro field while each stage resolves one immutable tactical child.
+  Every stage-facing title derives from the selected field in both Korean and
+  English rather than reusing another field's label.
 - Every registered field uses a `7200x4320` world rectangle and respawns the
   player at `(3600, 2160)`.
 - Functional-terrain footprints are mutually disjoint and remain outside the

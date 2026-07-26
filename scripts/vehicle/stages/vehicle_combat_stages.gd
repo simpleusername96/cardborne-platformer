@@ -9,10 +9,20 @@ const STAGE_IDS: Array[StringName] = [&"stage_1", &"stage_2", &"stage_3", &"stag
 const QUOTAS := [125, 166, 208, 250, 291]
 const AUTHORED_COUNTS := [260, 300, 340, 380, 420]
 const SURGE_SQUADS := 8
-const TITLE_KEYS := [
-	"STAGE_DROWNED_RUINS_1", "STAGE_DROWNED_RUINS_2", "STAGE_DROWNED_RUINS_3",
-	"STAGE_DROWNED_RUINS_4", "STAGE_DROWNED_RUINS_5",
-]
+const TITLE_KEYS_BY_FIELD := {
+	&"drowned_ruin_field":[
+		"STAGE_DROWNED_RUINS_1", "STAGE_DROWNED_RUINS_2", "STAGE_DROWNED_RUINS_3",
+		"STAGE_DROWNED_RUINS_4", "STAGE_DROWNED_RUINS_5",
+	],
+	&"tidal_archive_field":[
+		"STAGE_TIDAL_ARCHIVE_1", "STAGE_TIDAL_ARCHIVE_2", "STAGE_TIDAL_ARCHIVE_3",
+		"STAGE_TIDAL_ARCHIVE_4", "STAGE_TIDAL_ARCHIVE_5",
+	],
+	&"storm_drydock_field":[
+		"STAGE_STORM_DRYDOCK_1", "STAGE_STORM_DRYDOCK_2", "STAGE_STORM_DRYDOCK_3",
+		"STAGE_STORM_DRYDOCK_4", "STAGE_STORM_DRYDOCK_5",
+	],
+}
 const BOSS_NAME_KEYS := [
 	"ENEMY_FOUNDRY_COLOSSUS", "ENEMY_ARCHIVE_LEVIATHAN", "ENEMY_DRYDOCK_TITAN",
 	"ENEMY_SWITCHYARD_BEHEMOTH", "ENEMY_CROWN_ENGINE",
@@ -43,11 +53,16 @@ static func index_of(stage_id: StringName) -> int:
 
 static func profile(stage_id: StringName, field_id: StringName = &"drowned_ruin_field") -> Dictionary:
 	var index := index_of(stage_id)
+	var normalized_field := FieldRegistry.normalized_id(field_id)
+	var title_keys: Array = TITLE_KEYS_BY_FIELD.get(
+		normalized_field,
+		TITLE_KEYS_BY_FIELD[&"drowned_ruin_field"]
+	)
 	return {
 		"id": STAGE_IDS[index],
-		"field_id": FieldRegistry.normalized_id(field_id),
+		"field_id": normalized_field,
 		"number": index + 1,
-		"title_key": TITLE_KEYS[index],
+		"title_key": title_keys[index],
 		"boss_name_key": BOSS_NAME_KEYS[index],
 		"quota": QUOTAS[index],
 		"authored_count": AUTHORED_COUNTS[index],

@@ -2,6 +2,8 @@ extends SceneTree
 
 const BossPatterns = preload("res://scripts/bosses/vehicle_boss_patterns.gd")
 const Catalog = preload("res://scripts/cards/vehicle_upgrade_catalog.gd")
+const FieldRegistry = preload("res://scripts/vehicle/vehicle_field_registry.gd")
+const CombatStages = preload("res://scripts/vehicle/stages/vehicle_combat_stages.gd")
 const OfferPresenter = preload("res://scripts/cards/vehicle_upgrade_offer_presenter.gd")
 const UpgradeChoiceCard = preload("res://scripts/ui/vehicle_upgrade_choice_card.gd")
 const StageUI = preload("res://scripts/ui/vehicle_stage_ui.gd")
@@ -20,6 +22,19 @@ func _initialize() -> void:
 
 	for locale in ["ko", "en"]:
 		TranslationServer.set_locale(locale)
+		var field_stage_titles := {}
+		for field_id in FieldRegistry.FIELD_IDS:
+			for stage_id in CombatStages.STAGE_IDS:
+				var title_key := String(
+					CombatStages.profile(stage_id, field_id)["title_key"]
+				)
+				_expect_translated(title_key, locale)
+				field_stage_titles[title_key] = true
+		_expect(
+			field_stage_titles.size() == 15,
+			"%s resolves a distinct title for all three fields and five stages"
+				% locale
+		)
 		for snapshot in snapshots:
 			_expect_translated(String(snapshot["family_key"]), locale)
 			_expect_translated(String(snapshot["title_key"]), locale)

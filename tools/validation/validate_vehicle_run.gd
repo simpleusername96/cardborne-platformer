@@ -33,6 +33,12 @@ func _run() -> void:
 		_expect(run.MINIMAP_COLS == 20 and run.MINIMAP_ROWS == 12, "run uses 20x12 explored minimap")
 		_expect(run.ORDINARY_DECISION_BUCKET_COUNT == 6, "ordinary high-cost decisions are distributed at 10 Hz")
 		_expect(run._camera.zoom == Vector2.ONE, "gameplay camera keeps zoom 1")
+		var boss_arrival: Vector2 = run.call("_choose_boss_arrival_anchor")
+		_expect(
+			run.player_position.distance_to(boss_arrival)
+				>= run.BOSS_ARRIVAL_MIN_DISTANCE,
+			"boss arrival uses a reachable anchor beyond the documented minimum"
+		)
 		var initial_fingerprint := int(run.field_layout.fingerprint)
 		run.run_build.apply(&"tuned_thrusters")
 		run.visited_cells[Vector2i(2,2)] = true

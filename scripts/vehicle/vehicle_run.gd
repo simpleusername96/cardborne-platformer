@@ -80,6 +80,8 @@ const EMP_RADIUS := 285.0
 const MINIMAP_COLS := 20
 const MINIMAP_ROWS := 12
 const THREAT_SCAN_DISTANCE := 1200.0
+const BOSS_ARRIVAL_MIN_DISTANCE := 1200.0
+const BOSS_ARRIVAL_PREFERRED_MAX_DISTANCE := 1500.0
 const THREAT_SAMPLE_INTERVAL := 0.10
 const LOW_COUNT_OVERLAY_INTERVAL := 0.05
 const ORDINARY_DECISION_BUCKET_COUNT := 6
@@ -2856,7 +2858,10 @@ func _resolve_breach_contact(enemy: EnemyState) -> void:
 	if enemy.role == &"stage_boss":
 		if boss_runtime.update_phase_transition(enemy):
 			return
-		if boss_runtime.try_interrupt_signature(enemy):
+		if boss_runtime.try_interrupt_signature(
+			enemy,
+			boss_practice.is_pattern_loop()
+		):
 			_add_effect("impact", enemy.pos, Art.MUSTARD, 0.24, enemy.radius * 1.45)
 			_play_sound(&"impact", 0.78)
 			return
@@ -3670,12 +3675,20 @@ func _choose_boss_arrival_anchor() -> Vector2:
 	for anchor in anchors:
 		var distance := player_position.distance_to(anchor)
 		if (
-			distance >= 900.0
-			and distance <= 1500.0
+			distance >= BOSS_ARRIVAL_MIN_DISTANCE
+			and distance <= BOSS_ARRIVAL_PREFERRED_MAX_DISTANCE
 			and not excluded_view.has_point(anchor)
 			and pursuit_field.path_cost(anchor, 76.0) >= 0
-		):
+			):
 			candidates.append(anchor)
+	if candidates.is_empty():
+		for anchor in anchors:
+			if (
+				player_position.distance_to(anchor) >= BOSS_ARRIVAL_MIN_DISTANCE
+				and not excluded_view.has_point(anchor)
+				and pursuit_field.path_cost(anchor, 76.0) >= 0
+			):
+				candidates.append(anchor)
 	if candidates.is_empty():
 		for anchor in anchors:
 			if (
@@ -3686,8 +3699,12 @@ func _choose_boss_arrival_anchor() -> Vector2:
 	if candidates.is_empty():
 		candidates = anchors.duplicate()
 	candidates.sort_custom(func(a: Vector2, b: Vector2) -> bool:
-		var a_distance := absf(player_position.distance_to(a) - 1200.0)
-		var b_distance := absf(player_position.distance_to(b) - 1200.0)
+		var a_distance := absf(
+			player_position.distance_to(a) - BOSS_ARRIVAL_MIN_DISTANCE
+		)
+		var b_distance := absf(
+			player_position.distance_to(b) - BOSS_ARRIVAL_MIN_DISTANCE
+		)
 		if not is_equal_approx(a_distance, b_distance):
 			return a_distance < b_distance
 		return int(a.x + a.y + run_index * 31 + current_stage_index * 17) < int(b.x + b.y + run_index * 31 + current_stage_index * 17)
@@ -4996,11 +5013,17 @@ func _run_capture_sequence() -> void:
 	report_fixture.record_defeat(&"scrap_drone")
 	report_fixture.record_defeat(&"scrap_drone")
 	report_fixture.record_defeat(&"needle_drone", &"armored")
+	var first_stage_title_key := String(
+		StageCatalog.profile(StageCatalog.STAGE_IDS[0])["title_key"]
+	)
+	var second_stage_title_key := String(
+		StageCatalog.profile(StageCatalog.STAGE_IDS[1])["title_key"]
+	)
 	_ui.show_stage_report(StageReportBuilder.build(
 		report_fixture.freeze_stage(),
 		{
 			"number":1,
-			"title_key":"STAGE_DROWNED_RUINS_1",
+			"title_key":first_stage_title_key,
 			"has_next_stage":true,
 			"clear_time":74.8,
 			"hull":88.0,
@@ -5015,7 +5038,7 @@ func _run_capture_sequence() -> void:
 		report_fixture.stage_snapshot(),
 		{
 			"number":1,
-			"title_key":"STAGE_DROWNED_RUINS_1",
+			"title_key":first_stage_title_key,
 			"has_next_stage":false,
 			"clear_time":74.8,
 			"hull":0.0,
@@ -5029,8 +5052,8 @@ func _run_capture_sequence() -> void:
 
 	mode = RunMode.RESULT
 	_ui.show_result({
-		"stage_number": 1, "stage_title_key": "STAGE_DROWNED_RUINS_1",
-		"has_next_stage": true, "next_stage_key": "STAGE_DROWNED_RUINS_2",
+		"stage_number": 1, "stage_title_key": first_stage_title_key,
+		"has_next_stage": true, "next_stage_key": second_stage_title_key,
 		"time": "4:18", "health_ratio": 0.76, "upgrade": "UPGRADE_ION_WAKE_TITLE",
 		"primary_hits": 42, "dash_uses": 11, "installations": 5,
 	})
@@ -5195,6 +5218,8 @@ func _capture_stage_map_evidence() -> void:
 		_save_capture("10-field-%s.png" % String(field_id).replace("_", "-"))
 	_camera.zoom = Vector2.ONE
 	_field_id_override = original_override
+	field_layout = null
+	_reset_run(false, false, true)
 
 
 func _capture_damage_feedback_evidence() -> void:

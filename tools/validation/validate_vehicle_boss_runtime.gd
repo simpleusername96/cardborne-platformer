@@ -33,6 +33,29 @@ func _init() -> void:
 			BossPatterns.commit_mode(next_pattern) == &"committed",
 			"%s forces a committed direct pattern after interrupt" % stage_id
 		)
+		boss.boss_phase = 2
+		boss.pattern_index = 0
+		var later_cycle: Array[String] = []
+		for _index in 4:
+			later_cycle.append(runtime.select_direct(boss))
+		var has_later_signature := false
+		for pattern in later_cycle:
+			if BossPatterns.is_signature(pattern):
+				has_later_signature = true
+		_expect(
+			not has_later_signature,
+			"%s exposes its interruptible signature only once per fight" % stage_id
+		)
+		boss.phase = &"boss_startup"
+		boss.pattern = StringName(BossPatterns.sequence(stage_id, 1)[1])
+		_expect(
+			not runtime.try_interrupt_signature(boss),
+			"%s cannot grant a second signature interruption" % stage_id
+		)
+		_expect(
+			runtime.try_interrupt_signature(boss, true),
+			"%s practice mode can repeat its selected signature exam" % stage_id
+		)
 	_expect(runtime.phase_for_health(0.66) == 1, "phase one ends at 65 percent")
 	_expect(runtime.phase_for_health(0.65) == 2, "phase two starts at 65 percent")
 	_expect(runtime.phase_for_health(0.30) == 3, "phase three starts at 30 percent")

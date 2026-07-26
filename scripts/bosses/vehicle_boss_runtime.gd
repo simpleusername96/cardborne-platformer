@@ -16,6 +16,8 @@ const AUTONOMOUS_INTERVALS := [6.0, 4.9, 3.9]
 
 var stage_id: StringName = &"stage_1"
 var forced_committed_next := false
+var signature_exposed := false
+var signature_interrupt_consumed := false
 var autonomous_timer := 3.2
 var autonomous_index := 0
 var autonomous_serial := 0
@@ -24,6 +26,8 @@ var autonomous_serial := 0
 func configure(next_stage_id: StringName) -> void:
 	stage_id = next_stage_id
 	forced_committed_next = false
+	signature_exposed = false
+	signature_interrupt_consumed = false
 	autonomous_timer = 3.2
 	autonomous_index = 0
 	autonomous_serial = 0
@@ -59,11 +63,16 @@ func select_direct(boss: VehicleEnemyState) -> String:
 	var sequence := Patterns.sequence(stage_id, boss.boss_phase)
 	var candidate := String(sequence[boss.pattern_index % sequence.size()])
 	boss.pattern_index += 1
-	if forced_committed_next or candidate == String(boss.last_pattern):
+	if (
+		forced_committed_next
+		or candidate == String(boss.last_pattern)
+		or (signature_exposed and Patterns.is_signature(candidate))
+	):
 		for offset in sequence.size():
 			var alternate := String(sequence[(boss.pattern_index + offset) % sequence.size()])
 			if (
 				alternate != String(boss.last_pattern)
+				and not (signature_exposed and Patterns.is_signature(alternate))
 				and (
 					not forced_committed_next
 					or Patterns.commit_mode(alternate) == &"committed"
@@ -73,15 +82,23 @@ func select_direct(boss: VehicleEnemyState) -> String:
 				boss.pattern_index += offset + 1
 				break
 	forced_committed_next = false
+	if Patterns.is_signature(candidate):
+		signature_exposed = true
 	return candidate
 
 
-func try_interrupt_signature(boss: VehicleEnemyState) -> bool:
+func try_interrupt_signature(
+	boss: VehicleEnemyState,
+	allow_practice_repeat: bool = false
+) -> bool:
 	if (
 		boss.phase != &"boss_startup"
 		or not Patterns.is_signature(String(boss.pattern))
+		or (signature_interrupt_consumed and not allow_practice_repeat)
 	):
 		return false
+	if not allow_practice_repeat:
+		signature_interrupt_consumed = true
 	boss.phase = &"boss_interrupted_recovery"
 	boss.phase_time = INTERRUPTED_RECOVERY
 	boss.velocity = Vector2.ZERO
@@ -260,6 +277,8 @@ func snapshot() -> Dictionary:
 	return {
 		"stage_id":stage_id,
 		"forced_committed_next":forced_committed_next,
+		"signature_exposed":signature_exposed,
+		"signature_interrupt_consumed":signature_interrupt_consumed,
 		"autonomous_timer":autonomous_timer,
 		"autonomous_index":autonomous_index,
 	}
