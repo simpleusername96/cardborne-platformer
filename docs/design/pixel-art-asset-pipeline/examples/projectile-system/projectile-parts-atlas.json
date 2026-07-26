@@ -1,256 +1,2547 @@
 {
-  "schema_version": 1,
-  "native_sprite_size": [
+  "schema_version": 2,
+  "native_frame_size": [
+    32,
+    32
+  ],
+  "pivot": [
     16,
     16
   ],
   "atlas_size": [
-    108,
-    72
+    340,
+    306
   ],
   "gutter": 1,
-  "columns": 6,
-  "sprites": [
+  "columns": 10,
+  "frame_count": 85,
+  "directions": [
+    "e",
+    "se",
+    "s",
+    "sw",
+    "w",
+    "nw",
+    "n",
+    "ne"
+  ],
+  "clip_counts": {
+    "player_basic_flight": 16,
+    "player_opening_breach_flight": 16,
+    "secondary_seeker_flight": 16,
+    "hostile_light_pulse": 2,
+    "hostile_standard_pulse": 2,
+    "hostile_heavy_pulse": 3,
+    "affinity_thermal_motion": 2,
+    "affinity_toxin_motion": 2,
+    "affinity_cryo_motion": 2,
+    "affinity_arc_motion": 2,
+    "affinity_hybrid_motion": 2,
+    "impact_wall": 4,
+    "impact_enemy": 4,
+    "impact_player_hull": 4,
+    "impact_barrier": 4,
+    "impact_breach_interrupt": 4
+  },
+  "frames": [
     {
-      "id": "player_standard",
-      "category": "PROJECTILE HEADS",
+      "atlas_index": 0,
+      "clip": "player_basic_flight",
+      "frame": 0,
       "region": [
         1,
         1,
+        32,
+        32
+      ],
+      "duration_ms": 80,
+      "state": "player_primary",
+      "direction": "e",
+      "pivot": [
         16,
         16
+      ],
+      "leading_anchor": [
+        28,
+        16
+      ],
+      "trail_anchor": [
+        3,
+        16
+      ],
+      "opaque_bounds": [
+        3,
+        13,
+        25,
+        6
       ]
     },
     {
-      "id": "player_opening_breach",
-      "category": "PROJECTILE HEADS",
+      "atlas_index": 1,
+      "clip": "player_basic_flight",
+      "frame": 1,
       "region": [
-        19,
+        35,
         1,
+        32,
+        32
+      ],
+      "duration_ms": 80,
+      "state": "player_primary",
+      "direction": "e",
+      "pivot": [
         16,
         16
+      ],
+      "leading_anchor": [
+        28,
+        16
+      ],
+      "trail_anchor": [
+        3,
+        16
+      ],
+      "opaque_bounds": [
+        4,
+        13,
+        24,
+        6
       ]
     },
     {
-      "id": "enemy_light",
-      "category": "PROJECTILE HEADS",
+      "atlas_index": 2,
+      "clip": "player_basic_flight",
+      "frame": 0,
       "region": [
-        37,
+        69,
         1,
+        32,
+        32
+      ],
+      "duration_ms": 80,
+      "state": "player_primary",
+      "direction": "se",
+      "pivot": [
         16,
         16
+      ],
+      "leading_anchor": [
+        24,
+        25
+      ],
+      "trail_anchor": [
+        6,
+        7
+      ],
+      "opaque_bounds": [
+        6,
+        6,
+        19,
+        19
       ]
     },
     {
-      "id": "enemy_standard",
-      "category": "PROJECTILE HEADS",
+      "atlas_index": 3,
+      "clip": "player_basic_flight",
+      "frame": 1,
       "region": [
-        55,
+        103,
         1,
+        32,
+        32
+      ],
+      "duration_ms": 80,
+      "state": "player_primary",
+      "direction": "se",
+      "pivot": [
         16,
         16
+      ],
+      "leading_anchor": [
+        24,
+        25
+      ],
+      "trail_anchor": [
+        6,
+        7
+      ],
+      "opaque_bounds": [
+        7,
+        7,
+        18,
+        18
       ]
     },
     {
-      "id": "enemy_heavy",
-      "category": "PROJECTILE HEADS",
+      "atlas_index": 4,
+      "clip": "player_basic_flight",
+      "frame": 0,
       "region": [
-        73,
+        137,
         1,
+        32,
+        32
+      ],
+      "duration_ms": 80,
+      "state": "player_primary",
+      "direction": "s",
+      "pivot": [
         16,
         16
+      ],
+      "leading_anchor": [
+        15,
+        28
+      ],
+      "trail_anchor": [
+        15,
+        3
+      ],
+      "opaque_bounds": [
+        13,
+        3,
+        6,
+        25
       ]
     },
     {
-      "id": "seeker_missile",
-      "category": "PROJECTILE HEADS",
+      "atlas_index": 5,
+      "clip": "player_basic_flight",
+      "frame": 1,
       "region": [
-        91,
+        171,
         1,
+        32,
+        32
+      ],
+      "duration_ms": 80,
+      "state": "player_primary",
+      "direction": "s",
+      "pivot": [
         16,
         16
+      ],
+      "leading_anchor": [
+        15,
+        28
+      ],
+      "trail_anchor": [
+        15,
+        3
+      ],
+      "opaque_bounds": [
+        13,
+        4,
+        6,
+        24
       ]
     },
     {
-      "id": "affinity_kinetic",
-      "category": "ENEMY AFFINITIES",
+      "atlas_index": 6,
+      "clip": "player_basic_flight",
+      "frame": 0,
+      "region": [
+        205,
+        1,
+        32,
+        32
+      ],
+      "duration_ms": 80,
+      "state": "player_primary",
+      "direction": "sw",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": [
+        6,
+        24
+      ],
+      "trail_anchor": [
+        24,
+        6
+      ],
+      "opaque_bounds": [
+        7,
+        6,
+        19,
+        19
+      ]
+    },
+    {
+      "atlas_index": 7,
+      "clip": "player_basic_flight",
+      "frame": 1,
+      "region": [
+        239,
+        1,
+        32,
+        32
+      ],
+      "duration_ms": 80,
+      "state": "player_primary",
+      "direction": "sw",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": [
+        6,
+        24
+      ],
+      "trail_anchor": [
+        24,
+        6
+      ],
+      "opaque_bounds": [
+        7,
+        7,
+        18,
+        18
+      ]
+    },
+    {
+      "atlas_index": 8,
+      "clip": "player_basic_flight",
+      "frame": 0,
+      "region": [
+        273,
+        1,
+        32,
+        32
+      ],
+      "duration_ms": 80,
+      "state": "player_primary",
+      "direction": "w",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": [
+        3,
+        15
+      ],
+      "trail_anchor": [
+        28,
+        15
+      ],
+      "opaque_bounds": [
+        4,
+        13,
+        25,
+        6
+      ]
+    },
+    {
+      "atlas_index": 9,
+      "clip": "player_basic_flight",
+      "frame": 1,
+      "region": [
+        307,
+        1,
+        32,
+        32
+      ],
+      "duration_ms": 80,
+      "state": "player_primary",
+      "direction": "w",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": [
+        3,
+        15
+      ],
+      "trail_anchor": [
+        28,
+        15
+      ],
+      "opaque_bounds": [
+        4,
+        13,
+        24,
+        6
+      ]
+    },
+    {
+      "atlas_index": 10,
+      "clip": "player_basic_flight",
+      "frame": 0,
       "region": [
         1,
-        19,
+        35,
+        32,
+        32
+      ],
+      "duration_ms": 80,
+      "state": "player_primary",
+      "direction": "nw",
+      "pivot": [
         16,
         16
+      ],
+      "leading_anchor": [
+        7,
+        6
+      ],
+      "trail_anchor": [
+        25,
+        24
+      ],
+      "opaque_bounds": [
+        7,
+        7,
+        19,
+        19
       ]
     },
     {
-      "id": "affinity_thermal",
-      "category": "ENEMY AFFINITIES",
+      "atlas_index": 11,
+      "clip": "player_basic_flight",
+      "frame": 1,
       "region": [
-        19,
-        19,
+        35,
+        35,
+        32,
+        32
+      ],
+      "duration_ms": 80,
+      "state": "player_primary",
+      "direction": "nw",
+      "pivot": [
         16,
         16
+      ],
+      "leading_anchor": [
+        7,
+        6
+      ],
+      "trail_anchor": [
+        25,
+        24
+      ],
+      "opaque_bounds": [
+        7,
+        7,
+        18,
+        18
       ]
     },
     {
-      "id": "affinity_toxin",
-      "category": "ENEMY AFFINITIES",
+      "atlas_index": 12,
+      "clip": "player_basic_flight",
+      "frame": 0,
       "region": [
-        37,
-        19,
+        69,
+        35,
+        32,
+        32
+      ],
+      "duration_ms": 80,
+      "state": "player_primary",
+      "direction": "n",
+      "pivot": [
         16,
         16
+      ],
+      "leading_anchor": [
+        16,
+        3
+      ],
+      "trail_anchor": [
+        16,
+        28
+      ],
+      "opaque_bounds": [
+        13,
+        4,
+        6,
+        25
       ]
     },
     {
-      "id": "affinity_cryo",
-      "category": "ENEMY AFFINITIES",
+      "atlas_index": 13,
+      "clip": "player_basic_flight",
+      "frame": 1,
       "region": [
-        55,
-        19,
+        103,
+        35,
+        32,
+        32
+      ],
+      "duration_ms": 80,
+      "state": "player_primary",
+      "direction": "n",
+      "pivot": [
         16,
         16
+      ],
+      "leading_anchor": [
+        16,
+        3
+      ],
+      "trail_anchor": [
+        16,
+        28
+      ],
+      "opaque_bounds": [
+        13,
+        4,
+        6,
+        24
       ]
     },
     {
-      "id": "affinity_arc",
-      "category": "ENEMY AFFINITIES",
+      "atlas_index": 14,
+      "clip": "player_basic_flight",
+      "frame": 0,
       "region": [
-        73,
-        19,
+        137,
+        35,
+        32,
+        32
+      ],
+      "duration_ms": 80,
+      "state": "player_primary",
+      "direction": "ne",
+      "pivot": [
         16,
         16
+      ],
+      "leading_anchor": [
+        25,
+        7
+      ],
+      "trail_anchor": [
+        7,
+        25
+      ],
+      "opaque_bounds": [
+        6,
+        7,
+        19,
+        19
       ]
     },
     {
-      "id": "affinity_hybrid",
-      "category": "ENEMY AFFINITIES",
+      "atlas_index": 15,
+      "clip": "player_basic_flight",
+      "frame": 1,
       "region": [
-        91,
-        19,
+        171,
+        35,
+        32,
+        32
+      ],
+      "duration_ms": 80,
+      "state": "player_primary",
+      "direction": "ne",
+      "pivot": [
         16,
         16
+      ],
+      "leading_anchor": [
+        25,
+        7
+      ],
+      "trail_anchor": [
+        7,
+        25
+      ],
+      "opaque_bounds": [
+        7,
+        7,
+        18,
+        18
       ]
     },
     {
-      "id": "modifier_pierce",
-      "category": "PLAYER MODIFIERS",
+      "atlas_index": 16,
+      "clip": "player_opening_breach_flight",
+      "frame": 0,
+      "region": [
+        205,
+        35,
+        32,
+        32
+      ],
+      "duration_ms": 90,
+      "state": "player_opening_breach",
+      "direction": "e",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": [
+        30,
+        16
+      ],
+      "trail_anchor": [
+        2,
+        16
+      ],
+      "opaque_bounds": [
+        2,
+        10,
+        28,
+        12
+      ]
+    },
+    {
+      "atlas_index": 17,
+      "clip": "player_opening_breach_flight",
+      "frame": 1,
+      "region": [
+        239,
+        35,
+        32,
+        32
+      ],
+      "duration_ms": 90,
+      "state": "player_opening_breach",
+      "direction": "e",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": [
+        30,
+        16
+      ],
+      "trail_anchor": [
+        2,
+        16
+      ],
+      "opaque_bounds": [
+        3,
+        11,
+        27,
+        10
+      ]
+    },
+    {
+      "atlas_index": 18,
+      "clip": "player_opening_breach_flight",
+      "frame": 0,
+      "region": [
+        273,
+        35,
+        32,
+        32
+      ],
+      "duration_ms": 90,
+      "state": "player_opening_breach",
+      "direction": "se",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": [
+        25,
+        26
+      ],
+      "trail_anchor": [
+        6,
+        6
+      ],
+      "opaque_bounds": [
+        6,
+        6,
+        20,
+        20
+      ]
+    },
+    {
+      "atlas_index": 19,
+      "clip": "player_opening_breach_flight",
+      "frame": 1,
+      "region": [
+        307,
+        35,
+        32,
+        32
+      ],
+      "duration_ms": 90,
+      "state": "player_opening_breach",
+      "direction": "se",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": [
+        25,
+        26
+      ],
+      "trail_anchor": [
+        6,
+        6
+      ],
+      "opaque_bounds": [
+        6,
+        6,
+        20,
+        20
+      ]
+    },
+    {
+      "atlas_index": 20,
+      "clip": "player_opening_breach_flight",
+      "frame": 0,
       "region": [
         1,
-        37,
+        69,
+        32,
+        32
+      ],
+      "duration_ms": 90,
+      "state": "player_opening_breach",
+      "direction": "s",
+      "pivot": [
         16,
         16
+      ],
+      "leading_anchor": [
+        15,
+        30
+      ],
+      "trail_anchor": [
+        15,
+        2
+      ],
+      "opaque_bounds": [
+        10,
+        2,
+        12,
+        28
       ]
     },
     {
-      "id": "modifier_ricochet",
-      "category": "PLAYER MODIFIERS",
+      "atlas_index": 21,
+      "clip": "player_opening_breach_flight",
+      "frame": 1,
       "region": [
-        19,
-        37,
+        35,
+        69,
+        32,
+        32
+      ],
+      "duration_ms": 90,
+      "state": "player_opening_breach",
+      "direction": "s",
+      "pivot": [
         16,
         16
+      ],
+      "leading_anchor": [
+        15,
+        30
+      ],
+      "trail_anchor": [
+        15,
+        2
+      ],
+      "opaque_bounds": [
+        11,
+        3,
+        10,
+        27
       ]
     },
     {
-      "id": "modifier_explosive",
-      "category": "PLAYER MODIFIERS",
+      "atlas_index": 22,
+      "clip": "player_opening_breach_flight",
+      "frame": 0,
       "region": [
-        37,
-        37,
+        69,
+        69,
+        32,
+        32
+      ],
+      "duration_ms": 90,
+      "state": "player_opening_breach",
+      "direction": "sw",
+      "pivot": [
         16,
         16
+      ],
+      "leading_anchor": [
+        5,
+        25
+      ],
+      "trail_anchor": [
+        25,
+        6
+      ],
+      "opaque_bounds": [
+        6,
+        6,
+        20,
+        20
       ]
     },
     {
-      "id": "modifier_homing",
-      "category": "PLAYER MODIFIERS",
+      "atlas_index": 23,
+      "clip": "player_opening_breach_flight",
+      "frame": 1,
       "region": [
-        55,
-        37,
+        103,
+        69,
+        32,
+        32
+      ],
+      "duration_ms": 90,
+      "state": "player_opening_breach",
+      "direction": "sw",
+      "pivot": [
         16,
         16
+      ],
+      "leading_anchor": [
+        5,
+        25
+      ],
+      "trail_anchor": [
+        25,
+        6
+      ],
+      "opaque_bounds": [
+        6,
+        6,
+        20,
+        20
       ]
     },
     {
-      "id": "modifier_wall_piercing",
-      "category": "PLAYER MODIFIERS",
+      "atlas_index": 24,
+      "clip": "player_opening_breach_flight",
+      "frame": 0,
       "region": [
-        73,
-        37,
+        137,
+        69,
+        32,
+        32
+      ],
+      "duration_ms": 90,
+      "state": "player_opening_breach",
+      "direction": "w",
+      "pivot": [
         16,
         16
+      ],
+      "leading_anchor": [
+        1,
+        15
+      ],
+      "trail_anchor": [
+        29,
+        15
+      ],
+      "opaque_bounds": [
+        2,
+        10,
+        28,
+        12
       ]
     },
     {
-      "id": "modifier_reflected",
-      "category": "PLAYER MODIFIERS",
+      "atlas_index": 25,
+      "clip": "player_opening_breach_flight",
+      "frame": 1,
       "region": [
-        91,
-        37,
+        171,
+        69,
+        32,
+        32
+      ],
+      "duration_ms": 90,
+      "state": "player_opening_breach",
+      "direction": "w",
+      "pivot": [
         16,
         16
+      ],
+      "leading_anchor": [
+        1,
+        15
+      ],
+      "trail_anchor": [
+        29,
+        15
+      ],
+      "opaque_bounds": [
+        2,
+        11,
+        27,
+        10
       ]
     },
     {
-      "id": "trail_player",
-      "category": "FLIGHT / IMPACT",
+      "atlas_index": 26,
+      "clip": "player_opening_breach_flight",
+      "frame": 0,
+      "region": [
+        205,
+        69,
+        32,
+        32
+      ],
+      "duration_ms": 90,
+      "state": "player_opening_breach",
+      "direction": "nw",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": [
+        6,
+        5
+      ],
+      "trail_anchor": [
+        25,
+        25
+      ],
+      "opaque_bounds": [
+        6,
+        6,
+        20,
+        20
+      ]
+    },
+    {
+      "atlas_index": 27,
+      "clip": "player_opening_breach_flight",
+      "frame": 1,
+      "region": [
+        239,
+        69,
+        32,
+        32
+      ],
+      "duration_ms": 90,
+      "state": "player_opening_breach",
+      "direction": "nw",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": [
+        6,
+        5
+      ],
+      "trail_anchor": [
+        25,
+        25
+      ],
+      "opaque_bounds": [
+        6,
+        6,
+        20,
+        20
+      ]
+    },
+    {
+      "atlas_index": 28,
+      "clip": "player_opening_breach_flight",
+      "frame": 0,
+      "region": [
+        273,
+        69,
+        32,
+        32
+      ],
+      "duration_ms": 90,
+      "state": "player_opening_breach",
+      "direction": "n",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": [
+        16,
+        1
+      ],
+      "trail_anchor": [
+        16,
+        29
+      ],
+      "opaque_bounds": [
+        10,
+        2,
+        12,
+        28
+      ]
+    },
+    {
+      "atlas_index": 29,
+      "clip": "player_opening_breach_flight",
+      "frame": 1,
+      "region": [
+        307,
+        69,
+        32,
+        32
+      ],
+      "duration_ms": 90,
+      "state": "player_opening_breach",
+      "direction": "n",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": [
+        16,
+        1
+      ],
+      "trail_anchor": [
+        16,
+        29
+      ],
+      "opaque_bounds": [
+        11,
+        2,
+        10,
+        27
+      ]
+    },
+    {
+      "atlas_index": 30,
+      "clip": "player_opening_breach_flight",
+      "frame": 0,
       "region": [
         1,
-        55,
+        103,
+        32,
+        32
+      ],
+      "duration_ms": 90,
+      "state": "player_opening_breach",
+      "direction": "ne",
+      "pivot": [
         16,
         16
+      ],
+      "leading_anchor": [
+        26,
+        6
+      ],
+      "trail_anchor": [
+        6,
+        25
+      ],
+      "opaque_bounds": [
+        6,
+        6,
+        20,
+        20
       ]
     },
     {
-      "id": "trail_hostile",
-      "category": "FLIGHT / IMPACT",
+      "atlas_index": 31,
+      "clip": "player_opening_breach_flight",
+      "frame": 1,
       "region": [
+        35,
+        103,
+        32,
+        32
+      ],
+      "duration_ms": 90,
+      "state": "player_opening_breach",
+      "direction": "ne",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": [
+        26,
+        6
+      ],
+      "trail_anchor": [
+        6,
+        25
+      ],
+      "opaque_bounds": [
+        6,
+        6,
+        20,
+        20
+      ]
+    },
+    {
+      "atlas_index": 32,
+      "clip": "secondary_seeker_flight",
+      "frame": 0,
+      "region": [
+        69,
+        103,
+        32,
+        32
+      ],
+      "duration_ms": 100,
+      "state": "secondary_seeker",
+      "direction": "e",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": [
+        26,
+        16
+      ],
+      "trail_anchor": [
+        2,
+        16
+      ],
+      "opaque_bounds": [
+        1,
+        9,
+        25,
+        14
+      ]
+    },
+    {
+      "atlas_index": 33,
+      "clip": "secondary_seeker_flight",
+      "frame": 1,
+      "region": [
+        103,
+        103,
+        32,
+        32
+      ],
+      "duration_ms": 100,
+      "state": "secondary_seeker",
+      "direction": "e",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": [
+        26,
+        16
+      ],
+      "trail_anchor": [
+        2,
+        16
+      ],
+      "opaque_bounds": [
+        3,
+        9,
+        23,
+        14
+      ]
+    },
+    {
+      "atlas_index": 34,
+      "clip": "secondary_seeker_flight",
+      "frame": 0,
+      "region": [
+        137,
+        103,
+        32,
+        32
+      ],
+      "duration_ms": 100,
+      "state": "secondary_seeker",
+      "direction": "se",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": [
+        23,
+        23
+      ],
+      "trail_anchor": [
+        6,
+        6
+      ],
+      "opaque_bounds": [
+        4,
+        4,
+        20,
+        20
+      ]
+    },
+    {
+      "atlas_index": 35,
+      "clip": "secondary_seeker_flight",
+      "frame": 1,
+      "region": [
+        171,
+        103,
+        32,
+        32
+      ],
+      "duration_ms": 100,
+      "state": "secondary_seeker",
+      "direction": "se",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": [
+        23,
+        23
+      ],
+      "trail_anchor": [
+        6,
+        6
+      ],
+      "opaque_bounds": [
+        5,
+        5,
         19,
-        55,
-        16,
-        16
+        19
       ]
     },
     {
-      "id": "trail_seeker_exhaust",
-      "category": "FLIGHT / IMPACT",
+      "atlas_index": 36,
+      "clip": "secondary_seeker_flight",
+      "frame": 0,
       "region": [
-        37,
-        55,
+        205,
+        103,
+        32,
+        32
+      ],
+      "duration_ms": 100,
+      "state": "secondary_seeker",
+      "direction": "s",
+      "pivot": [
         16,
         16
+      ],
+      "leading_anchor": [
+        15,
+        26
+      ],
+      "trail_anchor": [
+        15,
+        2
+      ],
+      "opaque_bounds": [
+        9,
+        1,
+        14,
+        25
       ]
     },
     {
-      "id": "impact_wall",
-      "category": "FLIGHT / IMPACT",
+      "atlas_index": 37,
+      "clip": "secondary_seeker_flight",
+      "frame": 1,
       "region": [
-        55,
-        55,
+        239,
+        103,
+        32,
+        32
+      ],
+      "duration_ms": 100,
+      "state": "secondary_seeker",
+      "direction": "s",
+      "pivot": [
         16,
         16
+      ],
+      "leading_anchor": [
+        15,
+        26
+      ],
+      "trail_anchor": [
+        15,
+        2
+      ],
+      "opaque_bounds": [
+        9,
+        3,
+        14,
+        23
       ]
     },
     {
-      "id": "impact_hull",
-      "category": "FLIGHT / IMPACT",
+      "atlas_index": 38,
+      "clip": "secondary_seeker_flight",
+      "frame": 0,
       "region": [
-        73,
-        55,
+        273,
+        103,
+        32,
+        32
+      ],
+      "duration_ms": 100,
+      "state": "secondary_seeker",
+      "direction": "sw",
+      "pivot": [
         16,
         16
+      ],
+      "leading_anchor": [
+        8,
+        23
+      ],
+      "trail_anchor": [
+        25,
+        6
+      ],
+      "opaque_bounds": [
+        8,
+        4,
+        20,
+        20
       ]
     },
     {
-      "id": "impact_breach_interrupt",
-      "category": "FLIGHT / IMPACT",
+      "atlas_index": 39,
+      "clip": "secondary_seeker_flight",
+      "frame": 1,
       "region": [
-        91,
-        55,
+        307,
+        103,
+        32,
+        32
+      ],
+      "duration_ms": 100,
+      "state": "secondary_seeker",
+      "direction": "sw",
+      "pivot": [
         16,
         16
+      ],
+      "leading_anchor": [
+        8,
+        23
+      ],
+      "trail_anchor": [
+        25,
+        6
+      ],
+      "opaque_bounds": [
+        8,
+        5,
+        19,
+        19
+      ]
+    },
+    {
+      "atlas_index": 40,
+      "clip": "secondary_seeker_flight",
+      "frame": 0,
+      "region": [
+        1,
+        137,
+        32,
+        32
+      ],
+      "duration_ms": 100,
+      "state": "secondary_seeker",
+      "direction": "w",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": [
+        5,
+        15
+      ],
+      "trail_anchor": [
+        29,
+        15
+      ],
+      "opaque_bounds": [
+        6,
+        9,
+        25,
+        14
+      ]
+    },
+    {
+      "atlas_index": 41,
+      "clip": "secondary_seeker_flight",
+      "frame": 1,
+      "region": [
+        35,
+        137,
+        32,
+        32
+      ],
+      "duration_ms": 100,
+      "state": "secondary_seeker",
+      "direction": "w",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": [
+        5,
+        15
+      ],
+      "trail_anchor": [
+        29,
+        15
+      ],
+      "opaque_bounds": [
+        6,
+        9,
+        23,
+        14
+      ]
+    },
+    {
+      "atlas_index": 42,
+      "clip": "secondary_seeker_flight",
+      "frame": 0,
+      "region": [
+        69,
+        137,
+        32,
+        32
+      ],
+      "duration_ms": 100,
+      "state": "secondary_seeker",
+      "direction": "nw",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": [
+        8,
+        8
+      ],
+      "trail_anchor": [
+        25,
+        25
+      ],
+      "opaque_bounds": [
+        8,
+        8,
+        20,
+        20
+      ]
+    },
+    {
+      "atlas_index": 43,
+      "clip": "secondary_seeker_flight",
+      "frame": 1,
+      "region": [
+        103,
+        137,
+        32,
+        32
+      ],
+      "duration_ms": 100,
+      "state": "secondary_seeker",
+      "direction": "nw",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": [
+        8,
+        8
+      ],
+      "trail_anchor": [
+        25,
+        25
+      ],
+      "opaque_bounds": [
+        8,
+        8,
+        19,
+        19
+      ]
+    },
+    {
+      "atlas_index": 44,
+      "clip": "secondary_seeker_flight",
+      "frame": 0,
+      "region": [
+        137,
+        137,
+        32,
+        32
+      ],
+      "duration_ms": 100,
+      "state": "secondary_seeker",
+      "direction": "n",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": [
+        16,
+        5
+      ],
+      "trail_anchor": [
+        16,
+        29
+      ],
+      "opaque_bounds": [
+        9,
+        6,
+        14,
+        25
+      ]
+    },
+    {
+      "atlas_index": 45,
+      "clip": "secondary_seeker_flight",
+      "frame": 1,
+      "region": [
+        171,
+        137,
+        32,
+        32
+      ],
+      "duration_ms": 100,
+      "state": "secondary_seeker",
+      "direction": "n",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": [
+        16,
+        5
+      ],
+      "trail_anchor": [
+        16,
+        29
+      ],
+      "opaque_bounds": [
+        9,
+        6,
+        14,
+        23
+      ]
+    },
+    {
+      "atlas_index": 46,
+      "clip": "secondary_seeker_flight",
+      "frame": 0,
+      "region": [
+        205,
+        137,
+        32,
+        32
+      ],
+      "duration_ms": 100,
+      "state": "secondary_seeker",
+      "direction": "ne",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": [
+        23,
+        8
+      ],
+      "trail_anchor": [
+        6,
+        25
+      ],
+      "opaque_bounds": [
+        4,
+        8,
+        20,
+        20
+      ]
+    },
+    {
+      "atlas_index": 47,
+      "clip": "secondary_seeker_flight",
+      "frame": 1,
+      "region": [
+        239,
+        137,
+        32,
+        32
+      ],
+      "duration_ms": 100,
+      "state": "secondary_seeker",
+      "direction": "ne",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": [
+        23,
+        8
+      ],
+      "trail_anchor": [
+        6,
+        25
+      ],
+      "opaque_bounds": [
+        5,
+        8,
+        19,
+        19
+      ]
+    },
+    {
+      "atlas_index": 48,
+      "clip": "hostile_light_pulse",
+      "frame": 0,
+      "region": [
+        273,
+        137,
+        32,
+        32
+      ],
+      "duration_ms": 100,
+      "state": "hostile_light",
+      "direction": "",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": null,
+      "trail_anchor": null,
+      "opaque_bounds": [
+        10,
+        10,
+        11,
+        11
+      ]
+    },
+    {
+      "atlas_index": 49,
+      "clip": "hostile_light_pulse",
+      "frame": 1,
+      "region": [
+        307,
+        137,
+        32,
+        32
+      ],
+      "duration_ms": 100,
+      "state": "hostile_light",
+      "direction": "",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": null,
+      "trail_anchor": null,
+      "opaque_bounds": [
+        10,
+        10,
+        11,
+        11
+      ]
+    },
+    {
+      "atlas_index": 50,
+      "clip": "hostile_standard_pulse",
+      "frame": 0,
+      "region": [
+        1,
+        171,
+        32,
+        32
+      ],
+      "duration_ms": 120,
+      "state": "hostile_standard",
+      "direction": "",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": null,
+      "trail_anchor": null,
+      "opaque_bounds": [
+        9,
+        9,
+        13,
+        13
+      ]
+    },
+    {
+      "atlas_index": 51,
+      "clip": "hostile_standard_pulse",
+      "frame": 1,
+      "region": [
+        35,
+        171,
+        32,
+        32
+      ],
+      "duration_ms": 120,
+      "state": "hostile_standard",
+      "direction": "",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": null,
+      "trail_anchor": null,
+      "opaque_bounds": [
+        9,
+        9,
+        13,
+        13
+      ]
+    },
+    {
+      "atlas_index": 52,
+      "clip": "hostile_heavy_pulse",
+      "frame": 0,
+      "region": [
+        69,
+        171,
+        32,
+        32
+      ],
+      "duration_ms": 150,
+      "state": "hostile_heavy",
+      "direction": "",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": null,
+      "trail_anchor": null,
+      "opaque_bounds": [
+        8,
+        8,
+        15,
+        15
+      ]
+    },
+    {
+      "atlas_index": 53,
+      "clip": "hostile_heavy_pulse",
+      "frame": 1,
+      "region": [
+        103,
+        171,
+        32,
+        32
+      ],
+      "duration_ms": 150,
+      "state": "hostile_heavy",
+      "direction": "",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": null,
+      "trail_anchor": null,
+      "opaque_bounds": [
+        7,
+        8,
+        17,
+        15
+      ]
+    },
+    {
+      "atlas_index": 54,
+      "clip": "hostile_heavy_pulse",
+      "frame": 2,
+      "region": [
+        137,
+        171,
+        32,
+        32
+      ],
+      "duration_ms": 150,
+      "state": "hostile_heavy",
+      "direction": "",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": null,
+      "trail_anchor": null,
+      "opaque_bounds": [
+        8,
+        7,
+        15,
+        17
+      ]
+    },
+    {
+      "atlas_index": 55,
+      "clip": "affinity_thermal_motion",
+      "frame": 0,
+      "region": [
+        171,
+        171,
+        32,
+        32
+      ],
+      "duration_ms": 100,
+      "state": "affinity_thermal",
+      "direction": "",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": null,
+      "trail_anchor": null,
+      "opaque_bounds": [
+        5,
+        10,
+        16,
+        7
+      ]
+    },
+    {
+      "atlas_index": 56,
+      "clip": "affinity_thermal_motion",
+      "frame": 1,
+      "region": [
+        205,
+        171,
+        32,
+        32
+      ],
+      "duration_ms": 100,
+      "state": "affinity_thermal",
+      "direction": "",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": null,
+      "trail_anchor": null,
+      "opaque_bounds": [
+        7,
+        10,
+        14,
+        7
+      ]
+    },
+    {
+      "atlas_index": 57,
+      "clip": "affinity_toxin_motion",
+      "frame": 0,
+      "region": [
+        239,
+        171,
+        32,
+        32
+      ],
+      "duration_ms": 100,
+      "state": "affinity_toxin",
+      "direction": "",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": null,
+      "trail_anchor": null,
+      "opaque_bounds": [
+        6,
+        17,
+        15,
+        5
+      ]
+    },
+    {
+      "atlas_index": 58,
+      "clip": "affinity_toxin_motion",
+      "frame": 1,
+      "region": [
+        273,
+        171,
+        32,
+        32
+      ],
+      "duration_ms": 100,
+      "state": "affinity_toxin",
+      "direction": "",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": null,
+      "trail_anchor": null,
+      "opaque_bounds": [
+        5,
+        17,
+        16,
+        5
+      ]
+    },
+    {
+      "atlas_index": 59,
+      "clip": "affinity_cryo_motion",
+      "frame": 0,
+      "region": [
+        307,
+        171,
+        32,
+        32
+      ],
+      "duration_ms": 100,
+      "state": "affinity_cryo",
+      "direction": "",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": null,
+      "trail_anchor": null,
+      "opaque_bounds": [
+        8,
+        8,
+        14,
+        14
+      ]
+    },
+    {
+      "atlas_index": 60,
+      "clip": "affinity_cryo_motion",
+      "frame": 1,
+      "region": [
+        1,
+        205,
+        32,
+        32
+      ],
+      "duration_ms": 100,
+      "state": "affinity_cryo",
+      "direction": "",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": null,
+      "trail_anchor": null,
+      "opaque_bounds": [
+        8,
+        9,
+        14,
+        13
+      ]
+    },
+    {
+      "atlas_index": 61,
+      "clip": "affinity_arc_motion",
+      "frame": 0,
+      "region": [
+        35,
+        205,
+        32,
+        32
+      ],
+      "duration_ms": 100,
+      "state": "affinity_arc",
+      "direction": "",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": null,
+      "trail_anchor": null,
+      "opaque_bounds": [
+        7,
+        11,
+        16,
+        8
+      ]
+    },
+    {
+      "atlas_index": 62,
+      "clip": "affinity_arc_motion",
+      "frame": 1,
+      "region": [
+        69,
+        205,
+        32,
+        32
+      ],
+      "duration_ms": 100,
+      "state": "affinity_arc",
+      "direction": "",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": null,
+      "trail_anchor": null,
+      "opaque_bounds": [
+        7,
+        12,
+        16,
+        8
+      ]
+    },
+    {
+      "atlas_index": 63,
+      "clip": "affinity_hybrid_motion",
+      "frame": 0,
+      "region": [
+        103,
+        205,
+        32,
+        32
+      ],
+      "duration_ms": 100,
+      "state": "affinity_hybrid",
+      "direction": "",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": null,
+      "trail_anchor": null,
+      "opaque_bounds": [
+        8,
+        8,
+        15,
+        15
+      ]
+    },
+    {
+      "atlas_index": 64,
+      "clip": "affinity_hybrid_motion",
+      "frame": 1,
+      "region": [
+        137,
+        205,
+        32,
+        32
+      ],
+      "duration_ms": 100,
+      "state": "affinity_hybrid",
+      "direction": "",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": null,
+      "trail_anchor": null,
+      "opaque_bounds": [
+        8,
+        8,
+        15,
+        15
+      ]
+    },
+    {
+      "atlas_index": 65,
+      "clip": "impact_wall",
+      "frame": 0,
+      "region": [
+        171,
+        205,
+        32,
+        32
+      ],
+      "duration_ms": 60,
+      "state": "impact_wall",
+      "direction": "",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": null,
+      "trail_anchor": null,
+      "opaque_bounds": [
+        13,
+        13,
+        5,
+        5
+      ]
+    },
+    {
+      "atlas_index": 66,
+      "clip": "impact_wall",
+      "frame": 1,
+      "region": [
+        205,
+        205,
+        32,
+        32
+      ],
+      "duration_ms": 60,
+      "state": "impact_wall",
+      "direction": "",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": null,
+      "trail_anchor": null,
+      "opaque_bounds": [
+        8,
+        8,
+        15,
+        15
+      ]
+    },
+    {
+      "atlas_index": 67,
+      "clip": "impact_wall",
+      "frame": 2,
+      "region": [
+        239,
+        205,
+        32,
+        32
+      ],
+      "duration_ms": 60,
+      "state": "impact_wall",
+      "direction": "",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": null,
+      "trail_anchor": null,
+      "opaque_bounds": [
+        5,
+        5,
+        21,
+        21
+      ]
+    },
+    {
+      "atlas_index": 68,
+      "clip": "impact_wall",
+      "frame": 3,
+      "region": [
+        273,
+        205,
+        32,
+        32
+      ],
+      "duration_ms": 60,
+      "state": "impact_wall",
+      "direction": "",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": null,
+      "trail_anchor": null,
+      "opaque_bounds": [
+        4,
+        4,
+        23,
+        23
+      ]
+    },
+    {
+      "atlas_index": 69,
+      "clip": "impact_enemy",
+      "frame": 0,
+      "region": [
+        307,
+        205,
+        32,
+        32
+      ],
+      "duration_ms": 60,
+      "state": "impact_enemy",
+      "direction": "",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": null,
+      "trail_anchor": null,
+      "opaque_bounds": [
+        13,
+        13,
+        5,
+        5
+      ]
+    },
+    {
+      "atlas_index": 70,
+      "clip": "impact_enemy",
+      "frame": 1,
+      "region": [
+        1,
+        239,
+        32,
+        32
+      ],
+      "duration_ms": 60,
+      "state": "impact_enemy",
+      "direction": "",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": null,
+      "trail_anchor": null,
+      "opaque_bounds": [
+        8,
+        8,
+        15,
+        15
+      ]
+    },
+    {
+      "atlas_index": 71,
+      "clip": "impact_enemy",
+      "frame": 2,
+      "region": [
+        35,
+        239,
+        32,
+        32
+      ],
+      "duration_ms": 60,
+      "state": "impact_enemy",
+      "direction": "",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": null,
+      "trail_anchor": null,
+      "opaque_bounds": [
+        5,
+        5,
+        21,
+        21
+      ]
+    },
+    {
+      "atlas_index": 72,
+      "clip": "impact_enemy",
+      "frame": 3,
+      "region": [
+        69,
+        239,
+        32,
+        32
+      ],
+      "duration_ms": 60,
+      "state": "impact_enemy",
+      "direction": "",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": null,
+      "trail_anchor": null,
+      "opaque_bounds": [
+        4,
+        4,
+        23,
+        23
+      ]
+    },
+    {
+      "atlas_index": 73,
+      "clip": "impact_player_hull",
+      "frame": 0,
+      "region": [
+        103,
+        239,
+        32,
+        32
+      ],
+      "duration_ms": 60,
+      "state": "impact_player_hull",
+      "direction": "",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": null,
+      "trail_anchor": null,
+      "opaque_bounds": [
+        13,
+        13,
+        5,
+        5
+      ]
+    },
+    {
+      "atlas_index": 74,
+      "clip": "impact_player_hull",
+      "frame": 1,
+      "region": [
+        137,
+        239,
+        32,
+        32
+      ],
+      "duration_ms": 60,
+      "state": "impact_player_hull",
+      "direction": "",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": null,
+      "trail_anchor": null,
+      "opaque_bounds": [
+        8,
+        8,
+        15,
+        15
+      ]
+    },
+    {
+      "atlas_index": 75,
+      "clip": "impact_player_hull",
+      "frame": 2,
+      "region": [
+        171,
+        239,
+        32,
+        32
+      ],
+      "duration_ms": 60,
+      "state": "impact_player_hull",
+      "direction": "",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": null,
+      "trail_anchor": null,
+      "opaque_bounds": [
+        5,
+        5,
+        21,
+        21
+      ]
+    },
+    {
+      "atlas_index": 76,
+      "clip": "impact_player_hull",
+      "frame": 3,
+      "region": [
+        205,
+        239,
+        32,
+        32
+      ],
+      "duration_ms": 60,
+      "state": "impact_player_hull",
+      "direction": "",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": null,
+      "trail_anchor": null,
+      "opaque_bounds": [
+        4,
+        4,
+        23,
+        23
+      ]
+    },
+    {
+      "atlas_index": 77,
+      "clip": "impact_barrier",
+      "frame": 0,
+      "region": [
+        239,
+        239,
+        32,
+        32
+      ],
+      "duration_ms": 60,
+      "state": "impact_barrier",
+      "direction": "",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": null,
+      "trail_anchor": null,
+      "opaque_bounds": [
+        13,
+        13,
+        5,
+        5
+      ]
+    },
+    {
+      "atlas_index": 78,
+      "clip": "impact_barrier",
+      "frame": 1,
+      "region": [
+        273,
+        239,
+        32,
+        32
+      ],
+      "duration_ms": 60,
+      "state": "impact_barrier",
+      "direction": "",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": null,
+      "trail_anchor": null,
+      "opaque_bounds": [
+        8,
+        8,
+        15,
+        15
+      ]
+    },
+    {
+      "atlas_index": 79,
+      "clip": "impact_barrier",
+      "frame": 2,
+      "region": [
+        307,
+        239,
+        32,
+        32
+      ],
+      "duration_ms": 60,
+      "state": "impact_barrier",
+      "direction": "",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": null,
+      "trail_anchor": null,
+      "opaque_bounds": [
+        5,
+        5,
+        21,
+        21
+      ]
+    },
+    {
+      "atlas_index": 80,
+      "clip": "impact_barrier",
+      "frame": 3,
+      "region": [
+        1,
+        273,
+        32,
+        32
+      ],
+      "duration_ms": 60,
+      "state": "impact_barrier",
+      "direction": "",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": null,
+      "trail_anchor": null,
+      "opaque_bounds": [
+        4,
+        4,
+        23,
+        23
+      ]
+    },
+    {
+      "atlas_index": 81,
+      "clip": "impact_breach_interrupt",
+      "frame": 0,
+      "region": [
+        35,
+        273,
+        32,
+        32
+      ],
+      "duration_ms": 60,
+      "state": "impact_breach_interrupt",
+      "direction": "",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": null,
+      "trail_anchor": null,
+      "opaque_bounds": [
+        13,
+        13,
+        5,
+        5
+      ]
+    },
+    {
+      "atlas_index": 82,
+      "clip": "impact_breach_interrupt",
+      "frame": 1,
+      "region": [
+        69,
+        273,
+        32,
+        32
+      ],
+      "duration_ms": 60,
+      "state": "impact_breach_interrupt",
+      "direction": "",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": null,
+      "trail_anchor": null,
+      "opaque_bounds": [
+        8,
+        8,
+        15,
+        15
+      ]
+    },
+    {
+      "atlas_index": 83,
+      "clip": "impact_breach_interrupt",
+      "frame": 2,
+      "region": [
+        103,
+        273,
+        32,
+        32
+      ],
+      "duration_ms": 60,
+      "state": "impact_breach_interrupt",
+      "direction": "",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": null,
+      "trail_anchor": null,
+      "opaque_bounds": [
+        5,
+        5,
+        21,
+        21
+      ]
+    },
+    {
+      "atlas_index": 84,
+      "clip": "impact_breach_interrupt",
+      "frame": 3,
+      "region": [
+        137,
+        273,
+        32,
+        32
+      ],
+      "duration_ms": 60,
+      "state": "impact_breach_interrupt",
+      "direction": "",
+      "pivot": [
+        16,
+        16
+      ],
+      "leading_anchor": null,
+      "trail_anchor": null,
+      "opaque_bounds": [
+        4,
+        4,
+        23,
+        23
       ]
     }
   ],
-  "composition_rule": "trail -> complete head -> affinity or modifier overlay"
+  "composition_rule": "physical flight head -> optional affinity motion overlay -> separate impact clip"
 }

@@ -373,13 +373,13 @@
       ],
       "current_representation": "procedural_geometry",
       "target_representation": "raster_atlas",
-      "master_size": [16, 16],
+      "master_size": [32, 32],
       "variants": ["standard", "opening_breach"],
-      "directions": 16,
-      "states": ["flight"],
-      "semantic_layers": ["ownership_shell", "core", "breach_marker"],
+      "directions": 8,
+      "states": ["flight_0", "flight_1"],
+      "semantic_layers": ["body", "core", "wake", "breach_collar"],
       "priority": "P0",
-      "notes": "Collision radius controls final rendered extent; modifiers use separate overlays."
+      "notes": "Physical ammunition silhouette with leading and rear anchors; collision radius controls final rendered extent."
     },
     {
       "id": "player_projectile_modifier_overlays",
@@ -390,13 +390,13 @@
       ],
       "current_representation": "procedural_geometry",
       "target_representation": "procedural_pixel",
-      "master_size": [16, 16],
+      "master_size": [32, 32],
       "variants": ["pierce", "ricochet", "explosive", "homing", "wall_piercing", "reflected"],
-      "directions": 16,
-      "states": ["flight"],
-      "semantic_layers": ["outer_marker", "trail_marker"],
+      "directions": 8,
+      "states": ["motion_0", "motion_1", "impact"],
+      "semantic_layers": ["edge_motion", "wake", "impact"],
       "priority": "P1",
-      "notes": "Do not generate every modifier combination as a separate projectile."
+      "notes": "Use motion, wake, impact, or live state; never place literal modifier icons inside the bullet or generate every combination."
     },
     {
       "id": "hostile_projectile_affinities",
@@ -408,13 +408,13 @@
       ],
       "current_representation": "procedural_geometry",
       "target_representation": "raster_atlas",
-      "master_size": [16, 16],
+      "master_size": [32, 32],
       "variants": ["kinetic", "thermal", "toxin", "cryo", "arc", "hybrid"],
-      "directions": 16,
-      "states": ["light", "standard", "heavy"],
-      "semantic_layers": ["head", "affinity_shape", "trail"],
+      "directions": 0,
+      "states": ["light_0", "light_1", "standard_0", "standard_1", "heavy_0", "heavy_1", "heavy_2", "affinity_motion_0", "affinity_motion_1"],
+      "semantic_layers": ["head", "affinity_edge", "wake"],
       "priority": "P0",
-      "notes": "Head extent must match the five-, six-, or seven-pixel collision radius."
+      "notes": "Directionless complete heads cover five-, six-, or seven-pixel collision radii; affinities animate only at the edge or wake."
     },
     {
       "id": "secondary_seeker",
@@ -425,13 +425,13 @@
       ],
       "current_representation": "procedural_geometry",
       "target_representation": "raster_atlas",
-      "master_size": [16, 16],
+      "master_size": [32, 32],
       "variants": ["seeker_missile"],
-      "directions": 16,
-      "states": ["flight", "impact"],
+      "directions": 8,
+      "states": ["flight_0", "flight_1"],
       "semantic_layers": ["body", "guidance_fin", "exhaust"],
       "priority": "P0",
-      "notes": "Seeker is always equipped."
+      "notes": "Seeker is always equipped; use a physical missile silhouette and separate impact clip."
     },
     {
       "id": "secondary_ion_field",

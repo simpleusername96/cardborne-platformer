@@ -93,7 +93,8 @@ every modifier combination as a separate bitmap.
 | Family | Native master |
 | --- | ---: |
 | Floor, void, wall, and edge tile | `24 x 24` |
-| Small projectile or shard | `16 x 16` |
+| Projectile, seeker missile, or impact frame | `32 x 32` |
+| Small experience shard | `16 x 16` |
 | Pickup, status, or HUD glyph | `24 x 24` |
 | Common mobile enemy | `32 x 32` |
 | Tower, mine, terrain component | `32–64 px` |
@@ -251,8 +252,21 @@ replace exact procedural attack geometry.
 
 The rendered projectile head must not imply a smaller safe area than the actual
 collision radius. Ownership, affinity, and threat weight use shape plus value;
-modifier overlays are composable. Wall clipping and hit truth stay in combat
-code.
+wall clipping and hit truth stay in combat code.
+
+Projectile art is built as ammunition, not as a centered upgrade icon. A
+directional flight frame has a leading edge, connected body/core, rear anchor,
+and motion wake. Player basic fire, the opening/breach shot, and the seeker use
+eight directions with two flight frames. Round hostile light and standard shots
+use two directionless pulse frames; the heavy shot uses three. Thermal, toxin,
+cryo, arc, and hybrid are two-frame edge/wake overlays on the complete hostile
+head. Kinetic uses the unmodified head.
+
+Wall, enemy, player-hull, barrier, and breach-interrupt impacts are separate
+four-frame clips: contact, expansion, fragments, and fade. Modifier behavior is
+communicated by flight motion, wake, impact, and live state where required; do
+not place a literal pierce, poison, ricochet, or affinity glyph inside an
+ordinary bullet. Do not bake every upgrade combination into the atlas.
 
 ### Items and facilities
 
@@ -296,12 +310,19 @@ primary mount, and two engines, then reassembles it with zero changed pixels:
 
 ![Semantic split proof](./examples/player-craft-semantic-proof.png)
 
-The projectile proof is authored directly on the logical pixel grid rather than
-generated as combination-specific images. Its 24 atlas slots contain complete
-heads, affinity overlays, modifier overlays, trails, and impacts; the final row
-of the preview shows runtime compositions:
+The projectile proof is authored directly on the logical pixel grid. Its 85
+contiguous `32 x 32` frames contain directional player flight, seeker flight,
+hostile threat pulses, affinity motion overlays, and separate impact clips.
+Frame regions, pivots, durations, directions, and leading/trailing anchors are
+stored in the adjacent JSON file:
 
-![Projectile pixel system](./examples/projectile-system/projectile-system-preview.png)
+![Projectile animation sequences](./examples/projectile-system/projectile-system-preview.png)
+
+The gameplay-density proof tests ownership, direction, and threat at native
+one- and two-times scale. It is offline evidence, not a claim that the atlas is
+already connected to Godot:
+
+![Projectile gameplay-scale proof](./examples/projectile-system/projectile-gameplay-proof.png)
 
 ## Acceptance Criteria
 

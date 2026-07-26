@@ -1,5 +1,6 @@
 param(
-    [string]$OutputDirectory = "docs/design/pixel-art-asset-pipeline/examples/projectile-system"
+    [string]$OutputDirectory = "docs/design/pixel-art-asset-pipeline/examples/projectile-system",
+    [switch]$RunNegativeValidation
 )
 
 $ErrorActionPreference = "Stop"
@@ -7,8 +8,9 @@ $ErrorActionPreference = "Stop"
 $repoRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot "../.."))
 $destination = [System.IO.Path]::GetFullPath((Join-Path $repoRoot $OutputDirectory))
 $magick = Get-Command magick -ErrorAction Stop
-$spriteSize = 16
-$columns = 6
+$spriteSize = 32
+$pivot = 16
+$columns = 10
 $padding = 1
 $pitch = $spriteSize + $padding * 2
 $palette = [ordered]@{
@@ -24,27 +26,34 @@ $palette = [ordered]@{
     "V" = "#9B59B6"
     "M" = "#75C4B2"
     "I" = "#153B3A"
+    "N" = "#081F2B"
 }
+$directions = @(
+    [ordered]@{ id = "e"; angle = 0 },
+    [ordered]@{ id = "se"; angle = 45 },
+    [ordered]@{ id = "s"; angle = 90 },
+    [ordered]@{ id = "sw"; angle = 135 },
+    [ordered]@{ id = "w"; angle = 180 },
+    [ordered]@{ id = "nw"; angle = 225 },
+    [ordered]@{ id = "n"; angle = 270 },
+    [ordered]@{ id = "ne"; angle = 315 }
+)
 
 function New-PixelBuffer {
-    $pixels = [System.Collections.Generic.List[char]]::new(
-        $script:spriteSize * $script:spriteSize
-    )
-    for ($index = 0; $index -lt $script:spriteSize * $script:spriteSize; $index++) {
-        $pixels.Add(".")
-    }
+    [char[]]$pixels = [char[]]::new($script:spriteSize * $script:spriteSize)
+    [Array]::Fill($pixels, [char]".")
     return ,$pixels
 }
 
 function Copy-PixelBuffer {
-    param([System.Collections.Generic.List[char]]$Pixels)
+    param([char[]]$Pixels)
 
-    return ,[System.Collections.Generic.List[char]]::new($Pixels)
+    return ,([char[]]$Pixels.Clone())
 }
 
 function Set-Pixel {
     param(
-        [System.Collections.Generic.List[char]]$Pixels,
+        [char[]]$Pixels,
         [int]$X,
         [int]$Y,
         [char]$Color
@@ -58,7 +67,7 @@ function Set-Pixel {
 
 function Fill-Rect {
     param(
-        [System.Collections.Generic.List[char]]$Pixels,
+        [char[]]$Pixels,
         [int]$X,
         [int]$Y,
         [int]$Width,
@@ -68,14 +77,14 @@ function Fill-Rect {
 
     for ($py = $Y; $py -lt $Y + $Height; $py++) {
         for ($px = $X; $px -lt $X + $Width; $px++) {
-            Set-Pixel -Pixels $Pixels -X $px -Y $py -Color $Color
+            Set-Pixel $Pixels $px $py $Color
         }
     }
 }
 
 function Fill-Diamond {
     param(
-        [System.Collections.Generic.List[char]]$Pixels,
+        [char[]]$Pixels,
         [int]$CenterX,
         [int]$CenterY,
         [int]$Radius,
@@ -85,7 +94,58 @@ function Fill-Diamond {
     for ($dy = -$Radius; $dy -le $Radius; $dy++) {
         $extent = $Radius - [Math]::Abs($dy)
         for ($dx = -$extent; $dx -le $extent; $dx++) {
-            Set-Pixel -Pixels $Pixels -X ($CenterX + $dx) -Y ($CenterY + $dy) -Color $Color
+            Set-Pixel $Pixels ($CenterX + $dx) ($CenterY + $dy) $Color
+        }
+    }
+}
+
+function Fill-Disc {
+    param(
+        [char[]]$Pixels,
+        [int]$CenterX,
+        [int]$CenterY,
+        [int]$Radius,
+        [char]$Color
+    )
+
+    $limit = ($Radius + 0.2) * ($Radius + 0.2)
+    for ($dy = -$Radius; $dy -le $Radius; $dy++) {
+        for ($dx = -$Radius; $dx -le $Radius; $dx++) {
+            if ($dx * $dx + $dy * $dy -le $limit) {
+                Set-Pixel $Pixels ($CenterX + $dx) ($CenterY + $dy) $Color
+            }
+        }
+    }
+}
+
+function Draw-Line {
+    param(
+        [char[]]$Pixels,
+        [int]$X0,
+        [int]$Y0,
+        [int]$X1,
+        [int]$Y1,
+        [char]$Color
+    )
+
+    $dx = [Math]::Abs($X1 - $X0)
+    $sx = if ($X0 -lt $X1) { 1 } else { -1 }
+    $dy = -[Math]::Abs($Y1 - $Y0)
+    $sy = if ($Y0 -lt $Y1) { 1 } else { -1 }
+    $error = $dx + $dy
+    while ($true) {
+        Set-Pixel $Pixels $X0 $Y0 $Color
+        if ($X0 -eq $X1 -and $Y0 -eq $Y1) {
+            break
+        }
+        $doubleError = 2 * $error
+        if ($doubleError -ge $dy) {
+            $error += $dy
+            $X0 += $sx
+        }
+        if ($doubleError -le $dx) {
+            $error += $dx
+            $Y0 += $sy
         }
     }
 }
@@ -101,29 +161,60 @@ function Merge-PixelBuffers {
             }
         }
     }
-    return $result
+    return ,$result
 }
 
-function Add-Sprite {
+function Rotate-Point {
     param(
-        [System.Collections.Generic.List[object]]$Collection,
-        [string]$Id,
-        [string]$Label,
-        [string]$Category,
-        [System.Collections.Generic.List[char]]$Pixels
+        [int[]]$Point,
+        [int]$Angle
     )
 
-    $Collection.Add([ordered]@{
-        id = $Id
-        label = $Label
-        category = $Category
-        pixels = $Pixels
-    })
+    $radians = $Angle * [Math]::PI / 180.0
+    $x = $Point[0] - ($script:pivot - 0.5)
+    $y = $Point[1] - ($script:pivot - 0.5)
+    $rotatedX = $x * [Math]::Cos($radians) - $y * [Math]::Sin($radians)
+    $rotatedY = $x * [Math]::Sin($radians) + $y * [Math]::Cos($radians)
+    return @(
+        [int][Math]::Round($rotatedX + ($script:pivot - 0.5)),
+        [int][Math]::Round($rotatedY + ($script:pivot - 0.5))
+    )
+}
+
+function Rotate-PixelBuffer {
+    param(
+        [char[]]$Pixels,
+        [int]$Angle
+    )
+
+    if ($Angle % 360 -eq 0) {
+        return Copy-PixelBuffer $Pixels
+    }
+
+    $result = New-PixelBuffer
+    $radians = -$Angle * [Math]::PI / 180.0
+    $center = $script:pivot - 0.5
+    for ($targetY = 0; $targetY -lt $script:spriteSize; $targetY++) {
+        for ($targetX = 0; $targetX -lt $script:spriteSize; $targetX++) {
+            $x = $targetX - $center
+            $y = $targetY - $center
+            $sourceX = [int][Math]::Round($x * [Math]::Cos($radians) - $y * [Math]::Sin($radians) + $center)
+            $sourceY = [int][Math]::Round($x * [Math]::Sin($radians) + $y * [Math]::Cos($radians) + $center)
+            if ($sourceX -lt 0 -or $sourceY -lt 0 -or $sourceX -ge $script:spriteSize -or $sourceY -ge $script:spriteSize) {
+                continue
+            }
+            $symbol = $Pixels[$sourceY * $script:spriteSize + $sourceX]
+            if ($symbol -ne ".") {
+                $result[$targetY * $script:spriteSize + $targetX] = $symbol
+            }
+        }
+    }
+    return ,$result
 }
 
 function Pixel-Runs {
     param(
-        [System.Collections.Generic.List[char]]$Pixels,
+        [char[]]$Pixels,
         [int]$OriginX,
         [int]$OriginY,
         [int]$Scale = 1
@@ -140,16 +231,12 @@ function Pixel-Runs {
             }
             $start = $x
             $x++
-            while (
-                $x -lt $script:spriteSize -and
-                $Pixels[$y * $script:spriteSize + $x] -eq $symbol
-            ) {
+            while ($x -lt $script:spriteSize -and $Pixels[$y * $script:spriteSize + $x] -eq $symbol) {
                 $x++
             }
             $color = $script:palette[[string]$symbol]
-            $runWidth = $x - $start
             $rects.Add(
-                "<rect x=`"$($OriginX + $start * $Scale)`" y=`"$($OriginY + $y * $Scale)`" width=`"$($runWidth * $Scale)`" height=`"$Scale`" fill=`"$color`"/>"
+                "<rect x=`"$($OriginX + $start * $Scale)`" y=`"$($OriginY + $y * $Scale)`" width=`"$(($x - $start) * $Scale)`" height=`"$Scale`" fill=`"$color`"/>"
             )
         }
     }
@@ -157,7 +244,7 @@ function Pixel-Runs {
 }
 
 function Opaque-Bounds {
-    param([System.Collections.Generic.List[char]]$Pixels)
+    param([char[]]$Pixels)
 
     $minX = $script:spriteSize
     $minY = $script:spriteSize
@@ -175,290 +262,549 @@ function Opaque-Bounds {
         }
     }
     if ($maxX -lt 0) {
-        return @(0, 0)
+        return @(0, 0, 0, 0)
     }
-    $width = $maxX - $minX + 1
-    $height = $maxY - $minY + 1
-    return @($width, $height)
+    return @($minX, $minY, ($maxX - $minX + 1), ($maxY - $minY + 1))
 }
 
-$sprites = [System.Collections.Generic.List[object]]::new()
+function New-FrameRecord {
+    param(
+        [string]$Clip,
+        [int]$Frame,
+        [char[]]$Pixels,
+        [int]$Duration,
+        [string]$State,
+        [AllowNull()][string]$Direction,
+        [AllowNull()][int[]]$LeadingAnchor,
+        [AllowNull()][int[]]$TrailAnchor
+    )
 
-# Complete projectile heads. Direction points to the right.
-$playerStandard = New-PixelBuffer
-Fill-Rect $playerStandard 3 6 8 4 "Y"
-Fill-Rect $playerStandard 1 7 4 2 "D"
-Fill-Diamond $playerStandard 11 7 3 "W"
-Fill-Rect $playerStandard 8 7 5 2 "Y"
-Set-Pixel $playerStandard 14 7 "W"
-Set-Pixel $playerStandard 14 8 "W"
-Add-Sprite $sprites "player_standard" "STANDARD" "PROJECTILE HEADS" $playerStandard
+    return [ordered]@{
+        clip = $Clip
+        frame = $Frame
+        pixels = $Pixels
+        duration_ms = $Duration
+        state = $State
+        direction = $Direction
+        pivot = @($script:pivot, $script:pivot)
+        leading_anchor = $LeadingAnchor
+        trail_anchor = $TrailAnchor
+    }
+}
 
-$playerOpening = New-PixelBuffer
-Fill-Diamond $playerOpening 9 7 5 "Y"
-Fill-Diamond $playerOpening 10 7 3 "W"
-Fill-Rect $playerOpening 1 6 8 4 "D"
-Fill-Rect $playerOpening 4 7 10 2 "W"
-Set-Pixel $playerOpening 15 7 "Y"
-Set-Pixel $playerOpening 15 8 "Y"
-Set-Pixel $playerOpening 8 2 "W"
-Set-Pixel $playerOpening 8 12 "W"
-Add-Sprite $sprites "player_opening_breach" "OPENING" "PROJECTILE HEADS" $playerOpening
+function Assert-FrameAnchors {
+    param([System.Collections.IDictionary]$Frame)
 
-$enemyLight = New-PixelBuffer
-Fill-Diamond $enemyLight 8 7 5 "Q"
-Fill-Diamond $enemyLight 8 7 3 "R"
-Fill-Rect $enemyLight 7 7 3 2 "W"
-Add-Sprite $sprites "enemy_light" "ENEMY LIGHT" "PROJECTILE HEADS" $enemyLight
+    foreach ($anchorName in @("leading_anchor", "trail_anchor")) {
+        $anchor = $Frame[$anchorName]
+        if ($null -eq $anchor) {
+            continue
+        }
+        if ($anchor.Count -ne 2 -or $anchor[0] -lt 0 -or $anchor[1] -lt 0 -or $anchor[0] -ge $script:spriteSize -or $anchor[1] -ge $script:spriteSize) {
+            throw "Invalid $anchorName in $($Frame.clip) frame $($Frame.frame)."
+        }
+    }
+    if ($null -ne $Frame.leading_anchor -and $null -ne $Frame.trail_anchor) {
+        $leadingVector = @(
+            ($Frame.leading_anchor[0] - $script:pivot),
+            ($Frame.leading_anchor[1] - $script:pivot)
+        )
+        $trailVector = @(
+            ($Frame.trail_anchor[0] - $script:pivot),
+            ($Frame.trail_anchor[1] - $script:pivot)
+        )
+        $dot = $leadingVector[0] * $trailVector[0] + $leadingVector[1] * $trailVector[1]
+        if ($dot -ge 0) {
+            throw "Leading and trail anchors must be on opposite sides of the pivot in $($Frame.clip)."
+        }
+    }
+}
 
-$enemyStandard = New-PixelBuffer
-Fill-Diamond $enemyStandard 8 7 6 "Q"
-Fill-Diamond $enemyStandard 8 7 5 "R"
-Fill-Diamond $enemyStandard 8 7 1 "W"
-Add-Sprite $sprites "enemy_standard" "ENEMY STD" "PROJECTILE HEADS" $enemyStandard
+function Assert-MinimumExtent {
+    param(
+        [char[]]$Pixels,
+        [int]$Minimum,
+        [string]$Label
+    )
 
-$enemyHeavy = New-PixelBuffer
-Fill-Rect $enemyHeavy 4 1 9 14 "Q"
-Fill-Rect $enemyHeavy 1 4 15 8 "Q"
-Fill-Rect $enemyHeavy 5 2 7 12 "R"
-Fill-Rect $enemyHeavy 2 5 13 6 "R"
-Fill-Diamond $enemyHeavy 8 7 2 "W"
-Set-Pixel $enemyHeavy 1 7 "R"
-Set-Pixel $enemyHeavy 15 7 "R"
-Add-Sprite $sprites "enemy_heavy" "ENEMY HEAVY" "PROJECTILE HEADS" $enemyHeavy
+    $bounds = Opaque-Bounds $Pixels
+    if ($bounds[2] -lt $Minimum -or $bounds[3] -lt $Minimum) {
+        throw "$Label must cover at least ${Minimum}x${Minimum}; got $($bounds[2])x$($bounds[3])."
+    }
+}
 
-$seeker = New-PixelBuffer
-Fill-Rect $seeker 3 6 8 4 "D"
-Fill-Rect $seeker 6 5 6 6 "Y"
-Fill-Diamond $seeker 12 7 2 "W"
-Set-Pixel $seeker 5 4 "M"
-Set-Pixel $seeker 6 4 "M"
-Set-Pixel $seeker 5 11 "M"
-Set-Pixel $seeker 6 11 "M"
-Fill-Rect $seeker 1 7 3 2 "M"
-Add-Sprite $sprites "seeker_missile" "SEEKER" "PROJECTILE HEADS" $seeker
+function Add-DirectionalClip {
+    param(
+        [System.Collections.Generic.List[object]]$Collection,
+        [string]$Clip,
+        [object[]]$SourceFrames,
+        [int]$Duration,
+        [string]$State,
+        [int[]]$LeadingAnchor,
+        [int[]]$TrailAnchor
+    )
 
-# Hostile affinity overlays. These are combined with light/standard/heavy heads.
-$kinetic = New-PixelBuffer
-Fill-Rect $kinetic 3 7 10 2 "W"
-Set-Pixel $kinetic 11 5 "W"
-Set-Pixel $kinetic 12 6 "W"
-Set-Pixel $kinetic 11 10 "W"
-Set-Pixel $kinetic 12 9 "W"
-Add-Sprite $sprites "affinity_kinetic" "KINETIC" "ENEMY AFFINITIES" $kinetic
+    foreach ($direction in $script:directions) {
+        for ($frameIndex = 0; $frameIndex -lt $SourceFrames.Count; $frameIndex++) {
+            $rotatedPixels = Rotate-PixelBuffer $SourceFrames[$frameIndex] $direction.angle
+            $rotatedLeading = Rotate-Point $LeadingAnchor $direction.angle
+            $rotatedTrail = Rotate-Point $TrailAnchor $direction.angle
+            $Collection.Add((New-FrameRecord `
+                -Clip $Clip `
+                -Frame $frameIndex `
+                -Pixels $rotatedPixels `
+                -Duration $Duration `
+                -State $State `
+                -Direction $direction.id `
+                -LeadingAnchor $rotatedLeading `
+                -TrailAnchor $rotatedTrail))
+        }
+    }
+}
 
-$thermal = New-PixelBuffer
-Fill-Diamond $thermal 8 8 3 "O"
-Set-Pixel $thermal 7 3 "O"
-Set-Pixel $thermal 8 4 "O"
-Set-Pixel $thermal 10 4 "O"
-Set-Pixel $thermal 9 5 "W"
-Set-Pixel $thermal 7 9 "W"
-Add-Sprite $sprites "affinity_thermal" "THERMAL" "ENEMY AFFINITIES" $thermal
+function Add-StaticClip {
+    param(
+        [System.Collections.Generic.List[object]]$Collection,
+        [string]$Clip,
+        [object[]]$SourceFrames,
+        [int]$Duration,
+        [string]$State
+    )
 
-$toxin = New-PixelBuffer
-Fill-Diamond $toxin 8 9 3 "G"
-Fill-Rect $toxin 7 4 3 4 "G"
-Set-Pixel $toxin 8 3 "M"
-Set-Pixel $toxin 7 9 "M"
-Set-Pixel $toxin 8 8 "W"
-Add-Sprite $sprites "affinity_toxin" "TOXIN" "ENEMY AFFINITIES" $toxin
+    for ($frameIndex = 0; $frameIndex -lt $SourceFrames.Count; $frameIndex++) {
+        $Collection.Add((New-FrameRecord `
+            -Clip $Clip `
+            -Frame $frameIndex `
+            -Pixels $SourceFrames[$frameIndex] `
+            -Duration $Duration `
+            -State $State `
+            -Direction $null `
+            -LeadingAnchor $null `
+            -TrailAnchor $null))
+    }
+}
 
-$cryo = New-PixelBuffer
-Fill-Rect $cryo 7 3 2 10 "B"
-Fill-Rect $cryo 3 7 10 2 "B"
-Set-Pixel $cryo 4 4 "B"
-Set-Pixel $cryo 11 4 "B"
-Set-Pixel $cryo 4 11 "B"
-Set-Pixel $cryo 11 11 "B"
-Fill-Diamond $cryo 8 8 1 "W"
-Add-Sprite $sprites "affinity_cryo" "CRYO" "ENEMY AFFINITIES" $cryo
+function New-PlayerBasicFrame {
+    param([int]$Phase)
 
-$arc = New-PixelBuffer
-Fill-Rect $arc 8 2 3 4 "V"
-Fill-Rect $arc 6 5 4 3 "V"
-Fill-Rect $arc 5 7 4 3 "W"
-Fill-Rect $arc 3 9 4 4 "V"
-Set-Pixel $arc 11 3 "W"
-Set-Pixel $arc 3 13 "W"
-Add-Sprite $sprites "affinity_arc" "ARC" "ENEMY AFFINITIES" $arc
+    $pixels = New-PixelBuffer
+    Fill-Rect $pixels (3 + $Phase) 15 (6 - $Phase) 2 "D"
+    Fill-Rect $pixels (6 + $Phase) 14 7 4 "Y"
+    Fill-Rect $pixels 11 13 11 6 "Y"
+    Fill-Rect $pixels 13 14 10 4 "W"
+    Fill-Rect $pixels 22 15 4 2 "W"
+    Set-Pixel $pixels 26 15 "Y"
+    Set-Pixel $pixels 26 16 "Y"
+    Set-Pixel $pixels 27 15 "W"
+    Set-Pixel $pixels 27 16 "W"
+    if ($Phase -eq 0) {
+        Set-Pixel $pixels 9 13 "W"
+        Set-Pixel $pixels 9 18 "W"
+    }
+    else {
+        Set-Pixel $pixels 7 13 "D"
+        Set-Pixel $pixels 7 18 "D"
+    }
+    return ,$pixels
+}
 
-$hybrid = New-PixelBuffer
-Fill-Diamond $hybrid 8 7 4 "R"
-Fill-Rect $hybrid 7 2 2 4 "O"
-Fill-Rect $hybrid 10 6 4 2 "G"
-Fill-Rect $hybrid 7 9 2 4 "B"
-Fill-Rect $hybrid 2 6 4 2 "V"
-Fill-Diamond $hybrid 8 7 1 "W"
-Add-Sprite $sprites "affinity_hybrid" "HYBRID" "ENEMY AFFINITIES" $hybrid
+function New-OpeningFrame {
+    param([int]$Phase)
 
-# Player modifier overlays. They keep the player projectile's ownership color.
-$pierce = New-PixelBuffer
-Fill-Rect $pierce 2 7 12 2 "W"
-Set-Pixel $pierce 12 5 "Y"
-Set-Pixel $pierce 13 6 "Y"
-Set-Pixel $pierce 12 10 "Y"
-Set-Pixel $pierce 13 9 "Y"
-Add-Sprite $sprites "modifier_pierce" "PIERCE" "PLAYER MODIFIERS" $pierce
+    $pixels = New-PixelBuffer
+    Fill-Rect $pixels (2 + $Phase) 15 (7 - $Phase) 2 "D"
+    Fill-Rect $pixels 7 13 5 6 "Y"
+    Fill-Rect $pixels 10 11 3 10 "W"
+    Fill-Rect $pixels 12 13 12 6 "Y"
+    Fill-Rect $pixels 13 14 12 4 "W"
+    Fill-Rect $pixels 24 15 4 2 "W"
+    Set-Pixel $pixels 28 15 "Y"
+    Set-Pixel $pixels 28 16 "Y"
+    Set-Pixel $pixels 29 15 "W"
+    Set-Pixel $pixels 29 16 "W"
+    if ($Phase -eq 0) {
+        Fill-Rect $pixels 8 10 2 2 "Y"
+        Fill-Rect $pixels 8 20 2 2 "Y"
+    }
+    else {
+        Fill-Rect $pixels 5 12 3 2 "D"
+        Fill-Rect $pixels 5 18 3 2 "D"
+    }
+    return ,$pixels
+}
 
-$ricochet = New-PixelBuffer
-Set-Pixel $ricochet 3 5 "M"
-Set-Pixel $ricochet 4 6 "M"
-Set-Pixel $ricochet 5 7 "M"
-Set-Pixel $ricochet 4 8 "M"
-Set-Pixel $ricochet 3 9 "M"
-Set-Pixel $ricochet 10 4 "W"
-Set-Pixel $ricochet 11 5 "W"
-Set-Pixel $ricochet 12 6 "W"
-Set-Pixel $ricochet 11 7 "W"
-Set-Pixel $ricochet 10 8 "W"
-Add-Sprite $sprites "modifier_ricochet" "RICOCHET" "PLAYER MODIFIERS" $ricochet
+function New-SeekerFrame {
+    param([int]$Phase)
 
-$explosive = New-PixelBuffer
-Set-Pixel $explosive 6 2 "O"
-Set-Pixel $explosive 9 2 "O"
-Set-Pixel $explosive 3 5 "O"
-Set-Pixel $explosive 12 5 "O"
-Set-Pixel $explosive 2 8 "O"
-Set-Pixel $explosive 13 8 "O"
-Set-Pixel $explosive 4 11 "O"
-Set-Pixel $explosive 11 11 "O"
-Fill-Diamond $explosive 8 7 1 "W"
-Add-Sprite $sprites "modifier_explosive" "EXPLOSIVE" "PLAYER MODIFIERS" $explosive
+    $pixels = New-PixelBuffer
+    $exhaustStart = if ($Phase -eq 0) { 1 } else { 3 }
+    Fill-Rect $pixels $exhaustStart 15 (8 - $Phase) 2 "M"
+    Fill-Rect $pixels (4 + $Phase) 14 6 4 "Y"
+    Fill-Rect $pixels 8 12 14 8 "I"
+    Fill-Rect $pixels 10 13 13 6 "M"
+    Fill-Rect $pixels 13 14 10 4 "W"
+    Set-Pixel $pixels 23 13 "M"
+    Set-Pixel $pixels 24 14 "M"
+    Set-Pixel $pixels 25 15 "W"
+    Set-Pixel $pixels 25 16 "W"
+    Set-Pixel $pixels 24 17 "M"
+    Set-Pixel $pixels 23 18 "M"
+    Fill-Rect $pixels 10 9 4 4 "I"
+    Fill-Rect $pixels 10 19 4 4 "I"
+    Set-Pixel $pixels 9 10 "M"
+    Set-Pixel $pixels 9 21 "M"
+    if ($Phase -eq 0) {
+        Set-Pixel $pixels 2 13 "B"
+        Set-Pixel $pixels 2 18 "B"
+    }
+    else {
+        Set-Pixel $pixels 4 12 "B"
+        Set-Pixel $pixels 4 19 "B"
+    }
+    return ,$pixels
+}
 
-$homing = New-PixelBuffer
-Fill-Rect $homing 2 4 2 8 "M"
-Fill-Rect $homing 3 3 4 2 "M"
-Fill-Rect $homing 3 11 4 2 "M"
-Set-Pixel $homing 11 5 "W"
-Set-Pixel $homing 12 6 "W"
-Set-Pixel $homing 13 7 "W"
-Set-Pixel $homing 12 8 "W"
-Set-Pixel $homing 11 9 "W"
-Add-Sprite $sprites "modifier_homing" "HOMING" "PLAYER MODIFIERS" $homing
+function New-HostileFrame {
+    param(
+        [ValidateSet("light", "standard", "heavy")]
+        [string]$Tier,
+        [int]$Phase
+    )
 
-$wallPiercing = New-PixelBuffer
-Fill-Rect $wallPiercing 4 5 8 6 "V"
-Fill-Rect $wallPiercing 5 6 8 4 "W"
-Set-Pixel $wallPiercing 13 6 "V"
-Set-Pixel $wallPiercing 14 7 "V"
-Set-Pixel $wallPiercing 13 9 "V"
-Set-Pixel $wallPiercing 2 5 "V"
-Set-Pixel $wallPiercing 2 10 "V"
-Add-Sprite $sprites "modifier_wall_piercing" "WALL PIERCE" "PLAYER MODIFIERS" $wallPiercing
+    $pixels = New-PixelBuffer
+    switch ($Tier) {
+        "light" {
+            Fill-Disc $pixels 15 15 5 "Q"
+            Fill-Disc $pixels 15 15 4 "R"
+            Fill-Disc $pixels 14 14 1 "W"
+            if ($Phase -eq 1) {
+                Set-Pixel $pixels 19 14 "W"
+                Set-Pixel $pixels 19 15 "W"
+            }
+        }
+        "standard" {
+            Fill-Disc $pixels 15 15 6 "Q"
+            Fill-Disc $pixels 15 15 5 "R"
+            Fill-Diamond $pixels 15 15 2 "W"
+            if ($Phase -eq 1) {
+                Set-Pixel $pixels 15 9 "R"
+                Set-Pixel $pixels 15 21 "R"
+                Set-Pixel $pixels 9 15 "R"
+                Set-Pixel $pixels 21 15 "R"
+            }
+        }
+        "heavy" {
+            Fill-Disc $pixels 15 15 7 "Q"
+            Fill-Disc $pixels 15 15 6 "R"
+            Fill-Diamond $pixels 15 15 (2 + ($Phase % 2)) "W"
+            if ($Phase -eq 1) {
+                Fill-Rect $pixels 7 14 3 3 "Q"
+                Fill-Rect $pixels 21 14 3 3 "Q"
+            }
+            if ($Phase -eq 2) {
+                Fill-Rect $pixels 14 7 3 3 "O"
+                Fill-Rect $pixels 14 21 3 3 "O"
+            }
+        }
+    }
+    return ,$pixels
+}
 
-$reflected = New-PixelBuffer
-Fill-Rect $reflected 4 7 9 2 "Y"
-Set-Pixel $reflected 3 6 "Y"
-Set-Pixel $reflected 2 5 "W"
-Set-Pixel $reflected 3 9 "Y"
-Set-Pixel $reflected 2 10 "W"
-Set-Pixel $reflected 11 5 "M"
-Set-Pixel $reflected 12 6 "M"
-Set-Pixel $reflected 11 10 "M"
-Set-Pixel $reflected 12 9 "M"
-Add-Sprite $sprites "modifier_reflected" "REFLECTED" "PLAYER MODIFIERS" $reflected
+function New-AffinityOverlay {
+    param(
+        [ValidateSet("thermal", "toxin", "cryo", "arc", "hybrid")]
+        [string]$Affinity,
+        [int]$Phase
+    )
 
-# Flight and impact parts.
-$playerTrail = New-PixelBuffer
-Fill-Rect $playerTrail 1 7 8 2 "D"
-Fill-Rect $playerTrail 4 6 7 4 "Y"
-Fill-Rect $playerTrail 8 7 4 2 "W"
-Set-Pixel $playerTrail 2 6 "Y"
-Set-Pixel $playerTrail 2 9 "Y"
-Add-Sprite $sprites "trail_player" "PLAYER TRAIL" "FLIGHT / IMPACT" $playerTrail
+    $pixels = New-PixelBuffer
+    switch ($Affinity) {
+        "thermal" {
+            $offset = if ($Phase -eq 0) { 0 } else { 2 }
+            Set-Pixel $pixels (7 + $offset) 14 "O"
+            Set-Pixel $pixels (5 + $offset) 15 "O"
+            Set-Pixel $pixels (7 + $offset) 16 "Y"
+            Set-Pixel $pixels 18 10 "O"
+            Set-Pixel $pixels 19 11 "O"
+            Set-Pixel $pixels 20 12 "Y"
+        }
+        "toxin" {
+            $offset = if ($Phase -eq 0) { 0 } else { 1 }
+            Fill-Rect $pixels (8 - $offset) 17 3 2 "G"
+            Set-Pixel $pixels (6 - $offset) 19 "G"
+            Set-Pixel $pixels 12 21 "M"
+            Set-Pixel $pixels 20 18 "G"
+            Set-Pixel $pixels 19 20 "G"
+        }
+        "cryo" {
+            $offset = if ($Phase -eq 0) { 0 } else { 1 }
+            Draw-Line $pixels (8 + $offset) 9 (11 + $offset) 12 "B"
+            Draw-Line $pixels 20 (8 + $offset) 18 (11 + $offset) "M"
+            Draw-Line $pixels 21 19 19 21 "B"
+            Set-Pixel $pixels 8 20 "W"
+        }
+        "arc" {
+            if ($Phase -eq 0) {
+                Draw-Line $pixels 7 13 10 11 "V"
+                Draw-Line $pixels 10 11 12 13 "W"
+                Draw-Line $pixels 19 18 22 16 "V"
+            }
+            else {
+                Draw-Line $pixels 7 17 10 19 "V"
+                Draw-Line $pixels 10 19 12 17 "W"
+                Draw-Line $pixels 19 12 22 14 "V"
+            }
+        }
+        "hybrid" {
+            if ($Phase -eq 0) {
+                Fill-Rect $pixels 10 8 4 2 "O"
+                Fill-Rect $pixels 21 13 2 4 "G"
+                Fill-Rect $pixels 16 21 4 2 "B"
+                Fill-Rect $pixels 8 17 2 4 "V"
+            }
+            else {
+                Fill-Rect $pixels 16 8 4 2 "G"
+                Fill-Rect $pixels 21 17 2 4 "B"
+                Fill-Rect $pixels 10 21 4 2 "V"
+                Fill-Rect $pixels 8 11 2 4 "O"
+            }
+        }
+    }
+    return ,$pixels
+}
 
-$hostileTrail = New-PixelBuffer
-Fill-Rect $hostileTrail 1 7 8 2 "Q"
-Fill-Rect $hostileTrail 4 6 7 4 "R"
-Fill-Rect $hostileTrail 8 7 4 2 "W"
-Set-Pixel $hostileTrail 2 6 "R"
-Set-Pixel $hostileTrail 2 9 "R"
-Add-Sprite $sprites "trail_hostile" "HOSTILE TRAIL" "FLIGHT / IMPACT" $hostileTrail
+function New-ImpactFrame {
+    param(
+        [ValidateSet("wall", "enemy", "player_hull", "barrier", "breach_interrupt")]
+        [string]$Impact,
+        [int]$Phase
+    )
 
-$seekerExhaust = New-PixelBuffer
-Fill-Rect $seekerExhaust 2 7 9 2 "M"
-Fill-Rect $seekerExhaust 5 6 6 4 "Y"
-Fill-Rect $seekerExhaust 9 7 4 2 "W"
-Set-Pixel $seekerExhaust 1 6 "B"
-Set-Pixel $seekerExhaust 1 9 "B"
-Add-Sprite $sprites "trail_seeker_exhaust" "SEEKER EXHAUST" "FLIGHT / IMPACT" $seekerExhaust
+    $pixels = New-PixelBuffer
+    $primary = switch ($Impact) {
+        "wall" { "M" }
+        "enemy" { "Y" }
+        "player_hull" { "R" }
+        "barrier" { "B" }
+        "breach_interrupt" { "V" }
+    }
+    $secondary = switch ($Impact) {
+        "wall" { "I" }
+        "enemy" { "W" }
+        "player_hull" { "O" }
+        "barrier" { "W" }
+        "breach_interrupt" { "W" }
+    }
 
-$wallImpact = New-PixelBuffer
-Fill-Diamond $wallImpact 8 7 2 "W"
-Set-Pixel $wallImpact 8 1 "M"
-Set-Pixel $wallImpact 8 13 "M"
-Set-Pixel $wallImpact 2 7 "M"
-Set-Pixel $wallImpact 14 7 "M"
-Set-Pixel $wallImpact 4 3 "I"
-Set-Pixel $wallImpact 12 3 "I"
-Set-Pixel $wallImpact 4 11 "I"
-Set-Pixel $wallImpact 12 11 "I"
-Add-Sprite $sprites "impact_wall" "WALL IMPACT" "FLIGHT / IMPACT" $wallImpact
+    switch ($Phase) {
+        0 {
+            Fill-Diamond $pixels 15 15 2 $primary
+            Fill-Diamond $pixels 15 15 1 $secondary
+        }
+        1 {
+            Fill-Disc $pixels 15 15 5 $primary
+            Fill-Disc $pixels 15 15 2 $secondary
+            Set-Pixel $pixels 15 8 $secondary
+            Set-Pixel $pixels 22 15 $secondary
+            Set-Pixel $pixels 15 22 $secondary
+            Set-Pixel $pixels 8 15 $secondary
+        }
+        2 {
+            Draw-Line $pixels 15 10 15 5 $primary
+            Draw-Line $pixels 20 15 25 15 $primary
+            Draw-Line $pixels 15 20 15 25 $primary
+            Draw-Line $pixels 10 15 5 15 $primary
+            Draw-Line $pixels 11 11 7 7 $secondary
+            Draw-Line $pixels 19 11 23 7 $secondary
+            Draw-Line $pixels 19 19 23 23 $secondary
+            Draw-Line $pixels 11 19 7 23 $secondary
+        }
+        3 {
+            Set-Pixel $pixels 15 4 $primary
+            Set-Pixel $pixels 26 15 $primary
+            Set-Pixel $pixels 15 26 $primary
+            Set-Pixel $pixels 4 15 $primary
+            Set-Pixel $pixels 7 7 $secondary
+            Set-Pixel $pixels 23 7 $secondary
+            Set-Pixel $pixels 23 23 $secondary
+            Set-Pixel $pixels 7 23 $secondary
+        }
+    }
 
-$hullImpact = New-PixelBuffer
-Fill-Diamond $hullImpact 8 7 3 "R"
-Fill-Diamond $hullImpact 8 7 1 "W"
-Set-Pixel $hullImpact 8 1 "Y"
-Set-Pixel $hullImpact 8 13 "Y"
-Set-Pixel $hullImpact 2 7 "Y"
-Set-Pixel $hullImpact 14 7 "Y"
-Set-Pixel $hullImpact 3 3 "R"
-Set-Pixel $hullImpact 13 11 "R"
-Add-Sprite $sprites "impact_hull" "HULL IMPACT" "FLIGHT / IMPACT" $hullImpact
+    if ($Impact -eq "breach_interrupt" -and $Phase -eq 1) {
+        Draw-Line $pixels 9 15 21 15 "W"
+        Draw-Line $pixels 15 9 15 21 "W"
+    }
+    return ,$pixels
+}
 
-$breachInterrupt = New-PixelBuffer
-Fill-Diamond $breachInterrupt 8 7 4 "Y"
-Fill-Diamond $breachInterrupt 8 7 2 "I"
-Fill-Diamond $breachInterrupt 8 7 1 "W"
-Set-Pixel $breachInterrupt 2 2 "M"
-Set-Pixel $breachInterrupt 13 2 "M"
-Set-Pixel $breachInterrupt 2 12 "M"
-Set-Pixel $breachInterrupt 13 12 "M"
-Fill-Rect $breachInterrupt 7 0 2 3 "W"
-Add-Sprite $sprites "impact_breach_interrupt" "INTERRUPT" "FLIGHT / IMPACT" $breachInterrupt
+$frames = [System.Collections.Generic.List[object]]::new()
+Add-DirectionalClip `
+    -Collection $frames `
+    -Clip "player_basic_flight" `
+    -SourceFrames @((New-PlayerBasicFrame 0), (New-PlayerBasicFrame 1)) `
+    -Duration 80 `
+    -State "player_primary" `
+    -LeadingAnchor @(28, 16) `
+    -TrailAnchor @(3, 16)
+Add-DirectionalClip `
+    -Collection $frames `
+    -Clip "player_opening_breach_flight" `
+    -SourceFrames @((New-OpeningFrame 0), (New-OpeningFrame 1)) `
+    -Duration 90 `
+    -State "player_opening_breach" `
+    -LeadingAnchor @(30, 16) `
+    -TrailAnchor @(2, 16)
+Add-DirectionalClip `
+    -Collection $frames `
+    -Clip "secondary_seeker_flight" `
+    -SourceFrames @((New-SeekerFrame 0), (New-SeekerFrame 1)) `
+    -Duration 100 `
+    -State "secondary_seeker" `
+    -LeadingAnchor @(26, 16) `
+    -TrailAnchor @(2, 16)
 
-if ($sprites.Count -ne 24) {
-    throw "Expected 24 projectile parts; got $($sprites.Count)."
+Add-StaticClip $frames "hostile_light_pulse" @((New-HostileFrame "light" 0), (New-HostileFrame "light" 1)) 100 "hostile_light"
+Add-StaticClip $frames "hostile_standard_pulse" @((New-HostileFrame "standard" 0), (New-HostileFrame "standard" 1)) 120 "hostile_standard"
+Add-StaticClip $frames "hostile_heavy_pulse" @(
+    (New-HostileFrame "heavy" 0),
+    (New-HostileFrame "heavy" 1),
+    (New-HostileFrame "heavy" 2)
+) 150 "hostile_heavy"
+
+foreach ($affinity in @("thermal", "toxin", "cryo", "arc", "hybrid")) {
+    Add-StaticClip `
+        -Collection $frames `
+        -Clip "affinity_${affinity}_motion" `
+        -SourceFrames @((New-AffinityOverlay $affinity 0), (New-AffinityOverlay $affinity 1)) `
+        -Duration 100 `
+        -State "affinity_${affinity}"
+}
+
+foreach ($impact in @("wall", "enemy", "player_hull", "barrier", "breach_interrupt")) {
+    Add-StaticClip `
+        -Collection $frames `
+        -Clip "impact_${impact}" `
+        -SourceFrames @(
+            (New-ImpactFrame $impact 0),
+            (New-ImpactFrame $impact 1),
+            (New-ImpactFrame $impact 2),
+            (New-ImpactFrame $impact 3)
+        ) `
+        -Duration 60 `
+        -State "impact_${impact}"
+}
+
+if ($frames.Count -ne 85) {
+    throw "Expected 85 projectile animation frames; got $($frames.Count)."
+}
+
+$expectedClipCounts = [ordered]@{
+    player_basic_flight = 16
+    player_opening_breach_flight = 16
+    secondary_seeker_flight = 16
+    hostile_light_pulse = 2
+    hostile_standard_pulse = 2
+    hostile_heavy_pulse = 3
+    affinity_thermal_motion = 2
+    affinity_toxin_motion = 2
+    affinity_cryo_motion = 2
+    affinity_arc_motion = 2
+    affinity_hybrid_motion = 2
+    impact_wall = 4
+    impact_enemy = 4
+    impact_player_hull = 4
+    impact_barrier = 4
+    impact_breach_interrupt = 4
+}
+foreach ($entry in $expectedClipCounts.GetEnumerator()) {
+    $actual = @($frames | Where-Object { $_.clip -eq $entry.Key }).Count
+    if ($actual -ne $entry.Value) {
+        throw "Clip $($entry.Key) expected $($entry.Value) frames; got $actual."
+    }
+}
+
+foreach ($frame in $frames) {
+    Assert-FrameAnchors $frame
 }
 
 $minimumThreatExtents = [ordered]@{
-    enemy_light = 10
-    enemy_standard = 12
-    enemy_heavy = 14
+    hostile_light_pulse = 10
+    hostile_standard_pulse = 12
+    hostile_heavy_pulse = 14
 }
 foreach ($entry in $minimumThreatExtents.GetEnumerator()) {
-    $sprite = $sprites | Where-Object {$_.id -eq $entry.Key} | Select-Object -First 1
-    $bounds = Opaque-Bounds $sprite.pixels
-    if ($bounds[0] -lt $entry.Value -or $bounds[1] -lt $entry.Value) {
-        throw "$($entry.Key) visual extent must cover at least $($entry.Value)x$($entry.Value) logical pixels; got $($bounds[0])x$($bounds[1])."
+    foreach ($frame in @($frames | Where-Object { $_.clip -eq $entry.Key })) {
+        Assert-MinimumExtent $frame.pixels $entry.Value $entry.Key
     }
+}
+
+if ($RunNegativeValidation) {
+    $invalidAnchor = [ordered]@{
+        clip = "negative_anchor"
+        frame = 0
+        leading_anchor = @(32, 16)
+        trail_anchor = @(2, 16)
+    }
+    $anchorRejected = $false
+    try {
+        Assert-FrameAnchors $invalidAnchor
+    }
+    catch {
+        $anchorRejected = $true
+    }
+    if (-not $anchorRejected) {
+        throw "Negative validation failed: out-of-bounds anchor was accepted."
+    }
+
+    $undersized = New-PixelBuffer
+    Set-Pixel $undersized 15 15 "R"
+    $extentRejected = $false
+    try {
+        Assert-MinimumExtent $undersized 14 "negative_heavy"
+    }
+    catch {
+        $extentRejected = $true
+    }
+    if (-not $extentRejected) {
+        throw "Negative validation failed: undersized heavy shot was accepted."
+    }
+    Write-Output "Negative validation passed: invalid anchor and undersized threat were rejected."
 }
 
 if (-not [System.IO.Directory]::Exists($destination)) {
     [System.IO.Directory]::CreateDirectory($destination) | Out-Null
 }
 
-$rows = [int][Math]::Ceiling($sprites.Count / [double]$columns)
+$rows = [int][Math]::Ceiling($frames.Count / [double]$columns)
 $atlasWidth = $columns * $pitch
 $atlasHeight = $rows * $pitch
 $atlasSvg = [System.Collections.Generic.List[string]]::new()
 $atlasSvg.Add("<svg xmlns=`"http://www.w3.org/2000/svg`" width=`"$atlasWidth`" height=`"$atlasHeight`" viewBox=`"0 0 $atlasWidth $atlasHeight`" shape-rendering=`"crispEdges`">")
-$atlasSvg.Add("  <metadata>Cardborne projectile parts; 16x16 regions; one transparent pixel gutter.</metadata>")
-$metadataSprites = [System.Collections.Generic.List[object]]::new()
-for ($index = 0; $index -lt $sprites.Count; $index++) {
-    $sprite = $sprites[$index]
+$atlasSvg.Add("  <metadata>Cardborne projectile animations; 32x32 cells; one transparent pixel gutter; 85 frames.</metadata>")
+$metadataFrames = [System.Collections.Generic.List[object]]::new()
+for ($index = 0; $index -lt $frames.Count; $index++) {
+    $frame = $frames[$index]
     $column = $index % $columns
     $row = [int][Math]::Floor($index / [double]$columns)
     $originX = $column * $pitch + $padding
     $originY = $row * $pitch + $padding
-    foreach ($rect in (Pixel-Runs $sprite.pixels $originX $originY 1)) {
+    foreach ($rect in (Pixel-Runs $frame.pixels $originX $originY 1)) {
         $atlasSvg.Add("  $rect")
     }
-    $metadataSprites.Add([ordered]@{
-        id = [string]$sprite.id
-        category = [string]$sprite.category
+    $bounds = Opaque-Bounds $frame.pixels
+    $metadataFrames.Add([ordered]@{
+        atlas_index = $index
+        clip = [string]$frame.clip
+        frame = [int]$frame.frame
         region = @($originX, $originY, $spriteSize, $spriteSize)
+        duration_ms = [int]$frame.duration_ms
+        state = [string]$frame.state
+        direction = $frame.direction
+        pivot = @($frame.pivot)
+        leading_anchor = $frame.leading_anchor
+        trail_anchor = $frame.trail_anchor
+        opaque_bounds = @($bounds)
     })
 }
 $atlasSvg.Add("</svg>")
@@ -472,7 +818,7 @@ $atlasPngPath = Join-Path $destination "projectile-parts-atlas.png"
 )
 & $magick.Source -background none $atlasSvgPath -depth 8 -strip $atlasPngPath
 if ($LASTEXITCODE -ne 0) {
-    throw "Failed to rasterize the projectile parts atlas."
+    throw "Failed to rasterize the projectile animation atlas."
 }
 $atlasGeometry = (& $magick.Source identify -format "%w %h" $atlasPngPath).Trim()
 if ($atlasGeometry -ne "$atlasWidth $atlasHeight") {
@@ -480,81 +826,139 @@ if ($atlasGeometry -ne "$atlasWidth $atlasHeight") {
 }
 
 $metadata = [ordered]@{
-    schema_version = 1
-    native_sprite_size = @($spriteSize, $spriteSize)
+    schema_version = 2
+    native_frame_size = @($spriteSize, $spriteSize)
+    pivot = @($pivot, $pivot)
     atlas_size = @($atlasWidth, $atlasHeight)
     gutter = $padding
     columns = $columns
-    sprites = @($metadataSprites)
-    composition_rule = "trail -> complete head -> affinity or modifier overlay"
+    frame_count = $frames.Count
+    directions = @($directions | ForEach-Object { $_.id })
+    clip_counts = $expectedClipCounts
+    frames = @($metadataFrames)
+    composition_rule = "physical flight head -> optional affinity motion overlay -> separate impact clip"
 }
 [System.IO.File]::WriteAllText(
     (Join-Path $destination "projectile-parts-atlas.json"),
-    ($metadata | ConvertTo-Json -Depth 6),
+    ($metadata | ConvertTo-Json -Depth 8) + [Environment]::NewLine,
     [System.Text.UTF8Encoding]::new($false)
 )
 
-# Human-scale preview. The fifth row contains compositions, not extra atlas slots.
-$compositions = [System.Collections.Generic.List[object]]::new()
-Add-Sprite $compositions "example_player" "PLAYER BASIC" "ASSEMBLED EXAMPLES" (
-    Merge-PixelBuffers @($playerTrail, $playerStandard)
-)
-Add-Sprite $compositions "example_opening" "OPENING + PIERCE" "ASSEMBLED EXAMPLES" (
-    Merge-PixelBuffers @($playerTrail, $playerOpening, $pierce)
-)
-Add-Sprite $compositions "example_kinetic" "LIGHT KINETIC" "ASSEMBLED EXAMPLES" (
-    Merge-PixelBuffers @($hostileTrail, $enemyLight, $kinetic)
-)
-Add-Sprite $compositions "example_toxin" "STANDARD TOXIN" "ASSEMBLED EXAMPLES" (
-    Merge-PixelBuffers @($hostileTrail, $enemyStandard, $toxin)
-)
-Add-Sprite $compositions "example_thermal" "HEAVY THERMAL" "ASSEMBLED EXAMPLES" (
-    Merge-PixelBuffers @($hostileTrail, $enemyHeavy, $thermal)
-)
-Add-Sprite $compositions "example_hybrid" "HEAVY HYBRID" "ASSEMBLED EXAMPLES" (
-    Merge-PixelBuffers @($hostileTrail, $enemyHeavy, $hybrid)
-)
+function Find-Frame {
+    param(
+        [string]$Clip,
+        [int]$Frame,
+        [AllowNull()][string]$Direction
+    )
 
-$previewWidth = 1200
-$previewHeight = 960
-$cardWidth = 174
-$cardHeight = 128
-$cardGap = 12
-$left = 48
-$top = 116
-$rowPitch = 164
-$previewScale = 5
+    return $script:frames |
+        Where-Object {
+            $_.clip -eq $Clip -and
+            $_.frame -eq $Frame -and
+            (($null -eq $Direction -and $null -eq $_.direction) -or $_.direction -eq $Direction)
+        } |
+        Select-Object -First 1
+}
+
+function Add-PreviewSprite {
+    param(
+        [System.Collections.Generic.List[string]]$Svg,
+        [char[]]$Pixels,
+        [int]$X,
+        [int]$Y,
+        [int]$Scale
+    )
+
+    foreach ($rect in (Pixel-Runs $Pixels $X $Y $Scale)) {
+        $Svg.Add("  $rect")
+    }
+}
+
+function Add-SequenceRow {
+    param(
+        [System.Collections.Generic.List[string]]$Svg,
+        [string]$Label,
+        [object[]]$SequenceFrames,
+        [int]$Y,
+        [int]$Scale = 3
+    )
+
+    $Svg.Add("  <text x=`"52`" y=`"$($Y + 45)`" fill=`"#FFF6DC`" font-family=`"Arial, sans-serif`" font-size=`"18`" font-weight=`"700`">$Label</text>")
+    $x = 300
+    foreach ($frame in $SequenceFrames) {
+        $Svg.Add("  <rect x=`"$x`" y=`"$Y`" width=`"$(32 * $Scale)`" height=`"$(32 * $Scale)`" fill=`"#0739A6`"/>")
+        Add-PreviewSprite $Svg $frame.pixels $x $Y $Scale
+        $Svg.Add("  <text x=`"$($x + 48)`" y=`"$($Y + 116)`" text-anchor=`"middle`" fill=`"#75C4B2`" font-family=`"Arial, sans-serif`" font-size=`"12`">$($frame.duration_ms) ms</text>")
+        $x += 128
+    }
+}
+
+$previewWidth = 1280
+$previewHeight = 1040
 $preview = [System.Collections.Generic.List[string]]::new()
 $preview.Add("<svg xmlns=`"http://www.w3.org/2000/svg`" width=`"$previewWidth`" height=`"$previewHeight`" viewBox=`"0 0 $previewWidth $previewHeight`" shape-rendering=`"crispEdges`">")
 $preview.Add("  <rect width=`"$previewWidth`" height=`"$previewHeight`" fill=`"#042B7B`"/>")
-$preview.Add("  <text x=`"48`" y=`"48`" fill=`"#FFF6DC`" font-family=`"Arial, sans-serif`" font-size=`"26`" font-weight=`"700`">CARDBORNE PROJECTILE PIXEL SYSTEM</text>")
-$preview.Add("  <text x=`"48`" y=`"76`" fill=`"#A8DACB`" font-family=`"Arial, sans-serif`" font-size=`"15`">16x16 masters · flat palette · parts atlas + runtime composition · preview at 5x</text>")
+$preview.Add("  <text x=`"52`" y=`"48`" fill=`"#FFF6DC`" font-family=`"Arial, sans-serif`" font-size=`"28`" font-weight=`"700`">PROJECTILE FLIGHT AND IMPACT SEQUENCES</text>")
+$preview.Add("  <text x=`"52`" y=`"78`" fill=`"#A8DACB`" font-family=`"Arial, sans-serif`" font-size=`"15`">32x32 masters · frames shown at 3x · labels are preview-only</text>")
 
-$previewRows = @(
-    @($sprites | Where-Object {$_.category -eq "PROJECTILE HEADS"}),
-    @($sprites | Where-Object {$_.category -eq "ENEMY AFFINITIES"}),
-    @($sprites | Where-Object {$_.category -eq "PLAYER MODIFIERS"}),
-    @($sprites | Where-Object {$_.category -eq "FLIGHT / IMPACT"}),
-    @($compositions)
-)
-for ($rowIndex = 0; $rowIndex -lt $previewRows.Count; $rowIndex++) {
-    $rowSprites = $previewRows[$rowIndex]
-    $rowY = $top + $rowIndex * $rowPitch
-    $category = [string]$rowSprites[0].category
-    $preview.Add("  <text x=`"$left`" y=`"$($rowY - 12)`" fill=`"#75C4B2`" font-family=`"Arial, sans-serif`" font-size=`"14`" font-weight=`"700`">$category</text>")
-    for ($column = 0; $column -lt $rowSprites.Count; $column++) {
-        $sprite = $rowSprites[$column]
-        $cardX = $left + $column * ($cardWidth + $cardGap)
-        $preview.Add("  <rect x=`"$cardX`" y=`"$rowY`" width=`"$cardWidth`" height=`"$cardHeight`" fill=`"#0739A6`"/>")
-        $preview.Add("  <rect x=`"$($cardX + 1)`" y=`"$($rowY + 1)`" width=`"$($cardWidth - 2)`" height=`"$($cardHeight - 2)`" fill=`"none`" stroke=`"#0755C7`" stroke-width=`"2`"/>")
-        $spriteX = $cardX + [int](($cardWidth - $spriteSize * $previewScale) / 2)
-        $spriteY = $rowY + 13
-        foreach ($rect in (Pixel-Runs $sprite.pixels $spriteX $spriteY $previewScale)) {
-            $preview.Add("  $rect")
-        }
-        $preview.Add("  <text x=`"$($cardX + $cardWidth / 2)`" y=`"$($rowY + 114)`" text-anchor=`"middle`" fill=`"#FFF6DC`" font-family=`"Arial, sans-serif`" font-size=`"12`" font-weight=`"700`">$($sprite.label)</text>")
+Add-SequenceRow $preview "PLAYER BASIC" @(
+    (Find-Frame "player_basic_flight" 0 "e"),
+    (Find-Frame "player_basic_flight" 1 "e"),
+    (Find-Frame "player_basic_flight" 0 "n"),
+    (Find-Frame "player_basic_flight" 1 "n"),
+    (Find-Frame "player_basic_flight" 0 "se"),
+    (Find-Frame "player_basic_flight" 1 "se")
+) 110
+Add-SequenceRow $preview "OPENING / BREACH" @(
+    (Find-Frame "player_opening_breach_flight" 0 "e"),
+    (Find-Frame "player_opening_breach_flight" 1 "e")
+) 250
+Add-SequenceRow $preview "SEEKER MISSILE" @(
+    (Find-Frame "secondary_seeker_flight" 0 "e"),
+    (Find-Frame "secondary_seeker_flight" 1 "e"),
+    (Find-Frame "secondary_seeker_flight" 0 "ne"),
+    (Find-Frame "secondary_seeker_flight" 1 "ne")
+) 390
+Add-SequenceRow $preview "HOSTILE THREATS" @(
+    (Find-Frame "hostile_light_pulse" 0 $null),
+    (Find-Frame "hostile_light_pulse" 1 $null),
+    (Find-Frame "hostile_standard_pulse" 0 $null),
+    (Find-Frame "hostile_standard_pulse" 1 $null),
+    (Find-Frame "hostile_heavy_pulse" 0 $null),
+    (Find-Frame "hostile_heavy_pulse" 1 $null),
+    (Find-Frame "hostile_heavy_pulse" 2 $null)
+) 530
+
+$preview.Add("  <text x=`"52`" y=`"715`" fill=`"#FFF6DC`" font-family=`"Arial, sans-serif`" font-size=`"18`" font-weight=`"700`">AFFINITY MOTION</text>")
+$preview.Add("  <text x=`"52`" y=`"740`" fill=`"#75C4B2`" font-family=`"Arial, sans-serif`" font-size=`"12`">COMPOSITED ON STANDARD SHOT</text>")
+$affinityX = 300
+foreach ($affinity in @("thermal", "toxin", "cryo", "arc", "hybrid")) {
+    $base = (Find-Frame "hostile_standard_pulse" 0 $null).pixels
+    $overlay0 = (Find-Frame "affinity_${affinity}_motion" 0 $null).pixels
+    $overlay1 = (Find-Frame "affinity_${affinity}_motion" 1 $null).pixels
+    foreach ($composite in @((Merge-PixelBuffers @($base, $overlay0)), (Merge-PixelBuffers @($base, $overlay1)))) {
+        $preview.Add("  <rect x=`"$affinityX`" y=`"680`" width=`"64`" height=`"64`" fill=`"#0739A6`"/>")
+        Add-PreviewSprite $preview $composite $affinityX 680 2
+        $affinityX += 70
     }
+    $preview.Add("  <text x=`"$($affinityX - 70)`" y=`"762`" text-anchor=`"middle`" fill=`"#75C4B2`" font-family=`"Arial, sans-serif`" font-size=`"11`">$($affinity.ToUpperInvariant())</text>")
+    $affinityX += 22
 }
+
+$preview.Add("  <text x=`"52`" y=`"840`" fill=`"#FFF6DC`" font-family=`"Arial, sans-serif`" font-size=`"18`" font-weight=`"700`">IMPACT SEQUENCES</text>")
+$preview.Add("  <text x=`"52`" y=`"865`" fill=`"#75C4B2`" font-family=`"Arial, sans-serif`" font-size=`"12`">CONTACT → EXPANSION → FRAGMENTS → FADE</text>")
+$impactX = 300
+foreach ($impact in @("wall", "enemy", "player_hull", "barrier", "breach_interrupt")) {
+    for ($phase = 0; $phase -lt 4; $phase++) {
+        $impactFrame = Find-Frame "impact_${impact}" $phase $null
+        $preview.Add("  <rect x=`"$impactX`" y=`"805`" width=`"32`" height=`"32`" fill=`"#0739A6`"/>")
+        Add-PreviewSprite $preview $impactFrame.pixels $impactX 805 1
+        $impactX += 34
+    }
+    $preview.Add("  <text x=`"$($impactX - 68)`" y=`"858`" text-anchor=`"middle`" fill=`"#75C4B2`" font-family=`"Arial, sans-serif`" font-size=`"10`">$($impact.Replace("_", " ").ToUpperInvariant())</text>")
+    $impactX += 16
+}
+$preview.Add("  <text x=`"52`" y=`"982`" fill=`"#A8DACB`" font-family=`"Arial, sans-serif`" font-size=`"14`">The atlas stores motion and impacts. Upgrade rules remain gameplay state, not centered bullet icons.</text>")
 $preview.Add("</svg>")
 
 $previewSvgPath = Join-Path $destination "projectile-system-preview.svg"
@@ -566,12 +970,96 @@ $previewPngPath = Join-Path $destination "projectile-system-preview.png"
 )
 & $magick.Source -background none $previewSvgPath -depth 8 -strip $previewPngPath
 if ($LASTEXITCODE -ne 0) {
-    throw "Failed to rasterize the projectile system preview."
-}
-$previewGeometry = (& $magick.Source identify -format "%w %h" $previewPngPath).Trim()
-if ($previewGeometry -ne "$previewWidth $previewHeight") {
-    throw "Projectile preview must be ${previewWidth}x${previewHeight}; got $previewGeometry."
+    throw "Failed to rasterize the projectile sequence preview."
 }
 
-Write-Output "Created projectile parts atlas: $atlasPngPath"
-Write-Output "Created projectile system preview: $previewPngPath"
+$proofWidth = 1280
+$proofHeight = 720
+$proof = [System.Collections.Generic.List[string]]::new()
+$proof.Add("<svg xmlns=`"http://www.w3.org/2000/svg`" width=`"$proofWidth`" height=`"$proofHeight`" viewBox=`"0 0 $proofWidth $proofHeight`" shape-rendering=`"crispEdges`">")
+$proof.Add("  <rect width=`"$proofWidth`" height=`"$proofHeight`" fill=`"#061A25`"/>")
+$proof.Add("  <path d=`"M80 78 H1196 V642 H80 Z`" fill=`"#153B3A`"/>")
+$proof.Add("  <path d=`"M120 112 H1160 V608 H120 Z`" fill=`"#174E4B`"/>")
+$proof.Add("  <path d=`"M120 112 H1160 V608 H120 Z`" fill=`"none`" stroke=`"#75C4B2`" stroke-width=`"4`"/>")
+$proof.Add("  <path d=`"M120 252 H360 V294 H120 M920 426 H1160 V468 H920 M510 112 V238 H554 V112 M708 482 V608 H752 V482`" fill=`"#0B2E37`" stroke=`"#75C4B2`" stroke-width=`"3`"/>")
+$proof.Add("  <path d=`"M618 319 L650 336 L618 353 L586 336 Z`" fill=`"#D79A17`"/>")
+$proof.Add("  <path d=`"M618 324 L641 336 L618 348 L595 336 Z`" fill=`"#FFF6DC`"/>")
+$proof.Add("  <rect x=`"606`" y=`"352`" width=`"24`" height=`"8`" fill=`"#3E91B7`"/>")
+$proof.Add("  <rect x=`"610`" y=`"360`" width=`"16`" height=`"8`" fill=`"#75C4B2`"/>")
+
+$enemyPositions = @(
+    @(198, 168), @(294, 146), @(408, 186), @(842, 150), @(978, 186), @(1080, 254),
+    @(1032, 514), @(886, 564), @(752, 548), @(468, 558), @(302, 520), @(186, 438)
+)
+foreach ($position in $enemyPositions) {
+    $x = $position[0]
+    $y = $position[1]
+    $proof.Add("  <path d=`"M$x $($y - 12) L$($x + 12) $y L$x $($y + 12) L$($x - 12) $y Z`" fill=`"#7B1733`"/>")
+    $proof.Add("  <rect x=`"$($x - 5)`" y=`"$($y - 5)`" width=`"10`" height=`"10`" fill=`"#C92F4E`"/>")
+}
+
+$playerShots = @(
+    @(690, 328, "e", 0), @(746, 320, "e", 1), @(806, 312, "e", 0),
+    @(565, 280, "nw", 1), @(534, 247, "nw", 0)
+)
+foreach ($shot in $playerShots) {
+    $pixels = (Find-Frame "player_basic_flight" $shot[3] $shot[2]).pixels
+    Add-PreviewSprite $proof $pixels $shot[0] $shot[1] 1
+}
+Add-PreviewSprite $proof (Find-Frame "player_opening_breach_flight" 0 "se").pixels 662 382 1
+Add-PreviewSprite $proof (Find-Frame "secondary_seeker_flight" 1 "ne").pixels 536 364 1
+
+$hostileShots = @(
+    @(256, 194, "light", $null), @(302, 216, "light", $null), @(354, 238, "standard", "thermal"),
+    @(412, 260, "light", $null), @(452, 280, "standard", "toxin"), @(490, 298, "light", $null),
+    @(1000, 210, "light", $null), @(950, 232, "standard", "cryo"), @(906, 250, "light", $null),
+    @(862, 272, "heavy", "arc"), @(820, 290, "light", $null), @(780, 306, "standard", "hybrid"),
+    @(1000, 500, "light", $null), @(948, 478, "light", $null), @(900, 456, "standard", "toxin"),
+    @(852, 434, "light", $null), @(810, 416, "heavy", "thermal"), @(766, 398, "light", $null),
+    @(260, 468, "standard", "cryo"), @(314, 442, "light", $null), @(366, 416, "light", $null),
+    @(414, 394, "standard", "arc"), @(458, 376, "light", $null), @(502, 360, "light", $null),
+    @(596, 166, "light", $null), @(606, 206, "standard", "hybrid"), @(630, 246, "light", $null),
+    @(650, 488, "light", $null), @(634, 452, "standard", "thermal"), @(622, 416, "light", $null)
+)
+foreach ($shot in $hostileShots) {
+    $tier = $shot[2]
+    $clip = "hostile_${tier}_pulse"
+    $phase = if ($tier -eq "heavy") { 2 } else { 0 }
+    $basePixels = (Find-Frame $clip $phase $null).pixels
+    $composite = $basePixels
+    if ($null -ne $shot[3]) {
+        $overlay = (Find-Frame "affinity_$($shot[3])_motion" 0 $null).pixels
+        $composite = Merge-PixelBuffers @($basePixels, $overlay)
+    }
+    $scale = if ($tier -eq "light") { 1 } else { 2 }
+    Add-PreviewSprite $proof $composite $shot[0] $shot[1] $scale
+}
+
+Add-PreviewSprite $proof (Find-Frame "impact_wall" 2 $null).pixels 328 246 2
+Add-PreviewSprite $proof (Find-Frame "impact_breach_interrupt" 1 $null).pixels 734 270 2
+$proof.Add("</svg>")
+
+$proofSvgPath = Join-Path $destination "projectile-gameplay-proof.svg"
+$proofPngPath = Join-Path $destination "projectile-gameplay-proof.png"
+[System.IO.File]::WriteAllText(
+    $proofSvgPath,
+    ($proof -join [Environment]::NewLine) + [Environment]::NewLine,
+    [System.Text.UTF8Encoding]::new($false)
+)
+& $magick.Source -background none $proofSvgPath -depth 8 -strip $proofPngPath
+if ($LASTEXITCODE -ne 0) {
+    throw "Failed to rasterize the projectile gameplay proof."
+}
+
+$previewGeometry = (& $magick.Source identify -format "%w %h" $previewPngPath).Trim()
+$proofGeometry = (& $magick.Source identify -format "%w %h" $proofPngPath).Trim()
+if ($previewGeometry -ne "$previewWidth $previewHeight") {
+    throw "Projectile sequence preview must be ${previewWidth}x${previewHeight}; got $previewGeometry."
+}
+if ($proofGeometry -ne "$proofWidth $proofHeight") {
+    throw "Projectile gameplay proof must be ${proofWidth}x${proofHeight}; got $proofGeometry."
+}
+
+Write-Output "Created projectile animation atlas: $atlasPngPath"
+Write-Output "Created projectile sequence preview: $previewPngPath"
+Write-Output "Created projectile gameplay proof: $proofPngPath"
