@@ -44,7 +44,18 @@ if (-not [System.IO.Directory]::Exists($destinationDirectory)) {
 
 $magick = Get-Command magick -ErrorAction Stop
 $magickArguments = @(
-    $source,
+    $source
+)
+if (-not $KeepBackground) {
+    # Normalize every transparent input pixel to the declared key color before
+    # palette remapping; hidden RGB values must not become visible palette cells.
+    $magickArguments += @(
+        "-background", $TransparentColor,
+        "-alpha", "background",
+        "-alpha", "off"
+    )
+}
+$magickArguments += @(
     "-resize", "${CanvasSize}x${CanvasSize}!",
     "-filter", "point",
     "-resize", "${Cells}x${Cells}!",
@@ -54,7 +65,7 @@ $magickArguments = @(
 if (-not $KeepBackground) {
     $magickArguments += @("-transparent", $TransparentColor)
 }
-$magickArguments += @("-depth", "8", $destination)
+$magickArguments += @("-depth", "8", "-strip", $destination)
 
 & $magick.Source @magickArguments
 

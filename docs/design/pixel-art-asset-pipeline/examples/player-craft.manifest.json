@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "player_craft_north_idle",
+  "family": "player_chassis",
+  "canvas_size": 512,
+  "logical_size": [64, 64],
+  "palette_path": "docs/design/pixel-art-asset-pipeline/examples/player-craft-display-palette.png",
+  "semantic_palette_path": "docs/design/pixel-art-asset-pipeline/examples/player-craft-semantic-palette.png",
+  "transparent_color": "#FFFFFF",
+  "layers": [
+    {"id": "body", "mask_color": "#FF0000", "z": 0, "required": true},
+    {"id": "left_wing", "mask_color": "#00FF00", "z": 1, "required": true},
+    {"id": "right_wing", "mask_color": "#0000FF", "z": 2, "required": true},
+    {"id": "cockpit", "mask_color": "#FFFF00", "z": 3, "required": true},
+    {"id": "primary_mount", "mask_color": "#FF00FF", "z": 4, "required": true},
+    {"id": "left_engine", "mask_color": "#00FFFF", "z": 5, "required": true},
+    {"id": "right_engine", "mask_color": "#FF8000", "z": 6, "required": true}
+  ],
+  "pivot": [32, 32],
+  "anchors": {
+    "muzzle": [32, 5],
+    "left_engine_nozzle": [24, 57],
+    "right_engine_nozzle": [40, 57],
+    "status_left": [12, 31],
+    "status_right": [52, 31]
+  },
+  "frames": [
+    {
+      "id": "north_idle",
+      "source_path": "docs/design/pixel-art-asset-pipeline/examples/player-craft-imagegen-source-512.png",
+      "semantic_mask_path": "docs/design/pixel-art-asset-pipeline/examples/player-craft-semantic-mask-512.png",
+      "atlas_index": 0,
+      "direction": 0,
+      "state": "idle"
+    }
+  ],
+  "atlas": {
+    "columns": 1,
+    "padding": 0
+  }
+}

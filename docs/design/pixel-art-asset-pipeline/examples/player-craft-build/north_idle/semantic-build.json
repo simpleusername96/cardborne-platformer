@@ -1,0 +1,61 @@
+{
+  "asset_id": "player_craft_north_idle",
+  "size": [
+    64,
+    64
+  ],
+  "source": "docs/design/pixel-art-asset-pipeline/examples/player-craft-build/north_idle/source.png",
+  "semantic_mask": "docs/design/pixel-art-asset-pipeline/examples/player-craft-build/north_idle/semantic-mask.png",
+  "reassembly_pixel_difference": 0,
+  "layers": [
+    {
+      "id": "body",
+      "mask_color": "#FF0000",
+      "z": 0,
+      "pixel_count": 76,
+      "output": "layers/body.png"
+    },
+    {
+      "id": "left_wing",
+      "mask_color": "#00FF00",
+      "z": 1,
+      "pixel_count": 140,
+      "output": "layers/left_wing.png"
+    },
+    {
+      "id": "right_wing",
+      "mask_color": "#0000FF",
+      "z": 2,
+      "pixel_count": 136,
+      "output": "layers/right_wing.png"
+    },
+    {
+      "id": "cockpit",
+      "mask_color": "#FFFF00",
+      "z": 3,
+      "pixel_count": 252,
+      "output": "layers/cockpit.png"
+    },
+    {
+      "id": "primary_mount",
+      "mask_color": "#FF00FF",
+      "z": 4,
+      "pixel_count": 78,
+      "output": "layers/primary_mount.png"
+    },
+    {
+      "id": "left_engine",
+      "mask_color": "#00FFFF",
+      "z": 5,
+      "pixel_count": 234,
+      "output": "layers/left_engine.png"
+    },
+    {
+      "id": "right_engine",
+      "mask_color": "#FF8000",
+      "z": 6,
+      "pixel_count": 234,
+      "output": "layers/right_engine.png"
+    }
+  ]
+}

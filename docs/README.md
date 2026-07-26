@@ -12,3 +12,9 @@ in this tree.
 | 3 | `design/UI_VISUAL_SYSTEM.md` | Canonical current art and UI contract. |
 
 No other document defines the active game or its presentation.
+
+## Supporting Authoring Specifications
+
+| Document | Role |
+| --- | --- |
+| `design/pixel-art-asset-pipeline/README.md` | Canonical offline inventory and production contract for proposed pixel-art assets. It does not replace the live visual system until approved atlases are integrated. |

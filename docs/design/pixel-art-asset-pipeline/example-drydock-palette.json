@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "id": "drydock_proof",
+  "transparent_color": "#FFFFFF",
+  "colors": {
+    "void": "#141B24",
+    "deep_structure": "#202833",
+    "chassis_dark": "#222B35",
+    "chassis_mid": "#44515E",
+    "player_accent": "#D9A83D",
+    "energy_accent": "#65A9B8",
+    "highlight": "#E8EEF0"
+  },
+  "semantic_colors": {
+    "body": "#FF0000",
+    "left_wing": "#00FF00",
+    "right_wing": "#0000FF",
+    "cockpit": "#FFFF00",
+    "primary_mount": "#FF00FF",
+    "left_engine": "#00FFFF",
+    "right_engine": "#FF8000"
+  }
+}
