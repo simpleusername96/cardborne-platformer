@@ -8,6 +8,7 @@ canonical_for: Cardborne gameplay and product behavior
 scope: Current run-selected-field five-stage vehicle campaign
 related:
   - ../design/UI_VISUAL_SYSTEM.md
+  - ../design/pixel-art-space-hangar-research.md
   - ../../.agents/vehicle-performance-architecture-audit.md
   - ../../.agents/vehicle-performance-stabilization-evidence.md
   - ../../.agents/execplans/2026-07-23-vehicle-performance-architecture-stabilization.md
@@ -35,6 +36,19 @@ bosses, items, upgrades, HUD and modal flows, the guidebook, localization,
 settings, persistence, and release validation. It does not promise unconstrained
 procedural topology, a base stage, exploration puzzles, or content beyond the
 five-stage run.
+
+### Delivery target
+
+- Cardborne's intended public distribution target is a desktop-browser game
+  exported through Godot Web. Native builds remain development and QA paths.
+- The repository is the source of truth. A generated Web export is a release
+  artifact and must not become a separately hand-maintained version of the game.
+- A browser release is not qualified by a successful boot alone. The complete
+  five-stage loop, keyboard and mouse input, pause and pointer behavior, audio
+  startup, persistence, Korean and English surfaces, and browser runtime
+  performance must pass release validation.
+- Mobile-browser controls, responsive touch play, hosting provider selection,
+  and a public URL are not implied by this target and require separate decisions.
 
 ## Requirements
 
