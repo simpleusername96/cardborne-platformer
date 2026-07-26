@@ -34,6 +34,7 @@ separation, and engine anchors make grid failures easy to see.
 - [`create_pixel_grid.ps1`](../../../../tools/design/create_pixel_grid.ps1).
 - Built-in ImageGen with [`01-grid-32x32.png`](./01-grid-32x32.png) as the edit
   target.
+- [`snap_image_to_pixel_grid.ps1`](../../../../tools/design/snap_image_to_pixel_grid.ps1).
 - [`raster_to_pixel_svg.ps1`](../../../../tools/design/raster_to_pixel_svg.ps1).
 - Rendered and measured artifacts in this directory.
 
@@ -55,8 +56,17 @@ separation, and engine anchors make grid failures easy to see.
 | [`05-cleaned-ship-32-16x.png`](./05-cleaned-ship-32-16x.png) | Cleaned inspection preview |
 | [`06-grid-overlay-proof.png`](./06-grid-overlay-proof.png) | Cleaned SVG placed back on the original coordinate grid |
 | [`07-process-comparison.png`](./07-process-comparison.png) | Template, generation, sampled raster, and cleaned result |
+| [`08-imagegen-cell-fill-retry.png`](./08-imagegen-cell-fill-retry.png) | Second ImageGen result using a separate complete-cell-fill behavior reference |
+| [`08-imagegen-cell-fill-retry-512.png`](./08-imagegen-cell-fill-retry-512.png) | Second result normalized to the template dimensions |
+| [`09-cell-fill-retry-32.png`](./09-cell-fill-retry-32.png) | Second result snapped to exactly one palette color per logical cell |
+| [`09-cell-fill-retry-32-16x.png`](./09-cell-fill-retry-32-16x.png) | Snapped second result at inspection scale |
+| [`10-cell-fill-retry-32.svg`](./10-cell-fill-retry-32.svg) | Automatic editable SVG from the snapped second result |
+| [`10-cell-fill-retry-32.png`](./10-cell-fill-retry-32.png) | Native raster round-tripped from the automatic SVG |
+| [`11-cell-fill-retry-grid-proof.png`](./11-cell-fill-retry-grid-proof.png) | Snapped second result placed back on the input grid |
+| [`11a-old-sampled-grid-proof.png`](./11a-old-sampled-grid-proof.png) | First result's snapped reconstruction for comparison |
+| [`12-cell-fill-comparison.png`](./12-cell-fill-comparison.png) | First generation, cell-aware retry, and deterministic snapped output |
 
-## ImageGen Prompt
+## First ImageGen Prompt
 
 The built-in tool received `01-grid-32x32.png` as the edit target:
 
@@ -70,32 +80,67 @@ The built-in tool received `01-grid-32x32.png` as the edit target:
 > `#44515E`, `#D9A83D`, `#65A9B8`, and `#E8EEF0`. Add no environment, shadow,
 > glow, gradient, texture, dither, text, second ship, or isometric perspective.
 
+This prompt failed the strict cell-fill requirement. It preserved the grid and
+roughly followed it, but it drew a shaded illustration over the graph rather
+than assigning one flat color to every occupied cell.
+
+## Cell-Fill Retry Prompt
+
+The second built-in call received two inputs:
+
+- `01-grid-32x32.png` as the blank edit target;
+- `06-grid-overlay-proof.png` only as a complete-cell-fill behavior example.
+
+The critical instruction was:
+
+> Treat this like coloring spreadsheet cells, not drawing over graph paper.
+> Every occupied logical cell is filled completely from grid line to grid line
+> with exactly one solid palette color. Every empty cell stays white. Never
+> place an edge, line, highlight, shadow, or color boundary inside a cell.
+
 ## Findings
 
-### The corrected grid changed generation behavior
+### The first generation was not pixel art
 
-Unlike the rejected multi-slot template, the single-asset grid gave ImageGen one
-coordinate system and one subject. The generated craft:
+The first generated craft was centered and faced upward, but those qualities do
+not satisfy the pixel-art contract. It:
 
-- remained centered and fully inside the canvas;
-- preserved the visible grid;
-- used whole-cell stair steps for most of its silhouette;
-- made the upward facing direction immediate;
-- kept paired wings and engine housings recognizable.
+- crossed logical cell boundaries with contours and highlights;
+- contained gradients and different values inside the same cell;
+- used the grid as graph paper behind an illustration;
+- therefore required reconstruction before any pixel claim was valid.
 
 The model still returned `1254 x 1254`, not the input's exact dimensions, and
-introduced soft shading inside cells. The template guides composition and cell
-alignment; it does not enforce output resolution or palette by itself.
+introduced soft shading inside cells. My earlier statement that the generation
+had already used whole-cell fills was incorrect.
 
-### Center sampling performs the actual pixel conversion
+### A complete-cell behavior reference materially improved the retry
 
-The generated square was normalized to `512 x 512`. Sampling one center point
-per 16px grid cell produced a `32 x 32` logical raster. This operation:
+The retry visibly assigns its silhouette and major color regions by whole cells.
+It is much closer to a grid-native source, but it still contains subtle
+within-cell value changes.
+
+Distance from each normalized generation to its own strict cell-snapped
+reconstruction was measured as mean grayscale difference:
+
+| Generation | Difference |
+| --- | ---: |
+| First grid-only prompt | `0.0428108` |
+| Retry with cell-fill behavior reference | `0.0146254` |
+
+The retry reduced the difference by about 66%, but did not reach zero. ImageGen
+can be guided toward filled cells; it cannot be trusted to enforce them.
+
+### Grid snapping performs the actual pixel conversion
+
+`snap_image_to_pixel_grid.ps1` normalizes the generated square to `512 x 512`
+and samples one center point per 16px cell. It then maps that sample to the
+approved palette and produces a `32 x 32` logical raster. This operation:
 
 - removed the grid lines;
 - removed within-cell antialiasing and gradients;
 - retained the generated silhouette;
-- reduced the craft to six visible colors plus transparency.
+- made every logical cell exactly one palette color or transparency.
 
 This is more deterministic than resizing an ungridded generated image and
 calling the result pixel art.
@@ -103,9 +148,10 @@ calling the result pixel art.
 ### Automatic SVG conversion remains editable
 
 `raster_to_pixel_svg.ps1` omits transparent pixels and merges adjacent
-same-color pixels into horizontal `<rect>` runs. The automatic result contains
-139 runs in a `32 x 32` integer view box. Every visual pixel can be changed by
-editing an integer coordinate, width, or fill.
+same-color pixels into horizontal `<rect>` runs. The first automatic result
+contains 139 runs and the retry contains 137 runs in a `32 x 32` integer view
+box. Every visual pixel can be changed by editing an integer coordinate, width,
+or fill.
 
 ### Manual reinforcement is still necessary
 
@@ -123,6 +169,7 @@ details:
 ## Limitations
 
 - This validates the workflow, not the final Cardborne craft design.
+- Neither raw ImageGen result qualifies as a runtime pixel asset.
 - `32 x 32` produces a deliberately coarse ship. A `64 x 64` logical grid on
   the same `512 x 512` canvas should be compared before choosing the production
   player resolution.
@@ -134,7 +181,9 @@ details:
 ## Decision
 
 Use a scripted, blank `512 x 512` coordinate grid for each individual ImageGen
-asset. Normalize the result to the template, sample the logical cell centers,
-quantize to the semantic palette, convert the native raster to integer-grid SVG,
-and then perform direct symmetry and functional-layer edits. Do not use a
-multi-slot semantic sheet as the generation template.
+asset and provide a separate complete-cell-fill behavior reference. Treat the
+generated bitmap as a concept only. Normalize it to the template, force every
+logical cell to one palette color with `snap_image_to_pixel_grid.ps1`, convert
+the native raster to integer-grid SVG, and then perform direct symmetry and
+functional-layer edits. Do not call the raw generated bitmap pixel art, and do
+not use a multi-slot semantic sheet as the generation template.

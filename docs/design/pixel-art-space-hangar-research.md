@@ -211,7 +211,8 @@ The deterministic workflow is:
 
 1. Script a white `512 x 512` canvas with uniform logical-pixel grid lines.
 2. Give that single grid image to ImageGen as the edit target for exactly one
-   asset and require silhouette and color boundaries to follow whole cells.
+   asset. Also provide one separate cell-fill behavior reference showing that
+   each occupied logical cell is filled edge-to-edge with one flat color.
 3. Normalize the returned square image to `512 x 512`.
 4. Sample the center of each logical cell to remove the guide lines and reduce
    the image to its native logical resolution.
@@ -226,7 +227,9 @@ The deterministic workflow is:
 10. Render the corrected asset at gameplay scale before importing it.
 
 No generated bitmap is copied directly into the game, and no automatic vector
-trace is accepted as finished source.
+trace is accepted as finished source. A grid-preserving ImageGen output is still
+not pixel art until the logical-cell sampling step has forced every cell to one
+palette color.
 
 ### Map tile grammar
 
