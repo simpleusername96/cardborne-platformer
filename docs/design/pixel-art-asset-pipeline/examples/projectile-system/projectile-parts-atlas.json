@@ -1,0 +1,256 @@
+{
+  "schema_version": 1,
+  "native_sprite_size": [
+    16,
+    16
+  ],
+  "atlas_size": [
+    108,
+    72
+  ],
+  "gutter": 1,
+  "columns": 6,
+  "sprites": [
+    {
+      "id": "player_standard",
+      "category": "PROJECTILE HEADS",
+      "region": [
+        1,
+        1,
+        16,
+        16
+      ]
+    },
+    {
+      "id": "player_opening_breach",
+      "category": "PROJECTILE HEADS",
+      "region": [
+        19,
+        1,
+        16,
+        16
+      ]
+    },
+    {
+      "id": "enemy_light",
+      "category": "PROJECTILE HEADS",
+      "region": [
+        37,
+        1,
+        16,
+        16
+      ]
+    },
+    {
+      "id": "enemy_standard",
+      "category": "PROJECTILE HEADS",
+      "region": [
+        55,
+        1,
+        16,
+        16
+      ]
+    },
+    {
+      "id": "enemy_heavy",
+      "category": "PROJECTILE HEADS",
+      "region": [
+        73,
+        1,
+        16,
+        16
+      ]
+    },
+    {
+      "id": "seeker_missile",
+      "category": "PROJECTILE HEADS",
+      "region": [
+        91,
+        1,
+        16,
+        16
+      ]
+    },
+    {
+      "id": "affinity_kinetic",
+      "category": "ENEMY AFFINITIES",
+      "region": [
+        1,
+        19,
+        16,
+        16
+      ]
+    },
+    {
+      "id": "affinity_thermal",
+      "category": "ENEMY AFFINITIES",
+      "region": [
+        19,
+        19,
+        16,
+        16
+      ]
+    },
+    {
+      "id": "affinity_toxin",
+      "category": "ENEMY AFFINITIES",
+      "region": [
+        37,
+        19,
+        16,
+        16
+      ]
+    },
+    {
+      "id": "affinity_cryo",
+      "category": "ENEMY AFFINITIES",
+      "region": [
+        55,
+        19,
+        16,
+        16
+      ]
+    },
+    {
+      "id": "affinity_arc",
+      "category": "ENEMY AFFINITIES",
+      "region": [
+        73,
+        19,
+        16,
+        16
+      ]
+    },
+    {
+      "id": "affinity_hybrid",
+      "category": "ENEMY AFFINITIES",
+      "region": [
+        91,
+        19,
+        16,
+        16
+      ]
+    },
+    {
+      "id": "modifier_pierce",
+      "category": "PLAYER MODIFIERS",
+      "region": [
+        1,
+        37,
+        16,
+        16
+      ]
+    },
+    {
+      "id": "modifier_ricochet",
+      "category": "PLAYER MODIFIERS",
+      "region": [
+        19,
+        37,
+        16,
+        16
+      ]
+    },
+    {
+      "id": "modifier_explosive",
+      "category": "PLAYER MODIFIERS",
+      "region": [
+        37,
+        37,
+        16,
+        16
+      ]
+    },
+    {
+      "id": "modifier_homing",
+      "category": "PLAYER MODIFIERS",
+      "region": [
+        55,
+        37,
+        16,
+        16
+      ]
+    },
+    {
+      "id": "modifier_wall_piercing",
+      "category": "PLAYER MODIFIERS",
+      "region": [
+        73,
+        37,
+        16,
+        16
+      ]
+    },
+    {
+      "id": "modifier_reflected",
+      "category": "PLAYER MODIFIERS",
+      "region": [
+        91,
+        37,
+        16,
+        16
+      ]
+    },
+    {
+      "id": "trail_player",
+      "category": "FLIGHT / IMPACT",
+      "region": [
+        1,
+        55,
+        16,
+        16
+      ]
+    },
+    {
+      "id": "trail_hostile",
+      "category": "FLIGHT / IMPACT",
+      "region": [
+        19,
+        55,
+        16,
+        16
+      ]
+    },
+    {
+      "id": "trail_seeker_exhaust",
+      "category": "FLIGHT / IMPACT",
+      "region": [
+        37,
+        55,
+        16,
+        16
+      ]
+    },
+    {
+      "id": "impact_wall",
+      "category": "FLIGHT / IMPACT",
+      "region": [
+        55,
+        55,
+        16,
+        16
+      ]
+    },
+    {
+      "id": "impact_hull",
+      "category": "FLIGHT / IMPACT",
+      "region": [
+        73,
+        55,
+        16,
+        16
+      ]
+    },
+    {
+      "id": "impact_breach_interrupt",
+      "category": "FLIGHT / IMPACT",
+      "region": [
+        91,
+        55,
+        16,
+        16
+      ]
+    }
+  ],
+  "composition_rule": "trail -> complete head -> affinity or modifier overlay"
+}

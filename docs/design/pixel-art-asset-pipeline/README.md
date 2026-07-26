@@ -276,6 +276,8 @@ From the repository root:
   -ColorGroup colors `
   -OutputPath docs/design/pixel-art-asset-pipeline/examples/player-craft-display-palette.png
 
+./tools/design/create_projectile_pixel_sheet.ps1
+
 ./tools/design/validate_pixel_asset_inventory.ps1
 
 ./tools/design/validate_pixel_asset_manifest.ps1 `
@@ -293,6 +295,13 @@ The checked-in proof splits the 64-cell craft into body, two wings, cockpit,
 primary mount, and two engines, then reassembles it with zero changed pixels:
 
 ![Semantic split proof](./examples/player-craft-semantic-proof.png)
+
+The projectile proof is authored directly on the logical pixel grid rather than
+generated as combination-specific images. Its 24 atlas slots contain complete
+heads, affinity overlays, modifier overlays, trails, and impacts; the final row
+of the preview shows runtime compositions:
+
+![Projectile pixel system](./examples/projectile-system/projectile-system-preview.png)
 
 ## Acceptance Criteria
 
