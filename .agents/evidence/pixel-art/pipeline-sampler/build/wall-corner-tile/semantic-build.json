@@ -1,0 +1,33 @@
+{
+  "asset_id": "pipeline_sampler_wall_corner_tile",
+  "size": [
+    24,
+    24
+  ],
+  "source": "wall-corner-tile.png",
+  "semantic_mask": "wall-corner-tile.png",
+  "reassembly_pixel_difference": 0,
+  "layers": [
+    {
+      "id": "top",
+      "mask_color": "#FF0000",
+      "z": 0,
+      "pixel_count": 250,
+      "output": "layers/top.png"
+    },
+    {
+      "id": "contact_edge",
+      "mask_color": "#FF8000",
+      "z": 1,
+      "pixel_count": 112,
+      "output": "layers/contact_edge.png"
+    },
+    {
+      "id": "boundary_light",
+      "mask_color": "#FFFF00",
+      "z": 2,
+      "pixel_count": 70,
+      "output": "layers/boundary_light.png"
+    }
+  ]
+}

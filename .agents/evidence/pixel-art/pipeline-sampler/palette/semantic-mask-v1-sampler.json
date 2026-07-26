@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "id": "semantic-mask-v1-sampler",
+  "transparent_color": "#FFFFFF",
+  "colors": {
+    "base": "#FF0000",
+    "left_part": "#00FF00",
+    "right_part": "#0000FF",
+    "core": "#FFFF00",
+    "tool": "#FF00FF",
+    "mobility": "#00FFFF",
+    "effect": "#FF8000"
+  }
+}

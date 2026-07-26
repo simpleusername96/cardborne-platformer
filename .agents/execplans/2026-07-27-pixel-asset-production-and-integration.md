@@ -17,6 +17,7 @@ related:
   - ../../docs/design/pixel-space-hangar-visual-research/PART_GUIDELINES.md
   - ../../docs/design/pixel-space-hangar-visual-research/REFERENCE_GALLERY.md
   - ../../docs/design/pixel-space-hangar-visual-research/reference-manifest.json
+  - ../evidence/pixel-art/pipeline-sampler/README.md
   - ./2026-07-23-vehicle-performance-architecture-stabilization.md
 ---
 
@@ -1201,6 +1202,11 @@ change control, not an implementation-time choice.
 - [x] Separated source generation count from runtime-frame count.
 - [x] Locked one production and integration solution with fixed approval,
       validation, rollback, and stop conditions.
+- [x] Completed a bounded six-category pipeline sampler covering four
+      ImageGen-assisted bases, two direct-pixel assets, semantic masks,
+      same-origin PNG/SVG layers, zero-difference reassembly, and native-scale
+      review. This sampler does not complete Milestone 0 or approve a
+      production family.
 - [ ] Milestone 0 — Baseline and contracts.
 - [ ] Milestone 1 — Core native asset bases.
 - [ ] Milestone 2 — Core gameplay slice.

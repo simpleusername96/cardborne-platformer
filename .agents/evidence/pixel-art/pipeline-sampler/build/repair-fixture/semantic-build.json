@@ -1,0 +1,33 @@
+{
+  "asset_id": "pipeline_sampler_repair_fixture",
+  "size": [
+    64,
+    64
+  ],
+  "source": "repair-fixture.png",
+  "semantic_mask": "repair-fixture.png",
+  "reassembly_pixel_difference": 0,
+  "layers": [
+    {
+      "id": "base",
+      "mask_color": "#FF0000",
+      "z": 0,
+      "pixel_count": 244,
+      "output": "layers/base.png"
+    },
+    {
+      "id": "activation_ring",
+      "mask_color": "#FF8000",
+      "z": 1,
+      "pixel_count": 476,
+      "output": "layers/activation_ring.png"
+    },
+    {
+      "id": "repair_core",
+      "mask_color": "#FFFF00",
+      "z": 2,
+      "pixel_count": 300,
+      "output": "layers/repair_core.png"
+    }
+  ]
+}

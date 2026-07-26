@@ -1,0 +1,33 @@
+{
+  "asset_id": "pipeline_sampler_repair_pickup",
+  "size": [
+    24,
+    24
+  ],
+  "source": "repair-pickup.png",
+  "semantic_mask": "repair-pickup.png",
+  "reassembly_pixel_difference": 0,
+  "layers": [
+    {
+      "id": "container",
+      "mask_color": "#FF0000",
+      "z": 0,
+      "pixel_count": 104,
+      "output": "layers/container.png"
+    },
+    {
+      "id": "repair_glyph",
+      "mask_color": "#FFFF00",
+      "z": 1,
+      "pixel_count": 64,
+      "output": "layers/repair_glyph.png"
+    },
+    {
+      "id": "pickup_highlight",
+      "mask_color": "#FF8000",
+      "z": 2,
+      "pixel_count": 12,
+      "output": "layers/pickup_highlight.png"
+    }
+  ]
+}

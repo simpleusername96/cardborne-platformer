@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "id": "pipeline_sampler_shooter_drone",
+  "family": "mobile_enemy_set",
+  "canvas_size": 512,
+  "logical_size": [32, 32],
+  "palette_path": ".agents/evidence/pixel-art/pipeline-sampler/palette/pixel-hangar-v1-sampler.png",
+  "semantic_palette_path": ".agents/evidence/pixel-art/pipeline-sampler/palette/semantic-mask-v1-sampler.png",
+  "transparent_color": "#FFFFFF",
+  "layers": [
+    {"id": "body", "mask_color": "#FF0000", "z": 0, "required": true},
+    {"id": "role_core", "mask_color": "#FFFF00", "z": 1, "required": true},
+    {"id": "weapon", "mask_color": "#FF00FF", "z": 2, "required": true},
+    {"id": "mobility", "mask_color": "#00FFFF", "z": 3, "required": true}
+  ],
+  "pivot": [16, 16],
+  "anchors": {
+    "muzzle": [28, 16],
+    "left_rear_pod": [8, 11],
+    "right_rear_pod": [8, 21]
+  },
+  "frames": [
+    {
+      "id": "east",
+      "source_path": ".agents/evidence/pixel-art/pipeline-sampler/raw/shooter-drone.png",
+      "semantic_mask_path": ".agents/evidence/pixel-art/pipeline-sampler/masks/shooter-drone.png",
+      "atlas_index": 0,
+      "direction": 4,
+      "state": "canonical"
+    }
+  ],
+  "atlas": {"columns": 1, "padding": 0}
+}
