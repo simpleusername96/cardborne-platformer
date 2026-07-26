@@ -173,6 +173,13 @@ Example actor prompt:
 For later variations, edit the approved frame instead of regenerating from
 scratch. State the invariants first, then request one small change.
 
+An individual asset grid is not a scene grid. Do not shrink a complete gameplay
+frame to a `64 x 64` actor master: small actors, projectiles, and pickups collapse
+below their readable silhouette sizes. Visual-direction scenes use at least
+`128 x 128` logical pixels or are assembled from already-clean native assets.
+The retained diagnostic and comparison are documented in
+[`pixel-space-hangar-visual-research`](../pixel-space-hangar-visual-research/README.md).
+
 ### 4. Snap to the logical grid and palette
 
 `snap_image_to_pixel_grid.ps1` normalizes the image to the guide size, samples
@@ -337,6 +344,9 @@ already connected to Godot:
 - [ ] Connected tiles pass the repeated seam and adjacency tests.
 - [ ] Actor, enemy, projectile, pickup, and telegraph roles remain distinguishable
       at gameplay scale and in grayscale.
+- [ ] A representative dense-combat composite preserves every accepted family
+      at its declared native size; no whole-scene downsample substitutes for
+      native-family review.
 - [ ] Collision, navigation, telegraph truth, live state, localization, and
       accessibility remain outside raster art.
 - [ ] Godot integration retains batching and passes the Web export before any

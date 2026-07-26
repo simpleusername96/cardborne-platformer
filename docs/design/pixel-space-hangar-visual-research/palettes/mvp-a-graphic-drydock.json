@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "id": "mvp_a_graphic_drydock",
+  "transparent_color": "#061A25",
+  "colors": {
+    "void": "#061A25",
+    "deep_structure": "#0B2E37",
+    "blocker_dark": "#153B3A",
+    "blocker_mid": "#275B57",
+    "floor_dark": "#304B4B",
+    "floor_mid": "#496463",
+    "floor_light": "#A8DACB",
+    "ivory": "#FFF6DC",
+    "player": "#D79A17",
+    "player_dark": "#8A5B10",
+    "danger": "#C92F4E",
+    "danger_dark": "#7B1733",
+    "support": "#75C4B2",
+    "energy": "#3E91B7",
+    "arc": "#9B59B6",
+    "thermal": "#E45F36"
+  }
+}
