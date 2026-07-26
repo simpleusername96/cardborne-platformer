@@ -8,6 +8,7 @@ topic: Pixel-art space-hangar visual direction and production workflow
 scope: Research-backed candidate direction for the map, ship, world assets, and Web-safe rendering
 related:
   - ./UI_VISUAL_SYSTEM.md
+  - ./pixel-art-space-hangar-experiment/README.md
   - ../product/vehicle_game_spec.md
 ---
 
