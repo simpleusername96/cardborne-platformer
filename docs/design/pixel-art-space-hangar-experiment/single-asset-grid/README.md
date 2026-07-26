@@ -65,6 +65,17 @@ separation, and engine anchors make grid failures easy to see.
 | [`11-cell-fill-retry-grid-proof.png`](./11-cell-fill-retry-grid-proof.png) | Snapped second result placed back on the input grid |
 | [`11a-old-sampled-grid-proof.png`](./11a-old-sampled-grid-proof.png) | First result's snapped reconstruction for comparison |
 | [`12-cell-fill-comparison.png`](./12-cell-fill-comparison.png) | First generation, cell-aware retry, and deterministic snapped output |
+| [`13-grid-64x64.png`](./13-grid-64x64.png) | Scripted white `512 x 512` canvas; `64 x 64` logical cells; 8px per cell |
+| [`13-cell-fill-method-64-sprite.png`](./13-cell-fill-method-64-sprite.png) | Native helper raster used to build the density-matched behavior reference |
+| [`13-cell-fill-method-64.png`](./13-cell-fill-method-64.png) | Separate whole-cell behavior reference at the `64 x 64` density |
+| [`14-imagegen-ship-64.png`](./14-imagegen-ship-64.png) | Unmodified built-in ImageGen output from the `64 x 64` test |
+| [`14-imagegen-ship-64-512.png`](./14-imagegen-ship-64-512.png) | `64 x 64` test normalized to the template dimensions |
+| [`15-snapped-ship-64.png`](./15-snapped-ship-64.png) | Palette-snapped native `64 x 64` raster |
+| [`15-snapped-ship-64-8x.png`](./15-snapped-ship-64-8x.png) | Nearest-neighbor inspection preview |
+| [`16-snapped-ship-64.svg`](./16-snapped-ship-64.svg) | Editable integer-coordinate SVG with 604 horizontal color runs |
+| [`16-snapped-ship-64.png`](./16-snapped-ship-64.png) | Nearest-neighbor SVG render used for visual inspection |
+| [`17-grid-overlay-proof-64.png`](./17-grid-overlay-proof-64.png) | Snapped `64 x 64` result placed back on its input grid |
+| [`18-32-vs-64-comparison.png`](./18-32-vs-64-comparison.png) | Strict `32 x 32`, raw `64 x 64`, and strict `64 x 64` results at equal display size |
 
 ## First ImageGen Prompt
 
@@ -98,6 +109,24 @@ The critical instruction was:
 > with exactly one solid palette color. Every empty cell stays white. Never
 > place an edge, line, highlight, shadow, or color boundary inside a cell.
 
+## 64-Cell Density Test
+
+The third built-in call used:
+
+- `13-grid-64x64.png` as the blank edit target;
+- `13-cell-fill-method-64.png` only as a whole-cell behavior reference.
+
+It requested one centered top-down drydock interceptor within columns 12–51
+and rows 6–57. Details had to occupy at least `2 x 2` logical cells, and the
+same restrained ship palette was used. The prompt explicitly prohibited
+within-cell shading, antialiasing, continuous outlines, texture, and glow.
+
+The raw generation is visibly closer to a usable craft concept than the
+`32 x 32` attempt. The higher density preserves a stepped silhouette while
+making the cockpit, cannon socket, swept wings, and twin engine housings
+separately legible. It still introduces subtle value changes inside some cells,
+so it remains concept input rather than a runtime asset.
+
 ## Findings
 
 ### The first generation was not pixel art
@@ -127,9 +156,13 @@ reconstruction was measured as mean grayscale difference:
 | --- | ---: |
 | First grid-only prompt | `0.0428108` |
 | Retry with cell-fill behavior reference | `0.0146254` |
+| `64 x 64` test with density-matched behavior reference | `0.0228101` |
 
 The retry reduced the difference by about 66%, but did not reach zero. ImageGen
 can be guided toward filled cells; it cannot be trusted to enforce them.
+The `64 x 64` score is not directly a quality ranking against `32 x 32`: its
+smaller cells expose more generated sub-cell shading. Its strict reconstruction
+is nevertheless much more descriptive at the same display size.
 
 ### Grid snapping performs the actual pixel conversion
 
@@ -153,6 +186,12 @@ contains 139 runs and the retry contains 137 runs in a `32 x 32` integer view
 box. Every visual pixel can be changed by editing an integer coordinate, width,
 or fill.
 
+The `64 x 64` conversion contains 604 horizontal color runs and round-trips to
+the snapped raster with a maximum pixel difference of zero. Its automatic
+reconstruction uses six palette colors plus transparency. A symmetry audit
+found only two mismatched center-axis pixels, both in one cockpit row; that is
+small, explicit cleanup rather than a silhouette rebuild.
+
 ### Manual reinforcement is still necessary
 
 The sampled craft inherited asymmetric lighting and inconsistent cyan edging
@@ -169,10 +208,10 @@ details:
 ## Limitations
 
 - This validates the workflow, not the final Cardborne craft design.
-- Neither raw ImageGen result qualifies as a runtime pixel asset.
-- `32 x 32` produces a deliberately coarse ship. A `64 x 64` logical grid on
-  the same `512 x 512` canvas should be compared before choosing the production
-  player resolution.
+- No raw ImageGen result qualifies as a runtime pixel asset.
+- `32 x 32` is too coarse for the intended player craft. `64 x 64` is the
+  preferred authoring density for the next player-craft proof, subject to a
+  gameplay-scale composite and animation test.
 - One upward-facing frame does not prove 16-direction consistency.
 - Weapon recoil, engine animation, dash, damage, and upgrade overlays remain
   separate future tests.
@@ -187,3 +226,7 @@ logical cell to one palette color with `snap_image_to_pixel_grid.ps1`, convert
 the native raster to integer-grid SVG, and then perform direct symmetry and
 functional-layer edits. Do not call the raw generated bitmap pixel art, and do
 not use a multi-slot semantic sheet as the generation template.
+
+Use `64 x 64` logical cells for the next player-craft concept. Keep `32 x 32`
+available for simpler enemies, towers, mines, pickups, and props whose roles do
+not need the player's cockpit, weapon, and engine separation.

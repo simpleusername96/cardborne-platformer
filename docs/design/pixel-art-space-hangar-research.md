@@ -204,8 +204,11 @@ Use one blank `512 x 512` grid image per generated asset. The grid is a
 coordinate template for one ship, tile, prop, or animation frame—not a board
 that divides one generation into many named asset slots. Choose a logical grid
 density that divides 512 exactly. The first verified experiment uses `32 x 32`
-logical cells at 16 image pixels per cell; a production player craft should also
-test `64 x 64` before its final native resolution is accepted.
+logical cells at 16 image pixels per cell. The follow-up `64 x 64` test at
+8 image pixels per cell preserved whole-cell cleanup while making the cockpit,
+weapon socket, wings, and separate engine housings substantially clearer.
+Use `64 x 64` as the next player-craft authoring density; gameplay-scale
+composition and animation remain the acceptance gate for its runtime size.
 
 The deterministic workflow is:
 
