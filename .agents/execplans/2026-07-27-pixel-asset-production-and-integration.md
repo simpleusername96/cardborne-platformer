@@ -871,7 +871,7 @@ cardborne/presentation/pixel_assets
 
 ### Milestone 0 — Baseline and contracts
 
-- [ ] Record a clean production Web baseline, the current renderer batch
+- [x] Record a clean production Web baseline, the current renderer batch
       snapshot, and the deterministic calm/ordinary/hard-pressure captures.
   - **As-is:** current procedural visuals and `50` retained batches.
   - **To-be:** bounded baseline evidence under
@@ -879,17 +879,17 @@ cardborne/presentation/pixel_assets
   - **Accept:** current validators and Web export pass before pixel runtime
     changes.
   - **Guard:** do not change gameplay or balance to make the art pass.
-- [ ] Add `pixel-hangar-v1` display and semantic-mask palettes.
+- [x] Add `pixel-hangar-v1` display and semantic-mask palettes.
   - **Accept:** every role above exists once, duplicate hex values are rejected,
     and a generated palette strip matches the JSON.
-- [ ] Upgrade the inventory and manifest to the version-2 contracts.
+- [x] Upgrade the inventory and manifest to the version-2 contracts.
   - **Accept:** all forty families validate; no family has an unresolved mode,
     owner, native size, frame ceiling, or atlas group.
-- [ ] Add brief validation, checksums, atlas extrusion, catalog aggregation,
+- [x] Add brief validation, checksums, atlas extrusion, catalog aggregation,
       frame-budget validation, and review-board generation.
   - **Accept:** positive fixtures pass and negative fixtures reject every
     declared failure class.
-- [ ] Migrate the current craft and projectile proofs to schema version 2.
+- [x] Migrate the current craft and projectile proofs to schema version 2.
   - **Accept:** exact reassembly remains `0` changed pixels; they remain marked
     `proof`, not `production`.
 
@@ -1193,6 +1193,10 @@ change control, not an implementation-time choice.
 - 2026-07-27: Keep dynamic telegraphs, minimap state, localized UI, progress,
   focus, and accessibility live.
 - 2026-07-27: Require actual-game core approval before broad asset production.
+- 2026-07-27: Complete Milestone 0 with a clean Web/runtime baseline, locked
+  palettes, forty-family inventory and frame budgets, schema-v2 briefs and
+  manifests, checksum/semantic/gutter/catalog/seam/review/import validators,
+  and nonproduction craft/projectile fixtures.
 
 ## Progress
 
@@ -1207,7 +1211,7 @@ change control, not an implementation-time choice.
       same-origin PNG/SVG layers, zero-difference reassembly, and native-scale
       review. This sampler does not complete Milestone 0 or approve a
       production family.
-- [ ] Milestone 0 — Baseline and contracts.
+- [x] Milestone 0 — Baseline and contracts.
 - [ ] Milestone 1 — Core native asset bases.
 - [ ] Milestone 2 — Core gameplay slice.
 - [ ] Milestone 3 — Complete canonical base library.
@@ -1265,7 +1269,7 @@ Do not continue broad production past one of these conditions.
 
 ## Next Step
 
-Execute Milestone 0 only: preserve the current game as the baseline, upgrade
-the production contracts and validators, and migrate the existing technical
-proofs to schema version 2. Do not start the forty-four ImageGen jobs until
-Milestone 0 passes.
+Execute Milestone 1 next: author the Batch B briefs and reference packets, then
+produce and correct the core native asset bases within the locked per-family
+job and frame budgets. Do not integrate runtime visuals before those native
+assets pass the review contract.

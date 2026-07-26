@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "accessed": "2026-07-26",
   "policy": {
     "game_images": "Remote official links only; do not redistribute or use as direct generation inputs.",
@@ -12,160 +12,260 @@
       "kind": "direct",
       "url": "https://store.steampowered.com/app/250110/Assault_Android_Cactus/",
       "image_url": "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/250110/header.jpg",
-      "study": ["player_enemy_ownership", "pickups", "bright_ship_interior"],
-      "avoid": "Saturated full-screen effects and arcade bullet volume."
+      "study": [
+        "player_enemy_ownership",
+        "pickups",
+        "bright_ship_interior"
+      ],
+      "avoid": "Saturated full-screen effects and arcade bullet volume.",
+      "id": "game_assault_android_cactus"
     },
     {
       "title": "CRYPTARK",
       "kind": "direct",
       "url": "https://store.steampowered.com/app/344740/CRYPTARK/",
       "image_url": "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/344740/header.jpg",
-      "study": ["ship_room_grammar", "doors", "machinery_clusters"],
-      "avoid": "Heavy industrial texture and instrumentation density."
+      "study": [
+        "ship_room_grammar",
+        "doors",
+        "machinery_clusters"
+      ],
+      "avoid": "Heavy industrial texture and instrumentation density.",
+      "id": "game_cryptark"
     },
     {
       "title": "Space Bandit",
       "kind": "direct",
       "url": "https://store.steampowered.com/app/1435470/Space_Bandit/",
       "image_url": "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/1435470/header.jpg",
-      "study": ["simple_objects", "destructibles", "hazards"],
-      "avoid": "Chaotic gore and novelty-driven visual language."
+      "study": [
+        "simple_objects",
+        "destructibles",
+        "hazards"
+      ],
+      "avoid": "Chaotic gore and novelty-driven visual language.",
+      "id": "game_space_bandit"
     },
     {
       "title": "SYNTHETIK: Legion Rising",
       "kind": "direct",
       "url": "https://store.steampowered.com/app/528230/SYNTHETIK_Legion_Rising/",
       "image_url": "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/528230/header.jpg",
-      "study": ["projectile_direction", "ownership_hues", "pickup_separation"],
-      "avoid": "Realistic material noise and tiny tactical UI."
+      "study": [
+        "projectile_direction",
+        "ownership_hues",
+        "pickup_separation"
+      ],
+      "avoid": "Realistic material noise and tiny tactical UI.",
+      "id": "game_synthetik_legion_rising"
     },
     {
       "title": "SYNTHETIK 2",
       "kind": "direct",
       "url": "https://store.steampowered.com/app/1471410/SYNTHETIK_2/",
       "image_url": "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/1471410/header.jpg",
-      "study": ["player_value_separation", "enemy_readability"],
-      "avoid": "3D lighting, surface detail, and shadow complexity."
+      "study": [
+        "player_value_separation",
+        "enemy_readability"
+      ],
+      "avoid": "3D lighting, surface detail, and shadow complexity.",
+      "id": "game_synthetik_2"
     },
     {
       "title": "Tesla vs Lovecraft",
       "kind": "direct",
       "url": "https://store.steampowered.com/app/636100/Tesla_vs_Lovecraft/",
       "image_url": "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/636100/header.jpg",
-      "study": ["temporary_power_states", "large_vfx", "player_focus"],
-      "avoid": "Continuous horde and debris overload."
+      "study": [
+        "temporary_power_states",
+        "large_vfx",
+        "player_focus"
+      ],
+      "avoid": "Continuous horde and debris overload.",
+      "id": "game_tesla_vs_lovecraft"
     },
     {
       "title": "Nuclear Throne",
       "kind": "direct",
       "url": "https://store.steampowered.com/app/242680/Nuclear_Throne/",
       "image_url": "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/242680/header.jpg",
-      "study": ["small_sprite_readability", "short_projectile_trails", "sparse_hud"],
-      "avoid": "Brown-on-brown ambiguity and deliberately abrasive clutter."
+      "study": [
+        "small_sprite_readability",
+        "short_projectile_trails",
+        "sparse_hud"
+      ],
+      "avoid": "Brown-on-brown ambiguity and deliberately abrasive clutter.",
+      "id": "game_nuclear_throne"
     },
     {
       "title": "NeuroVoider",
       "kind": "direct",
       "url": "https://store.steampowered.com/app/400450/NeuroVoider/",
       "image_url": "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/400450/header.jpg",
-      "study": ["projectile_hierarchy", "loot_shapes", "room_scale"],
-      "avoid": "Neon glow competing across every layer."
+      "study": [
+        "projectile_hierarchy",
+        "loot_shapes",
+        "room_scale"
+      ],
+      "avoid": "Neon glow competing across every layer.",
+      "id": "game_neurovoider"
     },
     {
       "title": "Brigador: Up-Armored Edition",
       "kind": "direct",
       "url": "https://store.steampowered.com/app/274500/Brigador/",
       "image_url": "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/274500/header.jpg",
-      "study": ["vehicle_silhouette", "turret_facing", "ground_prop_separation"],
-      "avoid": "Dark clutter and complex destructibility."
+      "study": [
+        "vehicle_silhouette",
+        "turret_facing",
+        "ground_prop_separation"
+      ],
+      "avoid": "Dark clutter and complex destructibility.",
+      "id": "game_brigador"
     },
     {
       "title": "The Riftbreaker",
       "kind": "direct",
       "url": "https://store.steampowered.com/app/780310/The_Riftbreaker/",
       "image_url": "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/780310/header.jpg",
-      "study": ["swarm_grouping", "player_ownership", "functional_floor_zones"],
-      "avoid": "Construction and RTS information load."
+      "study": [
+        "swarm_grouping",
+        "player_ownership",
+        "functional_floor_zones"
+      ],
+      "avoid": "Construction and RTS information load.",
+      "id": "game_riftbreaker"
     },
     {
       "title": "KILL KNIGHT",
       "kind": "direct",
       "url": "https://store.steampowered.com/app/2694420/KILL_KNIGHT/",
       "image_url": "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/2694420/header.jpg",
-      "study": ["restrained_arena", "high_value_accents", "threat_priority"],
-      "avoid": "Horror tone, gore, and sustained darkness."
+      "study": [
+        "restrained_arena",
+        "high_value_accents",
+        "threat_priority"
+      ],
+      "avoid": "Horror tone, gore, and sustained darkness.",
+      "id": "game_kill_knight"
     },
     {
       "title": "The Ascent",
       "kind": "direct",
       "url": "https://store.steampowered.com/app/979690/The_Ascent/",
       "image_url": "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/979690/header.jpg",
-      "study": ["corridors", "raised_blockers", "machinery_zones"],
-      "avoid": "Most of its lighting and environmental density."
+      "study": [
+        "corridors",
+        "raised_blockers",
+        "machinery_zones"
+      ],
+      "avoid": "Most of its lighting and environmental density.",
+      "id": "game_the_ascent"
     },
     {
       "title": "Hyper Light Drifter",
       "kind": "adjacent",
       "url": "https://store.steampowered.com/app/257850/Hyper_Light_Drifter/",
       "image_url": "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/257850/header.jpg",
-      "study": ["calm_walkable_planes", "blocked_mass", "hud_restraint"],
-      "avoid": "Cryptic interaction language and ruin palette."
+      "study": [
+        "calm_walkable_planes",
+        "blocked_mass",
+        "hud_restraint"
+      ],
+      "avoid": "Cryptic interaction language and ruin palette.",
+      "id": "game_hyper_light_drifter"
     },
     {
       "title": "Void Bastards",
       "kind": "adjacent",
       "url": "https://store.steampowered.com/app/857980/Void_Bastards/",
       "image_url": "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/857980/header.jpg",
-      "study": ["spaceship_room_functions", "doors", "hazard_signage"],
-      "avoid": "First-person composition and text-heavy panels."
+      "study": [
+        "spaceship_room_functions",
+        "doors",
+        "hazard_signage"
+      ],
+      "avoid": "First-person composition and text-heavy panels.",
+      "id": "game_void_bastards"
     },
     {
       "title": "Enter the Gungeon",
       "kind": "adjacent",
       "url": "https://store.steampowered.com/app/311690/Enter_the_Gungeon/",
       "image_url": "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/311690/header.jpg",
-      "study": ["room_silhouette", "pickup_separation", "bullet_over_tile_readability"],
-      "avoid": "Ornate clutter and bullet quantity."
+      "study": [
+        "room_silhouette",
+        "pickup_separation",
+        "bullet_over_tile_readability"
+      ],
+      "avoid": "Ornate clutter and bullet quantity.",
+      "id": "game_enter_the_gungeon"
     },
     {
       "title": "Star of Providence",
       "kind": "adjacent",
       "url": "https://store.steampowered.com/app/603960/Star_of_Providence/",
       "image_url": "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/603960/header.jpg",
-      "study": ["projectile_palette", "pattern_hierarchy", "ownership"],
-      "avoid": "Severe retro austerity and bullet-hell framing."
+      "study": [
+        "projectile_palette",
+        "pattern_hierarchy",
+        "ownership"
+      ],
+      "avoid": "Severe retro austerity and bullet-hell framing.",
+      "id": "game_star_of_providence"
     },
     {
       "title": "FTL: Faster Than Light",
       "kind": "adjacent",
       "url": "https://store.steampowered.com/app/212680/FTL_Faster_Than_Light/",
       "image_url": "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/212680/header.jpg",
-      "study": ["ship_floor_plan", "rooms", "doors", "system_objects"],
-      "avoid": "Status-heavy UI and non-action visual priority."
+      "study": [
+        "ship_floor_plan",
+        "rooms",
+        "doors",
+        "system_objects"
+      ],
+      "avoid": "Status-heavy UI and non-action visual priority.",
+      "id": "game_ftl"
     },
     {
       "title": "Into the Breach",
       "kind": "adjacent",
       "url": "https://store.steampowered.com/app/590380/Into_the_Breach/",
       "image_url": "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/590380/header.jpg",
-      "study": ["telegraph_priority", "terrain_unit_separation", "shape_coding"],
-      "avoid": "Turn-based board overlays."
+      "study": [
+        "telegraph_priority",
+        "terrain_unit_separation",
+        "shape_coding"
+      ],
+      "avoid": "Turn-based board overlays.",
+      "id": "game_into_the_breach"
     },
     {
       "title": "Dead Cells",
       "kind": "adjacent",
       "url": "https://store.steampowered.com/app/588650/Dead_Cells/",
       "image_url": "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/588650/header.jpg",
-      "study": ["brief_hit_vfx", "particle_timing", "pickup_registration"],
-      "avoid": "Animated-background detail and side-view traversal grammar."
+      "study": [
+        "brief_hit_vfx",
+        "particle_timing",
+        "pickup_registration"
+      ],
+      "avoid": "Animated-background detail and side-view traversal grammar.",
+      "id": "game_dead_cells"
     },
     {
       "title": "Black Paradox",
       "kind": "adjacent",
       "url": "https://store.steampowered.com/app/858680/Black_Paradox/",
       "image_url": "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/858680/header.jpg",
-      "study": ["pixel_projectiles", "powerup_coding", "upgrade_icons"],
-      "avoid": "Synthwave glare and side-scrolling composition."
+      "study": [
+        "pixel_projectiles",
+        "powerup_coding",
+        "upgrade_icons"
+      ],
+      "avoid": "Synthwave glare and side-scrolling composition.",
+      "id": "game_black_paradox"
     }
   ],
   "free_asset_references": [
@@ -178,8 +278,13 @@
       "local_file": "references/cc0/original/kenney-pixel-shmup.zip",
       "sha256": "E33FD626B799DE343F18C81EBAA6F3BC161772FDD717ACF3F223589CE74CF952",
       "native": "16x16 tiles",
-      "use": ["ships", "enemies", "bullets"],
-      "caveat": "Vertical-shmup silhouettes require top-down action adaptation."
+      "use": [
+        "ships",
+        "enemies",
+        "bullets"
+      ],
+      "caveat": "Vertical-shmup silhouettes require top-down action adaptation.",
+      "id": "cc0_kenney_pixel_shmup"
     },
     {
       "title": "Space Shooter Redux",
@@ -187,8 +292,13 @@
       "url": "https://www.kenney.nl/assets/space-shooter-redux",
       "license": "CC0-1.0",
       "downloaded": false,
-      "use": ["ships", "weapons", "vfx"],
-      "caveat": "Clean vector-like rendering is a structural reference, not target pixel treatment."
+      "use": [
+        "ships",
+        "weapons",
+        "vfx"
+      ],
+      "caveat": "Clean vector-like rendering is a structural reference, not target pixel treatment.",
+      "id": "cc0_kenney_space_shooter_redux"
     },
     {
       "title": "Space Shooter Extension",
@@ -196,8 +306,13 @@
       "url": "https://www.kenney.nl/assets/space-shooter-extension",
       "license": "CC0-1.0",
       "downloaded": false,
-      "use": ["ships", "enemies", "props"],
-      "caveat": "Inspect dimensions and contents before production selection."
+      "use": [
+        "ships",
+        "enemies",
+        "props"
+      ],
+      "caveat": "Inspect dimensions and contents before production selection.",
+      "id": "cc0_kenney_space_shooter_extension"
     },
     {
       "title": "Top-down Shooter",
@@ -205,8 +320,14 @@
       "url": "https://www.kenney.nl/assets/top-down-shooter",
       "license": "CC0-1.0",
       "downloaded": false,
-      "use": ["floors", "walls", "doors", "props"],
-      "caveat": "Zombie and domestic context must not leak into the hangar grammar."
+      "use": [
+        "floors",
+        "walls",
+        "doors",
+        "props"
+      ],
+      "caveat": "Zombie and domestic context must not leak into the hangar grammar.",
+      "id": "cc0_kenney_top_down_shooter"
     },
     {
       "title": "Roguelike Modern City",
@@ -214,8 +335,14 @@
       "url": "https://www.kenney.nl/assets/roguelike-modern-city",
       "license": "CC0-1.0",
       "downloaded": false,
-      "use": ["floors", "walls", "crates", "doors"],
-      "caveat": "Use only a restricted modular subset; urban icons are out of theme."
+      "use": [
+        "floors",
+        "walls",
+        "crates",
+        "doors"
+      ],
+      "caveat": "Use only a restricted modular subset; urban icons are out of theme.",
+      "id": "cc0_kenney_roguelike_modern_city"
     },
     {
       "title": "UI Pack: Sci-Fi",
@@ -223,8 +350,13 @@
       "url": "https://kenney.nl/assets/ui-pack-sci-fi",
       "license": "CC0-1.0",
       "downloaded": false,
-      "use": ["buttons", "panels", "sliders"],
-      "caveat": "Non-pixel treatment may inform spacing but not world art."
+      "use": [
+        "buttons",
+        "panels",
+        "sliders"
+      ],
+      "caveat": "Non-pixel treatment may inform spacing but not world art.",
+      "id": "cc0_kenney_ui_scifi"
     },
     {
       "title": "Crosshair Pack",
@@ -232,8 +364,11 @@
       "url": "https://kenney.nl/assets/crosshair-pack",
       "license": "CC0-1.0",
       "downloaded": false,
-      "use": ["aim_reticles"],
-      "caveat": "FPS-oriented shapes require a restrained top-down subset."
+      "use": [
+        "aim_reticles"
+      ],
+      "caveat": "FPS-oriented shapes require a restrained top-down subset.",
+      "id": "cc0_kenney_crosshair"
     },
     {
       "title": "Particle Pack",
@@ -241,8 +376,13 @@
       "url": "https://www.kenney.nl/assets/particle-pack",
       "license": "CC0-1.0",
       "downloaded": false,
-      "use": ["impacts", "explosions", "emp"],
-      "caveat": "Large non-pixel sources need authored pixel adaptation."
+      "use": [
+        "impacts",
+        "explosions",
+        "emp"
+      ],
+      "caveat": "Large non-pixel sources need authored pixel adaptation.",
+      "id": "cc0_kenney_particle"
     },
     {
       "title": "Top-down space fighter sprite",
@@ -253,8 +393,11 @@
       "local_file": "references/cc0/original/oga-top-down-space-fighter.png",
       "sha256": "C7ABE4D82767AA689E71C2EBCB9B1A72F61529BB1E23BB9E0CEF2B280B67B236",
       "native": "448x64 sheet",
-      "use": ["ship_silhouette"],
-      "caveat": "Old one-off source with excessive antialias/color count for the target."
+      "use": [
+        "ship_silhouette"
+      ],
+      "caveat": "Old one-off source with excessive antialias/color count for the target.",
+      "id": "cc0_lamoot_space_fighter"
     },
     {
       "title": "2D spaceship sprites with engines",
@@ -265,8 +408,12 @@
       "local_file": "references/cc0/original/oga-spaceships-with-engines.png",
       "sha256": "0261FCF1C70684AED0DA4B706285F771402BFB6285975F2CA304D728CBD071EB",
       "native": "512x3328 sheet, 4x upsampled",
-      "use": ["ships", "engine_flames"],
-      "caveat": "HQ4x upscale and black outlines conflict with the target pipeline."
+      "use": [
+        "ships",
+        "engine_flames"
+      ],
+      "caveat": "HQ4x upscale and black outlines conflict with the target pipeline.",
+      "id": "cc0_morgan3d_spaceship_engines"
     },
     {
       "title": "Sci-fi platform tiles",
@@ -283,8 +430,12 @@
         "9B0BFF9BE770B1DBE6F3C69DF0F04AF56671A325FD2190F19FB7215DE7D14C91"
       ],
       "native": "16x16 and 32x32 grids",
-      "use": ["wall_panels", "industrial_props"],
-      "caveat": "Side-view shadows and 9,050-color texture are explicit anti-patterns."
+      "use": [
+        "wall_panels",
+        "industrial_props"
+      ],
+      "caveat": "Side-view shadows and 9,050-color texture are explicit anti-patterns.",
+      "id": "cc0_eris_scifi_platform_tiles"
     },
     {
       "title": "Sci-Fi background tilemap",
@@ -301,8 +452,12 @@
         "7A56D59C6E16D189B290C0E903AFABEAFF55264A724F7D192CE50BC6CB1095D9"
       ],
       "native": "64x64 tile chip",
-      "use": ["tile_grammar", "tmx_structure"],
-      "caveat": "Dense panel drawing and green key background are not target art."
+      "use": [
+        "tile_grammar",
+        "tmx_structure"
+      ],
+      "caveat": "Dense panel drawing and green key background are not target art.",
+      "id": "cc0_mieki256_scifi_background_tilemap"
     },
     {
       "title": "Assets: UI Minimalism SciFi",
@@ -313,8 +468,12 @@
       "local_file": "references/cc0/original/oga-ui-minimal-scifi.zip",
       "sha256": "3200EC3A03511BEDDD5CE09122A70F1A9D94DE5C73F71213853582354A44C3C0",
       "native": "33 transparent PNG elements and a 1920x1080 PSD",
-      "use": ["panel_hierarchy", "button_spacing"],
-      "caveat": "Noisy border treatment, darkness, and non-pixel finish are explicit anti-patterns."
+      "use": [
+        "panel_hierarchy",
+        "button_spacing"
+      ],
+      "caveat": "Noisy border treatment, darkness, and non-pixel finish are explicit anti-patterns.",
+      "id": "cc0_wenrexa_ui_minimalism_scifi"
     }
   ]
 }

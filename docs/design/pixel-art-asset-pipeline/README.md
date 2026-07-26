@@ -2,7 +2,7 @@
 type: spec
 status: active
 created: 2026-07-26
-last_reviewed: 2026-07-26
+last_reviewed: 2026-07-27
 canonical_for: Pixel-art asset inventory, authoring manifests, semantic layer separation, deterministic cleanup, and atlas production
 scope: Offline visual-asset production; it does not replace the current live visual system or gameplay geometry
 related:
@@ -140,11 +140,17 @@ priority. This prevents forgotten runtime visuals and duplicate ownership.
 
 ### 2. Create the job manifest
 
-Copy the shape in
-[`examples/player-craft.manifest.json`](./examples/player-craft.manifest.json)
-and validate it against
+Create a brief from
+[`examples/player-craft.brief.json`](./examples/player-craft.brief.json), then
+copy the manifest shape in
+[`examples/player-craft.manifest.json`](./examples/player-craft.manifest.json).
+Validate both before producing frames. The manifest validates against
 [`pixel-asset-manifest.schema.json`](./pixel-asset-manifest.schema.json).
-The manifest is the durable contract; filenames inferred from a prompt are not.
+The version-2 manifest is the durable contract: it records approval state,
+production method, reference IDs, native-source checksum, stable frame tuple
+(`variant`, `direction`, `state`, and `sequence_index`),
+semantic layers, runtime group, collision owner, review backgrounds, and fixed
+atlas gutter. Filenames inferred from a prompt are not a contract.
 
 ### 3. Build the generation input
 
@@ -201,6 +207,8 @@ only declared colors, and populate every required layer.
 `split_pixel_asset_layers.ps1` checks source/mask coverage, writes one
 full-canvas transparent PNG per semantic layer, composites them in z-order, and
 rejects the build unless the reassembled image has pixel difference `0`.
+Version-2 sources also reject partial alpha and any display or semantic color
+outside the locked palettes.
 
 `raster_to_pixel_svg.ps1` then creates an optional integer-grid SVG for direct
 pixel correction. Same-color horizontal runs are merged. PNG remains the atlas
@@ -222,10 +230,21 @@ layers or sheets so chassis combinations do not multiply.
 ### 8. Pack the atlas
 
 `pack_pixel_asset_atlas.ps1` follows explicit `atlas_index` values and writes a
-PNG plus JSON metadata containing every frame region, pivot, and anchor.
-Connected tiles must additionally pass a repeated `3 x 3` seam test. Atlas
-padding and edge extrusion can be introduced in the manifest when the Godot
-import proof establishes the required Web-safe gutter.
+PNG plus JSON metadata containing every frame region, cell region, source hash,
+pivot, anchor, variant, direction, state, and duration. Every version-2 frame
+uses one extruded edge pixel surrounded by a two-pixel transparent inter-frame
+gutter. Connected tile families declare all 16 orthogonal edge signatures and
+must pass full edge comparison plus a repeated `3 x 3` seam proof.
+
+`build_pixel_asset_catalog.ps1` aggregates version-2 atlas metadata into stable
+runtime keys. The catalog validator checks checksums, region bounds, extrusion,
+transparent gutters, and duplicate keys. The frame-budget validator enforces
+each inventory-family ceiling and the global `678`-frame limit.
+
+`build_pixel_asset_review.ps1` produces the mandatory native-size, enlarged
+nearest-neighbor, pivot/anchor, silhouette, grayscale, and declared-background
+panels. A `proof` or `candidate` may pass technical validation without becoming
+approved production art.
 
 ### 9. Integrate later
 
@@ -293,13 +312,14 @@ From the repository root:
 
 ```powershell
 ./tools/design/create_pixel_palette.ps1 `
-  -PaletteSpecPath docs/design/pixel-art-asset-pipeline/example-drydock-palette.json `
+  -PaletteSpecPath art/pixel/palettes/pixel-hangar-v1.json `
   -ColorGroup colors `
-  -OutputPath docs/design/pixel-art-asset-pipeline/examples/player-craft-display-palette.png
-
-./tools/design/create_projectile_pixel_sheet.ps1
+  -OutputPath art/pixel/palettes/pixel-hangar-v1.png
 
 ./tools/design/validate_pixel_asset_inventory.ps1
+
+./tools/design/validate_pixel_asset_brief.ps1 `
+  -BriefPath docs/design/pixel-art-asset-pipeline/examples/player-craft.brief.json
 
 ./tools/design/validate_pixel_asset_manifest.ps1 `
   -ManifestPath docs/design/pixel-art-asset-pipeline/examples/player-craft.manifest.json `
@@ -307,23 +327,23 @@ From the repository root:
 
 ./tools/design/invoke_pixel_asset_build.ps1 `
   -ManifestPath docs/design/pixel-art-asset-pipeline/examples/player-craft.manifest.json `
-  -OutputDirectory docs/design/pixel-art-asset-pipeline/examples/player-craft-build
+  -OutputDirectory docs/design/pixel-art-asset-pipeline/examples/player-craft-build-v2
 
 ./tools/validation/validate_pixel_asset_pipeline.ps1
 ```
 
-The checked-in proof splits the 64-cell craft into body, two wings, cockpit,
-primary mount, and two engines, then reassembles it with zero changed pixels:
+The checked-in version-2 proofs split the 64-cell craft and 32-cell projectile
+into independent editable layers, reassemble them with zero changed pixels,
+pack them with the production gutter, aggregate them into a two-frame proof
+catalog, and build mandatory review boards:
 
-![Semantic split proof](./examples/player-craft-semantic-proof.png)
+![Player craft review](./examples/player-craft-build-v2/review.png)
 
-The projectile proof is authored directly on the logical pixel grid. Its 85
-contiguous `32 x 32` frames contain directional player flight, seeker flight,
-hostile threat pulses, affinity motion overlays, and separate impact clips.
-Frame regions, pivots, durations, directions, and leading/trailing anchors are
-stored in the adjacent JSON file:
+![Projectile review](./examples/projectile-proof/build/review.png)
 
-![Projectile animation sequences](./examples/projectile-system/projectile-system-preview.png)
+The earlier 85-frame projectile-system sheet and the pipeline sampler remain
+technical exploration evidence. They do not enter the version-2 catalog and are
+not approved product assets.
 
 The gameplay-density proof tests ownership, direction, and threat at native
 one- and two-times scale. It is offline evidence, not a claim that the atlas is

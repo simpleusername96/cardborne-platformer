@@ -1,40 +1,72 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://cardborne.local/schemas/pixel-asset-manifest.schema.json",
-  "title": "Cardborne Pixel Asset Job",
+  "title": "Cardborne Pixel Asset Manifest",
   "type": "object",
   "additionalProperties": false,
   "required": [
     "schema_version",
     "id",
     "family",
-    "canvas_size",
+    "approval_status",
+    "production_method",
+    "reference_ids",
+    "avoid_rules",
+    "guide_size",
     "logical_size",
     "palette_path",
     "semantic_palette_path",
     "transparent_color",
+    "runtime_group",
+    "runtime_layers",
     "layers",
     "pivot",
     "anchors",
+    "tile_signature",
+    "collision_reference",
+    "review_backgrounds",
+    "silhouette_area_tolerance",
+    "anchor_tolerance",
     "frames",
     "atlas"
   ],
   "properties": {
     "schema_version": {
-      "const": 1
+      "const": 2
     },
     "id": {
-      "type": "string",
-      "pattern": "^[a-z0-9_]+$"
+      "$ref": "#/$defs/id"
     },
     "family": {
-      "type": "string",
-      "pattern": "^[a-z0-9_]+$"
+      "$ref": "#/$defs/id"
     },
-    "canvas_size": {
+    "approval_status": {
+      "enum": ["proof", "candidate", "approved"]
+    },
+    "production_method": {
+      "enum": ["imagegen_assisted", "direct_pixel", "derived_view"]
+    },
+    "reference_ids": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 3,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/id"
+      }
+    },
+    "avoid_rules": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "guide_size": {
       "type": "integer",
-      "minimum": 64,
-      "maximum": 2048
+      "enum": [512, 768]
     },
     "logical_size": {
       "$ref": "#/$defs/size"
@@ -50,6 +82,17 @@
     "transparent_color": {
       "$ref": "#/$defs/color"
     },
+    "runtime_group": {
+      "$ref": "#/$defs/id"
+    },
+    "runtime_layers": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/id"
+      }
+    },
     "layers": {
       "type": "array",
       "minItems": 1,
@@ -59,8 +102,7 @@
         "required": ["id", "mask_color", "z", "required"],
         "properties": {
           "id": {
-            "type": "string",
-            "pattern": "^[a-z0-9_]+$"
+            "$ref": "#/$defs/id"
           },
           "mask_color": {
             "$ref": "#/$defs/color"
@@ -83,17 +125,57 @@
         "$ref": "#/$defs/point"
       }
     },
+    "tile_signature": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "const": "orthogonal_16"
+        }
+      ]
+    },
+    "collision_reference": {
+      "type": "string",
+      "minLength": 1
+    },
+    "review_backgrounds": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/id"
+      }
+    },
+    "silhouette_area_tolerance": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 0.25
+    },
+    "anchor_tolerance": {
+      "const": 1
+    },
     "frames": {
       "type": "array",
       "minItems": 1,
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["id", "source_path", "semantic_mask_path", "atlas_index"],
+        "required": [
+          "id",
+          "source_path",
+          "semantic_mask_path",
+          "source_sha256",
+          "atlas_index",
+          "variant",
+          "direction_index",
+          "state",
+          "sequence_index",
+          "duration_ms"
+        ],
         "properties": {
           "id": {
-            "type": "string",
-            "pattern": "^[a-z0-9_]+$"
+            "$ref": "#/$defs/id"
           },
           "source_path": {
             "type": "string",
@@ -103,18 +185,45 @@
             "type": "string",
             "minLength": 1
           },
+          "source_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
           "atlas_index": {
             "type": "integer",
             "minimum": 0
           },
-          "direction": {
+          "variant": {
+            "$ref": "#/$defs/id"
+          },
+          "direction_index": {
             "type": "integer",
             "minimum": 0,
             "maximum": 15
           },
           "state": {
-            "type": "string",
-            "pattern": "^[a-z0-9_]+$"
+            "$ref": "#/$defs/id"
+          },
+          "sequence_index": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 31
+          },
+          "duration_ms": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "tile_edges": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["north", "east", "south", "west"],
+            "properties": {
+              "north": {"type": "boolean"},
+              "east": {"type": "boolean"},
+              "south": {"type": "boolean"},
+              "west": {"type": "boolean"}
+            }
           }
         }
       }
@@ -122,21 +231,26 @@
     "atlas": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["columns", "padding"],
+      "required": ["columns", "padding", "extrude"],
       "properties": {
         "columns": {
           "type": "integer",
           "minimum": 1
         },
         "padding": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 16
+          "const": 2
+        },
+        "extrude": {
+          "const": 1
         }
       }
     }
   },
   "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9_]+$"
+    },
     "color": {
       "type": "string",
       "pattern": "^#[0-9A-Fa-f]{6}$"
@@ -152,8 +266,8 @@
     "size": {
       "type": "array",
       "prefixItems": [
-        {"type": "integer", "minimum": 1, "maximum": 256},
-        {"type": "integer", "minimum": 1, "maximum": 256}
+        {"type": "integer", "enum": [16, 24, 32, 48, 64, 96]},
+        {"type": "integer", "enum": [16, 24, 32, 48, 64, 96]}
       ],
       "items": false
     }

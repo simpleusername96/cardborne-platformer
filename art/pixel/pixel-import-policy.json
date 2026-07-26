@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "texture_filter": "nearest",
+  "mipmaps": false,
+  "repeat": false,
+  "lossless": true,
+  "integer_scale": true,
+  "atlas_padding": 2,
+  "atlas_extrude": 1,
+  "runtime_owner": "scripts/presentation/vehicle_combat_renderer.gd"
+}

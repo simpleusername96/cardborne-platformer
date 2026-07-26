@@ -12,8 +12,16 @@ param(
 $ErrorActionPreference = "Stop"
 
 $repoRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot "../.."))
-$specFile = [System.IO.Path]::GetFullPath((Join-Path $repoRoot $PaletteSpecPath))
-$destination = [System.IO.Path]::GetFullPath((Join-Path $repoRoot $OutputPath))
+$specFile = if ([System.IO.Path]::IsPathRooted($PaletteSpecPath)) {
+    [System.IO.Path]::GetFullPath($PaletteSpecPath)
+} else {
+    [System.IO.Path]::GetFullPath((Join-Path $repoRoot $PaletteSpecPath))
+}
+$destination = if ([System.IO.Path]::IsPathRooted($OutputPath)) {
+    [System.IO.Path]::GetFullPath($OutputPath)
+} else {
+    [System.IO.Path]::GetFullPath((Join-Path $repoRoot $OutputPath))
+}
 $colorPattern = "^#[0-9A-Fa-f]{6}$"
 $magick = Get-Command magick -ErrorAction Stop
 

@@ -84,9 +84,25 @@ foreach ($layer in @($manifest.layers)) {
 $sourcePixels = Read-PixelMap -Path $source
 $maskPixels = Read-PixelMap -Path $semanticMask
 $coverageErrors = [System.Collections.Generic.List[string]]::new()
+$allowedDisplayColors = @{}
+if ([int]$manifest.schema_version -eq 2) {
+    $palettePath = Resolve-InputPath -Path ([string]$manifest.palette_path)
+    $displayPalette = Get-Content -LiteralPath $palettePath -Raw | ConvertFrom-Json
+    foreach ($property in @($displayPalette.colors.PSObject.Properties)) {
+        $allowedDisplayColors[([string]$property.Value).ToUpperInvariant()] = $true
+    }
+}
 for ($y = 0; $y -lt $height; $y++) {
     for ($x = 0; $x -lt $width; $x++) {
         $key = "$x,$y"
+        if ($sourcePixels[$key].alpha -notin @("00", "FF")) {
+            $coverageErrors.Add("partial source alpha at $key")
+            continue
+        }
+        if ($maskPixels[$key].alpha -notin @("00", "FF")) {
+            $coverageErrors.Add("partial semantic-mask alpha at $key")
+            continue
+        }
         $sourceVisible = $sourcePixels[$key].alpha -ne "00"
         $maskVisible = $maskPixels[$key].alpha -ne "00"
         if ($sourceVisible -and -not $maskVisible) {
@@ -98,6 +114,13 @@ for ($y = 0; $y -lt $height; $y++) {
             continue
         }
         if (-not $sourceVisible) {
+            continue
+        }
+        if (
+            [int]$manifest.schema_version -eq 2 -and
+            -not $allowedDisplayColors.ContainsKey([string]$sourcePixels[$key].color)
+        ) {
+            $coverageErrors.Add("unknown display color $($sourcePixels[$key].color) at $key")
             continue
         }
         $maskColor = [string]$maskPixels[$key].color

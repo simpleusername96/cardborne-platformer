@@ -15,7 +15,12 @@ $destination = [System.IO.Path]::GetFullPath((Join-Path $repoRoot $OutputDirecto
 & (Join-Path $PSScriptRoot "validate_pixel_asset_manifest.ps1") -ManifestPath $ManifestPath -RequireInputFiles
 
 $manifest = Get-Content -LiteralPath $manifestFile -Raw | ConvertFrom-Json
-$canvasSize = [int]$manifest.canvas_size
+$schemaVersion = [int]$manifest.schema_version
+$canvasSize = if ($schemaVersion -eq 1) {
+    [int]$manifest.canvas_size
+} else {
+    [int]$manifest.guide_size
+}
 $logicalSize = @($manifest.logical_size)
 $cells = [int]$logicalSize[0]
 if ($cells -ne [int]$logicalSize[1]) {
@@ -24,6 +29,7 @@ if ($cells -ne [int]$logicalSize[1]) {
 if (-not [System.IO.Directory]::Exists($destination)) {
     [System.IO.Directory]::CreateDirectory($destination) | Out-Null
 }
+$magick = Get-Command magick -ErrorAction Stop
 
 foreach ($frame in @($manifest.frames | Sort-Object {[int]$_.atlas_index})) {
     $frameDirectory = Join-Path $destination ([string]$frame.id)
@@ -33,21 +39,36 @@ foreach ($frame in @($manifest.frames | Sort-Object {[int]$_.atlas_index})) {
     $snappedSource = Join-Path $frameDirectory "source.png"
     $snappedSemanticMask = Join-Path $frameDirectory "semantic-mask.png"
 
-    & (Join-Path $PSScriptRoot "snap_image_to_pixel_grid.ps1") `
-        -InputPath ([string]$frame.source_path) `
-        -PalettePath ([string]$manifest.palette_path) `
-        -OutputPath $snappedSource `
-        -CanvasSize $canvasSize `
-        -Cells $cells `
-        -TransparentColor ([string]$manifest.transparent_color)
+    if ($schemaVersion -eq 1) {
+        & (Join-Path $PSScriptRoot "snap_image_to_pixel_grid.ps1") `
+            -InputPath ([string]$frame.source_path) `
+            -PalettePath ([string]$manifest.palette_path) `
+            -OutputPath $snappedSource `
+            -CanvasSize $canvasSize `
+            -Cells $cells `
+            -TransparentColor ([string]$manifest.transparent_color)
 
-    & (Join-Path $PSScriptRoot "snap_image_to_pixel_grid.ps1") `
-        -InputPath ([string]$frame.semantic_mask_path) `
-        -PalettePath ([string]$manifest.semantic_palette_path) `
-        -OutputPath $snappedSemanticMask `
-        -CanvasSize $canvasSize `
-        -Cells $cells `
-        -TransparentColor ([string]$manifest.transparent_color)
+        & (Join-Path $PSScriptRoot "snap_image_to_pixel_grid.ps1") `
+            -InputPath ([string]$frame.semantic_mask_path) `
+            -PalettePath ([string]$manifest.semantic_palette_path) `
+            -OutputPath $snappedSemanticMask `
+            -CanvasSize $canvasSize `
+            -Cells $cells `
+            -TransparentColor ([string]$manifest.transparent_color)
+    } else {
+        # V2 inputs are already approved native masters. Normalize metadata only;
+        # resampling at this stage would invalidate both pixel intent and source hash.
+        $sourceInput = [System.IO.Path]::GetFullPath((Join-Path $repoRoot ([string]$frame.source_path)))
+        $maskInput = [System.IO.Path]::GetFullPath((Join-Path $repoRoot ([string]$frame.semantic_mask_path)))
+        & $magick.Source $sourceInput -depth 8 -strip $snappedSource
+        if ($LASTEXITCODE -ne 0) {
+            throw "Could not normalize approved source: $($frame.id)"
+        }
+        & $magick.Source $maskInput -depth 8 -strip $snappedSemanticMask
+        if ($LASTEXITCODE -ne 0) {
+            throw "Could not normalize semantic mask: $($frame.id)"
+        }
+    }
 
     $sourceRelative = [System.IO.Path]::GetRelativePath($repoRoot, $snappedSource).Replace("\", "/")
     $maskRelative = [System.IO.Path]::GetRelativePath($repoRoot, $snappedSemanticMask).Replace("\", "/")

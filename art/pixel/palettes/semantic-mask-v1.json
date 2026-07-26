@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": "semantic_mask_v1",
+  "transparent_color": "#FFFFFF",
+  "colors": {
+    "layer_0": "#FF0000",
+    "layer_1": "#00FF00",
+    "layer_2": "#0000FF",
+    "layer_3": "#FFFF00",
+    "layer_4": "#FF00FF",
+    "layer_5": "#00FFFF",
+    "layer_6": "#FF8000",
+    "layer_7": "#8000FF"
+  }
+}
