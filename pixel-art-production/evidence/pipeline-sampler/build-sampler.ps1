@@ -2,10 +2,10 @@ param()
 
 $ErrorActionPreference = "Stop"
 
-$repoRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot "../../../.."))
+$repoRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot "../../.."))
 $samplerRoot = [System.IO.Path]::GetFullPath($PSScriptRoot)
 $magick = Get-Command magick -ErrorAction Stop
-$designTools = Join-Path $repoRoot "tools/design"
+$designTools = Join-Path $repoRoot "pixel-art-production/tools/design"
 
 function Resolve-SamplerPath {
     param([string]$RelativePath)

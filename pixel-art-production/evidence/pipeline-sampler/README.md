@@ -6,7 +6,7 @@ created: 2026-07-27
 last_reviewed: 2026-07-27
 scope: A bounded six-category proof of the Cardborne pixel-asset production pipeline
 related:
-  - ../../../execplans/2026-07-27-pixel-asset-production-and-integration.md
+  - ../../PLAN.md
   - ../../README.md
   - ../../design/visual-research/PART_GUIDELINES.md
 ---
@@ -95,5 +95,5 @@ or runtime migration.
 Rebuild the evidence from the repository root:
 
 ```powershell
-.\.agents\evidence\pixel-art\pipeline-sampler\build-sampler.ps1
+.\pixel-art-production\evidence\pipeline-sampler\build-sampler.ps1
 ```

@@ -60,6 +60,12 @@ $idPattern = "^[a-z0-9_]+$"
 $colorPattern = "^#[0-9A-Fa-f]{6}$"
 $hashPattern = "^[0-9a-f]{64}$"
 $schemaVersion = [int]$manifest.schema_version
+$tileSignatureProperty = $manifest.PSObject.Properties["tile_signature"]
+$tileSignature = if ($null -ne $tileSignatureProperty) {
+    [string]$tileSignatureProperty.Value
+} else {
+    ""
+}
 
 if ($schemaVersion -notin @(1, 2)) {
     $script:Errors.Add("schema_version must be 1 or 2")
@@ -135,7 +141,7 @@ if ($schemaVersion -eq 1) {
     if ([string]::IsNullOrWhiteSpace([string]$manifest.collision_reference)) {
         $script:Errors.Add("collision_reference must not be empty")
     }
-    if ($null -ne $manifest.tile_signature -and [string]$manifest.tile_signature -ne "orthogonal_16") {
+    if (-not [string]::IsNullOrWhiteSpace($tileSignature) -and $tileSignature -ne "orthogonal_16") {
         $script:Errors.Add("tile_signature must be null or orthogonal_16")
     }
 }
@@ -239,7 +245,7 @@ foreach ($frame in @($manifest.frames)) {
         if ([string]$frame.source_sha256 -notmatch $hashPattern) {
             $script:Errors.Add("$frameId source_sha256 must be lowercase SHA-256")
         }
-        if ([string]$manifest.tile_signature -eq "orthogonal_16") {
+        if ($tileSignature -eq "orthogonal_16") {
             $edgeNames = @("north", "east", "south", "west")
             $tileEdgesProperty = $frame.PSObject.Properties["tile_edges"]
             if ($null -eq $tileEdgesProperty) {
@@ -264,7 +270,7 @@ foreach ($frame in @($manifest.frames)) {
         }
     }
 }
-if ([string]$manifest.tile_signature -eq "orthogonal_16" -and $tileEdgeSignatures.Count -ne 16) {
+if ($tileSignature -eq "orthogonal_16" -and $tileEdgeSignatures.Count -ne 16) {
     $script:Errors.Add("orthogonal_16 manifests must contain all 16 unique tile edge signatures")
 }
 if ($frameIds.Count -eq 0) {
