@@ -29,8 +29,8 @@ func _run() -> void:
 		)
 		_expect(
 			renderer.get_node_or_null("Pixel_player_under") != null
-				and renderer.get_node_or_null("Pixel_player_over") != null,
-			"player chassis layers use retained pixel-atlas batches"
+				and renderer.get_node_or_null("Overlay_player_barrel") != null,
+			"player chassis and live aimed barrel use retained batches"
 		)
 	else:
 		_expect(
@@ -129,7 +129,7 @@ func _run() -> void:
 		Vector2(260.0,300.0), 1.0, true, "renderer_enemy",
 		{
 			"zones":[], "trails":[], "player_position":Vector2(260.0,300.0),
-			"hull_direction":Vector2.RIGHT, "aim_direction":Vector2.RIGHT,
+			"hull_direction":Vector2.RIGHT, "aim_direction":Vector2.DOWN,
 			"player_hit":false, "muzzle_flash":0.0, "barrier_strength":10.0,
 			"reduced_motion":true, "run_time":1.0, "ion_level":0,
 			"blade_level":0, "escort_drone":false, "secondary":{},
@@ -199,14 +199,22 @@ func _run() -> void:
 			"pixel projectile uploads a bounded non-empty atlas region"
 		)
 		var player_under := renderer.get_node("Pixel_player_under") as MultiMeshInstance2D
-		var player_over := renderer.get_node("Pixel_player_over") as MultiMeshInstance2D
+		var player_barrel := renderer.get_node("Overlay_player_barrel") as MultiMeshInstance2D
+		var player_barrel_buffer := player_barrel.multimesh.buffer
 		_expect(
 			player_under.multimesh.visible_instance_count >= 2,
 			"pixel player publishes its chassis and propulsion layers"
 		)
 		_expect(
-			player_over.multimesh.visible_instance_count == 1,
-			"pixel player publishes one independently aimed weapon layer"
+			player_barrel.multimesh.visible_instance_count == 2,
+			"pixel player publishes a live outline and core for its aimed barrel"
+		)
+		_expect(
+			Vector2(player_barrel_buffer[3], player_barrel_buffer[7])
+				.is_equal_approx(Vector2(260.0, 322.0))
+				and Vector2(player_barrel_buffer[0], player_barrel_buffer[4])
+					.normalized().is_equal_approx(Vector2.DOWN),
+			"live barrel follows aim independently from the right-facing chassis"
 		)
 	else:
 		var projectile_head := renderer.get_node("Projectile_head_player") as MultiMeshInstance2D

@@ -146,7 +146,7 @@ func _enemy(health_class: StringName, role: StringName, carrier_id: String = "")
 func _validate_level_up_cards() -> void:
 	var catalog := UpgradeCatalog.new()
 	var build := RunBuild.new(catalog)
-	var offer := catalog.offer(build, 0, 0, &"level_up")
+	var offer := catalog.offer(build, 0, 0, &"level_up", 0)
 	_expect(offer.size() == 3, "level-up source produces three choices")
 	var cycles := CycleRuntime.new()
 	build.apply(&"aegis_cycle")

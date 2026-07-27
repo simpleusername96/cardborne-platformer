@@ -340,7 +340,10 @@ Breach Shot.
   focus layers. They block carried input and provide deterministic keyboard focus.
 - One upgrade offer contains at most one instance of each card ID. Selection
   diversity rules may prefer families or unlocked branches but never duplicate
-  a card within the same three-card choice.
+  a card within the same three-card choice. Each newly opened reward
+  transaction advances a run-scoped constrained draw, while the cards remain
+  frozen for that transaction until the player confirms or declines it; UI
+  refreshes never reroll an open offer.
   Deployment includes three clearly selected, keyboard-focusable difficulty
   choices with concise Korean and English pressure descriptions.
 

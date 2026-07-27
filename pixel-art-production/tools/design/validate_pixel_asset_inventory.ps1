@@ -51,14 +51,14 @@ if ([int]$inventory.schema_version -ne 2) {
 if ($null -eq $inventory.assets -or @($inventory.assets).Count -eq 0) {
     $errors.Add("assets must contain at least one entry")
 }
-if (@($inventory.assets).Count -ne 40) {
-    $errors.Add("inventory must contain exactly 40 asset families")
+if (@($inventory.assets).Count -ne 39) {
+    $errors.Add("inventory must contain exactly 39 asset families")
 }
-if ([int]$inventory.raster_frame_ceiling -ne 678) {
-    $errors.Add("raster_frame_ceiling must be 678")
+if ([int]$inventory.raster_frame_ceiling -ne 646) {
+    $errors.Add("raster_frame_ceiling must be 646")
 }
-if ([int]$inventory.canonical_job_total -ne 44) {
-    $errors.Add("canonical_job_total must be 44")
+if ([int]$inventory.canonical_job_total -ne 43) {
+    $errors.Add("canonical_job_total must be 43")
 }
 
 foreach ($asset in @($inventory.assets)) {
@@ -160,6 +160,61 @@ foreach ($asset in @($inventory.assets)) {
             -not [System.IO.Directory]::Exists($ownerPath)
         ) {
             $errors.Add("$id references missing current_owner: $owner")
+        }
+    }
+}
+
+# Approved production roots must not retain families retired from inventory.
+# Candidate and evidence roots are intentionally excluded because they are
+# historical review records rather than publishable asset sources.
+$approvedArtifactRoots = @(
+    [ordered]@{
+        relative_path = "pixel-art-production/assets/briefs/approved/phase-2"
+        kind = "brief"
+    },
+    [ordered]@{
+        relative_path = "pixel-art-production/assets/manifests/approved/phase-2"
+        kind = "manifest"
+    },
+    [ordered]@{
+        relative_path = "pixel-art-production/assets/source/approved/phase-2"
+        kind = "directory"
+    },
+    [ordered]@{
+        relative_path = "pixel-art-production/assets/generated/approved/phase-2/build"
+        kind = "directory"
+    },
+    [ordered]@{
+        relative_path = "pixel-art-production/assets/generated/approved/complete/frames"
+        kind = "directory"
+    }
+)
+foreach ($rootSpec in $approvedArtifactRoots) {
+    $artifactRoot = Join-Path $repoRoot ([string]$rootSpec.relative_path)
+    if (-not [System.IO.Directory]::Exists($artifactRoot)) {
+        continue
+    }
+    $artifacts = switch ([string]$rootSpec.kind) {
+        "brief" {
+            Get-ChildItem -LiteralPath $artifactRoot -File -Filter "*.brief.json"
+        }
+        "manifest" {
+            Get-ChildItem -LiteralPath $artifactRoot -File -Filter "*.manifest.json"
+        }
+        default {
+            Get-ChildItem -LiteralPath $artifactRoot -Directory
+        }
+    }
+    foreach ($artifact in @($artifacts)) {
+        $family = switch ([string]$rootSpec.kind) {
+            "brief" { $artifact.Name.Substring(0, $artifact.Name.Length - ".brief.json".Length) }
+            "manifest" { $artifact.Name.Substring(0, $artifact.Name.Length - ".manifest.json".Length) }
+            default { $artifact.Name }
+        }
+        if (-not $ids.ContainsKey($family)) {
+            $errors.Add(
+                "approved artifact family absent from inventory: $family ($($rootSpec.relative_path))"
+            )
         }
     }
 }

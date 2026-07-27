@@ -62,13 +62,24 @@ func compatible(definition: VehicleUpgradeDefinition, build: VehicleRunBuild) ->
 	return true
 
 
-func offer(build: VehicleRunBuild, run_index: int, stage_index: int, source_id: StringName) -> Array[VehicleUpgradeDefinition]:
+## Stable within one reward transaction; callers advance offer_serial exactly
+## once when a new transaction opens.
+func offer(
+	build: VehicleRunBuild,
+	run_seed: int,
+	stage_index: int,
+	source_id: StringName,
+	offer_serial: int
+) -> Array[VehicleUpgradeDefinition]:
 	var available: Array[VehicleUpgradeDefinition] = []
 	for definition in all_definitions():
 		var source_matches := source_id == &"level_up" or definition.source_tags.is_empty() or source_id in definition.source_tags
 		if compatible(definition, build) and source_matches:
 			available.append(definition)
-	var seed_value := hash("%d:%d:%s" % [run_index, stage_index, source_id])
+	var seed_value := hash(
+		"upgrade-offer:v2:%d:%d:%s:%d"
+		% [run_seed, stage_index, source_id, offer_serial]
+	)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value
 	for index in range(available.size() - 1, 0, -1):

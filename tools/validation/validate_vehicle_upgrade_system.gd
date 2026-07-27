@@ -14,9 +14,15 @@ func _initialize() -> void:
 		var definition := catalog.get_definition(id)
 		_expect(definition != null and definition.max_level == 3 and definition.family == &"secondary", "%s is a three-level secondary" % id)
 	var build := RunBuild.new(catalog)
-	for run_index in 24:
+	for run_seed in 24:
 		for source_id in [&"level_up", &"boss", &"cache"]:
-			var offer := catalog.offer(build, run_index, run_index % 5, source_id)
+			var offer := catalog.offer(
+				build,
+				run_seed,
+				run_seed % 5,
+				source_id,
+				run_seed
+			)
 			var offered_ids := {}
 			for card in offer:
 				offered_ids[card.id] = true
@@ -24,6 +30,21 @@ func _initialize() -> void:
 				offered_ids.size() == offer.size(),
 				"one offer never repeats an upgrade card"
 			)
+	var stable_offer_a := catalog.offer(build, 0xCA4D, 1, &"level_up", 7)
+	var stable_offer_b := catalog.offer(build, 0xCA4D, 1, &"level_up", 7)
+	_expect(
+		_offer_key(stable_offer_a) == _offer_key(stable_offer_b),
+		"one reward transaction remains stable for the same run seed and serial"
+	)
+	var sequential_offers := {}
+	for offer_serial in 12:
+		sequential_offers[
+			_offer_key(catalog.offer(build, 0xCA4D, 1, &"level_up", offer_serial))
+		] = true
+	_expect(
+		sequential_offers.size() > 1,
+		"successive reward transactions draw more than one constrained offer"
+	)
 	var expected := [280.0, 302.4, 324.8, 347.2]
 	_expect(is_equal_approx(build.stat(&"move_speed_multiplier", 280.0), expected[0]), "base movement is 280")
 	for level in 3:
@@ -31,7 +52,7 @@ func _initialize() -> void:
 		_expect(is_equal_approx(build.stat(&"move_speed_multiplier", 280.0), expected[level + 1]), "Tuned Thrusters uses exact level speed")
 	build.reset()
 	build.apply(&"kinetic_rounds")
-	var second_offer := catalog.offer(build, 0, 0, &"level_up")
+	var second_offer := catalog.offer(build, 0, 0, &"level_up", 1)
 	_expect(second_offer.any(func(card): return card.id == &"tuned_thrusters"), "second level-up offers Tuned Thrusters")
 	build.reset()
 	_expect(bool(build.apply(&"incendiary_core").get("applied", false)), "fire root applies")
@@ -40,7 +61,7 @@ func _initialize() -> void:
 	_expect(not catalog.compatible(catalog.get_definition(&"flashover"), build), "Flashover remains locked before Thermal Compound")
 	build.apply(&"thermal_compound")
 	_expect(catalog.compatible(catalog.get_definition(&"flashover"), build), "Flashover unlocks from Thermal Compound")
-	var branch_offer := catalog.offer(build, 4, 1, &"level_up")
+	var branch_offer := catalog.offer(build, 4, 1, &"level_up", 3)
 	_expect(
 		branch_offer.any(func(card): return card.id in [&"flashover", &"concentrated_toxin", &"deep_freeze"]),
 		"level-up reserves an eligible child from an owned least-progressed branch"
@@ -52,6 +73,13 @@ func _initialize() -> void:
 	_expect(not catalog.compatible(catalog.get_definition(&"wake_mines"), build), "a fourth total family is blocked")
 	_expect(catalog.compatible(catalog.get_definition(&"ion_field"), build), "owned family remains levelable")
 	_finish()
+
+
+func _offer_key(offer: Array[VehicleUpgradeDefinition]) -> String:
+	var ids := PackedStringArray()
+	for definition in offer:
+		ids.append(String(definition.id))
+	return "|".join(ids)
 
 
 func _expect(condition: bool, message: String) -> void:

@@ -386,48 +386,11 @@
         "armor"
       ],
       "priority": "P0",
-      "notes": "Hit and invulnerability are runtime overlays; armor uses controlled palette depth.",
+      "notes": "The fixed mount and muzzle anchor belong to the chassis; hit, invulnerability, and independently aimed barrel feedback remain runtime overlays.",
       "production_method": "imagegen_assisted",
       "guide_size": 512,
       "runtime_group": "player",
       "frame_ceiling": 16,
-      "canonical_jobs": 1
-    },
-    {
-      "id": "player_primary_weapon",
-      "category": "player",
-      "current_owner": [
-        "scripts/player/vehicle_primary_weapon.gd",
-        "scripts/presentation/vehicle_combat_renderer.gd"
-      ],
-      "current_representation": "procedural_geometry",
-      "target_representation": "raster_atlas",
-      "master_size": [
-        64,
-        64
-      ],
-      "variants": [
-        "pulse_cannon"
-      ],
-      "directions": 16,
-      "states": [
-        "idle",
-        "recoil",
-        "opening_ready",
-        "muzzle_flash"
-      ],
-      "semantic_layers": [
-        "mount",
-        "barrel",
-        "power_core",
-        "muzzle_fx"
-      ],
-      "priority": "P0",
-      "notes": "Aims independently from movement; power depth affects this layer only.",
-      "production_method": "imagegen_assisted",
-      "guide_size": 512,
-      "runtime_group": "player",
-      "frame_ceiling": 32,
       "canonical_jobs": 1
     },
     {
@@ -1603,6 +1566,6 @@
     "combat_overlays",
     "ui"
   ],
-  "canonical_job_total": 44,
-  "raster_frame_ceiling": 678
+  "canonical_job_total": 43,
+  "raster_frame_ceiling": 646
 }

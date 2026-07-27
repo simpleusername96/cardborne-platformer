@@ -165,6 +165,7 @@ var applied_upgrades: Dictionary = run_build.levels
 var current_card_offer: Array[Dictionary] = []
 var current_reward_source: StringName = &""
 var current_reward_optional := false
+var _upgrade_offer_serial := 0
 var claimed_reward_sources: Dictionary = {}
 var completed_group_rewards: Dictionary = {}
 var pending_stage_completion := false
@@ -562,6 +563,7 @@ func _reset_run(
 		run_build.reset()
 		stage_telemetry.reset_run()
 		experience_runtime.reset()
+		_upgrade_offer_serial = 0
 		selected_upgrade_title_key = "UPGRADE_NONE"
 		claimed_reward_sources.clear()
 	else:
@@ -3559,7 +3561,9 @@ func _open_upgrade_reward(source_id: StringName, optional: bool) -> void:
 	mode = RunMode.UPGRADE
 	current_reward_source = source_id
 	current_reward_optional = optional
-	current_card_offer = _build_card_offer(source_id)
+	var offer_serial := _upgrade_offer_serial
+	_upgrade_offer_serial += 1
+	current_card_offer = _build_card_offer(source_id, offer_serial)
 	_ui.show_upgrade(current_card_offer, optional)
 	_play_sound(&"card", 0.9)
 	_set_mouse_for_mode()
@@ -3627,9 +3631,19 @@ func _advance_reward_queue() -> void:
 		_finalize_stage_completion()
 
 
-func _build_card_offer(source_id: StringName) -> Array[Dictionary]:
+func _build_card_offer(
+	source_id: StringName,
+	offer_serial: int
+) -> Array[Dictionary]:
 	var cards: Array[Dictionary] = []
-	for definition in upgrade_catalog.offer(run_build, run_index, current_stage_index, source_id):
+	var run_seed := field_layout.seed if field_layout != null else run_index
+	for definition in upgrade_catalog.offer(
+		run_build,
+		run_seed,
+		current_stage_index,
+		source_id,
+		offer_serial
+	):
 		var current_level := run_build.level_of(definition.id)
 		cards.append(UpgradeOfferPresenter.snapshot(definition, current_level))
 	return cards

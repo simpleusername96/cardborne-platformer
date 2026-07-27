@@ -41,7 +41,6 @@ const ARC := Color("#9B59B6")
 
 const PHASE2_FAMILIES := [
 	"player_chassis",
-	"player_primary_weapon",
 	"player_engine_modules",
 	"player_engine_flame",
 	"player_dash_effect",

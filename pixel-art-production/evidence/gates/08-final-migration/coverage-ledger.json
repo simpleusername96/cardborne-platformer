@@ -1,8 +1,8 @@
 {
-	"atlas_sha256": "33c89ce0976af93ab23301da9481f1a8b2facb05752611d3f9c070d39fe15d72",
+	"atlas_sha256": "394231cbb496ce920e077774a8171f7c40329484bd08e53ff32bb3b8d25e048a",
 	"atlas_size": [
 		1630,
-		1834
+		1766
 	],
 	"families": [
 		{
@@ -34,12 +34,6 @@
 			"id": "player_primary_projectiles",
 			"production_method": "imagegen_assisted",
 			"runtime_group": "player_projectiles"
-		},
-		{
-			"frame_count": 32,
-			"id": "player_primary_weapon",
-			"production_method": "imagegen_assisted",
-			"runtime_group": "player"
 		},
 		{
 			"frame_count": 5,
@@ -246,8 +240,8 @@
 			"runtime_group": "ui"
 		}
 	],
-	"inventory_assets": 40,
-	"published_assets": 40,
-	"published_frames": 644,
+	"inventory_assets": 39,
+	"published_assets": 39,
+	"published_frames": 612,
 	"schema_version": 1
 }

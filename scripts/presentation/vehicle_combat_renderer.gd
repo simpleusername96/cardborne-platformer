@@ -142,7 +142,6 @@ var _batches: Array[BatchHandle] = []
 var _pixel_catalog: VehiclePixelAssetCatalog
 var _pixel_enabled := false
 var _player_pixel_under: BatchHandle
-var _player_pixel_over: BatchHandle
 var _player_projectile_pixel: BatchHandle
 var _misc_pixel_batch: BatchHandle
 
@@ -352,8 +351,12 @@ func _build_batches() -> void:
 		_player_pixel_under = _create_atlas_batch(
 			"Pixel_player_under", 8, 4, &"player_chassis"
 		)
-		_player_pixel_over = _create_atlas_batch(
-			"Pixel_player_over", 4, 5, &"player_chassis"
+		_overlay_batches[&"player_barrel"] = _create_batch(
+			"Overlay_player_barrel",
+			Visuals.effect_mesh(&"beam"),
+			2,
+			5,
+			&"overlay_player_barrel"
 		)
 	else:
 		_overlay_batches[&"player_hull"] = _create_batch(
@@ -1226,16 +1229,12 @@ func _sync_pixel_player(
 	feedback_color: Color
 ) -> void:
 	var hull_direction_index := _pixel_catalog.direction_index(hull_direction, 16)
-	var aim_direction_index := _pixel_catalog.direction_index(aim_direction, 16)
 	var hull_tier := clampi(int(state.get("hull_visual_tier", 0)), 0, 3)
-	var primary_tier := clampi(int(state.get("primary_visual_tier", 0)), 0, 3)
 	var hull_tint := Color.WHITE * (1.0 - float(hull_tier) * 0.10)
-	var primary_tint := Color.WHITE * (1.0 - float(primary_tier) * 0.10)
 	# The invulnerability ring already carries that state; preserve the authored
 	# pixel palette unless this frame is responding to an actual hit.
 	if float(state.get("player_hit_remaining", 0.0)) > 0.0 and feedback_color.a > 0.0:
 		hull_tint = Color(1.0, 0.50, 0.50, feedback_color.a)
-		primary_tint = hull_tint
 	var moving := float(state.get("player_speed", 0.0)) > 12.0
 	var flame_variant := &"thrust" if moving else &"idle"
 	var flame_frame := _pixel_catalog.frame(
@@ -1311,26 +1310,16 @@ func _sync_pixel_player(
 			hull_frame
 		)
 	var muzzle_flash := float(state.get("muzzle_flash", 0.0))
-	var weapon_state := &"recoil" if muzzle_flash > 0.0 else &"idle"
-	var weapon_frame := _pixel_catalog.frame(
-		&"player_primary_weapon",
-		&"pulse_cannon",
-		aim_direction_index,
-		weapon_state,
-		0
+	var barrel_tip_distance := 28.0 if muzzle_flash > 0.0 else 32.0
+	_write_player_barrel(
+		position,
+		aim_direction,
+		barrel_tip_distance,
+		_primary_color
 	)
-	if not weapon_frame.is_empty():
-		_write_atlas_instance(
-			_player_pixel_over,
-			position,
-			0.0,
-			Vector2.ONE * 32.0,
-			primary_tint,
-			weapon_frame
-		)
 	if muzzle_flash > 0.0:
 		_write_diamond(
-			position + aim_direction * 32.0,
+			position + aim_direction * barrel_tip_distance,
 			7.0 + muzzle_flash * 45.0,
 			Art.IVORY_BRIGHT
 		)
@@ -1444,6 +1433,38 @@ func _write_beam(from: Vector2, to: Vector2, width: float, color: Color) -> void
 	_write_instance_basis(
 		_overlay_batches[&"beam"], from + vector * 0.5,
 		vector / length, Vector2(length * 0.5, width / 0.32), color
+	)
+
+
+func _write_player_barrel(
+	position: Vector2,
+	aim_direction: Vector2,
+	tip_distance: float,
+	color: Color
+) -> void:
+	if aim_direction.is_zero_approx():
+		return
+	var direction := aim_direction.normalized()
+	var barrel_start := position + direction * 12.0
+	var barrel_end := position + direction * tip_distance
+	var vector := barrel_end - barrel_start
+	var length := vector.length()
+	if length <= 0.001:
+		return
+	var center := barrel_start + vector * 0.5
+	_write_instance_basis(
+		_overlay_batches[&"player_barrel"],
+		center,
+		direction,
+		Vector2(length * 0.5, 7.0 / 0.32),
+		Art.INK
+	)
+	_write_instance_basis(
+		_overlay_batches[&"player_barrel"],
+		center,
+		direction,
+		Vector2(length * 0.5, 3.0 / 0.32),
+		color
 	)
 
 

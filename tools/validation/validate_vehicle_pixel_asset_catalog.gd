@@ -10,20 +10,18 @@ func _initialize() -> void:
 	_expect(catalog.is_ready(), "published pixel catalog loads")
 	var expected_families: Array[StringName] = [
 		&"player_chassis",
-		&"player_primary_weapon",
 		&"player_engine_modules",
 		&"player_engine_flame",
 		&"player_dash_effect",
 		&"player_primary_projectiles",
 	]
 	_expect(
-		catalog.published_families().size() == 40,
-		"all forty inventory families are published exactly once"
+		catalog.published_families().size() == 39,
+		"all thirty-nine inventory families are published exactly once"
 	)
 	for family in expected_families:
 		_expect(catalog.has_family(family), "%s remains published" % String(family))
 	var chassis := catalog.frame(&"player_chassis", &"base", 15, &"normal")
-	var recoil := catalog.frame(&"player_primary_weapon", &"pulse_cannon", 7, &"recoil")
 	var engines := catalog.frame(&"player_engine_modules", &"module_count_3", 12, &"installed")
 	var dash := catalog.frame(&"player_dash_effect", &"travel", 4, &"frame_0")
 	var breach := catalog.frame(
@@ -35,7 +33,6 @@ func _initialize() -> void:
 	var preview := catalog.first_frame(&"boss_set", &"leviathan", &"read")
 	for pair in [
 		["chassis", chassis],
-		["weapon recoil", recoil],
 		["engine count", engines],
 		["dash", dash],
 		["breach projectile", breach],

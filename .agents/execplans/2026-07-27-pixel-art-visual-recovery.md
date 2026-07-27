@@ -64,6 +64,7 @@ recorded truthfully.
 | Runtime publication | Import approved recovery frames ahead of procedural fallback into the existing shared atlas and catalog. | Preserves retained batching and avoids a second renderer. |
 | Missing approved art | An `imagegen_assisted` family with no reviewed source fails publication; it is never silently fabricated by `_make_sprite()`. | Fixes the provenance defect. |
 | Direct-pixel allowance | `procedural_pixel` and explicitly `direct_pixel` families may remain code-authored only when the inventory and runtime catalog both say so. | Live telegraphs, timers, positions, and localized UI remain dynamic. |
+| Mounted primary | The fixed mount stays in `player_chassis`; the independently aimed barrel, recoil offset, and muzzle flash are retained live direct-pixel presentation, not a separate raster family. | Manual aim remains responsive without multiplying or regenerating 64×64 weapon frames. |
 | Map ownership | Art is repeated/positioned from stage geometry; collision, navigation, line of sight, projectile walls, and minimap geometry remain unchanged. | Product and design invariants. |
 | Rollout unit | Six visible masters per batch, followed by native and gameplay review before the next batch. | Keeps rejection/revision bounded. |
 | Dependencies | Godot 4.7, GDScript, existing PowerShell/ImageMagick tools, and built-in Image Gen only. | No dependency change is needed. |
@@ -211,8 +212,8 @@ Batch guard:
 
 Goal: recover the complete friendly-ownership and collection layer.
 
-- [ ] Replace every frame in `player_chassis`, `player_primary_weapon`,
-  `player_engine_modules`, `player_engine_flame`, `player_dash_effect`,
+- [ ] Replace every frame in `player_chassis`, `player_engine_modules`,
+  `player_engine_flame`, `player_dash_effect`,
   `player_primary_projectiles`, `player_projectile_modifier_overlays`,
   `experience_shards`, `repair_pickup`, and `experience_recall_pickup`.
 - [ ] Preserve the one-second opening shot, held primary fire, dash, upgrade

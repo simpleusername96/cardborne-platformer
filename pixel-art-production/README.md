@@ -44,8 +44,8 @@ icon artwork without turning collision, telegraphs, localization, or changing
 runtime values into bitmaps.
 
 The complete machine-readable inventory is
-[`assets/asset-inventory.json`](./assets/asset-inventory.json). It currently contains 40 asset
-families: 30 raster-atlas families, nine procedurally positioned pixel
+[`assets/asset-inventory.json`](./assets/asset-inventory.json). It currently contains 39 asset
+families: 29 raster-atlas families, nine procedurally positioned pixel
 families, and one live-UI family.
 
 ## Scope
@@ -84,7 +84,7 @@ atlases as a presentation replacement. Gameplay geometry remains the sole truth.
 | Group | Asset families |
 | --- | --- |
 | Environment, terrain, facilities, props (9) | `world_floor_void_tiles`, `wall_cover_tiles`, `water_void_edge_tiles`, `arc_surge_strip`, `breakable_bulkhead`, `transit_gate`, `repair_field`, `overdrive_field`, `reward_crate` |
-| Player and effects (8) | `player_chassis`, `player_primary_weapon`, `player_engine_modules`, `player_engine_flame`, `player_dash_effect`, `player_status_overlays`, `enemy_condition_overlays`, `impact_effects` |
+| Player and effects (7) | `player_chassis`, `player_engine_modules`, `player_engine_flame`, `player_dash_effect`, `player_status_overlays`, `enemy_condition_overlays`, `impact_effects` |
 | Enemies and bosses (4) | `mobile_enemy_set`, `stationary_enemy_set`, `elite_trait_overlays`, `boss_set` |
 | Projectiles (3) | `player_primary_projectiles`, `player_projectile_modifier_overlays`, `hostile_projectile_affinities` |
 | Secondary weapons (5) | `secondary_seeker`, `secondary_ion_field`, `secondary_orbit_blades`, `secondary_wake_mines`, `secondary_escort_drone` |
@@ -260,7 +260,7 @@ must pass full edge comparison plus a repeated `3 x 3` seam proof.
 `build_pixel_asset_catalog.ps1` aggregates version-2 atlas metadata into stable
 runtime keys. The catalog validator checks checksums, region bounds, extrusion,
 transparent gutters, and duplicate keys. The frame-budget validator enforces
-each inventory-family ceiling and the global `678`-frame limit.
+each inventory-family ceiling and the global `646`-frame limit.
 
 `build_pixel_asset_review.ps1` produces the mandatory native-size, enlarged
 nearest-neighbor, pivot/anchor, silhouette, grayscale, and declared-background

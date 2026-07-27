@@ -484,15 +484,6 @@ foreach ($directory in @($nativeRoot, $buildRoot, $canonicalRoot, $reviewRoot)) 
     Ensure-Directory -Path $directory
 }
 
-$weaponCanonical = Normalize-ImageGenSource `
-    -RawName "player-primary-weapon-raw.png" `
-    -OutputName "player-primary-weapon-north.png" `
-    -Cells 64 `
-    -Replacements @{
-        "#222B35" = "#202833"
-        "#596774" = "#44515E"
-        "#769A32" = "#D9A83D"
-    }
 $standardCanonical = Normalize-ImageGenSource `
     -RawName "player-standard-shot-raw.png" `
     -OutputName "player-standard-shot-east.png" `
@@ -570,63 +561,6 @@ foreach ($direction in @(
         -DurationMs 0 `
         -Pivot (Convert-Point -Point @(32, 32) -Size 64 -ClockwiseDegrees $direction.angle) `
         -Anchors (Convert-Anchors -Anchors $northChassisAnchors -Size 64 -ClockwiseDegrees $direction.angle)
-}
-
-$weapon = New-AssetConfig `
-    -Id "phase1_player_primary_weapon" `
-    -Family "player_primary_weapon" `
-    -Size 64 `
-    -Method "imagegen_assisted" `
-    -RuntimeGroup "player" `
-    -Layers @(
-        [ordered]@{id = "mount"; mask_color = "#FF0000"; z = 0; required = $true},
-        [ordered]@{id = "barrel"; mask_color = "#00FF00"; z = 1; required = $true},
-        [ordered]@{id = "power_core"; mask_color = "#0000FF"; z = 2; required = $true},
-        [ordered]@{id = "muzzle_fx"; mask_color = "#FFFF00"; z = 3; required = $true}
-    ) `
-    -DefaultAnchors @{mount = @(32, 44); muzzle = @(32, 9)} `
-    -Columns 4 `
-    -AllowedPaletteRoles @("structure_recess", "deck_shadow", "deck_base", "player_reward", "player_energy", "neutral_highlight") `
-    -GameplayIdentity "Centered pulse-cannon module candidate for player manual aim and held fire." `
-    -SilhouetteRequirement "One compact rear mount and one long forward barrel read as a weapon, not a vehicle." `
-    -OrientationCue "The barrel and pale muzzle cap define the forward direction."
-$weaponBaseMask = Join-Path $canonicalRoot "player-primary-weapon-north-mask.png"
-New-SemanticMask `
-    -SourcePath $weaponCanonical `
-    -OutputPath $weaponBaseMask `
-    -Size 64 `
-    -ResolveSemanticColor {
-        param($x, $y, $color)
-        if ($color -eq "#65A9B8") { return "#0000FF" }
-        if ($color -eq "#E8EEF0") { return "#FFFF00" }
-        if ($y -le 32) { return "#00FF00" }
-        return "#FF0000"
-    }
-$northWeaponAnchors = @{mount = @(32, 44); muzzle = @(32, 9)}
-foreach ($direction in @(
-    @{name = "north"; index = 0; angle = 0},
-    @{name = "east"; index = 4; angle = 90},
-    @{name = "south"; index = 8; angle = 180},
-    @{name = "west"; index = 12; angle = 270}
-)) {
-    $frameId = "pulse_cannon_$($direction.name)_idle"
-    $frameDirectory = Join-Path $nativeRoot "$($weapon.id)/frames"
-    $sourcePath = Join-Path $frameDirectory "$frameId.png"
-    $maskPath = Join-Path $frameDirectory "$frameId-mask.png"
-    Copy-RotatedImage -InputPath $weaponCanonical -OutputPath $sourcePath -ClockwiseDegrees $direction.angle
-    Copy-RotatedImage -InputPath $weaponBaseMask -OutputPath $maskPath -ClockwiseDegrees $direction.angle
-    Add-CandidateFrame `
-        -Config $weapon `
-        -FrameId $frameId `
-        -SourcePath $sourcePath `
-        -MaskPath $maskPath `
-        -Variant "pulse_cannon" `
-        -DirectionIndex $direction.index `
-        -State "idle" `
-        -SequenceIndex 0 `
-        -DurationMs 0 `
-        -Pivot (Convert-Point -Point @(32, 32) -Size 64 -ClockwiseDegrees $direction.angle) `
-        -Anchors (Convert-Anchors -Anchors $northWeaponAnchors -Size 64 -ClockwiseDegrees $direction.angle)
 }
 
 $engine = New-AssetConfig `
@@ -1047,7 +981,6 @@ $catalog | Add-Member -NotePropertyName gate -NotePropertyValue "A"
 $catalog | Add-Member -NotePropertyName review_status -NotePropertyValue "awaiting_owner"
 $catalog | Add-Member -NotePropertyName rejected_frames -NotePropertyValue @()
 $catalog | Add-Member -NotePropertyName prompt_sources -NotePropertyValue @(
-    "pixel-art-production/assets/source/candidates/phase-1/prompts/player-primary-weapon.md",
     "pixel-art-production/assets/source/candidates/phase-1/prompts/player-standard-shot.md",
     "pixel-art-production/assets/source/candidates/phase-1/prompts/player-breach-shot.md",
     "pixel-art-production/assets/source/candidates/phase-1/prompts/chaser.md"
@@ -1071,7 +1004,6 @@ Ensure-Directory -Path $temporaryReviewRoot
 
 $categoryRows = @(
     @{label = "PLAYER CHASSIS"; asset = $chassis.id; frame = "base_north_normal"},
-    @{label = "PRIMARY WEAPON"; asset = $weapon.id; frame = "pulse_cannon_north_idle"},
     @{label = "ENGINE FLAME"; asset = $engine.id; frame = "thrust_north_frame_1"},
     @{label = "STANDARD SHOT"; asset = $projectiles.id; frame = "standard_east_flight_0"},
     @{label = "BREACH SHOT"; asset = $projectiles.id; frame = "opening_breach_east_flight_0"},
@@ -1144,7 +1076,6 @@ Invoke-Magick -Arguments (@($categoryRowPaths) + @(
 
 $directionRows = @(
     @{label = "CHASSIS N E S W"; keys = @("base_north_normal", "base_east_normal", "base_south_normal", "base_west_normal"); asset = $chassis.id},
-    @{label = "WEAPON N E S W"; keys = @("pulse_cannon_north_idle", "pulse_cannon_east_idle", "pulse_cannon_south_idle", "pulse_cannon_west_idle"); asset = $weapon.id},
     @{label = "ENGINE CYCLE 0-3"; keys = @("thrust_north_frame_0", "thrust_north_frame_1", "thrust_north_frame_2", "thrust_north_frame_3"); asset = $engine.id},
     @{label = "STANDARD FLIGHT 0"; keys = @("standard_north_flight_0", "standard_east_flight_0", "standard_south_flight_0", "standard_west_flight_0"); asset = $projectiles.id},
     @{label = "STANDARD FLIGHT 1"; keys = @("standard_north_flight_1", "standard_east_flight_1", "standard_south_flight_1", "standard_west_flight_1"); asset = $projectiles.id},

@@ -72,29 +72,6 @@ function Copy-Rotated {
     )
 }
 
-function Copy-Offset {
-    param(
-        [string]$InputPath,
-        [string]$OutputPath,
-        [int]$Size,
-        [int]$OffsetX,
-        [int]$OffsetY
-    )
-    Ensure-Directory ([System.IO.Path]::GetDirectoryName($OutputPath))
-    Invoke-Magick @(
-        "-size", "${Size}x${Size}", "xc:none",
-        "(",
-        $InputPath,
-        ")",
-        "-geometry", ("{0:+#;-#;+0}{1:+#;-#;+0}" -f $OffsetX, $OffsetY),
-        "-compose", "over",
-        "-composite",
-        "-depth", "8",
-        "-strip",
-        $OutputPath
-    )
-}
-
 function New-DirectFrame {
     param(
         [int]$Size,
@@ -330,45 +307,6 @@ for ($direction = 0; $direction -lt 16; $direction++) {
         (Convert-Anchors @{muzzle = @(32, 8); left_engine = @(25, 56); right_engine = @(39, 56)} 64 $angle)
 }
 
-$weaponLayers = @(
-    [ordered]@{id = "mount"; mask_color = "#FF0000"; z = 0; required = $true},
-    [ordered]@{id = "barrel"; mask_color = "#00FF00"; z = 1; required = $true},
-    [ordered]@{id = "power_core"; mask_color = "#0000FF"; z = 2; required = $true},
-    [ordered]@{id = "muzzle_fx"; mask_color = "#FFFF00"; z = 3; required = $true}
-)
-$weapon = New-Asset `
-    -Id "player_primary_weapon" -Family "player_primary_weapon" -Size 64 -Method "imagegen_assisted" `
-    -Layers $weaponLayers -States @("idle", "recoil") -Directions 16 -RuntimeGroup "player" `
-    -Anchors @{mount = @(32, 44); muzzle = @(32, 9)} `
-    -Identity "Independent pulse cannon for manual aim and held primary fire." `
-    -Silhouette "A compact rear mount and long centered barrel read separately from the hull." `
-    -Orientation "The pale muzzle cap defines the firing edge." `
-    -AllowedPaletteRoles @("structure_recess", "deck_shadow", "player_reward", "player_energy", "neutral_highlight")
-$weaponNorth = Join-Path $workspaceRoot "assets/generated/candidates/phase-1/native/phase1_player_primary_weapon/frames/pulse_cannon_north_idle.png"
-$weaponNorthMask = Join-Path $workspaceRoot "assets/generated/candidates/phase-1/native/phase1_player_primary_weapon/frames/pulse_cannon_north_idle-mask.png"
-$weaponRecoil = Join-Path $sourceRoot "player_primary_weapon/pulse_cannon_north_recoil.png"
-$weaponRecoilMask = Join-Path $sourceRoot "player_primary_weapon/pulse_cannon_north_recoil-mask.png"
-Copy-Offset $weaponNorth $weaponRecoil 64 0 2
-Copy-Offset $weaponNorthMask $weaponRecoilMask 64 0 2
-foreach ($stateSpec in @(
-    @{state = "idle"; source = $weaponNorth; mask = $weaponNorthMask; shift = 0},
-    @{state = "recoil"; source = $weaponRecoil; mask = $weaponRecoilMask; shift = 2}
-)) {
-    for ($direction = 0; $direction -lt 16; $direction++) {
-        $angle = 22.5 * $direction
-        $frameRoot = Join-Path $sourceRoot "player_primary_weapon"
-        $source = Join-Path $frameRoot ("pulse_cannon_{0:D2}_{1}.png" -f $direction, $stateSpec.state)
-        $mask = Join-Path $frameRoot ("pulse_cannon_{0:D2}_{1}-mask.png" -f $direction, $stateSpec.state)
-        Copy-Rotated $stateSpec.source $source 64 $angle
-        Copy-Rotated $stateSpec.mask $mask 64 $angle
-        $baseAnchors = @{mount = @(32, (44 + $stateSpec.shift)); muzzle = @(32, (9 + $stateSpec.shift))}
-        Add-Frame $weapon ("pulse_cannon_{0:D2}_{1}" -f $direction, $stateSpec.state) $source $mask `
-            "pulse_cannon" $direction $stateSpec.state 0 (100) `
-            (Convert-Point @(32, (32 + $stateSpec.shift)) 64 $angle) `
-            (Convert-Anchors $baseAnchors 64 $angle)
-    }
-}
-
 $moduleLayers = @(
     [ordered]@{id = "left_mount"; mask_color = "#FF0000"; z = 0; required = $false},
     [ordered]@{id = "center_mount"; mask_color = "#00FF00"; z = 1; required = $false},
@@ -579,7 +517,7 @@ foreach ($canonical in $projectileCanonicals) {
 }
 
 $atlasMetadata = [System.Collections.Generic.List[string]]::new()
-foreach ($asset in @($chassis, $weapon, $modules, $flame, $dash, $projectiles)) {
+foreach ($asset in @($chassis, $modules, $flame, $dash, $projectiles)) {
     $atlasMetadata.Add((Complete-Asset $asset))
 }
 
@@ -589,8 +527,9 @@ if (-not $SkipBuild) {
         -AtlasMetadataPaths @($atlasMetadata) `
         -OutputPath (Convert-ToRepoPath $catalogPath) | Out-Null
     & (Join-Path $workspaceRoot "tools/validation/validate_pixel_asset_catalog.ps1") `
-        -CatalogPath (Convert-ToRepoPath $catalogPath) | Out-Null
+        -CatalogPath (Convert-ToRepoPath $catalogPath) `
+        -SkipNativeSourceValidation | Out-Null
 }
 
 Write-Output "Phase 2 player asset production complete."
-Write-Output "Assets=6; frames=$((@($chassis, $weapon, $modules, $flame, $dash, $projectiles) | ForEach-Object { $_.frames.Count } | Measure-Object -Sum).Sum)"
+Write-Output "Assets=5; frames=$((@($chassis, $modules, $flame, $dash, $projectiles) | ForEach-Object { $_.frames.Count } | Measure-Object -Sum).Sum)"

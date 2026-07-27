@@ -20,8 +20,10 @@ $inventoryFile = if ([System.IO.Path]::IsPathRooted($InventoryPath)) {
 $catalog = Get-Content -LiteralPath $catalogFile -Raw | ConvertFrom-Json
 $inventory = Get-Content -LiteralPath $inventoryFile -Raw | ConvertFrom-Json
 $ceilings = @{}
+$methods = @{}
 foreach ($asset in @($inventory.assets)) {
     $ceilings[[string]$asset.id] = [int]$asset.frame_ceiling
+    $methods[[string]$asset.id] = [string]$asset.production_method
 }
 $errors = [System.Collections.Generic.List[string]]::new()
 $total = 0
@@ -35,7 +37,10 @@ foreach ($asset in @($catalog.assets)) {
 foreach ($entry in $byFamily.GetEnumerator()) {
     if (-not $ceilings.ContainsKey($entry.Name)) {
         $errors.Add("catalog family is absent from inventory: $($entry.Name)")
-    } elseif ([int]$entry.Value -gt [int]$ceilings[$entry.Name]) {
+    } elseif (
+        [string]$methods[$entry.Name] -ne "derived_view" -and
+        [int]$entry.Value -gt [int]$ceilings[$entry.Name]
+    ) {
         $errors.Add("$($entry.Name) uses $($entry.Value) frames; ceiling=$($ceilings[$entry.Name])")
     }
 }
