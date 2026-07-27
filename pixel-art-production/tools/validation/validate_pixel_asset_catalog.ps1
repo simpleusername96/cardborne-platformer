@@ -36,8 +36,26 @@ $frameKeys = @{}
 $countedFrames = 0
 $magick = Get-Command magick -ErrorAction Stop
 $script:Magick = $magick
+$atlasCache = @{}
+$occupiedCellsByAtlas = @{}
 
 if ([int]$catalog.schema_version -ne 1) { $errors.Add("schema_version must be 1") }
+foreach ($asset in @($catalog.assets)) {
+    $atlasKey = [string]$asset.atlas_path
+    if (-not $occupiedCellsByAtlas.ContainsKey($atlasKey)) {
+        $occupiedCellsByAtlas[$atlasKey] = @{}
+    }
+    $atlasCells = $occupiedCellsByAtlas[$atlasKey]
+    foreach ($frame in @($asset.frames)) {
+        $cell = @($frame.cell_region)
+        if ($cell.Count -ne 4) { continue }
+        for ($cellY = [int]$cell[1]; $cellY -lt [int]$cell[1] + [int]$cell[3]; $cellY++) {
+            for ($cellX = [int]$cell[0]; $cellX -lt [int]$cell[0] + [int]$cell[2]; $cellX++) {
+                $atlasCells["$cellX,$cellY"] = $true
+            }
+        }
+    }
+}
 foreach ($asset in @($catalog.assets)) {
     $assetId = [string]$asset.id
     if ($assetIds.ContainsKey($assetId)) { $errors.Add("duplicate asset id: $assetId") }
@@ -51,19 +69,27 @@ foreach ($asset in @($catalog.assets)) {
         $errors.Add("missing atlas: $($asset.atlas_path)")
         continue
     }
-    $actualHash = (Get-FileHash -LiteralPath $atlasPath -Algorithm SHA256).Hash.ToLowerInvariant()
+    if (-not $atlasCache.ContainsKey($atlasPath)) {
+        $atlasCache[$atlasPath] = @{
+            hash = (Get-FileHash -LiteralPath $atlasPath -Algorithm SHA256).Hash.ToLowerInvariant()
+            size = (& $magick.Source identify -format "%w %h" $atlasPath).Trim()
+            pixels = Read-PixelMap -Path $atlasPath
+        }
+    }
+    $atlasInfo = $atlasCache[$atlasPath]
+    $actualHash = [string]$atlasInfo.hash
     if ($actualHash -ne [string]$asset.atlas_sha256) {
         $errors.Add("$assetId atlas checksum mismatch")
     }
-    $actualSize = (& $magick.Source identify -format "%w %h" $atlasPath).Trim()
+    $actualSize = [string]$atlasInfo.size
     if ($actualSize -ne "$($asset.atlas_size[0]) $($asset.atlas_size[1])") {
         $errors.Add("$assetId atlas size mismatch: $actualSize")
     }
     if ([int]$asset.padding -ne 2 -or [int]$asset.extrude -ne 1) {
         $errors.Add("$assetId does not use the production gutter contract")
     }
-    $pixels = Read-PixelMap -Path $atlasPath
-    $occupiedCells = @{}
+    $pixels = $atlasInfo.pixels
+    $occupiedCells = $occupiedCellsByAtlas[[string]$asset.atlas_path]
     foreach ($frame in @($asset.frames)) {
         $countedFrames++
         $key = [string]$frame.key
@@ -90,11 +116,6 @@ foreach ($asset in @($catalog.assets)) {
             [int]$cell[1] + [int]$cell[3] -gt [int]$asset.atlas_size[1]
         ) {
             $errors.Add("$key cell is outside the atlas")
-        }
-        for ($cellY = [int]$cell[1]; $cellY -lt [int]$cell[1] + [int]$cell[3]; $cellY++) {
-            for ($cellX = [int]$cell[0]; $cellX -lt [int]$cell[0] + [int]$cell[2]; $cellX++) {
-                $occupiedCells["$cellX,$cellY"] = $true
-            }
         }
         $x = [int]$region[0]
         $y = [int]$region[1]

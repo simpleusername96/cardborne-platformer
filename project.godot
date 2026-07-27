@@ -14,6 +14,10 @@ config/features=PackedStringArray("4.7", "GL Compatibility")
 SettingsStore="*res://scripts/autoload/settings_store.gd"
 VehicleGuidebookStore="*res://scripts/autoload/vehicle_guidebook_store.gd"
 
+[cardborne]
+
+presentation/pixel_assets=true
+
 [display]
 
 window/size/viewport_width=1280

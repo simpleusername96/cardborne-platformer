@@ -48,7 +48,7 @@ $orderedFrames = @($manifest.frames | Sort-Object {[int]$_.atlas_index})
 $boardHeight = $orderedFrames.Count * $panelSize + [Math]::Max(0, $orderedFrames.Count - 1) * $panelGap
 $temporaryRoot = Join-Path $destinationDirectory "_review-$PID"
 [System.IO.Directory]::CreateDirectory($temporaryRoot) | Out-Null
-$boardArguments = @("-size", "${boardWidth}x${boardHeight}", "xc:#141B24")
+$rowPaths = [System.Collections.Generic.List[string]]::new()
 $reviewFrames = [System.Collections.Generic.List[object]]::new()
 
 try {
@@ -146,12 +146,14 @@ try {
             $panelKinds += "background_$role"
         }
 
+        $rowPath = Join-Path $temporaryRoot "$($frame.id)-row.png"
+        $rowArguments = @("-size", "${boardWidth}x${panelSize}", "xc:#141B24")
         for ($panelIndex = 0; $panelIndex -lt $panelPaths.Count; $panelIndex++) {
             $panelX = $panelIndex * ($panelSize + $panelGap)
-            $boardArguments += @(
+            $rowArguments += @(
                 $panelPaths[$panelIndex],
                 "-geometry",
-                "+$panelX+$rowY",
+                "+$panelX+0",
                 "-compose",
                 "over",
                 "-composite"
@@ -161,6 +163,12 @@ try {
                 region = @($panelX, $rowY, $panelSize, $panelSize)
             })
         }
+        $rowArguments += @("-depth", "8", "-strip", $rowPath)
+        & $magick.Source @rowArguments
+        if ($LASTEXITCODE -ne 0) {
+            throw "ImageMagick failed to build review row '$($frame.id)'."
+        }
+        $rowPaths.Add($rowPath)
         $reviewFrames.Add([ordered]@{
             id = [string]$frame.id
             source_sha256 = [string]$frame.source_sha256
@@ -171,8 +179,26 @@ try {
         })
     }
 
-    $boardArguments += @("-depth", "8", "-strip", $destination)
-    & $magick.Source @boardArguments
+    $appendArguments = [System.Collections.Generic.List[string]]::new()
+    $separatorPath = Join-Path $temporaryRoot "row-separator.png"
+    if ($panelGap -gt 0 -and $rowPaths.Count -gt 1) {
+        & $magick.Source -size "${boardWidth}x${panelGap}" "xc:#141B24" -depth 8 -strip $separatorPath
+        if ($LASTEXITCODE -ne 0) {
+            throw "ImageMagick failed to build the review-row separator."
+        }
+    }
+    for ($rowIndex = 0; $rowIndex -lt $rowPaths.Count; $rowIndex++) {
+        if ($rowIndex -gt 0 -and $panelGap -gt 0) {
+            $appendArguments.Add($separatorPath)
+        }
+        $appendArguments.Add($rowPaths[$rowIndex])
+    }
+    $appendArguments.Add("-append")
+    $appendArguments.Add("-depth")
+    $appendArguments.Add("8")
+    $appendArguments.Add("-strip")
+    $appendArguments.Add($destination)
+    & $magick.Source @appendArguments
     if ($LASTEXITCODE -ne 0) {
         throw "ImageMagick failed to build the pixel asset review board."
     }

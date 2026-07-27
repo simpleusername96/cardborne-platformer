@@ -1,0 +1,918 @@
+{
+  "schema_version": 2,
+  "id": "player_primary_projectiles",
+  "family": "player_primary_projectiles",
+  "approval_status": "approved",
+  "production_method": "imagegen_assisted",
+  "reference_ids": [
+    "game_assault_android_cactus",
+    "cc0_kenney_pixel_shmup"
+  ],
+  "avoid_rules": [
+    "No gradients, antialiasing, texture noise, lighting simulation, or baked glow.",
+    "Do not derive gameplay geometry from sprite alpha."
+  ],
+  "guide_size": 512,
+  "logical_size": [
+    32,
+    32
+  ],
+  "palette_path": "pixel-art-production/assets/palettes/pixel-hangar-v1.json",
+  "semantic_palette_path": "pixel-art-production/assets/palettes/semantic-mask-v1.json",
+  "transparent_color": "#FFFFFF",
+  "runtime_group": "player_projectiles",
+  "runtime_layers": [
+    "body",
+    "core",
+    "wake",
+    "breach_collar"
+  ],
+  "layers": [
+    {
+      "id": "body",
+      "mask_color": "#FF0000",
+      "z": 0,
+      "required": true
+    },
+    {
+      "id": "core",
+      "mask_color": "#00FF00",
+      "z": 1,
+      "required": true
+    },
+    {
+      "id": "wake",
+      "mask_color": "#0000FF",
+      "z": 2,
+      "required": true
+    },
+    {
+      "id": "breach_collar",
+      "mask_color": "#FFFF00",
+      "z": 3,
+      "required": false
+    }
+  ],
+  "pivot": [
+    16,
+    16
+  ],
+  "anchors": {
+    "head": [
+      25,
+      16
+    ],
+    "rear": [
+      7,
+      16
+    ]
+  },
+  "tile_signature": null,
+  "collision_reference": "Existing gameplay-owned geometry for player_primary_projectiles.",
+  "review_backgrounds": [
+    "space_void",
+    "deck_base",
+    "neutral_highlight"
+  ],
+  "silhouette_area_tolerance": 0.12,
+  "anchor_tolerance": 1,
+  "frames": [
+    {
+      "id": "standard_00_flight_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/standard_00_flight_0.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/standard_00_flight_0-mask.png",
+      "source_sha256": "eb8cfb34f1aa74edd60cc87265432f8185cd8449b61a5dae8dbcb46907aba170",
+      "atlas_index": 0,
+      "variant": "standard",
+      "direction_index": 0,
+      "state": "flight_0",
+      "sequence_index": 0,
+      "duration_ms": 70,
+      "pivot": [
+        16,
+        15
+      ],
+      "anchors": {
+        "head": [
+          16,
+          6
+        ],
+        "rear": [
+          16,
+          24
+        ]
+      }
+    },
+    {
+      "id": "standard_02_flight_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/standard_02_flight_0.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/standard_02_flight_0-mask.png",
+      "source_sha256": "22c07c874c353bf8238a104dff9de7a7907b579e49a1380bc9ce3a637559ebbe",
+      "atlas_index": 1,
+      "variant": "standard",
+      "direction_index": 2,
+      "state": "flight_0",
+      "sequence_index": 0,
+      "duration_ms": 70,
+      "pivot": [
+        16,
+        16
+      ],
+      "anchors": {
+        "head": [
+          23,
+          9
+        ],
+        "rear": [
+          10,
+          22
+        ]
+      }
+    },
+    {
+      "id": "standard_04_flight_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/standard_04_flight_0.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/standard_04_flight_0-mask.png",
+      "source_sha256": "eb6a3878437f2e19cc5ede2bd9a605900da9fed61f493748ac5df87473553c93",
+      "atlas_index": 2,
+      "variant": "standard",
+      "direction_index": 4,
+      "state": "flight_0",
+      "sequence_index": 0,
+      "duration_ms": 70,
+      "pivot": [
+        16,
+        16
+      ],
+      "anchors": {
+        "head": [
+          25,
+          16
+        ],
+        "rear": [
+          7,
+          16
+        ]
+      }
+    },
+    {
+      "id": "standard_06_flight_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/standard_06_flight_0.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/standard_06_flight_0-mask.png",
+      "source_sha256": "f56c9fa9d0bdb5aef966a98d8981e41210f41e0bdc3a983a09cf910643ad1ed5",
+      "atlas_index": 3,
+      "variant": "standard",
+      "direction_index": 6,
+      "state": "flight_0",
+      "sequence_index": 0,
+      "duration_ms": 70,
+      "pivot": [
+        16,
+        16
+      ],
+      "anchors": {
+        "head": [
+          22,
+          23
+        ],
+        "rear": [
+          9,
+          10
+        ]
+      }
+    },
+    {
+      "id": "standard_08_flight_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/standard_08_flight_0.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/standard_08_flight_0-mask.png",
+      "source_sha256": "944efb6518d0078e85f6a90ec6f9c0895507054d215a9426f3b34bbd0cdbb492",
+      "atlas_index": 4,
+      "variant": "standard",
+      "direction_index": 8,
+      "state": "flight_0",
+      "sequence_index": 0,
+      "duration_ms": 70,
+      "pivot": [
+        15,
+        16
+      ],
+      "anchors": {
+        "head": [
+          15,
+          25
+        ],
+        "rear": [
+          15,
+          7
+        ]
+      }
+    },
+    {
+      "id": "standard_10_flight_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/standard_10_flight_0.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/standard_10_flight_0-mask.png",
+      "source_sha256": "50c5e767652ab776e79bd23b248c5fa1be0e75ea1628544fb4c3604a32f55cb0",
+      "atlas_index": 5,
+      "variant": "standard",
+      "direction_index": 10,
+      "state": "flight_0",
+      "sequence_index": 0,
+      "duration_ms": 70,
+      "pivot": [
+        15,
+        16
+      ],
+      "anchors": {
+        "head": [
+          8,
+          22
+        ],
+        "rear": [
+          21,
+          9
+        ]
+      }
+    },
+    {
+      "id": "standard_12_flight_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/standard_12_flight_0.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/standard_12_flight_0-mask.png",
+      "source_sha256": "79acda29f8852588cae028b64cf83e1cb82f556d498d03cb310435ef817617e2",
+      "atlas_index": 6,
+      "variant": "standard",
+      "direction_index": 12,
+      "state": "flight_0",
+      "sequence_index": 0,
+      "duration_ms": 70,
+      "pivot": [
+        15,
+        15
+      ],
+      "anchors": {
+        "head": [
+          6,
+          15
+        ],
+        "rear": [
+          24,
+          15
+        ]
+      }
+    },
+    {
+      "id": "standard_14_flight_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/standard_14_flight_0.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/standard_14_flight_0-mask.png",
+      "source_sha256": "dae4e2fc787a225a9906dbc43adf1054e5814d1f7af4d2407b64197564fd0192",
+      "atlas_index": 7,
+      "variant": "standard",
+      "direction_index": 14,
+      "state": "flight_0",
+      "sequence_index": 0,
+      "duration_ms": 70,
+      "pivot": [
+        16,
+        15
+      ],
+      "anchors": {
+        "head": [
+          9,
+          8
+        ],
+        "rear": [
+          22,
+          21
+        ]
+      }
+    },
+    {
+      "id": "standard_00_flight_1",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/standard_00_flight_1.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/standard_00_flight_1-mask.png",
+      "source_sha256": "4f14fe4c3f6cd195fceb60248e99258796e00cea29505dbb4cfeb2d8c556194b",
+      "atlas_index": 8,
+      "variant": "standard",
+      "direction_index": 0,
+      "state": "flight_1",
+      "sequence_index": 1,
+      "duration_ms": 70,
+      "pivot": [
+        16,
+        15
+      ],
+      "anchors": {
+        "head": [
+          16,
+          6
+        ],
+        "rear": [
+          16,
+          24
+        ]
+      }
+    },
+    {
+      "id": "standard_02_flight_1",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/standard_02_flight_1.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/standard_02_flight_1-mask.png",
+      "source_sha256": "f69cca1b1daebe72af4cc2a4d017d47b2950d60056244b15ccf004b2e0a5628e",
+      "atlas_index": 9,
+      "variant": "standard",
+      "direction_index": 2,
+      "state": "flight_1",
+      "sequence_index": 1,
+      "duration_ms": 70,
+      "pivot": [
+        16,
+        16
+      ],
+      "anchors": {
+        "head": [
+          23,
+          9
+        ],
+        "rear": [
+          10,
+          22
+        ]
+      }
+    },
+    {
+      "id": "standard_04_flight_1",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/standard_04_flight_1.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/standard_04_flight_1-mask.png",
+      "source_sha256": "2be977f6714b85c7362f175faaaf3d728b4a5d92285673f45a79ae47e5bae25c",
+      "atlas_index": 10,
+      "variant": "standard",
+      "direction_index": 4,
+      "state": "flight_1",
+      "sequence_index": 1,
+      "duration_ms": 70,
+      "pivot": [
+        16,
+        16
+      ],
+      "anchors": {
+        "head": [
+          25,
+          16
+        ],
+        "rear": [
+          7,
+          16
+        ]
+      }
+    },
+    {
+      "id": "standard_06_flight_1",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/standard_06_flight_1.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/standard_06_flight_1-mask.png",
+      "source_sha256": "eeb1fcea912e28a9f4614f8237f93c4a69f4417986880b4133781682b7a61261",
+      "atlas_index": 11,
+      "variant": "standard",
+      "direction_index": 6,
+      "state": "flight_1",
+      "sequence_index": 1,
+      "duration_ms": 70,
+      "pivot": [
+        16,
+        16
+      ],
+      "anchors": {
+        "head": [
+          22,
+          23
+        ],
+        "rear": [
+          9,
+          10
+        ]
+      }
+    },
+    {
+      "id": "standard_08_flight_1",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/standard_08_flight_1.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/standard_08_flight_1-mask.png",
+      "source_sha256": "14c30e15393a0baacc3792b102f62e7dadf04af6cdbf7d46b52e32e38f3b3854",
+      "atlas_index": 12,
+      "variant": "standard",
+      "direction_index": 8,
+      "state": "flight_1",
+      "sequence_index": 1,
+      "duration_ms": 70,
+      "pivot": [
+        15,
+        16
+      ],
+      "anchors": {
+        "head": [
+          15,
+          25
+        ],
+        "rear": [
+          15,
+          7
+        ]
+      }
+    },
+    {
+      "id": "standard_10_flight_1",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/standard_10_flight_1.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/standard_10_flight_1-mask.png",
+      "source_sha256": "95c59456c4948262f0a747801d6c32fbeae363865460e9f535feda9c81ee19a1",
+      "atlas_index": 13,
+      "variant": "standard",
+      "direction_index": 10,
+      "state": "flight_1",
+      "sequence_index": 1,
+      "duration_ms": 70,
+      "pivot": [
+        15,
+        16
+      ],
+      "anchors": {
+        "head": [
+          8,
+          22
+        ],
+        "rear": [
+          21,
+          9
+        ]
+      }
+    },
+    {
+      "id": "standard_12_flight_1",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/standard_12_flight_1.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/standard_12_flight_1-mask.png",
+      "source_sha256": "5fb336162fa4e1e299e33fde0e626b267777b0e22acadc3b84d69b75b994c63a",
+      "atlas_index": 14,
+      "variant": "standard",
+      "direction_index": 12,
+      "state": "flight_1",
+      "sequence_index": 1,
+      "duration_ms": 70,
+      "pivot": [
+        15,
+        15
+      ],
+      "anchors": {
+        "head": [
+          6,
+          15
+        ],
+        "rear": [
+          24,
+          15
+        ]
+      }
+    },
+    {
+      "id": "standard_14_flight_1",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/standard_14_flight_1.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/standard_14_flight_1-mask.png",
+      "source_sha256": "8fd342279c929ac4f9d32eab16e314550da3ca61cedd838beb04c6d6e991d57b",
+      "atlas_index": 15,
+      "variant": "standard",
+      "direction_index": 14,
+      "state": "flight_1",
+      "sequence_index": 1,
+      "duration_ms": 70,
+      "pivot": [
+        16,
+        15
+      ],
+      "anchors": {
+        "head": [
+          9,
+          8
+        ],
+        "rear": [
+          22,
+          21
+        ]
+      }
+    },
+    {
+      "id": "opening_breach_00_flight_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/opening_breach_00_flight_0.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/opening_breach_00_flight_0-mask.png",
+      "source_sha256": "226e5331e147b56ac6fc6c8cd38e157f261a9c04c4d521df56a98de99c8c37b5",
+      "atlas_index": 16,
+      "variant": "opening_breach",
+      "direction_index": 0,
+      "state": "flight_0",
+      "sequence_index": 0,
+      "duration_ms": 70,
+      "pivot": [
+        16,
+        15
+      ],
+      "anchors": {
+        "head": [
+          16,
+          5
+        ],
+        "rear": [
+          16,
+          26
+        ]
+      }
+    },
+    {
+      "id": "opening_breach_02_flight_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/opening_breach_02_flight_0.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/opening_breach_02_flight_0-mask.png",
+      "source_sha256": "2194da263bab8691c5e01a11466abf9102d374161f469988b2d830c01daea579",
+      "atlas_index": 17,
+      "variant": "opening_breach",
+      "direction_index": 2,
+      "state": "flight_0",
+      "sequence_index": 0,
+      "duration_ms": 70,
+      "pivot": [
+        16,
+        16
+      ],
+      "anchors": {
+        "head": [
+          23,
+          8
+        ],
+        "rear": [
+          8,
+          23
+        ]
+      }
+    },
+    {
+      "id": "opening_breach_04_flight_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/opening_breach_04_flight_0.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/opening_breach_04_flight_0-mask.png",
+      "source_sha256": "31948573cb8a2d0e8c4d39f7640329258f1c56e952a588d44777add72f6a1736",
+      "atlas_index": 18,
+      "variant": "opening_breach",
+      "direction_index": 4,
+      "state": "flight_0",
+      "sequence_index": 0,
+      "duration_ms": 70,
+      "pivot": [
+        16,
+        16
+      ],
+      "anchors": {
+        "head": [
+          26,
+          16
+        ],
+        "rear": [
+          5,
+          16
+        ]
+      }
+    },
+    {
+      "id": "opening_breach_06_flight_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/opening_breach_06_flight_0.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/opening_breach_06_flight_0-mask.png",
+      "source_sha256": "1becc34003f873acb35b06ac967e15f1a27690dd235cdb07e44aedbb9bfe2412",
+      "atlas_index": 19,
+      "variant": "opening_breach",
+      "direction_index": 6,
+      "state": "flight_0",
+      "sequence_index": 0,
+      "duration_ms": 70,
+      "pivot": [
+        16,
+        16
+      ],
+      "anchors": {
+        "head": [
+          23,
+          23
+        ],
+        "rear": [
+          8,
+          8
+        ]
+      }
+    },
+    {
+      "id": "opening_breach_08_flight_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/opening_breach_08_flight_0.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/opening_breach_08_flight_0-mask.png",
+      "source_sha256": "178f5746786cc2d0ea32d1d28990c401ba8632f76903a3cb389dad972166d743",
+      "atlas_index": 20,
+      "variant": "opening_breach",
+      "direction_index": 8,
+      "state": "flight_0",
+      "sequence_index": 0,
+      "duration_ms": 70,
+      "pivot": [
+        15,
+        16
+      ],
+      "anchors": {
+        "head": [
+          15,
+          26
+        ],
+        "rear": [
+          15,
+          5
+        ]
+      }
+    },
+    {
+      "id": "opening_breach_10_flight_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/opening_breach_10_flight_0.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/opening_breach_10_flight_0-mask.png",
+      "source_sha256": "68e9b934274629104d895801cbe93325751f06f2858571db7c6501cd80ff610c",
+      "atlas_index": 21,
+      "variant": "opening_breach",
+      "direction_index": 10,
+      "state": "flight_0",
+      "sequence_index": 0,
+      "duration_ms": 70,
+      "pivot": [
+        15,
+        16
+      ],
+      "anchors": {
+        "head": [
+          8,
+          23
+        ],
+        "rear": [
+          23,
+          8
+        ]
+      }
+    },
+    {
+      "id": "opening_breach_12_flight_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/opening_breach_12_flight_0.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/opening_breach_12_flight_0-mask.png",
+      "source_sha256": "fea3e4ab428c4923bd3bb901a6962da527d9d2a0f49a09da2731a0f227d8f736",
+      "atlas_index": 22,
+      "variant": "opening_breach",
+      "direction_index": 12,
+      "state": "flight_0",
+      "sequence_index": 0,
+      "duration_ms": 70,
+      "pivot": [
+        15,
+        15
+      ],
+      "anchors": {
+        "head": [
+          5,
+          15
+        ],
+        "rear": [
+          26,
+          15
+        ]
+      }
+    },
+    {
+      "id": "opening_breach_14_flight_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/opening_breach_14_flight_0.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/opening_breach_14_flight_0-mask.png",
+      "source_sha256": "3474d8177efa06c04174ebcefa256223d9b4eb8f739319912233d624bba2b1fc",
+      "atlas_index": 23,
+      "variant": "opening_breach",
+      "direction_index": 14,
+      "state": "flight_0",
+      "sequence_index": 0,
+      "duration_ms": 70,
+      "pivot": [
+        16,
+        15
+      ],
+      "anchors": {
+        "head": [
+          8,
+          8
+        ],
+        "rear": [
+          23,
+          23
+        ]
+      }
+    },
+    {
+      "id": "opening_breach_00_flight_1",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/opening_breach_00_flight_1.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/opening_breach_00_flight_1-mask.png",
+      "source_sha256": "86332c04e3138c43da6dec747f3f9506c8905264f6fbf58ff031579feb297b96",
+      "atlas_index": 24,
+      "variant": "opening_breach",
+      "direction_index": 0,
+      "state": "flight_1",
+      "sequence_index": 1,
+      "duration_ms": 70,
+      "pivot": [
+        16,
+        15
+      ],
+      "anchors": {
+        "head": [
+          16,
+          5
+        ],
+        "rear": [
+          16,
+          26
+        ]
+      }
+    },
+    {
+      "id": "opening_breach_02_flight_1",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/opening_breach_02_flight_1.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/opening_breach_02_flight_1-mask.png",
+      "source_sha256": "bf754e6baf22c99f9b8a6101c008d30d994386f387912b15623279d59c0dfdb1",
+      "atlas_index": 25,
+      "variant": "opening_breach",
+      "direction_index": 2,
+      "state": "flight_1",
+      "sequence_index": 1,
+      "duration_ms": 70,
+      "pivot": [
+        16,
+        16
+      ],
+      "anchors": {
+        "head": [
+          23,
+          8
+        ],
+        "rear": [
+          8,
+          23
+        ]
+      }
+    },
+    {
+      "id": "opening_breach_04_flight_1",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/opening_breach_04_flight_1.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/opening_breach_04_flight_1-mask.png",
+      "source_sha256": "0f56d1394a3079bc8bfd52217a0003075e8865812ac2f29e886702486b12cc8a",
+      "atlas_index": 26,
+      "variant": "opening_breach",
+      "direction_index": 4,
+      "state": "flight_1",
+      "sequence_index": 1,
+      "duration_ms": 70,
+      "pivot": [
+        16,
+        16
+      ],
+      "anchors": {
+        "head": [
+          26,
+          16
+        ],
+        "rear": [
+          5,
+          16
+        ]
+      }
+    },
+    {
+      "id": "opening_breach_06_flight_1",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/opening_breach_06_flight_1.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/opening_breach_06_flight_1-mask.png",
+      "source_sha256": "e57cb870943ed4a7d62b003ace72177a8601af60fdd13419d7c9391154ec4fd5",
+      "atlas_index": 27,
+      "variant": "opening_breach",
+      "direction_index": 6,
+      "state": "flight_1",
+      "sequence_index": 1,
+      "duration_ms": 70,
+      "pivot": [
+        16,
+        16
+      ],
+      "anchors": {
+        "head": [
+          23,
+          23
+        ],
+        "rear": [
+          8,
+          8
+        ]
+      }
+    },
+    {
+      "id": "opening_breach_08_flight_1",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/opening_breach_08_flight_1.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/opening_breach_08_flight_1-mask.png",
+      "source_sha256": "084b13782480051d572fec7a4f55d9d36585c5435e1b10e941772d037dcf4477",
+      "atlas_index": 28,
+      "variant": "opening_breach",
+      "direction_index": 8,
+      "state": "flight_1",
+      "sequence_index": 1,
+      "duration_ms": 70,
+      "pivot": [
+        15,
+        16
+      ],
+      "anchors": {
+        "head": [
+          15,
+          26
+        ],
+        "rear": [
+          15,
+          5
+        ]
+      }
+    },
+    {
+      "id": "opening_breach_10_flight_1",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/opening_breach_10_flight_1.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/opening_breach_10_flight_1-mask.png",
+      "source_sha256": "e7ae4c67cba060a4503a9ef47868fc5edac8f9c4e85d8acb8bd0184e0a7558f8",
+      "atlas_index": 29,
+      "variant": "opening_breach",
+      "direction_index": 10,
+      "state": "flight_1",
+      "sequence_index": 1,
+      "duration_ms": 70,
+      "pivot": [
+        15,
+        16
+      ],
+      "anchors": {
+        "head": [
+          8,
+          23
+        ],
+        "rear": [
+          23,
+          8
+        ]
+      }
+    },
+    {
+      "id": "opening_breach_12_flight_1",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/opening_breach_12_flight_1.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/opening_breach_12_flight_1-mask.png",
+      "source_sha256": "abf07bcf58e6d7ebf4da4275ae1a5b39ccc87cf2172f411105bce113cdd21e14",
+      "atlas_index": 30,
+      "variant": "opening_breach",
+      "direction_index": 12,
+      "state": "flight_1",
+      "sequence_index": 1,
+      "duration_ms": 70,
+      "pivot": [
+        15,
+        15
+      ],
+      "anchors": {
+        "head": [
+          5,
+          15
+        ],
+        "rear": [
+          26,
+          15
+        ]
+      }
+    },
+    {
+      "id": "opening_breach_14_flight_1",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/opening_breach_14_flight_1.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_primary_projectiles/opening_breach_14_flight_1-mask.png",
+      "source_sha256": "2f63d61904e44e96564cd125c4d60e3988a66bc250dd7b2944e037b5319b8fc6",
+      "atlas_index": 31,
+      "variant": "opening_breach",
+      "direction_index": 14,
+      "state": "flight_1",
+      "sequence_index": 1,
+      "duration_ms": 70,
+      "pivot": [
+        16,
+        15
+      ],
+      "anchors": {
+        "head": [
+          8,
+          8
+        ],
+        "rear": [
+          23,
+          23
+        ]
+      }
+    }
+  ],
+  "atlas": {
+    "columns": 8,
+    "padding": 2,
+    "extrude": 1
+  }
+}

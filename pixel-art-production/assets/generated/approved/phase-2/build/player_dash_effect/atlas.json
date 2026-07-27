@@ -1,0 +1,1567 @@
+{
+  "schema_version": 2,
+  "asset_id": "player_dash_effect",
+  "family": "player_dash_effect",
+  "atlas_path": "pixel-art-production/assets/generated/approved/phase-2/build/player_dash_effect/atlas.png",
+  "atlas_size": [
+    542,
+    406
+  ],
+  "frame_size": [
+    64,
+    64
+  ],
+  "cell_size": [
+    66,
+    66
+  ],
+  "columns": 8,
+  "rows": 6,
+  "padding": 2,
+  "extrude": 1,
+  "frames": [
+    {
+      "id": "start_00_frame_0",
+      "atlas_index": 0,
+      "region": [
+        1,
+        1,
+        64,
+        64
+      ],
+      "cell_region": [
+        0,
+        0,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          32,
+          32
+        ]
+      },
+      "direction": 0,
+      "state": "frame_0",
+      "variant": "start",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "source_sha256": "df128eea1ad8c68d7e7ba8384156e6aa5f6ccbbaac5da598570b079f6c8a586f"
+    },
+    {
+      "id": "start_01_frame_0",
+      "atlas_index": 1,
+      "region": [
+        69,
+        1,
+        64,
+        64
+      ],
+      "cell_region": [
+        68,
+        0,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          32,
+          32
+        ]
+      },
+      "direction": 1,
+      "state": "frame_0",
+      "variant": "start",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "source_sha256": "45a5b73e0970a6be39e604c5451b2e1dc33c8f34a29b11b5bc220b5693b25640"
+    },
+    {
+      "id": "start_02_frame_0",
+      "atlas_index": 2,
+      "region": [
+        137,
+        1,
+        64,
+        64
+      ],
+      "cell_region": [
+        136,
+        0,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          32,
+          32
+        ]
+      },
+      "direction": 2,
+      "state": "frame_0",
+      "variant": "start",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "source_sha256": "376c73896e0431b009f12d582c0662df756e5f53e888802dc7a433ec7bae0ae9"
+    },
+    {
+      "id": "start_03_frame_0",
+      "atlas_index": 3,
+      "region": [
+        205,
+        1,
+        64,
+        64
+      ],
+      "cell_region": [
+        204,
+        0,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          31,
+          32
+        ]
+      },
+      "direction": 3,
+      "state": "frame_0",
+      "variant": "start",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "source_sha256": "b6bcc012358924a28fd726785077088555465f4261f50d2fc5e264e0539c3734"
+    },
+    {
+      "id": "start_04_frame_0",
+      "atlas_index": 4,
+      "region": [
+        273,
+        1,
+        64,
+        64
+      ],
+      "cell_region": [
+        272,
+        0,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          31,
+          32
+        ]
+      },
+      "direction": 4,
+      "state": "frame_0",
+      "variant": "start",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "source_sha256": "33b1dba2ca080d46cdd2c20214aa228753b63c273491f5f90638f0aa489c0a35"
+    },
+    {
+      "id": "start_05_frame_0",
+      "atlas_index": 5,
+      "region": [
+        341,
+        1,
+        64,
+        64
+      ],
+      "cell_region": [
+        340,
+        0,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          31,
+          32
+        ]
+      },
+      "direction": 5,
+      "state": "frame_0",
+      "variant": "start",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "source_sha256": "0f808c92520984818c8a16ad0885bae52975d2b0b98fe15978dc36c119ea9073"
+    },
+    {
+      "id": "start_06_frame_0",
+      "atlas_index": 6,
+      "region": [
+        409,
+        1,
+        64,
+        64
+      ],
+      "cell_region": [
+        408,
+        0,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          31,
+          32
+        ]
+      },
+      "direction": 6,
+      "state": "frame_0",
+      "variant": "start",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "source_sha256": "b50e366c49d38cad5f9ab481368000458db42a2deb1307e53ea769c41a19d830"
+    },
+    {
+      "id": "start_07_frame_0",
+      "atlas_index": 7,
+      "region": [
+        477,
+        1,
+        64,
+        64
+      ],
+      "cell_region": [
+        476,
+        0,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          31,
+          31
+        ]
+      },
+      "direction": 7,
+      "state": "frame_0",
+      "variant": "start",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "source_sha256": "0b4c366c83a0c96fcc37ce1c32fc873b006081f29b6e782910e701d56e9d5232"
+    },
+    {
+      "id": "start_08_frame_0",
+      "atlas_index": 8,
+      "region": [
+        1,
+        69,
+        64,
+        64
+      ],
+      "cell_region": [
+        0,
+        68,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          31,
+          31
+        ]
+      },
+      "direction": 8,
+      "state": "frame_0",
+      "variant": "start",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "source_sha256": "817a9a319ae555a1b3bee14ed02aa46f84122319b9068b16e420dc38804eaeb1"
+    },
+    {
+      "id": "start_09_frame_0",
+      "atlas_index": 9,
+      "region": [
+        69,
+        69,
+        64,
+        64
+      ],
+      "cell_region": [
+        68,
+        68,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          31,
+          31
+        ]
+      },
+      "direction": 9,
+      "state": "frame_0",
+      "variant": "start",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "source_sha256": "e7bdadb4809ea214507d303483cf96c9bfd00e7f9f6787522a47a027ec00e0a7"
+    },
+    {
+      "id": "start_10_frame_0",
+      "atlas_index": 10,
+      "region": [
+        137,
+        69,
+        64,
+        64
+      ],
+      "cell_region": [
+        136,
+        68,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          32,
+          31
+        ]
+      },
+      "direction": 10,
+      "state": "frame_0",
+      "variant": "start",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "source_sha256": "3ee36b113efc8808118e0ef78298feb2ac1230b0b23932eddb507de93073c083"
+    },
+    {
+      "id": "start_11_frame_0",
+      "atlas_index": 11,
+      "region": [
+        205,
+        69,
+        64,
+        64
+      ],
+      "cell_region": [
+        204,
+        68,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          32,
+          31
+        ]
+      },
+      "direction": 11,
+      "state": "frame_0",
+      "variant": "start",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "source_sha256": "c1ca1e18ca13e6f65456167b867be65bb9e63bdb7e0f4aae6f8ad31ccd9e1e72"
+    },
+    {
+      "id": "start_12_frame_0",
+      "atlas_index": 12,
+      "region": [
+        273,
+        69,
+        64,
+        64
+      ],
+      "cell_region": [
+        272,
+        68,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          32,
+          31
+        ]
+      },
+      "direction": 12,
+      "state": "frame_0",
+      "variant": "start",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "source_sha256": "7681d02cbe13f77edc2fc9a85a5d5fd31b2b2b3dbf70574ce9ced05d5054a4d7"
+    },
+    {
+      "id": "start_13_frame_0",
+      "atlas_index": 13,
+      "region": [
+        341,
+        69,
+        64,
+        64
+      ],
+      "cell_region": [
+        340,
+        68,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          32,
+          31
+        ]
+      },
+      "direction": 13,
+      "state": "frame_0",
+      "variant": "start",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "source_sha256": "b06a80770f652a11036f753865f03cc13dc1b8faeded39075b141396a420d703"
+    },
+    {
+      "id": "start_14_frame_0",
+      "atlas_index": 14,
+      "region": [
+        409,
+        69,
+        64,
+        64
+      ],
+      "cell_region": [
+        408,
+        68,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          32,
+          32
+        ]
+      },
+      "direction": 14,
+      "state": "frame_0",
+      "variant": "start",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "source_sha256": "f16735df98a17a8537f1d6d3b94cef4dc380226c6ee161305f3a9e4d59ddc357"
+    },
+    {
+      "id": "start_15_frame_0",
+      "atlas_index": 15,
+      "region": [
+        477,
+        69,
+        64,
+        64
+      ],
+      "cell_region": [
+        476,
+        68,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          32,
+          32
+        ]
+      },
+      "direction": 15,
+      "state": "frame_0",
+      "variant": "start",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "source_sha256": "ff9d3c5217b15ca5299082934693626577bbbeb6c5c206581654a04a6bc8183d"
+    },
+    {
+      "id": "travel_00_frame_0",
+      "atlas_index": 16,
+      "region": [
+        1,
+        137,
+        64,
+        64
+      ],
+      "cell_region": [
+        0,
+        136,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          32,
+          32
+        ]
+      },
+      "direction": 0,
+      "state": "frame_0",
+      "variant": "travel",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "source_sha256": "7c1e23947690e8de17c025c173ec1fa8dd9debd1f067a3d938b2b125befc6b6c"
+    },
+    {
+      "id": "travel_01_frame_0",
+      "atlas_index": 17,
+      "region": [
+        69,
+        137,
+        64,
+        64
+      ],
+      "cell_region": [
+        68,
+        136,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          32,
+          32
+        ]
+      },
+      "direction": 1,
+      "state": "frame_0",
+      "variant": "travel",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "source_sha256": "9870abd7a11dee8e1118898551eea7c475e15899bf4728b61ef64e9c1f87a144"
+    },
+    {
+      "id": "travel_02_frame_0",
+      "atlas_index": 18,
+      "region": [
+        137,
+        137,
+        64,
+        64
+      ],
+      "cell_region": [
+        136,
+        136,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          32,
+          32
+        ]
+      },
+      "direction": 2,
+      "state": "frame_0",
+      "variant": "travel",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "source_sha256": "4051aaa9fd53c3977e4461b4e11206d678fb7b565d90f378aa940fde3e9b2bdd"
+    },
+    {
+      "id": "travel_03_frame_0",
+      "atlas_index": 19,
+      "region": [
+        205,
+        137,
+        64,
+        64
+      ],
+      "cell_region": [
+        204,
+        136,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          31,
+          32
+        ]
+      },
+      "direction": 3,
+      "state": "frame_0",
+      "variant": "travel",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "source_sha256": "58303b6adf68ccf19fce0d61b6a6af336282e75c857baaab0948f93b0b266f03"
+    },
+    {
+      "id": "travel_04_frame_0",
+      "atlas_index": 20,
+      "region": [
+        273,
+        137,
+        64,
+        64
+      ],
+      "cell_region": [
+        272,
+        136,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          31,
+          32
+        ]
+      },
+      "direction": 4,
+      "state": "frame_0",
+      "variant": "travel",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "source_sha256": "ab0261b6fd97e3632f63fe090377e0913df0be89563cc473e9a01f953bc74ef9"
+    },
+    {
+      "id": "travel_05_frame_0",
+      "atlas_index": 21,
+      "region": [
+        341,
+        137,
+        64,
+        64
+      ],
+      "cell_region": [
+        340,
+        136,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          31,
+          32
+        ]
+      },
+      "direction": 5,
+      "state": "frame_0",
+      "variant": "travel",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "source_sha256": "74c974c8471d076a25b1686743e1c58ba8a620f0501c9cafaeac3c0958a2be2c"
+    },
+    {
+      "id": "travel_06_frame_0",
+      "atlas_index": 22,
+      "region": [
+        409,
+        137,
+        64,
+        64
+      ],
+      "cell_region": [
+        408,
+        136,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          31,
+          32
+        ]
+      },
+      "direction": 6,
+      "state": "frame_0",
+      "variant": "travel",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "source_sha256": "0fb4cc46d1780f19ad3f8f0419ad41b675828120c961784d67229fc4b61e8efb"
+    },
+    {
+      "id": "travel_07_frame_0",
+      "atlas_index": 23,
+      "region": [
+        477,
+        137,
+        64,
+        64
+      ],
+      "cell_region": [
+        476,
+        136,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          31,
+          31
+        ]
+      },
+      "direction": 7,
+      "state": "frame_0",
+      "variant": "travel",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "source_sha256": "6f5da1a902d87ec7225f8dc6907ee6c5e8db30bc3d07cf0341bb5737256f760f"
+    },
+    {
+      "id": "travel_08_frame_0",
+      "atlas_index": 24,
+      "region": [
+        1,
+        205,
+        64,
+        64
+      ],
+      "cell_region": [
+        0,
+        204,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          31,
+          31
+        ]
+      },
+      "direction": 8,
+      "state": "frame_0",
+      "variant": "travel",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "source_sha256": "7a5f566ff387bcd155ad7c0251133adfe29beadebf26672d0e58d3646bebae32"
+    },
+    {
+      "id": "travel_09_frame_0",
+      "atlas_index": 25,
+      "region": [
+        69,
+        205,
+        64,
+        64
+      ],
+      "cell_region": [
+        68,
+        204,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          31,
+          31
+        ]
+      },
+      "direction": 9,
+      "state": "frame_0",
+      "variant": "travel",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "source_sha256": "64806bae1d5d556337a59885393e8feb01ec34ecae94222d1ef48d99ba97f7f7"
+    },
+    {
+      "id": "travel_10_frame_0",
+      "atlas_index": 26,
+      "region": [
+        137,
+        205,
+        64,
+        64
+      ],
+      "cell_region": [
+        136,
+        204,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          32,
+          31
+        ]
+      },
+      "direction": 10,
+      "state": "frame_0",
+      "variant": "travel",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "source_sha256": "625f3c82a6a9ef4667eca1cb84ec5d2e73a1985a68b83ff68065bd705f59abd1"
+    },
+    {
+      "id": "travel_11_frame_0",
+      "atlas_index": 27,
+      "region": [
+        205,
+        205,
+        64,
+        64
+      ],
+      "cell_region": [
+        204,
+        204,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          32,
+          31
+        ]
+      },
+      "direction": 11,
+      "state": "frame_0",
+      "variant": "travel",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "source_sha256": "7c04c76df8a204f4fd5cea1f61c129fa9e60a14f513ab031cc7c1c961693243a"
+    },
+    {
+      "id": "travel_12_frame_0",
+      "atlas_index": 28,
+      "region": [
+        273,
+        205,
+        64,
+        64
+      ],
+      "cell_region": [
+        272,
+        204,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          32,
+          31
+        ]
+      },
+      "direction": 12,
+      "state": "frame_0",
+      "variant": "travel",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "source_sha256": "3a5f21e78253243b41d6b4be260d9bd2c66b41686c9598c19b7fbbea0625e077"
+    },
+    {
+      "id": "travel_13_frame_0",
+      "atlas_index": 29,
+      "region": [
+        341,
+        205,
+        64,
+        64
+      ],
+      "cell_region": [
+        340,
+        204,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          32,
+          31
+        ]
+      },
+      "direction": 13,
+      "state": "frame_0",
+      "variant": "travel",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "source_sha256": "be81c5d2e970767dcb80f906a8ae6d01bc252dcaf0cb01a5249f34997a85f8ee"
+    },
+    {
+      "id": "travel_14_frame_0",
+      "atlas_index": 30,
+      "region": [
+        409,
+        205,
+        64,
+        64
+      ],
+      "cell_region": [
+        408,
+        204,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          32,
+          32
+        ]
+      },
+      "direction": 14,
+      "state": "frame_0",
+      "variant": "travel",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "source_sha256": "22ea54b475c2dc23350b3609bb8e20c0f562856c440eb0a2e0330db9d183ceb8"
+    },
+    {
+      "id": "travel_15_frame_0",
+      "atlas_index": 31,
+      "region": [
+        477,
+        205,
+        64,
+        64
+      ],
+      "cell_region": [
+        476,
+        204,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          32,
+          32
+        ]
+      },
+      "direction": 15,
+      "state": "frame_0",
+      "variant": "travel",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "source_sha256": "ce0ee9a5fcdf41ed1d7dd43c62cf738ac9921661d8b295c7e5802170c9137e8e"
+    },
+    {
+      "id": "end_00_frame_0",
+      "atlas_index": 32,
+      "region": [
+        1,
+        273,
+        64,
+        64
+      ],
+      "cell_region": [
+        0,
+        272,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          32,
+          32
+        ]
+      },
+      "direction": 0,
+      "state": "frame_0",
+      "variant": "end",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "source_sha256": "a924331c7fa205ef414a0a0075f62f18b28430c15359cb21911fbbd8e640efd5"
+    },
+    {
+      "id": "end_01_frame_0",
+      "atlas_index": 33,
+      "region": [
+        69,
+        273,
+        64,
+        64
+      ],
+      "cell_region": [
+        68,
+        272,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          32,
+          32
+        ]
+      },
+      "direction": 1,
+      "state": "frame_0",
+      "variant": "end",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "source_sha256": "a7fa3bd545e05a792289cbf7ae3abceaff9bbf0d4da517e4576f9a11105a362e"
+    },
+    {
+      "id": "end_02_frame_0",
+      "atlas_index": 34,
+      "region": [
+        137,
+        273,
+        64,
+        64
+      ],
+      "cell_region": [
+        136,
+        272,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          32,
+          32
+        ]
+      },
+      "direction": 2,
+      "state": "frame_0",
+      "variant": "end",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "source_sha256": "31a84550dbbe9ba336faa1d8662e0642f7ebf8424d3e6f4a9dc964c39b47f003"
+    },
+    {
+      "id": "end_03_frame_0",
+      "atlas_index": 35,
+      "region": [
+        205,
+        273,
+        64,
+        64
+      ],
+      "cell_region": [
+        204,
+        272,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          31,
+          32
+        ]
+      },
+      "direction": 3,
+      "state": "frame_0",
+      "variant": "end",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "source_sha256": "210d2911d29e651997fc8496ec33872f8150949aaf9a8a1070d80795fd960486"
+    },
+    {
+      "id": "end_04_frame_0",
+      "atlas_index": 36,
+      "region": [
+        273,
+        273,
+        64,
+        64
+      ],
+      "cell_region": [
+        272,
+        272,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          31,
+          32
+        ]
+      },
+      "direction": 4,
+      "state": "frame_0",
+      "variant": "end",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "source_sha256": "8804fc9b8677c8746b2dda7a71c200ee4ce2e1c2a8aac718dce127d9c3637bbd"
+    },
+    {
+      "id": "end_05_frame_0",
+      "atlas_index": 37,
+      "region": [
+        341,
+        273,
+        64,
+        64
+      ],
+      "cell_region": [
+        340,
+        272,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          31,
+          32
+        ]
+      },
+      "direction": 5,
+      "state": "frame_0",
+      "variant": "end",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "source_sha256": "b75682851e4e01efec5dd10b30997552908b8b816f618b8dde0532ca69ac201e"
+    },
+    {
+      "id": "end_06_frame_0",
+      "atlas_index": 38,
+      "region": [
+        409,
+        273,
+        64,
+        64
+      ],
+      "cell_region": [
+        408,
+        272,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          31,
+          32
+        ]
+      },
+      "direction": 6,
+      "state": "frame_0",
+      "variant": "end",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "source_sha256": "387c4e0dc0f7ce2048ead377984e0bd7cf89430520aee51efbd34eabd289ed16"
+    },
+    {
+      "id": "end_07_frame_0",
+      "atlas_index": 39,
+      "region": [
+        477,
+        273,
+        64,
+        64
+      ],
+      "cell_region": [
+        476,
+        272,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          31,
+          31
+        ]
+      },
+      "direction": 7,
+      "state": "frame_0",
+      "variant": "end",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "source_sha256": "fa743a2e803071229091fd494fc447b5e56fe645745a3ddb2e62d9f78182ab90"
+    },
+    {
+      "id": "end_08_frame_0",
+      "atlas_index": 40,
+      "region": [
+        1,
+        341,
+        64,
+        64
+      ],
+      "cell_region": [
+        0,
+        340,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          31,
+          31
+        ]
+      },
+      "direction": 8,
+      "state": "frame_0",
+      "variant": "end",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "source_sha256": "3effb7ce73125bdfcaaea5855f9d3c6da74da3d3eee3a5a3d86a679611a2ab26"
+    },
+    {
+      "id": "end_09_frame_0",
+      "atlas_index": 41,
+      "region": [
+        69,
+        341,
+        64,
+        64
+      ],
+      "cell_region": [
+        68,
+        340,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          31,
+          31
+        ]
+      },
+      "direction": 9,
+      "state": "frame_0",
+      "variant": "end",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "source_sha256": "7426119b7e44c5e31a654c5ab2c851a01bb7c5ec94b8b53ed9a79113f27d5423"
+    },
+    {
+      "id": "end_10_frame_0",
+      "atlas_index": 42,
+      "region": [
+        137,
+        341,
+        64,
+        64
+      ],
+      "cell_region": [
+        136,
+        340,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          32,
+          31
+        ]
+      },
+      "direction": 10,
+      "state": "frame_0",
+      "variant": "end",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "source_sha256": "5b2b4cb3b6add3e16eb28d7217d84b937cafeaa617f240531e958ce3ec296340"
+    },
+    {
+      "id": "end_11_frame_0",
+      "atlas_index": 43,
+      "region": [
+        205,
+        341,
+        64,
+        64
+      ],
+      "cell_region": [
+        204,
+        340,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          32,
+          31
+        ]
+      },
+      "direction": 11,
+      "state": "frame_0",
+      "variant": "end",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "source_sha256": "e584d6f2b2ddff553da456042d928d6b1ca610ef6299b22b779deb2cf174950d"
+    },
+    {
+      "id": "end_12_frame_0",
+      "atlas_index": 44,
+      "region": [
+        273,
+        341,
+        64,
+        64
+      ],
+      "cell_region": [
+        272,
+        340,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          32,
+          31
+        ]
+      },
+      "direction": 12,
+      "state": "frame_0",
+      "variant": "end",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "source_sha256": "70ea455fd9d565ea3f976540f6ab9f1430fe6ce16aeb1676602fc350e671dacf"
+    },
+    {
+      "id": "end_13_frame_0",
+      "atlas_index": 45,
+      "region": [
+        341,
+        341,
+        64,
+        64
+      ],
+      "cell_region": [
+        340,
+        340,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          32,
+          31
+        ]
+      },
+      "direction": 13,
+      "state": "frame_0",
+      "variant": "end",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "source_sha256": "6a0c8d257500bece799192b6f758aae01de01d6ab7056396cff1e5c571d51280"
+    },
+    {
+      "id": "end_14_frame_0",
+      "atlas_index": 46,
+      "region": [
+        409,
+        341,
+        64,
+        64
+      ],
+      "cell_region": [
+        408,
+        340,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          32,
+          32
+        ]
+      },
+      "direction": 14,
+      "state": "frame_0",
+      "variant": "end",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "source_sha256": "dacdce72f401d20f66152965e59c1ecfc8061acd97923ad279900daf3f6c1c4d"
+    },
+    {
+      "id": "end_15_frame_0",
+      "atlas_index": 47,
+      "region": [
+        477,
+        341,
+        64,
+        64
+      ],
+      "cell_region": [
+        476,
+        340,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          32,
+          32
+        ]
+      },
+      "direction": 15,
+      "state": "frame_0",
+      "variant": "end",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "source_sha256": "7960e54fdc71042a5e4da34e31d8062d6709e6acb75e297fcbeeced353d6d37c"
+    }
+  ],
+  "runtime_group": "player",
+  "runtime_layers": [
+    "burst",
+    "trail",
+    "afterimage"
+  ],
+  "approval_status": "approved"
+}

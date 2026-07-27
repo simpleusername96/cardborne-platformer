@@ -4418,6 +4418,14 @@ func _combat_presentation_snapshot() -> Dictionary:
 		"player_position": player_position,
 		"hull_direction": player_hull_direction,
 		"aim_direction": player_aim_direction,
+		"player_speed": player_velocity.length(),
+		"dash_active": player_dash_timer > 0.0,
+		"dash_progress": (
+			1.0 - clampf(player_dash_timer / DASH_DURATION, 0.0, 1.0)
+			if player_dash_timer > 0.0
+			else 0.0
+		),
+		"dash_direction": player_dash_direction,
 		"player_hit": player_hit_flash > 0.0,
 		"player_hit_remaining": player_hit_flash,
 		"player_invulnerable_remaining": player_invulnerable,

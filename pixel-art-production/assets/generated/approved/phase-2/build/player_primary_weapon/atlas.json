@@ -1,0 +1,1184 @@
+{
+  "schema_version": 2,
+  "asset_id": "player_primary_weapon",
+  "family": "player_primary_weapon",
+  "atlas_path": "pixel-art-production/assets/generated/approved/phase-2/build/player_primary_weapon/atlas.png",
+  "atlas_size": [
+    542,
+    270
+  ],
+  "frame_size": [
+    64,
+    64
+  ],
+  "cell_size": [
+    66,
+    66
+  ],
+  "columns": 8,
+  "rows": 4,
+  "padding": 2,
+  "extrude": 1,
+  "frames": [
+    {
+      "id": "pulse_cannon_00_idle",
+      "atlas_index": 0,
+      "region": [
+        1,
+        1,
+        64,
+        64
+      ],
+      "cell_region": [
+        0,
+        0,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "mount": [
+          32,
+          44
+        ],
+        "muzzle": [
+          32,
+          9
+        ]
+      },
+      "direction": 0,
+      "state": "idle",
+      "variant": "pulse_cannon",
+      "sequence_index": 0,
+      "duration_ms": 100,
+      "source_sha256": "68aa635bb5489cb6b44af6720f8025539fd8b38bda2dcd95c4c25f3ff7a40b71"
+    },
+    {
+      "id": "pulse_cannon_01_idle",
+      "atlas_index": 1,
+      "region": [
+        69,
+        1,
+        64,
+        64
+      ],
+      "cell_region": [
+        68,
+        0,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "mount": [
+          27,
+          43
+        ],
+        "muzzle": [
+          41,
+          11
+        ]
+      },
+      "direction": 1,
+      "state": "idle",
+      "variant": "pulse_cannon",
+      "sequence_index": 0,
+      "duration_ms": 100,
+      "source_sha256": "43bbfcd067dff472b1b3a7fb338bd71140eb9990ae601ef959f708eabb6085c3"
+    },
+    {
+      "id": "pulse_cannon_02_idle",
+      "atlas_index": 2,
+      "region": [
+        137,
+        1,
+        64,
+        64
+      ],
+      "cell_region": [
+        136,
+        0,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "mount": [
+          23,
+          41
+        ],
+        "muzzle": [
+          48,
+          16
+        ]
+      },
+      "direction": 2,
+      "state": "idle",
+      "variant": "pulse_cannon",
+      "sequence_index": 0,
+      "duration_ms": 100,
+      "source_sha256": "c0f0c9343cb4c5556c162c18b5076175fbc2e2632e6b2705420e35fb2a61b105"
+    },
+    {
+      "id": "pulse_cannon_03_idle",
+      "atlas_index": 3,
+      "region": [
+        205,
+        1,
+        64,
+        64
+      ],
+      "cell_region": [
+        204,
+        0,
+        66,
+        66
+      ],
+      "pivot": [
+        31,
+        32
+      ],
+      "anchors": {
+        "mount": [
+          20,
+          37
+        ],
+        "muzzle": [
+          52,
+          23
+        ]
+      },
+      "direction": 3,
+      "state": "idle",
+      "variant": "pulse_cannon",
+      "sequence_index": 0,
+      "duration_ms": 100,
+      "source_sha256": "e47f86adb9352263644129209b9f5dd2cfc53defa9f2a6780e307b4ddfce1d56"
+    },
+    {
+      "id": "pulse_cannon_04_idle",
+      "atlas_index": 4,
+      "region": [
+        273,
+        1,
+        64,
+        64
+      ],
+      "cell_region": [
+        272,
+        0,
+        66,
+        66
+      ],
+      "pivot": [
+        31,
+        32
+      ],
+      "anchors": {
+        "mount": [
+          19,
+          32
+        ],
+        "muzzle": [
+          54,
+          32
+        ]
+      },
+      "direction": 4,
+      "state": "idle",
+      "variant": "pulse_cannon",
+      "sequence_index": 0,
+      "duration_ms": 100,
+      "source_sha256": "2ba207c8b219b985770f9e9f2f6e83c0df97af56ec56c9e6fec6ec2c01178aca"
+    },
+    {
+      "id": "pulse_cannon_05_idle",
+      "atlas_index": 5,
+      "region": [
+        341,
+        1,
+        64,
+        64
+      ],
+      "cell_region": [
+        340,
+        0,
+        66,
+        66
+      ],
+      "pivot": [
+        31,
+        32
+      ],
+      "anchors": {
+        "mount": [
+          20,
+          27
+        ],
+        "muzzle": [
+          52,
+          41
+        ]
+      },
+      "direction": 5,
+      "state": "idle",
+      "variant": "pulse_cannon",
+      "sequence_index": 0,
+      "duration_ms": 100,
+      "source_sha256": "9072a01b01563374d311d017074dee9d739e5d7cd0651b420bdfe50ec9bae743"
+    },
+    {
+      "id": "pulse_cannon_06_idle",
+      "atlas_index": 6,
+      "region": [
+        409,
+        1,
+        64,
+        64
+      ],
+      "cell_region": [
+        408,
+        0,
+        66,
+        66
+      ],
+      "pivot": [
+        31,
+        32
+      ],
+      "anchors": {
+        "mount": [
+          22,
+          23
+        ],
+        "muzzle": [
+          47,
+          48
+        ]
+      },
+      "direction": 6,
+      "state": "idle",
+      "variant": "pulse_cannon",
+      "sequence_index": 0,
+      "duration_ms": 100,
+      "source_sha256": "ce0b63be83b8dced7096da947ae6d6f471c9377dcd47e0aa176e8a8bddd82b84"
+    },
+    {
+      "id": "pulse_cannon_07_idle",
+      "atlas_index": 7,
+      "region": [
+        477,
+        1,
+        64,
+        64
+      ],
+      "cell_region": [
+        476,
+        0,
+        66,
+        66
+      ],
+      "pivot": [
+        31,
+        31
+      ],
+      "anchors": {
+        "mount": [
+          26,
+          20
+        ],
+        "muzzle": [
+          40,
+          52
+        ]
+      },
+      "direction": 7,
+      "state": "idle",
+      "variant": "pulse_cannon",
+      "sequence_index": 0,
+      "duration_ms": 100,
+      "source_sha256": "3cd971b9c7706ed1c258edcadcfcbf2c71452180b7fbadbbe73ff634cc0c375a"
+    },
+    {
+      "id": "pulse_cannon_08_idle",
+      "atlas_index": 8,
+      "region": [
+        1,
+        69,
+        64,
+        64
+      ],
+      "cell_region": [
+        0,
+        68,
+        66,
+        66
+      ],
+      "pivot": [
+        31,
+        31
+      ],
+      "anchors": {
+        "mount": [
+          31,
+          19
+        ],
+        "muzzle": [
+          31,
+          54
+        ]
+      },
+      "direction": 8,
+      "state": "idle",
+      "variant": "pulse_cannon",
+      "sequence_index": 0,
+      "duration_ms": 100,
+      "source_sha256": "76ead8ef71d98587d4ec3e39cb687712049eb4adc2c45d5b8e6847beec80b78b"
+    },
+    {
+      "id": "pulse_cannon_09_idle",
+      "atlas_index": 9,
+      "region": [
+        69,
+        69,
+        64,
+        64
+      ],
+      "cell_region": [
+        68,
+        68,
+        66,
+        66
+      ],
+      "pivot": [
+        31,
+        31
+      ],
+      "anchors": {
+        "mount": [
+          36,
+          20
+        ],
+        "muzzle": [
+          22,
+          52
+        ]
+      },
+      "direction": 9,
+      "state": "idle",
+      "variant": "pulse_cannon",
+      "sequence_index": 0,
+      "duration_ms": 100,
+      "source_sha256": "a1fadd6605d80e055b8434bfcfc8d909670e4a835c9be7c4ce142421988e840e"
+    },
+    {
+      "id": "pulse_cannon_10_idle",
+      "atlas_index": 10,
+      "region": [
+        137,
+        69,
+        64,
+        64
+      ],
+      "cell_region": [
+        136,
+        68,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        31
+      ],
+      "anchors": {
+        "mount": [
+          40,
+          22
+        ],
+        "muzzle": [
+          15,
+          47
+        ]
+      },
+      "direction": 10,
+      "state": "idle",
+      "variant": "pulse_cannon",
+      "sequence_index": 0,
+      "duration_ms": 100,
+      "source_sha256": "b5ec0c0ef78ce23f391657cab00c9edb4a0c864f3d43a1c4103cf5276e5a352a"
+    },
+    {
+      "id": "pulse_cannon_11_idle",
+      "atlas_index": 11,
+      "region": [
+        205,
+        69,
+        64,
+        64
+      ],
+      "cell_region": [
+        204,
+        68,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        31
+      ],
+      "anchors": {
+        "mount": [
+          43,
+          26
+        ],
+        "muzzle": [
+          11,
+          40
+        ]
+      },
+      "direction": 11,
+      "state": "idle",
+      "variant": "pulse_cannon",
+      "sequence_index": 0,
+      "duration_ms": 100,
+      "source_sha256": "b9b92a41071bc656a66df82a89fe8356a6e675ceb32661546df0a873a6096455"
+    },
+    {
+      "id": "pulse_cannon_12_idle",
+      "atlas_index": 12,
+      "region": [
+        273,
+        69,
+        64,
+        64
+      ],
+      "cell_region": [
+        272,
+        68,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        31
+      ],
+      "anchors": {
+        "mount": [
+          44,
+          31
+        ],
+        "muzzle": [
+          9,
+          31
+        ]
+      },
+      "direction": 12,
+      "state": "idle",
+      "variant": "pulse_cannon",
+      "sequence_index": 0,
+      "duration_ms": 100,
+      "source_sha256": "420ccc7ea24c354cbf8c93a4ae0ea8c1647876ac63158bc33abbc19d0be37967"
+    },
+    {
+      "id": "pulse_cannon_13_idle",
+      "atlas_index": 13,
+      "region": [
+        341,
+        69,
+        64,
+        64
+      ],
+      "cell_region": [
+        340,
+        68,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        31
+      ],
+      "anchors": {
+        "mount": [
+          43,
+          36
+        ],
+        "muzzle": [
+          11,
+          22
+        ]
+      },
+      "direction": 13,
+      "state": "idle",
+      "variant": "pulse_cannon",
+      "sequence_index": 0,
+      "duration_ms": 100,
+      "source_sha256": "41247feed9a9a878f20aaa8e5b6d63f0c83ec9525f88da1516ac8ca23ae9a5e8"
+    },
+    {
+      "id": "pulse_cannon_14_idle",
+      "atlas_index": 14,
+      "region": [
+        409,
+        69,
+        64,
+        64
+      ],
+      "cell_region": [
+        408,
+        68,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "mount": [
+          41,
+          40
+        ],
+        "muzzle": [
+          16,
+          15
+        ]
+      },
+      "direction": 14,
+      "state": "idle",
+      "variant": "pulse_cannon",
+      "sequence_index": 0,
+      "duration_ms": 100,
+      "source_sha256": "b8aff147ef9d1370ba4d49890b92d6cca6b37cadf4222cc85e9e5e97f1547757"
+    },
+    {
+      "id": "pulse_cannon_15_idle",
+      "atlas_index": 15,
+      "region": [
+        477,
+        69,
+        64,
+        64
+      ],
+      "cell_region": [
+        476,
+        68,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "mount": [
+          37,
+          43
+        ],
+        "muzzle": [
+          23,
+          11
+        ]
+      },
+      "direction": 15,
+      "state": "idle",
+      "variant": "pulse_cannon",
+      "sequence_index": 0,
+      "duration_ms": 100,
+      "source_sha256": "870cdb7f96c79d763cb05b76fe414e75e459fa5ed2108920d7705db6846861b9"
+    },
+    {
+      "id": "pulse_cannon_00_recoil",
+      "atlas_index": 16,
+      "region": [
+        1,
+        137,
+        64,
+        64
+      ],
+      "cell_region": [
+        0,
+        136,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        34
+      ],
+      "anchors": {
+        "mount": [
+          32,
+          46
+        ],
+        "muzzle": [
+          32,
+          11
+        ]
+      },
+      "direction": 0,
+      "state": "recoil",
+      "variant": "pulse_cannon",
+      "sequence_index": 0,
+      "duration_ms": 100,
+      "source_sha256": "51d192d70c00fedb93da1f8eadb26d6e2927a89b1535cebc29de2004ddccb104"
+    },
+    {
+      "id": "pulse_cannon_01_recoil",
+      "atlas_index": 17,
+      "region": [
+        69,
+        137,
+        64,
+        64
+      ],
+      "cell_region": [
+        68,
+        136,
+        66,
+        66
+      ],
+      "pivot": [
+        31,
+        34
+      ],
+      "anchors": {
+        "mount": [
+          26,
+          45
+        ],
+        "muzzle": [
+          40,
+          13
+        ]
+      },
+      "direction": 1,
+      "state": "recoil",
+      "variant": "pulse_cannon",
+      "sequence_index": 0,
+      "duration_ms": 100,
+      "source_sha256": "448d727c004f47d4f722d393d2310858f89e4e90ec3eebf8bd02fee6b4a6c90b"
+    },
+    {
+      "id": "pulse_cannon_02_recoil",
+      "atlas_index": 18,
+      "region": [
+        137,
+        137,
+        64,
+        64
+      ],
+      "cell_region": [
+        136,
+        136,
+        66,
+        66
+      ],
+      "pivot": [
+        30,
+        34
+      ],
+      "anchors": {
+        "mount": [
+          22,
+          42
+        ],
+        "muzzle": [
+          46,
+          17
+        ]
+      },
+      "direction": 2,
+      "state": "recoil",
+      "variant": "pulse_cannon",
+      "sequence_index": 0,
+      "duration_ms": 100,
+      "source_sha256": "d5b8069753752babdbad7828b8c68fe5c266d1dfc0d74bcde93aa1bdaa60e6e6"
+    },
+    {
+      "id": "pulse_cannon_03_recoil",
+      "atlas_index": 19,
+      "region": [
+        205,
+        137,
+        64,
+        64
+      ],
+      "cell_region": [
+        204,
+        136,
+        66,
+        66
+      ],
+      "pivot": [
+        29,
+        33
+      ],
+      "anchors": {
+        "mount": [
+          18,
+          38
+        ],
+        "muzzle": [
+          51,
+          24
+        ]
+      },
+      "direction": 3,
+      "state": "recoil",
+      "variant": "pulse_cannon",
+      "sequence_index": 0,
+      "duration_ms": 100,
+      "source_sha256": "b99b7ea6a3f34215180bcca19bc9a0fc684edd1da59e7b93ee335301795b8025"
+    },
+    {
+      "id": "pulse_cannon_04_recoil",
+      "atlas_index": 20,
+      "region": [
+        273,
+        137,
+        64,
+        64
+      ],
+      "cell_region": [
+        272,
+        136,
+        66,
+        66
+      ],
+      "pivot": [
+        29,
+        32
+      ],
+      "anchors": {
+        "mount": [
+          17,
+          32
+        ],
+        "muzzle": [
+          52,
+          32
+        ]
+      },
+      "direction": 4,
+      "state": "recoil",
+      "variant": "pulse_cannon",
+      "sequence_index": 0,
+      "duration_ms": 100,
+      "source_sha256": "494fe706a623e6f10ccf61f2fc383841bf04ce55747a5dbc33af36baf50e69e1"
+    },
+    {
+      "id": "pulse_cannon_05_recoil",
+      "atlas_index": 21,
+      "region": [
+        341,
+        137,
+        64,
+        64
+      ],
+      "cell_region": [
+        340,
+        136,
+        66,
+        66
+      ],
+      "pivot": [
+        29,
+        31
+      ],
+      "anchors": {
+        "mount": [
+          18,
+          26
+        ],
+        "muzzle": [
+          50,
+          40
+        ]
+      },
+      "direction": 5,
+      "state": "recoil",
+      "variant": "pulse_cannon",
+      "sequence_index": 0,
+      "duration_ms": 100,
+      "source_sha256": "68210cf3fd3108c499ed2b08cbf80e38f3381ebd0f21463b57170363fb1104ac"
+    },
+    {
+      "id": "pulse_cannon_06_recoil",
+      "atlas_index": 22,
+      "region": [
+        409,
+        137,
+        64,
+        64
+      ],
+      "cell_region": [
+        408,
+        136,
+        66,
+        66
+      ],
+      "pivot": [
+        29,
+        30
+      ],
+      "anchors": {
+        "mount": [
+          21,
+          22
+        ],
+        "muzzle": [
+          46,
+          46
+        ]
+      },
+      "direction": 6,
+      "state": "recoil",
+      "variant": "pulse_cannon",
+      "sequence_index": 0,
+      "duration_ms": 100,
+      "source_sha256": "fc433681690d190ec30c6535bbcb127b04b6c671c89a16b6db5869f5d0cede7a"
+    },
+    {
+      "id": "pulse_cannon_07_recoil",
+      "atlas_index": 23,
+      "region": [
+        477,
+        137,
+        64,
+        64
+      ],
+      "cell_region": [
+        476,
+        136,
+        66,
+        66
+      ],
+      "pivot": [
+        30,
+        29
+      ],
+      "anchors": {
+        "mount": [
+          25,
+          18
+        ],
+        "muzzle": [
+          39,
+          51
+        ]
+      },
+      "direction": 7,
+      "state": "recoil",
+      "variant": "pulse_cannon",
+      "sequence_index": 0,
+      "duration_ms": 100,
+      "source_sha256": "9fe676554a28616a42bc16e543d73841f917663be977c982c7b96e16e0570351"
+    },
+    {
+      "id": "pulse_cannon_08_recoil",
+      "atlas_index": 24,
+      "region": [
+        1,
+        205,
+        64,
+        64
+      ],
+      "cell_region": [
+        0,
+        204,
+        66,
+        66
+      ],
+      "pivot": [
+        31,
+        29
+      ],
+      "anchors": {
+        "mount": [
+          31,
+          17
+        ],
+        "muzzle": [
+          31,
+          52
+        ]
+      },
+      "direction": 8,
+      "state": "recoil",
+      "variant": "pulse_cannon",
+      "sequence_index": 0,
+      "duration_ms": 100,
+      "source_sha256": "fc1bd0b9ed621f0bf06437099e513b083e21f296f1bff1952f029e6790edadc2"
+    },
+    {
+      "id": "pulse_cannon_09_recoil",
+      "atlas_index": 25,
+      "region": [
+        69,
+        205,
+        64,
+        64
+      ],
+      "cell_region": [
+        68,
+        204,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        29
+      ],
+      "anchors": {
+        "mount": [
+          37,
+          18
+        ],
+        "muzzle": [
+          23,
+          50
+        ]
+      },
+      "direction": 9,
+      "state": "recoil",
+      "variant": "pulse_cannon",
+      "sequence_index": 0,
+      "duration_ms": 100,
+      "source_sha256": "90e2337e12d2ad10e0a3a9263af0efc9541399e0ad53f65b29486441edbbf548"
+    },
+    {
+      "id": "pulse_cannon_10_recoil",
+      "atlas_index": 26,
+      "region": [
+        137,
+        205,
+        64,
+        64
+      ],
+      "cell_region": [
+        136,
+        204,
+        66,
+        66
+      ],
+      "pivot": [
+        33,
+        29
+      ],
+      "anchors": {
+        "mount": [
+          41,
+          21
+        ],
+        "muzzle": [
+          17,
+          46
+        ]
+      },
+      "direction": 10,
+      "state": "recoil",
+      "variant": "pulse_cannon",
+      "sequence_index": 0,
+      "duration_ms": 100,
+      "source_sha256": "d43bf546abafd5d28a95b5fa63b1ef584e6404958888de0eae53303e00f3daaa"
+    },
+    {
+      "id": "pulse_cannon_11_recoil",
+      "atlas_index": 27,
+      "region": [
+        205,
+        205,
+        64,
+        64
+      ],
+      "cell_region": [
+        204,
+        204,
+        66,
+        66
+      ],
+      "pivot": [
+        34,
+        30
+      ],
+      "anchors": {
+        "mount": [
+          45,
+          25
+        ],
+        "muzzle": [
+          12,
+          39
+        ]
+      },
+      "direction": 11,
+      "state": "recoil",
+      "variant": "pulse_cannon",
+      "sequence_index": 0,
+      "duration_ms": 100,
+      "source_sha256": "545b2937390de70e0bd6c1aa3c8860499b39cc086e26888b9b145a5672ed7c21"
+    },
+    {
+      "id": "pulse_cannon_12_recoil",
+      "atlas_index": 28,
+      "region": [
+        273,
+        205,
+        64,
+        64
+      ],
+      "cell_region": [
+        272,
+        204,
+        66,
+        66
+      ],
+      "pivot": [
+        34,
+        31
+      ],
+      "anchors": {
+        "mount": [
+          46,
+          31
+        ],
+        "muzzle": [
+          11,
+          31
+        ]
+      },
+      "direction": 12,
+      "state": "recoil",
+      "variant": "pulse_cannon",
+      "sequence_index": 0,
+      "duration_ms": 100,
+      "source_sha256": "c9b514666bdaac5d1a20ce0a749504cff857501ab40e77b588e08de5a92ec9f6"
+    },
+    {
+      "id": "pulse_cannon_13_recoil",
+      "atlas_index": 29,
+      "region": [
+        341,
+        205,
+        64,
+        64
+      ],
+      "cell_region": [
+        340,
+        204,
+        66,
+        66
+      ],
+      "pivot": [
+        34,
+        32
+      ],
+      "anchors": {
+        "mount": [
+          45,
+          37
+        ],
+        "muzzle": [
+          13,
+          23
+        ]
+      },
+      "direction": 13,
+      "state": "recoil",
+      "variant": "pulse_cannon",
+      "sequence_index": 0,
+      "duration_ms": 100,
+      "source_sha256": "daf4f57aeaa8248fffdee53211921b69f6fc8d75c290d98a78245533d9fbd900"
+    },
+    {
+      "id": "pulse_cannon_14_recoil",
+      "atlas_index": 30,
+      "region": [
+        409,
+        205,
+        64,
+        64
+      ],
+      "cell_region": [
+        408,
+        204,
+        66,
+        66
+      ],
+      "pivot": [
+        34,
+        33
+      ],
+      "anchors": {
+        "mount": [
+          42,
+          41
+        ],
+        "muzzle": [
+          17,
+          17
+        ]
+      },
+      "direction": 14,
+      "state": "recoil",
+      "variant": "pulse_cannon",
+      "sequence_index": 0,
+      "duration_ms": 100,
+      "source_sha256": "ac5fc7cd16d55e9c5aad6495d5eb6ec7430f2c886aabe38b330b04ddaac497a0"
+    },
+    {
+      "id": "pulse_cannon_15_recoil",
+      "atlas_index": 31,
+      "region": [
+        477,
+        205,
+        64,
+        64
+      ],
+      "cell_region": [
+        476,
+        204,
+        66,
+        66
+      ],
+      "pivot": [
+        33,
+        34
+      ],
+      "anchors": {
+        "mount": [
+          38,
+          45
+        ],
+        "muzzle": [
+          24,
+          12
+        ]
+      },
+      "direction": 15,
+      "state": "recoil",
+      "variant": "pulse_cannon",
+      "sequence_index": 0,
+      "duration_ms": 100,
+      "source_sha256": "2096047b4d83235e5e01a45c4a5464826e7513d01983877d0861723121929166"
+    }
+  ],
+  "runtime_group": "player",
+  "runtime_layers": [
+    "mount",
+    "barrel",
+    "power_core",
+    "muzzle_fx"
+  ],
+  "approval_status": "approved"
+}

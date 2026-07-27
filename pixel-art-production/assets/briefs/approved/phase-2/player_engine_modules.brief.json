@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "id": "player_engine_modules",
+  "family": "player_engine_modules",
+  "approval_status": "approved",
+  "gameplay_identity": "Count-readable installed thruster modules for movement-speed upgrades.",
+  "current_owner": [
+    "scripts/vehicle/vehicle_run.gd",
+    "scripts/presentation/vehicle_combat_renderer.gd"
+  ],
+  "native_size": [
+    64,
+    64
+  ],
+  "rendered_diameter": 64,
+  "silhouette_requirement": "Zero through three large rear pods remain countable without labels.",
+  "orientation_cue": "Each pod sits on the rear line opposite the hull nose.",
+  "semantic_parts": [
+    "left_mount",
+    "center_mount",
+    "right_mount"
+  ],
+  "pivot": [
+    32,
+    32
+  ],
+  "anchors": {},
+  "directions": 4,
+  "states": [
+    "installed"
+  ],
+  "allowed_palette_roles": [
+    "structure_recess",
+    "deck_shadow",
+    "player_reward",
+    "player_energy"
+  ],
+  "references": [
+    {
+      "id": "game_assault_android_cactus",
+      "study": "Preserve role and orientation at dense top-down combat scale."
+    },
+    {
+      "id": "cc0_kenney_pixel_shmup",
+      "study": "Preserve economical whole-cell silhouettes and modular construction."
+    }
+  ],
+  "avoid_rules": [
+    "No gradients, antialiasing, texture noise, lighting simulation, or baked glow.",
+    "Do not derive collision, attack timing, or navigation from pixel alpha."
+  ],
+  "production_method": "imagegen_assisted",
+  "collision_reference": "Existing gameplay-owned geometry for player_engine_modules.",
+  "runtime_group": "player",
+  "review_backgrounds": [
+    "space_void",
+    "deck_base",
+    "neutral_highlight"
+  ],
+  "density_tier": "all"
+}

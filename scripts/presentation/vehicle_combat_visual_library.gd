@@ -391,6 +391,27 @@ static func player_mesh() -> ArrayMesh:
 	return player_hull_mesh()
 
 
+static func pixel_quad_mesh() -> ArrayMesh:
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = PackedVector3Array([
+		Vector3(-1.0, -1.0, 0.0),
+		Vector3(1.0, -1.0, 0.0),
+		Vector3(1.0, 1.0, 0.0),
+		Vector3(-1.0, 1.0, 0.0),
+	])
+	arrays[Mesh.ARRAY_TEX_UV] = PackedVector2Array([
+		Vector2(0.0, 0.0),
+		Vector2(1.0, 0.0),
+		Vector2(1.0, 1.0),
+		Vector2(0.0, 1.0),
+	])
+	arrays[Mesh.ARRAY_INDEX] = PackedInt32Array([0, 1, 2, 0, 2, 3])
+	var mesh := ArrayMesh.new()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	return mesh
+
+
 static func experience_mesh(kind: StringName) -> ArrayMesh:
 	var points := _regular_polygon(Vector2.ZERO, 1.0, 4, PI / 4.0)
 	if kind == &"medium":

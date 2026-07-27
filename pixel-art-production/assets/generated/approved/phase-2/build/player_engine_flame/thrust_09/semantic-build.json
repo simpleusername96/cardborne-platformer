@@ -1,0 +1,26 @@
+{
+  "asset_id": "player_engine_flame",
+  "size": [
+    64,
+    64
+  ],
+  "source": "pixel-art-production/assets/generated/approved/phase-2/build/player_engine_flame/thrust_09/source.png",
+  "semantic_mask": "pixel-art-production/assets/generated/approved/phase-2/build/player_engine_flame/thrust_09/semantic-mask.png",
+  "reassembly_pixel_difference": 0,
+  "layers": [
+    {
+      "id": "core",
+      "mask_color": "#FF0000",
+      "z": 0,
+      "pixel_count": 15,
+      "output": "layers/core.png"
+    },
+    {
+      "id": "outer_flame",
+      "mask_color": "#00FF00",
+      "z": 1,
+      "pixel_count": 35,
+      "output": "layers/outer_flame.png"
+    }
+  ]
+}

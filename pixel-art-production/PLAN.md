@@ -306,9 +306,9 @@ made coherently before any runtime integration.
 only this candidate set to `approved`. Rejection revises only named failing
 assets and repeats Gate A; Phase 2 remains blocked.
 
-**Current gate state:** Phase 1 production is complete. Gate A is
-`awaiting_owner`; no candidate has been published to `runtime/`, and Phase 2
-has not started.
+**Current gate state:** Phase 1 production is complete. The owner approved
+continuing from the sampler through the full migration on 2026-07-27, so Gate A
+is approved and later gates are execution checkpoints rather than chat pauses.
 
 ### Phase 2 — First live player and projectile slice
 
@@ -322,7 +322,7 @@ without changing simulation, collision, controls, or performance.
 `scripts/presentation/vehicle_combat_visual_library.gd`,
 `tools/validation/validate_vehicle_pixel_asset_catalog.gd`.
 
-- [ ] **2.1 Complete the six player-side production families.**
+- [x] **2.1 Complete the six player-side production families.**
   - Complete `player_chassis`, `player_primary_weapon`,
     `player_engine_modules`, `player_engine_flame`, `player_dash_effect`, and
     `player_primary_projectiles` to the exact inventory directions, states,
@@ -334,7 +334,7 @@ without changing simulation, collision, controls, or performance.
   - **Guard:** count-readable engine modules remain composited modules, not
     unique full-ship sprites.
 
-- [ ] **2.2 Publish the first runtime catalog.**
+- [x] **2.2 Publish the first runtime catalog.**
   - Add `cardborne/presentation/pixel_assets=false` to `project.godot`.
   - Publish approved atlases, JSON catalog, and
     `runtime/shaders/pixel_atlas_multimesh.gdshader`.
@@ -347,7 +347,7 @@ without changing simulation, collision, controls, or performance.
   - **Guard:** offline references, raw drafts, and evidence stay excluded from
     Godot and Web export.
 
-- [ ] **2.3 Add the retained atlas presentation path.**
+- [x] **2.3 Add the retained atlas presentation path.**
   - Extend `VehicleCombatRenderer` with atlas-backed quad meshes using
     per-instance custom UV data and existing transforms.
   - Select legacy or pixel once per published family; never instantiate both.
@@ -358,7 +358,7 @@ without changing simulation, collision, controls, or performance.
   - **Guard:** actor/projectile scene nodes remain `0`; global batch count stays
     `<=50`.
 
-- [ ] **2.4 Create Gate B actual-game evidence.**
+- [x] **2.4 Create Gate B actual-game evidence.**
   - Capture legacy and pixel views at `1280x720` for idle/facing, held fire,
     opening Breach, dash, accepted hit, ordinary pressure, and hard pressure.
   - Export and run the production Web build.

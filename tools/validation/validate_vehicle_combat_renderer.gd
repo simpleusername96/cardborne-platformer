@@ -19,11 +19,24 @@ func _run() -> void:
 	root.add_child(renderer)
 	await process_frame
 	var snapshot: Dictionary = renderer.debug_snapshot()
+	var pixel_enabled := bool(snapshot.get("pixel_enabled", false))
+	_expect(pixel_enabled, "approved pixel player presentation is active")
 	_expect(int(snapshot["batches"]) == 50, "combat presentation preserves the established retained batch count")
-	_expect(
-		renderer.get_node_or_null("Projectile_trail_player_kinetic") != null,
-		"player ownership uses its one rendered kinetic trail batch"
-	)
+	if pixel_enabled:
+		_expect(
+			renderer.get_node_or_null("Pixel_player_projectiles") != null,
+			"player projectiles use one retained pixel-atlas batch"
+		)
+		_expect(
+			renderer.get_node_or_null("Pixel_player_under") != null
+				and renderer.get_node_or_null("Pixel_player_over") != null,
+			"player chassis layers use retained pixel-atlas batches"
+		)
+	else:
+		_expect(
+			renderer.get_node_or_null("Projectile_trail_player_kinetic") != null,
+			"player ownership uses its one rendered kinetic trail batch"
+		)
 	for affinity in AttackContract.AFFINITIES:
 		_expect(
 			absf(Visuals.debug_projectile_head_extent(affinity) - 1.0) <= 0.001,
@@ -162,38 +175,69 @@ func _run() -> void:
 		is_equal_approx(Vector2(enemy_buffer[0], enemy_buffer[4]).length(), 26.0),
 		"batched buffer preserves enemy visual scale"
 	)
-	var projectile_head := renderer.get_node("Projectile_head_player") as MultiMeshInstance2D
-	var projectile_trail := renderer.get_node("Projectile_trail_player_kinetic") as MultiMeshInstance2D
-	var head_buffer := projectile_head.multimesh.buffer
-	var trail_buffer := projectile_trail.multimesh.buffer
-	_expect(
-		Vector2(head_buffer[3], head_buffer[7]).is_equal_approx(Vector2(330.0, 300.0)),
-		"projectile head remains centered on collision state"
-	)
-	_expect(
-		Vector2(head_buffer[0], head_buffer[4]).is_equal_approx(projectile_direction * 5.0),
-		"projectile head radius exactly matches its collision radius"
-	)
-	_expect(
-		Vector2(trail_buffer[3], trail_buffer[7]).is_equal_approx(
-			Vector2(330.0, 300.0) - projectile_direction * 18.5
-		),
-		"player ownership trail stays attached behind the five-pixel head"
-	)
-	_expect(
-		Vector2(trail_buffer[0], trail_buffer[4]).is_equal_approx(projectile_direction * 47.0),
-		"projectile trail preserves direction and fixed length"
-	)
-	_expect(
-		Vector2(trail_buffer[1], trail_buffer[5]).is_equal_approx(
-			projectile_direction.rotated(PI * 0.5) * 7.5
-		),
-		"player ownership trail width follows the collision radius"
-	)
-	_expect(
-		is_equal_approx(trail_buffer[11], 0.5),
-		"projectile trail remains translucent"
-	)
+	if pixel_enabled:
+		var projectile_pixel := renderer.get_node("Pixel_player_projectiles") as MultiMeshInstance2D
+		var projectile_pixel_buffer := projectile_pixel.multimesh.buffer
+		_expect(
+			projectile_pixel.multimesh.visible_instance_count == 1,
+			"one live player projectile becomes one retained atlas instance"
+		)
+		_expect(
+			Vector2(projectile_pixel_buffer[3], projectile_pixel_buffer[7]).is_equal_approx(
+				Vector2(330.0, 300.0)
+			),
+			"pixel projectile remains centered on collision state"
+		)
+		_expect(
+			projectile_pixel_buffer[12] >= 0.0
+				and projectile_pixel_buffer[13] >= 0.0
+				and projectile_pixel_buffer[14] > 0.0
+				and projectile_pixel_buffer[15] > 0.0,
+			"pixel projectile uploads a bounded non-empty atlas region"
+		)
+		var player_under := renderer.get_node("Pixel_player_under") as MultiMeshInstance2D
+		var player_over := renderer.get_node("Pixel_player_over") as MultiMeshInstance2D
+		_expect(
+			player_under.multimesh.visible_instance_count >= 2,
+			"pixel player publishes its chassis and propulsion layers"
+		)
+		_expect(
+			player_over.multimesh.visible_instance_count == 1,
+			"pixel player publishes one independently aimed weapon layer"
+		)
+	else:
+		var projectile_head := renderer.get_node("Projectile_head_player") as MultiMeshInstance2D
+		var projectile_trail := renderer.get_node("Projectile_trail_player_kinetic") as MultiMeshInstance2D
+		var head_buffer := projectile_head.multimesh.buffer
+		var trail_buffer := projectile_trail.multimesh.buffer
+		_expect(
+			Vector2(head_buffer[3], head_buffer[7]).is_equal_approx(Vector2(330.0, 300.0)),
+			"projectile head remains centered on collision state"
+		)
+		_expect(
+			Vector2(head_buffer[0], head_buffer[4]).is_equal_approx(projectile_direction * 5.0),
+			"projectile head radius exactly matches its collision radius"
+		)
+		_expect(
+			Vector2(trail_buffer[3], trail_buffer[7]).is_equal_approx(
+				Vector2(330.0, 300.0) - projectile_direction * 18.5
+			),
+			"player ownership trail stays attached behind the five-pixel head"
+		)
+		_expect(
+			Vector2(trail_buffer[0], trail_buffer[4]).is_equal_approx(projectile_direction * 47.0),
+			"projectile trail preserves direction and fixed length"
+		)
+		_expect(
+			Vector2(trail_buffer[1], trail_buffer[5]).is_equal_approx(
+				projectile_direction.rotated(PI * 0.5) * 7.5
+			),
+			"player ownership trail width follows the collision radius"
+		)
+		_expect(
+			is_equal_approx(trail_buffer[11], 0.5),
+			"projectile trail remains translucent"
+		)
 	var status_batch := renderer.get_node("Overlay_status_arc") as MultiMeshInstance2D
 	_expect(status_batch.multimesh.instance_count == 384, "one retained status arc batch reserves exactly 128 by three instances")
 	_expect(status_batch.multimesh.visible_instance_count == 3, "three simultaneous elements render as three large retained arcs")

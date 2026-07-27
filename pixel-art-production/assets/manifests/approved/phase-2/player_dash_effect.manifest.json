@@ -1,0 +1,1131 @@
+{
+  "schema_version": 2,
+  "id": "player_dash_effect",
+  "family": "player_dash_effect",
+  "approval_status": "approved",
+  "production_method": "direct_pixel",
+  "reference_ids": [
+    "game_assault_android_cactus",
+    "cc0_kenney_pixel_shmup"
+  ],
+  "avoid_rules": [
+    "No gradients, antialiasing, texture noise, lighting simulation, or baked glow.",
+    "Do not derive gameplay geometry from sprite alpha."
+  ],
+  "guide_size": 512,
+  "logical_size": [
+    64,
+    64
+  ],
+  "palette_path": "pixel-art-production/assets/palettes/pixel-hangar-v1.json",
+  "semantic_palette_path": "pixel-art-production/assets/palettes/semantic-mask-v1.json",
+  "transparent_color": "#FFFFFF",
+  "runtime_group": "player",
+  "runtime_layers": [
+    "burst",
+    "trail",
+    "afterimage"
+  ],
+  "layers": [
+    {
+      "id": "burst",
+      "mask_color": "#FF0000",
+      "z": 0,
+      "required": true
+    },
+    {
+      "id": "trail",
+      "mask_color": "#00FF00",
+      "z": 1,
+      "required": true
+    },
+    {
+      "id": "afterimage",
+      "mask_color": "#0000FF",
+      "z": 2,
+      "required": true
+    }
+  ],
+  "pivot": [
+    32,
+    32
+  ],
+  "anchors": {
+    "origin": [
+      32,
+      32
+    ]
+  },
+  "tile_signature": null,
+  "collision_reference": "Existing gameplay-owned geometry for player_dash_effect.",
+  "review_backgrounds": [
+    "space_void",
+    "deck_base",
+    "neutral_highlight"
+  ],
+  "silhouette_area_tolerance": 0.12,
+  "anchor_tolerance": 1,
+  "frames": [
+    {
+      "id": "start_00_frame_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/start_00.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/start_00-mask.png",
+      "source_sha256": "df128eea1ad8c68d7e7ba8384156e6aa5f6ccbbaac5da598570b079f6c8a586f",
+      "atlas_index": 0,
+      "variant": "start",
+      "direction_index": 0,
+      "state": "frame_0",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          32,
+          32
+        ]
+      }
+    },
+    {
+      "id": "start_01_frame_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/start_01.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/start_01-mask.png",
+      "source_sha256": "45a5b73e0970a6be39e604c5451b2e1dc33c8f34a29b11b5bc220b5693b25640",
+      "atlas_index": 1,
+      "variant": "start",
+      "direction_index": 1,
+      "state": "frame_0",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          32,
+          32
+        ]
+      }
+    },
+    {
+      "id": "start_02_frame_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/start_02.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/start_02-mask.png",
+      "source_sha256": "376c73896e0431b009f12d582c0662df756e5f53e888802dc7a433ec7bae0ae9",
+      "atlas_index": 2,
+      "variant": "start",
+      "direction_index": 2,
+      "state": "frame_0",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          32,
+          32
+        ]
+      }
+    },
+    {
+      "id": "start_03_frame_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/start_03.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/start_03-mask.png",
+      "source_sha256": "b6bcc012358924a28fd726785077088555465f4261f50d2fc5e264e0539c3734",
+      "atlas_index": 3,
+      "variant": "start",
+      "direction_index": 3,
+      "state": "frame_0",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          31,
+          32
+        ]
+      }
+    },
+    {
+      "id": "start_04_frame_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/start_04.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/start_04-mask.png",
+      "source_sha256": "33b1dba2ca080d46cdd2c20214aa228753b63c273491f5f90638f0aa489c0a35",
+      "atlas_index": 4,
+      "variant": "start",
+      "direction_index": 4,
+      "state": "frame_0",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          31,
+          32
+        ]
+      }
+    },
+    {
+      "id": "start_05_frame_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/start_05.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/start_05-mask.png",
+      "source_sha256": "0f808c92520984818c8a16ad0885bae52975d2b0b98fe15978dc36c119ea9073",
+      "atlas_index": 5,
+      "variant": "start",
+      "direction_index": 5,
+      "state": "frame_0",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          31,
+          32
+        ]
+      }
+    },
+    {
+      "id": "start_06_frame_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/start_06.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/start_06-mask.png",
+      "source_sha256": "b50e366c49d38cad5f9ab481368000458db42a2deb1307e53ea769c41a19d830",
+      "atlas_index": 6,
+      "variant": "start",
+      "direction_index": 6,
+      "state": "frame_0",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          31,
+          32
+        ]
+      }
+    },
+    {
+      "id": "start_07_frame_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/start_07.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/start_07-mask.png",
+      "source_sha256": "0b4c366c83a0c96fcc37ce1c32fc873b006081f29b6e782910e701d56e9d5232",
+      "atlas_index": 7,
+      "variant": "start",
+      "direction_index": 7,
+      "state": "frame_0",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          31,
+          31
+        ]
+      }
+    },
+    {
+      "id": "start_08_frame_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/start_08.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/start_08-mask.png",
+      "source_sha256": "817a9a319ae555a1b3bee14ed02aa46f84122319b9068b16e420dc38804eaeb1",
+      "atlas_index": 8,
+      "variant": "start",
+      "direction_index": 8,
+      "state": "frame_0",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          31,
+          31
+        ]
+      }
+    },
+    {
+      "id": "start_09_frame_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/start_09.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/start_09-mask.png",
+      "source_sha256": "e7bdadb4809ea214507d303483cf96c9bfd00e7f9f6787522a47a027ec00e0a7",
+      "atlas_index": 9,
+      "variant": "start",
+      "direction_index": 9,
+      "state": "frame_0",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          31,
+          31
+        ]
+      }
+    },
+    {
+      "id": "start_10_frame_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/start_10.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/start_10-mask.png",
+      "source_sha256": "3ee36b113efc8808118e0ef78298feb2ac1230b0b23932eddb507de93073c083",
+      "atlas_index": 10,
+      "variant": "start",
+      "direction_index": 10,
+      "state": "frame_0",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          32,
+          31
+        ]
+      }
+    },
+    {
+      "id": "start_11_frame_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/start_11.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/start_11-mask.png",
+      "source_sha256": "c1ca1e18ca13e6f65456167b867be65bb9e63bdb7e0f4aae6f8ad31ccd9e1e72",
+      "atlas_index": 11,
+      "variant": "start",
+      "direction_index": 11,
+      "state": "frame_0",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          32,
+          31
+        ]
+      }
+    },
+    {
+      "id": "start_12_frame_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/start_12.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/start_12-mask.png",
+      "source_sha256": "7681d02cbe13f77edc2fc9a85a5d5fd31b2b2b3dbf70574ce9ced05d5054a4d7",
+      "atlas_index": 12,
+      "variant": "start",
+      "direction_index": 12,
+      "state": "frame_0",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          32,
+          31
+        ]
+      }
+    },
+    {
+      "id": "start_13_frame_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/start_13.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/start_13-mask.png",
+      "source_sha256": "b06a80770f652a11036f753865f03cc13dc1b8faeded39075b141396a420d703",
+      "atlas_index": 13,
+      "variant": "start",
+      "direction_index": 13,
+      "state": "frame_0",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          32,
+          31
+        ]
+      }
+    },
+    {
+      "id": "start_14_frame_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/start_14.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/start_14-mask.png",
+      "source_sha256": "f16735df98a17a8537f1d6d3b94cef4dc380226c6ee161305f3a9e4d59ddc357",
+      "atlas_index": 14,
+      "variant": "start",
+      "direction_index": 14,
+      "state": "frame_0",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          32,
+          32
+        ]
+      }
+    },
+    {
+      "id": "start_15_frame_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/start_15.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/start_15-mask.png",
+      "source_sha256": "ff9d3c5217b15ca5299082934693626577bbbeb6c5c206581654a04a6bc8183d",
+      "atlas_index": 15,
+      "variant": "start",
+      "direction_index": 15,
+      "state": "frame_0",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          32,
+          32
+        ]
+      }
+    },
+    {
+      "id": "travel_00_frame_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/travel_00.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/travel_00-mask.png",
+      "source_sha256": "7c1e23947690e8de17c025c173ec1fa8dd9debd1f067a3d938b2b125befc6b6c",
+      "atlas_index": 16,
+      "variant": "travel",
+      "direction_index": 0,
+      "state": "frame_0",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          32,
+          32
+        ]
+      }
+    },
+    {
+      "id": "travel_01_frame_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/travel_01.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/travel_01-mask.png",
+      "source_sha256": "9870abd7a11dee8e1118898551eea7c475e15899bf4728b61ef64e9c1f87a144",
+      "atlas_index": 17,
+      "variant": "travel",
+      "direction_index": 1,
+      "state": "frame_0",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          32,
+          32
+        ]
+      }
+    },
+    {
+      "id": "travel_02_frame_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/travel_02.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/travel_02-mask.png",
+      "source_sha256": "4051aaa9fd53c3977e4461b4e11206d678fb7b565d90f378aa940fde3e9b2bdd",
+      "atlas_index": 18,
+      "variant": "travel",
+      "direction_index": 2,
+      "state": "frame_0",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          32,
+          32
+        ]
+      }
+    },
+    {
+      "id": "travel_03_frame_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/travel_03.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/travel_03-mask.png",
+      "source_sha256": "58303b6adf68ccf19fce0d61b6a6af336282e75c857baaab0948f93b0b266f03",
+      "atlas_index": 19,
+      "variant": "travel",
+      "direction_index": 3,
+      "state": "frame_0",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          31,
+          32
+        ]
+      }
+    },
+    {
+      "id": "travel_04_frame_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/travel_04.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/travel_04-mask.png",
+      "source_sha256": "ab0261b6fd97e3632f63fe090377e0913df0be89563cc473e9a01f953bc74ef9",
+      "atlas_index": 20,
+      "variant": "travel",
+      "direction_index": 4,
+      "state": "frame_0",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          31,
+          32
+        ]
+      }
+    },
+    {
+      "id": "travel_05_frame_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/travel_05.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/travel_05-mask.png",
+      "source_sha256": "74c974c8471d076a25b1686743e1c58ba8a620f0501c9cafaeac3c0958a2be2c",
+      "atlas_index": 21,
+      "variant": "travel",
+      "direction_index": 5,
+      "state": "frame_0",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          31,
+          32
+        ]
+      }
+    },
+    {
+      "id": "travel_06_frame_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/travel_06.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/travel_06-mask.png",
+      "source_sha256": "0fb4cc46d1780f19ad3f8f0419ad41b675828120c961784d67229fc4b61e8efb",
+      "atlas_index": 22,
+      "variant": "travel",
+      "direction_index": 6,
+      "state": "frame_0",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          31,
+          32
+        ]
+      }
+    },
+    {
+      "id": "travel_07_frame_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/travel_07.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/travel_07-mask.png",
+      "source_sha256": "6f5da1a902d87ec7225f8dc6907ee6c5e8db30bc3d07cf0341bb5737256f760f",
+      "atlas_index": 23,
+      "variant": "travel",
+      "direction_index": 7,
+      "state": "frame_0",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          31,
+          31
+        ]
+      }
+    },
+    {
+      "id": "travel_08_frame_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/travel_08.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/travel_08-mask.png",
+      "source_sha256": "7a5f566ff387bcd155ad7c0251133adfe29beadebf26672d0e58d3646bebae32",
+      "atlas_index": 24,
+      "variant": "travel",
+      "direction_index": 8,
+      "state": "frame_0",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          31,
+          31
+        ]
+      }
+    },
+    {
+      "id": "travel_09_frame_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/travel_09.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/travel_09-mask.png",
+      "source_sha256": "64806bae1d5d556337a59885393e8feb01ec34ecae94222d1ef48d99ba97f7f7",
+      "atlas_index": 25,
+      "variant": "travel",
+      "direction_index": 9,
+      "state": "frame_0",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          31,
+          31
+        ]
+      }
+    },
+    {
+      "id": "travel_10_frame_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/travel_10.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/travel_10-mask.png",
+      "source_sha256": "625f3c82a6a9ef4667eca1cb84ec5d2e73a1985a68b83ff68065bd705f59abd1",
+      "atlas_index": 26,
+      "variant": "travel",
+      "direction_index": 10,
+      "state": "frame_0",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          32,
+          31
+        ]
+      }
+    },
+    {
+      "id": "travel_11_frame_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/travel_11.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/travel_11-mask.png",
+      "source_sha256": "7c04c76df8a204f4fd5cea1f61c129fa9e60a14f513ab031cc7c1c961693243a",
+      "atlas_index": 27,
+      "variant": "travel",
+      "direction_index": 11,
+      "state": "frame_0",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          32,
+          31
+        ]
+      }
+    },
+    {
+      "id": "travel_12_frame_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/travel_12.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/travel_12-mask.png",
+      "source_sha256": "3a5f21e78253243b41d6b4be260d9bd2c66b41686c9598c19b7fbbea0625e077",
+      "atlas_index": 28,
+      "variant": "travel",
+      "direction_index": 12,
+      "state": "frame_0",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          32,
+          31
+        ]
+      }
+    },
+    {
+      "id": "travel_13_frame_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/travel_13.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/travel_13-mask.png",
+      "source_sha256": "be81c5d2e970767dcb80f906a8ae6d01bc252dcaf0cb01a5249f34997a85f8ee",
+      "atlas_index": 29,
+      "variant": "travel",
+      "direction_index": 13,
+      "state": "frame_0",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          32,
+          31
+        ]
+      }
+    },
+    {
+      "id": "travel_14_frame_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/travel_14.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/travel_14-mask.png",
+      "source_sha256": "22ea54b475c2dc23350b3609bb8e20c0f562856c440eb0a2e0330db9d183ceb8",
+      "atlas_index": 30,
+      "variant": "travel",
+      "direction_index": 14,
+      "state": "frame_0",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          32,
+          32
+        ]
+      }
+    },
+    {
+      "id": "travel_15_frame_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/travel_15.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/travel_15-mask.png",
+      "source_sha256": "ce0ee9a5fcdf41ed1d7dd43c62cf738ac9921661d8b295c7e5802170c9137e8e",
+      "atlas_index": 31,
+      "variant": "travel",
+      "direction_index": 15,
+      "state": "frame_0",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          32,
+          32
+        ]
+      }
+    },
+    {
+      "id": "end_00_frame_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/end_00.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/end_00-mask.png",
+      "source_sha256": "a924331c7fa205ef414a0a0075f62f18b28430c15359cb21911fbbd8e640efd5",
+      "atlas_index": 32,
+      "variant": "end",
+      "direction_index": 0,
+      "state": "frame_0",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          32,
+          32
+        ]
+      }
+    },
+    {
+      "id": "end_01_frame_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/end_01.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/end_01-mask.png",
+      "source_sha256": "a7fa3bd545e05a792289cbf7ae3abceaff9bbf0d4da517e4576f9a11105a362e",
+      "atlas_index": 33,
+      "variant": "end",
+      "direction_index": 1,
+      "state": "frame_0",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          32,
+          32
+        ]
+      }
+    },
+    {
+      "id": "end_02_frame_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/end_02.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/end_02-mask.png",
+      "source_sha256": "31a84550dbbe9ba336faa1d8662e0642f7ebf8424d3e6f4a9dc964c39b47f003",
+      "atlas_index": 34,
+      "variant": "end",
+      "direction_index": 2,
+      "state": "frame_0",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          32,
+          32
+        ]
+      }
+    },
+    {
+      "id": "end_03_frame_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/end_03.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/end_03-mask.png",
+      "source_sha256": "210d2911d29e651997fc8496ec33872f8150949aaf9a8a1070d80795fd960486",
+      "atlas_index": 35,
+      "variant": "end",
+      "direction_index": 3,
+      "state": "frame_0",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          31,
+          32
+        ]
+      }
+    },
+    {
+      "id": "end_04_frame_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/end_04.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/end_04-mask.png",
+      "source_sha256": "8804fc9b8677c8746b2dda7a71c200ee4ce2e1c2a8aac718dce127d9c3637bbd",
+      "atlas_index": 36,
+      "variant": "end",
+      "direction_index": 4,
+      "state": "frame_0",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          31,
+          32
+        ]
+      }
+    },
+    {
+      "id": "end_05_frame_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/end_05.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/end_05-mask.png",
+      "source_sha256": "b75682851e4e01efec5dd10b30997552908b8b816f618b8dde0532ca69ac201e",
+      "atlas_index": 37,
+      "variant": "end",
+      "direction_index": 5,
+      "state": "frame_0",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          31,
+          32
+        ]
+      }
+    },
+    {
+      "id": "end_06_frame_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/end_06.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/end_06-mask.png",
+      "source_sha256": "387c4e0dc0f7ce2048ead377984e0bd7cf89430520aee51efbd34eabd289ed16",
+      "atlas_index": 38,
+      "variant": "end",
+      "direction_index": 6,
+      "state": "frame_0",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          31,
+          32
+        ]
+      }
+    },
+    {
+      "id": "end_07_frame_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/end_07.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/end_07-mask.png",
+      "source_sha256": "fa743a2e803071229091fd494fc447b5e56fe645745a3ddb2e62d9f78182ab90",
+      "atlas_index": 39,
+      "variant": "end",
+      "direction_index": 7,
+      "state": "frame_0",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          31,
+          31
+        ]
+      }
+    },
+    {
+      "id": "end_08_frame_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/end_08.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/end_08-mask.png",
+      "source_sha256": "3effb7ce73125bdfcaaea5855f9d3c6da74da3d3eee3a5a3d86a679611a2ab26",
+      "atlas_index": 40,
+      "variant": "end",
+      "direction_index": 8,
+      "state": "frame_0",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          31,
+          31
+        ]
+      }
+    },
+    {
+      "id": "end_09_frame_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/end_09.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/end_09-mask.png",
+      "source_sha256": "7426119b7e44c5e31a654c5ab2c851a01bb7c5ec94b8b53ed9a79113f27d5423",
+      "atlas_index": 41,
+      "variant": "end",
+      "direction_index": 9,
+      "state": "frame_0",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          31,
+          31
+        ]
+      }
+    },
+    {
+      "id": "end_10_frame_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/end_10.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/end_10-mask.png",
+      "source_sha256": "5b2b4cb3b6add3e16eb28d7217d84b937cafeaa617f240531e958ce3ec296340",
+      "atlas_index": 42,
+      "variant": "end",
+      "direction_index": 10,
+      "state": "frame_0",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          32,
+          31
+        ]
+      }
+    },
+    {
+      "id": "end_11_frame_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/end_11.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/end_11-mask.png",
+      "source_sha256": "e584d6f2b2ddff553da456042d928d6b1ca610ef6299b22b779deb2cf174950d",
+      "atlas_index": 43,
+      "variant": "end",
+      "direction_index": 11,
+      "state": "frame_0",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          32,
+          31
+        ]
+      }
+    },
+    {
+      "id": "end_12_frame_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/end_12.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/end_12-mask.png",
+      "source_sha256": "70ea455fd9d565ea3f976540f6ab9f1430fe6ce16aeb1676602fc350e671dacf",
+      "atlas_index": 44,
+      "variant": "end",
+      "direction_index": 12,
+      "state": "frame_0",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          32,
+          31
+        ]
+      }
+    },
+    {
+      "id": "end_13_frame_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/end_13.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/end_13-mask.png",
+      "source_sha256": "6a0c8d257500bece799192b6f758aae01de01d6ab7056396cff1e5c571d51280",
+      "atlas_index": 45,
+      "variant": "end",
+      "direction_index": 13,
+      "state": "frame_0",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          32,
+          31
+        ]
+      }
+    },
+    {
+      "id": "end_14_frame_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/end_14.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/end_14-mask.png",
+      "source_sha256": "dacdce72f401d20f66152965e59c1ecfc8061acd97923ad279900daf3f6c1c4d",
+      "atlas_index": 46,
+      "variant": "end",
+      "direction_index": 14,
+      "state": "frame_0",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          32,
+          32
+        ]
+      }
+    },
+    {
+      "id": "end_15_frame_0",
+      "source_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/end_15.png",
+      "semantic_mask_path": "pixel-art-production/assets/source/approved/phase-2/player_dash_effect/end_15-mask.png",
+      "source_sha256": "7960e54fdc71042a5e4da34e31d8062d6709e6acb75e297fcbeeced353d6d37c",
+      "atlas_index": 47,
+      "variant": "end",
+      "direction_index": 15,
+      "state": "frame_0",
+      "sequence_index": 0,
+      "duration_ms": 80,
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "origin": [
+          32,
+          32
+        ]
+      }
+    }
+  ],
+  "atlas": {
+    "columns": 8,
+    "padding": 2,
+    "extrude": 1
+  }
+}

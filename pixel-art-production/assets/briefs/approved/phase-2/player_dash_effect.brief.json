@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "id": "player_dash_effect",
+  "family": "player_dash_effect",
+  "approval_status": "approved",
+  "gameplay_identity": "Movement-direction dash feedback split into start, travel, and end phases.",
+  "current_owner": [
+    "scripts/vehicle/vehicle_run.gd",
+    "scripts/presentation/vehicle_combat_renderer.gd"
+  ],
+  "native_size": [
+    64,
+    64
+  ],
+  "rendered_diameter": 64,
+  "silhouette_requirement": "A forward burst, long travel rails, and compact end fragments remain distinct.",
+  "orientation_cue": "All streaks align with the actual dash movement vector.",
+  "semantic_parts": [
+    "burst",
+    "trail",
+    "afterimage"
+  ],
+  "pivot": [
+    32,
+    32
+  ],
+  "anchors": {
+    "origin": [
+      32,
+      32
+    ]
+  },
+  "directions": 16,
+  "states": [
+    "frame_0"
+  ],
+  "allowed_palette_roles": [
+    "player_energy",
+    "neutral_highlight",
+    "player_reward"
+  ],
+  "references": [
+    {
+      "id": "game_assault_android_cactus",
+      "study": "Preserve role and orientation at dense top-down combat scale."
+    },
+    {
+      "id": "cc0_kenney_pixel_shmup",
+      "study": "Preserve economical whole-cell silhouettes and modular construction."
+    }
+  ],
+  "avoid_rules": [
+    "No gradients, antialiasing, texture noise, lighting simulation, or baked glow.",
+    "Do not derive collision, attack timing, or navigation from pixel alpha."
+  ],
+  "production_method": "direct_pixel",
+  "collision_reference": "Existing gameplay-owned geometry for player_dash_effect.",
+  "runtime_group": "player",
+  "review_backgrounds": [
+    "space_void",
+    "deck_base",
+    "neutral_highlight"
+  ],
+  "density_tier": "all"
+}
