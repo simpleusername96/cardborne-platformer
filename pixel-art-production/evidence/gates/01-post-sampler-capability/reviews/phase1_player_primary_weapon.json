@@ -1,0 +1,354 @@
+{
+  "schema_version": 1,
+  "asset_id": "phase1_player_primary_weapon",
+  "approval_status": "candidate",
+  "review_path": "pixel-art-production/evidence/gates/01-post-sampler-capability/reviews/phase1_player_primary_weapon.png",
+  "board_size": [
+    1840,
+    1048
+  ],
+  "panel_size": 256,
+  "backgrounds": [
+    "space_void",
+    "deck_base",
+    "neutral_highlight"
+  ],
+  "frames": [
+    {
+      "id": "pulse_cannon_north_idle",
+      "source_sha256": "68aa635bb5489cb6b44af6720f8025539fd8b38bda2dcd95c4c25f3ff7a40b71",
+      "scale": 4,
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "mount": [
+          32,
+          44
+        ],
+        "muzzle": [
+          32,
+          9
+        ]
+      },
+      "panels": [
+        {
+          "kind": "native_1x",
+          "region": [
+            0,
+            0,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "enlarged_with_pivot",
+          "region": [
+            264,
+            0,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "silhouette",
+          "region": [
+            528,
+            0,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "grayscale",
+          "region": [
+            792,
+            0,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_space_void",
+          "region": [
+            1056,
+            0,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_deck_base",
+          "region": [
+            1320,
+            0,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_neutral_highlight",
+          "region": [
+            1584,
+            0,
+            256,
+            256
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pulse_cannon_east_idle",
+      "source_sha256": "2ba207c8b219b985770f9e9f2f6e83c0df97af56ec56c9e6fec6ec2c01178aca",
+      "scale": 4,
+      "pivot": [
+        31,
+        32
+      ],
+      "anchors": {
+        "mount": [
+          19,
+          32
+        ],
+        "muzzle": [
+          54,
+          32
+        ]
+      },
+      "panels": [
+        {
+          "kind": "native_1x",
+          "region": [
+            0,
+            264,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "enlarged_with_pivot",
+          "region": [
+            264,
+            264,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "silhouette",
+          "region": [
+            528,
+            264,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "grayscale",
+          "region": [
+            792,
+            264,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_space_void",
+          "region": [
+            1056,
+            264,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_deck_base",
+          "region": [
+            1320,
+            264,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_neutral_highlight",
+          "region": [
+            1584,
+            264,
+            256,
+            256
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pulse_cannon_south_idle",
+      "source_sha256": "76ead8ef71d98587d4ec3e39cb687712049eb4adc2c45d5b8e6847beec80b78b",
+      "scale": 4,
+      "pivot": [
+        31,
+        31
+      ],
+      "anchors": {
+        "mount": [
+          31,
+          19
+        ],
+        "muzzle": [
+          31,
+          54
+        ]
+      },
+      "panels": [
+        {
+          "kind": "native_1x",
+          "region": [
+            0,
+            528,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "enlarged_with_pivot",
+          "region": [
+            264,
+            528,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "silhouette",
+          "region": [
+            528,
+            528,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "grayscale",
+          "region": [
+            792,
+            528,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_space_void",
+          "region": [
+            1056,
+            528,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_deck_base",
+          "region": [
+            1320,
+            528,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_neutral_highlight",
+          "region": [
+            1584,
+            528,
+            256,
+            256
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pulse_cannon_west_idle",
+      "source_sha256": "420ccc7ea24c354cbf8c93a4ae0ea8c1647876ac63158bc33abbc19d0be37967",
+      "scale": 4,
+      "pivot": [
+        32,
+        31
+      ],
+      "anchors": {
+        "mount": [
+          44,
+          31
+        ],
+        "muzzle": [
+          9,
+          31
+        ]
+      },
+      "panels": [
+        {
+          "kind": "native_1x",
+          "region": [
+            0,
+            792,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "enlarged_with_pivot",
+          "region": [
+            264,
+            792,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "silhouette",
+          "region": [
+            528,
+            792,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "grayscale",
+          "region": [
+            792,
+            792,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_space_void",
+          "region": [
+            1056,
+            792,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_deck_base",
+          "region": [
+            1320,
+            792,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_neutral_highlight",
+          "region": [
+            1584,
+            792,
+            256,
+            256
+          ]
+        }
+      ]
+    }
+  ]
+}

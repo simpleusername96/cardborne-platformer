@@ -1,0 +1,294 @@
+{
+  "schema_version": 2,
+  "id": "phase1_mobile_enemy_chaser",
+  "family": "mobile_enemy_set",
+  "approval_status": "candidate",
+  "production_method": "imagegen_assisted",
+  "reference_ids": [
+    "game_assault_android_cactus",
+    "cc0_kenney_pixel_shmup"
+  ],
+  "avoid_rules": [
+    "No microtexture, gradients, dithering, lighting simulation, or full-scene generation.",
+    "Do not derive collision, attack timing, or navigation from sprite alpha."
+  ],
+  "guide_size": 512,
+  "logical_size": [
+    32,
+    32
+  ],
+  "palette_path": "pixel-art-production/assets/palettes/pixel-hangar-v1.json",
+  "semantic_palette_path": "pixel-art-production/assets/palettes/semantic-mask-v1.json",
+  "transparent_color": "#FFFFFF",
+  "runtime_group": "mobile_enemies",
+  "runtime_layers": [
+    "body",
+    "role_accent",
+    "weapon_or_tool",
+    "mobility"
+  ],
+  "layers": [
+    {
+      "id": "body",
+      "mask_color": "#FF0000",
+      "z": 0,
+      "required": true
+    },
+    {
+      "id": "role_accent",
+      "mask_color": "#00FF00",
+      "z": 1,
+      "required": true
+    },
+    {
+      "id": "weapon_or_tool",
+      "mask_color": "#0000FF",
+      "z": 2,
+      "required": true
+    },
+    {
+      "id": "mobility",
+      "mask_color": "#FFFF00",
+      "z": 3,
+      "required": true
+    }
+  ],
+  "pivot": [
+    16,
+    16
+  ],
+  "anchors": {
+    "contact": [
+      24,
+      16
+    ],
+    "rear": [
+      9,
+      16
+    ]
+  },
+  "tile_signature": null,
+  "collision_reference": "Existing gameplay-owned geometry for mobile_enemy_set",
+  "review_backgrounds": [
+    "space_void",
+    "deck_base",
+    "neutral_highlight"
+  ],
+  "silhouette_area_tolerance": 0.08,
+  "anchor_tolerance": 1,
+  "frames": [
+    {
+      "id": "chaser_north_move",
+      "source_path": "pixel-art-production/assets/generated/candidates/phase-1/native/phase1_mobile_enemy_chaser/frames/chaser_north_move.png",
+      "semantic_mask_path": "pixel-art-production/assets/generated/candidates/phase-1/native/phase1_mobile_enemy_chaser/frames/chaser_north_move-mask.png",
+      "source_sha256": "f9c08ee244b1244a5f8fb60d1292d61bba6d0e1a4c556147fa076fb4fba37b8d",
+      "atlas_index": 0,
+      "variant": "chaser",
+      "direction_index": 0,
+      "state": "move",
+      "sequence_index": 0,
+      "duration_ms": 0,
+      "pivot": [
+        16,
+        15
+      ],
+      "anchors": {
+        "contact": [
+          16,
+          7
+        ],
+        "rear": [
+          16,
+          22
+        ]
+      }
+    },
+    {
+      "id": "chaser_east_move",
+      "source_path": "pixel-art-production/assets/generated/candidates/phase-1/native/phase1_mobile_enemy_chaser/frames/chaser_east_move.png",
+      "semantic_mask_path": "pixel-art-production/assets/generated/candidates/phase-1/native/phase1_mobile_enemy_chaser/frames/chaser_east_move-mask.png",
+      "source_sha256": "053fa38d703f56eb440661ba2588fdc3b3623c6fe7aea7851b35b6c339ab9e32",
+      "atlas_index": 1,
+      "variant": "chaser",
+      "direction_index": 4,
+      "state": "move",
+      "sequence_index": 0,
+      "duration_ms": 0,
+      "pivot": [
+        16,
+        16
+      ],
+      "anchors": {
+        "contact": [
+          24,
+          16
+        ],
+        "rear": [
+          9,
+          16
+        ]
+      }
+    },
+    {
+      "id": "chaser_south_move",
+      "source_path": "pixel-art-production/assets/generated/candidates/phase-1/native/phase1_mobile_enemy_chaser/frames/chaser_south_move.png",
+      "semantic_mask_path": "pixel-art-production/assets/generated/candidates/phase-1/native/phase1_mobile_enemy_chaser/frames/chaser_south_move-mask.png",
+      "source_sha256": "fe79a92d3a2417272e58a9c8339d0653df81cd9d4aa55b46ab977ba3422f1149",
+      "atlas_index": 2,
+      "variant": "chaser",
+      "direction_index": 8,
+      "state": "move",
+      "sequence_index": 0,
+      "duration_ms": 0,
+      "pivot": [
+        15,
+        16
+      ],
+      "anchors": {
+        "contact": [
+          15,
+          24
+        ],
+        "rear": [
+          15,
+          9
+        ]
+      }
+    },
+    {
+      "id": "chaser_west_move",
+      "source_path": "pixel-art-production/assets/generated/candidates/phase-1/native/phase1_mobile_enemy_chaser/frames/chaser_west_move.png",
+      "semantic_mask_path": "pixel-art-production/assets/generated/candidates/phase-1/native/phase1_mobile_enemy_chaser/frames/chaser_west_move-mask.png",
+      "source_sha256": "21d25d94e3744a392206a2046c3b1b6e9aca4894da4678737b35ffa14cfbbf98",
+      "atlas_index": 3,
+      "variant": "chaser",
+      "direction_index": 12,
+      "state": "move",
+      "sequence_index": 0,
+      "duration_ms": 0,
+      "pivot": [
+        15,
+        15
+      ],
+      "anchors": {
+        "contact": [
+          7,
+          15
+        ],
+        "rear": [
+          22,
+          15
+        ]
+      }
+    },
+    {
+      "id": "chaser_north_attack_startup",
+      "source_path": "pixel-art-production/assets/generated/candidates/phase-1/native/phase1_mobile_enemy_chaser/frames/chaser_north_attack_startup.png",
+      "semantic_mask_path": "pixel-art-production/assets/generated/candidates/phase-1/native/phase1_mobile_enemy_chaser/frames/chaser_north_attack_startup-mask.png",
+      "source_sha256": "9660ecb47b3614e0dd77b86ebd7be02da7087d34bbe5395fe7b1fbe7ab204c7b",
+      "atlas_index": 4,
+      "variant": "chaser",
+      "direction_index": 0,
+      "state": "attack_startup",
+      "sequence_index": 0,
+      "duration_ms": 0,
+      "pivot": [
+        16,
+        15
+      ],
+      "anchors": {
+        "contact": [
+          16,
+          7
+        ],
+        "rear": [
+          16,
+          22
+        ]
+      }
+    },
+    {
+      "id": "chaser_east_attack_startup",
+      "source_path": "pixel-art-production/assets/generated/candidates/phase-1/native/phase1_mobile_enemy_chaser/frames/chaser_east_attack_startup.png",
+      "semantic_mask_path": "pixel-art-production/assets/generated/candidates/phase-1/native/phase1_mobile_enemy_chaser/frames/chaser_east_attack_startup-mask.png",
+      "source_sha256": "4c73a8dd4ff90d861161f068f47a660dd76085561f7b46da5f16e9bc129d568b",
+      "atlas_index": 5,
+      "variant": "chaser",
+      "direction_index": 4,
+      "state": "attack_startup",
+      "sequence_index": 0,
+      "duration_ms": 0,
+      "pivot": [
+        16,
+        16
+      ],
+      "anchors": {
+        "contact": [
+          24,
+          16
+        ],
+        "rear": [
+          9,
+          16
+        ]
+      }
+    },
+    {
+      "id": "chaser_south_attack_startup",
+      "source_path": "pixel-art-production/assets/generated/candidates/phase-1/native/phase1_mobile_enemy_chaser/frames/chaser_south_attack_startup.png",
+      "semantic_mask_path": "pixel-art-production/assets/generated/candidates/phase-1/native/phase1_mobile_enemy_chaser/frames/chaser_south_attack_startup-mask.png",
+      "source_sha256": "108236419c1561c8cf9c669d7fbc58e21d69a4d3b9bb1f0a97913b5184a30117",
+      "atlas_index": 6,
+      "variant": "chaser",
+      "direction_index": 8,
+      "state": "attack_startup",
+      "sequence_index": 0,
+      "duration_ms": 0,
+      "pivot": [
+        15,
+        16
+      ],
+      "anchors": {
+        "contact": [
+          15,
+          24
+        ],
+        "rear": [
+          15,
+          9
+        ]
+      }
+    },
+    {
+      "id": "chaser_west_attack_startup",
+      "source_path": "pixel-art-production/assets/generated/candidates/phase-1/native/phase1_mobile_enemy_chaser/frames/chaser_west_attack_startup.png",
+      "semantic_mask_path": "pixel-art-production/assets/generated/candidates/phase-1/native/phase1_mobile_enemy_chaser/frames/chaser_west_attack_startup-mask.png",
+      "source_sha256": "6a7e4b76d04f5f0b3900ac0bf1699a1da55d688905791a53b123c9a777d6fb2f",
+      "atlas_index": 7,
+      "variant": "chaser",
+      "direction_index": 12,
+      "state": "attack_startup",
+      "sequence_index": 0,
+      "duration_ms": 0,
+      "pivot": [
+        15,
+        15
+      ],
+      "anchors": {
+        "contact": [
+          7,
+          15
+        ],
+        "rear": [
+          22,
+          15
+        ]
+      }
+    }
+  ],
+  "atlas": {
+    "columns": 4,
+    "padding": 2,
+    "extrude": 1
+  }
+}

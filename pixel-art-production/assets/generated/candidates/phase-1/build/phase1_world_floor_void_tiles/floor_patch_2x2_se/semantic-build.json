@@ -1,0 +1,26 @@
+{
+  "asset_id": "phase1_world_floor_void_tiles",
+  "size": [
+    24,
+    24
+  ],
+  "source": "pixel-art-production/assets/generated/candidates/phase-1/build/phase1_world_floor_void_tiles/floor_patch_2x2_se/source.png",
+  "semantic_mask": "pixel-art-production/assets/generated/candidates/phase-1/build/phase1_world_floor_void_tiles/floor_patch_2x2_se/semantic-mask.png",
+  "reassembly_pixel_difference": 0,
+  "layers": [
+    {
+      "id": "base",
+      "mask_color": "#FF0000",
+      "z": 0,
+      "pixel_count": 476,
+      "output": "layers/base.png"
+    },
+    {
+      "id": "large_material_break",
+      "mask_color": "#00FF00",
+      "z": 1,
+      "pixel_count": 100,
+      "output": "layers/large_material_break.png"
+    }
+  ]
+}

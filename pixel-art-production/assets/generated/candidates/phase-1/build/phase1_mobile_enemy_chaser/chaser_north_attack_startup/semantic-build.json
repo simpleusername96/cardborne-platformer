@@ -1,0 +1,40 @@
+{
+  "asset_id": "phase1_mobile_enemy_chaser",
+  "size": [
+    32,
+    32
+  ],
+  "source": "pixel-art-production/assets/generated/candidates/phase-1/build/phase1_mobile_enemy_chaser/chaser_north_attack_startup/source.png",
+  "semantic_mask": "pixel-art-production/assets/generated/candidates/phase-1/build/phase1_mobile_enemy_chaser/chaser_north_attack_startup/semantic-mask.png",
+  "reassembly_pixel_difference": 0,
+  "layers": [
+    {
+      "id": "body",
+      "mask_color": "#FF0000",
+      "z": 0,
+      "pixel_count": 42,
+      "output": "layers/body.png"
+    },
+    {
+      "id": "role_accent",
+      "mask_color": "#00FF00",
+      "z": 1,
+      "pixel_count": 12,
+      "output": "layers/role_accent.png"
+    },
+    {
+      "id": "weapon_or_tool",
+      "mask_color": "#0000FF",
+      "z": 2,
+      "pixel_count": 54,
+      "output": "layers/weapon_or_tool.png"
+    },
+    {
+      "id": "mobility",
+      "mask_color": "#FFFF00",
+      "z": 3,
+      "pixel_count": 12,
+      "output": "layers/mobility.png"
+    }
+  ]
+}

@@ -82,10 +82,22 @@ try {
         $scaled = Join-Path $temporaryRoot "$($frame.id)-scaled.png"
         & $magick.Source $source -filter point -resize "$($reviewScale * 100)%" $scaled
         if ($LASTEXITCODE -ne 0) { throw "Could not enlarge review source." }
-        $pivotX = $offsetX + [int]$manifest.pivot[0] * $reviewScale
-        $pivotY = $offsetY + [int]$manifest.pivot[1] * $reviewScale
+        $framePivotProperty = $frame.PSObject.Properties["pivot"]
+        $frameAnchorsProperty = $frame.PSObject.Properties["anchors"]
+        $resolvedPivot = if ($null -ne $framePivotProperty) {
+            @($framePivotProperty.Value)
+        } else {
+            @($manifest.pivot)
+        }
+        $resolvedAnchors = if ($null -ne $frameAnchorsProperty) {
+            $frameAnchorsProperty.Value
+        } else {
+            $manifest.anchors
+        }
+        $pivotX = $offsetX + [int]$resolvedPivot[0] * $reviewScale
+        $pivotY = $offsetY + [int]$resolvedPivot[1] * $reviewScale
         $anchorDraw = [System.Collections.Generic.List[string]]::new()
-        foreach ($anchorProperty in @($manifest.anchors.PSObject.Properties)) {
+        foreach ($anchorProperty in @($resolvedAnchors.PSObject.Properties)) {
             $anchor = @($anchorProperty.Value)
             $anchorX = $offsetX + [int]$anchor[0] * $reviewScale
             $anchorY = $offsetY + [int]$anchor[1] * $reviewScale
@@ -153,8 +165,8 @@ try {
             id = [string]$frame.id
             source_sha256 = [string]$frame.source_sha256
             scale = $reviewScale
-            pivot = @($manifest.pivot)
-            anchors = $manifest.anchors
+            pivot = @($resolvedPivot)
+            anchors = $resolvedAnchors
             panels = @($panels)
         })
     }

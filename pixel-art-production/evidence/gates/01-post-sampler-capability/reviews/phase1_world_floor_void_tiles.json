@@ -1,0 +1,658 @@
+{
+  "schema_version": 1,
+  "asset_id": "phase1_world_floor_void_tiles",
+  "approval_status": "candidate",
+  "review_path": "pixel-art-production/evidence/gates/01-post-sampler-capability/reviews/phase1_world_floor_void_tiles.png",
+  "board_size": [
+    1840,
+    2104
+  ],
+  "panel_size": 256,
+  "backgrounds": [
+    "space_void",
+    "deck_base",
+    "neutral_highlight"
+  ],
+  "frames": [
+    {
+      "id": "space_void",
+      "source_sha256": "bfd21576d0d7e17434239f1b61f494f8117169d42103e8f4832e26729092995d",
+      "scale": 10,
+      "pivot": [
+        12,
+        12
+      ],
+      "anchors": {
+        "center": [
+          12,
+          12
+        ]
+      },
+      "panels": [
+        {
+          "kind": "native_1x",
+          "region": [
+            0,
+            0,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "enlarged_with_pivot",
+          "region": [
+            264,
+            0,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "silhouette",
+          "region": [
+            528,
+            0,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "grayscale",
+          "region": [
+            792,
+            0,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_space_void",
+          "region": [
+            1056,
+            0,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_deck_base",
+          "region": [
+            1320,
+            0,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_neutral_highlight",
+          "region": [
+            1584,
+            0,
+            256,
+            256
+          ]
+        }
+      ]
+    },
+    {
+      "id": "floor_light",
+      "source_sha256": "0f6b41f1052efca64b652de52525db15531a0b4ba8e1f9f79ecfa5c2da38bc0c",
+      "scale": 10,
+      "pivot": [
+        12,
+        12
+      ],
+      "anchors": {
+        "center": [
+          12,
+          12
+        ]
+      },
+      "panels": [
+        {
+          "kind": "native_1x",
+          "region": [
+            0,
+            264,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "enlarged_with_pivot",
+          "region": [
+            264,
+            264,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "silhouette",
+          "region": [
+            528,
+            264,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "grayscale",
+          "region": [
+            792,
+            264,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_space_void",
+          "region": [
+            1056,
+            264,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_deck_base",
+          "region": [
+            1320,
+            264,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_neutral_highlight",
+          "region": [
+            1584,
+            264,
+            256,
+            256
+          ]
+        }
+      ]
+    },
+    {
+      "id": "floor_mid",
+      "source_sha256": "442114a1d5f2b36bd8f7a6b38fd999f291f5b3d10beccd0c491f50e49cdc2d8b",
+      "scale": 10,
+      "pivot": [
+        12,
+        12
+      ],
+      "anchors": {
+        "center": [
+          12,
+          12
+        ]
+      },
+      "panels": [
+        {
+          "kind": "native_1x",
+          "region": [
+            0,
+            528,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "enlarged_with_pivot",
+          "region": [
+            264,
+            528,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "silhouette",
+          "region": [
+            528,
+            528,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "grayscale",
+          "region": [
+            792,
+            528,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_space_void",
+          "region": [
+            1056,
+            528,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_deck_base",
+          "region": [
+            1320,
+            528,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_neutral_highlight",
+          "region": [
+            1584,
+            528,
+            256,
+            256
+          ]
+        }
+      ]
+    },
+    {
+      "id": "floor_dark",
+      "source_sha256": "af0b1672d46172f5c3474c86e98bd32d9e76c443759337fae157ad2314f66510",
+      "scale": 10,
+      "pivot": [
+        12,
+        12
+      ],
+      "anchors": {
+        "center": [
+          12,
+          12
+        ]
+      },
+      "panels": [
+        {
+          "kind": "native_1x",
+          "region": [
+            0,
+            792,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "enlarged_with_pivot",
+          "region": [
+            264,
+            792,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "silhouette",
+          "region": [
+            528,
+            792,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "grayscale",
+          "region": [
+            792,
+            792,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_space_void",
+          "region": [
+            1056,
+            792,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_deck_base",
+          "region": [
+            1320,
+            792,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_neutral_highlight",
+          "region": [
+            1584,
+            792,
+            256,
+            256
+          ]
+        }
+      ]
+    },
+    {
+      "id": "floor_patch_2x2_nw",
+      "source_sha256": "5af83b2391ddda4921565e7e9ed2a4accd04d12c3e087a28efdafe8960330256",
+      "scale": 10,
+      "pivot": [
+        12,
+        12
+      ],
+      "anchors": {
+        "center": [
+          12,
+          12
+        ]
+      },
+      "panels": [
+        {
+          "kind": "native_1x",
+          "region": [
+            0,
+            1056,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "enlarged_with_pivot",
+          "region": [
+            264,
+            1056,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "silhouette",
+          "region": [
+            528,
+            1056,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "grayscale",
+          "region": [
+            792,
+            1056,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_space_void",
+          "region": [
+            1056,
+            1056,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_deck_base",
+          "region": [
+            1320,
+            1056,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_neutral_highlight",
+          "region": [
+            1584,
+            1056,
+            256,
+            256
+          ]
+        }
+      ]
+    },
+    {
+      "id": "floor_patch_2x2_ne",
+      "source_sha256": "2eb4b80805ea20f39f323074bb161c34eeface7985194d4cbb1d895a751d22fb",
+      "scale": 10,
+      "pivot": [
+        12,
+        12
+      ],
+      "anchors": {
+        "center": [
+          12,
+          12
+        ]
+      },
+      "panels": [
+        {
+          "kind": "native_1x",
+          "region": [
+            0,
+            1320,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "enlarged_with_pivot",
+          "region": [
+            264,
+            1320,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "silhouette",
+          "region": [
+            528,
+            1320,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "grayscale",
+          "region": [
+            792,
+            1320,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_space_void",
+          "region": [
+            1056,
+            1320,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_deck_base",
+          "region": [
+            1320,
+            1320,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_neutral_highlight",
+          "region": [
+            1584,
+            1320,
+            256,
+            256
+          ]
+        }
+      ]
+    },
+    {
+      "id": "floor_patch_2x2_sw",
+      "source_sha256": "543a8568d6534ef624f0afa599ef108d4cd880039d81e87cc0719700c3428f31",
+      "scale": 10,
+      "pivot": [
+        12,
+        12
+      ],
+      "anchors": {
+        "center": [
+          12,
+          12
+        ]
+      },
+      "panels": [
+        {
+          "kind": "native_1x",
+          "region": [
+            0,
+            1584,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "enlarged_with_pivot",
+          "region": [
+            264,
+            1584,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "silhouette",
+          "region": [
+            528,
+            1584,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "grayscale",
+          "region": [
+            792,
+            1584,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_space_void",
+          "region": [
+            1056,
+            1584,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_deck_base",
+          "region": [
+            1320,
+            1584,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_neutral_highlight",
+          "region": [
+            1584,
+            1584,
+            256,
+            256
+          ]
+        }
+      ]
+    },
+    {
+      "id": "floor_patch_2x2_se",
+      "source_sha256": "d0bb38abad5a4937954b67cd06dba031d816cfc0a47fd6509bc4624b4bca8f16",
+      "scale": 10,
+      "pivot": [
+        12,
+        12
+      ],
+      "anchors": {
+        "center": [
+          12,
+          12
+        ]
+      },
+      "panels": [
+        {
+          "kind": "native_1x",
+          "region": [
+            0,
+            1848,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "enlarged_with_pivot",
+          "region": [
+            264,
+            1848,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "silhouette",
+          "region": [
+            528,
+            1848,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "grayscale",
+          "region": [
+            792,
+            1848,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_space_void",
+          "region": [
+            1056,
+            1848,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_deck_base",
+          "region": [
+            1320,
+            1848,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_neutral_highlight",
+          "region": [
+            1584,
+            1848,
+            256,
+            256
+          ]
+        }
+      ]
+    }
+  ]
+}

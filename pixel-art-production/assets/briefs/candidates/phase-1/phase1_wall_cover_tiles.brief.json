@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "id": "phase1_wall_cover_tiles",
+  "family": "wall_cover_tiles",
+  "approval_status": "candidate",
+  "gameplay_identity": "One blocker material with complete orthogonal connectivity and exact transparent openings.",
+  "current_owner": [
+    "scripts/vehicle/vehicle_stage_backdrop.gd",
+    "scripts/vehicle/vehicle_stage_geometry.gd",
+    "scripts/vehicle/vehicle_stage_tactical_layout.gd"
+  ],
+  "native_size": [
+    24,
+    24
+  ],
+  "rendered_diameter": 24,
+  "silhouette_requirement": "Every connected arm reaches its tile edge at a consistent eight-pixel width.",
+  "orientation_cue": "Neighbor signatures, not decorative perspective, determine orientation.",
+  "semantic_parts": [
+    "top",
+    "side",
+    "shadow",
+    "boundary_light"
+  ],
+  "pivot": [
+    12,
+    12
+  ],
+  "anchors": {
+    "center": [
+      12,
+      12
+    ]
+  },
+  "directions": 0,
+  "states": [
+    "static"
+  ],
+  "allowed_palette_roles": [
+    "deck_shadow",
+    "blocker_top",
+    "blocker_edge",
+    "player_energy"
+  ],
+  "references": [
+    {
+      "id": "game_assault_android_cactus",
+      "study": "Read owner, role, and orientation at dense top-down combat scale."
+    },
+    {
+      "id": "cc0_eris_scifi_platform_tiles",
+      "study": "Study economical whole-cell silhouettes and modular construction."
+    }
+  ],
+  "avoid_rules": [
+    "No gradient, antialiasing, texture noise, lighting simulation, or baked glow.",
+    "Do not derive gameplay collision, timing, or range from candidate pixels."
+  ],
+  "production_method": "direct_pixel",
+  "collision_reference": "Candidate presentation follows existing gameplay-owned geometry for wall_cover_tiles.",
+  "runtime_group": "world",
+  "review_backgrounds": [
+    "space_void",
+    "deck_base",
+    "neutral_highlight"
+  ],
+  "density_tier": "all"
+}

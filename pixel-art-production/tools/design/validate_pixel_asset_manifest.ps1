@@ -245,6 +245,23 @@ foreach ($frame in @($manifest.frames)) {
         if ([string]$frame.source_sha256 -notmatch $hashPattern) {
             $script:Errors.Add("$frameId source_sha256 must be lowercase SHA-256")
         }
+        $framePivotProperty = $frame.PSObject.Properties["pivot"]
+        if (
+            $null -ne $framePivotProperty -and
+            -not (Test-PointInside -Point @($framePivotProperty.Value) -Width $logicalWidth -Height $logicalHeight)
+        ) {
+            $script:Errors.Add("$frameId pivot must be inside logical_size")
+        }
+        $frameAnchorsProperty = $frame.PSObject.Properties["anchors"]
+        if ($null -ne $frameAnchorsProperty) {
+            foreach ($anchorProperty in @($frameAnchorsProperty.Value.PSObject.Properties)) {
+                if (
+                    -not (Test-PointInside -Point @($anchorProperty.Value) -Width $logicalWidth -Height $logicalHeight)
+                ) {
+                    $script:Errors.Add("$frameId anchor $($anchorProperty.Name) must be inside logical_size")
+                }
+            }
+        }
         if ($tileSignature -eq "orthogonal_16") {
             $edgeNames = @("north", "east", "south", "west")
             $tileEdgesProperty = $frame.PSObject.Properties["tile_edges"]

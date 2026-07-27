@@ -1,0 +1,690 @@
+{
+  "schema_version": 1,
+  "asset_id": "phase1_mobile_enemy_shooter",
+  "approval_status": "candidate",
+  "review_path": "pixel-art-production/evidence/gates/01-post-sampler-capability/reviews/phase1_mobile_enemy_shooter.png",
+  "board_size": [
+    1840,
+    2104
+  ],
+  "panel_size": 256,
+  "backgrounds": [
+    "space_void",
+    "deck_base",
+    "neutral_highlight"
+  ],
+  "frames": [
+    {
+      "id": "shooter_north_move",
+      "source_sha256": "2f8bfe87960da4c4d66a999b2f358f461f1cad249a10917560682e782e868d27",
+      "scale": 8,
+      "pivot": [
+        16,
+        15
+      ],
+      "anchors": {
+        "muzzle": [
+          16,
+          1
+        ],
+        "rear": [
+          16,
+          24
+        ]
+      },
+      "panels": [
+        {
+          "kind": "native_1x",
+          "region": [
+            0,
+            0,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "enlarged_with_pivot",
+          "region": [
+            264,
+            0,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "silhouette",
+          "region": [
+            528,
+            0,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "grayscale",
+          "region": [
+            792,
+            0,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_space_void",
+          "region": [
+            1056,
+            0,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_deck_base",
+          "region": [
+            1320,
+            0,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_neutral_highlight",
+          "region": [
+            1584,
+            0,
+            256,
+            256
+          ]
+        }
+      ]
+    },
+    {
+      "id": "shooter_east_move",
+      "source_sha256": "9fdb0f831f5191848a56d42c26b7fe951e898b31cb2db63f1b26d35ccc7e1471",
+      "scale": 8,
+      "pivot": [
+        16,
+        16
+      ],
+      "anchors": {
+        "muzzle": [
+          30,
+          16
+        ],
+        "rear": [
+          7,
+          16
+        ]
+      },
+      "panels": [
+        {
+          "kind": "native_1x",
+          "region": [
+            0,
+            264,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "enlarged_with_pivot",
+          "region": [
+            264,
+            264,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "silhouette",
+          "region": [
+            528,
+            264,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "grayscale",
+          "region": [
+            792,
+            264,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_space_void",
+          "region": [
+            1056,
+            264,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_deck_base",
+          "region": [
+            1320,
+            264,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_neutral_highlight",
+          "region": [
+            1584,
+            264,
+            256,
+            256
+          ]
+        }
+      ]
+    },
+    {
+      "id": "shooter_south_move",
+      "source_sha256": "ddb67f7856a71355953914788bf9445a98ea01f99eeb4f436efec7706fb0a718",
+      "scale": 8,
+      "pivot": [
+        15,
+        16
+      ],
+      "anchors": {
+        "muzzle": [
+          15,
+          30
+        ],
+        "rear": [
+          15,
+          7
+        ]
+      },
+      "panels": [
+        {
+          "kind": "native_1x",
+          "region": [
+            0,
+            528,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "enlarged_with_pivot",
+          "region": [
+            264,
+            528,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "silhouette",
+          "region": [
+            528,
+            528,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "grayscale",
+          "region": [
+            792,
+            528,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_space_void",
+          "region": [
+            1056,
+            528,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_deck_base",
+          "region": [
+            1320,
+            528,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_neutral_highlight",
+          "region": [
+            1584,
+            528,
+            256,
+            256
+          ]
+        }
+      ]
+    },
+    {
+      "id": "shooter_west_move",
+      "source_sha256": "cacae9550a99d42f829b03df01751b19c30b08cc73abcb4efcfb5e2a2718eac1",
+      "scale": 8,
+      "pivot": [
+        15,
+        15
+      ],
+      "anchors": {
+        "muzzle": [
+          1,
+          15
+        ],
+        "rear": [
+          24,
+          15
+        ]
+      },
+      "panels": [
+        {
+          "kind": "native_1x",
+          "region": [
+            0,
+            792,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "enlarged_with_pivot",
+          "region": [
+            264,
+            792,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "silhouette",
+          "region": [
+            528,
+            792,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "grayscale",
+          "region": [
+            792,
+            792,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_space_void",
+          "region": [
+            1056,
+            792,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_deck_base",
+          "region": [
+            1320,
+            792,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_neutral_highlight",
+          "region": [
+            1584,
+            792,
+            256,
+            256
+          ]
+        }
+      ]
+    },
+    {
+      "id": "shooter_north_attack_startup",
+      "source_sha256": "050111ba8bf1e42abb00fa7033624ed5f9e2a9a286de131db732fa1bdad338bc",
+      "scale": 8,
+      "pivot": [
+        16,
+        15
+      ],
+      "anchors": {
+        "muzzle": [
+          16,
+          1
+        ],
+        "rear": [
+          16,
+          24
+        ]
+      },
+      "panels": [
+        {
+          "kind": "native_1x",
+          "region": [
+            0,
+            1056,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "enlarged_with_pivot",
+          "region": [
+            264,
+            1056,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "silhouette",
+          "region": [
+            528,
+            1056,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "grayscale",
+          "region": [
+            792,
+            1056,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_space_void",
+          "region": [
+            1056,
+            1056,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_deck_base",
+          "region": [
+            1320,
+            1056,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_neutral_highlight",
+          "region": [
+            1584,
+            1056,
+            256,
+            256
+          ]
+        }
+      ]
+    },
+    {
+      "id": "shooter_east_attack_startup",
+      "source_sha256": "593aa1b0898d35119f35c25a0fe7c26a0524fb14839f991ed9a5d7d6228c8b7a",
+      "scale": 8,
+      "pivot": [
+        16,
+        16
+      ],
+      "anchors": {
+        "muzzle": [
+          30,
+          16
+        ],
+        "rear": [
+          7,
+          16
+        ]
+      },
+      "panels": [
+        {
+          "kind": "native_1x",
+          "region": [
+            0,
+            1320,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "enlarged_with_pivot",
+          "region": [
+            264,
+            1320,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "silhouette",
+          "region": [
+            528,
+            1320,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "grayscale",
+          "region": [
+            792,
+            1320,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_space_void",
+          "region": [
+            1056,
+            1320,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_deck_base",
+          "region": [
+            1320,
+            1320,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_neutral_highlight",
+          "region": [
+            1584,
+            1320,
+            256,
+            256
+          ]
+        }
+      ]
+    },
+    {
+      "id": "shooter_south_attack_startup",
+      "source_sha256": "13d68644cea090ce574b60059c81ae38e1d87c242fa62aa76bc507e94307846c",
+      "scale": 8,
+      "pivot": [
+        15,
+        16
+      ],
+      "anchors": {
+        "muzzle": [
+          15,
+          30
+        ],
+        "rear": [
+          15,
+          7
+        ]
+      },
+      "panels": [
+        {
+          "kind": "native_1x",
+          "region": [
+            0,
+            1584,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "enlarged_with_pivot",
+          "region": [
+            264,
+            1584,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "silhouette",
+          "region": [
+            528,
+            1584,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "grayscale",
+          "region": [
+            792,
+            1584,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_space_void",
+          "region": [
+            1056,
+            1584,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_deck_base",
+          "region": [
+            1320,
+            1584,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_neutral_highlight",
+          "region": [
+            1584,
+            1584,
+            256,
+            256
+          ]
+        }
+      ]
+    },
+    {
+      "id": "shooter_west_attack_startup",
+      "source_sha256": "a7f057af5dfc50007dd7c3013a43777e23800b223d3f44316360a6cddd471407",
+      "scale": 8,
+      "pivot": [
+        15,
+        15
+      ],
+      "anchors": {
+        "muzzle": [
+          1,
+          15
+        ],
+        "rear": [
+          24,
+          15
+        ]
+      },
+      "panels": [
+        {
+          "kind": "native_1x",
+          "region": [
+            0,
+            1848,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "enlarged_with_pivot",
+          "region": [
+            264,
+            1848,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "silhouette",
+          "region": [
+            528,
+            1848,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "grayscale",
+          "region": [
+            792,
+            1848,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_space_void",
+          "region": [
+            1056,
+            1848,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_deck_base",
+          "region": [
+            1320,
+            1848,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_neutral_highlight",
+          "region": [
+            1584,
+            1848,
+            256,
+            256
+          ]
+        }
+      ]
+    }
+  ]
+}

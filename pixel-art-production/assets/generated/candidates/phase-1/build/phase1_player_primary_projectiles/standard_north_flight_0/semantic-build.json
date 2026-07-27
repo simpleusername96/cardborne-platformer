@@ -1,0 +1,40 @@
+{
+  "asset_id": "phase1_player_primary_projectiles",
+  "size": [
+    32,
+    32
+  ],
+  "source": "pixel-art-production/assets/generated/candidates/phase-1/build/phase1_player_primary_projectiles/standard_north_flight_0/source.png",
+  "semantic_mask": "pixel-art-production/assets/generated/candidates/phase-1/build/phase1_player_primary_projectiles/standard_north_flight_0/semantic-mask.png",
+  "reassembly_pixel_difference": 0,
+  "layers": [
+    {
+      "id": "body",
+      "mask_color": "#FF0000",
+      "z": 0,
+      "pixel_count": 46,
+      "output": "layers/body.png"
+    },
+    {
+      "id": "core",
+      "mask_color": "#00FF00",
+      "z": 1,
+      "pixel_count": 20,
+      "output": "layers/core.png"
+    },
+    {
+      "id": "wake",
+      "mask_color": "#0000FF",
+      "z": 2,
+      "pixel_count": 14,
+      "output": "layers/wake.png"
+    },
+    {
+      "id": "breach_collar",
+      "mask_color": "#FFFF00",
+      "z": 3,
+      "pixel_count": 0,
+      "output": "layers/breach_collar.png"
+    }
+  ]
+}

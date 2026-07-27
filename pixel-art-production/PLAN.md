@@ -239,7 +239,7 @@ made coherently before any runtime integration.
 `assets/manifests/`, `assets/source/`, `assets/generated/`,
 `evidence/gates/01-post-sampler-capability/`.
 
-- [ ] **1.1 Create candidate contracts for the exact gate set.**
+- [x] **1.1 Create candidate contracts for the exact gate set.**
   - `player_chassis`: north, east, south, and west normal frames based on the
     approved interceptor grammar.
   - `player_primary_weapon`: new north/east/south/west idle frames with stable
@@ -262,7 +262,7 @@ made coherently before any runtime integration.
   - **Guard:** do not add a family, increase a frame ceiling, or substitute a
     sampler-only ID.
 
-- [ ] **1.2 Produce one canonical source per new ImageGen job.**
+- [x] **1.2 Produce one canonical source per new ImageGen job.**
   - Use one logical guide per object and the locked display palette.
   - Use the approved sampler only as grammar evidence, not as a sheet to trace.
   - Generate only primary weapon, standard shot, Breach shot, and chaser; reuse
@@ -273,7 +273,7 @@ made coherently before any runtime integration.
   - **Guard:** one failed cell-following draft gets one targeted retry; after
     that, correct that object directly at native resolution.
 
-- [ ] **1.3 Derive and correct the bounded direction and motion set.**
+- [x] **1.3 Derive and correct the bounded direction and motion set.**
   - Nearest transforms are starting points only; correct each cardinal frame at
     native resolution.
   - Declare chassis center, weapon muzzle, and projectile head/rear anchors.
@@ -282,14 +282,14 @@ made coherently before any runtime integration.
   - **Guard:** do not regenerate each direction independently and do not move
     gameplay anchors to accommodate a bad drawing.
 
-- [ ] **1.4 Build semantic layers and exact outputs.**
+- [x] **1.4 Build semantic layers and exact outputs.**
   - Run palette mapping, mask validation, same-origin layer split, reassembly,
     pixel-SVG export, candidate atlas, and review generation.
   - **Accept:** unknown colors `0`, partial alpha `0`, semantic gaps/overlap
     `0`, and reassembly difference `0` pixels.
   - **Guard:** raw ImageGen output never enters candidate or runtime atlases.
 
-- [ ] **1.5 Create Gate A evidence.**
+- [x] **1.5 Create Gate A evidence.**
   - `category-review.png`: native `1x`, `8x`, silhouette, grayscale, and every
     permitted backdrop.
   - `direction-motion-review.png`: cardinal direction and animation stability.
@@ -305,6 +305,10 @@ made coherently before any runtime integration.
 **Gate A — owner review:** stop and present the four artifacts. Approval changes
 only this candidate set to `approved`. Rejection revises only named failing
 assets and repeats Gate A; Phase 2 remains blocked.
+
+**Current gate state:** Phase 1 production is complete. Gate A is
+`awaiting_owner`; no candidate has been published to `runtime/`, and Phase 2
+has not started.
 
 ### Phase 2 — First live player and projectile slice
 

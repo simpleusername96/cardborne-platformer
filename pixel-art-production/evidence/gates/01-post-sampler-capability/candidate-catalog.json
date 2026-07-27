@@ -1,0 +1,2705 @@
+{
+  "schema_version": 1,
+  "generated_from": [
+    "pixel-art-production/assets/generated/candidates/phase-1/build/phase1_player_chassis/atlas.json",
+    "pixel-art-production/assets/generated/candidates/phase-1/build/phase1_player_primary_weapon/atlas.json",
+    "pixel-art-production/assets/generated/candidates/phase-1/build/phase1_player_engine_flame/atlas.json",
+    "pixel-art-production/assets/generated/candidates/phase-1/build/phase1_player_primary_projectiles/atlas.json",
+    "pixel-art-production/assets/generated/candidates/phase-1/build/phase1_mobile_enemy_chaser/atlas.json",
+    "pixel-art-production/assets/generated/candidates/phase-1/build/phase1_mobile_enemy_shooter/atlas.json",
+    "pixel-art-production/assets/generated/candidates/phase-1/build/phase1_world_floor_void_tiles/atlas.json",
+    "pixel-art-production/assets/generated/candidates/phase-1/build/phase1_wall_cover_tiles/atlas.json"
+  ],
+  "asset_count": 8,
+  "frame_count": 68,
+  "runtime_groups": {
+    "mobile_enemies": 2,
+    "player": 3,
+    "player_projectiles": 1,
+    "world": 2
+  },
+  "assets": [
+    {
+      "id": "phase1_mobile_enemy_chaser",
+      "family": "mobile_enemy_set",
+      "runtime_group": "mobile_enemies",
+      "runtime_layers": [
+        "body",
+        "role_accent",
+        "weapon_or_tool",
+        "mobility"
+      ],
+      "approval_status": "candidate",
+      "atlas_path": "pixel-art-production/assets/generated/candidates/phase-1/build/phase1_mobile_enemy_chaser/atlas.png",
+      "atlas_sha256": "b67a9fc1c3870b9ea30db9e86fb85d56d134d19a6769ee3f1d618386b0d42415",
+      "atlas_size": [
+        142,
+        70
+      ],
+      "frame_size": [
+        32,
+        32
+      ],
+      "cell_size": [
+        34,
+        34
+      ],
+      "padding": 2,
+      "extrude": 1,
+      "frames": [
+        {
+          "key": "phase1_mobile_enemy_chaser/chaser/0/move/0",
+          "id": "chaser_north_move",
+          "atlas_index": 0,
+          "region": [
+            1,
+            1,
+            32,
+            32
+          ],
+          "cell_region": [
+            0,
+            0,
+            34,
+            34
+          ],
+          "pivot": [
+            16,
+            15
+          ],
+          "anchors": {
+            "contact": [
+              16,
+              7
+            ],
+            "rear": [
+              16,
+              22
+            ]
+          },
+          "variant": "chaser",
+          "direction_index": 0,
+          "state": "move",
+          "sequence_index": 0,
+          "duration_ms": 0,
+          "source_sha256": "f9c08ee244b1244a5f8fb60d1292d61bba6d0e1a4c556147fa076fb4fba37b8d"
+        },
+        {
+          "key": "phase1_mobile_enemy_chaser/chaser/4/move/0",
+          "id": "chaser_east_move",
+          "atlas_index": 1,
+          "region": [
+            37,
+            1,
+            32,
+            32
+          ],
+          "cell_region": [
+            36,
+            0,
+            34,
+            34
+          ],
+          "pivot": [
+            16,
+            16
+          ],
+          "anchors": {
+            "contact": [
+              24,
+              16
+            ],
+            "rear": [
+              9,
+              16
+            ]
+          },
+          "variant": "chaser",
+          "direction_index": 4,
+          "state": "move",
+          "sequence_index": 0,
+          "duration_ms": 0,
+          "source_sha256": "053fa38d703f56eb440661ba2588fdc3b3623c6fe7aea7851b35b6c339ab9e32"
+        },
+        {
+          "key": "phase1_mobile_enemy_chaser/chaser/8/move/0",
+          "id": "chaser_south_move",
+          "atlas_index": 2,
+          "region": [
+            73,
+            1,
+            32,
+            32
+          ],
+          "cell_region": [
+            72,
+            0,
+            34,
+            34
+          ],
+          "pivot": [
+            15,
+            16
+          ],
+          "anchors": {
+            "contact": [
+              15,
+              24
+            ],
+            "rear": [
+              15,
+              9
+            ]
+          },
+          "variant": "chaser",
+          "direction_index": 8,
+          "state": "move",
+          "sequence_index": 0,
+          "duration_ms": 0,
+          "source_sha256": "fe79a92d3a2417272e58a9c8339d0653df81cd9d4aa55b46ab977ba3422f1149"
+        },
+        {
+          "key": "phase1_mobile_enemy_chaser/chaser/12/move/0",
+          "id": "chaser_west_move",
+          "atlas_index": 3,
+          "region": [
+            109,
+            1,
+            32,
+            32
+          ],
+          "cell_region": [
+            108,
+            0,
+            34,
+            34
+          ],
+          "pivot": [
+            15,
+            15
+          ],
+          "anchors": {
+            "contact": [
+              7,
+              15
+            ],
+            "rear": [
+              22,
+              15
+            ]
+          },
+          "variant": "chaser",
+          "direction_index": 12,
+          "state": "move",
+          "sequence_index": 0,
+          "duration_ms": 0,
+          "source_sha256": "21d25d94e3744a392206a2046c3b1b6e9aca4894da4678737b35ffa14cfbbf98"
+        },
+        {
+          "key": "phase1_mobile_enemy_chaser/chaser/0/attack_startup/0",
+          "id": "chaser_north_attack_startup",
+          "atlas_index": 4,
+          "region": [
+            1,
+            37,
+            32,
+            32
+          ],
+          "cell_region": [
+            0,
+            36,
+            34,
+            34
+          ],
+          "pivot": [
+            16,
+            15
+          ],
+          "anchors": {
+            "contact": [
+              16,
+              7
+            ],
+            "rear": [
+              16,
+              22
+            ]
+          },
+          "variant": "chaser",
+          "direction_index": 0,
+          "state": "attack_startup",
+          "sequence_index": 0,
+          "duration_ms": 0,
+          "source_sha256": "9660ecb47b3614e0dd77b86ebd7be02da7087d34bbe5395fe7b1fbe7ab204c7b"
+        },
+        {
+          "key": "phase1_mobile_enemy_chaser/chaser/4/attack_startup/0",
+          "id": "chaser_east_attack_startup",
+          "atlas_index": 5,
+          "region": [
+            37,
+            37,
+            32,
+            32
+          ],
+          "cell_region": [
+            36,
+            36,
+            34,
+            34
+          ],
+          "pivot": [
+            16,
+            16
+          ],
+          "anchors": {
+            "contact": [
+              24,
+              16
+            ],
+            "rear": [
+              9,
+              16
+            ]
+          },
+          "variant": "chaser",
+          "direction_index": 4,
+          "state": "attack_startup",
+          "sequence_index": 0,
+          "duration_ms": 0,
+          "source_sha256": "4c73a8dd4ff90d861161f068f47a660dd76085561f7b46da5f16e9bc129d568b"
+        },
+        {
+          "key": "phase1_mobile_enemy_chaser/chaser/8/attack_startup/0",
+          "id": "chaser_south_attack_startup",
+          "atlas_index": 6,
+          "region": [
+            73,
+            37,
+            32,
+            32
+          ],
+          "cell_region": [
+            72,
+            36,
+            34,
+            34
+          ],
+          "pivot": [
+            15,
+            16
+          ],
+          "anchors": {
+            "contact": [
+              15,
+              24
+            ],
+            "rear": [
+              15,
+              9
+            ]
+          },
+          "variant": "chaser",
+          "direction_index": 8,
+          "state": "attack_startup",
+          "sequence_index": 0,
+          "duration_ms": 0,
+          "source_sha256": "108236419c1561c8cf9c669d7fbc58e21d69a4d3b9bb1f0a97913b5184a30117"
+        },
+        {
+          "key": "phase1_mobile_enemy_chaser/chaser/12/attack_startup/0",
+          "id": "chaser_west_attack_startup",
+          "atlas_index": 7,
+          "region": [
+            109,
+            37,
+            32,
+            32
+          ],
+          "cell_region": [
+            108,
+            36,
+            34,
+            34
+          ],
+          "pivot": [
+            15,
+            15
+          ],
+          "anchors": {
+            "contact": [
+              7,
+              15
+            ],
+            "rear": [
+              22,
+              15
+            ]
+          },
+          "variant": "chaser",
+          "direction_index": 12,
+          "state": "attack_startup",
+          "sequence_index": 0,
+          "duration_ms": 0,
+          "source_sha256": "6a7e4b76d04f5f0b3900ac0bf1699a1da55d688905791a53b123c9a777d6fb2f"
+        }
+      ]
+    },
+    {
+      "id": "phase1_mobile_enemy_shooter",
+      "family": "mobile_enemy_set",
+      "runtime_group": "mobile_enemies",
+      "runtime_layers": [
+        "body",
+        "role_accent",
+        "weapon_or_tool",
+        "mobility"
+      ],
+      "approval_status": "candidate",
+      "atlas_path": "pixel-art-production/assets/generated/candidates/phase-1/build/phase1_mobile_enemy_shooter/atlas.png",
+      "atlas_sha256": "83563b5bfedd690ef72a5d1c3c94d521bf2b0084a9d4ce6fdf085e6fe1a1e606",
+      "atlas_size": [
+        142,
+        70
+      ],
+      "frame_size": [
+        32,
+        32
+      ],
+      "cell_size": [
+        34,
+        34
+      ],
+      "padding": 2,
+      "extrude": 1,
+      "frames": [
+        {
+          "key": "phase1_mobile_enemy_shooter/shooter/0/move/0",
+          "id": "shooter_north_move",
+          "atlas_index": 0,
+          "region": [
+            1,
+            1,
+            32,
+            32
+          ],
+          "cell_region": [
+            0,
+            0,
+            34,
+            34
+          ],
+          "pivot": [
+            16,
+            15
+          ],
+          "anchors": {
+            "muzzle": [
+              16,
+              1
+            ],
+            "rear": [
+              16,
+              24
+            ]
+          },
+          "variant": "shooter",
+          "direction_index": 0,
+          "state": "move",
+          "sequence_index": 0,
+          "duration_ms": 0,
+          "source_sha256": "2f8bfe87960da4c4d66a999b2f358f461f1cad249a10917560682e782e868d27"
+        },
+        {
+          "key": "phase1_mobile_enemy_shooter/shooter/4/move/0",
+          "id": "shooter_east_move",
+          "atlas_index": 1,
+          "region": [
+            37,
+            1,
+            32,
+            32
+          ],
+          "cell_region": [
+            36,
+            0,
+            34,
+            34
+          ],
+          "pivot": [
+            16,
+            16
+          ],
+          "anchors": {
+            "muzzle": [
+              30,
+              16
+            ],
+            "rear": [
+              7,
+              16
+            ]
+          },
+          "variant": "shooter",
+          "direction_index": 4,
+          "state": "move",
+          "sequence_index": 0,
+          "duration_ms": 0,
+          "source_sha256": "9fdb0f831f5191848a56d42c26b7fe951e898b31cb2db63f1b26d35ccc7e1471"
+        },
+        {
+          "key": "phase1_mobile_enemy_shooter/shooter/8/move/0",
+          "id": "shooter_south_move",
+          "atlas_index": 2,
+          "region": [
+            73,
+            1,
+            32,
+            32
+          ],
+          "cell_region": [
+            72,
+            0,
+            34,
+            34
+          ],
+          "pivot": [
+            15,
+            16
+          ],
+          "anchors": {
+            "muzzle": [
+              15,
+              30
+            ],
+            "rear": [
+              15,
+              7
+            ]
+          },
+          "variant": "shooter",
+          "direction_index": 8,
+          "state": "move",
+          "sequence_index": 0,
+          "duration_ms": 0,
+          "source_sha256": "ddb67f7856a71355953914788bf9445a98ea01f99eeb4f436efec7706fb0a718"
+        },
+        {
+          "key": "phase1_mobile_enemy_shooter/shooter/12/move/0",
+          "id": "shooter_west_move",
+          "atlas_index": 3,
+          "region": [
+            109,
+            1,
+            32,
+            32
+          ],
+          "cell_region": [
+            108,
+            0,
+            34,
+            34
+          ],
+          "pivot": [
+            15,
+            15
+          ],
+          "anchors": {
+            "muzzle": [
+              1,
+              15
+            ],
+            "rear": [
+              24,
+              15
+            ]
+          },
+          "variant": "shooter",
+          "direction_index": 12,
+          "state": "move",
+          "sequence_index": 0,
+          "duration_ms": 0,
+          "source_sha256": "cacae9550a99d42f829b03df01751b19c30b08cc73abcb4efcfb5e2a2718eac1"
+        },
+        {
+          "key": "phase1_mobile_enemy_shooter/shooter/0/attack_startup/0",
+          "id": "shooter_north_attack_startup",
+          "atlas_index": 4,
+          "region": [
+            1,
+            37,
+            32,
+            32
+          ],
+          "cell_region": [
+            0,
+            36,
+            34,
+            34
+          ],
+          "pivot": [
+            16,
+            15
+          ],
+          "anchors": {
+            "muzzle": [
+              16,
+              1
+            ],
+            "rear": [
+              16,
+              24
+            ]
+          },
+          "variant": "shooter",
+          "direction_index": 0,
+          "state": "attack_startup",
+          "sequence_index": 0,
+          "duration_ms": 0,
+          "source_sha256": "050111ba8bf1e42abb00fa7033624ed5f9e2a9a286de131db732fa1bdad338bc"
+        },
+        {
+          "key": "phase1_mobile_enemy_shooter/shooter/4/attack_startup/0",
+          "id": "shooter_east_attack_startup",
+          "atlas_index": 5,
+          "region": [
+            37,
+            37,
+            32,
+            32
+          ],
+          "cell_region": [
+            36,
+            36,
+            34,
+            34
+          ],
+          "pivot": [
+            16,
+            16
+          ],
+          "anchors": {
+            "muzzle": [
+              30,
+              16
+            ],
+            "rear": [
+              7,
+              16
+            ]
+          },
+          "variant": "shooter",
+          "direction_index": 4,
+          "state": "attack_startup",
+          "sequence_index": 0,
+          "duration_ms": 0,
+          "source_sha256": "593aa1b0898d35119f35c25a0fe7c26a0524fb14839f991ed9a5d7d6228c8b7a"
+        },
+        {
+          "key": "phase1_mobile_enemy_shooter/shooter/8/attack_startup/0",
+          "id": "shooter_south_attack_startup",
+          "atlas_index": 6,
+          "region": [
+            73,
+            37,
+            32,
+            32
+          ],
+          "cell_region": [
+            72,
+            36,
+            34,
+            34
+          ],
+          "pivot": [
+            15,
+            16
+          ],
+          "anchors": {
+            "muzzle": [
+              15,
+              30
+            ],
+            "rear": [
+              15,
+              7
+            ]
+          },
+          "variant": "shooter",
+          "direction_index": 8,
+          "state": "attack_startup",
+          "sequence_index": 0,
+          "duration_ms": 0,
+          "source_sha256": "13d68644cea090ce574b60059c81ae38e1d87c242fa62aa76bc507e94307846c"
+        },
+        {
+          "key": "phase1_mobile_enemy_shooter/shooter/12/attack_startup/0",
+          "id": "shooter_west_attack_startup",
+          "atlas_index": 7,
+          "region": [
+            109,
+            37,
+            32,
+            32
+          ],
+          "cell_region": [
+            108,
+            36,
+            34,
+            34
+          ],
+          "pivot": [
+            15,
+            15
+          ],
+          "anchors": {
+            "muzzle": [
+              1,
+              15
+            ],
+            "rear": [
+              24,
+              15
+            ]
+          },
+          "variant": "shooter",
+          "direction_index": 12,
+          "state": "attack_startup",
+          "sequence_index": 0,
+          "duration_ms": 0,
+          "source_sha256": "a7f057af5dfc50007dd7c3013a43777e23800b223d3f44316360a6cddd471407"
+        }
+      ]
+    },
+    {
+      "id": "phase1_player_chassis",
+      "family": "player_chassis",
+      "runtime_group": "player",
+      "runtime_layers": [
+        "body",
+        "left_wing",
+        "right_wing",
+        "cockpit",
+        "armor"
+      ],
+      "approval_status": "candidate",
+      "atlas_path": "pixel-art-production/assets/generated/candidates/phase-1/build/phase1_player_chassis/atlas.png",
+      "atlas_sha256": "725452fa1411097bf3eaa654f295e028a2666ed0fc3d0c2a2e5e1620793a49d0",
+      "atlas_size": [
+        270,
+        66
+      ],
+      "frame_size": [
+        64,
+        64
+      ],
+      "cell_size": [
+        66,
+        66
+      ],
+      "padding": 2,
+      "extrude": 1,
+      "frames": [
+        {
+          "key": "phase1_player_chassis/base/0/normal/0",
+          "id": "base_north_normal",
+          "atlas_index": 0,
+          "region": [
+            1,
+            1,
+            64,
+            64
+          ],
+          "cell_region": [
+            0,
+            0,
+            66,
+            66
+          ],
+          "pivot": [
+            32,
+            32
+          ],
+          "anchors": {
+            "left_engine": [
+              25,
+              56
+            ],
+            "muzzle": [
+              32,
+              8
+            ],
+            "right_engine": [
+              39,
+              56
+            ]
+          },
+          "variant": "base",
+          "direction_index": 0,
+          "state": "normal",
+          "sequence_index": 0,
+          "duration_ms": 0,
+          "source_sha256": "da370c09c1577d8b60be75ddf2d2ed2fc84851d0d06730a83aaff5c167a4ee8e"
+        },
+        {
+          "key": "phase1_player_chassis/base/4/normal/0",
+          "id": "base_east_normal",
+          "atlas_index": 1,
+          "region": [
+            69,
+            1,
+            64,
+            64
+          ],
+          "cell_region": [
+            68,
+            0,
+            66,
+            66
+          ],
+          "pivot": [
+            31,
+            32
+          ],
+          "anchors": {
+            "left_engine": [
+              7,
+              25
+            ],
+            "muzzle": [
+              55,
+              32
+            ],
+            "right_engine": [
+              7,
+              39
+            ]
+          },
+          "variant": "base",
+          "direction_index": 4,
+          "state": "normal",
+          "sequence_index": 0,
+          "duration_ms": 0,
+          "source_sha256": "f61ba44fb66550bc71aed3d3f45e62e02a414603ad0a69f98e003706b62e62c3"
+        },
+        {
+          "key": "phase1_player_chassis/base/8/normal/0",
+          "id": "base_south_normal",
+          "atlas_index": 2,
+          "region": [
+            137,
+            1,
+            64,
+            64
+          ],
+          "cell_region": [
+            136,
+            0,
+            66,
+            66
+          ],
+          "pivot": [
+            31,
+            31
+          ],
+          "anchors": {
+            "left_engine": [
+              38,
+              7
+            ],
+            "muzzle": [
+              31,
+              55
+            ],
+            "right_engine": [
+              24,
+              7
+            ]
+          },
+          "variant": "base",
+          "direction_index": 8,
+          "state": "normal",
+          "sequence_index": 0,
+          "duration_ms": 0,
+          "source_sha256": "52ee91521cb35bd496e01c417b593834a3db79dea8e8726ef89deb8d84d3c02c"
+        },
+        {
+          "key": "phase1_player_chassis/base/12/normal/0",
+          "id": "base_west_normal",
+          "atlas_index": 3,
+          "region": [
+            205,
+            1,
+            64,
+            64
+          ],
+          "cell_region": [
+            204,
+            0,
+            66,
+            66
+          ],
+          "pivot": [
+            32,
+            31
+          ],
+          "anchors": {
+            "left_engine": [
+              56,
+              38
+            ],
+            "muzzle": [
+              8,
+              31
+            ],
+            "right_engine": [
+              56,
+              24
+            ]
+          },
+          "variant": "base",
+          "direction_index": 12,
+          "state": "normal",
+          "sequence_index": 0,
+          "duration_ms": 0,
+          "source_sha256": "c0a4cab48aaf012ebcbbe89a336d0f2908155c635690e52d7c1f56d1a0401bac"
+        }
+      ]
+    },
+    {
+      "id": "phase1_player_engine_flame",
+      "family": "player_engine_flame",
+      "runtime_group": "player",
+      "runtime_layers": [
+        "core",
+        "outer_flame"
+      ],
+      "approval_status": "candidate",
+      "atlas_path": "pixel-art-production/assets/generated/candidates/phase-1/build/phase1_player_engine_flame/atlas.png",
+      "atlas_sha256": "148181645584ca40091feabb418211b194a30a497924fd75ae89c1e655466f3a",
+      "atlas_size": [
+        270,
+        66
+      ],
+      "frame_size": [
+        64,
+        64
+      ],
+      "cell_size": [
+        66,
+        66
+      ],
+      "padding": 2,
+      "extrude": 1,
+      "frames": [
+        {
+          "key": "phase1_player_engine_flame/thrust/0/frame_0/0",
+          "id": "thrust_north_frame_0",
+          "atlas_index": 0,
+          "region": [
+            1,
+            1,
+            64,
+            64
+          ],
+          "cell_region": [
+            0,
+            0,
+            66,
+            66
+          ],
+          "pivot": [
+            32,
+            32
+          ],
+          "anchors": {
+            "left_nozzle": [
+              25,
+              55
+            ],
+            "right_nozzle": [
+              38,
+              55
+            ]
+          },
+          "variant": "thrust",
+          "direction_index": 0,
+          "state": "frame_0",
+          "sequence_index": 0,
+          "duration_ms": 80,
+          "source_sha256": "a5ba346f571b260ad30b06cafa43ced8ee1664006230a1f4b6c1bfc98de3fef1"
+        },
+        {
+          "key": "phase1_player_engine_flame/thrust/0/frame_1/1",
+          "id": "thrust_north_frame_1",
+          "atlas_index": 1,
+          "region": [
+            69,
+            1,
+            64,
+            64
+          ],
+          "cell_region": [
+            68,
+            0,
+            66,
+            66
+          ],
+          "pivot": [
+            32,
+            32
+          ],
+          "anchors": {
+            "left_nozzle": [
+              25,
+              55
+            ],
+            "right_nozzle": [
+              38,
+              55
+            ]
+          },
+          "variant": "thrust",
+          "direction_index": 0,
+          "state": "frame_1",
+          "sequence_index": 1,
+          "duration_ms": 80,
+          "source_sha256": "6b06672b0b78c7124fcfff6282a91e43bbd6444bcd56d652252c53a67e396f30"
+        },
+        {
+          "key": "phase1_player_engine_flame/thrust/0/frame_2/2",
+          "id": "thrust_north_frame_2",
+          "atlas_index": 2,
+          "region": [
+            137,
+            1,
+            64,
+            64
+          ],
+          "cell_region": [
+            136,
+            0,
+            66,
+            66
+          ],
+          "pivot": [
+            32,
+            32
+          ],
+          "anchors": {
+            "left_nozzle": [
+              25,
+              55
+            ],
+            "right_nozzle": [
+              38,
+              55
+            ]
+          },
+          "variant": "thrust",
+          "direction_index": 0,
+          "state": "frame_2",
+          "sequence_index": 2,
+          "duration_ms": 80,
+          "source_sha256": "648754bf18807357244cac84aa5c640ffdaeca8aa8e2d60c8e759702bf18a7a8"
+        },
+        {
+          "key": "phase1_player_engine_flame/thrust/0/frame_3/3",
+          "id": "thrust_north_frame_3",
+          "atlas_index": 3,
+          "region": [
+            205,
+            1,
+            64,
+            64
+          ],
+          "cell_region": [
+            204,
+            0,
+            66,
+            66
+          ],
+          "pivot": [
+            32,
+            32
+          ],
+          "anchors": {
+            "left_nozzle": [
+              25,
+              55
+            ],
+            "right_nozzle": [
+              38,
+              55
+            ]
+          },
+          "variant": "thrust",
+          "direction_index": 0,
+          "state": "frame_3",
+          "sequence_index": 3,
+          "duration_ms": 80,
+          "source_sha256": "6b06672b0b78c7124fcfff6282a91e43bbd6444bcd56d652252c53a67e396f30"
+        }
+      ]
+    },
+    {
+      "id": "phase1_player_primary_projectiles",
+      "family": "player_primary_projectiles",
+      "runtime_group": "player_projectiles",
+      "runtime_layers": [
+        "body",
+        "core",
+        "wake",
+        "breach_collar"
+      ],
+      "approval_status": "candidate",
+      "atlas_path": "pixel-art-production/assets/generated/candidates/phase-1/build/phase1_player_primary_projectiles/atlas.png",
+      "atlas_sha256": "b32c127d03d4e8e86a27e2c78b3ca302859577541444f604616fa04425f75b6c",
+      "atlas_size": [
+        286,
+        70
+      ],
+      "frame_size": [
+        32,
+        32
+      ],
+      "cell_size": [
+        34,
+        34
+      ],
+      "padding": 2,
+      "extrude": 1,
+      "frames": [
+        {
+          "key": "phase1_player_primary_projectiles/standard/0/flight_0/0",
+          "id": "standard_north_flight_0",
+          "atlas_index": 0,
+          "region": [
+            1,
+            1,
+            32,
+            32
+          ],
+          "cell_region": [
+            0,
+            0,
+            34,
+            34
+          ],
+          "pivot": [
+            16,
+            15
+          ],
+          "anchors": {
+            "head": [
+              16,
+              8
+            ],
+            "rear": [
+              16,
+              24
+            ]
+          },
+          "variant": "standard",
+          "direction_index": 0,
+          "state": "flight_0",
+          "sequence_index": 0,
+          "duration_ms": 70,
+          "source_sha256": "eb8cfb34f1aa74edd60cc87265432f8185cd8449b61a5dae8dbcb46907aba170"
+        },
+        {
+          "key": "phase1_player_primary_projectiles/standard/4/flight_0/0",
+          "id": "standard_east_flight_0",
+          "atlas_index": 1,
+          "region": [
+            37,
+            1,
+            32,
+            32
+          ],
+          "cell_region": [
+            36,
+            0,
+            34,
+            34
+          ],
+          "pivot": [
+            16,
+            16
+          ],
+          "anchors": {
+            "head": [
+              23,
+              16
+            ],
+            "rear": [
+              7,
+              16
+            ]
+          },
+          "variant": "standard",
+          "direction_index": 4,
+          "state": "flight_0",
+          "sequence_index": 0,
+          "duration_ms": 70,
+          "source_sha256": "eb6a3878437f2e19cc5ede2bd9a605900da9fed61f493748ac5df87473553c93"
+        },
+        {
+          "key": "phase1_player_primary_projectiles/standard/8/flight_0/0",
+          "id": "standard_south_flight_0",
+          "atlas_index": 2,
+          "region": [
+            73,
+            1,
+            32,
+            32
+          ],
+          "cell_region": [
+            72,
+            0,
+            34,
+            34
+          ],
+          "pivot": [
+            15,
+            16
+          ],
+          "anchors": {
+            "head": [
+              15,
+              23
+            ],
+            "rear": [
+              15,
+              7
+            ]
+          },
+          "variant": "standard",
+          "direction_index": 8,
+          "state": "flight_0",
+          "sequence_index": 0,
+          "duration_ms": 70,
+          "source_sha256": "944efb6518d0078e85f6a90ec6f9c0895507054d215a9426f3b34bbd0cdbb492"
+        },
+        {
+          "key": "phase1_player_primary_projectiles/standard/12/flight_0/0",
+          "id": "standard_west_flight_0",
+          "atlas_index": 3,
+          "region": [
+            109,
+            1,
+            32,
+            32
+          ],
+          "cell_region": [
+            108,
+            0,
+            34,
+            34
+          ],
+          "pivot": [
+            15,
+            15
+          ],
+          "anchors": {
+            "head": [
+              8,
+              15
+            ],
+            "rear": [
+              24,
+              15
+            ]
+          },
+          "variant": "standard",
+          "direction_index": 12,
+          "state": "flight_0",
+          "sequence_index": 0,
+          "duration_ms": 70,
+          "source_sha256": "79acda29f8852588cae028b64cf83e1cb82f556d498d03cb310435ef817617e2"
+        },
+        {
+          "key": "phase1_player_primary_projectiles/standard/0/flight_1/1",
+          "id": "standard_north_flight_1",
+          "atlas_index": 4,
+          "region": [
+            145,
+            1,
+            32,
+            32
+          ],
+          "cell_region": [
+            144,
+            0,
+            34,
+            34
+          ],
+          "pivot": [
+            16,
+            15
+          ],
+          "anchors": {
+            "head": [
+              16,
+              8
+            ],
+            "rear": [
+              16,
+              24
+            ]
+          },
+          "variant": "standard",
+          "direction_index": 0,
+          "state": "flight_1",
+          "sequence_index": 1,
+          "duration_ms": 70,
+          "source_sha256": "4f14fe4c3f6cd195fceb60248e99258796e00cea29505dbb4cfeb2d8c556194b"
+        },
+        {
+          "key": "phase1_player_primary_projectiles/standard/4/flight_1/1",
+          "id": "standard_east_flight_1",
+          "atlas_index": 5,
+          "region": [
+            181,
+            1,
+            32,
+            32
+          ],
+          "cell_region": [
+            180,
+            0,
+            34,
+            34
+          ],
+          "pivot": [
+            16,
+            16
+          ],
+          "anchors": {
+            "head": [
+              23,
+              16
+            ],
+            "rear": [
+              7,
+              16
+            ]
+          },
+          "variant": "standard",
+          "direction_index": 4,
+          "state": "flight_1",
+          "sequence_index": 1,
+          "duration_ms": 70,
+          "source_sha256": "2be977f6714b85c7362f175faaaf3d728b4a5d92285673f45a79ae47e5bae25c"
+        },
+        {
+          "key": "phase1_player_primary_projectiles/standard/8/flight_1/1",
+          "id": "standard_south_flight_1",
+          "atlas_index": 6,
+          "region": [
+            217,
+            1,
+            32,
+            32
+          ],
+          "cell_region": [
+            216,
+            0,
+            34,
+            34
+          ],
+          "pivot": [
+            15,
+            16
+          ],
+          "anchors": {
+            "head": [
+              15,
+              23
+            ],
+            "rear": [
+              15,
+              7
+            ]
+          },
+          "variant": "standard",
+          "direction_index": 8,
+          "state": "flight_1",
+          "sequence_index": 1,
+          "duration_ms": 70,
+          "source_sha256": "14c30e15393a0baacc3792b102f62e7dadf04af6cdbf7d46b52e32e38f3b3854"
+        },
+        {
+          "key": "phase1_player_primary_projectiles/standard/12/flight_1/1",
+          "id": "standard_west_flight_1",
+          "atlas_index": 7,
+          "region": [
+            253,
+            1,
+            32,
+            32
+          ],
+          "cell_region": [
+            252,
+            0,
+            34,
+            34
+          ],
+          "pivot": [
+            15,
+            15
+          ],
+          "anchors": {
+            "head": [
+              8,
+              15
+            ],
+            "rear": [
+              24,
+              15
+            ]
+          },
+          "variant": "standard",
+          "direction_index": 12,
+          "state": "flight_1",
+          "sequence_index": 1,
+          "duration_ms": 70,
+          "source_sha256": "5fb336162fa4e1e299e33fde0e626b267777b0e22acadc3b84d69b75b994c63a"
+        },
+        {
+          "key": "phase1_player_primary_projectiles/opening_breach/0/flight_0/0",
+          "id": "opening_breach_north_flight_0",
+          "atlas_index": 8,
+          "region": [
+            1,
+            37,
+            32,
+            32
+          ],
+          "cell_region": [
+            0,
+            36,
+            34,
+            34
+          ],
+          "pivot": [
+            16,
+            15
+          ],
+          "anchors": {
+            "head": [
+              16,
+              8
+            ],
+            "rear": [
+              16,
+              24
+            ]
+          },
+          "variant": "opening_breach",
+          "direction_index": 0,
+          "state": "flight_0",
+          "sequence_index": 0,
+          "duration_ms": 70,
+          "source_sha256": "226e5331e147b56ac6fc6c8cd38e157f261a9c04c4d521df56a98de99c8c37b5"
+        },
+        {
+          "key": "phase1_player_primary_projectiles/opening_breach/4/flight_0/0",
+          "id": "opening_breach_east_flight_0",
+          "atlas_index": 9,
+          "region": [
+            37,
+            37,
+            32,
+            32
+          ],
+          "cell_region": [
+            36,
+            36,
+            34,
+            34
+          ],
+          "pivot": [
+            16,
+            16
+          ],
+          "anchors": {
+            "head": [
+              23,
+              16
+            ],
+            "rear": [
+              7,
+              16
+            ]
+          },
+          "variant": "opening_breach",
+          "direction_index": 4,
+          "state": "flight_0",
+          "sequence_index": 0,
+          "duration_ms": 70,
+          "source_sha256": "31948573cb8a2d0e8c4d39f7640329258f1c56e952a588d44777add72f6a1736"
+        },
+        {
+          "key": "phase1_player_primary_projectiles/opening_breach/8/flight_0/0",
+          "id": "opening_breach_south_flight_0",
+          "atlas_index": 10,
+          "region": [
+            73,
+            37,
+            32,
+            32
+          ],
+          "cell_region": [
+            72,
+            36,
+            34,
+            34
+          ],
+          "pivot": [
+            15,
+            16
+          ],
+          "anchors": {
+            "head": [
+              15,
+              23
+            ],
+            "rear": [
+              15,
+              7
+            ]
+          },
+          "variant": "opening_breach",
+          "direction_index": 8,
+          "state": "flight_0",
+          "sequence_index": 0,
+          "duration_ms": 70,
+          "source_sha256": "178f5746786cc2d0ea32d1d28990c401ba8632f76903a3cb389dad972166d743"
+        },
+        {
+          "key": "phase1_player_primary_projectiles/opening_breach/12/flight_0/0",
+          "id": "opening_breach_west_flight_0",
+          "atlas_index": 11,
+          "region": [
+            109,
+            37,
+            32,
+            32
+          ],
+          "cell_region": [
+            108,
+            36,
+            34,
+            34
+          ],
+          "pivot": [
+            15,
+            15
+          ],
+          "anchors": {
+            "head": [
+              8,
+              15
+            ],
+            "rear": [
+              24,
+              15
+            ]
+          },
+          "variant": "opening_breach",
+          "direction_index": 12,
+          "state": "flight_0",
+          "sequence_index": 0,
+          "duration_ms": 70,
+          "source_sha256": "fea3e4ab428c4923bd3bb901a6962da527d9d2a0f49a09da2731a0f227d8f736"
+        },
+        {
+          "key": "phase1_player_primary_projectiles/opening_breach/0/flight_1/1",
+          "id": "opening_breach_north_flight_1",
+          "atlas_index": 12,
+          "region": [
+            145,
+            37,
+            32,
+            32
+          ],
+          "cell_region": [
+            144,
+            36,
+            34,
+            34
+          ],
+          "pivot": [
+            16,
+            15
+          ],
+          "anchors": {
+            "head": [
+              16,
+              8
+            ],
+            "rear": [
+              16,
+              24
+            ]
+          },
+          "variant": "opening_breach",
+          "direction_index": 0,
+          "state": "flight_1",
+          "sequence_index": 1,
+          "duration_ms": 70,
+          "source_sha256": "86332c04e3138c43da6dec747f3f9506c8905264f6fbf58ff031579feb297b96"
+        },
+        {
+          "key": "phase1_player_primary_projectiles/opening_breach/4/flight_1/1",
+          "id": "opening_breach_east_flight_1",
+          "atlas_index": 13,
+          "region": [
+            181,
+            37,
+            32,
+            32
+          ],
+          "cell_region": [
+            180,
+            36,
+            34,
+            34
+          ],
+          "pivot": [
+            16,
+            16
+          ],
+          "anchors": {
+            "head": [
+              23,
+              16
+            ],
+            "rear": [
+              7,
+              16
+            ]
+          },
+          "variant": "opening_breach",
+          "direction_index": 4,
+          "state": "flight_1",
+          "sequence_index": 1,
+          "duration_ms": 70,
+          "source_sha256": "0f56d1394a3079bc8bfd52217a0003075e8865812ac2f29e886702486b12cc8a"
+        },
+        {
+          "key": "phase1_player_primary_projectiles/opening_breach/8/flight_1/1",
+          "id": "opening_breach_south_flight_1",
+          "atlas_index": 14,
+          "region": [
+            217,
+            37,
+            32,
+            32
+          ],
+          "cell_region": [
+            216,
+            36,
+            34,
+            34
+          ],
+          "pivot": [
+            15,
+            16
+          ],
+          "anchors": {
+            "head": [
+              15,
+              23
+            ],
+            "rear": [
+              15,
+              7
+            ]
+          },
+          "variant": "opening_breach",
+          "direction_index": 8,
+          "state": "flight_1",
+          "sequence_index": 1,
+          "duration_ms": 70,
+          "source_sha256": "084b13782480051d572fec7a4f55d9d36585c5435e1b10e941772d037dcf4477"
+        },
+        {
+          "key": "phase1_player_primary_projectiles/opening_breach/12/flight_1/1",
+          "id": "opening_breach_west_flight_1",
+          "atlas_index": 15,
+          "region": [
+            253,
+            37,
+            32,
+            32
+          ],
+          "cell_region": [
+            252,
+            36,
+            34,
+            34
+          ],
+          "pivot": [
+            15,
+            15
+          ],
+          "anchors": {
+            "head": [
+              8,
+              15
+            ],
+            "rear": [
+              24,
+              15
+            ]
+          },
+          "variant": "opening_breach",
+          "direction_index": 12,
+          "state": "flight_1",
+          "sequence_index": 1,
+          "duration_ms": 70,
+          "source_sha256": "abf07bcf58e6d7ebf4da4275ae1a5b39ccc87cf2172f411105bce113cdd21e14"
+        }
+      ]
+    },
+    {
+      "id": "phase1_player_primary_weapon",
+      "family": "player_primary_weapon",
+      "runtime_group": "player",
+      "runtime_layers": [
+        "mount",
+        "barrel",
+        "power_core",
+        "muzzle_fx"
+      ],
+      "approval_status": "candidate",
+      "atlas_path": "pixel-art-production/assets/generated/candidates/phase-1/build/phase1_player_primary_weapon/atlas.png",
+      "atlas_sha256": "d20f3b681861df67c283db5e0c59bddec208ad4d82a238968052adc2da883b0d",
+      "atlas_size": [
+        270,
+        66
+      ],
+      "frame_size": [
+        64,
+        64
+      ],
+      "cell_size": [
+        66,
+        66
+      ],
+      "padding": 2,
+      "extrude": 1,
+      "frames": [
+        {
+          "key": "phase1_player_primary_weapon/pulse_cannon/0/idle/0",
+          "id": "pulse_cannon_north_idle",
+          "atlas_index": 0,
+          "region": [
+            1,
+            1,
+            64,
+            64
+          ],
+          "cell_region": [
+            0,
+            0,
+            66,
+            66
+          ],
+          "pivot": [
+            32,
+            32
+          ],
+          "anchors": {
+            "mount": [
+              32,
+              44
+            ],
+            "muzzle": [
+              32,
+              9
+            ]
+          },
+          "variant": "pulse_cannon",
+          "direction_index": 0,
+          "state": "idle",
+          "sequence_index": 0,
+          "duration_ms": 0,
+          "source_sha256": "68aa635bb5489cb6b44af6720f8025539fd8b38bda2dcd95c4c25f3ff7a40b71"
+        },
+        {
+          "key": "phase1_player_primary_weapon/pulse_cannon/4/idle/0",
+          "id": "pulse_cannon_east_idle",
+          "atlas_index": 1,
+          "region": [
+            69,
+            1,
+            64,
+            64
+          ],
+          "cell_region": [
+            68,
+            0,
+            66,
+            66
+          ],
+          "pivot": [
+            31,
+            32
+          ],
+          "anchors": {
+            "mount": [
+              19,
+              32
+            ],
+            "muzzle": [
+              54,
+              32
+            ]
+          },
+          "variant": "pulse_cannon",
+          "direction_index": 4,
+          "state": "idle",
+          "sequence_index": 0,
+          "duration_ms": 0,
+          "source_sha256": "2ba207c8b219b985770f9e9f2f6e83c0df97af56ec56c9e6fec6ec2c01178aca"
+        },
+        {
+          "key": "phase1_player_primary_weapon/pulse_cannon/8/idle/0",
+          "id": "pulse_cannon_south_idle",
+          "atlas_index": 2,
+          "region": [
+            137,
+            1,
+            64,
+            64
+          ],
+          "cell_region": [
+            136,
+            0,
+            66,
+            66
+          ],
+          "pivot": [
+            31,
+            31
+          ],
+          "anchors": {
+            "mount": [
+              31,
+              19
+            ],
+            "muzzle": [
+              31,
+              54
+            ]
+          },
+          "variant": "pulse_cannon",
+          "direction_index": 8,
+          "state": "idle",
+          "sequence_index": 0,
+          "duration_ms": 0,
+          "source_sha256": "76ead8ef71d98587d4ec3e39cb687712049eb4adc2c45d5b8e6847beec80b78b"
+        },
+        {
+          "key": "phase1_player_primary_weapon/pulse_cannon/12/idle/0",
+          "id": "pulse_cannon_west_idle",
+          "atlas_index": 3,
+          "region": [
+            205,
+            1,
+            64,
+            64
+          ],
+          "cell_region": [
+            204,
+            0,
+            66,
+            66
+          ],
+          "pivot": [
+            32,
+            31
+          ],
+          "anchors": {
+            "mount": [
+              44,
+              31
+            ],
+            "muzzle": [
+              9,
+              31
+            ]
+          },
+          "variant": "pulse_cannon",
+          "direction_index": 12,
+          "state": "idle",
+          "sequence_index": 0,
+          "duration_ms": 0,
+          "source_sha256": "420ccc7ea24c354cbf8c93a4ae0ea8c1647876ac63158bc33abbc19d0be37967"
+        }
+      ]
+    },
+    {
+      "id": "phase1_wall_cover_tiles",
+      "family": "wall_cover_tiles",
+      "runtime_group": "world",
+      "runtime_layers": [
+        "top",
+        "side",
+        "shadow",
+        "boundary_light"
+      ],
+      "approval_status": "candidate",
+      "atlas_path": "pixel-art-production/assets/generated/candidates/phase-1/build/phase1_wall_cover_tiles/atlas.png",
+      "atlas_sha256": "9f7f3de44a4f8664a5c82c5a22f590de1af2beff3b5fce485bab9e35726d32a8",
+      "atlas_size": [
+        110,
+        110
+      ],
+      "frame_size": [
+        24,
+        24
+      ],
+      "cell_size": [
+        26,
+        26
+      ],
+      "padding": 2,
+      "extrude": 1,
+      "frames": [
+        {
+          "key": "phase1_wall_cover_tiles/isolated/0/static/0",
+          "id": "isolated",
+          "atlas_index": 0,
+          "region": [
+            1,
+            1,
+            24,
+            24
+          ],
+          "cell_region": [
+            0,
+            0,
+            26,
+            26
+          ],
+          "pivot": [
+            12,
+            12
+          ],
+          "anchors": {
+            "center": [
+              12,
+              12
+            ]
+          },
+          "variant": "isolated",
+          "direction_index": 0,
+          "state": "static",
+          "sequence_index": 0,
+          "duration_ms": 0,
+          "source_sha256": "1cc7c67d7a452e0c2ae3865c9989c6ec93832e1d771ab488a31a9e0dee5f635b"
+        },
+        {
+          "key": "phase1_wall_cover_tiles/north/0/static/0",
+          "id": "north",
+          "atlas_index": 1,
+          "region": [
+            29,
+            1,
+            24,
+            24
+          ],
+          "cell_region": [
+            28,
+            0,
+            26,
+            26
+          ],
+          "pivot": [
+            12,
+            12
+          ],
+          "anchors": {
+            "center": [
+              12,
+              12
+            ]
+          },
+          "variant": "north",
+          "direction_index": 0,
+          "state": "static",
+          "sequence_index": 0,
+          "duration_ms": 0,
+          "source_sha256": "a1266c517a9ed6d9f7d1c1a6eacfdd14f18e2ea56a064a8e2b7336ef100b3811"
+        },
+        {
+          "key": "phase1_wall_cover_tiles/east/0/static/0",
+          "id": "east",
+          "atlas_index": 2,
+          "region": [
+            57,
+            1,
+            24,
+            24
+          ],
+          "cell_region": [
+            56,
+            0,
+            26,
+            26
+          ],
+          "pivot": [
+            12,
+            12
+          ],
+          "anchors": {
+            "center": [
+              12,
+              12
+            ]
+          },
+          "variant": "east",
+          "direction_index": 0,
+          "state": "static",
+          "sequence_index": 0,
+          "duration_ms": 0,
+          "source_sha256": "3ba069e7b225e8adc4ab082798a2743cb416fc8c7e4b3d9c21dfbd1d597d1594"
+        },
+        {
+          "key": "phase1_wall_cover_tiles/south/0/static/0",
+          "id": "south",
+          "atlas_index": 3,
+          "region": [
+            85,
+            1,
+            24,
+            24
+          ],
+          "cell_region": [
+            84,
+            0,
+            26,
+            26
+          ],
+          "pivot": [
+            12,
+            12
+          ],
+          "anchors": {
+            "center": [
+              12,
+              12
+            ]
+          },
+          "variant": "south",
+          "direction_index": 0,
+          "state": "static",
+          "sequence_index": 0,
+          "duration_ms": 0,
+          "source_sha256": "0284e14820376afb5cf4b5149deea5c057e801be7031fd5aa1d511068b20ab1b"
+        },
+        {
+          "key": "phase1_wall_cover_tiles/west/0/static/0",
+          "id": "west",
+          "atlas_index": 4,
+          "region": [
+            1,
+            29,
+            24,
+            24
+          ],
+          "cell_region": [
+            0,
+            28,
+            26,
+            26
+          ],
+          "pivot": [
+            12,
+            12
+          ],
+          "anchors": {
+            "center": [
+              12,
+              12
+            ]
+          },
+          "variant": "west",
+          "direction_index": 0,
+          "state": "static",
+          "sequence_index": 0,
+          "duration_ms": 0,
+          "source_sha256": "b73116020319b518f02b8be872bb3d2bef404eb9f68deae0890c678b4646b54a"
+        },
+        {
+          "key": "phase1_wall_cover_tiles/north_east/0/static/0",
+          "id": "north_east",
+          "atlas_index": 5,
+          "region": [
+            29,
+            29,
+            24,
+            24
+          ],
+          "cell_region": [
+            28,
+            28,
+            26,
+            26
+          ],
+          "pivot": [
+            12,
+            12
+          ],
+          "anchors": {
+            "center": [
+              12,
+              12
+            ]
+          },
+          "variant": "north_east",
+          "direction_index": 0,
+          "state": "static",
+          "sequence_index": 0,
+          "duration_ms": 0,
+          "source_sha256": "fc16c475cb6f858fee0b3026bc58ca7b3724921f018acfea65881352604eff3b"
+        },
+        {
+          "key": "phase1_wall_cover_tiles/east_south/0/static/0",
+          "id": "east_south",
+          "atlas_index": 6,
+          "region": [
+            57,
+            29,
+            24,
+            24
+          ],
+          "cell_region": [
+            56,
+            28,
+            26,
+            26
+          ],
+          "pivot": [
+            12,
+            12
+          ],
+          "anchors": {
+            "center": [
+              12,
+              12
+            ]
+          },
+          "variant": "east_south",
+          "direction_index": 0,
+          "state": "static",
+          "sequence_index": 0,
+          "duration_ms": 0,
+          "source_sha256": "44eaf242ec5184b467123d3b4ec15303b5932c9b3fd0be2a9f8ff152cf80a340"
+        },
+        {
+          "key": "phase1_wall_cover_tiles/south_west/0/static/0",
+          "id": "south_west",
+          "atlas_index": 7,
+          "region": [
+            85,
+            29,
+            24,
+            24
+          ],
+          "cell_region": [
+            84,
+            28,
+            26,
+            26
+          ],
+          "pivot": [
+            12,
+            12
+          ],
+          "anchors": {
+            "center": [
+              12,
+              12
+            ]
+          },
+          "variant": "south_west",
+          "direction_index": 0,
+          "state": "static",
+          "sequence_index": 0,
+          "duration_ms": 0,
+          "source_sha256": "1ada0ed5494a27549cb29f7b9f67a8feea14b6ecf8aac0d4ef3ba63aecc84505"
+        },
+        {
+          "key": "phase1_wall_cover_tiles/west_north/0/static/0",
+          "id": "west_north",
+          "atlas_index": 8,
+          "region": [
+            1,
+            57,
+            24,
+            24
+          ],
+          "cell_region": [
+            0,
+            56,
+            26,
+            26
+          ],
+          "pivot": [
+            12,
+            12
+          ],
+          "anchors": {
+            "center": [
+              12,
+              12
+            ]
+          },
+          "variant": "west_north",
+          "direction_index": 0,
+          "state": "static",
+          "sequence_index": 0,
+          "duration_ms": 0,
+          "source_sha256": "7404a375052004b9d8e952d834f6f1f37bef848c67d4e26ba2bd2e8c94970b69"
+        },
+        {
+          "key": "phase1_wall_cover_tiles/north_south/0/static/0",
+          "id": "north_south",
+          "atlas_index": 9,
+          "region": [
+            29,
+            57,
+            24,
+            24
+          ],
+          "cell_region": [
+            28,
+            56,
+            26,
+            26
+          ],
+          "pivot": [
+            12,
+            12
+          ],
+          "anchors": {
+            "center": [
+              12,
+              12
+            ]
+          },
+          "variant": "north_south",
+          "direction_index": 0,
+          "state": "static",
+          "sequence_index": 0,
+          "duration_ms": 0,
+          "source_sha256": "f32ec28469d7d19165704fc2a27fd5cc00f896ec75619f3c55d875aa38bcd643"
+        },
+        {
+          "key": "phase1_wall_cover_tiles/east_west/0/static/0",
+          "id": "east_west",
+          "atlas_index": 10,
+          "region": [
+            57,
+            57,
+            24,
+            24
+          ],
+          "cell_region": [
+            56,
+            56,
+            26,
+            26
+          ],
+          "pivot": [
+            12,
+            12
+          ],
+          "anchors": {
+            "center": [
+              12,
+              12
+            ]
+          },
+          "variant": "east_west",
+          "direction_index": 0,
+          "state": "static",
+          "sequence_index": 0,
+          "duration_ms": 0,
+          "source_sha256": "d824a5377c5e5df7c8b2e6a64debc1e28a89e87e5ccb9026deb3646a5d15a3f1"
+        },
+        {
+          "key": "phase1_wall_cover_tiles/north_east_south/0/static/0",
+          "id": "north_east_south",
+          "atlas_index": 11,
+          "region": [
+            85,
+            57,
+            24,
+            24
+          ],
+          "cell_region": [
+            84,
+            56,
+            26,
+            26
+          ],
+          "pivot": [
+            12,
+            12
+          ],
+          "anchors": {
+            "center": [
+              12,
+              12
+            ]
+          },
+          "variant": "north_east_south",
+          "direction_index": 0,
+          "state": "static",
+          "sequence_index": 0,
+          "duration_ms": 0,
+          "source_sha256": "562cdf7f13151a4939a1af832a82dc4944d1eadd7ed3faedacb5ebaf490a01a5"
+        },
+        {
+          "key": "phase1_wall_cover_tiles/east_south_west/0/static/0",
+          "id": "east_south_west",
+          "atlas_index": 12,
+          "region": [
+            1,
+            85,
+            24,
+            24
+          ],
+          "cell_region": [
+            0,
+            84,
+            26,
+            26
+          ],
+          "pivot": [
+            12,
+            12
+          ],
+          "anchors": {
+            "center": [
+              12,
+              12
+            ]
+          },
+          "variant": "east_south_west",
+          "direction_index": 0,
+          "state": "static",
+          "sequence_index": 0,
+          "duration_ms": 0,
+          "source_sha256": "4ab4b0c9eef659fce66d7fc024a0eb8c583c07f2961023ad58f60ce242239c20"
+        },
+        {
+          "key": "phase1_wall_cover_tiles/south_west_north/0/static/0",
+          "id": "south_west_north",
+          "atlas_index": 13,
+          "region": [
+            29,
+            85,
+            24,
+            24
+          ],
+          "cell_region": [
+            28,
+            84,
+            26,
+            26
+          ],
+          "pivot": [
+            12,
+            12
+          ],
+          "anchors": {
+            "center": [
+              12,
+              12
+            ]
+          },
+          "variant": "south_west_north",
+          "direction_index": 0,
+          "state": "static",
+          "sequence_index": 0,
+          "duration_ms": 0,
+          "source_sha256": "02cb8d5f220c2ec3ac8b5e04b60643d4a0c95b9c6301f72d26f480b03cd798c7"
+        },
+        {
+          "key": "phase1_wall_cover_tiles/west_north_east/0/static/0",
+          "id": "west_north_east",
+          "atlas_index": 14,
+          "region": [
+            57,
+            85,
+            24,
+            24
+          ],
+          "cell_region": [
+            56,
+            84,
+            26,
+            26
+          ],
+          "pivot": [
+            12,
+            12
+          ],
+          "anchors": {
+            "center": [
+              12,
+              12
+            ]
+          },
+          "variant": "west_north_east",
+          "direction_index": 0,
+          "state": "static",
+          "sequence_index": 0,
+          "duration_ms": 0,
+          "source_sha256": "089f7fd5027037106a646536ce2e8a463d391c50f217145a0834117200a5309e"
+        },
+        {
+          "key": "phase1_wall_cover_tiles/all/0/static/0",
+          "id": "all",
+          "atlas_index": 15,
+          "region": [
+            85,
+            85,
+            24,
+            24
+          ],
+          "cell_region": [
+            84,
+            84,
+            26,
+            26
+          ],
+          "pivot": [
+            12,
+            12
+          ],
+          "anchors": {
+            "center": [
+              12,
+              12
+            ]
+          },
+          "variant": "all",
+          "direction_index": 0,
+          "state": "static",
+          "sequence_index": 0,
+          "duration_ms": 0,
+          "source_sha256": "4910256d305ae60a2c55c6ccfb43d1b729e25ac6b6de5e069377db06ee95b230"
+        }
+      ]
+    },
+    {
+      "id": "phase1_world_floor_void_tiles",
+      "family": "world_floor_void_tiles",
+      "runtime_group": "world",
+      "runtime_layers": [
+        "base",
+        "large_material_break"
+      ],
+      "approval_status": "candidate",
+      "atlas_path": "pixel-art-production/assets/generated/candidates/phase-1/build/phase1_world_floor_void_tiles/atlas.png",
+      "atlas_sha256": "55e2dd105c80eaa08d6fe7b58771381bc0ae5f6eab25de6e7b22c573aab94abe",
+      "atlas_size": [
+        110,
+        54
+      ],
+      "frame_size": [
+        24,
+        24
+      ],
+      "cell_size": [
+        26,
+        26
+      ],
+      "padding": 2,
+      "extrude": 1,
+      "frames": [
+        {
+          "key": "phase1_world_floor_void_tiles/space_void/0/static/0",
+          "id": "space_void",
+          "atlas_index": 0,
+          "region": [
+            1,
+            1,
+            24,
+            24
+          ],
+          "cell_region": [
+            0,
+            0,
+            26,
+            26
+          ],
+          "pivot": [
+            12,
+            12
+          ],
+          "anchors": {
+            "center": [
+              12,
+              12
+            ]
+          },
+          "variant": "space_void",
+          "direction_index": 0,
+          "state": "static",
+          "sequence_index": 0,
+          "duration_ms": 0,
+          "source_sha256": "bfd21576d0d7e17434239f1b61f494f8117169d42103e8f4832e26729092995d"
+        },
+        {
+          "key": "phase1_world_floor_void_tiles/floor_light/0/static/0",
+          "id": "floor_light",
+          "atlas_index": 1,
+          "region": [
+            29,
+            1,
+            24,
+            24
+          ],
+          "cell_region": [
+            28,
+            0,
+            26,
+            26
+          ],
+          "pivot": [
+            12,
+            12
+          ],
+          "anchors": {
+            "center": [
+              12,
+              12
+            ]
+          },
+          "variant": "floor_light",
+          "direction_index": 0,
+          "state": "static",
+          "sequence_index": 0,
+          "duration_ms": 0,
+          "source_sha256": "0f6b41f1052efca64b652de52525db15531a0b4ba8e1f9f79ecfa5c2da38bc0c"
+        },
+        {
+          "key": "phase1_world_floor_void_tiles/floor_mid/0/static/0",
+          "id": "floor_mid",
+          "atlas_index": 2,
+          "region": [
+            57,
+            1,
+            24,
+            24
+          ],
+          "cell_region": [
+            56,
+            0,
+            26,
+            26
+          ],
+          "pivot": [
+            12,
+            12
+          ],
+          "anchors": {
+            "center": [
+              12,
+              12
+            ]
+          },
+          "variant": "floor_mid",
+          "direction_index": 0,
+          "state": "static",
+          "sequence_index": 0,
+          "duration_ms": 0,
+          "source_sha256": "442114a1d5f2b36bd8f7a6b38fd999f291f5b3d10beccd0c491f50e49cdc2d8b"
+        },
+        {
+          "key": "phase1_world_floor_void_tiles/floor_dark/0/static/0",
+          "id": "floor_dark",
+          "atlas_index": 3,
+          "region": [
+            85,
+            1,
+            24,
+            24
+          ],
+          "cell_region": [
+            84,
+            0,
+            26,
+            26
+          ],
+          "pivot": [
+            12,
+            12
+          ],
+          "anchors": {
+            "center": [
+              12,
+              12
+            ]
+          },
+          "variant": "floor_dark",
+          "direction_index": 0,
+          "state": "static",
+          "sequence_index": 0,
+          "duration_ms": 0,
+          "source_sha256": "af0b1672d46172f5c3474c86e98bd32d9e76c443759337fae157ad2314f66510"
+        },
+        {
+          "key": "phase1_world_floor_void_tiles/floor_patch_2x2/0/static/0",
+          "id": "floor_patch_2x2_nw",
+          "atlas_index": 4,
+          "region": [
+            1,
+            29,
+            24,
+            24
+          ],
+          "cell_region": [
+            0,
+            28,
+            26,
+            26
+          ],
+          "pivot": [
+            12,
+            12
+          ],
+          "anchors": {
+            "center": [
+              12,
+              12
+            ]
+          },
+          "variant": "floor_patch_2x2",
+          "direction_index": 0,
+          "state": "static",
+          "sequence_index": 0,
+          "duration_ms": 0,
+          "source_sha256": "5af83b2391ddda4921565e7e9ed2a4accd04d12c3e087a28efdafe8960330256"
+        },
+        {
+          "key": "phase1_world_floor_void_tiles/floor_patch_2x2/0/static/1",
+          "id": "floor_patch_2x2_ne",
+          "atlas_index": 5,
+          "region": [
+            29,
+            29,
+            24,
+            24
+          ],
+          "cell_region": [
+            28,
+            28,
+            26,
+            26
+          ],
+          "pivot": [
+            12,
+            12
+          ],
+          "anchors": {
+            "center": [
+              12,
+              12
+            ]
+          },
+          "variant": "floor_patch_2x2",
+          "direction_index": 0,
+          "state": "static",
+          "sequence_index": 1,
+          "duration_ms": 0,
+          "source_sha256": "2eb4b80805ea20f39f323074bb161c34eeface7985194d4cbb1d895a751d22fb"
+        },
+        {
+          "key": "phase1_world_floor_void_tiles/floor_patch_2x2/0/static/2",
+          "id": "floor_patch_2x2_sw",
+          "atlas_index": 6,
+          "region": [
+            57,
+            29,
+            24,
+            24
+          ],
+          "cell_region": [
+            56,
+            28,
+            26,
+            26
+          ],
+          "pivot": [
+            12,
+            12
+          ],
+          "anchors": {
+            "center": [
+              12,
+              12
+            ]
+          },
+          "variant": "floor_patch_2x2",
+          "direction_index": 0,
+          "state": "static",
+          "sequence_index": 2,
+          "duration_ms": 0,
+          "source_sha256": "543a8568d6534ef624f0afa599ef108d4cd880039d81e87cc0719700c3428f31"
+        },
+        {
+          "key": "phase1_world_floor_void_tiles/floor_patch_2x2/0/static/3",
+          "id": "floor_patch_2x2_se",
+          "atlas_index": 7,
+          "region": [
+            85,
+            29,
+            24,
+            24
+          ],
+          "cell_region": [
+            84,
+            28,
+            26,
+            26
+          ],
+          "pivot": [
+            12,
+            12
+          ],
+          "anchors": {
+            "center": [
+              12,
+              12
+            ]
+          },
+          "variant": "floor_patch_2x2",
+          "direction_index": 0,
+          "state": "static",
+          "sequence_index": 3,
+          "duration_ms": 0,
+          "source_sha256": "d0bb38abad5a4937954b67cd06dba031d816cfc0a47fd6509bc4624b4bca8f16"
+        }
+      ]
+    }
+  ],
+  "gate": "A",
+  "review_status": "awaiting_owner",
+  "rejected_frames": [],
+  "prompt_sources": [
+    "pixel-art-production/assets/source/candidates/phase-1/prompts/player-primary-weapon.md",
+    "pixel-art-production/assets/source/candidates/phase-1/prompts/player-standard-shot.md",
+    "pixel-art-production/assets/source/candidates/phase-1/prompts/player-breach-shot.md",
+    "pixel-art-production/assets/source/candidates/phase-1/prompts/chaser.md"
+  ]
+}

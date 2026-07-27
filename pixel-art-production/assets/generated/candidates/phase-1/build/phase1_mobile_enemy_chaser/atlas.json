@@ -1,0 +1,320 @@
+{
+  "schema_version": 2,
+  "asset_id": "phase1_mobile_enemy_chaser",
+  "family": "mobile_enemy_set",
+  "atlas_path": "pixel-art-production/assets/generated/candidates/phase-1/build/phase1_mobile_enemy_chaser/atlas.png",
+  "atlas_size": [
+    142,
+    70
+  ],
+  "frame_size": [
+    32,
+    32
+  ],
+  "cell_size": [
+    34,
+    34
+  ],
+  "columns": 4,
+  "rows": 2,
+  "padding": 2,
+  "extrude": 1,
+  "frames": [
+    {
+      "id": "chaser_north_move",
+      "atlas_index": 0,
+      "region": [
+        1,
+        1,
+        32,
+        32
+      ],
+      "cell_region": [
+        0,
+        0,
+        34,
+        34
+      ],
+      "pivot": [
+        16,
+        15
+      ],
+      "anchors": {
+        "contact": [
+          16,
+          7
+        ],
+        "rear": [
+          16,
+          22
+        ]
+      },
+      "direction": 0,
+      "state": "move",
+      "variant": "chaser",
+      "sequence_index": 0,
+      "duration_ms": 0,
+      "source_sha256": "f9c08ee244b1244a5f8fb60d1292d61bba6d0e1a4c556147fa076fb4fba37b8d"
+    },
+    {
+      "id": "chaser_east_move",
+      "atlas_index": 1,
+      "region": [
+        37,
+        1,
+        32,
+        32
+      ],
+      "cell_region": [
+        36,
+        0,
+        34,
+        34
+      ],
+      "pivot": [
+        16,
+        16
+      ],
+      "anchors": {
+        "contact": [
+          24,
+          16
+        ],
+        "rear": [
+          9,
+          16
+        ]
+      },
+      "direction": 4,
+      "state": "move",
+      "variant": "chaser",
+      "sequence_index": 0,
+      "duration_ms": 0,
+      "source_sha256": "053fa38d703f56eb440661ba2588fdc3b3623c6fe7aea7851b35b6c339ab9e32"
+    },
+    {
+      "id": "chaser_south_move",
+      "atlas_index": 2,
+      "region": [
+        73,
+        1,
+        32,
+        32
+      ],
+      "cell_region": [
+        72,
+        0,
+        34,
+        34
+      ],
+      "pivot": [
+        15,
+        16
+      ],
+      "anchors": {
+        "contact": [
+          15,
+          24
+        ],
+        "rear": [
+          15,
+          9
+        ]
+      },
+      "direction": 8,
+      "state": "move",
+      "variant": "chaser",
+      "sequence_index": 0,
+      "duration_ms": 0,
+      "source_sha256": "fe79a92d3a2417272e58a9c8339d0653df81cd9d4aa55b46ab977ba3422f1149"
+    },
+    {
+      "id": "chaser_west_move",
+      "atlas_index": 3,
+      "region": [
+        109,
+        1,
+        32,
+        32
+      ],
+      "cell_region": [
+        108,
+        0,
+        34,
+        34
+      ],
+      "pivot": [
+        15,
+        15
+      ],
+      "anchors": {
+        "contact": [
+          7,
+          15
+        ],
+        "rear": [
+          22,
+          15
+        ]
+      },
+      "direction": 12,
+      "state": "move",
+      "variant": "chaser",
+      "sequence_index": 0,
+      "duration_ms": 0,
+      "source_sha256": "21d25d94e3744a392206a2046c3b1b6e9aca4894da4678737b35ffa14cfbbf98"
+    },
+    {
+      "id": "chaser_north_attack_startup",
+      "atlas_index": 4,
+      "region": [
+        1,
+        37,
+        32,
+        32
+      ],
+      "cell_region": [
+        0,
+        36,
+        34,
+        34
+      ],
+      "pivot": [
+        16,
+        15
+      ],
+      "anchors": {
+        "contact": [
+          16,
+          7
+        ],
+        "rear": [
+          16,
+          22
+        ]
+      },
+      "direction": 0,
+      "state": "attack_startup",
+      "variant": "chaser",
+      "sequence_index": 0,
+      "duration_ms": 0,
+      "source_sha256": "9660ecb47b3614e0dd77b86ebd7be02da7087d34bbe5395fe7b1fbe7ab204c7b"
+    },
+    {
+      "id": "chaser_east_attack_startup",
+      "atlas_index": 5,
+      "region": [
+        37,
+        37,
+        32,
+        32
+      ],
+      "cell_region": [
+        36,
+        36,
+        34,
+        34
+      ],
+      "pivot": [
+        16,
+        16
+      ],
+      "anchors": {
+        "contact": [
+          24,
+          16
+        ],
+        "rear": [
+          9,
+          16
+        ]
+      },
+      "direction": 4,
+      "state": "attack_startup",
+      "variant": "chaser",
+      "sequence_index": 0,
+      "duration_ms": 0,
+      "source_sha256": "4c73a8dd4ff90d861161f068f47a660dd76085561f7b46da5f16e9bc129d568b"
+    },
+    {
+      "id": "chaser_south_attack_startup",
+      "atlas_index": 6,
+      "region": [
+        73,
+        37,
+        32,
+        32
+      ],
+      "cell_region": [
+        72,
+        36,
+        34,
+        34
+      ],
+      "pivot": [
+        15,
+        16
+      ],
+      "anchors": {
+        "contact": [
+          15,
+          24
+        ],
+        "rear": [
+          15,
+          9
+        ]
+      },
+      "direction": 8,
+      "state": "attack_startup",
+      "variant": "chaser",
+      "sequence_index": 0,
+      "duration_ms": 0,
+      "source_sha256": "108236419c1561c8cf9c669d7fbc58e21d69a4d3b9bb1f0a97913b5184a30117"
+    },
+    {
+      "id": "chaser_west_attack_startup",
+      "atlas_index": 7,
+      "region": [
+        109,
+        37,
+        32,
+        32
+      ],
+      "cell_region": [
+        108,
+        36,
+        34,
+        34
+      ],
+      "pivot": [
+        15,
+        15
+      ],
+      "anchors": {
+        "contact": [
+          7,
+          15
+        ],
+        "rear": [
+          22,
+          15
+        ]
+      },
+      "direction": 12,
+      "state": "attack_startup",
+      "variant": "chaser",
+      "sequence_index": 0,
+      "duration_ms": 0,
+      "source_sha256": "6a7e4b76d04f5f0b3900ac0bf1699a1da55d688905791a53b123c9a777d6fb2f"
+    }
+  ],
+  "runtime_group": "mobile_enemies",
+  "runtime_layers": [
+    "body",
+    "role_accent",
+    "weapon_or_tool",
+    "mobility"
+  ],
+  "approval_status": "candidate"
+}

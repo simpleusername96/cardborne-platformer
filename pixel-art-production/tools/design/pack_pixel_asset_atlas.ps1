@@ -80,13 +80,23 @@ try {
         $temporaryExtruded.Add($packedFramePath)
     }
     $arguments += @($packedFramePath, "-geometry", "+$cellX+$cellY", "-compose", "over", "-composite")
+    $framePivotProperty = $frame.PSObject.Properties["pivot"]
+    $frameAnchorsProperty = $frame.PSObject.Properties["anchors"]
     $frameMetadata = [ordered]@{
         id = [string]$frame.id
         atlas_index = $index
         region = @($x, $y, $frameWidth, $frameHeight)
         cell_region = @($cellX, $cellY, $cellWidth, $cellHeight)
-        pivot = @($manifest.pivot)
-        anchors = $manifest.anchors
+        pivot = if ($null -ne $framePivotProperty) {
+            @($framePivotProperty.Value)
+        } else {
+            @($manifest.pivot)
+        }
+        anchors = if ($null -ne $frameAnchorsProperty) {
+            $frameAnchorsProperty.Value
+        } else {
+            $manifest.anchors
+        }
         direction = if ($schemaVersion -eq 2) { [int]$frame.direction_index } else { $frame.direction }
         state = $frame.state
     }

@@ -1,0 +1,544 @@
+{
+  "schema_version": 2,
+  "asset_id": "phase1_wall_cover_tiles",
+  "family": "wall_cover_tiles",
+  "atlas_path": "pixel-art-production/assets/generated/candidates/phase-1/build/phase1_wall_cover_tiles/atlas.png",
+  "atlas_size": [
+    110,
+    110
+  ],
+  "frame_size": [
+    24,
+    24
+  ],
+  "cell_size": [
+    26,
+    26
+  ],
+  "columns": 4,
+  "rows": 4,
+  "padding": 2,
+  "extrude": 1,
+  "frames": [
+    {
+      "id": "isolated",
+      "atlas_index": 0,
+      "region": [
+        1,
+        1,
+        24,
+        24
+      ],
+      "cell_region": [
+        0,
+        0,
+        26,
+        26
+      ],
+      "pivot": [
+        12,
+        12
+      ],
+      "anchors": {
+        "center": [
+          12,
+          12
+        ]
+      },
+      "direction": 0,
+      "state": "static",
+      "variant": "isolated",
+      "sequence_index": 0,
+      "duration_ms": 0,
+      "source_sha256": "1cc7c67d7a452e0c2ae3865c9989c6ec93832e1d771ab488a31a9e0dee5f635b"
+    },
+    {
+      "id": "north",
+      "atlas_index": 1,
+      "region": [
+        29,
+        1,
+        24,
+        24
+      ],
+      "cell_region": [
+        28,
+        0,
+        26,
+        26
+      ],
+      "pivot": [
+        12,
+        12
+      ],
+      "anchors": {
+        "center": [
+          12,
+          12
+        ]
+      },
+      "direction": 0,
+      "state": "static",
+      "variant": "north",
+      "sequence_index": 0,
+      "duration_ms": 0,
+      "source_sha256": "a1266c517a9ed6d9f7d1c1a6eacfdd14f18e2ea56a064a8e2b7336ef100b3811"
+    },
+    {
+      "id": "east",
+      "atlas_index": 2,
+      "region": [
+        57,
+        1,
+        24,
+        24
+      ],
+      "cell_region": [
+        56,
+        0,
+        26,
+        26
+      ],
+      "pivot": [
+        12,
+        12
+      ],
+      "anchors": {
+        "center": [
+          12,
+          12
+        ]
+      },
+      "direction": 0,
+      "state": "static",
+      "variant": "east",
+      "sequence_index": 0,
+      "duration_ms": 0,
+      "source_sha256": "3ba069e7b225e8adc4ab082798a2743cb416fc8c7e4b3d9c21dfbd1d597d1594"
+    },
+    {
+      "id": "south",
+      "atlas_index": 3,
+      "region": [
+        85,
+        1,
+        24,
+        24
+      ],
+      "cell_region": [
+        84,
+        0,
+        26,
+        26
+      ],
+      "pivot": [
+        12,
+        12
+      ],
+      "anchors": {
+        "center": [
+          12,
+          12
+        ]
+      },
+      "direction": 0,
+      "state": "static",
+      "variant": "south",
+      "sequence_index": 0,
+      "duration_ms": 0,
+      "source_sha256": "0284e14820376afb5cf4b5149deea5c057e801be7031fd5aa1d511068b20ab1b"
+    },
+    {
+      "id": "west",
+      "atlas_index": 4,
+      "region": [
+        1,
+        29,
+        24,
+        24
+      ],
+      "cell_region": [
+        0,
+        28,
+        26,
+        26
+      ],
+      "pivot": [
+        12,
+        12
+      ],
+      "anchors": {
+        "center": [
+          12,
+          12
+        ]
+      },
+      "direction": 0,
+      "state": "static",
+      "variant": "west",
+      "sequence_index": 0,
+      "duration_ms": 0,
+      "source_sha256": "b73116020319b518f02b8be872bb3d2bef404eb9f68deae0890c678b4646b54a"
+    },
+    {
+      "id": "north_east",
+      "atlas_index": 5,
+      "region": [
+        29,
+        29,
+        24,
+        24
+      ],
+      "cell_region": [
+        28,
+        28,
+        26,
+        26
+      ],
+      "pivot": [
+        12,
+        12
+      ],
+      "anchors": {
+        "center": [
+          12,
+          12
+        ]
+      },
+      "direction": 0,
+      "state": "static",
+      "variant": "north_east",
+      "sequence_index": 0,
+      "duration_ms": 0,
+      "source_sha256": "fc16c475cb6f858fee0b3026bc58ca7b3724921f018acfea65881352604eff3b"
+    },
+    {
+      "id": "east_south",
+      "atlas_index": 6,
+      "region": [
+        57,
+        29,
+        24,
+        24
+      ],
+      "cell_region": [
+        56,
+        28,
+        26,
+        26
+      ],
+      "pivot": [
+        12,
+        12
+      ],
+      "anchors": {
+        "center": [
+          12,
+          12
+        ]
+      },
+      "direction": 0,
+      "state": "static",
+      "variant": "east_south",
+      "sequence_index": 0,
+      "duration_ms": 0,
+      "source_sha256": "44eaf242ec5184b467123d3b4ec15303b5932c9b3fd0be2a9f8ff152cf80a340"
+    },
+    {
+      "id": "south_west",
+      "atlas_index": 7,
+      "region": [
+        85,
+        29,
+        24,
+        24
+      ],
+      "cell_region": [
+        84,
+        28,
+        26,
+        26
+      ],
+      "pivot": [
+        12,
+        12
+      ],
+      "anchors": {
+        "center": [
+          12,
+          12
+        ]
+      },
+      "direction": 0,
+      "state": "static",
+      "variant": "south_west",
+      "sequence_index": 0,
+      "duration_ms": 0,
+      "source_sha256": "1ada0ed5494a27549cb29f7b9f67a8feea14b6ecf8aac0d4ef3ba63aecc84505"
+    },
+    {
+      "id": "west_north",
+      "atlas_index": 8,
+      "region": [
+        1,
+        57,
+        24,
+        24
+      ],
+      "cell_region": [
+        0,
+        56,
+        26,
+        26
+      ],
+      "pivot": [
+        12,
+        12
+      ],
+      "anchors": {
+        "center": [
+          12,
+          12
+        ]
+      },
+      "direction": 0,
+      "state": "static",
+      "variant": "west_north",
+      "sequence_index": 0,
+      "duration_ms": 0,
+      "source_sha256": "7404a375052004b9d8e952d834f6f1f37bef848c67d4e26ba2bd2e8c94970b69"
+    },
+    {
+      "id": "north_south",
+      "atlas_index": 9,
+      "region": [
+        29,
+        57,
+        24,
+        24
+      ],
+      "cell_region": [
+        28,
+        56,
+        26,
+        26
+      ],
+      "pivot": [
+        12,
+        12
+      ],
+      "anchors": {
+        "center": [
+          12,
+          12
+        ]
+      },
+      "direction": 0,
+      "state": "static",
+      "variant": "north_south",
+      "sequence_index": 0,
+      "duration_ms": 0,
+      "source_sha256": "f32ec28469d7d19165704fc2a27fd5cc00f896ec75619f3c55d875aa38bcd643"
+    },
+    {
+      "id": "east_west",
+      "atlas_index": 10,
+      "region": [
+        57,
+        57,
+        24,
+        24
+      ],
+      "cell_region": [
+        56,
+        56,
+        26,
+        26
+      ],
+      "pivot": [
+        12,
+        12
+      ],
+      "anchors": {
+        "center": [
+          12,
+          12
+        ]
+      },
+      "direction": 0,
+      "state": "static",
+      "variant": "east_west",
+      "sequence_index": 0,
+      "duration_ms": 0,
+      "source_sha256": "d824a5377c5e5df7c8b2e6a64debc1e28a89e87e5ccb9026deb3646a5d15a3f1"
+    },
+    {
+      "id": "north_east_south",
+      "atlas_index": 11,
+      "region": [
+        85,
+        57,
+        24,
+        24
+      ],
+      "cell_region": [
+        84,
+        56,
+        26,
+        26
+      ],
+      "pivot": [
+        12,
+        12
+      ],
+      "anchors": {
+        "center": [
+          12,
+          12
+        ]
+      },
+      "direction": 0,
+      "state": "static",
+      "variant": "north_east_south",
+      "sequence_index": 0,
+      "duration_ms": 0,
+      "source_sha256": "562cdf7f13151a4939a1af832a82dc4944d1eadd7ed3faedacb5ebaf490a01a5"
+    },
+    {
+      "id": "east_south_west",
+      "atlas_index": 12,
+      "region": [
+        1,
+        85,
+        24,
+        24
+      ],
+      "cell_region": [
+        0,
+        84,
+        26,
+        26
+      ],
+      "pivot": [
+        12,
+        12
+      ],
+      "anchors": {
+        "center": [
+          12,
+          12
+        ]
+      },
+      "direction": 0,
+      "state": "static",
+      "variant": "east_south_west",
+      "sequence_index": 0,
+      "duration_ms": 0,
+      "source_sha256": "4ab4b0c9eef659fce66d7fc024a0eb8c583c07f2961023ad58f60ce242239c20"
+    },
+    {
+      "id": "south_west_north",
+      "atlas_index": 13,
+      "region": [
+        29,
+        85,
+        24,
+        24
+      ],
+      "cell_region": [
+        28,
+        84,
+        26,
+        26
+      ],
+      "pivot": [
+        12,
+        12
+      ],
+      "anchors": {
+        "center": [
+          12,
+          12
+        ]
+      },
+      "direction": 0,
+      "state": "static",
+      "variant": "south_west_north",
+      "sequence_index": 0,
+      "duration_ms": 0,
+      "source_sha256": "02cb8d5f220c2ec3ac8b5e04b60643d4a0c95b9c6301f72d26f480b03cd798c7"
+    },
+    {
+      "id": "west_north_east",
+      "atlas_index": 14,
+      "region": [
+        57,
+        85,
+        24,
+        24
+      ],
+      "cell_region": [
+        56,
+        84,
+        26,
+        26
+      ],
+      "pivot": [
+        12,
+        12
+      ],
+      "anchors": {
+        "center": [
+          12,
+          12
+        ]
+      },
+      "direction": 0,
+      "state": "static",
+      "variant": "west_north_east",
+      "sequence_index": 0,
+      "duration_ms": 0,
+      "source_sha256": "089f7fd5027037106a646536ce2e8a463d391c50f217145a0834117200a5309e"
+    },
+    {
+      "id": "all",
+      "atlas_index": 15,
+      "region": [
+        85,
+        85,
+        24,
+        24
+      ],
+      "cell_region": [
+        84,
+        84,
+        26,
+        26
+      ],
+      "pivot": [
+        12,
+        12
+      ],
+      "anchors": {
+        "center": [
+          12,
+          12
+        ]
+      },
+      "direction": 0,
+      "state": "static",
+      "variant": "all",
+      "sequence_index": 0,
+      "duration_ms": 0,
+      "source_sha256": "4910256d305ae60a2c55c6ccfb43d1b729e25ac6b6de5e069377db06ee95b230"
+    }
+  ],
+  "runtime_group": "world",
+  "runtime_layers": [
+    "top",
+    "side",
+    "shadow",
+    "boundary_light"
+  ],
+  "approval_status": "candidate"
+}
