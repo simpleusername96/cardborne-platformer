@@ -1,0 +1,237 @@
+{
+	"columns": 8,
+	"entries": [
+		{
+			"family": "world_floor_void_tiles",
+			"index": 0,
+			"variant": "space_void"
+		},
+		{
+			"family": "world_floor_void_tiles",
+			"index": 1,
+			"variant": "floor_light"
+		},
+		{
+			"family": "world_floor_void_tiles",
+			"index": 2,
+			"variant": "floor_mid"
+		},
+		{
+			"family": "world_floor_void_tiles",
+			"index": 3,
+			"variant": "floor_dark"
+		},
+		{
+			"family": "world_floor_void_tiles",
+			"index": 4,
+			"variant": "floor_patch_2x2"
+		},
+		{
+			"family": "wall_cover_tiles",
+			"index": 5,
+			"variant": "isolated"
+		},
+		{
+			"family": "wall_cover_tiles",
+			"index": 6,
+			"variant": "north"
+		},
+		{
+			"family": "wall_cover_tiles",
+			"index": 7,
+			"variant": "east"
+		},
+		{
+			"family": "wall_cover_tiles",
+			"index": 8,
+			"variant": "south"
+		},
+		{
+			"family": "wall_cover_tiles",
+			"index": 9,
+			"variant": "west"
+		},
+		{
+			"family": "wall_cover_tiles",
+			"index": 10,
+			"variant": "north_east"
+		},
+		{
+			"family": "wall_cover_tiles",
+			"index": 11,
+			"variant": "east_south"
+		},
+		{
+			"family": "wall_cover_tiles",
+			"index": 12,
+			"variant": "south_west"
+		},
+		{
+			"family": "wall_cover_tiles",
+			"index": 13,
+			"variant": "west_north"
+		},
+		{
+			"family": "wall_cover_tiles",
+			"index": 14,
+			"variant": "north_south"
+		},
+		{
+			"family": "wall_cover_tiles",
+			"index": 15,
+			"variant": "east_west"
+		},
+		{
+			"family": "wall_cover_tiles",
+			"index": 16,
+			"variant": "north_east_south"
+		},
+		{
+			"family": "wall_cover_tiles",
+			"index": 17,
+			"variant": "east_south_west"
+		},
+		{
+			"family": "wall_cover_tiles",
+			"index": 18,
+			"variant": "south_west_north"
+		},
+		{
+			"family": "wall_cover_tiles",
+			"index": 19,
+			"variant": "west_north_east"
+		},
+		{
+			"family": "wall_cover_tiles",
+			"index": 20,
+			"variant": "all"
+		},
+		{
+			"family": "mobile_enemy_set",
+			"index": 21,
+			"variant": "scrap_drone"
+		},
+		{
+			"family": "mobile_enemy_set",
+			"index": 22,
+			"variant": "needle_drone"
+		},
+		{
+			"family": "mobile_enemy_set",
+			"index": 23,
+			"variant": "spark_minelet"
+		},
+		{
+			"family": "mobile_enemy_set",
+			"index": 24,
+			"variant": "chaser"
+		},
+		{
+			"family": "mobile_enemy_set",
+			"index": 25,
+			"variant": "shooter"
+		},
+		{
+			"family": "mobile_enemy_set",
+			"index": 26,
+			"variant": "controller"
+		},
+		{
+			"family": "mobile_enemy_set",
+			"index": 27,
+			"variant": "shield_escort"
+		},
+		{
+			"family": "mobile_enemy_set",
+			"index": 28,
+			"variant": "artillery_spotter"
+		},
+		{
+			"family": "mobile_enemy_set",
+			"index": 29,
+			"variant": "rammer"
+		},
+		{
+			"family": "mobile_enemy_set",
+			"index": 30,
+			"variant": "bulkhead_guard"
+		},
+		{
+			"family": "mobile_enemy_set",
+			"index": 31,
+			"variant": "splitter_barge"
+		},
+		{
+			"family": "mobile_enemy_set",
+			"index": 32,
+			"variant": "repair_tender"
+		},
+		{
+			"family": "mobile_enemy_set",
+			"index": 33,
+			"variant": "drone_carrier"
+		},
+		{
+			"family": "hostile_projectile_affinities",
+			"index": 34,
+			"variant": "kinetic"
+		},
+		{
+			"family": "hostile_projectile_affinities",
+			"index": 35,
+			"variant": "thermal"
+		},
+		{
+			"family": "hostile_projectile_affinities",
+			"index": 36,
+			"variant": "toxin"
+		},
+		{
+			"family": "hostile_projectile_affinities",
+			"index": 37,
+			"variant": "cryo"
+		},
+		{
+			"family": "hostile_projectile_affinities",
+			"index": 38,
+			"variant": "arc"
+		},
+		{
+			"family": "hostile_projectile_affinities",
+			"index": 39,
+			"variant": "hybrid"
+		},
+		{
+			"family": "experience_shards",
+			"index": 40,
+			"variant": "small"
+		},
+		{
+			"family": "experience_shards",
+			"index": 41,
+			"variant": "medium"
+		},
+		{
+			"family": "experience_shards",
+			"index": 42,
+			"variant": "large"
+		},
+		{
+			"family": "repair_pickup",
+			"index": 43,
+			"variant": "repair"
+		},
+		{
+			"family": "reward_crate",
+			"index": 44,
+			"variant": "repair_contents"
+		},
+		{
+			"family": "reward_crate",
+			"index": 45,
+			"variant": "recall_contents"
+		}
+	],
+	"schema_version": 1,
+	"tile_size": 128
+}

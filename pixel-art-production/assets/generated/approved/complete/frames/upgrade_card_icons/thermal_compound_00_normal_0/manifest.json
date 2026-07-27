@@ -1,0 +1,41 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 0,
+	"family": "upgrade_card_icons",
+	"frame_key": "upgrade_card_icons/thermal_compound/0/normal/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/upgrade_card_icons/thermal_compound_00_normal_0/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/upgrade_card_icons/thermal_compound_00_normal_0/layers/blocker_edge.png",
+			"role": "blocker_edge",
+			"sha256": "9eec64a9b1d9097b25cf617a5eac8f2807be9b7ef5787674b7bdac318a87b652"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/upgrade_card_icons/thermal_compound_00_normal_0/layers/deck_shadow.png",
+			"role": "deck_shadow",
+			"sha256": "996707c0f5c94ca825f85eead8312ade2df30246de29b2446674ee5552e9245b"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/upgrade_card_icons/thermal_compound_00_normal_0/layers/space_void.png",
+			"role": "space_void",
+			"sha256": "043e277be54efee3fdfd7a2098407de086518bc35a2a6a9cd342773a7f570276"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/upgrade_card_icons/thermal_compound_00_normal_0/layers/thermal.png",
+			"role": "thermal",
+			"sha256": "c003cf7e5e03178f53098168667eae0dfa7a83abcf07237e068e5e5ffaec7002"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "ab922fbd1acf560b35e45263ed7ca900ce5230e27630ed0f56ffd71f0dda7775",
+	"state": "normal",
+	"variant": "thermal_compound",
+	"visible_pixel_count": 1936
+}

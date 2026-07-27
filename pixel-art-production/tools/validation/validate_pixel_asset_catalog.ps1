@@ -38,20 +38,27 @@ $magick = Get-Command magick -ErrorAction Stop
 $script:Magick = $magick
 $atlasCache = @{}
 $occupiedCellsByAtlas = @{}
+$atlasWidths = @{}
+$validatedBleedAtlases = @{}
+Add-Type -AssemblyName System.Drawing
 
 if ([int]$catalog.schema_version -ne 1) { $errors.Add("schema_version must be 1") }
 foreach ($asset in @($catalog.assets)) {
     $atlasKey = [string]$asset.atlas_path
     if (-not $occupiedCellsByAtlas.ContainsKey($atlasKey)) {
-        $occupiedCellsByAtlas[$atlasKey] = @{}
+        $atlasWidth = [int]$asset.atlas_size[0]
+        $atlasHeight = [int]$asset.atlas_size[1]
+        $occupiedCellsByAtlas[$atlasKey] = [bool[]]::new($atlasWidth * $atlasHeight)
+        $atlasWidths[$atlasKey] = $atlasWidth
     }
     $atlasCells = $occupiedCellsByAtlas[$atlasKey]
+    $atlasWidth = [int]$atlasWidths[$atlasKey]
     foreach ($frame in @($asset.frames)) {
         $cell = @($frame.cell_region)
         if ($cell.Count -ne 4) { continue }
         for ($cellY = [int]$cell[1]; $cellY -lt [int]$cell[1] + [int]$cell[3]; $cellY++) {
             for ($cellX = [int]$cell[0]; $cellX -lt [int]$cell[0] + [int]$cell[2]; $cellX++) {
-                $atlasCells["$cellX,$cellY"] = $true
+                $atlasCells[$cellY * $atlasWidth + $cellX] = $true
             }
         }
     }
@@ -73,7 +80,7 @@ foreach ($asset in @($catalog.assets)) {
         $atlasCache[$atlasPath] = @{
             hash = (Get-FileHash -LiteralPath $atlasPath -Algorithm SHA256).Hash.ToLowerInvariant()
             size = (& $magick.Source identify -format "%w %h" $atlasPath).Trim()
-            pixels = Read-PixelMap -Path $atlasPath
+            bitmap = [System.Drawing.Bitmap]::new($atlasPath)
         }
     }
     $atlasInfo = $atlasCache[$atlasPath]
@@ -88,13 +95,43 @@ foreach ($asset in @($catalog.assets)) {
     if ([int]$asset.padding -ne 2 -or [int]$asset.extrude -ne 1) {
         $errors.Add("$assetId does not use the production gutter contract")
     }
-    $pixels = $atlasInfo.pixels
+    $bitmap = $atlasInfo.bitmap
     $occupiedCells = $occupiedCellsByAtlas[[string]$asset.atlas_path]
+    $atlasWidth = [int]$atlasWidths[[string]$asset.atlas_path]
     foreach ($frame in @($asset.frames)) {
         $countedFrames++
         $key = [string]$frame.key
         if ($frameKeys.ContainsKey($key)) { $errors.Add("duplicate frame key: $key") }
         $frameKeys[$key] = $true
+        $frameDirectory = Join-Path $repoRoot (
+            "pixel-art-production/assets/generated/approved/complete/frames/{0}/{1}" -f
+            $assetId, [string]$frame.id
+        )
+        $masterPath = Join-Path $frameDirectory "master.png"
+        $manifestPath = Join-Path $frameDirectory "manifest.json"
+        if (-not [System.IO.File]::Exists($masterPath)) {
+            $errors.Add("$key has no native master")
+        } elseif (
+            [string]$frame.source_sha256 -ne
+            (Get-FileHash -LiteralPath $masterPath -Algorithm SHA256).Hash.ToLowerInvariant()
+        ) {
+            $errors.Add("$key native master checksum does not match")
+        }
+        if (-not [System.IO.File]::Exists($manifestPath)) {
+            $errors.Add("$key has no semantic manifest")
+        } else {
+            $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
+            if (
+                [string]$manifest.frame_key -ne $key -or
+                [int]$manifest.reassembly_difference_pixels -ne 0 -or
+                (
+                    [int]$manifest.visible_pixel_count -gt 0 -and
+                    @($manifest.semantic_layers).Count -eq 0
+                )
+            ) {
+                $errors.Add("$key semantic manifest is incomplete")
+            }
+        }
         $region = @($frame.region)
         $cell = @($frame.cell_region)
         if ($region.Count -ne 4 -or $cell.Count -ne 4) {
@@ -122,21 +159,33 @@ foreach ($asset in @($catalog.assets)) {
         $width = [int]$region[2]
         $height = [int]$region[3]
         for ($offset = 0; $offset -lt $width; $offset++) {
-            if ($pixels["$($x+$offset),$($y-1)"] -ne $pixels["$($x+$offset),$y"]) {
+            if (
+                $bitmap.GetPixel($x + $offset, $y - 1).ToArgb() -ne
+                $bitmap.GetPixel($x + $offset, $y).ToArgb()
+            ) {
                 $errors.Add("$key top extrusion does not match its source edge")
                 break
             }
-            if ($pixels["$($x+$offset),$($y+$height)"] -ne $pixels["$($x+$offset),$($y+$height-1)"]) {
+            if (
+                $bitmap.GetPixel($x + $offset, $y + $height).ToArgb() -ne
+                $bitmap.GetPixel($x + $offset, $y + $height - 1).ToArgb()
+            ) {
                 $errors.Add("$key bottom extrusion does not match its source edge")
                 break
             }
         }
         for ($offset = 0; $offset -lt $height; $offset++) {
-            if ($pixels["$($x-1),$($y+$offset)"] -ne $pixels["$x,$($y+$offset)"]) {
+            if (
+                $bitmap.GetPixel($x - 1, $y + $offset).ToArgb() -ne
+                $bitmap.GetPixel($x, $y + $offset).ToArgb()
+            ) {
                 $errors.Add("$key left extrusion does not match its source edge")
                 break
             }
-            if ($pixels["$($x+$width),$($y+$offset)"] -ne $pixels["$($x+$width-1),$($y+$offset)"]) {
+            if (
+                $bitmap.GetPixel($x + $width, $y + $offset).ToArgb() -ne
+                $bitmap.GetPixel($x + $width - 1, $y + $offset).ToArgb()
+            ) {
                 $errors.Add("$key right extrusion does not match its source edge")
                 break
             }
@@ -147,19 +196,35 @@ foreach ($asset in @($catalog.assets)) {
             @(($x - 1), ($y + $height), $x, ($y + $height - 1)),
             @(($x + $width), ($y + $height), ($x + $width - 1), ($y + $height - 1))
         )) {
-            if ($pixels["$($corner[0]),$($corner[1])"] -ne $pixels["$($corner[2]),$($corner[3])"]) {
+            if (
+                $bitmap.GetPixel([int]$corner[0], [int]$corner[1]).ToArgb() -ne
+                $bitmap.GetPixel([int]$corner[2], [int]$corner[3]).ToArgb()
+            ) {
                 $errors.Add("$key corner extrusion does not match its source corner")
                 break
             }
         }
     }
-    foreach ($pixel in $pixels.GetEnumerator()) {
-        $alpha = ([string]$pixel.Value).Substring(6, 2)
-        if ($alpha -ne "00" -and -not $occupiedCells.ContainsKey([string]$pixel.Key)) {
-            $errors.Add("$assetId has atlas bleed outside a frame cell at $($pixel.Key)")
-            break
+    $atlasKey = [string]$asset.atlas_path
+    if (-not $validatedBleedAtlases.ContainsKey($atlasKey)) {
+        $validatedBleedAtlases[$atlasKey] = $true
+        $bleedFound = $false
+        for ($pixelY = 0; $pixelY -lt $bitmap.Height -and -not $bleedFound; $pixelY++) {
+            for ($pixelX = 0; $pixelX -lt $bitmap.Width; $pixelX++) {
+                if (
+                    $bitmap.GetPixel($pixelX, $pixelY).A -ne 0 -and
+                    -not $occupiedCells[$pixelY * $atlasWidth + $pixelX]
+                ) {
+                    $errors.Add("$assetId has atlas bleed outside a frame cell at $pixelX,$pixelY")
+                    $bleedFound = $true
+                    break
+                }
+            }
         }
     }
+}
+foreach ($atlasInfo in $atlasCache.Values) {
+    $atlasInfo.bitmap.Dispose()
 }
 if ($assetIds.Count -ne [int]$catalog.asset_count) {
     $errors.Add("asset_count does not match catalog contents")

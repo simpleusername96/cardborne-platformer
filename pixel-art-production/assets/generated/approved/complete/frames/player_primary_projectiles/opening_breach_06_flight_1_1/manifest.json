@@ -1,0 +1,50 @@
+{
+	"anchors": {
+		"head": [
+			23.0,
+			23.0
+		],
+		"rear": [
+			8.0,
+			8.0
+		]
+	},
+	"approval_status": "approved",
+	"direction_index": 6,
+	"family": "player_primary_projectiles",
+	"frame_key": "player_primary_projectiles/opening_breach/6/flight_1/1",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/player_primary_projectiles/opening_breach_06_flight_1_1/master.png",
+	"pivot": [
+		16.0,
+		16.0
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/player_primary_projectiles/opening_breach_06_flight_1_1/layers/deck_base.png",
+			"role": "deck_base",
+			"sha256": "4e182c4bac92faf54a9cfa65d610951cd44f7add58264200626a3d173ab63b46"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/player_primary_projectiles/opening_breach_06_flight_1_1/layers/neutral_highlight.png",
+			"role": "neutral_highlight",
+			"sha256": "5ec4b4f5c0898cb397f7848fbc33d0cecadf930aa6c58f6b3bcbdeb98ee3c88a"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/player_primary_projectiles/opening_breach_06_flight_1_1/layers/player_reward.png",
+			"role": "player_reward",
+			"sha256": "4d7c630b60035814e31029d0f6a4969cfb7ea96825ca170968b829a3745aac0f"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/player_primary_projectiles/opening_breach_06_flight_1_1/layers/structure_recess.png",
+			"role": "structure_recess",
+			"sha256": "bbea61dcc0f9d1ae76e8548c80fff5f2f735bfea97eb88615121637b51b949ea"
+		}
+	],
+	"sequence_index": 1,
+	"source_sha256": "770122944304e7d8d114d41c83601dd24bf90d15a9c2a43416e9f35f4f2b6732",
+	"state": "flight_1",
+	"variant": "opening_breach",
+	"visible_pixel_count": 760
+}

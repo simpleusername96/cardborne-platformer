@@ -1,0 +1,41 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 2,
+	"family": "secondary_escort_drone",
+	"frame_key": "secondary_escort_drone/drone/2/fire/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/secondary_escort_drone/drone_02_fire_0/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/secondary_escort_drone/drone_02_fire_0/layers/blocker_edge.png",
+			"role": "blocker_edge",
+			"sha256": "3fc34c61707306b9e346ad300b63c21562f55fe17df152c2a2dc2349be7ac7f5"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/secondary_escort_drone/drone_02_fire_0/layers/neutral_highlight.png",
+			"role": "neutral_highlight",
+			"sha256": "899b6eeb75019943ee801aecc99a32f840e2774a1141b599fa75c91ee6d026e8"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/secondary_escort_drone/drone_02_fire_0/layers/player_reward.png",
+			"role": "player_reward",
+			"sha256": "eeea90afd24c452fa10a04822aae71c0cd7db3768ff920b8138f7dd6b8aa5294"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/secondary_escort_drone/drone_02_fire_0/layers/support_recovery.png",
+			"role": "support_recovery",
+			"sha256": "0e5d22bfc3142698f904b521ffdf4f4a702ea21153b29664320ed2f27e1c755f"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "ed57c3eaebb7b43fa8960ba482727bcacc0b5901beb518e26064302a8cc121b8",
+	"state": "fire",
+	"variant": "drone",
+	"visible_pixel_count": 812
+}

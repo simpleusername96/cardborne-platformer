@@ -1,0 +1,36 @@
+{
+	"anchors": {
+		"mount": [
+			44.0,
+			18.0
+		]
+	},
+	"approval_status": "approved",
+	"direction_index": 10,
+	"family": "player_engine_flame",
+	"frame_key": "player_engine_flame/idle/10/idle/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/player_engine_flame/idle_10_idle_0/master.png",
+	"pivot": [
+		32.0,
+		32.0
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/player_engine_flame/idle_10_idle_0/layers/neutral_highlight.png",
+			"role": "neutral_highlight",
+			"sha256": "50f6ab1435d2907f62b34ceb34efeed3ae1827ac9f277ce410707f457c4022b9"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/player_engine_flame/idle_10_idle_0/layers/player_energy.png",
+			"role": "player_energy",
+			"sha256": "4d4d7da5d0d235398cd05c2585a93e5e63c19829ef0e1b253cf3da0e89c98464"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "24d6e1a51a2a2fafb10b9a75c6c4f1170a26dc25548e01c4486324d897cf384f",
+	"state": "idle",
+	"variant": "idle",
+	"visible_pixel_count": 82
+}

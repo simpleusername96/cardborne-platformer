@@ -1,0 +1,36 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 0,
+	"family": "upgrade_card_icons",
+	"frame_key": "upgrade_card_icons/phase_seeker/0/normal/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/upgrade_card_icons/phase_seeker_00_normal_0/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/upgrade_card_icons/phase_seeker_00_normal_0/layers/arc.png",
+			"role": "arc",
+			"sha256": "8acfcbf0d71f776407e3de41051a3de9eb8dc002862dc464fa748e5eb214911d"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/upgrade_card_icons/phase_seeker_00_normal_0/layers/blocker_edge.png",
+			"role": "blocker_edge",
+			"sha256": "9eec64a9b1d9097b25cf617a5eac8f2807be9b7ef5787674b7bdac318a87b652"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/upgrade_card_icons/phase_seeker_00_normal_0/layers/deck_shadow.png",
+			"role": "deck_shadow",
+			"sha256": "b669ae85ae0446b5349f46d280d87df68bb2497f4cb9b2f24f79fc5957bb2dcc"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "2fb6746becce4ad51a7420312e1a4a0a905c8e7475970a1e1a082d2e2517e54f",
+	"state": "normal",
+	"variant": "phase_seeker",
+	"visible_pixel_count": 1936
+}

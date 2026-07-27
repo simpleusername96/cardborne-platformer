@@ -1,0 +1,36 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 0,
+	"family": "mobile_enemy_set",
+	"frame_key": "mobile_enemy_set/splitter_barge/0/attack_startup/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/mobile_enemy_set/splitter_barge_00_attack_startup_0/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/mobile_enemy_set/splitter_barge_00_attack_startup_0/layers/blocker_edge.png",
+			"role": "blocker_edge",
+			"sha256": "3338b29dd5e806be198e7244fff37bd5d9b3dc3051e1916b8d75c6cf96b3c5b2"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/mobile_enemy_set/splitter_barge_00_attack_startup_0/layers/ordinary_threat.png",
+			"role": "ordinary_threat",
+			"sha256": "eb8fbf38498d6a04d83ff6dcaa30a8e5f083696f315b3e81edc25f7587f60785"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/mobile_enemy_set/splitter_barge_00_attack_startup_0/layers/player_reward.png",
+			"role": "player_reward",
+			"sha256": "002cdca47f2f496ba1c33ab87c39d2e09249f7622bbe5de6f0a0be21bb8845df"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "f0b76059f6a0228016b3ead32484541a92a62d9dbc9daf7ac31af180bae58f34",
+	"state": "attack_startup",
+	"variant": "splitter_barge",
+	"visible_pixel_count": 1342
+}

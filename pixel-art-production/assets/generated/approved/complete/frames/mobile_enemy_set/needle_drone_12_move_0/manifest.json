@@ -1,0 +1,36 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 12,
+	"family": "mobile_enemy_set",
+	"frame_key": "mobile_enemy_set/needle_drone/12/move/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/mobile_enemy_set/needle_drone_12_move_0/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/mobile_enemy_set/needle_drone_12_move_0/layers/blocker_edge.png",
+			"role": "blocker_edge",
+			"sha256": "e06ad9a244ef77dd1a7bc46b94854227441c4a09763282ceba631e7d3dbe48df"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/mobile_enemy_set/needle_drone_12_move_0/layers/neutral_highlight.png",
+			"role": "neutral_highlight",
+			"sha256": "942f9915a706fbc459ab99eb8d1571e944bf93e788c28c6c0c796795ccb51d2f"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/mobile_enemy_set/needle_drone_12_move_0/layers/ordinary_threat.png",
+			"role": "ordinary_threat",
+			"sha256": "245b0301bd5ddc923b927a19b4f32fdb41519b577d68f0a7932dd711fa7439f8"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "b6cf3e8881715bdd7fa17b71122923615058f5c15c30d28110a4f2573d2bc28a",
+	"state": "move",
+	"variant": "needle_drone",
+	"visible_pixel_count": 721
+}

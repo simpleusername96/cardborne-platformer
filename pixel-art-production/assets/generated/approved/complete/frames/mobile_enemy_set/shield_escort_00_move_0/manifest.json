@@ -1,0 +1,36 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 0,
+	"family": "mobile_enemy_set",
+	"frame_key": "mobile_enemy_set/shield_escort/0/move/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/mobile_enemy_set/shield_escort_00_move_0/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/mobile_enemy_set/shield_escort_00_move_0/layers/blocker_edge.png",
+			"role": "blocker_edge",
+			"sha256": "d87a66a2ef906de03d61e94b80a3672412d0a164deee804ec2f59220a5b90090"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/mobile_enemy_set/shield_escort_00_move_0/layers/neutral_highlight.png",
+			"role": "neutral_highlight",
+			"sha256": "ae8ac4177adbe1aa7e3d40424b48462f457b9473068710c63754bb67775e42e5"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/mobile_enemy_set/shield_escort_00_move_0/layers/ordinary_threat.png",
+			"role": "ordinary_threat",
+			"sha256": "c56d78c9926c7ac6f195ddc783ac096b01f6b7cfd89af2b4387a3097b973c684"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "4576112d5e12fde1f4779c0371395b135a30583c772dafa490292e522b72dbab",
+	"state": "move",
+	"variant": "shield_escort",
+	"visible_pixel_count": 1108
+}

@@ -1,0 +1,26 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 0,
+	"family": "hud_action_icons",
+	"frame_key": "hud_action_icons/seeker/0/ready/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/hud_action_icons/seeker_00_ready_0/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/hud_action_icons/seeker_00_ready_0/layers/player_reward.png",
+			"role": "player_reward",
+			"sha256": "24c5a89c22a679d7f84beeb90f0e1d0136ea0aac55f1a7b7156d9eba874231e8"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "24c5a89c22a679d7f84beeb90f0e1d0136ea0aac55f1a7b7156d9eba874231e8",
+	"state": "ready",
+	"variant": "seeker",
+	"visible_pixel_count": 250
+}

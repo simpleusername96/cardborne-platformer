@@ -1,0 +1,36 @@
+{
+	"anchors": {
+		"mount": [
+			24.0,
+			15.0
+		]
+	},
+	"approval_status": "approved",
+	"direction_index": 7,
+	"family": "player_engine_flame",
+	"frame_key": "player_engine_flame/thrust/7/thrust/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/player_engine_flame/thrust_07_thrust_0/master.png",
+	"pivot": [
+		32.0,
+		32.0
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/player_engine_flame/thrust_07_thrust_0/layers/neutral_highlight.png",
+			"role": "neutral_highlight",
+			"sha256": "ed409ebb82f559f6cb4165f5493e247ce7f502442f24f7eecbc543384121724c"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/player_engine_flame/thrust_07_thrust_0/layers/player_energy.png",
+			"role": "player_energy",
+			"sha256": "2f2c8f9e87dfd8cd88e69fc60fb4f2ecb1c7285c9665491dc02489bbb114a9f6"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "c0bdcf12dd35c251cd76003e927726b8df06c99221a2f090843c3114059a5338",
+	"state": "thrust",
+	"variant": "thrust",
+	"visible_pixel_count": 50
+}

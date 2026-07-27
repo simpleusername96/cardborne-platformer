@@ -1,0 +1,36 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 0,
+	"family": "mobile_enemy_set",
+	"frame_key": "mobile_enemy_set/artillery_spotter/0/move/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/mobile_enemy_set/artillery_spotter_00_move_0/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/mobile_enemy_set/artillery_spotter_00_move_0/layers/blocker_edge.png",
+			"role": "blocker_edge",
+			"sha256": "0af46151beee79b4de0c926ed8a2df067b319b6e4aba1c89c7fa30e0e21b0313"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/mobile_enemy_set/artillery_spotter_00_move_0/layers/neutral_highlight.png",
+			"role": "neutral_highlight",
+			"sha256": "ae8ac4177adbe1aa7e3d40424b48462f457b9473068710c63754bb67775e42e5"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/mobile_enemy_set/artillery_spotter_00_move_0/layers/ordinary_threat.png",
+			"role": "ordinary_threat",
+			"sha256": "ea0e8eadcea1c0d1c1f59c46ff249a306d0dfececfb38c3317b8a29bbcee532b"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "333e333844ccc4dfdc450ef7fdd663016e9ac4897af39a88871402839121a547",
+	"state": "move",
+	"variant": "artillery_spotter",
+	"visible_pixel_count": 700
+}

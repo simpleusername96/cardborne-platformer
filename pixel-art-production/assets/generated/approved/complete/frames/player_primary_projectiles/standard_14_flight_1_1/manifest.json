@@ -1,0 +1,45 @@
+{
+	"anchors": {
+		"head": [
+			9.0,
+			8.0
+		],
+		"rear": [
+			22.0,
+			21.0
+		]
+	},
+	"approval_status": "approved",
+	"direction_index": 14,
+	"family": "player_primary_projectiles",
+	"frame_key": "player_primary_projectiles/standard/14/flight_1/1",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/player_primary_projectiles/standard_14_flight_1_1/master.png",
+	"pivot": [
+		16.0,
+		15.0
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/player_primary_projectiles/standard_14_flight_1_1/layers/neutral_highlight.png",
+			"role": "neutral_highlight",
+			"sha256": "6be715847681a9c239cf739a307985ae962cfc6fb12af56590a9e4a3096719b8"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/player_primary_projectiles/standard_14_flight_1_1/layers/player_reward.png",
+			"role": "player_reward",
+			"sha256": "5a1f7c1c44d085836873aafe2b7546725d4ff813911f5239368c3c05d8200349"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/player_primary_projectiles/standard_14_flight_1_1/layers/structure_recess.png",
+			"role": "structure_recess",
+			"sha256": "112a6b20a68d13a17fbc746482f21a2f7d07460b5605e68e7c3823d6a5998110"
+		}
+	],
+	"sequence_index": 1,
+	"source_sha256": "50cc6f0d78e09dc99fa5456da6c85062a9de3ae30c7384ea353b764a00108923",
+	"state": "flight_1",
+	"variant": "standard",
+	"visible_pixel_count": 324
+}

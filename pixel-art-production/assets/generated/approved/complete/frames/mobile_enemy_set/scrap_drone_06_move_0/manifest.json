@@ -1,0 +1,36 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 6,
+	"family": "mobile_enemy_set",
+	"frame_key": "mobile_enemy_set/scrap_drone/6/move/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/mobile_enemy_set/scrap_drone_06_move_0/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/mobile_enemy_set/scrap_drone_06_move_0/layers/blocker_edge.png",
+			"role": "blocker_edge",
+			"sha256": "be65a53d295e2709829bf0f1ce98deba4b1954ac85969033b3b977fa1acd0065"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/mobile_enemy_set/scrap_drone_06_move_0/layers/neutral_highlight.png",
+			"role": "neutral_highlight",
+			"sha256": "aaaf63d94e6b8305b48eca4363a1710c2c9f74397edaab34772f053fe0103b2f"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/mobile_enemy_set/scrap_drone_06_move_0/layers/ordinary_threat.png",
+			"role": "ordinary_threat",
+			"sha256": "1221f6534e365b5f0d1cce0b5701f1b59163585e6ea8aad0ee391a6eedeea33e"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "72b2c68ef366d191f9f74f284219dbd0434211a563dde223b141bf4acd5e35b0",
+	"state": "move",
+	"variant": "scrap_drone",
+	"visible_pixel_count": 703
+}

@@ -1,0 +1,64 @@
+{
+	"anchors": {
+		"left_engine": [
+			16.0,
+			52.0
+		],
+		"muzzle": [
+			41.0,
+			10.0
+		],
+		"right_engine": [
+			29.0,
+			57.0
+		]
+	},
+	"approval_status": "approved",
+	"direction_index": 1,
+	"family": "player_chassis",
+	"frame_key": "player_chassis/base/1/normal/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/player_chassis/base_01_normal_0/master.png",
+	"pivot": [
+		32.0,
+		32.0
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/player_chassis/base_01_normal_0/layers/blocker_edge.png",
+			"role": "blocker_edge",
+			"sha256": "508b12368e6796b6637d84c0b5925938e17311701663023f6bb1c11af81252b8"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/player_chassis/base_01_normal_0/layers/deck_base.png",
+			"role": "deck_base",
+			"sha256": "47121a8dd5a60d6d1877177e15dcc6517af9d8ce72e010c37b16775099a6abd1"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/player_chassis/base_01_normal_0/layers/deck_shadow.png",
+			"role": "deck_shadow",
+			"sha256": "0158b2b3cae4950427341dab24dc31b1a2962ee42a2ada94ec13fcc87c9b9a06"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/player_chassis/base_01_normal_0/layers/neutral_highlight.png",
+			"role": "neutral_highlight",
+			"sha256": "d2332b2fef39769bf6183477f96a1be8339328f3476527969e8d5c2607c4afb6"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/player_chassis/base_01_normal_0/layers/player_energy.png",
+			"role": "player_energy",
+			"sha256": "69750e7d0af21aff15a8fbd898e43dd7d158a38791ebe276b9c1604e295d006e"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/player_chassis/base_01_normal_0/layers/player_reward.png",
+			"role": "player_reward",
+			"sha256": "344b7b049e847b1e55a27ba3bc200613afd4975662a4e842802a21044b9f48a1"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "81aafedabd8a8c101f576a519c2d1c79226e923e2f9de157d6f63eb49ccd31cb",
+	"state": "normal",
+	"variant": "base",
+	"visible_pixel_count": 710
+}

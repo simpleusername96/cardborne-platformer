@@ -1,0 +1,36 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 0,
+	"family": "hostile_projectile_affinities",
+	"frame_key": "hostile_projectile_affinities/hybrid/0/affinity_motion_0/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/hostile_projectile_affinities/hybrid_00_affinity_motion_0_0/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/hostile_projectile_affinities/hybrid_00_affinity_motion_0_0/layers/blocker_edge.png",
+			"role": "blocker_edge",
+			"sha256": "8ba895bae625c8d2f5fecfd370d80aead2043066479bfe175ef8122430660124"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/hostile_projectile_affinities/hybrid_00_affinity_motion_0_0/layers/boss_threat.png",
+			"role": "boss_threat",
+			"sha256": "ee0300be09eb9e879bc9ff1809eeeab43ee9b085ab5c029d263b8e44e5dada5b"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/hostile_projectile_affinities/hybrid_00_affinity_motion_0_0/layers/neutral_highlight.png",
+			"role": "neutral_highlight",
+			"sha256": "6135f3bb3317d5483b6a4ecef03b36fd3bfb79ce4fe978550609d1e0e33d4376"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "41f0bb4ced4c4aa264b32134aac98e053fbdeb82b80bac272fbabc7d5aa93431",
+	"state": "affinity_motion_0",
+	"variant": "hybrid",
+	"visible_pixel_count": 458
+}

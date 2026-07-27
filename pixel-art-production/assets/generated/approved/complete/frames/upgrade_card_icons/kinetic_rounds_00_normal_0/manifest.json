@@ -1,0 +1,36 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 0,
+	"family": "upgrade_card_icons",
+	"frame_key": "upgrade_card_icons/kinetic_rounds/0/normal/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/upgrade_card_icons/kinetic_rounds_00_normal_0/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/upgrade_card_icons/kinetic_rounds_00_normal_0/layers/blocker_edge.png",
+			"role": "blocker_edge",
+			"sha256": "9eec64a9b1d9097b25cf617a5eac8f2807be9b7ef5787674b7bdac318a87b652"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/upgrade_card_icons/kinetic_rounds_00_normal_0/layers/deck_shadow.png",
+			"role": "deck_shadow",
+			"sha256": "31b1d027ba418051101779ecc8b97dd61a19e1dfb6a1247d45f918c3b411eb07"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/upgrade_card_icons/kinetic_rounds_00_normal_0/layers/player_reward.png",
+			"role": "player_reward",
+			"sha256": "24c5a89c22a679d7f84beeb90f0e1d0136ea0aac55f1a7b7156d9eba874231e8"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "dd2d570cb71f802e9500f69408f7aea70964627132ea8a9ef00519275a5f2edd",
+	"state": "normal",
+	"variant": "kinetic_rounds",
+	"visible_pixel_count": 1936
+}

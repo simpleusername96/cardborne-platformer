@@ -1,0 +1,31 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 0,
+	"family": "impact_effects",
+	"frame_key": "impact_effects/enemy/0/frame_0/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/impact_effects/enemy_00_frame_0_0/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/impact_effects/enemy_00_frame_0_0/layers/neutral_highlight.png",
+			"role": "neutral_highlight",
+			"sha256": "b6820c130dad869d3c6f1445a51f96dfefac4beed2722d3c77f0a8eb13826534"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/impact_effects/enemy_00_frame_0_0/layers/ordinary_threat.png",
+			"role": "ordinary_threat",
+			"sha256": "4699fd954306b3bd3d456b378024b5e293b65aea8b189cb2e9c0c8c91af141f1"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "b671e81832f993a7893c7063a941b145c4b1bdd1726856f09a171d4a7a9dc112",
+	"state": "frame_0",
+	"variant": "enemy",
+	"visible_pixel_count": 100
+}

@@ -172,8 +172,11 @@ func _run() -> void:
 		"batched buffer preserves enemy position"
 	)
 	_expect(
-		is_equal_approx(Vector2(enemy_buffer[0], enemy_buffer[4]).length(), 26.0),
-		"batched buffer preserves enemy visual scale"
+		is_equal_approx(
+			Vector2(enemy_buffer[0], enemy_buffer[4]).length(),
+			26.0 * (1.24 if pixel_enabled else 1.0)
+		),
+		"batched buffer preserves the selected enemy presentation scale"
 	)
 	if pixel_enabled:
 		var projectile_pixel := renderer.get_node("Pixel_player_projectiles") as MultiMeshInstance2D
@@ -244,8 +247,10 @@ func _run() -> void:
 	var hostile_trail := renderer.get_node("Projectile_trail_enemy_arc") as MultiMeshInstance2D
 	var hostile_trail_buffer := hostile_trail.multimesh.buffer
 	_expect(
-		Vector2(hostile_trail_buffer[0], hostile_trail_buffer[4]).is_equal_approx(Vector2.LEFT * 5.0),
-		"hostile combined mesh uses the exact collision radius"
+		Vector2(hostile_trail_buffer[0], hostile_trail_buffer[4]).is_equal_approx(
+			Vector2.LEFT * 5.0 * (3.0 if pixel_enabled else 1.0)
+		),
+		"hostile presentation derives its scale from the exact collision radius"
 	)
 	_expect(
 		Vector2(hostile_trail_buffer[3], hostile_trail_buffer[7]).is_equal_approx(
@@ -255,9 +260,9 @@ func _run() -> void:
 	)
 	_expect(
 		Vector2(hostile_trail_buffer[1], hostile_trail_buffer[5]).is_equal_approx(
-			Vector2.LEFT.rotated(PI * 0.5) * 5.0
+			Vector2.LEFT.rotated(PI * 0.5) * 5.0 * (3.0 if pixel_enabled else 1.0)
 		),
-		"hostile combined mesh preserves uniform collision-radius scaling"
+		"hostile presentation preserves uniform collision-derived scaling"
 	)
 	_expect(
 		hostile_trail.multimesh.mesh.get_surface_count() == 1,

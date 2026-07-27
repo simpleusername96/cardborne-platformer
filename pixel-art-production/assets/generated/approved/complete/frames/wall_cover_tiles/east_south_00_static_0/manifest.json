@@ -1,0 +1,36 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 0,
+	"family": "wall_cover_tiles",
+	"frame_key": "wall_cover_tiles/east_south/0/static/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/wall_cover_tiles/east_south_00_static_0/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/wall_cover_tiles/east_south_00_static_0/layers/blocker_top.png",
+			"role": "blocker_top",
+			"sha256": "1b7c0c62620e81fb8173d189fd23ea9c35ac27fab32f13a809b684c935041cf7"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/wall_cover_tiles/east_south_00_static_0/layers/deck_shadow.png",
+			"role": "deck_shadow",
+			"sha256": "dc41312942aa5e829fd4d9ba23e1abc150d6e68919acc51eabe4db3f226bf5ac"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/wall_cover_tiles/east_south_00_static_0/layers/neutral_highlight.png",
+			"role": "neutral_highlight",
+			"sha256": "143763d345f79c13ac301c7c553d767492a89221db2c0b0ce7a627bd457f1814"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "c30aeea3c2400967988db001e9efea72e01ea5a52407713cd9105467741473a9",
+	"state": "static",
+	"variant": "east_south",
+	"visible_pixel_count": 1016
+}

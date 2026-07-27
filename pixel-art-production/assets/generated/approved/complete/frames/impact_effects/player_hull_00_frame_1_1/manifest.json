@@ -1,0 +1,31 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 0,
+	"family": "impact_effects",
+	"frame_key": "impact_effects/player_hull/0/frame_1/1",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/impact_effects/player_hull_00_frame_1_1/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/impact_effects/player_hull_00_frame_1_1/layers/neutral_highlight.png",
+			"role": "neutral_highlight",
+			"sha256": "06bf76e48f3fc6816daafd2df3a11e842c92cc9f868f716473663e94a46ce912"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/impact_effects/player_hull_00_frame_1_1/layers/thermal.png",
+			"role": "thermal",
+			"sha256": "739b43a6090ec0b06ce16878c5a7a60e9828357f3703e52ee169779f63dbfa9c"
+		}
+	],
+	"sequence_index": 1,
+	"source_sha256": "3288dc595c22f740bcb5448963e9b9edef139b4b592e3ac1ea950486ea7b122b",
+	"state": "frame_1",
+	"variant": "player_hull",
+	"visible_pixel_count": 173
+}

@@ -1,0 +1,41 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 0,
+	"family": "upgrade_card_icons",
+	"frame_key": "upgrade_card_icons/ion_wake/0/normal/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/upgrade_card_icons/ion_wake_00_normal_0/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/upgrade_card_icons/ion_wake_00_normal_0/layers/arc.png",
+			"role": "arc",
+			"sha256": "d8b358dfbb61010001b855da7e0207c4b5ea8a4cdd02fc70aaaf00cd2e68e0dd"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/upgrade_card_icons/ion_wake_00_normal_0/layers/blocker_edge.png",
+			"role": "blocker_edge",
+			"sha256": "7b6f532cc71c1605465c7629e549dfddd3020415b9568b066fea42f7153cb305"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/upgrade_card_icons/ion_wake_00_normal_0/layers/deck_shadow.png",
+			"role": "deck_shadow",
+			"sha256": "8aa443c472bdfae1ffcffc27568d922c8a5ba99a14731d16f41897b91ef2cd63"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/upgrade_card_icons/ion_wake_00_normal_0/layers/neutral_highlight.png",
+			"role": "neutral_highlight",
+			"sha256": "369c89d45371d9c7d526617d8bb06bfc83329b9f247ec7846de59b64a274ab02"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "9649bc02bc4cafcfe40889104e16aeefe313c92f85dfe13772220b143370bfdf",
+	"state": "normal",
+	"variant": "ion_wake",
+	"visible_pixel_count": 1936
+}

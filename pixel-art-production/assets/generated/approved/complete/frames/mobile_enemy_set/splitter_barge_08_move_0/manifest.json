@@ -1,0 +1,36 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 8,
+	"family": "mobile_enemy_set",
+	"frame_key": "mobile_enemy_set/splitter_barge/8/move/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/mobile_enemy_set/splitter_barge_08_move_0/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/mobile_enemy_set/splitter_barge_08_move_0/layers/blocker_edge.png",
+			"role": "blocker_edge",
+			"sha256": "515ddf09bc98aab162c7bff7babf2ecfe67c5063b267310e45675db6edc7ba3b"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/mobile_enemy_set/splitter_barge_08_move_0/layers/neutral_highlight.png",
+			"role": "neutral_highlight",
+			"sha256": "ecb0729dfdb3ec82b509284c22c112d33c69690892e42b262e055255aeaf913c"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/mobile_enemy_set/splitter_barge_08_move_0/layers/ordinary_threat.png",
+			"role": "ordinary_threat",
+			"sha256": "63b9a866b2c2f8e8a3f8d32fc1dac1d20cd2db769123e9508dc5fdfe92988cb8"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "d04cabb2bce32c3516f8d9b062c27d5ec331907605785965224e51a322197d92",
+	"state": "move",
+	"variant": "splitter_barge",
+	"visible_pixel_count": 1342
+}

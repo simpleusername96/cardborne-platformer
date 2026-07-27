@@ -1,0 +1,41 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 0,
+	"family": "stationary_enemy_set",
+	"frame_key": "stationary_enemy_set/turret/0/idle/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/stationary_enemy_set/turret_00_idle_0/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/stationary_enemy_set/turret_00_idle_0/layers/blocker_edge.png",
+			"role": "blocker_edge",
+			"sha256": "a869d7d36e726cec9f8fc02e35f6eac6a8cbaad503fcb346a1a7d3b6d8b38717"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/stationary_enemy_set/turret_00_idle_0/layers/deck_shadow.png",
+			"role": "deck_shadow",
+			"sha256": "cbf353500b9033d19d426cc8550e97fa2afd2544f38160201c4ac13425d23820"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/stationary_enemy_set/turret_00_idle_0/layers/neutral_highlight.png",
+			"role": "neutral_highlight",
+			"sha256": "ae8ac4177adbe1aa7e3d40424b48462f457b9473068710c63754bb67775e42e5"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/stationary_enemy_set/turret_00_idle_0/layers/ordinary_threat.png",
+			"role": "ordinary_threat",
+			"sha256": "e3b75865a8b6e1427be199615dca793b03b5406b15d0f054d80714500b467cee"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "6c1e49cbb99d73e48d8b79969cdceae7ac50c0817ae48e17383502163dc956ac",
+	"state": "idle",
+	"variant": "turret",
+	"visible_pixel_count": 1340
+}

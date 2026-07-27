@@ -1,0 +1,41 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 0,
+	"family": "secondary_seeker",
+	"frame_key": "secondary_seeker/seeker_missile/0/flight_1/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/secondary_seeker/seeker_missile_00_flight_1_0/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/secondary_seeker/seeker_missile_00_flight_1_0/layers/blocker_edge.png",
+			"role": "blocker_edge",
+			"sha256": "bedb7cbe87d5a349e06e050bd02fdc72eaff7d73dbb1150d7325ea38585f4219"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/secondary_seeker/seeker_missile_00_flight_1_0/layers/neutral_highlight.png",
+			"role": "neutral_highlight",
+			"sha256": "1e6b6e6c5170df45307cd1bc02de13a65134f12a0f31155262937a877206757b"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/secondary_seeker/seeker_missile_00_flight_1_0/layers/player_energy.png",
+			"role": "player_energy",
+			"sha256": "eeb595b6b2fd5f4fb4d52c74deeaa3b93e9f893992251d9e07298632f4579b4b"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/secondary_seeker/seeker_missile_00_flight_1_0/layers/player_reward.png",
+			"role": "player_reward",
+			"sha256": "3437209e4dccab31eecf43860fca0dab94c3a3674af7cbc0fdc97dcd82c90582"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "3aa4ad5d3bb5e4f8db5320d99a31009c0a9ec8911ab461341b44b631160f9550",
+	"state": "flight_1",
+	"variant": "seeker_missile",
+	"visible_pixel_count": 502
+}

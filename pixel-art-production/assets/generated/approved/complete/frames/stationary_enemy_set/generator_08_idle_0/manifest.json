@@ -1,0 +1,41 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 8,
+	"family": "stationary_enemy_set",
+	"frame_key": "stationary_enemy_set/generator/8/idle/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/stationary_enemy_set/generator_08_idle_0/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/stationary_enemy_set/generator_08_idle_0/layers/blocker_edge.png",
+			"role": "blocker_edge",
+			"sha256": "64d456ff22075f05ef3375dc5bdb88625e5589cc31b6a5630a4b7fd93de8c267"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/stationary_enemy_set/generator_08_idle_0/layers/deck_shadow.png",
+			"role": "deck_shadow",
+			"sha256": "43a9c489ebf4a90ab394943485dd6f0d8b9aa3afea77c789010a4fd91ea48401"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/stationary_enemy_set/generator_08_idle_0/layers/neutral_highlight.png",
+			"role": "neutral_highlight",
+			"sha256": "ecb0729dfdb3ec82b509284c22c112d33c69690892e42b262e055255aeaf913c"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/stationary_enemy_set/generator_08_idle_0/layers/ordinary_threat.png",
+			"role": "ordinary_threat",
+			"sha256": "63b9a866b2c2f8e8a3f8d32fc1dac1d20cd2db769123e9508dc5fdfe92988cb8"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "313b2f80347ff63739fadc617a6428c494eec5a4b52e6aa531a358ae49871d04",
+	"state": "idle",
+	"variant": "generator",
+	"visible_pixel_count": 1634
+}

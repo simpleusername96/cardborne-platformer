@@ -1,0 +1,41 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 0,
+	"family": "stationary_enemy_set",
+	"frame_key": "stationary_enemy_set/generator/0/attack_startup/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/stationary_enemy_set/generator_00_attack_startup_0/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/stationary_enemy_set/generator_00_attack_startup_0/layers/blocker_edge.png",
+			"role": "blocker_edge",
+			"sha256": "ba0c98ee1a320a05f7e01dd30c90f1bc51766f43f6c4b671bab5b0e7a92dd088"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/stationary_enemy_set/generator_00_attack_startup_0/layers/deck_shadow.png",
+			"role": "deck_shadow",
+			"sha256": "cbf353500b9033d19d426cc8550e97fa2afd2544f38160201c4ac13425d23820"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/stationary_enemy_set/generator_00_attack_startup_0/layers/ordinary_threat.png",
+			"role": "ordinary_threat",
+			"sha256": "eb8fbf38498d6a04d83ff6dcaa30a8e5f083696f315b3e81edc25f7587f60785"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/stationary_enemy_set/generator_00_attack_startup_0/layers/player_reward.png",
+			"role": "player_reward",
+			"sha256": "002cdca47f2f496ba1c33ab87c39d2e09249f7622bbe5de6f0a0be21bb8845df"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "9147ed523db321b19ac4cd3540f57be18fdaba8f0cc50bae8cb2881c495c0f27",
+	"state": "attack_startup",
+	"variant": "generator",
+	"visible_pixel_count": 1634
+}

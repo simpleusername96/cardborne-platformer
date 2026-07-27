@@ -1,0 +1,60 @@
+{
+	"anchors": {
+		"mount": [
+			27.0,
+			43.0
+		],
+		"muzzle": [
+			41.0,
+			11.0
+		]
+	},
+	"approval_status": "approved",
+	"direction_index": 1,
+	"family": "player_primary_weapon",
+	"frame_key": "player_primary_weapon/pulse_cannon/1/idle/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/player_primary_weapon/pulse_cannon_01_idle_0/master.png",
+	"pivot": [
+		32.0,
+		32.0
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/player_primary_weapon/pulse_cannon_01_idle_0/layers/deck_base.png",
+			"role": "deck_base",
+			"sha256": "a8cf0d25903e95f5afbf5150fa32593b72e52e033966264807f007c9e61d27ac"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/player_primary_weapon/pulse_cannon_01_idle_0/layers/deck_shadow.png",
+			"role": "deck_shadow",
+			"sha256": "bdf9d340c3ae5368a011399fc8c6ca43f7b4df28411a547cdd5cd3b0364e0cee"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/player_primary_weapon/pulse_cannon_01_idle_0/layers/neutral_highlight.png",
+			"role": "neutral_highlight",
+			"sha256": "aeef3544fa49cd0883fc0636fda50a2ca4f310ed5eba97542c6d65aa859828c1"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/player_primary_weapon/pulse_cannon_01_idle_0/layers/player_energy.png",
+			"role": "player_energy",
+			"sha256": "3e5104e06f65b3a7a7731a6588d20f70e22cd4b90b45ecc287625c0e57e4c80b"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/player_primary_weapon/pulse_cannon_01_idle_0/layers/player_reward.png",
+			"role": "player_reward",
+			"sha256": "7d14de1af029c9c864325b5262f7af06842f15ba96d98373e52c5985170cf6f0"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/player_primary_weapon/pulse_cannon_01_idle_0/layers/structure_recess.png",
+			"role": "structure_recess",
+			"sha256": "3808b0a05dbcf22c8a487f73c31441f65a3334e71e46432adc7b9282d4c8a3da"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "627bef0a2a64a32a7d951994e96eea547700f7c5867e9e5ad1d81c9b025eefd0",
+	"state": "idle",
+	"variant": "pulse_cannon",
+	"visible_pixel_count": 503
+}

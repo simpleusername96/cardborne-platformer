@@ -1,0 +1,41 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 8,
+	"family": "stationary_enemy_set",
+	"frame_key": "stationary_enemy_set/interceptor_tower/8/idle/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/stationary_enemy_set/interceptor_tower_08_idle_0/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/stationary_enemy_set/interceptor_tower_08_idle_0/layers/blocker_edge.png",
+			"role": "blocker_edge",
+			"sha256": "214db4ed36f36e906595892b48b043dc70ab785c86eb5cabfb20b55e71858a1a"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/stationary_enemy_set/interceptor_tower_08_idle_0/layers/deck_shadow.png",
+			"role": "deck_shadow",
+			"sha256": "43a9c489ebf4a90ab394943485dd6f0d8b9aa3afea77c789010a4fd91ea48401"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/stationary_enemy_set/interceptor_tower_08_idle_0/layers/neutral_highlight.png",
+			"role": "neutral_highlight",
+			"sha256": "ecb0729dfdb3ec82b509284c22c112d33c69690892e42b262e055255aeaf913c"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/stationary_enemy_set/interceptor_tower_08_idle_0/layers/ordinary_threat.png",
+			"role": "ordinary_threat",
+			"sha256": "7a6da75fa96b951b7d5a8697153de0c7f5995c34afec89e8ef08069926fd1471"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "678374207c5e3a9ab555393c351df893a7ebb6f6eef2beb23ff9d17a1bacd0d1",
+	"state": "idle",
+	"variant": "interceptor_tower",
+	"visible_pixel_count": 1231
+}

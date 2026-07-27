@@ -1,0 +1,36 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 0,
+	"family": "hostile_projectile_affinities",
+	"frame_key": "hostile_projectile_affinities/toxin/0/affinity_motion_0/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/hostile_projectile_affinities/toxin_00_affinity_motion_0_0/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/hostile_projectile_affinities/toxin_00_affinity_motion_0_0/layers/blocker_edge.png",
+			"role": "blocker_edge",
+			"sha256": "8ba895bae625c8d2f5fecfd370d80aead2043066479bfe175ef8122430660124"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/hostile_projectile_affinities/toxin_00_affinity_motion_0_0/layers/neutral_highlight.png",
+			"role": "neutral_highlight",
+			"sha256": "6135f3bb3317d5483b6a4ecef03b36fd3bfb79ce4fe978550609d1e0e33d4376"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/hostile_projectile_affinities/toxin_00_affinity_motion_0_0/layers/toxin.png",
+			"role": "toxin",
+			"sha256": "2347dc148ec3fb31ba94cd724505cde18de8a3f0ad6d47f2e45db40ecd92f2a1"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "4351311b1f274c4286fe2d79a4320d939a3168ab40a4940fc009a210b50a8657",
+	"state": "affinity_motion_0",
+	"variant": "toxin",
+	"visible_pixel_count": 458
+}

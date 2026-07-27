@@ -1,0 +1,36 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 2,
+	"family": "mobile_enemy_set",
+	"frame_key": "mobile_enemy_set/bulkhead_guard/2/move/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/mobile_enemy_set/bulkhead_guard_02_move_0/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/mobile_enemy_set/bulkhead_guard_02_move_0/layers/blocker_edge.png",
+			"role": "blocker_edge",
+			"sha256": "dcb58a7e02b67fe1ad206d63022b82cf99cff8bc43bbb6428d2e90f27818350b"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/mobile_enemy_set/bulkhead_guard_02_move_0/layers/neutral_highlight.png",
+			"role": "neutral_highlight",
+			"sha256": "3a2ca1426c361dd2d742294259c85637f1b9871157195cfe999446d274508bbf"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/mobile_enemy_set/bulkhead_guard_02_move_0/layers/ordinary_threat.png",
+			"role": "ordinary_threat",
+			"sha256": "59931475d67735b59cbbe564297ad505175d04f786eb0619496b17d361703e55"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "74a7c3d65beaa1e19e70b9b0f23c775e8709c1612a5a19627fd0b6f3a332b456",
+	"state": "move",
+	"variant": "bulkhead_guard",
+	"visible_pixel_count": 1032
+}

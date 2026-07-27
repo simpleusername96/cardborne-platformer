@@ -1,0 +1,41 @@
+{
+	"anchors": {
+		"origin": [
+			32.0,
+			32.0
+		]
+	},
+	"approval_status": "approved",
+	"direction_index": 0,
+	"family": "player_dash_effect",
+	"frame_key": "player_dash_effect/travel/0/frame_0/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/player_dash_effect/travel_00_frame_0_0/master.png",
+	"pivot": [
+		32.0,
+		32.0
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/player_dash_effect/travel_00_frame_0_0/layers/neutral_highlight.png",
+			"role": "neutral_highlight",
+			"sha256": "5d998b7329c37282bcca1abf317412b26256809ca696f9100a527ef83e97e636"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/player_dash_effect/travel_00_frame_0_0/layers/player_energy.png",
+			"role": "player_energy",
+			"sha256": "918365c77ae5c7f5a4f7cdc00c07d7e6bd8bf2206fd3d992f4dd62a9134188e2"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/player_dash_effect/travel_00_frame_0_0/layers/player_reward.png",
+			"role": "player_reward",
+			"sha256": "dd9154922154e8748f14b8db20e85aac8d2ba10683c3e5e59a17efaf066a4cdb"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "c08ec845384dfb90ca020db01c2baa95d2ec038385718c84958f5055cfdc7b8c",
+	"state": "frame_0",
+	"variant": "travel",
+	"visible_pixel_count": 724
+}

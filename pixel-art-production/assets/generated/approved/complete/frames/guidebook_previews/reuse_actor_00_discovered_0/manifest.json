@@ -1,0 +1,31 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 0,
+	"family": "guidebook_previews",
+	"frame_key": "guidebook_previews/reuse_actor/0/discovered/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/guidebook_previews/reuse_actor_00_discovered_0/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/guidebook_previews/reuse_actor_00_discovered_0/layers/neutral_highlight.png",
+			"role": "neutral_highlight",
+			"sha256": "b6820c130dad869d3c6f1445a51f96dfefac4beed2722d3c77f0a8eb13826534"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/guidebook_previews/reuse_actor_00_discovered_0/layers/player_reward.png",
+			"role": "player_reward",
+			"sha256": "1b38533bf9e4f1cc7cda47571780c53bbf4a9e7d02ba895454bcfb0e04ba52ff"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "7b1088064381b4bb4a9fe38638e9d5804d6474c83df72c366505df7c3e3efeee",
+	"state": "discovered",
+	"variant": "reuse_actor",
+	"visible_pixel_count": 421
+}

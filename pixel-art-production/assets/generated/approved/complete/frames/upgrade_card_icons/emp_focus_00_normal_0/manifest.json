@@ -1,0 +1,41 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 0,
+	"family": "upgrade_card_icons",
+	"frame_key": "upgrade_card_icons/emp_focus/0/normal/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/upgrade_card_icons/emp_focus_00_normal_0/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/upgrade_card_icons/emp_focus_00_normal_0/layers/arc.png",
+			"role": "arc",
+			"sha256": "51f67d55b8fd64513807f774b93307522a2f84c2fc5631425d83ef816162d298"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/upgrade_card_icons/emp_focus_00_normal_0/layers/blocker_edge.png",
+			"role": "blocker_edge",
+			"sha256": "9eec64a9b1d9097b25cf617a5eac8f2807be9b7ef5787674b7bdac318a87b652"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/upgrade_card_icons/emp_focus_00_normal_0/layers/deck_shadow.png",
+			"role": "deck_shadow",
+			"sha256": "5a02bb9db9e207f03bdb561b7c9b28cf85b5b096fcf4712f3dad44beb7ef3a2c"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/upgrade_card_icons/emp_focus_00_normal_0/layers/neutral_highlight.png",
+			"role": "neutral_highlight",
+			"sha256": "e4904610b3d93d61c525f676728f5739477f57b5e77bc6f7f802334c0e8f6fce"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "7cd9e3b90b0e8d8e615f3bcea6821613f6afaa9ae81e8db1033e7d0d5b39c247",
+	"state": "normal",
+	"variant": "emp_focus",
+	"visible_pixel_count": 1936
+}

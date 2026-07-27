@@ -1,0 +1,36 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 2,
+	"family": "mobile_enemy_set",
+	"frame_key": "mobile_enemy_set/repair_tender/2/move/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/mobile_enemy_set/repair_tender_02_move_0/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/mobile_enemy_set/repair_tender_02_move_0/layers/blocker_edge.png",
+			"role": "blocker_edge",
+			"sha256": "4c8a17657ce60d4c4bc81b76e2ef7740c031e57f2384f14e01bd720d8d639400"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/mobile_enemy_set/repair_tender_02_move_0/layers/neutral_highlight.png",
+			"role": "neutral_highlight",
+			"sha256": "514f63796eae80d1f2e3bd70f4923677bae28c4d04d6b45bbe609f6c0c208fb8"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/mobile_enemy_set/repair_tender_02_move_0/layers/ordinary_threat.png",
+			"role": "ordinary_threat",
+			"sha256": "795416d40999048ef18b704f8c1c694096806ce53683cfe019326c3f30a11ecb"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "15c8545021578b4112005045e6e3550ad077a899e946d48b007b23ae46575557",
+	"state": "move",
+	"variant": "repair_tender",
+	"visible_pixel_count": 1317
+}

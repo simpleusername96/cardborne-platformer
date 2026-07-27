@@ -1,0 +1,41 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 0,
+	"family": "upgrade_card_icons",
+	"frame_key": "upgrade_card_icons/mass_driver/0/normal/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/upgrade_card_icons/mass_driver_00_normal_0/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/upgrade_card_icons/mass_driver_00_normal_0/layers/blocker_edge.png",
+			"role": "blocker_edge",
+			"sha256": "9eec64a9b1d9097b25cf617a5eac8f2807be9b7ef5787674b7bdac318a87b652"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/upgrade_card_icons/mass_driver_00_normal_0/layers/deck_shadow.png",
+			"role": "deck_shadow",
+			"sha256": "5a02bb9db9e207f03bdb561b7c9b28cf85b5b096fcf4712f3dad44beb7ef3a2c"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/upgrade_card_icons/mass_driver_00_normal_0/layers/neutral_highlight.png",
+			"role": "neutral_highlight",
+			"sha256": "e4904610b3d93d61c525f676728f5739477f57b5e77bc6f7f802334c0e8f6fce"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/upgrade_card_icons/mass_driver_00_normal_0/layers/player_reward.png",
+			"role": "player_reward",
+			"sha256": "29c99c34e148f5ae4842f311a4d6194c4ca9f6de91705e83fe81558318761345"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "af0d2cc6193f626e6d020c3a09cb9e4dfc107af77a4adb951305522f1e9d73c3",
+	"state": "normal",
+	"variant": "mass_driver",
+	"visible_pixel_count": 1936
+}

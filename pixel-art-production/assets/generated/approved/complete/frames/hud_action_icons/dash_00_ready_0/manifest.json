@@ -1,0 +1,31 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 0,
+	"family": "hud_action_icons",
+	"frame_key": "hud_action_icons/dash/0/ready/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/hud_action_icons/dash_00_ready_0/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/hud_action_icons/dash_00_ready_0/layers/neutral_highlight.png",
+			"role": "neutral_highlight",
+			"sha256": "b6820c130dad869d3c6f1445a51f96dfefac4beed2722d3c77f0a8eb13826534"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/hud_action_icons/dash_00_ready_0/layers/player_energy.png",
+			"role": "player_energy",
+			"sha256": "4e989271d52b5cf494a0143c6d72354d977c84f6bc5151ea45b85ea9f6023f6b"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "0bf95b9db20333944c0a4d16cc18cacda74116c6cbaa71d0c02e5726c2d4a75f",
+	"state": "ready",
+	"variant": "dash",
+	"visible_pixel_count": 421
+}

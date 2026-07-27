@@ -1,0 +1,36 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 0,
+	"family": "world_floor_void_tiles",
+	"frame_key": "world_floor_void_tiles/floor_light/0/static/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/world_floor_void_tiles/floor_light_00_static_0/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/world_floor_void_tiles/floor_light_00_static_0/layers/blocker_edge.png",
+			"role": "blocker_edge",
+			"sha256": "a25d2be4e8cb97b99f8a4318a6ec624f32e7599ba30c22707fa334f656484777"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/world_floor_void_tiles/floor_light_00_static_0/layers/blocker_top.png",
+			"role": "blocker_top",
+			"sha256": "3ed467c9bd2d53276b710adb00b60fe8b58a1bd53f4fd53f4798e1bde2c20f18"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/world_floor_void_tiles/floor_light_00_static_0/layers/deck_shadow.png",
+			"role": "deck_shadow",
+			"sha256": "8726a15d59d0e0eca4d7d13ee644dee4753e902bdc9ed7731302b2b86fbc83ed"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "22df295908a96883c51696bb386a369cf7289c709ea2858c2fa03294c600b948",
+	"state": "static",
+	"variant": "floor_light",
+	"visible_pixel_count": 4096
+}

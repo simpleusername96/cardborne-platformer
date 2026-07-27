@@ -1,0 +1,36 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 0,
+	"family": "mobile_enemy_set",
+	"frame_key": "mobile_enemy_set/scrap_drone/0/attack_active/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/mobile_enemy_set/scrap_drone_00_attack_active_0/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/mobile_enemy_set/scrap_drone_00_attack_active_0/layers/blocker_edge.png",
+			"role": "blocker_edge",
+			"sha256": "0af46151beee79b4de0c926ed8a2df067b319b6e4aba1c89c7fa30e0e21b0313"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/mobile_enemy_set/scrap_drone_00_attack_active_0/layers/ordinary_threat.png",
+			"role": "ordinary_threat",
+			"sha256": "ea0e8eadcea1c0d1c1f59c46ff249a306d0dfececfb38c3317b8a29bbcee532b"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/mobile_enemy_set/scrap_drone_00_attack_active_0/layers/thermal.png",
+			"role": "thermal",
+			"sha256": "096cdcee6ea4804c77dd81c7911f44db58f3637c90d759d0b7754ceb818abf18"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "e44300b231eb99b35ff87ff60a67d1c70db3a25f6d7a0bf1033a73de1fce92f5",
+	"state": "attack_active",
+	"variant": "scrap_drone",
+	"visible_pixel_count": 754
+}

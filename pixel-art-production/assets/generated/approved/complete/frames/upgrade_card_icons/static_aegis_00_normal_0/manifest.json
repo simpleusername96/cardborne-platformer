@@ -1,0 +1,41 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 0,
+	"family": "upgrade_card_icons",
+	"frame_key": "upgrade_card_icons/static_aegis/0/normal/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/upgrade_card_icons/static_aegis_00_normal_0/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/upgrade_card_icons/static_aegis_00_normal_0/layers/blocker_edge.png",
+			"role": "blocker_edge",
+			"sha256": "9eec64a9b1d9097b25cf617a5eac8f2807be9b7ef5787674b7bdac318a87b652"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/upgrade_card_icons/static_aegis_00_normal_0/layers/deck_shadow.png",
+			"role": "deck_shadow",
+			"sha256": "0d1b51c2daa5a3cfbdd5cd9ef9a44cfd3805510dafb28eb8b3bd265dc08533b4"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/upgrade_card_icons/static_aegis_00_normal_0/layers/neutral_highlight.png",
+			"role": "neutral_highlight",
+			"sha256": "b6820c130dad869d3c6f1445a51f96dfefac4beed2722d3c77f0a8eb13826534"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/upgrade_card_icons/static_aegis_00_normal_0/layers/support_recovery.png",
+			"role": "support_recovery",
+			"sha256": "609b4798f9151ff6d5834c73ed38b8b5edc93b5ef2d0cc163cc77d39baa94490"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "143e1e4c106ae531c5119f06740ebbde4d4574525145bf5b2243ffe2b3e2f5a6",
+	"state": "normal",
+	"variant": "static_aegis",
+	"visible_pixel_count": 1936
+}

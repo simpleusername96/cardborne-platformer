@@ -1,0 +1,41 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 6,
+	"family": "stationary_enemy_set",
+	"frame_key": "stationary_enemy_set/mine/6/idle/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/stationary_enemy_set/mine_06_idle_0/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/stationary_enemy_set/mine_06_idle_0/layers/blocker_edge.png",
+			"role": "blocker_edge",
+			"sha256": "285340ef94ebc87ea194bb57a700c49b6e0958e7d5e934064f57202e6bef7591"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/stationary_enemy_set/mine_06_idle_0/layers/deck_shadow.png",
+			"role": "deck_shadow",
+			"sha256": "2520e7808892c087b296d0ff86338acd42e159c317130aefde5dca73dc591598"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/stationary_enemy_set/mine_06_idle_0/layers/neutral_highlight.png",
+			"role": "neutral_highlight",
+			"sha256": "aaaf63d94e6b8305b48eca4363a1710c2c9f74397edaab34772f053fe0103b2f"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/stationary_enemy_set/mine_06_idle_0/layers/ordinary_threat.png",
+			"role": "ordinary_threat",
+			"sha256": "62f0075e7b835d34f2cbbe682af02a18f4601baadb498869a28aa16c1ccf28dc"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "e1388939a8704d1a4bbad3294b131c577a3fb160b32188d4fb0d5d22b088501e",
+	"state": "idle",
+	"variant": "mine",
+	"visible_pixel_count": 1084
+}

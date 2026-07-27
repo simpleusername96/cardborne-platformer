@@ -1,0 +1,55 @@
+{
+	"anchors": {
+		"head": [
+			23.0,
+			23.0
+		],
+		"rear": [
+			8.0,
+			8.0
+		]
+	},
+	"approval_status": "approved",
+	"direction_index": 6,
+	"family": "player_primary_projectiles",
+	"frame_key": "player_primary_projectiles/opening_breach/6/flight_0/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/player_primary_projectiles/opening_breach_06_flight_0_0/master.png",
+	"pivot": [
+		16.0,
+		16.0
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/player_primary_projectiles/opening_breach_06_flight_0_0/layers/deck_base.png",
+			"role": "deck_base",
+			"sha256": "c98f83242767b5d620110e84dc6bb94b3d16f28856ca3bc83d94701b97904e7c"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/player_primary_projectiles/opening_breach_06_flight_0_0/layers/neutral_highlight.png",
+			"role": "neutral_highlight",
+			"sha256": "a841ca9ce58dc234dcbc707d302c23b947eb043b7172cb7a1da0b7e9bc6d7c12"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/player_primary_projectiles/opening_breach_06_flight_0_0/layers/player_energy.png",
+			"role": "player_energy",
+			"sha256": "cb88b1c2c8b003d49ec275d067342e3ae48a6d95bee176f4bb5515e355d64c76"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/player_primary_projectiles/opening_breach_06_flight_0_0/layers/player_reward.png",
+			"role": "player_reward",
+			"sha256": "6f045171076ea0af2e5f3521b937e9917626796e0464f32da2a22ef3cee25dcf"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/player_primary_projectiles/opening_breach_06_flight_0_0/layers/structure_recess.png",
+			"role": "structure_recess",
+			"sha256": "bbea61dcc0f9d1ae76e8548c80fff5f2f735bfea97eb88615121637b51b949ea"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "8f26acb6d777ea1c3fb7efa214124ec4028b2aa207b157b7b2b9f2a403a5666f",
+	"state": "flight_0",
+	"variant": "opening_breach",
+	"visible_pixel_count": 760
+}

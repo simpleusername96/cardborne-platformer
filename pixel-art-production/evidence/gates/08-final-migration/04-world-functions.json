@@ -1,0 +1,52 @@
+{
+	"columns": 8,
+	"entries": [
+		{
+			"family": "water_void_edge_tiles",
+			"index": 0,
+			"variant": "water_fill"
+		},
+		{
+			"family": "water_void_edge_tiles",
+			"index": 1,
+			"variant": "straight_edge"
+		},
+		{
+			"family": "water_void_edge_tiles",
+			"index": 2,
+			"variant": "inner_corner"
+		},
+		{
+			"family": "arc_surge_strip",
+			"index": 3,
+			"variant": "horizontal_segment"
+		},
+		{
+			"family": "breakable_bulkhead",
+			"index": 4,
+			"variant": "horizontal"
+		},
+		{
+			"family": "transit_gate",
+			"index": 5,
+			"variant": "pair_a"
+		},
+		{
+			"family": "transit_gate",
+			"index": 6,
+			"variant": "pair_b"
+		},
+		{
+			"family": "repair_field",
+			"index": 7,
+			"variant": "center_fixture"
+		},
+		{
+			"family": "overdrive_field",
+			"index": 8,
+			"variant": "center_fixture"
+		}
+	],
+	"schema_version": 1,
+	"tile_size": 128
+}

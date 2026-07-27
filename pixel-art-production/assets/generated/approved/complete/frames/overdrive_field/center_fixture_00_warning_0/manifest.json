@@ -1,0 +1,41 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 0,
+	"family": "overdrive_field",
+	"frame_key": "overdrive_field/center_fixture/0/warning/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/overdrive_field/center_fixture_00_warning_0/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/overdrive_field/center_fixture_00_warning_0/layers/blocker_edge.png",
+			"role": "blocker_edge",
+			"sha256": "0b0db5ac7308cbae2963adcbd4704289d376c0e4cc98fbea16e36000c9620740"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/overdrive_field/center_fixture_00_warning_0/layers/deck_shadow.png",
+			"role": "deck_shadow",
+			"sha256": "31005da90aa1f35dc935101025389652e1d4d445c8a2c1aace78dea80b4ae2ef"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/overdrive_field/center_fixture_00_warning_0/layers/neutral_highlight.png",
+			"role": "neutral_highlight",
+			"sha256": "b92cb88163d749452cd5867322b86a5843e5745ebfea431b58db5d90ef620c0b"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/overdrive_field/center_fixture_00_warning_0/layers/player_reward.png",
+			"role": "player_reward",
+			"sha256": "abd2eb4b024723042cc8d5fbbf42a34f67f815014ee2eecf304a5b4634793660"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "8cc214039b99cb6b1ca0f9e348dc8cc18bab608d11898fd25ca4c5c798b653c4",
+	"state": "warning",
+	"variant": "center_fixture",
+	"visible_pixel_count": 1569
+}

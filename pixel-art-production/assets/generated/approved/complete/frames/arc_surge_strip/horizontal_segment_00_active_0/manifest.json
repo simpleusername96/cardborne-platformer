@@ -1,0 +1,31 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 0,
+	"family": "arc_surge_strip",
+	"frame_key": "arc_surge_strip/horizontal_segment/0/active/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/arc_surge_strip/horizontal_segment_00_active_0/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/arc_surge_strip/horizontal_segment_00_active_0/layers/arc.png",
+			"role": "arc",
+			"sha256": "0acaab8a10dc711c8d7508ecfcb39556698d41088754720611b8f1c82adabf4c"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/arc_surge_strip/horizontal_segment_00_active_0/layers/blocker_edge.png",
+			"role": "blocker_edge",
+			"sha256": "206e81e9e3747246f9ed5e81ea735ea32c704da7fce62f8aa02f6876011db4ad"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "74b49658663d670440a2572cc9dcb58ab9c6f69015f193ef14616be302c705bc",
+	"state": "active",
+	"variant": "horizontal_segment",
+	"visible_pixel_count": 566
+}

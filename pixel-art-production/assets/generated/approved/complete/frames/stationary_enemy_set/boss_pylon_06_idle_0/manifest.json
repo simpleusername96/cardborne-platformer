@@ -1,0 +1,41 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 6,
+	"family": "stationary_enemy_set",
+	"frame_key": "stationary_enemy_set/boss_pylon/6/idle/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/stationary_enemy_set/boss_pylon_06_idle_0/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/stationary_enemy_set/boss_pylon_06_idle_0/layers/blocker_edge.png",
+			"role": "blocker_edge",
+			"sha256": "b280d221c111113fcc876a223c84ef4e901ddd2e1d56ff4659c93a2da8a30fb2"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/stationary_enemy_set/boss_pylon_06_idle_0/layers/deck_shadow.png",
+			"role": "deck_shadow",
+			"sha256": "2520e7808892c087b296d0ff86338acd42e159c317130aefde5dca73dc591598"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/stationary_enemy_set/boss_pylon_06_idle_0/layers/neutral_highlight.png",
+			"role": "neutral_highlight",
+			"sha256": "aaaf63d94e6b8305b48eca4363a1710c2c9f74397edaab34772f053fe0103b2f"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/stationary_enemy_set/boss_pylon_06_idle_0/layers/ordinary_threat.png",
+			"role": "ordinary_threat",
+			"sha256": "9d47f4bf8374af68292ae172b9000baed62a2f0a24161631e0ce87310beacd5f"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "f2239d39c9c29b37e8fb81267374a9172f20685a24dc1bdc791c812f900aa1e6",
+	"state": "idle",
+	"variant": "boss_pylon",
+	"visible_pixel_count": 1519
+}

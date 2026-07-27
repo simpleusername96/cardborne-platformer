@@ -1,0 +1,41 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 0,
+	"family": "boss_set",
+	"frame_key": "boss_set/colossus/0/startup/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/boss_set/colossus_00_startup_0/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/boss_set/colossus_00_startup_0/layers/blocker_edge.png",
+			"role": "blocker_edge",
+			"sha256": "4fb97461ea1d30d465e7c2488a60c0815b08019dd0df3fa93ff8b3a3f6f999ce"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/boss_set/colossus_00_startup_0/layers/boss_threat.png",
+			"role": "boss_threat",
+			"sha256": "34ef7754f19e9a4f7724eb2145b9a106ba5a732c5519e06b759e3683cde3c48c"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/boss_set/colossus_00_startup_0/layers/player_reward.png",
+			"role": "player_reward",
+			"sha256": "85de368c3a18e875b5903c92974c030e3e5cb303e5d79195050122a24922ce5f"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/boss_set/colossus_00_startup_0/layers/space_void.png",
+			"role": "space_void",
+			"sha256": "4220491a9c2577345e7af81f722971136c7ed11d33b0f42b4de1dd60a7c5711a"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "9b34b9323eeb7957ee4146b9322d34be97f0c375cf23bd95ebe4c3c4d52be91e",
+	"state": "startup",
+	"variant": "colossus",
+	"visible_pixel_count": 2312
+}

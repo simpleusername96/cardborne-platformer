@@ -1,0 +1,41 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 12,
+	"family": "boss_set",
+	"frame_key": "boss_set/colossus/12/read/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/boss_set/colossus_12_read_0/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/boss_set/colossus_12_read_0/layers/blocker_edge.png",
+			"role": "blocker_edge",
+			"sha256": "66a1cb0839a283bd48e2086a67ae018da0bc470cc52048f74579e2b5c67f27dc"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/boss_set/colossus_12_read_0/layers/boss_threat.png",
+			"role": "boss_threat",
+			"sha256": "c486b6e5379f7420b92982330aaf07c63f87612d552854d6da23ba6e1f2a63e0"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/boss_set/colossus_12_read_0/layers/neutral_highlight.png",
+			"role": "neutral_highlight",
+			"sha256": "a0dace30eed68e78c5eae30ccd3ad45b07a2b53b11bcdd6ed89681e4472da3a9"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/boss_set/colossus_12_read_0/layers/space_void.png",
+			"role": "space_void",
+			"sha256": "d780400bccb3268f91296d7feb4bc7dc3db8696c5c0f6083922cf86106afdf80"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "bc331837211028d8d7e02487a8822408dfd56df748f7d4237ee666d95b034a2a",
+	"state": "read",
+	"variant": "colossus",
+	"visible_pixel_count": 2312
+}

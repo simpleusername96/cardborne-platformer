@@ -30,6 +30,7 @@ const RunDifficulty = preload("res://scripts/vehicle/vehicle_run_difficulty.gd")
 const StageCatalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
 const FieldRegistry = preload("res://scripts/vehicle/vehicle_field_registry.gd")
 const BossPatterns = preload("res://scripts/bosses/vehicle_boss_patterns.gd")
+const PixelCatalog = preload("res://scripts/presentation/vehicle_pixel_asset_catalog.gd")
 
 const CANVAS := Art.COBALT_VOID
 const SURFACE := Art.IVORY
@@ -150,11 +151,13 @@ class ActionRailSlot:
 	var segment_count := 0
 	var filled_segments := 0
 	var is_primary := false
+	var _pixel_catalog
 
 	func _ready() -> void:
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
 		focus_mode = Control.FOCUS_NONE
 		custom_minimum_size = Vector2(34.0, 34.0)
+		_pixel_catalog = PixelCatalog.new()
 
 	func configure(key_text: String, title: String, color: Color, primary: bool = false) -> void:
 		binding = key_text
@@ -182,6 +185,8 @@ class ActionRailSlot:
 		draw_circle(center, radius, Art.IVORY_BRIGHT)
 		var progress := cooldown_ratio if is_primary else 1.0 - cooldown_ratio
 		draw_arc(center, radius - 1.0, -PI * 0.5, -PI * 0.5 + TAU * clampf(progress, 0.0, 1.0), 24, accent, 3.0, true)
+		if _draw_pixel_icon(center):
+			return
 		match action_name:
 			"ACTION_PRIMARY":
 				draw_colored_polygon(PackedVector2Array([center + Vector2(7.0, 0.0), center + Vector2(-5.0, -4.0), center + Vector2(-5.0, 4.0)]), accent)
@@ -191,6 +196,37 @@ class ActionRailSlot:
 				draw_colored_polygon(PackedVector2Array([center + Vector2(-6.0, -5.0), center + Vector2(1.0, 0.0), center + Vector2(-6.0, 5.0), center + Vector2(7.0, 0.0)]), accent)
 			_:
 				draw_colored_polygon(PackedVector2Array([center + Vector2(0.0, -7.0), center + Vector2(6.0, 5.0), center, center + Vector2(-6.0, 5.0)]), accent)
+
+	func _draw_pixel_icon(center: Vector2) -> bool:
+		if _pixel_catalog == null or not _pixel_catalog.is_ready():
+			return false
+		var variant := &"emp"
+		match action_name:
+			"ACTION_PRIMARY":
+				variant = &"primary"
+			"ACTION_SEEKER":
+				variant = &"seeker"
+			"ACTION_DASH":
+				variant = &"dash"
+		var frame: Dictionary = _pixel_catalog.frame(
+			&"hud_action_icons", variant, 0, &"ready", 0
+		)
+		if frame.is_empty():
+			return false
+		var texture: Texture2D = _pixel_catalog.texture(&"hud_action_icons")
+		if texture == null:
+			return false
+		var region := Array(frame["region"])
+		draw_texture_rect_region(
+			texture,
+			Rect2(center - Vector2(10.0, 10.0), Vector2(20.0, 20.0)),
+			Rect2(
+				float(region[0]), float(region[1]),
+				float(region[2]), float(region[3])
+			),
+			Color.WHITE
+		)
+		return true
 
 
 class ControlHintGlyph:

@@ -2,20 +2,22 @@
 type: spec
 status: active
 owner: BK
-last_reviewed: 2026-07-25
+last_reviewed: 2026-07-27
 canonical_for: Cardborne vehicle-game art direction and UI presentation
 related:
   - ../product/vehicle_game_spec.md
   - ./sunken-ceramic-fresco.png
+  - ../../pixel-art-production/design/visual-research/PART_GUIDELINES.md
 ---
 
 # Cardborne UI and Visual System
 
 ## Purpose
 
-Define one readable flat-color visual language for the current run-selected-field
-vehicle game. `sunken-ceramic-fresco.png` supplies palette, large-shape rhythm,
-and restrained detail; gameplay meaning comes from this specification.
+Define one readable flat-color, grid-native pixel visual language for the
+current run-selected-field vehicle game. `sunken-ceramic-fresco.png` remains
+the palette and large-shape reference; the active pixel part guidelines own
+native asset construction. Gameplay meaning comes from this specification.
 
 ## Scope
 
@@ -27,14 +29,18 @@ rules remain owned by the product specification.
 
 ### Art language and semantic palette
 
-- Use flat color, large geometric masses, and clean silhouettes. Avoid
-  decorative floor motifs, outlines, fine texture, speckling, micro-patterns,
-  surface stains, and decorative detail that competes with combat.
+- Use flat, whole-cell pixel color, large geometric masses, and clean
+  silhouettes. Avoid antialiasing, dithering, decorative floor motifs,
+  universal outlines, fine texture, speckling, micro-patterns, surface stains,
+  and decorative detail that competes with combat.
 - A frame must read in this order: walkable floor, solid cover/void, player,
   threats and telegraphs, pickups/rewards, then atmosphere.
-- Ivory means walkable ground, ceramic green means solid cover/installations,
-  cobalt means water or void, mustard means player/reward/progress, coral means
-  ordinary danger, magenta means boss danger, and mint means recovery/support.
+- Deep slate means walkable hangar deck, near-black means exterior space,
+  one consistent blue-gray family means solid walls and installations,
+  cobalt means water or energized void, mustard means
+  player/reward/progress, coral means ordinary danger, magenta means boss
+  danger, mint means recovery/support, and ivory is reserved for high-contrast
+  highlights and live UI surfaces.
 - Attack affinity may override the general danger fill: kinetic is coral
   (mustard for friendly fire), thermal is orange, toxin is olive, cryo is blue,
   arc is violet, and a multi-condition hybrid is bright ivory. Affinity is also

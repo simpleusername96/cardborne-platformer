@@ -1,0 +1,41 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 6,
+	"family": "mobile_enemy_set",
+	"frame_key": "mobile_enemy_set/drone_carrier/6/move/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/mobile_enemy_set/drone_carrier_06_move_0/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/mobile_enemy_set/drone_carrier_06_move_0/layers/blocker_edge.png",
+			"role": "blocker_edge",
+			"sha256": "e526f746a1a051366808a4dd4092cc3ff93660c371675dab6668e27affd5a121"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/mobile_enemy_set/drone_carrier_06_move_0/layers/neutral_highlight.png",
+			"role": "neutral_highlight",
+			"sha256": "aaaf63d94e6b8305b48eca4363a1710c2c9f74397edaab34772f053fe0103b2f"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/mobile_enemy_set/drone_carrier_06_move_0/layers/ordinary_threat.png",
+			"role": "ordinary_threat",
+			"sha256": "fdb83b4fd494ae98617936562f9425615dbfae852184ddc22ff525b43d170152"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/mobile_enemy_set/drone_carrier_06_move_0/layers/space_void.png",
+			"role": "space_void",
+			"sha256": "5056ec126896182097917f279feeb9f8e510aaacd90dea025466aa2cb0e58d08"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "48208ce939418c675fe4cd929570aa538f0c51e194ed87f7ef95cc0616af2826",
+	"state": "move",
+	"variant": "drone_carrier",
+	"visible_pixel_count": 1038
+}

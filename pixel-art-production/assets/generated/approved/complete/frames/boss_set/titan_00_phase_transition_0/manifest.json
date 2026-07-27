@@ -1,0 +1,36 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 0,
+	"family": "boss_set",
+	"frame_key": "boss_set/titan/0/phase_transition/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/boss_set/titan_00_phase_transition_0/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/boss_set/titan_00_phase_transition_0/layers/blocker_edge.png",
+			"role": "blocker_edge",
+			"sha256": "438ed8f75d6518a438be85e82ddd8efd77ce05e975b635e898b23b2896909a00"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/boss_set/titan_00_phase_transition_0/layers/boss_threat.png",
+			"role": "boss_threat",
+			"sha256": "9b819fd478f4c801d728d28a64acf241159653577e9bd223e7597943efa80d24"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/boss_set/titan_00_phase_transition_0/layers/thermal.png",
+			"role": "thermal",
+			"sha256": "4a20a1d7ef7f358405a52ecf62e560bbd0f0eab844cb824226e5a37fede493c6"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "5b6f2617dcb93e13c4d7d8fd8cdc4d967863079f313cc34433dadee736893604",
+	"state": "phase_transition",
+	"variant": "titan",
+	"visible_pixel_count": 1082
+}

@@ -1,0 +1,36 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 0,
+	"family": "hostile_projectile_affinities",
+	"frame_key": "hostile_projectile_affinities/arc/0/standard_0/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/hostile_projectile_affinities/arc_00_standard_0_0/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/hostile_projectile_affinities/arc_00_standard_0_0/layers/arc.png",
+			"role": "arc",
+			"sha256": "f8d63d20f5cab15d94217a140391ce9875bed5278520e5abc1075436e61d95a7"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/hostile_projectile_affinities/arc_00_standard_0_0/layers/blocker_edge.png",
+			"role": "blocker_edge",
+			"sha256": "9ccb48bee8b4e35d3b705ccc053ad233289048697e6bdedf756b0bc255a64e86"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/hostile_projectile_affinities/arc_00_standard_0_0/layers/neutral_highlight.png",
+			"role": "neutral_highlight",
+			"sha256": "6135f3bb3317d5483b6a4ecef03b36fd3bfb79ce4fe978550609d1e0e33d4376"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "7495bca3e40b6885d3d9a91fbadb103fd9d1bade57992ef56b6109c4134d0c06",
+	"state": "standard_0",
+	"variant": "arc",
+	"visible_pixel_count": 416
+}

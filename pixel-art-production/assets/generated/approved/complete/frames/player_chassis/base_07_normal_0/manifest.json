@@ -1,0 +1,69 @@
+{
+	"anchors": {
+		"left_engine": [
+			28.0,
+			6.0
+		],
+		"muzzle": [
+			40.0,
+			53.0
+		],
+		"right_engine": [
+			15.0,
+			12.0
+		]
+	},
+	"approval_status": "approved",
+	"direction_index": 7,
+	"family": "player_chassis",
+	"frame_key": "player_chassis/base/7/normal/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/player_chassis/base_07_normal_0/master.png",
+	"pivot": [
+		31.0,
+		31.0
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/player_chassis/base_07_normal_0/layers/blocker_edge.png",
+			"role": "blocker_edge",
+			"sha256": "ac52ee2d8d50fada875105ec2789ff164ad65204ef26e3b98d1589baa6ab21ea"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/player_chassis/base_07_normal_0/layers/deck_base.png",
+			"role": "deck_base",
+			"sha256": "40d668e121541192505c4970db395d1c6bbeccabb503ba08f521089a4bcf6c27"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/player_chassis/base_07_normal_0/layers/deck_shadow.png",
+			"role": "deck_shadow",
+			"sha256": "25650cf2819bc400111c186d0bf48ac537af33d2480c9c509d1f1927658593fd"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/player_chassis/base_07_normal_0/layers/neutral_highlight.png",
+			"role": "neutral_highlight",
+			"sha256": "5168627492226fae84e2555e6412c72c452fda82ef4397326f8aa130cb3f3572"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/player_chassis/base_07_normal_0/layers/player_energy.png",
+			"role": "player_energy",
+			"sha256": "75a7fde98972c18848b20298b1daa28329038d681f9c513e3d4a6fed61221257"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/player_chassis/base_07_normal_0/layers/player_reward.png",
+			"role": "player_reward",
+			"sha256": "5ff6793e6e75af4086c5f2bd9608e87110a78351e547cd859342006334ad3fc6"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/player_chassis/base_07_normal_0/layers/structure_recess.png",
+			"role": "structure_recess",
+			"sha256": "a59a0d035eebc5bd146757c49242012a288ba31764d8de7d70c9baa4843bdb22"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "8ff0738779e7884f3c74e86a1055d9b6ec799878a38c05df42dd986474461ff3",
+	"state": "normal",
+	"variant": "base",
+	"visible_pixel_count": 703
+}

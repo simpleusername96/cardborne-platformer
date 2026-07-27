@@ -1,6 +1,6 @@
 ---
 type: plan
-status: active
+status: done
 owner: BK
 created: 2026-07-27
 last_reviewed: 2026-07-27
@@ -83,7 +83,7 @@ Phase 2 onward, a user-visible game result.
 | Cleanup | Every draft is snapped, palette-normalized, semantically masked, split, exactly reassembled, and reviewed before approval. |
 | Source format | Native indexed-color PNG plus same-origin transparent PNG layers; integer-cell SVG is an editable correction derivative. |
 | Runtime format | PNG atlas plus JSON catalog under `pixel-art-production/runtime/`; nearest, lossless, no mipmaps, no repeat, one-pixel extrusion, two-pixel gutter. |
-| Rollout flag | Add non-user-facing `cardborne/presentation/pixel_assets`, default `false` until Phase 2 owner approval. |
+| Rollout flag | The temporary `cardborne/presentation/pixel_assets` gate was removed after Gate H; the approved pixel catalog is the sole production presentation path. |
 | Partial family rollout | Atomic families publish as a whole. Aggregate sets (`mobile_enemy_set`, `stationary_enemy_set`, `boss_set`) publish only explicitly listed `published_variants`; a listed variant with a missing frame is a hard error. |
 | Renderer path | A visible instance uses exactly one legacy or pixel path. Published pixel actors/projectiles remain retained `MultiMesh` instances. |
 | World path | Pixel world surfaces are generated from authoritative geometry into bounded cached textured chunks. They do not own collision or navigation. |
@@ -104,7 +104,7 @@ Phase 2 onward, a user-visible game result.
 | Let a `TileMapLayer` own collision | It creates a second geometry truth and risks false openings and blockers. |
 | Mark the draft pixel guide active before an actual-game gate | The sampler proves production mechanics, not full gameplay readability. |
 
-## Current State
+## Completed State
 
 Already landed:
 
@@ -118,14 +118,17 @@ Already landed:
 - [x] Clean production Web baseline and retained-renderer baseline.
 - [x] One canonical `pixel-art-production/` workspace.
 
-Not yet landed:
+Now landed:
 
-- [ ] Any approved production family.
-- [ ] Any runtime atlas or runtime catalog.
-- [ ] A pixel asset catalog owner or atlas shader in Godot.
-- [ ] A pixel-rendered player, projectile, enemy, world tile, pickup, or UI
-      element in the game.
-- [ ] Actual-game owner approval of the pixel direction.
+- [x] All forty approved production families.
+- [x] The shared runtime atlas and deterministic runtime catalog.
+- [x] A pixel asset catalog owner, atlas renderer, and geometry-fed world
+      renderer in Godot.
+- [x] Pixel-rendered players, projectiles, enemies, world surfaces, pickups,
+      facilities, effects, bosses, HUD glyphs, card glyphs, and guidebook
+      previews in the game.
+- [x] Actual-game owner approval of the pixel direction and authorization to
+      complete the remaining phases.
 
 ## Scope and Non-scope
 
@@ -383,7 +386,7 @@ broad production.
 `world_targeting_markers`; publish `scrap_drone`, `chaser`, and `shooter`
 variants from `mobile_enemy_set`.
 
-- [ ] **3.1 Finish and approve the core sources.**
+- [x] **3.1 Finish and approve the core sources.**
   - Complete the three mobile roles, three XP shells, repair/recall pickups,
     reward-crate states, the exact eight floor/void frames defined in Phase 1,
     and all wall signatures.
@@ -400,7 +403,7 @@ variants from `mobile_enemy_set`.
   - **Guard:** no color-only role, condition promise, fake collision seam, or
     baked warning footprint.
 
-- [ ] **3.2 Add geometry-fed world rendering.**
+- [x] **3.2 Add geometry-fed world rendering.**
   - Add `vehicle_pixel_world_mesh_builder.gd`.
   - Feed it the existing immutable floor, void, wall, and cover polygons.
   - Cache bounded textured chunks; rebuild only when the field/layout
@@ -411,14 +414,14 @@ variants from `mobile_enemy_set`.
   - **Guard:** no giant field bitmap, tile-owned collision, or small unusable
     visual gap.
 
-- [ ] **3.3 Publish explicit aggregate variants.**
+- [x] **3.3 Publish explicit aggregate variants.**
   - Catalog `scrap_drone`, `chaser`, and `shooter` as published variants.
   - Unlisted mobile variants remain explicitly legacy.
   - **Accept:** each visible enemy instance selects exactly one renderer and a
     missing published variant frame hard-fails validation.
   - **Guard:** no family-wide silent fallback.
 
-- [ ] **3.4 Create Gate C actual-game evidence.**
+- [x] **3.4 Create Gate C actual-game evidence.**
   - Capture calm center, broad lane, wall opening, ordinary pressure,
     maximum-pressure projectiles/XP, crate/pickups, and grayscale at
     `1280x720`.
@@ -441,14 +444,14 @@ only the core assets or grammar named by the owner and repeats Gate C.
 **Family coverage:** `water_void_edge_tiles`, `arc_surge_strip`,
 `breakable_bulkhead`, `transit_gate`, `repair_field`, and `overdrive_field`.
 
-- [ ] Produce all declared states and semantic parts.
-- [ ] Reuse the approved repair-fixture grammar for `repair_field`; do not
+- [x] Produce all declared states and semantic parts.
+- [x] Reuse the approved repair-fixture grammar for `repair_field`; do not
       publish the sampler proof itself.
-- [ ] Pair each visible state with its existing exact footprint, lifetime,
+- [x] Pair each visible state with its existing exact footprint, lifetime,
       collision, projectile, and minimap truth.
-- [ ] Validate tile seams, bulkhead open/closed clearance, gate traversal,
+- [x] Validate tile seams, bulkhead open/closed clearance, gate traversal,
       support-field timing, non-overlap, and maximum-pressure visibility.
-- [ ] Capture every facility inactive/active/expiring and every terrain
+- [x] Capture every facility inactive/active/expiring and every terrain
       boundary in the actual field.
 
 **Gate D:** stop with the field-function catalog and actual-game captures.
@@ -463,15 +466,15 @@ visual without turning roles into color swaps.
 `stationary_enemy_set`; produce `elite_trait_overlays` and
 `enemy_condition_overlays`.
 
-- [ ] Produce the remaining ten mobile bases and all six stationary bases from
+- [x] Produce the remaining ten mobile bases and all six stationary bases from
       their inventory names.
-- [ ] Expand only approved canonical bases into required directions and visible
+- [x] Expand only approved canonical bases into required directions and visible
       attack states.
-- [ ] Keep burn, poison, chill, barrier, health, exact startup, and attack
+- [x] Keep burn, poison, chill, barrier, health, exact startup, and attack
       geometry composited/live.
-- [ ] Review every role as black silhouette, at native scale, in three-to-five
+- [x] Review every role as black silhouette, at native scale, in three-to-five
       enemy groups, during startup, and under maximum pressure.
-- [ ] Publish variants only after each variant passes; remove its legacy recipe
+- [x] Publish variants only after each variant passes; remove its legacy recipe
       in the same accepted family commit.
 
 **Gate E:** stop with mobile/stationary catalogs, startup comparisons, and dense
@@ -488,14 +491,14 @@ ship/projectile cues immediately distinguishable.
 `secondary_escort_drone`, `player_status_overlays`, and
 `player_projectile_modifier_overlays`.
 
-- [ ] Produce the declared secondary frames and anchors.
-- [ ] Keep ion radius, blade orbit, mine trigger/explosion radius, seeker
+- [x] Produce the declared secondary frames and anchors.
+- [x] Keep ion radius, blade orbit, mine trigger/explosion radius, seeker
       steering, drone follow path, counts, cooldowns, and timers live.
-- [ ] Use module count where count is already readable; use controlled shade or
+- [x] Use module count where count is already readable; use controlled shade or
       one large status cue only where the active visual spec requires it.
-- [ ] Capture each secondary alone and all five operating together under
+- [x] Capture each secondary alone and all five operating together under
       pressure.
-- [ ] Validate friendly/hostile separation in color and grayscale.
+- [x] Validate friendly/hostile separation in color and grayscale.
 
 **Gate F:** stop with five behavior captures and the upgraded-ship comparison.
 No redundant color tier is added where count, radius, or motion already shows
@@ -508,14 +511,14 @@ attack truth into bitmaps.
 
 **Family coverage:** `boss_set` and `impact_effects`.
 
-- [ ] Produce `colossus`, `leviathan`, `titan`, `behemoth`, and `crown` as
+- [x] Produce `colossus`, `leviathan`, `titan`, `behemoth`, and `crown` as
       separate canonical silhouettes with readable modules and phase cores.
-- [ ] Produce five four-frame impact families at native size.
-- [ ] Preserve live boss attack startup, exact paths/areas, autonomous attacks,
+- [x] Produce five four-frame impact families at native size.
+- [x] Preserve live boss attack startup, exact paths/areas, autonomous attacks,
       module state, health, status, and off-screen warnings.
-- [ ] Review partial-offscreen bosses, each visible startup, phase transition,
+- [x] Review partial-offscreen bosses, each visible startup, phase transition,
       module damage, and impact contact at native scale.
-- [ ] Validate all five in Boss Practice and in the connected run.
+- [x] Validate all five in Boss Practice and in the connected run.
 
 **Gate G:** stop with Boss Practice captures and attack-alignment overlays. A
 boss that reads as an enlarged ordinary enemy or obscures a telegraph is
@@ -530,18 +533,18 @@ and retire the last superseded procedural recipes.
 `guidebook_previews`, `upgrade_card_icons`, `ui_frame_system`, and
 `dynamic_combat_ui`.
 
-- [ ] Produce six HUD action glyphs and all current upgrade-card glyphs.
-- [ ] Keep minimap positions, exploration, clustering, priority, timers, and
+- [x] Produce six HUD action glyphs and all current upgrade-card glyphs.
+- [x] Keep minimap positions, exploration, clustering, priority, timers, and
       support lifetime procedural; author its stable marker silhouettes as
       retained procedural-pixel geometry rather than atlas sprites.
-- [ ] Derive guidebook previews from approved runtime frames; locked entries
+- [x] Derive guidebook previews from approved runtime frames; locked entries
       remain neutral live silhouettes.
-- [ ] Add only minimal scalable pixel corners/edges around existing controls.
-- [ ] Keep `dynamic_combat_ui` entirely live and verify it rather than
+- [x] Add only minimal scalable pixel corners/edges around existing controls.
+- [x] Keep `dynamic_combat_ui` entirely live and verify it rather than
       rasterizing it.
-- [ ] Review Korean and English at `960x540`, `1280x720`, and `1920x1080`.
-- [ ] Run full native/Web performance and connected-run validation.
-- [ ] Remove the presentation flag and remaining superseded procedural visual
+- [x] Review Korean and English at `960x540`, `1280x720`, and `1920x1080`.
+- [x] Run full native/Web performance and connected-run validation.
+- [x] Remove the presentation flag and remaining superseded procedural visual
       recipes only after all families are approved and the pixel path is the
       sole production path.
 
@@ -720,48 +723,57 @@ execution.
   activation of the draft pixel part guide.
 - 2026-07-27: Keep all production material and approved runtime publication
   under `pixel-art-production/`.
+- 2026-07-27: Gate A and Gate B passed with the post-sampler candidates and
+  first retained player/projectile runtime slice.
+- 2026-07-27: The owner authorized execution through completion; Gates C–H
+  passed with actual-game captures, all forty catalog families, localization
+  review, the complete validator suite, and the production Web build.
+- 2026-07-27: Activate `PART_GUIDELINES.md`, update
+  `UI_VISUAL_SYSTEM.md`, remove the temporary rollout flag, and retain live
+  gameplay geometry, telegraphs, values, localization, and UI state as their
+  existing owners.
 
 ## Progress
 
 - [x] Foundation: inventory, contracts, tools, six sampler assets, baseline,
       and consolidated workspace.
-- [ ] Phase 1: post-sampler production capability and Gate A.
-- [ ] Phase 2: first live player/projectile slice and Gate B.
-- [ ] Phase 3: core field readability slice and Gate C.
-- [ ] Phase 4: world functions/facilities and Gate D.
-- [ ] Phase 5: complete enemy library and Gate E.
-- [ ] Phase 6: secondaries/player cues and Gate F.
-- [ ] Phase 7: bosses/combat feedback and Gate G.
-- [ ] Phase 8: UI/final migration and Gate H.
-- [ ] Final full validation and production Web handoff.
+- [x] Phase 1: post-sampler production capability and Gate A.
+- [x] Phase 2: first live player/projectile slice and Gate B.
+- [x] Phase 3: core field readability slice and Gate C.
+- [x] Phase 4: world functions/facilities and Gate D.
+- [x] Phase 5: complete enemy library and Gate E.
+- [x] Phase 6: secondaries/player cues and Gate F.
+- [x] Phase 7: bosses/combat feedback and Gate G.
+- [x] Phase 8: UI/final migration and Gate H.
+- [x] Final full validation and production Web handoff.
 
 ## Next Steps
 
-1. Execute **Phase 1 only**.
-2. Generate the four Gate A review artifacts.
-3. Stop and present Gate A to the owner.
-4. Begin Phase 2 only after explicit Gate A approval.
+No remaining execution step belongs to this plan. Future asset additions must
+enter the same inventory, native-master, semantic-layer, manifest, atlas,
+catalog, retained-renderer, localization, and Web-validation contracts rather
+than reopening this completed migration.
 
 ## Completion Criteria
 
-- [ ] All forty inventory families are completed exactly once in the coverage
+- [x] All forty inventory families are completed exactly once in the coverage
       ledger.
-- [ ] Every approved raster frame has a native master, semantic layers,
+- [x] Every approved raster frame has a native master, semantic layers,
       manifest, checksum, stable pivot/anchors, atlas entry, and review.
-- [ ] Every generated canonical job obeys the one-object grid boundary.
-- [ ] Every semantic reassembly changes zero pixels.
-- [ ] All connected tiles pass every signature and deterministic `3x3` proof.
-- [ ] Player, every enemy role, every projectile owner/weight/affinity, every
+- [x] Every generated canonical job obeys the one-object grid boundary.
+- [x] Every semantic reassembly changes zero pixels.
+- [x] All connected tiles pass every signature and deterministic `3x3` proof.
+- [x] Player, every enemy role, every projectile owner/weight/affinity, every
       pickup, every secondary, and every boss remain readable at native scale
       and in grayscale.
-- [ ] Visible world boundaries and projectile/telegraph extents match
+- [x] Visible world boundaries and projectile/telegraph extents match
       gameplay-owned truth.
-- [ ] No repeated combat object owns a scene node and all frame, batch, chunk,
+- [x] No repeated combat object owns a scene node and all frame, batch, chunk,
       draw-call, native, and Web thresholds pass.
-- [ ] Korean and English UI pass at all three supported review sizes with no
+- [x] Korean and English UI pass at all three supported review sizes with no
       clipping, overflow, rasterized text, or hidden state.
-- [ ] The connected run and Boss Practice pass in the production Web build.
-- [ ] No superseded legacy visual recipe, duplicate production path,
+- [x] The connected run and Boss Practice pass in the production Web build.
+- [x] No superseded legacy visual recipe, duplicate production path,
       placeholder, stale path, or unresolved material decision remains.
 
 ## Stop Conditions
@@ -780,23 +792,25 @@ technical blocker, or completion.
 
 ```text
 Goal:
-Produce all Cardborne pixel assets through small visible approval gates and
-integrate them without changing gameplay truth or retained-renderer budgets.
+Completed: all forty Cardborne pixel-asset families are produced and integrated
+without changing gameplay truth or retained-renderer budgets.
 
-Read first:
+Canonical references:
 pixel-art-production/PLAN.md
 pixel-art-production/README.md
 pixel-art-production/assets/asset-inventory.json
 docs/design/UI_VISUAL_SYSTEM.md
 
-Execute exactly:
-Start Phase 1 only. Do not add another pipeline phase and do not start runtime
-integration before Gate A approval.
+Runtime publication:
+pixel-art-production/runtime/catalog.json
+pixel-art-production/runtime/atlases/cardborne-pixel-atlas.png
+pixel-art-production/runtime/tiles/
 
-Validate with:
+Validated with:
 pixel-art-production/tools/validation/validate_pixel_asset_pipeline.ps1
-the named Gate A review artifacts
+tools/validation/
+tools/export_web.ps1
 
-Stop when:
-Gate A artifacts are ready for owner review.
+Remaining work:
+None in this plan.
 ```

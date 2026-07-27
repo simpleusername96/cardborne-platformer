@@ -1,0 +1,41 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 0,
+	"family": "stationary_enemy_set",
+	"frame_key": "stationary_enemy_set/interceptor_tower/0/attack_startup/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/stationary_enemy_set/interceptor_tower_00_attack_startup_0/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/stationary_enemy_set/interceptor_tower_00_attack_startup_0/layers/blocker_edge.png",
+			"role": "blocker_edge",
+			"sha256": "585555912d97eb29008ce90e743656b3561e40eacb6103593ce6ab35132d0637"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/stationary_enemy_set/interceptor_tower_00_attack_startup_0/layers/deck_shadow.png",
+			"role": "deck_shadow",
+			"sha256": "cbf353500b9033d19d426cc8550e97fa2afd2544f38160201c4ac13425d23820"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/stationary_enemy_set/interceptor_tower_00_attack_startup_0/layers/ordinary_threat.png",
+			"role": "ordinary_threat",
+			"sha256": "b59d68dfb1d2d57192845c9fead0846ddb1e2337af71caa8a0de3e4aca27ee81"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/stationary_enemy_set/interceptor_tower_00_attack_startup_0/layers/player_reward.png",
+			"role": "player_reward",
+			"sha256": "002cdca47f2f496ba1c33ab87c39d2e09249f7622bbe5de6f0a0be21bb8845df"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "d9c82d9ee4d8bf95e8345d4323a9394316c502e9e6286a351dec538173012d22",
+	"state": "attack_startup",
+	"variant": "interceptor_tower",
+	"visible_pixel_count": 1231
+}

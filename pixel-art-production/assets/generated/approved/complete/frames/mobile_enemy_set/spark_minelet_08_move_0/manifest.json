@@ -1,0 +1,36 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 8,
+	"family": "mobile_enemy_set",
+	"frame_key": "mobile_enemy_set/spark_minelet/8/move/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/mobile_enemy_set/spark_minelet_08_move_0/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/mobile_enemy_set/spark_minelet_08_move_0/layers/blocker_edge.png",
+			"role": "blocker_edge",
+			"sha256": "de3330e7c1e651d91680b0c448e6b10eab8cfebc1628e9542cb990d1d9541f3c"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/mobile_enemy_set/spark_minelet_08_move_0/layers/neutral_highlight.png",
+			"role": "neutral_highlight",
+			"sha256": "06864ee715eb5feabc417a722d192c67d44dc551b5d9d62df948b44881d65855"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/mobile_enemy_set/spark_minelet_08_move_0/layers/ordinary_threat.png",
+			"role": "ordinary_threat",
+			"sha256": "997116d304bc7a6568d35df51a334ae73743ce8d9134236fab9aac3959e58c79"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "60ffb4865ecbeb8836f77c7df70bbcf101e0c53d3961b38883b1c8340ed6621d",
+	"state": "move",
+	"variant": "spark_minelet",
+	"visible_pixel_count": 1028
+}

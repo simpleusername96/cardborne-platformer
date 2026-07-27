@@ -1,0 +1,36 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 0,
+	"family": "mobile_enemy_set",
+	"frame_key": "mobile_enemy_set/artillery_spotter/0/attack_startup/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/mobile_enemy_set/artillery_spotter_00_attack_startup_0/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/mobile_enemy_set/artillery_spotter_00_attack_startup_0/layers/blocker_edge.png",
+			"role": "blocker_edge",
+			"sha256": "0af46151beee79b4de0c926ed8a2df067b319b6e4aba1c89c7fa30e0e21b0313"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/mobile_enemy_set/artillery_spotter_00_attack_startup_0/layers/ordinary_threat.png",
+			"role": "ordinary_threat",
+			"sha256": "ea0e8eadcea1c0d1c1f59c46ff249a306d0dfececfb38c3317b8a29bbcee532b"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/mobile_enemy_set/artillery_spotter_00_attack_startup_0/layers/player_reward.png",
+			"role": "player_reward",
+			"sha256": "002cdca47f2f496ba1c33ab87c39d2e09249f7622bbe5de6f0a0be21bb8845df"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "669a578644aab998016800c9e6087b07b2d7172bf77be4f2d01793d5217b1d3b",
+	"state": "attack_startup",
+	"variant": "artillery_spotter",
+	"visible_pixel_count": 700
+}

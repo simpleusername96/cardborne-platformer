@@ -1,0 +1,36 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 8,
+	"family": "water_void_edge_tiles",
+	"frame_key": "water_void_edge_tiles/inner_corner/8/static/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/water_void_edge_tiles/inner_corner_08_static_0/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/water_void_edge_tiles/inner_corner_08_static_0/layers/cryo.png",
+			"role": "cryo",
+			"sha256": "6949fd393e14fe54a92620382da316d5926a94fc221c3b1b903fd16c4a3cb63c"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/water_void_edge_tiles/inner_corner_08_static_0/layers/player_energy.png",
+			"role": "player_energy",
+			"sha256": "0507996c158211016e3faf05f8228e2c2437c8ea73fc65a3d6f311b43c945a63"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/water_void_edge_tiles/inner_corner_08_static_0/layers/space_void.png",
+			"role": "space_void",
+			"sha256": "04ae6e7ebe69302d98103a3e87d0758d1d788f9570fc203dca15879126254f1a"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "4cef207f62271377c403bf9a9c7f18cce7a52a2ea1a785b73272948cd6309afb",
+	"state": "static",
+	"variant": "inner_corner",
+	"visible_pixel_count": 4096
+}

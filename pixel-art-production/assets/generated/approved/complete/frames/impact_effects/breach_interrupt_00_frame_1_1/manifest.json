@@ -1,0 +1,31 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 0,
+	"family": "impact_effects",
+	"frame_key": "impact_effects/breach_interrupt/0/frame_1/1",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/impact_effects/breach_interrupt_00_frame_1_1/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/impact_effects/breach_interrupt_00_frame_1_1/layers/arc.png",
+			"role": "arc",
+			"sha256": "beaec8bfbc2c2c1c6e5a3e5ff84925dbf211deeb6e32aac489f6ef5499125406"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/impact_effects/breach_interrupt_00_frame_1_1/layers/neutral_highlight.png",
+			"role": "neutral_highlight",
+			"sha256": "06bf76e48f3fc6816daafd2df3a11e842c92cc9f868f716473663e94a46ce912"
+		}
+	],
+	"sequence_index": 1,
+	"source_sha256": "3f21477987bc1d4cdba8962e48881b50802b9a422c256016bb4dc6909e22bbae",
+	"state": "frame_1",
+	"variant": "breach_interrupt",
+	"visible_pixel_count": 173
+}

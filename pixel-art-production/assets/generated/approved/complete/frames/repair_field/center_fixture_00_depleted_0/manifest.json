@@ -1,0 +1,41 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 0,
+	"family": "repair_field",
+	"frame_key": "repair_field/center_fixture/0/depleted/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/repair_field/center_fixture_00_depleted_0/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/repair_field/center_fixture_00_depleted_0/layers/blocker_edge.png",
+			"role": "blocker_edge",
+			"sha256": "0b0db5ac7308cbae2963adcbd4704289d376c0e4cc98fbea16e36000c9620740"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/repair_field/center_fixture_00_depleted_0/layers/deck_shadow.png",
+			"role": "deck_shadow",
+			"sha256": "cd2e9a7a7c1f932b0bea2729ef9b347c755b0511bed31c28ff08ab87b4f92c75"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/repair_field/center_fixture_00_depleted_0/layers/neutral_highlight.png",
+			"role": "neutral_highlight",
+			"sha256": "3e24c58767be56ff118de897b8cbefc2eebb69ccee2c574dc2f724dfa0b45c19"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/repair_field/center_fixture_00_depleted_0/layers/support_recovery.png",
+			"role": "support_recovery",
+			"sha256": "5c94aa624601ebd0d64efde5f2554c6e7a29e336f6dc2aabe0921aeab0d73441"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "d6a6a558d2f190616c4b62d03d7a3496ded09bcee1dbc4557feecaddb0e0a962",
+	"state": "depleted",
+	"variant": "center_fixture",
+	"visible_pixel_count": 1569
+}

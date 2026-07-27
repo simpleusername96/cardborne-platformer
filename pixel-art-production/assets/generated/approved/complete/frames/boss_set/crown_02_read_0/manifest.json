@@ -1,0 +1,36 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 2,
+	"family": "boss_set",
+	"frame_key": "boss_set/crown/2/read/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/boss_set/crown_02_read_0/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/boss_set/crown_02_read_0/layers/blocker_edge.png",
+			"role": "blocker_edge",
+			"sha256": "36d3e5e3f322f5106bde91b002e6ab90470a03dff53ab1da5dc3a63a4f82c4ad"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/boss_set/crown_02_read_0/layers/boss_threat.png",
+			"role": "boss_threat",
+			"sha256": "fa58247bf3b76cd8e1b00bf341b2ce55964b912cc4ba578524463c1926721098"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/boss_set/crown_02_read_0/layers/neutral_highlight.png",
+			"role": "neutral_highlight",
+			"sha256": "9357919924c8d7176a3054dcbd19bebbdfc1b66cfa77d33560d301e70a29d2ab"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "8814a63ae41e1b2336fc4668253d15bf16517fcd0752085dc70c1647b5a37d81",
+	"state": "read",
+	"variant": "crown",
+	"visible_pixel_count": 2307
+}

@@ -70,6 +70,35 @@ func frame(
 	return Dictionary(frames[key]).duplicate(true)
 
 
+func first_frame(
+	family: StringName,
+	variant: StringName,
+	preferred_state: StringName = &""
+) -> Dictionary:
+	var asset: Dictionary = _assets_by_family.get(family, {})
+	if asset.is_empty():
+		return {}
+	var fallback: Dictionary = {}
+	for frame_variant in Array(asset.get("frames", [])):
+		var candidate := Dictionary(frame_variant)
+		if StringName(candidate["variant"]) != variant:
+			continue
+		if fallback.is_empty():
+			fallback = candidate
+		if (
+			preferred_state == &""
+			or StringName(candidate["state"]) == preferred_state
+		):
+			var result := candidate.duplicate(true)
+			result["family"] = family
+			return result
+	if not fallback.is_empty():
+		var result := fallback.duplicate(true)
+		result["family"] = family
+		return result
+	return {}
+
+
 func frame_uv(frame_record: Dictionary) -> Color:
 	var asset: Dictionary = _assets_by_family.get(
 		StringName(frame_record.get("family", &"")),

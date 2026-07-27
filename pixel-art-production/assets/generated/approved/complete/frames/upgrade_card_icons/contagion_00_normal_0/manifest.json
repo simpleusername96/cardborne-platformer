@@ -1,0 +1,41 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 0,
+	"family": "upgrade_card_icons",
+	"frame_key": "upgrade_card_icons/contagion/0/normal/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/upgrade_card_icons/contagion_00_normal_0/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/upgrade_card_icons/contagion_00_normal_0/layers/blocker_edge.png",
+			"role": "blocker_edge",
+			"sha256": "9eec64a9b1d9097b25cf617a5eac8f2807be9b7ef5787674b7bdac318a87b652"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/upgrade_card_icons/contagion_00_normal_0/layers/deck_shadow.png",
+			"role": "deck_shadow",
+			"sha256": "5719738de26ceb4057a35fd1e3545034579056dea2e4c06a67fee1a1e6ab153c"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/upgrade_card_icons/contagion_00_normal_0/layers/neutral_highlight.png",
+			"role": "neutral_highlight",
+			"sha256": "60755d70b1c6974e70448fb20e9ade072e27b16319ee6b7e15e59057badb945f"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/upgrade_card_icons/contagion_00_normal_0/layers/toxin.png",
+			"role": "toxin",
+			"sha256": "fc9dce2bc244cbf5e01864b1d9a1ab253c47f28acf5ccc84505659350fd46549"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "6ea9eff200e01b03dd64a04896d6d9f9e9b04b3d2cc54513385c7a89abfcb5c7",
+	"state": "normal",
+	"variant": "contagion",
+	"visible_pixel_count": 1936
+}

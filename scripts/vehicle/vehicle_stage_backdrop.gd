@@ -1,22 +1,26 @@
 class_name VehicleStageBackdrop
 extends Node2D
 
-## Cached stage geometry. Combat state stays in VehicleRun so this canvas
-## only redraws when the authored stage theme changes.
+## Cached presentation shell for the geometry-fed pixel world. Combat and
+## collision truth stay outside this node.
 
 const Rules = preload("res://scripts/vehicle/vehicle_stage_rules.gd")
-const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
-const StageGeometry = preload("res://scripts/vehicle/vehicle_stage_geometry.gd")
 const TacticalLayout = preload("res://scripts/vehicle/vehicle_stage_tactical_layout.gd")
+const PixelWorldBuilder = preload("res://scripts/presentation/vehicle_pixel_world_mesh_builder.gd")
 
 var stage_id: StringName = &"stage_1"
 var _layout: TacticalLayout
 var _layout_fingerprint := 0
+var _pixel_world
 
 
 func _ready() -> void:
 	z_index = -20
 	show_behind_parent = true
+	_pixel_world = PixelWorldBuilder.new()
+	_pixel_world.name = "PixelWorld"
+	add_child(_pixel_world)
+	_pixel_world.configure(stage_id, _layout)
 
 
 func configure(value: StringName, layout: TacticalLayout = null) -> void:
@@ -26,65 +30,13 @@ func configure(value: StringName, layout: TacticalLayout = null) -> void:
 	stage_id = value
 	_layout = layout
 	_layout_fingerprint = next_fingerprint
+	if _pixel_world != null:
+		_pixel_world.configure(stage_id, layout)
 	queue_redraw()
 
 
 func _draw() -> void:
-	_draw_world()
-	_draw_water_and_floor()
-	_draw_boundary_walls()
-	_draw_cover()
-
-
-func _draw_world() -> void:
-	draw_rect(Rules.world_rect(stage_id), Art.COBALT_VOID)
-	for region in Rules.get_floor_regions(stage_id):
-		draw_colored_polygon(PackedVector2Array(region["polygon"]), Art.IVORY)
-
-
-func _draw_water_and_floor() -> void:
-	for water in Rules.get_water_rects(stage_id):
-		draw_rect(water, Art.COBALT_WATER)
-		var wave_y := water.get_center().y
-		draw_line(Vector2(water.position.x + 28.0, wave_y), Vector2(water.end.x - 28.0, wave_y), Color(Art.IVORY_BRIGHT, 0.22), 8.0, true)
-
-
-func _draw_cover() -> void:
-	for polygon in Rules.get_cover_polygons(false, stage_id):
-		_draw_wall_polygon(PackedVector2Array(polygon))
-	if _layout != null:
-		for rectangle in _layout.cover_rects:
-			_draw_wall_polygon(PackedVector2Array(StageGeometry.rect_polygon(rectangle)))
-
-
-func _draw_boundary_walls() -> void:
-	if _layout == null or _layout.geometry_snapshot == null:
-		return
-	var segments: PackedVector2Array = _layout.geometry_snapshot.wall_segments
-	for index in range(0, segments.size(), 2):
-		draw_line(
-			segments[index] + Art.WALL_SHADOW_OFFSET,
-			segments[index + 1] + Art.WALL_SHADOW_OFFSET,
-			Art.WALL_SHADOW,
-			Art.WALL_RAIL_WIDTH,
-			true
-		)
-	for index in range(0, segments.size(), 2):
-		draw_line(
-			segments[index],
-			segments[index + 1],
-			Art.WALL_FILL,
-			Art.WALL_RAIL_WIDTH,
-			true
-		)
-
-
-func _draw_wall_polygon(polygon: PackedVector2Array) -> void:
-	var shadow := PackedVector2Array()
-	for point in polygon:
-		shadow.append(point + Art.WALL_SHADOW_OFFSET)
-	draw_colored_polygon(shadow, Art.WALL_SHADOW)
-	draw_colored_polygon(polygon, Art.WALL_FILL)
+	draw_rect(Rules.world_rect(stage_id), Color("#141B24"))
 
 
 func debug_contract() -> Dictionary:
@@ -97,4 +49,5 @@ func debug_contract() -> Dictionary:
 		"cover_count": Rules.get_cover_rects(false, stage_id).size(),
 		"layout_fingerprint":_layout_fingerprint,
 		"runtime_cover_count":_layout.cover_rects.size() if _layout != null else 0,
+		"pixel_world":_pixel_world.debug_contract() if _pixel_world != null else {},
 	}

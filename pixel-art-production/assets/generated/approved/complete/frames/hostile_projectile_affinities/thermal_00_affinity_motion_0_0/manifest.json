@@ -1,0 +1,36 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 0,
+	"family": "hostile_projectile_affinities",
+	"frame_key": "hostile_projectile_affinities/thermal/0/affinity_motion_0/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/hostile_projectile_affinities/thermal_00_affinity_motion_0_0/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/hostile_projectile_affinities/thermal_00_affinity_motion_0_0/layers/blocker_edge.png",
+			"role": "blocker_edge",
+			"sha256": "8ba895bae625c8d2f5fecfd370d80aead2043066479bfe175ef8122430660124"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/hostile_projectile_affinities/thermal_00_affinity_motion_0_0/layers/neutral_highlight.png",
+			"role": "neutral_highlight",
+			"sha256": "6135f3bb3317d5483b6a4ecef03b36fd3bfb79ce4fe978550609d1e0e33d4376"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/hostile_projectile_affinities/thermal_00_affinity_motion_0_0/layers/thermal.png",
+			"role": "thermal",
+			"sha256": "1148f21270ce64ae0e711b43803f7129d0447da27edc92c3c01c27a42393a400"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "63bebd103fc6eee311e46a63326c2d5ae8e7e71431e475d87fe4e7fac56121bf",
+	"state": "affinity_motion_0",
+	"variant": "thermal",
+	"visible_pixel_count": 458
+}

@@ -1,0 +1,31 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 0,
+	"family": "guidebook_previews",
+	"frame_key": "guidebook_previews/reuse_boss/0/discovered/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/guidebook_previews/reuse_boss_00_discovered_0/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/guidebook_previews/reuse_boss_00_discovered_0/layers/player_reward.png",
+			"role": "player_reward",
+			"sha256": "04b5b926711353df7a76d17fb41f1b1b9519bc2e49f5980760ce5f3ebb5751ec"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/guidebook_previews/reuse_boss_00_discovered_0/layers/space_void.png",
+			"role": "space_void",
+			"sha256": "043e277be54efee3fdfd7a2098407de086518bc35a2a6a9cd342773a7f570276"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "4701d98d05cb280970e7f76dad063ae171af46edb2ef46c7e5382a29e7b3a5ee",
+	"state": "discovered",
+	"variant": "reuse_boss",
+	"visible_pixel_count": 545
+}

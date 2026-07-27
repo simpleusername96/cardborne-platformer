@@ -1,0 +1,253 @@
+{
+	"atlas_sha256": "bc8d0da021a130024ce6dbb2bf5bd04e5a2239cab6ad92b03b1a83f38e086541",
+	"atlas_size": [
+		1630,
+		1834
+	],
+	"families": [
+		{
+			"frame_count": 16,
+			"id": "player_chassis",
+			"production_method": "imagegen_assisted",
+			"runtime_group": "player"
+		},
+		{
+			"frame_count": 48,
+			"id": "player_dash_effect",
+			"production_method": "imagegen_assisted",
+			"runtime_group": "player"
+		},
+		{
+			"frame_count": 32,
+			"id": "player_engine_flame",
+			"production_method": "imagegen_assisted",
+			"runtime_group": "player"
+		},
+		{
+			"frame_count": 16,
+			"id": "player_engine_modules",
+			"production_method": "imagegen_assisted",
+			"runtime_group": "player"
+		},
+		{
+			"frame_count": 32,
+			"id": "player_primary_projectiles",
+			"production_method": "imagegen_assisted",
+			"runtime_group": "player_projectiles"
+		},
+		{
+			"frame_count": 32,
+			"id": "player_primary_weapon",
+			"production_method": "imagegen_assisted",
+			"runtime_group": "player"
+		},
+		{
+			"frame_count": 5,
+			"id": "world_floor_void_tiles",
+			"production_method": "direct_pixel",
+			"runtime_group": "world"
+		},
+		{
+			"frame_count": 16,
+			"id": "wall_cover_tiles",
+			"production_method": "direct_pixel",
+			"runtime_group": "world"
+		},
+		{
+			"frame_count": 24,
+			"id": "water_void_edge_tiles",
+			"production_method": "direct_pixel",
+			"runtime_group": "world"
+		},
+		{
+			"frame_count": 8,
+			"id": "arc_surge_strip",
+			"production_method": "direct_pixel",
+			"runtime_group": "world"
+		},
+		{
+			"frame_count": 8,
+			"id": "breakable_bulkhead",
+			"production_method": "imagegen_assisted",
+			"runtime_group": "world"
+		},
+		{
+			"frame_count": 6,
+			"id": "transit_gate",
+			"production_method": "imagegen_assisted",
+			"runtime_group": "world"
+		},
+		{
+			"frame_count": 4,
+			"id": "repair_field",
+			"production_method": "imagegen_assisted",
+			"runtime_group": "world"
+		},
+		{
+			"frame_count": 3,
+			"id": "overdrive_field",
+			"production_method": "imagegen_assisted",
+			"runtime_group": "world"
+		},
+		{
+			"frame_count": 6,
+			"id": "reward_crate",
+			"production_method": "imagegen_assisted",
+			"runtime_group": "world"
+		},
+		{
+			"frame_count": 0,
+			"id": "player_status_overlays",
+			"production_method": "direct_pixel",
+			"runtime_group": "player"
+		},
+		{
+			"frame_count": 130,
+			"id": "mobile_enemy_set",
+			"production_method": "imagegen_assisted",
+			"runtime_group": "mobile_enemies"
+		},
+		{
+			"frame_count": 54,
+			"id": "stationary_enemy_set",
+			"production_method": "imagegen_assisted",
+			"runtime_group": "stationary_enemies"
+		},
+		{
+			"frame_count": 60,
+			"id": "boss_set",
+			"production_method": "imagegen_assisted",
+			"runtime_group": "bosses"
+		},
+		{
+			"frame_count": 0,
+			"id": "elite_trait_overlays",
+			"production_method": "direct_pixel",
+			"runtime_group": "mobile_enemies"
+		},
+		{
+			"frame_count": 0,
+			"id": "enemy_condition_overlays",
+			"production_method": "direct_pixel",
+			"runtime_group": "combat_overlays"
+		},
+		{
+			"frame_count": 0,
+			"id": "player_projectile_modifier_overlays",
+			"production_method": "direct_pixel",
+			"runtime_group": "player_projectiles"
+		},
+		{
+			"frame_count": 18,
+			"id": "hostile_projectile_affinities",
+			"production_method": "imagegen_assisted",
+			"runtime_group": "hostile_projectiles"
+		},
+		{
+			"frame_count": 16,
+			"id": "secondary_seeker",
+			"production_method": "imagegen_assisted",
+			"runtime_group": "secondaries"
+		},
+		{
+			"frame_count": 0,
+			"id": "secondary_ion_field",
+			"production_method": "direct_pixel",
+			"runtime_group": "secondaries"
+		},
+		{
+			"frame_count": 1,
+			"id": "secondary_orbit_blades",
+			"production_method": "imagegen_assisted",
+			"runtime_group": "secondaries"
+		},
+		{
+			"frame_count": 3,
+			"id": "secondary_wake_mines",
+			"production_method": "imagegen_assisted",
+			"runtime_group": "secondaries"
+		},
+		{
+			"frame_count": 17,
+			"id": "secondary_escort_drone",
+			"production_method": "imagegen_assisted",
+			"runtime_group": "secondaries"
+		},
+		{
+			"frame_count": 0,
+			"id": "telegraph_shape_system",
+			"production_method": "direct_pixel",
+			"runtime_group": "combat_overlays"
+		},
+		{
+			"frame_count": 20,
+			"id": "impact_effects",
+			"production_method": "direct_pixel",
+			"runtime_group": "impacts"
+		},
+		{
+			"frame_count": 3,
+			"id": "experience_shards",
+			"production_method": "direct_pixel",
+			"runtime_group": "pickups"
+		},
+		{
+			"frame_count": 2,
+			"id": "repair_pickup",
+			"production_method": "direct_pixel",
+			"runtime_group": "pickups"
+		},
+		{
+			"frame_count": 2,
+			"id": "experience_recall_pickup",
+			"production_method": "direct_pixel",
+			"runtime_group": "pickups"
+		},
+		{
+			"frame_count": 6,
+			"id": "hud_action_icons",
+			"production_method": "direct_pixel",
+			"runtime_group": "ui"
+		},
+		{
+			"frame_count": 0,
+			"id": "minimap_world_markers",
+			"production_method": "direct_pixel",
+			"runtime_group": "ui"
+		},
+		{
+			"frame_count": 10,
+			"id": "guidebook_previews",
+			"production_method": "derived_view",
+			"runtime_group": "ui"
+		},
+		{
+			"frame_count": 46,
+			"id": "upgrade_card_icons",
+			"production_method": "direct_pixel",
+			"runtime_group": "ui"
+		},
+		{
+			"frame_count": 0,
+			"id": "world_targeting_markers",
+			"production_method": "direct_pixel",
+			"runtime_group": "combat_overlays"
+		},
+		{
+			"frame_count": 0,
+			"id": "ui_frame_system",
+			"production_method": "direct_pixel",
+			"runtime_group": "ui"
+		},
+		{
+			"frame_count": 0,
+			"id": "dynamic_combat_ui",
+			"production_method": "live_ui",
+			"runtime_group": "ui"
+		}
+	],
+	"inventory_assets": 40,
+	"published_assets": 40,
+	"published_frames": 644,
+	"schema_version": 1
+}

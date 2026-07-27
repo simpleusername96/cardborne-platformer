@@ -1,0 +1,31 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 0,
+	"family": "impact_effects",
+	"frame_key": "impact_effects/cover/0/frame_0/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/impact_effects/cover_00_frame_0_0/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/impact_effects/cover_00_frame_0_0/layers/neutral_highlight.png",
+			"role": "neutral_highlight",
+			"sha256": "b6820c130dad869d3c6f1445a51f96dfefac4beed2722d3c77f0a8eb13826534"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/impact_effects/cover_00_frame_0_0/layers/player_reward.png",
+			"role": "player_reward",
+			"sha256": "8d6700694e9ee91e0563254bb04234f991e897ba4f3037ec9d4234d03e489126"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "841fb925c0fc2c85e5188b97b76979a560140e9b3b1c19af0f92790645a7049a",
+	"state": "frame_0",
+	"variant": "cover",
+	"visible_pixel_count": 100
+}

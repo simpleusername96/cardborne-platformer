@@ -1,0 +1,36 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 4,
+	"family": "boss_set",
+	"frame_key": "boss_set/titan/4/read/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/boss_set/titan_04_read_0/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/boss_set/titan_04_read_0/layers/blocker_edge.png",
+			"role": "blocker_edge",
+			"sha256": "c19cec51da0edf60423931ca8286c409a605a95d008cfada527ba60c77a03bbe"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/boss_set/titan_04_read_0/layers/boss_threat.png",
+			"role": "boss_threat",
+			"sha256": "6f41426dfe061722567b56a01ca182872855ed3b9b5c6e11865cfee7fd62e113"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/boss_set/titan_04_read_0/layers/neutral_highlight.png",
+			"role": "neutral_highlight",
+			"sha256": "37c93917dd62e5e705cc22437e54667d2e514828e6355441145b87e6e31f44e9"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "014a54b7bf59d05e384916e1aae5a39fc4309361f89e543855483840ae99913f",
+	"state": "read",
+	"variant": "titan",
+	"visible_pixel_count": 1082
+}

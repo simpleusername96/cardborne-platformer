@@ -1,0 +1,36 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 10,
+	"family": "boss_set",
+	"frame_key": "boss_set/leviathan/10/read/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/boss_set/leviathan_10_read_0/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/boss_set/leviathan_10_read_0/layers/blocker_edge.png",
+			"role": "blocker_edge",
+			"sha256": "bdb461fb7c62bc53247018b8c15300c4eae7f89108c175b032bbb57b868aeed9"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/boss_set/leviathan_10_read_0/layers/boss_threat.png",
+			"role": "boss_threat",
+			"sha256": "545616f05197cb84fff56bf4e4a5160f61437c3cd15e4ca929371479b2602ce6"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/boss_set/leviathan_10_read_0/layers/neutral_highlight.png",
+			"role": "neutral_highlight",
+			"sha256": "16cbc6534ba4757a84d7a87ada441dd5ccd69ce994ad5ce783cc0af679b1d8f2"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "cfecf68bab74a62a3f0cf3aecd59c88989a000839719779e26b81b024e258578",
+	"state": "read",
+	"variant": "leviathan",
+	"visible_pixel_count": 1251
+}

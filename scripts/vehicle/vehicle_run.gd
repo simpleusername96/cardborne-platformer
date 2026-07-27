@@ -23,6 +23,7 @@ const AttackTelegraphs = preload("res://scripts/combat/vehicle_attack_telegraph_
 const SpatialGrid = preload("res://scripts/combat/vehicle_spatial_grid.gd")
 const AudioDirector = preload("res://scripts/presentation/vehicle_audio_director.gd")
 const CombatRenderer = preload("res://scripts/presentation/vehicle_combat_renderer.gd")
+const PixelCatalog = preload("res://scripts/presentation/vehicle_pixel_asset_catalog.gd")
 const StageBackdrop = preload("res://scripts/vehicle/vehicle_stage_backdrop.gd")
 const BossPatterns = preload("res://scripts/bosses/vehicle_boss_patterns.gd")
 const UpgradeOfferPresenter = preload("res://scripts/cards/vehicle_upgrade_offer_presenter.gd")
@@ -107,6 +108,7 @@ var _hud_presenter := HudPresenter.new()
 var _camera: Camera2D
 var _backdrop
 var _combat_renderer: VehicleCombatRenderer
+var _pixel_catalog
 var _rng := RandomNumberGenerator.new()
 var _layout_session_rng := RandomNumberGenerator.new()
 var _layout_session_seed := 0
@@ -251,6 +253,7 @@ var _pending_stage_report: Dictionary = {}
 
 func _ready() -> void:
 	_rng.seed = 0xC4A2B0
+	_pixel_catalog = PixelCatalog.new()
 	_layout_session_rng.randomize()
 	_layout_session_seed = _layout_session_rng.seed
 	_parse_capture_arguments()
@@ -4548,6 +4551,20 @@ func _draw_terrain() -> void:
 				var color := Art.ATTACK_ARC
 				draw_rect(rectangle, Color(color, 0.12 + readiness * 0.38))
 				draw_rect(rectangle, color, false, 12.0)
+				var surge_state := (
+					&"active"
+					if readiness >= 0.82
+					else (&"warning" if readiness > 0.05 else &"idle")
+				)
+				_draw_pixel_asset(
+					&"arc_surge_strip",
+					&"horizontal_segment",
+					surge_state,
+					rectangle.get_center(),
+					rectangle.size,
+					Color(1.0, 1.0, 1.0, 0.88),
+					0 if rectangle.size.x >= rectangle.size.y else 8
+				)
 				for index in 3:
 					_draw_terrain_bolt(
 						rectangle.position + rectangle.size * Vector2(
@@ -4562,6 +4579,22 @@ func _draw_terrain() -> void:
 				var rectangle := Rect2(feature["rect"])
 				draw_rect(Rect2(rectangle.position + Art.WALL_SHADOW_OFFSET, rectangle.size), Art.WALL_SHADOW)
 				draw_rect(rectangle, Art.WALL_FILL)
+				var health_ratio := clampf(
+					float(feature.get("health", TerrainRuntime.BULKHEAD_HEALTH))
+					/ TerrainRuntime.BULKHEAD_HEALTH,
+					0.0,
+					1.0
+				)
+				var bulkhead_state := &"cracked" if health_ratio < 0.58 else &"intact"
+				_draw_pixel_asset(
+					&"breakable_bulkhead",
+					&"horizontal",
+					bulkhead_state,
+					rectangle.get_center(),
+					rectangle.size,
+					Color.WHITE,
+					0 if rectangle.size.x >= rectangle.size.y else 8
+				)
 				var center := rectangle.get_center()
 				draw_polyline(PackedVector2Array([
 					center + Vector2(-34,-72), center + Vector2(8,-22),
@@ -4575,6 +4608,18 @@ func _draw_terrain() -> void:
 				var gate_color := Art.MUSTARD if available else Art.INK_MUTED
 				draw_circle(center, TerrainRuntime.GATE_RADIUS, Color(gate_color, 0.24))
 				draw_arc(center, TerrainRuntime.GATE_RADIUS, 0.0, TAU, 40, gate_color, 12.0)
+				var gate_state := (
+					&"cooldown"
+					if not available
+					else (&"dwelling" if progress > 0.0 else &"ready")
+				)
+				_draw_pixel_asset(
+					&"transit_gate",
+					&"pair_a",
+					gate_state,
+					center,
+					Vector2.ONE * TerrainRuntime.GATE_RADIUS * 1.35
+				)
 				_draw_terrain_chevron(center - Vector2(20.0, 0.0), Vector2.LEFT, 32.0, Art.IVORY_BRIGHT, 12.0)
 				_draw_terrain_chevron(center + Vector2(20.0, 0.0), Vector2.RIGHT, 32.0, Art.IVORY_BRIGHT, 12.0)
 				draw_arc(center, TerrainRuntime.GATE_RADIUS - 18.0, -PI * 0.5, -PI * 0.5 + TAU * progress, 40, Art.IVORY_BRIGHT, 10.0)
@@ -4638,6 +4683,19 @@ func _draw_pickups_and_crates() -> void:
 		var color := _pickup_color(kind)
 		var bob := 0.0 if _reduced_motion_enabled() else sin(float(pickup["pulse"])) * 3.0
 		position.y += bob
+		var pickup_family := (
+			&"repair_pickup"
+			if kind == &"repair"
+			else &"experience_recall_pickup"
+		)
+		if _draw_pixel_asset(
+			pickup_family,
+			kind,
+			&"idle",
+			position,
+			Vector2.ONE * 72.0
+		):
+			continue
 		var plinth_radius := Art.PICKUP_PLINTH_RADIUS
 		draw_circle(position + Vector2(7.0, 9.0), plinth_radius, Art.COBALT_DEEP)
 		draw_circle(position, plinth_radius, Art.IVORY_BRIGHT)
@@ -4657,6 +4715,20 @@ func _draw_pickups_and_crates() -> void:
 			continue
 		var position := Vector2(crate["pos"])
 		var face := Art.IVORY_BRIGHT if float(crate["flash"]) > 0.0 else Art.IVORY_SHADE
+		var crate_variant := (
+			&"repair_contents"
+			if StringName(crate["drop"]) == &"repair"
+			else &"recall_contents"
+		)
+		if _draw_pixel_asset(
+			&"reward_crate",
+			crate_variant,
+			&"intact",
+			position,
+			Vector2.ONE * 88.0,
+			Color(1.0, 0.65, 0.65) if float(crate["flash"]) > 0.0 else Color.WHITE
+		):
+			continue
 		var crate_rect := Rect2(position - Vector2(38.0, 38.0), Vector2(76.0, 76.0))
 		var edge := crate_rect
 		edge.position += Vector2(8.0, 10.0)
@@ -4664,6 +4736,40 @@ func _draw_pickups_and_crates() -> void:
 		draw_colored_polygon(Art.stepped_rect(crate_rect, 12.0), face)
 		draw_colored_polygon(_regular_polygon(position, 23.0, 4, PI / 4.0), Art.MUSTARD)
 		draw_colored_polygon(_regular_polygon(position, 11.0, 4, PI / 4.0), Art.CERAMIC_GREEN)
+
+
+func _draw_pixel_asset(
+	family: StringName,
+	variant: StringName,
+	state: StringName,
+	position: Vector2,
+	target_size: Vector2,
+	modulate: Color = Color.WHITE,
+	direction_index: int = 0
+) -> bool:
+	if _pixel_catalog == null or not _pixel_catalog.is_ready():
+		return false
+	var frame: Dictionary = _pixel_catalog.frame(
+		family, variant, direction_index, state, 0
+	)
+	if frame.is_empty():
+		return false
+	var texture: Texture2D = _pixel_catalog.texture(family)
+	if texture == null:
+		return false
+	var region_values := Array(frame["region"])
+	draw_texture_rect_region(
+		texture,
+		Rect2(position - target_size * 0.5, target_size),
+		Rect2(
+			float(region_values[0]),
+			float(region_values[1]),
+			float(region_values[2]),
+			float(region_values[3])
+		),
+		modulate
+	)
+	return true
 
 
 func _draw_enemies() -> void:

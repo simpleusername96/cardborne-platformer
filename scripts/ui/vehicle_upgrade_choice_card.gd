@@ -6,6 +6,7 @@ extends Button
 ## gameplay progression layer.
 
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
+const PixelCatalog = preload("res://scripts/presentation/vehicle_pixel_asset_catalog.gd")
 
 class LevelPips:
 	extends Control
@@ -64,6 +65,7 @@ var _impact_title: Label
 var _impact: Label
 var _values: VBoxContainer
 var _pips: LevelPips
+var _pixel_catalog
 
 
 func _ready() -> void:
@@ -74,6 +76,7 @@ func _ready() -> void:
 	size_flags_stretch_ratio = 1.0
 	focus_mode = Control.FOCUS_ALL
 	theme_type_variation = &"UpgradeChoiceCard"
+	_pixel_catalog = PixelCatalog.new()
 	focus_entered.connect(queue_redraw)
 	focus_exited.connect(queue_redraw)
 	resized.connect(queue_redraw)
@@ -305,6 +308,7 @@ func _preview_value(preview: Dictionary) -> String:
 
 
 func _draw() -> void:
+	_draw_upgrade_icon()
 	if _selected:
 		var center := Vector2(size.x - 20.0, 20.0)
 		draw_colored_polygon(PackedVector2Array([
@@ -315,6 +319,30 @@ func _draw() -> void:
 		]), Art.MUSTARD)
 	if has_focus():
 		draw_rect(Rect2(7.0, 10.0, 5.0, size.y - 20.0), Art.IVORY_BRIGHT)
+
+
+func _draw_upgrade_icon() -> void:
+	if _pixel_catalog == null or not _pixel_catalog.is_ready() or _offer.is_empty():
+		return
+	var upgrade_id := StringName(_offer.get("id", &""))
+	var frame: Dictionary = _pixel_catalog.frame(
+		&"upgrade_card_icons", upgrade_id, 0, &"normal", 0
+	)
+	if frame.is_empty():
+		return
+	var texture: Texture2D = _pixel_catalog.texture(&"upgrade_card_icons")
+	if texture == null:
+		return
+	var region := Array(frame["region"])
+	draw_texture_rect_region(
+		texture,
+		Rect2(14.0, 12.0, 42.0, 42.0),
+		Rect2(
+			float(region[0]), float(region[1]),
+			float(region[2]), float(region[3])
+		),
+		Color.WHITE
+	)
 
 
 func _label(font_size: int, color: Color) -> Label:

@@ -1,0 +1,41 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 0,
+	"family": "world_floor_void_tiles",
+	"frame_key": "world_floor_void_tiles/floor_patch_2x2/0/static/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/world_floor_void_tiles/floor_patch_2x2_00_static_0/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/world_floor_void_tiles/floor_patch_2x2_00_static_0/layers/blocker_edge.png",
+			"role": "blocker_edge",
+			"sha256": "a25d2be4e8cb97b99f8a4318a6ec624f32e7599ba30c22707fa334f656484777"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/world_floor_void_tiles/floor_patch_2x2_00_static_0/layers/blocker_top.png",
+			"role": "blocker_top",
+			"sha256": "08c94762cf43ecf663b525f6c4f6778d1834ea9d08b90004e1d1b21435d6a71f"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/world_floor_void_tiles/floor_patch_2x2_00_static_0/layers/deck_base.png",
+			"role": "deck_base",
+			"sha256": "bf4b5e8bc48ab3bb76b3be7a50ee9c26cee2037984c760fec371cc2306cf8e42"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/world_floor_void_tiles/floor_patch_2x2_00_static_0/layers/deck_shadow.png",
+			"role": "deck_shadow",
+			"sha256": "887ab73902361683a5edc74482e9685e44aa633f6e697be6a156b33b42db4d61"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "6843d0e6fd941eb27519bd71694a37c0cbdca18bf3764e7e834493b3bbf8beef",
+	"state": "static",
+	"variant": "floor_patch_2x2",
+	"visible_pixel_count": 4096
+}

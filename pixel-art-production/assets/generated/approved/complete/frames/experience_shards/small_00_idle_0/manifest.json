@@ -1,0 +1,36 @@
+{
+	"anchors": {},
+	"approval_status": "approved",
+	"direction_index": 0,
+	"family": "experience_shards",
+	"frame_key": "experience_shards/small/0/idle/0",
+	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/experience_shards/small_00_idle_0/master.png",
+	"pivot": [
+		32,
+		32
+	],
+	"reassembly_difference_pixels": 0,
+	"schema_version": 1,
+	"semantic_layers": [
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/experience_shards/small_00_idle_0/layers/blocker_edge.png",
+			"role": "blocker_edge",
+			"sha256": "57fcef2b79f4d0a43254f5d48f6f69eda79189467e63dabf19a27273515f9714"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/experience_shards/small_00_idle_0/layers/neutral_highlight.png",
+			"role": "neutral_highlight",
+			"sha256": "78bbfd2982a0c51759f0b921db6b37a02dc233749d316ae5fc469829942a3618"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/experience_shards/small_00_idle_0/layers/player_reward.png",
+			"role": "player_reward",
+			"sha256": "cf82e16906a536a1d1d6b652d3618f2a474ac36ce26edf814c05daacf402cda2"
+		}
+	],
+	"sequence_index": 0,
+	"source_sha256": "3cb2385be72ec3f81288766d697b830f6f0885ae7f8de4614505c7900d48e01e",
+	"state": "idle",
+	"variant": "small",
+	"visible_pixel_count": 265
+}
