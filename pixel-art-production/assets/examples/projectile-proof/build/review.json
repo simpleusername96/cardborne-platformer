@@ -1,0 +1,186 @@
+{
+  "schema_version": 1,
+  "asset_id": "hostile_thermal_projectile_proof",
+  "approval_status": "proof",
+  "review_path": "pixel-art-production/assets/examples/projectile-proof/build/review.png",
+  "board_size": [
+    1840,
+    520
+  ],
+  "panel_size": 256,
+  "backgrounds": [
+    "space_void",
+    "deck_base",
+    "neutral_highlight"
+  ],
+  "frames": [
+    {
+      "id": "thermal_east_flight",
+      "source_sha256": "fc80927eaaf368dc2ac04ba31937686600f34ecfaa0d15a022eb1e54952ddc34",
+      "scale": 8,
+      "pivot": [
+        21,
+        16
+      ],
+      "anchors": {
+        "leading_edge": [
+          27,
+          16
+        ],
+        "wake_origin": [
+          14,
+          16
+        ]
+      },
+      "panels": [
+        {
+          "kind": "native_1x",
+          "region": [
+            0,
+            0,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "enlarged_with_pivot",
+          "region": [
+            264,
+            0,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "silhouette",
+          "region": [
+            528,
+            0,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "grayscale",
+          "region": [
+            792,
+            0,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_space_void",
+          "region": [
+            1056,
+            0,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_deck_base",
+          "region": [
+            1320,
+            0,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_neutral_highlight",
+          "region": [
+            1584,
+            0,
+            256,
+            256
+          ]
+        }
+      ]
+    },
+    {
+      "id": "thermal_east_flight_pulse",
+      "source_sha256": "59336092d41be2dab7cc90c3697b20826a08e01c2a3a76b1835401f9b8dab47f",
+      "scale": 8,
+      "pivot": [
+        21,
+        16
+      ],
+      "anchors": {
+        "leading_edge": [
+          27,
+          16
+        ],
+        "wake_origin": [
+          14,
+          16
+        ]
+      },
+      "panels": [
+        {
+          "kind": "native_1x",
+          "region": [
+            0,
+            264,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "enlarged_with_pivot",
+          "region": [
+            264,
+            264,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "silhouette",
+          "region": [
+            528,
+            264,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "grayscale",
+          "region": [
+            792,
+            264,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_space_void",
+          "region": [
+            1056,
+            264,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_deck_base",
+          "region": [
+            1320,
+            264,
+            256,
+            256
+          ]
+        },
+        {
+          "kind": "background_neutral_highlight",
+          "region": [
+            1584,
+            264,
+            256,
+            256
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "id": "pipeline_sampler_wall_corner_tile",
+  "family": "wall_cover_tiles",
+  "canvas_size": 768,
+  "logical_size": [24, 24],
+  "palette_path": "pixel-art-production/evidence/pipeline-sampler/palette/pixel-hangar-v1-sampler.png",
+  "semantic_palette_path": "pixel-art-production/evidence/pipeline-sampler/palette/semantic-mask-v1-sampler.png",
+  "transparent_color": "#FFFFFF",
+  "layers": [
+    {"id": "top", "mask_color": "#FF0000", "z": 0, "required": true},
+    {"id": "contact_edge", "mask_color": "#FF8000", "z": 1, "required": true},
+    {"id": "boundary_light", "mask_color": "#FFFF00", "z": 2, "required": true}
+  ],
+  "pivot": [12, 12],
+  "anchors": {},
+  "frames": [
+    {
+      "id": "north_east",
+      "source_path": "pixel-art-production/evidence/pipeline-sampler/native/wall-corner-tile.png",
+      "semantic_mask_path": "pixel-art-production/evidence/pipeline-sampler/masks/wall-corner-tile.png",
+      "atlas_index": 0,
+      "direction": 0,
+      "state": "canonical"
+    }
+  ],
+  "atlas": {"columns": 1, "padding": 0}
+}

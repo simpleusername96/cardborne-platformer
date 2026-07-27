@@ -17,4 +17,4 @@ No other document defines the active game or its presentation.
 
 | Document | Role |
 | --- | --- |
-| `design/pixel-art-asset-pipeline/README.md` | Canonical offline inventory and production contract for proposed pixel-art assets. It does not replace the live visual system until approved atlases are integrated. |
+| [`../pixel-art-production/README.md`](../pixel-art-production/README.md) | Canonical pixel-art production workspace and contract. It does not replace the live visual system until approved atlases are integrated. |

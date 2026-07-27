@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "asset_id": "player_craft_north_idle",
+  "atlas_path": "pixel-art-production/assets/examples/player-craft-build/atlas.png",
+  "atlas_size": [
+    64,
+    64
+  ],
+  "frame_size": [
+    64,
+    64
+  ],
+  "columns": 1,
+  "rows": 1,
+  "padding": 0,
+  "frames": [
+    {
+      "id": "north_idle",
+      "atlas_index": 0,
+      "region": [
+        0,
+        0,
+        64,
+        64
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "muzzle": [
+          32,
+          5
+        ],
+        "left_engine_nozzle": [
+          24,
+          57
+        ],
+        "right_engine_nozzle": [
+          40,
+          57
+        ],
+        "status_left": [
+          12,
+          31
+        ],
+        "status_right": [
+          52,
+          31
+        ]
+      },
+      "direction": 0,
+      "state": "idle"
+    }
+  ]
+}

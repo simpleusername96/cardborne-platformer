@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "id": "pipeline_sampler_thermal_heavy_shot",
+  "family": "hostile_projectile_affinities",
+  "canvas_size": 512,
+  "logical_size": [32, 32],
+  "palette_path": "pixel-art-production/evidence/pipeline-sampler/palette/pixel-hangar-v1-sampler.png",
+  "semantic_palette_path": "pixel-art-production/evidence/pipeline-sampler/palette/semantic-mask-v1-sampler.png",
+  "transparent_color": "#FFFFFF",
+  "layers": [
+    {"id": "head", "mask_color": "#FF0000", "z": 0, "required": true},
+    {"id": "core", "mask_color": "#FFFF00", "z": 1, "required": true},
+    {"id": "affinity_edge", "mask_color": "#FF00FF", "z": 2, "required": true},
+    {"id": "wake", "mask_color": "#FF8000", "z": 3, "required": true}
+  ],
+  "pivot": [21, 16],
+  "anchors": {
+    "leading_edge": [27, 16],
+    "wake_origin": [14, 16]
+  },
+  "frames": [
+    {
+      "id": "east_heavy",
+      "source_path": "pixel-art-production/evidence/pipeline-sampler/raw/thermal-heavy-shot.png",
+      "semantic_mask_path": "pixel-art-production/evidence/pipeline-sampler/masks/thermal-heavy-shot.png",
+      "atlas_index": 0,
+      "direction": 4,
+      "state": "canonical"
+    }
+  ],
+  "atlas": {"columns": 1, "padding": 0}
+}

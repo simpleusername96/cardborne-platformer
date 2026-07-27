@@ -1,0 +1,83 @@
+{
+  "schema_version": 2,
+  "asset_id": "player_craft_proof",
+  "family": "player_chassis",
+  "atlas_path": "pixel-art-production/assets/examples/player-craft-build-v2/atlas.png",
+  "atlas_size": [
+    66,
+    66
+  ],
+  "frame_size": [
+    64,
+    64
+  ],
+  "cell_size": [
+    66,
+    66
+  ],
+  "columns": 1,
+  "rows": 1,
+  "padding": 2,
+  "extrude": 1,
+  "frames": [
+    {
+      "id": "standard_north_idle",
+      "atlas_index": 0,
+      "region": [
+        1,
+        1,
+        64,
+        64
+      ],
+      "cell_region": [
+        0,
+        0,
+        66,
+        66
+      ],
+      "pivot": [
+        32,
+        32
+      ],
+      "anchors": {
+        "muzzle": [
+          32,
+          5
+        ],
+        "left_engine_nozzle": [
+          24,
+          57
+        ],
+        "right_engine_nozzle": [
+          40,
+          57
+        ],
+        "status_left": [
+          12,
+          31
+        ],
+        "status_right": [
+          52,
+          31
+        ]
+      },
+      "direction": 0,
+      "state": "idle",
+      "variant": "standard",
+      "sequence_index": 0,
+      "duration_ms": 0,
+      "source_sha256": "1821f64301a3dfcca6261064096627472a7a763239c965e629a5560286d88d00"
+    }
+  ],
+  "runtime_group": "player",
+  "runtime_layers": [
+    "body",
+    "left_wing",
+    "right_wing",
+    "cockpit",
+    "primary_mount",
+    "left_engine",
+    "right_engine"
+  ],
+  "approval_status": "proof"
+}

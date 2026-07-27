@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "canvas_size": 512,
+  "cells": 128,
+  "review_size": 1024,
+  "comparison": "pixel-art-production/design/visual-research/mvp/round-2/mvp-round-2-comparison.png",
+  "candidates": [
+    {
+      "id": "mvp-e-refined-readability",
+      "source": "pixel-art-production/design/visual-research/mvp/round-2/source/mvp-e-refined-readability.png",
+      "palette": "pixel-art-production/design/visual-research/palettes/mvp-d-tactical-monochrome.png",
+      "native": "pixel-art-production/design/visual-research/mvp/round-2/native/mvp-e-refined-readability-128.png",
+      "review": "pixel-art-production/design/visual-research/mvp/round-2/review/mvp-e-refined-readability-1024.png"
+    },
+    {
+      "id": "mvp-f-refined-hangar-identity",
+      "source": "pixel-art-production/design/visual-research/mvp/round-2/source/mvp-f-refined-hangar-identity.png",
+      "palette": "pixel-art-production/design/visual-research/palettes/mvp-d-tactical-monochrome.png",
+      "native": "pixel-art-production/design/visual-research/mvp/round-2/native/mvp-f-refined-hangar-identity-128.png",
+      "review": "pixel-art-production/design/visual-research/mvp/round-2/review/mvp-f-refined-hangar-identity-1024.png"
+    }
+  ]
+}

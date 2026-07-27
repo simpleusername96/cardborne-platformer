@@ -8,7 +8,7 @@ canonical_for: Cardborne gameplay and product behavior
 scope: Current run-selected-field five-stage vehicle campaign
 related:
   - ../design/UI_VISUAL_SYSTEM.md
-  - ../design/pixel-art-space-hangar-research.md
+  - ../../pixel-art-production/design/space-hangar-research.md
   - ../../.agents/vehicle-performance-architecture-audit.md
   - ../../.agents/vehicle-performance-stabilization-evidence.md
   - ../../.agents/execplans/2026-07-23-vehicle-performance-architecture-stabilization.md
