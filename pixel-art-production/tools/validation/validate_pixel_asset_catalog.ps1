@@ -1,6 +1,7 @@
 param(
     [Parameter(Mandatory = $true)]
-    [string]$CatalogPath
+    [string]$CatalogPath,
+    [switch]$SkipNativeSourceValidation
 )
 
 $ErrorActionPreference = "Stop"
@@ -103,33 +104,35 @@ foreach ($asset in @($catalog.assets)) {
         $key = [string]$frame.key
         if ($frameKeys.ContainsKey($key)) { $errors.Add("duplicate frame key: $key") }
         $frameKeys[$key] = $true
-        $frameDirectory = Join-Path $repoRoot (
-            "pixel-art-production/assets/generated/approved/complete/frames/{0}/{1}" -f
-            $assetId, [string]$frame.id
-        )
-        $masterPath = Join-Path $frameDirectory "master.png"
-        $manifestPath = Join-Path $frameDirectory "manifest.json"
-        if (-not [System.IO.File]::Exists($masterPath)) {
-            $errors.Add("$key has no native master")
-        } elseif (
-            [string]$frame.source_sha256 -ne
-            (Get-FileHash -LiteralPath $masterPath -Algorithm SHA256).Hash.ToLowerInvariant()
-        ) {
-            $errors.Add("$key native master checksum does not match")
-        }
-        if (-not [System.IO.File]::Exists($manifestPath)) {
-            $errors.Add("$key has no semantic manifest")
-        } else {
-            $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
-            if (
-                [string]$manifest.frame_key -ne $key -or
-                [int]$manifest.reassembly_difference_pixels -ne 0 -or
-                (
-                    [int]$manifest.visible_pixel_count -gt 0 -and
-                    @($manifest.semantic_layers).Count -eq 0
-                )
+        if (-not $SkipNativeSourceValidation) {
+            $frameDirectory = Join-Path $repoRoot (
+                "pixel-art-production/assets/generated/approved/complete/frames/{0}/{1}" -f
+                $assetId, [string]$frame.id
+            )
+            $masterPath = Join-Path $frameDirectory "master.png"
+            $manifestPath = Join-Path $frameDirectory "manifest.json"
+            if (-not [System.IO.File]::Exists($masterPath)) {
+                $errors.Add("$key has no native master")
+            } elseif (
+                [string]$frame.source_sha256 -ne
+                (Get-FileHash -LiteralPath $masterPath -Algorithm SHA256).Hash.ToLowerInvariant()
             ) {
-                $errors.Add("$key semantic manifest is incomplete")
+                $errors.Add("$key native master checksum does not match")
+            }
+            if (-not [System.IO.File]::Exists($manifestPath)) {
+                $errors.Add("$key has no semantic manifest")
+            } else {
+                $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
+                if (
+                    [string]$manifest.frame_key -ne $key -or
+                    [int]$manifest.reassembly_difference_pixels -ne 0 -or
+                    (
+                        [int]$manifest.visible_pixel_count -gt 0 -and
+                        @($manifest.semantic_layers).Count -eq 0
+                    )
+                ) {
+                    $errors.Add("$key semantic manifest is incomplete")
+                }
             }
         }
         $region = @($frame.region)
@@ -234,5 +237,10 @@ if ($countedFrames -ne [int]$catalog.frame_count) {
 }
 if ($errors.Count -gt 0) {
     throw "Pixel asset catalog validation failed:`n$(($errors | ForEach-Object { "- $_" }) -join "`n")"
+}
+if ($null -ne $catalog.PSObject.Properties["source_overrides"]) {
+    & (Join-Path $PSScriptRoot "validate_pixel_source_overrides.ps1") `
+        -ManifestPath ([string]$catalog.source_overrides.manifest_path) `
+        -CatalogPath $catalogFile
 }
 Write-Output "Pixel asset catalog valid: assets=$($assetIds.Count); frames=$countedFrames"

@@ -1,17 +1,21 @@
 extends SceneTree
 
 ## Deterministic full-library publisher. It preserves the approved Phase 2
-## masters, produces the remaining inventory families with the same restrained
-## pixel grammar, emits semantic-by-palette SVG masters, and packs one shared
-## runtime atlas without changing gameplay geometry.
+## masters, imports reviewed source overrides, truthfully labels any remaining
+## direct/procedural frames, emits semantic-by-palette SVG masters, and packs
+## one shared runtime atlas without changing gameplay geometry.
 
 const INVENTORY_PATH := "res://pixel-art-production/assets/asset-inventory.json"
 const PHASE2_CATALOG_PATH := "res://pixel-art-production/assets/generated/approved/phase-2/catalog.json"
+const SOURCE_OVERRIDE_MANIFEST_PATH := "res://pixel-art-production/assets/manifests/approved/visual-recovery/core-slice.json"
 const OUTPUT_ATLAS_PATH := "res://pixel-art-production/runtime/atlases/cardborne-pixel-atlas.png"
 const OUTPUT_CATALOG_PATH := "res://pixel-art-production/runtime/catalog.json"
 const MASTER_ROOT := "res://pixel-art-production/assets/generated/approved/complete/masters"
 const FRAME_SOURCE_ROOT := "res://pixel-art-production/assets/generated/approved/complete/frames"
 const EVIDENCE_ROOT := "res://pixel-art-production/evidence/gates/08-final-migration"
+const PixelSourceOverrideCatalog := preload(
+	"res://tools/design/pixel_source_override_catalog.gd"
+)
 
 const FRAME_SIZE := 64
 const CELL_SIZE := 66
@@ -55,6 +59,8 @@ var _frames: Array[Dictionary] = []
 var _assets: Array[Dictionary] = []
 var _masters: Dictionary = {}
 var _generation_failed := false
+var _source_overrides
+var _repeat_tile_records: Array[Dictionary] = []
 var _palette_names := {
 	"#141B24":"space_void",
 	"#202833":"structure_recess",
@@ -77,6 +83,12 @@ var _palette_names := {
 
 func _initialize() -> void:
 	_ensure_directories()
+	_source_overrides = PixelSourceOverrideCatalog.new()
+	if not _source_overrides.load_manifest(SOURCE_OVERRIDE_MANIFEST_PATH):
+		for message in _source_overrides.errors():
+			push_error(message)
+		quit(1)
+		return
 	var inventory_variant: Variant = JSON.parse_string(
 		FileAccess.get_file_as_string(INVENTORY_PATH)
 	)
@@ -96,6 +108,15 @@ func _initialize() -> void:
 			continue
 		_produce_inventory_asset(inventory_asset)
 	_publish_repeat_tiles()
+	for unused_key in _source_overrides.unused_frame_keys():
+		push_error("Pixel source override target was not published: %s" % unused_key)
+		_generation_failed = true
+	for message in _source_overrides.errors():
+		push_error(message)
+		_generation_failed = true
+	if _generation_failed:
+		quit(1)
+		return
 	_pack_and_publish(inventory)
 	if _generation_failed:
 		quit(1)
@@ -136,6 +157,26 @@ func _import_phase2(catalog: Dictionary) -> void:
 			))
 			if image.get_width() != FRAME_SIZE or image.get_height() != FRAME_SIZE:
 				image.resize(FRAME_SIZE, FRAME_SIZE, Image.INTERPOLATE_NEAREST)
+			var source_metadata := source_frame.duplicate(true)
+			source_metadata["production_method"] = String(
+				source_asset.get("production_method", "imagegen_assisted")
+			)
+			source_metadata["source_catalog_path"] = (
+				PHASE2_CATALOG_PATH.trim_prefix("res://")
+			)
+			var resolved := _resolve_frame_override(
+				String(source_asset["id"]),
+				String(source_frame["variant"]),
+				int(source_frame["direction_index"]),
+				String(source_frame["state"]),
+				int(source_frame["sequence_index"])
+			)
+			if not resolved.is_empty():
+				image = resolved["image"] as Image
+				source_metadata.merge(
+					Dictionary(resolved["metadata"]),
+					true
+				)
 			var record := _frame_record(
 				String(source_asset["id"]),
 				String(source_frame["variant"]),
@@ -143,7 +184,7 @@ func _import_phase2(catalog: Dictionary) -> void:
 				String(source_frame["state"]),
 				int(source_frame["sequence_index"]),
 				image,
-				source_frame
+				source_metadata
 			)
 			output_frames.append(record)
 		_assets.append(_asset_record(
@@ -151,7 +192,10 @@ func _import_phase2(catalog: Dictionary) -> void:
 			String(source_asset.get("runtime_group", "")),
 			Array(source_asset.get("runtime_layers", [])),
 			output_frames,
-			String(source_asset.get("production_method", "imagegen_assisted"))
+			_asset_production_method(
+				output_frames,
+				String(source_asset.get("production_method", "imagegen_assisted"))
+			)
 		))
 
 
@@ -159,6 +203,12 @@ func _produce_inventory_asset(spec: Dictionary) -> void:
 	var asset_id := String(spec["id"])
 	var target := String(spec.get("target_representation", ""))
 	var output_frames: Array[Dictionary] = []
+	var declared_method := String(spec.get("production_method", "direct_pixel"))
+	var fallback_method := (
+		"legacy_procedural"
+		if declared_method == "imagegen_assisted"
+		else declared_method
+	)
 	if target == "raster_atlas":
 		for frame_spec in _frame_specs(spec):
 			var variant := String(frame_spec["variant"])
@@ -166,8 +216,31 @@ func _produce_inventory_asset(spec: Dictionary) -> void:
 			var direction := int(frame_spec["direction"])
 			var sequence := int(frame_spec.get("sequence", 0))
 			var image := _make_sprite(asset_id, variant, state, direction, sequence)
+			var source_metadata := {
+				"production_method":fallback_method,
+				"generator_path":"tools/design/generate_complete_pixel_library.gd",
+			}
+			var resolved := _resolve_frame_override(
+				asset_id,
+				variant,
+				direction,
+				state,
+				sequence
+			)
+			if not resolved.is_empty():
+				image = resolved["image"] as Image
+				source_metadata.merge(
+					Dictionary(resolved["metadata"]),
+					true
+				)
 			var record := _frame_record(
-				asset_id, variant, direction, state, sequence, image, {}
+				asset_id,
+				variant,
+				direction,
+				state,
+				sequence,
+				image,
+				source_metadata
 			)
 			output_frames.append(record)
 			var master_key := "%s/%s" % [asset_id, variant]
@@ -179,8 +252,24 @@ func _produce_inventory_asset(spec: Dictionary) -> void:
 		String(spec.get("runtime_group", "")),
 		Array(spec.get("semantic_layers", [])),
 		output_frames,
-		String(spec.get("production_method", "direct_pixel"))
+		_asset_production_method(output_frames, fallback_method)
 	))
+
+
+func _resolve_frame_override(
+	family: String,
+	variant: String,
+	direction: int,
+	state: String,
+	sequence: int
+) -> Dictionary:
+	return _source_overrides.resolve_frame(
+		family,
+		variant,
+		direction,
+		state,
+		sequence
+	)
 
 
 func _frame_specs(spec: Dictionary) -> Array[Dictionary]:
@@ -298,6 +387,21 @@ func _asset_record(
 	}
 
 
+func _asset_production_method(
+	frames: Array[Dictionary],
+	fallback: String
+) -> String:
+	var methods := {}
+	for frame in frames:
+		var method := String(frame.get("production_method", fallback))
+		methods[method] = true
+	if methods.is_empty():
+		return fallback
+	if methods.size() == 1:
+		return String(methods.keys()[0])
+	return "mixed"
+
+
 func _frame_record(
 	family: String,
 	variant: String,
@@ -324,6 +428,21 @@ func _frame_record(
 		"_image":image,
 		"family":family,
 	}
+	for field in [
+		"production_method",
+		"source_catalog_path",
+		"generator_path",
+		"approved_source_path",
+		"approved_source_sha256",
+		"raw_source_path",
+		"raw_source_sha256",
+		"prompt_path",
+		"prompt_sha256",
+		"derivation",
+		"source_transform",
+	]:
+		if source.has(field):
+			frame[field] = source[field]
 	_frames.append(frame)
 	return frame
 
@@ -760,7 +879,10 @@ func _pack_and_publish(inventory: Dictionary) -> void:
 		"generated_from":[
 			"pixel-art-production/assets/asset-inventory.json",
 			"pixel-art-production/assets/generated/approved/phase-2/catalog.json",
+			SOURCE_OVERRIDE_MANIFEST_PATH.trim_prefix("res://"),
 		],
+		"source_overrides":_source_overrides.catalog_summary(),
+		"runtime_repeat_tiles":_repeat_tile_records,
 		"asset_count":_assets.size(),
 		"frame_count":_frames.size(),
 		"runtime_groups":runtime_groups,
@@ -805,6 +927,9 @@ func _publish_frame_sources(frame: Dictionary, image: Image) -> void:
 	var source_hash := FileAccess.get_sha256(
 		ProjectSettings.globalize_path(master_path)
 	)
+	var origin_source_hash := String(frame.get("source_sha256", ""))
+	if not origin_source_hash.is_empty():
+		frame["origin_source_sha256"] = origin_source_hash
 	frame["source_sha256"] = source_hash
 	var layers_by_role := {}
 	var visible_pixel_count := 0
@@ -885,37 +1010,60 @@ func _publish_frame_sources(frame: Dictionary, image: Image) -> void:
 		"visible_pixel_count":visible_pixel_count,
 		"reassembly_difference_pixels":difference_count,
 	}
+	if frame.has("approved_source_path"):
+		manifest["production_method"] = String(
+			frame.get("production_method", "")
+		)
+		for field in [
+			"origin_source_sha256",
+			"approved_source_path",
+			"approved_source_sha256",
+			"raw_source_path",
+			"raw_source_sha256",
+			"prompt_path",
+			"prompt_sha256",
+			"derivation",
+			"source_transform",
+		]:
+			if frame.has(field):
+				manifest[field] = frame[field]
 	_write_json("%s/manifest.json" % directory, manifest)
 
 
 func _publish_repeat_tiles() -> void:
 	var tile_root := "res://pixel-art-production/runtime/tiles"
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(tile_root))
-	var floor_image: Image = _masters.get(
-		"world_floor_void_tiles/floor_mid",
-		Image.create(FRAME_SIZE, FRAME_SIZE, false, Image.FORMAT_RGBA8)
-	).duplicate()
-	floor_image.save_png(
-		ProjectSettings.globalize_path("%s/hangar-floor.png" % tile_root)
-	)
-	var water_image: Image = _masters.get(
-		"water_void_edge_tiles/water_fill",
-		Image.create(FRAME_SIZE, FRAME_SIZE, false, Image.FORMAT_RGBA8)
-	).duplicate()
-	water_image.save_png(
-		ProjectSettings.globalize_path("%s/hangar-water.png" % tile_root)
-	)
-	var wall_image := Image.create(
-		FRAME_SIZE, FRAME_SIZE, false, Image.FORMAT_RGBA8
-	)
-	wall_image.fill(BLOCKER)
-	_rect(wall_image, Rect2i(0, 0, FRAME_SIZE, 10), LIGHT)
-	_rect(wall_image, Rect2i(0, 10, FRAME_SIZE, 8), SHADOW)
-	_rect(wall_image, Rect2i(0, 56, FRAME_SIZE, 8), EDGE)
-	_rect(wall_image, Rect2i(28, 18, 8, 38), SHADOW)
-	wall_image.save_png(
-		ProjectSettings.globalize_path("%s/hangar-wall.png" % tile_root)
-	)
+	_repeat_tile_records.clear()
+	var outputs := {
+		"hangar_floor":"hangar-floor.png",
+		"hangar_wall":"hangar-wall.png",
+		"hangar_water":"hangar-water.png",
+	}
+	for runtime_key_variant in outputs:
+		var runtime_key := String(runtime_key_variant)
+		var resolved: Dictionary = _source_overrides.repeat_tile(runtime_key)
+		if resolved.is_empty():
+			push_error("Missing approved repeat tile override: %s" % runtime_key)
+			_generation_failed = true
+			continue
+		var image := resolved["image"] as Image
+		var output_path := "%s/%s" % [tile_root, String(outputs[runtime_key])]
+		var save_error := image.save_png(
+			ProjectSettings.globalize_path(output_path)
+		)
+		if save_error != OK:
+			push_error("Could not publish repeat tile: %s" % output_path)
+			_generation_failed = true
+			continue
+		var record := Dictionary(resolved["metadata"]).duplicate(true)
+		record["runtime_key"] = runtime_key
+		record["output_path"] = output_path.trim_prefix("res://")
+		record["output_sha256"] = FileAccess.get_sha256(
+			ProjectSettings.globalize_path(output_path)
+		)
+		record["size"] = [image.get_width(), image.get_height()]
+		record["repeat_safe"] = true
+		_repeat_tile_records.append(record)
 
 
 func _extrude(atlas: Image, image: Image, cell_origin: Vector2i) -> void:

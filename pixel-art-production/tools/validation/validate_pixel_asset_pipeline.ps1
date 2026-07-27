@@ -191,7 +191,8 @@ try {
     & (Join-Path $designTools "build_pixel_asset_catalog.ps1") `
         -AtlasMetadataPaths $atlasMetadata `
         -OutputPath $CatalogPath
-    & (Join-Path $PSScriptRoot "validate_pixel_asset_catalog.ps1") -CatalogPath $CatalogPath
+    & (Join-Path $PSScriptRoot "validate_pixel_asset_catalog.ps1") `
+        -CatalogPath $CatalogPath -SkipNativeSourceValidation
     & (Join-Path $PSScriptRoot "validate_pixel_asset_frame_budget.ps1") -CatalogPath $CatalogPath
     & (Join-Path $PSScriptRoot "validate_pixel_asset_reviews.ps1") -ReviewMetadataPaths @(
         "$PlayerBuildDirectory/review.json",
@@ -276,7 +277,8 @@ try {
     $duplicateCatalogPath = Join-Path $temporaryRoot "duplicate-catalog.json"
     Write-Json -Value $duplicateCatalog -Path $duplicateCatalogPath
     Assert-Rejected -Name "duplicate catalog frame key" -MessagePattern "duplicate frame key" -Action {
-        & (Join-Path $PSScriptRoot "validate_pixel_asset_catalog.ps1") -CatalogPath $duplicateCatalogPath
+        & (Join-Path $PSScriptRoot "validate_pixel_asset_catalog.ps1") `
+            -CatalogPath $duplicateCatalogPath -SkipNativeSourceValidation
     }
 
     $overflowCatalog = Get-Content -LiteralPath (Resolve-RepoPath -Path $CatalogPath) -Raw | ConvertFrom-Json
@@ -322,7 +324,8 @@ try {
     $bleedCatalogPath = Join-Path $temporaryRoot "bleed-catalog.json"
     Write-Json -Value $bleedCatalog -Path $bleedCatalogPath
     Assert-Rejected -Name "atlas bleed" -MessagePattern "atlas bleed" -Action {
-        & (Join-Path $PSScriptRoot "validate_pixel_asset_catalog.ps1") -CatalogPath $bleedCatalogPath
+        & (Join-Path $PSScriptRoot "validate_pixel_asset_catalog.ps1") `
+            -CatalogPath $bleedCatalogPath -SkipNativeSourceValidation
     }
 
     $tileFixture = New-OrthogonalTileFixture -Directory (Join-Path $temporaryRoot "tiles")

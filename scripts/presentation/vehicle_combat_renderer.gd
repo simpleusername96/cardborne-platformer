@@ -1231,7 +1231,9 @@ func _sync_pixel_player(
 	var primary_tier := clampi(int(state.get("primary_visual_tier", 0)), 0, 3)
 	var hull_tint := Color.WHITE * (1.0 - float(hull_tier) * 0.10)
 	var primary_tint := Color.WHITE * (1.0 - float(primary_tier) * 0.10)
-	if feedback_color.a > 0.0:
+	# The invulnerability ring already carries that state; preserve the authored
+	# pixel palette unless this frame is responding to an actual hit.
+	if float(state.get("player_hit_remaining", 0.0)) > 0.0 and feedback_color.a > 0.0:
 		hull_tint = Color(1.0, 0.50, 0.50, feedback_color.a)
 		primary_tint = hull_tint
 	var moving := float(state.get("player_speed", 0.0)) > 12.0

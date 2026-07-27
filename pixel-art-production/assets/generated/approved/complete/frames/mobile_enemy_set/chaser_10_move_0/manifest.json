@@ -1,6 +1,9 @@
 {
 	"anchors": {},
 	"approval_status": "approved",
+	"approved_source_path": "pixel-art-production/assets/source/approved/visual-recovery/core/chaser-32.png",
+	"approved_source_sha256": "f948bb452896e9c86dcac0a3e9d586665070cc43dd831c14e3f7e3be94ce8075",
+	"derivation": "imagegen_grid_snap_palette_and_cell_cleanup",
 	"direction_index": 10,
 	"family": "mobile_enemy_set",
 	"frame_key": "mobile_enemy_set/chaser/10/move/0",
@@ -9,28 +12,57 @@
 		32,
 		32
 	],
+	"production_method": "imagegen_assisted",
+	"prompt_path": "pixel-art-production/assets/source/candidates/visual-recovery/prompts/chaser-32.txt",
+	"prompt_sha256": "68c0b8ec7041809ff26b68bd31a9dc231685fce0e53b29c0bd51b4f123352bac",
+	"raw_source_path": "pixel-art-production/assets/source/candidates/visual-recovery/raw/chaser-32-raw.png",
+	"raw_source_sha256": "1badc929d857dca2b333911b9e2fd7c490c6f598b29235c2fd8a09b850b0d8bd",
 	"reassembly_difference_pixels": 0,
 	"schema_version": 1,
 	"semantic_layers": [
 		{
 			"path": "pixel-art-production/assets/generated/approved/complete/frames/mobile_enemy_set/chaser_10_move_0/layers/blocker_edge.png",
 			"role": "blocker_edge",
-			"sha256": "39480a86e220c44303c625490f73fb580286fce0f1b36e53f428a3c816aa62c8"
+			"sha256": "8283fcef84c9af32751d0e7af17777d064e639412e507e6d58ee74ddcc782981"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/mobile_enemy_set/chaser_10_move_0/layers/boss_threat.png",
+			"role": "boss_threat",
+			"sha256": "ed1a73f3107e327f5739eb1a40f0355872c7704bebf26279ad8e721b61985b5b"
 		},
 		{
 			"path": "pixel-art-production/assets/generated/approved/complete/frames/mobile_enemy_set/chaser_10_move_0/layers/neutral_highlight.png",
 			"role": "neutral_highlight",
-			"sha256": "9d7ee9a91588e5219203b720e0661273da636d05296dd317bbc34abc68acbf4e"
+			"sha256": "a6d29036327f8dcf7c5ab4dcc9a1e1a9d6b237bcce7a74cce94eda71991fcc7b"
 		},
 		{
 			"path": "pixel-art-production/assets/generated/approved/complete/frames/mobile_enemy_set/chaser_10_move_0/layers/ordinary_threat.png",
 			"role": "ordinary_threat",
-			"sha256": "c7746ac7d0c0e6017d38a262d1bcf163d90ef9ae0879f92f72c85fb285abe88a"
+			"sha256": "83f0656b28be2d5ecb0da112c16013d68745ac9f4a563353c6b22ae6e191fd86"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/mobile_enemy_set/chaser_10_move_0/layers/structure_recess.png",
+			"role": "structure_recess",
+			"sha256": "5882541111e7a108d32f919ba2bf026c35da290c032e631bd298c338a42e4985"
 		}
 	],
 	"sequence_index": 0,
-	"source_sha256": "8a2a531867150a4740a991cfb2c83c054645ca812e081119aeda9b6e1e046ef1",
+	"source_sha256": "b19512e83d5ee4e81df3bc384477169d95f7f8937481aa53652d2c330847d8f0",
+	"source_transform": {
+		"atlas_frame_size": [
+			64,
+			64
+		],
+		"center_offset": [
+			16,
+			16
+		],
+		"native_pixel_scale": 1,
+		"rotation_steps_16": 6,
+		"source_direction_index": 4,
+		"target_direction_index": 10
+	},
 	"state": "move",
 	"variant": "chaser",
-	"visible_pixel_count": 1371
+	"visible_pixel_count": 307
 }

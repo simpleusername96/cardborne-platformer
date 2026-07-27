@@ -14,6 +14,9 @@ const Visuals = preload("res://scripts/presentation/vehicle_combat_visual_librar
 const FLOOR_TEXTURE := preload("res://pixel-art-production/runtime/tiles/hangar-floor.png")
 const WALL_TEXTURE := preload("res://pixel-art-production/runtime/tiles/hangar-wall.png")
 const WATER_TEXTURE := preload("res://pixel-art-production/runtime/tiles/hangar-water.png")
+# The approved 192 px material masters render at a quiet 384 world-pixel period,
+# keeping their authored 1 px details on a crisp 2 world-pixel grid.
+const REPEAT_TILE_UV_SCALE := 0.5
 
 var _stage_id: StringName = &""
 var _layout_fingerprint := -1
@@ -37,6 +40,7 @@ func debug_contract() -> Dictionary:
 		"chunk_budget_ok":_chunk_count <= 60,
 		"geometry_fed":true,
 		"collision_owner":"vehicle_stage_geometry",
+		"repeat_tile_uv_scale":REPEAT_TILE_UV_SCALE,
 	}
 
 
@@ -85,7 +89,7 @@ func _add_polygon(
 	polygon.texture = texture
 	polygon.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
 	polygon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	polygon.texture_scale = Vector2(2.0, 2.0)
+	polygon.texture_scale = Vector2.ONE * REPEAT_TILE_UV_SCALE
 	polygon.color = color
 	polygon.z_index = child_z
 	add_child(polygon)

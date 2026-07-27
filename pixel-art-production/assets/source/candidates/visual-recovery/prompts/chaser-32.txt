@@ -1,0 +1,7 @@
+Use case: stylized-concept.
+Asset type: one 32x32 logical-cell true top-down hostile chaser master.
+Input images: Image 1 is the edit target; Image 2 is a whole-cell behavior reference only; Image 3 is a style and large-shape reference only.
+Primary request: Edit Image 1 like coloring spreadsheet cells. Create one east-facing hostile chaser centered within columns 3–28 and rows 4–27. Give it a broad coral ceramic ram nose on the east side, split swept fins, dark rear engine cavities on the west side, and one ivory hostile eye/core. Its aggressive silhouette must be distinct from the player, a turret, and a pickup.
+Color palette: coral #C92F4E, boss-dark #962754 sparingly, ivory #E8EEF0, recess #202833 or #2E3945. No mustard and no mint.
+Constraints: Whole-cell fills only; every occupied cell is filled edge-to-edge with one exact flat color. Every detail is at least 2x2 cells. Preserve Image 1's grid and leave white outside the silhouette unchanged.
+Avoid: No shading, gradients, texture, dither, glow, shadow, text, second object, universal outline, within-cell edges, antialiasing, isometric perspective, or tiny panel noise.

@@ -1,5 +1,5 @@
 {
-	"atlas_sha256": "bc8d0da021a130024ce6dbb2bf5bd04e5a2239cab6ad92b03b1a83f38e086541",
+	"atlas_sha256": "33c89ce0976af93ab23301da9481f1a8b2facb05752611d3f9c070d39fe15d72",
 	"atlas_size": [
 		1630,
 		1834
@@ -68,31 +68,31 @@
 		{
 			"frame_count": 8,
 			"id": "breakable_bulkhead",
-			"production_method": "imagegen_assisted",
+			"production_method": "legacy_procedural",
 			"runtime_group": "world"
 		},
 		{
 			"frame_count": 6,
 			"id": "transit_gate",
-			"production_method": "imagegen_assisted",
+			"production_method": "legacy_procedural",
 			"runtime_group": "world"
 		},
 		{
 			"frame_count": 4,
 			"id": "repair_field",
-			"production_method": "imagegen_assisted",
+			"production_method": "legacy_procedural",
 			"runtime_group": "world"
 		},
 		{
 			"frame_count": 3,
 			"id": "overdrive_field",
-			"production_method": "imagegen_assisted",
+			"production_method": "legacy_procedural",
 			"runtime_group": "world"
 		},
 		{
 			"frame_count": 6,
 			"id": "reward_crate",
-			"production_method": "imagegen_assisted",
+			"production_method": "legacy_procedural",
 			"runtime_group": "world"
 		},
 		{
@@ -104,19 +104,19 @@
 		{
 			"frame_count": 130,
 			"id": "mobile_enemy_set",
-			"production_method": "imagegen_assisted",
+			"production_method": "mixed",
 			"runtime_group": "mobile_enemies"
 		},
 		{
 			"frame_count": 54,
 			"id": "stationary_enemy_set",
-			"production_method": "imagegen_assisted",
+			"production_method": "legacy_procedural",
 			"runtime_group": "stationary_enemies"
 		},
 		{
 			"frame_count": 60,
 			"id": "boss_set",
-			"production_method": "imagegen_assisted",
+			"production_method": "legacy_procedural",
 			"runtime_group": "bosses"
 		},
 		{
@@ -140,13 +140,13 @@
 		{
 			"frame_count": 18,
 			"id": "hostile_projectile_affinities",
-			"production_method": "imagegen_assisted",
+			"production_method": "legacy_procedural",
 			"runtime_group": "hostile_projectiles"
 		},
 		{
 			"frame_count": 16,
 			"id": "secondary_seeker",
-			"production_method": "imagegen_assisted",
+			"production_method": "legacy_procedural",
 			"runtime_group": "secondaries"
 		},
 		{
@@ -158,19 +158,19 @@
 		{
 			"frame_count": 1,
 			"id": "secondary_orbit_blades",
-			"production_method": "imagegen_assisted",
+			"production_method": "legacy_procedural",
 			"runtime_group": "secondaries"
 		},
 		{
 			"frame_count": 3,
 			"id": "secondary_wake_mines",
-			"production_method": "imagegen_assisted",
+			"production_method": "legacy_procedural",
 			"runtime_group": "secondaries"
 		},
 		{
 			"frame_count": 17,
 			"id": "secondary_escort_drone",
-			"production_method": "imagegen_assisted",
+			"production_method": "legacy_procedural",
 			"runtime_group": "secondaries"
 		},
 		{
@@ -194,7 +194,7 @@
 		{
 			"frame_count": 2,
 			"id": "repair_pickup",
-			"production_method": "direct_pixel",
+			"production_method": "imagegen_assisted",
 			"runtime_group": "pickups"
 		},
 		{

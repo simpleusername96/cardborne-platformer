@@ -14,51 +14,79 @@
 		]
 	},
 	"approval_status": "approved",
+	"approved_source_path": "pixel-art-production/assets/source/approved/visual-recovery/core/player-interceptor-64.png",
+	"approved_source_sha256": "559e2c0b0eb49c21ab50fb4508942a3db93b4a443bdffb72b5d681036d77755a",
+	"derivation": "imagegen_grid_snap_palette_and_cell_cleanup",
 	"direction_index": 14,
 	"family": "player_chassis",
 	"frame_key": "player_chassis/base/14/normal/0",
 	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/player_chassis/base_14_normal_0/master.png",
+	"origin_source_sha256": "44cc3ce51215e3ea562ec02683a1205ed2718e6af190420b999371a0d4f0e20c",
 	"pivot": [
 		32.0,
 		32.0
 	],
+	"production_method": "imagegen_assisted",
+	"prompt_path": "pixel-art-production/assets/source/candidates/visual-recovery/prompts/player-interceptor-64.txt",
+	"prompt_sha256": "4989ac573b4e3a35d1c41d402ecd44e38cf0d9009bac44f33ab91c81afe91dba",
+	"raw_source_path": "pixel-art-production/assets/source/candidates/visual-recovery/raw/player-interceptor-64-raw.png",
+	"raw_source_sha256": "887db71643772014b061f8aab65ff6bf7d7ced1c6a2ccaf868e308cc35035553",
 	"reassembly_difference_pixels": 0,
 	"schema_version": 1,
 	"semantic_layers": [
 		{
 			"path": "pixel-art-production/assets/generated/approved/complete/frames/player_chassis/base_14_normal_0/layers/blocker_edge.png",
 			"role": "blocker_edge",
-			"sha256": "228052e808db11a07aa3d643363a266b6ddcf2334b5d8c589e8b308dbf987cbd"
+			"sha256": "9f39ae737ce5664509c9fa3668f6b81a315fbb491f1f15b11950093bfab63b89"
 		},
 		{
 			"path": "pixel-art-production/assets/generated/approved/complete/frames/player_chassis/base_14_normal_0/layers/deck_base.png",
 			"role": "deck_base",
-			"sha256": "981ee79f8f502d30371d8d3d2595f20136671a260637e1468556c1594f987286"
+			"sha256": "e4e727ac4411f42f91aa7a3343bb2af511bdece589ac46f80ec558537d5da497"
 		},
 		{
 			"path": "pixel-art-production/assets/generated/approved/complete/frames/player_chassis/base_14_normal_0/layers/deck_shadow.png",
 			"role": "deck_shadow",
-			"sha256": "e053c872a550d48973def7f9b49053c08061f5b32a8bc34da0cc686de2a834e1"
+			"sha256": "139d6916059babd3441b21bd2c028cd49fb7b488fb2cf4b7fc7639d9e2dd6a04"
 		},
 		{
 			"path": "pixel-art-production/assets/generated/approved/complete/frames/player_chassis/base_14_normal_0/layers/neutral_highlight.png",
 			"role": "neutral_highlight",
-			"sha256": "3b85e0e5768b95c353eede049ece45bcdbde6bb276b508ea641ffeabd0b8e068"
+			"sha256": "6d522acdccb855cf263f364767eac7ca5bc214462cfb4ca7d44075c2470bc89b"
 		},
 		{
 			"path": "pixel-art-production/assets/generated/approved/complete/frames/player_chassis/base_14_normal_0/layers/player_energy.png",
 			"role": "player_energy",
-			"sha256": "0b879fe7946acc661a4d88b132f36824b3ff9b51cee1d1bf6a0b85088c385423"
+			"sha256": "cc14ea11f4a913b2089e49aaf1de3bd80aa36b6dac377983d94403bdcac2721b"
 		},
 		{
 			"path": "pixel-art-production/assets/generated/approved/complete/frames/player_chassis/base_14_normal_0/layers/player_reward.png",
 			"role": "player_reward",
-			"sha256": "4960e195ffb75faf3b61b43d802ae222fcc06d88d78c1695573a62fa49d7b97b"
+			"sha256": "c256d575f6d82b4782c77c839dcd62b6a4b59ebdd940028f808f793074746952"
+		},
+		{
+			"path": "pixel-art-production/assets/generated/approved/complete/frames/player_chassis/base_14_normal_0/layers/structure_recess.png",
+			"role": "structure_recess",
+			"sha256": "3632abea4270d472e00bc02973155f93e300d9861b90c57cf5369c14339696c5"
 		}
 	],
 	"sequence_index": 0,
-	"source_sha256": "d6ca7c3c602edbfbd0b8d45cecb630ed7965d8fb389f300e6b48faed1f84cad0",
+	"source_sha256": "bf491b0e0398586c5b34aaede1d50a0458ddddd2c7731afb180141e6dc5ed730",
+	"source_transform": {
+		"atlas_frame_size": [
+			64,
+			64
+		],
+		"center_offset": [
+			0,
+			0
+		],
+		"native_pixel_scale": 1,
+		"rotation_steps_16": 14,
+		"source_direction_index": 0,
+		"target_direction_index": 14
+	},
 	"state": "normal",
 	"variant": "base",
-	"visible_pixel_count": 716
+	"visible_pixel_count": 875
 }

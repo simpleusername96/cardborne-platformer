@@ -1,0 +1,186 @@
+{
+  "schema_version": 1,
+  "id": "visual_recovery_core_slice",
+  "approval_status": "approved",
+  "generation_tool": "built_in_imagegen",
+  "generation_board_id": "a193a696-3078-4458-a1bc-c28162a9c2ff",
+  "palette_path": "pixel-art-production/assets/palettes/pixel-hangar-v1.json",
+  "derivation": "imagegen_grid_snap_palette_and_cell_cleanup",
+  "frame_rules": [
+    {
+      "family": "player_chassis",
+      "variant": "base",
+      "states": [
+        "normal"
+      ],
+      "directions": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "sequence_indices": [
+        0
+      ],
+      "source_direction_index": 0,
+      "pixel_scale": 1,
+      "logical_size": [
+        64,
+        64
+      ],
+      "source_path": "pixel-art-production/assets/source/approved/visual-recovery/core/player-interceptor-64.png",
+      "source_sha256": "559e2c0b0eb49c21ab50fb4508942a3db93b4a443bdffb72b5d681036d77755a",
+      "raw_source_path": "pixel-art-production/assets/source/candidates/visual-recovery/raw/player-interceptor-64-raw.png",
+      "raw_source_sha256": "887db71643772014b061f8aab65ff6bf7d7ced1c6a2ccaf868e308cc35035553",
+      "prompt_path": "pixel-art-production/assets/source/candidates/visual-recovery/prompts/player-interceptor-64.txt",
+      "prompt_sha256": "4989ac573b4e3a35d1c41d402ecd44e38cf0d9009bac44f33ab91c81afe91dba",
+      "production_method": "imagegen_assisted"
+    },
+    {
+      "family": "mobile_enemy_set",
+      "variant": "chaser",
+      "states": [
+        "move"
+      ],
+      "directions": [
+        0,
+        2,
+        4,
+        6,
+        8,
+        10,
+        12,
+        14
+      ],
+      "sequence_indices": [
+        0
+      ],
+      "source_direction_index": 4,
+      "pixel_scale": 1,
+      "logical_size": [
+        32,
+        32
+      ],
+      "source_path": "pixel-art-production/assets/source/approved/visual-recovery/core/chaser-32.png",
+      "source_sha256": "f948bb452896e9c86dcac0a3e9d586665070cc43dd831c14e3f7e3be94ce8075",
+      "raw_source_path": "pixel-art-production/assets/source/candidates/visual-recovery/raw/chaser-32-raw.png",
+      "raw_source_sha256": "1badc929d857dca2b333911b9e2fd7c490c6f598b29235c2fd8a09b850b0d8bd",
+      "prompt_path": "pixel-art-production/assets/source/candidates/visual-recovery/prompts/chaser-32.txt",
+      "prompt_sha256": "68c0b8ec7041809ff26b68bd31a9dc231685fce0e53b29c0bd51b4f123352bac",
+      "production_method": "imagegen_assisted"
+    },
+    {
+      "family": "mobile_enemy_set",
+      "variant": "chaser",
+      "states": [
+        "attack_startup",
+        "attack_active"
+      ],
+      "directions": [
+        0
+      ],
+      "sequence_indices": [
+        0
+      ],
+      "source_direction_index": 4,
+      "pixel_scale": 1,
+      "logical_size": [
+        32,
+        32
+      ],
+      "source_path": "pixel-art-production/assets/source/approved/visual-recovery/core/chaser-32.png",
+      "source_sha256": "f948bb452896e9c86dcac0a3e9d586665070cc43dd831c14e3f7e3be94ce8075",
+      "raw_source_path": "pixel-art-production/assets/source/candidates/visual-recovery/raw/chaser-32-raw.png",
+      "raw_source_sha256": "1badc929d857dca2b333911b9e2fd7c490c6f598b29235c2fd8a09b850b0d8bd",
+      "prompt_path": "pixel-art-production/assets/source/candidates/visual-recovery/prompts/chaser-32.txt",
+      "prompt_sha256": "68c0b8ec7041809ff26b68bd31a9dc231685fce0e53b29c0bd51b4f123352bac",
+      "production_method": "imagegen_assisted"
+    },
+    {
+      "family": "repair_pickup",
+      "variant": "repair",
+      "states": [
+        "idle",
+        "collected"
+      ],
+      "directions": [
+        0
+      ],
+      "sequence_indices": [
+        0
+      ],
+      "source_direction_index": 0,
+      "pixel_scale": 2,
+      "logical_size": [
+        24,
+        24
+      ],
+      "source_path": "pixel-art-production/assets/source/approved/visual-recovery/core/repair-pickup-24.png",
+      "source_sha256": "4280695aff88ec7cf5ae1ad1437cc77b48c5faed5f40b8b2302282e071c30635",
+      "raw_source_path": "pixel-art-production/assets/source/candidates/visual-recovery/raw/repair-pickup-24-raw.png",
+      "raw_source_sha256": "c3f31a02540e89eae965ea5611f278289c7aefa1dd8b4fe9a1fc681b2f808e1a",
+      "prompt_path": "pixel-art-production/assets/source/candidates/visual-recovery/prompts/repair-pickup-24.txt",
+      "prompt_sha256": "a1a24e48d96cb4cb5f355f257e228e33722284474fa0f0fa02191e8f4199eead",
+      "production_method": "imagegen_assisted"
+    }
+  ],
+  "repeat_tiles": {
+    "hangar_floor": {
+      "logical_size": [
+        192,
+        192
+      ],
+      "source_path": "pixel-art-production/assets/source/approved/visual-recovery/core/ceramic-deck-repeat-192.png",
+      "source_sha256": "f0c846d9d1659d189d6308ea2c398bdb7a8d1fadc9ebf8c654d7dce23d596d43",
+      "raw_source_path": "pixel-art-production/assets/source/candidates/visual-recovery/raw/ceramic-deck-24-raw.png",
+      "raw_source_sha256": "f0c39693f61e583addc43d81854bb9944fb071df1353ec3e3c004138a38ddcb2",
+      "prompt_path": "pixel-art-production/assets/source/candidates/visual-recovery/prompts/ceramic-deck-24.txt",
+      "prompt_sha256": "add29450989fd45cfd51f091b6f96499674a8384a2376c743ba076fecb84006d",
+      "production_method": "imagegen_assisted",
+      "derivation": "imagegen_grid_snap_palette_cleanup_and_irregular_repeat_composition",
+      "repeat_safe": true
+    },
+    "hangar_wall": {
+      "logical_size": [
+        192,
+        192
+      ],
+      "source_path": "pixel-art-production/assets/source/approved/visual-recovery/core/ceramic-wall-repeat-192.png",
+      "source_sha256": "27d0cff2fce93a97f071ed96b1107cc348eb8608ab8036d57e95ae722a43c016",
+      "raw_source_path": "pixel-art-production/assets/source/candidates/visual-recovery/raw/ceramic-wall-24-raw.png",
+      "raw_source_sha256": "d1146107621197ffc22562557b3e403c80f8f64a599e1c00ce90c83102b3dac2",
+      "prompt_path": "pixel-art-production/assets/source/candidates/visual-recovery/prompts/ceramic-wall-24.txt",
+      "prompt_sha256": "21e3b8d0e96c14b5cafa969c64308401e0e09a5c3426fe4c714e00c9d5c6109c",
+      "production_method": "imagegen_assisted",
+      "derivation": "imagegen_grid_snap_palette_cleanup_and_irregular_repeat_composition",
+      "repeat_safe": true
+    },
+    "hangar_water": {
+      "logical_size": [
+        192,
+        192
+      ],
+      "source_path": "pixel-art-production/assets/source/approved/visual-recovery/core/cobalt-water-repeat-192.png",
+      "source_sha256": "3f074236a1b8f94d2d05e43ccec2c9011564a5612934172dee74f630d97da09f",
+      "raw_source_path": "pixel-art-production/assets/source/candidates/visual-recovery/raw/cobalt-water-24-raw.png",
+      "raw_source_sha256": "ac49229aa0bd212ec602aecb68367d91440e8c5eb036dae394bd85e4f69d174d",
+      "prompt_path": "pixel-art-production/assets/source/candidates/visual-recovery/prompts/cobalt-water-24.txt",
+      "prompt_sha256": "1241268786ab21914eae8e4471c6ec79da54a031cc52a4b517528c1f7b274c76",
+      "production_method": "imagegen_assisted",
+      "derivation": "imagegen_grid_snap_palette_cleanup_and_irregular_repeat_composition",
+      "repeat_safe": true
+    }
+  }
+}

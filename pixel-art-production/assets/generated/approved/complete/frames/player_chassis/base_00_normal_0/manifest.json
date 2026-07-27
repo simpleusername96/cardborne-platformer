@@ -14,56 +14,79 @@
 		]
 	},
 	"approval_status": "approved",
+	"approved_source_path": "pixel-art-production/assets/source/approved/visual-recovery/core/player-interceptor-64.png",
+	"approved_source_sha256": "559e2c0b0eb49c21ab50fb4508942a3db93b4a443bdffb72b5d681036d77755a",
+	"derivation": "imagegen_grid_snap_palette_and_cell_cleanup",
 	"direction_index": 0,
 	"family": "player_chassis",
 	"frame_key": "player_chassis/base/0/normal/0",
 	"master_path": "pixel-art-production/assets/generated/approved/complete/frames/player_chassis/base_00_normal_0/master.png",
+	"origin_source_sha256": "da370c09c1577d8b60be75ddf2d2ed2fc84851d0d06730a83aaff5c167a4ee8e",
 	"pivot": [
 		32.0,
 		32.0
 	],
+	"production_method": "imagegen_assisted",
+	"prompt_path": "pixel-art-production/assets/source/candidates/visual-recovery/prompts/player-interceptor-64.txt",
+	"prompt_sha256": "4989ac573b4e3a35d1c41d402ecd44e38cf0d9009bac44f33ab91c81afe91dba",
+	"raw_source_path": "pixel-art-production/assets/source/candidates/visual-recovery/raw/player-interceptor-64-raw.png",
+	"raw_source_sha256": "887db71643772014b061f8aab65ff6bf7d7ced1c6a2ccaf868e308cc35035553",
 	"reassembly_difference_pixels": 0,
 	"schema_version": 1,
 	"semantic_layers": [
 		{
 			"path": "pixel-art-production/assets/generated/approved/complete/frames/player_chassis/base_00_normal_0/layers/blocker_edge.png",
 			"role": "blocker_edge",
-			"sha256": "971143142d945a68bd04cea7b3a6c4fd748e90e2bad4e72d22662159dc31f044"
+			"sha256": "c6f7cd31af2b8f749558436d9b87234cf61a64354af721bcfb0c1fae2e4f6a7c"
 		},
 		{
 			"path": "pixel-art-production/assets/generated/approved/complete/frames/player_chassis/base_00_normal_0/layers/deck_base.png",
 			"role": "deck_base",
-			"sha256": "3909171784cf47783c756835ceee9f6d632d6630c5f8b92892c1041418bb06d9"
+			"sha256": "257642bf06ebd481cc08b8ee672cacda1b4bbaa269f6b804c2fb12d7750e8624"
 		},
 		{
 			"path": "pixel-art-production/assets/generated/approved/complete/frames/player_chassis/base_00_normal_0/layers/deck_shadow.png",
 			"role": "deck_shadow",
-			"sha256": "c4135967d1ea5454f6da3dedd3e12b5f171ce782a4fee063e855c4927c1c7ecf"
+			"sha256": "edbd79e5cb5087ef4b2cc303fcbda66ceafd34f6a527db3ce504bc58eb62e587"
 		},
 		{
 			"path": "pixel-art-production/assets/generated/approved/complete/frames/player_chassis/base_00_normal_0/layers/neutral_highlight.png",
 			"role": "neutral_highlight",
-			"sha256": "c64ff72e7fbad84446c78ef4c057a7a32a7b828c45966f088e886b6f410a095e"
+			"sha256": "468af5a270c8da4a4284a2586df3dc0b1306157dafe35c2579d48c311a6a2aff"
 		},
 		{
 			"path": "pixel-art-production/assets/generated/approved/complete/frames/player_chassis/base_00_normal_0/layers/player_energy.png",
 			"role": "player_energy",
-			"sha256": "97c5979c825ae0d530f0bf1241656f2b230e02f73e0a141c033b52885601ba29"
+			"sha256": "8359260a41980cda3dd82e92fa35b95c4d81b78aaad89cb786c1321d4570c0a0"
 		},
 		{
 			"path": "pixel-art-production/assets/generated/approved/complete/frames/player_chassis/base_00_normal_0/layers/player_reward.png",
 			"role": "player_reward",
-			"sha256": "f0da209b21dfc4bafc277827e9a17ce28b7104190c0ffe02cb83f52a283d5b50"
+			"sha256": "27380d80fe1d4b0c390381c0e854c3606e4a66610dbb08319c886718a4a7295e"
 		},
 		{
 			"path": "pixel-art-production/assets/generated/approved/complete/frames/player_chassis/base_00_normal_0/layers/structure_recess.png",
 			"role": "structure_recess",
-			"sha256": "030b554b35b9e00c86fbff224314693886de41acf22cbb5873df8f3ccca2095f"
+			"sha256": "efa64b76761988adf62d8e1d2a1d55e36d3d40b7ec0b79b36e9fcbecb836dc98"
 		}
 	],
 	"sequence_index": 0,
-	"source_sha256": "4ea20f02b237cd8745da968610a95ec52b4db68f72397dfba180edab1fb29a1b",
+	"source_sha256": "fa774ee223255e34555a30ffa9f18185c42736f5588f006c7dd2ac6b04982cf5",
+	"source_transform": {
+		"atlas_frame_size": [
+			64,
+			64
+		],
+		"center_offset": [
+			0,
+			0
+		],
+		"native_pixel_scale": 1,
+		"rotation_steps_16": 0,
+		"source_direction_index": 0,
+		"target_direction_index": 0
+	},
 	"state": "normal",
 	"variant": "base",
-	"visible_pixel_count": 722
+	"visible_pixel_count": 872
 }
