@@ -31,7 +31,7 @@ class AttributeIcon:
 			&"toxin":Art.MINT,
 			&"cryo":Art.COBALT_WATER,
 			&"arc":Art.BOSS_MAGENTA,
-		}.get(attribute, Art.INK_MUTED)
+		}.get(attribute, Art.MINT_SOFT)
 		match attribute:
 			&"thermal":
 				draw_colored_polygon(PackedVector2Array([
@@ -135,10 +135,10 @@ func _build() -> void:
 	_kicker = _label("", 16, Art.MUSTARD)
 	_kicker.theme_type_variation = &"MetricLabel"
 	add_child(_kicker)
-	_title = _label("", 34, Art.INK)
+	_title = _label("", 34, Art.IVORY_BRIGHT)
 	_title.theme_type_variation = &"TitleLabel"
 	add_child(_title)
-	_summary = _label("", 17, Art.INK_MUTED)
+	_summary = _label("", 17, Art.MINT_SOFT)
 	add_child(_summary)
 	add_child(HSeparator.new())
 	_content = HBoxContainer.new()
@@ -215,7 +215,7 @@ func _fill_defeats(box: VBoxContainer) -> void:
 	_clear_rows(box)
 	var rows: Array = _snapshot.get("defeats", [])
 	if rows.is_empty():
-		box.add_child(_label("REPORT_NONE", 17, Art.INK_MUTED))
+		box.add_child(_label("REPORT_NONE", 17, Art.MINT_SOFT))
 	for row in rows:
 		var data := Dictionary(row)
 		var row_box := HBoxContainer.new()
@@ -227,7 +227,7 @@ func _fill_defeats(box: VBoxContainer) -> void:
 		var name_box := VBoxContainer.new()
 		name_box.add_theme_constant_override("separation", 1)
 		name_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		var label := _label("", 17, Art.INK)
+		var label := _label("", 17, Art.IVORY_BRIGHT)
 		label.theme_type_variation = &"MetricLabel"
 		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		label.text = tr(String(data["name_key"]))
@@ -241,7 +241,7 @@ func _fill_defeats(box: VBoxContainer) -> void:
 			)
 			name_box.add_child(elite)
 		row_box.add_child(name_box)
-		var count := _label("", 17, Art.INK)
+		var count := _label("", 17, Art.IVORY_BRIGHT)
 		count.theme_type_variation = &"MetricLabel"
 		count.text = "×%d" % int(data["count"])
 		count.custom_minimum_size.x = 48.0
@@ -255,7 +255,7 @@ func _fill_damage(box: VBoxContainer) -> void:
 	_clear_rows(box)
 	var rows: Array = _snapshot.get("outgoing", [])
 	if rows.is_empty():
-		box.add_child(_label("REPORT_ZERO_DAMAGE", 17, Art.INK_MUTED))
+		box.add_child(_label("REPORT_ZERO_DAMAGE", 17, Art.MINT_SOFT))
 	for row in rows:
 		box.add_child(_damage_row(Dictionary(row), true))
 	var total := float(_snapshot.get("total_outgoing", 0.0))
@@ -272,7 +272,7 @@ func _fill_attributes(box: VBoxContainer) -> void:
 	_clear_rows(box)
 	var rows: Array = _snapshot.get("attributes", [])
 	if rows.is_empty():
-		box.add_child(_label("REPORT_NONE", 17, Art.INK_MUTED))
+		box.add_child(_label("REPORT_NONE", 17, Art.MINT_SOFT))
 	for row_variant in rows:
 		var row := Dictionary(row_variant)
 		var line := HBoxContainer.new()
@@ -286,7 +286,7 @@ func _fill_attributes(box: VBoxContainer) -> void:
 		content.add_child(_damage_row(row, true))
 		var applications := int(row.get("applications", 0))
 		if applications > 0:
-			var applications_label := _label("", 14, Art.INK_MUTED)
+			var applications_label := _label("", 14, Art.MINT_SOFT)
 			applications_label.text = tr("REPORT_ATTRIBUTE_APPLICATIONS").replace(
 				"%count%", str(applications)
 			)
@@ -305,7 +305,7 @@ func _damage_row(row: Dictionary, show_percentage: bool) -> HBoxContainer:
 			if show_percentage
 			else ""
 		),
-		Art.INK
+		Art.IVORY_BRIGHT
 	)
 
 

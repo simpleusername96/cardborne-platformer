@@ -18,6 +18,7 @@ signal stage_report_continued
 
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const VEHICLE_THEME = preload("res://art/ui/production/vehicle_stage_theme.tres")
+const UiChromeFactory = preload("res://scripts/ui/vehicle_ui_chrome_factory.gd")
 const UpgradeChoicePanel = preload("res://scripts/ui/vehicle_upgrade_choice_panel.gd")
 const ThreatRadar = preload("res://scripts/ui/vehicle_threat_radar.gd")
 const StatusOrbit = preload("res://scripts/ui/vehicle_status_orbit.gd")
@@ -40,9 +41,9 @@ const MOSS := Art.MINT
 const AMBER := Art.MUSTARD
 const CORAL := Art.CORAL
 const OFF_WHITE := Art.IVORY_BRIGHT
-const MUTED := Art.INK_MUTED
+const MUTED := Art.MINT_SOFT
 const VIOLET := Art.BOSS_MAGENTA
-const INK := Art.INK
+const INK := Art.IVORY_BRIGHT
 
 const MODAL_MINIMUMS := {
 	"deployment":Vector2(1176.0, 636.0),
@@ -428,6 +429,7 @@ var _settings_center: CenterContainer
 var _settings_panel: VehicleSettingsPanel
 var _guide_center: CenterContainer
 var _guide_panel: VehicleGuidebookPanel
+var _chrome_factory: VehicleUiChromeFactory
 var _practice_center: CenterContainer
 var _practice_stage: OptionButton
 var _practice_field: OptionButton
@@ -522,7 +524,9 @@ func _input(event: InputEvent) -> void:
 func _build_root() -> void:
 	_root = Control.new()
 	_root.name = "VehicleStageUIRoot"
-	_root.theme = VEHICLE_THEME
+	_chrome_factory = UiChromeFactory.new()
+	_root.theme = _chrome_factory.build(VEHICLE_THEME)
+	_root.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	_root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(_root)
 	_root.resized.connect(_apply_responsive_layout)
@@ -565,7 +569,6 @@ func _build_hud() -> void:
 	_hud.add_child(_status_orbit)
 
 	_health_panel = _flat_panel()
-	_set_panel_margins(_health_panel, 8, 4, 8, 4)
 	_health_panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	_health_panel.position = Vector2(18.0, 16.0)
 	_health_panel.size = Vector2(184.0, 54.0)
@@ -574,7 +577,6 @@ func _build_hud() -> void:
 	_health_panel.add_child(_health_bar)
 
 	_objective_panel = _flat_panel()
-	_set_panel_margins(_objective_panel, 10, 3, 10, 3)
 	_objective_panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	_objective_panel.position = Vector2(460.0, 16.0)
 	_objective_panel.custom_minimum_size = Vector2(360.0, 44.0)
@@ -592,7 +594,6 @@ func _build_hud() -> void:
 	objective_box.add_child(_objective_detail)
 
 	_minimap_panel = _flat_panel()
-	_set_panel_margins(_minimap_panel, 4, 4, 4, 4)
 	_minimap_panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	_minimap_panel.position = Vector2(1086.0, 16.0)
 	_minimap_panel.size = Vector2(176.0, 108.0)
@@ -631,7 +632,6 @@ func _build_hud() -> void:
 	_boss_cluster.visible = false
 
 	_target_panel = _flat_panel()
-	_set_panel_margins(_target_panel, 8, 5, 8, 5)
 	_target_panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	_target_panel.position = Vector2(1078.0, 310.0)
 	_target_panel.size = Vector2(184.0, 64.0)
@@ -1505,6 +1505,17 @@ func debug_ui_contract(viewport_width: float = 1280.0) -> Dictionary:
 		central_safe_clear = central_safe_clear and not Rect2(rect).intersects(central_safe)
 	return {
 		"theme_path": _root.theme.resource_path if _root.theme != null else "",
+		"ui_chrome":_chrome_factory.debug_contract(),
+		"image_backed_chrome":{
+			"modal":_root.theme.get_stylebox(&"panel", &"ModalSurface") is StyleBoxTexture,
+			"hud":_root.theme.get_stylebox(&"panel", &"HudStatusGroup") is StyleBoxTexture,
+			"button":_root.theme.get_stylebox(&"normal", &"Button") is StyleBoxTexture,
+			"upgrade_card":(
+				_root.theme.get_stylebox(&"normal", &"UpgradeChoiceCard")
+				is StyleBoxTexture
+			),
+			"tab":_root.theme.get_stylebox(&"tab_selected", &"TabBar") is StyleBoxTexture,
+		},
 		"command_min_height": _pause_first_button.custom_minimum_size.y,
 		"action_rail_size": Vector2(154.0, 34.0),
 		"action_rail_position":Vector2(18.0, 76.0),
@@ -1789,22 +1800,8 @@ func _refresh_input_bindings() -> void:
 
 func _flat_panel() -> PanelContainer:
 	var panel := PanelContainer.new()
-	panel.theme_type_variation = &"FlatPanel"
-	panel.add_theme_constant_override("margin_left", 14)
-	panel.add_theme_constant_override("margin_top", 10)
-	panel.add_theme_constant_override("margin_right", 14)
-	panel.add_theme_constant_override("margin_bottom", 10)
+	panel.theme_type_variation = &"HudStatusGroup"
 	return panel
-
-
-func _set_panel_margins(panel: PanelContainer, left: int, top: int, right: int, bottom: int) -> void:
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(Art.IVORY_BRIGHT, 0.96)
-	style.content_margin_left = left
-	style.content_margin_top = top
-	style.content_margin_right = right
-	style.content_margin_bottom = bottom
-	panel.add_theme_stylebox_override("panel", style)
 
 
 func _modal_panel(minimum_size: Vector2) -> PanelContainer:

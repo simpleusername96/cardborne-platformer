@@ -104,7 +104,7 @@ func _build() -> void:
 	add_theme_constant_override("separation", 14)
 	var header := HBoxContainer.new()
 	add_child(header)
-	_title_label = _label("GUIDE_TITLE", 40, Art.INK)
+	_title_label = _label("GUIDE_TITLE", 40, Art.IVORY_BRIGHT)
 	_title_label.theme_type_variation = &"DisplayLabel"
 	_title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(_title_label)
@@ -141,13 +141,13 @@ func _build() -> void:
 	detail.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	detail.add_theme_constant_override("separation", 12)
 	detail_scroll.add_child(detail)
-	_detail_title = _label("GUIDE_CURRENT_SHIP", 32, Art.INK)
+	_detail_title = _label("GUIDE_CURRENT_SHIP", 32, Art.IVORY_BRIGHT)
 	_detail_title.theme_type_variation = &"TitleLabel"
 	detail.add_child(_detail_title)
 	_preview = GuidebookPreview.new()
 	_preview.custom_minimum_size.y = 210.0
 	detail.add_child(_preview)
-	_detail_body = _label("", 17, Art.INK)
+	_detail_body = _label("", 17, Art.IVORY_BRIGHT)
 	_detail_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_detail_body.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	detail.add_child(_detail_body)
@@ -261,12 +261,12 @@ func _set_counterplay_rows(entry: Dictionary) -> void:
 		var glyph := CounterplayGlyph.new()
 		glyph.configure(StringName(definition[0]))
 		row.add_child(glyph)
-		var heading := _label(String(definition[1]), 18, Art.INK)
+		var heading := _label(String(definition[1]), 18, Art.IVORY_BRIGHT)
 		heading.theme_type_variation = &"SectionLabel"
 		heading.custom_minimum_size.x = 86.0
 		heading.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		row.add_child(heading)
-		var body := _label(String(definition[2]), 15, Art.INK_MUTED)
+		var body := _label(String(definition[2]), 15, Art.MINT_SOFT)
 		body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		body.vertical_alignment = VERTICAL_ALIGNMENT_CENTER

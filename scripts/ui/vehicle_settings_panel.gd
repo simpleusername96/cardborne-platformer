@@ -131,7 +131,7 @@ func _build() -> void:
 	var header := HBoxContainer.new()
 	header.add_theme_constant_override("separation", 12)
 	add_child(header)
-	var title := _label("SETTINGS_TITLE", 36, Art.INK)
+	var title := _label("SETTINGS_TITLE", 36, Art.IVORY_BRIGHT)
 	title.theme_type_variation = &"TitleLabel"
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(title)
@@ -146,7 +146,7 @@ func _build() -> void:
 	_close_button.pressed.connect(func() -> void: close_requested.emit())
 	header.add_child(_close_button)
 
-	_status_label = _label("", 14, Art.INK_MUTED)
+	_status_label = _label("", 14, Art.MINT_SOFT)
 	_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_status_label.visible = false
 	add_child(_status_label)
@@ -174,11 +174,11 @@ func _build_ship_status_page() -> void:
 func _build_audio_page() -> void:
 	var box := _page("Audio")
 	box.add_child(_section_title("SETTINGS_AUDIO_HEADING"))
-	box.add_child(_label("PAUSE_MASTER_VOLUME", 15, Art.INK))
+	box.add_child(_label("PAUSE_MASTER_VOLUME", 15, Art.IVORY_BRIGHT))
 	_master_slider = _slider()
 	_master_slider.value_changed.connect(_on_master_volume_changed)
 	box.add_child(_master_slider)
-	box.add_child(_label("PAUSE_EFFECTS_VOLUME", 15, Art.INK))
+	box.add_child(_label("PAUSE_EFFECTS_VOLUME", 15, Art.IVORY_BRIGHT))
 	_sfx_slider = _slider()
 	_sfx_slider.value_changed.connect(_on_sfx_volume_changed)
 	box.add_child(_sfx_slider)
@@ -187,13 +187,13 @@ func _build_audio_page() -> void:
 func _build_controls_page() -> void:
 	var box := _page("Controls")
 	box.add_child(_section_title("SETTINGS_CONTROLS_HEADING"))
-	var help := _label("SETTINGS_CONTROLS_HELP", 14, Art.INK_MUTED)
+	var help := _label("SETTINGS_CONTROLS_HELP", 14, Art.MINT_SOFT)
 	help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(help)
 	for action in InputProfile.REMAPPABLE_ACTIONS:
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 12)
-		var action_label := _label(String(ACTION_TITLE_KEYS[action]), 16, Art.INK)
+		var action_label := _label(String(ACTION_TITLE_KEYS[action]), 16, Art.IVORY_BRIGHT)
 		action_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		action_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		row.add_child(action_label)
@@ -219,7 +219,7 @@ func _build_gameplay_page() -> void:
 	_reduced_motion_toggle.focus_mode = Control.FOCUS_ALL
 	_reduced_motion_toggle.toggled.connect(_on_reduced_motion_toggled)
 	box.add_child(_reduced_motion_toggle)
-	_difficulty_lock_label = _label("SETTINGS_DIFFICULTY_LOCKED", 14, Art.INK_MUTED)
+	_difficulty_lock_label = _label("SETTINGS_DIFFICULTY_LOCKED", 14, Art.MINT_SOFT)
 	_difficulty_lock_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_difficulty_lock_label.custom_minimum_size.y = 72.0
 	box.add_child(_difficulty_lock_label)
@@ -272,31 +272,13 @@ func _style_tab_bar() -> void:
 	_tabs.add_theme_font_size_override("font_size", 18)
 	_tabs.add_theme_color_override("font_unselected_color", Art.IVORY_BRIGHT)
 	_tabs.add_theme_color_override("font_hovered_color", Art.IVORY_BRIGHT)
-	_tabs.add_theme_color_override("font_selected_color", Art.INK)
-	_tabs.add_theme_stylebox_override("tab_unselected", _tab_style(Art.BLOCKER_FILL))
-	_tabs.add_theme_stylebox_override("tab_hovered", _tab_style(Art.CERAMIC_GREEN_MID))
-	_tabs.add_theme_stylebox_override("tab_selected", _tab_style(Art.MUSTARD))
-	_tabs.add_theme_stylebox_override("tab_focus", _tab_style(Art.MUSTARD))
+	_tabs.add_theme_color_override("font_selected_color", Art.IVORY_BRIGHT)
 	var tab_bar := _tabs.get_tab_bar()
 	tab_bar.add_theme_font_override("font", get_theme_default_font())
 	tab_bar.add_theme_font_size_override("font_size", 18)
 	tab_bar.add_theme_color_override("font_unselected_color", Art.IVORY_BRIGHT)
 	tab_bar.add_theme_color_override("font_hovered_color", Art.IVORY_BRIGHT)
-	tab_bar.add_theme_color_override("font_selected_color", Art.INK)
-	tab_bar.add_theme_stylebox_override("tab_unselected", _tab_style(Art.BLOCKER_FILL))
-	tab_bar.add_theme_stylebox_override("tab_hovered", _tab_style(Art.CERAMIC_GREEN_MID))
-	tab_bar.add_theme_stylebox_override("tab_selected", _tab_style(Art.MUSTARD))
-	tab_bar.add_theme_stylebox_override("tab_focus", _tab_style(Art.MUSTARD))
-
-
-func _tab_style(color: Color) -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = color
-	style.content_margin_left = 14.0
-	style.content_margin_top = 8.0
-	style.content_margin_right = 14.0
-	style.content_margin_bottom = 8.0
-	return style
+	tab_bar.add_theme_color_override("font_selected_color", Art.IVORY_BRIGHT)
 
 
 func _label(text: String, font_size: int, color: Color) -> Label:

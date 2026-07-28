@@ -41,12 +41,12 @@ func _build() -> void:
 	_kicker.theme_type_variation = &"MetricLabel"
 	_kicker.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	add_child(_kicker)
-	_title = _label("UPGRADE_TITLE", 38, Color("102e38"))
+	_title = _label("UPGRADE_TITLE", 38, Color("f1e6be"))
 	_title.theme_type_variation = &"DisplayLabel"
 	_title.custom_minimum_size.x = 900.0
 	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	add_child(_title)
-	_detail = _label("UPGRADE_SELECT_DETAIL", 17, Color("315963"))
+	_detail = _label("UPGRADE_SELECT_DETAIL", 17, Color("b7c7c2"))
 	_detail.custom_minimum_size.x = 900.0
 	_detail.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_detail.custom_minimum_size.y = 34.0

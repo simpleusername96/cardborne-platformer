@@ -18,6 +18,16 @@ func _initialize() -> void:
 		get_root().size = viewport_size
 		await process_frame
 		var contract := ui.debug_ui_contract(width)
+		var chrome := Dictionary(contract["ui_chrome"])
+		_expect(bool(chrome["loaded"]), "published UI chrome recipe loads at %d" % width)
+		_expect(int(chrome["style_count"]) == 17, "all 17 UI chrome assets load at %d" % width)
+		_expect(Array(chrome["errors"]).is_empty(), "UI chrome has no asset contract errors at %d" % width)
+		var image_backed := Dictionary(contract["image_backed_chrome"])
+		for surface in ["modal", "hud", "button", "upgrade_card", "tab"]:
+			_expect(
+				bool(image_backed[surface]),
+				"%s chrome is image-backed at %d" % [surface, width]
+			)
 		_expect(Vector2(contract["action_rail_size"]) == Vector2(154.0, 34.0), "action rail size is fixed at %d" % width)
 		_expect(Vector2(contract["action_rail_position"]) == Vector2(18.0, 76.0), "action rail stays below hull at %d" % width)
 		_expect(bool(contract["action_rail_icon_only"]), "action rail contains icons only at %d" % width)

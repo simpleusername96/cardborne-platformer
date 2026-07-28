@@ -39,7 +39,7 @@ var _rendered_stat_count := 0
 func _ready() -> void:
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	add_theme_constant_override("separation", 16)
-	_empty_label = _label("SHIP_STATUS_EMPTY", 17, Art.INK_MUTED)
+	_empty_label = _label("SHIP_STATUS_EMPTY", 17, Art.MINT_SOFT)
 	_empty_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_empty_label.custom_minimum_size.y = 54.0
 	_empty_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -86,7 +86,7 @@ func _build_summary_strip() -> void:
 	for index in 3:
 		if index > 0:
 			_summary_strip.add_child(VSeparator.new())
-		var label := _label("", 18, Art.INK)
+		var label := _label("", 18, Art.IVORY_BRIGHT)
 		label.theme_type_variation = &"MetricLabel"
 		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -175,10 +175,10 @@ func _refresh_stats() -> void:
 
 
 func _append_stat_row(grid: GridContainer, stat: Dictionary) -> void:
-	var key_label := _label(String(stat.get("label_key", "")), 16, Art.INK_MUTED)
+	var key_label := _label(String(stat.get("label_key", "")), 16, Art.MINT_SOFT)
 	key_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	key_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var value_label := _label("", 17, Art.INK)
+	var value_label := _label("", 17, Art.IVORY_BRIGHT)
 	value_label.theme_type_variation = &"MetricLabel"
 	value_label.text = _format_value(stat)
 	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
@@ -190,11 +190,11 @@ func _append_stat_row(grid: GridContainer, stat: Dictionary) -> void:
 func _refresh_secondaries() -> void:
 	var secondaries: Array = _snapshot.get("secondaries", [])
 	if secondaries.is_empty():
-		_secondary_box.add_child(_label("SHIP_STATUS_NONE", 16, Art.INK_MUTED))
+		_secondary_box.add_child(_label("SHIP_STATUS_NONE", 16, Art.MINT_SOFT))
 		return
 	for secondary_variant in secondaries:
 		var row := Dictionary(secondary_variant)
-		var label := _label("", 17, Art.INK)
+		var label := _label("", 17, Art.IVORY_BRIGHT)
 		label.text = "%s  ·  %s" % [
 			tr(String(row.get("name_key", ""))),
 			tr("SHIP_STATUS_LEVEL").replace(
@@ -207,11 +207,11 @@ func _refresh_secondaries() -> void:
 func _refresh_upgrades() -> void:
 	var upgrades: Array = _snapshot.get("upgrades", [])
 	if upgrades.is_empty():
-		_upgrade_box.add_child(_label("SHIP_STATUS_NONE", 16, Art.INK_MUTED))
+		_upgrade_box.add_child(_label("SHIP_STATUS_NONE", 16, Art.MINT_SOFT))
 		return
 	for upgrade_variant in upgrades:
 		var row := Dictionary(upgrade_variant)
-		var label := _label("", 16, Art.INK)
+		var label := _label("", 16, Art.IVORY_BRIGHT)
 		label.text = "%s  ·  %s" % [
 			tr(String(row.get("title_key", ""))),
 			tr("SHIP_STATUS_LEVEL_MAX").replace(
