@@ -1,0 +1,263 @@
+{
+	"schema_version": 1,
+	"seed": 472013,
+	"sources": {
+		"source_manifest": "pixel-art-production/assets/source/candidates/space-hangar-v2/source-manifest.json",
+		"full_map_target": "pixel-art-production/assets/source/candidates/space-hangar-v2/raw/full-map-target.png",
+		"deck_material_master": "pixel-art-production/assets/source/candidates/space-hangar-v2/raw/deck-material-master.png",
+		"wall_material_master": "pixel-art-production/assets/source/candidates/space-hangar-v2/raw/wall-material-master.png",
+		"void_material_master": "pixel-art-production/assets/source/candidates/space-hangar-v2/raw/void-material-master.png",
+		"structure_sheet": "pixel-art-production/assets/source/candidates/space-hangar-v2/raw/structure-sheet.png",
+		"prop_sheet": "pixel-art-production/assets/source/candidates/space-hangar-v2/raw/prop-sheet.png",
+		"full_map_size": [1280, 720],
+		"material_source_size": [1024, 1024],
+		"sheet_source_size": [1024, 1024],
+		"sheet_grid": [4, 4],
+		"logical_sheet_size": [256, 256],
+		"cell_clearance_px": 24,
+		"chroma_key": "#FF00FF",
+		"chroma_predicate": {
+			"red_min": 160,
+			"green_max": 96,
+			"blue_min": 160,
+			"dominance_min": 96,
+			"fringe_value_min": 8,
+			"fringe_green_ratio_max": 0.65,
+			"fringe_rb_delta_max": 40
+		},
+		"stamp_fit_long_axis_px": {
+			"structure": 56,
+			"prop": 42,
+			"wear": 32
+		},
+		"stamp_palette": [
+			"#141B24",
+			"#202833",
+			"#2E3945",
+			"#44515E",
+			"#596774",
+			"#1F5FD0",
+			"#75C4B2",
+			"#D9A83D"
+		]
+	},
+	"base_families": [
+		{
+			"id": "deck",
+			"source": "deck_material_master",
+			"palette": ["#2E3945", "#44515E", "#596774"],
+			"neutral_color": "#44515E",
+			"prequantize_sample_size": 256,
+			"variant_count": 12,
+			"sample_windows": [
+				[104, 48, 24, 24],
+				[136, 48, 24, 24],
+				[104, 80, 24, 24],
+				[136, 80, 24, 24],
+				[112, 104, 24, 24],
+				[144, 104, 24, 24],
+				[24, 96, 24, 24],
+				[184, 64, 24, 24],
+				[184, 184, 24, 24],
+				[48, 144, 24, 24],
+				[104, 184, 24, 24],
+				[200, 208, 24, 24]
+			],
+			"allowed_transforms": ["identity", "flip_h", "flip_v", "rotate_180"]
+		},
+		{
+			"id": "wall",
+			"source": "wall_material_master",
+			"palette": ["#141B24", "#202833", "#2E3945", "#596774"],
+			"neutral_color": "#202833",
+			"prequantize_sample_size": 256,
+			"variant_count": 8,
+			"sample_windows": [
+				[16, 48, 24, 24],
+				[80, 48, 24, 24],
+				[144, 48, 24, 24],
+				[208, 48, 24, 24],
+				[16, 176, 24, 24],
+				[80, 176, 24, 24],
+				[144, 176, 24, 24],
+				[208, 176, 24, 24]
+			],
+			"allowed_transforms": ["identity", "flip_h", "flip_v", "rotate_180"]
+		},
+		{
+			"id": "void",
+			"source": "void_material_master",
+			"palette": ["#141B24", "#202833"],
+			"neutral_color": "#141B24",
+			"prequantize_sample_size": 32,
+			"variant_count": 4,
+			"sample_windows": [
+				[16, 116, 24, 24],
+				[80, 116, 24, 24],
+				[144, 116, 24, 24],
+				[208, 116, 24, 24]
+			],
+			"allowed_transforms": ["identity", "flip_h", "flip_v", "rotate_180"]
+		}
+	],
+	"structure_stamps": [
+		{"id": "frame_h", "cell": [0, 0], "role": "structure", "allowed_anchor": "boundary"},
+		{"id": "frame_v", "cell": [1, 0], "role": "structure", "allowed_anchor": "boundary"},
+		{"id": "corner_nw", "cell": [2, 0], "role": "structure", "allowed_anchor": "boundary"},
+		{"id": "corner_ne", "cell": [3, 0], "role": "structure", "allowed_anchor": "boundary"},
+		{"id": "corner_se", "cell": [0, 1], "role": "structure", "allowed_anchor": "boundary"},
+		{"id": "corner_sw", "cell": [1, 1], "role": "structure", "allowed_anchor": "boundary"},
+		{"id": "rail_h", "cell": [2, 1], "role": "structure", "allowed_anchor": "boundary"},
+		{"id": "rail_v", "cell": [3, 1], "role": "structure", "allowed_anchor": "boundary"},
+		{"id": "service_bay_h", "cell": [0, 2], "role": "structure", "allowed_anchor": "feature"},
+		{"id": "service_bay_v", "cell": [1, 2], "role": "structure", "allowed_anchor": "feature"},
+		{"id": "cover_small", "cell": [2, 2], "role": "structure", "allowed_anchor": "cover"},
+		{"id": "cover_wide", "cell": [3, 2], "role": "structure", "allowed_anchor": "cover"},
+		{"id": "bulkhead_h", "cell": [0, 3], "role": "structure", "allowed_anchor": "bulkhead"},
+		{"id": "bulkhead_v", "cell": [1, 3], "role": "structure", "allowed_anchor": "bulkhead"},
+		{"id": "inner_cap_h", "cell": [2, 3], "role": "structure", "allowed_anchor": "boundary"},
+		{"id": "inner_cap_v", "cell": [3, 3], "role": "structure", "allowed_anchor": "boundary"}
+	],
+	"prop_stamps": [
+		{"id": "hatch_round", "cell": [0, 0], "role": "prop", "allowed_anchor": "floor_flat"},
+		{"id": "vent_round", "cell": [1, 0], "role": "prop", "allowed_anchor": "floor_flat"},
+		{"id": "console_small", "cell": [2, 0], "role": "prop", "allowed_anchor": "floor_flat"},
+		{"id": "console_wide", "cell": [3, 0], "role": "prop", "allowed_anchor": "floor_flat"},
+		{"id": "cargo_small", "cell": [0, 1], "role": "prop", "allowed_anchor": "floor_flat"},
+		{"id": "cargo_wide", "cell": [1, 1], "role": "prop", "allowed_anchor": "floor_flat"},
+		{"id": "machinery_small", "cell": [2, 1], "role": "prop", "allowed_anchor": "floor_flat"},
+		{"id": "machinery_tall", "cell": [3, 1], "role": "prop", "allowed_anchor": "floor_flat"},
+		{"id": "warning_plate", "cell": [0, 2], "role": "prop", "allowed_anchor": "floor_flat"},
+		{"id": "pipe_cluster", "cell": [1, 2], "role": "prop", "allowed_anchor": "floor_flat"},
+		{"id": "cable_coil", "cell": [2, 2], "role": "prop", "allowed_anchor": "floor_flat"},
+		{"id": "terminal", "cell": [3, 2], "role": "prop", "allowed_anchor": "floor_flat"},
+		{"id": "wear_scrape_a", "cell": [0, 3], "role": "wear", "allowed_anchor": "floor_flat"},
+		{"id": "wear_scrape_b", "cell": [1, 3], "role": "wear", "allowed_anchor": "floor_flat"},
+		{"id": "wear_chip_a", "cell": [2, 3], "role": "wear", "allowed_anchor": "floor_flat"},
+		{"id": "wear_chip_b", "cell": [3, 3], "role": "wear", "allowed_anchor": "floor_flat"}
+	],
+	"proof_layout": {
+		"size": [1280, 720],
+		"arena": [156, 106, 968, 514],
+		"outer_frame": [124, 51, 1032, 619],
+		"center_no_go": [500, 250, 280, 250],
+		"base_regions": [
+			{"family": "void", "rect": [0, 0, 1280, 720]},
+			{"family": "wall", "rect": [124, 51, 1032, 619]},
+			{"family": "deck", "rect": [156, 106, 968, 514]}
+		],
+		"anchor_regions": {
+			"boundary": [
+				[124, 51, 1032, 55],
+				[124, 620, 1032, 50],
+				[124, 51, 32, 619],
+				[1124, 51, 32, 619]
+			],
+			"cover": [
+				[445, 251, 38, 28],
+				[694, 188, 42, 26],
+				[763, 151, 43, 26],
+				[904, 208, 48, 28],
+				[603, 508, 40, 26],
+				[763, 545, 44, 26],
+				[904, 486, 48, 28],
+				[232, 529, 44, 26]
+			],
+			"bulkhead": [
+				[426, 335, 24, 54],
+				[829, 335, 24, 54]
+			],
+			"feature": [
+				[284, 333, 110, 54],
+				[886, 333, 110, 54]
+			],
+			"floor_flat": [
+				[156, 106, 968, 514]
+			]
+		},
+		"placements": [
+			{"id": "landmark_nw", "stamp_id": "corner_nw", "position": [108, 46], "anchor": "boundary", "transform": "identity", "landmark": true},
+			{"id": "landmark_ne", "stamp_id": "corner_ne", "position": [1108, 46], "anchor": "boundary", "transform": "identity", "landmark": true},
+			{"id": "landmark_se", "stamp_id": "corner_se", "position": [1108, 561], "anchor": "boundary", "transform": "identity", "landmark": true},
+			{"id": "landmark_sw", "stamp_id": "corner_sw", "position": [108, 561], "anchor": "boundary", "transform": "identity", "landmark": true},
+			{"id": "frame_top_left", "stamp_id": "frame_h", "position": [350, 46], "anchor": "boundary", "transform": "identity", "landmark": false},
+			{"id": "frame_top_right", "stamp_id": "frame_h", "position": [866, 46], "anchor": "boundary", "transform": "identity", "landmark": false},
+			{"id": "frame_bottom_left", "stamp_id": "frame_h", "position": [350, 614], "anchor": "boundary", "transform": "flip_v", "landmark": false},
+			{"id": "frame_bottom_right", "stamp_id": "frame_h", "position": [866, 614], "anchor": "boundary", "transform": "flip_v", "landmark": false},
+			{"id": "frame_left_top", "stamp_id": "frame_v", "position": [108, 222], "anchor": "boundary", "transform": "identity", "landmark": false},
+			{"id": "frame_left_bottom", "stamp_id": "frame_v", "position": [108, 434], "anchor": "boundary", "transform": "identity", "landmark": false},
+			{"id": "frame_right_top", "stamp_id": "frame_v", "position": [1108, 222], "anchor": "boundary", "transform": "flip_h", "landmark": false},
+			{"id": "frame_right_bottom", "stamp_id": "frame_v", "position": [1108, 434], "anchor": "boundary", "transform": "flip_h", "landmark": false},
+			{"id": "rail_top_left", "stamp_id": "rail_h", "position": [408, 71], "anchor": "boundary", "transform": "identity", "landmark": false},
+			{"id": "rail_top_right", "stamp_id": "rail_h", "position": [808, 71], "anchor": "boundary", "transform": "identity", "landmark": false},
+			{"id": "rail_bottom_left", "stamp_id": "rail_h", "position": [408, 591], "anchor": "boundary", "transform": "flip_v", "landmark": false},
+			{"id": "rail_bottom_right", "stamp_id": "rail_h", "position": [808, 591], "anchor": "boundary", "transform": "flip_v", "landmark": false},
+			{"id": "service_bay_west", "stamp_id": "service_bay_h", "position": [284, 333], "target_size": [110, 54], "anchor": "feature", "transform": "identity", "landmark": false},
+			{"id": "service_bay_east", "stamp_id": "service_bay_h", "position": [886, 333], "target_size": [110, 54], "anchor": "feature", "transform": "flip_h", "landmark": false},
+			{"id": "bulkhead_west", "stamp_id": "bulkhead_v", "position": [406, 330], "anchor": "bulkhead", "transform": "identity", "landmark": false},
+			{"id": "bulkhead_east", "stamp_id": "bulkhead_v", "position": [809, 330], "anchor": "bulkhead", "transform": "flip_h", "landmark": false},
+			{"id": "cover_nw", "stamp_id": "cover_small", "position": [445, 251], "target_size": [38, 28], "anchor": "cover", "transform": "identity", "landmark": false},
+			{"id": "cover_north", "stamp_id": "cover_wide", "position": [694, 188], "target_size": [42, 26], "anchor": "cover", "transform": "identity", "landmark": false},
+			{"id": "cover_ne_high", "stamp_id": "cover_small", "position": [763, 151], "target_size": [43, 26], "anchor": "cover", "transform": "identity", "landmark": false},
+			{"id": "cover_ne", "stamp_id": "cover_wide", "position": [904, 208], "target_size": [48, 28], "anchor": "cover", "transform": "identity", "landmark": false},
+			{"id": "cover_south", "stamp_id": "cover_small", "position": [603, 508], "target_size": [40, 26], "anchor": "cover", "transform": "identity", "landmark": false},
+			{"id": "cover_se_low", "stamp_id": "cover_small", "position": [763, 545], "target_size": [44, 26], "anchor": "cover", "transform": "identity", "landmark": false},
+			{"id": "cover_se", "stamp_id": "cover_wide", "position": [904, 486], "target_size": [48, 28], "anchor": "cover", "transform": "identity", "landmark": false},
+			{"id": "cover_sw", "stamp_id": "cover_small", "position": [232, 529], "target_size": [44, 26], "anchor": "cover", "transform": "identity", "landmark": false},
+			{"id": "fixture_hatch", "stamp_id": "hatch_round", "position": [194, 148], "anchor": "floor_flat", "transform": "identity", "landmark": false},
+			{"id": "fixture_vent", "stamp_id": "vent_round", "position": [1022, 148], "anchor": "floor_flat", "transform": "identity", "landmark": false},
+			{"id": "fixture_console_small", "stamp_id": "console_small", "position": [268, 254], "anchor": "floor_flat", "transform": "identity", "landmark": false},
+			{"id": "fixture_console_wide", "stamp_id": "console_wide", "position": [948, 254], "anchor": "floor_flat", "transform": "identity", "landmark": false},
+			{"id": "fixture_warning", "stamp_id": "warning_plate", "position": [192, 408], "anchor": "floor_flat", "transform": "identity", "landmark": false},
+			{"id": "fixture_pipe", "stamp_id": "pipe_cluster", "position": [1024, 408], "anchor": "floor_flat", "transform": "identity", "landmark": false},
+			{"id": "fixture_cargo_small", "stamp_id": "cargo_small", "position": [328, 536], "anchor": "floor_flat", "transform": "identity", "landmark": false},
+			{"id": "fixture_terminal", "stamp_id": "terminal", "position": [888, 536], "anchor": "floor_flat", "transform": "identity", "landmark": false},
+			{"id": "fixture_hatch_southwest", "stamp_id": "hatch_round", "position": [194, 509], "anchor": "floor_flat", "transform": "identity", "landmark": false},
+			{"id": "fixture_vent_southeast", "stamp_id": "vent_round", "position": [1022, 509], "anchor": "floor_flat", "transform": "identity", "landmark": false},
+			{"id": "wear_01", "stamp_id": "wear_scrape_a", "position": [244, 192], "anchor": "floor_flat", "transform": "identity", "landmark": false},
+			{"id": "wear_02", "stamp_id": "wear_scrape_b", "position": [972, 192], "anchor": "floor_flat", "transform": "identity", "landmark": false},
+			{"id": "wear_03", "stamp_id": "wear_chip_a", "position": [244, 482], "anchor": "floor_flat", "transform": "identity", "landmark": false},
+			{"id": "wear_04", "stamp_id": "wear_chip_b", "position": [972, 482], "anchor": "floor_flat", "transform": "identity", "landmark": false}
+		],
+		"wear_min_spacing": 96,
+		"prop_fixture_range": [6, 10],
+		"minimum_landmarks": 4
+	},
+	"outputs": {
+		"clean": {
+			"deck_material_master": "clean/deck-material-master.png",
+			"wall_material_master": "clean/wall-material-master.png",
+			"void_material_master": "clean/void-material-master.png",
+			"base_variant_atlas": "clean/base-variant-atlas.png",
+			"structure_atlas": "clean/structure-atlas.png",
+			"prop_atlas": "clean/prop-atlas.png",
+			"deck_repeat_master": "clean/hangar-floor-master.png",
+			"wall_repeat_master": "clean/hangar-wall-master.png",
+			"void_repeat_master": "clean/hangar-water-master.png"
+		},
+		"review": {
+			"base_variant_atlas_4x": "review/base-variant-atlas-4x.png",
+			"structure_atlas_4x": "review/structure-atlas-4x.png",
+			"prop_atlas_4x": "review/prop-atlas-4x.png",
+			"deck_seam_2x2": "review/deck-seam-2x2.png",
+			"deck_seam_3x3": "review/deck-seam-3x3.png",
+			"deck_seam_offset_20x12": "review/deck-seam-offset-20x12.png",
+			"wall_seam_2x2": "review/wall-seam-2x2.png",
+			"wall_seam_3x3": "review/wall-seam-3x3.png",
+			"wall_seam_offset_20x12": "review/wall-seam-offset-20x12.png",
+			"void_seam_2x2": "review/void-seam-2x2.png",
+			"void_seam_3x3": "review/void-seam-3x3.png",
+			"void_seam_offset_20x12": "review/void-seam-offset-20x12.png",
+			"side_by_side": "review/full-map-target-vs-candidate.png"
+		},
+		"proof_layers": {
+			"base": "proof/map-base.png",
+			"structure": "proof/map-structure.png",
+			"wear": "proof/map-wear.png",
+			"props": "proof/map-props.png",
+			"final": "proof/map-final.png"
+		},
+		"validation": "candidate-validation.json",
+		"hashes": "sha256.json"
+	}
+}
