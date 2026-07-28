@@ -966,17 +966,17 @@ fallback stated above.
 
 ### Milestone 1 — Correct current authority and domain language
 
-- [ ] Rewrite the root README field paragraph to say one of three macro fields
+- [x] Rewrite the root README field paragraph to say one of three macro fields
   is selected per run and its tactical children host all five stages.
 - [ ] Apply the Gate-A-authorized root AGENTS phrase correction without changing
   the fixed preflight block or unrelated guidance. If Gate A preserves the
   feature requirement, stop this plan at the defined gate.
-- [ ] Narrow `PART_GUIDELINES.md` frontmatter to pixel-part production and state
+- [x] Narrow `PART_GUIDELINES.md` frontmatter to pixel-part production and state
   that runtime presentation remains governed by `UI_VISUAL_SYSTEM.md`.
-- [ ] Update `pixel-art-production/README.md` to describe the live runtime
+- [x] Update `pixel-art-production/README.md` to describe the live runtime
   catalog, atlas, three terrain tiles, shader, 39 families, and renderer-owned
   atlas selection.
-- [ ] Preserve Korean-first/English parity and all current product terminology.
+- [x] Preserve Korean-first/English parity and all current product terminology.
 
 **Acceptance:** `run`, `field`, `stage`, `tactical layout`, `encounter`, `surge`,
 `stage boss`, `upgrade`, and `card` are used consistently across current
@@ -985,17 +985,17 @@ work.
 
 ### Milestone 2 — Enforce current result/localization contracts
 
-- [ ] In `VehicleStageUI.show_result`, require a non-empty
+- [x] In `VehicleStageUI.show_result`, require a non-empty
   `stage_title_key`; fail a debug/test contract clearly instead of using
   `STAGE_FLOODED_WORKS`.
-- [ ] Update `debug_modal_contract("result")` to provide a current field-aware
+- [x] Update `debug_modal_contract("result")` to provide a current field-aware
   stage title key and the minimal valid result snapshot.
-- [ ] Reconfirm both runtime/capture callers already pass current keys.
-- [ ] Delete only the 58 localization rows in the locked manifest; delete
-  `NOTIFY_FIELD_BOSS_SHARD` only when Gate A authorizes it.
-- [ ] Add/adjust localization validation so current stage/result snapshots
+- [x] Reconfirm both runtime/capture callers already pass current keys.
+- [x] Delete only the 58 localization rows in the locked manifest.
+- [ ] Delete `NOTIFY_FIELD_BOSS_SHARD` only when Gate A authorizes it.
+- [x] Add/adjust localization validation so current stage/result snapshots
   require both Korean and English translations.
-- [ ] Run a post-change dynamic-key audit before committing the CSV.
+- [x] Run a post-change dynamic-key audit before committing the CSV.
 
 **Acceptance:** no confirmed retired stage, enemy, objective, result, or upgrade
 key remains; Gate A has resolved the field-boss key; all current dynamically

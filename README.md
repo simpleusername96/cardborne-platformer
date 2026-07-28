@@ -8,10 +8,11 @@ secondary weapons, EMP, collectible experience, and card upgrades.
 
 - `project.godot` boots `scenes/main/GameRoot.tscn` and the connected
   `scenes/run/VehicleRun.tscn` campaign.
-- Each new run selects one validated arrangement of eight large cover modules,
-  four stationary threats, three pickups, and five crates per stage. Five
-  escalating stages and exact retries reuse that same enlarged drowned-ruin
-  field while builds and explored minimap cells persist.
+- Each new run selects one of three validated macro fields. Its five
+  deterministic tactical layouts each activate eight large cover modules,
+  four stationary threats, three pickups, and five crates. All five stages and
+  exact retries reuse the selected field while builds and explored minimap
+  cells persist.
 - Encounter packets begin with a six-second safe arrival, then grow from one
   scout into eight-squad surges distributed across distinct, telegraphed field
   anchors. Hard preserves the current 48-to-72 active-enemy baseline; Normal

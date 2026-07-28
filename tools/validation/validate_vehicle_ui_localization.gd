@@ -51,6 +51,19 @@ func _initialize() -> void:
 		var ui := StageUI.new()
 		get_root().add_child(ui)
 		await process_frame
+		for stage_title_key in field_stage_titles:
+			var result_contract := ui.debug_modal_contract(
+				"result",
+				String(stage_title_key)
+			)
+			_expect(
+				String(result_contract["result_kicker"]).contains(
+					TranslationServer.translate(String(stage_title_key))
+				),
+				"%s result summary uses current stage title %s" % [
+					locale, stage_title_key,
+				]
+			)
 		for option_text in ui.debug_practice_option_texts():
 			_expect(
 				not option_text.is_empty()

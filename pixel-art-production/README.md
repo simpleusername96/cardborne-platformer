@@ -2,7 +2,7 @@
 type: spec
 status: active
 created: 2026-07-26
-last_reviewed: 2026-07-27
+last_reviewed: 2026-07-28
 canonical_for: Pixel-art asset inventory, authoring manifests, semantic layer separation, deterministic cleanup, and atlas production
 scope: Offline visual-asset production; it does not replace the current live visual system or gameplay geometry
 related:
@@ -19,21 +19,20 @@ migration lives under this directory:
 
 ```text
 pixel-art-production/
-  PLAN.md
   README.md
   assets/       # inventory, palettes, editable source/proof assets, builds
   design/       # research, reference manifests, experiments, guidelines
   evidence/     # baselines, samplers, and approval-gate captures
-  runtime/      # reserved for approved Godot-consumed atlases and metadata
+  runtime/      # approved Godot-consumed atlas, tiles, catalog, and shader
   schemas/      # brief and manifest contracts
   tools/        # production and validation scripts
 ```
 
 Each offline-heavy child directory has its own `.gdignore`, keeping references,
-proofs, and authoring tools out of Godot's resource scan. A later
-runtime-integration milestone publishes only approved generated atlases into
-`runtime/`; the entire pixel-art effort therefore stays discoverable beneath
-this one root without importing production evidence into the game.
+proofs, and authoring tools out of Godot's resource scan. The current publisher
+writes only approved runtime outputs into `runtime/`; the entire pixel-art
+effort therefore stays discoverable beneath this one root without importing
+production evidence into the game.
 
 ## Purpose
 
@@ -61,7 +60,7 @@ This specification owns:
 
 It does not:
 
-- change the live Godot renderer in this revision;
+- own or redesign the live Godot renderer;
 - replace authored collision, navigation, line of sight, or spawn legality;
 - bake exact telegraph areas, minimap positions, cooldowns, numbers, focus
   states, or Korean/English strings into images;
@@ -70,14 +69,20 @@ It does not:
 
 ## Current State
 
-The current game has no runtime PNG, SVG, `Sprite2D`, or `TileMapLayer` art.
-World surfaces are owned by `vehicle_stage_backdrop.gd`; actors and projectiles
-are mesh families in `vehicle_combat_visual_library.gd`; batching and state
-overlays are owned by `vehicle_combat_renderer.gd`. Existing PNG files are
-design references and captures, not runtime assets.
+The current game consumes
+`runtime/atlases/cardborne-pixel-atlas.png`, three repeat tiles under
+`runtime/tiles/`, `runtime/catalog.json`, and
+`runtime/shaders/pixel_atlas_multimesh.gdshader`. The catalog exposes 39 asset
+families through `vehicle_pixel_asset_catalog.gd`; the retained
+`vehicle_combat_renderer.gd` and `vehicle_pixel_world_mesh_builder.gd` select
+atlas regions and repeat materials without making raster art the collision
+owner.
 
-The pipeline therefore treats current scripts as the inventory source and future
-atlases as a presentation replacement. Gameplay geometry remains the sole truth.
+`tools/design/generate_complete_pixel_library.gd` is the current publisher.
+World geometry remains owned by the field, tactical-layout, and terrain
+runtimes; telegraphs, localization, focus, timers, and changing combat state
+remain live. Offline reference, source, proof, and review PNGs are production
+evidence rather than Godot runtime assets.
 
 ### Inventory coverage
 
@@ -267,16 +272,20 @@ nearest-neighbor, pivot/anchor, silhouette, grayscale, and declared-background
 panels. A `proof` or `candidate` may pass technical validation without becoming
 approved production art.
 
-### 9. Integrate later
+### 9. Publish and integrate
 
-Godot integration is a separate, reviewable phase:
+Godot integration uses one reviewable publication path:
 
 - retain current gameplay geometry and retained high-count batching;
 - select atlas regions in existing renderer-owned batches;
 - use nearest texture filtering and whole-number sprite scale;
 - derive visual tiles from geometry, never the reverse;
+- publish the shared atlas, repeat tiles, frame metadata, checksums, and source
+  provenance through `generate_complete_pixel_library.gd`;
+- validate the runtime catalog and Godot import settings after publication;
 - test the Web export at `1280 x 720` and `1920 x 1080`;
-- compare combat readability and frame pacing before broad conversion.
+- compare combat readability and frame pacing before accepting a replacement
+  asset slice.
 
 ## Family-Specific Rules
 

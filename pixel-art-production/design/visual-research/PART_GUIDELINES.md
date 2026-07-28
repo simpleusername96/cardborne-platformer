@@ -2,15 +2,15 @@
 type: spec
 status: active
 created: 2026-07-26
-last_reviewed: 2026-07-27
-canonical_for: Cardborne pixel-asset production and runtime presentation
+last_reviewed: 2026-07-28
+canonical_for: Cardborne pixel-asset part construction and authoring review
 topic: Pixel space-hangar visual production
 scope: Candidate pixel-art production rules for Cardborne world assets, actors, combat feedback, and restrained UI ornament
 source: ./reference-manifest.json
 related:
   - ../../../docs/design/UI_VISUAL_SYSTEM.md
   - ../../README.md
-  - ../../product/vehicle_game_spec.md
+  - ../../../docs/product/vehicle_game_spec.md
   - ./mvp/round-1/mvp-round-1-comparison.png
   - ./mvp/round-2/source/mvp-e-refined-readability.png
   - ./mvp/round-2/source/mvp-f-refined-hangar-identity.png
@@ -22,9 +22,10 @@ related:
 
 Define the approved simple, familiar, and production-feasible pixel-art grammar
 for Cardborne's top-down space hangar. This guide owns native pixel shapes,
-semantic parts, atlas production, and runtime presentation. The active
-[`UI_VISUAL_SYSTEM.md`](../../../docs/design/UI_VISUAL_SYSTEM.md) continues to
-own layout, live state, localization, and semantic visual hierarchy.
+semantic parts, atlas production, and authoring review. The active
+[`UI_VISUAL_SYSTEM.md`](../../../docs/design/UI_VISUAL_SYSTEM.md) remains the
+sole runtime-presentation authority and owns layout, live state, localization,
+and semantic visual hierarchy.
 
 The guide converts the reference study and MVP failures into part-level
 constraints. It favors first-clear gameplay information over novelty,

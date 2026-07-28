@@ -1326,13 +1326,21 @@ func show_pause() -> void:
 
 
 func show_result(summary: Dictionary) -> void:
+	var stage_title_key := String(summary.get("stage_title_key", ""))
+	if stage_title_key.is_empty():
+		push_error("VehicleStageUI.show_result requires stage_title_key.")
+		return
 	hide_all_modals()
 	_dim.visible = true
 	_result_center.visible = true
 	_hud.visible = false
 	_latest_result_summary = summary.duplicate(true)
 	var has_next := bool(summary.get("has_next_stage", false))
-	_result_kicker.text = tr("RESULT_STAGE_COMPLETE").replace("%d", str(int(summary.get("stage_number", 1)))).replace("%s", tr(String(summary.get("stage_title_key", "STAGE_FLOODED_WORKS"))))
+	_result_kicker.text = (
+		tr("RESULT_STAGE_COMPLETE")
+		.replace("%d", str(int(summary.get("stage_number", 1))))
+		.replace("%s", tr(stage_title_key))
+	)
 	_result_title.text = tr("RESULT_TITLE_CONTINUE" if has_next else "RESULT_TITLE_FINAL")
 	_result_first_button = _result_garage_button
 	_refresh_result_summary()
@@ -1542,7 +1550,10 @@ func debug_ui_contract(viewport_width: float = 1280.0) -> Dictionary:
 	}
 
 
-func debug_modal_contract(surface: String) -> Dictionary:
+func debug_modal_contract(
+	surface: String,
+	result_stage_title_key: String = "STAGE_DROWNED_RUINS_1"
+) -> Dictionary:
 	match surface:
 		"deployment":
 			show_deployment(_selected_primary, _selected_run_difficulty, _selected_field_name_key)
@@ -1551,14 +1562,24 @@ func debug_modal_contract(surface: String) -> Dictionary:
 		"pause":
 			show_pause()
 		"result":
-			show_result({"upgrade": "UPGRADE_NONE"})
+			show_result({
+				"stage_number": 1,
+				"stage_title_key": result_stage_title_key,
+				"has_next_stage": true,
+				"upgrade": "UPGRADE_NONE",
+			})
 		"garage":
 			show_garage({})
 		"settings":
 			_show_settings("deployment")
 		"guidebook":
 			_show_guidebook("settings")
-	return {"surface": surface, "hud_hidden": not _hud.visible, "dim_visible": _dim.visible}
+	return {
+		"surface": surface,
+		"hud_hidden": not _hud.visible,
+		"dim_visible": _dim.visible,
+		"result_kicker": _result_kicker.text,
+	}
 
 
 func debug_gameplay_settings_contract() -> Dictionary:
