@@ -2,7 +2,7 @@
 type: spec
 status: active
 owner: BK
-last_reviewed: 2026-07-27
+last_reviewed: 2026-07-29
 canonical_for: Cardborne vehicle-game art direction and UI presentation
 related:
   - ../product/vehicle_game_spec.md
@@ -16,8 +16,9 @@ related:
 
 Define one readable flat-color, grid-native pixel visual language for the
 current run-selected-field vehicle game. `sunken-ceramic-fresco.png` remains
-the palette and large-shape reference; the active pixel part guidelines own
-native asset construction. Gameplay meaning comes from this specification.
+the semantic-palette and large-shape reference. The approved
+`space-hangar-v2` runtime family owns deck, installation, and image-backed UI
+chrome construction. Gameplay meaning comes from this specification.
 
 ## Scope
 
@@ -30,9 +31,10 @@ rules remain owned by the product specification.
 ### Art language and semantic palette
 
 - Use flat, whole-cell pixel color, large geometric masses, and clean
-  silhouettes. Avoid antialiasing, dithering, decorative floor motifs,
-  universal outlines, fine texture, speckling, micro-patterns, surface stains,
-  and decorative detail that competes with combat.
+  silhouettes. Avoid antialiasing, dithering, universal outlines, and
+  decorative detail that competes with combat. Approved deck masters may use
+  restrained panel seams and wear in the locked palette; UI chrome may use the
+  same restrained seam and edge-light grammar.
 - A frame must read in this order: walkable floor, solid cover/void, player,
   threats and telegraphs, pickups/rewards, then atmosphere.
 - Deep slate means walkable hangar deck, near-black means exterior space,
@@ -49,6 +51,10 @@ rules remain owned by the product specification.
   uses another affinity.
 - All solid static cover uses the same blocker fill. State is communicated by a
   large shape, animation, or icon—not by inventing a new wall color.
+- Floor, wall, and water use the approved 192x192 repeat masters at a 384
+  world-pixel period. A deterministic per-cell rotation/reflection may break
+  obvious wallpaper repetition, but it may not recolor the master or alter
+  collision truth.
 
 ### Shared-field readability
 
@@ -70,8 +76,13 @@ rules remain owned by the product specification.
   chevrons for overdrive, violet lightning for an arc hazard, and blocker-fill
   walls with one large fracture for a
   breakable bulkhead. Helpful, hazardous, traversable-utility, directional, and
-  blocking roles must remain distinguishable without reading color. Do not add
-  decorative motifs, tiny debris, or repeated decoration to fake variation.
+  blocking roles must remain distinguishable without reading color.
+- Static structure, prop, and wear stamps are presentation-only overlays
+  resolved from the approved fixed atlas ID table. A field uses at most 48
+  sprites; the accepted composition uses 42: 28 structures, 10 props, and four
+  wear marks. Stamps use legal geometry anchors, avoid the player-start and
+  central combat clearances, create no collision or navigation nodes, and may
+  never resemble a pickup, hazard, telegraph, or passable opening.
 
 ### Actor and combat readability
 
@@ -144,6 +155,11 @@ rules remain owned by the product specification.
 
 - Korean is the default. Korean and English use the same layout and a real
   medium-or-heavier Noto Sans KR font weight.
+- Modal panels, commands, upgrade cards, tabs, and HUD frames use the approved
+  text-free `space-hangar-v2` PNG states through cached `StyleBoxTexture`
+  objects. Nine-slice margins and content insets come from the published
+  recipe; nearest filtering preserves the authored pixels at every supported
+  viewport.
 - Keep live HUD clusters compact and outside the central combat rectangle.
   Prefer icons, strong numerals, radial cooldowns, and short labels over wide
   explanatory panels.
@@ -197,6 +213,9 @@ rules remain owned by the product specification.
 ### Implementation boundaries
 
 - Typography and reusable control states belong in the production Godot theme.
+- `VehicleUiChromeFactory` is the sole runtime adapter from the published UI
+  recipe to semantic Theme variations. Screen owners keep their existing
+  containers, focus order, live labels, and state transitions.
 - `VehicleUpgradeChoiceCard` owns presentation of one frozen offer only.
   `VehicleUpgradeChoicePanel` owns selection, guard, decline, and confirmation;
   card compatibility and application stay outside UI code.
@@ -204,6 +223,10 @@ rules remain owned by the product specification.
   Settings and Guidebook. It never queries or mutates gameplay state.
 - Values, labels, cooldowns, focus, selection, localization, and guide discovery
   remain live UI state; do not bake them into raster assets.
+- `VehicleWorldStampCatalog` is the sole fixed-ID resolver for the approved
+  structure and prop atlases. `VehiclePixelWorldMeshBuilder` may place those
+  regions from immutable layout geometry, but visual sprites and tile
+  variation never become collision owners.
 - Static world presentation belongs to `vehicle_stage_backdrop.gd`; immutable
   floor/candidate data belongs to the three registered field definitions; the
   run-scoped `VehicleFieldLayout` owns the selected field and immutable
@@ -215,8 +238,9 @@ rules remain owned by the product specification.
 - World support fields use retained disk, ring, and beam batches plus one shared
   24-segment timer batch. They do not use per-field immediate canvas drawing or
   per-field scene nodes.
-- Raster assets are justified only when procedural flat shapes cannot communicate
-  the required silhouette at gameplay size.
+- Raster assets own approved static surface, silhouette, glyph, marker, and UI
+  chrome artwork. Procedural geometry remains responsible for exact telegraphs,
+  timers, collision-aligned boundaries, and changing gameplay truth.
 
 ## Verification
 
@@ -224,7 +248,9 @@ Run the focused UI and presentation validators after relevant changes:
 
 ```powershell
 .\tools\godot.ps1 --path . --headless --import
+.\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_pixel_world_renderer.gd
 .\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_stage_ui_layout.gd
+.\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_ui_localization.gd
 .\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_rewards_ui_audio.gd
 .\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_build_snapshot.gd
 .\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_guidebook.gd
@@ -251,10 +277,16 @@ reports, Garage, maximum combat pressure, and actor/projectile catalogs.
   status arcs and stack text remain legible without adding per-enemy nodes.
 - Rendered review shows one persistent field across all stage states, no fake
   passable gaps, no retired boss gate, and no hidden guidebook controls.
+- The three approved repeat masters, both 4x4 stamp atlases, all 17 UI chrome
+  PNGs, and both published recipes load without unknown IDs or fallback
+  styleboxes.
+- World overlays remain within the 48-sprite budget and add zero collision
+  nodes. Modal, HUD, command, card, and tab chrome resolve to
+  `StyleBoxTexture`.
 
 ## Non-Goals
 
-- Realistic materials, ornamental borders, dense texture, or micro-decoration.
+- Realistic materials, dense texture, or unbounded micro-decoration.
 - Per-stage field recolors or geometry variants.
 - Text baked into screenshots or image assets.
 - Black-floor/white-wall conversion without a separately accepted actor and

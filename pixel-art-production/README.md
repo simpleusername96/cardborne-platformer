@@ -2,7 +2,7 @@
 type: spec
 status: active
 created: 2026-07-26
-last_reviewed: 2026-07-28
+last_reviewed: 2026-07-29
 canonical_for: Pixel-art asset inventory, authoring manifests, semantic layer separation, deterministic cleanup, and atlas production
 scope: Offline visual-asset production; it does not replace the current live visual system or gameplay geometry
 related:
@@ -70,13 +70,16 @@ It does not:
 ## Current State
 
 The current game consumes
-`runtime/atlases/cardborne-pixel-atlas.png`, three repeat tiles under
-`runtime/tiles/`, `runtime/catalog.json`, and
+`runtime/atlases/cardborne-pixel-atlas.png`, the approved
+`runtime/atlases/space-hangar-v2/` stamp family, three repeat tiles under
+`runtime/tiles/`, `runtime/ui/space-hangar-v2/`, `runtime/catalog.json`, and
 `runtime/shaders/pixel_atlas_multimesh.gdshader`. The catalog exposes 39 asset
 families through `vehicle_pixel_asset_catalog.gd`; the retained
 `vehicle_combat_renderer.gd` and `vehicle_pixel_world_mesh_builder.gd` select
 atlas regions and repeat materials without making raster art the collision
-owner.
+owner. `vehicle_ui_chrome_factory.gd` builds cached `StyleBoxTexture` states
+from the published text-free UI recipe while every label, value, focus,
+selection, and localized string remains live.
 
 `tools/design/generate_complete_pixel_library.gd` is the current publisher.
 World geometry remains owned by the field, tactical-layout, and terrain
@@ -300,7 +303,9 @@ Floor variation is large and sparse; it may never resemble collision, hazards,
 pickups, or telegraphs. Walls and every impassable blocker use one material
 grammar. Orthogonal wall/edge sets use all 16 neighbor combinations. Static art
 does not own collision. Each tile family needs a `3 x 3` repeat and connection
-proof.
+proof. The accepted `space-hangar-v2` runtime may deterministically rotate or
+reflect the same seamless master per 384-world-pixel cell and may add at most
+48 fixed-ID atlas stamps from legal geometry anchors.
 
 ### Player, enemies, and bosses
 
@@ -337,9 +342,11 @@ radius, lifetime, and fill animation remain exact live geometry.
 
 ### UI
 
-Raster art is limited to glyphs, markers, and restrained ornament. Text,
-bindings, focus, selection, changing numbers, progress arcs, and accessibility
-states remain live controls. Korean and English never become atlas text.
+Raster art includes glyphs, markers, restrained ornament, and the approved
+text-free panel/button/card/tab/HUD-frame states. Runtime chrome uses published
+nine-slice margins and content insets. Text, bindings, focus, selection,
+changing numbers, progress arcs, and accessibility states remain live controls.
+Korean and English never become atlas text.
 
 ## Commands
 
