@@ -452,6 +452,10 @@ Guard:
   topology in 42 Deployment/Upgrade/Pause/Settings/Guidebook/Report/Garage
   proofs across KO/EN and all three viewports. Export seven 1280 KO
   reference-vs-candidate reviews; modal proofs contain no unrelated HUD.
+- [x] **4.8** Revise the rejected proof typography to Noto Sans KR weight 650,
+  a same-color 0.5px weight stroke, a 13pt minimum rendered size, and larger
+  role sizes. Regenerate all 42 proofs and re-run KO/EN text-fit validation
+  without changing panel or control geometry.
 
 Acceptance: Gate C approves the complete UI source/state family, state
 distinction, safe insets, current screen layout, and text-fit proofs before any
@@ -571,6 +575,8 @@ UI asset gates:
   truth baked into PNGs;
 - Korean and English static text-fit proofs without clipping at all three
   viewports;
+- rendered proof text uses the declared weight/stroke/minimum-size typography
+  contract and remains legible at 960×540;
 - screen-specific panel bounds remain centered within one pixel after scaling,
   internal row/column topology matches the current captures, and modal proofs
   contain no unrelated HUD;
@@ -686,6 +692,12 @@ approval and a plan update.
 - 2026-07-29: the expanded validator passes 158 checks. Two consecutive layout
   builds produced the same `layout-package/sha256.json` hash
   `fc073804093ea6a8385314320f3233b70b8b2967d62b34c4dc49cd4c23e76287`.
+- 2026-07-29: user rejected the first layout-proof typography as too small and
+  thin. Raised role sizes by roughly 15–21%, set weight 650 with a same-color
+  0.5px stroke, and enforced a 13pt rendered minimum. All 378 KO/EN text
+  records pass at the three viewports, and two regenerated packages produced
+  the same `sha256.json` hash
+  `fd738520f6bc27483c97532b1ca29bef45043ccdad99bdd8a5334d62d66d9a3c`.
 
 ## Progress
 
@@ -701,14 +713,16 @@ approval and a plan update.
 - [x] Gate C UI chrome asset package generated and mechanically validated.
 - [x] Gate C current-screen layout proof package generated and mechanically
   validated.
+- [x] Gate C layout typography revised after readability rejection and
+  mechanically revalidated.
 - [ ] Gate C explicit visual approval.
 - [ ] Gate D runtime vertical slice.
 - [ ] Gate E UI runtime migration and final rollout.
 
 ## Next Steps
 
-1. Review the native/4× state contact sheet, seven current-layout
-   reference-vs-candidate images, and KO/EN layout proofs.
+1. Review the native/4× state contact sheet, seven updated current-layout
+   reference-vs-candidate images, and larger weight-650 KO/EN layout proofs.
 2. Record explicit Gate C visual approval or revise only the rejected family.
 3. Begin Phase 5 runtime publication only after Gate C passes.
 

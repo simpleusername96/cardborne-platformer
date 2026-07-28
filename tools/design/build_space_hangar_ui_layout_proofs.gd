@@ -140,6 +140,7 @@ func _load_and_validate_recipe() -> bool:
 		"viewports",
 		"languages",
 		"font",
+		"typography",
 		"screens",
 	]
 	if not _has_exact_keys(_recipe, required):
@@ -155,6 +156,23 @@ func _load_and_validate_recipe() -> bool:
 		return _fail("viewports do not match the fixed proof set.")
 	if Array(_recipe["languages"]) != ["ko", "en"]:
 		return _fail("languages must be ko and en.")
+	var typography := Dictionary(_recipe["typography"])
+	if not _has_exact_keys(
+		typography,
+		["font_weight", "stroke_width", "minimum_rendered_point_size"]
+	):
+		return _fail("Typography keys do not match the contract.")
+	var font_weight := int(typography["font_weight"])
+	var stroke_width := float(typography["stroke_width"])
+	var minimum_point_size := int(typography["minimum_rendered_point_size"])
+	if font_weight < 500 or font_weight > 800:
+		return _fail("Typography font_weight must be between 500 and 800.")
+	if stroke_width < 0.25 or stroke_width > 1.0:
+		return _fail("Typography stroke_width must be between 0.25 and 1.0.")
+	if minimum_point_size < 12 or minimum_point_size > 16:
+		return _fail(
+			"Typography minimum_rendered_point_size must be between 12 and 16."
+		)
 	var screens := Array(_recipe["screens"])
 	if screens.size() != EXPECTED_SCREEN_IDS.size():
 		return _fail("Layout recipe must contain seven screens.")
@@ -268,14 +286,40 @@ func _build_screen_proof(
 		viewport.y,
 	]
 	var final_path := _staging_path.path_join(relative)
-	var args: Array[String] = [base_path, "-font", font_path]
+	var typography := Dictionary(_recipe["typography"])
+	var font_weight := int(typography["font_weight"])
+	var stroke_width := maxf(
+		0.5,
+		float(typography["stroke_width"]) * scale
+	)
+	var minimum_point_size := int(typography["minimum_rendered_point_size"])
+	var args: Array[String] = [
+		base_path,
+		"-font",
+		font_path,
+		"-weight",
+		str(font_weight),
+	]
 	for text_value in Array(screen["texts"]):
 		var text_spec := Dictionary(text_value)
 		var value := String(text_spec[language])
 		var box := _scaled_rect(Array(text_spec["rect"]), scale)
-		var point_size := maxi(10, int(round(float(text_spec["point_size"]) * scale)))
-		var measurement := _measure_text(value, point_size, font_path)
-		var vertical_tolerance := maxi(4, point_size / 4)
+		var point_size := maxi(
+			minimum_point_size,
+			int(round(float(text_spec["point_size"]) * scale))
+		)
+		var measurement := _measure_text(
+			value,
+			point_size,
+			font_path,
+			font_weight,
+			stroke_width
+		)
+		# ImageMagick label metrics include the same-color weight stroke outside
+		# the visible glyph box, so account for that expansion explicitly.
+		var vertical_tolerance := (
+			maxi(4, point_size / 4) + ceili(stroke_width * 2.0)
+		)
 		if (
 			measurement.x > box.size.x
 			or measurement.y > box.size.y + vertical_tolerance
@@ -304,6 +348,8 @@ func _build_screen_proof(
 			"role": text_spec["role"],
 			"text": value,
 			"point_size": point_size,
+			"font_weight": font_weight,
+			"stroke_width": stroke_width,
 			"measured": [measurement.x, measurement.y],
 			"box": [box.size.x, box.size.y],
 			"passed": true,
@@ -311,6 +357,10 @@ func _build_screen_proof(
 		args.append_array([
 			"-pointsize",
 			str(point_size),
+			"-stroke",
+			String(text_spec["color"]),
+			"-strokewidth",
+			str(stroke_width),
 			"-fill",
 			String(text_spec["color"]),
 			"-gravity",
@@ -383,7 +433,13 @@ func _build_reference_review(screen: Dictionary) -> bool:
 	return true
 
 
-func _measure_text(value: String, point_size: int, font_path: String) -> Vector2i:
+func _measure_text(
+	value: String,
+	point_size: int,
+	font_path: String,
+	font_weight: int,
+	stroke_width: float
+) -> Vector2i:
 	var width := 0
 	var height := 0
 	for line in value.split("\n"):
@@ -393,8 +449,16 @@ func _measure_text(value: String, point_size: int, font_path: String) -> Vector2
 			[
 				"-font",
 				font_path,
+				"-weight",
+				str(font_weight),
 				"-pointsize",
 				str(point_size),
+				"-fill",
+				"white",
+				"-stroke",
+				"white",
+				"-strokewidth",
+				str(stroke_width),
 				"label:%s" % line,
 				"-format",
 				"%w %h",
@@ -524,13 +588,26 @@ func _write_json(relative: String, value: Variant) -> bool:
 
 
 func _publish() -> bool:
+	var parent := DirAccess.open(_evidence_path)
+	if parent == null:
+		return _fail("Cannot open the layout package parent directory.")
+	var staging_name := PACKAGE_NAME + ".staging"
+	var backup_name := PACKAGE_NAME + ".previous"
 	if DirAccess.dir_exists_absolute(_package_path):
-		if DirAccess.rename_absolute(_package_path, _backup_path) != OK:
-			return _fail("Cannot move the previous layout package to backup.")
-	if DirAccess.rename_absolute(_staging_path, _package_path) != OK:
+		var backup_error := parent.rename(PACKAGE_NAME, backup_name)
+		if backup_error != OK:
+			return _fail(
+				"Cannot move the previous layout package to backup: %s."
+				% error_string(backup_error)
+			)
+	var publish_error := parent.rename(staging_name, PACKAGE_NAME)
+	if publish_error != OK:
 		if DirAccess.dir_exists_absolute(_backup_path):
-			DirAccess.rename_absolute(_backup_path, _package_path)
-		return _fail("Cannot publish the layout proof package.")
+			parent.rename(backup_name, PACKAGE_NAME)
+		return _fail(
+			"Cannot publish the layout proof package: %s."
+			% error_string(publish_error)
+		)
 	if DirAccess.dir_exists_absolute(_backup_path):
 		_remove_tree(_backup_path)
 	return true

@@ -3,13 +3,14 @@
 	"title": "Cardborne Space Hangar UI Layout Proofs",
 	"type": "object",
 	"additionalProperties": false,
-	"required": ["schema_version", "base_viewport", "viewports", "languages", "font", "screens"],
+	"required": ["schema_version", "base_viewport", "viewports", "languages", "font", "typography", "screens"],
 	"properties": {
 		"schema_version": {"const": 1},
 		"base_viewport": {"const": [1280, 720]},
 		"viewports": {"const": [[960, 540], [1280, 720], [1920, 1080]]},
 		"languages": {"const": ["ko", "en"]},
 		"font": {"const": "art/ui/production/fonts/NotoSansKR-Variable.ttf"},
+		"typography": {"$ref": "#/$defs/typography"},
 		"screens": {
 			"type": "array",
 			"minItems": 7,
@@ -18,6 +19,16 @@
 		}
 	},
 	"$defs": {
+		"typography": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["font_weight", "stroke_width", "minimum_rendered_point_size"],
+			"properties": {
+				"font_weight": {"type": "integer", "minimum": 500, "maximum": 800},
+				"stroke_width": {"type": "number", "minimum": 0.25, "maximum": 1.0},
+				"minimum_rendered_point_size": {"type": "integer", "minimum": 12, "maximum": 16}
+			}
+		},
 		"rect": {
 			"type": "array",
 			"prefixItems": [
