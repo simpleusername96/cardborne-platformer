@@ -1,4 +1,6 @@
+[CmdletBinding(PositionalBinding = $false)]
 param(
+  [string] $RuntimeRelease = "4.7.1-stable",
   [Parameter(ValueFromRemainingArguments = $true)]
   [string[]] $GodotArgs
 )
@@ -12,8 +14,8 @@ if ($env:GODOT_BIN) {
   $candidatePaths.Add($env:GODOT_BIN)
 }
 
-$candidatePaths.Add((Join-Path $repoRoot ".codex-runtime\godot-4.7-stable\Godot_v4.7-stable_win64_console.exe"))
-$candidatePaths.Add((Join-Path $repoRoot ".codex-runtime\godot-4.7-stable\Godot_v4.7-stable_win64.exe"))
+$candidatePaths.Add((Join-Path $repoRoot ".codex-runtime\godot-$RuntimeRelease\Godot_v$RuntimeRelease`_win64_console.exe"))
+$candidatePaths.Add((Join-Path $repoRoot ".codex-runtime\godot-$RuntimeRelease\Godot_v$RuntimeRelease`_win64.exe"))
 
 foreach ($path in $candidatePaths) {
   if ($path -and (Test-Path -LiteralPath $path)) {
