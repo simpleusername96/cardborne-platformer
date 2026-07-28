@@ -1,0 +1,190 @@
+{
+	"family_order": [
+		"panel",
+		"button",
+		"card",
+		"tab",
+		"hud-frame"
+	],
+	"families": [
+		{
+			"id": "panel",
+			"source_region": [
+				64.0,
+				61.0,
+				457.0,
+				428.0
+			],
+			"outputs": [
+				"panel-normal.png"
+			],
+			"native_size": [
+				96.0,
+				96.0
+			],
+			"patch_margins": [
+				16.0,
+				16.0,
+				16.0,
+				16.0
+			],
+			"content_insets": [
+				20.0,
+				20.0,
+				20.0,
+				20.0
+			],
+			"states": [
+				"normal"
+			]
+		},
+		{
+			"id": "button",
+			"source_region": [
+				590.0,
+				118.0,
+				367.0,
+				147.0
+			],
+			"outputs": [
+				"button-normal.png",
+				"button-hover.png",
+				"button-pressed.png",
+				"button-focus.png",
+				"button-disabled.png"
+			],
+			"native_size": [
+				96.0,
+				32.0
+			],
+			"patch_margins": [
+				12.0,
+				12.0,
+				8.0,
+				8.0
+			],
+			"content_insets": [
+				14.0,
+				14.0,
+				8.0,
+				8.0
+			],
+			"states": [
+				"normal",
+				"hover",
+				"pressed",
+				"focus",
+				"disabled"
+			]
+		},
+		{
+			"id": "card",
+			"source_region": [
+				104.0,
+				550.0,
+				241.0,
+				393.0
+			],
+			"outputs": [
+				"card-normal.png",
+				"card-hover.png",
+				"card-pressed.png",
+				"card-focus.png",
+				"card-selected.png",
+				"card-disabled.png"
+			],
+			"native_size": [
+				96.0,
+				128.0
+			],
+			"patch_margins": [
+				16.0,
+				16.0,
+				16.0,
+				16.0
+			],
+			"content_insets": [
+				20.0,
+				20.0,
+				20.0,
+				20.0
+			],
+			"states": [
+				"normal",
+				"hover",
+				"pressed",
+				"focus",
+				"selected",
+				"disabled"
+			]
+		},
+		{
+			"id": "tab",
+			"source_region": [
+				652.0,
+				452.0,
+				203.0,
+				168.0
+			],
+			"outputs": [
+				"tab-normal.png",
+				"tab-hovered.png",
+				"tab-selected.png",
+				"tab-focus.png"
+			],
+			"native_size": [
+				72.0,
+				32.0
+			],
+			"patch_margins": [
+				12.0,
+				12.0,
+				8.0,
+				8.0
+			],
+			"content_insets": [
+				14.0,
+				14.0,
+				8.0,
+				8.0
+			],
+			"states": [
+				"normal",
+				"hovered",
+				"selected",
+				"focus"
+			]
+		},
+		{
+			"id": "hud-frame",
+			"source_region": [
+				451.0,
+				799.0,
+				506.0,
+				137.0
+			],
+			"outputs": [
+				"hud-frame-normal.png"
+			],
+			"native_size": [
+				128.0,
+				48.0
+			],
+			"patch_margins": [
+				16.0,
+				16.0,
+				12.0,
+				12.0
+			],
+			"content_insets": [
+				18.0,
+				18.0,
+				14.0,
+				14.0
+			],
+			"states": [
+				"normal"
+			]
+		}
+	]
+}

@@ -1,0 +1,804 @@
+{
+	"schema_version": 1,
+	"all_passed": true,
+	"records": [
+		{
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "hud",
+			"text": "선체 120 / 120",
+			"point_size": 14,
+			"measured": [
+				86,
+				23
+			],
+			"box": [
+				148,
+				28
+			],
+			"passed": true
+		},
+		{
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "tab",
+			"text": "현재 함선",
+			"point_size": 14,
+			"measured": [
+				56,
+				23
+			],
+			"box": [
+				99,
+				24
+			],
+			"passed": true
+		},
+		{
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "title",
+			"text": "회로 하나를 선택하세요",
+			"point_size": 18,
+			"measured": [
+				175,
+				28
+			],
+			"box": [
+				480,
+				40
+			],
+			"passed": true
+		},
+		{
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "card-0",
+			"text": "분기 포구\n측면 탄환 +1\n레벨 0 → 1",
+			"point_size": 14,
+			"measured": [
+				74,
+				69
+			],
+			"box": [
+				110,
+				129
+			],
+			"passed": true
+		},
+		{
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "card-1",
+			"text": "빙결 코어\n동결 확률 +20%\n레벨 0 → 1",
+			"point_size": 14,
+			"measured": [
+				93,
+				69
+			],
+			"box": [
+				110,
+				129
+			],
+			"passed": true
+		},
+		{
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "card-2",
+			"text": "추적탄\n피해 ×1.20\n레벨 0 → 1",
+			"point_size": 14,
+			"measured": [
+				69,
+				69
+			],
+			"box": [
+				110,
+				129
+			],
+			"passed": true
+		},
+		{
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "button",
+			"text": "장착",
+			"point_size": 14,
+			"measured": [
+				27,
+				23
+			],
+			"box": [
+				185,
+				32
+			],
+			"passed": true
+		},
+		{
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "hud",
+			"text": "HULL 120 / 120",
+			"point_size": 14,
+			"measured": [
+				94,
+				23
+			],
+			"box": [
+				148,
+				28
+			],
+			"passed": true
+		},
+		{
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "tab",
+			"text": "Current Ship",
+			"point_size": 14,
+			"measured": [
+				78,
+				23
+			],
+			"box": [
+				99,
+				24
+			],
+			"passed": true
+		},
+		{
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "title",
+			"text": "Choose one circuit",
+			"point_size": 18,
+			"measured": [
+				149,
+				28
+			],
+			"box": [
+				480,
+				40
+			],
+			"passed": true
+		},
+		{
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "card-0",
+			"text": "Branch Port\nSide round +1\nLevel 0 → 1",
+			"point_size": 14,
+			"measured": [
+				87,
+				69
+			],
+			"box": [
+				110,
+				129
+			],
+			"passed": true
+		},
+		{
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "card-1",
+			"text": "Cryo Core\nFreeze chance\n+20%\nLevel 0 → 1",
+			"point_size": 14,
+			"measured": [
+				89,
+				92
+			],
+			"box": [
+				110,
+				129
+			],
+			"passed": true
+		},
+		{
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "card-2",
+			"text": "Seeker Round\nDamage ×1.20\nLevel 0 → 1",
+			"point_size": 14,
+			"measured": [
+				95,
+				69
+			],
+			"box": [
+				110,
+				129
+			],
+			"passed": true
+		},
+		{
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "button",
+			"text": "Equip",
+			"point_size": 14,
+			"measured": [
+				37,
+				23
+			],
+			"box": [
+				185,
+				32
+			],
+			"passed": true
+		},
+		{
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "hud",
+			"text": "선체 120 / 120",
+			"point_size": 18,
+			"measured": [
+				110,
+				28
+			],
+			"box": [
+				210,
+				36
+			],
+			"passed": true
+		},
+		{
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "tab",
+			"text": "현재 함선",
+			"point_size": 18,
+			"measured": [
+				72,
+				28
+			],
+			"box": [
+				144,
+				32
+			],
+			"passed": true
+		},
+		{
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "title",
+			"text": "회로 하나를 선택하세요",
+			"point_size": 24,
+			"measured": [
+				233,
+				36
+			],
+			"box": [
+				639,
+				48
+			],
+			"passed": true
+		},
+		{
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "card-0",
+			"text": "분기 포구\n측면 탄환 +1\n레벨 0 → 1",
+			"point_size": 18,
+			"measured": [
+				94,
+				84
+			],
+			"box": [
+				161,
+				186
+			],
+			"passed": true
+		},
+		{
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "card-1",
+			"text": "빙결 코어\n동결 확률 +20%\n레벨 0 → 1",
+			"point_size": 18,
+			"measured": [
+				120,
+				84
+			],
+			"box": [
+				161,
+				186
+			],
+			"passed": true
+		},
+		{
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "card-2",
+			"text": "추적탄\n피해 ×1.20\n레벨 0 → 1",
+			"point_size": 18,
+			"measured": [
+				89,
+				84
+			],
+			"box": [
+				161,
+				186
+			],
+			"passed": true
+		},
+		{
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "button",
+			"text": "장착",
+			"point_size": 18,
+			"measured": [
+				35,
+				28
+			],
+			"box": [
+				260,
+				36
+			],
+			"passed": true
+		},
+		{
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "hud",
+			"text": "HULL 120 / 120",
+			"point_size": 18,
+			"measured": [
+				120,
+				28
+			],
+			"box": [
+				210,
+				36
+			],
+			"passed": true
+		},
+		{
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "tab",
+			"text": "Current Ship",
+			"point_size": 18,
+			"measured": [
+				100,
+				28
+			],
+			"box": [
+				144,
+				32
+			],
+			"passed": true
+		},
+		{
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "title",
+			"text": "Choose one circuit",
+			"point_size": 24,
+			"measured": [
+				198,
+				36
+			],
+			"box": [
+				639,
+				48
+			],
+			"passed": true
+		},
+		{
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "card-0",
+			"text": "Branch Port\nSide round +1\nLevel 0 → 1",
+			"point_size": 18,
+			"measured": [
+				111,
+				84
+			],
+			"box": [
+				161,
+				186
+			],
+			"passed": true
+		},
+		{
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "card-1",
+			"text": "Cryo Core\nFreeze chance\n+20%\nLevel 0 → 1",
+			"point_size": 18,
+			"measured": [
+				114,
+				112
+			],
+			"box": [
+				161,
+				186
+			],
+			"passed": true
+		},
+		{
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "card-2",
+			"text": "Seeker Round\nDamage ×1.20\nLevel 0 → 1",
+			"point_size": 18,
+			"measured": [
+				122,
+				84
+			],
+			"box": [
+				161,
+				186
+			],
+			"passed": true
+		},
+		{
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "button",
+			"text": "Equip",
+			"point_size": 18,
+			"measured": [
+				48,
+				28
+			],
+			"box": [
+				260,
+				36
+			],
+			"passed": true
+		},
+		{
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "hud",
+			"text": "선체 120 / 120",
+			"point_size": 27,
+			"measured": [
+				164,
+				41
+			],
+			"box": [
+				335,
+				66
+			],
+			"passed": true
+		},
+		{
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "tab",
+			"text": "현재 함선",
+			"point_size": 27,
+			"measured": [
+				107,
+				41
+			],
+			"box": [
+				234,
+				56
+			],
+			"passed": true
+		},
+		{
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "title",
+			"text": "회로 하나를 선택하세요",
+			"point_size": 36,
+			"measured": [
+				349,
+				54
+			],
+			"box": [
+				960,
+				72
+			],
+			"passed": true
+		},
+		{
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "card-0",
+			"text": "분기 포구\n측면 탄환 +1\n레벨 0 → 1",
+			"point_size": 27,
+			"measured": [
+				141,
+				123
+			],
+			"box": [
+				264,
+				301
+			],
+			"passed": true
+		},
+		{
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "card-1",
+			"text": "빙결 코어\n동결 확률 +20%\n레벨 0 → 1",
+			"point_size": 27,
+			"measured": [
+				179,
+				123
+			],
+			"box": [
+				264,
+				301
+			],
+			"passed": true
+		},
+		{
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "card-2",
+			"text": "추적탄\n피해 ×1.20\n레벨 0 → 1",
+			"point_size": 27,
+			"measured": [
+				133,
+				123
+			],
+			"box": [
+				264,
+				301
+			],
+			"passed": true
+		},
+		{
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "button",
+			"text": "장착",
+			"point_size": 27,
+			"measured": [
+				51,
+				41
+			],
+			"box": [
+				410,
+				60
+			],
+			"passed": true
+		},
+		{
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "hud",
+			"text": "HULL 120 / 120",
+			"point_size": 27,
+			"measured": [
+				179,
+				41
+			],
+			"box": [
+				335,
+				66
+			],
+			"passed": true
+		},
+		{
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "tab",
+			"text": "Current Ship",
+			"point_size": 27,
+			"measured": [
+				150,
+				41
+			],
+			"box": [
+				234,
+				56
+			],
+			"passed": true
+		},
+		{
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "title",
+			"text": "Choose one circuit",
+			"point_size": 36,
+			"measured": [
+				296,
+				54
+			],
+			"box": [
+				960,
+				72
+			],
+			"passed": true
+		},
+		{
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "card-0",
+			"text": "Branch Port\nSide round +1\nLevel 0 → 1",
+			"point_size": 27,
+			"measured": [
+				166,
+				123
+			],
+			"box": [
+				264,
+				301
+			],
+			"passed": true
+		},
+		{
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "card-1",
+			"text": "Cryo Core\nFreeze chance\n+20%\nLevel 0 → 1",
+			"point_size": 27,
+			"measured": [
+				170,
+				164
+			],
+			"box": [
+				264,
+				301
+			],
+			"passed": true
+		},
+		{
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "card-2",
+			"text": "Seeker Round\nDamage ×1.20\nLevel 0 → 1",
+			"point_size": 27,
+			"measured": [
+				182,
+				123
+			],
+			"box": [
+				264,
+				301
+			],
+			"passed": true
+		},
+		{
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "button",
+			"text": "Equip",
+			"point_size": 27,
+			"measured": [
+				71,
+				41
+			],
+			"box": [
+				410,
+				60
+			],
+			"passed": true
+		}
+	]
+}

@@ -426,24 +426,24 @@ Guard:
 
 ### Phase 4 — UI chrome asset package
 
-- [ ] **4.1** Generate text-free panel, button, card, tab, and HUD-frame source
+- [x] **4.1** Generate text-free panel, button, card, tab, and HUD-frame source
   families using the selected direction for visual style and the existing
   KO/EN captures for layout/content-fit only. Preserve provider originals,
   prompts, normalized raw files, operations, and hashes under the fixed `ui/`
   source/provenance paths.
-- [ ] **4.2** Add and schema-validate
+- [x] **4.2** Add and schema-validate
   `pixel-art-production/assets/recipes/candidates/space-hangar-v2-ui.json`
   and `pixel-art-production/schemas/space-hangar-ui-chrome.schema.json` using
   the exact state files, native sizes, patch margins, content insets, and Theme
   mappings above.
-- [ ] **4.3** Add `tools/design/build_space_hangar_ui_chrome.gd` and build only
+- [x] **4.3** Add `tools/design/build_space_hangar_ui_chrome.gd` and build only
   the declared candidate state files under
   `pixel-art-production/evidence/space-hangar-v2/ui/clean/`.
-- [ ] **4.4** Export native and 4× contact sheets plus isolated state-delta
+- [x] **4.4** Export native and 4× contact sheets plus isolated state-delta
   proofs for normal/hover/pressed/focus/selected/disabled as applicable.
-- [ ] **4.5** Run
+- [x] **4.5** Run
   `tools/validation/validate_space_hangar_ui_chrome.gd`.
-- [ ] **4.6** Render static 9-slice safe-inset proofs for panel, button, card,
+- [x] **4.6** Render static 9-slice safe-inset proofs for panel, button, card,
   tab, and HUD frame using realistic Korean and English strings at 960×540,
   1280×720, and 1920×1080.
 
@@ -653,6 +653,17 @@ approval and a plan update.
 - 2026-07-28: user set asset completion as the priority. UI chrome source/state
   generation and static 9-slice proofs now precede every runtime world/UI
   publication or code migration.
+- 2026-07-28: generated one text-free ImageGen master plate from the selected
+  space-hangar direction and current deployment/upgrade captures, preserved its
+  provider/native provenance, and compiled 17 candidate state PNGs. Focus and
+  selected variants remap only source-derived rail pixels; they do not invent
+  code-drawn decoration or bake live state into the image.
+- 2026-07-28: Gate C mechanical evidence is ready. Recipe/schema validation,
+  six KO/EN viewport proofs, state-delta checks, corner invariance, palette,
+  dimensions, and output hashes pass 109 validator checks. Runtime publication
+  remains untouched pending explicit visual approval. Two consecutive builds
+  produced the same `sha256.json` hash
+  `5a42ae26ee4de01b2c923bbb10516f5f3d14713b217bf5f42ad0d8bf49280200`.
 
 ## Progress
 
@@ -665,24 +676,25 @@ approval and a plan update.
   `sha256.json` stayed
   `8e6f791eb57babc0c6cd67b57f57e9599b433e1dcaa59b26775c8c87cb2a2d2c`.
 - [x] Gate A/B world/map direction accepted for the next planning stage.
-- [ ] Gate C complete UI chrome asset package.
+- [x] Gate C UI chrome asset package generated and mechanically validated.
+- [ ] Gate C explicit visual approval.
 - [ ] Gate D runtime vertical slice.
 - [ ] Gate E UI runtime migration and final rollout.
 
 ## Next Steps
 
-1. Execute Phase 4 and create the complete UI chrome asset package only.
-2. Present native/4× states and KO/EN 9-slice proofs for Gate C approval.
+1. Review the native/4× state contact sheet and KO/EN 9-slice proofs.
+2. Record explicit Gate C visual approval or revise only the rejected family.
 3. Begin Phase 5 runtime publication only after Gate C passes.
 
 ## Completion Criteria
 
 - [ ] Every selected world and UI source/state family, map proof, 9-slice proof,
   and text-fit proof passes its visual and mechanical gate.
-- [ ] No runtime asset, renderer, Theme, or screen code is modified before the
+- [x] No runtime asset, renderer, Theme, or screen code is modified before the
   complete asset-package Gate C.
-- [ ] No production path claims WFC, ConvChain, Poisson-disk, or other unimplemented algorithm.
-- [ ] No missing art is replaced by script-authored decoration.
+- [x] No production path claims WFC, ConvChain, Poisson-disk, or other unimplemented algorithm.
+- [x] No missing art is replaced by script-authored decoration.
 - [ ] Runtime and UI preserve gameplay, localization, focus, responsive layout, and collision truth.
 - [ ] The canonical visual spec is updated only after explicit approval.
 - [ ] The active plan is marked done and removed according to `.agents/PLANS.md` after durable decisions are incorporated.

@@ -1,0 +1,38 @@
+{
+	"schema_version": 1,
+	"source_family": "space-hangar-v2-ui",
+	"generation": {
+		"tool": "built-in image_gen",
+		"board_id": "57c9a93c-5d9c-4cf6-987b-c1a2449bbafb",
+		"board_item_id": "ui-chrome-master",
+		"prompt": "pixel-art-production/assets/source/candidates/space-hangar-v2/ui/prompts/ui-chrome-master.txt"
+	},
+	"references": [
+		{
+			"path": "pixel-art-production/evidence/design-directions/2026-07-28/space-hangar-v2/selected-direction.png",
+			"role": "visual-style reference",
+			"sha256": "e5823a4cfd62d10f87869cbf4bddf53b395a208ed2523f7baf948a1990d76a61"
+		},
+		{
+			"path": "build/captures/final-ko-1280/01-deployment.png",
+			"role": "layout and content-fit reference only",
+			"sha256": "b340371b957d8204e2c6749f61792b7b78261a6a64ddc9fc852a4d3ef76015f0"
+		},
+		{
+			"path": "build/captures/final-ko-1280/06b-level-up-selected.png",
+			"role": "layout and content-fit reference only",
+			"sha256": "1174986f4adb2c830b50db04bc4f0bfd66b66e23211e712a1c5a783255d2b75a"
+		}
+	],
+	"provider_original": {
+		"path": "pixel-art-production/assets/source/candidates/space-hangar-v2/ui/provider-originals/ui-chrome-master.png",
+		"native_size": [1254, 1254],
+		"sha256": "3091dcce9eb5136d064ce17eb620c10e0d0967f3b7a316373369bc1ef1a4ada2"
+	},
+	"normalized_raw": {
+		"path": "pixel-art-production/assets/source/candidates/space-hangar-v2/ui/raw/ui-chrome-master.png",
+		"size": [1024, 1024],
+		"operation": "ImageMagick point-filter resize to 1024x1024; metadata stripped; no repainting",
+		"sha256": "6fdccdbb4adb7d30e6d3d73473032bfcf245eb84c58306bd6ef5befc53f8e4a2"
+	}
+}

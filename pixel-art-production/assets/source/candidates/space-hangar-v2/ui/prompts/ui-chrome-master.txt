@@ -1,0 +1,44 @@
+Image 1 is the locked visual-style reference. Images 2 and 3 are layout and
+content-fit references only; do not reproduce their text or gameplay truth.
+
+Create one square pixel-art UI chrome master plate for a top-down space shooter.
+It will be cropped into reusable 9-slice game UI assets.
+
+Canvas and layout:
+- square 1024×1024 source image
+- perfectly flat solid chroma-key background #FF00FF, absolutely uniform
+- five separate, non-touching, generously padded empty chrome silhouettes
+- top-left: large square modal panel frame, empty interior
+- top-right: wide short button frame, empty interior
+- bottom-left: tall upgrade card frame, empty interior
+- center-right: compact tab frame, empty interior
+- bottom-right: wide shallow HUD status frame, empty interior
+
+Art direction:
+- preserve Image 1's near-black space-shooter chassis language: thick graphite
+  outer shell, cool blue-gray inset deck, restrained cobalt rail accents, thin
+  mint edge highlight, tiny mustard hardware accents
+- flat-color, grid-native crisp pixel art, large geometric masses, stepped
+  corners, clean mechanical silhouette
+- consistent corner modules and straight center/edge bands that can be tiled or
+  stretched with 9-slice
+- central interior zones must be quiet and mostly uniform for live
+  Korean/English text and values
+- no more than 7 opaque colors, no antialiasing, no dithering, no fine surface
+  texture, no speckling, no ornamental sci-fi glyphs
+
+Hard constraints:
+- text-free: no words, letters, numbers, runes, punctuation, pseudo-text,
+  labels, logos, watermarks
+- no icons, arrows, meters, progress bars, focus rings, selection markers,
+  cooldowns, checkmarks, characters, ships, weapons, enemies, pickups, maps,
+  screenshots, or gameplay content
+- no baked state truth; this is neutral chrome only
+- no perspective; strict front-facing orthographic UI asset sheet
+- each silhouette fully visible, no cropping, no overlap, no contact with the
+  canvas edge
+- exact hard pixel edges, no blur, no soft glow
+
+Output intent: source raster for deterministic crop, palette mapping, state
+variants, and 9-slice validation; polished production-quality pixel UI asset
+plate.
