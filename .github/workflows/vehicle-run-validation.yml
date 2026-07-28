@@ -78,22 +78,25 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          validators=(
-            validate_settings_store.gd
-            validate_vehicle_input_bindings.gd
-            validate_vehicle_primary_weapon.gd
-            validate_vehicle_upgrade_system.gd
-            validate_vehicle_stage_layouts.gd
-            validate_vehicle_encounter_pacing.gd
-            validate_vehicle_run.gd
-            validate_vehicle_rewards_ui_audio.gd
-            profile_vehicle_pressure.gd
+          mapfile -d '' validators < <(
+            find tools/validation -maxdepth 1 -type f -name 'validate_*.gd' -print0 |
+              sort -z
           )
+          test "${#validators[@]}" -gt 0
           for validator in "${validators[@]}"; do
             "$GODOT_BIN" --path . --headless \
-              --script "res://tools/validation/$validator" \
-              2>&1 | tee "$EVIDENCE_DIR/logs/${validator%.gd}.log"
+              --script "res://$validator" \
+              2>&1 | tee "$EVIDENCE_DIR/logs/$(basename "${validator%.gd}").log"
           done
+
+      - name: Run pressure subsystem diagnostic
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$GODOT_BIN" --path . --headless \
+            --script res://tools/validation/profile_vehicle_pressure.gd \
+            2>&1 | tee "$EVIDENCE_DIR/logs/profile_vehicle_pressure.log"
 
       - name: Capture native rendered evidence
         shell: bash

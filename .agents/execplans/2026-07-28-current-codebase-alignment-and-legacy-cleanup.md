@@ -1024,13 +1024,13 @@ longer owns reward transaction state; no per-frame call was added.
 
 ### Milestone 4 — Complete validation authority and plan reconciliation
 
-- [ ] Change CI to discover sorted `tools/validation/validate_*.gd` files and
+- [x] Change CI to discover sorted `tools/validation/validate_*.gd` files and
   execute all 39, logging each separately.
-- [ ] Keep `profile_vehicle_pressure.gd` in a separately named diagnostic step
+- [x] Keep `profile_vehicle_pressure.gd` in a separately named diagnostic step
   whose failure/metrics cannot be mistaken for the rendered release gate.
-- [ ] Update the performance plan's dead validator commands to
+- [x] Update the performance plan's dead validator commands to
   `validate_vehicle_projectile_store.gd` and the sorted validator loop.
-- [ ] Rewrite its unchecked hot-owner extraction phase to record the measured
+- [x] Rewrite its unchecked hot-owner extraction phase to record the measured
   decision: bounded policy loops stay in `VehicleRun` unless a separately
   approved performance experiment proves a better boundary.
 - [ ] Move the tactical plan's remaining rendered performance checks and unique

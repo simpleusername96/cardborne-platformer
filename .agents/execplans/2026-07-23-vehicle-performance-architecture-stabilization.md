@@ -3,7 +3,7 @@ type: plan
 status: active
 owner: BK
 created: 2026-07-23
-last_reviewed: 2026-07-24
+last_reviewed: 2026-07-28
 scope: Vehicle-run simulation, entity lifecycle, spatial queries, projectile storage, combat presentation, HUD invalidation, and rendered performance gates
 related:
   - ../../AGENTS.md
@@ -11,8 +11,11 @@ related:
   - ../PLANS.md
   - ../vehicle-performance-architecture-audit.md
   - ../vehicle-performance-stabilization-evidence.md
+  - ../vehicle-world-combat-expansion-evidence.md
   - ./2026-07-23-single-field-campaign-secondaries-guidebook.md
   - ../../docs/product/vehicle_game_spec.md
+  - ../../docs/design/UI_VISUAL_SYSTEM.md
+  - ../../docs/design/vehicle-hud-upgrade-direction/03-runtime-vehicle-upgrade-sheet.png
 ---
 
 # Vehicle Runtime Performance Architecture Stabilization — Execution Plan
@@ -58,9 +61,12 @@ The implementation intentionally retained combat-loop policy in `VehicleRun`
 instead of performing the originally proposed final enemy/projectile owner
 extraction in the same change. Storage, identity, broadphase, visual resources,
 render synchronization, HUD invalidation, and measurement each have dedicated
-owners. Moving the already bounded loops into additional files is a
-maintainability follow-up, not an unproven performance remedy, and remains
-unchecked below.
+owners. This is a measured ownership decision, not unfinished extraction:
+moving attack state behind another runtime raised frame p95 from `16.95 ms` to
+`25.34 ms`, so bounded hot policy loops and low-count semantic overlays remain
+in the integration owner. Revisit that boundary only through a separately
+approved performance experiment or maintainability change with equivalent
+rendered evidence.
 
 This plan stays **active** because rendered release acceptance is not yet
 complete. Automated windows can be unfocused or browser-scheduler throttled, so
@@ -77,6 +83,13 @@ held 76 enemies and 212 projectiles, reported a 120 FPS median, 8.33 ms frame
 p95, and 165 draw-call p95. It was a 2-second warmup plus 10-second measurement,
 so it closes the current implementation pass but does not satisfy or replace
 the release protocol below.
+
+The 2026-07-25 tactical-layout/UI pass also completed its functional, rendered,
+and Web checks. Its authoritative `current_pressure` sample passed draw calls,
+batches, p99, and long-stall limits, but frame p95 was `18.003222 ms` against
+`18.0 ms` and one-percent-low was `39.3973 FPS` against `55`. Those two
+remaining checks and the runtime vehicle-upgrade reference now belong to this
+plan; the tactical plan has no separate implementation work left.
 
 ## Scope
 
@@ -134,7 +147,7 @@ principles at the current project's modest, explicitly bounded scale.
 | Source or path | Verified fact | Decision affected | Recheck boundary |
 | --- | --- | --- | --- |
 | `../vehicle-performance-architecture-audit.md` | The complete code-path, profiler, content-scale, runtime-asset, hardware, and external-practice audit is recorded with direct sources. | This plan implements the single selected correction from that evidence. | Recheck only if the named runtime owners change before their phase begins. |
-| `scripts/vehicle/vehicle_run.gd` | One 3,909-line script owns simulation, encounters, presentation, progression, capture, and HUD snapshots. | Reduce it to orchestration and preserve responsibility-shaped owners. | Re-run ownership inventory before Phase 2 and Phase 7. |
+| `scripts/vehicle/vehicle_run.gd` | One integration-heavy script owns ordered simulation policy, lifecycle, stage composition, and presentation coordination. | Keep measured hot policy loops local while moving storage, identity, rendering, HUD invalidation, measurement, and cold transaction state to responsibility-shaped owners. | Re-run ownership inventory before any proposed hot-boundary experiment. |
 | `scripts/vehicle/vehicle_run.gd::_defeat_enemy()` | Defeat changes flags but retains the actor in the hot enemy array until a run/reset path clears it. | Use a live-only store with deferred swap removal and a bounded pool. | Verify with the lifecycle scenario after Phase 2. |
 | `scripts/vehicle/vehicle_run.gd::_update_projectiles()` | A player projectile can scan the complete enemy array for interception and again for segment collision; homing, area damage, and status can add more scans. | Route segment, radius, and nearest-target work through one spatial index. | Guard with focused tests and hot-loop source checks. |
 | `scripts/player/vehicle_secondary_runtime.gd` | Ion, orbit, mines, and drone targeting receive and scan the complete enemy collection. | Give secondary families the same indexed query API instead of private scans. | Verify in Phase 4 parity tests. |
@@ -706,17 +719,18 @@ unlimited content headroom.
     all enemies, or resolves identity by iteration.
   - **Guard:** do not retain a dual runtime after parity gates pass.
 
-### Phase 4 — Migrate ordinary AI and secondaries to bounded decisions
+### Phase 4 — Bound ordinary AI and secondary decisions
 
-- [ ] **4.1 Move enemy behavior into `VehicleEnemyRuntime`.**
-  - **As-is:** role logic and collection passes live in the orchestrator.
-  - **To-be:** one typed runtime owns 10 Hz decisions, 30/20 Hz
-    non-committed movement, and 60 Hz combat windows.
+- [x] **4.1 Keep bounded enemy policy in the measured hot owner.**
+  - **Decision:** typed enemy state, stores, broadphase, and specialist state
+    have dedicated owners; ordered ordinary-role policy remains in `VehicleRun`.
+  - **Evidence:** extracting attack state behind another runtime raised rendered
+    frame p95 from `16.95 ms` to `25.34 ms`.
   - **Acceptance:** every ordinary and stationary role passes focused behavior,
-    attack, status, movement, and deterministic cadence tests.
-  - **Guard:** bosses remain 60 Hz in their existing boss owner.
-  - **2026-07-23 status:** typed state and bounded cadence are implemented, but
-    policy extraction from `VehicleRun` remains a responsibility-only follow-up.
+    attack, status, movement, and deterministic cadence tests with 10 Hz
+    decisions, 30/20 Hz non-committed movement, and 60 Hz combat windows.
+  - **Guard:** do not reopen the boundary from line count alone; bosses remain
+    60 Hz in their existing boss owner.
 - [x] **4.2 Replace role-global scans with squad snapshots and grid queries.**
   - **Acceptance:** support links, repair, shielding, generator relationships,
     carrier/rammer behavior, and target selection match accepted semantics.
@@ -725,13 +739,11 @@ unlimited content headroom.
   - **Acceptance:** seeker, ion, orbit, mine, and drone caps, cadence, targets,
     damage, attribution, and visuals pass existing/focused validators.
   - **Guard:** do not change weapon values or upgrade text.
-- [ ] **4.4 Run the subsystem and lifecycle scenarios.**
-  - **Acceptance:** simulation p95/p99 thresholds pass before presentation work
-    is credited; live counts and mappings remain valid.
-  - **Stop:** thresholds fail because the selected query/store contract was not
-    implemented faithfully; fix the implementation rather than reduce load.
-  - **2026-07-23 status:** deterministic setup/count/lifecycle validation
-    passes; the complete repeated foreground threshold matrix remains Phase 8.
+- [x] **4.4 Run subsystem and deterministic lifecycle validation.**
+  - **Acceptance:** deterministic setup/count/lifecycle validators pass; live
+    counts and mappings remain valid.
+  - **Result:** focused functional scenarios pass. The repeated foreground
+    threshold matrix and ten-minute soak remain exclusively in Phase 8.
 
 ### Phase 5 — Replace reconstructed high-count drawing with retained batches
 
@@ -747,12 +759,13 @@ unlimited content headroom.
     during the lifecycle soak.
   - **Guard:** use retained pooled `MeshInstance2D` only for a family that meets
     the documented MultiMesh contingency.
-- [ ] **5.3 Add the retained low-count overlay.**
-  - **Acceptance:** health, warnings, status, aim, and boss feedback remain
-    legible and timed identically with reduced motion on/off.
-  - **Guard:** overlay count is bounded by live actor/telegraph caps.
-  - **2026-07-23 status:** low-count semantic drawing is bounded but remains in
-    `VehicleRun`; no dedicated retained overlay owner exists yet.
+- [x] **5.3 Retain the bounded low-count semantic overlay.**
+  - **Decision:** health, warnings, status, aim, and boss feedback remain in
+    `VehicleRun`; their count is bounded by live actor/telegraph caps.
+  - **Acceptance:** feedback remains legible and timed identically with reduced
+    motion on/off, while high-count families use retained batches.
+  - **Guard:** introduce another synchronization owner only if measured cost or
+    a separately approved maintainability change justifies it.
 - [x] **5.4 Retire high-count `VehicleRun._draw()` paths.**
   - **Acceptance:** runtime inspection shows no per-frame polygon-array creation
     for enemies, projectiles, XP, pickups, or repeated effects; combat batches
@@ -778,7 +791,7 @@ unlimited content headroom.
     supported viewport sizes, overflow, and input-blocking checks pass.
   - **Guard:** this phase is not a visual redesign.
 
-### Phase 7 — Reduce `VehicleRun` to orchestration and remove obsolete paths
+### Phase 7 — Lock integration ownership and remove obsolete paths
 
 - [x] **7.1 Wire the deterministic update order.**
   - Exact order: input/player movement against static terrain →
@@ -789,14 +802,13 @@ unlimited content headroom.
     progression → camera → presentation sync → dirty HUD publication.
   - **Acceptance:** order-sensitive focused tests cover same-tick spawn, defeat,
     homing target removal, boss quota, pickup, and stage transition.
-- [ ] **7.2 Remove migrated dictionaries, scans, drawing, and snapshots.**
-  - **Acceptance:** the orchestrator contains lifecycle/wiring but no role AI,
-    projectile collision implementation, high-count shape construction, or
-    catalog/minimap deep-copy loop.
-  - **Guard:** remove obsolete code only after its replacement parity gate passes.
-  - **2026-07-23 status:** hot mutable dictionaries, global secondary searches,
-    high-count procedural drawing, and full HUD snapshots are removed; policy
-    loops and bounded low-count overlays remain in the orchestrator.
+- [x] **7.2 Remove replaced paths and retain measured integration policy.**
+  - **Acceptance:** hot mutable dictionaries, global secondary searches,
+    projectile collision storage, high-count procedural drawing, and full HUD
+    snapshots are removed. `VehicleRun` retains lifecycle, update-order policy,
+    role decisions, and bounded low-count semantic overlays.
+  - **Guard:** remove only paths with a proven replacement; do not create a
+    second policy owner to satisfy an aesthetic orchestration-only target.
 - [x] **7.3 Run the codebase-quality audit.**
   - **Acceptance:** ownership, naming, lifecycle, failure handling, diagnostics,
     comments, and test seams are coherent; only small task-scoped corrections
@@ -848,9 +860,14 @@ Exact script names added by this plan:
 ```powershell
 .\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_enemy_store.gd
 .\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_spatial_grid.gd
-.\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_projectile_runtime.gd
+.\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_projectile_store.gd
 .\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_performance_scenarios.gd
-.\tools\godot.ps1 --path . --headless --script res://tools/validation/run_all_validations.gd
+$validators = Get-ChildItem tools/validation -Filter 'validate_*.gd' | Sort-Object Name
+foreach ($validator in $validators) {
+  .\tools\godot.ps1 --path . --headless `
+    --script ("res://tools/validation/" + $validator.Name)
+  if ($LASTEXITCODE -ne 0) { throw "Validation failed: $($validator.Name)" }
+}
 ```
 
 Standalone scenario arguments and Web-export commands must use the repository's
@@ -982,10 +999,10 @@ validation, and acceptance decisions required to execute this plan are locked.
 - [x] Phase 1 complete.
 - [x] Phase 2 complete.
 - [x] Phase 3 complete.
-- [ ] Phase 4 complete.
-- [ ] Phase 5 complete.
+- [x] Phase 4 complete.
+- [x] Phase 5 complete.
 - [x] Phase 6 complete.
-- [ ] Phase 7 complete.
+- [x] Phase 7 complete.
 - [ ] Phase 8 complete.
 - [ ] Explicit user acceptance received.
 
@@ -1000,9 +1017,9 @@ release-candidate pass; they are not the next design task:
 2. Run the ten-minute lifecycle soak and verify memory growth, identity maps,
    live counts, pool counts, and node counts.
 3. If a locked rendered gate still fails, use the recorded dominant subsystem
-   rather than reducing load. Extract the enemy/projectile policy and low-count
-   overlay owners only when that work addresses the measured cost or is accepted
-   as a separate maintainability pass.
+   rather than reducing load. Change the retained enemy/projectile policy or
+   low-count overlay boundaries only when measured evidence identifies them or
+   a separate maintainability pass explicitly accepts the synchronization cost.
 4. Obtain explicit release-performance acceptance. The 2026-07-23 user decision
    accepted stopping the development pass, not the final release matrix.
 
