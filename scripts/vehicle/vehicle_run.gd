@@ -32,6 +32,7 @@ const BossPracticeSession = preload("res://scripts/bosses/vehicle_boss_practice_
 const StageDifficulty = preload("res://scripts/enemies/vehicle_stage_difficulty.gd")
 const RunDifficulty = preload("res://scripts/vehicle/vehicle_run_difficulty.gd")
 const FieldDropRules = preload("res://scripts/rewards/vehicle_field_drop_rules.gd")
+const RewardRuntime = preload("res://scripts/rewards/vehicle_reward_runtime.gd")
 const ExperienceRuntime = preload("res://scripts/progression/vehicle_experience_runtime.gd")
 const CycleRuntime = preload("res://scripts/cards/vehicle_cycle_runtime.gd")
 const StageGeometry = preload("res://scripts/vehicle/vehicle_stage_geometry.gd")
@@ -163,13 +164,9 @@ var experience_runtime := ExperienceRuntime.new()
 var cycle_runtime := CycleRuntime.new()
 var applied_upgrades: Dictionary = run_build.levels
 var current_card_offer: Array[Dictionary] = []
-var current_reward_source: StringName = &""
-var current_reward_optional := false
-var _upgrade_offer_serial := 0
-var claimed_reward_sources: Dictionary = {}
+var reward_runtime := RewardRuntime.new()
 var completed_group_rewards: Dictionary = {}
 var pending_stage_completion := false
-var pending_reward_sources: Array[StringName] = []
 var experience_recall_timer := 0.0
 var lifesteal_budget := 6.0
 
@@ -563,13 +560,13 @@ func _reset_run(
 		run_build.reset()
 		stage_telemetry.reset_run()
 		experience_runtime.reset()
-		_upgrade_offer_serial = 0
+		reward_runtime.reset_run()
 		selected_upgrade_title_key = "UPGRADE_NONE"
-		claimed_reward_sources.clear()
 	else:
 		stage_telemetry.reset_stage()
 		experience_runtime.clear_shards()
 		experience_runtime.pending_level_ups = 0
+		reward_runtime.reset_stage()
 	_status_profile = StatusProfile.from_build(run_build)
 	cycle_runtime.reset()
 	secondary_runtime.reset(player_position)
@@ -639,9 +636,6 @@ func _reset_run(
 	boss_arrival_position = Vector2.ZERO
 	stage_complete = false
 	pending_stage_completion = false
-	pending_reward_sources.clear()
-	current_reward_source = &""
-	current_reward_optional = false
 	completed_group_rewards.clear()
 	_pending_stage_report.clear()
 	if not preserve_upgrades:
@@ -966,10 +960,9 @@ func _on_upgrade_selected(upgrade_id: StringName) -> void:
 
 
 func _on_upgrade_declined() -> void:
-	if mode != RunMode.UPGRADE or not current_reward_optional:
+	if mode != RunMode.UPGRADE or not reward_runtime.is_current_optional():
 		return
-	claimed_reward_sources[_reward_transaction_id(current_reward_source)] = &"declined"
-	_resolve_reward_transaction()
+	_resolve_reward_transaction(&"declined")
 	mode = RunMode.PLAYING
 	_ui.show_gameplay()
 	_ui.notify(tr("NOTIFY_REWARD_DECLINED"), 2.2, Rules.MUTED)
@@ -1687,8 +1680,7 @@ func _update_experience(delta: float) -> void:
 		_discover_guide(&"object_experience")
 		_play_sound(&"pickup", 1.22)
 	for source in result["reward_sources"]:
-		if source not in pending_reward_sources:
-			pending_reward_sources.append(source)
+		reward_runtime.enqueue(StringName(source))
 	if int(result["levels"]) > 0:
 		_ui.notify(tr("NOTIFY_LEVEL_UP"), 1.8, Art.MUSTARD)
 	_advance_reward_queue()
@@ -3556,13 +3548,12 @@ func _trigger_contains(trigger: Variant, point: Vector2) -> bool:
 
 
 func _open_upgrade_reward(source_id: StringName, optional: bool) -> void:
-	if mode != RunMode.PLAYING or (source_id != &"level_up" and _reward_claimed(source_id)):
+	if mode != RunMode.PLAYING:
+		return
+	var offer_serial := reward_runtime.begin(current_stage_id, source_id, optional)
+	if offer_serial < 0:
 		return
 	mode = RunMode.UPGRADE
-	current_reward_source = source_id
-	current_reward_optional = optional
-	var offer_serial := _upgrade_offer_serial
-	_upgrade_offer_serial += 1
 	current_card_offer = _build_card_offer(source_id, offer_serial)
 	_ui.show_upgrade(current_card_offer, optional)
 	_play_sound(&"card", 0.9)
@@ -3596,24 +3587,19 @@ func apply_upgrade(upgrade_id: StringName) -> bool:
 	return true
 
 
-func _reward_transaction_id(source_id: StringName) -> StringName:
-	return StringName("%s:%s" % [String(current_stage_id), String(source_id)])
-
-
-func _reward_claimed(source_id: StringName) -> bool:
-	return claimed_reward_sources.has(_reward_transaction_id(source_id))
-
-
-func _resolve_reward_transaction() -> void:
-	if current_reward_source == &"":
+func _resolve_reward_transaction(outcome: StringName = &"claimed") -> void:
+	var source_id := reward_runtime.current_source()
+	if source_id.is_empty():
 		return
-	if current_reward_source == &"level_up":
-		experience_runtime.consume_pending_level()
+	if outcome == &"declined":
+		if not reward_runtime.decline(current_stage_id):
+			return
 	else:
-		claimed_reward_sources[_reward_transaction_id(current_reward_source)] = &"claimed"
+		if reward_runtime.claim(current_stage_id).is_empty():
+			return
+		if source_id == RewardRuntime.LEVEL_UP_SOURCE:
+			experience_runtime.consume_pending_level()
 	encounter_runtime.record_reward()
-	current_reward_source = &""
-	current_reward_optional = false
 	current_card_offer.clear()
 
 
@@ -3621,13 +3607,18 @@ func _advance_reward_queue() -> void:
 	if mode != RunMode.PLAYING:
 		return
 	if experience_runtime.pending_level_ups > 0:
-		_open_upgrade_reward(&"level_up", false)
+		_open_upgrade_reward(RewardRuntime.LEVEL_UP_SOURCE, false)
 		return
-	if not pending_reward_sources.is_empty():
-		var source: StringName = pending_reward_sources.pop_front()
+	if reward_runtime.has_pending():
+		var source := reward_runtime.pop_pending()
 		_open_upgrade_reward(source, false)
 		return
-	if pending_stage_completion and _reward_claimed(&"boss"):
+	if (
+		pending_stage_completion
+		and reward_runtime.is_idle()
+		and not reward_runtime.has_pending()
+		and reward_runtime.has_claimed(current_stage_id, &"boss")
+	):
 		_finalize_stage_completion()
 
 

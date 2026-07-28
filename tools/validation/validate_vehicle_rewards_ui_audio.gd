@@ -1,6 +1,8 @@
 extends SceneTree
 
 const StageCatalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
+const RewardRuntime = preload("res://scripts/rewards/vehicle_reward_runtime.gd")
+const VehicleRun = preload("res://scripts/vehicle/vehicle_run.gd")
 const UpgradePanel = preload("res://scripts/ui/vehicle_upgrade_choice_panel.gd")
 const AudioDirector = preload("res://scripts/presentation/vehicle_audio_director.gd")
 const StageScene = preload("res://scenes/run/VehicleRun.tscn")
@@ -23,7 +25,61 @@ func _expect(condition: bool, message: String) -> void:
 		print("FAIL %s" % message)
 
 
+func _validate_reward_runtime() -> void:
+	var rewards := RewardRuntime.new()
+	_expect(rewards.is_idle(), "reward runtime starts without an active transaction")
+	_expect(rewards.enqueue(&"boss"), "reward runtime accepts a pending source")
+	_expect(not rewards.enqueue(&"boss"), "reward runtime suppresses duplicate pending sources")
+	_expect(rewards.pop_pending() == &"boss", "reward queue preserves its source identity")
+	_expect(not rewards.has_pending(), "popping the only source empties the reward queue")
+
+	_expect(rewards.begin(&"stage_1", &"boss", false) == 0, "first reward offer uses serial zero")
+	_expect(not rewards.enqueue(&"boss"), "active reward sources cannot be queued again")
+	_expect(rewards.claim(&"stage_1") == &"boss", "claim resolves the active reward")
+	_expect(rewards.has_claimed(&"stage_1", &"boss"), "claimed rewards retain a stage-scoped terminal outcome")
+	_expect(rewards.begin(&"stage_1", &"boss", false) == -1, "resolved rewards cannot reopen")
+
+	_expect(rewards.begin(&"stage_1", &"field_boss", true) == 1, "offer serials advance across reward sources")
+	_expect(rewards.decline(&"stage_1"), "optional rewards can be declined")
+	_expect(
+		rewards.outcome(&"stage_1", &"field_boss") == &"declined"
+			and not rewards.has_claimed(&"stage_1", &"field_boss"),
+		"declined and claimed outcomes remain distinct"
+	)
+	_expect(rewards.enqueue(&"queued_reward"), "stage reset fixture queues a reward")
+	rewards.reset_stage()
+	_expect(
+		rewards.is_idle() and not rewards.has_pending(),
+		"stage reset clears active and pending reward state"
+	)
+	_expect(
+		rewards.has_claimed(&"stage_1", &"boss"),
+		"stage reset preserves run-scoped terminal outcomes"
+	)
+	_expect(rewards.begin(&"stage_2", &"boss", false) == 2, "stage reset preserves the offer serial")
+	rewards.reset_stage()
+	_expect(rewards.begin(&"stage_3", &"boss", false) == 3, "stage reset clears an active transaction")
+
+	rewards.reset_run()
+	_expect(
+		rewards.is_idle()
+			and not rewards.has_pending()
+			and not rewards.has_claimed(&"stage_1", &"boss"),
+		"run reset clears all reward transaction state"
+	)
+	_expect(
+		rewards.begin(&"stage_1", RewardRuntime.LEVEL_UP_SOURCE, false) == 0,
+		"run reset restarts the deterministic offer serial"
+	)
+	rewards.claim(&"stage_1")
+	_expect(
+		not rewards.is_resolved(&"stage_1", RewardRuntime.LEVEL_UP_SOURCE),
+		"level-up transactions do not create stage terminal outcomes"
+	)
+
+
 func _run() -> void:
+	_validate_reward_runtime()
 	var layout := LayoutGenerator.generate(0xC4A2B0, StageCatalog.STAGE_IDS)
 	for stage_id in StageCatalog.STAGE_IDS:
 		var stage_pickups := layout.pickup_blueprint(stage_id)
@@ -135,7 +191,26 @@ func _run() -> void:
 	_expect(bool(settings_contract["difficulty_lock_visible"]), "in-run settings explain the deployment lock")
 	var orbit_contract: Dictionary = stage_ui.call("debug_status_orbit_contract")
 	_expect(int(orbit_contract["maximum_badges"]) == 2, "status orbit exposes only the two retained cycle badges")
+	experience_runtime.set("pending_level_ups", 1)
+	var stage_rewards: RefCounted = stage.get("reward_runtime")
+	stage_rewards.call("enqueue", &"boss")
+	stage.set("mode", VehicleRun.RunMode.PLAYING)
+	stage.call("_advance_reward_queue")
+	_expect(
+		StringName(stage_rewards.call("current_source")) == RewardRuntime.LEVEL_UP_SOURCE
+			and bool(stage_rewards.call("has_pending")),
+		"level-up rewards take priority over queued authored rewards"
+	)
+	stage.call("_resolve_reward_transaction")
+	stage.set("mode", VehicleRun.RunMode.PLAYING)
+	stage.call("_advance_reward_queue")
+	_expect(
+		StringName(stage_rewards.call("current_source")) == &"boss",
+		"the authored reward opens after pending level-ups resolve"
+	)
+	stage.call("_resolve_reward_transaction")
 	experience_runtime = null
+	stage_rewards = null
 	stage_ui = null
 	stage.queue_free()
 	stage = null

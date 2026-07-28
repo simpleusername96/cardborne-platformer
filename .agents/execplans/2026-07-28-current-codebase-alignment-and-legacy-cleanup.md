@@ -1003,20 +1003,20 @@ generated keys still resolve in both languages.
 
 ### Milestone 3 — Extract the cold reward transaction owner
 
-- [ ] Add `scripts/rewards/vehicle_reward_runtime.gd` with reset, enqueue,
+- [x] Add `scripts/rewards/vehicle_reward_runtime.gd` with reset, enqueue,
   next-source, active-source, offer-serial, stage-scoped claim, decline, and
   resolution APIs.
-- [ ] Move only the five reward state fields and their pure
+- [x] Move only the five reward state fields and their pure
   identity/queue/terminal-outcome rules out of `VehicleRun`.
-- [ ] Keep card offer construction, build mutation, experience consumption,
+- [x] Keep card offer construction, build mutation, experience consumption,
   encounter telemetry, UI/audio, mode transitions, and stage finalization in
   their existing owners.
-- [ ] Preserve priority exactly: pending level-ups first, then queued encounter
+- [x] Preserve priority exactly: pending level-ups first, then queued encounter
   reward sources, then stage completion after the boss reward is claimed.
-- [ ] Preserve retry/reset semantics and the once-per-stage reward identity.
-- [ ] Add focused tests for duplicate enqueue suppression, claim vs decline,
+- [x] Preserve retry/reset semantics and the once-per-stage reward identity.
+- [x] Add focused tests for duplicate enqueue suppression, claim vs decline,
   stage identity, offer serial monotonicity, reset, and priority.
-- [ ] Run the codebase quality audit on the new public boundary and make only
+- [x] Run the codebase quality audit on the new public boundary and make only
   small task-scoped corrections.
 
 **Acceptance:** reward behavior and UI snapshots are unchanged; `VehicleRun` no
