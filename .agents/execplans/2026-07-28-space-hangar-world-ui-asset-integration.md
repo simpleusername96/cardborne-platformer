@@ -20,10 +20,13 @@ related:
 # Cardborne 인게임·UI 이미지 에셋 통합 실행 계획
 
 선택된 우주 격납고 시안의 재질과 화면 구성을 실제 게임에 적용한다.
-월드는 `geometry truth → raster asset template → live state overlay`, UI는
-`raster chrome → safe-inset template → live Control overlay`의 세 층으로
-바꾼다. 기존 전투, 충돌, 카드, 입력, 한·영 텍스트는 보존하고, 스크립트가
-장식 픽셀을 그리는 경로는 승인된 이미지 에셋 조립 경로로 교체한다.
+월드는
+`geometry truth → limited-palette material synthesis → topology/decor raster overlays → live state overlay`,
+UI는 `raster chrome → safe-inset template → live Control overlay`의 세 층으로
+바꾼다. 기존 전투, 충돌, 카드, 입력, 한·영 텍스트는 보존한다. 월드 바탕은
+승인된 소형 exemplar와 고정 recipe에서 오프라인으로 합성하고, 구조·장식은
+승인된 투명 에셋을 별도 overlay로 조립한다. 런타임 스크립트가 임의의
+장식 픽셀을 그리는 경로는 사용하지 않는다.
 
 ## Why / Context
 
@@ -44,8 +47,12 @@ connected edge, fixture, UI chrome으로 분해해 제작한다.
 
 - **Objective:** 맵, 지형지물, actor readability, HUD, modal, card, button을
   하나의 우주 격납고 이미지 에셋 문법으로 통합한다.
-- **First user-visible artifact:** 실제 현재 레이아웃에 승인 후보 에셋을
-  합성한 인게임, 일시정지, 업그레이드, 차고 검토 이미지 네 장.
+- **First user-visible artifact:** 정확히 네 색을 쓰는 floor exemplar,
+  합성된 16-signature Wang atlas, 대형 expansion/seam proof, base-only
+  gameplay composite.
+- **First full-screen approval artifact:** 실제 현재 레이아웃에 승인된
+  world/UI 후보 에셋을 합성한 인게임, 일시정지, 업그레이드, 차고 검토
+  이미지 네 장.
 - **First live vertical slice:** 한 필드의 safe-arrival/maximum-pressure,
   gameplay HUD, 일시정지 화면이 같은 승인 에셋을 사용하는 실행 빌드.
 - **Completion state:** 모든 대상 surface가 승인된 raster asset을 사용하고,
@@ -82,8 +89,9 @@ Destructive or irreversible actions:
 
 Exact user approval still required:
 
-- the four Phase 1 assembled images must be accepted before runtime
-  publication. This is an asset-quality gate, not a new style-selection gate.
+- each Phase 1 material/overlay proof and the four final assembled images must
+  be accepted before its corresponding runtime publication. These are ordered
+  asset-quality gates, not a new style-selection gate.
 
 ## Pre-plan Evidence Already Verified
 
@@ -109,15 +117,19 @@ Exact user approval still required:
 | Layout source | 현재 실제 화면의 정보와 입력 흐름을 보존한다. 사용자가 current screenshot layout을 요구하고 선택 이미지도 이를 유지했으므로, action rail의 bottom-center outer-chassis 배치만 명시적 예외로 적용한다. | 스타일이 바뀌어도 게임 사용법은 바뀌지 않으며 승인된 composition을 재현한다. |
 | World ownership | gameplay geometry가 floor, void, wall, blocker, opening의 진실이다. 이미지나 alpha는 collision을 소유하지 않는다. | 기존 제품 불변 조건이다. |
 | World composition | `geometry snapshot → VehicleWorldVisualTemplate → VehiclePixelWorldMeshBuilder`로 static art를 만들고, runtime state는 별도 overlay가 그린다. | 이미지와 gameplay truth를 분리한다. |
+| Base material synthesis | 각 material은 정확히 `n`개의 승인 색을 쓰는 exemplar/recipe에서 `categorical ConvChain-style distribution pass → overlapping-WFC legality pass → Wang edge catalog` 순서로 오프라인 합성한다. | 작은 승인 샘플의 재질 통계를 보존하면서 연결 가능한 넓은 바닥을 만든다. |
+| Runtime expansion | 서로 마주 보는 경계가 같은 값을 갖도록 tile coordinate의 shared edge를 고정 integer hash로 계산하고, 해당 Wang signature 안에서만 variant를 선택한다. | 맵이 확장되어도 이웃 tile이 항상 맞고 runtime WFC/재생성/모순이 없다. |
+| Macro variation | built-in `FastNoiseLite`는 clean/mid/worn variant의 저주파 가중치에만 쓴다. topology, collision, 최종 픽셀을 만들지 않는다. | 단독 noise의 얼룩·스펙클 결과를 피하면서 큰 반복감만 줄인다. |
+| Overlay distribution | 구조 edge는 geometry signature, 희소 장식은 승인 stamp와 layout-bounded Poisson-disk sockets, prop은 authored/legal socket으로 배치한다. | base texture, 구조, 장식, gameplay 의미를 분리한다. |
 | UI ownership | PNG chrome이 외형을, Theme/factory가 safe inset과 state mapping을, Control이 text/value/input/layout을 소유한다. | 이미지와 overlay가 맞물리는 단일 계약이다. |
 | UI renderer | `PanelContainer`, `Button`, `TabContainer`를 유지하고 visible style을 direct raster texture 기반 `StyleBoxTexture`로 바꾼다. | localization, focus, hit area, responsive layout을 보존한다. |
 | Generation unit | 한 ImageGen 작업은 한 component family 또는 그 component의 직접 관련 state만 만든다. unrelated contact sheet는 production source가 아니다. | topology와 state drift를 제한한다. |
 | Production source | 선택 이미지와 해당 current screen crop을 실제 reference input으로 사용한다. | style과 layout을 동시에 보존한다. |
 | Text policy | 한국어, 영어, binding, number, cooldown, progress, selection truth를 PNG에 굽지 않는다. | 양 언어와 runtime state가 계속 변한다. |
-| Script boundary | 스크립트는 crop, key removal, palette/grid cleanup, slicing, composition, hashing, seam/safe-inset validation만 한다. 장식 픽셀을 창작하지 않는다. | 사용자 승인 에셋이 외형의 유일한 출처다. |
+| Script boundary | 오프라인 합성기는 승인된 exemplar의 `n`색, local pattern, hard edge profile만 재조합할 수 있다. overlay는 승인된 raster stamp만 배치한다. 런타임과 publisher는 임의 도형·장식 픽셀을 창작하지 않는다. | 알고리즘 확장과 임의 procedural drawing을 구분하고 승인된 시각 문법을 보존한다. |
 | Missing art | 필수 asset이 없으면 publication 또는 validation이 실패한다. 코드 도형으로 조용히 대체하지 않는다. | 다시 procedural placeholder가 production에 들어오는 것을 막는다. |
 | UI scaling | 9-slice `StyleBoxTexture`가 기본이다. corner/edge motif가 target size에서 깨질 때만 해당 surface에 standard/compact fixed backplate를 사용한다. | localization과 세 viewport를 우선하면서 품질 저하를 막는다. |
-| Dependencies | Godot 4.7, GDScript, 기존 PowerShell/ImageMagick, built-in ImageGen만 사용한다. | production dependency 추가가 필요 없다. |
+| Dependencies | Godot 4.7, GDScript, 기존 PowerShell/ImageMagick, built-in ImageGen만 사용한다. WFC, ConvChain, Wang, Poisson-disk 공개 프로젝트는 알고리즘·검증 참고 자료이며 외부 실행 파일이나 패키지를 vendoring하지 않는다. | production dependency 추가 없이 좁은 오프라인 합성기를 구현한다. |
 
 ## Approved Visual Contract
 
@@ -141,12 +153,16 @@ panel seams, hard pixel edges, and semantic rails do.
 ### In-game composition
 
 - outer space is near-black and visually separate from the playable footprint;
-- the playable deck is cool blue-gray, low-contrast, and quieter than actor,
-  pickup, projectile, and telegraph art;
-- wall/cover uses graphite mass, a readable top edge, dark contact shadow, and
-  restrained cobalt boundary light;
-- vents, consoles, crates, pipes, and structural props are image assets placed
-  only at authored or deterministic visual sockets;
+- the playable deck base is an exactly `n`-color, cool blue-gray synthesized
+  material field. It stays low-contrast and quieter than actor, pickup,
+  projectile, and telegraph art;
+- wall/cover base is an independently synthesized graphite material. Readable
+  top edge, dark contact shadow, and restrained cobalt boundary light are
+  topology overlays, not baked base noise;
+- macro panel seams, maintenance joints, wear, vents, consoles, crates, pipes,
+  and structural props are separate transparent image assets;
+- panel structure follows deterministic grid/edge rules. Sparse wear uses
+  minimum-distance sockets, and props use authored or legal visual sockets;
 - decorative props never imply collision, pickup, hazard, objective, or route;
 - functional fixtures have a raster body, while exact radius, timer, health,
   readiness, warning, and cooldown remain live overlays;
@@ -189,10 +205,13 @@ to existing localized copy, but no control or information disappears.
 
 | Family | Native contract | Required output |
 | --- | --- | --- |
-| `space_void` | `24×24` | three sparse repeat variants |
-| `deck_base` | `24×24` | three repeat variants and one sparse `2×2` patch |
-| `floor_void_edge` | `24×24` | 16 orthogonal signatures |
-| `wall_cover_tiles` | `24×24` | 16 signatures with separable top/side/shadow/boundary-light layers |
+| `space_void_base` | `24×24`, exactly `n=2` for the first candidate | quiet base variants; no stars or gameplay-like marks unless approved as overlay |
+| `deck_material_wang` | `24×24`, exactly `n=4` for the first candidate | 16 two-edge Wang signatures × at least three variants |
+| `wall_material_wang` | `24×24`, exactly `n=4` for the first candidate | 16 two-edge Wang signatures × at least two variants |
+| `floor_void_edge` | transparent `24×24` | 16 geometry-owned orthogonal topology signatures |
+| `wall_cover_overlay` | transparent `24×24` | 16 geometry-owned signatures with separable top/side/shadow/boundary-light layers |
+| `deck_structure_overlay` | transparent `2×2` and `4×4` tile stamps | sparse panel seam, service joint, conduit and maintenance plate families |
+| `material_wear_overlay` | transparent `24–96 px` stamps | approved wear/scratch/repair families with density and exclusion metadata |
 | `wall_rail` | `24×24` | cap, horizontal, vertical, inner/outer corner |
 | static props | `48×48` or `96×96` | vent, console, cargo, conduit, structural support |
 | functional fixtures | `32–64 px` | arc strip, bulkhead, gate, repair, overdrive, reward crate state frames |
@@ -202,6 +221,61 @@ to existing localized copy, but no control or information disappears.
 layout fingerprint, and tile coordinate. It emits visual-only base regions,
 edge instances, wall instances, and prop instances. It never emits collision,
 navigation, spawn, line-of-sight, or attack data.
+
+### Natural material synthesis contract
+
+The current `192×192` repeat masters already use few colors
+(`hangar-floor.png` uses two and `hangar-wall.png` uses three), but they are
+single-period fields made from sparse bars. Palette cardinality alone therefore
+does not satisfy the material requirement.
+
+Each floor or wall family is built in this order:
+
+1. **Exemplar:** crop or generate one clean `48×48` or `96×96` material sample
+   from the approved space-hangar direction. Remove props, panel borders,
+   gameplay marks, text, gradients, and alpha.
+2. **Palette lock:** map the exemplar to exactly the recipe's `n` opaque colors.
+   The base palette excludes cobalt, mint, mustard, coral, and magenta semantic
+   overlay colors.
+3. **Distribution pass:** run a project-owned categorical, fixed-seed
+   ConvChain-style Markov-chain pass on a toroidal working canvas so the output
+   approaches the exemplar's `3×3` pattern distribution instead of scattering
+   independent noise pixels. The upstream binary sample implementation is not
+   copied or treated as supporting arbitrary `n`.
+4. **Legality pass:** run overlapping-WFC constraints over the same `3×3`
+   pattern vocabulary. Prelocked edge strips and approved authored cells are
+   immutable. A contradiction triggers a deterministic retry and then a hard
+   failure; it never falls back to publisher-drawn art.
+5. **Wang catalog:** build two approved material edge profiles. Their
+   north/east/south/west combinations produce 16 signatures. Synthesize
+   multiple interior variants per signature while preserving exact edge-strip
+   equality.
+6. **Expansion selection:** for tile `(x, y)`, derive north/south from the same
+   horizontal-boundary hash and east/west from the same vertical-boundary hash.
+   This makes both sides of every shared edge select the same profile without
+   a runtime solver. A separate coordinate hash chooses a variant inside the
+   compatible signature.
+7. **Macro weighting:** optionally bias only the approved clean/mid/worn
+   variant weights with low-frequency `FastNoiseLite`. Noise never changes
+   topology, palette, collision, or edge compatibility.
+8. **Overlay assembly:** add topology edges and rails, then macro structure,
+   then minimum-distance wear stamps, then legal props/fixtures, and finally
+   live gameplay overlays. No overlay is merged back into the base material
+   master.
+
+ImageGen is used for exemplar and overlay-stamp exploration, not for producing
+a claimed seamless final tileset. The synthesizer is allowed to rearrange only
+approved exemplar patterns and edge profiles. This is distinct from the
+rejected publisher path that draws sparse rectangles or invents motifs from
+asset IDs.
+
+The offline owner is `tools/design/synthesize_world_material.gd`, invoked by
+`pixel-art-production/tools/design/build_world_material_catalog.ps1`. Recipe
+and provenance live under
+`pixel-art-production/assets/material-recipes/approved/`, validated by
+`pixel-art-production/schemas/world-material-recipe.schema.json`. No synthesized
+candidate enters `pixel-art-production/runtime/` before its palette, seam,
+distribution, adjacency, repeat, overlay, and gameplay-composite proofs pass.
 
 ### UI chrome families
 
@@ -231,10 +305,13 @@ It owns no text, gameplay state, navigation, or button behavior.
 | Product/gameplay contract | `docs/product/vehicle_game_spec.md` | no gameplay/control changes; approved action-rail placement exception only | revise HUD placement line |
 | Visual contract | `docs/design/UI_VISUAL_SYSTEM.md` | approved space-hangar palette, hierarchy, raster/live boundary | revise |
 | Palette/role constants | `scripts/vehicle/vehicle_stage_visual_profile.gd` | shared semantic roles, no state | revise |
-| Pixel production | `pixel-art-production/README.md`, manifests, validators | ImageGen source → deterministic cleanup → approval → publish | extend |
+| Pixel production | `pixel-art-production/README.md`, material recipes, manifests, validators | ImageGen/crop exemplar → exact-`n` palette → deterministic synthesis → overlay assembly → approval → publish | extend |
+| Material synthesizer | `tools/design/synthesize_world_material.gd` | exemplar pattern vocabulary + hard edge profiles + fixed PRNG → candidate Wang catalog and provenance | add |
+| Material build orchestration | `pixel-art-production/tools/design/build_world_material_catalog.ps1` | validate recipe, invoke headless Godot synthesis, build proofs, never publish on failure | add |
 | World asset catalog | existing atlas/catalog | exact family/variant/state lookup | reuse |
 | World template | `scripts/presentation/vehicle_world_visual_template.gd` | geometry-fed deterministic visual records | add |
-| World renderer | `scripts/presentation/vehicle_pixel_world_mesh_builder.gd` | repeated base plus batched edges/walls/props | extend |
+| Base material shader | `pixel-art-production/runtime/shaders/world_material_wang.gdshader` | world-coordinate shared-edge hash + compatible atlas lookup inside existing geometry mask | add |
+| World renderer | `scripts/presentation/vehicle_pixel_world_mesh_builder.gd` | geometry-clipped Wang material base plus batched topology/structure/prop overlays | extend |
 | Functional state | `VehicleTerrainRuntime`, `VehicleCombatRenderer` | exact area/progress/state overlay | reuse |
 | Legacy terrain drawing | `VehicleRun._draw_terrain()` | retain exact live geometry; retire migrated decorative body/glyph drawing | narrow |
 | UI chrome manifest | new UI chrome schema/manifest | patch margins and content insets match runtime Theme | add |
@@ -248,9 +325,9 @@ It owns no text, gameplay state, navigation, or button behavior.
 
 | Concern | As-is | To-be | Acceptance | Guard |
 | --- | --- | --- | --- | --- |
-| World base | ivory repeat field | cool blue-gray deck inside near-black space | side-by-side approved composition | no floor motif reads as gameplay |
-| Wall/cover | green fill and broad code rail | graphite connected tiles and cobalt boundary asset | 16-signature and collision overlay proof | art never changes geometry |
-| Props | sparse generic code shapes | generated, approved socket-based raster props | deterministic placement capture | no false blocker/hazard/pickup |
+| World base | one `192×192` sparse-bar repeat; floor has two colors | exact-`n` Wang material catalog with deterministic aperiodic-compatible selection | palette/distribution/seam/large-mosaic and approved composition proofs | no floor motif reads as gameplay |
+| Wall/cover | one three-color repeat plus broad code rail | independent graphite Wang base plus 16-signature topology/cobalt overlays | material, topology and collision-overlay proofs | art never changes geometry |
+| Props | sparse generic code shapes | approved raster stamps at deterministic minimum-distance or authored sockets | occupancy heatmap and placement capture | no false blocker/hazard/pickup |
 | Terrain | body and exact state mixed in `_draw_terrain()` | raster fixture under exact live overlay | state-by-state captures | radius/timer/health stay live |
 | HUD surface | ivory `StyleBoxFlat` boxes | image-backed dark HUD shells | all anchors and central clear zone pass | no hidden information |
 | Health/action visuals | code-drawn decorative body plus live values | raster frame/icon/socket plus live fill/cooldown | value and cooldown parity | dynamic truth not baked |
@@ -285,6 +362,9 @@ Source owners touched:
   `ui_frame_system` from `procedural_pixel/direct_pixel` to
   `raster_texture/imagegen_assisted`; keep `dynamic_combat_ui` as `live_ui`.
 - [ ] Add UI chrome production and validation to the pixel pipeline spec.
+- [ ] Add the exact-`n` base-material, Wang expansion, topology/decor overlay,
+  fixed-seed provenance, and no-runtime-synthesis contracts to the pixel
+  pipeline spec.
 - [ ] Update `VehicleStageVisualProfile` material constants without changing
   gameplay radii or attack semantics.
 
@@ -300,14 +380,55 @@ Batch guard:
 
 ### Phase 1 — Produce asset masters and review assemblies
 
-Goal: approve real source art before runtime styling work.
+Goal: approve naturally extending base materials first, then their overlays and
+UI source art, before runtime styling work.
 
 Source owners touched:
-ImageGen evidence, world manifests, UI chrome schema/manifest,
-review-build scripts, candidate/approved source folders.
+ImageGen/crop evidence, world material recipes and manifests, synthesis and
+review tools, UI chrome schema/manifest, candidate/approved source folders.
 
-- [ ] Generate world masters one family at a time using the selected image and
-  current gameplay crop: void, deck, wall/edge, prop, and fixture families.
+#### Phase 1A — Floor material gate
+
+- [ ] Create
+  `pixel-art-production/schemas/world-material-recipe.schema.json`,
+  `tools/design/synthesize_world_material.gd`,
+  `pixel-art-production/tools/design/build_world_material_catalog.ps1`, and
+  `pixel-art-production/tools/validation/validate_world_material_catalog.ps1`.
+- [ ] Produce one clean approved deck exemplar from the selected reference
+  direction, quantize it to the exact four-color candidate recipe, and record
+  source and palette hashes.
+- [ ] Synthesize all 16 two-edge Wang signatures with at least three floor
+  variants per signature using the fixed distribution/legality pipeline.
+- [ ] Build native, `3×3`, `20×12`, autocorrelation, seam heatmap, palette,
+  distribution, and gameplay worst-patch proofs.
+- [ ] Reject or approve the base floor before adding panel seams, wear, rails,
+  props, or gameplay objects.
+
+#### Phase 1B — Wall material and topology gate
+
+- [ ] Produce one clean approved graphite wall exemplar, quantize it to the
+  exact four-color candidate recipe, and record source and palette hashes.
+- [ ] Synthesize all 16 two-edge Wang signatures with at least two wall
+  variants per signature.
+- [ ] Produce the independent transparent 16-signature floor/void and wall
+  topology overlays, including top, side, contact shadow, and boundary-light
+  layers.
+- [ ] Build long-strip, inner/outer corner, junction, collision-overlay, seam,
+  repeat, and gameplay proofs; approve wall base and topology overlays
+  separately.
+
+#### Phase 1C — Structure, wear, props, and fixtures
+
+- [ ] Generate or crop overlay stamps one family at a time using the selected
+  image: panel seam/service joint, wear/repair, vent, console, cargo, conduit,
+  support, rail, and fixture families.
+- [ ] Define overlay density, minimum distance, exclusion zones, rotation,
+  mirror, and legal-socket rules in the material recipes.
+- [ ] Build base/overlay/composite triptychs plus occupancy, minimum-distance,
+  false-geometry, and maximum-pressure gameplay proofs.
+
+#### Phase 1D — UI chrome and assembled-screen approval
+
 - [ ] Generate UI component families one at a time using the selected image and
   matching current modal crop: modal, HUD, section/card, button, tab, and
   focus/selected overlays.
@@ -326,13 +447,18 @@ review-build scripts, candidate/approved source folders.
 
 Approval gate:
 
-- BK approves the four assembled images before any candidate chrome or world
-  master is published into runtime.
+- BK approves floor base, wall base/topology, composited world, and the four
+  assembled UI/layout images in that order before the corresponding candidate
+  is published into runtime.
 
 Batch guard:
 
-- scripts may assemble and validate assets but may not draw new decorative
-  pixels or repair a rejected design by inventing shapes.
+- the synthesizer may only recombine an approved exemplar's locked palette,
+  local patterns, and hard edge profiles;
+- assembly scripts may place approved overlays but may not repair a rejected
+  design by inventing shapes;
+- a later overlay approval cannot retroactively hide a failed base-material
+  proof.
 
 ### Phase 2 — Implement the combined live vertical slice
 
@@ -346,10 +472,17 @@ Source owners touched:
 `vehicle_stage_theme.tres`, `vehicle_stage_ui.gd`,
 new focused validators.
 
-- [ ] Add `VehicleWorldVisualTemplate` and deterministic tile/prop selection
-  keyed by stage ID, layout fingerprint, and tile coordinate.
-- [ ] Keep repeat polygons for large base fills and add atlas-batched connected
-  edge, wall, rail, and sparse prop instances.
+- [ ] Add `VehicleWorldVisualTemplate` and deterministic material/overlay
+  selection keyed by stage ID, layout fingerprint, and world tile coordinate.
+- [ ] Add
+  `pixel-art-production/runtime/shaders/world_material_wang.gdshader`; retain
+  the existing geometry-clipped polygon/chunk budget while replacing its
+  single repeat sampler with world-coordinate Wang atlas selection.
+- [ ] Mirror the shader's fixed uint edge/variant hash in the template
+  validator and verify shared-edge equality over negative and positive
+  coordinates.
+- [ ] Add atlas-batched topology edge, wall, rail, structure, and sparse prop
+  overlays after the base material pass.
 - [ ] Publish approved UI PNGs to `art/ui/production/chrome/` and replace
   migrated Theme `StyleBoxFlat` resources with `StyleBoxTexture`.
 - [ ] Add `VehicleUISurfaceFactory`; route
@@ -368,6 +501,8 @@ Batch acceptance:
 
 - safe-arrival, maximum-pressure, and pause at `1280×720` visibly match the
   approved assemblies;
+- extending the test footprint in every direction produces byte-stable tile
+  decisions with no edge mismatch or visible short-period grid;
 - collision/minimap overlay remains identical before and after visual
   replacement;
 - no migrated surface uses a decorative code-shape fallback.
@@ -381,9 +516,12 @@ Batch guard:
 
 Goal: make every in-game object share the approved visual grammar.
 
-- [ ] Publish deck/void/wall connected families and replace the three broad
-  repeat-only materials with base fill plus topology-aware overlays.
-- [ ] Add deterministic static props only at legal visual sockets.
+- [ ] Publish approved deck/void/wall Wang material atlases and replace the
+  three broad repeat-only materials with synthesized base fill plus
+  topology-aware overlays.
+- [ ] Place structural overlays with recipe rules, wear/repair stamps with
+  layout-bounded Poisson-disk minimum distance, and static props only at legal
+  visual sockets.
 - [ ] Convert arc, bulkhead, gate, repair, overdrive, and crate bodies to raster
   fixtures.
 - [ ] Retain exact arc danger rectangle, gate radius/progress, support
@@ -454,8 +592,10 @@ Goal: make the approved image/template path the only production presentation.
 ### Asset inner loop
 
 ```powershell
+.\pixel-art-production\tools\design\build_world_material_catalog.ps1 -Recipe <approved-material-recipe>
 .\pixel-art-production\tools\design\validate_pixel_asset_manifest.ps1
 .\pixel-art-production\tools\design\invoke_pixel_asset_build.ps1
+.\pixel-art-production\tools\validation\validate_world_material_catalog.ps1 -Recipe <approved-material-recipe>
 .\pixel-art-production\tools\validation\validate_pixel_asset_palettes.ps1
 .\pixel-art-production\tools\validation\validate_pixel_asset_seams.ps1
 .\pixel-art-production\tools\validation\validate_pixel_asset_catalog.ps1
@@ -476,9 +616,30 @@ Goal: make the approved image/template path the only production presentation.
 .\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_guidebook.gd
 ```
 
-The two new validator commands become runnable gates only after their named
-Phase 1/2 tasks create the files. Existing commands remain available from
-Phase 0.
+The material build/validator and the two UI/runtime validator commands become
+runnable gates only after their named Phase 1/2 tasks create the files.
+Existing commands remain available from Phase 0.
+
+### Material proof requirements
+
+- exact opaque palette count equals recipe `n`; every output pixel belongs to
+  the declared palette and no base image has alpha;
+- two clean invocations with the same generator version, recipe, exemplar, and
+  seed produce byte-identical PNG and canonical metadata hashes;
+- all 16 signatures exist, every allowed neighbor pair has byte-equal shared
+  edge strips, and no base pixel crosses the supplied geometry mask;
+- the `3×3` and `20×12` assemblies, all adjacency/junction cases, seam
+  difference maps, and a large positive/negative-coordinate expansion pass;
+- the output's `3×3` local-pattern vocabulary contains no pattern forbidden by
+  the approved exemplar/recipe; contradictions or missing signatures fail;
+- no unintended sub-period below half the master proof width has normalized
+  luminance autocorrelation above `0.35`;
+- overlay coverage, minimum distance, and exclusion masks match the recipe;
+  the first candidate defaults to at most `2%` wear-overlay coverage and
+  `96 px` minimum spacing;
+- canonical actor, pickup, ordinary danger, boss danger, support, and telegraph
+  composites pass the recorded normal/grayscale contrast baseline, then pass
+  human first-clear review under movement and maximum pressure.
 
 ### Final gates
 
@@ -502,7 +663,12 @@ changes.
 | --- | --- | --- |
 | ImageGen adds text or changes layout | reject that source and regenerate the same component using empty-content constraints | never clean generated text into production |
 | Raw asset drifts from palette/grid | one stricter edit pass, then deterministic palette/grid cleanup | reject if the silhouette or frame grammar still changes |
-| Tile seam/topology fails | correct only the source family edge cells and rebuild the proof | never alter gameplay geometry |
+| Synthesized material uses a non-recipe color or alpha | reject output and fix recipe/exemplar quantization before rerun | never normalize the bad output during publication |
+| ConvChain/WFC contradiction or missing Wang signature | retry the same recipe with the predetermined seed sequence, maximum eight attempts | fail the family after attempt eight; no procedural publisher fallback |
+| Local pattern distribution or repeat proof fails | revise exemplar crop, recipe weights, or approved edge profiles and rebuild the same base-only proof | do not hide a failed base with overlays |
+| Material edge seam fails | correct the approved edge profile or synthesis constraint and rebuild every affected signature | never patch individual runtime tiles or alter gameplay geometry |
+| Topology overlay fails | correct only the transparent edge/rail source family and rebuild its adjacency proof | never alter the approved base material or gameplay geometry |
+| Overlay density/spacing/exclusion fails | change the recipe or approved stamp set and regenerate the layout-bounded sockets | never place a decorative mark manually into runtime output |
 | 9-slice corner/edge distorts | rebuild the source once with simpler repeatable edges | if it still fails, use exact standard/compact fixed backplates for that surface |
 | Content crosses safe inset | correct manifest/theme content margins or screen layout | do not shrink Korean/English text below current readable sizes |
 | Required raster asset is missing | fail validation/publication with its asset/state ID | no `StyleBoxFlat` or draw-shape production fallback |
@@ -527,6 +693,15 @@ changes.
 - The selected concept contains soft shading and detail that must be simplified
   at native pixel size; review boards prevent raw concept art from being treated
   as production art.
+- ConvChain-style synthesis can match pattern frequency while leaving local
+  defects, and overlapping WFC can contradict. The two passes therefore have
+  separate acceptance roles, fixed retry limits, and no fallback publication.
+- A valid Wang catalog can still look mechanically repetitive. Large expansion,
+  autocorrelation, motion, and maximum-pressure reviews are required in
+  addition to exact edge matching.
+- Upstream WFC sample images and tiles are not licensed by the software's MIT
+  license. Only wholly owned exemplars and approved project references enter
+  the recipe; upstream code/assets are not copied.
 - A visually rich wall or prop can imply false collision; collision-overlay and
   first-clear reviews are mandatory.
 - Korean line length can exceed a chrome safe area; safe-inset proofs and the
@@ -536,17 +711,49 @@ changes.
 - Adding a general-purpose factory could create a catch-all; the surface factory
   is limited to shell type, theme variation, safe inset, and minimum size.
 
+## Algorithm Sources and Adoption Boundary
+
+- [WaveFunctionCollapse](https://github.com/mxgmn/WaveFunctionCollapse) is the
+  primary reference for overlapping local-pattern constraints, preconstrained
+  synthesis, and the documented ConvChain-then-WFC division of responsibility.
+  Its [MIT license](https://raw.githubusercontent.com/mxgmn/WaveFunctionCollapse/master/LICENSE)
+  explicitly excludes the provided samples and tiles.
+- [ConvChain](https://github.com/mxgmn/ConvChain) is the primary reference for
+  Markov-chain pattern-distribution synthesis. Its
+  [license note](https://raw.githubusercontent.com/mxgmn/ConvChain/master/LICENSE.md)
+  also excludes provided image samples.
+- [Godot FastNoiseLite](https://docs.godotengine.org/en/4.7/classes/class_fastnoiselite.html)
+  and [Godot Noise](https://docs.godotengine.org/en/4.7/classes/class_noise.html)
+  are the built-in low-frequency weighting/seam-proof primitives; they are not
+  final texture generators.
+- [Godot TileSet terrains](https://docs.godotengine.org/en/4.7/tutorials/2d/using_tilesets.html)
+  and [Tiled terrain sets](https://doc.mapeditor.org/en/stable/manual/terrain/)
+  are the primary references for edge/corner signatures, 16-case two-terrain
+  sets, compatible variants, and probability-weighted decoration.
+- [Bridson's Poisson-disk paper](https://www.cs.ubc.ca/~rbridson/docs/bridson-siggraph07-poissondisk.pdf)
+  is the placement reference for layout-bounded minimum-distance overlay
+  sockets.
+
+These sources guide a project-owned Godot/GDScript implementation. No upstream
+binary, package, sample, or tileset is copied into production by this plan.
+
 ## Assumptions
 
 - The selected `call_fNU…png` image is the final visual direction.
 - Existing gameplay rules, current menu actions, and Korean/English copy remain
   unchanged.
+- The first candidate material recipes use `n=4` for deck and wall bases. `n`
+  remains a manifest field, so later approved material families may use another
+  exact count without changing the generator.
+- The material synthesizer and proof builder run offline. Runtime work is
+  limited to deterministic compatible-atlas selection and overlay rendering.
 - The prior explicit request to keep the current screenshot layout, followed by
   selection of the bottom-center composition, authorizes the action-rail
   placement exception recorded in Scope.
-- No material implementation choice remains unresolved. Any request to change
-  gameplay topology, any other UI information architecture, dependencies, or
-  copy is a separate change-control decision.
+- No material implementation choice remains unresolved. Any request to copy an
+  external generator, add a production dependency, change gameplay topology,
+  change any other UI information architecture, or change copy is a separate
+  change-control decision.
 
 ## Open Questions
 
@@ -562,13 +769,19 @@ unresolved layout choice.
   implementation target for world material and UI surface treatment.
 - Existing semantic colors, gameplay truth, localization, accessibility, and
   retained render ownership are preserved.
-- Image assets own appearance; templates own fit; live state owns meaning.
+- The current two-color floor and three-color wall prove that a small palette
+  without spatial synthesis is insufficient; exemplar statistics, compatible
+  expansion, and layered overlays are now separate requirements.
+- Approved exemplars and recipes own base material appearance; raster assets own
+  overlays and chrome; templates own fit; live state owns meaning.
 
 ## Progress
 
 - [x] Current screenshots, selected image, active specs, render owners, UI
   owners, pipeline, inventory, validators, and stale plans inspected.
 - [x] World asset/live-overlay and UI chrome/live-Control architectures locked.
+- [x] Limited-palette synthesis, Wang expansion, overlay separation, and
+  deterministic validation strategy locked.
 - [ ] Phase 0 complete.
 - [ ] Phase 1 approved.
 - [ ] Phase 2 live vertical slice accepted.
@@ -577,17 +790,27 @@ unresolved layout choice.
 
 ## Next Steps
 
-1. Execute Phase 0 and make the selected image plus raster/live boundary the
-   active spec and inventory contract.
-2. Execute Phase 1 and present the four named assembled images for the exact
-   approval gate.
-3. After approval, implement the combined live vertical slice before any broad
-   world or UI rollout.
+1. Execute Phase 0 and make the selected image, material-synthesis contract,
+   overlay boundary, and raster/live UI boundary the active spec and inventory
+   contract.
+2. Execute Phase 1A only: present the four-color floor exemplar, synthesized
+   Wang atlas, large expansion/seam proofs, and base-only gameplay composite.
+3. After floor approval, execute Phase 1B wall/topology proofs, then Phase 1C
+   overlays. Do not generate broad UI chrome while the world material grammar
+   is still rejected.
+4. Execute Phase 1D and present the four assembled in-game/UI images.
+5. After all corresponding approvals, implement the combined live vertical
+   slice before any broad world or UI rollout.
 
 ## Completion Criteria
 
 - [ ] The live world, terrain, actors, HUD, and modal surfaces visibly share the
   approved space-hangar grammar.
+- [ ] Floor and wall bases use exact recipe palettes, contain only approved
+  local patterns, expand through compatible Wang signatures, and pass
+  deterministic seam/repeat/distribution proofs without overlay camouflage.
+- [ ] Topology, structure, wear, prop/fixture, and live-state overlays remain
+  independently inspectable and obey their placement/exclusion contracts.
 - [ ] Every migrated visual shell is backed by an approved image source,
   checksum, and truthful production method.
 - [ ] No migrated surface silently falls back to script-authored decorative
