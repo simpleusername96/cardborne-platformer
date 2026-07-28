@@ -22,6 +22,17 @@ func _initialize() -> void:
 		for squad in packets[1]["squads"]:
 			surge_units += Array(squad).size()
 		_expect(surge_units >= 24, "%s first surge carries at least twenty-four enemies" % stage_id)
+		if stage_id == &"stage_1":
+			_expect(surge_units == 27, "Stage 1 first surge keeps the authored 27 units")
+			_expect(
+				StringName(packets[1].get("arrival_mode", &"")) == &"horde_front",
+				"Stage 1 first surge explicitly selects horde-front allocation"
+			)
+		else:
+			_expect(
+				not packets[1].has("arrival_mode"),
+				"%s first surge remains on the distributed default" % stage_id
+			)
 		var runtime := Runtime.new()
 		runtime.configure(stage_id, Catalog.packets(stage_id), RunDifficulty.HARD)
 		var before := runtime.tick(5.0, 0)
@@ -30,6 +41,11 @@ func _initialize() -> void:
 		runtime.tick(0.8, 0)
 		var first := runtime.tick(0.1, 0)
 		_expect(first["spawns"].size() == 1 and StringName(first["spawns"][0]["role"]) == &"scrap_drone", "%s spawns one scout at six seconds" % stage_id)
+		if stage_id == &"stage_1":
+			var first_front := runtime.tick(2.1, 0)
+			var second_front := runtime.tick(0.9, 0)
+			_expect(first_front["cues"].size() == 1, "Stage 1 cues the first horde front once")
+			_expect(second_front["cues"].size() == 1, "Stage 1 cues the second horde front once")
 		runtime.stop_spawning()
 		_expect(not runtime.spawning_enabled() and runtime.debug_snapshot()["queued_spawns"] == 0, "%s quota can stop future arrivals" % stage_id)
 	_expect(Director.active_cap_for(1) == 62, "Hard first surge sustains the thirty-percent density increase")

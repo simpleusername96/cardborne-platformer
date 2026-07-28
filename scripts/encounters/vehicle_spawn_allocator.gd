@@ -1,7 +1,8 @@
 class_name VehicleSpawnAllocator
 extends RefCounted
 
-## Deterministically assigns one validated arrival anchor to each authored squad.
+## Deterministically assigns validated arrival anchors while preserving authored
+## squads and role totals. Unmarked packets remain spatially distributed.
 
 const EnemyArchetypes = preload("res://scripts/enemies/vehicle_enemy_archetypes.gd")
 
@@ -10,6 +11,10 @@ const MAX_PLAYER_DISTANCE := 2400.0
 const OFFSCREEN_MARGIN := 220.0
 const RECENT_ANCHOR_LIMIT := 16
 const TARGET_DISTANCES := [1200.0, 1650.0, 2100.0]
+const ARRIVAL_DISTRIBUTED := &"distributed"
+const ARRIVAL_HORDE_FRONT := &"horde_front"
+const HORDE_FRONT_SQUADS := 4
+const HORDE_FRONT_MIN_SEPARATION := PI * 0.5
 const PURSUIT_ROLES: Array[StringName] = [
 	&"scrap_drone", &"chaser", &"rammer", &"spark_minelet",
 	&"controller", &"shield_escort", &"artillery_spotter",
@@ -31,6 +36,19 @@ func configure(seed: int, anchors: Array[Vector2]) -> void:
 func allocate(packet: Dictionary, player_position: Vector2, visible_world: Rect2) -> Array[Dictionary]:
 	var squads: Array = packet["squads"]
 	var reordered := _reorder_roles(squads, String(packet["id"]))
+	var arrival_mode := StringName(packet.get("arrival_mode", ARRIVAL_DISTRIBUTED))
+	if arrival_mode == ARRIVAL_HORDE_FRONT:
+		return _allocate_horde_fronts(packet, squads, reordered, player_position, visible_world)
+	return _allocate_distributed(packet, squads, reordered, player_position, visible_world)
+
+
+func _allocate_distributed(
+	packet: Dictionary,
+	squads: Array,
+	reordered: Array[Array],
+	player_position: Vector2,
+	visible_world: Rect2
+) -> Array[Dictionary]:
 	var beat := int(packet["beat"])
 	var group_size := 2 if beat <= 1 else 3
 	var maximum_arc := deg_to_rad(135.0 if beat <= 1 else 180.0)
@@ -59,6 +77,131 @@ func allocate(packet: Dictionary, player_position: Vector2, visible_world: Rect2
 			"sector":_sector_for(anchor - player_position),
 		})
 	return result
+
+
+func _allocate_horde_fronts(
+	packet: Dictionary,
+	squads: Array,
+	reordered: Array[Array],
+	player_position: Vector2,
+	visible_world: Rect2
+) -> Array[Dictionary]:
+	var used_front_anchors: Array[Vector2] = []
+	var result: Array[Dictionary] = []
+	for squad_index in squads.size():
+		var front_index := floori(float(squad_index) / float(HORDE_FRONT_SQUADS))
+		var first_squad_index := front_index * HORDE_FRONT_SQUADS
+		var anchor := Vector2.ZERO
+		if first_squad_index < result.size():
+			anchor = Vector2(result[first_squad_index]["anchor"])
+		else:
+			anchor = _choose_horde_front_anchor(
+				player_position,
+				visible_world,
+				used_front_anchors,
+				String(packet["id"]),
+				front_index
+			)
+			used_front_anchors.append(anchor)
+			_remember(anchor)
+		result.append({
+			"anchor":anchor,
+			"roles":reordered[squad_index],
+			"group_index":front_index,
+			"player_distance":anchor.distance_to(player_position),
+			"outside_visible_margin":not visible_world.grow(OFFSCREEN_MARGIN).has_point(anchor),
+			"sector":_sector_for(anchor - player_position),
+		})
+	return result
+
+
+func _choose_horde_front_anchor(
+	player_position: Vector2,
+	visible_world: Rect2,
+	used_front_anchors: Array[Vector2],
+	packet_id: String,
+	front_index: int
+) -> Vector2:
+	# Spatial fairness tiers remain stronger than the preferred opposite front.
+	var tiers: Array[Dictionary] = [
+		{"ring":true, "offscreen":true, "avoid_recent":true},
+		{"ring":true, "offscreen":true, "avoid_recent":false},
+		{"ring":false, "offscreen":true, "avoid_recent":true},
+		{"ring":false, "offscreen":true, "avoid_recent":false},
+	]
+	for tier in tiers:
+		for require_separation in [true, false]:
+			var candidates := _horde_front_candidates(
+				player_position,
+				visible_world,
+				used_front_anchors,
+				bool(tier["ring"]),
+				bool(tier["offscreen"]),
+				bool(tier["avoid_recent"]),
+				require_separation
+			)
+			if candidates.is_empty():
+				continue
+			candidates.sort_custom(
+				func(a: Vector2, b: Vector2) -> bool:
+					return _anchor_score(
+						a, player_position, packet_id, front_index * HORDE_FRONT_SQUADS
+					) < _anchor_score(
+						b, player_position, packet_id, front_index * HORDE_FRONT_SQUADS
+					)
+			)
+			return candidates[0]
+	for require_separation in [true, false]:
+		var fallback := _horde_front_candidates(
+			player_position,
+			visible_world,
+			used_front_anchors,
+			false,
+			false,
+			false,
+			require_separation
+		)
+		if fallback.is_empty():
+			continue
+		fallback.sort_custom(
+			func(a: Vector2, b: Vector2) -> bool:
+				return _anchor_score(
+					a, player_position, packet_id, front_index * HORDE_FRONT_SQUADS
+				) < _anchor_score(
+					b, player_position, packet_id, front_index * HORDE_FRONT_SQUADS
+				)
+		)
+		return fallback[0]
+	return _anchors[0] if not _anchors.is_empty() else player_position
+
+
+func _horde_front_candidates(
+	player_position: Vector2,
+	visible_world: Rect2,
+	used_front_anchors: Array[Vector2],
+	require_ring: bool,
+	require_offscreen: bool,
+	avoid_recent: bool,
+	require_separation: bool
+) -> Array[Vector2]:
+	var candidates: Array[Vector2] = []
+	for anchor in _anchors:
+		if anchor in used_front_anchors and used_front_anchors.size() < _anchors.size():
+			continue
+		var distance := anchor.distance_to(player_position)
+		if require_ring and (distance < MIN_PLAYER_DISTANCE or distance > MAX_PLAYER_DISTANCE):
+			continue
+		if require_offscreen and visible_world.grow(OFFSCREEN_MARGIN).has_point(anchor):
+			continue
+		if avoid_recent and anchor in _recent_anchors:
+			continue
+		if require_separation and not used_front_anchors.is_empty():
+			var first_direction := (used_front_anchors[0] - player_position).angle()
+			var candidate_direction := (anchor - player_position).angle()
+			if absf(angle_difference(candidate_direction, first_direction)) < HORDE_FRONT_MIN_SEPARATION:
+				continue
+		candidates.append(anchor)
+	return candidates
 
 
 func _choose_anchor(

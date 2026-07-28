@@ -218,13 +218,22 @@ second time; no individual stat is described as exactly 15% lower.
    6.0 seconds.
 3. Later arrivals are eight-squad surges. Each squad contains three to five
    enemies, so the first surge schedules at least 24 enemies and later surges
-   grow toward 40. Every squad receives its own deterministic valid anchor.
-   Arrivals prefer seeded distance lanes at 1200, 1650, or 2100 pixels from the
-   player within a valid 900–2400-pixel ring and remain 220 pixels beyond the
-   visible world. They avoid the sixteen most recent anchors and use groups
-   of at most two squads in beats 0–1 or three squads later. Group gaps are
-   0.90 seconds early and 0.65 seconds later. Existing role totals are preserved
-   while direct-projectile pressure is distributed between squads.
+   grow toward 40. Stage 1's first eight-squad surge keeps its authored 27
+   enemies but presents them as two horde fronts: squads 0–3 share one valid
+   anchor for a 12-enemy front and squads 4–7 share another for a 15-enemy
+   front. Each front emits one arrival cue. The second front prefers a direction
+   at least 90 degrees from the first, but a distinct offscreen anchor takes
+   priority when field edges prevent that separation.
+   Horde-front anchors prefer the valid 900–2400-pixel player ring and remain
+   220 pixels beyond the visible world. Ring/offscreen fairness takes precedence
+   over avoiding a recent anchor, and only the two selected front anchors enter
+   recent-anchor memory. Every other surge remains distributed: every squad
+   receives its own deterministic valid anchor, prefers seeded distance lanes at
+   1200, 1650, or 2100 pixels in the same valid ring, remains beyond the visible
+   margin, and avoids the sixteen most recent anchors. Distributed arrivals use
+   groups of at most two squads in beats 0–1 or three squads later. Group gaps
+   are 0.90 seconds early and 0.65 seconds later. Existing role totals are
+   preserved while direct-projectile pressure is distributed between squads.
    Projectile-firing archetypes are capped at 50% of both the authored mobile
    population and the four stationary threats in every stage. A stage already
    below the cap is not inflated to reach it; area, beam, charge, and support

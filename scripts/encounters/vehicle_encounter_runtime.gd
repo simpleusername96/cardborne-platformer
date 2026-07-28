@@ -13,6 +13,9 @@ const ARRIVAL_GRACE := 6.0
 const CUE_LEAD := 0.9
 const METRIC_SAMPLE_INTERVAL := 0.10
 const MAX_ACTIVE_COUNT_SAMPLES := 4096
+const HORDE_SPAWN_FAN_RADIUS := 16.0
+# Non-commensurate with 3–5 unit rings, so squads fan without biasing a centroid.
+const HORDE_SQUAD_PHASE_STEP := PI * 11.0 / 180.0
 
 var stage_id: StringName = &"stage_1"
 var difficulty: StringName = RunDifficulty.DEFAULT
@@ -114,7 +117,11 @@ func tick(
 		var cue_time := _effective_time(cue)
 		if _first_cue_time < 0.0:
 			_first_cue_time = cue_time
-		_timeline.append({"kind":&"cue", "id":cue["squad_id"], "time":cue_time})
+		_timeline.append({
+			"kind":&"cue",
+			"id":cue.get("cue_id", cue["squad_id"]),
+			"time":cue_time,
+		})
 
 	var spawns: Array[Dictionary] = []
 	if _spawning_enabled and not _spawn_queue.is_empty() and _effective_time(_spawn_queue[0]) <= elapsed + 0.0001:
@@ -236,15 +243,18 @@ func _schedule_packet(packet: Dictionary, player_position: Vector2, visible_worl
 	var beat := int(packet["beat"])
 	var squads: Array = packet["squads"]
 	var allocations := _spawn_allocator.allocate(packet, player_position, visible_world)
+	var arrival_mode := StringName(packet.get("arrival_mode", SpawnAllocator.ARRIVAL_DISTRIBUTED))
 	var unit_spacing := float(packet.get("unit_spacing", 0.16))
 	var gap := 0.90 if beat <= 1 else 0.65
 	var cue_lead := float(packet.get("cue_lead", CUE_LEAD))
+	var queued_cue_groups := {}
 	for squad_index in squads.size():
 		var allocation: Dictionary = allocations[squad_index]
 		var squad: Array = allocation["roles"]
 		var anchor := Vector2(allocation["anchor"])
 		var squad_id := "%s_s%02d" % [packet_id, squad_index + 1]
-		var cursor := elapsed + cue_lead + float(allocation["group_index"]) * gap
+		var group_index := int(allocation["group_index"])
+		var cursor := elapsed + cue_lead + float(group_index) * gap
 		var cue := {
 			"time":cursor - cue_lead,
 			"delay_base":_schedule_delay_total,
@@ -254,19 +264,40 @@ func _schedule_packet(packet: Dictionary, player_position: Vector2, visible_worl
 			"player_distance":allocation["player_distance"],
 			"outside_visible_margin":allocation["outside_visible_margin"],
 			"sector":allocation["sector"],
-			"group_index":allocation["group_index"],
+			"group_index":group_index,
+			"arrival_mode":arrival_mode,
 			"roles":squad.duplicate(),
 		}
-		_cue_queue.append(cue)
 		_allocation_debug.append(cue.duplicate(true))
+		if arrival_mode == SpawnAllocator.ARRIVAL_HORDE_FRONT:
+			if not queued_cue_groups.has(group_index):
+				queued_cue_groups[group_index] = true
+				cue["cue_id"] = "%s_f%02d" % [packet_id, group_index + 1]
+				cue["front_index"] = group_index
+				cue["roles"] = _roles_for_group(allocations, group_index)
+				_cue_queue.append(cue)
+		else:
+			_cue_queue.append(cue)
 		for unit_index in squad.size():
 			var role := StringName(squad[unit_index])
-			var formation_angle := TAU * float(unit_index) / float(maxi(1, squad.size()))
+			var formation_phase := 0.0
+			if arrival_mode == SpawnAllocator.ARRIVAL_HORDE_FRONT:
+				var front_squad_index := squad_index % SpawnAllocator.HORDE_FRONT_SQUADS
+				formation_phase = float(front_squad_index) * HORDE_SQUAD_PHASE_STEP
+			var formation_angle := (
+				formation_phase
+				+ TAU * float(unit_index) / float(maxi(1, squad.size()))
+			)
 			var formation_offset := Vector2.RIGHT.rotated(formation_angle) * (58.0 if squad.size() > 1 else 0.0)
+			var spawn_offset := (
+				Vector2.RIGHT.rotated(formation_angle) * HORDE_SPAWN_FAN_RADIUS
+				if arrival_mode == SpawnAllocator.ARRIVAL_HORDE_FRONT
+				else Vector2.ZERO
+			)
 			var spec := {
 				"id":"%s_u%02d" % [squad_id, unit_index + 1],
 				"role":role,
-				"pos":anchor,
+				"pos":anchor + spawn_offset,
 				"zone":String(packet.get("zone", "")),
 				"group_id":squad_id,
 				"squad_id":squad_id,
@@ -283,3 +314,13 @@ func _schedule_packet(packet: Dictionary, player_position: Vector2, visible_worl
 			_spawn_queue.append({"time":cursor + float(unit_index) * unit_spacing, "delay_base":_schedule_delay_total, "spec":spec})
 	_cue_queue.sort_custom(func(a:Dictionary,b:Dictionary)->bool: return _scheduled_key(a) < _scheduled_key(b))
 	_spawn_queue.sort_custom(func(a:Dictionary,b:Dictionary)->bool: return _scheduled_key(a) < _scheduled_key(b))
+
+
+func _roles_for_group(allocations: Array[Dictionary], group_index: int) -> Array[StringName]:
+	var result: Array[StringName] = []
+	for allocation in allocations:
+		if int(allocation["group_index"]) != group_index:
+			continue
+		for role in allocation["roles"]:
+			result.append(StringName(role))
+	return result

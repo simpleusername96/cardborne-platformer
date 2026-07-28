@@ -27,6 +27,7 @@ func _initialize() -> void:
 		var replay_allocator := Allocator.new()
 		replay_allocator.configure(tactical.encounter_seed, tactical.ordinary_spawn_anchors)
 		var replay := replay_allocator.allocate(packet, Catalog.player_start(), VISIBLE_WORLD)
+		var horde_front := StringName(packet.get("arrival_mode", Allocator.ARRIVAL_DISTRIBUTED)) == Allocator.ARRIVAL_HORDE_FRONT
 		_expect(var_to_str(allocations) == var_to_str(replay), "%s allocation replays from the same seed" % stage_id)
 		_expect(allocations.size() == 8, "%s allocates all eight surge squads" % stage_id)
 		var unique_anchors := {}
@@ -52,19 +53,42 @@ func _initialize() -> void:
 			)
 			for role in roles:
 				allocated_roles.append(StringName(role))
-		_expect(unique_anchors.size() == 8, "%s uses eight distinct anchors when the pool permits" % stage_id)
 		var two_wave_anchors := unique_anchors.duplicate()
 		for allocation in second_allocations:
 			two_wave_anchors[Vector2(allocation["anchor"])] = true
-		_expect(
-			two_wave_anchors.size() >= 14,
-			"%s distributes consecutive arrivals across the enlarged field" % stage_id
-		)
+		if horde_front:
+			_expect(stage_id == &"stage_1", "only Stage 1 opts into horde-front allocation")
+			_expect(unique_anchors.size() == 2, "Stage 1 first surge uses exactly two front anchors")
+			_expect(two_wave_anchors.size() == 4, "Stage 1 remembers and rotates both front anchors")
+			_validate_horde_fronts(allocations, stage_id)
+		else:
+			_expect(unique_anchors.size() == 8, "%s uses eight distinct anchors when the pool permits" % stage_id)
+			_expect(
+				two_wave_anchors.size() >= 14,
+				"%s distributes consecutive arrivals across the enlarged field" % stage_id
+			)
+			_validate_group_arcs(allocations, Catalog.player_start(), stage_id)
 		original_roles.sort()
 		allocated_roles.sort()
 		_expect(original_roles == allocated_roles, "%s preserves the authored role multiset" % stage_id)
-		_validate_group_arcs(allocations, Catalog.player_start(), stage_id)
 	_finish()
+
+
+func _validate_horde_fronts(allocations: Array[Dictionary], stage_id: StringName) -> void:
+	var fronts := {}
+	for allocation in allocations:
+		var front_index := int(allocation["group_index"])
+		if not fronts.has(front_index):
+			fronts[front_index] = []
+		fronts[front_index].append(allocation)
+	_expect(fronts.size() == 2, "%s horde surge has exactly two fronts" % stage_id)
+	for front in fronts.values():
+		var entries: Array = front
+		_expect(entries.size() == 4, "%s assigns four squads to each front" % stage_id)
+		var anchors := {}
+		for allocation in entries:
+			anchors[Vector2(allocation["anchor"])] = true
+		_expect(anchors.size() == 1, "%s front squads share one arrival anchor" % stage_id)
 
 
 func _validate_group_arcs(

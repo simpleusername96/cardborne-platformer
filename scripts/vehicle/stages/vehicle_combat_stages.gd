@@ -125,7 +125,7 @@ static func _packets(stage_index: int, field_definition: Dictionary) -> Array[Di
 			squads.append(squad)
 			authored += squad_size
 		var at_time := 5.1 if packet_index == 0 else 8.0 + float(packet_index - 1) * 2.4
-		result.append({
+		var packet := {
 			"id":"stage_%d_packet_%02d" % [stage_index + 1, packet_index + 1],
 			"beat":0 if packet_index == 0 else mini(4, 1 + floori(float(packet_index - 1) / 2.0)),
 			"trigger":{"kind":&"time", "at":at_time},
@@ -134,6 +134,9 @@ static func _packets(stage_index: int, field_definition: Dictionary) -> Array[Di
 			"cue_lead":0.9,
 			"zone":"field",
 			"leash":Rect2(field_definition["world_rect"]),
-		})
+		}
+		if stage_index == 0 and packet_index == 1:
+			packet["arrival_mode"] = &"horde_front"
+		result.append(packet)
 		packet_index += 1
 	return result
