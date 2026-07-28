@@ -3,7 +3,7 @@
 ## Project
 - Cardborne is a Godot 4.7 GDScript top-down vehicle action shooter.
 - The current product is the connected five-stage run defined in `docs/product/vehicle_game_spec.md`.
-- Preserve manual aim, held primary fire, the one-second opening shot, dash, passive seekers, EMP, authored encounters, map pickups, card upgrades, optional field bosses, and stage bosses.
+- Preserve manual aim, held primary fire, the one-second opening shot, dash, passive seekers, EMP, authored encounters, map pickups, card upgrades, and quota-gated stage bosses.
 - Korean is the default language; Korean and English must remain complete on every user-facing surface.
 - Preserve the flat-color Sunken Ceramic Fresco visual system in `docs/design/UI_VISUAL_SYSTEM.md`.
 - Prioritize first-clear readability, fair pressure, responsive control, target priority, and reliable performance before adding content breadth.

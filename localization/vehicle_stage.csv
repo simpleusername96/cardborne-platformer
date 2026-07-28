@@ -212,7 +212,6 @@ NOTIFY_COLOSSUS_PYLONS,"콜로서스 파일런 가동 · 우선 목표를 파괴
 NOTIFY_CROWN_RELAYS,"왕관 실드 중계기 가동 · 반사된 탄환으로 파괴하세요.","Crown shield relays online · Break them with reflected rounds."
 NOTIFY_EXPERIENCE_RECALL,"경험치 회수 · 모든 원석이 기체로 이동합니다.","Experience recall · All shards are moving to the skiff."
 NOTIFY_LEVEL_UP,"레벨 상승 · 새 회로를 선택하세요.","Level up · Choose a new circuit."
-NOTIFY_FIELD_BOSS_SHARD,"정예 원석 노출 · 회수하면 선택 보상이 열립니다.","Elite shard exposed · Collect it to open the optional reward."
 NOTIFY_BOSS_SHARD,"보스 원석 노출 · 회수하면 스테이지 보상이 열립니다.","Boss shard exposed · Collect it to open the stage reward."
 UPGRADE_FAMILY_PRIMARY,"주무기","Primary"
 UPGRADE_FAMILY_PASSIVE,"추적탄","Seeker"
