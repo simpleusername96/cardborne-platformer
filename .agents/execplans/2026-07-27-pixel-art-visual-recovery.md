@@ -1,10 +1,11 @@
 ---
 type: plan
-status: active
+status: superseded
 owner: BK
 created: 2026-07-27
 last_reviewed: 2026-07-28
 scope: Recover Cardborne's pixel-art presentation from procedural placeholder publication to reviewed grid-native ImageGen-assisted assets
+superseded_by: ./2026-07-28-space-hangar-world-ui-asset-integration.md
 related:
   - ../../AGENTS.md
   - ../AGENTS.md
@@ -16,6 +17,10 @@ related:
 ---
 
 # Pixel-Art Visual Recovery — Execution Plan
+
+> Superseded on 2026-07-28 by the user-selected space-hangar world/UI
+> asset-integration plan. This file preserves the completed recovery-pipeline
+> history but is no longer an implementation target.
 
 Recover the live game from the completed-but-rejected procedural pixel
 migration. The work keeps the existing Godot geometry, retained batching,

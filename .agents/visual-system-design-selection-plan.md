@@ -1,14 +1,16 @@
 ---
 type: plan
-status: active
+status: done
 owner: BK
 created: 2026-07-28
+last_reviewed: 2026-07-28
 scope: Select and approve one coherent Cardborne map, terrain, panel, and button visual direction before implementation
 related:
   - ../AGENTS.md
   - ./AGENTS.md
   - ./PLANS.md
   - ./execplans/2026-07-27-pixel-art-visual-recovery.md
+  - ./execplans/2026-07-28-space-hangar-world-ui-asset-integration.md
   - ../docs/product/vehicle_game_spec.md
   - ../docs/design/UI_VISUAL_SYSTEM.md
   - ../pixel-art-production/README.md
@@ -16,6 +18,28 @@ related:
 ---
 
 # Cardborne 맵·지형·UI 디자인 방향 결정 계획
+
+## Final Decision
+
+BK는 초기 Quiet Fresco Inlay, Tidal Ceramic Rim, Structural Ceramic Relief
+세 방향과 이후 혼합안들을 거절하고, 다음 우주 격납고 시안을 최종 시각
+방향으로 선택했다.
+
+`C:\Users\BK\.codex\generated_images\019fa732-bd99-7cb3-8c2b-bacadc225fae\call_fNU2GdTyzih0wzwInUvEEC1y.png`
+
+선택 결과는 다음 두 계약을 포함한다.
+
+- 현재 실제 인게임·pause·upgrade·garage의 기능과 정보 구조를 레이아웃
+  기준으로 유지한다.
+- map, terrain, panel, card, button의 보이는 외형은 ImageGen 기반 raster
+  asset으로 제작하고, template/script는 safe inset, 9-slice, state mapping,
+  deterministic composition만 담당한다. 한국어/영어, 수치, 입력, focus,
+  selection truth, cooldown, exact gameplay range는 live overlay로 유지한다.
+
+구현 대상과 검증 계약은
+`.agents/execplans/2026-07-28-space-hangar-world-ui-asset-integration.md`로
+승격되었다. 아래 내용은 최종 선택에 이르기 전의 비교 기록이며 현재
+구현 지시가 아니다.
 
 현재 런타임의 정보 구조, 입력 흐름, 충돌·내비게이션 소유권은 유지하면서
 맵, 지형지물, HUD 장식, 패널, 카드, 버튼을 하나의 Sunken Ceramic Fresco
@@ -95,11 +119,12 @@ Destructive or irreversible actions:
 
 - 없음. 시안은 증거 파일이며 기존 런타임 에셋을 덮어쓰지 않는다.
 
-User approval required before:
+Resolved approval:
 
-- 세 방향 중 하나를 구현 대상으로 승격;
-- 승인된 방향이 현재 `UI_VISUAL_SYSTEM.md`의 금지 항목을 의도적으로
-  바꾸는 경우 해당 spec 수정.
+- BK가 `call_fNU…png`를 구현 방향으로 선택했다.
+- ImageGen 기반 raster chrome과 live overlay의 결합을 승인했다.
+- 실제 runtime publication은 새 실행 계획에 명시된 인게임, pause,
+  upgrade, garage 합성 이미지 네 장의 검토를 통과한 뒤 시작한다.
 
 ## Shared Locked Design Contract
 
@@ -296,8 +321,8 @@ Failure handling:
 ### Phase 3 — 동일 기준 비교와 사용자 선택
 
 - [x] 세 결과를 표시된 순서대로 1, 2, 3에 고정한다.
-- [ ] 사용자가 한 번호를 선택하거나 결합·수정 요구를 남긴다.
-- [ ] 선택된 방향의 world, terrain, panel, button 규칙을 한 계약으로
+- [x] 사용자가 기존 세 안을 거절하고 후속 우주 격납고 시안을 선택한다.
+- [x] 선택된 방향의 world, terrain, panel, button 규칙을 한 계약으로
   기록한다.
 
 Success check:
@@ -311,11 +336,12 @@ Failure handling:
 
 ### Phase 4 — 실행 계획 승격
 
-- [ ] 선택된 규칙을
-  `.agents/execplans/2026-07-27-pixel-art-visual-recovery.md`의 locked
-  decisions, architecture, phase tasks, validation에 반영한다.
-- [ ] `UI_VISUAL_SYSTEM.md` 변경이 필요한 승인 사항만 spec에 반영한다.
-- [ ] 이 결정 계획을 `done`으로 바꾸고 선택 결과를 실행 계획에서
+- [x] 선택된 규칙을
+  `.agents/execplans/2026-07-28-space-hangar-world-ui-asset-integration.md`의
+  locked decisions, architecture, phase tasks, validation에 반영한다.
+- [x] `UI_VISUAL_SYSTEM.md`와 pixel pipeline에 필요한 변경 범위를 새
+  실행 계획 Phase 0에 고정한다.
+- [x] 이 결정 계획을 `done`으로 바꾸고 선택 결과를 실행 계획에서
   링크한다.
 
 Success check:
@@ -324,8 +350,9 @@ Success check:
 
 Failure handling:
 
-- 선택이 없으면 구현 계획을 활성화하지 않고 이 문서를 active decision
-  plan으로 유지한다.
+- 이후 합성 검토가 실패해도 새 스타일을 다시 선택하지 않는다. 실패한
+  component family만 새 실행 계획의 bounded regeneration 규칙으로
+  수정한다.
 
 ## Post-selection Implementation Contract
 
@@ -412,23 +439,23 @@ Final gates:
 - [x] Shared design and production contract fixed.
 - [x] Three viable directions defined with common disqualifiers.
 - [x] Three referenced mockups generated and validated.
-- [ ] User selection recorded.
-- [ ] Selected direction promoted into the active execution plan.
+- [x] User selection recorded.
+- [x] Selected direction promoted into the active execution plan.
 
 ## Next Steps
 
-1. Generate and inspect the three `1280x720` referenced mockups.
-2. Bind the visible results to 1, 2, 3 and receive BK's selection or revision.
-3. Promote only the selected direction into the existing visual-recovery
-   ExecPlan.
+1. Continue only from
+   `.agents/execplans/2026-07-28-space-hangar-world-ui-asset-integration.md`.
+2. Execute its Phase 0 contract correction.
+3. Produce its four named assembled approval images before runtime publication.
 
 ## Completion Criteria
 
-- [ ] Three independent images use the actual current UIUX references.
-- [ ] Every image shows a coherent map/terrain/panel/button system without a
+- [x] Three independent images use the actual current UIUX references.
+- [x] Every image shows a coherent map/terrain/panel/button system without a
   disqualifier.
-- [ ] BK selects one direction or requests one explicitly bounded revision.
-- [ ] The selected direction is recorded in the active execution plan with no
+- [x] BK selects one direction or requests one explicitly bounded revision.
+- [x] The selected direction is recorded in the active execution plan with no
   unresolved material design choice.
 
 ## Sources
