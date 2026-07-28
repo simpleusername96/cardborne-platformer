@@ -864,6 +864,454 @@
 			}
 		},
 		{
+			"name": "layout_proof_inventory",
+			"passed": true,
+			"details": {
+				"expected_count": 42,
+				"actual": [
+					"deployment-en-1280x720.png",
+					"deployment-en-1920x1080.png",
+					"deployment-en-960x540.png",
+					"deployment-ko-1280x720.png",
+					"deployment-ko-1920x1080.png",
+					"deployment-ko-960x540.png",
+					"garage-en-1280x720.png",
+					"garage-en-1920x1080.png",
+					"garage-en-960x540.png",
+					"garage-ko-1280x720.png",
+					"garage-ko-1920x1080.png",
+					"garage-ko-960x540.png",
+					"guidebook-en-1280x720.png",
+					"guidebook-en-1920x1080.png",
+					"guidebook-en-960x540.png",
+					"guidebook-ko-1280x720.png",
+					"guidebook-ko-1920x1080.png",
+					"guidebook-ko-960x540.png",
+					"pause-en-1280x720.png",
+					"pause-en-1920x1080.png",
+					"pause-en-960x540.png",
+					"pause-ko-1280x720.png",
+					"pause-ko-1920x1080.png",
+					"pause-ko-960x540.png",
+					"report-en-1280x720.png",
+					"report-en-1920x1080.png",
+					"report-en-960x540.png",
+					"report-ko-1280x720.png",
+					"report-ko-1920x1080.png",
+					"report-ko-960x540.png",
+					"settings-en-1280x720.png",
+					"settings-en-1920x1080.png",
+					"settings-en-960x540.png",
+					"settings-ko-1280x720.png",
+					"settings-ko-1920x1080.png",
+					"settings-ko-960x540.png",
+					"upgrade-en-1280x720.png",
+					"upgrade-en-1920x1080.png",
+					"upgrade-en-960x540.png",
+					"upgrade-ko-1280x720.png",
+					"upgrade-ko-1920x1080.png",
+					"upgrade-ko-960x540.png"
+				]
+			}
+		},
+		{
+			"name": "layout_review_inventory",
+			"passed": true,
+			"details": {
+				"expected": [
+					"deployment-ko-reference-vs-candidate.png",
+					"garage-ko-reference-vs-candidate.png",
+					"guidebook-ko-reference-vs-candidate.png",
+					"pause-ko-reference-vs-candidate.png",
+					"report-ko-reference-vs-candidate.png",
+					"settings-ko-reference-vs-candidate.png",
+					"upgrade-ko-reference-vs-candidate.png"
+				],
+				"actual": [
+					"deployment-ko-reference-vs-candidate.png",
+					"garage-ko-reference-vs-candidate.png",
+					"guidebook-ko-reference-vs-candidate.png",
+					"pause-ko-reference-vs-candidate.png",
+					"report-ko-reference-vs-candidate.png",
+					"settings-ko-reference-vs-candidate.png",
+					"upgrade-ko-reference-vs-candidate.png"
+				]
+			}
+		},
+		{
+			"name": "layout_proof_size_deployment-en-1280x720.png",
+			"passed": true,
+			"details": {
+				"expected": "(1280, 720)",
+				"actual": "(1280, 720)"
+			}
+		},
+		{
+			"name": "layout_proof_size_deployment-en-1920x1080.png",
+			"passed": true,
+			"details": {
+				"expected": "(1920, 1080)",
+				"actual": "(1920, 1080)"
+			}
+		},
+		{
+			"name": "layout_proof_size_deployment-en-960x540.png",
+			"passed": true,
+			"details": {
+				"expected": "(960, 540)",
+				"actual": "(960, 540)"
+			}
+		},
+		{
+			"name": "layout_proof_size_deployment-ko-1280x720.png",
+			"passed": true,
+			"details": {
+				"expected": "(1280, 720)",
+				"actual": "(1280, 720)"
+			}
+		},
+		{
+			"name": "layout_proof_size_deployment-ko-1920x1080.png",
+			"passed": true,
+			"details": {
+				"expected": "(1920, 1080)",
+				"actual": "(1920, 1080)"
+			}
+		},
+		{
+			"name": "layout_proof_size_deployment-ko-960x540.png",
+			"passed": true,
+			"details": {
+				"expected": "(960, 540)",
+				"actual": "(960, 540)"
+			}
+		},
+		{
+			"name": "layout_proof_size_garage-en-1280x720.png",
+			"passed": true,
+			"details": {
+				"expected": "(1280, 720)",
+				"actual": "(1280, 720)"
+			}
+		},
+		{
+			"name": "layout_proof_size_garage-en-1920x1080.png",
+			"passed": true,
+			"details": {
+				"expected": "(1920, 1080)",
+				"actual": "(1920, 1080)"
+			}
+		},
+		{
+			"name": "layout_proof_size_garage-en-960x540.png",
+			"passed": true,
+			"details": {
+				"expected": "(960, 540)",
+				"actual": "(960, 540)"
+			}
+		},
+		{
+			"name": "layout_proof_size_garage-ko-1280x720.png",
+			"passed": true,
+			"details": {
+				"expected": "(1280, 720)",
+				"actual": "(1280, 720)"
+			}
+		},
+		{
+			"name": "layout_proof_size_garage-ko-1920x1080.png",
+			"passed": true,
+			"details": {
+				"expected": "(1920, 1080)",
+				"actual": "(1920, 1080)"
+			}
+		},
+		{
+			"name": "layout_proof_size_garage-ko-960x540.png",
+			"passed": true,
+			"details": {
+				"expected": "(960, 540)",
+				"actual": "(960, 540)"
+			}
+		},
+		{
+			"name": "layout_proof_size_guidebook-en-1280x720.png",
+			"passed": true,
+			"details": {
+				"expected": "(1280, 720)",
+				"actual": "(1280, 720)"
+			}
+		},
+		{
+			"name": "layout_proof_size_guidebook-en-1920x1080.png",
+			"passed": true,
+			"details": {
+				"expected": "(1920, 1080)",
+				"actual": "(1920, 1080)"
+			}
+		},
+		{
+			"name": "layout_proof_size_guidebook-en-960x540.png",
+			"passed": true,
+			"details": {
+				"expected": "(960, 540)",
+				"actual": "(960, 540)"
+			}
+		},
+		{
+			"name": "layout_proof_size_guidebook-ko-1280x720.png",
+			"passed": true,
+			"details": {
+				"expected": "(1280, 720)",
+				"actual": "(1280, 720)"
+			}
+		},
+		{
+			"name": "layout_proof_size_guidebook-ko-1920x1080.png",
+			"passed": true,
+			"details": {
+				"expected": "(1920, 1080)",
+				"actual": "(1920, 1080)"
+			}
+		},
+		{
+			"name": "layout_proof_size_guidebook-ko-960x540.png",
+			"passed": true,
+			"details": {
+				"expected": "(960, 540)",
+				"actual": "(960, 540)"
+			}
+		},
+		{
+			"name": "layout_proof_size_pause-en-1280x720.png",
+			"passed": true,
+			"details": {
+				"expected": "(1280, 720)",
+				"actual": "(1280, 720)"
+			}
+		},
+		{
+			"name": "layout_proof_size_pause-en-1920x1080.png",
+			"passed": true,
+			"details": {
+				"expected": "(1920, 1080)",
+				"actual": "(1920, 1080)"
+			}
+		},
+		{
+			"name": "layout_proof_size_pause-en-960x540.png",
+			"passed": true,
+			"details": {
+				"expected": "(960, 540)",
+				"actual": "(960, 540)"
+			}
+		},
+		{
+			"name": "layout_proof_size_pause-ko-1280x720.png",
+			"passed": true,
+			"details": {
+				"expected": "(1280, 720)",
+				"actual": "(1280, 720)"
+			}
+		},
+		{
+			"name": "layout_proof_size_pause-ko-1920x1080.png",
+			"passed": true,
+			"details": {
+				"expected": "(1920, 1080)",
+				"actual": "(1920, 1080)"
+			}
+		},
+		{
+			"name": "layout_proof_size_pause-ko-960x540.png",
+			"passed": true,
+			"details": {
+				"expected": "(960, 540)",
+				"actual": "(960, 540)"
+			}
+		},
+		{
+			"name": "layout_proof_size_report-en-1280x720.png",
+			"passed": true,
+			"details": {
+				"expected": "(1280, 720)",
+				"actual": "(1280, 720)"
+			}
+		},
+		{
+			"name": "layout_proof_size_report-en-1920x1080.png",
+			"passed": true,
+			"details": {
+				"expected": "(1920, 1080)",
+				"actual": "(1920, 1080)"
+			}
+		},
+		{
+			"name": "layout_proof_size_report-en-960x540.png",
+			"passed": true,
+			"details": {
+				"expected": "(960, 540)",
+				"actual": "(960, 540)"
+			}
+		},
+		{
+			"name": "layout_proof_size_report-ko-1280x720.png",
+			"passed": true,
+			"details": {
+				"expected": "(1280, 720)",
+				"actual": "(1280, 720)"
+			}
+		},
+		{
+			"name": "layout_proof_size_report-ko-1920x1080.png",
+			"passed": true,
+			"details": {
+				"expected": "(1920, 1080)",
+				"actual": "(1920, 1080)"
+			}
+		},
+		{
+			"name": "layout_proof_size_report-ko-960x540.png",
+			"passed": true,
+			"details": {
+				"expected": "(960, 540)",
+				"actual": "(960, 540)"
+			}
+		},
+		{
+			"name": "layout_proof_size_settings-en-1280x720.png",
+			"passed": true,
+			"details": {
+				"expected": "(1280, 720)",
+				"actual": "(1280, 720)"
+			}
+		},
+		{
+			"name": "layout_proof_size_settings-en-1920x1080.png",
+			"passed": true,
+			"details": {
+				"expected": "(1920, 1080)",
+				"actual": "(1920, 1080)"
+			}
+		},
+		{
+			"name": "layout_proof_size_settings-en-960x540.png",
+			"passed": true,
+			"details": {
+				"expected": "(960, 540)",
+				"actual": "(960, 540)"
+			}
+		},
+		{
+			"name": "layout_proof_size_settings-ko-1280x720.png",
+			"passed": true,
+			"details": {
+				"expected": "(1280, 720)",
+				"actual": "(1280, 720)"
+			}
+		},
+		{
+			"name": "layout_proof_size_settings-ko-1920x1080.png",
+			"passed": true,
+			"details": {
+				"expected": "(1920, 1080)",
+				"actual": "(1920, 1080)"
+			}
+		},
+		{
+			"name": "layout_proof_size_settings-ko-960x540.png",
+			"passed": true,
+			"details": {
+				"expected": "(960, 540)",
+				"actual": "(960, 540)"
+			}
+		},
+		{
+			"name": "layout_proof_size_upgrade-en-1280x720.png",
+			"passed": true,
+			"details": {
+				"expected": "(1280, 720)",
+				"actual": "(1280, 720)"
+			}
+		},
+		{
+			"name": "layout_proof_size_upgrade-en-1920x1080.png",
+			"passed": true,
+			"details": {
+				"expected": "(1920, 1080)",
+				"actual": "(1920, 1080)"
+			}
+		},
+		{
+			"name": "layout_proof_size_upgrade-en-960x540.png",
+			"passed": true,
+			"details": {
+				"expected": "(960, 540)",
+				"actual": "(960, 540)"
+			}
+		},
+		{
+			"name": "layout_proof_size_upgrade-ko-1280x720.png",
+			"passed": true,
+			"details": {
+				"expected": "(1280, 720)",
+				"actual": "(1280, 720)"
+			}
+		},
+		{
+			"name": "layout_proof_size_upgrade-ko-1920x1080.png",
+			"passed": true,
+			"details": {
+				"expected": "(1920, 1080)",
+				"actual": "(1920, 1080)"
+			}
+		},
+		{
+			"name": "layout_proof_size_upgrade-ko-960x540.png",
+			"passed": true,
+			"details": {
+				"expected": "(960, 540)",
+				"actual": "(960, 540)"
+			}
+		},
+		{
+			"name": "layout_text_fit",
+			"passed": true,
+			"details": {
+				"minimum_records": 300
+			}
+		},
+		{
+			"name": "layout_panel_centering",
+			"passed": true,
+			"details": {
+				"expected_records": 42,
+				"actual": 42
+			}
+		},
+		{
+			"name": "layout_recipe_present",
+			"passed": true,
+			"details": {
+				"path": "res://pixel-art-production/assets/recipes/candidates/space-hangar-v2-ui-layout-proofs.json"
+			}
+		},
+		{
+			"name": "layout_schema_present",
+			"passed": true,
+			"details": {
+				"path": "res://pixel-art-production/schemas/space-hangar-ui-layout-proofs.schema.json"
+			}
+		},
+		{
+			"name": "layout_output_hashes",
+			"passed": true,
+			"details": {
+				"count": 51,
+				"mismatches": []
+			}
+		},
+		{
 			"name": "output_hashes",
 			"passed": true,
 			"details": {

@@ -6,6 +6,17 @@ extends SceneTree
 
 const RECIPE_DEFAULT := "res://pixel-art-production/assets/recipes/candidates/space-hangar-v2-ui.json"
 const EVIDENCE_DEFAULT := "res://pixel-art-production/evidence/space-hangar-v2/ui"
+const LAYOUT_RECIPE_PATH := "res://pixel-art-production/assets/recipes/candidates/space-hangar-v2-ui-layout-proofs.json"
+const LAYOUT_SCHEMA_PATH := "res://pixel-art-production/schemas/space-hangar-ui-layout-proofs.schema.json"
+const LAYOUT_SCREEN_IDS := [
+	"deployment",
+	"upgrade",
+	"pause",
+	"settings",
+	"guidebook",
+	"report",
+	"garage",
+]
 const EXPECTED_CLEAN := [
 	"button-disabled.png",
 	"button-focus.png",
@@ -50,6 +61,7 @@ func _initialize() -> void:
 	_validate_clean_assets()
 	_validate_state_families()
 	_validate_proofs()
+	_validate_layout_proofs()
 	_validate_hashes()
 	_finish()
 
@@ -236,6 +248,110 @@ func _validate_proofs() -> void:
 		"text_fit",
 		text_fit_valid,
 		{"expected_records": 42}
+	)
+
+
+func _validate_layout_proofs() -> void:
+	var package_path := _evidence_path.path_join("layout-package")
+	var proof_path := package_path.path_join("proofs")
+	var review_path := package_path.path_join("review")
+	var expected_proofs: Array[String] = []
+	var expected_reviews: Array[String] = []
+	for screen_id in LAYOUT_SCREEN_IDS:
+		expected_reviews.append("%s-ko-reference-vs-candidate.png" % screen_id)
+		for language in ["ko", "en"]:
+			for dimensions in ["960x540", "1280x720", "1920x1080"]:
+				expected_proofs.append(
+					"%s-%s-%s.png" % [screen_id, language, dimensions]
+				)
+	expected_proofs.sort()
+	expected_reviews.sort()
+	var actual_proofs := Array(DirAccess.get_files_at(proof_path))
+	var actual_reviews := Array(DirAccess.get_files_at(review_path))
+	actual_proofs.sort()
+	actual_reviews.sort()
+	_check(
+		"layout_proof_inventory",
+		actual_proofs == expected_proofs,
+		{"expected_count": expected_proofs.size(), "actual": actual_proofs}
+	)
+	_check(
+		"layout_review_inventory",
+		actual_reviews == expected_reviews,
+		{"expected": expected_reviews, "actual": actual_reviews}
+	)
+	for proof_name in expected_proofs:
+		var image := Image.load_from_file(proof_path.path_join(proof_name))
+		if image == null:
+			continue
+		var size_text: String = proof_name.get_basename().split("-")[-1]
+		var dimensions := size_text.split("x")
+		var expected_size := Vector2i(int(dimensions[0]), int(dimensions[1]))
+		_check(
+			"layout_proof_size_%s" % proof_name,
+			image.get_size() == expected_size,
+			{"expected": expected_size, "actual": image.get_size()}
+		)
+	var text_fit_path := package_path.path_join("text-fit.json")
+	var text_fit: Variant = JSON.parse_string(
+		FileAccess.get_file_as_string(text_fit_path)
+	)
+	var text_fit_valid := (
+		text_fit is Dictionary
+		and bool(Dictionary(text_fit).get("all_passed", false))
+		and Array(Dictionary(text_fit).get("records", [])).size() >= 300
+	)
+	_check(
+		"layout_text_fit",
+		text_fit_valid,
+		{"minimum_records": 300}
+	)
+	var metrics_path := package_path.path_join("layout-metrics.json")
+	var metrics: Variant = JSON.parse_string(
+		FileAccess.get_file_as_string(metrics_path)
+	)
+	var metrics_records: Array = []
+	if metrics is Dictionary:
+		metrics_records = Array(Dictionary(metrics).get("records", []))
+	var all_centered := metrics_records.size() == expected_proofs.size()
+	for record_value in metrics_records:
+		if not bool(Dictionary(record_value).get("horizontally_centered", false)):
+			all_centered = false
+	_check(
+		"layout_panel_centering",
+		all_centered,
+		{"expected_records": expected_proofs.size(), "actual": metrics_records.size()}
+	)
+	_check(
+		"layout_recipe_present",
+		FileAccess.file_exists(ProjectSettings.globalize_path(LAYOUT_RECIPE_PATH)),
+		{"path": LAYOUT_RECIPE_PATH}
+	)
+	_check(
+		"layout_schema_present",
+		FileAccess.file_exists(ProjectSettings.globalize_path(LAYOUT_SCHEMA_PATH)),
+		{"path": LAYOUT_SCHEMA_PATH}
+	)
+	var hash_path := package_path.path_join("sha256.json")
+	var hash_data: Variant = JSON.parse_string(
+		FileAccess.get_file_as_string(hash_path)
+	)
+	var mismatches: Array[String] = []
+	var files := {}
+	if hash_data is Dictionary:
+		files = Dictionary(Dictionary(hash_data).get("files", {}))
+	for relative_value in files.keys():
+		var relative := String(relative_value)
+		var absolute := package_path.path_join(relative)
+		if (
+			not FileAccess.file_exists(absolute)
+			or FileAccess.get_sha256(absolute) != String(files[relative])
+		):
+			mismatches.append(relative)
+	_check(
+		"layout_output_hashes",
+		not files.is_empty() and mismatches.is_empty(),
+		{"count": files.size(), "mismatches": mismatches}
 	)
 
 

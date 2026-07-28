@@ -3,7 +3,7 @@ type: plan
 status: active
 owner: BK
 created: 2026-07-28
-last_reviewed: 2026-07-28
+last_reviewed: 2026-07-29
 scope: Produce and integrate a source-backed space-hangar world and raster UI chrome while preserving Cardborne gameplay and live UI truth
 related:
   - ../../AGENTS.md
@@ -169,6 +169,8 @@ Exact approval gates:
 | UI candidate recipe | `pixel-art-production/assets/recipes/candidates/space-hangar-v2-ui.json` | file/state, native size, patch margin, content inset, Theme target |
 | UI candidate schema | `pixel-art-production/schemas/space-hangar-ui-chrome.schema.json` | UI recipe의 family/state/9-slice contract 검증 |
 | UI candidate compiler | `tools/design/build_space_hangar_ui_chrome.gd` | crop/chroma/nearest resize/9-slice proof/state pack/hash만 수행하고 canonical UI evidence path로만 출력; Theme·screen 수정 금지 |
+| UI layout proof contract | `pixel-art-production/assets/recipes/candidates/space-hangar-v2-ui-layout-proofs.json`, `pixel-art-production/schemas/space-hangar-ui-layout-proofs.schema.json` | 현재 Deployment, Upgrade, Pause, Settings, Guidebook, Report, Garage의 1280 기준 panel/row/column bounds를 고정 |
+| UI layout proof builder | `tools/design/build_space_hangar_ui_layout_proofs.gd` | 승인된 chrome만 9-slice 합성하고 KO/EN live-text overlay와 현재 캡처 side-by-side를 출력; runtime·Theme 수정 금지 |
 | UI review evidence | `pixel-art-production/evidence/space-hangar-v2/ui/` | clean state PNG, native/4× contact sheet, state delta, KO/EN safe-inset proofs, validation, hashes |
 | UI chrome validator | `tools/validation/validate_space_hangar_ui_chrome.gd` | dimensions, alpha, corner invariance, resize/text-fit proof |
 | UI runtime assets | `pixel-art-production/runtime/ui/space-hangar-v2/` | Gate C에서 승인된 text-free PNG만 publish |
@@ -446,10 +448,14 @@ Guard:
 - [x] **4.6** Render static 9-slice safe-inset proofs for panel, button, card,
   tab, and HUD frame using realistic Korean and English strings at 960×540,
   1280×720, and 1920×1080.
+- [x] **4.7** Preserve the current screen-specific panel bounds and information
+  topology in 42 Deployment/Upgrade/Pause/Settings/Guidebook/Report/Garage
+  proofs across KO/EN and all three viewports. Export seven 1280 KO
+  reference-vs-candidate reviews; modal proofs contain no unrelated HUD.
 
 Acceptance: Gate C approves the complete UI source/state family, state
-distinction, safe insets, and text-fit proofs before any runtime asset, Godot
-Theme, renderer, or screen is modified.
+distinction, safe insets, current screen layout, and text-fit proofs before any
+runtime asset, Godot Theme, renderer, or screen is modified.
 
 Guard:
 
@@ -541,13 +547,17 @@ UI asset inner loop after Phase 4.2:
 
 ```powershell
 $uiRecipe = (Resolve-Path 'pixel-art-production/assets/recipes/candidates/space-hangar-v2-ui.json').Path
+$uiLayoutRecipe = (Resolve-Path 'pixel-art-production/assets/recipes/candidates/space-hangar-v2-ui-layout-proofs.json').Path
 $uiOutput = (Resolve-Path 'pixel-art-production/evidence/space-hangar-v2').Path + '\ui'
 $uiCheckArgs = @('--path', '.', '--headless', '--script', 'res://tools/design/build_space_hangar_ui_chrome.gd', '--', '--recipe', $uiRecipe, '--check-only')
 $uiBuildArgs = @('--path', '.', '--headless', '--script', 'res://tools/design/build_space_hangar_ui_chrome.gd', '--', '--recipe', $uiRecipe, '--output', $uiOutput)
+$uiLayoutBuildArgs = @('--path', '.', '--headless', '--script', 'res://tools/design/build_space_hangar_ui_layout_proofs.gd', '--', '--recipe', $uiLayoutRecipe, '--evidence', $uiOutput)
 $uiValidateArgs = @('--path', '.', '--headless', '--script', 'res://tools/validation/validate_space_hangar_ui_chrome.gd', '--', '--recipe', $uiRecipe, '--output', $uiOutput)
 Get-Content -Raw $uiRecipe | Test-Json -SchemaFile 'pixel-art-production/schemas/space-hangar-ui-chrome.schema.json'
+Get-Content -Raw $uiLayoutRecipe | Test-Json -SchemaFile 'pixel-art-production/schemas/space-hangar-ui-layout-proofs.schema.json'
 .\tools\godot.ps1 @uiCheckArgs
 .\tools\godot.ps1 @uiBuildArgs
+.\tools\godot.ps1 @uiLayoutBuildArgs
 .\tools\godot.ps1 @uiValidateArgs
 git diff --check
 ```
@@ -561,6 +571,9 @@ UI asset gates:
   truth baked into PNGs;
 - Korean and English static text-fit proofs without clipping at all three
   viewports;
+- screen-specific panel bounds remain centered within one pixel after scaling,
+  internal row/column topology matches the current captures, and modal proofs
+  contain no unrelated HUD;
 - deterministic second-run SHA-256 equality.
 
 Runtime gates after Phase 5 begins:
@@ -664,6 +677,15 @@ approval and a plan update.
   remains untouched pending explicit visual approval. Two consecutive builds
   produced the same `sha256.json` hash
   `5a42ae26ee4de01b2c923bbb10516f5f3d14713b217bf5f42ad0d8bf49280200`.
+- 2026-07-29: rejected the single generic composition as sufficient
+  screen-layout evidence. It remains a component-fit proof only. Added a
+  separate current-layout recipe and builder for seven actual UI surfaces,
+  generating 42 KO/EN viewport proofs and seven 1280 KO side-by-side reviews.
+  All panel margins match exactly or differ by at most one pixel after integer
+  scaling; modal proofs no longer mix in the HUD.
+- 2026-07-29: the expanded validator passes 158 checks. Two consecutive layout
+  builds produced the same `layout-package/sha256.json` hash
+  `fc073804093ea6a8385314320f3233b70b8b2967d62b34c4dc49cd4c23e76287`.
 
 ## Progress
 
@@ -677,13 +699,16 @@ approval and a plan update.
   `8e6f791eb57babc0c6cd67b57f57e9599b433e1dcaa59b26775c8c87cb2a2d2c`.
 - [x] Gate A/B world/map direction accepted for the next planning stage.
 - [x] Gate C UI chrome asset package generated and mechanically validated.
+- [x] Gate C current-screen layout proof package generated and mechanically
+  validated.
 - [ ] Gate C explicit visual approval.
 - [ ] Gate D runtime vertical slice.
 - [ ] Gate E UI runtime migration and final rollout.
 
 ## Next Steps
 
-1. Review the native/4× state contact sheet and KO/EN 9-slice proofs.
+1. Review the native/4× state contact sheet, seven current-layout
+   reference-vs-candidate images, and KO/EN layout proofs.
 2. Record explicit Gate C visual approval or revise only the rejected family.
 3. Begin Phase 5 runtime publication only after Gate C passes.
 

@@ -1,0 +1,88 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"title": "Cardborne Space Hangar UI Layout Proofs",
+	"type": "object",
+	"additionalProperties": false,
+	"required": ["schema_version", "base_viewport", "viewports", "languages", "font", "screens"],
+	"properties": {
+		"schema_version": {"const": 1},
+		"base_viewport": {"const": [1280, 720]},
+		"viewports": {"const": [[960, 540], [1280, 720], [1920, 1080]]},
+		"languages": {"const": ["ko", "en"]},
+		"font": {"const": "art/ui/production/fonts/NotoSansKR-Variable.ttf"},
+		"screens": {
+			"type": "array",
+			"minItems": 7,
+			"maxItems": 7,
+			"items": {"$ref": "#/$defs/screen"}
+		}
+	},
+	"$defs": {
+		"rect": {
+			"type": "array",
+			"prefixItems": [
+				{"type": "integer", "minimum": 0},
+				{"type": "integer", "minimum": 0},
+				{"type": "integer", "minimum": 1},
+				{"type": "integer", "minimum": 1}
+			],
+			"items": false
+		},
+		"element": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["asset", "rect"],
+			"properties": {
+				"asset": {
+					"enum": [
+						"panel-normal.png",
+						"button-normal.png",
+						"button-hover.png",
+						"button-pressed.png",
+						"button-focus.png",
+						"button-disabled.png",
+						"card-normal.png",
+						"card-hover.png",
+						"card-pressed.png",
+						"card-focus.png",
+						"card-selected.png",
+						"card-disabled.png",
+						"tab-normal.png",
+						"tab-hovered.png",
+						"tab-selected.png",
+						"tab-focus.png",
+						"hud-frame-normal.png"
+					]
+				},
+				"rect": {"$ref": "#/$defs/rect"}
+			}
+		},
+		"text": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["role", "rect", "point_size", "align", "ko", "en", "color"],
+			"properties": {
+				"role": {"type": "string", "pattern": "^[a-z0-9_]+$"},
+				"rect": {"$ref": "#/$defs/rect"},
+				"point_size": {"type": "integer", "minimum": 10, "maximum": 36},
+				"align": {"enum": ["left", "center", "right"]},
+				"ko": {"type": "string", "minLength": 1},
+				"en": {"type": "string", "minLength": 1},
+				"color": {"type": "string", "pattern": "^#[0-9A-Fa-f]{6}$"}
+			}
+		},
+		"screen": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["id", "reference_ko", "reference_en", "panel_rect", "elements", "texts"],
+			"properties": {
+				"id": {"enum": ["deployment", "upgrade", "pause", "settings", "guidebook", "report", "garage"]},
+				"reference_ko": {"type": "string", "pattern": "^build/captures/final-ko-1280/.+\\.png$"},
+				"reference_en": {"type": "string", "pattern": "^build/captures/final-en-1920/.+\\.png$"},
+				"panel_rect": {"$ref": "#/$defs/rect"},
+				"elements": {"type": "array", "minItems": 2, "items": {"$ref": "#/$defs/element"}},
+				"texts": {"type": "array", "minItems": 6, "items": {"$ref": "#/$defs/text"}}
+			}
+		}
+	}
+}

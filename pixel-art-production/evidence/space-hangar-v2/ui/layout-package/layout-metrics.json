@@ -1,0 +1,765 @@
+{
+	"schema_version": 1,
+	"base_viewport": [
+		1280.0,
+		720.0
+	],
+	"records": [
+		{
+			"screen": "deployment",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"panel_rect": [
+				165,
+				23,
+				630,
+				495
+			],
+			"left_margin": 165,
+			"right_margin": 165,
+			"center_offset_px": 0,
+			"horizontally_centered": true
+		},
+		{
+			"screen": "deployment",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"panel_rect": [
+				165,
+				23,
+				630,
+				495
+			],
+			"left_margin": 165,
+			"right_margin": 165,
+			"center_offset_px": 0,
+			"horizontally_centered": true
+		},
+		{
+			"screen": "deployment",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"panel_rect": [
+				220,
+				30,
+				840,
+				660
+			],
+			"left_margin": 220,
+			"right_margin": 220,
+			"center_offset_px": 0,
+			"horizontally_centered": true
+		},
+		{
+			"screen": "deployment",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"panel_rect": [
+				220,
+				30,
+				840,
+				660
+			],
+			"left_margin": 220,
+			"right_margin": 220,
+			"center_offset_px": 0,
+			"horizontally_centered": true
+		},
+		{
+			"screen": "deployment",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"panel_rect": [
+				330,
+				45,
+				1260,
+				990
+			],
+			"left_margin": 330,
+			"right_margin": 330,
+			"center_offset_px": 0,
+			"horizontally_centered": true
+		},
+		{
+			"screen": "deployment",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"panel_rect": [
+				330,
+				45,
+				1260,
+				990
+			],
+			"left_margin": 330,
+			"right_margin": 330,
+			"center_offset_px": 0,
+			"horizontally_centered": true
+		},
+		{
+			"screen": "upgrade",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"panel_rect": [
+				143,
+				69,
+				675,
+				401
+			],
+			"left_margin": 143,
+			"right_margin": 142,
+			"center_offset_px": 1,
+			"horizontally_centered": true
+		},
+		{
+			"screen": "upgrade",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"panel_rect": [
+				143,
+				69,
+				675,
+				401
+			],
+			"left_margin": 143,
+			"right_margin": 142,
+			"center_offset_px": 1,
+			"horizontally_centered": true
+		},
+		{
+			"screen": "upgrade",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"panel_rect": [
+				190,
+				92,
+				900,
+				535
+			],
+			"left_margin": 190,
+			"right_margin": 190,
+			"center_offset_px": 0,
+			"horizontally_centered": true
+		},
+		{
+			"screen": "upgrade",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"panel_rect": [
+				190,
+				92,
+				900,
+				535
+			],
+			"left_margin": 190,
+			"right_margin": 190,
+			"center_offset_px": 0,
+			"horizontally_centered": true
+		},
+		{
+			"screen": "upgrade",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"panel_rect": [
+				285,
+				138,
+				1350,
+				803
+			],
+			"left_margin": 285,
+			"right_margin": 285,
+			"center_offset_px": 0,
+			"horizontally_centered": true
+		},
+		{
+			"screen": "upgrade",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"panel_rect": [
+				285,
+				138,
+				1350,
+				803
+			],
+			"left_margin": 285,
+			"right_margin": 285,
+			"center_offset_px": 0,
+			"horizontally_centered": true
+		},
+		{
+			"screen": "pause",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"panel_rect": [
+				270,
+				83,
+				420,
+				375
+			],
+			"left_margin": 270,
+			"right_margin": 270,
+			"center_offset_px": 0,
+			"horizontally_centered": true
+		},
+		{
+			"screen": "pause",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"panel_rect": [
+				270,
+				83,
+				420,
+				375
+			],
+			"left_margin": 270,
+			"right_margin": 270,
+			"center_offset_px": 0,
+			"horizontally_centered": true
+		},
+		{
+			"screen": "pause",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"panel_rect": [
+				360,
+				110,
+				560,
+				500
+			],
+			"left_margin": 360,
+			"right_margin": 360,
+			"center_offset_px": 0,
+			"horizontally_centered": true
+		},
+		{
+			"screen": "pause",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"panel_rect": [
+				360,
+				110,
+				560,
+				500
+			],
+			"left_margin": 360,
+			"right_margin": 360,
+			"center_offset_px": 0,
+			"horizontally_centered": true
+		},
+		{
+			"screen": "pause",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"panel_rect": [
+				540,
+				165,
+				840,
+				750
+			],
+			"left_margin": 540,
+			"right_margin": 540,
+			"center_offset_px": 0,
+			"horizontally_centered": true
+		},
+		{
+			"screen": "pause",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"panel_rect": [
+				540,
+				165,
+				840,
+				750
+			],
+			"left_margin": 540,
+			"right_margin": 540,
+			"center_offset_px": 0,
+			"horizontally_centered": true
+		},
+		{
+			"screen": "settings",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"panel_rect": [
+				165,
+				83,
+				630,
+				375
+			],
+			"left_margin": 165,
+			"right_margin": 165,
+			"center_offset_px": 0,
+			"horizontally_centered": true
+		},
+		{
+			"screen": "settings",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"panel_rect": [
+				165,
+				83,
+				630,
+				375
+			],
+			"left_margin": 165,
+			"right_margin": 165,
+			"center_offset_px": 0,
+			"horizontally_centered": true
+		},
+		{
+			"screen": "settings",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"panel_rect": [
+				220,
+				110,
+				840,
+				500
+			],
+			"left_margin": 220,
+			"right_margin": 220,
+			"center_offset_px": 0,
+			"horizontally_centered": true
+		},
+		{
+			"screen": "settings",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"panel_rect": [
+				220,
+				110,
+				840,
+				500
+			],
+			"left_margin": 220,
+			"right_margin": 220,
+			"center_offset_px": 0,
+			"horizontally_centered": true
+		},
+		{
+			"screen": "settings",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"panel_rect": [
+				330,
+				165,
+				1260,
+				750
+			],
+			"left_margin": 330,
+			"right_margin": 330,
+			"center_offset_px": 0,
+			"horizontally_centered": true
+		},
+		{
+			"screen": "settings",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"panel_rect": [
+				330,
+				165,
+				1260,
+				750
+			],
+			"left_margin": 330,
+			"right_margin": 330,
+			"center_offset_px": 0,
+			"horizontally_centered": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"panel_rect": [
+				135,
+				66,
+				690,
+				408
+			],
+			"left_margin": 135,
+			"right_margin": 135,
+			"center_offset_px": 0,
+			"horizontally_centered": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"panel_rect": [
+				135,
+				66,
+				690,
+				408
+			],
+			"left_margin": 135,
+			"right_margin": 135,
+			"center_offset_px": 0,
+			"horizontally_centered": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"panel_rect": [
+				180,
+				88,
+				920,
+				544
+			],
+			"left_margin": 180,
+			"right_margin": 180,
+			"center_offset_px": 0,
+			"horizontally_centered": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"panel_rect": [
+				180,
+				88,
+				920,
+				544
+			],
+			"left_margin": 180,
+			"right_margin": 180,
+			"center_offset_px": 0,
+			"horizontally_centered": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"panel_rect": [
+				270,
+				132,
+				1380,
+				816
+			],
+			"left_margin": 270,
+			"right_margin": 270,
+			"center_offset_px": 0,
+			"horizontally_centered": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"panel_rect": [
+				270,
+				132,
+				1380,
+				816
+			],
+			"left_margin": 270,
+			"right_margin": 270,
+			"center_offset_px": 0,
+			"horizontally_centered": true
+		},
+		{
+			"screen": "report",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"panel_rect": [
+				143,
+				83,
+				675,
+				375
+			],
+			"left_margin": 143,
+			"right_margin": 142,
+			"center_offset_px": 1,
+			"horizontally_centered": true
+		},
+		{
+			"screen": "report",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"panel_rect": [
+				143,
+				83,
+				675,
+				375
+			],
+			"left_margin": 143,
+			"right_margin": 142,
+			"center_offset_px": 1,
+			"horizontally_centered": true
+		},
+		{
+			"screen": "report",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"panel_rect": [
+				190,
+				110,
+				900,
+				500
+			],
+			"left_margin": 190,
+			"right_margin": 190,
+			"center_offset_px": 0,
+			"horizontally_centered": true
+		},
+		{
+			"screen": "report",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"panel_rect": [
+				190,
+				110,
+				900,
+				500
+			],
+			"left_margin": 190,
+			"right_margin": 190,
+			"center_offset_px": 0,
+			"horizontally_centered": true
+		},
+		{
+			"screen": "report",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"panel_rect": [
+				285,
+				165,
+				1350,
+				750
+			],
+			"left_margin": 285,
+			"right_margin": 285,
+			"center_offset_px": 0,
+			"horizontally_centered": true
+		},
+		{
+			"screen": "report",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"panel_rect": [
+				285,
+				165,
+				1350,
+				750
+			],
+			"left_margin": 285,
+			"right_margin": 285,
+			"center_offset_px": 0,
+			"horizontally_centered": true
+		},
+		{
+			"screen": "garage",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"panel_rect": [
+				158,
+				79,
+				645,
+				383
+			],
+			"left_margin": 158,
+			"right_margin": 157,
+			"center_offset_px": 1,
+			"horizontally_centered": true
+		},
+		{
+			"screen": "garage",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"panel_rect": [
+				158,
+				79,
+				645,
+				383
+			],
+			"left_margin": 158,
+			"right_margin": 157,
+			"center_offset_px": 1,
+			"horizontally_centered": true
+		},
+		{
+			"screen": "garage",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"panel_rect": [
+				210,
+				105,
+				860,
+				510
+			],
+			"left_margin": 210,
+			"right_margin": 210,
+			"center_offset_px": 0,
+			"horizontally_centered": true
+		},
+		{
+			"screen": "garage",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"panel_rect": [
+				210,
+				105,
+				860,
+				510
+			],
+			"left_margin": 210,
+			"right_margin": 210,
+			"center_offset_px": 0,
+			"horizontally_centered": true
+		},
+		{
+			"screen": "garage",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"panel_rect": [
+				315,
+				158,
+				1290,
+				765
+			],
+			"left_margin": 315,
+			"right_margin": 315,
+			"center_offset_px": 0,
+			"horizontally_centered": true
+		},
+		{
+			"screen": "garage",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"panel_rect": [
+				315,
+				158,
+				1290,
+				765
+			],
+			"left_margin": 315,
+			"right_margin": 315,
+			"center_offset_px": 0,
+			"horizontally_centered": true
+		}
+	]
+}

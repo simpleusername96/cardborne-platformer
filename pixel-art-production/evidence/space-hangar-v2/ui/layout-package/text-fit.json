@@ -1,0 +1,7566 @@
+{
+	"schema_version": 1,
+	"all_passed": true,
+	"records": [
+		{
+			"screen": "deployment",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "eyebrow",
+			"text": "침수 공방 · 스테이지 1",
+			"point_size": 11,
+			"measured": [
+				104,
+				18
+			],
+			"box": [
+				375,
+				18
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "title",
+			"text": "침수 공방 출격 준비",
+			"point_size": 23,
+			"measured": [
+				186,
+				35
+			],
+			"box": [
+				488,
+				39
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "field",
+			"text": "작전 구역 · 침수 유적",
+			"point_size": 13,
+			"measured": [
+				115,
+				21
+			],
+			"box": [
+				315,
+				23
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "controls",
+			"text": "이동 방향키/WASD · 조준 마우스 · 연속 발사 마우스 1 · 대시 Space · EMP Shift",
+			"point_size": 11,
+			"measured": [
+				365,
+				18
+			],
+			"box": [
+				593,
+				21
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "weapon",
+			"text": "중립형 펄스 캐논\n누르고 있으면 연속 발사 · 1초 쉬면 다음 첫 탄이 돌파탄",
+			"point_size": 14,
+			"measured": [
+				317,
+				46
+			],
+			"box": [
+				420,
+				62
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "difficulty_label",
+			"text": "런 난이도",
+			"point_size": 11,
+			"measured": [
+				44,
+				18
+			],
+			"box": [
+				165,
+				18
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "difficulty_easy",
+			"text": "쉬움",
+			"point_size": 14,
+			"measured": [
+				27,
+				23
+			],
+			"box": [
+				193,
+				41
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "difficulty_normal",
+			"text": "보통",
+			"point_size": 14,
+			"measured": [
+				27,
+				23
+			],
+			"box": [
+				193,
+				41
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "difficulty_hard",
+			"text": "어려움",
+			"point_size": 14,
+			"measured": [
+				40,
+				23
+			],
+			"box": [
+				194,
+				41
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "deploy",
+			"text": "출격",
+			"point_size": 15,
+			"measured": [
+				29,
+				24
+			],
+			"box": [
+				594,
+				38
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "settings",
+			"text": "설정 열기",
+			"point_size": 14,
+			"measured": [
+				56,
+				23
+			],
+			"box": [
+				594,
+				41
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "practice",
+			"text": "보스 연습",
+			"point_size": 14,
+			"measured": [
+				56,
+				23
+			],
+			"box": [
+				594,
+				41
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "eyebrow",
+			"text": "DROWNED HANGAR · STAGE 1",
+			"point_size": 11,
+			"measured": [
+				148,
+				18
+			],
+			"box": [
+				375,
+				18
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "title",
+			"text": "Prepare to Deploy",
+			"point_size": 23,
+			"measured": [
+				182,
+				35
+			],
+			"box": [
+				488,
+				39
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "field",
+			"text": "FIELD · DROWNED RUINS",
+			"point_size": 13,
+			"measured": [
+				147,
+				21
+			],
+			"box": [
+				315,
+				23
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "controls",
+			"text": "MOVE WASD · AIM MOUSE · HOLD FIRE MOUSE 1 · DASH SPACE · EMP SHIFT",
+			"point_size": 11,
+			"measured": [
+				373,
+				18
+			],
+			"box": [
+				593,
+				21
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "weapon",
+			"text": "BALANCED PULSE CANNON\nHold to fire · after 1 second idle, the next shot breaches",
+			"point_size": 14,
+			"measured": [
+				340,
+				46
+			],
+			"box": [
+				420,
+				62
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "difficulty_label",
+			"text": "RUN DIFFICULTY",
+			"point_size": 11,
+			"measured": [
+				80,
+				18
+			],
+			"box": [
+				165,
+				18
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "difficulty_easy",
+			"text": "EASY",
+			"point_size": 14,
+			"measured": [
+				32,
+				23
+			],
+			"box": [
+				193,
+				41
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "difficulty_normal",
+			"text": "NORMAL",
+			"point_size": 14,
+			"measured": [
+				55,
+				23
+			],
+			"box": [
+				193,
+				41
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "difficulty_hard",
+			"text": "HARD",
+			"point_size": 14,
+			"measured": [
+				37,
+				23
+			],
+			"box": [
+				194,
+				41
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "deploy",
+			"text": "DEPLOY",
+			"point_size": 15,
+			"measured": [
+				54,
+				24
+			],
+			"box": [
+				594,
+				38
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "settings",
+			"text": "OPEN SETTINGS",
+			"point_size": 14,
+			"measured": [
+				103,
+				23
+			],
+			"box": [
+				594,
+				41
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "practice",
+			"text": "BOSS PRACTICE",
+			"point_size": 14,
+			"measured": [
+				100,
+				23
+			],
+			"box": [
+				594,
+				41
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "eyebrow",
+			"text": "침수 공방 · 스테이지 1",
+			"point_size": 14,
+			"measured": [
+				132,
+				23
+			],
+			"box": [
+				500,
+				24
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "title",
+			"text": "침수 공방 출격 준비",
+			"point_size": 30,
+			"measured": [
+				242,
+				45
+			],
+			"box": [
+				650,
+				52
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "field",
+			"text": "작전 구역 · 침수 유적",
+			"point_size": 17,
+			"measured": [
+				151,
+				26
+			],
+			"box": [
+				420,
+				30
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "controls",
+			"text": "이동 방향키/WASD · 조준 마우스 · 연속 발사 마우스 1 · 대시 Space · EMP Shift",
+			"point_size": 15,
+			"measured": [
+				498,
+				24
+			],
+			"box": [
+				790,
+				28
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "weapon",
+			"text": "중립형 펄스 캐논\n누르고 있으면 연속 발사 · 1초 쉬면 다음 첫 탄이 돌파탄",
+			"point_size": 18,
+			"measured": [
+				408,
+				56
+			],
+			"box": [
+				560,
+				82
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "difficulty_label",
+			"text": "런 난이도",
+			"point_size": 15,
+			"measured": [
+				60,
+				24
+			],
+			"box": [
+				220,
+				24
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "difficulty_easy",
+			"text": "쉬움",
+			"point_size": 18,
+			"measured": [
+				35,
+				28
+			],
+			"box": [
+				257,
+				55
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "difficulty_normal",
+			"text": "보통",
+			"point_size": 18,
+			"measured": [
+				35,
+				28
+			],
+			"box": [
+				257,
+				55
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "difficulty_hard",
+			"text": "어려움",
+			"point_size": 18,
+			"measured": [
+				51,
+				28
+			],
+			"box": [
+				258,
+				55
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "deploy",
+			"text": "출격",
+			"point_size": 20,
+			"measured": [
+				38,
+				31
+			],
+			"box": [
+				792,
+				50
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "settings",
+			"text": "설정 열기",
+			"point_size": 18,
+			"measured": [
+				72,
+				28
+			],
+			"box": [
+				792,
+				55
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "practice",
+			"text": "보스 연습",
+			"point_size": 18,
+			"measured": [
+				72,
+				28
+			],
+			"box": [
+				792,
+				55
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "eyebrow",
+			"text": "DROWNED HANGAR · STAGE 1",
+			"point_size": 14,
+			"measured": [
+				188,
+				23
+			],
+			"box": [
+				500,
+				24
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "title",
+			"text": "Prepare to Deploy",
+			"point_size": 30,
+			"measured": [
+				237,
+				45
+			],
+			"box": [
+				650,
+				52
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "field",
+			"text": "FIELD · DROWNED RUINS",
+			"point_size": 17,
+			"measured": [
+				192,
+				26
+			],
+			"box": [
+				420,
+				30
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "controls",
+			"text": "MOVE WASD · AIM MOUSE · HOLD FIRE MOUSE 1 · DASH SPACE · EMP SHIFT",
+			"point_size": 15,
+			"measured": [
+				508,
+				24
+			],
+			"box": [
+				790,
+				28
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "weapon",
+			"text": "BALANCED PULSE CANNON\nHold to fire · after 1 second idle, the next shot breaches",
+			"point_size": 18,
+			"measured": [
+				436,
+				56
+			],
+			"box": [
+				560,
+				82
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "difficulty_label",
+			"text": "RUN DIFFICULTY",
+			"point_size": 15,
+			"measured": [
+				108,
+				24
+			],
+			"box": [
+				220,
+				24
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "difficulty_easy",
+			"text": "EASY",
+			"point_size": 18,
+			"measured": [
+				41,
+				28
+			],
+			"box": [
+				257,
+				55
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "difficulty_normal",
+			"text": "NORMAL",
+			"point_size": 18,
+			"measured": [
+				71,
+				28
+			],
+			"box": [
+				257,
+				55
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "difficulty_hard",
+			"text": "HARD",
+			"point_size": 18,
+			"measured": [
+				47,
+				28
+			],
+			"box": [
+				258,
+				55
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "deploy",
+			"text": "DEPLOY",
+			"point_size": 20,
+			"measured": [
+				71,
+				31
+			],
+			"box": [
+				792,
+				50
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "settings",
+			"text": "OPEN SETTINGS",
+			"point_size": 18,
+			"measured": [
+				132,
+				28
+			],
+			"box": [
+				792,
+				55
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "practice",
+			"text": "BOSS PRACTICE",
+			"point_size": 18,
+			"measured": [
+				128,
+				28
+			],
+			"box": [
+				792,
+				55
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "eyebrow",
+			"text": "침수 공방 · 스테이지 1",
+			"point_size": 21,
+			"measured": [
+				197,
+				33
+			],
+			"box": [
+				750,
+				36
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "title",
+			"text": "침수 공방 출격 준비",
+			"point_size": 45,
+			"measured": [
+				362,
+				67
+			],
+			"box": [
+				975,
+				78
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "field",
+			"text": "작전 구역 · 침수 유적",
+			"point_size": 26,
+			"measured": [
+				229,
+				40
+			],
+			"box": [
+				630,
+				45
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "controls",
+			"text": "이동 방향키/WASD · 조준 마우스 · 연속 발사 마우스 1 · 대시 Space · EMP Shift",
+			"point_size": 23,
+			"measured": [
+				762,
+				35
+			],
+			"box": [
+				1185,
+				42
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "weapon",
+			"text": "중립형 펄스 캐논\n누르고 있으면 연속 발사 · 1초 쉬면 다음 첫 탄이 돌파탄",
+			"point_size": 27,
+			"measured": [
+				611,
+				82
+			],
+			"box": [
+				840,
+				123
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "difficulty_label",
+			"text": "런 난이도",
+			"point_size": 23,
+			"measured": [
+				91,
+				35
+			],
+			"box": [
+				330,
+				36
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "difficulty_easy",
+			"text": "쉬움",
+			"point_size": 27,
+			"measured": [
+				51,
+				41
+			],
+			"box": [
+				386,
+				83
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "difficulty_normal",
+			"text": "보통",
+			"point_size": 27,
+			"measured": [
+				51,
+				41
+			],
+			"box": [
+				386,
+				83
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "difficulty_hard",
+			"text": "어려움",
+			"point_size": 27,
+			"measured": [
+				76,
+				41
+			],
+			"box": [
+				387,
+				83
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "deploy",
+			"text": "출격",
+			"point_size": 30,
+			"measured": [
+				57,
+				45
+			],
+			"box": [
+				1188,
+				75
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "settings",
+			"text": "설정 열기",
+			"point_size": 27,
+			"measured": [
+				107,
+				41
+			],
+			"box": [
+				1188,
+				83
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "practice",
+			"text": "보스 연습",
+			"point_size": 27,
+			"measured": [
+				107,
+				41
+			],
+			"box": [
+				1188,
+				83
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "eyebrow",
+			"text": "DROWNED HANGAR · STAGE 1",
+			"point_size": 21,
+			"measured": [
+				281,
+				33
+			],
+			"box": [
+				750,
+				36
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "title",
+			"text": "Prepare to Deploy",
+			"point_size": 45,
+			"measured": [
+				355,
+				67
+			],
+			"box": [
+				975,
+				78
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "field",
+			"text": "FIELD · DROWNED RUINS",
+			"point_size": 26,
+			"measured": [
+				293,
+				40
+			],
+			"box": [
+				630,
+				45
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "controls",
+			"text": "MOVE WASD · AIM MOUSE · HOLD FIRE MOUSE 1 · DASH SPACE · EMP SHIFT",
+			"point_size": 23,
+			"measured": [
+				778,
+				35
+			],
+			"box": [
+				1185,
+				42
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "weapon",
+			"text": "BALANCED PULSE CANNON\nHold to fire · after 1 second idle, the next shot breaches",
+			"point_size": 27,
+			"measured": [
+				654,
+				82
+			],
+			"box": [
+				840,
+				123
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "difficulty_label",
+			"text": "RUN DIFFICULTY",
+			"point_size": 23,
+			"measured": [
+				166,
+				35
+			],
+			"box": [
+				330,
+				36
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "difficulty_easy",
+			"text": "EASY",
+			"point_size": 27,
+			"measured": [
+				60,
+				41
+			],
+			"box": [
+				386,
+				83
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "difficulty_normal",
+			"text": "NORMAL",
+			"point_size": 27,
+			"measured": [
+				105,
+				41
+			],
+			"box": [
+				386,
+				83
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "difficulty_hard",
+			"text": "HARD",
+			"point_size": 27,
+			"measured": [
+				70,
+				41
+			],
+			"box": [
+				387,
+				83
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "deploy",
+			"text": "DEPLOY",
+			"point_size": 30,
+			"measured": [
+				106,
+				45
+			],
+			"box": [
+				1188,
+				75
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "settings",
+			"text": "OPEN SETTINGS",
+			"point_size": 27,
+			"measured": [
+				197,
+				41
+			],
+			"box": [
+				1188,
+				83
+			],
+			"passed": true
+		},
+		{
+			"screen": "deployment",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "practice",
+			"text": "BOSS PRACTICE",
+			"point_size": 27,
+			"measured": [
+				192,
+				41
+			],
+			"box": [
+				1188,
+				83
+			],
+			"passed": true
+		},
+		{
+			"screen": "upgrade",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "eyebrow",
+			"text": "인양 보관함",
+			"point_size": 11,
+			"measured": [
+				55,
+				18
+			],
+			"box": [
+				210,
+				18
+			],
+			"passed": true
+		},
+		{
+			"screen": "upgrade",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "title",
+			"text": "회로 하나를 선택하세요",
+			"point_size": 23,
+			"measured": [
+				223,
+				35
+			],
+			"box": [
+				465,
+				39
+			],
+			"passed": true
+		},
+		{
+			"screen": "upgrade",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "subtitle",
+			"text": "분기 포구 · 주무기 발사마다 감소된 피해의 측면 탄환을 추가합니다.",
+			"point_size": 11,
+			"measured": [
+				305,
+				18
+			],
+			"box": [
+				540,
+				21
+			],
+			"passed": true
+		},
+		{
+			"screen": "upgrade",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "card_1",
+			"text": "주무기 · 분기 포구\n측면 탄환 +1\n레벨 0 → 1 / 최대 2",
+			"point_size": 13,
+			"measured": [
+				105,
+				63
+			],
+			"box": [
+				173,
+				105
+			],
+			"passed": true
+		},
+		{
+			"screen": "upgrade",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "card_2",
+			"text": "속성 · 빙결 코어\n동결 확률 +20%\n레벨 0 → 1 / 최대 1",
+			"point_size": 13,
+			"measured": [
+				105,
+				63
+			],
+			"box": [
+				173,
+				105
+			],
+			"passed": true
+		},
+		{
+			"screen": "upgrade",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "card_3",
+			"text": "보조무기 · 추적탄\n피해 ×1.00 → ×1.20\n레벨 0 → 1 / 최대 3",
+			"point_size": 13,
+			"measured": [
+				120,
+				63
+			],
+			"box": [
+				173,
+				105
+			],
+			"passed": true
+		},
+		{
+			"screen": "upgrade",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "equip",
+			"text": "장착",
+			"point_size": 15,
+			"measured": [
+				29,
+				24
+			],
+			"box": [
+				639,
+				41
+			],
+			"passed": true
+		},
+		{
+			"screen": "upgrade",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "eyebrow",
+			"text": "SALVAGE VAULT",
+			"point_size": 11,
+			"measured": [
+				76,
+				18
+			],
+			"box": [
+				210,
+				18
+			],
+			"passed": true
+		},
+		{
+			"screen": "upgrade",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "title",
+			"text": "Choose one circuit",
+			"point_size": 23,
+			"measured": [
+				190,
+				35
+			],
+			"box": [
+				465,
+				39
+			],
+			"passed": true
+		},
+		{
+			"screen": "upgrade",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "subtitle",
+			"text": "Branch Port · Add a reduced-damage side round to each primary shot.",
+			"point_size": 11,
+			"measured": [
+				341,
+				18
+			],
+			"box": [
+				540,
+				21
+			],
+			"passed": true
+		},
+		{
+			"screen": "upgrade",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "card_1",
+			"text": "PRIMARY · BRANCH PORT\nSide round +1\nLevel 0 → 1 / Max 2",
+			"point_size": 13,
+			"measured": [
+				149,
+				63
+			],
+			"box": [
+				173,
+				105
+			],
+			"passed": true
+		},
+		{
+			"screen": "upgrade",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "card_2",
+			"text": "AFFINITY · CRYO CORE\nFreeze chance +20%\nLevel 0 → 1 / Max 1",
+			"point_size": 13,
+			"measured": [
+				130,
+				63
+			],
+			"box": [
+				173,
+				105
+			],
+			"passed": true
+		},
+		{
+			"screen": "upgrade",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "card_3",
+			"text": "SECONDARY · SEEKER\nDamage ×1.00 → ×1.20\nLevel 0 → 1 / Max 3",
+			"point_size": 13,
+			"measured": [
+				143,
+				63
+			],
+			"box": [
+				173,
+				105
+			],
+			"passed": true
+		},
+		{
+			"screen": "upgrade",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "equip",
+			"text": "EQUIP",
+			"point_size": 15,
+			"measured": [
+				44,
+				24
+			],
+			"box": [
+				639,
+				41
+			],
+			"passed": true
+		},
+		{
+			"screen": "upgrade",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "eyebrow",
+			"text": "인양 보관함",
+			"point_size": 14,
+			"measured": [
+				69,
+				23
+			],
+			"box": [
+				280,
+				24
+			],
+			"passed": true
+		},
+		{
+			"screen": "upgrade",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "title",
+			"text": "회로 하나를 선택하세요",
+			"point_size": 30,
+			"measured": [
+				291,
+				45
+			],
+			"box": [
+				620,
+				52
+			],
+			"passed": true
+		},
+		{
+			"screen": "upgrade",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "subtitle",
+			"text": "분기 포구 · 주무기 발사마다 감소된 피해의 측면 탄환을 추가합니다.",
+			"point_size": 15,
+			"measured": [
+				415,
+				24
+			],
+			"box": [
+				720,
+				28
+			],
+			"passed": true
+		},
+		{
+			"screen": "upgrade",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "card_1",
+			"text": "주무기 · 분기 포구\n측면 탄환 +1\n레벨 0 → 1 / 최대 2",
+			"point_size": 17,
+			"measured": [
+				137,
+				78
+			],
+			"box": [
+				230,
+				140
+			],
+			"passed": true
+		},
+		{
+			"screen": "upgrade",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "card_2",
+			"text": "속성 · 빙결 코어\n동결 확률 +20%\n레벨 0 → 1 / 최대 1",
+			"point_size": 17,
+			"measured": [
+				137,
+				78
+			],
+			"box": [
+				230,
+				140
+			],
+			"passed": true
+		},
+		{
+			"screen": "upgrade",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "card_3",
+			"text": "보조무기 · 추적탄\n피해 ×1.00 → ×1.20\n레벨 0 → 1 / 최대 3",
+			"point_size": 17,
+			"measured": [
+				156,
+				78
+			],
+			"box": [
+				230,
+				140
+			],
+			"passed": true
+		},
+		{
+			"screen": "upgrade",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "equip",
+			"text": "장착",
+			"point_size": 20,
+			"measured": [
+				38,
+				31
+			],
+			"box": [
+				852,
+				55
+			],
+			"passed": true
+		},
+		{
+			"screen": "upgrade",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "eyebrow",
+			"text": "SALVAGE VAULT",
+			"point_size": 14,
+			"measured": [
+				97,
+				23
+			],
+			"box": [
+				280,
+				24
+			],
+			"passed": true
+		},
+		{
+			"screen": "upgrade",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "title",
+			"text": "Choose one circuit",
+			"point_size": 30,
+			"measured": [
+				247,
+				45
+			],
+			"box": [
+				620,
+				52
+			],
+			"passed": true
+		},
+		{
+			"screen": "upgrade",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "subtitle",
+			"text": "Branch Port · Add a reduced-damage side round to each primary shot.",
+			"point_size": 15,
+			"measured": [
+				465,
+				24
+			],
+			"box": [
+				720,
+				28
+			],
+			"passed": true
+		},
+		{
+			"screen": "upgrade",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "card_1",
+			"text": "PRIMARY · BRANCH PORT\nSide round +1\nLevel 0 → 1 / Max 2",
+			"point_size": 17,
+			"measured": [
+				194,
+				78
+			],
+			"box": [
+				230,
+				140
+			],
+			"passed": true
+		},
+		{
+			"screen": "upgrade",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "card_2",
+			"text": "AFFINITY · CRYO CORE\nFreeze chance +20%\nLevel 0 → 1 / Max 1",
+			"point_size": 17,
+			"measured": [
+				170,
+				78
+			],
+			"box": [
+				230,
+				140
+			],
+			"passed": true
+		},
+		{
+			"screen": "upgrade",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "card_3",
+			"text": "SECONDARY · SEEKER\nDamage ×1.00 → ×1.20\nLevel 0 → 1 / Max 3",
+			"point_size": 17,
+			"measured": [
+				187,
+				78
+			],
+			"box": [
+				230,
+				140
+			],
+			"passed": true
+		},
+		{
+			"screen": "upgrade",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "equip",
+			"text": "EQUIP",
+			"point_size": 20,
+			"measured": [
+				58,
+				31
+			],
+			"box": [
+				852,
+				55
+			],
+			"passed": true
+		},
+		{
+			"screen": "upgrade",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "eyebrow",
+			"text": "인양 보관함",
+			"point_size": 21,
+			"measured": [
+				103,
+				33
+			],
+			"box": [
+				420,
+				36
+			],
+			"passed": true
+		},
+		{
+			"screen": "upgrade",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "title",
+			"text": "회로 하나를 선택하세요",
+			"point_size": 45,
+			"measured": [
+				435,
+				67
+			],
+			"box": [
+				930,
+				78
+			],
+			"passed": true
+		},
+		{
+			"screen": "upgrade",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "subtitle",
+			"text": "분기 포구 · 주무기 발사마다 감소된 피해의 측면 탄환을 추가합니다.",
+			"point_size": 23,
+			"measured": [
+				636,
+				35
+			],
+			"box": [
+				1080,
+				42
+			],
+			"passed": true
+		},
+		{
+			"screen": "upgrade",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "card_1",
+			"text": "주무기 · 분기 포구\n측면 탄환 +1\n레벨 0 → 1 / 최대 2",
+			"point_size": 26,
+			"measured": [
+				208,
+				120
+			],
+			"box": [
+				345,
+				210
+			],
+			"passed": true
+		},
+		{
+			"screen": "upgrade",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "card_2",
+			"text": "속성 · 빙결 코어\n동결 확률 +20%\n레벨 0 → 1 / 최대 1",
+			"point_size": 26,
+			"measured": [
+				208,
+				120
+			],
+			"box": [
+				345,
+				210
+			],
+			"passed": true
+		},
+		{
+			"screen": "upgrade",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "card_3",
+			"text": "보조무기 · 추적탄\n피해 ×1.00 → ×1.20\n레벨 0 → 1 / 최대 3",
+			"point_size": 26,
+			"measured": [
+				238,
+				120
+			],
+			"box": [
+				345,
+				210
+			],
+			"passed": true
+		},
+		{
+			"screen": "upgrade",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "equip",
+			"text": "장착",
+			"point_size": 30,
+			"measured": [
+				57,
+				45
+			],
+			"box": [
+				1278,
+				83
+			],
+			"passed": true
+		},
+		{
+			"screen": "upgrade",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "eyebrow",
+			"text": "SALVAGE VAULT",
+			"point_size": 21,
+			"measured": [
+				145,
+				33
+			],
+			"box": [
+				420,
+				36
+			],
+			"passed": true
+		},
+		{
+			"screen": "upgrade",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "title",
+			"text": "Choose one circuit",
+			"point_size": 45,
+			"measured": [
+				370,
+				67
+			],
+			"box": [
+				930,
+				78
+			],
+			"passed": true
+		},
+		{
+			"screen": "upgrade",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "subtitle",
+			"text": "Branch Port · Add a reduced-damage side round to each primary shot.",
+			"point_size": 23,
+			"measured": [
+				712,
+				35
+			],
+			"box": [
+				1080,
+				42
+			],
+			"passed": true
+		},
+		{
+			"screen": "upgrade",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "card_1",
+			"text": "PRIMARY · BRANCH PORT\nSide round +1\nLevel 0 → 1 / Max 2",
+			"point_size": 26,
+			"measured": [
+				296,
+				120
+			],
+			"box": [
+				345,
+				210
+			],
+			"passed": true
+		},
+		{
+			"screen": "upgrade",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "card_2",
+			"text": "AFFINITY · CRYO CORE\nFreeze chance +20%\nLevel 0 → 1 / Max 1",
+			"point_size": 26,
+			"measured": [
+				259,
+				120
+			],
+			"box": [
+				345,
+				210
+			],
+			"passed": true
+		},
+		{
+			"screen": "upgrade",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "card_3",
+			"text": "SECONDARY · SEEKER\nDamage ×1.00 → ×1.20\nLevel 0 → 1 / Max 3",
+			"point_size": 26,
+			"measured": [
+				285,
+				120
+			],
+			"box": [
+				345,
+				210
+			],
+			"passed": true
+		},
+		{
+			"screen": "upgrade",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "equip",
+			"text": "EQUIP",
+			"point_size": 30,
+			"measured": [
+				86,
+				45
+			],
+			"box": [
+				1278,
+				83
+			],
+			"passed": true
+		},
+		{
+			"screen": "pause",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "title",
+			"text": "일시정지",
+			"point_size": 23,
+			"measured": [
+				86,
+				35
+			],
+			"box": [
+				270,
+				39
+			],
+			"passed": true
+		},
+		{
+			"screen": "pause",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "help",
+			"text": "?",
+			"point_size": 15,
+			"measured": [
+				8,
+				24
+			],
+			"box": [
+				36,
+				41
+			],
+			"passed": true
+		},
+		{
+			"screen": "pause",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "resume",
+			"text": "계속하기",
+			"point_size": 15,
+			"measured": [
+				57,
+				24
+			],
+			"box": [
+				384,
+				38
+			],
+			"passed": true
+		},
+		{
+			"screen": "pause",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "restart",
+			"text": "스테이지 다시 시작",
+			"point_size": 14,
+			"measured": [
+				111,
+				23
+			],
+			"box": [
+				384,
+				41
+			],
+			"passed": true
+		},
+		{
+			"screen": "pause",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "settings",
+			"text": "설정",
+			"point_size": 14,
+			"measured": [
+				27,
+				23
+			],
+			"box": [
+				384,
+				41
+			],
+			"passed": true
+		},
+		{
+			"screen": "pause",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "garage",
+			"text": "차고로 돌아가기",
+			"point_size": 14,
+			"measured": [
+				95,
+				23
+			],
+			"box": [
+				384,
+				38
+			],
+			"passed": true
+		},
+		{
+			"screen": "pause",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "title",
+			"text": "Paused",
+			"point_size": 23,
+			"measured": [
+				76,
+				35
+			],
+			"box": [
+				270,
+				39
+			],
+			"passed": true
+		},
+		{
+			"screen": "pause",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "help",
+			"text": "?",
+			"point_size": 15,
+			"measured": [
+				8,
+				24
+			],
+			"box": [
+				36,
+				41
+			],
+			"passed": true
+		},
+		{
+			"screen": "pause",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "resume",
+			"text": "RESUME",
+			"point_size": 15,
+			"measured": [
+				58,
+				24
+			],
+			"box": [
+				384,
+				38
+			],
+			"passed": true
+		},
+		{
+			"screen": "pause",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "restart",
+			"text": "RESTART STAGE",
+			"point_size": 14,
+			"measured": [
+				100,
+				23
+			],
+			"box": [
+				384,
+				41
+			],
+			"passed": true
+		},
+		{
+			"screen": "pause",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "settings",
+			"text": "SETTINGS",
+			"point_size": 14,
+			"measured": [
+				64,
+				23
+			],
+			"box": [
+				384,
+				41
+			],
+			"passed": true
+		},
+		{
+			"screen": "pause",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "garage",
+			"text": "ABORT TO GARAGE",
+			"point_size": 14,
+			"measured": [
+				119,
+				23
+			],
+			"box": [
+				384,
+				38
+			],
+			"passed": true
+		},
+		{
+			"screen": "pause",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "title",
+			"text": "일시정지",
+			"point_size": 30,
+			"measured": [
+				112,
+				45
+			],
+			"box": [
+				360,
+				52
+			],
+			"passed": true
+		},
+		{
+			"screen": "pause",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "help",
+			"text": "?",
+			"point_size": 20,
+			"measured": [
+				10,
+				31
+			],
+			"box": [
+				48,
+				55
+			],
+			"passed": true
+		},
+		{
+			"screen": "pause",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "resume",
+			"text": "계속하기",
+			"point_size": 20,
+			"measured": [
+				75,
+				31
+			],
+			"box": [
+				512,
+				51
+			],
+			"passed": true
+		},
+		{
+			"screen": "pause",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "restart",
+			"text": "스테이지 다시 시작",
+			"point_size": 18,
+			"measured": [
+				142,
+				28
+			],
+			"box": [
+				512,
+				55
+			],
+			"passed": true
+		},
+		{
+			"screen": "pause",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "settings",
+			"text": "설정",
+			"point_size": 18,
+			"measured": [
+				35,
+				28
+			],
+			"box": [
+				512,
+				55
+			],
+			"passed": true
+		},
+		{
+			"screen": "pause",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "garage",
+			"text": "차고로 돌아가기",
+			"point_size": 18,
+			"measured": [
+				121,
+				28
+			],
+			"box": [
+				512,
+				51
+			],
+			"passed": true
+		},
+		{
+			"screen": "pause",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "title",
+			"text": "Paused",
+			"point_size": 30,
+			"measured": [
+				98,
+				45
+			],
+			"box": [
+				360,
+				52
+			],
+			"passed": true
+		},
+		{
+			"screen": "pause",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "help",
+			"text": "?",
+			"point_size": 20,
+			"measured": [
+				10,
+				31
+			],
+			"box": [
+				48,
+				55
+			],
+			"passed": true
+		},
+		{
+			"screen": "pause",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "resume",
+			"text": "RESUME",
+			"point_size": 20,
+			"measured": [
+				76,
+				31
+			],
+			"box": [
+				512,
+				51
+			],
+			"passed": true
+		},
+		{
+			"screen": "pause",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "restart",
+			"text": "RESTART STAGE",
+			"point_size": 18,
+			"measured": [
+				128,
+				28
+			],
+			"box": [
+				512,
+				55
+			],
+			"passed": true
+		},
+		{
+			"screen": "pause",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "settings",
+			"text": "SETTINGS",
+			"point_size": 18,
+			"measured": [
+				82,
+				28
+			],
+			"box": [
+				512,
+				55
+			],
+			"passed": true
+		},
+		{
+			"screen": "pause",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "garage",
+			"text": "ABORT TO GARAGE",
+			"point_size": 18,
+			"measured": [
+				152,
+				28
+			],
+			"box": [
+				512,
+				51
+			],
+			"passed": true
+		},
+		{
+			"screen": "pause",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "title",
+			"text": "일시정지",
+			"point_size": 45,
+			"measured": [
+				167,
+				67
+			],
+			"box": [
+				540,
+				78
+			],
+			"passed": true
+		},
+		{
+			"screen": "pause",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "help",
+			"text": "?",
+			"point_size": 30,
+			"measured": [
+				15,
+				45
+			],
+			"box": [
+				72,
+				83
+			],
+			"passed": true
+		},
+		{
+			"screen": "pause",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "resume",
+			"text": "계속하기",
+			"point_size": 30,
+			"measured": [
+				112,
+				45
+			],
+			"box": [
+				768,
+				77
+			],
+			"passed": true
+		},
+		{
+			"screen": "pause",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "restart",
+			"text": "스테이지 다시 시작",
+			"point_size": 27,
+			"measured": [
+				212,
+				41
+			],
+			"box": [
+				768,
+				83
+			],
+			"passed": true
+		},
+		{
+			"screen": "pause",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "settings",
+			"text": "설정",
+			"point_size": 27,
+			"measured": [
+				51,
+				41
+			],
+			"box": [
+				768,
+				83
+			],
+			"passed": true
+		},
+		{
+			"screen": "pause",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "garage",
+			"text": "차고로 돌아가기",
+			"point_size": 27,
+			"measured": [
+				181,
+				41
+			],
+			"box": [
+				768,
+				77
+			],
+			"passed": true
+		},
+		{
+			"screen": "pause",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "title",
+			"text": "Paused",
+			"point_size": 45,
+			"measured": [
+				146,
+				67
+			],
+			"box": [
+				540,
+				78
+			],
+			"passed": true
+		},
+		{
+			"screen": "pause",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "help",
+			"text": "?",
+			"point_size": 30,
+			"measured": [
+				15,
+				45
+			],
+			"box": [
+				72,
+				83
+			],
+			"passed": true
+		},
+		{
+			"screen": "pause",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "resume",
+			"text": "RESUME",
+			"point_size": 30,
+			"measured": [
+				114,
+				45
+			],
+			"box": [
+				768,
+				77
+			],
+			"passed": true
+		},
+		{
+			"screen": "pause",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "restart",
+			"text": "RESTART STAGE",
+			"point_size": 27,
+			"measured": [
+				191,
+				41
+			],
+			"box": [
+				768,
+				83
+			],
+			"passed": true
+		},
+		{
+			"screen": "pause",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "settings",
+			"text": "SETTINGS",
+			"point_size": 27,
+			"measured": [
+				122,
+				41
+			],
+			"box": [
+				768,
+				83
+			],
+			"passed": true
+		},
+		{
+			"screen": "pause",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "garage",
+			"text": "ABORT TO GARAGE",
+			"point_size": 27,
+			"measured": [
+				228,
+				41
+			],
+			"box": [
+				768,
+				77
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "title",
+			"text": "설정",
+			"point_size": 23,
+			"measured": [
+				44,
+				35
+			],
+			"box": [
+				225,
+				39
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "subtitle",
+			"text": "변경 사항은 즉시 저장되고 HUD에 반영됩니다.",
+			"point_size": 11,
+			"measured": [
+				211,
+				18
+			],
+			"box": [
+				428,
+				20
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "help",
+			"text": "?",
+			"point_size": 15,
+			"measured": [
+				8,
+				24
+			],
+			"box": [
+				37,
+				41
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "back",
+			"text": "돌아가기",
+			"point_size": 14,
+			"measured": [
+				53,
+				23
+			],
+			"box": [
+				84,
+				41
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "tab_ship",
+			"text": "기체 상태",
+			"point_size": 11,
+			"measured": [
+				44,
+				18
+			],
+			"box": [
+				62,
+				31
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "tab_audio",
+			"text": "음량",
+			"point_size": 11,
+			"measured": [
+				22,
+				18
+			],
+			"box": [
+				49,
+				31
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "tab_controls",
+			"text": "조작",
+			"point_size": 11,
+			"measured": [
+				22,
+				18
+			],
+			"box": [
+				49,
+				31
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "tab_game",
+			"text": "게임",
+			"point_size": 11,
+			"measured": [
+				22,
+				18
+			],
+			"box": [
+				49,
+				31
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "tab_language",
+			"text": "언어",
+			"point_size": 11,
+			"measured": [
+				22,
+				18
+			],
+			"box": [
+				45,
+				31
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "section",
+			"text": "현재 기체",
+			"point_size": 15,
+			"measured": [
+				60,
+				24
+			],
+			"box": [
+				375,
+				24
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "empty",
+			"text": "진행 중인 작전이 없습니다. 작전 중 일시정지 메뉴에서 현재 기체 상태를 확인할 수 있습니다.",
+			"point_size": 12,
+			"measured": [
+				450,
+				19
+			],
+			"box": [
+				525,
+				36
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "title",
+			"text": "Settings",
+			"point_size": 23,
+			"measured": [
+				83,
+				35
+			],
+			"box": [
+				225,
+				39
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "subtitle",
+			"text": "Changes save immediately and apply to the HUD.",
+			"point_size": 11,
+			"measured": [
+				239,
+				18
+			],
+			"box": [
+				428,
+				20
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "help",
+			"text": "?",
+			"point_size": 15,
+			"measured": [
+				8,
+				24
+			],
+			"box": [
+				37,
+				41
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "back",
+			"text": "BACK",
+			"point_size": 14,
+			"measured": [
+				35,
+				23
+			],
+			"box": [
+				84,
+				41
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "tab_ship",
+			"text": "SHIP",
+			"point_size": 11,
+			"measured": [
+				25,
+				18
+			],
+			"box": [
+				62,
+				31
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "tab_audio",
+			"text": "AUDIO",
+			"point_size": 11,
+			"measured": [
+				33,
+				18
+			],
+			"box": [
+				49,
+				31
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "tab_controls",
+			"text": "INPUT",
+			"point_size": 11,
+			"measured": [
+				32,
+				18
+			],
+			"box": [
+				49,
+				31
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "tab_game",
+			"text": "GAME",
+			"point_size": 11,
+			"measured": [
+				30,
+				18
+			],
+			"box": [
+				49,
+				31
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "tab_language",
+			"text": "LANG",
+			"point_size": 11,
+			"measured": [
+				28,
+				18
+			],
+			"box": [
+				45,
+				31
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "section",
+			"text": "Current Ship",
+			"point_size": 15,
+			"measured": [
+				84,
+				24
+			],
+			"box": [
+				375,
+				24
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "empty",
+			"text": "No run is active. Open Settings from Pause during a run to inspect the current ship.",
+			"point_size": 12,
+			"measured": [
+				433,
+				19
+			],
+			"box": [
+				525,
+				36
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "title",
+			"text": "설정",
+			"point_size": 30,
+			"measured": [
+				57,
+				45
+			],
+			"box": [
+				300,
+				52
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "subtitle",
+			"text": "변경 사항은 즉시 저장되고 HUD에 반영됩니다.",
+			"point_size": 15,
+			"measured": [
+				287,
+				24
+			],
+			"box": [
+				570,
+				26
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "help",
+			"text": "?",
+			"point_size": 20,
+			"measured": [
+				10,
+				31
+			],
+			"box": [
+				49,
+				55
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "back",
+			"text": "돌아가기",
+			"point_size": 18,
+			"measured": [
+				68,
+				28
+			],
+			"box": [
+				112,
+				55
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "tab_ship",
+			"text": "기체 상태",
+			"point_size": 14,
+			"measured": [
+				56,
+				23
+			],
+			"box": [
+				82,
+				41
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "tab_audio",
+			"text": "음량",
+			"point_size": 14,
+			"measured": [
+				27,
+				23
+			],
+			"box": [
+				65,
+				41
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "tab_controls",
+			"text": "조작",
+			"point_size": 14,
+			"measured": [
+				27,
+				23
+			],
+			"box": [
+				65,
+				41
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "tab_game",
+			"text": "게임",
+			"point_size": 14,
+			"measured": [
+				27,
+				23
+			],
+			"box": [
+				65,
+				41
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "tab_language",
+			"text": "언어",
+			"point_size": 14,
+			"measured": [
+				27,
+				23
+			],
+			"box": [
+				60,
+				41
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "section",
+			"text": "현재 기체",
+			"point_size": 20,
+			"measured": [
+				80,
+				31
+			],
+			"box": [
+				500,
+				32
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "empty",
+			"text": "진행 중인 작전이 없습니다. 작전 중 일시정지 메뉴에서 현재 기체 상태를 확인할 수 있습니다.",
+			"point_size": 16,
+			"measured": [
+				599,
+				25
+			],
+			"box": [
+				700,
+				48
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "title",
+			"text": "Settings",
+			"point_size": 30,
+			"measured": [
+				107,
+				45
+			],
+			"box": [
+				300,
+				52
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "subtitle",
+			"text": "Changes save immediately and apply to the HUD.",
+			"point_size": 15,
+			"measured": [
+				325,
+				24
+			],
+			"box": [
+				570,
+				26
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "help",
+			"text": "?",
+			"point_size": 20,
+			"measured": [
+				10,
+				31
+			],
+			"box": [
+				49,
+				55
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "back",
+			"text": "BACK",
+			"point_size": 18,
+			"measured": [
+				45,
+				28
+			],
+			"box": [
+				112,
+				55
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "tab_ship",
+			"text": "SHIP",
+			"point_size": 14,
+			"measured": [
+				31,
+				23
+			],
+			"box": [
+				82,
+				41
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "tab_audio",
+			"text": "AUDIO",
+			"point_size": 14,
+			"measured": [
+				42,
+				23
+			],
+			"box": [
+				65,
+				41
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "tab_controls",
+			"text": "INPUT",
+			"point_size": 14,
+			"measured": [
+				41,
+				23
+			],
+			"box": [
+				65,
+				41
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "tab_game",
+			"text": "GAME",
+			"point_size": 14,
+			"measured": [
+				37,
+				23
+			],
+			"box": [
+				65,
+				41
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "tab_language",
+			"text": "LANG",
+			"point_size": 14,
+			"measured": [
+				36,
+				23
+			],
+			"box": [
+				60,
+				41
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "section",
+			"text": "Current Ship",
+			"point_size": 20,
+			"measured": [
+				111,
+				31
+			],
+			"box": [
+				500,
+				32
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "empty",
+			"text": "No run is active. Open Settings from Pause during a run to inspect the current ship.",
+			"point_size": 16,
+			"measured": [
+				576,
+				25
+			],
+			"box": [
+				700,
+				48
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "title",
+			"text": "설정",
+			"point_size": 45,
+			"measured": [
+				84,
+				67
+			],
+			"box": [
+				450,
+				78
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "subtitle",
+			"text": "변경 사항은 즉시 저장되고 HUD에 반영됩니다.",
+			"point_size": 23,
+			"measured": [
+				439,
+				35
+			],
+			"box": [
+				855,
+				39
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "help",
+			"text": "?",
+			"point_size": 30,
+			"measured": [
+				15,
+				45
+			],
+			"box": [
+				74,
+				83
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "back",
+			"text": "돌아가기",
+			"point_size": 27,
+			"measured": [
+				101,
+				41
+			],
+			"box": [
+				168,
+				83
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "tab_ship",
+			"text": "기체 상태",
+			"point_size": 21,
+			"measured": [
+				83,
+				33
+			],
+			"box": [
+				123,
+				62
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "tab_audio",
+			"text": "음량",
+			"point_size": 21,
+			"measured": [
+				40,
+				33
+			],
+			"box": [
+				98,
+				62
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "tab_controls",
+			"text": "조작",
+			"point_size": 21,
+			"measured": [
+				40,
+				33
+			],
+			"box": [
+				98,
+				62
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "tab_game",
+			"text": "게임",
+			"point_size": 21,
+			"measured": [
+				40,
+				33
+			],
+			"box": [
+				98,
+				62
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "tab_language",
+			"text": "언어",
+			"point_size": 21,
+			"measured": [
+				40,
+				33
+			],
+			"box": [
+				90,
+				62
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "section",
+			"text": "현재 기체",
+			"point_size": 30,
+			"measured": [
+				118,
+				45
+			],
+			"box": [
+				750,
+				48
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "empty",
+			"text": "진행 중인 작전이 없습니다. 작전 중 일시정지 메뉴에서 현재 기체 상태를 확인할 수 있습니다.",
+			"point_size": 24,
+			"measured": [
+				898,
+				36
+			],
+			"box": [
+				1050,
+				72
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "title",
+			"text": "Settings",
+			"point_size": 45,
+			"measured": [
+				160,
+				67
+			],
+			"box": [
+				450,
+				78
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "subtitle",
+			"text": "Changes save immediately and apply to the HUD.",
+			"point_size": 23,
+			"measured": [
+				498,
+				35
+			],
+			"box": [
+				855,
+				39
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "help",
+			"text": "?",
+			"point_size": 30,
+			"measured": [
+				15,
+				45
+			],
+			"box": [
+				74,
+				83
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "back",
+			"text": "BACK",
+			"point_size": 27,
+			"measured": [
+				67,
+				41
+			],
+			"box": [
+				168,
+				83
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "tab_ship",
+			"text": "SHIP",
+			"point_size": 21,
+			"measured": [
+				46,
+				33
+			],
+			"box": [
+				123,
+				62
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "tab_audio",
+			"text": "AUDIO",
+			"point_size": 21,
+			"measured": [
+				62,
+				33
+			],
+			"box": [
+				98,
+				62
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "tab_controls",
+			"text": "INPUT",
+			"point_size": 21,
+			"measured": [
+				61,
+				33
+			],
+			"box": [
+				98,
+				62
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "tab_game",
+			"text": "GAME",
+			"point_size": 21,
+			"measured": [
+				55,
+				33
+			],
+			"box": [
+				98,
+				62
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "tab_language",
+			"text": "LANG",
+			"point_size": 21,
+			"measured": [
+				53,
+				33
+			],
+			"box": [
+				90,
+				62
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "section",
+			"text": "Current Ship",
+			"point_size": 30,
+			"measured": [
+				166,
+				45
+			],
+			"box": [
+				750,
+				48
+			],
+			"passed": true
+		},
+		{
+			"screen": "settings",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "empty",
+			"text": "No run is active. Open Settings from Pause during a run to inspect the current ship.",
+			"point_size": 24,
+			"measured": [
+				864,
+				36
+			],
+			"box": [
+				1050,
+				72
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "title",
+			"text": "가이드북",
+			"point_size": 23,
+			"measured": [
+				86,
+				35
+			],
+			"box": [
+				300,
+				39
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "back",
+			"text": "돌아가기",
+			"point_size": 14,
+			"measured": [
+				53,
+				23
+			],
+			"box": [
+				84,
+				40
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "cat_ship",
+			"text": "현재 기체",
+			"point_size": 13,
+			"measured": [
+				52,
+				21
+			],
+			"box": [
+				106,
+				40
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "cat_mobile",
+			"text": "이동형 적",
+			"point_size": 13,
+			"measured": [
+				52,
+				21
+			],
+			"box": [
+				106,
+				40
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "cat_static",
+			"text": "고정형 위협",
+			"point_size": 13,
+			"measured": [
+				64,
+				21
+			],
+			"box": [
+				106,
+				40
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "cat_boss",
+			"text": "보스",
+			"point_size": 13,
+			"measured": [
+				25,
+				21
+			],
+			"box": [
+				106,
+				40
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "cat_field",
+			"text": "필드 오브젝트",
+			"point_size": 13,
+			"measured": [
+				76,
+				21
+			],
+			"box": [
+				106,
+				40
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "entry",
+			"text": "현재 기체",
+			"point_size": 13,
+			"measured": [
+				52,
+				21
+			],
+			"box": [
+				150,
+				40
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "detail",
+			"text": "현재 기체",
+			"point_size": 20,
+			"measured": [
+				80,
+				31
+			],
+			"box": [
+				270,
+				32
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "stats",
+			"text": "최대 내구도       120 HP\n이동 속도          280 px/s\n주무기 피해        18.0 피해\n초당 발사 수       8.33 발/초\n탄환 속도          1120 px/s\n돌파탄 준비        1.00 초\n대시 재사용        1.25 초\nEMP 피해           62.0 피해\nEMP 재사용         11.50 초",
+			"point_size": 12,
+			"measured": [
+				131,
+				171
+			],
+			"box": [
+				293,
+				210
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "secondary",
+			"text": "보조 무기 · 추적 발사기 Lv.1",
+			"point_size": 13,
+			"measured": [
+				152,
+				21
+			],
+			"box": [
+				225,
+				21
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "title",
+			"text": "Guidebook",
+			"point_size": 23,
+			"measured": [
+				114,
+				35
+			],
+			"box": [
+				300,
+				39
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "back",
+			"text": "BACK",
+			"point_size": 14,
+			"measured": [
+				35,
+				23
+			],
+			"box": [
+				84,
+				40
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "cat_ship",
+			"text": "SHIP",
+			"point_size": 13,
+			"measured": [
+				29,
+				21
+			],
+			"box": [
+				106,
+				40
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "cat_mobile",
+			"text": "MOBILE",
+			"point_size": 13,
+			"measured": [
+				46,
+				21
+			],
+			"box": [
+				106,
+				40
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "cat_static",
+			"text": "STATIC",
+			"point_size": 13,
+			"measured": [
+				41,
+				21
+			],
+			"box": [
+				106,
+				40
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "cat_boss",
+			"text": "BOSSES",
+			"point_size": 13,
+			"measured": [
+				48,
+				21
+			],
+			"box": [
+				106,
+				40
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "cat_field",
+			"text": "FIELD",
+			"point_size": 13,
+			"measured": [
+				34,
+				21
+			],
+			"box": [
+				106,
+				40
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "entry",
+			"text": "CURRENT SHIP",
+			"point_size": 13,
+			"measured": [
+				88,
+				21
+			],
+			"box": [
+				150,
+				40
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "detail",
+			"text": "Current Ship",
+			"point_size": 20,
+			"measured": [
+				111,
+				31
+			],
+			"box": [
+				270,
+				32
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "stats",
+			"text": "MAX HULL          120 HP\nMOVE SPEED        280 px/s\nPRIMARY DAMAGE    18.0\nSHOTS PER SECOND  8.33\nPROJECTILE SPEED  1120 px/s\nBREACH READY      1.00 s\nDASH COOLDOWN     1.25 s\nEMP DAMAGE        62.0\nEMP COOLDOWN      11.50 s",
+			"point_size": 12,
+			"measured": [
+				160,
+				171
+			],
+			"box": [
+				293,
+				210
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "secondary",
+			"text": "SECONDARY · SEEKER Lv.1",
+			"point_size": 13,
+			"measured": [
+				154,
+				21
+			],
+			"box": [
+				225,
+				21
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "title",
+			"text": "가이드북",
+			"point_size": 30,
+			"measured": [
+				112,
+				45
+			],
+			"box": [
+				400,
+				52
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "back",
+			"text": "돌아가기",
+			"point_size": 18,
+			"measured": [
+				68,
+				28
+			],
+			"box": [
+				112,
+				53
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "cat_ship",
+			"text": "현재 기체",
+			"point_size": 17,
+			"measured": [
+				68,
+				26
+			],
+			"box": [
+				141,
+				53
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "cat_mobile",
+			"text": "이동형 적",
+			"point_size": 17,
+			"measured": [
+				68,
+				26
+			],
+			"box": [
+				141,
+				53
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "cat_static",
+			"text": "고정형 위협",
+			"point_size": 17,
+			"measured": [
+				83,
+				26
+			],
+			"box": [
+				141,
+				53
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "cat_boss",
+			"text": "보스",
+			"point_size": 17,
+			"measured": [
+				33,
+				26
+			],
+			"box": [
+				141,
+				53
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "cat_field",
+			"text": "필드 오브젝트",
+			"point_size": 17,
+			"measured": [
+				99,
+				26
+			],
+			"box": [
+				141,
+				53
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "entry",
+			"text": "현재 기체",
+			"point_size": 17,
+			"measured": [
+				68,
+				26
+			],
+			"box": [
+				200,
+				53
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "detail",
+			"text": "현재 기체",
+			"point_size": 27,
+			"measured": [
+				107,
+				41
+			],
+			"box": [
+				360,
+				42
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "stats",
+			"text": "최대 내구도       120 HP\n이동 속도          280 px/s\n주무기 피해        18.0 피해\n초당 발사 수       8.33 발/초\n탄환 속도          1120 px/s\n돌파탄 준비        1.00 초\n대시 재사용        1.25 초\nEMP 피해           62.0 피해\nEMP 재사용         11.50 초",
+			"point_size": 16,
+			"measured": [
+				175,
+				225
+			],
+			"box": [
+				390,
+				280
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "secondary",
+			"text": "보조 무기 · 추적 발사기 Lv.1",
+			"point_size": 17,
+			"measured": [
+				199,
+				26
+			],
+			"box": [
+				300,
+				28
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "title",
+			"text": "Guidebook",
+			"point_size": 30,
+			"measured": [
+				148,
+				45
+			],
+			"box": [
+				400,
+				52
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "back",
+			"text": "BACK",
+			"point_size": 18,
+			"measured": [
+				45,
+				28
+			],
+			"box": [
+				112,
+				53
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "cat_ship",
+			"text": "SHIP",
+			"point_size": 17,
+			"measured": [
+				38,
+				26
+			],
+			"box": [
+				141,
+				53
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "cat_mobile",
+			"text": "MOBILE",
+			"point_size": 17,
+			"measured": [
+				60,
+				26
+			],
+			"box": [
+				141,
+				53
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "cat_static",
+			"text": "STATIC",
+			"point_size": 17,
+			"measured": [
+				53,
+				26
+			],
+			"box": [
+				141,
+				53
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "cat_boss",
+			"text": "BOSSES",
+			"point_size": 17,
+			"measured": [
+				63,
+				26
+			],
+			"box": [
+				141,
+				53
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "cat_field",
+			"text": "FIELD",
+			"point_size": 17,
+			"measured": [
+				44,
+				26
+			],
+			"box": [
+				141,
+				53
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "entry",
+			"text": "CURRENT SHIP",
+			"point_size": 17,
+			"measured": [
+				115,
+				26
+			],
+			"box": [
+				200,
+				53
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "detail",
+			"text": "Current Ship",
+			"point_size": 27,
+			"measured": [
+				150,
+				41
+			],
+			"box": [
+				360,
+				42
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "stats",
+			"text": "MAX HULL          120 HP\nMOVE SPEED        280 px/s\nPRIMARY DAMAGE    18.0\nSHOTS PER SECOND  8.33\nPROJECTILE SPEED  1120 px/s\nBREACH READY      1.00 s\nDASH COOLDOWN     1.25 s\nEMP DAMAGE        62.0\nEMP COOLDOWN      11.50 s",
+			"point_size": 16,
+			"measured": [
+				213,
+				225
+			],
+			"box": [
+				390,
+				280
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "secondary",
+			"text": "SECONDARY · SEEKER Lv.1",
+			"point_size": 17,
+			"measured": [
+				201,
+				26
+			],
+			"box": [
+				300,
+				28
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "title",
+			"text": "가이드북",
+			"point_size": 45,
+			"measured": [
+				167,
+				67
+			],
+			"box": [
+				600,
+				78
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "back",
+			"text": "돌아가기",
+			"point_size": 27,
+			"measured": [
+				101,
+				41
+			],
+			"box": [
+				168,
+				80
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "cat_ship",
+			"text": "현재 기체",
+			"point_size": 26,
+			"measured": [
+				103,
+				40
+			],
+			"box": [
+				212,
+				80
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "cat_mobile",
+			"text": "이동형 적",
+			"point_size": 26,
+			"measured": [
+				103,
+				40
+			],
+			"box": [
+				212,
+				80
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "cat_static",
+			"text": "고정형 위협",
+			"point_size": 26,
+			"measured": [
+				127,
+				40
+			],
+			"box": [
+				212,
+				80
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "cat_boss",
+			"text": "보스",
+			"point_size": 26,
+			"measured": [
+				49,
+				40
+			],
+			"box": [
+				212,
+				80
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "cat_field",
+			"text": "필드 오브젝트",
+			"point_size": 26,
+			"measured": [
+				151,
+				40
+			],
+			"box": [
+				212,
+				80
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "entry",
+			"text": "현재 기체",
+			"point_size": 26,
+			"measured": [
+				103,
+				40
+			],
+			"box": [
+				300,
+				80
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "detail",
+			"text": "현재 기체",
+			"point_size": 41,
+			"measured": [
+				161,
+				61
+			],
+			"box": [
+				540,
+				63
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "stats",
+			"text": "최대 내구도       120 HP\n이동 속도          280 px/s\n주무기 피해        18.0 피해\n초당 발사 수       8.33 발/초\n탄환 속도          1120 px/s\n돌파탄 준비        1.00 초\n대시 재사용        1.25 초\nEMP 피해           62.0 피해\nEMP 재사용         11.50 초",
+			"point_size": 24,
+			"measured": [
+				261,
+				324
+			],
+			"box": [
+				585,
+				420
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "secondary",
+			"text": "보조 무기 · 추적 발사기 Lv.1",
+			"point_size": 26,
+			"measured": [
+				303,
+				40
+			],
+			"box": [
+				450,
+				42
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "title",
+			"text": "Guidebook",
+			"point_size": 45,
+			"measured": [
+				221,
+				67
+			],
+			"box": [
+				600,
+				78
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "back",
+			"text": "BACK",
+			"point_size": 27,
+			"measured": [
+				67,
+				41
+			],
+			"box": [
+				168,
+				80
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "cat_ship",
+			"text": "SHIP",
+			"point_size": 26,
+			"measured": [
+				57,
+				40
+			],
+			"box": [
+				212,
+				80
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "cat_mobile",
+			"text": "MOBILE",
+			"point_size": 26,
+			"measured": [
+				91,
+				40
+			],
+			"box": [
+				212,
+				80
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "cat_static",
+			"text": "STATIC",
+			"point_size": 26,
+			"measured": [
+				81,
+				40
+			],
+			"box": [
+				212,
+				80
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "cat_boss",
+			"text": "BOSSES",
+			"point_size": 26,
+			"measured": [
+				95,
+				40
+			],
+			"box": [
+				212,
+				80
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "cat_field",
+			"text": "FIELD",
+			"point_size": 26,
+			"measured": [
+				67,
+				40
+			],
+			"box": [
+				212,
+				80
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "entry",
+			"text": "CURRENT SHIP",
+			"point_size": 26,
+			"measured": [
+				174,
+				40
+			],
+			"box": [
+				300,
+				80
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "detail",
+			"text": "Current Ship",
+			"point_size": 41,
+			"measured": [
+				227,
+				61
+			],
+			"box": [
+				540,
+				63
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "stats",
+			"text": "MAX HULL          120 HP\nMOVE SPEED        280 px/s\nPRIMARY DAMAGE    18.0\nSHOTS PER SECOND  8.33\nPROJECTILE SPEED  1120 px/s\nBREACH READY      1.00 s\nDASH COOLDOWN     1.25 s\nEMP DAMAGE        62.0\nEMP COOLDOWN      11.50 s",
+			"point_size": 24,
+			"measured": [
+				318,
+				324
+			],
+			"box": [
+				585,
+				420
+			],
+			"passed": true
+		},
+		{
+			"screen": "guidebook",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "secondary",
+			"text": "SECONDARY · SEEKER Lv.1",
+			"point_size": 26,
+			"measured": [
+				307,
+				40
+			],
+			"box": [
+				450,
+				42
+			],
+			"passed": true
+		},
+		{
+			"screen": "report",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "eyebrow",
+			"text": "스테이지 전투 기록",
+			"point_size": 11,
+			"measured": [
+				87,
+				18
+			],
+			"box": [
+				300,
+				18
+			],
+			"passed": true
+		},
+		{
+			"screen": "report",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "title",
+			"text": "1단계 · 침수 유적 · 1구역",
+			"point_size": 22,
+			"measured": [
+				234,
+				34
+			],
+			"box": [
+				525,
+				38
+			],
+			"passed": true
+		},
+		{
+			"screen": "report",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "summary",
+			"text": "시간 01:15 · 내구도 88/120",
+			"point_size": 11,
+			"measured": [
+				126,
+				18
+			],
+			"box": [
+				375,
+				20
+			],
+			"passed": true
+		},
+		{
+			"screen": "report",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "defeats_heading",
+			"text": "처치한 적",
+			"point_size": 14,
+			"measured": [
+				56,
+				23
+			],
+			"box": [
+				240,
+				21
+			],
+			"passed": true
+		},
+		{
+			"screen": "report",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "defeats",
+			"text": "고철 드론  ×2\n니들 드론  ×1 · 정예 1",
+			"point_size": 13,
+			"measured": [
+				124,
+				42
+			],
+			"box": [
+				240,
+				83
+			],
+			"passed": true
+		},
+		{
+			"screen": "report",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "damage_heading",
+			"text": "피해 기여도",
+			"point_size": 14,
+			"measured": [
+				69,
+				23
+			],
+			"box": [
+				225,
+				21
+			],
+			"passed": true
+		},
+		{
+			"screen": "report",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "damage",
+			"text": "펄스 캐논 · 418.0 · 71.1%\n추적탄 · 126.0 · 21.4%\n아크 서지 · 44.0 · 7.5%\n총 피해 · 588.0",
+			"point_size": 13,
+			"measured": [
+				142,
+				84
+			],
+			"box": [
+				248,
+				98
+			],
+			"passed": true
+		},
+		{
+			"screen": "report",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "continue",
+			"text": "다음 단계",
+			"point_size": 15,
+			"measured": [
+				60,
+				24
+			],
+			"box": [
+				639,
+				39
+			],
+			"passed": true
+		},
+		{
+			"screen": "report",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "eyebrow",
+			"text": "STAGE COMBAT REPORT",
+			"point_size": 11,
+			"measured": [
+				120,
+				18
+			],
+			"box": [
+				300,
+				18
+			],
+			"passed": true
+		},
+		{
+			"screen": "report",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "title",
+			"text": "Stage 1 · Drowned Ruins · Sector 1",
+			"point_size": 22,
+			"measured": [
+				339,
+				34
+			],
+			"box": [
+				525,
+				38
+			],
+			"passed": true
+		},
+		{
+			"screen": "report",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "summary",
+			"text": "TIME 01:15 · HULL 88/120",
+			"point_size": 11,
+			"measured": [
+				126,
+				18
+			],
+			"box": [
+				375,
+				20
+			],
+			"passed": true
+		},
+		{
+			"screen": "report",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "defeats_heading",
+			"text": "DEFEATED",
+			"point_size": 14,
+			"measured": [
+				66,
+				23
+			],
+			"box": [
+				240,
+				21
+			],
+			"passed": true
+		},
+		{
+			"screen": "report",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "defeats",
+			"text": "SCRAP DRONE  ×2\nNEEDLE DRONE  ×1 · ELITE 1",
+			"point_size": 13,
+			"measured": [
+				172,
+				42
+			],
+			"box": [
+				240,
+				83
+			],
+			"passed": true
+		},
+		{
+			"screen": "report",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "damage_heading",
+			"text": "DAMAGE CONTRIBUTION",
+			"point_size": 14,
+			"measured": [
+				155,
+				23
+			],
+			"box": [
+				225,
+				21
+			],
+			"passed": true
+		},
+		{
+			"screen": "report",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "damage",
+			"text": "PULSE CANNON · 418.0 · 71.1%\nSEEKER · 126.0 · 21.4%\nARC SURGE · 44.0 · 7.5%\nTOTAL DAMAGE · 588.0",
+			"point_size": 13,
+			"measured": [
+				184,
+				84
+			],
+			"box": [
+				248,
+				98
+			],
+			"passed": true
+		},
+		{
+			"screen": "report",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "continue",
+			"text": "CONTINUE",
+			"point_size": 15,
+			"measured": [
+				73,
+				24
+			],
+			"box": [
+				639,
+				39
+			],
+			"passed": true
+		},
+		{
+			"screen": "report",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "eyebrow",
+			"text": "스테이지 전투 기록",
+			"point_size": 14,
+			"measured": [
+				111,
+				23
+			],
+			"box": [
+				400,
+				24
+			],
+			"passed": true
+		},
+		{
+			"screen": "report",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "title",
+			"text": "1단계 · 침수 유적 · 1구역",
+			"point_size": 29,
+			"measured": [
+				308,
+				44
+			],
+			"box": [
+				700,
+				50
+			],
+			"passed": true
+		},
+		{
+			"screen": "report",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "summary",
+			"text": "시간 01:15 · 내구도 88/120",
+			"point_size": 15,
+			"measured": [
+				171,
+				24
+			],
+			"box": [
+				500,
+				26
+			],
+			"passed": true
+		},
+		{
+			"screen": "report",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "defeats_heading",
+			"text": "처치한 적",
+			"point_size": 18,
+			"measured": [
+				72,
+				28
+			],
+			"box": [
+				320,
+				28
+			],
+			"passed": true
+		},
+		{
+			"screen": "report",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "defeats",
+			"text": "고철 드론  ×2\n니들 드론  ×1 · 정예 1",
+			"point_size": 17,
+			"measured": [
+				161,
+				52
+			],
+			"box": [
+				320,
+				110
+			],
+			"passed": true
+		},
+		{
+			"screen": "report",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "damage_heading",
+			"text": "피해 기여도",
+			"point_size": 18,
+			"measured": [
+				88,
+				28
+			],
+			"box": [
+				300,
+				28
+			],
+			"passed": true
+		},
+		{
+			"screen": "report",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "damage",
+			"text": "펄스 캐논 · 418.0 · 71.1%\n추적탄 · 126.0 · 21.4%\n아크 서지 · 44.0 · 7.5%\n총 피해 · 588.0",
+			"point_size": 17,
+			"measured": [
+				186,
+				104
+			],
+			"box": [
+				330,
+				130
+			],
+			"passed": true
+		},
+		{
+			"screen": "report",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "continue",
+			"text": "다음 단계",
+			"point_size": 20,
+			"measured": [
+				80,
+				31
+			],
+			"box": [
+				852,
+				52
+			],
+			"passed": true
+		},
+		{
+			"screen": "report",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "eyebrow",
+			"text": "STAGE COMBAT REPORT",
+			"point_size": 14,
+			"measured": [
+				152,
+				23
+			],
+			"box": [
+				400,
+				24
+			],
+			"passed": true
+		},
+		{
+			"screen": "report",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "title",
+			"text": "Stage 1 · Drowned Ruins · Sector 1",
+			"point_size": 29,
+			"measured": [
+				447,
+				44
+			],
+			"box": [
+				700,
+				50
+			],
+			"passed": true
+		},
+		{
+			"screen": "report",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "summary",
+			"text": "TIME 01:15 · HULL 88/120",
+			"point_size": 15,
+			"measured": [
+				171,
+				24
+			],
+			"box": [
+				500,
+				26
+			],
+			"passed": true
+		},
+		{
+			"screen": "report",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "defeats_heading",
+			"text": "DEFEATED",
+			"point_size": 18,
+			"measured": [
+				85,
+				28
+			],
+			"box": [
+				320,
+				28
+			],
+			"passed": true
+		},
+		{
+			"screen": "report",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "defeats",
+			"text": "SCRAP DRONE  ×2\nNEEDLE DRONE  ×1 · ELITE 1",
+			"point_size": 17,
+			"measured": [
+				225,
+				52
+			],
+			"box": [
+				320,
+				110
+			],
+			"passed": true
+		},
+		{
+			"screen": "report",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "damage_heading",
+			"text": "DAMAGE CONTRIBUTION",
+			"point_size": 18,
+			"measured": [
+				199,
+				28
+			],
+			"box": [
+				300,
+				28
+			],
+			"passed": true
+		},
+		{
+			"screen": "report",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "damage",
+			"text": "PULSE CANNON · 418.0 · 71.1%\nSEEKER · 126.0 · 21.4%\nARC SURGE · 44.0 · 7.5%\nTOTAL DAMAGE · 588.0",
+			"point_size": 17,
+			"measured": [
+				240,
+				104
+			],
+			"box": [
+				330,
+				130
+			],
+			"passed": true
+		},
+		{
+			"screen": "report",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "continue",
+			"text": "CONTINUE",
+			"point_size": 20,
+			"measured": [
+				97,
+				31
+			],
+			"box": [
+				852,
+				52
+			],
+			"passed": true
+		},
+		{
+			"screen": "report",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "eyebrow",
+			"text": "스테이지 전투 기록",
+			"point_size": 21,
+			"measured": [
+				165,
+				33
+			],
+			"box": [
+				600,
+				36
+			],
+			"passed": true
+		},
+		{
+			"screen": "report",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "title",
+			"text": "1단계 · 침수 유적 · 1구역",
+			"point_size": 44,
+			"measured": [
+				466,
+				66
+			],
+			"box": [
+				1050,
+				75
+			],
+			"passed": true
+		},
+		{
+			"screen": "report",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "summary",
+			"text": "시간 01:15 · 내구도 88/120",
+			"point_size": 23,
+			"measured": [
+				262,
+				35
+			],
+			"box": [
+				750,
+				39
+			],
+			"passed": true
+		},
+		{
+			"screen": "report",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "defeats_heading",
+			"text": "처치한 적",
+			"point_size": 27,
+			"measured": [
+				107,
+				41
+			],
+			"box": [
+				480,
+				42
+			],
+			"passed": true
+		},
+		{
+			"screen": "report",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "defeats",
+			"text": "고철 드론  ×2\n니들 드론  ×1 · 정예 1",
+			"point_size": 26,
+			"measured": [
+				246,
+				80
+			],
+			"box": [
+				480,
+				165
+			],
+			"passed": true
+		},
+		{
+			"screen": "report",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "damage_heading",
+			"text": "피해 기여도",
+			"point_size": 27,
+			"measured": [
+				132,
+				41
+			],
+			"box": [
+				450,
+				42
+			],
+			"passed": true
+		},
+		{
+			"screen": "report",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "damage",
+			"text": "펄스 캐논 · 418.0 · 71.1%\n추적탄 · 126.0 · 21.4%\n아크 서지 · 44.0 · 7.5%\n총 피해 · 588.0",
+			"point_size": 26,
+			"measured": [
+				283,
+				160
+			],
+			"box": [
+				495,
+				195
+			],
+			"passed": true
+		},
+		{
+			"screen": "report",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "continue",
+			"text": "다음 단계",
+			"point_size": 30,
+			"measured": [
+				118,
+				45
+			],
+			"box": [
+				1278,
+				78
+			],
+			"passed": true
+		},
+		{
+			"screen": "report",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "eyebrow",
+			"text": "STAGE COMBAT REPORT",
+			"point_size": 21,
+			"measured": [
+				227,
+				33
+			],
+			"box": [
+				600,
+				36
+			],
+			"passed": true
+		},
+		{
+			"screen": "report",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "title",
+			"text": "Stage 1 · Drowned Ruins · Sector 1",
+			"point_size": 44,
+			"measured": [
+				677,
+				66
+			],
+			"box": [
+				1050,
+				75
+			],
+			"passed": true
+		},
+		{
+			"screen": "report",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "summary",
+			"text": "TIME 01:15 · HULL 88/120",
+			"point_size": 23,
+			"measured": [
+				261,
+				35
+			],
+			"box": [
+				750,
+				39
+			],
+			"passed": true
+		},
+		{
+			"screen": "report",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "defeats_heading",
+			"text": "DEFEATED",
+			"point_size": 27,
+			"measured": [
+				126,
+				41
+			],
+			"box": [
+				480,
+				42
+			],
+			"passed": true
+		},
+		{
+			"screen": "report",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "defeats",
+			"text": "SCRAP DRONE  ×2\nNEEDLE DRONE  ×1 · ELITE 1",
+			"point_size": 26,
+			"measured": [
+				343,
+				80
+			],
+			"box": [
+				480,
+				165
+			],
+			"passed": true
+		},
+		{
+			"screen": "report",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "damage_heading",
+			"text": "DAMAGE CONTRIBUTION",
+			"point_size": 27,
+			"measured": [
+				298,
+				41
+			],
+			"box": [
+				450,
+				42
+			],
+			"passed": true
+		},
+		{
+			"screen": "report",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "damage",
+			"text": "PULSE CANNON · 418.0 · 71.1%\nSEEKER · 126.0 · 21.4%\nARC SURGE · 44.0 · 7.5%\nTOTAL DAMAGE · 588.0",
+			"point_size": 26,
+			"measured": [
+				367,
+				160
+			],
+			"box": [
+				495,
+				195
+			],
+			"passed": true
+		},
+		{
+			"screen": "report",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "continue",
+			"text": "CONTINUE",
+			"point_size": 30,
+			"measured": [
+				145,
+				45
+			],
+			"box": [
+				1278,
+				78
+			],
+			"passed": true
+		},
+		{
+			"screen": "garage",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "eyebrow",
+			"text": "간이 차고",
+			"point_size": 11,
+			"measured": [
+				44,
+				18
+			],
+			"box": [
+				263,
+				18
+			],
+			"passed": true
+		},
+		{
+			"screen": "garage",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "title",
+			"text": "인양정 장비 구성",
+			"point_size": 23,
+			"measured": [
+				160,
+				35
+			],
+			"box": [
+				480,
+				39
+			],
+			"passed": true
+		},
+		{
+			"screen": "garage",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "subtitle",
+			"text": "스테이지 클리어 1회 · 내구도는 출격할 때 완전히 복구됩니다.",
+			"point_size": 11,
+			"measured": [
+				278,
+				18
+			],
+			"box": [
+				540,
+				21
+			],
+			"passed": true
+		},
+		{
+			"screen": "garage",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "equipment_heading",
+			"text": "장비",
+			"point_size": 13,
+			"measured": [
+				25,
+				21
+			],
+			"box": [
+				225,
+				21
+			],
+			"passed": true
+		},
+		{
+			"screen": "garage",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "equipment",
+			"text": "주무기 · 펄스 캐논\n보조무기 · 없음\n액티브 · EMP 노바",
+			"point_size": 14,
+			"measured": [
+				110,
+				69
+			],
+			"box": [
+				540,
+				113
+			],
+			"passed": true
+		},
+		{
+			"screen": "garage",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "modules",
+			"text": "모듈 · 콜로서스 중계기: EMP가 20% 충전된 상태로 시작 · 준설\n축전기: 추적탄 발사 간격 단축\n이번 런 빌드 · 분기 포구 1",
+			"point_size": 11,
+			"measured": [
+				285,
+				54
+			],
+			"box": [
+				570,
+				68
+			],
+			"passed": true
+		},
+		{
+			"screen": "garage",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "deploy",
+			"text": "난이도 선택 후 출격",
+			"point_size": 14,
+			"measured": [
+				114,
+				23
+			],
+			"box": [
+				300,
+				42
+			],
+			"passed": true
+		},
+		{
+			"screen": "garage",
+			"language": "ko",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "settings",
+			"text": "출격 설정",
+			"point_size": 14,
+			"measured": [
+				56,
+				23
+			],
+			"box": [
+				300,
+				42
+			],
+			"passed": true
+		},
+		{
+			"screen": "garage",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "eyebrow",
+			"text": "FIELD GARAGE",
+			"point_size": 11,
+			"measured": [
+				71,
+				18
+			],
+			"box": [
+				263,
+				18
+			],
+			"passed": true
+		},
+		{
+			"screen": "garage",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "title",
+			"text": "Stable Equipment Loadout",
+			"point_size": 23,
+			"measured": [
+				273,
+				35
+			],
+			"box": [
+				480,
+				39
+			],
+			"passed": true
+		},
+		{
+			"screen": "garage",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "subtitle",
+			"text": "STAGE CLEARS 1 · Hull is fully restored on deployment.",
+			"point_size": 11,
+			"measured": [
+				266,
+				18
+			],
+			"box": [
+				540,
+				21
+			],
+			"passed": true
+		},
+		{
+			"screen": "garage",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "equipment_heading",
+			"text": "EQUIPMENT",
+			"point_size": 13,
+			"measured": [
+				72,
+				21
+			],
+			"box": [
+				225,
+				21
+			],
+			"passed": true
+		},
+		{
+			"screen": "garage",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "equipment",
+			"text": "PRIMARY · PULSE CANNON\nSECONDARY · NONE\nACTIVE · EMP NOVA",
+			"point_size": 14,
+			"measured": [
+				169,
+				69
+			],
+			"box": [
+				540,
+				113
+			],
+			"passed": true
+		},
+		{
+			"screen": "garage",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "modules",
+			"text": "MODULE · COLOSSUS RELAY: Start with EMP at 20% · DREDGE\nCAPACITOR: Reduced seeker interval\nTHIS RUN · BRANCH PORT 1",
+			"point_size": 11,
+			"measured": [
+				302,
+				54
+			],
+			"box": [
+				570,
+				68
+			],
+			"passed": true
+		},
+		{
+			"screen": "garage",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "deploy",
+			"text": "CHOOSE DIFFICULTY",
+			"point_size": 14,
+			"measured": [
+				128,
+				23
+			],
+			"box": [
+				300,
+				42
+			],
+			"passed": true
+		},
+		{
+			"screen": "garage",
+			"language": "en",
+			"viewport": [
+				960,
+				540
+			],
+			"role": "settings",
+			"text": "DEPLOYMENT SETTINGS",
+			"point_size": 14,
+			"measured": [
+				152,
+				23
+			],
+			"box": [
+				300,
+				42
+			],
+			"passed": true
+		},
+		{
+			"screen": "garage",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "eyebrow",
+			"text": "간이 차고",
+			"point_size": 14,
+			"measured": [
+				56,
+				23
+			],
+			"box": [
+				350,
+				24
+			],
+			"passed": true
+		},
+		{
+			"screen": "garage",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "title",
+			"text": "인양정 장비 구성",
+			"point_size": 30,
+			"measured": [
+				208,
+				45
+			],
+			"box": [
+				640,
+				52
+			],
+			"passed": true
+		},
+		{
+			"screen": "garage",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "subtitle",
+			"text": "스테이지 클리어 1회 · 내구도는 출격할 때 완전히 복구됩니다.",
+			"point_size": 15,
+			"measured": [
+				378,
+				24
+			],
+			"box": [
+				720,
+				28
+			],
+			"passed": true
+		},
+		{
+			"screen": "garage",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "equipment_heading",
+			"text": "장비",
+			"point_size": 17,
+			"measured": [
+				33,
+				26
+			],
+			"box": [
+				300,
+				28
+			],
+			"passed": true
+		},
+		{
+			"screen": "garage",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "equipment",
+			"text": "주무기 · 펄스 캐논\n보조무기 · 없음\n액티브 · EMP 노바",
+			"point_size": 18,
+			"measured": [
+				140,
+				84
+			],
+			"box": [
+				720,
+				150
+			],
+			"passed": true
+		},
+		{
+			"screen": "garage",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "modules",
+			"text": "모듈 · 콜로서스 중계기: EMP가 20% 충전된 상태로 시작 · 준설\n축전기: 추적탄 발사 간격 단축\n이번 런 빌드 · 분기 포구 1",
+			"point_size": 15,
+			"measured": [
+				388,
+				72
+			],
+			"box": [
+				760,
+				90
+			],
+			"passed": true
+		},
+		{
+			"screen": "garage",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "deploy",
+			"text": "난이도 선택 후 출격",
+			"point_size": 19,
+			"measured": [
+				154,
+				30
+			],
+			"box": [
+				400,
+				56
+			],
+			"passed": true
+		},
+		{
+			"screen": "garage",
+			"language": "ko",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "settings",
+			"text": "출격 설정",
+			"point_size": 19,
+			"measured": [
+				76,
+				30
+			],
+			"box": [
+				400,
+				56
+			],
+			"passed": true
+		},
+		{
+			"screen": "garage",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "eyebrow",
+			"text": "FIELD GARAGE",
+			"point_size": 14,
+			"measured": [
+				90,
+				23
+			],
+			"box": [
+				350,
+				24
+			],
+			"passed": true
+		},
+		{
+			"screen": "garage",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "title",
+			"text": "Stable Equipment Loadout",
+			"point_size": 30,
+			"measured": [
+				355,
+				45
+			],
+			"box": [
+				640,
+				52
+			],
+			"passed": true
+		},
+		{
+			"screen": "garage",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "subtitle",
+			"text": "STAGE CLEARS 1 · Hull is fully restored on deployment.",
+			"point_size": 15,
+			"measured": [
+				362,
+				24
+			],
+			"box": [
+				720,
+				28
+			],
+			"passed": true
+		},
+		{
+			"screen": "garage",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "equipment_heading",
+			"text": "EQUIPMENT",
+			"point_size": 17,
+			"measured": [
+				94,
+				26
+			],
+			"box": [
+				300,
+				28
+			],
+			"passed": true
+		},
+		{
+			"screen": "garage",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "equipment",
+			"text": "PRIMARY · PULSE CANNON\nSECONDARY · NONE\nACTIVE · EMP NOVA",
+			"point_size": 18,
+			"measured": [
+				217,
+				84
+			],
+			"box": [
+				720,
+				150
+			],
+			"passed": true
+		},
+		{
+			"screen": "garage",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "modules",
+			"text": "MODULE · COLOSSUS RELAY: Start with EMP at 20% · DREDGE\nCAPACITOR: Reduced seeker interval\nTHIS RUN · BRANCH PORT 1",
+			"point_size": 15,
+			"measured": [
+				412,
+				72
+			],
+			"box": [
+				760,
+				90
+			],
+			"passed": true
+		},
+		{
+			"screen": "garage",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "deploy",
+			"text": "CHOOSE DIFFICULTY",
+			"point_size": 19,
+			"measured": [
+				173,
+				30
+			],
+			"box": [
+				400,
+				56
+			],
+			"passed": true
+		},
+		{
+			"screen": "garage",
+			"language": "en",
+			"viewport": [
+				1280,
+				720
+			],
+			"role": "settings",
+			"text": "DEPLOYMENT SETTINGS",
+			"point_size": 19,
+			"measured": [
+				206,
+				30
+			],
+			"box": [
+				400,
+				56
+			],
+			"passed": true
+		},
+		{
+			"screen": "garage",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "eyebrow",
+			"text": "간이 차고",
+			"point_size": 21,
+			"measured": [
+				83,
+				33
+			],
+			"box": [
+				525,
+				36
+			],
+			"passed": true
+		},
+		{
+			"screen": "garage",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "title",
+			"text": "인양정 장비 구성",
+			"point_size": 45,
+			"measured": [
+				311,
+				67
+			],
+			"box": [
+				960,
+				78
+			],
+			"passed": true
+		},
+		{
+			"screen": "garage",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "subtitle",
+			"text": "스테이지 클리어 1회 · 내구도는 출격할 때 완전히 복구됩니다.",
+			"point_size": 23,
+			"measured": [
+				579,
+				35
+			],
+			"box": [
+				1080,
+				42
+			],
+			"passed": true
+		},
+		{
+			"screen": "garage",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "equipment_heading",
+			"text": "장비",
+			"point_size": 26,
+			"measured": [
+				49,
+				40
+			],
+			"box": [
+				450,
+				42
+			],
+			"passed": true
+		},
+		{
+			"screen": "garage",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "equipment",
+			"text": "주무기 · 펄스 캐논\n보조무기 · 없음\n액티브 · EMP 노바",
+			"point_size": 27,
+			"measured": [
+				210,
+				123
+			],
+			"box": [
+				1080,
+				225
+			],
+			"passed": true
+		},
+		{
+			"screen": "garage",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "modules",
+			"text": "모듈 · 콜로서스 중계기: EMP가 20% 충전된 상태로 시작 · 준설\n축전기: 추적탄 발사 간격 단축\n이번 런 빌드 · 분기 포구 1",
+			"point_size": 23,
+			"measured": [
+				593,
+				105
+			],
+			"box": [
+				1140,
+				135
+			],
+			"passed": true
+		},
+		{
+			"screen": "garage",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "deploy",
+			"text": "난이도 선택 후 출격",
+			"point_size": 29,
+			"measured": [
+				234,
+				44
+			],
+			"box": [
+				600,
+				84
+			],
+			"passed": true
+		},
+		{
+			"screen": "garage",
+			"language": "ko",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "settings",
+			"text": "출격 설정",
+			"point_size": 29,
+			"measured": [
+				115,
+				44
+			],
+			"box": [
+				600,
+				84
+			],
+			"passed": true
+		},
+		{
+			"screen": "garage",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "eyebrow",
+			"text": "FIELD GARAGE",
+			"point_size": 21,
+			"measured": [
+				135,
+				33
+			],
+			"box": [
+				525,
+				36
+			],
+			"passed": true
+		},
+		{
+			"screen": "garage",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "title",
+			"text": "Stable Equipment Loadout",
+			"point_size": 45,
+			"measured": [
+				532,
+				67
+			],
+			"box": [
+				960,
+				78
+			],
+			"passed": true
+		},
+		{
+			"screen": "garage",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "subtitle",
+			"text": "STAGE CLEARS 1 · Hull is fully restored on deployment.",
+			"point_size": 23,
+			"measured": [
+				554,
+				35
+			],
+			"box": [
+				1080,
+				42
+			],
+			"passed": true
+		},
+		{
+			"screen": "garage",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "equipment_heading",
+			"text": "EQUIPMENT",
+			"point_size": 26,
+			"measured": [
+				143,
+				40
+			],
+			"box": [
+				450,
+				42
+			],
+			"passed": true
+		},
+		{
+			"screen": "garage",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "equipment",
+			"text": "PRIMARY · PULSE CANNON\nSECONDARY · NONE\nACTIVE · EMP NOVA",
+			"point_size": 27,
+			"measured": [
+				325,
+				123
+			],
+			"box": [
+				1080,
+				225
+			],
+			"passed": true
+		},
+		{
+			"screen": "garage",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "modules",
+			"text": "MODULE · COLOSSUS RELAY: Start with EMP at 20% · DREDGE\nCAPACITOR: Reduced seeker interval\nTHIS RUN · BRANCH PORT 1",
+			"point_size": 23,
+			"measured": [
+				631,
+				105
+			],
+			"box": [
+				1140,
+				135
+			],
+			"passed": true
+		},
+		{
+			"screen": "garage",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "deploy",
+			"text": "CHOOSE DIFFICULTY",
+			"point_size": 29,
+			"measured": [
+				263,
+				44
+			],
+			"box": [
+				600,
+				84
+			],
+			"passed": true
+		},
+		{
+			"screen": "garage",
+			"language": "en",
+			"viewport": [
+				1920,
+				1080
+			],
+			"role": "settings",
+			"text": "DEPLOYMENT SETTINGS",
+			"point_size": 29,
+			"measured": [
+				314,
+				44
+			],
+			"box": [
+				600,
+				84
+			],
+			"passed": true
+		}
+	]
+}
