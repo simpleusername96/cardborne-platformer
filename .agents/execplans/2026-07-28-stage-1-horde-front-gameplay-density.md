@@ -1,10 +1,11 @@
 ---
 type: plan
-status: active
+status: superseded
 owner: BK
 created: 2026-07-28
-last_reviewed: 2026-07-28
+last_reviewed: 2026-07-29
 scope: Concentrate the existing Stage 1 first surge into two readable horde fronts without changing UI, enemy totals, speed, or active caps
+superseded_by: ./2026-07-29-continuous-multidirectional-horde-readability.md
 related:
   - ../../AGENTS.md
   - ../PLANS.md
@@ -14,6 +15,10 @@ related:
 ---
 
 # Stage 1 호드 전선 밀도 실행 계획
+
+> 2026-07-29 사용자 결정은 기존 27대 재배치가 아니라 실제 동시 적 수 2~3배
+> 증가와 four-quadrant spawn을 요구한다. 이 문서는 더 이상 실행 권한이 없으며
+> 후속 계획이 `horde_front` production path를 제거한다.
 
 ## Why / Context
 
