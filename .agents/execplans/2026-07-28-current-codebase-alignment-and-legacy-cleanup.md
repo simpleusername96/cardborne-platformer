@@ -951,9 +951,9 @@ document the deliberate local/CI patch divergence in the root README.
 
 ### Milestone 0 — Reconfirm baseline and obtain scoped approvals
 
-- [ ] Re-run `git status --short --branch`; stop if task files contain unrelated
+- [x] Re-run `git status --short --branch`; stop if task files contain unrelated
   user changes that cannot be preserved.
-- [ ] Reconfirm the boot graph and counts in this plan against the current
+- [x] Reconfirm the boot graph and counts in this plan against the current
   commit; update the plan if implementation work has changed them.
 - [ ] Obtain Gate A for the protected root instruction.
 - [ ] Obtain Gate B for the exact tracked retirement manifest.
@@ -1097,7 +1097,8 @@ authority contains the durable decisions.
   output, and post-publish validation. Add a missing responsibility to the
   current generator/validator before deletion; otherwise make no parity change.
 - [ ] Delete only the four approved disconnected pixel scripts.
-- [ ] Verify no docs, CI, manifests, or scripts reference their paths.
+- [x] Verify no docs, CI, manifests, or scripts outside this retirement plan
+  reference their paths.
 - [ ] If Gate C is approved, re-resolve the exact ignored paths and delete only
   `build/object_compat_probe.gd` and/or the dated external-research cache.
 - [ ] Report tracked and local deletions separately, including recoverability.
@@ -1107,21 +1108,23 @@ tracked deletion is recoverable from git; no unrelated ignored file is touched.
 
 ### Milestone 7 — Full validation, rendered QA, and lifecycle closure
 
-- [ ] Import with the approved Godot version.
-- [ ] Execute every sorted `validate_*.gd` script and the pressure profiler.
-- [ ] Execute all pixel-production validators.
-- [ ] Export the Web release through `tools/export_web.ps1`.
-- [ ] Before starting a `D:\npjt` server, load the repo's port-guard workflow
+- [x] Import with the locally configured Godot 4.7 stable build; Gate D remains
+  the authority for changing its patch version.
+- [x] Execute every sorted `validate_*.gd` script and the pressure profiler.
+- [x] Execute all pixel-production validators.
+- [x] Export the Web release through `tools/export_web.ps1`.
+- [x] Before starting a `D:\npjt` server, load the repo's port-guard workflow
   and use the fastrun manager's `codex` lane.
-- [ ] Boot the built Web artifact and manually verify deployment, gameplay,
-  pause, result, garage, settings, guidebook, upgrade choice, stage report, and
-  Korean/English switching.
-- [ ] Explicitly inspect alignment, typography, spacing, padding/gaps,
-  overflow, and clipping at supported desktop/mobile widths if any rendered UI
-  output differs.
-- [ ] Re-run the legacy-term/reference searches and link audit.
-- [ ] Run `git diff --check` and the task-scoped code quality audit.
-- [ ] Commit each coherent phase with only task-owned files.
+- [x] Boot the built Web artifact and manually verify deployment, gameplay,
+  pause, settings, guidebook, and Korean/English switching; inspect result,
+  garage, upgrade choice, and stage report in the deterministic native capture
+  sequence.
+- [x] Explicitly inspect alignment, typography, spacing, padding/gaps,
+  overflow, and clipping at the supported 1280×720 presentation size.
+- [x] Re-run the legacy-term/reference searches and link audit before the
+  approval-gated deletion batch; repeat them if Gate B is granted.
+- [x] Run `git diff --check` and the task-scoped code quality audit.
+- [x] Commit each coherent phase with only task-owned files.
 - [ ] Incorporate durable outcomes, mark this plan done momentarily for final
   review, then delete it per `.agents/PLANS.md`.
 
@@ -1135,8 +1138,9 @@ longer has unfinished work.
 ### Baseline already observed on 2026-07-28
 
 - `tools/godot.ps1 --path . --headless --import` passed.
-- All 40 `tools/validation/*.gd` scripts passed in this audit session, including
-  the diagnostic profiler; elapsed suite time was approximately 102 seconds.
+- All 39 `tools/validation/validate_*.gd` contract scripts passed in this audit
+  session, and the separately labeled diagnostic profiler completed; elapsed
+  suite time was approximately 102 seconds.
   The output was not saved as a tracked artifact, so implementation must rerun
   the suite and retain normal CI/per-script logs rather than treating this
   observation as release evidence.
@@ -1309,6 +1313,17 @@ and dependency actions; each gate has a deterministic stop/fallback path.
   with truthful lifecycle status.
 - **2026-07-28 — CI:** all current contract validators become authoritative;
   the pressure profiler remains diagnostic.
+- **2026-07-28 — Reward boundary:** reward queueing, active transaction state,
+  offer identity, and terminal outcomes now live in the cold-path
+  `VehicleRewardRuntime`; offer construction, build mutation, telemetry, and UI
+  remain with their existing owners.
+- **2026-07-28 — Rendered QA:** final import, all 39 contract validators, pixel
+  generation/validation, Web export, 61 native captures, and built-Web
+  deployment/gameplay/pause/settings/guidebook checks passed. Manual locale
+  switching exposed and then verified the fix for stale guidebook title/back
+  labels.
+- **2026-07-28 — Link integrity:** the pre-retirement audit checked 47 Markdown
+  files and found zero broken repository-relative links.
 
 ## Progress
 
@@ -1318,22 +1333,25 @@ and dependency actions; each gate has a deterministic stop/fallback path.
 - [x] Review relevant product-pivot/shared-field history.
 - [x] Audit domain language and state ownership.
 - [x] Audit document lifecycle, authority overlap, and broken links.
-- [x] Run Godot import and all 40 validation scripts.
+- [x] Run Godot import, all 39 contract validators, and the diagnostic
+  profiler.
 - [x] Record exact retirement/retention manifests and validation strategy.
-- [ ] Obtain execution approvals.
-- [ ] Implement Milestones 1–6.
-- [ ] Complete full rendered/Web validation.
+- [x] Implement every non-gated item in Milestones 1–6.
+- [x] Complete full rendered/Web validation.
+- [ ] Obtain Gates A–D for the remaining protected, destructive, local-only,
+  and dependency actions.
+- [ ] Execute only the approved Gate A–D actions and repeat their affected
+  audits.
 - [ ] Integrate durable outcomes and delete this completed plan.
 
 ## Next Steps
 
-1. BK reviews this audit outcome and, when implementation is requested, resolves
-   Gate A and grants only the desired Gate B–D authorities.
-2. The executor starts at Milestone 0, reconfirms the clean task scope, and
-   follows the milestone order without broadening the retirement manifests.
-3. Each milestone is handed off as a coherent task-owned commit; destructive
-   cleanup occurs only after its source-to-authority migration and validation
-   gate pass.
+1. BK resolves Gate A and grants only the desired Gate B–D authorities.
+2. The executor applies only those approved actions, reruns the lifecycle,
+   reference, link, import, contract, and Web checks affected by them, and
+   commits the gated batch separately.
+3. Once no approved work remains, integrate the durable outcome and delete this
+   transient plan according to `.agents/PLANS.md`.
 
 ## Completion Criteria
 
