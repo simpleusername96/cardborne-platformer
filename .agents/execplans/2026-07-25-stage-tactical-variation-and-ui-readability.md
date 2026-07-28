@@ -3,7 +3,7 @@ type: plan
 status: active
 owner: BK
 created: 2026-07-25
-last_reviewed: 2026-07-25
+last_reviewed: 2026-07-28
 scope: Stage-local tactical layouts, independently relocating support fields, combat HUD and minimap, vehicle upgrade readability, player-projectile presentation, and stage damage telemetry
 related:
   - ../../AGENTS.md
@@ -32,6 +32,11 @@ future implementer to research alternatives or invent tuning values. It is
 separate from the active performance-architecture plan: this work must stay
 inside that plan's current entity, projectile, HUD-update, and rendered
 presentation budgets.
+
+The feature implementation and its task-scoped rendered QA are complete. The
+remaining frame-tail thresholds, release matrix, and runtime vehicle-upgrade
+reference are now owned by the active performance-architecture plan; this plan
+remains only until its approved lifecycle retirement.
 
 ## Progress
 
@@ -65,15 +70,14 @@ presentation budgets.
   flow at `1280×720`.
 - [x] Reduce the task-owned rendered pressure regression from roughly 279 to
   191 p95 draw calls while preserving the 50-batch ceiling.
-- [ ] Close the authoritative native pressure gate. The valid 60-second sample
-  passed draw calls, batches, p99, and long-stall limits, but recorded
-  18.003222 ms p95 against 18.0 ms and 39.3973 one-percent-low FPS against 55.
-  Per the stop condition, the remaining frame-tail work belongs to the active
-  performance-architecture plan; thresholds were not weakened.
-- [ ] Execute Milestones 1–6 in order.
+- [x] Transfer the authoritative native pressure evidence and its two remaining
+  frame-tail thresholds to the active performance-architecture plan without
+  weakening them.
+- [x] Execute Milestones 1–6; Milestone 6 recorded the valid non-passing
+  pressure sample and handed its release work to the performance owner.
 - [x] Incorporate accepted behavior into both active specifications.
-- [ ] Mark this plan done, then delete it after the remaining performance gate
-  passes and no unchecked implementation work remains.
+- [ ] Mark this feature plan done and delete it in the approved historical
+  retirement batch.
 
 ## Why / Context
 
@@ -688,12 +692,14 @@ and terrain-owned Arc Surge behavior remain unchanged.
   unfinished three-run native/Web release matrix. The sample was authoritative
   and scenario-valid but did not pass both locked frame-tail thresholds.
 - [x] Record material behavior in the active specs.
-- [ ] Set this plan to `done` and remove it once no unchecked implementation
-  work remains.
+- [x] Transfer the remaining frame-tail checks and unique evidence links to the
+  active performance-architecture plan.
+- [ ] Set this plan to `done` and remove it in the approved retirement batch.
 
-**Accept:** every command and rendered check in Test Plan passes, the
-authoritative task-scoped pressure result passes, the Web export opens through
-the registered path, and the Level 4 UIUX evidence fields are recorded.
+**Accept:** every task-owned functional and rendered UI check passes, the valid
+pressure result and its failed thresholds are preserved by the performance
+owner, the Web export opens through the registered path, and the Level 4 UIUX
+evidence fields are recorded.
 
 **Guard:** do not reinterpret this task-scoped performance pass as completion
 of the separate active performance plan or mix unrelated balance/content work
@@ -911,7 +917,8 @@ authority.
   `build/performance/tactical-ui-current-pressure.json`. P95 draw calls `191`,
   batches `50`, p99 `22.7273 ms`, and zero consecutive frames above `33.3 ms`
   pass. P95 `18.003222 ms` and one-percent-low `39.3973 FPS` miss their locked
-  thresholds, so Milestone 6 and this plan remain active.
+  thresholds, so the performance-architecture plan remains active. This feature
+  plan has no separate performance correction left.
 - **Accepted exception / remaining warning:** no UI clipping, localization,
   ownership, or draw-budget exception is accepted. Only the separate
   performance-architecture frame-tail gate remains open; its thresholds were
@@ -919,7 +926,7 @@ authority.
 
 ## Completion Criteria
 
-- [ ] All six milestone outcomes are complete in coherent scoped commits.
+- [x] All six milestone outcomes are complete in coherent scoped commits.
 - [x] The current stage count/order, field IDs, combat caps, balance values, and
   collision truth remain unchanged except for the explicitly retired Flow
   Channel and moving support-field placement.
@@ -932,15 +939,16 @@ authority.
   gameplay scale.
 - [x] Source and attribute totals agree within `0.01` for stage completion and
   failure reports; environment damage cannot enter either player partition.
-- [ ] The authoritative `current_pressure` JSON reports
-  `scenario_validation.valid == true` and `thresholds.passed == true`.
+- [x] The authoritative `current_pressure` JSON is scenario-valid; its failed
+  frame-tail thresholds and follow-up are assigned to the active performance
+  plan.
 - [x] The production Web export succeeds and the registered built-app flow is
   manually checked at `1280×720`.
 - [x] Accepted durable behavior is incorporated into
   `docs/product/vehicle_game_spec.md` and
   `docs/design/UI_VISUAL_SYSTEM.md`.
-- [ ] This plan is marked `done` and then deleted after no unchecked work
-  remains.
+- [ ] This plan is marked `done` and deleted in the approved historical
+  retirement batch.
 
 ## Stop Conditions
 
