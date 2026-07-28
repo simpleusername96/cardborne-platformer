@@ -1,0 +1,32 @@
+Use case: stylized-concept
+Asset type: final game prop-and-wear pixel-art sprite sheet
+
+Input images:
+- Image 1: previous prop/wear sheet; use ONLY as the semantic subject/order reference. Do NOT copy its oversized scale, placement, shadows, stray fragments, or near-boundary wide props.
+- Image 2: approved Cardborne map; use ONLY as the visual-language reference for graphite metal, blue-gray panels, cobalt accents, mint indicators, crisp orthographic top-down construction, and the Sunken Ceramic Fresco feel. Do NOT reproduce a map, room, wall, floor, or UI.
+
+Create ONE exact square 1024×1024 raster sheet on a perfectly uniform solid #FF00FF background. Organize it as a strict invisible 4×4 layout of sixteen conceptual 256×256 cells. Do not draw cell borders, grid lines, guides, labels, IDs, text, or numbers.
+
+Row-major semantic order, exactly one complete subject in every cell:
+Row 1: hatch_round | vent_round | console_small | console_wide
+Row 2: cargo_small | cargo_wide | machinery_small | machinery_tall
+Row 3: warning_plate | pipe_cluster | cable_coil | terminal
+Row 4: wear_scrape_a | wear_scrape_b | wear_chip_a | wear_chip_b
+
+CRITICAL SIZE AND PLACEMENT CONTRACT:
+- Cell centers are (128,128), (384,128), (640,128), (896,128), continuing at y=384, 640, and 896.
+- Center each subject precisely on its cell center.
+- Target each complete non-magenta subject bounding box to fit inside a central 112×112 area. Absolute hard maximum is the central 128×128 area of its 256×256 cell.
+- Therefore leave at least 64 pixels of untouched pure #FF00FF on ALL FOUR SIDES of every subject; prefer about 72 pixels or more.
+- Every subject must be substantially smaller than Image 1. Generous magenta negative space is mandatory.
+- console_wide and cargo_wide must be deliberately tiny and centered, no wider than 112 pixels, with large equal magenta margins; neither may approach the left or right cell boundary.
+- No cropping, overlap, edge contact, boundary approach, or element crossing between cells.
+- Exactly one coherent subject per cell. Keep every detail attached within that subject's bounding box. No detached bolts, flecks, debris, sparks, fragments, secondary props, or satellite pixels.
+
+Style/medium: clean production-ready top-down orthographic pixel art, hard square pixel clusters, crisp 1-pixel-like stepped edges, flat colors, limited palette. Graphite and charcoal structure, blue-gray metal, selective cobalt blue accents, tiny mint-green indicators. Match Image 2's material vocabulary while simplifying each prop for compact readability.
+
+Subject notes: recognizable round hatch and round vent; compact consoles and cargo modules; compact machinery; a restrained warning plate; one compact connected pipe cluster; one compact cable coil with connectors contained inside its box; one compact terminal. The four wear motifs must stay subtle, low-contrast graphite/blue-gray, compact, and each read as one contiguous decal shape without scattered flecks: two narrow scrape variants followed by two small chip variants.
+
+Background: every background pixel should be the same flat solid #FF00FF. No texture, variation, noise, lighting, vignette, floor plane, or color shift. Do not use #FF00FF inside any subject.
+
+Avoid: perspective, isometric view, three-quarter view, antialiasing, smooth edges, gradients, glow, transparency, soft shading, cast shadows, contact shadows, reflections, map imagery, environment, walls, floor tiles, UI, text, logos, watermark, decorative separators, extra objects, duplicate subjects, or missing cells.

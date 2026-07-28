@@ -1,0 +1,23 @@
+Use case: stylized-concept
+Asset type: Cardborne game structure sprite sheet, square 1024×1024 PNG
+Input images: Image 1 is the previous 4×4 structure sheet and is reference ONLY for the sixteen structure identities, their row-major order, orientations, and connected silhouettes; its sprites are much too large, so do not copy their scale. Image 2 is the approved map target and is reference ONLY for the graphite / blue-gray / cobalt / mint palette, hard-surface detailing, and crisp top-down pixel-art language.
+
+Primary request: Generate ONE strict 4×4 sprite sheet on a perfectly uniform solid #FF00FF background. The 4×4 grid is conceptual and MUST NOT be drawn. Canvas is exactly 1024×1024, so each conceptual cell is 256×256. Place exactly one small, single connected structure sprite at the exact center of every cell.
+
+Row-major structure order, with no written labels:
+Row 1: frame_h, frame_v, corner_nw, corner_ne.
+Row 2: corner_se, corner_sw, rail_h, rail_v.
+Row 3: service_bay_h, service_bay_v, cover_small, cover_wide.
+Row 4: bulkhead_h, bulkhead_v, inner_cap_h, inner_cap_v.
+
+CRITICAL SCALE AND SAFE-AREA CONTRACT: Every complete non-magenta sprite bounding box, including every outline, highlight, bolt, light, and protrusion, must fit entirely inside the central 128×128 region of its own 256×256 cell. This leaves at least 64 pixels of untouched #FF00FF on the left, right, top, and bottom of EVERY cell. Target only about 96–112 pixels on each sprite's longest dimension; 128 pixels is an absolute maximum, never a target. Horizontal pieces must be approximately 104–112 px wide and 34–54 px tall, centered; vertical pieces approximately 34–54 px wide and 104–112 px tall, centered; corner pieces approximately 88–104 px square, centered. Even cover_wide, bulkhead_h, service_bay_h, and frame_h must remain well away from left/right cell boundaries. Every subject must be substantially smaller than Image 1.
+
+Exact cell centers in canvas pixels: row centers y=128,384,640,896; column centers x=128,384,640,896. Center each complete sprite on the corresponding point. Do not place any non-magenta pixel outside these safe regions: columns x=64–192, 320–448, 576–704, 832–960; rows y=64–192, 320–448, 576–704, 832–960.
+
+Style/medium: strict orthographic top-down 2D game pixel art, crisp deliberate pixel clusters, hard aliased edges, no antialiasing, no gradients. Compact modular industrial sci-fi architecture matching Image 2: dark graphite shells, restrained blue-gray panels, saturated cobalt channels/insets, tiny mint luminous indicators, near-black pixel outlines, sparse readable hardware details. Preserve each item as one clean connected silhouette.
+
+Scene/backdrop: perfectly flat, single-color #FF00FF across every background pixel. No texture, noise, lighting variation, vignette, floor, grid, dividers, cell borders, or checkerboard.
+
+Constraints: exactly sixteen subjects total; exactly one subject per conceptual cell; all sixteen cells occupied; correct row-major order and orientation; subjects isolated from one another; generous equal magenta padding; no subject uses magenta; no cropping.
+
+Avoid: any text, letters, numbers, labels, captions, icons, UI, visible grid, guide marks, extra fragments, loose bolts, particles, debris, shadows, contact shadows, glow spill onto background, reflections, halos, gradients, perspective, isometric view, 3D render, painterly rendering, antialiasing, map scene, vehicles, characters, weapons, duplicate subjects, merged subjects, empty cells, and any non-magenta pixel in the 64-pixel perimeter of any cell.

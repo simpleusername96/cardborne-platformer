@@ -1,0 +1,196 @@
+{
+  "schema_version": 1,
+  "candidate_id": "space-hangar-v2",
+  "generation_route": "builtin-imagegen",
+  "generated_at": "2026-07-28",
+  "normalization": {
+    "tool": "ImageMagick 7.1.1-Q16-HDRI",
+    "operation": "asset-level normalization_steps are recorded below in executed order",
+    "argument_contract": "Each arguments array follows the input path and writes to a same-directory temporary PNG represented by {output}; replace the declared output only after success.",
+    "art_changes": "none"
+  },
+  "references": [
+    {
+      "id": "selected-direction",
+      "role": "visual_style",
+      "workspace_path": "pixel-art-production/evidence/design-directions/2026-07-28/space-hangar-v2/selected-direction.png",
+      "sha256": "e5823a4cfd62d10f87869cbf4bddf53b395a208ed2523f7baf948a1990d76a61"
+    },
+    {
+      "id": "current-field-ko-1280",
+      "role": "strict_layout",
+      "workspace_path": "pixel-art-production/evidence/design-directions/2026-07-28/space-hangar-v2/current-field-ko-1280.png",
+      "sha256": "e6afbc83412b67a25211b18f348d1d1d965e244d787ae302894e8ebabd2877d4"
+    }
+  ],
+  "assets": [
+    {
+      "id": "full-map-target",
+      "prompt_path": "pixel-art-production/assets/source/candidates/space-hangar-v2/prompts/full-map-target.txt",
+      "input_roles": ["selected-direction:visual_style", "current-field-ko-1280:strict_layout"],
+      "provider_path": "C:/Users/BK/.codex/generated_images/019fa8bc-e21f-7cc1-a57a-76c8b4ce703d/call_9W97PMFm4QlNox2NijGNPSY4.png",
+      "provider_copy": "pixel-art-production/assets/source/candidates/space-hangar-v2/provider-originals/full-map-target.png",
+      "provider_size": [1672, 941],
+      "provider_sha256": "6339133842c0675b9832b7d0206d88c88bd457953986bd9ecaa23e6bfad5e402",
+      "normalized_path": "pixel-art-production/assets/source/candidates/space-hangar-v2/raw/full-map-target.png",
+      "normalized_size": [1280, 720],
+      "normalization_steps": [
+        {
+          "input": "provider_copy",
+          "output": "normalized_path",
+          "arguments": ["-filter", "point", "-resize", "1280x720!", "-strip", "PNG32:{output}"]
+        }
+      ],
+      "normalized_sha256": "2d55ae44432d465b6100397a1a39f9c72cc4a3e8863800ec62f6a204a2014aec"
+    },
+    {
+      "id": "deck-material-master",
+      "prompt_path": "pixel-art-production/assets/source/candidates/space-hangar-v2/prompts/deck-material-master.txt",
+      "input_roles": ["selected-direction:visual_style"],
+      "provider_path": "C:/Users/BK/.codex/generated_images/019fa8bd-2d55-7730-8901-fe6d0660bd38/call_J5m2odDCdfCgmFNUXl1kYO3y.png",
+      "provider_copy": "pixel-art-production/assets/source/candidates/space-hangar-v2/provider-originals/deck-material-master.png",
+      "provider_size": [1254, 1254],
+      "provider_sha256": "02e0ea6d00e0747895b1cf801038683c15ea7a4b0212ef7ffe930d84edf6eb52",
+      "normalized_path": "pixel-art-production/assets/source/candidates/space-hangar-v2/raw/deck-material-master.png",
+      "normalized_size": [1024, 1024],
+      "normalization_steps": [
+        {
+          "input": "provider_copy",
+          "output": "normalized_path",
+          "arguments": ["-filter", "point", "-resize", "1024x1024!", "-strip", "PNG32:{output}"]
+        }
+      ],
+      "normalized_sha256": "61d01d6e35bd060177cc836499fa4617d3805f595c8c7a911f26078a0e271b8a"
+    },
+    {
+      "id": "wall-material-master",
+      "prompt_path": "pixel-art-production/assets/source/candidates/space-hangar-v2/prompts/wall-material-master.txt",
+      "input_roles": ["selected-direction:visual_style"],
+      "provider_path": "C:/Users/BK/.codex/generated_images/019fa8bd-7c2d-75d0-a302-7d0cc569c8c0/call_9UYMIudTExLf0ojH92vWBu4S.png",
+      "provider_copy": "pixel-art-production/assets/source/candidates/space-hangar-v2/provider-originals/wall-material-master.png",
+      "provider_size": [1254, 1254],
+      "provider_sha256": "761b0737c12d127deb8dd11d4cd8a3075e3608caadd70d3e749d18e23966d0a7",
+      "normalized_path": "pixel-art-production/assets/source/candidates/space-hangar-v2/raw/wall-material-master.png",
+      "normalized_size": [1024, 1024],
+      "normalization_steps": [
+        {
+          "input": "provider_copy",
+          "output": "normalized_path",
+          "arguments": ["-filter", "point", "-resize", "1024x1024!", "-strip", "PNG32:{output}"]
+        }
+      ],
+      "normalized_sha256": "75018d13ea32a895831813c1a98df4c320ea9eaa62abd65039d531d430394058"
+    },
+    {
+      "id": "void-material-master",
+      "prompt_path": "pixel-art-production/assets/source/candidates/space-hangar-v2/prompts/void-material-master.txt",
+      "input_roles": ["selected-direction:visual_style"],
+      "provider_path": "C:/Users/BK/.codex/generated_images/019fa732-bd99-7cb3-8c2b-bacadc225fae/call_N7OVlxxYi09CduWlSBx52Sz3.png",
+      "provider_copy": "pixel-art-production/assets/source/candidates/space-hangar-v2/provider-originals/void-material-master.png",
+      "provider_size": [1254, 1254],
+      "provider_sha256": "367deaeb7bbe12448d2e68767f4866b4fd51a12c9ed2f89e209fd93afe91b8d0",
+      "normalized_path": "pixel-art-production/assets/source/candidates/space-hangar-v2/raw/void-material-master.png",
+      "normalized_size": [1024, 1024],
+      "normalization_steps": [
+        {
+          "input": "provider_copy",
+          "output": "normalized_path",
+          "arguments": ["-filter", "point", "-resize", "1024x1024!", "-strip", "PNG32:{output}"]
+        }
+      ],
+      "normalized_sha256": "0d9c4b564bc1b2b2adc8570894b451883eed716f99fa8cd75ac4ce0a58137a3b"
+    },
+    {
+      "id": "structure-sheet",
+      "prompt_path": "pixel-art-production/assets/source/candidates/space-hangar-v2/prompts/structure-sheet.txt",
+      "input_roles": ["selected-direction:visual_style", "full-map-target:fixture_language"],
+      "provider_path": "C:/Users/BK/.codex/generated_images/019fa8d2-f22b-7d62-b8f4-8b0a210d1829/call_s8bRV4MrU1mOVjk6Zklrat4i.png",
+      "provider_copy": "pixel-art-production/assets/source/candidates/space-hangar-v2/provider-originals/structure-sheet.png",
+      "provider_size": [1254, 1254],
+      "provider_sha256": "b861b8f523a741e2549323f7337809b63d5a23c1d7a3a48853830f69bd09f952",
+      "normalized_path": "pixel-art-production/assets/source/candidates/space-hangar-v2/raw/structure-sheet.png",
+      "normalized_size": [1024, 1024],
+      "normalization_steps": [
+        {
+          "input": "provider_copy",
+          "output": "normalized_path",
+          "arguments": ["-filter", "point", "-resize", "1024x1024!", "-strip", "PNG32:{output}"]
+        }
+      ],
+      "normalized_sha256": "63b3abc3b7cf1aa1a79ba94f5909b8cc3d94a3100c10888331da44d732b4fe9a"
+    },
+    {
+      "id": "prop-sheet",
+      "prompt_path": "pixel-art-production/assets/source/candidates/space-hangar-v2/prompts/prop-sheet.txt",
+      "input_roles": ["selected-direction:visual_style", "full-map-target:fixture_language"],
+      "provider_path": "C:/Users/BK/.codex/generated_images/019fa8d3-406e-7660-8356-4759c033faf4/call_vLEVT9ccxlXL9evk3BOysMoa.png",
+      "provider_copy": "pixel-art-production/assets/source/candidates/space-hangar-v2/provider-originals/prop-sheet.png",
+      "provider_size": [1254, 1254],
+      "provider_sha256": "5666851498b32ab285495909f6ae0f7d03622840ed6664a4b94b8d964a74c51e",
+      "normalized_path": "pixel-art-production/assets/source/candidates/space-hangar-v2/raw/prop-sheet.png",
+      "normalized_size": [1024, 1024],
+      "normalized_offset": [9, 0],
+      "normalization_steps": [
+        {
+          "input": "provider_copy",
+          "output": "normalized_path",
+          "arguments": ["-filter", "point", "-resize", "1024x1024!", "-strip", "PNG32:{output}"]
+        },
+        {
+          "input": "normalized_path",
+          "output": "normalized_path",
+          "arguments": ["-background", "#FF00FF", "-gravity", "northwest", "-splice", "1x0", "-crop", "1024x1024+0+0", "+repage", "-strip", "PNG32:{output}"]
+        },
+        {
+          "input": "normalized_path",
+          "output": "normalized_path",
+          "arguments": ["-background", "#FF00FF", "-gravity", "northwest", "-splice", "1x0", "-crop", "1024x1024+0+0", "+repage", "-strip", "PNG32:{output}"]
+        },
+        {
+          "input": "normalized_path",
+          "output": "normalized_path",
+          "arguments": ["-background", "#FF00FF", "-gravity", "northwest", "-splice", "7x0", "-crop", "1024x1024+0+0", "+repage", "-strip", "PNG32:{output}"]
+        }
+      ],
+      "normalized_sha256": "04aa7ba08c44b3980e2ce783a1cee5cc97997b72d2eb1549792519a176f46048"
+    }
+  ],
+  "rejected_attempts": [
+    {
+      "id": "structure-sheet-attempt-1",
+      "reason": "Three cells violated the declared 24px chroma clearance after normalization.",
+      "prompt_path": "pixel-art-production/assets/source/candidates/space-hangar-v2/prompts/rejected/structure-sheet-attempt-1.txt",
+      "provider_copy": "pixel-art-production/assets/source/candidates/space-hangar-v2/provider-originals/rejected/structure-sheet-attempt-1.png",
+      "provider_size": [1254, 1254],
+      "provider_sha256": "498d69ff187823190bbb2e2cc131ebf7e200102f3e105ea9563aac1b965aa92f",
+      "normalized_copy": "pixel-art-production/assets/source/candidates/space-hangar-v2/raw/rejected/structure-sheet-attempt-1.png",
+      "normalized_size": [1024, 1024],
+      "normalization_steps": [
+        {
+          "input": "provider_copy",
+          "output": "normalized_copy",
+          "arguments": ["-filter", "point", "-resize", "1024x1024!", "-strip", "PNG32:{output}"]
+        }
+      ],
+      "normalized_sha256": "d6ba0af91cbce77f57dbae35bbac8c4e992cde998bcf45316dde0ae0f9223d7f"
+    },
+    {
+      "id": "prop-sheet-attempt-1",
+      "reason": "The top-right cell had only 4px of left chroma clearance after normalization.",
+      "prompt_path": "pixel-art-production/assets/source/candidates/space-hangar-v2/prompts/rejected/prop-sheet-attempt-1.txt",
+      "provider_copy": "pixel-art-production/assets/source/candidates/space-hangar-v2/provider-originals/rejected/prop-sheet-attempt-1.png",
+      "provider_size": [1254, 1254],
+      "provider_sha256": "cb37c3ea33656a8628a6348a04dd3991e5b643957b3a82abf4a3f5e934b86678",
+      "normalized_copy": "pixel-art-production/assets/source/candidates/space-hangar-v2/raw/rejected/prop-sheet-attempt-1.png",
+      "normalized_size": [1024, 1024],
+      "normalization_steps": [
+        {
+          "input": "provider_copy",
+          "output": "normalized_copy",
+          "arguments": ["-filter", "point", "-resize", "1024x1024!", "-strip", "PNG32:{output}"]
+        }
+      ],
+      "normalized_sha256": "b7a6fc00017fbb118a8e9a454de2cd988e5116ba3d85c372445a6c4e9848833c"
+    }
+  ]
+}

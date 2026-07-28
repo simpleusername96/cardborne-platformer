@@ -75,8 +75,8 @@ later adds an external dependency or switches renderer ownership.
 | Base material | deck/wall/void는 각각 별도 ImageGen master에서 추출한 seam-safe variant를 사용한다. 각 24×24 tile은 2px neutral perimeter를 가지며 detail은 안쪽 20×20에만 존재한다. | 모든 variant가 방향과 무관하게 연결되며 16개 가짜 Wang signature가 필요 없다. |
 | Base palettes | deck `n=3`: `#2E3945`, `#44515E`, `#596774`; wall `n=4`: `#141B24`, `#202833`, `#2E3945`, `#596774`; void `n=2`: `#141B24`, `#202833`. | canonical `pixel-hangar-v1` 안에서 재질 역할을 분리한다. |
 | Variant counts | deck 12, wall 8, void 4 variants. | 1280×720 proof에서 반복 판단이 가능하면서 review surface가 과도해지지 않는다. |
-| Expansion | visual cell `(x,y)`의 fixed integer hash가 family variant와 허용된 transform을 선택한다. Base tile은 neutral perimeter 때문에 모든 이웃과 호환된다. | deterministic expansion을 유지하되 WFC를 가장하지 않는다. |
-| Runtime base format | compiler는 24px variant를 8×8 coordinate-hash mosaic로 조립한 `192×192` repeat master 세 장을 출력한다. 승인 후 기존 `hangar-floor.png`, `hangar-wall.png`, `hangar-water.png`를 교체한다. | 현재 `Polygon2D` repeat renderer와 `REPEAT_TILE_UV_SCALE=0.5`를 그대로 사용한다. |
+| Expansion | 24px library의 seam proof는 visual cell `(x,y)` fixed integer hash로 variant/transform을 고른다. 실제 field proof는 source-derived 192px repeat master를 2× nearest로 반복해 runtime의 384 world-pixel period를 그대로 재현한다. | deterministic 확장성과 실제 renderer 일치를 함께 검증하되 WFC를 가장하지 않는다. |
+| Runtime base format | compiler는 palette-mapped 256px material의 중앙 192px crop에 1px neutral perimeter를 적용한 `192×192` repeat master 세 장을 출력한다. 승인 후 기존 `hangar-floor.png`, `hangar-wall.png`, `hangar-water.png`를 교체한다. | 큰 source panel을 보존하고 현재 `Polygon2D` renderer와 `REPEAT_TILE_UV_SCALE=0.5`를 그대로 사용한다. |
 | Macro structure | panel seam, chassis edge, corner, rail, service bay는 승인된 transparent structure stamps에서만 가져온다. | base texture가 topology를 가장하지 않게 한다. |
 | Props | hatch, vent, console, cargo module, machinery, warning plate는 승인된 prop sheet crop만 배치한다. | 코드 사각형 소품을 금지한다. |
 | Wear | 8개 이하의 승인된 low-contrast wear stamp를 96px 이상 간격으로 둔다. | speckle과 전투 정보 경쟁을 막는다. |
@@ -105,14 +105,12 @@ Already true:
 - 실패 prototype generator와 proof가 commit `d2ffa2f`에 기록되어 있다.
 - world renderer의 geometry/collision separation과 rollback textures가 있다.
 - `pixel-hangar-v1` palette와 pixel production pipeline이 있다.
+- Gate A source family, prompt/provenance, rejected retry evidence가 생성됐다.
+- Gate B compiler, schema, recipe, atlas, layer proof, final map이 생성됐다.
 
 Remaining:
 
-- 승인 reference를 repo-local evidence로 보존한다.
-- full-map target, deck master, structure sheet, prop sheet를 생성한다.
-- source sheet를 실제 tile/stamp로 정규화하는 compiler를 만든다.
-- 기존 prototype의 procedural-art path를 candidate compiler에서 제거한다.
-- 1280×720 map proof를 다시 만들고 시각 승인을 받는다.
+- Gate A/B 시각 승인을 받는다.
 - 승인 후 runtime/UI publication을 수행한다.
 
 ## Scope / Non-scope
@@ -151,16 +149,17 @@ Exact approval gates:
 | Concern | Owner | Contract |
 | --- | --- | --- |
 | Direction reference | `pixel-art-production/evidence/design-directions/2026-07-28/space-hangar-v2/` | selected image와 current capture의 repo-local copies |
-| Raw generated art | `pixel-art-production/assets/source/candidates/space-hangar-v2/raw/` | ImageGen output, production에서 직접 참조 금지 |
+| Provider originals | `pixel-art-production/assets/source/candidates/space-hangar-v2/provider-originals/` | ImageGen native output를 byte-for-byte 보존; production에서 직접 참조 금지 |
+| Normalized raw art | `pixel-art-production/assets/source/candidates/space-hangar-v2/raw/` | provider output을 nearest-resize한 고정 입력 규격; production에서 직접 참조 금지 |
 | Prompt/provenance | `pixel-art-production/assets/source/candidates/space-hangar-v2/prompts/`, `pixel-art-production/assets/source/candidates/space-hangar-v2/source-manifest.json` | input roles, exact prompt, source hash, generation path |
-| Clean candidate art | `pixel-art-production/assets/source/candidates/space-hangar-v2/clean/` | palette/alpha/grid 정규화 후 review 대상 |
+| Clean candidate art | `pixel-art-production/evidence/space-hangar-v2/clean/` | palette/alpha/grid 정규화 후 review 대상 |
 | Candidate compiler | `tools/design/build_space_hangar_candidate.gd` | crop/quantize/pack/place/validate only |
 | Candidate recipe | `pixel-art-production/assets/recipes/candidates/space-hangar-v2.json` | palettes, crop cells, neutral edge, placements, seed |
-| Recipe schema | `pixel-art-production/schemas/space-hangar-candidate-recipe.schema.json` | source paths, base families, stamp IDs/cells, proof layout, output contract |
+| Recipe schema | `pixel-art-production/schemas/space-hangar-candidate-recipe.schema.json` | source paths, base families, stamp IDs/cells, proof layout, output contract의 machine-readable mirror; compiler validator가 실행 시 같은 fixed contract를 강제 |
 | Review evidence | `pixel-art-production/evidence/space-hangar-v2/` | native atlas, 4× atlas, layer PNGs, final map, validation JSON |
 | Runtime base | existing `pixel-art-production/runtime/tiles/hangar-{floor,wall,water}.png` | 승인된 192×192 masters로 교체; renderer interface 불변 |
 | Runtime stamps | `pixel-art-production/runtime/atlases/space-hangar-structure-atlas.png`, `pixel-art-production/runtime/atlases/space-hangar-prop-atlas.png` | 각각 4×4 grid, 64×64 cell, nearest-filtered |
-| Runtime placement | `scripts/presentation/vehicle_pixel_world_mesh_builder.gd` | 최대 16개 region-enabled `Sprite2D`; wall/cover/feature geometry에서만 anchor 계산 |
+| Runtime placement | `scripts/presentation/vehicle_pixel_world_mesh_builder.gd` | candidate proof의 42개 stamp를 수용하되 필드당 최대 48개 region-enabled `Sprite2D`; wall/cover/feature/floor geometry에서만 anchor 계산 |
 | UI candidate recipe | `pixel-art-production/assets/recipes/candidates/space-hangar-v2-ui.json` | file/state, native size, patch margin, content inset, Theme target |
 | UI candidate schema | `pixel-art-production/schemas/space-hangar-ui-chrome.schema.json` | UI recipe의 family/state/9-slice contract 검증 |
 | UI chrome validator | `tools/validation/validate_space_hangar_ui_chrome.gd` | dimensions, alpha, corner invariance, resize/text-fit proof |
@@ -170,7 +169,16 @@ Exact approval gates:
 
 ### Fixed candidate asset contract
 
-Raw files:
+ImageGen provider가 요청 크기와 다른 native bitmap을 반환하면 원본은 같은
+basename으로 `provider-originals/`에 그대로 보존한다. `raw/` 파일은 art를
+추가하거나 다시 그리지 않고 nearest-neighbor resize를 적용한 compiler 입력이다.
+시트 전체가 cell grid에 치우친 경우에만 chroma fill을 사용한 whole-sheet integer
+translation/crop을 허용하며, 셀별 이동·실루엣 수정은 금지한다. Map target은
+`1280×720`, 나머지 다섯 source는 `1024×1024`다. Manifest에는 provider 원본과
+normalized raw의 경로, native size, SHA-256, resize/translation operation을 모두
+기록한다.
+
+Normalized raw files:
 
 - `pixel-art-production/assets/source/candidates/space-hangar-v2/raw/full-map-target.png`
 - `pixel-art-production/assets/source/candidates/space-hangar-v2/raw/deck-material-master.png`
@@ -181,30 +189,36 @@ Raw files:
 
 Clean files:
 
-- `pixel-art-production/assets/source/candidates/space-hangar-v2/clean/deck-material-master.png`
-- `pixel-art-production/assets/source/candidates/space-hangar-v2/clean/wall-material-master.png`
-- `pixel-art-production/assets/source/candidates/space-hangar-v2/clean/void-material-master.png`
-- `pixel-art-production/assets/source/candidates/space-hangar-v2/clean/structure-atlas.png` — 4×4, 64×64 cells, 256×256
-- `pixel-art-production/assets/source/candidates/space-hangar-v2/clean/prop-atlas.png` — 4×4, 64×64 cells, 256×256
-- `pixel-art-production/assets/source/candidates/space-hangar-v2/clean/base-variant-atlas.png` — 12 columns × 2 rows, 24×24 cells, 288×48; deck is row 0 columns 0–11, wall is row 1 columns 0–7, void is row 1 columns 8–11
-- `pixel-art-production/assets/source/candidates/space-hangar-v2/clean/hangar-floor-master.png`
-- `pixel-art-production/assets/source/candidates/space-hangar-v2/clean/hangar-wall-master.png`
-- `pixel-art-production/assets/source/candidates/space-hangar-v2/clean/hangar-water-master.png`
+- `pixel-art-production/evidence/space-hangar-v2/clean/deck-material-master.png`
+- `pixel-art-production/evidence/space-hangar-v2/clean/wall-material-master.png`
+- `pixel-art-production/evidence/space-hangar-v2/clean/void-material-master.png`
+- `pixel-art-production/evidence/space-hangar-v2/clean/structure-atlas.png` — 4×4, 64×64 cells, 256×256
+- `pixel-art-production/evidence/space-hangar-v2/clean/prop-atlas.png` — 4×4, 64×64 cells, 256×256
+- `pixel-art-production/evidence/space-hangar-v2/clean/base-variant-atlas.png` — 12 columns × 2 rows, 24×24 cells, 288×48; deck is row 0 columns 0–11, wall is row 1 columns 0–7, void is row 1 columns 8–11
+- `pixel-art-production/evidence/space-hangar-v2/clean/hangar-floor-master.png`
+- `pixel-art-production/evidence/space-hangar-v2/clean/hangar-wall-master.png`
+- `pixel-art-production/evidence/space-hangar-v2/clean/hangar-water-master.png`
 
 The three repeat masters are each `192×192`.
 
-Each raw material master is `1024×1024`, authored as a crisp 4× presentation
-of a `256×256` logical pixel surface. The compiler reduces it to `256×256`
-with nearest sampling, maps it to the family palette, and extracts fixed 24×24
-windows:
+Each raw material master is `1024×1024`. The compiler reduces it to a
+`256×256` logical surface, palette-maps it, and extracts fixed 24×24 windows.
+Void alone is Lanczos-reduced to 32px and nearest-expanded before two-color
+mapping so provider micro-noise cannot become speckle:
 
-- deck: x `{16,80,144,208}` × y `{16,112,208}` = 12;
+- deck: `(104,48)`, `(136,48)`, `(104,80)`, `(136,80)`, `(112,104)`,
+  `(144,104)`, `(24,96)`, `(184,64)`, `(184,184)`, `(48,144)`,
+  `(104,184)`, `(200,208)`;
 - wall: x `{16,80,144,208}` × y `{48,176}` = 8;
 - void: x `{16,80,144,208}` × y `{116}` = 4.
 
 Each raw structure/prop sheet is `1024×1024` with a strict 4×4 grid of
-`256×256` source cells. Each cell reduces to one `64×64` output cell. A raw
-file with another size or a subject crossing its cell boundary fails Gate A.
+`256×256` source cells. Chroma cleanup, alpha-bound crop, palette map, and
+nearest fit place structure/prop/wear silhouettes on a 64px cell with long-axis
+limits `56/42/32` respectively. Proof placements may declare a target size only
+to fit that same raster silhouette into an existing feature or cover rectangle;
+free scaling and cell-local redrawing are forbidden. A raw file with another
+size or a subject crossing its cell boundary fails Gate A.
 
 Structure cell IDs, row-major:
 
@@ -223,8 +237,11 @@ Recipe top-level keys are fixed:
 
 `schema_version`, `seed`, `sources`, `base_families`, `structure_stamps`,
 `prop_stamps`, `proof_layout`, `outputs`. Each base family declares
-`palette`, `neutral_color`, `variant_count`, and `sample_windows`. Each stamp
-declares `id`, `cell`, `role`, and `allowed_anchor`.
+`palette`, `neutral_color`, `prequantize_sample_size`, `variant_count`, and
+`sample_windows`. Sources declare the fixed provenance-manifest path and
+`56/42/32` stamp fit contract.
+Each stamp declares `id`, `cell`, `role`, and `allowed_anchor`; a proof
+placement may additionally declare geometry-owned `target_size`.
 `allowed_anchor` is one of `boundary`, `cover`, `bulkhead`, `feature`, or
 `floor_flat`; the compiler and runtime validator reject every other value.
 
@@ -311,23 +328,25 @@ Guard: `d2ffa2f` remains labeled prototype evidence, not production approval.
 
 ### Phase 1 — Visual-source gate
 
-- [ ] **1.1** Copy the approved direction and current gameplay capture into the
+- [x] **1.1** Copy the approved direction and current gameplay capture into the
   repo-local direction evidence folder.
-- [ ] **1.2** Generate one text-free 1280×720 map target preserving the current
+- [x] **1.2** Generate one text-free 1280×720 map target preserving the current
   arena/HUD-safe layout.
-- [ ] **1.3** Generate one seamless deck-material master using only the locked
+- [x] **1.3** Generate one seamless deck-material master using only the locked
   blue-gray material family.
-- [ ] **1.4** Generate one seamless wall-material master using only the locked
+- [x] **1.4** Generate one seamless wall-material master using only the locked
   graphite material family.
-- [ ] **1.5** Generate one quiet void-material master using only the locked
+- [x] **1.5** Generate one quiet void-material master using only the locked
   near-black material family.
-- [ ] **1.6** Generate one 4×4 isolated structure sheet on a removable chroma
+- [x] **1.6** Generate one 4×4 isolated structure sheet on a removable chroma
   background: straight chassis, inner/outer corners, rail, service bay,
   cover shell.
-- [ ] **1.7** Generate one 4×4 isolated prop sheet on a removable chroma
+- [x] **1.7** Generate one 4×4 isolated prop sheet on a removable chroma
   background: hatch, vent, console, cargo, machinery, warning plate, wear.
-- [ ] **1.8** Save exact prompts and source hashes beside raw outputs.
-- [ ] **1.9** Inspect each source at native and 4× logical scale.
+- [x] **1.8** Preserve provider-native outputs, nearest-normalize them to the
+  fixed raw sizes, and save exact prompts, both source hashes, and the resize
+  operation beside the raw outputs.
+- [x] **1.9** Inspect each source at native and 4× logical scale.
 
 Acceptance:
 
@@ -345,19 +364,20 @@ Guard:
 
 ### Phase 2 — Candidate asset compiler
 
-- [ ] **2.1** Add the candidate recipe with exact palettes, cell crops, output
+- [x] **2.1** Add the candidate recipe with exact palettes, cell crops, output
   dimensions, seed, and placement sockets.
-- [ ] **2.2** Add and validate
+- [x] **2.2** Add and validate
   `pixel-art-production/schemas/space-hangar-candidate-recipe.schema.json`.
-- [ ] **2.3** Add `build_space_hangar_candidate.gd`.
-- [ ] **2.4** Downsample/quantize the three material masters and publish
+- [x] **2.3** Add `build_space_hangar_candidate.gd`.
+- [x] **2.4** Downsample/quantize the three material masters and publish
   12 deck, 8 wall, and
   4 void 24×24 variants with 2px neutral perimeter.
-- [ ] **2.5** Assemble the three deterministic 8×8 / 192×192 repeat masters.
-- [ ] **2.6** Remove chroma, crop, nearest-resize, and palette-map structure,
+- [x] **2.5** Assemble three 192×192 repeat masters from the palette-mapped
+  source centers with a 1px neutral perimeter.
+- [x] **2.6** Remove chroma, crop, nearest-resize, and palette-map structure,
   prop, and wear cells without redrawing their silhouettes.
-- [ ] **2.7** Pack the fixed-layout native and 4× review atlases.
-- [ ] **2.8** Write source/output hashes and validation results.
+- [x] **2.7** Pack the fixed-layout native and 4× review atlases.
+- [x] **2.8** Write source/output hashes and validation results.
 
 Acceptance:
 
@@ -373,12 +393,14 @@ Guard:
 
 ### Phase 3 — Current-layout map proof
 
-- [ ] **3.1** Assemble `base`, `structure`, `wear`, `props`, and `final` layers.
-- [ ] **3.2** Use deterministic coordinate hash for base variants only.
-- [ ] **3.3** Place structure/props from recipe sockets derived from current
+- [x] **3.1** Assemble `base`, `structure`, `wear`, `props`, and `final` layers.
+- [x] **3.2** Use 192px source-derived masters at 2× for the field proof and
+  deterministic coordinate hash only for 24px library seam mosaics.
+- [x] **3.3** Place structure/props from recipe sockets derived from current
   layout; never derive collision from asset alpha.
-- [ ] **3.4** Export final 1280×720 and a side-by-side review with reference and
-  current capture.
+- [x] **3.4** Export final 1280×720, a target-vs-candidate side-by-side, and
+  preserve the repo-local current gameplay capture as separate direction
+  evidence.
 
 Acceptance:
 
@@ -400,8 +422,9 @@ Guard:
 - [ ] **4.2** Replace only the three existing 192×192 repeat masters; keep the
   current `Polygon2D` texture interface and UV scale.
 - [ ] **4.3** Add the two fixed 4×4 / 64px stamp atlases.
-- [ ] **4.4** Extend `VehiclePixelWorldMeshBuilder` with at most 16
-  region-enabled `Sprite2D` decorations. Anchors come only from existing
+- [ ] **4.4** Extend `VehiclePixelWorldMeshBuilder` with at most 48
+  region-enabled `Sprite2D` decorations; the approved candidate currently uses
+  42 (28 structure, 10 prop, 4 wear). Anchors come only from existing
   floor-boundary segments, cover rectangles, bulkheads, and feature rectangles:
   frame/rail stamps on boundaries, cover/bulkhead stamps on solid geometry,
   service-bay stamps on feature rectangles, flat hatch/wear stamps on legal
@@ -409,7 +432,7 @@ Guard:
 - [ ] **4.5** Resolve atlas regions exclusively through the fixed stamp ID table
   above; unknown IDs are hard failures in the validator.
 - [ ] **4.6** Keep decorative sprite count in
-  `debug_contract()["decoration_count"]` and enforce `<=16`.
+  `debug_contract()["decoration_count"]` and enforce `<=48`.
 - [ ] **4.7** Capture safe-arrival and maximum-pressure states in Korean and
   English at 1280×720.
 
@@ -470,8 +493,13 @@ reducing combat, focus, localization, or text-fit clarity.
 Inner loop:
 
 ```powershell
-.\tools\godot.ps1 --path . --headless --script res://tools/design/build_space_hangar_candidate.gd --check-only
-.\tools\godot.ps1 --path . --headless --script res://tools/design/build_space_hangar_candidate.gd -- --recipe <absolute-recipe-path> --output <absolute-evidence-path>
+$recipe = (Resolve-Path 'pixel-art-production/assets/recipes/candidates/space-hangar-v2.json').Path
+$output = (Resolve-Path 'pixel-art-production/evidence').Path + '\space-hangar-v2'
+$checkArgs = @('--path', '.', '--headless', '--script', 'res://tools/design/build_space_hangar_candidate.gd', '--', '--recipe', $recipe, '--check-only')
+$buildArgs = @('--path', '.', '--headless', '--script', 'res://tools/design/build_space_hangar_candidate.gd', '--', '--recipe', $recipe, '--output', $output)
+Get-Content -Raw $recipe | Test-Json -SchemaFile 'pixel-art-production/schemas/space-hangar-candidate-recipe.schema.json'
+.\tools\godot.ps1 @checkArgs
+.\tools\godot.ps1 @buildArgs
 git diff --check
 ```
 
@@ -509,6 +537,9 @@ UIUX gate evidence:
 ## Rollback / Safety
 
 - Candidate assets stay outside runtime until approval.
+- The candidate compiler accepts only
+  `pixel-art-production/evidence/space-hangar-v2` as `--output`; it cannot
+  publish directly into runtime or UI paths.
 - Runtime publication is a separate scoped commit.
 - Existing runtime repeat textures remain untouched through Phase 3.
 - Failed generation never overwrites the last verified candidate; staging and
@@ -551,23 +582,44 @@ and a plan update.
   generative claim.
 - 2026-07-28: locked ImageGen as source-art production and scripts as deterministic
   compilers/assemblers only.
+- 2026-07-28: preserved 1254/1672px provider outputs and nearest-normalized
+  fixed compiler inputs; manifest hashes and operations retain both provenance
+  layers.
+- 2026-07-28: rejected the first structure/prop sheets for cell-clearance
+  failures, regenerated both families, then applied only a whole-sheet +9px
+  alignment to the accepted prop sheet. No cell or silhouette was repaired.
+- 2026-07-28: rejected the first 24px-per-cell full-map proof because its grid
+  cadence and noise dominated the field. Kept 24px variants as the seam-tested
+  asset library, while the map proof/runtime contract uses 192px source-derived
+  masters at the renderer's 384 world-pixel repeat period.
+- 2026-07-28: raised the runtime decoration cap from 16 to 48 because the
+  approved-layout proof has 42 declared raster placements. This keeps the
+  proof/runtime contract executable while preserving a small explicit cap.
+- 2026-07-28: post-pass audit locked compiler output to the canonical evidence
+  directory, aligned schema constraints with the executable validator, and
+  linked exact per-asset normalization steps plus source-manifest/schema hashes
+  into candidate evidence.
 
 ## Progress
 
 - [x] Discovery and old-plan audit.
 - [x] Algorithm and ownership decisions locked.
 - [x] Plan repair committed.
-- [ ] Gate A source assets.
-- [ ] Gate B candidate map proof.
+- [x] Gate A source artifacts ready for review.
+- [x] Gate B candidate map proof ready for review.
+- [x] Schema/source/edge/layer validation and deterministic double build;
+  `sha256.json` stayed
+  `8e6f791eb57babc0c6cd67b57f57e9599b433e1dcaa59b26775c8c87cb2a2d2c`.
+- [ ] Gate A/B visual approval.
 - [ ] Gate C runtime vertical slice.
 - [ ] Gate D UI chrome candidates.
 - [ ] Gate E UI runtime migration and final rollout.
 
 ## Next Steps
 
-1. Validate and commit this plan repair.
-2. Execute Phase 1 exactly and present Gate A artifacts.
-3. Continue to Phase 2–3 only with source families that pass visual review.
+1. Present the Gate A source family and Gate B current-layout map proof.
+2. After explicit Gate A/B approval, execute the Phase 4 runtime vertical slice.
+3. After Gate C approval, generate the Phase 5 UI chrome candidate family.
 
 ## Completion Criteria
 

@@ -1,0 +1,598 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://cardborne.local/schemas/space-hangar-candidate-recipe.schema.json",
+	"title": "Cardborne Space Hangar Candidate Recipe",
+	"type": "object",
+	"additionalProperties": false,
+	"required": [
+		"schema_version",
+		"seed",
+		"sources",
+		"base_families",
+		"structure_stamps",
+		"prop_stamps",
+		"proof_layout",
+		"outputs"
+	],
+	"properties": {
+		"schema_version": {
+			"const": 1
+		},
+		"seed": {
+			"type": "integer",
+			"minimum": 0,
+			"maximum": 2147483647
+		},
+		"sources": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": [
+				"source_manifest",
+				"full_map_target",
+				"deck_material_master",
+				"wall_material_master",
+				"void_material_master",
+				"structure_sheet",
+				"prop_sheet",
+				"full_map_size",
+				"material_source_size",
+				"sheet_source_size",
+				"sheet_grid",
+				"logical_sheet_size",
+				"cell_clearance_px",
+				"chroma_key",
+				"chroma_predicate",
+				"stamp_fit_long_axis_px",
+				"stamp_palette"
+			],
+			"properties": {
+				"source_manifest": {
+					"const": "pixel-art-production/assets/source/candidates/space-hangar-v2/source-manifest.json"
+				},
+				"full_map_target": {
+					"const": "pixel-art-production/assets/source/candidates/space-hangar-v2/raw/full-map-target.png"
+				},
+				"deck_material_master": {
+					"const": "pixel-art-production/assets/source/candidates/space-hangar-v2/raw/deck-material-master.png"
+				},
+				"wall_material_master": {
+					"const": "pixel-art-production/assets/source/candidates/space-hangar-v2/raw/wall-material-master.png"
+				},
+				"void_material_master": {
+					"const": "pixel-art-production/assets/source/candidates/space-hangar-v2/raw/void-material-master.png"
+				},
+				"structure_sheet": {
+					"const": "pixel-art-production/assets/source/candidates/space-hangar-v2/raw/structure-sheet.png"
+				},
+				"prop_sheet": {
+					"const": "pixel-art-production/assets/source/candidates/space-hangar-v2/raw/prop-sheet.png"
+				},
+				"full_map_size": {
+					"const": [1280, 720]
+				},
+				"material_source_size": {
+					"const": [1024, 1024]
+				},
+				"sheet_source_size": {
+					"const": [1024, 1024]
+				},
+				"sheet_grid": {
+					"const": [4, 4]
+				},
+				"logical_sheet_size": {
+					"const": [256, 256]
+				},
+				"cell_clearance_px": {
+					"const": 24
+				},
+				"chroma_key": {
+					"const": "#FF00FF"
+				},
+				"chroma_predicate": {
+					"type": "object",
+					"additionalProperties": false,
+					"required": [
+						"red_min",
+						"green_max",
+						"blue_min",
+						"dominance_min",
+						"fringe_value_min",
+						"fringe_green_ratio_max",
+						"fringe_rb_delta_max"
+					],
+					"properties": {
+						"red_min": {
+							"type": "integer",
+							"minimum": 128,
+							"maximum": 255
+						},
+						"green_max": {
+							"type": "integer",
+							"minimum": 0,
+							"maximum": 127
+						},
+						"blue_min": {
+							"type": "integer",
+							"minimum": 128,
+							"maximum": 255
+						},
+						"dominance_min": {
+							"type": "integer",
+							"minimum": 32,
+							"maximum": 255
+						},
+						"fringe_value_min": {
+							"type": "integer",
+							"minimum": 8,
+							"maximum": 96
+						},
+						"fringe_green_ratio_max": {
+							"type": "number",
+							"exclusiveMinimum": 0,
+							"maximum": 0.7
+						},
+						"fringe_rb_delta_max": {
+							"type": "integer",
+							"minimum": 0,
+							"maximum": 64
+						}
+					}
+				},
+				"stamp_fit_long_axis_px": {
+					"const": {
+						"structure": 56,
+						"prop": 42,
+						"wear": 32
+					}
+				},
+				"stamp_palette": {
+					"type": "array",
+					"minItems": 4,
+					"maxItems": 16,
+					"uniqueItems": true,
+					"items": {
+						"$ref": "#/$defs/color"
+					}
+				}
+			}
+		},
+		"base_families": {
+			"type": "array",
+			"prefixItems": [
+				{
+					"$ref": "#/$defs/deck_family"
+				},
+				{
+					"$ref": "#/$defs/wall_family"
+				},
+				{
+					"$ref": "#/$defs/void_family"
+				}
+			],
+			"items": false
+		},
+		"structure_stamps": {
+			"const": [
+				{"id": "frame_h", "cell": [0, 0], "role": "structure", "allowed_anchor": "boundary"},
+				{"id": "frame_v", "cell": [1, 0], "role": "structure", "allowed_anchor": "boundary"},
+				{"id": "corner_nw", "cell": [2, 0], "role": "structure", "allowed_anchor": "boundary"},
+				{"id": "corner_ne", "cell": [3, 0], "role": "structure", "allowed_anchor": "boundary"},
+				{"id": "corner_se", "cell": [0, 1], "role": "structure", "allowed_anchor": "boundary"},
+				{"id": "corner_sw", "cell": [1, 1], "role": "structure", "allowed_anchor": "boundary"},
+				{"id": "rail_h", "cell": [2, 1], "role": "structure", "allowed_anchor": "boundary"},
+				{"id": "rail_v", "cell": [3, 1], "role": "structure", "allowed_anchor": "boundary"},
+				{"id": "service_bay_h", "cell": [0, 2], "role": "structure", "allowed_anchor": "feature"},
+				{"id": "service_bay_v", "cell": [1, 2], "role": "structure", "allowed_anchor": "feature"},
+				{"id": "cover_small", "cell": [2, 2], "role": "structure", "allowed_anchor": "cover"},
+				{"id": "cover_wide", "cell": [3, 2], "role": "structure", "allowed_anchor": "cover"},
+				{"id": "bulkhead_h", "cell": [0, 3], "role": "structure", "allowed_anchor": "bulkhead"},
+				{"id": "bulkhead_v", "cell": [1, 3], "role": "structure", "allowed_anchor": "bulkhead"},
+				{"id": "inner_cap_h", "cell": [2, 3], "role": "structure", "allowed_anchor": "boundary"},
+				{"id": "inner_cap_v", "cell": [3, 3], "role": "structure", "allowed_anchor": "boundary"}
+			]
+		},
+		"prop_stamps": {
+			"const": [
+				{"id": "hatch_round", "cell": [0, 0], "role": "prop", "allowed_anchor": "floor_flat"},
+				{"id": "vent_round", "cell": [1, 0], "role": "prop", "allowed_anchor": "floor_flat"},
+				{"id": "console_small", "cell": [2, 0], "role": "prop", "allowed_anchor": "floor_flat"},
+				{"id": "console_wide", "cell": [3, 0], "role": "prop", "allowed_anchor": "floor_flat"},
+				{"id": "cargo_small", "cell": [0, 1], "role": "prop", "allowed_anchor": "floor_flat"},
+				{"id": "cargo_wide", "cell": [1, 1], "role": "prop", "allowed_anchor": "floor_flat"},
+				{"id": "machinery_small", "cell": [2, 1], "role": "prop", "allowed_anchor": "floor_flat"},
+				{"id": "machinery_tall", "cell": [3, 1], "role": "prop", "allowed_anchor": "floor_flat"},
+				{"id": "warning_plate", "cell": [0, 2], "role": "prop", "allowed_anchor": "floor_flat"},
+				{"id": "pipe_cluster", "cell": [1, 2], "role": "prop", "allowed_anchor": "floor_flat"},
+				{"id": "cable_coil", "cell": [2, 2], "role": "prop", "allowed_anchor": "floor_flat"},
+				{"id": "terminal", "cell": [3, 2], "role": "prop", "allowed_anchor": "floor_flat"},
+				{"id": "wear_scrape_a", "cell": [0, 3], "role": "wear", "allowed_anchor": "floor_flat"},
+				{"id": "wear_scrape_b", "cell": [1, 3], "role": "wear", "allowed_anchor": "floor_flat"},
+				{"id": "wear_chip_a", "cell": [2, 3], "role": "wear", "allowed_anchor": "floor_flat"},
+				{"id": "wear_chip_b", "cell": [3, 3], "role": "wear", "allowed_anchor": "floor_flat"}
+			]
+		},
+		"proof_layout": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": [
+				"size",
+				"arena",
+				"outer_frame",
+				"center_no_go",
+				"base_regions",
+				"anchor_regions",
+				"placements",
+				"wear_min_spacing",
+				"prop_fixture_range",
+				"minimum_landmarks"
+			],
+			"properties": {
+				"size": {
+					"const": [1280, 720]
+				},
+				"arena": {
+					"const": [156, 106, 968, 514]
+				},
+				"outer_frame": {
+					"const": [124, 51, 1032, 619]
+				},
+				"center_no_go": {
+					"const": [500, 250, 280, 250]
+				},
+				"base_regions": {
+					"type": "array",
+					"prefixItems": [
+						{
+							"$ref": "#/$defs/void_base_region"
+						},
+						{
+							"$ref": "#/$defs/wall_base_region"
+						},
+						{
+							"$ref": "#/$defs/deck_base_region"
+						}
+					],
+					"items": false
+				},
+				"anchor_regions": {
+					"type": "object",
+					"additionalProperties": false,
+					"required": [
+						"boundary",
+						"cover",
+						"bulkhead",
+						"feature",
+						"floor_flat"
+					],
+					"properties": {
+						"boundary": {
+							"$ref": "#/$defs/nonempty_rect_list"
+						},
+						"cover": {
+							"$ref": "#/$defs/nonempty_rect_list"
+						},
+						"bulkhead": {
+							"$ref": "#/$defs/nonempty_rect_list"
+						},
+						"feature": {
+							"$ref": "#/$defs/nonempty_rect_list"
+						},
+						"floor_flat": {
+							"$ref": "#/$defs/nonempty_rect_list"
+						}
+					}
+				},
+				"placements": {
+					"type": "array",
+					"minItems": 1,
+					"items": {
+						"$ref": "#/$defs/placement"
+					}
+				},
+				"wear_min_spacing": {
+					"type": "integer",
+					"minimum": 96
+				},
+				"prop_fixture_range": {
+					"const": [6, 10]
+				},
+				"minimum_landmarks": {
+					"type": "integer",
+					"minimum": 4
+				}
+			}
+		},
+		"outputs": {
+			"const": {
+				"clean": {
+					"deck_material_master": "clean/deck-material-master.png",
+					"wall_material_master": "clean/wall-material-master.png",
+					"void_material_master": "clean/void-material-master.png",
+					"base_variant_atlas": "clean/base-variant-atlas.png",
+					"structure_atlas": "clean/structure-atlas.png",
+					"prop_atlas": "clean/prop-atlas.png",
+					"deck_repeat_master": "clean/hangar-floor-master.png",
+					"wall_repeat_master": "clean/hangar-wall-master.png",
+					"void_repeat_master": "clean/hangar-water-master.png"
+				},
+				"review": {
+					"base_variant_atlas_4x": "review/base-variant-atlas-4x.png",
+					"structure_atlas_4x": "review/structure-atlas-4x.png",
+					"prop_atlas_4x": "review/prop-atlas-4x.png",
+					"deck_seam_2x2": "review/deck-seam-2x2.png",
+					"deck_seam_3x3": "review/deck-seam-3x3.png",
+					"deck_seam_offset_20x12": "review/deck-seam-offset-20x12.png",
+					"wall_seam_2x2": "review/wall-seam-2x2.png",
+					"wall_seam_3x3": "review/wall-seam-3x3.png",
+					"wall_seam_offset_20x12": "review/wall-seam-offset-20x12.png",
+					"void_seam_2x2": "review/void-seam-2x2.png",
+					"void_seam_3x3": "review/void-seam-3x3.png",
+					"void_seam_offset_20x12": "review/void-seam-offset-20x12.png",
+					"side_by_side": "review/full-map-target-vs-candidate.png"
+				},
+				"proof_layers": {
+					"base": "proof/map-base.png",
+					"structure": "proof/map-structure.png",
+					"wear": "proof/map-wear.png",
+					"props": "proof/map-props.png",
+					"final": "proof/map-final.png"
+				},
+				"validation": "candidate-validation.json",
+				"hashes": "sha256.json"
+			}
+		}
+	},
+	"$defs": {
+		"color": {
+			"type": "string",
+			"pattern": "^#[0-9A-F]{6}$"
+		},
+		"rect": {
+			"type": "array",
+			"prefixItems": [
+				{"type": "integer", "minimum": 0},
+				{"type": "integer", "minimum": 0},
+				{"type": "integer", "minimum": 1},
+				{"type": "integer", "minimum": 1}
+			],
+			"items": false
+		},
+		"point": {
+			"type": "array",
+			"prefixItems": [
+				{"type": "integer", "minimum": 0},
+				{"type": "integer", "minimum": 0}
+			],
+			"items": false
+		},
+		"target_size": {
+			"type": "array",
+			"prefixItems": [
+				{"type": "integer", "minimum": 1, "maximum": 256},
+				{"type": "integer", "minimum": 1, "maximum": 256}
+			],
+			"items": false
+		},
+		"base_family": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": [
+				"id",
+				"source",
+				"palette",
+				"neutral_color",
+				"prequantize_sample_size",
+				"variant_count",
+				"sample_windows",
+				"allowed_transforms"
+			],
+			"properties": {
+				"id": {
+					"enum": ["deck", "wall", "void"]
+				},
+				"source": {
+					"enum": [
+						"deck_material_master",
+						"wall_material_master",
+						"void_material_master"
+					]
+				},
+				"palette": {
+					"type": "array",
+					"minItems": 2,
+					"maxItems": 4,
+					"uniqueItems": true,
+					"items": {
+						"$ref": "#/$defs/color"
+					}
+				},
+				"neutral_color": {
+					"$ref": "#/$defs/color"
+				},
+				"prequantize_sample_size": {
+					"enum": [32, 256]
+				},
+				"variant_count": {
+					"enum": [4, 8, 12]
+				},
+				"sample_windows": {
+					"type": "array",
+					"items": {
+						"$ref": "#/$defs/rect"
+					}
+				},
+				"allowed_transforms": {
+					"const": ["identity", "flip_h", "flip_v", "rotate_180"]
+				}
+			}
+		},
+		"deck_family": {
+			"allOf": [
+				{
+					"$ref": "#/$defs/base_family"
+				},
+				{
+					"properties": {
+						"id": {"const": "deck"},
+						"source": {"const": "deck_material_master"},
+						"palette": {"const": ["#2E3945", "#44515E", "#596774"]},
+						"neutral_color": {"const": "#44515E"},
+						"prequantize_sample_size": {"const": 256},
+						"variant_count": {"const": 12},
+						"sample_windows": {
+							"const": [
+								[104, 48, 24, 24],
+								[136, 48, 24, 24],
+								[104, 80, 24, 24],
+								[136, 80, 24, 24],
+								[112, 104, 24, 24],
+								[144, 104, 24, 24],
+								[24, 96, 24, 24],
+								[184, 64, 24, 24],
+								[184, 184, 24, 24],
+								[48, 144, 24, 24],
+								[104, 184, 24, 24],
+								[200, 208, 24, 24]
+							]
+						}
+					}
+				}
+			]
+		},
+		"wall_family": {
+			"allOf": [
+				{
+					"$ref": "#/$defs/base_family"
+				},
+				{
+					"properties": {
+						"id": {"const": "wall"},
+						"source": {"const": "wall_material_master"},
+						"palette": {"const": ["#141B24", "#202833", "#2E3945", "#596774"]},
+						"neutral_color": {"const": "#202833"},
+						"prequantize_sample_size": {"const": 256},
+						"variant_count": {"const": 8},
+						"sample_windows": {
+							"const": [
+								[16, 48, 24, 24],
+								[80, 48, 24, 24],
+								[144, 48, 24, 24],
+								[208, 48, 24, 24],
+								[16, 176, 24, 24],
+								[80, 176, 24, 24],
+								[144, 176, 24, 24],
+								[208, 176, 24, 24]
+							]
+						}
+					}
+				}
+			]
+		},
+		"void_family": {
+			"allOf": [
+				{
+					"$ref": "#/$defs/base_family"
+				},
+				{
+					"properties": {
+						"id": {"const": "void"},
+						"source": {"const": "void_material_master"},
+						"palette": {"const": ["#141B24", "#202833"]},
+						"neutral_color": {"const": "#141B24"},
+						"prequantize_sample_size": {"const": 32},
+						"variant_count": {"const": 4},
+						"sample_windows": {
+							"const": [
+								[16, 116, 24, 24],
+								[80, 116, 24, 24],
+								[144, 116, 24, 24],
+								[208, 116, 24, 24]
+							]
+						}
+					}
+				}
+			]
+		},
+		"base_region": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["family", "rect"],
+			"properties": {
+				"family": {
+					"enum": ["deck", "wall", "void"]
+				},
+				"rect": {
+					"$ref": "#/$defs/rect"
+				}
+			}
+		},
+		"void_base_region": {
+			"allOf": [
+				{"$ref": "#/$defs/base_region"},
+				{"properties": {"family": {"const": "void"}}}
+			]
+		},
+		"wall_base_region": {
+			"allOf": [
+				{"$ref": "#/$defs/base_region"},
+				{"properties": {"family": {"const": "wall"}}}
+			]
+		},
+		"deck_base_region": {
+			"allOf": [
+				{"$ref": "#/$defs/base_region"},
+				{"properties": {"family": {"const": "deck"}}}
+			]
+		},
+		"nonempty_rect_list": {
+			"type": "array",
+			"minItems": 1,
+			"items": {
+				"$ref": "#/$defs/rect"
+			}
+		},
+		"placement": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": [
+				"id",
+				"stamp_id",
+				"position",
+				"anchor",
+				"transform",
+				"landmark"
+			],
+			"properties": {
+				"id": {
+					"type": "string",
+					"pattern": "^[a-z0-9_]+$"
+				},
+				"stamp_id": {
+					"type": "string",
+					"pattern": "^[a-z0-9_]+$"
+				},
+				"position": {
+					"$ref": "#/$defs/point"
+				},
+				"target_size": {
+					"$ref": "#/$defs/target_size"
+				},
+				"anchor": {
+					"enum": [
+						"boundary",
+						"cover",
+						"bulkhead",
+						"feature",
+						"floor_flat"
+					]
+				},
+				"transform": {
+					"enum": ["identity", "flip_h", "flip_v", "rotate_180"]
+				},
+				"landmark": {
+					"type": "boolean"
+				}
+			}
+		}
+	}
+}
