@@ -1749,6 +1749,8 @@ func _refresh_localized_content() -> void:
 	_refresh_result_summary()
 	_refresh_difficulty_selection()
 	_refresh_input_bindings()
+	if is_instance_valid(_guide_panel):
+		_guide_panel.refresh_localized_content()
 	_primary_slot.queue_redraw()
 	_passive_slot.queue_redraw()
 	_dash_slot.queue_redraw()

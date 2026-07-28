@@ -995,6 +995,8 @@ work.
 - [ ] Delete `NOTIFY_FIELD_BOSS_SHARD` only when Gate A authorizes it.
 - [x] Add/adjust localization validation so current stage/result snapshots
   require both Korean and English translations.
+- [x] Refresh the guidebook's persistent title/back controls after a locale
+  change and cover both locales in the existing guidebook validator.
 - [x] Run a post-change dynamic-key audit before committing the CSV.
 
 **Acceptance:** no confirmed retired stage, enemy, objective, result, or upgrade
@@ -1033,7 +1035,7 @@ longer owns reward transaction state; no per-frame call was added.
 - [x] Rewrite its unchecked hot-owner extraction phase to record the measured
   decision: bounded policy loops stay in `VehicleRun` unless a separately
   approved performance experiment proves a better boundary.
-- [ ] Move the tactical plan's remaining rendered performance checks and unique
+- [x] Move the tactical plan's remaining rendered performance checks and unique
   evidence links to the performance plan.
 - [ ] Mark the tactical plan done in the same commit that proves no unique work
   remains; include it in the approved retirement batch.
@@ -1088,8 +1090,8 @@ authority contains the durable decisions.
 
 ### Milestone 6 — Retire approved disconnected tooling and local residue
 
-- [ ] Run the current Godot pixel publisher and every pixel validator.
-- [ ] Compare the live catalog/atlas contract against the superseded publisher's
+- [x] Run the current Godot pixel publisher and every pixel validator.
+- [x] Compare the live catalog/atlas contract against the superseded publisher's
   exact responsibilities: shared atlas composition, region and cell-region
   offsets, runtime atlas path rewriting, atlas SHA-256/size metadata, catalog
   output, and post-publish validation. Add a missing responsibility to the
@@ -1178,17 +1180,26 @@ Run the diagnostic profiler separately:
 Run pixel validators:
 
 ```powershell
-$pixelValidators = @(
-  Get-ChildItem -LiteralPath '.\pixel-art-production\tools\validation' `
-    -Filter '*.ps1' |
-    Sort-Object Name
+$pixelRoot = '.\pixel-art-production\tools\validation'
+$catalog = 'pixel-art-production/runtime/catalog.json'
+& "$pixelRoot\validate_pixel_asset_pipeline.ps1"
+& "$pixelRoot\validate_pixel_asset_catalog.ps1" -CatalogPath $catalog
+& "$pixelRoot\validate_pixel_asset_frame_budget.ps1" -CatalogPath $catalog
+& "$pixelRoot\validate_pixel_asset_import_settings.ps1" -RuntimeTexturePaths @(
+  'pixel-art-production/runtime/atlases/cardborne-pixel-atlas.png',
+  'pixel-art-production/runtime/tiles/hangar-floor.png',
+  'pixel-art-production/runtime/tiles/hangar-wall.png',
+  'pixel-art-production/runtime/tiles/hangar-water.png'
 )
-foreach ($validator in $pixelValidators) {
-  & $validator.FullName
-  if ($LASTEXITCODE -ne 0) {
-    throw "Pixel validator failed: $($validator.Name)"
-  }
-}
+& "$pixelRoot\validate_pixel_asset_palettes.ps1"
+& "$pixelRoot\validate_pixel_asset_reviews.ps1" -ReviewMetadataPaths @(
+  'pixel-art-production/assets/examples/player-craft-build-v2/review.json',
+  'pixel-art-production/assets/examples/projectile-proof/build/review.json'
+)
+& "$pixelRoot\validate_pixel_asset_seams.ps1" `
+  -ManifestPath 'pixel-art-production/assets/manifests/candidates/phase-1/phase1_wall_cover_tiles.manifest.json' `
+  -ProofOutputPath 'build/pixel-validation/wall-cover-seam-proof.png'
+& "$pixelRoot\validate_pixel_source_overrides.ps1" -CatalogPath $catalog
 ```
 
 Export:

@@ -13,6 +13,7 @@ func _initialize() -> void:
 
 
 func _run() -> void:
+	var original_locale := TranslationServer.get_locale()
 	var store := Store.new()
 	store.save_path = TEST_PATH
 	store.known.clear()
@@ -62,6 +63,16 @@ func _run() -> void:
 	_expect(bool(contract["entry_column_visible"]), "non-ship categories restore the entry column")
 	panel.call("_select_category", &"ship")
 	_expect(bool(panel.debug_contract()["ship_entry_column_hidden"]), "Ship layout restores after repeated category changes")
+	for locale in ["ko", "en"]:
+		TranslationServer.set_locale(locale)
+		panel.open(visual)
+		contract = panel.debug_contract()
+		_expect(
+			String(contract["title"]) == tr("GUIDE_TITLE")
+				and String(contract["close_text"]) == tr("SETTINGS_CLOSE"),
+			"guidebook persistent controls refresh in %s" % locale
+		)
+	TranslationServer.set_locale(original_locale)
 	panel.queue_free()
 	await process_frame
 	store.free()

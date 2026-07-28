@@ -59,6 +59,7 @@ var _category_rail: VBoxContainer
 var _entry_list: VBoxContainer
 var _entry_scroll: ScrollContainer
 var _entry_separator: VSeparator
+var _title_label: Label
 var _detail_title: Label
 var _detail_body: Label
 var _build_summary: VehicleBuildSummaryPanel
@@ -78,6 +79,7 @@ func _ready() -> void:
 
 func open(snapshot: Dictionary) -> void:
 	_snapshot = snapshot.duplicate(true)
+	refresh_localized_content()
 	visible = true
 	_rebuild_categories()
 	_select_category(&"ship")
@@ -102,10 +104,10 @@ func _build() -> void:
 	add_theme_constant_override("separation", 14)
 	var header := HBoxContainer.new()
 	add_child(header)
-	var title := _label("GUIDE_TITLE", 40, Art.INK)
-	title.theme_type_variation = &"DisplayLabel"
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	header.add_child(title)
+	_title_label = _label("GUIDE_TITLE", 40, Art.INK)
+	_title_label.theme_type_variation = &"DisplayLabel"
+	_title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	header.add_child(_title_label)
 	_close_button = _button("SETTINGS_CLOSE")
 	_close_button.custom_minimum_size = Vector2(136.0, 48.0)
 	_close_button.pressed.connect(func() -> void: close_requested.emit())
@@ -156,6 +158,13 @@ func _build() -> void:
 	_build_summary.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	detail.add_child(_build_summary)
 	_apply_category_layout()
+
+
+func refresh_localized_content() -> void:
+	if is_instance_valid(_title_label):
+		_title_label.text = tr("GUIDE_TITLE")
+	if is_instance_valid(_close_button):
+		_close_button.text = tr("SETTINGS_CLOSE")
 
 
 func _rebuild_categories() -> void:
@@ -320,6 +329,8 @@ func debug_contract() -> Dictionary:
 		),
 		"entry_column_visible":_entry_scroll.visible and _entry_separator.visible,
 		"structured_counterplay":is_instance_valid(_counterplay_rows),
+		"title":_title_label.text,
+		"close_text":_close_button.text,
 	}
 
 
