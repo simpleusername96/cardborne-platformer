@@ -132,6 +132,11 @@ sheet of unrelated objects. A `512 x 512` guide canvas maps exactly onto the
 declared logical grid. The finished native frame is the logical size, not
 `512 x 512`.
 
+Do not divide that guide into a `4 x 4` sheet of named asset slots. The rejected
+experiment showed that a model can imitate the composition while breaking tile
+topology, edge thickness, pivots, and palette discipline; each slot therefore
+needs its own canonical grid-native source or deterministic derivation.
+
 ### Semantic part contract
 
 Every visible source pixel must belong to exactly one semantic layer. Each layer:

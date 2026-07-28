@@ -3,7 +3,7 @@ type: plan
 status: active
 owner: BK
 created: 2026-07-27
-last_reviewed: 2026-07-27
+last_reviewed: 2026-07-28
 scope: Recover Cardborne's pixel-art presentation from procedural placeholder publication to reviewed grid-native ImageGen-assisted assets
 related:
   - ../../AGENTS.md
@@ -12,7 +12,6 @@ related:
   - ../../docs/product/vehicle_game_spec.md
   - ../../docs/design/UI_VISUAL_SYSTEM.md
   - ../../pixel-art-production/README.md
-  - ../../pixel-art-production/PLAN.md
   - ../../pixel-art-production/design/experiment/single-asset-grid/README.md
 ---
 

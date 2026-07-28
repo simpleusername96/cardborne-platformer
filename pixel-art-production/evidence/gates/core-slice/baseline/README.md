@@ -1,12 +1,12 @@
 ---
 type: evidence
-status: active
+status: archived
 owner: BK
 created: 2026-07-27
-last_reviewed: 2026-07-27
+last_reviewed: 2026-07-28
 scope: Pre-pixel runtime, renderer, Web export, and representative gameplay baseline
 related:
-  - ../../../../../execplans/2026-07-27-pixel-asset-production-and-integration.md
+  - ../../../../../.agents/execplans/2026-07-27-pixel-art-visual-recovery.md
   - ../../../../../../docs/product/vehicle_game_spec.md
   - ../../../../../../docs/design/UI_VISUAL_SYSTEM.md
 ---

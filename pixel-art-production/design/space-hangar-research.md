@@ -1,15 +1,14 @@
 ---
 type: evidence
-status: active
+status: archived
 owner: BK
 created: 2026-07-26
-last_reviewed: 2026-07-26
+last_reviewed: 2026-07-28
 topic: Pixel-art space-hangar visual direction and production workflow
 scope: Research-backed candidate direction for the map, ship, world assets, and Web-safe rendering
 related:
-  - ./UI_VISUAL_SYSTEM.md
-  - ./pixel-art-space-hangar-experiment/README.md
-  - ./pixel-art-space-hangar-experiment/single-asset-grid/README.md
+  - ../../docs/design/UI_VISUAL_SYSTEM.md
+  - ./experiment/single-asset-grid/README.md
   - ../../docs/product/vehicle_game_spec.md
 ---
 

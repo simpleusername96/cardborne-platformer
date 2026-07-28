@@ -1048,35 +1048,35 @@ performance acceptance.
 
 - [ ] Redirect incoming links away from the three completed/superseded plans
   and the completed world-combat plan.
-- [ ] Remove the superseded single-field plan from the `related` lists in the
+- [x] Remove the superseded single-field plan from the `related` lists in the
   active performance plan, performance evidence, and archived architecture
   audit; each already links the current product spec and performance owners.
-- [ ] Remove the completed world-combat plan from the difficulty study's
+- [x] Remove the completed world-combat plan from the difficulty study's
   `related` list. In world-combat evidence, replace its `source` with the
   implementing git commits `dddbc00`, `fbb115c`, `7150b47`, `79fad1d`,
   `6b95c26`, `d20a25f`, and closure `51b2168`, plus the current product spec;
   remove the dead `related` entry before changing that evidence to
   `status: archived`.
-- [ ] Verify the completed plans' durable outcomes at their locked owners:
+- [x] Verify the completed plans' durable outcomes at their locked owners:
   selected-field/five-stage/secondary/guidebook and world-combat behavior in the
   product spec; Korean overflow/focus/layout rules in `UI_VISUAL_SYSTEM.md` and
   the localization/UI validators; performance A/B rationale in the retained
   evidence. Do not copy progress logs.
-- [ ] Move current pixel production invariants out of
+- [x] Move current pixel production invariants out of
   `pixel-art-production/PLAN.md` into the pixel README and active recovery plan.
-- [ ] In `.agents/execplans/2026-07-27-pixel-art-visual-recovery.md`, replace
+- [x] In `.agents/execplans/2026-07-27-pixel-art-visual-recovery.md`, replace
   the `related` link to `pixel-art-production/PLAN.md` with the current pixel
   README after its durable invariants are migrated.
-- [ ] In
+- [x] In
   `pixel-art-production/evidence/gates/01-post-sampler-capability/README.md`,
   replace both the frontmatter `source` link and the body “Phase 1” source
   reference to `pixel-art-production/PLAN.md` with the migrated current pixel
   README/active recovery authority.
-- [ ] Archive and relink the world-combat performance evidence, space-hangar
+- [x] Archive and relink the world-combat performance evidence, space-hangar
   research, pixel gate/baseline, and pipeline sampler documents.
-- [ ] Replace the missing core-slice plan link with the active
+- [x] Replace the missing core-slice plan link with the active
   `2026-07-27-pixel-art-visual-recovery.md` link.
-- [ ] Confirm the UIUX direction's accepted rules are present in current visual
+- [x] Confirm the UIUX direction's accepted rules are present in current visual
   authority and validators.
 - [ ] Delete only the Gate-B-approved document manifest and six UIUX evidence
   PNGs.

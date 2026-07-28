@@ -1,12 +1,11 @@
 ---
 type: evidence
-status: active
+status: archived
 owner: BK
 created: 2026-07-27
-last_reviewed: 2026-07-27
+last_reviewed: 2026-07-28
 scope: A bounded six-category proof of the Cardborne pixel-asset production pipeline
 related:
-  - ../../PLAN.md
   - ../../README.md
   - ../../design/visual-research/PART_GUIDELINES.md
 ---

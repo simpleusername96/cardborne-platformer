@@ -12,7 +12,6 @@ related:
   - ../vehicle-performance-architecture-audit.md
   - ../vehicle-performance-stabilization-evidence.md
   - ../vehicle-world-combat-expansion-evidence.md
-  - ./2026-07-23-single-field-campaign-secondaries-guidebook.md
   - ../../docs/product/vehicle_game_spec.md
   - ../../docs/design/UI_VISUAL_SYSTEM.md
   - ../../docs/design/vehicle-hud-upgrade-direction/03-runtime-vehicle-upgrade-sheet.png

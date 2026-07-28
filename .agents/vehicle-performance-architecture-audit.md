@@ -3,11 +3,10 @@ type: evidence
 status: archived
 owner: BK
 created: 2026-07-23
-last_reviewed: 2026-07-23
+last_reviewed: 2026-07-28
 scope: Current vehicle-run frame architecture, scalability limits, profiler validity, and Godot 4.7 performance practices
 related:
   - ./PLANS.md
-  - ./execplans/2026-07-23-single-field-campaign-secondaries-guidebook.md
   - ./execplans/2026-07-23-vehicle-performance-architecture-stabilization.md
   - ./vehicle-performance-stabilization-evidence.md
   - ../docs/product/vehicle_game_spec.md

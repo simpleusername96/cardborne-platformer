@@ -3,14 +3,13 @@ type: evidence
 status: active
 owner: BK
 created: 2026-07-23
-last_reviewed: 2026-07-24
+last_reviewed: 2026-07-28
 topic: Vehicle runtime performance stabilization
 scope: Implemented runtime boundaries, deterministic workload evidence, validation, and remaining release limits
 source: ./execplans/2026-07-23-vehicle-performance-architecture-stabilization.md
 related:
   - ./vehicle-performance-architecture-audit.md
   - ./execplans/2026-07-23-vehicle-performance-architecture-stabilization.md
-  - ./execplans/2026-07-23-single-field-campaign-secondaries-guidebook.md
   - ../docs/product/vehicle_game_spec.md
 ---
 

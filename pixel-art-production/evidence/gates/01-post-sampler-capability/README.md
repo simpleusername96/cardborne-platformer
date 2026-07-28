@@ -1,16 +1,15 @@
 ---
 type: evidence
-status: active
+status: archived
 owner: BK
 created: 2026-07-27
-last_reviewed: 2026-07-27
+last_reviewed: 2026-07-28
 topic: Cardborne Phase 1 post-sampler pixel-asset capability gate
 scope: Offline candidate review only; no runtime publication
-source:
-  - ../../../PLAN.md
+source: ../../../README.md
+related:
   - ../../../assets/asset-inventory.json
   - ../../pipeline-sampler/README.md
-related:
   - ./category-review.png
   - ./direction-motion-review.png
   - ./wall-signatures.png
@@ -28,7 +27,7 @@ It intentionally stops before Godot or Web runtime integration.
 
 ## Sources
 
-- `pixel-art-production/PLAN.md`, Phase 1
+- `pixel-art-production/README.md`, production requirements and workflow
 - `pixel-art-production/assets/asset-inventory.json`
 - `pixel-art-production/evidence/pipeline-sampler/`
 - Four saved ImageGen prompts and raw candidates under

@@ -1,14 +1,13 @@
 ---
 type: evidence
-status: active
+status: archived
 owner: BK
 created: 2026-07-24
-last_reviewed: 2026-07-24
+last_reviewed: 2026-07-28
 topic: Enlarged vehicle fields, terrain/facilities, enemy elites, bosses and practice QA, Breach Shot, run status, and stage-report expansion
-scope: Current repository evidence, recovered history, external design findings, owner corrections, and the accepted direction for the active execution plan
-source: ./execplans/2026-07-24-vehicle-world-combat-expansion.md
+scope: Historical evidence, recovered history, external design findings, owner corrections, and measured implementation rationale
+source: Git commits dddbc00, fbb115c, 7150b47, 79fad1d, 6b95c26, d20a25f, and 51b2168; ../docs/product/vehicle_game_spec.md
 related:
-  - ./execplans/2026-07-24-vehicle-world-combat-expansion.md
   - ./execplans/2026-07-23-vehicle-performance-architecture-stabilization.md
   - ./vehicle-difficulty-meta-progression-decision-study.md
   - ../docs/product/vehicle_game_spec.md
@@ -23,7 +22,7 @@ Record the facts behind the field and combat revision together with the final
 implementation verification.
 This document is evidence and design rationale, not product authority. The
 implemented decisions live in the canonical product and visual specifications;
-the related completed ExecPlan is historical execution context.
+the implementing commits named in frontmatter preserve the execution history.
 
 The investigation answers ten user concerns:
 
@@ -582,4 +581,4 @@ offensive exposure opportunity. Fixed elite replacements reinforce that lesson
 without raising capacity. Debug-only Boss Practice then makes the same
 production boss runtime repeatable for QA, while optional reward-bearing risk
 belongs to the unresolved difficulty/meta-progression decision rather than this
-execution plan.
+implemented slice.

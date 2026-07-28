@@ -3,14 +3,13 @@ type: evidence
 status: active
 owner: BK
 created: 2026-07-24
-last_reviewed: 2026-07-24
+last_reviewed: 2026-07-28
 topic: Run difficulty and death-persistent progression
 scope: Evidence and decision checklist for whether Cardborne should rely on fixed run difficulty, bounded persistent growth, or both
 source: User feedback and the current local implementation
 related:
   - ../docs/product/vehicle_game_spec.md
   - ./vehicle-performance-stabilization-evidence.md
-  - ./execplans/2026-07-24-vehicle-world-combat-expansion.md
 ---
 
 # Difficulty and Death-Persistent Progression — Decision Study
