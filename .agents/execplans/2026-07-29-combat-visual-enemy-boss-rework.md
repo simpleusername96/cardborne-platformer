@@ -14,6 +14,7 @@ related:
   - ../visual-system-design-selection-plan.md
   - ../../docs/product/vehicle_game_spec.md
   - ../../docs/design/UI_VISUAL_SYSTEM.md
+  - ../../docs/design/component-concepts/README.md
   - ../../docs/product/combat-growth-improvement-direction.md
   - ../../docs/research/hidden-techniques-collective-enemies-mastery-unlocks.md
 ---
@@ -87,6 +88,7 @@ card build와 다섯 stage run은 보존한다.
 | `.agents/execplans/2026-07-29-horde-foundation-recovery-and-acceptance.md` | 276 peak/320 capacity와 4방향 pressure는 고정됐고 Phase 5 timing/soak gate는 아직 열려 있다. | component runtime과 collective rollout은 그 plan 완료 뒤에 merge한다. sheet, upgrade UI, pickup contact는 먼저 진행할 수 있다. |
 | 2026-07-29 native/Web baseline | Web export, 1280×720 built page, canvas, 모든 request와 console은 정상이다. 기존 upgrade, localization, rewards, renderer, boss, run validator도 통과한다. | 현재 build가 깨진 것이 아니라 현재 검증이 사용자 경험 결함을 충분히 표현하지 못한다고 본다. |
 | 2026-07-29 peak/boss/item capture | 최대 horde에서 적 silhouette가 magenta/coral 덩어리로 합쳐지고, repair/recall item이 비슷한 medallion이며, boss가 큰 donut/blob처럼 보인다. | 작은 장식보다 외곽 silhouette·negative space·우선 표적 cue를 먼저 설계한다. |
+| `docs/design/component-concepts/README.md` | player, 12 mobile roles, structures/objectives, rewards/projectiles, five bosses와 upgrade glyph를 다룬 여섯 장의 생성형 시안이 있다. | 구현 전 형태 검토 input으로 사용한다. 이 draft는 runtime descriptor에서 생성한 deterministic approval sheet를 대신하지 않는다. |
 
 로컬 capture와 Web smoke는 분석 근거이며 `build/` 아래 ignored evidence다. 구현
 phase의 authoritative evidence는 각 phase가 새로 생성한다.
@@ -987,6 +989,10 @@ BK approval은 여러 방향 중 하나를 고르는 research gate가 아니다.
   rendered baseline을 확인했다.
 - [x] 하나의 execution solution, rejected alternatives, architecture,
   phase order, acceptance와 stop condition을 고정했다.
+- [x] 구현 전 형태 검토용 draft component sheet 6장을
+  `docs/design/component-concepts/`에 만들고 component/state mapping을
+  문서화했다. 이 시안은 BK 승인 전 draft이며 Phase 1의 deterministic
+  runtime sheet gate를 완료한 것으로 간주하지 않는다.
 - [ ] Phase 1 component authority and approval sheets
 - [ ] Phase 2 upgrade clarity and pickup contact
 - [ ] Horde recovery inter-plan gate
@@ -999,14 +1005,18 @@ BK approval은 여러 방향 중 하나를 고르는 research gate가 아니다.
 
 ## Next Steps
 
-1. Phase 1의 active design/product spec correction과 component catalog/sheet
-   generator를 하나의 bounded implementation batch로 시작한다.
-2. 8개 sheet를 생성해 이 문서의 single-direction acceptance gate를 연다.
-3. sheet correction이 필요하면 silhouette, spacing, state cue만 한 번 수정하고
-   style exploration을 다시 열지 않는다.
-4. 동시에 owner가 겹치지 않는 Phase 2 upgrade/pickup batch를 별도 commit으로
+1. 여섯 draft concept sheet에서 engine 부착, dash cue, role silhouette,
+   projectile core/tail, boss objective와 upgrade glyph 방향을 BK가 검토한다.
+2. 승인된 형태를 Phase 1의 component catalog/runtime descriptor로 번역하고
+   active design/product spec correction을 함께 적용한다.
+3. 같은 runtime descriptor에서 7개 deterministic component sheet와
+   pressure/accessibility sheet를 생성해 single-direction acceptance gate를
+   연다.
+4. correction이 필요하면 승인 grammar 안에서 silhouette, spacing, state
+   cue만 한 번 수정하고 style exploration을 다시 열지 않는다.
+5. 동시에 owner가 겹치지 않는 Phase 2 upgrade/pickup batch를 별도 commit으로
    진행한다.
-5. combat renderer publication은 horde recovery plan 완료 뒤 Phase 3에서
+6. combat renderer publication은 horde recovery plan 완료 뒤 Phase 3에서
    시작한다.
 
 ## Completion Criteria
