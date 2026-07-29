@@ -111,13 +111,66 @@ active다. 대표 플레이, 최대 몰이, capacity/lifecycle 부하를 분리�
 동일한 fixture owner를 쓰는 작업은
 `execplans/2026-07-29-horde-foundation-recovery-and-acceptance.md`가 이어받는다.
 
+## 2026-07-29 최대 부하 recovery 실행 결과
+
+후속 계획의 구현 커밋은 `bc1bbf0`, `38786dd`, `32e3305`, `20cb2b4`,
+`1f6cc97`, `5d58312`, `780aa37`이다.
+
+### Workload authority
+
+- `current_pressure`를 제거하고 `production_replay`, `peak_horde`,
+  `capacity_pressure`, `lifecycle_pressure`, `boss_pressure`를 분리했다.
+- performance와 `03-peak-horde.png` capture는 seed `12886704`,
+  fingerprint `2787026116`인 동일 `VehiclePressureFixture`를 사용한다.
+- peak initial qualification은 active 276, visible 124, near-600 124,
+  near-900 224, sector `42/29/29/42/40/27/27/40`이다.
+- production replay는 synthetic enemy fill 없이 실제 Stage 5 Hard scheduler와
+  입력 route를 사용한다. beat 4의 최근 10개 1초 표본에서 ordinary authored
+  reserve 1260, active cap 276, median active 276, 최소 요구 249, 4사분면과
+  8 sector, 최대 allocation sector 비중 19.53%, ranged commit 3,
+  denial commit 1, enemy capacity rejection 0으로 qualification을 통과했다.
+
+### Simulation and presentation
+
+- `VehicleEnemyUpdateSchedule`이 한 tick의 active/support/critical/due workset과
+  active-cap, commit, rammer, carrier counter를 한 번에 만든다.
+- ordinary decision은 10 Hz, near/far motion은 30/20 Hz이며 startup, active,
+  interrupted recovery와 boss/special path는 60 Hz를 유지한다.
+- actor-owned elapsed 값은 pool reuse 때 0으로 초기화된다. rammer/carrier의
+  per-enemy full-array helper scan은 제거됐다.
+- 276체 기준 `enemy_behavior_and_motion` p95는 초기 6.62ms에서 후속 표본
+  4.88–5.88ms로 낮아졌다.
+- ordinary body는 모두 남기면서 health bar 12개와 extra priority marker 8개로
+  제한했다. visible retained instances는 초기 1,233개에서 964–978개로 줄었다.
+- 별도 60/30 Hz retained channel 구현 세 가지는 presentation p95를
+  10.82–13.85ms로 악화시켜 전부 제거했다. 현재 source에 channel split은 없다.
+
+### Verification and limits
+
+- Godot import와 `tools/validation/validate_*.gd` 43개가 모두 통과했다.
+- production Web export가 필수 네 파일을 생성했고, fastrun-manager Codex lane의
+  built-Web smoke가 1280×720에서 부팅되어 console error 없이 peak workload를
+  완료했다. 해당 Chrome은 headless scheduler-throttled였으므로 Web frame 수치는
+  release evidence가 아니다.
+- production replay 20초 진단은 median 60 FPS, frame p95 16.67ms였지만
+  1% low 50.65 FPS로 55 FPS gate를 통과하지 못했다.
+- 276체 peak 후속 표본은 median 43.56–46.15 FPS, frame p95
+  26.67–42.23ms, physics p95 10.70–14.00ms였다. workload는 유효하지만
+  native release gate는 실패했다.
+- capacity 진단은 320 enemies, 240/120 projectiles, 192 shards와 96 effects를
+  정확히 유지하고 enemy capacity rejection 0으로 무결성을 통과했다. 그러나
+  physics p95 15.52ms, p99 18.09ms로 6/8ms timing gate를 실패했다.
+- timing gate가 이미 반복 실패했으므로 성공을 가장하는 10분 soak와 전체
+  native/Web 60초 matrix는 실행하지 않았다. QA package는 ignored
+  `build/evidence/horde-recovery/qa-package/`에 있다.
+
 ## 남은 기술 조건
 
-- representative production, 276기 peak와 320 capacity/lifecycle workload 분리;
-- 276기 목표를 유지한 simulation cadence와 retained presentation 최적화;
-- unchanged gameplay-contract validator 통과;
-- clean commit에서 native/Web 3회 60초 matrix와 10분 lifecycle soak;
-- 사용자 QA용 production build, peak capture와 objective diagnostics 제공.
+- 276기 peak frame p95와 320 capacity physics p95/p99를 현재 threshold까지
+  낮추는 다음 architecture batch;
+- 그 batch가 3회 retention rule을 통과한 뒤 clean commit에서 native/Web
+  3회 60초 matrix와 10분 lifecycle soak;
+- subjective 재미·압박감·성장 만족도는 별도 사용자 QA feedback으로 평가.
 
 계획이 금지한 density, player speed, camera zoom, physics rate, resolution 축소는
 성능 fallback으로 사용하지 않았다. 위 항목이 끝나기 전에는 이 evidence와 원본

@@ -67,7 +67,7 @@ simulation cadence와 presentation salience를 각각 한 번의 bounded batch�
 | Fixture ownership | 새 test-only `VehiclePressureFixture`가 deterministic composition/placement를 소유하고 performance와 capture가 재사용한다. | parallel truth 제거 |
 | Simulation cadence | boss·startup·active·status damage는 60 Hz, ordinary decision/support/cooldown은 10 Hz, near/far locomotion은 30/20 Hz다. | 현재 병목과 existing timing contract |
 | Scheduling ownership | 새 `VehicleEnemyUpdateSchedule`은 cadence/workset/counter만 소유하고 attack/collision/damage policy는 `VehicleRun`에 남긴다. | chatty cross-script policy 분산 방지 |
-| Presentation cadence | projectile/telegraph/boss/committed body는 60 Hz, non-committed crowd/XP/ordinary semantics는 30 Hz다. | presentation p95와 gameplay-critical timing 분리 |
+| Presentation cadence | combat renderer는 현재 full retained sync를 유지한다. 60/30 Hz channel split은 세 가지 구현을 측정했으나 presentation/frame p95를 악화시켜 retention rule에 따라 제거했다. | 실패한 optimization을 architecture contract로 남기지 않음 |
 | Salience budget | ordinary health bars 총 12, extra priority markers 총 8이다. Aim→committed→recently damaged/priority proximity 순으로 선택한다. | 109 health-bar pair와 overlay clutter 제거 |
 | Never-hidden semantics | boss cues, committed attacks, mine danger areas, projectile collision cores와 aim brackets는 salience budget으로 생략하지 않는다. | fairness/readability invariant |
 | Performance thresholds | 이전 native/Web/capacity/lifecycle threshold를 완화하지 않는다. | 숫자를 낮춰 완료 처리하는 것을 방지 |
@@ -205,7 +205,7 @@ Source owners touched:
 `scripts/vehicle/vehicle_run.gd` maximum-pressure capture method,
 `tools/validation/validate_vehicle_performance_scenarios.gd`
 
-- [ ] **1.1 Create `VehiclePressureFixture` as the single deterministic test-load owner.**
+- [x] **1.1 Create `VehiclePressureFixture` as the single deterministic test-load owner.**
   - As-is: performance and capture independently invent ring/grid positions and role lists.
   - To-be: fixture receives the live `VehicleSpawnAllocator`, selected field/stage layout,
     fixed seed `12886704`, requested load class and current production role definitions.
@@ -216,7 +216,7 @@ Source owners touched:
   - Guard: fixture contains no copied sector percentage, attack commit or difficulty
     policy; those remain in production owners.
 
-- [ ] **1.2 Replace scenario taxonomy and setup.**
+- [x] **1.2 Replace scenario taxonomy and setup.**
   - As-is: `current_pressure`, `capacity_pressure`, `lifecycle_pressure`,
     `boss_pressure`.
   - To-be:
@@ -236,7 +236,7 @@ Source owners touched:
   - Guard: `production_replay` never calls `_fill_enemies()`; `current_pressure` is
     rejected rather than aliased.
 
-- [ ] **1.3 Lock peak-horde spatial qualification.**
+- [x] **1.3 Lock peak-horde spatial qualification.**
   - As-is: 240 visible and 267 near-600 actors pass because only total count matters.
   - To-be: `peak_horde` requires active 276, visible 120–160, near-900 200–240,
     all four quadrants, all eight sectors, 24–45 actors per sector, ranged commits ≤3
@@ -246,7 +246,7 @@ Source owners touched:
   - Guard: bounds are not reused as production spawn policy; they qualify only the
     deterministic maximum fixture.
 
-- [ ] **1.4 Align only the maximum-pressure capture with the shared fixture.**
+- [x] **1.4 Align only the maximum-pressure capture with the shared fixture.**
   - As-is: `03-maximum-pressure-xp.png` is a one-sided manual grid unrelated to the
     performance fixture.
   - To-be: maximum-pressure capture calls `VehiclePressureFixture` and saves
@@ -297,7 +297,7 @@ Source owners touched:
 `tools/validation/validate_vehicle_enemy_store.gd`,
 existing combat/encounter validators
 
-- [ ] **2.1 Add actor-owned cadence accumulators.**
+- [x] **2.1 Add actor-owned cadence accumulators.**
   - As-is: skipped movement multiplies current frame delta, while decision/cooldown
     logic still enters every physics tick.
   - To-be: `VehicleEnemyState` owns `decision_elapsed` and `motion_elapsed`; both
@@ -307,7 +307,7 @@ existing combat/encounter validators
     inherited by another actor.
   - Guard: runtime-slot index is never used as persistent cadence identity.
 
-- [ ] **2.2 Add `VehicleEnemyUpdateSchedule`.**
+- [x] **2.2 Add `VehicleEnemyUpdateSchedule`.**
   - As-is: `VehicleRun` repeatedly scans enemies and role helpers rescan the array.
   - To-be: one bulk `rebuild()` per physics tick produces reusable arrays for active,
     timer/status, boss/special, critical ordinary, decision-due, near-motion-due,
@@ -318,7 +318,7 @@ existing combat/encounter validators
     counters; arrays are cleared and reused without unbounded growth.
   - Guard: schedule never calls damage, collision, attack-start, spawn or rendering.
 
-- [ ] **2.3 Split the combined ordinary update into three lanes.**
+- [x] **2.3 Split the combined ordinary update into three lanes.**
   - As-is: `_update_ordinary_enemy()` handles phase timing, support/role decisions,
     cooldown, commit and locomotion every physics tick.
   - To-be:
@@ -335,7 +335,7 @@ existing combat/encounter validators
   - Guard: boss update, committed charge/beam/projectile timing, collision geometry
     and damage values remain unchanged.
 
-- [ ] **2.4 Replace hot repeated specialist scans with schedule counters.**
+- [x] **2.4 Replace hot repeated specialist scans with schedule counters.**
   - As-is: `rammer_can_commit()` and `living_children()` can scan all enemies for
     every relevant actor.
   - To-be: `VehicleRun` reads the schedule snapshot for rammer global/squad and
@@ -346,7 +346,7 @@ existing combat/encounter validators
   - Guard: repair target selection continues to use the spatial-grid nearby result
     and exact line of sight.
 
-- [ ] **2.5 Reuse schedule worklists for coordination.**
+- [x] **2.5 Reuse schedule worklists for coordination.**
   - As-is: squad/shield support collection performs separate scans.
   - To-be: existing 10 Hz coordination reads the schedule's active/support lists;
     spatial queries and exact support range checks remain unchanged.
@@ -392,15 +392,17 @@ Source owners touched:
 `tools/validation/validate_vehicle_combat_renderer.gd`,
 `docs/design/UI_VISUAL_SYSTEM.md`
 
-- [ ] **3.1 Give retained batches explicit cadence channels.**
+- [x] **3.1 Evaluate explicit retained cadence channels; remove the failed experiment.**
   - As-is: one `sync()` resets, writes and uploads every batch.
   - To-be: each `BatchHandle` belongs to `critical` or `crowd`; resetting/uploading
     one channel leaves the other channel's visible instances intact.
   - Accept: debug snapshot reports per-channel batch and upload counts.
   - Guard: fixed capacity and retained MultiMesh ownership remain; no per-entity Node
     or per-frame mesh allocation.
+  - Outcome: three channel partitions increased presentation p95 to
+    `10.82–13.85ms`; all channel code and duplicate batches were removed.
 
-- [ ] **3.2 Split ordinary body presentation.**
+- [x] **3.2 Evaluate split ordinary body presentation; remove the failed experiment.**
   - As-is: all mobile actors share one 60 Hz atlas batch.
   - To-be: boss, stationary combat-critical and startup/active ordinary bodies use
     critical 60 Hz batches; non-committed mobile crowd uses a 30 Hz atlas batch.
@@ -410,8 +412,10 @@ Source owners touched:
     and no actor is visible in both body channels.
   - Guard: player, projectiles, attack telegraphs, mine danger areas and boss remain
     60 Hz.
+  - Outcome: the critical/crowd body split created more scan, sort and upload work
+    than it saved on this renderer, so the original single body owner remains.
 
-- [ ] **3.3 Apply deterministic semantic budgets.**
+- [x] **3.3 Apply deterministic semantic budgets.**
   - As-is: maximum fixture may draw 109 ordinary health-bar pairs and a marker for
     every visible priority actor.
   - To-be:
@@ -424,7 +428,7 @@ Source owners touched:
   - Guard: boss health/cue, aim brackets, committed attack markers, mine danger rings
     and projectile collision cores are not counted in or hidden by these caps.
 
-- [ ] **3.4 Run crowd/XP/ordinary semantics at 30 Hz.**
+- [x] **3.4 Evaluate 30 Hz crowd/XP/ordinary semantics; remove the failed experiment.**
   - As-is: XP and ordinary overlays rebuild every presented physics serial.
   - To-be: crowd body, XP and ordinary health/status/shield semantics update every
     second physics serial using current state; short critical effects and attack/world
@@ -432,8 +436,10 @@ Source owners touched:
   - Accept: 60 FPS capture shows no duplicate/stale actor and 30 FPS slow-motion
     inspection shows a maximum one-frame channel age.
   - Guard: presentation cadence is independent of unrelated UI motion settings.
+  - Outcome: the measured implementation failed the retention rule and was removed;
+    all retained combat semantics continue to update through the existing sync.
 
-- [ ] **3.5 Measure and visually inspect the batch.**
+- [x] **3.5 Measure and visually inspect the retained semantic-budget batch.**
   - As-is: last short maximum sample presentation p95 is 8.91ms and visible instances
     are 1,184.
   - To-be: run the Phase 1 3 × 20-second protocol and regenerate the shared
@@ -441,12 +447,15 @@ Source owners touched:
   - Accept: median presentation p95 improves at least 10%, frame p95 is not more than
     5% worse, health/marker caps hold, and no required cue is absent.
   - Guard: visual scale and collision core/envelope contract remain unchanged.
+  - Outcome: the overlay budget reduced peak visible instances from `1,233` to
+    `964–978`, but the three-sample frame retention gate did not pass. This is
+    retained as a readability contract, not claimed as a release-performance win.
 
-- [ ] **3.6 Record the bounded-overlay contract in the visual system spec.**
+- [x] **3.6 Record the bounded-overlay contract in the visual system spec.**
   - As-is: the visual spec defines salience and collision truth but not a maximum
     ordinary health/priority overlay count.
   - To-be: document the 12 health-bar, 8 extra-marker budget, deterministic selection
-    order, never-hidden cue list and 60/30 Hz presentation channels.
+    order and never-hidden cue list. Do not document the rejected channel split.
   - Accept: source constants, renderer validator and visual-system wording agree.
   - Guard: do not add general UI styling or asset-direction rules.
 
@@ -479,7 +488,7 @@ Source owners touched:
 `tools/validation/validate_vehicle_performance_scenarios.gd`,
 `.agents/continuous-horde-readability-evidence.md`
 
-- [ ] **4.1 Qualify one fixed Stage 5 Hard production replay.**
+- [x] **4.1 Qualify one fixed Stage 5 Hard production replay.**
   - As-is: active cap assertions은 있지만 actual scheduler workload와 maximum fixture가
     분리되지 않았다.
   - To-be: seed `12886704`, locked primary/build/input route와 Stage 5 highest-cap
@@ -495,7 +504,7 @@ Source owners touched:
   - Guard: 이 값은 workload qualification이며 재미, 난이도 또는 적정 밀도 판정으로
     서술하지 않는다.
 
-- [ ] **4.2 Run unchanged gameplay-contract regressions.**
+- [x] **4.2 Run unchanged gameplay-contract regressions.**
   - As-is: simulation/renderer hot path를 바꾸면 stage, boss, projectile, status,
     transition과 item behavior가 간접적으로 회귀할 수 있다.
   - To-be: 기존 focused validator를 변경 없이 통과시킨다. 새 gameplay behavior,
@@ -504,7 +513,7 @@ Source owners touched:
     upgrade와 transition validator가 모두 0으로 종료한다.
   - Guard: validator 통과를 재미나 시각적 선호의 증거로 표현하지 않는다.
 
-- [ ] **4.3 Produce a bounded QA package without an approval gate.**
+- [x] **4.3 Produce a bounded QA package without an approval gate.**
   - As-is: 사용자가 실제 실행 상태를 확인할 때 workload와 frame 정보를 한 번에
     볼 수 있는 bounded handoff가 없다.
   - To-be: ignored
@@ -540,12 +549,12 @@ No product source is expected. Only a failing targeted owner may be changed with
 locked Phase 2/3 architecture. Generated JSON/Web output stays ignored. The bounded
 summary updates `.agents/continuous-horde-readability-evidence.md`.
 
-- [ ] **5.1 Run all focused validators and import.**
+- [x] **5.1 Run all focused validators and import.**
   - Accept: every `tools/validation/validate_*.gd` exits 0 and Godot import has no
     script parse/resource error.
   - Guard: a failing validator is rerun only after its suspected cause changes.
 
-- [ ] **5.2 Build the production Web export.**
+- [x] **5.2 Build the production Web export.**
   - Accept: `.\tools\export_web.ps1` creates all required non-empty artifacts.
   - Guard: export success is build evidence only, not runtime-performance evidence.
 
@@ -579,7 +588,7 @@ summary updates `.agents/continuous-horde-readability-evidence.md`.
     continues.
   - Guard: capacity/lifecycle timing is not described as representative gameplay FPS.
 
-- [ ] **5.6 Apply the bounded failure rule.**
+- [x] **5.6 Apply the bounded failure rule.**
   - If one target fails, record the dominant subsystem and exact scenario.
   - A correction may change only the already selected schedule/channel/overlay
     implementation and must pass the same 3×20-second retention rule before the
@@ -623,7 +632,7 @@ this plan and related lifecycle frontmatter
     reader-facing docs.
   - Guard: historical audits/plans retain historical numbers when clearly labeled.
 
-- [ ] **6.2 Finalize bounded evidence.**
+- [x] **6.2 Finalize bounded evidence.**
   - To-be: update implementation evidence with commit, environment, fixed production
     workload qualification, peak capture path, all individual native/Web runs,
     lifecycle result와 limitations.
@@ -842,42 +851,52 @@ escalate한다.
 - [x] Problems classified and mapped to five core reasons.
 - [x] Five materially different solution alternatives compared.
 - [x] Final hybrid solution and all execution decisions locked.
-- [ ] Phase 1: workload authority and maximum-load baseline.
-- [ ] Phase 2: frequency-shaped enemy simulation.
-- [ ] Phase 3: salience-budgeted retained presentation.
-- [ ] Phase 4: objective production regression and QA package.
-- [ ] Phase 5: authoritative native/Web/lifecycle gates.
-- [ ] Phase 6: durable reconciliation and completion.
+- [x] Phase 1 workload authority, shared capture and diagnostic baseline landed.
+  The planned three clean baselines were not all produced, so release authority
+  is not claimed.
+- [x] Phase 2 frequency-shaped enemy simulation and aggregate counters landed;
+  behavior p95 improved, while the complete frame retention gate remains open.
+- [x] Phase 3 semantic overlay budget landed. All failed cadence-channel variants
+  were removed; the three-sample frame retention gate remains open.
+- [x] Phase 4 production peak qualification, unchanged regressions and ignored QA
+  package completed.
+- [ ] Phase 5: import, 43 validators, Web export and built runtime smoke pass;
+  native/Web authoritative timing and lifecycle gates remain blocked by measured
+  peak/capacity timing failure.
+- [ ] Phase 6: evidence is reconciled, but lifecycle completion waits for Phase 5.
 
 ## Next Steps
 
-1. Start with Phase 1 only and commit the corrected fixture/capture/baseline.
-2. Apply and measure Phase 2, then Phase 3 as separate retained-or-removed batches.
-3. Complete the fixed production replay and unchanged gameplay regression before
-   the full performance matrix.
-4. Run native/Web/lifecycle gates from one clean commit.
-5. Reconcile measured evidence and close the technical plan.
+1. Profile one next architecture batch against the existing fixed peak/capacity
+   payloads. Do not restore the rejected renderer channel split.
+2. Keep the batch only if all three focused peak samples satisfy the existing
+   subsystem and frame retention rule and capacity physics approaches the 6/8ms
+   gate without changing density, speed, scale, collision or gameplay values.
+3. Only after the timing gate is credible, run the complete native/Web 60-second
+   matrix and 600-second lifecycle soak from one clean commit.
+4. Mark this plan `done` only when those objective gates pass; subjective fun and
+   balance remain a separate user-QA task.
 
 ## Completion Criteria
 
-- [ ] `current_pressure` and duplicated manual ring/grid fixtures are gone.
-- [ ] Performance and capture use the same peak fixture fingerprint.
-- [ ] `production_replay` uses the actual Stage 5 Hard scheduler and production input path.
-- [ ] `peak_horde` meets all active/visible/near/sector/commit qualification bounds.
-- [ ] Ordinary critical/decision/near/far lanes run at 60/10/30/20 Hz with parity.
-- [ ] No per-enemy hot helper rescans the full enemy array for rammer/carrier counts.
-- [ ] Combat renderer channels run at 60/30 Hz as locked.
-- [ ] Ordinary health bars ≤12 and extra priority markers ≤8 while never-hidden cues remain.
-- [ ] Fixed Stage 5 Hard production replay passes occupancy, sector, commit and
+- [x] `current_pressure` and duplicated manual ring/grid fixtures are gone.
+- [x] Performance and capture use the same peak fixture fingerprint.
+- [x] `production_replay` uses the actual Stage 5 Hard scheduler and production input path.
+- [x] `peak_horde` meets all active/visible/near/sector/commit qualification bounds.
+- [x] Ordinary critical/decision/near/far lanes run at 60/10/30/20 Hz with parity.
+- [x] No per-enemy hot helper rescans the full enemy array for rammer/carrier counts.
+- [x] Failed 60/30 renderer channel experiments are removed rather than retained.
+- [x] Ordinary health bars ≤12 and extra priority markers ≤8 while never-hidden cues remain.
+- [x] Fixed Stage 5 Hard production replay passes occupancy, sector, commit and
   capacity qualification without synthetic enemy fill.
-- [ ] Existing stage, boss, projectile, experience, item, upgrade and transition
+- [x] Existing stage, boss, projectile, experience, item, upgrade and transition
   validators pass without product-value changes.
-- [ ] QA package contains the production build, peak capture, workload summaries,
+- [x] QA package contains the production build, peak capture, workload summaries,
   run commands and glossary.
-- [ ] Every focused validator, Web export and production-style start passes.
+- [x] Every focused validator, Web export and production-style start passes.
 - [ ] All individual native/Web authoritative samples and the lifecycle soak pass.
-- [ ] Durable docs use one glossary and one active authority; no invalid lifecycle status remains.
-- [ ] No density, speed, visual scale, resolution, collision, dependency or unrelated UI regression.
+- [x] Durable docs use one glossary and one active authority; no invalid lifecycle status remains.
+- [x] No density, speed, visual scale, resolution, collision, dependency or unrelated UI regression.
 
 ## Stop Conditions
 
