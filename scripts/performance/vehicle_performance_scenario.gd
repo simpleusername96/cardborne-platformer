@@ -599,7 +599,9 @@ func _record_production_pressure(run: Node, scheduler: Dictionary) -> void:
 	var projectile_snapshot: Dictionary = run.projectile_store.debug_snapshot()
 	_production_pressure_samples.append({
 		"time":elapsed,
-		"authored_reserve":StageCatalog.authored_population(run.current_stage_id),
+		"authored_reserve":StageCatalog.packet_enemy_blueprint(
+			run.current_stage_id
+		).size(),
 		"live":int(enemy_snapshot.get("live", 0)),
 		"active":int(pressure.get("active", 0)),
 		"visible":int(pressure.get("visible", 0)),

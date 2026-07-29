@@ -70,6 +70,10 @@ func _run() -> void:
 				"production replay retains a rolling ten-second peak window"
 			)
 			_expect(
+				int(qualification["samples"][0]["authored_reserve"]) == 1260,
+				"production replay reports the Stage 5 ordinary authored reserve"
+			)
+			_expect(
 				int(qualification["median_active"])
 					>= int(qualification["minimum_active"]),
 				"production replay sustains at least ninety percent of the Hard peak cap"
