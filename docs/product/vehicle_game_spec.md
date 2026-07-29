@@ -121,6 +121,11 @@ second time; no individual stat is described as exactly 15% lower.
   36-pixel trail is a non-damaging direction and affinity cue. The Pulse
   Cannon's unmodified projectile uses a seven-pixel collision radius, and
   upgrades scale from that base.
+- An enemy's compact movement/contact radius remains independent from its
+  player-projectile hit radius. The latter matches the enlarged visible target,
+  and swept collision chooses the earliest intersected enemy. A round without
+  explicit pierce is retired at that first enemy instead of crossing the
+  visible body.
 - Every hostile attack has a startup descriptor produced from simulation
   values. Its `danger footprint` is the exact set of player-center positions
   that can receive damage: projectile radius plus player radius, contact
@@ -363,7 +368,8 @@ every direct pattern remains committed after its warning appears.
 - Runtime capacity is fixed at 320 live hostile actors, 240 player projectiles,
   120 hostile projectiles with 24 slots reserved for bosses, 192 experience
   shards, and 96 repeated effects. Content may use less but may not silently
-  raise a cap.
+  raise a cap. Dynamic enemy spatial queries cover every live slot through 320;
+  no subsystem may impose a smaller hidden tracking ceiling.
 - Allocation is bounded and observable. A full pool rejects or applies its
   documented eviction policy; it never grows during combat. Ordinary hostile
   fire cannot consume the boss reserve.
@@ -406,8 +412,10 @@ every direct pattern remains committed after its warning appears.
   status-stack, elemental-prerequisite, and XP-cadence contracts pass focused
   tests.
 - Held primary fire uses one uniform shot contract, reaches the complete
-  unobstructed visible field, chips structures through repeated hits, and gains
-  no alternate first round after release.
+  unobstructed visible field, hits the enlarged visible enemy target through
+  swept collision at full horde capacity, stops at the first target unless
+  explicitly pierced, chips structures through repeated hits, and gains no
+  alternate first round after release.
 - Guide discovery persists, locked entries expose only `???`, settings and pause
   both reach the guide, and Korean/English copy is complete.
 - Godot import, all focused validators, native boot, Web export, and rendered

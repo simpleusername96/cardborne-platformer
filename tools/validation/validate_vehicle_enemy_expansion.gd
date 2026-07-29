@@ -42,8 +42,9 @@ func _init() -> void:
 	_expect(
 		is_equal_approx(heavy.health, 135.0)
 			and is_equal_approx(heavy.radius, 23.0)
+			and is_equal_approx(heavy.projectile_hit_radius, 34.5)
 			and is_equal_approx(heavy.speed, 90.0),
-		"Heavy applies its fixed health, footprint, and speed multipliers"
+		"Heavy applies its fixed health, movement, projectile-hit, and speed multipliers"
 	)
 	_finish()
 
@@ -54,6 +55,7 @@ func _enemy() -> EnemyState:
 	enemy.max_health = 100.0
 	enemy.speed = 100.0
 	enemy.radius = 20.0
+	enemy.projectile_hit_radius = 30.0
 	enemy.visual_radius = 30.0
 	return enemy
 

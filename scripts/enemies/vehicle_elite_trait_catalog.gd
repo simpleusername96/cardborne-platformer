@@ -46,5 +46,6 @@ static func apply(enemy: VehicleEnemyState, elite_kind: StringName) -> void:
 			enemy.health *= 1.35
 			enemy.max_health = enemy.health
 			enemy.radius *= 1.15
+			enemy.projectile_hit_radius *= 1.15
 			enemy.visual_radius *= 1.15
 			enemy.speed *= 0.90

@@ -15,7 +15,10 @@ var desired_velocity := Vector2.ZERO
 var health := 0.0
 var max_health := 0.0
 var speed := 0.0
+# Movement/contact radius stays compact so enlarged art does not reduce horde density.
 var radius := 0.0
+# Player projectiles use this separate swept-hit radius to match the visible target.
+var projectile_hit_radius := 0.0
 var visual_radius := 0.0
 var health_class: StringName = &"standard"
 var health_visible_timer := 0.0

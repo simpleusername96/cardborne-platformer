@@ -5,6 +5,7 @@ const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd"
 const AttackTelegraphs = preload("res://scripts/combat/vehicle_attack_telegraph_builder.gd")
 const BossPatterns = preload("res://scripts/bosses/vehicle_boss_patterns.gd")
 const Director = preload("res://scripts/encounters/vehicle_encounter_director.gd")
+const EnemyStore = preload("res://scripts/enemies/vehicle_enemy_store.gd")
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 const EnemyUpdateSchedule = preload("res://scripts/enemies/vehicle_enemy_update_schedule.gd")
 const ProjectileState = preload("res://scripts/combat/vehicle_projectile_state.gd")
@@ -68,6 +69,8 @@ func _run() -> void:
 		_check_boss_committed_recovery(run)
 		run.call("_reset_run", false, true, true)
 		_check_enemy_expansion(run)
+		run.call("_reset_run", false, true, true)
+		_check_primary_collision_at_horde_capacity(run)
 	root.queue_free()
 	await process_frame
 	_finish()
@@ -88,8 +91,9 @@ func _check_visual_collision_separation(run) -> void:
 		_expect(
 			enemy != null
 				and is_equal_approx(enemy.radius, float(fixture[1]))
+				and is_equal_approx(enemy.projectile_hit_radius, float(fixture[2]))
 				and is_equal_approx(enemy.visual_radius, float(fixture[2])),
-			"%s enlarges presentation without collision drift" % fixture[0]
+			"%s keeps movement compact while its projectile hit radius matches the art" % fixture[0]
 		)
 		run.enemy_store.release_untracked(enemy)
 
@@ -291,6 +295,7 @@ func _check_enemy_expansion(run) -> void:
 				and is_equal_approx(guard.guard_plate_structure, expected_structure),
 			"sustained primary fire chips the Guard plate by one uniform hit"
 		)
+	run.enemy_store.release_untracked(guard)
 
 	var splitter: EnemyState = run.call("_make_enemy", {
 		"id":"validation_splitter", "role":&"splitter_barge",
@@ -303,6 +308,68 @@ func _check_enemy_expansion(run) -> void:
 		if enemy.alive and enemy.carrier_id == "splitter:validation_splitter":
 			children += 1
 	_expect(children == 2, "Splitter Barge emits exactly two summon-only children when capacity permits")
+
+
+func _check_primary_collision_at_horde_capacity(run) -> void:
+	run.call("_clear_enemies")
+	run.call("_clear_projectiles")
+	for index in EnemyStore.MAX_LIVE_HOSTILES - 2:
+		var filler: EnemyState = run.call("_make_enemy", {
+			"id":"collision_filler_%d" % index,
+			"role":&"chaser",
+			"pos":run.player_position + Vector2(-500.0, 400.0),
+			"active":true,
+		})
+		_expect(
+			filler != null and bool(run.call("_append_enemy", filler)),
+			"collision fixture fills every non-target enemy slot"
+		)
+	var first_target: EnemyState = run.call("_make_enemy", {
+		"id":"collision_first_target",
+		"role":&"chaser",
+		"pos":run.player_position + Vector2(240.0, 38.0),
+		"active":true,
+	})
+	var rear_target: EnemyState = run.call("_make_enemy", {
+		"id":"collision_rear_target",
+		"role":&"chaser",
+		"pos":run.player_position + Vector2(310.0, 0.0),
+		"active":true,
+	})
+	if first_target == null or rear_target == null:
+		_expect(false, "collision fixture acquires both maximum-capacity targets")
+		return
+	_expect(
+		bool(run.call("_append_enemy", first_target))
+			and bool(run.call("_append_enemy", rear_target))
+			and rear_target.runtime_slot == EnemyStore.MAX_LIVE_HOSTILES - 1,
+		"collision targets occupy the final two horde-capacity slots"
+	)
+	run.call("_rebuild_enemy_runtime_indexes")
+	var first_health := first_target.health
+	var rear_health := rear_target.health
+	_expect(
+		run.projectile_store.add_player({
+			"pos":run.player_position,
+			"velocity":Vector2.RIGHT * run.PRIMARY_PROJECTILE_SPEED,
+			"radius":run.PRIMARY_PROJECTILE_RADIUS,
+			"damage":18.0,
+			"structure_damage":18.0,
+			"life":1.0,
+			"owner":"player_primary",
+		}),
+		"primary collision fixture accepts one uniform round"
+	)
+	run.call("_update_projectiles", 0.30)
+	_expect(
+		first_target.health < first_health,
+		"uniform primary fire damages an enemy in a maximum-capacity slot"
+	)
+	_expect(
+		is_equal_approx(rear_target.health, rear_health)
+			and run.projectile_store.player_count() == 0,
+		"a non-piercing primary round stops at the first enemy"
+	)
 
 
 func _expect(condition: bool, message: String) -> void:

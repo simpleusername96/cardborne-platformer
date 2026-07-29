@@ -3,6 +3,7 @@ extends SceneTree
 const Grid = preload("res://scripts/combat/vehicle_spatial_grid.gd")
 const Rules = preload("res://scripts/vehicle/vehicle_stage_rules.gd")
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
+const EnemyStore = preload("res://scripts/enemies/vehicle_enemy_store.gd")
 
 var failures: Array[String] = []
 
@@ -11,7 +12,7 @@ func _initialize() -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 0x51A71A1
 	var live: Array[EnemyState] = []
-	for index in 96:
+	for index in EnemyStore.MAX_LIVE_HOSTILES:
 		var enemy := EnemyState.new()
 		enemy.id = "grid_%d" % index
 		enemy.runtime_slot = index
@@ -19,13 +20,35 @@ func _initialize() -> void:
 		enemy.active = index % 11 != 0
 		enemy.pos = Vector2(rng.randf_range(0.0, 5600.0), rng.randf_range(0.0, 3400.0))
 		enemy.radius = rng.randf_range(8.0, 86.0)
+		enemy.projectile_hit_radius = enemy.radius + rng.randf_range(0.0, 36.0)
 		live.append(enemy)
 	var grid := Grid.new()
 	grid.configure(Rect2(0.0, 0.0, 5600.0, 3400.0), 160.0)
 	grid.rebuild(live)
 	_expect(grid.columns == 35 and grid.rows == 22, "grid uses the locked 35x22 dimensions")
+	_expect(
+		Grid.MAX_TRACKED_ACTORS == EnemyStore.MAX_LIVE_HOSTILES,
+		"grid preallocates stamps for the complete bounded enemy store"
+	)
 
 	var candidates: Array[EnemyState] = []
+	var capacity_target := live[-1]
+	capacity_target.active = true
+	capacity_target.pos = Vector2(2800.0, 1700.0)
+	capacity_target.radius = 24.0
+	grid.rebuild(live)
+	grid.query_segment_into(
+		Vector2(2500.0, 1700.0),
+		Vector2(3100.0, 1700.0),
+		7.0,
+		live,
+		candidates
+	)
+	_expect(
+		capacity_target in candidates,
+		"segment queries retain enemies in the final live-capacity slot"
+	)
+
 	for query_index in 120:
 		var center := Vector2(rng.randf_range(-80.0, 5680.0), rng.randf_range(-80.0, 3480.0))
 		var radius := rng.randf_range(24.0, 520.0)
@@ -34,7 +57,8 @@ func _initialize() -> void:
 		for enemy in live:
 			if not bool(enemy["alive"]) or not bool(enemy["active"]):
 				continue
-			if center.distance_to(Vector2(enemy["pos"])) <= radius + float(enemy["radius"]):
+			var target_radius := maxf(enemy.radius, enemy.projectile_hit_radius)
+			if center.distance_to(enemy.pos) <= radius + target_radius:
 				_expect(enemy in candidates, "radius query %d contains every exact hit" % query_index)
 
 	for query_index in 120:
@@ -46,7 +70,8 @@ func _initialize() -> void:
 		for enemy in live:
 			if not bool(enemy["alive"]) or not bool(enemy["active"]):
 				continue
-			if Rules.point_segment_distance(Vector2(enemy["pos"]), from, to) <= padding + float(enemy["radius"]):
+			var target_radius := maxf(enemy.radius, enemy.projectile_hit_radius)
+			if Rules.point_segment_distance(enemy.pos, from, to) <= padding + target_radius:
 				_expect(enemy in candidates, "segment query %d contains every exact hit" % query_index)
 	_finish()
 

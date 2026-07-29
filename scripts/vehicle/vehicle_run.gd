@@ -751,6 +751,7 @@ func _make_enemy(spec: Dictionary) -> EnemyState:
 	enemy.speed = speed
 	enemy.radius = float(definition["radius"])
 	enemy.visual_radius = Art.enemy_visual_radius(archetype)
+	enemy.projectile_hit_radius = enemy.visual_radius
 	enemy.health_class = health_class
 	enemy.health_visible_timer = 0.0
 	enemy.threat_cost = float(definition["threat_cost"])
@@ -2903,23 +2904,31 @@ func _player_projectile_contact(
 	candidates: Array[EnemyState]
 ) -> Variant:
 	var best: EnemyState
-	var best_distance := INF
+	var best_hit_t := INF
 	for enemy in candidates:
-		var distance_to_segment := Rules.point_segment_distance(enemy.pos, from, to)
-		if (
-			enemy.role == &"interceptor_tower"
-			and enemy.intercept_charges > 0
-			and distance_to_segment <= 112.0 + projectile.radius
-		):
-			enemy.intercept_charges -= 1
-			enemy.intercept_recharge = 4.0
-			_add_effect("shock", enemy.pos, Rules.VIOLET, 0.24, 112.0)
-			return true
-		if distance_to_segment > enemy.radius + projectile_radius:
+		if enemy.role == &"interceptor_tower" and enemy.intercept_charges > 0:
+			var intercept_t := AttackContract.segment_circle_first_t(
+				from,
+				to,
+				enemy.pos,
+				112.0 + projectile.radius
+			)
+			if intercept_t != INF:
+				enemy.intercept_charges -= 1
+				enemy.intercept_recharge = 4.0
+				_add_effect("shock", enemy.pos, Rules.VIOLET, 0.24, 112.0)
+				return true
+		var target_radius := maxf(enemy.radius, enemy.projectile_hit_radius)
+		var hit_t := AttackContract.segment_circle_first_t(
+			from,
+			to,
+			enemy.pos,
+			target_radius + projectile_radius
+		)
+		if hit_t == INF:
 			continue
-		var distance := from.distance_squared_to(enemy.pos)
-		if distance < best_distance:
-			best_distance = distance
+		if hit_t < best_hit_t:
+			best_hit_t = hit_t
 			best = enemy
 	return best
 

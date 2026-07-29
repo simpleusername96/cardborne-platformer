@@ -5,8 +5,9 @@ extends RefCounted
 ## live-store slots; callers still perform exact circle/segment geometry.
 
 const DEFAULT_CELL_SIZE := 160.0
-const MAX_TRACKED_ACTORS := 128
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
+const EnemyStore = preload("res://scripts/enemies/vehicle_enemy_store.gd")
+const MAX_TRACKED_ACTORS := EnemyStore.MAX_LIVE_HOSTILES
 
 var bounds := Rect2()
 var cell_size := DEFAULT_CELL_SIZE
@@ -49,7 +50,7 @@ func rebuild(live: Array[EnemyState]) -> void:
 		if not enemy.alive or not enemy.active:
 			continue
 		var position := enemy.pos
-		var radius := enemy.radius
+		var radius := maxf(enemy.radius, enemy.projectile_hit_radius)
 		var min_cell := _cell_for(position - Vector2(radius, radius))
 		var max_cell := _cell_for(position + Vector2(radius, radius))
 		for y in range(min_cell.y, max_cell.y + 1):
