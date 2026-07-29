@@ -30,11 +30,18 @@ const INK := Color("#153B3A")
 const INK_MUTED := Color("#4E6D67")
 const DIM := Color(0.02, 0.12, 0.28, 0.82)
 
-const PLAYER_VISUAL_RADIUS := 42.0
-const ORDINARY_ENEMY_RADIUS := 36.0
-const INSTALLATION_RADIUS := 54.0
-const STAGE_BOSS_RADIUS := 122.0
-const PICKUP_PLINTH_RADIUS := 34.0
+const PLAYER_VISUAL_RADIUS := 50.0
+const ORDINARY_ENEMY_RADIUS := 44.0
+const INSTALLATION_RADIUS := 62.0
+const STAGE_BOSS_RADIUS := 146.0
+const PICKUP_PLINTH_RADIUS := 42.0
+const EXPERIENCE_RADII := {
+	&"small":12.0,
+	&"medium":16.0,
+	&"large":22.0,
+}
+const HOSTILE_PROJECTILE_ENVELOPE_SCALE := 4.5
+const PLAYER_PRIMARY_PROJECTILE_SCALE := 1.25
 const CACHE_HALF_SIZE := Vector2(70.0, 52.0)
 const COVER_EDGE_OFFSET := Vector2(14.0, 18.0)
 const WALL_FILL := CERAMIC_GREEN
@@ -45,7 +52,7 @@ const WALL_SHADOW_OFFSET := Vector2(0.0, 12.0)
 
 static func enemy_visual_radius(role: StringName) -> float:
 	match role:
-		&"turret", &"mine", &"generator", &"boss_pylon":
+		&"turret", &"mine", &"interceptor_tower", &"beam_sentinel", &"generator", &"boss_pylon":
 			return INSTALLATION_RADIUS
 		&"stage_boss":
 			return STAGE_BOSS_RADIUS
@@ -117,12 +124,20 @@ static func validate_contract() -> PackedStringArray:
 	for affinity in [&"kinetic", &"thermal", &"toxin", &"cryo", &"arc", &"hybrid"]:
 		if attack_color(affinity).a < 1.0:
 			errors.append("attack affinity color must remain opaque: %s" % affinity)
-	if PLAYER_VISUAL_RADIUS * 2.0 < 72.0:
-		errors.append("player visual diameter is below the 72 px minimum")
-	if ORDINARY_ENEMY_RADIUS * 2.0 < 64.0:
-		errors.append("ordinary enemy diameter is below the 64 px minimum")
-	if PICKUP_PLINTH_RADIUS * 2.0 < 56.0:
-		errors.append("pickup plinth diameter is below the 56 px minimum")
-	if STAGE_BOSS_RADIUS * 2.0 < 200.0:
-		errors.append("stage boss diameter is below the 200 px minimum")
+	if not is_equal_approx(PLAYER_VISUAL_RADIUS, 50.0):
+		errors.append("player visual radius must remain 50 px")
+	if not is_equal_approx(ORDINARY_ENEMY_RADIUS, 44.0):
+		errors.append("ordinary enemy visual radius must remain 44 px")
+	if not is_equal_approx(INSTALLATION_RADIUS, 62.0):
+		errors.append("installation visual radius must remain 62 px")
+	if not is_equal_approx(PICKUP_PLINTH_RADIUS, 42.0):
+		errors.append("pickup plinth radius must remain 42 px")
+	if not is_equal_approx(STAGE_BOSS_RADIUS, 146.0):
+		errors.append("stage boss visual radius must remain 146 px")
+	if EXPERIENCE_RADII != {&"small":12.0, &"medium":16.0, &"large":22.0}:
+		errors.append("experience visual radii must remain 12/16/22 px")
+	if not is_equal_approx(HOSTILE_PROJECTILE_ENVELOPE_SCALE, 4.5):
+		errors.append("hostile projectile envelope must remain 4.5x collision radius")
+	if not is_equal_approx(PLAYER_PRIMARY_PROJECTILE_SCALE, 1.25):
+		errors.append("player primary projectile visual must remain 1.25x")
 	return errors

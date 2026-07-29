@@ -382,8 +382,8 @@ truth.
 - concurrent UI 기준 commit: `8a0b003`
 - concurrent UI 비소유 경로: `pixel-art-production/`, `docs/design/vehicle-hud-upgrade-direction/`,
   기존 Space Hangar asset/evidence/recipe
-- production implementation과 runtime evidence: M1~M2 수치·스폰 계약 완료,
-  M2의 연속-stage 시작 검증은 M4 transition 구현과 함께 완료 예정
+- production implementation과 runtime evidence: M1~M2 및 M3 runtime 계약 완료,
+  M2의 연속-stage 시작 검증과 M3 canonical visual doc은 M4~M5에서 완료 예정
 
 ## Tasks
 
@@ -423,14 +423,14 @@ truth.
 
 ### M3 — Readability and item presence
 
-- [ ] Apply the locked actor, pickup, XP and projectile visual targets without collision drift.
-- [ ] Render hostile projectile solid collision core plus non-damaging halo/tail.
-- [ ] Add shape/outline/readiness treatment for committed ranged and priority enemies.
-- [ ] Increase pickup collection radius to 60 and keep it independent from plinth art.
-- [ ] Generate six loose pickups and eight crates across at least four field sectors.
-- [ ] Split repair value into nine 25-hull events and one 20-hull event; keep two loose and
+- [x] Apply the locked actor, pickup, XP and projectile visual targets without collision drift.
+- [x] Render hostile projectile solid collision core plus non-damaging halo/tail.
+- [x] Add shape/outline/readiness treatment for committed ranged and priority enemies.
+- [x] Increase pickup collection radius to 60 and keep it independent from plinth art.
+- [x] Generate six loose pickups and eight crates across at least four field sectors.
+- [x] Split repair value into nine 25-hull events and one 20-hull event; keep two loose and
   two crate recalls.
-- [ ] Update minimap marker shapes/sizes without increasing radar update rate.
+- [x] Update minimap marker shapes/sizes without increasing radar update rate.
 - [ ] Update visual-system source-of-truth and renderer validators.
 
 ### M4 — Persistent field and seamless transition

@@ -90,6 +90,7 @@ const ORDINARY_DECISION_BUCKET_COUNT := 6
 const FAR_SIMULATION_DISTANCE := 820.0
 const FAR_SIMULATION_DISTANCE_SQUARED := FAR_SIMULATION_DISTANCE * FAR_SIMULATION_DISTANCE
 const FAR_ENEMY_SIMULATION_BUCKET_COUNT := 3
+const PICKUP_COLLECTION_RADIUS := 60.0
 const CRATE_COLLISION_RADIUS := 31.0
 const CRATE_COLLISION_CELL_SIZE := 320.0
 const CHARGE_PATH_SAMPLE_STEP := 8.0
@@ -619,6 +620,7 @@ func _reset_run(
 			"id": String(spec["id"]),
 			"pos": Vector2(spec["pos"]),
 			"drop": StringName(spec["drop"]),
+			"heal_amount": float(spec.get("heal_amount", 0.0)),
 			"health": 24.0,
 			"max_health": 24.0,
 			"alive": true,
@@ -723,7 +725,7 @@ func _make_enemy(spec: Dictionary) -> EnemyState:
 	enemy.max_health = health
 	enemy.speed = speed
 	enemy.radius = float(definition["radius"])
-	enemy.visual_radius = float(definition["visual_radius"])
+	enemy.visual_radius = Art.enemy_visual_radius(archetype)
 	enemy.health_class = health_class
 	enemy.health_visible_timer = 0.0
 	enemy.threat_cost = float(definition["threat_cost"])
@@ -1637,7 +1639,10 @@ func _update_pickups() -> void:
 		if not bool(pickup["active"]):
 			continue
 		pickup["pulse"] = float(pickup["pulse"]) + 0.06
-		if player_position.distance_to(Vector2(pickup["pos"])) <= 48.0:
+		if (
+			player_position.distance_to(Vector2(pickup["pos"]))
+			<= PICKUP_COLLECTION_RADIUS
+		):
 			_collect_pickup(pickup)
 
 
@@ -3038,6 +3043,7 @@ func _damage_crate(crate: Dictionary, amount: float) -> void:
 		"pos": Vector2(crate["pos"]),
 		"active": true,
 		"pulse": 0.0,
+		"heal_amount": float(crate.get("heal_amount", 0.0)),
 	})
 	_add_effect("destroy", Vector2(crate["pos"]), Rules.AMBER, 0.42, 58.0)
 	_play_sound(&"destroy", 1.35)
@@ -4681,7 +4687,7 @@ func _draw_pickups_and_crates() -> void:
 			kind,
 			&"idle",
 			position,
-			Vector2.ONE * 72.0
+			Vector2.ONE * (Art.PICKUP_PLINTH_RADIUS * 2.0)
 		):
 			continue
 		var plinth_radius := Art.PICKUP_PLINTH_RADIUS

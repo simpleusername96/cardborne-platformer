@@ -62,8 +62,8 @@ func _validate_field(field_id: StringName) -> void:
 			_expect(tactical.cover_ids != previous_cover_ids, "%s/%s changes cover from the previous stage" % [field_id, stage_id])
 		previous_cover_ids = tactical.cover_ids.duplicate()
 		_expect(fixed.stationary_blueprint(stage_id).size() == 4, "%s/%s has four stationary threats" % [field_id, stage_id])
-		_expect(fixed.pickup_blueprint(stage_id).size() == 3, "%s/%s has three pickups" % [field_id, stage_id])
-		_expect(fixed.crate_blueprint(stage_id).size() == 5, "%s/%s has five crates" % [field_id, stage_id])
+		_expect(fixed.pickup_blueprint(stage_id).size() == 6, "%s/%s has six loose pickups" % [field_id, stage_id])
+		_expect(fixed.crate_blueprint(stage_id).size() == 8, "%s/%s has eight crates" % [field_id, stage_id])
 		_validate_stage_objects(fixed, stage_id)
 
 	var varied := 0
@@ -125,13 +125,48 @@ func _validate_no_feature_overlaps(
 
 func _validate_stage_objects(layout: VehicleFieldLayout, stage_id: StringName) -> void:
 	var positions: Array[Vector2] = []
+	var occupied_sectors := {}
+	var repair_values: Array[float] = []
+	var loose_recall_count := 0
+	var crate_recall_count := 0
 	for spec in layout.pickup_blueprint(stage_id):
-		positions.append(Vector2(spec["pos"]))
+		var position := Vector2(spec["pos"])
+		positions.append(position)
+		occupied_sectors[
+			_item_sector(position, Vector2(layout.field_definition["player_start"]))
+		] = true
+		if StringName(spec["kind"]) == &"experience_recall":
+			loose_recall_count += 1
+		else:
+			repair_values.append(float(spec["heal_amount"]))
 	for spec in layout.crate_blueprint(stage_id):
-		positions.append(Vector2(spec["pos"]))
+		var position := Vector2(spec["pos"])
+		positions.append(position)
+		occupied_sectors[
+			_item_sector(position, Vector2(layout.field_definition["player_start"]))
+		] = true
+		if StringName(spec["drop"]) == &"experience_recall":
+			crate_recall_count += 1
+		else:
+			repair_values.append(float(spec["heal_amount"]))
 	for first in positions.size():
 		for second in range(first + 1, positions.size()):
-			_expect(positions[first].distance_to(positions[second]) >= 200.0, "%s item sockets keep pair clearance" % stage_id)
+			_expect(positions[first].distance_to(positions[second]) >= 180.0, "%s item sockets keep pair clearance" % stage_id)
+	_expect(occupied_sectors.size() >= 4, "%s items occupy at least four field sectors" % stage_id)
+	_expect(loose_recall_count == 2, "%s keeps two loose recall pickups" % stage_id)
+	_expect(crate_recall_count == 2, "%s keeps two crate recall drops" % stage_id)
+	var twenty_five_count := repair_values.count(25.0)
+	var twenty_count := repair_values.count(20.0)
+	var repair_total := 0.0
+	for value in repair_values:
+		repair_total += value
+	_expect(
+		repair_values.size() == 10
+			and twenty_five_count == 9
+			and twenty_count == 1
+			and is_equal_approx(repair_total, 245.0),
+		"%s keeps ten repair events and the 245-hull budget" % stage_id
+	)
 	var recall_positions: Array[Vector2] = []
 	for spec in layout.pickup_blueprint(stage_id):
 		if StringName(spec["kind"]) == &"experience_recall":
@@ -140,9 +175,22 @@ func _validate_stage_objects(layout: VehicleFieldLayout, stage_id: StringName) -
 		if StringName(spec["drop"]) == &"experience_recall":
 			recall_positions.append(Vector2(spec["pos"]))
 	_expect(
-		recall_positions.size() == 2 and recall_positions[0].distance_to(recall_positions[1]) >= 1200.0,
-		"%s recall sources are spatially separated" % stage_id
+		recall_positions.size() == 4 and _maximum_pair_distance(recall_positions) >= 1200.0,
+		"%s four recall sources include a separated pair" % stage_id
 	)
+
+
+func _item_sector(position: Vector2, center: Vector2) -> int:
+	var raw := floori(((position - center).angle() + PI) / (TAU / 8.0))
+	return (raw % 8 + 8) % 8
+
+
+func _maximum_pair_distance(points: Array[Vector2]) -> float:
+	var result := 0.0
+	for first in points.size():
+		for second in range(first + 1, points.size()):
+			result = maxf(result, points[first].distance_to(points[second]))
+	return result
 
 
 func _expect(condition: bool, message: String) -> void:

@@ -64,6 +64,28 @@ static func player_projectile_head_mesh() -> ArrayMesh:
 	])
 
 
+static func hostile_projectile_core_mesh() -> ArrayMesh:
+	return polygon_mesh([
+		{
+			"points":_regular_polygon(Vector2.ZERO, 1.0, 20),
+			"color":Art.INK,
+		},
+		{
+			"points":_regular_polygon(Vector2.ZERO, 0.68, 16),
+			"color":Art.IVORY_BRIGHT,
+		},
+	])
+
+
+static func hostile_projectile_envelope_mesh(affinity: StringName) -> ArrayMesh:
+	var polygons: Array[Dictionary] = [{
+		"points":_regular_polygon(Vector2.ZERO, 1.0, 12),
+		"color":Color(1.0, 1.0, 1.0, 0.16),
+	}]
+	polygons.append_array(_projectile_head_polygons(affinity))
+	return polygon_mesh(polygons)
+
+
 static func projectile_trail_mesh(affinity: StringName) -> ArrayMesh:
 	var polygons: Array[Dictionary] = []
 	match AttackContract.normalize_affinity(affinity):

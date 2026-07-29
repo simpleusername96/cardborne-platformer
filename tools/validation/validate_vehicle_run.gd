@@ -30,9 +30,12 @@ func _run() -> void:
 	if run != null:
 		run.call("_reset_run", false)
 		_expect(run.current_stage_id == &"stage_1" and run.player_position == Vector2(3600,2160), "run begins at shared center")
+		_expect(run.PLAYER_BASE_SPEED == 280.0, "player base speed remains 280 px/s")
+		_expect(run.PICKUP_COLLECTION_RADIUS == 60.0, "pickup collection radius is 60 px")
 		_expect(run.MINIMAP_COLS == 20 and run.MINIMAP_ROWS == 12, "run uses 20x12 explored minimap")
 		_expect(run.ORDINARY_DECISION_BUCKET_COUNT == 6, "ordinary high-cost decisions are distributed at 10 Hz")
 		_expect(run._camera.zoom == Vector2.ONE, "gameplay camera keeps zoom 1")
+		_check_visual_collision_separation(run)
 		var boss_arrival: Vector2 = run.call("_choose_boss_arrival_anchor")
 		_expect(
 			run.player_position.distance_to(boss_arrival)
@@ -61,6 +64,27 @@ func _run() -> void:
 	root.queue_free()
 	await process_frame
 	_finish()
+
+
+func _check_visual_collision_separation(run) -> void:
+	for fixture in [
+		[&"chaser", 18.0, 44.0],
+		[&"turret", 30.0, 62.0],
+		[&"stage_boss", 76.0, 146.0],
+	]:
+		var enemy = run.call("_make_enemy", {
+			"id":"visual_probe_%s" % String(fixture[0]),
+			"role":fixture[0],
+			"pos":run.player_position + Vector2(800.0, 0.0),
+			"active":false,
+		})
+		_expect(
+			enemy != null
+				and is_equal_approx(enemy.radius, float(fixture[1]))
+				and is_equal_approx(enemy.visual_radius, float(fixture[2])),
+			"%s enlarges presentation without collision drift" % fixture[0]
+		)
+		run.enemy_store.release_untracked(enemy)
 
 
 func _check_simulation_lod_contract(run) -> void:

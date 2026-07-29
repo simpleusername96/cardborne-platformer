@@ -79,18 +79,18 @@ static func _append_markers(
 			"boss":
 				_append_boss(vertices, colors, indices, point, marker_color, StringName(marker.get("variant", &"colossus")))
 			"objective":
-				_append_rect(vertices, colors, indices, Rect2(point - Vector2(3.5, 3.5), Vector2(7.0, 7.0)), marker_color)
+				_append_rect(vertices, colors, indices, Rect2(point - Vector2(4.5, 4.5), Vector2(9.0, 9.0)), marker_color)
 			"reward":
-				_append_polygon(vertices, colors, indices, _diamond(point, 5.0), marker_color)
+				_append_polygon(vertices, colors, indices, _diamond(point, 6.5), marker_color)
 			"elite":
 				_append_polygon(vertices, colors, indices, _diamond(point, 7.0), marker_color)
 				_append_rect(vertices, colors, indices, Rect2(point - Vector2.ONE, Vector2(2.0, 2.0)), Art.IVORY_BRIGHT)
 			"stationary":
-				_append_rect(vertices, colors, indices, Rect2(point - Vector2(2.5, 2.5), Vector2(5.0, 5.0)), marker_color)
+				_append_rect(vertices, colors, indices, Rect2(point - Vector2(3.5, 3.5), Vector2(7.0, 7.0)), marker_color)
 			"crate":
-				_append_rect(vertices, colors, indices, Rect2(point - Vector2(3.0, 3.0), Vector2(6.0, 6.0)), Art.INK_MUTED)
+				_append_rect(vertices, colors, indices, Rect2(point - Vector2(4.0, 4.0), Vector2(8.0, 8.0)), Art.INK_MUTED)
 			"pickup":
-				_append_circle(vertices, colors, indices, point, 5.0, marker_color)
+				_append_circle(vertices, colors, indices, point, 6.5, marker_color)
 			"mechanic":
 				var direction := Vector2.RIGHT.rotated(float(int(marker.get("orientation", 0))) * PI * 0.5)
 				_append_circle(vertices, colors, indices, point, 5.0, marker_color)
@@ -140,7 +140,7 @@ static func _append_clusters(
 		var cluster: Dictionary = cluster_variant
 		var point := (Vector2(Vector2i(cluster["cell"])) + Vector2(0.5, 0.5)) * cell_size
 		var count := int(cluster["count"])
-		var radius := 2.5 if count == 1 else (4.0 if count <= 4 else 5.5)
+		var radius := 3.0 if count == 1 else (5.0 if count <= 4 else 7.0)
 		_append_circle(vertices, colors, indices, point, radius, Art.CORAL)
 		var average_velocity := Vector2(cluster.get("average_velocity", Vector2.ZERO))
 		if average_velocity.length_squared() > 1.0:
@@ -189,12 +189,12 @@ static func _append_player(
 	var facing := Vector2(snapshot.get("player_facing", Vector2.UP)).normalized()
 	if facing.is_zero_approx():
 		facing = Vector2.UP
-	_append_line(vertices, colors, indices, point, point + facing * 9.0, 2.0, Art.MUSTARD)
+	_append_line(vertices, colors, indices, point, point + facing * 11.0, 2.5, Art.MUSTARD)
 	var side := facing.rotated(PI * 0.5)
 	_append_polygon(vertices, colors, indices, PackedVector2Array([
-		point + facing * 6.0,
-		point - facing * 4.0 + side * 4.0,
-		point - facing * 4.0 - side * 4.0,
+		point + facing * 7.5,
+		point - facing * 5.0 + side * 5.0,
+		point - facing * 5.0 - side * 5.0,
 	]), Art.MUSTARD)
 
 

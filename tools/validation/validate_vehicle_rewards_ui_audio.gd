@@ -84,12 +84,12 @@ func _run() -> void:
 	for stage_id in StageCatalog.STAGE_IDS:
 		var stage_pickups := layout.pickup_blueprint(stage_id)
 		var stage_crates := layout.crate_blueprint(stage_id)
-		_expect(stage_pickups.size() == 3, "%s has two repairs and one experience recall" % stage_id)
-		_expect(layout.crate_blueprint(stage_id).size() == 5, "%s has five authored crates" % stage_id)
-		_expect(stage_pickups.filter(func(item: Dictionary) -> bool: return StringName(item["kind"]) == &"repair").size() == 2, "%s pickup set contains exactly two repairs" % stage_id)
-		_expect(stage_pickups.filter(func(item: Dictionary) -> bool: return StringName(item["kind"]) == &"experience_recall").size() == 1, "%s pickup set contains exactly one experience recall" % stage_id)
-		_expect(stage_crates.filter(func(item: Dictionary) -> bool: return StringName(item["drop"]) == &"repair").size() == 4, "%s crate set contains exactly four repairs" % stage_id)
-		_expect(stage_crates.filter(func(item: Dictionary) -> bool: return StringName(item["drop"]) == &"experience_recall").size() == 1, "%s crate set contains exactly one experience recall" % stage_id)
+		_expect(stage_pickups.size() == 6, "%s has four repairs and two experience recalls" % stage_id)
+		_expect(layout.crate_blueprint(stage_id).size() == 8, "%s has eight authored crates" % stage_id)
+		_expect(stage_pickups.filter(func(item: Dictionary) -> bool: return StringName(item["kind"]) == &"repair").size() == 4, "%s pickup set contains exactly four repairs" % stage_id)
+		_expect(stage_pickups.filter(func(item: Dictionary) -> bool: return StringName(item["kind"]) == &"experience_recall").size() == 2, "%s pickup set contains exactly two experience recalls" % stage_id)
+		_expect(stage_crates.filter(func(item: Dictionary) -> bool: return StringName(item["drop"]) == &"repair").size() == 6, "%s crate set contains exactly six repairs" % stage_id)
+		_expect(stage_crates.filter(func(item: Dictionary) -> bool: return StringName(item["drop"]) == &"experience_recall").size() == 2, "%s crate set contains exactly two experience recalls" % stage_id)
 	var kinds: Dictionary = {}
 	for item in layout.pickup_blueprint(&"stage_1"):
 		kinds[StringName(item["kind"])] = true

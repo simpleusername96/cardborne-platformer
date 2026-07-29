@@ -158,7 +158,7 @@ func validation_snapshot(run: Node) -> Dictionary:
 		and run.experience_runtime.validate_capacity()
 		and run.effects.size() <= 96
 		and run.denied_zones.size() + run.damaging_trails.size() <= 16
-		and int(renderer_snapshot["batches"]) <= 50
+		and int(renderer_snapshot["batches"]) <= 51
 		and int(enemy_snapshot["rejected_capacity"]) == 0
 		and int(renderer_snapshot["enemy_capacity"]) == EnemyStore.MAX_LIVE_HOSTILES
 		and boss_valid

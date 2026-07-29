@@ -257,16 +257,21 @@ static func _build_stage_objects(layout_seed: int, stage_id: StringName, covers:
 	var item_candidates: Array = Array(_field["item_socket_candidates"]).duplicate()
 	_shuffle(item_candidates, item_rng)
 	var sockets: Array[Vector2] = []
+	var occupied_item_sectors := {}
 	for value in item_candidates:
 		var candidate := Vector2(value)
+		var sector := _item_sector(candidate)
+		if sockets.size() < 4 and occupied_item_sectors.has(sector):
+			continue
 		if not _is_valid_item_socket(
 			candidate, sockets, stationary_points, covers, ordinary_reachable
 		):
 			continue
 		sockets.append(candidate)
-		if sockets.size() == 8:
+		occupied_item_sectors[sector] = true
+		if sockets.size() == 14:
 			break
-	if sockets.size() != 8:
+	if sockets.size() != 14 or occupied_item_sectors.size() < 4:
 		push_warning("layout item placement failed for %s/%s (%d sockets)" % [_field["id"], stage_id, sockets.size()])
 		return {}
 	var recall_pair := _farthest_pair(sockets)
@@ -279,30 +284,46 @@ static func _build_stage_objects(layout_seed: int, stage_id: StringName, covers:
 		if index in [recall_pair.x, recall_pair.y]:
 			continue
 		pickup_sockets.append(sockets[index])
-		if pickup_sockets.size() == 3:
+		if pickup_sockets.size() == 6:
 			break
 	var crate_sockets: Array[Vector2] = [sockets[recall_pair.y]]
 	for socket in sockets:
 		if socket in pickup_sockets or socket == sockets[recall_pair.y]:
 			continue
 		crate_sockets.append(socket)
-	var pickups: Array[Dictionary] = [
-		{"id":"%s_pickup_recall" % String(stage_id), "kind":&"experience_recall", "pos":pickup_sockets[0]},
-		{"id":"%s_pickup_repair_1" % String(stage_id), "kind":&"repair", "heal_amount":35.0, "pos":pickup_sockets[1]},
-		{"id":"%s_pickup_repair_2" % String(stage_id), "kind":&"repair", "heal_amount":70.0, "pos":pickup_sockets[2]},
-	]
+	var pickups: Array[Dictionary] = []
+	for index in pickup_sockets.size():
+		var recall := index < 2
+		pickups.append({
+			"id":"%s_pickup_%02d" % [String(stage_id), index + 1],
+			"kind":&"experience_recall" if recall else &"repair",
+			"heal_amount":0.0 if recall else 25.0,
+			"pos":pickup_sockets[index],
+		})
 	var crates: Array[Dictionary] = []
 	for index in crate_sockets.size():
+		var recall := index < 2
 		crates.append({
 			"id":"%s_crate_%02d" % [String(stage_id), index + 1],
 			"pos":crate_sockets[index],
-			"drop":&"experience_recall" if index == 0 else &"repair",
+			"drop":&"experience_recall" if recall else &"repair",
+			"heal_amount":(
+				0.0
+				if recall
+				else (20.0 if index == crate_sockets.size() - 1 else 25.0)
+			),
 		})
 	var boss_reachable := _reachable_cells(
 		Vector2(_field["player_start"]), BOSS_RADIUS, covers
 	)
 	var support_sockets: Array[Vector2] = []
-	for value in item_candidates:
+	var support_candidates := item_candidates.duplicate()
+	support_candidates.append_array(Array(_field["ordinary_spawn_anchors"]))
+	_shuffle(
+		support_candidates,
+		_rng_for(layout_seed, "%s:support:v1" % String(stage_id))
+	)
+	for value in support_candidates:
 		var candidate := Vector2(value)
 		if candidate in sockets:
 			continue
@@ -332,6 +353,12 @@ static func _build_stage_objects(layout_seed: int, stage_id: StringName, covers:
 		"crates":crates,
 		"support_sockets":support_sockets,
 	}
+
+
+static func _item_sector(position: Vector2) -> int:
+	var offset := position - Vector2(_field["player_start"])
+	var raw := floori((offset.angle() + PI) / (TAU / 8.0))
+	return (raw % 8 + 8) % 8
 
 
 static func _random_cover_ids(rng: RandomNumberGenerator) -> Array[StringName]:

@@ -20,8 +20,8 @@ func _initialize() -> void:
 		_expect(Catalog.world_rect(stage_id) == Rect2(0,0,7200,4320), "%s world bounds" % stage_id)
 		_expect(Catalog.player_start(stage_id) == Vector2(3600,2160), "%s center spawn" % stage_id)
 		_expect(layout.stationary_blueprint(stage_id).size() == 4, "%s restocks four stationary threats" % stage_id)
-		_expect(layout.pickup_blueprint(stage_id).size() == 3, "%s restocks three pickups" % stage_id)
-		_expect(layout.crate_blueprint(stage_id).size() == 5, "%s restocks five crates" % stage_id)
+		_expect(layout.pickup_blueprint(stage_id).size() == 6, "%s restocks six loose pickups" % stage_id)
+		_expect(layout.crate_blueprint(stage_id).size() == 8, "%s restocks eight crates" % stage_id)
 		_expect(Catalog.packets(stage_id).all(func(packet: Dictionary) -> bool: return StringName(packet["trigger"]["kind"]) == &"time"), "%s uses only timed arrivals" % stage_id)
 		var mobile_blueprint := Catalog.packet_enemy_blueprint(stage_id)
 		var mobile_projectile_count := mobile_blueprint.filter(
@@ -29,8 +29,8 @@ func _initialize() -> void:
 				return EnemyArchetypes.fires_projectiles(StringName(spec["role"]))
 		).size()
 		_expect(
-			float(mobile_projectile_count) / float(maxi(1, mobile_blueprint.size())) <= 0.50,
-			"%s keeps projectile-firing mobile enemies at or below half" % stage_id
+			float(mobile_projectile_count) / float(maxi(1, mobile_blueprint.size())) <= 0.15,
+			"%s keeps projectile-firing mobile enemies at or below fifteen percent" % stage_id
 		)
 		var stationary_blueprint := layout.stationary_blueprint(stage_id)
 		var stationary_projectile_count := stationary_blueprint.filter(

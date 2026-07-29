@@ -15,6 +15,15 @@ const SURGE_SQUADS := SURGE_PACKS * SQUADS_PER_PACK
 const MIN_SQUAD_SIZE := 4
 const MAX_SQUAD_SIZE := 8
 const MAX_SURGE_UNITS := SURGE_SQUADS * MAX_SQUAD_SIZE
+# Standard-to-total pursuit ratios preserve the pre-density quota-path XP
+# cadence without spending the new body count on ranged or support roles.
+const PURSUIT_STANDARD_RATIOS := [
+	Vector2i(27, 53),
+	Vector2i(77, 127),
+	Vector2i(119, 188),
+	Vector2i(85, 96),
+	Vector2i(149, 195),
+]
 const TITLE_KEYS_BY_FIELD := {
 	&"drowned_ruin_field":[
 		"STAGE_DROWNED_RUINS_1", "STAGE_DROWNED_RUINS_2", "STAGE_DROWNED_RUINS_3",
@@ -179,11 +188,44 @@ static func _role_sequence(stage_index: int, target_count: int) -> Array[StringN
 		if roles.is_empty():
 			family = &"pursuit"
 			roles = families[family]
-		var role_index := int(counters[family]) % roles.size()
-		result.append(StringName(roles[role_index]))
+		var ordinal := int(counters[family])
+		var selected_role := (
+			_pursuit_role(roles, stage_index, ordinal)
+			if family == &"pursuit"
+			else StringName(roles[ordinal % roles.size()])
+		)
+		result.append(selected_role)
 		counters[family] = int(counters[family]) + 1
 	result[0] = &"scrap_drone"
 	return result
+
+
+static func _pursuit_role(
+	roles: Array,
+	stage_index: int,
+	ordinal: int
+) -> StringName:
+	var standard: Array[StringName] = []
+	var swarm: Array[StringName] = []
+	for role_variant in roles:
+		var role := StringName(role_variant)
+		if StringName(EnemyArchetypes.definition(role)["health_class"]) == &"swarm":
+			swarm.append(role)
+		else:
+			standard.append(role)
+	if standard.is_empty() or swarm.is_empty():
+		return StringName(roles[ordinal % roles.size()])
+	var ratio: Vector2i = PURSUIT_STANDARD_RATIOS[stage_index]
+	var standard_before := floori(
+		float(ordinal * ratio.x) / float(ratio.y)
+	)
+	var standard_after := floori(
+		float((ordinal + 1) * ratio.x) / float(ratio.y)
+	)
+	if standard_after > standard_before:
+		return standard[standard_before % standard.size()]
+	var swarm_before := ordinal - standard_before
+	return swarm[swarm_before % swarm.size()]
 
 
 static func _surge_squads(

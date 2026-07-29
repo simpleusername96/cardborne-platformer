@@ -2,6 +2,7 @@ extends SceneTree
 
 const Renderer = preload("res://scripts/presentation/vehicle_combat_renderer.gd")
 const Visuals = preload("res://scripts/presentation/vehicle_combat_visual_library.gd")
+const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd")
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 const ProjectileState = preload("res://scripts/combat/vehicle_projectile_state.gd")
@@ -23,7 +24,14 @@ func _run() -> void:
 	_expect(int(snapshot["enemy_capacity"]) == 320, "renderer shares the 320-hostile store capacity")
 	_expect(int(snapshot["status_arc_capacity"]) == 960, "status overlays scale from shared enemy capacity")
 	_expect(pixel_enabled, "approved pixel player presentation is active")
-	_expect(int(snapshot["batches"]) == 50, "combat presentation preserves the established retained batch count")
+	_expect(int(snapshot["batches"]) == 51, "combat presentation adds one retained hostile collision-core batch")
+	_expect(Art.validate_contract().is_empty(), "combat visual profile satisfies the locked readability contract")
+	_expect(
+		AttackContract.LIGHT_PROJECTILE_RADIUS == 5.0
+			and AttackContract.STANDARD_PROJECTILE_RADIUS == 6.0
+			and AttackContract.HEAVY_PROJECTILE_RADIUS == 7.0,
+		"hostile projectile collision radii remain 5/6/7 px"
+	)
 	if pixel_enabled:
 		_expect(
 			renderer.get_node_or_null("Pixel_player_projectiles") != null,
@@ -53,8 +61,8 @@ func _run() -> void:
 			"enemy %s combined head and trail batch exists" % affinity
 		)
 	_expect(
-		renderer.get_node_or_null("Projectile_head_enemy") == null,
-		"hostile heads reuse affinity batches instead of adding a draw batch"
+		renderer.get_node_or_null("Projectile_core_enemy") != null,
+		"hostile projectiles expose one shared collision-bounded core batch"
 	)
 	for pair in [
 		[&"shooter", &"artillery_spotter"],
@@ -188,6 +196,13 @@ func _run() -> void:
 			"one live player projectile becomes one retained atlas instance"
 		)
 		_expect(
+			is_equal_approx(
+				Vector2(projectile_pixel_buffer[0], projectile_pixel_buffer[4]).length(),
+				16.0 * Art.PLAYER_PRIMARY_PROJECTILE_SCALE * 5.0 / 6.0
+			),
+			"player primary projectile pixel footprint grows by the locked 1.25x"
+		)
+		_expect(
 			Vector2(projectile_pixel_buffer[3], projectile_pixel_buffer[7]).is_equal_approx(
 				Vector2(330.0, 300.0)
 			),
@@ -201,11 +216,19 @@ func _run() -> void:
 			"pixel projectile uploads a bounded non-empty atlas region"
 		)
 		var player_under := renderer.get_node("Pixel_player_under") as MultiMeshInstance2D
+		var player_under_buffer := player_under.multimesh.buffer
 		var player_barrel := renderer.get_node("Overlay_player_barrel") as MultiMeshInstance2D
 		var player_barrel_buffer := player_barrel.multimesh.buffer
 		_expect(
 			player_under.multimesh.visible_instance_count >= 2,
 			"pixel player publishes its chassis and propulsion layers"
+		)
+		_expect(
+			is_equal_approx(
+				Vector2(player_under_buffer[0], player_under_buffer[4]).length(),
+				Art.PLAYER_VISUAL_RADIUS
+			),
+			"pixel player uses the locked fifty-pixel presentation radius"
 		)
 		_expect(
 			player_barrel.multimesh.visible_instance_count == 2,
@@ -259,11 +282,13 @@ func _run() -> void:
 	_expect(status_batch.multimesh.visible_instance_count == 3, "three simultaneous elements render as three large retained arcs")
 	var hostile_trail := renderer.get_node("Projectile_trail_enemy_arc") as MultiMeshInstance2D
 	var hostile_trail_buffer := hostile_trail.multimesh.buffer
+	var hostile_core := renderer.get_node("Projectile_core_enemy") as MultiMeshInstance2D
+	var hostile_core_buffer := hostile_core.multimesh.buffer
 	_expect(
 		Vector2(hostile_trail_buffer[0], hostile_trail_buffer[4]).is_equal_approx(
-			Vector2.LEFT * 5.0 * (3.0 if pixel_enabled else 1.0)
+			Vector2.LEFT * 5.0 * Art.HOSTILE_PROJECTILE_ENVELOPE_SCALE
 		),
-		"hostile presentation derives its scale from the exact collision radius"
+		"hostile visual envelope is 4.5 times the collision radius"
 	)
 	_expect(
 		Vector2(hostile_trail_buffer[3], hostile_trail_buffer[7]).is_equal_approx(
@@ -273,9 +298,19 @@ func _run() -> void:
 	)
 	_expect(
 		Vector2(hostile_trail_buffer[1], hostile_trail_buffer[5]).is_equal_approx(
-			Vector2.LEFT.rotated(PI * 0.5) * 5.0 * (3.0 if pixel_enabled else 1.0)
+			Vector2.LEFT.rotated(PI * 0.5) * 5.0 * Art.HOSTILE_PROJECTILE_ENVELOPE_SCALE
 		),
-		"hostile presentation preserves uniform collision-derived scaling"
+		"hostile visual envelope preserves uniform scaling"
+	)
+	_expect(
+		hostile_core.multimesh.visible_instance_count == 1
+			and Vector2(hostile_core_buffer[3], hostile_core_buffer[7])
+				.is_equal_approx(Vector2(390.0, 300.0))
+			and is_equal_approx(
+				Vector2(hostile_core_buffer[0], hostile_core_buffer[4]).length(),
+				5.0
+			),
+		"hostile solid core remains centered and ends at the five-pixel collision boundary"
 	)
 	_expect(
 		hostile_trail.multimesh.mesh.get_surface_count() == 1,

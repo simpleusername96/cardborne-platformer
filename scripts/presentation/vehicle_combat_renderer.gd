@@ -271,7 +271,7 @@ func _build_batches() -> void:
 					(
 						Visuals.projectile_trail_mesh(affinity)
 						if team == &"player"
-						else Visuals.hostile_projectile_mesh(affinity)
+						else Visuals.hostile_projectile_envelope_mesh(affinity)
 					),
 					capacity,
 					1,
@@ -286,6 +286,14 @@ func _build_batches() -> void:
 				capacity,
 				2,
 				StringName("projectile_head_%s" % String(team))
+			)
+		else:
+			_projectile_head_batches[team] = _create_batch(
+				"Projectile_core_enemy",
+				Visuals.hostile_projectile_core_mesh(),
+				capacity,
+				2,
+				&"projectile_core_enemy"
 			)
 	for kind in [&"small", &"medium", &"large"]:
 		var family := StringName("experience_%s" % String(kind))
@@ -490,6 +498,7 @@ func _sync_enemies(enemies: Array[EnemyState], visible_world: Rect2, player_posi
 				)
 		else:
 			_write_instance(batch, position, angle, Vector2.ONE * radius, color)
+		_sync_enemy_readability_overlays(enemy, position, radius)
 		if enemy.shielded:
 			_write_instance(
 				_overlay_batches[&"shield"], position, 0.0,
@@ -518,6 +527,36 @@ func _sync_enemies(enemies: Array[EnemyState], visible_world: Rect2, player_posi
 		_sync_enemy_semantic_overlays(enemy, position, radius, angle)
 		if enemy.id == aim_target_id:
 			_sync_target_brackets(position, radius + 16.0)
+
+
+func _sync_enemy_readability_overlays(
+	enemy: EnemyState,
+	position: Vector2,
+	radius: float
+) -> void:
+	if enemy.health_class == &"priority":
+		_write_instance(
+			_overlay_batches[&"ring"],
+			position,
+			0.0,
+			Vector2.ONE * (radius + 7.0),
+			Color(Art.INK, 0.92)
+		)
+		_write_instance(
+			_overlay_batches[&"diamond"],
+			position - Vector2(0.0, radius + 12.0),
+			0.0,
+			Vector2(9.0, 7.0),
+			Art.IVORY_BRIGHT
+		)
+	if enemy.threat_kind == &"ranged" and enemy.phase == &"startup":
+		_write_instance(
+			_overlay_batches[&"diamond"],
+			position - Vector2(0.0, radius + 13.0),
+			0.0,
+			Vector2(13.0, 10.0),
+			Art.MUSTARD
+		)
 
 
 func _sync_enemy_semantic_overlays(
@@ -652,7 +691,11 @@ func _sync_projectiles(
 					Vector2.ONE * (
 						22.0
 						if pixel_family == &"secondary_seeker"
-						else 16.0 * radius / 6.0
+						else (
+							16.0
+							* Art.PLAYER_PRIMARY_PROJECTILE_SCALE
+							* radius / 6.0
+						)
 					),
 					Color.WHITE,
 					frame
@@ -678,19 +721,30 @@ func _sync_projectiles(
 						trail_batch,
 						position,
 						direction,
-						Vector2.ONE * (radius * 3.0),
+						Vector2.ONE * (
+							radius * Art.HOSTILE_PROJECTILE_ENVELOPE_SCALE
+						),
 						Color.WHITE,
 						hostile_frame
 					)
-				continue
-			# Each existing enemy-affinity trail batch now carries both its
-			# collision-bounded head and its fixed-ratio ownership trail.
+			else:
+				_write_instance_basis(
+					trail_batch,
+					position,
+					direction,
+					Vector2.ONE * (
+						radius * Art.HOSTILE_PROJECTILE_ENVELOPE_SCALE
+					),
+					Color(color, 0.72)
+				)
+			# The bright core ends at the collision boundary. Everything in
+			# the larger affinity envelope is presentation-only.
 			_write_instance_basis(
-				trail_batch,
+				_projectile_head_batches[team],
 				position,
 				direction,
 				Vector2.ONE * radius,
-				color
+				Color.WHITE
 			)
 			continue
 		var trail_length := (
@@ -732,7 +786,9 @@ func _sync_projectiles(
 			_projectile_head_batches[team],
 			position,
 			direction,
-			Vector2.ONE * radius,
+			Vector2.ONE * (
+				radius * Art.PLAYER_PRIMARY_PROJECTILE_SCALE
+			),
 			Color.WHITE
 		)
 
@@ -942,7 +998,7 @@ func _sync_experience(shards: Array[ExperienceShard], visible_world: Rect2) -> v
 			continue
 		var value := shard.value
 		var kind := &"small" if value == 1 else (&"medium" if value <= 4 else &"large")
-		var radius := 9.0 if value == 1 else (12.0 if value <= 4 else 17.0)
+		var radius := float(Art.EXPERIENCE_RADII[kind])
 		var batch: BatchHandle = _experience_batches[kind]
 		if _pixel_enabled:
 			var frame := _pixel_catalog.frame(
@@ -1231,6 +1287,7 @@ func _sync_pixel_player(
 	engine_count: int,
 	feedback_color: Color
 ) -> void:
+	var player_scale := Art.PLAYER_VISUAL_RADIUS
 	var hull_direction_index := _pixel_catalog.direction_index(hull_direction, 16)
 	var hull_tier := clampi(int(state.get("hull_visual_tier", 0)), 0, 3)
 	var hull_tint := Color.WHITE * (1.0 - float(hull_tier) * 0.10)
@@ -1252,7 +1309,7 @@ func _sync_pixel_player(
 			_player_pixel_under,
 			position,
 			0.0,
-			Vector2.ONE * 32.0,
+			Vector2.ONE * player_scale,
 			hull_tint,
 			flame_frame
 		)
@@ -1276,7 +1333,7 @@ func _sync_pixel_player(
 				_player_pixel_under,
 				position,
 				0.0,
-				Vector2.ONE * 32.0,
+				Vector2.ONE * player_scale,
 				Color(1.0, 1.0, 1.0, 0.88),
 				dash_frame
 			)
@@ -1292,7 +1349,7 @@ func _sync_pixel_player(
 			_player_pixel_under,
 			position,
 			0.0,
-			Vector2.ONE * 32.0,
+			Vector2.ONE * player_scale,
 			hull_tint,
 			module_frame
 		)
@@ -1308,7 +1365,7 @@ func _sync_pixel_player(
 			_player_pixel_under,
 			position,
 			0.0,
-			Vector2.ONE * 32.0,
+			Vector2.ONE * player_scale,
 			hull_tint,
 			hull_frame
 		)
