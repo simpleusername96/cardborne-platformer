@@ -145,6 +145,7 @@ var _pixel_enabled := false
 var _player_pixel_under: BatchHandle
 var _player_projectile_pixel: BatchHandle
 var _misc_pixel_batch: BatchHandle
+var _pixel_frame_cache: Dictionary = {}
 
 
 func _ready() -> void:
@@ -181,11 +182,15 @@ func sync(
 
 func debug_snapshot() -> Dictionary:
 	var visible := 0
+	var batch_counts := {}
 	for batch in _batches:
 		visible += batch.count
+		if batch.count > 0:
+			batch_counts[batch.instance.name] = batch.count
 	return {
 		"batches": _batches.size(),
 		"visible_instances": visible,
+		"batch_counts": batch_counts,
 		"pixel_enabled": _pixel_enabled,
 		"enemy_capacity": ENEMY_CAPACITY,
 		"status_arc_capacity": STATUS_ARC_CAPACITY,
@@ -193,6 +198,7 @@ func debug_snapshot() -> Dictionary:
 
 
 func _build_batches() -> void:
+	var pixel_enemy_family_batches := {}
 	for archetype in Visuals.ENEMY_ARCHETYPES:
 		if archetype == &"stage_boss":
 			continue
@@ -201,28 +207,32 @@ func _build_batches() -> void:
 			if archetype in STATIONARY_PIXEL_ARCHETYPES
 			else &"mobile_enemy_set"
 		)
-		_enemy_batches[archetype] = (
-			_create_atlas_batch(
-				"Enemy_%s" % String(archetype),
-				ENEMY_CAPACITY,
-				0,
-				pixel_family
-			)
-			if _pixel_enabled and _pixel_catalog.has_family(pixel_family)
-			else _create_batch(
+		if _pixel_enabled and _pixel_catalog.has_family(pixel_family):
+			if not pixel_enemy_family_batches.has(pixel_family):
+				pixel_enemy_family_batches[pixel_family] = _create_atlas_batch(
+					"Enemy_%s" % String(pixel_family),
+					ENEMY_CAPACITY,
+					0,
+					pixel_family
+				)
+			_enemy_batches[archetype] = pixel_enemy_family_batches[pixel_family]
+		else:
+			_enemy_batches[archetype] = _create_batch(
 				"Enemy_%s" % String(archetype),
 				Visuals.enemy_mesh(archetype),
 				ENEMY_CAPACITY,
 				0,
 				archetype
 			)
+	var shared_pixel_boss: BatchHandle
+	if _pixel_enabled and _pixel_catalog.has_family(&"boss_set"):
+		shared_pixel_boss = _create_atlas_batch(
+			"Boss_boss_set", 1, 0, &"boss_set"
 		)
 	for variant in [&"colossus", &"leviathan", &"titan", &"behemoth", &"crown"]:
 		_boss_variant_batches[variant] = (
-			_create_atlas_batch(
-				"Boss_%s" % String(variant), 1, 0, &"boss_set"
-			)
-			if _pixel_enabled and _pixel_catalog.has_family(&"boss_set")
+			shared_pixel_boss
+			if shared_pixel_boss != null
 			else _create_batch(
 				"Boss_%s" % String(variant),
 				Visuals.boss_mesh(variant),
@@ -246,6 +256,18 @@ func _build_batches() -> void:
 			)
 			continue
 		var affinity_batches := {}
+		var shared_hostile_pixel_batch: BatchHandle
+		if (
+			team == &"enemy"
+			and _pixel_enabled
+			and _pixel_catalog.has_family(&"hostile_projectile_affinities")
+		):
+			shared_hostile_pixel_batch = _create_atlas_batch(
+				"Projectile_trail_enemy_affinities",
+				capacity,
+				1,
+				&"hostile_projectile_affinities"
+			)
 		var rendered_affinities: Array[StringName] = []
 		if team == &"player":
 			rendered_affinities.append(AttackContract.KINETIC)
@@ -255,17 +277,8 @@ func _build_batches() -> void:
 			if affinity == AttackContract.SUPPORT:
 				continue
 			affinity_batches[affinity] = (
-				_create_atlas_batch(
-					"Projectile_trail_%s_%s" % [String(team), String(affinity)],
-					capacity,
-					1,
-					&"hostile_projectile_affinities"
-				)
-				if (
-					team == &"enemy"
-					and _pixel_enabled
-					and _pixel_catalog.has_family(&"hostile_projectile_affinities")
-				)
+				shared_hostile_pixel_batch
+				if shared_hostile_pixel_batch != null
 				else _create_batch(
 					"Projectile_trail_%s_%s" % [String(team), String(affinity)],
 					(
@@ -295,16 +308,19 @@ func _build_batches() -> void:
 				2,
 				&"projectile_core_enemy"
 			)
+	var shared_experience_pixel_batch: BatchHandle
+	if _pixel_enabled and _pixel_catalog.has_family(&"experience_shards"):
+		shared_experience_pixel_batch = _create_atlas_batch(
+			"Experience_experience_shards",
+			EXPERIENCE_CAPACITY,
+			-1,
+			&"experience_shards"
+		)
 	for kind in [&"small", &"medium", &"large"]:
 		var family := StringName("experience_%s" % String(kind))
 		_experience_batches[kind] = (
-			_create_atlas_batch(
-				"Experience_%s" % String(kind),
-				EXPERIENCE_CAPACITY,
-				-1,
-				&"experience_shards"
-			)
-			if _pixel_enabled and _pixel_catalog.has_family(&"experience_shards")
+			shared_experience_pixel_batch
+			if shared_experience_pixel_batch != null
 			else _create_batch(
 				"Experience_%s" % String(kind),
 				Visuals.experience_mesh(kind),
@@ -479,7 +495,7 @@ func _sync_enemies(enemies: Array[EnemyState], visible_world: Rect2, player_posi
 			var direction_index := _pixel_catalog.direction_index(
 				Vector2.RIGHT.rotated(angle), 8
 			)
-			var frame := _pixel_catalog.frame(
+			var frame := _cached_pixel_frame(
 				pixel_family,
 				pixel_variant,
 				direction_index,
@@ -676,7 +692,7 @@ func _sync_projectiles(
 			)
 			var direction_index := _pixel_catalog.direction_index(direction, 8)
 			var sequence_index: int = posmod(projectile.spawn_serial, 2)
-			var frame := _pixel_catalog.frame(
+			var frame := _cached_pixel_frame(
 				pixel_family,
 				variant,
 				direction_index,
@@ -709,7 +725,7 @@ func _sync_projectiles(
 				var motion_state := StringName(
 					"affinity_motion_%d" % posmod(projectile.spawn_serial, 2)
 				)
-				var hostile_frame := _pixel_catalog.frame(
+				var hostile_frame := _cached_pixel_frame(
 					&"hostile_projectile_affinities",
 					affinity,
 					0,
@@ -1001,7 +1017,7 @@ func _sync_experience(shards: Array[ExperienceShard], visible_world: Rect2) -> v
 		var radius := float(Art.EXPERIENCE_RADII[kind])
 		var batch: BatchHandle = _experience_batches[kind]
 		if _pixel_enabled:
-			var frame := _pixel_catalog.frame(
+			var frame := _cached_pixel_frame(
 				&"experience_shards", kind, 0, &"idle", 0
 			)
 			if not frame.is_empty():
@@ -1028,7 +1044,7 @@ func _sync_effects(effects: Array[Dictionary], visible_world: Rect2) -> void:
 		var kind := String(effect["kind"])
 		if _pixel_enabled and kind in ["impact", "muzzle"]:
 			var frame_index := clampi(int(floor(progress * 4.0)), 0, 3)
-			var impact_frame := _pixel_catalog.frame(
+			var impact_frame := _cached_pixel_frame(
 				&"impact_effects",
 				&"enemy" if kind == "impact" else &"player_hull",
 				0,
@@ -1216,7 +1232,7 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 	var blade_level := int(state.get("blade_level", 0))
 	if blade_level > 0:
 		var blade_count: int = [2, 3, 4][blade_level - 1]
-		var blade_frame := _pixel_catalog.frame(
+		var blade_frame := _cached_pixel_frame(
 			&"secondary_orbit_blades", &"blade", 0, &"orbit", 0
 		) if _pixel_enabled else {}
 		for blade_index in blade_count:
@@ -1236,7 +1252,7 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 				_write_diamond(blade_position, 13.0, Art.MUSTARD)
 	for mine in Array(secondary.get("mines", [])):
 		var mine_state := &"armed" if bool(mine.get("armed", false)) else &"idle"
-		var mine_frame := _pixel_catalog.frame(
+		var mine_frame := _cached_pixel_frame(
 			&"secondary_wake_mines", &"mine", 0, mine_state, 0
 		) if _pixel_enabled else {}
 		if not mine_frame.is_empty():
@@ -1253,7 +1269,7 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 	if bool(state.get("escort_drone", false)):
 		var drone_position := Vector2(secondary.get("drone_position", player_position))
 		var drone_direction := (player_position - drone_position).normalized()
-		var drone_frame := _pixel_catalog.frame(
+		var drone_frame := _cached_pixel_frame(
 			&"secondary_escort_drone",
 			&"drone",
 			_pixel_catalog.direction_index(drone_direction, 8),
@@ -1297,7 +1313,7 @@ func _sync_pixel_player(
 		hull_tint = Color(1.0, 0.50, 0.50, feedback_color.a)
 	var moving := float(state.get("player_speed", 0.0)) > 12.0
 	var flame_variant := &"thrust" if moving else &"idle"
-	var flame_frame := _pixel_catalog.frame(
+	var flame_frame := _cached_pixel_frame(
 		&"player_engine_flame",
 		flame_variant,
 		hull_direction_index,
@@ -1321,7 +1337,7 @@ func _sync_pixel_player(
 		elif dash_progress > 0.78:
 			dash_variant = &"end"
 		var dash_direction := Vector2(state.get("dash_direction", hull_direction))
-		var dash_frame := _pixel_catalog.frame(
+		var dash_frame := _cached_pixel_frame(
 			&"player_dash_effect",
 			dash_variant,
 			_pixel_catalog.direction_index(dash_direction, 16),
@@ -1337,7 +1353,7 @@ func _sync_pixel_player(
 				Color(1.0, 1.0, 1.0, 0.88),
 				dash_frame
 			)
-	var module_frame := _pixel_catalog.frame(
+	var module_frame := _cached_pixel_frame(
 		&"player_engine_modules",
 		StringName("module_count_%d" % engine_count),
 		_pixel_catalog.direction_index(hull_direction, 4),
@@ -1353,7 +1369,7 @@ func _sync_pixel_player(
 			hull_tint,
 			module_frame
 		)
-	var hull_frame := _pixel_catalog.frame(
+	var hull_frame := _cached_pixel_frame(
 		&"player_chassis",
 		&"base",
 		hull_direction_index,
@@ -1429,7 +1445,7 @@ func _sync_support_fields(support_fields: Array) -> void:
 			var fixture_state := &"active" if active else &"dormant"
 			if state == &"warning":
 				fixture_state = &"warning"
-			var fixture_frame := _pixel_catalog.frame(
+			var fixture_frame := _cached_pixel_frame(
 				fixture_family, &"center_fixture", 0, fixture_state, 0
 			)
 			if not fixture_frame.is_empty():
@@ -1577,6 +1593,33 @@ func _enemy_angle(archetype: StringName, enemy: EnemyState, player_position: Vec
 	return 0.0
 
 
+func _cached_pixel_frame(
+	family: StringName,
+	variant: StringName,
+	direction_index: int,
+	state: StringName,
+	sequence_index: int
+) -> Dictionary:
+	var key := hash(family)
+	key = key * 31 + hash(variant)
+	key = key * 31 + direction_index
+	key = key * 31 + hash(state)
+	key = key * 31 + sequence_index
+	if _pixel_frame_cache.has(key):
+		return _pixel_frame_cache[key]
+	var frame := _pixel_catalog.frame(
+		family,
+		variant,
+		direction_index,
+		state,
+		sequence_index
+	)
+	if not frame.is_empty():
+		frame["_cached_uv"] = _pixel_catalog.frame_uv(frame)
+	_pixel_frame_cache[key] = frame
+	return frame
+
+
 func _write_atlas_instance(
 	batch: BatchHandle,
 	position: Vector2,
@@ -1612,7 +1655,7 @@ func _write_atlas_instance_basis(
 		x_axis,
 		scale,
 		color,
-		_pixel_catalog.frame_uv(frame)
+		Color(frame["_cached_uv"])
 	)
 	batch.count += 1
 

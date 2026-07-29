@@ -24,7 +24,10 @@ func _run() -> void:
 	_expect(int(snapshot["enemy_capacity"]) == 320, "renderer shares the 320-hostile store capacity")
 	_expect(int(snapshot["status_arc_capacity"]) == 960, "status overlays scale from shared enemy capacity")
 	_expect(pixel_enabled, "approved pixel player presentation is active")
-	_expect(int(snapshot["batches"]) == 51, "combat presentation adds one retained hostile collision-core batch")
+	_expect(
+		int(snapshot["batches"]) == 23,
+		"pixel presentation coalesces shared atlases into 23 retained batches"
+	)
 	_expect(Art.validate_contract().is_empty(), "combat visual profile satisfies the locked readability contract")
 	_expect(
 		AttackContract.LIGHT_PROJECTILE_RADIUS == 5.0
@@ -47,6 +50,9 @@ func _run() -> void:
 			renderer.get_node_or_null("Projectile_trail_player_kinetic") != null,
 			"player ownership uses its one rendered kinetic trail batch"
 		)
+	var shared_hostile_trail = renderer.get_node_or_null(
+		"Projectile_trail_enemy_affinities"
+	)
 	for affinity in AttackContract.AFFINITIES:
 		_expect(
 			absf(Visuals.debug_projectile_head_extent(affinity) - 1.0) <= 0.001,
@@ -54,12 +60,7 @@ func _run() -> void:
 		)
 		if affinity == AttackContract.SUPPORT:
 			continue
-		_expect(
-			renderer.get_node_or_null(
-				"Projectile_trail_enemy_%s" % String(affinity)
-			) != null,
-			"enemy %s combined head and trail batch exists" % affinity
-		)
+		_expect(shared_hostile_trail != null, "hostile affinities share one atlas batch")
 	_expect(
 		renderer.get_node_or_null("Projectile_core_enemy") != null,
 		"hostile projectiles expose one shared collision-bounded core batch"
@@ -75,11 +76,12 @@ func _run() -> void:
 			Visuals.debug_enemy_signature(pair[0]) != Visuals.debug_enemy_signature(pair[1]),
 			"%s and %s have distinct outer silhouettes" % pair
 		)
-		_expect(
-			renderer.get_node("Enemy_%s" % String(pair[0]))
-				!= renderer.get_node("Enemy_%s" % String(pair[1])),
-			"%s and %s retain independent static batches" % pair
-		)
+		if pixel_enabled:
+			_expect(
+				renderer.get_node("Enemy_mobile_enemy_set" if pair[0] != &"turret" else "Enemy_stationary_enemy_set")
+					== renderer.get_node("Enemy_mobile_enemy_set" if pair[1] != &"interceptor_tower" else "Enemy_stationary_enemy_set"),
+				"%s and %s share their atlas family batch" % pair
+			)
 	var enemy := EnemyState.new()
 	enemy.id = "renderer_enemy"
 	enemy.role = &"chaser"
@@ -175,7 +177,9 @@ func _run() -> void:
 			),
 		"corridor warning caps stay centered on the simulated segment endpoints"
 	)
-	var enemy_batch := renderer.get_node("Enemy_chaser") as MultiMeshInstance2D
+	var enemy_batch := renderer.get_node(
+		"Enemy_mobile_enemy_set" if pixel_enabled else "Enemy_chaser"
+	) as MultiMeshInstance2D
 	var enemy_buffer := enemy_batch.multimesh.buffer
 	_expect(
 		Vector2(enemy_buffer[3], enemy_buffer[7]).is_equal_approx(Vector2(300.0, 300.0)),
@@ -280,7 +284,9 @@ func _run() -> void:
 		"one retained status arc batch reserves three instances per hostile slot"
 	)
 	_expect(status_batch.multimesh.visible_instance_count == 3, "three simultaneous elements render as three large retained arcs")
-	var hostile_trail := renderer.get_node("Projectile_trail_enemy_arc") as MultiMeshInstance2D
+	var hostile_trail := renderer.get_node(
+		"Projectile_trail_enemy_affinities" if pixel_enabled else "Projectile_trail_enemy_arc"
+	) as MultiMeshInstance2D
 	var hostile_trail_buffer := hostile_trail.multimesh.buffer
 	var hostile_core := renderer.get_node("Projectile_core_enemy") as MultiMeshInstance2D
 	var hostile_core_buffer := hostile_core.multimesh.buffer
@@ -336,7 +342,9 @@ func _run() -> void:
 		[offscreen_enemy], no_projectiles, no_projectiles, [], [],
 		Rect2(0,0,1280,720), Vector2.ZERO, 0.0, true
 	)
-	var offscreen_enemy_batch := renderer.get_node("Enemy_controller") as MultiMeshInstance2D
+	var offscreen_enemy_batch := renderer.get_node(
+		"Enemy_mobile_enemy_set" if pixel_enabled else "Enemy_controller"
+	) as MultiMeshInstance2D
 	var area_disk := renderer.get_node("Overlay_disk") as MultiMeshInstance2D
 	var area_ring := renderer.get_node("Overlay_danger_ring") as MultiMeshInstance2D
 	_expect(

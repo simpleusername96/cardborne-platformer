@@ -133,6 +133,7 @@ var stage_telemetry := StageTelemetry.new()
 var boss_runtime := BossRuntime.new()
 var boss_practice := BossPracticeSession.new()
 var _runtime_blockers: Array[Rect2] = []
+var _runtime_bulkheads: Array[Rect2] = []
 
 var player_position := Vector2.ZERO
 var player_velocity := Vector2.ZERO
@@ -193,6 +194,7 @@ var effects: Array[Dictionary] = []
 var damaging_trails: Array[Dictionary] = []
 var _empty_cover_rects: Array[Rect2] = []
 var _projectile_cover_query: Array[Rect2] = []
+var _motion_cover_query: Array[Rect2] = []
 var _elite_pending := 0
 var _elite_spawned := 0
 var _elite_threshold_cursor := 0
@@ -218,6 +220,8 @@ var _threat_contact_cache: Array[Dictionary] = []
 var _threat_sample_timer := 0.0
 var _squad_motion_snapshot: Dictionary = {}
 var _shielded_enemy_ids: Dictionary = {}
+var _pending_shielded_enemy_ids: Dictionary = {}
+var _shield_supports: Array[EnemyState] = []
 var _enemy_decision_bucket := 0
 var _simulation_lod_bucket := 0
 var _far_enemy_simulation_bucket := 0
@@ -640,6 +644,8 @@ func _reset_run(
 	_threat_sample_timer = 0.0
 	_squad_motion_snapshot.clear()
 	_shielded_enemy_ids.clear()
+	_pending_shielded_enemy_ids.clear()
+	_shield_supports.clear()
 	_enemy_decision_bucket = 0
 	_simulation_lod_bucket = 0
 	_far_enemy_simulation_bucket = 0
@@ -1338,11 +1344,29 @@ func _runtime_projectile_cover_rects(from: Vector2, to: Vector2, radius: float) 
 	return _projectile_cover_query
 
 
+func _runtime_motion_cover_rects(
+	from: Vector2,
+	to: Vector2,
+	radius: float
+) -> Array[Rect2]:
+	_motion_cover_query.clear()
+	if field_layout != null:
+		_active_tactical_layout.covers_near_motion_into(
+			from, to, radius, _motion_cover_query
+		)
+	var swept := Rect2(from, Vector2.ZERO).expand(to).grow(radius)
+	for bulkhead in _runtime_bulkheads:
+		if swept.intersects(bulkhead.grow(radius), true):
+			_motion_cover_query.append(bulkhead)
+	return _motion_cover_query
+
+
 func _rebuild_runtime_blockers() -> void:
 	_runtime_blockers.clear()
 	if field_layout != null:
 		_runtime_blockers.append_array(_active_tactical_layout.cover_rects)
-	_runtime_blockers.append_array(terrain_runtime.live_bulkhead_rects())
+	_runtime_bulkheads = terrain_runtime.live_bulkhead_rects()
+	_runtime_blockers.append_array(_runtime_bulkheads)
 
 
 func _runtime_first_cover_hit(from: Vector2, to: Vector2, padding: float) -> Dictionary:
@@ -1708,7 +1732,6 @@ func _update_experience(delta: float) -> void:
 func _update_enemies(delta: float) -> void:
 	var performance_active := _performance_detail_sample_active
 	var section_started := Time.get_ticks_usec() if performance_active else 0
-	_enforce_active_enemy_cap()
 	var decision_bucket := _enemy_decision_bucket
 	_enemy_decision_bucket = (_enemy_decision_bucket + 1) % ORDINARY_DECISION_BUCKET_COUNT
 	var committed_points := 0.0
@@ -1725,6 +1748,22 @@ func _update_enemies(delta: float) -> void:
 			match enemy.threat_kind:
 				&"ranged": committed_ranged += 1
 				&"denial": committed_denial += 1
+	if _enforce_active_enemy_cap(active_capped):
+		active_capped = encounter_runtime.active_cap()
+		committed_points = 0.0
+		committed_ranged = 0
+		committed_denial = 0
+		for enemy in enemies:
+			if (
+				enemy.alive
+				and enemy.active
+				and enemy.phase in [&"startup", &"active"]
+				and enemy.role not in [&"stage_boss", &"generator", &"boss_pylon"]
+			):
+				committed_points += enemy.threat_cost
+				match enemy.threat_kind:
+					&"ranged": committed_ranged += 1
+					&"denial": committed_denial += 1
 	if performance_active:
 		_performance_enemy_sections["budget_scan"] = _elapsed_ms(section_started)
 		section_started = Time.get_ticks_usec()
@@ -1763,37 +1802,59 @@ func _update_enemies(delta: float) -> void:
 		_performance_enemy_sections["status_activation"] = _elapsed_ms(section_started)
 		section_started = Time.get_ticks_usec()
 
-	if decision_bucket == 0 or not _enemy_coordination_initialized:
+	if not _enemy_coordination_initialized:
 		_squad_motion_snapshot = EncounterDirector.squad_motion_snapshot(enemies)
 		_shielded_enemy_ids = _build_enemy_shield_assignments()
 		for enemy in enemies:
 			if enemy.alive and enemy.active:
 				_apply_enemy_shield(enemy, _shielded_enemy_ids)
+		_pending_shielded_enemy_ids.clear()
+		_append_enemy_shield_assignments(
+			_pending_shielded_enemy_ids,
+			decision_bucket
+		)
 		_enemy_coordination_initialized = true
+	else:
+		if decision_bucket == 0:
+			_squad_motion_snapshot = EncounterDirector.squad_motion_snapshot(enemies)
+			_refresh_enemy_shield_supports()
+			_pending_shielded_enemy_ids.clear()
+		_append_enemy_shield_assignments(
+			_pending_shielded_enemy_ids,
+			decision_bucket
+		)
+		if decision_bucket == ORDINARY_DECISION_BUCKET_COUNT - 1:
+			_shielded_enemy_ids = _pending_shielded_enemy_ids.duplicate()
+			for enemy in enemies:
+				if enemy.alive and enemy.active:
+					_apply_enemy_shield(enemy, _shielded_enemy_ids)
 	if performance_active:
 		_performance_enemy_sections["coordination"] = _elapsed_ms(section_started)
 		section_started = Time.get_ticks_usec()
+	var arc_surge_active := terrain_runtime.has_active_arc_surge()
 	for enemy in enemies:
 		if not enemy.alive:
 			continue
 		if not enemy.active:
 			continue
-		var terrain_damage := terrain_runtime.surge_damage_for(
-			enemy.id,
-			enemy.pos,
-			&"boss" if enemy.role == &"stage_boss" else &"ordinary"
-		)
-		if terrain_damage > 0.0:
-			_damage_enemy(enemy, terrain_damage, "Arc Surge", 0.0, &"arc", false)
-			if not enemy.alive:
-				continue
-		var status_damage := StatusRuntime.tick(enemy, delta)
-		if float(status_damage["burn"]) > 0.0:
-			_damage_enemy(enemy, float(status_damage["burn"]), "status", 0.0, &"thermal", true)
-		if enemy.alive and float(status_damage["poison"]) > 0.0:
-			_damage_enemy(enemy, float(status_damage["poison"]), "status", 0.0, &"toxin", true)
-			if not enemy.alive:
-				continue
+		if arc_surge_active:
+			var terrain_damage := terrain_runtime.surge_damage_for(
+				enemy.id,
+				enemy.pos,
+				&"boss" if enemy.role == &"stage_boss" else &"ordinary"
+			)
+			if terrain_damage > 0.0:
+				_damage_enemy(enemy, terrain_damage, "Arc Surge", 0.0, &"arc", false)
+				if not enemy.alive:
+					continue
+		if not enemy.statuses.is_empty():
+			var status_damage := StatusRuntime.tick(enemy, delta)
+			if float(status_damage["burn"]) > 0.0:
+				_damage_enemy(enemy, float(status_damage["burn"]), "status", 0.0, &"thermal", true)
+			if enemy.alive and float(status_damage["poison"]) > 0.0:
+				_damage_enemy(enemy, float(status_damage["poison"]), "status", 0.0, &"toxin", true)
+				if not enemy.alive:
+					continue
 		var role := enemy.role
 		if role == &"stage_boss":
 			_update_stage_boss(enemy, delta)
@@ -1834,14 +1895,16 @@ func _update_enemies(delta: float) -> void:
 		_performance_enemy_sections["behavior_and_motion"] = _elapsed_ms(section_started)
 
 
-func _enforce_active_enemy_cap() -> void:
-	var active_count := 0
-	for enemy in enemies:
-		if enemy.alive and enemy.active and enemy.counts_active_cap:
-			active_count += 1
+func _enforce_active_enemy_cap(known_active_count: int = -1) -> bool:
+	var active_count := known_active_count
+	if active_count < 0:
+		active_count = 0
+		for enemy in enemies:
+			if enemy.alive and enemy.active and enemy.counts_active_cap:
+				active_count += 1
 	var cap := encounter_runtime.active_cap()
 	if active_count <= cap:
-		return
+		return false
 	var active_mobile: Array[EnemyState] = []
 	for enemy in enemies:
 		if enemy.alive and enemy.active and enemy.counts_active_cap:
@@ -1858,6 +1921,7 @@ func _enforce_active_enemy_cap() -> void:
 		enemy.active = false
 		enemy.velocity = Vector2.ZERO
 		enemy.phase = &"move"
+	return true
 
 
 func _update_enemy_activation(enemy: EnemyState, capacity_available: bool) -> bool:
@@ -1871,14 +1935,35 @@ func _update_enemy_activation(enemy: EnemyState, capacity_available: bool) -> bo
 
 func _build_enemy_shield_assignments() -> Dictionary:
 	var shielded_ids := {}
-	var supports: Array[EnemyState] = []
+	_refresh_enemy_shield_supports()
+	for bucket in ORDINARY_DECISION_BUCKET_COUNT:
+		_append_enemy_shield_assignments(shielded_ids, bucket)
+	return shielded_ids
+
+
+func _refresh_enemy_shield_supports() -> void:
+	_shield_supports.clear()
 	for enemy in enemies:
-		if not enemy.alive or not enemy.active:
+		if (
+			enemy.alive
+			and enemy.active
+			and enemy.role in [&"generator", &"shield_escort"]
+		):
+			_shield_supports.append(enemy)
+
+
+func _append_enemy_shield_assignments(
+	shielded_ids: Dictionary,
+	support_bucket: int
+) -> void:
+	for support in _shield_supports:
+		if not support.alive or not support.active:
 			continue
-		var role := enemy.role
-		if role in [&"generator", &"shield_escort"]:
-			supports.append(enemy)
-	for support in supports:
+		if posmod(
+			support.runtime_slot,
+			ORDINARY_DECISION_BUCKET_COUNT
+		) != support_bucket:
+			continue
 		var support_position := support.pos
 		var support_radius := 390.0 if support.role == &"generator" else 300.0
 		var nearby: Array[EnemyState] = []
@@ -1901,7 +1986,6 @@ func _build_enemy_shield_assignments() -> Dictionary:
 				closest_id = candidate.id
 		if not closest_id.is_empty():
 			shielded_ids[closest_id] = true
-	return shielded_ids
 
 
 func _apply_enemy_shield(enemy: EnemyState, shielded_ids: Dictionary) -> void:
@@ -2588,22 +2672,54 @@ func _enemy_contact_damage(enemy: EnemyState, base_damage: float) -> float:
 
 
 func _move_actor(position: Vector2, motion: Vector2, radius: float, is_player: bool) -> Vector2:
-	var result := Rules.move_circle_with_extra(position, motion, radius, false, current_stage_id, _runtime_cover_rects())
-	for crate in crates:
-		if not bool(crate["alive"]):
-			continue
-		var crate_position := Vector2(crate["pos"])
-		var clearance := radius + CRATE_COLLISION_RADIUS
-		if result.distance_squared_to(crate_position) < clearance * clearance:
-			var x_attempt := Vector2(result.x, position.y)
-			var y_attempt := Vector2(position.x, result.y)
-			if x_attempt.distance_squared_to(crate_position) >= clearance * clearance:
-				result = x_attempt
-			elif y_attempt.distance_squared_to(crate_position) >= clearance * clearance:
-				result = y_attempt
-			else:
-				result = position
+	var destination := position + motion
+	var result := Rules.move_circle_with_extra(
+		position,
+		motion,
+		radius,
+		false,
+		current_stage_id,
+		_runtime_motion_cover_rects(position, destination, radius)
+	)
+	var clearance := radius + CRATE_COLLISION_RADIUS
+	if not _position_clear_of_crates(result, clearance):
+		var x_attempt := Vector2(result.x, position.y)
+		var y_attempt := Vector2(position.x, result.y)
+		if _position_clear_of_crates(x_attempt, clearance):
+			result = x_attempt
+		elif _position_clear_of_crates(y_attempt, clearance):
+			result = y_attempt
+		else:
+			result = position
 	return result
+
+
+func _position_clear_of_crates(position: Vector2, clearance: float) -> bool:
+	var minimum := position - Vector2.ONE * clearance
+	var maximum := position + Vector2.ONE * clearance
+	var min_cell := Vector2i(
+		floori(minimum.x / CRATE_COLLISION_CELL_SIZE),
+		floori(minimum.y / CRATE_COLLISION_CELL_SIZE)
+	)
+	var max_cell := Vector2i(
+		floori(maximum.x / CRATE_COLLISION_CELL_SIZE),
+		floori(maximum.y / CRATE_COLLISION_CELL_SIZE)
+	)
+	var clearance_squared := clearance * clearance
+	for cell_y in range(min_cell.y, max_cell.y + 1):
+		for cell_x in range(min_cell.x, max_cell.x + 1):
+			var cell := Vector2i(cell_x, cell_y)
+			if not _crate_collision_cells.has(cell):
+				continue
+			var bucket: Array = _crate_collision_cells[cell]
+			for crate in bucket:
+				if (
+					bool(crate["alive"])
+					and position.distance_squared_to(Vector2(crate["pos"]))
+						< clearance_squared
+				):
+					return false
+	return true
 
 
 func _spawn_hostile_projectile(
@@ -4170,6 +4286,8 @@ func _begin_stage_transition() -> void:
 	_threat_sample_timer = 0.0
 	_squad_motion_snapshot.clear()
 	_shielded_enemy_ids.clear()
+	_pending_shielded_enemy_ids.clear()
+	_shield_supports.clear()
 	_enemy_coordination_initialized = false
 	_aim_target_id = ""
 	_marked_enemy_id = ""

@@ -12,6 +12,7 @@ const EnemyStore = preload("res://scripts/enemies/vehicle_enemy_store.gd")
 const ProjectileStore = preload("res://scripts/combat/vehicle_projectile_store.gd")
 const ExperienceRuntime = preload("res://scripts/progression/vehicle_experience_runtime.gd")
 const RunDifficulty = preload("res://scripts/vehicle/vehicle_run_difficulty.gd")
+const StageCatalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
 const EncounterDirector = preload("res://scripts/encounters/vehicle_encounter_director.gd")
 const EncounterRuntime = preload("res://scripts/encounters/vehicle_encounter_runtime.gd")
 
@@ -27,19 +28,15 @@ const MOBILE_ARCHETYPES: Array[StringName] = [
 	&"shield_escort", &"artillery_spotter", &"rammer", &"repair_tender",
 	&"drone_carrier",
 ]
-const STATIONARY_ARCHETYPES: Array[StringName] = [
-	# One-shot mines retire themselves during long samples, so the fixed-count
-	# capacity fixture uses non-retiring installations.
-	&"turret", &"generator", &"interceptor_tower", &"beam_sentinel",
-]
-
 var scenario_id: StringName
 var elapsed := 0.0
 var lifecycle_cycles := 0
 var _shot_serial := 0
 var _lifecycle_serial := 0
+var _enemy_refill_serial := 0
 var _lifecycle_timer := 0.0
 var _spawn_points: Array[Vector2] = []
+var _production_roles: Array[StringName] = []
 
 
 func configure(id: StringName) -> bool:
@@ -62,7 +59,12 @@ func activate(run: Node) -> void:
 	run.effects.clear()
 	run.denied_zones.clear()
 	run.damaging_trails.clear()
-	_spawn_points = _walkable_ring_points(run, 160)
+	run.encounter_runtime.current_beat = 4
+	_spawn_points = _walkable_ring_points(
+		run,
+		EnemyStore.MAX_LIVE_HOSTILES
+	)
+	_production_roles = _production_pressure_roles(ORDINARY_CAPACITY_LOAD)
 	if scenario_id == &"lifecycle_pressure":
 		_run_lifecycle_cycles(run, 300)
 	var enemy_target := (
@@ -101,6 +103,7 @@ func before_physics(run: Node, delta: float) -> void:
 
 
 func after_physics(run: Node) -> void:
+	_maintain_enemy_pressure(run)
 	_fill_projectiles(run, false)
 
 
@@ -158,7 +161,7 @@ func validation_snapshot(run: Node) -> Dictionary:
 		and run.experience_runtime.validate_capacity()
 		and run.effects.size() <= 96
 		and run.denied_zones.size() + run.damaging_trails.size() <= 16
-		and int(renderer_snapshot["batches"]) <= 51
+		and int(renderer_snapshot["batches"]) <= 50
 		and int(enemy_snapshot["rejected_capacity"]) == 0
 		and int(renderer_snapshot["enemy_capacity"]) == EnemyStore.MAX_LIVE_HOSTILES
 		and boss_valid
@@ -186,12 +189,9 @@ func validation_snapshot(run: Node) -> Dictionary:
 func _fill_enemies(run: Node, target: int, include_boss: bool) -> void:
 	var boss_slots := 1 if include_boss else 0
 	var ordinary_target := mini(ORDINARY_CAPACITY_LOAD, target - boss_slots)
+	_enemy_refill_serial = ordinary_target
 	for index in ordinary_target:
-		var archetype := (
-			STATIONARY_ARCHETYPES[index % STATIONARY_ARCHETYPES.size()]
-			if index < 4
-			else MOBILE_ARCHETYPES[index % MOBILE_ARCHETYPES.size()]
-		)
+		var archetype := _production_roles[index]
 		var enemy: EnemyState = run.call("_make_enemy", {
 			"id": "performance_enemy_%03d" % index,
 			"role": archetype,
@@ -201,7 +201,7 @@ func _fill_enemies(run: Node, target: int, include_boss: bool) -> void:
 		if enemy == null:
 			break
 		enemy.active = true
-		enemy.counts_active_cap = false
+		enemy.counts_active_cap = index >= 4
 		enemy.health = 1000000.0
 		enemy.max_health = 1000000.0
 		run.call("_append_enemy", enemy)
@@ -238,6 +238,54 @@ func _fill_enemies(run: Node, target: int, include_boss: bool) -> void:
 		run.call("_append_enemy", boss)
 
 
+func _maintain_enemy_pressure(run: Node) -> void:
+	var target := (
+		CURRENT_PRESSURE_TARGET
+		if scenario_id == &"current_pressure"
+		else CAPACITY_PRESSURE_TARGET
+	)
+	if scenario_id == &"boss_pressure":
+		target = 77
+	var budget := 8
+	while run.enemy_store.live_count() < target and budget > 0:
+		var mobile_index := 4 + posmod(
+			_enemy_refill_serial - 4,
+			_production_roles.size() - 4
+		)
+		var enemy: EnemyState = run.call("_make_enemy", {
+			"id":"performance_refill_%06d" % _enemy_refill_serial,
+			"role":_production_roles[mobile_index],
+			"pos":_spawn_points[_enemy_refill_serial % _spawn_points.size()],
+			"active":true,
+		})
+		_enemy_refill_serial += 1
+		budget -= 1
+		if enemy == null:
+			break
+		enemy.active = true
+		enemy.counts_active_cap = true
+		enemy.health = 1000000.0
+		enemy.max_health = 1000000.0
+		run.call("_append_enemy", enemy)
+
+
+func _production_pressure_roles(target: int) -> Array[StringName]:
+	var result: Array[StringName] = []
+	var stage_id: StringName = StageCatalog.STAGE_IDS[-1]
+	var profile := StageCatalog.profile(stage_id)
+	for role in Array(profile["stationary_roles"]):
+		if result.size() >= target:
+			return result
+		result.append(StringName(role))
+	for packet in StageCatalog.packets(stage_id):
+		for squad in Array(packet["squads"]):
+			for role in Array(squad):
+				if result.size() >= target:
+					return result
+				result.append(StringName(role))
+	return result
+
+
 func _run_lifecycle_cycles(run: Node, count: int) -> void:
 	for index in count:
 		var enemy: EnemyState = run.call("_make_enemy", {
@@ -266,6 +314,7 @@ func _churn_one_enemy(run: Node) -> void:
 		return
 	var role := retired.role
 	var position := retired.pos
+	var counts_active_cap := retired.counts_active_cap
 	retired.alive = false
 	run.enemy_store.queue_defeat(retired)
 	if run.enemy_store.flush_defeated() != 1:
@@ -280,7 +329,7 @@ func _churn_one_enemy(run: Node) -> void:
 		return
 	_lifecycle_serial += 1
 	replacement.active = true
-	replacement.counts_active_cap = false
+	replacement.counts_active_cap = counts_active_cap
 	replacement.health = 1000000.0
 	replacement.max_health = 1000000.0
 	if run.call("_append_enemy", replacement):
@@ -292,6 +341,10 @@ func _fill_projectiles(run: Node, initial: bool) -> void:
 	var hostile_target := 72 if scenario_id == &"current_pressure" else ProjectileStore.HOSTILE_CAPACITY
 	if scenario_id == &"boss_pressure":
 		hostile_target = 100
+	while run.projectile_store.hostile_count() > hostile_target:
+		run.projectile_store.remove_hostile_at_swap(
+			run.projectile_store.hostile_count() - 1
+		)
 	var player_budget := player_target if initial else 48
 	while run.projectile_store.player_count() < player_target and player_budget > 0:
 		var direction := Vector2.RIGHT.rotated(float(_shot_serial % 72) * TAU / 72.0)

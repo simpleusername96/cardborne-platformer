@@ -129,6 +129,13 @@ func surge_damage_for(
 	return 0.0
 
 
+func has_active_arc_surge() -> bool:
+	for feature in features:
+		if feature.kind == &"arc_surge" and _arc_is_active(feature):
+			return true
+	return false
+
+
 func record_player_damage() -> void:
 	repair_pause = REPAIR_HIT_PAUSE
 	repair_dwell = 0.0
