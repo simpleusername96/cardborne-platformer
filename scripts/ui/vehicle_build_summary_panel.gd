@@ -14,7 +14,7 @@ const STAT_GROUPS: Array[Dictionary] = [
 	},
 	{
 		"key":"SHIP_STATUS_GROUP_PRIMARY",
-		"ids":[&"primary_damage", &"fire_rate", &"projectile_speed", &"breach_charge"],
+		"ids":[&"primary_damage", &"fire_rate", &"projectile_speed"],
 	},
 	{
 		"key":"SHIP_STATUS_GROUP_EMP",

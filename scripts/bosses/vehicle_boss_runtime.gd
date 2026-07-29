@@ -1,7 +1,7 @@
 class_name VehicleBossRuntime
 extends RefCounted
 
-## Owns boss phase sequencing, interrupt state, and independent system cadence.
+## Owns boss phase sequencing and independent system cadence.
 ## VehicleRun supplies collision and spawn services but does not choose state.
 
 const Patterns = preload("res://scripts/bosses/vehicle_boss_patterns.gd")
@@ -9,15 +9,11 @@ const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd"
 const EncounterDirector = preload("res://scripts/encounters/vehicle_encounter_director.gd")
 const Rules = preload("res://scripts/vehicle/vehicle_stage_rules.gd")
 
-const INTERRUPTED_RECOVERY := 0.45
 const PHASE_THRESHOLDS := [0.65, 0.30]
 const PHASE_GAPS := [0.55, 0.42, 0.32]
 const AUTONOMOUS_INTERVALS := [6.0, 4.9, 3.9]
 
 var stage_id: StringName = &"stage_1"
-var forced_committed_next := false
-var signature_exposed := false
-var signature_interrupt_consumed := false
 var autonomous_timer := 3.2
 var autonomous_index := 0
 var autonomous_serial := 0
@@ -25,9 +21,6 @@ var autonomous_serial := 0
 
 func configure(next_stage_id: StringName) -> void:
 	stage_id = next_stage_id
-	forced_committed_next = false
-	signature_exposed = false
-	signature_interrupt_consumed = false
 	autonomous_timer = 3.2
 	autonomous_index = 0
 	autonomous_serial = 0
@@ -51,7 +44,6 @@ func update_phase_transition(boss: VehicleEnemyState) -> bool:
 	boss.pattern = &"phase_transition"
 	boss.pattern_index = 0
 	boss.attack_telegraphs.clear()
-	forced_committed_next = false
 	return true
 
 
@@ -63,61 +55,18 @@ func select_direct(boss: VehicleEnemyState) -> String:
 	var sequence := Patterns.sequence(stage_id, boss.boss_phase)
 	var candidate := String(sequence[boss.pattern_index % sequence.size()])
 	boss.pattern_index += 1
-	if (
-		forced_committed_next
-		or candidate == String(boss.last_pattern)
-		or (signature_exposed and Patterns.is_signature(candidate))
-	):
+	if candidate == String(boss.last_pattern):
 		for offset in sequence.size():
 			var alternate := String(sequence[(boss.pattern_index + offset) % sequence.size()])
-			if (
-				alternate != String(boss.last_pattern)
-				and not (signature_exposed and Patterns.is_signature(alternate))
-				and (
-					not forced_committed_next
-					or Patterns.commit_mode(alternate) == &"committed"
-				)
-			):
+			if alternate != String(boss.last_pattern):
 				candidate = alternate
 				boss.pattern_index += offset + 1
 				break
-	forced_committed_next = false
-	if Patterns.is_signature(candidate):
-		signature_exposed = true
 	return candidate
-
-
-func try_interrupt_signature(
-	boss: VehicleEnemyState,
-	allow_practice_repeat: bool = false
-) -> bool:
-	if (
-		boss.phase != &"boss_startup"
-		or not Patterns.is_signature(String(boss.pattern))
-		or (signature_interrupt_consumed and not allow_practice_repeat)
-	):
-		return false
-	if not allow_practice_repeat:
-		signature_interrupt_consumed = true
-	boss.phase = &"boss_interrupted_recovery"
-	boss.phase_time = INTERRUPTED_RECOVERY
-	boss.velocity = Vector2.ZERO
-	boss.attack_telegraphs.clear()
-	boss.last_pattern = boss.pattern
-	boss.pattern = &"signature_interrupted"
-	forced_committed_next = true
-	return true
-
-
-func finish_interrupted_recovery(boss: VehicleEnemyState) -> void:
-	boss.phase = &"boss_read"
-	boss.phase_time = read_gap(boss.boss_phase)
-	boss.pattern = &"reading_arena"
 
 
 func begin_active(boss: VehicleEnemyState, services: Variant) -> void:
 	boss.phase = &"boss_active"
-	boss.breach_exposed_recovery_used = false
 	boss.pattern_tick = 0.0
 	var pattern := String(boss.pattern)
 	boss.phase_time = Patterns.active_seconds(pattern)
@@ -276,9 +225,6 @@ func advance_autonomous(
 func snapshot() -> Dictionary:
 	return {
 		"stage_id":stage_id,
-		"forced_committed_next":forced_committed_next,
-		"signature_exposed":signature_exposed,
-		"signature_interrupt_consumed":signature_interrupt_consumed,
 		"autonomous_timer":autonomous_timer,
 		"autonomous_index":autonomous_index,
 	}

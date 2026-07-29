@@ -6,8 +6,7 @@ extends Node
 const ROOT := "res://art/audio/vehicle/sfx/"
 const FILES := {
 	&"primary_start": "primary_start.wav", &"primary_loop": "primary_loop.wav",
-	&"primary_end": "primary_end.wav", &"opening_ready": "opening_ready.wav",
-	&"opening_fire": "opening_fire.wav", &"impact_enemy": "impact_enemy.wav",
+	&"primary_end": "primary_end.wav", &"impact_enemy": "impact_enemy.wav",
 	&"impact_cover": "impact_cover.wav", &"enemy_destroy_small": "enemy_destroy_small.wav",
 	&"enemy_destroy_priority": "enemy_destroy_priority.wav", &"pickup": "pickup.wav",
 	&"upgrade_select": "upgrade_select.wav", &"upgrade_confirm": "upgrade_confirm.wav",

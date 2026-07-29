@@ -18,7 +18,7 @@ func _initialize() -> void:
 	for definition in catalog.all_definitions():
 		for current_level in definition.max_level:
 			snapshots.append(OfferPresenter.snapshot(definition, current_level))
-	_expect(snapshots.size() == 91, "upgrade catalog produces 91 selectable level states")
+	_expect(snapshots.size() == 83, "upgrade catalog produces 83 selectable level states")
 
 	for locale in ["ko", "en"]:
 		TranslationServer.set_locale(locale)
@@ -81,21 +81,21 @@ func _initialize() -> void:
 	var card := UpgradeChoiceCard.new()
 	get_root().add_child(card)
 	await process_frame
-	var breach_preview := {
-		"stat_key":"UPGRADE_STAT_BREACH_HEALTH_SCALE_BONUS",
+	var additive_preview := {
+		"stat_key":"UPGRADE_STAT_PICKUP_RADIUS_BONUS",
 		"operation":&"add",
 		"current":0.0,
-		"next":0.2,
+		"next":18.0,
 	}
 	_expect(
-		String(card.call("_preview_value", breach_preview)) == "+0% → +20%",
-		"breach bonus preview renders its fractional ratio as a percentage"
+		String(card.call("_preview_value", additive_preview)) == "+0 → +18",
+		"additive card preview renders ordinary values directly"
 	)
-	breach_preview["current"] = 0.2
-	breach_preview["next"] = 0.4
+	additive_preview["current"] = 18.0
+	additive_preview["next"] = 36.0
 	_expect(
-		String(card.call("_preview_value", breach_preview)) == "+20% → +40%",
-		"second breach bonus level keeps percentage semantics"
+		String(card.call("_preview_value", additive_preview)) == "+18 → +36",
+		"second additive level keeps the same preview semantics"
 	)
 	card.queue_free()
 	TranslationServer.set_locale(original_locale)

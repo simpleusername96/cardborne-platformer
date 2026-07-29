@@ -71,7 +71,8 @@ enum RunMode {
 const SAVE_PATH := "user://vehicle-run.cfg"
 const PLAYER_MAX_HEALTH := 120.0
 const PLAYER_BASE_SPEED := 280.0
-const PRIMARY_RANGE := 1100.0
+const PRIMARY_RANGE := 1600.0
+const PRIMARY_VISIBLE_RANGE_MARGIN := 80.0
 const PRIMARY_PROJECTILE_SPEED := 1120.0
 const PRIMARY_PROJECTILE_RADIUS := 7.0
 const DASH_DURATION := 0.20
@@ -157,7 +158,6 @@ var player_emp_startup := 0.0
 var player_barrier_strength := 0.0
 var player_barrier_timer := 0.0
 var coolant_surge_timer := 0.0
-var _last_primary_tier: StringName = &"ready"
 var _aim_target_id := ""
 var _marked_enemy_id := ""
 var _sheared_enemy_id := ""
@@ -555,8 +555,7 @@ func _reset_run(
 	player_health = _player_max_health()
 	player_invulnerable = 0.0
 	player_hit_flash = 0.0
-	player_primary_weapon.set_full_opening_seconds(_opening_charge_seconds())
-	player_primary_weapon.reset(true)
+	player_primary_weapon.reset()
 	_primary_shot_serial = 0
 	player_dash_cooldown = 0.0
 	player_dash_timer = 0.0
@@ -566,7 +565,6 @@ func _reset_run(
 	player_barrier_strength = 0.0
 	player_barrier_timer = 0.0
 	coolant_surge_timer = 0.0
-	_last_primary_tier = &"ready"
 	_aim_target_id = ""
 	_marked_enemy_id = ""
 	_sheared_enemy_id = ""
@@ -769,7 +767,6 @@ func _make_enemy(spec: Dictionary) -> EnemyState:
 	enemy.burst_left = 0
 	enemy.burst_timer = 0.0
 	enemy.stun = 0.0
-	enemy.stagger = 0.0
 	enemy.flash = 0.0
 	enemy.shielded = false
 	enemy.support_tick = 0.0
@@ -810,8 +807,6 @@ func _make_enemy(spec: Dictionary) -> EnemyState:
 	enemy.pattern_tick = 0.0
 	enemy.pattern_volleys = 0
 	enemy.vulnerable = 0.0
-	enemy.breach_exposed = 0.0
-	enemy.breach_exposed_recovery_used = false
 	enemy.elite_trait = &""
 	enemy.armor_structure = 0.0
 	enemy.guard_plate_structure = 72.0 if archetype == &"bulkhead_guard" else 0.0
@@ -1104,11 +1099,7 @@ func _update_player(delta: float) -> void:
 	lifesteal_budget = minf(6.0, lifesteal_budget + 6.0 * delta)
 	player_invulnerable = maxf(0.0, player_invulnerable - delta)
 	var primary_held := Input.is_action_pressed("primary_fire")
-	player_primary_weapon.tick(delta, primary_held, player_dash_timer <= 0.0)
-	var primary_tier := player_primary_weapon.tier()
-	if primary_tier == &"ready" and _last_primary_tier != &"ready":
-		_play_sound(&"opening_ready")
-	_last_primary_tier = primary_tier
+	player_primary_weapon.tick(delta, primary_held)
 	player_dash_cooldown = maxf(0.0, player_dash_cooldown - delta)
 	player_passive_cooldown = maxf(0.0, player_passive_cooldown - delta)
 	player_emp_cooldown = maxf(0.0, player_emp_cooldown - delta)
@@ -1245,7 +1236,7 @@ func _update_dash(delta: float) -> void:
 			coolant_surge_timer = 2.0
 		if applied_upgrades.has(&"ram_pulse"):
 			_damage_enemies_in_radius(
-				player_position, 145.0, 32.0, 24.0, "Ram Pulse", &"kinetic", true
+				player_position, 145.0, 32.0, "Ram Pulse", &"kinetic", true
 			)
 			_clear_hostile_projectiles(player_position, 170.0)
 			_add_effect("shock", player_position, Rules.AMBER, 0.38, 170.0)
@@ -1267,60 +1258,39 @@ func _apply_phase_shear(from: Vector2, to: Vector2) -> void:
 		return
 
 
-func _fire_primary(shot: Dictionary) -> void:
+func _fire_primary() -> void:
 	tutorial_fire = true
 	player_muzzle_flash = 0.075
 	_primary_shot_serial += 1
 	var primary_multiplier := run_build.stat(&"primary_damage_multiplier", 1.0)
 	var origin := player_position + player_aim_direction * 39.0
-	var breach_ready := bool(shot["full_opening"])
 	var fork_level := mini(2, run_build.level_of(&"forked_muzzle"))
 	var spread_step := deg_to_rad(7.0) * run_build.stat(&"primary_spread", 1.0)
 	var projectile_speed := run_build.stat(&"primary_projectile_speed", PRIMARY_PROJECTILE_SPEED)
 	var base_radius := run_build.stat(&"primary_radius", PRIMARY_PROJECTILE_RADIUS)
 	var primary_structure := run_build.stat(&"primary_structure", 1.0)
-	var range := run_build.stat(&"primary_range", PRIMARY_RANGE)
-	var projectile_specs: Array[Dictionary] = [{"angle":0.0, "scale":1.0, "center":true}]
+	var projectile_range := _primary_projectile_range()
+	var projectile_specs: Array[Dictionary] = [{"angle":0.0, "scale":1.0}]
 	if fork_level == 1:
 		var side_sign := -1.0 if _primary_shot_serial % 2 == 0 else 1.0
-		projectile_specs.append({"angle":side_sign * spread_step, "scale":0.40, "center":false})
+		projectile_specs.append({"angle":side_sign * spread_step, "scale":0.40})
 	elif fork_level >= 2:
-		projectile_specs.append({"angle":-spread_step, "scale":0.325, "center":false})
-		projectile_specs.append({"angle":spread_step, "scale":0.325, "center":false})
+		projectile_specs.append({"angle":-spread_step, "scale":0.325})
+		projectile_specs.append({"angle":spread_step, "scale":0.325})
 	for spec in projectile_specs:
-		var center_projectile := bool(spec["center"])
 		var scale := float(spec["scale"])
-		var owns_breach := breach_ready and center_projectile
-		var health_scale := (
-			PrimaryWeapon.FULL_HEALTH_SCALE
-			+ run_build.stat(&"breach_health_scale_bonus", 0.0)
-			if owns_breach
-			else 1.0
-		)
-		var radius_scale := PrimaryWeapon.FULL_RADIUS_SCALE if owns_breach else 1.0
-		var unprimed_structure_damage := 18.0 * primary_structure * scale
-		var structure_damage := (
-			maxf(TerrainRuntime.BULKHEAD_HEALTH, 18.0 * PrimaryWeapon.FULL_STRUCTURE_SCALE)
-			if owns_breach
-			else unprimed_structure_damage
-		)
 		_spawn_player_projectile(
 			origin,
 			player_aim_direction.rotated(float(spec["angle"])),
-			18.0 * primary_multiplier * health_scale * scale,
+			18.0 * primary_multiplier * scale,
 			projectile_speed,
-			run_build.level_of(&"phase_lance") + (1 if owns_breach else 0),
-			base_radius * radius_scale,
-			structure_damage,
-			5.0,
-			owns_breach,
-			range,
+			run_build.level_of(&"phase_lance"),
+			base_radius,
+			18.0 * primary_structure * scale,
+			projectile_range,
 			_status_profile,
-			false,
-			unprimed_structure_damage
+			false
 		)
-	if breach_ready:
-		_play_sound(&"opening_fire", _rng.randf_range(0.97, 1.03))
 	_add_effect("muzzle", origin, Art.MUSTARD, 0.09, 32.0, player_aim_direction)
 
 
@@ -1328,8 +1298,8 @@ func _try_fire_primary() -> bool:
 	if not player_primary_weapon.can_fire(player_dash_timer <= 0.0):
 		return false
 	var interval := _primary_fire_interval()
-	var shot := player_primary_weapon.consume_shot(interval)
-	_fire_primary(shot)
+	player_primary_weapon.consume_shot(interval)
+	_fire_primary()
 	return true
 
 
@@ -1338,6 +1308,15 @@ func _primary_fire_interval() -> float:
 	if coolant_surge_timer > 0.0:
 		interval = maxf(PrimaryWeapon.MIN_INTERVAL, interval * 0.85)
 	return interval
+
+
+func _primary_projectile_range() -> float:
+	var authored_range := run_build.stat(&"primary_range", PRIMARY_RANGE)
+	var visible_diagonal := _visible_world_rect(0.0).size.length()
+	return maxf(
+		authored_range,
+		visible_diagonal + PRIMARY_VISIBLE_RANGE_MARGIN
+	)
 
 
 func _runtime_cover_rects() -> Array[Rect2]:
@@ -1467,12 +1446,9 @@ func _spawn_player_projectile(
 	extra_pierce: int,
 	radius: float = PRIMARY_PROJECTILE_RADIUS,
 	structure_damage: float = -1.0,
-	stagger: float = 5.0,
-	breach_token: bool = false,
 	projectile_range: float = PRIMARY_RANGE,
 	status_profile: VehicleStatusProfile = null,
-	wall_piercing: bool = false,
-	unprimed_structure_damage: float = -1.0
+	wall_piercing: bool = false
 ) -> void:
 	var condition_mask := AttackContract.condition_mask_for_profile(status_profile)
 	var affinity := AttackContract.affinity_for_condition_mask(condition_mask)
@@ -1489,13 +1465,7 @@ func _spawn_player_projectile(
 		"homing": false,
 		"target_id": "",
 		"explosive": false,
-		"stagger": stagger,
 		"structure_damage": damage if structure_damage < 0.0 else structure_damage,
-		"breach_token_available": breach_token,
-		"breach_visual": breach_token,
-		"unprimed_structure_damage": (
-			damage if unprimed_structure_damage < 0.0 else unprimed_structure_damage
-		),
 		"reflected": false,
 		"wall_piercing": wall_piercing,
 		"affinity": affinity,
@@ -1527,8 +1497,7 @@ func _update_passive_secondary(delta: float) -> void:
 					"life":1.8, "color":Art.MINT, "owner":"passive_seeker",
 					"pierce":run_build.level_of(&"phase_seeker"), "bounces":0, "homing":true,
 					"target_id":enemy.id, "explosive":applied_upgrades.has(&"hunter_firmware"),
-					"stagger":12.0, "structure_damage":25.0,
-					"breach_token_available":false, "status_profile":null,
+					"structure_damage":25.0, "status_profile":null,
 					"wall_piercing":false,
 				})
 			_play_sound(&"missile")
@@ -1549,7 +1518,6 @@ func _update_passive_secondary(delta: float) -> void:
 				target,
 				float(intent["damage"]),
 				secondary_source,
-				6.0,
 				&"arc" if secondary_source == "Ion Field" else &"kinetic",
 				true
 			)
@@ -1604,7 +1572,6 @@ func _release_emp(is_aftershock: bool) -> void:
 		player_position,
 		radius,
 		damage,
-		42.0,
 		"EMP Aftershock" if is_aftershock else "EMP Nova",
 		&"arc",
 		true
@@ -1655,10 +1622,6 @@ func _dash_cooldown_max() -> float:
 
 func _player_max_health() -> float:
 	return run_build.stat(&"max_health_bonus", PLAYER_MAX_HEALTH)
-
-
-func _opening_charge_seconds() -> float:
-	return run_build.stat(&"opening_seconds_multiplier", PrimaryWeapon.FULL_OPENING_SECONDS)
 
 
 func _sync_cycle_upgrades() -> void:
@@ -1779,8 +1742,6 @@ func _update_enemies(delta: float) -> void:
 		var vulnerable := enemy.vulnerable
 		if vulnerable > 0.0:
 			enemy.vulnerable = maxf(0.0, vulnerable - delta)
-		if enemy.breach_exposed > 0.0:
-			enemy.breach_exposed = maxf(0.0, enemy.breach_exposed - delta)
 		var marked_time := enemy.marked_time
 		if marked_time > 0.0:
 			enemy.marked_time = maxf(0.0, marked_time - delta)
@@ -1838,15 +1799,15 @@ func _update_enemies(delta: float) -> void:
 				&"boss" if enemy.role == &"stage_boss" else &"ordinary"
 			)
 			if terrain_damage > 0.0:
-				_damage_enemy(enemy, terrain_damage, "Arc Surge", 0.0, &"arc", false)
+				_damage_enemy(enemy, terrain_damage, "Arc Surge", &"arc", false)
 				if not enemy.alive:
 					continue
 		if not enemy.statuses.is_empty():
 			var status_damage := StatusRuntime.tick(enemy, delta)
 			if float(status_damage["burn"]) > 0.0:
-				_damage_enemy(enemy, float(status_damage["burn"]), "status", 0.0, &"thermal", true)
+				_damage_enemy(enemy, float(status_damage["burn"]), "status", &"thermal", true)
 			if enemy.alive and float(status_damage["poison"]) > 0.0:
-				_damage_enemy(enemy, float(status_damage["poison"]), "status", 0.0, &"toxin", true)
+				_damage_enemy(enemy, float(status_damage["poison"]), "status", &"toxin", true)
 				if not enemy.alive:
 					continue
 		var role := enemy.role
@@ -2627,7 +2588,6 @@ func _explode_mine(enemy: EnemyState) -> void:
 				target,
 				damage,
 				source,
-				0.0,
 				&"arc",
 				enemy.mine_armed_by_player
 			)
@@ -2739,7 +2699,6 @@ func _spawn_hostile_projectile(
 		"homing": false,
 		"target_id": "",
 		"explosive": false,
-		"stagger": 0.0,
 		"reflected": false,
 		"reflector_lock": &"",
 		"reflector_lock_time": 0.0,
@@ -2793,13 +2752,11 @@ func _update_projectile_buffer(
 					var hit_rect := Rect2(cover_hit.get("rect", Rect2()))
 					var bulkhead_id := terrain_runtime.bulkhead_id_for_rect(hit_rect)
 					if not bulkhead_id.is_empty():
-						var structure_damage := projectile.structure_damage
-						if projectile.breach_token_available:
-							structure_damage = TerrainRuntime.BULKHEAD_HEALTH
-						if terrain_runtime.damage_bulkhead(bulkhead_id, structure_damage):
+						if terrain_runtime.damage_bulkhead(
+							bulkhead_id,
+							projectile.structure_damage
+						):
 							_on_bulkhead_broken(Vector2(cover_hit["point"]))
-				if projectile.breach_token_available:
-					_consume_breach_token(projectile)
 				if projectile.bounces > 0:
 					projectile.bounces -= 1
 					var normal: Vector2 = cover_hit["normal"]
@@ -2845,8 +2802,6 @@ func _update_projectile_buffer(
 			if hit_enemy != null:
 				var hit_position := hit_enemy.pos
 				if _try_absorb_protective_structure(hit_enemy, projectile):
-					if projectile.breach_token_available:
-						_consume_breach_token(projectile)
 					stats_primary_hits += 1 if projectile.owner == "player_primary" else 0
 					_add_effect("barrier_hit", hit_position, Art.IVORY_BRIGHT, 0.20, hit_enemy.radius * 1.35)
 					_play_sound(&"cover", 1.06)
@@ -2861,17 +2816,6 @@ func _update_projectile_buffer(
 				var enemy_damage := projectile.damage
 				if hit_enemy.role in [&"turret", &"mine", &"generator", &"interceptor_tower", &"beam_sentinel", &"boss_pylon"]:
 					enemy_damage = projectile.structure_damage
-				var opening_result := {
-					"thermal_bonus":0.0,
-					"cryo_bonus":0.0,
-					"splash_damage":0.0,
-					"splash_radius":0.0,
-				}
-				var breach_contact := projectile.breach_token_available
-				if breach_contact:
-					opening_result = StatusRuntime.resolve_opening(
-						hit_enemy, projectile.status_profile, enemy_damage
-					)
 				var damage_source := "reflected_%s" % projectile.owner if projectile.reflected else projectile.owner
 				var direct_attribute := (
 					_telemetry_attribute_for_affinity(projectile.affinity)
@@ -2882,60 +2826,19 @@ func _update_projectile_buffer(
 					hit_enemy,
 					enemy_damage,
 					damage_source,
-					projectile.stagger,
 					direct_attribute,
 					true
 				)
-				if float(opening_result["thermal_bonus"]) > 0.0:
-					_damage_enemy(
-						hit_enemy,
-						float(opening_result["thermal_bonus"]),
-						"Flashover",
-						0.0,
-						&"thermal",
-						true
-					)
-				if float(opening_result["cryo_bonus"]) > 0.0:
-					_damage_enemy(
-						hit_enemy,
-						float(opening_result["cryo_bonus"]),
-						"Shatter",
-						0.0,
-						&"cryo",
-						true
-					)
-				if breach_contact:
-					_resolve_breach_contact(hit_enemy)
 				if projectile.owner == "player_primary" and run_build.has(&"marked_salvo"):
 					_mark_enemy(hit_enemy)
-				if breach_contact and run_build.has(&"shock_breach"):
-					var shock_damage := _shock_breach_damage(enemy_damage)
-					_damage_enemies_in_radius(
-						hit_position, 90.0, shock_damage, 8.0,
-						"Shock Breach", &"arc", true, hit_enemy.id
-					)
-					_add_effect("shock", hit_position, Art.MUSTARD, 0.24, 90.0)
-				if float(opening_result["splash_radius"]) > 0.0:
-					_damage_enemies_in_radius(
-						hit_position,
-						float(opening_result["splash_radius"]),
-						float(opening_result["splash_damage"]),
-						0.0,
-						"Flashover",
-						&"thermal",
-						true,
-						hit_enemy.id
-					)
 				StatusRuntime.apply(hit_enemy, projectile.status_profile)
 				_record_status_applications(projectile.status_profile)
-				if breach_contact:
-					_consume_breach_token(projectile)
 				stats_primary_hits += 1 if projectile.owner == "player_primary" else 0
 				_add_effect("impact", hit_position, projectile.color, 0.18, 24.0)
 				_play_sound(&"impact", _rng.randf_range(0.92, 1.08))
 				if projectile.explosive:
 					_damage_enemies_in_radius(
-						hit_position, 95.0, 12.0, 8.0,
+						hit_position, 95.0, 12.0,
 						"Seeker burst", &"kinetic", true, hit_enemy.id
 					)
 					_add_effect("shock", hit_position, Rules.MOSS, 0.28, 95.0)
@@ -2967,52 +2870,6 @@ func _try_absorb_protective_structure(
 	return true
 
 
-func _consume_breach_token(projectile: ProjectileState) -> void:
-	projectile.breach_token_available = false
-	projectile.breach_visual = false
-	projectile.structure_damage = projectile.unprimed_structure_damage
-
-
-func _resolve_breach_contact(enemy: EnemyState) -> void:
-	if not enemy.alive:
-		return
-	if enemy.role == &"mine":
-		_arm_mine(enemy, 0.75, true)
-		return
-	if enemy.role == &"stage_boss":
-		if boss_runtime.update_phase_transition(enemy):
-			return
-		if boss_runtime.try_interrupt_signature(
-			enemy,
-			boss_practice.is_pattern_loop()
-		):
-			_add_effect("impact", enemy.pos, Art.MUSTARD, 0.24, enemy.radius * 1.45)
-			_play_sound(&"impact", 0.78)
-			return
-	if enemy.phase == &"startup" and AttackContract.startup_is_interruptible(enemy.role):
-		enemy.phase = &"interrupted_recovery"
-		enemy.phase_time = 0.45
-		enemy.velocity = Vector2.ZERO
-		enemy.burst_left = 0
-		enemy.burst_timer = 0.0
-		enemy.attack_telegraphs.clear()
-		_add_effect("impact", enemy.pos, Art.MUSTARD, 0.20, enemy.radius * 1.35)
-		_play_sound(&"impact", 0.82)
-		return
-	var eligible := enemy.role in [
-		&"repair_tender", &"drone_carrier", &"turret", &"interceptor_tower",
-		&"beam_sentinel", &"generator",
-	]
-	if enemy.role == &"stage_boss":
-		eligible = enemy.phase == &"boss_recovery" and not enemy.breach_exposed_recovery_used
-	if not eligible or enemy.breach_exposed > 0.0:
-		return
-	enemy.breach_exposed = 1.25
-	if enemy.role == &"stage_boss":
-		enemy.breach_exposed_recovery_used = true
-	_add_effect("impact", enemy.pos, Art.MUSTARD, 0.12, enemy.radius * 1.24)
-
-
 func _on_bulkhead_broken(position: Vector2) -> void:
 	_rebuild_runtime_blockers()
 	pursuit_field.request_rebuild()
@@ -3036,10 +2893,6 @@ func _mark_enemy(target: EnemyState) -> void:
 			previous.marked_time = 0.0
 	target.marked_time = 2.5
 	_marked_enemy_id = target.id
-
-
-func _shock_breach_damage(opening_damage: float) -> float:
-	return opening_damage * 0.45 * run_build.level_of(&"shock_breach")
 
 
 func _player_projectile_contact(
@@ -3215,7 +3068,7 @@ func _update_trails(delta: float) -> void:
 				continue
 			if enemy.pos.distance_to(Vector2(trail["pos"])) <= float(trail["radius"]) + enemy.radius:
 				hit_ids[enemy.id] = true
-				_damage_enemy(enemy, 18.0, "Ion Wake", 12.0, &"arc", true)
+				_damage_enemy(enemy, 18.0, "Ion Wake", &"arc", true)
 
 
 func _update_effects(delta: float) -> void:
@@ -3263,7 +3116,6 @@ func _damage_enemy(
 	enemy: EnemyState,
 	amount: float,
 	source: String,
-	stagger: float,
 	attribute: StringName,
 	player_owned: bool
 ) -> float:
@@ -3287,8 +3139,6 @@ func _damage_enemy(
 		multiplier *= 0.45
 	if enemy.shear_time > 0.0:
 		multiplier *= 1.20
-	if enemy.breach_exposed > 0.0:
-		multiplier *= 1.20 + 0.05 * run_build.level_of(&"breach_round")
 	if role == &"rammer" and enemy.vulnerable > 0.0:
 		multiplier *= 1.50
 	if role == &"stage_boss":
@@ -3602,7 +3452,7 @@ func _apply_dash_collision() -> void:
 			continue
 		if player_position.distance_to(enemy.pos) <= Rules.PLAYER_RADIUS + enemy.radius + 5.0:
 			enemy.ram_cooldown = 0.35
-			_damage_enemy(enemy, 16.0, "Dash impact", 18.0, &"kinetic", true)
+			_damage_enemy(enemy, 16.0, "Dash impact", &"kinetic", true)
 			var push := (enemy.pos - player_position).normalized()
 			enemy.pos = _move_actor(enemy.pos, push * 45.0, enemy.radius, false)
 			_add_effect("impact", enemy.pos, Rules.AMBER, 0.20, 34.0)
@@ -3622,7 +3472,6 @@ func _damage_enemies_in_radius(
 	center: Vector2,
 	radius: float,
 	damage: float,
-	stagger: float,
 	source: String,
 	attribute: StringName,
 	player_owned: bool,
@@ -3633,7 +3482,7 @@ func _damage_enemies_in_radius(
 		if enemy.id == excluded_id:
 			continue
 		if enemy.pos.distance_to(center) <= radius + enemy.radius:
-			_damage_enemy(enemy, damage, source, stagger, attribute, player_owned)
+			_damage_enemy(enemy, damage, source, attribute, player_owned)
 
 
 func _clear_hostile_projectiles(center: Vector2, radius: float) -> int:
@@ -3720,7 +3569,6 @@ func apply_upgrade(upgrade_id: StringName) -> bool:
 		player_health = minf(_player_max_health(), player_health + 15.0)
 	_status_profile = StatusProfile.from_build(run_build)
 	_sync_cycle_upgrades()
-	player_primary_weapon.set_full_opening_seconds(_opening_charge_seconds())
 	_hud_presenter.mark_guidebook_dirty()
 	return true
 
@@ -3892,11 +3740,6 @@ func _update_stage_boss(boss: EnemyState, delta: float) -> void:
 			_execute_boss_autonomous(event)
 
 	var phase := String(boss.phase)
-	if phase == "boss_interrupted_recovery":
-		boss.phase_time = maxf(0.0, boss.phase_time - delta)
-		if boss.phase_time <= 0.0:
-			boss_runtime.finish_interrupted_recovery(boss)
-		return
 	if phase == "boss_read":
 		boss.phase_time = maxf(0.0, float(boss.phase_time) - delta)
 		_boss_reposition(boss, delta)
@@ -4480,7 +4323,6 @@ func _build_snapshot() -> Dictionary:
 		{"id":&"primary_damage", "label_key":"SHIP_STAT_PRIMARY_DAMAGE", "value":18.0 * run_build.stat(&"primary_damage_multiplier", 1.0), "decimals":1, "unit_key":"SHIP_UNIT_DAMAGE"},
 		{"id":&"fire_rate", "label_key":"SHIP_STAT_FIRE_RATE", "value":1.0 / primary_interval, "decimals":2, "unit_key":"SHIP_UNIT_PER_SECOND"},
 		{"id":&"projectile_speed", "label_key":"SHIP_STAT_PROJECTILE_SPEED", "value":run_build.stat(&"primary_projectile_speed", PRIMARY_PROJECTILE_SPEED), "decimals":0, "unit_key":"SHIP_UNIT_PX_S"},
-		{"id":&"breach_charge", "label_key":"SHIP_STAT_BREACH_CHARGE", "value":_opening_charge_seconds(), "decimals":2, "unit_key":"SHIP_UNIT_SECONDS"},
 		{"id":&"dash_cooldown", "label_key":"SHIP_STAT_DASH_COOLDOWN", "value":_dash_cooldown_max(), "decimals":2, "unit_key":"SHIP_UNIT_SECONDS"},
 		{"id":&"emp_damage", "label_key":"SHIP_STAT_EMP_DAMAGE", "value":62.0 * run_build.stat(&"emp_damage_multiplier", 1.0), "decimals":1, "unit_key":"SHIP_UNIT_DAMAGE"},
 		{"id":&"emp_cooldown", "label_key":"SHIP_STAT_EMP_COOLDOWN", "value":_emp_cooldown_max(), "decimals":2, "unit_key":"SHIP_UNIT_SECONDS"},
@@ -5597,7 +5439,7 @@ func _capture_level_up_evidence() -> void:
 	await _settle_capture()
 	_save_capture("06c-level-up-confirmed.png")
 	var localization_fixture: Array[Dictionary] = []
-	for upgrade_id in [&"ion_field", &"aegis_cycle", &"breach_round"]:
+	for upgrade_id in [&"ion_field", &"aegis_cycle", &"kinetic_rounds"]:
 		var definition := upgrade_catalog.get_definition(upgrade_id)
 		if definition != null:
 			localization_fixture.append(UpgradeOfferPresenter.snapshot(definition, 0))

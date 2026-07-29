@@ -9,7 +9,7 @@ var failures: Array[String] = []
 func _initialize() -> void:
 	var catalog := Catalog.new()
 	for error in catalog.validate_contract(): failures.append(error)
-	_expect(catalog.definitions.size() == 46, "catalog contains exactly 46 upgrades")
+	_expect(catalog.definitions.size() == 41, "catalog contains exactly 41 upgrades")
 	for id in Catalog.SECONDARY_FAMILY_IDS:
 		var definition := catalog.get_definition(id)
 		_expect(definition != null and definition.max_level == 3 and definition.family == &"secondary", "%s is a three-level secondary" % id)
@@ -58,12 +58,12 @@ func _initialize() -> void:
 	_expect(bool(build.apply(&"incendiary_core").get("applied", false)), "fire root applies")
 	_expect(bool(build.apply(&"toxin_core").get("applied", false)), "poison root stacks with fire")
 	_expect(bool(build.apply(&"cryo_core").get("applied", false)), "chill root stacks with fire and poison")
-	_expect(not catalog.compatible(catalog.get_definition(&"flashover"), build), "Flashover remains locked before Thermal Compound")
+	for deleted_id in [&"breach_round", &"fast_capacitor", &"shock_breach", &"flashover", &"shatter"]:
+		_expect(catalog.get_definition(deleted_id) == null, "%s is absent from the live catalog" % deleted_id)
 	build.apply(&"thermal_compound")
-	_expect(catalog.compatible(catalog.get_definition(&"flashover"), build), "Flashover unlocks from Thermal Compound")
 	var branch_offer := catalog.offer(build, 4, 1, &"level_up", 3)
 	_expect(
-		branch_offer.any(func(card): return card.id in [&"flashover", &"concentrated_toxin", &"deep_freeze"]),
+		branch_offer.any(func(card): return card.id in [&"concentrated_toxin", &"deep_freeze"]),
 		"level-up reserves an eligible child from an owned least-progressed branch"
 	)
 	build.reset()

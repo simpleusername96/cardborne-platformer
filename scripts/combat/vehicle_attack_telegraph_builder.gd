@@ -53,7 +53,6 @@ static func refresh_ordinary(
 			AttackContract.ARC,
 			SpecialistRuntime.BEAM_WIDTH
 		))
-	_stamp_commit_mode(enemy, AttackContract.ordinary_commit_mode(enemy.role))
 	update_ordinary_readiness(enemy)
 
 

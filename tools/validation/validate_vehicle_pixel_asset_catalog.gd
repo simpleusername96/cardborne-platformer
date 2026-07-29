@@ -24,8 +24,8 @@ func _initialize() -> void:
 	var chassis := catalog.frame(&"player_chassis", &"base", 15, &"normal")
 	var engines := catalog.frame(&"player_engine_modules", &"module_count_3", 12, &"installed")
 	var dash := catalog.frame(&"player_dash_effect", &"travel", 4, &"frame_0")
-	var breach := catalog.frame(
-		&"player_primary_projectiles", &"opening_breach", 14, &"flight_1", 1
+	var primary_round := catalog.frame(
+		&"player_primary_projectiles", &"standard", 14, &"flight_1", 1
 	)
 	var chaser := catalog.frame(&"mobile_enemy_set", &"chaser", 6, &"move")
 	var boss := catalog.frame(&"boss_set", &"crown", 12, &"read")
@@ -35,7 +35,7 @@ func _initialize() -> void:
 		["chassis", chassis],
 		["engine count", engines],
 		["dash", dash],
-		["breach projectile", breach],
+		["primary projectile", primary_round],
 		["mobile enemy", chaser],
 		["boss", boss],
 		["upgrade card", card],

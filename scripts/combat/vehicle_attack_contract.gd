@@ -30,46 +30,38 @@ const LIGHT_PROJECTILE_RADIUS := 5.0
 const STANDARD_PROJECTILE_RADIUS := 6.0
 const HEAVY_PROJECTILE_RADIUS := 7.0
 const RADIAL_EDGE_DAMAGE_SCALE := 0.45
-const COMMIT_INTERRUPTIBLE: StringName = &"interruptible"
-const COMMIT_SHORT_FUSE: StringName = &"short_fuse"
-const COMMIT_COMMITTED: StringName = &"committed"
-
 const ORDINARY_ATTACKS := {
 	&"chaser":{
 		"kind":&"charge", "affinity":KINETIC, "startup":0.42, "active":0.24,
 		"damage":14.0, "speed":570.0, "contact_padding":8.0,
-		"commit_mode":COMMIT_INTERRUPTIBLE,
 	},
 	&"shooter":{
 		"kind":&"projectile", "affinity":KINETIC, "startup":0.62,
 		"damage":10.0, "speed":500.0, "origin_offset":30.0,
-		"commit_mode":COMMIT_INTERRUPTIBLE,
 	},
 	&"controller":{
 		"kind":&"area", "affinity":KINETIC, "startup":0.82,
-		"damage":9.0, "radius":112.0, "commit_mode":COMMIT_INTERRUPTIBLE,
+		"damage":9.0, "radius":112.0,
 	},
 	&"turret":{
 		"kind":&"projectile", "affinity":KINETIC, "startup":0.68,
 		"damage":9.0, "speed":590.0, "origin_offset":38.0,
-		"commit_mode":COMMIT_INTERRUPTIBLE,
 	},
 	&"mine":{
 		"kind":&"area", "affinity":ARC, "startup":0.62,
-		"damage":16.0, "radius":205.0, "commit_mode":COMMIT_SHORT_FUSE,
+		"damage":16.0, "radius":205.0,
 	},
 	&"artillery_spotter":{
 		"kind":&"area", "affinity":KINETIC, "startup":1.15,
-		"damage":15.0, "radius":175.0, "commit_mode":COMMIT_INTERRUPTIBLE,
+		"damage":15.0, "radius":175.0,
 	},
 	&"interceptor_tower":{
 		"kind":&"projectile", "affinity":ARC, "startup":0.78,
 		"damage":12.0, "speed":470.0, "origin_offset":40.0,
-		"commit_mode":COMMIT_INTERRUPTIBLE,
 	},
 	&"drone_carrier":{
 		"kind":&"support", "affinity":SUPPORT, "startup":0.82,
-		"damage":0.0, "radius":86.0, "commit_mode":COMMIT_INTERRUPTIBLE,
+		"damage":0.0, "radius":86.0,
 	},
 }
 
@@ -88,17 +80,6 @@ static func power_tier(damage: float) -> StringName:
 
 static func ordinary_attack(role: StringName) -> Dictionary:
 	return Dictionary(ORDINARY_ATTACKS.get(role, {}))
-
-
-static func ordinary_commit_mode(role: StringName) -> StringName:
-	if role in [&"rammer", &"beam_sentinel"]:
-		return COMMIT_INTERRUPTIBLE
-	var attack := ordinary_attack(role)
-	return StringName(attack.get("commit_mode", COMMIT_COMMITTED))
-
-
-static func startup_is_interruptible(role: StringName) -> bool:
-	return ordinary_commit_mode(role) == COMMIT_INTERRUPTIBLE
 
 
 static func hostile_projectile_radius(damage: float) -> float:
@@ -218,6 +199,4 @@ static func validate_contract() -> PackedStringArray:
 			errors.append("ordinary attack has an unknown affinity: %s" % role)
 		if float(attack.get("startup", 0.0)) < 0.4:
 			errors.append("ordinary attack lacks readable startup: %s" % role)
-		if not attack.has("commit_mode"):
-			errors.append("ordinary attack lacks commit metadata: %s" % role)
 	return errors

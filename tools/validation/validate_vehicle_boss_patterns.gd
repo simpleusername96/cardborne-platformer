@@ -19,7 +19,6 @@ func _initialize() -> void:
 		_expect(phase_one.size() == 4 and phase_one.duplicate().all(func(pattern): return phase_one.count(pattern) == 1), "%s has four distinct attacks" % stage_id)
 		_expect(phase_two.size() == 4 and phase_two != phase_one, "%s changes order in phase two" % stage_id)
 		_expect(phase_three.size() == 4 and phase_three != phase_two, "%s has an authored phase-three order" % stage_id)
-		var signatures := 0
 		for pattern in phase_one:
 			_expect(Patterns.startup_seconds(pattern) >= 0.8, "%s startup is visible" % pattern)
 			_expect(Patterns.active_seconds(pattern) >= 0.4, "%s active window is explicit" % pattern)
@@ -29,11 +28,9 @@ func _initialize() -> void:
 				"%s declares a supported attack affinity" % pattern
 			)
 			_expect(
-				Patterns.commit_mode(pattern) in [&"interruptible_signature", &"committed"],
-				"%s declares a direct commit mode" % pattern
+				Patterns.commit_mode(pattern) == &"committed",
+				"%s is a committed direct attack" % pattern
 			)
-			if Patterns.is_signature(pattern):
-				signatures += 1
 			if Patterns.damage(pattern) > 0.0:
 				_expect(
 					Patterns.affinity(pattern) != AttackContract.SUPPORT,
@@ -52,7 +49,6 @@ func _initialize() -> void:
 							+ Patterns.MIN_BASE_WALK_ESCAPE_MARGIN,
 					"%s can be escaped from its center with ordinary movement" % pattern
 				)
-		_expect(signatures == 1, "%s owns exactly one signature per direct cycle" % stage_id)
 		var autonomous := Patterns.autonomous_sequence(stage_id)
 		_expect(autonomous.size() == 2, "%s owns two bounded autonomous systems" % stage_id)
 		for pattern in autonomous:

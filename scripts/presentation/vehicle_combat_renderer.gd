@@ -793,7 +793,7 @@ func _sync_projectiles(
 			var variant := (
 				&"seeker_missile"
 				if pixel_family == &"secondary_seeker"
-				else (&"opening_breach" if projectile.breach_visual else &"standard")
+				else &"standard"
 			)
 			var direction_index := _pixel_catalog.direction_index(direction, 8)
 			var sequence_index: int = posmod(projectile.spawn_serial, 2)
@@ -873,29 +873,6 @@ func _sync_projectiles(
 		)
 		var trail_offset := trail_length * 0.5 - radius
 		var trail_width := radius * 1.5
-		if team == &"player" and projectile.breach_visual:
-			_write_instance_basis(
-				trail_batch,
-				position - direction * (trail_length * 0.5 - radius),
-				direction,
-				Vector2(maxf(48.0, trail_length), maxf(10.0, radius * 1.7)),
-				Color(Art.MUSTARD, 0.72)
-			)
-			_write_instance_basis(
-				_overlay_batches[&"diamond"],
-				position,
-				direction,
-				Vector2(radius * 1.35, radius),
-				Art.IVORY_BRIGHT
-			)
-			_write_instance_basis(
-				_overlay_batches[&"diamond"],
-				position,
-				direction,
-				Vector2(radius * 0.62, radius * 0.46),
-				Art.COBALT_DEEP
-			)
-			continue
 		_write_instance_basis(
 			trail_batch,
 			position - direction * trail_offset,
@@ -959,16 +936,7 @@ func _sync_commit_marker(telegraph: Dictionary) -> void:
 		if telegraph.has("center")
 		else Vector2(telegraph.get("from", Vector2.ZERO))
 	)
-	if commit_mode == &"interruptible_signature":
-		for side in [-1.0, 1.0]:
-			_write_instance(
-				_overlay_batches[&"diamond"],
-				center + Vector2(side * 19.0, 0.0),
-				0.0,
-				Vector2(10.0, 16.0),
-				Art.MUSTARD
-			)
-	elif commit_mode == &"committed":
+	if commit_mode == &"committed":
 		_write_instance(
 			_overlay_batches[&"diamond"], center, 0.0,
 			Vector2.ONE * 18.0, Art.CORAL

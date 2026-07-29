@@ -14,35 +14,35 @@ const BEAM_COVER_PADDING := 5.0
 
 const PATTERNS := {
 	&"furnace_gates":{"kind":&"lanes", "commit_mode":&"committed", "affinity":&"thermal", "startup":1.00, "active":0.90, "recovery":0.90, "damage":22.0},
-	&"foundry_ram":{"kind":&"charge", "commit_mode":&"interruptible_signature", "affinity":&"kinetic", "startup":1.10, "active":0.65, "recovery":1.30, "damage":34.0},
+	&"foundry_ram":{"kind":&"charge", "commit_mode":&"committed", "affinity":&"kinetic", "startup":1.10, "active":0.65, "recovery":1.30, "damage":34.0},
 	&"foundry_burst":{"kind":&"fan", "commit_mode":&"committed", "affinity":&"thermal", "startup":0.85, "active":0.70, "recovery":0.90, "damage":20.0},
 	&"furnace_ring":{"kind":&"area", "commit_mode":&"committed", "affinity":&"thermal", "startup":1.00, "active":0.60, "recovery":1.00, "damage":28.0, "radius":230.0},
 	&"slag_ring":{"kind":&"area", "commit_mode":&"autonomous", "affinity":&"thermal", "startup":1.15, "active":0.70, "recovery":0.0, "damage":20.0, "radius":210.0},
 	&"overload_pylons":{"kind":&"pylons", "commit_mode":&"autonomous", "affinity":&"arc", "startup":1.00, "active":2.4, "recovery":0.0, "damage":20.0, "radius":190.0},
 
 	&"current_fan":{"kind":&"fan", "commit_mode":&"committed", "affinity":&"kinetic", "startup":0.90, "active":0.70, "recovery":0.90, "damage":20.0},
-	&"archive_lunge":{"kind":&"charge", "commit_mode":&"interruptible_signature", "affinity":&"kinetic", "startup":1.10, "active":0.65, "recovery":1.25, "damage":34.0},
+	&"archive_lunge":{"kind":&"charge", "commit_mode":&"committed", "affinity":&"kinetic", "startup":1.10, "active":0.65, "recovery":1.25, "damage":34.0},
 	&"archive_cross":{"kind":&"cross", "commit_mode":&"committed", "affinity":&"kinetic", "startup":0.95, "active":0.70, "recovery":0.95, "damage":26.0},
 	&"archive_depth":{"kind":&"area", "commit_mode":&"committed", "affinity":&"kinetic", "startup":1.10, "active":0.55, "recovery":1.10, "damage":32.0, "radius":185.0},
 	&"undertow_lanes":{"kind":&"lanes", "commit_mode":&"autonomous", "affinity":&"kinetic", "startup":1.10, "active":1.4, "recovery":0.0, "damage":20.0},
 	&"depth_charges":{"kind":&"area", "commit_mode":&"autonomous", "affinity":&"kinetic", "startup":1.15, "active":0.60, "recovery":0.0, "damage":30.0, "radius":175.0},
 
 	&"grounding_grid":{"kind":&"lanes", "commit_mode":&"committed", "affinity":&"arc", "startup":1.00, "active":0.85, "recovery":0.95, "damage":22.0},
-	&"titan_pulse":{"kind":&"area", "commit_mode":&"interruptible_signature", "affinity":&"arc", "startup":1.15, "active":0.60, "recovery":1.20, "damage":30.0, "radius":235.0},
+	&"titan_pulse":{"kind":&"area", "commit_mode":&"committed", "affinity":&"arc", "startup":1.15, "active":0.60, "recovery":1.20, "damage":30.0, "radius":235.0},
 	&"titan_burst":{"kind":&"fan", "commit_mode":&"committed", "affinity":&"arc", "startup":0.90, "active":0.70, "recovery":0.90, "damage":22.0},
 	&"titan_ram":{"kind":&"charge", "commit_mode":&"committed", "affinity":&"kinetic", "startup":1.10, "active":0.62, "recovery":1.20, "damage":34.0},
 	&"thunder_chain":{"kind":&"area", "commit_mode":&"autonomous", "affinity":&"arc", "startup":1.20, "active":0.55, "recovery":0.0, "damage":32.0, "radius":170.0},
 	&"beam_sentinel_call":{"kind":&"summon", "commit_mode":&"autonomous", "affinity":&"support", "startup":1.00, "active":2.5, "recovery":0.0, "damage":0.0},
 
 	&"breaker_charge":{"kind":&"charge", "commit_mode":&"committed", "affinity":&"kinetic", "startup":1.10, "active":0.70, "recovery":1.20, "damage":36.0},
-	&"ricochet_volley":{"kind":&"fan", "commit_mode":&"interruptible_signature", "affinity":&"kinetic", "startup":1.00, "active":0.75, "recovery":1.05, "damage":22.0},
+	&"ricochet_volley":{"kind":&"fan", "commit_mode":&"committed", "affinity":&"kinetic", "startup":1.00, "active":0.75, "recovery":1.05, "damage":22.0},
 	&"gate_shockwave":{"kind":&"area", "commit_mode":&"committed", "affinity":&"kinetic", "startup":1.00, "active":0.55, "recovery":1.05, "damage":28.0, "radius":240.0},
 	&"switch_sweep":{"kind":&"beam", "commit_mode":&"committed", "affinity":&"arc", "startup":1.05, "active":0.80, "recovery":1.15, "damage":30.0, "width":78.0},
 	&"switchyard_mines":{"kind":&"area", "commit_mode":&"autonomous", "affinity":&"arc", "startup":1.15, "active":0.60, "recovery":0.0, "damage":26.0, "radius":145.0},
 	&"switch_sweeps":{"kind":&"beam", "commit_mode":&"autonomous", "affinity":&"arc", "startup":1.15, "active":0.75, "recovery":0.0, "damage":28.0, "width":72.0},
 
 	&"mirror_cross":{"kind":&"cross", "commit_mode":&"committed", "affinity":&"arc", "startup":0.95, "active":0.65, "recovery":1.00, "damage":28.0},
-	&"carrier_wave":{"kind":&"summon", "commit_mode":&"interruptible_signature", "affinity":&"support", "startup":1.10, "active":0.85, "recovery":1.25, "damage":0.0},
+	&"carrier_wave":{"kind":&"summon", "commit_mode":&"committed", "affinity":&"support", "startup":1.10, "active":0.85, "recovery":1.25, "damage":0.0},
 	&"crown_beam":{"kind":&"beam", "commit_mode":&"committed", "affinity":&"arc", "startup":1.15, "active":0.80, "recovery":1.25, "damage":34.0, "width":82.0},
 	&"crown_burst":{"kind":&"fan", "commit_mode":&"committed", "affinity":&"arc", "startup":0.90, "active":0.70, "recovery":0.90, "damage":22.0},
 	&"crown_lattice":{"kind":&"lanes", "commit_mode":&"autonomous", "affinity":&"arc", "startup":1.20, "active":1.4, "recovery":0.0, "damage":22.0},
@@ -116,13 +116,11 @@ const DISPLAY_KEYS := {
 	&"crown_burst":"PATTERN_CROWN_BURST",
 	&"crown_lattice":"PATTERN_CROWN_LATTICE",
 	&"relay_pulse_rings":"PATTERN_RELAY_PULSE_RINGS",
-	&"signature_interrupted":"PATTERN_SIGNATURE_INTERRUPTED",
 	&"phase_transition":"PATTERN_PHASE_TRANSITION",
 }
 
 const COMMIT_MODE_KEYS := {
 	&"committed":"BOSS_PRACTICE_MODE_COMMITTED",
-	&"interruptible_signature":"BOSS_PRACTICE_MODE_INTERRUPTIBLE",
 	&"autonomous":"BOSS_PRACTICE_MODE_AUTONOMOUS",
 }
 
@@ -186,10 +184,6 @@ static func display_key(pattern: String) -> String:
 
 static func commit_mode_display_key(mode: StringName) -> String:
 	return String(COMMIT_MODE_KEYS.get(mode, ""))
-
-
-static func is_signature(pattern: String) -> bool:
-	return commit_mode(pattern) == &"interruptible_signature"
 
 
 static func radius(pattern: String) -> float:

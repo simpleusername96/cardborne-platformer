@@ -2,9 +2,14 @@ class_name VehicleUpgradeCatalog
 extends RefCounted
 
 const CARD_PATH := "res://data/cards/vehicle"
-const EXPECTED_COUNT := 46
+const EXPECTED_COUNT := 41
 const SECONDARY_FAMILY_IDS: Array[StringName] = [&"ion_field", &"orbit_blades", &"wake_mines", &"escort_drone"]
 const OPTIONAL_SECONDARY_SLOTS := 2
+const ELEMENT_BRANCHES: Array = [
+	[&"incendiary_core", &"thermal_compound"],
+	[&"toxin_core", &"concentrated_toxin", &"contagion"],
+	[&"cryo_core", &"deep_freeze"],
+]
 
 var definitions: Dictionary = {}
 
@@ -157,26 +162,28 @@ func _eligible_branch_child(
 	build: VehicleRunBuild,
 	available: Array[VehicleUpgradeDefinition]
 ) -> VehicleUpgradeDefinition:
-	var branches := [
-		[&"incendiary_core", &"thermal_compound", &"flashover"],
-		[&"toxin_core", &"concentrated_toxin", &"contagion"],
-		[&"cryo_core", &"deep_freeze", &"shatter"],
-	]
 	var candidates: Array[Dictionary] = []
-	for branch in branches:
+	for branch in ELEMENT_BRANCHES:
 		if not build.has(branch[0]):
 			continue
 		var child: VehicleUpgradeDefinition
-		if build.level_of(branch[1]) <= 0:
-			child = get_definition(branch[1])
-		elif not build.has(branch[2]):
-			child = get_definition(branch[2])
-		elif build.level_of(branch[1]) < get_definition(branch[1]).max_level:
-			child = get_definition(branch[1])
+		for child_id in branch.slice(1):
+			if build.level_of(StringName(child_id)) <= 0:
+				child = get_definition(StringName(child_id))
+				break
+		if child == null:
+			for child_id in branch.slice(1):
+				var definition := get_definition(StringName(child_id))
+				if definition != null and build.level_of(definition.id) < definition.max_level:
+					child = definition
+					break
 		if child != null and child in available:
+			var progress := 0
+			for branch_id in branch:
+				progress += build.level_of(StringName(branch_id))
 			candidates.append({
 				"definition":child,
-				"progress":build.level_of(branch[0]) + build.level_of(branch[1]) + build.level_of(branch[2]),
+				"progress":progress,
 				"seeded_order":available.find(child),
 			})
 	if candidates.is_empty():

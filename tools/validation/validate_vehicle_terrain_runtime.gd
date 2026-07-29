@@ -31,7 +31,11 @@ func _init() -> void:
 	var repeated_arc := runtime.surge_damage_for("enemy", Vector2(600, 100), &"enemy")
 	_expect(first_arc == 18.0 and repeated_arc == 0.0, "arc surge hits once per active window")
 
-	_expect(runtime.damage_bulkhead(&"wall", 72.0), "one full Breach breaks a bulkhead")
+	for hit_index in 4:
+		_expect(
+			runtime.damage_bulkhead(&"wall", 18.0) == (hit_index == 3),
+			"four uniform primary hits break a full-health bulkhead"
+		)
 	_expect(runtime.live_bulkhead_rects().is_empty(), "broken bulkhead leaves blocker snapshot")
 	var next_stage := TerrainRuntime.new()
 	next_stage.configure([], persistent, true, sockets, 9981, &"stage_2")

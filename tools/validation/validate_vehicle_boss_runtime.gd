@@ -17,45 +17,30 @@ func _init() -> void:
 		for _index in 4:
 			cycle.append(runtime.select_direct(boss))
 		_expect(
-			cycle.count(cycle[-1]) == 1,
-			"%s direct cycle has no immediate or four-cycle repeat" % stage_id
+			cycle.duplicate().all(func(pattern): return cycle.count(pattern) == 1),
+			"%s direct cycle contains four distinct attacks" % stage_id
 		)
+		for pattern in cycle:
+			_expect(
+				BossPatterns.commit_mode(pattern) == &"committed",
+				"%s direct selection stays committed" % stage_id
+			)
+		boss.last_pattern = StringName(BossPatterns.sequence(stage_id, 1)[0])
+		boss.pattern_index = 0
 		_expect(
-			cycle.count(String(BossPatterns.sequence(stage_id, 1)[1])) <= 1,
-			"%s direct cycle contains its signature at most once" % stage_id
-		)
-		boss.phase = &"boss_startup"
-		boss.pattern = StringName(BossPatterns.sequence(stage_id, 1)[1])
-		_expect(runtime.try_interrupt_signature(boss), "%s signature is interruptible" % stage_id)
-		runtime.finish_interrupted_recovery(boss)
-		var next_pattern := runtime.select_direct(boss)
-		_expect(
-			BossPatterns.commit_mode(next_pattern) == &"committed",
-			"%s forces a committed direct pattern after interrupt" % stage_id
+			runtime.select_direct(boss) != String(boss.last_pattern),
+			"%s does not immediately repeat its last direct attack" % stage_id
 		)
 		boss.boss_phase = 2
 		boss.pattern_index = 0
 		var later_cycle: Array[String] = []
 		for _index in 4:
 			later_cycle.append(runtime.select_direct(boss))
-		var has_later_signature := false
 		for pattern in later_cycle:
-			if BossPatterns.is_signature(pattern):
-				has_later_signature = true
-		_expect(
-			not has_later_signature,
-			"%s exposes its interruptible signature only once per fight" % stage_id
-		)
-		boss.phase = &"boss_startup"
-		boss.pattern = StringName(BossPatterns.sequence(stage_id, 1)[1])
-		_expect(
-			not runtime.try_interrupt_signature(boss),
-			"%s cannot grant a second signature interruption" % stage_id
-		)
-		_expect(
-			runtime.try_interrupt_signature(boss, true),
-			"%s practice mode can repeat its selected signature exam" % stage_id
-		)
+			_expect(
+				BossPatterns.commit_mode(pattern) == &"committed",
+				"%s phase-two direct selection stays committed" % stage_id
+			)
 	_expect(runtime.phase_for_health(0.66) == 1, "phase one ends at 65 percent")
 	_expect(runtime.phase_for_health(0.65) == 2, "phase two starts at 65 percent")
 	_expect(runtime.phase_for_health(0.30) == 3, "phase three starts at 30 percent")

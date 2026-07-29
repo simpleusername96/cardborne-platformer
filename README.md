@@ -1,8 +1,8 @@
 # Cardborne
 
 Cardborne is a Godot 4.7 top-down vehicle action shooter built around manual
-targeting, held primary fire, a one-second opening shot, dash movement, automatic
-secondary weapons, EMP, collectible experience, and card upgrades.
+targeting, uniform held primary fire, dash movement, automatic secondary
+weapons, EMP, collectible experience, and card upgrades.
 
 ## Current Game
 
@@ -26,7 +26,7 @@ secondary weapons, EMP, collectible experience, and card upgrades.
 - Bosses pursue and strafe during read and recovery, then commit one predicted
   target when a startup warning appears. Its position and damage footprint stay
   fixed through impact before a bounded recovery window.
-- The current build includes 46 card upgrades and five automatic secondary
+- The current build includes 41 card upgrades and five automatic secondary
   families, with at most three active at once. Fire, poison, and chill upgrade
   branches can coexist and apply independent bounded stacks.
 - The persistent `?` guidebook reveals only enemies, bosses, objects, and ship

@@ -8,25 +8,29 @@ var failures: Array[String] = []
 func _initialize() -> void:
 	var store := ProjectileStore.new()
 	for index in ProjectileStore.PLAYER_CAPACITY:
-		store.add_player(_projectile(false, Vector2(index, 0.0)))
+		store.add_player(_projectile(Vector2(index, 0.0)))
 	_expect(store.player_count() == ProjectileStore.PLAYER_CAPACITY, "player capacity fills exactly")
-	store.add_player(_projectile(true, Vector2.ZERO))
-	_expect(store.player_count() == ProjectileStore.PLAYER_CAPACITY, "player overflow retires one ordinary projectile")
-	_expect(store.player_live.any(func(item) -> bool: return item.breach_token_available), "Breach projectile survives ordinary eviction")
+	store.add_player(_projectile(Vector2(999.0, 0.0)))
+	_expect(store.player_count() == ProjectileStore.PLAYER_CAPACITY, "player overflow retires exactly one projectile")
+	_expect(
+		not store.player_live.any(func(item) -> bool: return item.pos == Vector2.ZERO)
+		and store.player_live.any(func(item) -> bool: return item.pos == Vector2(999.0, 0.0)),
+		"player overflow retires the oldest uniform round"
+	)
 
 	var ordinary_limit := ProjectileStore.HOSTILE_CAPACITY - ProjectileStore.HOSTILE_BOSS_RESERVE
 	for index in ordinary_limit + 8:
-		store.add_hostile(_projectile(false, Vector2(index, 20.0)), false)
+		store.add_hostile(_projectile(Vector2(index, 20.0)), false)
 	_expect(store.hostile_count() == ordinary_limit, "ordinary hostile fire preserves boss reserve")
 	for index in ProjectileStore.HOSTILE_BOSS_RESERVE:
-		store.add_hostile(_projectile(false, Vector2(index, 40.0)), true)
+		store.add_hostile(_projectile(Vector2(index, 40.0)), true)
 	_expect(store.hostile_count() == ProjectileStore.HOSTILE_CAPACITY, "boss fire can fill the reserved hostile slots")
 
 	var interleaved_store := ProjectileStore.new()
 	for index in 12:
-		interleaved_store.add_hostile(_projectile(false, Vector2(index, 60.0)), true)
+		interleaved_store.add_hostile(_projectile(Vector2(index, 60.0)), true)
 	for index in ordinary_limit:
-		interleaved_store.add_hostile(_projectile(false, Vector2(index, 80.0)), false)
+		interleaved_store.add_hostile(_projectile(Vector2(index, 80.0)), false)
 	_expect(
 		interleaved_store.hostile_count() == ordinary_limit + 12,
 		"ordinary quota remains available when boss shots are inserted first"
@@ -60,13 +64,11 @@ func _initialize() -> void:
 	_finish()
 
 
-func _projectile(breach_token: bool, position: Vector2) -> Dictionary:
+func _projectile(position: Vector2) -> Dictionary:
 	return {
 		"pos": position,
 		"velocity": Vector2.RIGHT,
 		"radius": 5.0,
-		"breach_token_available": breach_token,
-		"breach_visual": breach_token,
 	}
 
 

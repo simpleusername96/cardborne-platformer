@@ -286,22 +286,16 @@ func _refresh() -> void:
 
 func _preview_value(preview: Dictionary) -> String:
 	var operation := String(preview.get("operation", "add"))
-	var stat_key := String(preview.get("stat_key", ""))
 	var current := float(preview.get("current", 0.0))
 	var next := float(preview.get("next", 0.0))
-	var percentage := stat_key == "UPGRADE_STAT_BREACH_HEALTH_SCALE_BONUS"
 	var current_text := (
 		"×%.2f" % current
 		if operation == "multiply"
-		else "%+.0f%%" % (current * 100.0)
-		if percentage
 		else "%+.0f" % current
 	)
 	var next_text := (
 		"×%.2f" % next
 		if operation == "multiply"
-		else "%+.0f%%" % (next * 100.0)
-		if percentage
 		else "%+.0f" % next
 	)
 	return "%s → %s" % [current_text, next_text]

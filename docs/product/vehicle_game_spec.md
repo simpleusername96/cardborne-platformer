@@ -65,9 +65,9 @@ five-stage run.
 | EMP | Left Shift |
 | Pause and settings | Escape |
 
-- Primary fire repeats while held. Releasing it for one second primes Breach
-  Shot: a larger first-contact projectile with extra structure damage,
-  temporary pierce, and explicit interrupt/counterplay rules.
+- Primary fire repeats uniform rounds while held. Releasing fire only stops the
+  cadence; waiting before the next press never changes that next round's
+  damage, size, pierce, structure damage, status payload, or counter behavior.
 - Dash is a fast defensive repositioning action. EMP is the sole explicit skill
   button. Secondary weapons operate automatically.
 - Primary fire, dash, and EMP are rebindable. Conflicting bindings are rejected.
@@ -153,6 +153,10 @@ second time; no individual stat is described as exactly 15% lower.
   fire can break it. `wall_piercing` is an explicit projectile capability whose
   default is false. No current ordinary enemy, boss pattern, primary shot, or
   secondary shot receives that capability implicitly.
+- The unmodified Pulse Cannon has an authored 1600-pixel range. At runtime its
+  effective range is never shorter than the current visible world rectangle's
+  diagonal plus 80 pixels, so an unobstructed target visible from any
+  camera-clamped player position remains reachable.
 
 ### One run-selected field
 
@@ -190,7 +194,7 @@ second time; no individual stat is described as exactly 15% lower.
   state, live pickups, unopened crates, and scheduled support fields remain
   visible as tactical markers.
 
-### Functional terrain, facilities, and Breach Shot
+### Functional terrain, facilities, and sustained fire
 
 - Every field authors Arc Surge Strips, two paired Transit Gate routes, and
   persistent Breakable Bulkheads. Every stage schedules two repair fields and
@@ -204,21 +208,20 @@ second time; no individual stat is described as exactly 15% lower.
   non-stacking 1.20x player-damage multiplier only while the ship center
   remains inside an active field. The four independent schedules use different
   active/dormant durations and space relocation grants by at least three seconds.
-- A full Breach Shot destroys a full-health Breakable Bulkhead, arms a mine
-  with a short fuse, breaks a Bulkhead Guard plate, or cancels an ordinary
-  enemy attack only during a metadata-approved startup. Cancellation enters a
-  fixed 0.45-second interrupted recovery; Breach never creates idle stun-lock.
-- Each boss exposes exactly one nonadjacent signature startup per fight to a
-  Breach cancellation. Autonomous systems and already committed attacks remain
-  active. Breach otherwise creates a short damage-exposure opportunity during
-  a valid natural recovery and never freezes boss locomotion or its pattern
-  state.
+- Primary rounds apply the same per-shot structure damage at every point in the
+  firing cadence. At base values, four 18-damage hits destroy a full-health
+  Breakable Bulkhead, Bulkhead Guard plate, or armored-elite shell; structure
+  upgrades change that repeated-hit result without introducing a special shot.
+- Ordinary primary damage never cancels an enemy or boss startup and never
+  creates a separate exposure state. EMP stun remains the dedicated crowd
+  control behavior. Boss direct attacks are committed once warned, while
+  autonomous systems continue independently.
 
 ### Encounter and stage flow
 
 1. Stage 1 deployment begins at the shared center. Stages 2–5 begin at the
    player's current position and facing without reopening deployment.
-2. Stage 1 keeps its opening cadence. After a successful Stage 1–4 transition,
+2. Stage 1 keeps its initial arrival cadence. After a successful Stage 1–4 transition,
    the next arrival cue begins after 0.35 seconds and the first hostile arrival
    begins within 1.35 seconds.
 3. Main-combat packets use deterministic multi-sector allocation. Every surge
@@ -276,9 +279,8 @@ health, damage, and movement rise only on a shallow stage curve; boss behavior
 changes through authored patterns rather than unchecked stat inflation. Each
 boss uses a distinct three-phase direct-pattern sequence plus independently
 scheduled autonomous pressure. Every damaging pattern has a visible startup,
-active window, and recovery. Routine hits never interrupt or stop the boss;
-only the one metadata-approved signature startup can be cancelled by a ready
-Breach Shot.
+active window, and recovery. Routine hits never interrupt or stop the boss, and
+every direct pattern remains committed after its warning appears.
 
 ### Items, experience, and upgrades
 
@@ -299,17 +301,18 @@ Breach Shot.
   selection that requires an explicit choice and confirm.
 - `Tuned Thrusters` is the direct movement upgrade and changes base movement to
   1.08x, 1.16x, then 1.24x. There is no recurring movement-speed cycle.
-- Upgrades cover primary cadence, count, damage, opening-shot behavior, status
-  payloads, dash, EMP, barrier, sustain, pickup reach, and automatic secondaries.
-- Fire, poison, and chill roots are independent and may all coexist. Each uses
-  a root → intermediate → capstone chain, and an owned branch guarantees one
-  eligible least-progressed child in a normal level-up offer when available.
-  Burn, poison, and chill accumulate bounded stacks rather than replacing one
-  another. Flashover consumes only burn, Shatter consumes only chill, and
-  an eligible opening shot resolves both capstones when both statuses are
-  present. Contagion spreads poison to at most eight nearby targets in
-  deterministic distance order. World arcs and Korean/English target text
-  expose active stack counts.
+- The live catalog contains 41 upgrades covering primary cadence, count,
+  damage, status payloads, dash, EMP, barrier, sustain, pickup reach, and
+  automatic secondaries. No upgrade changes the first round after a firing
+  pause.
+- Fire, poison, and chill roots are independent and may all coexist. Fire and
+  chill each use a root → intermediate chain; poison uses a root →
+  intermediate → Contagion chain. An owned branch guarantees one eligible
+  least-progressed child in a normal level-up offer when available. Burn,
+  poison, and chill accumulate bounded stacks rather than replacing or
+  consuming one another. Contagion spreads poison to at most eight nearby
+  targets in deterministic distance order. World arcs and Korean/English
+  target text expose active stack counts.
 - The ship always has Seeker support. Up to two additional optional secondary
   families may be active, for three total:
 
@@ -323,10 +326,10 @@ Breach Shot.
 
 ### UI, guidebook, and persistence
 
-- The live HUD prioritizes hull/experience, stage quota, opening-shot readiness,
-  dash, EMP, active secondary families, minimap, boss health, and exceptional
-  timed effects. Its 154x34 icon-only action rail sits below hull/experience;
-  no bottom-center dock covers the field.
+- The live HUD prioritizes hull/experience, stage quota, dash, EMP, active
+  secondary families, minimap, boss health, and exceptional timed effects. Its
+  154x34 icon-only action rail sits below hull/experience; no bottom-center dock
+  covers the field.
 - Pause and settings expose a `?` entry to the guidebook. The guidebook has ship,
   mobile enemies, stationary enemies, bosses, and objects categories.
 - The current ship page shows derived stats and equipped secondaries. Encountered
@@ -334,7 +337,7 @@ Breach Shot.
   identification. Unseen entries show only `???` and one neutral silhouette;
   they never leak a name, color, description, or counterplay.
 - Settings places read-only Ship Status first. During a paused run it shows
-  effective movement, defense, primary/Breach, EMP, secondary, level, and
+  effective movement, defense, primary, EMP, secondary, level, and
   acquired-upgrade values from one frozen gameplay-owned snapshot. Outside a
   run it shows one localized empty state.
 - Stage 1–4 success history is retained for later inspection but does not open a
@@ -402,6 +405,9 @@ Breach Shot.
   default-cover collision, explicit wall-piercing, projectile-role share,
   status-stack, elemental-prerequisite, and XP-cadence contracts pass focused
   tests.
+- Held primary fire uses one uniform shot contract, reaches the complete
+  unobstructed visible field, chips structures through repeated hits, and gains
+  no alternate first round after release.
 - Guide discovery persists, locked entries expose only `???`, settings and pause
   both reach the guide, and Korean/English copy is complete.
 - Godot import, all focused validators, native boot, Web export, and rendered

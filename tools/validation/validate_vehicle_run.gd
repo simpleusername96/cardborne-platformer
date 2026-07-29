@@ -36,6 +36,12 @@ func _run() -> void:
 		_expect(run.MINIMAP_COLS == 20 and run.MINIMAP_ROWS == 12, "run uses 20x12 explored minimap")
 		_expect(run.ORDINARY_DECISION_BUCKET_COUNT == 6, "ordinary high-cost decisions are distributed at 10 Hz")
 		_expect(run._camera.zoom == Vector2.ONE, "gameplay camera keeps zoom 1")
+		var visible_rect: Rect2 = run.call("_visible_world_rect", 0.0)
+		_expect(
+			float(run.call("_primary_projectile_range"))
+				>= visible_rect.size.length() + run.PRIMARY_VISIBLE_RANGE_MARGIN,
+			"primary range covers the full visible field diagonal with margin"
+		)
 		_check_visual_collision_separation(run)
 		var boss_arrival: Vector2 = run.call("_choose_boss_arrival_anchor")
 		_expect(
@@ -59,7 +65,7 @@ func _run() -> void:
 		_check_simulation_lod_contract(run)
 		_check_boss_progression_gate(run)
 		run.call("_reset_run", false, true, true)
-		_check_boss_hit_recovery(run)
+		_check_boss_committed_recovery(run)
 		run.call("_reset_run", false, true, true)
 		_check_enemy_expansion(run)
 	root.queue_free()
@@ -159,7 +165,7 @@ func _check_boss_progression_gate(run) -> void:
 	_expect(run.call("_find_enemy_by_id", "stage_boss") != null, "boss spawns only after quota and warning")
 
 
-func _check_boss_hit_recovery(run) -> void:
+func _check_boss_committed_recovery(run) -> void:
 	var boss: EnemyState = run.call("_make_enemy", {
 		"id":"validation_boss", "role":&"stage_boss",
 		"pos":run.player_position + Vector2(760.0, 0.0), "active":true,
@@ -168,38 +174,25 @@ func _check_boss_hit_recovery(run) -> void:
 	boss["phase"] = "boss_startup"
 	boss["phase_time"] = 1.0
 	run.call("_append_enemy", boss)
-	run.call("_damage_enemy", boss, 1.0, "validation", 999.0, &"kinetic", false)
-	_expect(String(boss["phase"]) == "boss_startup" and is_zero_approx(float(boss["stagger"])), "routine hits cannot interrupt a boss attack")
+	run.call("_damage_enemy", boss, 1.0, "validation", &"kinetic", false)
+	_expect(
+		String(boss["phase"]) == "boss_startup",
+		"routine primary damage cannot interrupt a committed boss startup"
+	)
 
 	boss["phase"] = "boss_recovery"
 	boss["vulnerable"] = 1.0
-	run.call("_damage_enemy", boss, 1.0, "validation", 999.0, &"kinetic", false)
-	_expect(String(boss["phase"]) == "boss_recovery", "accumulated damage never hard-staggers a boss")
-	run.call("_resolve_breach_contact", boss)
+	run.call("_damage_enemy", boss, 1.0, "validation", &"kinetic", false)
 	_expect(
-		String(boss["phase"]) == "boss_recovery" and float(boss["breach_exposed"]) > 0.0,
-		"a Breach contact exposes a natural recovery without stopping the boss"
+		String(boss["phase"]) == "boss_recovery",
+		"routine primary damage preserves the authored boss recovery"
 	)
 
 	run.call("_clear_projectiles")
 	boss["pos"] = run.player_position + Vector2(-420.0, 0.0)
 	boss["phase"] = "boss_startup"
 	boss["phase_time"] = 0.8
-	boss["pattern"] = "foundry_ram"
-	run.call("_resolve_breach_contact", boss)
-	_expect(
-		boss.phase == &"boss_interrupted_recovery"
-			and is_equal_approx(boss.phase_time, 0.45),
-		"Breach cancels only the boss signature startup"
-	)
-	boss["phase"] = "boss_startup"
-	boss["phase_time"] = 0.8
 	boss["pattern"] = "current_fan"
-	run.call("_resolve_breach_contact", boss)
-	_expect(
-		boss.phase == &"boss_startup",
-		"Breach cannot cancel a committed boss startup"
-	)
 	boss["pattern_index"] = 1
 	boss["committed_dir"] = Vector2.UP
 	boss["committed_target"] = run.player_position + Vector2(0.0, -240.0)
@@ -289,14 +282,15 @@ func _check_enemy_expansion(run) -> void:
 		"id":"validation_guard", "role":&"bulkhead_guard",
 		"pos":run.player_position + Vector2(300.0, 0.0), "active":true,
 	})
-	var breach := ProjectileState.new()
-	breach.velocity = Vector2.RIGHT
-	breach.structure_damage = 72.0
-	_expect(
-		bool(run.call("_try_absorb_protective_structure", guard, breach))
-			and is_zero_approx(guard.guard_plate_structure),
-		"one full Breach removes the Guard plate"
-	)
+	var primary_round := ProjectileState.new()
+	primary_round.velocity = Vector2.RIGHT
+	primary_round.structure_damage = 18.0
+	for expected_structure in [54.0, 36.0, 18.0, 0.0]:
+		_expect(
+			bool(run.call("_try_absorb_protective_structure", guard, primary_round))
+				and is_equal_approx(guard.guard_plate_structure, expected_structure),
+			"sustained primary fire chips the Guard plate by one uniform hit"
+		)
 
 	var splitter: EnemyState = run.call("_make_enemy", {
 		"id":"validation_splitter", "role":&"splitter_barge",

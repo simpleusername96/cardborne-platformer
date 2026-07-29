@@ -16,7 +16,7 @@ static func apply(enemy: EnemyState, profile: VehicleStatusProfile) -> void:
 	if profile.burn_enabled:
 		_add_stack(
 			enemy, &"burn", profile.burn_dps_per_stack, profile.burn_duration,
-			profile.burn_max_stacks, profile.flashover
+			profile.burn_max_stacks, false
 		)
 	if profile.poison_enabled:
 		_add_stack(
@@ -30,13 +30,11 @@ static func apply(enemy: EnemyState, profile: VehicleStatusProfile) -> void:
 			"time":0.0,
 			"stacks":0,
 			"max_stacks":profile.chill_max_stacks,
-			"shatter":profile.shatter,
 		})
 		status["magnitude_per_stack"] = profile.chill_magnitude_per_stack * boss_scale
 		status["time"] = profile.chill_duration * boss_scale
 		status["stacks"] = mini(profile.chill_max_stacks, int(status["stacks"]) + 1)
 		status["max_stacks"] = profile.chill_max_stacks
-		status["shatter"] = profile.shatter
 		enemy.statuses[&"chill"] = status
 
 
@@ -80,43 +78,6 @@ static func speed_multiplier(enemy: EnemyState) -> float:
 		0.50,
 		1.0 - float(chill["magnitude_per_stack"]) * float(chill["stacks"])
 	)
-
-
-static func resolve_opening(
-	enemy: EnemyState,
-	profile: VehicleStatusProfile,
-	base_damage: float
-) -> Dictionary:
-	var result := {
-		"thermal_bonus":0.0,
-		"cryo_bonus":0.0,
-		"splash_damage":0.0,
-		"splash_radius":0.0,
-		"flashover":false,
-		"shatter":false,
-	}
-	if profile == null:
-		return result
-	if profile.flashover and enemy.statuses.has(&"burn"):
-		var burn: Dictionary = enemy.statuses[&"burn"]
-		var bonus := (
-			float(burn["dps_per_stack"])
-			* float(burn["stacks"])
-			* float(burn["time"])
-			* 1.25
-		)
-		enemy.statuses.erase(&"burn")
-		result["thermal_bonus"] = bonus
-		result["splash_damage"] = bonus
-		result["splash_radius"] = 70.0
-		result["flashover"] = true
-	if profile.shatter and enemy.statuses.has(&"chill"):
-		var chill: Dictionary = enemy.statuses[&"chill"]
-		if int(chill["stacks"]) >= 3:
-			enemy.statuses.erase(&"chill")
-			result["cryo_bonus"] = base_damage * 0.40
-			result["shatter"] = true
-	return result
 
 
 static func stack_count(enemy: EnemyState, kind: StringName) -> int:

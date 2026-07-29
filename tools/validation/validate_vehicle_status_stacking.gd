@@ -17,9 +17,9 @@ func _initialize() -> void:
 		_expect(bool(build.apply(root_id).get("applied", false)), "%s can coexist with other elemental roots" % root_id)
 	_expect(build.has(&"incendiary_core") and build.has(&"toxin_core") and build.has(&"cryo_core"), "one run owns all three elemental roots")
 	for upgrade_id in [
-		&"thermal_compound", &"thermal_compound", &"flashover",
+		&"thermal_compound", &"thermal_compound",
 		&"concentrated_toxin", &"concentrated_toxin", &"contagion",
-		&"deep_freeze", &"deep_freeze", &"shatter",
+		&"deep_freeze", &"deep_freeze",
 	]:
 		_expect(bool(build.apply(upgrade_id).get("applied", false)), "%s follows its prerequisite chain" % upgrade_id)
 	var profile := StatusProfile.from_build(build)
@@ -49,18 +49,13 @@ func _initialize() -> void:
 	var dot := StatusRuntime.tick(enemy, 0.25)
 	_expect(is_equal_approx(float(dot["burn"]), 2.625), "burn DOT remains an independent thermal amount")
 	_expect(is_equal_approx(float(dot["poison"]), 3.0), "poison DOT remains an independent toxin amount")
-
-	var opening := StatusRuntime.resolve_opening(enemy, profile, 20.0)
-	_expect(is_equal_approx(float(opening["splash_damage"]), 49.21875), "Flashover consumes remaining burn stacks using exact time")
-	_expect(is_equal_approx(float(opening["thermal_bonus"]), 49.21875), "Flashover reports thermal bonus separately")
-	_expect(is_equal_approx(float(opening["cryo_bonus"]), 8.0), "Shatter reports cryo bonus separately")
-	_expect(bool(opening["flashover"]) and bool(opening["shatter"]), "coexisting capstones both trigger")
 	_expect(
-		not enemy.statuses.has(&"burn")
-		and not enemy.statuses.has(&"chill")
+		enemy.statuses.has(&"burn")
+		and enemy.statuses.has(&"chill")
 		and enemy.statuses.has(&"poison"),
-		"opening capstones consume only their own statuses"
+		"ordinary primary hits and status ticks never consume another element"
 	)
+	_expect(StatusRuntime.contagion_enabled(enemy), "Contagion remains attached to poison stacks")
 
 	var boss := EnemyState.new()
 	boss.role = &"stage_boss"

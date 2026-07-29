@@ -18,7 +18,6 @@ const OUTGOING: Dictionary = {
 	&"arc_mine": "REPORT_SOURCE_ARC_MINE",
 	&"ion_wake": "REPORT_SOURCE_ION_WAKE",
 	&"reflected": "REPORT_SOURCE_REFLECTED",
-	&"breach_burst": "REPORT_SOURCE_BREACH_BURST",
 	&"ram_pulse": "REPORT_SOURCE_RAM_PULSE",
 	&"other": "REPORT_SOURCE_OTHER",
 }
@@ -56,7 +55,7 @@ static func outgoing_id(source: String) -> StringName:
 			return &"emp_aftershock"
 		"dash impact":
 			return &"dash_impact"
-		"status", "flashover", "shatter":
+		"status":
 			return &"elemental_status"
 		"arc surge":
 			return &"arc_surge"
@@ -64,8 +63,6 @@ static func outgoing_id(source: String) -> StringName:
 			return &"arc_mine"
 		"ion wake":
 			return &"ion_wake"
-		"shock breach":
-			return &"breach_burst"
 		"ram pulse":
 			return &"ram_pulse"
 		"seeker burst":

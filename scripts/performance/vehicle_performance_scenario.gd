@@ -386,7 +386,19 @@ func _fill_projectiles(run: Node, initial: bool) -> void:
 	while run.projectile_store.player_count() < player_target and player_budget > 0:
 		var direction := Vector2.RIGHT.rotated(float(_shot_serial % 72) * TAU / 72.0)
 		var origin := _performance_projectile_origin(_shot_serial)
-		run.call("_spawn_player_projectile", origin, direction, 0.01, 4.0, 0, 3.0, 0.01, 0.0, false, 100000.0, null)
+		run.call(
+			"_spawn_player_projectile",
+			origin,
+			direction,
+			0.01,
+			4.0,
+			0,
+			3.0,
+			0.01,
+			100000.0,
+			null,
+			false
+		)
 		_shot_serial += 1
 		player_budget -= 1
 	var hostile_budget := hostile_target if initial else 8
