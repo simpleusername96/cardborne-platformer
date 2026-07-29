@@ -8,10 +8,16 @@ const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const Rules = preload("res://scripts/vehicle/vehicle_stage_rules.gd")
 const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd")
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
+const EnemyStore = preload("res://scripts/enemies/vehicle_enemy_store.gd")
 const ProjectileStore = preload("res://scripts/combat/vehicle_projectile_store.gd")
 const ExperienceRuntime = preload("res://scripts/progression/vehicle_experience_runtime.gd")
 const RunDifficulty = preload("res://scripts/vehicle/vehicle_run_difficulty.gd")
 const EncounterDirector = preload("res://scripts/encounters/vehicle_encounter_director.gd")
+const EncounterRuntime = preload("res://scripts/encounters/vehicle_encounter_runtime.gd")
+
+const CURRENT_PRESSURE_TARGET := 280
+const CAPACITY_PRESSURE_TARGET := EnemyStore.MAX_LIVE_HOSTILES
+const ORDINARY_CAPACITY_LOAD := 280
 
 const VALID_SCENARIOS: Array[StringName] = [
 	&"current_pressure", &"capacity_pressure", &"lifecycle_pressure", &"boss_pressure",
@@ -59,7 +65,11 @@ func activate(run: Node) -> void:
 	_spawn_points = _walkable_ring_points(run, 160)
 	if scenario_id == &"lifecycle_pressure":
 		_run_lifecycle_cycles(run, 300)
-	var enemy_target := EncounterDirector.active_cap_for(4) + 4 if scenario_id == &"current_pressure" else 128
+	var enemy_target := (
+		CURRENT_PRESSURE_TARGET
+		if scenario_id == &"current_pressure"
+		else CAPACITY_PRESSURE_TARGET
+	)
 	if scenario_id == &"boss_pressure":
 		enemy_target = 77
 	_fill_enemies(run, enemy_target, scenario_id == &"boss_pressure")
@@ -95,7 +105,11 @@ func after_physics(run: Node) -> void:
 
 
 func validation_snapshot(run: Node) -> Dictionary:
-	var expected_enemies := EncounterDirector.active_cap_for(4) + 4 if scenario_id == &"current_pressure" else 128
+	var expected_enemies := (
+		CURRENT_PRESSURE_TARGET
+		if scenario_id == &"current_pressure"
+		else CAPACITY_PRESSURE_TARGET
+	)
 	if scenario_id == &"boss_pressure":
 		expected_enemies = 77
 	var player_target := 140 if scenario_id in [&"current_pressure", &"boss_pressure"] else ProjectileStore.PLAYER_CAPACITY
@@ -116,12 +130,22 @@ func validation_snapshot(run: Node) -> Dictionary:
 				auxiliary_count += 1
 			_:
 				ordinary_count += 1
-	var expected_ordinary := mini(96, expected_enemies - (1 if scenario_id == &"boss_pressure" else 0))
+	var expected_ordinary := mini(
+		ORDINARY_CAPACITY_LOAD,
+		expected_enemies - (1 if scenario_id == &"boss_pressure" else 0)
+	)
 	var expected_auxiliary := expected_enemies - expected_ordinary - (1 if scenario_id == &"boss_pressure" else 0)
 	var boss_valid := true
 	if scenario_id == &"boss_pressure":
 		var boss: EnemyState = run.call("_find_enemy_by_id", "performance_boss")
 		boss_valid = boss != null and boss.alive
+	var pressure := EncounterRuntime.build_pressure_snapshot(
+		ordinary_count,
+		run.enemies,
+		run.player_position,
+		run.call("_visible_world_rect", 0.0),
+		run.projectile_store.hostile_count()
+	)
 	var valid: bool = (
 		int(enemy_snapshot["live"]) == expected_enemies
 		and ordinary_count == expected_ordinary
@@ -135,6 +159,8 @@ func validation_snapshot(run: Node) -> Dictionary:
 		and run.effects.size() <= 96
 		and run.denied_zones.size() + run.damaging_trails.size() <= 16
 		and int(renderer_snapshot["batches"]) <= 50
+		and int(enemy_snapshot["rejected_capacity"]) == 0
+		and int(renderer_snapshot["enemy_capacity"]) == EnemyStore.MAX_LIVE_HOSTILES
 		and boss_valid
 		and (scenario_id != &"lifecycle_pressure" or lifecycle_cycles >= 300)
 	)
@@ -153,12 +179,13 @@ func validation_snapshot(run: Node) -> Dictionary:
 		"zones_and_trails": run.denied_zones.size() + run.damaging_trails.size(),
 		"lifecycle_cycles": lifecycle_cycles,
 		"boss_active": boss_valid,
+		"pressure": pressure,
 	}
 
 
 func _fill_enemies(run: Node, target: int, include_boss: bool) -> void:
 	var boss_slots := 1 if include_boss else 0
-	var ordinary_target := mini(96, target - boss_slots)
+	var ordinary_target := mini(ORDINARY_CAPACITY_LOAD, target - boss_slots)
 	for index in ordinary_target:
 		var archetype := (
 			STATIONARY_ARCHETYPES[index % STATIONARY_ARCHETYPES.size()]

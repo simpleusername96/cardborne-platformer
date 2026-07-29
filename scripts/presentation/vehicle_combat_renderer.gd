@@ -8,11 +8,12 @@ const Visuals = preload("res://scripts/presentation/vehicle_combat_visual_librar
 const PixelCatalog = preload("res://scripts/presentation/vehicle_pixel_asset_catalog.gd")
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd")
+const EnemyStore = preload("res://scripts/enemies/vehicle_enemy_store.gd")
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 const ProjectileState = preload("res://scripts/combat/vehicle_projectile_state.gd")
 const ExperienceShard = preload("res://scripts/progression/vehicle_experience_shard.gd")
 
-const ENEMY_CAPACITY := 128
+const ENEMY_CAPACITY := EnemyStore.MAX_LIVE_HOSTILES
 const PROJECTILE_CAPACITY := 240
 const HOSTILE_PROJECTILE_CAPACITY := 120
 const EXPERIENCE_CAPACITY := 192
@@ -186,6 +187,8 @@ func debug_snapshot() -> Dictionary:
 		"batches": _batches.size(),
 		"visible_instances": visible,
 		"pixel_enabled": _pixel_enabled,
+		"enemy_capacity": ENEMY_CAPACITY,
+		"status_arc_capacity": STATUS_ARC_CAPACITY,
 	}
 
 

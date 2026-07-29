@@ -379,7 +379,10 @@ truth.
 - 계획·현행 코드·기존 성능 근거·상충 문서 확인: 완료
 - 사용자 피드백의 수치·흐름 계약화: 완료
 - 기존 single-front 계획 lifecycle 정리: 완료
-- production implementation과 runtime evidence: 미착수
+- concurrent UI 기준 commit: `8a0b003`
+- concurrent UI 비소유 경로: `pixel-art-production/`, `docs/design/vehicle-hud-upgrade-direction/`,
+  기존 Space Hangar asset/evidence/recipe
+- production implementation과 runtime evidence: M1 완료, M2 진행 예정
 
 ## Tasks
 
@@ -389,19 +392,19 @@ truth.
   current runtime owners and performance evidence.
 - [x] Translate the latest feedback into fixed numeric and flow contracts.
 - [x] Mark the single-front Stage 1 plan as superseded without deleting history.
-- [ ] At implementation start, record the settled concurrent UI commit and exact non-owned
+- [x] At implementation start, record the settled concurrent UI commit and exact non-owned
   paths.
 
 ### M1 — Capacity and observability first
 
-- [ ] Raise enemy store and retained renderer capacity to 320.
-- [ ] Update status/health-overlay retained capacities from the shared enemy capacity.
-- [ ] Add explicit pool rejection counters; any rejection before declared cap fails validation.
-- [ ] Extend encounter/performance snapshots with active, visible, near-600, near-900,
+- [x] Raise enemy store and retained renderer capacity to 320.
+- [x] Update status/health-overlay retained capacities from the shared enemy capacity.
+- [x] Add explicit pool rejection counters; any rejection before declared cap fails validation.
+- [x] Extend encounter/performance snapshots with active, visible, near-600, near-900,
   eight-sector histogram, ranged/denial commits and hostile projectile count.
-- [ ] Change `current_pressure` to 280 actors and `capacity_pressure`/
+- [x] Change `current_pressure` to 280 actors and `capacity_pressure`/
   `lifecycle_pressure` to 320 actors.
-- [ ] Pass store, renderer, lifecycle and performance-scenario structural validators before
+- [x] Pass store, renderer, lifecycle and performance-scenario structural validators before
   increasing production data.
 
 ### M2 — Quantity, composition and multi-sector spawning

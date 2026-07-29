@@ -13,14 +13,21 @@ func _initialize() -> void:
 		var enemy := _enemy(store, index)
 		original.append(enemy)
 		_expect(store.add(enemy), "store accepts live enemy %d" % index)
+	_expect(store.rejected_capacity == 0, "store records no rejection before declared capacity")
 	_expect(store.acquire() == null, "store rejects enemy beyond capacity")
 	_expect(store.rejected_spawns == 1, "rejected spawn is observable")
+	_expect(store.rejected_capacity == 1, "capacity rejection has a dedicated counter")
+	_expect(store.rejected_invalid == 0, "capacity rejection is not misclassified")
 
 	for index in range(0, original.size(), 2):
 		original[index].alive = false
 		store.queue_defeat(original[index])
 	var removed := store.flush_defeated()
-	_expect(removed == 64 and store.live_count() == 64, "flush removes all queued dead enemies")
+	var retired_count := (original.size() + 1) / 2
+	_expect(
+		removed == retired_count and store.live_count() == EnemyStore.MAX_LIVE_HOSTILES - retired_count,
+		"flush removes all queued dead enemies"
+	)
 	for index in range(0, original.size(), 2):
 		_expect(store.find(original[index].id) == null, "retired ID %d cannot resolve" % index)
 	for slot in store.live.size():
@@ -29,10 +36,14 @@ func _initialize() -> void:
 		_expect(enemy.runtime_slot == slot, "swap removal repairs slot %d" % slot)
 		_expect(store.find(enemy.id) == enemy, "live ID resolves after swap removal")
 
-	for index in 64:
-		_expect(store.add(_enemy(store, 200 + index)), "freed capacity accepts replacement %d" % index)
+	for index in retired_count:
+		_expect(store.add(_enemy(store, 1000 + index)), "freed capacity accepts replacement %d" % index)
 	_expect(store.live_count() == EnemyStore.MAX_LIVE_HOSTILES, "store returns to exact capacity")
 	_expect(store.debug_snapshot()["pool"] == 0, "every live slot is backed by one fixed pooled state")
+	_expect(
+		int(store.debug_snapshot()["capacity"]) == 320,
+		"store publishes the locked 320-hostile capacity"
+	)
 	_finish()
 
 

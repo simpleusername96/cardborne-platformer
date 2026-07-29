@@ -41,6 +41,7 @@ var _next_metric_sample := 0.0
 var _spawning_enabled := true
 var _spawn_allocator := SpawnAllocator.new()
 var _allocation_debug: Array[Dictionary] = []
+var _pressure_snapshot := {}
 
 
 func configure(
@@ -74,6 +75,7 @@ func configure(
 	_next_metric_sample = 0.0
 	_spawning_enabled = true
 	_allocation_debug.clear()
+	_pressure_snapshot = _empty_pressure_snapshot()
 	_spawn_allocator.configure(encounter_seed, spawn_anchors)
 
 
@@ -103,10 +105,19 @@ func tick(
 	active_mobile_count: int,
 	active_attack_families: Array[StringName] = [],
 	player_position: Vector2 = Field.CENTER,
-	visible_world: Rect2 = Rect2()
+	visible_world: Rect2 = Rect2(),
+	active_enemies: Array = [],
+	hostile_projectile_count: int = 0
 ) -> Dictionary:
 	elapsed += maxf(0.0, delta)
 	_record_active_count_sample(active_mobile_count)
+	_pressure_snapshot = build_pressure_snapshot(
+		active_mobile_count,
+		active_enemies,
+		player_position,
+		visible_world,
+		hostile_projectile_count
+	)
 	_max_attack_family_overlap = maxi(_max_attack_family_overlap, active_attack_families.size())
 	if _spawning_enabled:
 		_activate_ready_packets(player_position, visible_world)
@@ -190,7 +201,77 @@ func debug_snapshot() -> Dictionary:
 		"active_count_samples":_active_count_samples.size(),
 		"spawning_enabled":_spawning_enabled,
 		"allocations":_allocation_debug.duplicate(true),
+		"pressure":_pressure_snapshot.duplicate(true),
 	}
+
+
+static func build_pressure_snapshot(
+	active_mobile_count: int,
+	active_enemies: Array,
+	player_position: Vector2,
+	visible_world: Rect2,
+	hostile_projectile_count: int
+) -> Dictionary:
+	var visible := 0
+	var near_600 := 0
+	var near_900 := 0
+	var ranged_commits := 0
+	var denial_commits := 0
+	var sectors := PackedInt32Array()
+	sectors.resize(8)
+	for enemy in active_enemies:
+		if enemy == null or not bool(enemy.alive) or not bool(enemy.active):
+			continue
+		if not bool(enemy.counts_active_cap):
+			continue
+		var position := Vector2(enemy.pos)
+		var offset := position - player_position
+		var distance_squared := offset.length_squared()
+		if visible_world.has_point(position):
+			visible += 1
+		if distance_squared <= 600.0 * 600.0:
+			near_600 += 1
+		if distance_squared <= 900.0 * 900.0:
+			near_900 += 1
+		sectors[_sector_for_offset(offset)] += 1
+		if StringName(enemy.phase) in [&"startup", &"active"]:
+			match StringName(enemy.threat_kind):
+				&"ranged":
+					ranged_commits += 1
+				&"denial":
+					denial_commits += 1
+	return {
+		"active": active_mobile_count,
+		"visible": visible,
+		"near_600": near_600,
+		"near_900": near_900,
+		"sector_histogram": sectors,
+		"ranged_commits": ranged_commits,
+		"denial_commits": denial_commits,
+		"hostile_projectiles": maxi(0, hostile_projectile_count),
+	}
+
+
+static func _empty_pressure_snapshot() -> Dictionary:
+	var sectors := PackedInt32Array()
+	sectors.resize(8)
+	return {
+		"active": 0,
+		"visible": 0,
+		"near_600": 0,
+		"near_900": 0,
+		"sector_histogram": sectors,
+		"ranged_commits": 0,
+		"denial_commits": 0,
+		"hostile_projectiles": 0,
+	}
+
+
+static func _sector_for_offset(offset: Vector2) -> int:
+	if offset.length_squared() <= 0.0001:
+		return 0
+	var raw := floori((offset.angle() + PI) / (TAU / 8.0))
+	return (raw % 8 + 8) % 8
 
 
 func _active_count_percentile(percentile: float) -> int:

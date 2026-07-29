@@ -827,7 +827,9 @@ func _update_encounter(delta: float) -> void:
 		_active_mobile_count(),
 		_active_attack_families(),
 		player_position,
-		_visible_world_rect(0.0)
+		_visible_world_rect(0.0),
+		enemies,
+		projectile_store.hostile_count()
 	)
 	for cue in requests["cues"]:
 		_add_effect("spawn", Vector2(cue["anchor"]), Art.MUSTARD, 0.9, 126.0)

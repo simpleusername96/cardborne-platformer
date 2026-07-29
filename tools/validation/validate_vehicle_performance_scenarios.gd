@@ -29,6 +29,20 @@ func _run() -> void:
 		scenario.after_physics(run)
 		var snapshot := scenario.validation_snapshot(run)
 		_expect(bool(snapshot["valid"]), "%s reaches every declared workload count" % String(scenario_id))
+		var expected := (
+			Scenario.CURRENT_PRESSURE_TARGET
+			if scenario_id == &"current_pressure"
+			else (77 if scenario_id == &"boss_pressure" else Scenario.CAPACITY_PRESSURE_TARGET)
+		)
+		_expect(int(snapshot["expected_enemies"]) == expected, "%s uses its locked actor load" % String(scenario_id))
+		_expect(
+			PackedInt32Array(snapshot["pressure"]["sector_histogram"]).size() == 8,
+			"%s publishes an eight-sector pressure histogram" % String(scenario_id)
+		)
+		_expect(
+			int(snapshot["pressure"]["hostile_projectiles"]) == int(snapshot["expected_hostile_projectiles"]),
+			"%s pressure snapshot exposes hostile projectile occupancy" % String(scenario_id)
+		)
 		if scenario_id == &"lifecycle_pressure":
 			_expect(int(snapshot["lifecycle_cycles"]) == 300, "lifecycle scenario retires 300 actors before capacity load")
 			for _step in 20:

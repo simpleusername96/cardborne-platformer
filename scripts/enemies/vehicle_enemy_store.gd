@@ -4,11 +4,13 @@ extends RefCounted
 ## Owns a bounded, preallocated live-enemy pool. Swap retirement keeps both
 ## removal and identity lookup constant-time without retaining dead history.
 
-const MAX_LIVE_HOSTILES := 128
+const MAX_LIVE_HOSTILES := 320
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 
 var live: Array[EnemyState] = []
 var rejected_spawns := 0
+var rejected_capacity := 0
+var rejected_invalid := 0
 
 var _by_id: Dictionary = {}
 var _pending_ids: PackedStringArray = []
@@ -33,11 +35,14 @@ func clear() -> void:
 	_pending_ids.clear()
 	_pending_set.clear()
 	rejected_spawns = 0
+	rejected_capacity = 0
+	rejected_invalid = 0
 
 
 func acquire() -> EnemyState:
 	if _pool.is_empty():
 		rejected_spawns += 1
+		rejected_capacity += 1
 		return null
 	return _pool.pop_back()
 
@@ -45,8 +50,14 @@ func acquire() -> EnemyState:
 func add(enemy: EnemyState) -> bool:
 	if enemy == null:
 		return false
-	if live.size() >= MAX_LIVE_HOSTILES or enemy.id.is_empty() or _by_id.has(enemy.id):
+	if live.size() >= MAX_LIVE_HOSTILES:
 		rejected_spawns += 1
+		rejected_capacity += 1
+		release_untracked(enemy)
+		return false
+	if enemy.id.is_empty() or _by_id.has(enemy.id):
+		rejected_spawns += 1
+		rejected_invalid += 1
 		release_untracked(enemy)
 		return false
 	enemy.runtime_slot = live.size()
@@ -123,6 +134,9 @@ func debug_snapshot() -> Dictionary:
 		"pending": _pending_ids.size(),
 		"pool": _pool.size(),
 		"rejected_spawns": rejected_spawns,
+		"rejected_capacity": rejected_capacity,
+		"rejected_invalid": rejected_invalid,
+		"capacity": MAX_LIVE_HOSTILES,
 	}
 
 

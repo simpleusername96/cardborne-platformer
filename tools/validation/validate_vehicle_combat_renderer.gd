@@ -20,6 +20,8 @@ func _run() -> void:
 	await process_frame
 	var snapshot: Dictionary = renderer.debug_snapshot()
 	var pixel_enabled := bool(snapshot.get("pixel_enabled", false))
+	_expect(int(snapshot["enemy_capacity"]) == 320, "renderer shares the 320-hostile store capacity")
+	_expect(int(snapshot["status_arc_capacity"]) == 960, "status overlays scale from shared enemy capacity")
 	_expect(pixel_enabled, "approved pixel player presentation is active")
 	_expect(int(snapshot["batches"]) == 50, "combat presentation preserves the established retained batch count")
 	if pixel_enabled:
@@ -250,7 +252,10 @@ func _run() -> void:
 			"projectile trail remains translucent"
 		)
 	var status_batch := renderer.get_node("Overlay_status_arc") as MultiMeshInstance2D
-	_expect(status_batch.multimesh.instance_count == 384, "one retained status arc batch reserves exactly 128 by three instances")
+	_expect(
+		status_batch.multimesh.instance_count == Renderer.STATUS_ARC_CAPACITY,
+		"one retained status arc batch reserves three instances per hostile slot"
+	)
 	_expect(status_batch.multimesh.visible_instance_count == 3, "three simultaneous elements render as three large retained arcs")
 	var hostile_trail := renderer.get_node("Projectile_trail_enemy_arc") as MultiMeshInstance2D
 	var hostile_trail_buffer := hostile_trail.multimesh.buffer
