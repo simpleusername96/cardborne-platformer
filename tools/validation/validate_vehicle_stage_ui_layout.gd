@@ -28,9 +28,18 @@ func _initialize() -> void:
 				bool(image_backed[surface]),
 				"%s chrome is image-backed at %d" % [surface, width]
 			)
-		_expect(Vector2(contract["action_rail_size"]) == Vector2(154.0, 34.0), "action rail size is fixed at %d" % width)
-		_expect(Vector2(contract["action_rail_position"]) == Vector2(18.0, 76.0), "action rail stays below hull at %d" % width)
+		var action_rail_size := Vector2(contract["action_rail_size"])
+		var action_rail_position := Vector2(contract["action_rail_position"])
+		_expect(action_rail_size == Vector2(148.0, 44.0), "action rail size is fixed at %d" % width)
+		_expect(
+			is_equal_approx(action_rail_position.x, (width - action_rail_size.x) * 0.5)
+				and is_equal_approx(action_rail_position.y, width * 9.0 / 16.0 - 64.0),
+			"action rail stays centered at the bottom at %d" % width
+		)
 		_expect(bool(contract["action_rail_icon_only"]), "action rail contains icons only at %d" % width)
+		_expect(int(contract["action_slot_count"]) == 3, "action rail contains three auxiliary actions at %d" % width)
+		_expect(not bool(contract["shows_primary_slot"]), "primary fire is omitted from the action rail at %d" % width)
+		_expect(Vector2(contract["secondary_slot_size"]) == Vector2(44.0, 44.0), "action icons remain readable at %d" % width)
 		_expect(bool(contract["top_clusters_do_not_overlap"]), "top clusters do not overlap at %d" % width)
 		_expect(bool(contract["central_safe_clear"]), "central play space remains clear at %d" % width)
 		var upgrade_contract := Dictionary(contract["upgrade_choice"])
@@ -79,6 +88,30 @@ func _initialize() -> void:
 		)
 		var minimap_size := Vector2(contract["minimap_size"])
 		_expect(minimap_size.x >= 160.0 and minimap_size.y >= 98.0, "minimap keeps tactical area at %d" % width)
+	ui.update_hud({
+		"dash_available":false,
+		"dash_ratio":0.75,
+		"passive_available":false,
+		"passive_ratio":0.5,
+		"skill_available":false,
+		"skill_ratio":1.0,
+	})
+	var cooldown_contract := ui.debug_ui_contract(1280.0)
+	for slot_variant in cooldown_contract["action_slot_contracts"]:
+		var slot := Dictionary(slot_variant)
+		_expect(not bool(slot["interior_filled"]), "cooldown action circles keep an empty interior")
+		_expect(not bool(slot["has_text"]), "action circles do not render labels")
+	ui.update_hud({
+		"dash_available":true,
+		"dash_ratio":0.0,
+		"passive_available":true,
+		"passive_ratio":0.0,
+		"skill_available":true,
+		"skill_ratio":0.0,
+	})
+	var ready_contract := ui.debug_ui_contract(1280.0)
+	for slot_variant in ready_contract["action_slot_contracts"]:
+		_expect(bool(Dictionary(slot_variant)["interior_filled"]), "ready action circles use the filled state")
 	await _validate_upgrade_matrix(ui)
 	var tactical_mesh := MinimapMeshBuilder.build({
 		"cols":13,

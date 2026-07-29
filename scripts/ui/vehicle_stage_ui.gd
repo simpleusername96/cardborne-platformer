@@ -55,6 +55,9 @@ const MODAL_MINIMUMS := {
 	"settings":Vector2(920.0, 570.0),
 	"guidebook":Vector2(1160.0, 636.0),
 }
+const HEALTH_CLUSTER_SIZE := Vector2(216.0, 74.0)
+const ACTION_RAIL_SIZE := Vector2(148.0, 44.0)
+const ACTION_RAIL_BOTTOM_MARGIN := 20.0
 
 
 class HealthPips:
@@ -75,7 +78,7 @@ class HealthPips:
 
 	func _ready() -> void:
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
-		custom_minimum_size = Vector2(160.0, 42.0)
+		custom_minimum_size = Vector2(180.0, 46.0)
 		set_process(false)
 
 	func set_values(
@@ -122,9 +125,9 @@ class HealthPips:
 
 	func _draw() -> void:
 		var font := get_theme_default_font()
-		draw_string(font, Vector2(0.0, 14.0), "LV.%d" % run_level, HORIZONTAL_ALIGNMENT_LEFT, 52.0, 14, Art.CERAMIC_GREEN)
-		draw_string(font, Vector2(54.0, 14.0), "%d / %d" % [roundi(health), roundi(maximum)], HORIZONTAL_ALIGNMENT_RIGHT, size.x - 54.0, 14, Art.INK)
-		var hull_rect := Rect2(0.0, 18.0, size.x, 12.0)
+		draw_string(font, Vector2(0.0, 16.0), "LV.%d" % run_level, HORIZONTAL_ALIGNMENT_LEFT, 58.0, 16, Art.MINT_SOFT)
+		draw_string(font, Vector2(60.0, 16.0), "%d / %d" % [roundi(health), roundi(maximum)], HORIZONTAL_ALIGNMENT_RIGHT, size.x - 60.0, 16, Art.IVORY_BRIGHT)
+		var hull_rect := Rect2(0.0, 21.0, size.x, 13.0)
 		draw_rect(hull_rect, Art.IVORY_SHADE)
 		draw_rect(
 			Rect2(
@@ -136,7 +139,7 @@ class HealthPips:
 		draw_rect(Rect2(hull_rect.position, Vector2(hull_rect.size.x * clampf(health / maximum, 0.0, 1.0), hull_rect.size.y)), Art.CORAL)
 		if _pulse_time > 0.0:
 			draw_rect(hull_rect.grow(2.0), Art.CORAL, false, 2.0)
-		var xp_rect := Rect2(0.0, 35.0, size.x, 6.0)
+		var xp_rect := Rect2(0.0, 39.0, size.x, 7.0)
 		draw_rect(xp_rect, Art.CERAMIC_GREEN_MID)
 		draw_rect(Rect2(xp_rect.position, Vector2(xp_rect.size.x * clampf(experience / experience_required, 0.0, 1.0), xp_rect.size.y)), Art.MUSTARD)
 
@@ -144,67 +147,72 @@ class HealthPips:
 class ActionRailSlot:
 	extends Control
 
-	var binding := ""
 	var action_name := ""
-	var state_text := "READY"
 	var accent := Art.MUSTARD
 	var cooldown_ratio := 0.0
-	var segment_count := 0
-	var filled_segments := 0
-	var is_primary := false
+	var available := true
 	var _pixel_catalog
 
 	func _ready() -> void:
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
 		focus_mode = Control.FOCUS_NONE
-		custom_minimum_size = Vector2(34.0, 34.0)
+		custom_minimum_size = Vector2(44.0, 44.0)
 		_pixel_catalog = PixelCatalog.new()
 
-	func configure(key_text: String, title: String, color: Color, primary: bool = false) -> void:
-		binding = key_text
+	func configure(title: String, color: Color) -> void:
 		action_name = title
 		accent = color
-		is_primary = primary
-		custom_minimum_size = Vector2(34.0, 34.0)
+		custom_minimum_size = Vector2(44.0, 44.0)
 		queue_redraw()
 
-	func set_state(value: String, ratio: float = 0.0, current_segments: int = 0, maximum_segments: int = 0) -> void:
-		state_text = value
+	func set_state(is_available: bool, ratio: float = 0.0) -> void:
+		available = is_available
 		cooldown_ratio = clampf(ratio, 0.0, 1.0)
-		filled_segments = maxi(0, current_segments)
-		segment_count = maxi(0, maximum_segments)
-		queue_redraw()
-
-	func set_binding(value: String) -> void:
-		binding = value
 		queue_redraw()
 
 	func _draw() -> void:
 		var center := size * 0.5
-		var radius := 15.0
+		var radius := 19.0
 		draw_circle(center + Vector2(1.0, 2.0), radius + 1.0, Color(Art.COBALT_DEEP, 0.82))
-		draw_circle(center, radius, Art.IVORY_BRIGHT)
-		var progress := cooldown_ratio if is_primary else 1.0 - cooldown_ratio
-		draw_arc(center, radius - 1.0, -PI * 0.5, -PI * 0.5 + TAU * clampf(progress, 0.0, 1.0), 24, accent, 3.0, true)
+		draw_circle(center, radius, accent if available else Color(Art.COBALT_DEEP, 0.92))
+		draw_arc(
+			center,
+			radius,
+			0.0,
+			TAU,
+			32,
+			Art.IVORY_BRIGHT if available else Color(Art.MINT_SOFT, 0.58),
+			2.0,
+			true
+		)
+		if not available:
+			var progress := 1.0 - cooldown_ratio
+			draw_arc(
+				center,
+				radius - 3.0,
+				-PI * 0.5,
+				-PI * 0.5 + TAU * clampf(progress, 0.0, 1.0),
+				28,
+				Color(accent, 0.82),
+				2.0,
+				true
+			)
 		if _draw_pixel_icon(center):
 			return
+		var icon_color := Color(Art.COBALT_DEEP, 0.95) if available else Color(Art.IVORY_BRIGHT, 0.78)
 		match action_name:
-			"ACTION_PRIMARY":
-				draw_colored_polygon(PackedVector2Array([center + Vector2(7.0, 0.0), center + Vector2(-5.0, -4.0), center + Vector2(-5.0, 4.0)]), accent)
 			"ACTION_SEEKER":
-				for offset in [-6.0, 0.0, 6.0]: draw_circle(center + Vector2(offset, 0.0), 2.3, accent)
+				for offset in [-6.0, 0.0, 6.0]: draw_circle(center + Vector2(offset, 0.0), 2.3, icon_color)
 			"ACTION_DASH":
-				draw_colored_polygon(PackedVector2Array([center + Vector2(-6.0, -5.0), center + Vector2(1.0, 0.0), center + Vector2(-6.0, 5.0), center + Vector2(7.0, 0.0)]), accent)
+				draw_colored_polygon(PackedVector2Array([center + Vector2(-6.0, -5.0), center + Vector2(1.0, 0.0), center + Vector2(-6.0, 5.0), center + Vector2(7.0, 0.0)]), icon_color)
 			_:
-				draw_colored_polygon(PackedVector2Array([center + Vector2(0.0, -7.0), center + Vector2(6.0, 5.0), center, center + Vector2(-6.0, 5.0)]), accent)
+				draw_colored_polygon(PackedVector2Array([center + Vector2(0.0, -7.0), center + Vector2(6.0, 5.0), center, center + Vector2(-6.0, 5.0)]), icon_color)
 
 	func _draw_pixel_icon(center: Vector2) -> bool:
 		if _pixel_catalog == null or not _pixel_catalog.is_ready():
 			return false
 		var variant := &"emp"
 		match action_name:
-			"ACTION_PRIMARY":
-				variant = &"primary"
 			"ACTION_SEEKER":
 				variant = &"seeker"
 			"ACTION_DASH":
@@ -225,9 +233,17 @@ class ActionRailSlot:
 				float(region[0]), float(region[1]),
 				float(region[2]), float(region[3])
 			),
-			Color.WHITE
+			Color(Art.COBALT_DEEP, 0.95) if available else Color.WHITE
 		)
 		return true
+
+	func debug_contract() -> Dictionary:
+		return {
+			"available":available,
+			"interior_filled":available,
+			"has_text":false,
+			"minimum_size":custom_minimum_size,
+		}
 
 
 class ControlHintGlyph:
@@ -399,7 +415,6 @@ var _target_cluster: VBoxContainer
 var _target_name: Label
 var _target_bar: ProgressBar
 var _target_state: Label
-var _primary_slot: ActionRailSlot
 var _dash_slot: ActionRailSlot
 var _passive_slot: ActionRailSlot
 var _skill_slot: ActionRailSlot
@@ -571,7 +586,7 @@ func _build_hud() -> void:
 	_health_panel = _flat_panel()
 	_health_panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	_health_panel.position = Vector2(18.0, 16.0)
-	_health_panel.size = Vector2(184.0, 54.0)
+	_health_panel.size = HEALTH_CLUSTER_SIZE
 	_hud.add_child(_health_panel)
 	_health_bar = HealthPips.new()
 	_health_panel.add_child(_health_bar)
@@ -657,17 +672,16 @@ func _build_hud() -> void:
 	_dock_panel = Control.new()
 	_dock_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_dock_panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	_dock_panel.position = Vector2(18.0, 76.0)
-	_dock_panel.size = Vector2(154.0, 34.0)
+	_dock_panel.position = Vector2(566.0, 656.0)
+	_dock_panel.size = ACTION_RAIL_SIZE
 	_hud.add_child(_dock_panel)
 	var dock := HBoxContainer.new()
-	dock.add_theme_constant_override("separation", 6)
+	dock.add_theme_constant_override("separation", 8)
 	dock.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_dock_panel.add_child(dock)
-	_primary_slot = _action_slot(dock, "LMB", "ACTION_PRIMARY", AMBER, true)
-	_passive_slot = _action_slot(dock, "AUTO", "ACTION_SEEKER", MOSS)
-	_dash_slot = _action_slot(dock, "SPACE", "ACTION_DASH", CYAN)
-	_skill_slot = _action_slot(dock, "SHIFT", "ACTION_EMP", VIOLET)
+	_passive_slot = _action_slot(dock, "ACTION_SEEKER", MOSS)
+	_dash_slot = _action_slot(dock, "ACTION_DASH", CYAN)
+	_skill_slot = _action_slot(dock, "ACTION_EMP", VIOLET)
 
 	_buff_label = _label("", 13, OFF_WHITE)
 	_buff_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -688,7 +702,7 @@ func _apply_responsive_layout() -> void:
 	var compact := _root.size.x < 1100.0
 	var objective_width := 300.0 if compact else 360.0
 	var objective_height := 40.0 if compact else 44.0
-	var health_size := Vector2(168.0, 50.0) if compact else Vector2(184.0, 54.0)
+	var health_size := HEALTH_CLUSTER_SIZE
 	_health_panel.size = health_size
 	_objective_panel.position = Vector2((_root.size.x - objective_width) * 0.5, 16.0)
 	_objective_panel.custom_minimum_size = Vector2(objective_width, objective_height)
@@ -705,8 +719,11 @@ func _apply_responsive_layout() -> void:
 	var target_size := Vector2(168.0, 60.0) if compact else Vector2(184.0, 64.0)
 	_target_panel.size = target_size
 	_target_panel.position = Vector2(_root.size.x - target_size.x - 18.0, _root.size.y - target_size.y - 82.0)
-	_dock_panel.size = Vector2(154.0, 34.0)
-	_dock_panel.position = Vector2(18.0, 76.0)
+	_dock_panel.size = ACTION_RAIL_SIZE
+	_dock_panel.position = Vector2(
+		(_root.size.x - ACTION_RAIL_SIZE.x) * 0.5,
+		_root.size.y - ACTION_RAIL_SIZE.y - ACTION_RAIL_BOTTOM_MARGIN
+	)
 	_objective_detail.add_theme_font_size_override("font_size", 12 if compact else 13)
 	_notification.size.x = 320.0 if compact else 360.0
 	_notification.position.x = (_root.size.x - _notification.size.x) * 0.5
@@ -1243,12 +1260,10 @@ func update_hud(snapshot: Dictionary) -> void:
 			_objective_detail.visible = true
 		_objective_label.text = next_objective
 		_objective_detail.text = String(snapshot.get("objective_detail", ""))
-	if snapshot.has("primary_state"):
-		_primary_slot.action_name = String(snapshot.get("primary_name", "ACTION_PRIMARY"))
-		_primary_slot.set_state(String(snapshot["primary_state"]), float(snapshot.get("primary_ratio", 0.0)))
-		_dash_slot.set_state(String(snapshot.get("dash_state", "STATE_READY")), float(snapshot.get("dash_ratio", 0.0)))
-		_passive_slot.set_state(String(snapshot.get("passive_state", "STATE_READY")), float(snapshot.get("passive_ratio", 0.0)))
-		_skill_slot.set_state(String(snapshot.get("skill_state", "STATE_READY")), float(snapshot.get("skill_ratio", 0.0)))
+	if snapshot.has("dash_available"):
+		_dash_slot.set_state(bool(snapshot["dash_available"]), float(snapshot.get("dash_ratio", 0.0)))
+		_passive_slot.set_state(bool(snapshot.get("passive_available", false)), float(snapshot.get("passive_ratio", 0.0)))
+		_skill_slot.set_state(bool(snapshot.get("skill_available", false)), float(snapshot.get("skill_ratio", 0.0)))
 		_buff_label.text = String(snapshot.get("buff_text", ""))
 	if snapshot.has("boss"):
 		var boss: Dictionary = snapshot["boss"]
@@ -1475,15 +1490,19 @@ func debug_ui_contract(viewport_width: float = 1280.0) -> Dictionary:
 	var viewport_height := viewport_width * 9.0 / 16.0
 	var objective_width := 300.0 if compact else 360.0
 	var objective_height := 40.0 if compact else 44.0
-	var health_size := Vector2(168.0, 50.0) if compact else Vector2(184.0, 54.0)
+	var health_size := HEALTH_CLUSTER_SIZE
 	var minimap_size := Vector2(160.0, 98.0) if compact else Vector2(176.0, 108.0)
 	var target_size := Vector2(168.0, 60.0) if compact else Vector2(184.0, 64.0)
 	var deployment_surface_size := Vector2(
 		minf(MODAL_MINIMUMS["deployment"].x, viewport_width - 48.0),
 		minf(MODAL_MINIMUMS["deployment"].y, viewport_height - 24.0)
 	)
-	var dock_size := Vector2(154.0, 34.0)
-	var health_end := 18.0 + (168.0 if compact else 184.0)
+	var dock_size := ACTION_RAIL_SIZE
+	var dock_position := Vector2(
+		(viewport_width - dock_size.x) * 0.5,
+		viewport_height - dock_size.y - ACTION_RAIL_BOTTOM_MARGIN
+	)
+	var health_end := 18.0 + health_size.x
 	var objective_start := viewport_width * 0.5 - objective_width * 0.5
 	var objective_end := objective_start + objective_width
 	var minimap_start := viewport_width - minimap_size.x - 18.0
@@ -1495,7 +1514,7 @@ func debug_ui_contract(viewport_width: float = 1280.0) -> Dictionary:
 		Rect2(Vector2(objective_start, 16.0), Vector2(objective_width, objective_height)),
 		Rect2(Vector2(viewport_width - minimap_size.x - 18.0, 16.0), minimap_size),
 		Rect2(Vector2(viewport_width - target_size.x - 18.0, viewport_height - target_size.y - 82.0), target_size),
-		Rect2(Vector2(18.0, 76.0), dock_size),
+		Rect2(dock_position, dock_size),
 	]
 	var opaque_area := 0.0
 	var central_safe := Rect2(Vector2(viewport_width * 0.20, viewport_height * 0.20), Vector2(viewport_width * 0.60, viewport_height * 0.60))
@@ -1517,10 +1536,16 @@ func debug_ui_contract(viewport_width: float = 1280.0) -> Dictionary:
 			"tab":_root.theme.get_stylebox(&"tab_selected", &"TabBar") is StyleBoxTexture,
 		},
 		"command_min_height": _pause_first_button.custom_minimum_size.y,
-		"action_rail_size": Vector2(154.0, 34.0),
-		"action_rail_position":Vector2(18.0, 76.0),
+		"action_rail_size": dock_size,
+		"action_rail_position":dock_position,
 		"action_rail_icon_only":true,
-		"primary_slot_size": _primary_slot.custom_minimum_size,
+		"action_slot_count":3,
+		"shows_primary_slot":false,
+		"action_slot_contracts":[
+			_passive_slot.debug_contract(),
+			_dash_slot.debug_contract(),
+			_skill_slot.debug_contract(),
+		],
 		"secondary_slot_size": _dash_slot.custom_minimum_size,
 		"body_font_weight": body_font_weight,
 		"minimap_size": minimap_size,
@@ -1762,7 +1787,6 @@ func _refresh_localized_content() -> void:
 	_refresh_input_bindings()
 	if is_instance_valid(_guide_panel):
 		_guide_panel.refresh_localized_content()
-	_primary_slot.queue_redraw()
 	_passive_slot.queue_redraw()
 	_dash_slot.queue_redraw()
 	_skill_slot.queue_redraw()
@@ -1776,15 +1800,12 @@ func _on_controls_changed(_action: StringName) -> void:
 
 
 func _refresh_input_bindings() -> void:
-	if not is_instance_valid(_primary_slot):
+	if not is_instance_valid(_root):
 		return
 	var settings := get_node_or_null("/root/SettingsStore")
 	var bindings := InputProfile.default_descriptors()
 	if settings != null:
 		bindings = settings.control_bindings
-	_primary_slot.set_binding(InputProfile.action_display_name(&"primary_fire", bindings))
-	_dash_slot.set_binding(InputProfile.action_display_name(&"dash", bindings))
-	_skill_slot.set_binding(InputProfile.action_display_name(&"active_skill", bindings))
 	for action_variant in _deployment_control_binding_labels:
 		var action := StringName(action_variant)
 		var label := _deployment_control_binding_labels[action] as Label
@@ -1869,9 +1890,9 @@ func _deployment_control_row(
 		_deployment_control_binding_labels[action] = binding
 
 
-func _action_slot(parent: HBoxContainer, binding: String, title: String, color: Color, primary: bool = false) -> ActionRailSlot:
+func _action_slot(parent: HBoxContainer, title: String, color: Color) -> ActionRailSlot:
 	var slot := ActionRailSlot.new()
-	slot.configure(binding, title, color, primary)
+	slot.configure(title, color)
 	parent.add_child(slot)
 	return slot
 

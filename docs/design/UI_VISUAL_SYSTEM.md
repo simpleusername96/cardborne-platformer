@@ -163,10 +163,13 @@ rules remain owned by the product specification.
 - Keep live HUD clusters compact and outside the central combat rectangle.
   Prefer icons, strong numerals, radial cooldowns, and short labels over wide
   explanatory panels.
-- Hull/experience remains at the top left with a 154x34 icon-only action rail
-  directly below it. The bottom center remains free. The title-free 176x108
-  minimap uses player facing, clustered moving enemies, shape-coded priority
-  actors/items/crates, and support-field lifetime arcs.
+- Hull/experience remains at the top left in a readable high-contrast cluster.
+  The bottom center holds three 44x44 icon-only circles for seeker, dash, and
+  EMP; primary fire is omitted. A circle's interior is filled only while that
+  action is available, while cooldown keeps the interior dark and uses only a
+  thin progress arc. The title-free 176x108 minimap uses player facing,
+  clustered moving enemies, shape-coded priority actors/items/crates, and
+  support-field lifetime arcs.
 - Timed effects use shape-distinct radial badges around the ship. Cooldown and
   active duration are distinguishable without color alone.
 - Hull loss updates the main fill immediately and uses one restrained trailing

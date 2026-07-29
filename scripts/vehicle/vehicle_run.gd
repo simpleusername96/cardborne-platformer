@@ -4105,22 +4105,6 @@ func _build_hud_snapshot(include_world_channels: bool = true, include_guidebook:
 	var stage_profile := StageCatalog.profile(current_stage_id)
 	var experience_snapshot := experience_runtime.snapshot()
 
-	var dash_state := tr("STATE_READY") if player_dash_cooldown <= 0.0 else "%.1fs" % player_dash_cooldown
-	var passive_state := tr("STATE_READY") if player_passive_cooldown <= 0.0 else "%.1fs" % player_passive_cooldown
-	var skill_state := tr("STATE_STARTUP") if player_emp_startup > 0.0 else (tr("STATE_READY") if player_emp_cooldown <= 0.0 else "%.1fs" % player_emp_cooldown)
-	var primary_snapshot := player_primary_weapon.snapshot()
-	var primary_ratio := float(primary_snapshot["charge_ratio"])
-	var primary_state_key := "STATE_PRIMARY_IDLE"
-	match StringName(primary_snapshot["tier"]):
-		&"firing":
-			primary_state_key = "STATE_PRIMARY_FIRING"
-		&"charging":
-			primary_state_key = "STATE_PRIMARY_CHARGING"
-		&"ready":
-			primary_state_key = "STATE_PRIMARY_OPENING_READY"
-	var primary_state := tr(primary_state_key).replace("%d", str(roundi(primary_ratio * 100.0)))
-	var primary_name := tr("PRIMARY_PULSE_CANNON")
-
 	var target_snapshot := {"visible": false}
 	if not _aim_target_id.is_empty():
 		var target := _find_enemy_by_id(_aim_target_id)
@@ -4161,14 +4145,11 @@ func _build_hud_snapshot(include_world_channels: bool = true, include_guidebook:
 		"objective": "%s · %s" % [tr(String(stage_profile["title_key"])), objective[0]],
 		"objective_detail": objective[1],
 		"stage_title": tr(String(stage_profile["title_key"])),
-		"primary_name": primary_name,
-		"primary_state": primary_state,
-		"primary_ratio": primary_ratio,
-		"dash_state": dash_state,
+		"dash_available":player_dash_cooldown <= 0.0,
 		"dash_ratio": clampf(player_dash_cooldown / _dash_cooldown_max(), 0.0, 1.0),
-		"passive_state": passive_state,
+		"passive_available":player_passive_cooldown <= 0.0,
 		"passive_ratio": clampf(player_passive_cooldown / PASSIVE_COOLDOWN, 0.0, 1.0),
-		"skill_state": skill_state,
+		"skill_available":player_emp_startup <= 0.0 and player_emp_cooldown <= 0.0,
 		"skill_ratio": clampf(player_emp_cooldown / _emp_cooldown_max(), 0.0, 1.0),
 		"buff_text": "",
 		"target": target_snapshot,
@@ -5091,6 +5072,16 @@ func _run_capture_sequence() -> void:
 	_capture_prepare_stage(0)
 	await _settle_capture()
 	_save_capture("02-safe-arrival.png")
+	player_dash_cooldown = _dash_cooldown_max() * 0.75
+	player_passive_cooldown = PASSIVE_COOLDOWN * 0.5
+	player_emp_cooldown = _emp_cooldown_max()
+	_ui.update_hud(_build_hud_snapshot(false, false))
+	await _settle_capture()
+	_save_capture("02d-action-cooldowns.png")
+	player_dash_cooldown = 0.0
+	player_passive_cooldown = 0.0
+	player_emp_cooldown = 0.0
+	_ui.update_hud(_build_hud_snapshot(false, false))
 	var active_build := _build_snapshot()
 	_ui.update_hud({
 		"build_snapshot":active_build,
