@@ -46,6 +46,9 @@ var _route_waypoints: Array[Vector2] = []
 var _route_waypoint_index := 0
 var _dash_release_pending := false
 var _scheduler_spawn_seen := false
+var _production_pressure_samples: Array[Dictionary] = []
+var _production_next_sample := 0.0
+var _production_last_sample_spawned := 0
 
 
 func configure(id: StringName) -> bool:
@@ -131,6 +134,7 @@ func after_physics(run: Node) -> void:
 		_scheduler_spawn_seen = _scheduler_spawn_seen or not Dictionary(
 			scheduler_snapshot.get("spawned_by_squad", {})
 		).is_empty()
+		_record_production_pressure(run, scheduler_snapshot)
 		return
 	_maintain_enemy_pressure(run)
 	_fill_projectiles(run, false)
@@ -468,6 +472,9 @@ func _prepare_stage_five(run: Node) -> void:
 
 
 func _activate_production_replay(run: Node) -> void:
+	_production_pressure_samples.clear()
+	_production_next_sample = 0.0
+	_production_last_sample_spawned = 0
 	run.player_barrier_strength = 1.0e9
 	run.player_barrier_timer = 1.0e9
 	var center := Rules.player_start(run.current_stage_id)
@@ -519,6 +526,19 @@ func _production_validation_snapshot(run: Node) -> Dictionary:
 	var scheduler_spawned := _scheduler_spawn_seen or not Dictionary(
 		scheduler.get("spawned_by_squad", {})
 	).is_empty()
+	var allocation_qualification := _production_allocation_qualification(scheduler)
+	var active_cap := int(scheduler.get("active_cap", 0))
+	var median_active := _production_sample_median(&"active")
+	var maximum_ranged := _production_sample_maximum(&"ranged_commits")
+	var maximum_denial := _production_sample_maximum(&"denial_commits")
+	var pressure_qualified := (
+		_production_pressure_samples.size() >= 10
+		and int(scheduler.get("beat", 0)) >= 4
+		and median_active >= ceili(float(active_cap) * 0.90)
+		and bool(allocation_qualification["valid"])
+		and maximum_ranged <= EncounterDirector.MAX_RANGED_COMMITS
+		and maximum_denial <= EncounterDirector.MAX_DENIAL_COMMITS
+	)
 	var valid: bool = (
 		StringName(scheduler.get("stage_id", &"")) == StageCatalog.STAGE_IDS[-1]
 		and StringName(scheduler.get("difficulty", &"")) == RunDifficulty.HARD
@@ -526,7 +546,8 @@ func _production_validation_snapshot(run: Node) -> Dictionary:
 		and int(enemy_snapshot.get("rejected_capacity", 0)) == 0
 		and run.projectile_store.validate_counts()
 		and int(renderer_snapshot["batches"]) <= 50
-		and (elapsed < 5.1 or scheduler_spawned)
+		and scheduler_spawned
+		and pressure_qualified
 	)
 	return {
 		"valid":valid,
@@ -551,6 +572,113 @@ func _production_validation_snapshot(run: Node) -> Dictionary:
 		"scheduler_spawn_seen":scheduler_spawned,
 		"scheduler":scheduler,
 		"pressure":scheduler.get("pressure", {}),
+		"production_qualification":{
+			"valid":pressure_qualified,
+			"sample_count":_production_pressure_samples.size(),
+			"sample_interval_seconds":1.0,
+			"active_cap":active_cap,
+			"median_active":median_active,
+			"minimum_active":ceili(float(active_cap) * 0.90),
+			"maximum_ranged_commits":maximum_ranged,
+			"maximum_denial_commits":maximum_denial,
+			"allocations":allocation_qualification,
+			"samples":_production_pressure_samples.duplicate(true),
+		},
+	}
+
+
+func _record_production_pressure(run: Node, scheduler: Dictionary) -> void:
+	var spawned_total := _production_spawned_total(scheduler)
+	if int(scheduler.get("beat", 0)) < 4:
+		_production_last_sample_spawned = spawned_total
+		return
+	if elapsed + 0.0001 < _production_next_sample:
+		return
+	var pressure := Dictionary(scheduler.get("pressure", {}))
+	var enemy_snapshot: Dictionary = run.enemy_store.debug_snapshot()
+	var projectile_snapshot: Dictionary = run.projectile_store.debug_snapshot()
+	_production_pressure_samples.append({
+		"time":elapsed,
+		"authored_reserve":StageCatalog.authored_population(run.current_stage_id),
+		"live":int(enemy_snapshot.get("live", 0)),
+		"active":int(pressure.get("active", 0)),
+		"visible":int(pressure.get("visible", 0)),
+		"near_900":int(pressure.get("near_900", 0)),
+		"sector_histogram":PackedInt32Array(
+			pressure.get("sector_histogram", PackedInt32Array())
+		),
+		"spawned_last_second":maxi(
+			0, spawned_total - _production_last_sample_spawned
+		),
+		"ranged_commits":int(pressure.get("ranged_commits", 0)),
+		"denial_commits":int(pressure.get("denial_commits", 0)),
+		"player_projectiles":int(projectile_snapshot.get("player", 0)),
+		"hostile_projectiles":int(projectile_snapshot.get("hostile", 0)),
+	})
+	if _production_pressure_samples.size() > 10:
+		_production_pressure_samples.pop_front()
+	_production_last_sample_spawned = spawned_total
+	_production_next_sample = elapsed + 1.0
+
+
+func _production_spawned_total(scheduler: Dictionary) -> int:
+	var total := 0
+	for value in Dictionary(scheduler.get("spawned_by_squad", {})).values():
+		total += int(value)
+	return total
+
+
+func _production_sample_median(key: StringName) -> int:
+	if _production_pressure_samples.is_empty():
+		return 0
+	var values := PackedInt32Array()
+	for sample in _production_pressure_samples:
+		values.append(int(sample.get(key, 0)))
+	values.sort()
+	return values[values.size() / 2]
+
+
+func _production_sample_maximum(key: StringName) -> int:
+	var result := 0
+	for sample in _production_pressure_samples:
+		result = maxi(result, int(sample.get(key, 0)))
+	return result
+
+
+func _production_allocation_qualification(scheduler: Dictionary) -> Dictionary:
+	var sectors := PackedInt32Array()
+	sectors.resize(8)
+	for allocation_variant in Array(scheduler.get("allocations", [])):
+		var allocation := Dictionary(allocation_variant)
+		var sector := int(allocation.get("sector", -1))
+		if sector >= 0 and sector < sectors.size():
+			sectors[sector] += 1
+	var occupied_sectors := 0
+	var occupied_quadrants := PackedByteArray()
+	occupied_quadrants.resize(4)
+	var total := 0
+	var maximum := 0
+	for sector in sectors.size():
+		var count := sectors[sector]
+		total += count
+		maximum = maxi(maximum, count)
+		if count > 0:
+			occupied_sectors += 1
+			occupied_quadrants[floori(float(sector) / 2.0)] = 1
+	var quadrant_count := 0
+	for occupied in occupied_quadrants:
+		quadrant_count += int(occupied)
+	var maximum_share := float(maximum) / float(total) if total > 0 else 1.0
+	return {
+		"valid":(
+			quadrant_count == 4
+			and occupied_sectors >= 4
+			and maximum_share <= 0.35
+		),
+		"quadrants":quadrant_count,
+		"occupied_sectors":occupied_sectors,
+		"maximum_sector_share":maximum_share,
+		"sector_histogram":sectors,
 	}
 
 

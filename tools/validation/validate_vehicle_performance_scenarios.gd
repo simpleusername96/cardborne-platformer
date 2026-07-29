@@ -4,6 +4,7 @@ const Scenario = preload("res://scripts/performance/vehicle_performance_scenario
 const Recorder = preload("res://scripts/performance/vehicle_performance_recorder.gd")
 const PressureFixture = preload("res://scripts/performance/vehicle_pressure_fixture.gd")
 const InputProfile = preload("res://scripts/input/vehicle_input_profile.gd")
+const EncounterDirector = preload("res://scripts/encounters/vehicle_encounter_director.gd")
 const RUN_SCENE := "res://scenes/run/VehicleRun.tscn"
 
 var failures: Array[String] = []
@@ -37,7 +38,7 @@ func _run() -> void:
 		scenario.activate(run)
 		print("Activated performance scenario: %s" % String(scenario_id))
 		if scenario_id == &"production_replay":
-			for _step in 370:
+			for _step in 3000:
 				scenario.before_physics(run, 1.0 / 60.0)
 				run.call("_update_encounter", 1.0 / 60.0)
 				scenario.after_physics(run)
@@ -63,6 +64,27 @@ func _run() -> void:
 		)
 		if scenario_id == &"production_replay":
 			_expect(bool(snapshot["scheduler_spawn_seen"]), "production replay creates actors through the real scheduler")
+			var qualification := Dictionary(snapshot["production_qualification"])
+			_expect(
+				int(qualification["sample_count"]) == 10,
+				"production replay retains a rolling ten-second peak window"
+			)
+			_expect(
+				int(qualification["median_active"])
+					>= int(qualification["minimum_active"]),
+				"production replay sustains at least ninety percent of the Hard peak cap"
+			)
+			_expect(
+				bool(qualification["allocations"]["valid"]),
+				"production replay allocation covers four quadrants without one-sided concentration"
+			)
+			_expect(
+				int(qualification["maximum_ranged_commits"])
+					<= EncounterDirector.MAX_RANGED_COMMITS
+					and int(qualification["maximum_denial_commits"])
+					<= EncounterDirector.MAX_DENIAL_COMMITS,
+				"production replay peak window preserves commit caps"
+			)
 		else:
 			_expect(int(snapshot["fixture_fingerprint"]) != 0, "%s publishes a fixture fingerprint" % String(scenario_id))
 		if scenario_id == &"peak_horde":
