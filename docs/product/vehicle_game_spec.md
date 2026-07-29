@@ -3,7 +3,7 @@ type: spec
 status: active
 owner: BK
 created: 2026-07-21
-last_reviewed: 2026-07-26
+last_reviewed: 2026-07-29
 canonical_for: Cardborne gameplay and product behavior
 scope: Current run-selected-field five-stage vehicle campaign
 related:
@@ -12,6 +12,8 @@ related:
   - ../../.agents/vehicle-performance-architecture-audit.md
   - ../../.agents/vehicle-performance-stabilization-evidence.md
   - ../../.agents/execplans/2026-07-23-vehicle-performance-architecture-stabilization.md
+  - ../../.agents/execplans/2026-07-29-continuous-multidirectional-horde-readability.md
+  - ../../.agents/continuous-horde-readability-evidence.md
 ---
 
 # Cardborne Vehicle Game Specification
@@ -172,12 +174,13 @@ second time; no individual stat is described as exactly 15% lower.
   across six sectors. The selected cover is validated for the ordinary
   36-pixel and boss 76-pixel actor radii before play.
 - Rendering, movement, projectile collision, line of sight, pursuit, minimap,
-  and validation consume the same active stage-tactical layout. Exact retries
-  reproduce it; adjacent stages activate a different validated tactical set.
+  and validation consume the same active tactical layout. Exact retries
+  reproduce it, and the selected cover geometry remains fixed through all five
+  stages so a run reads as one continuous field rather than five reset maps.
 - Thirty-two ordinary arrival candidates, twelve boss arrival anchors, six
   stationary candidate groups, and at least thirty-two item sockets are
-  reusable authored positions. Each stage selects four stationary threats, three pickups, and
-  five crates from valid sockets. No stage owns a separate map, boss room,
+  reusable authored positions. Each stage selects four stationary threats, six pickups, and
+  eight crates from valid sockets. No stage owns a separate map, boss room,
   closed progression gate, switch maze, or reflector puzzle.
 - Capture, validation, and performance paths accept `--layout-seed=<integer>`
   and `--field-id=<id>`; their default layout seed is `0xC4A2B0`, and
@@ -213,38 +216,26 @@ second time; no individual stat is described as exactly 15% lower.
 
 ### Encounter and stage flow
 
-1. Each stage begins at the shared center with no mobile damaging enemy active.
-2. The first arrival cue begins at 5.1 seconds and the first scout arrives at
-   6.0 seconds.
-3. Later arrivals are eight-squad surges. Each squad contains three to five
-   enemies, so the first surge schedules at least 24 enemies and later surges
-   grow toward 40. Stage 1's first eight-squad surge keeps its authored 27
-   enemies but presents them as two horde fronts: squads 0–3 share one valid
-   anchor for a 12-enemy front and squads 4–7 share another for a 15-enemy
-   front. Each front emits one arrival cue. The second front prefers a direction
-   at least 90 degrees from the first, but a distinct offscreen anchor takes
-   priority when field edges prevent that separation.
-   Horde-front anchors prefer the valid 900–2400-pixel player ring and remain
-   220 pixels beyond the visible world. Ring/offscreen fairness takes precedence
-   over avoiding a recent anchor, and only the two selected front anchors enter
-   recent-anchor memory. Every other surge remains distributed: every squad
-   receives its own deterministic valid anchor, prefers seeded distance lanes at
-   1200, 1650, or 2100 pixels in the same valid ring, remains beyond the visible
-   margin, and avoids the sixteen most recent anchors. Distributed arrivals use
-   groups of at most two squads in beats 0–1 or three squads later. Group gaps
-   are 0.90 seconds early and 0.65 seconds later. Existing role totals are
-   preserved while direct-projectile pressure is distributed between squads.
-   Projectile-firing archetypes are capped at 50% of both the authored mobile
-   population and the four stationary threats in every stage. A stage already
-   below the cap is not inflated to reach it; area, beam, charge, and support
-   roles remain separate classifications.
-   Hard can sustain 62 active enemies from the first combat beat and reaches 92
-   at peak pressure. Normal scales those caps to 58 and 86; Easy scales them to
-   55 and 81. The hard peak plus four stationary threats occupies the
-   96-ordinary-enemy production budget without spilling into the global
-   boss/auxiliary reserve. Excess enemies stay in the deterministic scheduler
-   queue. These quotas and caps are approximately 30% above the pre-enlargement
-   field values.
+1. Stage 1 deployment begins at the shared center. Stages 2–5 begin at the
+   player's current position and facing without reopening deployment.
+2. Stage 1 keeps its opening cadence. After a successful Stage 1–4 transition,
+   the next arrival cue begins after 0.35 seconds and the first hostile arrival
+   begins within 1.35 seconds.
+3. Main-combat packets use deterministic multi-sector allocation. Every surge
+   occupies at least four of eight sectors and all four player-relative
+   quadrants before a sector is reused. Local squads still form readable packs,
+   but no surge is supplied by one wall, wedge, or two fixed fronts. Due
+   enemies enter in bounded bursts of at most four per physics tick so a large
+   scheduled packet fills the battlefield instead of remaining mostly queued.
+   Recent-sector occupancy prevents repeated replenishment from the same side.
+   Projectile-firing mobile roles remain at or below 15% of authored mobile
+   population; only three ranged attackers and two denial attackers may commit
+   at once. Ordinary hostile fire cannot consume the 24-shot boss reserve.
+   Hard active ordinary caps progress through `1/124/172/224/276`; Normal and
+   Easy scale those caps through the existing difficulty profile. Excess
+   enemies remain in the deterministic scheduler queue and are replenished
+   toward the current beat target without increasing individual enemy speed,
+   health, damage, telegraph speed, or projectile speed.
 4. Every mobile enemy joins a shared low-frequency pursuit field and can route
    around cover toward the player. Stationary roles hold authored anchors.
 5. Ordinary defeats advance the stage quota. Living enemies never block travel
@@ -263,17 +254,21 @@ second time; no individual stat is described as exactly 15% lower.
    aimed lane and repeat volleys along it; charge, area, pylon, and damaging
    summon patterns add one aimed three-shot pressure burst. Recovery resumes
    repositioning only after the committed attack ends.
-8. Boss defeat recalls experience, resolves mandatory reward choices, then
-   stages 1–4 automatically preserve the build and explored minimap, return the
-   ship to the center, and begin the next stage. Stage 5 opens the final result.
+8. Boss defeat recalls all live experience within 0.65 seconds and resolves the
+   mandatory reward choice. Stages 1–4 then full-heal the ship, grant 1.2
+   seconds of transition protection, preserve position, facing, aim, build,
+   difficulty, exploration, cover, and persistent terrain state, and show a
+   non-modal 1.6-second stage banner while the next encounter begins. No success
+   report or continue input interrupts the run. Stage 5 opens the final result;
+   failures still open the failure report.
 
 | Stage | Hard quota | Normal quota | Easy quota | Authored mobile population | Boss |
 | ---: | ---: | ---: | ---: | ---: | --- |
-| 1 | 125 | 113 | 101 | 260 | Foundry Colossus |
-| 2 | 166 | 149 | 134 | 300 | Archive Leviathan |
-| 3 | 208 | 187 | 168 | 340 | Drydock Titan |
-| 4 | 250 | 225 | 203 | 380 | Switchyard Behemoth |
-| 5 | 291 | 262 | 236 | 420 | Crown Engine |
+| 1 | 125 | 113 | 101 | 520 | Foundry Colossus |
+| 2 | 166 | 149 | 134 | 660 | Archive Leviathan |
+| 3 | 208 | 187 | 168 | 816 | Drydock Titan |
+| 4 | 250 | 225 | 203 | 1026 | Switchyard Behemoth |
+| 5 | 291 | 262 | 236 | 1260 | Crown Engine |
 
 Four stationary threats are added per stage. Ordinary hostile projectiles stop
 at 96 so 24 of the global 120-shot cap remain reserved for boss attacks. Enemy
@@ -294,6 +289,9 @@ Breach Shot.
   of those two items. Recall retargets the ship's current position every physics
   frame and guarantees all live shards reach it before the 0.65-second recall
   window expires, including while the ship dashes.
+- Each stage places six loose field items and eight breakable crates. The larger
+  number of item sightings redistributes the existing 245-point field-repair
+  budget rather than increasing total recovery without limit.
 - Level thresholds use
   `min(160, 12 + round(3n + 0.55n²))`, where `n` is the zero-based level
   progression index. This makes early choices frequent while restoring a rising
@@ -339,12 +337,13 @@ Breach Shot.
   effective movement, defense, primary/Breach, EMP, secondary, level, and
   acquired-upgrade values from one frozen gameplay-owned snapshot. Outside a
   run it shows one localized empty state.
-- Confirming a boss reward opens a frozen Stage Report before progression. It
-  lists actual defeat counts and effective outgoing damage by stable source,
-  plus a second partition by kinetic, thermal, toxin, cryo, or arc attribute.
-  Both outgoing totals agree within 0.01 and environmental Arc Surge is
-  excluded. A failed attempt opens the same report in failure mode with the
-  last hit and the three largest incoming sources before Garage.
+- Stage 1–4 success history is retained for later inspection but does not open a
+  modal report. Stage 5 result lists actual defeat counts and effective outgoing
+  damage by stable source, plus a second partition by kinetic, thermal, toxin,
+  cryo, or arc attribute. Both outgoing totals agree within 0.01 and
+  environmental Arc Surge is excluded. A failed attempt opens the report in
+  failure mode with the last hit and the three largest incoming sources before
+  Garage.
 - Deployment, upgrade, pause/settings, guidebook, result, and garage are modal
   focus layers. They block carried input and provide deterministic keyboard focus.
 - One upgrade offer contains at most one instance of each card ID. Selection
@@ -358,7 +357,7 @@ Breach Shot.
 
 ### Runtime capacity and performance
 
-- Runtime capacity is fixed at 128 live hostile actors, 240 player projectiles,
+- Runtime capacity is fixed at 320 live hostile actors, 240 player projectiles,
   120 hostile projectiles with 24 slots reserved for bosses, 192 experience
   shards, and 96 repeated effects. Content may use less but may not silently
   raise a cap.
@@ -377,6 +376,10 @@ Breach Shot.
   vertex-colored mesh surface. Scheduled support fields reuse retained world
   batches and one shared 24-segment timer batch; neither system creates
   per-actor canvas draws or per-field scene nodes.
+- Pixel combat presentation coalesces mobile enemies, stationary enemies,
+  bosses, hostile affinity trails, and experience into shared atlas-backed
+  retained batches. The current maximum-pressure fixture uses 23 retained
+  combat batches against a hard ceiling of 50.
 - Only the active vehicle-performance stabilization plan's rendered native/Web
   scenarios and lifecycle soak can establish release performance. Headless
   subsystem microbenchmarks are diagnostic only.

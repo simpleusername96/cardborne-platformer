@@ -68,9 +68,10 @@ rules remain owned by the product specification.
   another. Small unusable gaps are visually sealed.
 - The map is larger than the viewer. The camera shows only a local combat area;
   the explored 20x12 minimap communicates the persistent whole.
-- A new run selects one of three registered macro fields. Each stage activates
-  eight deterministic large modules and tactical sockets from that field;
-  exact retries reproduce them and adjacent stages use a different valid set.
+- A new run selects one of three registered macro fields. The run activates
+  eight deterministic large modules and keeps that cover set through all five
+  stages; exact retries reproduce it. Encounter anchors and item occupants may
+  advance, but the field does not visually rebuild between successful stages.
 - Functional terrain uses one large readable shape and a shape-coded purpose:
   mint plus for repair, mustard outward arrows for transit, mustard stacked
   chevrons for overdrive, violet lightning for an arc hazard, and blocker-fill
@@ -89,6 +90,11 @@ rules remain owned by the product specification.
 - The player, swarm units, mobile specialists, stationary threats, bosses,
   experience shards, repair, recall, and crates have distinct silhouettes and
   scale classes.
+- Presentation footprints are fixed at a 50-pixel player radius, 44-pixel
+  ordinary-enemy radius, 62-pixel installation radius, 146-pixel boss radius,
+  42-pixel pickup plinth radius, and 12/16/22-pixel experience radii. These are
+  visual values only: the established movement, hit, and collection radii
+  remain independent gameplay truth.
 - Tactically different enemy roles do not share one outer contour. A role uses
   one large directional mass, cut, or center accent that remains recognizable
   in grayscale at gameplay scale; role color and simulation radius remain
@@ -113,6 +119,11 @@ rules remain owned by the product specification.
   kinetic, thermal, toxin, cryo, arc, or hybrid silhouette. Player projectiles
   always use a mustard ownership shell with a dark cobalt core; hostile
   projectiles keep affinity color and shape.
+- Hostile projectiles add a non-damaging directional envelope whose maximum
+  presentation scale is 4.5 times the collision radius. The opaque solid core
+  still ends at the collision radius, so the larger halo improves acquisition
+  without implying a larger hitbox. The unmodified player primary uses a 1.25
+  presentation scale and retains its original collision contract.
 - Hostile affinity heads use large, distinct silhouettes: kinetic disk, thermal
   ember, toxin drop, cryo shard, arc bolt, and split hybrid diamond. Head and
   trail may share one static vertex-colored mesh and retained batch, but the
@@ -188,6 +199,10 @@ rules remain owned by the product specification.
   four-pixel mustard frame plus a diamond marker, keyboard focus uses a separate
   rail, and a centered `300x48` Equip action confirms the choice. No timeout,
   hover, or accidental carried click applies a card.
+- Successful Stage 1–4 transitions use a compact, non-modal 1.6-second banner
+  over the live HUD. It never hides the crosshair, objective, minimap, or action
+  rail, never blocks movement or aiming, and yields to upgrade, boss, pause,
+  result, and failure focus layers.
 - Pause keeps Resume as the only filled primary action. Restart and Settings
   remain secondary; aborting to the garage is a restrained tertiary danger
   action. Garage uses the same primary/secondary hierarchy and explicitly shows
@@ -241,6 +256,12 @@ rules remain owned by the product specification.
 - World support fields use retained disk, ring, and beam batches plus one shared
   24-segment timer batch. They do not use per-field immediate canvas drawing or
   per-field scene nodes.
+- High-count pixel actors use shared atlas-backed retained families: one mobile
+  enemy family, one stationary family, one boss family, one experience family,
+  and one hostile-affinity family. Role silhouettes and affinity shapes remain
+  distinct through atlas regions; they do not require one retained batch per
+  role. Maximum-pressure validation currently resolves 23 combat batches and
+  must remain within the 50-batch performance ceiling.
 - Raster assets own approved static surface, silhouette, glyph, marker, and UI
   chrome artwork. Procedural geometry remains responsible for exact telegraphs,
   timers, collision-aligned boundaries, and changing gameplay truth.

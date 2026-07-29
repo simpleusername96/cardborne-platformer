@@ -1,12 +1,13 @@
 ---
 type: evidence
-status: active
+status: superseded
 owner: BK
 created: 2026-07-23
-last_reviewed: 2026-07-28
+last_reviewed: 2026-07-29
 topic: Vehicle runtime performance stabilization
 scope: Implemented runtime boundaries, deterministic workload evidence, validation, and remaining release limits
 source: ./execplans/2026-07-23-vehicle-performance-architecture-stabilization.md
+superseded_by: ./continuous-horde-readability-evidence.md
 related:
   - ./vehicle-performance-architecture-audit.md
   - ./execplans/2026-07-23-vehicle-performance-architecture-stabilization.md
@@ -18,9 +19,9 @@ related:
 ## Purpose
 
 Record what the 2026-07-23 stabilization actually changed, what was verified,
-what the measurements show, and which release claims remain unproven. This is
-the current evidence companion to the active execution plan; the archived
-architecture audit is the pre-change baseline.
+what the measurements showed, and which release claims remained unproven. This
+document is retained as the 76-enemy performance baseline; the 2026-07-29
+continuous-horde evidence is the current implementation companion.
 
 ## Sources
 

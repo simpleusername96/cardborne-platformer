@@ -15,6 +15,7 @@ related:
   - ../../docs/product/combat-growth-improvement-direction.md
   - ../../docs/design/UI_VISUAL_SYSTEM.md
   - ../vehicle-performance-stabilization-evidence.md
+  - ../continuous-horde-readability-evidence.md
 ---
 
 # 다방향 대규모 적군·가독성·연속 스테이지 실행 계획
@@ -382,8 +383,15 @@ truth.
 - concurrent UI 기준 commit: `8a0b003`
 - concurrent UI 비소유 경로: `pixel-art-production/`, `docs/design/vehicle-hud-upgrade-direction/`,
   기존 Space Hangar asset/evidence/recipe
-- production implementation과 runtime evidence: M1~M2 및 M3 runtime 계약 완료,
-  M2의 연속-stage 시작 검증과 M3 canonical visual doc은 M4~M5에서 완료 예정
+- production implementation: M1~M4 완료 (`a9ae769`~`9485560`)
+- bounded performance optimization: `d87520b`; 280기 workload와 23 retained
+  batch는 유효하지만 Intel Iris Xe 1280×720 short diagnostic은 약 42.28 FPS로
+  locked frame gate 미달
+- structural validation: `validate_vehicle_*.gd` 40개 통과
+- production Web export: 성공
+- canonical product/visual spec과 active evidence: 구현값으로 갱신
+- 남은 acceptance: 실플레이 telemetry, 전체 rendered/accessibility matrix,
+  clean native/Web performance matrix와 10분 lifecycle soak
 
 ## Tasks
 
@@ -431,7 +439,7 @@ truth.
 - [x] Split repair value into nine 25-hull events and one 20-hull event; keep two loose and
   two crate recalls.
 - [x] Update minimap marker shapes/sizes without increasing radar update rate.
-- [ ] Update visual-system source-of-truth and renderer validators.
+- [x] Update visual-system source-of-truth and renderer validators.
 
 ### M4 — Persistent field and seamless transition
 
@@ -446,8 +454,8 @@ truth.
 
 ### M5 — Integrated evidence and canonicalization
 
-- [ ] Update focused validators and retire horde-front-only assertions.
-- [ ] Add a complete Stage 1→2→3 transition validator covering position, heal, XP, build,
+- [x] Update focused validators and retire horde-front-only assertions.
+- [x] Add a complete Stage 1→2→3 transition validator covering position, heal, XP, build,
   difficulty, exploration, item refresh and no success modal.
 - [ ] Run fixed-seed gameplay telemetry for Stage 1, Stage 3 and Stage 5 on all difficulties.
 - [ ] Capture maximum-pressure gameplay and transition states at all supported viewports,
@@ -455,9 +463,9 @@ truth.
 - [ ] Run grayscale and three color-vision simulations; verify critical elements remain
   distinguishable by shape/outline.
 - [ ] Build production Web export and run the full native/Web performance gate.
-- [ ] Update `vehicle_game_spec.md` and `UI_VISUAL_SYSTEM.md` only after implementation and
+- [x] Update `vehicle_game_spec.md` and `UI_VISUAL_SYSTEM.md` only after implementation and
   evidence agree.
-- [ ] Run task-scoped quality audit, diff check and commit only owned files.
+- [x] Run task-scoped quality audit, diff check and commit only owned files.
 
 ## Test Plan
 
