@@ -4,7 +4,7 @@ status: active
 owner: BK
 created: 2026-07-29
 last_reviewed: 2026-07-29
-scope: Recover measurement authority, optimize the 276-enemy simulation and retained presentation without reducing speed or density, align rendered evidence with production behavior, and complete gameplay/performance acceptance
+scope: Recover workload authority and make the 276-enemy peak and 320-actor capacity technically sustainable without reducing speed, density, visual scale, or combat fidelity
 supersedes:
   - ./2026-07-29-continuous-multidirectional-horde-readability.md
   - ./2026-07-23-vehicle-performance-architecture-stabilization.md
@@ -20,25 +20,24 @@ related:
   - ../../docs/design/UI_VISUAL_SYSTEM.md
 ---
 
-# 대규모 적군 기반 복구·수용 실행 계획
+# 대규모 적군 최대 부하 안정화 실행 계획
 
 현재 코드는 276기 Hard peak, 320 hostile capacity, 다방향 spawn, 확대된 combat
 footprint, 6 pickup + 8 crate와 Stage 1–4 연속 전환을 이미 구현했다. 그러나
-performance/capture fixture가 실제 production behavior와 다르고, 280기 maximum
-smoke는 frame gate를 실패하며, 실제 난이도·전환·아이템 빈도를 입증하는 evidence가
-없다. 이 계획은 여섯 phase에서 측정 authority를 먼저 고치고, simulation cadence와
-presentation salience를 각각 한 번의 bounded batch로 개선한 뒤, 실제 stage와
-production Web까지 수용한다.
+performance fixture가 실제 production behavior와 다르고, 280기 maximum smoke는
+frame gate를 실패한다. 이 계획은 여섯 phase에서 workload authority를 먼저 고치고,
+simulation cadence와 presentation salience를 각각 한 번의 bounded batch로 개선한
+뒤, objective production regression과 native/Web/lifecycle gate를 완료한다.
 
 ## Purpose
 
-- Objective: 사용자에게 보이는 적 수·속도·크기·연속 전환을 되돌리지 않고
-  276기 대규모 전투 기반을 읽기 쉽고 매끄럽고 검증 가능한 상태로 만든다.
-- Final artifact: production-aligned workload/capture, frequency-shaped ordinary
-  simulation, salience-budgeted retained renderer, real-stage difficulty report,
-  authoritative native/Web/lifecycle evidence.
-- Completion state: 모든 functional/rendered/performance gate가 통과하고 사용자가
-  Hard Stage 1/3/5의 적 밀도·가독성·전환 흐름을 명시적으로 수용한다.
+- Objective: 적 수·속도·크기·전투 규칙을 되돌리지 않고 276기 peak와 320 actor
+  capacity를 정해진 frame, memory와 lifecycle budget 안에서 처리한다.
+- Final artifact: production-aligned workload, frequency-shaped ordinary simulation,
+  salience-budgeted retained renderer, focused regression coverage, authoritative
+  native/Web/lifecycle evidence와 QA용 build/diagnostic package.
+- Completion state: 모든 functional, workload, native/Web performance와 lifecycle
+  gate가 통과하고, 주관적 재미를 판정하지 않는 bounded evidence가 저장된다.
 
 ## Pre-plan Evidence Already Verified
 
@@ -50,11 +49,9 @@ production Web까지 수용한다.
 | `scripts/vehicle/vehicle_run.gd::_update_enemies()` | budget/status/coordination/behavior full scan과 매-tick ordinary update가 있다. | frequency-shaped workset | 해당 함수 변경 시 recheck |
 | `scripts/enemies/vehicle_enemy_specialist_runtime.gd` | rammer/carrier helper가 enemy array를 반복 scan한다. | precomputed counters | Phase 2에서 hot-path consumer 제거 |
 | `scripts/presentation/vehicle_combat_renderer.gd` | 모든 channel을 한 번에 reset/rebuild/upload하며 maximum fixture에서 1,184 instances를 만든다. | channel cadence와 overlay budget | Phase 3에서 교체 |
-| `scripts/vehicle/vehicle_run.gd` capture methods | maximum pressure, field item, stage report capture가 현재 production contract와 다르다. | shared fixture와 실제 transition capture | Phase 1에서 교체 |
-| `tools/validation/validate_vehicle_stage_transition.gd` | 실제 Stage 1→2→3 no-teleport transition contract는 deterministic validator로 존재한다. | 기존 state machine 재사용 | transition owner 변경 시 recheck |
+| `scripts/vehicle/vehicle_run.gd::_capture_pressure_evidence()` | maximum-pressure capture가 performance workload와 다른 수동 grid를 사용한다. | shared peak fixture | Phase 1에서 교체 |
 | `docs/product/vehicle_game_spec.md` | 276 peak, 320 capacity, speed 280, camera 1, 6+8 items, continuous Stage 1–4 flow가 현재 product contract다. | 변경 금지 항목 | owner가 product spec을 바꿀 때만 |
 | `docs/design/UI_VISUAL_SYSTEM.md` | collision core와 presentation envelope가 분리돼 있고 color-only 구분이 금지된다. | readability guard | visual contract 변경 시 |
-| `scripts/vehicle/vehicle_run_difficulty.gd` | Easy/Normal/Hard simultaneous-pressure factor는 약 0.72/0.85/1.00이다. | 난이도 telemetry 해석 | difficulty profile 변경 시 |
 | `.agents/PLANS.md`와 lifecycle registry | cross-cutting work는 하나의 active ExecPlan과 valid frontmatter를 사용해야 한다. | plan authority 정리 | policy 변경 시 |
 
 ## Locked Decisions
@@ -75,8 +72,9 @@ production Web까지 수용한다.
 | Never-hidden semantics | boss cues, committed attacks, mine danger areas, projectile collision cores와 aim brackets는 salience budget으로 생략하지 않는다. | fairness/readability invariant |
 | Performance thresholds | 이전 native/Web/capacity/lifecycle threshold를 완화하지 않는다. | 숫자를 낮춰 완료 처리하는 것을 방지 |
 | Optimization retention | 같은 fixture의 3 × 20초 focused sample에서 target subsystem p95가 최소 10% 개선되고 frame p95가 5% 넘게 악화되지 않을 때만 batch를 유지한다. | 5초 smoke 변동성 차단 |
-| UI boundary | combat renderer와 capture/transition evidence만 건드린다. 일반 HUD/menu/hangar/garage layout·asset은 수정하지 않는다. | concurrent UI 작업 격리 |
+| UI boundary | combat renderer와 maximum-pressure capture harness만 건드린다. 일반 HUD/menu/hangar/garage/transition layout·asset은 수정하지 않는다. | concurrent UI 작업 격리 |
 | Broader fun systems | 보스 재설계, 집단 적 행동, hidden mastery, unlock, terrain chain, card evolution은 이번 plan에서 구현하지 않는다. | 안정화와 신규 gameplay scope 분리 |
+| Subjective QA authority | 재미, 압박감, 성장 만족도와 최종 balance는 이 plan이 판정하거나 완료 조건으로 사용하지 않는다. | 해당 판단은 사용자의 별도 QA feedback 영역 |
 | Dependency/engine | Godot 4.7.1 stable, GDScript, Compatibility renderer, 현재 dependency set을 유지한다. | repo operating model |
 
 ## Rejected Alternatives
@@ -108,10 +106,10 @@ Already true or landed:
 Remaining implementation:
 
 - representative, maximum, capacity fixture separation;
-- production-aligned capture and telemetry;
+- production-aligned maximum-pressure capture and workload telemetry;
 - enemy cadence/workset refactor;
 - renderer channel cadence and salience budget;
-- real-stage difficulty/readability evidence;
+- objective production-workload regression;
 - authoritative native/Web/lifecycle gates;
 - one active plan and accurate durable docs.
 
@@ -121,12 +119,12 @@ In scope:
 
 - performance scenario IDs, setup, qualification and result terminology;
 - shared pressure fixture used by performance and capture;
-- maximum/item/transition capture correctness;
+- maximum-pressure capture correctness;
 - enemy update workset, cadence accumulators and hot counter reuse;
 - retained renderer channel split and bounded semantic overlays;
-- focused validators for cadence, fixture, renderer and transition evidence;
-- Stage 1/3/5 × Easy/Normal/Hard gameplay telemetry;
-- Korean/English and supported-viewport rendered evidence;
+- focused validators for cadence, fixture, renderer and unchanged gameplay contracts;
+- one fixed Stage 5 Hard production-replay workload regression;
+- one 1280×720 maximum-pressure capture for structural visual regression;
 - native/Web performance matrix and lifecycle soak;
 - README, product/evidence lifecycle reconciliation.
 
@@ -140,19 +138,22 @@ Out of scope:
 - save schema, engine, language, shader architecture or production dependency change;
 - general HUD/menu/garage/hangar redesign or pixel-art asset regeneration;
 - external-model handoff or external research refresh.
+- 재미, 압박감, 성장 만족도, 난이도 체감 또는 가독성 선호의 판정;
+- Stage 1/3/5 × Easy/Normal/Hard 주관적 비교와 사용자 승인 대기;
 
 Destructive or irreversible actions:
 
-- None. Retired scenario IDs and capture producers are internal code paths and remain
-  recoverable from git history.
+- None. Retired scenario ID와 maximum-pressure manual-grid producer는 internal code
+  path이며 git history에서 복구할 수 있다.
 - Historical plans/evidence are preserved; they are not deleted.
 
 Exact actions requiring owner/user approval:
 
-- Final gameplay acceptance requires the user to play the prepared Hard Stage 1/3/5
-  build and approve density, readability and continuity.
-- Any proposal to reduce accepted density, speed, visual scale, resolution or combat
-  fidelity requires a new user decision and is not an automatic contingency.
+- None for the locked implementation and technical validation.
+- Reducing accepted density, speed, visual scale, resolution or combat fidelity
+  requires a new user decision and is not an automatic contingency.
+- User QA feedback may create a later balance/gameplay task, but no response or
+  approval is required to complete this technical stabilization plan.
 
 ## Architecture and Ownership
 
@@ -167,9 +168,9 @@ Exact actions requiring owner/user approval:
 | Enemy work schedule | `scripts/enemies/vehicle_enemy_update_schedule.gd` / `VehicleEnemyUpdateSchedule` | One bulk build per tick; owns worklists and rammer/carrier counters, not attacks/collision/damage | New focused boundary |
 | Enemy rules/orchestration | `scripts/vehicle/vehicle_run.gd` | Executes critical, decision and motion lanes in deterministic order | Split existing `_update_ordinary_enemy()` responsibilities; do not move policy into UI/store |
 | Retained combat presentation | `scripts/presentation/vehicle_combat_renderer.gd` | Owns critical/crowd batch channels and deterministic overlay selection | Replace global reset/rebuild sync |
-| Capture orchestration | `scripts/vehicle/vehicle_run.gd` capture-only methods | Invokes shared fixture and actual stage/layout state; no duplicate game rules | Retire stale pressure/item/report fixture code |
+| Maximum capture orchestration | `scripts/vehicle/vehicle_run.gd::_capture_pressure_evidence()` | Invokes the shared peak fixture and emits its fingerprint; no duplicate game rules | Retire only the stale pressure grid |
 | Stage flow | `scripts/encounters/vehicle_stage_flow.gd` and current Run integration | Actual Stage 1 boss clear → XP/reward/heal/banner → Stage 2 spawn | No new parallel transition |
-| Durable product truth | `docs/product/vehicle_game_spec.md`, `README.md` | Product behavior vs provisional acceptance are stated separately | Retire stale 48–72/3+5 README text |
+| Durable product truth | `docs/product/vehicle_game_spec.md`, `README.md` | Product behavior and measured technical limits are stated separately | Retire stale 48–72/3+5 README text |
 
 ## As-Is / To-Be Delta Map
 
@@ -178,34 +179,31 @@ Exact actions requiring owner/user approval:
 | Load naming | `current_pressure` mixes 280 maximum with “current” | five explicit scenarios | validator rejects old ID and verifies each load class | no `current_pressure` consumer remains |
 | Peak placement | 240/280 visible, 267 within 600px | active 276, visible 120–160, near-900 200–240, every sector 24–45 | scenario qualification snapshot | no manual ring/grid constructor |
 | Production representation | manual fill | actual Stage 5 Hard scheduler and fixed player route | `production_replay` has scheduler-originated IDs/events | no `_fill_enemies()` call in production replay |
-| Capture | one-sided pressure, two items, Stage 1 report | shared peak fixture, 6+8 layout, actual transition | generated Korean/English captures | no `05-two-field-items` or `91-stage-report` producer |
+| Maximum capture | one-sided pressure grid | same shared `peak_horde` descriptor and fingerprint | 1280×720 peak capture + debug snapshot | item/transition/report capture paths untouched |
 | Ordinary update | every actor enters combined update each physics tick | critical 60, decision 10, near/far motion 30/20 | cadence parity validator | no decision delta lost on skipped ticks |
 | Specialist counts | per-enemy full scans | one workset snapshot | rammer/carrier deterministic tests | no hot call to removed scan helpers |
 | Renderer sync | all channels rebuild each presented physics serial | critical 60, crowd/XP/semantics 30 | renderer snapshot and animation capture | projectiles/telegraphs never drop to 30 |
 | Health/priority overlays | up to every qualifying visible actor | health 12, extra marker 8 | renderer cap assertions | boss/attack/mine cues exempt |
-| Difficulty proof | config and cap assertions only | Stage 1/3/5 real telemetry for all difficulties | ordered Easy < Normal < Hard pressure report | no balance value changed |
+| Production workload proof | cap assertions only | one Stage 5 Hard replay records actual scheduler occupancy and sector distribution | workload qualification passes | no balance value changed |
 | Performance proof | 5-second non-authoritative smoke | clean 3×60s native/Web + 10m lifecycle | all existing thresholds pass | slowest run retained |
 | Plan authority | two overlapping active plans | this plan only | lifecycle audit | old plans preserved as superseded |
 
 ## Tasks
 
-### Phase 1: 측정 authority와 눈으로 확인 가능한 vertical slice
+### Phase 1: Workload authority와 최대 부하 baseline
 
 Goal:
 
-실제 production behavior와 같은 용어·배치·state flow를 쓰는 workload와 capture를
-먼저 만든다. 이 phase가 끝나면 사용자는 최적화 전이라도 “무엇을 고치고 있는지”를
-정확한 화면으로 확인할 수 있다.
+대표 production workload와 인위적인 최대/capacity workload를 분리하고, 이후
+최적화 전후가 같은 부하를 측정하도록 만든다.
 
 Source owners touched:
 
 `scripts/performance/vehicle_pressure_fixture.gd`,
 `scripts/performance/vehicle_performance_scenario.gd`,
 `scripts/performance/vehicle_performance_recorder.gd`,
-`scripts/vehicle/vehicle_run.gd` capture methods,
-`tools/validation/validate_vehicle_performance_scenarios.gd`,
-`tools/validation/validate_vehicle_run.gd`,
-`tools/validation/validate_vehicle_stage_transition.gd`
+`scripts/vehicle/vehicle_run.gd` maximum-pressure capture method,
+`tools/validation/validate_vehicle_performance_scenarios.gd`
 
 - [ ] **1.1 Create `VehiclePressureFixture` as the single deterministic test-load owner.**
   - As-is: performance and capture independently invent ring/grid positions and role lists.
@@ -248,31 +246,17 @@ Source owners touched:
   - Guard: bounds are not reused as production spawn policy; they qualify only the
     deterministic maximum fixture.
 
-- [ ] **1.4 Replace stale rendered fixtures.**
-  - As-is: `03-maximum-pressure-xp.png` is a one-sided manual grid,
-    `05-two-field-items.png` creates two pickups, `91-stage-report.png` creates a
-    retired Stage 1 success modal.
-  - To-be:
-    - pressure capture calls `VehiclePressureFixture`;
-    - item capture renders the selected production stage layout with 6 loose pickups
-      and 8 unopened crates plus minimap markers;
-    - transition capture drives actual Stage 1 success through XP recall, reward,
-      full heal, 1.6-second banner and Stage 2 first arrival;
-    - Stage 1 success report capture is deleted; failure and Stage 5 final result
-      remain.
-  - Accept: output names include `03-peak-horde`, `05-field-items`,
-    `08-stage-transition-ko`, `08-stage-transition-en` and
-    `08-stage-transition-reduced-motion`.
-  - Guard: capture-only code does not write production state rules.
+- [ ] **1.4 Align only the maximum-pressure capture with the shared fixture.**
+  - As-is: `03-maximum-pressure-xp.png` is a one-sided manual grid unrelated to the
+    performance fixture.
+  - To-be: maximum-pressure capture calls `VehiclePressureFixture` and saves
+    `03-peak-horde.png` with the same descriptor fingerprint as `peak_horde`.
+  - Accept: capture debug output and performance JSON report the same fingerprint,
+    active/visible/near counts and sector histogram.
+  - Guard: item, transition, report and general UI capture paths are not modified by
+    this technical stabilization plan.
 
-- [ ] **1.5 Correct the misleading reset assertion.**
-  - As-is: a legacy `_reset_run()` test says “stage transition respawns at center.”
-  - To-be: rename it to exact restart/reset semantics or remove it when redundant;
-    no-teleport transition remains covered only by `validate_vehicle_stage_transition.gd`.
-  - Accept: validator messages cannot imply that Stage 1→2 teleports.
-  - Guard: stage retry/deployment center reset coverage is retained under its true name.
-
-- [ ] **1.6 Produce the clean optimization baseline.**
+- [ ] **1.5 Produce the clean optimization baseline.**
   - As-is: 5-second samples vary widely and the last commit field is empty.
   - To-be: from the Phase 1 commit, run `production_replay`, `peak_horde` and
     `boss_pressure` three times with 5-second warmup + 20-second sample, foreground
@@ -284,8 +268,8 @@ Source owners touched:
 Batch acceptance:
 
 - New scenario validator passes.
-- Korean/English 1280×720 peak, item and actual transition captures have no clipping,
-  retired Stage 1 report or one-sided pileup.
+- 1280×720 peak capture has the same workload fingerprint as the measured fixture
+  and contains no duplicated actor body or one-sided manual-grid placement.
 - Phase 1 baseline payloads are reproducible enough that median target-subsystem p95
   differs by no more than 15% across the three runs. If it exceeds 15%, fix
   qualification/focus/workload stability before optimizing.
@@ -447,13 +431,13 @@ Source owners touched:
     damage overlays remain 60 Hz.
   - Accept: 60 FPS capture shows no duplicate/stale actor and 30 FPS slow-motion
     inspection shows a maximum one-frame channel age.
-  - Guard: reduced-motion changes animation amplitude only, not update correctness.
+  - Guard: presentation cadence is independent of unrelated UI motion settings.
 
 - [ ] **3.5 Measure and visually inspect the batch.**
   - As-is: last short maximum sample presentation p95 is 8.91ms and visible instances
     are 1,184.
-  - To-be: run the Phase 1 3 × 20-second protocol and regenerate peak, projectile and
-    transition captures.
+  - To-be: run the Phase 1 3 × 20-second protocol and regenerate the shared
+    `03-peak-horde.png` capture.
   - Accept: median presentation p95 improves at least 10%, frame p95 is not more than
     5% worse, health/marker caps hold, and no required cue is absent.
   - Guard: visual scale and collision core/envelope contract remain unchanged.
@@ -469,8 +453,9 @@ Source owners touched:
 Batch acceptance:
 
 - Renderer validator passes exact channel/cap/never-hidden contracts.
-- Peak capture allows player, nearest threatening enemy, hostile projectile and
-  pickups to be located without relying on color alone.
+- Peak debug snapshot contains exactly one player presentation, bounded ordinary
+  health/priority overlays, committed attack cues and hostile projectile cores with
+  no duplicate body instance.
 - Required performance retention rule passes.
 
 Batch guard:
@@ -479,87 +464,67 @@ Batch guard:
 - Do not modify general HUD/menu/hangar/garage layout or pixel asset recipes.
 - Commit Phase 3 separately.
 
-### Phase 4: 실제 난이도·적 수·연속 흐름 수용
+### Phase 4: Objective production regression과 QA package
 
 Goal:
 
-cap 숫자가 아니라 실제 Stage 1/3/5 플레이에서 적이 얼마나 활성·가시·접근하고,
-difficulty가 어떻게 달라지는지 동일한 telemetry와 화면으로 증명한다.
+maximum fixture만 빠르게 만든 뒤 실제 scheduler 경로가 망가지는 것을 막고, 사용자가
+원할 때 직접 QA할 수 있는 build와 객관적 진단값을 제공한다. 재미나 압박감은
+판정하지 않는다.
 
 Source owners touched:
 
 `scripts/performance/vehicle_performance_recorder.gd`,
-`scripts/vehicle/vehicle_run.gd` existing threat sampling/debug capture only,
-focused telemetry/capture validators,
+`scripts/performance/vehicle_performance_scenario.gd`,
+`tools/validation/validate_vehicle_performance_scenarios.gd`,
 `.agents/continuous-horde-readability-evidence.md`
 
-- [ ] **4.1 Record exact gameplay-pressure terminology every second and aggregate in 5-second windows.**
-  - As-is: cap/config assertions은 있지만 real-stage report는 없다.
-  - To-be: record authored reserve, live, active ordinary, visible ordinary,
-    near-900, eight-sector histogram, spawn count/rate, ranged/denial commits,
-    hostile projectiles, kills, incoming damage, hull, XP dropped/collected and
-    item pickups.
-  - Accept: JSON schema and human summary use the same glossary from the problem
-    analysis.
-  - Guard: telemetry is active only in explicit validation/performance mode.
-
-- [ ] **4.2 Run fixed-seed Stage 1/3/5 for Easy, Normal and Hard.**
-  - As-is: no complete 3×3 evidence exists.
-  - To-be: use seed `12886704`, the same primary/build/input route and each stage's
-    highest active-cap beat for a 60-second measured window.
+- [ ] **4.1 Qualify one fixed Stage 5 Hard production replay.**
+  - As-is: active cap assertions은 있지만 actual scheduler workload와 maximum fixture가
+    분리되지 않았다.
+  - To-be: seed `12886704`, locked primary/build/input route와 Stage 5 highest-cap
+    beat에서 authored reserve, live, active ordinary, visible ordinary, near-900,
+    sector histogram, spawn rate, ranged/denial commits와 projectile counts를
+    1초마다 기록한다.
   - Accept:
-    - rolling 10-second median active ordinary reaches at least 90% of the selected
-      difficulty's active cap;
-    - visible ordinary stays between 30% and 65% of active, near-900 between 60%
-      and 90%;
-    - every 10-second window with at least 24 spawns uses all four quadrants and at
-      least four sectors, and no sector exceeds 35%;
+    - measurement window의 rolling 10-second median active ordinary가 Hard cap의
+      최소 90%다;
+    - spawn이 네 사분면과 최소 네 sector를 사용하고 한 sector가 35%를 넘지 않는다;
     - ranged commit ≤3, denial commit ≤2;
-    - same seed/route produces strictly ordered Easy < Normal < Hard configured
-      simultaneous-pressure indices, matching approximately 0.72/0.85/1.00 within
-      ±0.02.
-  - Guard: failing telemetry is fixed in scheduler/fixture/measurement; difficulty
-    health/damage/speed/count factors are not changed in this plan.
+    - 모든 actor와 projectile count가 capacity 안에 있고 rejected capacity가 0이다.
+  - Guard: 이 값은 workload qualification이며 재미, 난이도 또는 적정 밀도 판정으로
+    서술하지 않는다.
 
-- [ ] **4.3 Verify field items and continuous transition in a real run.**
-  - As-is: deterministic structural tests pass, but production rendered evidence is
-    missing.
-  - To-be: Stage 1→2 run shows 6 loose pickups + 8 crates, XP recall within 0.65s,
-    mandatory reward completion, full heal, same position/facing/aim/build/map,
-    1.2s protection, 1.6s nonmodal banner, next cue by 0.35s and hostile spawn by
-    1.35s.
-  - Accept: no button, center teleport, deployment replay or Stage 1 report appears.
-  - Guard: Stage 5 final result and failure report remain.
+- [ ] **4.2 Run unchanged gameplay-contract regressions.**
+  - As-is: simulation/renderer hot path를 바꾸면 stage, boss, projectile, status,
+    transition과 item behavior가 간접적으로 회귀할 수 있다.
+  - To-be: 기존 focused validator를 변경 없이 통과시킨다. 새 gameplay behavior,
+    capture matrix 또는 balance metric을 추가하지 않는다.
+  - Accept: stage flow, boss, spawn allocation, projectile, experience, item,
+    upgrade와 transition validator가 모두 0으로 종료한다.
+  - Guard: validator 통과를 재미나 시각적 선호의 증거로 표현하지 않는다.
 
-- [ ] **4.4 Complete rendered matrix.**
-  - As-is: production-aligned accessibility evidence is absent.
-  - To-be: capture Korean and English at 960×540, 1280×720 and 1920×1080 for peak
-    horde, hostile projectiles, 6+8 items/minimap and Stage 1→2 transition; capture
-    reduced-motion transition and grayscale/protanopia/deuteranopia/tritanopia
-    simulations for the 1280×720 peak.
-  - Accept: no clipping/overflow; player fire, hostile fire, target enemy, pickup and
-    background remain separable by shape/value/outline; banner never blocks crosshair,
-    objective or action HUD.
-  - Guard: no general UI restyling is introduced to satisfy this gate.
-
-- [ ] **4.5 Present the user-test build and evidence.**
-  - As-is: implementation facts were communicated without a direct feel gate.
-  - To-be: provide the 3×3 pressure summary, three representative captures and a
-    production-style build for Hard Stage 1/3/5.
-  - Accept: user explicitly approves enemy presence, projectile/enemy visibility and
-    continuous flow, or gives concrete remaining feedback.
-  - Guard: lack of user response leaves this task unchecked; it does not authorize a
-    new gameplay redesign.
+- [ ] **4.3 Produce a bounded QA package without an approval gate.**
+  - As-is: 사용자가 실제 실행 상태를 확인할 때 workload와 frame 정보를 한 번에
+    볼 수 있는 bounded handoff가 없다.
+  - To-be: ignored
+    `build/evidence/horde-recovery/qa-package/README.md` manifest에 production Web
+    `build/web/index.html`, `03-peak-horde.png`, `production_replay-summary.json`,
+    `peak_horde-summary.json`, exact 실행 명령과 overlay glossary 경로를 기록한다.
+  - Accept: package에서 authored reserve, live, active, visible, near-900,
+    committed와 frame-time을 구분해 읽을 수 있다.
+  - Guard: 사용자의 실행, 응답, 재미 판정 또는 승인은 이 phase와 plan 완료 조건이
+    아니다. 이후 feedback은 별도 balance/gameplay task의 입력이다.
 
 Batch acceptance:
 
-- 3×3 telemetry contract passes.
-- Complete rendered matrix passes.
-- User-facing summary clearly separates authored reserve, active and visible counts.
+- Fixed Stage 5 Hard production workload qualification passes.
+- Existing gameplay-contract validators pass without changing product values.
+- QA package contains the built artifact, one peak capture and objective diagnostics.
 
 Batch guard:
 
-- No difficulty rebalance or new UI surface.
+- No difficulty rebalance, new UI surface, subjective scoring or gameplay claim.
 - New gameplay ideas remain outside this plan.
 
 ### Phase 5: Authoritative native/Web/lifecycle gates
@@ -638,7 +603,8 @@ Batch guard:
 
 Goal:
 
-실제 승인된 결과만 canonical docs에 남기고 plan/evidence authority를 한 개로 정리한다.
+측정으로 확인된 기술 결과만 canonical docs에 남기고 plan/evidence authority를
+한 개로 정리한다.
 
 Source owners touched:
 
@@ -649,27 +615,27 @@ Source owners touched:
 this plan and related lifecycle frontmatter
 
 - [ ] **6.1 Reconcile product and README wording.**
-  - As-is: product behavior is current but acceptance limits are easy to miss; root
+  - As-is: product behavior is current but measured limits are easy to miss; root
     README previously carried stale 48–72/3+5 language.
   - To-be: describe authored reserve, active caps, item count, continuous transition
-    and accepted performance using the canonical glossary.
+    and measured performance using the canonical glossary.
   - Accept: no stale current-pressure scenario or prior count remains in current
     reader-facing docs.
   - Guard: historical audits/plans retain historical numbers when clearly labeled.
 
 - [ ] **6.2 Finalize bounded evidence.**
-  - To-be: update implementation evidence with commit, environment, 3×3 gameplay
-    table, rendered evidence paths, all individual native/Web runs, lifecycle result,
-    limitations and explicit user acceptance.
+  - To-be: update implementation evidence with commit, environment, fixed production
+    workload qualification, peak capture path, all individual native/Web runs,
+    lifecycle result와 limitations.
   - Accept: claims can be traced to payload or capture and no non-authoritative smoke
     is presented as release proof.
   - Guard: generated JSON and Web build remain ignored; only bounded summaries are
     committed.
 
-- [ ] **6.3 Close lifecycle only after acceptance.**
-  - To-be: mark this plan complete only after every checkbox and user approval;
-    archive evidence when it becomes historical according to lifecycle rules.
-  - Accept: only one active performance/gameplay recovery plan exists.
+- [ ] **6.3 Close lifecycle after technical completion.**
+  - To-be: mark this plan complete after every objective checkbox passes; archive
+    evidence when it becomes historical according to lifecycle rules.
+  - Accept: only one active maximum-load stabilization plan exists.
   - Guard: do not delete historical plan/evidence without explicit user approval,
     even though `PLANS.md` normally retires completed plans.
 
@@ -681,7 +647,7 @@ Batch acceptance:
 
 Batch guard:
 
-- No claim broader than density/readability/flow/performance foundation.
+- No claim broader than declared workload, preserved behavior and measured performance.
 
 ## Validation Cadence
 
@@ -728,11 +694,11 @@ $godotArgs = @(
 
 ### Batch gates
 
-- Phase 1: scenario + stage-transition validators, corrected capture, 3× baseline.
+- Phase 1: scenario validator, corrected peak capture, 3× baseline.
 - Phase 2: schedule/enemy/combat validators, fixed-state parity, 3× retention rule.
-- Phase 3: renderer validator, peak/readability capture, 3× retention rule.
-- Phase 4: 3×3 real-stage telemetry, localization/viewports/color/reduced-motion,
-  user-test artifact.
+- Phase 3: renderer validator, peak structural capture, 3× retention rule.
+- Phase 4: fixed production workload qualification, unchanged gameplay regressions,
+  bounded QA package.
 - Phase 5: full functional suite, Web export, authoritative matrix, lifecycle soak.
 - Phase 6: documentation lifecycle, diff check, task-scoped quality audit.
 
@@ -765,13 +731,13 @@ Production start:
 - The port is intentionally resolved at execution time; no fixed ad-hoc port is
   permitted by repository policy.
 
-Manual/rendered routes and sizes:
+Rendered/runtime routes:
 
-- Korean/English: 960×540, 1280×720, 1920×1080.
-- Peak horde, hostile projectile, 6+8 items/minimap, Stage 1→2 transition.
-- Reduced motion transition.
-- Grayscale and three color-vision simulations at 1280×720.
-- Built Web 1280×720 gameplay and performance scenarios.
+- Native and built Web `peak_horde` at 1280×720 for workload and duplicate/stale
+  instance inspection.
+- Native and built Web `production_replay` at 1280×720 for actual scheduler-path
+  qualification.
+- Native `peak_horde` at 2560×1600 for the declared performance matrix.
 
 Documentation and lifecycle:
 
@@ -800,7 +766,7 @@ git diff --check
 | Schedule parity fails | accumulator consume/reset 또는 lane ordering을 고치고 parity fixture를 통과시킨다. | attack/collision rule 변경이 필요하면 중단한다. |
 | Phase 2 retention rule fails | Phase 2 task-owned 변경을 제거하고 Phase 1 authority만 보존한다. | 다른 architecture를 자동 선택하지 않는다. |
 | Critical visual becomes stale/duplicate | actor channel migration을 same-sync remove/add로 고친다. | critical cadence를 30 Hz로 낮추지 않는다. |
-| Phase 3 retention rule fails | renderer batch 변경을 제거하되 health/marker budget은 별도 readability acceptance와 cost를 보고 판단하지 않고 함께 제거한다. | 새로운 shader/engine path로 넘어가지 않는다. |
+| Phase 3 retention rule fails | renderer channel과 health/marker budget 변경을 함께 제거하고 Phase 2 상태의 exact metrics를 보고한다. | 새로운 shader/engine path로 넘어가지 않는다. |
 | Web focus/scheduler qualification fails | sample을 failed evidence로 보존하고 foreground activation/runner를 고친다. | native result로 대체하지 않는다. |
 | One final performance target fails | dominant subsystem 안에서 schedule/channel implementation correction을 한 번 수행하고 full gate를 다시 실행한다. | 두 번째 실패 시 정확한 수치와 함께 중단한다. |
 | Density/speed/resolution 감소가 필요해 보임 | 변경하지 않고 user decision을 요청한다. | 자동 fallback 금지 |
@@ -809,8 +775,8 @@ git diff --check
 
 ## Rollback and Safety
 
-- Phase 1 fixture/evidence, Phase 2 simulation, Phase 3 renderer, Phase 4 acceptance,
-  Phase 5 evidence를 각각 coherent commit으로 만든다.
+- Phase 1 fixture/evidence, Phase 2 simulation, Phase 3 renderer, Phase 4
+  regression/QA package, Phase 5 evidence를 각각 coherent commit으로 만든다.
 - unrelated user/concurrent UI changes를 stage, amend, revert하지 않는다.
 - `git reset --hard`, force push, broad clean을 사용하지 않는다.
 - experiment가 retention rule을 실패하면 해당 phase에서 만든 task-owned edit만
@@ -828,11 +794,10 @@ git diff --check
 | workset boundary가 또 다른 catch-all이 된다 | cadence/list/counter만 소유하고 attack/damage/spawn/render API를 금지한다. |
 | actor channel 전환에서 한 frame 사라지거나 중복된다 | committed state 변경 frame에 critical channel을 우선 sync하고 old crowd instance를 같은 sync에 제거한다. |
 | overlay cap이 중요한 상태를 숨긴다 | aim, committed, recent damage 우선순위와 never-hidden boss/attack/mine/projectile 목록을 validator로 고정한다. |
-| representative replay가 bot route에 과적합된다 | production scheduler/allocator/attack/collision은 그대로 사용하고 peak/boss/real-stage matrix를 별도 gate로 유지한다. |
+| representative replay가 bot route에 과적합된다 | production scheduler/allocator/attack/collision은 그대로 사용하고 peak/boss scenario를 별도 gate로 유지한다. |
 | clean sample도 laptop scheduler에 흔들린다 | foreground/focus/scheduler qualification, 세 표본 전부 보존, 15% baseline stability gate를 먼저 통과한다. |
 | full matrix가 다시 장시간 blind tuning으로 변한다 | 두 runtime batch와 final correction 1회만 허용하고 그 뒤에는 exact failure로 중단한다. |
-| larger crowd가 시각적으로 답답하다 | 크기를 되돌리지 않고 semantic overlay를 제한하고 visible/near-field 범위를 production-aligned fixture로 관리한다. |
-| foundation을 고친 뒤에도 전체 재미가 약하다 | 현재 plan 완료 후 collective enemies/mastery/unlock/boss objective 중 하나를 별도 user-approved vertical slice로 계획한다. |
+| 276기에서 semantic overlay 수가 다시 actor 수에 비례한다 | health/priority cap과 renderer validator를 고정하고 never-hidden cue만 별도로 유지한다. |
 
 ## Assumptions
 
@@ -849,7 +814,7 @@ git diff --check
 ## Open Questions
 
 None. Product quantity, movement, visual, architecture, cadence, fixture, threshold,
-UI boundary, contingency와 acceptance decision은 모두 잠겼다. 구현 중 발견되는
+UI boundary, contingency와 technical completion decision은 모두 잠겼다. 구현 중 발견되는
 local defect는 이 경계 안에서 고치며, 경계를 바꾸는 발견만 Stop Conditions에 따라
 escalate한다.
 
@@ -864,9 +829,11 @@ escalate한다.
 - workset은 deep scheduling boundary이고, store는 계속 storage boundary다.
 - actor 크기를 유지하면서 overlay 수를 줄이는 것은 visibility 요구를 되돌리는 것이
   아니다. silhouette와 projectile core는 보존하고 중복 semantic ornament만 제한한다.
-- `production_replay`는 대표 체감, `peak_horde`는 최대 몰이, `capacity/lifecycle`은
-  integrity를 각각 말한다. 어떤 하나도 다른 둘의 결론을 대신하지 않는다.
-- broader fun work는 폐기되지 않았다. 안정화 gate 뒤 별도 gameplay slice로 분리한다.
+- `production_replay`는 actual scheduler workload, `peak_horde`는 최대 몰이,
+  `capacity/lifecycle`은 integrity를 각각 말한다. 어떤 하나도 다른 둘의 결론을
+  대신하지 않는다.
+- 재미, 난이도 체감과 성장 만족도는 이 plan의 evidence나 완료 조건이 아니다.
+  QA feedback이 들어오면 별도 gameplay/balance task로 다룬다.
 
 ## Progress
 
@@ -875,10 +842,10 @@ escalate한다.
 - [x] Problems classified and mapped to five core reasons.
 - [x] Five materially different solution alternatives compared.
 - [x] Final hybrid solution and all execution decisions locked.
-- [ ] Phase 1: measurement authority and user-visible vertical slice.
+- [ ] Phase 1: workload authority and maximum-load baseline.
 - [ ] Phase 2: frequency-shaped enemy simulation.
 - [ ] Phase 3: salience-budgeted retained presentation.
-- [ ] Phase 4: gameplay/difficulty/flow acceptance.
+- [ ] Phase 4: objective production regression and QA package.
 - [ ] Phase 5: authoritative native/Web/lifecycle gates.
 - [ ] Phase 6: durable reconciliation and completion.
 
@@ -886,9 +853,10 @@ escalate한다.
 
 1. Start with Phase 1 only and commit the corrected fixture/capture/baseline.
 2. Apply and measure Phase 2, then Phase 3 as separate retained-or-removed batches.
-3. Complete real-stage/rendered acceptance before the full performance matrix.
+3. Complete the fixed production replay and unchanged gameplay regression before
+   the full performance matrix.
 4. Run native/Web/lifecycle gates from one clean commit.
-5. Reconcile docs and request explicit user acceptance.
+5. Reconcile measured evidence and close the technical plan.
 
 ## Completion Criteria
 
@@ -900,12 +868,14 @@ escalate한다.
 - [ ] No per-enemy hot helper rescans the full enemy array for rammer/carrier counts.
 - [ ] Combat renderer channels run at 60/30 Hz as locked.
 - [ ] Ordinary health bars ≤12 and extra priority markers ≤8 while never-hidden cues remain.
-- [ ] Production item and Stage 1→2 capture shows the exact current flow.
-- [ ] Stage 1/3/5 × Easy/Normal/Hard telemetry passes and clearly reports active/visible counts.
-- [ ] Korean/English, viewport, reduced-motion and color-vision rendered gates pass.
+- [ ] Fixed Stage 5 Hard production replay passes occupancy, sector, commit and
+  capacity qualification without synthetic enemy fill.
+- [ ] Existing stage, boss, projectile, experience, item, upgrade and transition
+  validators pass without product-value changes.
+- [ ] QA package contains the production build, peak capture, workload summaries,
+  run commands and glossary.
 - [ ] Every focused validator, Web export and production-style start passes.
 - [ ] All individual native/Web authoritative samples and the lifecycle soak pass.
-- [ ] User explicitly accepts Hard Stage 1/3/5 density, readability and continuity.
 - [ ] Durable docs use one glossary and one active authority; no invalid lifecycle status remains.
 - [ ] No density, speed, visual scale, resolution, collision, dependency or unrelated UI regression.
 
@@ -913,16 +883,15 @@ escalate한다.
 
 Complete when:
 
-- every completion criterion passes, evidence is committed and the user has explicitly
-  accepted the gameplay result.
+- every objective completion criterion passes and bounded technical evidence is
+  committed.
 
 Escalate only when:
 
 - preserving locked combat behavior prevents a parity or performance gate from passing;
 - the one allowed final in-architecture correction still fails;
 - a concurrent UI change makes the narrow combat renderer/capture integration impossible;
-- save, dependency, engine, language or product-balance changes become necessary;
-- the user wants broader bosses/cards/collective behavior before this foundation is accepted.
+- save, dependency, engine, language or product-balance changes become necessary.
 
 Do not stop when:
 
@@ -936,8 +905,8 @@ Do not stop when:
 ```text
 Goal:
 Preserve 276-enemy density, 320 capacity, player speed 280, camera zoom 1 and
-current visual scale while making the horde foundation representative, readable,
-performant and accepted.
+current visual scale while making the declared maximum workload technically
+representative, bounded and performant.
 
 Read first:
 AGENTS.md
@@ -958,7 +927,7 @@ full validator suite, Web export, 3×60-second native/Web matrix and 10-minute
 lifecycle soak.
 
 Stop when:
-All gates and explicit user acceptance pass, or one declared escalation condition
-is reached. Never manufacture a pass by reducing density, speed, scale, resolution
-or combat fidelity.
+All objective technical gates pass, or one declared escalation condition is reached.
+Never manufacture a pass by reducing density, speed, scale, resolution or combat
+fidelity. Do not wait for or claim subjective gameplay approval.
 ```

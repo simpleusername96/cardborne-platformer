@@ -5,7 +5,7 @@ owner: BK
 created: 2026-07-29
 last_reviewed: 2026-07-29
 topic: Continuous multi-sector horde, combat readability, and stage-transition implementation
-scope: Implemented runtime contracts, deterministic validation, Web export, diagnostic performance, and remaining acceptance work
+scope: Implemented runtime contracts, deterministic validation, Web export, diagnostic performance, and remaining technical stabilization work
 source: ./execplans/2026-07-29-continuous-multidirectional-horde-readability.md
 related:
   - ../docs/product/vehicle_game_spec.md
@@ -20,7 +20,7 @@ related:
 ## Purpose
 
 2026-07-29 rollout이 실제로 변경한 behavior, 통과한 구조 검증, 진단 성능과 아직
-남은 수용 한계를 과장 없이 기록한다.
+남은 기술 한계를 과장 없이 기록한다.
 
 ## Sources
 
@@ -34,7 +34,7 @@ related:
 
 Density, multi-sector spawn, item frequency와 continuous transition은 source와 구조
 validator 수준에서 구현됐다. 하지만 production-aligned rendered evidence와
-authoritative performance/feel acceptance는 아직 완료되지 않았다.
+authoritative maximum-load performance/lifecycle 검증은 아직 완료되지 않았다.
 
 ## 구현 결과
 
@@ -111,14 +111,15 @@ active다. 대표 플레이, 최대 몰이, capacity/lifecycle 부하를 분리�
 동일한 fixture owner를 쓰는 작업은
 `execplans/2026-07-29-horde-foundation-recovery-and-acceptance.md`가 이어받는다.
 
-## 남은 수용 조건
+## 남은 기술 조건
 
-- Stage 1/3/5 × Easy/Normal/Hard 고정 seed 실플레이 telemetry;
-- 한국어/영어, 960×540/1280×720/1920×1080, 일반/reduced-motion rendered
-  capture와 grayscale/색각 simulation;
+- representative production, 276기 peak와 320 capacity/lifecycle workload 분리;
+- 276기 목표를 유지한 simulation cadence와 retained presentation 최적화;
+- unchanged gameplay-contract validator 통과;
 - clean commit에서 native/Web 3회 60초 matrix와 10분 lifecycle soak;
-- 280기 목표를 유지한 채 frame gate를 통과시키는 추가 measured optimization.
+- 사용자 QA용 production build, peak capture와 objective diagnostics 제공.
 
 계획이 금지한 density, player speed, camera zoom, physics rate, resolution 축소는
 성능 fallback으로 사용하지 않았다. 위 항목이 끝나기 전에는 이 evidence와 원본
-ExecPlan의 lifecycle status를 `complete`로 바꾸지 않는다.
+ExecPlan의 lifecycle status를 `complete`로 바꾸지 않는다. 재미, 압박감, 난이도
+체감과 사용자 승인은 이 technical completion의 증거 또는 gate가 아니다.

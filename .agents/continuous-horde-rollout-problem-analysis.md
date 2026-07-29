@@ -39,6 +39,26 @@ solution을 확정한다.
 분리됐다는 것이다. 아래 결론, 문제 목록, core-reason mapping과 solution comparison은
 이 finding을 source별로 구체화한다.
 
+## Owner correction — subjective fun is not a technical completion gate
+
+2026-07-29 후속 대화에서 사용자는 Codex가 “늘어난 적이 재미있는 압력으로
+작동하는지”를 증명하거나 사용자 QA 승인을 기다리는 범위를 거부했다. 이 판단은
+사용자의 직접 플레이와 후속 feedback 영역이다.
+
+따라서 active ExecPlan은 다음 객관적 범위만 실행한다.
+
+- representative, peak와 capacity/lifecycle workload 분리;
+- 276 active / 320 live 구조의 simulation과 presentation 최적화;
+- unchanged gameplay contract regression;
+- authoritative native/Web performance와 lifecycle 검증;
+- 사용자가 원할 때 QA할 수 있는 build, peak capture와 objective diagnostics 제공.
+
+아래 역사적 분석에서 `explicit user acceptance`, `재미있는 압력 증명` 또는 전체
+Stage 1/3/5 × difficulty 체감 검증을 제안한 부분은 active plan의 완료 조건이 아니다.
+현재 실행 authority는
+`execplans/2026-07-29-horde-foundation-recovery-and-acceptance.md`의 수정된 기술
+범위다.
+
 ## 결론
 
 직전 단계는 사용자가 명시한 다음 계약을 실제 코드에 반영했다.
@@ -76,8 +96,8 @@ fixture다. 이 결과는 “현재 실제 게임이 항상 42 FPS다”라는 �
    10 Hz, near/far locomotion은 30/20 Hz에 실제로 분리한다.
 3. actor 크기는 유지하되 health bar와 priority marker에 명시적인 화면 정보량
    예산을 두고, combat renderer를 critical 60 Hz와 crowd 30 Hz channel로 나눈다.
-4. 실제 Stage 1/3/5 telemetry, rendered transition/item evidence, clean native/Web
-   성능 matrix와 사용자 플레이 승인 전에는 “완료”로 간주하지 않는다.
+4. 실제 Stage 5 Hard scheduler workload, clean native/Web 성능 matrix와 lifecycle
+   evidence가 없으면 기술적으로 “완료”로 간주하지 않는다.
 
 보스, 카드, 집단 적 행동, 숨겨진 조작, 지형 연쇄 처치는 중요한 후속 재미 설계지만
 이번 recovery에 섞지 않는다. 먼저 대규모 적군이라는 기반이 실제로 작동하고
@@ -168,7 +188,7 @@ geometry가 겹친 수동 fixture를 보여 준다. 실제 다방향 접근을 �
 | P0-2 | 현재 maximum fixture에서 frame gate가 크게 실패한다. | 280기 목표를 유지한 채 runtime 개선이 더 필요하다. | 미해결 |
 | P0-3 | clean 60초 native/Web 3회, 10분 lifecycle evidence가 없다. | release-performance claim을 할 수 없다. | 미해결 |
 | P0-4 | 최대 압력, item frequency, Stage 1→2 전환 capture가 production behavior를 보여 주지 않는다. | 사용자가 요청한 변화가 눈에 보이는지 검증할 수 없다. | 미해결 |
-| P0-5 | Stage 1/3/5 × difficulty의 실제 active/visible/spawn/damage telemetry와 사용자 플레이 승인이 없다. | “적이 실제로 많아졌는가”, “난이도가 어떻게 달라졌는가”에 수치와 체감으로 답할 수 없다. | 미해결 |
+| P0-5 | actual scheduler 경로의 active/visible/spawn/sector workload telemetry가 없다. | production 경로가 목표 부하를 실제로 만들고 유지하는지 답할 수 없다. | 미해결 |
 
 ### P1 — 구현 구조가 대규모 부하에 맞지 않는 문제
 
@@ -229,8 +249,9 @@ presentation rebuild는 여전히 actor 수에 비례한다. 기존 구조는 76
 ### R4. 구현 milestone과 사용자 수용 milestone을 같은 것으로 취급했다
 
 capacity, spawn, transition 코드와 deterministic validator가 먼저 끝났고,
-rendered evidence, real-play telemetry, Web runtime, explicit user acceptance는
-“남은 일”이 됐다. 그런데 문서와 handoff는 이미 rollout 결과를 중심으로 서술했다.
+production workload telemetry, Web runtime과 lifecycle soak는 “남은 일”이 됐다.
+게다가 explicit user acceptance까지 기술 완료 milestone에 잘못 섞였다. 그런데
+문서와 handoff는 이미 rollout 결과를 중심으로 서술했다.
 
 연결 문제: P0-3, P0-4, P0-5, P1-7, P1-9, P2-1, P2-6.
 
@@ -285,14 +306,15 @@ active cap과 authored reserve가 바뀌었지만 README, historical evidence st
    숨기지 않는다.
 8. actor visual radius, collision radius, player speed, camera zoom은 유지한다.
 
-### R4 — 수용 milestone을 구현보다 앞에 둔다
+### R4 — 기술 검증 milestone을 구현보다 앞에 둔다
 
 1. 첫 phase의 결과물을 “고친 capture와 대표 workload”로 만든다.
 2. 매 최적화 batch는 동일 fixture 3회 측정에서 target subsystem p95를 최소 10%
    낮추고 frame p95를 5% 넘게 악화시키지 않을 때만 유지한다.
-3. 최종 acceptance는 structural validator가 아니라 real-stage telemetry,
-   rendered matrix, native/Web frame matrix, 사용자 플레이 승인으로 구성한다.
-4. authoritative gate가 끝나기 전 evidence에는 `provisional` 한계를 명시한다.
+3. 최종 technical gate는 structural validator만이 아니라 fixed production replay,
+   native/Web frame matrix와 lifecycle soak로 구성한다.
+4. authoritative gate가 끝나기 전 evidence에는 `provisional` 한계를 명시하고,
+   재미·압박감·난이도 체감은 claim하지 않는다.
 
 ### R5 — 용어·authority 정리
 
@@ -378,21 +400,24 @@ B는 점수만 보면 높지만 runtime outcome 조건을 실패한다. E만 모
   절대 이 예산으로 생략하지 않는다.
 - 확대된 actor/item/projectile footprint와 실제 collision truth는 유지한다.
 
-### S4. Acceptance-first rollout
+### S4. Technical-gate-first rollout
 
-- 첫 번째 user-testable 결과는 production-aligned maximum/item/transition capture와
-  새 scenario payload다.
+- 첫 번째 inspectable 결과는 production-aligned maximum capture와 새 scenario
+  payload다.
 - 두 runtime batch는 동일 fixture 3회 비교에서 target subsystem p95 10% 이상
   개선이 없으면 보존하지 않는다.
 - 최종 gate는 기존 native/Web/frame/capacity/lifecycle threshold를 완화하지 않는다.
+- fixed Stage 5 Hard replay로 actual scheduler workload를 qualification한다.
+- production build, peak capture와 objective diagnostics를 QA package로 제공하지만
+  사용자 실행·응답·재미 판정은 완료 조건으로 사용하지 않는다.
 - 두 bounded runtime batch 뒤에도 gate가 실패하면 적 수·속도·해상도를 낮추지 않고
   정확한 dominant subsystem과 수치를 보고하고 별도 architecture 승인을 요청한다.
 
 ### S5. Broader fun work와의 경계
 
-이번 solution은 “몰이사냥과 성장 재미”의 기반을 안정화한다. 다음 항목은 삭제하거나
-거부하는 것이 아니라, performance/readability acceptance 뒤의 별도 gameplay
-vertical slice로 남긴다.
+이번 solution은 대규모 전투를 처리하는 기술 기반을 안정화한다. 다음 항목은 삭제하거나
+거부하는 것이 아니라, technical stabilization 뒤 사용자의 QA feedback으로 시작하는
+별도 gameplay vertical slice로 남긴다.
 
 - 집단 조건에 따라 합체·돌격·보호막·대형 레이저를 만드는 collective enemy behavior;
 - 단순 입력 안의 hold/double-tap 같은 hidden mastery;
