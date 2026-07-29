@@ -27,6 +27,8 @@ const STATIONARY_PIXEL_ARCHETYPES: Array[StringName] = [
 	&"turret", &"mine", &"interceptor_tower", &"beam_sentinel",
 	&"generator", &"boss_pylon",
 ]
+const MAX_ORDINARY_HEALTH_BARS := 12
+const MAX_EXTRA_PRIORITY_MARKERS := 8
 
 class BatchBuffer:
 	var values := PackedFloat32Array()
@@ -146,6 +148,8 @@ var _player_pixel_under: BatchHandle
 var _player_projectile_pixel: BatchHandle
 var _misc_pixel_batch: BatchHandle
 var _pixel_frame_cache: Dictionary = {}
+var _last_health_bar_count := 0
+var _last_priority_marker_count := 0
 
 
 func _ready() -> void:
@@ -171,7 +175,9 @@ func sync(
 	_reset_counts()
 	if active:
 		_sync_attack_telegraphs(enemies, visible_world)
-		_sync_enemies(enemies, visible_world, player_position, run_time, aim_target_id)
+		_sync_enemies(
+			enemies, visible_world, player_position, run_time, aim_target_id
+		)
 		_sync_projectiles(player_projectiles, &"player", visible_world)
 		_sync_projectiles(hostile_projectiles, &"enemy", visible_world)
 		_sync_experience(shards, visible_world)
@@ -194,6 +200,8 @@ func debug_snapshot() -> Dictionary:
 		"pixel_enabled": _pixel_enabled,
 		"enemy_capacity": ENEMY_CAPACITY,
 		"status_arc_capacity": STATUS_ARC_CAPACITY,
+		"health_bar_count": _last_health_bar_count,
+		"priority_marker_count": _last_priority_marker_count,
 	}
 
 
@@ -457,7 +465,18 @@ func _create_atlas_batch(
 	return handle
 
 
-func _sync_enemies(enemies: Array[EnemyState], visible_world: Rect2, player_position: Vector2, run_time: float, aim_target_id: String) -> void:
+func _sync_enemies(
+	enemies: Array[EnemyState],
+	visible_world: Rect2,
+	player_position: Vector2,
+	run_time: float,
+	aim_target_id: String
+) -> void:
+	var budgets := _enemy_overlay_budgets(
+		enemies, visible_world, player_position, aim_target_id
+	)
+	var health_ids: Dictionary = budgets["health"]
+	var priority_ids: Dictionary = budgets["priority"]
 	for enemy in enemies:
 		if not enemy.alive or not enemy.active:
 			continue
@@ -514,20 +533,26 @@ func _sync_enemies(enemies: Array[EnemyState], visible_world: Rect2, player_posi
 				)
 		else:
 			_write_instance(batch, position, angle, Vector2.ONE * radius, color)
-		_sync_enemy_readability_overlays(enemy, position, radius)
+		_sync_enemy_priority_marker(
+			enemy, position, radius, priority_ids.has(enemy.id)
+		)
+		if enemy.threat_kind == &"ranged" and enemy.phase == &"startup":
+			_write_instance(
+				_overlay_batches[&"diamond"],
+				position - Vector2(0.0, radius + 13.0),
+				0.0,
+				Vector2(13.0, 10.0),
+				Art.MUSTARD
+			)
 		if enemy.shielded:
 			_write_instance(
 				_overlay_batches[&"shield"], position, 0.0,
 				Vector2.ONE * (radius + 14.0), Color(Art.MINT, 0.76)
 			)
-		var health_class := enemy.health_class
-		var show_health := (
-			health_class == &"priority"
-			or enemy.id == aim_target_id
-			or enemy.health_visible_timer > 0.0
-		)
-		if role != &"stage_boss" and show_health:
-			var health_ratio := clampf(enemy.health / maxf(0.001, enemy.max_health), 0.0, 1.0)
+		if health_ids.has(enemy.id):
+			var health_ratio := clampf(
+				enemy.health / maxf(0.001, enemy.max_health), 0.0, 1.0
+			)
 			var bar_width := radius * 1.6
 			var bar_position := position + Vector2(0.0, radius + 14.0)
 			_write_instance(
@@ -536,7 +561,9 @@ func _sync_enemies(enemies: Array[EnemyState], visible_world: Rect2, player_posi
 			)
 			_write_instance(
 				_overlay_batches[&"health_fill"],
-				bar_position + Vector2(-bar_width * (1.0 - health_ratio) * 0.5, 0.0),
+				bar_position + Vector2(
+					-bar_width * (1.0 - health_ratio) * 0.5, 0.0
+				),
 				0.0, Vector2(bar_width * health_ratio, 10.0), Art.CORAL
 			)
 		_sync_status_arcs(enemy, position, radius)
@@ -545,12 +572,98 @@ func _sync_enemies(enemies: Array[EnemyState], visible_world: Rect2, player_posi
 			_sync_target_brackets(position, radius + 16.0)
 
 
-func _sync_enemy_readability_overlays(
+func _enemy_overlay_budgets(
+	enemies: Array[EnemyState],
+	visible_world: Rect2,
+	player_position: Vector2,
+	aim_target_id: String
+) -> Dictionary:
+	var health_scores := PackedInt64Array()
+	var priority_scores := PackedInt64Array()
+	var health_by_score: Dictionary = {}
+	var priority_by_score: Dictionary = {}
+	for enemy in enemies:
+		if (
+			enemy == null
+			or not enemy.alive
+			or not enemy.active
+			or not visible_world.has_point(enemy.pos)
+		):
+			continue
+		if (
+			enemy.role != &"stage_boss"
+			and (
+				enemy.health_class == &"priority"
+				or enemy.id == aim_target_id
+				or enemy.health_visible_timer > 0.0
+				or enemy.phase in [&"startup", &"active"]
+			)
+		):
+			var health_score := _unique_overlay_score(
+				enemy, player_position, aim_target_id, health_by_score
+			)
+			health_scores.append(health_score)
+			health_by_score[health_score] = enemy
+		if enemy.health_class == &"priority":
+			var priority_score := _unique_overlay_score(
+				enemy, player_position, aim_target_id, priority_by_score
+			)
+			priority_scores.append(priority_score)
+			priority_by_score[priority_score] = enemy
+	health_scores.sort()
+	priority_scores.sort()
+	var health_ids := {}
+	var priority_ids := {}
+	for index in mini(MAX_ORDINARY_HEALTH_BARS, health_scores.size()):
+		var candidate: EnemyState = health_by_score[health_scores[index]]
+		health_ids[candidate.id] = true
+	for index in mini(MAX_EXTRA_PRIORITY_MARKERS, priority_scores.size()):
+		var candidate: EnemyState = priority_by_score[priority_scores[index]]
+		priority_ids[candidate.id] = true
+	_last_health_bar_count = health_ids.size()
+	_last_priority_marker_count = priority_ids.size()
+	return {"health": health_ids, "priority": priority_ids}
+
+
+func _unique_overlay_score(
+	enemy: EnemyState,
+	player_position: Vector2,
+	aim_target_id: String,
+	occupied: Dictionary
+) -> int:
+	var distance_key := mini(
+		99999999,
+		roundi(player_position.distance_squared_to(enemy.pos))
+	)
+	var score := (
+		_enemy_overlay_rank(enemy, aim_target_id) * 1000000000000
+		+ distance_key * 10000
+		+ (enemy.id.hash() & 0x1fff)
+	)
+	while occupied.has(score):
+		score += 1
+	return score
+
+
+func _enemy_overlay_rank(enemy: EnemyState, aim_target_id: String) -> int:
+	if enemy.id == aim_target_id:
+		return 0
+	if enemy.phase in [&"startup", &"active"]:
+		return 1
+	if enemy.health_visible_timer > 0.0:
+		return 2
+	if enemy.health_class == &"priority":
+		return 3
+	return 4
+
+
+func _sync_enemy_priority_marker(
 	enemy: EnemyState,
 	position: Vector2,
-	radius: float
+	radius: float,
+	show_priority_marker: bool
 ) -> void:
-	if enemy.health_class == &"priority":
+	if show_priority_marker:
 		_write_instance(
 			_overlay_batches[&"ring"],
 			position,
@@ -564,14 +677,6 @@ func _sync_enemy_readability_overlays(
 			0.0,
 			Vector2(9.0, 7.0),
 			Art.IVORY_BRIGHT
-		)
-	if enemy.threat_kind == &"ranged" and enemy.phase == &"startup":
-		_write_instance(
-			_overlay_batches[&"diamond"],
-			position - Vector2(0.0, radius + 13.0),
-			0.0,
-			Vector2(13.0, 10.0),
-			Art.MUSTARD
 		)
 
 
@@ -1681,6 +1786,8 @@ func _write_instance_basis(
 
 
 func _reset_counts() -> void:
+	_last_health_bar_count = 0
+	_last_priority_marker_count = 0
 	for batch in _batches:
 		batch.reset()
 

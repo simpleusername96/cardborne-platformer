@@ -322,6 +322,44 @@ func _run() -> void:
 		hostile_trail.multimesh.mesh.get_surface_count() == 1,
 		"hostile head and trail share one vertex-colored mesh surface"
 	)
+	var crowd: Array[EnemyState] = []
+	for index in 40:
+		var crowd_enemy := EnemyState.new()
+		crowd_enemy.id = "crowd_%02d" % index
+		crowd_enemy.role = &"chaser"
+		crowd_enemy.archetype = &"chaser"
+		crowd_enemy.pos = Vector2(
+			120.0 + float(index % 10) * 92.0,
+			100.0 + float(index / 10) * 120.0
+		)
+		crowd_enemy.alive = true
+		crowd_enemy.active = true
+		crowd_enemy.visual_radius = 26.0
+		crowd_enemy.health_class = &"priority"
+		crowd_enemy.health = 20.0
+		crowd_enemy.max_health = 40.0
+		crowd_enemy.health_visible_timer = 1.0
+		crowd_enemy.phase = &"move"
+		crowd.append(crowd_enemy)
+	renderer.sync(
+		crowd, no_projectiles, no_projectiles, [], [],
+		Rect2(0,0,1280,720), Vector2(640.0,360.0), 2.0, true,
+		"crowd_39"
+	)
+	snapshot = renderer.debug_snapshot()
+	_expect(
+		int(snapshot["health_bar_count"]) == Renderer.MAX_ORDINARY_HEALTH_BARS,
+		"ordinary health bars stop at the deterministic twelve-actor budget"
+	)
+	_expect(
+		int(snapshot["priority_marker_count"]) == Renderer.MAX_EXTRA_PRIORITY_MARKERS,
+		"extra priority markers stop at the deterministic eight-actor budget"
+	)
+	var crowd_body := renderer.get_node("Enemy_mobile_enemy_set") as MultiMeshInstance2D
+	_expect(
+		crowd_body.multimesh.visible_instance_count == 40,
+		"semantic overlay budgets do not hide ordinary enemy bodies"
+	)
 	var offscreen_enemy := EnemyState.new()
 	offscreen_enemy.id = "offscreen_attacker"
 	offscreen_enemy.role = &"controller"
@@ -412,7 +450,16 @@ func _run() -> void:
 		"active off-screen beam keeps its exact danger boundary and beam body visible"
 	)
 	renderer.sync([], no_projectiles, no_projectiles, [], [], Rect2(0,0,1280,720), Vector2.ZERO, 0.0, false)
-	_expect(int(renderer.debug_snapshot()["visible_instances"]) == 0, "inactive presentation hides all retained instances")
+	snapshot = renderer.debug_snapshot()
+	_expect(
+		int(snapshot["visible_instances"]) == 0,
+		"inactive presentation hides all retained instances"
+	)
+	_expect(
+		int(snapshot["health_bar_count"]) == 0
+			and int(snapshot["priority_marker_count"]) == 0,
+		"inactive presentation clears semantic overlay diagnostics"
+	)
 	renderer.queue_free()
 	await process_frame
 	_finish()

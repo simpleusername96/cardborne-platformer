@@ -99,6 +99,13 @@ rules remain owned by the product specification.
   one large directional mass, cut, or center accent that remains recognizable
   in grayscale at gameplay scale; role color and simulation radius remain
   independent from that silhouette.
+- Large ordinary crowds keep every enemy body visible while limiting secondary
+  overlays to twelve health bars and eight extra priority markers. Selection is
+  deterministic: current aim first, then committed startup/active attacks,
+  recently damaged or priority targets, and finally nearer targets. Boss cues,
+  committed attack warnings, ranged startup diamonds, mine danger areas,
+  projectile collision cores, and the current aim bracket are never removed by
+  this budget.
 - All dangerous attacks show startup, damage area or projectile, and recovery.
   Startup fill and its outer boundary show the exact player-center danger
   footprint, not a decorative approximation. Any on-screen portion remains
