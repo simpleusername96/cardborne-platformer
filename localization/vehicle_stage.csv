@@ -203,6 +203,8 @@ NOTIFY_CONTACT_INBOUND,"접촉 신호 · 진입 지점을 확인하세요.","Con
 NOTIFY_MODULE_ONLINE,"회로 활성 · %s","Circuit online · %s"
 NOTIFY_STAGE_RESET,"스테이지 초기화 · 임시 강화와 일회성 보상을 제거했습니다.","Stage reset · Temporary upgrades and one-shot rewards cleared."
 NOTIFY_STAGE_ARRIVAL,"스테이지 %d 진입 · %s","Entering Stage %d · %s"
+STAGE_TRANSITION_TITLE,"스테이지 %d · %s","STAGE %d · %s"
+STAGE_TRANSITION_STATUS,"선체 회복 · 적 증원 접근","HULL RESTORED · HOSTILES INBOUND"
 NOTIFY_CALIBRATION_COMPLETE,"조정 완료 · 북쪽 관문은 적 처치와 무관하게 열립니다.","Calibration complete · The north gate is never kill-locked."
 NOTIFY_REPAIR,"수리 폼 · 내구도 +%d","Repair foam · +%d hull"
 NOTIFY_BARRIER_DEPLETED,"방벽 소진","Barrier depleted"

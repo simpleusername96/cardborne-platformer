@@ -418,7 +418,7 @@ truth.
 - [x] Add deterministic four-quadrant allocation, recent-sector memory and fairness fallback.
 - [x] Coalesce cues to one per pack and preserve at least 0.9-second cue lead.
 - [x] Dequeue at most four due spawns per physics tick until active occupancy reaches target.
-- [ ] Verify Stage 2~5 first surge can begin during transition without repeating the tutorial
+- [x] Verify Stage 2~5 first surge can begin during transition without repeating the tutorial
   scout.
 
 ### M3 — Readability and item presence
@@ -435,14 +435,14 @@ truth.
 
 ### M4 — Persistent field and seamless transition
 
-- [ ] Make one cover selection shared by all five tactical children.
-- [ ] Preserve player position, facing, build, difficulty, map exploration and terrain state.
-- [ ] Add `TRANSITION` to stage-flow and run-mode state machines.
-- [ ] Keep XP recall, mandatory reward resolution and full heal in that order.
-- [ ] Stop opening Stage 1~4 success reports; retain telemetry, Stage 5 result and failure report.
-- [ ] Refresh only dynamic stage content and item sets.
-- [ ] Add the focused transition banner component and complete Korean/English copy.
-- [ ] Start next-stage cues at 0.35 seconds and spawn at 1.35 seconds without continue input.
+- [x] Make one cover selection shared by all five tactical children.
+- [x] Preserve player position, facing, build, difficulty, map exploration and terrain state.
+- [x] Add `TRANSITION` to stage-flow and run-mode state machines.
+- [x] Keep XP recall, mandatory reward resolution and full heal in that order.
+- [x] Stop opening Stage 1~4 success reports; retain telemetry, Stage 5 result and failure report.
+- [x] Refresh only dynamic stage content and item sets.
+- [x] Add the focused transition banner component and complete Korean/English copy.
+- [x] Start next-stage cues at 0.35 seconds and spawn at 1.35 seconds without continue input.
 
 ### M5 — Integrated evidence and canonicalization
 

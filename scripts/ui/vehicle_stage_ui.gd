@@ -25,6 +25,7 @@ const StatusOrbit = preload("res://scripts/ui/vehicle_status_orbit.gd")
 const SettingsPanel = preload("res://scripts/ui/vehicle_settings_panel.gd")
 const GuidebookPanel = preload("res://scripts/ui/vehicle_guidebook_panel.gd")
 const StageReportPanel = preload("res://scripts/ui/vehicle_stage_report_panel.gd")
+const StageTransitionBanner = preload("res://scripts/ui/vehicle_stage_transition_banner.gd")
 const MinimapMeshBuilder = preload("res://scripts/ui/vehicle_minimap_mesh_builder.gd")
 const InputProfile = preload("res://scripts/input/vehicle_input_profile.gd")
 const RunDifficulty = preload("res://scripts/vehicle/vehicle_run_difficulty.gd")
@@ -423,6 +424,7 @@ var _minimap: StageMinimap
 var _notification: Label
 var _notification_timer := 0.0
 var _notification_queue: Array[Dictionary] = []
+var _transition_banner
 var _threat_radar
 var _status_orbit
 
@@ -568,6 +570,8 @@ func _build_root() -> void:
 	_notification.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_notification.visible = false
 	_root.add_child(_notification)
+	_transition_banner = StageTransitionBanner.new()
+	_root.add_child(_transition_banner)
 
 
 func _build_hud() -> void:
@@ -728,6 +732,8 @@ func _apply_responsive_layout() -> void:
 	_notification.size.x = 320.0 if compact else 360.0
 	_notification.position.x = (_root.size.x - _notification.size.x) * 0.5
 	_notification.position.y = 68.0 if _boss_cluster.visible else 72.0
+	if is_instance_valid(_transition_banner):
+		_transition_banner.apply_viewport(_root.size)
 	if is_instance_valid(_report_surface):
 		_report_surface.custom_minimum_size = Vector2(
 			minf(MODAL_MINIMUMS["report"].x, _root.size.x - 48.0),
@@ -1378,7 +1384,34 @@ func show_gameplay() -> void:
 	_hud.visible = true
 
 
+func show_stage_transition(
+	stage_number: int,
+	stage_title_key: String,
+	reduced_motion: bool
+) -> void:
+	show_gameplay()
+	_transition_banner.show_stage(
+		stage_number,
+		stage_title_key,
+		reduced_motion
+	)
+
+
+func hide_stage_transition() -> void:
+	if is_instance_valid(_transition_banner):
+		_transition_banner.hide_banner()
+
+
+func debug_transition_banner() -> Dictionary:
+	return (
+		_transition_banner.debug_snapshot()
+		if is_instance_valid(_transition_banner)
+		else {}
+	)
+
+
 func show_stage_report(snapshot: Dictionary) -> void:
+	hide_stage_transition()
 	hide_all_modals()
 	_dim.visible = true
 	_report_center.visible = true
@@ -1787,6 +1820,8 @@ func _refresh_localized_content() -> void:
 	_refresh_input_bindings()
 	if is_instance_valid(_guide_panel):
 		_guide_panel.refresh_localized_content()
+	if is_instance_valid(_transition_banner):
+		_transition_banner.refresh_localized_content()
 	_passive_slot.queue_redraw()
 	_dash_slot.queue_redraw()
 	_skill_slot.queue_redraw()

@@ -57,6 +57,7 @@ const StageReportBuilder = preload("res://scripts/combat/vehicle_stage_report_bu
 enum RunMode {
 	DEPLOYMENT,
 	PLAYING,
+	STAGE_TRANSITION,
 	UPGRADE,
 	PAUSED,
 	STAGE_REPORT,
@@ -100,6 +101,10 @@ const CHARGE_PATH_BINARY_STEPS := 8
 const PERFORMANCE_DETAIL_SAMPLE_STRIDE := 7
 const PLAYER_HIT_FLASH_DURATION := 0.20
 const PLAYER_HIT_INVULNERABILITY := 1.0
+const STAGE_TRANSITION_SECONDS := 1.6
+const STAGE_TRANSITION_INVULNERABILITY := 1.2
+const STAGE_TRANSITION_CUE_AT := 0.35
+const STAGE_TRANSITION_FIRST_SPAWN_AT := 1.35
 const FIXED_LAYOUT_SEED := 0xC4A2B0
 
 var mode := RunMode.DEPLOYMENT
@@ -169,6 +174,8 @@ var reward_runtime := RewardRuntime.new()
 var completed_group_rewards: Dictionary = {}
 var pending_stage_completion := false
 var experience_recall_timer := 0.0
+var stage_transition_remaining := 0.0
+var completed_stage_reports: Array[Dictionary] = []
 var lifesteal_budget := 6.0
 
 var enemy_store := EnemyStore.new()
@@ -308,7 +315,7 @@ func _physics_process(delta: float) -> void:
 		_performance_enemy_sections.clear()
 	if is_instance_valid(_performance_scenario) and mode == RunMode.PLAYING:
 		_performance_scenario.before_physics(self, delta)
-	if mode == RunMode.PLAYING:
+	if _simulation_active():
 		_simulation_lod_bucket = 1 - _simulation_lod_bucket
 		_far_enemy_simulation_bucket = (
 			(_far_enemy_simulation_bucket + 1)
@@ -372,7 +379,7 @@ func _process(delta: float) -> void:
 	player_hit_flash = maxf(0.0, player_hit_flash - delta)
 	player_muzzle_flash = maxf(0.0, player_muzzle_flash - delta)
 	camera_shake = maxf(0.0, camera_shake - delta * 18.0)
-	if is_instance_valid(_ui) and (mode == RunMode.PLAYING or _capture_mode):
+	if is_instance_valid(_ui) and (_simulation_active() or _capture_mode):
 		var hud_started := Time.get_ticks_usec() if performance_active else 0
 		var hud_update := _hud_presenter.advance(
 			delta,
@@ -390,12 +397,12 @@ func _process(delta: float) -> void:
 		_hud_presenter.reset()
 	if is_instance_valid(_audio):
 		var primary_held := (
-			mode == RunMode.PLAYING
+			_simulation_active()
 			and InputMap.has_action("primary_fire")
 			and Input.is_action_pressed("primary_fire")
 		)
 		_audio.update_primary(primary_held)
-	var presentation_active := mode == RunMode.PLAYING or _capture_mode
+	var presentation_active := _simulation_active() or _capture_mode
 	if (
 		is_instance_valid(_combat_renderer)
 		and (
@@ -424,7 +431,7 @@ func _process(delta: float) -> void:
 	_low_count_overlay_timer -= delta
 	if (
 		_low_count_overlay_timer <= 0.0
-		and (mode == RunMode.PLAYING or _capture_mode or _debug_collision_overlay)
+		and (_simulation_active() or _capture_mode or _debug_collision_overlay)
 	):
 		_low_count_overlay_timer = LOW_COUNT_OVERLAY_INTERVAL
 		queue_redraw()
@@ -529,6 +536,8 @@ func _reset_run(
 		_apply_camera_stage_limits()
 	if is_instance_valid(_ui):
 		_ui.clear_notifications()
+		_ui.hide_stage_transition()
+	stage_transition_remaining = 0.0
 	mode = RunMode.DEPLOYMENT
 	player_position = Rules.player_start(current_stage_id)
 	player_velocity = Vector2.ZERO
@@ -562,6 +571,7 @@ func _reset_run(
 		stage_telemetry.reset_run()
 		experience_runtime.reset()
 		reward_runtime.reset_run()
+		completed_stage_reports.clear()
 		selected_upgrade_title_key = "UPGRADE_NONE"
 	else:
 		stage_telemetry.reset_stage()
@@ -606,27 +616,7 @@ func _reset_run(
 	)
 	_rebuild_runtime_blockers()
 	pursuit_field.reset(current_stage_id, _runtime_cover_rects())
-	for spec in _active_tactical_layout.pickup_blueprint():
-		pickups.append({
-			"id": String(spec["id"]),
-			"kind": StringName(spec["kind"]),
-			"pos": Vector2(spec["pos"]),
-			"active": true,
-			"pulse": _rng.randf_range(0.0, TAU),
-			"heal_amount": float(spec.get("heal_amount", 35.0)),
-		})
-	for spec in _active_tactical_layout.crate_blueprint():
-		crates.append({
-			"id": String(spec["id"]),
-			"pos": Vector2(spec["pos"]),
-			"drop": StringName(spec["drop"]),
-			"heal_amount": float(spec.get("heal_amount", 0.0)),
-			"health": 24.0,
-			"max_health": 24.0,
-			"alive": true,
-			"flash": 0.0,
-		})
-	_rebuild_crate_collision_cells()
+	_populate_stage_items()
 
 	tutorial_move = false
 	tutorial_aim = false
@@ -685,6 +675,32 @@ func _generate_field_layout() -> void:
 		push_error("Could not generate the required run field layout")
 		return
 	StageCatalog.activate_field(field_layout.field_id)
+
+
+func _populate_stage_items() -> void:
+	pickups.clear()
+	crates.clear()
+	for spec in _active_tactical_layout.pickup_blueprint():
+		pickups.append({
+			"id": String(spec["id"]),
+			"kind": StringName(spec["kind"]),
+			"pos": Vector2(spec["pos"]),
+			"active": true,
+			"pulse": _rng.randf_range(0.0, TAU),
+			"heal_amount": float(spec.get("heal_amount", 0.0)),
+		})
+	for spec in _active_tactical_layout.crate_blueprint():
+		crates.append({
+			"id": String(spec["id"]),
+			"pos": Vector2(spec["pos"]),
+			"drop": StringName(spec["drop"]),
+			"heal_amount": float(spec.get("heal_amount", 0.0)),
+			"health": 24.0,
+			"max_health": 24.0,
+			"alive": true,
+			"flash": 0.0,
+		})
+	_rebuild_crate_collision_cells()
 
 
 func _make_enemy(spec: Dictionary) -> EnemyState:
@@ -820,6 +836,10 @@ func _rebuild_enemy_runtime_indexes() -> void:
 func _preferred_run_difficulty() -> StringName:
 	var settings := get_node_or_null("/root/SettingsStore")
 	return RunDifficulty.normalize(settings.run_difficulty) if settings != null else RunDifficulty.DEFAULT
+
+
+func _simulation_active() -> bool:
+	return mode in [RunMode.PLAYING, RunMode.STAGE_TRANSITION]
 
 
 func _update_encounter(delta: float) -> void:
@@ -975,10 +995,11 @@ func _on_upgrade_declined() -> void:
 
 
 func _pause_run() -> void:
-	if mode != RunMode.PLAYING:
+	if not _simulation_active():
 		return
 	mode_before_pause = mode
 	mode = RunMode.PAUSED
+	_ui.hide_stage_transition()
 	var build_snapshot := _build_snapshot()
 	_ui.update_hud({
 		"build_snapshot":build_snapshot,
@@ -995,6 +1016,8 @@ func _resume_run() -> void:
 	_release_tree_pause()
 	mode = mode_before_pause
 	_ui.show_gameplay()
+	if mode == RunMode.STAGE_TRANSITION:
+		_present_stage_transition_banner()
 	_set_mouse_for_mode()
 
 
@@ -1021,18 +1044,7 @@ func _replay_stage() -> void:
 
 
 func _advance_stage() -> void:
-	if current_stage_index >= StageCatalog.STAGE_IDS.size() - 1:
-		return
-	current_stage_index += 1
-	current_stage_id = StageCatalog.STAGE_IDS[current_stage_index]
-	_reset_run(false, true, true, true)
-	mode = RunMode.PLAYING
-	_ui.show_gameplay()
-	var profile := StageCatalog.profile(current_stage_id)
-	var arrival_text := tr("NOTIFY_STAGE_ARRIVAL").replace("%d", str(int(profile["number"]))).replace("%s", tr(String(profile["title_key"])))
-	_ui.notify(arrival_text, 3.2, Rules.CYAN)
-	_play_sound(&"card", 1.12)
-	_set_mouse_for_mode()
+	_begin_stage_transition()
 
 
 func _show_garage() -> void:
@@ -1056,7 +1068,7 @@ func _set_mouse_for_mode() -> void:
 	if _capture_mode:
 		Input.mouse_mode = Input.MOUSE_MODE_HIDDEN
 		return
-	Input.mouse_mode = Input.MOUSE_MODE_HIDDEN if mode == RunMode.PLAYING else Input.MOUSE_MODE_VISIBLE
+	Input.mouse_mode = Input.MOUSE_MODE_HIDDEN if _simulation_active() else Input.MOUSE_MODE_VISIBLE
 
 
 func _acquire_tree_pause() -> void:
@@ -3395,7 +3407,7 @@ func _clear_zones_owned_by_defeated_role(role: StringName) -> void:
 
 
 func _damage_player(amount: float, source: String, blockable: bool, enemy_source: bool = true, final_effective: bool = false) -> void:
-	if mode != RunMode.PLAYING or player_invulnerable > 0.0 or stage_complete:
+	if not _simulation_active() or player_invulnerable > 0.0 or stage_complete:
 		return
 	var remaining := _scaled_incoming_damage(amount, enemy_source, final_effective)
 	if player_barrier_strength > 0.0 and player_barrier_timer > 0.0:
@@ -3543,6 +3555,16 @@ func _update_aim_target() -> void:
 func _update_stage_progression(delta: float = 0.0) -> void:
 	if stage_flow.state == StageFlow.State.BOSS_WARNING and stage_flow.tick(delta):
 		_start_stage_boss()
+	if mode == RunMode.STAGE_TRANSITION:
+		stage_transition_remaining = maxf(
+			0.0,
+			stage_transition_remaining - maxf(0.0, delta)
+		)
+		if stage_transition_remaining <= 0.0:
+			stage_flow.record_transition_complete()
+			mode = RunMode.PLAYING
+			_ui.hide_stage_transition()
+			_set_mouse_for_mode()
 
 
 func _trigger_contains(trigger: Variant, point: Vector2) -> bool:
@@ -3613,6 +3635,14 @@ func _resolve_reward_transaction(outcome: StringName = &"claimed") -> void:
 
 func _advance_reward_queue() -> void:
 	if mode != RunMode.PLAYING:
+		return
+	if (
+		pending_stage_completion
+		and (
+			experience_recall_timer > 0.0
+			or not experience_runtime.shards.is_empty()
+		)
+	):
 		return
 	if experience_runtime.pending_level_ups > 0:
 		_open_upgrade_reward(RewardRuntime.LEVEL_UP_SOURCE, false)
@@ -4013,19 +4043,24 @@ func _finalize_stage_completion() -> void:
 		return
 	stage_complete = true
 	pending_stage_completion = false
-	stage_flow.record_rewards_complete()
 	_clear_projectiles()
 	denied_zones.clear()
-	mode = RunMode.STAGE_REPORT
 	_pending_stage_report = StageReportBuilder.build(
 		stage_telemetry.freeze_stage(),
 		_stage_report_context(
 			current_stage_index < StageCatalog.STAGE_IDS.size() - 1
 		)
 	)
-	_ui.show_stage_report(_pending_stage_report)
-	_play_sound(&"card", 0.72)
-	_set_mouse_for_mode()
+	completed_stage_reports.append(_pending_stage_report.duplicate(true))
+	var has_next_stage := current_stage_index < StageCatalog.STAGE_IDS.size() - 1
+	stage_flow.record_rewards_complete(has_next_stage)
+	if has_next_stage:
+		_begin_stage_transition()
+		return
+	persistent_clear_count += 1
+	persistent_relay_module = true
+	_save_persistence()
+	_show_final_result()
 
 
 func _stage_report_context(has_next_stage: bool) -> Dictionary:
@@ -4052,6 +4087,141 @@ func _continue_stage_report() -> void:
 	_show_final_result()
 
 
+func _begin_stage_transition() -> void:
+	if current_stage_index >= StageCatalog.STAGE_IDS.size() - 1:
+		return
+	var preserved_position := player_position
+	var preserved_hull_direction := player_hull_direction
+	var preserved_aim_direction := player_aim_direction
+	current_stage_index += 1
+	current_stage_id = StageCatalog.STAGE_IDS[current_stage_index]
+	_active_tactical_layout = field_layout.tactical_layout(current_stage_id)
+	if _active_tactical_layout == null:
+		push_error("Missing tactical layout for %s" % current_stage_id)
+		return
+	if is_instance_valid(_backdrop):
+		_backdrop.configure(current_stage_id, _active_tactical_layout)
+	if is_instance_valid(_camera):
+		_apply_camera_stage_limits()
+	player_position = preserved_position
+	player_hull_direction = preserved_hull_direction
+	player_aim_direction = preserved_aim_direction
+	player_velocity = Vector2.ZERO
+	player_dash_timer = 0.0
+	player_dash_trail_timer = 0.0
+	player_emp_startup = 0.0
+	player_health = _player_max_health()
+	player_invulnerable = maxf(
+		player_invulnerable,
+		STAGE_TRANSITION_INVULNERABILITY
+	)
+	experience_recall_timer = 0.0
+	experience_runtime.clear_shards()
+	experience_runtime.pending_level_ups = 0
+	stage_telemetry.reset_stage()
+	reward_runtime.reset_stage()
+	current_card_offer.clear()
+	secondary_runtime.reset(player_position)
+	_clear_enemies()
+	_clear_projectiles()
+	pickups.clear()
+	crates.clear()
+	denied_zones.clear()
+	effects.clear()
+	damaging_trails.clear()
+	for spec in _active_tactical_layout.stationary_blueprint():
+		_append_enemy(_make_enemy(spec))
+	encounter_runtime.configure(
+		current_stage_id,
+		_transition_packets(current_stage_id),
+		selected_run_difficulty,
+		_active_tactical_layout.ordinary_spawn_anchors,
+		_active_tactical_layout.encounter_seed
+	)
+	stage_flow.configure_transition(
+		current_stage_index,
+		RunDifficulty.scaled_quota(
+			StageCatalog.quota(current_stage_id),
+			selected_run_difficulty
+		)
+	)
+	terrain_runtime.configure(
+		field_layout.field_definition.get("features", []),
+		field_layout.persistent_bulkhead_health,
+		true,
+		_active_tactical_layout.support_sockets,
+		field_layout.seed,
+		current_stage_id
+	)
+	_rebuild_runtime_blockers()
+	pursuit_field.reset(current_stage_id, _runtime_cover_rects())
+	_populate_stage_items()
+	boss_started = false
+	boss_phase_two_announced = false
+	boss_arrival_position = Vector2.ZERO
+	stage_complete = false
+	pending_stage_completion = false
+	completed_group_rewards.clear()
+	discovered_markers.clear()
+	_elite_pending = 0
+	_elite_spawned = 0
+	_elite_threshold_cursor = 0
+	_threat_contact_cache.clear()
+	_threat_sample_timer = 0.0
+	_squad_motion_snapshot.clear()
+	_shielded_enemy_ids.clear()
+	_enemy_coordination_initialized = false
+	_aim_target_id = ""
+	_marked_enemy_id = ""
+	_sheared_enemy_id = ""
+	enemy_grid.configure(
+		Rules.world_rect(current_stage_id),
+		SpatialGrid.DEFAULT_CELL_SIZE
+	)
+	enemy_grid.rebuild(enemies)
+	stage_started_at = run_time
+	stage_transition_remaining = STAGE_TRANSITION_SECONDS
+	mode = RunMode.STAGE_TRANSITION
+	_hud_presenter.reset()
+	_present_stage_transition_banner()
+	_play_sound(&"card", 1.12)
+	_set_mouse_for_mode()
+
+
+func _present_stage_transition_banner() -> void:
+	var profile := StageCatalog.profile(current_stage_id)
+	_ui.show_stage_transition(
+		int(profile["number"]),
+		String(profile["title_key"]),
+		_reduced_motion_enabled()
+	)
+
+
+func _transition_packets(stage_id: StringName) -> Array[Dictionary]:
+	var authored := StageCatalog.packets(stage_id)
+	var result: Array[Dictionary] = []
+	if authored.size() <= 1:
+		return result
+	var authored_first_time := float(authored[1]["trigger"]["at"])
+	for packet_index in range(1, authored.size()):
+		var packet := authored[packet_index].duplicate(true)
+		var trigger := Dictionary(packet["trigger"]).duplicate(true)
+		trigger["at"] = (
+			STAGE_TRANSITION_CUE_AT
+			+ float(trigger["at"])
+			- authored_first_time
+		)
+		packet["trigger"] = trigger
+		if packet_index == 1:
+			packet["cue_lead"] = (
+				STAGE_TRANSITION_FIRST_SPAWN_AT
+				- STAGE_TRANSITION_CUE_AT
+			)
+			packet["pack_gap"] = 0.0
+		result.append(packet)
+	return result
+
+
 func _show_final_result() -> void:
 	mode = RunMode.RESULT
 	var profile := StageCatalog.profile(current_stage_id)
@@ -4066,6 +4236,7 @@ func _show_final_result() -> void:
 		"primary_hits": stats_primary_hits,
 		"dash_uses": stats_dash_uses,
 		"installations": stats_installations,
+		"stage_history": completed_stage_reports.duplicate(true),
 	})
 	_play_sound(&"card", 0.72)
 	_set_mouse_for_mode()
@@ -4519,7 +4690,7 @@ func _update_threat_contacts(delta: float) -> void:
 
 func _threat_radar_snapshot() -> Dictionary:
 	return {
-		"visible": mode == RunMode.PLAYING,
+		"visible": _simulation_active(),
 		"center": get_canvas_transform() * player_position,
 		"max_distance": THREAT_SCAN_DISTANCE,
 		"contacts": _threat_contact_cache,

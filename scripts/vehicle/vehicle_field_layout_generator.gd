@@ -43,19 +43,13 @@ static func generate(
 	if not feature_errors.is_empty():
 		push_error("Field features are invalid: %s" % "; ".join(feature_errors))
 		return null
-	var layouts_by_stage := {}
-	var previous_cover_ids: Array[StringName] = []
-	for stage_id in stage_ids:
-		var tactical := _build_stage_layout(
-			layout_seed, stage_id, previous_cover_ids
-		)
-		if tactical == null:
-			push_error(
-				"Field layout could not compile %s/%s" % [_field["id"], stage_id]
-			)
-			return null
-		layouts_by_stage[stage_id] = tactical
-		previous_cover_ids = tactical.cover_ids.duplicate()
+	var layouts_by_stage := _build_shared_stage_layouts(
+		layout_seed,
+		stage_ids
+	)
+	if layouts_by_stage.size() != stage_ids.size():
+		push_error("Field layout could not compile %s" % _field["id"])
+		return null
 	var layout := Layout.new()
 	layout.configure(
 		layout_seed,
@@ -112,45 +106,63 @@ static func cover_ids_for_mask(mask: Array[int]) -> Array[StringName]:
 	return result
 
 
-static func _build_stage_layout(
+static func _build_shared_stage_layouts(
 	layout_seed: int,
-	stage_id: StringName,
-	previous_cover_ids: Array[StringName]
-) -> TacticalLayout:
-	var cover_rng := _rng_for(
-		layout_seed, "%s:cover:v2" % String(stage_id)
-	)
+	stage_ids: Array[StringName]
+) -> Dictionary:
+	var cover_rng := _rng_for(layout_seed, "shared-cover:v3")
 	for _attempt in MAX_ATTEMPTS:
 		var selected_ids := _random_cover_ids(cover_rng)
-		if selected_ids == previous_cover_ids:
-			continue
 		var selected_rects := _rects_for_ids(selected_ids)
 		if _validate_cover_selection(selected_rects).is_empty():
-			var generated := _compile_stage_layout(
-				layout_seed, stage_id, selected_ids, selected_rects, false
+			var generated := _compile_stage_set(
+				layout_seed,
+				stage_ids,
+				selected_ids,
+				selected_rects,
+				false
 			)
-			if generated != null:
+			if generated.size() == stage_ids.size():
 				return generated
-	return _enumerated_stage_fallback(
-		layout_seed, stage_id, previous_cover_ids
-	)
+	return _enumerated_shared_fallback(layout_seed, stage_ids)
 
 
-static func _enumerated_stage_fallback(
+static func _compile_stage_set(
 	layout_seed: int,
-	stage_id: StringName,
-	previous_cover_ids: Array[StringName]
-) -> TacticalLayout:
+	stage_ids: Array[StringName],
+	cover_ids: Array[StringName],
+	cover_rects: Array[Rect2],
+	used_fallback: bool
+) -> Dictionary:
+	var result := {}
+	for stage_id in stage_ids:
+		var tactical := _compile_stage_layout(
+			layout_seed,
+			stage_id,
+			cover_ids,
+			cover_rects,
+			used_fallback
+		)
+		if tactical == null:
+			return {}
+		result[stage_id] = tactical
+	return result
+
+
+static func _enumerated_shared_fallback(
+	layout_seed: int,
+	stage_ids: Array[StringName]
+) -> Dictionary:
 	var candidate_counts: Array[int] = []
 	var combination_count := 1
 	for sector in SECTORS:
 		var count := _cover_candidates_for(sector).size()
 		if count <= 0:
-			return null
+			return {}
 		candidate_counts.append(count)
 		combination_count *= count
 	var start := posmod(
-		_sub_seed(layout_seed, "%s:cover-fallback:v2" % String(stage_id)),
+		_sub_seed(layout_seed, "shared-cover-fallback:v3"),
 		combination_count
 	)
 	for offset in combination_count:
@@ -160,17 +172,19 @@ static func _enumerated_stage_fallback(
 			mask.append(encoded % count)
 			encoded = floori(float(encoded) / float(count))
 		var selected_ids := cover_ids_for_mask(mask)
-		if selected_ids == previous_cover_ids:
-			continue
 		var selected_rects := _rects_for_ids(selected_ids)
 		if not _validate_cover_selection(selected_rects).is_empty():
 			continue
-		var generated := _compile_stage_layout(
-			layout_seed, stage_id, selected_ids, selected_rects, true
+		var generated := _compile_stage_set(
+			layout_seed,
+			stage_ids,
+			selected_ids,
+			selected_rects,
+			true
 		)
-		if generated != null:
+		if generated.size() == stage_ids.size():
 			return generated
-	return null
+	return {}
 
 
 static func _compile_stage_layout(

@@ -3,7 +3,14 @@ extends RefCounted
 
 ## Deterministic quota -> boss warning -> reward -> transition state owner.
 
-enum State { ORDINARY, BOSS_WARNING, BOSS_ACTIVE, REWARDS, COMPLETE }
+enum State {
+	ORDINARY,
+	BOSS_WARNING,
+	BOSS_ACTIVE,
+	REWARDS,
+	TRANSITION,
+	COMPLETE,
+}
 
 var stage_index := 0
 var quota := 96
@@ -20,8 +27,13 @@ func configure(next_stage_index: int, next_quota: int) -> void:
 	warning_remaining = 0.0
 
 
+func configure_transition(next_stage_index: int, next_quota: int) -> void:
+	configure(next_stage_index, next_quota)
+	state = State.TRANSITION
+
+
 func record_countable_defeat() -> bool:
-	if state != State.ORDINARY:
+	if state not in [State.ORDINARY, State.TRANSITION]:
 		return false
 	defeats = mini(quota, defeats + 1)
 	if defeats >= quota:
@@ -52,13 +64,18 @@ func record_boss_defeat() -> bool:
 	return true
 
 
-func record_rewards_complete() -> void:
+func record_rewards_complete(has_next_stage: bool = false) -> void:
 	if state == State.REWARDS:
-		state = State.COMPLETE
+		state = State.TRANSITION if has_next_stage else State.COMPLETE
+
+
+func record_transition_complete() -> void:
+	if state == State.TRANSITION:
+		state = State.ORDINARY
 
 
 func stop_ordinary_spawning() -> bool:
-	return state != State.ORDINARY
+	return state not in [State.ORDINARY, State.TRANSITION]
 
 
 func snapshot() -> Dictionary:

@@ -48,7 +48,7 @@ func _validate_field(field_id: StringName) -> void:
 	_expect(fixed.field_id == field_id, "%s layout retains field id" % field_id)
 	_expect(fixed.fingerprint == replay.fingerprint, "%s same seed reproduces layout" % field_id)
 	_validate_no_feature_overlaps(fixed, definition)
-	var previous_cover_ids: Array[StringName] = []
+	var shared_cover_ids: Array[StringName] = []
 	for stage_id in Catalog.STAGE_IDS:
 		var tactical := fixed.tactical_layout(stage_id)
 		_expect(tactical != null, "%s/%s has a tactical layout" % [field_id, stage_id])
@@ -58,9 +58,13 @@ func _validate_field(field_id: StringName) -> void:
 		_expect(tactical.ordinary_spawn_anchors.size() >= 20, "%s/%s retains at least 20 ordinary anchors" % [field_id, stage_id])
 		_expect(tactical.boss_arrival_anchors.size() >= 8, "%s/%s retains at least eight boss anchors" % [field_id, stage_id])
 		_expect(tactical.support_sockets.size() >= 12, "%s/%s retains twelve support sockets" % [field_id, stage_id])
-		if not previous_cover_ids.is_empty():
-			_expect(tactical.cover_ids != previous_cover_ids, "%s/%s changes cover from the previous stage" % [field_id, stage_id])
-		previous_cover_ids = tactical.cover_ids.duplicate()
+		if shared_cover_ids.is_empty():
+			shared_cover_ids = tactical.cover_ids.duplicate()
+		else:
+			_expect(
+				tactical.cover_ids == shared_cover_ids,
+				"%s/%s preserves the run-scoped cover selection" % [field_id, stage_id]
+			)
 		_expect(fixed.stationary_blueprint(stage_id).size() == 4, "%s/%s has four stationary threats" % [field_id, stage_id])
 		_expect(fixed.pickup_blueprint(stage_id).size() == 6, "%s/%s has six loose pickups" % [field_id, stage_id])
 		_expect(fixed.crate_blueprint(stage_id).size() == 8, "%s/%s has eight crates" % [field_id, stage_id])

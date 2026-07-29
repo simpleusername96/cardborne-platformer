@@ -338,7 +338,10 @@ func _schedule_packet(packet: Dictionary, player_position: Vector2, visible_worl
 	var allocations := _spawn_allocator.allocate(packet, player_position, visible_world)
 	var arrival_mode := StringName(packet.get("arrival_mode", SpawnAllocator.ARRIVAL_DISTRIBUTED))
 	var unit_spacing := float(packet.get("unit_spacing", 0.16))
-	var gap := 0.90 if beat <= 1 else 0.65
+	var gap := float(packet.get(
+		"pack_gap",
+		0.90 if beat <= 1 else 0.65
+	))
 	var cue_lead := float(packet.get("cue_lead", CUE_LEAD))
 	var queued_cue_groups := {}
 	for squad_index in squads.size():
