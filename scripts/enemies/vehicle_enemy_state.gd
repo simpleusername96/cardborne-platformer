@@ -88,6 +88,8 @@ var decision_bucket := 0
 var statuses: Dictionary = {}
 var runtime_slot := -1
 var passive_score := 0.0
+var decision_elapsed := 0.0
+var motion_elapsed := 0.0
 
 
 func reset_runtime_collections() -> void:
@@ -95,3 +97,5 @@ func reset_runtime_collections() -> void:
 	lane_centers.clear()
 	attack_telegraphs.clear()
 	passive_score = 0.0
+	decision_elapsed = 0.0
+	motion_elapsed = 0.0

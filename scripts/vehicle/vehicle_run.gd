@@ -42,6 +42,7 @@ const SecondaryRuntime = preload("res://scripts/player/vehicle_secondary_runtime
 const GuidebookCatalog = preload("res://scripts/progression/vehicle_guidebook_catalog.gd")
 const EnemyStore = preload("res://scripts/enemies/vehicle_enemy_store.gd")
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
+const EnemyUpdateSchedule = preload("res://scripts/enemies/vehicle_enemy_update_schedule.gd")
 const ProjectileStore = preload("res://scripts/combat/vehicle_projectile_store.gd")
 const ProjectileState = preload("res://scripts/combat/vehicle_projectile_state.gd")
 const PerformanceRecorder = preload("res://scripts/performance/vehicle_performance_recorder.gd")
@@ -181,6 +182,7 @@ var completed_stage_reports: Array[Dictionary] = []
 var lifesteal_budget := 6.0
 
 var enemy_store := EnemyStore.new()
+var _enemy_update_schedule := EnemyUpdateSchedule.new()
 var enemy_grid := SpatialGrid.new()
 var enemies: Array[EnemyState] = enemy_store.live
 var _enemy_query_buffer: Array[EnemyState] = []
@@ -1743,43 +1745,28 @@ func _update_enemies(delta: float) -> void:
 	var section_started := Time.get_ticks_usec() if performance_active else 0
 	var decision_bucket := _enemy_decision_bucket
 	_enemy_decision_bucket = (_enemy_decision_bucket + 1) % ORDINARY_DECISION_BUCKET_COUNT
-	var committed_points := 0.0
-	var committed_ranged := 0
-	var committed_denial := 0
-	var active_capped := 0
-	for enemy in enemies:
-		if not enemy.alive:
-			continue
-		if enemy.active and enemy.counts_active_cap:
-			active_capped += 1
-		if enemy.phase in [&"startup", &"active"] and enemy.role not in [&"stage_boss", &"generator", &"boss_pylon"]:
-			committed_points += enemy.threat_cost
-			match enemy.threat_kind:
-				&"ranged": committed_ranged += 1
-				&"denial": committed_denial += 1
+	_enemy_update_schedule.rebuild(
+		enemies, delta, player_position, FAR_SIMULATION_DISTANCE_SQUARED,
+		decision_bucket, _simulation_lod_bucket, _far_enemy_simulation_bucket
+	)
+	var committed_points := _enemy_update_schedule.committed_points
+	var committed_ranged := _enemy_update_schedule.committed_ranged
+	var committed_denial := _enemy_update_schedule.committed_denial
+	var active_capped := _enemy_update_schedule.active_cap_count
 	if _enforce_active_enemy_cap(active_capped):
-		active_capped = encounter_runtime.active_cap()
-		committed_points = 0.0
-		committed_ranged = 0
-		committed_denial = 0
-		for enemy in enemies:
-			if (
-				enemy.alive
-				and enemy.active
-				and enemy.phase in [&"startup", &"active"]
-				and enemy.role not in [&"stage_boss", &"generator", &"boss_pylon"]
-			):
-				committed_points += enemy.threat_cost
-				match enemy.threat_kind:
-					&"ranged": committed_ranged += 1
-					&"denial": committed_denial += 1
+		_enemy_update_schedule.rebuild(
+			enemies, 0.0, player_position, FAR_SIMULATION_DISTANCE_SQUARED,
+			decision_bucket, _simulation_lod_bucket, _far_enemy_simulation_bucket
+		)
+		active_capped = _enemy_update_schedule.active_cap_count
+		committed_points = _enemy_update_schedule.committed_points
+		committed_ranged = _enemy_update_schedule.committed_ranged
+		committed_denial = _enemy_update_schedule.committed_denial
 	if performance_active:
 		_performance_enemy_sections["budget_scan"] = _elapsed_ms(section_started)
 		section_started = Time.get_ticks_usec()
 
-	for enemy in enemies:
-		if not enemy.alive:
-			continue
+	for enemy in _enemy_update_schedule.alive:
 		var flash := enemy.flash
 		if flash > 0.0:
 			enemy.flash = maxf(0.0, flash - delta)
@@ -1812,11 +1799,12 @@ func _update_enemies(delta: float) -> void:
 		section_started = Time.get_ticks_usec()
 
 	if not _enemy_coordination_initialized:
-		_squad_motion_snapshot = EncounterDirector.squad_motion_snapshot(enemies)
+		_squad_motion_snapshot = EncounterDirector.squad_motion_snapshot(
+			_enemy_update_schedule.active
+		)
 		_shielded_enemy_ids = _build_enemy_shield_assignments()
-		for enemy in enemies:
-			if enemy.alive and enemy.active:
-				_apply_enemy_shield(enemy, _shielded_enemy_ids)
+		for enemy in _enemy_update_schedule.active:
+			_apply_enemy_shield(enemy, _shielded_enemy_ids)
 		_pending_shielded_enemy_ids.clear()
 		_append_enemy_shield_assignments(
 			_pending_shielded_enemy_ids,
@@ -1825,7 +1813,9 @@ func _update_enemies(delta: float) -> void:
 		_enemy_coordination_initialized = true
 	else:
 		if decision_bucket == 0:
-			_squad_motion_snapshot = EncounterDirector.squad_motion_snapshot(enemies)
+			_squad_motion_snapshot = EncounterDirector.squad_motion_snapshot(
+				_enemy_update_schedule.active
+			)
 			_refresh_enemy_shield_supports()
 			_pending_shielded_enemy_ids.clear()
 		_append_enemy_shield_assignments(
@@ -1834,18 +1824,13 @@ func _update_enemies(delta: float) -> void:
 		)
 		if decision_bucket == ORDINARY_DECISION_BUCKET_COUNT - 1:
 			_shielded_enemy_ids = _pending_shielded_enemy_ids.duplicate()
-			for enemy in enemies:
-				if enemy.alive and enemy.active:
-					_apply_enemy_shield(enemy, _shielded_enemy_ids)
+			for enemy in _enemy_update_schedule.active:
+				_apply_enemy_shield(enemy, _shielded_enemy_ids)
 	if performance_active:
 		_performance_enemy_sections["coordination"] = _elapsed_ms(section_started)
 		section_started = Time.get_ticks_usec()
 	var arc_surge_active := terrain_runtime.has_active_arc_surge()
-	for enemy in enemies:
-		if not enemy.alive:
-			continue
-		if not enemy.active:
-			continue
+	for enemy in _enemy_update_schedule.active:
 		if arc_surge_active:
 			var terrain_damage := terrain_runtime.surge_damage_for(
 				enemy.id,
@@ -1877,8 +1862,13 @@ func _update_enemies(delta: float) -> void:
 		if enemy.stun > 0.0:
 			enemy.velocity = Vector2.ZERO
 			continue
-		var decision_due := enemy.decision_bucket == decision_bucket
-		var motion_delta := _ordinary_enemy_motion_delta(enemy, delta)
+		var critical_due := _enemy_update_schedule.is_critical(enemy)
+		var decision_due := _enemy_update_schedule.decision_due(enemy)
+		var motion_delta := (
+			delta if critical_due else _enemy_update_schedule.motion_delta(enemy)
+		)
+		if not critical_due and motion_delta <= 0.0:
+			continue
 		var can_commit := false
 		if decision_due:
 			can_commit = EncounterDirector.can_commit(
@@ -1890,16 +1880,17 @@ func _update_enemies(delta: float) -> void:
 				encounter_runtime.ranged_commit_cap(),
 				encounter_runtime.denial_commit_cap()
 			)
-			if role == &"rammer" and not SpecialistRuntime.rammer_can_commit(enemy, enemies):
+			if role == &"rammer" and not _enemy_update_schedule.rammer_can_commit(enemy):
 				can_commit = false
 		var started := _update_ordinary_enemy(
-			enemy, delta, can_commit, decision_due, motion_delta
+			enemy, motion_delta, can_commit, decision_due, motion_delta
 		)
 		if started:
 			committed_points += enemy.threat_cost
 			match enemy.threat_kind:
 				&"ranged": committed_ranged += 1
 				&"denial": committed_denial += 1
+			_enemy_update_schedule.note_commit(enemy)
 	if performance_active:
 		_performance_enemy_sections["behavior_and_motion"] = _elapsed_ms(section_started)
 
@@ -1952,13 +1943,7 @@ func _build_enemy_shield_assignments() -> Dictionary:
 
 func _refresh_enemy_shield_supports() -> void:
 	_shield_supports.clear()
-	for enemy in enemies:
-		if (
-			enemy.alive
-			and enemy.active
-			and enemy.role in [&"generator", &"shield_escort"]
-		):
-			_shield_supports.append(enemy)
+	_shield_supports.assign(_enemy_update_schedule.supports)
 
 
 func _append_enemy_shield_assignments(
@@ -2043,7 +2028,10 @@ func _update_repair_tender(enemy: EnemyState, delta: float, refresh_target: bool
 
 
 func _spawn_carrier_child(carrier: EnemyState) -> void:
-	if SpecialistRuntime.living_children(carrier.id, enemies) >= SpecialistRuntime.CARRIER_CHILD_CAP:
+	if (
+		_enemy_update_schedule.carrier_child_count(carrier.id)
+		>= SpecialistRuntime.CARRIER_CHILD_CAP
+	):
 		return
 	carrier.child_serial += 1
 	var serial := carrier.child_serial
@@ -2060,6 +2048,7 @@ func _spawn_carrier_child(carrier: EnemyState) -> void:
 		"leash_rect":carrier.leash_rect,
 	})
 	if _append_enemy(child):
+		_enemy_update_schedule.note_carrier_child(carrier.id)
 		_add_effect("spawn", spawn_position, Art.CORAL, 0.32, 44.0)
 
 
@@ -2079,20 +2068,6 @@ func _update_boss_pylon(enemy: EnemyState, delta: float) -> void:
 			"source": "Colossus pylon field",
 			"affinity": AttackContract.ARC,
 		})
-
-
-func _ordinary_enemy_motion_delta(enemy: EnemyState, delta: float) -> float:
-	# Locomotion collision is the dominant ordinary-enemy cost. Combat windows
-	# remain 60 Hz, nearby travel runs at 30 Hz, and distant travel at 20 Hz.
-	if enemy.phase in [&"startup", &"active"]:
-		return delta
-	if player_position.distance_squared_to(enemy.pos) > FAR_SIMULATION_DISTANCE_SQUARED:
-		if enemy.runtime_slot % FAR_ENEMY_SIMULATION_BUCKET_COUNT != _far_enemy_simulation_bucket:
-			return 0.0
-		return delta * float(FAR_ENEMY_SIMULATION_BUCKET_COUNT)
-	if enemy.runtime_slot % 2 != _simulation_lod_bucket:
-		return 0.0
-	return delta * 2.0
 
 
 func _update_ordinary_enemy(
@@ -2227,7 +2202,11 @@ func _enemy_can_attack(enemy: EnemyState) -> bool:
 		&"rammer":
 			return distance <= 640.0 and distance >= 130.0 and _runtime_has_line_of_sight(enemy.pos, player_position, 12.0)
 		&"drone_carrier":
-			return distance <= 760.0 and SpecialistRuntime.living_children(enemy.id, enemies) < SpecialistRuntime.CARRIER_CHILD_CAP
+			return (
+				distance <= 760.0
+				and _enemy_update_schedule.carrier_child_count(enemy.id)
+					< SpecialistRuntime.CARRIER_CHILD_CAP
+			)
 		&"beam_sentinel":
 			return distance <= SpecialistRuntime.BEAM_RANGE and _runtime_has_line_of_sight(enemy.pos, player_position, 7.0)
 	return false
@@ -2334,7 +2313,11 @@ func _begin_enemy_active(enemy: EnemyState) -> void:
 		&"rammer":
 			enemy.phase_time = SpecialistRuntime.RAMMER_ACTIVE
 		&"drone_carrier":
-			enemy.burst_left = mini(3, SpecialistRuntime.CARRIER_CHILD_CAP - SpecialistRuntime.living_children(enemy.id, enemies))
+			enemy.burst_left = mini(
+				3,
+				SpecialistRuntime.CARRIER_CHILD_CAP
+					- _enemy_update_schedule.carrier_child_count(enemy.id)
+			)
 			enemy.burst_timer = 0.0
 			enemy.phase_time = 2.2
 		&"beam_sentinel":

@@ -26,20 +26,6 @@ const BEAM_COVER_PADDING := 5.0
 const BEAM_DAMAGE := 18.0
 
 
-static func rammer_can_commit(rammer: EnemyState, enemies: Array[EnemyState]) -> bool:
-	var global_committed := 0
-	var squad_committed := 0
-	for enemy in enemies:
-		if not enemy.alive or enemy.role != &"rammer":
-			continue
-		if enemy.phase not in [&"startup", &"active"]:
-			continue
-		global_committed += 1
-		if enemy.squad_id == rammer.squad_id:
-			squad_committed += 1
-	return global_committed < 2 and squad_committed < 1
-
-
 static func repair_target_id(tender: EnemyState, enemies: Array[EnemyState], stage_id: StringName, include_dynamic_cover: bool, extra_cover: Array = []) -> String:
 	var best_id := ""
 	var best_ratio := 1.0
@@ -63,14 +49,6 @@ static func repair_target_id(tender: EnemyState, enemies: Array[EnemyState], sta
 			best_ratio = ratio
 			best_id = target.id
 	return best_id
-
-
-static func living_children(carrier_id: String, enemies: Array[EnemyState]) -> int:
-	var count := 0
-	for enemy in enemies:
-		if enemy.alive and enemy.carrier_id == carrier_id:
-			count += 1
-	return count
 
 
 static func is_support_or_installation(role: StringName) -> bool:

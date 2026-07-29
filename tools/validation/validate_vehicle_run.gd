@@ -6,6 +6,7 @@ const AttackTelegraphs = preload("res://scripts/combat/vehicle_attack_telegraph_
 const BossPatterns = preload("res://scripts/bosses/vehicle_boss_patterns.gd")
 const Director = preload("res://scripts/encounters/vehicle_encounter_director.gd")
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
+const EnemyUpdateSchedule = preload("res://scripts/enemies/vehicle_enemy_update_schedule.gd")
 const ProjectileState = preload("res://scripts/combat/vehicle_projectile_state.gd")
 const MAIN_SCENE := "res://scenes/main/GameRoot.tscn"
 
@@ -88,39 +89,62 @@ func _check_visual_collision_separation(run) -> void:
 
 
 func _check_simulation_lod_contract(run) -> void:
-	run._simulation_lod_bucket = 0
 	var moving_even := EnemyState.new()
+	moving_even.alive = true
+	moving_even.active = true
 	moving_even.phase = &"move"
 	moving_even.runtime_slot = 0
 	moving_even.pos = run.player_position
 	var moving_odd := EnemyState.new()
+	moving_odd.alive = true
+	moving_odd.active = true
 	moving_odd.phase = &"move"
 	moving_odd.runtime_slot = 1
 	moving_odd.pos = run.player_position
 	var committed_odd := EnemyState.new()
+	committed_odd.alive = true
+	committed_odd.active = true
 	committed_odd.phase = &"startup"
-	committed_odd.runtime_slot = 1
+	committed_odd.runtime_slot = 2
 	committed_odd.pos = run.player_position + Vector2(1200.0, 0.0)
 	var distant := EnemyState.new()
+	distant.alive = true
+	distant.active = true
 	distant.phase = &"move"
-	distant.runtime_slot = 0
+	distant.runtime_slot = 3
 	distant.pos = run.player_position + Vector2(1200.0, 0.0)
+	var fixtures: Array[EnemyState] = [
+		moving_even, moving_odd, committed_odd, distant,
+	]
+	var schedule := EnemyUpdateSchedule.new()
+	schedule.rebuild(
+		fixtures, 1.0 / 60.0, run.player_position,
+		run.FAR_SIMULATION_DISTANCE_SQUARED, 0, 1, 1
+	)
 	_expect(
-		is_equal_approx(float(run.call("_ordinary_enemy_motion_delta", moving_even, 1.0 / 60.0)), 1.0 / 30.0),
+		schedule.is_critical(committed_odd)
+			and is_equal_approx(schedule.motion_delta(committed_odd), 0.0),
+		"attack startup is selected for the independent 60 Hz critical lane"
+	)
+	schedule.rebuild(
+		fixtures, 1.0 / 60.0, run.player_position,
+		run.FAR_SIMULATION_DISTANCE_SQUARED, 1, 0, 2
+	)
+	_expect(
+		is_equal_approx(schedule.motion_delta(moving_even), 1.0 / 30.0),
 		"ordinary locomotion integrates on its alternating 30 Hz slot"
 	)
 	_expect(
-		is_zero_approx(float(run.call("_ordinary_enemy_motion_delta", moving_odd, 1.0 / 60.0))),
+		is_zero_approx(schedule.motion_delta(moving_odd)),
 		"the other ordinary locomotion slot waits for the next physics tick"
 	)
-	run._far_enemy_simulation_bucket = 0
-	_expect(
-		is_equal_approx(float(run.call("_ordinary_enemy_motion_delta", distant, 1.0 / 60.0)), 1.0 / 20.0),
-		"distant non-committed locomotion integrates on its 20 Hz slot"
+	schedule.rebuild(
+		fixtures, 1.0 / 60.0, run.player_position,
+		run.FAR_SIMULATION_DISTANCE_SQUARED, 2, 1, 0
 	)
 	_expect(
-		is_equal_approx(float(run.call("_ordinary_enemy_motion_delta", committed_odd, 1.0 / 60.0)), 1.0 / 60.0),
-		"attack startup bypasses locomotion LOD and remains at 60 Hz"
+		is_equal_approx(schedule.motion_delta(distant), 1.0 / 20.0),
+		"distant non-committed locomotion integrates on its 20 Hz slot"
 	)
 
 

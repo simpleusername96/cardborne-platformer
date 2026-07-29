@@ -20,6 +20,8 @@ func _initialize() -> void:
 	_expect(store.rejected_invalid == 0, "capacity rejection is not misclassified")
 
 	for index in range(0, original.size(), 2):
+		original[index].decision_elapsed = 0.08
+		original[index].motion_elapsed = 0.04
 		original[index].alive = false
 		store.queue_defeat(original[index])
 	var removed := store.flush_defeated()
@@ -37,7 +39,12 @@ func _initialize() -> void:
 		_expect(store.find(enemy.id) == enemy, "live ID resolves after swap removal")
 
 	for index in retired_count:
-		_expect(store.add(_enemy(store, 1000 + index)), "freed capacity accepts replacement %d" % index)
+		var replacement := _enemy(store, 1000 + index)
+		_expect(
+			replacement.decision_elapsed == 0.0 and replacement.motion_elapsed == 0.0,
+			"reused state %d clears actor-owned cadence" % index
+		)
+		_expect(store.add(replacement), "freed capacity accepts replacement %d" % index)
 	_expect(store.live_count() == EnemyStore.MAX_LIVE_HOSTILES, "store returns to exact capacity")
 	_expect(store.debug_snapshot()["pool"] == 0, "every live slot is backed by one fixed pooled state")
 	_expect(
