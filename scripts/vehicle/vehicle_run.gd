@@ -46,6 +46,7 @@ const ProjectileStore = preload("res://scripts/combat/vehicle_projectile_store.g
 const ProjectileState = preload("res://scripts/combat/vehicle_projectile_state.gd")
 const PerformanceRecorder = preload("res://scripts/performance/vehicle_performance_recorder.gd")
 const PerformanceScenario = preload("res://scripts/performance/vehicle_performance_scenario.gd")
+const PressureFixture = preload("res://scripts/performance/vehicle_pressure_fixture.gd")
 const FieldLayoutGenerator = preload("res://scripts/vehicle/vehicle_field_layout_generator.gd")
 const StageTacticalLayout = preload("res://scripts/vehicle/vehicle_stage_tactical_layout.gd")
 const TerrainRuntime = preload("res://scripts/vehicle/vehicle_terrain_runtime.gd")
@@ -302,6 +303,8 @@ func _ready() -> void:
 
 
 func _exit_tree() -> void:
+	if is_instance_valid(_performance_scenario):
+		_performance_scenario.deactivate()
 	_release_tree_pause()
 	if is_instance_valid(_audio):
 		_audio.shutdown()
@@ -1112,7 +1115,13 @@ func _update_player(delta: float) -> void:
 	if player_barrier_timer <= 0.0:
 		player_barrier_strength = 0.0
 
-	_update_player_aim()
+	if (
+		is_instance_valid(_performance_scenario)
+		and _performance_scenario.scenario_id == &"production_replay"
+	):
+		player_aim_direction = _performance_scenario.desired_aim_direction(self)
+	else:
+		_update_player_aim()
 	var move_input := Input.get_vector("move_left", "move_right", "move_up", "move_down")
 	if move_input.length_squared() > 0.01:
 		tutorial_move = true
@@ -5277,6 +5286,7 @@ func _start_performance_scenario() -> void:
 func _finish_performance_scenario() -> void:
 	_performance_finishing = true
 	var validation := _performance_scenario.validation_snapshot(self)
+	_performance_scenario.deactivate()
 	_performance_recorder.finish(
 		get_viewport(),
 		validation,
@@ -5492,21 +5502,31 @@ func _capture_prepare_stage(stage_index: int, preserve_upgrades: bool = false) -
 
 
 func _capture_pressure_evidence() -> void:
-	_capture_prepare_stage(0)
+	_capture_prepare_stage(StageCatalog.STAGE_IDS.size() - 1)
 	_clear_enemies()
-	var roles: Array[StringName] = [&"scrap_drone", &"needle_drone", &"spark_minelet", &"chaser", &"shooter", &"controller"]
-	for index in EncounterDirector.ACTIVE_CAPS[-1]:
-		var position := Vector2(
-			2440.0 + float(index % 10) * 80.0,
-			1320.0 + float(index / 10) * 108.0
-		)
-		var enemy := _make_enemy({"id":"capture_pressure_%02d" % index, "role":roles[index % roles.size()], "pos":position, "active":true})
+	var scenario := PerformanceScenario.new()
+	var production_roles: Array[StringName] = scenario._production_pressure_roles(
+		PressureFixture.CAPACITY_ORDINARY_COUNT
+	)
+	var fixture := PressureFixture.build(
+		&"peak",
+		current_stage_id,
+		player_position,
+		_visible_world_rect(0.0),
+		_active_tactical_layout.ordinary_spawn_anchors,
+		production_roles
+	)
+	for descriptor_variant in Array(fixture["descriptors"]):
+		var descriptor := Dictionary(descriptor_variant)
+		var enemy := _make_enemy(descriptor)
 		if enemy == null:
 			break
 		enemy.active = true
-		enemy.health_visible_timer = 99.0 if index < 12 else 0.0
-		enemy.committed_dir = (player_position - position).normalized()
-		if index < 3:
+		enemy.counts_active_cap = bool(descriptor["counts_active_cap"])
+		var enemy_index := enemies.size()
+		enemy.health_visible_timer = 99.0 if enemy_index < 12 else 0.0
+		enemy.committed_dir = (player_position - enemy.pos).normalized()
+		if enemy_index < 3:
 			enemy.phase = "startup"
 			enemy.committed_target = player_position
 			AttackTelegraphs.refresh_ordinary(
@@ -5524,9 +5544,17 @@ func _capture_pressure_evidence() -> void:
 			shard_position = Vector2(580.0 + float(index % 20) * 34.0, 520.0 + float((index - 72) / 20) * 36.0)
 		experience_runtime.spawn_shard(shard_position, 1 + int(index % 11 == 0) * 3)
 	_update_threat_contacts(0.2)
+	var qualification := PressureFixture.qualification(
+		Array(fixture["descriptors"]), player_position, _visible_world_rect(0.0)
+	)
+	print(JSON.stringify({
+		"capture":"03-peak-horde.png",
+		"fixture_fingerprint":fixture["fingerprint"],
+		"qualification":qualification,
+	}))
 	mode = RunMode.PAUSED
 	await _settle_capture()
-	_save_capture("03-maximum-pressure-xp.png")
+	_save_capture("03-peak-horde.png")
 
 
 func _capture_cycle_evidence() -> void:

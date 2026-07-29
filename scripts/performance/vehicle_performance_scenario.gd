@@ -15,13 +15,16 @@ const RunDifficulty = preload("res://scripts/vehicle/vehicle_run_difficulty.gd")
 const StageCatalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
 const EncounterDirector = preload("res://scripts/encounters/vehicle_encounter_director.gd")
 const EncounterRuntime = preload("res://scripts/encounters/vehicle_encounter_runtime.gd")
+const PressureFixture = preload("res://scripts/performance/vehicle_pressure_fixture.gd")
 
-const CURRENT_PRESSURE_TARGET := 280
+const PEAK_HORDE_TARGET := PressureFixture.PEAK_ORDINARY_COUNT
 const CAPACITY_PRESSURE_TARGET := EnemyStore.MAX_LIVE_HOSTILES
-const ORDINARY_CAPACITY_LOAD := 280
+const ORDINARY_CAPACITY_LOAD := PressureFixture.CAPACITY_ORDINARY_COUNT
+const BOSS_PRESSURE_TARGET := PressureFixture.BOSS_ORDINARY_COUNT + 1
 
 const VALID_SCENARIOS: Array[StringName] = [
-	&"current_pressure", &"capacity_pressure", &"lifecycle_pressure", &"boss_pressure",
+	&"production_replay", &"peak_horde", &"capacity_pressure",
+	&"lifecycle_pressure", &"boss_pressure",
 ]
 const MOBILE_ARCHETYPES: Array[StringName] = [
 	&"scrap_drone", &"needle_drone", &"chaser", &"shooter", &"controller",
@@ -37,6 +40,12 @@ var _enemy_refill_serial := 0
 var _lifecycle_timer := 0.0
 var _spawn_points: Array[Vector2] = []
 var _production_roles: Array[StringName] = []
+var _fixture: Dictionary = {}
+var _fixture_qualification: Dictionary = {}
+var _route_waypoints: Array[Vector2] = []
+var _route_waypoint_index := 0
+var _dash_release_pending := false
+var _scheduler_spawn_seen := false
 
 
 func configure(id: StringName) -> bool:
@@ -47,7 +56,10 @@ func configure(id: StringName) -> bool:
 
 
 func activate(run: Node) -> void:
-	run.call("_start_deployed_run", &"pulse_cannon", RunDifficulty.HARD)
+	_prepare_stage_five(run)
+	if scenario_id == &"production_replay":
+		_activate_production_replay(run)
+		return
 	run.encounter_runtime.stop_spawning()
 	run.player_barrier_strength = 1.0e9
 	run.player_barrier_timer = 1.0e9
@@ -60,24 +72,32 @@ func activate(run: Node) -> void:
 	run.denied_zones.clear()
 	run.damaging_trails.clear()
 	run.encounter_runtime.current_beat = 4
-	_spawn_points = _walkable_ring_points(
-		run,
-		EnemyStore.MAX_LIVE_HOSTILES
-	)
 	_production_roles = _production_pressure_roles(ORDINARY_CAPACITY_LOAD)
+	var load_class := _load_class()
+	_fixture = PressureFixture.build(
+		load_class,
+		run.current_stage_id,
+		run.player_position,
+		run.call("_visible_world_rect", 0.0),
+		run._active_tactical_layout.ordinary_spawn_anchors,
+		_production_roles
+	)
+	_spawn_points.clear()
+	for descriptor_variant in Array(_fixture["descriptors"]):
+		var descriptor := Dictionary(descriptor_variant)
+		if StringName(descriptor.get("fixture_kind", &"ordinary")) == &"ordinary":
+			_spawn_points.append(Vector2(descriptor["pos"]))
+	_fixture_qualification = PressureFixture.qualification(
+		Array(_fixture["descriptors"]),
+		run.player_position,
+		run.call("_visible_world_rect", 0.0)
+	)
 	if scenario_id == &"lifecycle_pressure":
 		_run_lifecycle_cycles(run, 300)
-	var enemy_target := (
-		CURRENT_PRESSURE_TARGET
-		if scenario_id == &"current_pressure"
-		else CAPACITY_PRESSURE_TARGET
-	)
-	if scenario_id == &"boss_pressure":
-		enemy_target = 77
-	_fill_enemies(run, enemy_target, scenario_id == &"boss_pressure")
-	_fill_experience(run, 96 if scenario_id in [&"current_pressure", &"boss_pressure"] else ExperienceRuntime.MAX_SHARDS)
-	_fill_effects(run, 48 if scenario_id in [&"current_pressure", &"boss_pressure"] else 96)
-	_fill_zones_and_trails(run, 8 if scenario_id in [&"current_pressure", &"boss_pressure"] else 16)
+	_fill_enemies(run)
+	_fill_experience(run, 96 if scenario_id in [&"peak_horde", &"boss_pressure"] else ExperienceRuntime.MAX_SHARDS)
+	_fill_effects(run, 48 if scenario_id in [&"peak_horde", &"boss_pressure"] else 96)
+	_fill_zones_and_trails(run, 8 if scenario_id in [&"peak_horde", &"boss_pressure"] else 16)
 	run.run_build.apply(&"ion_field")
 	run.run_build.apply(&"orbit_blades")
 	run.call("_sync_cycle_upgrades")
@@ -87,6 +107,9 @@ func activate(run: Node) -> void:
 
 func before_physics(run: Node, delta: float) -> void:
 	elapsed += delta
+	if scenario_id == &"production_replay":
+		_drive_production_replay(run)
+		return
 	var center := Rules.player_start(run.current_stage_id)
 	var route := Vector2(cos(elapsed * 0.31) * 120.0, sin(elapsed * 0.47) * 80.0)
 	run.player_position = center + route
@@ -103,20 +126,22 @@ func before_physics(run: Node, delta: float) -> void:
 
 
 func after_physics(run: Node) -> void:
+	if scenario_id == &"production_replay":
+		var scheduler_snapshot: Dictionary = run.encounter_runtime.debug_snapshot()
+		_scheduler_spawn_seen = _scheduler_spawn_seen or not Dictionary(
+			scheduler_snapshot.get("spawned_by_squad", {})
+		).is_empty()
+		return
 	_maintain_enemy_pressure(run)
 	_fill_projectiles(run, false)
 
 
 func validation_snapshot(run: Node) -> Dictionary:
-	var expected_enemies := (
-		CURRENT_PRESSURE_TARGET
-		if scenario_id == &"current_pressure"
-		else CAPACITY_PRESSURE_TARGET
-	)
-	if scenario_id == &"boss_pressure":
-		expected_enemies = 77
-	var player_target := 140 if scenario_id in [&"current_pressure", &"boss_pressure"] else ProjectileStore.PLAYER_CAPACITY
-	var hostile_target := 72 if scenario_id == &"current_pressure" else ProjectileStore.HOSTILE_CAPACITY
+	if scenario_id == &"production_replay":
+		return _production_validation_snapshot(run)
+	var expected_enemies := int(Array(_fixture["descriptors"]).size())
+	var player_target := 140 if scenario_id in [&"peak_horde", &"boss_pressure"] else ProjectileStore.PLAYER_CAPACITY
+	var hostile_target := 72 if scenario_id == &"peak_horde" else ProjectileStore.HOSTILE_CAPACITY
 	if scenario_id == &"boss_pressure":
 		hostile_target = 100
 	var enemy_snapshot: Dictionary = run.enemy_store.debug_snapshot()
@@ -149,6 +174,15 @@ func validation_snapshot(run: Node) -> Dictionary:
 		run.call("_visible_world_rect", 0.0),
 		run.projectile_store.hostile_count()
 	)
+	var peak_valid := (
+		true
+		if scenario_id != &"peak_horde"
+		else (
+			PressureFixture.peak_qualification_passes(_fixture_qualification)
+			and int(pressure["ranged_commits"]) <= EncounterDirector.MAX_RANGED_COMMITS
+			and int(pressure["denial_commits"]) <= EncounterDirector.MAX_DENIAL_COMMITS
+		)
+	)
 	var valid: bool = (
 		int(enemy_snapshot["live"]) == expected_enemies
 		and ordinary_count == expected_ordinary
@@ -165,10 +199,16 @@ func validation_snapshot(run: Node) -> Dictionary:
 		and int(enemy_snapshot["rejected_capacity"]) == 0
 		and int(renderer_snapshot["enemy_capacity"]) == EnemyStore.MAX_LIVE_HOSTILES
 		and boss_valid
+		and peak_valid
 		and (scenario_id != &"lifecycle_pressure" or lifecycle_cycles >= 300)
 	)
 	return {
 		"valid": valid,
+		"scenario_origin":&"fixture",
+		"load_class":_load_class(),
+		"fixture_seed":int(_fixture["seed"]),
+		"fixture_fingerprint":int(_fixture["fingerprint"]),
+		"fixture_qualification":_fixture_qualification.duplicate(true),
 		"expected_enemies": expected_enemies,
 		"ordinary_enemies": ordinary_count,
 		"auxiliary_enemies": auxiliary_count,
@@ -186,66 +226,55 @@ func validation_snapshot(run: Node) -> Dictionary:
 	}
 
 
-func _fill_enemies(run: Node, target: int, include_boss: bool) -> void:
-	var boss_slots := 1 if include_boss else 0
-	var ordinary_target := mini(ORDINARY_CAPACITY_LOAD, target - boss_slots)
-	_enemy_refill_serial = ordinary_target
-	for index in ordinary_target:
-		var archetype := _production_roles[index]
-		var enemy: EnemyState = run.call("_make_enemy", {
-			"id": "performance_enemy_%03d" % index,
-			"role": archetype,
-			"pos": _spawn_points[index % _spawn_points.size()],
-			"active": true,
-		})
+func deactivate() -> void:
+	for action in [&"move_left", &"move_right", &"move_up", &"move_down", &"dash", &"primary_fire"]:
+		if InputMap.has_action(action):
+			Input.action_release(action)
+
+
+func desired_aim_direction(run: Node) -> Vector2:
+	if scenario_id != &"production_replay":
+		return Vector2.ZERO
+	var best_distance := INF
+	var best_direction: Vector2 = run.player_aim_direction
+	var found_priority := false
+	for enemy in run.enemies:
+		if enemy == null or not enemy.alive or not enemy.active:
+			continue
+		var priority: bool = enemy.threat_kind != &"pursuit" or enemy.role == &"stage_boss"
+		if found_priority and not priority:
+			continue
+		var distance_squared: float = enemy.pos.distance_squared_to(run.player_position)
+		if priority and not found_priority:
+			found_priority = true
+			best_distance = INF
+		if distance_squared < best_distance:
+			best_distance = distance_squared
+			best_direction = (enemy.pos - run.player_position).normalized()
+	return best_direction
+
+
+func _fill_enemies(run: Node) -> void:
+	_enemy_refill_serial = int(_fixture["ordinary_count"])
+	for descriptor_variant in Array(_fixture["descriptors"]):
+		var descriptor := Dictionary(descriptor_variant)
+		var enemy: EnemyState = run.call("_make_enemy", descriptor)
 		if enemy == null:
 			break
 		enemy.active = true
-		enemy.counts_active_cap = index >= 4
+		enemy.counts_active_cap = bool(descriptor["counts_active_cap"])
 		enemy.health = 1000000.0
 		enemy.max_health = 1000000.0
+		if enemy.role == &"boss_pylon":
+			enemy.support_tick = 1000000.0
+		elif enemy.role == &"stage_boss":
+			enemy.phase = &"boss_read"
+			enemy.phase_time = 0.0
 		run.call("_append_enemy", enemy)
-	var auxiliary_target := target - ordinary_target - boss_slots
-	for index in auxiliary_target:
-		var auxiliary: EnemyState = run.call("_make_enemy", {
-			"id": "performance_auxiliary_%03d" % index,
-			"role": &"boss_pylon",
-			"pos": _spawn_points[(ordinary_target + index) % _spawn_points.size()],
-			"active": true,
-		})
-		if auxiliary == null:
-			break
-		auxiliary.active = true
-		auxiliary.counts_active_cap = false
-		auxiliary.health = 1000000.0
-		auxiliary.max_health = 1000000.0
-		auxiliary.support_tick = 1000000.0
-		run.call("_append_enemy", auxiliary)
-	if include_boss:
-		var boss: EnemyState = run.call("_make_enemy", {
-			"id": "performance_boss",
-			"role": &"stage_boss",
-			"pos": _spawn_points[ordinary_target % _spawn_points.size()],
-			"active": true,
-		})
-		if boss == null:
-			return
-		boss.active = true
-		boss.health = 1000000.0
-		boss.max_health = 1000000.0
-		boss.phase = &"boss_read"
-		boss.phase_time = 0.0
-		run.call("_append_enemy", boss)
 
 
 func _maintain_enemy_pressure(run: Node) -> void:
-	var target := (
-		CURRENT_PRESSURE_TARGET
-		if scenario_id == &"current_pressure"
-		else CAPACITY_PRESSURE_TARGET
-	)
-	if scenario_id == &"boss_pressure":
-		target = 77
+	var target := int(Array(_fixture["descriptors"]).size())
 	var budget := 8
 	while run.enemy_store.live_count() < target and budget > 0:
 		var mobile_index := 4 + posmod(
@@ -337,8 +366,8 @@ func _churn_one_enemy(run: Node) -> void:
 
 
 func _fill_projectiles(run: Node, initial: bool) -> void:
-	var player_target := 140 if scenario_id in [&"current_pressure", &"boss_pressure"] else ProjectileStore.PLAYER_CAPACITY
-	var hostile_target := 72 if scenario_id == &"current_pressure" else ProjectileStore.HOSTILE_CAPACITY
+	var player_target := 140 if scenario_id in [&"peak_horde", &"boss_pressure"] else ProjectileStore.PLAYER_CAPACITY
+	var hostile_target := 72 if scenario_id == &"peak_horde" else ProjectileStore.HOSTILE_CAPACITY
 	if scenario_id == &"boss_pressure":
 		hostile_target = 100
 	while run.projectile_store.hostile_count() > hostile_target:
@@ -399,7 +428,7 @@ func _fill_effects(run: Node, target: int) -> void:
 
 
 func _maintain_effects(run: Node) -> void:
-	var target := 48 if scenario_id in [&"current_pressure", &"boss_pressure"] else 96
+	var target := 48 if scenario_id in [&"peak_horde", &"boss_pressure"] else 96
 	var budget := 4
 	while run.effects.size() < target and budget > 0:
 		var index := _shot_serial % _spawn_points.size()
@@ -425,19 +454,119 @@ func _fill_zones_and_trails(run: Node, target: int) -> void:
 			})
 
 
-func _walkable_ring_points(run: Node, target: int) -> Array[Vector2]:
-	var result: Array[Vector2] = []
+func _prepare_stage_five(run: Node) -> void:
+	run.selected_primary = &"pulse_cannon"
+	run.selected_run_difficulty = RunDifficulty.HARD
+	run.current_stage_index = StageCatalog.STAGE_IDS.size() - 1
+	run.current_stage_id = StageCatalog.STAGE_IDS[-1]
+	run.call("_reset_run", false, true)
+	run.mode = run.RunMode.PLAYING
+
+
+func _activate_production_replay(run: Node) -> void:
+	run.player_barrier_strength = 1.0e9
+	run.player_barrier_timer = 1.0e9
 	var center := Rules.player_start(run.current_stage_id)
-	var radius := 340.0
-	while result.size() < target and radius < 2100.0:
-		for index in 48:
-			var angle := TAU * float(index) / 48.0 + radius * 0.0007
-			var candidate := center + Vector2.RIGHT.rotated(angle) * radius
-			if Rules.is_position_walkable(candidate, 38.0, run.current_stage_id):
-				result.append(candidate)
-				if result.size() >= target:
-					break
-		radius += 115.0
-	if result.is_empty():
-		result.append(center + Vector2(500.0, 0.0))
-	return result
+	_route_waypoints = [
+		center + Vector2(640.0, 0.0),
+		center + Vector2(0.0, 360.0),
+		center + Vector2(-640.0, 0.0),
+		center + Vector2(0.0, -360.0),
+	]
+	_route_waypoint_index = 0
+	_set_action(&"primary_fire", true)
+
+
+func _drive_production_replay(run: Node) -> void:
+	if _dash_release_pending:
+		_set_action(&"dash", false)
+		_dash_release_pending = false
+	var target := _route_waypoints[_route_waypoint_index]
+	var offset: Vector2 = target - run.player_position
+	if offset.length() <= 32.0:
+		_route_waypoint_index = (_route_waypoint_index + 1) % _route_waypoints.size()
+		target = _route_waypoints[_route_waypoint_index]
+		offset = target - run.player_position
+		if run.player_dash_cooldown <= 0.0:
+			_set_action(&"dash", true)
+			_dash_release_pending = true
+	var direction: Vector2 = offset.normalized()
+	_set_action(&"move_left", false)
+	_set_action(&"move_right", false)
+	_set_action(&"move_up", false)
+	_set_action(&"move_down", false)
+	if direction.x < -0.2:
+		_set_action(&"move_left", true)
+	elif direction.x > 0.2:
+		_set_action(&"move_right", true)
+	if direction.y < -0.2:
+		_set_action(&"move_up", true)
+	elif direction.y > 0.2:
+		_set_action(&"move_down", true)
+	run.player_barrier_strength = maxf(run.player_barrier_strength, 1.0e8)
+	run.player_barrier_timer = 1.0e9
+
+
+func _production_validation_snapshot(run: Node) -> Dictionary:
+	var scheduler: Dictionary = run.encounter_runtime.debug_snapshot()
+	var enemy_snapshot: Dictionary = run.enemy_store.debug_snapshot()
+	var projectile_snapshot: Dictionary = run.projectile_store.debug_snapshot()
+	var renderer_snapshot: Dictionary = run._combat_renderer.debug_snapshot()
+	var scheduler_spawned := _scheduler_spawn_seen or not Dictionary(
+		scheduler.get("spawned_by_squad", {})
+	).is_empty()
+	var valid: bool = (
+		StringName(scheduler.get("stage_id", &"")) == StageCatalog.STAGE_IDS[-1]
+		and StringName(scheduler.get("difficulty", &"")) == RunDifficulty.HARD
+		and bool(scheduler.get("spawning_enabled", false))
+		and int(enemy_snapshot.get("rejected_capacity", 0)) == 0
+		and run.projectile_store.validate_counts()
+		and int(renderer_snapshot["batches"]) <= 50
+		and (elapsed < 5.1 or scheduler_spawned)
+	)
+	return {
+		"valid":valid,
+		"scenario_origin":&"production_scheduler",
+		"load_class":&"production",
+		"fixture_seed":0,
+		"fixture_fingerprint":0,
+		"fixture_qualification":{},
+		"expected_enemies":-1,
+		"ordinary_enemies":run.call("_active_mobile_count"),
+		"auxiliary_enemies":int(enemy_snapshot["live"]) - int(run.call("_active_mobile_count")),
+		"boss_enemies":0,
+		"expected_player_projectiles":-1,
+		"expected_hostile_projectiles":-1,
+		"enemies":enemy_snapshot,
+		"projectiles":projectile_snapshot,
+		"experience":run.experience_runtime.shards.size(),
+		"effects":run.effects.size(),
+		"zones_and_trails":run.denied_zones.size() + run.damaging_trails.size(),
+		"lifecycle_cycles":0,
+		"boss_active":false,
+		"scheduler_spawn_seen":scheduler_spawned,
+		"scheduler":scheduler,
+		"pressure":scheduler.get("pressure", {}),
+	}
+
+
+func _load_class() -> StringName:
+	match scenario_id:
+		&"peak_horde":
+			return &"peak"
+		&"capacity_pressure":
+			return &"capacity"
+		&"lifecycle_pressure":
+			return &"lifecycle"
+		&"boss_pressure":
+			return &"boss"
+	return &"production"
+
+
+func _set_action(action: StringName, pressed: bool) -> void:
+	if not InputMap.has_action(action):
+		return
+	if pressed:
+		Input.action_press(action)
+	else:
+		Input.action_release(action)

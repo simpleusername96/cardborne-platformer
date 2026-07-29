@@ -2,6 +2,8 @@ extends SceneTree
 
 const Scenario = preload("res://scripts/performance/vehicle_performance_scenario.gd")
 const Recorder = preload("res://scripts/performance/vehicle_performance_recorder.gd")
+const PressureFixture = preload("res://scripts/performance/vehicle_pressure_fixture.gd")
+const InputProfile = preload("res://scripts/input/vehicle_input_profile.gd")
 const RUN_SCENE := "res://scenes/run/VehicleRun.tscn"
 
 var failures: Array[String] = []
@@ -12,6 +14,7 @@ func _initialize() -> void:
 
 
 func _run() -> void:
+	InputProfile.apply_input_map(InputProfile.default_descriptors())
 	var packed := load(RUN_SCENE) as PackedScene
 	_expect(packed != null, "vehicle run scene loads")
 	if packed == null:
@@ -22,27 +25,69 @@ func _run() -> void:
 	await process_frame
 	run.set_process(false)
 	run.set_physics_process(false)
+	_expect(
+		not Scenario.new().configure(&"current_pressure"),
+		"retired current_pressure scenario is rejected rather than aliased"
+	)
+	var peak_fingerprint := 0
 	for scenario_id in Scenario.VALID_SCENARIOS:
+		print("Validating performance scenario: %s" % String(scenario_id))
 		var scenario := Scenario.new()
 		_expect(scenario.configure(scenario_id), "%s configures" % String(scenario_id))
 		scenario.activate(run)
+		print("Activated performance scenario: %s" % String(scenario_id))
+		if scenario_id == &"production_replay":
+			for _step in 370:
+				scenario.before_physics(run, 1.0 / 60.0)
+				run.call("_update_encounter", 1.0 / 60.0)
+				scenario.after_physics(run)
 		scenario.after_physics(run)
 		var snapshot := scenario.validation_snapshot(run)
 		_expect(bool(snapshot["valid"]), "%s reaches every declared workload count" % String(scenario_id))
-		var expected := (
-			Scenario.CURRENT_PRESSURE_TARGET
-			if scenario_id == &"current_pressure"
-			else (77 if scenario_id == &"boss_pressure" else Scenario.CAPACITY_PRESSURE_TARGET)
+		var expected_by_scenario := {
+			&"production_replay":-1,
+			&"peak_horde":Scenario.PEAK_HORDE_TARGET,
+			&"capacity_pressure":Scenario.CAPACITY_PRESSURE_TARGET,
+			&"lifecycle_pressure":Scenario.CAPACITY_PRESSURE_TARGET,
+			&"boss_pressure":Scenario.BOSS_PRESSURE_TARGET,
+		}
+		_expect(
+			int(snapshot["expected_enemies"]) == int(expected_by_scenario[scenario_id]),
+			"%s uses its locked actor load" % String(scenario_id)
 		)
-		_expect(int(snapshot["expected_enemies"]) == expected, "%s uses its locked actor load" % String(scenario_id))
+		_expect(
+			StringName(snapshot["scenario_origin"]) == (
+				&"production_scheduler" if scenario_id == &"production_replay" else &"fixture"
+			),
+			"%s reports its workload origin" % String(scenario_id)
+		)
+		if scenario_id == &"production_replay":
+			_expect(bool(snapshot["scheduler_spawn_seen"]), "production replay creates actors through the real scheduler")
+		else:
+			_expect(int(snapshot["fixture_fingerprint"]) != 0, "%s publishes a fixture fingerprint" % String(scenario_id))
+		if scenario_id == &"peak_horde":
+			peak_fingerprint = int(snapshot["fixture_fingerprint"])
+			_expect(
+				PressureFixture.peak_qualification_passes(snapshot["fixture_qualification"]),
+				"peak fixture passes locked focus and sector qualification"
+			)
+			var one_sided := Dictionary(snapshot["fixture_qualification"]).duplicate(true)
+			one_sided["sector_histogram"] = PackedInt32Array([0, 0, 0, 0, 69, 69, 69, 69])
+			one_sided["all_sectors"] = false
+			one_sided["sector_range_valid"] = false
+			_expect(
+				not PressureFixture.peak_qualification_passes(one_sided),
+				"one-sided peak placement fails qualification"
+			)
 		_expect(
 			PackedInt32Array(snapshot["pressure"]["sector_histogram"]).size() == 8,
 			"%s publishes an eight-sector pressure histogram" % String(scenario_id)
 		)
-		_expect(
-			int(snapshot["pressure"]["hostile_projectiles"]) == int(snapshot["expected_hostile_projectiles"]),
-			"%s pressure snapshot exposes hostile projectile occupancy" % String(scenario_id)
-		)
+		if scenario_id != &"production_replay":
+			_expect(
+				int(snapshot["pressure"]["hostile_projectiles"]) == int(snapshot["expected_hostile_projectiles"]),
+				"%s pressure snapshot exposes hostile projectile occupancy" % String(scenario_id)
+			)
 		if scenario_id == &"lifecycle_pressure":
 			_expect(int(snapshot["lifecycle_cycles"]) == 300, "lifecycle scenario retires 300 actors before capacity load")
 			for _step in 20:
@@ -50,6 +95,8 @@ func _run() -> void:
 			snapshot = scenario.validation_snapshot(run)
 			_expect(int(snapshot["lifecycle_cycles"]) >= 305, "lifecycle scenario keeps retiring and replacing actors during sampling")
 			_expect(bool(snapshot["valid"]), "lifecycle churn preserves the declared live composition")
+		scenario.deactivate()
+	_expect(peak_fingerprint != 0, "peak workload has a stable nonzero fingerprint")
 	_validate_threshold_contract()
 	run.queue_free()
 	await process_frame
@@ -58,7 +105,7 @@ func _run() -> void:
 
 func _validate_threshold_contract() -> void:
 	var recorder := Recorder.new()
-	recorder.scenario_id = &"current_pressure"
+	recorder.scenario_id = &"peak_horde"
 	recorder._max_consecutive_over_33 = 1
 	var native_standard := _threshold_fixture("native", Vector2i(1280, 720))
 	var thresholds: Dictionary = recorder._threshold_result(native_standard)
@@ -87,7 +134,7 @@ func _validate_threshold_contract() -> void:
 	lifecycle["memory"]["growth_bytes"] = 8.0 * 1024.0 * 1024.0
 	_expect(not bool(recorder._threshold_result(lifecycle)["passed"]), "eight MiB lifecycle growth fails the strict bound")
 
-	recorder.scenario_id = &"current_pressure"
+	recorder.scenario_id = &"peak_horde"
 	recorder._max_consecutive_over_33 = 2
 	var web_standard := _threshold_fixture("web", Vector2i(1280, 720))
 	_expect(bool(recorder._threshold_result(web_standard)["passed"]), "Web 1280 uses the locked Web frame contract")
