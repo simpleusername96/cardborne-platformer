@@ -88,6 +88,20 @@ func _run() -> void:
 				int(snapshot["pressure"]["hostile_projectiles"]) == int(snapshot["expected_hostile_projectiles"]),
 				"%s pressure snapshot exposes hostile projectile occupancy" % String(scenario_id)
 			)
+		if scenario_id == &"capacity_pressure":
+			run.projectile_store.remove_hostile_at_swap(
+				run.projectile_store.hostile_count() - 1
+			)
+			snapshot = scenario.validation_snapshot(run)
+			_expect(
+				int(snapshot["projectiles"]["hostile"])
+					== int(snapshot["expected_hostile_projectiles"]),
+				"terminal capacity qualification refills a just-retired projectile"
+			)
+			_expect(
+				bool(snapshot["valid"]),
+				"terminal projectile retirement does not invalidate capacity load"
+			)
 		if scenario_id == &"lifecycle_pressure":
 			_expect(int(snapshot["lifecycle_cycles"]) == 300, "lifecycle scenario retires 300 actors before capacity load")
 			for _step in 20:

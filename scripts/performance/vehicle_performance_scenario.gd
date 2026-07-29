@@ -139,6 +139,10 @@ func after_physics(run: Node) -> void:
 func validation_snapshot(run: Node) -> Dictionary:
 	if scenario_id == &"production_replay":
 		return _production_validation_snapshot(run)
+	# A projectile can expire in the final physics tick after the fixture has
+	# sustained its target for the sample. Refill once so terminal qualification
+	# describes the declared workload instead of that one-frame retirement edge.
+	_fill_projectiles(run, false)
 	var expected_enemies := int(Array(_fixture["descriptors"]).size())
 	var player_target := 140 if scenario_id in [&"peak_horde", &"boss_pressure"] else ProjectileStore.PLAYER_CAPACITY
 	var hostile_target := 72 if scenario_id == &"peak_horde" else ProjectileStore.HOSTILE_CAPACITY
