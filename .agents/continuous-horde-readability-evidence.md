@@ -11,9 +11,30 @@ related:
   - ../docs/product/vehicle_game_spec.md
   - ../docs/design/UI_VISUAL_SYSTEM.md
   - ./vehicle-performance-stabilization-evidence.md
+  - ./continuous-horde-rollout-problem-analysis.md
+  - ./execplans/2026-07-29-horde-foundation-recovery-and-acceptance.md
 ---
 
 # 연속 다방향 대규모 적군 구현 근거
+
+## Purpose
+
+2026-07-29 rollout이 실제로 변경한 behavior, 통과한 구조 검증, 진단 성능과 아직
+남은 수용 한계를 과장 없이 기록한다.
+
+## Sources
+
+- `a9ae769..d87520b`의 task-owned implementation commits;
+- current source와 `tools/validation/validate_vehicle_*.gd`;
+- ignored `build/performance/2026-07-29-horde/` payload;
+- `docs/product/vehicle_game_spec.md`와 `docs/design/UI_VISUAL_SYSTEM.md`;
+- 후속 감사 `continuous-horde-rollout-problem-analysis.md`.
+
+## Findings
+
+Density, multi-sector spawn, item frequency와 continuous transition은 source와 구조
+validator 수준에서 구현됐다. 하지만 production-aligned rendered evidence와
+authoritative performance/feel acceptance는 아직 완료되지 않았다.
 
 ## 구현 결과
 
@@ -66,8 +87,29 @@ Player base speed는 `280 px/s`, camera zoom은 `1`로 유지했다. 적 이동 
 
 로컬 payload는 ignored 경로
 `build/performance/2026-07-29-horde/smoke-current-cached.json`에 있다. 이 결과는
-짧은 dirty-worktree 진단이므로 release authority가 없지만, 목표 부하가 실제로
-구성되고 성능 문턱에 미달한다는 사실은 숨기지 않는다.
+5초짜리 non-authoritative 진단이고 payload의 git commit attribution이 비어 있어
+release authority가 없다. 목표 최대 부하가 구성되고 해당 fixture가 성능 문턱에
+미달한다는 사실은 숨기지 않되, 실제 production play의 frame rate라고 해석하지
+않는다.
+
+## 2026-07-29 후속 감사 정정
+
+후속 source/rendered 감사에서 현재 evidence가 수용 근거로 사용할 수 없는 추가
+이유를 확인했다.
+
+- `current_pressure`는 실제 multi-sector scheduler가 아니라 340px부터 적을 채우는
+  수동 동심원 fixture이며, 280기 중 240기를 visible, 267기를 near-600에 둔다.
+- maximum-pressure capture는 production allocator 대신 한쪽으로 긴 수동 grid를
+  사용한다.
+- field-item capture는 production의 6 loose pickup + 8 crate가 아니라 pickup 두
+  개만 보여 준다.
+- capture sequence는 실제 transition banner를 찍지 않고, 제거된 Stage 1 success
+  report를 계속 생성한다.
+
+따라서 이 문서는 “구현된 계약과 발견된 최대 fixture failure”의 현재 기록으로만
+active다. 대표 플레이, 최대 몰이, capacity/lifecycle 부하를 분리하고 production과
+동일한 fixture owner를 쓰는 작업은
+`execplans/2026-07-29-horde-foundation-recovery-and-acceptance.md`가 이어받는다.
 
 ## 남은 수용 조건
 

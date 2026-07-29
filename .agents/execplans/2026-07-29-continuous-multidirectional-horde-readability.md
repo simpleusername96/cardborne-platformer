@@ -1,10 +1,11 @@
 ---
 type: plan
-status: active
+status: superseded
 owner: BK
 created: 2026-07-29
 last_reviewed: 2026-07-29
 scope: Multiply ordinary enemy presence by two to three, distribute arrivals across the field, bound ranged pressure, improve combat-object readability and item presence, and remove the Stage 1-4 report interruption without slowing the ship
+superseded_by: ./2026-07-29-horde-foundation-recovery-and-acceptance.md
 supersedes:
   - ./2026-07-28-stage-1-horde-front-gameplay-density.md
 related:

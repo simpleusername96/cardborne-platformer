@@ -1,10 +1,11 @@
 ---
 type: plan
-status: active
+status: superseded
 owner: BK
 created: 2026-07-23
-last_reviewed: 2026-07-28
+last_reviewed: 2026-07-29
 scope: Vehicle-run simulation, entity lifecycle, spatial queries, projectile storage, combat presentation, HUD invalidation, and rendered performance gates
+superseded_by: ./2026-07-29-horde-foundation-recovery-and-acceptance.md
 related:
   - ../../AGENTS.md
   - ../AGENTS.md

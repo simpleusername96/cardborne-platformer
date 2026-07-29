@@ -10,13 +10,14 @@ secondary weapons, EMP, collectible experience, and card upgrades.
   `scenes/run/VehicleRun.tscn` campaign.
 - Each new run selects one of three validated macro fields. Its five
   deterministic tactical layouts each activate eight large cover modules,
-  four stationary threats, three pickups, and five crates. All five stages and
-  exact retries reuse the selected field while builds and explored minimap
+  four stationary threats, six loose pickups, and eight crates. All five stages
+  and exact retries reuse the selected field while builds and explored minimap
   cells persist.
 - Encounter packets begin with a six-second safe arrival, then grow from one
-  scout into eight-squad surges distributed across distinct, telegraphed field
-  anchors. Hard preserves the current 48-to-72 active-enemy baseline; Normal
-  and Easy reduce combined count and combat-stat pressure.
+  scout into local packs distributed across all four quadrants and at least
+  four of eight telegraphed field sectors. Hard's post-scout active-cap curve is
+  124/172/224/276; Normal and Easy reduce combined count and combat-stat
+  pressure.
 - Easy, Normal, or Hard is selected before deployment and remains locked for the
   complete run.
 - Substantial ordinary-defeat quotas summon a roaming boss into the same field;

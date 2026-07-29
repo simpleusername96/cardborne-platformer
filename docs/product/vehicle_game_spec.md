@@ -11,9 +11,9 @@ related:
   - ../../pixel-art-production/design/space-hangar-research.md
   - ../../.agents/vehicle-performance-architecture-audit.md
   - ../../.agents/vehicle-performance-stabilization-evidence.md
-  - ../../.agents/execplans/2026-07-23-vehicle-performance-architecture-stabilization.md
-  - ../../.agents/execplans/2026-07-29-continuous-multidirectional-horde-readability.md
+  - ../../.agents/execplans/2026-07-29-horde-foundation-recovery-and-acceptance.md
   - ../../.agents/continuous-horde-readability-evidence.md
+  - ../../.agents/continuous-horde-rollout-problem-analysis.md
 ---
 
 # Cardborne Vehicle Game Specification
