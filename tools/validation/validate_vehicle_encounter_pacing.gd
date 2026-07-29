@@ -3,10 +3,15 @@ extends SceneTree
 const Catalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
 const Runtime = preload("res://scripts/encounters/vehicle_encounter_runtime.gd")
 const Director = preload("res://scripts/encounters/vehicle_encounter_director.gd")
+const Allocator = preload("res://scripts/encounters/vehicle_spawn_allocator.gd")
+const EnemyArchetypes = preload("res://scripts/enemies/vehicle_enemy_archetypes.gd")
 const RunDifficulty = preload("res://scripts/vehicle/vehicle_run_difficulty.gd")
 
-const EXPECTED_MOBILE_COUNTS := [260, 300, 340, 380, 420]
+const EXPECTED_MOBILE_COUNTS := [520, 660, 816, 1026, 1260]
 const EXPECTED_QUOTAS := [125, 166, 208, 250, 291]
+const EXPECTED_HARD_CAPS := [1, 124, 172, 224, 276]
+const EXPECTED_NORMAL_CAPS := [1, 117, 162, 211, 259]
+const EXPECTED_EASY_CAPS := [1, 110, 152, 198, 244]
 
 var failures: Array[String] = []
 
@@ -15,48 +20,105 @@ func _initialize() -> void:
 	for stage_index in Catalog.STAGE_IDS.size():
 		var stage_id := Catalog.STAGE_IDS[stage_index]
 		var packets := Catalog.packets(stage_id)
-		_expect(Catalog.packet_enemy_blueprint(stage_id).size() == EXPECTED_MOBILE_COUNTS[stage_index], "%s authors fivefold mobile reserves" % stage_id)
-		_expect(Catalog.quota(stage_id) == EXPECTED_QUOTAS[stage_index], "%s sustains the expanded defeat quota" % stage_id)
-		_expect(Array(packets[1]["squads"]).size() == 8, "%s surge packets contain eight squads" % stage_id)
-		var surge_units := 0
-		for squad in packets[1]["squads"]:
-			surge_units += Array(squad).size()
-		_expect(surge_units >= 24, "%s first surge carries at least twenty-four enemies" % stage_id)
-		if stage_id == &"stage_1":
-			_expect(surge_units == 27, "Stage 1 first surge keeps the authored 27 units")
-			_expect(
-				StringName(packets[1].get("arrival_mode", &"")) == &"horde_front",
-				"Stage 1 first surge explicitly selects horde-front allocation"
-			)
-		else:
-			_expect(
-				not packets[1].has("arrival_mode"),
-				"%s first surge remains on the distributed default" % stage_id
-			)
-		var runtime := Runtime.new()
-		runtime.configure(stage_id, Catalog.packets(stage_id), RunDifficulty.HARD)
-		var before := runtime.tick(5.0, 0)
-		_expect(before["cues"].is_empty() and before["spawns"].is_empty(), "%s keeps a five-second safe opening" % stage_id)
-		_expect(runtime.tick(0.1, 0)["cues"].size() == 1, "%s cues first scout at 5.1 seconds" % stage_id)
-		runtime.tick(0.8, 0)
-		var first := runtime.tick(0.1, 0)
-		_expect(first["spawns"].size() == 1 and StringName(first["spawns"][0]["role"]) == &"scrap_drone", "%s spawns one scout at six seconds" % stage_id)
-		if stage_id == &"stage_1":
-			var first_front := runtime.tick(2.1, 0)
-			var second_front := runtime.tick(0.9, 0)
-			_expect(first_front["cues"].size() == 1, "Stage 1 cues the first horde front once")
-			_expect(second_front["cues"].size() == 1, "Stage 1 cues the second horde front once")
-		runtime.stop_spawning()
-		_expect(not runtime.spawning_enabled() and runtime.debug_snapshot()["queued_spawns"] == 0, "%s quota can stop future arrivals" % stage_id)
-	_expect(Director.active_cap_for(1) == 62, "Hard first surge sustains the thirty-percent density increase")
-	_expect(Director.active_cap_for(4) == 92, "Hard density uses the enlarged-field ceiling")
-	_expect(RunDifficulty.scaled_active_cap(92, RunDifficulty.NORMAL) == 86, "Normal density scales from the enlarged-field ceiling")
-	_expect(RunDifficulty.scaled_active_cap(92, RunDifficulty.EASY) == 81, "Easy density scales from the enlarged-field ceiling")
+		var blueprint := Catalog.packet_enemy_blueprint(stage_id)
+		_expect(
+			blueprint.size() == EXPECTED_MOBILE_COUNTS[stage_index],
+			"%s authors the locked mobile reserve" % stage_id
+		)
+		_expect(
+			Catalog.quota(stage_id) == EXPECTED_QUOTAS[stage_index],
+			"%s preserves the defeat quota" % stage_id
+		)
+		_expect(Array(packets[0]["squads"]) == [[&"scrap_drone"]], "%s opens with one scout" % stage_id)
+		for packet_index in range(1, packets.size()):
+			_validate_surge_packet(packets[packet_index], stage_id)
+		_validate_composition(blueprint, stage_id)
+		_validate_opening_runtime(stage_id, packets)
+	_validate_cap_curve(RunDifficulty.HARD, EXPECTED_HARD_CAPS)
+	_validate_cap_curve(RunDifficulty.NORMAL, EXPECTED_NORMAL_CAPS)
+	_validate_cap_curve(RunDifficulty.EASY, EXPECTED_EASY_CAPS)
+	_expect(Director.MAX_RANGED_COMMITS == 3, "ranged commit cap remains three")
+	_expect(Director.MAX_DENIAL_COMMITS == 2, "denial commit cap remains two")
 	_finish()
 
 
+func _validate_surge_packet(packet: Dictionary, stage_id: StringName) -> void:
+	var squads: Array = packet["squads"]
+	_expect(
+		StringName(packet.get("arrival_mode", &"")) == Allocator.ARRIVAL_MULTI_SECTOR,
+		"%s post-scout packet uses multi-sector allocation" % stage_id
+	)
+	_expect(int(packet.get("pack_count", 0)) == 4, "%s surge declares four packs" % stage_id)
+	_expect(int(packet.get("squads_per_pack", 0)) == 3, "%s surge declares three squads per pack" % stage_id)
+	_expect(squads.size() == 12, "%s surge contains twelve squads" % stage_id)
+	_expect(float(packet.get("cue_lead", 0.0)) >= 0.9, "%s cue lead is at least 0.9 seconds" % stage_id)
+	for squad in squads:
+		var size := Array(squad).size()
+		_expect(size >= 4 and size <= 8, "%s squad size stays within four to eight" % stage_id)
+
+
+func _validate_composition(blueprint: Array, stage_id: StringName) -> void:
+	var pursuit := 0
+	var direct := 0
+	var denial := 0
+	var support := 0
+	for spec in blueprint:
+		var role := StringName(spec["role"])
+		var threat_kind := StringName(EnemyArchetypes.definition(role)["threat_kind"])
+		if EnemyArchetypes.fires_projectiles(role):
+			direct += 1
+		elif threat_kind == &"denial":
+			denial += 1
+		elif threat_kind == &"support":
+			support += 1
+		else:
+			pursuit += 1
+	var total := float(maxi(1, blueprint.size()))
+	_expect(float(pursuit) / total >= 0.65, "%s keeps at least 65%% pursuit pressure" % stage_id)
+	_expect(float(direct) / total <= 0.15, "%s caps direct projectile roles at 15%%" % stage_id)
+	_expect(float(denial) / total <= 0.08, "%s caps denial roles at 8%%" % stage_id)
+	_expect(float(support) / total <= 0.12, "%s caps support roles at 12%%" % stage_id)
+
+
+func _validate_opening_runtime(stage_id: StringName, packets: Array[Dictionary]) -> void:
+	var runtime := Runtime.new()
+	runtime.configure(stage_id, packets, RunDifficulty.HARD)
+	var before := runtime.tick(5.0, 0)
+	_expect(before["cues"].is_empty() and before["spawns"].is_empty(), "%s keeps a five-second safe opening" % stage_id)
+	_expect(runtime.tick(0.1, 0)["cues"].size() == 1, "%s cues the scout at 5.1 seconds" % stage_id)
+	runtime.tick(0.8, 0)
+	var first := runtime.tick(0.1, 0)
+	_expect(
+		first["spawns"].size() == 1 and StringName(first["spawns"][0]["role"]) == &"scrap_drone",
+		"%s spawns one scout at six seconds" % stage_id
+	)
+	var cue_count := 0
+	var maximum_tick_spawns := 0
+	var first_surge_prefix := String(packets[1]["id"])
+	for _step in 50:
+		var result := runtime.tick(0.1, 0)
+		for cue in result["cues"]:
+			if String(cue.get("cue_id", "")).begins_with(first_surge_prefix):
+				cue_count += 1
+		maximum_tick_spawns = maxi(maximum_tick_spawns, Array(result["spawns"]).size())
+	_expect(cue_count == 4, "%s first surge emits one cue per pack" % stage_id)
+	_expect(maximum_tick_spawns <= Runtime.MAX_SPAWNS_PER_TICK, "%s dequeues at most four enemies per tick" % stage_id)
+	runtime.stop_spawning()
+	_expect(
+		not runtime.spawning_enabled() and runtime.debug_snapshot()["queued_spawns"] == 0,
+		"%s quota can stop future arrivals" % stage_id
+	)
+
+
+func _validate_cap_curve(difficulty: StringName, expected: Array) -> void:
+	for beat in expected.size():
+		var actual := RunDifficulty.scaled_active_cap(Director.active_cap_for(beat), difficulty)
+		_expect(actual == int(expected[beat]), "%s beat %d active cap is locked" % [difficulty, beat])
+
+
 func _expect(condition: bool, message: String) -> void:
-	if not condition: failures.append(message)
+	if not condition:
+		failures.append(message)
 
 
 func _finish() -> void:
@@ -64,5 +126,6 @@ func _finish() -> void:
 		print("VEHICLE_ENCOUNTER_PACING_VALIDATION_OK")
 		quit(0)
 	else:
-		for failure in failures: push_error(failure)
+		for failure in failures:
+			push_error(failure)
 		quit(1)

@@ -382,7 +382,8 @@ truth.
 - concurrent UI 기준 commit: `8a0b003`
 - concurrent UI 비소유 경로: `pixel-art-production/`, `docs/design/vehicle-hud-upgrade-direction/`,
   기존 Space Hangar asset/evidence/recipe
-- production implementation과 runtime evidence: M1 완료, M2 진행 예정
+- production implementation과 runtime evidence: M1~M2 수치·스폰 계약 완료,
+  M2의 연속-stage 시작 검증은 M4 transition 구현과 함께 완료 예정
 
 ## Tasks
 
@@ -409,14 +410,14 @@ truth.
 
 ### M2 — Quantity, composition and multi-sector spawning
 
-- [ ] Replace active caps with `1/124/172/224/276`.
-- [ ] Replace authored populations with `520/660/816/1026/1260`; preserve quotas.
-- [ ] Rebuild post-scout packets as four packs, 2~3 squads per pack, 4~8 units per squad.
-- [ ] Enforce the 65/15/8/12 composition budget deterministically per stage.
-- [ ] Remove Stage 1 production `horde_front` metadata and dedicated allocator/runtime path.
-- [ ] Add deterministic four-quadrant allocation, recent-sector memory and fairness fallback.
-- [ ] Coalesce cues to one per pack and preserve at least 0.9-second cue lead.
-- [ ] Dequeue at most four due spawns per physics tick until active occupancy reaches target.
+- [x] Replace active caps with `1/124/172/224/276`.
+- [x] Replace authored populations with `520/660/816/1026/1260`; preserve quotas.
+- [x] Rebuild post-scout packets as four packs, 2~3 squads per pack, 4~8 units per squad.
+- [x] Enforce the 65/15/8/12 composition budget deterministically per stage.
+- [x] Remove Stage 1 production `horde_front` metadata and dedicated allocator/runtime path.
+- [x] Add deterministic four-quadrant allocation, recent-sector memory and fairness fallback.
+- [x] Coalesce cues to one per pack and preserve at least 0.9-second cue lead.
+- [x] Dequeue at most four due spawns per physics tick until active occupancy reaches target.
 - [ ] Verify Stage 2~5 first surge can begin during transition without repeating the tutorial
   scout.
 

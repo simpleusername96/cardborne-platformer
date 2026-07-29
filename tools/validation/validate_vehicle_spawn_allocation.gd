@@ -23,94 +23,111 @@ func _initialize() -> void:
 		var allocator := Allocator.new()
 		allocator.configure(tactical.encounter_seed, tactical.ordinary_spawn_anchors)
 		var allocations := allocator.allocate(packet, Catalog.player_start(), VISIBLE_WORLD)
-		var second_allocations := allocator.allocate(packet, Catalog.player_start(), VISIBLE_WORLD)
+		var second := allocator.allocate(packet, Catalog.player_start(), VISIBLE_WORLD)
 		var replay_allocator := Allocator.new()
 		replay_allocator.configure(tactical.encounter_seed, tactical.ordinary_spawn_anchors)
 		var replay := replay_allocator.allocate(packet, Catalog.player_start(), VISIBLE_WORLD)
-		var horde_front := StringName(packet.get("arrival_mode", Allocator.ARRIVAL_DISTRIBUTED)) == Allocator.ARRIVAL_HORDE_FRONT
 		_expect(var_to_str(allocations) == var_to_str(replay), "%s allocation replays from the same seed" % stage_id)
-		_expect(allocations.size() == 8, "%s allocates all eight surge squads" % stage_id)
-		var unique_anchors := {}
-		var original_roles: Array[StringName] = []
-		var allocated_roles: Array[StringName] = []
-		for squad in packet["squads"]:
-			for role in squad:
-				original_roles.append(StringName(role))
-		for allocation in allocations:
-			var anchor := Vector2(allocation["anchor"])
-			unique_anchors[anchor] = true
-			_expect(float(allocation["player_distance"]) >= 960.0, "%s keeps surge arrivals away from the player" % stage_id)
-			_expect(bool(allocation["outside_visible_margin"]), "%s prefers arrivals beyond the visible margin" % stage_id)
-			var roles: Array = allocation["roles"]
-			_expect(roles.size() <= 5, "%s keeps one cue at five units or fewer" % stage_id)
-			_expect(
-				roles.any(func(role: StringName) -> bool: return role in Allocator.PURSUIT_ROLES),
-				"%s gives every squad a mobile pressure role" % stage_id
-			)
-			_expect(
-				roles.filter(func(role: StringName) -> bool: return role in Allocator.PROJECTILE_FIRING_ARCHETYPES).size() <= 2,
-				"%s limits direct projectile roles per squad" % stage_id
-			)
-			for role in roles:
-				allocated_roles.append(StringName(role))
-		var two_wave_anchors := unique_anchors.duplicate()
-		for allocation in second_allocations:
-			two_wave_anchors[Vector2(allocation["anchor"])] = true
-		if horde_front:
-			_expect(stage_id == &"stage_1", "only Stage 1 opts into horde-front allocation")
-			_expect(unique_anchors.size() == 2, "Stage 1 first surge uses exactly two front anchors")
-			_expect(two_wave_anchors.size() == 4, "Stage 1 remembers and rotates both front anchors")
-			_validate_horde_fronts(allocations, stage_id)
-		else:
-			_expect(unique_anchors.size() == 8, "%s uses eight distinct anchors when the pool permits" % stage_id)
-			_expect(
-				two_wave_anchors.size() >= 14,
-				"%s distributes consecutive arrivals across the enlarged field" % stage_id
-			)
-			_validate_group_arcs(allocations, Catalog.player_start(), stage_id)
-		original_roles.sort()
-		allocated_roles.sort()
-		_expect(original_roles == allocated_roles, "%s preserves the authored role multiset" % stage_id)
+		_validate_four_pack_allocation(allocations, packet, stage_id)
+		_validate_role_multiset(allocations, packet, stage_id)
+		_validate_rotation(allocations, second, stage_id)
 	_finish()
 
 
-func _validate_horde_fronts(allocations: Array[Dictionary], stage_id: StringName) -> void:
-	var fronts := {}
-	for allocation in allocations:
-		var front_index := int(allocation["group_index"])
-		if not fronts.has(front_index):
-			fronts[front_index] = []
-		fronts[front_index].append(allocation)
-	_expect(fronts.size() == 2, "%s horde surge has exactly two fronts" % stage_id)
-	for front in fronts.values():
-		var entries: Array = front
-		_expect(entries.size() == 4, "%s assigns four squads to each front" % stage_id)
-		var anchors := {}
-		for allocation in entries:
-			anchors[Vector2(allocation["anchor"])] = true
-		_expect(anchors.size() == 1, "%s front squads share one arrival anchor" % stage_id)
-
-
-func _validate_group_arcs(
+func _validate_four_pack_allocation(
 	allocations: Array[Dictionary],
-	player_position: Vector2,
+	packet: Dictionary,
 	stage_id: StringName
 ) -> void:
-	var groups := {}
+	_expect(allocations.size() == 12, "%s allocates all twelve surge squads" % stage_id)
+	var packs := {}
+	var quadrants := {}
+	var sectors := {}
+	var sector_population := PackedInt32Array()
+	sector_population.resize(8)
+	var total_population := 0
 	for allocation in allocations:
-		var group_index := int(allocation["group_index"])
-		if not groups.has(group_index):
-			groups[group_index] = []
-		groups[group_index].append(Vector2(allocation["anchor"]))
-	for group in groups.values():
-		_expect(Array(group).size() <= 2, "%s early surge groups use at most two sectors" % stage_id)
-		if Array(group).size() == 2:
-			var first_angle := (Vector2(group[0]) - player_position).angle()
-			var second_angle := (Vector2(group[1]) - player_position).angle()
-			_expect(
-				absf(angle_difference(first_angle, second_angle)) <= deg_to_rad(135.0) + 0.001,
-				"%s early surge group remains inside a 135-degree arc" % stage_id
-			)
+		var pack_index := int(allocation["pack_index"])
+		if not packs.has(pack_index):
+			packs[pack_index] = []
+		packs[pack_index].append(allocation)
+		quadrants[int(allocation["quadrant"])] = true
+		var sector := int(allocation["sector"])
+		sectors[sector] = true
+		var roles: Array = allocation["roles"]
+		sector_population[sector] += roles.size()
+		total_population += roles.size()
+		_expect(float(allocation["player_distance"]) >= Allocator.MIN_PLAYER_DISTANCE, "%s keeps packs outside the inner ring" % stage_id)
+		_expect(bool(allocation["outside_visible_margin"]), "%s prefers packs beyond the visible margin" % stage_id)
+		_expect(roles.size() >= 4 and roles.size() <= 8, "%s preserves squad size bounds" % stage_id)
+		_expect(
+			roles.any(func(role: StringName) -> bool: return role in Allocator.PURSUIT_ROLES),
+			"%s gives every squad a pursuit-capable role" % stage_id
+		)
+		_expect(
+			roles.filter(func(role: StringName) -> bool: return role in Allocator.PROJECTILE_FIRING_ARCHETYPES).size() <= 2,
+			"%s limits direct projectile roles per squad" % stage_id
+		)
+	_expect(packs.size() == 4, "%s allocates exactly four packs" % stage_id)
+	_expect(quadrants.size() == 4, "%s occupies all four quadrants" % stage_id)
+	_expect(sectors.size() >= 4, "%s occupies at least four of eight sectors" % stage_id)
+	for entries in packs.values():
+		var pack_entries: Array = entries
+		_expect(pack_entries.size() == 3, "%s assigns three squads to each pack" % stage_id)
+		var anchors := {}
+		for entry in pack_entries:
+			anchors[Vector2(entry["anchor"])] = true
+		_expect(anchors.size() == 1, "%s pack squads share one arrival anchor" % stage_id)
+	for population in sector_population:
+		_expect(float(population) / float(maxi(1, total_population)) <= 0.35, "%s limits one-sector population to 35%%" % stage_id)
+	for sector in 8:
+		var adjacent := sector_population[sector] + sector_population[(sector + 1) % 8]
+		_expect(float(adjacent) / float(maxi(1, total_population)) <= 0.55, "%s limits adjacent-sector population to 55%%" % stage_id)
+
+
+func _validate_role_multiset(
+	allocations: Array[Dictionary],
+	packet: Dictionary,
+	stage_id: StringName
+) -> void:
+	var authored: Array[StringName] = []
+	var allocated: Array[StringName] = []
+	for squad in packet["squads"]:
+		for role in squad:
+			authored.append(StringName(role))
+	for allocation in allocations:
+		for role in allocation["roles"]:
+			allocated.append(StringName(role))
+	authored.sort()
+	allocated.sort()
+	_expect(authored == allocated, "%s allocation preserves the authored role multiset" % stage_id)
+
+
+func _validate_rotation(
+	first: Array[Dictionary],
+	second: Array[Dictionary],
+	stage_id: StringName
+) -> void:
+	var first_largest_quadrant := _largest_pack_quadrant(first)
+	var second_first_quadrant := int(second[0]["quadrant"]) if not second.is_empty() else -1
+	_expect(
+		first_largest_quadrant != second_first_quadrant,
+		"%s rotates the next leading pack away from the previous largest quadrant" % stage_id
+	)
+
+
+func _largest_pack_quadrant(allocations: Array[Dictionary]) -> int:
+	var populations := {}
+	var quadrant_by_pack := {}
+	for allocation in allocations:
+		var pack := int(allocation["pack_index"])
+		populations[pack] = int(populations.get(pack, 0)) + Array(allocation["roles"]).size()
+		quadrant_by_pack[pack] = int(allocation["quadrant"])
+	var largest_pack := 0
+	for pack in populations:
+		if int(populations[pack]) > int(populations.get(largest_pack, -1)):
+			largest_pack = int(pack)
+	return int(quadrant_by_pack.get(largest_pack, -1))
 
 
 func _expect(condition: bool, message: String) -> void:

@@ -13,9 +13,10 @@ const ARRIVAL_GRACE := 6.0
 const CUE_LEAD := 0.9
 const METRIC_SAMPLE_INTERVAL := 0.10
 const MAX_ACTIVE_COUNT_SAMPLES := 4096
-const HORDE_SPAWN_FAN_RADIUS := 16.0
-# Non-commensurate with 3–5 unit rings, so squads fan without biasing a centroid.
-const HORDE_SQUAD_PHASE_STEP := PI * 11.0 / 180.0
+const MAX_SPAWNS_PER_TICK := 4
+const PACK_SPAWN_FAN_RADIUS := 38.0
+# Non-commensurate with squad rings, so pack members do not stack on one pixel.
+const PACK_SQUAD_PHASE_STEP := PI * 11.0 / 180.0
 
 var stage_id: StringName = &"stage_1"
 var difficulty: StringName = RunDifficulty.DEFAULT
@@ -135,18 +136,29 @@ func tick(
 		})
 
 	var spawns: Array[Dictionary] = []
-	if _spawning_enabled and not _spawn_queue.is_empty() and _effective_time(_spawn_queue[0]) <= elapsed + 0.0001:
-		if active_mobile_count < active_cap():
+	var spawn_budget := mini(MAX_SPAWNS_PER_TICK, maxi(0, active_cap() - active_mobile_count))
+	while (
+		_spawning_enabled
+		and spawn_budget > 0
+		and not _spawn_queue.is_empty()
+		and _effective_time(_spawn_queue[0]) <= elapsed + 0.0001
+	):
 			var request: Dictionary = _spawn_queue.pop_front()
 			spawns.append(request["spec"])
+			spawn_budget -= 1
 			var squad_id := String(request["spec"]["squad_id"])
 			_spawned_by_squad[squad_id] = int(_spawned_by_squad.get(squad_id, 0)) + 1
 			var spawn_time := _effective_time(request)
 			if _first_spawn_time < 0.0:
 				_first_spawn_time = spawn_time
 			_timeline.append({"kind":&"spawn", "id":request["spec"]["id"], "squad_id":squad_id, "time":spawn_time})
-		else:
-			_schedule_delay_total += maxf(0.0, delta)
+	if (
+		_spawning_enabled
+		and spawn_budget == 0
+		and not _spawn_queue.is_empty()
+		and _effective_time(_spawn_queue[0]) <= elapsed + 0.0001
+	):
+		_schedule_delay_total += maxf(0.0, delta)
 	return {"cues":cues, "spawns":spawns}
 
 
@@ -350,11 +362,11 @@ func _schedule_packet(packet: Dictionary, player_position: Vector2, visible_worl
 			"roles":squad.duplicate(),
 		}
 		_allocation_debug.append(cue.duplicate(true))
-		if arrival_mode == SpawnAllocator.ARRIVAL_HORDE_FRONT:
+		if arrival_mode == SpawnAllocator.ARRIVAL_MULTI_SECTOR:
 			if not queued_cue_groups.has(group_index):
 				queued_cue_groups[group_index] = true
-				cue["cue_id"] = "%s_f%02d" % [packet_id, group_index + 1]
-				cue["front_index"] = group_index
+				cue["cue_id"] = "%s_p%02d" % [packet_id, group_index + 1]
+				cue["pack_index"] = group_index
 				cue["roles"] = _roles_for_group(allocations, group_index)
 				_cue_queue.append(cue)
 		else:
@@ -362,17 +374,17 @@ func _schedule_packet(packet: Dictionary, player_position: Vector2, visible_worl
 		for unit_index in squad.size():
 			var role := StringName(squad[unit_index])
 			var formation_phase := 0.0
-			if arrival_mode == SpawnAllocator.ARRIVAL_HORDE_FRONT:
-				var front_squad_index := squad_index % SpawnAllocator.HORDE_FRONT_SQUADS
-				formation_phase = float(front_squad_index) * HORDE_SQUAD_PHASE_STEP
+			if arrival_mode == SpawnAllocator.ARRIVAL_MULTI_SECTOR:
+				var pack_squad_index := squad_index % SpawnAllocator.SQUADS_PER_PACK
+				formation_phase = float(pack_squad_index) * PACK_SQUAD_PHASE_STEP
 			var formation_angle := (
 				formation_phase
 				+ TAU * float(unit_index) / float(maxi(1, squad.size()))
 			)
 			var formation_offset := Vector2.RIGHT.rotated(formation_angle) * (58.0 if squad.size() > 1 else 0.0)
 			var spawn_offset := (
-				Vector2.RIGHT.rotated(formation_angle) * HORDE_SPAWN_FAN_RADIUS
-				if arrival_mode == SpawnAllocator.ARRIVAL_HORDE_FRONT
+				Vector2.RIGHT.rotated(formation_angle) * PACK_SPAWN_FAN_RADIUS
+				if arrival_mode == SpawnAllocator.ARRIVAL_MULTI_SECTOR
 				else Vector2.ZERO
 			)
 			var spec := {

@@ -4,11 +4,17 @@ extends RefCounted
 ## Stage pressure data. Geometry is supplied by the run-selected field.
 
 const FieldRegistry = preload("res://scripts/vehicle/vehicle_field_registry.gd")
+const EnemyArchetypes = preload("res://scripts/enemies/vehicle_enemy_archetypes.gd")
 
 const STAGE_IDS: Array[StringName] = [&"stage_1", &"stage_2", &"stage_3", &"stage_4", &"stage_5"]
 const QUOTAS := [125, 166, 208, 250, 291]
-const AUTHORED_COUNTS := [260, 300, 340, 380, 420]
-const SURGE_SQUADS := 8
+const AUTHORED_COUNTS := [520, 660, 816, 1026, 1260]
+const SURGE_PACKS := 4
+const SQUADS_PER_PACK := 3
+const SURGE_SQUADS := SURGE_PACKS * SQUADS_PER_PACK
+const MIN_SQUAD_SIZE := 4
+const MAX_SQUAD_SIZE := 8
+const MAX_SURGE_UNITS := SURGE_SQUADS * MAX_SQUAD_SIZE
 const TITLE_KEYS_BY_FIELD := {
 	&"drowned_ruin_field":[
 		"STAGE_DROWNED_RUINS_1", "STAGE_DROWNED_RUINS_2", "STAGE_DROWNED_RUINS_3",
@@ -105,38 +111,95 @@ static func _static_enemies(stage_index: int, field_definition: Dictionary) -> A
 
 static func _packets(stage_index: int, field_definition: Dictionary) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
-	var roles: Array = MOBILE_ROLES[stage_index]
 	var target_count: int = int(AUTHORED_COUNTS[stage_index])
-	var authored := 0
-	var packet_index := 0
-	while authored < target_count:
-		var squads: Array[Array] = []
-		var squads_in_packet := 1 if packet_index == 0 else SURGE_SQUADS
-		for squad_index in squads_in_packet:
-			if authored >= target_count:
-				break
-			var squad_size := 1 if packet_index == 0 else mini(5, 3 + floori(float(packet_index + squad_index) / 6.0))
-			squad_size = mini(squad_size, target_count - authored)
-			var squad: Array[StringName] = []
-			for unit_index in squad_size:
-				squad.append(roles[(packet_index + squad_index + unit_index) % roles.size()])
-			if packet_index == 0:
-				squad[0] = &"scrap_drone"
-			squads.append(squad)
-			authored += squad_size
-		var at_time := 5.1 if packet_index == 0 else 8.0 + float(packet_index - 1) * 2.4
-		var packet := {
-			"id":"stage_%d_packet_%02d" % [stage_index + 1, packet_index + 1],
-			"beat":0 if packet_index == 0 else mini(4, 1 + floori(float(packet_index - 1) / 2.0)),
-			"trigger":{"kind":&"time", "at":at_time},
-			"squads":squads,
-			"unit_spacing":0.16,
+	var sequence := _role_sequence(stage_index, target_count)
+	result.append({
+		"id":"stage_%d_packet_01" % [stage_index + 1],
+		"beat":0,
+		"trigger":{"kind":&"time", "at":5.1},
+		"squads":[[&"scrap_drone"]],
+		"unit_spacing":0.16,
+		"cue_lead":0.9,
+		"zone":"field",
+		"leash":Rect2(field_definition["world_rect"]),
+	})
+	var remaining := target_count - 1
+	var surge_count := ceili(float(remaining) / float(MAX_SURGE_UNITS))
+	var base_surge_size := remaining / surge_count
+	var extra_surges := remaining % surge_count
+	var cursor := 1
+	for surge_index in surge_count:
+		var surge_size := base_surge_size + (1 if surge_index < extra_surges else 0)
+		var beat := mini(4, 1 + floori(4.0 * float(surge_index) / float(surge_count)))
+		result.append({
+			"id":"stage_%d_packet_%02d" % [stage_index + 1, surge_index + 2],
+			"beat":beat,
+			"trigger":{"kind":&"time", "at":8.0 + float(surge_index) * 2.4},
+			"squads":_surge_squads(sequence, cursor, surge_size),
+			"pack_count":SURGE_PACKS,
+			"squads_per_pack":SQUADS_PER_PACK,
+			"arrival_mode":&"multi_sector",
+			"unit_spacing":0.10,
 			"cue_lead":0.9,
 			"zone":"field",
 			"leash":Rect2(field_definition["world_rect"]),
-		}
-		if stage_index == 0 and packet_index == 1:
-			packet["arrival_mode"] = &"horde_front"
-		result.append(packet)
-		packet_index += 1
+		})
+		cursor += surge_size
+	return result
+
+
+static func _role_sequence(stage_index: int, target_count: int) -> Array[StringName]:
+	var families := {
+		&"pursuit":[],
+		&"ranged":[],
+		&"denial":[],
+		&"support":[],
+	}
+	for role_variant in MOBILE_ROLES[stage_index]:
+		var role := StringName(role_variant)
+		var definition := EnemyArchetypes.definition(role)
+		var family := StringName(definition["threat_kind"])
+		if EnemyArchetypes.fires_projectiles(role):
+			family = &"ranged"
+		if not families.has(family):
+			family = &"pursuit"
+		families[family].append(role)
+	var counters := {&"pursuit":0, &"ranged":0, &"denial":0, &"support":0}
+	var result: Array[StringName] = []
+	for index in target_count:
+		var roll := index % 100
+		var family := &"pursuit"
+		if roll >= 88:
+			family = &"support"
+		elif roll >= 80:
+			family = &"denial"
+		elif roll >= 65:
+			family = &"ranged"
+		var roles: Array = families[family]
+		if roles.is_empty():
+			family = &"pursuit"
+			roles = families[family]
+		var role_index := int(counters[family]) % roles.size()
+		result.append(StringName(roles[role_index]))
+		counters[family] = int(counters[family]) + 1
+	result[0] = &"scrap_drone"
+	return result
+
+
+static func _surge_squads(
+	sequence: Array[StringName],
+	start_index: int,
+	unit_count: int
+) -> Array[Array]:
+	var result: Array[Array] = []
+	var base_size := unit_count / SURGE_SQUADS
+	var extra := unit_count % SURGE_SQUADS
+	var cursor := start_index
+	for squad_index in SURGE_SQUADS:
+		var squad_size := base_size + (1 if squad_index < extra else 0)
+		var squad: Array[StringName] = []
+		for _unit_index in squad_size:
+			squad.append(sequence[cursor])
+			cursor += 1
+		result.append(squad)
 	return result
