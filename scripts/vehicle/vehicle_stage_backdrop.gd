@@ -5,6 +5,7 @@ extends Node2D
 ## collision truth stay outside this node.
 
 const Rules = preload("res://scripts/vehicle/vehicle_stage_rules.gd")
+const Visual = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const TacticalLayout = preload("res://scripts/vehicle/vehicle_stage_tactical_layout.gd")
 const PixelWorldBuilder = preload("res://scripts/presentation/vehicle_pixel_world_mesh_builder.gd")
 
@@ -36,7 +37,7 @@ func configure(value: StringName, layout: TacticalLayout = null) -> void:
 
 
 func _draw() -> void:
-	draw_rect(Rules.world_rect(stage_id), Color("#141B24"))
+	draw_rect(Rules.world_rect(stage_id), Visual.WORLD_CANVAS)
 
 
 func debug_contract() -> Dictionary:

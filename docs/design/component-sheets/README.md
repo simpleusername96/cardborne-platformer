@@ -5,12 +5,11 @@ owner: BK
 created: 2026-07-30
 last_reviewed: 2026-07-30
 topic: Selected general-SF visual-system direction seed
-scope: Direction evidence for the replacement component grammar before runtime descriptor implementation
+scope: Direction evidence for the replacement component grammar
 source: ../../../pixel-art-production/evidence/space-hangar-v2/runtime/ko-1280-maximum-pressure.png
 related:
   - ../UI_VISUAL_SYSTEM.md
   - ../../../.agents/execplans/2026-07-30-full-visual-system-redesign.md
-  - ../../../pixel-art-production/runtime/atlases/cardborne-pixel-atlas.png
 ---
 
 # 일반 SF 전투 컴포넌트 디자인 시안
@@ -22,8 +21,8 @@ related:
 시작해 world, effect, HUD와 UI로 확장한다.
 
 이 문서는 `active evidence`이며 정본 spec이나 runtime asset은 아니다. 실제
-게임의 visual truth는 별도의 runtime descriptor, Godot Theme와 그것으로
-생성한 system sheet가 소유한다.
+게임의 visual truth는 runtime descriptor, Godot Theme와 그것으로 생성한
+[`system-v1/manifest.json`](./system-v1/manifest.json)이 소유한다.
 
 ## Sources
 
@@ -53,11 +52,12 @@ related:
   오인하기 어렵다.
 - boss는 원형 blob 대신 비대칭 본체와 외곽 objective module로 구성한다.
 
-## Recommendations
+## Production handoff
 
-- 이 마스터 방향을 player, mobile enemy, structure, boss, pickup,
-  projectile, upgrade glyph와 전체 world/UI의 runtime descriptor로 분해한다.
-- 다음 sheet부터는 descriptor와 동일한 polygon으로 normalized view,
+- `01-foundation-tokens.png`와 `10-ui-controls-states.png`는 실제
+  `VehicleStageVisualProfile`, catalog registry와 Noto Sans KR provider에서
+  생성한다.
+- 이후 sheet도 descriptor와 동일한 polygon으로 normalized view,
   gameplay 1×, grayscale, state, anchor, collision overlay를 생성한다.
 
 ## Limitations

@@ -3,12 +3,11 @@ type: spec
 status: active
 owner: BK
 created: 2026-07-21
-last_reviewed: 2026-07-29
+last_reviewed: 2026-07-30
 canonical_for: Cardborne gameplay and product behavior
 scope: Current run-selected-field five-stage vehicle campaign
 related:
   - ../design/UI_VISUAL_SYSTEM.md
-  - ../../pixel-art-production/design/space-hangar-research.md
   - ../../.agents/vehicle-performance-architecture-audit.md
   - ../../.agents/vehicle-performance-stabilization-evidence.md
   - ../../.agents/execplans/2026-07-29-horde-foundation-recovery-and-acceptance.md
@@ -331,6 +330,13 @@ every direct pattern remains committed after its warning appears.
 
 ### UI, guidebook, and persistence
 
+- Every player-facing world, actor, projectile, reward, effect, HUD, modal,
+  minimap, and preview uses the shared non-raster general-SF component system
+  defined by `UI_VISUAL_SYSTEM.md`. Role color is always paired with a
+  silhouette, notch, rail, or glyph cue.
+- The ship engine remains a rigid rear child of the continuously rotated hull.
+  Dash feedback uses a directional afterimage and engine flare, never a danger
+  ring or radial burst.
 - The live HUD prioritizes hull/experience, stage quota, dash, EMP, active
   secondary families, minimap, boss health, and exceptional timed effects. Its
   154x34 icon-only action rail sits below hull/experience; no bottom-center dock
@@ -385,10 +391,9 @@ every direct pattern remains committed after its warning appears.
   vertex-colored mesh surface. Scheduled support fields reuse retained world
   batches and one shared 24-segment timer batch; neither system creates
   per-actor canvas draws or per-field scene nodes.
-- Pixel combat presentation coalesces mobile enemies, stationary enemies,
-  bosses, hostile affinity trails, and experience into shared atlas-backed
-  retained batches. The current maximum-pressure fixture uses 23 retained
-  combat batches against a hard ceiling of 50.
+- Combat presentation coalesces mobile enemies, stationary enemies, bosses,
+  hostile affinity trails, and experience into descriptor-backed retained
+  batches. The hard ceiling remains 50 combat batches.
 - Only the active vehicle-performance stabilization plan's rendered native/Web
   scenarios and lifecycle soak can establish release performance. Headless
   subsystem microbenchmarks are diagnostic only.

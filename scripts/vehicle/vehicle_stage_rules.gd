@@ -5,22 +5,23 @@ extends RefCounted
 
 const Catalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
 const Geometry = preload("res://scripts/vehicle/vehicle_stage_geometry.gd")
+const Visual = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 
 const PLAYER_RADIUS := 24.0
 
-const CANVAS := Color("#12171A")
-const SURFACE := Color("#1C2428")
-const RAISED := Color("#263136")
-const CYAN := Color("#62A9B5")
-const MOSS := Color("#6F8F62")
-const AMBER := Color("#D4A33F")
-const CORAL := Color("#D9654F")
-const OFF_WHITE := Color("#F0F1E8")
-const MUTED := Color("#A8B4AE")
-const VIOLET := Color("#AA89CF")
-const FLOOR_DARK := Color("#18272A")
-const FLOOR_MID := Color("#203437")
-const FLOOR_LIGHT := Color("#294247")
+const CANVAS := Visual.WORLD_CANVAS
+const SURFACE := Visual.SURFACE
+const RAISED := Visual.RAISED
+const CYAN := Visual.SYSTEM
+const MOSS := Visual.SUPPORT
+const AMBER := Visual.PLAYER_REWARD
+const CORAL := Visual.DANGER
+const OFF_WHITE := Visual.TEXT_PRIMARY
+const MUTED := Visual.TEXT_MUTED
+const VIOLET := Visual.ARC
+const FLOOR_DARK := Visual.WORLD_CANVAS
+const FLOOR_MID := Visual.SURFACE
+const FLOOR_LIGHT := Visual.RAISED
 
 
 static func get_cover_rects(_unused_dynamic_blocker: bool = false, stage_id: StringName = &"stage_1") -> Array[Rect2]:

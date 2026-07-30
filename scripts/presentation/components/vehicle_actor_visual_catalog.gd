@@ -1,0 +1,60 @@
+class_name VehicleActorVisualCatalog
+extends RefCounted
+
+## Actor silhouette, state, and anchor descriptors. Attack behavior, health,
+## collision, animation timing, and AI remain outside this catalog.
+
+const SOURCE_FAMILIES: Array[StringName] = [
+	&"player_chassis",
+	&"player_engine_flame",
+	&"player_engine_modules",
+	&"mobile_enemy_set",
+	&"stationary_enemy_set",
+	&"boss_set",
+	&"secondary_escort_drone",
+]
+
+const DESCRIPTORS := {
+	&"player": {"role": &"player", "shape": &"forward_wedge", "color": &"player_reward", "rear_socket": Vector2(-0.72, 0.0)},
+	&"scrap_drone": {"role": &"swarm", "shape": &"solid_chevron", "color": &"danger"},
+	&"needle_drone": {"role": &"skirmisher", "shape": &"split_spear", "color": &"danger"},
+	&"spark_minelet": {"role": &"minelet", "shape": &"diamond", "color": &"danger"},
+	&"chaser": {"role": &"melee", "shape": &"split_spear", "color": &"danger"},
+	&"shooter": {"role": &"ranged", "shape": &"slab", "color": &"danger"},
+	&"controller": {"role": &"command", "shape": &"solid_chevron", "color": &"boss_command"},
+	&"turret": {"role": &"stationary_ranged", "shape": &"slab", "color": &"danger"},
+	&"mine": {"role": &"stationary_mine", "shape": &"diamond", "color": &"danger"},
+	&"generator": {"role": &"support_structure", "shape": &"slab", "color": &"support"},
+	&"shield_escort": {"role": &"shield", "shape": &"slab", "color": &"support"},
+	&"artillery_spotter": {"role": &"artillery", "shape": &"split_spear", "color": &"danger"},
+	&"interceptor_tower": {"role": &"interceptor", "shape": &"solid_chevron", "color": &"danger"},
+	&"rammer": {"role": &"rammer", "shape": &"forward_wedge", "color": &"danger"},
+	&"bulkhead_guard": {"role": &"guard", "shape": &"slab", "color": &"danger"},
+	&"splitter_barge": {"role": &"splitter", "shape": &"split_spear", "color": &"danger"},
+	&"repair_tender": {"role": &"repair", "shape": &"solid_chevron", "color": &"support"},
+	&"drone_carrier": {"role": &"carrier", "shape": &"slab", "color": &"boss_command"},
+	&"beam_sentinel": {"role": &"beam", "shape": &"split_spear", "color": &"danger"},
+	&"boss_pylon": {"role": &"boss_module", "shape": &"diamond", "color": &"boss_command"},
+	&"escort_drone": {"role": &"player_secondary", "shape": &"solid_chevron", "color": &"support"},
+	&"behemoth": {"role": &"boss", "shape": &"slab", "color": &"boss_command", "module_budget": 5},
+	&"colossus": {"role": &"boss", "shape": &"forward_wedge", "color": &"boss_command", "module_budget": 5},
+	&"crown": {"role": &"boss", "shape": &"solid_chevron", "color": &"boss_command", "module_budget": 5},
+	&"leviathan": {"role": &"boss", "shape": &"split_spear", "color": &"boss_command", "module_budget": 5},
+	&"titan": {"role": &"boss", "shape": &"diamond", "color": &"boss_command", "module_budget": 5},
+}
+
+
+static func source_family_ids() -> Array[StringName]:
+	return SOURCE_FAMILIES.duplicate()
+
+
+static func descriptor_ids() -> Array[StringName]:
+	var ids: Array[StringName] = []
+	for value in DESCRIPTORS:
+		ids.append(StringName(value))
+	ids.sort()
+	return ids
+
+
+static func descriptor(visual_id: StringName) -> Dictionary:
+	return Dictionary(DESCRIPTORS.get(visual_id, {})).duplicate(true)

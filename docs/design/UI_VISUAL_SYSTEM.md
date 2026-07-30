@@ -2,337 +2,241 @@
 type: spec
 status: active
 owner: BK
+created: 2026-07-21
 last_reviewed: 2026-07-30
 canonical_for: Cardborne vehicle-game art direction and UI presentation
+scope: All player-facing world, combat, HUD, modal, preview, and effect surfaces
 related:
   - ../product/vehicle_game_spec.md
-  - ../../pixel-art-production/design/visual-research/PART_GUIDELINES.md
+  - ./component-sheets/README.md
+  - ../../.agents/execplans/2026-07-30-full-visual-system-redesign.md
 ---
 
-# Cardborne UI and Visual System
+# Cardborne UI 및 비주얼 시스템
 
-## Purpose
+## 목적과 권한
 
-Define one readable flat-color visual language for the current
-run-selected-field vehicle game. Familiar top-down space-hangar science fiction
-is the baseline; no named material, cultural, marine, or ritual theme is part of
-the product direction. The approved `space-hangar-v2` runtime family owns deck,
-installation, and image-backed UI chrome construction. Gameplay meaning comes
-from this specification.
+이 문서는 Cardborne의 모든 player-facing surface에 적용되는 정본 visual
+contract다. 실제 runtime truth는
+`scripts/vehicle/vehicle_stage_visual_profile.gd`, 책임별 component catalog,
+Godot Theme와 실제 provider에서 생성한 system sheet가 함께 소유한다.
 
-Existing field titles such as Drowned Ruins and Tidal Archive identify current
-gameplay content only. They are not visual-style references and do not authorize
-marine motifs for components, environments, UI, or effects.
+방향 seed인 `00-general-sf-component-master-v1.png`는 선택된 형태 언어를
+설명하는 evidence일 뿐 runtime asset이나 독립 authority가 아니다.
 
-## Scope
+## 디자인 방향
 
-This contract applies to the run-selected field, actors, combat feedback, HUD,
-deployment, upgrades, pause/settings, guidebook, result, and garage. Gameplay
-rules remain owned by the product specification.
+- 장르는 익숙한 top-down industrial/general SF다. 특정 문화, 재질, 해양,
+  의례 motif를 제품 정체성으로 만들지 않는다.
+- 형태는 큰 mechanical mass, 명확한 front/rear cut, 기능 module, sparse
+  state accent 네 층으로 구성한다.
+- 모든 형태는 antialiased flat two-plane geometry를 사용한다. 고정 raster
+  방향 frame, 미세 texture noise, dither와 반복 장식은 사용하지 않는다.
+- ordinary component는 filled mass 최대 3개, function accent 최대 2개,
+  dark separation plane 최대 1개다. boss는 고유 objective module을 최대
+  5개까지 가진다.
+- shadow는 형태 분리를 위한 짧은 한 방향 dark plane만 허용한다. glow,
+  bevel, glossy highlight와 nested outline은 사용하지 않는다.
+- world는 sparse, HUD는 cockpit-compact, modal은 information-first다.
+  장식은 gameplay cue나 primary action과 같은 대비를 갖지 않는다.
+- motion은 이동, state change, impact와 objective만 설명한다. ambient
+  pulse, 반복 flashing과 의미 없는 orbit 장식은 금지한다.
 
-## Requirements
+## Semantic token
 
-### Art language and semantic palette
+`VehicleStageVisualProfile`이 아래 색과 scale의 유일한 runtime owner다.
+world, combat, minimap, Theme와 sheet는 literal role color를 다시 선언하지
+않고 이 token을 소비한다.
 
-- The existing field, installations, and image-backed UI chrome use flat,
-  whole-cell pixel color, large geometric masses, and clean silhouettes.
-  Approved deck masters may use restrained panel seams and wear in the locked
-  palette; UI chrome may use the same restrained seam and edge-light grammar.
-- New or replaced player, enemy, boss, pickup, projectile, and upgrade-glyph
-  components do not inherit a pixel grid, nearest-neighbor, fixed logical-cell,
-  or direction-frame requirement. They use antialiased flat component geometry,
-  large familiar mechanical shapes, sparse accents, and clear negative space.
-  Dithering, universal outlines, and detail that competes with combat remain
-  excluded.
-- A frame must read in this order: walkable floor, solid cover/void, player,
-  threats and telegraphs, pickups/rewards, then atmosphere.
-- Deep slate means walkable hangar deck, near-black means exterior space,
-  one consistent blue-gray family means solid walls and installations,
-  cobalt means energized systems or void, mustard means
-  player/reward/progress, coral means ordinary danger, magenta means boss
-  danger, mint means recovery/support, and ivory is reserved for high-contrast
-  highlights and live UI surfaces.
-- Attack affinity may override the general danger fill: kinetic is coral
-  (mustard for friendly fire), thermal is orange, toxin is olive, cryo is blue,
-  arc is violet, and a multi-condition hybrid is bright ivory. Affinity is also
-  encoded by a large trail or interior shape, never by color alone. Boss body,
-  warning ownership, and health remain magenta even when a specific boss attack
-  uses another affinity.
-- All solid static cover uses the same blocker fill. State is communicated by a
-  large shape, animation, or icon—not by inventing a new wall color.
-- Floor, wall, and void use the approved 192x192 repeat masters at a 384
-  world-pixel period. A deterministic per-cell rotation/reflection may break
-  obvious wallpaper repetition, but it may not recolor the master or alter
-  collision truth.
+| token | 값 | 의미 |
+| --- | --- | --- |
+| `space_black` | `#070B11` | exterior/absolute void |
+| `world_canvas` | `#101923` | walkable base |
+| `surface` | `#182431` | panel과 floor plate |
+| `raised` | `#243445` | cover, facility, raised UI |
+| `line` | `#465A6E` | non-semantic boundary |
+| `text_primary` | `#EEF3F7` | primary text/live highlight |
+| `text_muted` | `#9EADBC` | secondary text |
+| `player_reward` | `#F2B735` | player, progress, reward, selection |
+| `danger` | `#F05A5F` | ordinary hostile/damage |
+| `boss_command` | `#D43F8D` | boss, command, objective lock |
+| `support` | `#72D6C4` | heal, support, safe recovery |
+| `system` | `#58BFEA` | energy, movement, recall, focus |
+| `thermal` | `#F47A3C` | thermal affinity |
+| `toxin` | `#91B44B` | toxin affinity |
+| `cryo` | `#55BFE9` | cryo affinity |
+| `arc` | `#AA6DE0` | arc affinity |
 
-### Shared-field readability
+색은 identity의 보조 수단이다. role, affinity, selected, locked와 support
+state는 silhouette, notch, rail pattern 또는 glyph 중 하나를 함께 사용한다.
+grayscale에서도 외곽선과 negative space만으로 주요 역할을 구분해야 한다.
 
-- Rendering and collision use the exact same floor and cover polygons. A visible
-  opening must be traversable and a visible barrier must block movement,
-  projectiles, line of sight, pursuit, and minimap space.
-- Functional-terrain shapes never overlap one another or generated cover,
-  actors, rewards, or spawn markers. Their visible footprint matches the
-  reserved gameplay rectangle or radius used by layout validation.
-- Main lanes remain broad enough for the player and pursuing groups to pass one
-  another. Small unusable gaps are visually sealed.
-- The map is larger than the viewer. The camera shows only a local combat area;
-  the explored 20x12 minimap communicates the persistent whole.
-- A new run selects one of three registered macro fields. The run activates
-  eight deterministic large modules and keeps that cover set through all five
-  stages; exact retries reproduce it. Encounter anchors and item occupants may
-  advance, but the field does not visually rebuild between successful stages.
-- Functional terrain uses one large readable shape and a shape-coded purpose:
-  mint plus for repair, mustard outward arrows for transit, mustard stacked
-  chevrons for overdrive, violet lightning for an arc hazard, and blocker-fill
-  walls with one large fracture for a
-  breakable bulkhead. Helpful, hazardous, traversable-utility, directional, and
-  blocking roles must remain distinguishable without reading color.
-- Static structure, prop, and wear stamps are presentation-only overlays
-  resolved from the approved fixed atlas ID table. A field uses at most 48
-  sprites; the accepted composition uses 42: 28 structures, 10 props, and four
-  wear marks. Stamps use legal geometry anchors, avoid the player-start and
-  central combat clearances, create no collision or navigation nodes, and may
-  never resemble a pickup, hazard, telegraph, or passable opening.
+## Component 및 catalog contract
 
-### Actor and combat readability
+각 visual ID는 정확히 한 catalog가 소유한다.
 
-- The player, swarm units, mobile specialists, stationary threats, bosses,
-  experience shards, repair, recall, and crates have distinct silhouettes and
-  scale classes.
-- Presentation footprints are fixed at a 50-pixel player radius, 44-pixel
-  ordinary-enemy radius, 62-pixel installation radius, 146-pixel boss radius,
-  42-pixel pickup plinth radius, and 12/16/22-pixel experience radii. These are
-  visual values only: the established movement, hit, and collection radii
-  remain independent gameplay truth.
-- Tactically different enemy roles do not share one outer contour. A role uses
-  one large directional mass, cut, or center accent that remains recognizable
-  in grayscale at gameplay scale; role color and simulation radius remain
-  independent from that silhouette.
-- Actor and combat silhouettes use familiar spacecraft and weapon geometry as
-  their starting point. A Cardborne-specific material or cultural motif may be
-  added only after explicit user approval.
-- Large ordinary crowds keep every enemy body visible while limiting secondary
-  overlays to twelve health bars and eight extra priority markers. Selection is
-  deterministic: current aim first, then committed startup/active attacks,
-  recently damaged or priority targets, and finally nearer targets. Boss cues,
-  committed attack warnings, ranged startup diamonds, mine danger areas,
-  projectile collision cores, and the current aim bracket are never removed by
-  this budget.
-- All dangerous attacks show startup, damage area or projectile, and recovery.
-  Startup fill and its outer boundary show the exact player-center danger
-  footprint, not a decorative approximation. Any on-screen portion remains
-  visible when the attacker is off-screen. Enemy intent is communicated through
-  authored motion and bounded telegraphs, not permanent trajectory overlays.
-- A warning's position and geometry are fixed from its first visible frame.
-  Readiness changes continuously and monotonically from a pale, low-opacity
-  affinity tint to a darker, higher-contrast tint at impact; it never flashes,
-  pulses, or chases the ship.
-- Accepted hull damage must be legible at the ship without reading the HUD:
-  coral hit tint, small presentation-only recoil, bounded camera response,
-  pale-coral invulnerability state, and a dedicated impact sound. Fully
-  absorbed barrier damage remains visually distinct.
-- A projectile head ends exactly at its circular collision radius. Light,
-  standard, and heavy hostile damage use five-, six-, and seven-pixel heads;
-  power therefore changes visible and physical size together. A short
-  non-damaging hostile trail communicates direction and uses a shape-distinct
-  kinetic, thermal, toxin, cryo, arc, or hybrid silhouette. Player projectiles
-  always use a mustard ownership shell with a dark cobalt core; hostile
-  projectiles keep affinity color and shape.
-- Hostile projectiles add a non-damaging directional envelope whose maximum
-  presentation scale is 4.5 times the collision radius. The opaque solid core
-  still ends at the collision radius, so the larger halo improves acquisition
-  without implying a larger hitbox. The unmodified player primary uses a 1.25
-  presentation scale and retains its original collision contract.
-- Hostile affinity heads use large, distinct silhouettes: kinetic disk, thermal
-  ember, toxin drop, cryo shard, arc bolt, and split hybrid diamond. Head and
-  trail may share one static vertex-colored mesh and retained batch, but the
-  head's farthest vertex must still equal the projectile collision radius.
-- The unmodified Pulse Cannon starts from a seven-pixel collision radius and a
-  rendered head exactly that large. Solid-cover impacts must terminate the
-  visible trail at the same blocker used by collision; a projectile may appear
-  beyond cover only when its state explicitly carries the exceptional
-  `wall_piercing` capability.
-- Corridor fill reaches the exact expanded collision boundary, including the
-  swept circle's rounded start and end caps. Boundary rails sit inside that
-  edge, and projectile or beam warnings end at the same live wall or crate
-  contact as simulation. Area warnings, active persistent zones, and boss area
-  attacks keep their exact outer radius visible for the complete damaging
-  window. Ordinary rails are 3 pixels and heavy rails are 4 pixels; center
-  accents remain 2–3 pixels so paths do not dominate the field. Area fill is
-  strongest inside the central 55% to communicate center-weighted damage while
-  the thin outer ring remains the exact cutoff. Thermal, toxin, cryo, and arc
-  variations add restrained, large interior rhythms without changing the
-  damage footprint.
-- `Affinity` describes immediate impact presentation. Burn, poison, and chill
-  are separate real `condition` payloads; no color promises a damage-over-time
-  effect that gameplay does not apply. Multi-condition player rounds use the
-  hybrid family.
-- Burn, poison, and chill use three retained, shape-distinct status arcs around
-  an affected enemy. Stack counts belong in localized target/boss text rather
-  than tiny floating labels.
-- Boss warning and boss health replace competing top-level information while
-  active. Off-screen threat arcs supplement the field and never duplicate
-  visible enemies.
-- Automatic secondaries use bounded, recognizable shapes: seeker projectile,
-  mint ion ring, mustard orbit blades, coral wake mines, and a following drone.
-- Persistent glance cues use four fixed tiers. Reinforced Hull darkens the
-  mustard hull, Tuned Thrusters shows zero to three rear engine modules,
-  Kinetic Rounds darkens the primary cannon, and passive-damage upgrades darken
-  one mint secondary core. Count- or radius-readable secondary upgrades do not
-  receive a redundant shade tier.
+| owner | 책임 | 금지 |
+| --- | --- | --- |
+| component mesh library | immutable cached flat primitive | gameplay rule, collision |
+| actor catalog | role, state, anchor, silhouette | health, AI, attack |
+| projectile catalog | collision-normalized core와 non-damaging tail | damage, range, hit rule |
+| reward catalog | pickup, shard, crate의 shape/glyph | spawn, value, collection |
+| effect catalog | transient semantic state | timer, damage, protection rule |
+| world catalog | field surface, facility, decoration | topology, collision, schedule |
+| UI glyph catalog | action, upgrade, minimap, preview glyph | layout, localization, focus |
 
-### HUD and modal hierarchy
+runtime, guidebook, upgrade card와 system sheet는 같은 descriptor를 재사용한다.
+preview-only 대체 art를 만들지 않는다. visual geometry는 collision truth와
+분리하되 projectile core boundary와 debug overlay로 그 차이를 검증한다.
 
-- Korean is the default. Korean and English use the same layout and a real
-  medium-or-heavier Noto Sans KR font weight.
-- Modal panels, commands, upgrade cards, tabs, and HUD frames use the approved
-  text-free `space-hangar-v2` PNG states through cached `StyleBoxTexture`
-  objects. Nine-slice margins and content insets come from the published
-  recipe; nearest filtering preserves the authored pixels at every supported
-  viewport.
-- Keep live HUD clusters compact and outside the central combat rectangle.
-  Prefer icons, strong numerals, radial cooldowns, and short labels over wide
-  explanatory panels.
-- Hull/experience remains at the top left in a readable high-contrast cluster.
-  The bottom center holds three 44x44 icon-only circles for seeker, dash, and
-  EMP; primary fire is omitted. A circle's interior is filled only while that
-  action is available, while cooldown keeps the interior dark and uses only a
-  thin progress arc. The title-free 176x108 minimap uses player facing,
-  clustered moving enemies, shape-coded priority actors/items/crates, and
-  support-field lifetime arcs.
-- Timed effects use shape-distinct radial badges around the ship. Cooldown and
-  active duration are distinguishable without color alone.
-- Hull loss updates the main fill immediately and uses one restrained trailing
-  segment. Reduced motion replaces recoil, shake, and flicker with steady tint,
-  ring, and outline-pulse feedback; gameplay invulnerability duration is
-  unchanged.
-- Deployment, upgrade, pause/settings, guidebook, result, and garage hide
-  conflicting live HUD, block gameplay input, have one clear primary action,
-  and never clip at the supported minimum viewport.
-- Deployment uses a centered header above a two-column body: controls and
-  primary-weapon truth on the left, run difficulty and its lock explanation on
-  the right. Deploy is the single centered `300x48` primary action; settings is
-  secondary and Boss Practice remains debug-only.
-- Upgrade selection uses three equal structured cards with family, title,
-  effect, existing numeric deltas, and three level pips. Selection uses a
-  four-pixel mustard frame plus a diamond marker, keyboard focus uses a separate
-  rail, and a centered `300x48` Equip action confirms the choice. No timeout,
-  hover, or accidental carried click applies a card.
-- Successful Stage 1–4 transitions use a compact, non-modal 1.6-second banner
-  over the live HUD. It never hides the crosshair, objective, minimap, or action
-  rail, never blocks movement or aiming, and yields to upgrade, boss, pause,
-  result, and failure focus layers.
-- Pause keeps Resume as the only filled primary action. Restart and Settings
-  remain secondary; aborting to the garage is a restrained tertiary danger
-  action. Garage uses the same primary/secondary hierarchy and explicitly shows
-  `없음` / `None` when no passive weapon is installed.
-- The guidebook is reachable through `?`, uses five stable categories, clearly
-  separates discovered content from `???`, and shows current ship statistics
-  without exposing future entries. Discovered actors reuse the combat mesh;
-  locked entries use one neutral muted silhouette.
-- The Guidebook hides its redundant entry column only for Current Ship. Other
-  categories retain category, entry, and detail columns with explicit selected
-  states; discovered details render separate Movement, Attack, and Counter
-  rows.
-- Settings places Ship Status first and renders dense read-only values inside a
-  vertical scroll region. An active run shows one level/hull/experience summary,
-  then Hull/Mobility, Primary/Breach, and EMP stat groups before secondary
-  weapons and upgrades. Its no-run state contains only the localized empty
-  state—no empty group headings or stale values.
-- Stage and failure reports are full modal focus layers with one bottom primary
-  action. At 1180 pixels and wider, defeats, damage source, and damage attribute
-  use three columns; below that, keyboard-accessible tabs expose one list at a
-  time. Light dividers separate the wide columns; names, amounts, percentages,
-  and counts align independently, and the bottom primary action is `300x48`.
-  Percentage, amount, and count columns remain readable in both Korean and
-  English.
+## World
 
-### Implementation boundaries
+- field geometry, collision, navigation, cover selection, terrain schedule와
+  deterministic fingerprint는 visual rework 때문에 바꾸지 않는다.
+- floor는 large plate와 lane seam 두 scale만 사용한다. 반복 micro tile,
+  random scratch와 high-frequency panel grid는 사용하지 않는다.
+- void는 near-black mass와 sparse system edge만 가진다.
+- blocker는 raised shell, floor-side light edge와 짧은 outer shadow를
+  공통으로 사용한다.
+- presentation-only decoration은 retained descriptor instance로 그리며
+  field당 최대 24개다.
+- facility는 장식보다 대비가 높고 shape가 고유하다.
+  - repair: plus cut
+  - transit: opposing chevron
+  - overdrive: stacked forward chevron
+  - arc surge: broken bolt rail
+  - breakable bulkhead: split slab
+- 세 field는 이름의 연상 소재가 아니라 gameplay topology에서 읽히는 panel
+  rhythm으로만 구분한다.
+  - Drowned Ruin: central court frame + orthogonal service plate
+  - Tidal Archive: parallel bay spine + lateral corridor rail
+  - Storm Drydock: basin frame + diagonal docking guide
 
-- Typography and reusable control states belong in the production Godot theme.
-- `VehicleUiChromeFactory` is the sole runtime adapter from the published UI
-  recipe to semantic Theme variations. Screen owners keep their existing
-  containers, focus order, live labels, and state transitions.
-- `VehicleUpgradeChoiceCard` owns presentation of one frozen offer only.
-  `VehicleUpgradeChoicePanel` owns selection, guard, decline, and confirmation;
-  card compatibility and application stay outside UI code.
-- `VehicleBuildSummaryPanel` renders only a frozen build snapshot shared by
-  Settings and Guidebook. It never queries or mutates gameplay state.
-- Values, labels, cooldowns, focus, selection, localization, and guide discovery
-  remain live UI state; do not bake them into raster assets.
-- `VehicleWorldStampCatalog` is the sole fixed-ID resolver for the approved
-  structure and prop atlases. `VehiclePixelWorldMeshBuilder` may place those
-  regions from immutable layout geometry, but visual sprites and tile
-  variation never become collision owners.
-- Static world presentation belongs to `vehicle_stage_backdrop.gd`; immutable
-  floor/candidate data belongs to the three registered field definitions; the
-  run-scoped `VehicleFieldLayout` owns the selected field and immutable
-  stage-tactical children; `VehicleTerrainRuntime` owns scheduled support
-  fields; dynamic combat belongs to the run.
-- Static minimap geometry and each bounded dynamic tactical snapshot render as
-  one vertex-colored mesh surface. Do not reintroduce per-actor or per-marker
-  canvas draw commands.
-- World support fields use retained disk, ring, and beam batches plus one shared
-  24-segment timer batch. They do not use per-field immediate canvas drawing or
-  per-field scene nodes.
-- The published combat pixel atlas is a compatibility implementation until each
-  combat family is migrated. It is not design authority and must not be extended
-  with new player, enemy, boss, pickup, projectile, or upgrade-glyph art.
-- Migrated combat families use descriptor-backed `ArrayMesh` geometry and shared
-  retained `MultiMesh` batches. Role silhouettes remain distinct without
-  requiring one batch or node per role. Maximum-pressure presentation must stay
-  within the 50-batch ceiling.
-- Raster assets own the approved static world surface, world stamps, markers,
-  and UI chrome. Component geometry owns migrated combat silhouettes and glyphs.
-  Procedural geometry remains responsible for exact telegraphs, timers,
-  collision-aligned boundaries, and changing gameplay truth.
+## Actor, projectile 및 effect
 
-## Verification
+- player는 이동 방향을 보여주는 hull front/rear cut과 manual-aim mount를
+  분리한다.
+- engine mount와 flame은 hull continuous transform의 rear child다. engine
+  count는 rear socket의 좌우 배치만 바꾸며 angle을 따로 quantize하지 않는다.
+- dash는 0.20초 동안 최대 5개 directional afterimage와 engine flare를
+  사용한다. danger color 원, radial ring과 circular burst는 사용하지 않는다.
+- reduced motion에서는 반복 afterimage 대신 0.12초 이하의 elongated
+  silhouette 한 개와 engine flash를 사용한다.
+- dash, hull hit, arrival, transit와 barrier를 서로 다른 semantic effect로
+  표현한다. barrier만 support ring을 사용할 수 있다.
+- ordinary enemy role은 외곽선과 negative space로 먼저 구분한다. command와
+  boss는 boss color만으로 ordinary enemy를 재도색하지 않는다.
+- projectile damaging core는 collision boundary와 일치한다. tail은 방향을
+  설명하는 non-damaging cue다.
+- telegraph는 gameplay이 제공한 exact live geometry를 사용하고 readiness는
+  단조롭게 증가한다. warning이 뜬 뒤 origin, direction과 target을 장식
+  animation으로 바꾸지 않는다.
+- maximum pressure에서도 player, crosshair, committed threat, boss
+  objective, pickup과 current target이 world decoration보다 먼저 읽혀야 한다.
 
-Run the focused UI and presentation validators after relevant changes:
+## Typography, spacing 및 control
 
-```powershell
-.\tools\godot.ps1 --path . --headless --import
-.\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_pixel_world_renderer.gd
-.\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_stage_ui_layout.gd
-.\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_ui_localization.gd
-.\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_rewards_ui_audio.gd
-.\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_build_snapshot.gd
-.\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_guidebook.gd
-.\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_stage_report.gd
-.\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_combat_renderer.gd
-.\tools\export_web.ps1
-```
+- font는 Noto Sans KR variable 한 family만 사용한다.
+- body weight는 500, label/title는 650이다.
+- compact type scale은 `12/14/16/20/28/36`, wide는
+  `13/15/17/22/32/40`이다.
+- spacing scale은 `4/8/12/16/24/32`다.
+- panel inset은 compact `16`, wide `24`다.
+- button, tab, toggle와 focus target의 최소 높이는 `44`다.
+- body text는 `14` 미만으로 자동 축소하지 않는다.
+- normal control은 1 px line, hover는 system rail, keyboard focus는 2 px
+  system outline, selected는 3 px player/reward rail을 쓴다.
+- destructive control은 danger text/outline을 쓰며 filled primary action과
+  경쟁하지 않는다.
+- surface에는 한 border와 한 semantic accent rail만 허용한다. 장식용
+  corner와 중첩 frame을 반복하지 않는다.
 
-Rendered review covers Korean and English at `960x540`, `1280x720`, and
-`1920x1080`, including Deployment, upgrade default/selected, Pause, active and
-empty Ship Status, discovered and locked Guidebook entries, wide and compact
-reports, Garage, maximum combat pressure, and actor/projectile catalogs.
+## Responsive geometry
 
-## Acceptance Criteria
+| viewport | outer safe margin | modal content maximum | mode |
+| --- | ---: | ---: | --- |
+| 960×540 | 16 | 928×508 | compact |
+| 1280×720 | 24 | 1184×656 | wide |
+| 1920×1080 | 32 | 1184×720 | wide centered |
 
-- At 960x540, 1280x720, and 1920x1080, HUD clusters do not overlap, modal content
-  is not clipped, and command targets remain at least 44 pixels high.
-- Korean and English expose identical reachable controls and complete copy.
-- Walkable, blocker, void, player/reward, danger, support, and boss semantics are
-  distinguishable without relying on fine detail.
-- The player, current objective, Breach Shot state, active secondaries, and boss
-  warning remain locatable at maximum supported enemy pressure.
-- Accepted damage is readable at the ship and hull bar in both motion modes;
-  status arcs and stack text remain legible without adding per-enemy nodes.
-- Rendered review shows one persistent field across all stage states, no fake
-  passable gaps, no retired boss gate, and no hidden guidebook controls.
-- The three approved repeat masters, both 4x4 stamp atlases, all 17 UI chrome
-  PNGs, and both published recipes load without unknown IDs or fallback
-  styleboxes.
-- World overlays remain within the 48-sprite budget and add zero collision
-  nodes. Modal, HUD, command, card, and tab chrome resolve to
-  `StyleBoxTexture`.
+- layout breakpoint는 width `1100`, guide/report three-column breakpoint는
+  `1180`이다.
+- upgrade card는 compact에서 최소 `280×286`, gap `12`, title 2줄,
+  summary 3줄, effect row 최대 2개, level pip 1줄을 사용한다.
+- upgrade card는 scroll을 사용하지 않는다. settings, guidebook, report는
+  지정 content region만 scroll하고 primary action은 고정한다.
+- `clip_contents`는 safety guard일 뿐 layout 해결책이 아니다.
+- Korean과 English의 title, body, dynamic value, control label은 지원
+  viewport에서 겹치거나 잘리거나 container 밖으로 나갈 수 없다.
 
-## Non-Goals
+## HUD
 
-- Realistic materials, dense texture, or unbounded micro-decoration.
-- Per-stage field recolors or geometry variants.
-- Text baked into screenshots or image assets.
-- Black-floor/white-wall conversion without a separately accepted actor and
-  telegraph contrast system.
+- top-left는 hull/experience와 `154×44` action rail을 묶는다. primary fire는
+  rail에 넣지 않는다.
+- top-center objective는 최대 `440×48`이다. boss가 active면 boss name,
+  health와 one-line mechanic으로 교체하며 두 cluster를 쌓지 않는다.
+- top-right minimap은 `176×108`, conditional target panel은 그 아래
+  `176×60`이다.
+- notification과 transition은 objective 아래 한 줄에 나타나며 crosshair를
+  가리지 않는다.
+- off-screen threat, status orbit, crosshair, minimap marker와 support timer는
+  shape-coded retained mesh를 사용한다.
+
+## Modal
+
+- 모든 modal은 live HUD와 gameplay input을 차단하고 title, content,
+  primary action 순서가 한 번에 읽혀야 한다.
+- Deployment는 loadout/control과 difficulty/lock explanation의 two-column
+  body, 한 개의 Deploy primary action을 사용한다.
+- Upgrade는 세 structured card, explicit selection, Equip confirm과 optional
+  decline을 사용한다. 상단과 card 안에 같은 detail을 중복하지 않는다.
+- Pause는 Resume만 filled primary다. Restart/Settings는 secondary, Garage는
+  restrained tertiary danger다.
+- Settings는 category rail + content이며 Ship Status, audio, controls,
+  motion, language 순서를 유지한다.
+- Guidebook은 wide에서 category/list/detail 세 column, compact에서 category
+  tab + list/detail 두 pane다. discovered preview는 runtime component,
+  locked entry는 neutral silhouette를 쓴다.
+- Report는 wide three-column, compact keyboard tab과 fixed bottom primary를
+  사용한다.
+- Result/Garage는 metric, build/loadout와 next action을 glyph로 요약한다.
+- Boss Practice는 debug-only이지만 production boss descriptor와 Theme를
+  재사용한다.
+
+## 접근성 및 상태
+
+- focus order는 visual/task order와 같고 keyboard/controller focus가 항상
+  보인다.
+- selected, disabled, warning, support와 affinity는 색만으로 전달하지 않는다.
+- icon-only control은 localized accessible name과 동일한 input hint를 가진다.
+- reduced motion은 정보량을 줄이지 않고 반복 movement만 정적 cue로 바꾼다.
+- grayscale capture, text glyph bounds, focus path, 200% text fit과 supported
+  viewport를 validation한다.
+
+## 생성물과 검증
+
+`docs/design/component-sheets/system-v1/manifest.json`은 실제 provider
+fingerprint, source commit, viewport, locale와 각 sheet SHA-256을 기록한다.
+최종 12개 sheet는 foundation, world surface/facility, player, enemy, boss,
+projectile/effect, reward/glyph, HUD/minimap, UI control, modal flow,
+pressure/accessibility를 포함한다.
+
+각 publication batch는 다음을 통과해야 한다.
+
+- catalog ID coverage와 duplicate owner 0
+- 같은 provider fingerprint에서 동일한 sheet hash
+- ko/en × 960/1280/1920의 overflow, overlap, clipping 0
+- grayscale role/affinity/state 구분
+- engine 360° rear-anchor drift 0
+- dash danger/radial instance 0
+- combat batch ≤50, world batch ≤12, draw-call p95 ≤200
+- full Godot import, focused validator, native/Web production smoke
+
+## 비목표
+
+- gameplay geometry, collision, actor count, speed, controls와 campaign flow를
+  visual rework의 이유로 바꾸지 않는다.
+- 특정 material/culture motif를 새 lore로 만들지 않는다.
+- upgrade behavior를 UI가 해석하거나 pickup effect를 contact helper로
+  이동하지 않는다.
+- system sheet나 direction seed를 별도 runtime art owner로 사용하지 않는다.
