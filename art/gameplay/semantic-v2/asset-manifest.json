@@ -1,0 +1,333 @@
+{
+  "schema_version": 1,
+  "pack_id": "cardborne-semantic-v2",
+  "visual_direction": "flat-color general-SF hard-surface",
+  "approved_references": [
+    "docs/design/component-sheets/semantic-rework-v2-proposal/13-visual-taxonomy-asis-tobe.png",
+    "docs/design/component-sheets/semantic-rework-v2-proposal/14-attack-telegraph-asis-tobe.png",
+    "docs/design/component-sheets/semantic-rework-v2-proposal/15-world-layering-asis-tobe.png"
+  ],
+  "image_contract": {
+    "format": "PNG",
+    "color_space": "sRGB",
+    "alpha": "straight RGBA",
+    "facing": "+X/right",
+    "pixels_per_world_unit": 1,
+    "trim_runtime_files": false,
+    "texture_filter": "linear",
+    "mipmaps": false,
+    "repeat": false,
+    "default_pivot": "canvas_center",
+    "outline": "authored near-black contour",
+    "source_item_limit": 3,
+    "source_item_limit_note": "Animation frames count as one named effect, not separate asset identities."
+  },
+  "integration": {
+    "requires_texture_instancing_adapter": true,
+    "current_runtime_is_procedural_mesh_multimesh": true,
+    "high_count_rule": "Use a texture-capable MultiMesh/atlas shader or a capped event pool; do not create one AnimatedSprite2D per projectile, enemy, or effect.",
+    "collision_rule": "Collision geometry and live telegraph footprints remain authoritative and independent from these textures."
+  },
+  "attachments": {
+    "player_hull": {
+      "path": "actors/player/actor_player_hull_base.png",
+      "canvas": [128, 128],
+      "pivot": [64, 64],
+      "rotation_driver": "hull"
+    },
+    "player_engine": {
+      "path": "actors/player/actor_player_engine.png",
+      "canvas": [64, 48],
+      "pivot": [32, 24],
+      "parent": "player_hull",
+      "offset_world": [-42, 0],
+      "rotation_driver": "hull",
+      "deform_with_velocity": false,
+      "note": "The engine is rigidly attached to the hull and must not bend or rotate independently while moving."
+    },
+    "player_aim_mount": {
+      "path": "actors/player/actor_player_aim_mount.png",
+      "canvas": [80, 48],
+      "pivot": [40, 24],
+      "parent": "player_hull",
+      "offset_world": [0, 0],
+      "rotation_driver": "aim"
+    }
+  },
+  "asset_sets": [
+    {
+      "id": "ordinary_enemies",
+      "root": "actors/enemies",
+      "pattern": "actor_enemy_{role}_base.png",
+      "pivot": "center",
+      "roles": [
+        "scrap_drone",
+        "needle_drone",
+        "spark_minelet",
+        "chaser",
+        "rammer",
+        "bulkhead_guard",
+        "shooter",
+        "turret",
+        "artillery_spotter",
+        "controller",
+        "generator",
+        "shield_escort",
+        "repair_tender",
+        "drone_carrier",
+        "splitter_barge",
+        "interceptor_tower",
+        "beam_sentinel",
+        "boss_pylon"
+      ],
+      "canvas_by_role": {
+        "default": [112, 112],
+        "turret": [160, 160],
+        "generator": [160, 160],
+        "interceptor_tower": [160, 160],
+        "beam_sentinel": [160, 160],
+        "boss_pylon": [160, 160]
+      }
+    },
+    {
+      "id": "bosses",
+      "root": "actors/bosses",
+      "pattern": "actor_boss_{boss}_base.png",
+      "canvas": [352, 352],
+      "pivot": [176, 176],
+      "roles": [
+        "colossus",
+        "leviathan",
+        "titan",
+        "behemoth",
+        "crown"
+      ]
+    },
+    {
+      "id": "boss_modules",
+      "root": "actors/bosses/modules",
+      "canvas": [160, 160],
+      "pivot": [80, 80],
+      "files": [
+        "actor_boss_module_forge_plate_active.png",
+        "actor_boss_module_forge_plate_disabled.png",
+        "actor_boss_module_segment_lock_active.png",
+        "actor_boss_module_segment_lock_disabled.png",
+        "actor_boss_module_relay_positive.png",
+        "actor_boss_module_relay_negative.png",
+        "actor_boss_module_armor_car.png",
+        "actor_boss_module_crown_lattice.png",
+        "actor_boss_module_crown_pylon.png"
+      ]
+    },
+    {
+      "id": "secondaries",
+      "root": "weapons/secondaries",
+      "pivot": "center",
+      "files": {
+        "seeker": {"path": "secondary_seeker.png", "canvas": [96, 64], "pivot": [58, 32]},
+        "escort_drone": {"path": "secondary_escort_drone.png", "canvas": [64, 48], "pivot": [32, 24]},
+        "orbit_blade": {"path": "secondary_orbit_blade.png", "canvas": [64, 32], "pivot": [32, 16]},
+        "wake_mine": {"path": "secondary_wake_mine.png", "canvas": [48, 48], "pivot": [24, 24]}
+      }
+    },
+    {
+      "id": "projectiles",
+      "root": "weapons/projectiles",
+      "files": {
+        "player_primary": {"path": "projectile_player_primary.png", "canvas": [112, 64], "pivot": [72, 32]},
+        "player_opening_breach": {"path": "projectile_player_opening_breach.png", "canvas": [112, 64], "pivot": [72, 32]},
+        "player_seeker": {"path": "projectile_player_seeker.png", "canvas": [96, 64], "pivot": [58, 32]},
+        "hostile_kinetic": {"path": "projectile_hostile_kinetic.png", "canvas": [80, 80], "pivot": [40, 40]},
+        "hostile_thermal": {"path": "projectile_hostile_thermal.png", "canvas": [80, 80], "pivot": [40, 40]},
+        "hostile_toxin": {"path": "projectile_hostile_toxin.png", "canvas": [80, 80], "pivot": [40, 40]},
+        "hostile_cryo": {"path": "projectile_hostile_cryo.png", "canvas": [80, 80], "pivot": [40, 40]},
+        "hostile_arc": {"path": "projectile_hostile_arc.png", "canvas": [80, 80], "pivot": [40, 40]},
+        "hostile_hybrid": {"path": "projectile_hostile_hybrid.png", "canvas": [80, 80], "pivot": [40, 40]}
+      }
+    },
+    {
+      "id": "states",
+      "root": "states",
+      "files": {
+        "player_barrier_plate": {"path": "player_barrier_plate.png", "canvas": [96, 128], "pivot": [48, 64], "topology": "segmented defensive plate"},
+        "player_ion_emitter": {"path": "player_ion_emitter.png", "canvas": [64, 64], "pivot": [32, 32], "topology": "offensive hex/lightning source"},
+        "enemy_generator_shield_source": {"path": "enemy_generator_shield_source.png", "canvas": [96, 96], "pivot": [48, 48]},
+        "enemy_shield_escort_plate": {"path": "enemy_shield_escort_plate.png", "canvas": [96, 96], "pivot": [48, 48]},
+        "burn": {"path": "status_burn.png", "canvas": [96, 96], "pivot": [48, 48], "morphology": "broken triangular stroke"},
+        "poison": {"path": "status_poison.png", "canvas": [96, 96], "pivot": [48, 48], "morphology": "bead chain"},
+        "chill": {"path": "status_chill.png", "canvas": [96, 96], "pivot": [48, 48], "morphology": "split frost bars"}
+      }
+    },
+    {
+      "id": "pickups",
+      "root": "pickups",
+      "pivot": "center",
+      "files": {
+        "experience_small": {"path": "pickup_experience_small.png", "canvas": [32, 32]},
+        "experience_medium": {"path": "pickup_experience_medium.png", "canvas": [48, 48]},
+        "experience_large": {"path": "pickup_experience_large.png", "canvas": [64, 64]},
+        "reward_crate": {"path": "pickup_reward_crate.png", "canvas": [64, 64]},
+        "repair": {"path": "pickup_repair.png", "canvas": [48, 48]},
+        "experience_recall": {"path": "pickup_experience_recall.png", "canvas": [64, 64]}
+      }
+    },
+    {
+      "id": "world",
+      "root": "world",
+      "origin": "top_left",
+      "floor_cell": [192, 192],
+      "files": [
+        "world_shared_floor_00.png",
+        "world_shared_floor_01.png",
+        "world_wall_straight.png",
+        "world_wall_convex_corner.png",
+        "world_wall_concave_corner.png",
+        "world_wall_end_cap.png",
+        "world_wall_t_junction.png",
+        "world_wall_cross_junction.png",
+        "world_bulkhead_intact.png",
+        "world_bulkhead_damaged.png",
+        "facility_repair_pad.png",
+        "facility_repair_pad_core.png",
+        "facility_overdrive_lane.png",
+        "facility_arc_surge_strip.png",
+        "facility_transit_gate.png",
+        "terrain_solid_cover_block.png",
+        "terrain_breakable_cover_slab.png",
+        "terrain_hazard_power_relay.png"
+      ],
+      "generation_rule": "Floor cells are selected by the map algorithm; wall shell selection is derived from neighbor topology and collision truth. Decorative no-op decals are not part of this pack."
+    },
+    {
+      "id": "hud",
+      "root": "hud",
+      "pivot": "center",
+      "files": [
+        "minimap_marker_player.png",
+        "minimap_marker_hostile.png",
+        "minimap_marker_elite.png",
+        "minimap_marker_boss.png",
+        "minimap_marker_objective_active.png",
+        "minimap_marker_objective_locked.png",
+        "action_primary.png",
+        "action_seeker.png",
+        "action_dash.png",
+        "action_emp.png",
+        "action_barrier.png",
+        "action_ion_field.png",
+        "upgrade_primary.png",
+        "upgrade_passive.png",
+        "upgrade_secondary.png",
+        "upgrade_defense.png",
+        "upgrade_dash.png",
+        "upgrade_skill.png",
+        "upgrade_element.png",
+        "upgrade_mobility.png",
+        "upgrade_support.png"
+      ]
+    }
+  ],
+  "animations": {
+    "muzzle_player_primary": {
+      "atlas": "effects/atlases/fx_muzzle_player_primary.png",
+      "frames": "effects/frames/fx_muzzle_player_primary/frame_{index:02}.png",
+      "frame_count": 4,
+      "grid": [4, 1],
+      "frame_size": [48, 48],
+      "gutter": 2,
+      "pivot": [4, 24],
+      "fps": 20,
+      "loop": false,
+      "blend": "alpha; additive only for tiny core"
+    },
+    "impact_reflect": {
+      "atlas": "effects/atlases/fx_impact_reflect.png",
+      "frames": "effects/frames/fx_impact_reflect/frame_{index:02}.png",
+      "frame_count": 5,
+      "grid": [5, 1],
+      "frame_size": [64, 64],
+      "gutter": 2,
+      "pivot": [32, 32],
+      "fps": 20,
+      "loop": false
+    },
+    "dash_start": {
+      "atlas": "effects/atlases/fx_dash_start.png",
+      "frames": "effects/frames/fx_dash_start/frame_{index:02}.png",
+      "frame_count": 3,
+      "grid": [3, 1],
+      "frame_size": [96, 48],
+      "gutter": 2,
+      "pivot": [48, 24],
+      "fps": 15,
+      "loop": false,
+      "note": "Use with procedural afterimages; never draw the removed red circle."
+    },
+    "emp_release": {
+      "atlas": "effects/atlases/fx_emp_release.png",
+      "frames": "effects/frames/fx_emp_release/frame_{index:02}.png",
+      "frame_count": 6,
+      "grid": [3, 2],
+      "frame_size": [512, 512],
+      "gutter": 2,
+      "pivot": [256, 256],
+      "fps": 12,
+      "loop": false,
+      "scale_from_gameplay_radius": true
+    },
+    "wake_mine_detonation": {
+      "atlas": "effects/atlases/fx_wake_mine_detonation.png",
+      "frames": "effects/frames/fx_wake_mine_detonation/frame_{index:02}.png",
+      "frame_count": 5,
+      "grid": [5, 1],
+      "frame_size": [256, 256],
+      "gutter": 2,
+      "pivot": [128, 128],
+      "fps": 15,
+      "loop": false
+    },
+    "boss_module_disabled": {
+      "atlas": "effects/atlases/fx_boss_module_disabled.png",
+      "frames": "effects/frames/fx_boss_module_disabled/frame_{index:02}.png",
+      "frame_count": 4,
+      "grid": [4, 1],
+      "frame_size": [128, 128],
+      "gutter": 2,
+      "pivot": [64, 64],
+      "fps": 12,
+      "loop": false
+    },
+    "hostile_summon_arrival": {
+      "atlas": "effects/atlases/fx_hostile_summon_arrival.png",
+      "frames": "effects/frames/fx_hostile_summon_arrival/frame_{index:02}.png",
+      "frame_count": 6,
+      "grid": [3, 2],
+      "frame_size": [192, 192],
+      "gutter": 2,
+      "pivot": [96, 96],
+      "fps": 12,
+      "loop": false
+    },
+    "bulkhead_destroy": {
+      "atlas": "effects/atlases/fx_bulkhead_destroy.png",
+      "frames": "effects/frames/fx_bulkhead_destroy/frame_{index:02}.png",
+      "frame_count": 5,
+      "grid": [5, 1],
+      "frame_size": [256, 256],
+      "gutter": 2,
+      "pivot": [128, 128],
+      "fps": 12,
+      "loop": false
+    }
+  },
+  "review_sheets": [
+    "sheets/01-player-weapons.png",
+    "sheets/02-enemies.png",
+    "sheets/03-bosses-modules.png",
+    "sheets/04-projectiles-status-pickups.png",
+    "sheets/05-world.png",
+    "sheets/06-hud-glyphs.png",
+    "sheets/07-effect-atlases.png"
+  ]
+}
