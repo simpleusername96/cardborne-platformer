@@ -43,6 +43,27 @@ static func polygon_mesh(cache_id: StringName, layers: Array[Dictionary]) -> Arr
 
 static func primitive_points(primitive_id: StringName) -> PackedVector2Array:
 	match primitive_id:
+		&"player_interceptor":
+			return PackedVector2Array([
+				Vector2(1.00, 0.00),
+				Vector2(0.44, -0.20),
+				Vector2(0.18, -0.54),
+				Vector2(-0.34, -0.78),
+				Vector2(-0.54, -0.60),
+				Vector2(-0.46, -0.30),
+				Vector2(-0.78, -0.28),
+				Vector2(-0.72, -0.06),
+				Vector2(-0.40, -0.03),
+				Vector2(-0.34, 0.00),
+				Vector2(-0.40, 0.03),
+				Vector2(-0.72, 0.06),
+				Vector2(-0.78, 0.28),
+				Vector2(-0.46, 0.30),
+				Vector2(-0.54, 0.60),
+				Vector2(-0.34, 0.78),
+				Vector2(0.18, 0.54),
+				Vector2(0.44, 0.20),
+			])
 		&"forward_wedge":
 			return PackedVector2Array([
 				Vector2(1.0, 0.0), Vector2(0.18, -0.72),

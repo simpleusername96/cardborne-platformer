@@ -37,7 +37,20 @@ func _generate() -> void:
 	var records: Array[Dictionary] = []
 	for record in [
 		{"id": &"01-foundation-tokens", "canvas": &"foundation"},
+		{"id": &"02-world-surfaces", "canvas": &"world_surfaces"},
+		{"id": &"03-world-facilities", "canvas": &"world_facilities"},
+		{"id": &"04-player-components", "canvas": &"player"},
+		{"id": &"05-enemy-components", "canvas": &"enemies"},
+		{"id": &"06-boss-components", "canvas": &"bosses"},
+		{
+			"id": &"07-projectile-telegraph-vfx",
+			"canvas": &"projectiles",
+		},
+		{"id": &"08-reward-upgrade-glyphs", "canvas": &"rewards"},
+		{"id": &"09-hud-minimap-markers", "canvas": &"hud"},
 		{"id": &"10-ui-controls-states", "canvas": &"controls"},
+		{"id": &"11-modal-flow-contact-sheet", "canvas": &"modals"},
+		{"id": &"12-pressure-accessibility", "canvas": &"pressure"},
 	]:
 		var result := await _capture_sheet(
 			output_path,
@@ -116,7 +129,11 @@ func _capture_sheet(
 
 
 func _output_path() -> String:
-	for argument in OS.get_cmdline_user_args():
+	var arguments := OS.get_cmdline_user_args()
+	for argument in OS.get_cmdline_args():
+		if argument not in arguments:
+			arguments.append(argument)
+	for argument in arguments:
 		if argument.begins_with("--visual-sheet-output="):
 			var value := argument.trim_prefix("--visual-sheet-output=")
 			if value.begins_with("res://"):

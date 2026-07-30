@@ -31,18 +31,8 @@ static func write(
 		"viewport": [2048, 1152],
 		"locale": "ko",
 		"sheets": sheets,
-		"planned_sheet_ids": [
-			"02-world-surfaces",
-			"03-world-facilities",
-			"04-player-components",
-			"05-enemy-components",
-			"06-boss-components",
-			"07-projectile-telegraph-vfx",
-			"08-reward-upgrade-glyphs",
-			"09-hud-minimap-markers",
-			"11-modal-flow-contact-sheet",
-			"12-pressure-accessibility",
-		],
+		"planned_sheet_ids": [],
+		"publication_status": "complete-design-set",
 	}
 	var path := output_directory.path_join("manifest.json")
 	var file := FileAccess.open(path, FileAccess.WRITE)

@@ -15,7 +15,13 @@ const SOURCE_FAMILIES: Array[StringName] = [
 ]
 
 const DESCRIPTORS := {
-	&"player": {"role": &"player", "shape": &"forward_wedge", "color": &"player_reward", "rear_socket": Vector2(-0.72, 0.0)},
+	&"player": {
+		"role": &"player",
+		"shape": &"player_interceptor",
+		"color": &"player_reward",
+		"rear_sockets": [Vector2(-0.58, -0.43), Vector2(-0.58, 0.43)],
+		"aim_socket": Vector2(0.04, 0.0),
+	},
 	&"scrap_drone": {"role": &"swarm", "shape": &"solid_chevron", "color": &"danger"},
 	&"needle_drone": {"role": &"skirmisher", "shape": &"split_spear", "color": &"danger"},
 	&"spark_minelet": {"role": &"minelet", "shape": &"diamond", "color": &"danger"},

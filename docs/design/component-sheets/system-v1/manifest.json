@@ -1,7 +1,7 @@
 {
 	"schema_version": 1,
 	"system_id": "cardborne-general-sf-v1",
-	"source_commit": "bc31a12e21edaf2e88f14ab972f1231f359c1794",
+	"source_commit": "0448c11f9c8242d842b82e0bfc50cb41eec7f061",
 	"providers": {
 		"tokens": "res://scripts/vehicle/vehicle_stage_visual_profile.gd",
 		"catalog_registry": "res://scripts/presentation/components/vehicle_visual_system_registry.gd",
@@ -9,7 +9,7 @@
 	},
 	"provider_fingerprints": {
 		"tokens": "31f395e6b3a75d7f214c6423a45abcc52a9cb73a8ec24532d1c007eb30415b19",
-		"catalog_registry": "181cd877abc98e9081138c45d0d1675039b23434bb207a7b2adc3ff2436ffd1c"
+		"catalog_registry": "69948a69dc0d03534ebd08408ed16c53c4845c4e649136bfadc29e4112818f96"
 	},
 	"viewport": [
 		2048,
@@ -20,7 +20,103 @@
 		{
 			"id": "01-foundation-tokens",
 			"path": "docs/design/component-sheets/system-v1/01-foundation-tokens.png",
-			"sha256": "277720f04848af6f807ddd8a3b2b27221ffc291948cb0d4d63444a941608435f",
+			"sha256": "456292d88033d81ea2a1b1c3aca6d962b4749d06c0c061b0f17d652cee3d1530",
+			"width": 2048,
+			"height": 1152,
+			"providers": [
+				"VehicleStageVisualProfile",
+				"VehicleVisualSystemRegistry",
+				"NotoSansKR-Variable"
+			]
+		},
+		{
+			"id": "02-world-surfaces",
+			"path": "docs/design/component-sheets/system-v1/02-world-surfaces.png",
+			"sha256": "8fc34c0bd3c71ed1d6d4ed6ecbb5e4c93207428d8c9dd3b08fcd5ef95bbdafef",
+			"width": 2048,
+			"height": 1152,
+			"providers": [
+				"VehicleStageVisualProfile",
+				"VehicleVisualSystemRegistry",
+				"NotoSansKR-Variable"
+			]
+		},
+		{
+			"id": "03-world-facilities",
+			"path": "docs/design/component-sheets/system-v1/03-world-facilities.png",
+			"sha256": "e7f8e41675b43cc445d5196ea727b846a6795daac2431171a04429b449fdcd41",
+			"width": 2048,
+			"height": 1152,
+			"providers": [
+				"VehicleStageVisualProfile",
+				"VehicleVisualSystemRegistry",
+				"NotoSansKR-Variable"
+			]
+		},
+		{
+			"id": "04-player-components",
+			"path": "docs/design/component-sheets/system-v1/04-player-components.png",
+			"sha256": "2df94e00d00c73a9cb5fd21bde67b7886f3a22021689ef7b63ef01787e1fac14",
+			"width": 2048,
+			"height": 1152,
+			"providers": [
+				"VehicleStageVisualProfile",
+				"VehicleVisualSystemRegistry",
+				"NotoSansKR-Variable"
+			]
+		},
+		{
+			"id": "05-enemy-components",
+			"path": "docs/design/component-sheets/system-v1/05-enemy-components.png",
+			"sha256": "7216fd3b23cd2d840fdd74ad4c1c9c423e88bd5f5918d29839ac7509aa1fbab1",
+			"width": 2048,
+			"height": 1152,
+			"providers": [
+				"VehicleStageVisualProfile",
+				"VehicleVisualSystemRegistry",
+				"NotoSansKR-Variable"
+			]
+		},
+		{
+			"id": "06-boss-components",
+			"path": "docs/design/component-sheets/system-v1/06-boss-components.png",
+			"sha256": "06e01ff50b6c76edc74b351fe2d324f49a5d0c91381919f8f449ed1d353f3270",
+			"width": 2048,
+			"height": 1152,
+			"providers": [
+				"VehicleStageVisualProfile",
+				"VehicleVisualSystemRegistry",
+				"NotoSansKR-Variable"
+			]
+		},
+		{
+			"id": "07-projectile-telegraph-vfx",
+			"path": "docs/design/component-sheets/system-v1/07-projectile-telegraph-vfx.png",
+			"sha256": "306af002e489f63978f2870c78ebc9065474371dd75fbcba221f5a1d7329dd66",
+			"width": 2048,
+			"height": 1152,
+			"providers": [
+				"VehicleStageVisualProfile",
+				"VehicleVisualSystemRegistry",
+				"NotoSansKR-Variable"
+			]
+		},
+		{
+			"id": "08-reward-upgrade-glyphs",
+			"path": "docs/design/component-sheets/system-v1/08-reward-upgrade-glyphs.png",
+			"sha256": "916620d0fa40fa98877894c5c5a3fd24fa5508935bb4ce26ee6e770566bf7764",
+			"width": 2048,
+			"height": 1152,
+			"providers": [
+				"VehicleStageVisualProfile",
+				"VehicleVisualSystemRegistry",
+				"NotoSansKR-Variable"
+			]
+		},
+		{
+			"id": "09-hud-minimap-markers",
+			"path": "docs/design/component-sheets/system-v1/09-hud-minimap-markers.png",
+			"sha256": "c236a0f728abd0889b0ccd08a0c8ac5208e3860cf65b78ef58e2b3ba0e150ed5",
 			"width": 2048,
 			"height": 1152,
 			"providers": [
@@ -32,7 +128,31 @@
 		{
 			"id": "10-ui-controls-states",
 			"path": "docs/design/component-sheets/system-v1/10-ui-controls-states.png",
-			"sha256": "7d9269567c4deaa67224383820d89f7616b148f0edfc32d9e8aa48c09c596730",
+			"sha256": "491cbcd4a455507e2b6acbfd17ff926ba8a443b9d39b7cce7eef23bd8d40c159",
+			"width": 2048,
+			"height": 1152,
+			"providers": [
+				"VehicleStageVisualProfile",
+				"VehicleVisualSystemRegistry",
+				"NotoSansKR-Variable"
+			]
+		},
+		{
+			"id": "11-modal-flow-contact-sheet",
+			"path": "docs/design/component-sheets/system-v1/11-modal-flow-contact-sheet.png",
+			"sha256": "4f3d4493813f582f467b758cc1cbfd82a1132fc3bcfe7c057d0a81053b61aa51",
+			"width": 2048,
+			"height": 1152,
+			"providers": [
+				"VehicleStageVisualProfile",
+				"VehicleVisualSystemRegistry",
+				"NotoSansKR-Variable"
+			]
+		},
+		{
+			"id": "12-pressure-accessibility",
+			"path": "docs/design/component-sheets/system-v1/12-pressure-accessibility.png",
+			"sha256": "16cc6a197de76d77a97bf80888cba0d2a29acc72bbdb296977270b5aef56ed6f",
 			"width": 2048,
 			"height": 1152,
 			"providers": [
@@ -42,16 +162,6 @@
 			]
 		}
 	],
-	"planned_sheet_ids": [
-		"02-world-surfaces",
-		"03-world-facilities",
-		"04-player-components",
-		"05-enemy-components",
-		"06-boss-components",
-		"07-projectile-telegraph-vfx",
-		"08-reward-upgrade-glyphs",
-		"09-hud-minimap-markers",
-		"11-modal-flow-contact-sheet",
-		"12-pressure-accessibility"
-	]
+	"planned_sheet_ids": [],
+	"publication_status": "complete-design-set"
 }

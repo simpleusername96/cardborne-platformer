@@ -23,10 +23,14 @@ func _run() -> void:
 	var pixel_enabled := bool(snapshot.get("pixel_enabled", false))
 	_expect(int(snapshot["enemy_capacity"]) == 320, "renderer shares the 320-hostile store capacity")
 	_expect(int(snapshot["status_arc_capacity"]) == 960, "status overlays scale from shared enemy capacity")
-	_expect(pixel_enabled, "approved pixel player presentation is active")
+	_expect(pixel_enabled, "unmigrated enemy atlas presentation remains active until the enemy phase")
 	_expect(
-		int(snapshot["batches"]) == 23,
-		"pixel presentation coalesces shared atlases into 23 retained batches"
+		not bool(snapshot.get("migrated_combat_pixel_fallback", true)),
+		"player, projectile, reward and effect families have no pixel fallback"
+	)
+	_expect(
+		int(snapshot["batches"]) <= 50,
+		"combat presentation remains inside the retained fifty-batch ceiling"
 	)
 	_expect(Art.validate_contract().is_empty(), "combat visual profile satisfies the locked readability contract")
 	_expect(
@@ -35,23 +39,16 @@ func _run() -> void:
 			and AttackContract.HEAVY_PROJECTILE_RADIUS == 7.0,
 		"hostile projectile collision radii remain 5/6/7 px"
 	)
-	if pixel_enabled:
-		_expect(
-			renderer.get_node_or_null("Pixel_player_projectiles") != null,
-			"player projectiles use one retained pixel-atlas batch"
-		)
-		_expect(
-			renderer.get_node_or_null("Pixel_player_under") != null
-				and renderer.get_node_or_null("Overlay_player_barrel") != null,
-			"player chassis and live aimed barrel use retained batches"
-		)
-	else:
-		_expect(
-			renderer.get_node_or_null("Projectile_trail_player_kinetic") != null,
-			"player ownership uses its one rendered kinetic trail batch"
-		)
-	var shared_hostile_trail = renderer.get_node_or_null(
-		"Projectile_trail_enemy_affinities"
+	_expect(
+		renderer.get_node_or_null("Projectile_trail_player_kinetic") != null,
+		"player ownership uses its rendered kinetic trail batch"
+	)
+	_expect(
+		renderer.get_node_or_null("Player_hull") != null
+			and renderer.get_node_or_null("Player_engine") != null
+			and renderer.get_node_or_null("Player_engine_flare") != null
+			and renderer.get_node_or_null("Player_primary_mount") != null,
+		"player hull, rigid engine, flare and independent aim mount use component batches"
 	)
 	for affinity in AttackContract.AFFINITIES:
 		_expect(
@@ -60,7 +57,12 @@ func _run() -> void:
 		)
 		if affinity == AttackContract.SUPPORT:
 			continue
-		_expect(shared_hostile_trail != null, "hostile affinities share one atlas batch")
+		_expect(
+			renderer.get_node_or_null(
+				"Projectile_trail_enemy_%s" % String(affinity)
+			) != null,
+			"hostile %s affinity uses its descriptor mesh batch" % affinity
+		)
 	_expect(
 		renderer.get_node_or_null("Projectile_core_enemy") != null,
 		"hostile projectiles expose one shared collision-bounded core batch"
@@ -192,92 +194,62 @@ func _run() -> void:
 		),
 		"batched buffer preserves the selected enemy presentation scale"
 	)
-	if pixel_enabled:
-		var projectile_pixel := renderer.get_node("Pixel_player_projectiles") as MultiMeshInstance2D
-		var projectile_pixel_buffer := projectile_pixel.multimesh.buffer
-		_expect(
-			projectile_pixel.multimesh.visible_instance_count == 1,
-			"one live player projectile becomes one retained atlas instance"
-		)
-		_expect(
-			is_equal_approx(
-				Vector2(projectile_pixel_buffer[0], projectile_pixel_buffer[4]).length(),
-				16.0 * Art.PLAYER_PRIMARY_PROJECTILE_SCALE * 5.0 / 6.0
+	var projectile_head := renderer.get_node("Projectile_head_player") as MultiMeshInstance2D
+	var projectile_trail := renderer.get_node("Projectile_trail_player_kinetic") as MultiMeshInstance2D
+	var head_buffer := projectile_head.multimesh.buffer
+	var trail_buffer := projectile_trail.multimesh.buffer
+	_expect(
+		Vector2(head_buffer[3], head_buffer[7]).is_equal_approx(Vector2(330.0, 300.0)),
+		"projectile head remains centered on collision state"
+	)
+	_expect(
+		Vector2(head_buffer[0], head_buffer[4]).is_equal_approx(projectile_direction * 5.0),
+		"projectile head radius exactly matches its collision radius"
+	)
+	_expect(
+		Vector2(trail_buffer[3], trail_buffer[7]).is_equal_approx(
+			Vector2(330.0, 300.0) - projectile_direction * 18.5
+		),
+		"player ownership trail stays attached behind the five-pixel head"
+	)
+	_expect(
+		Vector2(trail_buffer[0], trail_buffer[4]).is_equal_approx(projectile_direction * 47.0),
+		"projectile trail preserves direction and fixed length"
+	)
+	_expect(
+		Vector2(trail_buffer[1], trail_buffer[5]).is_equal_approx(
+			projectile_direction.rotated(PI * 0.5) * 7.5
+		),
+		"player ownership trail width follows the collision radius"
+	)
+	var player_hull := renderer.get_node("Player_hull") as MultiMeshInstance2D
+	var player_engine := renderer.get_node("Player_engine") as MultiMeshInstance2D
+	var player_primary := renderer.get_node("Player_primary_mount") as MultiMeshInstance2D
+	var hull_buffer := player_hull.multimesh.buffer
+	var engine_buffer := player_engine.multimesh.buffer
+	var primary_buffer := player_primary.multimesh.buffer
+	_expect(
+		player_hull.multimesh.visible_instance_count == 1
+			and Vector2(hull_buffer[3], hull_buffer[7]).is_equal_approx(
+				Vector2(260.0, 300.0)
 			),
-			"player primary projectile pixel footprint grows by the locked 1.25x"
-		)
-		_expect(
-			Vector2(projectile_pixel_buffer[3], projectile_pixel_buffer[7]).is_equal_approx(
-				Vector2(330.0, 300.0)
-			),
-			"pixel projectile remains centered on collision state"
-		)
-		_expect(
-			projectile_pixel_buffer[12] >= 0.0
-				and projectile_pixel_buffer[13] >= 0.0
-				and projectile_pixel_buffer[14] > 0.0
-				and projectile_pixel_buffer[15] > 0.0,
-			"pixel projectile uploads a bounded non-empty atlas region"
-		)
-		var player_under := renderer.get_node("Pixel_player_under") as MultiMeshInstance2D
-		var player_under_buffer := player_under.multimesh.buffer
-		var player_barrel := renderer.get_node("Overlay_player_barrel") as MultiMeshInstance2D
-		var player_barrel_buffer := player_barrel.multimesh.buffer
-		_expect(
-			player_under.multimesh.visible_instance_count >= 2,
-			"pixel player publishes its chassis and propulsion layers"
-		)
-		_expect(
-			is_equal_approx(
-				Vector2(player_under_buffer[0], player_under_buffer[4]).length(),
-				Art.PLAYER_VISUAL_RADIUS
-			),
-			"pixel player uses the locked fifty-pixel presentation radius"
-		)
-		_expect(
-			player_barrel.multimesh.visible_instance_count == 2,
-			"pixel player publishes a live outline and core for its aimed barrel"
-		)
-		_expect(
-			Vector2(player_barrel_buffer[3], player_barrel_buffer[7])
-				.is_equal_approx(Vector2(260.0, 322.0))
-				and Vector2(player_barrel_buffer[0], player_barrel_buffer[4])
-					.normalized().is_equal_approx(Vector2.DOWN),
-			"live barrel follows aim independently from the right-facing chassis"
-		)
-	else:
-		var projectile_head := renderer.get_node("Projectile_head_player") as MultiMeshInstance2D
-		var projectile_trail := renderer.get_node("Projectile_trail_player_kinetic") as MultiMeshInstance2D
-		var head_buffer := projectile_head.multimesh.buffer
-		var trail_buffer := projectile_trail.multimesh.buffer
-		_expect(
-			Vector2(head_buffer[3], head_buffer[7]).is_equal_approx(Vector2(330.0, 300.0)),
-			"projectile head remains centered on collision state"
-		)
-		_expect(
-			Vector2(head_buffer[0], head_buffer[4]).is_equal_approx(projectile_direction * 5.0),
-			"projectile head radius exactly matches its collision radius"
-		)
-		_expect(
-			Vector2(trail_buffer[3], trail_buffer[7]).is_equal_approx(
-				Vector2(330.0, 300.0) - projectile_direction * 18.5
-			),
-			"player ownership trail stays attached behind the five-pixel head"
-		)
-		_expect(
-			Vector2(trail_buffer[0], trail_buffer[4]).is_equal_approx(projectile_direction * 47.0),
-			"projectile trail preserves direction and fixed length"
-		)
-		_expect(
-			Vector2(trail_buffer[1], trail_buffer[5]).is_equal_approx(
-				projectile_direction.rotated(PI * 0.5) * 7.5
-			),
-			"player ownership trail width follows the collision radius"
-		)
-		_expect(
-			is_equal_approx(trail_buffer[11], 0.5),
-			"projectile trail remains translucent"
-		)
+		"player hull uses one centered component instance"
+	)
+	_expect(
+		Vector2(engine_buffer[3], engine_buffer[7]).is_equal_approx(
+			Renderer.player_engine_sockets(
+				Vector2(260.0, 300.0),
+				Vector2.RIGHT
+			)[0]
+		),
+		"engine components stay on the first continuous rear socket"
+	)
+	_expect(
+		Vector2(primary_buffer[0], primary_buffer[4]).normalized().is_equal_approx(
+			Vector2.DOWN
+		),
+		"primary mount follows aim independently from the right-facing hull"
+	)
 	var status_batch := renderer.get_node("Overlay_status_arc") as MultiMeshInstance2D
 	_expect(
 		status_batch.multimesh.instance_count == Renderer.STATUS_ARC_CAPACITY,
@@ -285,7 +257,7 @@ func _run() -> void:
 	)
 	_expect(status_batch.multimesh.visible_instance_count == 3, "three simultaneous elements render as three large retained arcs")
 	var hostile_trail := renderer.get_node(
-		"Projectile_trail_enemy_affinities" if pixel_enabled else "Projectile_trail_enemy_arc"
+		"Projectile_trail_enemy_arc"
 	) as MultiMeshInstance2D
 	var hostile_trail_buffer := hostile_trail.multimesh.buffer
 	var hostile_core := renderer.get_node("Projectile_core_enemy") as MultiMeshInstance2D

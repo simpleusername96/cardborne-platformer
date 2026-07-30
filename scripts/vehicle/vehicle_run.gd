@@ -79,6 +79,7 @@ const PRIMARY_PROJECTILE_RADIUS := 7.0
 const DASH_DURATION := 0.20
 const DASH_SPEED := 1220.0
 const DASH_COOLDOWN := 1.25
+const MAX_DASH_AFTERIMAGES := 5
 const PASSIVE_RANGE := 560.0
 const PASSIVE_COOLDOWN := 1.35
 const EMP_COOLDOWN := 13.0
@@ -145,6 +146,7 @@ var player_hull_direction := Vector2.RIGHT
 var player_aim_direction := Vector2.RIGHT
 var player_health := PLAYER_MAX_HEALTH
 var player_invulnerable := 0.0
+var player_protection_sources: Dictionary = {}
 var player_hit_flash := 0.0
 var player_primary_weapon := PrimaryWeapon.new()
 var _primary_shot_serial := 0
@@ -557,6 +559,7 @@ func _reset_run(
 	player_aim_direction = Vector2.RIGHT
 	player_health = _player_max_health()
 	player_invulnerable = 0.0
+	player_protection_sources.clear()
 	player_hit_flash = 0.0
 	player_primary_weapon.reset()
 	_primary_shot_serial = 0
@@ -1102,6 +1105,7 @@ func _update_player(delta: float) -> void:
 	var previous_position := player_position
 	lifesteal_budget = minf(6.0, lifesteal_budget + 6.0 * delta)
 	player_invulnerable = maxf(0.0, player_invulnerable - delta)
+	_advance_player_protection_sources(delta)
 	var primary_held := Input.is_action_pressed("primary_fire")
 	player_primary_weapon.tick(delta, primary_held)
 	player_dash_cooldown = maxf(0.0, player_dash_cooldown - delta)
@@ -1154,6 +1158,29 @@ func _update_player(delta: float) -> void:
 		_ui.notify(tr("NOTIFY_CALIBRATION_COMPLETE"), 3.0, Rules.MOSS)
 
 
+func _grant_player_protection(duration: float, source: StringName) -> void:
+	var bounded_duration := maxf(0.0, duration)
+	player_invulnerable = maxf(player_invulnerable, bounded_duration)
+	if source != &"" and bounded_duration > 0.0:
+		player_protection_sources[source] = maxf(
+			float(player_protection_sources.get(source, 0.0)),
+			bounded_duration
+		)
+
+
+func _advance_player_protection_sources(delta: float) -> void:
+	for source_variant in player_protection_sources.keys():
+		var source := StringName(source_variant)
+		var remaining := maxf(
+			0.0,
+			float(player_protection_sources[source]) - maxf(0.0, delta)
+		)
+		if remaining <= 0.0:
+			player_protection_sources.erase(source)
+		else:
+			player_protection_sources[source] = remaining
+
+
 func _update_terrain(delta: float) -> void:
 	var events := terrain_runtime.advance(
 		delta, player_position, player_health, _player_max_health()
@@ -1168,8 +1195,9 @@ func _update_terrain(delta: float) -> void:
 			&"transit":
 				player_position = Vector2(event["destination"])
 				player_velocity = Vector2.ZERO
-				player_invulnerable = maxf(
-					player_invulnerable, float(event["invulnerability"])
+				_grant_player_protection(
+					float(event["invulnerability"]),
+					&"transit"
 				)
 				_add_effect("transit", player_position, Art.MINT, 0.34, 96.0)
 				_play_sound(&"dash", 1.18)
@@ -1203,7 +1231,7 @@ func _start_dash(move_input: Vector2) -> void:
 		player_dash_direction = player_hull_direction
 	player_dash_timer = DASH_DURATION
 	player_dash_cooldown = _dash_cooldown_max()
-	player_invulnerable = DASH_DURATION + 0.08
+	_grant_player_protection(DASH_DURATION + 0.08, &"dash")
 	player_dash_trail_timer = 0.0
 	stats_dash_uses += 1
 	tutorial_dash = true
@@ -1226,7 +1254,15 @@ func _update_dash(delta: float) -> void:
 	player_dash_trail_timer -= delta
 	if player_dash_trail_timer <= 0.0:
 		player_dash_trail_timer = 0.035
-		_add_effect("afterimage", before, Rules.CYAN, 0.20, 30.0, player_dash_direction)
+		if _live_effect_count("afterimage") < MAX_DASH_AFTERIMAGES:
+			_add_effect(
+				"afterimage",
+				before,
+				Rules.CYAN,
+				0.20,
+				30.0,
+				player_dash_direction
+			)
 		if applied_upgrades.has(&"ion_wake"):
 			damaging_trails.append({
 				"pos": before,
@@ -1245,6 +1281,14 @@ func _update_dash(delta: float) -> void:
 			_clear_hostile_projectiles(player_position, 170.0)
 			_add_effect("shock", player_position, Rules.AMBER, 0.38, 170.0)
 			_play_sound(&"emp", 1.55)
+
+
+func _live_effect_count(kind: String) -> int:
+	var count := 0
+	for effect in effects:
+		if String(effect.get("kind", "")) == kind:
+			count += 1
+	return count
 
 
 func _apply_phase_shear(from: Vector2, to: Vector2) -> void:
@@ -1564,7 +1608,7 @@ func _query_enemy_radius_into(center: Vector2, radius: float, output: Array[Enem
 func _start_emp() -> void:
 	player_emp_startup = EMP_STARTUP
 	player_emp_cooldown = _emp_cooldown_max()
-	player_invulnerable = maxf(player_invulnerable, 0.24)
+	_grant_player_protection(0.24, &"emp")
 	_play_sound(&"emp_start")
 	_add_effect("emp_start", player_position, Art.BOSS_MAGENTA, EMP_STARTUP, _emp_radius())
 
@@ -3416,7 +3460,7 @@ func _damage_player(amount: float, source: String, blockable: bool, enemy_source
 			remaining
 		)
 	player_hit_flash = PLAYER_HIT_FLASH_DURATION
-	player_invulnerable = maxf(player_invulnerable, PLAYER_HIT_INVULNERABILITY)
+	_grant_player_protection(PLAYER_HIT_INVULNERABILITY, &"hit")
 	if not _reduced_motion_enabled():
 		camera_shake = maxf(camera_shake, 3.0)
 	_last_damage_source = source
@@ -4088,9 +4132,9 @@ func _begin_stage_transition() -> void:
 	player_dash_trail_timer = 0.0
 	player_emp_startup = 0.0
 	player_health = _player_max_health()
-	player_invulnerable = maxf(
-		player_invulnerable,
-		STAGE_TRANSITION_INVULNERABILITY
+	_grant_player_protection(
+		STAGE_TRANSITION_INVULNERABILITY,
+		&"stage_transition"
 	)
 	experience_recall_timer = 0.0
 	experience_runtime.clear_shards()
@@ -4575,6 +4619,7 @@ func _combat_presentation_snapshot() -> Dictionary:
 		"player_hit": player_hit_flash > 0.0,
 		"player_hit_remaining": player_hit_flash,
 		"player_invulnerable_remaining": player_invulnerable,
+		"protection_sources": player_protection_sources.duplicate(),
 		"muzzle_flash": player_muzzle_flash,
 		"barrier_strength": player_barrier_strength,
 		"reduced_motion": _reduced_motion_enabled(),
@@ -4826,59 +4871,60 @@ func _draw_pickups_and_crates() -> void:
 		var color := _pickup_color(kind)
 		var bob := 0.0 if _reduced_motion_enabled() else sin(float(pickup["pulse"])) * 3.0
 		position.y += bob
-		var pickup_family := (
-			&"repair_pickup"
-			if kind == &"repair"
-			else &"experience_recall_pickup"
-		)
-		if _draw_pixel_asset(
-			pickup_family,
-			kind,
-			&"idle",
-			position,
-			Vector2.ONE * (Art.PICKUP_PLINTH_RADIUS * 2.0)
-		):
-			continue
 		var plinth_radius := Art.PICKUP_PLINTH_RADIUS
-		draw_circle(position + Vector2(7.0, 9.0), plinth_radius, Art.COBALT_DEEP)
-		draw_circle(position, plinth_radius, Art.IVORY_BRIGHT)
-		draw_circle(position, plinth_radius - 8.0, Art.STRUCTURE_MID)
+		draw_colored_polygon(
+			_regular_polygon(position + Vector2(6.0, 8.0), plinth_radius, 6),
+			Art.SPACE_BLACK
+		)
+		draw_colored_polygon(
+			_regular_polygon(position, plinth_radius, 6),
+			Art.TEXT_PRIMARY
+		)
+		draw_colored_polygon(
+			_regular_polygon(position, plinth_radius - 7.0, 6),
+			Art.SURFACE
+		)
 		match kind:
 			&"repair":
 				draw_rect(Rect2(position - Vector2(7.0, 22.0), Vector2(14.0, 44.0)), color)
 				draw_rect(Rect2(position - Vector2(22.0, 7.0), Vector2(44.0, 14.0)), color)
 			&"experience_recall":
-				draw_arc(position, 22.0, -PI * 0.15, PI * 1.55, 20, color, 8.0)
-				draw_colored_polygon(PackedVector2Array([
-					position + Vector2(24.0, -11.0), position + Vector2(30.0, 9.0), position + Vector2(10.0, 3.0),
-				]), color)
-				draw_colored_polygon(_regular_polygon(position, 8.0, 4, PI / 4.0), Art.MUSTARD)
+				for sign_value in [-1.0, 1.0]:
+					var direction := Vector2(sign_value, 0.0)
+					_draw_terrain_chevron(
+						position + direction * 14.0,
+						-direction,
+						24.0,
+						color,
+						7.0
+					)
+				draw_colored_polygon(
+					_regular_polygon(position, 8.0, 4, PI / 4.0),
+					Art.MUSTARD
+				)
 	for crate in crates:
 		if not bool(crate["alive"]):
 			continue
 		var position := Vector2(crate["pos"])
 		var face := Art.IVORY_BRIGHT if float(crate["flash"]) > 0.0 else Art.IVORY_SHADE
-		var crate_variant := (
-			&"repair_contents"
-			if StringName(crate["drop"]) == &"repair"
-			else &"recall_contents"
-		)
-		if _draw_pixel_asset(
-			&"reward_crate",
-			crate_variant,
-			&"intact",
-			position,
-			Vector2.ONE * 88.0,
-			Color(1.0, 0.65, 0.65) if float(crate["flash"]) > 0.0 else Color.WHITE
-		):
-			continue
 		var crate_rect := Rect2(position - Vector2(38.0, 38.0), Vector2(76.0, 76.0))
 		var edge := crate_rect
 		edge.position += Vector2(8.0, 10.0)
 		draw_colored_polygon(Art.stepped_rect(edge, 12.0), Art.MUSTARD_DARK)
 		draw_colored_polygon(Art.stepped_rect(crate_rect, 12.0), face)
-		draw_colored_polygon(_regular_polygon(position, 23.0, 4, PI / 4.0), Art.MUSTARD)
-		draw_colored_polygon(_regular_polygon(position, 11.0, 4, PI / 4.0), Art.STRUCTURE_BASE)
+		var content_color := (
+			Art.SUPPORT
+			if StringName(crate["drop"]) == &"repair"
+			else Art.SYSTEM
+		)
+		draw_colored_polygon(
+			_regular_polygon(position, 23.0, 4, PI / 4.0),
+			content_color
+		)
+		draw_colored_polygon(
+			_regular_polygon(position, 11.0, 4, PI / 4.0),
+			Art.SURFACE
+		)
 
 
 func _draw_pixel_asset(

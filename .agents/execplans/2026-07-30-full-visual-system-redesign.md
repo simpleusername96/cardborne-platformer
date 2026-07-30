@@ -96,7 +96,7 @@ campaign flow는 visual rework를 이유로 바꾸지 않는다.
 | combat renderer validator | current pixel mode는 23 retained batch, total ceiling은 50이다. | shared mesh/MultiMesh architecture와 50-batch ceiling을 유지한다. | Phase 3 이후 매 batch |
 | enemy strategy 문서 | `Gather → Lock → Execute → Break`, global permission과 stage별 formation idea가 있다. | 4방향 horde는 유지하고 일부 authored squad에만 collective tactic을 단계적으로 적용한다. | Phase 5 |
 | boss patterns/runtime | 5 boss가 공통 primitive 순서와 health ratio phase를 공유해 burst가 phase를 건너뛸 수 있다. | 5개 고유 arena exam, sequential phase floor와 objective gate를 사용한다. | Phase 6 |
-| horde recovery ExecPlan | 기능 회귀는 통과했지만 authoritative native/Web timing과 lifecycle gate가 열려 있다. | combat/world renderer publication은 해당 gate 뒤에만 시작한다. | Inter-plan Gate |
+| horde recovery ExecPlan | 기능 회귀는 통과했지만 authoritative native/Web timing과 lifecycle gate가 열려 있다. | 사용자가 지정한 최종 asset/UI build에서 동일 threshold로 실행한다. | Phase 8 final gate |
 | localization/validators | ko/en, 3 viewport, guidebook, report, UI layout validator가 이미 있다. | existing behavioral coverage를 보존하고 rendered bounds/accessibility oracle을 추가한다. | 매 UI phase |
 
 ## Input Classification
@@ -370,12 +370,10 @@ campaign flow는 visual rework를 이유로 바꾸지 않는다.
 
 ## Assumptions
 
-- horde recovery plan의 capacity, pressure, timing과 lifecycle gate가 renderer
-  migration보다 선행 authority다.
-- Phase 1과 Phase 2의 docs, sheet harness, UI foundation, upgrade와 pickup은
-  horde gate 전에도 진행할 수 있다.
-- `vehicle_combat_renderer.gd`, world renderer publication와 enemy hot path를
-  건드리는 Phase 3 이후는 Inter-plan Gate 뒤에 시작한다.
+- horde recovery plan의 capacity, pressure, timing과 lifecycle threshold는
+  final release authority다.
+- 2026-07-30 사용자 지시에 따라 asset과 UI publication을 먼저 완료하고,
+  그 최종 build로 horde native/Web/capacity/lifecycle gate를 실행한다.
 - current visual footprint와 gameplay collision radius는 presentation
   redesign과 독립적으로 유지한다.
 - boss objective는 base primary, dash와 EMP만으로 해결 가능해야 하며 특정
@@ -500,13 +498,14 @@ authored count는 유지하며 surge당 최대 1개 squad만 tactic tag를 받�
 - [x] Phase 1에서 active visual authority, token과 sheet harness를 고정한다.
 - [x] Phase 2에서 non-pixel UI foundation, upgrade clarity와 pickup contact를
   완료한다.
-- [ ] Inter-plan Gate에서 horde recovery의 authoritative baseline을 확인한다.
-- [ ] Phase 3에서 player/engine/dash/projectile/reward/effect를 publication한다.
+- [x] Sheet-first gate에서 12개 component design sheet를 publication한다.
+- [x] Phase 3에서 player/engine/dash/projectile/reward/effect를 publication한다.
 - [ ] Phase 4에서 three field, facility와 minimap world layer를 교체한다.
 - [ ] Phase 5에서 enemy visual family와 collective tactic을 적용한다.
 - [ ] Phase 6에서 five boss exam과 objective visual을 적용한다.
 - [ ] Phase 7에서 HUD와 모든 modal composition을 같은 system으로 완성한다.
-- [ ] Phase 8에서 legacy pixel stack을 제거하고 final release gate를 통과한다.
+- [ ] Phase 8에서 legacy pixel stack을 제거하고 horde recovery를 포함한 final
+  release gate를 통과한다.
 
 ## Milestones
 
@@ -577,7 +576,7 @@ runtime에서 제거한다.
 - upgrade behavior/application은 UI로 이동하지 않는다.
 - pickup effect, spawn와 budget은 contact helper로 이동하지 않는다.
 
-### Inter-plan Gate — Horde recovery completion
+### Deferred final gate — Horde recovery completion
 
 - [ ] horde plan Phase 5/6와 모든 objective completion criterion이 완료된다.
 - [ ] clean commit에서 native/Web `production_replay`, `peak_horde`,
@@ -585,22 +584,46 @@ runtime에서 제거한다.
 - [ ] target subsystem/frame retention threshold와 evidence path를 이 plan
   실행 기록에 고정한다.
 
-이 gate 전에는 combat/world renderer publication, enemy hot path와 pressure
-fixture를 merge하지 않는다.
+2026-07-30 사용자 지시에 따라 이 gate는 모든 asset과 UI publication 뒤
+Phase 8 final release gate에서 실행한다. threshold, clean-commit 조건과
+failure rule은 낮추지 않는다.
+
+### Sheet-first publication gate — Complete component design set
+
+2026-07-30 사용자가 Phase 3 draft의 player asset이 완성된 것인지 확인한 뒤,
+crude generic polygon을 family별로 부분 publication하는 순서를 중단했다.
+runtime 교체 전 다음 12개 sheet를 하나의 일관된 component set으로 먼저
+완성한다.
+
+- [x] `01`–`12` sheet가 모두 runtime token/catalog provider에서 생성된다.
+- [x] player는 compact symmetric hull, rigid twin rear engine, independent aim
+  mount로 고정한다.
+- [x] enemy 18 role, boss 5종, projectile 6 affinity, reward/facility, HUD marker,
+  control state와 modal 8종이 각 sheet에서 shape-first로 구분된다.
+- [x] player/enemy/projectile/reward는 gameplay 1× composition strip에서
+  크기와 우선순위를 확인한다.
+- [x] pressure sheet는 grayscale, reduced motion, core/tail, center-clear,
+  ko/en text-fit 검증 슬롯을 포함한다.
+- [x] sheet hash가 연속 두 번 생성에서 동일하고 manifest가 12개 record와
+  provider fingerprint를 가진다.
+
+이 gate는 direction 탐색 단계가 아니다. accepted general-SF master를
+silhouette seed로 사용하며 production geometry는 catalog와 runtime mesh가
+소유한다. sheet는 inspection artifact이고 runtime texture로 잘라 쓰지 않는다.
 
 ### Phase 3 — Player, projectile, reward and feedback publication
 
 **목표:** 최초 feedback의 engine/dash 문제를 포함한 가장 자주 보는 combat
 layer를 새 component owner로 전환한다.
 
-- [ ] source-specific protection windows를 도입하고 snapshot을 분리한다.
-- [ ] player hull, rear engine mount/flame와 independent aim mount를 새 catalog로
+- [x] source-specific protection windows를 도입하고 snapshot을 분리한다.
+- [x] player hull, rear engine mount/flame와 independent aim mount를 새 catalog로
   연결한다.
-- [ ] dash radial asset/ring을 제거하고 normal/reduced-motion cue를 연결한다.
-- [ ] player/hostile projectile, affinity core/tail, XP, repair, recall, crate,
+- [x] dash radial asset/ring을 제거하고 normal/reduced-motion cue를 연결한다.
+- [x] player/hostile projectile, affinity core/tail, XP, repair, recall, crate,
   secondary와 transient effect를 새 catalog로 연결한다.
-- [ ] migrated family는 pixel fallback 없이 새 owner만 사용한다.
-- [ ] player/reward/projectile/effect sheet와 gameplay 1× capture를 생성한다.
+- [x] migrated family는 pixel fallback 없이 새 owner만 사용한다.
+- [x] player/reward/projectile/effect sheet와 gameplay 1× capture를 생성한다.
 
 **Batch acceptance**
 
@@ -945,7 +968,8 @@ contrast, timing과 performance 조정으로 제한한다.
 - 기존 field title은 content identifier일 뿐 visual motif가 아니다.
 - visual redesign 때문에 gameplay map, count, speed, radius와 controls를
   바꾸지 않는다.
-- horde plan의 미완료 성능 gate를 이 plan에서 우회하지 않는다.
+- horde plan의 미완료 성능 gate는 사용자 지시에 따라 final asset/UI build에서
+  실행하며 threshold와 evidence contract는 그대로 유지한다.
 - old enemy strategy의 “2–3 front 축소”는 current four-quadrant horde와
   충돌하므로 채택하지 않고 collective phase/permission만 채택한다.
 - boss strength는 HP가 아니라 phase skip 방지, unique objective, readable
@@ -979,21 +1003,33 @@ contrast, timing과 performance 조정으로 제한한다.
   Web export·deployment→gameplay smoke가 통과했다. Web smoke의 legacy
   ArrayMesh 초기화 경고 66건은 startup 뒤 증가하지 않았으며 Phase 3
   renderer publication의 관찰 항목으로 유지한다.
-- [ ] Inter-plan horde gate
-- [ ] Phase 3 player/projectile/reward/feedback
+- [x] Sheet-first component design set
+  - 12개 `2048×1152` sheet와 complete manifest를 runtime provider에서
+    생성했다.
+  - 두 output set의 12개 PNG SHA-256이 일치했다.
+  - player는 twin rigid engine과 independent aim mount, boss는 5개
+    body/module, pressure sheet는 gameplay 1× inspection composition을
+    사용한다.
+- [x] Phase 3 player/projectile/reward/feedback
+  - player protection source, engine socket 360°/5°, dash non-radial,
+    projectile collision extent와 migrated pixel fallback validator가 통과했다.
+  - `visual-system-phase3-ko-960-sheetfirst` runtime capture에서 player,
+    repair/recall/XP와 upgrade surface를 확인했다.
+  - 이 phase의 performance retention 수치는 사용자 지시에 따라 Phase 8
+    clean final build에서 실행한다.
 - [ ] Phase 4 world/facilities/minimap
 - [ ] Phase 5 enemy/tactics
 - [ ] Phase 6 bosses
 - [ ] Phase 7 HUD/modal suite
 - [ ] Phase 8 retirement/final gates
+- [ ] Final horde native/Web/capacity/lifecycle gate
 
 ## Next Steps
 
-1. horde recovery completion과 clean performance baseline을 확인한다.
-2. Phase 3에서 player, rigid engine, directional dash, projectile/reward/effect
-   publication을 완료한다.
-3. Phase 4 이후 world → enemy → boss → complete UI 순서로
-   publication하고 Phase 8에서 legacy를 삭제한다.
+1. Phase 4에서 three-field world, facility와 minimap layer를 publication한다.
+2. Phase 5 이후 enemy → boss → complete UI 순서로 publication한다.
+3. Phase 8에서 legacy를 삭제한 최종 build로 horde recovery와 전체
+   native/Web/capacity/lifecycle gate를 실행한다.
 
 ## Completion Criteria
 

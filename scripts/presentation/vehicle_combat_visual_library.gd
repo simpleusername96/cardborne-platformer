@@ -6,6 +6,11 @@ extends RefCounted
 
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd")
+const ActorCatalog = preload("res://scripts/presentation/components/vehicle_actor_visual_catalog.gd")
+const ProjectileCatalog = preload("res://scripts/presentation/components/vehicle_projectile_visual_catalog.gd")
+const RewardCatalog = preload("res://scripts/presentation/components/vehicle_reward_visual_catalog.gd")
+const EffectCatalog = preload("res://scripts/presentation/components/vehicle_effect_visual_catalog.gd")
+const Components = preload("res://scripts/presentation/components/vehicle_component_mesh_library.gd")
 
 const ENEMY_ARCHETYPES: Array[StringName] = [
 	&"scrap_drone", &"needle_drone", &"spark_minelet", &"chaser",
@@ -39,15 +44,14 @@ static func boss_mesh(variant: StringName) -> ArrayMesh:
 		{"points":shadow, "color":Color(0.22, 0.18, 0.22, 0.92)},
 		{"points":body, "color":Color.WHITE},
 	]
-	var accent := _boss_accent_polygon(variant)
-	if not accent.is_empty():
-		polygons.append({"points":accent, "color":Color(0.62, 0.62, 0.62, 1.0)})
+	polygons.append_array(_boss_detail_polygons(variant))
 	return polygon_mesh(polygons)
 
 
 static func projectile_head_mesh(
 	affinity: StringName = AttackContract.KINETIC
 ) -> ArrayMesh:
+	var _descriptor := ProjectileCatalog.descriptor(affinity)
 	return polygon_mesh(_projectile_head_polygons(affinity))
 
 
@@ -78,6 +82,7 @@ static func hostile_projectile_core_mesh() -> ArrayMesh:
 
 
 static func hostile_projectile_envelope_mesh(affinity: StringName) -> ArrayMesh:
+	var _descriptor := ProjectileCatalog.descriptor(affinity)
 	var polygons: Array[Dictionary] = [{
 		"points":_regular_polygon(Vector2.ZERO, 1.0, 12),
 		"color":Color(1.0, 1.0, 1.0, 0.16),
@@ -87,6 +92,7 @@ static func hostile_projectile_envelope_mesh(affinity: StringName) -> ArrayMesh:
 
 
 static func projectile_trail_mesh(affinity: StringName) -> ArrayMesh:
+	var _descriptor := ProjectileCatalog.descriptor(affinity)
 	var polygons: Array[Dictionary] = []
 	match AttackContract.normalize_affinity(affinity):
 		AttackContract.THERMAL:
@@ -367,36 +373,66 @@ static func support_timer_segment_mesh() -> ArrayMesh:
 
 
 static func player_hull_mesh() -> ArrayMesh:
-	var hull := PackedVector2Array([
-		Vector2(1.0, 0.0), Vector2(0.18, -0.74),
-		Vector2(-0.72, -1.0), Vector2(-0.48, -0.18),
-		Vector2(-1.0, 0.54), Vector2(0.08, 0.70),
-	])
+	var descriptor := ActorCatalog.descriptor(&"player")
+	var hull := Components.primitive_points(
+		StringName(descriptor.get("shape", &"player_interceptor"))
+	)
 	var shadow := PackedVector2Array()
 	for point in hull:
-		shadow.append(point + Vector2(0.20, 0.25))
+		shadow.append(point + Vector2(0.10, 0.12))
 	return polygon_mesh([
-		{"points": shadow, "color": Color(0.42, 0.34, 0.18, 0.88)},
+		{"points": shadow, "color": Color(Art.SPACE_BLACK, 0.94)},
 		{"points": hull, "color": Color.WHITE},
+		{"points":PackedVector2Array([
+			Vector2(0.58, 0.0), Vector2(0.20, -0.15),
+			Vector2(-0.20, -0.13), Vector2(-0.38, 0.0),
+			Vector2(-0.20, 0.13), Vector2(0.20, 0.15),
+		]), "color":Art.TEXT_MUTED},
+		{"points":PackedVector2Array([
+			Vector2(0.52, 0.0), Vector2(0.17, -0.08),
+			Vector2(-0.17, -0.07), Vector2(-0.29, 0.0),
+			Vector2(-0.17, 0.07), Vector2(0.17, 0.08),
+		]), "color":Art.WORLD_CANVAS},
+		{"points":PackedVector2Array([
+			Vector2(0.22, -0.58), Vector2(-0.10, -0.56),
+			Vector2(-0.36, -0.38), Vector2(0.08, -0.42),
+		]), "color":Art.MUSTARD_DARK},
+		{"points":PackedVector2Array([
+			Vector2(0.22, 0.58), Vector2(-0.10, 0.56),
+			Vector2(-0.36, 0.38), Vector2(0.08, 0.42),
+		]), "color":Art.MUSTARD_DARK},
 	])
 
 
 static func player_primary_mesh() -> ArrayMesh:
 	return polygon_mesh([
 		{"points":PackedVector2Array([
-			Vector2(-0.18, -0.18), Vector2(1.0, -0.18),
-			Vector2(1.0, 0.18), Vector2(-0.18, 0.18),
+			Vector2(-0.34, -0.24), Vector2(0.72, -0.16),
+			Vector2(1.0, 0.0), Vector2(0.72, 0.16),
+			Vector2(-0.34, 0.24),
 		]), "color":Color.WHITE},
-		{"points":_regular_polygon(Vector2(-0.14, 0.0), 0.26, 16), "color":Color.WHITE},
+		{"points":_regular_polygon(Vector2(-0.30, 0.0), 0.18, 12), "color":Art.WORLD_CANVAS},
 	])
 
 
 static func player_engine_mesh() -> ArrayMesh:
 	return polygon_mesh([{
 		"points":PackedVector2Array([
-			Vector2(0.28, -0.34), Vector2(0.38, 0.34),
-			Vector2(-0.72, 0.24), Vector2(-1.0, 0.0),
-			Vector2(-0.72, -0.24),
+			Vector2(0.56, -0.48), Vector2(0.72, -0.24),
+			Vector2(0.72, 0.24), Vector2(0.56, 0.48),
+			Vector2(-0.72, 0.40), Vector2(-0.92, 0.18),
+			Vector2(-0.92, -0.18), Vector2(-0.72, -0.40),
+		]),
+		"color":Color.WHITE,
+	}])
+
+
+static func player_engine_flare_mesh() -> ArrayMesh:
+	return polygon_mesh([{
+		"points":PackedVector2Array([
+			Vector2(0.30, -0.50), Vector2(0.30, 0.50),
+			Vector2(-1.0, 0.18), Vector2(-0.72, 0.0),
+			Vector2(-1.0, -0.18),
 		]),
 		"color":Color.WHITE,
 	}])
@@ -435,6 +471,9 @@ static func pixel_quad_mesh() -> ArrayMesh:
 
 
 static func experience_mesh(kind: StringName) -> ArrayMesh:
+	var _descriptor := RewardCatalog.descriptor(
+		StringName("experience_%s" % String(kind))
+	)
 	var points := _regular_polygon(Vector2.ZERO, 1.0, 4, PI / 4.0)
 	if kind == &"medium":
 		points = _regular_polygon(Vector2.ZERO, 1.0, 6, PI / 6.0)
@@ -450,6 +489,9 @@ static func experience_mesh(kind: StringName) -> ArrayMesh:
 
 
 static func effect_mesh(kind: StringName) -> ArrayMesh:
+	var _descriptor := EffectCatalog.descriptor(
+		&"dash_afterimage" if kind == &"afterimage" else &"impact"
+	)
 	match kind:
 		&"diamond":
 			return polygon_mesh([{
@@ -736,10 +778,95 @@ static func _boss_polygon(variant: StringName) -> PackedVector2Array:
 			])
 
 
-static func _boss_accent_polygon(variant: StringName) -> PackedVector2Array:
-	if variant == &"titan":
-		return _regular_polygon(Vector2.ZERO, 0.42, 4, PI / 4.0)
-	return PackedVector2Array()
+static func _boss_detail_polygons(variant: StringName) -> Array[Dictionary]:
+	var light := Color(0.72, 0.72, 0.72, 1.0)
+	var core := Color(0.16, 0.16, 0.18, 1.0)
+	var details: Array[Dictionary] = []
+	match variant:
+		&"behemoth":
+			details.append({
+				"points":PackedVector2Array([
+					Vector2(0.62, -0.16), Vector2(0.06, -0.44),
+					Vector2(-0.46, -0.28), Vector2(-0.14, -0.08),
+				]),
+				"color":light,
+			})
+			details.append({
+				"points":PackedVector2Array([
+					Vector2(0.62, 0.16), Vector2(0.06, 0.44),
+					Vector2(-0.46, 0.28), Vector2(-0.14, 0.08),
+				]),
+				"color":light,
+			})
+			details.append({
+				"points":_regular_polygon(Vector2(0.12, 0.0), 0.24, 6, PI / 6.0),
+				"color":core,
+			})
+		&"leviathan":
+			details.append({
+				"points":PackedVector2Array([
+					Vector2(0.88, 0.0), Vector2(0.20, -0.14),
+					Vector2(-0.44, -0.10), Vector2(-0.70, 0.0),
+					Vector2(-0.44, 0.10), Vector2(0.20, 0.14),
+				]),
+				"color":core,
+			})
+			for sign_value in [-1.0, 1.0]:
+				details.append({
+					"points":PackedVector2Array([
+						Vector2(0.10, sign_value * 0.24),
+						Vector2(-0.28, sign_value * 0.62),
+						Vector2(-0.56, sign_value * 0.46),
+						Vector2(-0.18, sign_value * 0.18),
+					]),
+					"color":light,
+				})
+		&"titan":
+			details.append({
+				"points":_regular_polygon(Vector2.ZERO, 0.34, 4, PI / 4.0),
+				"color":core,
+			})
+			for offset in [
+				Vector2(0.0, -0.72), Vector2(0.72, 0.0),
+				Vector2(0.0, 0.72), Vector2(-0.72, 0.0),
+			]:
+				details.append({
+					"points":_regular_polygon(offset, 0.13, 4, PI / 4.0),
+					"color":light,
+				})
+		&"colossus":
+			for sign_value in [-1.0, 1.0]:
+				details.append({
+					"points":PackedVector2Array([
+						Vector2(0.52, sign_value * 0.18),
+						Vector2(0.06, sign_value * 0.36),
+						Vector2(-0.50, sign_value * 0.56),
+						Vector2(-0.22, sign_value * 0.14),
+					]),
+					"color":light,
+				})
+			details.append({
+				"points":PackedVector2Array([
+					Vector2(0.72, 0.0), Vector2(0.10, -0.12),
+					Vector2(-0.34, 0.0), Vector2(0.10, 0.12),
+				]),
+				"color":core,
+			})
+		&"crown":
+			details.append({
+				"points":_regular_polygon(Vector2.ZERO, 0.40, 8, PI / 8.0),
+				"color":light,
+			})
+			details.append({
+				"points":_regular_polygon(Vector2.ZERO, 0.22, 8, PI / 8.0),
+				"color":core,
+			})
+		_:
+			details.append({
+				"points":_regular_polygon(Vector2.ZERO, 0.30, 6, PI / 6.0),
+				"color":core,
+			})
+	return details
 
 
 static func _regular_polygon(origin: Vector2, radius: float, sides: int, rotation: float = 0.0) -> PackedVector2Array:

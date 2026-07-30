@@ -5,6 +5,9 @@ extends Node2D
 ## overlays. VehicleRun supplies state; this node owns visible instances.
 
 const Visuals = preload("res://scripts/presentation/vehicle_combat_visual_library.gd")
+const ActorCatalog = preload(
+	"res://scripts/presentation/components/vehicle_actor_visual_catalog.gd"
+)
 const PixelCatalog = preload("res://scripts/presentation/vehicle_pixel_asset_catalog.gd")
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd")
@@ -29,7 +32,6 @@ const STATIONARY_PIXEL_ARCHETYPES: Array[StringName] = [
 ]
 const MAX_ORDINARY_HEALTH_BARS := 12
 const MAX_EXTRA_PRIORITY_MARKERS := 8
-
 class BatchBuffer:
 	var values := PackedFloat32Array()
 
@@ -144,9 +146,12 @@ var _overlay_batches: Dictionary = {}
 var _batches: Array[BatchHandle] = []
 var _pixel_catalog: VehiclePixelAssetCatalog
 var _pixel_enabled := false
-var _player_pixel_under: BatchHandle
-var _player_projectile_pixel: BatchHandle
 var _misc_pixel_batch: BatchHandle
+var _player_hull_batch: BatchHandle
+var _player_engine_batch: BatchHandle
+var _player_engine_flare_batch: BatchHandle
+var _player_primary_batch: BatchHandle
+var _player_secondary_batch: BatchHandle
 var _pixel_frame_cache: Dictionary = {}
 var _last_health_bar_count := 0
 var _last_priority_marker_count := 0
@@ -186,6 +191,32 @@ func sync(
 	_apply_visible_counts()
 
 
+static func player_engine_sockets(
+	player_position: Vector2,
+	hull_direction: Vector2
+) -> Array[Vector2]:
+	var normalized := (
+		hull_direction.normalized()
+		if not hull_direction.is_zero_approx()
+		else Vector2.RIGHT
+	)
+	var lateral := normalized.rotated(PI * 0.5)
+	var descriptor := ActorCatalog.descriptor(&"player")
+	var normalized_sockets: Array = descriptor.get(
+		"rear_sockets",
+		[Vector2(-0.58, -0.43), Vector2(-0.58, 0.43)]
+	)
+	var result: Array[Vector2] = []
+	for socket_variant in normalized_sockets:
+		var socket := Vector2(socket_variant)
+		result.append(
+			player_position
+			+ normalized * socket.x * Art.PLAYER_VISUAL_RADIUS
+			+ lateral * socket.y * Art.PLAYER_VISUAL_RADIUS
+		)
+	return result
+
+
 func debug_snapshot() -> Dictionary:
 	var visible := 0
 	var batch_counts := {}
@@ -198,6 +229,7 @@ func debug_snapshot() -> Dictionary:
 		"visible_instances": visible,
 		"batch_counts": batch_counts,
 		"pixel_enabled": _pixel_enabled,
+		"migrated_combat_pixel_fallback": false,
 		"enemy_capacity": ENEMY_CAPACITY,
 		"status_arc_capacity": STATUS_ARC_CAPACITY,
 		"health_bar_count": _last_health_bar_count,
@@ -255,27 +287,7 @@ func _build_batches() -> void:
 			if team == &"player"
 			else HOSTILE_PROJECTILE_CAPACITY
 		)
-		if team == &"player" and _pixel_enabled:
-			_player_projectile_pixel = _create_atlas_batch(
-				"Pixel_player_projectiles",
-				PROJECTILE_CAPACITY,
-				2,
-				&"player_primary_projectiles"
-			)
-			continue
 		var affinity_batches := {}
-		var shared_hostile_pixel_batch: BatchHandle
-		if (
-			team == &"enemy"
-			and _pixel_enabled
-			and _pixel_catalog.has_family(&"hostile_projectile_affinities")
-		):
-			shared_hostile_pixel_batch = _create_atlas_batch(
-				"Projectile_trail_enemy_affinities",
-				capacity,
-				1,
-				&"hostile_projectile_affinities"
-			)
 		var rendered_affinities: Array[StringName] = []
 		if team == &"player":
 			rendered_affinities.append(AttackContract.KINETIC)
@@ -284,20 +296,16 @@ func _build_batches() -> void:
 		for affinity in rendered_affinities:
 			if affinity == AttackContract.SUPPORT:
 				continue
-			affinity_batches[affinity] = (
-				shared_hostile_pixel_batch
-				if shared_hostile_pixel_batch != null
-				else _create_batch(
-					"Projectile_trail_%s_%s" % [String(team), String(affinity)],
-					(
-						Visuals.projectile_trail_mesh(affinity)
-						if team == &"player"
-						else Visuals.hostile_projectile_envelope_mesh(affinity)
-					),
-					capacity,
-					1,
-					StringName("projectile_trail_%s_%s" % [String(team), String(affinity)])
-				)
+			affinity_batches[affinity] = _create_batch(
+				"Projectile_trail_%s_%s" % [String(team), String(affinity)],
+				(
+					Visuals.projectile_trail_mesh(affinity)
+					if team == &"player"
+					else Visuals.hostile_projectile_envelope_mesh(affinity)
+				),
+				capacity,
+				1,
+				StringName("projectile_trail_%s_%s" % [String(team), String(affinity)])
 			)
 		_projectile_trail_batches[team] = affinity_batches
 		if team == &"player":
@@ -316,33 +324,16 @@ func _build_batches() -> void:
 				2,
 				&"projectile_core_enemy"
 			)
-	var shared_experience_pixel_batch: BatchHandle
-	if _pixel_enabled and _pixel_catalog.has_family(&"experience_shards"):
-		shared_experience_pixel_batch = _create_atlas_batch(
-			"Experience_experience_shards",
-			EXPERIENCE_CAPACITY,
-			-1,
-			&"experience_shards"
-		)
 	for kind in [&"small", &"medium", &"large"]:
 		var family := StringName("experience_%s" % String(kind))
-		_experience_batches[kind] = (
-			shared_experience_pixel_batch
-			if shared_experience_pixel_batch != null
-			else _create_batch(
-				"Experience_%s" % String(kind),
-				Visuals.experience_mesh(kind),
-				EXPERIENCE_CAPACITY,
-				-1,
-				family
-			)
+		_experience_batches[kind] = _create_batch(
+			"Experience_%s" % String(kind),
+			Visuals.experience_mesh(kind),
+			EXPERIENCE_CAPACITY,
+			-1,
+			family
 		)
 	for kind in [&"diamond", &"ring", &"afterimage", &"beam"]:
-		# The pixel dash frames already own the player afterimage. Reuse that
-		# retired batch slot for all other bounded pixel combat ornaments so
-		# the production renderer stays within the existing batch ceiling.
-		if _pixel_enabled and kind == &"afterimage":
-			continue
 		var family := StringName("effect_%s" % String(kind))
 		_effect_batches[kind] = _create_batch(
 			"Effect_%s" % String(kind),
@@ -383,20 +374,41 @@ func _build_batches() -> void:
 		_misc_pixel_batch = _create_atlas_batch(
 			"Pixel_combat_ornaments", EFFECT_CAPACITY, 4, &"impact_effects"
 		)
-		_player_pixel_under = _create_atlas_batch(
-			"Pixel_player_under", 8, 4, &"player_chassis"
-		)
-		_overlay_batches[&"player_barrel"] = _create_batch(
-			"Overlay_player_barrel",
-			Visuals.effect_mesh(&"beam"),
-			2,
-			5,
-			&"overlay_player_barrel"
-		)
-	else:
-		_overlay_batches[&"player_hull"] = _create_batch(
-			"Overlay_player_hull", Visuals.player_hull_mesh(), 1, 4, &"overlay_player_hull"
-		)
+	_player_engine_flare_batch = _create_batch(
+		"Player_engine_flare",
+		Visuals.player_engine_flare_mesh(),
+		4,
+		3,
+		&"player_engine_flare"
+	)
+	_player_engine_batch = _create_batch(
+		"Player_engine",
+		Visuals.player_engine_mesh(),
+		4,
+		4,
+		&"player_engine"
+	)
+	_player_hull_batch = _create_batch(
+		"Player_hull",
+		Visuals.player_hull_mesh(),
+		1,
+		5,
+		&"player_hull"
+	)
+	_player_primary_batch = _create_batch(
+		"Player_primary_mount",
+		Visuals.player_primary_mesh(),
+		1,
+		6,
+		&"player_primary_mount"
+	)
+	_player_secondary_batch = _create_batch(
+		"Player_secondary",
+		Visuals.player_secondary_core_mesh(),
+		8,
+		6,
+		&"player_secondary"
+	)
 	_overlay_batches[&"status_arc"] = _create_batch(
 		"Overlay_status_arc", Visuals.status_arc_mesh(),
 		STATUS_ARC_CAPACITY, 3, &"overlay_status_arc"
@@ -784,80 +796,19 @@ func _sync_projectiles(
 		var direction := projectile.velocity.normalized()
 		if direction.is_zero_approx():
 			direction = Vector2.RIGHT
-		if team == &"player" and _pixel_enabled:
-			var pixel_family := (
-				&"secondary_seeker"
-				if projectile.owner == "passive_seeker"
-				else &"player_primary_projectiles"
-			)
-			var variant := (
-				&"seeker_missile"
-				if pixel_family == &"secondary_seeker"
-				else &"standard"
-			)
-			var direction_index := _pixel_catalog.direction_index(direction, 8)
-			var sequence_index: int = posmod(projectile.spawn_serial, 2)
-			var frame := _cached_pixel_frame(
-				pixel_family,
-				variant,
-				direction_index,
-				StringName("flight_%d" % sequence_index),
-				0 if pixel_family == &"secondary_seeker" else sequence_index
-			)
-			if not frame.is_empty():
-				_write_atlas_instance(
-					_player_projectile_pixel,
-					position,
-					0.0,
-					Vector2.ONE * (
-						22.0
-						if pixel_family == &"secondary_seeker"
-						else (
-							16.0
-							* Art.PLAYER_PRIMARY_PROJECTILE_SCALE
-							* radius / 6.0
-						)
-					),
-					Color.WHITE,
-					frame
-				)
-			continue
 		var affinity_batches: Dictionary = _projectile_trail_batches[team]
 		var trail_batch: BatchHandle = affinity_batches[render_affinity]
 		var color := Art.attack_color(affinity) if hostile else Art.MUSTARD
 		if hostile:
-			if _pixel_enabled:
-				var motion_state := StringName(
-					"affinity_motion_%d" % posmod(projectile.spawn_serial, 2)
-				)
-				var hostile_frame := _cached_pixel_frame(
-					&"hostile_projectile_affinities",
-					affinity,
-					0,
-					motion_state,
-					0
-				)
-				if not hostile_frame.is_empty():
-					_write_atlas_instance_basis(
-						trail_batch,
-						position,
-						direction,
-						Vector2.ONE * (
-							radius * Art.HOSTILE_PROJECTILE_ENVELOPE_SCALE
-						),
-						Color.WHITE,
-						hostile_frame
-					)
-			else:
-				_write_instance_basis(
-					trail_batch,
-					position,
-					direction,
-					Vector2.ONE * (
-						radius * Art.HOSTILE_PROJECTILE_ENVELOPE_SCALE
-					),
-					Color(color, 0.72)
-				)
+			_write_instance_basis(
+				trail_batch,
+				position,
+				direction,
+				Vector2.ONE * (
+					radius * Art.HOSTILE_PROJECTILE_ENVELOPE_SCALE
+				),
+				Color(color, 0.72)
+			)
 			# The bright core ends at the collision boundary. Everything in
 			# the larger affinity envelope is presentation-only.
 			_write_instance_basis(
@@ -884,9 +835,7 @@ func _sync_projectiles(
 			_projectile_head_batches[team],
 			position,
 			direction,
-			Vector2.ONE * (
-				radius * Art.PLAYER_PRIMARY_PROJECTILE_SCALE
-			),
+			Vector2.ONE * radius,
 			Color.WHITE
 		)
 
@@ -1089,21 +1038,7 @@ func _sync_experience(shards: Array[ExperienceShard], visible_world: Rect2) -> v
 		var kind := &"small" if value == 1 else (&"medium" if value <= 4 else &"large")
 		var radius := float(Art.EXPERIENCE_RADII[kind])
 		var batch: BatchHandle = _experience_batches[kind]
-		if _pixel_enabled:
-			var frame := _cached_pixel_frame(
-				&"experience_shards", kind, 0, &"idle", 0
-			)
-			if not frame.is_empty():
-				_write_atlas_instance(
-					batch,
-					position,
-					0.0,
-					Vector2.ONE * (radius * 2.0),
-					Color.WHITE,
-					frame
-				)
-		else:
-			_write_instance(batch, position, 0.0, Vector2.ONE * radius, Art.MUSTARD)
+		_write_instance(batch, position, 0.0, Vector2.ONE * radius, Art.MUSTARD)
 
 
 func _sync_effects(effects: Array[Dictionary], visible_world: Rect2) -> void:
@@ -1115,27 +1050,6 @@ func _sync_effects(effects: Array[Dictionary], visible_world: Rect2) -> void:
 		var progress := 1.0 - clampf(float(effect["time"]) / duration, 0.0, 1.0)
 		var radius := float(effect["radius"])
 		var kind := String(effect["kind"])
-		if _pixel_enabled and kind in ["impact", "muzzle"]:
-			var frame_index := clampi(int(floor(progress * 4.0)), 0, 3)
-			var impact_frame := _cached_pixel_frame(
-				&"impact_effects",
-				&"enemy" if kind == "impact" else &"player_hull",
-				0,
-				StringName("frame_%d" % frame_index),
-				frame_index
-			)
-			if not impact_frame.is_empty():
-				_write_atlas_instance(
-					_misc_pixel_batch,
-					position,
-					0.0,
-					Vector2.ONE * maxf(18.0, radius),
-					Color.WHITE,
-					impact_frame
-				)
-			continue
-		if _pixel_enabled and kind == "afterimage":
-			continue
 		var family := &"ring"
 		var angle := 0.0
 		var scale := Vector2.ONE * lerpf(maxf(5.0, radius * 0.25), radius, progress)
@@ -1151,7 +1065,12 @@ func _sync_effects(effects: Array[Dictionary], visible_world: Rect2) -> void:
 			angle = Vector2(effect.get("dir", Vector2.RIGHT)).angle()
 			scale = Vector2(radius, 9.0)
 		elif kind == "dash_start":
-			scale = Vector2.ONE * lerpf(radius, radius * 0.20, progress)
+			family = &"beam"
+			angle = Vector2(effect.get("dir", Vector2.RIGHT)).angle()
+			scale = Vector2(
+				lerpf(radius * 1.65, radius * 0.25, progress),
+				lerpf(18.0, 4.0, progress)
+			)
 		var color := Color(effect["color"])
 		color.a *= 1.0 - progress
 		var batch: BatchHandle = _effect_batches[family]
@@ -1202,7 +1121,7 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 	var aim_direction := Vector2(state["aim_direction"])
 	var reduced_motion := bool(state.get("reduced_motion", false))
 	var hit_remaining := float(state.get("player_hit_remaining", 0.0))
-	var invulnerable_remaining := float(state.get("player_invulnerable_remaining", 0.0))
+	var protection_sources: Dictionary = state.get("protection_sources", {})
 	var displayed_player_position := player_position
 	var hull_color := _upgrade_shade(
 		Art.MUSTARD, Art.MUSTARD_DARK, int(state.get("hull_visual_tier", 0))
@@ -1225,73 +1144,91 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 				cos(float(state.get("run_time", 0.0)) * 73.0)
 			).normalized()
 			displayed_player_position += jitter_direction * amplitude
-	elif invulnerable_remaining > 0.0:
-		if reduced_motion:
-			feedback_color = Color(Art.CORAL).lerp(Art.IVORY_BRIGHT, 0.56)
-		else:
-			var pale_coral := Color(Art.CORAL).lerp(Art.IVORY_BRIGHT, 0.62)
-			pale_coral.a = 0.78
-			if int(floor(float(state.get("run_time", 0.0)) * 16.0)) % 2 == 0:
-				feedback_color = pale_coral
 	if feedback_color.a > 0.0:
 		hull_color = feedback_color
 		primary_color = feedback_color
 		secondary_color = feedback_color
 	var hull_angle := hull_direction.angle()
-	var engine_count := clampi(int(state.get("engine_visual_count", 0)), 0, 3)
+	var engine_upgrade_count := clampi(
+		int(state.get("engine_visual_count", 0)),
+		0,
+		2
+	)
 	var rear := -hull_direction.normalized()
 	var side := rear.rotated(PI * 0.5)
-	if _pixel_enabled:
-		_sync_pixel_player(
-			state,
-			displayed_player_position,
-			hull_direction,
-			aim_direction,
-			hull_color,
-			primary_color,
-			engine_count,
-			feedback_color
+	var engine_sockets := player_engine_sockets(
+		displayed_player_position,
+		hull_direction
+	)
+	if engine_upgrade_count > 0:
+		engine_sockets.append(
+			displayed_player_position
+			+ rear * Art.PLAYER_VISUAL_RADIUS * 0.50
 		)
-	else:
-		for engine_index in engine_count:
-			var offset_index := float(engine_index) - float(engine_count - 1) * 0.5
-			_write_instance(
-				_overlay_batches[&"diamond"],
-				displayed_player_position + rear * 31.0 + side * offset_index * 18.0,
-				hull_angle,
-				Vector2(18.0, 12.0),
-				hull_color
-			)
+	if engine_upgrade_count > 1:
+		engine_sockets.append(
+			displayed_player_position
+			+ rear * Art.PLAYER_VISUAL_RADIUS * 0.30
+		)
+	var thrust_ratio := clampf(float(state.get("player_speed", 0.0)) / 560.0, 0.0, 1.0)
+	if bool(state.get("dash_active", false)):
+		thrust_ratio = 1.0
+	for mount_position in engine_sockets:
 		_write_instance(
-			_overlay_batches[&"player_hull"], displayed_player_position,
-			hull_angle, Vector2.ONE * Art.PLAYER_VISUAL_RADIUS,
-			hull_color
+			_player_engine_flare_batch,
+			mount_position + rear * (13.0 + thrust_ratio * 9.0),
+			hull_angle,
+			Vector2(14.0 + thrust_ratio * 19.0, 6.0),
+			Color(Art.SYSTEM if bool(state.get("dash_active", false)) else Art.MUSTARD, 0.56 + thrust_ratio * 0.38)
 		)
-		_write_beam(
-			displayed_player_position,
-			displayed_player_position + aim_direction * 61.0,
-			17.0,
-			Art.INK
+		_write_instance(
+			_player_engine_batch,
+			mount_position,
+			hull_angle,
+			Vector2(15.0, 10.0),
+			Art.IVORY_SHADE
 		)
-		_write_beam(
-			displayed_player_position,
-			displayed_player_position + aim_direction * 61.0,
-			10.0,
-			primary_color
-		)
+	_write_instance(
+		_player_hull_batch,
+		displayed_player_position,
+		hull_angle,
+		Vector2.ONE * Art.PLAYER_VISUAL_RADIUS,
+		hull_color
+	)
+	var primary_mount_position := displayed_player_position + aim_direction * 12.0
+	_write_instance(
+		_player_primary_batch,
+		primary_mount_position,
+		aim_direction.angle(),
+		Vector2(25.0, 10.0),
+		primary_color
+	)
+	if float(state.get("muzzle_flash", 0.0)) > 0.0:
 		_write_diamond(
 			displayed_player_position + aim_direction * 64.0,
 			9.0 + float(state.get("muzzle_flash", 0.0)) * 58.0,
 			Art.MUSTARD
 		)
 	if int(state.get("secondary_visual_tier", 0)) > 0:
-		_write_diamond(
+		_write_instance(
+			_player_secondary_batch,
 			displayed_player_position - hull_direction * 5.0 - side * 25.0,
-			12.0,
+			hull_angle,
+			Vector2.ONE * 12.0,
 			secondary_color
 		)
-	if invulnerable_remaining > 0.0:
-		_write_ring(player_position, Art.PLAYER_VISUAL_RADIUS + 12.0, Color(Art.CORAL, 0.78))
+	if (
+		float(protection_sources.get(&"stage_transition", 0.0)) > 0.0
+		or float(protection_sources.get(&"transit", 0.0)) > 0.0
+	):
+		_sync_target_brackets(player_position, Art.PLAYER_VISUAL_RADIUS + 13.0)
+	if float(protection_sources.get(&"emp", 0.0)) > 0.0:
+		_write_beam(
+			player_position - side * 33.0,
+			player_position + side * 33.0,
+			5.0,
+			Color(Art.MINT, 0.84)
+		)
 	if float(state.get("barrier_strength", 0.0)) > 0.0:
 		var barrier_radius := 61.0
 		if not reduced_motion:
@@ -1305,173 +1242,33 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 	var blade_level := int(state.get("blade_level", 0))
 	if blade_level > 0:
 		var blade_count: int = [2, 3, 4][blade_level - 1]
-		var blade_frame := _cached_pixel_frame(
-			&"secondary_orbit_blades", &"blade", 0, &"orbit", 0
-		) if _pixel_enabled else {}
 		for blade_index in blade_count:
 			var blade_position := player_position + Vector2.RIGHT.rotated(
 				float(secondary.get("orbit_angle", 0.0)) + TAU * float(blade_index) / float(blade_count)
 			) * 78.0
-			if not blade_frame.is_empty():
-				_write_atlas_instance(
-					_misc_pixel_batch,
-					blade_position,
-					float(secondary.get("orbit_angle", 0.0)),
-					Vector2.ONE * 22.0,
-					Color.WHITE,
-					blade_frame
-				)
-			else:
-				_write_diamond(blade_position, 13.0, Art.MUSTARD)
-	for mine in Array(secondary.get("mines", [])):
-		var mine_state := &"armed" if bool(mine.get("armed", false)) else &"idle"
-		var mine_frame := _cached_pixel_frame(
-			&"secondary_wake_mines", &"mine", 0, mine_state, 0
-		) if _pixel_enabled else {}
-		if not mine_frame.is_empty():
-			_write_atlas_instance(
-				_misc_pixel_batch,
-				Vector2(mine["pos"]),
-				0.0,
-				Vector2.ONE * 26.0,
-				Color.WHITE,
-				mine_frame
+			_write_instance(
+				_player_secondary_batch,
+				blade_position,
+				float(secondary.get("orbit_angle", 0.0)),
+				Vector2(19.0, 8.0),
+				Art.MUSTARD
 			)
-		else:
-			_write_diamond(Vector2(mine["pos"]), 16.0, Art.CORAL)
+	for mine in Array(secondary.get("mines", [])):
+		_write_diamond(Vector2(mine["pos"]), 16.0, Art.CORAL)
 	if bool(state.get("escort_drone", false)):
 		var drone_position := Vector2(secondary.get("drone_position", player_position))
 		var drone_direction := (player_position - drone_position).normalized()
-		var drone_frame := _cached_pixel_frame(
-			&"secondary_escort_drone",
-			&"drone",
-			_pixel_catalog.direction_index(drone_direction, 8),
-			&"follow",
-			0
-		) if _pixel_enabled else {}
-		if not drone_frame.is_empty():
-			_write_atlas_instance(
-				_misc_pixel_batch,
-				drone_position,
-				0.0,
-				Vector2.ONE * 32.0,
-				Color.WHITE,
-				drone_frame
-			)
-		else:
-			_write_diamond(drone_position, 18.0, Art.MINT_SOFT)
+		_write_instance(
+			_player_secondary_batch,
+			drone_position,
+			drone_direction.angle(),
+			Vector2(19.0, 15.0),
+			Art.MINT_SOFT
+		)
 	var cursor_position := Vector2(state.get("cursor_position", player_position + aim_direction * 230.0))
 	for direction in [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]:
 		_write_diamond(cursor_position + direction * 18.0, 6.0, Art.MUSTARD)
 	_write_diamond(cursor_position, 4.0, Art.IVORY_BRIGHT)
-
-
-func _sync_pixel_player(
-	state: Dictionary,
-	position: Vector2,
-	hull_direction: Vector2,
-	aim_direction: Vector2,
-	_hull_color: Color,
-	_primary_color: Color,
-	engine_count: int,
-	feedback_color: Color
-) -> void:
-	var player_scale := Art.PLAYER_VISUAL_RADIUS
-	var hull_direction_index := _pixel_catalog.direction_index(hull_direction, 16)
-	var hull_tier := clampi(int(state.get("hull_visual_tier", 0)), 0, 3)
-	var hull_tint := Color.WHITE * (1.0 - float(hull_tier) * 0.10)
-	# The invulnerability ring already carries that state; preserve the authored
-	# pixel palette unless this frame is responding to an actual hit.
-	if float(state.get("player_hit_remaining", 0.0)) > 0.0 and feedback_color.a > 0.0:
-		hull_tint = Color(1.0, 0.50, 0.50, feedback_color.a)
-	var moving := float(state.get("player_speed", 0.0)) > 12.0
-	var flame_variant := &"thrust" if moving else &"idle"
-	var flame_frame := _cached_pixel_frame(
-		&"player_engine_flame",
-		flame_variant,
-		hull_direction_index,
-		flame_variant,
-		0
-	)
-	if not flame_frame.is_empty():
-		_write_atlas_instance(
-			_player_pixel_under,
-			position,
-			0.0,
-			Vector2.ONE * player_scale,
-			hull_tint,
-			flame_frame
-		)
-	if bool(state.get("dash_active", false)):
-		var dash_progress := clampf(float(state.get("dash_progress", 0.0)), 0.0, 1.0)
-		var dash_variant := &"travel"
-		if dash_progress < 0.22:
-			dash_variant = &"start"
-		elif dash_progress > 0.78:
-			dash_variant = &"end"
-		var dash_direction := Vector2(state.get("dash_direction", hull_direction))
-		var dash_frame := _cached_pixel_frame(
-			&"player_dash_effect",
-			dash_variant,
-			_pixel_catalog.direction_index(dash_direction, 16),
-			&"frame_0",
-			0
-		)
-		if not dash_frame.is_empty():
-			_write_atlas_instance(
-				_player_pixel_under,
-				position,
-				0.0,
-				Vector2.ONE * player_scale,
-				Color(1.0, 1.0, 1.0, 0.88),
-				dash_frame
-			)
-	var module_frame := _cached_pixel_frame(
-		&"player_engine_modules",
-		StringName("module_count_%d" % engine_count),
-		_pixel_catalog.direction_index(hull_direction, 4),
-		&"installed",
-		0
-	)
-	if not module_frame.is_empty():
-		_write_atlas_instance(
-			_player_pixel_under,
-			position,
-			0.0,
-			Vector2.ONE * player_scale,
-			hull_tint,
-			module_frame
-		)
-	var hull_frame := _cached_pixel_frame(
-		&"player_chassis",
-		&"base",
-		hull_direction_index,
-		&"normal",
-		0
-	)
-	if not hull_frame.is_empty():
-		_write_atlas_instance(
-			_player_pixel_under,
-			position,
-			0.0,
-			Vector2.ONE * player_scale,
-			hull_tint,
-			hull_frame
-		)
-	var muzzle_flash := float(state.get("muzzle_flash", 0.0))
-	var barrel_tip_distance := 28.0 if muzzle_flash > 0.0 else 32.0
-	_write_player_barrel(
-		position,
-		aim_direction,
-		barrel_tip_distance,
-		_primary_color
-	)
-	if muzzle_flash > 0.0:
-		_write_diamond(
-			position + aim_direction * barrel_tip_distance,
-			7.0 + muzzle_flash * 45.0,
-			Art.IVORY_BRIGHT
-		)
 
 
 func _sync_support_fields(support_fields: Array) -> void:

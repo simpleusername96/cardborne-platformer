@@ -17,7 +17,17 @@ const MANIFEST_PATH := (
 const ACTIVE_SPEC_PATH := "res://docs/design/UI_VISUAL_SYSTEM.md"
 const EXPECTED_SHEETS := [
 	"01-foundation-tokens",
+	"02-world-surfaces",
+	"03-world-facilities",
+	"04-player-components",
+	"05-enemy-components",
+	"06-boss-components",
+	"07-projectile-telegraph-vfx",
+	"08-reward-upgrade-glyphs",
+	"09-hud-minimap-markers",
 	"10-ui-controls-states",
+	"11-modal-flow-contact-sheet",
+	"12-pressure-accessibility",
 ]
 
 
@@ -80,6 +90,10 @@ func _validate_manifest(errors: PackedStringArray) -> void:
 	var manifest := Dictionary(parsed)
 	if int(manifest.get("schema_version", 0)) != 1:
 		errors.append("visual sheet manifest schema must be 1")
+	if String(manifest.get("publication_status", "")) != "complete-design-set":
+		errors.append("visual sheet manifest must publish the complete design set")
+	if not Array(manifest.get("planned_sheet_ids", [])).is_empty():
+		errors.append("complete design set cannot retain planned sheet ids")
 	var fingerprints := Dictionary(manifest.get("provider_fingerprints", {}))
 	if String(fingerprints.get("tokens", "")) != Art.provider_fingerprint():
 		errors.append("manifest token fingerprint does not match provider")
@@ -108,4 +122,9 @@ func _validate_manifest(errors: PackedStringArray) -> void:
 			errors.append("published sheet dimensions must be 2048x1152: %s" % sheet_id)
 	for sheet_id in EXPECTED_SHEETS:
 		if not seen.has(sheet_id):
-			errors.append("manifest is missing Phase 1 sheet: %s" % sheet_id)
+			errors.append("manifest is missing required sheet: %s" % sheet_id)
+	if seen.size() != EXPECTED_SHEETS.size():
+		errors.append(
+			"manifest must contain exactly %d sheets"
+			% EXPECTED_SHEETS.size()
+		)

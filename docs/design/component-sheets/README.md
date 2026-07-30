@@ -52,18 +52,34 @@ related:
   오인하기 어렵다.
 - boss는 원형 blob 대신 비대칭 본체와 외곽 objective module로 구성한다.
 
-## Production handoff
+## Production component sheets
 
-- `01-foundation-tokens.png`와 `10-ui-controls-states.png`는 실제
-  `VehicleStageVisualProfile`, catalog registry와 Noto Sans KR provider에서
-  생성한다.
-- 이후 sheet도 descriptor와 동일한 polygon으로 normalized view,
-  gameplay 1×, grayscale, state, anchor, collision overlay를 생성한다.
+`system-v1/`의 12개 sheet는 실제 `VehicleStageVisualProfile`, component
+catalog, runtime combat mesh와 Noto Sans KR provider에서 결정적으로 생성한다.
+
+| 번호 | sheet | 확인 대상 |
+| --- | --- | --- |
+| 01 | foundation tokens | 색, 글자, 간격, 역할 문법 |
+| 02 | world surfaces | 세 필드의 대형 패널 리듬 |
+| 03 | world facilities | 시설별 형태와 4개 상태 |
+| 04 | player components | hull, rigid twin engine, aim, dash/hit |
+| 05 | enemy components | 18개 역할 실루엣 |
+| 06 | boss components | 5개 본체, objective module, phase read |
+| 07 | projectile/telegraph/VFX | 6개 affinity와 live footprint |
+| 08 | reward/upgrade glyphs | XP, 수리, 회수, 상자, 8개 upgrade family |
+| 09 | HUD/minimap markers | four-zone HUD와 shared marker |
+| 10 | UI controls | normal/hover/focus/selected/disabled/danger |
+| 11 | modal flow | 8개 production/debug surface composition |
+| 12 | pressure/accessibility | gameplay 1× composition과 검증 슬롯 |
+
+[`system-v1/manifest.json`](./system-v1/manifest.json)은 12개 PNG hash,
+token/catalog fingerprint와 publication 상태를 기록한다. 같은 source에서
+연속 생성한 PNG hash는 일치해야 한다.
 
 ## Limitations
 
 - 이 이미지는 ImageGen 기반 방향 시안이며 runtime geometry의 정본이 아니다.
-- 하단 gameplay-scale strip은 상대 판독성 비교용으로, 실제 collision radius와
-  정확한 화면 배율 검증을 대신하지 않는다.
-- upgrade glyph, stationary enemy, 다섯 boss 전체와 pressure composite는 아직
-  포함하지 않았다.
+- sheet의 composition test는 실제 runtime capture가 아니다. Phase별 runtime
+  publication 뒤 native/Web gameplay capture로 교체 검증한다.
+- `12-pressure-accessibility.png`의 체크 표시는 디자인 계약 슬롯이며, 최종
+  release gate의 실제 결과를 선반영하지 않는다.

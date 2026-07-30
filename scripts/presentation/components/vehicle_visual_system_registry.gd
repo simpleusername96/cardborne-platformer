@@ -12,6 +12,12 @@ const WorldCatalog = preload("res://scripts/presentation/components/vehicle_worl
 const GlyphCatalog = preload("res://scripts/presentation/components/vehicle_ui_glyph_catalog.gd")
 
 const LEGACY_CATALOG_PATH := "res://pixel-art-production/runtime/catalog.json"
+const COMPONENT_GEOMETRY_PATH := (
+	"res://scripts/presentation/components/vehicle_component_mesh_library.gd"
+)
+const COMBAT_GEOMETRY_PATH := (
+	"res://scripts/presentation/vehicle_combat_visual_library.gd"
+)
 const LEGACY_WORLD_RECIPE_PATH := (
 	"res://pixel-art-production/runtime/atlases/space-hangar-v2/world-recipe.json"
 )
@@ -59,6 +65,14 @@ static func provider_fingerprint() -> String:
 		records,
 		"glyph_upgrade_family",
 		GlyphCatalog.UPGRADE_FAMILY_GLYPHS
+	)
+	records.append(
+		"component_geometry=%s"
+		% FileAccess.get_sha256(COMPONENT_GEOMETRY_PATH)
+	)
+	records.append(
+		"combat_geometry=%s"
+		% FileAccess.get_sha256(COMBAT_GEOMETRY_PATH)
 	)
 	records.sort()
 	return "|".join(records).sha256_text()
