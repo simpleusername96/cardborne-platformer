@@ -612,6 +612,31 @@ func debug_transition_banner() -> Dictionary:
 	return _transition_banner.debug_snapshot()
 
 
+func debug_health_animation_contract() -> Dictionary:
+	_health_bar.set_values(120.0, 120.0, 1, 0.0, 12.0, false)
+	_health_bar.set_values(80.0, 120.0, 1, 0.0, 12.0, false)
+	var result := {
+		"standard_holds_previous":is_equal_approx(
+			_health_bar.trailing_health,
+			120.0
+		),
+		"standard_processing":_health_bar.is_processing(),
+	}
+	_health_bar._process(0.18)
+	_health_bar._process(0.45)
+	result["standard_settled"] = is_equal_approx(
+		_health_bar.trailing_health,
+		80.0
+	)
+	result["standard_stopped"] = not _health_bar.is_processing()
+	_health_bar.set_values(60.0, 120.0, 1, 0.0, 12.0, true)
+	result["reduced_motion_steady"] = is_equal_approx(
+		_health_bar.trailing_health,
+		60.0
+	)
+	return result
+
+
 func debug_threat_radar_contract() -> Dictionary:
 	return _threat_radar.debug_contract()
 

@@ -46,8 +46,7 @@ func _run() -> void:
 	await process_frame
 	var stage_ui = stage.get("_ui")
 	stage_ui.call("show_deployment", &"pulse_cannon", RunDifficulty.HARD)
-	stage_ui.call("_select_run_difficulty", RunDifficulty.NORMAL)
-	stage_ui.call("_on_deployment_confirmed")
+	stage_ui.call("debug_submit_deployment", RunDifficulty.NORMAL)
 	_expect(stage.selected_run_difficulty == RunDifficulty.NORMAL, "deployment snapshots Normal on the active run")
 	_expect(stage.encounter_runtime.difficulty == RunDifficulty.NORMAL, "encounter runtime receives the deployed difficulty")
 	_expect(stage.stage_flow.quota == RunDifficulty.scaled_quota(StageCatalog.quota(&"stage_1"), RunDifficulty.NORMAL), "active stage quota uses the deployed difficulty")

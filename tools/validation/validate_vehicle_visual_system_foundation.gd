@@ -36,7 +36,7 @@ const EXPECTED_SHEETS := [
 
 func _init() -> void:
 	var errors := Art.validate_contract()
-	errors.append_array(Registry.validate_current_source_coverage())
+	errors.append_array(Registry.validate_catalog_contract())
 	errors.append_array(ComponentMeshes.validate_component_budget(3, 2, 1, 5))
 	_validate_active_spec(errors)
 	_validate_runtime_backed_ui_sheets(errors)
@@ -70,8 +70,6 @@ func _validate_active_spec(errors: PackedStringArray) -> void:
 		if required not in content:
 			errors.append("active visual spec is missing contract text: %s" % required)
 	for retired_authority in [
-		"space-hangar-v2",
-		"StyleBoxTexture",
 		"Sunken Ceramic",
 	]:
 		if retired_authority in content:

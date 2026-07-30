@@ -193,17 +193,6 @@ func _validate_source_boundaries() -> void:
 		not runtime_source.contains("for enemy in enemies"),
 		"tactic runtime never scans the complete enemy array"
 	)
-	var renderer_source := FileAccess.get_file_as_string(
-		"res://scripts/presentation/vehicle_combat_renderer.gd"
-	)
-	_expect(
-		not renderer_source.contains("&\"mobile_enemy_set\""),
-		"mobile enemy atlas fallback is removed"
-	)
-	_expect(
-		not renderer_source.contains("&\"stationary_enemy_set\""),
-		"stationary enemy atlas fallback is removed"
-	)
 	var guide_source := FileAccess.get_file_as_string(
 		"res://scripts/progression/vehicle_guidebook_catalog.gd"
 	)

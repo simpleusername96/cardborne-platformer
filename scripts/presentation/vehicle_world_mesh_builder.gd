@@ -53,7 +53,6 @@ func debug_contract() -> Dictionary:
 		"decoration_collision_nodes": 0,
 		"geometry_fed": true,
 		"collision_owner": "vehicle_stage_geometry",
-		"pixel_textures": 0,
 		"geometry_fingerprint": _geometry_fingerprint,
 		"field_id": _field_id,
 		"field_descriptor": WorldCatalog.FIELD_DESCRIPTORS.get(_field_id, {}),

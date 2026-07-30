@@ -770,13 +770,13 @@ strategy document의 collective behavior를 단계적으로 연결한다.
 **목표:** competing visual truth를 제거하고 production evidence로 완료를
 판정한다.
 
-- [ ] remaining pixel catalog/branch/family, generator, schema, recipe, asset,
+- [x] remaining pixel catalog/branch/family, generator, schema, recipe, asset,
   evidence와 old visual proof를 reference search 뒤 삭제한다.
-- [ ] `pixel-art-production/`, pixel-only tools/validators와
+- [x] `pixel-art-production/`, pixel-only tools/validators와
   `space_hangar_tile_variation.gdshader`를 제거한다.
-- [ ] active product/design spec, docs index, component manifest, guidebook와
+- [x] active product/design spec, docs index, component manifest, guidebook와
   runtime을 최종 상태에 맞춘다.
-- [ ] task-scoped code quality audit로 catch-all, competing owner, public
+- [x] task-scoped code quality audit로 catch-all, competing owner, public
   snapshot, hot-path scan과 dead compatibility path를 확인한다.
 - [ ] full validators, native/Web matrix, production-style Web smoke,
   pressure matrix와 600-second lifecycle soak를 clean commit에서 실행한다.
@@ -1081,6 +1081,24 @@ contrast, timing과 performance 조정으로 제한한다.
     performance retention은 사용자 지시대로 Phase 8 최종 build에서만
     실행한다.
 - [ ] Phase 8 retirement/final gates
+  - `pixel-art-production/` 7,172개 file과 isolated catalog/generator/
+    validator 16개를 exact reference audit 뒤 삭제했다. 삭제 경로를 가리키는
+    runtime, tool, active design 문서 reference는 0이다.
+  - `VehicleRun`의 caller 없는 texture draw helper와 catalog instance,
+    renderer/world의 false-valued compatibility snapshot key와 visual
+    library의 unused quad mesh를 제거했다.
+  - component registry는 retired source manifest 대신 actor, projectile,
+    reward, effect, world, core glyph와 upgrade glyph descriptor group을
+    직접 검증한다. clean provider fingerprint는
+    `d837c8cbc6a893bc6bf3af657ccda1327da792b840bc30dd2bdf2f0c01398ae4`다.
+  - 12개 clean-tree sheet의 published/evidence SHA-256이 모두 일치한다.
+    45개 focused validator가 통과했으며, Phase 7 extraction 뒤 남아 있던
+    damage-feedback health control과 run-difficulty deployment private call은
+    component-owned debug contract로 교체했다.
+  - task-scoped quality audit에서 competing visual owner, dead catalog API,
+    runtime hot-path 추가와 private Control leak가 0이다. native/Web,
+    pressure, performance와 lifecycle soak는 이 retirement commit 뒤에만
+    실행한다.
 - [ ] Final horde native/Web/capacity/lifecycle gate
 
 ## Next Steps

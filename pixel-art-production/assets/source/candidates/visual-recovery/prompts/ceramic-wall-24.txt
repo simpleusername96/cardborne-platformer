@@ -1,7 +1,0 @@
-Use case: stylized-concept
-Asset type: targeted correction of one 24x24 logical-cell true top-down solid blocker/cover material tile master
-Input images: Image 1 is the edit target and current wall composition. Image 2 is the exact 24x24 grid reference. Image 3 is reference only for whole-cell fill behavior. Image 4 is reference only for Sunken Ceramic Fresco large-shape language.
-Primary request: Change only the raster fill compliance of Image 1. Preserve the square canvas, exact 24x24 logical grid, full-canvas solid wall reading, true top-down view, and seamless matching left/right edges. Set logical rows 0 through 20, inclusive, to one uniform exact flat blue-gray #596774. Set logical rows 21 through 23, inclusive, to one uniform exact flat dark contact edge #202833. Do not add an inlay or any object.
-Style/medium: strict grid-preserving flat-color pixel master. Every logical cell interior must be one perfectly uniform exact flat color from edge to edge; no color variation, lighting, or boundary inside any logical cell. Keep only the grid itself visible above the fills.
-Constraints: fully solid blocker/cover; exactly 21 top rows and exactly 3 bottom contact rows; left and right edge cell colors match row by row.
-Avoid: opening, door, pit, crack, hazard, prop, pickup, arrow, plus, seam suggesting traversal, within-cell edge, shading, gradient, texture, speckles, dither, glow, cast shadow, side-view depth, perspective, text, watermark, border, frame, ornament.

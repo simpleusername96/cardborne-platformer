@@ -1,8 +1,0 @@
-Use case: stylized-concept.
-Asset type: one 64x64 logical-cell top-down player chassis master.
-Input images: Image 1 is the edit target; Image 2 is a whole-cell behavior reference only; Image 3 is a style and large-shape reference only.
-Targeted correction: Edit Image 1 without redrawing, rescaling, softening, tinting, or obscuring its existing grid. Treat it strictly like coloring spreadsheet cells: change only complete cell interiors and leave every grid line and every outside cell exactly as in Image 1. No cast shadow, ambient shadow, tonal falloff, bevel, highlight, transparency, or soft edge anywhere.
-Subject: One north-facing broad drydock interceptor centered within columns 8–55 and rows 4–59. Large pointed ceramic prow, paired manta-like wings, central cockpit, separate forward mount, two rear engine housings. Use large contiguous regions; every detail is at least 2x2 cells.
-Color palette: ownership mass mustard #D9A83D, ceramic armor #E8EEF0, cockpit/energy #65A9B8, recesses #202833 or #2E3945, restrained structure #44515E. Use only these exact solid colors inside the silhouette.
-Constraints: White remains empty outside the silhouette. Every occupied cell is filled edge-to-edge with one exact flat color. Preserve the grid exactly. The craft must clearly read as player-controlled and north-facing at native scale.
-Avoid: No within-cell lines, antialiasing, gradients, texture, dither, glow, shadow, labels, extra objects, isometric perspective, universal outline, tiny panel noise, or modifications to outside cells.

@@ -15,7 +15,7 @@ const METRIC_SAMPLE_INTERVAL := 0.10
 const MAX_ACTIVE_COUNT_SAMPLES := 4096
 const MAX_SPAWNS_PER_TICK := 4
 const PACK_SPAWN_FAN_RADIUS := 38.0
-# Non-commensurate with squad rings, so pack members do not stack on one pixel.
+# Non-commensurate with squad rings, so pack members do not stack at one point.
 const PACK_SQUAD_PHASE_STEP := PI * 11.0 / 180.0
 
 var stage_id: StringName = &"stage_1"

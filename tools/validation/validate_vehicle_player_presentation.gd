@@ -71,19 +71,6 @@ func _initialize() -> void:
 	var renderer_source := FileAccess.get_file_as_string(
 		"res://scripts/presentation/vehicle_combat_renderer.gd"
 	)
-	for retired_family in [
-		"player_chassis",
-		"player_engine_flame",
-		"player_engine_modules",
-		"player_dash_effect",
-		"player_primary_projectiles",
-		"hostile_projectile_affinities",
-		"experience_shards",
-	]:
-		_expect(
-			not renderer_source.contains(retired_family),
-			"migrated combat family has no pixel fallback: %s" % retired_family
-		)
 	_expect(
 		not renderer_source.contains(
 			"_write_ring(player_position, Art.PLAYER_VISUAL_RADIUS"

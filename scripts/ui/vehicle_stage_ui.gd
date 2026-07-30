@@ -314,6 +314,14 @@ func debug_transition_banner() -> Dictionary:
 	return _hud.debug_transition_banner()
 
 
+func debug_health_animation_contract() -> Dictionary:
+	return _hud.debug_health_animation_contract()
+
+
+func debug_submit_deployment(difficulty_id: StringName) -> void:
+	_deployment_panel.debug_submit(difficulty_id)
+
+
 func show_stage_report(snapshot: Dictionary) -> void:
 	hide_stage_transition()
 	hide_all_modals()

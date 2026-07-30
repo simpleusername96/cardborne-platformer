@@ -30,7 +30,6 @@ func _run() -> void:
 	for field_id in FieldRegistry.FIELD_IDS:
 		await _validate_field(field_id)
 	_validate_minimap_tokens()
-	_validate_source_retirement()
 	_finish()
 
 
@@ -112,10 +111,6 @@ func _validate_field(field_id: StringName) -> void:
 	_expect(
 		int(contract.get("decoration_collision_nodes", -1)) == 0,
 		"%s decorations own no collision nodes" % field_id
-	)
-	_expect(
-		int(contract.get("pixel_textures", -1)) == 0,
-		"%s world owns no pixel textures" % field_id
 	)
 	_expect(
 		not String(contract.get("geometry_fingerprint", "")).is_empty(),
@@ -217,29 +212,6 @@ func _validate_minimap_tokens() -> void:
 		(PackedColorArray(arrays[Mesh.ARRAY_COLOR])).has(Art.PLAYER_REWARD),
 		"minimap preserves player/reward emphasis"
 	)
-
-
-func _validate_source_retirement() -> void:
-	var backdrop_source := FileAccess.get_file_as_string(
-		"res://scripts/vehicle/vehicle_stage_backdrop.gd"
-	)
-	var world_source := FileAccess.get_file_as_string(
-		"res://scripts/presentation/vehicle_world_mesh_builder.gd"
-	)
-	_expect(
-		not backdrop_source.contains("vehicle_pixel_world_mesh_builder"),
-		"stage backdrop has no pixel world caller"
-	)
-	for forbidden in [
-		"pixel-art-production",
-		"Texture2D",
-		"TEXTURE_FILTER_NEAREST",
-		"space_hangar_tile_variation",
-	]:
-		_expect(
-			not world_source.contains(forbidden),
-			"world builder excludes %s" % forbidden
-		)
 
 
 func _expect(condition: bool, message: String) -> void:

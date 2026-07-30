@@ -181,15 +181,11 @@ func debug_snapshot() -> Dictionary:
 		"batches": _batches.size(),
 		"visible_instances": visible,
 		"batch_counts": batch_counts,
-		"pixel_enabled": false,
-		"migrated_combat_pixel_fallback": false,
 		"enemy_capacity": ENEMY_CAPACITY,
 		"status_arc_capacity": STATUS_ARC_CAPACITY,
 		"health_bar_count": _last_health_bar_count,
 		"priority_marker_count": _last_priority_marker_count,
 		"tactic_module_count": _last_tactic_module_count,
-		"enemy_pixel_fallback": false,
-		"boss_pixel_fallback": false,
 	}
 
 

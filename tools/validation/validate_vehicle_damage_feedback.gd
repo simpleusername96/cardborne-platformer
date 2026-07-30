@@ -68,17 +68,29 @@ func _run() -> void:
 	_expect(bool(stage.call("_combat_presentation_snapshot")["reduced_motion"]), "presentation receives reduced-motion state")
 
 	var stage_ui: CanvasLayer = stage.get("_ui")
-	var health_bar: Control = stage_ui.get("_health_bar")
-	health_bar.call("set_values", 120.0, 120.0, 1, 0.0, 12.0, false)
-	health_bar.call("set_values", 80.0, 120.0, 1, 0.0, 12.0, false)
-	_expect(is_equal_approx(float(health_bar.get("trailing_health")), 120.0), "standard motion holds the previous health value")
-	_expect(health_bar.is_processing(), "health loss animation processes only while active")
-	health_bar.call("_process", 0.18)
-	health_bar.call("_process", 0.45)
-	_expect(is_equal_approx(float(health_bar.get("trailing_health")), 80.0), "health loss trail closes over the bounded decay")
-	_expect(not health_bar.is_processing(), "health loss animation stops processing when settled")
-	health_bar.call("set_values", 60.0, 120.0, 1, 0.0, 12.0, true)
-	_expect(is_equal_approx(float(health_bar.get("trailing_health")), 60.0), "reduced motion replaces the trailing animation with a steady pulse")
+	var health_contract: Dictionary = (
+		stage_ui.debug_health_animation_contract()
+	)
+	_expect(
+		bool(health_contract["standard_holds_previous"]),
+		"standard motion holds the previous health value"
+	)
+	_expect(
+		bool(health_contract["standard_processing"]),
+		"health loss animation processes only while active"
+	)
+	_expect(
+		bool(health_contract["standard_settled"]),
+		"health loss trail closes over the bounded decay"
+	)
+	_expect(
+		bool(health_contract["standard_stopped"]),
+		"health loss animation stops processing when settled"
+	)
+	_expect(
+		bool(health_contract["reduced_motion_steady"]),
+		"reduced motion replaces the trailing animation with a steady pulse"
+	)
 
 	var projectile_store: RefCounted = stage.get("projectile_store")
 	projectile_store.call("clear")
@@ -95,7 +107,7 @@ func _run() -> void:
 	var hostile_projectiles: Array = projectile_store.get("hostile_live")
 	_expect(hostile_projectiles.size() == 1, "ordinary hostile projectile enters the retained store")
 	if hostile_projectiles.size() == 1:
-		_expect(is_equal_approx(float(hostile_projectiles[0].radius), 5.0), "ordinary hostile projectile uses a five-pixel collision radius")
+		_expect(is_equal_approx(float(hostile_projectiles[0].radius), 5.0), "ordinary hostile projectile uses a five-unit collision radius")
 		_expect(is_equal_approx(Vector2(hostile_projectiles[0].velocity).length(), 410.0), "ordinary hostile projectile uses the reduced effective speed contract")
 		_expect(not bool(hostile_projectiles[0].wall_piercing), "ordinary hostile projectile cannot cross solid blockers")
 	projectile_store.call("clear")
@@ -111,7 +123,7 @@ func _run() -> void:
 	)
 	hostile_projectiles = projectile_store.get("hostile_live")
 	if hostile_projectiles.size() == 1:
-		_expect(is_equal_approx(float(hostile_projectiles[0].radius), 6.0), "standard hostile damage uses a six-pixel collision radius")
+		_expect(is_equal_approx(float(hostile_projectiles[0].radius), 6.0), "standard hostile damage uses a six-unit collision radius")
 		_expect(is_equal_approx(Vector2(hostile_projectiles[0].velocity).length(), 410.0), "boss prediction and motion share the reduced speed contract")
 		_expect(hostile_projectiles[0].affinity == AttackContract.THERMAL, "hostile projectile retains its authored affinity")
 
@@ -128,7 +140,7 @@ func _run() -> void:
 	)
 	hostile_projectiles = projectile_store.get("hostile_live")
 	if hostile_projectiles.size() == 1:
-		_expect(is_equal_approx(float(hostile_projectiles[0].radius), 7.0), "heavy hostile damage uses a seven-pixel collision radius")
+		_expect(is_equal_approx(float(hostile_projectiles[0].radius), 7.0), "heavy hostile damage uses a seven-unit collision radius")
 		_expect(hostile_projectiles[0].affinity == AttackContract.ARC, "heavy projectile retains its distinct affinity")
 
 	projectile_store.call("clear")
@@ -136,7 +148,7 @@ func _run() -> void:
 	var player_projectiles: Array = projectile_store.get("player_live")
 	_expect(player_projectiles.size() == 1, "default player projectile enters the retained store")
 	if player_projectiles.size() == 1:
-		_expect(is_equal_approx(float(player_projectiles[0].radius), 7.0), "default player projectile uses the larger seven-pixel collision radius")
+		_expect(is_equal_approx(float(player_projectiles[0].radius), 7.0), "default player projectile uses the larger seven-unit collision radius")
 		_expect(not bool(player_projectiles[0].wall_piercing), "default player projectile cannot cross solid blockers")
 
 	var field_layout: Variant = stage.get("field_layout")

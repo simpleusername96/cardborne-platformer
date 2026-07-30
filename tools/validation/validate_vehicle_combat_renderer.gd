@@ -20,22 +20,8 @@ func _run() -> void:
 	root.add_child(renderer)
 	await process_frame
 	var snapshot: Dictionary = renderer.debug_snapshot()
-	var pixel_enabled := bool(snapshot.get("pixel_enabled", false))
 	_expect(int(snapshot["enemy_capacity"]) == 320, "renderer shares the 320-hostile store capacity")
 	_expect(int(snapshot["status_arc_capacity"]) == 960, "status overlays scale from shared enemy capacity")
-	_expect(not pixel_enabled, "combat renderer has no remaining pixel catalog branch")
-	_expect(
-		not bool(snapshot.get("enemy_pixel_fallback", true)),
-		"ordinary and stationary enemies have no pixel fallback"
-	)
-	_expect(
-		not bool(snapshot.get("migrated_combat_pixel_fallback", true)),
-		"player, projectile, reward and effect families have no pixel fallback"
-	)
-	_expect(
-		not bool(snapshot.get("boss_pixel_fallback", true)),
-		"all five boss bodies have no pixel fallback"
-	)
 	_expect(
 		int(snapshot["batches"]) <= 50,
 		"combat presentation remains inside the retained fifty-batch ceiling (actual %d)"
@@ -46,7 +32,7 @@ func _run() -> void:
 		AttackContract.LIGHT_PROJECTILE_RADIUS == 5.0
 			and AttackContract.STANDARD_PROJECTILE_RADIUS == 6.0
 			and AttackContract.HEAVY_PROJECTILE_RADIUS == 7.0,
-		"hostile projectile collision radii remain 5/6/7 px"
+		"hostile projectile collision radii remain 5/6/7 world units"
 	)
 	_expect(
 		renderer.get_node_or_null("Projectile_trail_player_kinetic") != null,
@@ -221,7 +207,7 @@ func _run() -> void:
 		Vector2(trail_buffer[3], trail_buffer[7]).is_equal_approx(
 			Vector2(330.0, 300.0) - projectile_direction * 18.5
 		),
-		"player ownership trail stays attached behind the five-pixel head"
+		"player ownership trail stays attached behind the five-unit head"
 	)
 	_expect(
 		Vector2(trail_buffer[0], trail_buffer[4]).is_equal_approx(projectile_direction * 47.0),
@@ -299,7 +285,7 @@ func _run() -> void:
 				Vector2(hostile_core_buffer[0], hostile_core_buffer[4]).length(),
 				5.0
 			),
-		"hostile solid core remains centered and ends at the five-pixel collision boundary"
+		"hostile solid core ends at the five-unit collision boundary"
 	)
 	_expect(
 		hostile_trail.multimesh.mesh.get_surface_count() == 1,

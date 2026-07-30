@@ -276,7 +276,8 @@ func _validate_owner_boundaries() -> void:
 		"res://scripts/ui/vehicle_guidebook_preview.gd"
 	)
 	_expect(
-		not guide_source.contains("PixelCatalog")
+		guide_source.contains("vehicle_combat_visual_library.gd")
+			and guide_source.contains("vehicle_stage_visual_profile.gd")
 			and not guide_source.contains("draw_texture_rect_region"),
 		"guidebook preview consumes runtime vector providers only"
 	)

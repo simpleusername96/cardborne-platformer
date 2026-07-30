@@ -57,7 +57,7 @@ static func circle_inside_polygon_union(center: Vector2, radius: float, polygons
 		return false
 	if radius <= 0.0:
 		return true
-	# Sixteen perimeter samples keep the maximum edge error below half a pixel
+	# Sixteen perimeter samples keep the maximum edge error below half a world unit
 	# at the 24 px player radius while avoiding a costly physics-frame hot path.
 	for index in CIRCLE_UNION_SAMPLES:
 		var sample := center + Vector2.RIGHT.rotated(TAU * float(index) / float(CIRCLE_UNION_SAMPLES)) * radius * 0.999

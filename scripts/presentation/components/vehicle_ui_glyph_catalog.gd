@@ -4,16 +4,6 @@ extends RefCounted
 ## Action, upgrade-family, minimap, and preview glyph ownership. Layout,
 ## localization, focus, and control state stay in their UI owners.
 
-const SOURCE_FAMILIES: Array[StringName] = [
-	&"hud_action_icons",
-	&"minimap_world_markers",
-	&"guidebook_previews",
-	&"upgrade_card_icons",
-	&"world_targeting_markers",
-	&"ui_frame_system",
-	&"dynamic_combat_ui",
-]
-
 const CORE_GLYPHS: Array[StringName] = [
 	&"primary", &"seeker", &"dash", &"emp", &"secondary", &"breach_ready",
 	&"player", &"enemy", &"elite", &"boss", &"stationary", &"pickup",
@@ -32,12 +22,16 @@ const UPGRADE_FAMILY_GLYPHS := {
 }
 
 
-static func source_family_ids() -> Array[StringName]:
-	return SOURCE_FAMILIES.duplicate()
-
-
 static func descriptor_ids() -> Array[StringName]:
 	return CORE_GLYPHS.duplicate()
+
+
+static func upgrade_family_ids() -> Array[StringName]:
+	var ids: Array[StringName] = []
+	for value in UPGRADE_FAMILY_GLYPHS:
+		ids.append(StringName(value))
+	ids.sort()
+	return ids
 
 
 static func upgrade_family_descriptor(family: StringName) -> Dictionary:

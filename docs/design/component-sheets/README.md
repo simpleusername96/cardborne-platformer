@@ -6,7 +6,7 @@ created: 2026-07-30
 last_reviewed: 2026-07-30
 topic: Selected general-SF visual-system direction seed
 scope: Direction evidence for the replacement component grammar
-source: ../../../pixel-art-production/evidence/space-hangar-v2/runtime/ko-1280-maximum-pressure.png
+source: ./system-v1/manifest.json
 related:
   - ../UI_VISUAL_SYSTEM.md
   - ../../../.agents/execplans/2026-07-30-full-visual-system-redesign.md
@@ -16,7 +16,7 @@ related:
 
 ## Purpose
 
-현재 맵에서 사용하는 역할별 의미를 유지하면서 기존 픽셀 형태를 재사용하지
+현재 맵에서 사용하는 역할별 의미를 유지하면서 교체 전 형태를 재사용하지
 않는 전체 비주얼 시스템의 선택된 방향 seed다. 이 방향은 전투 컴포넌트에서
 시작해 world, effect, HUD와 UI로 확장한다.
 
@@ -27,11 +27,11 @@ related:
 ## Sources
 
 - 현재 최대 압력 gameplay capture: 맵 밝기, 배경 대비, 실제 플레이 크기 확인
-- 현재 runtime atlas: 필요한 역할 목록과 semantic color 확인
-- `UI_VISUAL_SYSTEM.md`: 일반적인 top-down space-hangar SF, 역할별 색·형태,
-  non-pixel combat component 계약
+- current runtime catalogs와 `system-v1/manifest.json`: 역할 목록,
+  semantic color와 production geometry 확인
+- `UI_VISUAL_SYSTEM.md`: 익숙한 일반 SF, 역할별 색·형태와 flat component 계약
 
-기존 atlas의 실루엣, pixel grid, 장식, 방향별 frame은 디자인 입력으로
+교체 전 시각 소스의 실루엣, 장식과 방향별 이미지는 디자인 입력으로
 사용하지 않았다.
 
 ## Findings

@@ -237,14 +237,6 @@ func _validate_source_boundaries() -> void:
 		not runtime_source.contains("for enemy in enemies"),
 		"boss exam runtime never scans the complete enemy array"
 	)
-	var renderer_source := FileAccess.get_file_as_string(
-		"res://scripts/presentation/vehicle_combat_renderer.gd"
-	)
-	_expect(
-		not renderer_source.contains("&\"boss_set\"")
-			and not renderer_source.contains("PixelCatalog"),
-		"boss combat presentation has no pixel atlas fallback"
-	)
 	var run_source := FileAccess.get_file_as_string(
 		"res://scripts/vehicle/vehicle_run.gd"
 	)

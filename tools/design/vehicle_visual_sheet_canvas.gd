@@ -641,7 +641,7 @@ func _build_actual_hud() -> void:
 		},
 	})
 	# Freeze transient HUD timers so repeated publication produces identical
-	# evidence pixels instead of capture-time-dependent health trails.
+	# evidence frames instead of capture-time-dependent health trails.
 	hud.process_mode = Node.PROCESS_MODE_DISABLED
 
 

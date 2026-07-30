@@ -26,7 +26,6 @@ const AttackTelegraphs = preload("res://scripts/combat/vehicle_attack_telegraph_
 const SpatialGrid = preload("res://scripts/combat/vehicle_spatial_grid.gd")
 const AudioDirector = preload("res://scripts/presentation/vehicle_audio_director.gd")
 const CombatRenderer = preload("res://scripts/presentation/vehicle_combat_renderer.gd")
-const PixelCatalog = preload("res://scripts/presentation/vehicle_pixel_asset_catalog.gd")
 const StageBackdrop = preload("res://scripts/vehicle/vehicle_stage_backdrop.gd")
 const BossPatterns = preload("res://scripts/bosses/vehicle_boss_patterns.gd")
 const BossExamCatalog = preload("res://scripts/bosses/vehicle_boss_exam_catalog.gd")
@@ -125,7 +124,6 @@ var _hud_presenter := HudPresenter.new()
 var _camera: Camera2D
 var _backdrop
 var _combat_renderer: VehicleCombatRenderer
-var _pixel_catalog
 var _rng := RandomNumberGenerator.new()
 var _layout_session_rng := RandomNumberGenerator.new()
 var _layout_session_seed := 0
@@ -276,7 +274,6 @@ var _pending_stage_report: Dictionary = {}
 
 func _ready() -> void:
 	_rng.seed = 0xC4A2B0
-	_pixel_catalog = PixelCatalog.new()
 	_layout_session_rng.randomize()
 	_layout_session_seed = _layout_session_rng.seed
 	_parse_capture_arguments()
@@ -5294,40 +5291,6 @@ func _draw_pickups_and_crates() -> void:
 			_regular_polygon(position, 11.0, 4, PI / 4.0),
 			Art.SURFACE
 		)
-
-
-func _draw_pixel_asset(
-	family: StringName,
-	variant: StringName,
-	state: StringName,
-	position: Vector2,
-	target_size: Vector2,
-	modulate: Color = Color.WHITE,
-	direction_index: int = 0
-) -> bool:
-	if _pixel_catalog == null or not _pixel_catalog.is_ready():
-		return false
-	var frame: Dictionary = _pixel_catalog.frame(
-		family, variant, direction_index, state, 0
-	)
-	if frame.is_empty():
-		return false
-	var texture: Texture2D = _pixel_catalog.texture(family)
-	if texture == null:
-		return false
-	var region_values := Array(frame["region"])
-	draw_texture_rect_region(
-		texture,
-		Rect2(position - target_size * 0.5, target_size),
-		Rect2(
-			float(region_values[0]),
-			float(region_values[1]),
-			float(region_values[2]),
-			float(region_values[3])
-		),
-		modulate
-	)
-	return true
 
 
 func _draw_enemies() -> void:

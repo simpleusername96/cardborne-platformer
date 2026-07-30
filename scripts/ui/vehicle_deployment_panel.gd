@@ -395,6 +395,11 @@ func selected_difficulty() -> StringName:
 	return _selected_difficulty
 
 
+func debug_submit(difficulty_id: StringName) -> void:
+	_select_difficulty(difficulty_id)
+	_command.pressed.emit()
+
+
 func _add_control_row(
 	glyph_kind: StringName,
 	title_key: String,

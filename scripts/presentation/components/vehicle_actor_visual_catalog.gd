@@ -4,16 +4,6 @@ extends RefCounted
 ## Actor silhouette, state, and anchor descriptors. Attack behavior, health,
 ## collision, animation timing, and AI remain outside this catalog.
 
-const SOURCE_FAMILIES: Array[StringName] = [
-	&"player_chassis",
-	&"player_engine_flame",
-	&"player_engine_modules",
-	&"mobile_enemy_set",
-	&"stationary_enemy_set",
-	&"boss_set",
-	&"secondary_escort_drone",
-]
-
 const DESCRIPTORS := {
 	&"player": {
 		"role": &"player",
@@ -55,10 +45,6 @@ const DESCRIPTORS := {
 	&"leviathan": {"role": &"boss", "shape": &"split_spear", "color": &"boss_command", "module_budget": 5},
 	&"titan": {"role": &"boss", "shape": &"diamond", "color": &"boss_command", "module_budget": 5},
 }
-
-
-static func source_family_ids() -> Array[StringName]:
-	return SOURCE_FAMILIES.duplicate()
 
 
 static func descriptor_ids() -> Array[StringName]:

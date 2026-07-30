@@ -5,7 +5,7 @@
 - The current product is the connected five-stage run defined in `docs/product/vehicle_game_spec.md`.
 - Preserve manual aim, uniform held primary fire, dash, passive seekers, EMP, authored encounters, map pickups, card upgrades, and quota-gated stage bosses.
 - Korean is the default language; Korean and English must remain complete on every user-facing surface.
-- Preserve the flat-color, role-readable top-down space-hangar visual contract in `docs/design/UI_VISUAL_SYSTEM.md`.
+- Preserve the flat-color, role-readable general-SF visual contract in `docs/design/UI_VISUAL_SYSTEM.md`.
 - Treat familiar science fiction as the visual baseline. Do not introduce a named material, cultural, marine, or ritual theme without explicit user approval.
 - Prioritize first-clear readability, fair pressure, responsive control, target priority, and reliable performance before adding content breadth.
 

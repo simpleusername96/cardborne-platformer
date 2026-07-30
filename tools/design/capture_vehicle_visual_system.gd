@@ -21,7 +21,7 @@ func _ready() -> void:
 
 func _generate() -> void:
 	var errors := Art.validate_contract()
-	errors.append_array(Registry.validate_current_source_coverage())
+	errors.append_array(Registry.validate_catalog_contract())
 	if not errors.is_empty():
 		for message in errors:
 			push_error(message)
