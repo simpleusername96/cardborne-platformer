@@ -233,7 +233,7 @@ func _format_value(stat: Dictionary) -> String:
 
 
 func _section(key: String) -> Label:
-	var label := _label(key, 19, Art.MUSTARD)
+	var label := _label(key, 18, Art.MUSTARD)
 	label.theme_type_variation = &"SectionLabel"
 	return label
 

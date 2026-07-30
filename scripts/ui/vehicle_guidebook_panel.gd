@@ -316,7 +316,7 @@ func _button(key_or_text: String) -> Button:
 	button.text = tr(key_or_text) if key_or_text.begins_with("GUIDE_") or key_or_text == "SETTINGS_CLOSE" else key_or_text
 	button.theme_type_variation = &"SecondaryButton"
 	button.focus_mode = Control.FOCUS_ALL
-	button.add_theme_font_size_override("font_size", 19)
+	button.add_theme_font_size_override("font_size", 18)
 	return button
 
 

@@ -49,7 +49,7 @@ static func section_heading(key: String) -> HBoxContainer:
 	var left_rule := HSeparator.new()
 	left_rule.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(left_rule)
-	var heading := label(key, 19, Art.MUSTARD)
+	var heading := label(key, 22, Art.MUSTARD)
 	heading.theme_type_variation = &"SectionLabel"
 	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	row.add_child(heading)

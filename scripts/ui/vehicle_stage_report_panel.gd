@@ -135,7 +135,7 @@ func _build() -> void:
 	_kicker = _label("", 16, Art.MUSTARD)
 	_kicker.theme_type_variation = &"MetricLabel"
 	add_child(_kicker)
-	_title = _label("", 34, Art.IVORY_BRIGHT)
+	_title = _label("", 32, Art.IVORY_BRIGHT)
 	_title.theme_type_variation = &"TitleLabel"
 	add_child(_title)
 	_summary = _label("", 17, Art.MINT_SOFT)
@@ -380,7 +380,7 @@ func _clear(node: Node) -> void:
 
 
 func _section(key: String) -> Label:
-	var label := _label(key, 20, Art.MUSTARD)
+	var label := _label(key, 22, Art.MUSTARD)
 	label.theme_type_variation = &"SectionLabel"
 	return label
 

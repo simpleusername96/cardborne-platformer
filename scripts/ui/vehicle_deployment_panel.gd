@@ -243,7 +243,7 @@ func _build() -> void:
 		button.alignment = HORIZONTAL_ALIGNMENT_CENTER
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		button.custom_minimum_size.y = 72.0
-		button.add_theme_font_size_override("font_size", 20)
+		button.add_theme_font_size_override("font_size", 22)
 		button.pressed.connect(_select_difficulty.bind(difficulty_id))
 		difficulty_row.add_child(button)
 		_difficulty_buttons[difficulty_id] = button
@@ -307,7 +307,7 @@ func set_compact_mode(compact: bool) -> void:
 	_body.add_theme_constant_override("separation", 16 if compact else 28)
 	_controls_box.custom_minimum_size.x = 400.0 if compact else 522.0
 	_difficulty_box.custom_minimum_size.x = 400.0 if compact else 520.0
-	_title.add_theme_font_size_override("font_size", 32 if compact else 42)
+	_title.add_theme_font_size_override("font_size", 30 if compact else 40)
 	_field_label.add_theme_font_size_override("font_size", 14 if compact else 16)
 	for row in _control_rows:
 		row.custom_minimum_size.y = 28.0 if compact else 36.0
@@ -331,7 +331,7 @@ func set_compact_mode(compact: bool) -> void:
 	for button_variant in _difficulty_buttons.values():
 		var button := button_variant as Button
 		button.custom_minimum_size.y = 58.0 if compact else 72.0
-		button.add_theme_font_size_override("font_size", 17 if compact else 20)
+		button.add_theme_font_size_override("font_size", 17 if compact else 22)
 	_command.custom_minimum_size.y = 48.0
 	_secondary_actions.add_theme_constant_override(
 		"separation",

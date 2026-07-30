@@ -5,11 +5,17 @@ const MinimapMeshBuilder = preload("res://scripts/ui/vehicle_minimap_mesh_builde
 const RetainedMinimapMesh = preload("res://scripts/ui/vehicle_retained_minimap_mesh.gd")
 const Catalog = preload("res://scripts/cards/vehicle_upgrade_catalog.gd")
 const OfferPresenter = preload("res://scripts/cards/vehicle_upgrade_offer_presenter.gd")
+const UiGlyphCatalog = preload(
+	"res://scripts/presentation/components/vehicle_ui_glyph_catalog.gd"
+)
 
 var failures: Array[String] = []
 
 
 func _initialize() -> void:
+	for error in UiGlyphCatalog.validate_action_recipes():
+		failures.append("shared action glyph recipe: %s" % error)
+	_validate_action_glyph_meshes()
 	var ui := StageUI.new()
 	get_root().add_child(ui)
 	await process_frame
@@ -24,6 +30,16 @@ func _initialize() -> void:
 		_expect(
 			int(foundation["modal_surface_count"]) >= 8,
 			"all modals use the shared self-drawing surface at %d" % width
+		)
+		var modal_frame := Dictionary(foundation["modal_frame"])
+		_expect(
+			bool(modal_frame.get("layered_depth", false))
+				and is_equal_approx(
+					float(modal_frame.get("corner_cut", 0.0)),
+					12.0
+				),
+			"modal surfaces keep the approved layered mechanical frame at %d"
+			% width
 		)
 		_expect(
 			int(foundation["texture_filter"]) == CanvasItem.TEXTURE_FILTER_LINEAR,
@@ -48,6 +64,12 @@ func _initialize() -> void:
 		_expect(int(contract["action_slot_count"]) == 3, "action rail contains three auxiliary actions at %d" % width)
 		_expect(not bool(contract["shows_primary_slot"]), "primary fire is omitted from the action rail at %d" % width)
 		_expect(Vector2(contract["secondary_slot_size"]) == Vector2(44.0, 44.0), "action icons remain readable at %d" % width)
+		for status_name in Dictionary(contract["status_font_sizes"]):
+			_expect(
+				int(contract["status_font_sizes"][status_name]) >= 14,
+				"%s HUD status typography stays at or above 14 px at %d"
+				% [status_name, width]
+			)
 		_expect(bool(contract["top_clusters_do_not_overlap"]), "top clusters do not overlap at %d" % width)
 		_expect(bool(contract["central_safe_clear"]), "central play space remains clear at %d" % width)
 		var upgrade_contract := Dictionary(contract["upgrade_choice"])
@@ -168,11 +190,22 @@ func _initialize() -> void:
 		"skill_ratio":1.0,
 	})
 	var cooldown_contract := ui.debug_ui_contract(1280.0)
+	var cooldown_glyph_ids: Array[StringName] = []
 	for slot_variant in cooldown_contract["action_slot_contracts"]:
 		var slot := Dictionary(slot_variant)
+		cooldown_glyph_ids.append(StringName(slot["glyph_id"]))
 		_expect(not bool(slot["interior_filled"]), "cooldown action circles keep an empty interior")
 		_expect(not bool(slot["has_text"]), "action circles do not render labels")
 		_expect(int(slot["draw_batches"]) <= 2, "each action glyph uses one retained mesh plus at most one cooldown arc")
+		_expect(
+			bool(slot["shared_glyph_recipe"])
+				and int(slot["glyph_command_count"]) >= 3,
+			"action identity uses a complete shared glyph recipe"
+		)
+	_expect(
+		cooldown_glyph_ids == [&"seeker", &"dash", &"emp"],
+		"action rail keeps seeker, dash, and EMP in their authored order"
+	)
 	ui.update_hud({
 		"dash_available":true,
 		"dash_ratio":0.0,
@@ -305,6 +338,50 @@ func _initialize() -> void:
 	ui.queue_free()
 	await process_frame
 	_finish()
+
+
+func _validate_action_glyph_meshes() -> void:
+	for action_id in UiGlyphCatalog.action_ids():
+		var vertices := PackedVector3Array()
+		var colors := PackedColorArray()
+		var indices := PackedInt32Array()
+		var command_count := UiGlyphCatalog.append_action_mesh_geometry(
+			vertices,
+			colors,
+			indices,
+			action_id,
+			Vector2(22.0, 22.0),
+			10.5,
+			{
+				&"primary":Color.WHITE,
+				&"secondary":Color.GRAY,
+				&"highlight":Color.LIGHT_GRAY,
+			}
+		)
+		var recipe_commands := Array(
+			UiGlyphCatalog.action_descriptor(action_id).get("commands", [])
+		)
+		_expect(
+			command_count == recipe_commands.size()
+				and not vertices.is_empty()
+				and colors.size() == vertices.size()
+				and indices.size() >= 3
+				and indices.size() % 3 == 0,
+			"%s action recipe compiles into retained triangle geometry"
+			% action_id
+		)
+		var arrays := []
+		arrays.resize(Mesh.ARRAY_MAX)
+		arrays[Mesh.ARRAY_VERTEX] = vertices
+		arrays[Mesh.ARRAY_COLOR] = colors
+		arrays[Mesh.ARRAY_INDEX] = indices
+		var mesh := ArrayMesh.new()
+		mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+		_expect(
+			mesh.get_surface_count() == 1,
+			"%s action identity stays inside one retained mesh surface"
+			% action_id
+		)
 
 
 func _validate_modal_matrix(ui: VehicleStageUI) -> void:

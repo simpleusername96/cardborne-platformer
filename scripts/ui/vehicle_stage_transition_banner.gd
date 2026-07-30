@@ -1,12 +1,14 @@
 class_name VehicleStageTransitionBanner
-extends PanelContainer
+extends Control
 
 ## Non-modal stage handoff presentation. The run owns transition state and
 ## timing; this component owns only the two-line banner and reduced-motion fade.
 
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
+const Factory = preload("res://scripts/ui/vehicle_ui_component_factory.gd")
 const DISPLAY_SECONDS := 1.6
 
+var _surface: PanelContainer
 var _title: Label
 var _status: Label
 var _remaining := 0.0
@@ -20,27 +22,22 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_PAUSABLE
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	z_index = 20
-	var panel := StyleBoxFlat.new()
-	panel.bg_color = Color(Art.COBALT_DEEP, 0.94)
-	panel.border_color = Art.MUSTARD
-	panel.set_border_width_all(2)
-	panel.content_margin_left = 24.0
-	panel.content_margin_right = 24.0
-	panel.content_margin_top = 10.0
-	panel.content_margin_bottom = 10.0
-	add_theme_stylebox_override("panel", panel)
+	_surface = Factory.modal_surface(Vector2.ZERO)
+	_surface.name = "TransitionSurface"
+	_surface.theme_type_variation = &"HudStatusGroup"
+	_surface.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_surface)
+	_surface.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var stack := VBoxContainer.new()
+	stack.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	stack.add_theme_constant_override("separation", 2)
-	add_child(stack)
-	_title = Label.new()
+	_surface.add_child(stack)
+	_title = Factory.label("", 22, Art.TEXT_PRIMARY)
+	_title.theme_type_variation = &"TitleLabel"
 	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_title.add_theme_font_size_override("font_size", 21)
-	_title.add_theme_color_override("font_color", Art.IVORY_BRIGHT)
 	stack.add_child(_title)
-	_status = Label.new()
+	_status = Factory.label("", 14, Art.TEXT_MUTED)
 	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_status.add_theme_font_size_override("font_size", 13)
-	_status.add_theme_color_override("font_color", Art.MINT_SOFT)
 	stack.add_child(_status)
 	visible = false
 	set_process(false)
@@ -91,9 +88,37 @@ func debug_snapshot() -> Dictionary:
 		"title":_title.text if is_instance_valid(_title) else "",
 		"status":_status.text if is_instance_valid(_status) else "",
 		"mouse_filter":mouse_filter,
+		"input_passthrough":_input_passthrough(),
 		"size":size,
 		"position":position,
+		"mechanical_frame":(
+			_surface.call("debug_contract")
+			if is_instance_valid(_surface)
+			else {}
+		),
+		"title_variation":(
+			_title.theme_type_variation
+			if is_instance_valid(_title)
+			else &""
+		),
+		"title_font_size":(
+			_title.get_theme_font_size("font_size")
+			if is_instance_valid(_title)
+			else 0
+		),
+		"status_font_size":(
+			_status.get_theme_font_size("font_size")
+			if is_instance_valid(_status)
+			else 0
+		),
 	}
+
+
+func _input_passthrough() -> bool:
+	for node in find_children("*", "Control", true, false):
+		if (node as Control).mouse_filter != Control.MOUSE_FILTER_IGNORE:
+			return false
+	return true
 
 
 func _process(delta: float) -> void:

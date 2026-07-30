@@ -429,6 +429,11 @@ func debug_ui_contract(viewport_width: float = 1280.0) -> Dictionary:
 				true,
 				false
 			).size(),
+			"modal_frame":(
+				_host("deployment").surface.call("debug_contract")
+				if _host("deployment").surface != null
+				else {}
+			),
 			"texture_filter":_root.texture_filter,
 		},
 		"flat_style_foundation":{

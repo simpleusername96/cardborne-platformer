@@ -121,8 +121,18 @@ func _check_stage_one_to_three(run) -> void:
 	_expect(
 		not banner.is_empty()
 			and bool(banner["visible"])
-			and int(banner["mouse_filter"]) == Control.MOUSE_FILTER_IGNORE,
+			and int(banner["mouse_filter"]) == Control.MOUSE_FILTER_IGNORE
+			and bool(banner.get("input_passthrough", false)),
 		"transition banner is visible and never captures gameplay input"
+	)
+	var banner_frame := Dictionary(banner.get("mechanical_frame", {}))
+	_expect(
+		bool(banner_frame.get("layered_depth", false))
+			and StringName(banner.get("title_variation", &""))
+				== &"TitleLabel"
+			and int(banner.get("title_font_size", 0)) >= 22
+			and int(banner.get("status_font_size", 0)) >= 14,
+		"transition banner uses shared mechanical chrome and canonical type hierarchy"
 	)
 	_expect(
 		ui != null

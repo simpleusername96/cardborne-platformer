@@ -141,7 +141,7 @@ func _build() -> void:
 	var header := HBoxContainer.new()
 	header.add_theme_constant_override("separation", 12)
 	add_child(header)
-	var title := _label("SETTINGS_TITLE", 36, Art.IVORY_BRIGHT)
+	var title := _label("SETTINGS_TITLE", 40, Art.IVORY_BRIGHT)
 	title.theme_type_variation = &"TitleLabel"
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(title)
@@ -272,7 +272,7 @@ func _page(page_name: String) -> VBoxContainer:
 
 
 func _section_title(key: String) -> Label:
-	var label := _label(key, 21, Art.MUSTARD)
+	var label := _label(key, 22, Art.MUSTARD)
 	label.theme_type_variation = &"SectionLabel"
 	return label
 

@@ -10,6 +10,9 @@ const ThreatRadar = preload("res://scripts/ui/vehicle_threat_radar.gd")
 const StatusOrbit = preload("res://scripts/ui/vehicle_status_orbit.gd")
 const StageTransitionBanner = preload("res://scripts/ui/vehicle_stage_transition_banner.gd")
 const RetainedMinimapMesh = preload("res://scripts/ui/vehicle_retained_minimap_mesh.gd")
+const UiGlyphCatalog = preload(
+	"res://scripts/presentation/components/vehicle_ui_glyph_catalog.gd"
+)
 
 const HEALTH_CLUSTER_SIZE := Vector2(216.0, 74.0)
 const ACTION_RAIL_SIZE := Vector2(148.0, 44.0)
@@ -236,8 +239,8 @@ class HealthPips:
 class ActionRailSlot:
 	extends Control
 
-	var action_name := ""
-	var accent := Art.MUSTARD
+	var action_id: StringName = &"seeker"
+	var accent := Art.PLAYER_REWARD
 	var cooldown_ratio := 0.0
 	var available := true
 	var _available_mesh: ArrayMesh
@@ -248,10 +251,10 @@ class ActionRailSlot:
 		focus_mode = Control.FOCUS_NONE
 		custom_minimum_size = Vector2(44.0, 44.0)
 
-	func configure(title: String, color: Color) -> void:
-		if action_name == title and accent.is_equal_approx(color):
+	func configure(glyph_id: StringName, color: Color) -> void:
+		if action_id == glyph_id and accent.is_equal_approx(color):
 			return
-		action_name = title
+		action_id = glyph_id
 		accent = color
 		_available_mesh = null
 		_unavailable_mesh = null
@@ -300,64 +303,43 @@ class ActionRailSlot:
 		_append_disk(
 			vertices, colors, indices,
 			center + Vector2(1.0, 2.0), radius + 1.0,
-			Color(Art.COBALT_DEEP, 0.82), 24
+			Color(Art.WORLD_CANVAS, 0.82), 24
 		)
 		_append_disk(
 			vertices, colors, indices,
 			center, radius,
-			accent if is_available else Color(Art.COBALT_DEEP, 0.92), 24
+			accent if is_available else Color(Art.WORLD_CANVAS, 0.92), 24
 		)
 		_append_band(
 			vertices, colors, indices,
 			center, radius - 1.0, radius + 1.0, 0.0, TAU,
-			Art.IVORY_BRIGHT
+			Art.TEXT_PRIMARY
 				if is_available
-				else Color(Art.MINT_SOFT, 0.58),
+				else Color(Art.SUPPORT, 0.58),
 			24
 		)
 		var icon_color := (
-			Color(Art.COBALT_DEEP, 0.95)
+			Color(Art.WORLD_CANVAS, 0.95)
 			if is_available
-			else Color(Art.IVORY_BRIGHT, 0.78)
+			else Color(Art.TEXT_PRIMARY, 0.78)
 		)
-		match action_name:
-			"ACTION_SEEKER":
-				for offset in [-6.0, 0.0, 6.0]:
-					_append_disk(
-						vertices, colors, indices,
-						center + Vector2(offset, 0.0), 2.3,
-						icon_color, 8
-					)
-			"ACTION_DASH":
-				_append_triangle(
-					vertices, colors, indices,
-					center + Vector2(-7.0, -5.0),
-					center + Vector2(0.0, 0.0),
-					center + Vector2(-7.0, 5.0),
-					icon_color
-				)
-				_append_triangle(
-					vertices, colors, indices,
-					center + Vector2(0.0, -5.0),
-					center + Vector2(7.0, 0.0),
-					center + Vector2(0.0, 5.0),
-					icon_color
-				)
-			_:
-				_append_triangle(
-					vertices, colors, indices,
-					center + Vector2(0.0, -8.0),
-					center + Vector2(7.0, 6.0),
-					center,
-					icon_color
-				)
-				_append_triangle(
-					vertices, colors, indices,
-					center + Vector2(0.0, -8.0),
-					center,
-					center + Vector2(-7.0, 6.0),
-					icon_color
-				)
+		UiGlyphCatalog.append_action_mesh_geometry(
+			vertices,
+			colors,
+			indices,
+			action_id,
+			center,
+			10.5,
+			{
+				&"primary":icon_color,
+				&"secondary":icon_color.lerp(accent, 0.18),
+				&"highlight":(
+					Color(Art.TEXT_PRIMARY, 0.92)
+					if is_available
+					else Color(Art.TEXT_MUTED, 0.72)
+				),
+			}
+		)
 		var arrays := []
 		arrays.resize(Mesh.ARRAY_MAX)
 		arrays[Mesh.ARRAY_VERTEX] = vertices
@@ -423,29 +405,19 @@ class ActionRailSlot:
 			for local_index in [0, 1, 2, 0, 2, 3]:
 				indices.append(offset + local_index)
 
-	func _append_triangle(
-		vertices: PackedVector3Array,
-		colors: PackedColorArray,
-		indices: PackedInt32Array,
-		point_a: Vector2,
-		point_b: Vector2,
-		point_c: Vector2,
-		color: Color
-	) -> void:
-		var offset := vertices.size()
-		for point in [point_a, point_b, point_c]:
-			vertices.append(Vector3(point.x, point.y, 0.0))
-			colors.append(color)
-		for local_index in [0, 1, 2]:
-			indices.append(offset + local_index)
-
 	func debug_contract() -> Dictionary:
+		var descriptor := UiGlyphCatalog.action_descriptor(action_id)
 		return {
 			"available":available,
 			"interior_filled":available,
 			"has_text":false,
 			"draw_batches":2 if not available else 1,
 			"minimum_size":custom_minimum_size,
+			"glyph_id":action_id,
+			"shared_glyph_recipe":not descriptor.is_empty(),
+			"glyph_command_count":Array(
+				descriptor.get("commands", [])
+			).size(),
 		}
 
 
@@ -633,7 +605,7 @@ func _build() -> void:
 	)
 	_objective_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	objective_box.add_child(_objective_label)
-	_objective_detail = Factory.label("DEPLOY_CONTROLS", 12, Art.MINT_SOFT)
+	_objective_detail = Factory.label("DEPLOY_CONTROLS", 14, Art.TEXT_MUTED)
 	_objective_detail.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_objective_detail.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	objective_box.add_child(_objective_detail)
@@ -668,8 +640,8 @@ func _build() -> void:
 	_boss_cluster.add_child(_boss_bar)
 	_boss_state = Factory.label(
 		"PATTERN_READING_ARENA",
-		11,
-		Art.IVORY_BRIGHT
+		14,
+		Art.TEXT_MUTED
 	)
 	_shadow_label(_boss_state)
 	_boss_state.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -692,7 +664,7 @@ func _build() -> void:
 	_target_bar.theme_type_variation = &"HealthMeter"
 	_target_bar.custom_minimum_size = Vector2(160.0, 9.0)
 	target_cluster.add_child(_target_bar)
-	_target_state = Factory.label("", 12, Art.MINT_SOFT)
+	_target_state = Factory.label("", 14, Art.TEXT_MUTED)
 	_target_state.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	target_cluster.add_child(_target_state)
 	_target_panel.visible = false
@@ -706,11 +678,11 @@ func _build() -> void:
 	dock.add_theme_constant_override("separation", 8)
 	dock.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_dock_panel.add_child(dock)
-	_passive_slot = _action_slot(dock, "ACTION_SEEKER", Art.MINT)
-	_dash_slot = _action_slot(dock, "ACTION_DASH", Art.COBALT_ENERGY)
-	_skill_slot = _action_slot(dock, "ACTION_EMP", Art.BOSS_MAGENTA)
+	_passive_slot = _action_slot(dock, &"seeker", Art.SUPPORT)
+	_dash_slot = _action_slot(dock, &"dash", Art.SYSTEM)
+	_skill_slot = _action_slot(dock, &"emp", Art.BOSS_COMMAND)
 
-	_buff_label = Factory.label("", 13, Art.IVORY_BRIGHT)
+	_buff_label = Factory.label("", 14, Art.TEXT_PRIMARY)
 	_buff_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_buff_label.size = Vector2(600.0, 28.0)
 	_shadow_label(_buff_label)
@@ -989,6 +961,14 @@ func debug_contract(viewport_width: float) -> Dictionary:
 		),
 		"zone_count":4,
 		"notification_inside_hud":_notification.get_parent() == self,
+		"status_font_sizes":{
+			"objective_detail":_objective_detail.get_theme_font_size(
+				"font_size"
+			),
+			"boss_state":_boss_state.get_theme_font_size("font_size"),
+			"target_state":_target_state.get_theme_font_size("font_size"),
+			"buff":_buff_label.get_theme_font_size("font_size"),
+		},
 	}
 
 
@@ -1050,7 +1030,7 @@ func _apply_responsive_layout() -> void:
 	)
 	_objective_detail.add_theme_font_size_override(
 		"font_size",
-		12 if compact else 13
+		14
 	)
 	_notification.size.x = 320.0 if compact else 360.0
 	_notification.position = Vector2(
@@ -1079,11 +1059,11 @@ func _show_notification(entry: Dictionary) -> void:
 
 func _action_slot(
 	parent: HBoxContainer,
-	title: String,
+	action_id: StringName,
 	color: Color
 ) -> ActionRailSlot:
 	var slot := ActionRailSlot.new()
-	slot.configure(title, color)
+	slot.configure(action_id, color)
 	parent.add_child(slot)
 	return slot
 
