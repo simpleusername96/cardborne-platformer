@@ -9,6 +9,9 @@ const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd"
 const ActorCatalog = preload("res://scripts/presentation/components/vehicle_actor_visual_catalog.gd")
 const ActorRecipes = preload("res://scripts/presentation/components/vehicle_actor_mesh_recipes.gd")
 const ProjectileCatalog = preload("res://scripts/presentation/components/vehicle_projectile_visual_catalog.gd")
+const ProjectileEffectRecipes = preload(
+	"res://scripts/presentation/components/vehicle_projectile_effect_mesh_recipes.gd"
+)
 const RewardCatalog = preload("res://scripts/presentation/components/vehicle_reward_visual_catalog.gd")
 const EffectCatalog = preload("res://scripts/presentation/components/vehicle_effect_visual_catalog.gd")
 const Components = preload("res://scripts/presentation/components/vehicle_component_mesh_library.gd")
@@ -69,21 +72,27 @@ static func boss_module_mesh(
 static func projectile_head_mesh(
 	affinity: StringName = AttackContract.KINETIC
 ) -> ArrayMesh:
-	var _descriptor := ProjectileCatalog.descriptor(affinity)
-	return polygon_mesh(_projectile_head_polygons(affinity))
+	var recipe_id := _projectile_recipe_id(affinity)
+	return Components.polygon_mesh(
+		StringName("projectile_head_%s" % String(recipe_id)),
+		ProjectileEffectRecipes.projectile_head_layers(recipe_id)
+	)
 
 
 static func hostile_projectile_mesh(affinity: StringName) -> ArrayMesh:
-	var polygons := _hostile_trail_polygons(affinity)
-	polygons.append_array(_projectile_head_polygons(affinity))
-	return polygon_mesh(polygons)
+	var recipe_id := _projectile_recipe_id(affinity)
+	return Components.polygon_mesh(
+		StringName("projectile_hostile_%s" % String(recipe_id)),
+		ProjectileEffectRecipes.projectile_layers(recipe_id)
+	)
 
 
 static func player_projectile_head_mesh() -> ArrayMesh:
-	return polygon_mesh([
-		{"points":_regular_polygon(Vector2.ZERO, 1.0, 20), "color":Art.MUSTARD},
-		{"points":_regular_polygon(Vector2.ZERO, 0.46, 16), "color":Art.COBALT_DEEP},
-	])
+	var recipe_id := _projectile_recipe_id(&"player_primary")
+	return Components.polygon_mesh(
+		StringName("projectile_player_head_%s" % String(recipe_id)),
+		ProjectileEffectRecipes.projectile_head_layers(recipe_id, Art.MUSTARD)
+	)
 
 
 static func hostile_projectile_core_mesh() -> ArrayMesh:
@@ -100,229 +109,34 @@ static func hostile_projectile_core_mesh() -> ArrayMesh:
 
 
 static func hostile_projectile_envelope_mesh(affinity: StringName) -> ArrayMesh:
-	var _descriptor := ProjectileCatalog.descriptor(affinity)
-	var polygons: Array[Dictionary] = [{
-		"points":_regular_polygon(Vector2.ZERO, 1.0, 12),
-		"color":Color(1.0, 1.0, 1.0, 0.16),
-	}]
-	polygons.append_array(_projectile_head_polygons(affinity))
-	return polygon_mesh(polygons)
+	return hostile_projectile_mesh(affinity)
 
 
-static func projectile_trail_mesh(affinity: StringName) -> ArrayMesh:
-	var _descriptor := ProjectileCatalog.descriptor(affinity)
-	var polygons: Array[Dictionary] = []
-	match AttackContract.normalize_affinity(affinity):
-		AttackContract.THERMAL:
-			polygons.append({
-				"points":PackedVector2Array([
-					Vector2(-0.5, -0.5), Vector2(0.5, -0.18),
-					Vector2(0.5, 0.18), Vector2(-0.5, 0.5),
-				]),
-				"color":Color.WHITE,
-			})
-		AttackContract.TOXIN:
-			for center_x in [-0.28, 0.28]:
-				polygons.append({
-					"points":PackedVector2Array([
-						Vector2(center_x - 0.22, 0.0), Vector2(center_x, -0.46),
-						Vector2(center_x + 0.22, 0.0), Vector2(center_x, 0.46),
-					]),
-					"color":Color.WHITE,
-				})
-		AttackContract.CRYO:
-			polygons.append({
-				"points":PackedVector2Array([
-					Vector2(-0.5, -0.48), Vector2(0.5, -0.08),
-					Vector2(0.5, 0.05), Vector2(-0.5, -0.16),
-				]),
-				"color":Color.WHITE,
-			})
-			polygons.append({
-				"points":PackedVector2Array([
-					Vector2(-0.5, 0.16), Vector2(0.5, -0.05),
-					Vector2(0.5, 0.08), Vector2(-0.5, 0.48),
-				]),
-				"color":Color.WHITE,
-			})
-		AttackContract.ARC:
-			polygons.append({
-				"points":PackedVector2Array([
-					Vector2(-0.5, -0.18), Vector2(-0.18, -0.5),
-					Vector2(-0.04, -0.12), Vector2(0.24, -0.42),
-					Vector2(0.12, -0.03), Vector2(0.5, 0.18),
-					Vector2(0.18, 0.5), Vector2(0.04, 0.12),
-					Vector2(-0.24, 0.42), Vector2(-0.12, 0.03),
-				]),
-				"color":Color.WHITE,
-			})
-		AttackContract.HYBRID:
-			polygons.append({
-				"points":PackedVector2Array([
-					Vector2(-0.5, 0.0), Vector2(-0.08, -0.5),
-					Vector2(0.5, 0.0), Vector2(-0.08, 0.5),
-				]),
-				"color":Color.WHITE,
-			})
-		_:
-			polygons.append({
-				"points":PackedVector2Array([
-					Vector2(-0.5, -0.5), Vector2(0.5, -0.5),
-					Vector2(0.5, 0.5), Vector2(-0.5, 0.5),
-				]),
-				"color":Color.WHITE,
-			})
-	return polygon_mesh(polygons)
-
-
-static func _hostile_trail_polygons(affinity: StringName) -> Array[Dictionary]:
-	var polygons: Array[Dictionary] = []
-	var tail_color := Color(1.0, 1.0, 1.0, 0.50)
-	match AttackContract.normalize_affinity(affinity):
-		AttackContract.THERMAL:
-			polygons.append({
-				"points":PackedVector2Array([
-					Vector2(-6.5, -0.46), Vector2(-0.72, -0.20),
-					Vector2(-0.72, 0.20), Vector2(-6.5, 0.46),
-				]),
-				"color":tail_color,
-			})
-		AttackContract.TOXIN:
-			for center_x in [-4.8, -2.5]:
-				polygons.append({
-					"points":PackedVector2Array([
-						Vector2(center_x - 0.58, 0.0),
-						Vector2(center_x, -0.42),
-						Vector2(center_x + 0.58, 0.0),
-						Vector2(center_x, 0.42),
-					]),
-					"color":tail_color,
-				})
-		AttackContract.CRYO:
-			for center_y in [-0.29, 0.29]:
-				polygons.append({
-					"points":PackedVector2Array([
-						Vector2(-6.5, center_y - 0.13),
-						Vector2(-0.72, center_y - 0.08),
-						Vector2(-0.72, center_y + 0.08),
-						Vector2(-6.5, center_y + 0.13),
-					]),
-					"color":tail_color,
-				})
-		AttackContract.ARC:
-			polygons.append({
-				"points":PackedVector2Array([
-					Vector2(-6.5, -0.16), Vector2(-5.3, -0.50),
-					Vector2(-4.2, 0.10), Vector2(-3.0, -0.42),
-					Vector2(-1.9, 0.16), Vector2(-0.72, -0.16),
-					Vector2(-1.9, 0.48), Vector2(-3.0, -0.10),
-					Vector2(-4.2, 0.42), Vector2(-5.3, -0.18),
-				]),
-				"color":tail_color,
-			})
-		AttackContract.HYBRID:
-			polygons.append({
-				"points":PackedVector2Array([
-					Vector2(-6.5, 0.0), Vector2(-5.7, -0.44),
-					Vector2(-0.72, -0.16), Vector2(-0.72, 0.16),
-					Vector2(-5.7, 0.44),
-				]),
-				"color":tail_color,
-			})
-		_:
-			polygons.append({
-				"points":PackedVector2Array([
-					Vector2(-6.5, -0.28), Vector2(-0.72, -0.28),
-					Vector2(-0.72, 0.28), Vector2(-6.5, 0.28),
-				]),
-				"color":tail_color,
-			})
-	return polygons
-
-
-static func _projectile_head_polygons(affinity: StringName) -> Array[Dictionary]:
-	var polygons: Array[Dictionary] = []
-	var head_color := Color.WHITE
-	match AttackContract.normalize_affinity(affinity):
-		AttackContract.THERMAL:
-			polygons.append({
-				"points":PackedVector2Array([
-					Vector2(1.0, 0.0), Vector2(0.28, -0.48),
-					Vector2(-0.14, -0.95), Vector2(-0.58, -0.34),
-					Vector2(-0.82, 0.0), Vector2(-0.58, 0.34),
-					Vector2(-0.14, 0.95), Vector2(0.28, 0.48),
-				]),
-				"color":head_color,
-			})
-		AttackContract.TOXIN:
-			polygons.append({
-				"points":PackedVector2Array([
-					Vector2(1.0, 0.0), Vector2(0.18, -0.76),
-					Vector2(-0.65, -0.45), Vector2(-0.88, 0.0),
-					Vector2(-0.65, 0.45), Vector2(0.18, 0.76),
-				]),
-				"color":head_color,
-			})
-		AttackContract.CRYO:
-			polygons.append({
-				"points":PackedVector2Array([
-					Vector2(1.0, 0.0), Vector2(0.0, -0.48),
-					Vector2(-1.0, 0.0), Vector2(0.0, 0.48),
-				]),
-				"color":head_color,
-			})
-		AttackContract.ARC:
-			polygons.append({
-				"points":PackedVector2Array([
-					Vector2(1.0, 0.0), Vector2(0.16, -0.28),
-					Vector2(0.42, -0.82), Vector2(-0.32, -0.20),
-					Vector2(-0.08, 0.04), Vector2(-0.55, 0.80),
-					Vector2(0.26, 0.24), Vector2(0.02, 0.02),
-				]),
-				"color":head_color,
-			})
-		AttackContract.HYBRID:
-			polygons.append({
-				"points":PackedVector2Array([
-					Vector2(0.96, -0.28), Vector2(0.0, -0.64),
-					Vector2(-0.96, -0.28), Vector2(0.0, 0.0),
-				]),
-				"color":head_color,
-			})
-			polygons.append({
-				"points":PackedVector2Array([
-					Vector2(0.96, 0.28), Vector2(0.0, 0.64),
-					Vector2(-0.96, 0.28), Vector2(0.0, 0.0),
-				]),
-				"color":head_color,
-			})
-		AttackContract.SUPPORT:
-			for index in 8:
-				var angle_a := TAU * float(index) / 8.0
-				var angle_b := TAU * float(index + 1) / 8.0
-				polygons.append({
-					"points":PackedVector2Array([
-						Vector2.RIGHT.rotated(angle_a),
-						Vector2.RIGHT.rotated(angle_b),
-						Vector2.RIGHT.rotated(angle_b) * 0.58,
-						Vector2.RIGHT.rotated(angle_a) * 0.58,
-					]),
-					"color":head_color,
-				})
-		_:
-			polygons.append({
-				"points":_regular_polygon(Vector2.ZERO, 1.0, 20),
-				"color":head_color,
-			})
-	return polygons
+static func projectile_trail_mesh(_affinity: StringName) -> ArrayMesh:
+	var recipe_id := _projectile_recipe_id(&"player_primary")
+	return Components.polygon_mesh(
+		StringName("projectile_player_trail_%s" % String(recipe_id)),
+		ProjectileEffectRecipes.player_trail_layers(recipe_id)
+	)
 
 
 static func debug_projectile_head_extent(affinity: StringName) -> float:
 	var extent := 0.0
-	for polygon in _projectile_head_polygons(affinity):
-		for point in PackedVector2Array(polygon["points"]):
-			extent = maxf(extent, point.length())
+	for point in ProjectileEffectRecipes.projectile_head_signature(
+		_projectile_recipe_id(affinity)
+	):
+		extent = maxf(extent, point.length())
 	return extent
+
+
+static func _projectile_recipe_id(visual_id: StringName) -> StringName:
+	var descriptor := ProjectileCatalog.descriptor(visual_id)
+	if descriptor.is_empty():
+		var normalized := AttackContract.normalize_affinity(visual_id)
+		descriptor = ProjectileCatalog.descriptor(
+			&"seeker" if normalized == AttackContract.SUPPORT else normalized
+		)
+	return StringName(descriptor.get("recipe", &""))
 
 
 static func debug_enemy_signature(archetype: StringName) -> PackedVector2Array:
@@ -447,9 +261,6 @@ static func experience_mesh(kind: StringName) -> ArrayMesh:
 
 
 static func effect_mesh(kind: StringName) -> ArrayMesh:
-	var _descriptor := EffectCatalog.descriptor(
-		&"dash_afterimage" if kind == &"afterimage" else &"impact"
-	)
 	match kind:
 		&"diamond":
 			return polygon_mesh([{
@@ -457,12 +268,16 @@ static func effect_mesh(kind: StringName) -> ArrayMesh:
 				"color": Color.WHITE,
 			}])
 		&"afterimage":
-			return polygon_mesh([{
-				"points": PackedVector2Array([
-					Vector2(1.0, 0.0), Vector2(-0.78, -0.62), Vector2(-0.62, 0.62),
-				]),
-				"color": Color.WHITE,
-			}])
+			var recipe_id := StringName(
+				EffectCatalog.descriptor(&"dash_afterimage").get(
+					"recipe",
+					&""
+				)
+			)
+			return Components.polygon_mesh(
+				StringName("effect_%s" % String(recipe_id)),
+				ProjectileEffectRecipes.effect_layers(recipe_id)
+			)
 		&"beam":
 			return polygon_mesh([{
 				"points": PackedVector2Array([

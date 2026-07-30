@@ -5,7 +5,12 @@ extends RefCounted
 ## stack rules, and state transitions remain outside this catalog.
 
 const DESCRIPTORS := {
-	&"dash_afterimage": {"shape": &"elongated_hull", "color": &"system", "radial": false},
+	&"dash_afterimage": {
+		"shape": &"elongated_hull",
+		"color": &"system",
+		"radial": false,
+		"recipe": &"dash_player_hull_afterimage",
+	},
 	&"dash_engine_flare": {"shape": &"rear_flare", "color": &"system", "radial": false},
 	&"barrier": {"shape": &"open_ring", "color": &"support", "radial": true},
 	&"arrival": {"shape": &"corner_brackets", "color": &"system", "radial": false},
