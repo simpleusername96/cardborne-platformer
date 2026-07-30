@@ -9,6 +9,7 @@ const ActorRecipes = preload(
 const Visuals = preload(
 	"res://scripts/presentation/vehicle_combat_visual_library.gd"
 )
+const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 
 const APPROVED_MASTER_PATH := (
 	"res://docs/design/component-sheets/00-general-sf-component-master-v1.png"
@@ -132,6 +133,7 @@ func _validate_ordinary_recipes() -> void:
 			and Visuals.enemy_mesh(&"escort_drone").get_surface_count() == 1,
 		"escort drone resolves to a production chevron recipe"
 	)
+	_validate_role_grammar_fidelity()
 
 
 func _validate_boss_recipes() -> void:
@@ -152,6 +154,26 @@ func _validate_boss_recipes() -> void:
 		_expect(
 			_is_asymmetric(signature),
 			"%s outer contour is intentionally asymmetric" % variant
+		)
+		_expect(
+			_aspect_ratio(signature) >= 1.5,
+			"%s boss body is intrinsically wide in runtime orientation" % variant
+		)
+		_expect(
+			_layers_on_plane(layers, &"perimeter").size() >= 3
+				and _layers_on_plane(layers, &"offset_module").size() >= 3,
+			"%s composes its body with two external detachable pods" % variant
+		)
+		var channel_layers := _layers_on_plane(layers, &"vulnerable_channel")
+		_expect(
+			channel_layers.size() == 1
+				and _aspect_ratio(
+					PackedVector2Array(channel_layers[0].get(
+						"points",
+						PackedVector2Array()
+					))
+				) >= 1.8,
+			"%s exposes a horizontal or diagonal vulnerable channel" % variant
 		)
 		var signature_text := var_to_str(signature)
 		_expect(
@@ -189,6 +211,94 @@ func _validate_boss_recipes() -> void:
 				"%s %s compiles into one retained module surface"
 				% [module_id, state]
 			)
+
+
+func _validate_role_grammar_fidelity() -> void:
+	var swarm_layers := ActorRecipes.enemy_layers(
+		&"swarm_scrap_chevron",
+		&"solid_chevron"
+	)
+	var swarm_inset := _layers_on_plane(swarm_layers, &"function_inset")
+	_expect(
+		swarm_inset.size() == 1
+			and Color(swarm_inset[0].get("color", Color.TRANSPARENT))
+				!= Art.WORLD_CANVAS
+			and _layers_on_plane(swarm_layers, &"hard_highlight").size() == 1,
+		"swarm reads as a solid chevron with a small center highlight"
+	)
+	var melee_layers := ActorRecipes.enemy_layers(
+		&"melee_pursuit_split",
+		&"split_spear"
+	)
+	var melee_gap := _layers_on_plane(melee_layers, &"function_inset")
+	_expect(
+		melee_gap.size() == 1
+			and _bounds(
+				PackedVector2Array(melee_gap[0].get(
+					"points",
+					PackedVector2Array()
+				))
+			).end.x >= 0.70,
+		"melee exposes a deep forward split between spear prongs"
+	)
+	var ranged_layers := ActorRecipes.enemy_layers(
+		&"ranged_gunship_bracket",
+		&"open_bracket"
+	)
+	var ranged_opening := _layers_on_plane(ranged_layers, &"function_inset")
+	_expect(
+		ranged_opening.size() == 1
+			and _bounds(
+				PackedVector2Array(ranged_opening[0].get(
+					"points",
+					PackedVector2Array()
+				))
+			).end.x >= 1.0,
+		"ranged exposes an open two-prong muzzle bracket"
+	)
+	var controller_layers := ActorRecipes.enemy_layers(
+		&"command_twin_prong",
+		&"twin_prong"
+	)
+	_expect(
+		_layers_on_plane(controller_layers, &"main_mass").size() == 2
+			and _layers_on_plane(controller_layers, &"perimeter").size() >= 3
+			and _layers_on_plane(controller_layers, &"function_inset").size() == 1,
+		"controller owns two separated prongs and an outlined command core"
+	)
+	var shield_signature := ActorRecipes.enemy_signature(&"shield_forward_slab")
+	var forward_face_points := 0
+	for point in shield_signature:
+		if point.x >= 1.0:
+			forward_face_points += 1
+	_expect(
+		forward_face_points >= 2,
+		"shield grammar keeps an unmistakable flat forward slab"
+	)
+	_expect(
+		_aspect_ratio(
+			ActorRecipes.enemy_signature(&"artillery_long_rail")
+		) >= 1.7,
+		"artillery grammar keeps a long rail body"
+	)
+	var support_layers := ActorRecipes.enemy_layers(
+		&"generator_open_cradle",
+		&"open_cradle"
+	)
+	var support_opening := _layers_on_plane(
+		support_layers,
+		&"function_inset"
+	)
+	_expect(
+		support_opening.size() == 1
+			and _bounds(
+				PackedVector2Array(support_opening[0].get(
+					"points",
+					PackedVector2Array()
+				))
+			).end.x >= 0.85,
+		"support grammar keeps a visibly open forward cradle"
+	)
 
 
 func _validate_no_generic_fallback() -> void:
@@ -248,6 +358,35 @@ func _is_asymmetric(points: PackedVector2Array) -> bool:
 		if not found:
 			return true
 	return false
+
+
+func _layers_on_plane(
+	layers: Array[Dictionary],
+	plane: StringName
+) -> Array[Dictionary]:
+	var matches: Array[Dictionary] = []
+	for layer in layers:
+		if StringName(layer.get("plane", &"")) == plane:
+			matches.append(layer)
+	return matches
+
+
+func _bounds(points: PackedVector2Array) -> Rect2:
+	if points.is_empty():
+		return Rect2()
+	var minimum := points[0]
+	var maximum := points[0]
+	for point in points:
+		minimum = minimum.min(point)
+		maximum = maximum.max(point)
+	return Rect2(minimum, maximum - minimum)
+
+
+func _aspect_ratio(points: PackedVector2Array) -> float:
+	var bounds := _bounds(points)
+	if bounds.size.y <= 0.001:
+		return 0.0
+	return bounds.size.x / bounds.size.y
 
 
 func _contains_generic_fallback(recipe_id: StringName) -> bool:

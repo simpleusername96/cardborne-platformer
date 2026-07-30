@@ -503,7 +503,7 @@ func _draw_boss_components() -> void:
 			Visuals.boss_mesh(StringName(bosses[index][0])),
 			rect.get_center() - Vector2(0.0, 112.0),
 			Vector2.ONE * 118.0,
-			-PI * 0.5,
+			0.0,
 			Art.BOSS_COMMAND
 		)
 		_draw_boss_modules(

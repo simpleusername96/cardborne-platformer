@@ -230,19 +230,21 @@ static func enemy_layers(
 	var outer := enemy_signature(recipe_id)
 	if outer.is_empty():
 		return []
+	if grammar_id == &"twin_prong":
+		return _twin_prong_layers(recipe_id)
 	var secondary := _enemy_secondary(grammar_id)
 	var accent := _enemy_accent(grammar_id)
 	var highlight := _enemy_highlight(grammar_id)
 	return [
 		_layer(outer, Art.INK, &"perimeter"),
 		_layer(
-			Components.scaled_points(outer, Vector2(0.88, 0.88)),
-			Color.WHITE,
+			Components.scaled_points(outer, Vector2(0.90, 0.88)),
+			Color(0.88, 0.88, 0.90, 1.0),
 			&"main_mass"
 		),
-		_layer(secondary, Color(0.54, 0.56, 0.60, 1.0), &"secondary_mass"),
-		_layer(accent, Art.WORLD_CANVAS, &"function_inset"),
-		_layer(highlight, Art.TEXT_PRIMARY, &"hard_highlight"),
+		_layer(secondary, Color(0.58, 0.60, 0.64, 1.0), &"secondary_mass"),
+		_layer(accent, _enemy_accent_color(grammar_id), &"function_inset"),
+		_layer(highlight, Color.WHITE, &"hard_highlight"),
 	]
 
 
@@ -250,121 +252,128 @@ static func enemy_signature(recipe_id: StringName) -> PackedVector2Array:
 	match recipe_id:
 		&"swarm_scrap_chevron":
 			return PackedVector2Array([
-				Vector2(1.0, 0.0), Vector2(0.05, -0.62),
-				Vector2(-0.78, -0.58), Vector2(-0.38, 0.0),
-				Vector2(-0.78, 0.58), Vector2(0.05, 0.62),
+				Vector2(1.0, 0.0), Vector2(0.12, -0.58),
+				Vector2(-0.68, -0.46), Vector2(-0.92, 0.0),
+				Vector2(-0.58, 0.56), Vector2(0.18, 0.48),
 			])
 		&"swarm_needle_chevron":
 			return PackedVector2Array([
-				Vector2(1.18, 0.0), Vector2(0.18, -0.44),
-				Vector2(-0.72, -0.68), Vector2(-0.46, 0.0),
-				Vector2(-0.72, 0.68), Vector2(0.18, 0.44),
+				Vector2(1.18, 0.0), Vector2(0.18, -0.38),
+				Vector2(-0.78, -0.62), Vector2(-0.48, 0.0),
+				Vector2(-0.72, 0.58), Vector2(0.22, 0.34),
 			])
 		&"melee_minelet_split":
 			return PackedVector2Array([
-				Vector2(1.0, -0.44), Vector2(0.24, -0.72),
-				Vector2(-0.72, -0.54), Vector2(-0.36, 0.0),
-				Vector2(-0.72, 0.54), Vector2(0.24, 0.72),
-				Vector2(1.0, 0.44), Vector2(0.42, 0.08),
-				Vector2(0.42, -0.08),
+				Vector2(1.0, -0.24), Vector2(0.18, -0.72),
+				Vector2(-0.72, -0.48), Vector2(-0.42, -0.06),
+				Vector2(0.20, 0.0), Vector2(-0.42, 0.06),
+				Vector2(-0.72, 0.48), Vector2(0.18, 0.72),
+				Vector2(1.0, 0.24), Vector2(0.48, 0.08),
+				Vector2(0.48, -0.08),
 			])
 		&"melee_pursuit_split":
 			return PackedVector2Array([
-				Vector2(1.18, -0.16), Vector2(0.14, -0.90),
-				Vector2(-0.78, -0.58), Vector2(-0.30, -0.08),
-				Vector2(-0.82, 0.52), Vector2(0.02, 0.94),
-				Vector2(1.06, 0.18), Vector2(0.38, 0.04),
-				Vector2(0.38, -0.04),
+				Vector2(1.18, -0.12), Vector2(0.24, -0.74),
+				Vector2(-0.70, -0.50), Vector2(-0.42, -0.08),
+				Vector2(0.32, 0.0), Vector2(-0.42, 0.08),
+				Vector2(-0.68, 0.58), Vector2(0.24, 0.82),
+				Vector2(1.08, 0.18), Vector2(0.52, 0.05),
+				Vector2(0.52, -0.05),
 			])
 		&"ranged_gunship_bracket":
 			return PackedVector2Array([
-				Vector2(1.0, -0.58), Vector2(0.28, -0.78),
-				Vector2(-0.78, -0.62), Vector2(-0.92, -0.30),
-				Vector2(-0.92, 0.30), Vector2(-0.78, 0.62),
-				Vector2(0.28, 0.78), Vector2(1.0, 0.58),
-				Vector2(0.60, 0.20), Vector2(-0.32, 0.30),
-				Vector2(-0.42, 0.0), Vector2(-0.32, -0.30),
-				Vector2(0.60, -0.20),
+				Vector2(1.12, -0.66), Vector2(0.46, -0.78),
+				Vector2(-0.70, -0.58), Vector2(-0.92, -0.28),
+				Vector2(-0.92, 0.28), Vector2(-0.70, 0.58),
+				Vector2(0.46, 0.78), Vector2(1.12, 0.66),
+				Vector2(0.92, 0.34), Vector2(0.10, 0.30),
+				Vector2(-0.26, 0.0), Vector2(0.10, -0.30),
+				Vector2(0.92, -0.34),
 			])
 		&"command_twin_prong":
 			return PackedVector2Array([
-				Vector2(1.0, -0.62), Vector2(0.34, -0.84),
-				Vector2(-0.62, -0.64), Vector2(-0.82, -0.28),
-				Vector2(-0.34, -0.16), Vector2(-0.34, 0.16),
-				Vector2(-0.82, 0.28), Vector2(-0.62, 0.64),
-				Vector2(0.34, 0.84), Vector2(1.0, 0.62),
-				Vector2(0.50, 0.18), Vector2(0.18, 0.0),
-				Vector2(0.50, -0.18),
+				Vector2(1.08, -0.62), Vector2(0.42, -0.86),
+				Vector2(-0.54, -0.66), Vector2(-0.82, -0.28),
+				Vector2(-0.24, -0.12), Vector2(-0.24, 0.12),
+				Vector2(-0.78, 0.30), Vector2(-0.50, 0.68),
+				Vector2(0.38, 0.88), Vector2(1.06, 0.60),
+				Vector2(0.46, 0.24), Vector2(0.10, 0.0),
+				Vector2(0.48, -0.24),
 			])
 		&"ranged_turret_bracket":
 			return PackedVector2Array([
-				Vector2(1.16, -0.24), Vector2(1.16, 0.24),
-				Vector2(0.54, 0.32), Vector2(0.54, 0.68),
-				Vector2(-0.72, 0.68), Vector2(-1.0, 0.42),
-				Vector2(-1.0, -0.42), Vector2(-0.72, -0.68),
-				Vector2(0.54, -0.68), Vector2(0.54, -0.32),
+				Vector2(1.18, -0.42), Vector2(0.48, -0.42),
+				Vector2(0.48, -0.66), Vector2(-0.62, -0.66),
+				Vector2(-0.94, -0.34), Vector2(-0.94, 0.34),
+				Vector2(-0.62, 0.66), Vector2(0.48, 0.66),
+				Vector2(0.48, 0.42), Vector2(1.18, 0.42),
+				Vector2(0.94, 0.18), Vector2(0.10, 0.18),
+				Vector2(-0.06, 0.0), Vector2(0.10, -0.18),
+				Vector2(0.94, -0.18),
 			])
 		&"mine_open_cradle":
 			return PackedVector2Array([
-				Vector2(1.0, -0.30), Vector2(0.42, -0.70),
-				Vector2(-0.48, -0.86), Vector2(-0.90, -0.42),
-				Vector2(-0.58, -0.12), Vector2(-0.28, 0.0),
-				Vector2(-0.58, 0.12), Vector2(-0.90, 0.42),
-				Vector2(-0.48, 0.86), Vector2(0.42, 0.70),
-				Vector2(1.0, 0.30), Vector2(0.62, 0.0),
+				Vector2(0.98, -0.28), Vector2(0.56, -0.68),
+				Vector2(-0.20, -0.86), Vector2(-0.82, -0.48),
+				Vector2(-0.88, 0.40), Vector2(-0.22, 0.84),
+				Vector2(0.54, 0.68), Vector2(1.0, 0.28),
+				Vector2(0.62, 0.16), Vector2(0.06, 0.20),
+				Vector2(-0.34, 0.0), Vector2(0.06, -0.20),
+				Vector2(0.62, -0.16),
 			])
 		&"generator_open_cradle":
 			return PackedVector2Array([
-				Vector2(0.82, -0.62), Vector2(0.34, -0.92),
-				Vector2(-0.58, -0.84), Vector2(-0.96, -0.32),
-				Vector2(-0.66, 0.0), Vector2(-0.96, 0.32),
-				Vector2(-0.58, 0.84), Vector2(0.34, 0.92),
-				Vector2(0.82, 0.62), Vector2(0.46, 0.28),
-				Vector2(0.18, 0.0), Vector2(0.46, -0.28),
+				Vector2(1.0, -0.48), Vector2(0.52, -0.84),
+				Vector2(-0.48, -0.82), Vector2(-0.94, -0.38),
+				Vector2(-0.94, 0.38), Vector2(-0.48, 0.82),
+				Vector2(0.52, 0.84), Vector2(1.0, 0.48),
+				Vector2(0.66, 0.24), Vector2(0.02, 0.26),
+				Vector2(-0.36, 0.0), Vector2(0.02, -0.26),
+				Vector2(0.66, -0.24),
 			])
 		&"shield_forward_slab":
 			return PackedVector2Array([
-				Vector2(1.08, -0.58), Vector2(0.82, -0.86),
-				Vector2(-0.24, -0.88), Vector2(-0.78, -0.48),
-				Vector2(-0.68, 0.0), Vector2(-0.78, 0.48),
-				Vector2(-0.24, 0.88), Vector2(0.82, 0.86),
-				Vector2(1.08, 0.58), Vector2(0.84, 0.0),
+				Vector2(1.10, -0.65), Vector2(0.88, -0.88),
+				Vector2(-0.20, -0.86), Vector2(-0.80, -0.54),
+				Vector2(-0.94, -0.18), Vector2(-0.94, 0.34),
+				Vector2(-0.48, 0.78), Vector2(0.62, 0.86),
+				Vector2(1.10, 0.62),
 			])
 		&"artillery_long_rail":
 			return PackedVector2Array([
-				Vector2(1.30, -0.14), Vector2(0.54, -0.26),
-				Vector2(0.28, -0.58), Vector2(-0.72, -0.76),
-				Vector2(-1.0, -0.42), Vector2(-0.84, 0.0),
-				Vector2(-1.0, 0.42), Vector2(-0.72, 0.76),
-				Vector2(0.28, 0.58), Vector2(0.54, 0.26),
-				Vector2(1.30, 0.14),
+				Vector2(1.38, -0.12), Vector2(0.58, -0.22),
+				Vector2(0.24, -0.42), Vector2(-0.72, -0.56),
+				Vector2(-1.0, -0.34), Vector2(-0.84, 0.0),
+				Vector2(-1.0, 0.34), Vector2(-0.72, 0.56),
+				Vector2(0.24, 0.42), Vector2(0.58, 0.22),
+				Vector2(1.38, 0.12),
 			])
 		&"interceptor_twin_prong":
 			return PackedVector2Array([
-				Vector2(1.12, -0.20), Vector2(0.34, -0.42),
-				Vector2(0.06, -0.92), Vector2(-0.58, -0.76),
-				Vector2(-0.34, -0.20), Vector2(-0.88, 0.0),
-				Vector2(-0.34, 0.20), Vector2(-0.58, 0.76),
-				Vector2(0.06, 0.92), Vector2(0.34, 0.42),
+				Vector2(1.16, -0.22), Vector2(0.42, -0.70),
+				Vector2(0.08, -0.92), Vector2(-0.42, -0.62),
+				Vector2(-0.82, -0.12), Vector2(-0.24, 0.0),
+				Vector2(-0.82, 0.10), Vector2(-0.36, 0.56),
+				Vector2(0.02, 0.94), Vector2(0.46, 0.66),
 				Vector2(1.12, 0.20), Vector2(0.46, 0.08),
 				Vector2(0.46, -0.08),
 			])
 		&"rammer_split_spear":
 			return PackedVector2Array([
-				Vector2(1.28, -0.28), Vector2(0.42, -0.82),
-				Vector2(-0.52, -0.94), Vector2(-0.96, -0.36),
-				Vector2(-0.44, 0.0), Vector2(-0.88, 0.50),
-				Vector2(-0.30, 0.90), Vector2(0.52, 0.72),
-				Vector2(1.16, 0.22), Vector2(0.34, 0.08),
-				Vector2(0.34, -0.08),
+				Vector2(1.30, -0.14), Vector2(0.36, -0.82),
+				Vector2(-0.54, -0.88), Vector2(-0.94, -0.34),
+				Vector2(-0.34, -0.06), Vector2(0.34, 0.0),
+				Vector2(-0.34, 0.06), Vector2(-0.86, 0.48),
+				Vector2(-0.26, 0.90), Vector2(0.52, 0.72),
+				Vector2(1.22, 0.18), Vector2(0.56, 0.05),
+				Vector2(0.56, -0.05),
 			])
 		&"guard_forward_slab":
 			return PackedVector2Array([
-				Vector2(1.12, -0.64), Vector2(0.84, -0.92),
-				Vector2(-0.42, -0.82), Vector2(-1.0, -0.30),
-				Vector2(-1.0, 0.30), Vector2(-0.42, 0.82),
-				Vector2(0.84, 0.92), Vector2(1.12, 0.64),
-				Vector2(0.84, 0.34), Vector2(0.84, -0.34),
+				Vector2(1.14, -0.72), Vector2(0.82, -0.94),
+				Vector2(-0.46, -0.84), Vector2(-1.02, -0.38),
+				Vector2(-1.02, 0.28), Vector2(-0.56, 0.82),
+				Vector2(0.70, 0.92), Vector2(1.14, 0.66),
 			])
 		&"splitter_chevron":
 			return PackedVector2Array([
@@ -386,13 +395,13 @@ static func enemy_signature(recipe_id: StringName) -> PackedVector2Array:
 			])
 		&"carrier_open_cradle":
 			return PackedVector2Array([
-				Vector2(1.0, -0.48), Vector2(0.68, -0.76),
-				Vector2(-0.72, -0.82), Vector2(-1.04, -0.44),
-				Vector2(-0.76, -0.14), Vector2(-0.42, 0.0),
-				Vector2(-0.76, 0.14), Vector2(-1.04, 0.44),
-				Vector2(-0.72, 0.82), Vector2(0.68, 0.76),
-				Vector2(1.0, 0.48), Vector2(0.62, 0.18),
-				Vector2(0.28, 0.0), Vector2(0.62, -0.18),
+				Vector2(1.12, -0.58), Vector2(0.56, -0.78),
+				Vector2(-0.84, -0.74), Vector2(-1.06, -0.36),
+				Vector2(-1.06, 0.36), Vector2(-0.84, 0.74),
+				Vector2(0.56, 0.78), Vector2(1.12, 0.58),
+				Vector2(0.74, 0.30), Vector2(0.12, 0.28),
+				Vector2(-0.30, 0.0), Vector2(0.12, -0.28),
+				Vector2(0.74, -0.30),
 			])
 		&"beam_long_rail":
 			return PackedVector2Array([
@@ -418,67 +427,78 @@ static func boss_layers(recipe_id: StringName) -> Array[Dictionary]:
 	if recipe_id not in BOSS_RECIPES:
 		return []
 	var outer := boss_signature(recipe_id)
-	return [
+	var layers: Array[Dictionary] = [
 		_layer(outer, Art.INK, &"perimeter"),
 		_layer(
-			Components.scaled_points(outer, Vector2(0.91, 0.91)),
-			Color.WHITE,
+			Components.scaled_points(outer, Vector2(0.92, 0.88)),
+			Color(0.90, 0.90, 0.92, 1.0),
 			&"main_mass"
 		),
 		_layer(_boss_offset_plane(recipe_id), Color(0.62, 0.48, 0.58, 1.0), &"offset_module"),
 		_layer(_boss_channel(recipe_id), Art.WORLD_CANVAS, &"vulnerable_channel"),
-		_layer(_boss_socket(recipe_id), Art.TEXT_PRIMARY, &"objective_socket"),
+		_layer(_boss_socket(recipe_id), Color.WHITE, &"objective_socket"),
 	]
+	for module in _boss_detached_modules(recipe_id):
+		layers.append(_layer(module, Art.INK, &"perimeter"))
+		layers.append(
+			_layer(
+				_scale_about_centroid(module, Vector2(0.72, 0.72)),
+				Color(0.62, 0.48, 0.58, 1.0),
+				&"offset_module"
+			)
+		)
+	return layers
 
 
 static func boss_signature(recipe_id: StringName) -> PackedVector2Array:
 	match recipe_id:
 		&"boss_colossus":
 			return PackedVector2Array([
-				Vector2(1.30, -0.10), Vector2(0.72, -0.34),
-				Vector2(0.58, -0.92), Vector2(0.12, -0.78),
-				Vector2(-0.06, -1.05), Vector2(-0.76, -0.86),
-				Vector2(-1.05, -0.34), Vector2(-0.82, -0.04),
-				Vector2(-1.12, 0.18), Vector2(-0.68, 0.88),
-				Vector2(-0.10, 0.72), Vector2(0.30, 0.96),
-				Vector2(0.54, 0.40), Vector2(1.14, 0.22),
+				Vector2(1.30, -0.12), Vector2(0.82, -0.30),
+				Vector2(0.70, -0.58), Vector2(0.15, -0.60),
+				Vector2(-0.12, -0.82), Vector2(-0.88, -0.66),
+				Vector2(-1.18, -0.30), Vector2(-0.94, -0.04),
+				Vector2(-1.24, 0.20), Vector2(-0.82, 0.66),
+				Vector2(-0.18, 0.72), Vector2(0.08, 0.54),
+				Vector2(0.58, 0.62), Vector2(0.82, 0.30),
+				Vector2(1.30, 0.16),
 			])
 		&"boss_leviathan":
 			return PackedVector2Array([
-				Vector2(1.42, -0.08), Vector2(0.72, -0.42),
-				Vector2(0.28, -0.68), Vector2(-0.42, -0.92),
-				Vector2(-1.04, -0.56), Vector2(-0.82, -0.16),
-				Vector2(-1.18, 0.08), Vector2(-0.72, 0.54),
-				Vector2(-0.20, 0.74), Vector2(0.14, 0.54),
-				Vector2(0.68, 0.46), Vector2(1.28, 0.18),
+				Vector2(1.30, -0.08), Vector2(0.82, -0.26),
+				Vector2(0.46, -0.54), Vector2(-0.38, -0.64),
+				Vector2(-1.22, -0.42), Vector2(-1.02, -0.10),
+				Vector2(-1.30, 0.12), Vector2(-0.92, 0.50),
+				Vector2(-0.22, 0.76), Vector2(0.12, 0.56),
+				Vector2(0.72, 0.48), Vector2(1.24, 0.18),
 			])
 		&"boss_titan":
 			return PackedVector2Array([
-				Vector2(1.12, -0.52), Vector2(0.78, -0.88),
-				Vector2(-0.18, -0.94), Vector2(-0.40, -0.66),
-				Vector2(-1.02, -0.70), Vector2(-1.16, -0.18),
-				Vector2(-0.86, 0.18), Vector2(-1.0, 0.72),
-				Vector2(-0.12, 1.02), Vector2(0.20, 0.70),
-				Vector2(0.92, 0.74), Vector2(1.30, 0.28),
+				Vector2(1.32, -0.34), Vector2(0.92, -0.58),
+				Vector2(0.10, -0.62), Vector2(-0.18, -0.78),
+				Vector2(-1.08, -0.66), Vector2(-1.28, -0.26),
+				Vector2(-1.12, 0.08), Vector2(-1.24, 0.52),
+				Vector2(-0.36, 0.72), Vector2(0.04, 0.56),
+				Vector2(0.80, 0.62), Vector2(1.28, 0.28),
 			])
 		&"boss_behemoth":
 			return PackedVector2Array([
-				Vector2(1.28, -0.18), Vector2(0.64, -0.78),
-				Vector2(0.10, -1.06), Vector2(-0.58, -0.90),
-				Vector2(-1.12, -0.42), Vector2(-0.86, -0.02),
-				Vector2(-1.18, 0.34), Vector2(-0.48, 0.94),
-				Vector2(0.20, 0.82), Vector2(0.62, 0.56),
-				Vector2(1.12, 0.36),
+				Vector2(1.26, -0.16), Vector2(0.72, -0.54),
+				Vector2(0.24, -0.76), Vector2(-0.50, -0.72),
+				Vector2(-1.16, -0.36), Vector2(-0.98, -0.04),
+				Vector2(-1.24, 0.28), Vector2(-0.72, 0.70),
+				Vector2(0.04, 0.64), Vector2(0.42, 0.48),
+				Vector2(0.94, 0.52), Vector2(1.30, 0.20),
 			])
 		&"boss_crown":
 			return PackedVector2Array([
-				Vector2(1.16, -0.12), Vector2(0.62, -0.34),
-				Vector2(0.46, -0.98), Vector2(-0.10, -0.82),
-				Vector2(-0.34, -1.08), Vector2(-0.98, -0.66),
-				Vector2(-0.78, -0.18), Vector2(-1.12, 0.06),
-				Vector2(-0.66, 0.46), Vector2(-0.24, 0.92),
-				Vector2(0.12, 0.74), Vector2(0.72, 1.02),
-				Vector2(0.60, 0.38), Vector2(1.24, 0.20),
+				Vector2(1.28, -0.04), Vector2(0.70, -0.26),
+				Vector2(0.66, -0.62), Vector2(0.16, -0.48),
+				Vector2(-0.04, -0.80), Vector2(-0.72, -0.60),
+				Vector2(-1.20, -0.22), Vector2(-0.96, 0.06),
+				Vector2(-1.26, 0.34), Vector2(-0.62, 0.70),
+				Vector2(-0.12, 0.56), Vector2(0.18, 0.78),
+				Vector2(0.48, 0.46), Vector2(0.98, 0.36),
 			])
 	return PackedVector2Array()
 
@@ -572,43 +592,156 @@ static func plane_count(layers: Array[Dictionary]) -> int:
 	return planes.size()
 
 
+static func _twin_prong_layers(recipe_id: StringName) -> Array[Dictionary]:
+	var prongs := _twin_prong_polygons(recipe_id)
+	if prongs.is_empty():
+		return []
+	var layers: Array[Dictionary] = []
+	for prong in prongs:
+		layers.append(_layer(prong, Art.INK, &"perimeter"))
+		layers.append(
+			_layer(
+				_scale_about_centroid(prong, Vector2(0.84, 0.78)),
+				Color(0.88, 0.88, 0.90, 1.0),
+				&"main_mass"
+			)
+		)
+	for facet in _twin_prong_facets(recipe_id):
+		layers.append(
+			_layer(
+				facet,
+				Color(0.58, 0.60, 0.64, 1.0),
+				&"secondary_mass"
+			)
+		)
+	var core := _twin_prong_core(recipe_id)
+	layers.append(_layer(core, Art.INK, &"perimeter"))
+	layers.append(
+		_layer(
+			_scale_about_centroid(core, Vector2(0.74, 0.74)),
+			Color(0.70, 0.72, 0.76, 1.0),
+			&"function_inset"
+		)
+	)
+	layers.append(
+		_layer(
+			Components.rect_points(
+				Vector2(-0.02, -0.08),
+				Vector2(0.075, 0.055)
+			),
+			Color.WHITE,
+			&"hard_highlight"
+		)
+	)
+	return layers
+
+
+static func _twin_prong_polygons(
+	recipe_id: StringName
+) -> Array[PackedVector2Array]:
+	match recipe_id:
+		&"command_twin_prong":
+			return [
+				PackedVector2Array([
+					Vector2(-0.72, -0.28), Vector2(-0.54, -0.64),
+					Vector2(0.42, -0.86), Vector2(1.08, -0.62),
+					Vector2(0.84, -0.34), Vector2(0.18, -0.22),
+					Vector2(-0.18, -0.12),
+				]),
+				PackedVector2Array([
+					Vector2(-0.70, 0.30), Vector2(-0.50, 0.68),
+					Vector2(0.38, 0.88), Vector2(1.06, 0.60),
+					Vector2(0.82, 0.34), Vector2(0.16, 0.22),
+					Vector2(-0.20, 0.12),
+				]),
+			]
+		&"interceptor_twin_prong":
+			return [
+				PackedVector2Array([
+					Vector2(-0.82, -0.12), Vector2(-0.42, -0.62),
+					Vector2(0.08, -0.92), Vector2(0.42, -0.70),
+					Vector2(1.16, -0.22), Vector2(0.48, -0.28),
+					Vector2(0.12, -0.18),
+				]),
+				PackedVector2Array([
+					Vector2(-0.82, 0.10), Vector2(-0.36, 0.56),
+					Vector2(0.02, 0.94), Vector2(0.46, 0.66),
+					Vector2(1.12, 0.20), Vector2(0.46, 0.26),
+					Vector2(0.08, 0.18),
+				]),
+			]
+	return []
+
+
+static func _twin_prong_facets(
+	recipe_id: StringName
+) -> Array[PackedVector2Array]:
+	if recipe_id == &"command_twin_prong":
+		return [
+			PackedVector2Array([
+				Vector2(-0.42, -0.38), Vector2(0.32, -0.70),
+				Vector2(0.74, -0.56), Vector2(0.12, -0.34),
+			]),
+			PackedVector2Array([
+				Vector2(-0.38, 0.40), Vector2(0.28, 0.72),
+				Vector2(0.72, 0.54), Vector2(0.10, 0.34),
+			]),
+		]
+	return [
+		PackedVector2Array([
+			Vector2(-0.28, -0.52), Vector2(0.08, -0.78),
+				Vector2(0.68, -0.36), Vector2(0.18, -0.30),
+		]),
+		PackedVector2Array([
+			Vector2(-0.26, 0.48), Vector2(0.02, 0.80),
+				Vector2(0.66, 0.34), Vector2(0.16, 0.28),
+		]),
+	]
+
+
+static func _twin_prong_core(recipe_id: StringName) -> PackedVector2Array:
+	if recipe_id == &"interceptor_twin_prong":
+		return PackedVector2Array([
+			Vector2(0.30, 0.0), Vector2(0.0, -0.28),
+				Vector2(-0.30, 0.0), Vector2(0.0, 0.28),
+		])
+	return _regular_polygon(Vector2(-0.02, 0.0), 0.34, 6, PI / 6.0)
+
+
 static func _enemy_secondary(grammar_id: StringName) -> PackedVector2Array:
 	match grammar_id:
 		&"solid_chevron":
 			return PackedVector2Array([
-				Vector2(0.58, 0.0), Vector2(-0.18, -0.28),
-				Vector2(-0.48, 0.0), Vector2(-0.18, 0.28),
+				Vector2(0.48, -0.02), Vector2(-0.16, -0.34),
+				Vector2(-0.64, -0.30), Vector2(-0.28, -0.02),
 			])
 		&"split_spear":
 			return PackedVector2Array([
-				Vector2(0.66, -0.11), Vector2(-0.28, -0.40),
-				Vector2(-0.08, -0.08), Vector2(0.42, 0.0),
+				Vector2(0.84, -0.16), Vector2(0.08, -0.58),
+				Vector2(-0.48, -0.42), Vector2(-0.16, -0.12),
 			])
 		&"open_bracket":
 			return PackedVector2Array([
-				Vector2(0.58, -0.42), Vector2(-0.50, -0.50),
-				Vector2(-0.64, -0.26), Vector2(0.44, -0.18),
-			])
-		&"twin_prong":
-			return PackedVector2Array([
-				Vector2(0.62, -0.46), Vector2(0.06, -0.62),
-				Vector2(-0.36, -0.34), Vector2(0.34, -0.16),
+				Vector2(0.84, -0.52), Vector2(0.28, -0.64),
+				Vector2(-0.58, -0.44), Vector2(-0.42, -0.26),
+				Vector2(0.50, -0.30),
 			])
 		&"forward_slab":
 			return PackedVector2Array([
-				Vector2(0.84, -0.55), Vector2(0.48, -0.68),
-				Vector2(0.48, 0.68), Vector2(0.84, 0.55),
+				Vector2(1.0, -0.56), Vector2(0.58, -0.70),
+				Vector2(0.58, 0.70), Vector2(1.0, 0.56),
 			])
 		&"long_rail":
 			return PackedVector2Array([
-				Vector2(1.02, -0.18), Vector2(-0.42, -0.24),
-				Vector2(-0.64, 0.0), Vector2(-0.42, 0.24),
-				Vector2(1.02, 0.18),
+				Vector2(1.08, -0.16), Vector2(-0.30, -0.24),
+				Vector2(-0.62, -0.06), Vector2(-0.62, 0.06),
+				Vector2(-0.30, 0.24), Vector2(1.08, 0.16),
 			])
 		&"open_cradle":
 			return PackedVector2Array([
-				Vector2(0.42, -0.52), Vector2(-0.46, -0.62),
-				Vector2(-0.68, -0.32), Vector2(0.12, -0.20),
+				Vector2(0.52, -0.56), Vector2(-0.34, -0.66),
+				Vector2(-0.72, -0.36), Vector2(-0.42, -0.18),
+				Vector2(0.24, -0.26),
 			])
 		&"service_cross":
 			return PackedVector2Array([
@@ -625,24 +758,33 @@ static func _enemy_secondary(grammar_id: StringName) -> PackedVector2Array:
 
 static func _enemy_accent(grammar_id: StringName) -> PackedVector2Array:
 	match grammar_id:
-		&"solid_chevron", &"split_spear":
+		&"solid_chevron":
 			return PackedVector2Array([
-				Vector2(0.36, 0.0), Vector2(-0.08, -0.13),
-				Vector2(-0.34, 0.0), Vector2(-0.08, 0.13),
+				Vector2(0.26, 0.0), Vector2(-0.06, -0.15),
+				Vector2(-0.34, 0.0), Vector2(-0.06, 0.15),
+			])
+		&"split_spear":
+			return PackedVector2Array([
+				Vector2(0.76, -0.07), Vector2(0.16, -0.14),
+				Vector2(-0.42, -0.05), Vector2(-0.58, 0.0),
+				Vector2(-0.40, 0.05), Vector2(0.16, 0.14),
+				Vector2(0.76, 0.07), Vector2(0.44, 0.0),
 			])
 		&"open_bracket":
-			return Components.rect_points(Vector2(-0.34, 0.0), Vector2(0.20, 0.15))
-		&"twin_prong":
-			return _regular_polygon(Vector2(-0.06, 0.0), 0.25, 6, PI / 6.0)
+			return PackedVector2Array([
+				Vector2(1.02, -0.24), Vector2(0.14, -0.20),
+					Vector2(-0.34, 0.0), Vector2(0.14, 0.20),
+				Vector2(1.02, 0.24), Vector2(0.78, 0.0),
+			])
 		&"forward_slab":
-			return Components.rect_points(Vector2(0.42, 0.0), Vector2(0.22, 0.30))
+			return Components.rect_points(Vector2(0.72, 0.0), Vector2(0.16, 0.42))
 		&"long_rail":
-			return Components.rect_points(Vector2(0.24, 0.0), Vector2(0.52, 0.09))
+			return Components.rect_points(Vector2(0.38, 0.0), Vector2(0.70, 0.075))
 		&"open_cradle":
 			return PackedVector2Array([
-				Vector2(0.34, -0.24), Vector2(-0.16, -0.34),
-				Vector2(-0.42, 0.0), Vector2(-0.16, 0.34),
-				Vector2(0.34, 0.24), Vector2(0.08, 0.0),
+				Vector2(0.90, -0.18), Vector2(0.12, -0.22),
+				Vector2(-0.40, 0.0), Vector2(0.12, 0.22),
+				Vector2(0.90, 0.18), Vector2(0.58, 0.0),
 			])
 		&"service_cross":
 			return PackedVector2Array([
@@ -658,12 +800,32 @@ static func _enemy_accent(grammar_id: StringName) -> PackedVector2Array:
 	return PackedVector2Array()
 
 
+static func _enemy_accent_color(grammar_id: StringName) -> Color:
+	if grammar_id == &"solid_chevron":
+		return Color(0.42, 0.44, 0.48, 1.0)
+	return Art.WORLD_CANVAS
+
+
 static func _enemy_highlight(grammar_id: StringName) -> PackedVector2Array:
 	match grammar_id:
+		&"solid_chevron":
+			return Components.rect_points(Vector2(0.08, 0.0), Vector2(0.06, 0.17))
+		&"split_spear":
+			return PackedVector2Array([
+				Vector2(0.12, -0.10), Vector2(0.22, 0.0),
+				Vector2(0.10, 0.10), Vector2(-0.02, 0.0),
+			])
+		&"open_bracket":
+			return Components.rect_points(Vector2(-0.30, -0.10), Vector2(0.10, 0.06))
 		&"long_rail":
-			return Components.rect_points(Vector2(0.66, -0.13), Vector2(0.22, 0.045))
+			return Components.rect_points(Vector2(-0.20, -0.13), Vector2(0.15, 0.055))
 		&"forward_slab":
-			return Components.rect_points(Vector2(0.72, -0.36), Vector2(0.10, 0.16))
+			return Components.rect_points(Vector2(0.78, -0.34), Vector2(0.09, 0.14))
+		&"open_cradle":
+			return PackedVector2Array([
+				Vector2(0.80, -0.28), Vector2(0.56, -0.34),
+				Vector2(0.48, -0.24), Vector2(0.72, -0.20),
+			])
 		&"service_cross":
 			return Components.rect_points(Vector2(0.36, -0.28), Vector2(0.13, 0.06))
 		_:
@@ -677,69 +839,144 @@ static func _boss_offset_plane(recipe_id: StringName) -> PackedVector2Array:
 	match recipe_id:
 		&"boss_colossus":
 			return PackedVector2Array([
-				Vector2(0.46, -0.38), Vector2(0.30, -0.82),
-				Vector2(-0.06, -0.70), Vector2(-0.42, -0.42),
-				Vector2(-0.12, -0.18),
+				Vector2(0.78, -0.24), Vector2(0.56, -0.52),
+				Vector2(0.10, -0.52), Vector2(-0.18, -0.72),
+				Vector2(-0.76, -0.54), Vector2(-0.38, -0.22),
+				Vector2(0.26, -0.14),
 			])
 		&"boss_leviathan":
 			return PackedVector2Array([
-				Vector2(0.54, 0.18), Vector2(0.08, 0.50),
-				Vector2(-0.54, 0.48), Vector2(-0.26, 0.14),
+				Vector2(0.86, 0.18), Vector2(0.54, 0.42),
+				Vector2(-0.18, 0.58), Vector2(-0.72, 0.42),
+				Vector2(-0.40, 0.14), Vector2(0.22, 0.04),
 			])
 		&"boss_titan":
 			return PackedVector2Array([
-				Vector2(0.62, -0.52), Vector2(-0.16, -0.72),
-				Vector2(-0.58, -0.48), Vector2(-0.28, -0.16),
-				Vector2(0.48, -0.20),
+				Vector2(0.72, -0.44), Vector2(0.02, -0.48),
+				Vector2(-0.26, -0.64), Vector2(-0.92, -0.54),
+				Vector2(-0.74, -0.18), Vector2(0.34, -0.18),
 			])
 		&"boss_behemoth":
 			return PackedVector2Array([
-				Vector2(0.52, 0.18), Vector2(0.20, 0.66),
-				Vector2(-0.42, 0.70), Vector2(-0.68, 0.36),
-				Vector2(-0.16, 0.08),
+				Vector2(0.74, -0.42), Vector2(0.14, -0.64),
+				Vector2(-0.52, -0.58), Vector2(-0.86, -0.32),
+				Vector2(-0.28, -0.16), Vector2(0.42, -0.18),
 			])
 		&"boss_crown":
 			return PackedVector2Array([
-				Vector2(0.46, -0.34), Vector2(0.30, -0.76),
-				Vector2(-0.22, -0.66), Vector2(-0.58, -0.36),
-				Vector2(-0.08, -0.12),
+				Vector2(0.84, 0.10), Vector2(0.44, 0.34),
+				Vector2(0.12, 0.66), Vector2(-0.10, 0.44),
+				Vector2(-0.56, 0.56), Vector2(-0.82, 0.30),
+				Vector2(-0.32, 0.08), Vector2(0.30, -0.02),
 			])
 	return PackedVector2Array()
 
 
 static func _boss_channel(recipe_id: StringName) -> PackedVector2Array:
-	var vertical_offset: float = float({
-		&"boss_colossus": 0.08,
-		&"boss_leviathan": -0.08,
-		&"boss_titan": 0.12,
-		&"boss_behemoth": -0.12,
-		&"boss_crown": 0.04,
-	}.get(recipe_id, 0.0))
-	return PackedVector2Array([
-		Vector2(0.92, vertical_offset - 0.10),
-		Vector2(0.18, vertical_offset - 0.14),
-		Vector2(-0.58, vertical_offset - 0.08),
-		Vector2(-0.70, vertical_offset),
-		Vector2(-0.58, vertical_offset + 0.08),
-		Vector2(0.18, vertical_offset + 0.14),
-		Vector2(0.92, vertical_offset + 0.10),
-	])
+	match recipe_id:
+		&"boss_colossus":
+			return PackedVector2Array([
+				Vector2(0.98, -0.05), Vector2(0.26, -0.12),
+				Vector2(-0.58, -0.06), Vector2(-0.72, 0.04),
+				Vector2(-0.54, 0.14), Vector2(0.28, 0.12),
+				Vector2(0.98, 0.05),
+			])
+		&"boss_leviathan":
+			return PackedVector2Array([
+				Vector2(0.88, 0.18), Vector2(0.54, 0.08),
+				Vector2(-0.18, -0.34), Vector2(-0.72, -0.40),
+				Vector2(-0.54, -0.24), Vector2(0.18, 0.18),
+				Vector2(0.68, 0.32),
+			])
+		&"boss_titan":
+			return PackedVector2Array([
+				Vector2(1.02, -0.04), Vector2(0.34, -0.10),
+				Vector2(-0.70, -0.08), Vector2(-0.88, 0.02),
+				Vector2(-0.68, 0.12), Vector2(0.34, 0.10),
+				Vector2(1.02, 0.04),
+			])
+		&"boss_behemoth":
+			return PackedVector2Array([
+				Vector2(0.72, -0.12), Vector2(0.18, -0.20),
+				Vector2(-0.28, -0.06), Vector2(-0.52, 0.34),
+				Vector2(-0.34, 0.42), Vector2(-0.10, 0.08),
+				Vector2(0.70, 0.02),
+			])
+		&"boss_crown":
+			return PackedVector2Array([
+				Vector2(0.90, 0.12), Vector2(0.34, 0.02),
+				Vector2(0.02, -0.32), Vector2(-0.46, -0.38),
+				Vector2(-0.30, -0.18), Vector2(0.04, 0.18),
+				Vector2(0.76, 0.26),
+			])
+	return PackedVector2Array()
 
 
 static func _boss_socket(recipe_id: StringName) -> PackedVector2Array:
-	var offsets := {
-		&"boss_colossus": Vector2(0.18, 0.08),
-		&"boss_leviathan": Vector2(0.02, -0.08),
-		&"boss_titan": Vector2(0.20, 0.12),
-		&"boss_behemoth": Vector2(-0.02, -0.12),
-		&"boss_crown": Vector2(0.12, 0.04),
-	}
-	return _regular_polygon(
-		Vector2(offsets.get(recipe_id, Vector2.ZERO)),
-		0.20,
-		6,
-		PI / 6.0
-	)
+	match recipe_id:
+		&"boss_colossus":
+			return PackedVector2Array([
+				Vector2(0.62, -0.12), Vector2(0.82, -0.04),
+					Vector2(0.82, 0.10), Vector2(0.58, 0.16),
+				Vector2(0.42, 0.06), Vector2(0.44, -0.08),
+			])
+		&"boss_leviathan":
+			return _regular_polygon(Vector2(0.06, -0.18), 0.19, 4, PI / 4.0)
+		&"boss_titan":
+			return Components.rect_points(Vector2(0.46, 0.0), Vector2(0.22, 0.10))
+		&"boss_behemoth":
+			return _regular_polygon(Vector2(-0.22, 0.18), 0.20, 5, -PI / 2.0)
+		&"boss_crown":
+			return _regular_polygon(Vector2(0.30, -0.24), 0.18, 6, PI / 6.0)
+	return PackedVector2Array()
+
+
+static func _boss_detached_modules(
+	recipe_id: StringName
+) -> Array[PackedVector2Array]:
+	match recipe_id:
+		&"boss_colossus":
+			return [
+				_module_pod(Vector2(-0.82, -0.78), Vector2(0.28, 0.16)),
+				_module_pod(Vector2(-0.62, 0.80), Vector2(0.24, 0.15)),
+			]
+		&"boss_leviathan":
+			return [
+				_module_pod(Vector2(-1.02, -0.62), Vector2(0.22, 0.14)),
+				_module_pod(Vector2(0.58, 0.70), Vector2(0.26, 0.14)),
+			]
+		&"boss_titan":
+			return [
+				_module_pod(Vector2(-0.80, -0.78), Vector2(0.30, 0.13)),
+				_module_pod(Vector2(-0.52, 0.78), Vector2(0.30, 0.13)),
+			]
+		&"boss_behemoth":
+			return [
+				_module_pod(Vector2(-1.02, 0.66), Vector2(0.24, 0.16)),
+				_module_pod(Vector2(0.62, -0.76), Vector2(0.22, 0.15)),
+			]
+		&"boss_crown":
+			return [
+				_module_pod(Vector2(-0.96, -0.70), Vector2(0.22, 0.15)),
+				_module_pod(Vector2(-0.82, 0.72), Vector2(0.24, 0.14)),
+			]
+	return []
+
+
+static func _module_pod(
+	center: Vector2,
+	half_extent: Vector2
+) -> PackedVector2Array:
+	return PackedVector2Array([
+		center + Vector2(-half_extent.x, -half_extent.y * 0.45),
+		center + Vector2(-half_extent.x * 0.58, -half_extent.y),
+		center + Vector2(half_extent.x * 0.62, -half_extent.y),
+		center + Vector2(half_extent.x, -half_extent.y * 0.30),
+		center + Vector2(half_extent.x, half_extent.y * 0.40),
+		center + Vector2(half_extent.x * 0.52, half_extent.y),
+		center + Vector2(-half_extent.x * 0.62, half_extent.y),
+		center + Vector2(-half_extent.x, half_extent.y * 0.36),
+	])
 
 
 static func _boss_module_inset(recipe_id: StringName) -> PackedVector2Array:
@@ -807,6 +1044,22 @@ static func _regular_polygon(
 			) * radius
 		)
 	return points
+
+
+static func _scale_about_centroid(
+	points: PackedVector2Array,
+	scale: Vector2
+) -> PackedVector2Array:
+	if points.is_empty():
+		return PackedVector2Array()
+	var centroid := Vector2.ZERO
+	for point in points:
+		centroid += point
+	centroid /= float(points.size())
+	var result := PackedVector2Array()
+	for point in points:
+		result.append(centroid + (point - centroid) * scale)
+	return result
 
 
 static func _layer(
