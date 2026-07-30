@@ -47,8 +47,8 @@ func _initialize() -> void:
 		var tactical := layout.tactical_layout(stage_id)
 		for cover in tactical.cover_rects:
 			_expect(not Rules.circle_overlaps_rect(center, 560.0, cover), "%s center clearance contains no cover" % stage_id)
-	for water in Catalog.water_rects():
-		_expect(not Rules.circle_overlaps_rect(center, 560.0, water), "center clearance contains no water")
+	for void_rect in Catalog.void_rects():
+		_expect(not Rules.circle_overlaps_rect(center, 560.0, void_rect), "center clearance contains no void")
 	for stage_id in Catalog.STAGE_IDS:
 		for spec in layout.stationary_blueprint(stage_id):
 			_expect(center.distance_to(Vector2(spec["pos"])) >= 560.0, "center clearance contains no stationary threat")

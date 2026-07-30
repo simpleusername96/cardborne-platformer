@@ -84,7 +84,7 @@ static func definition() -> Dictionary:
 		"id":FIELD_ID, "name_key":NAME_KEY, "world_rect":WORLD_RECT,
 		"player_start":CENTER, "start_clearance":START_CLEARANCE,
 		"walkable_regions":_walkable_regions(), "cover_rects":[],
-		"water_rects":_water_rects(),
+		"void_rects":_void_rects(),
 		"ordinary_spawn_anchors":ORDINARY_SPAWN_CANDIDATES.duplicate(),
 		"boss_arrival_anchors":BOSS_ARRIVAL_ANCHORS.duplicate(),
 		"cover_candidates":COVER_CANDIDATES.duplicate(true),
@@ -122,7 +122,7 @@ static func _walkable_regions() -> Array[Dictionary]:
 	]
 
 
-static func _water_rects() -> Array[Rect2]:
+static func _void_rects() -> Array[Rect2]:
 	return [Rect2(80,60,7040,180), Rect2(80,4080,7040,180)]
 
 

@@ -2,10 +2,10 @@
 type: spec
 status: active
 created: 2026-07-26
-last_reviewed: 2026-07-28
-canonical_for: Cardborne pixel-asset part construction and authoring review
+last_reviewed: 2026-07-30
+canonical_for: Existing Cardborne pixel world, UI chrome, and legacy combat-atlas maintenance
 topic: Pixel space-hangar visual production
-scope: Candidate pixel-art production rules for Cardborne world assets, actors, combat feedback, and restrained UI ornament
+scope: Pixel production rules for the existing world and UI; legacy combat sections are compatibility records and cannot direct new component design
 source: ./reference-manifest.json
 related:
   - ../../../docs/design/UI_VISUAL_SYSTEM.md
@@ -21,11 +21,18 @@ related:
 ## Purpose
 
 Define the approved simple, familiar, and production-feasible pixel-art grammar
-for Cardborne's top-down space hangar. This guide owns native pixel shapes,
-semantic parts, atlas production, and authoring review. The active
+for Cardborne's existing top-down space-hangar world and image-backed UI. This
+guide owns native pixel shapes, semantic parts, atlas production, and authoring
+review only inside that boundary. The active
 [`UI_VISUAL_SYSTEM.md`](../../../docs/design/UI_VISUAL_SYSTEM.md) remains the
 sole runtime-presentation authority and owns layout, live state, localization,
 and semantic visual hierarchy.
+
+The shipped combat atlas remains documented below only for reproducibility and
+maintenance until migration. It is not a visual reference: do not create new
+player, enemy, boss, pickup, projectile, effect, or upgrade-glyph art from its
+pixel grid, silhouettes, prompts, or named source assets. New combat components
+follow `UI_VISUAL_SYSTEM.md` and the active combat-rework ExecPlan.
 
 The guide converts the reference study and MVP failures into part-level
 constraints. It favors first-clear gameplay information over novelty,
@@ -35,13 +42,15 @@ decoration, realism, or dense science-fiction detail.
 
 This guide covers:
 
-- top-down floor, void, blockers, facilities, props, actors, projectiles,
-  secondary weapons, pickups, combat effects, telegraphs, and restrained UI
+- top-down floor, void, blockers, facilities, props, and restrained UI
   ornament;
 - native logical size, silhouette, palette ownership, state treatment, and
   validation for each visual family;
 - ImageGen draft boundaries and the deterministic cleanup path into semantic
   layers and atlases.
+
+Existing combat-family sections cover compatibility validation only. They do
+not authorize visual iteration or expansion.
 
 This guide does not change gameplay geometry, collision, navigation, spawn
 legality, attack timing, localization, accessibility, batching, or any live
@@ -149,7 +158,7 @@ continuous value family.
 - **Palette / ownership:** Void MUST use the darkest value. Floor MUST use at
   most three neighboring gray values and remain less contrast-heavy than actors
   or attacks.
-- **Animation / state:** Floor SHOULD be static. Any void or water motion MUST be
+- **Animation / state:** Floor SHOULD be static. Any void motion MUST be
   slow, sparse, and limited to an edge band; it MUST NOT animate the full play
   surface.
 - **Validation:** Repeat every tile in a `3 x 3` proof, test every neighbor
@@ -206,7 +215,7 @@ continuous value family.
   reservation, non-overlap, clear traversable gaps, facility timer pairing, and
   differentiation from pickups and ordinary cover.
 
-## Player Craft
+## Legacy Pixel Player Craft — Compatibility Only
 
 - **Role / use:** The craft is the persistent visual anchor for movement,
   facing, manual aim, damage, armor, engines, weapon state, and dash.
@@ -229,7 +238,7 @@ continuous value family.
   directions, stable pivot/muzzle/nozzles, exact semantic reassembly, player
   recognition in grayscale, and visibility under maximum enemy pressure.
 
-## Mobile Enemies
+## Legacy Pixel Mobile Enemies — Compatibility Only
 
 - **Role / use:** Mobile enemies expose current role, movement intent, attack
   preparation, and ownership before fine detail.
@@ -253,7 +262,7 @@ continuous value family.
   scale, in small groups, and during startup. Confirm each role remains
   distinguishable without names, permanent paths, or color.
 
-## Stationary Enemies And Bosses
+## Legacy Pixel Stationary Enemies And Bosses — Compatibility Only
 
 - **Role / use:** Stationary enemies establish fixed target priority; bosses
   communicate phase, attack preparation, module ownership, and exceptional
@@ -279,7 +288,7 @@ continuous value family.
   separate module anchors, and agreement between visible preparation and the
   gameplay-owned attack contract.
 
-## Player Projectiles
+## Legacy Pixel Player Projectiles — Compatibility Only
 
 - **Role / use:** Player projectiles communicate friendly ownership, direction,
   physical ammunition, ordinary fire, and the distinct opening Breach Shot.
@@ -302,7 +311,7 @@ continuous value family.
   rear anchors in all directions, test against floor/wall/enemy colors, and
   confirm ordinary versus Breach recognition without HUD text.
 
-## Hostile Projectiles
+## Legacy Pixel Hostile Projectiles — Compatibility Only
 
 - **Role / use:** Hostile shots communicate danger ownership, travel direction,
   damage weight, and affinity early enough to dodge.
@@ -327,7 +336,7 @@ continuous value family.
   equality, wall termination, readable direction, and no confusion with player
   fire or pickups.
 
-## Secondary Weapons
+## Legacy Pixel Secondary Weapons — Compatibility Only
 
 - **Role / use:** Automatic secondaries provide five immediately distinct
   behaviors: seeker missile, ion field, orbit blades, wake mines, and escort
@@ -352,7 +361,7 @@ continuous value family.
   friendly ownership survives grayscale, and simultaneous secondaries remain
   readable without extra HUD labels.
 
-## Pickups
+## Legacy Pixel Pickups — Compatibility Only
 
 - **Role / use:** Pickups communicate collectible experience, hull repair, and
   whole-field experience recall. No other field-item behavior is implied.
@@ -373,7 +382,7 @@ continuous value family.
   projectile class, three experience value tiers, minimap-marker pairing, and
   visibility without animation.
 
-## VFX And Telegraphs
+## Legacy Pixel VFX And Telegraphs — Compatibility Only
 
 - **Role / use:** VFX confirm contact and state change; telegraphs show exact
   hostile startup, damage footprint, readiness, and active duration.
@@ -425,6 +434,10 @@ continuous value family.
   focus/selection, scalable frame seams, and no rasterized live content.
 
 ## Acceptance Criteria
+
+Actor, projectile, pickup, and effect checks below apply only when confirming
+that the currently shipped compatibility atlas still reproduces its existing
+runtime contract. They are not acceptance criteria for new combat components.
 
 - [ ] Every production family uses the native logical size and target mode in
       `assets/asset-inventory.json`.

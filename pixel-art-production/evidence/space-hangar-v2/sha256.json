@@ -23,7 +23,7 @@
 			"sha256": "314ba00e46e85984eb4d09c2dab426a3e5256441a957e9bfd12b28e8b9c98bcf"
 		},
 		{
-			"path": "clean/hangar-water-master.png",
+			"path": "clean/hangar-void-master.png",
 			"sha256": "1d67cccfac9e8c122d4fcd4b5b1acfc3b66143bb717d607c34b52f511f617936"
 		},
 		{
@@ -125,7 +125,7 @@
 	},
 	"source_manifest": {
 		"path": "pixel-art-production/assets/source/candidates/space-hangar-v2/source-manifest.json",
-		"sha256": "66808dc00ea5534820431dbb6d1303280e0d38df553e59a2b25502039c7a89fa"
+		"sha256": "3d4de1704c342ad79fc1d3fa1d65ab9de20e1e62c68275061a2c78eed211c25f"
 	},
 	"sources": [
 		{

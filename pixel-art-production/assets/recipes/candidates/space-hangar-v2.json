@@ -233,7 +233,7 @@
 			"prop_atlas": "clean/prop-atlas.png",
 			"deck_repeat_master": "clean/hangar-floor-master.png",
 			"wall_repeat_master": "clean/hangar-wall-master.png",
-			"void_repeat_master": "clean/hangar-water-master.png"
+			"void_repeat_master": "clean/hangar-void-master.png"
 		},
 		"review": {
 			"base_variant_atlas_4x": "review/base-variant-atlas-4x.png",

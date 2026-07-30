@@ -1,7 +1,7 @@
 class_name VehiclePixelWorldMeshBuilder
 extends Node2D
 
-## Geometry-fed pixel world presentation. Authoritative floor, water, cover,
+## Geometry-fed pixel world presentation. Authoritative floor, void, cover,
 ## and boundary segments stay owned by stage layout data; this node only
 ## rebuilds repeat-textured visual chunks when that immutable fingerprint
 ## changes.
@@ -16,7 +16,7 @@ const StampCatalog = preload(
 
 const FLOOR_TEXTURE := preload("res://pixel-art-production/runtime/tiles/hangar-floor.png")
 const WALL_TEXTURE := preload("res://pixel-art-production/runtime/tiles/hangar-wall.png")
-const WATER_TEXTURE := preload("res://pixel-art-production/runtime/tiles/hangar-water.png")
+const VOID_TEXTURE := preload("res://pixel-art-production/runtime/tiles/hangar-void.png")
 const TILE_VARIATION_SHADER := preload(
 	"res://shaders/space_hangar_tile_variation.gdshader"
 )
@@ -103,10 +103,10 @@ func _rebuild(layout: Object) -> void:
 			FLOOR_TEXTURE,
 			Color.WHITE
 		)
-	for water in Rules.get_water_rects(_stage_id):
+	for void_rect in Rules.get_void_rects(_stage_id):
 		_add_polygon(
-			PackedVector2Array(StageGeometry.rect_polygon(water)),
-			WATER_TEXTURE,
+			PackedVector2Array(StageGeometry.rect_polygon(void_rect)),
+			VOID_TEXTURE,
 			Color.WHITE
 		)
 	for polygon in Rules.get_cover_polygons(false, _stage_id):
@@ -460,7 +460,7 @@ func _floor_decoration_positions(
 			continue
 		if _point_in_any_rect(
 			position,
-			_typed_rects(Array(snapshot.get("water_rects"))),
+			_typed_rects(Array(snapshot.get("void_rects"))),
 			72.0
 		):
 			continue

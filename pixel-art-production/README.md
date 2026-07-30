@@ -2,8 +2,8 @@
 type: spec
 status: active
 created: 2026-07-26
-last_reviewed: 2026-07-29
-canonical_for: Pixel-art asset inventory, authoring manifests, semantic layer separation, deterministic cleanup, and atlas production
+last_reviewed: 2026-07-30
+canonical_for: Existing pixel-runtime asset inventory, authoring manifests, semantic layer separation, deterministic cleanup, and atlas production
 scope: Offline visual-asset production; it does not replace the current live visual system or gameplay geometry
 related:
   - ../docs/design/UI_VISUAL_SYSTEM.md
@@ -36,11 +36,12 @@ production evidence into the game.
 
 ## Purpose
 
-Define one production path for replacing Cardborne's procedural visual assets
-with editable pixel art. The path applies to map tiles, terrain, the player
-craft, enemies, bosses, projectiles, secondary weapons, effects, pickups, and
-icon artwork without turning collision, telegraphs, localization, or changing
-runtime values into bitmaps.
+Preserve one reproducible production path for the pixel assets already consumed
+by Cardborne. New pixel production is limited to the existing map, terrain,
+static world stamps, and image-backed UI chrome. The player craft, enemies,
+bosses, projectiles, secondary weapons, effects, pickups, and upgrade glyphs
+remain in the inventory only as legacy runtime compatibility assets until their
+component migration is complete.
 
 The complete machine-readable inventory is
 [`assets/asset-inventory.json`](./assets/asset-inventory.json). It currently contains 39 asset
@@ -86,6 +87,20 @@ World geometry remains owned by the field, tactical-layout, and terrain
 runtimes; telegraphs, localization, focus, timers, and changing combat state
 remain live. Offline reference, source, proof, and review PNGs are production
 evidence rather than Godot runtime assets.
+
+### Authority boundary
+
+- `docs/design/UI_VISUAL_SYSTEM.md` is the only live visual-direction authority.
+- The pixel inventory, atlas, manifests, prompts, source images, and generated
+  frame metadata describe the current implementation and its reproducibility;
+  they do not define the next combat-component style.
+- Historical prompt and source paths retain their original names where
+  manifests and hashes make them provenance records, including retired material
+  or water terminology. They must never be reused as generation input, cited as
+  user approval, or promoted into a design rule.
+- Do not add new player, enemy, boss, pickup, projectile, effect, or
+  upgrade-glyph families or variants to the pixel atlas. Their replacement path
+  is the active combat-rework ExecPlan.
 
 ### Inventory coverage
 
@@ -307,14 +322,14 @@ proof. The accepted `space-hangar-v2` runtime may deterministically rotate or
 reflect the same seamless master per 384-world-pixel cell and may add at most
 48 fixed-ID atlas stamps from legal geometry anchors.
 
-### Player, enemies, and bosses
+### Legacy player, enemies, and bosses — compatibility only
 
 Silhouette communicates ownership and role before interior detail. Attack
 startup, active state, recovery, damage, and destruction use separate states
 only when visible during play. Boss sprite phases support boss logic but never
 replace exact procedural attack geometry.
 
-### Projectiles and effects
+### Legacy projectiles and effects — compatibility only
 
 The rendered projectile head must not imply a smaller safe area than the actual
 collision radius. Ownership, affinity, and threat weight use shape plus value;
@@ -334,7 +349,7 @@ communicated by flight motion, wake, impact, and live state where required; do
 not place a literal pierce, poison, ricochet, or affinity glyph inside an
 ordinary bullet. Do not bake every upgrade combination into the atlas.
 
-### Items and facilities
+### Legacy items and current facilities
 
 Repair and experience recall remain the only field-item behaviors. XP value
 classes share one family. Repair/overdrive fields use a pixel fixture, while

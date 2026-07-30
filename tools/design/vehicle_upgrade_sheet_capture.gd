@@ -177,7 +177,7 @@ func _seeker_pods(canvas: Node2D, center: Vector2, level: int) -> void:
 			Vector2(-6, side * 34), Vector2(24, side * 34),
 			Vector2(36, side * 27), Vector2(20, side * 22),
 			Vector2(-12, side * 25),
-		]), Art.CERAMIC_GREEN_MID)
+		]), Art.STRUCTURE_MID)
 		for notch in level:
 			_circle(canvas, center + Vector2(4 + notch * 9, side * 28), 3.0, Art.MUSTARD)
 
@@ -307,7 +307,7 @@ func _compact_hud_contract(canvas: Node2D) -> void:
 	for index in 4:
 		var slot := Rect2(origin + Vector2(18 + index * 40, 80), Vector2(34, 34))
 		_rect(canvas, slot, Color(Art.IVORY_BRIGHT, 0.94))
-		_ring(canvas, slot.get_center(), 13.0, 3.0, [Art.MUSTARD, Art.MINT, Art.COBALT_WATER, Art.ATTACK_ARC][index])
+		_ring(canvas, slot.get_center(), 13.0, 3.0, [Art.MUSTARD, Art.MINT, Art.COBALT_ENERGY, Art.ATTACK_ARC][index])
 		if index == 0:
 			_circle(canvas, slot.get_center(), 5.0, Art.MUSTARD)
 		elif index == 1:
@@ -315,7 +315,7 @@ func _compact_hud_contract(canvas: Node2D) -> void:
 		elif index == 2:
 			_polygon(canvas, slot.get_center(), PackedVector2Array([
 				Vector2(-7, -8), Vector2(9, 0), Vector2(-7, 8),
-			]), Art.COBALT_WATER)
+			]), Art.COBALT_ENERGY)
 		else:
 			_draw_terrain_bolt_icon(canvas, slot.get_center(), 8.0, Art.ATTACK_ARC)
 

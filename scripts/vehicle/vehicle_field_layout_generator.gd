@@ -24,7 +24,7 @@ const SECTORS: Array[StringName] = [&"nw", &"n", &"ne", &"sw", &"s", &"se"]
 
 static var _field: Dictionary = {}
 static var _walkable_rects_cache: Array[Rect2] = []
-static var _water_rects_cache: Array[Rect2] = []
+static var _void_rects_cache: Array[Rect2] = []
 static var _grid_cache_by_radius: Dictionary = {}
 
 
@@ -431,9 +431,9 @@ static func _validate_cover_selection(covers: Array[Rect2]) -> PackedStringArray
 			Vector2(_field["player_start"]), float(_field["start_clearance"]), cover
 		):
 			errors.append("cover %d breaches center clearance" % index)
-		for water in _water_rects():
-			if _rect_distance(cover, water) < COVER_CLEARANCE:
-				errors.append("cover %d is too close to water" % index)
+		for void_rect in _void_rects():
+			if _rect_distance(cover, void_rect) < COVER_CLEARANCE:
+				errors.append("cover %d is too close to void" % index)
 		if feature_overlaps_rect(_field, cover):
 			errors.append("cover %d overlaps functional terrain" % index)
 		for other_index in range(index + 1, covers.size()):
@@ -547,8 +547,8 @@ static func _farthest_pair(points: Array[Vector2]) -> Vector2i:
 static func _is_walkable(position: Vector2, radius: float, covers: Array[Rect2]) -> bool:
 	if not _circle_inside_floor_union(position, radius):
 		return false
-	for water in _water_rects():
-		if _circle_overlaps_rect(position, radius, water):
+	for void_rect in _void_rects():
+		if _circle_overlaps_rect(position, radius, void_rect):
 			return false
 	for cover in covers:
 		if _circle_overlaps_rect(position, radius, cover):
@@ -645,8 +645,8 @@ static func _grid_contract(radius: float) -> Dictionary:
 static func _is_static_walkable(position: Vector2, radius: float) -> bool:
 	if not _circle_inside_floor_union(position, radius):
 		return false
-	for water in _water_rects():
-		if _circle_overlaps_rect(position, radius, water):
+	for void_rect in _void_rects():
+		if _circle_overlaps_rect(position, radius, void_rect):
 			return false
 	return true
 
@@ -711,9 +711,9 @@ static func _validate_feature_contract() -> PackedStringArray:
 			var rectangle := Rect2(feature["rect"])
 			if not _rect_inside_floor_union(rectangle):
 				errors.append("%s leaves the walkable floor" % feature_id)
-			for water in _water_rects():
-				if rectangle.intersects(water, true):
-					errors.append("%s overlaps water" % feature_id)
+			for void_rect in _void_rects():
+				if rectangle.intersects(void_rect, true):
+					errors.append("%s overlaps void" % feature_id)
 		else:
 			var radius := _feature_radius(feature)
 			var position := Vector2(feature.get("pos", Vector2.ZERO))
@@ -721,9 +721,9 @@ static func _validate_feature_contract() -> PackedStringArray:
 				errors.append("%s has no reserved footprint" % feature_id)
 			elif not _circle_inside_floor_union(position, radius):
 				errors.append("%s leaves the walkable floor" % feature_id)
-			for water in _water_rects():
-				if _circle_overlaps_rect(position, radius, water):
-					errors.append("%s overlaps water" % feature_id)
+			for void_rect in _void_rects():
+				if _circle_overlaps_rect(position, radius, void_rect):
+					errors.append("%s overlaps void" % feature_id)
 		if _single_feature_overlaps_circle(feature, start, start_clearance):
 			errors.append("%s breaches player start clearance" % feature_id)
 		for other_index in range(index + 1, features.size()):
@@ -794,11 +794,11 @@ static func _feature_radius(feature: Dictionary) -> float:
 	return 0.0
 
 
-static func _water_rects() -> Array[Rect2]:
-	if _water_rects_cache.is_empty():
-		for value in Array(_field["water_rects"]):
-			_water_rects_cache.append(Rect2(value))
-	return _water_rects_cache
+static func _void_rects() -> Array[Rect2]:
+	if _void_rects_cache.is_empty():
+		for value in Array(_field["void_rects"]):
+			_void_rects_cache.append(Rect2(value))
+	return _void_rects_cache
 
 
 static func _walkable_rects() -> Array[Rect2]:
@@ -811,7 +811,7 @@ static func _walkable_rects() -> Array[Rect2]:
 static func _configure_field(definition: Dictionary) -> void:
 	_field = definition.duplicate(true)
 	_walkable_rects_cache.clear()
-	_water_rects_cache.clear()
+	_void_rects_cache.clear()
 	_grid_cache_by_radius.clear()
 
 

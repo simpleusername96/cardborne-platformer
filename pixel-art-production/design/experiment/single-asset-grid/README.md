@@ -1,11 +1,11 @@
 ---
 type: evidence
-status: active
+status: archived
 owner: BK
 created: 2026-07-26
-last_reviewed: 2026-07-26
+last_reviewed: 2026-07-30
 topic: Single-asset grid-guided ImageGen to pixel-SVG workflow
-scope: One player-craft experiment; no live game integration
+scope: Historical player-craft pixel-workflow experiment; not input for new combat-component design
 source: ../../space-hangar-research.md
 related:
   - ../../../README.md

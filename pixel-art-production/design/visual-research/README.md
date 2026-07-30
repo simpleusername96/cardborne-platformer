@@ -1,10 +1,10 @@
 ---
 type: evidence
-status: active
+status: archived
 created: 2026-07-26
-last_reviewed: 2026-07-26
+last_reviewed: 2026-07-30
 topic: Pixel-art space-hangar reference research, MVP comparison, and production recommendation
-scope: Offline design evidence only; no live Godot asset or renderer changes
+scope: Historical evidence behind the existing pixel runtime; not input for new combat-component design
 related:
   - ./REFERENCE_GALLERY.md
   - ./reference-manifest.json
@@ -25,6 +25,10 @@ enemy roles, projectiles, pickups, and support effects while the screen is busy.
 This report is design evidence. It does not supersede
 [`UI_VISUAL_SYSTEM.md`](../../../docs/design/UI_VISUAL_SYSTEM.md), approve external production
 assets, or change the live Godot game.
+
+This evidence has been consumed by the existing pixel runtime and is archived.
+It must not guide new player, enemy, boss, pickup, projectile, effect, or
+upgrade-glyph components.
 
 ## Sources
 

@@ -8,7 +8,6 @@ topic: Enlarged vehicle fields, terrain/facilities, enemy elites, bosses and pra
 scope: Historical evidence, recovered history, external design findings, owner corrections, and measured implementation rationale
 source: Git commits dddbc00, fbb115c, 7150b47, 79fad1d, 6b95c26, d20a25f, and 51b2168; ../docs/product/vehicle_game_spec.md
 related:
-  - ./execplans/2026-07-23-vehicle-performance-architecture-stabilization.md
   - ./vehicle-difficulty-meta-progression-decision-study.md
   - ../docs/product/vehicle_game_spec.md
   - ../docs/design/UI_VISUAL_SYSTEM.md
@@ -139,14 +138,14 @@ The correct direction is therefore a new shared terrain contract, not a revert.
 The current field is `5600x3400`, centered at `(2800, 1700)`, and has:
 
 - sixteen overlapping walkable rectangles;
-- four peripheral water rectangles;
+- four peripheral void rectangles;
 - sixteen cover candidates, of which eight are selected per run;
 - twenty-four ordinary spawn candidates;
 - eight boss arrival anchors; and
 - four large decorative motifs.
 
-`VehicleStageBackdrop` renders the outside and water as cobalt, walkable floor
-as ivory variants, internal cover as ceramic green, and the four motifs as
+`VehicleStageBackdrop` renders the outside and void as cobalt, walkable floor
+as ivory variants, internal cover as a deep structure fill, and the four motifs as
 additional floor graphics. As a result:
 
 - an internal green rectangle and a cobalt gap can both block the ship but do
@@ -154,7 +153,7 @@ additional floor graphics. As a result:
 - some narrow negative spaces look open even though the player-radius collision
   test rejects them;
 - the four motifs look semantically important despite having no behavior; and
-- collision truth is distributed across walkable union, water, selected cover,
+- collision truth is distributed across walkable union, void, selected cover,
   crates, and presentation-specific drawing.
 
 The existing visual specification already says static solid cover should use
@@ -440,17 +439,17 @@ new attack grammar.
 
 ## Accepted Direction
 
-The related ExecPlan fixes one implementation direction:
+The implementation history fixed one direction:
 
-1. Three total `7200x4320` run-level field layouts in the same Sunken Ceramic
-   Fresco theme:
+1. Three total `7200x4320` run-level field layouts in the same flat-color
+   space-hangar visual system:
    `drowned_ruin_field`, `tidal_archive_field`, and
    `storm_drydock_field`. One is selected at run creation and retained for all
    five stages and retries.
 2. Zero decorative floor motifs. The motif data, rendering, profile constants,
    validators, and canonical references are removed rather than hidden.
 3. One wall material for every impassable map boundary and internal solid:
-   ceramic-green fill, one common shadow, and a `48 px` boundary rail whose
+   structure-green fill, one common shadow, and a `48 px` boundary rail whose
    floor-side edge matches the `24 px` base ship clearance.
 4. Six initial field-feature families:
    - Flow Channel;

@@ -6,7 +6,7 @@ created: 2026-07-29
 last_reviewed: 2026-07-29
 topic: Continuous-horde rollout problem analysis and recovery-solution selection
 scope: Problems introduced or left unresolved by the 2026-07-29 density, readability, item-frequency, and continuous-stage implementation
-source: ./execplans/2026-07-29-continuous-multidirectional-horde-readability.md
+source: Git range 8a0b003..b87a84b and the repository evidence named below
 related:
   - ./continuous-horde-readability-evidence.md
   - ./vehicle-performance-stabilization-evidence.md

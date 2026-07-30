@@ -3,7 +3,7 @@ type: spec
 status: draft
 owner: BK
 created: 2026-07-28
-last_reviewed: 2026-07-28
+last_reviewed: 2026-07-30
 topic: Combat growth, horde, terrain, and boss improvement direction
 scope: Proposed evolution of the current five-stage Cardborne vehicle campaign
 source: ../../.agents/survivor-shooter-combat-growth-reference-study.md
@@ -149,7 +149,8 @@ related:
 
 ### R1.3 가독성과 성능
 
-- 새로운 damage geometry는 `UI_VISUAL_SYSTEM.md`의 flat-color Sunken Ceramic Fresco 체계를 따른다.
+- 새로운 damage geometry는 `UI_VISUAL_SYSTEM.md`의 일반 SF 기반 flat-color,
+  역할 우선 component 체계를 따른다.
 - 플레이어, ordinary enemy, priority enemy, boss telegraph의 시각 우선순위를 뒤집지 않는다.
 - reduced motion, flash, camera-shake 설정을 존중한다.
 - 같은 global actor budget 안에서 먼저 설계한다.

@@ -762,7 +762,7 @@ func _sync_status_arcs(enemy: EnemyState, position: Vector2, radius: float) -> v
 	if statuses.has(&"chill"):
 		_write_instance(
 			_overlay_batches[&"status_arc"], position, deg_to_rad(120.0),
-			Vector2.ONE * arc_radius, Art.COBALT_WATER
+			Vector2.ONE * arc_radius, Art.COBALT_ENERGY
 		)
 
 
@@ -1211,7 +1211,7 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 		Art.MUSTARD, Art.MUSTARD_DARK, int(state.get("primary_visual_tier", 0))
 	)
 	var secondary_color := _upgrade_shade(
-		Art.MINT, Art.CERAMIC_GREEN, int(state.get("secondary_visual_tier", 0))
+		Art.MINT, Art.STRUCTURE_BASE, int(state.get("secondary_visual_tier", 0))
 	)
 	_sync_support_fields(Array(state.get("support_fields", [])))
 	var feedback_color := Color.TRANSPARENT
@@ -1507,7 +1507,7 @@ func _sync_support_fields(support_fields: Array) -> void:
 			center,
 			48.0,
 			Color(
-				Art.CERAMIC_GREEN_MID if kind == &"repair" else Art.MUSTARD_DARK,
+				Art.STRUCTURE_MID if kind == &"repair" else Art.MUSTARD_DARK,
 				0.92
 			)
 		)

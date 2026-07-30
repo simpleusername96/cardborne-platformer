@@ -1,10 +1,10 @@
 ---
 type: evidence
-status: active
+status: archived
 created: 2026-07-26
-last_reviewed: 2026-07-26
+last_reviewed: 2026-07-30
 topic: Image-bearing references for a simple, approachable pixel-art space hangar
-scope: Remote official game imagery and locally retained CC0 reference samples
+scope: Historical reference evidence for the existing pixel runtime; not input for new combat-component design
 related:
   - ./reference-manifest.json
   - ./README.md
@@ -23,6 +23,9 @@ are limited to the CC0 packs recorded with source, license, and checksum in
 
 This is a reference gallery, not an asset-approval list. No external art in this
 folder is imported by Godot.
+
+The comparison is complete and this gallery is archived. It must not be used to
+select or justify the next combat-component direction.
 
 ## Sources
 

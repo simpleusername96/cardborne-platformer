@@ -21199,7 +21199,7 @@
 			"approved_source_path": "pixel-art-production/assets/source/approved/visual-recovery/core/cobalt-water-repeat-192.png",
 			"approved_source_sha256": "3f074236a1b8f94d2d05e43ccec2c9011564a5612934172dee74f630d97da09f",
 			"derivation": "imagegen_grid_snap_palette_cleanup_and_irregular_repeat_composition",
-			"output_path": "pixel-art-production/runtime/tiles/hangar-water.png",
+			"output_path": "pixel-art-production/runtime/tiles/hangar-void.png",
 			"output_sha256": "95cab812092ad7ce7ddf72e0402a3b60d529b486ba984520d269db50cd30982d",
 			"production_method": "imagegen_assisted",
 			"prompt_path": "pixel-art-production/assets/source/candidates/visual-recovery/prompts/cobalt-water-24.txt",
@@ -21207,7 +21207,7 @@
 			"raw_source_path": "pixel-art-production/assets/source/candidates/visual-recovery/raw/cobalt-water-24-raw.png",
 			"raw_source_sha256": "ac49229aa0bd212ec602aecb68367d91440e8c5eb036dae394bd85e4f69d174d",
 			"repeat_safe": true,
-			"runtime_key": "hangar_water",
+			"runtime_key": "hangar_void",
 			"size": [
 				192,
 				192

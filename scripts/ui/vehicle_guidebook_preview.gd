@@ -74,7 +74,7 @@ func show_preview(preview: Dictionary) -> void:
 
 func _draw() -> void:
 	draw_rect(Rect2(Vector2.ZERO, size), Art.COBALT_VOID.lightened(0.04))
-	draw_rect(Rect2(Vector2(8.0, 8.0), size - Vector2(16.0, 16.0)), Art.CERAMIC_GREEN, false, 3.0)
+	draw_rect(Rect2(Vector2(8.0, 8.0), size - Vector2(16.0, 16.0)), Art.STRUCTURE_BASE, false, 3.0)
 	if _pixel_texture != null and not _pixel_frame.is_empty():
 		var region := Array(_pixel_frame["region"])
 		draw_texture_rect_region(
@@ -171,7 +171,7 @@ func _add_terrain(terrain_id: StringName) -> void:
 		&"arc_surge":
 			_add_instance(Visuals.effect_mesh(&"beam"), Art.BOSS_MAGENTA, Vector2(78.0, 42.0))
 		&"breakable_bulkhead":
-			_add_instance(Visuals.health_bar_mesh(), Art.CERAMIC_GREEN, Vector2(74.0, 34.0))
+			_add_instance(Visuals.health_bar_mesh(), Art.STRUCTURE_BASE, Vector2(74.0, 34.0))
 		_:
 			_add_instance(Visuals.effect_mesh(&"diamond"), Art.INK_MUTED, Vector2(42.0, 42.0))
 

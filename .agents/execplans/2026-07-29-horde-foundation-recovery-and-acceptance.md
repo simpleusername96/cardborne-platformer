@@ -3,11 +3,8 @@ type: plan
 status: active
 owner: BK
 created: 2026-07-29
-last_reviewed: 2026-07-29
+last_reviewed: 2026-07-30
 scope: Recover workload authority and make the 276-enemy peak and 320-actor capacity technically sustainable without reducing speed, density, visual scale, or combat fidelity
-supersedes:
-  - ./2026-07-29-continuous-multidirectional-horde-readability.md
-  - ./2026-07-23-vehicle-performance-architecture-stabilization.md
 related:
   - ../../AGENTS.md
   - ../AGENTS.md
@@ -186,7 +183,7 @@ Exact actions requiring owner/user approval:
 | Health/priority overlays | up to every qualifying visible actor | health 12, extra marker 8 | renderer cap assertions | boss/attack/mine cues exempt |
 | Production workload proof | cap assertions only | one Stage 5 Hard replay records actual scheduler occupancy and sector distribution | workload qualification passes | no balance value changed |
 | Performance proof | 5-second non-authoritative smoke | clean 3×60s native/Web + 10m lifecycle | all existing thresholds pass | slowest run retained |
-| Plan authority | two overlapping active plans | this plan only | lifecycle audit | old plans preserved as superseded |
+| Plan authority | two overlapping active plans | this plan only | lifecycle audit | retired plans deleted after their evidence was retained |
 
 ## Tasks
 

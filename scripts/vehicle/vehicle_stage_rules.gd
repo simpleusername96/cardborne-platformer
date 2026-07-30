@@ -18,7 +18,6 @@ const CORAL := Color("#D9654F")
 const OFF_WHITE := Color("#F0F1E8")
 const MUTED := Color("#A8B4AE")
 const VIOLET := Color("#AA89CF")
-const WATER := Color("#153238")
 const FLOOR_DARK := Color("#18272A")
 const FLOOR_MID := Color("#203437")
 const FLOOR_LIGHT := Color("#294247")
@@ -40,8 +39,8 @@ static func player_start(stage_id: StringName = &"stage_1") -> Vector2:
 	return Catalog.player_start(stage_id)
 
 
-static func get_water_rects(stage_id: StringName = &"stage_1") -> Array[Rect2]:
-	return Catalog.water_rects(stage_id)
+static func get_void_rects(stage_id: StringName = &"stage_1") -> Array[Rect2]:
+	return Catalog.void_rects(stage_id)
 
 
 static func get_floor_regions(stage_id: StringName = &"stage_1") -> Array[Dictionary]:

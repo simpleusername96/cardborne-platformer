@@ -12,7 +12,7 @@ var world_rect := Rect2()
 var player_start := Vector2.ZERO
 var walkable_rects: Array[Rect2] = []
 var selected_cover_rects: Array[Rect2] = []
-var water_rects: Array[Rect2] = []
+var void_rects: Array[Rect2] = []
 var terrain_zones: Array[Dictionary] = []
 var wall_segments := PackedVector2Array()
 var navigation_occupancy := PackedByteArray()
@@ -26,9 +26,9 @@ func configure(definition: Dictionary, cover_rects: Array[Rect2]) -> void:
 	for region in Array(definition["walkable_regions"]):
 		walkable_rects.append(Rect2(region["rect"]))
 	selected_cover_rects = cover_rects.duplicate()
-	water_rects.clear()
-	for value in Array(definition["water_rects"]):
-		water_rects.append(Rect2(value))
+	void_rects.clear()
+	for value in Array(definition["void_rects"]):
+		void_rects.append(Rect2(value))
 	terrain_zones.clear()
 	for value in Array(definition.get("features", [])):
 		terrain_zones.append(Dictionary(value).duplicate(true))

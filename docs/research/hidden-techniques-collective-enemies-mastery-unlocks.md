@@ -9,7 +9,8 @@ related:
   - ../product/vehicle_game_spec.md
   - ../product/combat-growth-improvement-direction.md
   - ../../.agents/survivor-shooter-combat-growth-reference-study.md
-  - ../../.agents/execplans/2026-07-29-continuous-multidirectional-horde-readability.md
+  - ../../.agents/execplans/2026-07-29-horde-foundation-recovery-and-acceptance.md
+  - ../../.agents/execplans/2026-07-29-combat-visual-enemy-boss-rework.md
 ---
 
 # 숨은 조작·적 집단행동·행동 기반 해금 설계 분석
@@ -527,8 +528,8 @@ seed에서만 가능하면 안 된다.
 ## Relationship to Current Work
 
 현재 활성 ExecPlan인
-[`2026-07-29-continuous-multidirectional-horde-readability.md`](../../.agents/execplans/2026-07-29-continuous-multidirectional-horde-readability.md)는
-다음을 해결한다.
+[`2026-07-29-horde-foundation-recovery-and-acceptance.md`](../../.agents/execplans/2026-07-29-horde-foundation-recovery-and-acceptance.md)는
+다음 구현 상태의 기술적 안정화를 담당한다.
 
 - 적 수 2~3배 증가
 - 사방에 고르게 분포된 spawn
@@ -537,9 +538,11 @@ seed에서만 가능하면 안 된다.
 - 아이템의 필드 존재감
 - 스테이지 간 비모달 연속 진행
 
-이 문서의 집단행동·숨은 조작·행동 기반 해금은 그 계획에 포함된 것으로 간주하지 않는다.
-충분한 적 밀도와 가독성은 이 제안의 선행조건이며, 복잡한 집단 AI가 현재 요청한 물량 개선을
-미루는 이유가 되어서는 안 된다.
+집단행동 rollout은 별도의 활성
+[`2026-07-29-combat-visual-enemy-boss-rework.md`](../../.agents/execplans/2026-07-29-combat-visual-enemy-boss-rework.md)가
+소유한다. 숨은 조작과 행동 기반 해금은 어느 활성 계획에도 포함되지 않는다.
+충분한 적 밀도와 가독성은 이 제안의 선행조건이며, 복잡한 집단 AI가 현재
+요청한 물량 개선을 미루는 이유가 되어서는 안 된다.
 
 ## Limitations
 

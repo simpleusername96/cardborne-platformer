@@ -1681,7 +1681,7 @@ func _pickup_color(kind: StringName) -> Color:
 		&"repair":
 			return Art.MINT
 		&"experience_recall":
-			return Art.COBALT_WATER
+			return Art.COBALT_ENERGY
 	return Art.IVORY_BRIGHT
 
 
@@ -4523,7 +4523,7 @@ func _minimap_snapshot(include_static_geometry: bool = true) -> Dictionary:
 		for rect in _runtime_cover_rects():
 			blocker_polygons.append(StageGeometry.rect_polygon(rect))
 		snapshot["floor_polygons"] = StageCatalog.floor_polygons(current_stage_id)
-		snapshot["water_polygons"] = StageCatalog.water_polygons(current_stage_id)
+		snapshot["void_polygons"] = StageCatalog.void_polygons(current_stage_id)
 		snapshot["blocker_polygons"] = blocker_polygons
 	return snapshot
 
@@ -4825,7 +4825,7 @@ func _draw_pickups_and_crates() -> void:
 		var plinth_radius := Art.PICKUP_PLINTH_RADIUS
 		draw_circle(position + Vector2(7.0, 9.0), plinth_radius, Art.COBALT_DEEP)
 		draw_circle(position, plinth_radius, Art.IVORY_BRIGHT)
-		draw_circle(position, plinth_radius - 8.0, Art.CERAMIC_GREEN_MID)
+		draw_circle(position, plinth_radius - 8.0, Art.STRUCTURE_MID)
 		match kind:
 			&"repair":
 				draw_rect(Rect2(position - Vector2(7.0, 22.0), Vector2(14.0, 44.0)), color)
@@ -4861,7 +4861,7 @@ func _draw_pickups_and_crates() -> void:
 		draw_colored_polygon(Art.stepped_rect(edge, 12.0), Art.MUSTARD_DARK)
 		draw_colored_polygon(Art.stepped_rect(crate_rect, 12.0), face)
 		draw_colored_polygon(_regular_polygon(position, 23.0, 4, PI / 4.0), Art.MUSTARD)
-		draw_colored_polygon(_regular_polygon(position, 11.0, 4, PI / 4.0), Art.CERAMIC_GREEN)
+		draw_colored_polygon(_regular_polygon(position, 11.0, 4, PI / 4.0), Art.STRUCTURE_BASE)
 
 
 func _draw_pixel_asset(

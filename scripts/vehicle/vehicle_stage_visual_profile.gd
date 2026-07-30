@@ -1,20 +1,20 @@
 class_name VehicleStageVisualProfile
 extends RefCounted
 
-## Presentation-only contract for the Sunken Ceramic Fresco vehicle stage.
+## Presentation-only semantic color and scale contract for the vehicle stage.
 ## Gameplay code may consume these roles and sizes, but this profile owns no state,
 ## collision, progression, input, or persistence behavior.
 
 const COBALT_VOID := Color("#0739A6")
-const COBALT_WATER := Color("#0755C7")
+const COBALT_ENERGY := Color("#0755C7")
 const COBALT_DEEP := Color("#042B7B")
 const IVORY := Color("#F3E8C9")
 const IVORY_SHADE := Color("#D9CAA7")
 const IVORY_BRIGHT := Color("#FFF6DC")
-const CERAMIC_GREEN := Color("#07564C")
+const STRUCTURE_BASE := Color("#07564C")
 const BLOCKER_FILL := Color("#07564C")
-const CERAMIC_GREEN_MID := Color("#0E6C5E")
-const CERAMIC_GREEN_LIGHT := Color("#2F8170")
+const STRUCTURE_MID := Color("#0E6C5E")
+const STRUCTURE_LIGHT := Color("#2F8170")
 const MINT := Color("#75C4B2")
 const MINT_SOFT := Color("#A8DACB")
 const CORAL := Color("#C92F4E")
@@ -44,7 +44,7 @@ const HOSTILE_PROJECTILE_ENVELOPE_SCALE := 4.5
 const PLAYER_PRIMARY_PROJECTILE_SCALE := 1.25
 const CACHE_HALF_SIZE := Vector2(70.0, 52.0)
 const COVER_EDGE_OFFSET := Vector2(14.0, 18.0)
-const WALL_FILL := CERAMIC_GREEN
+const WALL_FILL := STRUCTURE_BASE
 const WALL_SHADOW := COBALT_DEEP
 const WALL_RAIL_WIDTH := 48.0
 const WALL_SHADOW_OFFSET := Vector2(0.0, 12.0)
@@ -104,7 +104,7 @@ static func stepped_rect(rect: Rect2, cut: float = 34.0) -> PackedVector2Array:
 static func required_color_roles() -> Dictionary:
 	return {
 		"walkable": IVORY,
-		"blocked": CERAMIC_GREEN,
+		"blocked": STRUCTURE_BASE,
 		"void": COBALT_VOID,
 		"player_reward": MUSTARD,
 		"threat": CORAL,

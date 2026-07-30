@@ -32,7 +32,7 @@ class SnapshotStub:
 		Rect2(240.0, 360.0, 6720.0, 3600.0),
 		Rect2(2520.0, 1260.0, 2160.0, 1800.0),
 	]
-	var water_rects: Array[Rect2] = [
+	var void_rects: Array[Rect2] = [
 		Rect2(80.0, 60.0, 3000.0, 200.0),
 		Rect2(4120.0, 4060.0, 3000.0, 200.0),
 	]

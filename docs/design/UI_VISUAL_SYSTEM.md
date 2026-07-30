@@ -2,11 +2,10 @@
 type: spec
 status: active
 owner: BK
-last_reviewed: 2026-07-29
+last_reviewed: 2026-07-30
 canonical_for: Cardborne vehicle-game art direction and UI presentation
 related:
   - ../product/vehicle_game_spec.md
-  - ./sunken-ceramic-fresco.png
   - ../../pixel-art-production/design/visual-research/PART_GUIDELINES.md
 ---
 
@@ -14,11 +13,16 @@ related:
 
 ## Purpose
 
-Define one readable flat-color, grid-native pixel visual language for the
-current run-selected-field vehicle game. `sunken-ceramic-fresco.png` remains
-the semantic-palette and large-shape reference. The approved
-`space-hangar-v2` runtime family owns deck, installation, and image-backed UI
-chrome construction. Gameplay meaning comes from this specification.
+Define one readable flat-color visual language for the current
+run-selected-field vehicle game. Familiar top-down space-hangar science fiction
+is the baseline; no named material, cultural, marine, or ritual theme is part of
+the product direction. The approved `space-hangar-v2` runtime family owns deck,
+installation, and image-backed UI chrome construction. Gameplay meaning comes
+from this specification.
+
+Existing field titles such as Drowned Ruins and Tidal Archive identify current
+gameplay content only. They are not visual-style references and do not authorize
+marine motifs for components, environments, UI, or effects.
 
 ## Scope
 
@@ -30,16 +34,21 @@ rules remain owned by the product specification.
 
 ### Art language and semantic palette
 
-- Use flat, whole-cell pixel color, large geometric masses, and clean
-  silhouettes. Avoid antialiasing, dithering, universal outlines, and
-  decorative detail that competes with combat. Approved deck masters may use
-  restrained panel seams and wear in the locked palette; UI chrome may use the
-  same restrained seam and edge-light grammar.
+- The existing field, installations, and image-backed UI chrome use flat,
+  whole-cell pixel color, large geometric masses, and clean silhouettes.
+  Approved deck masters may use restrained panel seams and wear in the locked
+  palette; UI chrome may use the same restrained seam and edge-light grammar.
+- New or replaced player, enemy, boss, pickup, projectile, and upgrade-glyph
+  components do not inherit a pixel grid, nearest-neighbor, fixed logical-cell,
+  or direction-frame requirement. They use antialiased flat component geometry,
+  large familiar mechanical shapes, sparse accents, and clear negative space.
+  Dithering, universal outlines, and detail that competes with combat remain
+  excluded.
 - A frame must read in this order: walkable floor, solid cover/void, player,
   threats and telegraphs, pickups/rewards, then atmosphere.
 - Deep slate means walkable hangar deck, near-black means exterior space,
   one consistent blue-gray family means solid walls and installations,
-  cobalt means water or energized void, mustard means
+  cobalt means energized systems or void, mustard means
   player/reward/progress, coral means ordinary danger, magenta means boss
   danger, mint means recovery/support, and ivory is reserved for high-contrast
   highlights and live UI surfaces.
@@ -51,7 +60,7 @@ rules remain owned by the product specification.
   uses another affinity.
 - All solid static cover uses the same blocker fill. State is communicated by a
   large shape, animation, or icon—not by inventing a new wall color.
-- Floor, wall, and water use the approved 192x192 repeat masters at a 384
+- Floor, wall, and void use the approved 192x192 repeat masters at a 384
   world-pixel period. A deterministic per-cell rotation/reflection may break
   obvious wallpaper repetition, but it may not recolor the master or alter
   collision truth.
@@ -99,6 +108,9 @@ rules remain owned by the product specification.
   one large directional mass, cut, or center accent that remains recognizable
   in grayscale at gameplay scale; role color and simulation radius remain
   independent from that silhouette.
+- Actor and combat silhouettes use familiar spacecraft and weapon geometry as
+  their starting point. A Cardborne-specific material or cultural motif may be
+  added only after explicit user approval.
 - Large ordinary crowds keep every enemy body visible while limiting secondary
   overlays to twelve health bars and eight extra priority markers. Selection is
   deterministic: current aim first, then committed startup/active attacks,
@@ -263,15 +275,17 @@ rules remain owned by the product specification.
 - World support fields use retained disk, ring, and beam batches plus one shared
   24-segment timer batch. They do not use per-field immediate canvas drawing or
   per-field scene nodes.
-- High-count pixel actors use shared atlas-backed retained families: one mobile
-  enemy family, one stationary family, one boss family, one experience family,
-  and one hostile-affinity family. Role silhouettes and affinity shapes remain
-  distinct through atlas regions; they do not require one retained batch per
-  role. Maximum-pressure validation currently resolves 23 combat batches and
-  must remain within the 50-batch performance ceiling.
-- Raster assets own approved static surface, silhouette, glyph, marker, and UI
-  chrome artwork. Procedural geometry remains responsible for exact telegraphs,
-  timers, collision-aligned boundaries, and changing gameplay truth.
+- The published combat pixel atlas is a compatibility implementation until each
+  combat family is migrated. It is not design authority and must not be extended
+  with new player, enemy, boss, pickup, projectile, or upgrade-glyph art.
+- Migrated combat families use descriptor-backed `ArrayMesh` geometry and shared
+  retained `MultiMesh` batches. Role silhouettes remain distinct without
+  requiring one batch or node per role. Maximum-pressure presentation must stay
+  within the 50-batch ceiling.
+- Raster assets own the approved static world surface, world stamps, markers,
+  and UI chrome. Component geometry owns migrated combat silhouettes and glyphs.
+  Procedural geometry remains responsible for exact telegraphs, timers,
+  collision-aligned boundaries, and changing gameplay truth.
 
 ## Verification
 

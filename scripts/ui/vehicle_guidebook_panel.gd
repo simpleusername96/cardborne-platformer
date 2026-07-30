@@ -47,12 +47,12 @@ class CounterplayGlyph:
 					3.0
 				)
 			_:
-				draw_arc(center, 13.0, -PI * 0.15, PI * 1.45, 28, Art.CERAMIC_GREEN_LIGHT, 5.0, true)
+				draw_arc(center, 13.0, -PI * 0.15, PI * 1.45, 28, Art.STRUCTURE_LIGHT, 5.0, true)
 				draw_colored_polygon(PackedVector2Array([
 					center + Vector2(-15.0, -3.0),
 					center + Vector2(-6.0, -10.0),
 					center + Vector2(-5.0, 2.0),
-				]), Art.CERAMIC_GREEN_LIGHT)
+				]), Art.STRUCTURE_LIGHT)
 
 var _snapshot: Dictionary = {}
 var _category_rail: VBoxContainer

@@ -6,7 +6,7 @@ created: 2026-07-29
 last_reviewed: 2026-07-29
 topic: Continuous multi-sector horde, combat readability, and stage-transition implementation
 scope: Implemented runtime contracts, deterministic validation, Web export, diagnostic performance, and remaining technical stabilization work
-source: ./execplans/2026-07-29-continuous-multidirectional-horde-readability.md
+source: Git range a9ae769..d87520b and the repository evidence named below
 related:
   - ../docs/product/vehicle_game_spec.md
   - ../docs/design/UI_VISUAL_SYSTEM.md

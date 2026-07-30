@@ -7,7 +7,6 @@ last_reviewed: 2026-07-28
 scope: Current vehicle-run frame architecture, scalability limits, profiler validity, and Godot 4.7 performance practices
 related:
   - ./PLANS.md
-  - ./execplans/2026-07-23-vehicle-performance-architecture-stabilization.md
   - ./vehicle-performance-stabilization-evidence.md
   - ../docs/product/vehicle_game_spec.md
 ---
@@ -343,7 +342,7 @@ full redraw with substantially more command construction and collision search.
 At 20 Hz, `_build_hud_snapshot()` constructs:
 
 - health, XP, action, objective, target, and boss values;
-- a minimap snapshot with floor/water/blocker polygons, visited cells, and
+- a minimap snapshot with floor/void/blocker polygons, visited cells, and
   markers;
 - threat radar and cycle states;
 - the entire guidebook catalog, current upgrades, secondary summary, and a deep

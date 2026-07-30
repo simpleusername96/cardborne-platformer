@@ -36,8 +36,8 @@ const PixelCatalog = preload("res://scripts/presentation/vehicle_pixel_asset_cat
 
 const CANVAS := Art.COBALT_VOID
 const SURFACE := Art.IVORY
-const RAISED := Art.CERAMIC_GREEN
-const CYAN := Art.COBALT_WATER
+const RAISED := Art.STRUCTURE_BASE
+const CYAN := Art.COBALT_ENERGY
 const MOSS := Art.MINT
 const AMBER := Art.MUSTARD
 const CORAL := Art.CORAL
@@ -141,7 +141,7 @@ class HealthPips:
 		if _pulse_time > 0.0:
 			draw_rect(hull_rect.grow(2.0), Art.CORAL, false, 2.0)
 		var xp_rect := Rect2(0.0, 39.0, size.x, 7.0)
-		draw_rect(xp_rect, Art.CERAMIC_GREEN_MID)
+		draw_rect(xp_rect, Art.STRUCTURE_MID)
 		draw_rect(Rect2(xp_rect.position, Vector2(xp_rect.size.x * clampf(experience / experience_required, 0.0, 1.0), xp_rect.size.y)), Art.MUSTARD)
 
 
@@ -338,7 +338,7 @@ class StageMinimap:
 			snapshot[key] = value[key]
 		if (
 			value.has("floor_polygons")
-			or value.has("water_polygons")
+			or value.has("void_polygons")
 			or value.has("blocker_polygons")
 			or value.has("world_size")
 		):
@@ -367,7 +367,7 @@ class StageMinimap:
 		var indices := PackedInt32Array()
 		for layer in [
 			{"key": "floor_polygons", "color": Art.IVORY_SHADE},
-			{"key": "water_polygons", "color": Art.COBALT_WATER},
+			{"key": "void_polygons", "color": Art.COBALT_ENERGY},
 			{"key": "blocker_polygons", "color": Art.BLOCKER_FILL},
 		]:
 			for polygon_variant in snapshot.get(layer["key"], []):

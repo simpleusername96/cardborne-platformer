@@ -3,18 +3,15 @@ type: plan
 status: active
 owner: BK
 created: 2026-07-29
-last_reviewed: 2026-07-29
+last_reviewed: 2026-07-30
 scope: Replace Cardborne's player, enemy, pickup, projectile, upgrade-choice, collective-enemy, and boss presentation/behavior with a simple scalable component system while preserving the stabilized five-stage run
 related:
   - ../../AGENTS.md
   - ../AGENTS.md
   - ../PLANS.md
   - ./2026-07-29-horde-foundation-recovery-and-acceptance.md
-  - ./2026-07-27-pixel-art-visual-recovery.md
-  - ../visual-system-design-selection-plan.md
   - ../../docs/product/vehicle_game_spec.md
   - ../../docs/design/UI_VISUAL_SYSTEM.md
-  - ../../docs/design/component-concepts/README.md
   - ../../docs/product/combat-growth-improvement-direction.md
   - ../../docs/research/hidden-techniques-collective-enemies-mastery-unlocks.md
 ---
@@ -22,10 +19,11 @@ related:
 # 전투 비주얼·적 전략·보스 전면 재구성 실행 계획
 
 현재 버전의 기체, 적, 아이템, 탄환을 기존 픽셀 자산의 부분 수정으로
-수습하지 않는다. Sunken Ceramic Fresco의 평면 색상과 역할별 색·형태
-구분은 유지하되, 픽셀 격자와 방향별 래스터 프레임 제약을 폐기하고 같은
-런타임 component 정의에서 component sheet와 실제 게임을 함께 만드는
-확장 가능한 vector/parametric 체계로 교체한다.
+수습하지 않는다. 현재 space-hangar 맵과 연결되는 익숙한 일반 SF를
+baseline으로 삼고 역할별 색·형태 구분은 유지하되, 별도의 고유 재질이나
+문화적 theme는 가정하지 않는다. 픽셀 격자와 방향별 래스터 프레임 제약을
+폐기하고 같은 런타임 component 정의에서 component sheet와 실제 게임을
+함께 만드는 확장 가능한 vector/parametric 체계로 교체한다.
 
 동시에 업그레이드 선택 UI의 정보 구조와 overflow를 고치고, 아이템 접촉
 판정을 기체의 이동 궤적까지 포함하도록 바꾸며, 기존 적 전략 문서의
@@ -88,8 +86,6 @@ card build와 다섯 stage run은 보존한다.
 | `.agents/execplans/2026-07-29-horde-foundation-recovery-and-acceptance.md` | 276 peak/320 capacity와 4방향 pressure는 고정됐고 Phase 5 timing/soak gate는 아직 열려 있다. | component runtime과 collective rollout은 그 plan 완료 뒤에 merge한다. sheet, upgrade UI, pickup contact는 먼저 진행할 수 있다. |
 | 2026-07-29 native/Web baseline | Web export, 1280×720 built page, canvas, 모든 request와 console은 정상이다. 기존 upgrade, localization, rewards, renderer, boss, run validator도 통과한다. | 현재 build가 깨진 것이 아니라 현재 검증이 사용자 경험 결함을 충분히 표현하지 못한다고 본다. |
 | 2026-07-29 peak/boss/item capture | 최대 horde에서 적 silhouette가 magenta/coral 덩어리로 합쳐지고, repair/recall item이 비슷한 medallion이며, boss가 큰 donut/blob처럼 보인다. | 작은 장식보다 외곽 silhouette·negative space·우선 표적 cue를 먼저 설계한다. |
-| `docs/design/component-concepts/README.md` | player, 12 mobile roles, structures/objectives, rewards/projectiles, five bosses와 upgrade glyph를 다룬 여섯 장의 생성형 시안이 있다. | 구현 전 형태 검토 input으로 사용한다. 이 draft는 runtime descriptor에서 생성한 deterministic approval sheet를 대신하지 않는다. |
-
 로컬 capture와 Web smoke는 분석 근거이며 `build/` 아래 ignored evidence다. 구현
 phase의 authoritative evidence는 각 phase가 새로 생성한다.
 
@@ -142,7 +138,7 @@ phase의 authoritative evidence는 각 phase가 새로 생성한다.
 
 ### 제외
 
-- full map, terrain tile, water, blocker와 전체 menu/HUD chrome의 재설계
+- full map, terrain tile, void, blocker와 전체 menu/HUD chrome의 재설계
 - manual aim, held primary fire, dash input, passive seeker, EMP 삭제·교체
 - enemy count, movement speed, camera zoom, current collision radius의 하향 조정
 - 새로운 engine, production dependency, third-party vector library
@@ -169,9 +165,9 @@ phase의 authoritative evidence는 각 phase가 새로 생성한다.
 
 | 항목 | 최종 결정 | 이유 |
 | --- | --- | --- |
-| 시각 방향 | **Sunken Ceramic Components**: flat-color vector/parametric silhouette, 넓은 ceramic mass, 한두 개의 accent와 명확한 negative space를 사용한다. | 현재 theme는 보존하면서 pixel 격자와 micro-detail 문제를 제거한다. |
+| 시각 방향 | 익숙한 top-down space-hangar SF를 baseline으로 하는 flat-color vector/parametric silhouette다. 넓은 기계적 mass, 한두 개의 기능 accent와 명확한 negative space를 사용하고 승인되지 않은 재질·문화 theme는 넣지 않는다. | 현재 맵과 직관적으로 연결하면서 pixel 격자와 micro-detail 문제를 제거한다. |
 | Pixel 규칙 | migrated combat component에는 whole-cell, nearest-neighbor, fixed logical grid, 방향별 raster frame, dithering 금지 같은 pixel 규칙을 적용하지 않는다. antialiasing을 허용한다. | 최신 사용자 지시와 continuous motion 요구 |
-| 색상 | cobalt environment, ivory neutral/UI, ceramic green structure, mustard player/reward, coral hostile danger, magenta boss/command, mint support/recovery 체계를 유지한다. | 기존 first-read 의미를 보존한다. |
+| 색상 | near-black/deep slate environment, blue-gray structure, cobalt energized system, ivory neutral/UI, mustard player/reward, coral hostile danger, magenta boss/command, mint support/recovery 체계를 유지한다. | 현재 맵과 기존 first-read 의미를 함께 보존한다. |
 | 역할 구분 | 모든 role은 color 외에 silhouette 또는 negative-space cue를 하나 이상 갖는다. color만 바꾼 복제는 금지한다. | color vision과 horde 중첩에서 판독성을 유지한다. |
 | 복잡도 | ordinary component는 큰 filled mass 최대 3개와 accent 최대 2개, boss는 고유 module 최대 5개다. 미세 장식과 nested outline을 쓰지 않는다. | 실제 gameplay scale에서 보이는 정보만 남긴다. |
 | Runtime | Godot `ArrayMesh` + retained `MultiMesh`를 사용하고 mesh/descriptor를 cache한다. SVG/PNG texture를 actor마다 instance하지 않는다. | 확장성과 기존 performance architecture를 함께 보존한다. |
@@ -209,7 +205,7 @@ phase의 authoritative evidence는 각 phase가 새로 생성한다.
 
 ## Proposed Design
 
-### 1. Sunken Ceramic Component Grammar
+### 1. General SF Component Grammar
 
 모든 combat component는 다음 네 layer 중 필요한 것만 가진다.
 
@@ -239,7 +235,7 @@ telegraph가 그리며 component art에 굽지 않는다.
 | support | 열린 ring이 아닌 crescent cradle | mint link arms |
 | stationary threat | 바닥에 잠긴 square/hex base | 회전하는 공격 module만 분리 |
 | boss | stage마다 다른 outer silhouette | 파괴·활성 가능한 module이 외곽에서 바로 보임 |
-| repair pickup | mint cross-shaped ceramic shard | 중앙 plus cut |
+| repair pickup | mint cross-shaped support module | 중앙 plus cut |
 | recall pickup | cobalt/mint inward chevrons | 안쪽으로 모이는 세 방향 |
 | projectile | damage core는 작고 단단한 shape | 방향 tail은 길지만 non-damaging |
 
@@ -577,7 +573,7 @@ gate를 통과하기 전에는 뒤 phase의 runtime publication을 merge하지 �
 **목표:** runtime publication 전에 단일 새 시각 방향을 실제 scale로 고정한다.
 
 - [ ] `docs/design/UI_VISUAL_SYSTEM.md`에서 combat component에 대한 pixel
-  grid/nearest-neighbor 의무를 폐기하고 Sunken Ceramic Components section을
+  grid/nearest-neighbor 의무를 폐기하고 일반 SF component section을
   추가한다. map/terrain/UI chrome의 현행 계약은 이번 phase에서 유지한다고
   명시한다.
 - [ ] `docs/product/vehicle_game_spec.md`의 player/enemy/item/projectile
@@ -952,9 +948,10 @@ Chrome DevTools로 다음을 확인한다.
 
 ## Open Questions
 
-없다. 시각 방향, component 수, runtime 방식, sheet, UI geometry, pickup
-threshold, tactic 순서, boss rule, clear-time target, performance gate와 rollout
-dependency는 모두 고정됐다.
+별도의 Cardborne 고유 material/cultural modifier는 아직 승인되지 않았다.
+따라서 Phase 1은 익숙한 일반 SF baseline을 벗어나지 않으며, component 수,
+runtime 방식, sheet, UI geometry, pickup threshold, tactic 순서, boss rule,
+clear-time target, performance gate와 rollout dependency는 이 문서대로 고정한다.
 
 BK approval은 여러 방향 중 하나를 고르는 research gate가 아니다. 이 문서에
 정한 단일 방향의 실제-scale sheet가 runtime publication 품질에 도달했는지
@@ -964,8 +961,8 @@ BK approval은 여러 방향 중 하나를 고르는 research gate가 아니다.
 
 - pixel 관련 active spec 문구보다 이 대화의 최신 사용자 지시가 우선한다.
   구현 시작 시 spec을 먼저 갱신해 authority 충돌을 없앤다.
-- Sunken Ceramic Fresco는 pixel technique가 아니라 flat color, recessed mass,
-  semantic palette와 restrained ornament로 보존한다.
+- 과거 에이전트가 붙인 named theme와 그 해석은 사용자 승인 사항이 아니므로
+  보존하거나 새 component의 design input으로 사용하지 않는다.
 - current horde plan의 성능 미완료를 이 계획에서 다시 고치지 않는다. 그 plan의
   완료 baseline을 새 renderer/tactic의 비교점으로 사용한다.
 - 기존 enemy strategy 문서의 2–3 pressure front 제안은 현재 4방향 horde보다
@@ -989,10 +986,8 @@ BK approval은 여러 방향 중 하나를 고르는 research gate가 아니다.
   rendered baseline을 확인했다.
 - [x] 하나의 execution solution, rejected alternatives, architecture,
   phase order, acceptance와 stop condition을 고정했다.
-- [x] 구현 전 형태 검토용 draft component sheet 6장을
-  `docs/design/component-concepts/`에 만들고 component/state mapping을
-  문서화했다. 이 시안은 BK 승인 전 draft이며 Phase 1의 deterministic
-  runtime sheet gate를 완료한 것으로 간주하지 않는다.
+- [x] 승인되지 않은 theme를 사용한 draft component sheet와 생성 기록을
+  삭제했다. 해당 시안은 이후 형태나 palette의 근거로 사용하지 않는다.
 - [ ] Phase 1 component authority and approval sheets
 - [ ] Phase 2 upgrade clarity and pickup contact
 - [ ] Horde recovery inter-plan gate
@@ -1005,18 +1000,16 @@ BK approval은 여러 방향 중 하나를 고르는 research gate가 아니다.
 
 ## Next Steps
 
-1. 여섯 draft concept sheet에서 engine 부착, dash cue, role silhouette,
-   projectile core/tail, boss objective와 upgrade glyph 방향을 BK가 검토한다.
-2. 승인된 형태를 Phase 1의 component catalog/runtime descriptor로 번역하고
-   active design/product spec correction을 함께 적용한다.
-3. 같은 runtime descriptor에서 7개 deterministic component sheet와
+1. Phase 1 component catalog/runtime descriptor를 일반 SF baseline과
+   active design/product spec에 맞춰 정의한다.
+2. 같은 runtime descriptor에서 7개 deterministic component sheet와
    pressure/accessibility sheet를 생성해 single-direction acceptance gate를
    연다.
-4. correction이 필요하면 승인 grammar 안에서 silhouette, spacing, state
+3. correction이 필요하면 승인 grammar 안에서 silhouette, spacing, state
    cue만 한 번 수정하고 style exploration을 다시 열지 않는다.
-5. 동시에 owner가 겹치지 않는 Phase 2 upgrade/pickup batch를 별도 commit으로
+4. 동시에 owner가 겹치지 않는 Phase 2 upgrade/pickup batch를 별도 commit으로
    진행한다.
-6. combat renderer publication은 horde recovery plan 완료 뒤 Phase 3에서
+5. combat renderer publication은 horde recovery plan 완료 뒤 Phase 3에서
    시작한다.
 
 ## Completion Criteria

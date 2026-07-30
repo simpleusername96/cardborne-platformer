@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cig4o1k3sbb3n"
-path="res://.godot/imported/hangar-water.png-fcb5cba350211cc5e21d9b9d1a2b9cce.ctex"
+uid="uid://oq0cs0lef61l"
+path="res://.godot/imported/hangar-void.png-3d2d551e87572d2d284fc34351ef8b03.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://pixel-art-production/runtime/tiles/hangar-water.png"
-dest_files=["res://.godot/imported/hangar-water.png-fcb5cba350211cc5e21d9b9d1a2b9cce.ctex"]
+source_file="res://pixel-art-production/runtime/tiles/hangar-void.png"
+dest_files=["res://.godot/imported/hangar-void.png-3d2d551e87572d2d284fc34351ef8b03.ctex"]
 
 [params]
 

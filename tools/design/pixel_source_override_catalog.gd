@@ -7,7 +7,7 @@ const ATLAS_FRAME_SIZE := 64
 const ALLOWED_REPEAT_KEYS := {
 	"hangar_floor":true,
 	"hangar_wall":true,
-	"hangar_water":true,
+	"hangar_void":true,
 }
 const ALLOWED_VISIBLE_COLORS := {
 	"141B24":true,

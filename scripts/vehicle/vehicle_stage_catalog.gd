@@ -11,7 +11,7 @@ const STAGE_IDS: Array[StringName] = CombatStages.STAGE_IDS
 const REQUIRED_FIELDS := [
 	"id", "field_id", "title_key", "number", "boss_name_key", "quota",
 	"world_rect", "player_start", "start_clearance", "walkable_regions",
-	"cover_rects", "water_rects", "ordinary_spawn_anchors",
+	"cover_rects", "void_rects", "ordinary_spawn_anchors",
 	"boss_arrival_anchors", "static_enemies", "packets",
 ]
 
@@ -21,13 +21,13 @@ static var _definition_cache: Dictionary = {}
 static var _definition_build_counts: Dictionary = {}
 static var _walkable_rect_cache: Array[Rect2] = []
 static var _cover_rect_cache: Array[Rect2] = []
-static var _water_rect_cache: Array[Rect2] = []
+static var _void_rect_cache: Array[Rect2] = []
 static var _floor_polygon_cache: Array = []
 static var _cover_polygon_cache: Array = []
-static var _water_polygon_cache: Array = []
+static var _void_polygon_cache: Array = []
 static var _floor_cells: Dictionary = {}
 static var _cover_cells: Dictionary = {}
-static var _water_cells: Dictionary = {}
+static var _void_cells: Dictionary = {}
 static var _safe_motion_cells_36: Dictionary = {}
 static var _spatial_cache_ready := false
 
@@ -154,18 +154,18 @@ static func cover_polygons(_stage_id: StringName = &"stage_1") -> Array:
 	return _cover_polygon_cache
 
 
-static func water_rects(_stage_id: StringName = &"stage_1") -> Array[Rect2]:
-	if _water_rect_cache.is_empty():
-		for rect in definition(&"stage_1")["water_rects"]:
-			_water_rect_cache.append(Rect2(rect))
-	return _water_rect_cache
+static func void_rects(_stage_id: StringName = &"stage_1") -> Array[Rect2]:
+	if _void_rect_cache.is_empty():
+		for rect in definition(&"stage_1")["void_rects"]:
+			_void_rect_cache.append(Rect2(rect))
+	return _void_rect_cache
 
 
-static func water_polygons(_stage_id: StringName = &"stage_1") -> Array:
-	if _water_polygon_cache.is_empty():
-		for rect in water_rects():
-			_water_polygon_cache.append(Geometry.rect_polygon(rect))
-	return _water_polygon_cache
+static func void_polygons(_stage_id: StringName = &"stage_1") -> Array:
+	if _void_polygon_cache.is_empty():
+		for rect in void_rects():
+			_void_polygon_cache.append(Geometry.rect_polygon(rect))
+	return _void_polygon_cache
 
 
 static func floor_regions(stage_id: StringName, colors: Dictionary) -> Array[Dictionary]:
@@ -194,17 +194,17 @@ static func position_is_walkable(stage_id: StringName, position: Vector2, radius
 		for rectangle in floor_rectangles:
 			if position.x - radius >= rectangle.position.x and position.x + radius <= rectangle.end.x \
 					and position.y - radius >= rectangle.position.y and position.y + radius <= rectangle.end.y:
-				return not _circle_overlaps_any_rect(position, radius, water_rects(stage_id))
+				return not _circle_overlaps_any_rect(position, radius, void_rects(stage_id))
 		for sample_index in Geometry.CIRCLE_UNION_SAMPLES:
 			var sample := position + Vector2.RIGHT.rotated(TAU * float(sample_index) / float(Geometry.CIRCLE_UNION_SAMPLES)) * radius * 0.999
 			var sample_rectangles := _nearby_rects(_floor_cells, sample, stage_id)
 			if not _point_in_any_rect(sample, sample_rectangles):
 				return false
-	var nearby_water := _nearby_rects(_water_cells, position, stage_id)
+	var nearby_void := _nearby_rects(_void_cells, position, stage_id)
 	if radius > COLLISION_CACHE_MARGIN:
-		nearby_water = water_rects(stage_id)
-	for water in nearby_water:
-		if _circle_overlaps_rect(position, radius, water):
+		nearby_void = void_rects(stage_id)
+	for void_rect in nearby_void:
+		if _circle_overlaps_rect(position, radius, void_rect):
 			return false
 	return true
 
@@ -252,7 +252,7 @@ static func _ensure_spatial_cache() -> void:
 		return
 	_register_rects(_floor_cells, walkable_rects())
 	_register_rects(_cover_cells, cover_rects())
-	_register_rects(_water_cells, water_rects())
+	_register_rects(_void_cells, void_rects())
 	_build_safe_motion_cells()
 	_spatial_cache_ready = true
 
@@ -289,7 +289,7 @@ static func _build_safe_motion_cells() -> void:
 	)
 	var floors := walkable_rects()
 	var covers := cover_rects()
-	var waters := water_rects()
+	var voids := void_rects()
 	for y in range(min_cell.y, max_cell.y + 1):
 		for x in range(min_cell.x, max_cell.x + 1):
 			var cell := Vector2i(x, y)
@@ -309,8 +309,8 @@ static func _build_safe_motion_cells() -> void:
 					break
 			if blocked:
 				continue
-			for water in waters:
-				if clearance_rect.intersects(water, true):
+			for void_rect in voids:
+				if clearance_rect.intersects(void_rect, true):
 					blocked = true
 					break
 			if not blocked:
@@ -382,7 +382,7 @@ static func authored_population(stage_id: StringName) -> int:
 
 static func geometry_fingerprint(_stage_id: StringName = &"stage_1") -> int:
 	return hash(var_to_str([
-		world_rect(), walkable_regions(), cover_rects(), water_rects(),
+		world_rect(), walkable_regions(), cover_rects(), void_rects(),
 		_active_field["cover_candidates"], ordinary_spawn_anchors(), boss_arrival_anchors(),
 		_active_field["stationary_candidates"], _active_field["item_socket_candidates"],
 	]))
@@ -398,7 +398,7 @@ static func debug_cache_contract(stage_id: StringName) -> Dictionary:
 		"definition_build_count":int(_definition_build_counts.get(normalized, 0)),
 		"floor_count":floor_polygons().size(),
 		"cover_count":cover_rects().size(),
-		"water_count":water_rects().size(),
+		"void_count":void_rects().size(),
 		"geometry_fingerprint":geometry_fingerprint(),
 	}
 
@@ -421,12 +421,12 @@ static func _clear_geometry_caches() -> void:
 	_definition_build_counts.clear()
 	_walkable_rect_cache.clear()
 	_cover_rect_cache.clear()
-	_water_rect_cache.clear()
+	_void_rect_cache.clear()
 	_floor_polygon_cache.clear()
 	_cover_polygon_cache.clear()
-	_water_polygon_cache.clear()
+	_void_polygon_cache.clear()
 	_floor_cells.clear()
 	_cover_cells.clear()
-	_water_cells.clear()
+	_void_cells.clear()
 	_safe_motion_cells_36.clear()
 	_spatial_cache_ready = false

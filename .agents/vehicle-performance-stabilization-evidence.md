@@ -6,10 +6,9 @@ created: 2026-07-23
 last_reviewed: 2026-07-29
 topic: Vehicle runtime performance stabilization
 scope: Implemented runtime boundaries, deterministic workload evidence, validation, and remaining release limits
-source: ./execplans/2026-07-23-vehicle-performance-architecture-stabilization.md
+source: Git commit 1c7a2b0 and the repository validators named below
 related:
   - ./vehicle-performance-architecture-audit.md
-  - ./execplans/2026-07-23-vehicle-performance-architecture-stabilization.md
   - ./execplans/2026-07-29-horde-foundation-recovery-and-acceptance.md
   - ../docs/product/vehicle_game_spec.md
 ---

@@ -155,42 +155,5 @@
       "normalized_sha256": "04aa7ba08c44b3980e2ce783a1cee5cc97997b72d2eb1549792519a176f46048"
     }
   ],
-  "rejected_attempts": [
-    {
-      "id": "structure-sheet-attempt-1",
-      "reason": "Three cells violated the declared 24px chroma clearance after normalization.",
-      "prompt_path": "pixel-art-production/assets/source/candidates/space-hangar-v2/prompts/rejected/structure-sheet-attempt-1.txt",
-      "provider_copy": "pixel-art-production/assets/source/candidates/space-hangar-v2/provider-originals/rejected/structure-sheet-attempt-1.png",
-      "provider_size": [1254, 1254],
-      "provider_sha256": "498d69ff187823190bbb2e2cc131ebf7e200102f3e105ea9563aac1b965aa92f",
-      "normalized_copy": "pixel-art-production/assets/source/candidates/space-hangar-v2/raw/rejected/structure-sheet-attempt-1.png",
-      "normalized_size": [1024, 1024],
-      "normalization_steps": [
-        {
-          "input": "provider_copy",
-          "output": "normalized_copy",
-          "arguments": ["-filter", "point", "-resize", "1024x1024!", "-strip", "PNG32:{output}"]
-        }
-      ],
-      "normalized_sha256": "d6ba0af91cbce77f57dbae35bbac8c4e992cde998bcf45316dde0ae0f9223d7f"
-    },
-    {
-      "id": "prop-sheet-attempt-1",
-      "reason": "The top-right cell had only 4px of left chroma clearance after normalization.",
-      "prompt_path": "pixel-art-production/assets/source/candidates/space-hangar-v2/prompts/rejected/prop-sheet-attempt-1.txt",
-      "provider_copy": "pixel-art-production/assets/source/candidates/space-hangar-v2/provider-originals/rejected/prop-sheet-attempt-1.png",
-      "provider_size": [1254, 1254],
-      "provider_sha256": "cb37c3ea33656a8628a6348a04dd3991e5b643957b3a82abf4a3f5e934b86678",
-      "normalized_copy": "pixel-art-production/assets/source/candidates/space-hangar-v2/raw/rejected/prop-sheet-attempt-1.png",
-      "normalized_size": [1024, 1024],
-      "normalization_steps": [
-        {
-          "input": "provider_copy",
-          "output": "normalized_copy",
-          "arguments": ["-filter", "point", "-resize", "1024x1024!", "-strip", "PNG32:{output}"]
-        }
-      ],
-      "normalized_sha256": "b7a6fc00017fbb118a8e9a454de2cd988e5116ba3d85c372445a6c4e9848833c"
-    }
-  ]
+  "rejected_attempts": []
 }

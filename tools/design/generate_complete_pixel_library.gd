@@ -1036,7 +1036,7 @@ func _publish_repeat_tiles() -> void:
 	var outputs := {
 		"hangar_floor":"hangar-floor.png",
 		"hangar_wall":"hangar-wall.png",
-		"hangar_water":"hangar-water.png",
+		"hangar_void":"hangar-void.png",
 	}
 	for runtime_key_variant in outputs:
 		var runtime_key := String(runtime_key_variant)

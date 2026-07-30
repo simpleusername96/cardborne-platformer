@@ -29,7 +29,7 @@ class AttributeIcon:
 			&"kinetic":Art.MUSTARD,
 			&"thermal":Art.CORAL,
 			&"toxin":Art.MINT,
-			&"cryo":Art.COBALT_WATER,
+			&"cryo":Art.COBALT_ENERGY,
 			&"arc":Art.BOSS_MAGENTA,
 		}.get(attribute, Art.MINT_SOFT)
 		match attribute:

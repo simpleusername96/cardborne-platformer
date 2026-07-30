@@ -1134,12 +1134,12 @@ $script:Errors = [System.Collections.Generic.List[string]]::new()
 $script:ExpectedRepeatKeys = [string[]]@(
     "hangar_floor",
     "hangar_wall",
-    "hangar_water"
+    "hangar_void"
 )
 $script:ExpectedRepeatOutputs = @{
     hangar_floor = "pixel-art-production/runtime/tiles/hangar-floor.png"
     hangar_wall = "pixel-art-production/runtime/tiles/hangar-wall.png"
-    hangar_water = "pixel-art-production/runtime/tiles/hangar-water.png"
+    hangar_void = "pixel-art-production/runtime/tiles/hangar-void.png"
 }
 $script:GeneratedFrameRoot = (
     "pixel-art-production/assets/generated/approved/complete/frames"
