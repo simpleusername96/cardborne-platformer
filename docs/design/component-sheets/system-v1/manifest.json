@@ -1,15 +1,15 @@
 {
 	"schema_version": 1,
 	"system_id": "cardborne-general-sf-v1",
-	"source_commit": "229c14cf9f277da4b3068ae042973697cff79886",
+	"source_commit": "f1a850a6b04d6135d9c318f1ee74ee4e41a61acb",
 	"providers": {
 		"tokens": "res://scripts/vehicle/vehicle_stage_visual_profile.gd",
 		"catalog_registry": "res://scripts/presentation/components/vehicle_visual_system_registry.gd",
 		"font": "res://art/ui/production/fonts/NotoSansKR-Variable.ttf"
 	},
 	"provider_fingerprints": {
-		"tokens": "31f395e6b3a75d7f214c6423a45abcc52a9cb73a8ec24532d1c007eb30415b19",
-		"catalog_registry": "467a0a84f4d0e15e3f29b6a9417f9a8df250b9a782c22cabdfab058b74ab40ba"
+		"tokens": "5e209dad1f4bc25b63f27bcb4b0b2f8abb744b23faeef2d2d5980d6f55ede162",
+		"catalog_registry": "98b55fdda9f390249d99c9266b96af3525c57ac010d986f2c270601625f390e8"
 	},
 	"viewport": [
 		2048,
@@ -20,7 +20,7 @@
 		{
 			"id": "01-foundation-tokens",
 			"path": "docs/design/component-sheets/system-v1/01-foundation-tokens.png",
-			"sha256": "456292d88033d81ea2a1b1c3aca6d962b4749d06c0c061b0f17d652cee3d1530",
+			"sha256": "bd708020f50927fc19b91c6c97883a5b0e0f6cbdfe663b4f59dd6b6e88a9bcef",
 			"width": 2048,
 			"height": 1152,
 			"providers": [
@@ -32,7 +32,7 @@
 		{
 			"id": "02-world-surfaces",
 			"path": "docs/design/component-sheets/system-v1/02-world-surfaces.png",
-			"sha256": "8fc34c0bd3c71ed1d6d4ed6ecbb5e4c93207428d8c9dd3b08fcd5ef95bbdafef",
+			"sha256": "59e05a9b8868ac7dd611de19d887ecfbe225a7cc44e697a39c37020a44b40635",
 			"width": 2048,
 			"height": 1152,
 			"providers": [
@@ -44,7 +44,7 @@
 		{
 			"id": "03-world-facilities",
 			"path": "docs/design/component-sheets/system-v1/03-world-facilities.png",
-			"sha256": "e7f8e41675b43cc445d5196ea727b846a6795daac2431171a04429b449fdcd41",
+			"sha256": "3668088053a5b6f8667a9065dfd05ac4fd2feb3689cf122523b6ff45cabc8a69",
 			"width": 2048,
 			"height": 1152,
 			"providers": [
@@ -56,7 +56,7 @@
 		{
 			"id": "04-player-components",
 			"path": "docs/design/component-sheets/system-v1/04-player-components.png",
-			"sha256": "2df94e00d00c73a9cb5fd21bde67b7886f3a22021689ef7b63ef01787e1fac14",
+			"sha256": "7becc0faf376f01f5ff56a36c6e7085fc3cdce7940537eb8be330ecb29e6722a",
 			"width": 2048,
 			"height": 1152,
 			"providers": [
@@ -68,7 +68,7 @@
 		{
 			"id": "05-enemy-components",
 			"path": "docs/design/component-sheets/system-v1/05-enemy-components.png",
-			"sha256": "7216fd3b23cd2d840fdd74ad4c1c9c423e88bd5f5918d29839ac7509aa1fbab1",
+			"sha256": "66e08d47a96d68993311cd28c2f1a12321bc0f86f02606dc31c5a3f722b28c04",
 			"width": 2048,
 			"height": 1152,
 			"providers": [
@@ -80,7 +80,7 @@
 		{
 			"id": "06-boss-components",
 			"path": "docs/design/component-sheets/system-v1/06-boss-components.png",
-			"sha256": "bfc8a48a65afb475dd9407a135070f8b9209bfc7871943199a537b04c6659c6d",
+			"sha256": "33221f9b679f09f1b69dd02e87f77d6682f888cbeccf7d35e8f21c3a55f0c4af",
 			"width": 2048,
 			"height": 1152,
 			"providers": [
@@ -92,7 +92,7 @@
 		{
 			"id": "07-projectile-telegraph-vfx",
 			"path": "docs/design/component-sheets/system-v1/07-projectile-telegraph-vfx.png",
-			"sha256": "306af002e489f63978f2870c78ebc9065474371dd75fbcba221f5a1d7329dd66",
+			"sha256": "4c0e19604bf4b9201bbc355c28743fefb058221393cf3992aa636920d2e3a738",
 			"width": 2048,
 			"height": 1152,
 			"providers": [
@@ -104,7 +104,7 @@
 		{
 			"id": "08-reward-upgrade-glyphs",
 			"path": "docs/design/component-sheets/system-v1/08-reward-upgrade-glyphs.png",
-			"sha256": "916620d0fa40fa98877894c5c5a3fd24fa5508935bb4ce26ee6e770566bf7764",
+			"sha256": "3236357c089bce8412cb9eff1b63d775104caf8b8262df9bb898fcbadfab87ae",
 			"width": 2048,
 			"height": 1152,
 			"providers": [
@@ -116,7 +116,7 @@
 		{
 			"id": "09-hud-minimap-markers",
 			"path": "docs/design/component-sheets/system-v1/09-hud-minimap-markers.png",
-			"sha256": "fff1b54b8420512dd6642ef7a43823c14e03bad3f01567cd3f79f643b26b6818",
+			"sha256": "ed30f1bea082109ba97f1dea2e181e7ff4fb9af73bf23fa0951fc7f78c13792f",
 			"width": 2048,
 			"height": 1152,
 			"providers": [
@@ -128,7 +128,7 @@
 		{
 			"id": "10-ui-controls-states",
 			"path": "docs/design/component-sheets/system-v1/10-ui-controls-states.png",
-			"sha256": "f825d69f71f24f478328f2f59464c926d970e132146be84b84ff154efc398734",
+			"sha256": "d69930c7d3aa46225fdb494cb8059cba311ae42bfc7514a4e116ed699e9d688e",
 			"width": 2048,
 			"height": 1152,
 			"providers": [
@@ -140,7 +140,7 @@
 		{
 			"id": "11-modal-flow-contact-sheet",
 			"path": "docs/design/component-sheets/system-v1/11-modal-flow-contact-sheet.png",
-			"sha256": "c7c9f67b74248ef14ebc063907e8216564f6cbae516595195e3baff3ea22bb28",
+			"sha256": "65094da0b265bf8a80df515c2a73d3e5c108f6309191e8118fd50bd5f99a90ab",
 			"width": 2048,
 			"height": 1152,
 			"providers": [
@@ -152,7 +152,7 @@
 		{
 			"id": "12-pressure-accessibility",
 			"path": "docs/design/component-sheets/system-v1/12-pressure-accessibility.png",
-			"sha256": "16cc6a197de76d77a97bf80888cba0d2a29acc72bbdb296977270b5aef56ed6f",
+			"sha256": "09040f835b3016dc0454e9ed48f94a558e945d8787dacc85031df04c31f9f8b2",
 			"width": 2048,
 			"height": 1152,
 			"providers": [
