@@ -498,7 +498,7 @@ authored count는 유지하며 surge당 최대 1개 squad만 tactic tag를 받�
 ## Tasks
 
 - [x] Phase 1에서 active visual authority, token과 sheet harness를 고정한다.
-- [ ] Phase 2에서 non-pixel UI foundation, upgrade clarity와 pickup contact를
+- [x] Phase 2에서 non-pixel UI foundation, upgrade clarity와 pickup contact를
   완료한다.
 - [ ] Inter-plan Gate에서 horde recovery의 authoritative baseline을 확인한다.
 - [ ] Phase 3에서 player/engine/dash/projectile/reward/effect를 publication한다.
@@ -545,22 +545,22 @@ gameplay renderer에는 아직 연결하지 않는다.
 **목표:** renderer와 독립된 사용자 불편을 먼저 없애고 image UI chrome을
 runtime에서 제거한다.
 
-- [ ] `vehicle_stage_theme.tres`를 locked type/spacing/StyleBoxFlat state로
+- [x] `vehicle_stage_theme.tres`를 locked type/spacing/StyleBoxFlat state로
   교체한다.
-- [ ] `VehicleUiAccentFrame`을 추가하고 `VehicleUiChromeFactory`,
+- [x] `VehicleUiAccentFrame`을 추가하고 `VehicleUiChromeFactory`,
   chrome recipe와 runtime UI texture caller를 제거한다.
-- [ ] 모든 existing modal을 새 foundation에서 boot해 unreadable/clipped
+- [x] 모든 existing modal을 새 foundation에서 boot해 unreadable/clipped
   regression이 없게 한다. full composition은 Phase 7에서 수행한다.
-- [ ] upgrade definition에 level별 summary key를 추가하고 presenter가
+- [x] upgrade definition에 level별 summary key를 추가하고 presenter가
   immutable `summary + 0..2 effect_rows + behavior_change`를 export한다.
-- [ ] 41 card/83 state ko/en copy를 실제 card width에 맞춘다.
-- [ ] upgrade panel/card를 fixed content budget으로 바꾸고 duplicate top
+- [x] 41 card/83 state ko/en copy를 실제 card width에 맞춘다.
+- [x] upgrade panel/card를 fixed content budget으로 바꾸고 duplicate top
   detail을 제거한다.
-- [ ] glyph bounds, focus, selected, disabled, optional decline, input guard와
+- [x] glyph bounds, focus, selected, disabled, optional decline, input guard와
   two-step confirm validator를 확장한다.
-- [ ] pure `vehicle_pickup_contact.gd`와 previous→current swept circle을
+- [x] pure `vehicle_pickup_contact.gd`와 previous→current swept circle을
   연결한다.
-- [ ] endpoint, tangent, normal pass, full dash pass, 0.1 outside miss,
+- [x] endpoint, tangent, normal pass, full dash pass, 0.1 outside miss,
   inactive/idempotent repair/recall case를 추가한다.
 
 **Batch acceptance**
@@ -971,7 +971,14 @@ contrast, timing과 performance 조정으로 제한한다.
   `01-foundation-tokens.png`, `10-ui-controls-states.png`,
   `manifest.json`을 생성했다. 39 family와 32 world stamp가 exact-one-owner
   validation을 통과했고 두 번의 sheet hash가 일치했다.
-- [ ] Phase 2 UI foundation, upgrade and pickup
+- [x] Phase 2 UI foundation, upgrade and pickup
+- [x] Phase 2 implementation commit `bc31a12`에서 image-backed chrome과
+  pixel HUD/card icon caller를 제거하고, 41 card/83 state의 fixed-budget
+  ko/en upgrade UI와 swept pickup contact를 연결했다. `960×540`,
+  `1280×720`, `1920×1080` 전수 layout validator와 native ko/en capture,
+  Web export·deployment→gameplay smoke가 통과했다. Web smoke의 legacy
+  ArrayMesh 초기화 경고 66건은 startup 뒤 증가하지 않았으며 Phase 3
+  renderer publication의 관찰 항목으로 유지한다.
 - [ ] Inter-plan horde gate
 - [ ] Phase 3 player/projectile/reward/feedback
 - [ ] Phase 4 world/facilities/minimap
@@ -982,9 +989,10 @@ contrast, timing과 performance 조정으로 제한한다.
 
 ## Next Steps
 
-1. Phase 2에서 image UI chrome을 제거하고 upgrade/pickup 불편을 완료한다.
-2. horde recovery completion과 clean performance baseline을 확인한다.
-3. Phase 3 이후 player → world → enemy → boss → complete UI 순서로
+1. horde recovery completion과 clean performance baseline을 확인한다.
+2. Phase 3에서 player, rigid engine, directional dash, projectile/reward/effect
+   publication을 완료한다.
+3. Phase 4 이후 world → enemy → boss → complete UI 순서로
    publication하고 Phase 8에서 legacy를 삭제한다.
 
 ## Completion Criteria
