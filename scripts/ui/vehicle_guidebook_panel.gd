@@ -86,6 +86,26 @@ func open(snapshot: Dictionary) -> void:
 	_close_button.grab_focus()
 
 
+func set_compact_mode(compact: bool) -> void:
+	custom_minimum_size = (
+		Vector2(840.0, 456.0)
+		if compact
+		else Vector2(1104.0, 580.0)
+	)
+	add_theme_constant_override("separation", 8 if compact else 14)
+	if is_instance_valid(_category_rail):
+		_category_rail.custom_minimum_size.x = 150.0 if compact else 198.0
+	if is_instance_valid(_entry_scroll):
+		_entry_scroll.custom_minimum_size.x = 190.0 if compact else 230.0
+	if is_instance_valid(_preview):
+		_preview.custom_minimum_size.y = 150.0 if compact else 210.0
+	if is_instance_valid(_title_label):
+		_title_label.add_theme_font_size_override(
+			"font_size",
+			32 if compact else 40
+		)
+
+
 func _input(event: InputEvent) -> void:
 	if (
 		is_inside_tree()

@@ -6,21 +6,15 @@ extends Control
 ## vector providers as combat and the system sheets.
 
 const Visuals = preload("res://scripts/presentation/vehicle_combat_visual_library.gd")
-const PixelCatalog = preload("res://scripts/presentation/vehicle_pixel_asset_catalog.gd")
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 
 var _instances: Array[MeshInstance2D] = []
-var _pixel_catalog: VehiclePixelAssetCatalog
-var _pixel_frame: Dictionary = {}
-var _pixel_texture: Texture2D
-var _pixel_size := Vector2(92.0, 92.0)
 
 
 func _ready() -> void:
 	custom_minimum_size = Vector2(220.0, 150.0)
 	clip_contents = true
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_pixel_catalog = PixelCatalog.new()
 	resized.connect(_layout_instances)
 	queue_redraw()
 
@@ -33,15 +27,17 @@ func show_preview(preview: Dictionary) -> void:
 	visible = true
 	var kind := StringName(preview.get("kind", &"enemy"))
 	var preview_id := StringName(preview.get("id", &"chaser"))
-	if _show_pixel_preview(kind, preview_id):
-		queue_redraw()
-		return
 	match kind:
 		&"locked":
 			_add_instance(
-				Visuals.enemy_mesh(&"chaser"),
+				Visuals.effect_mesh(&"diamond"),
 				Art.INK_MUTED,
-				Vector2(44.0, 44.0)
+				Vector2(46.0, 46.0)
+			)
+			_add_instance(
+				Visuals.effect_mesh(&"ring"),
+				Art.STRUCTURE_LIGHT,
+				Vector2(31.0, 31.0)
 			)
 		&"boss":
 			_add_instance(
@@ -76,97 +72,6 @@ func show_preview(preview: Dictionary) -> void:
 func _draw() -> void:
 	draw_rect(Rect2(Vector2.ZERO, size), Art.COBALT_VOID.lightened(0.04))
 	draw_rect(Rect2(Vector2(8.0, 8.0), size - Vector2(16.0, 16.0)), Art.STRUCTURE_BASE, false, 3.0)
-	if _pixel_texture != null and not _pixel_frame.is_empty():
-		var region := Array(_pixel_frame["region"])
-		draw_texture_rect_region(
-			_pixel_texture,
-			Rect2(size * 0.5 - _pixel_size * 0.5, _pixel_size),
-			Rect2(
-				float(region[0]),
-				float(region[1]),
-				float(region[2]),
-				float(region[3])
-			)
-		)
-
-
-func _show_pixel_preview(kind: StringName, preview_id: StringName) -> bool:
-	if _pixel_catalog == null or not _pixel_catalog.is_ready():
-		return false
-	if kind in [&"enemy", &"boss", &"terrain", &"facility", &"pickup"]:
-		return false
-	var family := &""
-	var variant := preview_id
-	var preferred_state := &""
-	var size_value := Vector2(92.0, 92.0)
-	match kind:
-		&"locked":
-			family = &"guidebook_previews"
-			variant = &"locked_silhouette"
-			size_value = Vector2(84.0, 84.0)
-		&"boss":
-			family = &"boss_set"
-			preferred_state = &"idle"
-			size_value = Vector2(118.0, 118.0)
-		&"enemy", &"elite":
-			family = (
-				&"stationary_enemy_set"
-				if preview_id in [
-					&"turret", &"mine", &"interceptor_tower",
-					&"beam_sentinel", &"controller", &"artillery"
-				]
-				else &"mobile_enemy_set"
-			)
-			preferred_state = &"move"
-			if kind == &"elite":
-				variant = &"chaser"
-		&"terrain":
-			family = (
-				&"arc_surge_strip"
-				if preview_id == &"arc_surge"
-				else &"breakable_bulkhead"
-			)
-			variant = (
-				&"horizontal_segment"
-				if preview_id == &"arc_surge"
-				else &"horizontal"
-			)
-			preferred_state = &"active" if preview_id == &"arc_surge" else &"intact"
-			size_value = Vector2(132.0, 82.0)
-		&"facility":
-			match preview_id:
-				&"transit_gate":
-					family = &"transit_gate"
-					variant = &"pair_a"
-					preferred_state = &"ready"
-				&"repair_basin":
-					family = &"repair_field"
-					variant = &"center_fixture"
-					preferred_state = &"active"
-				&"overdrive_field":
-					family = &"overdrive_field"
-					variant = &"center_fixture"
-					preferred_state = &"active"
-		&"pickup":
-			if preview_id == &"experience":
-				family = &"experience_shards"
-				variant = &"large"
-			else:
-				family = &"repair_pickup"
-				variant = &"repair"
-			preferred_state = &"idle"
-	if family == &"" or not _pixel_catalog.has_family(family):
-		return false
-	var frame := _pixel_catalog.first_frame(family, variant, preferred_state)
-	if frame.is_empty():
-		return false
-	var texture := _pixel_catalog.texture(family)
-	if texture == null:
-		return false
-	_pixel_frame = frame
-	_pixel_texture = texture
-	_pixel_size = size_value
-	return true
 
 
 func _add_terrain(terrain_id: StringName) -> void:
@@ -226,8 +131,6 @@ func _layout_instances() -> void:
 
 
 func _clear_instances() -> void:
-	_pixel_frame.clear()
-	_pixel_texture = null
 	for instance in _instances:
 		instance.queue_free()
 	_instances.clear()

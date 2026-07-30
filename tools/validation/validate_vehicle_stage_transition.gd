@@ -126,8 +126,8 @@ func _check_stage_one_to_three(run) -> void:
 	)
 	_expect(
 		ui != null
-			and ui._hud.visible
-			and not ui._report_center.visible,
+			and ui.debug_hud_visible()
+			and not ui.debug_surface_visible("report"),
 		"Stage 1 success keeps the HUD visible and never opens the report modal"
 	)
 	run.call("_pause_run")

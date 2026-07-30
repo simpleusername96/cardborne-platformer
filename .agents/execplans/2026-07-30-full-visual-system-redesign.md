@@ -734,17 +734,17 @@ strategy document의 collective behavior를 단계적으로 연결한다.
 **목표:** 모든 remaining screen을 새 component와 information hierarchy로
 완성하고 `VehicleStageUI`의 catch-all layout ownership을 해체한다.
 
-- [ ] `VehicleGameplayHud`와 deployment, pause, result, garage, debug practice
+- [x] `VehicleGameplayHud`와 deployment, pause, result, garage, debug practice
   panel을 분리한다.
-- [ ] `VehicleStageUI`에서 direct `_build_*` screen block을 제거하고 routing,
+- [x] `VehicleStageUI`에서 direct `_build_*` screen block을 제거하고 routing,
   signal, visibility, snapshot distribution만 남긴다.
-- [ ] HUD를 locked four-zone hierarchy로 재배치한다.
-- [ ] minimap, target, radar, crosshair, status, banner와 notification을 새
+- [x] HUD를 locked four-zone hierarchy로 재배치한다.
+- [x] minimap, target, radar, crosshair, status, banner와 notification을 새
   token/glyph로 완성한다.
-- [ ] deployment, pause/settings, guidebook, report, result, garage와 upgrade의
+- [x] deployment, pause/settings, guidebook, report, result, garage와 upgrade의
   compact/wide composition을 완성한다.
-- [ ] guidebook/card/loadout preview가 runtime catalog만 소비하게 한다.
-- [ ] modal flow, HUD/minimap와 controls-state sheet를 actual control에서
+- [x] guidebook/card/loadout preview가 runtime catalog만 소비하게 한다.
+- [x] modal flow, HUD/minimap와 controls-state sheet를 actual control에서
   생성한다.
 
 **Batch acceptance**
@@ -1062,14 +1062,30 @@ contrast, timing과 performance 조정으로 제한한다.
   - boss/runtime/practice/renderer/layout/localization validator와 12 sheet의
     deterministic hash가 통과했다. clear-time 및 performance retention은
     사용자 지시에 따라 Phase 8 최종 build에서 측정한다.
-- [ ] Phase 7 HUD/modal suite
+- [x] Phase 7 HUD/modal suite
+  - `VehicleStageUI`를 screen layout catch-all에서 routing·signal·visibility·
+    snapshot distribution owner로 축소하고 gameplay HUD와 deployment,
+    pause, result, garage, boss-practice panel을 독립 component로 분리했다.
+  - shared modal host/surface가 viewport clamp, compact mode, content padding,
+    focus와 one-primary-action contract를 제공한다. modal rail은 surface가
+    직접 그려 content column을 침범하지 않는다.
+  - 8 surface × ko/en × 960/1280/1920 matrix에서 visible non-scroll overflow,
+    clipping, unreachable focus, missing copy와 conflicting HUD가 0이다.
+    41 upgrade/83 state도 같은 layout validation을 통과했다.
+  - guidebook preview의 pixel catalog 의존을 제거하고 discovered entry는
+    runtime vector provider, locked entry는 identity-neutral glyph만 쓴다.
+  - sheet 09–11은 actual runtime HUD, controls와 eight modal control에서
+    생성되며 12개 published/evidence PNG hash가 모두 일치한다.
+  - `visual-system-phase7-ko-960-surfacefix`에서 compact deployment,
+    guidebook, upgrade, result, garage와 modal surface rail을 직접 확인했다.
+    performance retention은 사용자 지시대로 Phase 8 최종 build에서만
+    실행한다.
 - [ ] Phase 8 retirement/final gates
 - [ ] Final horde native/Web/capacity/lifecycle gate
 
 ## Next Steps
 
-1. Phase 7에서 HUD와 complete modal suite를 publication한다.
-2. Phase 8에서 raw tile을 포함한 legacy를 삭제한 최종 build로 horde recovery와 전체
+1. Phase 8에서 raw tile을 포함한 legacy를 삭제한 최종 build로 horde recovery와 전체
    native/Web/capacity/lifecycle gate를 실행한다.
 
 ## Completion Criteria

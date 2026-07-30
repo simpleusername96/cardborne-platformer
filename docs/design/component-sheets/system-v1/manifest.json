@@ -1,7 +1,7 @@
 {
 	"schema_version": 1,
 	"system_id": "cardborne-general-sf-v1",
-	"source_commit": "d9ff27556abd0a1db5c32ec499ce6051059c7c32",
+	"source_commit": "8b9ce2b337f52c65e29c3af28a98b7f128a690dc",
 	"providers": {
 		"tokens": "res://scripts/vehicle/vehicle_stage_visual_profile.gd",
 		"catalog_registry": "res://scripts/presentation/components/vehicle_visual_system_registry.gd",
@@ -116,7 +116,7 @@
 		{
 			"id": "09-hud-minimap-markers",
 			"path": "docs/design/component-sheets/system-v1/09-hud-minimap-markers.png",
-			"sha256": "c236a0f728abd0889b0ccd08a0c8ac5208e3860cf65b78ef58e2b3ba0e150ed5",
+			"sha256": "867fcb466df31efbe248ce71ec4e103a09a53f72cd929f71d7214bfeecdb2cf5",
 			"width": 2048,
 			"height": 1152,
 			"providers": [
@@ -128,7 +128,7 @@
 		{
 			"id": "10-ui-controls-states",
 			"path": "docs/design/component-sheets/system-v1/10-ui-controls-states.png",
-			"sha256": "491cbcd4a455507e2b6acbfd17ff926ba8a443b9d39b7cce7eef23bd8d40c159",
+			"sha256": "f825d69f71f24f478328f2f59464c926d970e132146be84b84ff154efc398734",
 			"width": 2048,
 			"height": 1152,
 			"providers": [
@@ -140,7 +140,7 @@
 		{
 			"id": "11-modal-flow-contact-sheet",
 			"path": "docs/design/component-sheets/system-v1/11-modal-flow-contact-sheet.png",
-			"sha256": "4f3d4493813f582f467b758cc1cbfd82a1132fc3bcfe7c057d0a81053b61aa51",
+			"sha256": "c7c9f67b74248ef14ebc063907e8216564f6cbae516595195e3baff3ea22bb28",
 			"width": 2048,
 			"height": 1152,
 			"providers": [

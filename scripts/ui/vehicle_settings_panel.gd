@@ -58,6 +58,16 @@ func open() -> void:
 		_close_button.grab_focus()
 
 
+func set_compact_mode(compact: bool) -> void:
+	custom_minimum_size = (
+		Vector2(820.0, 456.0)
+		if compact
+		else Vector2(856.0, 500.0)
+	)
+	if is_instance_valid(_tabs):
+		_tabs.custom_minimum_size.y = 376.0 if compact else 420.0
+
+
 func set_build_snapshot(snapshot: Dictionary) -> void:
 	_build_snapshot = snapshot.duplicate(true)
 	if is_instance_valid(_build_summary):

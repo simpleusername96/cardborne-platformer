@@ -39,17 +39,26 @@ class PauseProbe:
 		_expect(get_tree().paused, "Escape pause freezes the complete scene tree")
 		_expect(run.mode == run.RunMode.PAUSED, "pause enters the paused run mode")
 		_expect(Input.mouse_mode == Input.MOUSE_MODE_VISIBLE, "pause restores the system cursor")
-		_expect(ui._pause_center.visible, "pause surface is visible")
+		_expect(
+			ui.debug_surface_visible("pause"),
+			"pause surface is visible"
+		)
 
 		ui.call("_show_settings", "pause")
 		await _tap_escape()
 		_expect(get_tree().paused, "closing pause settings keeps gameplay frozen")
-		_expect(ui._pause_center.visible, "Escape returns from settings to pause")
+		_expect(
+			ui.debug_surface_visible("pause"),
+			"Escape returns from settings to pause"
+		)
 
 		ui.call("_show_guidebook", "pause")
 		await _tap_escape()
 		_expect(get_tree().paused, "closing the guidebook keeps gameplay frozen")
-		_expect(ui._pause_center.visible, "Escape returns from the guidebook to pause")
+		_expect(
+			ui.debug_surface_visible("pause"),
+			"Escape returns from the guidebook to pause"
+		)
 
 		await _tap_escape()
 		_expect(not get_tree().paused, "Escape resumes the scene tree from the pause surface")

@@ -15,6 +15,9 @@ const MANIFEST_PATH := (
 	"res://docs/design/component-sheets/system-v1/manifest.json"
 )
 const ACTIVE_SPEC_PATH := "res://docs/design/UI_VISUAL_SYSTEM.md"
+const SHEET_CANVAS_PATH := (
+	"res://tools/design/vehicle_visual_sheet_canvas.gd"
+)
 const EXPECTED_SHEETS := [
 	"01-foundation-tokens",
 	"02-world-surfaces",
@@ -36,6 +39,7 @@ func _init() -> void:
 	errors.append_array(Registry.validate_current_source_coverage())
 	errors.append_array(ComponentMeshes.validate_component_budget(3, 2, 1, 5))
 	_validate_active_spec(errors)
+	_validate_runtime_backed_ui_sheets(errors)
 	_validate_manifest(errors)
 	if errors.is_empty():
 		print(
@@ -74,6 +78,33 @@ func _validate_active_spec(errors: PackedStringArray) -> void:
 			errors.append(
 				"active visual spec still names retired authority: %s"
 				% retired_authority
+			)
+
+
+func _validate_runtime_backed_ui_sheets(errors: PackedStringArray) -> void:
+	if not FileAccess.file_exists(SHEET_CANVAS_PATH):
+		errors.append("visual sheet canvas is missing")
+		return
+	var content := FileAccess.get_file_as_string(SHEET_CANVAS_PATH)
+	for required in [
+		"VehicleGameplayHud",
+		"VehicleDeploymentPanel",
+		"VehicleSettingsPanel",
+		"_build_actual_modals",
+	]:
+		if required not in content:
+			errors.append(
+				"UI sheet is missing runtime control evidence: %s" % required
+			)
+	for retired_mock in [
+		"func _draw_modal_thumbnail",
+		"func _draw_hud_zone",
+		"func _draw_control_state",
+	]:
+		if retired_mock in content:
+			errors.append(
+				"UI sheet still owns a sheet-only control mock: %s"
+				% retired_mock
 			)
 
 

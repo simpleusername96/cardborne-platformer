@@ -29,6 +29,35 @@ const ComponentMeshes = preload(
 const Visuals = preload(
 	"res://scripts/presentation/vehicle_combat_visual_library.gd"
 )
+const VEHICLE_THEME = preload(
+	"res://art/ui/production/vehicle_stage_theme.tres"
+)
+const GameplayHud = preload("res://scripts/ui/vehicle_gameplay_hud.gd")
+const ModalHost = preload("res://scripts/ui/vehicle_modal_host.gd")
+const DeploymentPanel = preload(
+	"res://scripts/ui/vehicle_deployment_panel.gd"
+)
+const UpgradePanel = preload(
+	"res://scripts/ui/vehicle_upgrade_choice_panel.gd"
+)
+const PausePanel = preload("res://scripts/ui/vehicle_pause_panel.gd")
+const GuidebookPanel = preload(
+	"res://scripts/ui/vehicle_guidebook_panel.gd"
+)
+const SettingsPanel = preload(
+	"res://scripts/ui/vehicle_settings_panel.gd"
+)
+const UpgradeCatalog = preload(
+	"res://scripts/cards/vehicle_upgrade_catalog.gd"
+)
+const UpgradePresenter = preload(
+	"res://scripts/cards/vehicle_upgrade_offer_presenter.gd"
+)
+const StageReportPanel = preload(
+	"res://scripts/ui/vehicle_stage_report_panel.gd"
+)
+const ResultPanel = preload("res://scripts/ui/vehicle_result_panel.gd")
+const GaragePanel = preload("res://scripts/ui/vehicle_garage_panel.gd")
 const FONT_PATH := "res://art/ui/production/fonts/NotoSansKR-Variable.ttf"
 
 const SHEET_TITLES := {
@@ -53,10 +82,12 @@ var _retained_draw_meshes: Array[Mesh] = []
 
 
 func _ready() -> void:
+	theme = VEHICLE_THEME
 	_font = load(FONT_PATH) as Font
 	var white_image := Image.create(1, 1, false, Image.FORMAT_RGBA8)
 	white_image.fill(Color.WHITE)
 	_white_texture = ImageTexture.create_from_image(white_image)
+	_build_runtime_control_evidence()
 	queue_redraw()
 
 
@@ -470,13 +501,12 @@ func _draw_hud_components() -> void:
 	var screen := Rect2(72.0, 194.0, 1260.0, 790.0)
 	_draw_panel(screen, Art.WORLD_CANVAS, Art.LINE, Art.SYSTEM)
 	_draw_mock_combat_field(screen.grow(-1.0), false)
-	_draw_hud_zone(Rect2(96.0, 218.0, 350.0, 124.0), "HULL  86 / 100", Art.SUPPORT)
-	_draw_hud_zone(Rect2(958.0, 218.0, 350.0, 124.0), "STAGE 03 · 62%", Art.SYSTEM)
-	_draw_hud_zone(Rect2(96.0, 864.0, 474.0, 96.0), "PRIMARY · DASH · EMP", Art.PLAYER_REWARD)
-	_draw_hud_zone(Rect2(834.0, 864.0, 474.0, 96.0), "TARGET · ARTILLERY", Art.DANGER)
-	draw_rect(Rect2(486.0, 218.0, 380.0, 18.0), Art.SPACE_BLACK)
-	draw_rect(Rect2(486.0, 218.0, 264.0, 18.0), Art.BOSS_COMMAND)
-	_label(Vector2(588.0, 266.0), "central combat rectangle stays clear", 13, Art.TEXT_MUTED)
+	_label(
+		Vector2(492.0, 282.0),
+		"actual VehicleGameplayHud · 1280×720",
+		13,
+		Art.TEXT_MUTED
+	)
 	var marker_rect := Rect2(1370.0, 194.0, 606.0, 790.0)
 	_draw_panel(marker_rect, Art.SURFACE, Art.LINE, Art.SYSTEM)
 	_label(marker_rect.position + Vector2(24.0, 42.0), "MINIMAP / TARGET MARKERS", 20, Art.TEXT_PRIMARY)
@@ -501,7 +531,13 @@ func _draw_controls() -> void:
 		var column := index % 3
 		var row := index / 3
 		var rect := Rect2(72.0 + column * 624.0, 210.0 + row * 176.0, 568.0, 132.0)
-		_draw_control_state(rect, Dictionary(states[index]))
+		_draw_panel(rect, Art.SURFACE, Art.LINE, Color(states[index]["rail"]))
+		_label(
+			rect.position + Vector2(20.0, 26.0),
+			String(states[index]["id"]).to_upper(),
+			12,
+			Art.TEXT_MUTED
+		)
 	_label(Vector2(72.0, 620.0), "PANEL HIERARCHY", 20, Art.TEXT_PRIMARY)
 	var modal := Rect2(72.0, 660.0, 1190.0, 360.0)
 	_draw_panel(modal, Art.SURFACE, Art.LINE, Art.SYSTEM)
@@ -529,14 +565,198 @@ func _draw_modal_contact_sheet() -> void:
 		["REPORT", "전투 보고", &"metrics"],
 		["RESULT", "작전 결과", &"result"],
 		["GARAGE", "격납고", &"split"],
-		["PRACTICE", "보스 연습", &"cards"],
+		["SETTINGS", "설정", &"tabs"],
 	]
 	for index in surfaces.size():
 		var column := index % 4
 		var row := index / 4
 		var rect := Rect2(72.0 + column * 474.0, 194.0 + row * 416.0, 442.0, 374.0)
-		_draw_modal_thumbnail(rect, surfaces[index])
+		_draw_panel(rect, Art.SURFACE, Art.LINE, Art.SYSTEM)
+		_label(
+			rect.position + Vector2(18.0, 30.0),
+			String(surfaces[index][0]),
+			14,
+			Art.TEXT_PRIMARY
+		)
 	_footer("Compact stacks content; wide may split. Every modal keeps one unmistakable primary action.")
+
+
+func _build_runtime_control_evidence() -> void:
+	match sheet_id:
+		&"hud":
+			_build_actual_hud()
+		&"controls":
+			_build_actual_controls()
+		&"modals":
+			_build_actual_modals()
+
+
+func _build_actual_hud() -> void:
+	var frame := Control.new()
+	frame.position = Vector2(96.0, 218.0)
+	frame.size = Vector2(1280.0, 720.0)
+	frame.scale = Vector2.ONE * 0.945
+	add_child(frame)
+	var hud := GameplayHud.new()
+	frame.add_child(hud)
+	hud.update_snapshot({
+		"health":86.0,
+		"max_health":120.0,
+		"level":7,
+		"experience":31.0,
+		"experience_required":42.0,
+		"objective":"STAGE 03 · 62%",
+		"objective_detail":"SECURE THE RELAY",
+		"dash_available":true,
+		"passive_available":false,
+		"passive_ratio":0.46,
+		"skill_available":true,
+		"boss":{
+			"visible":false,
+			"name":"",
+		},
+		"target":{
+			"visible":true,
+			"name":"ARTILLERY SPOTTER",
+			"health":44.0,
+			"max_health":80.0,
+			"state":"COMMITTED",
+		},
+		"minimap":{
+			"world_size":Vector2(5200.0, 2200.0),
+			"player":Vector2(2600.0, 1100.0),
+			"player_facing":Vector2.RIGHT,
+			"markers":[
+				{
+					"kind":"boss",
+					"position":Vector2(4200.0, 1100.0),
+					"discovered":true,
+				},
+				{
+					"kind":"pickup",
+					"position":Vector2(3100.0, 900.0),
+					"discovered":true,
+				},
+			],
+		},
+	})
+	# Freeze transient HUD timers so repeated publication produces identical
+	# evidence pixels instead of capture-time-dependent health trails.
+	hud.process_mode = Node.PROCESS_MODE_DISABLED
+
+
+func _build_actual_controls() -> void:
+	var records := [
+		["기본 / NORMAL", &"SecondaryButton", false, false],
+		["가리킴 / HOVER", &"SecondaryButton", false, false],
+		["키보드 초점 / FOCUS", &"SecondaryButton", false, true],
+		["선택 / SELECTED", &"SelectedChoiceButton", false, false],
+		["비활성 / DISABLED", &"SecondaryButton", true, false],
+		["위험 / DANGER", &"TertiaryDangerButton", false, false],
+	]
+	var focus_button: Button
+	for index in records.size():
+		var column := index % 3
+		var row := index / 3
+		var button := Button.new()
+		button.position = Vector2(
+			98.0 + column * 624.0,
+			262.0 + row * 176.0
+		)
+		button.size = Vector2(516.0, 62.0)
+		button.text = String(records[index][0])
+		button.theme_type_variation = StringName(records[index][1])
+		button.disabled = bool(records[index][2])
+		button.focus_mode = Control.FOCUS_ALL
+		add_child(button)
+		if bool(records[index][3]):
+			focus_button = button
+	call_deferred("_focus_sheet_control", focus_button)
+
+
+func _focus_sheet_control(button: Button) -> void:
+	if is_instance_valid(button):
+		button.grab_focus()
+
+
+func _build_actual_modals() -> void:
+	var contents: Array[Control] = [
+		DeploymentPanel.new(),
+		UpgradePanel.new(),
+		PausePanel.new(),
+		GuidebookPanel.new(),
+		StageReportPanel.new(),
+		ResultPanel.new(),
+		GaragePanel.new(),
+		SettingsPanel.new(),
+	]
+	for index in contents.size():
+		var column := index % 4
+		var row := index / 4
+		var wrapper := Control.new()
+		wrapper.position = Vector2(
+			90.0 + column * 474.0,
+			240.0 + row * 416.0
+		)
+		wrapper.size = Vector2(1280.0, 720.0)
+		wrapper.scale = Vector2.ONE * 0.305
+		add_child(wrapper)
+		var host := ModalHost.new()
+		host.configure(contents[index], _modal_evidence_size(index))
+		wrapper.add_child(host)
+		_open_modal_evidence(contents[index], index)
+
+
+func _modal_evidence_size(index: int) -> Vector2:
+	return [
+		Vector2(1176.0, 636.0),
+		Vector2(960.0, 626.0),
+		Vector2(640.0, 380.0),
+		Vector2(1160.0, 636.0),
+		Vector2(1120.0, 600.0),
+		Vector2(900.0, 560.0),
+		Vector2(960.0, 560.0),
+		Vector2(920.0, 570.0),
+	][index]
+
+
+func _open_modal_evidence(content: Control, index: int) -> void:
+	match index:
+		0:
+			(content as VehicleDeploymentPanel).open(
+				&"hard",
+				"FIELD_DROWNED_RUIN"
+			)
+		1:
+			var empty_cards: Array[Dictionary] = []
+			var catalog := UpgradeCatalog.new()
+			for definition in catalog.all_definitions().slice(0, 3):
+				empty_cards.append(
+					UpgradePresenter.snapshot(definition, 0)
+				)
+			(content as VehicleUpgradeChoicePanel).open(
+				empty_cards,
+				false
+			)
+		2:
+			(content as VehiclePausePanel).open()
+		3:
+			(content as VehicleGuidebookPanel).open({})
+		4:
+			(content as VehicleStageReportPanel).open({})
+		5:
+			(content as VehicleResultPanel).open({
+				"stage_number":3,
+				"stage_title_key":"STAGE_STORM_DRYDOCK_3",
+				"has_next_stage":true,
+				"time":"1:18",
+				"health_ratio":0.72,
+				"upgrade":"UPGRADE_NONE",
+			})
+		6:
+			(content as VehicleGaragePanel).open({})
+		7:
+			(content as VehicleSettingsPanel).open()
 
 
 func _draw_pressure_accessibility() -> void:
@@ -810,55 +1030,6 @@ func _draw_telegraph(rect: Rect2, kind: StringName) -> void:
 			for index in 6:
 				var direction := Vector2.RIGHT.rotated(TAU * float(index) / 6.0)
 				draw_line(center + direction * 22.0, center + direction * 78.0, Art.TEXT_PRIMARY, 5.0)
-
-
-func _draw_modal_thumbnail(rect: Rect2, surface: Array) -> void:
-	_draw_panel(rect, Art.WORLD_CANVAS, Art.LINE, Art.SYSTEM)
-	_label(rect.position + Vector2(18.0, 30.0), String(surface[0]), 14, Art.TEXT_PRIMARY)
-	_label(rect.position + Vector2(18.0, 55.0), String(surface[1]), 12, Art.TEXT_MUTED)
-	var content := Rect2(rect.position + Vector2(18.0, 78.0), Vector2(rect.size.x - 36.0, 218.0))
-	_draw_panel(content, Art.SURFACE, Art.LINE, Color.TRANSPARENT)
-	match StringName(surface[2]):
-		&"cards":
-			for index in 3:
-				_draw_panel(
-					Rect2(content.position + Vector2(14.0 + index * 126.0, 18.0), Vector2(112.0, 180.0)),
-					Art.WORLD_CANVAS,
-					Art.LINE,
-					Art.PLAYER_REWARD if index == 0 else Color.TRANSPARENT
-				)
-		&"split":
-			_draw_panel(Rect2(content.position + Vector2(14.0, 18.0), Vector2(136.0, 180.0)), Art.WORLD_CANVAS, Art.LINE, Art.SYSTEM)
-			_draw_panel(Rect2(content.position + Vector2(164.0, 18.0), Vector2(224.0, 180.0)), Art.WORLD_CANVAS, Art.LINE, Color.TRANSPARENT)
-		&"metrics":
-			for index in 3:
-				draw_rect(Rect2(content.position + Vector2(18.0, 24.0 + index * 54.0), Vector2(310.0 - index * 44.0, 24.0)), Art.RAISED)
-		&"result":
-			_draw_regular_polygon(content.get_center() - Vector2(0.0, 28.0), 48.0, 6, Art.PLAYER_REWARD, PI / 6.0)
-		_:
-			for index in 4:
-				draw_rect(Rect2(content.position + Vector2(18.0, 20.0 + index * 42.0), Vector2(content.size.x - 36.0, 24.0)), Art.RAISED)
-	_draw_button(
-		Rect2(rect.position + Vector2(18.0, 314.0), Vector2(rect.size.x - 36.0, 44.0)),
-		"PRIMARY ACTION",
-		Art.PLAYER_REWARD,
-		true
-	)
-
-
-func _draw_hud_zone(rect: Rect2, text: String, accent: Color) -> void:
-	_draw_panel(rect, Color(Art.SPACE_BLACK, 0.86), Art.LINE, accent)
-	_label(rect.position + Vector2(18.0, rect.size.y * 0.58), text, 14, Art.TEXT_PRIMARY)
-
-
-func _draw_control_state(rect: Rect2, state: Dictionary) -> void:
-	_draw_panel(rect, Art.SURFACE, Color(state["line"]), Color(state["rail"]))
-	if String(state["id"]) == "focus":
-		draw_rect(rect.grow(4.0), Art.SYSTEM, false, 2.0)
-	if String(state["id"]) == "selected":
-		_draw_regular_polygon(rect.position + Vector2(48.0, 66.0), 10.0, 4, Art.PLAYER_REWARD, PI / 4.0)
-	_label(rect.position + Vector2(76.0, 57.0), String(state["label"]), 17, Color(state["text"]))
-	_label(rect.position + Vector2(76.0, 88.0), String(state["id"]), 13, Art.TEXT_MUTED)
 
 
 func _draw_panel(rect: Rect2, fill: Color, line: Color, rail: Color) -> void:

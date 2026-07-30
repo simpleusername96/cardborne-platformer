@@ -21,8 +21,8 @@ func _initialize() -> void:
 		var foundation := Dictionary(contract["ui_foundation"])
 		_expect(bool(foundation["loaded"]), "flat UI foundation loads at %d" % width)
 		_expect(
-			int(foundation["accent_frame_count"]) >= 8,
-			"all modal surfaces use the shared accent frame at %d" % width
+			int(foundation["modal_surface_count"]) >= 8,
+			"all modals use the shared self-drawing surface at %d" % width
 		)
 		_expect(
 			int(foundation["texture_filter"]) == CanvasItem.TEXTURE_FILTER_LINEAR,
@@ -121,7 +121,9 @@ func _initialize() -> void:
 	var ready_contract := ui.debug_ui_contract(1280.0)
 	for slot_variant in ready_contract["action_slot_contracts"]:
 		_expect(bool(Dictionary(slot_variant)["interior_filled"]), "ready action circles use the filled state")
+	await _validate_modal_matrix(ui)
 	await _validate_upgrade_matrix(ui)
+	_validate_owner_boundaries()
 	var tactical_mesh := MinimapMeshBuilder.build({
 		"cols":13,
 		"rows":6,
@@ -153,6 +155,131 @@ func _initialize() -> void:
 	ui.queue_free()
 	await process_frame
 	_finish()
+
+
+func _validate_modal_matrix(ui: VehicleStageUI) -> void:
+	var original_locale := TranslationServer.get_locale()
+	for locale in ["ko", "en"]:
+		TranslationServer.set_locale(locale)
+		for viewport in [
+			Vector2i(960, 540),
+			Vector2i(1280, 720),
+			Vector2i(1920, 1080),
+		]:
+			get_root().content_scale_size = viewport
+			get_root().size = viewport
+			await _settle_ui()
+			for surface in [
+				"deployment",
+				"upgrade",
+				"pause",
+				"result",
+				"report",
+				"garage",
+				"settings",
+				"guidebook",
+			]:
+				var modal := ui.debug_modal_contract(surface)
+				await _settle_ui()
+				var geometry := ui.debug_modal_geometry(surface)
+				var context := "%s %dx%d %s" % [
+					locale,
+					viewport.x,
+					viewport.y,
+					surface,
+				]
+				var viewport_rect := Rect2(
+					geometry["viewport_rect"]
+				).grow(0.75)
+				var surface_rect := Rect2(geometry["surface_rect"])
+				var content_rect := Rect2(geometry["content_rect"])
+				var content_minimum := Vector2(
+					geometry["content_minimum"]
+				)
+				_expect(
+					viewport_rect.encloses(surface_rect),
+					"%s surface stays inside viewport" % context
+				)
+				_expect(
+					surface_rect.grow(0.75).encloses(content_rect),
+					"%s content stays inside surface" % context
+				)
+				_expect(
+					content_minimum.x <= content_rect.size.x + 0.75
+						and content_minimum.y <= content_rect.size.y + 0.75,
+					"%s combined minimum fits content rect" % context
+				)
+				var host := Dictionary(geometry["host"])
+				_expect(
+					int(host["focusables"]) > 0,
+					"%s exposes reachable keyboard/controller focus"
+					% context
+				)
+				_expect(
+					int(host["primary_actions"]) <= 1,
+					"%s exposes at most one emphasized primary action"
+					% context
+				)
+				_expect(
+					int(host["overflow_count"]) == 0,
+					"%s has no visible non-scroll overflow (%s): %s"
+					% [
+						context,
+						{
+							"viewport":geometry["viewport_rect"],
+							"host":geometry["host_rect"],
+							"surface":surface_rect,
+							"content":content_rect,
+						},
+						host["overflow_nodes"],
+					]
+				)
+				_expect(
+					int(host["missing_copy_count"]) == 0,
+					"%s has no untranslated visible copy" % context
+				)
+				_expect(
+					bool(modal["hud_hidden"])
+						and bool(modal["dim_visible"]),
+					"%s blocks HUD and gameplay attention" % context
+				)
+	TranslationServer.set_locale(original_locale)
+
+
+func _settle_ui() -> void:
+	for _frame in 3:
+		await process_frame
+
+
+func _validate_owner_boundaries() -> void:
+	var source := FileAccess.get_file_as_string(
+		"res://scripts/ui/vehicle_stage_ui.gd"
+	)
+	_expect(
+		not source.contains("func _build_"),
+		"stage UI router contains no direct screen construction blocks"
+	)
+	for forbidden in [
+		"_deployment_control_row",
+		"func _practice_option",
+		"_result_metric_labels",
+		"_garage_primary_label",
+		"HealthPips",
+		"StageMinimap",
+	]:
+		_expect(
+			not source.contains(forbidden),
+			"stage UI router does not retain %s layout ownership"
+			% forbidden
+		)
+	var guide_source := FileAccess.get_file_as_string(
+		"res://scripts/ui/vehicle_guidebook_preview.gd"
+	)
+	_expect(
+		not guide_source.contains("PixelCatalog")
+			and not guide_source.contains("draw_texture_rect_region"),
+		"guidebook preview consumes runtime vector providers only"
+	)
 
 
 func _validate_upgrade_matrix(ui: VehicleStageUI) -> void:
