@@ -9,7 +9,7 @@ scope: All player-facing world, combat, HUD, modal, preview, and effect surfaces
 related:
   - ../product/vehicle_game_spec.md
   - ./component-sheets/README.md
-  - ../../.agents/execplans/2026-07-30-full-visual-system-redesign.md
+  - ../../.agents/execplans/2026-07-30-approved-sheet-fidelity-recovery.md
 ---
 
 # Cardborne UI 및 비주얼 시스템
@@ -18,12 +18,13 @@ related:
 
 이 문서는 Cardborne의 모든 player-facing surface에 적용되는 정본 visual
 contract다. 실제 runtime truth는
-`scripts/vehicle/vehicle_stage_visual_profile.gd`, 책임별 component catalog,
-Godot Theme와 실제 provider에서 생성한 system sheet가 함께 소유한다.
+`scripts/vehicle/vehicle_stage_visual_profile.gd`, 책임별 component catalog와
+Godot Theme가 소유한다. 실제 provider에서 생성한 system sheet는 이 runtime
+truth와 승인 시안의 충실도를 검증하는 publication artifact다.
 
 `00-general-sf-component-master-v1.png`는 runtime asset은 아니지만,
-silhouette, proportion, mechanical layering와 contrast hierarchy의 binding
-visual reference다. runtime descriptor와 production sheet는 이 reference를
+silhouette, proportion, mechanical layering와 contrast hierarchy의
+binding visual reference다. runtime descriptor와 production sheet는 이 reference를
 느슨하게 재해석하지 않고 같은 visual family로 읽히도록 구현해야 한다.
 
 ## Scope
@@ -190,7 +191,7 @@ preview-only 대체 art를 만들지 않는다. visual geometry는 collision tru
 
 ### HUD
 
-- top-left는 hull/experience와 `154×44` action rail을 묶는다. primary fire는
+- top-left는 hull/experience와 `148×44` action rail을 묶는다. primary fire는
   rail에 넣지 않는다.
 - top-center objective는 최대 `440×48`이다. boss가 active면 boss name,
   health와 one-line mechanic으로 교체하며 두 cluster를 쌓지 않는다.

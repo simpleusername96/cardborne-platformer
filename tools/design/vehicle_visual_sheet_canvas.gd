@@ -20,14 +20,39 @@ const EffectCatalog = preload(
 const WorldCatalog = preload(
 	"res://scripts/presentation/components/vehicle_world_visual_catalog.gd"
 )
+const SurfacePatternCompiler = preload(
+	"res://scripts/presentation/vehicle_field_surface_pattern_compiler.gd"
+)
+const LayoutGenerator = preload(
+	"res://scripts/vehicle/vehicle_field_layout_generator.gd"
+)
+const StageCatalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
 const GlyphCatalog = preload(
 	"res://scripts/presentation/components/vehicle_ui_glyph_catalog.gd"
+)
+const UpgradeGlyphRenderer = preload(
+	"res://scripts/presentation/components/vehicle_upgrade_glyph_renderer.gd"
+)
+const RewardFacilityRecipes = preload(
+	"res://scripts/presentation/components/vehicle_reward_facility_visual_recipes.gd"
 )
 const ComponentMeshes = preload(
 	"res://scripts/presentation/components/vehicle_component_mesh_library.gd"
 )
 const Visuals = preload(
 	"res://scripts/presentation/vehicle_combat_visual_library.gd"
+)
+const CombatRenderer = preload(
+	"res://scripts/presentation/vehicle_combat_renderer.gd"
+)
+const EnemyState = preload(
+	"res://scripts/enemies/vehicle_enemy_state.gd"
+)
+const ProjectileState = preload(
+	"res://scripts/combat/vehicle_projectile_state.gd"
+)
+const ExperienceShard = preload(
+	"res://scripts/progression/vehicle_experience_shard.gd"
 )
 const VEHICLE_THEME = preload(
 	"res://art/ui/production/vehicle_stage_theme.tres"
@@ -58,11 +83,18 @@ const StageReportPanel = preload(
 )
 const ResultPanel = preload("res://scripts/ui/vehicle_result_panel.gd")
 const GaragePanel = preload("res://scripts/ui/vehicle_garage_panel.gd")
+const BossPracticePanel = preload(
+	"res://scripts/ui/vehicle_boss_practice_panel.gd"
+)
+const UiFactory = preload(
+	"res://scripts/ui/vehicle_ui_component_factory.gd"
+)
 const FONT_PATH := "res://art/ui/production/fonts/NotoSansKR-Variable.ttf"
+const SHEET_LAYOUT_SEED := 0xC4A2B0
 
 const SHEET_TITLES := {
 	&"foundation": ["01  FOUNDATION TOKENS", "기본 토큰 · semantic roles · component grammar"],
-	&"world_surfaces": ["02  WORLD SURFACES", "세 필드의 대형 패널 리듬 · geometry truth preserved"],
+	&"world_surfaces": ["02  WORLD SURFACES", "deterministic modular tiles · gameplay geometry preserved"],
 	&"world_facilities": ["03  WORLD FACILITIES", "기능별 실루엣 · idle / warning / active / cooldown"],
 	&"player": ["04  PLAYER COMPONENTS", "compact interceptor · rigid twin engines · independent aim"],
 	&"enemies": ["05  ENEMY COMPONENTS", "역할별 외곽선 · target priority before decoration"],
@@ -70,20 +102,23 @@ const SHEET_TITLES := {
 	&"projectiles": ["07  PROJECTILE · TELEGRAPH · VFX", "collision-bounded core · affinity tail · directional feedback"],
 	&"rewards": ["08  REWARD · UPGRADE GLYPHS", "보상과 위협의 즉시 구분 · shape remains meaningful in grayscale"],
 	&"hud": ["09  HUD · MINIMAP MARKERS", "four-zone HUD · sparse center · shared world markers"],
-	&"controls": ["10  UI CONTROL STATES", "one border · one semantic rail · 44 px minimum target"],
-	&"modals": ["11  MODAL FLOW CONTACT SHEET", "eight surfaces · compact and wide composition contract"],
+	&"controls": ["10  UI CONTROL STATES", "mechanical frame · semantic state rail · 44 px minimum target"],
+	&"modals": ["11  MODAL FLOW CONTACT SHEET", "nine surfaces · compact and wide composition contract"],
 	&"pressure": ["12  PRESSURE · ACCESSIBILITY", "1× combat density · grayscale · reduced-motion proof layout"],
 }
 
 var sheet_id: StringName = &"foundation"
-var _font: Font
+var _font_body: Font
+var _font_strong: Font
 var _white_texture: Texture2D
 var _retained_draw_meshes: Array[Mesh] = []
 
 
 func _ready() -> void:
 	theme = VEHICLE_THEME
-	_font = load(FONT_PATH) as Font
+	var base_font := load(FONT_PATH) as Font
+	_font_body = _font_variation(base_font, 650.0)
+	_font_strong = _font_variation(base_font, 800.0)
 	var white_image := Image.create(1, 1, false, Image.FORMAT_RGBA8)
 	white_image.fill(Color.WHITE)
 	_white_texture = ImageTexture.create_from_image(white_image)
@@ -198,19 +233,16 @@ func _draw_world_surfaces() -> void:
 			"id": &"drowned_ruin_field",
 			"name": "FIELD 01 · CENTRAL COURT",
 			"accent": Art.SYSTEM,
-			"rhythm": &"court",
 		},
 		{
 			"id": &"tidal_archive_field",
 			"name": "FIELD 02 · PARALLEL BAYS",
 			"accent": Art.SUPPORT,
-			"rhythm": &"bays",
 		},
 		{
 			"id": &"storm_drydock_field",
 			"name": "FIELD 03 · DIAGONAL DOCK",
 			"accent": Art.PLAYER_REWARD,
-			"rhythm": &"dock",
 		},
 	]
 	for index in fields.size():
@@ -221,69 +253,133 @@ func _draw_world_surfaces() -> void:
 		)
 		_label(
 			rect.position + Vector2(22.0, rect.size.y - 36.0),
-			"decoration ≤ %d · one large mass rhythm"
+			"service rail ≤ %d · one retained tile batch"
 			% int(descriptor["decoration_budget"]),
 			13,
 			Art.TEXT_MUTED
 		)
-	_footer("Design proof only · field geometry, cover, sockets and navigation remain gameplay truth.")
+	_footer("Runtime compiler proof · deterministic tiles change presentation only; geometry and navigation remain gameplay truth.")
 
 
 func _draw_field_preview(rect: Rect2, field: Dictionary) -> void:
 	_draw_panel(rect, Art.WORLD_CANVAS, Art.LINE, Color(field["accent"]))
 	_label(rect.position + Vector2(22.0, 38.0), String(field["name"]), 18, Art.TEXT_PRIMARY)
-	var map_rect := Rect2(rect.position + Vector2(22.0, 64.0), rect.size - Vector2(44.0, 132.0))
+	var map_slot := Rect2(
+		rect.position + Vector2(22.0, 70.0),
+		rect.size - Vector2(44.0, 184.0)
+	)
+	var run_layout := LayoutGenerator.generate(
+		SHEET_LAYOUT_SEED,
+		StageCatalog.STAGE_IDS,
+		StringName(field["id"])
+	)
+	if run_layout == null:
+		_label(map_slot.position + Vector2(18.0, 34.0), "LAYOUT UNAVAILABLE", 15, Art.DANGER)
+		return
+	var tactical = run_layout.tactical_layout(&"stage_1")
+	if tactical == null or tactical.geometry_snapshot == null:
+		_label(map_slot.position + Vector2(18.0, 34.0), "SNAPSHOT UNAVAILABLE", 15, Art.DANGER)
+		return
+	var snapshot = tactical.geometry_snapshot
+	var world_rect := Rect2(snapshot.world_rect)
+	var map_rect := _fit_rect(world_rect.size, map_slot)
 	draw_rect(map_rect, Art.SURFACE)
-	draw_rect(map_rect, Art.LINE, false, 1.0)
-	var accent := Color(field["accent"])
-	match StringName(field["rhythm"]):
-		&"court":
-			_draw_plate(map_rect.grow(-36.0), 42.0, Art.RAISED)
-			_draw_plate(
-				Rect2(map_rect.get_center() - Vector2(112.0, 170.0), Vector2(224.0, 340.0)),
-				28.0,
-				Art.WORLD_CANVAS
+	var walkable_rects: Array[Rect2] = []
+	walkable_rects.assign(snapshot.walkable_rects)
+	var void_rects: Array[Rect2] = []
+	void_rects.assign(snapshot.void_rects)
+	var cover_rects: Array[Rect2] = []
+	cover_rects.assign(tactical.cover_rects)
+	var pattern := SurfacePatternCompiler.compile(
+		StringName(field["id"]),
+		tactical.fingerprint,
+		walkable_rects,
+		void_rects,
+		cover_rects,
+		snapshot.player_start
+	)
+	for layer_value in Array(pattern.get("layers", [])):
+		var layer := Dictionary(layer_value)
+		var transformed := PackedVector2Array()
+		for point in PackedVector2Array(layer.get("points", PackedVector2Array())):
+			transformed.append(
+				_map_world_point(point, world_rect, map_rect)
 			)
-			draw_line(
-				Vector2(map_rect.position.x + 54.0, map_rect.get_center().y),
-				Vector2(map_rect.end.x - 54.0, map_rect.get_center().y),
-				accent,
-				7.0
+		if transformed.size() >= 3:
+			draw_colored_polygon(
+				transformed,
+				Color(layer.get("color", Art.RAISED))
 			)
-		&"bays":
-			for row in 3:
-				var bay := Rect2(
-					map_rect.position + Vector2(34.0, 44.0 + row * 170.0),
-					Vector2(map_rect.size.x - 68.0, 116.0)
-				)
-				_draw_plate(bay, 22.0, Art.RAISED)
-				draw_line(
-					bay.position + Vector2(32.0, bay.size.y * 0.5),
-					bay.end - Vector2(32.0, bay.size.y * 0.5),
-					accent,
-					4.0
-				)
-		&"dock":
-			var center := map_rect.get_center()
-			for offset in [-150.0, 0.0, 150.0]:
-				draw_line(
-					center + Vector2(-230.0, offset - 110.0),
-					center + Vector2(230.0, offset + 110.0),
-					Art.LINE,
-					26.0
-				)
-				draw_line(
-					center + Vector2(-230.0, offset - 110.0),
-					center + Vector2(230.0, offset + 110.0),
-					accent,
-					3.0
-				)
-			_draw_plate(
-				Rect2(center - Vector2(120.0, 160.0), Vector2(240.0, 320.0)),
-				30.0,
-				Art.RAISED
-			)
-	_draw_world_marker(map_rect.get_center(), &"player", 1.0)
+	for void_rect in void_rects:
+		draw_rect(_map_world_rect(void_rect, world_rect, map_rect), Art.SPACE_BLACK)
+	for cover_rect in cover_rects:
+		var preview_cover := _map_world_rect(
+			cover_rect,
+			world_rect,
+			map_rect
+		)
+		draw_rect(
+			Rect2(preview_cover.position + Vector2(1.0, 1.5), preview_cover.size),
+			Color(Art.SPACE_BLACK, 0.86)
+		)
+		draw_rect(preview_cover, Art.RAISED)
+		draw_rect(preview_cover, Art.LINE, false, 1.0)
+	draw_rect(map_rect, Art.LINE, false, 2.0)
+	_draw_world_marker(
+		_map_world_point(snapshot.player_start, world_rect, map_rect),
+		&"player",
+		0.56
+	)
+	_label(
+		rect.position + Vector2(22.0, rect.size.y - 88.0),
+		"%d MODULES · 288 GRID · %s"
+		% [
+			int(pattern.get("module_count", 0)),
+			String(pattern.get("fingerprint", "")).substr(0, 10),
+		],
+		13,
+		Art.TEXT_PRIMARY
+	)
+
+
+func _fit_rect(source_size: Vector2, target: Rect2) -> Rect2:
+	if source_size.x <= 0.0 or source_size.y <= 0.0:
+		return target
+	var scale_value := minf(
+		target.size.x / source_size.x,
+		target.size.y / source_size.y
+	)
+	var fitted_size := source_size * scale_value
+	return Rect2(
+		target.get_center() - fitted_size * 0.5,
+		fitted_size
+	)
+
+
+func _map_world_point(
+	point: Vector2,
+	world_rect: Rect2,
+	preview_rect: Rect2
+) -> Vector2:
+	var normalized := Vector2(
+		(point.x - world_rect.position.x) / maxf(1.0, world_rect.size.x),
+		(point.y - world_rect.position.y) / maxf(1.0, world_rect.size.y)
+	)
+	return preview_rect.position + preview_rect.size * normalized
+
+
+func _map_world_rect(
+	rectangle: Rect2,
+	world_rect: Rect2,
+	preview_rect: Rect2
+) -> Rect2:
+	return Rect2(
+		_map_world_point(rectangle.position, world_rect, preview_rect),
+		Vector2(
+			rectangle.size.x / maxf(1.0, world_rect.size.x) * preview_rect.size.x,
+			rectangle.size.y / maxf(1.0, world_rect.size.y) * preview_rect.size.y
+		)
+	)
 
 
 func _draw_world_facilities() -> void:
@@ -445,14 +541,21 @@ func _draw_projectile_components() -> void:
 		_label(rect.position + Vector2(430.0, 146.0), "core = hit", 12, Art.TEXT_MUTED)
 	_label(Vector2(72.0, 668.0), "TELEGRAPH FOOTPRINTS", 20, Art.TEXT_PRIMARY)
 	var telegraphs := [
-		["LINE", &"line"], ["CONE", &"cone"], ["AREA", &"area"],
-		["LOCK", &"lock"], ["IMPACT", &"impact"],
+		"CORRIDOR",
+		"ACTIVE BEAM",
+		"AREA",
+		"SUPPORT",
+		"COMMIT / IMPACT",
 	]
 	for index in telegraphs.size():
 		var rect := Rect2(72.0 + index * 380.0, 706.0, 348.0, 276.0)
 		_draw_panel(rect, Art.SURFACE, Art.LINE, Art.DANGER)
-		_draw_telegraph(rect, StringName(telegraphs[index][1]))
-		_label(rect.position + Vector2(18.0, 248.0), String(telegraphs[index][0]), 13, Art.TEXT_MUTED)
+		_label(
+			rect.position + Vector2(18.0, 248.0),
+			String(telegraphs[index]),
+			13,
+			Art.TEXT_MUTED
+		)
 	_footer("Bright cores stop at collision truth; tails and telegraphs may extend beyond it.")
 
 
@@ -486,11 +589,18 @@ func _draw_reward_components() -> void:
 		var rect := Rect2(72.0 + column * 474.0, 612.0 + row * 180.0, 442.0, 148.0)
 		var color := _semantic_color(StringName(descriptor["color"]))
 		_draw_panel(rect, Art.SURFACE, Art.LINE, color)
-		_draw_primitive(
+		UpgradeGlyphRenderer.draw_glyph(
+			self,
+			family,
 			rect.position + Vector2(76.0, 74.0),
-			StringName(descriptor["shape"]),
-			color,
-			42.0
+			34.0,
+			{
+				&"accent":color,
+				&"perimeter":Art.SPACE_BLACK,
+				&"surface":Art.WORLD_CANVAS,
+				&"secondary":color.lerp(Art.SPACE_BLACK, 0.34),
+				&"highlight":Art.TEXT_PRIMARY,
+			}
 		)
 		_label(rect.position + Vector2(146.0, 70.0), String(family).to_upper(), 15, Art.TEXT_PRIMARY)
 		_label(rect.position + Vector2(146.0, 100.0), "family glyph", 12, Art.TEXT_MUTED)
@@ -520,12 +630,12 @@ func _draw_hud_components() -> void:
 
 func _draw_controls() -> void:
 	var states := [
-		{"id": "normal", "label": "기본 / NORMAL", "line": Art.LINE, "rail": Color.TRANSPARENT, "text": Art.TEXT_PRIMARY},
-		{"id": "hover", "label": "가리킴 / HOVER", "line": Art.LINE, "rail": Art.SYSTEM, "text": Art.TEXT_PRIMARY},
-		{"id": "focus", "label": "키보드 초점 / FOCUS", "line": Art.SYSTEM, "rail": Art.SYSTEM, "text": Art.TEXT_PRIMARY},
-		{"id": "selected", "label": "선택 / SELECTED", "line": Art.LINE, "rail": Art.PLAYER_REWARD, "text": Art.TEXT_PRIMARY},
-		{"id": "disabled", "label": "비활성 / DISABLED", "line": Art.LINE.darkened(0.35), "rail": Color.TRANSPARENT, "text": Art.TEXT_MUTED.darkened(0.28)},
-		{"id": "danger", "label": "위험 / DANGER", "line": Art.DANGER, "rail": Art.DANGER, "text": Art.DANGER},
+		{"id": "normal", "rail": Color.TRANSPARENT},
+		{"id": "hover", "rail": Art.SYSTEM},
+		{"id": "focus", "rail": Art.SYSTEM},
+		{"id": "selected", "rail": Art.PLAYER_REWARD},
+		{"id": "disabled", "rail": Color.TRANSPARENT},
+		{"id": "danger", "rail": Art.DANGER},
 	]
 	for index in states.size():
 		var column := index % 3
@@ -539,20 +649,7 @@ func _draw_controls() -> void:
 			Art.TEXT_MUTED
 		)
 	_label(Vector2(72.0, 620.0), "PANEL HIERARCHY", 20, Art.TEXT_PRIMARY)
-	var modal := Rect2(72.0, 660.0, 1190.0, 360.0)
-	_draw_panel(modal, Art.SURFACE, Art.LINE, Art.SYSTEM)
-	_label(modal.position + Vector2(28.0, 48.0), "함선 시스템 / SHIP SYSTEMS", 28, Art.TEXT_PRIMARY)
-	_label(modal.position + Vector2(28.0, 84.0), "Title → content → action", 15, Art.TEXT_MUTED)
-	_draw_panel(Rect2(100.0, 782.0, 710.0, 180.0), Art.WORLD_CANVAS, Art.LINE, Color.TRANSPARENT)
-	_label(Vector2(128.0, 830.0), "현재 상태", 17, Art.TEXT_PRIMARY)
-	_label(Vector2(128.0, 870.0), "장갑  100 / 100", 15, Art.TEXT_MUTED)
-	_label(Vector2(128.0, 906.0), "추진  준비", 15, Art.SUPPORT)
-	_draw_button(Rect2(862.0, 886.0, 348.0, 64.0), "확인 / CONFIRM", Art.PLAYER_REWARD, true)
 	_label(Vector2(1340.0, 620.0), "CONTROL FAMILY", 20, Art.TEXT_PRIMARY)
-	_draw_button(Rect2(1340.0, 676.0, 560.0, 64.0), "주요 행동 / PRIMARY", Art.PLAYER_REWARD, true)
-	_draw_button(Rect2(1340.0, 764.0, 560.0, 64.0), "보조 행동 / SECONDARY", Art.SYSTEM, false)
-	_draw_button(Rect2(1340.0, 852.0, 560.0, 64.0), "위험 행동 / DANGER", Art.DANGER, false)
-	_draw_checkbox(Rect2(1340.0, 948.0, 560.0, 56.0), "모션 감소 / REDUCED MOTION")
 	_footer("Selected, focus, disabled, and danger remain identifiable without hue alone.")
 
 
@@ -566,11 +663,17 @@ func _draw_modal_contact_sheet() -> void:
 		["RESULT", "작전 결과", &"result"],
 		["GARAGE", "격납고", &"split"],
 		["SETTINGS", "설정", &"tabs"],
+		["BOSS PRACTICE", "보스 훈련", &"debug"],
 	]
 	for index in surfaces.size():
-		var column := index % 4
-		var row := index / 4
-		var rect := Rect2(72.0 + column * 474.0, 194.0 + row * 416.0, 442.0, 374.0)
+		var column := index % 3
+		var row := index / 3
+		var rect := Rect2(
+			72.0 + column * 634.0,
+			194.0 + row * 284.0,
+			604.0,
+			260.0
+		)
 		_draw_panel(rect, Art.SURFACE, Art.LINE, Art.SYSTEM)
 		_label(
 			rect.position + Vector2(18.0, 30.0),
@@ -589,6 +692,8 @@ func _build_runtime_control_evidence() -> void:
 			_build_actual_controls()
 		&"modals":
 			_build_actual_modals()
+		&"projectiles":
+			_build_actual_telegraphs()
 
 
 func _build_actual_hud() -> void:
@@ -671,7 +776,210 @@ func _build_actual_controls() -> void:
 		add_child(button)
 		if bool(records[index][3]):
 			focus_button = button
+	_build_actual_control_hierarchy()
 	call_deferred("_focus_sheet_control", focus_button)
+
+
+func _build_actual_control_hierarchy() -> void:
+	var modal := UiFactory.modal_surface(Vector2(1190.0, 360.0))
+	modal.position = Vector2(72.0, 660.0)
+	modal.size = Vector2(1190.0, 360.0)
+	add_child(modal)
+	var content := Control.new()
+	content.custom_minimum_size = modal.size
+	modal.add_child(content)
+	var title := UiFactory.label("함선 시스템 / SHIP SYSTEMS", 28)
+	title.theme_type_variation = &"TitleLabel"
+	title.position = Vector2(28.0, 24.0)
+	title.size = Vector2(760.0, 42.0)
+	content.add_child(title)
+	var subtitle := UiFactory.label(
+		"Title → content → action",
+		15,
+		Art.TEXT_MUTED
+	)
+	subtitle.position = Vector2(28.0, 70.0)
+	subtitle.size = Vector2(760.0, 28.0)
+	content.add_child(subtitle)
+	var status_panel := UiFactory.flat_panel()
+	status_panel.position = Vector2(28.0, 122.0)
+	status_panel.size = Vector2(710.0, 180.0)
+	content.add_child(status_panel)
+	var status_content := Control.new()
+	status_content.custom_minimum_size = status_panel.size
+	status_panel.add_child(status_content)
+	var status_title := UiFactory.label("현재 상태", 17)
+	status_title.theme_type_variation = &"MetricLabel"
+	status_title.position = Vector2(28.0, 22.0)
+	status_title.size = Vector2(620.0, 30.0)
+	status_content.add_child(status_title)
+	var hull := UiFactory.label("장갑  100 / 100", 15, Art.TEXT_MUTED)
+	hull.position = Vector2(28.0, 66.0)
+	hull.size = Vector2(620.0, 28.0)
+	status_content.add_child(hull)
+	var thrust := UiFactory.label("추진  준비", 15, Art.SUPPORT)
+	thrust.position = Vector2(28.0, 106.0)
+	thrust.size = Vector2(620.0, 28.0)
+	status_content.add_child(thrust)
+	var confirm := UiFactory.command_button(
+		"확인 / CONFIRM",
+		&"PrimaryButton"
+	)
+	confirm.position = Vector2(790.0, 226.0)
+	confirm.size = Vector2(348.0, 64.0)
+	content.add_child(confirm)
+	for record in [
+		[Vector2(1340.0, 676.0), "주요 행동 / PRIMARY", &"PrimaryButton"],
+		[Vector2(1340.0, 764.0), "보조 행동 / SECONDARY", &"SecondaryButton"],
+		[Vector2(1340.0, 852.0), "위험 행동 / DANGER", &"TertiaryDangerButton"],
+	]:
+		var button := UiFactory.command_button(
+			String(record[1]),
+			StringName(record[2])
+		)
+		button.position = Vector2(record[0])
+		button.size = Vector2(560.0, 64.0)
+		add_child(button)
+	var motion_toggle := CheckButton.new()
+	motion_toggle.position = Vector2(1340.0, 948.0)
+	motion_toggle.size = Vector2(560.0, 56.0)
+	motion_toggle.text = "모션 감소 / REDUCED MOTION"
+	motion_toggle.button_pressed = true
+	motion_toggle.focus_mode = Control.FOCUS_ALL
+	add_child(motion_toggle)
+
+
+func _build_actual_telegraphs() -> void:
+	var renderer := CombatRenderer.new()
+	add_child(renderer)
+	call_deferred("_sync_actual_telegraphs", renderer)
+
+
+func _sync_actual_telegraphs(renderer: Node2D) -> void:
+	if not is_instance_valid(renderer):
+		return
+	renderer.z_index = 2
+	var enemies: Array[EnemyState] = []
+	var centers: Array[Vector2] = []
+	for index in 5:
+		centers.append(
+			Rect2(72.0 + index * 380.0, 706.0, 348.0, 276.0)
+			.get_center() - Vector2(0.0, 12.0)
+		)
+	enemies.append(
+		_telegraph_enemy(
+			"sheet_corridor",
+			&"startup",
+			[{
+				"shape":&"corridor",
+				"from":centers[0] - Vector2(112.0, 0.0),
+				"to":centers[0] + Vector2(112.0, 0.0),
+				"half_width":32.0,
+				"damage":14.0,
+				"affinity":&"kinetic",
+				"readiness":0.72,
+			}]
+		)
+	)
+	enemies.append(
+		_telegraph_enemy(
+			"sheet_active_beam",
+			&"active",
+			[{
+				"shape":&"corridor",
+				"from":centers[1] - Vector2(112.0, 0.0),
+				"to":centers[1] + Vector2(112.0, 0.0),
+				"half_width":28.0,
+				"active_width":32.0,
+				"damage":28.0,
+				"affinity":&"arc",
+				"readiness":1.0,
+			}]
+		)
+	)
+	enemies.append(
+		_telegraph_enemy(
+			"sheet_area",
+			&"startup",
+			[{
+				"shape":&"area",
+				"center":centers[2],
+				"radius":82.0,
+				"damage":28.0,
+				"affinity":&"thermal",
+				"readiness":0.76,
+			}]
+		)
+	)
+	enemies.append(
+		_telegraph_enemy(
+			"sheet_support",
+			&"startup",
+			[{
+				"shape":&"support",
+				"center":centers[3],
+				"radius":82.0,
+				"damage":0.0,
+				"affinity":&"support",
+			}]
+		)
+	)
+	enemies.append(
+		_telegraph_enemy(
+			"sheet_commit",
+			&"startup",
+			[{
+				"shape":&"area",
+				"center":centers[4] - Vector2(58.0, 0.0),
+				"radius":8.0,
+				"damage":14.0,
+				"affinity":&"kinetic",
+				"readiness":1.0,
+				"commit_mode":&"committed",
+			}]
+		)
+	)
+	var no_projectiles: Array[ProjectileState] = []
+	var no_shards: Array[ExperienceShard] = []
+	var effects: Array[Dictionary] = [{
+		"pos":centers[4] + Vector2(58.0, 0.0),
+		"duration":1.0,
+		"time":0.45,
+		"radius":58.0,
+		"kind":"impact",
+		"color":Art.TEXT_PRIMARY,
+	}]
+	renderer.sync(
+		enemies,
+		no_projectiles,
+		no_projectiles,
+		no_shards,
+		effects,
+		Rect2(Vector2.ZERO, size),
+		Vector2.ZERO,
+		0.0,
+		true
+	)
+
+
+func _telegraph_enemy(
+	enemy_id: String,
+	phase: StringName,
+	telegraphs: Array
+) -> EnemyState:
+	var enemy := EnemyState.new()
+	enemy.id = enemy_id
+	enemy.role = &"chaser"
+	enemy.archetype = &"chaser"
+	enemy.pos = Vector2(-128.0, -128.0)
+	enemy.alive = true
+	enemy.active = true
+	enemy.visual_radius = 0.01
+	enemy.health = 1.0
+	enemy.max_health = 1.0
+	enemy.phase = phase
+	enemy.attack_telegraphs = telegraphs
+	return enemy
 
 
 func _focus_sheet_control(button: Button) -> void:
@@ -689,20 +997,37 @@ func _build_actual_modals() -> void:
 		ResultPanel.new(),
 		GaragePanel.new(),
 		SettingsPanel.new(),
+		BossPracticePanel.new(),
 	]
 	for index in contents.size():
-		var column := index % 4
-		var row := index / 4
-		var wrapper := Control.new()
-		wrapper.position = Vector2(
-			90.0 + column * 474.0,
-			240.0 + row * 416.0
+		var column := index % 3
+		var row := index / 3
+		var cell_rect := Rect2(
+			72.0 + column * 634.0,
+			194.0 + row * 284.0,
+			604.0,
+			260.0
 		)
-		wrapper.size = Vector2(1280.0, 720.0)
-		wrapper.scale = Vector2.ONE * 0.305
+		var inner_rect := Rect2(
+			cell_rect.position + Vector2(14.0, 42.0),
+			cell_rect.size - Vector2(28.0, 54.0)
+		)
+		var evidence_size := _modal_evidence_size(index)
+		var evidence_viewport := evidence_size + Vector2(48.0, 24.0)
+		var evidence_scale := minf(
+			inner_rect.size.x / evidence_viewport.x,
+			inner_rect.size.y / evidence_viewport.y
+		)
+		var wrapper := Control.new()
+		wrapper.position = (
+			inner_rect.position
+			+ (inner_rect.size - evidence_viewport * evidence_scale) * 0.5
+		)
+		wrapper.size = evidence_viewport
+		wrapper.scale = Vector2.ONE * evidence_scale
 		add_child(wrapper)
 		var host := ModalHost.new()
-		host.configure(contents[index], _modal_evidence_size(index))
+		host.configure(contents[index], evidence_size)
 		wrapper.add_child(host)
 		_open_modal_evidence(contents[index], index)
 
@@ -717,6 +1042,7 @@ func _modal_evidence_size(index: int) -> Vector2:
 		Vector2(900.0, 560.0),
 		Vector2(960.0, 560.0),
 		Vector2(920.0, 570.0),
+		Vector2(760.0, 620.0),
 	][index]
 
 
@@ -757,6 +1083,8 @@ func _open_modal_evidence(content: Control, index: int) -> void:
 			(content as VehicleGaragePanel).open({})
 		7:
 			(content as VehicleSettingsPanel).open()
+		8:
+			(content as VehicleBossPracticePanel).open()
 
 
 func _draw_pressure_accessibility() -> void:
@@ -839,7 +1167,7 @@ func _draw_player_assembly(
 		for index in 3:
 			var after_center := center + rear * radius * (0.65 + index * 0.38)
 			_draw_mesh_at(
-				Visuals.player_hull_mesh(),
+				Visuals.effect_mesh(&"afterimage"),
 				after_center,
 				Vector2.ONE * radius * (0.78 - index * 0.12),
 				hull_angle,
@@ -914,29 +1242,17 @@ func _draw_facility_glyph(
 	color: Color,
 	scale: float
 ) -> void:
-	match facility_id:
-		&"repair_field":
-			draw_rect(Rect2(center - Vector2(scale * 0.16, scale * 0.48), Vector2(scale * 0.32, scale * 0.96)), color)
-			draw_rect(Rect2(center - Vector2(scale * 0.48, scale * 0.16), Vector2(scale * 0.96, scale * 0.32)), color)
-		&"transit_gate":
-			for sign_value in [-1.0, 1.0]:
-				_draw_chevron(center + Vector2(sign_value * scale * 0.38, 0.0), Vector2(-sign_value, 0.0), scale * 0.72, color, scale * 0.18)
-		&"overdrive_field":
-			for offset in [-0.34, 0.0, 0.34]:
-				_draw_chevron(center + Vector2(offset * scale, 0.0), Vector2.RIGHT, scale * 0.72, color, scale * 0.18)
-		&"arc_surge_strip":
-			var points := PackedVector2Array([
-				center + Vector2(-scale * 0.52, -scale * 0.12),
-				center + Vector2(-scale * 0.10, -scale * 0.44),
-				center + Vector2(-scale * 0.02, -scale * 0.08),
-				center + Vector2(scale * 0.48, -scale * 0.22),
-				center + Vector2(scale * 0.08, scale * 0.44),
-				center + Vector2(scale * 0.02, scale * 0.08),
-			])
-			draw_colored_polygon(points, color)
-		_:
-			draw_rect(Rect2(center - Vector2(scale * 0.54, scale * 0.34), Vector2(scale * 0.42, scale * 0.68)), color)
-			draw_rect(Rect2(center + Vector2(scale * 0.12, -scale * 0.34), Vector2(scale * 0.42, scale * 0.68)), color)
+	var descriptor := WorldCatalog.facility_descriptor(facility_id)
+	var recipe_id := StringName(
+		descriptor.get("recipe", facility_id)
+	)
+	RewardFacilityRecipes.draw_recipe(
+		self,
+		recipe_id,
+		center,
+		scale,
+		_reward_facility_palette(color)
+	)
 
 
 func _draw_reward_glyph(
@@ -945,22 +1261,17 @@ func _draw_reward_glyph(
 	color: Color,
 	scale: float
 ) -> void:
-	match reward_id:
-		&"experience_small":
-			_draw_regular_polygon(center, scale * 0.58, 4, color, PI / 4.0)
-		&"experience_medium":
-			_draw_regular_polygon(center, scale * 0.68, 6, color, PI / 6.0)
-		&"experience_large":
-			_draw_star(center, scale * 0.72, scale * 0.48, 8, color)
-		&"repair":
-			_draw_regular_polygon(center, scale * 0.78, 8, Art.TEXT_PRIMARY, PI / 8.0)
-			_draw_facility_glyph(center, &"repair_field", color, scale)
-		&"experience_recall":
-			_draw_regular_polygon(center, scale * 0.78, 6, Art.TEXT_PRIMARY, PI / 6.0)
-			_draw_facility_glyph(center, &"transit_gate", color, scale * 0.84)
-		&"reward_crate":
-			_draw_plate(Rect2(center - Vector2.ONE * scale * 0.68, Vector2.ONE * scale * 1.36), scale * 0.18, color)
-			_draw_regular_polygon(center, scale * 0.30, 4, Art.SURFACE, PI / 4.0)
+	var descriptor := RewardCatalog.descriptor(reward_id)
+	var recipe_id := StringName(
+		descriptor.get("recipe", reward_id)
+	)
+	RewardFacilityRecipes.draw_recipe(
+		self,
+		recipe_id,
+		center,
+		scale,
+		_reward_facility_palette(color)
+	)
 
 
 func _draw_world_marker(center: Vector2, marker_id: StringName, scale: float) -> void:
@@ -968,28 +1279,82 @@ func _draw_world_marker(center: Vector2, marker_id: StringName, scale: float) ->
 	match marker_id:
 		&"player":
 			color = Art.PLAYER_REWARD
-			_draw_primitive(center, &"player_interceptor", color, 25.0 * scale)
+			_draw_mesh_at(
+				Visuals.player_hull_mesh(),
+				center,
+				Vector2.ONE * 25.0 * scale,
+				0.0,
+				color
+			)
 		&"enemy":
 			color = Art.DANGER
-			_draw_primitive(center, &"split_spear", color, 23.0 * scale)
+			_draw_mesh_at(
+				Visuals.enemy_mesh(&"chaser"),
+				center,
+				Vector2.ONE * 23.0 * scale,
+				0.0,
+				color
+			)
 		&"elite":
 			color = Art.DANGER
-			_draw_star(center, 28.0 * scale, 18.0 * scale, 6, color)
+			_draw_mesh_at(
+				Visuals.enemy_mesh(&"controller"),
+				center,
+				Vector2.ONE * 25.0 * scale,
+				0.0,
+				color
+			)
 		&"boss":
 			color = Art.BOSS_COMMAND
-			_draw_regular_polygon(center, 27.0 * scale, 8, color, PI / 8.0)
+			_draw_mesh_at(
+				Visuals.boss_mesh(&"colossus"),
+				center,
+				Vector2.ONE * 27.0 * scale,
+				0.0,
+				color
+			)
 		&"stationary":
 			color = Art.DANGER
-			_draw_regular_polygon(center, 25.0 * scale, 4, color, PI / 4.0)
+			_draw_mesh_at(
+				Visuals.enemy_mesh(&"turret"),
+				center,
+				Vector2.ONE * 24.0 * scale,
+				0.0,
+				color
+			)
 		&"pickup":
 			color = Art.SUPPORT
-			_draw_regular_polygon(center, 23.0 * scale, 6, color, PI / 6.0)
+			_draw_reward_glyph(
+				center,
+				&"repair",
+				color,
+				23.0 * scale
+			)
 		&"crate":
 			color = Art.PLAYER_REWARD
-			_draw_plate(Rect2(center - Vector2.ONE * 22.0 * scale, Vector2.ONE * 44.0 * scale), 7.0 * scale, color)
+			_draw_reward_glyph(
+				center,
+				&"reward_crate",
+				color,
+				22.0 * scale
+			)
 		_:
 			color = Art.SYSTEM
 			draw_arc(center, 26.0 * scale, -2.4, 2.4, 24, color, 4.0 * scale)
+
+
+func _reward_facility_palette(accent: Color) -> Dictionary:
+	return {
+		&"accent":accent,
+		&"perimeter":Color(Art.SPACE_BLACK, accent.a),
+		&"main_mass":accent,
+		&"secondary_mass":Color(
+			accent.lerp(Art.SPACE_BLACK, 0.28),
+			accent.a
+		),
+		&"function_inset":Color(Art.SURFACE, accent.a),
+		&"hard_highlight":Color(Art.TEXT_PRIMARY, accent.a),
+	}
 
 
 func _draw_boss_modules(center: Vector2, module_id: StringName) -> void:
@@ -1004,44 +1369,41 @@ func _draw_boss_modules(center: Vector2, module_id: StringName) -> void:
 		)
 
 
-func _draw_telegraph(rect: Rect2, kind: StringName) -> void:
-	var center := rect.get_center() - Vector2(0.0, 12.0)
-	match kind:
-		&"line":
-			draw_line(center - Vector2(118.0, 0.0), center + Vector2(118.0, 0.0), Color(Art.DANGER, 0.34), 28.0)
-			draw_line(center - Vector2(118.0, 0.0), center + Vector2(118.0, 0.0), Art.DANGER, 3.0)
-		&"cone":
-			draw_colored_polygon(PackedVector2Array([
-				center - Vector2(80.0, 0.0),
-				center + Vector2(94.0, -72.0),
-				center + Vector2(94.0, 72.0),
-			]), Color(Art.DANGER, 0.24))
-			draw_line(center - Vector2(80.0, 0.0), center + Vector2(94.0, -72.0), Art.DANGER, 3.0)
-			draw_line(center - Vector2(80.0, 0.0), center + Vector2(94.0, 72.0), Art.DANGER, 3.0)
-		&"area":
-			draw_circle(center, 82.0, Color(Art.DANGER, 0.18))
-			draw_arc(center, 82.0, 0.0, TAU, 48, Art.DANGER, 4.0)
-		&"lock":
-			for offset_variant in [Vector2(-52.0, -52.0), Vector2(52.0, -52.0), Vector2(52.0, 52.0), Vector2(-52.0, 52.0)]:
-				var offset := Vector2(offset_variant)
-				var direction: Vector2 = -offset.normalized()
-				draw_line(center + offset, center + offset + direction * 26.0, Art.DANGER, 5.0)
-		_:
-			for index in 6:
-				var direction := Vector2.RIGHT.rotated(TAU * float(index) / 6.0)
-				draw_line(center + direction * 22.0, center + direction * 78.0, Art.TEXT_PRIMARY, 5.0)
-
-
 func _draw_panel(rect: Rect2, fill: Color, line: Color, rail: Color) -> void:
-	draw_rect(rect, fill)
-	draw_rect(rect, line, false, 1.0)
+	var cut := clampf(minf(rect.size.x, rect.size.y) * 0.055, 8.0, 16.0)
+	var shadow_points := Art.stepped_rect(
+		Rect2(rect.position + Vector2(4.0, 5.0), rect.size),
+		cut
+	)
+	draw_colored_polygon(shadow_points, Color(Art.SPACE_BLACK, 0.86))
+	var panel_points := Art.stepped_rect(rect, cut)
+	draw_colored_polygon(panel_points, fill)
+	var closed_panel := panel_points.duplicate()
+	closed_panel.append(panel_points[0])
+	draw_polyline(closed_panel, line, 2.0, true)
+	draw_line(
+		rect.position + Vector2(cut + 8.0, 6.0),
+		Vector2(rect.end.x - cut - 8.0, rect.position.y + 6.0),
+		Color(Art.TEXT_PRIMARY, 0.13),
+		1.0,
+		true
+	)
 	if rail.a > 0.0:
-		draw_rect(Rect2(rect.position, Vector2(3.0, rect.size.y)), rail)
+		draw_rect(
+			Rect2(
+				rect.position + Vector2(7.0, cut + 5.0),
+				Vector2(3.0, maxf(0.0, rect.size.y - cut * 2.0 - 10.0))
+			),
+			rail
+		)
 
 
 func _draw_plate(rect: Rect2, cut: float, color: Color) -> void:
-	draw_colored_polygon(Art.stepped_rect(rect, cut), color)
-	draw_polyline(Art.stepped_rect(rect, cut), Art.LINE, 1.0)
+	var points := Art.stepped_rect(rect, cut)
+	draw_colored_polygon(points, color)
+	var closed_points := points.duplicate()
+	closed_points.append(points[0])
+	draw_polyline(closed_points, Art.LINE, 1.0, true)
 
 
 func _draw_token(rect: Rect2, role: String, color: Color) -> void:
@@ -1105,73 +1467,11 @@ func _draw_regular_polygon(
 	draw_colored_polygon(points, color)
 
 
-func _draw_star(
-	center: Vector2,
-	outer_radius: float,
-	inner_radius: float,
-	points_count: int,
-	color: Color
-) -> void:
-	var points := PackedVector2Array()
-	for index in points_count * 2:
-		var radius := outer_radius if index % 2 == 0 else inner_radius
-		points.append(
-			center
-			+ Vector2.RIGHT.rotated(
-				-PI * 0.5 + TAU * float(index) / float(points_count * 2)
-			) * radius
-		)
-	draw_colored_polygon(points, color)
-
-
-func _draw_chevron(
-	center: Vector2,
-	direction: Vector2,
-	length: float,
-	color: Color,
-	width: float
-) -> void:
-	var side := direction.rotated(PI * 0.5)
-	var rear := center - direction * length * 0.5
-	var front := center + direction * length * 0.5
-	var points := PackedVector2Array([
-		rear + side * width,
-		center + side * width,
-		front,
-		center - side * width,
-		rear - side * width,
-		center - direction * length * 0.12,
-	])
-	draw_colored_polygon(points, color)
-
-
 func _draw_measure(from: Vector2, to: Vector2, text: String) -> void:
 	draw_line(from, to, Art.SYSTEM, 1.0)
 	draw_line(from - Vector2(0.0, 8.0), from + Vector2(0.0, 8.0), Art.SYSTEM, 1.0)
 	draw_line(to - Vector2(0.0, 8.0), to + Vector2(0.0, 8.0), Art.SYSTEM, 1.0)
 	_label((from + to) * 0.5 - Vector2(150.0, 12.0), text, 13, Art.TEXT_MUTED)
-
-
-func _draw_button(rect: Rect2, text: String, accent: Color, filled: bool) -> void:
-	draw_rect(rect, accent if filled else Art.SURFACE)
-	draw_rect(rect, accent, false, 1.0)
-	if not filled:
-		draw_rect(Rect2(rect.position, Vector2(3.0, rect.size.y)), accent)
-	_label(
-		rect.position + Vector2(22.0, rect.size.y * 0.64),
-		text,
-		15,
-		Art.SPACE_BLACK if filled else Art.TEXT_PRIMARY
-	)
-
-
-func _draw_checkbox(rect: Rect2, text: String) -> void:
-	_draw_panel(rect, Art.SURFACE, Art.LINE, Color.TRANSPARENT)
-	var box := Rect2(rect.position + Vector2(18.0, 14.0), Vector2(28.0, 28.0))
-	draw_rect(box, Art.SYSTEM, false, 2.0)
-	draw_line(box.position + Vector2(6.0, 14.0), box.position + Vector2(12.0, 21.0), Art.SYSTEM, 3.0)
-	draw_line(box.position + Vector2(12.0, 21.0), box.position + Vector2(23.0, 7.0), Art.SYSTEM, 3.0)
-	_label(rect.position + Vector2(64.0, 36.0), text, 16, Art.TEXT_PRIMARY)
 
 
 func _draw_check(center: Vector2, checked: bool) -> void:
@@ -1198,10 +1498,11 @@ func _footer(text: String) -> void:
 
 
 func _label(position: Vector2, text: String, font_size: int, color: Color) -> void:
-	if _font == null:
+	var font := _font_strong if font_size >= 20 else _font_body
+	if font == null:
 		return
 	draw_string(
-		_font,
+		font,
 		position,
 		text,
 		HORIZONTAL_ALIGNMENT_LEFT,
@@ -1209,3 +1510,12 @@ func _label(position: Vector2, text: String, font_size: int, color: Color) -> vo
 		font_size,
 		color
 	)
+
+
+func _font_variation(base_font: Font, weight: float) -> Font:
+	if base_font == null:
+		return null
+	var variation := FontVariation.new()
+	variation.base_font = base_font
+	variation.variation_opentype = {"weight":weight}
+	return variation

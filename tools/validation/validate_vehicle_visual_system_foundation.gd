@@ -15,6 +15,12 @@ const MANIFEST_PATH := (
 	"res://docs/design/component-sheets/system-v1/manifest.json"
 )
 const ACTIVE_SPEC_PATH := "res://docs/design/UI_VISUAL_SYSTEM.md"
+const APPROVED_REFERENCE_PATH := (
+	"res://docs/design/component-sheets/00-general-sf-component-master-v1.png"
+)
+const APPROVED_REFERENCE_SHA256 := (
+	"d91df76685480676e6695eeaab7db49e93c7de89e1950a9b3b3bc806c02ea7e7"
+)
 const SHEET_CANVAS_PATH := (
 	"res://tools/design/vehicle_visual_sheet_canvas.gd"
 )
@@ -39,6 +45,7 @@ func _init() -> void:
 	errors.append_array(Registry.validate_catalog_contract())
 	errors.append_array(ComponentMeshes.validate_component_budget(3, 2, 1, 5))
 	_validate_active_spec(errors)
+	_validate_approved_reference(errors)
 	_validate_runtime_backed_ui_sheets(errors)
 	_validate_manifest(errors)
 	if errors.is_empty():
@@ -66,6 +73,9 @@ func _validate_active_spec(errors: PackedStringArray) -> void:
 		"directional afterimage",
 		"960×540",
 		"grayscale",
+		"binding visual reference",
+		"288×288",
+		"body weight는 650",
 	]:
 		if required not in content:
 			errors.append("active visual spec is missing contract text: %s" % required)
@@ -79,6 +89,17 @@ func _validate_active_spec(errors: PackedStringArray) -> void:
 			)
 
 
+func _validate_approved_reference(errors: PackedStringArray) -> void:
+	if not FileAccess.file_exists(APPROVED_REFERENCE_PATH):
+		errors.append("approved component reference is missing")
+		return
+	var absolute_path := ProjectSettings.globalize_path(APPROVED_REFERENCE_PATH)
+	if FileAccess.get_sha256(absolute_path) != APPROVED_REFERENCE_SHA256:
+		errors.append(
+			"approved component reference changed; review visual authority before publication"
+		)
+
+
 func _validate_runtime_backed_ui_sheets(errors: PackedStringArray) -> void:
 	if not FileAccess.file_exists(SHEET_CANVAS_PATH):
 		errors.append("visual sheet canvas is missing")
@@ -88,7 +109,11 @@ func _validate_runtime_backed_ui_sheets(errors: PackedStringArray) -> void:
 		"VehicleGameplayHud",
 		"VehicleDeploymentPanel",
 		"VehicleSettingsPanel",
+		"VehicleBossPracticePanel",
 		"_build_actual_modals",
+		"_build_actual_telegraphs",
+		"Visuals.effect_mesh(&\"afterimage\")",
+		"UiFactory.command_button",
 	]:
 		if required not in content:
 			errors.append(
@@ -98,6 +123,9 @@ func _validate_runtime_backed_ui_sheets(errors: PackedStringArray) -> void:
 		"func _draw_modal_thumbnail",
 		"func _draw_hud_zone",
 		"func _draw_control_state",
+		"func _draw_telegraph",
+		"func _draw_button",
+		"func _draw_checkbox",
 	]:
 		if retired_mock in content:
 			errors.append(

@@ -14,6 +14,21 @@ const GlyphCatalog = preload("res://scripts/presentation/components/vehicle_ui_g
 const COMPONENT_GEOMETRY_PATH := (
 	"res://scripts/presentation/components/vehicle_component_mesh_library.gd"
 )
+const ACTOR_RECIPE_PATH := (
+	"res://scripts/presentation/components/vehicle_actor_mesh_recipes.gd"
+)
+const UPGRADE_GLYPH_RECIPE_PATH := (
+	"res://scripts/presentation/components/vehicle_upgrade_glyph_renderer.gd"
+)
+const ACTION_GLYPH_RECIPE_PATH := (
+	"res://scripts/presentation/components/vehicle_ui_action_glyph_renderer.gd"
+)
+const PROJECTILE_EFFECT_RECIPE_PATH := (
+	"res://scripts/presentation/components/vehicle_projectile_effect_mesh_recipes.gd"
+)
+const REWARD_FACILITY_RECIPE_PATH := (
+	"res://scripts/presentation/components/vehicle_reward_facility_visual_recipes.gd"
+)
 const COMBAT_GEOMETRY_PATH := (
 	"res://scripts/presentation/vehicle_combat_visual_library.gd"
 )
@@ -32,6 +47,17 @@ const MINIMAP_GEOMETRY_PATH := (
 const RETAINED_MINIMAP_GEOMETRY_PATH := (
 	"res://scripts/ui/vehicle_retained_minimap_mesh.gd"
 )
+const VEHICLE_THEME_PATH := (
+	"res://art/ui/production/vehicle_stage_theme.tres"
+)
+const VEHICLE_FONT_PATH := (
+	"res://art/ui/production/fonts/NotoSansKR-Variable.ttf"
+)
+const SHEET_CANVAS_PATH := (
+	"res://tools/design/vehicle_visual_sheet_canvas.gd"
+)
+
+
 static func catalog_ids() -> Dictionary:
 	return {
 		&"actor": ActorCatalog.descriptor_ids(),
@@ -69,6 +95,26 @@ static func provider_fingerprint() -> String:
 		% FileAccess.get_sha256(COMPONENT_GEOMETRY_PATH)
 	)
 	records.append(
+		"actor_recipes=%s"
+		% FileAccess.get_sha256(ACTOR_RECIPE_PATH)
+	)
+	records.append(
+		"upgrade_glyph_recipes=%s"
+		% FileAccess.get_sha256(UPGRADE_GLYPH_RECIPE_PATH)
+	)
+	records.append(
+		"action_glyph_recipes=%s"
+		% FileAccess.get_sha256(ACTION_GLYPH_RECIPE_PATH)
+	)
+	records.append(
+		"projectile_effect_recipes=%s"
+		% FileAccess.get_sha256(PROJECTILE_EFFECT_RECIPE_PATH)
+	)
+	records.append(
+		"reward_facility_recipes=%s"
+		% FileAccess.get_sha256(REWARD_FACILITY_RECIPE_PATH)
+	)
+	records.append(
 		"combat_geometry=%s"
 		% FileAccess.get_sha256(COMBAT_GEOMETRY_PATH)
 	)
@@ -91,6 +137,18 @@ static func provider_fingerprint() -> String:
 	records.append(
 		"retained_minimap_geometry=%s"
 		% FileAccess.get_sha256(RETAINED_MINIMAP_GEOMETRY_PATH)
+	)
+	records.append(
+		"vehicle_theme=%s"
+		% FileAccess.get_sha256(VEHICLE_THEME_PATH)
+	)
+	records.append(
+		"vehicle_font=%s"
+		% FileAccess.get_sha256(VEHICLE_FONT_PATH)
+	)
+	records.append(
+		"sheet_canvas=%s"
+		% FileAccess.get_sha256(SHEET_CANVAS_PATH)
 	)
 	records.sort()
 	return "|".join(records).sha256_text()

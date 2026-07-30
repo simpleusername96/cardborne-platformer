@@ -4,21 +4,22 @@ status: active
 owner: BK
 created: 2026-07-30
 last_reviewed: 2026-07-30
-topic: Selected general-SF visual-system direction seed
-scope: Direction evidence for the replacement component grammar
-source: ./system-v1/manifest.json
+topic: Approved general-SF component master
+scope: Binding evidence for the production component grammar
+source: ./00-general-sf-component-master-v1.png
 related:
   - ../UI_VISUAL_SYSTEM.md
   - ../../../.agents/execplans/2026-07-30-approved-sheet-fidelity-recovery.md
+  - ./system-v1/manifest.json
 ---
 
 # 일반 SF 전투 컴포넌트 디자인 시안
 
 ## Purpose
 
-현재 맵에서 사용하는 역할별 의미를 유지하면서 교체 전 형태를 재사용하지
-않는 전체 비주얼 시스템의 선택된 방향 seed다. 이 방향은 전투 컴포넌트에서
-시작해 world, effect, HUD와 UI로 확장한다.
+현재 맵에서 사용하는 역할별 의미를 유지하면서 전체 비주얼 시스템을
+교체하기 위해 사용자가 승인한 general-SF component master다. 이 기준은
+전투 컴포넌트에서 시작해 world, effect, HUD와 UI로 확장한다.
 
 이 문서는 `active evidence`이며 runtime asset은 아니다. 다만 사용자가
 승인한 이 이미지의 silhouette, proportion, mechanical layering와 contrast
@@ -71,7 +72,7 @@ catalog, runtime combat mesh와 Noto Sans KR provider에서 결정적으로 생�
 | 08 | reward/upgrade glyphs | XP, 수리, 회수, 상자, 8개 upgrade family |
 | 09 | HUD/minimap markers | four-zone HUD와 shared marker |
 | 10 | UI controls | normal/hover/focus/selected/disabled/danger |
-| 11 | modal flow | 8개 production/debug surface composition |
+| 11 | modal flow | 9개 production/debug surface composition |
 | 12 | pressure/accessibility | gameplay 1× composition과 검증 슬롯 |
 
 [`system-v1/manifest.json`](./system-v1/manifest.json)은 12개 PNG hash,
