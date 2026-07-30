@@ -10,7 +10,7 @@ related:
   - ../product/combat-growth-improvement-direction.md
   - ../../.agents/survivor-shooter-combat-growth-reference-study.md
   - ../../.agents/execplans/2026-07-29-horde-foundation-recovery-and-acceptance.md
-  - ../../.agents/execplans/2026-07-29-combat-visual-enemy-boss-rework.md
+  - ../../.agents/execplans/2026-07-30-full-visual-system-redesign.md
 ---
 
 # 숨은 조작·적 집단행동·행동 기반 해금 설계 분석
@@ -539,7 +539,7 @@ seed에서만 가능하면 안 된다.
 - 스테이지 간 비모달 연속 진행
 
 집단행동 rollout은 별도의 활성
-[`2026-07-29-combat-visual-enemy-boss-rework.md`](../../.agents/execplans/2026-07-29-combat-visual-enemy-boss-rework.md)가
+[`2026-07-30-full-visual-system-redesign.md`](../../.agents/execplans/2026-07-30-full-visual-system-redesign.md)가
 소유한다. 숨은 조작과 행동 기반 해금은 어느 활성 계획에도 포함되지 않는다.
 충분한 적 밀도와 가독성은 이 제안의 선행조건이며, 복잡한 집단 AI가 현재
 요청한 물량 개선을 미루는 이유가 되어서는 안 된다.

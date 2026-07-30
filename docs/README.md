@@ -19,8 +19,8 @@ No other document defines the active game or its presentation.
 | --- | --- |
 | [`../pixel-art-production/README.md`](../pixel-art-production/README.md) | Existing pixel-runtime production and reproducibility contract. It cannot define or constrain new combat-component art. |
 
-## Draft Review Evidence
+## Active Design Evidence
 
 | Document | Role |
 | --- | --- |
-| [`design/component-sheets/README.md`](design/component-sheets/README.md) | Non-authoritative general-SF combat-component visual proposal for owner review. |
+| [`design/component-sheets/README.md`](design/component-sheets/README.md) | Selected, non-authoritative general-SF visual-system direction seed; runtime descriptors and the active visual spec remain authoritative. |

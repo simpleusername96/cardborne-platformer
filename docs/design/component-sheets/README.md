@@ -1,15 +1,15 @@
 ---
 type: evidence
-status: draft
+status: active
 owner: BK
 created: 2026-07-30
 last_reviewed: 2026-07-30
-topic: General-SF combat component design proposal
-scope: Visual review of a replacement component grammar before runtime descriptor implementation
+topic: Selected general-SF visual-system direction seed
+scope: Direction evidence for the replacement component grammar before runtime descriptor implementation
 source: ../../../pixel-art-production/evidence/space-hangar-v2/runtime/ko-1280-maximum-pressure.png
 related:
   - ../UI_VISUAL_SYSTEM.md
-  - ../../../.agents/execplans/2026-07-29-combat-visual-enemy-boss-rework.md
+  - ../../../.agents/execplans/2026-07-30-full-visual-system-redesign.md
   - ../../../pixel-art-production/runtime/atlases/cardborne-pixel-atlas.png
 ---
 
@@ -17,11 +17,13 @@ related:
 
 ## Purpose
 
-현재 맵에서 사용하는 색 대비와 역할별 의미만 유지하면서, 기존 픽셀 형태를
-재사용하지 않는 신규 전투 컴포넌트 방향을 검토하기 위한 시안이다.
+현재 맵에서 사용하는 역할별 의미를 유지하면서 기존 픽셀 형태를 재사용하지
+않는 전체 비주얼 시스템의 선택된 방향 seed다. 이 방향은 전투 컴포넌트에서
+시작해 world, effect, HUD와 UI로 확장한다.
 
-이 문서는 `draft evidence`다. 이미지가 승인되더라도 실제 게임의 정본은
-별도의 runtime descriptor와 그것으로 생성한 7개 component sheet가 소유한다.
+이 문서는 `active evidence`이며 정본 spec이나 runtime asset은 아니다. 실제
+게임의 visual truth는 별도의 runtime descriptor, Godot Theme와 그것으로
+생성한 system sheet가 소유한다.
 
 ## Sources
 
@@ -53,8 +55,8 @@ related:
 
 ## Recommendations
 
-- 이 마스터 방향을 검토한 뒤 player, mobile enemy, structure, boss, pickup,
-  projectile, upgrade glyph의 runtime descriptor로 분해한다.
+- 이 마스터 방향을 player, mobile enemy, structure, boss, pickup,
+  projectile, upgrade glyph와 전체 world/UI의 runtime descriptor로 분해한다.
 - 다음 sheet부터는 descriptor와 동일한 polygon으로 normalized view,
   gameplay 1×, grayscale, state, anchor, collision overlay를 생성한다.
 
