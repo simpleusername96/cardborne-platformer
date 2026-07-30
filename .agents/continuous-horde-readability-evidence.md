@@ -3,10 +3,10 @@ type: evidence
 status: active
 owner: BK
 created: 2026-07-29
-last_reviewed: 2026-07-29
+last_reviewed: 2026-07-30
 topic: Continuous multi-sector horde, combat readability, and stage-transition implementation
 scope: Implemented runtime contracts, deterministic validation, Web export, diagnostic performance, and remaining technical stabilization work
-source: Git range a9ae769..d87520b and the repository evidence named below
+source: Git range a9ae769..d87520b, final correction 8e6efa8, and the repository evidence named below
 related:
   - ../docs/product/vehicle_game_spec.md
   - ../docs/design/UI_VISUAL_SYSTEM.md
@@ -25,8 +25,10 @@ related:
 ## Sources
 
 - `a9ae769..d87520b`의 task-owned implementation commits;
+- final visual build correction `8e6efa8`;
 - current source와 `tools/validation/validate_vehicle_*.gd`;
 - ignored `build/performance/2026-07-29-horde/` payload;
+- ignored `build/performance/visual-system-retention/`의 paired 3×20초 payload;
 - `docs/product/vehicle_game_spec.md`와 `docs/design/UI_VISUAL_SYSTEM.md`;
 - 후속 감사 `continuous-horde-rollout-problem-analysis.md`.
 
@@ -164,12 +166,87 @@ active다. 대표 플레이, 최대 몰이, capacity/lifecycle 부하를 분리�
   native/Web 60초 matrix는 실행하지 않았다. QA package는 ignored
   `build/evidence/horde-recovery/qa-package/`에 있다.
 
-## 남은 기술 조건
+## 2026-07-30 최종 비주얼 빌드 성능 판정
 
-- 276기 peak frame p95와 320 capacity physics p95/p99를 현재 threshold까지
-  낮추는 다음 architecture batch;
-- 그 batch가 3회 retention rule을 통과한 뒤 clean commit에서 native/Web
-  3회 60초 matrix와 10분 lifecycle soak;
+사용자 지시에 따라 asset, world, combat visual, HUD와 modal publication 및
+legacy retirement를 모두 마친 뒤에만 최종 성능 gate를 실행했다. 측정 전
+worktree는 commit `8e6efa8`에서 clean이었고 Godot `4.7.1`, Windows,
+Intel Iris Xe, native GL Compatibility, 1280×720를 사용했다. 모든 표본은
+foreground/focus 유지, scheduler unthrottled, 5초 warmup + 20초 sample이다.
+20초 focused comparison이므로 payload의 `authoritative` 값은 의도대로
+`false`다.
+
+### Final bounded correction
+
+`8e6efa8`은 gameplay value를 바꾸지 않고 다음 runtime work만 제한했다.
+
+- minimap은 9개 semantic color channel의 fixed-capacity retained
+  `ArrayMesh`를 유지하고 vertex region만 갱신한다. unchanged snapshot은
+  rebuild·redraw하지 않는다.
+- HUD는 responsive layout, health mesh와 action slot state를 실제 변화가 있을
+  때만 갱신한다. action cooldown만 bounded dynamic arc로 남긴다.
+- combat renderer allocation은 작은 initial capacity에서 기존 maximum까지만
+  bounded growth한다.
+- boss/special/critical path는 60Hz를 유지하고 ordinary enemy decision/motion만
+  schedule worklist와 accumulated delta를 사용한다.
+
+Godot import와 `tools/validation/validate_*.gd` 46개가 통과했고, Web export,
+fastrun-manager Codex lane의 production build smoke, 960×540/1280×720/
+1920×1080 canvas sizing, gameplay 진입과 ko/en 전환이 통과했다. console
+warning/error는 0이었다.
+
+### Paired focused results
+
+| Payload | Workload valid | Frame median / p95 / p99 | 1% low / median FPS |
+| --- | ---: | ---: | ---: |
+| `peak-horde-01.json` | yes | `133.243 / 142.327 / 147.196ms` | `6.730 / 7.505` |
+| `peak-horde-02.json` | yes | `40.073 / 132.269 / 142.295ms` | `6.926 / 24.954` |
+| `peak-horde-03.json` | yes | `50.000 / 92.349 / 125.634ms` | `7.503 / 20.000` |
+| `production-replay-01.json` | no | `16.667 / 16.667 / 16.667ms` | `59.901 / 60.000` |
+| `production-replay-02.json` | no | `16.667 / 16.667 / 16.667ms` | `60.000 / 60.000` |
+| `production-replay-03.json` | no | `16.667 / 16.667 / 22.131ms` | `36.288 / 60.000` |
+
+세 peak 표본은 seed `12886704`, fingerprint `2787026116`, live enemy 276,
+player projectile 140, hostile projectile 72, all-sector fixture qualification을
+모두 유지했다. 세 표본 median 기준 physics p95 `19.831ms`,
+enemy behavior p95 `8.055ms`, presentation p95 `9.578ms`, HUD p95
+`4.125ms`, draw-call p95 `192`, combat batch `50`이다.
+
+clean Phase 1 peak baseline
+`build/performance/recovery/phase1-peak-horde-01.json`의 frame p95
+`26.790ms`와 비교하면 final 세 표본 median은 `132.269ms`, 즉
+`+393.7%`다. 같은 비교에서 physics `+64.9%`, enemy behavior `+21.6%`,
+presentation `+35.4%`, HUD `+251.7%`다. target subsystem 최소 10% 개선과
+frame p95 최대 5% 악화라는 retention rule을 통과하지 못한다.
+
+세 production replay는 frame median과 p95가 모두 `16.667ms`였지만,
+qualification sample이 매번 0이었다. final active 195는 각 payload의
+minimum 202보다 작고 median active는 0으로 기록되어 세 workload가 모두
+invalid다. 따라서 좋은 frame 수치를 release 또는 paired retention
+근거로 사용할 수 없다. clean Phase 1 production baseline 대비 세 표본
+median은 physics p95 `+11.0%`, behavior p95 `-5.7%`, presentation p95
+`+58.9%`, HUD p95 `+184.0%`다.
+
+payload의 `git.dirty`는 모두 `false`지만 `git.commit` 문자열은 비어 있다.
+shell에서 clean `8e6efa8`을 확인한 실행 기록과 함께 focused diagnosis로는
+사용하되, 이것도 authoritative release proof로 승격하지 않는다.
+
+### 판정
+
+한 번 허용된 final in-architecture correction 뒤 같은 paired retention gate가
+다시 실패했다. 따라서 ExecPlan 5.6의 predetermined stop을 적용해
+3×60초 native/Web matrix, `capacity_pressure`와 600초 lifecycle soak를
+실행하지 않았다. 실패한 표본을 평균으로 숨기거나 density, speed, scale,
+collision, resolution, threshold를 낮추지 않았다.
+
+## 남은 기술 조건과 권한 경계
+
+- 현재 plan 안에서 두 번째 automatic optimization batch를 시작하지 않는다.
+- BK가 새로운 performance architecture 범위 또는 acceptance contract를 명시한
+  뒤에만 다음 correction을 설계한다.
+- 새 범위가 승인되면 먼저 final `production_replay` qualification을 복구하고
+  paired 3×20초 retention을 통과해야 한다. 그 뒤에만 clean commit에서
+  native/Web 3회 60초 matrix와 10분 lifecycle soak를 실행한다.
 - subjective 재미·압박감·성장 만족도는 별도 사용자 QA feedback으로 평가.
 
 계획이 금지한 density, player speed, camera zoom, physics rate, resolution 축소는

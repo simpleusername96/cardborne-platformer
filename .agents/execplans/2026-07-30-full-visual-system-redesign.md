@@ -581,7 +581,7 @@ runtime에서 제거한다.
 - [ ] horde plan Phase 5/6와 모든 objective completion criterion이 완료된다.
 - [ ] clean commit에서 native/Web `production_replay`, `peak_horde`,
   `capacity_pressure`, `boss_pressure`와 600-second lifecycle baseline이 있다.
-- [ ] target subsystem/frame retention threshold와 evidence path를 이 plan
+- [x] target subsystem/frame retention threshold와 evidence path를 이 plan
   실행 기록에 고정한다.
 
 2026-07-30 사용자 지시에 따라 이 gate는 모든 asset과 UI publication 뒤
@@ -821,11 +821,14 @@ replacement validator가 같은 behavior/asset coverage를 가진 뒤에만 삭�
 ### Sheet and rendered capture
 
 ```powershell
-$sheetDir = Join-Path (Resolve-Path .).Path "build\validation\visual-system-sheets"
-.\tools\godot.ps1 --path . --headless `
-  --script res://tools/design/capture_vehicle_visual_system.gd -- `
-  --output=$sheetDir `
-  --sheet-size=2048x1152
+$sheetArgs = @(
+  "--path", ".",
+  "--rendering-method", "gl_compatibility",
+  "--resolution", "2048x1152",
+  "res://tools/design/CaptureVehicleVisualSystem.tscn", "--",
+  "--visual-sheet-output=res://build/validation/visual-system-sheets"
+)
+.\tools\godot.ps1 @sheetArgs
 
 $captureDir = Join-Path (Resolve-Path .).Path "build\validation\visual-system-ko-960"
 .\tools\godot.ps1 --path . -- `
@@ -1092,51 +1095,76 @@ contrast, timing과 performance 조정으로 제한한다.
     직접 검증한다. clean provider fingerprint는
     `d837c8cbc6a893bc6bf3af657ccda1327da792b840bc30dd2bdf2f0c01398ae4`다.
   - 12개 clean-tree sheet의 published/evidence SHA-256이 모두 일치한다.
-    45개 focused validator가 통과했으며, Phase 7 extraction 뒤 남아 있던
+    46개 focused validator가 통과했으며, Phase 7 extraction 뒤 남아 있던
     damage-feedback health control과 run-difficulty deployment private call은
     component-owned debug contract로 교체했다.
   - task-scoped quality audit에서 competing visual owner, dead catalog API,
-    runtime hot-path 추가와 private Control leak가 0이다. native/Web,
-    pressure, performance와 lifecycle soak는 이 retirement commit 뒤에만
-    실행한다.
+    runtime hot-path 추가와 private Control leak가 0이다.
+  - legacy retirement `229c14c`, HUD/modal publication `b0639b1`과 final bounded
+    runtime correction `8e6efa8` 뒤 full validator 46개, Web export,
+    fastrun-manager Codex lane production smoke, 960/1280/1920 canvas sizing,
+    gameplay 진입과 ko/en 전환이 통과했다. Chrome console warning/error는 0이다.
+  - `build/performance/visual-system-retention/`에서 clean worktree의
+    `8e6efa8`, native GL Compatibility, Intel Iris Xe, 1280×720로
+    `peak_horde`와 `production_replay`를 각각 5초 warmup + 20초 sample 3회
+    실행했다.
+  - 세 `peak_horde` workload는 모두 276 active와 fixture qualification을
+    통과했지만 frame p95가 `142.327 / 132.269 / 92.349ms`, median FPS가
+    `7.505 / 24.954 / 20.000`이었다. clean Phase 1 baseline frame p95
+    `26.790ms` 대비 세 표본 median `132.269ms`로 `+393.7%`이며, 허용
+    `+5%` retention boundary와 release threshold를 모두 실패했다.
+  - 세 `production_replay` frame p95는 `16.667ms`였지만 workload
+    qualification sample이 매번 0이고 final active 195가 minimum 202보다
+    작아 세 payload 모두 invalid다. 따라서 paired retention proof가 성립하지
+    않는다.
+  - final correction 뒤 같은 gate가 다시 실패했으므로 horde plan 5.6과
+    Stop Conditions에 따라 full native/Web 60-second matrix,
+    `capacity_pressure`와 600-second lifecycle soak를 실행하지 않고 정확한
+    수치로 중단했다. density, speed, scale, collision, resolution과 threshold는
+    변경하지 않았다.
 - [ ] Final horde native/Web/capacity/lifecycle gate
 
 ## Next Steps
 
-1. Phase 8에서 raw tile을 포함한 legacy를 삭제한 최종 build로 horde recovery와 전체
-   native/Web/capacity/lifecycle gate를 실행한다.
+1. 이 plan 안에서는 두 번째 automatic performance correction을 수행하지 않는다.
+   `8e6efa8` 뒤 반복 실패로 선언된 escalation condition에 도달했다.
+2. BK가 별도의 performance architecture 범위 또는 acceptance contract 변경을
+   승인할 때까지 현재 general-SF publication과 locked gameplay 값은 유지한다.
+3. 새 범위가 승인되면 위 여섯 payload를 출발점으로 삼아
+   `production_replay` qualification부터 복구하고, 3×20초 retention을 통과한
+   뒤에만 full native/Web/capacity/lifecycle matrix를 실행한다.
 
 ## Completion Criteria
 
-- [ ] 모든 current player-facing visual surface가 new general-SF system을 쓴다.
-- [ ] runtime/active docs에 pixel grid, nearest, direction-frame와 image chrome
+- [x] 모든 current player-facing visual surface가 new general-SF system을 쓴다.
+- [x] runtime/active docs에 pixel grid, nearest, direction-frame와 image chrome
   dependency가 없다.
-- [ ] player engine은 continuous hull angle에서 rigid rear attachment다.
-- [ ] dash coral/radial ring 0이고 normal/reduced-motion cue가 방향을 보인다.
-- [ ] player, enemy, boss, facility, item, projectile, effect와 glyph가 sole
+- [x] player engine은 continuous hull angle에서 rigid rear attachment다.
+- [x] dash coral/radial ring 0이고 normal/reduced-motion cue가 방향을 보인다.
+- [x] player, enemy, boss, facility, item, projectile, effect와 glyph가 sole
   runtime catalog를 사용한다.
-- [ ] three field는 gameplay geometry를 보존하며 서로 구분되는 world
+- [x] three field는 gameplay geometry를 보존하며 서로 구분되는 world
   descriptor를 사용한다.
-- [ ] world batch ≤12, combat batch ≤50, draw-call p95 ≤200이다.
-- [ ] 41 upgrade, 83 state, ko/en, 3 viewport에서 overflow/overlap/clipping과
+- [x] world batch ≤12, combat batch ≤50, draw-call p95 ≤200이다.
+- [x] 41 upgrade, 83 state, ko/en, 3 viewport에서 overflow/overlap/clipping과
   missing content가 0이다.
-- [ ] player가 item에 닿거나 dash로 통과하면 정확히 한 번 획득한다.
-- [ ] Stage 1–5 tactic Teach/Combine/Power Test와 telemetry가 있다.
-- [ ] offscreen Execute 0, simultaneous global Execute ≤1, stale member 0이다.
-- [ ] five boss가 unique semantic exam을 가지고 phase skip 0이다.
-- [ ] boss objective는 base kit으로 해결 가능하고 adds ≤12, total hostile
+- [x] player가 item에 닿거나 dash로 통과하면 정확히 한 번 획득한다.
+- [x] Stage 1–5 tactic Teach/Combine/Power Test와 telemetry가 있다.
+- [x] offscreen Execute 0, simultaneous global Execute ≤1, stale member 0이다.
+- [x] five boss가 unique semantic exam을 가지고 phase skip 0이다.
+- [x] boss objective는 base kit으로 해결 가능하고 adds ≤12, total hostile
   ≤320이다.
-- [ ] every HUD/modal surface가 ko/en, 960/1280/1920, keyboard/controller focus와
+- [x] every HUD/modal surface가 ko/en, 960/1280/1920, keyboard/controller focus와
   reduced motion contract를 통과한다.
-- [ ] grayscale에서 role, affinity, facility, pickup과 objective를 shape로
+- [x] grayscale에서 role, affinity, facility, pickup과 objective를 shape로
   구분한다.
-- [ ] manual aim, held fire, dash control, seeker, EMP, encounter, quota,
+- [x] manual aim, held fire, dash control, seeker, EMP, encounter, quota,
   transition, save와 localization이 회귀하지 않는다.
 - [ ] full validators, native/Web build, production smoke, pressure matrix와
   600-second lifecycle soak가 통과한다.
-- [ ] 12 sheet manifest, guidebook preview, runtime fingerprint와 active spec이
+- [x] 12 sheet manifest, guidebook preview, runtime fingerprint와 active spec이
   일치한다.
-- [ ] pixel production stack, compatibility branch, stale visual proof와
+- [x] pixel production stack, compatibility branch, stale visual proof와
   competing visual owner가 repository에서 제거된다.
 
 ## Stop Conditions
@@ -1155,6 +1183,12 @@ contrast, timing과 performance 조정으로 제한한다.
   경우
 - base kit으로 boss objective를 해결하려면 card/save contract가 필요한 경우
 - repository 밖의 확인된 consumer가 legacy pixel path를 계속 요구하는 경우
+
+2026-07-30에는 한 번 허용된 final bounded correction `8e6efa8` 뒤 세 focused
+`peak_horde` frame-retention sample과 세 paired `production_replay`
+qualification이 다시 실패했다. 따라서 현재 plan은 위 escalation condition에
+도달했으며, 같은 범위의 두 번째 correction이나 full release matrix를 자동으로
+계속하지 않는다.
 
 중단 사유가 아님:
 
@@ -1179,20 +1213,27 @@ Read first:
 4. docs/design/UI_VISUAL_SYSTEM.md
 5. docs/design/component-sheets/README.md
 
-Execute first:
-Phase 1 only. Update authority, implement tokens/catalog boundaries and the
-runtime-backed capture harness, then generate foundation/control sheets.
+Current state:
+Phases 1–7 and Phase 8 legacy retirement are implemented and validated. The
+allowed final bounded performance correction has been consumed, and its 3×20s
+retention retry failed. Do not start a second correction under this plan.
+
+Execute next only with BK authorization:
+Define a new performance-architecture or acceptance-contract scope. First restore
+valid production_replay qualification, then pass the paired 3×20s retention rule
+before running the full native/Web/capacity/lifecycle matrix.
 
 Do not:
 - reopen style alternatives;
-- publish combat/world renderer changes before the horde gate;
 - change field geometry, collision, count, speed, controls, dependency or engine;
 - use ImageGen sheets as runtime assets;
 - add scroll/tiny text to upgrade cards;
 - leave a permanent pixel fallback.
+- relax or average away the recorded performance failure.
 
 Validate:
 Use tools/godot.ps1, phase-owned validators, deterministic sheet/capture hashes,
-the horde retention rule, Web export, npjt codex-lane production start and
-Chrome DevTools. Commit only coherent task-owned phase changes.
+the six payloads under build/performance/visual-system-retention, the horde
+retention rule, Web export, npjt codex-lane production start and Chrome DevTools.
+Commit only coherent task-owned phase changes.
 ```

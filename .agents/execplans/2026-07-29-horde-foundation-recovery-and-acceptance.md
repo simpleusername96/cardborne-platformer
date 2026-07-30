@@ -593,6 +593,18 @@ summary updates `.agents/continuous-horde-readability-evidence.md`.
   - After one such correction, a repeated failure stops implementation and is
     reported. It does not trigger density/speed/resolution reduction or an automatic
     engine rewrite.
+  - Outcome, 2026-07-30: final visual build correction `8e6efa8` retained the
+    minimap mesh, cached unchanged HUD state, bounded renderer allocation and split
+    ordinary-enemy scheduling without changing product values. On the clean
+    worktree, all three `peak_horde` workloads remained valid at 276 enemies, but
+    frame p95 was `142.327 / 132.269 / 92.349ms`. The three paired
+    `production_replay` runs had frame p95 `16.667ms` but were all workload-invalid
+    because qualification `sample_count` remained 0 and final active 195 was below
+    minimum 202. The repeated-failure stop therefore applies.
+  - Evidence:
+    `build/performance/visual-system-retention/peak-horde-01.json` through
+    `peak-horde-03.json` and `production-replay-01.json` through
+    `production-replay-03.json`.
 
 Batch acceptance:
 
@@ -620,7 +632,7 @@ Source owners touched:
 `.agents/continuous-horde-readability-evidence.md`,
 this plan and related lifecycle frontmatter
 
-- [ ] **6.1 Reconcile product and README wording.**
+- [x] **6.1 Reconcile product and README wording.**
   - As-is: product behavior is current but measured limits are easy to miss; root
     README previously carried stale 48–72/3+5 language.
   - To-be: describe authored reserve, active caps, item count, continuous transition
@@ -852,27 +864,32 @@ escalate한다.
   The planned three clean baselines were not all produced, so release authority
   is not claimed.
 - [x] Phase 2 frequency-shaped enemy simulation and aggregate counters landed;
-  behavior p95 improved, while the complete frame retention gate remains open.
+  phase-local behavior p95 improved, while the final visual build no longer retains
+  that gain against the Phase 1 baseline.
 - [x] Phase 3 semantic overlay budget landed. All failed cadence-channel variants
   were removed; the three-sample frame retention gate remains open.
 - [x] Phase 4 production peak qualification, unchanged regressions and ignored QA
   package completed.
-- [ ] Phase 5: import, 43 validators, Web export and built runtime smoke pass;
-  native/Web authoritative timing and lifecycle gates remain blocked by measured
-  peak/capacity timing failure.
-- [ ] Phase 6: evidence is reconciled, but lifecycle completion waits for Phase 5.
+- [ ] Phase 5: final import, 46 validators, Web export and built runtime smoke pass.
+  The allowed correction `8e6efa8` was followed by the required paired 3×20-second
+  retry. All peak workloads were valid but frame retention failed in every run;
+  all production-replay workloads were invalid. The repeated-failure stop prevents
+  the authoritative native/Web/capacity/lifecycle matrix.
+- [ ] Phase 6: product wording and bounded evidence are reconciled. Lifecycle
+  completion remains open because Phase 5 objective gates did not pass.
 
 ## Next Steps
 
-1. Profile one next architecture batch against the existing fixed peak/capacity
-   payloads. Do not restore the rejected renderer channel split.
-2. Keep the batch only if all three focused peak samples satisfy the existing
-   subsystem and frame retention rule and capacity physics approaches the 6/8ms
-   gate without changing density, speed, scale, collision or gameplay values.
-3. Only after the timing gate is credible, run the complete native/Web 60-second
-   matrix and 600-second lifecycle soak from one clean commit.
-4. Mark this plan `done` only when those objective gates pass; subjective fun and
-   balance remain a separate user-QA task.
+1. Do not profile or retain a second automatic correction under this plan; the
+   one-correction retry budget and its repeated-failure stop have both been consumed.
+2. Escalate to BK for an explicit new performance-architecture scope or a deliberate
+   acceptance-contract decision. Preserve density, speed, scale, collision,
+   resolution and gameplay values until such a decision exists.
+3. If a new scope is authorized, begin from the six final-retention payloads,
+   restore valid `production_replay` qualification, and pass the paired 3×20-second
+   rule before starting the 3×60-second native/Web matrix or 600-second soak.
+4. Keep this plan `active`; mark it `done` only if every objective technical gate
+   eventually passes.
 
 ## Completion Criteria
 
@@ -884,7 +901,7 @@ escalate한다.
 - [x] No per-enemy hot helper rescans the full enemy array for rammer/carrier counts.
 - [x] Failed 60/30 renderer channel experiments are removed rather than retained.
 - [x] Ordinary health bars ≤12 and extra priority markers ≤8 while never-hidden cues remain.
-- [x] Fixed Stage 5 Hard production replay passes occupancy, sector, commit and
+- [ ] Fixed Stage 5 Hard production replay passes occupancy, sector, commit and
   capacity qualification without synthetic enemy fill.
 - [x] Existing stage, boss, projectile, experience, item, upgrade and transition
   validators pass without product-value changes.
@@ -908,6 +925,10 @@ Escalate only when:
 - the one allowed final in-architecture correction still fails;
 - a concurrent UI change makes the narrow combat renderer/capture integration impossible;
 - save, dependency, engine, language or product-balance changes become necessary.
+
+Reached on 2026-07-30: the one allowed final in-architecture correction
+`8e6efa8` failed the paired focused-retention retry. The implementation therefore
+stops at escalation with exact evidence instead of running an invalid full matrix.
 
 Do not stop when:
 
@@ -933,14 +954,21 @@ AGENTS.md
 docs/product/vehicle_game_spec.md
 docs/design/UI_VISUAL_SYSTEM.md
 
-Execute exactly:
-Begin at the first unchecked phase. Commit each phase separately. Do not combine
-simulation and renderer optimization, and do not touch unrelated UI/assets.
+Current state:
+Phases 1–4, focused validation, Web export and bounded evidence are complete.
+The one allowed final correction and its paired 3×20-second retry have been
+consumed; peak frame retention failed and production_replay qualification was
+invalid in all three runs.
+
+Execute next only with BK authorization:
+Define a new performance-architecture or acceptance-contract scope. Do not start
+another optimization batch from the first unchecked Phase 5 box under this plan.
 
 Validate with:
-The phase-local validators and 3×20-second retention protocol, followed by the
-full validator suite, Web export, 3×60-second native/Web matrix and 10-minute
-lifecycle soak.
+The six payloads under build/performance/visual-system-retention and the bounded
+evidence first. Only after a newly authorized correction passes the paired
+3×20-second retention protocol may the 3×60-second native/Web matrix and
+10-minute lifecycle soak run.
 
 Stop when:
 All objective technical gates pass, or one declared escalation condition is reached.
