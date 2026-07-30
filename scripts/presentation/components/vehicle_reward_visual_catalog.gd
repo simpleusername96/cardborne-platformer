@@ -5,12 +5,42 @@ extends RefCounted
 ## effects, persistence, and reward value stay in reward/gameplay owners.
 
 const DESCRIPTORS := {
-	&"reward_crate": {"shape": &"slab", "glyph": &"crate", "color": &"player_reward"},
-	&"experience_small": {"shape": &"diamond", "glyph": &"experience", "color": &"player_reward"},
-	&"experience_medium": {"shape": &"diamond", "glyph": &"experience", "color": &"player_reward"},
-	&"experience_large": {"shape": &"diamond", "glyph": &"experience", "color": &"player_reward"},
-	&"repair": {"shape": &"plus_cut", "glyph": &"repair", "color": &"support"},
-	&"experience_recall": {"shape": &"inward_chevrons", "glyph": &"recall", "color": &"system"},
+	&"reward_crate": {
+		"recipe": &"reward_crate",
+		"shape": &"stepped_mechanical_crate",
+		"glyph": &"crate",
+		"color": &"player_reward",
+	},
+	&"experience_small": {
+		"recipe": &"experience_small",
+		"shape": &"mechanical_shard_tier_1",
+		"glyph": &"experience",
+		"color": &"player_reward",
+	},
+	&"experience_medium": {
+		"recipe": &"experience_medium",
+		"shape": &"mechanical_shard_tier_2",
+		"glyph": &"experience",
+		"color": &"player_reward",
+	},
+	&"experience_large": {
+		"recipe": &"experience_large",
+		"shape": &"mechanical_shard_tier_3",
+		"glyph": &"experience",
+		"color": &"player_reward",
+	},
+	&"repair": {
+		"recipe": &"repair",
+		"shape": &"layered_repair_plus_cut",
+		"glyph": &"repair",
+		"color": &"support",
+	},
+	&"experience_recall": {
+		"recipe": &"experience_recall",
+		"shape": &"three_way_inward_chevrons",
+		"glyph": &"recall",
+		"color": &"system",
+	},
 }
 
 

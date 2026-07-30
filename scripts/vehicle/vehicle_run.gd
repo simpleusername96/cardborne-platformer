@@ -7,6 +7,15 @@ const Rules = preload("res://scripts/vehicle/vehicle_stage_rules.gd")
 const StageUI = preload("res://scripts/ui/vehicle_stage_ui.gd")
 const HudPresenter = preload("res://scripts/ui/vehicle_hud_presenter.gd")
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
+const RewardVisualCatalog = preload(
+	"res://scripts/presentation/components/vehicle_reward_visual_catalog.gd"
+)
+const WorldVisualCatalog = preload(
+	"res://scripts/presentation/components/vehicle_world_visual_catalog.gd"
+)
+const RewardFacilityRecipes = preload(
+	"res://scripts/presentation/components/vehicle_reward_facility_visual_recipes.gd"
+)
 const PrimaryWeapon = preload("res://scripts/player/vehicle_primary_weapon.gd")
 const StageCatalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
 const EnemyArchetypes = preload("res://scripts/enemies/vehicle_enemy_archetypes.gd")
@@ -4829,6 +4838,7 @@ func _minimap_snapshot(include_static_geometry: bool = true) -> Dictionary:
 				"kind":"stationary",
 				"position":enemy.pos,
 				"color":Rules.CORAL,
+				"variant":enemy.role,
 				"discovered":true,
 			})
 		elif not enemy.elite_trait.is_empty() or enemy.health_class == &"priority":
@@ -4836,6 +4846,7 @@ func _minimap_snapshot(include_static_geometry: bool = true) -> Dictionary:
 				"kind":"elite",
 				"position":enemy.pos,
 				"color":Rules.CORAL,
+				"variant":enemy.role,
 				"discovered":true,
 			})
 		else:
@@ -4856,6 +4867,7 @@ func _minimap_snapshot(include_static_geometry: bool = true) -> Dictionary:
 				"kind": "pickup",
 				"position": Vector2(pickup["pos"]),
 				"color": _pickup_color(StringName(pickup["kind"])),
+				"variant":StringName(pickup["kind"]),
 				"discovered": true,
 			})
 	for crate in crates:
@@ -5070,7 +5082,8 @@ func _draw_terrain() -> void:
 						float(segment) / 3.0
 					)
 					var center := rectangle.get_center() + axis * offset
-					_draw_terrain_bolt(
+					_draw_reward_facility_recipe(
+						_facility_recipe_id(&"arc_surge_strip"),
 						center,
 						32.0 + readiness * 16.0,
 						Color(
@@ -5087,7 +5100,8 @@ func _draw_terrain() -> void:
 						4.0
 					)
 				for index in 3:
-					_draw_terrain_bolt(
+					_draw_reward_facility_recipe(
+						_facility_recipe_id(&"arc_surge_strip"),
 						rectangle.position + rectangle.size * Vector2(
 							0.25 + float(index) * 0.25, 0.5
 						),
@@ -5124,8 +5138,13 @@ func _draw_terrain() -> void:
 							5.0
 						)
 					continue
-				draw_rect(Rect2(rectangle.position + Art.WALL_SHADOW_OFFSET, rectangle.size), Art.WALL_SHADOW)
-				draw_rect(rectangle, Art.WALL_FILL)
+				draw_rect(
+					Rect2(
+						rectangle.position + Art.WALL_SHADOW_OFFSET,
+						rectangle.size
+					),
+					Art.WALL_SHADOW
+				)
 				var health_ratio := clampf(
 					feature_health
 					/ TerrainRuntime.BULKHEAD_HEALTH,
@@ -5133,31 +5152,18 @@ func _draw_terrain() -> void:
 					1.0
 				)
 				var bulkhead_state := &"cracked" if health_ratio < 0.58 else &"intact"
-				var center := rectangle.get_center()
-				var horizontal := rectangle.size.x >= rectangle.size.y
-				var rail_color := (
-					Art.DANGER
-					if bulkhead_state == &"cracked"
-					else Art.LINE
+				_draw_reward_facility_recipe_fitted(
+					_facility_recipe_id(&"breakable_bulkhead"),
+					rectangle,
+					Art.RAISED,
+					{
+						&"function_inset":(
+							Art.DANGER
+							if bulkhead_state == &"cracked"
+							else Art.SURFACE
+						),
+					}
 				)
-				if horizontal:
-					draw_line(
-						Vector2(rectangle.position.x + 18.0, center.y),
-						Vector2(rectangle.end.x - 18.0, center.y),
-						rail_color,
-						8.0
-					)
-				else:
-					draw_line(
-						Vector2(center.x, rectangle.position.y + 18.0),
-						Vector2(center.x, rectangle.end.y - 18.0),
-						rail_color,
-						8.0
-					)
-				draw_polyline(PackedVector2Array([
-					center + Vector2(-34,-72), center + Vector2(8,-22),
-					center + Vector2(-16,18), center + Vector2(36,72),
-				]), Art.DANGER, 14.0, true)
 			&"transit_gate":
 				var center := Vector2(feature["pos"])
 				var progress := clampf(float(feature.get("progress", 0.0)), 0.0, 1.0)
@@ -5166,41 +5172,15 @@ func _draw_terrain() -> void:
 				var gate_color := Art.SYSTEM if available else Art.TEXT_MUTED
 				draw_circle(center, TerrainRuntime.GATE_RADIUS, Color(gate_color, 0.24))
 				draw_arc(center, TerrainRuntime.GATE_RADIUS, 0.0, TAU, 40, gate_color, 12.0)
-				var gate_state := (
-					&"cooldown"
-					if not available
-					else (&"dwelling" if progress > 0.0 else &"ready")
+				_draw_reward_facility_recipe(
+					_facility_recipe_id(&"transit_gate"),
+					center,
+					54.0,
+					gate_color
 				)
-				_draw_terrain_chevron(center - Vector2(20.0, 0.0), Vector2.LEFT, 32.0, Art.TEXT_PRIMARY, 12.0)
-				_draw_terrain_chevron(center + Vector2(20.0, 0.0), Vector2.RIGHT, 32.0, Art.TEXT_PRIMARY, 12.0)
 				draw_arc(center, TerrainRuntime.GATE_RADIUS - 18.0, -PI * 0.5, -PI * 0.5 + TAU * progress, 40, Art.TEXT_PRIMARY, 10.0)
 				if cooldown > 0.0:
 					draw_arc(center, 72.0, 0.0, TAU * (1.0 - cooldown / TerrainRuntime.GATE_COOLDOWN), 32, Art.TEXT_MUTED, 10.0)
-func _draw_terrain_chevron(
-	center: Vector2,
-	direction: Vector2,
-	extent: float,
-	color: Color,
-	width: float
-) -> void:
-	var forward := direction.normalized()
-	var side := forward.rotated(PI * 0.5)
-	draw_polyline(PackedVector2Array([
-		center - forward * extent * 0.55 - side * extent * 0.58,
-		center + forward * extent * 0.55,
-		center - forward * extent * 0.55 + side * extent * 0.58,
-	]), color, width, true)
-
-
-func _draw_terrain_bolt(center: Vector2, extent: float, color: Color) -> void:
-	draw_colored_polygon(PackedVector2Array([
-		center + Vector2(-0.18, -1.0) * extent,
-		center + Vector2(0.50, -0.22) * extent,
-		center + Vector2(0.12, -0.18) * extent,
-		center + Vector2(0.28, 0.86) * extent,
-		center + Vector2(-0.54, 0.10) * extent,
-		center + Vector2(-0.12, 0.06) * extent,
-	]), color)
 
 
 func _draw_debug_collision_overlay() -> void:
@@ -5234,60 +5214,102 @@ func _draw_pickups_and_crates() -> void:
 		var color := _pickup_color(kind)
 		var bob := 0.0 if _reduced_motion_enabled() else sin(float(pickup["pulse"])) * 3.0
 		position.y += bob
-		var plinth_radius := Art.PICKUP_PLINTH_RADIUS
-		draw_colored_polygon(
-			_regular_polygon(position + Vector2(6.0, 8.0), plinth_radius, 6),
-			Art.SPACE_BLACK
+		var descriptor := RewardVisualCatalog.descriptor(kind)
+		_draw_reward_facility_recipe(
+			StringName(descriptor.get("recipe", kind)),
+			position,
+			Art.PICKUP_PLINTH_RADIUS,
+			color
 		)
-		draw_colored_polygon(
-			_regular_polygon(position, plinth_radius, 6),
-			Art.TEXT_PRIMARY
-		)
-		draw_colored_polygon(
-			_regular_polygon(position, plinth_radius - 7.0, 6),
-			Art.SURFACE
-		)
-		match kind:
-			&"repair":
-				draw_rect(Rect2(position - Vector2(7.0, 22.0), Vector2(14.0, 44.0)), color)
-				draw_rect(Rect2(position - Vector2(22.0, 7.0), Vector2(44.0, 14.0)), color)
-			&"experience_recall":
-				for sign_value in [-1.0, 1.0]:
-					var direction := Vector2(sign_value, 0.0)
-					_draw_terrain_chevron(
-						position + direction * 14.0,
-						-direction,
-						24.0,
-						color,
-						7.0
-					)
-				draw_colored_polygon(
-					_regular_polygon(position, 8.0, 4, PI / 4.0),
-					Art.MUSTARD
-				)
 	for crate in crates:
 		if not bool(crate["alive"]):
 			continue
 		var position := Vector2(crate["pos"])
-		var face := Art.IVORY_BRIGHT if float(crate["flash"]) > 0.0 else Art.IVORY_SHADE
-		var crate_rect := Rect2(position - Vector2(38.0, 38.0), Vector2(76.0, 76.0))
-		var edge := crate_rect
-		edge.position += Vector2(8.0, 10.0)
-		draw_colored_polygon(Art.stepped_rect(edge, 12.0), Art.MUSTARD_DARK)
-		draw_colored_polygon(Art.stepped_rect(crate_rect, 12.0), face)
+		var face := (
+			Art.IVORY_BRIGHT
+			if float(crate["flash"]) > 0.0
+			else Art.PLAYER_REWARD
+		)
 		var content_color := (
 			Art.SUPPORT
 			if StringName(crate["drop"]) == &"repair"
 			else Art.SYSTEM
 		)
-		draw_colored_polygon(
-			_regular_polygon(position, 23.0, 4, PI / 4.0),
-			content_color
+		_draw_reward_facility_recipe(
+			StringName(
+				RewardVisualCatalog.descriptor(&"reward_crate")
+				.get("recipe", &"reward_crate")
+			),
+			position,
+			38.0,
+			face,
+			{&"function_inset":content_color}
 		)
-		draw_colored_polygon(
-			_regular_polygon(position, 11.0, 4, PI / 4.0),
-			Art.SURFACE
+
+
+func _draw_reward_facility_recipe(
+	recipe_id: StringName,
+	center: Vector2,
+	scale: float,
+	accent: Color,
+	overrides: Dictionary = {}
+) -> void:
+	var palette := _reward_facility_palette(accent)
+	palette.merge(overrides, true)
+	RewardFacilityRecipes.draw_recipe(
+		self,
+		recipe_id,
+		center,
+		scale,
+		palette
+	)
+
+
+func _draw_reward_facility_recipe_fitted(
+	recipe_id: StringName,
+	target: Rect2,
+	accent: Color,
+	overrides: Dictionary = {}
+) -> void:
+	var source_bounds := RewardFacilityRecipes.normalized_bounds(recipe_id)
+	if not source_bounds.has_area():
+		return
+	var palette := _reward_facility_palette(accent)
+	palette.merge(overrides, true)
+	for command in RewardFacilityRecipes.resolved_polygon_commands(
+		recipe_id,
+		Vector2.ZERO,
+		1.0,
+		palette
+	):
+		var fitted := PackedVector2Array()
+		for point in PackedVector2Array(command["points"]):
+			var normalized := (point - source_bounds.position) / source_bounds.size
+			fitted.append(target.position + normalized * target.size)
+		draw_colored_polygon(fitted, Color(command["color"]))
+
+
+func _reward_facility_palette(accent: Color) -> Dictionary:
+	return {
+		&"accent":accent,
+		&"perimeter":Color(Art.SPACE_BLACK, accent.a),
+		&"main_mass":accent,
+		&"secondary_mass":Color(
+			accent.lerp(Art.SPACE_BLACK, 0.28),
+			accent.a
+		),
+		&"function_inset":Color(Art.SURFACE, accent.a),
+		&"hard_highlight":Color(Art.TEXT_PRIMARY, accent.a),
+	}
+
+
+func _facility_recipe_id(facility_id: StringName) -> StringName:
+	return StringName(
+		WorldVisualCatalog.facility_descriptor(facility_id).get(
+			"recipe",
+			facility_id
 		)
+	)
 
 
 func _draw_enemies() -> void:

@@ -11,11 +11,31 @@ const FIELD_DESCRIPTORS := {
 }
 
 const FACILITY_DESCRIPTORS := {
-	&"repair_field": {"shape": &"plus_cut", "color": &"support"},
-	&"transit_gate": {"shape": &"opposing_chevrons", "color": &"system"},
-	&"overdrive_field": {"shape": &"stacked_forward_chevrons", "color": &"player_reward"},
-	&"arc_surge_strip": {"shape": &"broken_bolt_rail", "color": &"arc"},
-	&"breakable_bulkhead": {"shape": &"split_slab", "color": &"raised"},
+	&"repair_field": {
+		"recipe": &"repair_field",
+		"shape": &"layered_repair_pad",
+		"color": &"support",
+	},
+	&"transit_gate": {
+		"recipe": &"transit_gate",
+		"shape": &"opposing_transit_chevrons",
+		"color": &"system",
+	},
+	&"overdrive_field": {
+		"recipe": &"overdrive_field",
+		"shape": &"stacked_forward_chevrons",
+		"color": &"player_reward",
+	},
+	&"arc_surge_strip": {
+		"recipe": &"arc_surge_strip",
+		"shape": &"broken_bolt_rail",
+		"color": &"arc",
+	},
+	&"breakable_bulkhead": {
+		"recipe": &"breakable_bulkhead",
+		"shape": &"fracture_split_bulkhead",
+		"color": &"raised",
+	},
 }
 
 
@@ -27,3 +47,7 @@ static func descriptor_ids() -> Array[StringName]:
 		ids.append(StringName(value))
 	ids.sort()
 	return ids
+
+
+static func facility_descriptor(visual_id: StringName) -> Dictionary:
+	return Dictionary(FACILITY_DESCRIPTORS.get(visual_id, {})).duplicate(true)

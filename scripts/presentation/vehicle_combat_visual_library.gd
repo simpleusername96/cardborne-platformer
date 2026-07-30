@@ -14,6 +14,9 @@ const ProjectileEffectRecipes = preload(
 )
 const RewardCatalog = preload("res://scripts/presentation/components/vehicle_reward_visual_catalog.gd")
 const EffectCatalog = preload("res://scripts/presentation/components/vehicle_effect_visual_catalog.gd")
+const RewardFacilityRecipes = preload(
+	"res://scripts/presentation/components/vehicle_reward_facility_visual_recipes.gd"
+)
 const Components = preload("res://scripts/presentation/components/vehicle_component_mesh_library.gd")
 
 const ENEMY_ARCHETYPES: Array[StringName] = [
@@ -243,21 +246,13 @@ static func player_mesh() -> ArrayMesh:
 
 
 static func experience_mesh(kind: StringName) -> ArrayMesh:
-	var _descriptor := RewardCatalog.descriptor(
-		StringName("experience_%s" % String(kind))
+	var visual_id := StringName("experience_%s" % String(kind))
+	var descriptor := RewardCatalog.descriptor(visual_id)
+	var recipe_id := StringName(descriptor.get("recipe", visual_id))
+	return Components.polygon_mesh(
+		StringName("reward_%s" % String(recipe_id)),
+		_reward_facility_layers(recipe_id)
 	)
-	var points := _regular_polygon(Vector2.ZERO, 1.0, 4, PI / 4.0)
-	if kind == &"medium":
-		points = _regular_polygon(Vector2.ZERO, 1.0, 6, PI / 6.0)
-	elif kind == &"large":
-		points = _alternating_polygon(16, 1.0, 0.68, -PI * 0.5)
-	var shadow := PackedVector2Array()
-	for point in points:
-		shadow.append(point + Vector2(0.20, 0.25))
-	return polygon_mesh([
-		{"points": shadow, "color": Color(0.12, 0.18, 0.30, 0.90)},
-		{"points": points, "color": Color.WHITE},
-	])
 
 
 static func effect_mesh(kind: StringName) -> ArrayMesh:
@@ -301,6 +296,22 @@ static func enemy_color(role: StringName) -> Color:
 		&"controller", &"drone_carrier", &"stage_boss", &"boss_pylon":
 			return Art.BOSS_COMMAND
 	return Art.DANGER
+
+
+static func _reward_facility_layers(recipe_id: StringName) -> Array[Dictionary]:
+	return RewardFacilityRecipes.resolved_polygon_commands(
+		recipe_id,
+		Vector2.ZERO,
+		1.0,
+		{
+			&"accent":Color.WHITE,
+			&"perimeter":Art.INK,
+			&"main_mass":Color.WHITE,
+			&"secondary_mass":Color(0.68, 0.68, 0.68, 1.0),
+			&"function_inset":Art.WORLD_CANVAS,
+			&"hard_highlight":Art.IVORY_BRIGHT,
+		}
+	)
 
 
 static func polygon_mesh(polygons: Array[Dictionary]) -> ArrayMesh:

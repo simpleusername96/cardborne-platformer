@@ -169,9 +169,10 @@ func _run() -> void:
 	var corridor_boundaries := renderer.get_node("Overlay_danger_ring") as MultiMeshInstance2D
 	var corridor_cap_buffer := corridor_caps.multimesh.buffer
 	_expect(
-		corridor_caps.multimesh.visible_instance_count >= 4
-			and corridor_boundaries.multimesh.visible_instance_count == 2,
-		"corridor warning keeps its two endpoint disks and rings alongside support overlays"
+		corridor_caps.multimesh.visible_instance_count >= 3
+			and corridor_boundaries.multimesh.visible_instance_count == 2
+			and int(snapshot["support_field_glyph_count"]) == 1,
+		"corridor warning keeps its endpoint disks and rings while the support field uses one shared recipe glyph"
 	)
 	_expect(
 		Vector2(corridor_cap_buffer[3], corridor_cap_buffer[7]).is_equal_approx(
@@ -431,7 +432,8 @@ func _run() -> void:
 	)
 	_expect(
 		int(snapshot["health_bar_count"]) == 0
-			and int(snapshot["priority_marker_count"]) == 0,
+			and int(snapshot["priority_marker_count"]) == 0
+			and int(snapshot["support_field_glyph_count"]) == 0,
 		"inactive presentation clears semantic overlay diagnostics"
 	)
 	renderer.queue_free()

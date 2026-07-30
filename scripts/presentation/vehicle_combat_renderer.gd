@@ -8,6 +8,12 @@ const Visuals = preload("res://scripts/presentation/vehicle_combat_visual_librar
 const ActorCatalog = preload(
 	"res://scripts/presentation/components/vehicle_actor_visual_catalog.gd"
 )
+const WorldCatalog = preload(
+	"res://scripts/presentation/components/vehicle_world_visual_catalog.gd"
+)
+const RewardFacilityRecipes = preload(
+	"res://scripts/presentation/components/vehicle_reward_facility_visual_recipes.gd"
+)
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd")
 const EnemyStore = preload("res://scripts/enemies/vehicle_enemy_store.gd")
@@ -137,6 +143,7 @@ var _player_secondary_batch: BatchHandle
 var _last_health_bar_count := 0
 var _last_priority_marker_count := 0
 var _last_tactic_module_count := 0
+var _support_field_glyph_draws: Array[Dictionary] = []
 
 
 func _ready() -> void:
@@ -158,6 +165,7 @@ func sync(
 	presentation: Dictionary = {}
 ) -> void:
 	_reset_counts()
+	_support_field_glyph_draws.clear()
 	if active:
 		_sync_attack_telegraphs(enemies, visible_world)
 		_sync_enemies(
@@ -169,6 +177,29 @@ func sync(
 		_sync_effects(effects, visible_world)
 		_sync_world_overlays(presentation, visible_world)
 	_apply_visible_counts()
+	queue_redraw()
+
+
+func _draw() -> void:
+	for glyph in _support_field_glyph_draws:
+		var accent := Color(glyph["color"])
+		RewardFacilityRecipes.draw_recipe(
+			self,
+			StringName(glyph["recipe"]),
+			Vector2(glyph["center"]),
+			float(glyph["scale"]),
+			{
+				&"accent":accent,
+				&"perimeter":Color(Art.SPACE_BLACK, accent.a),
+				&"main_mass":accent,
+				&"secondary_mass":Color(
+					accent.lerp(Art.SPACE_BLACK, 0.28),
+					accent.a
+				),
+				&"function_inset":Color(Art.WORLD_CANVAS, accent.a),
+				&"hard_highlight":Color(Art.TEXT_PRIMARY, accent.a),
+			}
+		)
 
 
 static func player_engine_sockets(
@@ -219,6 +250,7 @@ func debug_snapshot() -> Dictionary:
 		"health_bar_count": _last_health_bar_count,
 		"priority_marker_count": _last_priority_marker_count,
 		"tactic_module_count": _last_tactic_module_count,
+		"support_field_glyph_count":_support_field_glyph_draws.size(),
 	}
 
 
@@ -1423,42 +1455,20 @@ func _sync_support_fields(support_fields: Array) -> void:
 				Vector2.ONE * (radius - 12.0),
 				color
 			)
-		_write_disk(
-			center,
-			48.0,
-			Color(
-				Art.LINE if kind == &"repair" else Art.RAISED,
-				0.92
-			)
+		var facility_id := (
+			&"repair_field"
+			if kind == &"repair"
+			else &"overdrive_field"
 		)
-		if kind == &"repair":
-			_write_beam(
-				center - Vector2(0.0, 30.0),
-				center + Vector2(0.0, 30.0),
-				20.0,
-				Art.TEXT_PRIMARY
-			)
-			_write_beam(
-				center - Vector2(30.0, 0.0),
-				center + Vector2(30.0, 0.0),
-				20.0,
-				Art.TEXT_PRIMARY
-			)
-		else:
-			for index in 2:
-				var point := center + Vector2(0.0, 12.0 - index * 25.0)
-				_write_beam(
-					point + Vector2(-14.0, 8.0),
-					point,
-					9.0,
-					Art.TEXT_PRIMARY
-				)
-				_write_beam(
-					point,
-					point + Vector2(14.0, 8.0),
-					9.0,
-					Art.TEXT_PRIMARY
-				)
+		var facility_descriptor := WorldCatalog.facility_descriptor(facility_id)
+		_support_field_glyph_draws.append({
+			"recipe":StringName(
+				facility_descriptor.get("recipe", facility_id)
+			),
+			"center":center,
+			"scale":48.0,
+			"color":Color(color, 0.92),
+		})
 
 
 func _upgrade_shade(base: Color, target: Color, tier: int) -> Color:
