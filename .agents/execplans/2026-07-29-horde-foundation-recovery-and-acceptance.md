@@ -1,6 +1,6 @@
 ---
 type: plan
-status: active
+status: superseded
 owner: BK
 created: 2026-07-29
 last_reviewed: 2026-07-30
@@ -15,6 +15,7 @@ related:
   - ../../docs/product/vehicle_game_spec.md
   - ../../docs/product/combat-growth-improvement-direction.md
   - ../../docs/design/UI_VISUAL_SYSTEM.md
+superseded_by: ./2026-07-30-semantic-visual-world-boss-performance-rework.md
 ---
 
 # 대규모 적군 최대 부하 안정화 실행 계획

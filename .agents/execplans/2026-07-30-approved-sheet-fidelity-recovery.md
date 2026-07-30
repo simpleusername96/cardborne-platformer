@@ -1,6 +1,6 @@
 ---
 type: plan
-status: active
+status: superseded
 owner: BK
 created: 2026-07-30
 last_reviewed: 2026-07-30
@@ -14,6 +14,7 @@ related:
   - ../../docs/product/vehicle_game_spec.md
   - ../../docs/design/UI_VISUAL_SYSTEM.md
   - ../../docs/design/component-sheets/README.md
+superseded_by: ./2026-07-30-semantic-visual-world-boss-performance-rework.md
 ---
 
 # 승인 시안 충실도 회복 및 알고리즘 맵·UI 복구 실행 계획
