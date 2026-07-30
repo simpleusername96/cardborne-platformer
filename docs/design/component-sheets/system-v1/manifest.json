@@ -1,7 +1,7 @@
 {
 	"schema_version": 1,
 	"system_id": "cardborne-general-sf-v1",
-	"source_commit": "0448c11f9c8242d842b82e0bfc50cb41eec7f061",
+	"source_commit": "86ae852c380b56abd8853c02194e68268d24b470",
 	"providers": {
 		"tokens": "res://scripts/vehicle/vehicle_stage_visual_profile.gd",
 		"catalog_registry": "res://scripts/presentation/components/vehicle_visual_system_registry.gd",
@@ -9,7 +9,7 @@
 	},
 	"provider_fingerprints": {
 		"tokens": "31f395e6b3a75d7f214c6423a45abcc52a9cb73a8ec24532d1c007eb30415b19",
-		"catalog_registry": "69948a69dc0d03534ebd08408ed16c53c4845c4e649136bfadc29e4112818f96"
+		"catalog_registry": "83ee2caa61b80d7b857b860bf880866e5532f508ac6f8a0aa24b1f81d6b37d64"
 	},
 	"viewport": [
 		2048,

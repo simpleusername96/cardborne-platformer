@@ -500,7 +500,7 @@ authored count는 유지하며 surge당 최대 1개 squad만 tactic tag를 받�
   완료한다.
 - [x] Sheet-first gate에서 12개 component design sheet를 publication한다.
 - [x] Phase 3에서 player/engine/dash/projectile/reward/effect를 publication한다.
-- [ ] Phase 4에서 three field, facility와 minimap world layer를 교체한다.
+- [x] Phase 4에서 three field, facility와 minimap world layer를 교체한다.
 - [ ] Phase 5에서 enemy visual family와 collective tactic을 적용한다.
 - [ ] Phase 6에서 five boss exam과 objective visual을 적용한다.
 - [ ] Phase 7에서 HUD와 모든 modal composition을 같은 system으로 완성한다.
@@ -645,17 +645,20 @@ layer를 새 component owner로 전환한다.
 **목표:** 현재 map을 큰 일반 SF surface grammar로 교체하고 collision truth를
 더 명확히 보이게 한다.
 
-- [ ] world visual catalog에 three field plate rhythm, blocker, void, prop와
+- [x] world visual catalog에 three field plate rhythm, blocker, void, prop와
   facility descriptor를 구현한다.
-- [ ] `VehicleWorldMeshBuilder`가 immutable geometry snapshot을 vertex-colored
+- [x] `VehicleWorldMeshBuilder`가 immutable geometry snapshot을 vertex-colored
   mesh/MultiMesh로 그리게 한다.
-- [ ] decoration을 ≤24 descriptor, world visual batch를 ≤12로 제한한다.
-- [ ] repair, transit, overdrive, arc와 bulkhead의 idle/warning/active/cooldown/
+- [x] decoration을 ≤24 descriptor, world visual batch를 ≤12로 제한한다.
+- [x] repair, transit, overdrive, arc와 bulkhead의 idle/warning/active/cooldown/
   broken state를 새 shape로 연결한다.
-- [ ] minimap static geometry와 facility/marker가 같은 shape token을 소비한다.
-- [ ] three field overview와 world/facility sheet를 생성한다.
-- [ ] world pixel builder, stamp catalog, tile textures/shader와 world-only
-  design tool/validator를 zero-reference 뒤 제거한다.
+- [x] minimap static geometry와 facility/marker가 같은 semantic token을
+  소비한다.
+- [x] three field overview와 world/facility sheet를 생성한다.
+- [x] world pixel builder, stamp catalog, shader와 world-only validator를
+  zero-runtime-reference 뒤 제거한다.
+- [ ] raw tile texture와 pixel generator/catalog record는 remaining enemy/boss
+  atlas와 함께 Phase 8에서 atomic retirement한다. 현재 runtime caller는 0이다.
 
 **Batch acceptance**
 
@@ -976,6 +979,10 @@ contrast, timing과 performance 조정으로 제한한다.
   response와 earned damage window로 정의한다.
 - pixel production stack은 history로 보존하지 않는다. migration 완료 뒤
   repository에서는 삭제하고 git history만 복구 경로로 남긴다.
+- Phase 4의 raw tile PNG는 runtime에서 더 이상 load되지 않지만 current
+  legacy catalog/generator validation이 참조한다. 세 파일만 먼저 지워
+  intermediate catalog를 깨뜨리지 않고 Phase 8의 전체 pixel stack과 함께
+  제거한다.
 
 ## Progress
 
@@ -1017,7 +1024,18 @@ contrast, timing과 performance 조정으로 제한한다.
     repair/recall/XP와 upgrade surface를 확인했다.
   - 이 phase의 performance retention 수치는 사용자 지시에 따라 Phase 8
     clean final build에서 실행한다.
-- [ ] Phase 4 world/facilities/minimap
+- [x] Phase 4 world/facilities/minimap runtime publication
+  - `VehicleWorldMeshBuilder`가 three field를 각각 orthogonal court,
+    parallel bay, diagonal dock rhythm으로 그리며 world batch ≤12,
+    decoration ≤24, visual collision 0 validator를 통과했다.
+  - repair/overdrive/transit/arc/bulkhead state와 minimap marker를 semantic
+    vector shape로 전환했다.
+  - `visual-system-phase4-world-final-b` overview에서 중복 walkable region에
+    의한 line clutter를 발견해 primary region rhythm으로 수정했다.
+  - old world builder/stamp/shader/validator는 삭제했다. raw tile production
+    file은 Phase 8 atomic legacy retirement까지 runtime-unreferenced 상태다.
+  - 12 sheet 두 output hash가 일치했고 provider fingerprint와 manifest가
+    일치한다. performance retention은 사용자 지시대로 Phase 8에만 실행한다.
 - [ ] Phase 5 enemy/tactics
 - [ ] Phase 6 bosses
 - [ ] Phase 7 HUD/modal suite
@@ -1026,9 +1044,9 @@ contrast, timing과 performance 조정으로 제한한다.
 
 ## Next Steps
 
-1. Phase 4에서 three-field world, facility와 minimap layer를 publication한다.
-2. Phase 5 이후 enemy → boss → complete UI 순서로 publication한다.
-3. Phase 8에서 legacy를 삭제한 최종 build로 horde recovery와 전체
+1. Phase 5에서 enemy visual family와 collective tactic을 publication한다.
+2. Phase 6 이후 boss → complete UI 순서로 publication한다.
+3. Phase 8에서 raw tile을 포함한 legacy를 삭제한 최종 build로 horde recovery와 전체
    native/Web/capacity/lifecycle gate를 실행한다.
 
 ## Completion Criteria

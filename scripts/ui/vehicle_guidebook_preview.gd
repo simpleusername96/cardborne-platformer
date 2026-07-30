@@ -1,8 +1,9 @@
 class_name VehicleGuidebookPreview
 extends Control
 
-## Displays approved runtime atlas frames while guidebook text and locked-state
-## ownership remain live UI.
+## Displays runtime component previews while guidebook text and locked-state
+## ownership remain live UI. Unmigrated enemy/boss families may still use the
+## atlas until their publication phases.
 
 const Visuals = preload("res://scripts/presentation/vehicle_combat_visual_library.gd")
 const PixelCatalog = preload("res://scripts/presentation/vehicle_pixel_asset_catalog.gd")
@@ -92,6 +93,8 @@ func _draw() -> void:
 func _show_pixel_preview(kind: StringName, preview_id: StringName) -> bool:
 	if _pixel_catalog == null or not _pixel_catalog.is_ready():
 		return false
+	if kind in [&"terrain", &"facility", &"pickup"]:
+		return false
 	var family := &""
 	var variant := preview_id
 	var preferred_state := &""
@@ -169,7 +172,7 @@ func _show_pixel_preview(kind: StringName, preview_id: StringName) -> bool:
 func _add_terrain(terrain_id: StringName) -> void:
 	match terrain_id:
 		&"arc_surge":
-			_add_instance(Visuals.effect_mesh(&"beam"), Art.BOSS_MAGENTA, Vector2(78.0, 42.0))
+			_add_instance(Visuals.effect_mesh(&"beam"), Art.ARC, Vector2(78.0, 42.0))
 		&"breakable_bulkhead":
 			_add_instance(Visuals.health_bar_mesh(), Art.STRUCTURE_BASE, Vector2(74.0, 34.0))
 		_:
@@ -177,7 +180,11 @@ func _add_terrain(terrain_id: StringName) -> void:
 
 
 func _add_facility(facility_id: StringName) -> void:
-	var color := Art.MINT if facility_id != &"overdrive_field" else Art.MUSTARD
+	var color := (
+		Art.PLAYER_REWARD
+		if facility_id == &"overdrive_field"
+		else (Art.SYSTEM if facility_id == &"transit_gate" else Art.SUPPORT)
+	)
 	_add_instance(Visuals.effect_mesh(&"ring"), color, Vector2(54.0, 54.0))
 	if facility_id == &"transit_gate":
 		var left := _add_instance(Visuals.effect_mesh(&"diamond"), Art.IVORY_BRIGHT, Vector2(20.0, 20.0))

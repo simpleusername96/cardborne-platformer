@@ -18,6 +18,12 @@ const COMPONENT_GEOMETRY_PATH := (
 const COMBAT_GEOMETRY_PATH := (
 	"res://scripts/presentation/vehicle_combat_visual_library.gd"
 )
+const WORLD_GEOMETRY_PATH := (
+	"res://scripts/presentation/vehicle_world_mesh_builder.gd"
+)
+const MINIMAP_GEOMETRY_PATH := (
+	"res://scripts/ui/vehicle_minimap_mesh_builder.gd"
+)
 const LEGACY_WORLD_RECIPE_PATH := (
 	"res://pixel-art-production/runtime/atlases/space-hangar-v2/world-recipe.json"
 )
@@ -73,6 +79,14 @@ static func provider_fingerprint() -> String:
 	records.append(
 		"combat_geometry=%s"
 		% FileAccess.get_sha256(COMBAT_GEOMETRY_PATH)
+	)
+	records.append(
+		"world_geometry=%s"
+		% FileAccess.get_sha256(WORLD_GEOMETRY_PATH)
+	)
+	records.append(
+		"minimap_geometry=%s"
+		% FileAccess.get_sha256(MINIMAP_GEOMETRY_PATH)
 	)
 	records.sort()
 	return "|".join(records).sha256_text()

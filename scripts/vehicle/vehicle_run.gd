@@ -4496,13 +4496,13 @@ func _minimap_snapshot(include_static_geometry: bool = true) -> Dictionary:
 	if stage_flow.state == StageFlow.State.BOSS_WARNING:
 		markers.append({
 			"kind":"boss", "position":boss_arrival_position,
-			"color":Rules.CORAL, "discovered":true,
+			"color":Art.BOSS_COMMAND, "discovered":true,
 			"variant":[&"colossus", &"leviathan", &"titan", &"behemoth", &"crown"][current_stage_index],
 		})
 	var stage_boss := _find_enemy_by_id("stage_boss")
 	if stage_boss != null and stage_boss.alive:
 		markers.append({
-			"kind":"boss", "position":stage_boss.pos, "color":Rules.CORAL,
+			"kind":"boss", "position":stage_boss.pos, "color":Art.BOSS_COMMAND,
 			"discovered":true, "variant":stage_boss.boss_variant,
 		})
 	for enemy in enemies:
@@ -4744,15 +4744,35 @@ func _draw_terrain() -> void:
 					if readiness >= 0.82
 					else (&"warning" if readiness > 0.05 else &"idle")
 				)
-				_draw_pixel_asset(
-					&"arc_surge_strip",
-					&"horizontal_segment",
-					surge_state,
-					rectangle.get_center(),
-					rectangle.size,
-					Color(1.0, 1.0, 1.0, 0.88),
-					0 if rectangle.size.x >= rectangle.size.y else 8
+				var horizontal := rectangle.size.x >= rectangle.size.y
+				var axis := Vector2.RIGHT if horizontal else Vector2.DOWN
+				var side := axis.rotated(PI * 0.5)
+				var segment_extent := (
+					rectangle.size.x if horizontal else rectangle.size.y
 				)
+				for segment in 4:
+					var offset := lerpf(
+						-segment_extent * 0.34,
+						segment_extent * 0.34,
+						float(segment) / 3.0
+					)
+					var center := rectangle.get_center() + axis * offset
+					_draw_terrain_bolt(
+						center,
+						32.0 + readiness * 16.0,
+						Color(
+							color,
+							0.44
+							if surge_state == &"idle"
+							else 0.92
+						)
+					)
+					draw_line(
+						center - side * 42.0,
+						center + side * 42.0,
+						Color(color, 0.24 + readiness * 0.40),
+						4.0
+					)
 				for index in 3:
 					_draw_terrain_bolt(
 						rectangle.position + rectangle.size * Vector2(
@@ -4762,38 +4782,75 @@ func _draw_terrain() -> void:
 						Color(Art.IVORY_BRIGHT, 0.56 + readiness * 0.44)
 					)
 			&"breakable_bulkhead":
-				if float(feature.get("health", 0.0)) <= 0.0:
-					continue
 				var rectangle := Rect2(feature["rect"])
+				var feature_health := float(feature.get("health", 0.0))
+				if feature_health <= 0.0:
+					var broken_center := rectangle.get_center()
+					var horizontal_break := rectangle.size.x >= rectangle.size.y
+					var long_axis := Vector2.RIGHT if horizontal_break else Vector2.DOWN
+					var short_axis := long_axis.rotated(PI * 0.5)
+					for direction: float in [-1.0, 1.0]:
+						var chunk_center: Vector2 = (
+							broken_center
+							+ long_axis * direction * 46.0
+							+ short_axis * direction * 14.0
+						)
+						var chunk_size := (
+							Vector2(62.0, 28.0)
+							if horizontal_break
+							else Vector2(28.0, 62.0)
+						)
+						draw_rect(
+							Rect2(chunk_center - chunk_size * 0.5, chunk_size),
+							Art.RAISED
+						)
+						draw_line(
+							chunk_center - short_axis * 12.0,
+							chunk_center + short_axis * 12.0,
+							Art.DANGER,
+							5.0
+						)
+					continue
 				draw_rect(Rect2(rectangle.position + Art.WALL_SHADOW_OFFSET, rectangle.size), Art.WALL_SHADOW)
 				draw_rect(rectangle, Art.WALL_FILL)
 				var health_ratio := clampf(
-					float(feature.get("health", TerrainRuntime.BULKHEAD_HEALTH))
+					feature_health
 					/ TerrainRuntime.BULKHEAD_HEALTH,
 					0.0,
 					1.0
 				)
 				var bulkhead_state := &"cracked" if health_ratio < 0.58 else &"intact"
-				_draw_pixel_asset(
-					&"breakable_bulkhead",
-					&"horizontal",
-					bulkhead_state,
-					rectangle.get_center(),
-					rectangle.size,
-					Color.WHITE,
-					0 if rectangle.size.x >= rectangle.size.y else 8
-				)
 				var center := rectangle.get_center()
+				var horizontal := rectangle.size.x >= rectangle.size.y
+				var rail_color := (
+					Art.DANGER
+					if bulkhead_state == &"cracked"
+					else Art.LINE
+				)
+				if horizontal:
+					draw_line(
+						Vector2(rectangle.position.x + 18.0, center.y),
+						Vector2(rectangle.end.x - 18.0, center.y),
+						rail_color,
+						8.0
+					)
+				else:
+					draw_line(
+						Vector2(center.x, rectangle.position.y + 18.0),
+						Vector2(center.x, rectangle.end.y - 18.0),
+						rail_color,
+						8.0
+					)
 				draw_polyline(PackedVector2Array([
 					center + Vector2(-34,-72), center + Vector2(8,-22),
 					center + Vector2(-16,18), center + Vector2(36,72),
-				]), Art.MUSTARD, 14.0, true)
+				]), Art.DANGER, 14.0, true)
 			&"transit_gate":
 				var center := Vector2(feature["pos"])
 				var progress := clampf(float(feature.get("progress", 0.0)), 0.0, 1.0)
 				var cooldown := float(feature.get("cooldown", 0.0))
 				var available := cooldown <= 0.0
-				var gate_color := Art.MUSTARD if available else Art.INK_MUTED
+				var gate_color := Art.SYSTEM if available else Art.TEXT_MUTED
 				draw_circle(center, TerrainRuntime.GATE_RADIUS, Color(gate_color, 0.24))
 				draw_arc(center, TerrainRuntime.GATE_RADIUS, 0.0, TAU, 40, gate_color, 12.0)
 				var gate_state := (
@@ -4801,18 +4858,11 @@ func _draw_terrain() -> void:
 					if not available
 					else (&"dwelling" if progress > 0.0 else &"ready")
 				)
-				_draw_pixel_asset(
-					&"transit_gate",
-					&"pair_a",
-					gate_state,
-					center,
-					Vector2.ONE * TerrainRuntime.GATE_RADIUS * 1.35
-				)
-				_draw_terrain_chevron(center - Vector2(20.0, 0.0), Vector2.LEFT, 32.0, Art.IVORY_BRIGHT, 12.0)
-				_draw_terrain_chevron(center + Vector2(20.0, 0.0), Vector2.RIGHT, 32.0, Art.IVORY_BRIGHT, 12.0)
-				draw_arc(center, TerrainRuntime.GATE_RADIUS - 18.0, -PI * 0.5, -PI * 0.5 + TAU * progress, 40, Art.IVORY_BRIGHT, 10.0)
+				_draw_terrain_chevron(center - Vector2(20.0, 0.0), Vector2.LEFT, 32.0, Art.TEXT_PRIMARY, 12.0)
+				_draw_terrain_chevron(center + Vector2(20.0, 0.0), Vector2.RIGHT, 32.0, Art.TEXT_PRIMARY, 12.0)
+				draw_arc(center, TerrainRuntime.GATE_RADIUS - 18.0, -PI * 0.5, -PI * 0.5 + TAU * progress, 40, Art.TEXT_PRIMARY, 10.0)
 				if cooldown > 0.0:
-					draw_arc(center, 72.0, 0.0, TAU * (1.0 - cooldown / TerrainRuntime.GATE_COOLDOWN), 32, Art.INK_MUTED, 10.0)
+					draw_arc(center, 72.0, 0.0, TAU * (1.0 - cooldown / TerrainRuntime.GATE_COOLDOWN), 32, Art.TEXT_MUTED, 10.0)
 func _draw_terrain_chevron(
 	center: Vector2,
 	direction: Vector2,

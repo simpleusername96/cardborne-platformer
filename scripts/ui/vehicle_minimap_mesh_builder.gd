@@ -36,7 +36,7 @@ static func _append_concealment(
 	var visited_lookup := {}
 	for cell_variant in snapshot.get("visited", []):
 		visited_lookup[Vector2i(cell_variant)] = true
-	var concealment_color := Color(Art.COBALT_VOID, 0.82)
+	var concealment_color := Color(Art.SPACE_BLACK, 0.82)
 	for row in rows:
 		var concealed_run_start := -1
 		for column in range(cols + 1):
@@ -73,7 +73,7 @@ static func _append_markers(
 		if not bool(marker.get("discovered", false)):
 			continue
 		var point := _map_point(Vector2(marker.get("position", Vector2.ZERO)), world_size, canvas_size)
-		var marker_color: Color = marker.get("color", Art.MUSTARD)
+		var marker_color: Color = marker.get("color", Art.PLAYER_REWARD)
 		var kind := String(marker.get("kind", "point"))
 		match kind:
 			"boss":
@@ -84,17 +84,18 @@ static func _append_markers(
 				_append_polygon(vertices, colors, indices, _diamond(point, 6.5), marker_color)
 			"elite":
 				_append_polygon(vertices, colors, indices, _diamond(point, 7.0), marker_color)
-				_append_rect(vertices, colors, indices, Rect2(point - Vector2.ONE, Vector2(2.0, 2.0)), Art.IVORY_BRIGHT)
+				_append_rect(vertices, colors, indices, Rect2(point - Vector2.ONE, Vector2(2.0, 2.0)), Art.TEXT_PRIMARY)
 			"stationary":
 				_append_rect(vertices, colors, indices, Rect2(point - Vector2(3.5, 3.5), Vector2(7.0, 7.0)), marker_color)
 			"crate":
-				_append_rect(vertices, colors, indices, Rect2(point - Vector2(4.0, 4.0), Vector2(8.0, 8.0)), Art.INK_MUTED)
+				_append_rect(vertices, colors, indices, Rect2(point - Vector2(4.5, 4.5), Vector2(9.0, 9.0)), Art.PLAYER_REWARD)
+				_append_rect(vertices, colors, indices, Rect2(point - Vector2(2.0, 1.0), Vector2(4.0, 2.0)), Art.SPACE_BLACK)
 			"pickup":
-				_append_circle(vertices, colors, indices, point, 6.5, marker_color)
+				_append_polygon(vertices, colors, indices, _hexagon(point, 6.5), marker_color)
 			"mechanic":
 				var direction := Vector2.RIGHT.rotated(float(int(marker.get("orientation", 0))) * PI * 0.5)
 				_append_circle(vertices, colors, indices, point, 5.0, marker_color)
-				_append_line(vertices, colors, indices, point - direction * 6.0, point + direction * 6.0, 2.5, Art.IVORY_BRIGHT)
+				_append_line(vertices, colors, indices, point - direction * 6.0, point + direction * 6.0, 2.5, Art.TEXT_PRIMARY)
 			"blocker":
 				_append_rect(vertices, colors, indices, Rect2(point - Vector2(5.0, 2.5), Vector2(10.0, 5.0)), marker_color)
 			_:
@@ -113,7 +114,7 @@ static func _append_boss(
 		_append_rect(vertices, colors, indices, Rect2(point - Vector2(5.0, 5.0), Vector2(10.0, 10.0)), color)
 	elif variant == &"crown":
 		_append_polygon(vertices, colors, indices, _diamond(point, 7.0), color)
-		_append_circle(vertices, colors, indices, point, 2.0, Art.INK_MUTED)
+		_append_circle(vertices, colors, indices, point, 2.0, Art.SPACE_BLACK)
 	elif variant in [&"leviathan", &"behemoth"]:
 		_append_polygon(vertices, colors, indices, PackedVector2Array([
 			point + Vector2(7.0, 0.0),
@@ -141,11 +142,11 @@ static func _append_clusters(
 		var point := (Vector2(Vector2i(cluster["cell"])) + Vector2(0.5, 0.5)) * cell_size
 		var count := int(cluster["count"])
 		var radius := 3.0 if count == 1 else (5.0 if count <= 4 else 7.0)
-		_append_circle(vertices, colors, indices, point, radius, Art.CORAL)
+		_append_circle(vertices, colors, indices, point, radius, Art.DANGER)
 		var average_velocity := Vector2(cluster.get("average_velocity", Vector2.ZERO))
 		if average_velocity.length_squared() > 1.0:
 			var tick := average_velocity.normalized() * clampf(average_velocity.length() / 42.0, 4.0, 7.0)
-			_append_line(vertices, colors, indices, point, point + tick, 1.5, Art.IVORY_BRIGHT)
+			_append_line(vertices, colors, indices, point, point + tick, 1.5, Art.TEXT_PRIMARY)
 
 
 static func _append_support_fields(
@@ -163,18 +164,18 @@ static func _append_support_fields(
 			continue
 		var point := _map_point(Vector2(support["position"]), world_size, canvas_size)
 		var kind := StringName(support["kind"])
-		var color := Art.MINT if kind == &"repair" else Art.MUSTARD
+		var color := Art.SUPPORT if kind == &"repair" else Art.PLAYER_REWARD
 		var progress := clampf(float(support["phase_progress"]), 0.0, 1.0)
 		_append_arc(
 			vertices, colors, indices, point, 7.0,
 			-PI * 0.5, -PI * 0.5 + TAU * (1.0 - progress), 2.0, color
 		)
 		if kind == &"repair":
-			_append_line(vertices, colors, indices, point - Vector2(3.0, 0.0), point + Vector2(3.0, 0.0), 2.0, Art.IVORY_BRIGHT)
-			_append_line(vertices, colors, indices, point - Vector2(0.0, 3.0), point + Vector2(0.0, 3.0), 2.0, Art.IVORY_BRIGHT)
+			_append_line(vertices, colors, indices, point - Vector2(3.0, 0.0), point + Vector2(3.0, 0.0), 2.0, Art.TEXT_PRIMARY)
+			_append_line(vertices, colors, indices, point - Vector2(0.0, 3.0), point + Vector2(0.0, 3.0), 2.0, Art.TEXT_PRIMARY)
 		else:
-			_append_line(vertices, colors, indices, point + Vector2(-3.0, 2.0), point + Vector2(0.0, -2.0), 2.0, Art.IVORY_BRIGHT)
-			_append_line(vertices, colors, indices, point + Vector2(0.0, -2.0), point + Vector2(3.0, 2.0), 2.0, Art.IVORY_BRIGHT)
+			_append_line(vertices, colors, indices, point + Vector2(-3.0, 2.0), point + Vector2(0.0, -2.0), 2.0, Art.TEXT_PRIMARY)
+			_append_line(vertices, colors, indices, point + Vector2(0.0, -2.0), point + Vector2(3.0, 2.0), 2.0, Art.TEXT_PRIMARY)
 
 
 static func _append_player(
@@ -189,13 +190,16 @@ static func _append_player(
 	var facing := Vector2(snapshot.get("player_facing", Vector2.UP)).normalized()
 	if facing.is_zero_approx():
 		facing = Vector2.UP
-	_append_line(vertices, colors, indices, point, point + facing * 11.0, 2.5, Art.MUSTARD)
+	_append_line(vertices, colors, indices, point, point + facing * 11.0, 2.5, Art.PLAYER_REWARD)
 	var side := facing.rotated(PI * 0.5)
 	_append_polygon(vertices, colors, indices, PackedVector2Array([
-		point + facing * 7.5,
-		point - facing * 5.0 + side * 5.0,
-		point - facing * 5.0 - side * 5.0,
-	]), Art.MUSTARD)
+		point + facing * 8.0,
+		point + facing * 1.0 + side * 5.5,
+		point - facing * 5.0 + side * 4.0,
+		point - facing * 2.5,
+		point - facing * 5.0 - side * 4.0,
+		point + facing * 1.0 - side * 5.5,
+	]), Art.PLAYER_REWARD)
 
 
 static func _append_circle(
@@ -323,3 +327,13 @@ static func _diamond(center: Vector2, radius: float) -> PackedVector2Array:
 		center + Vector2(0.0, radius),
 		center + Vector2(-radius, 0.0),
 	])
+
+
+static func _hexagon(center: Vector2, radius: float) -> PackedVector2Array:
+	var points := PackedVector2Array()
+	for index in 6:
+		points.append(
+			center
+			+ Vector2.RIGHT.rotated(TAU * float(index) / 6.0) * radius
+		)
+	return points

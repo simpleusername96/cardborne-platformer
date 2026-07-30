@@ -146,7 +146,6 @@ var _overlay_batches: Dictionary = {}
 var _batches: Array[BatchHandle] = []
 var _pixel_catalog: VehiclePixelAssetCatalog
 var _pixel_enabled := false
-var _misc_pixel_batch: BatchHandle
 var _player_hull_batch: BatchHandle
 var _player_engine_batch: BatchHandle
 var _player_engine_flare_batch: BatchHandle
@@ -370,10 +369,6 @@ func _build_batches() -> void:
 	_overlay_batches[&"diamond"] = _create_batch(
 		"Overlay_diamond", Visuals.effect_mesh(&"diamond"), 96, 4, &"overlay_diamond"
 	)
-	if _pixel_enabled:
-		_misc_pixel_batch = _create_atlas_batch(
-			"Pixel_combat_ornaments", EFFECT_CAPACITY, 4, &"impact_effects"
-		)
 	_player_engine_flare_batch = _create_batch(
 		"Player_engine_flare",
 		Visuals.player_engine_flare_mesh(),
@@ -1283,7 +1278,7 @@ func _sync_support_fields(support_fields: Array) -> void:
 		var kind := StringName(support["kind"])
 		var progress := clampf(float(support["phase_progress"]), 0.0, 1.0)
 		var active := bool(support["effect_active"])
-		var color := Art.MINT if kind == &"repair" else Art.MUSTARD
+		var color := Art.SUPPORT if kind == &"repair" else Art.PLAYER_REWARD
 		var opacity := 0.26 if active else (0.14 if state == &"warning" else 0.07)
 		_write_disk(center, radius, Color(color, opacity))
 		_write_ring(center, radius, Color(color, 0.76))
@@ -1304,42 +1299,22 @@ func _sync_support_fields(support_fields: Array) -> void:
 			center,
 			48.0,
 			Color(
-				Art.STRUCTURE_MID if kind == &"repair" else Art.MUSTARD_DARK,
+				Art.LINE if kind == &"repair" else Art.RAISED,
 				0.92
 			)
 		)
-		if _pixel_enabled:
-			var fixture_family := (
-				&"repair_field" if kind == &"repair" else &"overdrive_field"
-			)
-			var fixture_state := &"active" if active else &"dormant"
-			if state == &"warning":
-				fixture_state = &"warning"
-			var fixture_frame := _cached_pixel_frame(
-				fixture_family, &"center_fixture", 0, fixture_state, 0
-			)
-			if not fixture_frame.is_empty():
-				_write_atlas_instance(
-					_misc_pixel_batch,
-					center,
-					0.0,
-					Vector2.ONE * 46.0,
-					Color.WHITE,
-					fixture_frame
-				)
-				continue
 		if kind == &"repair":
 			_write_beam(
 				center - Vector2(0.0, 30.0),
 				center + Vector2(0.0, 30.0),
 				20.0,
-				Art.IVORY_BRIGHT
+				Art.TEXT_PRIMARY
 			)
 			_write_beam(
 				center - Vector2(30.0, 0.0),
 				center + Vector2(30.0, 0.0),
 				20.0,
-				Art.IVORY_BRIGHT
+				Art.TEXT_PRIMARY
 			)
 		else:
 			for index in 2:
@@ -1348,13 +1323,13 @@ func _sync_support_fields(support_fields: Array) -> void:
 					point + Vector2(-14.0, 8.0),
 					point,
 					9.0,
-					Art.IVORY_BRIGHT
+					Art.TEXT_PRIMARY
 				)
 				_write_beam(
 					point,
 					point + Vector2(14.0, 8.0),
 					9.0,
-					Art.IVORY_BRIGHT
+					Art.TEXT_PRIMARY
 				)
 
 

@@ -1,27 +1,29 @@
 class_name VehicleStageBackdrop
 extends Node2D
 
-## Cached presentation shell for the geometry-fed pixel world. Combat and
+## Cached presentation shell for the geometry-fed flat world. Combat and
 ## collision truth stay outside this node.
 
 const Rules = preload("res://scripts/vehicle/vehicle_stage_rules.gd")
 const Visual = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const TacticalLayout = preload("res://scripts/vehicle/vehicle_stage_tactical_layout.gd")
-const PixelWorldBuilder = preload("res://scripts/presentation/vehicle_pixel_world_mesh_builder.gd")
+const WorldMeshBuilder = preload(
+	"res://scripts/presentation/vehicle_world_mesh_builder.gd"
+)
 
 var stage_id: StringName = &"stage_1"
 var _layout: TacticalLayout
 var _layout_fingerprint := 0
-var _pixel_world
+var _world_mesh
 
 
 func _ready() -> void:
 	z_index = -20
 	show_behind_parent = true
-	_pixel_world = PixelWorldBuilder.new()
-	_pixel_world.name = "PixelWorld"
-	add_child(_pixel_world)
-	_pixel_world.configure(stage_id, _layout)
+	_world_mesh = WorldMeshBuilder.new()
+	_world_mesh.name = "WorldMesh"
+	add_child(_world_mesh)
+	_world_mesh.configure(stage_id, _layout)
 
 
 func configure(value: StringName, layout: TacticalLayout = null) -> void:
@@ -31,8 +33,8 @@ func configure(value: StringName, layout: TacticalLayout = null) -> void:
 	stage_id = value
 	_layout = layout
 	_layout_fingerprint = next_fingerprint
-	if _pixel_world != null:
-		_pixel_world.configure(stage_id, layout)
+	if _world_mesh != null:
+		_world_mesh.configure(stage_id, layout)
 	queue_redraw()
 
 
@@ -50,5 +52,5 @@ func debug_contract() -> Dictionary:
 		"cover_count": Rules.get_cover_rects(false, stage_id).size(),
 		"layout_fingerprint":_layout_fingerprint,
 		"runtime_cover_count":_layout.cover_rects.size() if _layout != null else 0,
-		"pixel_world":_pixel_world.debug_contract() if _pixel_world != null else {},
+		"world_mesh":_world_mesh.debug_contract() if _world_mesh != null else {},
 	}
