@@ -5,13 +5,13 @@
 [sub_resource type="FontVariation" id="FontBody"]
 base_font = ExtResource("1_font")
 variation_opentype = {
-"wght": 500.0
+"weight": 650.0
 }
 
 [sub_resource type="FontVariation" id="FontStrong"]
 base_font = ExtResource("1_font")
 variation_opentype = {
-"wght": 650.0
+"weight": 800.0
 }
 
 [sub_resource type="StyleBoxEmpty" id="Empty"]
@@ -329,7 +329,7 @@ content_margin_top = 4.0
 content_margin_right = 12.0
 content_margin_bottom = 4.0
 bg_color = Color(0.141176, 0.203922, 0.270588, 1)
-border_width_left = 1
+border_width_left = 3
 border_width_top = 1
 border_width_right = 1
 border_width_bottom = 1

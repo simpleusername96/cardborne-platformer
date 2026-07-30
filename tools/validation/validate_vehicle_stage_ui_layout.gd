@@ -59,21 +59,82 @@ func _initialize() -> void:
 			),
 			"upgrade confirmation uses the supported command contract at %d" % width
 		)
+		_expect(
+			int(upgrade_contract["row_separation"]) == (
+				12 if width < 1100.0 else 18
+			),
+			"upgrade cards use the approved responsive gap at %d" % width
+		)
+		var panel_type_sizes := Dictionary(upgrade_contract["type_sizes"])
+		_expect(
+			panel_type_sizes == (
+				{
+					"kicker":15,
+					"title":30,
+					"detail":15,
+					"message":15,
+					"confirm":22,
+				}
+				if width < 1100.0
+				else {
+					"kicker":16,
+					"title":40,
+					"detail":18,
+					"message":16,
+					"confirm":24,
+				}
+			),
+			"upgrade panel uses the approved responsive type scale at %d"
+			% width
+		)
 		for card_variant in upgrade_contract["cards"]:
 			var card := Dictionary(card_variant)
 			var card_size := Vector2(card["minimum_size"])
 			_expect(
 				(
-					card_size == Vector2(280.0, 286.0)
+					card_size == Vector2(244.0, 286.0)
 					if width < 1100.0
 					else card_size == Vector2(304.0, 330.0)
 				),
 				"upgrade cards use the supported hierarchy at %d" % width
 			)
+			_expect(
+				Dictionary(card["type_sizes"]) == (
+					{
+						"family":13,
+						"title":22,
+						"summary":15,
+						"behavior":15,
+					}
+					if width < 1100.0
+					else {
+						"family":14,
+						"title":24,
+						"summary":16,
+						"behavior":16,
+					}
+				),
+				"upgrade card uses the approved responsive type scale at %d"
+				% width
+			)
+			var state_cues := Dictionary(card["state_cues"])
+			_expect(
+				int(state_cues["normal_edge"]) == 1
+					and int(state_cues["focus_edge"]) == 2
+					and bool(state_cues["selected_corner"])
+					and bool(state_cues["focus_corner"])
+					and bool(state_cues["disabled_corner"]),
+				"upgrade card states do not depend on color alone at %d"
+				% width
+			)
 			_expect(int(card["effect_rows"]) <= 2, "upgrade card has at most two effect rows")
 			_expect(not bool(card["has_scroll"]), "upgrade card never scrolls")
 		_expect(bool(contract["has_upgrade_card_theme"]), "upgrade cards use dedicated shared theme states at %d" % width)
 		_expect(bool(contract["has_tertiary_danger_theme"]), "tertiary danger uses a shared theme state at %d" % width)
+		_expect(
+			is_equal_approx(float(contract["body_font_weight"]), 650.0),
+			"shared UI body typography uses weight 650 at %d" % width
+		)
 		_expect(int(contract["display_font_size"]) >= 40, "display typography remains legible at %d" % width)
 		_expect(Vector2(contract["deployment_primary_size"]) == Vector2(300.0, 48.0), "deployment uses one compact primary action at %d" % width)
 		var deployment_surface := Vector2(contract["deployment_surface_size"])
@@ -426,20 +487,61 @@ func _expect_upgrade_geometry(contract: Dictionary, context: String) -> void:
 		var card := Dictionary(card_variant)
 		var card_rect := Rect2(card["rect"])
 		_expect(panel_rect.encloses(card_rect), "%s card stays inside panel" % context)
+		_expect(
+			card_rect.size.is_equal_approx(
+				Vector2(244.0, 286.0)
+				if card_rect.size.x < 270.0
+				else Vector2(304.0, 330.0)
+			),
+			"%s card uses approved compact/wide geometry: %s"
+			% [context, card_rect.size]
+		)
 		if prior_card.has_area():
 			_expect(not prior_card.intersects(card_rect), "%s cards do not overlap" % context)
 		prior_card = card_rect
+		var glyph := Dictionary(card["glyph"])
+		var glyph_control_rect := Rect2(glyph["control_rect"]).grow(0.5)
+		var glyph_content_rect := Rect2(glyph["content_rect"])
+		_expect(
+			int(glyph["command_count"]) >= 3
+				and glyph_control_rect.encloses(glyph_content_rect)
+				and card_rect.grow(0.5).encloses(glyph_content_rect),
+			"%s card glyph has complete visible bounds" % context
+		)
 		for label_variant in card["labels"]:
 			var label := Dictionary(label_variant)
 			var label_rect := Rect2(label["rect"])
+			var glyph_rect := Rect2(label["glyph_rect"])
 			_expect(
 				card_rect.grow(0.5).encloses(label_rect),
 				"%s card text stays inside card: %s" % [context, label["text"]]
 			)
 			_expect(
+				label_rect.grow(0.5).encloses(glyph_rect),
+				"%s shaped text stays inside its label: %s"
+				% [context, label["text"]]
+			)
+			_expect(
 				int(label["visible_line_count"]) == int(label["line_count"]),
 				"%s card keeps every wrapped line visible: %s" % [context, label["text"]]
 			)
+			if String(label["name"]) == "TitleLabel":
+				_expect(
+					int(label["line_count"]) <= 2,
+					"%s card title stays within two lines: %s"
+					% [context, label["text"]]
+				)
+			elif String(label["name"]) == "SummaryLabel":
+				_expect(
+					int(label["line_count"])
+						<= int(card["summary_max_lines"]),
+					"%s card summary stays within its %d-line density budget: %s"
+					% [
+						context,
+						int(card["summary_max_lines"]),
+						label["text"],
+					]
+				)
 
 
 func _expect(condition: bool, message: String) -> void:

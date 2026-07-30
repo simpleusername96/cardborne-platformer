@@ -49,8 +49,8 @@ const INK := SPACE_BLACK
 const INK_MUTED := TEXT_MUTED
 const DIM := Color(0.027, 0.043, 0.067, 0.82)
 
-const TYPE_SCALE_COMPACT := [12, 14, 16, 20, 28, 36]
-const TYPE_SCALE_WIDE := [13, 15, 17, 22, 32, 40]
+const TYPE_SCALE_COMPACT := [13, 15, 17, 22, 30]
+const TYPE_SCALE_WIDE := [14, 16, 18, 24, 32, 40]
 const SPACING_SCALE := [4, 8, 12, 16, 24, 32]
 const BREAKPOINT_WIDE := 1100
 const BREAKPOINT_THREE_COLUMN := 1180
@@ -184,10 +184,10 @@ static func validate_contract() -> PackedStringArray:
 	]:
 		if not roles.has(role):
 			errors.append("missing semantic color role: %s" % role)
-	if TYPE_SCALE_COMPACT != [12, 14, 16, 20, 28, 36]:
-		errors.append("compact type scale must remain 12/14/16/20/28/36")
-	if TYPE_SCALE_WIDE != [13, 15, 17, 22, 32, 40]:
-		errors.append("wide type scale must remain 13/15/17/22/32/40")
+	if TYPE_SCALE_COMPACT != [13, 15, 17, 22, 30]:
+		errors.append("compact type scale must remain 13/15/17/22/30")
+	if TYPE_SCALE_WIDE != [14, 16, 18, 24, 32, 40]:
+		errors.append("wide type scale must remain 14/16/18/24/32/40")
 	if SPACING_SCALE != [4, 8, 12, 16, 24, 32]:
 		errors.append("spacing scale must remain 4/8/12/16/24/32")
 	if CONTROL_MIN_HEIGHT < 44:

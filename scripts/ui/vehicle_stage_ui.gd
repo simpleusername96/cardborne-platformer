@@ -407,7 +407,7 @@ func debug_ui_contract(viewport_width: float = 1280.0) -> Dictionary:
 	if _root.theme.default_font is FontVariation:
 		body_font_weight = float(
 			(_root.theme.default_font as FontVariation)
-			.variation_opentype.get("wght", 0.0)
+			.variation_opentype.get("weight", 0.0)
 		)
 	var hud_contract := _hud.debug_contract(viewport_width)
 	var deployment_contract := _deployment_panel.debug_contract()
