@@ -519,15 +519,15 @@ static func effect_mesh(kind: StringName) -> ArrayMesh:
 
 static func enemy_color(role: StringName) -> Color:
 	match role:
-		&"chaser", &"shooter", &"controller", &"mine", &"artillery_spotter", &"rammer":
-			return Art.CORAL
+		&"chaser", &"shooter", &"mine", &"artillery_spotter", &"rammer":
+			return Art.DANGER
 		&"turret", &"interceptor_tower", &"beam_sentinel":
 			return Art.CORAL_DARK
-		&"generator", &"shield_escort", &"repair_tender", &"drone_carrier":
-			return Art.MINT
-		&"stage_boss", &"boss_pylon":
-			return Art.BOSS_MAGENTA
-	return Art.INK_MUTED
+		&"generator", &"shield_escort", &"repair_tender":
+			return Art.SUPPORT
+		&"controller", &"drone_carrier", &"stage_boss", &"boss_pylon":
+			return Art.BOSS_COMMAND
+	return Art.DANGER
 
 
 static func polygon_mesh(polygons: Array[Dictionary]) -> ArrayMesh:

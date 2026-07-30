@@ -680,13 +680,13 @@ layer를 새 component owner로 전환한다.
 **목표:** 모든 mobile/stationary enemy를 새 role grammar로 옮기고 existing
 strategy document의 collective behavior를 단계적으로 연결한다.
 
-- [ ] actor catalog에서 ordinary, specialist, stationary와 elite silhouette를
+- [x] actor catalog에서 ordinary, specialist, stationary와 elite silhouette를
   완성한다.
-- [ ] tactic catalog/runtime, enemy hot fields와 global permission을 추가한다.
-- [ ] Stage 1→5 Teach/Combine/Power Test beat를 authored data에 넣는다.
-- [ ] Lock/Execute cue는 body module/accent로 보이고 actor별 world ring을
+- [x] tactic catalog/runtime, enemy hot fields와 global permission을 추가한다.
+- [x] Stage 1→5 Teach/Combine/Power Test beat를 authored data에 넣는다.
+- [x] Lock/Execute cue는 body module/accent로 보이고 actor별 world ring을
   추가하지 않는다.
-- [ ] guidebook counterplay metadata와 enemy sheet를 갱신한다.
+- [x] guidebook counterplay metadata와 enemy sheet를 갱신한다.
 
 **Batch acceptance**
 
@@ -1036,7 +1036,18 @@ contrast, timing과 performance 조정으로 제한한다.
     file은 Phase 8 atomic legacy retirement까지 runtime-unreferenced 상태다.
   - 12 sheet 두 output hash가 일치했고 provider fingerprint와 manifest가
     일치한다. performance retention은 사용자 지시대로 Phase 8에만 실행한다.
-- [ ] Phase 5 enemy/tactics
+- [x] Phase 5 enemy/tactics
+  - 18개 mobile/stationary role을 pixel atlas 없이 고유 vector silhouette로
+    publication했고 combat retained batch ceiling 50을 지켰다.
+  - surge당 tactic squad 1개, global Gather/Lock·Execute permission,
+    offscreen break, stale-member pruning과 Stage 1→5
+    Teach/Combine/Power Test recipe를 production encounter에 연결했다.
+  - `visual-system-phase5-enemy-final`에서 peak horde, Lock, Break와
+    guidebook counterplay를 확인했다. Break의 legacy vulnerability ring은
+    body-attached bracket으로 교체했다.
+  - encounter/spawn/run/renderer/guidebook/localization validator와 12 sheet
+    deterministic hash가 통과했다. performance retention은 사용자 지시대로
+    Phase 8 최종 build에서만 실행한다.
 - [ ] Phase 6 bosses
 - [ ] Phase 7 HUD/modal suite
 - [ ] Phase 8 retirement/final gates
@@ -1044,8 +1055,8 @@ contrast, timing과 performance 조정으로 제한한다.
 
 ## Next Steps
 
-1. Phase 5에서 enemy visual family와 collective tactic을 publication한다.
-2. Phase 6 이후 boss → complete UI 순서로 publication한다.
+1. Phase 6에서 five boss semantic exam과 objective visual을 publication한다.
+2. Phase 7에서 HUD와 complete modal suite를 publication한다.
 3. Phase 8에서 raw tile을 포함한 legacy를 삭제한 최종 build로 horde recovery와 전체
    native/Web/capacity/lifecycle gate를 실행한다.
 

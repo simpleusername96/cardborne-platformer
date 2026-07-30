@@ -5,6 +5,9 @@ extends RefCounted
 
 const FieldRegistry = preload("res://scripts/vehicle/vehicle_field_registry.gd")
 const EnemyArchetypes = preload("res://scripts/enemies/vehicle_enemy_archetypes.gd")
+const TacticCatalog = preload(
+	"res://scripts/encounters/vehicle_collective_tactic_catalog.gd"
+)
 
 const STAGE_IDS: Array[StringName] = [&"stage_1", &"stage_2", &"stage_3", &"stage_4", &"stage_5"]
 const QUOTAS := [125, 166, 208, 250, 291]
@@ -140,11 +143,18 @@ static func _packets(stage_index: int, field_definition: Dictionary) -> Array[Di
 	for surge_index in surge_count:
 		var surge_size := base_surge_size + (1 if surge_index < extra_surges else 0)
 		var beat := mini(4, 1 + floori(4.0 * float(surge_index) / float(surge_count)))
+		var squads := _surge_squads(sequence, cursor, surge_size)
 		result.append({
 			"id":"stage_%d_packet_%02d" % [stage_index + 1, surge_index + 2],
 			"beat":beat,
 			"trigger":{"kind":&"time", "at":8.0 + float(surge_index) * 2.4},
-			"squads":_surge_squads(sequence, cursor, surge_size),
+			"squads":squads,
+			"collective_tactic":TacticCatalog.assignment_for(
+				stage_index,
+				surge_index,
+				surge_count,
+				squads.size()
+			),
 			"pack_count":SURGE_PACKS,
 			"squads_per_pack":SQUADS_PER_PACK,
 			"arrival_mode":&"multi_sector",

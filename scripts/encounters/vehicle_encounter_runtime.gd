@@ -343,6 +343,10 @@ func _schedule_packet(packet: Dictionary, player_position: Vector2, visible_worl
 		0.90 if beat <= 1 else 0.65
 	))
 	var cue_lead := float(packet.get("cue_lead", CUE_LEAD))
+	var collective_tactic := Dictionary(packet.get("collective_tactic", {}))
+	var tactic_squad_index := int(
+		collective_tactic.get("squad_index", -1)
+	)
 	var queued_cue_groups := {}
 	for squad_index in squads.size():
 		var allocation: Dictionary = allocations[squad_index]
@@ -406,6 +410,16 @@ func _schedule_packet(packet: Dictionary, player_position: Vector2, visible_worl
 				"leash_rect":Rect2(packet["leash"]),
 				"active":true,
 				"packet_beat":beat,
+				"collective_tactic_id":(
+					StringName(collective_tactic.get("id", &""))
+					if squad_index == tactic_squad_index
+					else &""
+				),
+				"collective_beat_kind":(
+					StringName(collective_tactic.get("beat_kind", &""))
+					if squad_index == tactic_squad_index
+					else &""
+				),
 			}
 			_spawn_queue.append({"time":cursor + float(unit_index) * unit_spacing, "delay_base":_schedule_delay_total, "spec":spec})
 	_cue_queue.sort_custom(func(a:Dictionary,b:Dictionary)->bool: return _scheduled_key(a) < _scheduled_key(b))

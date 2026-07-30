@@ -93,7 +93,7 @@ func _draw() -> void:
 func _show_pixel_preview(kind: StringName, preview_id: StringName) -> bool:
 	if _pixel_catalog == null or not _pixel_catalog.is_ready():
 		return false
-	if kind in [&"terrain", &"facility", &"pickup"]:
+	if kind in [&"enemy", &"terrain", &"facility", &"pickup"]:
 		return false
 	var family := &""
 	var variant := preview_id

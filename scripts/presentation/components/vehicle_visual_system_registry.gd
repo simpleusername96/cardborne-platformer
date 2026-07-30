@@ -18,6 +18,9 @@ const COMPONENT_GEOMETRY_PATH := (
 const COMBAT_GEOMETRY_PATH := (
 	"res://scripts/presentation/vehicle_combat_visual_library.gd"
 )
+const COMBAT_RENDERER_PATH := (
+	"res://scripts/presentation/vehicle_combat_renderer.gd"
+)
 const WORLD_GEOMETRY_PATH := (
 	"res://scripts/presentation/vehicle_world_mesh_builder.gd"
 )
@@ -79,6 +82,10 @@ static func provider_fingerprint() -> String:
 	records.append(
 		"combat_geometry=%s"
 		% FileAccess.get_sha256(COMBAT_GEOMETRY_PATH)
+	)
+	records.append(
+		"combat_renderer=%s"
+		% FileAccess.get_sha256(COMBAT_RENDERER_PATH)
 	)
 	records.append(
 		"world_geometry=%s"

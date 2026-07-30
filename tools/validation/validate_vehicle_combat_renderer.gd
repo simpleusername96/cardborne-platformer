@@ -23,14 +23,19 @@ func _run() -> void:
 	var pixel_enabled := bool(snapshot.get("pixel_enabled", false))
 	_expect(int(snapshot["enemy_capacity"]) == 320, "renderer shares the 320-hostile store capacity")
 	_expect(int(snapshot["status_arc_capacity"]) == 960, "status overlays scale from shared enemy capacity")
-	_expect(pixel_enabled, "unmigrated enemy atlas presentation remains active until the enemy phase")
+	_expect(pixel_enabled, "unmigrated boss atlas presentation remains active until the boss phase")
+	_expect(
+		not bool(snapshot.get("enemy_pixel_fallback", true)),
+		"ordinary and stationary enemies have no pixel fallback"
+	)
 	_expect(
 		not bool(snapshot.get("migrated_combat_pixel_fallback", true)),
 		"player, projectile, reward and effect families have no pixel fallback"
 	)
 	_expect(
 		int(snapshot["batches"]) <= 50,
-		"combat presentation remains inside the retained fifty-batch ceiling"
+		"combat presentation remains inside the retained fifty-batch ceiling (actual %d)"
+		% int(snapshot["batches"])
 	)
 	_expect(Art.validate_contract().is_empty(), "combat visual profile satisfies the locked readability contract")
 	_expect(
@@ -78,12 +83,11 @@ func _run() -> void:
 			Visuals.debug_enemy_signature(pair[0]) != Visuals.debug_enemy_signature(pair[1]),
 			"%s and %s have distinct outer silhouettes" % pair
 		)
-		if pixel_enabled:
-			_expect(
-				renderer.get_node("Enemy_mobile_enemy_set" if pair[0] != &"turret" else "Enemy_stationary_enemy_set")
-					== renderer.get_node("Enemy_mobile_enemy_set" if pair[1] != &"interceptor_tower" else "Enemy_stationary_enemy_set"),
-				"%s and %s share their atlas family batch" % pair
-			)
+		_expect(
+			renderer.get_node_or_null("Enemy_%s" % String(pair[0])) != null
+				and renderer.get_node_or_null("Enemy_%s" % String(pair[1])) != null,
+			"%s and %s own descriptor mesh batches" % pair
+		)
 	var enemy := EnemyState.new()
 	enemy.id = "renderer_enemy"
 	enemy.role = &"chaser"
@@ -179,9 +183,7 @@ func _run() -> void:
 			),
 		"corridor warning caps stay centered on the simulated segment endpoints"
 	)
-	var enemy_batch := renderer.get_node(
-		"Enemy_mobile_enemy_set" if pixel_enabled else "Enemy_chaser"
-	) as MultiMeshInstance2D
+	var enemy_batch := renderer.get_node("Enemy_chaser") as MultiMeshInstance2D
 	var enemy_buffer := enemy_batch.multimesh.buffer
 	_expect(
 		Vector2(enemy_buffer[3], enemy_buffer[7]).is_equal_approx(Vector2(300.0, 300.0)),
@@ -190,7 +192,7 @@ func _run() -> void:
 	_expect(
 		is_equal_approx(
 			Vector2(enemy_buffer[0], enemy_buffer[4]).length(),
-			26.0 * (1.24 if pixel_enabled else 1.0)
+			26.0
 		),
 		"batched buffer preserves the selected enemy presentation scale"
 	)
@@ -327,7 +329,7 @@ func _run() -> void:
 		int(snapshot["priority_marker_count"]) == Renderer.MAX_EXTRA_PRIORITY_MARKERS,
 		"extra priority markers stop at the deterministic eight-actor budget"
 	)
-	var crowd_body := renderer.get_node("Enemy_mobile_enemy_set") as MultiMeshInstance2D
+	var crowd_body := renderer.get_node("Enemy_chaser") as MultiMeshInstance2D
 	_expect(
 		crowd_body.multimesh.visible_instance_count == 40,
 		"semantic overlay budgets do not hide ordinary enemy bodies"
@@ -353,7 +355,7 @@ func _run() -> void:
 		Rect2(0,0,1280,720), Vector2.ZERO, 0.0, true
 	)
 	var offscreen_enemy_batch := renderer.get_node(
-		"Enemy_mobile_enemy_set" if pixel_enabled else "Enemy_controller"
+		"Enemy_controller"
 	) as MultiMeshInstance2D
 	var area_disk := renderer.get_node("Overlay_disk") as MultiMeshInstance2D
 	var area_ring := renderer.get_node("Overlay_danger_ring") as MultiMeshInstance2D

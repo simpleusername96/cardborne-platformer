@@ -26,10 +26,6 @@ const BUFFER_FLOATS_PER_INSTANCE := 12
 const ATLAS_BUFFER_FLOATS_PER_INSTANCE := 16
 const CUSTOM_BATCH_AABB := AABB(Vector3(-8192.0, -8192.0, -1.0), Vector3(16384.0, 16384.0, 2.0))
 const PIXEL_SHADER := preload("res://pixel-art-production/runtime/shaders/pixel_atlas_multimesh.gdshader")
-const STATIONARY_PIXEL_ARCHETYPES: Array[StringName] = [
-	&"turret", &"mine", &"interceptor_tower", &"beam_sentinel",
-	&"generator", &"boss_pylon",
-]
 const MAX_ORDINARY_HEALTH_BARS := 12
 const MAX_EXTRA_PRIORITY_MARKERS := 8
 class BatchBuffer:
@@ -154,6 +150,7 @@ var _player_secondary_batch: BatchHandle
 var _pixel_frame_cache: Dictionary = {}
 var _last_health_bar_count := 0
 var _last_priority_marker_count := 0
+var _last_tactic_module_count := 0
 
 
 func _ready() -> void:
@@ -233,36 +230,22 @@ func debug_snapshot() -> Dictionary:
 		"status_arc_capacity": STATUS_ARC_CAPACITY,
 		"health_bar_count": _last_health_bar_count,
 		"priority_marker_count": _last_priority_marker_count,
+		"tactic_module_count": _last_tactic_module_count,
+		"enemy_pixel_fallback": false,
 	}
 
 
 func _build_batches() -> void:
-	var pixel_enemy_family_batches := {}
 	for archetype in Visuals.ENEMY_ARCHETYPES:
 		if archetype == &"stage_boss":
 			continue
-		var pixel_family := (
-			&"stationary_enemy_set"
-			if archetype in STATIONARY_PIXEL_ARCHETYPES
-			else &"mobile_enemy_set"
+		_enemy_batches[archetype] = _create_batch(
+			"Enemy_%s" % String(archetype),
+			Visuals.enemy_mesh(archetype),
+			ENEMY_CAPACITY,
+			0,
+			archetype
 		)
-		if _pixel_enabled and _pixel_catalog.has_family(pixel_family):
-			if not pixel_enemy_family_batches.has(pixel_family):
-				pixel_enemy_family_batches[pixel_family] = _create_atlas_batch(
-					"Enemy_%s" % String(pixel_family),
-					ENEMY_CAPACITY,
-					0,
-					pixel_family
-				)
-			_enemy_batches[archetype] = pixel_enemy_family_batches[pixel_family]
-		else:
-			_enemy_batches[archetype] = _create_batch(
-				"Enemy_%s" % String(archetype),
-				Visuals.enemy_mesh(archetype),
-				ENEMY_CAPACITY,
-				0,
-				archetype
-			)
 	var shared_pixel_boss: BatchHandle
 	if _pixel_enabled and _pixel_catalog.has_family(&"boss_set"):
 		shared_pixel_boss = _create_atlas_batch(
@@ -344,11 +327,12 @@ func _build_batches() -> void:
 	_overlay_batches[&"shield"] = _create_batch(
 		"Overlay_shield", Visuals.effect_mesh(&"ring"), ENEMY_CAPACITY, 2, &"overlay_shield"
 	)
-	_overlay_batches[&"health_back"] = _create_batch(
-		"Overlay_health_back", Visuals.health_bar_mesh(), ENEMY_CAPACITY, 2, &"overlay_health_back"
-	)
-	_overlay_batches[&"health_fill"] = _create_batch(
-		"Overlay_health_fill", Visuals.health_bar_mesh(), ENEMY_CAPACITY, 3, &"overlay_health_fill"
+	_overlay_batches[&"health"] = _create_batch(
+		"Overlay_health",
+		Visuals.health_bar_mesh(),
+		ENEMY_CAPACITY * 2,
+		3,
+		&"overlay_health"
 	)
 	_overlay_batches[&"ring"] = _create_batch(
 		"Overlay_ring", Visuals.effect_mesh(&"ring"), 256, 3, &"overlay_ring"
@@ -502,22 +486,14 @@ func _sync_enemies(
 		var angle := _enemy_angle(archetype, enemy, player_position, run_time)
 		var radius := enemy.visual_radius
 		var color := Art.IVORY_BRIGHT if enemy.flash > 0.0 else Visuals.enemy_color(role)
-		if _pixel_enabled:
-			var pixel_family := (
-				&"boss_set"
-				if archetype == &"stage_boss"
-				else (
-					&"stationary_enemy_set"
-					if archetype in STATIONARY_PIXEL_ARCHETYPES
-					else &"mobile_enemy_set"
-				)
-			)
-			var pixel_variant := enemy.boss_variant if archetype == &"stage_boss" else archetype
-			var pixel_state := (
-				&"read"
-				if archetype == &"stage_boss"
-				else (&"idle" if archetype in STATIONARY_PIXEL_ARCHETYPES else &"move")
-			)
+		if (
+			archetype == &"stage_boss"
+			and _pixel_enabled
+			and _pixel_catalog.has_family(&"boss_set")
+		):
+			var pixel_family := &"boss_set"
+			var pixel_variant := enemy.boss_variant
+			var pixel_state := &"read"
 			var direction_index := _pixel_catalog.direction_index(
 				Vector2.RIGHT.rotated(angle), 8
 			)
@@ -540,6 +516,7 @@ func _sync_enemies(
 				)
 		else:
 			_write_instance(batch, position, angle, Vector2.ONE * radius, color)
+		_sync_collective_tactic_module(enemy, position, radius)
 		_sync_enemy_priority_marker(
 			enemy, position, radius, priority_ids.has(enemy.id)
 		)
@@ -563,11 +540,11 @@ func _sync_enemies(
 			var bar_width := radius * 1.6
 			var bar_position := position + Vector2(0.0, radius + 14.0)
 			_write_instance(
-				_overlay_batches[&"health_back"], bar_position,
+				_overlay_batches[&"health"], bar_position,
 				0.0, Vector2(bar_width, 10.0), Art.IVORY_SHADE
 			)
 			_write_instance(
-				_overlay_batches[&"health_fill"],
+				_overlay_batches[&"health"],
 				bar_position + Vector2(
 					-bar_width * (1.0 - health_ratio) * 0.5, 0.0
 				),
@@ -579,6 +556,72 @@ func _sync_enemies(
 			_sync_target_brackets(position, radius + 16.0)
 
 
+func _sync_collective_tactic_module(
+	enemy: EnemyState,
+	position: Vector2,
+	radius: float
+) -> void:
+	var phase := enemy.collective_phase
+	if phase in [&"", &"dormant", &"cooldown"]:
+		return
+	var direction := enemy.collective_direction.normalized()
+	if direction.is_zero_approx():
+		direction = Vector2.RIGHT
+	var side := direction.rotated(PI * 0.5)
+	match phase:
+		&"gather":
+			_write_instance(
+				_overlay_batches[&"diamond"],
+				position - direction * radius * 0.56,
+				direction.angle(),
+				Vector2.ONE * 5.0,
+				Art.TEXT_MUTED
+			)
+			_last_tactic_module_count += 1
+		&"lock":
+			var tip := position + direction * radius * 0.78
+			_write_beam(
+				tip,
+				position - direction * radius * 0.08 + side * radius * 0.44,
+				5.0,
+				Art.BOSS_COMMAND
+			)
+			_write_beam(
+				tip,
+				position - direction * radius * 0.08 - side * radius * 0.44,
+				5.0,
+				Art.BOSS_COMMAND
+			)
+			_last_tactic_module_count += 1
+		&"execute":
+			_write_instance(
+				_overlay_batches[&"diamond"],
+				position + direction * radius * 0.62,
+				direction.angle(),
+				Vector2(8.0, 5.0),
+				Art.TEXT_PRIMARY
+			)
+			_write_beam(
+				position - direction * radius * 0.72,
+				position + direction * radius * 0.20,
+				4.0,
+				Art.BOSS_COMMAND
+			)
+			_last_tactic_module_count += 1
+		&"break":
+			_write_beam(
+				position - direction * radius * 0.42 - side * radius * 0.42,
+				position + direction * radius * 0.42 + side * radius * 0.42,
+				5.0,
+				Art.INK
+			)
+			_write_beam(
+				position - direction * radius * 0.42 + side * radius * 0.42,
+				position + direction * radius * 0.42 - side * radius * 0.42,
+				5.0,
+				Art.INK
+			)
+			_last_tactic_module_count += 1
 func _enemy_overlay_budgets(
 	enemies: Array[EnemyState],
 	visible_world: Rect2,
@@ -722,15 +765,15 @@ func _sync_enemy_semantic_overlays(
 				Vector2(radius * 0.42, radius * 0.22),
 				Art.MUSTARD
 			)
-		_write_instance(
-			_overlay_batches[&"ring"], position, 0.0,
-			Vector2.ONE * (radius + 11.0), Art.MUSTARD
-		)
 	elif enemy.elite_trait == &"heavy":
-		_write_instance(
-			_overlay_batches[&"ring"], position, 0.0,
-			Vector2.ONE * (radius * 0.72), Art.IVORY_BRIGHT
-		)
+		for sign_value in [-1.0, 1.0]:
+			_write_instance_basis(
+				_overlay_batches[&"beam"],
+				position + forward * sign_value * radius * 0.52,
+				side,
+				Vector2(radius * 0.46, 9.0),
+				Art.TEXT_PRIMARY
+			)
 	if enemy.role != &"mine":
 		return
 	var mobile := enemy.archetype == &"spark_minelet"
@@ -1528,6 +1571,7 @@ func _write_instance_basis(
 func _reset_counts() -> void:
 	_last_health_bar_count = 0
 	_last_priority_marker_count = 0
+	_last_tactic_module_count = 0
 	for batch in _batches:
 		batch.reset()
 

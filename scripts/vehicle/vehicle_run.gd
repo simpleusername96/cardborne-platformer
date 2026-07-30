@@ -14,6 +14,9 @@ const EliteTraits = preload("res://scripts/enemies/vehicle_elite_trait_catalog.g
 const SpecialistRuntime = preload("res://scripts/enemies/vehicle_enemy_specialist_runtime.gd")
 const EncounterDirector = preload("res://scripts/encounters/vehicle_encounter_director.gd")
 const EncounterRuntime = preload("res://scripts/encounters/vehicle_encounter_runtime.gd")
+const CollectiveTacticRuntime = preload(
+	"res://scripts/encounters/vehicle_collective_tactic_runtime.gd"
+)
 const UpgradeCatalog = preload("res://scripts/cards/vehicle_upgrade_catalog.gd")
 const RunBuild = preload("res://scripts/cards/vehicle_run_build.gd")
 const StatusRuntime = preload("res://scripts/combat/vehicle_status_runtime.gd")
@@ -130,6 +133,7 @@ var _field_id_override: StringName = &""
 var field_layout: VehicleFieldLayout
 var _active_tactical_layout: StageTacticalLayout
 var encounter_runtime := EncounterRuntime.new()
+var collective_tactics := CollectiveTacticRuntime.new()
 var stage_flow := StageFlow.new()
 var pursuit_field := PursuitField.new()
 var secondary_runtime := SecondaryRuntime.new()
@@ -791,6 +795,18 @@ func _make_enemy(spec: Dictionary) -> EnemyState:
 	enemy.formation_slot = int(spec.get("formation_slot", 0))
 	enemy.formation_size = int(spec.get("formation_size", 1))
 	enemy.formation_offset = Vector2(spec.get("formation_offset", Vector2.ZERO))
+	enemy.collective_tactic_id = StringName(
+		spec.get("collective_tactic_id", &"")
+	)
+	enemy.collective_beat_kind = StringName(
+		spec.get("collective_beat_kind", &"")
+	)
+	enemy.collective_phase = &"dormant"
+	enemy.collective_mode = &""
+	enemy.collective_direction = Vector2.RIGHT
+	enemy.collective_target = position
+	enemy.collective_slot = 0
+	enemy.collective_speed_multiplier = 1.0
 	enemy.target_sector = Vector2(spec.get("target_sector", Vector2.RIGHT))
 	enemy.packet_beat = int(spec.get("packet_beat", 0))
 	enemy.carrier_id = String(spec.get("carrier_id", ""))
@@ -826,10 +842,14 @@ func _make_enemy(spec: Dictionary) -> EnemyState:
 
 
 func _append_enemy(enemy: EnemyState) -> bool:
-	return enemy_store.add(enemy)
+	var added := enemy_store.add(enemy)
+	if added:
+		collective_tactics.register_enemy(enemy)
+	return added
 
 
 func _clear_enemies() -> void:
+	collective_tactics.reset()
 	enemy_store.clear()
 
 
@@ -1821,6 +1841,14 @@ func _update_enemies(delta: float) -> void:
 		_performance_enemy_sections["status_activation"] = _elapsed_ms(section_started)
 		section_started = Time.get_ticks_usec()
 
+	var tactic_events := collective_tactics.advance(
+		delta,
+		player_position,
+		_visible_world_rect(0.0),
+		Callable(enemy_store, "find")
+	)
+	_handle_collective_tactic_events(tactic_events)
+
 	if not _enemy_coordination_initialized:
 		_squad_motion_snapshot = EncounterDirector.squad_motion_snapshot(
 			_enemy_update_schedule.active
@@ -2006,7 +2034,11 @@ func _append_enemy_shield_assignments(
 
 
 func _apply_enemy_shield(enemy: EnemyState, shielded_ids: Dictionary) -> void:
-	var shielded := bool(shielded_ids.get(enemy.id, false))
+	var tactic_shield := (
+		enemy.collective_mode in [&"shield", &"support", &"escort"]
+		and enemy.collective_phase in [&"lock", &"execute"]
+	)
+	var shielded := bool(shielded_ids.get(enemy.id, false)) or tactic_shield
 	if enemy.shielded != shielded:
 		enemy.shielded = shielded
 
@@ -2102,6 +2134,8 @@ func _update_ordinary_enemy(
 ) -> bool:
 	if motion_delta < 0.0:
 		motion_delta = delta
+	if _update_collective_enemy(enemy, motion_delta):
+		return false
 	var leash := enemy.leash_rect
 	if leash.has_area() and not leash.has_point(player_position):
 		enemy.phase = &"move"
@@ -2174,6 +2208,90 @@ func _update_ordinary_enemy(
 		_start_enemy_attack(enemy)
 		return true
 	return false
+
+
+func _update_collective_enemy(
+	enemy: EnemyState,
+	delta: float
+) -> bool:
+	match enemy.collective_phase:
+		&"gather":
+			var to_slot := enemy.collective_target - enemy.pos
+			if to_slot.length_squared() > 4.0:
+				_move_enemy_with_recovery(
+					enemy,
+					to_slot.normalized() * enemy.speed,
+					delta
+				)
+			else:
+				enemy.velocity = Vector2.ZERO
+			return true
+		&"lock":
+			enemy.velocity = Vector2.ZERO
+			return true
+		&"execute":
+			if enemy.collective_mode in [&"charge", &"fuse"]:
+				var before := enemy.pos
+				var requested := (
+					enemy.collective_direction
+					* enemy.speed
+					* enemy.collective_speed_multiplier
+					* delta
+				)
+				var after := _runtime_charge_path_end(
+					before,
+					enemy.collective_direction,
+					requested.length(),
+					enemy.radius
+				)
+				enemy.pos = after
+				enemy.velocity = (
+					(after - before) / maxf(delta, 0.0001)
+				)
+				if before.distance_to(after) + 1.0 < requested.length():
+					collective_tactics.break_squad(
+						enemy.squad_id,
+						&"cover_collision"
+					)
+				elif (
+					not enemy.hit_committed
+					and player_position.distance_to(after)
+						<= enemy.radius + Rules.PLAYER_RADIUS + 10.0
+				):
+					enemy.hit_committed = true
+					_damage_player(
+						_enemy_contact_damage(enemy, 12.0),
+						"Collective charge",
+						true
+					)
+			else:
+				var to_slot := enemy.collective_target - enemy.pos
+				if to_slot.length_squared() > 4.0:
+					_move_enemy_with_recovery(
+						enemy,
+						to_slot.normalized()
+							* enemy.speed
+							* enemy.collective_speed_multiplier,
+						delta
+					)
+				else:
+					enemy.velocity = Vector2.ZERO
+			return true
+	return false
+
+
+func _handle_collective_tactic_events(events: Array[Dictionary]) -> void:
+	for event in events:
+		var kind := StringName(event.get("kind", &""))
+		var tactic_id := StringName(event.get("tactic_id", &""))
+		if kind == &"phase":
+			var phase := StringName(event.get("phase", &""))
+			stage_telemetry.record_tactic_event(tactic_id, phase)
+			if phase == &"lock":
+				_play_sound(&"boss", 0.62)
+		elif kind == &"break":
+			stage_telemetry.record_tactic_event(tactic_id, &"interrupted")
+			_play_sound(&"impact", 0.86)
 
 
 func _enemy_recovery_cooldown(enemy: EnemyState) -> float:
@@ -3307,6 +3425,7 @@ func _apply_lifesteal(
 func _defeat_enemy(enemy: EnemyState, source: String) -> void:
 	if not enemy.alive:
 		return
+	collective_tactics.unregister_enemy(enemy.id, enemy.squad_id)
 	if boss_practice.active:
 		enemy.alive = false
 		enemy.active = false
@@ -5031,7 +5150,12 @@ func _draw_enemy_overlay(enemy: EnemyState) -> void:
 			draw_line(position, repair_target.pos, Color(Art.MINT, 0.82), 14.0, true)
 		_draw_enemy_marks(enemy, position, visual_radius)
 	if enemy.vulnerable > 0.0:
-		draw_arc(position, visual_radius + 12.0, 0.0, TAU, 28, Art.MUSTARD, 7.0)
+		var cue_radius := visual_radius + 8.0
+		for sign_value in [-1.0, 1.0]:
+			var anchor := position + Vector2(sign_value * cue_radius, 0.0)
+			var inward := Vector2(-sign_value * 7.0, 0.0)
+			draw_line(anchor + Vector2(0.0, -6.0), anchor + inward, Art.MUSTARD, 4.0, true)
+			draw_line(anchor + inward, anchor + Vector2(0.0, 6.0), Art.MUSTARD, 4.0, true)
 
 
 func _draw_enemy_marks(enemy: EnemyState, position: Vector2, radius: float) -> void:
@@ -5043,15 +5167,15 @@ func _draw_enemy_marks(enemy: EnemyState, position: Vector2, radius: float) -> v
 
 func _enemy_color(role: StringName) -> Color:
 	match role:
-		&"chaser", &"shooter", &"controller", &"mine", &"artillery_spotter", &"rammer":
+		&"chaser", &"shooter", &"mine", &"artillery_spotter", &"rammer":
 			return Art.CORAL
 		&"turret", &"interceptor_tower", &"beam_sentinel":
 			return Art.CORAL_DARK
-		&"generator", &"shield_escort", &"repair_tender", &"drone_carrier":
+		&"generator", &"shield_escort", &"repair_tender":
 			return Art.MINT
-		&"stage_boss", &"boss_pylon":
+		&"controller", &"drone_carrier", &"stage_boss", &"boss_pylon":
 			return Art.BOSS_MAGENTA
-	return Art.INK_MUTED
+	return Art.CORAL
 
 
 func _visible_world_rect(margin: float = 0.0) -> Rect2:
@@ -5258,6 +5382,7 @@ func _performance_counts() -> Dictionary:
 		"zones": denied_zones.size(),
 		"trails": damaging_trails.size(),
 		"layout":field_layout.debug_snapshot(current_stage_id) if field_layout != null else {},
+		"collective_tactics":collective_tactics.debug_snapshot(),
 	}
 
 
@@ -5322,6 +5447,13 @@ func _run_capture_sequence() -> void:
 	)
 	await _settle_capture()
 	_save_capture("01f-guidebook-locked.png")
+	_ui.debug_guide_entry(
+		GuidebookCatalog.snapshot(all_known, _build_snapshot()),
+		&"mobile",
+		&"mobile_chaser"
+	)
+	await _settle_capture()
+	_save_capture("01g-guidebook-enemy-counterplay.png")
 
 	_capture_prepare_stage(0)
 	await _settle_capture()
@@ -5350,6 +5482,7 @@ func _run_capture_sequence() -> void:
 	_save_capture("02b-first-contact-cue.png")
 
 	await _capture_pressure_evidence()
+	await _capture_collective_tactic_evidence()
 	await _capture_cycle_evidence()
 	await _capture_field_item_evidence()
 	await _capture_level_up_evidence()
@@ -5502,6 +5635,51 @@ func _capture_pressure_evidence() -> void:
 	mode = RunMode.PAUSED
 	await _settle_capture()
 	_save_capture("03-peak-horde.png")
+
+
+func _capture_collective_tactic_evidence() -> void:
+	_capture_prepare_stage(0)
+	_clear_enemies()
+	var direction := Vector2.LEFT
+	for index in 6:
+		var row := floori((float(index) + 1.0) * 0.5)
+		var sign_value := -1.0 if index % 2 == 0 else 1.0
+		var position := (
+			player_position
+			+ Vector2(330.0 + float(row) * 48.0, sign_value * float(row) * 42.0)
+		)
+		var enemy := _make_enemy({
+			"id":"capture_tactic_%02d" % index,
+			"role":&"rammer" if index == 0 else &"chaser",
+			"pos":position,
+			"active":true,
+			"squad_id":"capture_tactic",
+			"group_id":"capture_tactic",
+			"squad_leader":index == 0,
+			"formation_slot":index,
+			"formation_size":6,
+			"collective_tactic_id":&"spearhead",
+			"collective_beat_kind":&"teach",
+		})
+		if enemy == null:
+			break
+		enemy.collective_phase = &"lock"
+		enemy.collective_mode = &"charge"
+		enemy.collective_direction = direction
+		enemy.collective_target = position
+		enemy.health_visible_timer = 99.0 if index == 0 else 0.0
+		_append_enemy(enemy)
+	mode = RunMode.PAUSED
+	await _settle_capture()
+	_save_capture("03b-collective-lock.png")
+	for enemy in enemies:
+		if enemy.squad_id != "capture_tactic":
+			continue
+		enemy.collective_phase = &"break"
+		enemy.vulnerable = 1.0
+	mode = RunMode.PAUSED
+	await _settle_capture()
+	_save_capture("03c-collective-break.png")
 
 
 func _capture_cycle_evidence() -> void:
