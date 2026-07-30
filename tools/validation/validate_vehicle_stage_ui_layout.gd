@@ -3,6 +3,8 @@ extends SceneTree
 const StageUI = preload("res://scripts/ui/vehicle_stage_ui.gd")
 const MinimapMeshBuilder = preload("res://scripts/ui/vehicle_minimap_mesh_builder.gd")
 const RetainedMinimapMesh = preload("res://scripts/ui/vehicle_retained_minimap_mesh.gd")
+const EnemyStore = preload("res://scripts/enemies/vehicle_enemy_store.gd")
+const VehicleRun = preload("res://scripts/vehicle/vehicle_run.gd")
 const Catalog = preload("res://scripts/cards/vehicle_upgrade_catalog.gd")
 const OfferPresenter = preload("res://scripts/cards/vehicle_upgrade_offer_presenter.gd")
 const UiGlyphCatalog = preload(
@@ -289,7 +291,7 @@ func _initialize() -> void:
 		"retained minimap clears channels that leave the snapshot"
 	)
 	var pressure_markers: Array[Dictionary] = []
-	for index in 320:
+	for index in EnemyStore.MAX_LIVE_HOSTILES:
 		pressure_markers.append({
 			"kind":"elite",
 			"position":Vector2(
@@ -299,28 +301,74 @@ func _initialize() -> void:
 			"discovered":true,
 			"color":minimap_palette[5],
 		})
+	retained_snapshot["cols"] = VehicleRun.MINIMAP_COLS
+	retained_snapshot["rows"] = VehicleRun.MINIMAP_ROWS
+	retained_snapshot["markers"] = pressure_markers
+	retained_snapshot["enemy_clusters"] = []
+	var danger_key := minimap_palette[5].to_rgba32()
+	var all_marker_channels := MinimapMeshBuilder.build_triangle_channels(
+		retained_snapshot,
+		Vector2(176.0, 108.0)
+	)
+	var all_marker_compiled: PackedVector3Array = all_marker_channels.get(
+		danger_key,
+		PackedVector3Array()
+	)
+	retained_map.update(retained_snapshot)
+	var all_marker_contract := retained_map.debug_snapshot()
+	var all_marker_counts := Dictionary(
+		all_marker_contract["visible_vertices_by_color"]
+	)
+	var all_marker_retained := int(all_marker_counts.get(danger_key, 0))
+	_expect(
+		pressure_markers.size() == EnemyStore.MAX_LIVE_HOSTILES
+			and all_marker_compiled.size() > 3500
+			and all_marker_compiled.size()
+				<= int(all_marker_contract["vertices_per_color"])
+			and all_marker_retained == all_marker_compiled.size(),
+		"retained minimap preserves every marker at the 320-hostile capacity"
+	)
 	var pressure_clusters: Array[Dictionary] = []
-	for row in 6:
-		for column in 13:
+	for row in VehicleRun.MINIMAP_ROWS:
+		for column in VehicleRun.MINIMAP_COLS:
 			pressure_clusters.append({
 				"cell":Vector2i(column, row),
-				"count":5,
+				"count":1,
 				"average_velocity":Vector2(100.0, 0.0),
 			})
-	retained_snapshot["markers"] = pressure_markers
+	var mixed_marker_count := (
+		EnemyStore.MAX_LIVE_HOSTILES - pressure_clusters.size()
+	)
+	var mixed_pressure_markers: Array[Dictionary] = []
+	mixed_pressure_markers.assign(
+		pressure_markers.slice(0, mixed_marker_count)
+	)
+	retained_snapshot["markers"] = mixed_pressure_markers
 	retained_snapshot["enemy_clusters"] = pressure_clusters
+	var mixed_channels := MinimapMeshBuilder.build_triangle_channels(
+		retained_snapshot,
+		Vector2(176.0, 108.0)
+	)
+	var mixed_compiled: PackedVector3Array = mixed_channels.get(
+		danger_key,
+		PackedVector3Array()
+	)
 	retained_map.update(retained_snapshot)
-	var pressure_contract := retained_map.debug_snapshot()
-	var pressure_counts := Dictionary(
-		pressure_contract["visible_vertices_by_color"]
+	var mixed_contract := retained_map.debug_snapshot()
+	var mixed_counts := Dictionary(
+		mixed_contract["visible_vertices_by_color"]
 	)
-	var danger_vertices := int(
-		pressure_counts.get(minimap_palette[5].to_rgba32(), 0)
-	)
+	var mixed_retained := int(mixed_counts.get(danger_key, 0))
 	_expect(
-		danger_vertices > 3500
-			and danger_vertices < int(pressure_contract["vertices_per_color"]),
-		"retained minimap covers the maximum enemy pressure inside its channel bound"
+		pressure_clusters.size()
+				== VehicleRun.MINIMAP_COLS * VehicleRun.MINIMAP_ROWS
+			and mixed_pressure_markers.size() + pressure_clusters.size()
+				== EnemyStore.MAX_LIVE_HOSTILES
+			and mixed_compiled.size() > 3500
+			and mixed_compiled.size()
+				<= int(mixed_contract["vertices_per_color"])
+			and mixed_retained == mixed_compiled.size(),
+		"retained minimap preserves a full 20x12 cluster grid inside 320 hostile slots"
 	)
 	retained_snapshot["player"] = Vector2(2800.0, 1200.0)
 	retained_map.update(retained_snapshot)
