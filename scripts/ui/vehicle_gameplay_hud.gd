@@ -9,7 +9,7 @@ const Factory = preload("res://scripts/ui/vehicle_ui_component_factory.gd")
 const ThreatRadar = preload("res://scripts/ui/vehicle_threat_radar.gd")
 const StatusOrbit = preload("res://scripts/ui/vehicle_status_orbit.gd")
 const StageTransitionBanner = preload("res://scripts/ui/vehicle_stage_transition_banner.gd")
-const MinimapMeshBuilder = preload("res://scripts/ui/vehicle_minimap_mesh_builder.gd")
+const RetainedMinimapMesh = preload("res://scripts/ui/vehicle_retained_minimap_mesh.gd")
 
 const HEALTH_CLUSTER_SIZE := Vector2(216.0, 74.0)
 const ACTION_RAIL_SIZE := Vector2(148.0, 44.0)
@@ -31,6 +31,7 @@ class HealthPips:
 	var _trail_elapsed := 0.0
 	var _trail_duration := 0.45
 	var _pulse_time := 0.0
+	var _bar_mesh: ArrayMesh
 
 	func _ready() -> void:
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -46,6 +47,15 @@ class HealthPips:
 		reduced_motion_value: bool = false
 	) -> void:
 		var next_health := clampf(value, 0.0, maxf(1.0, max_value))
+		var next_maximum := maxf(1.0, max_value)
+		var next_required := maxf(1.0, required_value)
+		var values_changed := (
+			not is_equal_approx(next_health, health)
+			or not is_equal_approx(next_maximum, maximum)
+			or run_level != level_value
+			or not is_equal_approx(experience, experience_value)
+			or not is_equal_approx(experience_required, next_required)
+		)
 		reduced_motion = reduced_motion_value
 		if next_health < health:
 			if reduced_motion:
@@ -60,11 +70,13 @@ class HealthPips:
 		elif next_health > health:
 			trailing_health = next_health
 		health = next_health
-		maximum = maxf(1.0, max_value)
+		maximum = next_maximum
 		run_level = level_value
 		experience = experience_value
-		experience_required = maxf(1.0, required_value)
-		queue_redraw()
+		experience_required = next_required
+		if values_changed:
+			_bar_mesh = null
+			queue_redraw()
 
 	func _process(delta: float) -> void:
 		if _pulse_time > 0.0:
@@ -85,6 +97,7 @@ class HealthPips:
 		):
 			trailing_health = health
 			set_process(false)
+		_bar_mesh = null
 		queue_redraw()
 
 	func _draw() -> void:
@@ -107,9 +120,21 @@ class HealthPips:
 			16,
 			Art.IVORY_BRIGHT
 		)
+		if _bar_mesh == null:
+			_bar_mesh = _build_bar_mesh()
+		if _bar_mesh != null:
+			draw_mesh(_bar_mesh, null)
+
+	func _build_bar_mesh() -> ArrayMesh:
+		var vertices := PackedVector3Array()
+		var colors := PackedColorArray()
+		var indices := PackedInt32Array()
 		var hull_rect := Rect2(0.0, 21.0, size.x, 13.0)
-		draw_rect(hull_rect, Art.IVORY_SHADE)
-		draw_rect(
+		_append_rect(vertices, colors, indices, hull_rect, Art.IVORY_SHADE)
+		_append_rect(
+			vertices,
+			colors,
+			indices,
 			Rect2(
 				hull_rect.position,
 				Vector2(
@@ -120,7 +145,10 @@ class HealthPips:
 			),
 			Color(Art.CORAL).lerp(Art.IVORY_BRIGHT, 0.55)
 		)
-		draw_rect(
+		_append_rect(
+			vertices,
+			colors,
+			indices,
 			Rect2(
 				hull_rect.position,
 				Vector2(
@@ -131,10 +159,39 @@ class HealthPips:
 			Art.CORAL
 		)
 		if _pulse_time > 0.0:
-			draw_rect(hull_rect.grow(2.0), Art.CORAL, false, 2.0)
+			var pulse := hull_rect.grow(2.0)
+			_append_rect(
+				vertices, colors, indices,
+				Rect2(pulse.position, Vector2(pulse.size.x, 2.0)),
+				Art.CORAL
+			)
+			_append_rect(
+				vertices, colors, indices,
+				Rect2(
+					pulse.position + Vector2(0.0, pulse.size.y - 2.0),
+					Vector2(pulse.size.x, 2.0)
+				),
+				Art.CORAL
+			)
+			_append_rect(
+				vertices, colors, indices,
+				Rect2(pulse.position, Vector2(2.0, pulse.size.y)),
+				Art.CORAL
+			)
+			_append_rect(
+				vertices, colors, indices,
+				Rect2(
+					pulse.position + Vector2(pulse.size.x - 2.0, 0.0),
+					Vector2(2.0, pulse.size.y)
+				),
+				Art.CORAL
+			)
 		var xp_rect := Rect2(0.0, 39.0, size.x, 7.0)
-		draw_rect(xp_rect, Art.STRUCTURE_MID)
-		draw_rect(
+		_append_rect(vertices, colors, indices, xp_rect, Art.STRUCTURE_MID)
+		_append_rect(
+			vertices,
+			colors,
+			indices,
 			Rect2(
 				xp_rect.position,
 				Vector2(
@@ -145,6 +202,35 @@ class HealthPips:
 			),
 			Art.MUSTARD
 		)
+		var arrays := []
+		arrays.resize(Mesh.ARRAY_MAX)
+		arrays[Mesh.ARRAY_VERTEX] = vertices
+		arrays[Mesh.ARRAY_COLOR] = colors
+		arrays[Mesh.ARRAY_INDEX] = indices
+		var mesh := ArrayMesh.new()
+		mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+		return mesh
+
+	func _append_rect(
+		vertices: PackedVector3Array,
+		colors: PackedColorArray,
+		indices: PackedInt32Array,
+		rect: Rect2,
+		color: Color
+	) -> void:
+		if rect.size.x <= 0.0 or rect.size.y <= 0.0:
+			return
+		var offset := vertices.size()
+		for point in [
+			rect.position,
+			Vector2(rect.end.x, rect.position.y),
+			rect.end,
+			Vector2(rect.position.x, rect.end.y),
+		]:
+			vertices.append(Vector3(point.x, point.y, 0.0))
+			colors.append(color)
+		for local_index in [0, 1, 2, 0, 2, 3]:
+			indices.append(offset + local_index)
 
 
 class ActionRailSlot:
@@ -154,6 +240,8 @@ class ActionRailSlot:
 	var accent := Art.MUSTARD
 	var cooldown_ratio := 0.0
 	var available := true
+	var _available_mesh: ArrayMesh
+	var _unavailable_mesh: ArrayMesh
 
 	func _ready() -> void:
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -161,80 +249,202 @@ class ActionRailSlot:
 		custom_minimum_size = Vector2(44.0, 44.0)
 
 	func configure(title: String, color: Color) -> void:
+		if action_name == title and accent.is_equal_approx(color):
+			return
 		action_name = title
 		accent = color
+		_available_mesh = null
+		_unavailable_mesh = null
 		queue_redraw()
 
 	func set_state(is_available: bool, ratio: float = 0.0) -> void:
+		var next_ratio := clampf(ratio, 0.0, 1.0)
+		if available == is_available and is_equal_approx(cooldown_ratio, next_ratio):
+			return
 		available = is_available
-		cooldown_ratio = clampf(ratio, 0.0, 1.0)
+		cooldown_ratio = next_ratio
 		queue_redraw()
 
 	func _draw() -> void:
 		var center := size * 0.5
 		var radius := 19.0
-		draw_circle(
-			center + Vector2(1.0, 2.0),
-			radius + 1.0,
-			Color(Art.COBALT_DEEP, 0.82)
-		)
-		draw_circle(
-			center,
-			radius,
-			accent if available else Color(Art.COBALT_DEEP, 0.92)
-		)
-		draw_arc(
-			center,
-			radius,
-			0.0,
-			TAU,
-			32,
-			Art.IVORY_BRIGHT
-				if available
-				else Color(Art.MINT_SOFT, 0.58),
-			2.0,
-			true
-		)
-		if not available:
+		var mesh := _available_mesh if available else _unavailable_mesh
+		if mesh == null:
+			mesh = _build_mesh(center, radius, available)
+			if available:
+				_available_mesh = mesh
+			else:
+				_unavailable_mesh = mesh
+		if mesh != null:
+			draw_mesh(mesh, null)
+		if not available and cooldown_ratio < 0.9999:
 			draw_arc(
 				center,
 				radius - 3.0,
 				-PI * 0.5,
 				-PI * 0.5 + TAU * (1.0 - cooldown_ratio),
-				28,
+				24,
 				Color(accent, 0.82),
 				2.0,
 				true
 			)
+
+	func _build_mesh(
+		center: Vector2,
+		radius: float,
+		is_available: bool
+	) -> ArrayMesh:
+		var vertices := PackedVector3Array()
+		var colors := PackedColorArray()
+		var indices := PackedInt32Array()
+		_append_disk(
+			vertices, colors, indices,
+			center + Vector2(1.0, 2.0), radius + 1.0,
+			Color(Art.COBALT_DEEP, 0.82), 24
+		)
+		_append_disk(
+			vertices, colors, indices,
+			center, radius,
+			accent if is_available else Color(Art.COBALT_DEEP, 0.92), 24
+		)
+		_append_band(
+			vertices, colors, indices,
+			center, radius - 1.0, radius + 1.0, 0.0, TAU,
+			Art.IVORY_BRIGHT
+				if is_available
+				else Color(Art.MINT_SOFT, 0.58),
+			24
+		)
 		var icon_color := (
 			Color(Art.COBALT_DEEP, 0.95)
-			if available
+			if is_available
 			else Color(Art.IVORY_BRIGHT, 0.78)
 		)
 		match action_name:
 			"ACTION_SEEKER":
 				for offset in [-6.0, 0.0, 6.0]:
-					draw_circle(center + Vector2(offset, 0.0), 2.3, icon_color)
+					_append_disk(
+						vertices, colors, indices,
+						center + Vector2(offset, 0.0), 2.3,
+						icon_color, 8
+					)
 			"ACTION_DASH":
-				draw_colored_polygon(PackedVector2Array([
-					center + Vector2(-6.0, -5.0),
-					center + Vector2(1.0, 0.0),
-					center + Vector2(-6.0, 5.0),
+				_append_triangle(
+					vertices, colors, indices,
+					center + Vector2(-7.0, -5.0),
+					center + Vector2(0.0, 0.0),
+					center + Vector2(-7.0, 5.0),
+					icon_color
+				)
+				_append_triangle(
+					vertices, colors, indices,
+					center + Vector2(0.0, -5.0),
 					center + Vector2(7.0, 0.0),
-				]), icon_color)
+					center + Vector2(0.0, 5.0),
+					icon_color
+				)
 			_:
-				draw_colored_polygon(PackedVector2Array([
-					center + Vector2(0.0, -7.0),
-					center + Vector2(6.0, 5.0),
+				_append_triangle(
+					vertices, colors, indices,
+					center + Vector2(0.0, -8.0),
+					center + Vector2(7.0, 6.0),
 					center,
-					center + Vector2(-6.0, 5.0),
-				]), icon_color)
+					icon_color
+				)
+				_append_triangle(
+					vertices, colors, indices,
+					center + Vector2(0.0, -8.0),
+					center,
+					center + Vector2(-7.0, 6.0),
+					icon_color
+				)
+		var arrays := []
+		arrays.resize(Mesh.ARRAY_MAX)
+		arrays[Mesh.ARRAY_VERTEX] = vertices
+		arrays[Mesh.ARRAY_COLOR] = colors
+		arrays[Mesh.ARRAY_INDEX] = indices
+		var mesh := ArrayMesh.new()
+		mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+		return mesh
+
+	func _append_disk(
+		vertices: PackedVector3Array,
+		colors: PackedColorArray,
+		indices: PackedInt32Array,
+		center: Vector2,
+		radius: float,
+		color: Color,
+		segments: int
+	) -> void:
+		var center_index := vertices.size()
+		vertices.append(Vector3(center.x, center.y, 0.0))
+		colors.append(color)
+		for index in range(segments + 1):
+			var point := center + Vector2.RIGHT.rotated(
+				TAU * float(index) / float(segments)
+			) * radius
+			vertices.append(Vector3(point.x, point.y, 0.0))
+			colors.append(color)
+		for index in segments:
+			indices.append(center_index)
+			indices.append(center_index + index + 1)
+			indices.append(center_index + index + 2)
+
+	func _append_band(
+		vertices: PackedVector3Array,
+		colors: PackedColorArray,
+		indices: PackedInt32Array,
+		center: Vector2,
+		inner_radius: float,
+		outer_radius: float,
+		from_angle: float,
+		to_angle: float,
+		color: Color,
+		segments: int
+	) -> void:
+		for segment in segments:
+			var ratio_a := float(segment) / float(segments)
+			var ratio_b := float(segment + 1) / float(segments)
+			var direction_a := Vector2.RIGHT.rotated(
+				lerpf(from_angle, to_angle, ratio_a)
+			)
+			var direction_b := Vector2.RIGHT.rotated(
+				lerpf(from_angle, to_angle, ratio_b)
+			)
+			var offset := vertices.size()
+			for point in [
+				center + direction_a * inner_radius,
+				center + direction_a * outer_radius,
+				center + direction_b * outer_radius,
+				center + direction_b * inner_radius,
+			]:
+				vertices.append(Vector3(point.x, point.y, 0.0))
+				colors.append(color)
+			for local_index in [0, 1, 2, 0, 2, 3]:
+				indices.append(offset + local_index)
+
+	func _append_triangle(
+		vertices: PackedVector3Array,
+		colors: PackedColorArray,
+		indices: PackedInt32Array,
+		point_a: Vector2,
+		point_b: Vector2,
+		point_c: Vector2,
+		color: Color
+	) -> void:
+		var offset := vertices.size()
+		for point in [point_a, point_b, point_c]:
+			vertices.append(Vector3(point.x, point.y, 0.0))
+			colors.append(color)
+		for local_index in [0, 1, 2]:
+			indices.append(offset + local_index)
 
 	func debug_contract() -> Dictionary:
 		return {
 			"available":available,
 			"interior_filled":available,
 			"has_text":false,
+			"draw_batches":2 if not available else 1,
 			"minimum_size":custom_minimum_size,
 		}
 
@@ -245,7 +455,7 @@ class StageMinimap:
 	var snapshot: Dictionary = {}
 	var _static_map_mesh: ArrayMesh
 	var _static_mesh_size := Vector2.ZERO
-	var _dynamic_map_mesh: ArrayMesh
+	var _dynamic_map: VehicleRetainedMinimapMesh
 	var _dynamic_mesh_size := Vector2.ZERO
 
 	func _ready() -> void:
@@ -253,17 +463,33 @@ class StageMinimap:
 		custom_minimum_size = Vector2(144.0, 80.0)
 
 	func set_snapshot(value: Dictionary) -> void:
-		for key in value:
-			snapshot[key] = value[key]
-		if (
+		var redraw_needed := false
+		var static_geometry_changed := (
 			value.has("floor_polygons")
 			or value.has("void_polygons")
 			or value.has("blocker_polygons")
-			or value.has("world_size")
-		):
+		)
+		var world_size_changed := (
+			value.has("world_size")
+			and (
+				not snapshot.has("world_size")
+				or not Vector2(snapshot["world_size"]).is_equal_approx(
+					Vector2(value["world_size"])
+				)
+			)
+		)
+		for key in value:
+			snapshot[key] = value[key]
+		if static_geometry_changed or world_size_changed:
 			_static_map_mesh = null
-		_dynamic_map_mesh = null
-		queue_redraw()
+			redraw_needed = true
+		if _dynamic_map != null and _dynamic_mesh_size.is_equal_approx(size):
+			_dynamic_map.update(snapshot)
+		else:
+			_dynamic_map = null
+			redraw_needed = true
+		if redraw_needed:
+			queue_redraw()
 
 	func _draw() -> void:
 		draw_rect(Rect2(Vector2.ZERO, size), Art.COBALT_DEEP)
@@ -276,11 +502,12 @@ class StageMinimap:
 			_static_mesh_size = size
 		if _static_map_mesh != null:
 			draw_mesh(_static_map_mesh, null)
-		if _dynamic_map_mesh == null or not _dynamic_mesh_size.is_equal_approx(size):
-			_dynamic_map_mesh = MinimapMeshBuilder.build(snapshot, size)
+		if _dynamic_map == null or not _dynamic_mesh_size.is_equal_approx(size):
+			_dynamic_map = RetainedMinimapMesh.new(size)
 			_dynamic_mesh_size = size
-		if _dynamic_map_mesh != null:
-			draw_mesh(_dynamic_map_mesh, null)
+			_dynamic_map.update(snapshot)
+		if _dynamic_map != null and _dynamic_map.mesh != null:
+			draw_mesh(_dynamic_map.mesh, null)
 
 	func _build_static_map_mesh(world_size: Vector2) -> ArrayMesh:
 		var vertices := PackedVector3Array()
@@ -327,6 +554,10 @@ var _objective_label: Label
 var _objective_detail: Label
 var _objective_detail_timer := 0.0
 var _last_objective_text := ""
+var _last_objective_detail := ""
+var _last_buff_text := ""
+var _boss_visible := false
+var _target_visible := false
 var _boss_cluster: VBoxContainer
 var _boss_name: Label
 var _boss_bar: ProgressBar
@@ -354,6 +585,7 @@ func _ready() -> void:
 	resized.connect(_apply_responsive_layout)
 	_build()
 	_apply_responsive_layout()
+	set_process(false)
 
 
 func _process(delta: float) -> void:
@@ -366,6 +598,8 @@ func _process(delta: float) -> void:
 	if _objective_detail_timer > 0.0:
 		_objective_detail_timer = maxf(0.0, _objective_detail_timer - delta)
 		_objective_detail.visible = _objective_detail_timer > 0.0
+	if _notification_timer <= 0.0 and _objective_detail_timer <= 0.0:
+		set_process(false)
 
 
 func _build() -> void:
@@ -377,6 +611,7 @@ func _build() -> void:
 	add_child(_status_orbit)
 
 	_health_panel = Factory.flat_panel()
+	_health_panel.name = "HealthPanel"
 	_health_panel.position = Vector2(18.0, 16.0)
 	_health_panel.size = HEALTH_CLUSTER_SIZE
 	add_child(_health_panel)
@@ -384,6 +619,7 @@ func _build() -> void:
 	_health_panel.add_child(_health_bar)
 
 	_objective_panel = Factory.flat_panel()
+	_objective_panel.name = "ObjectivePanel"
 	_objective_panel.custom_minimum_size = Vector2(360.0, 44.0)
 	_objective_panel.size = Vector2(360.0, 44.0)
 	add_child(_objective_panel)
@@ -403,6 +639,7 @@ func _build() -> void:
 	objective_box.add_child(_objective_detail)
 
 	_minimap_panel = Factory.flat_panel()
+	_minimap_panel.name = "MinimapPanel"
 	_minimap_panel.size = Vector2(176.0, 108.0)
 	add_child(_minimap_panel)
 	_minimap = StageMinimap.new()
@@ -440,6 +677,7 @@ func _build() -> void:
 	_boss_cluster.visible = false
 
 	_target_panel = Factory.flat_panel()
+	_target_panel.name = "TargetPanel"
 	_target_panel.size = Vector2(184.0, 64.0)
 	add_child(_target_panel)
 	var target_cluster := VBoxContainer.new()
@@ -460,6 +698,7 @@ func _build() -> void:
 	_target_panel.visible = false
 
 	_dock_panel = Control.new()
+	_dock_panel.name = "ActionRail"
 	_dock_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_dock_panel.size = ACTION_RAIL_SIZE
 	add_child(_dock_panel)
@@ -507,8 +746,12 @@ func update_snapshot(snapshot: Dictionary) -> void:
 			_last_objective_text = next_objective
 			_objective_detail_timer = 3.0
 			_objective_detail.visible = true
-		_objective_label.text = next_objective
-		_objective_detail.text = String(snapshot.get("objective_detail", ""))
+			_objective_label.text = next_objective
+			set_process(true)
+		var next_detail := String(snapshot.get("objective_detail", ""))
+		if next_detail != _last_objective_detail:
+			_last_objective_detail = next_detail
+			_objective_detail.text = next_detail
 	if snapshot.has("dash_available"):
 		_dash_slot.set_state(
 			bool(snapshot["dash_available"]),
@@ -522,41 +765,64 @@ func update_snapshot(snapshot: Dictionary) -> void:
 			bool(snapshot.get("skill_available", false)),
 			float(snapshot.get("skill_ratio", 0.0))
 		)
-		_buff_label.text = String(snapshot.get("buff_text", ""))
-		_buff_label.visible = not _buff_label.text.is_empty()
+		var next_buff_text := String(snapshot.get("buff_text", ""))
+		if next_buff_text != _last_buff_text:
+			_last_buff_text = next_buff_text
+			_buff_label.text = next_buff_text
+			_buff_label.visible = not next_buff_text.is_empty()
 	if snapshot.has("boss"):
 		var boss := Dictionary(snapshot["boss"])
 		var boss_name := String(boss.get("name", "")).strip_edges()
-		_boss_cluster.visible = (
+		var next_boss_visible := (
 			bool(boss.get("visible", false))
 			and not boss_name.is_empty()
 		)
-		_objective_panel.visible = not _boss_cluster.visible
-		if _boss_cluster.visible:
-			_boss_name.text = boss_name
-			_boss_bar.max_value = maxf(
+		if next_boss_visible != _boss_visible:
+			_boss_visible = next_boss_visible
+			_boss_cluster.visible = next_boss_visible
+			_objective_panel.visible = not next_boss_visible
+			_apply_responsive_layout()
+		if next_boss_visible:
+			if _boss_name.text != boss_name:
+				_boss_name.text = boss_name
+			var next_boss_maximum := maxf(
 				1.0,
 				float(boss.get("max_health", 1.0))
 			)
-			_boss_bar.value = float(boss.get("health", 0.0))
-			_boss_state.text = String(boss.get("state", ""))
-			_boss_state.visible = not _boss_state.text.is_empty()
-		_apply_responsive_layout()
+			var next_boss_health := float(boss.get("health", 0.0))
+			if not is_equal_approx(_boss_bar.max_value, next_boss_maximum):
+				_boss_bar.max_value = next_boss_maximum
+			if not is_equal_approx(_boss_bar.value, next_boss_health):
+				_boss_bar.value = next_boss_health
+			var next_boss_state := String(boss.get("state", ""))
+			if _boss_state.text != next_boss_state:
+				_boss_state.text = next_boss_state
+				_boss_state.visible = not next_boss_state.is_empty()
 	if snapshot.has("target"):
 		var target := Dictionary(snapshot["target"])
 		var target_name := String(target.get("name", "")).strip_edges()
-		_target_panel.visible = (
+		var next_target_visible := (
 			bool(target.get("visible", false))
 			and not target_name.is_empty()
 		)
-		if _target_panel.visible:
-			_target_name.text = target_name
-			_target_bar.max_value = maxf(
+		if next_target_visible != _target_visible:
+			_target_visible = next_target_visible
+			_target_panel.visible = next_target_visible
+		if next_target_visible:
+			if _target_name.text != target_name:
+				_target_name.text = target_name
+			var next_target_maximum := maxf(
 				1.0,
 				float(target.get("max_health", 1.0))
 			)
-			_target_bar.value = float(target.get("health", 0.0))
-			_target_state.text = String(target.get("state", ""))
+			var next_target_health := float(target.get("health", 0.0))
+			if not is_equal_approx(_target_bar.max_value, next_target_maximum):
+				_target_bar.max_value = next_target_maximum
+			if not is_equal_approx(_target_bar.value, next_target_health):
+				_target_bar.value = next_target_health
+			var next_target_state := String(target.get("state", ""))
+			if _target_state.text != next_target_state:
+				_target_state.text = next_target_state
 	if snapshot.has("minimap"):
 		_minimap.set_snapshot(snapshot["minimap"])
 	if snapshot.has("threat_radar"):
@@ -808,6 +1074,7 @@ func _show_notification(entry: Dictionary) -> void:
 	_notification.modulate.a = 1.0
 	_notification.visible = true
 	_notification_timer = float(entry["duration"])
+	set_process(true)
 
 
 func _action_slot(

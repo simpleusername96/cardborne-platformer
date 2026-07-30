@@ -27,6 +27,10 @@ func _run() -> void:
 		"combat presentation remains inside the retained fifty-batch ceiling (actual %d)"
 		% int(snapshot["batches"])
 	)
+	_expect(
+		int(snapshot["allocated_instances"]) < int(snapshot["maximum_instances"]),
+		"component batches reserve bounded working buffers and retain their full growth ceiling"
+	)
 	_expect(Art.validate_contract().is_empty(), "combat visual profile satisfies the locked readability contract")
 	_expect(
 		AttackContract.LIGHT_PROJECTILE_RADIUS == 5.0
@@ -292,14 +296,14 @@ func _run() -> void:
 		"hostile head and trail share one vertex-colored mesh surface"
 	)
 	var crowd: Array[EnemyState] = []
-	for index in 40:
+	for index in 110:
 		var crowd_enemy := EnemyState.new()
 		crowd_enemy.id = "crowd_%02d" % index
 		crowd_enemy.role = &"chaser"
 		crowd_enemy.archetype = &"chaser"
 		crowd_enemy.pos = Vector2(
 			120.0 + float(index % 10) * 92.0,
-			100.0 + float(index / 10) * 120.0
+			80.0 + float(index / 10) * 52.0
 		)
 		crowd_enemy.alive = true
 		crowd_enemy.active = true
@@ -326,8 +330,9 @@ func _run() -> void:
 	)
 	var crowd_body := renderer.get_node("Enemy_chaser") as MultiMeshInstance2D
 	_expect(
-		crowd_body.multimesh.visible_instance_count == 40,
-		"semantic overlay budgets do not hide ordinary enemy bodies"
+		crowd_body.multimesh.visible_instance_count == 110
+			and crowd_body.multimesh.instance_count >= 110,
+		"adaptive component buffers grow without hiding ordinary enemy bodies"
 	)
 	var offscreen_enemy := EnemyState.new()
 	offscreen_enemy.id = "offscreen_attacker"

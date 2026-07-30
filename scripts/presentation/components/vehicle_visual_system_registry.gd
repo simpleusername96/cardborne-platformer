@@ -26,6 +26,9 @@ const WORLD_GEOMETRY_PATH := (
 const MINIMAP_GEOMETRY_PATH := (
 	"res://scripts/ui/vehicle_minimap_mesh_builder.gd"
 )
+const RETAINED_MINIMAP_GEOMETRY_PATH := (
+	"res://scripts/ui/vehicle_retained_minimap_mesh.gd"
+)
 static func catalog_ids() -> Dictionary:
 	return {
 		&"actor": ActorCatalog.descriptor_ids(),
@@ -77,6 +80,10 @@ static func provider_fingerprint() -> String:
 	records.append(
 		"minimap_geometry=%s"
 		% FileAccess.get_sha256(MINIMAP_GEOMETRY_PATH)
+	)
+	records.append(
+		"retained_minimap_geometry=%s"
+		% FileAccess.get_sha256(RETAINED_MINIMAP_GEOMETRY_PATH)
 	)
 	records.sort()
 	return "|".join(records).sha256_text()

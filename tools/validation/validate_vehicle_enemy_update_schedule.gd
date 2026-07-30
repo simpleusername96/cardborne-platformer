@@ -37,6 +37,18 @@ func _initialize() -> void:
 		store.live[index].carrier_id = carrier.id
 	var support := store.live[6]
 	support.role = &"shield_escort"
+	var other_squad := store.live[7]
+	other_squad.role = &"rammer"
+	other_squad.squad_id = "gamma"
+	var stage_boss := store.live[8]
+	stage_boss.role = &"stage_boss"
+	stage_boss.phase = &"startup"
+	var generator := store.live[9]
+	generator.role = &"generator"
+	generator.phase = &"active"
+	var boss_pylon := store.live[10]
+	boss_pylon.role = &"boss_pylon"
+	boss_pylon.phase = &"interrupted_recovery"
 
 	var schedule := Schedule.new()
 	schedule.rebuild(store.live, 1.0 / 60.0, Vector2(2800.0, 1700.0), 820.0 * 820.0, 0, 0, 0)
@@ -46,19 +58,88 @@ func _initialize() -> void:
 	_expect(int(first["active_cap_count"]) == 276, "schedule snapshots the active-cap count")
 	_expect(int(first["critical"]) == 2, "startup and active ordinary actors stay critical")
 	_expect(int(first["committed_rammers"]) == 2, "schedule snapshots committed rammers")
+	_expect(
+		is_zero_approx(schedule.motion_delta(rammer_a)),
+		"critical ordinary actors remain on the independent 60 Hz lane"
+	)
+	_expect(
+		stage_boss not in schedule.critical
+		and generator not in schedule.critical
+		and boss_pylon not in schedule.critical,
+		"special roles stay out of ordinary behavior worklists"
+	)
 	_expect(schedule.carrier_child_count(carrier.id) == 3, "carrier child count is precomputed")
-	_expect(not schedule.rammer_can_commit(store.live[7]), "global rammer cap blocks another commit")
-	_expect(schedule.supports.size() == 1 and schedule.supports[0] == support, "support worklist preserves store order")
+	_expect(
+		not schedule.can_commit(other_squad, 100.0, 100, 100),
+		"global rammer cap blocks another commit"
+	)
+	_expect(
+		schedule.supports.size() == 2
+		and schedule.supports[0] == support
+		and schedule.supports[1] == generator,
+		"support worklist preserves store order"
+	)
 
 	rammer_b.phase = &"move"
 	schedule.rebuild(store.live, 1.0 / 60.0, Vector2(2800.0, 1700.0), 820.0 * 820.0, 1, 1, 1)
-	_expect(not schedule.rammer_can_commit(rammer_a), "same-squad rammer cannot overlap")
-	var other_squad := store.live[7]
-	other_squad.role = &"rammer"
-	other_squad.squad_id = "gamma"
-	_expect(schedule.rammer_can_commit(other_squad), "different squad can use the second global rammer slot")
+	_expect(
+		not schedule.can_commit(rammer_a, 100.0, 100, 100),
+		"same-squad rammer cannot overlap"
+	)
+	_expect(
+		schedule.can_commit(other_squad, 100.0, 100, 100),
+		"different squad can use the second global rammer slot"
+	)
+	var committed_points_before := schedule.committed_points
 	schedule.note_commit(other_squad)
-	_expect(not schedule.rammer_can_commit(store.live[8]), "local commit update closes the global rammer cap")
+	var blocked_rammer := store.live[11]
+	blocked_rammer.role = &"rammer"
+	blocked_rammer.squad_id = "delta"
+	_expect(
+		is_equal_approx(
+			schedule.committed_points,
+			committed_points_before + other_squad.threat_cost
+		),
+		"local commit update accounts for threat points"
+	)
+	_expect(
+		not schedule.can_commit(blocked_rammer, 100.0, 100, 100),
+		"local commit update closes the global rammer cap"
+	)
+	var ranged_candidate := store.live[12]
+	ranged_candidate.role = &"shooter"
+	ranged_candidate.threat_kind = &"ranged"
+	ranged_candidate.threat_cost = 2.0
+	_expect(
+		schedule.can_commit(ranged_candidate, 100.0, 1, 100),
+		"available ranged budget accepts a candidate"
+	)
+	schedule.note_commit(ranged_candidate)
+	var blocked_ranged := store.live[13]
+	blocked_ranged.role = &"shooter"
+	blocked_ranged.threat_kind = &"ranged"
+	_expect(
+		schedule.committed_ranged == 1
+		and not schedule.can_commit(blocked_ranged, 100.0, 1, 100),
+		"local commit update closes the ranged cap"
+	)
+	var denial_candidate := store.live[14]
+	denial_candidate.role = &"mine"
+	denial_candidate.threat_kind = &"denial"
+	denial_candidate.threat_cost = 1.0
+	_expect(
+		schedule.can_commit(denial_candidate, 100.0, 100, 1),
+		"available denial budget accepts a candidate"
+	)
+	schedule.note_commit(denial_candidate)
+	var blocked_denial := store.live[15]
+	blocked_denial.role = &"mine"
+	blocked_denial.threat_kind = &"denial"
+	_expect(
+		schedule.committed_denial == 1
+		and not schedule.can_commit(blocked_denial, 100.0, 100, 1),
+		"local commit update closes the denial cap"
+	)
 
 	for tick in 12:
 		schedule.rebuild(
@@ -67,6 +148,22 @@ func _initialize() -> void:
 		)
 	var due_snapshot := schedule.debug_snapshot()
 	_expect(int(due_snapshot["ordinary_due"]) > 0, "10 Hz decision work becomes due")
+	_expect(
+		stage_boss not in schedule.ordinary_due
+		and generator not in schedule.ordinary_due
+		and boss_pylon not in schedule.ordinary_due,
+		"special roles never enter deferred ordinary behavior work"
+	)
+	_expect(
+		schedule.critical.size() + schedule.ordinary_due.size()
+		< schedule.active.size(),
+		"ordinary behavior dispatch visits only scheduled worklists"
+	)
+	for due in schedule.ordinary_due:
+		_expect(
+			schedule.motion_delta(due) > 0.0 and due not in schedule.critical,
+			"deferred ordinary work carries accumulated motion without overlap"
+		)
 	var previous_alive := schedule.alive.duplicate()
 	schedule.rebuild(store.live, 0.0, Vector2(2800.0, 1700.0), 820.0 * 820.0, 0, 0, 0)
 	_expect(schedule.alive == previous_alive, "zero-delta rebuild preserves deterministic worklist order")

@@ -6,6 +6,9 @@ extends RefCounted
 
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 const EnemyStore = preload("res://scripts/enemies/vehicle_enemy_store.gd")
+const EncounterDirector = preload(
+	"res://scripts/encounters/vehicle_encounter_director.gd"
+)
 
 const DECISION_INTERVAL := 0.10
 const NEAR_MOTION_INTERVAL := 1.0 / 30.0
@@ -150,14 +153,39 @@ func motion_delta(enemy: EnemyState) -> float:
 	return float(_motion_delta[slot]) if slot >= 0 and slot < _motion_delta.size() else 0.0
 
 
-func rammer_can_commit(enemy: EnemyState) -> bool:
+func can_commit(
+	enemy: EnemyState,
+	threat_budget: float,
+	ranged_cap: int,
+	denial_cap: int
+) -> bool:
 	return (
-		committed_rammers < 2
-		and int(_rammers_by_squad.get(enemy.squad_id, 0)) < 1
+		EncounterDirector.can_commit(
+			committed_points,
+			committed_ranged,
+			committed_denial,
+			enemy,
+			threat_budget,
+			ranged_cap,
+			denial_cap
+		)
+		and (
+			enemy.role != &"rammer"
+			or (
+				committed_rammers < 2
+				and int(_rammers_by_squad.get(enemy.squad_id, 0)) < 1
+			)
+		)
 	)
 
 
 func note_commit(enemy: EnemyState) -> void:
+	committed_points += enemy.threat_cost
+	match enemy.threat_kind:
+		&"ranged":
+			committed_ranged += 1
+		&"denial":
+			committed_denial += 1
 	if enemy.role == &"rammer":
 		_note_rammer_commit(enemy)
 

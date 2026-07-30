@@ -2,6 +2,7 @@ extends SceneTree
 
 const StageUI = preload("res://scripts/ui/vehicle_stage_ui.gd")
 const MinimapMeshBuilder = preload("res://scripts/ui/vehicle_minimap_mesh_builder.gd")
+const RetainedMinimapMesh = preload("res://scripts/ui/vehicle_retained_minimap_mesh.gd")
 const Catalog = preload("res://scripts/cards/vehicle_upgrade_catalog.gd")
 const OfferPresenter = preload("res://scripts/cards/vehicle_upgrade_offer_presenter.gd")
 
@@ -110,6 +111,7 @@ func _initialize() -> void:
 		var slot := Dictionary(slot_variant)
 		_expect(not bool(slot["interior_filled"]), "cooldown action circles keep an empty interior")
 		_expect(not bool(slot["has_text"]), "action circles do not render labels")
+		_expect(int(slot["draw_batches"]) <= 2, "each action glyph uses one retained mesh plus at most one cooldown arc")
 	ui.update_hud({
 		"dash_available":true,
 		"dash_ratio":0.0,
@@ -151,6 +153,93 @@ func _initialize() -> void:
 	_expect(
 		tactical_mesh != null and tactical_mesh.get_surface_count() == 1,
 		"tactical minimap publishes all dynamic markers through one mesh surface"
+	)
+	var minimap_palette := MinimapMeshBuilder.dynamic_colors()
+	var palette_markers: Array[Dictionary] = []
+	for index in minimap_palette.size():
+		palette_markers.append({
+			"kind":"point",
+			"position":Vector2(400.0 + index * 420.0, 900.0),
+			"discovered":true,
+			"color":minimap_palette[index],
+		})
+	var retained_snapshot := {
+		"cols":13,
+		"rows":6,
+		"visited":[Vector2i(6, 3)],
+		"world_size":Vector2(5200.0, 2200.0),
+		"player":Vector2(2600.0, 1100.0),
+		"player_facing":Vector2.RIGHT,
+		"markers":palette_markers,
+		"enemy_clusters":[],
+		"support_fields":[],
+	}
+	var retained_map := RetainedMinimapMesh.new(Vector2(176.0, 108.0))
+	var retained_mesh_id := retained_map.mesh.get_instance_id()
+	retained_map.update(retained_snapshot)
+	var palette_contract := retained_map.debug_snapshot()
+	var palette_counts := Dictionary(palette_contract["visible_vertices_by_color"])
+	for color in minimap_palette:
+		_expect(
+			int(palette_counts.get(color.to_rgba32(), 0)) > 0,
+			"retained minimap supports palette channel %s"
+			% color.to_html(true)
+		)
+	retained_snapshot["markers"] = []
+	retained_map.update(retained_snapshot)
+	var cleared_counts := Dictionary(
+		retained_map.debug_snapshot()["visible_vertices_by_color"]
+	)
+	_expect(
+		int(cleared_counts.get(minimap_palette[5].to_rgba32(), 0)) == 0,
+		"retained minimap clears channels that leave the snapshot"
+	)
+	var pressure_markers: Array[Dictionary] = []
+	for index in 320:
+		pressure_markers.append({
+			"kind":"elite",
+			"position":Vector2(
+				300.0 + float(index % 32) * 140.0,
+				300.0 + float(index / 32) * 140.0
+			),
+			"discovered":true,
+			"color":minimap_palette[5],
+		})
+	var pressure_clusters: Array[Dictionary] = []
+	for row in 6:
+		for column in 13:
+			pressure_clusters.append({
+				"cell":Vector2i(column, row),
+				"count":5,
+				"average_velocity":Vector2(100.0, 0.0),
+			})
+	retained_snapshot["markers"] = pressure_markers
+	retained_snapshot["enemy_clusters"] = pressure_clusters
+	retained_map.update(retained_snapshot)
+	var pressure_contract := retained_map.debug_snapshot()
+	var pressure_counts := Dictionary(
+		pressure_contract["visible_vertices_by_color"]
+	)
+	var danger_vertices := int(
+		pressure_counts.get(minimap_palette[5].to_rgba32(), 0)
+	)
+	_expect(
+		danger_vertices > 3500
+			and danger_vertices < int(pressure_contract["vertices_per_color"]),
+		"retained minimap covers the maximum enemy pressure inside its channel bound"
+	)
+	retained_snapshot["player"] = Vector2(2800.0, 1200.0)
+	retained_map.update(retained_snapshot)
+	var retained_contract := retained_map.debug_snapshot()
+	_expect(
+		retained_map.mesh.get_instance_id() == retained_mesh_id,
+		"tactical minimap updates one retained GPU resource"
+	)
+	_expect(
+		int(retained_contract["surface_count"]) == 1
+			and int(retained_contract["visible_vertices"]) > 0
+			and int(retained_contract["vertices_per_color"]) % 3 == 0,
+		"retained minimap publishes aligned bounded triangle channels"
 	)
 	ui.queue_free()
 	await process_frame

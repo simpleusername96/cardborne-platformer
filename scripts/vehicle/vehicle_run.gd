@@ -1798,9 +1798,6 @@ func _update_enemies(delta: float) -> void:
 		enemies, delta, player_position, FAR_SIMULATION_DISTANCE_SQUARED,
 		decision_bucket, _simulation_lod_bucket, _far_enemy_simulation_bucket
 	)
-	var committed_points := _enemy_update_schedule.committed_points
-	var committed_ranged := _enemy_update_schedule.committed_ranged
-	var committed_denial := _enemy_update_schedule.committed_denial
 	var active_capped := _enemy_update_schedule.active_cap_count
 	if _enforce_active_enemy_cap(active_capped):
 		_enemy_update_schedule.rebuild(
@@ -1808,9 +1805,6 @@ func _update_enemies(delta: float) -> void:
 			decision_bucket, _simulation_lod_bucket, _far_enemy_simulation_bucket
 		)
 		active_capped = _enemy_update_schedule.active_cap_count
-		committed_points = _enemy_update_schedule.committed_points
-		committed_ranged = _enemy_update_schedule.committed_ranged
-		committed_denial = _enemy_update_schedule.committed_denial
 	if performance_active:
 		_performance_enemy_sections["budget_scan"] = _elapsed_ms(section_started)
 		section_started = Time.get_ticks_usec()
@@ -1915,38 +1909,41 @@ func _update_enemies(delta: float) -> void:
 			continue
 		if enemy.stun > 0.0:
 			enemy.velocity = Vector2.ZERO
-			continue
-		var critical_due := _enemy_update_schedule.is_critical(enemy)
-		var decision_due := _enemy_update_schedule.decision_due(enemy)
-		var motion_delta := (
-			delta if critical_due else _enemy_update_schedule.motion_delta(enemy)
-		)
-		if not critical_due and motion_delta <= 0.0:
-			continue
-		var can_commit := false
-		if decision_due:
-			can_commit = EncounterDirector.can_commit(
-				committed_points,
-				committed_ranged,
-				committed_denial,
-				enemy,
-				encounter_runtime.threat_budget(),
-				encounter_runtime.ranged_commit_cap(),
-				encounter_runtime.denial_commit_cap()
-			)
-			if role == &"rammer" and not _enemy_update_schedule.rammer_can_commit(enemy):
-				can_commit = false
-		var started := _update_ordinary_enemy(
-			enemy, motion_delta, can_commit, decision_due, motion_delta
-		)
-		if started:
-			committed_points += enemy.threat_cost
-			match enemy.threat_kind:
-				&"ranged": committed_ranged += 1
-				&"denial": committed_denial += 1
-			_enemy_update_schedule.note_commit(enemy)
+	for enemy in _enemy_update_schedule.critical:
+		_update_scheduled_ordinary_enemy(enemy, delta)
+	for enemy in _enemy_update_schedule.ordinary_due:
+		_update_scheduled_ordinary_enemy(enemy)
 	if performance_active:
 		_performance_enemy_sections["behavior_and_motion"] = _elapsed_ms(section_started)
+
+
+func _update_scheduled_ordinary_enemy(
+	enemy: EnemyState,
+	critical_delta: float = -1.0
+) -> void:
+	if not enemy.alive or not enemy.active or enemy.stun > 0.0:
+		return
+	var motion_delta := (
+		critical_delta
+		if critical_delta >= 0.0
+		else _enemy_update_schedule.motion_delta(enemy)
+	)
+	if motion_delta <= 0.0:
+		return
+	var decision_due := _enemy_update_schedule.decision_due(enemy)
+	var can_commit := (
+		decision_due
+		and _enemy_update_schedule.can_commit(
+			enemy,
+			encounter_runtime.threat_budget(),
+			encounter_runtime.ranged_commit_cap(),
+			encounter_runtime.denial_commit_cap()
+		)
+	)
+	if _update_ordinary_enemy(
+		enemy, motion_delta, can_commit, decision_due, motion_delta
+	):
+		_enemy_update_schedule.note_commit(enemy)
 
 
 func _enforce_active_enemy_cap(known_active_count: int = -1) -> bool:

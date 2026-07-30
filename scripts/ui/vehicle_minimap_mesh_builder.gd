@@ -7,6 +7,57 @@ const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 
 
 static func build(snapshot: Dictionary, canvas_size: Vector2) -> ArrayMesh:
+	var geometry := _build_geometry(snapshot, canvas_size)
+	return _mesh(
+		geometry["vertices"],
+		geometry["colors"],
+		geometry["indices"]
+	)
+
+
+static func build_triangle_channels(
+	snapshot: Dictionary,
+	canvas_size: Vector2
+) -> Dictionary:
+	var geometry := _build_geometry(snapshot, canvas_size)
+	var vertices: Array[Vector3] = geometry["vertices"]
+	var colors: Array[Color] = geometry["colors"]
+	var indices: Array[int] = geometry["indices"]
+	var channels: Dictionary = {}
+	for index in indices:
+		var vertex_index := int(index)
+		var key := colors[vertex_index].to_rgba32()
+		var channel: Array[Vector3]
+		if channels.has(key):
+			channel = channels[key]
+		else:
+			channel = []
+			channels[key] = channel
+		channel.append(vertices[vertex_index])
+	var packed_channels := {}
+	for key in channels:
+		packed_channels[key] = PackedVector3Array(channels[key])
+	return packed_channels
+
+
+static func dynamic_colors() -> Array[Color]:
+	return [
+		Color(Art.SPACE_BLACK, 0.82),
+		Art.SPACE_BLACK,
+		Art.TEXT_PRIMARY,
+		Art.TEXT_MUTED,
+		Art.PLAYER_REWARD,
+		Art.DANGER,
+		Art.BOSS_COMMAND,
+		Art.SUPPORT,
+		Art.SYSTEM,
+	]
+
+
+static func _build_geometry(
+	snapshot: Dictionary,
+	canvas_size: Vector2
+) -> Dictionary:
 	var vertices: Array[Vector3] = []
 	var colors: Array[Color] = []
 	var indices: Array[int] = []
@@ -21,7 +72,11 @@ static func build(snapshot: Dictionary, canvas_size: Vector2) -> ArrayMesh:
 	_append_clusters(vertices, colors, indices, snapshot, cell_size)
 	_append_support_fields(vertices, colors, indices, snapshot, world_size, canvas_size)
 	_append_player(vertices, colors, indices, snapshot, world_size, canvas_size)
-	return _mesh(vertices, colors, indices)
+	return {
+		"vertices":vertices,
+		"colors":colors,
+		"indices":indices,
+	}
 
 
 static func _append_concealment(

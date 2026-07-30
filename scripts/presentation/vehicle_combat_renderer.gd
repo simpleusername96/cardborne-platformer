@@ -25,11 +25,17 @@ const BUFFER_FLOATS_PER_INSTANCE := 12
 const CUSTOM_BATCH_AABB := AABB(Vector3(-8192.0, -8192.0, -1.0), Vector3(16384.0, 16384.0, 2.0))
 const MAX_ORDINARY_HEALTH_BARS := 12
 const MAX_EXTRA_PRIORITY_MARKERS := 8
+const ENEMY_BATCH_INITIAL_CAPACITY := 96
+const PROJECTILE_BATCH_INITIAL_CAPACITY := 96
+const EXPERIENCE_BATCH_INITIAL_CAPACITY := 64
 class BatchBuffer:
 	var values := PackedFloat32Array()
 
 
 	func _init(capacity: int) -> void:
+		values.resize(capacity * BUFFER_FLOATS_PER_INSTANCE)
+
+	func resize(capacity: int) -> void:
 		values.resize(capacity * BUFFER_FLOATS_PER_INSTANCE)
 
 
@@ -77,11 +83,17 @@ class BatchHandle:
 	var instance: MultiMeshInstance2D
 	var buffer
 	var count := 0
+	var max_capacity := 0
 
 
-	func _init(target: MultiMeshInstance2D, target_buffer) -> void:
+	func _init(
+		target: MultiMeshInstance2D,
+		target_buffer,
+		target_max_capacity: int
+	) -> void:
 		instance = target
 		buffer = target_buffer
+		max_capacity = target_max_capacity
 
 
 	func reset() -> void:
@@ -92,6 +104,21 @@ class BatchHandle:
 		instance.multimesh.visible_instance_count = count
 		if count > 0:
 			instance.multimesh.buffer = buffer.values
+
+
+	func ensure_capacity(required: int) -> bool:
+		var current := instance.multimesh.instance_count
+		if required <= current:
+			return true
+		if current >= max_capacity:
+			return false
+		var next_capacity := mini(
+			max_capacity,
+			maxi(required, maxi(1, current * 2))
+		)
+		instance.multimesh.instance_count = next_capacity
+		buffer.resize(next_capacity)
+		return true
 
 
 var _enemy_batches: Dictionary = {}
@@ -172,14 +199,20 @@ static func player_engine_sockets(
 
 func debug_snapshot() -> Dictionary:
 	var visible := 0
+	var allocated := 0
+	var maximum := 0
 	var batch_counts := {}
 	for batch in _batches:
 		visible += batch.count
+		allocated += batch.instance.multimesh.instance_count
+		maximum += batch.max_capacity
 		if batch.count > 0:
 			batch_counts[batch.instance.name] = batch.count
 	return {
 		"batches": _batches.size(),
 		"visible_instances": visible,
+		"allocated_instances":allocated,
+		"maximum_instances":maximum,
 		"batch_counts": batch_counts,
 		"enemy_capacity": ENEMY_CAPACITY,
 		"status_arc_capacity": STATUS_ARC_CAPACITY,
@@ -198,7 +231,8 @@ func _build_batches() -> void:
 			Visuals.enemy_mesh(archetype),
 			ENEMY_CAPACITY,
 			0,
-			archetype
+			archetype,
+			ENEMY_BATCH_INITIAL_CAPACITY
 		)
 	for variant in [&"colossus", &"leviathan", &"titan", &"behemoth", &"crown"]:
 		_boss_variant_batches[variant] = _create_batch(
@@ -232,7 +266,8 @@ func _build_batches() -> void:
 				),
 				capacity,
 				1,
-				StringName("projectile_trail_%s_%s" % [String(team), String(affinity)])
+				StringName("projectile_trail_%s_%s" % [String(team), String(affinity)]),
+				PROJECTILE_BATCH_INITIAL_CAPACITY
 			)
 		_projectile_trail_batches[team] = affinity_batches
 		if team == &"player":
@@ -241,7 +276,8 @@ func _build_batches() -> void:
 				Visuals.player_projectile_head_mesh(),
 				capacity,
 				2,
-				StringName("projectile_head_%s" % String(team))
+				StringName("projectile_head_%s" % String(team)),
+				PROJECTILE_BATCH_INITIAL_CAPACITY
 			)
 		else:
 			_projectile_head_batches[team] = _create_batch(
@@ -249,7 +285,8 @@ func _build_batches() -> void:
 				Visuals.hostile_projectile_core_mesh(),
 				capacity,
 				2,
-				&"projectile_core_enemy"
+				&"projectile_core_enemy",
+				PROJECTILE_BATCH_INITIAL_CAPACITY
 			)
 	for kind in [&"small", &"medium", &"large"]:
 		var family := StringName("experience_%s" % String(kind))
@@ -258,17 +295,20 @@ func _build_batches() -> void:
 			Visuals.experience_mesh(kind),
 			EXPERIENCE_CAPACITY,
 			-1,
-			family
+			family,
+			EXPERIENCE_BATCH_INITIAL_CAPACITY
 		)
 	_overlay_batches[&"health"] = _create_batch(
 		"Overlay_health",
 		Visuals.health_bar_mesh(),
 		ENEMY_CAPACITY * 2,
 		3,
-		&"overlay_health"
+		&"overlay_health",
+		32
 	)
 	_overlay_batches[&"ring"] = _create_batch(
-		"Overlay_ring", Visuals.effect_mesh(&"ring"), 1024, 3, &"overlay_ring"
+		"Overlay_ring", Visuals.effect_mesh(&"ring"), 1024, 3, &"overlay_ring",
+		384
 	)
 	_overlay_batches[&"shield"] = _overlay_batches[&"ring"]
 	_overlay_batches[&"danger_ring"] = _create_batch(
@@ -276,16 +316,19 @@ func _build_batches() -> void:
 		Visuals.annulus_mesh(48, 0.975),
 		256,
 		3,
-		&"overlay_danger_ring"
+		&"overlay_danger_ring",
+		64
 	)
 	_overlay_batches[&"beam"] = _create_batch(
-		"Overlay_beam", Visuals.effect_mesh(&"beam"), 1024, 3, &"overlay_beam"
+		"Overlay_beam", Visuals.effect_mesh(&"beam"), 1024, 3, &"overlay_beam",
+		256
 	)
 	_overlay_batches[&"disk"] = _create_batch(
 		"Overlay_disk", Visuals.disk_mesh(), 96, 1, &"overlay_disk"
 	)
 	_overlay_batches[&"diamond"] = _create_batch(
-		"Overlay_diamond", Visuals.effect_mesh(&"diamond"), 640, 4, &"overlay_diamond"
+		"Overlay_diamond", Visuals.effect_mesh(&"diamond"), 640, 4, &"overlay_diamond",
+		96
 	)
 	_effect_batches[&"ring"] = _overlay_batches[&"ring"]
 	_effect_batches[&"beam"] = _overlay_batches[&"beam"]
@@ -295,7 +338,8 @@ func _build_batches() -> void:
 		Visuals.effect_mesh(&"afterimage"),
 		EFFECT_CAPACITY,
 		2,
-		&"effect_afterimage"
+		&"effect_afterimage",
+		16
 	)
 	_player_engine_flare_batch = _create_batch(
 		"Player_engine_flare",
@@ -352,12 +396,18 @@ func _create_batch(
 	mesh: Mesh,
 	capacity: int,
 	child_z: int,
-	_buffer_key: StringName
+	_buffer_key: StringName,
+	initial_capacity: int = -1
 ) -> BatchHandle:
+	var allocated_capacity := (
+		capacity
+		if initial_capacity <= 0
+		else mini(capacity, initial_capacity)
+	)
 	var multi_mesh := MultiMesh.new()
 	multi_mesh.transform_format = MultiMesh.TRANSFORM_2D
 	multi_mesh.use_colors = true
-	multi_mesh.instance_count = capacity
+	multi_mesh.instance_count = allocated_capacity
 	multi_mesh.visible_instance_count = 0
 	multi_mesh.mesh = mesh
 	multi_mesh.custom_aabb = CUSTOM_BATCH_AABB
@@ -366,7 +416,11 @@ func _create_batch(
 	instance.z_index = child_z
 	instance.multimesh = multi_mesh
 	add_child(instance)
-	var handle := BatchHandle.new(instance, BatchBuffer.new(capacity))
+	var handle := BatchHandle.new(
+		instance,
+		BatchBuffer.new(allocated_capacity),
+		capacity
+	)
 	_batches.append(handle)
 	return handle
 
@@ -1513,7 +1567,7 @@ func _enemy_angle(archetype: StringName, enemy: EnemyState, player_position: Vec
 
 
 func _write_instance(batch: BatchHandle, position: Vector2, angle: float, scale: Vector2, color: Color) -> void:
-	if batch.count >= batch.instance.multimesh.instance_count:
+	if not batch.ensure_capacity(batch.count + 1):
 		return
 	batch.buffer.write(batch.count, position, angle, scale, color)
 	batch.count += 1
@@ -1526,7 +1580,7 @@ func _write_instance_basis(
 	scale: Vector2,
 	color: Color
 ) -> void:
-	if batch.count >= batch.instance.multimesh.instance_count:
+	if not batch.ensure_capacity(batch.count + 1):
 		return
 	batch.buffer.write_basis(batch.count, position, x_axis, scale, color)
 	batch.count += 1
