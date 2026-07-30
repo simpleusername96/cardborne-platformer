@@ -21,8 +21,10 @@ contract다. 실제 runtime truth는
 `scripts/vehicle/vehicle_stage_visual_profile.gd`, 책임별 component catalog,
 Godot Theme와 실제 provider에서 생성한 system sheet가 함께 소유한다.
 
-방향 seed인 `00-general-sf-component-master-v1.png`는 선택된 형태 언어를
-설명하는 evidence일 뿐 runtime asset이나 독립 authority가 아니다.
+`00-general-sf-component-master-v1.png`는 runtime asset은 아니지만,
+silhouette, proportion, mechanical layering와 contrast hierarchy의 binding
+visual reference다. runtime descriptor와 production sheet는 이 reference를
+느슨하게 재해석하지 않고 같은 visual family로 읽히도록 구현해야 한다.
 
 ## Scope
 
@@ -38,13 +40,15 @@ rule과 collision truth는 각 기존 owner의 책임이며 이 문서는 표현
   의례 motif를 제품 정체성으로 만들지 않는다.
 - 형태는 큰 mechanical mass, 명확한 front/rear cut, 기능 module, sparse
   state accent 네 층으로 구성한다.
-- 모든 형태는 antialiased flat two-plane geometry를 사용한다. 고정 raster
-  방향 frame, 미세 texture noise, dither와 반복 장식은 사용하지 않는다.
-- ordinary component는 filled mass 최대 3개, function accent 최대 2개,
-  dark separation plane 최대 1개다. boss는 고유 objective module을 최대
-  5개까지 가진다.
-- shadow는 형태 분리를 위한 짧은 한 방향 dark plane만 허용한다. glow,
-  bevel, glossy highlight와 nested outline은 사용하지 않는다.
+- 모든 형태는 antialiased hard-edged geometry를 사용한다. 고정 raster 방향
+  frame, 미세 texture noise와 dither는 사용하지 않는다.
+- ordinary component는 dark perimeter/separation, semantic main mass,
+  secondary mechanical plane, restrained hard highlight 또는 inset의 3–5
+  filled plane으로 구성한다. boss는 비대칭 body와 고유 objective module을
+  최대 5개까지 가진다.
+- 짧은 한 방향 shadow, hard edge highlight와 얕은 inset은 승인 시안의
+  기계적 깊이를 설명할 때 사용한다. soft glow, photoreal material,
+  uncontrolled glossy effect와 반복 nested outline은 사용하지 않는다.
 - world는 sparse, HUD는 cockpit-compact, modal은 information-first다.
   장식은 gameplay cue나 primary action과 같은 대비를 갖지 않는다.
 - motion은 이동, state change, impact와 objective만 설명한다. ambient
@@ -101,8 +105,14 @@ preview-only 대체 art를 만들지 않는다. visual geometry는 collision tru
 
 - field geometry, collision, navigation, cover selection, terrain schedule와
   deterministic fingerprint는 visual rework 때문에 바꾸지 않는다.
-- floor는 large plate와 lane seam 두 scale만 사용한다. 반복 micro tile,
-  random scratch와 high-frequency panel grid는 사용하지 않는다.
+- floor는 field geometry와 layout fingerprint를 입력으로 하는 deterministic
+  presentation tile compiler가 만든다. base grid는 `288×288` world unit이며
+  `1×1`, `2×1`, `1×2`, `2×2` modular panel을 조합한다.
+- tile은 walkable region에 clip되고 void에는 생성되지 않는다. variant와
+  orientation은 `field_id`, layout fingerprint와 cell coordinate만으로
+  결정하며 global RNG나 frame time을 사용하지 않는다.
+- 12-unit gutter, chamfer, 낮은 대비 inset과 sparse service rail은 허용한다.
+  random scratch와 combat cue보다 강한 high-frequency detail은 금지한다.
 - void는 near-black mass와 sparse system edge만 가진다.
 - blocker는 raised shell, floor-side light edge와 짧은 outer shadow를
   공통으로 사용한다.
@@ -145,9 +155,9 @@ preview-only 대체 art를 만들지 않는다. visual geometry는 collision tru
 ### Typography, spacing 및 control
 
 - font는 Noto Sans KR variable 한 family만 사용한다.
-- body weight는 500, label/title는 650이다.
-- compact type scale은 `12/14/16/20/28/36`, wide는
-  `13/15/17/22/32/40`이다.
+- body weight는 650, label/title는 800이다.
+- compact type scale은 `13/15/17/22/30`, wide는
+  `14/16/18/24/32/40`이다.
 - spacing scale은 `4/8/12/16/24/32`다.
 - panel inset은 compact `16`, wide `24`다.
 - button, tab, toggle와 focus target의 최소 높이는 `44`다.
@@ -169,8 +179,9 @@ preview-only 대체 art를 만들지 않는다. visual geometry는 collision tru
 
 - layout breakpoint는 width `1100`, guide/report three-column breakpoint는
   `1180`이다.
-- upgrade card는 compact에서 최소 `280×286`, gap `12`, title 2줄,
-  summary 3줄, effect row 최대 2개, level pip 1줄을 사용한다.
+- upgrade card는 compact에서 `224–244×286`, gap `12`, wide에서
+  `304×330`, gap `18`을 사용한다. title 2줄, summary 3줄, effect row 최대
+  2개, optional behavior row와 level pip 1줄을 한 화면에 표시한다.
 - upgrade card는 scroll을 사용하지 않는다. settings, guidebook, report는
   지정 content region만 scroll하고 primary action은 고정한다.
 - `clip_contents`는 safety guard일 뿐 layout 해결책이 아니다.
@@ -233,7 +244,11 @@ pressure/accessibility를 포함한다.
 
 - catalog ID coverage와 duplicate owner 0
 - 같은 provider fingerprint에서 동일한 sheet hash
+- approved reference와 runtime actor를 같은 scale로 비교한 sheet에서
+  player, 8 role grammar와 boss proportion hierarchy가 같은 family로 판독
 - ko/en × 960/1280/1920의 overflow, overlap, clipping 0
+- 8개 upgrade family glyph의 card/sheet empty slot 0
+- deterministic tile hash equality와 walkable/void containment
 - grayscale role/affinity/state 구분
 - engine 360° rear-anchor drift 0
 - dash danger/radial instance 0

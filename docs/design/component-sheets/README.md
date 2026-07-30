@@ -9,7 +9,7 @@ scope: Direction evidence for the replacement component grammar
 source: ./system-v1/manifest.json
 related:
   - ../UI_VISUAL_SYSTEM.md
-  - ../../../.agents/execplans/2026-07-30-full-visual-system-redesign.md
+  - ../../../.agents/execplans/2026-07-30-approved-sheet-fidelity-recovery.md
 ---
 
 # 일반 SF 전투 컴포넌트 디자인 시안
@@ -20,9 +20,11 @@ related:
 않는 전체 비주얼 시스템의 선택된 방향 seed다. 이 방향은 전투 컴포넌트에서
 시작해 world, effect, HUD와 UI로 확장한다.
 
-이 문서는 `active evidence`이며 정본 spec이나 runtime asset은 아니다. 실제
-게임의 visual truth는 runtime descriptor, Godot Theme와 그것으로 생성한
-[`system-v1/manifest.json`](./system-v1/manifest.json)이 소유한다.
+이 문서는 `active evidence`이며 runtime asset은 아니다. 다만 사용자가
+승인한 이 이미지의 silhouette, proportion, mechanical layering와 contrast
+hierarchy는 `UI_VISUAL_SYSTEM.md`가 binding visual reference로 채택한다.
+실제 게임의 render source는 runtime descriptor와 Godot Theme이며, production
+sheet는 그 source가 승인 reference에 충실한지 검증하는 artifact다.
 
 ## Sources
 
@@ -60,7 +62,7 @@ catalog, runtime combat mesh와 Noto Sans KR provider에서 결정적으로 생�
 | 번호 | sheet | 확인 대상 |
 | --- | --- | --- |
 | 01 | foundation tokens | 색, 글자, 간격, 역할 문법 |
-| 02 | world surfaces | 세 필드의 대형 패널 리듬 |
+| 02 | world surfaces | 세 필드의 deterministic modular tile composition |
 | 03 | world facilities | 시설별 형태와 4개 상태 |
 | 04 | player components | hull, rigid twin engine, aim, dash/hit |
 | 05 | enemy components | 18개 역할 실루엣 |
@@ -78,7 +80,9 @@ token/catalog fingerprint와 publication 상태를 기록한다. 같은 source�
 
 ## Limitations
 
-- 이 이미지는 ImageGen 기반 방향 시안이며 runtime geometry의 정본이 아니다.
+- 이 이미지는 ImageGen 기반 방향 시안이며 runtime source file은 아니다.
+  그러나 production geometry는 같은 silhouette family, proportion과
+  layer hierarchy를 충족해야 한다.
 - sheet의 composition test는 실제 runtime capture가 아니다. Phase별 runtime
   publication 뒤 native/Web gameplay capture로 교체 검증한다.
 - `12-pressure-accessibility.png`의 체크 표시는 디자인 계약 슬롯이며, 최종

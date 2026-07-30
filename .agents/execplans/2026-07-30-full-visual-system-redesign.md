@@ -1,9 +1,10 @@
 ---
 type: plan
-status: active
+status: superseded
 owner: BK
 created: 2026-07-29
 last_reviewed: 2026-07-30
+superseded_by: ./2026-07-30-approved-sheet-fidelity-recovery.md
 scope: Replace every current player-facing visual surface with one non-pixel general-SF component system while preserving the connected five-stage run and completing the requested upgrade, pickup, enemy-strategy, and boss revisions
 related:
   - ../../AGENTS.md
@@ -18,6 +19,11 @@ related:
 ---
 
 # 전체 비주얼 시스템 전면 재구성 실행 계획
+
+> 이 계획의 gameplay 변경 이력은 유효하지만 visual acceptance와 남은 실행
+> 순서는 `2026-07-30-approved-sheet-fidelity-recovery.md`로 대체됐다.
+> 승인 시안을 느슨한 seed로 취급하고 large plate world를 고정한 결정은
+> 사용자의 2026-07-30 검토에서 거부됐다.
 
 현재 런타임의 pixel world texture, image-backed UI chrome, pixel combat
 atlas를 부분 보수하지 않는다. 사용자가 긍정적으로 확인한
