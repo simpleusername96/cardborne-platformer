@@ -1302,7 +1302,7 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 			mount_position + rear * (13.0 + thrust_ratio * 9.0),
 			hull_angle,
 			Vector2(14.0 + thrust_ratio * 19.0, 6.0),
-			Color(Art.SYSTEM if bool(state.get("dash_active", false)) else Art.MUSTARD, 0.56 + thrust_ratio * 0.38)
+			Color(Art.SYSTEM, 0.56 + thrust_ratio * 0.38)
 		)
 		_write_instance(
 			_player_engine_batch,

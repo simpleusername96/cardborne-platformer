@@ -2,6 +2,7 @@ extends SceneTree
 
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const ActorCatalog = preload("res://scripts/presentation/components/vehicle_actor_visual_catalog.gd")
+const ActorRecipes = preload("res://scripts/presentation/components/vehicle_actor_mesh_recipes.gd")
 const ProjectileCatalog = preload("res://scripts/presentation/components/vehicle_projectile_visual_catalog.gd")
 const EffectCatalog = preload("res://scripts/presentation/components/vehicle_effect_visual_catalog.gd")
 const Visuals = preload("res://scripts/presentation/vehicle_combat_visual_library.gd")
@@ -17,6 +18,35 @@ func _initialize() -> void:
 	_expect(
 		Array(player.get("rear_sockets", [])).size() == 2,
 		"player descriptor owns two rigid rear engine sockets"
+	)
+	var rear_sockets := Array(player.get("rear_sockets", []))
+	_expect(
+		Vector2(rear_sockets[0]).x < 0.0
+			and is_equal_approx(
+				Vector2(rear_sockets[0]).x,
+				Vector2(rear_sockets[1]).x
+			)
+			and is_equal_approx(
+				Vector2(rear_sockets[0]).y,
+				-Vector2(rear_sockets[1]).y
+			),
+		"player recipe keeps a symmetric twin-engine pair on the rear plane"
+	)
+	var player_components := Dictionary(player.get("components", {}))
+	for component_id in [&"hull", &"engine", &"engine_flare", &"aim_mount"]:
+		var recipe_id := StringName(player_components.get(component_id, &""))
+		_expect(
+			recipe_id in ActorRecipes.PLAYER_COMPONENT_RECIPES
+				and not ActorRecipes.player_component_layers(recipe_id).is_empty(),
+			"player %s resolves through the actor recipe owner" % component_id
+		)
+	_expect(
+		ActorRecipes.plane_count(
+			ActorRecipes.player_component_layers(
+				StringName(player_components.get(&"hull", &""))
+			)
+		) == 5,
+		"player hull keeps the approved five-plane mechanical hierarchy"
 	)
 	for degrees in range(0, 360, 5):
 		var angle := deg_to_rad(float(degrees))

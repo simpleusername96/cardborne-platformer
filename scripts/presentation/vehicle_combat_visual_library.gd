@@ -7,6 +7,7 @@ extends RefCounted
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd")
 const ActorCatalog = preload("res://scripts/presentation/components/vehicle_actor_visual_catalog.gd")
+const ActorRecipes = preload("res://scripts/presentation/components/vehicle_actor_mesh_recipes.gd")
 const ProjectileCatalog = preload("res://scripts/presentation/components/vehicle_projectile_visual_catalog.gd")
 const RewardCatalog = preload("res://scripts/presentation/components/vehicle_reward_visual_catalog.gd")
 const EffectCatalog = preload("res://scripts/presentation/components/vehicle_effect_visual_catalog.gd")
@@ -23,116 +24,46 @@ const ENEMY_ARCHETYPES: Array[StringName] = [
 
 
 static func enemy_mesh(archetype: StringName) -> ArrayMesh:
-	var recipe := _enemy_recipe(archetype)
-	var body := PackedVector2Array(recipe[0]["points"])
-	var shadow := PackedVector2Array()
-	for point in body:
-		shadow.append(point + Vector2(0.14, 0.18))
-	var polygons: Array[Dictionary] = [
-		{"points": shadow, "color": Color(0.22, 0.18, 0.22, 0.92)},
-	]
-	polygons.append_array(recipe)
-	return polygon_mesh(polygons)
+	var descriptor := ActorCatalog.descriptor(archetype)
+	var recipe_id := StringName(descriptor.get("recipe", &""))
+	var grammar_id := StringName(descriptor.get("grammar", &""))
+	return Components.polygon_mesh(
+		StringName("actor_enemy_%s" % String(recipe_id)),
+		ActorRecipes.enemy_layers(recipe_id, grammar_id)
+	)
 
 
 static func boss_mesh(variant: StringName) -> ArrayMesh:
-	var body := _boss_polygon(variant)
-	var shadow := PackedVector2Array()
-	for point in body:
-		shadow.append(point + Vector2(0.14, 0.18))
-	var polygons: Array[Dictionary] = [
-		{"points":shadow, "color":Color(0.22, 0.18, 0.22, 0.92)},
-		{"points":body, "color":Color.WHITE},
-	]
-	polygons.append_array(_boss_detail_polygons(variant))
-	return polygon_mesh(polygons)
+	var recipe_id := StringName(
+		ActorCatalog.descriptor(variant).get("recipe", &"")
+	)
+	return Components.polygon_mesh(
+		StringName("actor_boss_%s" % String(recipe_id)),
+		ActorRecipes.boss_layers(recipe_id)
+	)
 
 
 static func debug_boss_signature(variant: StringName) -> PackedVector2Array:
-	return _boss_polygon(variant)
+	var recipe_id := StringName(
+		ActorCatalog.descriptor(variant).get("recipe", &"")
+	)
+	return ActorRecipes.boss_signature(recipe_id)
 
 
 static func boss_module_mesh(
 	module_kind: StringName,
 	state: StringName = &"active"
 ) -> ArrayMesh:
-	var body := _regular_polygon(Vector2.ZERO, 1.0, 4, PI / 4.0)
-	var shadow := PackedVector2Array()
-	for point in body:
-		shadow.append(point + Vector2(0.14, 0.18))
-	var cue := (
-		Art.PLAYER_REWARD
-		if state == &"active"
-		else Art.TEXT_MUTED
+	var recipe_id := StringName(
+		ActorCatalog.descriptor(module_kind).get("recipe", &"")
 	)
-	var polygons: Array[Dictionary] = [
-		{"points":shadow, "color":Art.INK},
-		{"points":body, "color":Art.BOSS_COMMAND},
-	]
-	match module_kind:
-		&"forge_plate":
-			for y in [-0.32, 0.32]:
-				polygons.append({
-					"points":PackedVector2Array([
-						Vector2(-0.62, y - 0.10), Vector2(0.62, y - 0.10),
-						Vector2(0.62, y + 0.10), Vector2(-0.62, y + 0.10),
-					]),
-					"color":cue,
-				})
-		&"segment_lock":
-			polygons.append({
-				"points":PackedVector2Array([
-					Vector2(0.66, 0.0), Vector2(-0.34, -0.55),
-					Vector2(-0.10, 0.0), Vector2(-0.34, 0.55),
-				]),
-				"color":cue,
-			})
-		&"relay_positive":
-			polygons.append({
-				"points":PackedVector2Array([
-					Vector2(-0.58, -0.10), Vector2(-0.10, -0.10),
-					Vector2(-0.10, -0.58), Vector2(0.10, -0.58),
-					Vector2(0.10, -0.10), Vector2(0.58, -0.10),
-					Vector2(0.58, 0.10), Vector2(0.10, 0.10),
-					Vector2(0.10, 0.58), Vector2(-0.10, 0.58),
-					Vector2(-0.10, 0.10), Vector2(-0.58, 0.10),
-				]),
-				"color":cue,
-			})
-		&"relay_negative":
-			polygons.append({
-				"points":PackedVector2Array([
-					Vector2(-0.58, -0.11), Vector2(0.58, -0.11),
-					Vector2(0.58, 0.11), Vector2(-0.58, 0.11),
-				]),
-				"color":cue,
-			})
-		&"route_switch":
-			for sign_value in [-1.0, 1.0]:
-				polygons.append({
-					"points":PackedVector2Array([
-						Vector2(-0.60, -0.09), Vector2(0.02, -0.09),
-						Vector2(0.60, sign_value * 0.48 - 0.09),
-						Vector2(0.60, sign_value * 0.48 + 0.09),
-						Vector2(-0.02, 0.09), Vector2(-0.60, 0.09),
-					]),
-					"color":cue,
-				})
-		&"armor_car":
-			for x in [-0.30, 0.30]:
-				polygons.append({
-					"points":PackedVector2Array([
-						Vector2(x - 0.11, -0.58), Vector2(x + 0.11, -0.58),
-						Vector2(x + 0.11, 0.58), Vector2(x - 0.11, 0.58),
-					]),
-					"color":cue,
-				})
-		_:
-			polygons.append({
-				"points":_regular_polygon(Vector2.ZERO, 0.46, 4, PI / 4.0),
-				"color":cue,
-			})
-	return polygon_mesh(polygons)
+	return Components.polygon_mesh(
+		StringName(
+			"actor_boss_module_%s_%s"
+			% [String(recipe_id), String(state)]
+		),
+		ActorRecipes.boss_module_layers(recipe_id, state)
+	)
 
 
 static func projectile_head_mesh(
@@ -395,7 +326,10 @@ static func debug_projectile_head_extent(affinity: StringName) -> float:
 
 
 static func debug_enemy_signature(archetype: StringName) -> PackedVector2Array:
-	return _enemy_polygon(archetype)
+	var descriptor := ActorCatalog.descriptor(archetype)
+	return ActorRecipes.enemy_signature(
+		StringName(descriptor.get("recipe", &""))
+	)
 
 
 static func health_bar_mesh() -> ArrayMesh:
@@ -459,70 +393,28 @@ static func support_timer_segment_mesh() -> ArrayMesh:
 	}])
 
 
-static func player_hull_mesh() -> ArrayMesh:
-	var descriptor := ActorCatalog.descriptor(&"player")
-	var hull := Components.primitive_points(
-		StringName(descriptor.get("shape", &"player_interceptor"))
+static func _player_component_mesh(component_id: StringName) -> ArrayMesh:
+	var recipe_id := ActorCatalog.player_component_recipe(component_id)
+	return Components.polygon_mesh(
+		StringName("actor_player_%s" % String(recipe_id)),
+		ActorRecipes.player_component_layers(recipe_id)
 	)
-	var shadow := PackedVector2Array()
-	for point in hull:
-		shadow.append(point + Vector2(0.10, 0.12))
-	return polygon_mesh([
-		{"points": shadow, "color": Color(Art.SPACE_BLACK, 0.94)},
-		{"points": hull, "color": Color.WHITE},
-		{"points":PackedVector2Array([
-			Vector2(0.58, 0.0), Vector2(0.20, -0.15),
-			Vector2(-0.20, -0.13), Vector2(-0.38, 0.0),
-			Vector2(-0.20, 0.13), Vector2(0.20, 0.15),
-		]), "color":Art.TEXT_MUTED},
-		{"points":PackedVector2Array([
-			Vector2(0.52, 0.0), Vector2(0.17, -0.08),
-			Vector2(-0.17, -0.07), Vector2(-0.29, 0.0),
-			Vector2(-0.17, 0.07), Vector2(0.17, 0.08),
-		]), "color":Art.WORLD_CANVAS},
-		{"points":PackedVector2Array([
-			Vector2(0.22, -0.58), Vector2(-0.10, -0.56),
-			Vector2(-0.36, -0.38), Vector2(0.08, -0.42),
-		]), "color":Art.MUSTARD_DARK},
-		{"points":PackedVector2Array([
-			Vector2(0.22, 0.58), Vector2(-0.10, 0.56),
-			Vector2(-0.36, 0.38), Vector2(0.08, 0.42),
-		]), "color":Art.MUSTARD_DARK},
-	])
+
+
+static func player_hull_mesh() -> ArrayMesh:
+	return _player_component_mesh(&"hull")
 
 
 static func player_primary_mesh() -> ArrayMesh:
-	return polygon_mesh([
-		{"points":PackedVector2Array([
-			Vector2(-0.34, -0.24), Vector2(0.72, -0.16),
-			Vector2(1.0, 0.0), Vector2(0.72, 0.16),
-			Vector2(-0.34, 0.24),
-		]), "color":Color.WHITE},
-		{"points":_regular_polygon(Vector2(-0.30, 0.0), 0.18, 12), "color":Art.WORLD_CANVAS},
-	])
+	return _player_component_mesh(&"aim_mount")
 
 
 static func player_engine_mesh() -> ArrayMesh:
-	return polygon_mesh([{
-		"points":PackedVector2Array([
-			Vector2(0.56, -0.48), Vector2(0.72, -0.24),
-			Vector2(0.72, 0.24), Vector2(0.56, 0.48),
-			Vector2(-0.72, 0.40), Vector2(-0.92, 0.18),
-			Vector2(-0.92, -0.18), Vector2(-0.72, -0.40),
-		]),
-		"color":Color.WHITE,
-	}])
+	return _player_component_mesh(&"engine")
 
 
 static func player_engine_flare_mesh() -> ArrayMesh:
-	return polygon_mesh([{
-		"points":PackedVector2Array([
-			Vector2(0.30, -0.50), Vector2(0.30, 0.50),
-			Vector2(-1.0, 0.18), Vector2(-0.72, 0.0),
-			Vector2(-1.0, -0.18),
-		]),
-		"color":Color.WHITE,
-	}])
+	return _player_component_mesh(&"engine_flare")
 
 
 static func player_secondary_core_mesh() -> ArrayMesh:
@@ -644,295 +536,6 @@ static func annulus_mesh(segments: int, inner_radius: float) -> ArrayMesh:
 	var mesh := ArrayMesh.new()
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
 	return mesh
-
-
-static func _enemy_recipe(archetype: StringName) -> Array[Dictionary]:
-	var recipe: Array[Dictionary] = [{
-		"points":_enemy_polygon(archetype),
-		"color":Color.WHITE,
-	}]
-	var accent := _enemy_accent_polygon(archetype)
-	if not accent.is_empty():
-		recipe.append({
-			"points":accent,
-			"color":Color(0.62, 0.62, 0.62, 1.0),
-		})
-	return recipe
-
-
-static func _enemy_polygon(archetype: StringName) -> PackedVector2Array:
-	match archetype:
-		&"scrap_drone":
-			return PackedVector2Array([Vector2(1.0, 0.0), Vector2(-0.45, -0.72), Vector2(-0.18, 0.0), Vector2(-0.45, 0.72)])
-		&"needle_drone":
-			return PackedVector2Array([Vector2(1.2, 0.0), Vector2(0.0, -0.62), Vector2(-0.72, 0.0), Vector2(0.0, 0.62)])
-		&"spark_minelet":
-			return _alternating_polygon(12, 1.0, 0.46)
-		&"chaser":
-			return PackedVector2Array([
-				Vector2(1.0, 0.0), Vector2(0.08, -1.0), Vector2(-0.82, -0.42),
-				Vector2(-0.48, 0.0), Vector2(-0.82, 0.42), Vector2(0.08, 1.0),
-			])
-		&"shooter":
-			return PackedVector2Array([
-				Vector2(1.0, 0.0), Vector2(0.48, -0.28),
-				Vector2(0.48, -0.72), Vector2(-0.68, -0.72),
-				Vector2(-0.48, -0.24), Vector2(-0.88, 0.0),
-				Vector2(-0.48, 0.24), Vector2(-0.68, 0.72),
-				Vector2(0.48, 0.72), Vector2(0.48, 0.28),
-			])
-		&"artillery_spotter":
-			return PackedVector2Array([
-				Vector2(1.0, 0.0), Vector2(0.38, -0.86),
-				Vector2(-0.64, -0.70), Vector2(-1.0, 0.0),
-				Vector2(-0.64, 0.70), Vector2(0.38, 0.86),
-			])
-		&"beam_sentinel":
-			return PackedVector2Array([
-				Vector2(1.18, 0.0), Vector2(0.42, -0.40),
-				Vector2(-0.82, -0.24), Vector2(-1.0, 0.0),
-				Vector2(-0.82, 0.24), Vector2(0.42, 0.40),
-			])
-		&"boss_pylon":
-			return PackedVector2Array([
-				Vector2(1.0, -0.24), Vector2(0.34, -0.24),
-				Vector2(0.34, -1.0), Vector2(-0.34, -1.0),
-				Vector2(-0.34, -0.24), Vector2(-1.0, -0.24),
-				Vector2(-1.0, 0.24), Vector2(-0.34, 0.24),
-				Vector2(-0.34, 1.0), Vector2(0.34, 1.0),
-				Vector2(0.34, 0.24), Vector2(1.0, 0.24),
-			])
-		&"controller":
-			return _alternating_polygon(12, 1.0, 0.72, PI / 12.0)
-		&"turret":
-			return PackedVector2Array([
-				Vector2(1.15, -0.18), Vector2(1.15, 0.18),
-				Vector2(0.62, 0.32), Vector2(0.62, 0.76),
-				Vector2(-0.65, 0.76), Vector2(-1.0, 0.42),
-				Vector2(-1.0, -0.42), Vector2(-0.65, -0.76),
-				Vector2(0.62, -0.76), Vector2(0.62, -0.32),
-			])
-		&"interceptor_tower":
-			return PackedVector2Array([
-				Vector2(1.0, 0.0), Vector2(0.42, -0.28),
-				Vector2(0.10, -0.90), Vector2(-0.56, -0.78),
-				Vector2(-0.28, -0.16), Vector2(-0.88, 0.0),
-				Vector2(-0.28, 0.16), Vector2(-0.56, 0.78),
-				Vector2(0.10, 0.90), Vector2(0.42, 0.28),
-			])
-		&"mine":
-			return _alternating_polygon(16, 1.0, 0.54)
-		&"generator":
-			return _regular_polygon(Vector2.ZERO, 1.0, 8, PI / 8.0)
-		&"shield_escort":
-			return PackedVector2Array([
-				Vector2(1.10, 0.0), Vector2(0.20, -0.95),
-				Vector2(-0.74, -0.62), Vector2(-0.50, 0.0),
-				Vector2(-0.74, 0.62), Vector2(0.20, 0.95),
-			])
-		&"repair_tender":
-			return PackedVector2Array([
-				Vector2(0.34, -1.0), Vector2(-0.34, -1.0),
-				Vector2(-0.34, -0.34), Vector2(-1.0, -0.34),
-				Vector2(-1.0, 0.34), Vector2(-0.34, 0.34),
-				Vector2(-0.34, 1.0), Vector2(0.34, 1.0),
-				Vector2(0.34, 0.34), Vector2(1.0, 0.34),
-				Vector2(1.0, -0.34), Vector2(0.34, -0.34),
-			])
-		&"rammer":
-			return PackedVector2Array([Vector2(1.2, 0.0), Vector2(-0.45, -1.0), Vector2(-1.0, 0.0), Vector2(-0.45, 1.0)])
-		&"bulkhead_guard":
-			return PackedVector2Array([
-				Vector2(1.0, 0.0), Vector2(0.62, -0.88), Vector2(-0.38, -0.72),
-				Vector2(-1.0, -0.24), Vector2(-1.0, 0.24), Vector2(-0.38, 0.72),
-				Vector2(0.62, 0.88),
-			])
-		&"splitter_barge":
-			return PackedVector2Array([
-				Vector2(1.0, 0.0), Vector2(0.42, -0.62), Vector2(-0.16, -1.0),
-				Vector2(-0.82, -0.48), Vector2(-0.56, 0.0), Vector2(-0.82, 0.48),
-				Vector2(-0.16, 1.0), Vector2(0.42, 0.62),
-			])
-		&"drone_carrier":
-			return PackedVector2Array([
-				Vector2(-0.82, -0.72), Vector2(0.82, -0.72), Vector2(1.0, -0.50),
-				Vector2(1.0, 0.50), Vector2(0.82, 0.72), Vector2(-0.82, 0.72),
-				Vector2(-1.0, 0.50), Vector2(-1.0, -0.50),
-			])
-		&"stage_boss":
-			return PackedVector2Array([
-				Vector2(1.0, 0.0), Vector2(0.50, -0.36), Vector2(0.25, -1.0),
-				Vector2(-0.12, -0.58), Vector2(-0.66, -0.78), Vector2(-0.48, 0.0),
-				Vector2(-0.66, 0.78), Vector2(-0.12, 0.58), Vector2(0.25, 1.0),
-				Vector2(0.50, 0.36),
-			])
-	return _regular_polygon(Vector2.ZERO, 1.0, 6)
-
-
-static func _enemy_accent_polygon(archetype: StringName) -> PackedVector2Array:
-	match archetype:
-		&"shooter":
-			return PackedVector2Array([
-				Vector2(0.72, -0.10), Vector2(0.72, 0.10),
-				Vector2(-0.18, 0.18), Vector2(-0.18, -0.18),
-			])
-		&"artillery_spotter":
-			return _regular_polygon(Vector2.ZERO, 0.42, 4, PI / 4.0)
-		&"beam_sentinel":
-			return PackedVector2Array([
-				Vector2(0.62, 0.0), Vector2(0.16, -0.18),
-				Vector2(-0.52, 0.0), Vector2(0.16, 0.18),
-			])
-		&"boss_pylon":
-			return _regular_polygon(Vector2.ZERO, 0.32, 4, PI / 4.0)
-		&"controller":
-			return _regular_polygon(Vector2.ZERO, 0.38, 6, PI / 6.0)
-		&"turret":
-			return PackedVector2Array([
-				Vector2(0.46, -0.34), Vector2(0.46, 0.34),
-				Vector2(-0.42, 0.34), Vector2(-0.42, -0.34),
-			])
-		&"interceptor_tower":
-			return PackedVector2Array([
-				Vector2(0.52, 0.0), Vector2(-0.04, -0.20),
-				Vector2(-0.46, 0.0), Vector2(-0.04, 0.20),
-			])
-		&"shield_escort":
-			return PackedVector2Array([
-				Vector2(0.48, 0.0), Vector2(-0.10, -0.46),
-				Vector2(-0.10, 0.46),
-			])
-		&"repair_tender":
-			return PackedVector2Array([
-				Vector2(-0.28, -0.28), Vector2(0.28, -0.28),
-				Vector2(0.28, 0.28), Vector2(-0.28, 0.28),
-			])
-	return PackedVector2Array()
-
-
-static func _boss_polygon(variant: StringName) -> PackedVector2Array:
-	match variant:
-		&"leviathan":
-			return PackedVector2Array([
-				Vector2(1.25, 0.0), Vector2(0.40, -0.42), Vector2(-0.65, -0.78),
-				Vector2(-1.0, -0.30), Vector2(-0.35, 0.0), Vector2(-1.0, 0.30),
-				Vector2(-0.65, 0.78), Vector2(0.40, 0.42),
-			])
-		&"titan":
-			return PackedVector2Array([
-				Vector2(-0.72, -1.0), Vector2(0.72, -1.0),
-				Vector2(0.72, -0.72), Vector2(1.0, -0.72),
-				Vector2(1.0, 0.72), Vector2(0.72, 0.72),
-				Vector2(0.72, 1.0), Vector2(-0.72, 1.0),
-				Vector2(-0.72, 0.72), Vector2(-1.0, 0.72),
-				Vector2(-1.0, -0.72), Vector2(-0.72, -0.72),
-			])
-		&"behemoth":
-			return PackedVector2Array([
-				Vector2(1.30, 0.0), Vector2(0.35, -0.82), Vector2(-0.62, -1.0),
-				Vector2(-1.0, -0.32), Vector2(-0.72, 0.0), Vector2(-1.0, 0.32),
-				Vector2(-0.62, 1.0), Vector2(0.35, 0.82),
-			])
-		&"crown":
-			return _alternating_polygon(16, 1.15, 0.68, -PI * 0.5)
-		_:
-			return PackedVector2Array([
-				Vector2(1.0, 0.0), Vector2(0.45, -0.46), Vector2(0.24, -1.15),
-				Vector2(-0.22, -0.72), Vector2(-0.90, -0.92), Vector2(-0.62, 0.0),
-				Vector2(-0.90, 0.92), Vector2(-0.22, 0.72), Vector2(0.24, 1.15),
-				Vector2(0.45, 0.46),
-			])
-
-
-static func _boss_detail_polygons(variant: StringName) -> Array[Dictionary]:
-	var light := Color(0.72, 0.72, 0.72, 1.0)
-	var core := Color(0.16, 0.16, 0.18, 1.0)
-	var details: Array[Dictionary] = []
-	match variant:
-		&"behemoth":
-			details.append({
-				"points":PackedVector2Array([
-					Vector2(0.62, -0.16), Vector2(0.06, -0.44),
-					Vector2(-0.46, -0.28), Vector2(-0.14, -0.08),
-				]),
-				"color":light,
-			})
-			details.append({
-				"points":PackedVector2Array([
-					Vector2(0.62, 0.16), Vector2(0.06, 0.44),
-					Vector2(-0.46, 0.28), Vector2(-0.14, 0.08),
-				]),
-				"color":light,
-			})
-			details.append({
-				"points":_regular_polygon(Vector2(0.12, 0.0), 0.24, 6, PI / 6.0),
-				"color":core,
-			})
-		&"leviathan":
-			details.append({
-				"points":PackedVector2Array([
-					Vector2(0.88, 0.0), Vector2(0.20, -0.14),
-					Vector2(-0.44, -0.10), Vector2(-0.70, 0.0),
-					Vector2(-0.44, 0.10), Vector2(0.20, 0.14),
-				]),
-				"color":core,
-			})
-			for sign_value in [-1.0, 1.0]:
-				details.append({
-					"points":PackedVector2Array([
-						Vector2(0.10, sign_value * 0.24),
-						Vector2(-0.28, sign_value * 0.62),
-						Vector2(-0.56, sign_value * 0.46),
-						Vector2(-0.18, sign_value * 0.18),
-					]),
-					"color":light,
-				})
-		&"titan":
-			details.append({
-				"points":_regular_polygon(Vector2.ZERO, 0.34, 4, PI / 4.0),
-				"color":core,
-			})
-			for offset in [
-				Vector2(0.0, -0.72), Vector2(0.72, 0.0),
-				Vector2(0.0, 0.72), Vector2(-0.72, 0.0),
-			]:
-				details.append({
-					"points":_regular_polygon(offset, 0.13, 4, PI / 4.0),
-					"color":light,
-				})
-		&"colossus":
-			for sign_value in [-1.0, 1.0]:
-				details.append({
-					"points":PackedVector2Array([
-						Vector2(0.52, sign_value * 0.18),
-						Vector2(0.06, sign_value * 0.36),
-						Vector2(-0.50, sign_value * 0.56),
-						Vector2(-0.22, sign_value * 0.14),
-					]),
-					"color":light,
-				})
-			details.append({
-				"points":PackedVector2Array([
-					Vector2(0.72, 0.0), Vector2(0.10, -0.12),
-					Vector2(-0.34, 0.0), Vector2(0.10, 0.12),
-				]),
-				"color":core,
-			})
-		&"crown":
-			details.append({
-				"points":_regular_polygon(Vector2.ZERO, 0.40, 8, PI / 8.0),
-				"color":light,
-			})
-			details.append({
-				"points":_regular_polygon(Vector2.ZERO, 0.22, 8, PI / 8.0),
-				"color":core,
-			})
-		_:
-			details.append({
-				"points":_regular_polygon(Vector2.ZERO, 0.30, 6, PI / 6.0),
-				"color":core,
-			})
-	return details
 
 
 static func _regular_polygon(origin: Vector2, radius: float, sides: int, rotation: float = 0.0) -> PackedVector2Array:

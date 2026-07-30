@@ -41,6 +41,28 @@ static func polygon_mesh(cache_id: StringName, layers: Array[Dictionary]) -> Arr
 	return mesh
 
 
+static func scaled_points(
+	points: PackedVector2Array,
+	scale: Vector2
+) -> PackedVector2Array:
+	var result := PackedVector2Array()
+	for point in points:
+		result.append(point * scale)
+	return result
+
+
+static func rect_points(
+	center: Vector2,
+	half_extent: Vector2
+) -> PackedVector2Array:
+	return PackedVector2Array([
+		center + Vector2(-half_extent.x, -half_extent.y),
+		center + Vector2(half_extent.x, -half_extent.y),
+		center + Vector2(half_extent.x, half_extent.y),
+		center + Vector2(-half_extent.x, half_extent.y),
+	])
+
+
 static func primitive_points(primitive_id: StringName) -> PackedVector2Array:
 	match primitive_id:
 		&"player_interceptor":
