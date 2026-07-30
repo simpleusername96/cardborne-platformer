@@ -497,7 +497,7 @@ authored count는 유지하며 surge당 최대 1개 squad만 tactic tag를 받�
 
 ## Tasks
 
-- [ ] Phase 1에서 active visual authority, token과 sheet harness를 고정한다.
+- [x] Phase 1에서 active visual authority, token과 sheet harness를 고정한다.
 - [ ] Phase 2에서 non-pixel UI foundation, upgrade clarity와 pickup contact를
   완료한다.
 - [ ] Inter-plan Gate에서 horde recovery의 authoritative baseline을 확인한다.
@@ -515,17 +515,17 @@ authored count는 유지하며 surge당 최대 1개 squad만 tactic tag를 받�
 **목표:** 선택된 방향을 active spec과 reusable descriptor contract로 바꾸되
 gameplay renderer에는 아직 연결하지 않는다.
 
-- [ ] `UI_VISUAL_SYSTEM.md`를 이 계획의 full non-pixel system으로 갱신한다.
-- [ ] `vehicle_game_spec.md`의 presentation clause만 새 descriptor/role
+- [x] `UI_VISUAL_SYSTEM.md`를 이 계획의 full non-pixel system으로 갱신한다.
+- [x] `vehicle_game_spec.md`의 presentation clause만 새 descriptor/role
   contract로 맞춘다.
-- [ ] `vehicle_stage_visual_profile.gd`에 locked palette를 반영하고 literal
+- [x] `vehicle_stage_visual_profile.gd`에 locked palette를 반영하고 literal
   role color 중복 owner를 제거한다.
-- [ ] component mesh library와 actor/projectile/reward/effect/world/glyph
+- [x] component mesh library와 actor/projectile/reward/effect/world/glyph
   catalog skeleton을 책임별 파일로 만든다.
-- [ ] `capture_vehicle_visual_system.gd`, capture scene와 manifest writer를
+- [x] `capture_vehicle_visual_system.gd`, capture scene와 manifest writer를
   구현한다.
-- [ ] foundation/control state sheet를 실제 token/Theme provider에서 만든다.
-- [ ] master seed와 새 sheet의 역할을 docs index에 명확히 기록한다.
+- [x] foundation/control state sheet를 실제 token/Theme provider에서 만든다.
+- [x] master seed와 새 sheet의 역할을 docs index에 명확히 기록한다.
 
 **Batch acceptance**
 
@@ -966,7 +966,11 @@ contrast, timing과 performance 조정으로 제한한다.
   inventory했다.
 - [x] 하나의 architecture, visual grammar, phase order, gate와 acceptance를
   고정했다.
-- [ ] Phase 1 visual authority and sheet foundation
+- [x] Phase 1 visual authority and sheet foundation
+- [x] Phase 1 provider commit `e01cbaa`와 runtime-backed
+  `01-foundation-tokens.png`, `10-ui-controls-states.png`,
+  `manifest.json`을 생성했다. 39 family와 32 world stamp가 exact-one-owner
+  validation을 통과했고 두 번의 sheet hash가 일치했다.
 - [ ] Phase 2 UI foundation, upgrade and pickup
 - [ ] Inter-plan horde gate
 - [ ] Phase 3 player/projectile/reward/feedback
@@ -978,13 +982,9 @@ contrast, timing과 performance 조정으로 제한한다.
 
 ## Next Steps
 
-1. Phase 1만 시작해 active visual/product authority, token, catalog boundary와
-   capture harness를 구현한다.
-2. foundation/control sheet와 manifest를 생성해 accepted master direction과
-   실제 provider가 일치하는지 검증한다.
-3. Phase 2에서 image UI chrome을 제거하고 upgrade/pickup 불편을 완료한다.
-4. horde recovery completion과 clean performance baseline을 확인한다.
-5. Phase 3 이후 player → world → enemy → boss → complete UI 순서로
+1. Phase 2에서 image UI chrome을 제거하고 upgrade/pickup 불편을 완료한다.
+2. horde recovery completion과 clean performance baseline을 확인한다.
+3. Phase 3 이후 player → world → enemy → boss → complete UI 순서로
    publication하고 Phase 8에서 legacy를 삭제한다.
 
 ## Completion Criteria

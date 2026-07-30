@@ -1,0 +1,57 @@
+{
+	"schema_version": 1,
+	"system_id": "cardborne-general-sf-v1",
+	"source_commit": "e01cbaa17dbe54b2d5f00830a03a3fdca18d4522",
+	"providers": {
+		"tokens": "res://scripts/vehicle/vehicle_stage_visual_profile.gd",
+		"catalog_registry": "res://scripts/presentation/components/vehicle_visual_system_registry.gd",
+		"font": "res://art/ui/production/fonts/NotoSansKR-Variable.ttf"
+	},
+	"provider_fingerprints": {
+		"tokens": "31f395e6b3a75d7f214c6423a45abcc52a9cb73a8ec24532d1c007eb30415b19",
+		"catalog_registry": "accd918a6731029faff830b9a5edfa0d8f8bd232d32911dd39df6346cfd14191"
+	},
+	"viewport": [
+		2048,
+		1152
+	],
+	"locale": "ko",
+	"sheets": [
+		{
+			"id": "01-foundation-tokens",
+			"path": "docs/design/component-sheets/system-v1/01-foundation-tokens.png",
+			"sha256": "277720f04848af6f807ddd8a3b2b27221ffc291948cb0d4d63444a941608435f",
+			"width": 2048,
+			"height": 1152,
+			"providers": [
+				"VehicleStageVisualProfile",
+				"VehicleVisualSystemRegistry",
+				"NotoSansKR-Variable"
+			]
+		},
+		{
+			"id": "10-ui-controls-states",
+			"path": "docs/design/component-sheets/system-v1/10-ui-controls-states.png",
+			"sha256": "7d9269567c4deaa67224383820d89f7616b148f0edfc32d9e8aa48c09c596730",
+			"width": 2048,
+			"height": 1152,
+			"providers": [
+				"VehicleStageVisualProfile",
+				"VehicleVisualSystemRegistry",
+				"NotoSansKR-Variable"
+			]
+		}
+	],
+	"planned_sheet_ids": [
+		"02-world-surfaces",
+		"03-world-facilities",
+		"04-player-components",
+		"05-enemy-components",
+		"06-boss-components",
+		"07-projectile-telegraph-vfx",
+		"08-reward-upgrade-glyphs",
+		"09-hud-minimap-markers",
+		"11-modal-flow-contact-sheet",
+		"12-pressure-accessibility"
+	]
+}

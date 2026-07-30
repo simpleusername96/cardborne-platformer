@@ -14,7 +14,7 @@ related:
 
 # Cardborne UI 및 비주얼 시스템
 
-## 목적과 권한
+## Purpose
 
 이 문서는 Cardborne의 모든 player-facing surface에 적용되는 정본 visual
 contract다. 실제 runtime truth는
@@ -24,7 +24,15 @@ Godot Theme와 실제 provider에서 생성한 system sheet가 함께 소유한�
 방향 seed인 `00-general-sf-component-master-v1.png`는 선택된 형태 언어를
 설명하는 evidence일 뿐 runtime asset이나 독립 authority가 아니다.
 
-## 디자인 방향
+## Scope
+
+world, actor, projectile, reward, effect, HUD, modal, minimap, guidebook preview와
+debug boss practice를 포함한 모든 player-facing surface에 적용한다. gameplay
+rule과 collision truth는 각 기존 owner의 책임이며 이 문서는 표현만 정의한다.
+
+## Requirements
+
+### 디자인 방향
 
 - 장르는 익숙한 top-down industrial/general SF다. 특정 문화, 재질, 해양,
   의례 motif를 제품 정체성으로 만들지 않는다.
@@ -42,7 +50,7 @@ Godot Theme와 실제 provider에서 생성한 system sheet가 함께 소유한�
 - motion은 이동, state change, impact와 objective만 설명한다. ambient
   pulse, 반복 flashing과 의미 없는 orbit 장식은 금지한다.
 
-## Semantic token
+### Semantic token
 
 `VehicleStageVisualProfile`이 아래 색과 scale의 유일한 runtime owner다.
 world, combat, minimap, Theme와 sheet는 literal role color를 다시 선언하지
@@ -71,7 +79,7 @@ world, combat, minimap, Theme와 sheet는 literal role color를 다시 선언하
 state는 silhouette, notch, rail pattern 또는 glyph 중 하나를 함께 사용한다.
 grayscale에서도 외곽선과 negative space만으로 주요 역할을 구분해야 한다.
 
-## Component 및 catalog contract
+### Component 및 catalog contract
 
 각 visual ID는 정확히 한 catalog가 소유한다.
 
@@ -89,7 +97,7 @@ runtime, guidebook, upgrade card와 system sheet는 같은 descriptor를 재사�
 preview-only 대체 art를 만들지 않는다. visual geometry는 collision truth와
 분리하되 projectile core boundary와 debug overlay로 그 차이를 검증한다.
 
-## World
+### World
 
 - field geometry, collision, navigation, cover selection, terrain schedule와
   deterministic fingerprint는 visual rework 때문에 바꾸지 않는다.
@@ -112,7 +120,7 @@ preview-only 대체 art를 만들지 않는다. visual geometry는 collision tru
   - Tidal Archive: parallel bay spine + lateral corridor rail
   - Storm Drydock: basin frame + diagonal docking guide
 
-## Actor, projectile 및 effect
+### Actor, projectile 및 effect
 
 - player는 이동 방향을 보여주는 hull front/rear cut과 manual-aim mount를
   분리한다.
@@ -134,7 +142,7 @@ preview-only 대체 art를 만들지 않는다. visual geometry는 collision tru
 - maximum pressure에서도 player, crosshair, committed threat, boss
   objective, pickup과 current target이 world decoration보다 먼저 읽혀야 한다.
 
-## Typography, spacing 및 control
+### Typography, spacing 및 control
 
 - font는 Noto Sans KR variable 한 family만 사용한다.
 - body weight는 500, label/title는 650이다.
@@ -151,7 +159,7 @@ preview-only 대체 art를 만들지 않는다. visual geometry는 collision tru
 - surface에는 한 border와 한 semantic accent rail만 허용한다. 장식용
   corner와 중첩 frame을 반복하지 않는다.
 
-## Responsive geometry
+### Responsive geometry
 
 | viewport | outer safe margin | modal content maximum | mode |
 | --- | ---: | ---: | --- |
@@ -169,7 +177,7 @@ preview-only 대체 art를 만들지 않는다. visual geometry는 collision tru
 - Korean과 English의 title, body, dynamic value, control label은 지원
   viewport에서 겹치거나 잘리거나 container 밖으로 나갈 수 없다.
 
-## HUD
+### HUD
 
 - top-left는 hull/experience와 `154×44` action rail을 묶는다. primary fire는
   rail에 넣지 않는다.
@@ -182,7 +190,7 @@ preview-only 대체 art를 만들지 않는다. visual geometry는 collision tru
 - off-screen threat, status orbit, crosshair, minimap marker와 support timer는
   shape-coded retained mesh를 사용한다.
 
-## Modal
+### Modal
 
 - 모든 modal은 live HUD와 gameplay input을 차단하고 title, content,
   primary action 순서가 한 번에 읽혀야 한다.
@@ -203,7 +211,7 @@ preview-only 대체 art를 만들지 않는다. visual geometry는 collision tru
 - Boss Practice는 debug-only이지만 production boss descriptor와 Theme를
   재사용한다.
 
-## 접근성 및 상태
+### 접근성 및 상태
 
 - focus order는 visual/task order와 같고 keyboard/controller focus가 항상
   보인다.
@@ -213,7 +221,7 @@ preview-only 대체 art를 만들지 않는다. visual geometry는 collision tru
 - grayscale capture, text glyph bounds, focus path, 200% text fit과 supported
   viewport를 validation한다.
 
-## 생성물과 검증
+## Acceptance Criteria
 
 `docs/design/component-sheets/system-v1/manifest.json`은 실제 provider
 fingerprint, source commit, viewport, locale와 각 sheet SHA-256을 기록한다.
@@ -232,7 +240,7 @@ pressure/accessibility를 포함한다.
 - combat batch ≤50, world batch ≤12, draw-call p95 ≤200
 - full Godot import, focused validator, native/Web production smoke
 
-## 비목표
+## Non-Goals
 
 - gameplay geometry, collision, actor count, speed, controls와 campaign flow를
   visual rework의 이유로 바꾸지 않는다.
