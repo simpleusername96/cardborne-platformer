@@ -362,11 +362,11 @@ func _draw_enemy_components() -> void:
 
 func _draw_boss_components() -> void:
 	var bosses := [
-		[&"behemoth", "FOUNDRY / BEHEMOTH", "armored lanes", &"plate"],
-		[&"leviathan", "LEVIATHAN", "moving breach", &"spine"],
-		[&"titan", "TITAN", "quadrant anchors", &"anchor"],
-		[&"colossus", "COLOSSUS", "pursuit gates", &"gate"],
-		[&"crown", "CROWN", "command lattice", &"node"],
+		[&"colossus", "FOUNDRY COLOSSUS", "forge plate", &"forge_plate"],
+		[&"leviathan", "ARCHIVE LEVIATHAN", "segment lock", &"segment_lock"],
+		[&"titan", "DRYDOCK TITAN", "relay polarity", &"relay_positive"],
+		[&"behemoth", "SWITCHYARD BEHEMOTH", "route switch", &"route_switch"],
+		[&"crown", "CROWN ENGINE", "lattice command", &"lattice_outer"],
 	]
 	for index in bosses.size():
 		var rect := Rect2(72.0 + index * 380.0, 196.0, 348.0, 730.0)
@@ -773,19 +773,15 @@ func _draw_world_marker(center: Vector2, marker_id: StringName, scale: float) ->
 
 
 func _draw_boss_modules(center: Vector2, module_id: StringName) -> void:
-	for index in 3:
-		var module_center := center + Vector2((index - 1) * 76.0, 0.0)
-		match module_id:
-			&"plate":
-				_draw_plate(Rect2(module_center - Vector2(26.0, 18.0), Vector2(52.0, 36.0)), 8.0, Art.BOSS_COMMAND)
-			&"spine":
-				_draw_primitive(module_center, &"split_spear", Art.BOSS_COMMAND, 26.0)
-			&"anchor":
-				_draw_regular_polygon(module_center, 26.0, 4, Art.BOSS_COMMAND, PI / 4.0)
-			&"gate":
-				_draw_chevron(module_center, Vector2.RIGHT, 48.0, Art.BOSS_COMMAND, 10.0)
-			_:
-				_draw_regular_polygon(module_center, 25.0, 8, Art.BOSS_COMMAND, PI / 8.0)
+	for index in 2:
+		var module_center := center + Vector2((float(index) - 0.5) * 92.0, 0.0)
+		_draw_mesh_at(
+			Visuals.boss_module_mesh(module_id, &"active"),
+			module_center,
+			Vector2.ONE * 30.0,
+			0.0,
+			Color.WHITE
+		)
 
 
 func _draw_telegraph(rect: Rect2, kind: StringName) -> void:

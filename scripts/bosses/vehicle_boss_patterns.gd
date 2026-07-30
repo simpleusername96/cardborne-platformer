@@ -18,7 +18,7 @@ const PATTERNS := {
 	&"foundry_burst":{"kind":&"fan", "commit_mode":&"committed", "affinity":&"thermal", "startup":0.85, "active":0.70, "recovery":0.90, "damage":20.0},
 	&"furnace_ring":{"kind":&"area", "commit_mode":&"committed", "affinity":&"thermal", "startup":1.00, "active":0.60, "recovery":1.00, "damage":28.0, "radius":230.0},
 	&"slag_ring":{"kind":&"area", "commit_mode":&"autonomous", "affinity":&"thermal", "startup":1.15, "active":0.70, "recovery":0.0, "damage":20.0, "radius":210.0},
-	&"overload_pylons":{"kind":&"pylons", "commit_mode":&"autonomous", "affinity":&"arc", "startup":1.00, "active":2.4, "recovery":0.0, "damage":20.0, "radius":190.0},
+	&"forge_vent":{"kind":&"area", "commit_mode":&"autonomous", "affinity":&"arc", "startup":1.00, "active":2.4, "recovery":0.0, "damage":20.0, "radius":190.0},
 
 	&"current_fan":{"kind":&"fan", "commit_mode":&"committed", "affinity":&"kinetic", "startup":0.90, "active":0.70, "recovery":0.90, "damage":20.0},
 	&"archive_lunge":{"kind":&"charge", "commit_mode":&"committed", "affinity":&"kinetic", "startup":1.10, "active":0.65, "recovery":1.25, "damage":34.0},
@@ -57,7 +57,7 @@ const STAGE_SEQUENCES := {
 	&"stage_5":[&"mirror_cross", &"carrier_wave", &"crown_beam", &"crown_burst"],
 }
 const AUTONOMOUS_SEQUENCES := {
-	&"stage_1":[&"slag_ring", &"overload_pylons"],
+	&"stage_1":[&"slag_ring", &"forge_vent"],
 	&"stage_2":[&"undertow_lanes", &"depth_charges"],
 	&"stage_3":[&"thunder_chain", &"beam_sentinel_call"],
 	&"stage_4":[&"switchyard_mines", &"switch_sweeps"],
@@ -81,8 +81,7 @@ const DISPLAY_KEYS := {
 	&"furnace_gates":"PATTERN_FURNACE_GATES",
 	&"foundry_burst":"PATTERN_FOUNDRY_BURST",
 	&"slag_ring":"PATTERN_SLAG_RING",
-	&"overload_pylons":"PATTERN_OVERLOAD_PYLONS",
-	&"pylon_overload":"PATTERN_PYLON_OVERLOAD",
+	&"forge_vent":"PATTERN_FORGE_VENT",
 	&"current_fan":"PATTERN_CURRENT_FAN",
 	&"archive_lunge":"PATTERN_ARCHIVE_LUNGE",
 	&"archive_cross":"PATTERN_ARCHIVE_CROSS",

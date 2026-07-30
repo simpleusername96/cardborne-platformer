@@ -501,8 +501,8 @@ authored count는 유지하며 surge당 최대 1개 squad만 tactic tag를 받�
 - [x] Sheet-first gate에서 12개 component design sheet를 publication한다.
 - [x] Phase 3에서 player/engine/dash/projectile/reward/effect를 publication한다.
 - [x] Phase 4에서 three field, facility와 minimap world layer를 교체한다.
-- [ ] Phase 5에서 enemy visual family와 collective tactic을 적용한다.
-- [ ] Phase 6에서 five boss exam과 objective visual을 적용한다.
+- [x] Phase 5에서 enemy visual family와 collective tactic을 적용한다.
+- [x] Phase 6에서 five boss exam과 objective visual을 적용한다.
 - [ ] Phase 7에서 HUD와 모든 modal composition을 같은 system으로 완성한다.
 - [ ] Phase 8에서 legacy pixel stack을 제거하고 horde recovery를 포함한 final
   release gate를 통과한다.
@@ -708,13 +708,13 @@ strategy document의 collective behavior를 단계적으로 연결한다.
 
 **목표:** common pattern-order boss를 five unique arena exam으로 교체한다.
 
-- [ ] boss exam catalog/runtime, sequential floor와 objective state를 구현한다.
-- [ ] Foundry → Leviathan → Titan → Behemoth → Crown 순서로 vertical slice를
+- [x] boss exam catalog/runtime, sequential floor와 objective state를 구현한다.
+- [x] Foundry → Leviathan → Titan → Behemoth → Crown 순서로 vertical slice를
   확장한다.
-- [ ] each boss의 module, one-line HUD cue, practice phase와 finite add를
+- [x] each boss의 module, one-line HUD cue, practice phase와 finite add를
   production runtime에 연결한다.
-- [ ] base kit, reference build와 high-output build fixture를 추가한다.
-- [ ] boss/objective sheet와 ko/en guide/practice capture를 생성한다.
+- [x] base kit, reference build와 high-output build fixture를 추가한다.
+- [x] boss/objective sheet와 ko/en guide/practice capture를 생성한다.
 
 **Batch acceptance**
 
@@ -1048,16 +1048,28 @@ contrast, timing과 performance 조정으로 제한한다.
   - encounter/spawn/run/renderer/guidebook/localization validator와 12 sheet
     deterministic hash가 통과했다. performance retention은 사용자 지시대로
     Phase 8 최종 build에서만 실행한다.
-- [ ] Phase 6 bosses
+- [x] Phase 6 bosses
+  - five stage가 forge plate, segment lock, relay polarity, route switch,
+    lattice command라는 서로 다른 semantic objective와 body/module silhouette를
+    사용한다.
+  - 65%/30% sequential floor, 9% module health, 5초 vulnerability와
+    base/reference/high-output fixture에서 phase skip 0을 검증했다.
+  - boss entry는 boss·module·12 add slot을 예약하고 phase 전환 때 retired
+    module을 먼저 회수해 objective spawn이 hostile capacity에 막히지 않는다.
+  - `visual-system-phase6-boss-final-c`의 five-boss startup/imminent/active/
+    recovery/phase-two와 `visual-system-phase6-en-1280`의 English guide/HUD를
+    확인했다.
+  - boss/runtime/practice/renderer/layout/localization validator와 12 sheet의
+    deterministic hash가 통과했다. clear-time 및 performance retention은
+    사용자 지시에 따라 Phase 8 최종 build에서 측정한다.
 - [ ] Phase 7 HUD/modal suite
 - [ ] Phase 8 retirement/final gates
 - [ ] Final horde native/Web/capacity/lifecycle gate
 
 ## Next Steps
 
-1. Phase 6에서 five boss semantic exam과 objective visual을 publication한다.
-2. Phase 7에서 HUD와 complete modal suite를 publication한다.
-3. Phase 8에서 raw tile을 포함한 legacy를 삭제한 최종 build로 horde recovery와 전체
+1. Phase 7에서 HUD와 complete modal suite를 publication한다.
+2. Phase 8에서 raw tile을 포함한 legacy를 삭제한 최종 build로 horde recovery와 전체
    native/Web/capacity/lifecycle gate를 실행한다.
 
 ## Completion Criteria

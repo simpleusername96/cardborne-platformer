@@ -69,7 +69,7 @@ func _initialize() -> void:
 		Patterns.affinity("furnace_gates") == AttackContract.THERMAL
 			and Patterns.affinity("foundry_ram") == AttackContract.KINETIC
 			and Patterns.affinity("furnace_ring") == AttackContract.THERMAL
-			and Patterns.affinity("overload_pylons") == AttackContract.ARC,
+			and Patterns.affinity("forge_vent") == AttackContract.ARC,
 		"stage-one boss patterns expose distinct thermal, kinetic, and arc families"
 	)
 	_finish()

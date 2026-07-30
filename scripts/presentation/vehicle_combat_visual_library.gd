@@ -48,6 +48,93 @@ static func boss_mesh(variant: StringName) -> ArrayMesh:
 	return polygon_mesh(polygons)
 
 
+static func debug_boss_signature(variant: StringName) -> PackedVector2Array:
+	return _boss_polygon(variant)
+
+
+static func boss_module_mesh(
+	module_kind: StringName,
+	state: StringName = &"active"
+) -> ArrayMesh:
+	var body := _regular_polygon(Vector2.ZERO, 1.0, 4, PI / 4.0)
+	var shadow := PackedVector2Array()
+	for point in body:
+		shadow.append(point + Vector2(0.14, 0.18))
+	var cue := (
+		Art.PLAYER_REWARD
+		if state == &"active"
+		else Art.TEXT_MUTED
+	)
+	var polygons: Array[Dictionary] = [
+		{"points":shadow, "color":Art.INK},
+		{"points":body, "color":Art.BOSS_COMMAND},
+	]
+	match module_kind:
+		&"forge_plate":
+			for y in [-0.32, 0.32]:
+				polygons.append({
+					"points":PackedVector2Array([
+						Vector2(-0.62, y - 0.10), Vector2(0.62, y - 0.10),
+						Vector2(0.62, y + 0.10), Vector2(-0.62, y + 0.10),
+					]),
+					"color":cue,
+				})
+		&"segment_lock":
+			polygons.append({
+				"points":PackedVector2Array([
+					Vector2(0.66, 0.0), Vector2(-0.34, -0.55),
+					Vector2(-0.10, 0.0), Vector2(-0.34, 0.55),
+				]),
+				"color":cue,
+			})
+		&"relay_positive":
+			polygons.append({
+				"points":PackedVector2Array([
+					Vector2(-0.58, -0.10), Vector2(-0.10, -0.10),
+					Vector2(-0.10, -0.58), Vector2(0.10, -0.58),
+					Vector2(0.10, -0.10), Vector2(0.58, -0.10),
+					Vector2(0.58, 0.10), Vector2(0.10, 0.10),
+					Vector2(0.10, 0.58), Vector2(-0.10, 0.58),
+					Vector2(-0.10, 0.10), Vector2(-0.58, 0.10),
+				]),
+				"color":cue,
+			})
+		&"relay_negative":
+			polygons.append({
+				"points":PackedVector2Array([
+					Vector2(-0.58, -0.11), Vector2(0.58, -0.11),
+					Vector2(0.58, 0.11), Vector2(-0.58, 0.11),
+				]),
+				"color":cue,
+			})
+		&"route_switch":
+			for sign_value in [-1.0, 1.0]:
+				polygons.append({
+					"points":PackedVector2Array([
+						Vector2(-0.60, -0.09), Vector2(0.02, -0.09),
+						Vector2(0.60, sign_value * 0.48 - 0.09),
+						Vector2(0.60, sign_value * 0.48 + 0.09),
+						Vector2(-0.02, 0.09), Vector2(-0.60, 0.09),
+					]),
+					"color":cue,
+				})
+		&"armor_car":
+			for x in [-0.30, 0.30]:
+				polygons.append({
+					"points":PackedVector2Array([
+						Vector2(x - 0.11, -0.58), Vector2(x + 0.11, -0.58),
+						Vector2(x + 0.11, 0.58), Vector2(x - 0.11, 0.58),
+					]),
+					"color":cue,
+				})
+		_:
+			polygons.append({
+				"points":_regular_polygon(Vector2.ZERO, 0.46, 4, PI / 4.0),
+				"color":cue,
+			})
+	return polygon_mesh(polygons)
+
+
 static func projectile_head_mesh(
 	affinity: StringName = AttackContract.KINETIC
 ) -> ArrayMesh:

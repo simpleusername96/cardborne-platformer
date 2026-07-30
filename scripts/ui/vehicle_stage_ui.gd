@@ -589,7 +589,7 @@ func _build_hud() -> void:
 	_boss_cluster.name = "BossCluster"
 	_boss_cluster.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	_boss_cluster.position = Vector2(380.0, 70.0)
-	_boss_cluster.size = Vector2(520.0, 40.0)
+	_boss_cluster.size = Vector2(520.0, 54.0)
 	_boss_cluster.add_theme_constant_override("separation", 1)
 	_hud.add_child(_boss_cluster)
 	_boss_name = _label("ENEMY_FOUNDRY_COLOSSUS", 14, OFF_WHITE)
@@ -605,13 +605,13 @@ func _build_hud() -> void:
 	_boss_bar.value = 1.0
 	_boss_bar.custom_minimum_size = Vector2(520.0, 10.0)
 	_boss_cluster.add_child(_boss_bar)
-	_boss_state = _label("PATTERN_READING_ARENA", 9, OFF_WHITE)
+	_boss_state = _label("PATTERN_READING_ARENA", 11, OFF_WHITE)
 	_boss_state.add_theme_color_override("font_shadow_color", CANVAS)
 	_boss_state.add_theme_constant_override("shadow_offset_x", 2)
 	_boss_state.add_theme_constant_override("shadow_offset_y", 2)
 	_boss_state.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_boss_cluster.add_child(_boss_state)
-	_boss_state.visible = false
+	_boss_state.visible = true
 	_boss_cluster.visible = false
 
 	_target_panel = _flat_panel()
@@ -1247,6 +1247,7 @@ func update_hud(snapshot: Dictionary) -> void:
 			_boss_bar.max_value = maxf(1.0, float(boss.get("max_health", 1.0)))
 			_boss_bar.value = float(boss.get("health", 0.0))
 			_boss_state.text = String(boss.get("state", ""))
+			_boss_state.visible = not _boss_state.text.is_empty()
 	if snapshot.has("target"):
 		var target: Dictionary = snapshot["target"]
 		var target_panel: Control = _target_cluster.get_meta("panel")

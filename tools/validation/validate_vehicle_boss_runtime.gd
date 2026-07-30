@@ -41,9 +41,10 @@ func _init() -> void:
 				BossPatterns.commit_mode(pattern) == &"committed",
 				"%s phase-two direct selection stays committed" % stage_id
 			)
-	_expect(runtime.phase_for_health(0.66) == 1, "phase one ends at 65 percent")
-	_expect(runtime.phase_for_health(0.65) == 2, "phase two starts at 65 percent")
-	_expect(runtime.phase_for_health(0.30) == 3, "phase three starts at 30 percent")
+	_expect(
+		runtime.read_gap(1) > runtime.read_gap(3),
+		"direct-pattern read cadence escalates without owning semantic phase floors"
+	)
 	_finish()
 
 

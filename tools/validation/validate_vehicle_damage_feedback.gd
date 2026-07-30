@@ -271,7 +271,7 @@ func _check_attack_telegraphs(stage: Node) -> void:
 
 	AttackTelegraphs.refresh_boss(
 		boss,
-		"overload_pylons",
+		"forge_vent",
 		resolve_path,
 		resolve_charge_path
 	)

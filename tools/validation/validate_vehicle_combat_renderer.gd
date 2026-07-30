@@ -23,7 +23,7 @@ func _run() -> void:
 	var pixel_enabled := bool(snapshot.get("pixel_enabled", false))
 	_expect(int(snapshot["enemy_capacity"]) == 320, "renderer shares the 320-hostile store capacity")
 	_expect(int(snapshot["status_arc_capacity"]) == 960, "status overlays scale from shared enemy capacity")
-	_expect(pixel_enabled, "unmigrated boss atlas presentation remains active until the boss phase")
+	_expect(not pixel_enabled, "combat renderer has no remaining pixel catalog branch")
 	_expect(
 		not bool(snapshot.get("enemy_pixel_fallback", true)),
 		"ordinary and stationary enemies have no pixel fallback"
@@ -31,6 +31,10 @@ func _run() -> void:
 	_expect(
 		not bool(snapshot.get("migrated_combat_pixel_fallback", true)),
 		"player, projectile, reward and effect families have no pixel fallback"
+	)
+	_expect(
+		not bool(snapshot.get("boss_pixel_fallback", true)),
+		"all five boss bodies have no pixel fallback"
 	)
 	_expect(
 		int(snapshot["batches"]) <= 50,
@@ -55,6 +59,11 @@ func _run() -> void:
 			and renderer.get_node_or_null("Player_primary_mount") != null,
 		"player hull, rigid engine, flare and independent aim mount use component batches"
 	)
+	for variant in [&"colossus", &"leviathan", &"titan", &"behemoth", &"crown"]:
+		_expect(
+			renderer.get_node_or_null("Boss_%s" % String(variant)) != null,
+			"%s boss owns a vector silhouette batch" % variant
+		)
 	for affinity in AttackContract.AFFINITIES:
 		_expect(
 			absf(Visuals.debug_projectile_head_extent(affinity) - 1.0) <= 0.001,

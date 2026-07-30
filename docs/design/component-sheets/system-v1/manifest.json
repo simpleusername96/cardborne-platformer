@@ -1,7 +1,7 @@
 {
 	"schema_version": 1,
 	"system_id": "cardborne-general-sf-v1",
-	"source_commit": "df26f792cc1ec4679b385c32ed7d26c1acbc0d38",
+	"source_commit": "d9ff27556abd0a1db5c32ec499ce6051059c7c32",
 	"providers": {
 		"tokens": "res://scripts/vehicle/vehicle_stage_visual_profile.gd",
 		"catalog_registry": "res://scripts/presentation/components/vehicle_visual_system_registry.gd",
@@ -9,7 +9,7 @@
 	},
 	"provider_fingerprints": {
 		"tokens": "31f395e6b3a75d7f214c6423a45abcc52a9cb73a8ec24532d1c007eb30415b19",
-		"catalog_registry": "89acbd23b5aae104dae5f9405f8a73fe6f96c06476edc3965a85dde4714f7a5a"
+		"catalog_registry": "693f6d15afd90e0b399a8fc88ca04f557b335ea1bab68818a44e5120259d8d67"
 	},
 	"viewport": [
 		2048,
@@ -80,7 +80,7 @@
 		{
 			"id": "06-boss-components",
 			"path": "docs/design/component-sheets/system-v1/06-boss-components.png",
-			"sha256": "06e01ff50b6c76edc74b351fe2d324f49a5d0c91381919f8f449ed1d353f3270",
+			"sha256": "bfc8a48a65afb475dd9407a135070f8b9209bfc7871943199a537b04c6659c6d",
 			"width": 2048,
 			"height": 1152,
 			"providers": [

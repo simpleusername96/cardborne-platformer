@@ -2,8 +2,8 @@ class_name VehicleGuidebookPreview
 extends Control
 
 ## Displays runtime component previews while guidebook text and locked-state
-## ownership remain live UI. Unmigrated enemy/boss families may still use the
-## atlas until their publication phases.
+## ownership remain live UI. Published enemy and boss previews use the same
+## vector providers as combat and the system sheets.
 
 const Visuals = preload("res://scripts/presentation/vehicle_combat_visual_library.gd")
 const PixelCatalog = preload("res://scripts/presentation/vehicle_pixel_asset_catalog.gd")
@@ -93,7 +93,7 @@ func _draw() -> void:
 func _show_pixel_preview(kind: StringName, preview_id: StringName) -> bool:
 	if _pixel_catalog == null or not _pixel_catalog.is_ready():
 		return false
-	if kind in [&"enemy", &"terrain", &"facility", &"pickup"]:
+	if kind in [&"enemy", &"boss", &"terrain", &"facility", &"pickup"]:
 		return false
 	var family := &""
 	var variant := preview_id

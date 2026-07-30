@@ -8,7 +8,6 @@ const Visuals = preload("res://scripts/presentation/vehicle_combat_visual_librar
 const ActorCatalog = preload(
 	"res://scripts/presentation/components/vehicle_actor_visual_catalog.gd"
 )
-const PixelCatalog = preload("res://scripts/presentation/vehicle_pixel_asset_catalog.gd")
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd")
 const EnemyStore = preload("res://scripts/enemies/vehicle_enemy_store.gd")
@@ -23,9 +22,7 @@ const EXPERIENCE_CAPACITY := 192
 const EFFECT_CAPACITY := 96
 const STATUS_ARC_CAPACITY := ENEMY_CAPACITY * 3
 const BUFFER_FLOATS_PER_INSTANCE := 12
-const ATLAS_BUFFER_FLOATS_PER_INSTANCE := 16
 const CUSTOM_BATCH_AABB := AABB(Vector3(-8192.0, -8192.0, -1.0), Vector3(16384.0, 16384.0, 2.0))
-const PIXEL_SHADER := preload("res://pixel-art-production/runtime/shaders/pixel_atlas_multimesh.gdshader")
 const MAX_ORDINARY_HEALTH_BARS := 12
 const MAX_EXTRA_PRIORITY_MARKERS := 8
 class BatchBuffer:
@@ -97,41 +94,6 @@ class BatchHandle:
 			instance.multimesh.buffer = buffer.values
 
 
-class AtlasBatchBuffer:
-	var values := PackedFloat32Array()
-
-
-	func _init(capacity: int) -> void:
-		values.resize(capacity * ATLAS_BUFFER_FLOATS_PER_INSTANCE)
-
-
-	func write_basis(
-		instance_index: int,
-		position: Vector2,
-		x_axis: Vector2,
-		scale: Vector2,
-		color: Color,
-		uv_region: Color
-	) -> void:
-		var offset := instance_index * ATLAS_BUFFER_FLOATS_PER_INSTANCE
-		values[offset] = x_axis.x * scale.x
-		values[offset + 1] = -x_axis.y * scale.y
-		values[offset + 2] = 0.0
-		values[offset + 3] = position.x
-		values[offset + 4] = x_axis.y * scale.x
-		values[offset + 5] = x_axis.x * scale.y
-		values[offset + 6] = 0.0
-		values[offset + 7] = position.y
-		values[offset + 8] = color.r
-		values[offset + 9] = color.g
-		values[offset + 10] = color.b
-		values[offset + 11] = color.a
-		values[offset + 12] = uv_region.r
-		values[offset + 13] = uv_region.g
-		values[offset + 14] = uv_region.b
-		values[offset + 15] = uv_region.a
-
-
 var _enemy_batches: Dictionary = {}
 var _boss_variant_batches: Dictionary = {}
 var _projectile_head_batches: Dictionary = {}
@@ -140,14 +102,11 @@ var _experience_batches: Dictionary = {}
 var _effect_batches: Dictionary = {}
 var _overlay_batches: Dictionary = {}
 var _batches: Array[BatchHandle] = []
-var _pixel_catalog: VehiclePixelAssetCatalog
-var _pixel_enabled := false
 var _player_hull_batch: BatchHandle
 var _player_engine_batch: BatchHandle
 var _player_engine_flare_batch: BatchHandle
 var _player_primary_batch: BatchHandle
 var _player_secondary_batch: BatchHandle
-var _pixel_frame_cache: Dictionary = {}
 var _last_health_bar_count := 0
 var _last_priority_marker_count := 0
 var _last_tactic_module_count := 0
@@ -155,8 +114,6 @@ var _last_tactic_module_count := 0
 
 func _ready() -> void:
 	z_index = -5
-	_pixel_catalog = PixelCatalog.new()
-	_pixel_enabled = _pixel_catalog.is_ready()
 	_build_batches()
 
 
@@ -224,7 +181,7 @@ func debug_snapshot() -> Dictionary:
 		"batches": _batches.size(),
 		"visible_instances": visible,
 		"batch_counts": batch_counts,
-		"pixel_enabled": _pixel_enabled,
+		"pixel_enabled": false,
 		"migrated_combat_pixel_fallback": false,
 		"enemy_capacity": ENEMY_CAPACITY,
 		"status_arc_capacity": STATUS_ARC_CAPACITY,
@@ -232,6 +189,7 @@ func debug_snapshot() -> Dictionary:
 		"priority_marker_count": _last_priority_marker_count,
 		"tactic_module_count": _last_tactic_module_count,
 		"enemy_pixel_fallback": false,
+		"boss_pixel_fallback": false,
 	}
 
 
@@ -246,22 +204,13 @@ func _build_batches() -> void:
 			0,
 			archetype
 		)
-	var shared_pixel_boss: BatchHandle
-	if _pixel_enabled and _pixel_catalog.has_family(&"boss_set"):
-		shared_pixel_boss = _create_atlas_batch(
-			"Boss_boss_set", 1, 0, &"boss_set"
-		)
 	for variant in [&"colossus", &"leviathan", &"titan", &"behemoth", &"crown"]:
-		_boss_variant_batches[variant] = (
-			shared_pixel_boss
-			if shared_pixel_boss != null
-			else _create_batch(
-				"Boss_%s" % String(variant),
-				Visuals.boss_mesh(variant),
-				1,
-				0,
-				StringName("boss_%s" % String(variant))
-			)
+		_boss_variant_batches[variant] = _create_batch(
+			"Boss_%s" % String(variant),
+			Visuals.boss_mesh(variant),
+			1,
+			0,
+			StringName("boss_%s" % String(variant))
 		)
 	for team in [&"player", &"enemy"]:
 		var capacity := (
@@ -315,18 +264,6 @@ func _build_batches() -> void:
 			-1,
 			family
 		)
-	for kind in [&"diamond", &"ring", &"afterimage", &"beam"]:
-		var family := StringName("effect_%s" % String(kind))
-		_effect_batches[kind] = _create_batch(
-			"Effect_%s" % String(kind),
-			Visuals.effect_mesh(kind),
-			EFFECT_CAPACITY,
-			2,
-			family
-		)
-	_overlay_batches[&"shield"] = _create_batch(
-		"Overlay_shield", Visuals.effect_mesh(&"ring"), ENEMY_CAPACITY, 2, &"overlay_shield"
-	)
 	_overlay_batches[&"health"] = _create_batch(
 		"Overlay_health",
 		Visuals.health_bar_mesh(),
@@ -335,8 +272,9 @@ func _build_batches() -> void:
 		&"overlay_health"
 	)
 	_overlay_batches[&"ring"] = _create_batch(
-		"Overlay_ring", Visuals.effect_mesh(&"ring"), 256, 3, &"overlay_ring"
+		"Overlay_ring", Visuals.effect_mesh(&"ring"), 1024, 3, &"overlay_ring"
 	)
+	_overlay_batches[&"shield"] = _overlay_batches[&"ring"]
 	_overlay_batches[&"danger_ring"] = _create_batch(
 		"Overlay_danger_ring",
 		Visuals.annulus_mesh(48, 0.975),
@@ -345,13 +283,23 @@ func _build_batches() -> void:
 		&"overlay_danger_ring"
 	)
 	_overlay_batches[&"beam"] = _create_batch(
-		"Overlay_beam", Visuals.effect_mesh(&"beam"), 256, 3, &"overlay_beam"
+		"Overlay_beam", Visuals.effect_mesh(&"beam"), 1024, 3, &"overlay_beam"
 	)
 	_overlay_batches[&"disk"] = _create_batch(
 		"Overlay_disk", Visuals.disk_mesh(), 96, 1, &"overlay_disk"
 	)
 	_overlay_batches[&"diamond"] = _create_batch(
-		"Overlay_diamond", Visuals.effect_mesh(&"diamond"), 96, 4, &"overlay_diamond"
+		"Overlay_diamond", Visuals.effect_mesh(&"diamond"), 640, 4, &"overlay_diamond"
+	)
+	_effect_batches[&"ring"] = _overlay_batches[&"ring"]
+	_effect_batches[&"beam"] = _overlay_batches[&"beam"]
+	_effect_batches[&"diamond"] = _overlay_batches[&"diamond"]
+	_effect_batches[&"afterimage"] = _create_batch(
+		"Effect_afterimage",
+		Visuals.effect_mesh(&"afterimage"),
+		EFFECT_CAPACITY,
+		2,
+		&"effect_afterimage"
 	)
 	_player_engine_flare_batch = _create_batch(
 		"Player_engine_flare",
@@ -427,35 +375,6 @@ func _create_batch(
 	return handle
 
 
-func _create_atlas_batch(
-	batch_name: String,
-	capacity: int,
-	child_z: int,
-	texture_family: StringName
-) -> BatchHandle:
-	var multi_mesh := MultiMesh.new()
-	multi_mesh.transform_format = MultiMesh.TRANSFORM_2D
-	multi_mesh.use_colors = true
-	multi_mesh.use_custom_data = true
-	multi_mesh.instance_count = capacity
-	multi_mesh.visible_instance_count = 0
-	multi_mesh.mesh = Visuals.pixel_quad_mesh()
-	multi_mesh.custom_aabb = CUSTOM_BATCH_AABB
-	var instance := MultiMeshInstance2D.new()
-	instance.name = batch_name
-	instance.z_index = child_z
-	instance.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	instance.multimesh = multi_mesh
-	var material := ShaderMaterial.new()
-	material.shader = PIXEL_SHADER
-	material.set_shader_parameter("atlas_texture", _pixel_catalog.texture(texture_family))
-	instance.material = material
-	add_child(instance)
-	var handle := BatchHandle.new(instance, AtlasBatchBuffer.new(capacity))
-	_batches.append(handle)
-	return handle
-
-
 func _sync_enemies(
 	enemies: Array[EnemyState],
 	visible_world: Rect2,
@@ -486,36 +405,13 @@ func _sync_enemies(
 		var angle := _enemy_angle(archetype, enemy, player_position, run_time)
 		var radius := enemy.visual_radius
 		var color := Art.IVORY_BRIGHT if enemy.flash > 0.0 else Visuals.enemy_color(role)
-		if (
-			archetype == &"stage_boss"
-			and _pixel_enabled
-			and _pixel_catalog.has_family(&"boss_set")
-		):
-			var pixel_family := &"boss_set"
-			var pixel_variant := enemy.boss_variant
-			var pixel_state := &"read"
-			var direction_index := _pixel_catalog.direction_index(
-				Vector2.RIGHT.rotated(angle), 8
-			)
-			var frame := _cached_pixel_frame(
-				pixel_family,
-				pixel_variant,
-				direction_index,
-				pixel_state,
-				0
-			)
-			if not frame.is_empty():
-				var pixel_scale := radius * (1.10 if archetype == &"stage_boss" else 1.24)
-				_write_atlas_instance(
-					batch,
-					position,
-					0.0,
-					Vector2.ONE * pixel_scale,
-					Color.WHITE if enemy.flash <= 0.0 else Color(1.0, 0.65, 0.65),
-					frame
-				)
-		else:
-			_write_instance(batch, position, angle, Vector2.ONE * radius, color)
+		_write_instance(
+			batch,
+			position,
+			angle,
+			Vector2.ONE * radius,
+			color
+		)
 		_sync_collective_tactic_module(enemy, position, radius)
 		_sync_enemy_priority_marker(
 			enemy, position, radius, priority_ids.has(enemy.id)
@@ -713,6 +609,8 @@ func _sync_enemy_priority_marker(
 	radius: float,
 	show_priority_marker: bool
 ) -> void:
+	if enemy.role == &"boss_pylon":
+		return
 	if show_priority_marker:
 		_write_instance(
 			_overlay_batches[&"ring"],
@@ -738,6 +636,11 @@ func _sync_enemy_semantic_overlays(
 ) -> void:
 	var forward := Vector2.RIGHT.rotated(angle)
 	var side := forward.rotated(PI * 0.5)
+	if enemy.role == &"boss_pylon":
+		_sync_boss_module_overlay(enemy, position, radius, forward, side)
+		return
+	if enemy.role == &"stage_boss":
+		_sync_boss_core_overlay(enemy, position, radius)
 	if enemy.guard_plate_structure > 0.0:
 		for sign_value in [-1.0, 1.0]:
 			_write_instance_basis(
@@ -793,6 +696,138 @@ func _sync_enemy_semantic_overlays(
 		_write_instance(
 			_overlay_batches[&"disk"], position, 0.0,
 			Vector2.ONE * damage_radius * readiness, Color(Art.CORAL, 0.16 + readiness * 0.22)
+		)
+
+
+func _sync_boss_core_overlay(
+	enemy: EnemyState,
+	position: Vector2,
+	radius: float
+) -> void:
+	var core_color := (
+		Art.PLAYER_REWARD
+		if enemy.boss_module_state == &"open"
+		else Art.BOSS_COMMAND
+	)
+	_write_instance(
+		_overlay_batches[&"diamond"],
+		position,
+		PI / 4.0,
+		Vector2.ONE * radius * 0.19,
+		core_color
+	)
+
+
+func _sync_boss_module_overlay(
+	enemy: EnemyState,
+	position: Vector2,
+	radius: float,
+	forward: Vector2,
+	side: Vector2
+) -> void:
+	var cue_color := (
+		Art.PLAYER_REWARD
+		if enemy.boss_module_state == &"active"
+		else Art.TEXT_MUTED
+	)
+	var short := radius * 0.46
+	match enemy.boss_module_kind:
+		&"forge_plate":
+			for sign_value in [-1.0, 1.0]:
+				_write_instance_basis(
+					_overlay_batches[&"beam"],
+					position + side * sign_value * radius * 0.30,
+					forward,
+					Vector2(short, 7.0),
+					cue_color
+				)
+		&"segment_lock":
+			var tip := position + forward * radius * 0.42
+			_write_beam(
+				tip,
+				position - forward * radius * 0.20 + side * radius * 0.38,
+				6.0,
+				cue_color
+			)
+			_write_beam(
+				tip,
+				position - forward * radius * 0.20 - side * radius * 0.38,
+				6.0,
+				cue_color
+			)
+		&"relay_positive":
+			_write_instance_basis(
+				_overlay_batches[&"beam"],
+				position,
+				forward,
+				Vector2(short, 7.0),
+				cue_color
+			)
+			_write_instance_basis(
+				_overlay_batches[&"beam"],
+				position,
+				side,
+				Vector2(short, 7.0),
+				cue_color
+			)
+		&"relay_negative":
+			_write_instance_basis(
+				_overlay_batches[&"beam"],
+				position,
+				forward,
+				Vector2(short, 7.0),
+				cue_color
+			)
+		&"route_switch":
+			_write_beam(
+				position - forward * radius * 0.44,
+				position + forward * radius * 0.10,
+				7.0,
+				cue_color
+			)
+			_write_beam(
+				position + forward * radius * 0.08,
+				position + forward * radius * 0.42 + side * radius * 0.34,
+				7.0,
+				cue_color
+			)
+			_write_beam(
+				position + forward * radius * 0.08,
+				position + forward * radius * 0.42 - side * radius * 0.34,
+				7.0,
+				cue_color
+			)
+		&"armor_car":
+			for sign_value in [-1.0, 1.0]:
+				_write_instance_basis(
+					_overlay_batches[&"beam"],
+					position + forward * sign_value * radius * 0.24,
+					side,
+					Vector2(short, 8.0),
+					cue_color
+				)
+		_:
+			_write_instance(
+				_overlay_batches[&"diamond"],
+				position,
+				PI / 4.0,
+				Vector2.ONE * radius * 0.34,
+				cue_color
+			)
+			_write_instance_basis(
+				_overlay_batches[&"beam"],
+				position,
+				forward,
+				Vector2(short, 6.0),
+				Art.INK
+			)
+	if enemy.boss_module_state == &"active":
+		_write_instance(
+			_overlay_batches[&"diamond"],
+			position - side * radius * 0.72,
+			0.0,
+			Vector2(7.0, 5.0),
+			Art.TEXT_PRIMARY
 		)
 
 
@@ -1479,73 +1514,6 @@ func _enemy_angle(archetype: StringName, enemy: EnemyState, player_position: Vec
 	if archetype == &"controller":
 		return run_time * 0.22
 	return 0.0
-
-
-func _cached_pixel_frame(
-	family: StringName,
-	variant: StringName,
-	direction_index: int,
-	state: StringName,
-	sequence_index: int
-) -> Dictionary:
-	var key := hash(family)
-	key = key * 31 + hash(variant)
-	key = key * 31 + direction_index
-	key = key * 31 + hash(state)
-	key = key * 31 + sequence_index
-	if _pixel_frame_cache.has(key):
-		return _pixel_frame_cache[key]
-	var frame := _pixel_catalog.frame(
-		family,
-		variant,
-		direction_index,
-		state,
-		sequence_index
-	)
-	if not frame.is_empty():
-		frame["_cached_uv"] = _pixel_catalog.frame_uv(frame)
-	_pixel_frame_cache[key] = frame
-	return frame
-
-
-func _write_atlas_instance(
-	batch: BatchHandle,
-	position: Vector2,
-	angle: float,
-	scale: Vector2,
-	color: Color,
-	frame: Dictionary
-) -> void:
-	_write_atlas_instance_basis(
-		batch,
-		position,
-		Vector2(cos(angle), sin(angle)),
-		scale,
-		color,
-		frame
-	)
-
-
-func _write_atlas_instance_basis(
-	batch: BatchHandle,
-	position: Vector2,
-	x_axis: Vector2,
-	scale: Vector2,
-	color: Color,
-	frame: Dictionary
-) -> void:
-	if batch == null or batch.count >= batch.instance.multimesh.instance_count:
-		return
-	var atlas_buffer: AtlasBatchBuffer = batch.buffer
-	atlas_buffer.write_basis(
-		batch.count,
-		position,
-		x_axis,
-		scale,
-		color,
-		Color(frame["_cached_uv"])
-	)
-	batch.count += 1
 
 
 func _write_instance(batch: BatchHandle, position: Vector2, angle: float, scale: Vector2, color: Color) -> void:

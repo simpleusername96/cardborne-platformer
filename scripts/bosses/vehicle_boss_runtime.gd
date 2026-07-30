@@ -1,15 +1,14 @@
 class_name VehicleBossRuntime
 extends RefCounted
 
-## Owns boss phase sequencing and independent system cadence.
-## VehicleRun supplies collision and spawn services but does not choose state.
+## Owns direct-pattern sequencing and independent system cadence.
+## Semantic phase floors and objectives belong to VehicleBossExamRuntime.
 
 const Patterns = preload("res://scripts/bosses/vehicle_boss_patterns.gd")
 const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd")
 const EncounterDirector = preload("res://scripts/encounters/vehicle_encounter_director.gd")
 const Rules = preload("res://scripts/vehicle/vehicle_stage_rules.gd")
 
-const PHASE_THRESHOLDS := [0.65, 0.30]
 const PHASE_GAPS := [0.55, 0.42, 0.32]
 const AUTONOMOUS_INTERVALS := [6.0, 4.9, 3.9]
 
@@ -17,6 +16,7 @@ var stage_id: StringName = &"stage_1"
 var autonomous_timer := 3.2
 var autonomous_index := 0
 var autonomous_serial := 0
+var finite_summons_remaining := 6
 
 
 func configure(next_stage_id: StringName) -> void:
@@ -24,27 +24,7 @@ func configure(next_stage_id: StringName) -> void:
 	autonomous_timer = 3.2
 	autonomous_index = 0
 	autonomous_serial = 0
-
-
-func phase_for_health(health_ratio: float) -> int:
-	if health_ratio <= PHASE_THRESHOLDS[1]:
-		return 3
-	if health_ratio <= PHASE_THRESHOLDS[0]:
-		return 2
-	return 1
-
-
-func update_phase_transition(boss: VehicleEnemyState) -> bool:
-	var next_phase := phase_for_health(boss.health / maxf(1.0, boss.max_health))
-	if next_phase <= boss.boss_phase:
-		return false
-	boss.boss_phase = next_phase
-	boss.phase = &"boss_read"
-	boss.phase_time = 0.90
-	boss.pattern = &"phase_transition"
-	boss.pattern_index = 0
-	boss.attack_telegraphs.clear()
-	return true
+	finite_summons_remaining = 6
 
 
 func read_gap(phase: int) -> float:
@@ -72,10 +52,10 @@ func begin_active(boss: VehicleEnemyState, services: Variant) -> void:
 	boss.phase_time = Patterns.active_seconds(pattern)
 	boss.pattern_volleys = 0
 	var kind := Patterns.kind(pattern)
-	if kind == &"pylons":
-		services.call("_spawn_boss_pylons")
-	elif kind == &"summon":
-		for _child_index in 3:
+	if kind == &"summon":
+		var spawn_count := mini(3, finite_summons_remaining)
+		finite_summons_remaining -= spawn_count
+		for _child_index in spawn_count:
 			services.call("_spawn_carrier_child", boss)
 
 
@@ -154,6 +134,12 @@ func update_active(
 			boss.hit_committed = true
 			services.call("_damage_player", damage, pattern, true, true, true)
 		if before.distance_to(boss.pos) + 1.0 < requested.length():
+			services.call(
+				"_on_boss_charge_collision",
+				boss,
+				before,
+				boss.pos
+			)
 			boss.phase_time = 0.0
 	elif kind == &"beam":
 		if (
@@ -204,6 +190,10 @@ func advance_autonomous(
 	autonomous_timer = float(
 		AUTONOMOUS_INTERVALS[clampi(boss.boss_phase - 1, 0, 2)]
 	)
+	if Patterns.kind(pattern) == &"summon":
+		if finite_summons_remaining <= 0:
+			return events
+		finite_summons_remaining -= 1
 	var offset := Vector2.RIGHT.rotated(
 		float(autonomous_serial * 2 + boss.boss_phase) * 1.17
 	) * (180.0 + 35.0 * float(boss.boss_phase))
@@ -227,4 +217,5 @@ func snapshot() -> Dictionary:
 		"stage_id":stage_id,
 		"autonomous_timer":autonomous_timer,
 		"autonomous_index":autonomous_index,
+		"finite_summons_remaining":finite_summons_remaining,
 	}
