@@ -978,7 +978,9 @@ func _telegraph_enemy(
 	enemy.health = 1.0
 	enemy.max_health = 1.0
 	enemy.phase = phase
-	enemy.attack_telegraphs = telegraphs
+	enemy.attack_telegraphs.clear()
+	for telegraph_variant in telegraphs:
+		enemy.attack_telegraphs.append(Dictionary(telegraph_variant))
 	return enemy
 
 
@@ -1140,7 +1142,7 @@ func _draw_player_assembly(
 			mount + rear * radius * (0.22 + thrust * 0.12),
 			Vector2(radius * (0.22 + thrust * 0.24), radius * 0.10),
 			hull_angle,
-			Art.SYSTEM if dashing else Art.PLAYER_REWARD
+			Art.SYSTEM
 		)
 		_draw_mesh_at(
 			Visuals.player_engine_mesh(),
