@@ -18,7 +18,7 @@ signal stage_report_continued
 
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const VEHICLE_THEME = preload("res://art/ui/production/vehicle_stage_theme.tres")
-const UiChromeFactory = preload("res://scripts/ui/vehicle_ui_chrome_factory.gd")
+const UiAccentFrame = preload("res://scripts/ui/vehicle_ui_accent_frame.gd")
 const UpgradeChoicePanel = preload("res://scripts/ui/vehicle_upgrade_choice_panel.gd")
 const ThreatRadar = preload("res://scripts/ui/vehicle_threat_radar.gd")
 const StatusOrbit = preload("res://scripts/ui/vehicle_status_orbit.gd")
@@ -32,11 +32,10 @@ const RunDifficulty = preload("res://scripts/vehicle/vehicle_run_difficulty.gd")
 const StageCatalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
 const FieldRegistry = preload("res://scripts/vehicle/vehicle_field_registry.gd")
 const BossPatterns = preload("res://scripts/bosses/vehicle_boss_patterns.gd")
-const PixelCatalog = preload("res://scripts/presentation/vehicle_pixel_asset_catalog.gd")
 
 const CANVAS := Art.COBALT_VOID
 const SURFACE := Art.IVORY
-const RAISED := Art.STRUCTURE_BASE
+const RAISED := Art.SYSTEM
 const CYAN := Art.COBALT_ENERGY
 const MOSS := Art.MINT
 const AMBER := Art.MUSTARD
@@ -152,13 +151,11 @@ class ActionRailSlot:
 	var accent := Art.MUSTARD
 	var cooldown_ratio := 0.0
 	var available := true
-	var _pixel_catalog
 
 	func _ready() -> void:
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
 		focus_mode = Control.FOCUS_NONE
 		custom_minimum_size = Vector2(44.0, 44.0)
-		_pixel_catalog = PixelCatalog.new()
 
 	func configure(title: String, color: Color) -> void:
 		action_name = title
@@ -198,8 +195,6 @@ class ActionRailSlot:
 				2.0,
 				true
 			)
-		if _draw_pixel_icon(center):
-			return
 		var icon_color := Color(Art.COBALT_DEEP, 0.95) if available else Color(Art.IVORY_BRIGHT, 0.78)
 		match action_name:
 			"ACTION_SEEKER":
@@ -208,35 +203,6 @@ class ActionRailSlot:
 				draw_colored_polygon(PackedVector2Array([center + Vector2(-6.0, -5.0), center + Vector2(1.0, 0.0), center + Vector2(-6.0, 5.0), center + Vector2(7.0, 0.0)]), icon_color)
 			_:
 				draw_colored_polygon(PackedVector2Array([center + Vector2(0.0, -7.0), center + Vector2(6.0, 5.0), center, center + Vector2(-6.0, 5.0)]), icon_color)
-
-	func _draw_pixel_icon(center: Vector2) -> bool:
-		if _pixel_catalog == null or not _pixel_catalog.is_ready():
-			return false
-		var variant := &"emp"
-		match action_name:
-			"ACTION_SEEKER":
-				variant = &"seeker"
-			"ACTION_DASH":
-				variant = &"dash"
-		var frame: Dictionary = _pixel_catalog.frame(
-			&"hud_action_icons", variant, 0, &"ready", 0
-		)
-		if frame.is_empty():
-			return false
-		var texture: Texture2D = _pixel_catalog.texture(&"hud_action_icons")
-		if texture == null:
-			return false
-		var region := Array(frame["region"])
-		draw_texture_rect_region(
-			texture,
-			Rect2(center - Vector2(10.0, 10.0), Vector2(20.0, 20.0)),
-			Rect2(
-				float(region[0]), float(region[1]),
-				float(region[2]), float(region[3])
-			),
-			Color(Art.COBALT_DEEP, 0.95) if available else Color.WHITE
-		)
-		return true
 
 	func debug_contract() -> Dictionary:
 		return {
@@ -446,7 +412,6 @@ var _settings_center: CenterContainer
 var _settings_panel: VehicleSettingsPanel
 var _guide_center: CenterContainer
 var _guide_panel: VehicleGuidebookPanel
-var _chrome_factory: VehicleUiChromeFactory
 var _practice_center: CenterContainer
 var _practice_stage: OptionButton
 var _practice_field: OptionButton
@@ -541,9 +506,8 @@ func _input(event: InputEvent) -> void:
 func _build_root() -> void:
 	_root = Control.new()
 	_root.name = "VehicleStageUIRoot"
-	_chrome_factory = UiChromeFactory.new()
-	_root.theme = _chrome_factory.build(VEHICLE_THEME)
-	_root.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_root.theme = VEHICLE_THEME
+	_root.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	_root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(_root)
 	_root.resized.connect(_apply_responsive_layout)
@@ -1557,16 +1521,21 @@ func debug_ui_contract(viewport_width: float = 1280.0) -> Dictionary:
 		central_safe_clear = central_safe_clear and not Rect2(rect).intersects(central_safe)
 	return {
 		"theme_path": _root.theme.resource_path if _root.theme != null else "",
-		"ui_chrome":_chrome_factory.debug_contract(),
-		"image_backed_chrome":{
-			"modal":_root.theme.get_stylebox(&"panel", &"ModalSurface") is StyleBoxTexture,
-			"hud":_root.theme.get_stylebox(&"panel", &"HudStatusGroup") is StyleBoxTexture,
-			"button":_root.theme.get_stylebox(&"normal", &"Button") is StyleBoxTexture,
+		"ui_foundation":{
+			"loaded":_root.theme != null,
+			"provider":"res://art/ui/production/vehicle_stage_theme.tres",
+			"accent_frame_count":find_children("*", "VehicleUiAccentFrame", true, false).size(),
+			"texture_filter":_root.texture_filter,
+		},
+		"flat_style_foundation":{
+			"modal":_root.theme.get_stylebox(&"panel", &"ModalSurface") is StyleBoxFlat,
+			"hud":_root.theme.get_stylebox(&"panel", &"HudStatusGroup") is StyleBoxFlat,
+			"button":_root.theme.get_stylebox(&"normal", &"Button") is StyleBoxFlat,
 			"upgrade_card":(
 				_root.theme.get_stylebox(&"normal", &"UpgradeChoiceCard")
-				is StyleBoxTexture
+				is StyleBoxFlat
 			),
-			"tab":_root.theme.get_stylebox(&"tab_selected", &"TabBar") is StyleBoxTexture,
+			"tab":_root.theme.get_stylebox(&"tab_selected", &"TabBar") is StyleBoxFlat,
 		},
 		"command_min_height": _pause_first_button.custom_minimum_size.y,
 		"action_rail_size": dock_size,
@@ -1868,6 +1837,7 @@ func _modal_panel(minimum_size: Vector2) -> PanelContainer:
 	panel.add_theme_constant_override("margin_top", 22)
 	panel.add_theme_constant_override("margin_right", 24)
 	panel.add_theme_constant_override("margin_bottom", 22)
+	UiAccentFrame.attach_to(panel)
 	return panel
 
 

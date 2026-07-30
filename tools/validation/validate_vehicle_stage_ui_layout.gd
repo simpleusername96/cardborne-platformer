@@ -18,15 +18,22 @@ func _initialize() -> void:
 		get_root().size = viewport_size
 		await process_frame
 		var contract := ui.debug_ui_contract(width)
-		var chrome := Dictionary(contract["ui_chrome"])
-		_expect(bool(chrome["loaded"]), "published UI chrome recipe loads at %d" % width)
-		_expect(int(chrome["style_count"]) == 17, "all 17 UI chrome assets load at %d" % width)
-		_expect(Array(chrome["errors"]).is_empty(), "UI chrome has no asset contract errors at %d" % width)
-		var image_backed := Dictionary(contract["image_backed_chrome"])
+		var foundation := Dictionary(contract["ui_foundation"])
+		_expect(bool(foundation["loaded"]), "flat UI foundation loads at %d" % width)
+		_expect(
+			int(foundation["accent_frame_count"]) >= 8,
+			"all modal surfaces use the shared accent frame at %d" % width
+		)
+		_expect(
+			int(foundation["texture_filter"]) == CanvasItem.TEXTURE_FILTER_LINEAR,
+			"UI foundation uses antialiased linear filtering at %d" % width
+		)
+		var flat_styles := Dictionary(contract["flat_style_foundation"])
 		for surface in ["modal", "hud", "button", "upgrade_card", "tab"]:
 			_expect(
-				bool(image_backed[surface]),
-				"%s chrome is image-backed at %d" % [surface, width]
+				bool(flat_styles[surface]),
+				"%s uses StyleBoxFlat instead of image chrome at %d"
+				% [surface, width]
 			)
 		var action_rail_size := Vector2(contract["action_rail_size"])
 		var action_rail_position := Vector2(contract["action_rail_position"])
@@ -47,7 +54,7 @@ func _initialize() -> void:
 		_expect(int(upgrade_contract["card_count"]) == 3, "upgrade choice keeps exactly three card slots at %d" % width)
 		_expect(
 			Vector2(upgrade_contract["confirm_size"]) == (
-				Vector2(260.0, 42.0) if width < 1100.0 else Vector2(300.0, 48.0)
+				Vector2(260.0, 44.0) if width < 1100.0 else Vector2(300.0, 48.0)
 			),
 			"upgrade confirmation uses the supported command contract at %d" % width
 		)
@@ -56,12 +63,14 @@ func _initialize() -> void:
 			var card_size := Vector2(card["minimum_size"])
 			_expect(
 				(
-					card_size == Vector2(276.0, 290.0)
+					card_size == Vector2(280.0, 286.0)
 					if width < 1100.0
-					else card_size.x >= 280.0 and card_size.y >= 330.0
+					else card_size == Vector2(304.0, 330.0)
 				),
 				"upgrade cards use the supported hierarchy at %d" % width
 			)
+			_expect(int(card["effect_rows"]) <= 2, "upgrade card has at most two effect rows")
+			_expect(not bool(card["has_scroll"]), "upgrade card never scrolls")
 		_expect(bool(contract["has_upgrade_card_theme"]), "upgrade cards use dedicated shared theme states at %d" % width)
 		_expect(bool(contract["has_tertiary_danger_theme"]), "tertiary danger uses a shared theme state at %d" % width)
 		_expect(int(contract["display_font_size"]) >= 40, "display typography remains legible at %d" % width)

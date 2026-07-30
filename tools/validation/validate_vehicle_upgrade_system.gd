@@ -2,6 +2,7 @@ extends SceneTree
 
 const Catalog = preload("res://scripts/cards/vehicle_upgrade_catalog.gd")
 const RunBuild = preload("res://scripts/cards/vehicle_run_build.gd")
+const OfferPresenter = preload("res://scripts/cards/vehicle_upgrade_offer_presenter.gd")
 
 var failures: Array[String] = []
 
@@ -10,6 +11,25 @@ func _initialize() -> void:
 	var catalog := Catalog.new()
 	for error in catalog.validate_contract(): failures.append(error)
 	_expect(catalog.definitions.size() == 41, "catalog contains exactly 41 upgrades")
+	var state_count := 0
+	for definition in catalog.all_definitions():
+		_expect(
+			definition.summary_keys.size() == definition.max_level,
+			"%s has one explicit summary key per level" % definition.id
+		)
+		for current_level in definition.max_level:
+			var snapshot := OfferPresenter.snapshot(definition, current_level)
+			_expect(
+				not String(snapshot["summary_key"]).is_empty(),
+				"%s level %d has a summary" % [definition.id, current_level + 1]
+			)
+			_expect(
+				Array(snapshot["effect_rows"]).size() <= 2,
+				"%s level %d has at most two effect rows"
+				% [definition.id, current_level + 1]
+			)
+			state_count += 1
+	_expect(state_count == 83, "upgrade presentation covers all 83 level states")
 	for id in Catalog.SECONDARY_FAMILY_IDS:
 		var definition := catalog.get_definition(id)
 		_expect(definition != null and definition.max_level == 3 and definition.family == &"secondary", "%s is a three-level secondary" % id)

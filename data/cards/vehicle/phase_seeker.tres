@@ -7,6 +7,7 @@ script = ExtResource("1_def")
 id = &"phase_seeker"
 title_key = "UPGRADE_PHASE_SEEKER_TITLE"
 description_key = "UPGRADE_PHASE_SEEKER_DESC"
+summary_keys = Array[String](["UPGRADE_PHASE_SEEKER_DESC", "UPGRADE_PHASE_SEEKER_DESC"])
 family = &"passive"
 max_level = 2
 source_tags = Array[StringName]([&"level_up", &"boss"])

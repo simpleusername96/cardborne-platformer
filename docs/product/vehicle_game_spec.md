@@ -190,6 +190,10 @@ second time; no individual stat is described as exactly 15% lower.
   reusable authored positions. Each stage selects four stationary threats, six pickups, and
   eight crates from valid sockets. No stage owns a separate map, boss room,
   closed progression gate, switch maze, or reflector puzzle.
+- Pickup contact uses the swept player path with the 24-pixel player radius and
+  42-pixel pickup body. Endpoint contact, tangent contact, and a complete dash
+  pass collect an active repair or recall exactly once; a path 0.1 pixels
+  outside the combined 66-pixel radius misses.
 - Capture, validation, and performance paths accept `--layout-seed=<integer>`
   and `--field-id=<id>`; their default layout seed is `0xC4A2B0`, and
   debug/performance snapshots expose the selected field, seed, and fingerprint.

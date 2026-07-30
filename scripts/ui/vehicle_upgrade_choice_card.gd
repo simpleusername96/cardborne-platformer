@@ -6,7 +6,12 @@ extends Button
 ## gameplay progression layer.
 
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
-const PixelCatalog = preload("res://scripts/presentation/vehicle_pixel_asset_catalog.gd")
+const GlyphCatalog = preload(
+	"res://scripts/presentation/components/vehicle_ui_glyph_catalog.gd"
+)
+const ComponentMeshes = preload(
+	"res://scripts/presentation/components/vehicle_component_mesh_library.gd"
+)
 
 class LevelPips:
 	extends Control
@@ -60,23 +65,20 @@ var _content_box: VBoxContainer
 var _family_badge: PanelContainer
 var _family: Label
 var _title: Label
-var _effect: Label
-var _impact_title: Label
-var _impact: Label
-var _values: VBoxContainer
+var _summary: Label
+var _effects: VBoxContainer
+var _behavior: Label
 var _pips: LevelPips
-var _pixel_catalog
 
 
 func _ready() -> void:
 	text = ""
 	clip_contents = true
-	custom_minimum_size = Vector2(282.0, 336.0)
+	custom_minimum_size = Vector2(304.0, 330.0)
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	size_flags_stretch_ratio = 1.0
 	focus_mode = Control.FOCUS_ALL
 	theme_type_variation = &"UpgradeChoiceCard"
-	_pixel_catalog = PixelCatalog.new()
 	focus_entered.connect(queue_redraw)
 	focus_exited.connect(queue_redraw)
 	resized.connect(queue_redraw)
@@ -104,25 +106,24 @@ func set_selected_state(value: bool) -> void:
 
 func set_compact_mode(value: bool) -> void:
 	_compact = value
-	custom_minimum_size = Vector2(276.0, 290.0) if value else Vector2(282.0, 336.0)
+	custom_minimum_size = Vector2(280.0, 286.0) if value else Vector2(304.0, 330.0)
 	if not is_node_ready():
 		return
-	var horizontal_margin := 14 if value else 20
-	var vertical_margin := 8 if value else 18
+	var horizontal_margin := 12 if value else 14
+	var vertical_margin := 8 if value else 12
 	for side in ["margin_left", "margin_right"]:
 		_content_margin.add_theme_constant_override(side, horizontal_margin)
 	for side in ["margin_top", "margin_bottom"]:
 		_content_margin.add_theme_constant_override(side, vertical_margin)
-	_content_box.add_theme_constant_override("separation", 4 if value else 10)
+	_content_box.add_theme_constant_override("separation", 5 if value else 8)
 	_family_badge.custom_minimum_size = Vector2(112.0, 26.0) if value else Vector2(118.0, 32.0)
-	_family.add_theme_font_size_override("font_size", 13 if value else 15)
-	_title.add_theme_font_size_override("font_size", 23 if value else 30)
-	_title.custom_minimum_size.y = 34.0 if value else 46.0
-	_effect.add_theme_font_size_override("font_size", 14 if value else 17)
-	_effect.custom_minimum_size.y = 54.0 if value else 82.0
-	_impact_title.add_theme_font_size_override("font_size", 12 if value else 14)
-	_impact.add_theme_font_size_override("font_size", 21 if value else 28)
-	_impact.custom_minimum_size.y = 30.0 if value else 42.0
+	_family.add_theme_font_size_override("font_size", 13 if value else 14)
+	_title.add_theme_font_size_override("font_size", 21 if value else 24)
+	_title.custom_minimum_size.y = 44.0 if value else 54.0
+	_summary.add_theme_font_size_override("font_size", 14 if value else 15)
+	_summary.custom_minimum_size.y = 64.0 if value else 72.0
+	_behavior.add_theme_font_size_override("font_size", 14)
+	_behavior.custom_minimum_size.y = 34.0
 	_pips.custom_minimum_size = Vector2(132.0, 24.0) if value else Vector2(132.0, 32.0)
 	_refresh()
 
@@ -136,9 +137,11 @@ func debug_contract() -> Dictionary:
 		"structured":true,
 		"minimum_size":custom_minimum_size,
 		"value_rows":(
-			(_values.get_child_count() if is_instance_valid(_values) else 0)
-			+ (1 if is_instance_valid(_impact) and not _impact.text.is_empty() else 0)
+			(_effects.get_child_count() if is_instance_valid(_effects) else 0)
+			+ (1 if is_instance_valid(_behavior) and _behavior.visible else 0)
 		),
+		"effect_rows":_effects.get_child_count() if is_instance_valid(_effects) else 0,
+		"has_scroll":false,
 		"pip_slots":3,
 		"selected":_selected,
 		"compact":_compact,
@@ -172,15 +175,15 @@ func debug_geometry_contract() -> Dictionary:
 func _build() -> void:
 	_content_margin = MarginContainer.new()
 	_content_margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_content_margin.add_theme_constant_override("margin_left", 20)
-	_content_margin.add_theme_constant_override("margin_top", 18)
-	_content_margin.add_theme_constant_override("margin_right", 20)
-	_content_margin.add_theme_constant_override("margin_bottom", 18)
+	_content_margin.add_theme_constant_override("margin_left", 14)
+	_content_margin.add_theme_constant_override("margin_top", 12)
+	_content_margin.add_theme_constant_override("margin_right", 14)
+	_content_margin.add_theme_constant_override("margin_bottom", 12)
 	_content_margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_content_margin)
 
 	_content_box = VBoxContainer.new()
-	_content_box.add_theme_constant_override("separation", 10)
+	_content_box.add_theme_constant_override("separation", 8)
 	_content_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_content_margin.add_child(_content_box)
 
@@ -197,34 +200,29 @@ func _build() -> void:
 	_family.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_family.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_family_badge.add_child(_family)
-	_title = _label(30, Art.IVORY_BRIGHT)
+	_title = _label(24, Art.TEXT_PRIMARY)
 	_title.theme_type_variation = &"TitleLabel"
 	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_title.custom_minimum_size.y = 46.0
+	_title.custom_minimum_size.y = 54.0
 	_content_box.add_child(_title)
-	_effect = _label(17, Art.IVORY_BRIGHT)
-	_effect.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_effect.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_effect.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_effect.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_effect.custom_minimum_size.y = 82.0
-	_content_box.add_child(_effect)
-	_impact_title = _label(14, Art.MINT_SOFT)
-	_impact_title.theme_type_variation = &"MetricLabel"
-	_impact_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_impact_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_impact_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_content_box.add_child(_impact_title)
-	_impact = _label(28, Art.IVORY_BRIGHT)
-	_impact.theme_type_variation = &"TitleLabel"
-	_impact.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_impact.custom_minimum_size.y = 42.0
-	_content_box.add_child(_impact)
-	_values = VBoxContainer.new()
-	_values.add_theme_constant_override("separation", 3)
-	_values.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_content_box.add_child(_values)
+	_summary = _label(15, Art.TEXT_PRIMARY)
+	_summary.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_summary.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_summary.custom_minimum_size.y = 72.0
+	_content_box.add_child(_summary)
+	_effects = VBoxContainer.new()
+	_effects.add_theme_constant_override("separation", 4)
+	_effects.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_content_box.add_child(_effects)
+	_behavior = _label(14, Art.SUPPORT)
+	_behavior.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_behavior.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_behavior.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_behavior.custom_minimum_size.y = 34.0
+	_behavior.visible = false
+	_content_box.add_child(_behavior)
 	_pips = LevelPips.new()
 	_content_box.add_child(_pips)
 
@@ -232,43 +230,31 @@ func _build() -> void:
 func _refresh() -> void:
 	_family.text = tr(String(_offer.get("family_key", "")))
 	_title.text = tr(String(_offer.get("title_key", "")))
-	_effect.text = tr(String(_offer.get("description_key", "")))
-	_clear(_values)
+	_summary.text = tr(String(_offer.get("summary_key", "")))
+	_clear(_effects)
 	var accessible_values := PackedStringArray()
-	var previews: Array = _offer.get("value_previews", [])
-	if previews.is_empty():
-		_impact_title.text = tr("UPGRADE_CARD_LEVEL")
-		_impact.text = tr("UPGRADE_CARD_LEVEL_VALUE").replace(
-			"%level%",
-			str(int(_offer.get("next_level", 1)))
-		)
-	else:
-		var primary_preview := Dictionary(previews[0])
-		_impact_title.text = tr(String(primary_preview.get("stat_key", "")))
-		_impact.text = _preview_value(primary_preview)
-		accessible_values.append("%s %s" % [_impact_title.text, _impact.text])
-	for preview_index in range(1, previews.size()):
-		var preview_variant = previews[preview_index]
+	var previews: Array = _offer.get("effect_rows", [])
+	for preview_variant in previews.slice(0, 2):
 		var preview := Dictionary(preview_variant)
-		var row := VBoxContainer.new()
-		row.add_theme_constant_override("separation", 1)
+		var row := HBoxContainer.new()
+		row.custom_minimum_size.y = 24.0
+		row.add_theme_constant_override("separation", 8)
 		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		var stat := _label(14, Art.MINT_SOFT)
+		var stat := _label(14, Art.TEXT_MUTED)
 		stat.text = tr(String(preview.get("stat_key", "")))
 		stat.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		stat.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		stat.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		stat.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		if _compact:
-			stat.add_theme_font_size_override("font_size", 12)
 		row.add_child(stat)
-		var delta := _label(15, Art.IVORY_BRIGHT)
+		var delta := _label(14, Art.TEXT_PRIMARY)
 		delta.text = _preview_value(preview)
-		delta.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		if _compact:
-			delta.add_theme_font_size_override("font_size", 13)
+		delta.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		row.add_child(delta)
-		_values.add_child(row)
+		_effects.add_child(row)
 		accessible_values.append("%s %s" % [stat.text, delta.text])
+	var behavior_key := String(_offer.get("behavior_change_key", ""))
+	_behavior.text = tr(behavior_key) if not behavior_key.is_empty() else ""
+	_behavior.visible = not _behavior.text.is_empty()
 	_pips.configure(
 		int(_offer.get("next_level", 1)),
 		int(_offer.get("max_level", 1)),
@@ -279,8 +265,9 @@ func _refresh() -> void:
 	accessibility_name = " · ".join(PackedStringArray([
 		_family.text,
 		_title.text,
-		_effect.text,
+		_summary.text,
 		"; ".join(accessible_values),
+		_behavior.text,
 	]))
 
 
@@ -311,32 +298,60 @@ func _draw() -> void:
 			center + Vector2(0.0, 9.0),
 			center + Vector2(-9.0, 0.0),
 		]), Art.MUSTARD)
-	if has_focus():
-		draw_rect(Rect2(7.0, 10.0, 5.0, size.y - 20.0), Art.IVORY_BRIGHT)
+	if has_focus() and _selected:
+		draw_rect(
+			Rect2(Vector2(5.0, 5.0), size - Vector2(10.0, 10.0)),
+			Art.SYSTEM,
+			false,
+			float(Art.FOCUS_WIDTH)
+		)
 
 
 func _draw_upgrade_icon() -> void:
-	if _pixel_catalog == null or not _pixel_catalog.is_ready() or _offer.is_empty():
+	if _offer.is_empty():
 		return
-	var upgrade_id := StringName(_offer.get("id", &""))
-	var frame: Dictionary = _pixel_catalog.frame(
-		&"upgrade_card_icons", upgrade_id, 0, &"normal", 0
-	)
-	if frame.is_empty():
-		return
-	var texture: Texture2D = _pixel_catalog.texture(&"upgrade_card_icons")
-	if texture == null:
-		return
-	var region := Array(frame["region"])
-	draw_texture_rect_region(
-		texture,
-		Rect2(14.0, 12.0, 42.0, 42.0),
-		Rect2(
-			float(region[0]), float(region[1]),
-			float(region[2]), float(region[3])
-		),
-		Color.WHITE
-	)
+	var family := StringName(_offer.get("family", &""))
+	var descriptor := GlyphCatalog.upgrade_family_descriptor(family)
+	var color := Art.required_color_roles().get(
+		String(descriptor.get("color", &"text_primary")),
+		Art.TEXT_PRIMARY
+	) as Color
+	var center := Vector2(30.0, 29.0)
+	var shape := StringName(descriptor.get("shape", &"diamond"))
+	match shape:
+		&"triple_core":
+			for offset in [-7.0, 0.0, 7.0]:
+				draw_circle(center + Vector2(offset, 0.0), 2.5, color)
+		&"open_brackets":
+			draw_line(center + Vector2(-8.0, -7.0), center + Vector2(-8.0, 7.0), color, 2.0)
+			draw_line(center + Vector2(8.0, -7.0), center + Vector2(8.0, 7.0), color, 2.0)
+		&"bolt":
+			draw_colored_polygon(PackedVector2Array([
+				center + Vector2(-2.0, -9.0), center + Vector2(7.0, -2.0),
+				center + Vector2(1.0, 0.0), center + Vector2(3.0, 9.0),
+				center + Vector2(-7.0, 2.0), center + Vector2(-1.0, 0.0),
+			]), color)
+		&"split_diamond":
+			draw_colored_polygon(PackedVector2Array([
+				center + Vector2(0.0, -9.0), center + Vector2(8.0, 0.0),
+				center + Vector2(0.0, -2.0), center + Vector2(-8.0, 0.0),
+			]), color)
+			draw_colored_polygon(PackedVector2Array([
+				center + Vector2(0.0, 2.0), center + Vector2(8.0, 0.0),
+				center + Vector2(0.0, 9.0), center + Vector2(-8.0, 0.0),
+			]), color)
+		&"opposing_chevrons":
+			draw_line(center + Vector2(-9.0, -6.0), center, color, 2.0)
+			draw_line(center, center + Vector2(-9.0, 6.0), color, 2.0)
+			draw_line(center + Vector2(9.0, -6.0), center, color, 2.0)
+			draw_line(center, center + Vector2(9.0, 6.0), color, 2.0)
+		_:
+			var points := ComponentMeshes.primitive_points(shape)
+			var transformed := PackedVector2Array()
+			for point in points:
+				transformed.append(center + point * 9.0)
+			if transformed.size() >= 3:
+				draw_colored_polygon(transformed, color)
 
 
 func _label(font_size: int, color: Color) -> Label:

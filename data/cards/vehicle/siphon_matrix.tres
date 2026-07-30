@@ -7,6 +7,7 @@ script = ExtResource("1_def")
 id = &"siphon_matrix"
 title_key = "UPGRADE_SIPHON_MATRIX_TITLE"
 description_key = "UPGRADE_SIPHON_MATRIX_DESC"
+summary_keys = Array[String](["UPGRADE_SIPHON_MATRIX_DESC", "UPGRADE_SIPHON_MATRIX_DESC"])
 family = &"defense"
 max_level = 2
 source_tags = Array[StringName]([&"level_up"])

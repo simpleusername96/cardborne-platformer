@@ -7,6 +7,7 @@ script = ExtResource("1_def")
 id = &"coolant_wake"
 title_key = "UPGRADE_COOLANT_WAKE_TITLE"
 description_key = "UPGRADE_COOLANT_WAKE_DESC"
+summary_keys = Array[String](["UPGRADE_COOLANT_WAKE_DESC"])
 family = &"dash"
 max_level = 1
 source_tags = Array[StringName]([&"level_up", &"boss"])

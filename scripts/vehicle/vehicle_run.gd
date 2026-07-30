@@ -33,6 +33,7 @@ const StageDifficulty = preload("res://scripts/enemies/vehicle_stage_difficulty.
 const RunDifficulty = preload("res://scripts/vehicle/vehicle_run_difficulty.gd")
 const FieldDropRules = preload("res://scripts/rewards/vehicle_field_drop_rules.gd")
 const RewardRuntime = preload("res://scripts/rewards/vehicle_reward_runtime.gd")
+const PickupContact = preload("res://scripts/rewards/vehicle_pickup_contact.gd")
 const ExperienceRuntime = preload("res://scripts/progression/vehicle_experience_runtime.gd")
 const CycleRuntime = preload("res://scripts/cards/vehicle_cycle_runtime.gd")
 const StageGeometry = preload("res://scripts/vehicle/vehicle_stage_geometry.gd")
@@ -94,7 +95,7 @@ const ORDINARY_DECISION_BUCKET_COUNT := 6
 const FAR_SIMULATION_DISTANCE := 820.0
 const FAR_SIMULATION_DISTANCE_SQUARED := FAR_SIMULATION_DISTANCE * FAR_SIMULATION_DISTANCE
 const FAR_ENEMY_SIMULATION_BUCKET_COUNT := 3
-const PICKUP_COLLECTION_RADIUS := 60.0
+const PICKUP_BODY_RADIUS := Art.PICKUP_PLINTH_RADIUS
 const CRATE_COLLISION_RADIUS := 31.0
 const CRATE_COLLISION_CELL_SIZE := 320.0
 const CHARGE_PATH_SAMPLE_STEP := 8.0
@@ -325,6 +326,7 @@ func _physics_process(delta: float) -> void:
 	if is_instance_valid(_performance_scenario) and mode == RunMode.PLAYING:
 		_performance_scenario.before_physics(self, delta)
 	if _simulation_active():
+		var pickup_motion_start := player_position
 		_simulation_lod_bucket = 1 - _simulation_lod_bucket
 		_far_enemy_simulation_bucket = (
 			(_far_enemy_simulation_bucket + 1)
@@ -333,9 +335,10 @@ func _physics_process(delta: float) -> void:
 		run_time += delta
 		var section_started := Time.get_ticks_usec() if _performance_detail_sample_active else 0
 		_update_player(delta)
+		var pickup_motion_end := player_position
 		_update_terrain(delta)
 		_update_cycle_upgrades(delta)
-		_update_pickups()
+		_update_pickups(pickup_motion_start, pickup_motion_end)
 		if experience_recall_timer > 0.0:
 			_update_experience(delta)
 		elif _simulation_lod_bucket == 0:
@@ -1645,15 +1648,29 @@ func _activate_cycle(upgrade_id: StringName) -> void:
 	_add_effect("barrier_hit", player_position, Art.MINT, 0.22, 74.0)
 
 
-func _update_pickups() -> void:
+func _update_pickups(motion_start: Vector2, motion_end: Vector2) -> void:
 	for pickup in pickups:
 		if not bool(pickup["active"]):
 			continue
 		pickup["pulse"] = float(pickup["pulse"]) + 0.06
-		if (
-			player_position.distance_to(Vector2(pickup["pos"]))
-			<= PICKUP_COLLECTION_RADIUS
-		):
+		var pickup_position := Vector2(pickup["pos"])
+		var crossed_during_motion := PickupContact.should_collect(
+			true,
+			motion_start,
+			motion_end,
+			Rules.PLAYER_RADIUS,
+			pickup_position,
+			PICKUP_BODY_RADIUS
+		)
+		var touches_current_endpoint := PickupContact.should_collect(
+			true,
+			player_position,
+			player_position,
+			Rules.PLAYER_RADIUS,
+			pickup_position,
+			PICKUP_BODY_RADIUS
+		)
+		if crossed_during_motion or touches_current_endpoint:
 			_collect_pickup(pickup)
 
 

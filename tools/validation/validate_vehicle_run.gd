@@ -33,7 +33,7 @@ func _run() -> void:
 		run.call("_reset_run", false)
 		_expect(run.current_stage_id == &"stage_1" and run.player_position == Vector2(3600,2160), "run begins at shared center")
 		_expect(run.PLAYER_BASE_SPEED == 280.0, "player base speed remains 280 px/s")
-		_expect(run.PICKUP_COLLECTION_RADIUS == 60.0, "pickup collection radius is 60 px")
+		_expect(run.PICKUP_BODY_RADIUS == 42.0, "pickup body radius is 42 px")
 		_expect(run.MINIMAP_COLS == 20 and run.MINIMAP_ROWS == 12, "run uses 20x12 explored minimap")
 		_expect(run.ORDINARY_DECISION_BUCKET_COUNT == 6, "ordinary high-cost decisions are distributed at 10 Hz")
 		_expect(run._camera.zoom == Vector2.ONE, "gameplay camera keeps zoom 1")

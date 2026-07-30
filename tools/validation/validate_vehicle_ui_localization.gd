@@ -38,8 +38,11 @@ func _initialize() -> void:
 		for snapshot in snapshots:
 			_expect_translated(String(snapshot["family_key"]), locale)
 			_expect_translated(String(snapshot["title_key"]), locale)
-			_expect_translated(String(snapshot["description_key"]), locale)
-			for preview_variant in snapshot["value_previews"]:
+			_expect_translated(String(snapshot["summary_key"]), locale)
+			var behavior_key := String(snapshot["behavior_change_key"])
+			if not behavior_key.is_empty():
+				_expect_translated(behavior_key, locale)
+			for preview_variant in snapshot["effect_rows"]:
 				_expect_translated(
 					String(Dictionary(preview_variant)["stat_key"]),
 					locale

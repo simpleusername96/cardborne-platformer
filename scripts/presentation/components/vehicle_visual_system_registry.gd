@@ -49,6 +49,17 @@ static func provider_fingerprint() -> String:
 		stamps.append(String(stamp))
 	stamps.sort()
 	records.append("world_stamps=%s" % ",".join(stamps))
+	_append_descriptor_records(records, "actor", ActorCatalog.DESCRIPTORS)
+	_append_descriptor_records(records, "projectile", ProjectileCatalog.DESCRIPTORS)
+	_append_descriptor_records(records, "reward", RewardCatalog.DESCRIPTORS)
+	_append_descriptor_records(records, "effect", EffectCatalog.DESCRIPTORS)
+	_append_descriptor_records(records, "world_field", WorldCatalog.FIELD_DESCRIPTORS)
+	_append_descriptor_records(records, "world_facility", WorldCatalog.FACILITY_DESCRIPTORS)
+	_append_descriptor_records(
+		records,
+		"glyph_upgrade_family",
+		GlyphCatalog.UPGRADE_FAMILY_GLYPHS
+	)
 	records.sort()
 	return "|".join(records).sha256_text()
 
@@ -108,3 +119,32 @@ static func _validate_world_stamp_coverage(errors: PackedStringArray) -> void:
 	for stamp_variant in target:
 		if not current.has(stamp_variant):
 			errors.append("target world stamp has no current source: %s" % stamp_variant)
+
+
+static func _append_descriptor_records(
+	records: PackedStringArray,
+	path: String,
+	value: Variant
+) -> void:
+	if value is Dictionary:
+		var keys := Dictionary(value).keys()
+		keys.sort_custom(
+			func(a: Variant, b: Variant) -> bool:
+				return String(a) < String(b)
+		)
+		for key_variant in keys:
+			_append_descriptor_records(
+				records,
+				"%s/%s" % [path, String(key_variant)],
+				Dictionary(value)[key_variant]
+			)
+		return
+	if value is Array:
+		for index in Array(value).size():
+			_append_descriptor_records(
+				records,
+				"%s/%d" % [path, index],
+				Array(value)[index]
+			)
+		return
+	records.append("%s=%s" % [path, str(value)])

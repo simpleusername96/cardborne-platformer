@@ -100,8 +100,8 @@ func set_compact_mode(value: bool) -> void:
 	_detail.add_theme_font_size_override("font_size", 14 if value else 17)
 	_row.add_theme_constant_override("separation", 12 if value else 18)
 	_message.custom_minimum_size.y = 16.0 if value else 20.0
-	_decline.custom_minimum_size = Vector2(190.0, 42.0) if value else Vector2(210.0, 48.0)
-	_confirm.custom_minimum_size = Vector2(260.0, 42.0) if value else Vector2(300.0, 48.0)
+	_decline.custom_minimum_size = Vector2(190.0, 44.0) if value else Vector2(210.0, 48.0)
+	_confirm.custom_minimum_size = Vector2(260.0, 44.0) if value else Vector2(300.0, 48.0)
 	_confirm.add_theme_font_size_override("font_size", 19 if value else 22)
 	for button in _buttons:
 		(button as VehicleUpgradeChoiceCard).set_compact_mode(value)
@@ -161,9 +161,6 @@ func _select(index: int) -> void:
 	_decline_armed = false
 	_decline.text = tr("UPGRADE_LEAVE_REWARD")
 	var card: Dictionary = _cards[index]
-	_detail.text = "%s  ·  %s" % [tr(String(card["title_key"])), tr(String(card["description_key"]))]
-	if String(card.get("family_key", "")) == "UPGRADE_FAMILY_ELEMENT":
-		_detail.text += "  ·  %s" % tr("UPGRADE_ELEMENT_STACK_NOTICE")
 	_message.text = ""
 	_refresh_controls()
 	selected.emit(StringName(card["id"]))
