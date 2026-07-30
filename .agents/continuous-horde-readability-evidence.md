@@ -6,13 +6,14 @@ created: 2026-07-29
 last_reviewed: 2026-07-30
 topic: Continuous multi-sector horde, combat readability, and stage-transition implementation
 scope: Implemented runtime contracts, deterministic validation, Web export, diagnostic performance, and remaining technical stabilization work
-source: Git range a9ae769..d87520b, final correction 8e6efa8, and the repository evidence named below
+source: Git ranges a9ae769..d87520b and e9dc516^..529e915, final correction 8e6efa8, and the repository evidence named below
 related:
   - ../docs/product/vehicle_game_spec.md
   - ../docs/design/UI_VISUAL_SYSTEM.md
   - ./vehicle-performance-stabilization-evidence.md
   - ./continuous-horde-rollout-problem-analysis.md
   - ./execplans/2026-07-29-horde-foundation-recovery-and-acceptance.md
+  - ./execplans/2026-07-30-approved-sheet-fidelity-recovery.md
 ---
 
 # 연속 다방향 대규모 적군 구현 근거
@@ -238,6 +239,43 @@ shell에서 clean `8e6efa8`을 확인한 실행 기록과 함께 focused diagnos
 3×60초 native/Web matrix, `capacity_pressure`와 600초 lifecycle soak를
 실행하지 않았다. 실패한 표본을 평균으로 숨기거나 density, speed, scale,
 collision, resolution, threshold를 낮추지 않았다.
+
+## 2026-07-30 승인 시안 복구 빌드 재측정
+
+승인 시안 충실도 복구는 `e9dc516^..529e915`에서 algorithmic field tile,
+player/enemy/boss recipe, projectile/effect, reward/facility, Upgrade UI,
+HUD/minimap와 모든 modal을 교체하고 production sheet 12개를 재생성했다.
+성능 측정은 ko/en × 960/1280/1920 runtime visual acceptance, 48개
+non-performance validator, Godot import와 built-Web smoke를 끝낸 뒤
+마지막에만 실행했다. 측정 직전 task-owned baseline은 clean commit
+`529e915`였다.
+
+Godot 4.7.1, Windows, Intel Iris Xe, native GL Compatibility, 1280×720에서
+2초 warmup + 20초 sample로 `peak_horde`와 `production_replay`를 각각
+3회 실행했다.
+
+| Payload | Workload valid | Active | Median / 1% low FPS | Frame p95 / p99 | Draw p95 | Batches |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| `peak_horde-01.json` | yes | 276 | `7.500 / 6.837` | `142.868 / 145.848ms` | 308 | 50 |
+| `peak_horde-02.json` | yes | 276 | `7.490 / 6.762` | `142.756 / 147.275ms` | 308 | 50 |
+| `peak_horde-03.json` | yes | 276 | `7.556 / 6.780` | `143.987 / 147.154ms` | 308 | 50 |
+| `production_replay-01.json` | no | 192 | `60.000 / 29.704` | `27.778 / 31.786ms` | 299 | 50 |
+| `production_replay-02.json` | no | 192 | `59.001 / 27.962` | `25.000 / 30.274ms` | 298 | 50 |
+| `production_replay-03.json` | no | 192 | `60.000 / 27.885` | `25.378 / 33.333ms` | 299 | 50 |
+
+세 peak 표본은 live enemy 276과 fixture qualification을 유지했지만 frame
+p95 약 143ms, draw-call p95 308로 release threshold를 반복 실패했다. 세
+production replay는 final active 192, qualification sample 0, median active
+0으로 minimum active 202를 충족하지 못해 workload가 invalid다. 이 수치는
+frame rate가 좋아 보여도 release evidence로 사용할 수 없다.
+
+20초 focused comparison이므로 여섯 payload의 `authoritative`는 모두
+`false`다. 결과는 ignored 경로
+`build/performance/approved-visual-final-retention/`에 있다. 선행 paired
+gate가 반복 실패했으므로 full 3×60초 native/Web matrix, 320 capacity,
+boss scenario와 lifecycle soak는 실행하지 않았다. 승인된 asset/UI를
+되돌리거나 density, resolution, quality와 threshold를 낮추는 방식도
+사용하지 않았다.
 
 ## 남은 기술 조건과 권한 경계
 

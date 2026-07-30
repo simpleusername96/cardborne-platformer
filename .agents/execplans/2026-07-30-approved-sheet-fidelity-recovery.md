@@ -193,107 +193,126 @@ hash가 달라지면 구현을 계속하지 않고 변경된 시안을 다시 �
 ### Milestone 0 — Authority correction
 
 - [x] 기존 visual plan을 `superseded`로 표시한다.
-- [ ] `UI_VISUAL_SYSTEM.md`에서 승인 시안을 binding reference로 올리고
+- [x] `UI_VISUAL_SYSTEM.md`에서 승인 시안을 binding reference로 올리고
   two-plane/no-bevel/large-plate-only 규칙을 제거한다.
-- [ ] component sheet README와 manifest 설명에서 large plate와 느슨한
+- [x] component sheet README와 manifest 설명에서 large plate와 느슨한
   direction-seed 표현을 교정한다.
-- [ ] 승인 시안 hash와 현재 runtime comparison evidence를 기록한다.
+- [x] 승인 시안 hash와 현재 runtime comparison evidence를 기록한다.
 
 ### Milestone 1 — Player, enemy와 boss visual fidelity
 
-- [ ] actor/boss mesh recipe owner를 분리한다.
-- [ ] player hull, spine, rear socket, twin engine과 aim mount를 승인 시안
+- [x] actor/boss mesh recipe owner를 분리한다.
+- [x] player hull, spine, rear socket, twin engine과 aim mount를 승인 시안
   비례로 재구성한다.
-- [ ] 18 ordinary role이 approved role grammar에서 파생되도록 재구성한다.
-- [ ] five boss body를 asymmetric modular machine으로 재구성하고 objective
+- [x] 18 ordinary role이 approved role grammar에서 파생되도록 재구성한다.
+- [x] five boss body를 asymmetric modular machine으로 재구성하고 objective
   module과 vulnerable channel을 state별로 드러낸다.
-- [ ] runtime, guidebook, minimap과 sheet가 같은 catalog/recipe를 사용한다.
-- [ ] generic diamond/star/octagon fallback이 ordinary/boss production ID에
+- [x] runtime, guidebook, minimap과 sheet가 같은 catalog/recipe를 사용한다.
+- [x] generic diamond/star/octagon fallback이 ordinary/boss production ID에
   남지 않도록 validator를 추가한다.
 
 ### Milestone 2 — Algorithmic map tiles
 
-- [ ] deterministic surface pattern compiler와 fingerprint contract를 만든다.
-- [ ] 288-unit module을 walkable geometry에 clip하고 void를 제외한다.
-- [ ] 세 field grammar를 구현하고 layout seed의 동일성/차이를 검증한다.
-- [ ] world builder의 fixed `FieldRhythm`/`SparseServicePlates`를 compiler
+- [x] deterministic surface pattern compiler와 fingerprint contract를 만든다.
+- [x] 288-unit module을 walkable geometry에 clip하고 void를 제외한다.
+- [x] 세 field grammar를 구현하고 layout seed의 동일성/차이를 검증한다.
+- [x] world builder의 fixed `FieldRhythm`/`SparseServicePlates`를 compiler
   output으로 교체한다.
-- [ ] cover, boundary, facility, collision과 navigation fingerprint가
+- [x] cover, boundary, facility, collision과 navigation fingerprint가
   변경되지 않았음을 확인한다.
-- [ ] 3 field overview와 local 1× capture에서 tile composition을 검토한다.
+- [x] 3 field overview와 local 1× capture에서 tile composition을 검토한다.
 
 ### Milestone 3 — Upgrade UI와 glyph 복구
 
-- [ ] Theme의 body/strong weight와 compact/wide type token을 복구한다.
-- [ ] family badge contrast와 card state frame을 수정한다.
-- [ ] 960/1280/1920에서 3-card geometry와 font scale을 정렬한다.
-- [ ] 83 upgrade state 중 최대 text triplet과 ko/en worst case를 fixture로
+- [x] Theme의 body/strong weight와 compact/wide type token을 복구한다.
+- [x] family badge contrast와 card state frame을 수정한다.
+- [x] 960/1280/1920에서 3-card geometry와 font scale을 정렬한다.
+- [x] 83 upgrade state 중 최대 text triplet과 ko/en worst case를 fixture로
   고정한다.
-- [ ] 8개 upgrade family glyph가 card와 sheet 양쪽에서 동일하게 렌더되고
+- [x] 8개 upgrade family glyph가 card와 sheet 양쪽에서 동일하게 렌더되고
   빈 cell이 없도록 shared renderer를 구현한다.
-- [ ] glyph bounds, actual text bounds, contrast와 visible line validator를
+- [x] glyph bounds, actual text bounds, contrast와 visible line validator를
   추가한다.
 
 ### Milestone 4 — Remaining asset와 UI alignment
 
-- [ ] projectile, reward, facility, effect와 HUD/minimap glyph를 승인 시안의
+- [x] projectile, reward, facility, effect와 HUD/minimap glyph를 승인 시안의
   layered mechanical grammar로 재검토하고 drift를 수정한다.
-- [ ] deployment, pause/settings, guidebook, report, result/garage와
+- [x] deployment, pause/settings, guidebook, report, result/garage와
   boss-practice panel이 교정된 Theme primitive와 font hierarchy를 사용하게
   한다.
-- [ ] 각 surface의 ko/en compact/wide capture에서 overflow, overlap,
+- [x] 각 surface의 ko/en compact/wide capture에서 overflow, overlap,
   clipping, invisible state와 unreadable label을 수정한다.
-- [ ] 12개 production sheet를 전부 재생성하고 누락/빈 slot 0을 확인한다.
+- [x] 12개 production sheet를 전부 재생성하고 누락/빈 slot 0을 확인한다.
 
 ### Milestone 5 — Runtime visual acceptance
 
-- [ ] approved master 옆에 runtime player/role enemy/boss/reward/projectile을
+- [x] approved master 옆에 runtime player/role enemy/boss/reward/projectile을
   같은 scale로 놓은 comparison sheet를 생성한다.
-- [ ] ko/en × 960/1280/1920 native captures를 생성한다.
-- [ ] three field, peak combat, five boss, upgrade worst-triplet와 모든 modal을
+- [x] ko/en × 960/1280/1920 native captures를 생성한다.
+- [x] three field, peak combat, five boss, upgrade worst-triplet와 모든 modal을
   사람이 직접 비교 검토한다.
-- [ ] visual failure가 있으면 asset/UI phase로 돌아가며 performance 측정을
+- [x] visual failure가 있으면 asset/UI phase로 돌아가며 performance 측정을
   시작하지 않는다.
 
 ### Milestone 6 — Final performance gate
 
-- [ ] 모든 asset와 UI가 visual acceptance를 통과한 뒤에만 시작한다.
-- [ ] focused functional validators 전체를 실행한다.
-- [ ] Web export와 production-style native/Web smoke를 실행한다.
+- [x] 모든 asset와 UI가 visual acceptance를 통과한 뒤에만 시작한다.
+- [x] focused functional validators 전체를 실행한다.
+- [x] Web export와 production-style native/Web smoke를 실행한다.
 - [ ] 276-enemy peak, 320-actor capacity, boss scenario에서 existing
-  frame-time, draw-call, batch, lifecycle threshold를 검증한다.
-- [ ] final sheet/capture manifest와 plan progress를 갱신한다.
+  frame-time, draw-call, batch, lifecycle threshold를 검증한다. 3회
+  `peak_horde`와 3회 `production_replay`의 선행 gate가 다시 실패해
+  predetermined stop을 적용했으며 capacity/boss/lifecycle matrix는 실행하지
+  않았다.
+- [x] final sheet/capture manifest와 plan progress를 갱신한다.
 
 ## Progress
 
-- 승인 시안과 current component sheets/runtime capture를 직접 비교했다.
-- 맵이 authored geometry와 fixed decoration만 사용하며 algorithmic visual
-  tile generation이 없음을 확인했다.
-- Noto Sans KR loading은 정상이고, font weight/contrast/layout contract가
-  회귀 원인임을 확인했다.
-- `08-reward-upgrade-glyphs.png`에서 8개 family 중 5개 cell이 비어 있음을
-  확인했다.
-- 기존 plan/spec이 이 잘못된 결과를 의도적으로 허용한 authority error를
-  확인했다.
+- 승인 시안 hash를 고정하고 runtime actor, world, projectile/effect,
+  reward/facility, UI와 production sheet가 shared provider를 사용하도록
+  교정했다.
+- player, ordinary role과 five boss silhouette를 승인 시안의 layered
+  mechanical grammar로 재구성했다. engine thrust는 runtime token을 따르며
+  이동 방향으로 꺾이지 않는다.
+- 세 field에 deterministic 288-unit surface module compiler를 적용했다.
+  동일 fingerprint는 동일 mesh를 생성하며 walkable clip, void 제외와 한
+  retained batch 계약을 검증했다.
+- Upgrade card를 compact `244×286`, wide `304×330` 계약으로 교정하고 Noto
+  Sans KR `650/800` hierarchy, family contrast, selected/focus/disabled
+  state와 shared 8-family glyph를 복구했다.
+- projectile/effect, reward/facility, HUD/minimap, deployment, pause/settings,
+  guidebook, report, result/garage와 boss-practice panel을 같은 component
+  grammar로 정렬했다. dash는 radial red circle 대신 진행 방향 잔상을 쓴다.
+- ko/en × 960/1280/1920 runtime matrix, five boss, three field, worst-case
+  upgrade와 modal을 수동 검토했고 overflow, overlap, clipping과 빈 sheet
+  slot이 없음을 확인했다.
+- non-performance validator 48개, performance scenario validator, Godot
+  import, Web export와 built-Web gameplay smoke가 통과했다. Web console
+  warning/error는 0이었다.
+- 시각 수용이 끝난 뒤 마지막으로 실행한 paired 3×20초 performance gate는
+  실패했다. 이 계획의 stop rule에 따라 추가 최적화, 3×60초 native/Web
+  matrix와 capacity/lifecycle soak를 시작하지 않았다.
 
 ## Next Steps
 
-1. Milestone 0의 canonical spec과 sheet metadata를 교정한다.
-2. Milestone 1–3을 독립 owner로 병렬 구현하되 shared Theme/catalog 변경은
-   한 owner가 통합한다.
-3. Milestone 4에서 나머지 surface를 같은 primitives로 정렬한다.
-4. Milestone 5의 rendered comparison을 통과한 뒤 Milestone 6을 실행한다.
+1. 이 visual/UI recovery 범위에서 두 번째 automatic optimization batch를
+   시작하지 않는다.
+2. BK가 새로운 performance architecture 범위 또는 acceptance contract를
+   명시하면 먼저 `production_replay` qualification window를 복구한다.
+3. paired 3×20초 retention을 통과한 뒤에만 clean commit에서 native/Web
+   3×60초 matrix와 capacity/boss/lifecycle 검증을 재개한다.
 
 ## Test Plan
 
 ### Focused validation
 
 ```powershell
-.\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_visual_tokens.gd
-.\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_component_catalogs.gd
+.\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_visual_system_foundation.gd
+.\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_actor_visuals.gd
 .\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_player_presentation.gd
 .\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_world_visuals.gd
-.\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_ui_theme.gd
+.\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_upgrade_ui.gd
 .\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_upgrade_system.gd
 .\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_stage_ui_layout.gd
 .\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_ui_localization.gd
@@ -317,18 +336,74 @@ scenario와 threshold를 그대로 사용한다.
 
 ## Acceptance Criteria
 
-- 승인 시안의 player/8 role enemy/boss silhouette와 runtime counterpart가
+- [x] 승인 시안의 player/8 role enemy/boss silhouette와 runtime counterpart가
   같은 visual family와 proportion hierarchy로 읽힌다.
-- ordinary/boss production asset에 generic star/octagon fallback이 없다.
-- map floor는 288-unit deterministic module로 생성되고 동일 seed hash가
+- [x] ordinary/boss production asset에 generic star/octagon fallback이 없다.
+- [x] map floor는 288-unit deterministic module로 생성되고 동일 seed hash가
   동일하며, collision/navigation fingerprint는 변경되지 않는다.
-- upgrade family badge 대비가 정상이고 ko/en worst-triplet에서 visible
+- [x] upgrade family badge 대비가 정상이고 ko/en worst-triplet에서 visible
   glyph/text overflow, overlap와 clipping이 0이다.
-- 8개 upgrade family glyph가 card와 sheet 모두에 존재한다.
-- 모든 player-facing panel이 같은 Theme font/panel primitive를 사용한다.
-- 12개 production sheet와 runtime capture가 누락 없이 재생성된다.
-- 모든 visual acceptance 완료 뒤 final native/Web performance gate가 기존
-  threshold를 통과한다.
+- [x] 8개 upgrade family glyph가 card와 sheet 모두에 존재한다.
+- [x] 모든 player-facing panel이 같은 Theme font/panel primitive를 사용한다.
+- [x] 12개 production sheet와 runtime capture가 누락 없이 재생성된다.
+- [ ] 모든 visual acceptance 완료 뒤 final native/Web performance gate가 기존
+  threshold를 통과한다. 마지막 paired gate가 실패해 plan status를
+  `active`로 유지한다.
+
+## Final Outcome
+
+### 구현 및 시각 수용
+
+- canonical 승인 시안:
+  `docs/design/component-sheets/00-general-sf-component-master-v1.png`
+- production publication:
+  `docs/design/component-sheets/system-v1/manifest.json`과 12개 PNG
+- sheet 재생성 repeat hash: 12/12 동일
+- runtime capture:
+  ko/en × 960×540, 1280×720, 1920×1080
+- 수동 검토 범위:
+  three field, player/ordinary roles, five bosses, projectile/reward/facility,
+  worst-case upgrade cards, HUD/minimap와 모든 modal
+- local comparison evidence:
+  `.codex-runtime/visual-acceptance/approved-runtime-comparison-final.png`,
+  `.codex-runtime/visual-acceptance/production-12-sheet-contact.png`
+
+구현은 `e9dc516^..529e915`의 subsystem별 commit으로 보존했다. sheet source
+manifest가 가리키는 actor/runtime source 기준점은 `f1a850a`다.
+
+### 검증 결과
+
+- non-performance validator 48개 통과
+- `validate_vehicle_performance_scenarios.gd` 통과
+- Godot import 통과
+- production Web export 통과, 필수 산출물 4개 생성
+- built-Web에서 gameplay 진입, new player/HUD/map 표시와 console
+  warning/error 0 확인
+
+### 마지막 성능 gate
+
+모든 asset/UI 시각 수용 뒤에만 Godot 4.7.1, Windows, Intel Iris Xe,
+native GL Compatibility, 1280×720에서 2초 warmup + 20초 sample을 각
+scenario에 3회 실행했다.
+
+| Payload | Workload valid | Active | Median / 1% low FPS | Frame p95 / p99 | Draw p95 | Batches |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| `peak_horde-01` | yes | 276 | `7.500 / 6.837` | `142.868 / 145.848ms` | 308 | 50 |
+| `peak_horde-02` | yes | 276 | `7.490 / 6.762` | `142.756 / 147.275ms` | 308 | 50 |
+| `peak_horde-03` | yes | 276 | `7.556 / 6.780` | `143.987 / 147.154ms` | 308 | 50 |
+| `production_replay-01` | no | 192 | `60.000 / 29.704` | `27.778 / 31.786ms` | 299 | 50 |
+| `production_replay-02` | no | 192 | `59.001 / 27.962` | `25.000 / 30.274ms` | 298 | 50 |
+| `production_replay-03` | no | 192 | `60.000 / 27.885` | `25.378 / 33.333ms` | 299 | 50 |
+
+세 peak workload는 유효하지만 frame/draw threshold를 실패했다. 세
+production replay는 qualification sample 0, median active 0, minimum active
+202에 final active 192라 workload 자체가 유효하지 않다. focused 20초
+payload이므로 여섯 표본 모두 `authoritative: false`다.
+
+따라서 이미 정한 반복 실패 stop을 적용했다. 320 capacity, boss scenario,
+3×60초 native/Web matrix와 lifecycle soak는 실행하지 않았고, density,
+resolution, visual quality 또는 threshold를 낮추지 않았다. 결과 payload는
+ignored 경로 `build/performance/approved-visual-final-retention/`에 보존한다.
 
 ## Rollback / Safety
 
