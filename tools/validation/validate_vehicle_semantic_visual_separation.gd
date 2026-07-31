@@ -33,7 +33,9 @@ const DISTINCT_GROUPS := {
 	],
 	"combat_events":[
 		&"effect/muzzle_player_primary/02",
-		&"effect/impact_reflect/02",
+		&"effect/impact_damage/02",
+		&"effect/reflect_deflection/02",
+		&"effect/barrier_contact/02",
 		&"hud/minimap_marker_objective_active",
 		&"pickup/experience_medium",
 	],

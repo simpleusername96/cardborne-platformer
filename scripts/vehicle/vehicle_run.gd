@@ -279,6 +279,7 @@ var _capture_directory := ""
 var _capture_mode := false
 var _capture_locale := ""
 var _capture_size := Vector2i.ZERO
+var _capture_text_scale := 1.0
 var _debug_collision_overlay := false
 var _performance_request: Dictionary = {}
 var _performance_recorder: VehiclePerformanceRecorder
@@ -6098,6 +6099,12 @@ func _parse_capture_arguments() -> void:
 			var parts := argument.trim_prefix("--capture-size=").split("x")
 			if parts.size() == 2:
 				_capture_size = Vector2i(maxi(640, int(parts[0])), maxi(360, int(parts[1])))
+		elif argument.begins_with("--capture-text-scale="):
+			_capture_text_scale = clampf(
+				float(argument.trim_prefix("--capture-text-scale=")),
+				1.0,
+				2.0
+			)
 		elif argument.begins_with("--layout-seed="):
 			_layout_seed_override = int(argument.trim_prefix("--layout-seed="))
 			_has_layout_seed_override = true
@@ -6115,6 +6122,7 @@ func _run_capture_sequence() -> void:
 	if _capture_size.x > 0 and _capture_size.y > 0:
 		get_window().size = _capture_size
 	_camera.position_smoothing_enabled = false
+	_ui.debug_set_text_scale(_capture_text_scale)
 	_ui.show_deployment(
 		selected_primary,
 		RunDifficulty.HARD,

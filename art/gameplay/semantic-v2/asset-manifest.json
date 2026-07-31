@@ -1260,7 +1260,7 @@
       ],
       "fps": 20,
       "loop": false,
-      "source": "sources/effects/02-impact-reflect.png"
+      "source": "sources/effects/02-impact-damage.png"
     }
   },
   "review_sheets": [

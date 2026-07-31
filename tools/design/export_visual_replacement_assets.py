@@ -11,7 +11,6 @@ from __future__ import annotations
 from hashlib import sha256
 import json
 from pathlib import Path
-import shutil
 
 from PIL import Image, ImageDraw, ImageFont
 
@@ -226,14 +225,10 @@ def _export_effects() -> dict[str, dict]:
             "source": f"sources/effect-expansion/{source_name}",
         }
 
-    old_atlas = GAME_ROOT / "effects/atlases/fx_impact_reflect.png"
-    new_atlas = GAME_ROOT / "effects/atlases/fx_impact_damage.png"
-    shutil.copy2(old_atlas, new_atlas)
-    old_frames = GAME_ROOT / "effects/frames/fx_impact_reflect"
-    new_frames = GAME_ROOT / "effects/frames/fx_impact_damage"
-    new_frames.mkdir(parents=True, exist_ok=True)
-    for path in sorted(old_frames.glob("frame_*.png")):
-        shutil.copy2(path, new_frames / path.name)
+    damage_atlas = GAME_ROOT / "effects/atlases/fx_impact_damage.png"
+    damage_frames = GAME_ROOT / "effects/frames/fx_impact_damage"
+    if not damage_atlas.is_file() or len(list(damage_frames.glob("frame_*.png"))) != 5:
+        raise RuntimeError("canonical impact_damage runtime frames are missing")
     animations["impact_damage"] = {
         "atlas": "effects/atlases/fx_impact_damage.png",
         "frames": "effects/frames/fx_impact_damage/frame_{index:02}.png",
@@ -244,7 +239,7 @@ def _export_effects() -> dict[str, dict]:
         "pivot": [32, 32],
         "fps": 20,
         "loop": False,
-        "source": "sources/effects/02-impact-reflect.png",
+        "source": "sources/effects/02-impact-damage.png",
     }
     return animations
 

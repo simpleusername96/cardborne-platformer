@@ -13,6 +13,16 @@ const UI_MANIFEST_PATH := (
 const EVENT_CATALOG_PATH := (
 	"res://scripts/presentation/components/vehicle_visual_event_catalog.gd"
 )
+const THEME_PATH := "res://art/ui/production/vehicle_stage_theme.tres"
+const RUN_PATH := "res://scripts/vehicle/vehicle_run.gd"
+const SECONDARY_PATH := "res://scripts/player/vehicle_secondary_runtime.gd"
+const RENDERER_PATH := (
+	"res://scripts/presentation/vehicle_combat_renderer.gd"
+)
+const VisualEventCatalog = preload(
+	"res://scripts/presentation/components/vehicle_visual_event_catalog.gd"
+)
+const UiAssets = preload("res://scripts/ui/vehicle_ui_asset_provider.gd")
 
 const EXPECTED_ANIMATIONS := [
 	"muzzle_player_primary",
@@ -45,15 +55,25 @@ const EXPECTED_EVENT_IDS := [
 	"player_dash_afterimage",
 	"player_hull_hit",
 	"player_barrier_hit",
+	"player_barrier_activate",
 	"player_emp_charge",
 	"player_emp_release",
 	"player_emp_aftershock",
+	"player_ram_pulse",
+	"player_phase_shear_hit",
+	"player_ram_impact",
 	"secondary_seeker_impact",
+	"secondary_seeker_burst",
 	"secondary_escort_impact",
 	"secondary_orbit_blade_impact",
 	"secondary_wake_mine_detonation",
+	"enemy_mine_detonation",
 	"hostile_projectile_impact",
+	"projectile_cover_impact",
+	"projectile_damage_impact",
 	"projectile_reflected",
+	"projectile_intercepted",
+	"enemy_barrier_hit",
 	"hostile_arrival",
 	"hostile_summon_arrival",
 	"enemy_destroy_light",
@@ -104,7 +124,7 @@ const EXPECTED_UI_COMPONENT_STATES := {
 	"toggle": ["off", "on", "focus"],
 	"slider": ["lane", "fill", "grabber"],
 	"meter": [
-		"background", "health", "boss", "resource", "cooldown",
+		"background", "health", "boss", "resource", "cooldown", "support",
 	],
 	"preview": ["normal", "locked", "focused"],
 	"small_state": [
@@ -132,18 +152,21 @@ func _initialize() -> void:
 	if not FileAccess.file_exists(EVENT_CATALOG_PATH):
 		_failures.append("missing visual event catalog: %s" % EVENT_CATALOG_PATH)
 	else:
-		var catalog_source := FileAccess.get_file_as_string(EVENT_CATALOG_PATH)
 		for event_id in EXPECTED_EVENT_IDS:
 			_expect(
-				catalog_source.contains('"%s"' % event_id)
-					or catalog_source.contains('&"%s"' % event_id),
+				VisualEventCatalog.has_event(StringName(event_id)),
 				"missing visual event mapping: %s" % event_id
 			)
+		_validate_event_catalog(animations)
+		_validate_event_producers()
 
 	if not FileAccess.file_exists(UI_MANIFEST_PATH):
 		_failures.append("missing UI asset manifest: %s" % UI_MANIFEST_PATH)
 	else:
 		_validate_ui_manifest(_read_json(UI_MANIFEST_PATH))
+		for error in UiAssets.validate_pack():
+			_failures.append(String(error))
+	_validate_ui_runtime_contract()
 	_finish()
 
 
@@ -206,6 +229,125 @@ func _validate_ui_manifest(manifest: Dictionary) -> void:
 				"missing UI state image: %s/%s -> %s"
 				% [component_id, state_id, path]
 			)
+
+
+func _validate_event_catalog(animations: Dictionary) -> void:
+	var catalog_ids := VisualEventCatalog.event_ids()
+	_expect(
+		catalog_ids.size() == EXPECTED_EVENT_IDS.size(),
+		"event catalog and reviewed production event inventory must stay in sync"
+	)
+	for event_id in catalog_ids:
+		var event := VisualEventCatalog.descriptor(event_id)
+		var mode := StringName(event.get("mode", &"animation"))
+		var animation_id := StringName(event.get("animation", &""))
+		_expect(
+			mode in [
+				&"animation",
+				&"hull_afterimage",
+				&"live_emp_radius",
+				&"pickup_intake",
+				&"directed_transfer",
+				&"hud_only",
+			],
+			"unsupported visual event mode: %s -> %s" % [event_id, mode]
+		)
+		if animation_id != &"":
+			_expect(
+				animations.has(String(animation_id)),
+				"event references missing animation: %s -> %s"
+				% [event_id, animation_id]
+			)
+		elif mode == &"animation":
+			_failures.append(
+				"animation event has no animation: %s" % event_id
+			)
+
+
+func _validate_event_producers() -> void:
+	var run_source := FileAccess.get_file_as_string(RUN_PATH)
+	var direct_event_pattern := RegEx.new()
+	direct_event_pattern.compile('_add_effect\\(\\s*&"([^"]+)"')
+	for result in direct_event_pattern.search_all(run_source):
+		var event_id := StringName(result.get_string(1))
+		_expect(
+			VisualEventCatalog.has_event(event_id),
+			"VehicleRun emits an unmapped visual event: %s" % event_id
+		)
+	for prohibited_id in [
+		"spawn",
+		"shock",
+		"secondary",
+		"destroy",
+		"support",
+		"impact",
+		"reflect",
+		"barrier_hit",
+		"afterimage",
+		"muzzle",
+	]:
+		_expect(
+			not run_source.contains(
+				'_add_effect(&"%s"' % prohibited_id
+			),
+			"VehicleRun still emits broad visual event: %s" % prohibited_id
+		)
+	var secondary_source := FileAccess.get_file_as_string(SECONDARY_PATH)
+	var secondary_event_pattern := RegEx.new()
+	secondary_event_pattern.compile('"event_id"\\s*:\\s*&"([^"]+)"')
+	for result in secondary_event_pattern.search_all(secondary_source):
+		var event_id := StringName(result.get_string(1))
+		_expect(
+			VisualEventCatalog.has_event(event_id),
+			"secondary runtime emits an unmapped visual event: %s" % event_id
+		)
+	var renderer_source := FileAccess.get_file_as_string(RENDERER_PATH)
+	for obsolete_path in [
+		"_effect_batches",
+		"impact_reflect",
+		'family := &"ring"',
+	]:
+		_expect(
+			not renderer_source.contains(obsolete_path),
+			"renderer still contains generic effect fallback: %s"
+			% obsolete_path
+		)
+
+
+func _validate_ui_runtime_contract() -> void:
+	var theme_source := FileAccess.get_file_as_string(THEME_PATH)
+	_expect(
+		not theme_source.contains("StyleBoxFlat"),
+		"production UI theme still contains StyleBoxFlat"
+	)
+	for required_reference in [
+		'[sub_resource type="StyleBoxTexture"',
+		'HudHealthResource/styles/panel',
+		'HudObjectiveBoss/styles/panel',
+		'HudMinimapTarget/styles/panel',
+		'HudActionRail/styles/panel',
+		'HudToast/styles/panel',
+		'PreviewFrame/styles/panel',
+		'CheckButton/icons/checked',
+		'HSlider/icons/grabber',
+	]:
+		_expect(
+			theme_source.contains(required_reference),
+			"production UI theme is missing image-backed contract: %s"
+			% required_reference
+		)
+	for source_path in [
+		"res://scripts/ui/vehicle_modal_surface.gd",
+		"res://scripts/ui/vehicle_upgrade_choice_card.gd",
+		"res://scripts/ui/vehicle_guidebook_preview.gd",
+		"res://scripts/ui/vehicle_deployment_panel.gd",
+	]:
+		var source := FileAccess.get_file_as_string(source_path)
+		_expect(
+			not source.contains("func _draw()"),
+			"replaceable decorative primitive draw remains: %s"
+			% source_path
+		)
 
 
 func _read_json(path: String) -> Dictionary:

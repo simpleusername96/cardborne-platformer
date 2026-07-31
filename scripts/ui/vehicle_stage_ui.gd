@@ -528,6 +528,29 @@ func debug_ui_contract(viewport_width: float = 1280.0) -> Dictionary:
 	return contract
 
 
+func debug_set_text_scale(scale: float) -> void:
+	# Capture-only accessibility probe: image chrome remains unchanged while
+	# the localized dynamic text layer is magnified.
+	var clamped := clampf(scale, 1.0, 2.0)
+	var scaled_theme := VEHICLE_THEME.duplicate(true) as Theme
+	scaled_theme.default_font_size = maxi(
+		1,
+		roundi(float(VEHICLE_THEME.default_font_size) * clamped)
+	)
+	for type_name in scaled_theme.get_type_list():
+		for font_size_name in scaled_theme.get_font_size_list(type_name):
+			var base_size := VEHICLE_THEME.get_font_size(
+				font_size_name,
+				type_name
+			)
+			scaled_theme.set_font_size(
+				font_size_name,
+				type_name,
+				maxi(1, roundi(float(base_size) * clamped))
+			)
+	_root.theme = scaled_theme
+
+
 func debug_modal_contract(
 	surface: String,
 	result_stage_title_key: String = "STAGE_DROWNED_RUINS_1"
