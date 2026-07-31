@@ -208,6 +208,7 @@ var crates: Array[Dictionary] = []
 var _crate_collision_cells: Dictionary = {}
 var denied_zones: Array[Dictionary] = []
 var effects: Array[Dictionary] = []
+var resolved_boss_module_visuals: Array[Dictionary] = []
 var damaging_trails: Array[Dictionary] = []
 var _empty_cover_rects: Array[Rect2] = []
 var _projectile_cover_query: Array[Rect2] = []
@@ -639,6 +640,7 @@ func _reset_run(
 	crates.clear()
 	denied_zones.clear()
 	effects.clear()
+	resolved_boss_module_visuals.clear()
 	damaging_trails.clear()
 	for spec in _active_tactical_layout.stationary_blueprint():
 		_append_enemy(_make_enemy(spec))
@@ -923,7 +925,13 @@ func _update_encounter(delta: float) -> void:
 		projectile_store.hostile_count()
 	)
 	for cue in requests["cues"]:
-		_add_effect("spawn", Vector2(cue["anchor"]), Art.MUSTARD, 0.9, 126.0)
+		_add_effect(
+			&"hostile_arrival",
+			Vector2(cue["anchor"]),
+			Art.MUSTARD,
+			0.9,
+			126.0
+		)
 		_play_sound(&"boss", 0.72)
 		if int(cue["beat"]) == 0:
 			_ui.notify(tr("NOTIFY_CONTACT_INBOUND"), 1.2, Art.MUSTARD)
@@ -932,7 +940,13 @@ func _update_encounter(delta: float) -> void:
 		var enemy := _make_enemy(bounded_spec)
 		_apply_pending_elite(enemy)
 		if _append_enemy(enemy):
-			_add_effect("spawn", Vector2(enemy.pos), Art.CORAL, 0.42, 68.0)
+			_add_effect(
+				&"hostile_arrival",
+				Vector2(enemy.pos),
+				Art.CORAL,
+				0.42,
+				68.0
+			)
 
 
 func _refresh_elite_reservations() -> void:
@@ -1255,7 +1269,14 @@ func _update_terrain(delta: float) -> void:
 					float(event["invulnerability"]),
 					&"transit"
 				)
-				_add_effect("transit", player_position, Art.MINT, 0.34, 96.0)
+				_add_effect(
+					&"transit_complete",
+					player_position,
+					Art.MINT,
+					0.34,
+					96.0,
+					player_hull_direction
+				)
 				_play_sound(&"dash", 1.18)
 	var surge_damage := terrain_runtime.surge_damage_for(
 		"player", player_position, &"player"
@@ -1293,7 +1314,14 @@ func _start_dash(move_input: Vector2) -> void:
 	tutorial_dash = true
 	camera_shake = maxf(camera_shake, 4.0)
 	_play_sound(&"dash")
-	_add_effect("dash_start", player_position, Rules.CYAN, 0.22, 52.0, player_dash_direction)
+	_add_effect(
+		&"player_dash_start",
+		player_position,
+		Rules.CYAN,
+		0.22,
+		52.0,
+		player_dash_direction
+	)
 
 
 func _update_dash(delta: float) -> void:
@@ -1310,9 +1338,9 @@ func _update_dash(delta: float) -> void:
 	player_dash_trail_timer -= delta
 	if player_dash_trail_timer <= 0.0:
 		player_dash_trail_timer = 0.035
-		if _live_effect_count("afterimage") < MAX_DASH_AFTERIMAGES:
+		if _live_effect_count(&"player_dash_afterimage") < MAX_DASH_AFTERIMAGES:
 			_add_effect(
-				"afterimage",
+				&"player_dash_afterimage",
 				before,
 				Rules.CYAN,
 				0.20,
@@ -1335,14 +1363,20 @@ func _update_dash(delta: float) -> void:
 				player_position, 145.0, 32.0, "Ram Pulse", &"kinetic", true
 			)
 			_clear_hostile_projectiles(player_position, 170.0)
-			_add_effect("shock", player_position, Rules.AMBER, 0.38, 170.0)
+			_add_effect(
+				&"player_ram_pulse",
+				player_position,
+				Rules.AMBER,
+				0.38,
+				170.0
+			)
 			_play_sound(&"emp", 1.55)
 
 
-func _live_effect_count(kind: String) -> int:
+func _live_effect_count(kind: StringName) -> int:
 	var count := 0
 	for effect in effects:
-		if String(effect.get("kind", "")) == kind:
+		if StringName(effect.get("kind", &"")) == kind:
 			count += 1
 	return count
 
@@ -1358,7 +1392,14 @@ func _apply_phase_shear(from: Vector2, to: Vector2) -> void:
 				previous.shear_time = 0.0
 		enemy.shear_time = 3.0
 		_sheared_enemy_id = enemy.id
-		_add_effect("impact", enemy.pos, Art.MINT, 0.24, 48.0)
+		_add_effect(
+			&"player_phase_shear_hit",
+			enemy.pos,
+			Art.MINT,
+			0.24,
+			48.0,
+			(to - from).normalized()
+		)
 		return
 
 
@@ -1395,7 +1436,14 @@ func _fire_primary() -> void:
 			_status_profile,
 			false
 		)
-	_add_effect("muzzle", origin, Art.MUSTARD, 0.09, 32.0, player_aim_direction)
+	_add_effect(
+		&"player_primary_muzzle",
+		origin,
+		Art.MUSTARD,
+		0.09,
+		32.0,
+		player_aim_direction
+	)
 
 
 func _try_fire_primary() -> bool:
@@ -1648,7 +1696,19 @@ func _update_passive_secondary(delta: float) -> void:
 				true
 			)
 	for effect in secondary_result["effects"]:
-		_add_effect("secondary", Vector2(effect["pos"]), Art.MINT, 0.18, float(effect.get("radius", 24.0)), (Vector2(effect.get("target", effect["pos"])) - Vector2(effect["pos"])).normalized())
+		var effect_position := Vector2(effect["pos"])
+		var effect_target := Vector2(effect.get("target", effect_position))
+		_add_effect(
+			StringName(effect["event_id"]),
+			effect_position,
+			Art.MINT,
+			0.24,
+			float(effect.get("radius", 24.0)),
+			(effect_target - effect_position).normalized(),
+			0.0,
+			1.0,
+			effect_target
+		)
 
 
 func _find_passive_targets(max_targets: int) -> Array[EnemyState]:
@@ -1697,7 +1757,13 @@ func _start_emp() -> void:
 	player_emp_cooldown = _emp_cooldown_max()
 	_grant_player_protection(0.24, &"emp")
 	_play_sound(&"emp_start")
-	_add_effect("emp_start", player_position, Art.BOSS_MAGENTA, EMP_STARTUP, _emp_radius())
+	_add_effect(
+		&"player_emp_charge",
+		player_position,
+		Art.BOSS_MAGENTA,
+		EMP_STARTUP,
+		_emp_radius()
+	)
 
 
 func _release_emp(is_aftershock: bool) -> void:
@@ -1723,7 +1789,13 @@ func _release_emp(is_aftershock: bool) -> void:
 			if not is_aftershock and run_build.has(&"relay_overload") and SpecialistRuntime.is_support_or_installation(StringName(enemy.role)):
 				stun_duration += 2.5 * run_build.level_of(&"relay_overload")
 			enemy.stun = maxf(float(enemy.stun), stun_duration)
-	_add_effect("shock", player_position, Art.BOSS_MAGENTA, 0.55, radius)
+	_add_effect(
+		&"player_emp_aftershock" if is_aftershock else &"player_emp_release",
+		player_position,
+		Art.BOSS_MAGENTA,
+		0.55,
+		radius
+	)
 	camera_shake = maxf(camera_shake, 11.0 if not is_aftershock else 6.0)
 	_play_sound(&"emp", 1.2 if is_aftershock else 1.0)
 	if not is_aftershock and applied_upgrades.has(&"emp_aftershock"):
@@ -1776,7 +1848,13 @@ func _activate_cycle(upgrade_id: StringName) -> void:
 	player_barrier_strength = maxf(player_barrier_strength, 28.0 if level >= 2 else 20.0)
 	player_barrier_timer = maxf(player_barrier_timer, 6.0 if level >= 2 else 5.0)
 	_clear_hostile_projectiles(player_position, 86.0)
-	_add_effect("barrier_hit", player_position, Art.MINT, 0.22, 74.0)
+	_add_effect(
+		&"player_barrier_activate",
+		player_position,
+		Art.MINT,
+		0.22,
+		74.0
+	)
 
 
 func _update_pickups(motion_start: Vector2, motion_end: Vector2) -> void:
@@ -1820,7 +1898,24 @@ func _collect_pickup(pickup: Dictionary) -> void:
 			_discover_guide(&"object_recall")
 			experience_recall_timer = 0.65
 			_ui.notify(tr("NOTIFY_EXPERIENCE_RECALL"), 2.0, Rules.CYAN)
-	_add_effect("pickup", Vector2(pickup["pos"]), _pickup_color(kind), 0.40, 65.0)
+	var pickup_event := (
+		&"pickup_repair"
+		if kind == &"repair"
+		else &"pickup_experience"
+		if kind == &"experience_recall"
+		else &"pickup_reward"
+	)
+	_add_effect(
+		pickup_event,
+		Vector2(pickup["pos"]),
+		_pickup_color(kind),
+		0.40,
+		65.0,
+		(player_position - Vector2(pickup["pos"])).normalized(),
+		0.0,
+		1.0,
+		player_position
+	)
 	_play_sound(&"pickup")
 
 
@@ -2139,7 +2234,7 @@ func _update_generator(enemy: EnemyState, delta: float) -> void:
 			continue
 		if target.pos.distance_to(enemy.pos) <= 390.0:
 			target.health = minf(target.max_health, target.health + 4.0)
-	_add_effect("support", enemy.pos, Rules.CYAN, 0.28, 105.0)
+	_add_effect(&"support_heal", enemy.pos, Rules.CYAN, 0.28, 105.0)
 
 
 func _update_repair_tender(enemy: EnemyState, delta: float, refresh_target: bool) -> void:
@@ -2168,7 +2263,7 @@ func _update_repair_tender(enemy: EnemyState, delta: float, refresh_target: bool
 	enemy.support_tick = maxf(0.0, enemy.support_tick - delta)
 	if enemy.support_tick <= 0.0:
 		enemy.support_tick = 0.32
-		_add_effect("support", target.pos, Art.MINT, 0.24, 46.0)
+		_add_effect(&"support_heal", target.pos, Art.MINT, 0.24, 46.0)
 
 
 func _spawn_carrier_child(carrier: EnemyState) -> void:
@@ -2198,7 +2293,13 @@ func _spawn_carrier_child(carrier: EnemyState) -> void:
 	})
 	if _append_enemy(child):
 		_enemy_update_schedule.note_carrier_child(carrier.id)
-		_add_effect("spawn", spawn_position, Art.CORAL, 0.32, 44.0)
+		_add_effect(
+			&"hostile_summon_arrival",
+			spawn_position,
+			Art.CORAL,
+			0.32,
+			44.0
+		)
 
 
 func _update_ordinary_enemy(
@@ -2497,7 +2598,7 @@ func _begin_enemy_active(enemy: EnemyState) -> void:
 			if mine_damage > 0.0:
 				_damage_player(mine_damage, "Arc proximity burst", true)
 			_add_effect(
-				"shock",
+				&"enemy_mine_detonation",
 				enemy.pos,
 				Art.attack_color(StringName(mine_attack["affinity"])),
 				0.36,
@@ -2848,7 +2949,13 @@ func _explode_mine(enemy: EnemyState) -> void:
 				enemy.mine_armed_by_player
 			)
 	_arm_chain_mines(enemy, origin, mobile)
-	_add_effect("shock", origin, Art.ATTACK_ARC, 0.36, radius)
+	_add_effect(
+		&"enemy_mine_detonation",
+		origin,
+		Art.ATTACK_ARC,
+		0.36,
+		radius
+	)
 	_defeat_enemy(enemy, source)
 
 
@@ -3018,10 +3125,24 @@ func _update_projectile_buffer(
 					var normal: Vector2 = cover_hit["normal"]
 					projectile.velocity = projectile.velocity.bounce(normal)
 					projectile.pos = Vector2(cover_hit["point"]) + normal * (radius + 2.0)
-					_add_effect("impact", projectile.pos, Rules.CYAN, 0.15, 18.0)
+					_add_effect(
+						&"projectile_reflected",
+						projectile.pos,
+						Rules.CYAN,
+						0.15,
+						18.0,
+						projectile.velocity.normalized()
+					)
 					index += 1
 					continue
-				_add_effect("impact", Vector2(cover_hit["point"]), projectile.color, 0.14, 20.0)
+				_add_effect(
+					&"projectile_cover_impact",
+					Vector2(cover_hit["point"]),
+					projectile.color,
+					0.14,
+					20.0,
+					projectile.velocity.normalized()
+				)
 				_play_sound(&"cover", _rng.randf_range(0.96, 1.04))
 				_remove_projectile_at(hostile, index)
 				continue
@@ -3063,7 +3184,14 @@ func _update_projectile_buffer(
 				var hit_position := hit_enemy.pos
 				if _try_absorb_protective_structure(hit_enemy, projectile):
 					stats_primary_hits += 1 if projectile.owner == "player_primary" else 0
-					_add_effect("barrier_hit", hit_position, Art.IVORY_BRIGHT, 0.20, hit_enemy.radius * 1.35)
+					_add_effect(
+						&"enemy_barrier_hit",
+						hit_position,
+						Art.IVORY_BRIGHT,
+						0.20,
+						hit_enemy.radius * 1.35,
+						projectile.velocity.normalized()
+					)
 					_play_sound(&"cover", 1.06)
 					if projectile.pierce > 0:
 						projectile.pierce -= 1
@@ -3094,14 +3222,35 @@ func _update_projectile_buffer(
 				StatusRuntime.apply(hit_enemy, projectile.status_profile)
 				_record_status_applications(projectile.status_profile)
 				stats_primary_hits += 1 if projectile.owner == "player_primary" else 0
-				_add_effect("impact", hit_position, projectile.color, 0.18, 24.0)
+				var impact_event := (
+					&"projectile_reflected"
+					if projectile.reflected
+					else &"secondary_seeker_impact"
+					if projectile.owner == "passive_seeker"
+					else &"projectile_damage_impact"
+				)
+				_add_effect(
+					impact_event,
+					hit_position,
+					projectile.color,
+					0.18,
+					24.0,
+					projectile.velocity.normalized()
+				)
 				_play_sound(&"impact", _rng.randf_range(0.92, 1.08))
 				if projectile.explosive:
 					_damage_enemies_in_radius(
 						hit_position, 95.0, 12.0,
 						"Seeker burst", &"kinetic", true, hit_enemy.id
 					)
-					_add_effect("shock", hit_position, Rules.MOSS, 0.28, 95.0)
+					_add_effect(
+						&"secondary_seeker_burst",
+						hit_position,
+						Rules.MOSS,
+						0.28,
+						95.0,
+						projectile.velocity.normalized()
+					)
 				if projectile.pierce > 0:
 					projectile.pierce -= 1
 					projectile.pos = to + projectile.velocity.normalized() * 8.0
@@ -3135,7 +3284,7 @@ func _on_bulkhead_broken(position: Vector2) -> void:
 	pursuit_field.request_rebuild()
 	if is_instance_valid(_backdrop):
 		_backdrop.queue_redraw()
-	_add_effect("destroy", position, Art.MUSTARD, 0.24, 90.0)
+	_add_effect(&"bulkhead_destroy", position, Art.MUSTARD, 0.24, 90.0)
 	_play_sound(&"destroy_priority", 0.92)
 
 
@@ -3229,7 +3378,14 @@ func _player_projectile_contact(
 	if best_is_intercept and best != null:
 		best.intercept_charges -= 1
 		best.intercept_recharge = 4.0
-		_add_effect("shock", best.pos, Rules.VIOLET, 0.24, 112.0)
+		_add_effect(
+			&"projectile_intercepted",
+			best.pos,
+			Rules.VIOLET,
+			0.24,
+			112.0,
+			projectile.velocity.normalized()
+		)
 		return true
 	return best
 
@@ -3322,11 +3478,12 @@ func _projectile_hits_crate(
 	if damage_crate:
 		_damage_crate(crate_hit, projectile.structure_damage)
 	_add_effect(
-		"impact",
+		&"projectile_cover_impact",
 		from + motion * hit_t if hit_t != INF else crate_position,
 		projectile.color,
 		0.16,
-		22.0
+		22.0,
+		projectile.velocity.normalized()
 	)
 	_play_sound(&"cover", _rng.randf_range(0.96, 1.04))
 	return true
@@ -3362,7 +3519,13 @@ func _damage_crate(crate: Dictionary, amount: float) -> void:
 		"pulse": 0.0,
 		"heal_amount": float(crate.get("heal_amount", 0.0)),
 	})
-	_add_effect("destroy", Vector2(crate["pos"]), Rules.AMBER, 0.42, 58.0)
+	_add_effect(
+		&"crate_destroy",
+		Vector2(crate["pos"]),
+		Rules.AMBER,
+		0.42,
+		58.0
+	)
 	_play_sound(&"destroy", 1.35)
 
 
@@ -3431,14 +3594,15 @@ func _update_effects(delta: float) -> void:
 
 
 func _add_effect(
-	kind: String,
+	kind: StringName,
 	position: Vector2,
 	color: Color,
 	duration: float,
 	radius: float,
 	direction: Vector2 = Vector2.ZERO,
 	value: float = 0.0,
-	multiplier: float = 1.0
+	multiplier: float = 1.0,
+	target_position: Variant = null
 ) -> void:
 	if effects.size() >= EncounterDirector.EFFECT_CAP:
 		for index in effects.size():
@@ -3453,6 +3617,7 @@ func _add_effect(
 		"duration": duration,
 		"radius": radius,
 		"dir": direction,
+		"target": target_position if target_position is Vector2 else position,
 		"value": value,
 		"multiplier": multiplier,
 	})
@@ -3484,7 +3649,7 @@ func _damage_enemy(
 	):
 		enemy.health_visible_timer = 1.5
 		_add_effect(
-			"barrier_hit",
+			&"enemy_barrier_hit",
 			enemy.pos,
 			Art.BOSS_COMMAND,
 			0.20,
@@ -3525,7 +3690,13 @@ func _damage_enemy(
 			stage_telemetry.record_outgoing(
 				DamageSourceCatalog.outgoing_id(source), attribute, mine_applied
 			)
-		_apply_lifesteal(mine_applied, source, role, player_owned)
+		_apply_lifesteal(
+			mine_applied,
+			source,
+			role,
+			player_owned,
+			enemy.pos
+		)
 		return mine_applied
 	var applied_damage := minf(health_before, maxf(0.0, amount * multiplier))
 	if applied_damage <= 0.0:
@@ -3536,7 +3707,7 @@ func _damage_enemy(
 		if impact_direction.is_zero_approx():
 			impact_direction = Vector2.RIGHT
 		_add_effect(
-			"boss_reduced_hit",
+			&"boss_core_reduced_hit",
 			enemy.pos,
 			Art.MUSTARD,
 			0.52,
@@ -3553,7 +3724,13 @@ func _damage_enemy(
 		)
 	enemy.flash = 0.11
 	enemy.health_visible_timer = 1.0 if enemy.health_class == &"swarm" else 1.5
-	_apply_lifesteal(applied_damage, source, role, player_owned)
+	_apply_lifesteal(
+		applied_damage,
+		source,
+		role,
+		player_owned,
+		enemy.pos
+	)
 	if (
 		role == &"stage_boss"
 		and enemy.health > 0.0
@@ -3605,7 +3782,8 @@ func _apply_lifesteal(
 	applied_damage: float,
 	source: String,
 	_role: StringName,
-	player_owned: bool
+	player_owned: bool,
+	source_position: Vector2
 ) -> void:
 	if (
 		not player_owned
@@ -3622,7 +3800,32 @@ func _apply_lifesteal(
 		return
 	player_health += healing
 	lifesteal_budget -= healing
-	_add_effect("lifesteal", player_position, Art.MINT, 0.18, 46.0)
+	_add_effect(
+		&"lifesteal_transfer",
+		source_position,
+		Art.MINT,
+		0.30,
+		46.0,
+		(player_position - source_position).normalized(),
+		0.0,
+		1.0,
+		player_position
+	)
+
+
+func _enemy_destroy_event(enemy: EnemyState) -> StringName:
+	if (
+		enemy.role == &"boss_pylon"
+		and not enemy.boss_objective_id.is_empty()
+	):
+		return &"boss_module_resolved"
+	if (
+		enemy.role == &"stage_boss"
+		or enemy.health_class in [&"elite", &"priority", &"boss"]
+		or enemy.radius >= 30.0
+	):
+		return &"enemy_destroy_heavy"
+	return &"enemy_destroy_light"
 
 
 func _defeat_enemy(enemy: EnemyState, source: String) -> void:
@@ -3633,12 +3836,24 @@ func _defeat_enemy(enemy: EnemyState, source: String) -> void:
 	var module_result := {}
 	if role == &"boss_pylon" and not enemy.boss_objective_id.is_empty():
 		module_result = boss_exam_runtime.register_module_defeat(enemy.id)
+		resolved_boss_module_visuals.append({
+			"position": enemy.pos,
+			"radius": enemy.visual_radius,
+			"kind": enemy.boss_module_kind,
+			"index": enemy.boss_module_index,
+		})
 	if boss_practice.active:
 		enemy.alive = false
 		enemy.active = false
 		enemy_grid.update_actor(enemy)
 		enemy_store.queue_defeat(enemy)
-		_add_effect("destroy", enemy.pos, _enemy_color(enemy.role), 0.38, enemy.radius * 1.8)
+		_add_effect(
+			_enemy_destroy_event(enemy),
+			enemy.pos,
+			_enemy_color(enemy.role),
+			0.48,
+			enemy.radius * 1.8
+		)
 		_handle_boss_module_result(module_result)
 		return
 	var spreads_poison := StatusRuntime.contagion_enabled(enemy)
@@ -3695,7 +3910,13 @@ func _defeat_enemy(enemy: EnemyState, source: String) -> void:
 				spread_count += 1
 				if spread_count >= 8:
 					break
-	_add_effect("destroy", enemy.pos, _enemy_color(role), 0.65 if role in [&"stage_boss"] else 0.38, enemy.radius * 1.8)
+	_add_effect(
+		_enemy_destroy_event(enemy),
+		enemy.pos,
+		_enemy_color(role),
+		0.65 if role == &"stage_boss" else 0.42,
+		enemy.radius * 1.8
+	)
 	_play_sound(
 		&"destroy_priority"
 		if role in [&"stage_boss", &"generator", &"interceptor_tower", &"repair_tender", &"drone_carrier", &"beam_sentinel"]
@@ -3753,7 +3974,7 @@ func _try_group_completion_reward(group_id: String, position: Vector2) -> void:
 		if candidate.group_id == group_id and candidate.alive:
 			return
 	completed_group_rewards[group_id] = true
-	_add_effect("group_clear", position, Art.MINT, 0.28, 44.0)
+	_add_effect(&"group_clear", position, Art.MINT, 0.28, 44.0)
 
 
 func _clear_zones_owned_by_defeated_role(role: StringName) -> void:
@@ -3771,7 +3992,14 @@ func _damage_player(amount: float, source: String, blockable: bool, enemy_source
 		var absorbed := minf(player_barrier_strength, remaining)
 		player_barrier_strength -= absorbed
 		remaining -= absorbed
-		_add_effect("barrier_hit", player_position, Rules.CYAN, 0.20, 70.0)
+		_add_effect(
+			&"player_barrier_hit",
+			player_position,
+			Rules.CYAN,
+			0.20,
+			70.0,
+			-player_hull_direction
+		)
 		if player_barrier_strength <= 0.0:
 			_ui.notify(tr("NOTIFY_BARRIER_DEPLETED"), 1.6, Rules.CORAL)
 	if remaining <= 0.0:
@@ -3789,6 +4017,14 @@ func _damage_player(amount: float, source: String, blockable: bool, enemy_source
 			remaining
 		)
 	player_hit_flash = PLAYER_HIT_FLASH_DURATION
+	_add_effect(
+		&"player_hull_hit",
+		player_position,
+		Rules.CORAL,
+		0.20,
+		46.0,
+		-player_hull_direction
+	)
 	_grant_player_protection(PLAYER_HIT_INVULNERABILITY, &"hit")
 	if not _reduced_motion_enabled():
 		camera_shake = maxf(camera_shake, 3.0)
@@ -3857,7 +4093,14 @@ func _apply_dash_collision() -> void:
 			var push := (enemy.pos - player_position).normalized()
 			enemy.pos = _move_actor(enemy.pos, push * 45.0, enemy.radius, false)
 			enemy_grid.update_actor(enemy)
-			_add_effect("impact", enemy.pos, Rules.AMBER, 0.20, 34.0)
+			_add_effect(
+				&"player_ram_impact",
+				enemy.pos,
+				Rules.AMBER,
+				0.20,
+				34.0,
+				push
+			)
 
 
 func _repel_nearby_enemies(radius: float) -> void:
@@ -4285,7 +4528,13 @@ func _execute_boss_autonomous(event: Dictionary) -> void:
 			"zone":"boss_system",
 		})
 		if _append_enemy(sentinel):
-			_add_effect("spawn", sentinel.pos, Art.ATTACK_ARC, 0.55, 76.0)
+			_add_effect(
+				&"hostile_summon_arrival",
+				sentinel.pos,
+				Art.ATTACK_ARC,
+				0.55,
+				76.0
+			)
 		return
 	denied_zones.append({
 		"id":event["id"],
@@ -4334,6 +4583,7 @@ func _boss_combat_move(boss: EnemyState, delta: float, speed_scale: float) -> vo
 
 func _begin_boss_exam_phase(boss: EnemyState, next_phase: int) -> void:
 	_remove_boss_objective_modules()
+	resolved_boss_module_visuals.clear()
 	if _flush_defeated_enemies() > 0:
 		enemy_grid.rebuild(enemies)
 	boss.boss_phase = clampi(next_phase, 1, 3)
@@ -4395,7 +4645,7 @@ func _spawn_boss_objective_modules(
 		module.active = true
 		if _append_enemy(module):
 			_add_effect(
-				"spawn",
+				&"hostile_arrival",
 				position,
 				Art.BOSS_COMMAND,
 				0.55,
@@ -4444,7 +4694,13 @@ func _spawn_boss_exam_adds(
 		})
 		if add != null and _append_enemy(add):
 			spawned += 1
-			_add_effect("spawn", position, Art.DANGER, 0.42, 56.0)
+			_add_effect(
+				&"hostile_summon_arrival",
+				position,
+				Art.DANGER,
+				0.42,
+				56.0
+			)
 	boss_exam_runtime.note_adds_spawned(
 		spawned,
 		live_before + spawned
@@ -5225,6 +5481,7 @@ func _combat_presentation_snapshot() -> Dictionary:
 			run_build.level_of(&"escort_drone")
 		),
 		"support_fields":terrain_runtime.support_snapshot(),
+		"resolved_boss_modules":resolved_boss_module_visuals,
 		"ion_level": run_build.level_of(&"ion_field"),
 		"blade_level": run_build.level_of(&"orbit_blades"),
 		"escort_drone": run_build.has(&"escort_drone"),

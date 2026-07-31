@@ -193,7 +193,7 @@ func _check_boss_damage_and_guidance(run, ui) -> void:
 	)
 	_expect(
 		not run.effects.is_empty()
-			and String(run.effects[-1]["kind"]) == "boss_reduced_hit"
+			and String(run.effects[-1]["kind"]) == "boss_core_reduced_hit"
 			and is_equal_approx(float(run.effects[-1]["value"]), 20.0),
 		"sealed hit feedback exposes the actual applied damage"
 	)

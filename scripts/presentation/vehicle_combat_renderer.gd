@@ -17,6 +17,9 @@ const SecondaryCatalog = preload(
 const DefenseCatalog = preload(
 	"res://scripts/presentation/components/vehicle_defense_visual_catalog.gd"
 )
+const VisualEventCatalog = preload(
+	"res://scripts/presentation/components/vehicle_visual_event_catalog.gd"
+)
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd")
 const EnemyStore = preload("res://scripts/enemies/vehicle_enemy_store.gd")
@@ -28,7 +31,6 @@ const ENEMY_CAPACITY := EnemyStore.MAX_LIVE_HOSTILES
 const PROJECTILE_CAPACITY := 240
 const HOSTILE_PROJECTILE_CAPACITY := 120
 const EXPERIENCE_CAPACITY := 192
-const EFFECT_CAPACITY := 96
 const STATUS_ARC_CAPACITY := ENEMY_CAPACITY * 3
 const BUFFER_FLOATS_PER_INSTANCE := 12
 const CUSTOM_BATCH_AABB := AABB(Vector3(-8192.0, -8192.0, -1.0), Vector3(16384.0, 16384.0, 2.0))
@@ -44,12 +46,6 @@ const CARDINAL_DIRECTIONS := [
 	Vector2.RIGHT,
 	Vector2.UP,
 	Vector2.DOWN,
-]
-const TARGET_BRACKET_CORNERS := [
-	Vector2(-1.0, -1.0),
-	Vector2(1.0, -1.0),
-	Vector2(1.0, 1.0),
-	Vector2(-1.0, 1.0),
 ]
 const ION_RADII := [120.0, 140.0, 160.0]
 class BatchBuffer:
@@ -170,7 +166,6 @@ var _boss_variant_batches: Dictionary = {}
 var _projectile_trail_batches: Dictionary = {}
 var _experience_batches: Dictionary = {}
 var _status_batches: Dictionary = {}
-var _effect_batches: Dictionary = {}
 var _overlay_batches: Dictionary = {}
 var _batches: Array[BatchHandle] = []
 var _player_hull_batch: BatchHandle
@@ -236,6 +231,7 @@ func sync(
 		_sync_experience(shards, visible_world)
 		_sync_effects(effects, visible_world)
 		_sync_world_overlays(presentation, visible_world)
+		_sync_resolved_boss_modules(presentation, visible_world)
 	_apply_visible_counts()
 	queue_redraw()
 
@@ -416,17 +412,6 @@ func _build_batches() -> void:
 	_overlay_batches[&"diamond"] = _create_batch(
 		"Overlay_diamond", Visuals.effect_mesh(&"diamond"), 640, 4, &"overlay_diamond",
 		48
-	)
-	_effect_batches[&"ring"] = _overlay_batches[&"ring"]
-	_effect_batches[&"beam"] = _overlay_batches[&"beam"]
-	_effect_batches[&"diamond"] = _overlay_batches[&"diamond"]
-	_effect_batches[&"afterimage"] = _create_batch(
-		"Effect_afterimage",
-		Visuals.effect_mesh(&"afterimage"),
-		EFFECT_CAPACITY,
-		2,
-		&"effect_afterimage",
-		16
 	)
 	_player_engine_batch = _create_asset_batch(
 		"Player_engine",
@@ -648,12 +633,15 @@ func _sync_enemies(
 			)
 		_sync_collective_tactic_module(enemy, position, radius)
 		if enemy.threat_kind == &"ranged" and enemy.phase == &"startup":
-			_write_instance(
-				_overlay_batches[&"diamond"],
-				position - Vector2(0.0, radius + 13.0),
-				0.0,
-				Vector2(13.0, 10.0),
-				Art.MUSTARD
+			var attack_direction := enemy.committed_dir.normalized()
+			if attack_direction.is_zero_approx():
+				attack_direction = Vector2.RIGHT.rotated(angle)
+			_queue_semantic_texture(
+				&"cue/ranged_startup",
+				position + attack_direction * (radius + 17.0),
+				attack_direction.angle(),
+				15.0,
+				Color.WHITE
 			)
 		var shield_source_asset := _enemy_shield_asset_id(enemy)
 		if shield_source_asset != &"":
@@ -665,7 +653,14 @@ func _sync_enemies(
 				Color(1.0, 1.0, 1.0, 0.90)
 			)
 		_sync_status_arcs(enemy, position, radius)
-		_sync_enemy_semantic_overlays(enemy, position, radius, angle)
+		_sync_enemy_semantic_overlays(
+			enemy,
+			position,
+			radius,
+			angle,
+			player_position,
+			enemy.id == aim_target_id
+		)
 		if enemy.id == aim_target_id:
 			_sync_target_brackets(position, radius + 16.0)
 	for index in _health_overlay_candidate_count:
@@ -693,61 +688,17 @@ func _sync_collective_tactic_module(
 	var direction := enemy.collective_direction.normalized()
 	if direction.is_zero_approx():
 		direction = Vector2.RIGHT
-	var side := direction.rotated(PI * 0.5)
-	match phase:
-		&"gather":
-			_write_instance(
-				_overlay_batches[&"diamond"],
-				position - direction * radius * 0.56,
-				direction.angle(),
-				Vector2.ONE * 5.0,
-				Art.TEXT_MUTED
-			)
-			_last_tactic_module_count += 1
-		&"lock":
-			var tip := position + direction * radius * 0.78
-			_write_beam(
-				tip,
-				position - direction * radius * 0.08 + side * radius * 0.44,
-				5.0,
-				Art.BOSS_COMMAND
-			)
-			_write_beam(
-				tip,
-				position - direction * radius * 0.08 - side * radius * 0.44,
-				5.0,
-				Art.BOSS_COMMAND
-			)
-			_last_tactic_module_count += 1
-		&"execute":
-			_write_instance(
-				_overlay_batches[&"diamond"],
-				position + direction * radius * 0.62,
-				direction.angle(),
-				Vector2(8.0, 5.0),
-				Art.TEXT_PRIMARY
-			)
-			_write_beam(
-				position - direction * radius * 0.72,
-				position + direction * radius * 0.20,
-				4.0,
-				Art.BOSS_COMMAND
-			)
-			_last_tactic_module_count += 1
-		&"break":
-			_write_beam(
-				position - direction * radius * 0.42 - side * radius * 0.42,
-				position + direction * radius * 0.42 + side * radius * 0.42,
-				5.0,
-				Art.INK
-			)
-			_write_beam(
-				position - direction * radius * 0.42 + side * radius * 0.42,
-				position + direction * radius * 0.42 - side * radius * 0.42,
-				5.0,
-				Art.INK
-			)
-			_last_tactic_module_count += 1
+	var cue_id := StringName("cue/collective_%s" % String(phase))
+	if not AssetProvider.has_asset(cue_id):
+		return
+	_queue_semantic_texture(
+		cue_id,
+		position + direction.rotated(-PI * 0.5) * (radius + 15.0),
+		direction.angle(),
+		14.0,
+		Color.WHITE
+	)
+	_last_tactic_module_count += 1
 func _enemy_overlay_score(
 	enemy: EnemyState,
 	player_position: Vector2,
@@ -840,19 +791,12 @@ func _sync_enemy_priority_marker(
 	if enemy.role == &"boss_pylon":
 		return
 	if show_priority_marker:
-		_write_instance(
-			_overlay_batches[&"ring"],
-			position,
-			0.0,
-			Vector2.ONE * (radius + 7.0),
-			Color(Art.INK, 0.92)
-		)
-		_write_instance(
-			_overlay_batches[&"diamond"],
+		_queue_semantic_texture(
+			&"cue/priority_target",
 			position - Vector2(0.0, radius + 12.0),
 			0.0,
-			Vector2(9.0, 7.0),
-			Art.IVORY_BRIGHT
+			14.0,
+			Color.WHITE
 		)
 
 
@@ -860,58 +804,65 @@ func _sync_enemy_semantic_overlays(
 	enemy: EnemyState,
 	position: Vector2,
 	radius: float,
-	angle: float
+	angle: float,
+	player_position: Vector2,
+	is_current_target: bool
 ) -> void:
 	var forward := Vector2.RIGHT.rotated(angle)
-	var side := forward.rotated(PI * 0.5)
 	if enemy.role == &"boss_pylon":
-		_sync_boss_module_overlay(enemy, position, radius, forward, side)
+		_sync_boss_module_overlay(enemy, position, radius)
 		return
 	if enemy.role == &"stage_boss":
 		_sync_boss_core_overlay(enemy, position, radius)
-	if enemy.elite_trait == &"armored" and enemy.armor_structure > 0.0:
-		_write_instance_basis(
-			_overlay_batches[&"beam"],
-			position,
-			forward,
-			Vector2(radius * 1.08, 10.0),
-			Art.IVORY_BRIGHT
+	var elite_cue := StringName("cue/elite_%s" % String(enemy.elite_trait))
+	if (
+		enemy.elite_trait != &""
+		and AssetProvider.has_asset(elite_cue)
+		and (
+			enemy.elite_trait != &"armored"
+			or enemy.armor_structure > 0.0
 		)
-	elif enemy.elite_trait == &"overclocked":
-		_write_instance_basis(
-			_overlay_batches[&"diamond"],
-			position - forward * radius * 0.70,
-			forward,
-			Vector2(radius * 0.54, radius * 0.28),
-			Art.MUSTARD
-		)
-	elif enemy.elite_trait == &"heavy":
-		_write_instance_basis(
-			_overlay_batches[&"beam"],
-			position,
-			side,
-			Vector2(radius * 0.92, 9.0),
-			Art.TEXT_PRIMARY
+	):
+		_queue_semantic_texture(
+			elite_cue,
+			position - forward.rotated(-PI * 0.5) * (radius + 15.0),
+			angle,
+			14.0,
+			Color.WHITE
 		)
 	if enemy.role != &"mine":
 		return
 	var mobile := enemy.archetype == &"spark_minelet"
 	var activation_radius := 160.0 if mobile else 230.0
 	var damage_radius := 100.0 if mobile else 160.0
-	_write_instance(
-		_overlay_batches[&"ring"], position, 0.0,
-		Vector2.ONE * activation_radius, Color(Art.MUSTARD, 0.38)
-	)
-	_write_instance(
-		_overlay_batches[&"danger_ring"], position, 0.0,
-		Vector2.ONE * damage_radius, Color(Art.CORAL, 0.82)
-	)
 	if enemy.phase == &"mine_armed":
 		var fuse := 1.0 if mobile else 1.25
 		var readiness := 1.0 - clampf(enemy.phase_time / fuse, 0.0, 1.0)
 		_write_instance(
-			_overlay_batches[&"disk"], position, 0.0,
-			Vector2.ONE * damage_radius * readiness, Color(Art.CORAL, 0.16 + readiness * 0.22)
+			_overlay_batches[&"danger_ring"],
+			position,
+			0.0,
+			Vector2.ONE * damage_radius,
+			Color(Art.CORAL, 0.82)
+		)
+		_write_instance(
+			_overlay_batches[&"diamond"],
+			position + Vector2.RIGHT.rotated(-PI * 0.5 + readiness * TAU)
+				* damage_radius,
+			readiness * TAU,
+			Vector2(7.0, 5.0),
+			Art.IVORY_BRIGHT
+		)
+	elif (
+		is_current_target
+		or player_position.distance_to(position) <= activation_radius * 1.20
+	):
+		_write_instance(
+			_overlay_batches[&"ring"],
+			position,
+			0.0,
+			Vector2.ONE * activation_radius,
+			Color(Art.MUSTARD, 0.30)
 		)
 
 
@@ -920,131 +871,41 @@ func _sync_boss_core_overlay(
 	position: Vector2,
 	radius: float
 ) -> void:
-	var core_color := (
-		Art.PLAYER_REWARD
+	var cue_id := (
+		&"cue/boss_core_open"
 		if enemy.boss_module_state == &"open"
-		else Art.BOSS_COMMAND
+		else &"cue/boss_core_stable"
+		if enemy.boss_module_state == &"stable"
+		else &"cue/boss_core_sealed"
 	)
-	_write_instance(
-		_overlay_batches[&"diamond"],
+	_queue_semantic_texture(
+		cue_id,
 		position,
-		PI / 4.0,
-		Vector2.ONE * radius * 0.19,
-		core_color
+		0.0,
+		radius * 0.25,
+		Color.WHITE
 	)
 
 
 func _sync_boss_module_overlay(
 	enemy: EnemyState,
 	position: Vector2,
-	radius: float,
-	forward: Vector2,
-	side: Vector2
+	radius: float
 ) -> void:
-	var cue_color := (
-		Art.PLAYER_REWARD
+	var cue_id := (
+		&"cue/objective_active"
 		if enemy.boss_module_state == &"active"
-		else Art.TEXT_MUTED
+		else &"cue/objective_resolved"
+		if enemy.boss_module_state in [&"resolved", &"disabled"]
+		else &"cue/commit_locked"
 	)
-	var short := radius * 0.46
-	match enemy.boss_module_kind:
-		&"forge_plate":
-			for sign_value in [-1.0, 1.0]:
-				_write_instance_basis(
-					_overlay_batches[&"beam"],
-					position + side * sign_value * radius * 0.30,
-					forward,
-					Vector2(short, 7.0),
-					cue_color
-				)
-		&"segment_lock":
-			var tip := position + forward * radius * 0.42
-			_write_beam(
-				tip,
-				position - forward * radius * 0.20 + side * radius * 0.38,
-				6.0,
-				cue_color
-			)
-			_write_beam(
-				tip,
-				position - forward * radius * 0.20 - side * radius * 0.38,
-				6.0,
-				cue_color
-			)
-		&"relay_positive":
-			_write_instance_basis(
-				_overlay_batches[&"beam"],
-				position,
-				forward,
-				Vector2(short, 7.0),
-				cue_color
-			)
-			_write_instance_basis(
-				_overlay_batches[&"beam"],
-				position,
-				side,
-				Vector2(short, 7.0),
-				cue_color
-			)
-		&"relay_negative":
-			_write_instance_basis(
-				_overlay_batches[&"beam"],
-				position,
-				forward,
-				Vector2(short, 7.0),
-				cue_color
-			)
-		&"route_switch":
-			_write_beam(
-				position - forward * radius * 0.44,
-				position + forward * radius * 0.10,
-				7.0,
-				cue_color
-			)
-			_write_beam(
-				position + forward * radius * 0.08,
-				position + forward * radius * 0.42 + side * radius * 0.34,
-				7.0,
-				cue_color
-			)
-			_write_beam(
-				position + forward * radius * 0.08,
-				position + forward * radius * 0.42 - side * radius * 0.34,
-				7.0,
-				cue_color
-			)
-		&"armor_car":
-			for sign_value in [-1.0, 1.0]:
-				_write_instance_basis(
-					_overlay_batches[&"beam"],
-					position + forward * sign_value * radius * 0.24,
-					side,
-					Vector2(short, 8.0),
-					cue_color
-				)
-		_:
-			_write_instance(
-				_overlay_batches[&"diamond"],
-				position,
-				PI / 4.0,
-				Vector2.ONE * radius * 0.34,
-				cue_color
-			)
-			_write_instance_basis(
-				_overlay_batches[&"beam"],
-				position,
-				forward,
-				Vector2(short, 6.0),
-				Art.INK
-			)
-	if enemy.boss_module_state == &"active":
-		_write_instance(
-			_overlay_batches[&"diamond"],
-			position - side * radius * 0.72,
-			0.0,
-			Vector2(7.0, 5.0),
-			Art.TEXT_PRIMARY
-		)
+	_queue_semantic_texture(
+		cue_id,
+		position - Vector2(0.0, radius + 14.0),
+		0.0,
+		14.0,
+		Color.WHITE
+	)
 
 
 func _sync_status_arcs(enemy: EnemyState, position: Vector2, radius: float) -> void:
@@ -1135,6 +996,7 @@ func _sync_enemy_attack_telegraphs(
 ) -> void:
 	var startup := enemy.phase in [&"startup", &"boss_startup"]
 	var active := enemy.phase in [&"active", &"boss_active"]
+	var commit_marker_drawn := false
 	for telegraph in enemy.attack_telegraphs:
 		if not _telegraph_intersects_view(telegraph, visible_world):
 			continue
@@ -1167,8 +1029,9 @@ func _sync_enemy_attack_telegraphs(
 			and float(telegraph.get("active_width", 0.0)) > 0.0
 		):
 			_sync_active_beam(telegraph)
-		if startup:
+		if startup and not commit_marker_drawn:
 			_sync_commit_marker(telegraph)
+			commit_marker_drawn = true
 
 
 func _sync_commit_marker(telegraph: Dictionary) -> void:
@@ -1180,15 +1043,20 @@ func _sync_commit_marker(telegraph: Dictionary) -> void:
 		if telegraph.has("center")
 		else Vector2(telegraph.get("from", Vector2.ZERO))
 	)
-	if commit_mode == &"committed":
-		_write_instance(
-			_overlay_batches[&"diamond"], center, 0.0,
-			Vector2.ONE * 18.0, Art.CORAL
-		)
-	elif commit_mode == &"autonomous":
-		_write_instance(
-			_overlay_batches[&"ring"], center, 0.0,
-			Vector2.ONE * 22.0, Art.ATTACK_ARC
+	var cue_id := (
+		&"cue/commit_locked"
+		if commit_mode == &"committed"
+		else &"cue/commit_autonomous"
+		if commit_mode == &"autonomous"
+		else &""
+	)
+	if cue_id != &"":
+		_queue_semantic_texture(
+			cue_id,
+			center,
+			0.0,
+			18.0,
+			Color.WHITE
 		)
 
 
@@ -1220,7 +1088,6 @@ func _sync_projectile_telegraph(telegraph: Dictionary) -> void:
 	if length <= 0.001:
 		return
 	var direction := vector / length
-	var tangent := direction.rotated(PI * 0.5)
 	var half_width := maxf(1.0, float(telegraph["half_width"]))
 	var affinity := AttackContract.normalize_affinity(StringName(telegraph["affinity"]))
 	var readiness := clampf(float(telegraph.get("readiness", 1.0)), 0.0, 1.0)
@@ -1229,21 +1096,16 @@ func _sync_projectile_telegraph(telegraph: Dictionary) -> void:
 	var damage := float(telegraph.get("damage", 0.0))
 	var line_width := 4.0 if AttackContract.power_tier(damage) == &"heavy" else 3.0
 	var boundary_alpha := lerpf(0.42, 0.94, intensity)
-	var accent_alpha := lerpf(0.32, 0.82, intensity)
 	# A projectile startup is a short launch preview, not a full-lifetime lane.
-	# The muzzle bracket and cadence pips make volleys readable without filling
-	# the arena with overlapping capsule warnings.
+	# A directional authored cap distinguishes it from beam and charge lanes.
 	_write_beam(from, to, line_width, Color(color, boundary_alpha))
-	_write_danger_ring(from, minf(half_width, 16.0), Color(color, boundary_alpha))
-	for progress in [0.34, 0.68]:
-		var pip := from + direction * length * float(progress)
-		_write_beam(
-			pip - tangent * minf(half_width * 0.42, 13.0),
-			pip + tangent * minf(half_width * 0.42, 13.0),
-			2.0,
-			Color(color, accent_alpha)
-		)
-	_write_diamond(to, minf(half_width * 0.42, 10.0), Color(color, accent_alpha))
+	_queue_semantic_texture(
+		&"cue/ranged_startup",
+		from + direction * minf(18.0, length * 0.18),
+		direction.angle(),
+		minf(16.0, maxf(11.0, half_width)),
+		Color.WHITE
+	)
 
 
 func _sync_charge_telegraph(telegraph: Dictionary) -> void:
@@ -1264,11 +1126,7 @@ func _sync_charge_telegraph(telegraph: Dictionary) -> void:
 	var boundary_width := 4.0 if AttackContract.power_tier(damage) == &"heavy" else 3.0
 	var boundary_offset := maxf(0.0, half_width - boundary_width * 0.5)
 	var boundary_alpha := lerpf(0.38, 0.92, intensity)
-	var fill_alpha := lerpf(0.025, 0.085, intensity)
 	var accent_alpha := lerpf(0.30, 0.78, intensity)
-	_write_beam(from, to, half_width * 2.0, Color(color, fill_alpha))
-	_write_disk(from, half_width, Color(color, fill_alpha))
-	_write_disk(to, half_width, Color(color, fill_alpha))
 	_write_beam(
 		from + tangent * boundary_offset,
 		to + tangent * boundary_offset,
@@ -1309,14 +1167,9 @@ func _sync_corridor_telegraph(telegraph: Dictionary) -> void:
 	var damage := float(telegraph.get("damage", 0.0))
 	var boundary_width := 4.0 if AttackContract.power_tier(damage) == &"heavy" else 3.0
 	var boundary_offset := maxf(0.0, half_width - boundary_width * 0.5)
-	var fill_alpha := lerpf(0.035, 0.11, intensity)
 	var boundary_alpha := lerpf(0.36, 0.88, intensity)
 	var accent_alpha := lerpf(0.24, 0.68, intensity)
-	# A swept circle produces a capsule, not a rectangle. These endpoint disks
-	# make the warning footprint match the same point-to-segment hit test.
-	_write_beam(from, to, half_width * 2.0, Color(color, fill_alpha))
-	_write_disk(from, half_width, Color(color, fill_alpha))
-	_write_disk(to, half_width, Color(color, fill_alpha))
+	# Exact capsule boundaries remain visible without accumulating interior fill.
 	_write_beam(from + tangent * boundary_offset, to + tangent * boundary_offset, boundary_width, Color(color, boundary_alpha))
 	_write_beam(from - tangent * boundary_offset, to - tangent * boundary_offset, boundary_width, Color(color, boundary_alpha))
 	_write_danger_ring(from, half_width, Color(color, boundary_alpha))
@@ -1366,8 +1219,6 @@ func _sync_area_telegraph(telegraph: Dictionary) -> void:
 	var boundary_width := 4.0 if AttackContract.power_tier(damage) == &"heavy" else 3.0
 	var boundary_alpha := lerpf(0.38, 0.90, intensity)
 	var accent_alpha := lerpf(0.24, 0.66, intensity)
-	_write_disk(center, radius, Color(color, lerpf(0.025, 0.075, intensity)))
-	_write_disk(center, radius * 0.55, Color(color, lerpf(0.045, 0.15, intensity)))
 	_write_danger_ring(center, radius, Color(color, boundary_alpha))
 	match affinity:
 		AttackContract.THERMAL:
@@ -1424,23 +1275,68 @@ func _sync_effects(effects: Array[Dictionary], visible_world: Rect2) -> void:
 		var radius := float(effect["radius"])
 		if not visible_world.grow(radius).has_point(position):
 			continue
-		var kind := String(effect["kind"])
-		if kind == "boss_reduced_hit":
-			var direction := Vector2(effect.get("dir", Vector2.RIGHT)).normalized()
-			if direction.is_zero_approx():
-				direction = Vector2.RIGHT
-			var reduced_color := Color(effect["color"])
-			_write_beam(
-				position - direction * radius * 0.88,
-				position - direction * radius * 0.18,
-				4.0,
-				Color(reduced_color, 0.92 * (1.0 - progress))
-			)
-			_write_danger_ring(
+		var event_id := StringName(effect["kind"])
+		if not VisualEventCatalog.has_event(event_id):
+			continue
+		var event := VisualEventCatalog.descriptor(event_id)
+		var mode := StringName(event.get("mode", &"animation"))
+		var color := Color(effect["color"])
+		color.a *= 1.0 - progress
+		var direction := Vector2(effect.get("dir", Vector2.RIGHT)).normalized()
+		if direction.is_zero_approx():
+			direction = Vector2.RIGHT
+		var target := Vector2(effect.get("target", position))
+		var angle := (
+			(target - position).angle()
+			if event.get("rotation", &"") == &"target"
+			and not target.is_equal_approx(position)
+			else direction.angle()
+			if event.get("rotation", &"") == &"direction"
+			else 0.0
+		)
+		if mode == &"hud_only":
+			continue
+		if mode == &"live_emp_radius":
+			_write_ring(
 				position,
-				maxf(12.0, radius * 0.28),
-				Color(reduced_color, 0.72 * (1.0 - progress))
+				radius,
+				Color(color, maxf(0.20, color.a * 0.62))
 			)
+			continue
+		if mode == &"hull_afterimage":
+			_queue_semantic_texture(
+				&"attachment/player_hull",
+				position,
+				angle,
+				Art.PLAYER_VISUAL_RADIUS,
+				Color(color, color.a * 0.62)
+			)
+			continue
+		var draw_position := position
+		if mode == &"pickup_intake" and not target.is_equal_approx(position):
+			draw_position = position.lerp(target, ease(progress, 2.0))
+		elif mode == &"directed_transfer" and not target.is_equal_approx(position):
+			draw_position = position.lerp(target, progress)
+			_write_beam(
+				position,
+				target,
+				2.0,
+				Color(color, color.a * 0.34)
+			)
+		var animation_id := StringName(event.get("animation", &""))
+		if animation_id != &"":
+			var frame_asset := AssetProvider.animation_frame_asset(
+				animation_id,
+				progress
+			)
+			_queue_semantic_texture(
+				frame_asset,
+				draw_position,
+				angle,
+				radius,
+				color
+			)
+		if bool(event.get("floating_damage", false)):
 			_queue_floating_damage(
 				position + Vector2(
 					-34.0,
@@ -1450,57 +1346,8 @@ func _sync_effects(effects: Array[Dictionary], visible_world: Rect2) -> void:
 					maxi(1, roundi(float(effect.get("value", 0.0)))),
 					roundi(float(effect.get("multiplier", 1.0)) * 100.0),
 				],
-				Color(reduced_color, 1.0 - progress)
+				Color(color, 1.0 - progress)
 			)
-			continue
-		var animation_id := &""
-		if kind == "muzzle":
-			animation_id = &"muzzle_player_primary"
-		elif kind in ["impact", "reflect", "barrier_hit"]:
-			animation_id = &"impact_reflect"
-		elif kind == "dash_start":
-			animation_id = &"dash_start"
-		if animation_id != &"":
-			var frame_asset := AssetProvider.animation_frame_asset(
-				animation_id,
-				progress
-			)
-			var direction := Vector2(effect.get("dir", Vector2.RIGHT))
-			if direction.is_zero_approx():
-				direction = Vector2.RIGHT
-			_queue_semantic_texture(
-				frame_asset,
-				position,
-				direction.angle(),
-				radius,
-				Color(effect["color"])
-			)
-			continue
-		var family := &"ring"
-		var angle := 0.0
-		var scale := Vector2.ONE * lerpf(maxf(5.0, radius * 0.25), radius, progress)
-		if kind in ["impact", "muzzle"]:
-			family = &"diamond"
-			scale = Vector2.ONE * lerpf(8.0, radius, progress)
-		elif kind == "afterimage":
-			family = &"afterimage"
-			angle = Vector2(effect.get("dir", Vector2.RIGHT)).angle()
-			scale = Vector2.ONE * Art.PLAYER_VISUAL_RADIUS
-		elif kind == "reflect":
-			family = &"beam"
-			angle = Vector2(effect.get("dir", Vector2.RIGHT)).angle()
-			scale = Vector2(radius, 9.0)
-		elif kind == "dash_start":
-			family = &"beam"
-			angle = Vector2(effect.get("dir", Vector2.RIGHT)).angle()
-			scale = Vector2(
-				lerpf(radius * 1.65, radius * 0.25, progress),
-				lerpf(18.0, 4.0, progress)
-			)
-		var color := Color(effect["color"])
-		color.a *= 1.0 - progress
-		var batch: BatchHandle = _effect_batches[family]
-		_write_instance(batch, position, angle, scale, color)
 
 
 func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
@@ -1534,14 +1381,16 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 			)
 			_sync_area_telegraph(descriptor)
 		else:
-			var color := Art.attack_color(affinity)
 			_sync_area_telegraph(descriptor)
-			_write_disk(position, radius, Color(color, 0.18))
 	for trail in Array(state.get("trails", [])):
 		var position := Vector2(trail["pos"])
 		if visible_world.has_point(position):
 			var alpha := clampf(float(trail["time"]) / maxf(0.001, float(trail["duration"])), 0.0, 1.0)
-			_write_disk(position, float(trail["radius"]), Color(Art.MUSTARD, alpha * 0.28))
+			_write_ring(
+				position,
+				float(trail["radius"]),
+				Color(Art.MUSTARD, alpha * 0.64)
+			)
 	var player_position := Vector2(state["player_position"])
 	var hull_direction := Vector2(state["hull_direction"])
 	var aim_direction := Vector2(state["aim_direction"])
@@ -1744,6 +1593,36 @@ func _sync_support_fields(support_fields: Array) -> void:
 		_support_field_asset_count += 1
 
 
+func _sync_resolved_boss_modules(
+	state: Dictionary,
+	visible_world: Rect2
+) -> void:
+	for module_variant in Array(state.get("resolved_boss_modules", [])):
+		var module := Dictionary(module_variant)
+		var position := Vector2(module["position"])
+		var radius := float(module["radius"])
+		if not visible_world.grow(radius).has_point(position):
+			continue
+		_queue_semantic_texture(
+			_boss_module_asset_id_for(
+				StringName(module["kind"]),
+				int(module["index"]),
+				true
+			),
+			position,
+			0.0,
+			radius,
+			Color(0.52, 0.58, 0.66, 0.78)
+		)
+		_queue_semantic_texture(
+			&"cue/objective_resolved",
+			position - Vector2(0.0, radius + 14.0),
+			0.0,
+			14.0,
+			Color.WHITE
+		)
+
+
 func _queue_semantic_texture(
 	asset_id: StringName,
 	position: Vector2,
@@ -1852,8 +1731,20 @@ func _draw_floating_damage(damage_draw: FloatingDamageDraw) -> void:
 
 
 func _boss_module_asset_id(enemy: EnemyState) -> StringName:
-	var disabled := enemy.boss_module_state == &"disabled"
-	match enemy.boss_module_kind:
+	var disabled := enemy.boss_module_state in [&"disabled", &"resolved"]
+	return _boss_module_asset_id_for(
+		enemy.boss_module_kind,
+		enemy.boss_module_index,
+		disabled
+	)
+
+
+func _boss_module_asset_id_for(
+	module_kind: StringName,
+	module_index: int,
+	disabled: bool
+) -> StringName:
+	match module_kind:
 		&"forge_plate":
 			return (
 				&"boss_module/forge_plate_disabled"
@@ -1877,7 +1768,7 @@ func _boss_module_asset_id(enemy: EnemyState) -> StringName:
 		&"lattice_outer":
 			return (
 				&"boss_module/crown_lattice"
-				if enemy.boss_module_index == 0
+				if module_index == 0
 				else &"boss_module/crown_pylon"
 			)
 	return &"actor/boss_pylon"
@@ -1892,11 +1783,13 @@ func _enemy_shield_asset_id(enemy: EnemyState) -> StringName:
 
 
 func _sync_target_brackets(position: Vector2, radius: float) -> void:
-	for corner in TARGET_BRACKET_CORNERS:
-		var typed_corner := Vector2(corner)
-		var anchor: Vector2 = position + typed_corner * radius
-		_write_beam(anchor, anchor - Vector2(typed_corner.x, 0.0) * 18.0, 6.0, Art.MUSTARD)
-		_write_beam(anchor, anchor - Vector2(0.0, typed_corner.y) * 18.0, 6.0, Art.MUSTARD)
+	_queue_semantic_texture(
+		&"cue/target_bracket_corner",
+		position,
+		0.0,
+		radius + 8.0,
+		Color.WHITE
+	)
 
 
 func _write_beam(from: Vector2, to: Vector2, width: float, color: Color) -> void:

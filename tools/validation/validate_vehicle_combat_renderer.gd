@@ -141,7 +141,8 @@ func _run() -> void:
 	var shards: Array[ExperienceShard] = [shard]
 	var effects: Array[Dictionary] = [{
 		"pos":Vector2(360.0,320.0), "duration":1.0, "time":0.5,
-		"radius":20.0, "kind":"impact", "color":Color.WHITE,
+		"radius":20.0, "kind":&"projectile_damage_impact",
+		"color":Color.WHITE, "dir":Vector2.RIGHT,
 	}]
 	renderer.sync(
 		enemies, projectiles, hostile_projectiles, shards, effects, Rect2(0,0,1280,720),
@@ -174,21 +175,27 @@ func _run() -> void:
 	)
 	var corridor_caps := renderer.get_node("Overlay_disk") as MultiMeshInstance2D
 	var corridor_boundaries := renderer.get_node("Overlay_danger_ring") as MultiMeshInstance2D
-	var corridor_cap_buffer := corridor_caps.multimesh.buffer
+	var corridor_boundary_buffer := corridor_boundaries.multimesh.buffer
 	_expect(
-		corridor_caps.multimesh.visible_instance_count >= 3
+		corridor_caps.multimesh.visible_instance_count == 1
 			and corridor_boundaries.multimesh.visible_instance_count == 2
 			and int(snapshot["support_field_glyph_count"]) == 1,
-		"corridor warning keeps its endpoint disks and rings while the support field uses one shared recipe glyph"
+		"corridor warning adds no interior fill while the beneficial support field keeps one fill and one shared recipe glyph"
 	)
 	_expect(
-		Vector2(corridor_cap_buffer[3], corridor_cap_buffer[7]).is_equal_approx(
+		Vector2(
+			corridor_boundary_buffer[3],
+			corridor_boundary_buffer[7]
+		).is_equal_approx(
 			Vector2(300.0, 300.0)
 		)
-			and Vector2(corridor_cap_buffer[15], corridor_cap_buffer[19]).is_equal_approx(
+			and Vector2(
+				corridor_boundary_buffer[15],
+				corridor_boundary_buffer[19]
+			).is_equal_approx(
 				Vector2(500.0, 300.0)
 			),
-		"corridor warning caps stay centered on the simulated segment endpoints"
+		"corridor warning outline caps stay centered on the simulated segment endpoints"
 	)
 	var enemy_batch := renderer.get_node("Enemy_chaser") as MultiMeshInstance2D
 	var enemy_buffer := enemy_batch.multimesh.buffer
@@ -361,11 +368,11 @@ func _run() -> void:
 		"off-screen attacker body remains culled"
 	)
 	_expect(
-		area_disk.multimesh.visible_instance_count == 2
+		area_disk.multimesh.visible_instance_count == 0
 			and area_ring.multimesh.visible_instance_count >= 2,
-		"an on-screen center-weighted danger footprint renders independently of its off-screen owner"
+		"an on-screen outline-only danger footprint renders independently of its off-screen owner"
 	)
-	var early_area_buffer := area_disk.multimesh.buffer
+	var early_area_buffer := area_ring.multimesh.buffer
 	var early_area_color := Color(
 		early_area_buffer[8],
 		early_area_buffer[9],
@@ -377,7 +384,7 @@ func _run() -> void:
 		[offscreen_enemy], no_projectiles, no_projectiles, [], [],
 		Rect2(0,0,1280,720), Vector2.ZERO, 0.0, true
 	)
-	var late_area_buffer := area_disk.multimesh.buffer
+	var late_area_buffer := area_ring.multimesh.buffer
 	var late_area_color := Color(
 		late_area_buffer[8],
 		late_area_buffer[9],
@@ -387,7 +394,7 @@ func _run() -> void:
 	_expect(
 		late_area_color.get_luminance() < early_area_color.get_luminance()
 			and late_area_color.a > early_area_color.a,
-		"area warning continuously darkens and gains contrast toward impact"
+		"area outline continuously darkens and gains contrast toward impact"
 	)
 	offscreen_enemy.role = &"stage_boss"
 	offscreen_enemy.phase = &"boss_active"
@@ -396,9 +403,9 @@ func _run() -> void:
 		Rect2(0,0,1280,720), Vector2.ZERO, 0.0, true
 	)
 	_expect(
-		area_disk.multimesh.visible_instance_count == 2
+		area_disk.multimesh.visible_instance_count == 0
 			and area_ring.multimesh.visible_instance_count >= 2,
-		"boss area footprint stays visible for its complete damaging window"
+		"boss area outline stays visible for its complete damaging window"
 	)
 	offscreen_enemy.phase = &"active"
 	offscreen_enemy.role = &"controller"
@@ -417,7 +424,7 @@ func _run() -> void:
 	)
 	var beam_batch := renderer.get_node("Overlay_beam") as MultiMeshInstance2D
 	_expect(
-		beam_batch.multimesh.visible_instance_count >= 5,
+		beam_batch.multimesh.visible_instance_count >= 4,
 		"active off-screen beam keeps its exact danger boundary and beam body visible"
 	)
 	renderer.sync([], no_projectiles, no_projectiles, [], [], Rect2(0,0,1280,720), Vector2.ZERO, 0.0, false)

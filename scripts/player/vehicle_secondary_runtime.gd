@@ -60,7 +60,15 @@ func update(delta: float, player_position: Vector2, player_direction: Vector2, b
 	for enemy_id in _expired_cooldown_ids:
 		orbit_target_cooldowns.erase(enemy_id)
 	_update_ion(delta, player_position, build, enemies, line_of_sight, query_radius, _damage_output)
-	_update_orbit(player_position, build, enemies, line_of_sight, query_radius, _damage_output)
+	_update_orbit(
+		player_position,
+		build,
+		enemies,
+		line_of_sight,
+		query_radius,
+		_damage_output,
+		_effects_output
+	)
 	_update_mines(delta, player_position, player_direction, build, enemies, line_of_sight, query_radius, _damage_output, _effects_output)
 	_update_drone(delta, player_position, build, enemies, line_of_sight, query_radius, _damage_output, _effects_output)
 	return _result
@@ -102,7 +110,15 @@ func _update_ion(delta: float, origin: Vector2, build: VehicleRunBuild, enemies:
 			_append_damage_intent(output, enemy, definition.value(level) * ION_TICK, "Ion Field")
 
 
-func _update_orbit(origin: Vector2, build: VehicleRunBuild, enemies: Array[EnemyState], line_of_sight: Callable, query_radius: Callable, output: Array[Dictionary]) -> void:
+func _update_orbit(
+	origin: Vector2,
+	build: VehicleRunBuild,
+	enemies: Array[EnemyState],
+	line_of_sight: Callable,
+	query_radius: Callable,
+	output: Array[Dictionary],
+	effects: Array[Dictionary]
+) -> void:
 	var definition: VehicleSecondaryDefinition = definitions.get(&"orbit_blades")
 	var level := build.level_of(definition.upgrade_id) if definition != null else 0
 	if level <= 0:
@@ -119,6 +135,12 @@ func _update_orbit(origin: Vector2, build: VehicleRunBuild, enemies: Array[Enemy
 			if blade_position.distance_squared_to(enemy.pos) <= contact_radius * contact_radius and line_of_sight.call(blade_position, enemy.pos, 2.0):
 				orbit_target_cooldowns[enemy_id] = ORBIT_HIT_COOLDOWN
 				_append_damage_intent(output, enemy, definition.value(level), "Orbit Blades")
+				effects.append({
+					"event_id": &"secondary_orbit_blade_impact",
+					"pos": enemy.pos,
+					"target": enemy.pos + (enemy.pos - blade_position).normalized(),
+					"radius": 30.0,
+				})
 
 
 func _update_mines(delta: float, origin: Vector2, direction: Vector2, build: VehicleRunBuild, enemies: Array[EnemyState], line_of_sight: Callable, query_radius: Callable, output: Array[Dictionary], effects: Array[Dictionary]) -> void:
@@ -150,7 +172,11 @@ func _update_mines(delta: float, origin: Vector2, direction: Vector2, build: Veh
 			var contact_radius := radius + enemy.radius
 			if _eligible(enemy) and Vector2(mine["pos"]).distance_squared_to(enemy.pos) <= contact_radius * contact_radius and line_of_sight.call(Vector2(mine["pos"]), enemy.pos, 3.0):
 				_append_damage_intent(output, enemy, definition.value(level), "Wake Mine")
-		effects.append({"pos":Vector2(mine["pos"]), "radius":radius})
+		effects.append({
+			"event_id": &"secondary_wake_mine_detonation",
+			"pos": Vector2(mine["pos"]),
+			"radius": radius,
+		})
 		mines.remove_at(index)
 
 
@@ -176,7 +202,12 @@ func _update_drone(delta: float, origin: Vector2, build: VehicleRunBuild, enemie
 			best_distance = distance
 	if best != null:
 		_append_damage_intent(output, best, definition.value(level), "Escort Drone")
-		effects.append({"pos":drone_position, "target":best.pos})
+		effects.append({
+			"event_id": &"secondary_escort_impact",
+			"pos": best.pos,
+			"target": best.pos + (best.pos - drone_position).normalized(),
+			"radius": 34.0,
+		})
 
 
 func _timer_ready(timer_id: StringName, delta: float, interval: float) -> bool:
