@@ -29,6 +29,9 @@ const AttackTelegraphs = preload("res://scripts/combat/vehicle_attack_telegraph_
 const SpatialGrid = preload("res://scripts/combat/vehicle_spatial_grid.gd")
 const AudioDirector = preload("res://scripts/presentation/vehicle_audio_director.gd")
 const CombatRenderer = preload("res://scripts/presentation/vehicle_combat_renderer.gd")
+const VisualEventCaptureFixture = preload(
+	"res://scripts/presentation/components/vehicle_visual_event_capture_fixture.gd"
+)
 const StageBackdrop = preload("res://scripts/vehicle/vehicle_stage_backdrop.gd")
 const BossPatterns = preload("res://scripts/bosses/vehicle_boss_patterns.gd")
 const BossExamCatalog = preload("res://scripts/bosses/vehicle_boss_exam_catalog.gd")
@@ -6200,6 +6203,7 @@ func _run_capture_sequence() -> void:
 	await _capture_boss_preview()
 	await _capture_stage_map_evidence()
 	if _capture_full_evidence():
+		await _capture_visual_event_evidence()
 		await _capture_damage_feedback_evidence()
 		await _capture_collision_overlay_evidence()
 		await _capture_all_boss_evidence()
@@ -6545,6 +6549,48 @@ func _capture_damage_feedback_evidence() -> void:
 	_save_capture("08-player-barrier-only.png")
 	if settings != null:
 		settings.reduced_motion = original_reduced_motion
+
+
+func _capture_visual_event_evidence() -> void:
+	var colors := [Art.SYSTEM, Art.MUSTARD, Art.CORAL, Art.MINT]
+	for group_variant in VisualEventCaptureFixture.GROUPS:
+		var group := Dictionary(group_variant)
+		var event_ids := Array(group["events"])
+		_capture_prepare_stage(0, true)
+		_clear_enemies()
+		_clear_projectiles()
+		effects.clear()
+		for index in event_ids.size():
+			var column := index % 4
+			var row := index / 4
+			var position := player_position + Vector2(
+				-330.0 + float(column) * 220.0,
+				-180.0 + float(row) * 180.0
+			)
+			var direction := Vector2.RIGHT.rotated(
+				float(index) * TAU / maxf(1.0, float(event_ids.size()))
+			)
+			effects.append({
+				"kind":StringName(event_ids[index]),
+				"pos":position,
+				"color":colors[index % colors.size()],
+				"time":0.52,
+				"duration":1.0,
+				"radius":54.0,
+				"dir":direction,
+				"target":position + direction * 86.0,
+				"value":18.0,
+				"multiplier":0.20,
+			})
+		mode = RunMode.PAUSED
+		print(JSON.stringify({
+			"capture_group":String(group["id"]),
+			"events":event_ids,
+		}))
+		await _settle_capture()
+		_save_capture(
+			"09-effects-%s.png" % String(group["id"]).replace("_", "-")
+		)
 
 
 func _capture_collision_overlay_evidence() -> void:

@@ -23,6 +23,9 @@ const VisualEventCatalog = preload(
 	"res://scripts/presentation/components/vehicle_visual_event_catalog.gd"
 )
 const UiAssets = preload("res://scripts/ui/vehicle_ui_asset_provider.gd")
+const EventCaptureFixture = preload(
+	"res://scripts/presentation/components/vehicle_visual_event_capture_fixture.gd"
+)
 
 const EXPECTED_ANIMATIONS := [
 	"muzzle_player_primary",
@@ -159,6 +162,8 @@ func _initialize() -> void:
 			)
 		_validate_event_catalog(animations)
 		_validate_event_producers()
+		for error in EventCaptureFixture.validate():
+			_failures.append(String(error))
 
 	if not FileAccess.file_exists(UI_MANIFEST_PATH):
 		_failures.append("missing UI asset manifest: %s" % UI_MANIFEST_PATH)
