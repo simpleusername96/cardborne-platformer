@@ -3,7 +3,7 @@ type: evidence
 status: active
 owner: BK
 created: 2026-07-31
-last_reviewed: 2026-07-31
+last_reviewed: 2026-08-01
 topic: Cardborne semantic-v3 visual approval
 scope: Current asset inventory and review-only replacement candidates
 source: ./00-current-asset-inventory-grid.png
@@ -47,30 +47,52 @@ related:
 [`GAMEPLAY_VISUAL_TAXONOMY.md`](../../GAMEPLAY_VISUAL_TAXONOMY.md)다.
 구조벽, 엄폐물, 파괴 장벽, 통과형 에너지 장벽, 기능 장판, 위험 장판과
 순간이동 게이트를 서로 바꿔 부르지 않는다. v1 리포트의 local decision은
-의미가 달라졌으므로 v2로 자동 승계하지 않는다.
+의미가 달라졌으므로 v2로 자동 승계하지 않는다. v3는 사용자가 내보낸
+v2 JSON의 `수정 필요` 7건과 `보류` 2건만 승계하고, 나머지는 미검토로
+유지한다. 원본 export는
+[`asset-switch-approval-feedback-v2.json`](./asset-switch-approval-feedback-v2.json)에
+보관한다.
 
-새 후보는 `generated/semantic-v4/`에 source와 alpha candidate를 함께
-보관한다. 현재 묶음은 다음과 같다.
+기존 미검토 후보는 `generated/semantic-v4/`, 피드백 수정 후보는
+`generated/semantic-v5/`에 source와 alpha candidate를 함께 보관한다.
+v5 재승인 단위는 다음과 같다.
+
+| family | 재승인 단위 | 한 생성 이미지의 identity 수 |
+| --- | --- | --- |
+| `floor-base` | plain 기본 타일, restrained alternate | 2 |
+| `overdrive-field` | 실제 판정과 같은 반경 180 원형 장판 | 1 |
+| `repair-pickup` | 더 밝은 green/mint 휴대형 회복 pickup | 1 |
+| `upgrade-offense` | primary, secondary, skill, element | 4 |
+| `upgrade-chassis` | passive, defense, dash, mobility | 4 |
+
+engine, secondary 방향과 boss stream은 새 runtime PNG가 필요한 항목이
+아니다. `generated/semantic-v5/previews/`의 비교 이미지는 기존 asset을
+재사용해 코드 변경 전후만 보여주는 비정본 evidence다.
+
+기존 v4 미검토 묶음은 다음과 같다.
 
 | family | 승인 단위 |
 | --- | --- |
 | `floor-decay` | 정상, 마모·균열, 독성 노출, 용암 노출 |
 | `structure-family` | 독립 엄폐물, 보상 구역 장벽 3상태 |
 | `gate-barrier` | 원형 순간이동 게이트 2상태, 통과형 에너지 장벽 2상태 |
-| `world-functional` | 회복 장판 base/active와 공격 증폭 장판 |
-| `collectibles-containers-and-pickups` | 상자, 회복, 경험치 회수, 단순 XP |
+| `world-functional` | 회복 장판 base/active만 유효; overdrive는 v5로 대체 |
+| `collectibles-containers-and-pickups` | 상자, 경험치 회수, 단순 XP; 회복은 v5로 대체 |
 | `projectile-delivery` | player bolt, hostile bolt, missile, breach slug |
 | `hostile-tier` | ordinary, elite, boss projectile tier |
 | `laser-beam` | hostile startup cap, repeat core, endpoint contact, boss heavy segment |
-| `impact-feedback` | bolt hit, missile hit, reflect, barrier contact |
+| `impact-feedback` | 사용자 보류; integration 대상 아님 |
 
-`generated/semantic-v4/previews/`는 큰 개별 viewer를 위한 기계적 crop이며
-별도 production asset owner가 아니다.
+`generated/semantic-v4/previews/`와 `generated/semantic-v5/previews/`는 큰
+개별 viewer를 위한 기계적 crop·비교 evidence이며 별도 production asset
+owner가 아니다.
 
 이전 `generated/world-v4/world-obstacle-candidates.png`의 cover/bulkhead 안은
 새 `structure-family`가 대체하므로 승인·integration 대상으로 사용하지
-않는다. `world-functional-candidates.png`에서는 회복 장판과 overdrive만
-유효하며, 작은 arc terminal 안은 새 `gate-barrier`가 대체한다.
+않는다. `world-functional-candidates.png`에서는 회복 장판 base/active만
+유효하다. overdrive 안은 v5 원형 장판이, 작은 arc terminal 안은 새
+`gate-barrier`가 대체한다. `structure-family`의 독립 엄폐물도 사용자가
+필요성 판단을 보류했으므로 integration하지 않는다.
 
 ### 현재 에셋 마스터 그리드
 

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Cardborne 에셋 전환 승인 리포트 v2</title>
+  <title>Cardborne 에셋 전환 승인 리포트 v3</title>
   <style>
     :root {
       color-scheme: dark;
@@ -354,6 +354,15 @@
     .toolbar button { padding: 0 14px; }
     .toolbar .primary { border-color: var(--amber); color: var(--amber); }
     .footnote { margin: 18px 0 0; color: var(--muted); font-size: 13px; }
+    .feedback-seed {
+      margin-top: 14px;
+      padding: 14px 16px;
+      border: 1px solid rgba(242, 183, 53, .5);
+      border-radius: 10px;
+      background: rgba(242, 183, 53, .08);
+    }
+    .feedback-seed h3 { margin: 0 0 5px; color: var(--amber); font-size: 14px; }
+    .feedback-seed p { margin: 0; }
     .upgrade-mock {
       width: min(330px, 88%);
       height: 94%;
@@ -373,15 +382,35 @@
     .upgrade-art {
       display: grid;
       place-items: center;
+      min-height: 0;
+      overflow: hidden;
       border: 1px solid var(--line);
       border-radius: 8px;
       background: rgba(7, 11, 17, .65);
     }
-    .upgrade-art img { width: 72%; height: 72%; object-fit: contain; }
+    .upgrade-art img { width: clamp(64px, 14vw, 118px); height: clamp(64px, 14vw, 118px); object-fit: contain; }
     .upgrade-name { font-size: 22px; font-weight: 900; }
     .upgrade-level { color: var(--amber); font-size: 13px; font-weight: 900; }
     .upgrade-desc { color: var(--muted); font-size: 14px; }
     .upgrade-effect { padding-top: 10px; border-top: 1px solid var(--line); color: var(--support); font-weight: 800; }
+    .upgrade-mock.is-current {
+      grid-template-rows: auto auto 1fr auto;
+      overflow: hidden;
+    }
+    .upgrade-current-head { display: flex; align-items: center; gap: 10px; }
+    .upgrade-current-head img { width: 38px; height: 32px; object-fit: contain; }
+    .upgrade-current-head span { color: var(--muted); font-size: 11px; font-weight: 900; }
+    .upgrade-current-copy { min-height: 0; overflow: hidden; position: relative; color: var(--muted); }
+    .upgrade-current-copy::after {
+      content: "";
+      position: absolute;
+      inset: auto 0 0;
+      height: 32px;
+      background: linear-gradient(transparent, rgba(16, 25, 35, .98));
+    }
+    .upgrade-pips { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    .upgrade-pips i { height: 12px; border: 1px solid var(--line); background: #0d1620; }
+    .upgrade-pips i:first-child, .upgrade-pips i:nth-child(2) { background: var(--amber); }
     .reference-panel {
       align-self: stretch;
       width: 100%;
@@ -465,9 +494,9 @@
   <main class="app">
     <header class="topbar">
       <div>
-        <p class="eyebrow">Approval gate · report v2</p>
+        <p class="eyebrow">Approval gate · report v3</p>
         <h1>에셋 전환 승인 리포트</h1>
-        <p class="lede">게임 역할별 카테고리를 먼저 고정하고, 각 항목을 큰 화면에서 하나씩 비교합니다. 후보 이미지는 승인용이며 아직 runtime에 연결하지 않았습니다.</p>
+        <p class="lede">v2의 부분 피드백을 실제 후보와 코드 비교 화면에 반영했습니다. 수정된 항목은 다시 검토하고, 미검토 항목은 이전 후보와 상태를 그대로 유지합니다.</p>
       </div>
       <div class="summary" aria-label="판정 현황">
         <div><strong id="resolved-count">0</strong><span>판정 완료</span></div>
@@ -478,9 +507,9 @@
 
     <div class="scope-banner">
       <strong>현재 단계</strong>
-      <span>에셋·동적 표현 승인만 진행합니다.</span>
+      <span>수정 후보·동적 표현 재승인만 진행합니다.</span>
       <span>맵/전투/UI 코드 수정과 성능 검증은 전체 승인 뒤에 시작합니다.</span>
-      <span>기존 v1 판정은 분류 변경으로 자동 승계하지 않습니다.</span>
+      <span>v2 수정 7건은 재검토, 보류 2건은 보류 상태로 승계했습니다.</span>
     </div>
 
     <nav class="tabs-shell" aria-label="에셋 카테고리">
@@ -536,6 +565,11 @@
           <a id="sheet-link" class="sheet-link hidden" href="#" target="_blank" rel="noreferrer">후보 원본 sheet 열기</a>
         </section>
 
+        <section id="feedback-seed" class="feedback-seed hidden">
+          <h3>v2에서 받은 피드백</h3>
+          <p id="feedback-seed-note"></p>
+        </section>
+
         <section class="decision">
           <div>
             <h3>이 항목의 승인 질문</h3>
@@ -557,7 +591,7 @@
       <button type="button" id="reset-decisions">판정 초기화</button>
       <button type="button" id="export-decisions" class="primary">판정 JSON 내보내기</button>
     </div>
-    <p class="footnote">모든 필수 항목을 승인한 뒤에만 production asset 분리, runtime 연결, 코드 수정, UI 적용을 시작합니다. 성능 검증은 전체 asset/UI 교체 이후 마지막 단계입니다.</p>
+    <p class="footnote">수정 후보를 포함한 필수 항목을 승인한 뒤에만 production asset 분리, runtime 연결, 코드 수정, UI 적용을 시작합니다. 성능 검증은 전체 asset/UI 교체 이후 마지막 단계입니다.</p>
   </main>
 
   <dialog id="image-dialog">
@@ -584,17 +618,18 @@
 
       var items = [
         {
-          id: 'floor-tile-compiler', category: 'map', title: '알고리즘 기반 바닥 타일', action: 'REUSE + CODE', tone: 'code',
+          id: 'floor-tile-compiler', category: 'map', title: '알고리즘 기반 바닥 타일', action: 'REPLACE + CODE', tone: 'replace',
           asset: 'world_shared_floor_00/01 · VehicleWorldMeshBuilder',
           current: './evidence/current-map-runtime.png',
-          target: './evidence/report-v2/approved-map-tobe-reference.png',
+          target: './generated/semantic-v5/floor-base-candidates.png',
           currentCaption: '현재 바닥은 어두운 procedural band 위주이고, 만들어 둔 floor PNG는 provider에서 제외되어 실제 맵에 연결되지 않습니다.',
-          targetCaption: '이 overview는 타일 밀도와 전역 명도 대비 기준입니다. 안쪽 gate·장벽·엄폐물 모양은 정본이 아니며 각 카테고리의 큰 개별 후보가 이를 대체합니다.',
+          targetCaption: '새 기본 타일 2종은 넓은 단색 면과 최소 seam만 사용합니다. 알고리즘은 이 두 variant를 회전·배치하되 기능 없는 문양을 추가하지 않습니다.',
           asis: '맵 geometry는 authored stage data로 존재하지만 시각 바닥은 넓은 단색 면과 낮은 대비 선으로 축약됩니다. 타일 variant와 topology 연결이 없습니다.',
-          tobe: '288 world-unit grid에서 1×1, 2×1, 1×2, 2×2 panel을 deterministic하게 선택하고 walkable polygon에 clip합니다. 무작위 장식 문양은 생성하지 않습니다.',
-          implementation: '이미지는 기존/승인 타일 family를 사용하고, 실제 배치는 코드 수정이 필요합니다. collision과 stage layout은 그대로 두고 presentation compiler만 연결합니다.',
+          tobe: 'plain base 2종을 288 world-unit grid에서 deterministic하게 선택·회전하고 walkable polygon에 clip합니다. 무작위 장식 문양은 생성하지 않습니다.',
+          implementation: '두 새 이미지와 실제 deterministic 배치 코드가 모두 필요합니다. collision과 stage layout은 그대로 두고 presentation compiler만 연결합니다.',
           files: ['vehicle_world_mesh_builder.gd', 'vehicle_semantic_asset_provider.gd', 'world_shared_floor_00/01.png'],
-          question: '이 타일 밀도와 밝기 대비를 맵 바닥의 정본으로 승인합니까?'
+          sheet: './generated/semantic-v5/floor-base-candidates.png',
+          question: '이 plain 기본 타일 2종을 알고리즘 배치의 정본 후보로 승인합니까?'
         },
         {
           id: 'floor-decay-states', category: 'map', title: '통행 마모·붕괴 바닥', action: 'ADD + CODE', tone: 'add',
@@ -614,14 +649,16 @@
           id: 'floor-decoration-removal', category: 'map', title: '기능 없는 바닥 문양 제거', action: 'REMOVE + CODE', tone: 'remove',
           asset: 'presentation-only decals / ambient motifs',
           current: './evidence/current-map-runtime.png',
-          target: './generated/semantic-v4/previews/floor-intact.png',
+          target: './generated/semantic-v5/previews/floor-base-plain.png',
           currentCaption: '현재 화면에는 기능이 없는 방사형 문양, 작은 node와 낮은 대비 표식이 전투 cue와 함께 보입니다.',
-          targetCaption: '기본 타일 seam과 실제 기능 지형만 남깁니다. 전투 정보가 없는 꽃무늬·원형 glyph는 만들지 않습니다.',
+          targetCaption: 'plain base와 최소 perimeter seam만 남깁니다. 전투 정보가 없는 꽃무늬·원형 glyph·node·service rail은 만들지 않습니다.',
           asis: '장식과 기능 cue가 비슷한 밝기와 형태를 사용해 무엇을 피하거나 밟아야 하는지 판단하기 어렵습니다.',
           tobe: '무의미한 decal은 삭제하고 service rail도 희소하게 제한합니다. 기능이 있으면 해당 기능 카테고리의 고유 asset로 승격합니다.',
-          implementation: '새 이미지보다 decoration spawn/draw 제거가 핵심입니다. 타일 자체의 낮은 대비 seam은 유지합니다.',
+          implementation: 'plain 타일 2종 교체와 decoration spawn/draw 제거가 함께 필요합니다. 미승인인 마모·붕괴·독성·용암 상태는 이번 재생성 범위가 아닙니다.',
           files: ['VehicleWorldMeshBuilder decoration pass', 'world descriptor instances'],
-          question: '기능 없는 바닥 문양을 전부 제거하는 방향을 승인합니까?'
+          sheet: './generated/semantic-v5/floor-base-candidates.png',
+          previousFeedback: '타일을 더 간단하고 plain하게 만들고, 연관된 기본 바닥 요소도 함께 단순화할 것.',
+          question: '이 plain 타일과 기능 없는 문양 전부 제거 방향을 승인합니까?'
         },
         {
           id: 'structural-wall-family', category: 'wall', title: '맵 가장자리·중앙 구조벽', action: 'REUSE + CODE', tone: 'code',
@@ -637,18 +674,19 @@
           question: '이 밝은 wall family를 외곽과 중앙 구조벽에 공통 사용해도 됩니까?'
         },
         {
-          id: 'standalone-cover', category: 'wall', title: '독립 엄폐물', action: 'REPLACE + CODE', tone: 'replace',
+          id: 'standalone-cover', category: 'wall', title: '독립 엄폐물', action: 'HOLD · ROLE DECISION', tone: 'truth',
           asset: 'terrain_solid_cover_block',
           current: '../../../../art/gameplay/semantic-v2/world/terrain_solid_cover_block.png',
           target: './generated/semantic-v4/previews/structure-cover.png',
           currentCaption: '현재 엄폐물은 어둡고 사각 tile처럼 보여 구조벽·바닥과 역할이 겹칩니다.',
-          targetCaption: '열린 공간에 하나씩 놓이는 밝고 낮은 독립 obstacle입니다. 연속 배치할 수 없는 silhouette로 만듭니다.',
+          targetCaption: '이 후보는 보류 상태입니다. 구조벽과 달리 열린 공간의 이동·탄환·시야를 막는 전술 역할이 확인됐지만, 필요성부터 결정하기 전에는 교체하지 않습니다.',
           asis: '고정 blocker가 줄지어 배치되면 별도 구조벽이 있는데도 임시 벽처럼 보입니다.',
           tobe: '엄폐물은 국소적인 우회와 사격 차단만 만듭니다. 생성 규칙에서 이웃 cover 연속 배치를 금지합니다.',
-          implementation: 'asset 교체와 placement constraint 코드가 모두 필요합니다.',
+          implementation: '이번 revision에서는 이미지 생성·asset switch·placement 변경을 하지 않습니다. 보류 해제 시에만 독립 배치 규칙과 후보를 함께 재검토합니다.',
           files: ['terrain_solid_cover_block.png', 'field layout obstacle placement'],
           sheet: './generated/semantic-v4/structure-family-candidates.png',
-          question: '이 밝은 독립 obstacle과 “연속 배치 금지” 규칙을 승인합니까?'
+          previousFeedback: '중앙 구조벽이 있는데 독립 엄폐물이 별도로 필요한지 먼저 검토할 것.',
+          question: '독립 엄폐물은 현재 보류 상태로 유지합니다.'
         },
         {
           id: 'destructible-loot-barrier', category: 'barrier', title: '보상 구역 파괴 장벽', action: 'ADD + CODE', tone: 'add',
@@ -710,15 +748,16 @@
           id: 'overdrive-field', category: 'terrain', title: '공격 증폭 장판', action: 'REPLACE', tone: 'replace',
           asset: 'facility_overdrive_lane',
           current: '../../../../art/gameplay/semantic-v2/world/facility_overdrive_lane.png',
-          target: './generated/semantic-v4/previews/overdrive-field.png',
+          target: './generated/semantic-v5/overdrive-field-candidate.png',
           currentCaption: '현재 lane은 어두운 rectangle과 작은 chevron이어서 바닥 장식처럼 보입니다.',
-          targetCaption: '밝은 amber 진행 mass와 고유한 연속 chevron으로 공격 증폭 기능을 회복 장판과 구분합니다.',
+          targetCaption: '실제 판정과 같은 넓은 원형 장판입니다. 밝은 amber segmented ring과 단순 power-amplification 표식으로 회복 장판과 구분합니다.',
           asis: '실제 효과 영역보다 시각 면이 약하고 회복/위험 지형과 같은 계층으로 읽히지 않습니다.',
-          tobe: '실제 buff footprint 전체를 이미지가 차지하며 amber 방향 pattern은 움직임이 아니라 공격 증폭 상태를 표시합니다.',
-          implementation: 'image swap과 footprint scale 일치가 필요합니다. buff 수치와 tick은 기존 owner를 유지합니다.',
+          tobe: '반경 180 원형 buff footprint 전체를 이미지가 차지합니다. 얇은 lane과 이동 방향 화살표는 제거합니다.',
+          implementation: '새 원형 이미지와 radius 180에 맞춘 scale이 필요합니다. buff 수치, tick과 collision 없음 계약은 기존 owner를 유지합니다.',
           files: ['facility_overdrive_lane.png', 'terrain visual renderer'],
-          sheet: './generated/world-v4/world-functional-candidates.png',
-          question: '이 밝은 amber 장판을 공격 증폭의 고유 형태로 승인합니까?'
+          sheet: './generated/semantic-v5/overdrive-field-candidate.png',
+          previousFeedback: '공격력 증가도 회복처럼 장판인지 확인하고, 좁은 lane이 의도된 것이 아니라면 형태를 바로잡을 것.',
+          question: '좁은 lane 대신 실제 판정과 같은 반경 180 원형 공격 증폭 장판을 승인합니까?'
         },
         {
           id: 'poison-lava-hazards', category: 'terrain', title: '독성·용암 위험 장판', action: 'ADD + CODE', tone: 'add',
@@ -752,14 +791,15 @@
           id: 'repair-pickup', category: 'reward', title: '휴대형 회복 픽업', action: 'REPLACE', tone: 'replace',
           asset: 'pickup/repair',
           current: '../../../../art/gameplay/semantic-v2/pickups/pickup_repair.png',
-          target: './generated/semantic-v4/previews/collectible-repair.png',
+          target: './generated/semantic-v5/repair-pickup-candidate.png',
           currentCaption: '현재 작은 plus glyph는 회복 장판과 모양이 겹치고 배경에서 잘 보이지 않습니다.',
-          targetCaption: 'mint 의료 core와 inward clamp silhouette로 작은 수집물임을 표시합니다.',
+          targetCaption: '기존 휴대형 plus/clamp silhouette는 유지하되, 더 밝고 포화된 green/mint 면을 사용해 배경에서 즉시 찾게 합니다.',
           asis: '기체 접촉 시 즉시 회복하는 loose pickup입니다.',
           tobe: 'stationary repair field와 다른 footprint를 사용하고, 직접 충돌 수집 동작은 그대로 유지합니다.',
           implementation: 'image swap만 필요하며 직접 충돌 수집은 이미 구현되어 있으므로 회귀 방지만 합니다.',
           files: ['pickup_repair.png', 'vehicle_run.gd pickup contact'],
-          sheet: './generated/semantic-v4/collectibles-containers-and-pickups-candidate.png',
+          sheet: './generated/semantic-v5/repair-pickup-candidate.png',
+          previousFeedback: '현재 후보보다 더 밝게 하고 초록색 비중을 늘릴 것.',
           question: '작은 mint 수집물과 넓은 회복 장판의 구분을 승인합니까?'
         },
         {
@@ -859,71 +899,76 @@
           question: '실제 판정 면 + authored edge/cap의 혼합 방식을 승인합니까?'
         },
         {
-          id: 'damage-feedback-family', category: 'feedback', title: '피격 source·impact 효과', action: 'REPLACE + CODE', tone: 'replace',
+          id: 'damage-feedback-family', category: 'feedback', title: '피격 source·impact 효과', action: 'HOLD', tone: 'truth',
           asset: 'hull hit / projectile impact / reflect / barrier contact',
           current: '../semantic-rework-v2-proposal/16-effects-runtime-asis-tobe.png',
           target: './generated/semantic-v4/impact-feedback-candidates.png',
           currentCaption: '현재 여러 사건이 유사한 방사형 꽃·원 burst로 보여 무엇에 맞았는지 알기 어렵습니다.',
-          targetCaption: 'bolt hit, missile impact, reflect, barrier contact를 각기 다른 방향성 silhouette와 짧은 감쇠로 구분합니다.',
+          targetCaption: '이 후보는 보류 상태입니다. 이번 revision에서 새 이미지를 만들거나 runtime에 연결하지 않습니다.',
           asis: 'synthetic QA fixture와 일부 runtime atlas가 큰 radial shape를 반복합니다.',
           tobe: '80–180ms 동안 hit normal 방향 spark, 짧은 core flash와 source-side accent를 표시합니다. 지속 glow cloud는 쓰지 않습니다.',
-          implementation: '새 frame/atlas 또는 retained particle image와 hit normal/source 전달 코드가 필요합니다.',
+          implementation: '보류 해제 전까지 기존 효과를 유지합니다. 새 frame/atlas와 hit normal/source 전달 코드는 실행 계획에서 제외합니다.',
           files: ['effect visual catalog', 'fx_* atlases', 'combat impact event payload'],
           sheet: './generated/semantic-v4/impact-feedback-candidates.png',
-          question: '사건별 방향성 impact family와 짧은 수명을 승인합니까?'
+          previousFeedback: '현재 단계에서는 별도 피격 feedback family가 필요하지 않아 보류.',
+          question: '피격 feedback family는 현재 보류 상태로 유지합니다.'
         },
         {
-          id: 'boss-stream-projectile', category: 'feedback', title: '보스 줄사격 표현', action: 'CODE + ASSET', tone: 'code',
+          id: 'boss-stream-projectile', category: 'feedback', title: '보스 줄사격 표현', action: 'REUSE + CODE', tone: 'code',
           asset: 'boss fan/lane projectile emission',
-          current: './evidence/current-boss-attack-runtime.png',
-          target: './generated/semantic-v4/hostile-tier-candidates.png',
+          current: './generated/semantic-v5/previews/boss-stream-asis.png',
+          target: './generated/semantic-v5/previews/boss-stream-tobe.png',
           currentCaption: '줄지어 같은 작은 탄환이 발사되면 하나의 위험 구간인지 개별 shot인지 판독하기 어렵습니다.',
-          targetCaption: '발사 묶음마다 origin cap과 cadence pulse를 주고, 각 shot은 boss heavy silhouette를 사용하되 화면을 긴 점선으로 채우지 않습니다.',
+          targetCaption: '보스 전용 heavy 탄환을 새로 만들지 않습니다. 같은 일반 적 탄환 family를 재사용하고 짧은 묶음 사이 pause만 코드로 구분합니다.',
           asis: '동일 간격 projectile chain이 반복되어 단조롭고 공격 시작과 종료가 약합니다.',
-          tobe: '짧은 burst group, 명확한 발사 origin, 묶음 사이 pause와 endpoint impact로 구분합니다. 실제 패턴 변경은 별도 승인 대상입니다.',
-          implementation: '이번 범위에서는 visual emission grouping과 projectile art를 수정합니다. boss AI/pattern 설계 자체는 건드리지 않습니다.',
-          files: ['boss projectile emission renderer', 'hostile boss projectile asset'],
-          sheet: './generated/semantic-v4/hostile-tier-candidates.png',
-          question: '긴 점선 대신 짧은 발사 묶음과 boss heavy shot을 쓰는 표현을 승인합니까?'
+          tobe: '일반 탄환의 최종 승인 asset을 그대로 쓰고, 긴 등간격 chain만 짧은 burst group과 pause로 읽히게 합니다. 실제 boss pattern 설계는 별도 범위입니다.',
+          implementation: '새 boss projectile PNG는 만들지 않습니다. ordinary hostile projectile selector 재사용과 emission cadence/grouping 표시만 코드에서 수정합니다.',
+          files: ['boss projectile emission renderer', 'projectile/hostile_{affinity}'],
+          previousFeedback: '보스 줄사격 탄환을 별도 heavy 디자인으로 만들지 말고 일반 탄환처럼 디자인할 것.',
+          question: '보스 전용 탄환 없이 일반 적 탄환 family 재사용 + 짧은 묶음 표시를 승인합니까?'
         },
         {
           id: 'upgrade-card-layout', category: 'ui', title: '업그레이드 카드 이미지 패널', action: 'REUSE + CODE', tone: 'code',
-          asset: 'upgrade_card_* + upgrade glyphs',
-          current: '../../../../art/ui/production/semantic-v2/surfaces/upgrade_card_normal.png',
-          targetMode: 'upgrade',
+          asset: 'upgrade_card_* + 8 live upgrade family images',
+          currentMode: 'upgradeCurrent',
+          targetMode: 'upgradeTarget',
           currentCaption: '이미지 panel은 존재하지만 art가 작고 텍스트 흐름이 불명확하며 level text와 3칸 pip가 중복됩니다.',
-          targetCaption: '상단 약 1/3 image → 이름 → 현재 level → 설명 → 실제 효과. 3칸 pip는 완전히 제거합니다.',
+          targetCaption: '상단 약 1/3에 새 단순 family image를 크게 배치하고 이름 → 현재 level → 설명 → 실제 효과 순서로 구성합니다. 3칸 pip는 완전히 제거합니다.',
           asis: '일부 카드 설명이 vertical overflow하고, glyph가 38×32 수준이며 level과 pip가 같은 정보를 반복합니다.',
           tobe: 'image-backed shell은 유지하고 실제 text/icon node를 safe inset 안에 재배치합니다. 스크롤과 자동 축소 없이 KO/EN을 맞춥니다.',
-          implementation: '새 panel 이미지가 아니라 기존 image shell을 재사용하는 layout code 수정입니다. 모든 supported viewport와 언어에서 overflow를 검증합니다.',
-          files: ['vehicle_upgrade_choice_card.gd', 'upgrade_card_*.png', 'upgrade glyph renderer'],
-          question: 'pip 없는 단일 level 표시와 상단 1/3 이미지 구조를 승인합니까?'
+          implementation: '기존 image-backed panel shell은 유지합니다. 8개 live family image를 교체하고 layout code·validator를 함께 수정해 KO/EN overflow를 0으로 만듭니다.',
+          files: ['vehicle_upgrade_choice_card.gd', 'upgrade_card_*.png', '8 upgrade family images', 'validate_vehicle_upgrade_ui.gd'],
+          sheet: './generated/semantic-v5/previews/upgrade-family-contact-sheet.png',
+          previousFeedback: 'overflow를 고치고 카드 안의 이미지 전부를 더 직관적이고 단순한 스타일로 다시 만들 것.',
+          question: '새 8개 family image와 pip 없는 상단 1/3 카드 구조를 승인합니까?'
         },
         {
           id: 'engine-dash-only', category: 'motion', title: '엔진 고정·dash 전용 불꽃', action: 'CODE', tone: 'code',
           asset: 'actor_player_engine + dash afterimage',
-          current: '../../../../art/gameplay/semantic-v2/actors/player/actor_player_engine.png',
-          target: '../../../../art/gameplay/semantic-v2/actors/player/actor_player_engine.png',
+          current: './generated/semantic-v5/previews/engine-motion-asis.png',
+          target: './generated/semantic-v5/previews/engine-motion-tobe.png',
           currentCaption: 'engine body는 asset으로 존재하지만 이동/추력 표현 때문에 꺾이거나 평상시에도 exhaust가 보이는 인상을 줍니다.',
           targetCaption: 'engine body는 rear socket에 고정합니다. idle과 일반 이동은 불꽃 없음, dash 때만 짧은 밝은 rear flare와 잔상을 표시합니다.',
           asis: 'engine transform과 speed/dash exhaust가 같은 시각 흐름으로 읽힙니다.',
           tobe: '기체 body/engine 이미지는 다시 그리지 않습니다. dash 0.20초에만 방향성 afterimage와 cyan-white flare를 켭니다.',
-          implementation: 'asset swap 없이 transform ownership과 exhaust visibility 조건을 수정합니다.',
+          implementation: '새 래스터 asset은 필요 없습니다. rigid attachment는 이미 맞으므로 평상시 exhaust draw를 끄고 기존 dash-start frame과 afterimage를 dash_active에서만 재사용합니다.',
           files: ['vehicle_combat_renderer.gd engine/exhaust draw', 'dash visual event'],
+          previousFeedback: 'AS-IS와 TO-BE가 같은 이미지라 차이를 확인할 수 없음.',
           question: '평상시 불꽃 없음 + dash 전용 flare 규칙을 승인합니까?'
         },
         {
-          id: 'orbit-facing', category: 'motion', title: '회전 보조무기 바깥 방향 정렬', action: 'CODE', tone: 'code',
-          asset: 'secondary/orbit_blade',
-          current: '../../../../art/gameplay/semantic-v2/weapons/secondaries/secondary_orbit_blade.png',
-          target: '../../../../art/gameplay/semantic-v2/weapons/secondaries/secondary_orbit_blade.png',
-          currentCaption: '현재 sprite 방향이 orbit 자체와 묶여 기체를 향하거나 비스듬히 놓일 수 있습니다.',
-          targetCaption: '각 위치에서 player → blade 벡터를 바라보게 해 항상 기체에서 바깥으로 뻗습니다.',
-          asis: '회전 위치는 맞지만 visual orientation contract가 radial outward로 고정되지 않았습니다.',
-          tobe: '위치와 hitbox는 유지하고 sprite rotation만 outward vector angle로 계산합니다.',
-          implementation: '새 이미지가 필요 없는 작은 transform code 수정입니다.',
-          files: ['secondary orbit presentation draw/transform'],
-          question: '기존 asset 유지 + 항상 바깥 방향 정렬을 승인합니까?'
+          id: 'orbit-facing', category: 'motion', title: '보조무기 배치별 방향 규칙', action: 'CODE', tone: 'code',
+          asset: 'secondary presentation transforms',
+          current: './generated/semantic-v5/previews/secondary-facing-asis.png',
+          target: './generated/semantic-v5/previews/secondary-facing-tobe.png',
+          currentCaption: '현재 orbit blade는 여러 개가 같은 각도를 공유하고, escort drone은 기체 안쪽을 향합니다.',
+          targetCaption: '궤도 칼날과 호위 드론은 player→weapon 벡터로 바깥을 향합니다. 발사된 seeker는 속도 방향, 고정 지뢰·이온장은 무방향입니다.',
+          asis: '모든 보조무기에 하나의 방향 계약이 없고, 궤도 위치와 sprite forward가 서로 어긋납니다.',
+          tobe: '궤도형만 radial outward, 발사체는 velocity, 고정형은 heading 없음으로 배치 방식별 규칙을 분리합니다.',
+          implementation: '새 이미지가 필요 없습니다. 기존 sprite와 hitbox는 유지하고 presentation transform 계산만 수정합니다.',
+          files: ['vehicle_combat_renderer.gd secondary transforms'],
+          previousFeedback: 'AS-IS와 TO-BE가 같아 보이며, 방향 규칙은 회전 칼날뿐 아니라 모든 보조무기에 적용되어야 함.',
+          question: '궤도형=바깥 방향, 발사체=속도 방향, 고정형=무방향 규칙을 승인합니까?'
         },
         {
           id: 'canonical-glossary', category: 'reference', title: '정본 카테고리 glossary', action: 'SPEC', tone: 'truth',
@@ -953,11 +998,22 @@
         }
       ];
 
-      var storageKey = 'cardborne.asset-switch-approval.v2';
+      var storageKey = 'cardborne.asset-switch-approval.v3';
       var saved;
       try { saved = JSON.parse(localStorage.getItem(storageKey) || '{}'); }
       catch (error) { saved = {}; }
       saved.decisions = saved.decisions || {};
+      if (!saved.seededFromV2) {
+        saved.decisions['standalone-cover'] = {
+          choice: 'hold',
+          note: '중앙 구조벽이 있다는 건 그게 벽이라는 거고, 그럼 엄폐물이 필요 없지 않아?'
+        };
+        saved.decisions['damage-feedback-family'] = {
+          choice: 'hold',
+          note: '별로 필요 없는 거 같은데 아직은.'
+        };
+        saved.seededFromV2 = true;
+      }
 
       var activeCategory = saved.activeCategory || categories[0].id;
       var activeItem = saved.activeItem || items[0].id;
@@ -1029,13 +1085,24 @@
         return panel;
       }
 
-      function upgradePanel() {
+      function upgradeCurrentPanel() {
+        var card = document.createElement('div');
+        card.className = 'upgrade-mock is-current';
+        card.innerHTML =
+          '<div class="upgrade-current-head"><img src="../../../../art/gameplay/semantic-v2/hud/upgrade_primary.png" alt="현재 작은 주무기 glyph"><span>PRIMARY · 희귀</span></div>' +
+          '<div class="upgrade-name">관통 탄두 강화</div>' +
+          '<div class="upgrade-current-copy">탄환이 추가 대상을 관통합니다. 다음 레벨에서는 관통 횟수와 피해 보정이 함께 증가합니다. 긴 한국어 설명은 카드 아래의 효과·행동 문구와 3칸 레벨 표시를 밀어내며, 현재 구현은 내용을 재배치하지 않고 잘라서 숨깁니다.</div>' +
+          '<div class="upgrade-pips" aria-label="중복된 3칸 레벨 표시"><i></i><i></i><i></i></div>';
+        return card;
+      }
+
+      function upgradeTargetPanel() {
         var card = document.createElement('div');
         card.className = 'upgrade-mock';
         card.innerHTML =
-          '<div class="upgrade-art"><img src="../../../../art/gameplay/semantic-v2/hud/upgrade_primary.png" alt="주무기 업그레이드 이미지"></div>' +
+          '<div class="upgrade-art"><img src="./generated/semantic-v5/previews/upgrade-primary.png" alt="새 주무기 업그레이드 이미지"></div>' +
           '<div class="upgrade-name">관통 탄두</div>' +
-          '<div class="upgrade-level">LEVEL 2 · PRIMARY</div>' +
+          '<div class="upgrade-level">현재 레벨 2 · 주무기</div>' +
           '<div class="upgrade-desc">탄환이 추가 대상을 관통합니다. 설명은 지정된 안전 영역 안에서 줄바꿈되고 넘치지 않습니다.</div>' +
           '<div class="upgrade-effect">관통 횟수 +1</div>';
         return card;
@@ -1044,7 +1111,8 @@
       function renderMedia(root, item, side) {
         root.innerHTML = '';
         var mode = item[side + 'Mode'];
-        if (mode === 'upgrade') root.appendChild(upgradePanel());
+        if (mode === 'upgradeCurrent') root.appendChild(upgradeCurrentPanel());
+        else if (mode === 'upgradeTarget') root.appendChild(upgradeTargetPanel());
         else if (mode === 'glossary') root.appendChild(glossaryPanel());
         else if (mode === 'references') root.appendChild(referencesPanel());
         else root.appendChild(makeImage(item[side], item.title + ' ' + (side === 'current' ? '현재' : '승인 후보')));
@@ -1131,6 +1199,13 @@
         document.getElementById('item-implementation').textContent = currentItem.implementation;
         document.getElementById('item-files').textContent = currentItem.files.join(' · ');
         document.getElementById('approval-question').textContent = currentItem.question;
+        var feedbackSeed = document.getElementById('feedback-seed');
+        if (currentItem.previousFeedback) {
+          document.getElementById('feedback-seed-note').textContent = currentItem.previousFeedback;
+          feedbackSeed.classList.remove('hidden');
+        } else {
+          feedbackSeed.classList.add('hidden');
+        }
         var sheetLink = document.getElementById('sheet-link');
         if (currentItem.sheet) {
           sheetLink.href = currentItem.sheet;
@@ -1147,9 +1222,7 @@
           button.setAttribute('aria-current', String(button.dataset.item === currentItem.id));
         });
         var nextHash = '#' + activeCategory + '/' + activeItem;
-        if (location.protocol === 'file:') {
-          if (location.hash !== nextHash) location.hash = nextHash;
-        } else {
+        if (location.protocol !== 'file:') {
           history.replaceState(null, '', nextHash);
         }
         persist();
@@ -1201,17 +1274,19 @@
       dialog.addEventListener('click', function (event) { if (event.target === dialog) dialog.close(); });
 
       document.getElementById('reset-decisions').addEventListener('click', function () {
-        if (!confirm('v2 리포트의 판정과 메모를 모두 초기화할까요?')) return;
+        if (!confirm('v3 리포트의 판정과 메모를 모두 초기화할까요? 보류 2건은 다시 자동 입력됩니다.')) return;
         localStorage.removeItem(storageKey);
         location.reload();
       });
 
       document.getElementById('export-decisions').addEventListener('click', function () {
         var payload = {
-          report: 'Cardborne asset switch approval v2',
+          report: 'Cardborne asset switch approval v3',
           taxonomy: 'docs/design/GAMEPLAY_VISUAL_TAXONOMY.md',
           exported_at: new Date().toISOString(),
-          complete: items.every(function (item) { return saved.decisions[item.id] && saved.decisions[item.id].choice === 'approved'; }),
+          complete: items.every(function (item) {
+            return saved.decisions[item.id] && ['approved', 'hold'].indexOf(saved.decisions[item.id].choice) >= 0;
+          }),
           items: items.map(function (item) {
             var decision = saved.decisions[item.id] || {};
             return {
@@ -1220,14 +1295,15 @@
               title: item.title,
               action: item.action,
               choice: decision.choice || 'unreviewed',
-              note: decision.note || ''
+              note: decision.note || '',
+              previous_feedback: item.previousFeedback || ''
             };
           })
         };
         var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
         var link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
-        link.download = 'cardborne-asset-switch-approval-v2.json';
+        link.download = 'cardborne-asset-switch-approval-v3.json';
         link.click();
         URL.revokeObjectURL(link.href);
       });

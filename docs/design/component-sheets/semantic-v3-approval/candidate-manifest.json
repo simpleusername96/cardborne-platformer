@@ -1,6 +1,6 @@
 {
-  "schema_version": 2,
-  "pack_id": "cardborne-semantic-v4-approval-review",
+  "schema_version": 3,
+  "pack_id": "cardborne-semantic-v5-feedback-review",
   "runtime_integration": false,
   "approval_report": "asset-switch-approval-report.html",
   "taxonomy": "../../GAMEPLAY_VISUAL_TAXONOMY.md",
@@ -8,7 +8,131 @@
   "facing": "+X/right for directional combat assets",
   "max_asset_identities_per_generated_image": 4,
   "current_approval_unit": "role_categorized_map_combat_ui_visual_contract",
-  "approval_policy": "Do not split into production assets or change runtime code until the required items are explicitly approved in report v2.",
+  "approval_policy": "Do not split candidates into production assets or change runtime code until the required items, including all v5 revisions, are explicitly approved in report v3.",
+  "approval_mapping_contract": "Every required record declares report_items. Without approval_mapping_by_identity, all listed report items must be approved before the record may execute. With approval_mapping_by_identity, each identity is gated only by its mapped report item. Multiple candidate records may intentionally share one atomic report decision.",
+  "feedback_round": {
+    "source": "asset-switch-approval-feedback-v2.json",
+    "resolved_at_source": 9,
+    "revised_items": [
+      "floor-decoration-removal",
+      "overdrive-field",
+      "repair-pickup",
+      "boss-stream-projectile",
+      "upgrade-card-layout",
+      "engine-dash-only",
+      "orbit-facing"
+    ],
+    "held_items": [
+      "standalone-cover",
+      "damage-feedback-family"
+    ],
+    "derived_reapproval_items": ["floor-tile-compiler"],
+    "derived_reapproval_reason": "The plain floor feedback changes the base tile consumed by the algorithm item, so asset and placement decisions must both approve before integration.",
+    "unreviewed_policy": "All other report items retain their previous candidate and unreviewed state. No implicit approval is inferred."
+  },
+  "revision_candidates": [
+    {
+      "id": "floor_base_plain",
+      "category": "map_floor_tile",
+      "status": "pending_user_reapproval",
+      "required_for_execution": true,
+      "file": "generated/semantic-v5/floor-base-candidates.png",
+      "chroma_source": "generated/semantic-v5/floor-base-source.png",
+      "canvas": [1536, 1024],
+      "identities": ["floor_base_plain", "floor_base_restrained_alternate"],
+      "report_items": ["floor-tile-compiler", "floor-decoration-removal"],
+      "approval_rule": "all listed report items must be approved",
+      "supersedes_role_only": ["world_shared_floor_00", "world_shared_floor_01"],
+      "does_not_supersede": "floor_decay; its states remain unreviewed and unimplemented",
+      "sha256": "d411cf9bd30aa6ced62b1af967a3de3f4354c4d9c331eaab9975e28dd40b4782"
+    },
+    {
+      "id": "overdrive_field_radial",
+      "category": "functional_terrain",
+      "status": "pending_user_reapproval",
+      "required_for_execution": true,
+      "file": "generated/semantic-v5/overdrive-field-candidate.png",
+      "chroma_source": "generated/semantic-v5/overdrive-field-source.png",
+      "canvas": [1254, 1254],
+      "identities": ["overdrive_field_radius_180"],
+      "report_items": ["overdrive-field"],
+      "approval_rule": "single report item",
+      "supersedes": "generated/world-v4/world-functional-candidates.png#overdrive_field",
+      "runtime_truth": "circular non-blocking radius 180 buff footprint",
+      "sha256": "9e710507d7565f4c773f4322d6544a410aa2f458d4f165a45a85061d442cb31d"
+    },
+    {
+      "id": "repair_pickup_bright",
+      "category": "container_and_pickup",
+      "status": "pending_user_reapproval",
+      "required_for_execution": true,
+      "file": "generated/semantic-v5/repair-pickup-candidate.png",
+      "chroma_source": "generated/semantic-v5/repair-pickup-source.png",
+      "canvas": [1254, 1254],
+      "identities": ["repair_pickup_bright_green_mint"],
+      "report_items": ["repair-pickup"],
+      "approval_rule": "single report item",
+      "supersedes": "generated/semantic-v4/collectibles-containers-and-pickups-candidate.png#repair_pickup",
+      "sha256": "4a47b09b4ca1e2d334b0fc278a08109a604354b4c2e25632d1fec97c98ab82c6"
+    },
+    {
+      "id": "upgrade_offense_families",
+      "category": "upgrade_card_family_art",
+      "status": "pending_user_reapproval",
+      "required_for_execution": true,
+      "file": "generated/semantic-v5/upgrade-offense-candidates.png",
+      "chroma_source": "generated/semantic-v5/upgrade-offense-source.png",
+      "canvas": [1254, 1254],
+      "identities": ["upgrade_primary", "upgrade_secondary", "upgrade_skill", "upgrade_element"],
+      "report_items": ["upgrade-card-layout"],
+      "approval_group": "upgrade_card_all_8_live_families",
+      "approval_rule": "atomic with upgrade_chassis_families",
+      "sha256": "7232df4a2aa7a2a6bc4c8b0ff23c1a246988c6862ef064956da324b4d1a3413c"
+    },
+    {
+      "id": "upgrade_chassis_families",
+      "category": "upgrade_card_family_art",
+      "status": "pending_user_reapproval",
+      "required_for_execution": true,
+      "file": "generated/semantic-v5/upgrade-chassis-candidates.png",
+      "chroma_source": "generated/semantic-v5/upgrade-chassis-source.png",
+      "canvas": [1254, 1254],
+      "identities": ["upgrade_passive", "upgrade_defense", "upgrade_dash", "upgrade_mobility"],
+      "report_items": ["upgrade-card-layout"],
+      "approval_group": "upgrade_card_all_8_live_families",
+      "approval_rule": "atomic with upgrade_offense_families",
+      "sha256": "712982bc230e763797132ad001d157163b3b67b17016e3a08a6c3f61568a7bde"
+    }
+  ],
+  "code_only_revision_previews": [
+    {
+      "id": "boss-stream-projectile",
+      "status": "pending_user_reapproval",
+      "required_for_execution": true,
+      "report_items": ["boss-stream-projectile"],
+      "asset_policy": "reuse the ordinary hostile projectile family; no boss-stream-specific raster",
+      "current": "generated/semantic-v5/previews/boss-stream-asis.png",
+      "target": "generated/semantic-v5/previews/boss-stream-tobe.png"
+    },
+    {
+      "id": "engine-dash-only",
+      "status": "pending_user_reapproval",
+      "required_for_execution": true,
+      "report_items": ["engine-dash-only"],
+      "asset_policy": "reuse current engine and dash-start assets; exhaust only while dash_active",
+      "current": "generated/semantic-v5/previews/engine-motion-asis.png",
+      "target": "generated/semantic-v5/previews/engine-motion-tobe.png"
+    },
+    {
+      "id": "orbit-facing",
+      "status": "pending_user_reapproval",
+      "required_for_execution": true,
+      "report_items": ["orbit-facing"],
+      "asset_policy": "reuse current secondary sprites; fix presentation transforms by placement mode",
+      "current": "generated/semantic-v5/previews/secondary-facing-asis.png",
+      "target": "generated/semantic-v5/previews/secondary-facing-tobe.png"
+    }
+  ],
   "active_candidates": [
     {
       "id": "floor_decay",
@@ -24,6 +148,8 @@
         "floor_breached_poison",
         "floor_breached_lava"
       ],
+      "report_items": ["floor-decay-states"],
+      "approval_rule": "single report item gates all four floor states",
       "sha256": "cc4dc103c3eb8a53ef658bfa2999926870ed58d8fb3e53be85dba032841afc68"
     },
     {
@@ -40,6 +166,20 @@
         "loot_barrier_damaged",
         "loot_barrier_breached"
       ],
+      "review_status_by_identity": {
+        "standalone_cover": "held_by_user; do not integrate",
+        "loot_barrier_intact": "unreviewed",
+        "loot_barrier_damaged": "unreviewed",
+        "loot_barrier_breached": "unreviewed"
+      },
+      "report_items": ["standalone-cover", "destructible-loot-barrier"],
+      "approval_mapping_by_identity": {
+        "standalone_cover": "standalone-cover",
+        "loot_barrier_intact": "destructible-loot-barrier",
+        "loot_barrier_damaged": "destructible-loot-barrier",
+        "loot_barrier_breached": "destructible-loot-barrier"
+      },
+      "approval_rule": "per identity; the held standalone cover does not block the three loot-barrier identities",
       "sha256": "5b23feb8980fe77c2125931257925b4802c15655786f8b4276bdea16858c874b"
     },
     {
@@ -56,6 +196,14 @@
         "energy_barrier_inactive",
         "energy_barrier_active"
       ],
+      "report_items": ["teleport-gate", "traversable-energy-barrier"],
+      "approval_mapping_by_identity": {
+        "teleport_gate_inactive": "teleport-gate",
+        "teleport_gate_active": "teleport-gate",
+        "energy_barrier_inactive": "traversable-energy-barrier",
+        "energy_barrier_active": "traversable-energy-barrier"
+      },
+      "approval_rule": "per identity family; teleport and traversable barrier decisions are independent",
       "sha256": "9bff8608af649ab09cbb9d4e4a2fe3f0a3be25afe903ab0a4b610085f1680972"
     },
     {
@@ -68,11 +216,12 @@
       "canvas": [1254, 1254],
       "valid_identities": [
         "repair_field_base",
-        "repair_field_active",
-        "overdrive_field"
+        "repair_field_active"
       ],
-      "superseded_identity": "arc_terminal_pair",
-      "notes": "The fourth quadrant is replaced by gate_barrier.energy_barrier_active and must not be integrated.",
+      "report_items": ["repair-field"],
+      "approval_rule": "single report item gates only the two valid repair-field identities",
+      "superseded_identities": ["overdrive_field", "arc_terminal_pair"],
+      "notes": "The overdrive identity is replaced by semantic-v5 overdrive_field_radial. The fourth quadrant is replaced by gate_barrier.energy_barrier_active. Neither superseded identity may be integrated.",
       "sha256": "fe83ce94b3f6c9a597d3d987b2acc7f57c98c56ea5bf008d4fc59bc84798f9e3"
     },
     {
@@ -85,10 +234,17 @@
       "canvas": [1254, 1254],
       "identities": [
         "reward_crate",
-        "repair_pickup",
         "experience_recall_pickup",
         "experience_shard"
       ],
+      "report_items": ["reward-crate", "recall-pickup", "xp-shard"],
+      "approval_mapping_by_identity": {
+        "reward_crate": "reward-crate",
+        "experience_recall_pickup": "recall-pickup",
+        "experience_shard": "xp-shard"
+      },
+      "approval_rule": "per identity; crate, recall pickup, and XP shard decisions are independent",
+      "superseded_identity": "repair_pickup; replaced by semantic-v5 repair_pickup_bright",
       "sha256": "e3be0f97d111e8aac1190f44543dc766aaec3bf76c81e8c41b373a9af1082169"
     },
     {
@@ -105,6 +261,8 @@
         "player_homing_missile",
         "player_breach_slug"
       ],
+      "report_items": ["projectile-delivery-family"],
+      "approval_rule": "single report item gates the delivery family",
       "sha256": "986e3ef43e7fc7b60851315f9148453c3f5c0ed4d5d54b16b671aaaa67b04baf"
     },
     {
@@ -120,13 +278,15 @@
         "elite_hostile_projectile",
         "boss_hostile_projectile"
       ],
+      "report_items": ["hostile-projectile-tier"],
+      "approval_rule": "single report item gates all hostile threat tiers",
       "sha256": "1dabb4969fbf037fabeacc64e12458ffad42b2d7d539c8bb424c4e8a4e897cdc"
     },
     {
       "id": "impact_feedback",
       "category": "damage_feedback",
-      "status": "pending_user_approval",
-      "required_for_execution": true,
+      "status": "held_by_user",
+      "required_for_execution": false,
       "file": "generated/semantic-v4/impact-feedback-candidates.png",
       "chroma_source": "generated/semantic-v4/impact-feedback-source.png",
       "canvas": [1254, 1254],
@@ -136,6 +296,8 @@
         "reflect_deflection",
         "barrier_contact"
       ],
+      "report_items": ["damage-feedback-family"],
+      "approval_rule": "held report item; no identity may execute in this round",
       "sha256": "69e5bb5b7fc5070ad07842dd68c4b4b2e43a0edf3bbe22501c44e6483efcf00f"
     },
     {
@@ -152,6 +314,8 @@
         "ordinary_beam_endpoint_contact",
         "boss_heavy_beam_repeat_segment"
       ],
+      "report_items": ["hostile-laser-beam-components"],
+      "approval_rule": "single report item gates the beam component family",
       "sha256": "4ee2ccef0a1723585db2a6a28d79b5682f30f4863f1f9a0b4cdd848036dda4ef"
     }
   ],
@@ -197,9 +361,16 @@
       "reason": "The small arc-terminal concept is replaced by the large traversable energy barrier."
     }
   ],
-  "preview_derivatives": {
-    "directory": "generated/semantic-v4/previews",
-    "canonical": false,
-    "purpose": "Mechanical crops and family strips for the large HTML approval viewer."
-  }
+  "preview_derivatives": [
+    {
+      "directory": "generated/semantic-v5/previews",
+      "canonical": false,
+      "purpose": "Mechanical crops, contact sheets, and code-only AS-IS/TO-BE illustrations for report v3."
+    },
+    {
+      "directory": "generated/semantic-v4/previews",
+      "canonical": false,
+      "purpose": "Previous mechanical crops and family strips retained for unreviewed report items."
+    }
+  ]
 }

@@ -3,7 +3,7 @@ type: spec
 status: active
 owner: BK
 created: 2026-07-31
-last_reviewed: 2026-07-31
+last_reviewed: 2026-08-01
 canonical_for: Cardborne gameplay visual categories, terminology, semantic distinctions, and visible state contracts
 scope: Player-facing map surfaces, structures, terrain, containers, pickups, projectiles, attack feedback, upgrade cards, and vehicle exhaust
 related:
@@ -89,6 +89,9 @@ related:
 - 현재 레벨을 텍스트로 표시하므로 3개의 빈/채움 단계 pip는 제거한다.
 - 엔진 body는 기체 rear socket에 고정한다. idle과 일반 이동에는 불꽃을
   표시하지 않고, dash 동안에만 짧고 밝은 rear flare와 잔상을 표시한다.
+- 보조무기 sprite 방향은 배치 방식이 소유한다. 궤도 칼날과 호위 드론은
+  `player → weapon` 벡터를 따라 바깥을 향하고, 발사된 seeker는 속도 방향을
+  향한다. 고정 wake mine과 원형 ion field에는 임의 heading을 부여하지 않는다.
 
 ### 현재 내부 ID와 표시 이름
 
@@ -99,7 +102,7 @@ related:
 | `breakable_bulkhead` | 파괴 장벽 | 보상 구역 봉쇄 목적과 파손 상태를 명시 |
 | `arc_surge` | 통과형 에너지 장벽 | 내부 ID는 임시 유지 가능; 넓은 판정과 감속·피해를 표현 |
 | `repair_pad` | 회복 장판 | loose repair pickup과 구분 |
-| `overdrive_lane` | 공격 증폭 장판 | 진행 화살표만이 아니라 실제 효과 면적 표시 |
+| `overdrive_lane` | 공격 증폭 장판 | 내부 이름과 달리 반경 180 원형 판정 전체를 표시; 좁은 lane과 이동 화살표 사용 금지 |
 | `transit_gate` | 순간이동 게이트 | 원형 floor portal로 교체 |
 | `reward_crate` | 보상 상자 | pickup과 분리 |
 
