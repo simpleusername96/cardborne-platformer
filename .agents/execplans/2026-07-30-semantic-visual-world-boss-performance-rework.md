@@ -3,7 +3,7 @@ type: plan
 status: active
 owner: BK
 created: 2026-07-30
-last_reviewed: 2026-07-30
+last_reviewed: 2026-07-31
 scope: Replace every ambiguous runtime visual family, rebuild the map as functional algorithmic layers, redesign attack and boss communication, and remove crowd-clump performance failure after visual acceptance
 supersedes: ./2026-07-30-approved-sheet-fidelity-recovery.md
 related:
@@ -12,6 +12,7 @@ related:
   - ../../docs/product/vehicle_game_spec.md
   - ../../docs/design/UI_VISUAL_SYSTEM.md
   - ../../docs/design/component-sheets/semantic-rework-v2-proposal/README.md
+  - ../../art/gameplay/semantic-v2/README.md
   - ../vehicle-world-combat-expansion-evidence.md
   - ./2026-07-29-horde-foundation-recovery-and-acceptance.md
 ---
@@ -577,6 +578,23 @@ pattern data를 그 파일에 추가하지 않는다.
 - [ ] AS-IS `system-v1` sheet는 historical evidence로 보존하되 production
   target에서 제외한다.
 
+### Milestone 0A — semantic-v2 이미지 에셋 제작·패키징
+
+- [x] 승인된 v2 시안을 기준으로 고해상도 생성 원본 48장을 제작하고,
+  일반 시트는 이미지당 최대 3개 역할, 보스는 이미지당 1개, 애니메이션은
+  이미지당 1개 효과로 제한한다.
+- [x] 정적 runtime PNG 100개와 8개 효과의 독립 프레임 38개를 고정
+  캔버스·피벗 규격으로 분할한다.
+- [x] 효과 atlas 8개, 검수용 family sheet 7개와
+  `art/gameplay/semantic-v2/asset-manifest.json`을 패키징한다.
+- [x] manifest 추적 runtime PNG 146개의 alpha와 canvas 규격을 검사하고
+  바닥 타일 두 variant의 상하좌우 edge seam 오차가 0임을 확인한다.
+
+이 milestone은 **이미지 제작·분할·패키징 단계만 완료**됐다는 뜻이다.
+현재 renderer는 procedural `ArrayMesh`/`MultiMesh`이므로 runtime visual
+ID/state 연결, texture-instancing adapter, 실제 게임 내 교체와 rendered
+acceptance는 각각 Milestone 0, 1, 3, 7에서 계속 검증한다.
+
 ### Milestone 1 — component grammar와 sheet provider
 
 - [ ] secondary와 defense catalog를 독립 owner로 만든다.
@@ -794,13 +812,18 @@ validator 이름은 owner별 책임을 유지한다. 하나의 catch-all test fi
 - 세 AS-IS/TO-BE comparison sheet를 생성해 repository에 보존했다.
 - 기존 visual recovery와 horde performance plan을 supersede해 이 문서만
   active execution authority로 남겼다.
-- 구현은 아직 시작하지 않았다.
+- `art/gameplay/semantic-v2/`에 고해상도 원본, 정적 runtime PNG,
+  effect frame/atlas, review sheet와 manifest로 구성된 이미지 에셋 팩을
+  제작·검증했다.
+- 이미지 제작 단계는 완료했지만 runtime provider/adapter 구현과 실제
+  게임 내 에셋 교체는 아직 시작하지 않았다.
 
 ## Next Steps
 
-1. Milestone 0에서 이전 plan을 supersede하고 complete runtime manifest를
-   고정한다.
-2. Milestone 1–7 순서로 visual, map, attack, boss와 모든 UI를 교체한다.
+1. Milestone 0의 남은 runtime visual ID/state manifest와 validator
+   fixture를 고정하고 AS-IS sheet를 production target에서 제외한다.
+2. Milestone 1의 runtime provider/adapter부터 시작해 Milestone 2–7
+   순서로 visual, map, attack, boss와 모든 UI를 교체한다.
 3. rendered acceptance가 끝난 뒤에만 Milestone 8의 performance 구조와
    final gate를 실행한다.
 
@@ -826,3 +849,6 @@ performance escalation과 stop condition을 이 계획에서 결정했다.
   이 계획의 Milestone 8에 흡수하고 기존 plan을 supersede했다.
 - 2026-07-30: 성능 측정과 최적화는 모든 asset/UI rendered acceptance
   이후 마지막 milestone로 유지한다.
+- 2026-07-31: `semantic-v2` 이미지 에셋의 생성·분할·패키징과 기초
+  파일 검증을 완료했다. 이 완료 표시는 runtime 연결, 게임 내 교체,
+  rendered acceptance를 포함하지 않는다.
