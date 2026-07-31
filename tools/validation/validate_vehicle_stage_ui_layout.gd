@@ -28,14 +28,15 @@ func _initialize() -> void:
 		await process_frame
 		var contract := ui.debug_ui_contract(width)
 		var foundation := Dictionary(contract["ui_foundation"])
-		_expect(bool(foundation["loaded"]), "flat UI foundation loads at %d" % width)
+		_expect(bool(foundation["loaded"]), "image UI foundation loads at %d" % width)
 		_expect(
 			int(foundation["modal_surface_count"]) >= 8,
-			"all modals use the shared self-drawing surface at %d" % width
+			"all modals use the shared image-backed surface at %d" % width
 		)
 		var modal_frame := Dictionary(foundation["modal_frame"])
 		_expect(
 			bool(modal_frame.get("layered_depth", false))
+				and bool(modal_frame.get("image_backed", false))
 				and is_equal_approx(
 					float(modal_frame.get("corner_cut", 0.0)),
 					12.0
@@ -47,11 +48,11 @@ func _initialize() -> void:
 			int(foundation["texture_filter"]) == CanvasItem.TEXTURE_FILTER_LINEAR,
 			"UI foundation uses antialiased linear filtering at %d" % width
 		)
-		var flat_styles := Dictionary(contract["flat_style_foundation"])
+		var image_styles := Dictionary(contract["image_style_foundation"])
 		for surface in ["modal", "hud", "button", "upgrade_card", "tab"]:
 			_expect(
-				bool(flat_styles[surface]),
-				"%s uses StyleBoxFlat instead of image chrome at %d"
+				bool(image_styles[surface]),
+				"%s uses image-backed chrome at %d"
 				% [surface, width]
 			)
 		var action_rail_size := Vector2(contract["action_rail_size"])
@@ -143,8 +144,8 @@ func _initialize() -> void:
 			)
 			var state_cues := Dictionary(card["state_cues"])
 			_expect(
-				int(state_cues["normal_edge"]) == 1
-					and int(state_cues["focus_edge"]) == 2
+				bool(state_cues["normal_image"])
+					and bool(state_cues["focus_image"])
 					and bool(state_cues["selected_corner"])
 					and bool(state_cues["focus_corner"])
 					and bool(state_cues["disabled_corner"]),
@@ -218,7 +219,11 @@ func _initialize() -> void:
 	})
 	var ready_contract := ui.debug_ui_contract(1280.0)
 	for slot_variant in ready_contract["action_slot_contracts"]:
-		_expect(bool(Dictionary(slot_variant)["interior_filled"]), "ready action circles use the filled state")
+		_expect(
+			bool(Dictionary(slot_variant)["image_backed"])
+				and not bool(Dictionary(slot_variant)["interior_filled"]),
+			"ready action slots use authored image chrome"
+		)
 	await _validate_modal_matrix(ui)
 	await _validate_upgrade_matrix(ui)
 	_validate_owner_boundaries()
@@ -554,7 +559,6 @@ func _validate_owner_boundaries() -> void:
 	)
 	_expect(
 		guide_source.contains("vehicle_semantic_asset_provider.gd")
-			and guide_source.contains("vehicle_stage_visual_profile.gd")
 			and not guide_source.contains("vehicle_combat_visual_library.gd"),
 		"guidebook preview consumes the semantic-v2 runtime provider only"
 	)

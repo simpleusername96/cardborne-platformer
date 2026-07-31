@@ -6,10 +6,13 @@ signal close_requested
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const BuildSummaryPanel = preload("res://scripts/ui/vehicle_build_summary_panel.gd")
 const GuidebookPreview = preload("res://scripts/ui/vehicle_guidebook_preview.gd")
+const SemanticAssets = preload(
+	"res://scripts/presentation/components/vehicle_semantic_asset_provider.gd"
+)
 
 
 class CounterplayGlyph:
-	extends Control
+	extends TextureRect
 
 	var kind: StringName = &"movement"
 
@@ -17,42 +20,17 @@ class CounterplayGlyph:
 	func _ready() -> void:
 		custom_minimum_size = Vector2(44.0, 44.0)
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
+		expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 
 
 	func configure(value: StringName) -> void:
 		kind = value
-		queue_redraw()
-
-
-	func _draw() -> void:
-		var center := size * 0.5
-		match kind:
-			&"attack":
-				draw_circle(center + Vector2(-8.0, 3.0), 7.0, Art.BOSS_MAGENTA)
-				draw_circle(center + Vector2(4.0, -7.0), 6.0, Art.BOSS_MAGENTA)
-				draw_circle(center + Vector2(8.0, 8.0), 6.0, Art.BOSS_MAGENTA)
-			&"counter":
-				draw_colored_polygon(PackedVector2Array([
-					center + Vector2(0.0, -16.0),
-					center + Vector2(13.0, -10.0),
-					center + Vector2(11.0, 7.0),
-					center + Vector2(0.0, 17.0),
-					center + Vector2(-11.0, 7.0),
-					center + Vector2(-13.0, -10.0),
-				]), Art.MINT)
-				draw_line(
-					center + Vector2(0.0, -13.0),
-					center + Vector2(0.0, 13.0),
-					Art.IVORY_BRIGHT,
-					3.0
-				)
-			_:
-				draw_arc(center, 13.0, -PI * 0.15, PI * 1.45, 28, Art.STRUCTURE_LIGHT, 5.0, true)
-				draw_colored_polygon(PackedVector2Array([
-					center + Vector2(-15.0, -3.0),
-					center + Vector2(-6.0, -10.0),
-					center + Vector2(-5.0, 2.0),
-				]), Art.STRUCTURE_LIGHT)
+		texture = SemanticAssets.texture(StringName({
+			&"attack": &"cue/ranged_startup",
+			&"counter": &"cue/objective_active",
+			&"movement": &"cue/guide_mobile",
+		}.get(kind, &"cue/guide_mobile")))
 
 var _snapshot: Dictionary = {}
 var _category_rail: VBoxContainer
@@ -199,6 +177,11 @@ func _rebuild_categories() -> void:
 		var category_id := StringName(category)
 		var button := _button(String(keys.get(category_id, "???")))
 		button.custom_minimum_size.y = 56.0
+		button.icon = SemanticAssets.texture(
+			StringName("cue/guide_%s" % String(category_id))
+		)
+		button.expand_icon = true
+		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		button.pressed.connect(_select_category.bind(category_id))
 		_category_rail.add_child(button)
 		_category_buttons[category_id] = button

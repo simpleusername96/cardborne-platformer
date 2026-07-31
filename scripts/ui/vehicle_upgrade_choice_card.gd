@@ -9,49 +9,57 @@ const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const UpgradeGlyphRenderer = preload(
 	"res://scripts/presentation/components/vehicle_upgrade_glyph_renderer.gd"
 )
+const UiAssets = preload("res://scripts/ui/vehicle_ui_asset_provider.gd")
 
 class LevelPips:
-	extends Control
+	extends HBoxContainer
 
 	var next_level := 0
 	var max_level := 1
-	var active_color := Color.WHITE
-	var available_color := Color.WHITE
-	var unavailable_color := Color.WHITE
+	var _slots: Array[TextureRect] = []
 
 
 	func _ready() -> void:
 		custom_minimum_size = Vector2(132.0, 32.0)
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
+		alignment = BoxContainer.ALIGNMENT_CENTER
+		add_theme_constant_override("separation", 12)
+		_ensure_slots()
+
+
+	func _ensure_slots() -> void:
+		if not _slots.is_empty():
+			return
+		for index in 3:
+			var slot := TextureRect.new()
+			slot.name = "LevelPip%d" % (index + 1)
+			slot.custom_minimum_size = Vector2(28.0, 28.0)
+			slot.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			slot.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			add_child(slot)
+			_slots.append(slot)
 
 
 	func configure(
 		next_value: int,
 		max_value: int,
-		active: Color,
-		available: Color,
-		unavailable: Color
+		_active: Color,
+		_available: Color,
+		_unavailable: Color
 	) -> void:
 		next_level = clampi(next_value, 0, 3)
 		max_level = clampi(max_value, 1, 3)
-		active_color = active
-		available_color = available
-		unavailable_color = unavailable
-		queue_redraw()
-
-
-	func _draw() -> void:
-		var radius := 9.0
-		var gap := 38.0
-		var start_x := (size.x - gap * 2.0) * 0.5
+		_ensure_slots()
 		for index in 3:
-			var center := Vector2(start_x + gap * index, size.y * 0.5)
-			if index < next_level:
-				draw_circle(center, radius, active_color)
-			elif index < max_level:
-				draw_arc(center, radius, 0.0, TAU, 24, available_color, 2.0, true)
-			else:
-				draw_arc(center, radius, 0.0, TAU, 24, unavailable_color, 2.0, true)
+			var state := (
+				&"pip_filled"
+				if index < next_level
+				else &"pip_available"
+				if index < max_level
+				else &"pip_empty"
+			)
+			_slots[index].texture = UiAssets.texture(&"small_state", state)
 
 
 var _offer: Dictionary = {}
@@ -78,9 +86,6 @@ func _ready() -> void:
 	size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	focus_mode = Control.FOCUS_ALL
 	theme_type_variation = &"UpgradeChoiceCard"
-	focus_entered.connect(queue_redraw)
-	focus_exited.connect(queue_redraw)
-	resized.connect(queue_redraw)
 	_build()
 	if not _offer.is_empty():
 		_refresh()
@@ -100,7 +105,6 @@ func set_selected_state(value: bool) -> void:
 		if _selected
 		else &"UpgradeChoiceCard"
 	)
-	queue_redraw()
 
 
 func set_compact_mode(value: bool) -> void:
@@ -159,33 +163,12 @@ func debug_contract() -> Dictionary:
 		"summary_max_lines":_summary.max_lines_visible,
 		"family_badge":{
 			"text_color":_family.get_theme_color("font_color"),
-			"background":(
-				(badge_style as StyleBoxFlat).bg_color
-				if badge_style is StyleBoxFlat
-				else Color.TRANSPARENT
-			),
-			"edge_color":(
-				(badge_style as StyleBoxFlat).border_color
-				if badge_style is StyleBoxFlat
-				else Color.TRANSPARENT
-			),
-			"edge_width":(
-				(badge_style as StyleBoxFlat).get_border_width(SIDE_LEFT)
-				if badge_style is StyleBoxFlat
-				else 0
-			),
+			"image_backed":badge_style is StyleBoxTexture,
+			"semantic_accent_owner":&"family_glyph",
 		},
 		"state_cues":{
-			"normal_edge":(
-				normal_style.get_border_width(SIDE_LEFT)
-				if normal_style is StyleBoxFlat
-				else 0
-			),
-			"focus_edge":(
-				focus_style.get_border_width(SIDE_LEFT)
-				if focus_style is StyleBoxFlat
-				else 0
-			),
+			"normal_image":normal_style is StyleBoxTexture,
+			"focus_image":focus_style is StyleBoxTexture,
 			"selected_corner":true,
 			"focus_corner":true,
 			"disabled_corner":true,
@@ -383,49 +366,6 @@ func _refresh_family_glyph() -> void:
 		&"secondary":accent.lerp(Art.SPACE_BLACK, 0.34),
 		&"highlight":Art.TEXT_PRIMARY,
 	})
-	var badge_style := _family_badge.get_theme_stylebox("panel").duplicate()
-	if badge_style is StyleBoxFlat:
-		var flat_style := badge_style as StyleBoxFlat
-		flat_style.border_color = accent
-		flat_style.border_width_left = Art.SELECTED_RAIL_WIDTH
-		_family_badge.add_theme_stylebox_override("panel", flat_style)
-
-
-func _draw() -> void:
-	if _selected:
-		var center := Vector2(size.x - 20.0, 20.0)
-		draw_colored_polygon(PackedVector2Array([
-			center + Vector2(0.0, -9.0),
-			center + Vector2(9.0, 0.0),
-			center + Vector2(0.0, 9.0),
-			center + Vector2(-9.0, 0.0),
-		]), Art.MUSTARD)
-	if has_focus():
-		draw_line(Vector2(8.0, 18.0), Vector2(8.0, 8.0), Art.SYSTEM, 2.0, true)
-		draw_line(Vector2(8.0, 8.0), Vector2(18.0, 8.0), Art.SYSTEM, 2.0, true)
-	if has_focus() and _selected:
-		draw_rect(
-			Rect2(Vector2(5.0, 5.0), size - Vector2(10.0, 10.0)),
-			Art.SYSTEM,
-			false,
-			float(Art.FOCUS_WIDTH)
-		)
-	if disabled:
-		var disabled_center := Vector2(size.x - 18.0, size.y - 18.0)
-		draw_line(
-			disabled_center + Vector2(-5.0, -5.0),
-			disabled_center + Vector2(5.0, 5.0),
-			Art.TEXT_MUTED,
-			2.0,
-			true
-		)
-		draw_line(
-			disabled_center + Vector2(5.0, -5.0),
-			disabled_center + Vector2(-5.0, 5.0),
-			Art.TEXT_MUTED,
-			2.0,
-			true
-		)
 
 
 func _label_geometry(label: Label) -> Dictionary:

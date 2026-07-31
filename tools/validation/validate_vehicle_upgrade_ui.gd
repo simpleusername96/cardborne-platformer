@@ -99,35 +99,41 @@ func _validate_theme_contract() -> void:
 	var normal := _theme.get_stylebox(
 		&"normal",
 		&"UpgradeChoiceCard"
-	) as StyleBoxFlat
+	) as StyleBoxTexture
 	var focus := _theme.get_stylebox(
 		&"focus",
 		&"UpgradeChoiceCard"
-	) as StyleBoxFlat
+	) as StyleBoxTexture
 	var selected := _theme.get_stylebox(
 		&"normal",
 		&"SelectedUpgradeChoiceCard"
-	) as StyleBoxFlat
+	) as StyleBoxTexture
 	_expect(
-		normal != null and normal.get_border_width(SIDE_LEFT) == 1,
-		"normal upgrade card uses the one-pixel neutral edge"
+		normal != null
+			and normal.texture.resource_path.ends_with(
+				"upgrade_card_normal.png"
+			),
+		"normal upgrade card uses its authored image state"
 	)
 	_expect(
 		normal != null
-			and _contrast_ratio(Art.TEXT_PRIMARY, normal.bg_color) >= 4.5
-			and _contrast_ratio(Art.TEXT_MUTED, normal.bg_color) >= 4.5,
-		"upgrade card primary and secondary text keep normal-text contrast"
+			and normal.texture_margin_left == 20.0
+			and normal.texture_margin_top == 20.0,
+		"upgrade card uses the manifest 9-slice margin"
 	)
 	_expect(
 		focus != null
-			and focus.get_border_width(SIDE_LEFT) == Art.FOCUS_WIDTH
-			and focus.get_border_width(SIDE_TOP) == Art.FOCUS_WIDTH,
-		"focused upgrade card uses a two-pixel full outline"
+			and focus.texture.resource_path.ends_with(
+				"upgrade_card_focus.png"
+			),
+		"focused upgrade card uses its authored image state"
 	)
 	_expect(
 		selected != null
-			and selected.get_border_width(SIDE_LEFT) == Art.SELECTED_RAIL_WIDTH,
-		"selected upgrade card uses a three-pixel semantic rail"
+			and selected.texture.resource_path.ends_with(
+				"upgrade_card_selected.png"
+			),
+		"selected upgrade card uses its authored image state"
 	)
 
 
@@ -167,21 +173,17 @@ func _validate_family_badges(catalog: VehicleUpgradeCatalog) -> void:
 		await process_frame
 		var contract := card.debug_contract()
 		var badge := Dictionary(contract["family_badge"])
-		var accent := Art.required_color_roles().get(
-			String(UpgradeGlyphRenderer.color_role(family)),
-			Art.TEXT_PRIMARY
-		) as Color
 		_expect(
-			_contrast_ratio(
-				Color(badge["text_color"]),
-				Color(badge["background"])
-			) >= 4.5,
-			"%s family badge keeps readable text contrast" % family
+			bool(badge["image_backed"]),
+			"%s family badge uses image-backed chrome" % family
 		)
 		_expect(
-			int(badge["edge_width"]) == Art.SELECTED_RAIL_WIDTH
-				and Color(badge["edge_color"]).is_equal_approx(accent),
-			"%s family badge exposes its semantic accent edge" % family
+			StringName(badge["semantic_accent_owner"]) == &"family_glyph"
+				and bool(Dictionary(
+					card.debug_geometry_contract()["glyph"]
+				)["semantic_asset"]),
+			"%s family badge keeps its semantic accent in the image glyph"
+			% family
 		)
 		var geometry := card.debug_geometry_contract()
 		_expect_glyph_geometry(
@@ -382,14 +384,14 @@ func _validate_panel(
 	var modal_style := _theme.get_stylebox(
 		&"panel",
 		&"ModalSurface"
-	) as StyleBoxFlat
+	) as StyleBoxTexture
 	_expect(
 		modal_style != null
-			and _contrast_ratio(
-				Color(warning_contract["message_color"]),
-				modal_style.bg_color
-			) >= 4.5,
-		"%s warning/message text meets normal-text contrast" % context
+			and modal_style.texture.resource_path.ends_with(
+				"modal_master_normal.png"
+			),
+		"%s warning/message uses the authored modal image surface"
+		% context
 	)
 	_expect(
 		Color(warning_contract["message_color"]).is_equal_approx(Art.DANGER),

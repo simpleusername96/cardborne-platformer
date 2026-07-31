@@ -24,7 +24,7 @@ func _ready() -> void:
 	z_index = 20
 	_surface = Factory.modal_surface(Vector2.ZERO)
 	_surface.name = "TransitionSurface"
-	_surface.theme_type_variation = &"HudStatusGroup"
+	_surface.theme_type_variation = &"HudToast"
 	_surface.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_surface)
 	_surface.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)

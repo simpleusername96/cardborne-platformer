@@ -1,6 +1,54 @@
-[gd_resource type="Theme" load_steps=36 format=3]
+[gd_resource type="Theme" load_steps=105 format=3]
 
 [ext_resource type="FontFile" path="res://art/ui/production/fonts/NotoSansKR-Variable.ttf" id="1_font"]
+[ext_resource type="Texture2D" path="res://art/ui/production/semantic-v2/controls/button_danger_disabled.png" id="ui_button_danger_disabled"]
+[ext_resource type="Texture2D" path="res://art/ui/production/semantic-v2/controls/button_danger_focus.png" id="ui_button_danger_focus"]
+[ext_resource type="Texture2D" path="res://art/ui/production/semantic-v2/controls/button_danger_hover.png" id="ui_button_danger_hover"]
+[ext_resource type="Texture2D" path="res://art/ui/production/semantic-v2/controls/button_danger_normal.png" id="ui_button_danger_normal"]
+[ext_resource type="Texture2D" path="res://art/ui/production/semantic-v2/controls/button_danger_pressed.png" id="ui_button_danger_pressed"]
+[ext_resource type="Texture2D" path="res://art/ui/production/semantic-v2/controls/button_primary_disabled.png" id="ui_button_primary_disabled"]
+[ext_resource type="Texture2D" path="res://art/ui/production/semantic-v2/controls/button_primary_focus.png" id="ui_button_primary_focus"]
+[ext_resource type="Texture2D" path="res://art/ui/production/semantic-v2/controls/button_primary_hover.png" id="ui_button_primary_hover"]
+[ext_resource type="Texture2D" path="res://art/ui/production/semantic-v2/controls/button_primary_normal.png" id="ui_button_primary_normal"]
+[ext_resource type="Texture2D" path="res://art/ui/production/semantic-v2/controls/button_primary_pressed.png" id="ui_button_primary_pressed"]
+[ext_resource type="Texture2D" path="res://art/ui/production/semantic-v2/controls/button_secondary_disabled.png" id="ui_button_secondary_disabled"]
+[ext_resource type="Texture2D" path="res://art/ui/production/semantic-v2/controls/button_secondary_focus.png" id="ui_button_secondary_focus"]
+[ext_resource type="Texture2D" path="res://art/ui/production/semantic-v2/controls/button_secondary_hover.png" id="ui_button_secondary_hover"]
+[ext_resource type="Texture2D" path="res://art/ui/production/semantic-v2/controls/button_secondary_normal.png" id="ui_button_secondary_normal"]
+[ext_resource type="Texture2D" path="res://art/ui/production/semantic-v2/controls/button_secondary_pressed.png" id="ui_button_secondary_pressed"]
+[ext_resource type="Texture2D" path="res://art/ui/production/semantic-v2/surfaces/content_plate_inset.png" id="ui_content_plate_inset"]
+[ext_resource type="Texture2D" path="res://art/ui/production/semantic-v2/surfaces/content_plate_normal.png" id="ui_content_plate_normal"]
+[ext_resource type="Texture2D" path="res://art/ui/production/semantic-v2/surfaces/content_plate_summary.png" id="ui_content_plate_summary"]
+[ext_resource type="Texture2D" path="res://art/ui/production/semantic-v2/surfaces/hud_plate_action_rail.png" id="ui_hud_plate_action_rail"]
+[ext_resource type="Texture2D" path="res://art/ui/production/semantic-v2/surfaces/hud_plate_health_resource.png" id="ui_hud_plate_health_resource"]
+[ext_resource type="Texture2D" path="res://art/ui/production/semantic-v2/surfaces/hud_plate_minimap_target.png" id="ui_hud_plate_minimap_target"]
+[ext_resource type="Texture2D" path="res://art/ui/production/semantic-v2/surfaces/hud_plate_objective_boss.png" id="ui_hud_plate_objective_boss"]
+[ext_resource type="Texture2D" path="res://art/ui/production/semantic-v2/surfaces/hud_plate_toast.png" id="ui_hud_plate_toast"]
+[ext_resource type="Texture2D" path="res://art/ui/production/semantic-v2/controls/meter_background.png" id="ui_meter_background"]
+[ext_resource type="Texture2D" path="res://art/ui/production/semantic-v2/controls/meter_boss.png" id="ui_meter_boss"]
+[ext_resource type="Texture2D" path="res://art/ui/production/semantic-v2/controls/meter_cooldown.png" id="ui_meter_cooldown"]
+[ext_resource type="Texture2D" path="res://art/ui/production/semantic-v2/controls/meter_health.png" id="ui_meter_health"]
+[ext_resource type="Texture2D" path="res://art/ui/production/semantic-v2/controls/meter_resource.png" id="ui_meter_resource"]
+[ext_resource type="Texture2D" path="res://art/ui/production/semantic-v2/controls/meter_support.png" id="ui_meter_support"]
+[ext_resource type="Texture2D" path="res://art/ui/production/semantic-v2/surfaces/modal_master_normal.png" id="ui_modal_master_normal"]
+[ext_resource type="Texture2D" path="res://art/ui/production/semantic-v2/glyphs/preview_focused.png" id="ui_preview_focused"]
+[ext_resource type="Texture2D" path="res://art/ui/production/semantic-v2/glyphs/preview_locked.png" id="ui_preview_locked"]
+[ext_resource type="Texture2D" path="res://art/ui/production/semantic-v2/glyphs/preview_normal.png" id="ui_preview_normal"]
+[ext_resource type="Texture2D" path="res://art/ui/production/semantic-v2/controls/slider_fill.png" id="ui_slider_fill"]
+[ext_resource type="Texture2D" path="res://art/ui/production/semantic-v2/controls/slider_lane.png" id="ui_slider_lane"]
+[ext_resource type="Texture2D" path="res://art/ui/production/semantic-v2/controls/tab_option_focus.png" id="ui_tab_option_focus"]
+[ext_resource type="Texture2D" path="res://art/ui/production/semantic-v2/controls/tab_option_hover.png" id="ui_tab_option_hover"]
+[ext_resource type="Texture2D" path="res://art/ui/production/semantic-v2/controls/tab_option_normal.png" id="ui_tab_option_normal"]
+[ext_resource type="Texture2D" path="res://art/ui/production/semantic-v2/controls/tab_option_selected.png" id="ui_tab_option_selected"]
+[ext_resource type="Texture2D" path="res://art/ui/production/semantic-v2/surfaces/upgrade_card_disabled.png" id="ui_upgrade_card_disabled"]
+[ext_resource type="Texture2D" path="res://art/ui/production/semantic-v2/surfaces/upgrade_card_focus.png" id="ui_upgrade_card_focus"]
+[ext_resource type="Texture2D" path="res://art/ui/production/semantic-v2/surfaces/upgrade_card_hover.png" id="ui_upgrade_card_hover"]
+[ext_resource type="Texture2D" path="res://art/ui/production/semantic-v2/surfaces/upgrade_card_normal.png" id="ui_upgrade_card_normal"]
+[ext_resource type="Texture2D" path="res://art/ui/production/semantic-v2/surfaces/upgrade_card_pressed.png" id="ui_upgrade_card_pressed"]
+[ext_resource type="Texture2D" path="res://art/ui/production/semantic-v2/surfaces/upgrade_card_selected.png" id="ui_upgrade_card_selected"]
+[ext_resource type="Texture2D" path="res://art/ui/production/semantic-v2/controls/slider_grabber.png" id="ui_slider_grabber"]
+[ext_resource type="Texture2D" path="res://art/ui/production/semantic-v2/controls/toggle_off.png" id="ui_toggle_off"]
+[ext_resource type="Texture2D" path="res://art/ui/production/semantic-v2/controls/toggle_on.png" id="ui_toggle_on"]
 
 [sub_resource type="FontVariation" id="FontBody"]
 base_font = ExtResource("1_font")
@@ -16,347 +64,429 @@ variation_opentype = {
 
 [sub_resource type="StyleBoxEmpty" id="Empty"]
 
-[sub_resource type="StyleBoxFlat" id="Modal"]
+[sub_resource type="StyleBoxTexture" id="Modal"]
+texture = ExtResource("ui_modal_master_normal")
+texture_margin_left = 32.0
+texture_margin_top = 32.0
+texture_margin_right = 32.0
+texture_margin_bottom = 32.0
 content_margin_left = 24.0
 content_margin_top = 22.0
 content_margin_right = 24.0
 content_margin_bottom = 22.0
-bg_color = Color(0.0941176, 0.141176, 0.192157, 0.99)
-
-[sub_resource type="StyleBoxFlat" id="Plate"]
+[sub_resource type="StyleBoxTexture" id="Plate"]
+texture = ExtResource("ui_content_plate_normal")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
 content_margin_left = 16.0
 content_margin_top = 12.0
 content_margin_right = 16.0
 content_margin_bottom = 12.0
-bg_color = Color(0.0627451, 0.0980392, 0.137255, 0.96)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.27451, 0.352941, 0.431373, 1)
-
-[sub_resource type="StyleBoxFlat" id="Hud"]
+[sub_resource type="StyleBoxTexture" id="Hud"]
+texture = ExtResource("ui_hud_plate_health_resource")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
 content_margin_left = 10.0
 content_margin_top = 8.0
 content_margin_right = 10.0
 content_margin_bottom = 8.0
-bg_color = Color(0.0941176, 0.141176, 0.192157, 0.94)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.27451, 0.352941, 0.431373, 1)
-
-[sub_resource type="StyleBoxFlat" id="ChoiceNormal"]
+[sub_resource type="StyleBoxTexture" id="ChoiceNormal"]
+texture = ExtResource("ui_button_secondary_normal")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
 content_margin_left = 16.0
 content_margin_top = 11.0
 content_margin_right = 16.0
 content_margin_bottom = 11.0
-bg_color = Color(0.0941176, 0.141176, 0.192157, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.27451, 0.352941, 0.431373, 1)
-
-[sub_resource type="StyleBoxFlat" id="ChoiceHover"]
+[sub_resource type="StyleBoxTexture" id="ChoiceHover"]
+texture = ExtResource("ui_button_secondary_hover")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
 content_margin_left = 16.0
 content_margin_top = 11.0
 content_margin_right = 16.0
 content_margin_bottom = 11.0
-bg_color = Color(0.141176, 0.203922, 0.270588, 1)
-border_width_left = 3
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.345098, 0.74902, 0.917647, 1)
-
-[sub_resource type="StyleBoxFlat" id="ChoicePressed"]
+[sub_resource type="StyleBoxTexture" id="ChoicePressed"]
+texture = ExtResource("ui_button_secondary_pressed")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
 content_margin_left = 16.0
 content_margin_top = 11.0
 content_margin_right = 16.0
 content_margin_bottom = 11.0
-bg_color = Color(0.0627451, 0.0980392, 0.137255, 1)
-border_width_left = 3
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.345098, 0.74902, 0.917647, 1)
-
-[sub_resource type="StyleBoxFlat" id="ChoiceFocus"]
+[sub_resource type="StyleBoxTexture" id="ChoiceFocus"]
+texture = ExtResource("ui_button_secondary_focus")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
 content_margin_left = 15.0
 content_margin_top = 10.0
 content_margin_right = 15.0
 content_margin_bottom = 10.0
-bg_color = Color(0.0941176, 0.141176, 0.192157, 1)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.345098, 0.74902, 0.917647, 1)
-
-[sub_resource type="StyleBoxFlat" id="ChoiceSelected"]
+[sub_resource type="StyleBoxTexture" id="ChoiceSelected"]
+texture = ExtResource("ui_tab_option_selected")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
 content_margin_left = 16.0
 content_margin_top = 11.0
 content_margin_right = 16.0
 content_margin_bottom = 11.0
-bg_color = Color(0.0941176, 0.141176, 0.192157, 1)
-border_width_left = 3
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.94902, 0.717647, 0.207843, 1)
-
-[sub_resource type="StyleBoxFlat" id="Disabled"]
+[sub_resource type="StyleBoxTexture" id="Disabled"]
+texture = ExtResource("ui_button_secondary_disabled")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
 content_margin_left = 16.0
 content_margin_top = 11.0
 content_margin_right = 16.0
 content_margin_bottom = 11.0
-bg_color = Color(0.0941176, 0.141176, 0.192157, 0.56)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.27451, 0.352941, 0.431373, 0.55)
-
-[sub_resource type="StyleBoxFlat" id="UpgradeCardNormal"]
+[sub_resource type="StyleBoxTexture" id="UpgradeCardNormal"]
+texture = ExtResource("ui_upgrade_card_normal")
+texture_margin_left = 20.0
+texture_margin_top = 20.0
+texture_margin_right = 20.0
+texture_margin_bottom = 20.0
 content_margin_left = 14.0
 content_margin_top = 10.0
 content_margin_right = 14.0
 content_margin_bottom = 10.0
-bg_color = Color(0.0627451, 0.0980392, 0.137255, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.27451, 0.352941, 0.431373, 1)
-
-[sub_resource type="StyleBoxFlat" id="UpgradeCardHover"]
+[sub_resource type="StyleBoxTexture" id="UpgradeCardHover"]
+texture = ExtResource("ui_upgrade_card_hover")
+texture_margin_left = 20.0
+texture_margin_top = 20.0
+texture_margin_right = 20.0
+texture_margin_bottom = 20.0
 content_margin_left = 14.0
 content_margin_top = 10.0
 content_margin_right = 14.0
 content_margin_bottom = 10.0
-bg_color = Color(0.0941176, 0.141176, 0.192157, 1)
-border_width_left = 3
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.345098, 0.74902, 0.917647, 1)
-
-[sub_resource type="StyleBoxFlat" id="UpgradeCardPressed"]
+[sub_resource type="StyleBoxTexture" id="UpgradeCardPressed"]
+texture = ExtResource("ui_upgrade_card_pressed")
+texture_margin_left = 20.0
+texture_margin_top = 20.0
+texture_margin_right = 20.0
+texture_margin_bottom = 20.0
 content_margin_left = 14.0
 content_margin_top = 10.0
 content_margin_right = 14.0
 content_margin_bottom = 10.0
-bg_color = Color(0.027451, 0.0431373, 0.0666667, 1)
-border_width_left = 3
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.345098, 0.74902, 0.917647, 1)
-
-[sub_resource type="StyleBoxFlat" id="UpgradeCardFocus"]
+[sub_resource type="StyleBoxTexture" id="UpgradeCardFocus"]
+texture = ExtResource("ui_upgrade_card_focus")
+texture_margin_left = 20.0
+texture_margin_top = 20.0
+texture_margin_right = 20.0
+texture_margin_bottom = 20.0
 content_margin_left = 13.0
 content_margin_top = 9.0
 content_margin_right = 13.0
 content_margin_bottom = 9.0
-bg_color = Color(0.0627451, 0.0980392, 0.137255, 1)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.345098, 0.74902, 0.917647, 1)
-
-[sub_resource type="StyleBoxFlat" id="UpgradeCardSelected"]
+[sub_resource type="StyleBoxTexture" id="UpgradeCardSelected"]
+texture = ExtResource("ui_upgrade_card_selected")
+texture_margin_left = 20.0
+texture_margin_top = 20.0
+texture_margin_right = 20.0
+texture_margin_bottom = 20.0
 content_margin_left = 14.0
 content_margin_top = 10.0
 content_margin_right = 14.0
 content_margin_bottom = 10.0
-bg_color = Color(0.0941176, 0.141176, 0.192157, 1)
-border_width_left = 3
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.94902, 0.717647, 0.207843, 1)
-
-[sub_resource type="StyleBoxFlat" id="PrimaryNormal"]
+[sub_resource type="StyleBoxTexture" id="PrimaryNormal"]
+texture = ExtResource("ui_button_primary_normal")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
 content_margin_left = 20.0
 content_margin_top = 11.0
 content_margin_right = 20.0
 content_margin_bottom = 11.0
-bg_color = Color(0.94902, 0.717647, 0.207843, 1)
-
-[sub_resource type="StyleBoxFlat" id="PrimaryHover"]
+[sub_resource type="StyleBoxTexture" id="PrimaryHover"]
+texture = ExtResource("ui_button_primary_hover")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
 content_margin_left = 20.0
 content_margin_top = 11.0
 content_margin_right = 20.0
 content_margin_bottom = 11.0
-bg_color = Color(1, 0.792157, 0.290196, 1)
-border_width_left = 3
-border_color = Color(0.345098, 0.74902, 0.917647, 1)
-
-[sub_resource type="StyleBoxFlat" id="PrimaryPressed"]
+[sub_resource type="StyleBoxTexture" id="PrimaryPressed"]
+texture = ExtResource("ui_button_primary_pressed")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
 content_margin_left = 20.0
 content_margin_top = 11.0
 content_margin_right = 20.0
 content_margin_bottom = 11.0
-bg_color = Color(0.619608, 0.462745, 0.133333, 1)
-
-[sub_resource type="StyleBoxFlat" id="PrimaryFocus"]
+[sub_resource type="StyleBoxTexture" id="PrimaryFocus"]
+texture = ExtResource("ui_button_primary_focus")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
 content_margin_left = 18.0
 content_margin_top = 9.0
 content_margin_right = 18.0
 content_margin_bottom = 9.0
-bg_color = Color(0.94902, 0.717647, 0.207843, 1)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.345098, 0.74902, 0.917647, 1)
-
-[sub_resource type="StyleBoxFlat" id="DangerNormal"]
+[sub_resource type="StyleBoxTexture" id="DangerNormal"]
+texture = ExtResource("ui_button_danger_normal")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
 content_margin_left = 16.0
 content_margin_top = 11.0
 content_margin_right = 16.0
 content_margin_bottom = 11.0
-bg_color = Color(0.0941176, 0.141176, 0.192157, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.941176, 0.352941, 0.372549, 1)
-
-[sub_resource type="StyleBoxFlat" id="DangerHover"]
+[sub_resource type="StyleBoxTexture" id="DangerHover"]
+texture = ExtResource("ui_button_danger_hover")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
 content_margin_left = 16.0
 content_margin_top = 11.0
 content_margin_right = 16.0
 content_margin_bottom = 11.0
-bg_color = Color(0.141176, 0.203922, 0.270588, 1)
-border_width_left = 3
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.941176, 0.352941, 0.372549, 1)
-
-[sub_resource type="StyleBoxFlat" id="DangerPressed"]
+[sub_resource type="StyleBoxTexture" id="DangerPressed"]
+texture = ExtResource("ui_button_danger_pressed")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
 content_margin_left = 16.0
 content_margin_top = 11.0
 content_margin_right = 16.0
 content_margin_bottom = 11.0
-bg_color = Color(0.0627451, 0.0980392, 0.137255, 1)
-border_width_left = 3
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.941176, 0.352941, 0.372549, 1)
-
-[sub_resource type="StyleBoxFlat" id="DangerFocus"]
+[sub_resource type="StyleBoxTexture" id="DangerFocus"]
+texture = ExtResource("ui_button_danger_focus")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
 content_margin_left = 15.0
 content_margin_top = 10.0
 content_margin_right = 15.0
 content_margin_bottom = 10.0
-bg_color = Color(0.0941176, 0.141176, 0.192157, 1)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.941176, 0.352941, 0.372549, 1)
-
-[sub_resource type="StyleBoxFlat" id="MeterBackground"]
-bg_color = Color(0.141176, 0.203922, 0.270588, 1)
-
-[sub_resource type="StyleBoxFlat" id="MeterHealth"]
-bg_color = Color(0.941176, 0.352941, 0.372549, 1)
-
-[sub_resource type="StyleBoxFlat" id="MeterBoss"]
-bg_color = Color(0.831373, 0.247059, 0.552941, 1)
-
-[sub_resource type="StyleBoxFlat" id="MeterResource"]
-bg_color = Color(0.94902, 0.717647, 0.207843, 1)
-
-[sub_resource type="StyleBoxFlat" id="Slider"]
+[sub_resource type="StyleBoxTexture" id="MeterBackground"]
+texture = ExtResource("ui_meter_background")
+texture_margin_left = 8.0
+texture_margin_top = 8.0
+texture_margin_right = 8.0
+texture_margin_bottom = 8.0
+[sub_resource type="StyleBoxTexture" id="MeterHealth"]
+texture = ExtResource("ui_meter_health")
+texture_margin_left = 8.0
+texture_margin_top = 8.0
+texture_margin_right = 8.0
+texture_margin_bottom = 8.0
+[sub_resource type="StyleBoxTexture" id="MeterBoss"]
+texture = ExtResource("ui_meter_boss")
+texture_margin_left = 8.0
+texture_margin_top = 8.0
+texture_margin_right = 8.0
+texture_margin_bottom = 8.0
+[sub_resource type="StyleBoxTexture" id="MeterResource"]
+texture = ExtResource("ui_meter_resource")
+texture_margin_left = 8.0
+texture_margin_top = 8.0
+texture_margin_right = 8.0
+texture_margin_bottom = 8.0
+[sub_resource type="StyleBoxTexture" id="Slider"]
+texture = ExtResource("ui_slider_lane")
+texture_margin_left = 12.0
+texture_margin_top = 12.0
+texture_margin_right = 12.0
+texture_margin_bottom = 12.0
 content_margin_top = 4.0
 content_margin_bottom = 4.0
-bg_color = Color(0.141176, 0.203922, 0.270588, 1)
-
-[sub_resource type="StyleBoxFlat" id="SliderActive"]
+[sub_resource type="StyleBoxTexture" id="SliderActive"]
+texture = ExtResource("ui_slider_fill")
+texture_margin_left = 12.0
+texture_margin_top = 12.0
+texture_margin_right = 12.0
+texture_margin_bottom = 12.0
 content_margin_top = 4.0
 content_margin_bottom = 4.0
-bg_color = Color(0.345098, 0.74902, 0.917647, 1)
-
-[sub_resource type="StyleBoxFlat" id="TabPanel"]
+[sub_resource type="StyleBoxTexture" id="TabPanel"]
+texture = ExtResource("ui_content_plate_inset")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
 content_margin_left = 12.0
 content_margin_top = 12.0
 content_margin_right = 12.0
 content_margin_bottom = 12.0
-bg_color = Color(0.0627451, 0.0980392, 0.137255, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.27451, 0.352941, 0.431373, 1)
-
-[sub_resource type="StyleBoxFlat" id="TabUnselected"]
+[sub_resource type="StyleBoxTexture" id="TabUnselected"]
+texture = ExtResource("ui_tab_option_normal")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
 content_margin_left = 14.0
 content_margin_top = 10.0
 content_margin_right = 14.0
 content_margin_bottom = 10.0
-bg_color = Color(0.0941176, 0.141176, 0.192157, 1)
-border_width_bottom = 1
-border_color = Color(0.27451, 0.352941, 0.431373, 1)
-
-[sub_resource type="StyleBoxFlat" id="TabHovered"]
+[sub_resource type="StyleBoxTexture" id="TabHovered"]
+texture = ExtResource("ui_tab_option_hover")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
 content_margin_left = 14.0
 content_margin_top = 10.0
 content_margin_right = 14.0
 content_margin_bottom = 10.0
-bg_color = Color(0.141176, 0.203922, 0.270588, 1)
-border_width_bottom = 3
-border_color = Color(0.345098, 0.74902, 0.917647, 1)
-
-[sub_resource type="StyleBoxFlat" id="TabSelected"]
+[sub_resource type="StyleBoxTexture" id="TabSelected"]
+texture = ExtResource("ui_tab_option_selected")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
 content_margin_left = 14.0
 content_margin_top = 10.0
 content_margin_right = 14.0
 content_margin_bottom = 10.0
-bg_color = Color(0.0941176, 0.141176, 0.192157, 1)
-border_width_bottom = 3
-border_color = Color(0.94902, 0.717647, 0.207843, 1)
-
-[sub_resource type="StyleBoxFlat" id="FamilyBadge"]
+[sub_resource type="StyleBoxTexture" id="FamilyBadge"]
+texture = ExtResource("ui_content_plate_summary")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
 content_margin_left = 12.0
 content_margin_top = 4.0
 content_margin_right = 12.0
 content_margin_bottom = 4.0
-bg_color = Color(0.141176, 0.203922, 0.270588, 1)
-border_width_left = 3
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.447059, 0.839216, 0.768627, 1)
-
-[sub_resource type="StyleBoxFlat" id="SummaryBand"]
+[sub_resource type="StyleBoxTexture" id="SummaryBand"]
+texture = ExtResource("ui_content_plate_summary")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
 content_margin_left = 16.0
 content_margin_top = 12.0
 content_margin_right = 16.0
 content_margin_bottom = 12.0
-bg_color = Color(0.0627451, 0.0980392, 0.137255, 0.92)
-border_width_left = 3
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.345098, 0.74902, 0.917647, 1)
-
-[sub_resource type="StyleBoxFlat" id="HorizontalRule"]
-content_margin_top = 1.0
-content_margin_bottom = 1.0
-bg_color = Color(0.27451, 0.352941, 0.431373, 1)
-
-[sub_resource type="StyleBoxFlat" id="VerticalRule"]
-content_margin_left = 1.0
-content_margin_right = 1.0
-bg_color = Color(0.27451, 0.352941, 0.431373, 1)
-
+[sub_resource type="StyleBoxLine" id="HorizontalRule"]
+color = Color(0.27451, 0.352941, 0.431373, 1)
+thickness = 1
+[sub_resource type="StyleBoxLine" id="VerticalRule"]
+color = Color(0.27451, 0.352941, 0.431373, 1)
+thickness = 1
+vertical = true
+[sub_resource type="StyleBoxTexture" id="PrimaryDisabled"]
+texture = ExtResource("ui_button_primary_disabled")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
+[sub_resource type="StyleBoxTexture" id="DangerDisabled"]
+texture = ExtResource("ui_button_danger_disabled")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
+[sub_resource type="StyleBoxTexture" id="UpgradeCardDisabled"]
+texture = ExtResource("ui_upgrade_card_disabled")
+texture_margin_left = 20.0
+texture_margin_top = 20.0
+texture_margin_right = 20.0
+texture_margin_bottom = 20.0
+[sub_resource type="StyleBoxTexture" id="TabFocus"]
+texture = ExtResource("ui_tab_option_focus")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
+[sub_resource type="StyleBoxTexture" id="ContentInset"]
+texture = ExtResource("ui_content_plate_inset")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
+[sub_resource type="StyleBoxTexture" id="ContentSummary"]
+texture = ExtResource("ui_content_plate_summary")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
+[sub_resource type="StyleBoxTexture" id="HudHealthResource"]
+texture = ExtResource("ui_hud_plate_health_resource")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
+[sub_resource type="StyleBoxTexture" id="HudObjectiveBoss"]
+texture = ExtResource("ui_hud_plate_objective_boss")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
+[sub_resource type="StyleBoxTexture" id="HudMinimapTarget"]
+texture = ExtResource("ui_hud_plate_minimap_target")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
+[sub_resource type="StyleBoxTexture" id="HudActionRail"]
+texture = ExtResource("ui_hud_plate_action_rail")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
+[sub_resource type="StyleBoxTexture" id="HudToast"]
+texture = ExtResource("ui_hud_plate_toast")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
+[sub_resource type="StyleBoxTexture" id="PreviewNormal"]
+texture = ExtResource("ui_preview_normal")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
+[sub_resource type="StyleBoxTexture" id="PreviewLocked"]
+texture = ExtResource("ui_preview_locked")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
+[sub_resource type="StyleBoxTexture" id="PreviewFocused"]
+texture = ExtResource("ui_preview_focused")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
+[sub_resource type="StyleBoxTexture" id="MeterCooldown"]
+texture = ExtResource("ui_meter_cooldown")
+texture_margin_left = 8.0
+texture_margin_top = 8.0
+texture_margin_right = 8.0
+texture_margin_bottom = 8.0
+[sub_resource type="StyleBoxTexture" id="MeterSupport"]
+texture = ExtResource("ui_meter_support")
+texture_margin_left = 8.0
+texture_margin_top = 8.0
+texture_margin_right = 8.0
+texture_margin_bottom = 8.0
 [resource]
 default_font = SubResource("FontBody")
 default_font_size = 15
@@ -386,6 +516,8 @@ VSeparator/styles/separator = SubResource("VerticalRule")
 HSlider/styles/slider = SubResource("Slider")
 HSlider/styles/grabber_area = SubResource("SliderActive")
 HSlider/styles/grabber_area_highlight = SubResource("SliderActive")
+HSlider/icons/grabber = ExtResource("ui_slider_grabber")
+HSlider/icons/grabber_highlight = ExtResource("ui_slider_grabber")
 TabContainer/styles/panel = SubResource("TabPanel")
 TabContainer/colors/font_unselected_color = Color(0.619608, 0.678431, 0.737255, 1)
 TabContainer/colors/font_hovered_color = Color(0.933333, 0.952941, 0.968627, 1)
@@ -395,7 +527,7 @@ TabContainer/font_sizes/font_size = 15
 TabContainer/styles/tab_unselected = SubResource("TabUnselected")
 TabContainer/styles/tab_hovered = SubResource("TabHovered")
 TabContainer/styles/tab_selected = SubResource("TabSelected")
-TabContainer/styles/tab_focus = SubResource("ChoiceFocus")
+TabContainer/styles/tab_focus = SubResource("TabFocus")
 TabBar/colors/font_unselected_color = Color(0.619608, 0.678431, 0.737255, 1)
 TabBar/colors/font_hovered_color = Color(0.933333, 0.952941, 0.968627, 1)
 TabBar/colors/font_selected_color = Color(0.933333, 0.952941, 0.968627, 1)
@@ -404,7 +536,7 @@ TabBar/font_sizes/font_size = 15
 TabBar/styles/tab_unselected = SubResource("TabUnselected")
 TabBar/styles/tab_hovered = SubResource("TabHovered")
 TabBar/styles/tab_selected = SubResource("TabSelected")
-TabBar/styles/tab_focus = SubResource("ChoiceFocus")
+TabBar/styles/tab_focus = SubResource("TabFocus")
 OptionButton/colors/font_color = Color(0.933333, 0.952941, 0.968627, 1)
 OptionButton/colors/font_hover_color = Color(0.933333, 0.952941, 0.968627, 1)
 OptionButton/colors/font_pressed_color = Color(0.933333, 0.952941, 0.968627, 1)
@@ -415,6 +547,8 @@ OptionButton/styles/focus = SubResource("ChoiceFocus")
 CheckButton/colors/font_color = Color(0.933333, 0.952941, 0.968627, 1)
 CheckButton/colors/font_hover_color = Color(0.933333, 0.952941, 0.968627, 1)
 CheckButton/font_sizes/font_size = 15
+CheckButton/icons/unchecked = ExtResource("ui_toggle_off")
+CheckButton/icons/checked = ExtResource("ui_toggle_on")
 PrimaryButton/base_type = &"Button"
 PrimaryButton/colors/font_color = Color(0.027451, 0.0431373, 0.0666667, 1)
 PrimaryButton/colors/font_hover_color = Color(0.027451, 0.0431373, 0.0666667, 1)
@@ -424,7 +558,7 @@ PrimaryButton/styles/normal = SubResource("PrimaryNormal")
 PrimaryButton/styles/hover = SubResource("PrimaryHover")
 PrimaryButton/styles/pressed = SubResource("PrimaryPressed")
 PrimaryButton/styles/focus = SubResource("PrimaryFocus")
-PrimaryButton/styles/disabled = SubResource("Disabled")
+PrimaryButton/styles/disabled = SubResource("PrimaryDisabled")
 SecondaryButton/base_type = &"Button"
 SecondaryButton/styles/normal = SubResource("ChoiceNormal")
 SecondaryButton/styles/hover = SubResource("ChoiceHover")
@@ -440,7 +574,7 @@ DangerButton/styles/normal = SubResource("DangerNormal")
 DangerButton/styles/hover = SubResource("DangerHover")
 DangerButton/styles/pressed = SubResource("DangerPressed")
 DangerButton/styles/focus = SubResource("DangerFocus")
-DangerButton/styles/disabled = SubResource("Disabled")
+DangerButton/styles/disabled = SubResource("DangerDisabled")
 ChoiceButton/base_type = &"Button"
 ChoiceButton/styles/normal = SubResource("ChoiceNormal")
 ChoiceButton/styles/hover = SubResource("ChoiceHover")
@@ -468,13 +602,13 @@ UpgradeChoiceCard/styles/normal = SubResource("UpgradeCardNormal")
 UpgradeChoiceCard/styles/hover = SubResource("UpgradeCardHover")
 UpgradeChoiceCard/styles/pressed = SubResource("UpgradeCardPressed")
 UpgradeChoiceCard/styles/focus = SubResource("UpgradeCardFocus")
-UpgradeChoiceCard/styles/disabled = SubResource("Disabled")
+UpgradeChoiceCard/styles/disabled = SubResource("UpgradeCardDisabled")
 SelectedUpgradeChoiceCard/base_type = &"Button"
 SelectedUpgradeChoiceCard/styles/normal = SubResource("UpgradeCardSelected")
 SelectedUpgradeChoiceCard/styles/hover = SubResource("UpgradeCardSelected")
 SelectedUpgradeChoiceCard/styles/pressed = SubResource("UpgradeCardPressed")
 SelectedUpgradeChoiceCard/styles/focus = SubResource("UpgradeCardSelected")
-SelectedUpgradeChoiceCard/styles/disabled = SubResource("Disabled")
+SelectedUpgradeChoiceCard/styles/disabled = SubResource("UpgradeCardDisabled")
 TertiaryDangerButton/base_type = &"Button"
 TertiaryDangerButton/colors/font_color = Color(0.941176, 0.352941, 0.372549, 1)
 TertiaryDangerButton/colors/font_hover_color = Color(0.941176, 0.352941, 0.372549, 1)
@@ -484,7 +618,7 @@ TertiaryDangerButton/styles/normal = SubResource("DangerNormal")
 TertiaryDangerButton/styles/hover = SubResource("DangerHover")
 TertiaryDangerButton/styles/pressed = SubResource("DangerPressed")
 TertiaryDangerButton/styles/focus = SubResource("DangerFocus")
-TertiaryDangerButton/styles/disabled = SubResource("Disabled")
+TertiaryDangerButton/styles/disabled = SubResource("DangerDisabled")
 FlatPanel/base_type = &"PanelContainer"
 FlatPanel/styles/panel = SubResource("Plate")
 ModalSurface/base_type = &"PanelContainer"
@@ -518,3 +652,29 @@ FamilyBadge/base_type = &"PanelContainer"
 FamilyBadge/styles/panel = SubResource("FamilyBadge")
 SummaryBand/base_type = &"PanelContainer"
 SummaryBand/styles/panel = SubResource("SummaryBand")
+ContentInset/base_type = &"PanelContainer"
+ContentInset/styles/panel = SubResource("ContentInset")
+ContentSummary/base_type = &"PanelContainer"
+ContentSummary/styles/panel = SubResource("ContentSummary")
+HudHealthResource/base_type = &"PanelContainer"
+HudHealthResource/styles/panel = SubResource("HudHealthResource")
+HudObjectiveBoss/base_type = &"PanelContainer"
+HudObjectiveBoss/styles/panel = SubResource("HudObjectiveBoss")
+HudMinimapTarget/base_type = &"PanelContainer"
+HudMinimapTarget/styles/panel = SubResource("HudMinimapTarget")
+HudActionRail/base_type = &"PanelContainer"
+HudActionRail/styles/panel = SubResource("HudActionRail")
+HudToast/base_type = &"PanelContainer"
+HudToast/styles/panel = SubResource("HudToast")
+PreviewFrame/base_type = &"PanelContainer"
+PreviewFrame/styles/panel = SubResource("PreviewNormal")
+PreviewLocked/base_type = &"PanelContainer"
+PreviewLocked/styles/panel = SubResource("PreviewLocked")
+PreviewFocused/base_type = &"PanelContainer"
+PreviewFocused/styles/panel = SubResource("PreviewFocused")
+CooldownMeter/base_type = &"ProgressBar"
+CooldownMeter/styles/background = SubResource("MeterBackground")
+CooldownMeter/styles/fill = SubResource("MeterCooldown")
+SupportMeter/base_type = &"ProgressBar"
+SupportMeter/styles/background = SubResource("MeterBackground")
+SupportMeter/styles/fill = SubResource("MeterSupport")

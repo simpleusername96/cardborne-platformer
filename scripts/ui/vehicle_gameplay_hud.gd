@@ -16,6 +16,7 @@ const UiGlyphCatalog = preload(
 const SemanticAssets = preload(
 	"res://scripts/presentation/components/vehicle_semantic_asset_provider.gd"
 )
+const UiAssets = preload("res://scripts/ui/vehicle_ui_asset_provider.gd")
 
 const HEALTH_CLUSTER_SIZE := Vector2(216.0, 74.0)
 const ACTION_RAIL_SIZE := Vector2(148.0, 44.0)
@@ -37,7 +38,6 @@ class HealthPips:
 	var _trail_elapsed := 0.0
 	var _trail_duration := 0.45
 	var _pulse_time := 0.0
-	var _bar_mesh: ArrayMesh
 
 	func _ready() -> void:
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -81,7 +81,6 @@ class HealthPips:
 		experience = experience_value
 		experience_required = next_required
 		if values_changed:
-			_bar_mesh = null
 			queue_redraw()
 
 	func _process(delta: float) -> void:
@@ -103,7 +102,6 @@ class HealthPips:
 		):
 			trailing_health = health
 			set_process(false)
-		_bar_mesh = null
 		queue_redraw()
 
 	func _draw() -> void:
@@ -126,117 +124,56 @@ class HealthPips:
 			16,
 			Art.IVORY_BRIGHT
 		)
-		if _bar_mesh == null:
-			_bar_mesh = _build_bar_mesh()
-		if _bar_mesh != null:
-			draw_mesh(_bar_mesh, null)
-
-	func _build_bar_mesh() -> ArrayMesh:
-		var vertices := PackedVector3Array()
-		var colors := PackedColorArray()
-		var indices := PackedInt32Array()
 		var hull_rect := Rect2(0.0, 21.0, size.x, 13.0)
-		_append_rect(vertices, colors, indices, hull_rect, Art.IVORY_SHADE)
-		_append_rect(
-			vertices,
-			colors,
-			indices,
-			Rect2(
-				hull_rect.position,
-				Vector2(
-					hull_rect.size.x
-						* clampf(trailing_health / maximum, 0.0, 1.0),
-					hull_rect.size.y
-				)
-			),
-			Color(Art.CORAL).lerp(Art.IVORY_BRIGHT, 0.55)
+		draw_texture_rect(
+			UiAssets.texture(&"meter", &"background"),
+			hull_rect,
+			false
 		)
-		_append_rect(
-			vertices,
-			colors,
-			indices,
-			Rect2(
-				hull_rect.position,
-				Vector2(
-					hull_rect.size.x * clampf(health / maximum, 0.0, 1.0),
-					hull_rect.size.y
-				)
-			),
-			Art.CORAL
+		_draw_meter_fill(
+			UiAssets.texture(&"meter", &"health"),
+			hull_rect,
+			clampf(trailing_health / maximum, 0.0, 1.0),
+			Color(1.0, 1.0, 1.0, 0.48)
 		)
-		if _pulse_time > 0.0:
-			var pulse := hull_rect.grow(2.0)
-			_append_rect(
-				vertices, colors, indices,
-				Rect2(pulse.position, Vector2(pulse.size.x, 2.0)),
-				Art.CORAL
-			)
-			_append_rect(
-				vertices, colors, indices,
-				Rect2(
-					pulse.position + Vector2(0.0, pulse.size.y - 2.0),
-					Vector2(pulse.size.x, 2.0)
-				),
-				Art.CORAL
-			)
-			_append_rect(
-				vertices, colors, indices,
-				Rect2(pulse.position, Vector2(2.0, pulse.size.y)),
-				Art.CORAL
-			)
-			_append_rect(
-				vertices, colors, indices,
-				Rect2(
-					pulse.position + Vector2(pulse.size.x - 2.0, 0.0),
-					Vector2(2.0, pulse.size.y)
-				),
-				Art.CORAL
-			)
+		_draw_meter_fill(
+			UiAssets.texture(&"meter", &"health"),
+			hull_rect,
+			clampf(health / maximum, 0.0, 1.0),
+			Color.WHITE
+		)
 		var xp_rect := Rect2(0.0, 39.0, size.x, 7.0)
-		_append_rect(vertices, colors, indices, xp_rect, Art.STRUCTURE_MID)
-		_append_rect(
-			vertices,
-			colors,
-			indices,
-			Rect2(
-				xp_rect.position,
-				Vector2(
-					xp_rect.size.x
-						* clampf(experience / experience_required, 0.0, 1.0),
-					xp_rect.size.y
-				)
-			),
-			Art.MUSTARD
+		draw_texture_rect(
+			UiAssets.texture(&"meter", &"background"),
+			xp_rect,
+			false
 		)
-		var arrays := []
-		arrays.resize(Mesh.ARRAY_MAX)
-		arrays[Mesh.ARRAY_VERTEX] = vertices
-		arrays[Mesh.ARRAY_COLOR] = colors
-		arrays[Mesh.ARRAY_INDEX] = indices
-		var mesh := ArrayMesh.new()
-		mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
-		return mesh
+		_draw_meter_fill(
+			UiAssets.texture(&"meter", &"resource"),
+			xp_rect,
+			clampf(experience / experience_required, 0.0, 1.0),
+			Color.WHITE
+		)
 
-	func _append_rect(
-		vertices: PackedVector3Array,
-		colors: PackedColorArray,
-		indices: PackedInt32Array,
+	func _draw_meter_fill(
+		texture: Texture2D,
 		rect: Rect2,
-		color: Color
+		ratio: float,
+		modulate: Color
 	) -> void:
-		if rect.size.x <= 0.0 or rect.size.y <= 0.0:
+		if texture == null or ratio <= 0.0:
 			return
-		var offset := vertices.size()
-		for point in [
-			rect.position,
-			Vector2(rect.end.x, rect.position.y),
-			rect.end,
-			Vector2(rect.position.x, rect.end.y),
-		]:
-			vertices.append(Vector3(point.x, point.y, 0.0))
-			colors.append(color)
-		for local_index in [0, 1, 2, 0, 2, 3]:
-			indices.append(offset + local_index)
+		var clamped := clampf(ratio, 0.0, 1.0)
+		var texture_size := Vector2(texture.get_size())
+		draw_texture_rect_region(
+			texture,
+			Rect2(rect.position, Vector2(rect.size.x * clamped, rect.size.y)),
+			Rect2(
+				Vector2.ZERO,
+				Vector2(texture_size.x * clamped, texture_size.y)
+			),
+			modulate
+		)
 
 
 class ActionRailSlot:
@@ -246,8 +183,6 @@ class ActionRailSlot:
 	var accent := Art.PLAYER_REWARD
 	var cooldown_ratio := 0.0
 	var available := true
-	var _available_mesh: ArrayMesh
-	var _unavailable_mesh: ArrayMesh
 
 	func _ready() -> void:
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -259,8 +194,6 @@ class ActionRailSlot:
 			return
 		action_id = glyph_id
 		accent = color
-		_available_mesh = null
-		_unavailable_mesh = null
 		queue_redraw()
 
 	func set_state(is_available: bool, ratio: float = 0.0) -> void:
@@ -274,15 +207,17 @@ class ActionRailSlot:
 	func _draw() -> void:
 		var center := size * 0.5
 		var radius := 19.0
-		var mesh := _available_mesh if available else _unavailable_mesh
-		if mesh == null:
-			mesh = _build_mesh(center, radius, available)
-			if available:
-				_available_mesh = mesh
-			else:
-				_unavailable_mesh = mesh
-		if mesh != null:
-			draw_mesh(mesh, null)
+		var state_texture := UiAssets.texture(
+			&"small_state",
+			&"pip_available" if available else &"disabled"
+		)
+		if state_texture != null:
+			draw_texture_rect(
+				state_texture,
+				Rect2(center - Vector2.ONE * 21.0, Vector2.ONE * 42.0),
+				false,
+				Color.WHITE
+			)
 		var icon := SemanticAssets.texture(
 			StringName("hud/action_%s" % action_id)
 		)
@@ -306,102 +241,12 @@ class ActionRailSlot:
 				true
 			)
 
-	func _build_mesh(
-		center: Vector2,
-		radius: float,
-		is_available: bool
-	) -> ArrayMesh:
-		var vertices := PackedVector3Array()
-		var colors := PackedColorArray()
-		var indices := PackedInt32Array()
-		_append_disk(
-			vertices, colors, indices,
-			center + Vector2(1.0, 2.0), radius + 1.0,
-			Color(Art.WORLD_CANVAS, 0.82), 24
-		)
-		_append_disk(
-			vertices, colors, indices,
-			center, radius,
-			accent if is_available else Color(Art.WORLD_CANVAS, 0.92), 24
-		)
-		_append_band(
-			vertices, colors, indices,
-			center, radius - 1.0, radius + 1.0, 0.0, TAU,
-			Art.TEXT_PRIMARY
-				if is_available
-				else Color(Art.SUPPORT, 0.58),
-			24
-		)
-		var arrays := []
-		arrays.resize(Mesh.ARRAY_MAX)
-		arrays[Mesh.ARRAY_VERTEX] = vertices
-		arrays[Mesh.ARRAY_COLOR] = colors
-		arrays[Mesh.ARRAY_INDEX] = indices
-		var mesh := ArrayMesh.new()
-		mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
-		return mesh
-
-	func _append_disk(
-		vertices: PackedVector3Array,
-		colors: PackedColorArray,
-		indices: PackedInt32Array,
-		center: Vector2,
-		radius: float,
-		color: Color,
-		segments: int
-	) -> void:
-		var center_index := vertices.size()
-		vertices.append(Vector3(center.x, center.y, 0.0))
-		colors.append(color)
-		for index in range(segments + 1):
-			var point := center + Vector2.RIGHT.rotated(
-				TAU * float(index) / float(segments)
-			) * radius
-			vertices.append(Vector3(point.x, point.y, 0.0))
-			colors.append(color)
-		for index in segments:
-			indices.append(center_index)
-			indices.append(center_index + index + 1)
-			indices.append(center_index + index + 2)
-
-	func _append_band(
-		vertices: PackedVector3Array,
-		colors: PackedColorArray,
-		indices: PackedInt32Array,
-		center: Vector2,
-		inner_radius: float,
-		outer_radius: float,
-		from_angle: float,
-		to_angle: float,
-		color: Color,
-		segments: int
-	) -> void:
-		for segment in segments:
-			var ratio_a := float(segment) / float(segments)
-			var ratio_b := float(segment + 1) / float(segments)
-			var direction_a := Vector2.RIGHT.rotated(
-				lerpf(from_angle, to_angle, ratio_a)
-			)
-			var direction_b := Vector2.RIGHT.rotated(
-				lerpf(from_angle, to_angle, ratio_b)
-			)
-			var offset := vertices.size()
-			for point in [
-				center + direction_a * inner_radius,
-				center + direction_a * outer_radius,
-				center + direction_b * outer_radius,
-				center + direction_b * inner_radius,
-			]:
-				vertices.append(Vector3(point.x, point.y, 0.0))
-				colors.append(color)
-			for local_index in [0, 1, 2, 0, 2, 3]:
-				indices.append(offset + local_index)
-
 	func debug_contract() -> Dictionary:
 		var descriptor := UiGlyphCatalog.action_descriptor(action_id)
 		return {
 			"available":available,
-			"interior_filled":available,
+			"image_backed":true,
+			"interior_filled":false,
 			"has_text":false,
 			"draw_batches":2 if not available else 1,
 			"minimum_size":custom_minimum_size,
@@ -459,7 +304,6 @@ class StageMinimap:
 			queue_redraw()
 
 	func _draw() -> void:
-		draw_rect(Rect2(Vector2.ZERO, size), Art.COBALT_DEEP)
 		var world_size: Vector2 = snapshot.get(
 			"world_size",
 			Vector2(5200.0, 2200.0)
@@ -589,7 +433,7 @@ var _health_panel: PanelContainer
 var _objective_panel: PanelContainer
 var _minimap_panel: PanelContainer
 var _target_panel: PanelContainer
-var _dock_panel: Control
+var _dock_panel: PanelContainer
 var _health_bar: HealthPips
 var _objective_label: Label
 var _objective_detail: Label
@@ -599,7 +443,7 @@ var _last_objective_detail := ""
 var _last_buff_text := ""
 var _boss_visible := false
 var _target_visible := false
-var _boss_cluster: VBoxContainer
+var _boss_cluster: PanelContainer
 var _boss_name: Label
 var _boss_bar: ProgressBar
 var _boss_state: Label
@@ -611,6 +455,7 @@ var _passive_slot: ActionRailSlot
 var _skill_slot: ActionRailSlot
 var _buff_label: Label
 var _minimap: StageMinimap
+var _notification_panel: PanelContainer
 var _notification: Label
 var _notification_timer := 0.0
 var _notification_queue: Array[Dictionary] = []
@@ -632,9 +477,12 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if _notification_timer > 0.0:
 		_notification_timer = maxf(0.0, _notification_timer - delta)
-		_notification.modulate.a = minf(1.0, _notification_timer * 3.0)
+		_notification_panel.modulate.a = minf(
+			1.0,
+			_notification_timer * 3.0
+		)
 		if _notification_timer <= 0.0:
-			_notification.visible = false
+			_notification_panel.visible = false
 			_show_next_notification()
 	if _objective_detail_timer > 0.0:
 		_objective_detail_timer = maxf(0.0, _objective_detail_timer - delta)
@@ -653,6 +501,7 @@ func _build() -> void:
 
 	_health_panel = Factory.flat_panel()
 	_health_panel.name = "HealthPanel"
+	_health_panel.theme_type_variation = &"HudHealthResource"
 	_health_panel.position = Vector2(18.0, 16.0)
 	_health_panel.size = HEALTH_CLUSTER_SIZE
 	add_child(_health_panel)
@@ -661,6 +510,7 @@ func _build() -> void:
 
 	_objective_panel = Factory.flat_panel()
 	_objective_panel.name = "ObjectivePanel"
+	_objective_panel.theme_type_variation = &"HudObjectiveBoss"
 	_objective_panel.custom_minimum_size = Vector2(360.0, 44.0)
 	_objective_panel.size = Vector2(360.0, 44.0)
 	add_child(_objective_panel)
@@ -681,17 +531,21 @@ func _build() -> void:
 
 	_minimap_panel = Factory.flat_panel()
 	_minimap_panel.name = "MinimapPanel"
+	_minimap_panel.theme_type_variation = &"HudMinimapTarget"
 	_minimap_panel.size = Vector2(176.0, 108.0)
 	add_child(_minimap_panel)
 	_minimap = StageMinimap.new()
 	_minimap.custom_minimum_size = Vector2(168.0, 100.0)
 	_minimap_panel.add_child(_minimap)
 
-	_boss_cluster = VBoxContainer.new()
+	_boss_cluster = PanelContainer.new()
 	_boss_cluster.name = "BossCluster"
+	_boss_cluster.theme_type_variation = &"HudObjectiveBoss"
 	_boss_cluster.size = Vector2(520.0, 58.0)
-	_boss_cluster.add_theme_constant_override("separation", 1)
 	add_child(_boss_cluster)
+	var boss_box := VBoxContainer.new()
+	boss_box.add_theme_constant_override("separation", 1)
+	_boss_cluster.add_child(boss_box)
 	_boss_name = Factory.label(
 		"ENEMY_FOUNDRY_COLOSSUS",
 		14,
@@ -699,14 +553,14 @@ func _build() -> void:
 	)
 	_shadow_label(_boss_name)
 	_boss_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_boss_cluster.add_child(_boss_name)
+	boss_box.add_child(_boss_name)
 	_boss_bar = ProgressBar.new()
 	_boss_bar.theme_type_variation = &"BossMeter"
 	_boss_bar.show_percentage = false
 	_boss_bar.max_value = 1.0
 	_boss_bar.value = 1.0
 	_boss_bar.custom_minimum_size = Vector2(520.0, 10.0)
-	_boss_cluster.add_child(_boss_bar)
+	boss_box.add_child(_boss_bar)
 	_boss_state = Factory.label(
 		"PATTERN_READING_ARENA",
 		14,
@@ -715,11 +569,12 @@ func _build() -> void:
 	_shadow_label(_boss_state)
 	_boss_state.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_boss_state.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	_boss_cluster.add_child(_boss_state)
+	boss_box.add_child(_boss_state)
 	_boss_cluster.visible = false
 
 	_target_panel = Factory.flat_panel()
 	_target_panel.name = "TargetPanel"
+	_target_panel.theme_type_variation = &"HudMinimapTarget"
 	_target_panel.size = Vector2(184.0, 64.0)
 	add_child(_target_panel)
 	var target_cluster := VBoxContainer.new()
@@ -739,8 +594,9 @@ func _build() -> void:
 	target_cluster.add_child(_target_state)
 	_target_panel.visible = false
 
-	_dock_panel = Control.new()
+	_dock_panel = PanelContainer.new()
 	_dock_panel.name = "ActionRail"
+	_dock_panel.theme_type_variation = &"HudActionRail"
 	_dock_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_dock_panel.size = ACTION_RAIL_SIZE
 	add_child(_dock_panel)
@@ -759,14 +615,18 @@ func _build() -> void:
 	add_child(_buff_label)
 	_buff_label.visible = false
 
+	_notification_panel = PanelContainer.new()
+	_notification_panel.name = "NotificationPanel"
+	_notification_panel.theme_type_variation = &"HudToast"
+	_notification_panel.size = Vector2(360.0, 36.0)
+	add_child(_notification_panel)
 	_notification = Factory.label("", 18, Art.IVORY_BRIGHT)
 	_notification.name = "Notification"
 	_notification.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_notification.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_notification.size = Vector2(360.0, 36.0)
 	_shadow_label(_notification)
-	add_child(_notification)
-	_notification.visible = false
+	_notification_panel.add_child(_notification)
+	_notification_panel.visible = false
 
 	_transition_banner = StageTransitionBanner.new()
 	add_child(_transition_banner)
@@ -890,7 +750,7 @@ func notify(
 func clear_notifications() -> void:
 	_notification_queue.clear()
 	_notification_timer = 0.0
-	_notification.visible = false
+	_notification_panel.visible = false
 
 
 func show_stage_transition(
@@ -1031,7 +891,7 @@ func debug_contract(viewport_width: float) -> Dictionary:
 			and objective_start + objective_size.x <= minimap_start
 		),
 		"zone_count":4,
-		"notification_inside_hud":_notification.get_parent() == self,
+		"notification_inside_hud":_notification_panel.get_parent() == self,
 		"status_font_sizes":{
 			"objective_detail":_objective_detail.get_theme_font_size(
 				"font_size"
@@ -1103,9 +963,9 @@ func _apply_responsive_layout() -> void:
 		"font_size",
 		14
 	)
-	_notification.size.x = 320.0 if compact else 360.0
-	_notification.position = Vector2(
-		(size.x - _notification.size.x) * 0.5,
+	_notification_panel.size.x = 320.0 if compact else 360.0
+	_notification_panel.position = Vector2(
+		(size.x - _notification_panel.size.x) * 0.5,
 		156.0 if _boss_cluster.visible else 72.0
 	)
 	_transition_banner.apply_viewport(size)
@@ -1122,8 +982,8 @@ func _show_notification(entry: Dictionary) -> void:
 		"font_color",
 		Color(entry["color"])
 	)
-	_notification.modulate.a = 1.0
-	_notification.visible = true
+	_notification_panel.modulate.a = 1.0
+	_notification_panel.visible = true
 	_notification_timer = float(entry["duration"])
 	set_process(true)
 

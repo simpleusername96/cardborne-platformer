@@ -1,5 +1,5 @@
 class_name VehicleGuidebookPreview
-extends Control
+extends PanelContainer
 
 ## Displays guide entries through the approved semantic-v2 runtime provider.
 ## Preview geometry stays presentation-only and never substitutes for collision.
@@ -7,18 +7,16 @@ extends Control
 const SemanticAssets = preload(
 	"res://scripts/presentation/components/vehicle_semantic_asset_provider.gd"
 )
-const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
-
 var _textures: Array[TextureRect] = []
 var _asset_ids: Array[StringName] = []
 
 
 func _ready() -> void:
 	custom_minimum_size = Vector2(220.0, 150.0)
+	theme_type_variation = &"PreviewFrame"
 	clip_contents = true
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	resized.connect(_layout_textures)
-	queue_redraw()
 
 
 func show_preview(preview: Dictionary) -> void:
@@ -50,7 +48,6 @@ func show_preview(preview: Dictionary) -> void:
 		_:
 			_add_asset(StringName("actor/%s" % preview_id), 94.0)
 	_layout_textures()
-	queue_redraw()
 
 
 func debug_contract() -> Dictionary:
@@ -59,16 +56,6 @@ func debug_contract() -> Dictionary:
 		"asset_ids":_asset_ids.duplicate(),
 		"texture_count":_textures.size(),
 	}
-
-
-func _draw() -> void:
-	draw_rect(Rect2(Vector2.ZERO, size), Art.COBALT_VOID.lightened(0.04))
-	draw_rect(
-		Rect2(Vector2(8.0, 8.0), size - Vector2(16.0, 16.0)),
-		Art.STRUCTURE_BASE,
-		false,
-		3.0
-	)
 
 
 func _add_terrain(terrain_id: StringName) -> void:

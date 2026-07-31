@@ -15,96 +15,28 @@ const RunDifficulty = preload("res://scripts/vehicle/vehicle_run_difficulty.gd")
 
 
 class ControlHintGlyph:
-	extends Control
+	extends TextureRect
 
 	const SemanticAssets = preload(
 		"res://scripts/presentation/components/vehicle_semantic_asset_provider.gd"
 	)
 
 	var kind: StringName = &"move"
-	var accent := Art.MINT
-
 	func _ready() -> void:
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
 		if custom_minimum_size == Vector2.ZERO:
 			custom_minimum_size = Vector2(40.0, 40.0)
+		expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 
-	func configure(value: StringName, color: Color = Art.MINT) -> void:
+	func configure(value: StringName, _color: Color = Art.MINT) -> void:
 		kind = value
-		accent = color
-		queue_redraw()
-
-	func _draw() -> void:
-		var center := size * 0.5
-		draw_circle(center, minf(size.x, size.y) * 0.46, accent)
-		match kind:
-			&"move":
-				for direction_variant in [
-					Vector2.UP,
-					Vector2.RIGHT,
-					Vector2.DOWN,
-					Vector2.LEFT,
-				]:
-					var direction: Vector2 = direction_variant
-					var tip := center + direction * 12.0
-					var side := direction.rotated(PI * 0.5) * 4.0
-					draw_colored_polygon(PackedVector2Array([
-						tip,
-						center + direction * 5.0 + side,
-						center + direction * 5.0 - side,
-					]), Art.IVORY_BRIGHT)
-			&"aim":
-				draw_arc(
-					center,
-					8.0,
-					0.0,
-					TAU,
-					24,
-					Art.IVORY_BRIGHT,
-					3.0,
-					true
-				)
-				draw_circle(center, 2.5, Art.IVORY_BRIGHT)
-				for direction_variant in [
-					Vector2.UP,
-					Vector2.RIGHT,
-					Vector2.DOWN,
-					Vector2.LEFT,
-				]:
-					var direction: Vector2 = direction_variant
-					draw_line(
-						center + direction * 10.0,
-						center + direction * 15.0,
-						Art.IVORY_BRIGHT,
-						3.0
-					)
-			&"primary":
-				_draw_semantic_action(center, &"primary")
-			&"dash":
-				_draw_semantic_action(center, &"dash")
-			_:
-				draw_colored_polygon(PackedVector2Array([
-					center + Vector2(-3.0, -13.0),
-					center + Vector2(8.0, -3.0),
-					center + Vector2(2.0, -1.0),
-					center + Vector2(6.0, 12.0),
-					center + Vector2(-9.0, 2.0),
-					center + Vector2(-2.0, 0.0),
-				]), Art.IVORY_BRIGHT)
-
-	func _draw_semantic_action(center: Vector2, action_id: StringName) -> void:
-		var texture := SemanticAssets.texture(
-			StringName("hud/action_%s" % action_id)
-		)
-		if texture == null:
-			return
-		var extent := Vector2.ONE * 28.0
-		draw_texture_rect(
-			texture,
-			Rect2(center - extent * 0.5, extent),
-			false,
-			Color.WHITE
-		)
+		texture = SemanticAssets.texture(StringName({
+			&"move": &"cue/guide_ship",
+			&"aim": &"cue/target_bracket_corner",
+			&"primary": &"hud/action_primary",
+			&"dash": &"hud/action_dash",
+		}.get(kind, &"hud/action_emp")))
 
 
 var _field_label: Label

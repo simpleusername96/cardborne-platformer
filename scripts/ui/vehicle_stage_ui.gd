@@ -436,36 +436,36 @@ func debug_ui_contract(viewport_width: float = 1280.0) -> Dictionary:
 			),
 			"texture_filter":_root.texture_filter,
 		},
-		"flat_style_foundation":{
+		"image_style_foundation":{
 			"modal":(
 				_root.theme.get_stylebox(
 					&"panel",
 					&"ModalSurface"
-				) is StyleBoxFlat
+				) is StyleBoxTexture
 			),
 			"hud":(
 				_root.theme.get_stylebox(
 					&"panel",
 					&"HudStatusGroup"
-				) is StyleBoxFlat
+				) is StyleBoxTexture
 			),
 			"button":(
 				_root.theme.get_stylebox(
 					&"normal",
 					&"Button"
-				) is StyleBoxFlat
+				) is StyleBoxTexture
 			),
 			"upgrade_card":(
 				_root.theme.get_stylebox(
 					&"normal",
 					&"UpgradeChoiceCard"
-				) is StyleBoxFlat
+				) is StyleBoxTexture
 			),
 			"tab":(
 				_root.theme.get_stylebox(
 					&"tab_selected",
 					&"TabBar"
-				) is StyleBoxFlat
+				) is StyleBoxTexture
 			),
 		},
 		"command_min_height":pause_contract["command_min_height"],
