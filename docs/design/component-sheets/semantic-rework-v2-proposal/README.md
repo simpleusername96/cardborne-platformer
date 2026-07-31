@@ -12,9 +12,12 @@ runtime asset이 아니며, 구현 완료 뒤에는 같은 catalog와 renderer�
 - `15-world-layering-asis-tobe.png`: 알고리즘 바닥 타일, 명확한 벽,
   기능성 지형의 3계층 맵
 
-구현 순서와 수용 기준은
+`13`과 `14`의 runtime asset·UI·공격 표시·boss objective 구현 순서와
+수용 기준은
 `.agents/execplans/2026-07-30-semantic-visual-world-boss-performance-rework.md`를
-따른다.
+따른다. `15`의 map generation은 현재 실행 범위가 아니며
+`.agents/execplans/2026-07-31-deferred-map-tactics-boss-follow-up.md`에
+`draft`로 보존한다.
 
 ## 생성 근거
 
