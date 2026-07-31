@@ -1,0 +1,674 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cardborne 에셋 전환 승인 보드</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b1018;
+      --panel: #131b28;
+      --panel-2: #192433;
+      --line: #34465a;
+      --text: #eef5fb;
+      --muted: #a9b7c6;
+      --cyan: #48d8e8;
+      --mint: #72d7ad;
+      --amber: #f2b632;
+      --coral: #f06a66;
+      --violet: #ae7bea;
+      --focus: #fff1a8;
+      --shadow: 0 14px 32px rgb(0 0 0 / 30%);
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at 20% -10%, rgb(72 216 232 / 10%), transparent 30rem),
+        var(--bg);
+      color: var(--text);
+      font-family: Inter, "Pretendard", "Noto Sans KR", system-ui, sans-serif;
+      line-height: 1.55;
+    }
+
+    button, textarea, select { font: inherit; }
+    button, a, textarea, select { outline-offset: 3px; }
+    :focus-visible { outline: 3px solid var(--focus); }
+    a { color: var(--cyan); }
+    code { color: #d6e7f6; overflow-wrap: anywhere; }
+
+    .shell { width: min(1500px, calc(100% - 32px)); margin: 0 auto; }
+
+    .hero {
+      border-bottom: 1px solid var(--line);
+      padding: 52px 0 30px;
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: var(--cyan);
+      font-size: .78rem;
+      font-weight: 800;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+    }
+
+    h1 { margin: 0; font-size: clamp(2rem, 5vw, 4.3rem); line-height: 1.02; letter-spacing: -.045em; }
+    h2 { margin: 0 0 8px; font-size: clamp(1.45rem, 3vw, 2.15rem); letter-spacing: -.025em; }
+    h3 { margin: 0; font-size: 1.05rem; }
+    p { margin: 0; }
+
+    .lede { max-width: 78ch; margin-top: 18px; color: var(--muted); font-size: 1.04rem; }
+
+    .gate-note {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      margin-top: 22px;
+      max-width: 980px;
+      padding: 14px 16px;
+      border: 1px solid rgb(242 182 50 / 48%);
+      border-left: 5px solid var(--amber);
+      border-radius: 12px;
+      background: rgb(242 182 50 / 7%);
+    }
+
+    .toolbar {
+      position: sticky;
+      z-index: 20;
+      top: 0;
+      border-bottom: 1px solid var(--line);
+      background: rgb(11 16 24 / 94%);
+      backdrop-filter: blur(14px);
+    }
+
+    .toolbar-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      min-height: 72px;
+      padding: 10px 0;
+    }
+
+    .count { margin-right: auto; color: var(--muted); }
+    .count strong { color: var(--text); }
+
+    .filter, .utility, .decision button {
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--panel);
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .filter, .utility { padding: 8px 12px; }
+    .filter[aria-pressed="true"] { border-color: var(--cyan); background: rgb(72 216 232 / 12%); }
+    .utility:hover, .filter:hover, .decision button:hover { border-color: #6c8299; }
+
+    main { padding: 36px 0 100px; }
+    .section { scroll-margin-top: 90px; margin-top: 58px; }
+    .section:first-child { margin-top: 0; }
+    .section-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 18px; align-items: end; margin-bottom: 18px; }
+    .section-copy { max-width: 80ch; color: var(--muted); }
+    .section-count { color: var(--muted); font-size: .88rem; }
+
+    .reference-grid, .mapping-grid { display: grid; gap: 18px; }
+    .reference-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .mapping-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+    .reference, .mapping-card {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: linear-gradient(145deg, rgb(25 36 51 / 96%), rgb(16 23 34 / 96%));
+      box-shadow: var(--shadow);
+    }
+
+    .reference button, .zoom-button {
+      width: 100%;
+      border: 0;
+      padding: 0;
+      background: transparent;
+      color: inherit;
+      cursor: zoom-in;
+    }
+
+    .reference img { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; background: #080c12; }
+    .reference figcaption { padding: 12px 14px 14px; color: var(--muted); }
+    .reference strong { display: block; margin-bottom: 2px; color: var(--text); }
+
+    .card-head { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: start; padding: 18px 18px 14px; }
+    .asset-id { margin-top: 4px; color: var(--muted); font-size: .78rem; overflow-wrap: anywhere; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      padding: 3px 8px;
+      border: 1px solid currentColor;
+      border-radius: 999px;
+      font-size: .7rem;
+      font-weight: 850;
+      letter-spacing: .08em;
+      white-space: nowrap;
+    }
+
+    .replace { color: var(--amber); }
+    .reuse { color: var(--mint); }
+    .code { color: var(--cyan); }
+    .remove { color: var(--coral); }
+    .hold { color: var(--violet); }
+
+    .compare {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 36px minmax(0, 1fr);
+      gap: 0;
+      align-items: stretch;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .arrow { display: grid; place-items: center; background: #0b111b; color: var(--cyan); font-weight: 900; }
+    .state { min-width: 0; padding: 12px; background: rgb(8 13 20 / 34%); }
+    .state-label { margin-bottom: 8px; color: var(--muted); font-size: .7rem; font-weight: 850; letter-spacing: .12em; }
+    .state-label.target { color: var(--cyan); }
+
+    .media, .sheet-crop, .diagram, .card-mock {
+      position: relative;
+      overflow: hidden;
+      display: grid;
+      place-items: center;
+      width: 100%;
+      min-height: 210px;
+      border: 1px solid #26384c;
+      border-radius: 10px;
+      background-color: #111a26;
+      background-image:
+        linear-gradient(45deg, #172332 25%, transparent 25%),
+        linear-gradient(-45deg, #172332 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #172332 75%),
+        linear-gradient(-45deg, transparent 75%, #172332 75%);
+      background-position: 0 0, 0 12px, 12px -12px, -12px 0;
+      background-size: 24px 24px;
+    }
+
+    .media img { display: block; max-width: 92%; max-height: 205px; object-fit: contain; }
+    .media.multi { grid-template-columns: repeat(auto-fit, minmax(58px, 1fr)); gap: 8px; padding: 10px; }
+    .media.multi img { width: 100%; max-height: 112px; }
+    .media.runtime img { max-width: 100%; max-height: none; width: 100%; height: 100%; object-fit: cover; }
+
+    .sheet-crop { aspect-ratio: 1; min-height: 0; }
+    .sheet-crop img { position: absolute; width: 220%; height: 220%; max-width: none; object-fit: contain; }
+    .sheet-crop.tl img { left: 0; top: 0; }
+    .sheet-crop.tr img { left: -120%; top: 0; }
+    .sheet-crop.bl img { left: 0; top: -100%; }
+    .sheet-crop.br img { left: -120%; top: -100%; }
+
+    .visual-caption { min-height: 64px; margin-top: 8px; color: var(--muted); font-size: .84rem; }
+    .visual-caption strong { color: var(--text); }
+
+    .spec { padding: 15px 18px 4px; }
+    .spec p + p { margin-top: 9px; }
+    .spec strong { color: var(--cyan); }
+    .files { margin-top: 9px; color: var(--muted); font-size: .77rem; overflow-wrap: anywhere; }
+
+    .decision { padding: 14px 18px 18px; }
+    .decision-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .decision button { padding: 8px 6px; font-size: .83rem; }
+    .decision button[data-choice="approved"].selected { border-color: var(--mint); background: rgb(114 215 173 / 15%); color: #baf0d4; }
+    .decision button[data-choice="revise"].selected { border-color: var(--coral); background: rgb(240 106 102 / 14%); color: #ffc1bf; }
+    .decision button[data-choice="hold"].selected { border-color: var(--amber); background: rgb(242 182 50 / 12%); color: #ffe09a; }
+    .decision textarea { width: 100%; min-height: 70px; margin-top: 9px; resize: vertical; border: 1px solid var(--line); border-radius: 9px; padding: 9px 10px; background: #0d141f; color: var(--text); }
+
+    .diagram { padding: 18px; text-align: center; }
+    .floor-demo { display: grid; grid-template-columns: repeat(4, 46px); gap: 3px; transform: rotate(-5deg); }
+    .floor-demo span { aspect-ratio: 1; border: 1px solid #44566a; background: linear-gradient(135deg, #263444, #182433); }
+    .floor-demo span:nth-child(3n) { background: linear-gradient(45deg, #2f4051, #172230); }
+
+    .xp-demo { display: flex; gap: 28px; align-items: center; }
+    .old-xp { width: 52px; height: 52px; border: 7px double #65d9e5; border-radius: 50%; box-shadow: 0 0 14px #52d7e8; transform: rotate(20deg); }
+    .new-xp { width: 28px; height: 28px; background: #59d9e7; border: 3px solid #d9fbff; transform: rotate(45deg); box-shadow: 0 0 0 3px #133446; }
+
+    .effect-demo { display: flex; gap: 18px; align-items: center; }
+    .effect-demo .burst { width: 68px; height: 68px; border: 8px dotted var(--coral); border-radius: 50%; filter: drop-shadow(0 0 8px var(--coral)); }
+    .effect-demo .spark { width: 66px; height: 6px; border-radius: 99px; background: linear-gradient(90deg, white, var(--coral), transparent); transform: rotate(-22deg); }
+
+    .telegraph-demo { position: relative; width: 90%; height: 100px; }
+    .telegraph-demo::before { content: ""; position: absolute; inset: 30px 0; border: 2px solid var(--coral); background: rgb(240 106 102 / 15%); }
+    .telegraph-demo::after { content: ""; position: absolute; left: 10px; top: 23px; width: 52px; height: 52px; border: 5px double var(--coral); border-radius: 50%; background: #311b24; }
+
+    .orbit-demo { position: relative; width: 170px; height: 170px; border: 1px dashed #4e647a; border-radius: 50%; }
+    .ship-dot { position: absolute; left: 67px; top: 67px; width: 36px; height: 36px; background: var(--amber); clip-path: polygon(0 15%, 100% 50%, 0 85%, 22% 50%); }
+    .blade-dot { position: absolute; left: 134px; top: 72px; width: 30px; height: 13px; border: 2px solid #b7fbff; background: var(--cyan); transform: rotate(0deg); clip-path: polygon(0 28%, 100% 0, 82% 50%, 100% 100%, 0 72%); }
+    .orbit-demo::after { content: "바깥 방향"; position: absolute; right: -4px; top: 106px; color: var(--cyan); font-size: .72rem; }
+
+    .card-mock { min-height: 310px; padding: 20px; }
+    .upgrade-card {
+      display: grid;
+      grid-template-rows: 34% auto auto 1fr auto;
+      width: min(230px, 90%);
+      height: 286px;
+      overflow: hidden;
+      border: 2px solid #567189;
+      border-radius: 12px;
+      background: linear-gradient(150deg, #223247, #111a27);
+      box-shadow: 0 14px 22px rgb(0 0 0 / 38%);
+    }
+    .upgrade-card .art { display: grid; place-items: center; background: linear-gradient(145deg, #273b52, #172333); border-bottom: 1px solid #496279; }
+    .upgrade-card .art img { width: 62px; height: 62px; object-fit: contain; }
+    .upgrade-card .name { padding: 10px 14px 0; font-weight: 800; }
+    .upgrade-card .level { padding: 2px 14px 6px; color: var(--cyan); font-size: .77rem; }
+    .upgrade-card .desc { min-height: 0; overflow: hidden; padding: 0 14px; color: var(--muted); font-size: .76rem; }
+    .upgrade-card .pips { display: flex; gap: 4px; padding: 8px 14px 12px; }
+    .upgrade-card .pips img { width: 18px; height: 18px; }
+
+    .scope-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
+    .scope-item { border: 1px solid var(--line); border-radius: 12px; padding: 14px; background: var(--panel); }
+    .scope-item strong { display: block; margin-bottom: 4px; }
+    .scope-item p { color: var(--muted); font-size: .86rem; }
+
+    dialog { width: min(94vw, 1500px); max-height: 94vh; padding: 0; border: 1px solid #6f859b; border-radius: 14px; background: #080d14; color: var(--text); box-shadow: 0 28px 90px #000; }
+    dialog::backdrop { background: rgb(0 0 0 / 82%); }
+    dialog img { display: block; width: 100%; max-height: 86vh; object-fit: contain; }
+    .dialog-bar { display: flex; justify-content: space-between; gap: 16px; align-items: center; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+    .dialog-bar button { border: 1px solid var(--line); border-radius: 8px; padding: 7px 11px; background: var(--panel); color: var(--text); cursor: pointer; }
+
+    .hidden { display: none !important; }
+    .footer-note { margin-top: 48px; padding: 18px; border: 1px solid var(--line); border-radius: 12px; color: var(--muted); background: var(--panel); }
+
+    @media (max-width: 920px) {
+      .mapping-grid, .reference-grid { grid-template-columns: 1fr; }
+      .scope-list { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 620px) {
+      .shell { width: min(100% - 20px, 1500px); }
+      .hero { padding-top: 34px; }
+      .toolbar { position: static; }
+      .toolbar-row { align-items: stretch; }
+      .count { width: 100%; }
+      .filter, .utility { flex: 1 1 auto; }
+      .section-head { grid-template-columns: 1fr; }
+      .compare { grid-template-columns: 1fr; }
+      .arrow { min-height: 36px; transform: rotate(90deg); }
+      .media { min-height: 190px; }
+      .card-head { grid-template-columns: 1fr; }
+      .badge { justify-self: start; }
+      .scope-list { grid-template-columns: 1fr; }
+      .decision-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="shell">
+      <p class="eyebrow">Approval gate · visual asset switch</p>
+      <h1>현재 → TO-BE<br>에셋 전환 승인 보드</h1>
+      <p class="lede">인벤토리 그리드가 아니라 실제 교체 결정을 위한 매칭표입니다. 현재 파일 또는 현재 코드 표현을 왼쪽에, 승인 후 사용할 이미지 또는 구현 계약을 오른쪽에 놓았습니다. 새로 그릴 이유가 없는 에셋은 억지로 재생성하지 않고 <b>REUSE + CODE</b>로 구분했습니다.</p>
+      <div class="gate-note">
+        <span aria-hidden="true">⚠</span>
+        <p><strong>승인 게이트:</strong> 모든 카드가 승인되기 전에는 게임 코드, 매니페스트, 실제 에셋 연결, 활성 계획서의 구현 단계를 진행하지 않습니다. 성능 검증도 전체 에셋·UI 적용이 끝난 마지막 단계까지 유예합니다.</p>
+      </div>
+    </div>
+  </header>
+
+  <nav class="toolbar" aria-label="승인 보드 도구">
+    <div class="shell toolbar-row">
+      <p class="count"><strong id="resolved-count">0</strong>/<span id="total-count">0</span> 판정 완료 · 승인 <strong id="approved-count">0</strong></p>
+      <button class="filter" type="button" data-filter="all" aria-pressed="true">전체</button>
+      <button class="filter" type="button" data-filter="replace" aria-pressed="false">새 후보</button>
+      <button class="filter" type="button" data-filter="reuse" aria-pressed="false">기존 유지</button>
+      <button class="filter" type="button" data-filter="code" aria-pressed="false">코드 표현</button>
+      <button class="filter" type="button" data-filter="remove" aria-pressed="false">삭제</button>
+      <button class="utility" id="export-decisions" type="button">판정 JSON 내보내기</button>
+      <button class="utility" id="reset-decisions" type="button">판정 초기화</button>
+    </div>
+  </nav>
+
+  <main class="shell">
+    <section class="section" aria-labelledby="reference-title">
+      <div class="section-head">
+        <div>
+          <h2 id="reference-title">승인 기준</h2>
+          <p class="section-copy">새 테마를 발명하는 자료가 아니라, 이전에 사용자가 좋다고 평가한 일반 SF 기반의 형태·색·계층 기준입니다. 이미지를 누르면 원본 크기로 확인할 수 있습니다.</p>
+        </div>
+        <span class="section-count">binding references</span>
+      </div>
+      <div class="reference-grid">
+        <figure class="reference">
+          <button class="zoom-button" type="button" data-full="../semantic-rework-v2-proposal/15-world-layering-asis-tobe.png" aria-label="맵과 기능 지형 목표 이미지 확대">
+            <img src="../semantic-rework-v2-proposal/15-world-layering-asis-tobe.png" alt="현재 맵과 목표 맵의 계층 비교">
+          </button>
+          <figcaption><strong>맵·벽·기능 지형</strong>현실적이지만 단순한 바닥, 명확한 벽, 실제 판정 범위와 맞는 지형지물.</figcaption>
+        </figure>
+        <figure class="reference">
+          <button class="zoom-button" type="button" data-full="../semantic-rework-v2-proposal/14-attack-telegraph-asis-tobe.png" aria-label="공격 표시 목표 이미지 확대">
+            <img src="../semantic-rework-v2-proposal/14-attack-telegraph-asis-tobe.png" alt="현재 공격 표시와 목표 공격 표시 비교">
+          </button>
+          <figcaption><strong>탄환·공격 경로</strong>가는 선이 아니라 실제 위험 폭, 방향, 일반·엘리트·보스 등급이 한눈에 보이는 표시.</figcaption>
+        </figure>
+        <figure class="reference">
+          <button class="zoom-button" type="button" data-full="../semantic-rework-v2-proposal/16-effects-runtime-asis-tobe.png" aria-label="효과 목표 이미지 확대">
+            <img src="../semantic-rework-v2-proposal/16-effects-runtime-asis-tobe.png" alt="현재 효과와 목표 효과 비교">
+          </button>
+          <figcaption><strong>효과</strong>의미 없는 꽃·원형 raster를 없애고 충돌 방향과 사건 의미만 짧게 전달.</figcaption>
+        </figure>
+        <figure class="reference">
+          <button class="zoom-button" type="button" data-full="../semantic-rework-v2-proposal/17-ui-panels-asis-tobe.png" aria-label="UI 패널 목표 이미지 확대">
+            <img src="../semantic-rework-v2-proposal/17-ui-panels-asis-tobe.png" alt="현재 UI 패널과 목표 UI 패널 비교">
+          </button>
+          <figcaption><strong>UI 패널</strong>이미지 패널 위에 실제 텍스트·아이콘을 배치하고, 정보 순서와 안전 여백을 코드가 보장.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="new-assets-title">
+      <div class="section-head">
+        <div>
+          <h2 id="new-assets-title">A. 새 이미지 후보 — 개별 승인</h2>
+          <p class="section-copy">현재 파일이 목표 역할과 맞지 않는 8개 identity만 다시 만들었습니다. 한 생성 이미지에 최대 4개만 배치했고, 아래에서는 각 identity를 따로 잘라 현재 항목과 1:1로 비교합니다.</p>
+        </div>
+        <span class="section-count">8 identities · 2 source sheets</span>
+      </div>
+      <div class="mapping-grid">
+
+        <article class="mapping-card" data-kind="replace code" data-id="facility-repair-base">
+          <header class="card-head"><div><h3>수리 장판 베이스</h3><p class="asset-id">world/facility_repair_pad</p></div><span class="badge replace">REPLACE + CODE</span></header>
+          <div class="compare">
+            <section class="state"><p class="state-label">AS-IS</p><div class="media"><img src="../../../../art/gameplay/semantic-v2/world/facility_repair_pad.png" alt="현재 수리 패드 이미지"></div><p class="visual-caption">작은 중앙 장식으로만 표시되어 실제 <strong>반경 150</strong>과 분리돼 보임.</p></section>
+            <div class="arrow" aria-hidden="true">→</div>
+            <section class="state"><p class="state-label target">TO-BE CANDIDATE</p><button class="zoom-button sheet-crop tl" type="button" data-full="./generated/world-v4/world-functional-candidates.png" aria-label="수리 장판 후보 원본 확대"><img src="./generated/world-v4/world-functional-candidates.png" alt="새 수리 패드 베이스 후보"></button><p class="visual-caption">넓은 사각 dock와 비어 있는 원형 well. 실제 효과 경계는 별도 동적 overlay.</p></section>
+          </div>
+          <div class="spec"><p><strong>승인 후:</strong> 베이스를 실제 판정 footprint에 맞춰 배치하고, collision 진실값은 그대로 유지합니다.</p><p class="files">현재: art/gameplay/semantic-v2/world/facility_repair_pad.png<br>후보 sheet: generated/world-v4/world-functional-candidates.png · 좌상단</p></div>
+          <div class="decision"></div>
+        </article>
+
+        <article class="mapping-card" data-kind="replace code" data-id="facility-repair-core">
+          <header class="card-head"><div><h3>수리 장판 활성 코어</h3><p class="asset-id">world/facility_repair_pad_core</p></div><span class="badge replace">REPLACE + CODE</span></header>
+          <div class="compare">
+            <section class="state"><p class="state-label">AS-IS</p><div class="media"><img src="../../../../art/gameplay/semantic-v2/world/facility_repair_pad_core.png" alt="현재 수리 패드 코어"></div><p class="visual-caption">작고 복잡한 중앙 심볼. 활성 상태와 남은 범위를 충분히 설명하지 못함.</p></section>
+            <div class="arrow" aria-hidden="true">→</div>
+            <section class="state"><p class="state-label target">TO-BE CANDIDATE</p><button class="zoom-button sheet-crop tr" type="button" data-full="./generated/world-v4/world-functional-candidates.png" aria-label="수리 활성 코어 후보 원본 확대"><img src="./generated/world-v4/world-functional-candidates.png" alt="새 수리 활성 코어 후보"></button><p class="visual-caption">mint plus + cyan 분절 ring. 사용 중에는 segment 채움이 진행 시간을 표시.</p></section>
+          </div>
+          <div class="spec"><p><strong>승인 후:</strong> 베이스 위 overlay로 합성합니다. ring의 진행 상태는 sprite를 늘리지 않고 코드로 제어합니다.</p><p class="files">현재: art/gameplay/semantic-v2/world/facility_repair_pad_core.png<br>후보 sheet: generated/world-v4/world-functional-candidates.png · 우상단</p></div>
+          <div class="decision"></div>
+        </article>
+
+        <article class="mapping-card" data-kind="replace code" data-id="facility-overdrive-lane">
+          <header class="card-head"><div><h3>공격력 증가 / 오버드라이브 레인</h3><p class="asset-id">world/facility_overdrive_lane</p></div><span class="badge replace">REPLACE + CODE</span></header>
+          <div class="compare">
+            <section class="state"><p class="state-label">AS-IS</p><div class="media"><img src="../../../../art/gameplay/semantic-v2/world/facility_overdrive_lane.png" alt="현재 오버드라이브 레인"></div><p class="visual-caption">반경 180 장판 한가운데 작은 body만 고정 크기로 표시됨.</p></section>
+            <div class="arrow" aria-hidden="true">→</div>
+            <section class="state"><p class="state-label target">TO-BE CANDIDATE</p><button class="zoom-button sheet-crop bl" type="button" data-full="./generated/world-v4/world-functional-candidates.png" aria-label="오버드라이브 레인 후보 원본 확대"><img src="./generated/world-v4/world-functional-candidates.png" alt="새 오버드라이브 레인 후보"></button><p class="visual-caption">정확히 5개 forward chevron을 가진 긴 lane. 방향성과 공격 증폭 역할을 즉시 구분.</p></section>
+          </div>
+          <div class="spec"><p><strong>승인 후:</strong> 실제 효과 영역 안에 방향을 맞춰 반복/fit하고, 외곽 경계가 판정 범위와 일치하게 합니다.</p><p class="files">현재: art/gameplay/semantic-v2/world/facility_overdrive_lane.png<br>후보 sheet: generated/world-v4/world-functional-candidates.png · 좌하단</p></div>
+          <div class="decision"></div>
+        </article>
+
+        <article class="mapping-card" data-kind="replace code" data-id="facility-arc-terminals">
+          <header class="card-head"><div><h3>아군·적 공통 피해 장판 단말</h3><p class="asset-id">facility_arc_surge_strip + terrain_hazard_power_relay</p></div><span class="badge replace">REPLACE + CODE</span></header>
+          <div class="compare">
+            <section class="state"><p class="state-label">AS-IS</p><div class="media multi"><img src="../../../../art/gameplay/semantic-v2/world/facility_arc_surge_strip.png" alt="현재 아크 피해 strip"><img src="../../../../art/gameplay/semantic-v2/world/terrain_hazard_power_relay.png" alt="현재 전력 relay"></div><p class="visual-caption">반투명 사각형·작은 strip·선이 겹치며 실제 피해 rectangle을 명확히 설명하지 못함.</p></section>
+            <div class="arrow" aria-hidden="true">→</div>
+            <section class="state"><p class="state-label target">TO-BE CANDIDATE</p><button class="zoom-button sheet-crop br" type="button" data-full="./generated/world-v4/world-functional-candidates.png" aria-label="아크 단말 후보 원본 확대"><img src="./generated/world-v4/world-functional-candidates.png" alt="새 아크 단말 한 쌍 후보"></button><p class="visual-caption">두 단말은 정적 이미지. 사이의 붉은 아크와 정확한 피해 폭은 동적 code effect.</p></section>
+          </div>
+          <div class="spec"><p><strong>승인 후:</strong> 단말 사이 전체 collision rectangle과 시각 경계를 일치시킵니다. 번개를 PNG에 굽지 않습니다.</p><p class="files">현재: facility_arc_surge_strip.png, terrain_hazard_power_relay.png<br>후보 sheet: generated/world-v4/world-functional-candidates.png · 우하단</p></div>
+          <div class="decision"></div>
+        </article>
+
+        <article class="mapping-card" data-kind="replace code" data-id="terrain-solid-cover">
+          <header class="card-head"><div><h3>고정 엄폐물</h3><p class="asset-id">world/terrain_solid_cover_block</p></div><span class="badge replace">REPLACE + CODE</span></header>
+          <div class="compare">
+            <section class="state"><p class="state-label">AS-IS</p><div class="media"><img src="../../../../art/gameplay/semantic-v2/world/terrain_solid_cover_block.png" alt="현재 고정 엄폐물 이미지"></div><p class="visual-caption">파일은 guidebook fallback 위주이고 gameplay body는 단색 polygon/rail로 렌더링됨.</p></section>
+            <div class="arrow" aria-hidden="true">→</div>
+            <section class="state"><p class="state-label target">TO-BE CANDIDATE</p><button class="zoom-button sheet-crop tl" type="button" data-full="./generated/world-v4/world-obstacle-candidates.png" aria-label="고정 엄폐물 후보 원본 확대"><img src="./generated/world-v4/world-obstacle-candidates.png" alt="새 고정 엄폐물 후보"></button><p class="visual-caption">어두운 면·밝은 alloy rim·짧은 깊이로 바닥과 분명히 분리되는 solid block.</p></section>
+          </div>
+          <div class="spec"><p><strong>승인 후:</strong> 실제 collision Rect2를 유일한 위치·크기 진실값으로 사용해 body를 fit/tile합니다.</p><p class="files">현재: art/gameplay/semantic-v2/world/terrain_solid_cover_block.png<br>후보 sheet: generated/world-v4/world-obstacle-candidates.png · 좌상단</p></div>
+          <div class="decision"></div>
+        </article>
+
+        <article class="mapping-card" data-kind="replace code" data-id="terrain-breakable-cover">
+          <header class="card-head"><div><h3>파괴 가능한 엄폐물</h3><p class="asset-id">world/terrain_breakable_cover_slab</p></div><span class="badge replace">REPLACE + CODE</span></header>
+          <div class="compare">
+            <section class="state"><p class="state-label">AS-IS</p><div class="media"><img src="../../../../art/gameplay/semantic-v2/world/terrain_breakable_cover_slab.png" alt="현재 파괴 엄폐물 이미지"></div><p class="visual-caption">런타임 미사용. 고정 엄폐물과 파괴 가능 상태의 가족 관계도 화면에 연결되지 않음.</p></section>
+            <div class="arrow" aria-hidden="true">→</div>
+            <section class="state"><p class="state-label target">TO-BE CANDIDATE</p><button class="zoom-button sheet-crop tr" type="button" data-full="./generated/world-v4/world-obstacle-candidates.png" aria-label="파괴 엄폐물 후보 원본 확대"><img src="./generated/world-v4/world-obstacle-candidates.png" alt="새 파괴 엄폐물 후보"></button><p class="visual-caption">동일 footprint 가족 + 제한된 균열. 보라색이 아닌 중립 회색으로 재질과 파괴 가능성만 표현.</p></section>
+          </div>
+          <div class="spec"><p><strong>승인 후:</strong> collision과 동일 크기로 연결하고, 파괴 상태 전환은 별도 hit/destroy cue가 담당합니다.</p><p class="files">현재: art/gameplay/semantic-v2/world/terrain_breakable_cover_slab.png<br>후보 sheet: generated/world-v4/world-obstacle-candidates.png · 우상단</p></div>
+          <div class="decision"></div>
+        </article>
+
+        <article class="mapping-card" data-kind="replace code" data-id="world-bulkhead-intact">
+          <header class="card-head"><div><h3>정상 격벽</h3><p class="asset-id">world/world_bulkhead_intact</p></div><span class="badge replace">REPLACE + CODE</span></header>
+          <div class="compare">
+            <section class="state"><p class="state-label">AS-IS</p><div class="media"><img src="../../../../art/gameplay/semantic-v2/world/world_bulkhead_intact.png" alt="현재 정상 격벽"></div><p class="visual-caption">실제 사용되지만 회색 body를 rectangle에 늘려 사용해 목표의 분절 barrier 역할이 약함.</p></section>
+            <div class="arrow" aria-hidden="true">→</div>
+            <section class="state"><p class="state-label target">TO-BE CANDIDATE</p><button class="zoom-button sheet-crop bl" type="button" data-full="./generated/world-v4/world-obstacle-candidates.png" aria-label="정상 격벽 후보 원본 확대"><img src="./generated/world-v4/world-obstacle-candidates.png" alt="새 정상 격벽 후보"></button><p class="visual-caption">pale end cap + 연속된 violet 분절 중심. 통행 차단 구조임을 벽과 다르게 표시.</p></section>
+          </div>
+          <div class="spec"><p><strong>승인 후:</strong> end cap은 고정 비율, 중앙 segment만 길이에 맞춰 반복하여 왜곡을 막습니다.</p><p class="files">현재: art/gameplay/semantic-v2/world/world_bulkhead_intact.png<br>후보 sheet: generated/world-v4/world-obstacle-candidates.png · 좌하단</p></div>
+          <div class="decision"></div>
+        </article>
+
+        <article class="mapping-card" data-kind="replace code" data-id="world-bulkhead-damaged">
+          <header class="card-head"><div><h3>파손 격벽</h3><p class="asset-id">world/world_bulkhead_damaged</p></div><span class="badge replace">REPLACE + CODE</span></header>
+          <div class="compare">
+            <section class="state"><p class="state-label">AS-IS</p><div class="media"><img src="../../../../art/gameplay/semantic-v2/world/world_bulkhead_damaged.png" alt="현재 파손 격벽"></div><p class="visual-caption">정상형과의 외곽 계약이 약하고 파손 중심이 게임 크기에서 직관적이지 않음.</p></section>
+            <div class="arrow" aria-hidden="true">→</div>
+            <section class="state"><p class="state-label target">TO-BE CANDIDATE</p><button class="zoom-button sheet-crop br" type="button" data-full="./generated/world-v4/world-obstacle-candidates.png" aria-label="파손 격벽 후보 원본 확대"><img src="./generated/world-v4/world-obstacle-candidates.png" alt="새 파손 격벽 후보"></button><p class="visual-caption">정상형과 같은 외곽·end cap·segment 간격, 중앙에만 명확한 fracture.</p></section>
+          </div>
+          <div class="spec"><p><strong>승인 후:</strong> 정상/파손이 정확히 같은 footprint를 공유하며 상태만 교체합니다.</p><p class="files">현재: art/gameplay/semantic-v2/world/world_bulkhead_damaged.png<br>후보 sheet: generated/world-v4/world-obstacle-candidates.png · 우하단</p></div>
+          <div class="decision"></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="reuse-title">
+      <div class="section-head">
+        <div><h2 id="reuse-title">B. 기존 이미지는 유지 — 연결 방식 승인</h2><p class="section-copy">이미지 품질보다 런타임 연결이 문제인 항목입니다. 오른쪽은 새 그림이 아니라, 같은 이미지를 어떤 규칙으로 쓸지 보여줍니다.</p></div>
+        <span class="section-count">no redraw</span>
+      </div>
+      <div class="mapping-grid">
+        <article class="mapping-card" data-kind="reuse code" data-id="world-floor-family">
+          <header class="card-head"><div><h3>맵 바닥 타일 2종</h3><p class="asset-id">world_shared_floor_00 / 01</p></div><span class="badge reuse">REUSE + CODE</span></header>
+          <div class="compare">
+            <section class="state"><p class="state-label">AS-IS FILES</p><div class="media multi"><img src="../../../../art/gameplay/semantic-v2/world/world_shared_floor_00.png" alt="바닥 타일 0"><img src="../../../../art/gameplay/semantic-v2/world/world_shared_floor_01.png" alt="바닥 타일 1"></div><p class="visual-caption">manifest에는 있으나 provider가 prefix를 제외. 화면은 색 polygon panel.</p></section>
+            <div class="arrow" aria-hidden="true">→</div>
+            <section class="state"><p class="state-label target">TO-BE RULE</p><div class="diagram"><div class="floor-demo" aria-label="결정론적으로 배열된 바닥 타일 예시"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div></div><p class="visual-caption">기존 seed/module 조합 유지 + tile ID·회전·clip을 결정론적으로 출력. 무의미한 문양은 추가하지 않음.</p></section>
+          </div>
+          <div class="spec"><p><strong>수정 위치:</strong> <code>vehicle_field_surface_pattern_compiler.gd</code>, <code>vehicle_world_mesh_builder.gd</code>, asset provider. collision/navigation은 변경하지 않습니다.</p></div><div class="decision"></div>
+        </article>
+
+        <article class="mapping-card" data-kind="reuse code" data-id="world-wall-family">
+          <header class="card-head"><div><h3>벽 topology 6종</h3><p class="asset-id">straight / convex / concave / end / T / cross</p></div><span class="badge reuse">REUSE + CODE</span></header>
+          <div class="compare">
+            <section class="state"><p class="state-label">AS-IS FILES</p><div class="media multi"><img src="../../../../art/gameplay/semantic-v2/world/world_wall_straight.png" alt="직선 벽"><img src="../../../../art/gameplay/semantic-v2/world/world_wall_convex_corner.png" alt="볼록 모서리"><img src="../../../../art/gameplay/semantic-v2/world/world_wall_concave_corner.png" alt="오목 모서리"><img src="../../../../art/gameplay/semantic-v2/world/world_wall_end_cap.png" alt="벽 끝"><img src="../../../../art/gameplay/semantic-v2/world/world_wall_t_junction.png" alt="T 교차 벽"><img src="../../../../art/gameplay/semantic-v2/world/world_wall_cross_junction.png" alt="십자 교차 벽"></div><p class="visual-caption">파일은 존재하지만 provider에서 제외. 런타임은 굵은 rail/edge 사각형만 겹침.</p></section>
+            <div class="arrow" aria-hidden="true">→</div>
+            <section class="state"><p class="state-label target">TO-BE RULE</p><div class="media runtime"><img src="../semantic-rework-v2-proposal/15-world-layering-asis-tobe.png" alt="벽 topology 목표"></div><p class="visual-caption">경계 이웃을 분석해 6종을 선택·회전. 바닥보다 높은 silhouette와 shadow, 실제 벽 선분과 동일한 위치.</p></section>
+          </div><div class="spec"><p><strong>승인 후:</strong> 부족한 topology가 실제 preview에서 확인될 때만 추가 이미지를 만듭니다. 지금은 재생성하지 않습니다.</p></div><div class="decision"></div>
+        </article>
+
+        <article class="mapping-card" data-kind="reuse code" data-id="facility-transit-gate">
+          <header class="card-head"><div><h3>통과 게이트</h3><p class="asset-id">world/facility_transit_gate</p></div><span class="badge reuse">REUSE + CODE</span></header>
+          <div class="compare">
+            <section class="state"><p class="state-label">CURRENT</p><div class="media"><img src="../../../../art/gameplay/semantic-v2/world/facility_transit_gate.png" alt="현재 통과 게이트"></div><p class="visual-caption">현재 파일의 역할·silhouette는 승인된 TO-BE와 이미 일치.</p></section><div class="arrow" aria-hidden="true">→</div><section class="state"><p class="state-label target">TO-BE</p><div class="media"><img src="../../../../art/gameplay/semantic-v2/world/facility_transit_gate.png" alt="유지할 통과 게이트"></div><p class="visual-caption">동일 이미지 유지. 실제 통과 폭과 기둥 위치만 코드로 정렬하고 cyan barrier는 동적 표현.</p></section>
+          </div><div class="spec"><p><strong>판정:</strong> 새 asset 불필요. geometry/footprint 연결만 승인 대상입니다.</p></div><div class="decision"></div>
+        </article>
+
+        <article class="mapping-card" data-kind="reuse code" data-id="hostile-projectile-affinities">
+          <header class="card-head"><div><h3>적 탄환 속성 6종</h3><p class="asset-id">kinetic / thermal / toxin / cryo / arc / hybrid</p></div><span class="badge reuse">REUSE + CODE</span></header>
+          <div class="compare">
+            <section class="state"><p class="state-label">CURRENT FILES</p><div class="media multi"><img src="../../../../art/gameplay/semantic-v2/weapons/projectiles/projectile_hostile_kinetic.png" alt="kinetic 탄환"><img src="../../../../art/gameplay/semantic-v2/weapons/projectiles/projectile_hostile_thermal.png" alt="thermal 탄환"><img src="../../../../art/gameplay/semantic-v2/weapons/projectiles/projectile_hostile_toxin.png" alt="toxin 탄환"><img src="../../../../art/gameplay/semantic-v2/weapons/projectiles/projectile_hostile_cryo.png" alt="cryo 탄환"><img src="../../../../art/gameplay/semantic-v2/weapons/projectiles/projectile_hostile_arc.png" alt="arc 탄환"><img src="../../../../art/gameplay/semantic-v2/weapons/projectiles/projectile_hostile_hybrid.png" alt="hybrid 탄환"></div><p class="visual-caption">속성 모양은 구분되지만 실제 표시가 작고, 특히 kinetic core가 collision보다 얇고 어두움.</p></section>
+            <div class="arrow" aria-hidden="true">→</div>
+            <section class="state"><p class="state-label target">TO-BE RENDER</p><div class="telegraph-demo" aria-label="밝은 탄환 core와 넓은 실제 공격 폭 예시"></div><p class="visual-caption">속성 identity는 유지. collision보다 분명한 밝은 core + 방향 tail. 일반/엘리트/보스는 head·tail·startup cap 중 2개 이상 차등.</p></section>
+          </div><div class="spec"><p><strong>승인 후:</strong> tier를 spawn state → telegraph descriptor → renderer까지 전달하고 표시 배율·명도·core를 수정합니다. 6종을 다시 그리는 것은 보류합니다.</p></div><div class="decision"></div>
+        </article>
+
+        <article class="mapping-card" data-kind="reuse code" data-id="upgrade-card-shells">
+          <header class="card-head"><div><h3>업그레이드 카드 이미지 패널</h3><p class="asset-id">upgrade_card_* + upgrade_* glyphs + small_state_pip_*</p></div><span class="badge reuse">REUSE + CODE</span></header>
+          <div class="compare">
+            <section class="state"><p class="state-label">AS-IS IMPLEMENTATION</p><div class="media multi"><img src="../../../../art/ui/production/semantic-v2/surfaces/upgrade_card_normal.png" alt="업그레이드 카드 기본 패널"><img src="../../../../art/gameplay/semantic-v2/hud/upgrade_primary.png" alt="업그레이드 primary 아이콘"><img src="../../../../art/ui/production/semantic-v2/glyphs/small_state_pip_filled.png" alt="업그레이드 단계 pip"></div><p class="visual-caption">이미지 패널은 있으나 glyph가 38×32에 머물고, 상단 1/3 art slot과 텍스트 흐름 계약이 없음. 일부 설명 overflow.</p></section>
+            <div class="arrow" aria-hidden="true">→</div>
+            <section class="state"><p class="state-label target">TO-BE LIVE MOCK</p><div class="card-mock"><div class="upgrade-card" aria-label="목표 업그레이드 카드 레이아웃"><div class="art"><img src="../../../../art/gameplay/semantic-v2/hud/upgrade_primary.png" alt="주무기 업그레이드 이미지"></div><div class="name">관통 탄두</div><div class="level">LEVEL 2 · PRIMARY</div><div class="desc">탄환이 추가 대상을 관통합니다. 핵심 효과를 먼저 표시하고 긴 설명은 안전 영역 안에서 줄바꿈합니다.</div><div class="pips"><img src="../../../../art/ui/production/semantic-v2/glyphs/small_state_pip_filled.png" alt="획득 단계"><img src="../../../../art/ui/production/semantic-v2/glyphs/small_state_pip_available.png" alt="현재 단계"><img src="../../../../art/ui/production/semantic-v2/glyphs/small_state_pip_empty.png" alt="미획득 단계"></div></div></div><p class="visual-caption">상단 32–34% 이미지 → 이름/레벨 → 설명 → 선택 요소. 패널 이미지는 배경, 텍스트와 아이콘은 실제 UI node.</p></section>
+          </div><div class="spec"><p><strong>승인 후:</strong> 128×128 image-backed shell과 20px patch margin은 유지하고 safe inset을 검증합니다. 모든 언어에서 clipping/overflow를 검사합니다.</p></div><div class="decision"></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="code-title">
+      <div class="section-head"><div><h2 id="code-title">C. 새 PNG가 아니라 코드 표현으로 바꿀 항목</h2><p class="section-copy">움직임, 실제 판정 범위, 방향, 시간 진행을 설명해야 하므로 정지 이미지로 굽지 않습니다. 아래 목표 표현을 승인받은 뒤 구현합니다.</p></div><span class="section-count">dynamic truth</span></div>
+      <div class="mapping-grid">
+        <article class="mapping-card" data-kind="code" data-id="attack-telegraph-grammar">
+          <header class="card-head"><div><h3>일반·엘리트·보스 공격 경로</h3><p class="asset-id">projectile / charge / beam / area</p></div><span class="badge code">CODE</span></header>
+          <div class="compare"><section class="state"><p class="state-label">AS-IS RUNTIME</p><div class="media runtime"><img src="./evidence/current-boss-attack-runtime.png" alt="현재 보스 공격 표시"></div><p class="visual-caption">실제 폭을 계산해도 중앙 3–4px 선과 작은 cap 위주. 일부 보스 패턴이 같은 원형 장판으로 축약.</p></section><div class="arrow" aria-hidden="true">→</div><section class="state"><p class="state-label target">TO-BE CONTRACT</p><div class="media runtime"><img src="../semantic-rework-v2-proposal/14-attack-telegraph-asis-tobe.png" alt="목표 공격 표시"></div><p class="visual-caption">정확한 footprint fill + 굵은 경계. 일반은 filled head, 엘리트는 double-notch/segment, 보스는 group origin과 넓은 band.</p></section></div>
+          <div class="spec"><p><strong>움직임:</strong> warning 시작 때 origin/head가 켜지고, fill이 공격 방향으로 진행합니다. charge 후 endpoint impact, beam은 corridor 전체, area는 내부 fill을 유지합니다.</p></div><div class="decision"></div>
+        </article>
+
+        <article class="mapping-card" data-kind="code remove" data-id="experience-pickup">
+          <header class="card-head"><div><h3>경험치 픽업</h3><p class="asset-id">pickup_experience_small / medium / large</p></div><span class="badge remove">REMOVE RASTER + CODE</span></header>
+          <div class="compare"><section class="state"><p class="state-label">AS-IS</p><div class="media multi"><img src="../../../../art/gameplay/semantic-v2/pickups/pickup_experience_small.png" alt="작은 경험치 픽업"><img src="../../../../art/gameplay/semantic-v2/pickups/pickup_experience_medium.png" alt="중간 경험치 픽업"><img src="../../../../art/gameplay/semantic-v2/pickups/pickup_experience_large.png" alt="큰 경험치 픽업"></div><p class="visual-caption">경험치처럼 자주 쌓이는 항목치고 그림과 tier가 과도하게 복잡.</p></section><div class="arrow" aria-hidden="true">→</div><section class="state"><p class="state-label target">TO-BE</p><div class="diagram"><div class="xp-demo"><div class="old-xp" aria-hidden="true"></div><span aria-hidden="true">→</span><div class="new-xp" aria-label="간단한 cyan 다이아몬드 경험치"></div></div></div><p class="visual-caption">단일 cyan diamond/shard 기본 도형. 값 차이는 크기 한 단계 또는 숫자 합산으로만 표현; gameplay XP 값은 유지.</p></section></div>
+          <div class="spec"><p><strong>승인 후:</strong> 3종 raster 선택을 제거하고 단순 도형 renderer로 통합합니다. 기체와 직접 충돌해도 pickup되도록 수집 판정도 함께 수정합니다.</p></div><div class="decision"></div>
+        </article>
+
+        <article class="mapping-card" data-kind="code remove" data-id="visual-event-effects">
+          <header class="card-head"><div><h3>쓸데없이 보이는 꽃·원형 효과</h3><p class="asset-id">impact_damage / reflect_deflection / barrier_contact / hostile_summon_arrival</p></div><span class="badge remove">REMOVE + CODE</span></header>
+          <div class="compare"><section class="state"><p class="state-label">AS-IS FIXTURE</p><div class="media runtime"><img src="../semantic-rework-v2-proposal/16-effects-runtime-asis-tobe.png" alt="현재와 목표 효과 비교"></div><p class="visual-caption">사용자 캡처의 배열은 탄환 sheet가 아니라 synthetic visual-event QA fixture. 여러 사건이 유사한 방사형 raster로 보임.</p></section><div class="arrow" aria-hidden="true">→</div><section class="state"><p class="state-label target">TO-BE MOTION</p><div class="diagram"><div class="effect-demo"><div class="burst" aria-label="기존 원형 burst"></div><span aria-hidden="true">→</span><div class="spark" aria-label="짧은 방향성 spark"></div></div></div><p class="visual-caption">피격: 짧은 방향 spark. 반사: wedge/arc. 보호막: 접점 segment. 적 등장: bracket/tether/ring. 사건마다 형태를 분리.</p></section></div>
+          <div class="spec"><p><strong>애니메이션:</strong> 80–180ms 수명, hit normal 방향, 빠른 fade/scale. 지속 raster나 화면을 가리는 glow cloud는 사용하지 않습니다.</p></div><div class="decision"></div>
+        </article>
+
+        <article class="mapping-card" data-kind="code" data-id="orbit-facing">
+          <header class="card-head"><div><h3>기체 주변 회전 보조무기 방향</h3><p class="asset-id">secondary/orbit_blade</p></div><span class="badge code">CODE</span></header>
+          <div class="compare"><section class="state"><p class="state-label">AS-IS</p><div class="media"><img src="../../../../art/gameplay/semantic-v2/weapons/secondaries/secondary_orbit_blade.png" alt="현재 회전 칼날 에셋"></div><p class="visual-caption">이미지는 유지 가능하지만 모든 blade가 orbit angle 자체로 회전해 기체에서 바깥으로 뻗는 방향 계약이 없음.</p></section><div class="arrow" aria-hidden="true">→</div><section class="state"><p class="state-label target">TO-BE ORIENTATION</p><div class="diagram"><div class="orbit-demo"><div class="ship-dot" aria-hidden="true"></div><div class="blade-dot" aria-hidden="true"></div></div></div><p class="visual-caption">각 위치에서 <code>(blade_position - player_position).angle()</code>을 사용해 항상 radial outward 배치.</p></section></div>
+          <div class="spec"><p><strong>판정:</strong> 새 이미지 불필요. 회전 위치와 hitbox는 유지하고 sprite 방향만 수정합니다.</p></div><div class="decision"></div>
+        </article>
+
+        <article class="mapping-card" data-kind="code" data-id="engine-attachment">
+          <header class="card-head"><div><h3>기체 엔진 부착</h3><p class="asset-id">player engine/thruster attachment</p></div><span class="badge code">CODE</span></header>
+          <div class="compare"><section class="state"><p class="state-label">AS-IS</p><div class="diagram"><p>이동 벡터에 따라 엔진 부품 자체가 꺾여<br>기체와 분리된 것처럼 보임</p></div><p class="visual-caption">엔진 body orientation과 이동/추력 표현이 같은 transform에 묶임.</p></section><div class="arrow" aria-hidden="true">→</div><section class="state"><p class="state-label target">TO-BE</p><div class="diagram"><p><strong>엔진 body는 기체에 고정</strong><br>추력 flame/length/opacity만 이동에 반응</p></div><p class="visual-caption">기체 자체를 다시 그리지 않습니다. 승인된 player hull과 engine asset을 유지합니다.</p></section></div>
+          <div class="spec"><p><strong>판정:</strong> transform ownership 수정. 새로운 player foundation 이미지는 이번 교체 대상이 아닙니다.</p></div><div class="decision"></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="unchanged-title">
+      <div class="section-head"><div><h2 id="unchanged-title">D. 이번 승인에서 재제작하지 않는 것</h2><p class="section-copy">“모든 것을 백지에서 다시 그린다”로 범위를 잘못 확장하지 않기 위한 명시적 경계입니다. 여기서 마음에 들지 않는 가족이 있으면 메모로 지적하면 별도 후보를 만든 뒤에만 승인됩니다.</p></div><span class="section-count">scope boundary</span></div>
+      <div class="scope-list">
+        <div class="scope-item"><strong>플레이어 기체 본체</strong><p>현재 승인된 hull을 유지. 엔진 부착 transform만 수정.</p></div>
+        <div class="scope-item"><strong>일반·엘리트·보스 hull</strong><p>역할별 silhouette/색 identity를 유지. 공격 경로만 별도 개선.</p></div>
+        <div class="scope-item"><strong>보조무기 본체</strong><p>기존 family asset 유지. orbit 방향처럼 의미가 틀린 transform만 수정.</p></div>
+        <div class="scope-item"><strong>보호막 plate</strong><p>지속 방어막 body는 유지. 보호막 접촉 효과와 역장 공격 표시는 서로 다른 code grammar로 분리.</p></div>
+        <div class="scope-item"><strong>무의미한 바닥 장식</strong><p>기능이 없는 cyan node, 낙서, 원형 문양은 새 asset으로 만들지 않고 삭제.</p></div>
+        <div class="scope-item"><strong>성능 검증</strong><p>현재 단계에서 실행하지 않음. 전체 에셋·UI 적용 이후 마지막에만 수행.</p></div>
+      </div>
+    </section>
+
+    <p class="footer-note"><strong>다음 단계:</strong> 이 HTML에서 각 항목을 판정하고 JSON을 내보내 전달합니다. <b>모두 승인</b>된 뒤에만 후보 sheet를 개별 production asset으로 분리하고, active plan의 코드/연결/QA 단계를 시작합니다.</p>
+  </main>
+
+  <dialog id="image-dialog">
+    <div class="dialog-bar"><strong id="dialog-title">이미지 원본</strong><button type="button" id="close-dialog">닫기</button></div>
+    <img id="dialog-image" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" alt="확대한 승인 이미지">
+  </dialog>
+
+  <script>
+    (() => {
+      const storageKey = 'cardborne.asset-switch-approval.v1';
+      const cards = [...document.querySelectorAll('.mapping-card')];
+      const state = JSON.parse(localStorage.getItem(storageKey) || '{}');
+
+      for (const card of cards) {
+        const decision = card.querySelector('.decision');
+        decision.innerHTML = `
+          <div class="decision-row" role="group" aria-label="${card.querySelector('h3').textContent} 판정">
+            <button type="button" data-choice="approved">승인</button>
+            <button type="button" data-choice="revise">수정 필요</button>
+            <button type="button" data-choice="hold">보류</button>
+          </div>
+          <textarea id="note-${card.dataset.id}" name="note-${card.dataset.id}" aria-label="${card.querySelector('h3').textContent} 메모" placeholder="수정할 점이나 승인 조건을 적으세요."></textarea>`;
+        const saved = state[card.dataset.id] || {};
+        if (saved.choice) decision.querySelector(`[data-choice="${saved.choice}"]`)?.classList.add('selected');
+        decision.querySelector('textarea').value = saved.note || '';
+      }
+
+      const persist = () => {
+        localStorage.setItem(storageKey, JSON.stringify(state));
+        const resolved = Object.values(state).filter(value => value.choice).length;
+        const approved = Object.values(state).filter(value => value.choice === 'approved').length;
+        document.querySelector('#resolved-count').textContent = resolved;
+        document.querySelector('#approved-count').textContent = approved;
+        document.querySelector('#total-count').textContent = cards.length;
+      };
+
+      document.addEventListener('click', event => {
+        const choice = event.target.closest('[data-choice]');
+        if (choice) {
+          const card = choice.closest('.mapping-card');
+          card.querySelectorAll('[data-choice]').forEach(button => button.classList.remove('selected'));
+          choice.classList.add('selected');
+          state[card.dataset.id] = { ...(state[card.dataset.id] || {}), choice: choice.dataset.choice };
+          persist();
+        }
+      });
+
+      document.querySelectorAll('.decision textarea').forEach(textarea => {
+        textarea.addEventListener('input', () => {
+          const id = textarea.closest('.mapping-card').dataset.id;
+          state[id] = { ...(state[id] || {}), note: textarea.value };
+          persist();
+        });
+      });
+
+      document.querySelectorAll('.filter').forEach(button => button.addEventListener('click', () => {
+        document.querySelectorAll('.filter').forEach(item => item.setAttribute('aria-pressed', 'false'));
+        button.setAttribute('aria-pressed', 'true');
+        const filter = button.dataset.filter;
+        cards.forEach(card => card.classList.toggle('hidden', filter !== 'all' && !card.dataset.kind.split(' ').includes(filter)));
+      }));
+
+      document.querySelector('#export-decisions').addEventListener('click', () => {
+        const payload = {
+          report: 'Cardborne asset switch approval',
+          exported_at: new Date().toISOString(),
+          complete: cards.every(card => state[card.dataset.id]?.choice === 'approved'),
+          items: cards.map(card => ({
+            id: card.dataset.id,
+            title: card.querySelector('h3').textContent,
+            kinds: card.dataset.kind.split(' '),
+            choice: state[card.dataset.id]?.choice || 'unreviewed',
+            note: state[card.dataset.id]?.note || ''
+          }))
+        };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'cardborne-asset-switch-approval.json';
+        link.click();
+        URL.revokeObjectURL(link.href);
+      });
+
+      document.querySelector('#reset-decisions').addEventListener('click', () => {
+        if (!confirm('저장된 판정과 메모를 모두 초기화할까요?')) return;
+        localStorage.removeItem(storageKey);
+        location.reload();
+      });
+
+      const dialog = document.querySelector('#image-dialog');
+      const dialogImage = document.querySelector('#dialog-image');
+      document.querySelectorAll('[data-full]').forEach(button => button.addEventListener('click', () => {
+        dialogImage.src = button.dataset.full;
+        document.querySelector('#dialog-title').textContent = button.getAttribute('aria-label') || '이미지 원본';
+        dialog.showModal();
+      }));
+      document.querySelector('#close-dialog').addEventListener('click', () => dialog.close());
+      dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
+      persist();
+    })();
+  </script>
+</body>
+</html>
