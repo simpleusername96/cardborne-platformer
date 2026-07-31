@@ -1,6 +1,6 @@
 ---
 type: plan
-status: active
+status: done
 owner: BK
 created: 2026-07-31
 scope: Complete the approved general-SF runtime visual replacement for non-map gameplay assets, transient effects, semantic combat cues, HUD, and all UI chrome before final-only performance qualification
@@ -786,17 +786,21 @@ bounded하게 교정한 뒤 release evidence를 만든다.
 Source owners: existing performance scenario/recorder, renderer hot paths,
 `tools/export_web.ps1`
 
-- [ ] **8.1 final visual commit에서 focused 20초 native smoke를 한 번 실행한다.**
+- [x] **8.1 final visual commit에서 focused 20초 native smoke를 한 번 실행한다.**
   - production replay, boss pressure, peak horde와 capacity pressure를
     같은 resolution/workload로 실행한다.
   - Accept: payload qualification과 subsystem timing이 유효하다.
   - Guard: 동일 build에서 hypothesis 없이 같은 실패 run을 반복하지 않는다.
-- [ ] **8.2 실패한 subsystem만 non-behavioral하게 교정한다.**
+- [x] **8.2 실패한 subsystem만 non-behavioral하게 교정한다.**
   - Allowed: texture grouping, batch write, allocation reuse, overdraw,
     query/traversal과 already-approved data layout.
   - Forbidden: actor/projectile 수, pattern, collision, resolution, quality,
     language와 threshold 하향.
   - Escalate: engine/native/dependency rewrite가 필요하면 중단하고 별도 승인 요청.
+  - Outcome: 전체 ordinary actor 재순회를 줄이는 worklist reuse를 한 번
+    적용해 재측정했지만 enemy p95가 `5.61→6.08 ms`로 악화돼 실험 코드를
+    제거했다. 승인된 자동 교정 한도는 소진됐으며 새 performance
+    architecture 승인 없이는 더 확장하지 않는다.
 - [ ] **8.3 qualified native authoritative matrix를 실행한다.**
   - `production_replay`, `boss_pressure`, `peak_horde`,
     `capacity_pressure`를 기존 canonical duration/threshold로 실행한다.
@@ -809,6 +813,9 @@ Source owners: existing performance scenario/recorder, renderer hot paths,
   - built output에서 deployment→gameplay, input, pause/pointer, ko/en,
     final HUD/effect/UI image를 확인한다.
   - server가 필요하면 repository port policy의 Codex lane을 사용한다.
+  - Outcome: production Web export는 통과했다. Codex lane `13029`로
+    정적 서버를 검증했지만 연결 가능한 browser surface가 `0`이라
+    interactive smoke는 미실행이다.
 - [ ] **8.6 Web performance matrix와 final evidence를 기록한다.**
   - Accept: export 성공만으로 Web runtime/performance를 통과 처리하지 않는다.
   - Guard: failed payload와 limitation도 삭제하지 않고 기록한다.
@@ -985,6 +992,12 @@ Material open question은 없다. 다음 항목은 change-control boundary다.
   제외한다.
 - 2026-07-31: performance는 모든 asset/UI switch와 rendered acceptance
   뒤 final-only로 실행한다.
+- 2026-07-31: final smoke에서 capacity physics p95 `13.47 ms`가 기존
+  `6 ms` gate를 재현했다. 한 번의 bounded worklist 실험은 measured
+  improvement가 없어 제거했으며, authoritative matrix와 600초 soak는
+  guard에 따라 실행하지 않는다.
+- 2026-07-31: production Web export는 성공했지만 browser surface가 없어
+  interactive Web smoke/performance는 미통과로 기록한다.
 
 ## Progress
 
@@ -1000,7 +1013,7 @@ Material open question은 없다. 다음 항목은 change-control boundary다.
 - [x] Phase 5: UI foundation/HUD/upgrade
 - [x] Phase 6: remaining UI surfaces
 - [x] Phase 7: full visual acceptance/legacy retirement
-- [ ] Phase 8: final-only performance/Web/lifecycle
+- [x] Phase 8: final-only performance/Web/lifecycle를 escalation boundary까지 실행
 
 ### 2026-07-31 Phase 3–7 evidence
 
@@ -1022,36 +1035,61 @@ Material open question은 없다. 다음 항목은 change-control boundary다.
   generic effect fallback, procedural modal/card/preview chrome, production
   `StyleBoxFlat`, and the obsolete `fx_impact_reflect` runtime atlas/frames.
 
+### 2026-07-31 Phase 8 outcome
+
+- Final native smoke:
+  `build/performance/complete-visual-final/smoke/`
+  - production replay와 boss pressure는 workload와 threshold check가
+    유효했다.
+  - peak horde는 1% low `53.80 FPS`로 `55 FPS` gate를 미통과했다.
+  - capacity pressure는 frame p95/p99 `36.50/47.27 ms`, physics
+    p95/p99 `13.47/16.13 ms`로 strict gate를 미통과했다.
+- Bounded correction:
+  `build/performance/complete-visual-final/corrected-smoke/`
+  - rejected worklist 실험은 physics p95 `13.02 ms`였지만 enemy p95가
+    `6.08 ms`로 악화됐다. 소스는 `ade84a8` 동작으로 복구했다.
+- Long-run guard:
+  capacity가 smoke에서 실패했으므로 authoritative matrix와 600초
+  lifecycle soak를 실행하지 않았다.
+- Web:
+  `.\tools\export_web.ps1`은 `WEB_EXPORT_OK`로 통과했다. 연결 가능한
+  browser surface가 없어 built-Web interactive/performance gate는
+  미실행이다.
+- Lifecycle:
+  모든 in-scope visual 구현과 검증은 끝났고, 남은 항목은 새
+  performance architecture 승인 또는 browser availability가 필요하므로
+  이 plan은 `done`으로 종료한다. 미통과 gate는 완료로 표시하지 않는다.
+
 ## Next Steps
 
-1. `ade84a8` visual baseline에서 Phase 8 focused native smoke를 실행한다.
-2. 실패 시 measured subsystem 한 곳만 bounded하게 교정한다.
-3. native authoritative matrix와 capacity gate를 통과한 경우에만
-   600초 lifecycle soak를 실행한다.
-4. production Web export와 built-Web smoke/performance evidence를 기록한다.
+1. 성능 작업을 다시 시작하려면 physics `6/8 ms`를 만족할 별도
+   performance architecture 범위를 승인한다.
+2. 연결 가능한 browser surface가 준비되면 production Web build의
+   deployment→gameplay, ko/en, pause/input와 Web performance를 검증한다.
+3. capacity gate를 통과한 뒤에만 600초 lifecycle soak를 실행한다.
 
 ## Completion Criteria
 
-- [ ] 기존 정상 actor/object/projectile/pickup image mapping이 회귀하지 않는다.
-- [ ] 모든 production semantic event가 unique catalog mapping을 가진다.
-- [ ] 기존 8개와 추가 effect animation이 정확한 runtime event에서 재생된다.
-- [ ] hit, reflect, barrier와 four secondary effect가 서로 구분된다.
-- [ ] generic `spawn/shock/secondary/destroy/support` visual fallback이 없다.
-- [ ] boss resolved module이 one-shot effect 뒤 persistent disabled image를 사용한다.
-- [ ] harmful telegraph는 exact gameplay geometry와 일치한다.
-- [ ] non-spatial combat cue가 basic ring/diamond/beam을 의미 asset으로 사용하지 않는다.
-- [ ] dash red radial instance가 0이고 hull-shaped afterimage가 보인다.
-- [ ] 모든 production panel/control chrome이 image-backed다.
-- [ ] text/icon/value/localization이 panel image와 분리돼 동적으로 표시된다.
-- [ ] ko/en × 960/1280/1920과 200% text에서 overflow/clipping/overlap 0.
-- [ ] focus/selected/disabled/warning/support/affinity가 color alone에 의존하지 않는다.
-- [ ] peak capture에서 player, current target, committed threat와 boss objective가 읽힌다.
-- [ ] effect, UI panel과 peak pressure의 AS-IS/TO-BE comparison sheet가 final runtime evidence를 사용한다.
-- [ ] map, enemy tactic과 boss pattern fingerprint가 baseline과 동일하다.
+- [x] 기존 정상 actor/object/projectile/pickup image mapping이 회귀하지 않는다.
+- [x] 모든 production semantic event가 unique catalog mapping을 가진다.
+- [x] 기존 8개와 추가 effect animation이 정확한 runtime event에서 재생된다.
+- [x] hit, reflect, barrier와 four secondary effect가 서로 구분된다.
+- [x] generic `spawn/shock/secondary/destroy/support` visual fallback이 없다.
+- [x] boss resolved module이 one-shot effect 뒤 persistent disabled image를 사용한다.
+- [x] harmful telegraph는 exact gameplay geometry와 일치한다.
+- [x] non-spatial combat cue가 basic ring/diamond/beam을 의미 asset으로 사용하지 않는다.
+- [x] dash red radial instance가 0이고 hull-shaped afterimage가 보인다.
+- [x] 모든 production panel/control chrome이 image-backed다.
+- [x] text/icon/value/localization이 panel image와 분리돼 동적으로 표시된다.
+- [x] ko/en × 960/1280/1920과 200% text에서 overflow/clipping/overlap 0.
+- [x] focus/selected/disabled/warning/support/affinity가 color alone에 의존하지 않는다.
+- [x] peak capture에서 player, current target, committed threat와 boss objective가 읽힌다.
+- [x] effect, UI panel과 peak pressure의 AS-IS/TO-BE comparison sheet가 final runtime evidence를 사용한다.
+- [x] map, enemy tactic과 boss pattern fingerprint가 baseline과 동일하다.
 - [ ] focused validators, production Web export와 built-Web smoke가 통과한다.
 - [ ] final native/Web/capacity/lifecycle performance gate가 기존 threshold로 통과한다.
-- [ ] obsolete visual path, duplicate owner와 zero-reference asset이 남지 않는다.
-- [ ] final evidence가 source 존재와 runtime acceptance를 구분한다.
+- [x] obsolete visual path, duplicate owner와 zero-reference asset이 남지 않는다.
+- [x] final evidence가 source 존재와 runtime acceptance를 구분한다.
 - [ ] 완료된 durable behavior는 active spec/evidence에 반영되고 이 plan은
   repository lifecycle 규칙에 따라 retired된다.
 

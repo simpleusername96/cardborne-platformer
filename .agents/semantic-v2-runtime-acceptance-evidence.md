@@ -6,12 +6,13 @@ created: 2026-07-31
 last_reviewed: 2026-07-31
 topic: Semantic-v2 runtime integration, UI acceptance, boss guidance, and final performance
 scope: Non-map semantic-v2 runtime switch and its post-acceptance validation
-source: ./execplans/2026-07-30-semantic-visual-world-boss-performance-rework.md
+source: ./execplans/2026-07-31-complete-visual-asset-ui-effect-replacement.md
 related:
   - ../docs/design/UI_VISUAL_SYSTEM.md
   - ../docs/product/vehicle_game_spec.md
   - ../art/gameplay/semantic-v2/README.md
   - ./vehicle-performance-architecture-audit.md
+  - ./execplans/2026-07-30-semantic-visual-world-boss-performance-rework.md
 ---
 
 # Semantic-v2 Runtime Acceptance Evidence
@@ -32,6 +33,8 @@ related:
   AS-IS baseline capture matrix
 - `build/captures/complete-visual-replacement/`의 Phase 7 native
   TO-BE capture matrix
+- `build/performance/complete-visual-final/`의 Phase 8 final visual build
+  smoke와 rejected correction payload
 - `build/performance/semantic-v2-final/`의 final performance JSON
 - `tools/validation/`의 52개 focused validator
 - `build/web/index.html`을 포함한 Godot production Web export
@@ -137,7 +140,34 @@ Phase 3–7 구현과 visual acceptance의 clean baseline은 commit
   추가하던 문제를 고쳤다. real zone은 보존하고 fixture-owned zone만
   retire/backfill하여 320 scenario가 항상 정확히 16 zone을 유지한다.
 
-### 최종 성능 결과
+### Complete visual replacement 최종 성능 결과
+
+Phase 7 clean visual baseline `ade84a8`에서 native 1280×720,
+5초 warmup + 20초 focused smoke를 실행했다. 네 workload는 모두
+qualification이 유효하다. 짧은 smoke라 payload의 `authoritative`는
+`false`이며, 아래 판정은 개별 threshold check와 subsystem 진단이다.
+
+| Payload | Frame p95/p99 | 1% low | Physics p95/p99 | 판정 |
+| --- | ---: | ---: | ---: | --- |
+| `smoke/production_replay.json` | `16.67/16.67 ms` | `60.00 FPS` | `8.88/10.79 ms` | workload와 non-authority threshold check 통과 |
+| `smoke/boss_pressure.json` | `16.67/16.67 ms` | `56.89 FPS` | `4.20/6.29 ms` | workload와 non-authority threshold check 통과 |
+| `smoke/peak_horde.json` | `16.67/18.06 ms` | `53.80 FPS` | `9.35/11.72 ms` | 1% low `55 FPS` gate 미통과 |
+| `smoke/capacity_pressure.json` | `36.50/47.27 ms` | `20.20 FPS` | `13.47/16.13 ms` | frame, tail과 capacity simulation `6/8 ms` gate 미통과 |
+
+capacity의 가장 큰 measured subsystem은 `enemies_and_grid`
+p95 `5.61 ms`였고, `combat_and_effects`도 `4.61 ms`였다. 계획이 허용한
+한 번의 bounded correction으로 ordinary actor의 중복 traversal을
+worklist로 제한했지만 `corrected-smoke/capacity_pressure.json`에서
+physics p95 `13.02 ms`, enemy p95 `6.08 ms`로 measured improvement를
+만들지 못했다. 실험 코드는 제거했으며 final source는 `ade84a8`의
+simulation behavior를 유지한다.
+
+capacity smoke가 실패했으므로 guard에 따라 authoritative native/Web
+matrix와 600초 lifecycle soak를 실행하지 않았다. production Web export는
+`WEB_EXPORT_OK`로 통과했지만 browser discovery 결과가 0이라
+interactive built-Web smoke/performance는 미실행이다.
+
+### 이전 semantic-v2 성능 결과
 
 | Payload | 자격 | 결과 |
 | --- | --- | --- |
