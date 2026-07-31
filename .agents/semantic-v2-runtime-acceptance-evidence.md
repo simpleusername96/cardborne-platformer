@@ -29,13 +29,53 @@ related:
 - `art/gameplay/semantic-v2/asset-manifest.json`과 runtime semantic asset
   provider
 - `build/captures/semantic-v2-acceptance/ko-1280-final2/`의 최종 native
-  capture matrix
+  AS-IS baseline capture matrix
+- `build/captures/complete-visual-replacement/`의 Phase 7 native
+  TO-BE capture matrix
 - `build/performance/semantic-v2-final/`의 final performance JSON
 - `tools/validation/`의 52개 focused validator
 - `build/web/index.html`을 포함한 Godot production Web export
 
 `build/` 아래 파일은 local ignored evidence다. 아래 표에 payload 이름과
 핵심 수치를 남겨 repository 문서만 읽어도 통과 여부를 알 수 있게 한다.
+
+## Complete visual replacement checkpoint
+
+Phase 3–7 구현과 visual acceptance의 clean baseline은 commit
+`ade84a8`이다.
+
+- gameplay manifest SHA-256:
+  `756076d7ba2164464749272143bf4f43027c4c1447af14e1470817f6baa0afe5`
+- UI manifest SHA-256:
+  `2ce75df98280ec00b9c31715c76d53396388be5626c1f089f25ac4dd3a9f79fe`
+- 모든 world-space visual event는
+  `VehicleVisualEventCatalog`의 descriptor를 사용한다. broad
+  `spawn/shock/secondary/destroy/support` emit과 renderer generic
+  ring/beam/diamond fallback은 제거됐다.
+- EMP, wake mine, summon arrival, boss module resolved와 bulkhead destroy를
+  포함한 모든 event는 `09-effects-player`, `secondary`,
+  `projectile-hostile`, `destroy-boss`, `pickup-support`의 다섯 runtime
+  capture group에 정확히 한 번 포함된다. `group_clear`는 의도된
+  HUD-only event라 world capture에서 제외된다.
+- hit, reflection, barrier contact와 seeker/escort/orbit/wake secondary는
+  서로 다른 animation family다. dash afterimage는 player hull image를
+  재사용하며 red danger radial을 만들지 않는다.
+- resolved boss module은 one-shot disabled effect 뒤 persistent disabled
+  body와 resolved objective cue를 사용한다.
+- production Theme의 `StyleBoxFlat` 수는 0이다. modal/HUD/card/button/
+  tab/meter/preview는 image-backed texture state를 사용하고 localized
+  text, icon, value와 progress는 child control 또는 live geometry로
+  유지된다.
+- ko/en × 960×540, 1280×720, 1920×1080, English 200% dynamic-text
+  magnification, reduced-motion, grayscale, peak horde, all five bosses와
+  modal state를 capture했다. 확인된 clipping/overflow blocker는 0이다.
+- `16-effects-runtime-asis-tobe.png`,
+  `17-ui-panels-asis-tobe.png`,
+  `18-pressure-readability-asis-tobe.png`는 동일 locale/viewport/fixture의
+  baseline과 Phase 7 runtime을 비교한다.
+- 52개 non-performance focused validator가 통과했다. performance
+  scenario, native/Web authoritative matrix와 lifecycle soak는 사용자
+  지시대로 이 checkpoint 뒤 Phase 8에만 실행한다.
 
 ## Findings
 
@@ -129,8 +169,9 @@ performance release로 판정할 수 없다.
 
 - map tile compiler, enemy coordinated tactics와 boss pattern redesign은
   이 구현과 evidence의 범위가 아니다.
-- effect runtime wiring은 3/8 family만 확인됐고 UI chrome은 procedural
-  상태였으므로 이 문서는 complete visual replacement를 주장하지 않는다.
+- `ko-1280-final2` AS-IS baseline에서는 effect runtime wiring이 3/8
+  family였고 UI chrome이 procedural이었다. 해당 제한은 위
+  `ade84a8` Phase 7 checkpoint에서 해소됐다.
 - native capture는 Korean 중심이며 English/960/1920/200% text는 validator
   및 이전 rendered matrix로 확인했다.
 - production replay와 boss pressure는 통과했지만 synthetic peak와

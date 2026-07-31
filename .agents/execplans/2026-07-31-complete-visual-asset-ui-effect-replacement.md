@@ -575,31 +575,31 @@ Source owners:
 `scripts/player/vehicle_secondary_runtime.gd`,
 `scripts/bosses/vehicle_boss_exam_runtime.gd`
 
-- [ ] **3.1 table-driven visual-event catalog를 추가한다.**
+- [x] **3.1 table-driven visual-event catalog를 추가한다.**
   - As-is: renderer의 string if/else와 fallback이 mapping을 소유한다.
   - To-be: catalog descriptor가 animation, layer, scale, direction, tint와
     reduced-motion policy를 제공한다.
   - Accept: producer event 100% mapping, duplicate semantic owner 0.
   - Guard: catalog가 damage, duration과 collision을 소유하지 않는다.
-- [ ] **3.2 broad event producer를 concrete ID로 교체한다.**
+- [x] **3.2 broad event producer를 concrete ID로 교체한다.**
   - As-is: `spawn/shock/secondary/destroy/support`가 원인을 지운다.
   - To-be: Semantic visual event contract의 event ID를 emit한다.
   - Accept: production source에서 broad event emit reference 0.
   - Guard: effect 추가 이외의 gameplay branch와 숫자는 변경하지 않는다.
-- [ ] **3.3 existing effect 5종을 실제 lifecycle에 연결한다.**
+- [x] **3.3 existing effect 5종을 실제 lifecycle에 연결한다.**
   - EMP release, wake mine detonation, hostile summon arrival,
     boss module resolved, bulkhead destroy를 정확한 state transition에
     연결한다.
   - Accept: 각 named effect가 runtime capture와 event trace에 한 번 이상
     나타난다.
   - Guard: damage/activation/collision timing은 기존 authoritative event다.
-- [ ] **3.4 hit/reflect/barrier/secondary effect를 분리한다.**
+- [x] **3.4 hit/reflect/barrier/secondary effect를 분리한다.**
   - Accept: renderer mapping에서 shared `impact_reflect` alias 0.
   - Guard: projectile core와 swept collision은 변경하지 않는다.
-- [ ] **3.5 dash afterimage를 player hull texture history로 교체한다.**
+- [x] **3.5 dash afterimage를 player hull texture history로 교체한다.**
   - Accept: 최대 5개, 이전 hull transform, 단조 alpha 감소, red ring 0.
   - Guard: reduced motion은 한 elongated silhouette와 engine flash만 사용한다.
-- [ ] **3.6 generic fallback을 제거한다.**
+- [x] **3.6 generic fallback을 제거한다.**
   - Accept: unknown event fixture는 debug failure를 내고 world ring을 만들지 않는다.
   - Guard: production은 같은 unknown event를 frame마다 log하지 않는다.
 
@@ -617,25 +617,25 @@ Source owners: `vehicle_combat_renderer.gd`,
 `vehicle_attack_telegraph_builder.gd`,
 `vehicle_threat_radar.gd`, `vehicle_status_orbit.gd`
 
-- [ ] **4.1 priority/collective/elite/boss cue를 image batch로 교체한다.**
+- [x] **4.1 priority/collective/elite/boss cue를 image batch로 교체한다.**
   - As-is: ring/diamond/beam 조합을 공유한다.
   - To-be: combat cue image set을 actor-relative anchor에 배치한다.
   - Accept: cue pair별 asset ID가 다르고 peak에서 actor silhouette를 가리지 않는다.
   - Guard: current target과 committed danger 우선순위가 유지된다.
-- [ ] **4.2 boss module `resolved` visual transition을 원자적으로 처리한다.**
+- [x] **4.2 boss module `resolved` visual transition을 원자적으로 처리한다.**
   - To-be: active/locked→resolved one-shot, persistent disabled body,
     HUD/minimap/target update가 같은 state snapshot을 소비한다.
   - Accept: resolved forge/segment가 active image를 사용하는 frame 0.
   - Guard: boss phase와 damage multiplier는 변경하지 않는다.
-- [ ] **4.3 telegraph edge/cap에 authored pattern texture를 적용한다.**
+- [x] **4.3 telegraph edge/cap에 authored pattern texture를 적용한다.**
   - Accept: projectile/beam/charge/area/support/mine가 shape와 pattern으로
     구분되고 exact geometry assertion은 유지된다.
   - Guard: frame image가 live footprint를 대신하지 않는다.
-- [ ] **4.4 mine과 pressure overlay를 outline-first로 교정한다.**
+- [x] **4.4 mine과 pressure overlay를 outline-first로 교정한다.**
   - Accept: dormant activation ring 상시 대량 표시 0, armed damage boundary
     누락 0, interior fill 중첩으로 player가 가려지는 capture 0.
   - Guard: harmful active warning을 salience budget으로 숨기지 않는다.
-- [ ] **4.5 duplicate visual owner를 제거한다.**
+- [x] **4.5 duplicate visual owner를 제거한다.**
   - As-is: `VehicleRun._draw()`와 retained renderer가 일부 state cue를
     나눠 그린다.
   - To-be: static/semantic combat cue는 combat renderer, terrain live
@@ -661,23 +661,23 @@ Source owners: `vehicle_stage_theme.tres`,
 `vehicle_upgrade_choice_card.gd`,
 `vehicle_upgrade_choice_panel.gd`
 
-- [ ] **5.1 production Theme style을 `StyleBoxTexture`로 교체한다.**
+- [x] **5.1 production Theme style을 `StyleBoxTexture`로 교체한다.**
   - Accept: modal/HUD/card/button/tab/meter production styles의
     `StyleBoxFlat` count 0.
   - Guard: transparent/debug style과 screen dim은 exception으로 기록한다.
-- [ ] **5.2 modal surface direct chrome draw를 제거한다.**
+- [x] **5.2 modal surface direct chrome draw를 제거한다.**
   - Accept: `VehicleModalSurface._draw()` decorative line/rect reference 0.
   - Guard: modal host sizing, input blocking, focus order와 content inset 동일.
-- [ ] **5.3 HUD panel과 action rail을 image backplate로 교체한다.**
+- [x] **5.3 HUD panel과 action rail을 image backplate로 교체한다.**
   - Accept: health/resource, objective/boss, minimap/target, action rail,
     toast/transition 모두 image surface ID를 가진다.
   - Guard: HP/XP/cooldown/minimap marker/notification은 동적이다.
-- [ ] **5.4 upgrade card와 panel을 image component로 교체한다.**
+- [x] **5.4 upgrade card와 panel을 image component로 교체한다.**
   - Accept: normal/hover/pressed/focus/selected/disabled texture state,
     image pip, family glyph와 text layer가 올바르게 겹친다.
   - Guard: exact three cards, selection/confirm behavior와 upgrade application
     ownership은 변경하지 않는다.
-- [ ] **5.5 typography와 text-safe inset을 정렬한다.**
+- [x] **5.5 typography와 text-safe inset을 정렬한다.**
   - Accept: Noto Sans KR 650/800, title 2줄, summary 3줄, effect row 최대 2,
     optional behavior와 pips가 compact/wide에서 모두 보인다.
   - Guard: font size를 14 미만으로 줄여 overflow를 숨기지 않는다.
@@ -698,27 +698,27 @@ Source owners: `vehicle_deployment_panel.gd`, `vehicle_pause_panel.gd`,
 `vehicle_result_panel.gd`, `vehicle_garage_panel.gd`,
 `vehicle_stage_transition_banner.gd`, `vehicle_boss_practice_panel.gd`
 
-- [ ] **6.1 deployment와 pause를 전환한다.**
+- [x] **6.1 deployment와 pause를 전환한다.**
   - Accept: field/control/difficulty section, pause action group와 모든
     button state가 image-backed다.
   - Guard: deployment two-column/compact flow와 primary action 수 동일.
-- [ ] **6.2 settings와 build status를 전환한다.**
+- [x] **6.2 settings와 build status를 전환한다.**
   - Accept: tab/option/toggle/slider/summary strip image state가 실제 값과
     focus를 표시한다.
   - Guard: binding capture, locale, audio와 reduced-motion behavior 동일.
-- [ ] **6.3 guidebook과 preview를 전환한다.**
+- [x] **6.3 guidebook과 preview를 전환한다.**
   - Accept: category/list/detail/preview frame과 five category glyph가
     image-backed다.
   - Guard: actor/boss/pickup preview는 기존 semantic provider를 재사용한다.
-- [ ] **6.4 report/result/garage를 전환한다.**
+- [x] **6.4 report/result/garage를 전환한다.**
   - Accept: summary band, metric/list row, report tab/column과 action surface가
     image-backed다.
   - Guard: dynamic metric, percentage, icon과 scroll behavior 동일.
-- [ ] **6.5 transition과 boss practice를 전환한다.**
+- [x] **6.5 transition과 boss practice를 전환한다.**
   - Accept: transition banner는 narrow image frame을 사용하고 practice는
     settings/form component를 재사용한다.
   - Guard: debug-only practice를 위한 별도 production theme를 만들지 않는다.
-- [ ] **6.6 direct decorative shape draw를 제거한다.**
+- [x] **6.6 direct decorative shape draw를 제거한다.**
   - Accept: upgrade selection mark, guide preview frame, category icon,
     deployment hint의 replaceable primitive draw reference 0.
   - Guard: live cooldown/progress, threat direction과 debug geometry는 allowlist에 남긴다.
@@ -736,10 +736,10 @@ Goal: source/manifest가 아니라 실제 final runtime 화면으로 전환 완�
 Source owners: `tools/validation/`, capture path,
 `.agents/semantic-v2-runtime-acceptance-evidence.md`
 
-- [ ] **7.1 asset/event/UI coverage validator를 통과한다.**
+- [x] **7.1 asset/event/UI coverage validator를 통과한다.**
   - Required: asset ID, frame, event mapping, state texture, 9-slice margin,
     duplicate owner, generic fallback, prohibited primitive surface.
-- [ ] **7.2 full rendered capture matrix를 생성한다.**
+- [x] **7.2 full rendered capture matrix를 생성한다.**
   - ko/en × 960×540, 1280×720, 1920×1080
   - normal/reduced motion
   - grayscale semantic sheet
@@ -747,7 +747,7 @@ Source owners: `tools/validation/`, capture path,
   - every named effect
   - boss sealed/open/stable와 every module active/resolved
   - every modal, upgrade worst-copy, focus/selected/disabled/locked
-- [ ] **7.3 AS-IS / TO-BE 비교 sheet를 생성한다.**
+- [x] **7.3 AS-IS / TO-BE 비교 sheet를 생성한다.**
   - Output:
     - `docs/design/component-sheets/semantic-rework-v2-proposal/16-effects-runtime-asis-tobe.png`
     - `docs/design/component-sheets/semantic-rework-v2-proposal/17-ui-panels-asis-tobe.png`
@@ -756,12 +756,12 @@ Source owners: `tools/validation/`, capture path,
     나란히 배치하고, effect ID·UI surface·readability 차이를 짧게 표시한다.
   - Guard: comparison sheet를 runtime asset이나 별도 visual authority로
     사용하지 않는다.
-- [ ] **7.4 visual blockers를 수정한다.**
+- [x] **7.4 visual blockers를 수정한다.**
   - blocker: clipped/overflow text, actor hidden by non-danger overlay,
     indistinguishable critical pair, wrong effect timing, missing image surface,
     duplicate cue, missing focus 또는 color-only state.
   - warning만 남은 경우 근거와 capture path를 evidence에 기록한다.
-- [ ] **7.5 legacy code와 asset을 제거한다.**
+- [x] **7.5 legacy code와 asset을 제거한다.**
   - Remove only after replacement passes:
     - generic effect fallback
     - obsolete procedural effect recipes
@@ -769,7 +769,7 @@ Source owners: `tools/validation/`, capture path,
     - unused flat production styles
     - zero-reference obsolete source/runtime assets
   - Accept: `rg` reference 0, import와 focused validators 통과.
-- [ ] **7.6 visual acceptance checkpoint를 commit한다.**
+- [x] **7.6 visual acceptance checkpoint를 commit한다.**
   - 이 commit이 Phase 8 performance의 유일한 baseline이다.
   - Accept: worktree clean, commit hash와 manifest fingerprint가 evidence에 기록된다.
 
@@ -995,22 +995,40 @@ Material open question은 없다. 다음 항목은 change-control boundary다.
 - [x] Phase 0: authority와 acceptance truth 정정
 - [x] Phase 1: 추가 effect/cue asset pack
 - [x] Phase 2: UI image component pack
-- [ ] Phase 3: semantic event/effect runtime switch
-- [ ] Phase 4: combat cue/live telegraph 교정
-- [ ] Phase 5: UI foundation/HUD/upgrade
-- [ ] Phase 6: remaining UI surfaces
-- [ ] Phase 7: full visual acceptance/legacy retirement
+- [x] Phase 3: semantic event/effect runtime switch
+- [x] Phase 4: combat cue/live telegraph 교정
+- [x] Phase 5: UI foundation/HUD/upgrade
+- [x] Phase 6: remaining UI surfaces
+- [x] Phase 7: full visual acceptance/legacy retirement
 - [ ] Phase 8: final-only performance/Web/lifecycle
+
+### 2026-07-31 Phase 3–7 evidence
+
+- Visual acceptance baseline: `ade84a8`
+- Runtime capture:
+  `build/captures/complete-visual-replacement/`
+  - ko/en × 960×540, 1280×720, 1920×1080
+  - `en-1280-text-200` dynamic-text magnification probe
+  - grayscale peak/upgrade semantic sheet
+  - `09-effects-*` five-group capture covering every world-space event in
+    `VehicleVisualEventCatalog`
+- Durable comparisons:
+  `docs/design/component-sheets/semantic-rework-v2-proposal/16`–`18`
+- Validation:
+  52 non-performance focused validators passed. The performance scenario,
+  authoritative matrix, soak and Web runtime checks remain intentionally
+  deferred to Phase 8.
+- Retired:
+  generic effect fallback, procedural modal/card/preview chrome, production
+  `StyleBoxFlat`, and the obsolete `fx_impact_reflect` runtime atlas/frames.
 
 ## Next Steps
 
-1. Phase 0에서 visual spec과 acceptance evidence를 실제 current state로
-   정정하고 coverage validator를 누락 감지 상태로 만든다.
-2. Phase 1과 2에서 gameplay effect/cue와 UI component 이미지를 각각
-   독립 pack으로 제작·검수한다.
-3. Phase 3–6에서 runtime event와 모든 UI surface를 순서대로 전환한다.
-4. Phase 7의 full rendered matrix가 통과한 clean commit을 만든다.
-5. 그 commit에서만 Phase 8 성능·Web·lifecycle gate를 실행한다.
+1. `ade84a8` visual baseline에서 Phase 8 focused native smoke를 실행한다.
+2. 실패 시 measured subsystem 한 곳만 bounded하게 교정한다.
+3. native authoritative matrix와 capacity gate를 통과한 경우에만
+   600초 lifecycle soak를 실행한다.
+4. production Web export와 built-Web smoke/performance evidence를 기록한다.
 
 ## Completion Criteria
 
