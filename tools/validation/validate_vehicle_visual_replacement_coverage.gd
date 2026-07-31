@@ -183,7 +183,7 @@ func _validate_ui_manifest(manifest: Dictionary) -> void:
 		var component := Dictionary(components[component_id])
 		var states := Dictionary(component.get("states", {}))
 		_expect(
-			Vector2i(component.get("canvas", Vector2i.ZERO)) != Vector2i.ZERO,
+			_vector2i(component.get("canvas", [])) != Vector2i.ZERO,
 			"%s has no canvas metadata" % component_id
 		)
 		_expect(
@@ -217,6 +217,16 @@ func _read_json(path: String) -> Dictionary:
 	if error != OK or not parser.data is Dictionary:
 		return {}
 	return Dictionary(parser.data)
+
+
+func _vector2i(value: Variant) -> Vector2i:
+	if value is Vector2i:
+		return value
+	if value is Vector2:
+		return Vector2i(value)
+	if value is Array and Array(value).size() >= 2:
+		return Vector2i(int(Array(value)[0]), int(Array(value)[1]))
+	return Vector2i.ZERO
 
 
 func _expect(condition: bool, message: String) -> void:

@@ -29,6 +29,11 @@ const REQUIRED_RUNTIME_IDS: Array[StringName] = [
 	&"hud/action_primary",
 	&"hud/minimap_marker_objective_active",
 	&"effect/dash_start/00",
+	&"effect/barrier_contact/00",
+	&"effect/boss_reduced_hit/00",
+	&"cue/priority_target",
+	&"cue/boss_core_open",
+	&"cue/guide_objects",
 ]
 
 var _failures: Array[String] = []
@@ -36,7 +41,7 @@ var _failures: Array[String] = []
 
 func _initialize() -> void:
 	var ids := AssetProvider.asset_ids()
-	_expect(ids.size() == 140, "all 140 non-map runtime PNGs are indexed")
+	_expect(ids.size() == 239, "all 239 non-map runtime PNGs are indexed")
 	for asset_id in REQUIRED_RUNTIME_IDS:
 		_expect(AssetProvider.has_asset(asset_id), "%s is indexed" % asset_id)
 	for asset_id in ids:

@@ -496,24 +496,24 @@ Source owners: `art/gameplay/semantic-v2/sources/`,
 `effects/atlases/`, `effects/frames/`, `hud/`,
 `asset-manifest.json`, `sheets/`
 
-- [ ] **1.1 14개 새 animation family와 1개 분리 re-export를 한 named effect/source 규칙으로 제작한다.**
+- [x] **1.1 14개 새 animation family와 1개 분리 re-export를 한 named effect/source 규칙으로 제작한다.**
   - As-is: generic effect와 한 starburst가 여러 event를 대신한다.
   - To-be: Proposed Design 표의 frame/FPS/pivot 규격으로 독립 source,
     atlas와 frame PNG를 만든다.
   - Accept: alpha/canvas/pivot/frame count/FPS validation 통과.
   - Guard: live radius, text, attack footprint와 background를 image에 굽지 않는다.
-- [ ] **1.2 22개 combat/guide cue glyph를 최대 세 identity/source로 제작한다.**
+- [x] **1.2 22개 combat/guide cue glyph를 최대 세 identity/source로 제작한다.**
   - As-is: non-spatial state가 ring/diamond/beam을 공유한다.
   - To-be: target, collective, elite, boss/objective, guide category별
     silhouette를 만든다.
   - Accept: critical-pair grayscale sheet에서 exact silhouette collision 0.
   - Guard: 기존 minimap/action/upgrade glyph를 복제하지 않는다.
-- [ ] **1.3 manifest와 runtime export를 패키징한다.**
+- [x] **1.3 manifest와 runtime export를 패키징한다.**
   - As-is: 추가 family metadata가 없다.
   - To-be: path, canvas, pivot, FPS, loop, scale/rotation policy를 기록한다.
   - Accept: 모든 manifest asset load와 alpha/canvas 검증 통과.
   - Guard: high-resolution source를 runtime에서 직접 load하지 않는다.
-- [ ] **1.4 review sheet를 생성한다.**
+- [x] **1.4 review sheet를 생성한다.**
   - Output:
     - `sheets/08-effect-semantic-expansion.png`
     - `sheets/09-combat-cue-glyphs.png`
@@ -533,24 +533,24 @@ Goal: 모든 UI surface가 조합해 사용할 reusable image component를 만�
 Source owners: `art/ui/production/semantic-v2/`,
 `ui-asset-manifest.json`
 
-- [ ] **2.1 modal/content/HUD/upgrade surface image를 제작한다.**
+- [x] **2.1 modal/content/HUD/upgrade surface image를 제작한다.**
   - As-is: flat fill과 직접 그린 perimeter다.
   - To-be: 지정 canvas, patch margin, text-safe inset을 가진 9-slice PNG다.
   - Accept: 960–1920 크기로 늘려도 corner/rail 두께가 유지된다.
   - Guard: text, icon, fake control과 기능 없는 중앙 장식을 굽지 않는다.
-- [ ] **2.2 button/tab/toggle/slider/meter state image를 제작한다.**
+- [x] **2.2 button/tab/toggle/slider/meter state image를 제작한다.**
   - As-is: state는 fill/border color 차이다.
   - To-be: normal/hover/pressed/focus/selected/disabled가 notch/rail/pattern도
     달라진다.
   - Accept: grayscale에서 focus/selected/disabled가 구분된다.
   - Guard: focus semantics와 keyboard behavior는 Godot Control이 계속 소유한다.
-- [ ] **2.3 pip/preview/small-state image를 제작한다.**
+- [x] **2.3 pip/preview/small-state image를 제작한다.**
   - As-is: circle/arc/rect로 직접 그린다.
   - To-be: pip, warning, disabled, selection rail과 preview frame PNG를
     사용한다.
   - Accept: 13–32 px 실제 표시 크기에서 형태가 뭉개지지 않는다.
   - Guard: upgrade level 값과 locked state를 image가 소유하지 않는다.
-- [ ] **2.4 UI manifest와 component sheet를 생성한다.**
+- [x] **2.4 UI manifest와 component sheet를 생성한다.**
   - Output:
     - `sheets/01-ui-surface-components.png`
     - `sheets/02-ui-control-states.png`
@@ -993,8 +993,8 @@ Material open question은 없다. 다음 항목은 change-control boundary다.
 - [x] image/hybrid/procedural 경계와 event/UI asset contract를 잠갔다.
 - [x] 실행 계획서를 생성했다.
 - [x] Phase 0: authority와 acceptance truth 정정
-- [ ] Phase 1: 추가 effect/cue asset pack
-- [ ] Phase 2: UI image component pack
+- [x] Phase 1: 추가 effect/cue asset pack
+- [x] Phase 2: UI image component pack
 - [ ] Phase 3: semantic event/effect runtime switch
 - [ ] Phase 4: combat cue/live telegraph 교정
 - [ ] Phase 5: UI foundation/HUD/upgrade

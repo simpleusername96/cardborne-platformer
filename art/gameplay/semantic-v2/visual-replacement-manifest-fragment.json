@@ -1,0 +1,587 @@
+{
+  "schema_version": 1,
+  "generated_by": "tools/design/export_visual_replacement_assets.py",
+  "animations": {
+    "reflect_deflection": {
+      "atlas": "effects/atlases/fx_reflect_deflection.png",
+      "frames": "effects/frames/fx_reflect_deflection/frame_{index:02}.png",
+      "frame_count": 5,
+      "grid": [
+        5,
+        1
+      ],
+      "frame_size": [
+        96,
+        96
+      ],
+      "gutter": 2,
+      "pivot": [
+        48,
+        48
+      ],
+      "fps": 20,
+      "loop": false,
+      "source": "sources/effect-expansion/01-reflect-deflection.png"
+    },
+    "barrier_contact": {
+      "atlas": "effects/atlases/fx_barrier_contact.png",
+      "frames": "effects/frames/fx_barrier_contact/frame_{index:02}.png",
+      "frame_count": 5,
+      "grid": [
+        5,
+        1
+      ],
+      "frame_size": [
+        128,
+        128
+      ],
+      "gutter": 2,
+      "pivot": [
+        64,
+        64
+      ],
+      "fps": 20,
+      "loop": false,
+      "source": "sources/effect-expansion/02-barrier-contact.png"
+    },
+    "hull_hit": {
+      "atlas": "effects/atlases/fx_hull_hit.png",
+      "frames": "effects/frames/fx_hull_hit/frame_{index:02}.png",
+      "frame_count": 4,
+      "grid": [
+        4,
+        1
+      ],
+      "frame_size": [
+        96,
+        96
+      ],
+      "gutter": 2,
+      "pivot": [
+        48,
+        48
+      ],
+      "fps": 20,
+      "loop": false,
+      "source": "sources/effect-expansion/03-hull-hit.png"
+    },
+    "seeker_impact": {
+      "atlas": "effects/atlases/fx_seeker_impact.png",
+      "frames": "effects/frames/fx_seeker_impact/frame_{index:02}.png",
+      "frame_count": 4,
+      "grid": [
+        4,
+        1
+      ],
+      "frame_size": [
+        96,
+        96
+      ],
+      "gutter": 2,
+      "pivot": [
+        48,
+        48
+      ],
+      "fps": 20,
+      "loop": false,
+      "source": "sources/effect-expansion/04-seeker-impact.png"
+    },
+    "escort_drone_impact": {
+      "atlas": "effects/atlases/fx_escort_drone_impact.png",
+      "frames": "effects/frames/fx_escort_drone_impact/frame_{index:02}.png",
+      "frame_count": 4,
+      "grid": [
+        4,
+        1
+      ],
+      "frame_size": [
+        96,
+        96
+      ],
+      "gutter": 2,
+      "pivot": [
+        48,
+        48
+      ],
+      "fps": 20,
+      "loop": false,
+      "source": "sources/effect-expansion/05-escort-drone-impact.png"
+    },
+    "orbit_blade_impact": {
+      "atlas": "effects/atlases/fx_orbit_blade_impact.png",
+      "frames": "effects/frames/fx_orbit_blade_impact/frame_{index:02}.png",
+      "frame_count": 4,
+      "grid": [
+        4,
+        1
+      ],
+      "frame_size": [
+        96,
+        96
+      ],
+      "gutter": 2,
+      "pivot": [
+        48,
+        48
+      ],
+      "fps": 20,
+      "loop": false,
+      "source": "sources/effect-expansion/06-orbit-blade-impact.png"
+    },
+    "enemy_destroy_light": {
+      "atlas": "effects/atlases/fx_enemy_destroy_light.png",
+      "frames": "effects/frames/fx_enemy_destroy_light/frame_{index:02}.png",
+      "frame_count": 5,
+      "grid": [
+        5,
+        1
+      ],
+      "frame_size": [
+        160,
+        160
+      ],
+      "gutter": 2,
+      "pivot": [
+        80,
+        80
+      ],
+      "fps": 15,
+      "loop": false,
+      "source": "sources/effect-expansion/07-enemy-destroy-light.png"
+    },
+    "enemy_destroy_heavy": {
+      "atlas": "effects/atlases/fx_enemy_destroy_heavy.png",
+      "frames": "effects/frames/fx_enemy_destroy_heavy/frame_{index:02}.png",
+      "frame_count": 6,
+      "grid": [
+        6,
+        1
+      ],
+      "frame_size": [
+        192,
+        192
+      ],
+      "gutter": 2,
+      "pivot": [
+        96,
+        96
+      ],
+      "fps": 15,
+      "loop": false,
+      "source": "sources/effect-expansion/08-enemy-destroy-heavy.png"
+    },
+    "crate_destroy": {
+      "atlas": "effects/atlases/fx_crate_destroy.png",
+      "frames": "effects/frames/fx_crate_destroy/frame_{index:02}.png",
+      "frame_count": 5,
+      "grid": [
+        5,
+        1
+      ],
+      "frame_size": [
+        128,
+        128
+      ],
+      "gutter": 2,
+      "pivot": [
+        64,
+        64
+      ],
+      "fps": 15,
+      "loop": false,
+      "source": "sources/effect-expansion/09-crate-destroy.png"
+    },
+    "pickup_intake": {
+      "atlas": "effects/atlases/fx_pickup_intake.png",
+      "frames": "effects/frames/fx_pickup_intake/frame_{index:02}.png",
+      "frame_count": 4,
+      "grid": [
+        4,
+        1
+      ],
+      "frame_size": [
+        96,
+        96
+      ],
+      "gutter": 2,
+      "pivot": [
+        48,
+        48
+      ],
+      "fps": 20,
+      "loop": false,
+      "source": "sources/effect-expansion/10-pickup-intake.png"
+    },
+    "support_heal": {
+      "atlas": "effects/atlases/fx_support_heal.png",
+      "frames": "effects/frames/fx_support_heal/frame_{index:02}.png",
+      "frame_count": 4,
+      "grid": [
+        4,
+        1
+      ],
+      "frame_size": [
+        128,
+        128
+      ],
+      "gutter": 2,
+      "pivot": [
+        64,
+        64
+      ],
+      "fps": 15,
+      "loop": false,
+      "source": "sources/effect-expansion/11-support-heal.png"
+    },
+    "lifesteal_pulse": {
+      "atlas": "effects/atlases/fx_lifesteal_pulse.png",
+      "frames": "effects/frames/fx_lifesteal_pulse/frame_{index:02}.png",
+      "frame_count": 4,
+      "grid": [
+        4,
+        1
+      ],
+      "frame_size": [
+        64,
+        64
+      ],
+      "gutter": 2,
+      "pivot": [
+        32,
+        32
+      ],
+      "fps": 20,
+      "loop": false,
+      "source": "sources/effect-expansion/12-lifesteal-pulse.png"
+    },
+    "transit_shift": {
+      "atlas": "effects/atlases/fx_transit_shift.png",
+      "frames": "effects/frames/fx_transit_shift/frame_{index:02}.png",
+      "frame_count": 5,
+      "grid": [
+        5,
+        1
+      ],
+      "frame_size": [
+        160,
+        96
+      ],
+      "gutter": 2,
+      "pivot": [
+        80,
+        48
+      ],
+      "fps": 15,
+      "loop": false,
+      "source": "sources/effect-expansion/13-transit-shift.png"
+    },
+    "boss_reduced_hit": {
+      "atlas": "effects/atlases/fx_boss_reduced_hit.png",
+      "frames": "effects/frames/fx_boss_reduced_hit/frame_{index:02}.png",
+      "frame_count": 4,
+      "grid": [
+        4,
+        1
+      ],
+      "frame_size": [
+        96,
+        96
+      ],
+      "gutter": 2,
+      "pivot": [
+        48,
+        48
+      ],
+      "fps": 20,
+      "loop": false,
+      "source": "sources/effect-expansion/14-boss-reduced-hit.png"
+    },
+    "impact_damage": {
+      "atlas": "effects/atlases/fx_impact_damage.png",
+      "frames": "effects/frames/fx_impact_damage/frame_{index:02}.png",
+      "frame_count": 5,
+      "grid": [
+        5,
+        1
+      ],
+      "frame_size": [
+        64,
+        64
+      ],
+      "gutter": 2,
+      "pivot": [
+        32,
+        32
+      ],
+      "fps": 20,
+      "loop": false,
+      "source": "sources/effects/02-impact-reflect.png"
+    }
+  },
+  "combat_cues": {
+    "target_bracket_corner": {
+      "path": "combat-cues/cue_target_bracket_corner.png",
+      "canvas": [
+        96,
+        96
+      ],
+      "pivot": [
+        48,
+        48
+      ],
+      "source": "sources/combat-cues/01-target-priority-ranged.png"
+    },
+    "priority_target": {
+      "path": "combat-cues/cue_priority_target.png",
+      "canvas": [
+        96,
+        96
+      ],
+      "pivot": [
+        48,
+        48
+      ],
+      "source": "sources/combat-cues/01-target-priority-ranged.png"
+    },
+    "ranged_startup": {
+      "path": "combat-cues/cue_ranged_startup.png",
+      "canvas": [
+        96,
+        96
+      ],
+      "pivot": [
+        48,
+        48
+      ],
+      "source": "sources/combat-cues/01-target-priority-ranged.png"
+    },
+    "collective_gather": {
+      "path": "combat-cues/cue_collective_gather.png",
+      "canvas": [
+        96,
+        96
+      ],
+      "pivot": [
+        48,
+        48
+      ],
+      "source": "sources/combat-cues/02-collective-gather-lock-execute.png"
+    },
+    "collective_lock": {
+      "path": "combat-cues/cue_collective_lock.png",
+      "canvas": [
+        96,
+        96
+      ],
+      "pivot": [
+        48,
+        48
+      ],
+      "source": "sources/combat-cues/02-collective-gather-lock-execute.png"
+    },
+    "collective_execute": {
+      "path": "combat-cues/cue_collective_execute.png",
+      "canvas": [
+        96,
+        96
+      ],
+      "pivot": [
+        48,
+        48
+      ],
+      "source": "sources/combat-cues/02-collective-gather-lock-execute.png"
+    },
+    "collective_break": {
+      "path": "combat-cues/cue_collective_break.png",
+      "canvas": [
+        96,
+        96
+      ],
+      "pivot": [
+        48,
+        48
+      ],
+      "source": "sources/combat-cues/03-collective-break-elite-traits.png"
+    },
+    "elite_armored": {
+      "path": "combat-cues/cue_elite_armored.png",
+      "canvas": [
+        96,
+        96
+      ],
+      "pivot": [
+        48,
+        48
+      ],
+      "source": "sources/combat-cues/03-collective-break-elite-traits.png"
+    },
+    "elite_overclocked": {
+      "path": "combat-cues/cue_elite_overclocked.png",
+      "canvas": [
+        96,
+        96
+      ],
+      "pivot": [
+        48,
+        48
+      ],
+      "source": "sources/combat-cues/03-collective-break-elite-traits.png"
+    },
+    "elite_heavy": {
+      "path": "combat-cues/cue_elite_heavy.png",
+      "canvas": [
+        96,
+        96
+      ],
+      "pivot": [
+        48,
+        48
+      ],
+      "source": "sources/combat-cues/04-elite-heavy-boss-core.png"
+    },
+    "boss_core_sealed": {
+      "path": "combat-cues/cue_boss_core_sealed.png",
+      "canvas": [
+        96,
+        96
+      ],
+      "pivot": [
+        48,
+        48
+      ],
+      "source": "sources/combat-cues/04-elite-heavy-boss-core.png"
+    },
+    "boss_core_open": {
+      "path": "combat-cues/cue_boss_core_open.png",
+      "canvas": [
+        96,
+        96
+      ],
+      "pivot": [
+        48,
+        48
+      ],
+      "source": "sources/combat-cues/04-elite-heavy-boss-core.png"
+    },
+    "boss_core_stable": {
+      "path": "combat-cues/cue_boss_core_stable.png",
+      "canvas": [
+        96,
+        96
+      ],
+      "pivot": [
+        48,
+        48
+      ],
+      "source": "sources/combat-cues/05-boss-objective-states.png"
+    },
+    "objective_active": {
+      "path": "combat-cues/cue_objective_active.png",
+      "canvas": [
+        96,
+        96
+      ],
+      "pivot": [
+        48,
+        48
+      ],
+      "source": "sources/combat-cues/05-boss-objective-states.png"
+    },
+    "objective_resolved": {
+      "path": "combat-cues/cue_objective_resolved.png",
+      "canvas": [
+        96,
+        96
+      ],
+      "pivot": [
+        48,
+        48
+      ],
+      "source": "sources/combat-cues/05-boss-objective-states.png"
+    },
+    "commit_locked": {
+      "path": "combat-cues/cue_commit_locked.png",
+      "canvas": [
+        96,
+        96
+      ],
+      "pivot": [
+        48,
+        48
+      ],
+      "source": "sources/combat-cues/06-commit-guide-ship.png"
+    },
+    "commit_autonomous": {
+      "path": "combat-cues/cue_commit_autonomous.png",
+      "canvas": [
+        96,
+        96
+      ],
+      "pivot": [
+        48,
+        48
+      ],
+      "source": "sources/combat-cues/06-commit-guide-ship.png"
+    },
+    "guide_ship": {
+      "path": "combat-cues/cue_guide_ship.png",
+      "canvas": [
+        96,
+        96
+      ],
+      "pivot": [
+        48,
+        48
+      ],
+      "source": "sources/combat-cues/06-commit-guide-ship.png"
+    },
+    "guide_mobile": {
+      "path": "combat-cues/cue_guide_mobile.png",
+      "canvas": [
+        96,
+        96
+      ],
+      "pivot": [
+        48,
+        48
+      ],
+      "source": "sources/combat-cues/07-guide-role-categories.png"
+    },
+    "guide_stationary": {
+      "path": "combat-cues/cue_guide_stationary.png",
+      "canvas": [
+        96,
+        96
+      ],
+      "pivot": [
+        48,
+        48
+      ],
+      "source": "sources/combat-cues/07-guide-role-categories.png"
+    },
+    "guide_bosses": {
+      "path": "combat-cues/cue_guide_bosses.png",
+      "canvas": [
+        96,
+        96
+      ],
+      "pivot": [
+        48,
+        48
+      ],
+      "source": "sources/combat-cues/07-guide-role-categories.png"
+    },
+    "guide_objects": {
+      "path": "combat-cues/cue_guide_objects.png",
+      "canvas": [
+        96,
+        96
+      ],
+      "pivot": [
+        48,
+        48
+      ],
+      "source": "sources/combat-cues/08-guide-objects.png"
+    }
+  }
+}

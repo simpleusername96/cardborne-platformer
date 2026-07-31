@@ -1,0 +1,259 @@
+{
+  "schema_version": 1,
+  "pack": "cardborne-ui-semantic-v2",
+  "generated_by": "tools/design/export_visual_replacement_assets.py",
+  "components": {
+    "modal_master": {
+      "canvas": [
+        192,
+        192
+      ],
+      "patch_margin": 32,
+      "safe_inset": [
+        36,
+        32,
+        32,
+        32
+      ],
+      "states": {
+        "normal": "surfaces/modal_master_normal.png",
+        "compact_safe": "surfaces/modal_master_compact_safe.png"
+      }
+    },
+    "content_plate": {
+      "canvas": [
+        96,
+        96
+      ],
+      "patch_margin": 16,
+      "safe_inset": [
+        20,
+        18,
+        18,
+        18
+      ],
+      "states": {
+        "normal": "surfaces/content_plate_normal.png",
+        "inset": "surfaces/content_plate_inset.png",
+        "summary": "surfaces/content_plate_summary.png"
+      }
+    },
+    "hud_plate": {
+      "canvas": [
+        96,
+        96
+      ],
+      "patch_margin": 16,
+      "safe_inset": [
+        18,
+        16,
+        18,
+        16
+      ],
+      "states": {
+        "health_resource": "surfaces/hud_plate_health_resource.png",
+        "objective_boss": "surfaces/hud_plate_objective_boss.png",
+        "minimap_target": "surfaces/hud_plate_minimap_target.png",
+        "action_rail": "surfaces/hud_plate_action_rail.png",
+        "toast": "surfaces/hud_plate_toast.png"
+      }
+    },
+    "upgrade_card": {
+      "canvas": [
+        128,
+        128
+      ],
+      "patch_margin": 20,
+      "safe_inset": [
+        24,
+        22,
+        22,
+        22
+      ],
+      "states": {
+        "normal": "surfaces/upgrade_card_normal.png",
+        "hover": "surfaces/upgrade_card_hover.png",
+        "pressed": "surfaces/upgrade_card_pressed.png",
+        "focus": "surfaces/upgrade_card_focus.png",
+        "selected": "surfaces/upgrade_card_selected.png",
+        "disabled": "surfaces/upgrade_card_disabled.png"
+      }
+    },
+    "button_primary": {
+      "canvas": [
+        96,
+        64
+      ],
+      "patch_margin": 16,
+      "safe_inset": [
+        20,
+        16,
+        20,
+        16
+      ],
+      "states": {
+        "normal": "controls/button_primary_normal.png",
+        "hover": "controls/button_primary_hover.png",
+        "pressed": "controls/button_primary_pressed.png",
+        "focus": "controls/button_primary_focus.png",
+        "disabled": "controls/button_primary_disabled.png"
+      }
+    },
+    "button_secondary": {
+      "canvas": [
+        96,
+        64
+      ],
+      "patch_margin": 16,
+      "safe_inset": [
+        20,
+        16,
+        20,
+        16
+      ],
+      "states": {
+        "normal": "controls/button_secondary_normal.png",
+        "hover": "controls/button_secondary_hover.png",
+        "pressed": "controls/button_secondary_pressed.png",
+        "focus": "controls/button_secondary_focus.png",
+        "disabled": "controls/button_secondary_disabled.png"
+      }
+    },
+    "button_danger": {
+      "canvas": [
+        96,
+        64
+      ],
+      "patch_margin": 16,
+      "safe_inset": [
+        20,
+        16,
+        20,
+        16
+      ],
+      "states": {
+        "normal": "controls/button_danger_normal.png",
+        "hover": "controls/button_danger_hover.png",
+        "pressed": "controls/button_danger_pressed.png",
+        "focus": "controls/button_danger_focus.png",
+        "disabled": "controls/button_danger_disabled.png"
+      }
+    },
+    "tab_option": {
+      "canvas": [
+        96,
+        48
+      ],
+      "patch_margin": 16,
+      "safe_inset": [
+        18,
+        12,
+        18,
+        12
+      ],
+      "states": {
+        "normal": "controls/tab_option_normal.png",
+        "hover": "controls/tab_option_hover.png",
+        "selected": "controls/tab_option_selected.png",
+        "focus": "controls/tab_option_focus.png",
+        "disabled": "controls/tab_option_disabled.png"
+      }
+    },
+    "toggle": {
+      "canvas": [
+        64,
+        64
+      ],
+      "patch_margin": 12,
+      "safe_inset": [
+        12,
+        12,
+        12,
+        12
+      ],
+      "states": {
+        "off": "controls/toggle_off.png",
+        "on": "controls/toggle_on.png",
+        "focus": "controls/toggle_focus.png"
+      }
+    },
+    "slider": {
+      "canvas": [
+        96,
+        32
+      ],
+      "patch_margin": 12,
+      "safe_inset": [
+        12,
+        8,
+        12,
+        8
+      ],
+      "states": {
+        "lane": "controls/slider_lane.png",
+        "fill": "controls/slider_fill.png",
+        "grabber": "controls/slider_grabber.png"
+      }
+    },
+    "meter": {
+      "canvas": [
+        64,
+        24
+      ],
+      "patch_margin": 8,
+      "safe_inset": [
+        8,
+        6,
+        8,
+        6
+      ],
+      "states": {
+        "background": "controls/meter_background.png",
+        "health": "controls/meter_health.png",
+        "boss": "controls/meter_boss.png",
+        "resource": "controls/meter_resource.png",
+        "cooldown": "controls/meter_cooldown.png",
+        "support": "controls/meter_support.png"
+      }
+    },
+    "preview": {
+      "canvas": [
+        96,
+        96
+      ],
+      "patch_margin": 16,
+      "safe_inset": [
+        18,
+        18,
+        18,
+        18
+      ],
+      "states": {
+        "normal": "glyphs/preview_normal.png",
+        "locked": "glyphs/preview_locked.png",
+        "focused": "glyphs/preview_focused.png"
+      }
+    },
+    "small_state": {
+      "canvas": [
+        32,
+        32
+      ],
+      "patch_margin": 6,
+      "safe_inset": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "states": {
+        "pip_empty": "glyphs/small_state_pip_empty.png",
+        "pip_available": "glyphs/small_state_pip_available.png",
+        "pip_filled": "glyphs/small_state_pip_filled.png",
+        "warning": "glyphs/small_state_warning.png",
+        "disabled": "glyphs/small_state_disabled.png",
+        "selection_rail": "glyphs/small_state_selection_rail.png"
+      }
+    }
+  }
+}

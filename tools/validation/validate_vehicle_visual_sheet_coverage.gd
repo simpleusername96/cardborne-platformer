@@ -15,8 +15,9 @@ const EXPECTED_CATEGORY_COUNTS := {
 	&"pickups":6,
 	&"world_feature":10,
 	&"hud":21,
-	&"effect_atlas":8,
-	&"effect_frame":38,
+	&"combat_cue":22,
+	&"effect_atlas":22,
+	&"effect_frame":101,
 }
 const APPROVED_REFERENCE_PATHS := [
 	"res://docs/design/component-sheets/semantic-rework-v2-proposal/13-visual-taxonomy-asis-tobe.png",
@@ -58,8 +59,8 @@ func _initialize() -> void:
 			]
 		)
 	_expect(
-		AssetProvider.asset_ids().size() == 140,
-		"semantic-v2 production coverage totals 140 non-map runtime images"
+		AssetProvider.asset_ids().size() == 239,
+		"semantic-v2 production coverage totals 239 non-map runtime images"
 	)
 	for path in APPROVED_REFERENCE_PATHS:
 		_expect(FileAccess.file_exists(path), "approved reference exists: %s" % path)

@@ -251,6 +251,18 @@ static func _index_asset_sets() -> void:
 						{},
 						&"hud"
 					)
+			&"combat_cues":
+				for id_variant in Dictionary(asset_set.get("files", {})):
+					var cue_id := StringName(id_variant)
+					var source := Dictionary(
+						Dictionary(asset_set["files"])[id_variant]
+					)
+					_add_asset(
+						StringName("cue/%s" % cue_id),
+						"%s/%s" % [root, String(source["path"])],
+						source,
+						&"combat_cue"
+					)
 
 
 static func _index_animations() -> void:

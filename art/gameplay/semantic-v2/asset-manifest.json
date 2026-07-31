@@ -31,26 +31,50 @@
   "attachments": {
     "player_hull": {
       "path": "actors/player/actor_player_hull_base.png",
-      "canvas": [128, 128],
-      "pivot": [64, 64],
+      "canvas": [
+        128,
+        128
+      ],
+      "pivot": [
+        64,
+        64
+      ],
       "rotation_driver": "hull"
     },
     "player_engine": {
       "path": "actors/player/actor_player_engine.png",
-      "canvas": [64, 48],
-      "pivot": [32, 24],
+      "canvas": [
+        64,
+        48
+      ],
+      "pivot": [
+        32,
+        24
+      ],
       "parent": "player_hull",
-      "offset_world": [-42, 0],
+      "offset_world": [
+        -42,
+        0
+      ],
       "rotation_driver": "hull",
       "deform_with_velocity": false,
       "note": "The engine is rigidly attached to the hull and must not bend or rotate independently while moving."
     },
     "player_aim_mount": {
       "path": "actors/player/actor_player_aim_mount.png",
-      "canvas": [80, 48],
-      "pivot": [40, 24],
+      "canvas": [
+        80,
+        48
+      ],
+      "pivot": [
+        40,
+        24
+      ],
       "parent": "player_hull",
-      "offset_world": [0, 0],
+      "offset_world": [
+        0,
+        0
+      ],
       "rotation_driver": "aim"
     }
   },
@@ -82,21 +106,48 @@
         "boss_pylon"
       ],
       "canvas_by_role": {
-        "default": [112, 112],
-        "turret": [160, 160],
-        "mine": [160, 160],
-        "generator": [160, 160],
-        "interceptor_tower": [160, 160],
-        "beam_sentinel": [160, 160],
-        "boss_pylon": [160, 160]
+        "default": [
+          112,
+          112
+        ],
+        "turret": [
+          160,
+          160
+        ],
+        "mine": [
+          160,
+          160
+        ],
+        "generator": [
+          160,
+          160
+        ],
+        "interceptor_tower": [
+          160,
+          160
+        ],
+        "beam_sentinel": [
+          160,
+          160
+        ],
+        "boss_pylon": [
+          160,
+          160
+        ]
       }
     },
     {
       "id": "bosses",
       "root": "actors/bosses",
       "pattern": "actor_boss_{boss}_base.png",
-      "canvas": [352, 352],
-      "pivot": [176, 176],
+      "canvas": [
+        352,
+        352
+      ],
+      "pivot": [
+        176,
+        176
+      ],
       "roles": [
         "colossus",
         "leviathan",
@@ -108,8 +159,14 @@
     {
       "id": "boss_modules",
       "root": "actors/bosses/modules",
-      "canvas": [160, 160],
-      "pivot": [80, 80],
+      "canvas": [
+        160,
+        160
+      ],
+      "pivot": [
+        80,
+        80
+      ],
       "files": [
         "actor_boss_module_forge_plate_active.png",
         "actor_boss_module_forge_plate_disabled.png",
@@ -128,38 +185,243 @@
       "root": "weapons/secondaries",
       "pivot": "center",
       "files": {
-        "seeker": {"path": "secondary_seeker.png", "canvas": [96, 64], "pivot": [58, 32]},
-        "escort_drone": {"path": "secondary_escort_drone.png", "canvas": [64, 48], "pivot": [32, 24]},
-        "orbit_blade": {"path": "secondary_orbit_blade.png", "canvas": [64, 32], "pivot": [32, 16]},
-        "wake_mine": {"path": "secondary_wake_mine.png", "canvas": [48, 48], "pivot": [24, 24]}
+        "seeker": {
+          "path": "secondary_seeker.png",
+          "canvas": [
+            96,
+            64
+          ],
+          "pivot": [
+            58,
+            32
+          ]
+        },
+        "escort_drone": {
+          "path": "secondary_escort_drone.png",
+          "canvas": [
+            64,
+            48
+          ],
+          "pivot": [
+            32,
+            24
+          ]
+        },
+        "orbit_blade": {
+          "path": "secondary_orbit_blade.png",
+          "canvas": [
+            64,
+            32
+          ],
+          "pivot": [
+            32,
+            16
+          ]
+        },
+        "wake_mine": {
+          "path": "secondary_wake_mine.png",
+          "canvas": [
+            48,
+            48
+          ],
+          "pivot": [
+            24,
+            24
+          ]
+        }
       }
     },
     {
       "id": "projectiles",
       "root": "weapons/projectiles",
       "files": {
-        "player_primary": {"path": "projectile_player_primary.png", "canvas": [112, 64], "pivot": [72, 32]},
-        "player_opening_breach": {"path": "projectile_player_opening_breach.png", "canvas": [112, 64], "pivot": [72, 32]},
-        "player_seeker": {"path": "projectile_player_seeker.png", "canvas": [96, 64], "pivot": [58, 32]},
-        "hostile_kinetic": {"path": "projectile_hostile_kinetic.png", "canvas": [80, 80], "pivot": [40, 40]},
-        "hostile_thermal": {"path": "projectile_hostile_thermal.png", "canvas": [80, 80], "pivot": [40, 40]},
-        "hostile_toxin": {"path": "projectile_hostile_toxin.png", "canvas": [80, 80], "pivot": [40, 40]},
-        "hostile_cryo": {"path": "projectile_hostile_cryo.png", "canvas": [80, 80], "pivot": [40, 40]},
-        "hostile_arc": {"path": "projectile_hostile_arc.png", "canvas": [80, 80], "pivot": [40, 40]},
-        "hostile_hybrid": {"path": "projectile_hostile_hybrid.png", "canvas": [80, 80], "pivot": [40, 40]}
+        "player_primary": {
+          "path": "projectile_player_primary.png",
+          "canvas": [
+            112,
+            64
+          ],
+          "pivot": [
+            72,
+            32
+          ]
+        },
+        "player_opening_breach": {
+          "path": "projectile_player_opening_breach.png",
+          "canvas": [
+            112,
+            64
+          ],
+          "pivot": [
+            72,
+            32
+          ]
+        },
+        "player_seeker": {
+          "path": "projectile_player_seeker.png",
+          "canvas": [
+            96,
+            64
+          ],
+          "pivot": [
+            58,
+            32
+          ]
+        },
+        "hostile_kinetic": {
+          "path": "projectile_hostile_kinetic.png",
+          "canvas": [
+            80,
+            80
+          ],
+          "pivot": [
+            40,
+            40
+          ]
+        },
+        "hostile_thermal": {
+          "path": "projectile_hostile_thermal.png",
+          "canvas": [
+            80,
+            80
+          ],
+          "pivot": [
+            40,
+            40
+          ]
+        },
+        "hostile_toxin": {
+          "path": "projectile_hostile_toxin.png",
+          "canvas": [
+            80,
+            80
+          ],
+          "pivot": [
+            40,
+            40
+          ]
+        },
+        "hostile_cryo": {
+          "path": "projectile_hostile_cryo.png",
+          "canvas": [
+            80,
+            80
+          ],
+          "pivot": [
+            40,
+            40
+          ]
+        },
+        "hostile_arc": {
+          "path": "projectile_hostile_arc.png",
+          "canvas": [
+            80,
+            80
+          ],
+          "pivot": [
+            40,
+            40
+          ]
+        },
+        "hostile_hybrid": {
+          "path": "projectile_hostile_hybrid.png",
+          "canvas": [
+            80,
+            80
+          ],
+          "pivot": [
+            40,
+            40
+          ]
+        }
       }
     },
     {
       "id": "states",
       "root": "states",
       "files": {
-        "player_barrier_plate": {"path": "player_barrier_plate.png", "canvas": [96, 128], "pivot": [48, 64], "topology": "segmented defensive plate"},
-        "player_ion_emitter": {"path": "player_ion_emitter.png", "canvas": [64, 64], "pivot": [32, 32], "topology": "offensive hex/lightning source"},
-        "enemy_generator_shield_source": {"path": "enemy_generator_shield_source.png", "canvas": [96, 96], "pivot": [48, 48]},
-        "enemy_shield_escort_plate": {"path": "enemy_shield_escort_plate.png", "canvas": [96, 96], "pivot": [48, 48]},
-        "burn": {"path": "status_burn.png", "canvas": [96, 96], "pivot": [48, 48], "morphology": "broken triangular stroke"},
-        "poison": {"path": "status_poison.png", "canvas": [96, 96], "pivot": [48, 48], "morphology": "bead chain"},
-        "chill": {"path": "status_chill.png", "canvas": [96, 96], "pivot": [48, 48], "morphology": "split frost bars"}
+        "player_barrier_plate": {
+          "path": "player_barrier_plate.png",
+          "canvas": [
+            96,
+            128
+          ],
+          "pivot": [
+            48,
+            64
+          ],
+          "topology": "segmented defensive plate"
+        },
+        "player_ion_emitter": {
+          "path": "player_ion_emitter.png",
+          "canvas": [
+            64,
+            64
+          ],
+          "pivot": [
+            32,
+            32
+          ],
+          "topology": "offensive hex/lightning source"
+        },
+        "enemy_generator_shield_source": {
+          "path": "enemy_generator_shield_source.png",
+          "canvas": [
+            96,
+            96
+          ],
+          "pivot": [
+            48,
+            48
+          ]
+        },
+        "enemy_shield_escort_plate": {
+          "path": "enemy_shield_escort_plate.png",
+          "canvas": [
+            96,
+            96
+          ],
+          "pivot": [
+            48,
+            48
+          ]
+        },
+        "burn": {
+          "path": "status_burn.png",
+          "canvas": [
+            96,
+            96
+          ],
+          "pivot": [
+            48,
+            48
+          ],
+          "morphology": "broken triangular stroke"
+        },
+        "poison": {
+          "path": "status_poison.png",
+          "canvas": [
+            96,
+            96
+          ],
+          "pivot": [
+            48,
+            48
+          ],
+          "morphology": "bead chain"
+        },
+        "chill": {
+          "path": "status_chill.png",
+          "canvas": [
+            96,
+            96
+          ],
+          "pivot": [
+            48,
+            48
+          ],
+          "morphology": "split frost bars"
+        }
       }
     },
     {
@@ -167,19 +429,58 @@
       "root": "pickups",
       "pivot": "center",
       "files": {
-        "experience_small": {"path": "pickup_experience_small.png", "canvas": [32, 32]},
-        "experience_medium": {"path": "pickup_experience_medium.png", "canvas": [48, 48]},
-        "experience_large": {"path": "pickup_experience_large.png", "canvas": [64, 64]},
-        "reward_crate": {"path": "pickup_reward_crate.png", "canvas": [64, 64]},
-        "repair": {"path": "pickup_repair.png", "canvas": [48, 48]},
-        "experience_recall": {"path": "pickup_experience_recall.png", "canvas": [64, 64]}
+        "experience_small": {
+          "path": "pickup_experience_small.png",
+          "canvas": [
+            32,
+            32
+          ]
+        },
+        "experience_medium": {
+          "path": "pickup_experience_medium.png",
+          "canvas": [
+            48,
+            48
+          ]
+        },
+        "experience_large": {
+          "path": "pickup_experience_large.png",
+          "canvas": [
+            64,
+            64
+          ]
+        },
+        "reward_crate": {
+          "path": "pickup_reward_crate.png",
+          "canvas": [
+            64,
+            64
+          ]
+        },
+        "repair": {
+          "path": "pickup_repair.png",
+          "canvas": [
+            48,
+            48
+          ]
+        },
+        "experience_recall": {
+          "path": "pickup_experience_recall.png",
+          "canvas": [
+            64,
+            64
+          ]
+        }
       }
     },
     {
       "id": "world",
       "root": "world",
       "origin": "top_left",
-      "floor_cell": [192, 192],
+      "floor_cell": [
+        192,
+        192
+      ],
       "files": [
         "world_shared_floor_00.png",
         "world_shared_floor_01.png",
@@ -229,6 +530,277 @@
         "upgrade_mobility.png",
         "upgrade_support.png"
       ]
+    },
+    {
+      "id": "combat_cues",
+      "root": "hud",
+      "pivot": "center",
+      "files": {
+        "target_bracket_corner": {
+          "path": "combat-cues/cue_target_bracket_corner.png",
+          "canvas": [
+            96,
+            96
+          ],
+          "pivot": [
+            48,
+            48
+          ],
+          "source": "sources/combat-cues/01-target-priority-ranged.png"
+        },
+        "priority_target": {
+          "path": "combat-cues/cue_priority_target.png",
+          "canvas": [
+            96,
+            96
+          ],
+          "pivot": [
+            48,
+            48
+          ],
+          "source": "sources/combat-cues/01-target-priority-ranged.png"
+        },
+        "ranged_startup": {
+          "path": "combat-cues/cue_ranged_startup.png",
+          "canvas": [
+            96,
+            96
+          ],
+          "pivot": [
+            48,
+            48
+          ],
+          "source": "sources/combat-cues/01-target-priority-ranged.png"
+        },
+        "collective_gather": {
+          "path": "combat-cues/cue_collective_gather.png",
+          "canvas": [
+            96,
+            96
+          ],
+          "pivot": [
+            48,
+            48
+          ],
+          "source": "sources/combat-cues/02-collective-gather-lock-execute.png"
+        },
+        "collective_lock": {
+          "path": "combat-cues/cue_collective_lock.png",
+          "canvas": [
+            96,
+            96
+          ],
+          "pivot": [
+            48,
+            48
+          ],
+          "source": "sources/combat-cues/02-collective-gather-lock-execute.png"
+        },
+        "collective_execute": {
+          "path": "combat-cues/cue_collective_execute.png",
+          "canvas": [
+            96,
+            96
+          ],
+          "pivot": [
+            48,
+            48
+          ],
+          "source": "sources/combat-cues/02-collective-gather-lock-execute.png"
+        },
+        "collective_break": {
+          "path": "combat-cues/cue_collective_break.png",
+          "canvas": [
+            96,
+            96
+          ],
+          "pivot": [
+            48,
+            48
+          ],
+          "source": "sources/combat-cues/03-collective-break-elite-traits.png"
+        },
+        "elite_armored": {
+          "path": "combat-cues/cue_elite_armored.png",
+          "canvas": [
+            96,
+            96
+          ],
+          "pivot": [
+            48,
+            48
+          ],
+          "source": "sources/combat-cues/03-collective-break-elite-traits.png"
+        },
+        "elite_overclocked": {
+          "path": "combat-cues/cue_elite_overclocked.png",
+          "canvas": [
+            96,
+            96
+          ],
+          "pivot": [
+            48,
+            48
+          ],
+          "source": "sources/combat-cues/03-collective-break-elite-traits.png"
+        },
+        "elite_heavy": {
+          "path": "combat-cues/cue_elite_heavy.png",
+          "canvas": [
+            96,
+            96
+          ],
+          "pivot": [
+            48,
+            48
+          ],
+          "source": "sources/combat-cues/04-elite-heavy-boss-core.png"
+        },
+        "boss_core_sealed": {
+          "path": "combat-cues/cue_boss_core_sealed.png",
+          "canvas": [
+            96,
+            96
+          ],
+          "pivot": [
+            48,
+            48
+          ],
+          "source": "sources/combat-cues/04-elite-heavy-boss-core.png"
+        },
+        "boss_core_open": {
+          "path": "combat-cues/cue_boss_core_open.png",
+          "canvas": [
+            96,
+            96
+          ],
+          "pivot": [
+            48,
+            48
+          ],
+          "source": "sources/combat-cues/04-elite-heavy-boss-core.png"
+        },
+        "boss_core_stable": {
+          "path": "combat-cues/cue_boss_core_stable.png",
+          "canvas": [
+            96,
+            96
+          ],
+          "pivot": [
+            48,
+            48
+          ],
+          "source": "sources/combat-cues/05-boss-objective-states.png"
+        },
+        "objective_active": {
+          "path": "combat-cues/cue_objective_active.png",
+          "canvas": [
+            96,
+            96
+          ],
+          "pivot": [
+            48,
+            48
+          ],
+          "source": "sources/combat-cues/05-boss-objective-states.png"
+        },
+        "objective_resolved": {
+          "path": "combat-cues/cue_objective_resolved.png",
+          "canvas": [
+            96,
+            96
+          ],
+          "pivot": [
+            48,
+            48
+          ],
+          "source": "sources/combat-cues/05-boss-objective-states.png"
+        },
+        "commit_locked": {
+          "path": "combat-cues/cue_commit_locked.png",
+          "canvas": [
+            96,
+            96
+          ],
+          "pivot": [
+            48,
+            48
+          ],
+          "source": "sources/combat-cues/06-commit-guide-ship.png"
+        },
+        "commit_autonomous": {
+          "path": "combat-cues/cue_commit_autonomous.png",
+          "canvas": [
+            96,
+            96
+          ],
+          "pivot": [
+            48,
+            48
+          ],
+          "source": "sources/combat-cues/06-commit-guide-ship.png"
+        },
+        "guide_ship": {
+          "path": "combat-cues/cue_guide_ship.png",
+          "canvas": [
+            96,
+            96
+          ],
+          "pivot": [
+            48,
+            48
+          ],
+          "source": "sources/combat-cues/06-commit-guide-ship.png"
+        },
+        "guide_mobile": {
+          "path": "combat-cues/cue_guide_mobile.png",
+          "canvas": [
+            96,
+            96
+          ],
+          "pivot": [
+            48,
+            48
+          ],
+          "source": "sources/combat-cues/07-guide-role-categories.png"
+        },
+        "guide_stationary": {
+          "path": "combat-cues/cue_guide_stationary.png",
+          "canvas": [
+            96,
+            96
+          ],
+          "pivot": [
+            48,
+            48
+          ],
+          "source": "sources/combat-cues/07-guide-role-categories.png"
+        },
+        "guide_bosses": {
+          "path": "combat-cues/cue_guide_bosses.png",
+          "canvas": [
+            96,
+            96
+          ],
+          "pivot": [
+            48,
+            48
+          ],
+          "source": "sources/combat-cues/07-guide-role-categories.png"
+        },
+        "guide_objects": {
+          "path": "combat-cues/cue_guide_objects.png",
+          "canvas": [
+            96,
+            96
+          ],
+          "pivot": [
+            48,
+            48
+          ],
+          "source": "sources/combat-cues/08-guide-objects.png"
+        }
+      }
     }
   ],
   "animations": {
@@ -236,33 +808,40 @@
       "atlas": "effects/atlases/fx_muzzle_player_primary.png",
       "frames": "effects/frames/fx_muzzle_player_primary/frame_{index:02}.png",
       "frame_count": 4,
-      "grid": [4, 1],
-      "frame_size": [48, 48],
+      "grid": [
+        4,
+        1
+      ],
+      "frame_size": [
+        48,
+        48
+      ],
       "gutter": 2,
-      "pivot": [4, 24],
+      "pivot": [
+        4,
+        24
+      ],
       "fps": 20,
       "loop": false,
       "blend": "alpha; additive only for tiny core"
-    },
-    "impact_reflect": {
-      "atlas": "effects/atlases/fx_impact_reflect.png",
-      "frames": "effects/frames/fx_impact_reflect/frame_{index:02}.png",
-      "frame_count": 5,
-      "grid": [5, 1],
-      "frame_size": [64, 64],
-      "gutter": 2,
-      "pivot": [32, 32],
-      "fps": 20,
-      "loop": false
     },
     "dash_start": {
       "atlas": "effects/atlases/fx_dash_start.png",
       "frames": "effects/frames/fx_dash_start/frame_{index:02}.png",
       "frame_count": 3,
-      "grid": [3, 1],
-      "frame_size": [96, 48],
+      "grid": [
+        3,
+        1
+      ],
+      "frame_size": [
+        96,
+        48
+      ],
       "gutter": 2,
-      "pivot": [48, 24],
+      "pivot": [
+        48,
+        24
+      ],
       "fps": 15,
       "loop": false,
       "note": "Use with procedural afterimages; never draw the removed red circle."
@@ -271,10 +850,19 @@
       "atlas": "effects/atlases/fx_emp_release.png",
       "frames": "effects/frames/fx_emp_release/frame_{index:02}.png",
       "frame_count": 6,
-      "grid": [3, 2],
-      "frame_size": [512, 512],
+      "grid": [
+        3,
+        2
+      ],
+      "frame_size": [
+        512,
+        512
+      ],
       "gutter": 2,
-      "pivot": [256, 256],
+      "pivot": [
+        256,
+        256
+      ],
       "fps": 12,
       "loop": false,
       "scale_from_gameplay_radius": true
@@ -283,10 +871,19 @@
       "atlas": "effects/atlases/fx_wake_mine_detonation.png",
       "frames": "effects/frames/fx_wake_mine_detonation/frame_{index:02}.png",
       "frame_count": 5,
-      "grid": [5, 1],
-      "frame_size": [256, 256],
+      "grid": [
+        5,
+        1
+      ],
+      "frame_size": [
+        256,
+        256
+      ],
       "gutter": 2,
-      "pivot": [128, 128],
+      "pivot": [
+        128,
+        128
+      ],
       "fps": 15,
       "loop": false
     },
@@ -294,10 +891,19 @@
       "atlas": "effects/atlases/fx_boss_module_disabled.png",
       "frames": "effects/frames/fx_boss_module_disabled/frame_{index:02}.png",
       "frame_count": 4,
-      "grid": [4, 1],
-      "frame_size": [128, 128],
+      "grid": [
+        4,
+        1
+      ],
+      "frame_size": [
+        128,
+        128
+      ],
       "gutter": 2,
-      "pivot": [64, 64],
+      "pivot": [
+        64,
+        64
+      ],
       "fps": 12,
       "loop": false
     },
@@ -305,10 +911,19 @@
       "atlas": "effects/atlases/fx_hostile_summon_arrival.png",
       "frames": "effects/frames/fx_hostile_summon_arrival/frame_{index:02}.png",
       "frame_count": 6,
-      "grid": [3, 2],
-      "frame_size": [192, 192],
+      "grid": [
+        3,
+        2
+      ],
+      "frame_size": [
+        192,
+        192
+      ],
       "gutter": 2,
-      "pivot": [96, 96],
+      "pivot": [
+        96,
+        96
+      ],
       "fps": 12,
       "loop": false
     },
@@ -316,12 +931,336 @@
       "atlas": "effects/atlases/fx_bulkhead_destroy.png",
       "frames": "effects/frames/fx_bulkhead_destroy/frame_{index:02}.png",
       "frame_count": 5,
-      "grid": [5, 1],
-      "frame_size": [256, 256],
+      "grid": [
+        5,
+        1
+      ],
+      "frame_size": [
+        256,
+        256
+      ],
       "gutter": 2,
-      "pivot": [128, 128],
+      "pivot": [
+        128,
+        128
+      ],
       "fps": 12,
       "loop": false
+    },
+    "reflect_deflection": {
+      "atlas": "effects/atlases/fx_reflect_deflection.png",
+      "frames": "effects/frames/fx_reflect_deflection/frame_{index:02}.png",
+      "frame_count": 5,
+      "grid": [
+        5,
+        1
+      ],
+      "frame_size": [
+        96,
+        96
+      ],
+      "gutter": 2,
+      "pivot": [
+        48,
+        48
+      ],
+      "fps": 20,
+      "loop": false,
+      "source": "sources/effect-expansion/01-reflect-deflection.png"
+    },
+    "barrier_contact": {
+      "atlas": "effects/atlases/fx_barrier_contact.png",
+      "frames": "effects/frames/fx_barrier_contact/frame_{index:02}.png",
+      "frame_count": 5,
+      "grid": [
+        5,
+        1
+      ],
+      "frame_size": [
+        128,
+        128
+      ],
+      "gutter": 2,
+      "pivot": [
+        64,
+        64
+      ],
+      "fps": 20,
+      "loop": false,
+      "source": "sources/effect-expansion/02-barrier-contact.png"
+    },
+    "hull_hit": {
+      "atlas": "effects/atlases/fx_hull_hit.png",
+      "frames": "effects/frames/fx_hull_hit/frame_{index:02}.png",
+      "frame_count": 4,
+      "grid": [
+        4,
+        1
+      ],
+      "frame_size": [
+        96,
+        96
+      ],
+      "gutter": 2,
+      "pivot": [
+        48,
+        48
+      ],
+      "fps": 20,
+      "loop": false,
+      "source": "sources/effect-expansion/03-hull-hit.png"
+    },
+    "seeker_impact": {
+      "atlas": "effects/atlases/fx_seeker_impact.png",
+      "frames": "effects/frames/fx_seeker_impact/frame_{index:02}.png",
+      "frame_count": 4,
+      "grid": [
+        4,
+        1
+      ],
+      "frame_size": [
+        96,
+        96
+      ],
+      "gutter": 2,
+      "pivot": [
+        48,
+        48
+      ],
+      "fps": 20,
+      "loop": false,
+      "source": "sources/effect-expansion/04-seeker-impact.png"
+    },
+    "escort_drone_impact": {
+      "atlas": "effects/atlases/fx_escort_drone_impact.png",
+      "frames": "effects/frames/fx_escort_drone_impact/frame_{index:02}.png",
+      "frame_count": 4,
+      "grid": [
+        4,
+        1
+      ],
+      "frame_size": [
+        96,
+        96
+      ],
+      "gutter": 2,
+      "pivot": [
+        48,
+        48
+      ],
+      "fps": 20,
+      "loop": false,
+      "source": "sources/effect-expansion/05-escort-drone-impact.png"
+    },
+    "orbit_blade_impact": {
+      "atlas": "effects/atlases/fx_orbit_blade_impact.png",
+      "frames": "effects/frames/fx_orbit_blade_impact/frame_{index:02}.png",
+      "frame_count": 4,
+      "grid": [
+        4,
+        1
+      ],
+      "frame_size": [
+        96,
+        96
+      ],
+      "gutter": 2,
+      "pivot": [
+        48,
+        48
+      ],
+      "fps": 20,
+      "loop": false,
+      "source": "sources/effect-expansion/06-orbit-blade-impact.png"
+    },
+    "enemy_destroy_light": {
+      "atlas": "effects/atlases/fx_enemy_destroy_light.png",
+      "frames": "effects/frames/fx_enemy_destroy_light/frame_{index:02}.png",
+      "frame_count": 5,
+      "grid": [
+        5,
+        1
+      ],
+      "frame_size": [
+        160,
+        160
+      ],
+      "gutter": 2,
+      "pivot": [
+        80,
+        80
+      ],
+      "fps": 15,
+      "loop": false,
+      "source": "sources/effect-expansion/07-enemy-destroy-light.png"
+    },
+    "enemy_destroy_heavy": {
+      "atlas": "effects/atlases/fx_enemy_destroy_heavy.png",
+      "frames": "effects/frames/fx_enemy_destroy_heavy/frame_{index:02}.png",
+      "frame_count": 6,
+      "grid": [
+        6,
+        1
+      ],
+      "frame_size": [
+        192,
+        192
+      ],
+      "gutter": 2,
+      "pivot": [
+        96,
+        96
+      ],
+      "fps": 15,
+      "loop": false,
+      "source": "sources/effect-expansion/08-enemy-destroy-heavy.png"
+    },
+    "crate_destroy": {
+      "atlas": "effects/atlases/fx_crate_destroy.png",
+      "frames": "effects/frames/fx_crate_destroy/frame_{index:02}.png",
+      "frame_count": 5,
+      "grid": [
+        5,
+        1
+      ],
+      "frame_size": [
+        128,
+        128
+      ],
+      "gutter": 2,
+      "pivot": [
+        64,
+        64
+      ],
+      "fps": 15,
+      "loop": false,
+      "source": "sources/effect-expansion/09-crate-destroy.png"
+    },
+    "pickup_intake": {
+      "atlas": "effects/atlases/fx_pickup_intake.png",
+      "frames": "effects/frames/fx_pickup_intake/frame_{index:02}.png",
+      "frame_count": 4,
+      "grid": [
+        4,
+        1
+      ],
+      "frame_size": [
+        96,
+        96
+      ],
+      "gutter": 2,
+      "pivot": [
+        48,
+        48
+      ],
+      "fps": 20,
+      "loop": false,
+      "source": "sources/effect-expansion/10-pickup-intake.png"
+    },
+    "support_heal": {
+      "atlas": "effects/atlases/fx_support_heal.png",
+      "frames": "effects/frames/fx_support_heal/frame_{index:02}.png",
+      "frame_count": 4,
+      "grid": [
+        4,
+        1
+      ],
+      "frame_size": [
+        128,
+        128
+      ],
+      "gutter": 2,
+      "pivot": [
+        64,
+        64
+      ],
+      "fps": 15,
+      "loop": false,
+      "source": "sources/effect-expansion/11-support-heal.png"
+    },
+    "lifesteal_pulse": {
+      "atlas": "effects/atlases/fx_lifesteal_pulse.png",
+      "frames": "effects/frames/fx_lifesteal_pulse/frame_{index:02}.png",
+      "frame_count": 4,
+      "grid": [
+        4,
+        1
+      ],
+      "frame_size": [
+        64,
+        64
+      ],
+      "gutter": 2,
+      "pivot": [
+        32,
+        32
+      ],
+      "fps": 20,
+      "loop": false,
+      "source": "sources/effect-expansion/12-lifesteal-pulse.png"
+    },
+    "transit_shift": {
+      "atlas": "effects/atlases/fx_transit_shift.png",
+      "frames": "effects/frames/fx_transit_shift/frame_{index:02}.png",
+      "frame_count": 5,
+      "grid": [
+        5,
+        1
+      ],
+      "frame_size": [
+        160,
+        96
+      ],
+      "gutter": 2,
+      "pivot": [
+        80,
+        48
+      ],
+      "fps": 15,
+      "loop": false,
+      "source": "sources/effect-expansion/13-transit-shift.png"
+    },
+    "boss_reduced_hit": {
+      "atlas": "effects/atlases/fx_boss_reduced_hit.png",
+      "frames": "effects/frames/fx_boss_reduced_hit/frame_{index:02}.png",
+      "frame_count": 4,
+      "grid": [
+        4,
+        1
+      ],
+      "frame_size": [
+        96,
+        96
+      ],
+      "gutter": 2,
+      "pivot": [
+        48,
+        48
+      ],
+      "fps": 20,
+      "loop": false,
+      "source": "sources/effect-expansion/14-boss-reduced-hit.png"
+    },
+    "impact_damage": {
+      "atlas": "effects/atlases/fx_impact_damage.png",
+      "frames": "effects/frames/fx_impact_damage/frame_{index:02}.png",
+      "frame_count": 5,
+      "grid": [
+        5,
+        1
+      ],
+      "frame_size": [
+        64,
+        64
+      ],
+      "gutter": 2,
+      "pivot": [
+        32,
+        32
+      ],
+      "fps": 20,
+      "loop": false,
+      "source": "sources/effects/02-impact-reflect.png"
     }
   },
   "review_sheets": [
@@ -331,6 +1270,8 @@
     "sheets/04-projectiles-status-pickups.png",
     "sheets/05-world.png",
     "sheets/06-hud-glyphs.png",
-    "sheets/07-effect-atlases.png"
+    "sheets/07-effect-atlases.png",
+    "sheets/08-effect-semantic-expansion.png",
+    "sheets/09-combat-cue-glyphs.png"
   ]
 }
