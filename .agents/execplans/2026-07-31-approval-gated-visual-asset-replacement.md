@@ -1,33 +1,40 @@
 ---
 type: plan
-status: draft
+status: active
 owner: BK
 created: 2026-07-31
 last_reviewed: 2026-07-31
 scope: Targeted Cardborne visual corrections, approved asset replacements, and adjacent gameplay fixes
 related:
   - ../../docs/design/UI_VISUAL_SYSTEM.md
+  - ../../docs/design/component-sheets/semantic-v3-approval/01-world-combat-runtime-gap.md
   - ../../docs/product/vehicle_game_spec.md
   - ../visual-redesign-decision-catalog.md
   - ../semantic-v2-runtime-acceptance-evidence.md
 ---
 
-# Cardborne 선택적 비주얼 수정 및 에셋 교체 계획
+# Cardborne 맵·전투 가독성 정상화 및 승인형 에셋 교체 계획
 
-현재 에셋은 **유지가 기본값**이다. 전체를 처음부터 다시 만드는 계획이
-아니며, 현재 grid에서 사용자가 문제를 명시한 항목만 `FIX`, `REPLACE` 또는
-`ADD`로 분류한다. 맵 타일·벽·지형지물·공격 표시·업그레이드 카드 등 필수
-대상의 시안을 먼저 승인받고, 승인된 항목만 런타임에 반영한다.
+목적은 inventory grid를 관리하거나 새 이미지를 많이 만드는 것이 아니다.
+실제 플레이에서 맵·벽·기능 지형·탄환·공격 경로와 UI가 역할과 판정에 맞게
+즉시 읽히도록 정상화하는 것이다. inventory grid는 그 과정에서 누락된
+에셋과 연결 상태를 하나씩 확인하는 **교체·수정 coverage ledger**로만 쓴다.
+
+모든 디자인을 백지에서 다시 만들지는 않는다. 대신 scoped identity마다
+현재 구현과 실제 런타임 결과를 확인해 `REUSE`, `FIX`, `REPLACE`, `ADD` 중
+하나를 근거와 함께 결정한다. 미확인 항목을 자동으로 유지하지도, 자동으로
+재생성하지도 않는다.
 
 ## Purpose
 
-- 목표: 현재 에셋을 보존하면서 명시된 가독성·구성·정합성 문제만 고친다.
+- 목표: 맵과 전투의 시각 표현을 실제 생성·collision·효과 범위·공격 경로와
+  일치시키고, 역할과 위험 등급을 첫 시야에서 구분 가능하게 만든다.
 - 최종 산출물: 승인된 대상의 새 이미지 또는 수정된 런타임 표현, 관련
   코드 수정, 비교 캡처와 검증 결과.
-- 완료 상태: 필수 대상만 승인·구현·검증되고, `KEEP` 대상은 불필요하게
-  재생성되거나 교체되지 않은 상태.
-- 현재 상태: `draft`. 시각 후보 승인 전에는 runtime manifest/provider,
-  Theme와 gameplay code를 바꾸지 않는다.
+- 완료 상태: scoped identity 전부의 처리 결과가 기록되고, 승인된 에셋과
+  코드 변경이 실제 런타임에서 판정 truth와 일치하며 누락 없이 적용된 상태.
+- 현재 상태: `active`, 단 승인 전 권한은 조사·비교·후보 제작까지다. runtime
+  manifest/provider, Theme와 gameplay code는 사용자 승인 뒤에 바꾼다.
 
 ## Why / Context
 
@@ -42,13 +49,15 @@ UI 이미지가 있다. 문제는 이 전체가 존재하지 않는 것이 아�
 - XP는 필요 이상으로 복잡하고, orbiting secondary의 방향 계산은 어긋난다.
 - 적 속도와 pickup contact는 이미지 교체가 아닌 별도 gameplay 수정이다.
 
-따라서 inventory 전체는 검토 기준일 뿐 전체 재제작 목록이 아니다.
+따라서 inventory는 수정 작업의 coverage를 보증하는 수단이다. 목표는 각
+항목을 실제 게임에서 정상화하는 것이며, 기존 에셋이 목적을 충족하면
+재사용하고 그렇지 않으면 수정하거나 교체한다.
 
 ## Scope / Non-scope
 
 ### In scope
 
-- 현재 에셋을 `KEEP`, `FIX`, `REPLACE`, `ADD`, `OPTIONAL`로 분류.
+- scoped 에셋을 `REUSE`, `FIX`, `REPLACE`, `ADD`, `OPTIONAL`로 전수 판정.
 - 다음 필수 시각 대상의 후보 생성과 사용자 승인.
   - map floor tile과 deterministic placement preview
   - wall straight/corner/end/junction image assets
@@ -66,17 +75,21 @@ UI 이미지가 있다. 문제는 이 전체가 존재하지 않는 것이 아�
 
 ### Out of scope
 
-- player, ordinary enemy, boss, secondary, effect와 UI 전체를 일괄 재제작.
+- 근거 확인 없이 player, ordinary enemy, boss, secondary, effect와 UI 전체를
+  일괄 재제작.
 - 현재 정상이고 사용자가 교체를 요청하지 않은 에셋 변경.
 - 적 합동 전략, formation, encounter composition과 spawn capacity 변경.
-- 보스 패턴·AI·단계·cadence 재설계.
+- 새 보스 패턴·AI·단계·cadence의 콘텐츠 재설계. 기존 pattern kind가 잘못된
+  원형 장판으로 축약되는 실행·표시 오류 수정은 in scope다.
 - stage topology, collision, navigation, LOS와 save-data 변경.
 - 새 engine 또는 production dependency 도입.
 
 ## Assumptions
 
-- 현재 asset grid는 교체 목록이 아니라 현황 확인용 목록이다.
-- 사용자가 특정 항목을 `REPLACE`로 지정하지 않으면 `KEEP`이다.
+- 현재 asset grid는 교체·수정 작업의 누락 방지 목록이며 그 자체가 목적은
+  아니다.
+- 기존 에셋 재사용은 실제 런타임 preview에서 요구를 충족했을 때만
+  확정한다. 명시적 검토 없이 `REUSE`로 간주하지 않는다.
 - 생성된 player foundation 3안은 사용자가 더 낫다고 평가했지만 원래 필수
   요청은 아니므로 `OPTIONAL`로 보관한다.
 - UI panel image 위에 localized text, icon, value와 focus state를 올리는
@@ -87,9 +100,9 @@ UI 이미지가 있다. 문제는 이 전체가 존재하지 않는 것이 아�
 
 | 근거 | 현재 사실 | 계획에 미치는 영향 |
 | --- | --- | --- |
-| `00-current-asset-inventory-grid.png` | 현재 review sheet 11개를 한 장에 고정 | 모든 항목을 새로 만든다는 뜻이 아님 |
+| `00-current-asset-inventory-grid.png` | 현재 review sheet 11개를 한 장에 고정 | 교체·수정 누락을 막는 coverage ledger |
 | `current-asset-inventory.csv` | 390개 PNG를 runtime/staged/source로 구분 | 파일 존재와 교체 필요를 분리 |
-| gameplay manifest/provider | gameplay runtime PNG 239개, floor/wall 8개 미연결 | 기존 runtime asset은 기본 유지 |
+| gameplay manifest/provider | gameplay runtime PNG 239개, floor/wall 8개 미연결 | 파일 존재와 실제 사용을 분리해서 판정 |
 | UI manifest/provider | 13 component, 57개 image state | 문제 있는 card/layout만 수정 |
 | field surface compiler | 288-unit deterministic vertex-color module | tile 후보 승인 후에만 이미지 연결 |
 | world mesh builder | wall/cover는 UV 없는 retained mesh | wall 후보 승인 후 geometry-fed image shell로 변경 |
@@ -101,51 +114,55 @@ UI 이미지가 있다. 문제는 이 전체가 존재하지 않는 것이 아�
 
 | 상태 | 의미 | 허용 작업 |
 | --- | --- | --- |
-| `KEEP` | 현재 에셋을 그대로 유지 | 회귀 검증만 수행 |
+| `REUSE` | 실제 runtime preview에서 요구를 충족한 기존 에셋 | 연결 또는 회귀 검증 |
 | `FIX` | 에셋은 유지하고 transform/layout/runtime 표현만 수정 | 해당 owner의 최소 코드 변경 |
 | `REPLACE` | 현재 이미지가 요구를 충족하지 못함 | 승인된 새 이미지만 교체 |
 | `ADD` | 필요한 runtime image가 없거나 미연결 | 승인된 신규 asset과 provider 연결 |
 | `OPTIONAL` | 요청 범위 밖이지만 비교 가치가 있는 후보 | 사용자 선택 전 구현·승인 gate에 영향 없음 |
 
-각 asset은 명시적 결정이 없으면 `KEEP`이다. `OPTIONAL` 항목이 미결정이어도
-필수 수정 계획을 진행할 수 있다.
+각 scoped asset은 근거가 기록되기 전까지 `UNREVIEWED`다. `OPTIONAL` 항목이
+미결정이어도 필수 수정 계획을 진행할 수 있다.
 
 ## Locked Target Matrix
 
 | 대상 | 분류 | AS-IS | TO-BE | 승인 필요 |
 | --- | --- | --- | --- | --- |
-| player hull/engine/aim art | `KEEP` + optional candidate | 현재 runtime image 사용 | 현재 유지; flat 시안은 선호 표현만 기록 | 아니오 |
+| player hull/engine/aim art | `REUSE` + optional candidate | 현재 runtime image 사용 | 이번 필수 범위에서는 유지; flat 시안은 선호 표현만 기록 | 아니오 |
 | engine attachment | `FIX` | 이동 중 부착 인상이 어색할 수 있음 | hull transform만 공유, 별도 꺾임 0 | 시각 캡처 |
 | orbit blade orientation | `FIX` | blade index가 rotation에 반영되지 않음 | 각 blade forward가 radial outward와 일치 | 아니오 |
 | enemy movement speed | `FIX` | 체감상 느림 | 역할별 time-to-contact 측정 후 승인 수치 적용 | 최종 수치 |
 | hostile projectile | `REPLACE/FIX` | 작은 core와 얇은 trail이 잘 안 보임 | core truth 유지, 더 명확한 head/tail silhouette | 이미지 시안 |
-| ordinary/elite/boss attack cue | `REPLACE/ADD` | 공용 선 문법 비중이 큼 | 등급별 head, cap, fill/pattern 차이 | 이미지 시안 |
+| ordinary/elite/boss attack cue | `FIX`, 필요 시 `ADD` | 공용 선 문법 비중이 큼 | 등급별 head, cap, fill/pattern 차이 | integration preview |
 | upgrade card | `FIX` + 필요 시 `REPLACE` | 작은 header glyph, 계층/overflow 문제 | 상단 1/3 art → 이름·레벨 → 설명·효과 | panel mock |
 | XP pickup | `FIX` | 기계형 3단계 image | 단순 shard geometry, 크기/면 수만 차이 | 간단 시안 |
-| floor tile | `ADD` | 절차 mesh, image 미연결 | 현실적이고 단순한 tile + deterministic placement | art+algorithm |
-| wall | `ADD` | retained mesh, PNG 미연결 | floor와 명확히 구분되는 topology image | asset set |
-| cover/terrain/facility | `REPLACE/FIX` | image와 실제 rect/radius가 다르게 느낌 | 고유 body image + live truth overlay | asset set |
+| floor tile | `FIX/ADD` | deterministic polygon compiler가 있고 PNG는 제외됨 | 기존 seed 배치가 tile ID·회전·UV를 출력 | integration preview + algorithm |
+| wall | `FIX/ADD` | 선분 rail renderer이며 PNG는 제외됨 | 선분 topology를 분류해 wall image를 실제 경계에 배치 | integration preview + topology |
+| cover/terrain/facility | `FIX`, 필요 시 `REPLACE` | 작은 body image와 실제 rect/radius 도형이 분리됨 | body가 전체 footprint를 차지하고 live truth overlay와 일치 | footprint preview |
 | pickup contact | `FIX` | 종류별 contact 경로 확인 필요 | body/dash swept contact로 정확히 1회 수집 | 아니오 |
-| 나머지 actor/secondary/effect/UI | `KEEP` | 현재 semantic-v2 | 사용자가 별도 지정할 때만 재분류 | 아니오 |
+| 나머지 actor/secondary/effect/UI | `UNREVIEWED` 또는 `REUSE` | 현재 semantic-v2 | 기존 피드백 범위와 inventory coverage에 따라 판정 | 해당 시각 변경 시 |
 
 ## Proposed Design
 
 ### Candidate generation
 
-- 필수 `REPLACE/ADD` 대상만 후보를 만든다.
+- 먼저 기존 에셋을 실제 크기·경로·배치에 올린 integration preview를 만든다.
+- preview에서 요구를 충족하지 못한 `REPLACE/ADD` 대상만 새 후보를 만든다.
 - 한 이미지에는 최대 4개 asset identity만 둔다.
-- 현재 에셋을 그대로 쓸 수 있으면 새 이미지를 만들지 않는다.
+- 기존 에셋을 그대로 쓸 수 있다는 판정에는 실제 runtime scale과 배경 위
+  비교 근거가 필요하다.
 - text, level, value와 gameplay icon을 panel background에 굽지 않는다.
 - 후보는 `candidate`일 뿐 runtime manifest에서 참조하지 않는다.
 
 ### Map and terrain
 
-- floor art와 placement algorithm을 별도로 승인한다.
-- 첫 algorithm candidate는 현재 288-unit cell, `1×1`, `2×1`, `1×2`,
-  `2×2` module을 유지한다.
+- floor art와 placement algorithm을 함께 확인하되 서로 다른 책임으로
+  승인한다.
+- 현재 288-unit cell, `1×1`, `2×1`, `1×2`, `2×2` module과 deterministic
+  hash는 유지하고, 출력에 tile ID·회전·UV/clip을 추가한다.
 - tile variation은 field/layout fingerprint와 cell coordinate로 결정한다.
 - wall asset은 collision boundary neighbor topology로만 선택한다.
-- cover/terrain image는 existing rect/radius를 바꾸지 않는다.
+- cover/terrain image는 existing rect/radius를 바꾸지 않고 body를 그 전체에
+  맞춘다. 작은 중앙 그림만 교체해 범위 불일치를 숨기지 않는다.
 - 무효 문양, rune, 반복 강조 decal은 만들지 않는다.
 
 ### Combat readability
@@ -154,6 +171,7 @@ UI 이미지가 있다. 문제는 이 전체가 존재하지 않는 것이 아�
 - tail은 방향만 보여주는 non-damaging cue다.
 - ordinary/elite/boss는 head silhouette, tail pattern, startup cap 중 2개
   이상이 다르다.
+- tier를 projectile state와 telegraph descriptor에서 renderer까지 전달한다.
 - thin line은 보조 축으로만 사용하며 filled head/cap 없이 단독으로 쓰지
   않는다.
 - beam만 full corridor, projectile은 최대 0.4초 lead, charge는 rounded
@@ -182,19 +200,21 @@ UI 이미지가 있다. 문제는 이 전체가 존재하지 않는 것이 아�
 
 ## Milestones
 
-1. 현재 inventory와 선택적 수정 범위를 고정한다.
-2. 필수 6개 시각 대상만 생성·승인한다.
-3. 승인 대상만 productionize하고 인접 runtime 문제를 수정한다.
-4. combat/UI와 map/wall/terrain을 각각 검증 가능한 batch로 전환한다.
-5. 전체 기능 검증 뒤 마지막으로 성능을 측정한다.
+1. 현재 구현을 추적해 image-only/code-only/both를 확정한다.
+2. 기존 에셋 integration preview와 필요한 신규 후보만 사용자에게 승인받는다.
+3. 승인된 표현 계약대로 map/wall/terrain과 combat code를 수정한다.
+4. 나머지 card/XP/behavior 수정과 asset switch를 검증 가능한 batch로 진행한다.
+5. 전체 asset/UI 적용과 기능 검증 뒤 마지막으로 성능을 측정한다.
 
 ## Tasks
 
-### Phase 0: inventory와 범위 교정
+### Phase 0: 구현 감사와 범위 교정
 
 - [x] 현재 390개 PNG의 상태를 CSV로 기록한다.
 - [x] 기존 review sheet 11개를 master grid로 합친다.
-- [x] 전체 재제작이 아니라 `KEEP` 기본의 선택적 수정으로 계획을 교정한다.
+- [x] grid는 목적이 아니라 교체·수정 coverage 수단으로 계획을 교정한다.
+- [x] 맵·벽·지형·탄환·공격 경로의 runtime owner와 실제 draw path를 추적한다.
+- [x] 최종 요구를 image-only로 완결할 수 있는 대상이 없음을 확인한다.
 - [x] player foundation 3안은 `OPTIONAL`로 보관한다.
 
 Batch acceptance:
@@ -202,20 +222,22 @@ Batch acceptance:
 - 기존 runtime 파일 변경 0.
 - optional player 후보가 필수 승인 gate를 막지 않음.
 
-### Phase 1: 필수 시각 후보 생성과 승인
+### Phase 1: 실제 연결 preview와 시각 승인
 
-- [ ] **1.1 Map floor**: tile primitives와 3개 deterministic output sample.
-- [ ] **1.2 Wall**: straight, corner, end, junction topology asset set.
-- [ ] **1.3 Terrain**: cover, bulkhead, repair/overdrive/arc/gate를 최대 4개씩.
-- [ ] **1.4 Combat**: projectile와 ordinary/elite/boss cue를 최대 4개씩.
+- [ ] **1.1 Map floor**: 기존 2종을 288-unit algorithm output에 올린 preview.
+- [ ] **1.2 Wall**: 기존 6종을 straight/corner/end/junction으로 배치한 preview.
+- [ ] **1.3 Terrain**: 기존 cover/repair/overdrive/arc body를 실제 footprint에
+  맞춘 preview; 부족한 identity만 최대 4개씩 새로 생성.
+- [ ] **1.4 Combat**: 기존 탄환을 정확한 collision core와 tier grammar에 올린
+  preview; 부족한 head/tail/cap만 최대 4개씩 새로 생성.
 - [ ] **1.5 Upgrade card**: 실제 card 비율의 panel/art/text-safe mock.
 - [ ] **1.6 XP**: 단순 3단계 shard 시안.
 - [ ] 각 필수 후보에 대해 사용자 `approve` 또는 `revise`를 기록한다.
 
 Batch acceptance:
 
-- 필수 6개 대상만 승인됨.
-- 나머지 current asset은 자동으로 `REPLACE`되지 않음.
+- 각 대상에서 기존 재사용/수정/교체/추가 결정과 이유가 기록됨.
+- 새 후보는 실제 연결 preview로 부족함이 확인된 identity만 포함함.
 
 ### Phase 2: 승인 대상만 productionize
 
@@ -227,7 +249,7 @@ Batch acceptance:
 Batch acceptance:
 
 - 승인 대상 coverage 100%, 불필요한 새 asset 0.
-- `KEEP` path와 hash가 변경되지 않음.
+- `REUSE` path와 hash가 승인 없이 변경되지 않음.
 
 ### Phase 3: 비시각 runtime fix
 
@@ -243,8 +265,12 @@ Batch acceptance:
 
 ### Phase 4: 승인된 combat/UI asset switch
 
-- [ ] projectile head/tail과 attack tier cue를 전환한다.
+- [ ] projectile tier를 state/descriptor/renderer까지 전달하고 승인된
+  head/tail/cap을 전환한다.
 - [ ] exact live telegraph geometry를 그대로 사용한다.
+- [ ] 3–4 px 단독 선을 footprint fill + boundary + tier grammar로 바꾼다.
+- [ ] boss autonomous lane/beam/area가 원형 장판 하나로 축약되는 경로와
+  warning readiness를 수정한다.
 - [ ] upgrade card art slot과 text hierarchy를 적용한다.
 - [ ] card shell 교체는 승인된 경우에만 수행한다.
 - [ ] XP를 승인된 단순 표현으로 바꾼다.
@@ -256,9 +282,11 @@ Batch acceptance:
 
 ### Phase 5: 승인된 map/wall/terrain switch
 
-- [ ] floor compiler에 승인 tile 이미지를 연결한다.
-- [ ] wall topology로 승인 wall image를 선택한다.
-- [ ] terrain body 이미지를 바꾸고 live rect/radius overlay만 유지한다.
+- [ ] floor compiler가 승인 tile ID·회전·clip을 출력하고 renderer가 UV 또는
+  instance로 연결한다.
+- [ ] boundary neighbor topology로 승인 wall image를 선택·회전한다.
+- [ ] terrain body를 전체 live rect/radius에 맞추고 exact boundary/timer만
+  dynamic overlay로 유지한다.
 - [ ] 무효 decoration을 제거한다.
 - [ ] geometry, collision, navigation, LOS와 minimap fingerprint 불변을 확인한다.
 
@@ -291,7 +319,7 @@ Phase 1–5가 완료되기 전에는 시작하지 않는다.
 - 대상별 narrow fixture.
 - attachment orientation, projectile collision overlay, terrain footprint와 UI
   text bounds 캡처.
-- `KEEP` path/hash leftover guard.
+- `REUSE` path/hash regression guard.
 
 최종:
 
@@ -311,7 +339,10 @@ Phase 1–5가 완료되기 전에는 시작하지 않는다.
 
 ## Risks
 
-- inventory를 replacement backlog로 오해해 다시 전체 재제작할 위험.
+- inventory 관리 자체를 목표로 오해하거나, 반대로 미확인 항목을 자동
+  유지해 실제 교체 누락을 만드는 위험.
+- 기존 이미지가 있다는 이유만으로 런타임 연결·크기·상태 계약을 확인하지
+  않고 “에셋 완료”로 처리할 위험.
 - tile/wall image 연결 후 batch/VRAM 비용이 증가할 위험.
 - 강한 outline이 군집에서 내부 노이즈로 변할 위험.
 - terrain body와 실제 rect/radius가 다시 어긋날 위험.
@@ -331,17 +362,22 @@ Phase 1–5가 완료되기 전에는 시작하지 않는다.
 - 2026-07-31: 현재 에셋 inventory와 master grid를 생성했다.
 - 2026-07-31: player foundation 3안을 만들었으나, 사용자는 기체 교체를
   요청하지 않았음을 확인했다. 후보는 `OPTIONAL`로 보관한다.
-- 2026-07-31: 전체 재제작 해석을 폐기하고 `KEEP` 기본의 선택적 수정으로
-  범위를 교정했다.
+- 2026-07-31: inventory grid는 목적이 아니라 교체·수정 coverage 수단이며,
+  scoped asset에는 implicit `KEEP`가 없다고 교정했다.
+- 2026-07-31: 바닥·벽 PNG는 provider에서 제외되고, 기능 장판 이미지는 실제
+  범위보다 작으며, projectile/telegraph에는 tier/path code gap이 있음을
+  확인했다. 따라서 새 이미지 선생성 대신 integration contract를 먼저
+  승인받는다.
 - UI panel image + dynamic text/icon 합성 규칙은 유지한다.
 - 성능 검증은 승인된 asset/UI 수정이 모두 적용된 마지막에 수행한다.
 
 ## Progress
 
 - [x] current inventory CSV와 master grid.
-- [x] over-scoped plan correction.
+- [x] 맵·벽·장판·탄환·공격 경로 AS-IS/TO-BE 코드 감사.
+- [x] inventory 수단/실제 정상화 목적 교정.
 - [x] optional player candidate 3안 보관.
-- [ ] 필수 6개 시각 대상 후보 생성·승인.
+- [ ] 기존 에셋 integration preview와 필요한 신규 후보 승인.
 - [ ] 승인 대상 productionization.
 - [ ] targeted runtime fixes/switches.
 - [ ] final validation/performance.
@@ -349,15 +385,16 @@ Phase 1–5가 완료되기 전에는 시작하지 않는다.
 ## Next Steps
 
 1. player 후보를 필수 gate에서 제외한 상태를 유지한다.
-2. 다음 필수 승인 단위로 map floor tile + algorithm preview를 만든다.
-3. wall, terrain, combat, upgrade card, XP 순서로 필요한 후보만 만든다.
-4. 필수 시안이 확정되면 이 문서를 decision-complete 상태로 갱신하고
-   runtime 적용 권한을 확인한다.
+2. 기존 floor/wall 이미지를 현재 algorithm/geometry에 올린 integration
+   preview를 먼저 만든다.
+3. terrain 실제 footprint와 projectile/telegraph tier 계약 preview를 만든다.
+4. preview에서 부족한 identity만 새 에셋으로 생성해 사용자 승인을 받는다.
+5. 승인 뒤에만 runtime code와 manifest/provider를 수정한다.
 
 ## Completion Criteria
 
-- [ ] 필수 6개 시각 대상만 승인·구현·검증됨.
-- [ ] `KEEP` asset이 불필요하게 재생성·교체되지 않음.
+- [ ] 필수 시각 대상이 모두 `REUSE/FIX/REPLACE/ADD`로 근거와 함께 판정됨.
+- [ ] 부족한 asset만 재생성되었고 실제 교체·연결 누락이 없음.
 - [ ] orbit/engine/pickup/speed 인접 수정이 승인 범위대로 동작함.
 - [ ] attack direction/tier가 실제 플레이에서 구분됨.
 - [ ] upgrade card overflow 0.
@@ -368,7 +405,7 @@ Phase 1–5가 완료되기 전에는 시작하지 않는다.
 
 ```text
 Goal:
-기존 에셋은 유지하고, 명시된 문제 대상만 승인 후 수정·교체한다.
+맵·지형·탄환·공격 표시를 실제 gameplay truth와 일치시키고 읽기 쉽게 만든다.
 
 Read first:
 .agents/visual-redesign-decision-catalog.md
@@ -376,8 +413,9 @@ docs/design/component-sheets/semantic-v3-approval/README.md
 docs/design/UI_VISUAL_SYSTEM.md
 
 Execute exactly:
-KEEP는 건드리지 않는다.
-필수 REPLACE/ADD 후보만 생성하고 승인 전 runtime에 연결하지 않는다.
+inventory는 coverage 수단으로 사용한다.
+기존 에셋 integration preview를 먼저 만들고 부족한 후보만 생성한다.
+승인 전 runtime에는 연결하지 않는다.
 
 Validate with:
 tools/design/build_visual_asset_approval_catalog.ps1

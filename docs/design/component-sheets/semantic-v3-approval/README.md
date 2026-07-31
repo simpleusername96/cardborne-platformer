@@ -1,8 +1,9 @@
 ---
 type: evidence
-status: draft
+status: active
 owner: BK
 created: 2026-07-31
+last_reviewed: 2026-07-31
 topic: Cardborne semantic-v3 visual approval
 scope: Current asset inventory and review-only replacement candidates
 source: ./00-current-asset-inventory-grid.png
@@ -10,15 +11,17 @@ related:
   - ../../UI_VISUAL_SYSTEM.md
   - ../../../../.agents/visual-redesign-decision-catalog.md
   - ../../../../.agents/execplans/2026-07-31-approval-gated-visual-asset-replacement.md
+  - ./01-world-combat-runtime-gap.md
 ---
 
 # Cardborne 비주얼 에셋 승인 보드
 
 ## Purpose
 
-현재 사용 중인 이미지와 미연결 이미지, 절차 생성 표현을 구분하고,
-새 후보를 작은 가족 단위로 하나씩 확인하기 위한 검토 디렉터리다.
-이 디렉터리의 후보는 승인 전까지 runtime asset이 아니다.
+맵·전투·UI의 실제 문제를 고치기 위해 현재 이미지, 미연결 이미지와 절차
+표현을 대응시키고, 재사용·수정·교체·추가 결정을 작은 가족 단위로
+승인하기 위한 디렉터리다. inventory는 이 작업의 coverage 수단이며,
+후보는 승인 전까지 runtime asset이 아니다.
 
 ## Sources
 
@@ -39,6 +42,16 @@ related:
   [`current-asset-inventory.csv`](./current-asset-inventory.csv)에 있다.
 - `05 맵 · 벽 · 지형지물`의 floor/wall 8개는 파일만 존재하며 현재
   런타임에는 연결되지 않았다.
+
+### 현재 구현 감사
+
+[`01-world-combat-runtime-gap.md`](./01-world-combat-runtime-gap.md)에 맵
+타일, 벽, 기능 지형, 탄환과 일반/엘리트/보스 공격 경로의 AS-IS/TO-BE와
+image-only/code-only/both 판정을 기록했다.
+
+핵심은 새 이미지 부족만이 아니다. 기존 floor/wall PNG는 provider에서
+제외되고, 기능 장판 이미지는 실제 효과 범위보다 작으며, 탄환과 공격
+경로에는 tier와 pattern geometry를 전달하지 않는 코드 문제가 있다.
 
 ### Optional comparison: player foundation
 
@@ -70,10 +83,15 @@ related:
 
 ## Review rule
 
-- current asset은 별도 `REPLACE` 지시가 없으면 유지한다.
+- scoped current asset은 실제 runtime integration 근거가 없으면
+  `UNREVIEWED`다.
+- 기존 에셋이 실제 크기·경로·배경에서 요구를 충족하면 재사용하고,
+  부족한 identity만 수정·교체·추가한다.
 - player 1, 2, 3안의 선택은 필수가 아니며 다음 작업을 막지 않는다.
-- 다음 필수 승인 단위는 floor tile + deterministic algorithm preview다.
-- 이후 wall, terrain, attack cue, upgrade card, XP만 필요한 만큼 생성한다.
+- 다음 필수 승인 단위는 기존 floor/wall 에셋 + deterministic
+  algorithm/topology integration preview다.
+- 이후 terrain footprint와 projectile/attack tier contract를 확인하고,
+  부족함이 입증된 이미지만 생성한다.
 - 필수 대상이 승인되기 전에는 manifest/provider/Theme와 runtime 코드를
   바꾸지 않는다.
 - UI panel 이미지는 shell만 소유하고, localized text와 dynamic icon은

@@ -5,7 +5,7 @@
   "reference": "../00-general-sf-component-master-v1.png",
   "facing": "+X/right",
   "max_asset_identities_per_image": 4,
-  "current_approval_unit": "floor_tile_and_algorithm",
+  "current_approval_unit": "world_combat_runtime_integration_contract",
   "candidates": [
     {
       "id": "player_foundation_flat",
