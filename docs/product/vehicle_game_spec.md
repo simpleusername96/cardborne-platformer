@@ -3,7 +3,7 @@ type: spec
 status: active
 owner: BK
 created: 2026-07-21
-last_reviewed: 2026-07-30
+last_reviewed: 2026-07-31
 canonical_for: Cardborne gameplay and product behavior
 scope: Current run-selected-field five-stage vehicle campaign
 related:
@@ -13,6 +13,7 @@ related:
   - ../../.agents/execplans/2026-07-29-horde-foundation-recovery-and-acceptance.md
   - ../../.agents/continuous-horde-readability-evidence.md
   - ../../.agents/continuous-horde-rollout-problem-analysis.md
+  - ../../.agents/semantic-v2-runtime-acceptance-evidence.md
 ---
 
 # Cardborne Vehicle Game Specification
@@ -135,6 +136,11 @@ second time; no individual stat is described as exactly 15% lower.
   current wall or live crate as collision. From the first visible startup frame,
   damaging boss attacks hold their warned origin, direction, and target through
   impact; only warning readiness changes.
+- Projectile startup shows its muzzle/cadence cue and no more than `0.4`
+  seconds of predicted travel; the current contract uses `0.36 s`. Beam is the
+  only delivery that warns its full committed corridor. Charge uses its locked
+  endpoint capsule, and area/support warnings retain their own exact footprint
+  rather than inheriting projectile or beam geometry.
 - Boss charge, area, pylon, and damaging summon warnings include their aimed
   three-shot burst as separate corridors. Active beams retain both their
   physical beam body and the expanded player-center danger boundary. Persistent
@@ -290,6 +296,15 @@ scheduled autonomous pressure. Every damaging pattern has a visible startup,
 active window, and recovery. Routine hits never interrupt or stop the boss, and
 every direct pattern remains committed after its warning appears.
 
+Boss objective state changes damage efficiency rather than creating immunity:
+`SEALED` applies `0.20×`, `OPEN` applies `1.55×` for five seconds, and
+`STABLE` applies `1.00×`. Objective lock and phase thresholds never clamp
+accepted damage to zero. A phase threshold starts the next sequential objective
+but is not an HP floor. Inactive sequential modules are neither targetable nor
+projectile blockers. The boss strip, objective tracker, world cue, threat radar,
+and minimap consume the same active module ID, state, and health. A state-entry
+hint appears once and the same hint cannot repeat within two seconds.
+
 ### Items, experience, and upgrades
 
 - Enemy defeats leave collectible geometric experience shards. Experience is
@@ -393,14 +408,20 @@ every direct pattern remains committed after its warning appears.
   performance-scenario coverage before increasing runtime load.
 - Static minimap geometry and each bounded dynamic tactical snapshot use one
   vertex-colored mesh surface. Scheduled support fields reuse retained world
-  batches and one shared 24-segment timer batch; neither system creates
+  batches and one shared eight-segment timer batch; neither system creates
   per-actor canvas draws or per-field scene nodes.
 - Combat presentation coalesces mobile enemies, stationary enemies, bosses,
   hostile affinity trails, and experience into descriptor-backed retained
   batches. The hard ceiling remains 50 combat batches.
-- Only the active vehicle-performance stabilization plan's rendered native/Web
-  scenarios and lifecycle soak can establish release performance. Headless
-  subsystem microbenchmarks are diagnostic only.
+- Dynamic enemy broadphase uses stable runtime slots, reuse generations and
+  incremental membership updates. Ordered projectile traversal stops a
+  non-piercing shot after its first contact; reusable query, support-assignment,
+  cover-hit and presentation buffers avoid per-frame full-grid rebuilds and
+  high-count temporary allocations.
+- Only rendered native/Web scenarios and the complete lifecycle soak can
+  establish release performance. Headless subsystem microbenchmarks and short
+  focused samples are diagnostic only. Current acceptance and known failures
+  are recorded in `.agents/semantic-v2-runtime-acceptance-evidence.md`.
 
 ## Acceptance Criteria
 
@@ -429,9 +450,9 @@ every direct pattern remains committed after its warning appears.
   both reach the guide, and Korean/English copy is complete.
 - Godot import, all focused validators, native boot, Web export, and rendered
   review at supported sizes succeed. Release performance is governed by the
-  active vehicle-performance architecture plan's complete native/Web
-  frame-pacing, capacity, draw-call, and lifecycle gates; the legacy headless
-  pressure microbenchmark is diagnostic only and cannot establish smooth play.
+  complete native/Web frame-pacing, capacity, draw-call, and lifecycle gates;
+  the legacy headless pressure microbenchmark and a successful export alone are
+  diagnostic only and cannot establish smooth play.
 
 ## Non-Goals
 

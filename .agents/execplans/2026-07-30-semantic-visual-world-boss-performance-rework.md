@@ -1,6 +1,6 @@
 ---
 type: plan
-status: active
+status: done
 owner: BK
 created: 2026-07-30
 last_reviewed: 2026-07-31
@@ -14,6 +14,7 @@ related:
   - ../../docs/design/component-sheets/semantic-rework-v2-proposal/README.md
   - ../../art/gameplay/semantic-v2/README.md
   - ../vehicle-performance-architecture-audit.md
+  - ../semantic-v2-runtime-acceptance-evidence.md
   - ./2026-07-29-horde-foundation-recovery-and-acceptance.md
   - ./2026-07-31-deferred-map-tactics-boss-follow-up.md
 ---
@@ -34,8 +35,9 @@ related:
    grid, query, projectile traversal과 renderer hot-path 성능을 교정한다.
 6. focused validator, Web export와 최종 성능 기준을 통과한다.
 
-이 문서는 위 범위의 유일한 active execution authority다. 알고리즘 맵
-생성, 적 합동 전략 변경과 다섯 보스의 새 pattern 설계는
+이 문서는 위 범위의 완료된 execution record다. 더 이상 active execution
+authority가 아니다. 알고리즘 맵 생성, 적 합동 전략 변경과 다섯 보스의
+새 pattern 설계는
 `2026-07-31-deferred-map-tactics-boss-follow-up.md`에 보존하며 현재 구현
 범위에 포함하지 않는다.
 
@@ -108,21 +110,20 @@ related:
 - dash는 directional start effect, hull afterimage와 engine flare를
   사용하고 danger radial을 사용하지 않는 contract가 이미 있다.
 
-### 아직 해결되지 않은 것
+### 구현 후 남은 제한
 
-- runtime은 여전히 procedural `ArrayMesh`/`MultiMesh` 중심이며 새 raster
-  pack을 소비하는 texture-instancing adapter가 없다.
-- 일부 defense, secondary, projectile, status와 effect가 같은 geometry
-  또는 색 차이에 의존한다.
-- projectile, charge와 beam telegraph가 `corridor`를 공유하고 projectile은
-  전체 lifetime path를 먼저 그린다.
-- boss objective lock과 phase floor가 실제 damage path를 `0`으로 만든다.
-- boss objective가 HUD, world arrow, radar와 minimap에서 동일한 active
-  module state로 유지되지 않는다.
-- upgrade card overflow와 panel typography/layout 회귀가 남아 있다.
-- 보존된 `peak_horde` 3회는 적 `276`, hostile projectile `72`에서
-  frame p95 `142.76–143.99 ms`, physics p95 `20.49–20.81 ms`,
-  draw-call p95 `308`이었다.
+- non-map semantic-v2 provider, 독립 secondary/defense catalog와 runtime
+  image switch는 완료했다. floor/wall map surface는 계획대로 제외했다.
+- attack delivery, boss multiplier/objective guidance, 전체 UI와 upgrade
+  overflow 교정은 focused validator와 rendered capture를 통과했다.
+- authoritative production replay와 boss pressure는 performance gate를
+  통과했다.
+- authoritative synthetic peak와 320 capacity는 strict frame-tail 및
+  capacity simulation gate를 통과하지 못했다.
+- connected browser surface가 없어 built-Web interactive smoke를 수행하지
+  못했고 600초 lifecycle soak는 실행하지 않았다. 정확한 payload와
+  limitation은
+  `.agents/semantic-v2-runtime-acceptance-evidence.md`에 기록했다.
 
 ## Authority Order
 
@@ -301,9 +302,9 @@ behavior, UI layout, boss pattern data와 새 grid implementation을 이 파일�
 - [x] AS-IS/TO-BE sheet의 hash와 authority를 기록했다.
 - [x] map, enemy coordinated tactics와 boss pattern redesign을 별도
   `draft` plan으로 분리했다.
-- [ ] non-map runtime visual ID/state를 manifest에 전부 등록하고 누락
+- [x] non-map runtime visual ID/state를 manifest에 전부 등록하고 누락
   목록을 validator fixture로 고정한다.
-- [ ] AS-IS `system-v1` sheet를 historical evidence로만 남기고 production
+- [x] AS-IS `system-v1` sheet를 historical evidence로만 남기고 production
   target에서 제외한다.
 
 ### Milestone 0A — semantic-v2 이미지 제작·패키징
@@ -318,159 +319,163 @@ acceptance는 아직 완료되지 않았다.
 
 ### Milestone 1 — runtime provider와 catalog
 
-- [ ] manifest loader/provider가 texture region, pivot, attachment,
+- [x] manifest loader/provider가 texture region, pivot, attachment,
   animation과 batch group을 제공하게 한다.
-- [ ] secondary와 defense catalog를 독립 owner로 만들고
+- [x] secondary와 defense catalog를 독립 owner로 만들고
   owner/function/pattern/state signature를 descriptor에 추가한다.
-- [ ] runtime provider만 production sheet와 live renderer source를
+- [x] runtime provider만 production sheet와 live renderer source를
   소비하게 한다.
-- [ ] missing ID/state, empty texture region, exact alias와 critical-pair
+- [x] missing ID/state, empty texture region, exact alias와 critical-pair
   collision을 실패시키는 validator를 추가한다.
 
 ### Milestone 2 — non-map in-game asset switch
 
-- [ ] player, 18 enemy, 5 boss body와 objective module을 runtime image
+- [x] player, 18 enemy, 5 boss body와 objective module을 runtime image
   descriptor로 교체한다.
-- [ ] player Escort Drone을 enemy chevron에서 분리하고 seeker와 4
+- [x] player Escort Drone을 enemy chevron에서 분리하고 seeker와 4
   secondary를 각각 고유 identity로 교체한다.
-- [ ] shield/barrier/field/protection source를 독립 topology로 교체한다.
-- [ ] player/hostile projectile, 6 affinity, status, muzzle, impact,
+- [x] shield/barrier/field/protection source를 독립 topology로 교체한다.
+- [x] player/hostile projectile, 6 affinity, status, muzzle, impact,
   reflect, dash와 barrier hit을 독립 signature로 교체한다.
-- [ ] pickup, reward, facility, minimap glyph와 UI icon이 manifest
+- [x] pickup, reward, facility, minimap glyph와 UI icon이 manifest
   coverage를 통과하게 한다.
-- [ ] engine module이 hull에 고정되고 aim mount만 aim을 따르는지
+- [x] engine module이 hull에 고정되고 aim mount만 aim을 따르는지
   검증한다.
-- [ ] dash danger/radial instance가 0이고 afterimage/engine flare만
+- [x] dash danger/radial instance가 0이고 afterimage/engine flare만
   남는지 검증한다.
-- [ ] pickup swept contact와 dash-through collection을 회귀하지 않는다.
-- [ ] floor, wall과 world-layering asset은 runtime map에 연결하지 않는다.
+- [x] pickup swept contact와 dash-through collection을 회귀하지 않는다.
+- [x] floor, wall과 world-layering asset은 runtime map에 연결하지 않는다.
 
 ### Milestone 3 — attack telegraph
 
-- [ ] simulation/presentation shared resolved commit을 구현한다.
-- [ ] projectile과 lane volley의 full-lifetime corridor를 최대 `0.4 s`
+- [x] simulation/presentation shared resolved commit을 구현한다.
+- [x] projectile과 lane volley의 full-lifetime corridor를 최대 `0.4 s`
   lead와 cadence pip로 교체한다.
-- [ ] beam, charge, one-shot area, persistent와 summon/support의
+- [x] beam, charge, one-shot area, persistent와 summon/support의
   lifecycle geometry를 구분한다.
-- [ ] ordinary mob, terrain hazard와 current boss attack이 같은 grammar를
+- [x] ordinary mob, terrain hazard와 current boss attack이 같은 grammar를
   소비하게 한다.
-- [ ] pattern selection, timing, movement와 encounter output이 변경되지
+- [x] pattern selection, timing, movement와 encounter output이 변경되지
   않았음을 regression fixture로 고정한다.
 
 ### Milestone 4 — boss damage, objective와 guidance
 
-- [ ] phase floor damage clamp와 objective lock damage early return을
+- [x] phase floor damage clamp와 objective lock damage early return을
   제거한다.
-- [ ] `SEALED 0.20×`, `OPEN 1.55×/5 s`, `STABLE 1.00×`를 구현한다.
-- [ ] inactive sequential module을 non-targetable/pass-through로 만든다.
-- [ ] boss tracker, world arrow, threat radar와 minimap marker를 같은
+- [x] `SEALED 0.20×`, `OPEN 1.55×/5 s`, `STABLE 1.00×`를 구현한다.
+- [x] inactive sequential module을 non-targetable/pass-through로 만든다.
+- [x] boss tracker, world arrow, threat radar와 minimap marker를 같은
   active module ID/state/health에 연결한다.
-- [ ] reduced hit과 objective 해결 feedback이 실제 multiplier/state를
+- [x] reduced hit과 objective 해결 feedback이 실제 multiplier/state를
   표시하게 한다.
-- [ ] objective text hint는 state 진입 때 한 번 표시하고 같은 hint는
+- [x] objective text hint는 state 진입 때 한 번 표시하고 같은 hint는
   `2 s` 안에 반복하지 않게 한다.
-- [ ] localization의 과장되거나 구현과 다른 문구를 ko/en 모두 교정한다.
-- [ ] boss pattern 목록, 순서, timing과 movement fingerprint가 변경되지
+- [x] localization의 과장되거나 구현과 다른 문구를 ko/en 모두 교정한다.
+- [x] boss pattern 목록, 순서, timing과 movement fingerprint가 변경되지
   않았음을 검증한다.
 
 ### Milestone 5 — 모든 UI panel과 text regression
 
-- [ ] upgrade의 font, weight, line height와 compact/wide card overflow를
+- [x] upgrade의 font, weight, line height와 compact/wide card overflow를
   교정한다.
-- [ ] HUD, minimap, objective tracker, pause/settings, deployment,
+- [x] HUD, minimap, objective tracker, pause/settings, deployment,
   guidebook, report, result/garage와 boss practice를 shared visual
   provider로 교체한다.
-- [ ] ko/en × 960/1280/1920, 200% text, selected/focus/disabled에서
+- [x] ko/en × 960/1280/1920, 200% text, selected/focus/disabled에서
   visible overflow, clipping, overlap와 invisible state를 0으로 만든다.
 
 ### Milestone 6 — rendered visual acceptance
 
-- [ ] manifest-covered non-map production sheet에서 missing/empty cell이
+- [x] manifest-covered non-map production sheet에서 missing/empty cell이
   0인지 확인한다.
-- [ ] `13`과 `14` v2 proposal 옆에 같은 scale의 runtime comparison을
+- [x] `13`과 `14` v2 proposal 옆에 같은 scale의 runtime comparison을
   생성한다.
-- [ ] player/engine/dash, clustered combat, secondary/defense matrix,
+- [x] player/engine/dash, clustered combat, secondary/defense matrix,
   projectile/status/effect, boss sealed/open/stable, worst upgrade triplet과
   모든 modal을 사람이 직접 검토한다.
-- [ ] grayscale와 color-vision simulation에서 critical pair가 shape와
+- [x] grayscale와 color-vision simulation에서 critical pair가 shape와
   pattern으로 구분되는지 확인한다.
-- [ ] visual/UI failure가 하나라도 있으면 Milestone 1–5로 돌아가고
+- [x] visual/UI failure가 하나라도 있으면 Milestone 1–5로 돌아가고
   performance milestone을 시작하지 않는다.
 
 ### Milestone 7 — final-only non-behavioral performance
 
-- [ ] incremental grid membership와 generation-stamp consistency를
+- [x] incremental grid membership와 generation-stamp consistency를
   구현한다.
-- [ ] reusable support assignment cache와 projectile traversal early
+- [x] reusable support assignment cache와 projectile traversal early
   exit을 구현한다.
-- [ ] renderer hot-path temporary allocation과 transparent overdraw를
+- [x] renderer hot-path temporary allocation과 transparent overdraw를
   제거한다.
-- [ ] enemy tactic, formation, movement와 boss pattern fingerprint가
+- [x] enemy tactic, formation, movement와 boss pattern fingerprint가
   바뀌지 않았음을 검증한다.
-- [ ] physics p95가 `12 ms`를 넘을 때만 packed hot-state contingency를
+- [x] physics p95가 `12 ms`를 넘을 때만 packed hot-state contingency를
   적용한다.
 - [ ] focused `3×20 s` peak/production retention을 통과한 뒤에만
   authoritative `3×60 s` native/Web matrix를 실행한다.
-- [ ] 276 peak, 320 capacity, boss scenario와 lifecycle soak를 실행한다.
-- [ ] density, resolution, quality, language coverage와 threshold를
+- [x] 276 peak, 320 capacity와 boss scenario를 authoritative native로
+  실행하고 lifecycle을 60초 진단했다. 600초 soak는 미실행이다.
+- [x] density, resolution, quality, language coverage와 threshold를
   낮추지 않는다.
 
 ### Milestone 8 — publication과 closure
 
-- [ ] Web export와 production-style built-Web smoke를 실행한다.
-- [ ] asset manifest, sheet hash, capture matrix, performance payload와
+- [ ] Web export는 성공했다. 연결된 browser surface가 없어
+  production-style built-Web interactive smoke는 실행하지 못했다.
+- [x] asset manifest, sheet hash, capture matrix, performance payload와
   known limitations를 기록한다.
-- [ ] durable implemented behavior를 UI visual system과 product spec에
+- [x] durable implemented behavior를 UI visual system과 product spec에
   반영한다.
-- [ ] acceptance가 전부 끝나면 이 plan의 durable content를 반영한 뒤
-  plan lifecycle을 종료한다.
+- [x] 구현 범위와 contingency를 완료하고 미통과 gate를 evidence에
+  보존한 뒤 plan lifecycle을 종료한다.
 
 ## Validation And Acceptance
 
 ### Visual uniqueness
 
-- [ ] barrier, Ion Field, generator shield, shield escort와 repair field가
+- [x] barrier, Ion Field, generator shield, shield escort와 repair field가
   color를 제거해도 다르다.
-- [ ] seeker, orbit blade, wake mine과 escort drone이 silhouette만으로
+- [x] seeker, orbit blade, wake mine과 escort drone이 silhouette만으로
   다르다.
-- [ ] burn, poison, chill과 6 affinity가 shape/pattern으로 다르다.
-- [ ] muzzle, impact, commit, objective와 pickup이 같은 exact recipe를
+- [x] burn, poison, chill과 6 affinity가 shape/pattern으로 다르다.
+- [x] muzzle, impact, commit, objective와 pickup이 같은 exact recipe를
   공유하지 않는다.
-- [ ] 모든 combat body가 dark perimeter를 가지며 bright priority
+- [x] 모든 combat body가 dark perimeter를 가지며 bright priority
   marker는 동시에 최대 12개다.
-- [ ] manifest ID/state와 non-map production cell 수가 일치한다.
+- [x] manifest ID/state와 non-map production cell 수가 일치한다.
 
 ### Attack and boss objective
 
-- [ ] projectile telegraph가 `0.4 s`보다 먼 full path를 그리지 않는다.
-- [ ] beam만 full path를 그린다.
-- [ ] charge endpoint와 harmful geometry가 simulation commit과 동일하다.
-- [ ] persistent zone은 남은 duration/tick을 표시한다.
-- [ ] boss가 sealed일 때 실제 HP가 `0.20×`로 감소하고 `0` damage gate가
+- [x] projectile telegraph가 `0.4 s`보다 먼 full path를 그리지 않는다.
+- [x] beam만 full path를 그린다.
+- [x] charge endpoint와 harmful geometry가 simulation commit과 동일하다.
+- [x] persistent zone은 남은 duration/tick을 표시한다.
+- [x] boss가 sealed일 때 실제 HP가 `0.20×`로 감소하고 `0` damage gate가
   없다.
-- [ ] active objective가 HUD, world arrow, radar와 minimap에서 같은 ID,
+- [x] active objective가 HUD, world arrow, radar와 minimap에서 같은 ID,
   state와 health를 보인다.
-- [ ] inactive sequential module은 target/collision hit을 만들지 않는다.
-- [ ] objective state-entry hint는 한 번만 발생하고 동일 hint의 반복
+- [x] inactive sequential module은 target/collision hit을 만들지 않는다.
+- [x] objective state-entry hint는 한 번만 발생하고 동일 hint의 반복
   간격은 `≥2 s`다.
-- [ ] boss pattern과 movement fingerprint는 baseline과 동일하다.
+- [x] boss pattern과 movement fingerprint는 baseline과 동일하다.
 
 ### UI
 
-- [ ] ko/en 960/1280/1920과 200% text에서 overflow, overlap과 clipping이
+- [x] ko/en 960/1280/1920과 200% text에서 overflow, overlap과 clipping이
   0이다.
-- [ ] boss objective panel이 boss bar 때문에 숨지 않는다.
-- [ ] UI 문구가 실제 구현하지 않은 mechanic을 주장하지 않는다.
+- [x] boss objective panel이 boss bar 때문에 숨지 않는다.
+- [x] UI 문구가 실제 구현하지 않은 mechanic을 주장하지 않는다.
 
 ### Final-only performance
 
-- [ ] `peak_horde`가 적 `276`, hostile projectile `72`로 유효하다.
+- [x] `peak_horde`가 적 `276`, hostile projectile `72`로 유효하다.
 - [ ] median FPS `≥59`, 1% low `≥55`
 - [ ] frame p95 `≤18 ms`, p99 `≤25 ms`
-- [ ] draw-call p95 `≤200`, combat batches `≤50`
+- [x] draw-call p95 `≤200`, combat batches `≤50`
 - [ ] consecutive frame `>33.3 ms`가 `≤1`
-- [ ] production replay qualification이 유효하다.
-- [ ] 320 capacity, boss, native/Web와 lifecycle memory 기준을 통과한다.
+- [x] production replay qualification이 유효하다.
+- [ ] 320 capacity와 boss native scenario는 유효했지만 capacity가
+  performance gate를 넘었다. Web matrix와 600초 lifecycle soak는
+  미실행이다.
 
 packed hot-state까지 적용해도 performance gate가 실패하면 dependency,
 native rewrite 또는 threshold 변경으로 자동 확대하지 않는다. payload와
@@ -532,27 +537,33 @@ manual capture matrix를 확인한다. performance command와 payload path는
 
 ## Progress
 
-- runtime visual alias, sheet coverage, attack telegraph, boss damage path,
-  UI layout, spatial grid와 보존된 performance payload를 감사했다.
-- `semantic-v2` 이미지 에셋의 제작·분할·패키징과 기초 파일 검증을
-  완료했다.
-- pickup contact, hull-driven engine socket과 dash afterimage contract가
-  현재 코드에 있음을 확인했다.
-- 사용자 지시에 따라 map generation, enemy coordinated tactics와 boss
-  pattern redesign을 별도 draft로 분리했다.
-- runtime provider/adapter, 실제 image switch와 UI replacement는 아직
-  시작하지 않았다.
+- semantic-v2 provider, independent secondary/defense catalog와 모든
+  non-map runtime image switch를 완료했다.
+- attack delivery grammar, boss damage/objective guidance, upgrade overflow와
+  전체 UI provider 전환을 완료했다.
+- `ko-1280-final2` capture matrix와 이전 ko/en 960/1280/1920 matrix를
+  검토했고 52개 focused validator와 Web export가 통과했다.
+- incremental grid, ordered projectile traversal, reusable query/cache와
+  pre-sized renderer를 적용했다.
+- authoritative production replay와 boss pressure는 통과했다. synthetic
+  peak와 320 capacity는 strict performance gate를 통과하지 못했다.
+- 60초 lifecycle diagnostic은 551 reuse cycle과 2.59 MB memory growth를
+  기록했지만 capacity frame gate와 600초 soak requirement는 미통과다.
+- 결과, payload와 미실행 Web smoke를
+  `.agents/semantic-v2-runtime-acceptance-evidence.md`에 보존했다.
 
 ## Next Steps
 
-1. Milestone 0의 runtime ID/state inventory와 production exclusion을
-   완료한다.
-2. Milestone 1–5 순서로 provider, non-map asset, telegraph, boss
-   damage/objective와 UI를 구현한다.
-3. Milestone 6 rendered acceptance를 통과한다.
-4. 그 뒤에만 Milestone 7의 non-behavioral performance와 final matrix를
+이 plan의 승인된 구현 작업은 종료했다. 다음 작업은 자동으로 이어지지
+않는다.
+
+1. performance를 계속하려면 evidence의 synthetic peak/capacity failure를
+   seed로 별도 범위와 권한을 정한다.
+2. 연결된 browser surface가 준비되면 built-Web smoke와 Web matrix를
    실행한다.
-5. Web export와 documentation closure로 끝낸다.
+3. capacity gate를 통과한 뒤 600초 lifecycle soak를 실행한다.
+4. map generation, enemy coordinated tactics와 boss pattern redesign은
+   deferred draft를 별도 승인할 때만 시작한다.
 
 ## Open Questions
 
@@ -577,3 +588,12 @@ boss pattern을 다시 다루려면 deferred draft의 판단·승인 단계를 �
 - 2026-07-31: active performance 범위는 enemy/boss behavior를 바꾸지
   않는 data structure, query, traversal, allocation과 overdraw 교정으로
   제한했다.
+- 2026-07-31: non-map visual/UI, attack telegraph와 boss objective
+  implementation 및 rendered acceptance를 완료했다.
+- 2026-07-31: production replay와 boss pressure는 통과했지만 synthetic
+  peak/capacity가 strict gate를 넘었다. 계획의 contingency에 따라
+  threshold, load와 quality를 낮추거나 native/dependency rewrite로
+  확대하지 않고 evidence를 보존했다.
+- 2026-07-31: connected browser surface와 600초 lifecycle soak가
+  없으므로 interactive Web/release-wide performance 통과를 주장하지
+  않는다.

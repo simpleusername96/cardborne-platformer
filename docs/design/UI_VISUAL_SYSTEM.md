@@ -3,13 +3,14 @@ type: spec
 status: active
 owner: BK
 created: 2026-07-21
-last_reviewed: 2026-07-30
+last_reviewed: 2026-07-31
 canonical_for: Cardborne vehicle-game art direction and UI presentation
 scope: All player-facing world, combat, HUD, modal, preview, and effect surfaces
 related:
   - ../product/vehicle_game_spec.md
   - ./component-sheets/README.md
-  - ../../.agents/execplans/2026-07-30-approved-sheet-fidelity-recovery.md
+  - ../../.agents/execplans/2026-07-30-semantic-visual-world-boss-performance-rework.md
+  - ../../.agents/semantic-v2-runtime-acceptance-evidence.md
 ---
 
 # Cardborne UI 및 비주얼 시스템
@@ -96,11 +97,16 @@ grayscale에서도 외곽선과 negative space만으로 주요 역할을 구분�
 | reward catalog | pickup, shard, crate의 shape/glyph | spawn, value, collection |
 | effect catalog | transient semantic state | timer, damage, protection rule |
 | world catalog | field surface, facility, decoration | topology, collision, schedule |
+| secondary catalog | seeker, drone, blade, mine의 presentation identity | targeting, cadence, damage |
+| defense catalog | barrier, field, shield source/protection topology | protection, damage, timer |
 | UI glyph catalog | action, upgrade, minimap, preview glyph | layout, localization, focus |
+| semantic asset provider | approved non-map texture, pivot, attachment, animation frame | collision, behavior, map topology |
 
-runtime, guidebook, upgrade card와 system sheet는 같은 descriptor를 재사용한다.
-preview-only 대체 art를 만들지 않는다. visual geometry는 collision truth와
-분리하되 projectile core boundary와 debug overlay로 그 차이를 검증한다.
+runtime, guidebook, upgrade card와 system sheet는 같은 descriptor와
+`art/gameplay/semantic-v2/asset-manifest.json`을 재사용한다. preview-only
+대체 art를 만들지 않는다. visual geometry는 collision truth와 분리하되
+projectile core boundary와 debug overlay로 그 차이를 검증한다. semantic-v2
+provider는 floor/wall map surface를 현재 runtime에 연결하지 않는다.
 
 ### World
 
@@ -147,6 +153,9 @@ preview-only 대체 art를 만들지 않는다. visual geometry는 collision tru
   boss는 boss color만으로 ordinary enemy를 재도색하지 않는다.
 - projectile damaging core는 collision boundary와 일치한다. tail은 방향을
   설명하는 non-damaging cue다.
+- projectile startup은 muzzle/cadence cue와 최대 `0.4 s` short lead만
+  표시한다. full committed path는 beam에만 사용하고 charge는 locked
+  endpoint capsule을 사용한다.
 - telegraph는 gameplay이 제공한 exact live geometry를 사용하고 readiness는
   단조롭게 증가한다. warning이 뜬 뒤 origin, direction과 target을 장식
   animation으로 바꾸지 않는다.
@@ -193,8 +202,9 @@ preview-only 대체 art를 만들지 않는다. visual geometry는 collision tru
 
 - top-left는 hull/experience와 `148×44` action rail을 묶는다. primary fire는
   rail에 넣지 않는다.
-- top-center objective는 최대 `440×48`이다. boss가 active면 boss name,
-  health와 one-line mechanic으로 교체하며 두 cluster를 쌓지 않는다.
+- top-center boss strip은 최대 `520×58`이며 boss name, health와 core
+  damage state를 표시한다. active boss objective는 그 아래 최대
+  `440×48` tracker로 함께 남아 현재 파괴 대상이 숨지 않는다.
 - top-right minimap은 `176×108`, conditional target panel은 그 아래
   `176×60`이다.
 - notification과 transition은 objective 아래 한 줄에 나타나며 crosshair를
@@ -255,6 +265,11 @@ pressure/accessibility를 포함한다.
 - dash danger/radial instance 0
 - combat batch ≤50, world batch ≤12, draw-call p95 ≤200
 - full Godot import, focused validator, native/Web production smoke
+
+현재 semantic-v2 runtime acceptance와 미통과 performance gate는
+`.agents/semantic-v2-runtime-acceptance-evidence.md`에 기록한다. 성공한
+Web export만으로 interactive built-Web smoke나 release performance를
+통과한 것으로 간주하지 않는다.
 
 ## Non-Goals
 
