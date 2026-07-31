@@ -96,37 +96,37 @@ func _validate_sequential_floors() -> void:
 			"%s phase one starts with two actionable modules" % stage_id
 		)
 		_expect(
-			is_equal_approx(runtime.damage_allowance(1000.0, 1000.0), 0.0),
-			"%s core damage is gated by an actionable objective" % stage_id
+			runtime.core_state() == &"sealed"
+				and is_equal_approx(runtime.boss_damage_multiplier(), 0.20),
+			"%s sealed core takes the declared reduced damage" % stage_id
+		)
+		_expect(
+			not runtime.take_state_entry_hint().is_empty()
+				and runtime.take_state_entry_hint().is_empty(),
+			"%s phase-entry hint is consumed exactly once" % stage_id
 		)
 		_solve_objective(runtime, stage_id, 1)
 		_expect(
-			is_equal_approx(runtime.boss_damage_multiplier(), 1.55),
+			runtime.core_state() == &"open"
+				and is_equal_approx(runtime.boss_damage_multiplier(), 1.55),
 			"%s success opens the declared damage multiplier" % stage_id
-		)
-		_expect(
-			is_equal_approx(
-				runtime.damage_allowance(1000.0, 1000.0),
-				350.0
-			),
-			"%s phase one damage stops exactly at the 65-percent floor" % stage_id
 		)
 		runtime.advance(Catalog.VULNERABILITY_SECONDS + 0.1)
 		_expect(
-			is_equal_approx(runtime.boss_damage_multiplier(), 1.0),
+			runtime.core_state() == &"stable"
+				and is_equal_approx(runtime.boss_damage_multiplier(), 1.0),
 			"%s vulnerability expires without relocking the solved objective" % stage_id
 		)
-		var transition := runtime.try_advance_phase(0.0, 1000.0)
+		var transition := runtime.try_advance_phase(650.0, 1000.0)
 		_expect(
 			int(transition.get("phase", 0)) == 2,
-			"%s high output advances only from phase one to phase two" % stage_id
+			"%s phase-one threshold triggers phase two without clamping health" % stage_id
 		)
 		runtime.begin_phase(1000.0, 2)
-		_solve_objective(runtime, stage_id, 2)
-		transition = runtime.try_advance_phase(0.0, 1000.0)
+		transition = runtime.try_advance_phase(300.0, 1000.0)
 		_expect(
 			int(transition.get("phase", 0)) == 3,
-			"%s second floor advances only from phase two to phase three" % stage_id
+			"%s sealed phase-two threshold still triggers phase three" % stage_id
 		)
 		runtime.begin_phase(1000.0, 3)
 		_solve_objective(runtime, stage_id, 3)
@@ -140,8 +140,8 @@ func _validate_sequential_floors() -> void:
 			"%s records zero phase skips" % stage_id
 		)
 		_expect(
-			int(snapshot["objective_successes"]) == 3,
-			"%s resolves one objective in every semantic phase" % stage_id
+			int(snapshot["objective_successes"]) == 2,
+			"%s records only objectives actually resolved by the player" % stage_id
 		)
 
 
@@ -174,33 +174,24 @@ func _validate_build_fixtures() -> void:
 			runtime.begin_phase(1000.0, 1)
 			_expect(
 				is_equal_approx(
-					runtime.damage_allowance(1000.0, shot_damage),
-					0.0
+					shot_damage * runtime.boss_damage_multiplier(),
+					shot_damage * 0.20
 				),
-				"%s cannot bypass %s phase-one objective"
+				"%s deals reduced but nonzero sealed damage to %s"
 				% [fixture_id, stage_id]
 			)
 			_solve_objective(runtime, stage_id, 1)
-			var requested_burst := (
-				shot_damage * ceilf(400.0 / shot_damage)
-			)
-			var allowed := minf(
-				requested_burst,
-				runtime.damage_allowance(1000.0, 1000.0)
-			)
+			var requested_burst := shot_damage * runtime.boss_damage_multiplier()
 			_expect(
-				is_equal_approx(allowed, 350.0),
-				"%s burst stops at %s sequential floor"
+				requested_burst > shot_damage,
+				"%s receives the open-window reward against %s"
 				% [fixture_id, stage_id]
 			)
-			var transition := runtime.try_advance_phase(
-				1000.0 - allowed,
-				1000.0
-			)
+			var transition := runtime.try_advance_phase(650.0, 1000.0)
 			_expect(
 				int(transition.get("phase", 0)) == 2
 					and runtime.phase == 2,
-				"%s advances %s by exactly one phase"
+				"%s advances %s at the threshold without a damage floor"
 				% [fixture_id, stage_id]
 			)
 
@@ -241,12 +232,13 @@ func _validate_source_boundaries() -> void:
 		"res://scripts/vehicle/vehicle_run.gd"
 	)
 	_expect(
-		run_source.contains("boss_exam_runtime.damage_allowance")
+		run_source.contains("boss_exam_runtime.boss_damage_multiplier")
+			and not run_source.contains("boss_exam_runtime.damage_allowance")
 			and run_source.contains("_spawn_boss_exam_adds")
 			and run_source.contains(
 				"BossExamCatalog.BOSS_ENTRY_SLOT_RESERVE"
 			),
-		"production damage and finite add services consume the exam runtime"
+		"production damage consumes multipliers without a phase-floor clamp"
 	)
 
 

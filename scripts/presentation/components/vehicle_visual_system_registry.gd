@@ -10,6 +10,15 @@ const RewardCatalog = preload("res://scripts/presentation/components/vehicle_rew
 const EffectCatalog = preload("res://scripts/presentation/components/vehicle_effect_visual_catalog.gd")
 const WorldCatalog = preload("res://scripts/presentation/components/vehicle_world_visual_catalog.gd")
 const GlyphCatalog = preload("res://scripts/presentation/components/vehicle_ui_glyph_catalog.gd")
+const SecondaryCatalog = preload(
+	"res://scripts/presentation/components/vehicle_secondary_visual_catalog.gd"
+)
+const DefenseCatalog = preload(
+	"res://scripts/presentation/components/vehicle_defense_visual_catalog.gd"
+)
+const AssetProvider = preload(
+	"res://scripts/presentation/components/vehicle_semantic_asset_provider.gd"
+)
 
 const COMPONENT_GEOMETRY_PATH := (
 	"res://scripts/presentation/components/vehicle_component_mesh_library.gd"
@@ -65,6 +74,9 @@ static func catalog_ids() -> Dictionary:
 		&"reward": RewardCatalog.descriptor_ids(),
 		&"effect": EffectCatalog.descriptor_ids(),
 		&"world": WorldCatalog.descriptor_ids(),
+		&"secondary": SecondaryCatalog.descriptor_ids(),
+		&"defense": DefenseCatalog.descriptor_ids(),
+		&"semantic_asset": AssetProvider.asset_ids(),
 		&"glyph_core": GlyphCatalog.descriptor_ids(),
 		&"glyph_upgrade": GlyphCatalog.upgrade_family_ids(),
 	}
@@ -83,6 +95,12 @@ static func provider_fingerprint() -> String:
 	_append_descriptor_records(records, "projectile", ProjectileCatalog.DESCRIPTORS)
 	_append_descriptor_records(records, "reward", RewardCatalog.DESCRIPTORS)
 	_append_descriptor_records(records, "effect", EffectCatalog.DESCRIPTORS)
+	_append_descriptor_records(
+		records,
+		"secondary",
+		SecondaryCatalog.DESCRIPTORS
+	)
+	_append_descriptor_records(records, "defense", DefenseCatalog.DESCRIPTORS)
 	_append_descriptor_records(records, "world_field", WorldCatalog.FIELD_DESCRIPTORS)
 	_append_descriptor_records(records, "world_facility", WorldCatalog.FACILITY_DESCRIPTORS)
 	_append_descriptor_records(
@@ -156,6 +174,7 @@ static func provider_fingerprint() -> String:
 
 static func validate_catalog_contract() -> PackedStringArray:
 	var errors := PackedStringArray()
+	errors.append_array(AssetProvider.validate_pack())
 	for group_variant in catalog_ids():
 		var catalog_group := StringName(group_variant)
 		var ids := Array(catalog_ids()[catalog_group])

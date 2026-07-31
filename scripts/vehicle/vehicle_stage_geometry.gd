@@ -149,6 +149,93 @@ static func segment_rect_hit(from: Vector2, to: Vector2, rect: Rect2, padding: f
 	return {"hit":true, "t":t_min, "normal":entering_normal, "point":from + delta * t_min}
 
 
+static func segment_rect_intersects(
+	from: Vector2,
+	to: Vector2,
+	rect: Rect2,
+	padding: float = 0.0
+) -> bool:
+	# Boolean line checks avoid allocating the richer projectile-hit receipt.
+	var target := rect.grow(padding)
+	if target.has_point(from):
+		return true
+	var delta := to - from
+	var t_min := 0.0
+	var t_max := 1.0
+	for axis in 2:
+		var origin := from[axis]
+		var direction := delta[axis]
+		var lower := target.position[axis]
+		var upper := target.end[axis]
+		if absf(direction) < 0.00001:
+			if origin < lower or origin > upper:
+				return false
+			continue
+		var near_t := (lower - origin) / direction
+		var far_t := (upper - origin) / direction
+		if near_t > far_t:
+			var temporary := near_t
+			near_t = far_t
+			far_t = temporary
+		t_min = maxf(t_min, near_t)
+		t_max = minf(t_max, far_t)
+		if t_min > t_max:
+			return false
+	return t_min >= 0.0 and t_min <= 1.0
+
+
+static func segment_rect_hit_into(
+	from: Vector2,
+	to: Vector2,
+	rect: Rect2,
+	padding: float,
+	result: Dictionary
+) -> bool:
+	var target := rect.grow(padding)
+	result["hit"] = false
+	if target.has_point(from):
+		result["hit"] = true
+		result["t"] = 0.0
+		result["normal"] = _inside_normal(from, target)
+		result["point"] = from
+		return true
+	var delta := to - from
+	var t_min := 0.0
+	var t_max := 1.0
+	var entering_normal := Vector2.ZERO
+	for axis in 2:
+		var origin := from[axis]
+		var direction := delta[axis]
+		var lower := target.position[axis]
+		var upper := target.end[axis]
+		if absf(direction) < 0.00001:
+			if origin < lower or origin > upper:
+				return false
+			continue
+		var near_t := (lower - origin) / direction
+		var far_t := (upper - origin) / direction
+		var near_normal := Vector2.ZERO
+		near_normal[axis] = -1.0
+		if near_t > far_t:
+			var temporary := near_t
+			near_t = far_t
+			far_t = temporary
+			near_normal[axis] = 1.0
+		if near_t > t_min:
+			t_min = near_t
+			entering_normal = near_normal
+		t_max = minf(t_max, far_t)
+		if t_min > t_max:
+			return false
+	if t_min < 0.0 or t_min > 1.0:
+		return false
+	result["hit"] = true
+	result["t"] = t_min
+	result["normal"] = entering_normal
+	result["point"] = from + delta * t_min
+	return true
+
+
 static func _inside_normal(point: Vector2, rect: Rect2) -> Vector2:
 	var distances := [
 		{"distance":absf(point.x - rect.position.x), "normal":Vector2.LEFT},

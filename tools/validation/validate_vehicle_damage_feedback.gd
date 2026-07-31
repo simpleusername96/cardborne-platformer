@@ -250,6 +250,14 @@ func _check_attack_telegraphs(stage: Node) -> void:
 			StringName(warning["affinity"]) == AttackContract.THERMAL,
 			"furnace components share one truthful thermal affinity"
 		)
+		if StringName(warning["delivery"]) == &"projectile":
+			_expect(
+				is_equal_approx(
+					float(warning["lead_seconds"]),
+					AttackContract.PROJECTILE_TELEGRAPH_LEAD_SECONDS
+				),
+				"boss aimed projectile warnings use the bounded lead contract"
+			)
 
 	AttackTelegraphs.refresh_boss(
 		boss,
@@ -258,6 +266,10 @@ func _check_attack_telegraphs(stage: Node) -> void:
 		resolve_charge_path
 	)
 	_expect(boss.attack_telegraphs.size() == 4, "ram startup exposes contact travel and three aimed projectiles")
+	_expect(
+		StringName(boss.attack_telegraphs[0]["delivery"]) == &"charge",
+		"ram startup uses the charge lane grammar"
+	)
 	_expect(
 		is_equal_approx(
 			float(boss.attack_telegraphs[0]["half_width"]),
@@ -317,7 +329,8 @@ func _check_attack_telegraphs(stage: Node) -> void:
 			and is_equal_approx(
 				float(beam.attack_telegraphs[0]["active_width"]),
 				SpecialistRuntime.BEAM_WIDTH
-			),
+			)
+			and StringName(beam.attack_telegraphs[0]["delivery"]) == &"beam",
 		"beam startup and active body share one exact collision footprint"
 	)
 
@@ -336,6 +349,7 @@ func _check_attack_telegraphs(stage: Node) -> void:
 	)
 	_expect(
 		mine.attack_telegraphs.size() == 1
+			and StringName(mine.attack_telegraphs[0]["delivery"]) == &"area"
 			and is_equal_approx(
 				float(mine.attack_telegraphs[0]["radius"]),
 				float(AttackContract.ORDINARY_ATTACKS[&"mine"]["radius"])

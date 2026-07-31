@@ -19,21 +19,14 @@ func _initialize() -> void:
 	var player := ActorCatalog.descriptor(&"player")
 	_expect(not player.is_empty(), "player descriptor exists")
 	_expect(
-		Array(player.get("rear_sockets", [])).size() == 2,
-		"player descriptor owns two rigid rear engine sockets"
+		Array(player.get("rear_sockets", [])).size() == 1,
+		"player descriptor owns one rigid centered rear engine socket"
 	)
 	var rear_sockets := Array(player.get("rear_sockets", []))
 	_expect(
 		Vector2(rear_sockets[0]).x < 0.0
-			and is_equal_approx(
-				Vector2(rear_sockets[0]).x,
-				Vector2(rear_sockets[1]).x
-			)
-			and is_equal_approx(
-				Vector2(rear_sockets[0]).y,
-				-Vector2(rear_sockets[1]).y
-			),
-		"player recipe keeps a symmetric twin-engine pair on the rear plane"
+			and is_zero_approx(Vector2(rear_sockets[0]).y),
+		"player recipe keeps the engine centered on the rear plane"
 	)
 	var player_components := Dictionary(player.get("components", {}))
 	for component_id in [&"hull", &"engine", &"engine_flare", &"aim_mount"]:

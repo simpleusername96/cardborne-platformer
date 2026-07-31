@@ -17,6 +17,10 @@ const RunDifficulty = preload("res://scripts/vehicle/vehicle_run_difficulty.gd")
 class ControlHintGlyph:
 	extends Control
 
+	const SemanticAssets = preload(
+		"res://scripts/presentation/components/vehicle_semantic_asset_provider.gd"
+	)
+
 	var kind: StringName = &"move"
 	var accent := Art.MINT
 
@@ -75,24 +79,9 @@ class ControlHintGlyph:
 						3.0
 					)
 			&"primary":
-				for angle in 6:
-					var direction := Vector2.RIGHT.rotated(
-						float(angle) * TAU / 6.0
-					)
-					draw_line(
-						center + direction * 5.0,
-						center + direction * 14.0,
-						Art.IVORY_BRIGHT,
-						3.0
-					)
-				draw_circle(center, 4.0, Art.IVORY_BRIGHT)
+				_draw_semantic_action(center, &"primary")
 			&"dash":
-				for offset in [-5.0, 4.0]:
-					draw_polyline(PackedVector2Array([
-						center + Vector2(offset - 5.0, -8.0),
-						center + Vector2(offset + 3.0, 0.0),
-						center + Vector2(offset - 5.0, 8.0),
-					]), Art.IVORY_BRIGHT, 3.0, true)
+				_draw_semantic_action(center, &"dash")
 			_:
 				draw_colored_polygon(PackedVector2Array([
 					center + Vector2(-3.0, -13.0),
@@ -102,6 +91,20 @@ class ControlHintGlyph:
 					center + Vector2(-9.0, 2.0),
 					center + Vector2(-2.0, 0.0),
 				]), Art.IVORY_BRIGHT)
+
+	func _draw_semantic_action(center: Vector2, action_id: StringName) -> void:
+		var texture := SemanticAssets.texture(
+			StringName("hud/action_%s" % action_id)
+		)
+		if texture == null:
+			return
+		var extent := Vector2.ONE * 28.0
+		draw_texture_rect(
+			texture,
+			Rect2(center - extent * 0.5, extent),
+			false,
+			Color.WHITE
+		)
 
 
 var _field_label: Label

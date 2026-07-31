@@ -24,6 +24,7 @@ const CONDITION_CHILL := 4
 const CONDITION_MASK := CONDITION_BURN | CONDITION_POISON | CONDITION_CHILL
 
 const HOSTILE_PROJECTILE_LIFETIME := 2.2
+const PROJECTILE_TELEGRAPH_LEAD_SECONDS := 0.36
 const LIGHT_DAMAGE_MAX := 10.0
 const HEAVY_DAMAGE_MIN := 20.0
 const LIGHT_PROJECTILE_RADIUS := 5.0
@@ -184,6 +185,12 @@ static func validate_contract() -> PackedStringArray:
 		errors.append("projectile warning must expose the player-center hit footprint")
 	if affinity_for_condition_mask(CONDITION_BURN | CONDITION_POISON) != HYBRID:
 		errors.append("multi-condition projectiles must use the hybrid affinity")
+	if (
+		PROJECTILE_TELEGRAPH_LEAD_SECONDS <= 0.0
+		or PROJECTILE_TELEGRAPH_LEAD_SECONDS > 0.4
+		or PROJECTILE_TELEGRAPH_LEAD_SECONDS >= HOSTILE_PROJECTILE_LIFETIME
+	):
+		errors.append("projectile telegraph lead must be positive, at most 0.4 seconds, and shorter than projectile lifetime")
 	if not (
 		is_equal_approx(radial_damage(20.0, 0.0, 100.0), 20.0)
 		and is_equal_approx(

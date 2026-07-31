@@ -9,7 +9,7 @@ const DESCRIPTORS := {
 		"role": &"player",
 		"recipe": &"player_hull_layered",
 		"color": &"player_reward",
-		"rear_sockets": [Vector2(-0.58, -0.43), Vector2(-0.58, 0.43)],
+		"rear_sockets": [Vector2(-0.84, 0.0)],
 		"aim_socket": Vector2(0.04, 0.0),
 		"components": {
 			&"hull": &"player_hull_layered",
@@ -45,7 +45,6 @@ const DESCRIPTORS := {
 	&"route_switch": {"role": &"boss_module", "recipe": &"objective_route_switch", "color": &"boss_command", "states": [&"active", &"disabled"]},
 	&"armor_car": {"role": &"boss_module", "recipe": &"objective_armor_car", "color": &"boss_command", "states": [&"active", &"disabled"]},
 	&"lattice_outer": {"role": &"boss_module", "recipe": &"objective_lattice_outer", "color": &"boss_command", "states": [&"active", &"disabled"]},
-	&"escort_drone": {"role": &"player_secondary", "recipe": &"swarm_scrap_chevron", "grammar": &"solid_chevron", "color": &"support", "states": [&"base"]},
 	&"behemoth": {"role": &"boss", "recipe": &"boss_behemoth", "color": &"boss_command", "module_budget": 5, "states": [&"sealed", &"vulnerable"]},
 	&"colossus": {"role": &"boss", "recipe": &"boss_colossus", "color": &"boss_command", "module_budget": 5, "states": [&"sealed", &"vulnerable"]},
 	&"crown": {"role": &"boss", "recipe": &"boss_crown", "color": &"boss_command", "module_budget": 5, "states": [&"sealed", &"vulnerable"]},

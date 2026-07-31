@@ -98,6 +98,10 @@ var attack_telegraphs: Array[Dictionary] = []
 var decision_bucket := 0
 var statuses: Dictionary = {}
 var runtime_slot := -1
+# Stable pool identity and reuse generation let spatial membership reject stale
+# cell entries after swap retirement or pooled actor reuse.
+var spatial_slot := -1
+var runtime_generation := 0
 var passive_score := 0.0
 var decision_elapsed := 0.0
 var motion_elapsed := 0.0

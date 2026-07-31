@@ -1,26 +1,28 @@
 class_name VehicleGuidebookPreview
 extends Control
 
-## Displays runtime component previews while guidebook text and locked-state
-## ownership remain live UI. Published enemy and boss previews use the same
-## vector providers as combat and the system sheets.
+## Displays guide entries through the approved semantic-v2 runtime provider.
+## Preview geometry stays presentation-only and never substitutes for collision.
 
-const Visuals = preload("res://scripts/presentation/vehicle_combat_visual_library.gd")
+const SemanticAssets = preload(
+	"res://scripts/presentation/components/vehicle_semantic_asset_provider.gd"
+)
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 
-var _instances: Array[MeshInstance2D] = []
+var _textures: Array[TextureRect] = []
+var _asset_ids: Array[StringName] = []
 
 
 func _ready() -> void:
 	custom_minimum_size = Vector2(220.0, 150.0)
 	clip_contents = true
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	resized.connect(_layout_instances)
+	resized.connect(_layout_textures)
 	queue_redraw()
 
 
 func show_preview(preview: Dictionary) -> void:
-	_clear_instances()
+	_clear_textures()
 	if preview.is_empty():
 		visible = false
 		return
@@ -29,108 +31,108 @@ func show_preview(preview: Dictionary) -> void:
 	var preview_id := StringName(preview.get("id", &"chaser"))
 	match kind:
 		&"locked":
-			_add_instance(
-				Visuals.effect_mesh(&"diamond"),
-				Art.INK_MUTED,
-				Vector2(46.0, 46.0)
-			)
-			_add_instance(
-				Visuals.effect_mesh(&"ring"),
-				Art.STRUCTURE_LIGHT,
-				Vector2(31.0, 31.0)
-			)
+			_add_asset(&"hud/minimap_marker_objective_locked", 54.0)
 		&"boss":
-			_add_instance(
-				Visuals.boss_mesh(preview_id),
-				Art.BOSS_MAGENTA,
-				Vector2(52.0, 52.0)
-			)
+			_add_asset(StringName("boss/%s" % preview_id), 220.0)
 		&"terrain":
 			_add_terrain(preview_id)
 		&"facility":
 			_add_facility(preview_id)
 		&"elite":
-			_add_instance(Visuals.enemy_mesh(&"chaser"), Art.CORAL, Vector2(42.0, 42.0))
-			var marker := _add_instance(Visuals.effect_mesh(&"diamond"), Art.IVORY_BRIGHT, Vector2(58.0, 58.0))
-			marker.modulate.a = 0.85
+			_add_asset(&"actor/chaser", 92.0)
+			_add_asset(
+				&"hud/minimap_marker_elite",
+				34.0,
+				Vector2(44.0, -38.0)
+			)
 		&"pickup":
-			_add_instance(
-				Visuals.experience_mesh(&"large") if preview_id == &"experience" else Visuals.effect_mesh(&"diamond"),
-				Art.MINT if preview_id != &"repair" else Art.MUSTARD,
-				Vector2(32.0, 32.0)
-			)
+			_add_pickup(preview_id)
 		_:
-			_add_instance(
-				Visuals.enemy_mesh(preview_id),
-				Visuals.enemy_color(preview_id),
-				Vector2(44.0, 44.0)
-			)
-	_layout_instances()
+			_add_asset(StringName("actor/%s" % preview_id), 94.0)
+	_layout_textures()
 	queue_redraw()
+
+
+func debug_contract() -> Dictionary:
+	return {
+		"semantic_provider":true,
+		"asset_ids":_asset_ids.duplicate(),
+		"texture_count":_textures.size(),
+	}
 
 
 func _draw() -> void:
 	draw_rect(Rect2(Vector2.ZERO, size), Art.COBALT_VOID.lightened(0.04))
-	draw_rect(Rect2(Vector2(8.0, 8.0), size - Vector2(16.0, 16.0)), Art.STRUCTURE_BASE, false, 3.0)
+	draw_rect(
+		Rect2(Vector2(8.0, 8.0), size - Vector2(16.0, 16.0)),
+		Art.STRUCTURE_BASE,
+		false,
+		3.0
+	)
 
 
 func _add_terrain(terrain_id: StringName) -> void:
-	match terrain_id:
-		&"arc_surge":
-			_add_instance(Visuals.effect_mesh(&"beam"), Art.ARC, Vector2(78.0, 42.0))
-		&"breakable_bulkhead":
-			_add_instance(Visuals.health_bar_mesh(), Art.STRUCTURE_BASE, Vector2(74.0, 34.0))
-		_:
-			_add_instance(Visuals.effect_mesh(&"diamond"), Art.INK_MUTED, Vector2(42.0, 42.0))
+	var asset_id := StringName({
+		&"arc_surge":&"world/facility_arc_surge_strip",
+		&"breakable_bulkhead":&"world/world_bulkhead_intact",
+	}.get(terrain_id, &"world/terrain_solid_cover_block"))
+	_add_asset(asset_id, 116.0)
 
 
 func _add_facility(facility_id: StringName) -> void:
-	var color := (
-		Art.PLAYER_REWARD
-		if facility_id == &"overdrive_field"
-		else (Art.SYSTEM if facility_id == &"transit_gate" else Art.SUPPORT)
-	)
-	_add_instance(Visuals.effect_mesh(&"ring"), color, Vector2(54.0, 54.0))
-	if facility_id == &"transit_gate":
-		var left := _add_instance(Visuals.effect_mesh(&"diamond"), Art.IVORY_BRIGHT, Vector2(20.0, 20.0))
-		left.set_meta("preview_offset", Vector2(-22.0, 0.0))
-		var right := _add_instance(Visuals.effect_mesh(&"diamond"), Art.IVORY_BRIGHT, Vector2(20.0, 20.0))
-		right.set_meta("preview_offset", Vector2(22.0, 0.0))
-	elif facility_id == &"repair_basin":
-		_add_instance(Visuals.health_bar_mesh(), Art.IVORY_BRIGHT, Vector2(10.0, 34.0))
-		_add_instance(Visuals.health_bar_mesh(), Art.IVORY_BRIGHT, Vector2(34.0, 10.0))
-	elif facility_id == &"overdrive_field":
-		for index in 3:
-			var arrow := _add_instance(
-				Visuals.effect_mesh(&"diamond"),
-				Art.IVORY_BRIGHT,
-				Vector2(18.0, 12.0)
-			)
-			arrow.set_meta(
-				"preview_offset",
-				Vector2(0.0, 24.0 - float(index) * 24.0)
-			)
+	match facility_id:
+		&"transit_gate":
+			_add_asset(&"world/facility_transit_gate", 126.0)
+		&"repair_basin":
+			_add_asset(&"world/facility_repair_pad", 116.0)
+			_add_asset(&"world/facility_repair_pad_core", 48.0)
+		&"overdrive_field":
+			_add_asset(&"world/facility_overdrive_lane", 116.0)
+		_:
+			_add_asset(&"world/terrain_solid_cover_block", 96.0)
 
 
-func _add_instance(mesh: Mesh, color: Color, scale_value: Vector2) -> MeshInstance2D:
-	var instance := MeshInstance2D.new()
-	instance.mesh = mesh
-	instance.modulate = color
-	instance.scale = scale_value
-	instance.set_meta("preview_offset", Vector2.ZERO)
-	add_child(instance)
-	_instances.append(instance)
-	return instance
+func _add_pickup(pickup_id: StringName) -> void:
+	var asset_id := StringName({
+		&"experience":&"pickup/experience_large",
+		&"repair":&"pickup/repair",
+		&"experience_recall":&"pickup/experience_recall",
+		&"reward_crate":&"pickup/reward_crate",
+	}.get(pickup_id, &"pickup/experience_large"))
+	_add_asset(asset_id, 72.0)
 
 
-func _layout_instances() -> void:
-	for instance in _instances:
-		instance.position = size * 0.5 + Vector2(
-			instance.get_meta("preview_offset", Vector2.ZERO)
-		)
+func _add_asset(
+	asset_id: StringName,
+	extent: float,
+	offset: Vector2 = Vector2.ZERO,
+	modulate: Color = Color.WHITE
+) -> TextureRect:
+	var texture := SemanticAssets.texture(asset_id)
+	if texture == null:
+		return null
+	var view := TextureRect.new()
+	view.texture = texture
+	view.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	view.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	view.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	view.modulate = modulate
+	view.size = Vector2.ONE * extent
+	view.set_meta("preview_offset", offset)
+	add_child(view)
+	_textures.append(view)
+	_asset_ids.append(asset_id)
+	return view
 
 
-func _clear_instances() -> void:
-	for instance in _instances:
-		instance.queue_free()
-	_instances.clear()
+func _layout_textures() -> void:
+	for view in _textures:
+		var offset := Vector2(view.get_meta("preview_offset", Vector2.ZERO))
+		view.position = size * 0.5 + offset - view.size * 0.5
+
+
+func _clear_textures() -> void:
+	for view in _textures:
+		view.queue_free()
+	_textures.clear()
+	_asset_ids.clear()

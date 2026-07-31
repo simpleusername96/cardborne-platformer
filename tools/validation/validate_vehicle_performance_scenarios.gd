@@ -128,6 +128,34 @@ func _run() -> void:
 				bool(snapshot["valid"]),
 				"terminal projectile retirement does not invalidate capacity load"
 			)
+			run.denied_zones.append({
+				"source":"authored_fixture_probe",
+				"pos":Vector2.ZERO,
+				"duration":1.0,
+			})
+			scenario.after_physics(run)
+			_expect(
+				run.denied_zones.size() + run.damaging_trails.size() == 16,
+				"real attack zones retire artificial fixture zones without lowering pressure"
+			)
+			var authored_probe_preserved := false
+			for zone in run.denied_zones:
+				if String(zone.get("source", "")) == "authored_fixture_probe":
+					authored_probe_preserved = true
+					break
+			_expect(
+				authored_probe_preserved,
+				"fixture pressure maintenance preserves real attack zones"
+			)
+			for index in range(run.denied_zones.size() - 1, -1, -1):
+				if String(run.denied_zones[index].get("source", "")) == "authored_fixture_probe":
+					run.denied_zones.remove_at(index)
+					break
+			scenario.after_physics(run)
+			_expect(
+				run.denied_zones.size() + run.damaging_trails.size() == 16,
+				"expired real zones are backfilled to the declared fixture pressure"
+			)
 		if scenario_id == &"lifecycle_pressure":
 			_expect(int(snapshot["lifecycle_cycles"]) == 300, "lifecycle scenario retires 300 actors before capacity load")
 			for _step in 20:

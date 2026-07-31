@@ -16,6 +16,8 @@ func _initialize() -> void:
 		var enemy := EnemyState.new()
 		enemy.id = "grid_%d" % index
 		enemy.runtime_slot = index
+		enemy.spatial_slot = index
+		enemy.runtime_generation = 1
 		enemy.alive = true
 		enemy.active = index % 11 != 0
 		enemy.pos = Vector2(rng.randf_range(0.0, 5600.0), rng.randf_range(0.0, 3400.0))
@@ -65,14 +67,80 @@ func _initialize() -> void:
 		var from := Vector2(rng.randf_range(-80.0, 5680.0), rng.randf_range(-80.0, 3480.0))
 		var to := Vector2(rng.randf_range(-80.0, 5680.0), rng.randf_range(-80.0, 3480.0))
 		var padding := rng.randf_range(2.0, 32.0)
-		grid.query_segment_into(from, to, padding, live, candidates)
+		var group_ends := PackedInt32Array()
+		var group_exit_t := PackedFloat32Array()
+		grid.query_segment_cells_into(
+			from,
+			to,
+			padding,
+			live,
+			candidates,
+			group_ends,
+			group_exit_t
+		)
 		_expect_unique(candidates, "segment query %d" % query_index)
+		_expect(
+			group_ends.size() == group_exit_t.size()
+				and not group_ends.is_empty()
+				and group_ends[-1] == candidates.size(),
+			"ordered segment query %d exposes complete cell groups"
+			% query_index
+		)
 		for enemy in live:
 			if not bool(enemy["alive"]) or not bool(enemy["active"]):
 				continue
 			var target_radius := maxf(enemy.radius, enemy.projectile_hit_radius)
 			if Rules.point_segment_distance(enemy.pos, from, to) <= padding + target_radius:
 				_expect(enemy in candidates, "segment query %d contains every exact hit" % query_index)
+
+	var moved := live[17]
+	var old_position := moved.pos
+	moved.pos = Vector2(5320.0, 3180.0)
+	grid.sync(live)
+	grid.query_radius_into(
+		moved.pos,
+		8.0,
+		live,
+		candidates
+	)
+	_expect(moved in candidates, "incremental sync inserts a moved actor in its new cells")
+	grid.query_radius_into(
+		old_position,
+		8.0,
+		live,
+		candidates
+	)
+	_expect(moved not in candidates, "incremental sync removes a moved actor from old cells")
+
+	var replaced := live[31]
+	var replaced_slot := replaced.spatial_slot
+	var replacement := EnemyState.new()
+	replacement.id = "grid_reused"
+	replacement.runtime_slot = replaced.runtime_slot
+	replacement.spatial_slot = replaced_slot
+	replacement.runtime_generation = replaced.runtime_generation + 1
+	replacement.alive = true
+	replacement.active = true
+	replacement.pos = Vector2(180.0, 180.0)
+	replacement.radius = 18.0
+	replacement.projectile_hit_radius = 18.0
+	live[31] = replacement
+	grid.sync(live)
+	grid.query_radius_into(
+		replacement.pos,
+		8.0,
+		live,
+		candidates
+	)
+	_expect(
+		replacement in candidates and replaced not in candidates,
+		"generation sync replaces a pooled actor without stale membership"
+	)
+	var snapshot := grid.debug_snapshot()
+	_expect(
+		int(snapshot["active_members"]) > 0,
+		"incremental grid reports active membership"
+	)
 	_finish()
 
 

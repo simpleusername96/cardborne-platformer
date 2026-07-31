@@ -6,9 +6,11 @@ extends RefCounted
 
 const ACTION_INTERVAL := 0.05
 const WORLD_MARKER_INTERVAL := 0.10
+const INITIAL_WORLD_PHASE_OFFSET := ACTION_INTERVAL * 0.5
 
 var _action_timer := 0.0
 var _world_timer := 0.0
+var _world_phase_seeded := false
 var _static_minimap_dirty := true
 var _guidebook_dirty := true
 
@@ -16,6 +18,7 @@ var _guidebook_dirty := true
 func reset() -> void:
 	_action_timer = 0.0
 	_world_timer = 0.0
+	_world_phase_seeded = false
 	_static_minimap_dirty = true
 	_guidebook_dirty = true
 
@@ -43,7 +46,11 @@ func advance(
 		_action_timer = ACTION_INTERVAL
 		update.merge(Dictionary(fast_builder.call()), true)
 	if _world_timer <= 0.0:
-		_world_timer = WORLD_MARKER_INTERVAL
+		_world_timer = (
+			WORLD_MARKER_INTERVAL
+			+ (INITIAL_WORLD_PHASE_OFFSET if not _world_phase_seeded else 0.0)
+		)
+		_world_phase_seeded = true
 		update["minimap"] = minimap_builder.call(_static_minimap_dirty)
 		update["threat_radar"] = threat_builder.call()
 		update["status_orbit"] = status_builder.call()

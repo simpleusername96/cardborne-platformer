@@ -39,20 +39,22 @@ func _run() -> void:
 		"hostile projectile collision radii remain 5/6/7 world units"
 	)
 	_expect(
-		renderer.get_node_or_null("Projectile_trail_player_kinetic") != null,
-		"player ownership uses its rendered kinetic trail batch"
+		renderer.get_node_or_null("Projectile_player_primary") != null
+			and renderer.get_node_or_null("Projectile_player_opening_breach") != null
+			and renderer.get_node_or_null("Projectile_player_seeker") != null,
+		"each player projectile identity owns a semantic texture batch"
 	)
 	_expect(
 		renderer.get_node_or_null("Player_hull") != null
 			and renderer.get_node_or_null("Player_engine") != null
-			and renderer.get_node_or_null("Player_engine_flare") != null
+			and renderer.get_node_or_null("Player_engine_flare") == null
 			and renderer.get_node_or_null("Player_primary_mount") != null,
-		"player hull, rigid engine, flare and independent aim mount use component batches"
+		"player hull, rigid engine and independent aim mount use semantic component batches while thrust reuses the overlay beam"
 	)
 	for variant in [&"colossus", &"leviathan", &"titan", &"behemoth", &"crown"]:
 		_expect(
 			renderer.get_node_or_null("Boss_%s" % String(variant)) != null,
-			"%s boss owns a vector silhouette batch" % variant
+			"%s boss owns a semantic texture batch" % variant
 		)
 	for affinity in AttackContract.AFFINITIES:
 		_expect(
@@ -63,13 +65,13 @@ func _run() -> void:
 			continue
 		_expect(
 			renderer.get_node_or_null(
-				"Projectile_trail_enemy_%s" % String(affinity)
+				"Projectile_enemy_%s" % String(affinity)
 			) != null,
-			"hostile %s affinity uses its descriptor mesh batch" % affinity
+			"hostile %s affinity uses its semantic texture batch" % affinity
 		)
 	_expect(
-		renderer.get_node_or_null("Projectile_core_enemy") != null,
-		"hostile projectiles expose one shared collision-bounded core batch"
+		renderer.get_node_or_null("Projectile_core_enemy") == null,
+		"hostile projectile identities no longer collapse onto one generic core"
 	)
 	for pair in [
 		[&"shooter", &"artillery_spotter"],
@@ -160,10 +162,15 @@ func _run() -> void:
 	)
 	snapshot = renderer.debug_snapshot()
 	_expect(int(snapshot["visible_instances"]) >= 10, "renderer publishes bodies and semantic overlays as retained instances")
+	_expect(
+		int(snapshot["semantic_texture_draw_count"])
+			<= int(snapshot["semantic_texture_draw_capacity"]),
+		"semantic texture draws stay inside the preallocated record capacity"
+	)
 	var support_timer := renderer.get_node("Overlay_support_timer_segment") as MultiMeshInstance2D
 	_expect(
-		support_timer.multimesh.visible_instance_count == 12,
-		"support-field lifetime uses one retained 24-step timer batch"
+		support_timer.multimesh.visible_instance_count == 4,
+		"support-field lifetime uses one retained eight-step timer batch"
 	)
 	var corridor_caps := renderer.get_node("Overlay_disk") as MultiMeshInstance2D
 	var corridor_boundaries := renderer.get_node("Overlay_danger_ring") as MultiMeshInstance2D
@@ -186,6 +193,10 @@ func _run() -> void:
 	var enemy_batch := renderer.get_node("Enemy_chaser") as MultiMeshInstance2D
 	var enemy_buffer := enemy_batch.multimesh.buffer
 	_expect(
+		enemy_batch.material == null,
+		"authored actor perimeters do not add a runtime outline shader"
+	)
+	_expect(
 		Vector2(enemy_buffer[3], enemy_buffer[7]).is_equal_approx(Vector2(300.0, 300.0)),
 		"batched buffer preserves enemy position"
 	)
@@ -196,33 +207,25 @@ func _run() -> void:
 		),
 		"batched buffer preserves the selected enemy presentation scale"
 	)
-	var projectile_head := renderer.get_node("Projectile_head_player") as MultiMeshInstance2D
-	var projectile_trail := renderer.get_node("Projectile_trail_player_kinetic") as MultiMeshInstance2D
-	var head_buffer := projectile_head.multimesh.buffer
-	var trail_buffer := projectile_trail.multimesh.buffer
+	var projectile_visual := renderer.get_node(
+		"Projectile_player_primary"
+	) as MultiMeshInstance2D
+	var projectile_buffer := projectile_visual.multimesh.buffer
 	_expect(
-		Vector2(head_buffer[3], head_buffer[7]).is_equal_approx(Vector2(330.0, 300.0)),
-		"projectile head remains centered on collision state"
-	)
-	_expect(
-		Vector2(head_buffer[0], head_buffer[4]).is_equal_approx(projectile_direction * 5.0),
-		"projectile head radius exactly matches its collision radius"
-	)
-	_expect(
-		Vector2(trail_buffer[3], trail_buffer[7]).is_equal_approx(
-			Vector2(330.0, 300.0) - projectile_direction * 18.5
+		Vector2(projectile_buffer[3], projectile_buffer[7]).is_equal_approx(
+			Vector2(330.0, 300.0)
 		),
-		"player ownership trail stays attached behind the five-unit head"
+		"projectile semantic pivot remains centered on collision state"
 	)
 	_expect(
-		Vector2(trail_buffer[0], trail_buffer[4]).is_equal_approx(projectile_direction * 47.0),
-		"projectile trail preserves direction and fixed length"
-	)
-	_expect(
-		Vector2(trail_buffer[1], trail_buffer[5]).is_equal_approx(
-			projectile_direction.rotated(PI * 0.5) * 7.5
+		Vector2(projectile_buffer[0], projectile_buffer[4]).is_equal_approx(
+			projectile_direction * 28.0
 		),
-		"player ownership trail width follows the collision radius"
+		"player primary image uses its authored long-form presentation scale"
+	)
+	_expect(
+		projectile_visual.texture != null,
+		"player projectile batch binds the approved raster image"
 	)
 	var player_hull := renderer.get_node("Player_hull") as MultiMeshInstance2D
 	var player_engine := renderer.get_node("Player_engine") as MultiMeshInstance2D
@@ -252,18 +255,20 @@ func _run() -> void:
 		),
 		"primary mount follows aim independently from the right-facing hull"
 	)
-	var status_batch := renderer.get_node("Overlay_status_arc") as MultiMeshInstance2D
-	_expect(
-		status_batch.multimesh.instance_count == Renderer.STATUS_ARC_CAPACITY,
-		"one retained status arc batch reserves three instances per hostile slot"
-	)
-	_expect(status_batch.multimesh.visible_instance_count == 3, "three simultaneous elements render as three large retained arcs")
+	for status_id in [&"burn", &"poison", &"chill"]:
+		var status_batch := renderer.get_node(
+			"Status_%s" % status_id
+		) as MultiMeshInstance2D
+		_expect(
+			status_batch.multimesh.instance_count == Renderer.ENEMY_CAPACITY
+				and status_batch.multimesh.visible_instance_count == 1
+				and status_batch.texture != null,
+			"%s renders in its own retained semantic-icon batch" % status_id
+		)
 	var hostile_trail := renderer.get_node(
-		"Projectile_trail_enemy_arc"
+		"Projectile_enemy_arc"
 	) as MultiMeshInstance2D
 	var hostile_trail_buffer := hostile_trail.multimesh.buffer
-	var hostile_core := renderer.get_node("Projectile_core_enemy") as MultiMeshInstance2D
-	var hostile_core_buffer := hostile_core.multimesh.buffer
 	_expect(
 		Vector2(hostile_trail_buffer[0], hostile_trail_buffer[4]).is_equal_approx(
 			Vector2.LEFT * 5.0 * Art.HOSTILE_PROJECTILE_ENVELOPE_SCALE
@@ -274,7 +279,7 @@ func _run() -> void:
 		Vector2(hostile_trail_buffer[3], hostile_trail_buffer[7]).is_equal_approx(
 			Vector2(390.0, 300.0)
 		),
-		"hostile affinity head remains centered on collision state"
+		"hostile affinity image remains centered on collision state"
 	)
 	_expect(
 		Vector2(hostile_trail_buffer[1], hostile_trail_buffer[5]).is_equal_approx(
@@ -283,18 +288,9 @@ func _run() -> void:
 		"hostile visual envelope preserves uniform scaling"
 	)
 	_expect(
-		hostile_core.multimesh.visible_instance_count == 1
-			and Vector2(hostile_core_buffer[3], hostile_core_buffer[7])
-				.is_equal_approx(Vector2(390.0, 300.0))
-			and is_equal_approx(
-				Vector2(hostile_core_buffer[0], hostile_core_buffer[4]).length(),
-				5.0
-			),
-		"hostile solid core ends at the five-unit collision boundary"
-	)
-	_expect(
-		hostile_trail.multimesh.mesh.get_surface_count() == 1,
-		"hostile head and trail share one vertex-colored mesh surface"
+		hostile_trail.texture != null
+			and hostile_trail.multimesh.mesh is QuadMesh,
+		"hostile affinity uses one texture-capable retained quad surface"
 	)
 	var crowd: Array[EnemyState] = []
 	for index in 110:

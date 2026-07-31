@@ -70,11 +70,24 @@ func _aggregate_contacts(contacts: Array, maximum_distance: float) -> Array[Dict
 				"count": 1,
 				"priority": bool(contact.get("priority", false)),
 				"targeted": bool(contact.get("targeted", false)),
+				"objective":bool(contact.get("objective", false)),
+				"objective_id":String(contact.get("objective_id", "")),
+				"objective_state":StringName(contact.get("objective_state", &"")),
+				"health":float(contact.get("health", 0.0)),
+				"max_health":float(contact.get("max_health", 0.0)),
 			}
 			continue
 		existing["count"] = int(existing["count"]) + 1
 		existing["priority"] = bool(existing["priority"]) or bool(contact.get("priority", false))
 		existing["targeted"] = bool(existing["targeted"]) or bool(contact.get("targeted", false))
+		if bool(contact.get("objective", false)):
+			existing["objective"] = true
+			existing["objective_id"] = String(contact.get("objective_id", ""))
+			existing["objective_state"] = StringName(
+				contact.get("objective_state", &"")
+			)
+			existing["health"] = float(contact.get("health", 0.0))
+			existing["max_health"] = float(contact.get("max_health", 0.0))
 		if distance < float(existing["distance"]):
 			existing["angle"] = angle
 			existing["distance"] = distance
@@ -104,6 +117,8 @@ func _build_threat_mesh(
 		var density := minf(1.0, float(int(sector["count"]) - 1) / 5.0)
 		var width := 5.0 + density * 6.0 + proximity * 2.0
 		var color := Art.MUSTARD if bool(sector["priority"]) else Art.CORAL
+		if bool(sector.get("objective", false)):
+			color = Art.PLAYER_REWARD
 		if bool(sector["targeted"]):
 			color = Art.IVORY_BRIGHT
 		var alpha := 0.58 + proximity * 0.30
@@ -135,6 +150,17 @@ func _build_threat_mesh(
 				vertices, colors, indices, center, ARC_RADIUS + 9.0,
 				angle - ARC_HALF_WIDTH * 0.72, angle + ARC_HALF_WIDTH * 0.72,
 				3.0, Art.MUSTARD, 10
+			)
+		if bool(sector.get("objective", false)):
+			var outer_tip := center + direction * (ARC_RADIUS - 24.0)
+			_append_triangle(
+				vertices,
+				colors,
+				indices,
+				outer_tip,
+				outer_tip - direction * 10.0 + tangent * 6.0,
+				outer_tip - direction * 10.0 - tangent * 6.0,
+				Art.PLAYER_REWARD
 			)
 	if vertices.is_empty():
 		return null
@@ -208,6 +234,7 @@ func debug_contract() -> Dictionary:
 		"sector_count": SECTOR_COUNT,
 		"maximum_markers": SECTOR_COUNT,
 		"offscreen_arcs": true,
+		"objective_channel":true,
 		"batched_mesh": true,
 		"full_rect": is_zero_approx(anchor_left) and is_zero_approx(anchor_top) and is_equal_approx(anchor_right, 1.0) and is_equal_approx(anchor_bottom, 1.0),
 		"mouse_ignored": mouse_filter == Control.MOUSE_FILTER_IGNORE,

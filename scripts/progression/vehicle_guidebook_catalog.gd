@@ -91,9 +91,9 @@ static func _preview_for(entry: Dictionary) -> Dictionary:
 			"id":StringName(entry_id.trim_prefix("mobile_").trim_prefix("stationary_")),
 		}
 	if entry_id == "object_recall":
-		return {"kind":&"pickup", "id":&"experience"}
+		return {"kind":&"pickup", "id":&"experience_recall"}
 	if entry_id == "object_crate":
-		return {"kind":&"terrain", "id":&"breakable_bulkhead"}
+		return {"kind":&"pickup", "id":&"reward_crate"}
 	return {}
 
 

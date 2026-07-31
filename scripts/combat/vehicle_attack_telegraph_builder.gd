@@ -51,6 +51,7 @@ static func refresh_ordinary(
 			AttackContract.beam_danger_half_width(SpecialistRuntime.BEAM_WIDTH),
 			SpecialistRuntime.BEAM_DAMAGE,
 			AttackContract.ARC,
+			&"beam",
 			SpecialistRuntime.BEAM_WIDTH
 		))
 	update_ordinary_readiness(enemy)
@@ -138,6 +139,7 @@ static func refresh_boss(
 			AttackContract.beam_danger_half_width(BossPatterns.width(pattern)),
 			damage,
 			affinity,
+			&"beam",
 			BossPatterns.width(pattern)
 		))
 	elif kind in [&"area", &"pylons"]:
@@ -163,6 +165,7 @@ static func refresh_boss(
 			)
 		enemy.attack_telegraphs.append({
 			"shape":&"support",
+			"delivery":&"support",
 			"center":Vector2(enemy.pos),
 			"radius":112.0,
 			"affinity":AttackContract.SUPPORT,
@@ -226,6 +229,7 @@ static func _append_ordinary_attack(
 	elif kind == &"support":
 		enemy.attack_telegraphs.append({
 			"shape":&"support",
+			"delivery":&"support",
 			"center":Vector2(enemy.pos),
 			"radius":float(attack["radius"]),
 			"affinity":AttackContract.SUPPORT,
@@ -253,7 +257,8 @@ static func _append_charge(
 		to,
 		AttackContract.contact_danger_half_width(enemy.radius, contact_padding),
 		damage,
-		affinity
+		affinity,
+		&"charge"
 	))
 
 
@@ -288,7 +293,7 @@ static func _append_projectile(
 	var radius := AttackContract.hostile_projectile_radius(damage)
 	var distance := (
 		EncounterDirector.effective_hostile_projectile_speed(base_speed)
-		* AttackContract.HOSTILE_PROJECTILE_LIFETIME
+		* AttackContract.PROJECTILE_TELEGRAPH_LEAD_SECONDS
 	)
 	var to := _resolve_path(resolve_path, origin, direction, distance, radius)
 	enemy.attack_telegraphs.append(_corridor(
@@ -296,7 +301,10 @@ static func _append_projectile(
 		to,
 		AttackContract.projectile_danger_half_width(radius),
 		damage,
-		affinity
+		affinity,
+		&"projectile",
+		0.0,
+		AttackContract.PROJECTILE_TELEGRAPH_LEAD_SECONDS
 	))
 
 
@@ -321,16 +329,20 @@ static func _corridor(
 	half_width: float,
 	damage: float,
 	affinity: StringName,
-	active_width: float = 0.0
+	delivery: StringName,
+	active_width: float = 0.0,
+	lead_seconds: float = 0.0
 ) -> Dictionary:
 	return {
 		"shape":&"corridor",
+		"delivery":delivery,
 		"from":from,
 		"to":to,
 		"half_width":half_width,
 		"damage":damage,
 		"affinity":AttackContract.normalize_affinity(affinity),
 		"active_width":active_width,
+		"lead_seconds":lead_seconds,
 	}
 
 
@@ -342,6 +354,7 @@ static func _area(
 ) -> Dictionary:
 	return {
 		"shape":&"area",
+		"delivery":&"area",
 		"center":center,
 		"radius":radius,
 		"damage":damage,

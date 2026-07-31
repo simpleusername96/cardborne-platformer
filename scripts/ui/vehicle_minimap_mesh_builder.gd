@@ -142,6 +142,11 @@ static func _append_markers(
 		var point := _map_point(Vector2(marker.get("position", Vector2.ZERO)), world_size, canvas_size)
 		var marker_color: Color = marker.get("color", Art.PLAYER_REWARD)
 		var kind := String(marker.get("kind", "point"))
+		if (
+			bool(snapshot.get("semantic_markers", false))
+			and kind in ["boss", "objective", "elite", "stationary"]
+		):
+			continue
 		match kind:
 			"boss":
 				_append_boss(vertices, colors, indices, point, marker_color, StringName(marker.get("variant", &"colossus")))
@@ -273,6 +278,8 @@ static func _append_clusters(
 	snapshot: Dictionary,
 	cell_size: Vector2
 ) -> void:
+	if bool(snapshot.get("semantic_markers", false)):
+		return
 	for cluster_variant in snapshot.get("enemy_clusters", []):
 		var cluster: Dictionary = cluster_variant
 		var point := (Vector2(Vector2i(cluster["cell"])) + Vector2(0.5, 0.5)) * cell_size
@@ -322,6 +329,8 @@ static func _append_player(
 	world_size: Vector2,
 	canvas_size: Vector2
 ) -> void:
+	if bool(snapshot.get("semantic_markers", false)):
+		return
 	var point := _map_point(Vector2(snapshot.get("player", Vector2.ZERO)), world_size, canvas_size)
 	var facing := Vector2(snapshot.get("player_facing", Vector2.UP)).normalized()
 	if facing.is_zero_approx():

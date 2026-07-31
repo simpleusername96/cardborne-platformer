@@ -1,11 +1,16 @@
 class_name VehicleBossExamRuntime
 extends RefCounted
 
-## Owns sequential boss health floors and actionable objective-module state.
+## Owns boss core vulnerability state and actionable objective-module order.
+## Health thresholds trigger the next phase but never clamp or cancel damage.
 ## The run supplies spawning, collision and damage services; this runtime never
 ## scans the complete enemy array.
 
 const Catalog = preload("res://scripts/bosses/vehicle_boss_exam_catalog.gd")
+const SEALED_DAMAGE_MULTIPLIER := 0.20
+const OPEN_DAMAGE_MULTIPLIER := 1.55
+const STABLE_DAMAGE_MULTIPLIER := 1.00
+const HINT_REPEAT_COOLDOWN := 2.0
 
 var stage_id: StringName = &"stage_1"
 var phase := 1
@@ -24,6 +29,9 @@ var _locked_time := 0.0
 var _open_time := 0.0
 var _adds_spawned := 0
 var _maximum_live_adds := 0
+var _pending_hint_key := ""
+var _last_hint_key := ""
+var _last_hint_elapsed := HINT_REPEAT_COOLDOWN
 
 
 func configure(next_stage_id: StringName, starting_phase: int = 1) -> void:
@@ -43,6 +51,9 @@ func configure(next_stage_id: StringName, starting_phase: int = 1) -> void:
 	_open_time = 0.0
 	_adds_spawned = 0
 	_maximum_live_adds = 0
+	_pending_hint_key = ""
+	_last_hint_key = ""
+	_last_hint_elapsed = HINT_REPEAT_COOLDOWN
 
 
 func begin_phase(boss_max_health: float, requested_phase: int = -1) -> Dictionary:
@@ -70,6 +81,7 @@ func begin_phase(boss_max_health: float, requested_phase: int = -1) -> Dictionar
 			"health":maxf(1.0, boss_max_health * Catalog.MODULE_HEALTH_RATIO),
 		})
 	_active_index = _initial_active_index()
+	_queue_state_hint(cue_key())
 	return {
 		"phase":phase,
 		"modules":modules,
@@ -81,6 +93,7 @@ func begin_phase(boss_max_health: float, requested_phase: int = -1) -> Dictionar
 
 func advance(delta: float) -> void:
 	var bounded_delta := maxf(0.0, delta)
+	var was_open := vulnerability_remaining > 0.0
 	if objective_locked:
 		_locked_time += bounded_delta
 	else:
@@ -89,21 +102,31 @@ func advance(delta: float) -> void:
 		0.0,
 		vulnerability_remaining - bounded_delta
 	)
-
-
-func damage_allowance(health: float, max_health: float) -> float:
-	if objective_locked:
-		return 0.0
-	var floor_health := max_health * Catalog.phase_floor(phase)
-	return maxf(0.0, health - floor_health)
+	_last_hint_elapsed += bounded_delta
+	if was_open and vulnerability_remaining <= 0.0:
+		_queue_state_hint("BOSS_EXAM_CORE_STABLE")
 
 
 func boss_damage_multiplier() -> float:
-	return 1.55 if vulnerability_remaining > 0.0 else 1.0
+	match core_state():
+		&"sealed":
+			return SEALED_DAMAGE_MULTIPLIER
+		&"open":
+			return OPEN_DAMAGE_MULTIPLIER
+		_:
+			return STABLE_DAMAGE_MULTIPLIER
+
+
+func core_state() -> StringName:
+	if objective_locked:
+		return &"sealed"
+	if vulnerability_remaining > 0.0:
+		return &"open"
+	return &"stable"
 
 
 func try_advance_phase(health: float, max_health: float) -> Dictionary:
-	if phase >= 3 or objective_locked:
+	if phase >= 3:
 		return {}
 	var floor_health := max_health * Catalog.phase_floor(phase)
 	if health > floor_health + 0.001:
@@ -144,6 +167,7 @@ func register_module_defeat(module_id: String) -> Dictionary:
 		_objective_successes += 1
 		_vulnerability_windows += 1
 		_active_index = -1
+		_queue_state_hint("BOSS_EXAM_CORE_OPEN")
 		return {
 			"resolved":true,
 			"vulnerability":vulnerability_remaining,
@@ -198,6 +222,16 @@ func variant() -> StringName:
 	return StringName(_definition.get("variant", &"colossus"))
 
 
+func take_state_entry_hint() -> String:
+	var result := _pending_hint_key
+	if result.is_empty():
+		return ""
+	_pending_hint_key = ""
+	_last_hint_key = result
+	_last_hint_elapsed = 0.0
+	return result
+
+
 func note_adds_spawned(count: int, live_count: int) -> void:
 	_adds_spawned += maxi(0, count)
 	_maximum_live_adds = maxi(_maximum_live_adds, maxi(0, live_count))
@@ -212,6 +246,8 @@ func snapshot() -> Dictionary:
 		"phase_skip_count":_phase_skip_count,
 		"objective_id":objective_id(),
 		"objective_locked":objective_locked,
+		"core_state":core_state(),
+		"core_damage_multiplier":boss_damage_multiplier(),
 		"module_count":_module_ids.size(),
 		"active_module_ids":Array(active_module_ids()),
 		"vulnerability_remaining":vulnerability_remaining,
@@ -241,3 +277,13 @@ func _next_unresolved_index() -> int:
 		if not bool(_destroyed_modules.get(_module_ids[index], false)):
 			return index
 	return -1
+
+
+func _queue_state_hint(hint_key: String) -> void:
+	if hint_key.is_empty():
+		return
+	if hint_key == _pending_hint_key:
+		return
+	if hint_key == _last_hint_key and _last_hint_elapsed < HINT_REPEAT_COOLDOWN:
+		return
+	_pending_hint_key = hint_key

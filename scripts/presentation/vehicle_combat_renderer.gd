@@ -8,11 +8,14 @@ const Visuals = preload("res://scripts/presentation/vehicle_combat_visual_librar
 const ActorCatalog = preload(
 	"res://scripts/presentation/components/vehicle_actor_visual_catalog.gd"
 )
-const WorldCatalog = preload(
-	"res://scripts/presentation/components/vehicle_world_visual_catalog.gd"
+const AssetProvider = preload(
+	"res://scripts/presentation/components/vehicle_semantic_asset_provider.gd"
 )
-const RewardFacilityRecipes = preload(
-	"res://scripts/presentation/components/vehicle_reward_facility_visual_recipes.gd"
+const SecondaryCatalog = preload(
+	"res://scripts/presentation/components/vehicle_secondary_visual_catalog.gd"
+)
+const DefenseCatalog = preload(
+	"res://scripts/presentation/components/vehicle_defense_visual_catalog.gd"
 )
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd")
@@ -31,9 +34,24 @@ const BUFFER_FLOATS_PER_INSTANCE := 12
 const CUSTOM_BATCH_AABB := AABB(Vector3(-8192.0, -8192.0, -1.0), Vector3(16384.0, 16384.0, 2.0))
 const MAX_ORDINARY_HEALTH_BARS := 12
 const MAX_EXTRA_PRIORITY_MARKERS := 8
-const ENEMY_BATCH_INITIAL_CAPACITY := 96
-const PROJECTILE_BATCH_INITIAL_CAPACITY := 96
-const EXPERIENCE_BATCH_INITIAL_CAPACITY := 64
+const ENEMY_BATCH_INITIAL_CAPACITY := 64
+const PROJECTILE_BATCH_INITIAL_CAPACITY := 120
+const EXPERIENCE_BATCH_INITIAL_CAPACITY := 32
+const SEMANTIC_TEXTURE_DRAW_CAPACITY := 512
+const FLOATING_DAMAGE_DRAW_CAPACITY := 32
+const CARDINAL_DIRECTIONS := [
+	Vector2.LEFT,
+	Vector2.RIGHT,
+	Vector2.UP,
+	Vector2.DOWN,
+]
+const TARGET_BRACKET_CORNERS := [
+	Vector2(-1.0, -1.0),
+	Vector2(1.0, -1.0),
+	Vector2(1.0, 1.0),
+	Vector2(-1.0, 1.0),
+]
+const ION_RADII := [120.0, 140.0, 160.0]
 class BatchBuffer:
 	var values := PackedFloat32Array()
 
@@ -127,27 +145,68 @@ class BatchHandle:
 		return true
 
 
+class SemanticTextureDraw:
+	var asset_id: StringName = &""
+	var position := Vector2.ZERO
+	var angle := 0.0
+	var radius := 0.0
+	var modulate := Color.WHITE
+
+
+class SemanticTextureSpec:
+	var texture: Texture2D
+	var canvas := Vector2.ONE
+	var pivot := Vector2.ZERO
+
+
+class FloatingDamageDraw:
+	var position := Vector2.ZERO
+	var text := ""
+	var color := Color.WHITE
+
+
 var _enemy_batches: Dictionary = {}
 var _boss_variant_batches: Dictionary = {}
-var _projectile_head_batches: Dictionary = {}
 var _projectile_trail_batches: Dictionary = {}
 var _experience_batches: Dictionary = {}
+var _status_batches: Dictionary = {}
 var _effect_batches: Dictionary = {}
 var _overlay_batches: Dictionary = {}
 var _batches: Array[BatchHandle] = []
 var _player_hull_batch: BatchHandle
 var _player_engine_batch: BatchHandle
-var _player_engine_flare_batch: BatchHandle
 var _player_primary_batch: BatchHandle
-var _player_secondary_batch: BatchHandle
 var _last_health_bar_count := 0
 var _last_priority_marker_count := 0
 var _last_tactic_module_count := 0
-var _support_field_glyph_draws: Array[Dictionary] = []
+var _support_field_asset_count := 0
+var _semantic_texture_draws: Array[SemanticTextureDraw] = []
+var _semantic_texture_draw_count := 0
+var _semantic_texture_specs: Dictionary = {}
+var _floating_damage_draws: Array[FloatingDamageDraw] = []
+var _floating_damage_draw_count := 0
+var _secondary_asset_ids: Dictionary = {}
+var _defense_asset_ids: Dictionary = {}
+var _player_rear_socket := Vector2(-0.84, 0.0)
+var _health_overlay_candidates: Array[EnemyState] = []
+var _health_overlay_scores := PackedInt64Array()
+var _health_overlay_candidate_count := 0
+var _priority_overlay_candidates: Array[EnemyState] = []
+var _priority_overlay_scores := PackedInt64Array()
+var _priority_overlay_candidate_count := 0
 
 
 func _ready() -> void:
 	z_index = -5
+	for _index in SEMANTIC_TEXTURE_DRAW_CAPACITY:
+		_semantic_texture_draws.append(SemanticTextureDraw.new())
+	for _index in FLOATING_DAMAGE_DRAW_CAPACITY:
+		_floating_damage_draws.append(FloatingDamageDraw.new())
+	_health_overlay_candidates.resize(MAX_ORDINARY_HEALTH_BARS)
+	_health_overlay_scores.resize(MAX_ORDINARY_HEALTH_BARS)
+	_priority_overlay_candidates.resize(MAX_EXTRA_PRIORITY_MARKERS)
+	_priority_overlay_scores.resize(MAX_EXTRA_PRIORITY_MARKERS)
+	_cache_catalog_asset_ids()
 	_build_batches()
 
 
@@ -165,9 +224,10 @@ func sync(
 	presentation: Dictionary = {}
 ) -> void:
 	_reset_counts()
-	_support_field_glyph_draws.clear()
+	_support_field_asset_count = 0
+	_semantic_texture_draw_count = 0
+	_floating_damage_draw_count = 0
 	if active:
-		_sync_attack_telegraphs(enemies, visible_world)
 		_sync_enemies(
 			enemies, visible_world, player_position, run_time, aim_target_id
 		)
@@ -181,25 +241,10 @@ func sync(
 
 
 func _draw() -> void:
-	for glyph in _support_field_glyph_draws:
-		var accent := Color(glyph["color"])
-		RewardFacilityRecipes.draw_recipe(
-			self,
-			StringName(glyph["recipe"]),
-			Vector2(glyph["center"]),
-			float(glyph["scale"]),
-			{
-				&"accent":accent,
-				&"perimeter":Color(Art.SPACE_BLACK, accent.a),
-				&"main_mass":accent,
-				&"secondary_mass":Color(
-					accent.lerp(Art.SPACE_BLACK, 0.28),
-					accent.a
-				),
-				&"function_inset":Color(Art.WORLD_CANVAS, accent.a),
-				&"hard_highlight":Color(Art.TEXT_PRIMARY, accent.a),
-			}
-		)
+	for index in _semantic_texture_draw_count:
+		_draw_semantic_texture(_semantic_texture_draws[index])
+	for index in _floating_damage_draw_count:
+		_draw_floating_damage(_floating_damage_draws[index])
 
 
 static func player_engine_sockets(
@@ -215,7 +260,7 @@ static func player_engine_sockets(
 	var descriptor := ActorCatalog.descriptor(&"player")
 	var normalized_sockets: Array = descriptor.get(
 		"rear_sockets",
-		[Vector2(-0.58, -0.43), Vector2(-0.58, 0.43)]
+		[Vector2(-0.84, 0.0)]
 	)
 	var result: Array[Vector2] = []
 	for socket_variant in normalized_sockets:
@@ -228,15 +273,36 @@ static func player_engine_sockets(
 	return result
 
 
+func _player_engine_socket(
+	player_position: Vector2,
+	hull_direction: Vector2
+) -> Vector2:
+	var normalized := (
+		hull_direction.normalized()
+		if not hull_direction.is_zero_approx()
+		else Vector2.RIGHT
+	)
+	var lateral := normalized.rotated(PI * 0.5)
+	return (
+		player_position
+		+ normalized * _player_rear_socket.x * Art.PLAYER_VISUAL_RADIUS
+		+ lateral * _player_rear_socket.y * Art.PLAYER_VISUAL_RADIUS
+	)
+
+
 func debug_snapshot() -> Dictionary:
 	var visible := 0
 	var allocated := 0
 	var maximum := 0
 	var batch_counts := {}
+	var batch_allocations := {}
 	for batch in _batches:
 		visible += batch.count
 		allocated += batch.instance.multimesh.instance_count
 		maximum += batch.max_capacity
+		batch_allocations[batch.instance.name] = (
+			batch.instance.multimesh.instance_count
+		)
 		if batch.count > 0:
 			batch_counts[batch.instance.name] = batch.count
 	return {
@@ -245,12 +311,15 @@ func debug_snapshot() -> Dictionary:
 		"allocated_instances":allocated,
 		"maximum_instances":maximum,
 		"batch_counts": batch_counts,
+		"batch_allocations":batch_allocations,
 		"enemy_capacity": ENEMY_CAPACITY,
 		"status_arc_capacity": STATUS_ARC_CAPACITY,
 		"health_bar_count": _last_health_bar_count,
 		"priority_marker_count": _last_priority_marker_count,
 		"tactic_module_count": _last_tactic_module_count,
-		"support_field_glyph_count":_support_field_glyph_draws.size(),
+		"support_field_glyph_count":_support_field_asset_count,
+		"semantic_texture_draw_count":_semantic_texture_draw_count,
+		"semantic_texture_draw_capacity":SEMANTIC_TEXTURE_DRAW_CAPACITY,
 	}
 
 
@@ -258,73 +327,59 @@ func _build_batches() -> void:
 	for archetype in Visuals.ENEMY_ARCHETYPES:
 		if archetype == &"stage_boss":
 			continue
-		_enemy_batches[archetype] = _create_batch(
+		_enemy_batches[archetype] = _create_asset_batch(
 			"Enemy_%s" % String(archetype),
-			Visuals.enemy_mesh(archetype),
+			StringName("actor/%s" % archetype),
 			ENEMY_CAPACITY,
 			0,
 			archetype,
-			ENEMY_BATCH_INITIAL_CAPACITY
+			ENEMY_BATCH_INITIAL_CAPACITY,
+			true
 		)
 	for variant in [&"colossus", &"leviathan", &"titan", &"behemoth", &"crown"]:
-		_boss_variant_batches[variant] = _create_batch(
+		_boss_variant_batches[variant] = _create_asset_batch(
 			"Boss_%s" % String(variant),
-			Visuals.boss_mesh(variant),
+			StringName("boss/%s" % variant),
 			1,
 			0,
-			StringName("boss_%s" % String(variant))
+			StringName("boss_%s" % String(variant)),
+			-1,
+			true
 		)
-	for team in [&"player", &"enemy"]:
-		var capacity := (
-			PROJECTILE_CAPACITY
-			if team == &"player"
-			else HOSTILE_PROJECTILE_CAPACITY
+	var player_projectile_batches := {}
+	for visual_id in [&"primary", &"opening_breach", &"seeker"]:
+		var asset_suffix := (
+			"player_primary"
+			if visual_id == &"primary"
+			else "player_%s" % visual_id
 		)
-		var affinity_batches := {}
-		var rendered_affinities: Array[StringName] = []
-		if team == &"player":
-			rendered_affinities.append(AttackContract.KINETIC)
-		else:
-			rendered_affinities.append_array(AttackContract.AFFINITIES)
-		for affinity in rendered_affinities:
-			if affinity == AttackContract.SUPPORT:
-				continue
-			affinity_batches[affinity] = _create_batch(
-				"Projectile_trail_%s_%s" % [String(team), String(affinity)],
-				(
-					Visuals.projectile_trail_mesh(affinity)
-					if team == &"player"
-					else Visuals.hostile_projectile_envelope_mesh(affinity)
-				),
-				capacity,
-				1,
-				StringName("projectile_trail_%s_%s" % [String(team), String(affinity)]),
-				PROJECTILE_BATCH_INITIAL_CAPACITY
-			)
-		_projectile_trail_batches[team] = affinity_batches
-		if team == &"player":
-			_projectile_head_batches[team] = _create_batch(
-				"Projectile_head_%s" % String(team),
-				Visuals.player_projectile_head_mesh(),
-				capacity,
-				2,
-				StringName("projectile_head_%s" % String(team)),
-				PROJECTILE_BATCH_INITIAL_CAPACITY
-			)
-		else:
-			_projectile_head_batches[team] = _create_batch(
-				"Projectile_core_enemy",
-				Visuals.hostile_projectile_core_mesh(),
-				capacity,
-				2,
-				&"projectile_core_enemy",
-				PROJECTILE_BATCH_INITIAL_CAPACITY
-			)
+		player_projectile_batches[visual_id] = _create_asset_batch(
+			"Projectile_player_%s" % visual_id,
+			StringName("projectile/%s" % asset_suffix),
+			PROJECTILE_CAPACITY,
+			2,
+			StringName("projectile_player_%s" % visual_id),
+			PROJECTILE_BATCH_INITIAL_CAPACITY
+		)
+	_projectile_trail_batches[&"player"] = player_projectile_batches
+	var hostile_projectile_batches := {}
+	for affinity in AttackContract.AFFINITIES:
+		if affinity == AttackContract.SUPPORT:
+			continue
+		hostile_projectile_batches[affinity] = _create_asset_batch(
+			"Projectile_enemy_%s" % affinity,
+			StringName("projectile/hostile_%s" % affinity),
+			HOSTILE_PROJECTILE_CAPACITY,
+			2,
+			StringName("projectile_enemy_%s" % affinity),
+			PROJECTILE_BATCH_INITIAL_CAPACITY
+		)
+	_projectile_trail_batches[&"enemy"] = hostile_projectile_batches
 	for kind in [&"small", &"medium", &"large"]:
 		var family := StringName("experience_%s" % String(kind))
-		_experience_batches[kind] = _create_batch(
+		_experience_batches[kind] = _create_asset_batch(
 			"Experience_%s" % String(kind),
-			Visuals.experience_mesh(kind),
+			StringName("pickup/%s" % family),
 			EXPERIENCE_CAPACITY,
 			-1,
 			family,
@@ -340,7 +395,7 @@ func _build_batches() -> void:
 	)
 	_overlay_batches[&"ring"] = _create_batch(
 		"Overlay_ring", Visuals.effect_mesh(&"ring"), 1024, 3, &"overlay_ring",
-		384
+		64
 	)
 	_overlay_batches[&"shield"] = _overlay_batches[&"ring"]
 	_overlay_batches[&"danger_ring"] = _create_batch(
@@ -349,18 +404,18 @@ func _build_batches() -> void:
 		256,
 		3,
 		&"overlay_danger_ring",
-		64
+		32
 	)
 	_overlay_batches[&"beam"] = _create_batch(
 		"Overlay_beam", Visuals.effect_mesh(&"beam"), 1024, 3, &"overlay_beam",
-		256
+		128
 	)
 	_overlay_batches[&"disk"] = _create_batch(
 		"Overlay_disk", Visuals.disk_mesh(), 96, 1, &"overlay_disk"
 	)
 	_overlay_batches[&"diamond"] = _create_batch(
 		"Overlay_diamond", Visuals.effect_mesh(&"diamond"), 640, 4, &"overlay_diamond",
-		96
+		48
 	)
 	_effect_batches[&"ring"] = _overlay_batches[&"ring"]
 	_effect_batches[&"beam"] = _overlay_batches[&"beam"]
@@ -373,51 +428,48 @@ func _build_batches() -> void:
 		&"effect_afterimage",
 		16
 	)
-	_player_engine_flare_batch = _create_batch(
-		"Player_engine_flare",
-		Visuals.player_engine_flare_mesh(),
-		4,
-		3,
-		&"player_engine_flare"
-	)
-	_player_engine_batch = _create_batch(
+	_player_engine_batch = _create_asset_batch(
 		"Player_engine",
-		Visuals.player_engine_mesh(),
+		&"attachment/player_engine",
 		4,
 		4,
-		&"player_engine"
+		&"player_engine",
+		-1,
+		true
 	)
-	_player_hull_batch = _create_batch(
+	_player_hull_batch = _create_asset_batch(
 		"Player_hull",
-		Visuals.player_hull_mesh(),
+		&"attachment/player_hull",
 		1,
 		5,
-		&"player_hull"
+		&"player_hull",
+		-1,
+		true
 	)
-	_player_primary_batch = _create_batch(
+	_player_primary_batch = _create_asset_batch(
 		"Player_primary_mount",
-		Visuals.player_primary_mesh(),
+		&"attachment/player_aim_mount",
 		1,
 		6,
-		&"player_primary_mount"
+		&"player_primary_mount",
+		-1,
+		true
 	)
-	_player_secondary_batch = _create_batch(
-		"Player_secondary",
-		Visuals.player_secondary_core_mesh(),
-		8,
-		6,
-		&"player_secondary"
-	)
-	_overlay_batches[&"status_arc"] = _create_batch(
-		"Overlay_status_arc", Visuals.status_arc_mesh(),
-		STATUS_ARC_CAPACITY, 3, &"overlay_status_arc"
-	)
+	for status_id in [&"burn", &"poison", &"chill"]:
+		_status_batches[status_id] = _create_asset_batch(
+			"Status_%s" % status_id,
+			StringName("state/%s" % status_id),
+			ENEMY_CAPACITY,
+			3,
+			StringName("status_%s" % status_id)
+		)
 	_overlay_batches[&"support_timer_segment"] = _create_batch(
 		"Overlay_support_timer_segment",
 		Visuals.support_timer_segment_mesh(),
 		96,
 		3,
-		&"overlay_support_timer_segment"
+		&"overlay_support_timer_segment",
+		64
 	)
 	_reset_counts()
 	_apply_visible_counts()
@@ -429,7 +481,9 @@ func _create_batch(
 	capacity: int,
 	child_z: int,
 	_buffer_key: StringName,
-	initial_capacity: int = -1
+	initial_capacity: int = -1,
+	texture: Texture2D = null,
+	material: Material = null
 ) -> BatchHandle:
 	var allocated_capacity := (
 		capacity
@@ -447,6 +501,8 @@ func _create_batch(
 	instance.name = batch_name
 	instance.z_index = child_z
 	instance.multimesh = multi_mesh
+	instance.texture = texture
+	instance.material = material
 	add_child(instance)
 	var handle := BatchHandle.new(
 		instance,
@@ -457,6 +513,48 @@ func _create_batch(
 	return handle
 
 
+func _create_asset_batch(
+	batch_name: String,
+	asset_id: StringName,
+	capacity: int,
+	child_z: int,
+	buffer_key: StringName,
+	initial_capacity: int = -1,
+	_outlined: bool = false
+) -> BatchHandle:
+	var mesh := AssetProvider.normalized_mesh(asset_id)
+	var texture := AssetProvider.texture(asset_id)
+	assert(mesh != null, "Missing semantic mesh: %s" % asset_id)
+	assert(texture != null, "Missing semantic texture: %s" % asset_id)
+	return _create_batch(
+		batch_name,
+		mesh,
+		capacity,
+		child_z,
+		buffer_key,
+		initial_capacity,
+		texture
+	)
+
+
+func _cache_catalog_asset_ids() -> void:
+	var player_descriptor := ActorCatalog.descriptor(&"player")
+	var sockets: Array = player_descriptor.get(
+		"rear_sockets",
+		[_player_rear_socket]
+	)
+	if not sockets.is_empty():
+		_player_rear_socket = Vector2(sockets[0])
+	for visual_id in SecondaryCatalog.descriptor_ids():
+		_secondary_asset_ids[visual_id] = StringName(
+			SecondaryCatalog.descriptor(visual_id).get("asset", &"")
+		)
+	for visual_id in DefenseCatalog.descriptor_ids():
+		_defense_asset_ids[visual_id] = StringName(
+			DefenseCatalog.descriptor(visual_id).get("asset", &"")
+		)
+
+
 func _sync_enemies(
 	enemies: Array[EnemyState],
 	visible_world: Rect2,
@@ -464,40 +562,91 @@ func _sync_enemies(
 	run_time: float,
 	aim_target_id: String
 ) -> void:
-	var budgets := _enemy_overlay_budgets(
-		enemies, visible_world, player_position, aim_target_id
-	)
-	var health_ids: Dictionary = budgets["health"]
-	var priority_ids: Dictionary = budgets["priority"]
+	_health_overlay_candidate_count = 0
+	_priority_overlay_candidate_count = 0
 	for enemy in enemies:
 		if not enemy.alive or not enemy.active:
 			continue
+		_sync_enemy_attack_telegraphs(enemy, visible_world)
 		var position := enemy.pos
-		if not visible_world.has_point(position):
+		var radius := enemy.visual_radius
+		if not visible_world.grow(radius).has_point(position):
 			continue
 		var role := enemy.role
 		var archetype := enemy.archetype
+		var angle := _enemy_angle(
+			archetype,
+			enemy,
+			player_position,
+			run_time
+		)
+		if role == &"boss_pylon":
+			_queue_semantic_texture(
+				_boss_module_asset_id(enemy),
+				position,
+				angle,
+				radius,
+				(
+					Color.WHITE
+					if enemy.boss_module_state == &"active"
+					else Color(0.52, 0.58, 0.66, 0.56)
+				)
+			)
 		var batch: BatchHandle = (
 			_boss_variant_batches.get(enemy.boss_variant)
 			if archetype == &"stage_boss"
 			else _enemy_batches.get(archetype)
 		)
-		if batch == null:
+		if batch == null and role != &"boss_pylon":
 			continue
-		var angle := _enemy_angle(archetype, enemy, player_position, run_time)
-		var radius := enemy.visual_radius
-		var color := Art.IVORY_BRIGHT if enemy.flash > 0.0 else Visuals.enemy_color(role)
-		_write_instance(
-			batch,
-			position,
-			angle,
-			Vector2.ONE * radius,
-			color
-		)
+		if role != &"boss_pylon":
+			var color := (
+				Color(1.0, 0.66, 0.66, 1.0)
+				if enemy.flash > 0.0
+				else (
+					Color(0.72, 1.0, 0.88, 1.0)
+					if enemy.shielded
+					else (
+						Color(0.82, 0.90, 1.0, 1.0)
+						if enemy.guard_plate_structure > 0.0
+						else Color.WHITE
+					)
+				)
+			)
+			_write_instance(
+				batch,
+				position,
+				angle,
+				Vector2.ONE * radius,
+				color
+			)
+		if (
+			role != &"stage_boss"
+			and (
+				enemy.health_class == &"priority"
+				or enemy.id == aim_target_id
+				or enemy.health_visible_timer > 0.0
+				or enemy.phase in [&"startup", &"active"]
+			)
+		):
+			_health_overlay_candidate_count = _offer_overlay_candidate(
+				enemy,
+				_enemy_overlay_score(enemy, player_position, aim_target_id),
+				_health_overlay_candidates,
+				_health_overlay_scores,
+				_health_overlay_candidate_count,
+				MAX_ORDINARY_HEALTH_BARS
+			)
+		if enemy.health_class == &"priority":
+			_priority_overlay_candidate_count = _offer_overlay_candidate(
+				enemy,
+				_enemy_overlay_score(enemy, player_position, aim_target_id),
+				_priority_overlay_candidates,
+				_priority_overlay_scores,
+				_priority_overlay_candidate_count,
+				MAX_EXTRA_PRIORITY_MARKERS
+			)
 		_sync_collective_tactic_module(enemy, position, radius)
-		_sync_enemy_priority_marker(
-			enemy, position, radius, priority_ids.has(enemy.id)
-		)
 		if enemy.threat_kind == &"ranged" and enemy.phase == &"startup":
 			_write_instance(
 				_overlay_batches[&"diamond"],
@@ -506,32 +655,31 @@ func _sync_enemies(
 				Vector2(13.0, 10.0),
 				Art.MUSTARD
 			)
-		if enemy.shielded:
-			_write_instance(
-				_overlay_batches[&"shield"], position, 0.0,
-				Vector2.ONE * (radius + 14.0), Color(Art.MINT, 0.76)
-			)
-		if health_ids.has(enemy.id):
-			var health_ratio := clampf(
-				enemy.health / maxf(0.001, enemy.max_health), 0.0, 1.0
-			)
-			var bar_width := radius * 1.6
-			var bar_position := position + Vector2(0.0, radius + 14.0)
-			_write_instance(
-				_overlay_batches[&"health"], bar_position,
-				0.0, Vector2(bar_width, 10.0), Art.IVORY_SHADE
-			)
-			_write_instance(
-				_overlay_batches[&"health"],
-				bar_position + Vector2(
-					-bar_width * (1.0 - health_ratio) * 0.5, 0.0
-				),
-				0.0, Vector2(bar_width * health_ratio, 10.0), Art.CORAL
+		var shield_source_asset := _enemy_shield_asset_id(enemy)
+		if shield_source_asset != &"":
+			_queue_semantic_texture(
+				shield_source_asset,
+				position,
+				angle,
+				radius + 7.0,
+				Color(1.0, 1.0, 1.0, 0.90)
 			)
 		_sync_status_arcs(enemy, position, radius)
 		_sync_enemy_semantic_overlays(enemy, position, radius, angle)
 		if enemy.id == aim_target_id:
 			_sync_target_brackets(position, radius + 16.0)
+	for index in _health_overlay_candidate_count:
+		_sync_enemy_health_bar(_health_overlay_candidates[index])
+	for index in _priority_overlay_candidate_count:
+		var enemy := _priority_overlay_candidates[index]
+		_sync_enemy_priority_marker(
+			enemy,
+			enemy.pos,
+			enemy.visual_radius,
+			true
+		)
+	_last_health_bar_count = _health_overlay_candidate_count
+	_last_priority_marker_count = _priority_overlay_candidate_count
 
 
 func _sync_collective_tactic_module(
@@ -600,64 +748,10 @@ func _sync_collective_tactic_module(
 				Art.INK
 			)
 			_last_tactic_module_count += 1
-func _enemy_overlay_budgets(
-	enemies: Array[EnemyState],
-	visible_world: Rect2,
-	player_position: Vector2,
-	aim_target_id: String
-) -> Dictionary:
-	var health_scores := PackedInt64Array()
-	var priority_scores := PackedInt64Array()
-	var health_by_score: Dictionary = {}
-	var priority_by_score: Dictionary = {}
-	for enemy in enemies:
-		if (
-			enemy == null
-			or not enemy.alive
-			or not enemy.active
-			or not visible_world.has_point(enemy.pos)
-		):
-			continue
-		if (
-			enemy.role != &"stage_boss"
-			and (
-				enemy.health_class == &"priority"
-				or enemy.id == aim_target_id
-				or enemy.health_visible_timer > 0.0
-				or enemy.phase in [&"startup", &"active"]
-			)
-		):
-			var health_score := _unique_overlay_score(
-				enemy, player_position, aim_target_id, health_by_score
-			)
-			health_scores.append(health_score)
-			health_by_score[health_score] = enemy
-		if enemy.health_class == &"priority":
-			var priority_score := _unique_overlay_score(
-				enemy, player_position, aim_target_id, priority_by_score
-			)
-			priority_scores.append(priority_score)
-			priority_by_score[priority_score] = enemy
-	health_scores.sort()
-	priority_scores.sort()
-	var health_ids := {}
-	var priority_ids := {}
-	for index in mini(MAX_ORDINARY_HEALTH_BARS, health_scores.size()):
-		var candidate: EnemyState = health_by_score[health_scores[index]]
-		health_ids[candidate.id] = true
-	for index in mini(MAX_EXTRA_PRIORITY_MARKERS, priority_scores.size()):
-		var candidate: EnemyState = priority_by_score[priority_scores[index]]
-		priority_ids[candidate.id] = true
-	_last_health_bar_count = health_ids.size()
-	_last_priority_marker_count = priority_ids.size()
-	return {"health": health_ids, "priority": priority_ids}
-
-
-func _unique_overlay_score(
+func _enemy_overlay_score(
 	enemy: EnemyState,
 	player_position: Vector2,
-	aim_target_id: String,
-	occupied: Dictionary
+	aim_target_id: String
 ) -> int:
 	var distance_key := mini(
 		99999999,
@@ -666,11 +760,63 @@ func _unique_overlay_score(
 	var score := (
 		_enemy_overlay_rank(enemy, aim_target_id) * 1000000000000
 		+ distance_key * 10000
-		+ (enemy.id.hash() & 0x1fff)
+		+ clampi(enemy.runtime_slot, 0, 9999)
 	)
-	while occupied.has(score):
-		score += 1
 	return score
+
+
+func _offer_overlay_candidate(
+	enemy: EnemyState,
+	score: int,
+	candidates: Array[EnemyState],
+	scores: PackedInt64Array,
+	count: int,
+	capacity: int
+) -> int:
+	var insert_at := count
+	for index in count:
+		if score < scores[index]:
+			insert_at = index
+			break
+	if insert_at >= capacity:
+		return count
+	var next_count := mini(capacity, count + 1)
+	for index in range(next_count - 1, insert_at, -1):
+		candidates[index] = candidates[index - 1]
+		scores[index] = scores[index - 1]
+	candidates[insert_at] = enemy
+	scores[insert_at] = score
+	return next_count
+
+
+func _sync_enemy_health_bar(enemy: EnemyState) -> void:
+	if enemy == null:
+		return
+	var radius := enemy.visual_radius
+	var health_ratio := clampf(
+		enemy.health / maxf(0.001, enemy.max_health),
+		0.0,
+		1.0
+	)
+	var bar_width := radius * 1.6
+	var bar_position := enemy.pos + Vector2(0.0, radius + 14.0)
+	_write_instance(
+		_overlay_batches[&"health"],
+		bar_position,
+		0.0,
+		Vector2(bar_width, 10.0),
+		Art.IVORY_SHADE
+	)
+	_write_instance(
+		_overlay_batches[&"health"],
+		bar_position + Vector2(
+			-bar_width * (1.0 - health_ratio) * 0.5,
+			0.0
+		),
+		0.0,
+		Vector2(bar_width * health_ratio, 10.0),
+		Art.CORAL
+	)
 
 
 func _enemy_overlay_rank(enemy: EnemyState, aim_target_id: String) -> int:
@@ -723,42 +869,30 @@ func _sync_enemy_semantic_overlays(
 		return
 	if enemy.role == &"stage_boss":
 		_sync_boss_core_overlay(enemy, position, radius)
-	if enemy.guard_plate_structure > 0.0:
-		for sign_value in [-1.0, 1.0]:
-			_write_instance_basis(
-				_overlay_batches[&"beam"],
-				position + forward * radius * 0.58 + side * sign_value * radius * 0.48,
-				side,
-				Vector2(radius * 0.48, 9.0),
-				Art.IVORY_BRIGHT
-			)
 	if enemy.elite_trait == &"armored" and enemy.armor_structure > 0.0:
-		for sign_value in [-1.0, 1.0]:
-			_write_instance_basis(
-				_overlay_batches[&"beam"],
-				position + side * sign_value * radius * 0.72,
-				forward,
-				Vector2(radius * 0.58, 10.0),
-				Art.IVORY_BRIGHT
-			)
+		_write_instance_basis(
+			_overlay_batches[&"beam"],
+			position,
+			forward,
+			Vector2(radius * 1.08, 10.0),
+			Art.IVORY_BRIGHT
+		)
 	elif enemy.elite_trait == &"overclocked":
-		for sign_value in [-1.0, 1.0]:
-			_write_instance_basis(
-				_overlay_batches[&"diamond"],
-				position - forward * radius * 0.70 + side * sign_value * radius * 0.62,
-				forward,
-				Vector2(radius * 0.42, radius * 0.22),
-				Art.MUSTARD
-			)
+		_write_instance_basis(
+			_overlay_batches[&"diamond"],
+			position - forward * radius * 0.70,
+			forward,
+			Vector2(radius * 0.54, radius * 0.28),
+			Art.MUSTARD
+		)
 	elif enemy.elite_trait == &"heavy":
-		for sign_value in [-1.0, 1.0]:
-			_write_instance_basis(
-				_overlay_batches[&"beam"],
-				position + forward * sign_value * radius * 0.52,
-				side,
-				Vector2(radius * 0.46, 9.0),
-				Art.TEXT_PRIMARY
-			)
+		_write_instance_basis(
+			_overlay_batches[&"beam"],
+			position,
+			side,
+			Vector2(radius * 0.92, 9.0),
+			Art.TEXT_PRIMARY
+		)
 	if enemy.role != &"mine":
 		return
 	var mobile := enemy.archetype == &"spark_minelet"
@@ -915,21 +1049,31 @@ func _sync_boss_module_overlay(
 
 func _sync_status_arcs(enemy: EnemyState, position: Vector2, radius: float) -> void:
 	var statuses := enemy.statuses
-	var arc_radius := radius + 11.0
+	var icon_distance := radius + 17.0
+	var icon_radius := 11.0
 	if statuses.has(&"burn"):
 		_write_instance(
-			_overlay_batches[&"status_arc"], position, deg_to_rad(-120.0),
-			Vector2.ONE * arc_radius, Art.CORAL
+			_status_batches[&"burn"],
+			position + Vector2.RIGHT.rotated(deg_to_rad(-120.0)) * icon_distance,
+			deg_to_rad(-120.0),
+			Vector2.ONE * icon_radius,
+			Color.WHITE
 		)
 	if statuses.has(&"poison"):
 		_write_instance(
-			_overlay_batches[&"status_arc"], position, 0.0,
-			Vector2.ONE * arc_radius, Art.MINT
+			_status_batches[&"poison"],
+			position + Vector2.RIGHT * icon_distance,
+			0.0,
+			Vector2.ONE * icon_radius,
+			Color.WHITE
 		)
 	if statuses.has(&"chill"):
 		_write_instance(
-			_overlay_batches[&"status_arc"], position, deg_to_rad(120.0),
-			Vector2.ONE * arc_radius, Art.COBALT_ENERGY
+			_status_batches[&"chill"],
+			position + Vector2.RIGHT.rotated(deg_to_rad(120.0)) * icon_distance,
+			deg_to_rad(120.0),
+			Vector2.ONE * icon_radius,
+			Color.WHITE
 		)
 
 
@@ -941,8 +1085,6 @@ func _sync_projectiles(
 	var hostile := team == &"enemy"
 	for projectile in projectiles:
 		var position := projectile.pos
-		if not visible_world.has_point(position):
-			continue
 		var affinity := AttackContract.normalize_affinity(projectile.affinity)
 		if affinity == AttackContract.SUPPORT:
 			affinity = AttackContract.KINETIC
@@ -951,84 +1093,82 @@ func _sync_projectiles(
 		var direction := projectile.velocity.normalized()
 		if direction.is_zero_approx():
 			direction = Vector2.RIGHT
-		var affinity_batches: Dictionary = _projectile_trail_batches[team]
-		var trail_batch: BatchHandle = affinity_batches[render_affinity]
-		var color := Art.attack_color(affinity) if hostile else Art.MUSTARD
+		var projectile_batches: Dictionary = _projectile_trail_batches[team]
 		if hostile:
-			_write_instance_basis(
-				trail_batch,
-				position,
-				direction,
-				Vector2.ONE * (
-					radius * Art.HOSTILE_PROJECTILE_ENVELOPE_SCALE
-				),
-				Color(color, 0.72)
+			var hostile_visual_radius := (
+				radius * Art.HOSTILE_PROJECTILE_ENVELOPE_SCALE
 			)
-			# The bright core ends at the collision boundary. Everything in
-			# the larger affinity envelope is presentation-only.
+			if not visible_world.grow(hostile_visual_radius).has_point(position):
+				continue
 			_write_instance_basis(
-				_projectile_head_batches[team],
+				projectile_batches[render_affinity],
 				position,
 				direction,
-				Vector2.ONE * radius,
+				Vector2.ONE * hostile_visual_radius,
 				Color.WHITE
 			)
 			continue
-		var trail_length := (
-			47.0 + maxf(0.0, radius - 7.0) * 3.0
+		var visual_id := (
+			&"seeker"
+			if projectile.homing or projectile.owner == "passive_seeker"
+			else (&"opening_breach" if projectile.wall_piercing else &"primary")
 		)
-		var trail_offset := trail_length * 0.5 - radius
-		var trail_width := radius * 1.5
-		_write_instance_basis(
-			trail_batch,
-			position - direction * trail_offset,
-			direction,
-			Vector2(trail_length, trail_width),
-			Color(color, 0.50)
+		var visual_radius := radius * (
+			5.8 if visual_id == &"opening_breach" else (
+				5.0 if visual_id == &"seeker" else 5.6
+			)
 		)
+		if not visible_world.grow(visual_radius).has_point(position):
+			continue
 		_write_instance_basis(
-			_projectile_head_batches[team],
+			projectile_batches[visual_id],
 			position,
 			direction,
-			Vector2.ONE * radius,
+			Vector2.ONE * visual_radius,
 			Color.WHITE
 		)
 
 
-func _sync_attack_telegraphs(
-	enemies: Array[EnemyState],
+func _sync_enemy_attack_telegraphs(
+	enemy: EnemyState,
 	visible_world: Rect2
 ) -> void:
-	for enemy in enemies:
-		if not enemy.alive or not enemy.active:
+	var startup := enemy.phase in [&"startup", &"boss_startup"]
+	var active := enemy.phase in [&"active", &"boss_active"]
+	for telegraph in enemy.attack_telegraphs:
+		if not _telegraph_intersects_view(telegraph, visible_world):
 			continue
-		var startup := enemy.phase in [&"startup", &"boss_startup"]
-		var active := enemy.phase in [&"active", &"boss_active"]
-		for telegraph in enemy.attack_telegraphs:
-			if not _telegraph_intersects_view(telegraph, visible_world):
-				continue
-			var shape := StringName(telegraph.get("shape", &""))
-			if startup and shape == &"corridor":
-				_sync_corridor_telegraph(telegraph)
-			elif startup and shape == &"area":
-				_sync_area_telegraph(telegraph)
-			elif startup and shape == &"support":
-				_sync_support_telegraph(telegraph)
-			elif (
-				enemy.phase == &"boss_active"
-				and shape == &"area"
-			):
-				# Boss area damage can remain live for its authored active window.
-				# Keep the committed footprint visible until it is no longer harmful.
-				_sync_area_telegraph(telegraph)
-			elif (
-				active
-				and shape == &"corridor"
-				and float(telegraph.get("active_width", 0.0)) > 0.0
-			):
-				_sync_active_beam(telegraph)
-			if startup:
-				_sync_commit_marker(telegraph)
+		var shape := StringName(telegraph.get("shape", &""))
+		if startup and shape == &"corridor":
+			match StringName(telegraph.get("delivery", &"")):
+				&"projectile":
+					_sync_projectile_telegraph(telegraph)
+				&"charge":
+					_sync_charge_telegraph(telegraph)
+				&"beam":
+					_sync_corridor_telegraph(telegraph)
+				_:
+					_sync_corridor_telegraph(telegraph)
+		elif startup and shape == &"area":
+			_sync_area_telegraph(telegraph)
+		elif startup and shape == &"support":
+			_sync_support_telegraph(telegraph)
+		elif (
+			enemy.phase == &"boss_active"
+			and shape == &"area"
+		):
+			# Boss area damage can remain live for its authored active window.
+			# Keep the committed footprint visible until it is no longer harmful.
+			_sync_area_telegraph(telegraph)
+		elif (
+			active
+			and shape == &"corridor"
+			and StringName(telegraph.get("delivery", &"beam")) == &"beam"
+			and float(telegraph.get("active_width", 0.0)) > 0.0
+		):
+			_sync_active_beam(telegraph)
+		if startup:
+			_sync_commit_marker(telegraph)
 
 
 func _sync_commit_marker(telegraph: Dictionary) -> void:
@@ -1070,6 +1210,86 @@ func _telegraph_intersects_view(
 		var radius := maxf(0.0, float(telegraph.get("radius", 0.0)))
 		return visible_world.grow(radius).has_point(center)
 	return false
+
+
+func _sync_projectile_telegraph(telegraph: Dictionary) -> void:
+	var from := Vector2(telegraph["from"])
+	var to := Vector2(telegraph["to"])
+	var vector := to - from
+	var length := vector.length()
+	if length <= 0.001:
+		return
+	var direction := vector / length
+	var tangent := direction.rotated(PI * 0.5)
+	var half_width := maxf(1.0, float(telegraph["half_width"]))
+	var affinity := AttackContract.normalize_affinity(StringName(telegraph["affinity"]))
+	var readiness := clampf(float(telegraph.get("readiness", 1.0)), 0.0, 1.0)
+	var intensity := smoothstep(0.0, 1.0, readiness)
+	var color := Art.attack_warning_color(affinity, readiness)
+	var damage := float(telegraph.get("damage", 0.0))
+	var line_width := 4.0 if AttackContract.power_tier(damage) == &"heavy" else 3.0
+	var boundary_alpha := lerpf(0.42, 0.94, intensity)
+	var accent_alpha := lerpf(0.32, 0.82, intensity)
+	# A projectile startup is a short launch preview, not a full-lifetime lane.
+	# The muzzle bracket and cadence pips make volleys readable without filling
+	# the arena with overlapping capsule warnings.
+	_write_beam(from, to, line_width, Color(color, boundary_alpha))
+	_write_danger_ring(from, minf(half_width, 16.0), Color(color, boundary_alpha))
+	for progress in [0.34, 0.68]:
+		var pip := from + direction * length * float(progress)
+		_write_beam(
+			pip - tangent * minf(half_width * 0.42, 13.0),
+			pip + tangent * minf(half_width * 0.42, 13.0),
+			2.0,
+			Color(color, accent_alpha)
+		)
+	_write_diamond(to, minf(half_width * 0.42, 10.0), Color(color, accent_alpha))
+
+
+func _sync_charge_telegraph(telegraph: Dictionary) -> void:
+	var from := Vector2(telegraph["from"])
+	var to := Vector2(telegraph["to"])
+	var vector := to - from
+	var length := vector.length()
+	if length <= 0.001:
+		return
+	var direction := vector / length
+	var tangent := direction.rotated(PI * 0.5)
+	var half_width := maxf(1.0, float(telegraph["half_width"]))
+	var affinity := AttackContract.normalize_affinity(StringName(telegraph["affinity"]))
+	var readiness := clampf(float(telegraph.get("readiness", 1.0)), 0.0, 1.0)
+	var intensity := smoothstep(0.0, 1.0, readiness)
+	var color := Art.attack_warning_color(affinity, readiness)
+	var damage := float(telegraph.get("damage", 0.0))
+	var boundary_width := 4.0 if AttackContract.power_tier(damage) == &"heavy" else 3.0
+	var boundary_offset := maxf(0.0, half_width - boundary_width * 0.5)
+	var boundary_alpha := lerpf(0.38, 0.92, intensity)
+	var fill_alpha := lerpf(0.025, 0.085, intensity)
+	var accent_alpha := lerpf(0.30, 0.78, intensity)
+	_write_beam(from, to, half_width * 2.0, Color(color, fill_alpha))
+	_write_disk(from, half_width, Color(color, fill_alpha))
+	_write_disk(to, half_width, Color(color, fill_alpha))
+	_write_beam(
+		from + tangent * boundary_offset,
+		to + tangent * boundary_offset,
+		boundary_width,
+		Color(color, boundary_alpha)
+	)
+	_write_beam(
+		from - tangent * boundary_offset,
+		to - tangent * boundary_offset,
+		boundary_width,
+		Color(color, boundary_alpha)
+	)
+	_write_danger_ring(to, half_width, Color(color, boundary_alpha))
+	for offset in [-0.36, 0.0, 0.36]:
+		var endpoint := to + tangent * half_width * float(offset)
+		_write_beam(
+			endpoint - direction * minf(half_width * 0.46, 24.0),
+			endpoint,
+			3.0,
+			Color(color, accent_alpha)
+		)
 
 
 func _sync_corridor_telegraph(telegraph: Dictionary) -> void:
@@ -1187,24 +1407,75 @@ func _sync_support_telegraph(telegraph: Dictionary) -> void:
 func _sync_experience(shards: Array[ExperienceShard], visible_world: Rect2) -> void:
 	for shard in shards:
 		var position := shard.pos
-		if not visible_world.has_point(position):
-			continue
 		var value := shard.value
 		var kind := &"small" if value == 1 else (&"medium" if value <= 4 else &"large")
 		var radius := float(Art.EXPERIENCE_RADII[kind])
+		if not visible_world.grow(radius).has_point(position):
+			continue
 		var batch: BatchHandle = _experience_batches[kind]
-		_write_instance(batch, position, 0.0, Vector2.ONE * radius, Art.MUSTARD)
+		_write_instance(batch, position, 0.0, Vector2.ONE * radius, Color.WHITE)
 
 
 func _sync_effects(effects: Array[Dictionary], visible_world: Rect2) -> void:
 	for effect in effects:
 		var position := Vector2(effect["pos"])
-		if not visible_world.has_point(position):
-			continue
 		var duration := maxf(0.001, float(effect["duration"]))
 		var progress := 1.0 - clampf(float(effect["time"]) / duration, 0.0, 1.0)
 		var radius := float(effect["radius"])
+		if not visible_world.grow(radius).has_point(position):
+			continue
 		var kind := String(effect["kind"])
+		if kind == "boss_reduced_hit":
+			var direction := Vector2(effect.get("dir", Vector2.RIGHT)).normalized()
+			if direction.is_zero_approx():
+				direction = Vector2.RIGHT
+			var reduced_color := Color(effect["color"])
+			_write_beam(
+				position - direction * radius * 0.88,
+				position - direction * radius * 0.18,
+				4.0,
+				Color(reduced_color, 0.92 * (1.0 - progress))
+			)
+			_write_danger_ring(
+				position,
+				maxf(12.0, radius * 0.28),
+				Color(reduced_color, 0.72 * (1.0 - progress))
+			)
+			_queue_floating_damage(
+				position + Vector2(
+					-34.0,
+					-radius * 0.62 - progress * 22.0
+				),
+				"%d  ×%d%%" % [
+					maxi(1, roundi(float(effect.get("value", 0.0)))),
+					roundi(float(effect.get("multiplier", 1.0)) * 100.0),
+				],
+				Color(reduced_color, 1.0 - progress)
+			)
+			continue
+		var animation_id := &""
+		if kind == "muzzle":
+			animation_id = &"muzzle_player_primary"
+		elif kind in ["impact", "reflect", "barrier_hit"]:
+			animation_id = &"impact_reflect"
+		elif kind == "dash_start":
+			animation_id = &"dash_start"
+		if animation_id != &"":
+			var frame_asset := AssetProvider.animation_frame_asset(
+				animation_id,
+				progress
+			)
+			var direction := Vector2(effect.get("dir", Vector2.RIGHT))
+			if direction.is_zero_approx():
+				direction = Vector2.RIGHT
+			_queue_semantic_texture(
+				frame_asset,
+				position,
+				direction.angle(),
+				radius,
+				Color(effect["color"])
+			)
+			continue
 		var family := &"ring"
 		var angle := 0.0
 		var scale := Vector2.ONE * lerpf(maxf(5.0, radius * 0.25), radius, progress)
@@ -1278,15 +1549,8 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 	var hit_remaining := float(state.get("player_hit_remaining", 0.0))
 	var protection_sources: Dictionary = state.get("protection_sources", {})
 	var displayed_player_position := player_position
-	var hull_color := _upgrade_shade(
-		Art.MUSTARD, Art.MUSTARD_DARK, int(state.get("hull_visual_tier", 0))
-	)
-	var primary_color := _upgrade_shade(
-		Art.MUSTARD, Art.MUSTARD_DARK, int(state.get("primary_visual_tier", 0))
-	)
-	var secondary_color := _upgrade_shade(
-		Art.MINT, Art.STRUCTURE_BASE, int(state.get("secondary_visual_tier", 0))
-	)
+	var hull_color := Color.WHITE
+	var primary_color := Color.WHITE
 	_sync_support_fields(Array(state.get("support_fields", [])))
 	var feedback_color := Color.TRANSPARENT
 	if hit_remaining > 0.0:
@@ -1302,47 +1566,29 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 	if feedback_color.a > 0.0:
 		hull_color = feedback_color
 		primary_color = feedback_color
-		secondary_color = feedback_color
 	var hull_angle := hull_direction.angle()
-	var engine_upgrade_count := clampi(
-		int(state.get("engine_visual_count", 0)),
-		0,
-		2
-	)
 	var rear := -hull_direction.normalized()
 	var side := rear.rotated(PI * 0.5)
-	var engine_sockets := player_engine_sockets(
+	var engine_socket := _player_engine_socket(
 		displayed_player_position,
 		hull_direction
 	)
-	if engine_upgrade_count > 0:
-		engine_sockets.append(
-			displayed_player_position
-			+ rear * Art.PLAYER_VISUAL_RADIUS * 0.50
-		)
-	if engine_upgrade_count > 1:
-		engine_sockets.append(
-			displayed_player_position
-			+ rear * Art.PLAYER_VISUAL_RADIUS * 0.30
-		)
 	var thrust_ratio := clampf(float(state.get("player_speed", 0.0)) / 560.0, 0.0, 1.0)
 	if bool(state.get("dash_active", false)):
 		thrust_ratio = 1.0
-	for mount_position in engine_sockets:
-		_write_instance(
-			_player_engine_flare_batch,
-			mount_position + rear * (13.0 + thrust_ratio * 9.0),
-			hull_angle,
-			Vector2(14.0 + thrust_ratio * 19.0, 6.0),
-			Color(Art.SYSTEM, 0.56 + thrust_ratio * 0.38)
-		)
-		_write_instance(
-			_player_engine_batch,
-			mount_position,
-			hull_angle,
-			Vector2(15.0, 10.0),
-			Art.IVORY_SHADE
-		)
+	_write_beam(
+		engine_socket + rear * 8.0,
+		engine_socket + rear * (25.0 + thrust_ratio * 22.0),
+		7.0,
+		Color(Art.SYSTEM, 0.56 + thrust_ratio * 0.38)
+	)
+	_write_instance(
+		_player_engine_batch,
+		engine_socket,
+		hull_angle,
+		Vector2.ONE * 18.0,
+		Color.WHITE
+	)
 	_write_instance(
 		_player_hull_batch,
 		displayed_player_position,
@@ -1355,7 +1601,7 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 		_player_primary_batch,
 		primary_mount_position,
 		aim_direction.angle(),
-		Vector2(25.0, 10.0),
+		Vector2.ONE * 25.0,
 		primary_color
 	)
 	if float(state.get("muzzle_flash", 0.0)) > 0.0:
@@ -1365,12 +1611,12 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 			Art.MUSTARD
 		)
 	if int(state.get("secondary_visual_tier", 0)) > 0:
-		_write_instance(
-			_player_secondary_batch,
+		_queue_semantic_texture(
+			StringName(_secondary_asset_ids.get(&"seeker", &"")),
 			displayed_player_position - hull_direction * 5.0 - side * 25.0,
 			hull_angle,
-			Vector2.ONE * 12.0,
-			secondary_color
+			14.0,
+			Color.WHITE
 		)
 	if (
 		float(protection_sources.get(&"stage_transition", 0.0)) > 0.0
@@ -1388,11 +1634,26 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 		var barrier_radius := 61.0
 		if not reduced_motion:
 			barrier_radius += sin(float(state.get("run_time", 0.0)) * 5.0) * 3.0
-		_write_ring(player_position, barrier_radius, Color(Art.MINT, 0.86))
+		for plate_index in 4:
+			var plate_angle := TAU * float(plate_index) / 4.0
+			_queue_semantic_texture(
+				StringName(_defense_asset_ids.get(&"barrier", &"")),
+				player_position + Vector2.RIGHT.rotated(plate_angle) * barrier_radius,
+				plate_angle,
+				22.0,
+				Color.WHITE
+			)
 	var ion_level := int(state.get("ion_level", 0))
 	if ion_level > 0:
-		var ion_radius: float = [120.0, 140.0, 160.0][ion_level - 1]
+		var ion_radius: float = ION_RADII[ion_level - 1]
 		_write_ring(player_position, ion_radius, Color(Art.MINT, 0.48))
+		_queue_semantic_texture(
+			StringName(_defense_asset_ids.get(&"ion_field", &"")),
+			player_position,
+			0.0,
+			24.0,
+			Color.WHITE
+		)
 	var secondary: Dictionary = state.get("secondary", {})
 	var blade_level := int(state.get("blade_level", 0))
 	if blade_level > 0:
@@ -1401,33 +1662,39 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 			var blade_position := player_position + Vector2.RIGHT.rotated(
 				float(secondary.get("orbit_angle", 0.0)) + TAU * float(blade_index) / float(blade_count)
 			) * 78.0
-			_write_instance(
-				_player_secondary_batch,
+			_queue_semantic_texture(
+				StringName(_secondary_asset_ids.get(&"orbit_blade", &"")),
 				blade_position,
 				float(secondary.get("orbit_angle", 0.0)),
-				Vector2(19.0, 8.0),
-				Art.MUSTARD
+				19.0,
+				Color.WHITE
 			)
 	for mine in Array(secondary.get("mines", [])):
-		_write_diamond(Vector2(mine["pos"]), 16.0, Art.CORAL)
+		_queue_semantic_texture(
+			StringName(_secondary_asset_ids.get(&"wake_mine", &"")),
+			Vector2(mine["pos"]),
+			0.0,
+			16.0,
+			Color.WHITE
+		)
 	if bool(state.get("escort_drone", false)):
 		var drone_position := Vector2(secondary.get("drone_position", player_position))
 		var drone_direction := (player_position - drone_position).normalized()
-		_write_instance(
-			_player_secondary_batch,
+		_queue_semantic_texture(
+			StringName(_secondary_asset_ids.get(&"escort_drone", &"")),
 			drone_position,
 			drone_direction.angle(),
-			Vector2(19.0, 15.0),
-			Art.MINT_SOFT
+			19.0,
+			Color.WHITE
 		)
 	var cursor_position := Vector2(state.get("cursor_position", player_position + aim_direction * 230.0))
-	for direction in [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]:
+	for direction in CARDINAL_DIRECTIONS:
 		_write_diamond(cursor_position + direction * 18.0, 6.0, Art.MUSTARD)
 	_write_diamond(cursor_position, 4.0, Art.IVORY_BRIGHT)
 
 
 func _sync_support_fields(support_fields: Array) -> void:
-	const TIMER_SEGMENTS := 24
+	const TIMER_SEGMENTS := 8
 	for support_variant in support_fields:
 		var support := Dictionary(support_variant)
 		var state := StringName(support.get("state", &"initial_delay"))
@@ -1439,8 +1706,8 @@ func _sync_support_fields(support_fields: Array) -> void:
 		var progress := clampf(float(support["phase_progress"]), 0.0, 1.0)
 		var active := bool(support["effect_active"])
 		var color := Art.SUPPORT if kind == &"repair" else Art.PLAYER_REWARD
-		var opacity := 0.26 if active else (0.14 if state == &"warning" else 0.07)
-		_write_disk(center, radius, Color(color, opacity))
+		if active:
+			_write_disk(center, radius, Color(color, 0.20))
 		_write_ring(center, radius, Color(color, 0.76))
 		var visible_segments := clampi(
 			ceili((1.0 - progress) * TIMER_SEGMENTS),
@@ -1455,29 +1722,177 @@ func _sync_support_fields(support_fields: Array) -> void:
 				Vector2.ONE * (radius - 12.0),
 				color
 			)
-		var facility_id := (
-			&"repair_field"
-			if kind == &"repair"
-			else &"overdrive_field"
-		)
-		var facility_descriptor := WorldCatalog.facility_descriptor(facility_id)
-		_support_field_glyph_draws.append({
-			"recipe":StringName(
-				facility_descriptor.get("recipe", facility_id)
+		_queue_semantic_texture(
+			(
+				&"world/facility_repair_pad"
+				if kind == &"repair"
+				else &"world/facility_overdrive_lane"
 			),
-			"center":center,
-			"scale":48.0,
-			"color":Color(color, 0.92),
-		})
+			center,
+			0.0,
+			48.0,
+			Color.WHITE
+		)
+		if kind == &"repair" and active:
+			_queue_semantic_texture(
+				&"world/facility_repair_pad_core",
+				center,
+				0.0,
+				24.0,
+				Color.WHITE
+			)
+		_support_field_asset_count += 1
 
 
-func _upgrade_shade(base: Color, target: Color, tier: int) -> Color:
-	var mix_values := [0.0, 0.28, 0.52, 0.72]
-	return base.lerp(target, mix_values[clampi(tier, 0, 3)])
+func _queue_semantic_texture(
+	asset_id: StringName,
+	position: Vector2,
+	angle: float,
+	radius: float,
+	modulate: Color
+) -> void:
+	if (
+		asset_id == &""
+		or radius <= 0.0
+		or _semantic_texture_draw_count >= SEMANTIC_TEXTURE_DRAW_CAPACITY
+		or not AssetProvider.has_asset(asset_id)
+	):
+		return
+	var texture_draw := _semantic_texture_draws[
+		_semantic_texture_draw_count
+	]
+	texture_draw.asset_id = asset_id
+	texture_draw.position = position
+	texture_draw.angle = angle
+	texture_draw.radius = radius
+	texture_draw.modulate = modulate
+	_semantic_texture_draw_count += 1
+
+
+func _draw_semantic_texture(texture_draw: SemanticTextureDraw) -> void:
+	var spec := _semantic_texture_spec(texture_draw.asset_id)
+	if spec == null or spec.texture == null:
+		return
+	var scale := texture_draw.radius / (
+		maxf(spec.canvas.x, spec.canvas.y) * 0.5
+	)
+	draw_set_transform(
+		texture_draw.position,
+		texture_draw.angle,
+		Vector2.ONE
+	)
+	draw_texture_rect(
+		spec.texture,
+		Rect2(-spec.pivot * scale, spec.canvas * scale),
+		false,
+		texture_draw.modulate
+	)
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+
+func _semantic_texture_spec(
+	asset_id: StringName
+) -> SemanticTextureSpec:
+	if _semantic_texture_specs.has(asset_id):
+		return _semantic_texture_specs[asset_id] as SemanticTextureSpec
+	var texture := AssetProvider.texture(asset_id)
+	var descriptor := AssetProvider.descriptor(asset_id)
+	if texture == null or descriptor.is_empty():
+		return null
+	var spec := SemanticTextureSpec.new()
+	spec.texture = texture
+	spec.canvas = Vector2(descriptor.get("canvas", texture.get_size()))
+	if spec.canvas.x <= 0.0 or spec.canvas.y <= 0.0:
+		spec.canvas = Vector2(texture.get_size())
+	spec.pivot = Vector2(
+		descriptor.get("pivot", spec.canvas * 0.5)
+	)
+	_semantic_texture_specs[asset_id] = spec
+	return spec
+
+
+func _queue_floating_damage(
+	position: Vector2,
+	text: String,
+	color: Color
+) -> void:
+	if _floating_damage_draw_count >= FLOATING_DAMAGE_DRAW_CAPACITY:
+		return
+	var damage_draw := _floating_damage_draws[
+		_floating_damage_draw_count
+	]
+	damage_draw.position = position
+	damage_draw.text = text
+	damage_draw.color = color
+	_floating_damage_draw_count += 1
+
+
+func _draw_floating_damage(damage_draw: FloatingDamageDraw) -> void:
+	var position := damage_draw.position
+	var text := damage_draw.text
+	var color := damage_draw.color
+	draw_string(
+		ThemeDB.fallback_font,
+		position + Vector2(2.0, 2.0),
+		text,
+		HORIZONTAL_ALIGNMENT_LEFT,
+		-1.0,
+		16,
+		Color(Art.COBALT_VOID, color.a)
+	)
+	draw_string(
+		ThemeDB.fallback_font,
+		position,
+		text,
+		HORIZONTAL_ALIGNMENT_LEFT,
+		-1.0,
+		16,
+		color
+	)
+
+
+func _boss_module_asset_id(enemy: EnemyState) -> StringName:
+	var disabled := enemy.boss_module_state == &"disabled"
+	match enemy.boss_module_kind:
+		&"forge_plate":
+			return (
+				&"boss_module/forge_plate_disabled"
+				if disabled
+				else &"boss_module/forge_plate_active"
+			)
+		&"segment_lock":
+			return (
+				&"boss_module/segment_lock_disabled"
+				if disabled
+				else &"boss_module/segment_lock_active"
+			)
+		&"relay_positive":
+			return &"boss_module/relay_positive"
+		&"relay_negative":
+			return &"boss_module/relay_negative"
+		&"route_switch":
+			return &"boss_module/route_switch"
+		&"armor_car":
+			return &"boss_module/armor_car"
+		&"lattice_outer":
+			return (
+				&"boss_module/crown_lattice"
+				if enemy.boss_module_index == 0
+				else &"boss_module/crown_pylon"
+			)
+	return &"actor/boss_pylon"
+
+
+func _enemy_shield_asset_id(enemy: EnemyState) -> StringName:
+	if enemy.archetype == &"generator":
+		return StringName(_defense_asset_ids.get(&"generator_shield", &""))
+	if enemy.archetype == &"shield_escort":
+		return StringName(_defense_asset_ids.get(&"shield_escort", &""))
+	return &""
 
 
 func _sync_target_brackets(position: Vector2, radius: float) -> void:
-	for corner in [Vector2(-1.0, -1.0), Vector2(1.0, -1.0), Vector2(1.0, 1.0), Vector2(-1.0, 1.0)]:
+	for corner in TARGET_BRACKET_CORNERS:
 		var typed_corner := Vector2(corner)
 		var anchor: Vector2 = position + typed_corner * radius
 		_write_beam(anchor, anchor - Vector2(typed_corner.x, 0.0) * 18.0, 6.0, Art.MUSTARD)

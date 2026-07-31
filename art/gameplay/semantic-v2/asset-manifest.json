@@ -69,6 +69,7 @@
         "bulkhead_guard",
         "shooter",
         "turret",
+        "mine",
         "artillery_spotter",
         "controller",
         "generator",
@@ -83,6 +84,7 @@
       "canvas_by_role": {
         "default": [112, 112],
         "turret": [160, 160],
+        "mine": [160, 160],
         "generator": [160, 160],
         "interceptor_tower": [160, 160],
         "beam_sentinel": [160, 160],
@@ -115,6 +117,7 @@
         "actor_boss_module_segment_lock_disabled.png",
         "actor_boss_module_relay_positive.png",
         "actor_boss_module_relay_negative.png",
+        "actor_boss_module_route_switch.png",
         "actor_boss_module_armor_car.png",
         "actor_boss_module_crown_lattice.png",
         "actor_boss_module_crown_pylon.png"

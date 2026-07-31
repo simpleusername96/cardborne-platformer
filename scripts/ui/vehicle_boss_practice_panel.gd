@@ -19,6 +19,8 @@ var _phase: OptionButton
 var _pattern: OptionButton
 var _invulnerable: CheckBox
 var _start: Button
+var _form: VBoxContainer
+var _form_scroll: ScrollContainer
 
 
 func _ready() -> void:
@@ -33,6 +35,15 @@ func _ready() -> void:
 func _build() -> void:
 	add_child(Factory.label("BOSS_PRACTICE_KICKER", 14, Art.MUSTARD))
 	add_child(Factory.label("BOSS_PRACTICE_TITLE", 28, Art.IVORY_BRIGHT))
+	_form_scroll = ScrollContainer.new()
+	_form_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_form_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_form_scroll.custom_minimum_size.y = 210.0
+	add_child(_form_scroll)
+	_form = VBoxContainer.new()
+	_form.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_form.add_theme_constant_override("separation", 6)
+	_form_scroll.add_child(_form)
 	_stage = _option("BOSS_PRACTICE_BOSS")
 	_stage.item_selected.connect(
 		func(_index: int) -> void: _refresh_patterns()
@@ -43,7 +54,7 @@ func _build() -> void:
 	_invulnerable = CheckBox.new()
 	_invulnerable.text = "BOSS_PRACTICE_INVULNERABLE"
 	_invulnerable.add_theme_font_size_override("font_size", 16)
-	add_child(_invulnerable)
+	_form.add_child(_invulnerable)
 	_start = Factory.command_button(
 		"BOSS_PRACTICE_START",
 		&"PrimaryButton"
@@ -91,6 +102,10 @@ func refresh_localized_content() -> void:
 
 func set_compact_mode(compact: bool) -> void:
 	add_theme_constant_override("separation", 6 if compact else 10)
+	if is_instance_valid(_form):
+		_form.add_theme_constant_override("separation", 4 if compact else 6)
+	if is_instance_valid(_form_scroll):
+		_form_scroll.custom_minimum_size.y = 180.0 if compact else 260.0
 	for option in [_stage, _field, _phase, _pattern]:
 		option.custom_minimum_size.y = 40.0 if compact else 46.0
 
@@ -103,11 +118,12 @@ func debug_option_texts() -> PackedStringArray:
 
 
 func _option(label_key: String) -> OptionButton:
-	add_child(Factory.label(label_key, 15, Art.MINT_SOFT))
+	_form.add_child(Factory.label(label_key, 15, Art.MINT_SOFT))
 	var option := OptionButton.new()
+	option.fit_to_longest_item = false
 	option.custom_minimum_size.y = 46.0
 	option.add_theme_font_size_override("font_size", 16)
-	add_child(option)
+	_form.add_child(option)
 	return option
 
 

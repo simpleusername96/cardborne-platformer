@@ -558,6 +558,8 @@ func debug_modal_contract(
 			_show_settings("deployment")
 		"guidebook":
 			_show_guidebook("settings")
+		"practice":
+			_show_boss_practice()
 	return {
 		"surface":surface,
 		"hud_hidden":not _hud.visible,

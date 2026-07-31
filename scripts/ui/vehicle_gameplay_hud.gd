@@ -13,6 +13,9 @@ const RetainedMinimapMesh = preload("res://scripts/ui/vehicle_retained_minimap_m
 const UiGlyphCatalog = preload(
 	"res://scripts/presentation/components/vehicle_ui_glyph_catalog.gd"
 )
+const SemanticAssets = preload(
+	"res://scripts/presentation/components/vehicle_semantic_asset_provider.gd"
+)
 
 const HEALTH_CLUSTER_SIZE := Vector2(216.0, 74.0)
 const ACTION_RAIL_SIZE := Vector2(148.0, 44.0)
@@ -280,6 +283,17 @@ class ActionRailSlot:
 				_unavailable_mesh = mesh
 		if mesh != null:
 			draw_mesh(mesh, null)
+		var icon := SemanticAssets.texture(
+			StringName("hud/action_%s" % action_id)
+		)
+		if icon != null:
+			var icon_size := Vector2.ONE * 28.0
+			draw_texture_rect(
+				icon,
+				Rect2(center - icon_size * 0.5, icon_size),
+				false,
+				Color(1.0, 1.0, 1.0, 1.0 if available else 0.42)
+			)
 		if not available and cooldown_ratio < 0.9999:
 			draw_arc(
 				center,
@@ -317,28 +331,6 @@ class ActionRailSlot:
 				if is_available
 				else Color(Art.SUPPORT, 0.58),
 			24
-		)
-		var icon_color := (
-			Color(Art.WORLD_CANVAS, 0.95)
-			if is_available
-			else Color(Art.TEXT_PRIMARY, 0.78)
-		)
-		UiGlyphCatalog.append_action_mesh_geometry(
-			vertices,
-			colors,
-			indices,
-			action_id,
-			center,
-			10.5,
-			{
-				&"primary":icon_color,
-				&"secondary":icon_color.lerp(accent, 0.18),
-				&"highlight":(
-					Color(Art.TEXT_PRIMARY, 0.92)
-					if is_available
-					else Color(Art.TEXT_MUTED, 0.72)
-				),
-			}
 		)
 		var arrays := []
 		arrays.resize(Mesh.ARRAY_MAX)
@@ -415,6 +407,9 @@ class ActionRailSlot:
 			"minimum_size":custom_minimum_size,
 			"glyph_id":action_id,
 			"shared_glyph_recipe":not descriptor.is_empty(),
+			"semantic_texture":SemanticAssets.has_asset(
+				StringName("hud/action_%s" % action_id)
+			),
 			"glyph_command_count":Array(
 				descriptor.get("commands", [])
 			).size(),
@@ -480,6 +475,80 @@ class StageMinimap:
 			_dynamic_map.update(snapshot)
 		if _dynamic_map != null and _dynamic_map.mesh != null:
 			draw_mesh(_dynamic_map.mesh, null)
+		_draw_semantic_markers(world_size)
+
+	func _draw_semantic_markers(world_size: Vector2) -> void:
+		if not bool(snapshot.get("semantic_markers", false)):
+			return
+		_draw_marker_texture(
+			&"hud/minimap_marker_player",
+			_map_point(
+				Vector2(snapshot.get("player", Vector2.ZERO)),
+				world_size
+			),
+			14.0
+		)
+		for marker_variant in Array(snapshot.get("markers", [])):
+			var marker := Dictionary(marker_variant)
+			if not bool(marker.get("discovered", false)):
+				continue
+			var kind := StringName(marker.get("kind", &""))
+			var asset_id := &""
+			match kind:
+				&"boss":
+					asset_id = &"hud/minimap_marker_boss"
+				&"elite":
+					asset_id = &"hud/minimap_marker_elite"
+				&"stationary":
+					asset_id = &"hud/minimap_marker_hostile"
+				&"objective":
+					asset_id = (
+						&"hud/minimap_marker_objective_locked"
+						if bool(marker.get("locked", false))
+						else &"hud/minimap_marker_objective_active"
+					)
+			if asset_id == &"":
+				continue
+			_draw_marker_texture(
+				asset_id,
+				_map_point(Vector2(marker["position"]), world_size),
+				16.0 if kind in [&"boss", &"objective"] else 13.0
+			)
+		var cols := maxi(1, int(snapshot.get("cols", 13)))
+		var rows := maxi(1, int(snapshot.get("rows", 6)))
+		var cell_size := Vector2(size.x / float(cols), size.y / float(rows))
+		for cluster_variant in Array(snapshot.get("enemy_clusters", [])):
+			var cluster := Dictionary(cluster_variant)
+			var point := (
+				Vector2(Vector2i(cluster["cell"])) + Vector2(0.5, 0.5)
+			) * cell_size
+			_draw_marker_texture(
+				&"hud/minimap_marker_hostile",
+				point,
+				11.0 if int(cluster.get("count", 1)) <= 4 else 14.0
+			)
+
+	func _map_point(world_point: Vector2, world_size: Vector2) -> Vector2:
+		return Vector2(
+			world_point.x / maxf(1.0, world_size.x) * size.x,
+			world_point.y / maxf(1.0, world_size.y) * size.y
+		)
+
+	func _draw_marker_texture(
+		asset_id: StringName,
+		center: Vector2,
+		extent: float
+	) -> void:
+		var texture := SemanticAssets.texture(asset_id)
+		if texture == null:
+			return
+		var marker_size := Vector2.ONE * extent
+		draw_texture_rect(
+			texture,
+			Rect2(center - marker_size * 0.5, marker_size),
+			false,
+			Color.WHITE
+		)
 
 	func _build_static_map_mesh(world_size: Vector2) -> ArrayMesh:
 		var vertices := PackedVector3Array()
@@ -620,7 +689,7 @@ func _build() -> void:
 
 	_boss_cluster = VBoxContainer.new()
 	_boss_cluster.name = "BossCluster"
-	_boss_cluster.size = Vector2(520.0, 54.0)
+	_boss_cluster.size = Vector2(520.0, 58.0)
 	_boss_cluster.add_theme_constant_override("separation", 1)
 	add_child(_boss_cluster)
 	_boss_name = Factory.label(
@@ -645,6 +714,7 @@ func _build() -> void:
 	)
 	_shadow_label(_boss_state)
 	_boss_state.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_boss_state.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	_boss_cluster.add_child(_boss_state)
 	_boss_cluster.visible = false
 
@@ -752,7 +822,7 @@ func update_snapshot(snapshot: Dictionary) -> void:
 		if next_boss_visible != _boss_visible:
 			_boss_visible = next_boss_visible
 			_boss_cluster.visible = next_boss_visible
-			_objective_panel.visible = not next_boss_visible
+			_objective_panel.visible = true
 			_apply_responsive_layout()
 		if next_boss_visible:
 			if _boss_name.text != boss_name:
@@ -949,8 +1019,9 @@ func debug_contract(viewport_width: float) -> Dictionary:
 		"target_cluster_size":target_size,
 		"boss_strip_size":Vector2(
 			minf(520.0, viewport_width - 424.0),
-			54.0
+			58.0
 		),
+		"boss_objective_coexist":_objective_panel.visible,
 		"opaque_combat_area_ratio":(
 			opaque_area / (viewport_width * viewport_height)
 		),
@@ -984,7 +1055,7 @@ func _apply_responsive_layout() -> void:
 	_health_panel.size = HEALTH_CLUSTER_SIZE
 	_objective_panel.position = Vector2(
 		(size.x - objective_size.x) * 0.5,
-		16.0
+		76.0 if _boss_cluster.visible else 16.0
 	)
 	_objective_panel.custom_minimum_size = objective_size
 	_objective_panel.size = objective_size
@@ -1035,7 +1106,7 @@ func _apply_responsive_layout() -> void:
 	_notification.size.x = 320.0 if compact else 360.0
 	_notification.position = Vector2(
 		(size.x - _notification.size.x) * 0.5,
-		68.0 if _boss_cluster.visible else 72.0
+		156.0 if _boss_cluster.visible else 72.0
 	)
 	_transition_banner.apply_viewport(size)
 

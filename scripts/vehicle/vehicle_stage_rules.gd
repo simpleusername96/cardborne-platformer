@@ -66,6 +66,15 @@ static func segment_rect_hit(from: Vector2, to: Vector2, rect: Rect2, padding: f
 	return Geometry.segment_rect_hit(from, to, rect, padding)
 
 
+static func segment_rect_intersects(
+	from: Vector2,
+	to: Vector2,
+	rect: Rect2,
+	padding: float = 0.0
+) -> bool:
+	return Geometry.segment_rect_intersects(from, to, rect, padding)
+
+
 static func first_cover_hit(from: Vector2, to: Vector2, radius: float, _unused_dynamic_blocker: bool = false, stage_id: StringName = &"stage_1") -> Dictionary:
 	return first_cover_hit_with_extra(from, to, radius, false, stage_id, [])
 
@@ -79,6 +88,34 @@ static func first_cover_hit_with_extra(from: Vector2, to: Vector2, radius: float
 			Catalog.cover_rects_near_motion(stage_id, from, to, radius), best
 		)
 	_consider_cover_hits(from, to, radius, swept_bounds, extra_cover, best)
+	return best
+
+
+static func first_cover_hit_with_extra_into(
+	from: Vector2,
+	to: Vector2,
+	radius: float,
+	stage_id: StringName,
+	extra_cover: Array,
+	best: Dictionary,
+	candidate: Dictionary
+) -> Dictionary:
+	best["hit"] = false
+	best["t"] = 2.0
+	var swept_bounds := Rect2(from, Vector2.ZERO).expand(to).grow(radius)
+	if not Catalog.cover_rects(stage_id).is_empty():
+		_consider_cover_hits_into(
+			from,
+			to,
+			radius,
+			swept_bounds,
+			Catalog.cover_rects_near_motion(stage_id, from, to, radius),
+			best,
+			candidate
+		)
+	_consider_cover_hits_into(
+		from, to, radius, swept_bounds, extra_cover, best, candidate
+	)
 	return best
 
 
@@ -101,12 +138,60 @@ static func _consider_cover_hits(
 			best["polygon"] = Geometry.rect_polygon(blocker)
 
 
+static func _consider_cover_hits_into(
+	from: Vector2,
+	to: Vector2,
+	radius: float,
+	swept_bounds: Rect2,
+	blockers: Array,
+	best: Dictionary,
+	candidate: Dictionary
+) -> void:
+	for blocker_value in blockers:
+		var blocker := Rect2(blocker_value)
+		if not swept_bounds.intersects(blocker.grow(radius), true):
+			continue
+		if (
+			Geometry.segment_rect_hit_into(
+				from, to, blocker, radius, candidate
+			)
+			and float(candidate["t"]) < float(best["t"])
+		):
+			best["hit"] = true
+			best["t"] = candidate["t"]
+			best["normal"] = candidate["normal"]
+			best["point"] = candidate["point"]
+			best["rect"] = blocker
+
+
 static func has_line_of_sight(from: Vector2, to: Vector2, padding: float = 0.0, _unused_dynamic_blocker: bool = false, stage_id: StringName = &"stage_1") -> bool:
-	return not bool(first_cover_hit(from, to, padding, false, stage_id).get("hit", false))
+	return has_line_of_sight_with_extra(
+		from, to, padding, false, stage_id, []
+	)
 
 
 static func has_line_of_sight_with_extra(from: Vector2, to: Vector2, padding: float, _unused_dynamic_blocker: bool, stage_id: StringName, extra_cover: Array) -> bool:
-	return not bool(first_cover_hit_with_extra(from, to, padding, false, stage_id, extra_cover).get("hit", false))
+	var swept_bounds := Rect2(from, Vector2.ZERO).expand(to).grow(padding)
+	if not Catalog.cover_rects(stage_id).is_empty():
+		for blocker_value in Catalog.cover_rects_near_motion(
+			stage_id, from, to, padding
+		):
+			var blocker := Rect2(blocker_value)
+			if (
+				swept_bounds.intersects(blocker.grow(padding), true)
+				and Geometry.segment_rect_intersects(
+					from, to, blocker, padding
+				)
+			):
+				return false
+	for blocker_value in extra_cover:
+		var blocker := Rect2(blocker_value)
+		if (
+			swept_bounds.intersects(blocker.grow(padding), true)
+			and Geometry.segment_rect_intersects(from, to, blocker, padding)
+		):
+			return false
+	return true
 
 
 static func point_segment_distance(point: Vector2, a: Vector2, b: Vector2) -> float:

@@ -38,6 +38,8 @@ var committed_rammers := 0
 var _decision_due := PackedByteArray()
 var _critical_due := PackedByteArray()
 var _motion_delta := PackedFloat32Array()
+var _due_stamps := PackedInt32Array()
+var _schedule_id := 0
 var _rammers_by_squad: Dictionary = {}
 var _carrier_children: Dictionary = {}
 
@@ -46,6 +48,8 @@ func _init() -> void:
 	_decision_due.resize(EnemyStore.MAX_LIVE_HOSTILES)
 	_critical_due.resize(EnemyStore.MAX_LIVE_HOSTILES)
 	_motion_delta.resize(EnemyStore.MAX_LIVE_HOSTILES)
+	_due_stamps.resize(EnemyStore.MAX_LIVE_HOSTILES)
+	_due_stamps.fill(0)
 
 
 func rebuild(
@@ -62,9 +66,10 @@ func rebuild(
 	supports.clear()
 	critical.clear()
 	ordinary_due.clear()
-	_decision_due.fill(0)
-	_critical_due.fill(0)
-	_motion_delta.fill(0.0)
+	_schedule_id += 1
+	if _schedule_id >= 0x7ffffffe:
+		_due_stamps.fill(0)
+		_schedule_id = 1
 	_rammers_by_squad.clear()
 	_carrier_children.clear()
 	active_cap_count = 0
@@ -106,7 +111,10 @@ func rebuild(
 		if enemy.phase in CRITICAL_PHASES:
 			enemy.decision_elapsed = 0.0
 			enemy.motion_elapsed = 0.0
+			_due_stamps[slot] = _schedule_id
 			_critical_due[slot] = 1
+			_decision_due[slot] = 0
+			_motion_delta[slot] = 0.0
 			critical.append(enemy)
 			continue
 		enemy.decision_elapsed += maxf(0.0, delta)
@@ -131,26 +139,48 @@ func rebuild(
 		if not motion_now and not decision_now:
 			continue
 		_motion_delta[slot] = enemy.motion_elapsed
+		_due_stamps[slot] = _schedule_id
+		_critical_due[slot] = 0
 		enemy.motion_elapsed = 0.0
 		if decision_now:
 			_decision_due[slot] = 1
 			enemy.decision_elapsed = 0.0
-		ordinary_due.append(enemy)
+			ordinary_due.append(enemy)
+		else:
+			_decision_due[slot] = 0
 
 
 func decision_due(enemy: EnemyState) -> bool:
 	var slot := enemy.runtime_slot
-	return slot >= 0 and slot < _decision_due.size() and _decision_due[slot] != 0
+	return (
+		slot >= 0
+		and slot < _decision_due.size()
+		and _due_stamps[slot] == _schedule_id
+		and _decision_due[slot] != 0
+	)
 
 
 func is_critical(enemy: EnemyState) -> bool:
 	var slot := enemy.runtime_slot
-	return slot >= 0 and slot < _critical_due.size() and _critical_due[slot] != 0
+	return (
+		slot >= 0
+		and slot < _critical_due.size()
+		and _due_stamps[slot] == _schedule_id
+		and _critical_due[slot] != 0
+	)
 
 
 func motion_delta(enemy: EnemyState) -> float:
 	var slot := enemy.runtime_slot
-	return float(_motion_delta[slot]) if slot >= 0 and slot < _motion_delta.size() else 0.0
+	return (
+		float(_motion_delta[slot])
+		if (
+			slot >= 0
+			and slot < _motion_delta.size()
+			and _due_stamps[slot] == _schedule_id
+		)
+		else 0.0
+	)
 
 
 func can_commit(

@@ -39,6 +39,13 @@ func _initialize() -> void:
 		"beam danger corridor exactly expands by the player radius"
 	)
 	_expect(
+		AttackContract.PROJECTILE_TELEGRAPH_LEAD_SECONDS > 0.0
+			and AttackContract.PROJECTILE_TELEGRAPH_LEAD_SECONDS <= 0.4
+			and AttackContract.PROJECTILE_TELEGRAPH_LEAD_SECONDS
+				< AttackContract.HOSTILE_PROJECTILE_LIFETIME,
+		"projectile startup exposes a short lead of at most 0.4 seconds"
+	)
+	_expect(
 		is_zero_approx(AttackContract.warning_readiness(0.8, 0.8))
 			and is_equal_approx(AttackContract.warning_readiness(0.4, 0.8), 0.5)
 			and is_equal_approx(AttackContract.warning_readiness(0.0, 0.8), 1.0),

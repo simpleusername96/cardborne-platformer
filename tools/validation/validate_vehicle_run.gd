@@ -65,6 +65,7 @@ func _run() -> void:
 		_expect(ui != null and ui._guide_panel.debug_contract()["categories"] == 5, "guidebook modal is connected")
 		_check_simulation_lod_contract(run)
 		_check_boss_progression_gate(run)
+		_check_boss_damage_and_guidance(run, ui)
 		run.call("_reset_run", false, true, true)
 		_check_boss_committed_recovery(run)
 		run.call("_reset_run", false, true, true)
@@ -167,6 +168,113 @@ func _check_boss_progression_gate(run) -> void:
 	_expect(run.stage_flow.record_countable_defeat(), "final ordinary defeat begins the boss warning")
 	run.call("_update_stage_progression", 1.5)
 	_expect(run.call("_find_enemy_by_id", "stage_boss") != null, "boss spawns only after quota and warning")
+
+
+func _check_boss_damage_and_guidance(run, ui) -> void:
+	var boss: EnemyState = run.call("_find_enemy_by_id", "stage_boss")
+	_expect(boss != null, "boss guidance fixture has a live boss")
+	if boss == null:
+		return
+	var health_before := boss.health
+	var applied := float(
+		run.call(
+			"_damage_enemy",
+			boss,
+			100.0,
+			"validation",
+			&"kinetic",
+			false
+		)
+	)
+	_expect(
+		is_equal_approx(applied, 20.0)
+			and is_equal_approx(health_before - boss.health, 20.0),
+		"sealed boss damage is reduced to twenty percent instead of cancelled"
+	)
+	_expect(
+		not run.effects.is_empty()
+			and String(run.effects[-1]["kind"]) == "boss_reduced_hit"
+			and is_equal_approx(float(run.effects[-1]["value"]), 20.0),
+		"sealed hit feedback exposes the actual applied damage"
+	)
+	var hud := Dictionary(run.call("_build_hud_snapshot"))
+	var objective := Dictionary(Dictionary(hud["boss"])["objective"])
+	var active_modules := Array(objective["active_modules"])
+	_expect(
+		objective["state"] == &"sealed"
+			and is_equal_approx(float(objective["damage_multiplier"]), 0.20)
+			and not active_modules.is_empty(),
+		"boss strip consumes the sealed state and active module health snapshot"
+	)
+	var active := Dictionary(active_modules[0])
+	var objective_markers := Array(hud["minimap"]["markers"]).filter(
+		func(marker_variant) -> bool:
+			var marker := Dictionary(marker_variant)
+			return (
+				StringName(marker.get("kind", &"")) == &"objective"
+				and String(marker.get("id", "")) == String(active["id"])
+				and StringName(marker.get("state", &"")) == &"active"
+				and is_equal_approx(
+					float(marker.get("health", -1.0)),
+					float(active["health"])
+				)
+			)
+	)
+	_expect(
+		not objective_markers.is_empty(),
+		"minimap consumes the same active objective id, state, and health"
+	)
+	var all_modules := Array(objective["modules"])
+	var locked_modules := all_modules.filter(
+		func(module_variant) -> bool:
+			return StringName(Dictionary(module_variant)["state"]) == &"locked"
+	)
+	if not locked_modules.is_empty():
+		var locked := Dictionary(locked_modules[0])
+		var locked_enemy: EnemyState = run.call(
+			"_find_enemy_by_id",
+			String(locked["id"])
+		)
+		var probe := ProjectileState.new()
+		probe.radius = 6.0
+		var locked_candidates: Array[EnemyState] = [locked_enemy]
+		var contact = run.call(
+			"_player_projectile_contact",
+			probe,
+			locked_enemy.pos - Vector2(120.0, 0.0),
+			locked_enemy.pos + Vector2(120.0, 0.0),
+			probe.radius,
+			locked_candidates
+		)
+		_expect(
+			contact == null,
+			"inactive sequential objective modules are projectile-pass-through"
+		)
+	run._threat_sample_timer = 0.0
+	run.call("_update_threat_contacts", 0.11)
+	var objective_contacts: Array = run._threat_contact_cache.filter(
+		func(contact_variant) -> bool:
+			var contact := Dictionary(contact_variant)
+			return (
+				bool(contact.get("objective", false))
+				and String(contact.get("objective_id", "")) == String(active["id"])
+				and StringName(contact.get("objective_state", &"")) == &"active"
+				and is_equal_approx(
+					float(contact.get("health", -1.0)),
+					float(active["health"])
+				)
+			)
+	)
+	_expect(
+		not objective_contacts.is_empty(),
+		"off-screen radar consumes the same active objective id, state, and health"
+	)
+	ui.update_hud(hud)
+	_expect(
+		ui._hud._boss_cluster.visible
+			and ui._hud._objective_panel.visible,
+		"boss strip and objective panel remain visible together"
+	)
 
 
 func _check_boss_committed_recovery(run) -> void:

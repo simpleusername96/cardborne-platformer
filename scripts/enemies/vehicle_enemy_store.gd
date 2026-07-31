@@ -19,8 +19,10 @@ var _pool: Array[EnemyState] = []
 
 
 func _init() -> void:
-	for _index in MAX_LIVE_HOSTILES:
-		_pool.append(EnemyState.new())
+	for index in MAX_LIVE_HOSTILES:
+		var enemy := EnemyState.new()
+		enemy.spatial_slot = index
+		_pool.append(enemy)
 
 
 func clear() -> void:
@@ -44,7 +46,11 @@ func acquire() -> EnemyState:
 		rejected_spawns += 1
 		rejected_capacity += 1
 		return null
-	return _pool.pop_back()
+	var enemy: EnemyState = _pool.pop_back()
+	enemy.runtime_generation += 1
+	if enemy.runtime_generation >= 0x7ffffffe:
+		enemy.runtime_generation = 1
+	return enemy
 
 
 func add(enemy: EnemyState) -> bool:

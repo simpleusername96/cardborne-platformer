@@ -453,6 +453,7 @@ func _validate_modal_matrix(ui: VehicleStageUI) -> void:
 				"garage",
 				"settings",
 				"guidebook",
+				"practice",
 			]:
 				var modal := ui.debug_modal_contract(surface)
 				await _settle_ui()
@@ -473,7 +474,8 @@ func _validate_modal_matrix(ui: VehicleStageUI) -> void:
 				)
 				_expect(
 					viewport_rect.encloses(surface_rect),
-					"%s surface stays inside viewport" % context
+					"%s surface stays inside viewport; viewport=%s surface=%s"
+					% [context, viewport_rect, surface_rect]
 				)
 				_expect(
 					surface_rect.grow(0.75).encloses(content_rect),
@@ -551,10 +553,10 @@ func _validate_owner_boundaries() -> void:
 		"res://scripts/ui/vehicle_guidebook_preview.gd"
 	)
 	_expect(
-		guide_source.contains("vehicle_combat_visual_library.gd")
+		guide_source.contains("vehicle_semantic_asset_provider.gd")
 			and guide_source.contains("vehicle_stage_visual_profile.gd")
-			and not guide_source.contains("draw_texture_rect_region"),
-		"guidebook preview consumes runtime vector providers only"
+			and not guide_source.contains("vehicle_combat_visual_library.gd"),
+		"guidebook preview consumes the semantic-v2 runtime provider only"
 	)
 
 

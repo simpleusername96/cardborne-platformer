@@ -137,6 +137,7 @@ func after_physics(run: Node) -> void:
 		_record_production_pressure(run, scheduler_snapshot)
 		return
 	_maintain_enemy_pressure(run)
+	_maintain_zone_and_trail_pressure(run)
 	_fill_projectiles(run, false)
 
 
@@ -458,7 +459,13 @@ func _maintain_effects(run: Node) -> void:
 
 
 func _fill_zones_and_trails(run: Node, target: int) -> void:
-	for index in target:
+	var index: int = run.denied_zones.size() + run.damaging_trails.size()
+	var safety: int = target + 1
+	while (
+		run.denied_zones.size() + run.damaging_trails.size() < target
+		and safety > 0
+	):
+		safety -= 1
 		var position := _spawn_points[index % _spawn_points.size()]
 		if index % 2 == 0:
 			run.denied_zones.append({
@@ -471,7 +478,41 @@ func _fill_zones_and_trails(run: Node, target: int) -> void:
 			run.damaging_trails.append({
 				"pos": position, "radius": 42.0,
 				"time": 100000.0, "duration": 100000.0, "hit_ids": {},
+				"source": "performance_trail",
 			})
+		index += 1
+	if safety == 0 and run.denied_zones.size() + run.damaging_trails.size() < target:
+		push_error("Performance zone fixture could not reach its declared pressure")
+
+
+func _maintain_zone_and_trail_pressure(run: Node) -> void:
+	var target := 8 if scenario_id in [&"peak_horde", &"boss_pressure"] else 16
+	var safety: int = run.denied_zones.size() + run.damaging_trails.size() + 1
+	while (
+		run.denied_zones.size() + run.damaging_trails.size() > target
+		and safety > 0
+	):
+		safety -= 1
+		var removed_fixture := false
+		for index in range(run.denied_zones.size() - 1, -1, -1):
+			if String(run.denied_zones[index].get("source", "")) != "performance_zone":
+				continue
+			run.denied_zones.remove_at(index)
+			removed_fixture = true
+			break
+		if removed_fixture:
+			continue
+		for index in range(run.damaging_trails.size() - 1, -1, -1):
+			if String(run.damaging_trails[index].get("source", "")) != "performance_trail":
+				continue
+			run.damaging_trails.remove_at(index)
+			removed_fixture = true
+			break
+		if not removed_fixture:
+			break
+	if safety == 0 and run.denied_zones.size() + run.damaging_trails.size() > target:
+		push_error("Performance zone fixture could not retire artificial pressure")
+	_fill_zones_and_trails(run, target)
 
 
 func _prepare_stage_five(run: Node) -> void:
@@ -487,6 +528,11 @@ func _activate_production_replay(run: Node) -> void:
 	_production_pressure_samples.clear()
 	_production_next_sample = 0.0
 	_production_last_sample_spawned = 0
+	# The recorder's short retention warmup must measure the authored maximum
+	# beat, not spend the sample ramping through the opening schedule.
+	run.encounter_runtime.elapsed = _final_authored_beat_trigger_time(
+		run.current_stage_id
+	)
 	run.player_barrier_strength = 1.0e9
 	run.player_barrier_timer = 1.0e9
 	var center := Rules.player_start(run.current_stage_id)
@@ -498,6 +544,23 @@ func _activate_production_replay(run: Node) -> void:
 	]
 	_route_waypoint_index = 0
 	_set_action(&"primary_fire", true)
+
+
+func _final_authored_beat_trigger_time(stage_id: StringName) -> float:
+	var final_beat := 0
+	var trigger_time := 0.0
+	for packet in StageCatalog.packets(stage_id):
+		var beat := int(packet.get("beat", 0))
+		var trigger := Dictionary(packet.get("trigger", {}))
+		if StringName(trigger.get("kind", &"")) != &"time":
+			continue
+		var at := float(trigger.get("at", 0.0))
+		if beat > final_beat:
+			final_beat = beat
+			trigger_time = at
+		elif beat == final_beat:
+			trigger_time = minf(trigger_time, at)
+	return trigger_time
 
 
 func _drive_production_replay(run: Node) -> void:

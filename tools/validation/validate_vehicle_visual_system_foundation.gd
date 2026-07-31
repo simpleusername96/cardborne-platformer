@@ -158,7 +158,13 @@ func _validate_manifest(errors: PackedStringArray) -> void:
 		String(fingerprints.get("catalog_registry", ""))
 		!= Registry.provider_fingerprint()
 	):
-		errors.append("manifest catalog fingerprint does not match provider")
+		errors.append(
+			"manifest catalog fingerprint does not match provider: expected=%s actual=%s"
+			% [
+				String(fingerprints.get("catalog_registry", "")),
+				Registry.provider_fingerprint(),
+			]
+		)
 	var seen := {}
 	for value in Array(manifest.get("sheets", [])):
 		var sheet := Dictionary(value)

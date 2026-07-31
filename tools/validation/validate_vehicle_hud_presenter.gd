@@ -20,8 +20,11 @@ func _initialize() -> void:
 	_expect(quiet.is_empty(), "no channel republishes before its cadence or invalidation")
 	presenter.advance(0.04, _fast, _minimap, _threat, _status, _guide)
 	_expect(fast_calls == 2 and minimap_calls == 1, "action channel runs at 20 Hz without rebuilding world markers")
-	presenter.advance(0.051, _fast, _minimap, _threat, _status, _guide)
-	_expect(minimap_calls == 2 and static_minimap_calls == 1, "world markers run at 10 Hz and static geometry remains one-shot")
+	presenter.advance(0.076, _fast, _minimap, _threat, _status, _guide)
+	_expect(
+		minimap_calls == 2 and static_minimap_calls == 1,
+		"world markers phase-stagger after first publication, then run at 10 Hz while static geometry remains one-shot"
+	)
 	presenter.mark_guidebook_dirty()
 	presenter.advance(0.0, _fast, _minimap, _threat, _status, _guide)
 	_expect(guide_calls == 2, "guidebook rebuilds only after explicit invalidation")

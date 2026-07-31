@@ -1,11 +1,14 @@
 class_name VehicleCombatMeshIcon
 extends Control
 
-## Small retained combat silhouette used by reports and other dense UI rows.
+## Small semantic-v2 enemy silhouette used by reports and dense UI rows.
 
-const Visuals = preload("res://scripts/presentation/vehicle_combat_visual_library.gd")
+const SemanticAssets = preload(
+	"res://scripts/presentation/components/vehicle_semantic_asset_provider.gd"
+)
 
-var _instance: MeshInstance2D
+var _view: TextureRect
+var _asset_id: StringName = &""
 
 
 func _ready() -> void:
@@ -15,15 +18,28 @@ func _ready() -> void:
 
 
 func set_enemy(archetype: StringName) -> void:
-	if not is_instance_valid(_instance):
-		_instance = MeshInstance2D.new()
-		add_child(_instance)
-	_instance.mesh = Visuals.enemy_mesh(archetype)
-	_instance.modulate = Visuals.enemy_color(archetype)
-	_instance.scale = Vector2(15.0, 15.0)
+	_asset_id = StringName("actor/%s" % archetype)
+	if not SemanticAssets.has_asset(_asset_id):
+		_asset_id = &"hud/minimap_marker_boss"
+	if not is_instance_valid(_view):
+		_view = TextureRect.new()
+		_view.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		_view.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		_view.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(_view)
+	_view.texture = SemanticAssets.texture(_asset_id)
 	_layout()
 
 
+func debug_contract() -> Dictionary:
+	return {
+		"semantic_provider":true,
+		"asset_id":_asset_id,
+		"has_texture":is_instance_valid(_view) and _view.texture != null,
+	}
+
+
 func _layout() -> void:
-	if is_instance_valid(_instance):
-		_instance.position = size * 0.5
+	if is_instance_valid(_view):
+		_view.position = Vector2.ZERO
+		_view.size = size

@@ -4,6 +4,10 @@ extends Control
 ## Shared, presentation-only upgrade-family glyph recipes. Upgrade cards and
 ## production evidence draw through the same normalized command data.
 
+const SemanticAssets = preload(
+	"res://scripts/presentation/components/vehicle_semantic_asset_provider.gd"
+)
+
 const FAMILY_IDS: Array[StringName] = [
 	&"primary",
 	&"passive",
@@ -391,11 +395,24 @@ func configure(family: StringName, palette: Dictionary) -> void:
 
 
 func _draw() -> void:
-	draw_glyph(self, _family, size * 0.5, _draw_scale(), _palette)
+	var texture := SemanticAssets.texture(
+		StringName("hud/upgrade_%s" % _family)
+	)
+	if texture == null:
+		return
+	var extent := minf(size.x, size.y) * 0.92
+	var image_size := Vector2.ONE * extent
+	draw_texture_rect(
+		texture,
+		Rect2(size * 0.5 - image_size * 0.5, image_size),
+		false,
+		Color.WHITE
+	)
 
 
 func local_content_bounds() -> Rect2:
-	return glyph_bounds(_family, size * 0.5, _draw_scale())
+	var extent := minf(size.x, size.y) * 0.92
+	return Rect2(size * 0.5 - Vector2.ONE * extent * 0.5, Vector2.ONE * extent)
 
 
 func debug_contract() -> Dictionary:
@@ -405,6 +422,9 @@ func debug_contract() -> Dictionary:
 		"control_rect":get_global_rect(),
 		"content_rect":Rect2(global_position + local_bounds.position, local_bounds.size),
 		"command_count":Array(recipe(_family).get("commands", [])).size(),
+		"semantic_asset":SemanticAssets.has_asset(
+			StringName("hud/upgrade_%s" % _family)
+		),
 	}
 
 

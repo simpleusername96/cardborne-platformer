@@ -7,6 +7,9 @@ signal garage_requested
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const DamageSources = preload("res://scripts/combat/vehicle_damage_source_catalog.gd")
 const CombatMeshIcon = preload("res://scripts/ui/vehicle_combat_mesh_icon.gd")
+const SemanticAssets = preload(
+	"res://scripts/presentation/components/vehicle_semantic_asset_provider.gd"
+)
 
 const INPUT_GUARD_SECONDS := 0.35
 
@@ -25,37 +28,18 @@ class AttributeIcon:
 
 	func _draw() -> void:
 		var center := size * 0.5
-		var color: Color = {
-			&"kinetic":Art.MUSTARD,
-			&"thermal":Art.CORAL,
-			&"toxin":Art.MINT,
-			&"cryo":Art.COBALT_ENERGY,
-			&"arc":Art.BOSS_MAGENTA,
-		}.get(attribute, Art.MINT_SOFT)
-		match attribute:
-			&"thermal":
-				draw_colored_polygon(PackedVector2Array([
-					center + Vector2(0, -11), center + Vector2(8, 7),
-					center, center + Vector2(-8, 7),
-				]), color)
-			&"toxin":
-				draw_circle(center, 10.0, color)
-				draw_circle(center, 4.0, Art.IVORY_BRIGHT)
-			&"cryo":
-				for angle in [0.0, PI / 3.0, PI * 2.0 / 3.0]:
-					var axis := Vector2.RIGHT.rotated(angle) * 11.0
-					draw_line(center - axis, center + axis, color, 3.0)
-			&"arc":
-				draw_colored_polygon(PackedVector2Array([
-					center + Vector2(-4, -12), center + Vector2(7, -2),
-					center + Vector2(1, 0), center + Vector2(5, 12),
-					center + Vector2(-8, 2), center + Vector2(-2, 0),
-				]), color)
-			_:
-				draw_colored_polygon(PackedVector2Array([
-					center + Vector2(11, 0), center + Vector2(0, 8),
-					center + Vector2(-11, 0), center + Vector2(0, -8),
-				]), color)
+		var texture := SemanticAssets.texture(
+			StringName("projectile/hostile_%s" % attribute)
+		)
+		if texture == null:
+			return
+		var extent := Vector2.ONE * 28.0
+		draw_texture_rect(
+			texture,
+			Rect2(center - extent * 0.5, extent),
+			false,
+			Color.WHITE
+		)
 
 
 var _snapshot: Dictionary = {}

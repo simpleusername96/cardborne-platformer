@@ -7,14 +7,8 @@ const Rules = preload("res://scripts/vehicle/vehicle_stage_rules.gd")
 const StageUI = preload("res://scripts/ui/vehicle_stage_ui.gd")
 const HudPresenter = preload("res://scripts/ui/vehicle_hud_presenter.gd")
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
-const RewardVisualCatalog = preload(
-	"res://scripts/presentation/components/vehicle_reward_visual_catalog.gd"
-)
-const WorldVisualCatalog = preload(
-	"res://scripts/presentation/components/vehicle_world_visual_catalog.gd"
-)
-const RewardFacilityRecipes = preload(
-	"res://scripts/presentation/components/vehicle_reward_facility_visual_recipes.gd"
+const SemanticAssets = preload(
+	"res://scripts/presentation/components/vehicle_semantic_asset_provider.gd"
 )
 const PrimaryWeapon = preload("res://scripts/player/vehicle_primary_weapon.gd")
 const StageCatalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
@@ -203,6 +197,9 @@ var _enemy_update_schedule := EnemyUpdateSchedule.new()
 var enemy_grid := SpatialGrid.new()
 var enemies: Array[EnemyState] = enemy_store.live
 var _enemy_query_buffer: Array[EnemyState] = []
+var _enemy_query_group_ends := PackedInt32Array()
+var _enemy_query_group_exit_t := PackedFloat32Array()
+var _support_query_buffer: Array[EnemyState] = []
 var projectile_store := ProjectileStore.new()
 var player_projectiles: Array[ProjectileState] = projectile_store.player_live
 var hostile_projectiles: Array[ProjectileState] = projectile_store.hostile_live
@@ -215,6 +212,18 @@ var damaging_trails: Array[Dictionary] = []
 var _empty_cover_rects: Array[Rect2] = []
 var _projectile_cover_query: Array[Rect2] = []
 var _motion_cover_query: Array[Rect2] = []
+var _cover_hit_receipt: Dictionary = {"hit":false, "t":2.0}
+var _cover_hit_candidate: Dictionary = {"hit":false, "t":2.0}
+var _build_fast_hud_snapshot_callable: Callable
+var _minimap_snapshot_callable: Callable
+var _threat_radar_snapshot_callable: Callable
+var _status_orbit_snapshot_callable: Callable
+var _guidebook_snapshot_callable: Callable
+var _runtime_line_of_sight_callable: Callable
+var _query_enemy_radius_callable: Callable
+var _enemy_find_callable: Callable
+var _runtime_attack_path_callable: Callable
+var _runtime_charge_path_callable: Callable
 var _elite_pending := 0
 var _elite_spawned := 0
 var _elite_threshold_cursor := 0
@@ -282,6 +291,20 @@ var _pending_stage_report: Dictionary = {}
 
 
 func _ready() -> void:
+	_build_fast_hud_snapshot_callable = Callable(
+		self, "_build_fast_hud_snapshot"
+	)
+	_minimap_snapshot_callable = Callable(self, "_minimap_snapshot")
+	_threat_radar_snapshot_callable = Callable(self, "_threat_radar_snapshot")
+	_status_orbit_snapshot_callable = Callable(self, "_status_orbit_snapshot")
+	_guidebook_snapshot_callable = Callable(self, "_guidebook_snapshot")
+	_runtime_line_of_sight_callable = Callable(
+		self, "_runtime_has_line_of_sight"
+	)
+	_query_enemy_radius_callable = Callable(self, "_query_enemy_radius_into")
+	_enemy_find_callable = Callable(enemy_store, "find")
+	_runtime_attack_path_callable = Callable(self, "_runtime_attack_path_end")
+	_runtime_charge_path_callable = Callable(self, "_runtime_charge_path_end")
 	_rng.seed = 0xC4A2B0
 	_layout_session_rng.randomize()
 	_layout_session_seed = _layout_session_rng.seed
@@ -370,8 +393,6 @@ func _physics_process(delta: float) -> void:
 		if _performance_detail_sample_active:
 			for section_name in _performance_enemy_sections:
 				subsystem_ms["enemy_%s" % String(section_name)] = _performance_enemy_sections[section_name]
-		if _simulation_lod_bucket == 0:
-			enemy_grid.rebuild(enemies)
 		_update_threat_contacts(delta)
 		if _performance_detail_sample_active:
 			subsystem_ms["enemies_and_grid"] = _elapsed_ms(section_started)
@@ -386,7 +407,7 @@ func _physics_process(delta: float) -> void:
 			section_started = Time.get_ticks_usec()
 		_update_stage_progression(delta)
 		if _flush_defeated_enemies() > 0:
-			enemy_grid.rebuild(enemies)
+			enemy_grid.sync(enemies)
 		if _performance_detail_sample_active:
 			subsystem_ms["progression_and_cleanup"] = _elapsed_ms(section_started)
 	else:
@@ -410,11 +431,11 @@ func _process(delta: float) -> void:
 		var hud_started := Time.get_ticks_usec() if performance_active else 0
 		var hud_update := _hud_presenter.advance(
 			delta,
-			Callable(self, "_build_fast_hud_snapshot"),
-			Callable(self, "_minimap_snapshot"),
-			Callable(self, "_threat_radar_snapshot"),
-			Callable(self, "_status_orbit_snapshot"),
-			Callable(self, "_guidebook_snapshot")
+			_build_fast_hud_snapshot_callable,
+			_minimap_snapshot_callable,
+			_threat_radar_snapshot_callable,
+			_status_orbit_snapshot_callable,
+			_guidebook_snapshot_callable
 		)
 		if not hud_update.is_empty():
 			_ui.update_hud(hud_update)
@@ -444,7 +465,7 @@ func _process(delta: float) -> void:
 			hostile_projectiles,
 			experience_runtime.shards,
 			effects,
-			_visible_world_rect(220.0),
+			_visible_world_rect(0.0),
 			player_position,
 			run_time,
 			presentation_active,
@@ -858,12 +879,14 @@ func _append_enemy(enemy: EnemyState) -> bool:
 	var added := enemy_store.add(enemy)
 	if added:
 		collective_tactics.register_enemy(enemy)
+		enemy_grid.update_actor(enemy)
 	return added
 
 
 func _clear_enemies() -> void:
 	collective_tactics.reset()
 	enemy_store.clear()
+	enemy_grid.rebuild(enemies)
 
 
 func _flush_defeated_enemies() -> int:
@@ -1410,7 +1433,7 @@ func _runtime_projectile_cover_rects(from: Vector2, to: Vector2, radius: float) 
 		_active_tactical_layout.covers_near_motion_into(
 			from, to, radius, _projectile_cover_query
 		)
-	for bulkhead in terrain_runtime.live_bulkhead_rects():
+	for bulkhead in _runtime_bulkheads:
 		_projectile_cover_query.append(bulkhead)
 	return _projectile_cover_query
 
@@ -1441,16 +1464,36 @@ func _rebuild_runtime_blockers() -> void:
 
 
 func _runtime_first_cover_hit(from: Vector2, to: Vector2, padding: float) -> Dictionary:
-	return Rules.first_cover_hit_with_extra(
-		from, to, padding, false, current_stage_id,
-		_runtime_projectile_cover_rects(from, to, padding)
+	return Rules.first_cover_hit_with_extra_into(
+		from,
+		to,
+		padding,
+		current_stage_id,
+		_runtime_projectile_cover_rects(from, to, padding),
+		_cover_hit_receipt,
+		_cover_hit_candidate
 	)
 
 
 func _runtime_has_line_of_sight(from: Vector2, to: Vector2, padding: float) -> bool:
-	if bool(_runtime_first_cover_hit(from, to, padding).get("hit", false)):
+	if not _runtime_cover_has_line_of_sight(from, to, padding):
 		return false
 	return not _segment_hits_live_crate(from, to, padding)
+
+
+func _runtime_cover_has_line_of_sight(
+	from: Vector2,
+	to: Vector2,
+	padding: float
+) -> bool:
+	var swept := Rect2(from, Vector2.ZERO).expand(to).grow(padding)
+	for blocker in _runtime_blockers:
+		if (
+			swept.intersects(blocker.grow(padding), true)
+			and Rules.segment_rect_intersects(from, to, blocker, padding)
+		):
+			return false
+	return true
 
 
 func _runtime_attack_path_end(
@@ -1588,11 +1631,13 @@ func _update_passive_secondary(delta: float) -> void:
 		player_hull_direction,
 		run_build,
 		enemies,
-		Callable(self, "_runtime_has_line_of_sight"),
-		Callable(self, "_query_enemy_radius_into")
+		_runtime_line_of_sight_callable,
+		_query_enemy_radius_callable
 	)
 	for intent in secondary_result["damage"]:
-		var target := _find_enemy_by_id(String(intent["enemy_id"]))
+		var target := intent.get("enemy") as EnemyState
+		if target == null:
+			target = _find_enemy_by_id(String(intent["enemy_id"]))
 		if target != null:
 			var secondary_source := String(intent["source"])
 			_damage_enemy(
@@ -1610,6 +1655,8 @@ func _find_passive_targets(max_targets: int) -> Array[EnemyState]:
 	var candidates: Array[EnemyState] = []
 	enemy_grid.query_radius_into(player_position, PASSIVE_RANGE, enemies, _enemy_query_buffer)
 	for enemy in _enemy_query_buffer:
+		if not _is_player_targetable_enemy(enemy):
+			continue
 		var distance := player_position.distance_to(enemy.pos)
 		if distance > PASSIVE_RANGE:
 			continue
@@ -1636,6 +1683,13 @@ func _find_passive_targets(max_targets: int) -> Array[EnemyState]:
 
 func _query_enemy_radius_into(center: Vector2, radius: float, output: Array[EnemyState]) -> void:
 	enemy_grid.query_radius_into(center, radius, enemies, output)
+	var write_index := 0
+	for enemy in output:
+		if not _is_player_targetable_enemy(enemy):
+			continue
+		output[write_index] = enemy
+		write_index += 1
+	output.resize(write_index)
 
 
 func _start_emp() -> void:
@@ -1844,6 +1898,8 @@ func _update_enemies(delta: float) -> void:
 			var activated := _update_enemy_activation(enemy, active_capped < encounter_runtime.active_cap())
 			if activated and enemy.counts_active_cap:
 				active_capped += 1
+			if activated:
+				enemy_grid.update_actor(enemy)
 	if performance_active:
 		_performance_enemy_sections["status_activation"] = _elapsed_ms(section_started)
 		section_started = Time.get_ticks_usec()
@@ -1852,7 +1908,7 @@ func _update_enemies(delta: float) -> void:
 		delta,
 		player_position,
 		_visible_world_rect(0.0),
-		Callable(enemy_store, "find")
+		_enemy_find_callable
 	)
 	_handle_collective_tactic_events(tactic_events)
 
@@ -1881,7 +1937,10 @@ func _update_enemies(delta: float) -> void:
 			decision_bucket
 		)
 		if decision_bucket == ORDINARY_DECISION_BUCKET_COUNT - 1:
-			_shielded_enemy_ids = _pending_shielded_enemy_ids.duplicate()
+			var previous_assignments := _shielded_enemy_ids
+			_shielded_enemy_ids = _pending_shielded_enemy_ids
+			_pending_shielded_enemy_ids = previous_assignments
+			_pending_shielded_enemy_ids.clear()
 			for enemy in _enemy_update_schedule.active:
 				_apply_enemy_shield(enemy, _shielded_enemy_ids)
 	if performance_active:
@@ -1910,6 +1969,7 @@ func _update_enemies(delta: float) -> void:
 		var role := enemy.role
 		if role == &"stage_boss":
 			_update_stage_boss(enemy, delta)
+			enemy_grid.update_actor(enemy)
 			continue
 		if role == &"generator":
 			_update_generator(enemy, delta)
@@ -1953,6 +2013,7 @@ func _update_scheduled_ordinary_enemy(
 		enemy, motion_delta, can_commit, decision_due, motion_delta
 	):
 		_enemy_update_schedule.note_commit(enemy)
+	enemy_grid.update_actor(enemy)
 
 
 func _enforce_active_enemy_cap(known_active_count: int = -1) -> bool:
@@ -1981,6 +2042,7 @@ func _enforce_active_enemy_cap(known_active_count: int = -1) -> bool:
 		enemy.active = false
 		enemy.velocity = Vector2.ZERO
 		enemy.phase = &"move"
+		enemy_grid.update_actor(enemy)
 	return true
 
 
@@ -2020,17 +2082,21 @@ func _append_enemy_shield_assignments(
 			continue
 		var support_position := support.pos
 		var support_radius := 390.0 if support.role == &"generator" else 300.0
-		var nearby: Array[EnemyState] = []
-		enemy_grid.query_radius_into(support_position, support_radius, enemies, nearby)
+		enemy_grid.query_radius_into(
+			support_position,
+			support_radius,
+			enemies,
+			_support_query_buffer
+		)
 		if support.role == &"generator":
-			for candidate in nearby:
+			for candidate in _support_query_buffer:
 				var candidate_role := candidate.role
 				if candidate != support and candidate_role not in [&"generator", &"shield_escort", &"stage_boss", &"boss_pylon"] and support_position.distance_squared_to(candidate.pos) <= 390.0 * 390.0:
 					shielded_ids[candidate.id] = true
 			continue
 		var closest_id := ""
 		var closest_distance_squared := 300.0 * 300.0
-		for candidate in nearby:
+		for candidate in _support_query_buffer:
 			var candidate_role := candidate.role
 			if candidate == support or candidate_role in [&"generator", &"shield_escort", &"stage_boss", &"boss_pylon"]:
 				continue
@@ -2062,9 +2128,13 @@ func _update_generator(enemy: EnemyState, delta: float) -> void:
 	if enemy.support_tick > 0.0:
 		return
 	enemy.support_tick = 0.75
-	var nearby: Array[EnemyState] = []
-	enemy_grid.query_radius_into(enemy.pos, 390.0, enemies, nearby)
-	for target in nearby:
+	enemy_grid.query_radius_into(
+		enemy.pos,
+		390.0,
+		enemies,
+		_support_query_buffer
+	)
+	for target in _support_query_buffer:
 		if target == enemy:
 			continue
 		if target.pos.distance_to(enemy.pos) <= 390.0:
@@ -2074,9 +2144,19 @@ func _update_generator(enemy: EnemyState, delta: float) -> void:
 
 func _update_repair_tender(enemy: EnemyState, delta: float, refresh_target: bool) -> void:
 	if refresh_target:
-		var nearby: Array[EnemyState] = []
-		enemy_grid.query_radius_into(enemy.pos, SpecialistRuntime.REPAIR_RANGE, enemies, nearby)
-		enemy.repair_target_id = SpecialistRuntime.repair_target_id(enemy, nearby, current_stage_id, false, _runtime_cover_rects())
+		enemy_grid.query_radius_into(
+			enemy.pos,
+			SpecialistRuntime.REPAIR_RANGE,
+			enemies,
+			_support_query_buffer
+		)
+		enemy.repair_target_id = SpecialistRuntime.repair_target_id(
+			enemy,
+			_support_query_buffer,
+			current_stage_id,
+			false,
+			_runtime_cover_rects()
+		)
 	var target_id := enemy.repair_target_id
 	if target_id.is_empty():
 		return
@@ -2364,8 +2444,8 @@ func _start_enemy_attack(enemy: EnemyState) -> void:
 		enemy.phase_time = SpecialistRuntime.BEAM_STARTUP
 	AttackTelegraphs.refresh_ordinary(
 		enemy,
-		Callable(self, "_runtime_attack_path_end"),
-		Callable(self, "_runtime_charge_path_end")
+		_runtime_attack_path_callable,
+		_runtime_charge_path_callable
 	)
 
 
@@ -2957,19 +3037,23 @@ func _update_projectile_buffer(
 				continue
 		else:
 			var projectile_radius := radius
-			enemy_grid.query_segment_into(
+			enemy_grid.query_segment_cells_into(
 				from,
 				to,
 				112.0 + projectile_radius,
 				enemies,
-				_enemy_query_buffer
+				_enemy_query_buffer,
+				_enemy_query_group_ends,
+				_enemy_query_group_exit_t
 			)
 			var contact: Variant = _player_projectile_contact(
 				projectile,
 				from,
 				to,
 				projectile_radius,
-				_enemy_query_buffer
+				_enemy_query_buffer,
+				_enemy_query_group_ends,
+				_enemy_query_group_exit_t
 			)
 			if contact is bool:
 				projectile_store.remove_player_at_swap(index)
@@ -3071,45 +3155,121 @@ func _mark_enemy(target: EnemyState) -> void:
 	_marked_enemy_id = target.id
 
 
+func _is_player_targetable_enemy(enemy: EnemyState) -> bool:
+	if enemy == null or not enemy.alive or not enemy.active:
+		return false
+	if (
+		enemy.role == &"boss_pylon"
+		and not enemy.boss_objective_id.is_empty()
+	):
+		return boss_exam_runtime.can_damage_module(enemy.id)
+	return true
+
+
 func _player_projectile_contact(
 	projectile: ProjectileState,
 	from: Vector2,
 	to: Vector2,
 	projectile_radius: float,
-	candidates: Array[EnemyState]
+	candidates: Array[EnemyState],
+	group_ends: PackedInt32Array = PackedInt32Array(),
+	group_exit_t: PackedFloat32Array = PackedFloat32Array()
 ) -> Variant:
 	var best: EnemyState
 	var best_hit_t := INF
-	for enemy in candidates:
-		if enemy.role == &"interceptor_tower" and enemy.intercept_charges > 0:
-			var intercept_t := AttackContract.segment_circle_first_t(
+	var best_is_intercept := false
+	var candidate_start := 0
+	var group_count := group_ends.size()
+	if group_count == 0 and not candidates.is_empty():
+		group_count = 1
+	for group_index in group_count:
+		var candidate_end := (
+			group_ends[group_index]
+			if group_index < group_ends.size()
+			else candidates.size()
+		)
+		for candidate_index in range(candidate_start, candidate_end):
+			var enemy := candidates[candidate_index]
+			if not _is_player_targetable_enemy(enemy):
+				continue
+			if enemy.role == &"interceptor_tower" and enemy.intercept_charges > 0:
+				var intercept_t := AttackContract.segment_circle_first_t(
+					from,
+					to,
+					enemy.pos,
+					112.0 + projectile.radius
+				)
+				if intercept_t < best_hit_t:
+					best_hit_t = intercept_t
+					best = enemy
+					best_is_intercept = true
+				continue
+			var target_radius := maxf(
+				enemy.radius,
+				enemy.projectile_hit_radius
+			)
+			var hit_t := AttackContract.segment_circle_first_t(
 				from,
 				to,
 				enemy.pos,
-				112.0 + projectile.radius
+				target_radius + projectile_radius
 			)
-			if intercept_t != INF:
-				enemy.intercept_charges -= 1
-				enemy.intercept_recharge = 4.0
-				_add_effect("shock", enemy.pos, Rules.VIOLET, 0.24, 112.0)
-				return true
-		var target_radius := maxf(enemy.radius, enemy.projectile_hit_radius)
-		var hit_t := AttackContract.segment_circle_first_t(
-			from,
-			to,
-			enemy.pos,
-			target_radius + projectile_radius
+			if hit_t < best_hit_t:
+				best_hit_t = hit_t
+				best = enemy
+				best_is_intercept = false
+		candidate_start = candidate_end
+		var exit_t := (
+			group_exit_t[group_index]
+			if group_index < group_exit_t.size()
+			else 1.0
 		)
-		if hit_t == INF:
-			continue
-		if hit_t < best_hit_t:
-			best_hit_t = hit_t
-			best = enemy
+		if best != null and best_hit_t <= exit_t + 0.0001:
+			break
+	if best_is_intercept and best != null:
+		best.intercept_charges -= 1
+		best.intercept_recharge = 4.0
+		_add_effect("shock", best.pos, Rules.VIOLET, 0.24, 112.0)
+		return true
 	return best
 
 
 func _segment_hits_live_crate(from: Vector2, to: Vector2, padding: float) -> bool:
-	return _first_live_crate_hit(from, to, padding) != null
+	var clearance := CRATE_COLLISION_RADIUS + padding
+	var minimum := (
+		Vector2(minf(from.x, to.x), minf(from.y, to.y))
+		- Vector2.ONE * clearance
+	)
+	var maximum := (
+		Vector2(maxf(from.x, to.x), maxf(from.y, to.y))
+		+ Vector2.ONE * clearance
+	)
+	var min_cell := Vector2i(
+		floori(minimum.x / CRATE_COLLISION_CELL_SIZE),
+		floori(minimum.y / CRATE_COLLISION_CELL_SIZE)
+	)
+	var max_cell := Vector2i(
+		floori(maximum.x / CRATE_COLLISION_CELL_SIZE),
+		floori(maximum.y / CRATE_COLLISION_CELL_SIZE)
+	)
+	for cell_y in range(min_cell.y, max_cell.y + 1):
+		for cell_x in range(min_cell.x, max_cell.x + 1):
+			var cell := Vector2i(cell_x, cell_y)
+			if not _crate_collision_cells.has(cell):
+				continue
+			var bucket: Array = _crate_collision_cells[cell]
+			for crate in bucket:
+				if (
+					bool(crate["alive"])
+					and AttackContract.segment_circle_first_t(
+						from,
+						to,
+						Vector2(crate["pos"]),
+						clearance
+					) != INF
+				):
+					return true
+	return false
 
 
 func _first_live_crate_hit(from: Vector2, to: Vector2, padding: float) -> Variant:
@@ -3270,7 +3430,16 @@ func _update_effects(delta: float) -> void:
 		index += 1
 
 
-func _add_effect(kind: String, position: Vector2, color: Color, duration: float, radius: float, direction: Vector2 = Vector2.ZERO) -> void:
+func _add_effect(
+	kind: String,
+	position: Vector2,
+	color: Color,
+	duration: float,
+	radius: float,
+	direction: Vector2 = Vector2.ZERO,
+	value: float = 0.0,
+	multiplier: float = 1.0
+) -> void:
 	if effects.size() >= EncounterDirector.EFFECT_CAP:
 		for index in effects.size():
 			if String(effects[index]["kind"]) != "scheduled_aftershock":
@@ -3284,6 +3453,8 @@ func _add_effect(kind: String, position: Vector2, color: Color, duration: float,
 		"duration": duration,
 		"radius": radius,
 		"dir": direction,
+		"value": value,
+		"multiplier": multiplier,
 	})
 
 
@@ -3320,16 +3491,6 @@ func _damage_enemy(
 			enemy.radius * 1.25
 		)
 		return 0.0
-	if role == &"stage_boss" and boss_exam_runtime.objective_locked:
-		enemy.health_visible_timer = 1.5
-		_add_effect(
-			"barrier_hit",
-			enemy.pos,
-			Art.BOSS_COMMAND,
-			0.20,
-			enemy.radius * 1.15
-		)
-		return 0.0
 	if (
 		terrain_runtime.overdrive_active
 		and player_owned
@@ -3345,8 +3506,10 @@ func _damage_enemy(
 		multiplier *= 1.20
 	if role == &"rammer" and enemy.vulnerable > 0.0:
 		multiplier *= 1.50
+	var boss_damage_multiplier := 1.0
 	if role == &"stage_boss":
-		multiplier *= boss_exam_runtime.boss_damage_multiplier()
+		boss_damage_multiplier = boss_exam_runtime.boss_damage_multiplier()
+		multiplier *= boss_damage_multiplier
 	var health_before := enemy.health
 	if (
 		role == &"mine"
@@ -3365,17 +3528,23 @@ func _damage_enemy(
 		_apply_lifesteal(mine_applied, source, role, player_owned)
 		return mine_applied
 	var applied_damage := minf(health_before, maxf(0.0, amount * multiplier))
-	if role == &"stage_boss":
-		applied_damage = minf(
-			applied_damage,
-			boss_exam_runtime.damage_allowance(
-				health_before,
-				enemy.max_health
-			)
-		)
 	if applied_damage <= 0.0:
 		return 0.0
 	enemy.health = health_before - applied_damage
+	if role == &"stage_boss" and boss_damage_multiplier < 1.0:
+		var impact_direction := (enemy.pos - player_position).normalized()
+		if impact_direction.is_zero_approx():
+			impact_direction = Vector2.RIGHT
+		_add_effect(
+			"boss_reduced_hit",
+			enemy.pos,
+			Art.MUSTARD,
+			0.52,
+			enemy.radius,
+			impact_direction,
+			applied_damage,
+			boss_damage_multiplier
+		)
 	if player_owned and not boss_practice.active and source != "validation":
 		stage_telemetry.record_outgoing(
 			DamageSourceCatalog.outgoing_id(source),
@@ -3467,6 +3636,7 @@ func _defeat_enemy(enemy: EnemyState, source: String) -> void:
 	if boss_practice.active:
 		enemy.alive = false
 		enemy.active = false
+		enemy_grid.update_actor(enemy)
 		enemy_store.queue_defeat(enemy)
 		_add_effect("destroy", enemy.pos, _enemy_color(enemy.role), 0.38, enemy.radius * 1.8)
 		_handle_boss_module_result(module_result)
@@ -3482,6 +3652,7 @@ func _defeat_enemy(enemy: EnemyState, source: String) -> void:
 		_spawn_splitter_children(enemy)
 	enemy.alive = false
 	enemy.active = false
+	enemy_grid.update_actor(enemy)
 	enemy_store.queue_defeat(enemy)
 	stats_enemies_defeated += 1
 	stage_telemetry.record_defeat(enemy.archetype, enemy.elite_trait)
@@ -3676,6 +3847,8 @@ func _apply_dash_collision() -> void:
 		return
 	enemy_grid.query_radius_into(player_position, Rules.PLAYER_RADIUS + 96.0, enemies, _enemy_query_buffer)
 	for enemy in _enemy_query_buffer:
+		if not _is_player_targetable_enemy(enemy):
+			continue
 		if enemy.ram_cooldown > 0.0:
 			continue
 		if player_position.distance_to(enemy.pos) <= Rules.PLAYER_RADIUS + enemy.radius + 5.0:
@@ -3683,6 +3856,7 @@ func _apply_dash_collision() -> void:
 			_damage_enemy(enemy, 16.0, "Dash impact", &"kinetic", true)
 			var push := (enemy.pos - player_position).normalized()
 			enemy.pos = _move_actor(enemy.pos, push * 45.0, enemy.radius, false)
+			enemy_grid.update_actor(enemy)
 			_add_effect("impact", enemy.pos, Rules.AMBER, 0.20, 34.0)
 
 
@@ -3694,6 +3868,7 @@ func _repel_nearby_enemies(radius: float) -> void:
 			var push := (enemy.pos - player_position).normalized() * 95.0
 			enemy.pos = _move_actor(enemy.pos, push, enemy.radius, false)
 			enemy.stun = maxf(enemy.stun, 0.75)
+			enemy_grid.update_actor(enemy)
 
 
 func _damage_enemies_in_radius(
@@ -3709,6 +3884,8 @@ func _damage_enemies_in_radius(
 	for enemy in _enemy_query_buffer:
 		if enemy.id == excluded_id:
 			continue
+		if not _is_player_targetable_enemy(enemy):
+			continue
 		if enemy.pos.distance_to(center) <= radius + enemy.radius:
 			_damage_enemy(enemy, damage, source, attribute, player_owned)
 
@@ -3720,20 +3897,30 @@ func _clear_hostile_projectiles(center: Vector2, radius: float) -> int:
 func _update_aim_target() -> void:
 	var ray_end := player_position + player_aim_direction * 900.0
 	var best_id := ""
-	var best_projection := INF
 	enemy_grid.query_segment_into(player_position, ray_end, 110.0, enemies, _enemy_query_buffer)
+	var candidate_count := 0
 	for enemy in _enemy_query_buffer:
+		if not _is_player_targetable_enemy(enemy):
+			continue
 		var enemy_position := enemy.pos
 		if Rules.point_segment_distance(enemy_position, player_position, ray_end) > enemy.radius + 22.0:
 			continue
 		var projection := (enemy_position - player_position).dot(player_aim_direction)
 		if projection < 0.0 or projection > 900.0:
 			continue
-		if not _runtime_has_line_of_sight(player_position, enemy_position, 5.0):
-			continue
-		if projection < best_projection:
-			best_projection = projection
+		enemy.passive_score = projection
+		_enemy_query_buffer[candidate_count] = enemy
+		candidate_count += 1
+	_enemy_query_buffer.resize(candidate_count)
+	_enemy_query_buffer.sort_custom(func(a: EnemyState, b: EnemyState) -> bool:
+		return a.passive_score < b.passive_score
+	)
+	# Projection order preserves exact target priority while avoiding repeated
+	# terrain line tests behind the first visible target.
+	for enemy in _enemy_query_buffer:
+		if _runtime_has_line_of_sight(player_position, enemy.pos, 5.0):
 			best_id = enemy.id
+			break
 	_aim_target_id = best_id
 
 
@@ -3952,6 +4139,8 @@ func _update_stage_boss(boss: EnemyState, delta: float) -> void:
 	if not bool(boss.alive):
 		return
 	boss_exam_runtime.advance(delta)
+	boss.boss_module_state = boss_exam_runtime.core_state()
+	_show_pending_boss_state_hint()
 	if (
 		boss_practice.is_pattern_loop()
 		and BossPatterns.commit_mode(boss_practice.pattern) == &"autonomous"
@@ -4032,8 +4221,8 @@ func _boss_select_pattern(boss: EnemyState) -> void:
 	AttackTelegraphs.refresh_boss(
 		boss,
 		pattern,
-		Callable(self, "_runtime_attack_path_end"),
-		Callable(self, "_runtime_charge_path_end")
+		_runtime_attack_path_callable,
+		_runtime_charge_path_callable
 	)
 
 
@@ -4152,7 +4341,7 @@ func _begin_boss_exam_phase(boss: EnemyState, next_phase: int) -> void:
 	boss.phase_time = 0.90
 	boss.pattern = &"phase_transition" if boss.boss_phase > 1 else &"system_wake"
 	boss.pattern_index = 0
-	boss.boss_module_state = &"locked"
+	boss.boss_module_state = &"sealed"
 	boss.attack_telegraphs.clear()
 	var payload := boss_exam_runtime.begin_phase(
 		boss.max_health,
@@ -4166,9 +4355,9 @@ func _begin_boss_exam_phase(boss: EnemyState, next_phase: int) -> void:
 			StringName(payload.get("tactic_id", &""))
 		)
 	_sync_boss_module_states()
+	_show_pending_boss_state_hint()
 	if boss.boss_phase > 1:
 		boss_phase_two_announced = true
-		_ui.notify(tr(String(payload["cue_key"])), 3.4, Art.BOSS_COMMAND)
 		_play_sound(&"boss", 0.78)
 
 
@@ -4286,6 +4475,7 @@ func _remove_boss_objective_modules() -> void:
 		):
 			enemy.alive = false
 			enemy.active = false
+			enemy_grid.update_actor(enemy)
 			enemy_store.queue_defeat(enemy)
 
 
@@ -4308,14 +4498,22 @@ func _handle_boss_module_result(result: Dictionary) -> void:
 		if boss != null and boss.alive:
 			boss.vulnerable = float(result.get("vulnerability", 0.0))
 			boss.boss_module_state = &"open"
-		_ui.notify(
-			tr(String(result.get("cue_key", "BOSS_EXAM_CORE_OPEN"))),
-			2.4,
-			Art.PLAYER_REWARD
-		)
+		_show_pending_boss_state_hint()
 		_play_sound(&"impact", 1.08)
 	else:
 		_play_sound(&"impact", 0.82)
+
+
+func _show_pending_boss_state_hint() -> void:
+	var hint_key := boss_exam_runtime.take_state_entry_hint()
+	if hint_key.is_empty():
+		return
+	var color := (
+		Art.PLAYER_REWARD
+		if hint_key == "BOSS_EXAM_CORE_OPEN"
+		else Art.BOSS_COMMAND
+	)
+	_ui.notify(tr(hint_key), 2.6, color)
 
 
 func _on_boss_charge_collision(
@@ -4376,6 +4574,7 @@ func _complete_stage() -> void:
 		if enemy.alive:
 			enemy.alive = false
 			enemy.active = false
+			enemy_grid.update_actor(enemy)
 			enemy_store.queue_defeat(enemy)
 	projectile_store.retain_player_only()
 	denied_zones.clear()
@@ -4655,12 +4854,14 @@ func _build_hud_snapshot(include_world_channels: bool = true, include_guidebook:
 	var boss_snapshot := {"visible": false}
 	var boss := _find_enemy_by_id("stage_boss")
 	if boss != null and boss.alive:
+		var boss_objective := _boss_objective_snapshot()
 		boss_snapshot = {
 			"visible": true,
 			"name": tr("ENEMY_BOSS_PHASE") % [tr(String(boss.name)), int(boss.boss_phase)],
 			"health": float(boss.health),
 			"max_health": float(boss.max_health),
 			"state": _boss_state_text(boss),
+			"objective":boss_objective,
 		}
 
 	var snapshot := {
@@ -4752,9 +4953,15 @@ func _objective_text() -> Array[String]:
 	if stage_flow.state == StageFlow.State.BOSS_WARNING:
 		return [tr("OBJECTIVE_BOSS_INBOUND").replace("%s", boss_name), tr("OBJECTIVE_BOSS_INBOUND_DETAIL")]
 	if boss_started:
+		var boss_detail_key := boss_exam_runtime.cue_key()
+		match boss_exam_runtime.core_state():
+			&"open":
+				boss_detail_key = "BOSS_EXAM_CORE_OPEN"
+			&"stable":
+				boss_detail_key = "BOSS_EXAM_CORE_STABLE"
 		return [
 			tr("OBJECTIVE_BOSS_STAGE").replace("%s", boss_name),
-			tr(boss_exam_runtime.cue_key()),
+			tr(boss_detail_key),
 		]
 	return [tr("OBJECTIVE_THREATS") % [stage_flow.defeats, stage_flow.quota], tr("OBJECTIVE_THREATS_DETAIL")]
 
@@ -4781,18 +4988,60 @@ func _enemy_state_text(enemy: EnemyState) -> String:
 
 
 func _boss_state_text(boss: EnemyState) -> String:
-	var base_state := (
-		tr(boss_exam_runtime.cue_key())
-		if boss_exam_runtime.objective_locked
-		else (
-			tr("BOSS_EXAM_CORE_OPEN")
-			if boss_exam_runtime.vulnerability_remaining > 0.0
-			else tr("BOSS_EXAM_CORE_STABLE")
-		)
-	)
+	var objective := _boss_objective_snapshot()
+	var state := StringName(objective.get("state", &"stable"))
+	var base_state := ""
+	if state == &"sealed":
+		var active_modules := Array(objective.get("active_modules", []))
+		if active_modules.is_empty():
+			base_state = tr("BOSS_CORE_SEALED_STATUS_EMPTY")
+		else:
+			var active := Dictionary(active_modules[0])
+			base_state = tr("BOSS_CORE_SEALED_STATUS") % [
+				String(active.get("name", "")),
+				roundi(float(active.get("health", 0.0))),
+				roundi(float(active.get("max_health", 1.0))),
+			]
+	elif state == &"open":
+		base_state = tr("BOSS_CORE_OPEN_STATUS") % boss_exam_runtime.vulnerability_remaining
+	else:
+		base_state = tr("BOSS_CORE_STABLE_STATUS")
 	var parts: Array[String] = [base_state]
 	parts.append_array(_localized_status_parts(boss))
 	return "  •  ".join(parts)
+
+
+func _boss_objective_snapshot() -> Dictionary:
+	var modules: Array[Dictionary] = []
+	var active_modules: Array[Dictionary] = []
+	for enemy in enemies:
+		if (
+			not enemy.alive
+			or enemy.role != &"boss_pylon"
+			or enemy.boss_objective_id.is_empty()
+		):
+			continue
+		var module_state := boss_exam_runtime.module_state(enemy.id)
+		var descriptor := {
+			"id":enemy.id,
+			"objective_id":enemy.boss_objective_id,
+			"kind":enemy.boss_module_kind,
+			"state":module_state,
+			"name":tr(String(enemy.name)),
+			"health":enemy.health,
+			"max_health":enemy.max_health,
+			"position":enemy.pos,
+		}
+		modules.append(descriptor)
+		if module_state == &"active":
+			active_modules.append(descriptor)
+	return {
+		"objective_id":boss_exam_runtime.objective_id(),
+		"state":boss_exam_runtime.core_state(),
+		"damage_multiplier":boss_exam_runtime.boss_damage_multiplier(),
+		"active_modules":active_modules,
+		"modules":modules,
+	}
 
 
 func _localized_status_parts(enemy: EnemyState) -> Array[String]:
@@ -4829,6 +5078,24 @@ func _minimap_snapshot(include_static_geometry: bool = true) -> Dictionary:
 		})
 	for enemy in enemies:
 		if not enemy.alive or not enemy.active or enemy.role == &"stage_boss":
+			continue
+		if (
+			enemy.role == &"boss_pylon"
+			and not enemy.boss_objective_id.is_empty()
+		):
+			var module_state := boss_exam_runtime.module_state(enemy.id)
+			markers.append({
+				"kind":"objective",
+				"id":enemy.id,
+				"objective_id":enemy.boss_objective_id,
+				"state":module_state,
+				"locked":module_state != &"active",
+				"health":enemy.health,
+				"max_health":enemy.max_health,
+				"position":enemy.pos,
+				"color":Art.MUSTARD,
+				"discovered":true,
+			})
 			continue
 		var stationary := enemy.role in [
 			&"turret", &"generator", &"interceptor_tower", &"beam_sentinel"
@@ -4899,6 +5166,7 @@ func _minimap_snapshot(include_static_geometry: bool = true) -> Dictionary:
 		"visited": visited,
 		"player": player_position,
 		"player_facing": player_aim_direction,
+		"semantic_markers": true,
 		"world_size": Rules.world_rect(current_stage_id).size,
 		"markers": markers,
 		"enemy_clusters":enemy_clusters,
@@ -5015,21 +5283,44 @@ func _update_threat_contacts(delta: float) -> void:
 	for enemy in enemies:
 		if not bool(enemy.alive) or not bool(enemy.active):
 			continue
+		var objective_active := (
+			enemy.role == &"boss_pylon"
+			and not enemy.boss_objective_id.is_empty()
+			and boss_exam_runtime.module_state(enemy.id) == &"active"
+		)
+		if (
+			enemy.role == &"boss_pylon"
+			and not enemy.boss_objective_id.is_empty()
+			and not objective_active
+		):
+			continue
 		var enemy_screen := canvas_transform * Vector2(enemy.pos)
 		if safe_viewport.has_point(enemy_screen):
 			_discover_guide(GuidebookCatalog.entry_id_for_enemy(enemy.archetype, enemy.role))
 			if enemy.elite_trait != &"":
 				_discover_guide(StringName("object_elite_%s" % String(enemy.elite_trait)))
 		var offset := Vector2(enemy.pos) - player_position
-		if offset.length_squared() > THREAT_SCAN_DISTANCE * THREAT_SCAN_DISTANCE:
+		if (
+			not objective_active
+			and offset.length_squared()
+				> THREAT_SCAN_DISTANCE * THREAT_SCAN_DISTANCE
+		):
 			continue
 		if safe_viewport.has_point(enemy_screen):
 			continue
 		var health_class := enemy.health_class
+		var radar_offset := offset
+		if objective_active and radar_offset.length() > THREAT_SCAN_DISTANCE:
+			radar_offset = radar_offset.normalized() * THREAT_SCAN_DISTANCE * 0.98
 		contacts.append({
-			"offset": offset,
-			"priority": health_class in [&"priority", &"boss"],
+			"offset": radar_offset,
+			"priority": health_class in [&"priority", &"boss"] or objective_active,
 			"targeted": String(enemy.id) == _aim_target_id,
+			"objective":objective_active,
+			"objective_id":enemy.id if objective_active else "",
+			"objective_state":enemy.boss_module_state if objective_active else &"",
+			"health":enemy.health if objective_active else 0.0,
+			"max_health":enemy.max_health if objective_active else 0.0,
 		})
 	if stage_flow.state == StageFlow.State.BOSS_WARNING:
 		contacts.append({"offset":boss_arrival_position - player_position, "priority":true, "targeted":false})
@@ -5082,8 +5373,8 @@ func _draw_terrain() -> void:
 						float(segment) / 3.0
 					)
 					var center := rectangle.get_center() + axis * offset
-					_draw_reward_facility_recipe(
-						_facility_recipe_id(&"arc_surge_strip"),
+					_draw_semantic_asset(
+						&"world/facility_arc_surge_strip",
 						center,
 						32.0 + readiness * 16.0,
 						Color(
@@ -5100,8 +5391,8 @@ func _draw_terrain() -> void:
 						4.0
 					)
 				for index in 3:
-					_draw_reward_facility_recipe(
-						_facility_recipe_id(&"arc_surge_strip"),
+					_draw_semantic_asset(
+						&"world/facility_arc_surge_strip",
 						rectangle.position + rectangle.size * Vector2(
 							0.25 + float(index) * 0.25, 0.5
 						),
@@ -5152,17 +5443,14 @@ func _draw_terrain() -> void:
 					1.0
 				)
 				var bulkhead_state := &"cracked" if health_ratio < 0.58 else &"intact"
-				_draw_reward_facility_recipe_fitted(
-					_facility_recipe_id(&"breakable_bulkhead"),
+				_draw_semantic_asset_fitted(
+					(
+						&"world/world_bulkhead_damaged"
+						if bulkhead_state == &"cracked"
+						else &"world/world_bulkhead_intact"
+					),
 					rectangle,
-					Art.RAISED,
-					{
-						&"function_inset":(
-							Art.DANGER
-							if bulkhead_state == &"cracked"
-							else Art.SURFACE
-						),
-					}
+					Color.WHITE
 				)
 			&"transit_gate":
 				var center := Vector2(feature["pos"])
@@ -5172,8 +5460,8 @@ func _draw_terrain() -> void:
 				var gate_color := Art.SYSTEM if available else Art.TEXT_MUTED
 				draw_circle(center, TerrainRuntime.GATE_RADIUS, Color(gate_color, 0.24))
 				draw_arc(center, TerrainRuntime.GATE_RADIUS, 0.0, TAU, 40, gate_color, 12.0)
-				_draw_reward_facility_recipe(
-					_facility_recipe_id(&"transit_gate"),
+				_draw_semantic_asset(
+					&"world/facility_transit_gate",
 					center,
 					54.0,
 					gate_color
@@ -5211,15 +5499,13 @@ func _draw_pickups_and_crates() -> void:
 			continue
 		var position := Vector2(pickup["pos"])
 		var kind := StringName(pickup["kind"])
-		var color := _pickup_color(kind)
 		var bob := 0.0 if _reduced_motion_enabled() else sin(float(pickup["pulse"])) * 3.0
 		position.y += bob
-		var descriptor := RewardVisualCatalog.descriptor(kind)
-		_draw_reward_facility_recipe(
-			StringName(descriptor.get("recipe", kind)),
+		_draw_semantic_asset(
+			StringName("pickup/%s" % kind),
 			position,
 			Art.PICKUP_PLINTH_RADIUS,
-			color
+			Color.WHITE
 		)
 	for crate in crates:
 		if not bool(crate["alive"]):
@@ -5235,81 +5521,52 @@ func _draw_pickups_and_crates() -> void:
 			if StringName(crate["drop"]) == &"repair"
 			else Art.SYSTEM
 		)
-		_draw_reward_facility_recipe(
-			StringName(
-				RewardVisualCatalog.descriptor(&"reward_crate")
-				.get("recipe", &"reward_crate")
-			),
+		_draw_semantic_asset(
+			&"pickup/reward_crate",
 			position,
 			38.0,
-			face,
-			{&"function_inset":content_color}
+			Color(
+				face.lerp(content_color, 0.12),
+				1.0
+			)
 		)
 
 
-func _draw_reward_facility_recipe(
-	recipe_id: StringName,
+func _draw_semantic_asset(
+	asset_id: StringName,
 	center: Vector2,
-	scale: float,
-	accent: Color,
-	overrides: Dictionary = {}
+	radius: float,
+	modulate: Color = Color.WHITE,
+	angle: float = 0.0
 ) -> void:
-	var palette := _reward_facility_palette(accent)
-	palette.merge(overrides, true)
-	RewardFacilityRecipes.draw_recipe(
-		self,
-		recipe_id,
-		center,
-		scale,
-		palette
-	)
-
-
-func _draw_reward_facility_recipe_fitted(
-	recipe_id: StringName,
-	target: Rect2,
-	accent: Color,
-	overrides: Dictionary = {}
-) -> void:
-	var source_bounds := RewardFacilityRecipes.normalized_bounds(recipe_id)
-	if not source_bounds.has_area():
+	var texture := SemanticAssets.texture(asset_id)
+	var descriptor := SemanticAssets.descriptor(asset_id)
+	if texture == null or descriptor.is_empty():
 		return
-	var palette := _reward_facility_palette(accent)
-	palette.merge(overrides, true)
-	for command in RewardFacilityRecipes.resolved_polygon_commands(
-		recipe_id,
-		Vector2.ZERO,
-		1.0,
-		palette
-	):
-		var fitted := PackedVector2Array()
-		for point in PackedVector2Array(command["points"]):
-			var normalized := (point - source_bounds.position) / source_bounds.size
-			fitted.append(target.position + normalized * target.size)
-		draw_colored_polygon(fitted, Color(command["color"]))
-
-
-func _reward_facility_palette(accent: Color) -> Dictionary:
-	return {
-		&"accent":accent,
-		&"perimeter":Color(Art.SPACE_BLACK, accent.a),
-		&"main_mass":accent,
-		&"secondary_mass":Color(
-			accent.lerp(Art.SPACE_BLACK, 0.28),
-			accent.a
-		),
-		&"function_inset":Color(Art.SURFACE, accent.a),
-		&"hard_highlight":Color(Art.TEXT_PRIMARY, accent.a),
-	}
-
-
-func _facility_recipe_id(facility_id: StringName) -> StringName:
-	return StringName(
-		WorldVisualCatalog.facility_descriptor(facility_id).get(
-			"recipe",
-			facility_id
-		)
+	var canvas := Vector2(descriptor.get("canvas", texture.get_size()))
+	if canvas.x <= 0.0 or canvas.y <= 0.0:
+		canvas = Vector2(texture.get_size())
+	var pivot := Vector2(descriptor.get("pivot", canvas * 0.5))
+	var scale := radius / (maxf(canvas.x, canvas.y) * 0.5)
+	draw_set_transform(center, angle, Vector2.ONE)
+	draw_texture_rect(
+		texture,
+		Rect2(-pivot * scale, canvas * scale),
+		false,
+		modulate
 	)
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+
+func _draw_semantic_asset_fitted(
+	asset_id: StringName,
+	target: Rect2,
+	modulate: Color = Color.WHITE
+) -> void:
+	var texture := SemanticAssets.texture(asset_id)
+	if texture == null:
+		return
+	draw_texture_rect(texture, target, false, modulate)
 
 
 func _draw_enemies() -> void:
@@ -5597,6 +5854,7 @@ func _parse_capture_arguments() -> void:
 
 func _run_capture_sequence() -> void:
 	DirAccess.make_dir_recursive_absolute(_capture_directory)
+	get_viewport().transparent_bg = false
 	if _capture_size.x > 0 and _capture_size.y > 0:
 		get_window().size = _capture_size
 	_camera.position_smoothing_enabled = false
@@ -5639,6 +5897,9 @@ func _run_capture_sequence() -> void:
 	)
 	await _settle_capture()
 	_save_capture("01g-guidebook-enemy-counterplay.png")
+	_ui.debug_modal_contract("practice")
+	await _settle_capture()
+	_save_capture("01h-boss-practice.png")
 
 	_capture_prepare_stage(0)
 	await _settle_capture()
@@ -5796,8 +6057,8 @@ func _capture_pressure_evidence() -> void:
 			enemy.committed_target = player_position
 			AttackTelegraphs.refresh_ordinary(
 				enemy,
-				Callable(self, "_runtime_attack_path_end"),
-				Callable(self, "_runtime_charge_path_end")
+				_runtime_attack_path_callable,
+				_runtime_charge_path_callable
 			)
 		_append_enemy(enemy)
 	experience_runtime.clear_shards()
@@ -5924,10 +6185,20 @@ func _capture_level_up_evidence() -> void:
 	await _settle_capture()
 	_save_capture("06c-level-up-confirmed.png")
 	var localization_fixture: Array[Dictionary] = []
-	for upgrade_id in [&"ion_field", &"aegis_cycle", &"kinetic_rounds"]:
+	for upgrade_record in [
+		[&"siphon_matrix", 1],
+		[&"aegis_cycle", 1],
+		[&"marked_salvo", 0],
+	]:
+		var upgrade_id := StringName(upgrade_record[0])
 		var definition := upgrade_catalog.get_definition(upgrade_id)
 		if definition != null:
-			localization_fixture.append(UpgradeOfferPresenter.snapshot(definition, 0))
+			localization_fixture.append(
+				UpgradeOfferPresenter.snapshot(
+					definition,
+					int(upgrade_record[1])
+				)
+			)
 	if localization_fixture.size() == 3:
 		_ui.show_upgrade(localization_fixture)
 		_ui.debug_select_upgrade(2)
@@ -6032,6 +6303,18 @@ func _capture_all_boss_evidence() -> void:
 		if boss == null:
 			continue
 		var stage_slug := String(current_stage_id).replace("_", "-")
+		if stage_index == 0:
+			_damage_enemy(
+				boss,
+				100.0,
+				"validation",
+				&"kinetic",
+				true
+			)
+			mode = RunMode.PAUSED
+			await _settle_capture()
+			_save_capture("30-boss-01-stage-1-sealed-hit.png")
+			effects.clear()
 		_boss_select_pattern(boss)
 		mode = RunMode.PAUSED
 		await _settle_capture()
@@ -6063,6 +6346,12 @@ func _capture_all_boss_evidence() -> void:
 		boss.pattern = "recovery_window"
 		await _settle_capture()
 		_save_capture("30-boss-%02d-%s-recovery.png" % [stage_index + 1, stage_slug])
+		boss_exam_runtime.advance(BossExamCatalog.VULNERABILITY_SECONDS + 0.1)
+		boss.boss_module_state = boss_exam_runtime.core_state()
+		await _settle_capture()
+		_save_capture(
+			"30-boss-%02d-%s-stable.png" % [stage_index + 1, stage_slug]
+		)
 
 		boss.health = float(boss.max_health) * 0.48
 		_ui.clear_notifications()
@@ -6080,8 +6369,8 @@ func _capture_all_boss_evidence() -> void:
 			AttackTelegraphs.refresh_boss(
 				boss,
 				"furnace_ring",
-				Callable(self, "_runtime_attack_path_end"),
-				Callable(self, "_runtime_charge_path_end")
+				_runtime_attack_path_callable,
+				_runtime_charge_path_callable
 			)
 			_camera.position = player_position
 			await _settle_capture()
@@ -6171,6 +6460,7 @@ func _settle_capture() -> void:
 
 func _save_capture(file_name: String) -> void:
 	var path := _capture_directory.path_join(file_name)
+	RenderingServer.force_draw(true)
 	var image := get_viewport().get_texture().get_image()
 	var error := image.save_png(path)
 	if error != OK:
