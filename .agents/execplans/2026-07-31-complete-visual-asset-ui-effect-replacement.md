@@ -462,20 +462,20 @@ Source owners: `docs/design/UI_VISUAL_SYSTEM.md`,
 `art/gameplay/semantic-v2/asset-manifest.json`,
 `tools/validation/validate_vehicle_visual_sheet_coverage.gd`
 
-- [ ] **0.1 UI image-panel contract를 active visual spec에 기록한다.**
+- [x] **0.1 UI image-panel contract를 active visual spec에 기록한다.**
   - As-is: UI panel chrome의 image-backed requirement가 정본에 충분히
     명시되지 않았다.
   - To-be: panel/frame/background image + dynamic text/icon/value contract,
     9-slice safe area와 allowed procedural list를 명시한다.
   - Accept: spec과 이 계획의 image/procedural boundary가 동일하다.
   - Guard: map, gameplay와 unapproved motif가 spec에 들어가지 않는다.
-- [ ] **0.2 이전 acceptance evidence의 범위를 정정한다.**
+- [x] **0.2 이전 acceptance evidence의 범위를 정정한다.**
   - As-is: effect/UI integration 설명이 실제 runtime wiring보다 넓다.
   - To-be: 3/8 effect 연결, 5/8 미연결, procedural UI chrome과 final
     performance limitation을 current fact로 기록한다.
   - Accept: evidence가 source 존재와 runtime evidence를 구분한다.
   - Guard: 과거 통과 payload와 수치를 삭제하거나 바꾸지 않는다.
-- [ ] **0.3 manifest와 validator를 event/state coverage 기준으로 확장한다.**
+- [x] **0.3 manifest와 validator를 event/state coverage 기준으로 확장한다.**
   - As-is: effect file 수만 세어도 coverage가 통과한다.
   - To-be: producer event→catalog→asset→frame chain과 UI surface state
     coverage를 검사한다.
@@ -992,7 +992,7 @@ Material open question은 없다. 다음 항목은 change-control boundary다.
 - [x] 기존 image-backed family와 remaining primitive/generic family를 분리했다.
 - [x] image/hybrid/procedural 경계와 event/UI asset contract를 잠갔다.
 - [x] 실행 계획서를 생성했다.
-- [ ] Phase 0: authority와 acceptance truth 정정
+- [x] Phase 0: authority와 acceptance truth 정정
 - [ ] Phase 1: 추가 effect/cue asset pack
 - [ ] Phase 2: UI image component pack
 - [ ] Phase 3: semantic event/effect runtime switch

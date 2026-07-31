@@ -179,6 +179,30 @@ provider는 floor/wall map surface를 현재 runtime에 연결하지 않는다.
 - surface에는 한 border와 한 semantic accent rail만 허용한다. 장식용
   corner와 중첩 frame을 반복하지 않는다.
 
+### Image-backed UI composition
+
+- production HUD, modal, card, button, tab, option, toggle, slider, meter와
+  preview chrome은 승인된 raster component image를 사용한다.
+- panel/frame/background image가 시각 shell을 소유하고 localized text,
+  gameplay icon, dynamic value, focus target과 accessibility state는 그 위의
+  Godot `Control` child가 소유한다. text, gameplay icon 또는 임의 숫자를
+  background image에 굽지 않는다.
+- 늘어나는 shell은 `StyleBoxTexture` 9-slice로 구성한다. 각 texture는
+  manifest에 canvas, patch margin과 text-safe inset을 기록하며 corner,
+  rail과 notch는 지원 viewport에서 늘어나거나 잘리지 않는다.
+- normal, hover, pressed, focus, selected와 disabled는 color뿐 아니라
+  rail, notch 또는 pattern이 다른 독립 image state를 사용한다.
+- `StyleBoxFlat`과 `_draw()`로 production chrome을 새로 만들거나 raster
+  shell 위에 같은 perimeter, rail 또는 decorative corner를 다시 그리지
+  않는다.
+- procedural 표현은 다음 동적 truth에만 허용한다.
+  - collision과 일치하는 attack radius, beam/charge corridor, mine boundary
+  - HP, cooldown, progress와 fuse의 실제 ratio 또는 clip
+  - target/off-screen vector와 floating/localized text
+  - screen dim, invisible layout container와 debug collision overlay
+- 위 목록에 없는 non-spatial state, panel decoration, badge, pip와
+  selection ornament는 authored image component를 사용한다.
+
 ### Responsive geometry
 
 | viewport | outer safe margin | modal content maximum | mode |

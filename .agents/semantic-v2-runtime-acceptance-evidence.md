@@ -18,10 +18,11 @@ related:
 
 ## Purpose
 
-승인된 `semantic-v2` 이미지 팩의 runtime 연결, 전체 UI 교정, 공격 표시,
-보스 피해·목표 안내와 그 뒤에 수행한 성능 안정화 결과를 기록한다. 이
-문서는 구현 결과와 미통과 gate를 함께 보존하는 evidence이며 새로운
-gameplay나 release policy를 만들지 않는다.
+승인된 `semantic-v2` 이미지 팩의 runtime 연결 범위, UI와 공격 표시의
+현재 상태, 보스 피해·목표 안내와 당시 수행한 성능 안정화 결과를 기록한다.
+이 문서는 source asset 존재와 실제 runtime 연결을 구분하고, 구현 결과와
+미통과 gate를 함께 보존한다. 새로운 gameplay나 release policy를 만들지
+않는다.
 
 ## Sources
 
@@ -40,9 +41,19 @@ gameplay나 release policy를 만들지 않는다.
 
 ### 구현 및 시각 검수
 
-- non-map actor, boss/module, secondary, defense, projectile, status, effect,
-  pickup, facility, HUD/minimap와 upgrade glyph가 하나의 manifest-backed
-  provider를 소비한다. floor/wall map surface는 이번 범위에서 제외했다.
+- non-map actor, boss/module, secondary, defense, projectile, status, pickup,
+  facility, HUD/minimap와 upgrade glyph가 하나의 manifest-backed provider를
+  소비한다. floor/wall map surface는 이번 범위에서 제외했다.
+- effect source와 manifest에는 8개 animation family가 존재하지만 당시
+  combat renderer가 실제 event lifecycle에 연결한 것은
+  `muzzle_player_primary`, `impact_reflect`, `dash_start` 3개뿐이다.
+  `emp_release`, `wake_mine_detonation`, `boss_module_disabled`,
+  `hostile_summon_arrival`, `bulkhead_destroy` 5개는 source가 존재해도
+  production event에서 재생된 것으로 인정할 runtime evidence가 없다.
+- 당시 hit, reflect와 barrier contact는 같은 `impact_reflect` animation을
+  공유했고 broad `spawn`, `shock`, `secondary`, `destroy`, `support` event는
+  generic ring/diamond/beam/afterimage fallback으로 표시됐다. 따라서 effect
+  integration은 완료 상태가 아니었다.
 - player engine은 hull rear socket에 고정되고 aim mount만 manual aim을
   따른다. dash는 directional start/afterimage를 사용하며 danger radial을
   만들지 않는다.
@@ -52,13 +63,20 @@ gameplay나 release policy를 만들지 않는다.
   floor나 objective lock 때문에 damage가 0이 되지 않는다. active module
   ID/state/health는 HUD, world cue, radar와 minimap에서 같은 snapshot을
   소비한다.
-- upgrade card의 Korean/English overflow를 교정하고 deployment,
-  settings, guidebook, report/result/garage와 boss practice를 같은 font,
-  token과 semantic glyph 체계로 맞췄다.
-- 최종 `ko-1280-final2` capture에서 peak combat, worst upgrade triplet,
-  boss sealed/open/stable, all modal과 report surface를 재검토했다.
+- upgrade card의 Korean/English overflow와 modal layout을 당시 validator
+  기준으로 교정했지만 production chrome은
+  `art/ui/production/vehicle_stage_theme.tres`의 `StyleBoxFlat`과
+  `VehicleModalSurface._draw()` 등 procedural perimeter에 남아 있었다.
+  사용자가 지정한 image panel/frame/background 위에 동적 text/icon/value를
+  조합하는 UI 전환은 완료되지 않았다.
+- `ko-1280-final2` capture는 당시 runtime 상태를 보존하는 baseline
+  evidence다. peak combat에서 generic overlay가 판독을 방해하고 UI chrome이
+  image-backed가 아니므로 최종 visual acceptance 증거로 사용하지 않는다.
 - import, 52개 focused validator, semantic coverage/separation, UI layout,
-  attack, boss, pickup, spatial-grid와 integrated-run validation이 통과했다.
+  attack, boss, pickup, spatial-grid와 integrated-run validation이 당시
+  계약에서 통과했다. source 수와 code path 존재를 확인한 결과이며 누락된
+  producer event→catalog→asset→frame chain 또는 UI texture state coverage를
+  증명하지 않는다.
 - Godot Web export가 성공했다. production build는 fastrun Codex lane에서
   정상 제공했지만 이 session에는 연결된 browser surface가 없어 interactive
   built-Web smoke는 수행하지 못했다.
@@ -111,6 +129,8 @@ performance release로 판정할 수 없다.
 
 - map tile compiler, enemy coordinated tactics와 boss pattern redesign은
   이 구현과 evidence의 범위가 아니다.
+- effect runtime wiring은 3/8 family만 확인됐고 UI chrome은 procedural
+  상태였으므로 이 문서는 complete visual replacement를 주장하지 않는다.
 - native capture는 Korean 중심이며 English/960/1920/200% text는 validator
   및 이전 rendered matrix로 확인했다.
 - production replay와 boss pressure는 통과했지만 synthetic peak와
