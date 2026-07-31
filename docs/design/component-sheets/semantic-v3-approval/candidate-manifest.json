@@ -1,69 +1,205 @@
 {
-  "schema_version": 1,
-  "pack_id": "cardborne-semantic-v3-approval-review",
+  "schema_version": 2,
+  "pack_id": "cardborne-semantic-v4-approval-review",
   "runtime_integration": false,
+  "approval_report": "asset-switch-approval-report.html",
+  "taxonomy": "../../GAMEPLAY_VISUAL_TAXONOMY.md",
   "reference": "../00-general-sf-component-master-v1.png",
-  "facing": "+X/right",
-  "max_asset_identities_per_image": 4,
-  "current_approval_unit": "world_combat_runtime_integration_contract",
-  "candidates": [
+  "facing": "+X/right for directional combat assets",
+  "max_asset_identities_per_generated_image": 4,
+  "current_approval_unit": "role_categorized_map_combat_ui_visual_contract",
+  "approval_policy": "Do not split into production assets or change runtime code until the required items are explicitly approved in report v2.",
+  "active_candidates": [
+    {
+      "id": "floor_decay",
+      "category": "map_floor_tile",
+      "status": "pending_user_approval",
+      "required_for_execution": true,
+      "file": "generated/semantic-v4/floor-decay-candidates.png",
+      "chroma_source": "generated/semantic-v4/floor-decay-source.png",
+      "canvas": [1254, 1254],
+      "identities": [
+        "floor_intact",
+        "floor_worn_cracked",
+        "floor_breached_poison",
+        "floor_breached_lava"
+      ],
+      "sha256": "cc4dc103c3eb8a53ef658bfa2999926870ed58d8fb3e53be85dba032841afc68"
+    },
+    {
+      "id": "structure_family",
+      "category": "cover_and_destructible_barrier",
+      "status": "pending_user_approval",
+      "required_for_execution": true,
+      "file": "generated/semantic-v4/structure-family-candidates.png",
+      "chroma_source": "generated/semantic-v4/structure-family-source.png",
+      "canvas": [1536, 1536],
+      "identities": [
+        "standalone_cover",
+        "loot_barrier_intact",
+        "loot_barrier_damaged",
+        "loot_barrier_breached"
+      ],
+      "sha256": "5b23feb8980fe77c2125931257925b4802c15655786f8b4276bdea16858c874b"
+    },
+    {
+      "id": "gate_barrier",
+      "category": "teleport_gate_and_traversable_energy_barrier",
+      "status": "pending_user_approval",
+      "required_for_execution": true,
+      "file": "generated/semantic-v4/gate-barrier-candidates.png",
+      "chroma_source": "generated/semantic-v4/gate-barrier-source.png",
+      "canvas": [1254, 1254],
+      "identities": [
+        "teleport_gate_inactive",
+        "teleport_gate_active",
+        "energy_barrier_inactive",
+        "energy_barrier_active"
+      ],
+      "sha256": "9bff8608af649ab09cbb9d4e4a2fe3f0a3be25afe903ab0a4b610085f1680972"
+    },
+    {
+      "id": "world_functional_fields",
+      "category": "functional_terrain",
+      "status": "pending_user_approval",
+      "required_for_execution": true,
+      "file": "generated/world-v4/world-functional-candidates.png",
+      "chroma_source": "generated/world-v4/world-functional-source.png",
+      "canvas": [1254, 1254],
+      "valid_identities": [
+        "repair_field_base",
+        "repair_field_active",
+        "overdrive_field"
+      ],
+      "superseded_identity": "arc_terminal_pair",
+      "notes": "The fourth quadrant is replaced by gate_barrier.energy_barrier_active and must not be integrated.",
+      "sha256": "fe83ce94b3f6c9a597d3d987b2acc7f57c98c56ea5bf008d4fc59bc84798f9e3"
+    },
+    {
+      "id": "containers_and_pickups",
+      "category": "container_and_pickup",
+      "status": "pending_user_approval",
+      "required_for_execution": true,
+      "file": "generated/semantic-v4/collectibles-containers-and-pickups-candidate.png",
+      "chroma_source": "generated/semantic-v4/collectibles-containers-and-pickups-source.png",
+      "canvas": [1254, 1254],
+      "identities": [
+        "reward_crate",
+        "repair_pickup",
+        "experience_recall_pickup",
+        "experience_shard"
+      ],
+      "sha256": "e3be0f97d111e8aac1190f44543dc766aaec3bf76c81e8c41b373a9af1082169"
+    },
+    {
+      "id": "projectile_delivery",
+      "category": "projectile_delivery",
+      "status": "pending_user_approval",
+      "required_for_execution": true,
+      "file": "generated/semantic-v4/projectile-delivery-candidates.png",
+      "chroma_source": "generated/semantic-v4/projectile-delivery-source.png",
+      "canvas": [1254, 1254],
+      "identities": [
+        "player_primary_bolt",
+        "hostile_standard_bolt",
+        "player_homing_missile",
+        "player_breach_slug"
+      ],
+      "sha256": "986e3ef43e7fc7b60851315f9148453c3f5c0ed4d5d54b16b671aaaa67b04baf"
+    },
+    {
+      "id": "hostile_projectile_tier",
+      "category": "projectile_threat_tier",
+      "status": "pending_user_approval",
+      "required_for_execution": true,
+      "file": "generated/semantic-v4/hostile-tier-candidates.png",
+      "chroma_source": "generated/semantic-v4/hostile-tier-source.png",
+      "canvas": [1774, 887],
+      "identities": [
+        "ordinary_hostile_projectile",
+        "elite_hostile_projectile",
+        "boss_hostile_projectile"
+      ],
+      "sha256": "1dabb4969fbf037fabeacc64e12458ffad42b2d7d539c8bb424c4e8a4e897cdc"
+    },
+    {
+      "id": "impact_feedback",
+      "category": "damage_feedback",
+      "status": "pending_user_approval",
+      "required_for_execution": true,
+      "file": "generated/semantic-v4/impact-feedback-candidates.png",
+      "chroma_source": "generated/semantic-v4/impact-feedback-source.png",
+      "canvas": [1254, 1254],
+      "identities": [
+        "directional_bolt_hit",
+        "asymmetric_missile_hit",
+        "reflect_deflection",
+        "barrier_contact"
+      ],
+      "sha256": "69e5bb5b7fc5070ad07842dd68c4b4b2e43a0edf3bbe22501c44e6483efcf00f"
+    },
+    {
+      "id": "laser_beam_components",
+      "category": "continuous_beam_delivery",
+      "status": "pending_user_approval",
+      "required_for_execution": true,
+      "file": "generated/semantic-v4/laser-beam-candidates.png",
+      "chroma_source": "generated/semantic-v4/laser-beam-source.png",
+      "canvas": [1254, 1254],
+      "identities": [
+        "ordinary_beam_startup_emitter",
+        "ordinary_beam_repeat_segment",
+        "ordinary_beam_endpoint_contact",
+        "boss_heavy_beam_repeat_segment"
+      ],
+      "sha256": "4ee2ccef0a1723585db2a6a28d79b5682f30f4863f1f9a0b4cdd848036dda4ef"
+    }
+  ],
+  "optional_candidates": [
     {
       "id": "player_foundation_flat",
-      "display_order": 1,
-      "title_ko": "평면 실루엣",
-      "status": "optional_preferred",
+      "status": "optional_not_requested",
       "required_for_execution": false,
-      "user_feedback": "Looks better than the current player art, but replacement was not requested or approved.",
       "file": "generated/01-player-foundation-flat.png",
       "chroma_source": "generated/player-foundation-flat-source.png",
-      "canvas": [
-        1536,
-        1024
-      ],
-      "identities": [
-        "player_hull",
-        "player_engine",
-        "player_aim_mount"
-      ],
+      "canvas": [1536, 1024],
+      "identities": ["player_hull", "player_engine", "player_aim_mount"],
       "sha256": "645b1fa7eb901e1499c184179cd8d1d9f5179c8eef7a4d9c75c662cb21ad6a3f"
     },
     {
       "id": "player_foundation_layered",
-      "display_order": 2,
-      "title_ko": "절제된 모듈 레이어",
-      "status": "optional_hold",
+      "status": "optional_not_requested",
       "required_for_execution": false,
       "file": "generated/02-player-foundation-layered.png",
       "chroma_source": "generated/player-foundation-layered-source.png",
-      "canvas": [
-        1536,
-        1024
-      ],
-      "identities": [
-        "player_hull",
-        "player_engine",
-        "player_aim_mount"
-      ],
+      "canvas": [1536, 1024],
+      "identities": ["player_hull", "player_engine", "player_aim_mount"],
       "sha256": "2680f8a100993ddd756c2e2bf4822060155253df2ab263a60426781c57ffed6b"
     },
     {
       "id": "player_foundation_outline",
-      "display_order": 3,
-      "title_ko": "윤곽 우선",
-      "status": "optional_hold",
+      "status": "optional_not_requested",
       "required_for_execution": false,
       "file": "generated/03-player-foundation-outline.png",
       "chroma_source": "generated/player-foundation-outline-source.png",
-      "canvas": [
-        1536,
-        1024
-      ],
-      "identities": [
-        "player_hull",
-        "player_engine",
-        "player_aim_mount"
-      ],
+      "canvas": [1536, 1024],
+      "identities": ["player_hull", "player_engine", "player_aim_mount"],
       "sha256": "476a84cae774161a6314f881eabe0c586b20daaf7301d3afbe8e4f20c3e00700"
     }
-  ]
+  ],
+  "superseded_review_artifacts": [
+    {
+      "file": "generated/world-v4/world-obstacle-candidates.png",
+      "reason": "Replaced by the brighter role-separated structure_family candidate."
+    },
+    {
+      "file": "generated/world-v4/world-functional-candidates.png#bottom-right",
+      "reason": "The small arc-terminal concept is replaced by the large traversable energy barrier."
+    }
+  ],
+  "preview_derivatives": {
+    "directory": "generated/semantic-v4/previews",
+    "canonical": false,
+    "purpose": "Mechanical crops and family strips for the large HTML approval viewer."
+  }
 }

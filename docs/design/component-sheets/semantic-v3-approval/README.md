@@ -9,6 +9,7 @@ scope: Current asset inventory and review-only replacement candidates
 source: ./00-current-asset-inventory-grid.png
 related:
   - ../../UI_VISUAL_SYSTEM.md
+  - ../../GAMEPLAY_VISUAL_TAXONOMY.md
   - ../../../../.agents/visual-redesign-decision-catalog.md
   - ../../../../.agents/execplans/2026-07-31-approval-gated-visual-asset-replacement.md
   - ./01-world-combat-runtime-gap.md
@@ -31,6 +32,45 @@ related:
 - 기존 gameplay/UI review sheet 11개: 현재 마스터 그리드 입력.
 
 ## Findings
+
+### 역할별 승인 리포트
+
+[`asset-switch-approval-report.html`](./asset-switch-approval-report.html)은
+작은 카드 그리드가 아니라 다음 구조로 검토한다.
+
+- 상단의 10개 역할 카테고리 tab
+- 카테고리 안의 실제 교체·추가·코드 항목 목록
+- 한 번에 한 항목을 표시하는 큰 AS-IS / TO-BE viewer
+- 원본 전체 화면 확대, 항목별 승인·수정·보류와 JSON export
+
+분류와 이름의 정본은
+[`GAMEPLAY_VISUAL_TAXONOMY.md`](../../GAMEPLAY_VISUAL_TAXONOMY.md)다.
+구조벽, 엄폐물, 파괴 장벽, 통과형 에너지 장벽, 기능 장판, 위험 장판과
+순간이동 게이트를 서로 바꿔 부르지 않는다. v1 리포트의 local decision은
+의미가 달라졌으므로 v2로 자동 승계하지 않는다.
+
+새 후보는 `generated/semantic-v4/`에 source와 alpha candidate를 함께
+보관한다. 현재 묶음은 다음과 같다.
+
+| family | 승인 단위 |
+| --- | --- |
+| `floor-decay` | 정상, 마모·균열, 독성 노출, 용암 노출 |
+| `structure-family` | 독립 엄폐물, 보상 구역 장벽 3상태 |
+| `gate-barrier` | 원형 순간이동 게이트 2상태, 통과형 에너지 장벽 2상태 |
+| `world-functional` | 회복 장판 base/active와 공격 증폭 장판 |
+| `collectibles-containers-and-pickups` | 상자, 회복, 경험치 회수, 단순 XP |
+| `projectile-delivery` | player bolt, hostile bolt, missile, breach slug |
+| `hostile-tier` | ordinary, elite, boss projectile tier |
+| `laser-beam` | hostile startup cap, repeat core, endpoint contact, boss heavy segment |
+| `impact-feedback` | bolt hit, missile hit, reflect, barrier contact |
+
+`generated/semantic-v4/previews/`는 큰 개별 viewer를 위한 기계적 crop이며
+별도 production asset owner가 아니다.
+
+이전 `generated/world-v4/world-obstacle-candidates.png`의 cover/bulkhead 안은
+새 `structure-family`가 대체하므로 승인·integration 대상으로 사용하지
+않는다. `world-functional-candidates.png`에서는 회복 장판과 overdrive만
+유효하며, 작은 arc terminal 안은 새 `gate-barrier`가 대체한다.
 
 ### 현재 에셋 마스터 그리드
 

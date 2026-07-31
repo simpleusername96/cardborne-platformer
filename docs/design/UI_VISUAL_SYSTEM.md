@@ -8,6 +8,7 @@ canonical_for: Cardborne vehicle-game art direction and UI presentation
 scope: All player-facing world, combat, HUD, modal, preview, and effect surfaces
 related:
   - ../product/vehicle_game_spec.md
+  - ./GAMEPLAY_VISUAL_TAXONOMY.md
   - ./component-sheets/README.md
   - ../../.agents/execplans/2026-07-30-semantic-visual-world-boss-performance-rework.md
   - ../../.agents/semantic-v2-runtime-acceptance-evidence.md
@@ -121,16 +122,21 @@ provider는 floor/wall map surface를 현재 runtime에 연결하지 않는다.
 - 12-unit gutter, chamfer, 낮은 대비 inset과 sparse service rail은 허용한다.
   random scratch와 combat cue보다 강한 high-frequency detail은 금지한다.
 - void는 near-black mass와 sparse system edge만 가진다.
-- blocker는 raised shell, floor-side light edge와 짧은 outer shadow를
-  공통으로 사용한다.
+- 구조벽은 맵 가장자리와 중앙 구역 모두 바닥보다 명백히 밝은 pale-metal
+  mass, dark contour와 짧은 outer shadow를 사용한다. 열린 공간의 독립
+  엄폐물은 구조벽처럼 일렬로 연결하지 않는다. 세부 역할과 상태 이름은
+  `GAMEPLAY_VISUAL_TAXONOMY.md`를 따른다.
 - presentation-only decoration은 retained descriptor instance로 그리며
   field당 최대 24개다.
 - facility는 장식보다 대비가 높고 shape가 고유하다.
   - repair: plus cut
-  - transit: opposing chevron
+  - transit: complete circular floor portal
   - overdrive: stacked forward chevron
-  - arc surge: broken bolt rail
-  - breakable bulkhead: split slab
+  - arc surge: broad pass-through energy curtain between visible pylons
+  - breakable bulkhead: bright sealed/damaged/breached loot barrier
+- 상자, loose pickup과 실제 효과가 있는 지형은 넓은 role-color 면과 dark
+  contour를 사용해 바닥·무기 공격과 즉시 구분한다. 작은 accent color만으로
+  역할을 표시하지 않는다.
 - 세 field는 이름의 연상 소재가 아니라 gameplay topology에서 읽히는 panel
   rhythm으로만 구분한다.
   - Drowned Ruin: central court frame + orthogonal service plate
@@ -141,8 +147,10 @@ provider는 floor/wall map surface를 현재 runtime에 연결하지 않는다.
 
 - player는 이동 방향을 보여주는 hull front/rear cut과 manual-aim mount를
   분리한다.
-- engine mount와 flame은 hull continuous transform의 rear child다. engine
-  count는 rear socket의 좌우 배치만 바꾸며 angle을 따로 quantize하지 않는다.
+- engine mount는 hull continuous transform의 rear child다. engine count는
+  rear socket의 좌우 배치만 바꾸며 angle을 따로 quantize하지 않는다.
+  idle과 일반 이동에는 flame을 표시하지 않고 dash 동안에만 rear flare를
+  표시한다.
 - dash는 0.20초 동안 최대 5개 directional afterimage와 engine flare를
   사용한다. danger color 원, radial ring과 circular burst는 사용하지 않는다.
 - reduced motion에서는 반복 afterimage 대신 0.12초 이하의 elongated
@@ -156,6 +164,9 @@ provider는 floor/wall map surface를 현재 runtime에 연결하지 않는다.
 - projectile startup은 muzzle/cadence cue와 최대 `0.4 s` short lead만
   표시한다. full committed path는 beam에만 사용하고 charge는 locked
   endpoint capsule을 사용한다.
+- beam은 gameplay corridor가 길이와 폭을 소유하고 authored startup cap,
+  repeatable core/edge, endpoint contact component를 조립한다. projectile
+  bolt image를 늘이거나 procedural line 하나로 대체하지 않는다.
 - telegraph는 gameplay이 제공한 exact live geometry를 사용하고 readiness는
   단조롭게 증가한다. warning이 뜬 뒤 origin, direction과 target을 장식
   animation으로 바꾸지 않는다.
@@ -214,8 +225,9 @@ provider는 floor/wall map surface를 현재 runtime에 연결하지 않는다.
 - layout breakpoint는 width `1100`, guide/report three-column breakpoint는
   `1180`이다.
 - upgrade card는 compact에서 `224–244×286`, gap `12`, wide에서
-  `304×330`, gap `18`을 사용한다. title 2줄, summary 3줄, effect row 최대
-  2개, optional behavior row와 level pip 1줄을 한 화면에 표시한다.
+  `304×330`, gap `18`을 사용한다. 상단 약 1/3은 upgrade image가 차지하고,
+  그 아래 title과 현재 level, summary 최대 3줄, effect row 최대 2개를 한
+  화면에 표시한다. level text와 중복되는 단계 pip는 사용하지 않는다.
 - upgrade card는 scroll을 사용하지 않는다. settings, guidebook, report는
   지정 content region만 scroll하고 primary action은 고정한다.
 - `clip_contents`는 safety guard일 뿐 layout 해결책이 아니다.
