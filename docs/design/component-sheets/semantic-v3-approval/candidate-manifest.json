@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "pack_id": "cardborne-semantic-v3-approval-review",
+  "runtime_integration": false,
+  "reference": "../00-general-sf-component-master-v1.png",
+  "facing": "+X/right",
+  "max_asset_identities_per_image": 4,
+  "current_approval_unit": "player_foundation",
+  "candidates": [
+    {
+      "id": "player_foundation_flat",
+      "display_order": 1,
+      "title_ko": "평면 실루엣",
+      "status": "pending_user_selection",
+      "file": "generated/01-player-foundation-flat.png",
+      "chroma_source": "generated/player-foundation-flat-source.png",
+      "canvas": [
+        1536,
+        1024
+      ],
+      "identities": [
+        "player_hull",
+        "player_engine",
+        "player_aim_mount"
+      ],
+      "sha256": "645b1fa7eb901e1499c184179cd8d1d9f5179c8eef7a4d9c75c662cb21ad6a3f"
+    },
+    {
+      "id": "player_foundation_layered",
+      "display_order": 2,
+      "title_ko": "절제된 모듈 레이어",
+      "status": "pending_user_selection",
+      "file": "generated/02-player-foundation-layered.png",
+      "chroma_source": "generated/player-foundation-layered-source.png",
+      "canvas": [
+        1536,
+        1024
+      ],
+      "identities": [
+        "player_hull",
+        "player_engine",
+        "player_aim_mount"
+      ],
+      "sha256": "2680f8a100993ddd756c2e2bf4822060155253df2ab263a60426781c57ffed6b"
+    },
+    {
+      "id": "player_foundation_outline",
+      "display_order": 3,
+      "title_ko": "윤곽 우선",
+      "status": "pending_user_selection",
+      "file": "generated/03-player-foundation-outline.png",
+      "chroma_source": "generated/player-foundation-outline-source.png",
+      "canvas": [
+        1536,
+        1024
+      ],
+      "identities": [
+        "player_hull",
+        "player_engine",
+        "player_aim_mount"
+      ],
+      "sha256": "476a84cae774161a6314f881eabe0c586b20daaf7301d3afbe8e4f20c3e00700"
+    }
+  ]
+}
