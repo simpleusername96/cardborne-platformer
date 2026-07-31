@@ -40,16 +40,21 @@ related:
 - `05 맵 · 벽 · 지형지물`의 floor/wall 8개는 파일만 존재하며 현재
   런타임에는 연결되지 않았다.
 
-### 첫 승인 단위: player foundation
+### Optional comparison: player foundation
 
 비교 대상은 player hull, rigid rear engine, manual-aim mount 3개다.
 모두 +X/right 방향이며 한 이미지에 정확히 3개만 둔다.
+
+이 후보는 원래 필수 교체 요청이 아니었다. 현재 player asset은 기본적으로
+유지하며, 아래 3안은 사용자가 나중에 명시적으로 채택할 때만 교체한다.
 
 #### 시안 1
 
 ![평면 실루엣](./generated/01-player-foundation-flat.png)
 
 - 승인 마스터에 가장 가까운 3–4 plane 처리.
+- 사용자는 현재 기체보다 나아 보인다고 평가했지만 runtime 교체를
+  지시하지는 않았다.
 
 #### 시안 2
 
@@ -65,10 +70,12 @@ related:
 
 ## Review rule
 
-- 먼저 1, 2, 3 중 하나를 선택하거나 수정할 부분을 지정한다.
-- 선택된 문법으로 secondary 4종을 다음 승인 단위로 생성한다.
-- 모든 필수 가족이 승인되기 전에는 manifest/provider/Theme와 runtime
-  코드를 바꾸지 않는다.
+- current asset은 별도 `REPLACE` 지시가 없으면 유지한다.
+- player 1, 2, 3안의 선택은 필수가 아니며 다음 작업을 막지 않는다.
+- 다음 필수 승인 단위는 floor tile + deterministic algorithm preview다.
+- 이후 wall, terrain, attack cue, upgrade card, XP만 필요한 만큼 생성한다.
+- 필수 대상이 승인되기 전에는 manifest/provider/Theme와 runtime 코드를
+  바꾸지 않는다.
 - UI panel 이미지는 shell만 소유하고, localized text와 dynamic icon은
   Godot Control child로 올린다.
 

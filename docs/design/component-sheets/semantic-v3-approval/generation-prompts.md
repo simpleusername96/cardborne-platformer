@@ -3,7 +3,7 @@ type: evidence
 status: draft
 created: 2026-07-31
 topic: Cardborne semantic-v3 candidate generation prompts
-scope: Review-only player foundation candidates
+scope: Optional review-only player foundation candidates
 source: ./candidate-manifest.json
 related:
   - ./README.md
@@ -16,6 +16,9 @@ related:
 Preserve the exact generation inputs for the first review-only approval unit.
 All three calls used the built-in ImageGen path and
 `../00-general-sf-component-master-v1.png` as the sole image reference.
+
+These candidates are optional comparison material. The current player art remains
+the default and no candidate is required for the targeted correction plan.
 
 ## Sources
 

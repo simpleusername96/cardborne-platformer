@@ -3,21 +3,25 @@ type: evidence
 status: draft
 owner: BK
 created: 2026-07-31
-topic: Cardborne visual asset approval catalog
-scope: Pre-implementation visual decisions and current-state inventory
+last_reviewed: 2026-07-31
+topic: Cardborne targeted visual asset decisions
+scope: Current asset triage and pre-implementation approval decisions
 source: ../docs/design/component-sheets/semantic-v3-approval/
 related:
   - ./execplans/2026-07-31-approval-gated-visual-asset-replacement.md
   - ../docs/design/UI_VISUAL_SYSTEM.md
 ---
 
-# Cardborne 비주얼 에셋 승인 카탈로그
+# Cardborne 선택적 비주얼 수정 승인 카탈로그
 
 ## Purpose
 
-현재 런타임과 파일 저장소의 시각 truth를 구분하고, 새 후보를 가족별로
-하나씩 승인하기 위한 결정 기록이다. 이 문서는 구현 권한이 아니며,
-필수 행이 모두 승인될 때까지 runtime asset이나 코드를 바꾸지 않는다.
+현재 에셋 전체를 교체 목록으로 취급하지 않고, 각 항목을 `KEEP`, `FIX`,
+`REPLACE`, `ADD`, `OPTIONAL`로 구분한다. 사용자가 명시한 문제만 후보를
+만들고 승인하며, 나머지는 현재 runtime asset을 유지한다.
+
+이 문서는 구현 권한이 아니다. 필수 시각 대상이 승인될 때까지 runtime
+manifest/provider, Theme와 gameplay code를 바꾸지 않는다.
 
 ## Sources
 
@@ -35,75 +39,81 @@ related:
 
 | 구분 | 수 | 상태 |
 | --- | ---: | --- |
-| gameplay static manifest PNG | 124 | 이 중 8개 바닥·벽은 런타임 미연결 |
-| runtime gameplay static PNG | 116 | 실제 provider 대상 |
-| runtime effect atlas/frame PNG | 123 | 22개 animation identity |
-| runtime gameplay 합계 | 239 | static + effect |
-| runtime UI PNG | 57 | 13 component의 state 이미지 |
+| runtime gameplay PNG | 239 | 기본 `KEEP` |
+| runtime UI PNG | 57 | 기본 `KEEP` |
+| floor/wall PNG | 8 | 파일은 있으나 runtime 미연결 |
 | gameplay review/source PNG | 79 | runtime 미사용 |
 | UI review/source PNG | 7 | runtime 미사용 |
 
-### 이미지가 아닌 현재 표현
+### 핵심 해석
 
-| 표현 | 현재 방식 | 승인 뒤 목표 |
-| --- | --- | --- |
-| floor tile | 288-unit vertex-color retained mesh | 승인 tile image를 쓰는 deterministic compiler |
-| wall shell | geometry-derived, UV 없는 retained mesh | topology-selected wall image shell |
-| 공격 피해 범위 | exact live procedural geometry + 작은 cue image | truth 유지 + 명확한 head/tail/tier image |
-| terrain footprint | image body와 procedural rect/ring 혼합 | 고유 image body + 실제 rect/radius overlay |
-| upgrade 일부 fallback | 작은 glyph/절차 보조 표현 | top-third family art + image-backed state |
+- inventory에 있다는 사실은 교체 대상이라는 뜻이 아니다.
+- player, ordinary enemy, boss, secondaries와 기존 UI panel은 별도 지시가
+  없으면 유지한다.
+- 필요한 수정은 map/wall/terrain 연결, attack readability, upgrade card,
+  XP 단순화와 runtime behavior 일부다.
+- 새 player 3안은 원 요청 밖에서 만들어졌지만 사용자가 더 낫다고
+  평가했으므로 optional comparison으로 보관한다.
 
 ### 현재 기준 그리드
 
 ![현재 에셋 마스터 그리드](../docs/design/component-sheets/semantic-v3-approval/00-current-asset-inventory-grid.png)
 
-원본 11개 review sheet를 그대로 합성했으며 생성형 모델로 다시 그리지
-않았다. `05 맵 · 벽 · 지형지물`의 floor/wall 8개는 파일은 있지만
-현재 런타임에서 사용하지 않는다.
+원본 11개 review sheet를 재해석 없이 합성했다. `05 맵 · 벽 · 지형지물`의
+floor/wall 이미지는 현재 runtime에서 사용하지 않는다.
 
-## Approval Queue
+## Decision Matrix
 
-상태 값은 `current`, `candidate`, `revise`, `approved`만 사용한다.
+| 대상 | 분류 | 후보/수정 | 필수 승인 | 현재 결정 |
+| --- | --- | --- | --- | --- |
+| player hull/engine/aim art | `KEEP` | 기존 runtime 유지 | 아니오 | 유지 |
+| 새 player foundation 3안 | `OPTIONAL` | `generated/01–03-player-foundation-*.png` | 아니오 | flat 시안 선호 표현; runtime 교체 미승인 |
+| engine attachment transform | `FIX` | 새 art 없이 rigid transform 확인 | 구현 전 캡처 | 예정 |
+| orbit blade direction | `FIX` | 새 art 없이 radial outward rotation | 아니오 | 예정 |
+| enemy speed | `FIX` | 측정표 후 승인 수치만 적용 | 수치 승인 | 예정 |
+| hostile projectile | `REPLACE/FIX` | head/tail 가독성 후보 | 예 | 미생성 |
+| ordinary/elite/boss cue | `REPLACE/ADD` | 등급별 head/cap/pattern | 예 | 미생성 |
+| upgrade card | `FIX`, 필요 시 `REPLACE` | top-third art와 layout mock | 예 | 미생성 |
+| XP pickup | `FIX` | 단순 3단계 shard | 예 | 미생성 |
+| floor tile/algorithm | `ADD` | tile art + deterministic preview | 예 | 미생성 |
+| wall topology | `ADD` | straight/corner/end/junction | 예 | 미생성 |
+| cover/terrain/facility | `REPLACE/FIX` | body image + truth overlay | 예 | 미생성 |
+| pickup contact | `FIX` | body/dash swept collection | 아니오 | 예정 |
+| 그 외 current asset | `KEEP` | 생성·교체 없음 | 아니오 | 유지 |
 
-| 순서 | 승인 단위 | 현재 기준 | 후보 | 상태 | 결정 |
-| ---: | --- | --- | --- | --- | --- |
-| 1 | player hull · engine · aim mount | `01-player-weapons.png` | `01–03-player-foundation-*.png` | candidate | 사용자 선택 대기 |
-| 2 | secondary 4종 | `01-player-weapons.png` | 미생성 | current | 1번 승인 후 생성 |
-| 3 | ordinary enemy 19종 | `02-enemies.png` | 미생성 | current | 2번 승인 후 생성 |
-| 4 | boss 5종 · module 10종 | `03-bosses-modules.png` | 미생성 | current | 3번 승인 후 생성 |
-| 5 | projectile · attack tier cue | `04`, `07–09` sheet | 미생성 | current | actor grammar 승인 후 생성 |
-| 6 | barrier · field · shield · status | `04`, `06` sheet | 미생성 | current | topology 분리 시안 생성 |
-| 7 | XP · repair · recall · crate | `04` sheet | 미생성 | current | XP 단순 도형 우선 |
-| 8 | effect 22 identity | `07–08` sheet | 미생성 | current | key pose 최대 3종씩 |
-| 9 | floor tile · algorithm | `05-world.png`, 현재 compiler | 미생성 | current | tile art와 output 별도 승인 |
-| 10 | wall topology 6종 | `05-world.png`, 현재 mesh | 미생성 | current | straight/corner/end/junction |
-| 11 | cover · terrain · facility | `05-world.png`, terrain runtime | 미생성 | current | footprint overlay 포함 |
-| 12 | HUD · UI panel · upgrade card | `06`, UI sheet 2개 | 미생성 | current | shell/dynamic content 분리 |
+## Required Approval Queue
+
+player 후보는 아래 순서에 포함되지 않는다.
+
+| 순서 | 필수 승인 단위 | 한 이미지 최대 항목 | 확인 대상 |
+| ---: | --- | ---: | --- |
+| 1 | floor tile + algorithm preview | 4 | 실제적·단순, deterministic, 무효 문양 없음 |
+| 2 | wall topology | 4 | floor보다 높고 blocker가 즉시 보임 |
+| 3 | cover/terrain/facility | 4 | image와 rect/radius truth 일치 |
+| 4 | projectile + attack tier cue | 4 | 방향, ordinary/elite/boss, affinity 판독 |
+| 5 | upgrade card | 1 card mock | top 1/3 art, 이름·레벨·설명, overflow 0 |
+| 6 | XP shard | 3 | 가장 단순한 값 단계 구분 |
 
 ## Decision Rules
 
-- 승인되지 않은 후보는 runtime manifest, provider, Theme에서 참조하지 않는다.
-- 한 후보 이미지에는 최대 4개 identity만 둔다.
-- 승인 마스터의 큰 실루엣, 평면 색, 역할별 negative space를 유지한다.
-- 현재의 과도한 기계 디테일, pixel 제약과 의미 없는 장식 문양은
-  다음 후보에 계승하지 않는다.
-- UI 배경 이미지에는 텍스트, 아이콘, 레벨과 수치를 굽지 않는다.
-- map/terrain 후보는 visual과 실제 범위를 같은 이미지에서 비교한다.
-- 선택 또는 수정 지시는 이 표의 `결정` 열에 기록한다.
+- 명시적 `REPLACE` 결정이 없는 current asset은 `KEEP`이다.
+- `OPTIONAL` 후보의 미결정은 필수 계획을 막지 않는다.
+- 후보 한 장에는 최대 4개 identity만 둔다.
+- 승인되지 않은 후보는 runtime에서 참조하지 않는다.
+- UI background image에는 localized text, icon, level과 value를 굽지 않는다.
+- map/terrain 후보는 visual body와 실제 footprint overlay를 함께 비교한다.
+- 사용자 선택 또는 수정 지시는 이 문서의 결정표에 기록한다.
 
 ## Recommendations
 
-- 첫 선택에서는 player 3안의 내부 디테일보다는 1× 크기에서의 전후 방향,
-  engine 부착 인상과 바깥 contour를 우선 비교한다.
-- 한 안을 선택한 뒤 그 문법을 secondary 4종에 그대로 적용해 가족
-  일관성을 먼저 확인한다.
-- floor/wall은 actor 후보와 별도로 승인해 전투 개체와 배경의 대비를
-  독립적으로 조절한다.
+- 다음 생성 대상은 player가 아니라 floor tile + algorithm preview다.
+- wall과 terrain은 floor 승인 뒤 같은 world contrast 기준으로 만든다.
+- projectile/attack cue는 actor art를 다시 만들지 않고 기존 actor 위에서
+  읽히는 방향으로 설계한다.
+- player 후보는 이후 사용자가 명시적으로 채택할 때만 productionize한다.
 
 ## Limitations
 
-- 현재 후보는 review-only다. 선택된 안도 개별 canvas/pivot/alpha와
-  runtime scale을 고정하기 전에는 production asset이 아니다.
-- master grid는 overview다. 작은 label과 frame detail은 원본 11개 sheet와
-  CSV에서 확인한다.
-- 이 문서는 적 전략, 보스 패턴과 성능 최적화 결정을 포함하지 않는다.
+- optional player 이미지는 review sheet이며 개별 canvas/pivot asset이 아니다.
+- 필수 후보는 아직 생성되지 않았으므로 이 문서는 `draft`다.
+- 적 전략과 보스 패턴 재설계는 이 카탈로그의 결정 대상이 아니다.

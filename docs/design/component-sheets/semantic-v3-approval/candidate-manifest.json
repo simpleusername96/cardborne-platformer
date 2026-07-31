@@ -5,13 +5,15 @@
   "reference": "../00-general-sf-component-master-v1.png",
   "facing": "+X/right",
   "max_asset_identities_per_image": 4,
-  "current_approval_unit": "player_foundation",
+  "current_approval_unit": "floor_tile_and_algorithm",
   "candidates": [
     {
       "id": "player_foundation_flat",
       "display_order": 1,
       "title_ko": "평면 실루엣",
-      "status": "pending_user_selection",
+      "status": "optional_preferred",
+      "required_for_execution": false,
+      "user_feedback": "Looks better than the current player art, but replacement was not requested or approved.",
       "file": "generated/01-player-foundation-flat.png",
       "chroma_source": "generated/player-foundation-flat-source.png",
       "canvas": [
@@ -29,7 +31,8 @@
       "id": "player_foundation_layered",
       "display_order": 2,
       "title_ko": "절제된 모듈 레이어",
-      "status": "pending_user_selection",
+      "status": "optional_hold",
+      "required_for_execution": false,
       "file": "generated/02-player-foundation-layered.png",
       "chroma_source": "generated/player-foundation-layered-source.png",
       "canvas": [
@@ -47,7 +50,8 @@
       "id": "player_foundation_outline",
       "display_order": 3,
       "title_ko": "윤곽 우선",
-      "status": "pending_user_selection",
+      "status": "optional_hold",
+      "required_for_execution": false,
       "file": "generated/03-player-foundation-outline.png",
       "chroma_source": "generated/player-foundation-outline-source.png",
       "canvas": [
