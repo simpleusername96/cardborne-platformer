@@ -66,6 +66,7 @@ const DamageSourceCatalog = preload("res://scripts/combat/vehicle_damage_source_
 const StageTelemetry = preload("res://scripts/combat/vehicle_stage_telemetry.gd")
 const BuildSnapshotBuilder = preload("res://scripts/cards/vehicle_build_snapshot_builder.gd")
 const StageReportBuilder = preload("res://scripts/combat/vehicle_stage_report_builder.gd")
+const CaptureDriver = preload("res://scripts/vehicle/vehicle_run_capture_driver.gd")
 
 enum RunMode {
 	DEPLOYMENT,
@@ -278,11 +279,8 @@ var persistent_field_module := false
 
 var _audio: VehicleAudioDirector
 
-var _capture_directory := ""
 var _capture_mode := false
-var _capture_locale := ""
-var _capture_size := Vector2i.ZERO
-var _capture_text_scale := 1.0
+var _capture_driver: VehicleRunCaptureDriver
 var _debug_collision_overlay := false
 var _performance_request: Dictionary = {}
 var _performance_recorder: VehiclePerformanceRecorder
@@ -313,7 +311,16 @@ func _ready() -> void:
 	_rng.seed = 0xC4A2B0
 	_layout_session_rng.randomize()
 	_layout_session_seed = _layout_session_rng.seed
-	_parse_capture_arguments()
+	_capture_driver = CaptureDriver.from_command_line()
+	_capture_mode = _capture_driver.is_requested()
+	_capture_driver.apply_locale()
+	if _capture_driver.layout_seed_override != null:
+		_layout_seed_override = int(_capture_driver.layout_seed_override)
+		_has_layout_seed_override = true
+	if _capture_driver.field_id_override != &"":
+		_field_id_override = _capture_driver.field_id_override
+	if _capture_mode:
+		call_deferred("_run_capture_sequence")
 	_performance_request = _parse_performance_request()
 	_practice_request = _parse_boss_practice_request()
 	if _practice_request_invalid and DisplayServer.get_name() == "headless":
@@ -6089,43 +6096,15 @@ func _performance_counts() -> Dictionary:
 	}
 
 
-func _parse_capture_arguments() -> void:
-	var arguments := OS.get_cmdline_args()
-	arguments.append_array(OS.get_cmdline_user_args())
-	for argument in arguments:
-		if argument.begins_with("--capture-all="):
-			_capture_directory = argument.trim_prefix("--capture-all=")
-			_capture_mode = true
-		elif argument.begins_with("--capture-locale="):
-			_capture_locale = argument.trim_prefix("--capture-locale=")
-		elif argument.begins_with("--capture-size="):
-			var parts := argument.trim_prefix("--capture-size=").split("x")
-			if parts.size() == 2:
-				_capture_size = Vector2i(maxi(640, int(parts[0])), maxi(360, int(parts[1])))
-		elif argument.begins_with("--capture-text-scale="):
-			_capture_text_scale = clampf(
-				float(argument.trim_prefix("--capture-text-scale=")),
-				1.0,
-				2.0
-			)
-		elif argument.begins_with("--layout-seed="):
-			_layout_seed_override = int(argument.trim_prefix("--layout-seed="))
-			_has_layout_seed_override = true
-		elif argument.begins_with("--field-id="):
-			_field_id_override = StringName(argument.trim_prefix("--field-id="))
-	if _capture_locale in ["ko", "en"]:
-		TranslationServer.set_locale(_capture_locale)
-	if _capture_mode:
-		call_deferred("_run_capture_sequence")
-
-
 func _run_capture_sequence() -> void:
-	DirAccess.make_dir_recursive_absolute(_capture_directory)
+	if not _capture_driver.prepare_output():
+		get_tree().quit(1)
+		return
 	get_viewport().transparent_bg = false
-	if _capture_size.x > 0 and _capture_size.y > 0:
-		get_window().size = _capture_size
+	if _capture_driver.viewport_size.x > 0 and _capture_driver.viewport_size.y > 0:
+		get_window().size = _capture_driver.viewport_size
 	_camera.position_smoothing_enabled = false
-	_ui.debug_set_text_scale(_capture_text_scale)
+	_ui.debug_set_text_scale(_capture_driver.text_scale)
 	_ui.show_deployment(
 		selected_primary,
 		RunDifficulty.HARD,
@@ -6281,7 +6260,10 @@ func _run_capture_sequence() -> void:
 	})
 	await _settle_capture()
 	_save_capture("94-garage.png")
-	print("VEHICLE_STAGE_CAPTURE_COMPLETE dir=%s" % _capture_directory)
+	if _capture_driver.failed:
+		get_tree().quit(1)
+		return
+	print("VEHICLE_STAGE_CAPTURE_COMPLETE dir=%s" % _capture_driver.directory)
 	get_tree().quit(0)
 
 
@@ -6760,8 +6742,7 @@ func _fit_camera_to_stage(bounds: Rect2) -> void:
 
 
 func _capture_full_evidence() -> bool:
-	var width := _capture_size.x if _capture_size.x > 0 else roundi(get_viewport().get_visible_rect().size.x)
-	return _capture_locale == "ko" and width == 1280
+	return _capture_driver.is_full_evidence(get_viewport())
 
 
 func _settle_capture() -> void:
@@ -6770,14 +6751,8 @@ func _settle_capture() -> void:
 
 
 func _save_capture(file_name: String) -> void:
-	var path := _capture_directory.path_join(file_name)
-	RenderingServer.force_draw(true)
-	var image := get_viewport().get_texture().get_image()
-	var error := image.save_png(path)
-	if error != OK:
-		push_error("Could not save capture %s: %s" % [path, error_string(error)])
-	else:
-		print("CAPTURE_SAVED %s" % path)
+	if not _capture_driver.save_viewport(get_viewport(), file_name):
+		get_tree().quit(1)
 
 
 # Pressure validation support --------------------------------------------------
