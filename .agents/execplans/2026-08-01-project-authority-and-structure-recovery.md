@@ -1,9 +1,9 @@
 ---
 type: plan
-status: draft
+status: active
 owner: BK
 created: 2026-08-01
-last_reviewed: 2026-08-01
+last_reviewed: 2026-08-02
 scope: Cardborne source-of-truth consolidation, stale artifact retirement, and VehicleRun responsibility recovery
 related:
   - ../../AGENTS.md
@@ -678,6 +678,10 @@ fastrun manager의 `codex` lane에서 수행한다. 임의 port나 `user` lane�
   추가하지 않고 감사 결론만 이 plan에 기록했다.
 - 2026-08-01: 기존 visual plan은 사용자 G2 선택 전 active 상태를 유지한다.
   따라서 이 recovery plan은 승인 전 `draft`다.
+- 2026-08-02: 사용자가 `G1 approve, G2 defer, G3 approve`로 모든 정리
+  gate를 승인했다. pre-cleanup tip은
+  `2bc102fff21dcaa81125d627269b9467498fae8f`이며 원격보다 89 commits 앞선
+  local history임을 확인했다.
 
 ## Progress
 
@@ -687,7 +691,7 @@ fastrun manager의 `codex` lane에서 수행한다. 임의 port나 `user` lane�
 - [x] repo 연결 과거 Codex session 184개 색인과 root thread 직접 검토.
 - [x] canonical conflict, stale references와 runtime ownership 식별.
 - [x] cleanup 및 responsibility recovery batch 설계.
-- [ ] 사용자 G1/G2/G3 결정.
+- [x] 사용자 G1/G2/G3 결정: G1 approve, G2 defer, G3 approve.
 - [ ] Phase 0~6 실행.
 
 ## Next Steps
