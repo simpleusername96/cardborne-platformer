@@ -83,6 +83,8 @@ floor/wall 이미지는 현재 runtime에서 사용하지 않는다.
 | wall topology | `FIX/ADD` | 기존 6종을 boundary topology에 연결한 preview | 예 | topology 코드 없음 |
 | cover/terrain/facility | `FIX`, 필요 시 `REPLACE` | 기존 body를 전체 rect/radius에 맞춘 preview | 예 | 작은 body와 truth overlay가 분리됨 |
 | pickup contact | `FIX` | body/dash swept collection | 아니오 | 예정 |
+| boss body 5종 | `REPLACE` | `generated/semantic-v6/boss-bodies-a-candidates.png`, `boss-bodies-b-candidates.png` | 예 | 단순화 후보 생성·미승인 |
+| boss 방어막 objective | `REPLACE` | `generated/semantic-v6/boss-shield-node-states-candidates.png` | 예 | 공통 노드 3상태 후보 생성·미승인 |
 | 그 외 scoped current asset | `UNREVIEWED` | 실제 runtime 결과로 판정 | 해당 시각 변경 시 | 자동 유지/교체하지 않음 |
 
 ## Required Approval Queue
@@ -97,6 +99,8 @@ player 후보는 아래 순서에 포함되지 않는다.
 | 4 | projectile + attack tier contract | 4 | 방향, ordinary/elite/boss, affinity 판독 |
 | 5 | upgrade card | 1 card mock | top 1/3 art, 이름·레벨·설명, overflow 0 |
 | 6 | XP shard | 3 | 가장 단순한 값 단계 구분 |
+| 7 | boss body | 3 + 2 | 4–6개 큰 plane, 고유 silhouette 유지, greeble 제거 |
+| 8 | boss 방어막 노드 | 3 states | 모든 boss 동일 housing, active/damaged/resolved 상태만 변경 |
 
 ## Decision Rules
 
@@ -118,6 +122,8 @@ player 후보는 아래 순서에 포함되지 않는다.
 - projectile/attack cue는 tier/path 코드 계약을 먼저 고정하고, 기존 이미지가
   부족한 head/tail/cap만 새로 만든다.
 - player 후보는 이후 사용자가 명시적으로 채택할 때만 productionize한다.
+- 기존 boss-specific module 10종은 TO-BE 후보가 아니다. 공통 방어막 노드가
+  승인되면 같은 production switch에서 provider reference와 파일을 제거한다.
 
 ## Limitations
 

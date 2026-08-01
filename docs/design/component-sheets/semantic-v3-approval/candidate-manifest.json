@@ -1,14 +1,14 @@
 {
-  "schema_version": 3,
-  "pack_id": "cardborne-semantic-v5-feedback-review",
+  "schema_version": 4,
+  "pack_id": "cardborne-semantic-v6-feedback-review",
   "runtime_integration": false,
-  "approval_report": "asset-switch-approval-report.html",
+  "approval_report": "runtime-visual-inventory-report.html",
   "taxonomy": "../../GAMEPLAY_VISUAL_TAXONOMY.md",
   "reference": "../00-general-sf-component-master-v1.png",
   "facing": "+X/right for directional combat assets",
   "max_asset_identities_per_generated_image": 4,
   "current_approval_unit": "role_categorized_map_combat_ui_visual_contract",
-  "approval_policy": "Do not split candidates into production assets or change runtime code until the required items, including all v5 revisions, are explicitly approved in report v3.",
+  "approval_policy": "Do not split candidates into production assets or switch runtime visuals until every required revision and latest-feedback candidate is explicitly approved in the canonical report.",
   "approval_mapping_contract": "Every required record declares report_items. Without approval_mapping_by_identity, all listed report items must be approved before the record may execute. With approval_mapping_by_identity, each identity is gated only by its mapped report item. Multiple candidate records may intentionally share one atomic report decision.",
   "feedback_round": {
     "source": "asset-switch-approval-feedback-v2.json",
@@ -26,11 +26,101 @@
       "standalone-cover",
       "damage-feedback-family"
     ],
-    "derived_reapproval_items": ["floor-tile-compiler"],
+    "derived_reapproval_items": [
+      "floor-tile-compiler"
+    ],
     "derived_reapproval_reason": "The plain floor feedback changes the base tile consumed by the algorithm item, so asset and placement decisions must both approve before integration.",
     "unreviewed_policy": "All other report items retain their previous candidate and unreviewed state. No implicit approval is inferred."
   },
+  "latest_feedback": {
+    "source": "2026-08-01 user feedback in active Codex session",
+    "comparison_orientation": "horizontal_asis_left_tobe_right_only",
+    "new_approval_items": [
+      "boss-body-simplification",
+      "boss-shield-node-unification"
+    ],
+    "delete_from_tobe": [
+      "nonfunctional_floor_decoration",
+      "upgrade_card_level_pips",
+      "dash_danger_circle",
+      "meaningless_radial_flower_bursts",
+      "superseded_review_candidates",
+      "boss_specific_shield_objective_modules"
+    ],
+    "runtime_safety": "Current runtime boss bodies and boss-specific modules remain AS-IS evidence until the new candidates are explicitly approved and switched in one scoped production batch."
+  },
   "revision_candidates": [
+    {
+      "id": "boss_bodies_simplified_a",
+      "category": "boss_body",
+      "status": "pending_user_approval",
+      "required_for_execution": true,
+      "file": "generated/semantic-v6/boss-bodies-a-candidates.png",
+      "chroma_source": "generated/semantic-v6/boss-bodies-a-source.png",
+      "canvas": [
+        1672,
+        941
+      ],
+      "identities": [
+        "boss_colossus",
+        "boss_leviathan",
+        "boss_titan"
+      ],
+      "report_items": [
+        "boss-body-simplification"
+      ],
+      "approval_rule": "atomic with boss_bodies_simplified_b",
+      "target_contract": "Preserve the five broad silhouettes while reducing each body to 4-6 large planes, one outer contour, and sparse functional accents.",
+      "sha256": "1efb8f9a2afc83be5ef9f55f5a2c7bc7b1fa9fc8a19b852c0ad85a199347c7ff",
+      "source_sha256": "2ca02320135763d1f020abb38c39ed0aaa8542db88a6700d2d3d3c9f18cd8f10"
+    },
+    {
+      "id": "boss_bodies_simplified_b",
+      "category": "boss_body",
+      "status": "pending_user_approval",
+      "required_for_execution": true,
+      "file": "generated/semantic-v6/boss-bodies-b-candidates.png",
+      "chroma_source": "generated/semantic-v6/boss-bodies-b-source.png",
+      "canvas": [
+        1672,
+        941
+      ],
+      "identities": [
+        "boss_behemoth",
+        "boss_crown"
+      ],
+      "report_items": [
+        "boss-body-simplification"
+      ],
+      "approval_rule": "atomic with boss_bodies_simplified_a",
+      "target_contract": "Use a small number of broad masses; Crown uses six outer sectors and Behemoth removes repeated panel subdivisions.",
+      "sha256": "69b74a440fe10dfab404fdc523960c533d6dc2f897eb38d94c5f3833813ffbf2",
+      "source_sha256": "ca4d5ea3755557b4681c4a2b4e56e8c473e05a396a1edca78d521415ece669c4"
+    },
+    {
+      "id": "boss_shield_node_states",
+      "category": "boss_objective",
+      "status": "pending_user_approval",
+      "required_for_execution": true,
+      "file": "generated/semantic-v6/boss-shield-node-states-candidates.png",
+      "chroma_source": "generated/semantic-v6/boss-shield-node-states-source.png",
+      "canvas": [
+        1983,
+        793
+      ],
+      "identities": [
+        "boss_shield_node_active",
+        "boss_shield_node_damaged",
+        "boss_shield_node_resolved"
+      ],
+      "report_items": [
+        "boss-shield-node-unification"
+      ],
+      "approval_rule": "single common family replaces all boss-specific shield-objective module silhouettes",
+      "target_contract": "All bosses reuse the same housing, canvas, pivot, and rail topology; only active, damaged, and resolved state geometry changes.",
+      "sha256": "06b69df6f0e154f82dd293819873083c460d722e9bf4798f9e798ef1f350fe33",
+      "source_sha256": "b412c4d7dadc9a74e4310b788b3d02eef9b43fb898adc5469df0a637993d4ce5"
+    },
     {
       "id": "floor_base_plain",
       "category": "map_floor_tile",
@@ -38,13 +128,26 @@
       "required_for_execution": true,
       "file": "generated/semantic-v5/floor-base-candidates.png",
       "chroma_source": "generated/semantic-v5/floor-base-source.png",
-      "canvas": [1536, 1024],
-      "identities": ["floor_base_plain", "floor_base_restrained_alternate"],
-      "report_items": ["floor-tile-compiler", "floor-decoration-removal"],
+      "canvas": [
+        1536,
+        1024
+      ],
+      "identities": [
+        "floor_base_plain",
+        "floor_base_restrained_alternate"
+      ],
+      "report_items": [
+        "floor-tile-compiler",
+        "floor-decoration-removal"
+      ],
       "approval_rule": "all listed report items must be approved",
-      "supersedes_role_only": ["world_shared_floor_00", "world_shared_floor_01"],
+      "supersedes_role_only": [
+        "world_shared_floor_00",
+        "world_shared_floor_01"
+      ],
       "does_not_supersede": "floor_decay; its states remain unreviewed and unimplemented",
-      "sha256": "d411cf9bd30aa6ced62b1af967a3de3f4354c4d9c331eaab9975e28dd40b4782"
+      "sha256": "d411cf9bd30aa6ced62b1af967a3de3f4354c4d9c331eaab9975e28dd40b4782",
+      "source_sha256": "40707438111858d52418452e8cf4e1d5f2619eefcc648103cac2a80e361097de"
     },
     {
       "id": "overdrive_field_radial",
@@ -53,13 +156,21 @@
       "required_for_execution": true,
       "file": "generated/semantic-v5/overdrive-field-candidate.png",
       "chroma_source": "generated/semantic-v5/overdrive-field-source.png",
-      "canvas": [1254, 1254],
-      "identities": ["overdrive_field_radius_180"],
-      "report_items": ["overdrive-field"],
+      "canvas": [
+        1254,
+        1254
+      ],
+      "identities": [
+        "overdrive_field_radius_180"
+      ],
+      "report_items": [
+        "overdrive-field"
+      ],
       "approval_rule": "single report item",
-      "supersedes": "generated/world-v4/world-functional-candidates.png#overdrive_field",
+      "supersedes": "deleted world-v4 overdrive_field identity",
       "runtime_truth": "circular non-blocking radius 180 buff footprint",
-      "sha256": "9e710507d7565f4c773f4322d6544a410aa2f458d4f165a45a85061d442cb31d"
+      "sha256": "9e710507d7565f4c773f4322d6544a410aa2f458d4f165a45a85061d442cb31d",
+      "source_sha256": "ecb630bf7aefda0285760b65b57b9d90d048e9fb47b173de00449e4cc127fff8"
     },
     {
       "id": "repair_pickup_bright",
@@ -68,12 +179,20 @@
       "required_for_execution": true,
       "file": "generated/semantic-v5/repair-pickup-candidate.png",
       "chroma_source": "generated/semantic-v5/repair-pickup-source.png",
-      "canvas": [1254, 1254],
-      "identities": ["repair_pickup_bright_green_mint"],
-      "report_items": ["repair-pickup"],
+      "canvas": [
+        1254,
+        1254
+      ],
+      "identities": [
+        "repair_pickup_bright_green_mint"
+      ],
+      "report_items": [
+        "repair-pickup"
+      ],
       "approval_rule": "single report item",
       "supersedes": "generated/semantic-v4/collectibles-containers-and-pickups-candidate.png#repair_pickup",
-      "sha256": "4a47b09b4ca1e2d334b0fc278a08109a604354b4c2e25632d1fec97c98ab82c6"
+      "sha256": "4a47b09b4ca1e2d334b0fc278a08109a604354b4c2e25632d1fec97c98ab82c6",
+      "source_sha256": "7d7e6d4a6a0efead77f9c93ea1fa12253a6810b400022e1239f7149a4e6a7eb7"
     },
     {
       "id": "upgrade_offense_families",
@@ -82,12 +201,23 @@
       "required_for_execution": true,
       "file": "generated/semantic-v5/upgrade-offense-candidates.png",
       "chroma_source": "generated/semantic-v5/upgrade-offense-source.png",
-      "canvas": [1254, 1254],
-      "identities": ["upgrade_primary", "upgrade_secondary", "upgrade_skill", "upgrade_element"],
-      "report_items": ["upgrade-card-layout"],
+      "canvas": [
+        1254,
+        1254
+      ],
+      "identities": [
+        "upgrade_primary",
+        "upgrade_secondary",
+        "upgrade_skill",
+        "upgrade_element"
+      ],
+      "report_items": [
+        "upgrade-card-layout"
+      ],
       "approval_group": "upgrade_card_all_8_live_families",
       "approval_rule": "atomic with upgrade_chassis_families",
-      "sha256": "7232df4a2aa7a2a6bc4c8b0ff23c1a246988c6862ef064956da324b4d1a3413c"
+      "sha256": "7232df4a2aa7a2a6bc4c8b0ff23c1a246988c6862ef064956da324b4d1a3413c",
+      "source_sha256": "f86a1f9faf451ddc546dd321c35e402f6ee55b8265157cc3646c2a1296b7395d"
     },
     {
       "id": "upgrade_chassis_families",
@@ -96,12 +226,23 @@
       "required_for_execution": true,
       "file": "generated/semantic-v5/upgrade-chassis-candidates.png",
       "chroma_source": "generated/semantic-v5/upgrade-chassis-source.png",
-      "canvas": [1254, 1254],
-      "identities": ["upgrade_passive", "upgrade_defense", "upgrade_dash", "upgrade_mobility"],
-      "report_items": ["upgrade-card-layout"],
+      "canvas": [
+        1254,
+        1254
+      ],
+      "identities": [
+        "upgrade_passive",
+        "upgrade_defense",
+        "upgrade_dash",
+        "upgrade_mobility"
+      ],
+      "report_items": [
+        "upgrade-card-layout"
+      ],
       "approval_group": "upgrade_card_all_8_live_families",
       "approval_rule": "atomic with upgrade_offense_families",
-      "sha256": "712982bc230e763797132ad001d157163b3b67b17016e3a08a6c3f61568a7bde"
+      "sha256": "712982bc230e763797132ad001d157163b3b67b17016e3a08a6c3f61568a7bde",
+      "source_sha256": "85cee0779bea67453b1e0da72ef716f648f688d288dacd732086891cb6074e98"
     }
   ],
   "code_only_revision_previews": [
@@ -109,7 +250,9 @@
       "id": "boss-stream-projectile",
       "status": "pending_user_reapproval",
       "required_for_execution": true,
-      "report_items": ["boss-stream-projectile"],
+      "report_items": [
+        "boss-stream-projectile"
+      ],
       "asset_policy": "reuse the ordinary hostile projectile family; no boss-stream-specific raster",
       "current": "generated/semantic-v5/previews/boss-stream-asis.png",
       "target": "generated/semantic-v5/previews/boss-stream-tobe.png"
@@ -118,7 +261,9 @@
       "id": "engine-dash-only",
       "status": "pending_user_reapproval",
       "required_for_execution": true,
-      "report_items": ["engine-dash-only"],
+      "report_items": [
+        "engine-dash-only"
+      ],
       "asset_policy": "reuse current engine and dash-start assets; exhaust only while dash_active",
       "current": "generated/semantic-v5/previews/engine-motion-asis.png",
       "target": "generated/semantic-v5/previews/engine-motion-tobe.png"
@@ -127,7 +272,9 @@
       "id": "orbit-facing",
       "status": "pending_user_reapproval",
       "required_for_execution": true,
-      "report_items": ["orbit-facing"],
+      "report_items": [
+        "orbit-facing"
+      ],
       "asset_policy": "reuse current secondary sprites; fix presentation transforms by placement mode",
       "current": "generated/semantic-v5/previews/secondary-facing-asis.png",
       "target": "generated/semantic-v5/previews/secondary-facing-tobe.png"
@@ -141,16 +288,22 @@
       "required_for_execution": true,
       "file": "generated/semantic-v4/floor-decay-candidates.png",
       "chroma_source": "generated/semantic-v4/floor-decay-source.png",
-      "canvas": [1254, 1254],
+      "canvas": [
+        1254,
+        1254
+      ],
       "identities": [
         "floor_intact",
         "floor_worn_cracked",
         "floor_breached_poison",
         "floor_breached_lava"
       ],
-      "report_items": ["floor-decay-states"],
+      "report_items": [
+        "floor-decay-states"
+      ],
       "approval_rule": "single report item gates all four floor states",
-      "sha256": "cc4dc103c3eb8a53ef658bfa2999926870ed58d8fb3e53be85dba032841afc68"
+      "sha256": "cc4dc103c3eb8a53ef658bfa2999926870ed58d8fb3e53be85dba032841afc68",
+      "source_sha256": "9f12399d29fc87c236f123c953a1f9d4c3000614f8fb4249a10f0af2af142bda"
     },
     {
       "id": "structure_family",
@@ -159,7 +312,10 @@
       "required_for_execution": true,
       "file": "generated/semantic-v4/structure-family-candidates.png",
       "chroma_source": "generated/semantic-v4/structure-family-source.png",
-      "canvas": [1536, 1536],
+      "canvas": [
+        1536,
+        1536
+      ],
       "identities": [
         "standalone_cover",
         "loot_barrier_intact",
@@ -172,7 +328,10 @@
         "loot_barrier_damaged": "unreviewed",
         "loot_barrier_breached": "unreviewed"
       },
-      "report_items": ["standalone-cover", "destructible-loot-barrier"],
+      "report_items": [
+        "standalone-cover",
+        "destructible-loot-barrier"
+      ],
       "approval_mapping_by_identity": {
         "standalone_cover": "standalone-cover",
         "loot_barrier_intact": "destructible-loot-barrier",
@@ -180,7 +339,8 @@
         "loot_barrier_breached": "destructible-loot-barrier"
       },
       "approval_rule": "per identity; the held standalone cover does not block the three loot-barrier identities",
-      "sha256": "5b23feb8980fe77c2125931257925b4802c15655786f8b4276bdea16858c874b"
+      "sha256": "5b23feb8980fe77c2125931257925b4802c15655786f8b4276bdea16858c874b",
+      "source_sha256": "7565e728d80d652b19859e1dd09fd1c0cd32525e6d6b83a8b92cbbc2e18e216b"
     },
     {
       "id": "gate_barrier",
@@ -189,14 +349,20 @@
       "required_for_execution": true,
       "file": "generated/semantic-v4/gate-barrier-candidates.png",
       "chroma_source": "generated/semantic-v4/gate-barrier-source.png",
-      "canvas": [1254, 1254],
+      "canvas": [
+        1254,
+        1254
+      ],
       "identities": [
         "teleport_gate_inactive",
         "teleport_gate_active",
         "energy_barrier_inactive",
         "energy_barrier_active"
       ],
-      "report_items": ["teleport-gate", "traversable-energy-barrier"],
+      "report_items": [
+        "teleport-gate",
+        "traversable-energy-barrier"
+      ],
       "approval_mapping_by_identity": {
         "teleport_gate_inactive": "teleport-gate",
         "teleport_gate_active": "teleport-gate",
@@ -204,25 +370,31 @@
         "energy_barrier_active": "traversable-energy-barrier"
       },
       "approval_rule": "per identity family; teleport and traversable barrier decisions are independent",
-      "sha256": "9bff8608af649ab09cbb9d4e4a2fe3f0a3be25afe903ab0a4b610085f1680972"
+      "sha256": "9bff8608af649ab09cbb9d4e4a2fe3f0a3be25afe903ab0a4b610085f1680972",
+      "source_sha256": "11830fc0f50c97f6bf7a6d00fee60327e231d3962175696abf4b1030fd93b6b3"
     },
     {
       "id": "world_functional_fields",
       "category": "functional_terrain",
       "status": "pending_user_approval",
       "required_for_execution": true,
-      "file": "generated/world-v4/world-functional-candidates.png",
-      "chroma_source": "generated/world-v4/world-functional-source.png",
-      "canvas": [1254, 1254],
+      "file": "generated/world-v4/repair-field-candidates.png",
+      "chroma_source": "generated/world-v4/repair-field-source.png",
+      "canvas": [
+        1254,
+        560
+      ],
       "valid_identities": [
         "repair_field_base",
         "repair_field_active"
       ],
-      "report_items": ["repair-field"],
-      "approval_rule": "single report item gates only the two valid repair-field identities",
-      "superseded_identities": ["overdrive_field", "arc_terminal_pair"],
-      "notes": "The overdrive identity is replaced by semantic-v5 overdrive_field_radial. The fourth quadrant is replaced by gate_barrier.energy_barrier_active. Neither superseded identity may be integrated.",
-      "sha256": "fe83ce94b3f6c9a597d3d987b2acc7f57c98c56ea5bf008d4fc59bc84798f9e3"
+      "report_items": [
+        "repair-field"
+      ],
+      "approval_rule": "single report item gates the two repair-field identities; rejected quadrants were physically removed from this sheet",
+      "notes": "This sheet contains only repair_field_base and repair_field_active.",
+      "sha256": "d7a512ae10d2e6c5969ce1bb6b5a2e67780d15b3c498d803396658259c08cdde",
+      "source_sha256": "e6871d4103814d49f33e85db18d596893be0528bce547ec6b4b829655d94389d"
     },
     {
       "id": "containers_and_pickups",
@@ -231,13 +403,20 @@
       "required_for_execution": true,
       "file": "generated/semantic-v4/collectibles-containers-and-pickups-candidate.png",
       "chroma_source": "generated/semantic-v4/collectibles-containers-and-pickups-source.png",
-      "canvas": [1254, 1254],
+      "canvas": [
+        1254,
+        1254
+      ],
       "identities": [
         "reward_crate",
         "experience_recall_pickup",
         "experience_shard"
       ],
-      "report_items": ["reward-crate", "recall-pickup", "xp-shard"],
+      "report_items": [
+        "reward-crate",
+        "recall-pickup",
+        "xp-shard"
+      ],
       "approval_mapping_by_identity": {
         "reward_crate": "reward-crate",
         "experience_recall_pickup": "recall-pickup",
@@ -245,7 +424,8 @@
       },
       "approval_rule": "per identity; crate, recall pickup, and XP shard decisions are independent",
       "superseded_identity": "repair_pickup; replaced by semantic-v5 repair_pickup_bright",
-      "sha256": "e3be0f97d111e8aac1190f44543dc766aaec3bf76c81e8c41b373a9af1082169"
+      "sha256": "e3be0f97d111e8aac1190f44543dc766aaec3bf76c81e8c41b373a9af1082169",
+      "source_sha256": "f34e63d353d4f6412a303f6e0447a63692eee9e4f9dc7f1a54e250f14f9577dc"
     },
     {
       "id": "projectile_delivery",
@@ -254,16 +434,22 @@
       "required_for_execution": true,
       "file": "generated/semantic-v4/projectile-delivery-candidates.png",
       "chroma_source": "generated/semantic-v4/projectile-delivery-source.png",
-      "canvas": [1254, 1254],
+      "canvas": [
+        1254,
+        1254
+      ],
       "identities": [
         "player_primary_bolt",
         "hostile_standard_bolt",
         "player_homing_missile",
         "player_breach_slug"
       ],
-      "report_items": ["projectile-delivery-family"],
+      "report_items": [
+        "projectile-delivery-family"
+      ],
       "approval_rule": "single report item gates the delivery family",
-      "sha256": "986e3ef43e7fc7b60851315f9148453c3f5c0ed4d5d54b16b671aaaa67b04baf"
+      "sha256": "986e3ef43e7fc7b60851315f9148453c3f5c0ed4d5d54b16b671aaaa67b04baf",
+      "source_sha256": "767b65de92898c2082f551baa7b7d6a92f27bc2d75d426c746efec5514e15b59"
     },
     {
       "id": "hostile_projectile_tier",
@@ -272,15 +458,21 @@
       "required_for_execution": true,
       "file": "generated/semantic-v4/hostile-tier-candidates.png",
       "chroma_source": "generated/semantic-v4/hostile-tier-source.png",
-      "canvas": [1774, 887],
+      "canvas": [
+        1774,
+        887
+      ],
       "identities": [
         "ordinary_hostile_projectile",
         "elite_hostile_projectile",
         "boss_hostile_projectile"
       ],
-      "report_items": ["hostile-projectile-tier"],
+      "report_items": [
+        "hostile-projectile-tier"
+      ],
       "approval_rule": "single report item gates all hostile threat tiers",
-      "sha256": "1dabb4969fbf037fabeacc64e12458ffad42b2d7d539c8bb424c4e8a4e897cdc"
+      "sha256": "1dabb4969fbf037fabeacc64e12458ffad42b2d7d539c8bb424c4e8a4e897cdc",
+      "source_sha256": "31ffc90325e512e4da8ac11a934d9f3975cd6a5c8c1deaa06a9a611bd0102cb5"
     },
     {
       "id": "impact_feedback",
@@ -289,16 +481,22 @@
       "required_for_execution": false,
       "file": "generated/semantic-v4/impact-feedback-candidates.png",
       "chroma_source": "generated/semantic-v4/impact-feedback-source.png",
-      "canvas": [1254, 1254],
+      "canvas": [
+        1254,
+        1254
+      ],
       "identities": [
         "directional_bolt_hit",
         "asymmetric_missile_hit",
         "reflect_deflection",
         "barrier_contact"
       ],
-      "report_items": ["damage-feedback-family"],
+      "report_items": [
+        "damage-feedback-family"
+      ],
       "approval_rule": "held report item; no identity may execute in this round",
-      "sha256": "69e5bb5b7fc5070ad07842dd68c4b4b2e43a0edf3bbe22501c44e6483efcf00f"
+      "sha256": "69e5bb5b7fc5070ad07842dd68c4b4b2e43a0edf3bbe22501c44e6483efcf00f",
+      "source_sha256": "e928ffd1ca41193dc74c4c94c80f75c5c3c913e241a7774c93ac2a7a4614a767"
     },
     {
       "id": "laser_beam_components",
@@ -307,16 +505,22 @@
       "required_for_execution": true,
       "file": "generated/semantic-v4/laser-beam-candidates.png",
       "chroma_source": "generated/semantic-v4/laser-beam-source.png",
-      "canvas": [1254, 1254],
+      "canvas": [
+        1254,
+        1254
+      ],
       "identities": [
         "ordinary_beam_startup_emitter",
         "ordinary_beam_repeat_segment",
         "ordinary_beam_endpoint_contact",
         "boss_heavy_beam_repeat_segment"
       ],
-      "report_items": ["hostile-laser-beam-components"],
+      "report_items": [
+        "hostile-laser-beam-components"
+      ],
       "approval_rule": "single report item gates the beam component family",
-      "sha256": "4ee2ccef0a1723585db2a6a28d79b5682f30f4863f1f9a0b4cdd848036dda4ef"
+      "sha256": "4ee2ccef0a1723585db2a6a28d79b5682f30f4863f1f9a0b4cdd848036dda4ef",
+      "source_sha256": "d7c21d2f57a97d60177d577888bb8067caab573e4dfa44ae65f8f2d1b3cdf163"
     }
   ],
   "optional_candidates": [
@@ -326,9 +530,17 @@
       "required_for_execution": false,
       "file": "generated/01-player-foundation-flat.png",
       "chroma_source": "generated/player-foundation-flat-source.png",
-      "canvas": [1536, 1024],
-      "identities": ["player_hull", "player_engine", "player_aim_mount"],
-      "sha256": "645b1fa7eb901e1499c184179cd8d1d9f5179c8eef7a4d9c75c662cb21ad6a3f"
+      "canvas": [
+        1536,
+        1024
+      ],
+      "identities": [
+        "player_hull",
+        "player_engine",
+        "player_aim_mount"
+      ],
+      "sha256": "645b1fa7eb901e1499c184179cd8d1d9f5179c8eef7a4d9c75c662cb21ad6a3f",
+      "source_sha256": "421453b16f938f113ccb6fa91f6bda761d4c1d48c69f05422056a31fd4357c1a"
     },
     {
       "id": "player_foundation_layered",
@@ -336,9 +548,17 @@
       "required_for_execution": false,
       "file": "generated/02-player-foundation-layered.png",
       "chroma_source": "generated/player-foundation-layered-source.png",
-      "canvas": [1536, 1024],
-      "identities": ["player_hull", "player_engine", "player_aim_mount"],
-      "sha256": "2680f8a100993ddd756c2e2bf4822060155253df2ab263a60426781c57ffed6b"
+      "canvas": [
+        1536,
+        1024
+      ],
+      "identities": [
+        "player_hull",
+        "player_engine",
+        "player_aim_mount"
+      ],
+      "sha256": "2680f8a100993ddd756c2e2bf4822060155253df2ab263a60426781c57ffed6b",
+      "source_sha256": "cdf020345dac7c2d19e5ab8c5ce46e3b9beb19a69ffeadf6d8423d477f1c4a21"
     },
     {
       "id": "player_foundation_outline",
@@ -346,21 +566,20 @@
       "required_for_execution": false,
       "file": "generated/03-player-foundation-outline.png",
       "chroma_source": "generated/player-foundation-outline-source.png",
-      "canvas": [1536, 1024],
-      "identities": ["player_hull", "player_engine", "player_aim_mount"],
-      "sha256": "476a84cae774161a6314f881eabe0c586b20daaf7301d3afbe8e4f20c3e00700"
+      "canvas": [
+        1536,
+        1024
+      ],
+      "identities": [
+        "player_hull",
+        "player_engine",
+        "player_aim_mount"
+      ],
+      "sha256": "476a84cae774161a6314f881eabe0c586b20daaf7301d3afbe8e4f20c3e00700",
+      "source_sha256": "2c65794a7131c900defb9779a5d49df620d4503f1de4e816279d0f9e4c411756"
     }
   ],
-  "superseded_review_artifacts": [
-    {
-      "file": "generated/world-v4/world-obstacle-candidates.png",
-      "reason": "Replaced by the brighter role-separated structure_family candidate."
-    },
-    {
-      "file": "generated/world-v4/world-functional-candidates.png#bottom-right",
-      "reason": "The small arc-terminal concept is replaced by the large traversable energy barrier."
-    }
-  ],
+  "superseded_review_artifacts": [],
   "preview_derivatives": [
     {
       "directory": "generated/semantic-v5/previews",

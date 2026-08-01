@@ -3,13 +3,13 @@ type: evidence
 status: draft
 created: 2026-07-31
 topic: Cardborne semantic-v3 candidate generation prompts
-scope: Optional review-only player foundation candidates
+scope: Review-only player foundation and boss simplification candidates
 source: ./candidate-manifest.json
 related:
   - ./README.md
 ---
 
-# Player foundation candidate prompts
+# Candidate generation prompts
 
 ## Purpose
 
@@ -81,6 +81,51 @@ Aim mount: distinct detached right-facing manual-aim rail/barrel with a clear ba
 Constraints: exactly three subjects total; each fully isolated from the others and fully inside the canvas; no overlap; no green anywhere in any subject; clean opaque interiors suitable for chroma removal.
 Avoid: text, labels, letters, numbers, logos, watermark, UI panels, dividers, assembly diagram, assembly preview, arrows, photoreal materials, glow, bloom, lighting, shading gradients, cast shadow, contact shadow, reflection, pixel art, tiny greebles, excessive internal detail, circular hull, soft painterly edges, additional objects.
 ```
+
+## Boss simplification prompts
+
+All three 2026-08-01 calls used the built-in ImageGen path. The first two calls
+used the current boss bodies as subject references and the approved general-SF
+master as style reference. The shield-node call used current boss modules only
+as rejected AS-IS examples.
+
+### 4. Boss bodies A — Colossus, Leviathan, Titan
+
+```text
+Redesign the three referenced right-facing top-down bosses while preserving the
+wide wedge, long segmented hull, and broad carrier silhouettes. Use a flat
+#00ff00 background, exactly three separated assets, 4–6 large filled mechanical
+planes, one near-black contour, restrained boss-magenta mass and sparse cyan
+functional light. Remove tiny greebles, repeated nested panels, lamps, bolts,
+photoreal texture, soft glow, decorative symbols and objective modules.
+```
+
+### 5. Boss bodies B — Behemoth, Crown
+
+```text
+Redesign exactly two right-facing top-down bosses on a flat #00ff00 background.
+Preserve Behemoth as a long narrow assault hull and Crown as a circular command
+fortress with a forward prong. Merge neighboring panels aggressively: Behemoth
+uses about six large major planes; Crown uses six broad outer sectors, one inner
+ring and one core. Remove repeated seams, sockets, trusses, tiny protrusions,
+greebles, glow, particles, text and objective modules.
+```
+
+### 6. Shared boss shield node states
+
+```text
+Replace all boss-specific objective modules with exactly three copies of the
+same compact top-down shield-node housing on a flat #00ff00 background. Show
+ACTIVE, DAMAGED and DESTROYED/RESOLVED only. Keep silhouette, dimensions,
+mounting frame and rotation identical. Active uses a complete cyan rail and
+large magenta core; damaged breaks one rail and reduces the core with a small
+amber split; resolved opens the same rail/housing and darkens the fractured
+core. Use 3–5 large planes and one contour. No boss-specific ornament, different
+silhouettes, text, starburst, explosion or particles.
+```
+
+The Behemoth/Crown result received one targeted simplification edit before the
+saved `boss-bodies-b-source.png`; the initial intermediate was deleted.
 
 ## Limitations
 

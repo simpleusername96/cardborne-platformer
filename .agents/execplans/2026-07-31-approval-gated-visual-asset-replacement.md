@@ -3,7 +3,7 @@ type: plan
 status: active
 owner: BK
 created: 2026-07-31
-last_reviewed: 2026-07-31
+last_reviewed: 2026-08-01
 scope: Targeted Cardborne visual corrections, approved asset replacements, and adjacent gameplay fixes
 related:
   - ../../docs/design/UI_VISUAL_SYSTEM.md
@@ -65,6 +65,8 @@ UI 이미지가 있다. 문제는 이 전체가 존재하지 않는 것이 아�
   - ordinary/elite/boss projectile와 attack telegraph readability
   - upgrade card art slot과 image-backed panel composition
   - 단순 XP shard 표현
+  - 4–6개 큰 plane으로 단순화한 boss body 5종
+  - 모든 boss가 공유하는 방어막 노드 active/damaged/resolved 3상태
 - 다음 인접 gameplay 수정.
   - engine이 hull에 rigid하게 붙어 보이도록 attachment transform 확인
   - orbiting secondary가 기체 중심에서 바깥을 향하도록 rotation 수정
@@ -75,8 +77,9 @@ UI 이미지가 있다. 문제는 이 전체가 존재하지 않는 것이 아�
 
 ### Out of scope
 
-- 근거 확인 없이 player, ordinary enemy, boss, secondary, effect와 UI 전체를
-  일괄 재제작.
+- 근거 확인 없이 player, ordinary enemy, secondary, effect와 UI 전체를
+  일괄 재제작. boss는 2026-08-01 사용자 피드백에 따라 body와 방어막
+  objective만 승인 후보로 추가한다.
 - 현재 정상이고 사용자가 교체를 요청하지 않은 에셋 변경.
 - 적 합동 전략, formation, encounter composition과 spawn capacity 변경.
 - 새 보스 패턴·AI·단계·cadence의 콘텐츠 재설계. 기존 pattern kind가 잘못된
@@ -139,6 +142,8 @@ UI 이미지가 있다. 문제는 이 전체가 존재하지 않는 것이 아�
 | wall | `FIX/ADD` | 선분 rail renderer이며 PNG는 제외됨 | 선분 topology를 분류해 wall image를 실제 경계에 배치 | integration preview + topology |
 | cover/terrain/facility | `FIX`, 필요 시 `REPLACE` | 작은 body image와 실제 rect/radius 도형이 분리됨 | body가 전체 footprint를 차지하고 live truth overlay와 일치 | footprint preview |
 | pickup contact | `FIX` | 종류별 contact 경로 확인 필요 | body/dash swept contact로 정확히 1회 수집 | 아니오 |
+| boss body | `REPLACE` | 5종 모두 작은 panel·lamp·greeble이 과밀 | 고유 silhouette는 유지하고 4–6개 큰 plane과 한 외곽선으로 단순화 | 이미지 시안 |
+| boss 방어막 objective | `REPLACE` | boss마다 10종의 서로 다른 module raster와 이름 사용 | 동일한 보스 방어막 노드 housing의 active/damaged/resolved 3상태만 재사용 | 이미지 시안 + state contract |
 | 나머지 actor/secondary/effect/UI | `UNREVIEWED` 또는 `REUSE` | 현재 semantic-v2 | 기존 피드백 범위와 inventory coverage에 따라 판정 | 해당 시각 변경 시 |
 
 ## Proposed Design
@@ -152,6 +157,9 @@ UI 이미지가 있다. 문제는 이 전체가 존재하지 않는 것이 아�
   비교 근거가 필요하다.
 - text, level, value와 gameplay icon을 panel background에 굽지 않는다.
 - 후보는 `candidate`일 뿐 runtime manifest에서 참조하지 않는다.
+- AS-IS/TO-BE 비교는 모든 report surface에서 왼쪽 AS-IS, 오른쪽 TO-BE의
+  가로 한 쌍으로만 표시한다. 좁은 화면에서는 페이지 전체가 아니라 pair
+  내부를 가로 scroll한다.
 
 ### Map and terrain
 
@@ -180,7 +188,8 @@ UI 이미지가 있다. 문제는 이 전체가 존재하지 않는 것이 아�
 ### Upgrade card
 
 - card height의 30–34%를 family art slot으로 사용한다.
-- 그 아래 이름+레벨, 설명, 실제 효과, optional behavior와 level pip 순서다.
+- 그 아래 이름+레벨, 설명, 실제 효과, optional behavior 순서다. 중복 level
+  pip는 사용하지 않는다.
 - 기존 card shell이 맞으면 유지하고 layout만 `FIX`한다.
 - shell 자체가 text-safe inset을 침범할 때만 승인된 image state로 교체한다.
 - 한국어·영어, 960/1280/1920과 200% text fixture에서 overflow 0.
@@ -232,6 +241,9 @@ Batch acceptance:
   preview; 부족한 head/tail/cap만 최대 4개씩 새로 생성.
 - [ ] **1.5 Upgrade card**: 실제 card 비율의 panel/art/text-safe mock.
 - [ ] **1.6 XP**: 단순 3단계 shard 시안.
+- [x] **1.7 Boss body**: 현재 5종을 3종/2종 두 sheet로 나누어 단순화한 시안 생성 완료. 사용자 승인 대기.
+- [x] **1.8 Boss shield node**: 모든 boss가 공유하는 동일 housing의
+  active/damaged/resolved 3상태 시안.
 - [ ] 각 필수 후보에 대해 사용자 `approve` 또는 `revise`를 기록한다.
 
 Batch acceptance:
@@ -274,6 +286,9 @@ Batch acceptance:
 - [ ] upgrade card art slot과 text hierarchy를 적용한다.
 - [ ] card shell 교체는 승인된 경우에만 수행한다.
 - [ ] XP를 승인된 단순 표현으로 바꾼다.
+- [ ] 승인된 boss body 5종과 공통 방어막 노드 3상태를 production asset으로
+  분리하고, 기존 boss-specific module identity를 provider와 renderer에서
+  제거한다.
 
 Batch acceptance:
 
@@ -355,7 +370,8 @@ Phase 1–5가 완료되기 전에는 시작하지 않는다.
   진행된다.
 - enemy speed 최종 값은 before/after 측정표를 본 뒤 사용자 승인을 받는다.
 
-이 문서가 `active`로 전환되기 전에는 위 선택을 구현 과제로 넘기지 않는다.
+필수 후보가 명시적으로 승인되기 전에는 Phase 2 이후의 production asset
+switch로 넘기지 않는다.
 
 ## Decision Notes
 
@@ -370,6 +386,13 @@ Phase 1–5가 완료되기 전에는 시작하지 않는다.
   승인받는다.
 - UI panel image + dynamic text/icon 합성 규칙은 유지한다.
 - 성능 검증은 승인된 asset/UI 수정이 모두 적용된 마지막에 수행한다.
+- 2026-08-01: 모든 report 비교는 AS-IS/TO-BE 가로 쌍만 사용한다.
+- 2026-08-01: boss body는 디테일을 줄인 5종 후보로 교체하고, boss마다
+  달랐던 방어막 objective는 공통 `보스 방어막 노드` 3상태로 통일한다.
+- 2026-08-01: 삭제 목록은 기능 없는 바닥 문양, upgrade level pip, dash
+  danger 원, 의미 없는 방사형 flower burst, superseded 후보와 boss-specific
+  방어막 module TO-BE다. AS-IS runtime 파일은 승인 비교 근거이므로 최종
+  asset switch batch까지 유지하고 provider 전환과 같은 commit에서 제거한다.
 
 ## Progress
 
@@ -377,6 +400,10 @@ Phase 1–5가 완료되기 전에는 시작하지 않는다.
 - [x] 맵·벽·장판·탄환·공격 경로 AS-IS/TO-BE 코드 감사.
 - [x] inventory 수단/실제 정상화 목적 교정.
 - [x] optional player candidate 3안 보관.
+- [x] boss body 단순화 5종과 공통 방어막 노드 3상태 후보 생성.
+- [x] 모든 visual unit·effect·UI·staged map을 92개 가로 AS-IS/TO-BE pair로
+  재구성.
+- [x] upgrade card level pip와 superseded mixed review sheet 삭제.
 - [ ] 기존 에셋 integration preview와 필요한 신규 후보 승인.
 - [ ] 승인 대상 productionization.
 - [ ] targeted runtime fixes/switches.

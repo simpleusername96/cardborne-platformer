@@ -9,57 +9,6 @@ const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const UpgradeGlyphRenderer = preload(
 	"res://scripts/presentation/components/vehicle_upgrade_glyph_renderer.gd"
 )
-const UiAssets = preload("res://scripts/ui/vehicle_ui_asset_provider.gd")
-
-class LevelPips:
-	extends HBoxContainer
-
-	var next_level := 0
-	var max_level := 1
-	var _slots: Array[TextureRect] = []
-
-
-	func _ready() -> void:
-		custom_minimum_size = Vector2(132.0, 32.0)
-		mouse_filter = Control.MOUSE_FILTER_IGNORE
-		alignment = BoxContainer.ALIGNMENT_CENTER
-		add_theme_constant_override("separation", 12)
-		_ensure_slots()
-
-
-	func _ensure_slots() -> void:
-		if not _slots.is_empty():
-			return
-		for index in 3:
-			var slot := TextureRect.new()
-			slot.name = "LevelPip%d" % (index + 1)
-			slot.custom_minimum_size = Vector2(28.0, 28.0)
-			slot.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-			slot.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-			slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			add_child(slot)
-			_slots.append(slot)
-
-
-	func configure(
-		next_value: int,
-		max_value: int,
-		_active: Color,
-		_available: Color,
-		_unavailable: Color
-	) -> void:
-		next_level = clampi(next_value, 0, 3)
-		max_level = clampi(max_value, 1, 3)
-		_ensure_slots()
-		for index in 3:
-			var state := (
-				&"pip_filled"
-				if index < next_level
-				else &"pip_available"
-				if index < max_level
-				else &"pip_empty"
-			)
-			_slots[index].texture = UiAssets.texture(&"small_state", state)
 
 
 var _offer: Dictionary = {}
@@ -75,7 +24,6 @@ var _title: Label
 var _summary: Label
 var _effects: VBoxContainer
 var _behavior: Label
-var _pips: LevelPips
 
 
 func _ready() -> void:
@@ -129,7 +77,6 @@ func set_compact_mode(value: bool) -> void:
 	_summary.custom_minimum_size.y = 60.0 if value else 66.0
 	_behavior.add_theme_font_size_override("font_size", 15 if value else 16)
 	_behavior.custom_minimum_size.y = 32.0 if value else 36.0
-	_pips.custom_minimum_size = Vector2(132.0, 22.0) if value else Vector2(132.0, 28.0)
 	_refresh()
 
 
@@ -264,9 +211,6 @@ func _build() -> void:
 	_behavior.custom_minimum_size.y = 36.0
 	_behavior.visible = false
 	_content_box.add_child(_behavior)
-	_pips = LevelPips.new()
-	_pips.custom_minimum_size = Vector2(132.0, 28.0)
-	_content_box.add_child(_pips)
 
 
 func _refresh() -> void:
@@ -300,13 +244,6 @@ func _refresh() -> void:
 	_behavior.text = tr(behavior_key) if not behavior_key.is_empty() else ""
 	_behavior.visible = not _behavior.text.is_empty()
 	_refresh_summary_budget()
-	_pips.configure(
-		int(_offer.get("next_level", 1)),
-		int(_offer.get("max_level", 1)),
-		Art.MUSTARD,
-		Art.IVORY_BRIGHT,
-		Color(Art.IVORY_SHADE, 0.42)
-	)
 	var accessibility_parts := PackedStringArray([
 		_family.text,
 		_title.text,

@@ -33,15 +33,16 @@ related:
 
 ## Findings
 
-### 역할별 승인 리포트
+### 정본 승인 리포트
 
-[`asset-switch-approval-report.html`](./asset-switch-approval-report.html)은
-작은 카드 그리드가 아니라 다음 구조로 검토한다.
+[`runtime-visual-inventory-report.html`](./runtime-visual-inventory-report.html)은
+현재 정본 보고서다. 모든 시각 시스템·effect·UI·staged map 항목을
+`AS-IS 왼쪽 | TO-BE 오른쪽`의 가로 두 열로만 검토한다. TO-BE가 아직
+없거나 삭제 대상이어도 오른쪽 열을 유지해 그 상태를 명시한다.
 
-- 상단의 10개 역할 카테고리 tab
-- 카테고리 안의 실제 교체·추가·코드 항목 목록
-- 한 번에 한 항목을 표시하는 큰 AS-IS / TO-BE viewer
-- 원본 전체 화면 확대, 항목별 승인·수정·보류와 JSON export
+이전 [`asset-switch-approval-report.html`](./asset-switch-approval-report.html)은
+v3 JSON feedback을 만든 과거 decision-capture 근거다. 최신 boss body와
+공통 보스 방어막 노드 승인에는 사용하지 않는다.
 
 분류와 이름의 정본은
 [`GAMEPLAY_VISUAL_TAXONOMY.md`](../../GAMEPLAY_VISUAL_TAXONOMY.md)다.
@@ -55,6 +56,7 @@ v2 JSON의 `수정 필요` 7건과 `보류` 2건만 승계하고, 나머지는 �
 
 기존 미검토 후보는 `generated/semantic-v4/`, 피드백 수정 후보는
 `generated/semantic-v5/`에 source와 alpha candidate를 함께 보관한다.
+2026-08-01 boss 단순화 피드백은 `generated/semantic-v6/`에 보관한다.
 v5 재승인 단위는 다음과 같다.
 
 | family | 재승인 단위 | 한 생성 이미지의 identity 수 |
@@ -64,6 +66,9 @@ v5 재승인 단위는 다음과 같다.
 | `repair-pickup` | 더 밝은 green/mint 휴대형 회복 pickup | 1 |
 | `upgrade-offense` | primary, secondary, skill, element | 4 |
 | `upgrade-chassis` | passive, defense, dash, mobility | 4 |
+| `boss-bodies-a` | colossus, leviathan, titan 단순화 | 3 |
+| `boss-bodies-b` | behemoth, crown 단순화 | 2 |
+| `boss-shield-node-states` | 공통 active, damaged, resolved | 3 |
 
 engine, secondary 방향과 boss stream은 새 runtime PNG가 필요한 항목이
 아니다. `generated/semantic-v5/previews/`의 비교 이미지는 기존 asset을
@@ -87,12 +92,16 @@ engine, secondary 방향과 boss stream은 새 runtime PNG가 필요한 항목�
 개별 viewer를 위한 기계적 crop·비교 evidence이며 별도 production asset
 owner가 아니다.
 
-이전 `generated/world-v4/world-obstacle-candidates.png`의 cover/bulkhead 안은
-새 `structure-family`가 대체하므로 승인·integration 대상으로 사용하지
-않는다. `world-functional-candidates.png`에서는 회복 장판 base/active만
-유효하다. overdrive 안은 v5 원형 장판이, 작은 arc terminal 안은 새
-`gate-barrier`가 대체한다. `structure-family`의 독립 엄폐물도 사용자가
-필요성 판단을 보류했으므로 integration하지 않는다.
+모든 비교 surface는 `AS-IS | TO-BE`의 가로 두 열만 사용한다. TO-BE가
+미제작·삭제·현행 유지이면 오른쪽 열을 숨기지 않고 그 상태를 명시한다.
+기존 boss-specific module 10종은 AS-IS 증거로만 남고, TO-BE는 모든 boss가
+동일한 `보스 방어막 노드` 3상태를 사용한다.
+
+폐기된 `world-obstacle-candidates` sheet는 삭제했다. 이전 mixed
+`world-functional-candidates`도 삭제하고, 유효한 회복 장판 base/active만
+`repair-field-candidates.png`로 분리했다. overdrive는 v5 원형 장판,
+energy barrier는 새 `gate-barrier`만 유효하다. `structure-family`의 독립
+엄폐물은 사용자가 필요성 판단을 보류했으므로 integration하지 않는다.
 
 ### 현재 에셋 마스터 그리드
 

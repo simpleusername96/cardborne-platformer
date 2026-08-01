@@ -5,7 +5,7 @@ owner: BK
 created: 2026-07-31
 last_reviewed: 2026-08-01
 canonical_for: Cardborne gameplay visual categories, terminology, semantic distinctions, and visible state contracts
-scope: Player-facing map surfaces, structures, terrain, containers, pickups, projectiles, attack feedback, upgrade cards, and vehicle exhaust
+scope: Player-facing map surfaces, structures, terrain, containers, pickups, projectiles, attack feedback, boss objectives, upgrade cards, and vehicle exhaust
 related:
   - ./UI_VISUAL_SYSTEM.md
   - ./component-sheets/semantic-v3-approval/asset-switch-approval-report.html
@@ -93,6 +93,16 @@ related:
   `player → weapon` 벡터를 따라 바깥을 향하고, 발사된 seeker는 속도 방향을
   향한다. 고정 wake mine과 원형 ion field에는 임의 heading을 부여하지 않는다.
 
+### 보스 objective
+
+| 정본 이름 | 무엇인가 | gameplay 계약 | 시각 계약 | 삭제·금지 대상 |
+| --- | --- | --- | --- | --- |
+| **보스 방어막 노드** | 파괴하면 boss damage reduction 또는 shield가 단계적으로 낮아지는 공통 외부 objective | 모든 boss가 같은 objective kind와 `active → damaged → resolved` 상태 계약을 사용 | 모든 boss에서 동일한 housing, canvas, pivot과 rail 구조를 사용하고 상태만 core 크기·rail 파손·housing 개방으로 변경 | boss별 forge plate, segment lock, relay polarity, route switch, crown lattice/pylon silhouette |
+
+boss마다 다른 이름과 외형을 부여했던 기존 module raster는 AS-IS 비교
+근거일 뿐 TO-BE asset family가 아니다. boss body의 차이는 큰 silhouette와
+mass 비율이 담당하고, 방어막을 낮추는 방법은 공통 노드로 즉시 학습되게 한다.
+
 ### 현재 내부 ID와 표시 이름
 
 | 현재 내부 ID·표현 | 승인 리포트 표시 이름 | 처리 원칙 |
@@ -116,6 +126,8 @@ related:
 - projectile의 전달 방식과 위협 등급을 grayscale silhouette만으로도 구분한다.
 - 실제 gameplay 효과가 없는 hostile payload를 색만으로 약속하지 않는다.
 - 업그레이드 카드에는 level pip 중복이 없고 지원 언어에서 overflow가 없다.
+- 모든 boss의 방어막 objective가 같은 노드로 보이며 active, damaged,
+  resolved 상태를 색 없이도 구분한다.
 
 ## Non-Goals
 

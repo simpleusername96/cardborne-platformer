@@ -1,9 +1,9 @@
 {
-  "schema_version": 1,
-  "report_id": "cardborne-runtime-visual-inventory-v1",
-  "generated_at": "2026-07-31T17:09:31.623Z",
+  "schema_version": 2,
+  "report_id": "cardborne-runtime-visual-asis-tobe-pairs-v2",
+  "generated_at": "2026-08-01T03:38:30.543Z",
   "language": "ko",
-  "title": "Cardborne 런타임 비주얼 인벤토리",
+  "title": "Cardborne 런타임 비주얼 AS-IS / TO-BE 매칭 리포트",
   "scope": {
     "definition": "현재 provider가 색인하여 runtime에서 경로 해석 가능한 visual raster 296개와 Noto font 1개를 본 장부의 runtime 범위로 삼는다.",
     "provider_reachable_is_not_proven_draw": "provider-indexed/reachable은 현재 gameplay state에서 실제 draw되었다는 뜻이 아니다. 특히 effect atlas 22개는 색인되지만 current consumer가 없고, renderer는 101개 개별 frame path를 선택한다.",
@@ -27,6 +27,78 @@
       "review-only sheets",
       "scheduled_aftershock scheduler entry before it emits player_emp_aftershock"
     ]
+  },
+  "comparison_contract": {
+    "orientation": "horizontal_only",
+    "left": "AS-IS",
+    "right": "TO-BE",
+    "narrow_viewport": "Keep both columns side by side inside a horizontally scrollable pair; never stack TO-BE below AS-IS.",
+    "missing_target": "Render an explicit TO-BE 미제작/미결정 state instead of hiding the right column."
+  },
+  "latest_feedback": {
+    "recorded_at": "2026-08-01",
+    "boss_body": "Replace the five over-detailed bodies with simpler candidates that preserve broad silhouettes using 4-6 large planes.",
+    "boss_objective": "All bosses reuse one boss shield-node housing with active, damaged, and resolved states. Existing boss-specific module silhouettes are AS-IS only.",
+    "delete_from_tobe": [
+      "nonfunctional_floor_decoration",
+      "upgrade_card_level_pips",
+      "dash_danger_circle",
+      "meaningless_radial_flower_burst",
+      "superseded_review_candidates",
+      "boss_specific_shield_objective_modules"
+    ],
+    "runtime_guard": "Current boss bodies and boss-specific modules remain available only as AS-IS evidence until the new target is approved and switched atomically."
+  },
+  "tobe_overrides": {
+    "boss_bodies": {
+      "action": "REPLACE",
+      "status_label": "신규 TO-BE · 미승인",
+      "images": [
+        "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v6/boss-bodies-a-candidates.png",
+        "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v6/boss-bodies-b-candidates.png"
+      ],
+      "summary": "5종의 큰 silhouette는 유지하고 tiny panel·lamp·greeble을 제거해 4-6개 큰 plane과 한 외곽선으로 단순화한다."
+    },
+    "boss_modules_and_core": {
+      "action": "REPLACE_AND_RETIRE",
+      "status_label": "공통 TO-BE · 미승인",
+      "images": [
+        "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v6/boss-shield-node-states-candidates.png"
+      ],
+      "summary": "boss별 10종 module TO-BE를 폐기하고 모든 boss가 동일 housing의 active/damaged/resolved 보스 방어막 노드를 재사용한다."
+    },
+    "boss_modules_core_feedback": {
+      "action": "REPLACE_AND_RETIRE",
+      "status_label": "공통 TO-BE · 미승인",
+      "images": [
+        "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v6/boss-shield-node-states-candidates.png"
+      ],
+      "summary": "파괴 시 one-shot flower burst를 추가하지 않고 같은 노드 housing이 resolved 상태로 바뀌며 boss shield 감소를 HUD와 함께 표시한다."
+    },
+    "ui_upgrade_card_shell": {
+      "action": "FIX",
+      "status_label": "중복 level pip 삭제",
+      "images": [],
+      "summary": "카드의 level text가 현재 레벨을 소유한다. 3개의 empty/available/filled level pip는 삭제하며 새 TO-BE panel image는 아직 미제작이다."
+    },
+    "map_floor_void_cover_walls": {
+      "action": "FIX_AND_DELETE",
+      "status_label": "기능 없는 문양 삭제",
+      "images": [],
+      "summary": "collision·topology·기능을 설명하지 않는 floor flower/rune/service decoration을 TO-BE에서 제거한다. 타일 가장자리와 seam만 남긴다."
+    },
+    "transient_visual_events": {
+      "action": "REVIEW_AND_REPLACE",
+      "status_label": "무의미한 방사형 burst 삭제",
+      "images": [],
+      "summary": "generic impact_damage의 방사형 flower/starburst를 TO-BE에서 제거한다. 명확한 source 방향이나 상태 전이가 없는 effect는 새 후보로 승계하지 않는다."
+    },
+    "player_engine": {
+      "action": "KEEP_CURRENT",
+      "status_label": "AS-IS 유지",
+      "images": [],
+      "summary": "현재 dash effect를 유지한다. danger 원은 현재 runtime에 없으며 다시 추가하지 않는다."
+    }
   },
   "summary": {
     "provider_reachable_rasters": 296,
@@ -55,7 +127,16 @@
       "hold": 3,
       "revise": 3,
       "unreviewed": 21
-    }
+    },
+    "latest_feedback_decisions": 2,
+    "approval_items": 29,
+    "approval_decision_counts": {
+      "approved": 0,
+      "hold": 3,
+      "revise": 3,
+      "unreviewed": 23
+    },
+    "horizontal_visual_pairs": 92
   },
   "reconciliation": {
     "source_inventory_status_counts": {
@@ -74,7 +155,7 @@
       "124 gameplay-manifest-declared static/staged raster = 116 provider-reachable gameplay static + 8 staged map raster",
       "22 animation identities = 22 indexed atlas raster + 101 renderer-selected frame raster",
       "13 UI components = 57 UI state raster",
-      "27 v3 decisions = 0 approved + 3 hold + 3 revise + 21 unreviewed"
+      "29 approval items = 27 v3 decisions + 2 latest-feedback decisions; 0 approved + 3 hold + 3 revise + 23 unreviewed"
     ],
     "assertions": {
       "all_source_inventory_metadata_matches_disk": true,
@@ -162,229 +243,267 @@
       "role": "repo_evidence",
       "path": "AGENTS.md",
       "bytes": 5855,
-      "sha256": "d272454155421bce8450ff9614bffddf67a49dc51b46cb3f6a3f343a165a7e56"
+      "sha256": "d272454155421bce8450ff9614bffddf67a49dc51b46cb3f6a3f343a165a7e56",
+      "availability": "available_at_refresh"
     },
     {
       "role": "repo_evidence",
       "path": "docs/design/GAMEPLAY_VISUAL_TAXONOMY.md",
-      "bytes": 9597,
-      "sha256": "9e6ea0822bc7f0216133295028098f7befe47123b1a56f02ca96bfadf6975eff"
+      "bytes": 10662,
+      "sha256": "46f0053c409a84de7fafa020513c63da8c9fb79509032d133fcada22bfd5f0e2",
+      "availability": "available_at_refresh"
     },
     {
       "role": "repo_evidence",
       "path": "docs/design/UI_VISUAL_SYSTEM.md",
-      "bytes": 17249,
-      "sha256": "89d1087d346e09b7f6b45b9d358200aecf26825d470b2c147a401c7fd8a188e6"
+      "bytes": 18272,
+      "sha256": "b7a8a3e56a9ef06bb8f8977400c1daecb8972a43a724b21693008a5fa63b27b9",
+      "availability": "available_at_refresh"
     },
     {
       "role": "repo_evidence",
       "path": "docs/design/component-sheets/semantic-v3-approval/current-asset-inventory.csv",
       "bytes": 60911,
-      "sha256": "5422c806913264094180861a2cd6c9f3f43c19e76cbb87857a3709aebb7391b7"
+      "sha256": "5422c806913264094180861a2cd6c9f3f43c19e76cbb87857a3709aebb7391b7",
+      "availability": "available_at_refresh"
     },
     {
       "role": "repo_evidence",
       "path": "art/gameplay/semantic-v2/asset-manifest.json",
       "bytes": 30501,
-      "sha256": "756076d7ba2164464749272143bf4f43027c4c1447af14e1470817f6baa0afe5"
+      "sha256": "756076d7ba2164464749272143bf4f43027c4c1447af14e1470817f6baa0afe5",
+      "availability": "available_at_refresh"
     },
     {
       "role": "repo_evidence",
       "path": "art/ui/production/semantic-v2/ui-asset-manifest.json",
       "bytes": 6193,
-      "sha256": "2ce75df98280ec00b9c31715c76d53396388be5626c1f089f25ac4dd3a9f79fe"
+      "sha256": "2ce75df98280ec00b9c31715c76d53396388be5626c1f089f25ac4dd3a9f79fe",
+      "availability": "available_at_refresh"
     },
     {
       "role": "repo_evidence",
       "path": "docs/design/component-sheets/semantic-v3-approval/candidate-manifest.json",
-      "bytes": 16844,
-      "sha256": "6e5111b814e7c0b405d9da72ed6d6267a4f5da3b37f400f6d0219b85c81af064"
+      "bytes": 22419,
+      "sha256": "7a574306b2bd906627f67606c357b48ae50e27a5ecfbd0a69b9a6574ba6e8961",
+      "availability": "available_at_refresh"
     },
     {
       "role": "repo_evidence",
       "path": "docs/design/component-sheets/semantic-v3-approval/asset-switch-approval-report.html",
-      "bytes": 79418,
-      "sha256": "32443cdd85442e11caf4fb00847e66e2313d4c692bdb8b99b5156a5b4822e14d"
+      "bytes": 79414,
+      "sha256": "0a39f71c855c2e9fe6b9bf845b5f13d19cc111a8ac292126ee7a79c9d0f339dd",
+      "availability": "available_at_refresh"
     },
     {
       "role": "repo_evidence",
       "path": "scripts/presentation/components/vehicle_semantic_asset_provider.gd",
       "bytes": 9598,
-      "sha256": "bcdb847712ae6ab6a5083a2accfaabb93b6bbb0d46268654d8b222687cddd2e7"
+      "sha256": "bcdb847712ae6ab6a5083a2accfaabb93b6bbb0d46268654d8b222687cddd2e7",
+      "availability": "available_at_refresh"
     },
     {
       "role": "repo_evidence",
       "path": "scripts/ui/vehicle_ui_asset_provider.gd",
       "bytes": 2162,
-      "sha256": "4a51eefd51a5d3ab48d468f2d3031ae072cea4346fc22de82a9269c76509a1de"
+      "sha256": "4a51eefd51a5d3ab48d468f2d3031ae072cea4346fc22de82a9269c76509a1de",
+      "availability": "available_at_refresh"
     },
     {
       "role": "repo_evidence",
       "path": "scripts/presentation/vehicle_combat_renderer.gd",
       "bytes": 55195,
-      "sha256": "6e83a962d272818e1efd5b5c52893022af55bd7080cd5b0323ee818f8d3de1ba"
+      "sha256": "6e83a962d272818e1efd5b5c52893022af55bd7080cd5b0323ee818f8d3de1ba",
+      "availability": "available_at_refresh"
     },
     {
       "role": "repo_evidence",
       "path": "scripts/presentation/vehicle_combat_visual_library.gd",
       "bytes": 12735,
-      "sha256": "137568d8a395421008568cb8d9718271f26294fdabf24a0846a1e3772cff5517"
+      "sha256": "137568d8a395421008568cb8d9718271f26294fdabf24a0846a1e3772cff5517",
+      "availability": "available_at_refresh"
     },
     {
       "role": "repo_evidence",
       "path": "scripts/presentation/vehicle_world_mesh_builder.gd",
       "bytes": 10735,
-      "sha256": "5646087a911ce48499d070e345a5f6f6aa10240f39d6f1d13b4b8ff42c7c8415"
+      "sha256": "5646087a911ce48499d070e345a5f6f6aa10240f39d6f1d13b4b8ff42c7c8415",
+      "availability": "available_at_refresh"
     },
     {
       "role": "repo_evidence",
       "path": "scripts/presentation/vehicle_field_surface_pattern_compiler.gd",
       "bytes": 15773,
-      "sha256": "4599e7a768e0483ac547b3432f6e9bebbf637531771ad66dabc0e564d0f22f13"
+      "sha256": "4599e7a768e0483ac547b3432f6e9bebbf637531771ad66dabc0e564d0f22f13",
+      "availability": "available_at_refresh"
     },
     {
       "role": "repo_evidence",
       "path": "scripts/vehicle/vehicle_stage_backdrop.gd",
       "bytes": 1872,
-      "sha256": "ae31f5e94d0368668202a7daed2c3b241baeb192409ff72b52d865f866c1bd3e"
+      "sha256": "ae31f5e94d0368668202a7daed2c3b241baeb192409ff72b52d865f866c1bd3e",
+      "availability": "available_at_refresh"
     },
     {
       "role": "repo_evidence",
       "path": "scripts/vehicle/vehicle_run.gd",
       "bytes": 218103,
-      "sha256": "c1d1e51cec378c75c00e83fe23ba7d3db97c7da58cd13cff913778ece78de5d1"
+      "sha256": "c1d1e51cec378c75c00e83fe23ba7d3db97c7da58cd13cff913778ece78de5d1",
+      "availability": "available_at_refresh"
     },
     {
       "role": "repo_evidence",
       "path": "scripts/presentation/components/vehicle_visual_event_catalog.gd",
       "bytes": 4619,
-      "sha256": "9c6ee0969c37aa9b10fc766be247e59cb4ea89cc95b16c70736b441b2d165b85"
+      "sha256": "9c6ee0969c37aa9b10fc766be247e59cb4ea89cc95b16c70736b441b2d165b85",
+      "availability": "available_at_refresh"
     },
     {
       "role": "repo_evidence",
       "path": "scripts/presentation/components/vehicle_actor_visual_catalog.gd",
       "bytes": 6072,
-      "sha256": "01250f08e972cbd560c6c28e5987911c367a1f96f17c8e921e9c2092c2cb3341"
+      "sha256": "01250f08e972cbd560c6c28e5987911c367a1f96f17c8e921e9c2092c2cb3341",
+      "availability": "available_at_refresh"
     },
     {
       "role": "repo_evidence",
       "path": "scripts/presentation/components/vehicle_projectile_visual_catalog.gd",
       "bytes": 1904,
-      "sha256": "c864bbd10719bb27f49b6d297ed7eb73c78e8dd572bfa94ed55b86f7c51fe1a4"
+      "sha256": "c864bbd10719bb27f49b6d297ed7eb73c78e8dd572bfa94ed55b86f7c51fe1a4",
+      "availability": "available_at_refresh"
     },
     {
       "role": "repo_evidence",
       "path": "scripts/presentation/components/vehicle_world_visual_catalog.gd",
       "bytes": 1549,
-      "sha256": "ab0e7c933cf35a64c70cf03808a7b5f952ec52a72cc9c5eb72366b4e53029f36"
+      "sha256": "ab0e7c933cf35a64c70cf03808a7b5f952ec52a72cc9c5eb72366b4e53029f36",
+      "availability": "available_at_refresh"
     },
     {
       "role": "repo_evidence",
       "path": "scripts/presentation/components/vehicle_secondary_visual_catalog.gd",
       "bytes": 1084,
-      "sha256": "4aa5fa8a7ae984a4fa5ae43548ec5f628c6df0c03f3f626a14ede87ed41b029f"
+      "sha256": "4aa5fa8a7ae984a4fa5ae43548ec5f628c6df0c03f3f626a14ede87ed41b029f",
+      "availability": "available_at_refresh"
     },
     {
       "role": "repo_evidence",
       "path": "scripts/presentation/components/vehicle_defense_visual_catalog.gd",
       "bytes": 1082,
-      "sha256": "7b9aaece63573ba9abca2029bc4b7c477162a1239e6768366d239db667eae81a"
+      "sha256": "7b9aaece63573ba9abca2029bc4b7c477162a1239e6768366d239db667eae81a",
+      "availability": "available_at_refresh"
     },
     {
       "role": "repo_evidence",
       "path": "scripts/presentation/components/vehicle_reward_visual_catalog.gd",
       "bytes": 1414,
-      "sha256": "49dadd65d2c824eadb6a5320511efdaa2e9bee6831ba9bdfbe8031e4a21e640b"
+      "sha256": "49dadd65d2c824eadb6a5320511efdaa2e9bee6831ba9bdfbe8031e4a21e640b",
+      "availability": "available_at_refresh"
     },
     {
       "role": "repo_evidence",
       "path": "scripts/presentation/components/vehicle_effect_visual_catalog.gd",
       "bytes": 1483,
-      "sha256": "2bb531200c2f1d5dac85263cdf95a93d86d6c356609b82ac752b47cc816a207b"
+      "sha256": "2bb531200c2f1d5dac85263cdf95a93d86d6c356609b82ac752b47cc816a207b",
+      "availability": "available_at_refresh"
     },
     {
       "role": "repo_evidence",
       "path": "scripts/presentation/components/vehicle_visual_system_registry.gd",
       "bytes": 7219,
-      "sha256": "f6edae91d3173287566606298aec37f86390a820ecd37a6b524ecdc0b9e5334c"
+      "sha256": "f6edae91d3173287566606298aec37f86390a820ecd37a6b524ecdc0b9e5334c",
+      "availability": "available_at_refresh"
     },
     {
       "role": "repo_evidence",
       "path": "scripts/combat/vehicle_attack_contract.gd",
       "bytes": 6761,
-      "sha256": "69de634409d427e89708ede20d126f5d5b57ba5b6b41fa8df1b17838c55a2a55"
+      "sha256": "69de634409d427e89708ede20d126f5d5b57ba5b6b41fa8df1b17838c55a2a55",
+      "availability": "available_at_refresh"
     },
     {
       "role": "repo_evidence",
       "path": "scripts/combat/vehicle_attack_telegraph_builder.gd",
       "bytes": 9704,
-      "sha256": "92c9361291572cdb493f70ca2777018f9618ef544024c672466ca78fbb8a7762"
+      "sha256": "92c9361291572cdb493f70ca2777018f9618ef544024c672466ca78fbb8a7762",
+      "availability": "available_at_refresh"
     },
     {
       "role": "repo_evidence",
       "path": "scripts/enemies/vehicle_enemy_specialist_runtime.gd",
       "bytes": 1900,
-      "sha256": "450915468a08f9600c816055ae412e3362433a4f7539d80d21867853e6fcde13"
+      "sha256": "450915468a08f9600c816055ae412e3362433a4f7539d80d21867853e6fcde13",
+      "availability": "available_at_refresh"
     },
     {
       "role": "repo_evidence",
       "path": "scripts/enemies/vehicle_enemy_archetypes.gd",
       "bytes": 6440,
-      "sha256": "1a3b98ec4ad5d1dd41c43c208f8aaebeddc253d463f65ec8ab3afaa28b731c92"
+      "sha256": "1a3b98ec4ad5d1dd41c43c208f8aaebeddc253d463f65ec8ab3afaa28b731c92",
+      "availability": "available_at_refresh"
     },
     {
       "role": "repo_evidence",
       "path": "scripts/bosses/vehicle_boss_patterns.gd",
       "bytes": 10704,
-      "sha256": "23e9a0a9f5dddb6d3d688d2007889f96a5988f0c167e43e2307c7fb782504190"
+      "sha256": "23e9a0a9f5dddb6d3d688d2007889f96a5988f0c167e43e2307c7fb782504190",
+      "availability": "available_at_refresh"
     },
     {
       "role": "repo_evidence",
       "path": "scripts/bosses/vehicle_boss_runtime.gd",
       "bytes": 6869,
-      "sha256": "de5edc7d4d5b9c7710ca95d3e296b0926c578e5a6f0a981fac81fdf48feb9011"
+      "sha256": "de5edc7d4d5b9c7710ca95d3e296b0926c578e5a6f0a981fac81fdf48feb9011",
+      "availability": "available_at_refresh"
     },
     {
       "role": "repo_evidence",
       "path": "scripts/bosses/vehicle_boss_exam_runtime.gd",
       "bytes": 8019,
-      "sha256": "fe3a4dd0fecff220ea003a3ab217afd2225ea6679863e434903a28f5d25dbe1b"
+      "sha256": "fe3a4dd0fecff220ea003a3ab217afd2225ea6679863e434903a28f5d25dbe1b",
+      "availability": "available_at_refresh"
     },
     {
       "role": "repo_evidence",
       "path": "scripts/ui/vehicle_gameplay_hud.gd",
       "bytes": 30508,
-      "sha256": "5ceb4964cee9007146242bd171759a98be883c9cd87a079f2656bb4d957523f5"
+      "sha256": "5ceb4964cee9007146242bd171759a98be883c9cd87a079f2656bb4d957523f5",
+      "availability": "available_at_refresh"
     },
     {
       "role": "repo_evidence",
       "path": "scripts/ui/vehicle_threat_radar.gd",
       "bytes": 7859,
-      "sha256": "7af6e1812c0229a9e96cd24648ef7d4af42011c197711493eea01f39640c4b9d"
+      "sha256": "7af6e1812c0229a9e96cd24648ef7d4af42011c197711493eea01f39640c4b9d",
+      "availability": "available_at_refresh"
     },
     {
       "role": "repo_evidence",
       "path": "scripts/ui/vehicle_status_orbit.gd",
       "bytes": 2369,
-      "sha256": "c69aba0e3a63329ce272943f6a9be7d7373ce26732f0d335e005b09a0872f17c"
+      "sha256": "c69aba0e3a63329ce272943f6a9be7d7373ce26732f0d335e005b09a0872f17c",
+      "availability": "available_at_refresh"
     },
     {
       "role": "repo_evidence",
       "path": "scripts/ui/vehicle_stage_report_panel.gd",
       "bytes": 13225,
-      "sha256": "96f4a2d9c6e9d74a2ba04645c8b90f0fb408fee7850104d62b25f726184d85fc"
+      "sha256": "96f4a2d9c6e9d74a2ba04645c8b90f0fb408fee7850104d62b25f726184d85fc",
+      "availability": "available_at_refresh"
     },
     {
       "role": "repo_evidence",
       "path": "art/ui/production/vehicle_stage_theme.tres",
       "bytes": 31903,
-      "sha256": "1ea22af0ac5ccdcf8cfe00937b79b41ac9dfb29d0ca4f49c9344293bf24a0cf2"
+      "sha256": "1ea22af0ac5ccdcf8cfe00937b79b41ac9dfb29d0ca4f49c9344293bf24a0cf2",
+      "availability": "available_at_refresh"
     },
     {
       "role": "authoritative_v3_decision_export",
       "path": "C:/Users/BK/Downloads/cardborne-asset-switch-approval-v3.json",
       "bytes": 8349,
-      "sha256": "b4768f8db25acab47c570150d36b919af39f5b076f2f54ece46edf77a354fe50"
+      "sha256": "b4768f8db25acab47c570150d36b919af39f5b076f2f54ece46edf77a354fe50",
+      "availability": "missing_at_refresh; prior evidence hash preserved"
     }
   ],
   "source_snapshots": {
@@ -1925,16 +2044,16 @@
       }
     },
     "candidate_manifest": {
-      "schema_version": 3,
-      "pack_id": "cardborne-semantic-v5-feedback-review",
+      "schema_version": 4,
+      "pack_id": "cardborne-semantic-v6-feedback-review",
       "runtime_integration": false,
-      "approval_report": "asset-switch-approval-report.html",
+      "approval_report": "runtime-visual-inventory-report.html",
       "taxonomy": "../../GAMEPLAY_VISUAL_TAXONOMY.md",
       "reference": "../00-general-sf-component-master-v1.png",
       "facing": "+X/right for directional combat assets",
       "max_asset_identities_per_generated_image": 4,
       "current_approval_unit": "role_categorized_map_combat_ui_visual_contract",
-      "approval_policy": "Do not split candidates into production assets or change runtime code until the required items, including all v5 revisions, are explicitly approved in report v3.",
+      "approval_policy": "Do not split candidates into production assets or switch runtime visuals until every required revision and latest-feedback candidate is explicitly approved in the canonical report.",
       "approval_mapping_contract": "Every required record declares report_items. Without approval_mapping_by_identity, all listed report items must be approved before the record may execute. With approval_mapping_by_identity, each identity is gated only by its mapped report item. Multiple candidate records may intentionally share one atomic report decision.",
       "feedback_round": {
         "source": "asset-switch-approval-feedback-v2.json",
@@ -1958,7 +2077,95 @@
         "derived_reapproval_reason": "The plain floor feedback changes the base tile consumed by the algorithm item, so asset and placement decisions must both approve before integration.",
         "unreviewed_policy": "All other report items retain their previous candidate and unreviewed state. No implicit approval is inferred."
       },
+      "latest_feedback": {
+        "source": "2026-08-01 user feedback in active Codex session",
+        "comparison_orientation": "horizontal_asis_left_tobe_right_only",
+        "new_approval_items": [
+          "boss-body-simplification",
+          "boss-shield-node-unification"
+        ],
+        "delete_from_tobe": [
+          "nonfunctional_floor_decoration",
+          "upgrade_card_level_pips",
+          "dash_danger_circle",
+          "meaningless_radial_flower_bursts",
+          "superseded_review_candidates",
+          "boss_specific_shield_objective_modules"
+        ],
+        "runtime_safety": "Current runtime boss bodies and boss-specific modules remain AS-IS evidence until the new candidates are explicitly approved and switched in one scoped production batch."
+      },
       "revision_candidates": [
+        {
+          "id": "boss_bodies_simplified_a",
+          "category": "boss_body",
+          "status": "pending_user_approval",
+          "required_for_execution": true,
+          "file": "generated/semantic-v6/boss-bodies-a-candidates.png",
+          "chroma_source": "generated/semantic-v6/boss-bodies-a-source.png",
+          "canvas": [
+            1672,
+            941
+          ],
+          "identities": [
+            "boss_colossus",
+            "boss_leviathan",
+            "boss_titan"
+          ],
+          "report_items": [
+            "boss-body-simplification"
+          ],
+          "approval_rule": "atomic with boss_bodies_simplified_b",
+          "target_contract": "Preserve the five broad silhouettes while reducing each body to 4-6 large planes, one outer contour, and sparse functional accents.",
+          "sha256": "1efb8f9a2afc83be5ef9f55f5a2c7bc7b1fa9fc8a19b852c0ad85a199347c7ff",
+          "source_sha256": "2ca02320135763d1f020abb38c39ed0aaa8542db88a6700d2d3d3c9f18cd8f10"
+        },
+        {
+          "id": "boss_bodies_simplified_b",
+          "category": "boss_body",
+          "status": "pending_user_approval",
+          "required_for_execution": true,
+          "file": "generated/semantic-v6/boss-bodies-b-candidates.png",
+          "chroma_source": "generated/semantic-v6/boss-bodies-b-source.png",
+          "canvas": [
+            1672,
+            941
+          ],
+          "identities": [
+            "boss_behemoth",
+            "boss_crown"
+          ],
+          "report_items": [
+            "boss-body-simplification"
+          ],
+          "approval_rule": "atomic with boss_bodies_simplified_a",
+          "target_contract": "Use a small number of broad masses; Crown uses six outer sectors and Behemoth removes repeated panel subdivisions.",
+          "sha256": "69b74a440fe10dfab404fdc523960c533d6dc2f897eb38d94c5f3833813ffbf2",
+          "source_sha256": "ca4d5ea3755557b4681c4a2b4e56e8c473e05a396a1edca78d521415ece669c4"
+        },
+        {
+          "id": "boss_shield_node_states",
+          "category": "boss_objective",
+          "status": "pending_user_approval",
+          "required_for_execution": true,
+          "file": "generated/semantic-v6/boss-shield-node-states-candidates.png",
+          "chroma_source": "generated/semantic-v6/boss-shield-node-states-source.png",
+          "canvas": [
+            1983,
+            793
+          ],
+          "identities": [
+            "boss_shield_node_active",
+            "boss_shield_node_damaged",
+            "boss_shield_node_resolved"
+          ],
+          "report_items": [
+            "boss-shield-node-unification"
+          ],
+          "approval_rule": "single common family replaces all boss-specific shield-objective module silhouettes",
+          "target_contract": "All bosses reuse the same housing, canvas, pivot, and rail topology; only active, damaged, and resolved state geometry changes.",
+          "sha256": "06b69df6f0e154f82dd293819873083c460d722e9bf4798f9e798ef1f350fe33",
+          "source_sha256": "b412c4d7dadc9a74e4310b788b3d02eef9b43fb898adc5469df0a637993d4ce5"
+        },
         {
           "id": "floor_base_plain",
           "category": "map_floor_tile",
@@ -1984,7 +2191,8 @@
             "world_shared_floor_01"
           ],
           "does_not_supersede": "floor_decay; its states remain unreviewed and unimplemented",
-          "sha256": "d411cf9bd30aa6ced62b1af967a3de3f4354c4d9c331eaab9975e28dd40b4782"
+          "sha256": "d411cf9bd30aa6ced62b1af967a3de3f4354c4d9c331eaab9975e28dd40b4782",
+          "source_sha256": "40707438111858d52418452e8cf4e1d5f2619eefcc648103cac2a80e361097de"
         },
         {
           "id": "overdrive_field_radial",
@@ -2004,9 +2212,10 @@
             "overdrive-field"
           ],
           "approval_rule": "single report item",
-          "supersedes": "generated/world-v4/world-functional-candidates.png#overdrive_field",
+          "supersedes": "deleted world-v4 overdrive_field identity",
           "runtime_truth": "circular non-blocking radius 180 buff footprint",
-          "sha256": "9e710507d7565f4c773f4322d6544a410aa2f458d4f165a45a85061d442cb31d"
+          "sha256": "9e710507d7565f4c773f4322d6544a410aa2f458d4f165a45a85061d442cb31d",
+          "source_sha256": "ecb630bf7aefda0285760b65b57b9d90d048e9fb47b173de00449e4cc127fff8"
         },
         {
           "id": "repair_pickup_bright",
@@ -2027,7 +2236,8 @@
           ],
           "approval_rule": "single report item",
           "supersedes": "generated/semantic-v4/collectibles-containers-and-pickups-candidate.png#repair_pickup",
-          "sha256": "4a47b09b4ca1e2d334b0fc278a08109a604354b4c2e25632d1fec97c98ab82c6"
+          "sha256": "4a47b09b4ca1e2d334b0fc278a08109a604354b4c2e25632d1fec97c98ab82c6",
+          "source_sha256": "7d7e6d4a6a0efead77f9c93ea1fa12253a6810b400022e1239f7149a4e6a7eb7"
         },
         {
           "id": "upgrade_offense_families",
@@ -2051,7 +2261,8 @@
           ],
           "approval_group": "upgrade_card_all_8_live_families",
           "approval_rule": "atomic with upgrade_chassis_families",
-          "sha256": "7232df4a2aa7a2a6bc4c8b0ff23c1a246988c6862ef064956da324b4d1a3413c"
+          "sha256": "7232df4a2aa7a2a6bc4c8b0ff23c1a246988c6862ef064956da324b4d1a3413c",
+          "source_sha256": "f86a1f9faf451ddc546dd321c35e402f6ee55b8265157cc3646c2a1296b7395d"
         },
         {
           "id": "upgrade_chassis_families",
@@ -2075,7 +2286,8 @@
           ],
           "approval_group": "upgrade_card_all_8_live_families",
           "approval_rule": "atomic with upgrade_offense_families",
-          "sha256": "712982bc230e763797132ad001d157163b3b67b17016e3a08a6c3f61568a7bde"
+          "sha256": "712982bc230e763797132ad001d157163b3b67b17016e3a08a6c3f61568a7bde",
+          "source_sha256": "85cee0779bea67453b1e0da72ef716f648f688d288dacd732086891cb6074e98"
         }
       ],
       "code_only_revision_previews": [
@@ -2135,7 +2347,8 @@
             "floor-decay-states"
           ],
           "approval_rule": "single report item gates all four floor states",
-          "sha256": "cc4dc103c3eb8a53ef658bfa2999926870ed58d8fb3e53be85dba032841afc68"
+          "sha256": "cc4dc103c3eb8a53ef658bfa2999926870ed58d8fb3e53be85dba032841afc68",
+          "source_sha256": "9f12399d29fc87c236f123c953a1f9d4c3000614f8fb4249a10f0af2af142bda"
         },
         {
           "id": "structure_family",
@@ -2171,7 +2384,8 @@
             "loot_barrier_breached": "destructible-loot-barrier"
           },
           "approval_rule": "per identity; the held standalone cover does not block the three loot-barrier identities",
-          "sha256": "5b23feb8980fe77c2125931257925b4802c15655786f8b4276bdea16858c874b"
+          "sha256": "5b23feb8980fe77c2125931257925b4802c15655786f8b4276bdea16858c874b",
+          "source_sha256": "7565e728d80d652b19859e1dd09fd1c0cd32525e6d6b83a8b92cbbc2e18e216b"
         },
         {
           "id": "gate_barrier",
@@ -2201,18 +2415,19 @@
             "energy_barrier_active": "traversable-energy-barrier"
           },
           "approval_rule": "per identity family; teleport and traversable barrier decisions are independent",
-          "sha256": "9bff8608af649ab09cbb9d4e4a2fe3f0a3be25afe903ab0a4b610085f1680972"
+          "sha256": "9bff8608af649ab09cbb9d4e4a2fe3f0a3be25afe903ab0a4b610085f1680972",
+          "source_sha256": "11830fc0f50c97f6bf7a6d00fee60327e231d3962175696abf4b1030fd93b6b3"
         },
         {
           "id": "world_functional_fields",
           "category": "functional_terrain",
           "status": "pending_user_approval",
           "required_for_execution": true,
-          "file": "generated/world-v4/world-functional-candidates.png",
-          "chroma_source": "generated/world-v4/world-functional-source.png",
+          "file": "generated/world-v4/repair-field-candidates.png",
+          "chroma_source": "generated/world-v4/repair-field-source.png",
           "canvas": [
             1254,
-            1254
+            560
           ],
           "valid_identities": [
             "repair_field_base",
@@ -2221,13 +2436,10 @@
           "report_items": [
             "repair-field"
           ],
-          "approval_rule": "single report item gates only the two valid repair-field identities",
-          "superseded_identities": [
-            "overdrive_field",
-            "arc_terminal_pair"
-          ],
-          "notes": "The overdrive identity is replaced by semantic-v5 overdrive_field_radial. The fourth quadrant is replaced by gate_barrier.energy_barrier_active. Neither superseded identity may be integrated.",
-          "sha256": "fe83ce94b3f6c9a597d3d987b2acc7f57c98c56ea5bf008d4fc59bc84798f9e3"
+          "approval_rule": "single report item gates the two repair-field identities; rejected quadrants were physically removed from this sheet",
+          "notes": "This sheet contains only repair_field_base and repair_field_active.",
+          "sha256": "d7a512ae10d2e6c5969ce1bb6b5a2e67780d15b3c498d803396658259c08cdde",
+          "source_sha256": "e6871d4103814d49f33e85db18d596893be0528bce547ec6b4b829655d94389d"
         },
         {
           "id": "containers_and_pickups",
@@ -2257,7 +2469,8 @@
           },
           "approval_rule": "per identity; crate, recall pickup, and XP shard decisions are independent",
           "superseded_identity": "repair_pickup; replaced by semantic-v5 repair_pickup_bright",
-          "sha256": "e3be0f97d111e8aac1190f44543dc766aaec3bf76c81e8c41b373a9af1082169"
+          "sha256": "e3be0f97d111e8aac1190f44543dc766aaec3bf76c81e8c41b373a9af1082169",
+          "source_sha256": "f34e63d353d4f6412a303f6e0447a63692eee9e4f9dc7f1a54e250f14f9577dc"
         },
         {
           "id": "projectile_delivery",
@@ -2280,7 +2493,8 @@
             "projectile-delivery-family"
           ],
           "approval_rule": "single report item gates the delivery family",
-          "sha256": "986e3ef43e7fc7b60851315f9148453c3f5c0ed4d5d54b16b671aaaa67b04baf"
+          "sha256": "986e3ef43e7fc7b60851315f9148453c3f5c0ed4d5d54b16b671aaaa67b04baf",
+          "source_sha256": "767b65de92898c2082f551baa7b7d6a92f27bc2d75d426c746efec5514e15b59"
         },
         {
           "id": "hostile_projectile_tier",
@@ -2302,7 +2516,8 @@
             "hostile-projectile-tier"
           ],
           "approval_rule": "single report item gates all hostile threat tiers",
-          "sha256": "1dabb4969fbf037fabeacc64e12458ffad42b2d7d539c8bb424c4e8a4e897cdc"
+          "sha256": "1dabb4969fbf037fabeacc64e12458ffad42b2d7d539c8bb424c4e8a4e897cdc",
+          "source_sha256": "31ffc90325e512e4da8ac11a934d9f3975cd6a5c8c1deaa06a9a611bd0102cb5"
         },
         {
           "id": "impact_feedback",
@@ -2325,7 +2540,8 @@
             "damage-feedback-family"
           ],
           "approval_rule": "held report item; no identity may execute in this round",
-          "sha256": "69e5bb5b7fc5070ad07842dd68c4b4b2e43a0edf3bbe22501c44e6483efcf00f"
+          "sha256": "69e5bb5b7fc5070ad07842dd68c4b4b2e43a0edf3bbe22501c44e6483efcf00f",
+          "source_sha256": "e928ffd1ca41193dc74c4c94c80f75c5c3c913e241a7774c93ac2a7a4614a767"
         },
         {
           "id": "laser_beam_components",
@@ -2348,7 +2564,8 @@
             "hostile-laser-beam-components"
           ],
           "approval_rule": "single report item gates the beam component family",
-          "sha256": "4ee2ccef0a1723585db2a6a28d79b5682f30f4863f1f9a0b4cdd848036dda4ef"
+          "sha256": "4ee2ccef0a1723585db2a6a28d79b5682f30f4863f1f9a0b4cdd848036dda4ef",
+          "source_sha256": "d7c21d2f57a97d60177d577888bb8067caab573e4dfa44ae65f8f2d1b3cdf163"
         }
       ],
       "optional_candidates": [
@@ -2367,7 +2584,8 @@
             "player_engine",
             "player_aim_mount"
           ],
-          "sha256": "645b1fa7eb901e1499c184179cd8d1d9f5179c8eef7a4d9c75c662cb21ad6a3f"
+          "sha256": "645b1fa7eb901e1499c184179cd8d1d9f5179c8eef7a4d9c75c662cb21ad6a3f",
+          "source_sha256": "421453b16f938f113ccb6fa91f6bda761d4c1d48c69f05422056a31fd4357c1a"
         },
         {
           "id": "player_foundation_layered",
@@ -2384,7 +2602,8 @@
             "player_engine",
             "player_aim_mount"
           ],
-          "sha256": "2680f8a100993ddd756c2e2bf4822060155253df2ab263a60426781c57ffed6b"
+          "sha256": "2680f8a100993ddd756c2e2bf4822060155253df2ab263a60426781c57ffed6b",
+          "source_sha256": "cdf020345dac7c2d19e5ab8c5ce46e3b9beb19a69ffeadf6d8423d477f1c4a21"
         },
         {
           "id": "player_foundation_outline",
@@ -2401,19 +2620,11 @@
             "player_engine",
             "player_aim_mount"
           ],
-          "sha256": "476a84cae774161a6314f881eabe0c586b20daaf7301d3afbe8e4f20c3e00700"
+          "sha256": "476a84cae774161a6314f881eabe0c586b20daaf7301d3afbe8e4f20c3e00700",
+          "source_sha256": "2c65794a7131c900defb9779a5d49df620d4503f1de4e816279d0f9e4c411756"
         }
       ],
-      "superseded_review_artifacts": [
-        {
-          "file": "generated/world-v4/world-obstacle-candidates.png",
-          "reason": "Replaced by the brighter role-separated structure_family candidate."
-        },
-        {
-          "file": "generated/world-v4/world-functional-candidates.png#bottom-right",
-          "reason": "The small arc-terminal concept is replaced by the large traversable energy barrier."
-        }
-      ],
+      "superseded_review_artifacts": [],
       "preview_derivatives": [
         {
           "directory": "generated/semantic-v5/previews",
@@ -2435,6 +2646,416 @@
     }
   },
   "candidate_file_evidence": [
+    {
+      "section": "optional_candidates",
+      "record_id": "player_foundation_flat",
+      "field": "file",
+      "path": "docs/design/component-sheets/semantic-v3-approval/generated/01-player-foundation-flat.png",
+      "bytes": 291861,
+      "sha256": "645b1fa7eb901e1499c184179cd8d1d9f5179c8eef7a4d9c75c662cb21ad6a3f",
+      "width": 1536,
+      "height": 1024,
+      "mime_type": "image/png",
+      "manifest_sha256": "645b1fa7eb901e1499c184179cd8d1d9f5179c8eef7a4d9c75c662cb21ad6a3f",
+      "manifest_hash_matches_disk": true,
+      "decision_ids": [],
+      "decision_states": []
+    },
+    {
+      "section": "optional_candidates",
+      "record_id": "player_foundation_layered",
+      "field": "file",
+      "path": "docs/design/component-sheets/semantic-v3-approval/generated/02-player-foundation-layered.png",
+      "bytes": 242849,
+      "sha256": "2680f8a100993ddd756c2e2bf4822060155253df2ab263a60426781c57ffed6b",
+      "width": 1536,
+      "height": 1024,
+      "mime_type": "image/png",
+      "manifest_sha256": "2680f8a100993ddd756c2e2bf4822060155253df2ab263a60426781c57ffed6b",
+      "manifest_hash_matches_disk": true,
+      "decision_ids": [],
+      "decision_states": []
+    },
+    {
+      "section": "optional_candidates",
+      "record_id": "player_foundation_outline",
+      "field": "file",
+      "path": "docs/design/component-sheets/semantic-v3-approval/generated/03-player-foundation-outline.png",
+      "bytes": 257528,
+      "sha256": "476a84cae774161a6314f881eabe0c586b20daaf7301d3afbe8e4f20c3e00700",
+      "width": 1536,
+      "height": 1024,
+      "mime_type": "image/png",
+      "manifest_sha256": "476a84cae774161a6314f881eabe0c586b20daaf7301d3afbe8e4f20c3e00700",
+      "manifest_hash_matches_disk": true,
+      "decision_ids": [],
+      "decision_states": []
+    },
+    {
+      "section": "optional_candidates",
+      "record_id": "player_foundation_flat",
+      "field": "chroma_source",
+      "path": "docs/design/component-sheets/semantic-v3-approval/generated/player-foundation-flat-source.png",
+      "bytes": 1259855,
+      "sha256": "421453b16f938f113ccb6fa91f6bda761d4c1d48c69f05422056a31fd4357c1a",
+      "width": 1536,
+      "height": 1024,
+      "mime_type": "image/png",
+      "manifest_sha256": "421453b16f938f113ccb6fa91f6bda761d4c1d48c69f05422056a31fd4357c1a",
+      "manifest_hash_matches_disk": true,
+      "decision_ids": [],
+      "decision_states": []
+    },
+    {
+      "section": "optional_candidates",
+      "record_id": "player_foundation_layered",
+      "field": "chroma_source",
+      "path": "docs/design/component-sheets/semantic-v3-approval/generated/player-foundation-layered-source.png",
+      "bytes": 209298,
+      "sha256": "cdf020345dac7c2d19e5ab8c5ce46e3b9beb19a69ffeadf6d8423d477f1c4a21",
+      "width": 1536,
+      "height": 1024,
+      "mime_type": "image/png",
+      "manifest_sha256": "cdf020345dac7c2d19e5ab8c5ce46e3b9beb19a69ffeadf6d8423d477f1c4a21",
+      "manifest_hash_matches_disk": true,
+      "decision_ids": [],
+      "decision_states": []
+    },
+    {
+      "section": "optional_candidates",
+      "record_id": "player_foundation_outline",
+      "field": "chroma_source",
+      "path": "docs/design/component-sheets/semantic-v3-approval/generated/player-foundation-outline-source.png",
+      "bytes": 218304,
+      "sha256": "2c65794a7131c900defb9779a5d49df620d4503f1de4e816279d0f9e4c411756",
+      "width": 1536,
+      "height": 1024,
+      "mime_type": "image/png",
+      "manifest_sha256": "2c65794a7131c900defb9779a5d49df620d4503f1de4e816279d0f9e4c411756",
+      "manifest_hash_matches_disk": true,
+      "decision_ids": [],
+      "decision_states": []
+    },
+    {
+      "section": "active_candidates",
+      "record_id": "containers_and_pickups",
+      "field": "file",
+      "path": "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v4/collectibles-containers-and-pickups-candidate.png",
+      "bytes": 697685,
+      "sha256": "e3be0f97d111e8aac1190f44543dc766aaec3bf76c81e8c41b373a9af1082169",
+      "width": 1254,
+      "height": 1254,
+      "mime_type": "image/png",
+      "manifest_sha256": "e3be0f97d111e8aac1190f44543dc766aaec3bf76c81e8c41b373a9af1082169",
+      "manifest_hash_matches_disk": true,
+      "decision_ids": [
+        "reward-crate",
+        "recall-pickup",
+        "xp-shard"
+      ],
+      "decision_states": [
+        "unreviewed",
+        "unreviewed",
+        "unreviewed"
+      ]
+    },
+    {
+      "section": "active_candidates",
+      "record_id": "containers_and_pickups",
+      "field": "chroma_source",
+      "path": "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v4/collectibles-containers-and-pickups-source.png",
+      "bytes": 581285,
+      "sha256": "f34e63d353d4f6412a303f6e0447a63692eee9e4f9dc7f1a54e250f14f9577dc",
+      "width": 1254,
+      "height": 1254,
+      "mime_type": "image/png",
+      "manifest_sha256": "f34e63d353d4f6412a303f6e0447a63692eee9e4f9dc7f1a54e250f14f9577dc",
+      "manifest_hash_matches_disk": true,
+      "decision_ids": [
+        "reward-crate",
+        "recall-pickup",
+        "xp-shard"
+      ],
+      "decision_states": [
+        "unreviewed",
+        "unreviewed",
+        "unreviewed"
+      ]
+    },
+    {
+      "section": "active_candidates",
+      "record_id": "floor_decay",
+      "field": "file",
+      "path": "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v4/floor-decay-candidates.png",
+      "bytes": 2068720,
+      "sha256": "cc4dc103c3eb8a53ef658bfa2999926870ed58d8fb3e53be85dba032841afc68",
+      "width": 1254,
+      "height": 1254,
+      "mime_type": "image/png",
+      "manifest_sha256": "cc4dc103c3eb8a53ef658bfa2999926870ed58d8fb3e53be85dba032841afc68",
+      "manifest_hash_matches_disk": true,
+      "decision_ids": [
+        "floor-decay-states"
+      ],
+      "decision_states": [
+        "unreviewed"
+      ]
+    },
+    {
+      "section": "active_candidates",
+      "record_id": "floor_decay",
+      "field": "chroma_source",
+      "path": "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v4/floor-decay-source.png",
+      "bytes": 2208107,
+      "sha256": "9f12399d29fc87c236f123c953a1f9d4c3000614f8fb4249a10f0af2af142bda",
+      "width": 1254,
+      "height": 1254,
+      "mime_type": "image/png",
+      "manifest_sha256": "9f12399d29fc87c236f123c953a1f9d4c3000614f8fb4249a10f0af2af142bda",
+      "manifest_hash_matches_disk": true,
+      "decision_ids": [
+        "floor-decay-states"
+      ],
+      "decision_states": [
+        "unreviewed"
+      ]
+    },
+    {
+      "section": "active_candidates",
+      "record_id": "gate_barrier",
+      "field": "file",
+      "path": "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v4/gate-barrier-candidates.png",
+      "bytes": 1494425,
+      "sha256": "9bff8608af649ab09cbb9d4e4a2fe3f0a3be25afe903ab0a4b610085f1680972",
+      "width": 1254,
+      "height": 1254,
+      "mime_type": "image/png",
+      "manifest_sha256": "9bff8608af649ab09cbb9d4e4a2fe3f0a3be25afe903ab0a4b610085f1680972",
+      "manifest_hash_matches_disk": true,
+      "decision_ids": [
+        "teleport-gate",
+        "traversable-energy-barrier"
+      ],
+      "decision_states": [
+        "unreviewed",
+        "unreviewed"
+      ]
+    },
+    {
+      "section": "active_candidates",
+      "record_id": "gate_barrier",
+      "field": "chroma_source",
+      "path": "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v4/gate-barrier-source.png",
+      "bytes": 1517240,
+      "sha256": "11830fc0f50c97f6bf7a6d00fee60327e231d3962175696abf4b1030fd93b6b3",
+      "width": 1254,
+      "height": 1254,
+      "mime_type": "image/png",
+      "manifest_sha256": "11830fc0f50c97f6bf7a6d00fee60327e231d3962175696abf4b1030fd93b6b3",
+      "manifest_hash_matches_disk": true,
+      "decision_ids": [
+        "teleport-gate",
+        "traversable-energy-barrier"
+      ],
+      "decision_states": [
+        "unreviewed",
+        "unreviewed"
+      ]
+    },
+    {
+      "section": "active_candidates",
+      "record_id": "hostile_projectile_tier",
+      "field": "file",
+      "path": "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v4/hostile-tier-candidates.png",
+      "bytes": 569986,
+      "sha256": "1dabb4969fbf037fabeacc64e12458ffad42b2d7d539c8bb424c4e8a4e897cdc",
+      "width": 1774,
+      "height": 887,
+      "mime_type": "image/png",
+      "manifest_sha256": "1dabb4969fbf037fabeacc64e12458ffad42b2d7d539c8bb424c4e8a4e897cdc",
+      "manifest_hash_matches_disk": true,
+      "decision_ids": [
+        "hostile-projectile-tier"
+      ],
+      "decision_states": [
+        "unreviewed"
+      ]
+    },
+    {
+      "section": "active_candidates",
+      "record_id": "hostile_projectile_tier",
+      "field": "chroma_source",
+      "path": "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v4/hostile-tier-source.png",
+      "bytes": 1270759,
+      "sha256": "31ffc90325e512e4da8ac11a934d9f3975cd6a5c8c1deaa06a9a611bd0102cb5",
+      "width": 1774,
+      "height": 887,
+      "mime_type": "image/png",
+      "manifest_sha256": "31ffc90325e512e4da8ac11a934d9f3975cd6a5c8c1deaa06a9a611bd0102cb5",
+      "manifest_hash_matches_disk": true,
+      "decision_ids": [
+        "hostile-projectile-tier"
+      ],
+      "decision_states": [
+        "unreviewed"
+      ]
+    },
+    {
+      "section": "active_candidates",
+      "record_id": "impact_feedback",
+      "field": "file",
+      "path": "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v4/impact-feedback-candidates.png",
+      "bytes": 422042,
+      "sha256": "69e5bb5b7fc5070ad07842dd68c4b4b2e43a0edf3bbe22501c44e6483efcf00f",
+      "width": 1254,
+      "height": 1254,
+      "mime_type": "image/png",
+      "manifest_sha256": "69e5bb5b7fc5070ad07842dd68c4b4b2e43a0edf3bbe22501c44e6483efcf00f",
+      "manifest_hash_matches_disk": true,
+      "decision_ids": [
+        "damage-feedback-family"
+      ],
+      "decision_states": [
+        "hold"
+      ]
+    },
+    {
+      "section": "active_candidates",
+      "record_id": "impact_feedback",
+      "field": "chroma_source",
+      "path": "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v4/impact-feedback-source.png",
+      "bytes": 1215169,
+      "sha256": "e928ffd1ca41193dc74c4c94c80f75c5c3c913e241a7774c93ac2a7a4614a767",
+      "width": 1254,
+      "height": 1254,
+      "mime_type": "image/png",
+      "manifest_sha256": "e928ffd1ca41193dc74c4c94c80f75c5c3c913e241a7774c93ac2a7a4614a767",
+      "manifest_hash_matches_disk": true,
+      "decision_ids": [
+        "damage-feedback-family"
+      ],
+      "decision_states": [
+        "hold"
+      ]
+    },
+    {
+      "section": "active_candidates",
+      "record_id": "laser_beam_components",
+      "field": "file",
+      "path": "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v4/laser-beam-candidates.png",
+      "bytes": 743432,
+      "sha256": "4ee2ccef0a1723585db2a6a28d79b5682f30f4863f1f9a0b4cdd848036dda4ef",
+      "width": 1254,
+      "height": 1254,
+      "mime_type": "image/png",
+      "manifest_sha256": "4ee2ccef0a1723585db2a6a28d79b5682f30f4863f1f9a0b4cdd848036dda4ef",
+      "manifest_hash_matches_disk": true,
+      "decision_ids": [
+        "hostile-laser-beam-components"
+      ],
+      "decision_states": [
+        "revise"
+      ]
+    },
+    {
+      "section": "active_candidates",
+      "record_id": "laser_beam_components",
+      "field": "chroma_source",
+      "path": "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v4/laser-beam-source.png",
+      "bytes": 1497017,
+      "sha256": "d7c21d2f57a97d60177d577888bb8067caab573e4dfa44ae65f8f2d1b3cdf163",
+      "width": 1254,
+      "height": 1254,
+      "mime_type": "image/png",
+      "manifest_sha256": "d7c21d2f57a97d60177d577888bb8067caab573e4dfa44ae65f8f2d1b3cdf163",
+      "manifest_hash_matches_disk": true,
+      "decision_ids": [
+        "hostile-laser-beam-components"
+      ],
+      "decision_states": [
+        "revise"
+      ]
+    },
+    {
+      "section": "active_candidates",
+      "record_id": "projectile_delivery",
+      "field": "file",
+      "path": "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v4/projectile-delivery-candidates.png",
+      "bytes": 390367,
+      "sha256": "986e3ef43e7fc7b60851315f9148453c3f5c0ed4d5d54b16b671aaaa67b04baf",
+      "width": 1254,
+      "height": 1254,
+      "mime_type": "image/png",
+      "manifest_sha256": "986e3ef43e7fc7b60851315f9148453c3f5c0ed4d5d54b16b671aaaa67b04baf",
+      "manifest_hash_matches_disk": true,
+      "decision_ids": [
+        "projectile-delivery-family"
+      ],
+      "decision_states": [
+        "unreviewed"
+      ]
+    },
+    {
+      "section": "active_candidates",
+      "record_id": "projectile_delivery",
+      "field": "chroma_source",
+      "path": "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v4/projectile-delivery-source.png",
+      "bytes": 1167773,
+      "sha256": "767b65de92898c2082f551baa7b7d6a92f27bc2d75d426c746efec5514e15b59",
+      "width": 1254,
+      "height": 1254,
+      "mime_type": "image/png",
+      "manifest_sha256": "767b65de92898c2082f551baa7b7d6a92f27bc2d75d426c746efec5514e15b59",
+      "manifest_hash_matches_disk": true,
+      "decision_ids": [
+        "projectile-delivery-family"
+      ],
+      "decision_states": [
+        "unreviewed"
+      ]
+    },
+    {
+      "section": "active_candidates",
+      "record_id": "structure_family",
+      "field": "file",
+      "path": "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v4/structure-family-candidates.png",
+      "bytes": 586762,
+      "sha256": "5b23feb8980fe77c2125931257925b4802c15655786f8b4276bdea16858c874b",
+      "width": 1536,
+      "height": 1536,
+      "mime_type": "image/png",
+      "manifest_sha256": "5b23feb8980fe77c2125931257925b4802c15655786f8b4276bdea16858c874b",
+      "manifest_hash_matches_disk": true,
+      "decision_ids": [
+        "standalone-cover",
+        "destructible-loot-barrier"
+      ],
+      "decision_states": [
+        "hold",
+        "unreviewed"
+      ]
+    },
+    {
+      "section": "active_candidates",
+      "record_id": "structure_family",
+      "field": "chroma_source",
+      "path": "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v4/structure-family-source.png",
+      "bytes": 568058,
+      "sha256": "7565e728d80d652b19859e1dd09fd1c0cd32525e6d6b83a8b92cbbc2e18e216b",
+      "width": 1536,
+      "height": 1536,
+      "mime_type": "image/png",
+      "manifest_sha256": "7565e728d80d652b19859e1dd09fd1c0cd32525e6d6b83a8b92cbbc2e18e216b",
+      "manifest_hash_matches_disk": true,
+      "decision_ids": [
+        "standalone-cover",
+        "destructible-loot-barrier"
+      ],
+      "decision_states": [
+        "hold",
+        "unreviewed"
+      ]
+    },
     {
       "section": "revision_candidates",
       "record_id": "floor_base_plain",
@@ -2466,8 +3087,8 @@
       "width": 1536,
       "height": 1024,
       "mime_type": "image/png",
-      "manifest_sha256": null,
-      "manifest_hash_matches_disk": null,
+      "manifest_sha256": "40707438111858d52418452e8cf4e1d5f2619eefcc648103cac2a80e361097de",
+      "manifest_hash_matches_disk": true,
       "decision_ids": [
         "floor-tile-compiler",
         "floor-decoration-removal"
@@ -2506,124 +3127,10 @@
       "width": 1254,
       "height": 1254,
       "mime_type": "image/png",
-      "manifest_sha256": null,
-      "manifest_hash_matches_disk": null,
+      "manifest_sha256": "ecb630bf7aefda0285760b65b57b9d90d048e9fb47b173de00449e4cc127fff8",
+      "manifest_hash_matches_disk": true,
       "decision_ids": [
         "overdrive-field"
-      ],
-      "decision_states": [
-        "unreviewed"
-      ]
-    },
-    {
-      "section": "revision_candidates",
-      "record_id": "repair_pickup_bright",
-      "field": "file",
-      "path": "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v5/repair-pickup-candidate.png",
-      "bytes": 386883,
-      "sha256": "4a47b09b4ca1e2d334b0fc278a08109a604354b4c2e25632d1fec97c98ab82c6",
-      "width": 1254,
-      "height": 1254,
-      "mime_type": "image/png",
-      "manifest_sha256": "4a47b09b4ca1e2d334b0fc278a08109a604354b4c2e25632d1fec97c98ab82c6",
-      "manifest_hash_matches_disk": true,
-      "decision_ids": [
-        "repair-pickup"
-      ],
-      "decision_states": [
-        "unreviewed"
-      ]
-    },
-    {
-      "section": "revision_candidates",
-      "record_id": "repair_pickup_bright",
-      "field": "chroma_source",
-      "path": "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v5/repair-pickup-source.png",
-      "bytes": 342957,
-      "sha256": "7d7e6d4a6a0efead77f9c93ea1fa12253a6810b400022e1239f7149a4e6a7eb7",
-      "width": 1254,
-      "height": 1254,
-      "mime_type": "image/png",
-      "manifest_sha256": null,
-      "manifest_hash_matches_disk": null,
-      "decision_ids": [
-        "repair-pickup"
-      ],
-      "decision_states": [
-        "unreviewed"
-      ]
-    },
-    {
-      "section": "revision_candidates",
-      "record_id": "upgrade_offense_families",
-      "field": "file",
-      "path": "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v5/upgrade-offense-candidates.png",
-      "bytes": 563942,
-      "sha256": "7232df4a2aa7a2a6bc4c8b0ff23c1a246988c6862ef064956da324b4d1a3413c",
-      "width": 1254,
-      "height": 1254,
-      "mime_type": "image/png",
-      "manifest_sha256": "7232df4a2aa7a2a6bc4c8b0ff23c1a246988c6862ef064956da324b4d1a3413c",
-      "manifest_hash_matches_disk": true,
-      "decision_ids": [
-        "upgrade-card-layout"
-      ],
-      "decision_states": [
-        "unreviewed"
-      ]
-    },
-    {
-      "section": "revision_candidates",
-      "record_id": "upgrade_offense_families",
-      "field": "chroma_source",
-      "path": "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v5/upgrade-offense-source.png",
-      "bytes": 1141324,
-      "sha256": "f86a1f9faf451ddc546dd321c35e402f6ee55b8265157cc3646c2a1296b7395d",
-      "width": 1254,
-      "height": 1254,
-      "mime_type": "image/png",
-      "manifest_sha256": null,
-      "manifest_hash_matches_disk": null,
-      "decision_ids": [
-        "upgrade-card-layout"
-      ],
-      "decision_states": [
-        "unreviewed"
-      ]
-    },
-    {
-      "section": "revision_candidates",
-      "record_id": "upgrade_chassis_families",
-      "field": "file",
-      "path": "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v5/upgrade-chassis-candidates.png",
-      "bytes": 564609,
-      "sha256": "712982bc230e763797132ad001d157163b3b67b17016e3a08a6c3f61568a7bde",
-      "width": 1254,
-      "height": 1254,
-      "mime_type": "image/png",
-      "manifest_sha256": "712982bc230e763797132ad001d157163b3b67b17016e3a08a6c3f61568a7bde",
-      "manifest_hash_matches_disk": true,
-      "decision_ids": [
-        "upgrade-card-layout"
-      ],
-      "decision_states": [
-        "unreviewed"
-      ]
-    },
-    {
-      "section": "revision_candidates",
-      "record_id": "upgrade_chassis_families",
-      "field": "chroma_source",
-      "path": "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v5/upgrade-chassis-source.png",
-      "bytes": 1149395,
-      "sha256": "85cee0779bea67453b1e0da72ef716f648f688d288dacd732086891cb6074e98",
-      "width": 1254,
-      "height": 1254,
-      "mime_type": "image/png",
-      "manifest_sha256": null,
-      "manifest_hash_matches_disk": null,
-      "decision_ids": [
-        "upgrade-card-layout"
       ],
       "decision_states": [
         "unreviewed"
@@ -2744,482 +3251,218 @@
       ]
     },
     {
-      "section": "active_candidates",
-      "record_id": "floor_decay",
+      "section": "revision_candidates",
+      "record_id": "repair_pickup_bright",
       "field": "file",
-      "path": "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v4/floor-decay-candidates.png",
-      "bytes": 2068720,
-      "sha256": "cc4dc103c3eb8a53ef658bfa2999926870ed58d8fb3e53be85dba032841afc68",
+      "path": "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v5/repair-pickup-candidate.png",
+      "bytes": 386883,
+      "sha256": "4a47b09b4ca1e2d334b0fc278a08109a604354b4c2e25632d1fec97c98ab82c6",
       "width": 1254,
       "height": 1254,
       "mime_type": "image/png",
-      "manifest_sha256": "cc4dc103c3eb8a53ef658bfa2999926870ed58d8fb3e53be85dba032841afc68",
+      "manifest_sha256": "4a47b09b4ca1e2d334b0fc278a08109a604354b4c2e25632d1fec97c98ab82c6",
       "manifest_hash_matches_disk": true,
       "decision_ids": [
-        "floor-decay-states"
+        "repair-pickup"
       ],
       "decision_states": [
         "unreviewed"
       ]
     },
     {
-      "section": "active_candidates",
-      "record_id": "floor_decay",
+      "section": "revision_candidates",
+      "record_id": "repair_pickup_bright",
       "field": "chroma_source",
-      "path": "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v4/floor-decay-source.png",
-      "bytes": 2208107,
-      "sha256": "9f12399d29fc87c236f123c953a1f9d4c3000614f8fb4249a10f0af2af142bda",
+      "path": "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v5/repair-pickup-source.png",
+      "bytes": 342957,
+      "sha256": "7d7e6d4a6a0efead77f9c93ea1fa12253a6810b400022e1239f7149a4e6a7eb7",
       "width": 1254,
       "height": 1254,
       "mime_type": "image/png",
-      "manifest_sha256": null,
-      "manifest_hash_matches_disk": null,
-      "decision_ids": [
-        "floor-decay-states"
-      ],
-      "decision_states": [
-        "unreviewed"
-      ]
-    },
-    {
-      "section": "active_candidates",
-      "record_id": "structure_family",
-      "field": "file",
-      "path": "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v4/structure-family-candidates.png",
-      "bytes": 586762,
-      "sha256": "5b23feb8980fe77c2125931257925b4802c15655786f8b4276bdea16858c874b",
-      "width": 1536,
-      "height": 1536,
-      "mime_type": "image/png",
-      "manifest_sha256": "5b23feb8980fe77c2125931257925b4802c15655786f8b4276bdea16858c874b",
+      "manifest_sha256": "7d7e6d4a6a0efead77f9c93ea1fa12253a6810b400022e1239f7149a4e6a7eb7",
       "manifest_hash_matches_disk": true,
       "decision_ids": [
-        "standalone-cover",
-        "destructible-loot-barrier"
+        "repair-pickup"
       ],
       "decision_states": [
-        "hold",
         "unreviewed"
       ]
     },
     {
-      "section": "active_candidates",
-      "record_id": "structure_family",
-      "field": "chroma_source",
-      "path": "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v4/structure-family-source.png",
-      "bytes": 568058,
-      "sha256": "7565e728d80d652b19859e1dd09fd1c0cd32525e6d6b83a8b92cbbc2e18e216b",
-      "width": 1536,
-      "height": 1536,
-      "mime_type": "image/png",
-      "manifest_sha256": null,
-      "manifest_hash_matches_disk": null,
-      "decision_ids": [
-        "standalone-cover",
-        "destructible-loot-barrier"
-      ],
-      "decision_states": [
-        "hold",
-        "unreviewed"
-      ]
-    },
-    {
-      "section": "active_candidates",
-      "record_id": "gate_barrier",
+      "section": "revision_candidates",
+      "record_id": "upgrade_chassis_families",
       "field": "file",
-      "path": "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v4/gate-barrier-candidates.png",
-      "bytes": 1494425,
-      "sha256": "9bff8608af649ab09cbb9d4e4a2fe3f0a3be25afe903ab0a4b610085f1680972",
+      "path": "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v5/upgrade-chassis-candidates.png",
+      "bytes": 564609,
+      "sha256": "712982bc230e763797132ad001d157163b3b67b17016e3a08a6c3f61568a7bde",
       "width": 1254,
       "height": 1254,
       "mime_type": "image/png",
-      "manifest_sha256": "9bff8608af649ab09cbb9d4e4a2fe3f0a3be25afe903ab0a4b610085f1680972",
+      "manifest_sha256": "712982bc230e763797132ad001d157163b3b67b17016e3a08a6c3f61568a7bde",
       "manifest_hash_matches_disk": true,
       "decision_ids": [
-        "teleport-gate",
-        "traversable-energy-barrier"
+        "upgrade-card-layout"
       ],
       "decision_states": [
-        "unreviewed",
         "unreviewed"
       ]
     },
     {
-      "section": "active_candidates",
-      "record_id": "gate_barrier",
+      "section": "revision_candidates",
+      "record_id": "upgrade_chassis_families",
       "field": "chroma_source",
-      "path": "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v4/gate-barrier-source.png",
-      "bytes": 1517240,
-      "sha256": "11830fc0f50c97f6bf7a6d00fee60327e231d3962175696abf4b1030fd93b6b3",
+      "path": "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v5/upgrade-chassis-source.png",
+      "bytes": 1149395,
+      "sha256": "85cee0779bea67453b1e0da72ef716f648f688d288dacd732086891cb6074e98",
       "width": 1254,
       "height": 1254,
       "mime_type": "image/png",
-      "manifest_sha256": null,
-      "manifest_hash_matches_disk": null,
+      "manifest_sha256": "85cee0779bea67453b1e0da72ef716f648f688d288dacd732086891cb6074e98",
+      "manifest_hash_matches_disk": true,
       "decision_ids": [
-        "teleport-gate",
-        "traversable-energy-barrier"
+        "upgrade-card-layout"
       ],
       "decision_states": [
-        "unreviewed",
         "unreviewed"
       ]
+    },
+    {
+      "section": "revision_candidates",
+      "record_id": "upgrade_offense_families",
+      "field": "file",
+      "path": "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v5/upgrade-offense-candidates.png",
+      "bytes": 563942,
+      "sha256": "7232df4a2aa7a2a6bc4c8b0ff23c1a246988c6862ef064956da324b4d1a3413c",
+      "width": 1254,
+      "height": 1254,
+      "mime_type": "image/png",
+      "manifest_sha256": "7232df4a2aa7a2a6bc4c8b0ff23c1a246988c6862ef064956da324b4d1a3413c",
+      "manifest_hash_matches_disk": true,
+      "decision_ids": [
+        "upgrade-card-layout"
+      ],
+      "decision_states": [
+        "unreviewed"
+      ]
+    },
+    {
+      "section": "revision_candidates",
+      "record_id": "upgrade_offense_families",
+      "field": "chroma_source",
+      "path": "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v5/upgrade-offense-source.png",
+      "bytes": 1141324,
+      "sha256": "f86a1f9faf451ddc546dd321c35e402f6ee55b8265157cc3646c2a1296b7395d",
+      "width": 1254,
+      "height": 1254,
+      "mime_type": "image/png",
+      "manifest_sha256": "f86a1f9faf451ddc546dd321c35e402f6ee55b8265157cc3646c2a1296b7395d",
+      "manifest_hash_matches_disk": true,
+      "decision_ids": [
+        "upgrade-card-layout"
+      ],
+      "decision_states": [
+        "unreviewed"
+      ]
+    },
+    {
+      "path": "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v6/boss-bodies-a-candidates.png",
+      "bytes": 448032,
+      "sha256": "1efb8f9a2afc83be5ef9f55f5a2c7bc7b1fa9fc8a19b852c0ad85a199347c7ff",
+      "width": 1672,
+      "height": 941,
+      "role": "alpha_candidate",
+      "status": "latest_feedback_candidate_not_runtime",
+      "manifest_sha256": "1efb8f9a2afc83be5ef9f55f5a2c7bc7b1fa9fc8a19b852c0ad85a199347c7ff",
+      "manifest_hash_matches_disk": true
+    },
+    {
+      "path": "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v6/boss-bodies-a-source.png",
+      "bytes": 1125734,
+      "sha256": "2ca02320135763d1f020abb38c39ed0aaa8542db88a6700d2d3d3c9f18cd8f10",
+      "width": 1672,
+      "height": 941,
+      "role": "chroma_source",
+      "status": "latest_feedback_candidate_not_runtime",
+      "manifest_sha256": "2ca02320135763d1f020abb38c39ed0aaa8542db88a6700d2d3d3c9f18cd8f10",
+      "manifest_hash_matches_disk": true
+    },
+    {
+      "path": "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v6/boss-bodies-b-candidates.png",
+      "bytes": 458699,
+      "sha256": "69b74a440fe10dfab404fdc523960c533d6dc2f897eb38d94c5f3833813ffbf2",
+      "width": 1672,
+      "height": 941,
+      "role": "alpha_candidate",
+      "status": "latest_feedback_candidate_not_runtime",
+      "manifest_sha256": "69b74a440fe10dfab404fdc523960c533d6dc2f897eb38d94c5f3833813ffbf2",
+      "manifest_hash_matches_disk": true
+    },
+    {
+      "path": "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v6/boss-bodies-b-source.png",
+      "bytes": 1099442,
+      "sha256": "ca4d5ea3755557b4681c4a2b4e56e8c473e05a396a1edca78d521415ece669c4",
+      "width": 1672,
+      "height": 941,
+      "role": "chroma_source",
+      "status": "latest_feedback_candidate_not_runtime",
+      "manifest_sha256": "ca4d5ea3755557b4681c4a2b4e56e8c473e05a396a1edca78d521415ece669c4",
+      "manifest_hash_matches_disk": true
+    },
+    {
+      "path": "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v6/boss-shield-node-states-candidates.png",
+      "bytes": 571365,
+      "sha256": "06b69df6f0e154f82dd293819873083c460d722e9bf4798f9e798ef1f350fe33",
+      "width": 1983,
+      "height": 793,
+      "role": "alpha_candidate",
+      "status": "latest_feedback_candidate_not_runtime",
+      "manifest_sha256": "06b69df6f0e154f82dd293819873083c460d722e9bf4798f9e798ef1f350fe33",
+      "manifest_hash_matches_disk": true
+    },
+    {
+      "path": "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v6/boss-shield-node-states-source.png",
+      "bytes": 1137172,
+      "sha256": "b412c4d7dadc9a74e4310b788b3d02eef9b43fb898adc5469df0a637993d4ce5",
+      "width": 1983,
+      "height": 793,
+      "role": "chroma_source",
+      "status": "latest_feedback_candidate_not_runtime",
+      "manifest_sha256": "b412c4d7dadc9a74e4310b788b3d02eef9b43fb898adc5469df0a637993d4ce5",
+      "manifest_hash_matches_disk": true
     },
     {
       "section": "active_candidates",
       "record_id": "world_functional_fields",
       "field": "file",
-      "path": "docs/design/component-sheets/semantic-v3-approval/generated/world-v4/world-functional-candidates.png",
-      "bytes": 526391,
-      "sha256": "fe83ce94b3f6c9a597d3d987b2acc7f57c98c56ea5bf008d4fc59bc84798f9e3",
-      "width": 1254,
-      "height": 1254,
+      "path": "docs/design/component-sheets/semantic-v3-approval/generated/world-v4/repair-field-candidates.png",
       "mime_type": "image/png",
-      "manifest_sha256": "fe83ce94b3f6c9a597d3d987b2acc7f57c98c56ea5bf008d4fc59bc84798f9e3",
-      "manifest_hash_matches_disk": true,
       "decision_ids": [
         "repair-field"
       ],
-      "decision_states": [
-        "unreviewed"
-      ]
+      "decision_states": [],
+      "bytes": 320463,
+      "sha256": "d7a512ae10d2e6c5969ce1bb6b5a2e67780d15b3c498d803396658259c08cdde",
+      "width": 1254,
+      "height": 560,
+      "manifest_sha256": "d7a512ae10d2e6c5969ce1bb6b5a2e67780d15b3c498d803396658259c08cdde",
+      "manifest_hash_matches_disk": true
     },
     {
       "section": "active_candidates",
       "record_id": "world_functional_fields",
       "field": "chroma_source",
-      "path": "docs/design/component-sheets/semantic-v3-approval/generated/world-v4/world-functional-source.png",
-      "bytes": 1417550,
-      "sha256": "5d79c75c69fb9412f15f72c9820ac2ae1b47911e4bf7f11ff534108d24c78517",
-      "width": 1254,
-      "height": 1254,
+      "path": "docs/design/component-sheets/semantic-v3-approval/generated/world-v4/repair-field-source.png",
       "mime_type": "image/png",
-      "manifest_sha256": null,
-      "manifest_hash_matches_disk": null,
       "decision_ids": [
         "repair-field"
       ],
-      "decision_states": [
-        "unreviewed"
-      ]
-    },
-    {
-      "section": "active_candidates",
-      "record_id": "containers_and_pickups",
-      "field": "file",
-      "path": "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v4/collectibles-containers-and-pickups-candidate.png",
-      "bytes": 697685,
-      "sha256": "e3be0f97d111e8aac1190f44543dc766aaec3bf76c81e8c41b373a9af1082169",
+      "decision_states": [],
+      "bytes": 662812,
+      "sha256": "e6871d4103814d49f33e85db18d596893be0528bce547ec6b4b829655d94389d",
       "width": 1254,
-      "height": 1254,
-      "mime_type": "image/png",
-      "manifest_sha256": "e3be0f97d111e8aac1190f44543dc766aaec3bf76c81e8c41b373a9af1082169",
-      "manifest_hash_matches_disk": true,
-      "decision_ids": [
-        "reward-crate",
-        "recall-pickup",
-        "xp-shard"
-      ],
-      "decision_states": [
-        "unreviewed",
-        "unreviewed",
-        "unreviewed"
-      ]
-    },
-    {
-      "section": "active_candidates",
-      "record_id": "containers_and_pickups",
-      "field": "chroma_source",
-      "path": "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v4/collectibles-containers-and-pickups-source.png",
-      "bytes": 581285,
-      "sha256": "f34e63d353d4f6412a303f6e0447a63692eee9e4f9dc7f1a54e250f14f9577dc",
-      "width": 1254,
-      "height": 1254,
-      "mime_type": "image/png",
-      "manifest_sha256": null,
-      "manifest_hash_matches_disk": null,
-      "decision_ids": [
-        "reward-crate",
-        "recall-pickup",
-        "xp-shard"
-      ],
-      "decision_states": [
-        "unreviewed",
-        "unreviewed",
-        "unreviewed"
-      ]
-    },
-    {
-      "section": "active_candidates",
-      "record_id": "projectile_delivery",
-      "field": "file",
-      "path": "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v4/projectile-delivery-candidates.png",
-      "bytes": 390367,
-      "sha256": "986e3ef43e7fc7b60851315f9148453c3f5c0ed4d5d54b16b671aaaa67b04baf",
-      "width": 1254,
-      "height": 1254,
-      "mime_type": "image/png",
-      "manifest_sha256": "986e3ef43e7fc7b60851315f9148453c3f5c0ed4d5d54b16b671aaaa67b04baf",
-      "manifest_hash_matches_disk": true,
-      "decision_ids": [
-        "projectile-delivery-family"
-      ],
-      "decision_states": [
-        "unreviewed"
-      ]
-    },
-    {
-      "section": "active_candidates",
-      "record_id": "projectile_delivery",
-      "field": "chroma_source",
-      "path": "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v4/projectile-delivery-source.png",
-      "bytes": 1167773,
-      "sha256": "767b65de92898c2082f551baa7b7d6a92f27bc2d75d426c746efec5514e15b59",
-      "width": 1254,
-      "height": 1254,
-      "mime_type": "image/png",
-      "manifest_sha256": null,
-      "manifest_hash_matches_disk": null,
-      "decision_ids": [
-        "projectile-delivery-family"
-      ],
-      "decision_states": [
-        "unreviewed"
-      ]
-    },
-    {
-      "section": "active_candidates",
-      "record_id": "hostile_projectile_tier",
-      "field": "file",
-      "path": "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v4/hostile-tier-candidates.png",
-      "bytes": 569986,
-      "sha256": "1dabb4969fbf037fabeacc64e12458ffad42b2d7d539c8bb424c4e8a4e897cdc",
-      "width": 1774,
-      "height": 887,
-      "mime_type": "image/png",
-      "manifest_sha256": "1dabb4969fbf037fabeacc64e12458ffad42b2d7d539c8bb424c4e8a4e897cdc",
-      "manifest_hash_matches_disk": true,
-      "decision_ids": [
-        "hostile-projectile-tier"
-      ],
-      "decision_states": [
-        "unreviewed"
-      ]
-    },
-    {
-      "section": "active_candidates",
-      "record_id": "hostile_projectile_tier",
-      "field": "chroma_source",
-      "path": "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v4/hostile-tier-source.png",
-      "bytes": 1270759,
-      "sha256": "31ffc90325e512e4da8ac11a934d9f3975cd6a5c8c1deaa06a9a611bd0102cb5",
-      "width": 1774,
-      "height": 887,
-      "mime_type": "image/png",
-      "manifest_sha256": null,
-      "manifest_hash_matches_disk": null,
-      "decision_ids": [
-        "hostile-projectile-tier"
-      ],
-      "decision_states": [
-        "unreviewed"
-      ]
-    },
-    {
-      "section": "active_candidates",
-      "record_id": "impact_feedback",
-      "field": "file",
-      "path": "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v4/impact-feedback-candidates.png",
-      "bytes": 422042,
-      "sha256": "69e5bb5b7fc5070ad07842dd68c4b4b2e43a0edf3bbe22501c44e6483efcf00f",
-      "width": 1254,
-      "height": 1254,
-      "mime_type": "image/png",
-      "manifest_sha256": "69e5bb5b7fc5070ad07842dd68c4b4b2e43a0edf3bbe22501c44e6483efcf00f",
-      "manifest_hash_matches_disk": true,
-      "decision_ids": [
-        "damage-feedback-family"
-      ],
-      "decision_states": [
-        "hold"
-      ]
-    },
-    {
-      "section": "active_candidates",
-      "record_id": "impact_feedback",
-      "field": "chroma_source",
-      "path": "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v4/impact-feedback-source.png",
-      "bytes": 1215169,
-      "sha256": "e928ffd1ca41193dc74c4c94c80f75c5c3c913e241a7774c93ac2a7a4614a767",
-      "width": 1254,
-      "height": 1254,
-      "mime_type": "image/png",
-      "manifest_sha256": null,
-      "manifest_hash_matches_disk": null,
-      "decision_ids": [
-        "damage-feedback-family"
-      ],
-      "decision_states": [
-        "hold"
-      ]
-    },
-    {
-      "section": "active_candidates",
-      "record_id": "laser_beam_components",
-      "field": "file",
-      "path": "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v4/laser-beam-candidates.png",
-      "bytes": 743432,
-      "sha256": "4ee2ccef0a1723585db2a6a28d79b5682f30f4863f1f9a0b4cdd848036dda4ef",
-      "width": 1254,
-      "height": 1254,
-      "mime_type": "image/png",
-      "manifest_sha256": "4ee2ccef0a1723585db2a6a28d79b5682f30f4863f1f9a0b4cdd848036dda4ef",
-      "manifest_hash_matches_disk": true,
-      "decision_ids": [
-        "hostile-laser-beam-components"
-      ],
-      "decision_states": [
-        "revise"
-      ]
-    },
-    {
-      "section": "active_candidates",
-      "record_id": "laser_beam_components",
-      "field": "chroma_source",
-      "path": "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v4/laser-beam-source.png",
-      "bytes": 1497017,
-      "sha256": "d7c21d2f57a97d60177d577888bb8067caab573e4dfa44ae65f8f2d1b3cdf163",
-      "width": 1254,
-      "height": 1254,
-      "mime_type": "image/png",
-      "manifest_sha256": null,
-      "manifest_hash_matches_disk": null,
-      "decision_ids": [
-        "hostile-laser-beam-components"
-      ],
-      "decision_states": [
-        "revise"
-      ]
-    },
-    {
-      "section": "optional_candidates",
-      "record_id": "player_foundation_flat",
-      "field": "file",
-      "path": "docs/design/component-sheets/semantic-v3-approval/generated/01-player-foundation-flat.png",
-      "bytes": 291861,
-      "sha256": "645b1fa7eb901e1499c184179cd8d1d9f5179c8eef7a4d9c75c662cb21ad6a3f",
-      "width": 1536,
-      "height": 1024,
-      "mime_type": "image/png",
-      "manifest_sha256": "645b1fa7eb901e1499c184179cd8d1d9f5179c8eef7a4d9c75c662cb21ad6a3f",
-      "manifest_hash_matches_disk": true,
-      "decision_ids": [],
-      "decision_states": []
-    },
-    {
-      "section": "optional_candidates",
-      "record_id": "player_foundation_flat",
-      "field": "chroma_source",
-      "path": "docs/design/component-sheets/semantic-v3-approval/generated/player-foundation-flat-source.png",
-      "bytes": 1259855,
-      "sha256": "421453b16f938f113ccb6fa91f6bda761d4c1d48c69f05422056a31fd4357c1a",
-      "width": 1536,
-      "height": 1024,
-      "mime_type": "image/png",
-      "manifest_sha256": null,
-      "manifest_hash_matches_disk": null,
-      "decision_ids": [],
-      "decision_states": []
-    },
-    {
-      "section": "optional_candidates",
-      "record_id": "player_foundation_layered",
-      "field": "file",
-      "path": "docs/design/component-sheets/semantic-v3-approval/generated/02-player-foundation-layered.png",
-      "bytes": 242849,
-      "sha256": "2680f8a100993ddd756c2e2bf4822060155253df2ab263a60426781c57ffed6b",
-      "width": 1536,
-      "height": 1024,
-      "mime_type": "image/png",
-      "manifest_sha256": "2680f8a100993ddd756c2e2bf4822060155253df2ab263a60426781c57ffed6b",
-      "manifest_hash_matches_disk": true,
-      "decision_ids": [],
-      "decision_states": []
-    },
-    {
-      "section": "optional_candidates",
-      "record_id": "player_foundation_layered",
-      "field": "chroma_source",
-      "path": "docs/design/component-sheets/semantic-v3-approval/generated/player-foundation-layered-source.png",
-      "bytes": 209298,
-      "sha256": "cdf020345dac7c2d19e5ab8c5ce46e3b9beb19a69ffeadf6d8423d477f1c4a21",
-      "width": 1536,
-      "height": 1024,
-      "mime_type": "image/png",
-      "manifest_sha256": null,
-      "manifest_hash_matches_disk": null,
-      "decision_ids": [],
-      "decision_states": []
-    },
-    {
-      "section": "optional_candidates",
-      "record_id": "player_foundation_outline",
-      "field": "file",
-      "path": "docs/design/component-sheets/semantic-v3-approval/generated/03-player-foundation-outline.png",
-      "bytes": 257528,
-      "sha256": "476a84cae774161a6314f881eabe0c586b20daaf7301d3afbe8e4f20c3e00700",
-      "width": 1536,
-      "height": 1024,
-      "mime_type": "image/png",
-      "manifest_sha256": "476a84cae774161a6314f881eabe0c586b20daaf7301d3afbe8e4f20c3e00700",
-      "manifest_hash_matches_disk": true,
-      "decision_ids": [],
-      "decision_states": []
-    },
-    {
-      "section": "optional_candidates",
-      "record_id": "player_foundation_outline",
-      "field": "chroma_source",
-      "path": "docs/design/component-sheets/semantic-v3-approval/generated/player-foundation-outline-source.png",
-      "bytes": 218304,
-      "sha256": "2c65794a7131c900defb9779a5d49df620d4503f1de4e816279d0f9e4c411756",
-      "width": 1536,
-      "height": 1024,
-      "mime_type": "image/png",
-      "manifest_sha256": null,
-      "manifest_hash_matches_disk": null,
-      "decision_ids": [],
-      "decision_states": []
-    },
-    {
-      "section": "superseded_review_artifacts",
-      "record_id": null,
-      "field": "file",
-      "path": "docs/design/component-sheets/semantic-v3-approval/generated/world-v4/world-obstacle-candidates.png",
-      "bytes": 658317,
-      "sha256": "570d440ebe09105d46f07fef97fc9e37d60b631859234d9d5d8a5ff054d78d00",
-      "width": 1254,
-      "height": 1254,
-      "mime_type": "image/png",
-      "manifest_sha256": null,
-      "manifest_hash_matches_disk": null,
-      "decision_ids": [],
-      "decision_states": []
-    },
-    {
-      "section": "superseded_review_artifacts",
-      "record_id": null,
-      "field": "file",
-      "path": "docs/design/component-sheets/semantic-v3-approval/generated/world-v4/world-functional-candidates.png",
-      "bytes": 526391,
-      "sha256": "fe83ce94b3f6c9a597d3d987b2acc7f57c98c56ea5bf008d4fc59bc84798f9e3",
-      "width": 1254,
-      "height": 1254,
-      "mime_type": "image/png",
-      "manifest_sha256": null,
-      "manifest_hash_matches_disk": null,
-      "decision_ids": [],
-      "decision_states": []
+      "height": 560,
+      "manifest_sha256": "e6871d4103814d49f33e85db18d596893be0528bce547ec6b4b829655d94389d",
+      "manifest_hash_matches_disk": true
     }
   ],
   "approval_decisions": [
@@ -3662,11 +3905,11 @@
           "mime_type": "image/png"
         },
         "sheet": {
-          "path": "docs/design/component-sheets/semantic-v3-approval/generated/world-v4/world-functional-candidates.png",
-          "bytes": 526391,
-          "sha256": "fe83ce94b3f6c9a597d3d987b2acc7f57c98c56ea5bf008d4fc59bc84798f9e3",
+          "path": "docs/design/component-sheets/semantic-v3-approval/generated/world-v4/repair-field-candidates.png",
+          "bytes": 320463,
+          "sha256": "d7a512ae10d2e6c5969ce1bb6b5a2e67780d15b3c498d803396658259c08cdde",
           "width": 1254,
-          "height": 1254,
+          "height": 560,
           "mime_type": "image/png"
         },
         "caption": "밝은 mint plus, 넓은 dock 면과 segmented progress ring을 결합해 회복 범위와 작동 상태를 보여줍니다.",
@@ -4521,6 +4764,54 @@
         "GDC/Riot clarity references"
       ],
       "asset_contract": "CC0 packs + official engine docs + gameplay clarity talks"
+    },
+    {
+      "id": "boss-body-simplification",
+      "title": "보스 body 5종 단순화",
+      "category": "boss",
+      "action": "REPLACE",
+      "choice": "unreviewed",
+      "state_label": "신규 TO-BE · 미승인",
+      "current_truth": {
+        "statement": "현재 5종 body는 tiny panel, lamp, greeble과 nested plane이 과밀하다.",
+        "caption": "AS-IS는 실제 semantic-v2 runtime boss body다.",
+        "image": {
+          "path": "art/gameplay/semantic-v2/actors/bosses/actor_boss_colossus_base.png"
+        }
+      },
+      "candidate_evidence": {
+        "statement": "5종의 고유 silhouette는 유지하고 4-6개 큰 plane과 한 외곽선으로 단순화한다.",
+        "caption": "A sheet 3종과 B sheet 2종은 하나의 atomic approval family다.",
+        "image": {
+          "path": "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v6/boss-bodies-a-candidates.png"
+        }
+      },
+      "semantic_warning": "후보는 아직 runtime asset이 아니며 사용자 승인 전 provider에 연결하지 않는다.",
+      "source": "2026-08-01-current-user-feedback"
+    },
+    {
+      "id": "boss-shield-node-unification",
+      "title": "보스 방어막 노드 통일",
+      "category": "boss",
+      "action": "REPLACE_AND_RETIRE",
+      "choice": "unreviewed",
+      "state_label": "공통 TO-BE · 미승인",
+      "current_truth": {
+        "statement": "현재 boss마다 forge plate, segment lock, relay, route switch, crown lattice/pylon처럼 다른 module silhouette를 사용한다.",
+        "caption": "AS-IS 10종은 서로 다른 장치처럼 보여 공통 objective 규칙 학습을 방해한다.",
+        "image": {
+          "path": "art/gameplay/semantic-v2/actors/bosses/modules/actor_boss_module_forge_plate_active.png"
+        }
+      },
+      "candidate_evidence": {
+        "statement": "모든 boss가 동일 housing의 active, damaged, resolved 보스 방어막 노드를 재사용한다.",
+        "caption": "상태는 core 크기, rail 파손, housing 개방으로 구분하고 색만으로 구분하지 않는다.",
+        "image": {
+          "path": "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v6/boss-shield-node-states-candidates.png"
+        }
+      },
+      "semantic_warning": "후보 승인 후 기존 boss-specific module identity를 provider와 파일에서 같은 batch로 제거한다.",
+      "source": "2026-08-01-current-user-feedback"
     }
   ],
   "animations": [
@@ -4584,7 +4875,19 @@
       "decision_ids": [],
       "decision_state": "baseline_undecided",
       "decision_label": "AS-IS 기준선 / TO-BE 미결정",
-      "target_direction": null
+      "target_direction": null,
+      "asis_images": [
+        "art/gameplay/semantic-v2/effects/frames/fx_muzzle_player_primary/frame_00.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_muzzle_player_primary/frame_01.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_muzzle_player_primary/frame_02.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_muzzle_player_primary/frame_03.png"
+      ],
+      "tobe": {
+        "action": "UNDECIDED",
+        "status_label": "TO-BE 미제작·미결정",
+        "images": [],
+        "summary": "유효한 TO-BE 이미지가 아직 없다."
+      }
     },
     {
       "id": "dash_start",
@@ -4642,7 +4945,22 @@
       ],
       "decision_state": "hold",
       "decision_label": "보류 · 승인 아님",
-      "target_direction": "HOLD: 이 identity의 새 feedback family는 승인되지 않았다. current AS-IS를 유지하고 후보 이미지를 runtime target으로 사용하지 않는다."
+      "target_direction": "HOLD: 이 identity의 새 feedback family는 승인되지 않았다. current AS-IS를 유지하고 후보 이미지를 runtime target으로 사용하지 않는다.",
+      "asis_images": [
+        "art/gameplay/semantic-v2/effects/frames/fx_dash_start/frame_00.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_dash_start/frame_01.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_dash_start/frame_02.png"
+      ],
+      "tobe": {
+        "action": "KEEP_CURRENT",
+        "status_label": "AS-IS 유지",
+        "images": [
+          "art/gameplay/semantic-v2/effects/frames/fx_dash_start/frame_00.png",
+          "art/gameplay/semantic-v2/effects/frames/fx_dash_start/frame_01.png",
+          "art/gameplay/semantic-v2/effects/frames/fx_dash_start/frame_02.png"
+        ],
+        "summary": "현재 directional dash shell을 유지한다. danger 원은 현재 runtime에 없으며 다시 추가하지 않는다."
+      }
     },
     {
       "id": "emp_release",
@@ -4716,7 +5034,19 @@
       "decision_ids": [],
       "decision_state": "baseline_undecided",
       "decision_label": "AS-IS 기준선 / TO-BE 미결정",
-      "target_direction": null
+      "target_direction": null,
+      "asis_images": [
+        "art/gameplay/semantic-v2/effects/frames/fx_emp_release/frame_00.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_emp_release/frame_01.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_emp_release/frame_02.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_emp_release/frame_03.png"
+      ],
+      "tobe": {
+        "action": "UNDECIDED",
+        "status_label": "TO-BE 미제작·미결정",
+        "images": [],
+        "summary": "유효한 TO-BE 이미지가 아직 없다."
+      }
     },
     {
       "id": "wake_mine_detonation",
@@ -4784,7 +5114,19 @@
       "decision_ids": [],
       "decision_state": "baseline_undecided",
       "decision_label": "AS-IS 기준선 / TO-BE 미결정",
-      "target_direction": null
+      "target_direction": null,
+      "asis_images": [
+        "art/gameplay/semantic-v2/effects/frames/fx_wake_mine_detonation/frame_00.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_wake_mine_detonation/frame_01.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_wake_mine_detonation/frame_02.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_wake_mine_detonation/frame_03.png"
+      ],
+      "tobe": {
+        "action": "UNDECIDED",
+        "status_label": "TO-BE 미제작·미결정",
+        "images": [],
+        "summary": "유효한 TO-BE 이미지가 아직 없다."
+      }
     },
     {
       "id": "boss_module_disabled",
@@ -4848,7 +5190,21 @@
       ],
       "decision_state": "revise",
       "decision_label": "수정 필요 · 이전/거절 근거",
-      "target_direction": "수정 요구사항: exact boss module/core state 위에 역할별 authored state frame을 사용한다. 유효 후보는 아직 없다."
+      "target_direction": "수정 요구사항: exact boss module/core state 위에 역할별 authored state frame을 사용한다. 유효 후보는 아직 없다.",
+      "asis_images": [
+        "art/gameplay/semantic-v2/effects/frames/fx_boss_module_disabled/frame_00.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_boss_module_disabled/frame_01.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_boss_module_disabled/frame_02.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_boss_module_disabled/frame_03.png"
+      ],
+      "tobe": {
+        "action": "REPLACE",
+        "status_label": "공통 노드 resolved 상태",
+        "images": [
+          "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v6/boss-shield-node-states-candidates.png"
+        ],
+        "summary": "별도 폭발 flower 대신 동일한 보스 방어막 노드 housing의 resolved 상태로 전환한다."
+      }
     },
     {
       "id": "hostile_summon_arrival",
@@ -4924,7 +5280,19 @@
       ],
       "decision_state": "revise",
       "decision_label": "수정 필요 · 이전/거절 근거",
-      "target_direction": "수정 요구사항: authored emitter pad와 이 arrival frame family를 actual spawn/support footprint에 맞춘다. 유효 후보는 아직 없다."
+      "target_direction": "수정 요구사항: authored emitter pad와 이 arrival frame family를 actual spawn/support footprint에 맞춘다. 유효 후보는 아직 없다.",
+      "asis_images": [
+        "art/gameplay/semantic-v2/effects/frames/fx_hostile_summon_arrival/frame_00.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_hostile_summon_arrival/frame_01.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_hostile_summon_arrival/frame_02.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_hostile_summon_arrival/frame_03.png"
+      ],
+      "tobe": {
+        "action": "REVISION_REQUIRED",
+        "status_label": "TO-BE 재제작 필요",
+        "images": [],
+        "summary": "수정 요구사항: authored emitter pad와 이 arrival frame family를 actual spawn/support footprint에 맞춘다. 유효 후보는 아직 없다."
+      }
     },
     {
       "id": "bulkhead_destroy",
@@ -4992,7 +5360,19 @@
       "decision_ids": [],
       "decision_state": "baseline_undecided",
       "decision_label": "AS-IS 기준선 / TO-BE 미결정",
-      "target_direction": null
+      "target_direction": null,
+      "asis_images": [
+        "art/gameplay/semantic-v2/effects/frames/fx_bulkhead_destroy/frame_00.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_bulkhead_destroy/frame_01.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_bulkhead_destroy/frame_02.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_bulkhead_destroy/frame_03.png"
+      ],
+      "tobe": {
+        "action": "UNDECIDED",
+        "status_label": "TO-BE 미제작·미결정",
+        "images": [],
+        "summary": "유효한 TO-BE 이미지가 아직 없다."
+      }
     },
     {
       "id": "reflect_deflection",
@@ -5062,7 +5442,24 @@
       ],
       "decision_state": "hold",
       "decision_label": "보류 · 승인 아님",
-      "target_direction": "HOLD: 이 identity의 새 feedback family는 승인되지 않았다. current AS-IS를 유지하고 후보 이미지를 runtime target으로 사용하지 않는다."
+      "target_direction": "HOLD: 이 identity의 새 feedback family는 승인되지 않았다. current AS-IS를 유지하고 후보 이미지를 runtime target으로 사용하지 않는다.",
+      "asis_images": [
+        "art/gameplay/semantic-v2/effects/frames/fx_reflect_deflection/frame_00.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_reflect_deflection/frame_01.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_reflect_deflection/frame_02.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_reflect_deflection/frame_03.png"
+      ],
+      "tobe": {
+        "action": "KEEP_CURRENT_HOLD",
+        "status_label": "교체 보류 · AS-IS 표시",
+        "images": [
+          "art/gameplay/semantic-v2/effects/frames/fx_reflect_deflection/frame_00.png",
+          "art/gameplay/semantic-v2/effects/frames/fx_reflect_deflection/frame_01.png",
+          "art/gameplay/semantic-v2/effects/frames/fx_reflect_deflection/frame_02.png",
+          "art/gameplay/semantic-v2/effects/frames/fx_reflect_deflection/frame_03.png"
+        ],
+        "summary": "HOLD: 이 identity의 새 feedback family는 승인되지 않았다. current AS-IS를 유지하고 후보 이미지를 runtime target으로 사용하지 않는다."
+      }
     },
     {
       "id": "barrier_contact",
@@ -5132,7 +5529,24 @@
       ],
       "decision_state": "hold",
       "decision_label": "보류 · 승인 아님",
-      "target_direction": "HOLD: 이 identity의 새 feedback family는 승인되지 않았다. current AS-IS를 유지하고 후보 이미지를 runtime target으로 사용하지 않는다."
+      "target_direction": "HOLD: 이 identity의 새 feedback family는 승인되지 않았다. current AS-IS를 유지하고 후보 이미지를 runtime target으로 사용하지 않는다.",
+      "asis_images": [
+        "art/gameplay/semantic-v2/effects/frames/fx_barrier_contact/frame_00.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_barrier_contact/frame_01.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_barrier_contact/frame_02.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_barrier_contact/frame_03.png"
+      ],
+      "tobe": {
+        "action": "KEEP_CURRENT_HOLD",
+        "status_label": "교체 보류 · AS-IS 표시",
+        "images": [
+          "art/gameplay/semantic-v2/effects/frames/fx_barrier_contact/frame_00.png",
+          "art/gameplay/semantic-v2/effects/frames/fx_barrier_contact/frame_01.png",
+          "art/gameplay/semantic-v2/effects/frames/fx_barrier_contact/frame_02.png",
+          "art/gameplay/semantic-v2/effects/frames/fx_barrier_contact/frame_03.png"
+        ],
+        "summary": "HOLD: 이 identity의 새 feedback family는 승인되지 않았다. current AS-IS를 유지하고 후보 이미지를 runtime target으로 사용하지 않는다."
+      }
     },
     {
       "id": "hull_hit",
@@ -5196,7 +5610,24 @@
       ],
       "decision_state": "hold",
       "decision_label": "보류 · 승인 아님",
-      "target_direction": "HOLD: 이 identity의 새 feedback family는 승인되지 않았다. current AS-IS를 유지하고 후보 이미지를 runtime target으로 사용하지 않는다."
+      "target_direction": "HOLD: 이 identity의 새 feedback family는 승인되지 않았다. current AS-IS를 유지하고 후보 이미지를 runtime target으로 사용하지 않는다.",
+      "asis_images": [
+        "art/gameplay/semantic-v2/effects/frames/fx_hull_hit/frame_00.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_hull_hit/frame_01.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_hull_hit/frame_02.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_hull_hit/frame_03.png"
+      ],
+      "tobe": {
+        "action": "KEEP_CURRENT_HOLD",
+        "status_label": "교체 보류 · AS-IS 표시",
+        "images": [
+          "art/gameplay/semantic-v2/effects/frames/fx_hull_hit/frame_00.png",
+          "art/gameplay/semantic-v2/effects/frames/fx_hull_hit/frame_01.png",
+          "art/gameplay/semantic-v2/effects/frames/fx_hull_hit/frame_02.png",
+          "art/gameplay/semantic-v2/effects/frames/fx_hull_hit/frame_03.png"
+        ],
+        "summary": "HOLD: 이 identity의 새 feedback family는 승인되지 않았다. current AS-IS를 유지하고 후보 이미지를 runtime target으로 사용하지 않는다."
+      }
     },
     {
       "id": "seeker_impact",
@@ -5260,7 +5691,24 @@
       ],
       "decision_state": "hold",
       "decision_label": "보류 · 승인 아님",
-      "target_direction": "HOLD: 이 identity의 새 feedback family는 승인되지 않았다. current AS-IS를 유지하고 후보 이미지를 runtime target으로 사용하지 않는다."
+      "target_direction": "HOLD: 이 identity의 새 feedback family는 승인되지 않았다. current AS-IS를 유지하고 후보 이미지를 runtime target으로 사용하지 않는다.",
+      "asis_images": [
+        "art/gameplay/semantic-v2/effects/frames/fx_seeker_impact/frame_00.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_seeker_impact/frame_01.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_seeker_impact/frame_02.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_seeker_impact/frame_03.png"
+      ],
+      "tobe": {
+        "action": "KEEP_CURRENT_HOLD",
+        "status_label": "교체 보류 · AS-IS 표시",
+        "images": [
+          "art/gameplay/semantic-v2/effects/frames/fx_seeker_impact/frame_00.png",
+          "art/gameplay/semantic-v2/effects/frames/fx_seeker_impact/frame_01.png",
+          "art/gameplay/semantic-v2/effects/frames/fx_seeker_impact/frame_02.png",
+          "art/gameplay/semantic-v2/effects/frames/fx_seeker_impact/frame_03.png"
+        ],
+        "summary": "HOLD: 이 identity의 새 feedback family는 승인되지 않았다. current AS-IS를 유지하고 후보 이미지를 runtime target으로 사용하지 않는다."
+      }
     },
     {
       "id": "escort_drone_impact",
@@ -5324,7 +5772,24 @@
       ],
       "decision_state": "hold",
       "decision_label": "보류 · 승인 아님",
-      "target_direction": "HOLD: 이 identity의 새 feedback family는 승인되지 않았다. current AS-IS를 유지하고 후보 이미지를 runtime target으로 사용하지 않는다."
+      "target_direction": "HOLD: 이 identity의 새 feedback family는 승인되지 않았다. current AS-IS를 유지하고 후보 이미지를 runtime target으로 사용하지 않는다.",
+      "asis_images": [
+        "art/gameplay/semantic-v2/effects/frames/fx_escort_drone_impact/frame_00.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_escort_drone_impact/frame_01.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_escort_drone_impact/frame_02.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_escort_drone_impact/frame_03.png"
+      ],
+      "tobe": {
+        "action": "KEEP_CURRENT_HOLD",
+        "status_label": "교체 보류 · AS-IS 표시",
+        "images": [
+          "art/gameplay/semantic-v2/effects/frames/fx_escort_drone_impact/frame_00.png",
+          "art/gameplay/semantic-v2/effects/frames/fx_escort_drone_impact/frame_01.png",
+          "art/gameplay/semantic-v2/effects/frames/fx_escort_drone_impact/frame_02.png",
+          "art/gameplay/semantic-v2/effects/frames/fx_escort_drone_impact/frame_03.png"
+        ],
+        "summary": "HOLD: 이 identity의 새 feedback family는 승인되지 않았다. current AS-IS를 유지하고 후보 이미지를 runtime target으로 사용하지 않는다."
+      }
     },
     {
       "id": "orbit_blade_impact",
@@ -5388,7 +5853,24 @@
       ],
       "decision_state": "hold",
       "decision_label": "보류 · 승인 아님",
-      "target_direction": "HOLD: 이 identity의 새 feedback family는 승인되지 않았다. current AS-IS를 유지하고 후보 이미지를 runtime target으로 사용하지 않는다."
+      "target_direction": "HOLD: 이 identity의 새 feedback family는 승인되지 않았다. current AS-IS를 유지하고 후보 이미지를 runtime target으로 사용하지 않는다.",
+      "asis_images": [
+        "art/gameplay/semantic-v2/effects/frames/fx_orbit_blade_impact/frame_00.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_orbit_blade_impact/frame_01.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_orbit_blade_impact/frame_02.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_orbit_blade_impact/frame_03.png"
+      ],
+      "tobe": {
+        "action": "KEEP_CURRENT_HOLD",
+        "status_label": "교체 보류 · AS-IS 표시",
+        "images": [
+          "art/gameplay/semantic-v2/effects/frames/fx_orbit_blade_impact/frame_00.png",
+          "art/gameplay/semantic-v2/effects/frames/fx_orbit_blade_impact/frame_01.png",
+          "art/gameplay/semantic-v2/effects/frames/fx_orbit_blade_impact/frame_02.png",
+          "art/gameplay/semantic-v2/effects/frames/fx_orbit_blade_impact/frame_03.png"
+        ],
+        "summary": "HOLD: 이 identity의 새 feedback family는 승인되지 않았다. current AS-IS를 유지하고 후보 이미지를 runtime target으로 사용하지 않는다."
+      }
     },
     {
       "id": "enemy_destroy_light",
@@ -5458,7 +5940,19 @@
       ],
       "decision_state": "revise",
       "decision_label": "수정 필요 · 이전/거절 근거",
-      "target_direction": "수정 요구사항: enemy event를 역할과 tier가 읽히는 authored frame family로 정리한다. 현재 frame은 AS-IS이며 유효한 새 TO-BE 후보는 없다."
+      "target_direction": "수정 요구사항: enemy event를 역할과 tier가 읽히는 authored frame family로 정리한다. 현재 frame은 AS-IS이며 유효한 새 TO-BE 후보는 없다.",
+      "asis_images": [
+        "art/gameplay/semantic-v2/effects/frames/fx_enemy_destroy_light/frame_00.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_enemy_destroy_light/frame_01.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_enemy_destroy_light/frame_02.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_enemy_destroy_light/frame_03.png"
+      ],
+      "tobe": {
+        "action": "REVISION_REQUIRED",
+        "status_label": "TO-BE 재제작 필요",
+        "images": [],
+        "summary": "수정 요구사항: enemy event를 역할과 tier가 읽히는 authored frame family로 정리한다. 현재 frame은 AS-IS이며 유효한 새 TO-BE 후보는 없다."
+      }
     },
     {
       "id": "enemy_destroy_heavy",
@@ -5534,7 +6028,19 @@
       ],
       "decision_state": "revise",
       "decision_label": "수정 필요 · 이전/거절 근거",
-      "target_direction": "수정 요구사항: enemy event를 역할과 tier가 읽히는 authored frame family로 정리한다. 현재 frame은 AS-IS이며 유효한 새 TO-BE 후보는 없다."
+      "target_direction": "수정 요구사항: enemy event를 역할과 tier가 읽히는 authored frame family로 정리한다. 현재 frame은 AS-IS이며 유효한 새 TO-BE 후보는 없다.",
+      "asis_images": [
+        "art/gameplay/semantic-v2/effects/frames/fx_enemy_destroy_heavy/frame_00.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_enemy_destroy_heavy/frame_01.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_enemy_destroy_heavy/frame_02.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_enemy_destroy_heavy/frame_03.png"
+      ],
+      "tobe": {
+        "action": "REVISION_REQUIRED",
+        "status_label": "TO-BE 재제작 필요",
+        "images": [],
+        "summary": "수정 요구사항: enemy event를 역할과 tier가 읽히는 authored frame family로 정리한다. 현재 frame은 AS-IS이며 유효한 새 TO-BE 후보는 없다."
+      }
     },
     {
       "id": "crate_destroy",
@@ -5602,7 +6108,19 @@
       "decision_ids": [],
       "decision_state": "baseline_undecided",
       "decision_label": "AS-IS 기준선 / TO-BE 미결정",
-      "target_direction": null
+      "target_direction": null,
+      "asis_images": [
+        "art/gameplay/semantic-v2/effects/frames/fx_crate_destroy/frame_00.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_crate_destroy/frame_01.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_crate_destroy/frame_02.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_crate_destroy/frame_03.png"
+      ],
+      "tobe": {
+        "action": "UNDECIDED",
+        "status_label": "TO-BE 미제작·미결정",
+        "images": [],
+        "summary": "유효한 TO-BE 이미지가 아직 없다."
+      }
     },
     {
       "id": "pickup_intake",
@@ -5664,7 +6182,19 @@
       "decision_ids": [],
       "decision_state": "baseline_undecided",
       "decision_label": "AS-IS 기준선 / TO-BE 미결정",
-      "target_direction": null
+      "target_direction": null,
+      "asis_images": [
+        "art/gameplay/semantic-v2/effects/frames/fx_pickup_intake/frame_00.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_pickup_intake/frame_01.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_pickup_intake/frame_02.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_pickup_intake/frame_03.png"
+      ],
+      "tobe": {
+        "action": "UNDECIDED",
+        "status_label": "TO-BE 미제작·미결정",
+        "images": [],
+        "summary": "유효한 TO-BE 이미지가 아직 없다."
+      }
     },
     {
       "id": "support_heal",
@@ -5728,7 +6258,19 @@
       ],
       "decision_state": "revise",
       "decision_label": "수정 필요 · 이전/거절 근거",
-      "target_direction": "수정 요구사항: source/target cap + repeat transfer beam + heal frame을 실제 source/target 위에 조립한다. 유효 후보는 아직 없다."
+      "target_direction": "수정 요구사항: source/target cap + repeat transfer beam + heal frame을 실제 source/target 위에 조립한다. 유효 후보는 아직 없다.",
+      "asis_images": [
+        "art/gameplay/semantic-v2/effects/frames/fx_support_heal/frame_00.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_support_heal/frame_01.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_support_heal/frame_02.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_support_heal/frame_03.png"
+      ],
+      "tobe": {
+        "action": "REVISION_REQUIRED",
+        "status_label": "TO-BE 재제작 필요",
+        "images": [],
+        "summary": "수정 요구사항: source/target cap + repeat transfer beam + heal frame을 실제 source/target 위에 조립한다. 유효 후보는 아직 없다."
+      }
     },
     {
       "id": "lifesteal_pulse",
@@ -5792,7 +6334,19 @@
       ],
       "decision_state": "revise",
       "decision_label": "수정 필요 · 이전/거절 근거",
-      "target_direction": "수정 요구사항: source/target cap + repeat transfer beam + heal frame을 실제 source/target 위에 조립한다. 유효 후보는 아직 없다."
+      "target_direction": "수정 요구사항: source/target cap + repeat transfer beam + heal frame을 실제 source/target 위에 조립한다. 유효 후보는 아직 없다.",
+      "asis_images": [
+        "art/gameplay/semantic-v2/effects/frames/fx_lifesteal_pulse/frame_00.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_lifesteal_pulse/frame_01.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_lifesteal_pulse/frame_02.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_lifesteal_pulse/frame_03.png"
+      ],
+      "tobe": {
+        "action": "REVISION_REQUIRED",
+        "status_label": "TO-BE 재제작 필요",
+        "images": [],
+        "summary": "수정 요구사항: source/target cap + repeat transfer beam + heal frame을 실제 source/target 위에 조립한다. 유효 후보는 아직 없다."
+      }
     },
     {
       "id": "transit_shift",
@@ -5860,7 +6414,19 @@
       "decision_ids": [],
       "decision_state": "baseline_undecided",
       "decision_label": "AS-IS 기준선 / TO-BE 미결정",
-      "target_direction": null
+      "target_direction": null,
+      "asis_images": [
+        "art/gameplay/semantic-v2/effects/frames/fx_transit_shift/frame_00.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_transit_shift/frame_01.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_transit_shift/frame_02.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_transit_shift/frame_03.png"
+      ],
+      "tobe": {
+        "action": "UNDECIDED",
+        "status_label": "TO-BE 미제작·미결정",
+        "images": [],
+        "summary": "유효한 TO-BE 이미지가 아직 없다."
+      }
     },
     {
       "id": "boss_reduced_hit",
@@ -5924,7 +6490,19 @@
       ],
       "decision_state": "revise",
       "decision_label": "수정 필요 · 이전/거절 근거",
-      "target_direction": "수정 요구사항: exact boss module/core state 위에 역할별 authored state frame을 사용한다. 유효 후보는 아직 없다."
+      "target_direction": "수정 요구사항: exact boss module/core state 위에 역할별 authored state frame을 사용한다. 유효 후보는 아직 없다.",
+      "asis_images": [
+        "art/gameplay/semantic-v2/effects/frames/fx_boss_reduced_hit/frame_00.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_boss_reduced_hit/frame_01.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_boss_reduced_hit/frame_02.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_boss_reduced_hit/frame_03.png"
+      ],
+      "tobe": {
+        "action": "REVISION_REQUIRED",
+        "status_label": "TO-BE 재제작 필요",
+        "images": [],
+        "summary": "수정 요구사항: exact boss module/core state 위에 역할별 authored state frame을 사용한다. 유효 후보는 아직 없다."
+      }
     },
     {
       "id": "impact_damage",
@@ -5994,7 +6572,19 @@
       ],
       "decision_state": "hold",
       "decision_label": "보류 · 승인 아님",
-      "target_direction": "HOLD: 이 identity의 새 feedback family는 승인되지 않았다. current AS-IS를 유지하고 후보 이미지를 runtime target으로 사용하지 않는다."
+      "target_direction": "HOLD: 이 identity의 새 feedback family는 승인되지 않았다. current AS-IS를 유지하고 후보 이미지를 runtime target으로 사용하지 않는다.",
+      "asis_images": [
+        "art/gameplay/semantic-v2/effects/frames/fx_impact_damage/frame_00.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_impact_damage/frame_01.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_impact_damage/frame_02.png",
+        "art/gameplay/semantic-v2/effects/frames/fx_impact_damage/frame_03.png"
+      ],
+      "tobe": {
+        "action": "REPLACE_AND_RETIRE",
+        "status_label": "기존 flower burst 삭제",
+        "images": [],
+        "summary": "현재 방사형 white flower/starburst family를 TO-BE로 승계하지 않는다. source 방향과 실제 impact 역할이 있는 새 cue가 승인되기 전에는 이 이미지를 목표안으로 사용하지 않는다."
+      }
     }
   ],
   "ui_components": [
@@ -6031,7 +6621,17 @@
       "composition_contract": "이미지 shell + live localized text/icon/value/focus/accessibility state",
       "decision_ids": [],
       "decision_state": "baseline_undecided",
-      "decision_label": "AS-IS 기준선 / TO-BE 미결정"
+      "decision_label": "AS-IS 기준선 / TO-BE 미결정",
+      "asis_images": [
+        "art/ui/production/semantic-v2/surfaces/modal_master_normal.png",
+        "art/ui/production/semantic-v2/surfaces/modal_master_compact_safe.png"
+      ],
+      "tobe": {
+        "action": "UNDECIDED",
+        "status_label": "TO-BE 미제작·미결정",
+        "images": [],
+        "summary": "이 component의 유효한 TO-BE 이미지는 아직 없다."
+      }
     },
     {
       "id": "content_plate",
@@ -6073,7 +6673,18 @@
       "composition_contract": "이미지 shell + live localized text/icon/value/focus/accessibility state",
       "decision_ids": [],
       "decision_state": "baseline_undecided",
-      "decision_label": "AS-IS 기준선 / TO-BE 미결정"
+      "decision_label": "AS-IS 기준선 / TO-BE 미결정",
+      "asis_images": [
+        "art/ui/production/semantic-v2/surfaces/content_plate_normal.png",
+        "art/ui/production/semantic-v2/surfaces/content_plate_inset.png",
+        "art/ui/production/semantic-v2/surfaces/content_plate_summary.png"
+      ],
+      "tobe": {
+        "action": "UNDECIDED",
+        "status_label": "TO-BE 미제작·미결정",
+        "images": [],
+        "summary": "이 component의 유효한 TO-BE 이미지는 아직 없다."
+      }
     },
     {
       "id": "hud_plate",
@@ -6129,7 +6740,20 @@
       "composition_contract": "이미지 shell + live localized text/icon/value/focus/accessibility state",
       "decision_ids": [],
       "decision_state": "baseline_undecided",
-      "decision_label": "AS-IS 기준선 / TO-BE 미결정"
+      "decision_label": "AS-IS 기준선 / TO-BE 미결정",
+      "asis_images": [
+        "art/ui/production/semantic-v2/surfaces/hud_plate_health_resource.png",
+        "art/ui/production/semantic-v2/surfaces/hud_plate_objective_boss.png",
+        "art/ui/production/semantic-v2/surfaces/hud_plate_minimap_target.png",
+        "art/ui/production/semantic-v2/surfaces/hud_plate_action_rail.png",
+        "art/ui/production/semantic-v2/surfaces/hud_plate_toast.png"
+      ],
+      "tobe": {
+        "action": "UNDECIDED",
+        "status_label": "TO-BE 미제작·미결정",
+        "images": [],
+        "summary": "이 component의 유효한 TO-BE 이미지는 아직 없다."
+      }
     },
     {
       "id": "upgrade_card",
@@ -6194,7 +6818,21 @@
         "upgrade-card-layout"
       ],
       "decision_state": "unreviewed",
-      "decision_label": "미검토 · TO-BE 미결정"
+      "decision_label": "미검토 · TO-BE 미결정",
+      "asis_images": [
+        "art/ui/production/semantic-v2/surfaces/upgrade_card_normal.png",
+        "art/ui/production/semantic-v2/surfaces/upgrade_card_hover.png",
+        "art/ui/production/semantic-v2/surfaces/upgrade_card_pressed.png",
+        "art/ui/production/semantic-v2/surfaces/upgrade_card_focus.png",
+        "art/ui/production/semantic-v2/surfaces/upgrade_card_selected.png",
+        "art/ui/production/semantic-v2/surfaces/upgrade_card_disabled.png"
+      ],
+      "tobe": {
+        "action": "FIX",
+        "status_label": "level pip 삭제 · panel 후보 미제작",
+        "images": [],
+        "summary": "level text가 현재 레벨을 소유한다. 3개 level pip는 runtime card에서 삭제했다. 상단 1/3 art 구조를 포함한 새 panel 비교 이미지는 아직 없다."
+      }
     },
     {
       "id": "button_primary",
@@ -6250,7 +6888,20 @@
       "composition_contract": "이미지 shell + live localized text/icon/value/focus/accessibility state",
       "decision_ids": [],
       "decision_state": "baseline_undecided",
-      "decision_label": "AS-IS 기준선 / TO-BE 미결정"
+      "decision_label": "AS-IS 기준선 / TO-BE 미결정",
+      "asis_images": [
+        "art/ui/production/semantic-v2/controls/button_primary_normal.png",
+        "art/ui/production/semantic-v2/controls/button_primary_hover.png",
+        "art/ui/production/semantic-v2/controls/button_primary_pressed.png",
+        "art/ui/production/semantic-v2/controls/button_primary_focus.png",
+        "art/ui/production/semantic-v2/controls/button_primary_disabled.png"
+      ],
+      "tobe": {
+        "action": "UNDECIDED",
+        "status_label": "TO-BE 미제작·미결정",
+        "images": [],
+        "summary": "이 component의 유효한 TO-BE 이미지는 아직 없다."
+      }
     },
     {
       "id": "button_secondary",
@@ -6306,7 +6957,20 @@
       "composition_contract": "이미지 shell + live localized text/icon/value/focus/accessibility state",
       "decision_ids": [],
       "decision_state": "baseline_undecided",
-      "decision_label": "AS-IS 기준선 / TO-BE 미결정"
+      "decision_label": "AS-IS 기준선 / TO-BE 미결정",
+      "asis_images": [
+        "art/ui/production/semantic-v2/controls/button_secondary_normal.png",
+        "art/ui/production/semantic-v2/controls/button_secondary_hover.png",
+        "art/ui/production/semantic-v2/controls/button_secondary_pressed.png",
+        "art/ui/production/semantic-v2/controls/button_secondary_focus.png",
+        "art/ui/production/semantic-v2/controls/button_secondary_disabled.png"
+      ],
+      "tobe": {
+        "action": "UNDECIDED",
+        "status_label": "TO-BE 미제작·미결정",
+        "images": [],
+        "summary": "이 component의 유효한 TO-BE 이미지는 아직 없다."
+      }
     },
     {
       "id": "button_danger",
@@ -6362,7 +7026,20 @@
       "composition_contract": "이미지 shell + live localized text/icon/value/focus/accessibility state",
       "decision_ids": [],
       "decision_state": "baseline_undecided",
-      "decision_label": "AS-IS 기준선 / TO-BE 미결정"
+      "decision_label": "AS-IS 기준선 / TO-BE 미결정",
+      "asis_images": [
+        "art/ui/production/semantic-v2/controls/button_danger_normal.png",
+        "art/ui/production/semantic-v2/controls/button_danger_hover.png",
+        "art/ui/production/semantic-v2/controls/button_danger_pressed.png",
+        "art/ui/production/semantic-v2/controls/button_danger_focus.png",
+        "art/ui/production/semantic-v2/controls/button_danger_disabled.png"
+      ],
+      "tobe": {
+        "action": "UNDECIDED",
+        "status_label": "TO-BE 미제작·미결정",
+        "images": [],
+        "summary": "이 component의 유효한 TO-BE 이미지는 아직 없다."
+      }
     },
     {
       "id": "tab_option",
@@ -6418,7 +7095,20 @@
       "composition_contract": "이미지 shell + live localized text/icon/value/focus/accessibility state",
       "decision_ids": [],
       "decision_state": "baseline_undecided",
-      "decision_label": "AS-IS 기준선 / TO-BE 미결정"
+      "decision_label": "AS-IS 기준선 / TO-BE 미결정",
+      "asis_images": [
+        "art/ui/production/semantic-v2/controls/tab_option_normal.png",
+        "art/ui/production/semantic-v2/controls/tab_option_hover.png",
+        "art/ui/production/semantic-v2/controls/tab_option_selected.png",
+        "art/ui/production/semantic-v2/controls/tab_option_focus.png",
+        "art/ui/production/semantic-v2/controls/tab_option_disabled.png"
+      ],
+      "tobe": {
+        "action": "UNDECIDED",
+        "status_label": "TO-BE 미제작·미결정",
+        "images": [],
+        "summary": "이 component의 유효한 TO-BE 이미지는 아직 없다."
+      }
     },
     {
       "id": "toggle",
@@ -6460,7 +7150,18 @@
       "composition_contract": "이미지 shell + live localized text/icon/value/focus/accessibility state",
       "decision_ids": [],
       "decision_state": "baseline_undecided",
-      "decision_label": "AS-IS 기준선 / TO-BE 미결정"
+      "decision_label": "AS-IS 기준선 / TO-BE 미결정",
+      "asis_images": [
+        "art/ui/production/semantic-v2/controls/toggle_off.png",
+        "art/ui/production/semantic-v2/controls/toggle_on.png",
+        "art/ui/production/semantic-v2/controls/toggle_focus.png"
+      ],
+      "tobe": {
+        "action": "UNDECIDED",
+        "status_label": "TO-BE 미제작·미결정",
+        "images": [],
+        "summary": "이 component의 유효한 TO-BE 이미지는 아직 없다."
+      }
     },
     {
       "id": "slider",
@@ -6502,7 +7203,18 @@
       "composition_contract": "이미지 shell + live localized text/icon/value/focus/accessibility state",
       "decision_ids": [],
       "decision_state": "baseline_undecided",
-      "decision_label": "AS-IS 기준선 / TO-BE 미결정"
+      "decision_label": "AS-IS 기준선 / TO-BE 미결정",
+      "asis_images": [
+        "art/ui/production/semantic-v2/controls/slider_lane.png",
+        "art/ui/production/semantic-v2/controls/slider_fill.png",
+        "art/ui/production/semantic-v2/controls/slider_grabber.png"
+      ],
+      "tobe": {
+        "action": "UNDECIDED",
+        "status_label": "TO-BE 미제작·미결정",
+        "images": [],
+        "summary": "이 component의 유효한 TO-BE 이미지는 아직 없다."
+      }
     },
     {
       "id": "meter",
@@ -6565,7 +7277,21 @@
       "composition_contract": "이미지 shell + live localized text/icon/value/focus/accessibility state",
       "decision_ids": [],
       "decision_state": "baseline_undecided",
-      "decision_label": "AS-IS 기준선 / TO-BE 미결정"
+      "decision_label": "AS-IS 기준선 / TO-BE 미결정",
+      "asis_images": [
+        "art/ui/production/semantic-v2/controls/meter_background.png",
+        "art/ui/production/semantic-v2/controls/meter_health.png",
+        "art/ui/production/semantic-v2/controls/meter_boss.png",
+        "art/ui/production/semantic-v2/controls/meter_resource.png",
+        "art/ui/production/semantic-v2/controls/meter_cooldown.png",
+        "art/ui/production/semantic-v2/controls/meter_support.png"
+      ],
+      "tobe": {
+        "action": "UNDECIDED",
+        "status_label": "TO-BE 미제작·미결정",
+        "images": [],
+        "summary": "이 component의 유효한 TO-BE 이미지는 아직 없다."
+      }
     },
     {
       "id": "preview",
@@ -6607,7 +7333,18 @@
       "composition_contract": "이미지 shell + live localized text/icon/value/focus/accessibility state",
       "decision_ids": [],
       "decision_state": "baseline_undecided",
-      "decision_label": "AS-IS 기준선 / TO-BE 미결정"
+      "decision_label": "AS-IS 기준선 / TO-BE 미결정",
+      "asis_images": [
+        "art/ui/production/semantic-v2/glyphs/preview_normal.png",
+        "art/ui/production/semantic-v2/glyphs/preview_locked.png",
+        "art/ui/production/semantic-v2/glyphs/preview_focused.png"
+      ],
+      "tobe": {
+        "action": "UNDECIDED",
+        "status_label": "TO-BE 미제작·미결정",
+        "images": [],
+        "summary": "이 component의 유효한 TO-BE 이미지는 아직 없다."
+      }
     },
     {
       "id": "small_state",
@@ -6670,7 +7407,21 @@
       "composition_contract": "이미지 shell + live localized text/icon/value/focus/accessibility state",
       "decision_ids": [],
       "decision_state": "baseline_undecided",
-      "decision_label": "AS-IS 기준선 / TO-BE 미결정"
+      "decision_label": "AS-IS 기준선 / TO-BE 미결정",
+      "asis_images": [
+        "art/ui/production/semantic-v2/glyphs/small_state_pip_empty.png",
+        "art/ui/production/semantic-v2/glyphs/small_state_pip_available.png",
+        "art/ui/production/semantic-v2/glyphs/small_state_pip_filled.png",
+        "art/ui/production/semantic-v2/glyphs/small_state_warning.png",
+        "art/ui/production/semantic-v2/glyphs/small_state_disabled.png",
+        "art/ui/production/semantic-v2/glyphs/small_state_selection_rail.png"
+      ],
+      "tobe": {
+        "action": "UNDECIDED",
+        "status_label": "TO-BE 미제작·미결정",
+        "images": [],
+        "summary": "이 component의 유효한 TO-BE 이미지는 아직 없다."
+      }
     }
   ],
   "procedural_and_mixed_systems": [
@@ -7562,7 +8313,17 @@
       "decision_state": "baseline_undecided",
       "decision_label": "AS-IS 기준선 / TO-BE 미결정",
       "current_truth": "현재 provider/index에서 접근 가능한 AS-IS raster resource 단위다. 실제 draw 여부는 runtime state에 따라 달라진다.",
-      "target_direction": null
+      "target_direction": null,
+      "asis_images": [
+        "art/gameplay/semantic-v2/actors/player/actor_player_aim_mount.png",
+        "art/gameplay/semantic-v2/actors/player/actor_player_hull_base.png"
+      ],
+      "tobe": {
+        "action": "UNDECIDED",
+        "status_label": "TO-BE 미제작·미결정",
+        "images": [],
+        "summary": "유효한 TO-BE 이미지가 아직 없다. AS-IS를 자동 유지하거나 자동 교체하지 않는다."
+      }
     },
     {
       "id": "player_engine",
@@ -7581,7 +8342,16 @@
       "decision_state": "hold",
       "decision_label": "보류 · 승인 아님",
       "current_truth": "현재 provider/index에서 접근 가능한 AS-IS raster resource 단위다. 실제 draw 여부는 runtime state에 따라 달라진다.",
-      "target_direction": "HOLD: 현재 dash AS-IS를 유지한다. 새 exhaust/flare 후보나 동작 변경은 승인되지 않았다."
+      "target_direction": "HOLD: 현재 dash AS-IS를 유지한다. 새 exhaust/flare 후보나 동작 변경은 승인되지 않았다.",
+      "asis_images": [
+        "art/gameplay/semantic-v2/actors/player/actor_player_engine.png"
+      ],
+      "tobe": {
+        "action": "KEEP_CURRENT",
+        "status_label": "AS-IS 유지",
+        "images": [],
+        "summary": "현재 dash effect를 유지한다. danger 원은 현재 runtime에 없으며 다시 추가하지 않는다."
+      }
     },
     {
       "id": "enemy_bodies",
@@ -7616,7 +8386,21 @@
       "decision_state": "baseline_undecided",
       "decision_label": "AS-IS 기준선 / TO-BE 미결정",
       "current_truth": "현재 provider/index에서 접근 가능한 AS-IS raster resource 단위다. 실제 draw 여부는 runtime state에 따라 달라진다.",
-      "target_direction": null
+      "target_direction": null,
+      "asis_images": [
+        "art/gameplay/semantic-v2/actors/enemies/actor_enemy_artillery_spotter_base.png",
+        "art/gameplay/semantic-v2/actors/enemies/actor_enemy_beam_sentinel_base.png",
+        "art/gameplay/semantic-v2/actors/enemies/actor_enemy_boss_pylon_base.png",
+        "art/gameplay/semantic-v2/actors/enemies/actor_enemy_bulkhead_guard_base.png",
+        "art/gameplay/semantic-v2/actors/enemies/actor_enemy_chaser_base.png",
+        "art/gameplay/semantic-v2/actors/enemies/actor_enemy_controller_base.png"
+      ],
+      "tobe": {
+        "action": "UNDECIDED",
+        "status_label": "TO-BE 미제작·미결정",
+        "images": [],
+        "summary": "유효한 TO-BE 이미지가 아직 없다. AS-IS를 자동 유지하거나 자동 교체하지 않는다."
+      }
     },
     {
       "id": "boss_bodies",
@@ -7637,7 +8421,23 @@
       "decision_state": "baseline_undecided",
       "decision_label": "AS-IS 기준선 / TO-BE 미결정",
       "current_truth": "현재 provider/index에서 접근 가능한 AS-IS raster resource 단위다. 실제 draw 여부는 runtime state에 따라 달라진다.",
-      "target_direction": null
+      "target_direction": null,
+      "asis_images": [
+        "art/gameplay/semantic-v2/actors/bosses/actor_boss_behemoth_base.png",
+        "art/gameplay/semantic-v2/actors/bosses/actor_boss_colossus_base.png",
+        "art/gameplay/semantic-v2/actors/bosses/actor_boss_crown_base.png",
+        "art/gameplay/semantic-v2/actors/bosses/actor_boss_leviathan_base.png",
+        "art/gameplay/semantic-v2/actors/bosses/actor_boss_titan_base.png"
+      ],
+      "tobe": {
+        "action": "REPLACE",
+        "status_label": "신규 TO-BE · 미승인",
+        "images": [
+          "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v6/boss-bodies-a-candidates.png",
+          "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v6/boss-bodies-b-candidates.png"
+        ],
+        "summary": "5종의 큰 silhouette는 유지하고 tiny panel·lamp·greeble을 제거해 4-6개 큰 plane과 한 외곽선으로 단순화한다."
+      }
     },
     {
       "id": "boss_modules_and_core",
@@ -7665,7 +8465,23 @@
       "decision_state": "revise",
       "decision_label": "수정 필요 · 이전/거절 근거",
       "current_truth": "현재 provider/index에서 접근 가능한 AS-IS raster resource 단위다. 실제 draw 여부는 runtime state에 따라 달라진다.",
-      "target_direction": "수정 요구사항: 각 module의 active/disabled/resolved state image와 core/objective cue를 역할별로 유지하고, exact objective state는 code truth를 따른다. 유효 후보는 아직 없다."
+      "target_direction": "수정 요구사항: 각 module의 active/disabled/resolved state image와 core/objective cue를 역할별로 유지하고, exact objective state는 code truth를 따른다. 유효 후보는 아직 없다.",
+      "asis_images": [
+        "art/gameplay/semantic-v2/actors/bosses/modules/actor_boss_module_armor_car.png",
+        "art/gameplay/semantic-v2/actors/bosses/modules/actor_boss_module_crown_lattice.png",
+        "art/gameplay/semantic-v2/actors/bosses/modules/actor_boss_module_crown_pylon.png",
+        "art/gameplay/semantic-v2/actors/bosses/modules/actor_boss_module_forge_plate_active.png",
+        "art/gameplay/semantic-v2/actors/bosses/modules/actor_boss_module_forge_plate_disabled.png",
+        "art/gameplay/semantic-v2/actors/bosses/modules/actor_boss_module_relay_negative.png"
+      ],
+      "tobe": {
+        "action": "REPLACE_AND_RETIRE",
+        "status_label": "공통 TO-BE · 미승인",
+        "images": [
+          "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v6/boss-shield-node-states-candidates.png"
+        ],
+        "summary": "boss별 10종 module TO-BE를 폐기하고 모든 boss가 동일 housing의 active/damaged/resolved 보스 방어막 노드를 재사용한다."
+      }
     },
     {
       "id": "ordinary_hostile_projectiles",
@@ -7692,7 +8508,21 @@
       "decision_state": "mixed_decisions",
       "decision_label": "여러 v3 상태 · 항목별 확인",
       "current_truth": "현재 provider/index에서 접근 가능한 AS-IS raster resource 단위다. 실제 draw 여부는 runtime state에 따라 달라진다.",
-      "target_direction": "projectile은 exact collision core 위에 authored head/tail/tier image를 합성한다. 전달 방식과 threat tier는 silhouette로 구분하고 실제 mechanics가 없는 payload 색을 과장하지 않는다."
+      "target_direction": "projectile은 exact collision core 위에 authored head/tail/tier image를 합성한다. 전달 방식과 threat tier는 silhouette로 구분하고 실제 mechanics가 없는 payload 색을 과장하지 않는다.",
+      "asis_images": [
+        "art/gameplay/semantic-v2/weapons/projectiles/projectile_hostile_arc.png",
+        "art/gameplay/semantic-v2/weapons/projectiles/projectile_hostile_cryo.png",
+        "art/gameplay/semantic-v2/weapons/projectiles/projectile_hostile_hybrid.png",
+        "art/gameplay/semantic-v2/weapons/projectiles/projectile_hostile_kinetic.png",
+        "art/gameplay/semantic-v2/weapons/projectiles/projectile_hostile_thermal.png",
+        "art/gameplay/semantic-v2/weapons/projectiles/projectile_hostile_toxin.png"
+      ],
+      "tobe": {
+        "action": "REVISION_REQUIRED",
+        "status_label": "TO-BE 재제작 필요",
+        "images": [],
+        "summary": "projectile은 exact collision core 위에 authored head/tail/tier image를 합성한다. 전달 방식과 threat tier는 silhouette로 구분하고 실제 mechanics가 없는 payload 색을 과장하지 않는다."
+      }
     },
     {
       "id": "player_projectiles",
@@ -7713,7 +8543,20 @@
       "decision_state": "unreviewed",
       "decision_label": "미검토 · TO-BE 미결정",
       "current_truth": "현재 provider/index에서 접근 가능한 AS-IS raster resource 단위다. 실제 draw 여부는 runtime state에 따라 달라진다.",
-      "target_direction": "player bolt, seeker missile, breach slug는 exact collision core를 유지하면서 authored head/tail silhouette로 전달 방식을 구분한다. 아직 미검토다."
+      "target_direction": "player bolt, seeker missile, breach slug는 exact collision core를 유지하면서 authored head/tail silhouette로 전달 방식을 구분한다. 아직 미검토다.",
+      "asis_images": [
+        "art/gameplay/semantic-v2/weapons/projectiles/projectile_player_opening_breach.png",
+        "art/gameplay/semantic-v2/weapons/projectiles/projectile_player_primary.png",
+        "art/gameplay/semantic-v2/weapons/projectiles/projectile_player_seeker.png"
+      ],
+      "tobe": {
+        "action": "CANDIDATE_AVAILABLE",
+        "status_label": "TO-BE 후보 · 미승인",
+        "images": [
+          "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v4/projectile-delivery-candidates.png"
+        ],
+        "summary": "player bolt, seeker missile, breach slug는 exact collision core를 유지하면서 authored head/tail silhouette로 전달 방식을 구분한다. 아직 미검토다."
+      }
     },
     {
       "id": "player_secondaries",
@@ -7735,7 +8578,19 @@
       "decision_state": "revise",
       "decision_label": "수정 필요 · 이전/거절 근거",
       "current_truth": "현재 provider/index에서 접근 가능한 AS-IS raster resource 단위다. 실제 draw 여부는 runtime state에 따라 달라진다.",
-      "target_direction": "수정 요구사항: escort는 orbit 위치가 변하는 동안 player 이동/선체 heading을 따르고, orbit blade는 접선 이동 방향에 정렬한다. seeker는 velocity, wake mine은 heading 없음이다. 거절 preview는 유효 TO-BE가 아니다."
+      "target_direction": "수정 요구사항: escort는 orbit 위치가 변하는 동안 player 이동/선체 heading을 따르고, orbit blade는 접선 이동 방향에 정렬한다. seeker는 velocity, wake mine은 heading 없음이다. 거절 preview는 유효 TO-BE가 아니다.",
+      "asis_images": [
+        "art/gameplay/semantic-v2/weapons/secondaries/secondary_escort_drone.png",
+        "art/gameplay/semantic-v2/weapons/secondaries/secondary_orbit_blade.png",
+        "art/gameplay/semantic-v2/weapons/secondaries/secondary_seeker.png",
+        "art/gameplay/semantic-v2/weapons/secondaries/secondary_wake_mine.png"
+      ],
+      "tobe": {
+        "action": "REVISION_REQUIRED",
+        "status_label": "TO-BE 재제작 필요",
+        "images": [],
+        "summary": "수정 요구사항: escort는 orbit 위치가 변하는 동안 player 이동/선체 heading을 따르고, orbit blade는 접선 이동 방향에 정렬한다. seeker는 velocity, wake mine은 heading 없음이다. 거절 preview는 유효 TO-BE가 아니다."
+      }
     },
     {
       "id": "ordinary_enemy_defense",
@@ -7755,7 +8610,17 @@
       "decision_state": "revise",
       "decision_label": "수정 필요 · 이전/거절 근거",
       "current_truth": "현재 provider/index에서 접근 가능한 AS-IS raster resource 단위다. 실제 draw 여부는 runtime state에 따라 달라진다.",
-      "target_direction": "수정 요구사항: 기존 generator source/escort plate에 authored shield-field boundary를 더하고 실제 radius 또는 forward slab topology와 일치시킨다. 유효 후보는 아직 없다."
+      "target_direction": "수정 요구사항: 기존 generator source/escort plate에 authored shield-field boundary를 더하고 실제 radius 또는 forward slab topology와 일치시킨다. 유효 후보는 아직 없다.",
+      "asis_images": [
+        "art/gameplay/semantic-v2/states/enemy_generator_shield_source.png",
+        "art/gameplay/semantic-v2/states/enemy_shield_escort_plate.png"
+      ],
+      "tobe": {
+        "action": "REVISION_REQUIRED",
+        "status_label": "TO-BE 재제작 필요",
+        "images": [],
+        "summary": "수정 요구사항: 기존 generator source/escort plate에 authored shield-field boundary를 더하고 실제 radius 또는 forward slab topology와 일치시킨다. 유효 후보는 아직 없다."
+      }
     },
     {
       "id": "player_defense_deployment",
@@ -7775,7 +8640,17 @@
       "decision_state": "revise",
       "decision_label": "수정 필요 · 이전/거절 근거",
       "current_truth": "현재 provider/index에서 접근 가능한 AS-IS raster resource 단위다. 실제 draw 여부는 runtime state에 따라 달라진다.",
-      "target_direction": "수정 요구사항: barrier와 ion deployment는 실제 footprint를 그대로 보이고 plate/slab 방어와 offensive ion field를 서로 다른 topology로 읽히게 한다. 거절 preview는 유효 TO-BE가 아니다."
+      "target_direction": "수정 요구사항: barrier와 ion deployment는 실제 footprint를 그대로 보이고 plate/slab 방어와 offensive ion field를 서로 다른 topology로 읽히게 한다. 거절 preview는 유효 TO-BE가 아니다.",
+      "asis_images": [
+        "art/gameplay/semantic-v2/states/player_barrier_plate.png",
+        "art/gameplay/semantic-v2/states/player_ion_emitter.png"
+      ],
+      "tobe": {
+        "action": "REVISION_REQUIRED",
+        "status_label": "TO-BE 재제작 필요",
+        "images": [],
+        "summary": "수정 요구사항: barrier와 ion deployment는 실제 footprint를 그대로 보이고 plate/slab 방어와 offensive ion field를 서로 다른 topology로 읽히게 한다. 거절 preview는 유효 TO-BE가 아니다."
+      }
     },
     {
       "id": "player_status_effects",
@@ -7794,7 +8669,18 @@
       "decision_state": "baseline_undecided",
       "decision_label": "AS-IS 기준선 / TO-BE 미결정",
       "current_truth": "현재 provider/index에서 접근 가능한 AS-IS raster resource 단위다. 실제 draw 여부는 runtime state에 따라 달라진다.",
-      "target_direction": null
+      "target_direction": null,
+      "asis_images": [
+        "art/gameplay/semantic-v2/states/status_burn.png",
+        "art/gameplay/semantic-v2/states/status_chill.png",
+        "art/gameplay/semantic-v2/states/status_poison.png"
+      ],
+      "tobe": {
+        "action": "UNDECIDED",
+        "status_label": "TO-BE 미제작·미결정",
+        "images": [],
+        "summary": "유효한 TO-BE 이미지가 아직 없다. AS-IS를 자동 유지하거나 자동 교체하지 않는다."
+      }
     },
     {
       "id": "rewards_and_pickups",
@@ -7821,7 +8707,26 @@
       "decision_state": "unreviewed",
       "decision_label": "미검토 · TO-BE 미결정",
       "current_truth": "현재 provider/index에서 접근 가능한 AS-IS raster resource 단위다. 실제 draw 여부는 runtime state에 따라 달라진다.",
-      "target_direction": "각 보상 역할의 승인 전 후보를 검토한다. crate, repair, recall, XP는 서로 다른 silhouette를 사용하되 gameplay value와 collection rule은 code truth를 유지한다."
+      "target_direction": "각 보상 역할의 승인 전 후보를 검토한다. crate, repair, recall, XP는 서로 다른 silhouette를 사용하되 gameplay value와 collection rule은 code truth를 유지한다.",
+      "asis_images": [
+        "art/gameplay/semantic-v2/pickups/pickup_experience_large.png",
+        "art/gameplay/semantic-v2/pickups/pickup_experience_medium.png",
+        "art/gameplay/semantic-v2/pickups/pickup_experience_recall.png",
+        "art/gameplay/semantic-v2/pickups/pickup_experience_small.png",
+        "art/gameplay/semantic-v2/pickups/pickup_repair.png",
+        "art/gameplay/semantic-v2/pickups/pickup_reward_crate.png"
+      ],
+      "tobe": {
+        "action": "CANDIDATE_AVAILABLE",
+        "status_label": "TO-BE 후보 · 미승인",
+        "images": [
+          "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v4/previews/collectible-crate.png",
+          "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v5/repair-pickup-candidate.png",
+          "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v4/previews/collectible-recall.png",
+          "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v4/previews/collectible-xp.png"
+        ],
+        "summary": "각 보상 역할의 승인 전 후보를 검토한다. crate, repair, recall, XP는 서로 다른 silhouette를 사용하되 gameplay value와 collection rule은 code truth를 유지한다."
+      }
     },
     {
       "id": "world_support_facilities",
@@ -7847,7 +8752,25 @@
       "decision_state": "unreviewed",
       "decision_label": "미검토 · TO-BE 미결정",
       "current_truth": "현재 provider/index에서 접근 가능한 AS-IS raster resource 단위다. 실제 draw 여부는 runtime state에 따라 달라진다.",
-      "target_direction": "회복·공격 증폭·장벽·게이트 surface는 실제 radius/span/state footprint에 맞는 authored image를 사용한다. 현재 모두 미검토이며 유효 TO-BE가 아니다."
+      "target_direction": "회복·공격 증폭·장벽·게이트 surface는 실제 radius/span/state footprint에 맞는 authored image를 사용한다. 현재 모두 미검토이며 유효 TO-BE가 아니다.",
+      "asis_images": [
+        "art/gameplay/semantic-v2/world/facility_arc_surge_strip.png",
+        "art/gameplay/semantic-v2/world/facility_overdrive_lane.png",
+        "art/gameplay/semantic-v2/world/facility_repair_pad_core.png",
+        "art/gameplay/semantic-v2/world/facility_repair_pad.png",
+        "art/gameplay/semantic-v2/world/facility_transit_gate.png"
+      ],
+      "tobe": {
+        "action": "CANDIDATE_AVAILABLE",
+        "status_label": "TO-BE 후보 · 미승인",
+        "images": [
+          "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v4/previews/energy-barrier-active.png",
+          "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v4/previews/teleport-gate-active.png",
+          "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v4/previews/repair-field-active.png",
+          "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v5/overdrive-field-candidate.png"
+        ],
+        "summary": "회복·공격 증폭·장벽·게이트 surface는 실제 radius/span/state footprint에 맞는 authored image를 사용한다. 현재 모두 미검토이며 유효 TO-BE가 아니다."
+      }
     },
     {
       "id": "world_terrain_mixed",
@@ -7889,7 +8812,25 @@
           "line_end": 39,
           "claim": "world facility visual descriptors"
         }
-      ]
+      ],
+      "asis_images": [
+        "art/gameplay/semantic-v2/world/terrain_breakable_cover_slab.png",
+        "art/gameplay/semantic-v2/world/terrain_hazard_power_relay.png",
+        "art/gameplay/semantic-v2/world/terrain_solid_cover_block.png",
+        "art/gameplay/semantic-v2/world/world_bulkhead_damaged.png",
+        "art/gameplay/semantic-v2/world/world_bulkhead_intact.png"
+      ],
+      "tobe": {
+        "action": "CANDIDATE_AVAILABLE",
+        "status_label": "TO-BE 후보 · 미승인",
+        "images": [
+          "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v4/previews/loot-barrier-state-family.png",
+          "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v4/previews/energy-barrier-active.png",
+          "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v4/previews/teleport-gate-active.png",
+          "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v4/previews/hazard-floor-family.png"
+        ],
+        "summary": "구조물·파괴 장벽·위험 지형은 collision/topology를 code truth로 유지하고 authored state surface를 그 위에 맞춘다. 각 v3 항목 승인 전에는 교체하지 않는다."
+      }
     },
     {
       "id": "enemy_boss_authored_cues",
@@ -7930,7 +8871,21 @@
       "decision_state": "mixed_decisions",
       "decision_label": "여러 v3 상태 · 항목별 확인",
       "current_truth": "현재 provider/index에서 접근 가능한 AS-IS raster resource 단위다. 실제 draw 여부는 runtime state에 따라 달라진다.",
-      "target_direction": "수정 요구사항과 미검토 항목이 섞여 있다. exact live geometry 위에 delivery별 authored cap/edge/core를 배치하되 각 v3 결정을 따로 확인한다."
+      "target_direction": "수정 요구사항과 미검토 항목이 섞여 있다. exact live geometry 위에 delivery별 authored cap/edge/core를 배치하되 각 v3 결정을 따로 확인한다.",
+      "asis_images": [
+        "art/gameplay/semantic-v2/hud/combat-cues/cue_boss_core_open.png",
+        "art/gameplay/semantic-v2/hud/combat-cues/cue_boss_core_sealed.png",
+        "art/gameplay/semantic-v2/hud/combat-cues/cue_boss_core_stable.png",
+        "art/gameplay/semantic-v2/hud/combat-cues/cue_collective_break.png",
+        "art/gameplay/semantic-v2/hud/combat-cues/cue_collective_execute.png",
+        "art/gameplay/semantic-v2/hud/combat-cues/cue_collective_gather.png"
+      ],
+      "tobe": {
+        "action": "REVISION_REQUIRED",
+        "status_label": "TO-BE 재제작 필요",
+        "images": [],
+        "summary": "수정 요구사항과 미검토 항목이 섞여 있다. exact live geometry 위에 delivery별 authored cap/edge/core를 배치하되 각 v3 결정을 따로 확인한다."
+      }
     },
     {
       "id": "hud_and_minimap_dynamic",
@@ -7952,7 +8907,21 @@
       "decision_state": "baseline_undecided",
       "decision_label": "AS-IS 기준선 / TO-BE 미결정",
       "current_truth": "현재 provider/index에서 접근 가능한 AS-IS raster resource 단위다. 실제 draw 여부는 runtime state에 따라 달라진다.",
-      "target_direction": null
+      "target_direction": null,
+      "asis_images": [
+        "art/gameplay/semantic-v2/hud/minimap_marker_boss.png",
+        "art/gameplay/semantic-v2/hud/minimap_marker_elite.png",
+        "art/gameplay/semantic-v2/hud/minimap_marker_hostile.png",
+        "art/gameplay/semantic-v2/hud/minimap_marker_objective_active.png",
+        "art/gameplay/semantic-v2/hud/minimap_marker_objective_locked.png",
+        "art/gameplay/semantic-v2/hud/minimap_marker_player.png"
+      ],
+      "tobe": {
+        "action": "UNDECIDED",
+        "status_label": "TO-BE 미제작·미결정",
+        "images": [],
+        "summary": "유효한 TO-BE 이미지가 아직 없다. AS-IS를 자동 유지하거나 자동 교체하지 않는다."
+      }
     },
     {
       "id": "hud_action_glyphs",
@@ -7974,7 +8943,21 @@
       "decision_state": "baseline_undecided",
       "decision_label": "AS-IS 기준선 / TO-BE 미결정",
       "current_truth": "현재 provider/index에서 접근 가능한 AS-IS raster resource 단위다. 실제 draw 여부는 runtime state에 따라 달라진다.",
-      "target_direction": null
+      "target_direction": null,
+      "asis_images": [
+        "art/gameplay/semantic-v2/hud/action_barrier.png",
+        "art/gameplay/semantic-v2/hud/action_dash.png",
+        "art/gameplay/semantic-v2/hud/action_emp.png",
+        "art/gameplay/semantic-v2/hud/action_ion_field.png",
+        "art/gameplay/semantic-v2/hud/action_primary.png",
+        "art/gameplay/semantic-v2/hud/action_seeker.png"
+      ],
+      "tobe": {
+        "action": "UNDECIDED",
+        "status_label": "TO-BE 미제작·미결정",
+        "images": [],
+        "summary": "유효한 TO-BE 이미지가 아직 없다. AS-IS를 자동 유지하거나 자동 교체하지 않는다."
+      }
     },
     {
       "id": "upgrade_live_family_glyphs",
@@ -8000,7 +8983,23 @@
       "decision_state": "unreviewed",
       "decision_label": "미검토 · TO-BE 미결정",
       "current_truth": "현재 provider/index에서 접근 가능한 AS-IS raster resource 단위다. 실제 draw 여부는 runtime state에 따라 달라진다.",
-      "target_direction": "8개 live family만 더 단순하고 직관적인 authored image로 검토한다. upgrade_support는 이 v3 묶음 밖이다."
+      "target_direction": "8개 live family만 더 단순하고 직관적인 authored image로 검토한다. upgrade_support는 이 v3 묶음 밖이다.",
+      "asis_images": [
+        "art/gameplay/semantic-v2/hud/upgrade_dash.png",
+        "art/gameplay/semantic-v2/hud/upgrade_defense.png",
+        "art/gameplay/semantic-v2/hud/upgrade_element.png",
+        "art/gameplay/semantic-v2/hud/upgrade_mobility.png",
+        "art/gameplay/semantic-v2/hud/upgrade_passive.png",
+        "art/gameplay/semantic-v2/hud/upgrade_primary.png"
+      ],
+      "tobe": {
+        "action": "CANDIDATE_AVAILABLE",
+        "status_label": "TO-BE 후보 · 미승인",
+        "images": [
+          "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v5/previews/upgrade-family-contact-sheet.png"
+        ],
+        "summary": "8개 live family만 더 단순하고 직관적인 authored image로 검토한다. upgrade_support는 이 v3 묶음 밖이다."
+      }
     },
     {
       "id": "upgrade_support_glyph",
@@ -8017,7 +9016,16 @@
       "decision_state": "baseline_undecided",
       "decision_label": "AS-IS 기준선 / TO-BE 미결정",
       "current_truth": "현재 provider/index에서 접근 가능한 AS-IS raster resource 단위다. 실제 draw 여부는 runtime state에 따라 달라진다.",
-      "target_direction": null
+      "target_direction": null,
+      "asis_images": [
+        "art/gameplay/semantic-v2/hud/upgrade_support.png"
+      ],
+      "tobe": {
+        "action": "UNDECIDED",
+        "status_label": "TO-BE 미제작·미결정",
+        "images": [],
+        "summary": "유효한 TO-BE 이미지가 아직 없다. AS-IS를 자동 유지하거나 자동 교체하지 않는다."
+      }
     },
     {
       "id": "ui_upgrade_card_shell",
@@ -8041,7 +9049,21 @@
       "decision_state": "unreviewed",
       "decision_label": "미검토 · TO-BE 미결정",
       "current_truth": "배경 shell/state는 raster이며 localized text, icon, dynamic value, focus는 live Control이 소유한다.",
-      "target_direction": "기존 image-backed shell 위에서 상단 약 1/3 family image, 이름·level·설명·실제 효과 순서를 맞추고 중복 pip와 KO/EN overflow를 제거한다. 아직 미검토다."
+      "target_direction": "기존 image-backed shell 위에서 상단 약 1/3 family image, 이름·level·설명·실제 효과 순서를 맞추고 중복 pip와 KO/EN overflow를 제거한다. 아직 미검토다.",
+      "asis_images": [
+        "art/ui/production/semantic-v2/surfaces/upgrade_card_disabled.png",
+        "art/ui/production/semantic-v2/surfaces/upgrade_card_focus.png",
+        "art/ui/production/semantic-v2/surfaces/upgrade_card_hover.png",
+        "art/ui/production/semantic-v2/surfaces/upgrade_card_normal.png",
+        "art/ui/production/semantic-v2/surfaces/upgrade_card_pressed.png",
+        "art/ui/production/semantic-v2/surfaces/upgrade_card_selected.png"
+      ],
+      "tobe": {
+        "action": "FIX",
+        "status_label": "중복 level pip 삭제",
+        "images": [],
+        "summary": "카드의 level text가 현재 레벨을 소유한다. 3개의 empty/available/filled level pip는 삭제하며 새 TO-BE panel image는 아직 미제작이다."
+      }
     },
     {
       "id": "ui_image_backed_shells_other",
@@ -8108,7 +9130,21 @@
       "decision_state": "baseline_undecided",
       "decision_label": "AS-IS 기준선 / TO-BE 미결정",
       "current_truth": "배경 shell/state는 raster이며 localized text, icon, dynamic value, focus는 live Control이 소유한다.",
-      "target_direction": null
+      "target_direction": null,
+      "asis_images": [
+        "art/ui/production/semantic-v2/controls/button_danger_disabled.png",
+        "art/ui/production/semantic-v2/controls/button_danger_focus.png",
+        "art/ui/production/semantic-v2/controls/button_danger_hover.png",
+        "art/ui/production/semantic-v2/controls/button_danger_normal.png",
+        "art/ui/production/semantic-v2/controls/button_danger_pressed.png",
+        "art/ui/production/semantic-v2/controls/button_primary_disabled.png"
+      ],
+      "tobe": {
+        "action": "UNDECIDED",
+        "status_label": "TO-BE 미제작·미결정",
+        "images": [],
+        "summary": "유효한 TO-BE 이미지가 아직 없다. AS-IS를 자동 유지하거나 자동 교체하지 않는다."
+      }
     },
     {
       "id": "staged_map_floor_rasters",
@@ -8128,7 +9164,17 @@
       "decision_state": "revise",
       "decision_label": "수정 필요 · 이전/거절 근거",
       "current_truth": "파일은 존재하지만 provider가 명시적으로 제외한다. 현재 맵 바닥·벽은 procedural이다.",
-      "target_direction": "수정 요구사항: plain 면만 두지 말고 tile edge/seam이 판독되는 새 후보가 필요하다. 현재 2개 staged PNG와 거절 후보는 runtime/유효 TO-BE가 아니다."
+      "target_direction": "수정 요구사항: plain 면만 두지 말고 tile edge/seam이 판독되는 새 후보가 필요하다. 현재 2개 staged PNG와 거절 후보는 runtime/유효 TO-BE가 아니다.",
+      "asis_images": [
+        "art/gameplay/semantic-v2/world/world_shared_floor_00.png",
+        "art/gameplay/semantic-v2/world/world_shared_floor_01.png"
+      ],
+      "tobe": {
+        "action": "REVISION_REQUIRED",
+        "status_label": "TO-BE 재제작 필요",
+        "images": [],
+        "summary": "수정 요구사항: plain 면만 두지 말고 tile edge/seam이 판독되는 새 후보가 필요하다. 현재 2개 staged PNG와 거절 후보는 runtime/유효 TO-BE가 아니다."
+      }
     },
     {
       "id": "staged_map_wall_rasters",
@@ -8152,7 +9198,23 @@
       "decision_state": "unreviewed",
       "decision_label": "미검토 · TO-BE 미결정",
       "current_truth": "파일은 존재하지만 provider가 명시적으로 제외한다. 현재 맵 바닥·벽은 procedural이다.",
-      "target_direction": "6개 wall topology image의 runtime 연결은 미검토다. 승인 전에는 staged 상태를 유지하고 현재 procedural wall을 AS-IS로 본다."
+      "target_direction": "6개 wall topology image의 runtime 연결은 미검토다. 승인 전에는 staged 상태를 유지하고 현재 procedural wall을 AS-IS로 본다.",
+      "asis_images": [
+        "art/gameplay/semantic-v2/world/world_wall_concave_corner.png",
+        "art/gameplay/semantic-v2/world/world_wall_convex_corner.png",
+        "art/gameplay/semantic-v2/world/world_wall_cross_junction.png",
+        "art/gameplay/semantic-v2/world/world_wall_end_cap.png",
+        "art/gameplay/semantic-v2/world/world_wall_straight.png",
+        "art/gameplay/semantic-v2/world/world_wall_t_junction.png"
+      ],
+      "tobe": {
+        "action": "CANDIDATE_AVAILABLE",
+        "status_label": "TO-BE 후보 · 미승인",
+        "images": [
+          "docs/design/component-sheets/semantic-v3-approval/evidence/report-v2/current-wall-family.png"
+        ],
+        "summary": "6개 wall topology image의 runtime 연결은 미검토다. 승인 전에는 staged 상태를 유지하고 현재 procedural wall을 AS-IS로 본다."
+      }
     },
     {
       "id": "runtime_typography",
@@ -8169,7 +9231,14 @@
       "decision_state": "baseline_undecided",
       "decision_label": "AS-IS 기준선 / TO-BE 미결정",
       "current_truth": "Theme와 visual-system registry가 동일 Noto Sans KR variable file을 사용한다.",
-      "target_direction": null
+      "target_direction": null,
+      "asis_images": [],
+      "tobe": {
+        "action": "UNDECIDED",
+        "status_label": "TO-BE 미제작·미결정",
+        "images": [],
+        "summary": "유효한 TO-BE 이미지가 아직 없다. AS-IS를 자동 유지하거나 자동 교체하지 않는다."
+      }
     },
     {
       "id": "map_floor_void_cover_walls",
@@ -8219,7 +9288,14 @@
       "representative_image": null,
       "decision_state": "mixed_decisions",
       "decision_label": "여러 v3 상태 · 항목별 확인",
-      "target_direction": "floor compiler, decoration removal, structural wall, cover 결정을 분리한다. floor revise에는 edge가 읽히는 새 tile 요구만 남고 유효 후보는 없으며, wall/decoration은 미검토, cover는 hold다."
+      "target_direction": "floor compiler, decoration removal, structural wall, cover 결정을 분리한다. floor revise에는 edge가 읽히는 새 tile 요구만 남고 유효 후보는 없으며, wall/decoration은 미검토, cover는 hold다.",
+      "asis_images": [],
+      "tobe": {
+        "action": "FIX_AND_DELETE",
+        "status_label": "기능 없는 문양 삭제",
+        "images": [],
+        "summary": "collision·topology·기능을 설명하지 않는 floor flower/rune/service decoration을 TO-BE에서 제거한다. 타일 가장자리와 seam만 남긴다."
+      }
     },
     {
       "id": "map_backdrop",
@@ -8243,7 +9319,14 @@
       "representative_image": null,
       "decision_state": "baseline_undecided",
       "decision_label": "AS-IS 기준선 / TO-BE 미결정",
-      "target_direction": null
+      "target_direction": null,
+      "asis_images": [],
+      "tobe": {
+        "action": "UNDECIDED",
+        "status_label": "TO-BE 미제작·미결정",
+        "images": [],
+        "summary": "유효한 TO-BE 이미지가 아직 없다. AS-IS를 자동 유지하거나 자동 교체하지 않는다."
+      }
     },
     {
       "id": "support_facilities",
@@ -8270,7 +9353,17 @@
       "representative_image": null,
       "decision_state": "unreviewed",
       "decision_label": "미검토 · TO-BE 미결정",
-      "target_direction": "repair/overdrive authored surface를 실제 radius와 state에 맞추고 live progress/timer geometry는 code truth로 유지한다. 아직 미검토다."
+      "target_direction": "repair/overdrive authored surface를 실제 radius와 state에 맞추고 live progress/timer geometry는 code truth로 유지한다. 아직 미검토다.",
+      "asis_images": [],
+      "tobe": {
+        "action": "CANDIDATE_AVAILABLE",
+        "status_label": "TO-BE 후보 · 미승인",
+        "images": [
+          "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v4/previews/repair-field-active.png",
+          "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v5/overdrive-field-candidate.png"
+        ],
+        "summary": "repair/overdrive authored surface를 실제 radius와 state에 맞추고 live progress/timer geometry는 code truth로 유지한다. 아직 미검토다."
+      }
     },
     {
       "id": "player_actor_overlays",
@@ -8302,7 +9395,14 @@
       "representative_image": null,
       "decision_state": "baseline_undecided",
       "decision_label": "AS-IS 기준선 / TO-BE 미결정",
-      "target_direction": null
+      "target_direction": null,
+      "asis_images": [],
+      "tobe": {
+        "action": "UNDECIDED",
+        "status_label": "TO-BE 미제작·미결정",
+        "images": [],
+        "summary": "유효한 TO-BE 이미지가 아직 없다. AS-IS를 자동 유지하거나 자동 교체하지 않는다."
+      }
     },
     {
       "id": "enemy_bodies_feedback",
@@ -8340,7 +9440,14 @@
       "representative_image": null,
       "decision_state": "baseline_undecided",
       "decision_label": "AS-IS 기준선 / TO-BE 미결정",
-      "target_direction": null
+      "target_direction": null,
+      "asis_images": [],
+      "tobe": {
+        "action": "UNDECIDED",
+        "status_label": "TO-BE 미제작·미결정",
+        "images": [],
+        "summary": "유효한 TO-BE 이미지가 아직 없다. AS-IS를 자동 유지하거나 자동 교체하지 않는다."
+      }
     },
     {
       "id": "ordinary_projectile_feedback",
@@ -8384,7 +9491,14 @@
       "representative_image": null,
       "decision_state": "mixed_decisions",
       "decision_label": "여러 v3 상태 · 항목별 확인",
-      "target_direction": "projectile은 authored head/tail/tier image를 exact collision core 위에 합성한다. 수정 요구가 포함된 broad enemy-action 결정에는 유효 후보가 아직 없다."
+      "target_direction": "projectile은 authored head/tail/tier image를 exact collision core 위에 합성한다. 수정 요구가 포함된 broad enemy-action 결정에는 유효 후보가 아직 없다.",
+      "asis_images": [],
+      "tobe": {
+        "action": "REVISION_REQUIRED",
+        "status_label": "TO-BE 재제작 필요",
+        "images": [],
+        "summary": "projectile은 authored head/tail/tier image를 exact collision core 위에 합성한다. 수정 요구가 포함된 broad enemy-action 결정에는 유효 후보가 아직 없다."
+      }
     },
     {
       "id": "ordinary_charge_feedback",
@@ -8432,7 +9546,14 @@
       "representative_image": null,
       "decision_state": "mixed_decisions",
       "decision_label": "여러 v3 상태 · 항목별 확인",
-      "target_direction": "charge는 authored startup cap과 corridor edge/repeat image를 exact path/width 위에 조립한다. collision은 code truth이며 유효 후보는 아직 없다."
+      "target_direction": "charge는 authored startup cap과 corridor edge/repeat image를 exact path/width 위에 조립한다. collision은 code truth이며 유효 후보는 아직 없다.",
+      "asis_images": [],
+      "tobe": {
+        "action": "REVISION_REQUIRED",
+        "status_label": "TO-BE 재제작 필요",
+        "images": [],
+        "summary": "charge는 authored startup cap과 corridor edge/repeat image를 exact path/width 위에 조립한다. collision은 code truth이며 유효 후보는 아직 없다."
+      }
     },
     {
       "id": "ordinary_area_feedback",
@@ -8473,7 +9594,14 @@
       "representative_image": null,
       "decision_state": "mixed_decisions",
       "decision_label": "여러 v3 상태 · 항목별 확인",
-      "target_direction": "수정 요구사항: area는 authored scalable boundary segment와 center hazard core를 exact radius 위에 배치한다. radius/damage는 code truth이며 유효 후보는 아직 없다."
+      "target_direction": "수정 요구사항: area는 authored scalable boundary segment와 center hazard core를 exact radius 위에 배치한다. radius/damage는 code truth이며 유효 후보는 아직 없다.",
+      "asis_images": [],
+      "tobe": {
+        "action": "REVISION_REQUIRED",
+        "status_label": "TO-BE 재제작 필요",
+        "images": [],
+        "summary": "수정 요구사항: area는 authored scalable boundary segment와 center hazard core를 exact radius 위에 배치한다. radius/damage는 code truth이며 유효 후보는 아직 없다."
+      }
     },
     {
       "id": "ordinary_beam_feedback",
@@ -8507,7 +9635,14 @@
       "representative_image": null,
       "decision_state": "mixed_decisions",
       "decision_label": "여러 v3 상태 · 항목별 확인",
-      "target_direction": "beam은 emitter cap + repeat core/edges + endpoint를 exact length/width에 조립한다. 수정 요구사항이며 기존 candidate sheet는 거절 근거일 뿐 유효 TO-BE가 아니다."
+      "target_direction": "beam은 emitter cap + repeat core/edges + endpoint를 exact length/width에 조립한다. 수정 요구사항이며 기존 candidate sheet는 거절 근거일 뿐 유효 TO-BE가 아니다.",
+      "asis_images": [],
+      "tobe": {
+        "action": "REVISION_REQUIRED",
+        "status_label": "TO-BE 재제작 필요",
+        "images": [],
+        "summary": "beam은 emitter cap + repeat core/edges + endpoint를 exact length/width에 조립한다. 수정 요구사항이며 기존 candidate sheet는 거절 근거일 뿐 유효 TO-BE가 아니다."
+      }
     },
     {
       "id": "ordinary_support_summon_feedback",
@@ -8555,7 +9690,14 @@
       "representative_image": null,
       "decision_state": "mixed_decisions",
       "decision_label": "여러 v3 상태 · 항목별 확인",
-      "target_direction": "support/summon은 authored emitter pad와 arrival frames를 actual support footprint 위에 사용한다. 유효 후보는 아직 없다."
+      "target_direction": "support/summon은 authored emitter pad와 arrival frames를 actual support footprint 위에 사용한다. 유효 후보는 아직 없다.",
+      "asis_images": [],
+      "tobe": {
+        "action": "REVISION_REQUIRED",
+        "status_label": "TO-BE 재제작 필요",
+        "images": [],
+        "summary": "support/summon은 authored emitter pad와 arrival frames를 actual support footprint 위에 사용한다. 유효 후보는 아직 없다."
+      }
     },
     {
       "id": "ordinary_defense_feedback",
@@ -8595,7 +9737,14 @@
       "representative_image": null,
       "decision_state": "revise",
       "decision_label": "수정 필요 · 이전/거절 근거",
-      "target_direction": "기존 shield source/plate를 유지하면서 authored shield-field boundary를 actual radius/forward slab와 일치시킨다. 수정 요구사항이며 유효 후보는 아직 없다."
+      "target_direction": "기존 shield source/plate를 유지하면서 authored shield-field boundary를 actual radius/forward slab와 일치시킨다. 수정 요구사항이며 유효 후보는 아직 없다.",
+      "asis_images": [],
+      "tobe": {
+        "action": "REVISION_REQUIRED",
+        "status_label": "TO-BE 재제작 필요",
+        "images": [],
+        "summary": "기존 shield source/plate를 유지하면서 authored shield-field boundary를 actual radius/forward slab와 일치시킨다. 수정 요구사항이며 유효 후보는 아직 없다."
+      }
     },
     {
       "id": "ordinary_heal_feedback",
@@ -8635,7 +9784,14 @@
       "representative_image": null,
       "decision_state": "revise",
       "decision_label": "수정 필요 · 이전/거절 근거",
-      "target_direction": "heal은 source/target cap + repeat transfer beam + heal frames를 조립하고 실제 source/target과 tick은 code truth를 따른다. 유효 후보는 아직 없다."
+      "target_direction": "heal은 source/target cap + repeat transfer beam + heal frames를 조립하고 실제 source/target과 tick은 code truth를 따른다. 유효 후보는 아직 없다.",
+      "asis_images": [],
+      "tobe": {
+        "action": "REVISION_REQUIRED",
+        "status_label": "TO-BE 재제작 필요",
+        "images": [],
+        "summary": "heal은 source/target cap + repeat transfer beam + heal frames를 조립하고 실제 source/target과 tick은 code truth를 따른다. 유효 후보는 아직 없다."
+      }
     },
     {
       "id": "boss_lanes_feedback",
@@ -8676,7 +9832,14 @@
       "representative_image": null,
       "decision_state": "mixed_decisions",
       "decision_label": "여러 v3 상태 · 항목별 확인",
-      "target_direction": "수정 요구사항: boss lanes는 ordinary projectile family를 재사용하고 lane formation/grouping으로 읽힌다. 고유 heavy bullet을 만들지 않으며 유효 후보는 아직 없다."
+      "target_direction": "수정 요구사항: boss lanes는 ordinary projectile family를 재사용하고 lane formation/grouping으로 읽힌다. 고유 heavy bullet을 만들지 않으며 유효 후보는 아직 없다.",
+      "asis_images": [],
+      "tobe": {
+        "action": "REVISION_REQUIRED",
+        "status_label": "TO-BE 재제작 필요",
+        "images": [],
+        "summary": "수정 요구사항: boss lanes는 ordinary projectile family를 재사용하고 lane formation/grouping으로 읽힌다. 고유 heavy bullet을 만들지 않으며 유효 후보는 아직 없다."
+      }
     },
     {
       "id": "boss_fan_feedback",
@@ -8718,7 +9881,14 @@
       "representative_image": null,
       "decision_state": "mixed_decisions",
       "decision_label": "여러 v3 상태 · 항목별 확인",
-      "target_direction": "수정 요구사항: boss fan은 ordinary projectile family를 재사용하고 tier/5-way formation grouping으로 구분한다. 고유 heavy bullet을 만들지 않으며 유효 후보는 아직 없다."
+      "target_direction": "수정 요구사항: boss fan은 ordinary projectile family를 재사용하고 tier/5-way formation grouping으로 구분한다. 고유 heavy bullet을 만들지 않으며 유효 후보는 아직 없다.",
+      "asis_images": [],
+      "tobe": {
+        "action": "REVISION_REQUIRED",
+        "status_label": "TO-BE 재제작 필요",
+        "images": [],
+        "summary": "수정 요구사항: boss fan은 ordinary projectile family를 재사용하고 tier/5-way formation grouping으로 구분한다. 고유 heavy bullet을 만들지 않으며 유효 후보는 아직 없다."
+      }
     },
     {
       "id": "boss_cross_feedback",
@@ -8757,7 +9927,14 @@
       "representative_image": null,
       "decision_state": "mixed_decisions",
       "decision_label": "여러 v3 상태 · 항목별 확인",
-      "target_direction": "수정 요구사항: boss cross는 ordinary projectile family를 재사용하고 tier/4-way formation grouping으로 구분한다. 고유 heavy bullet을 만들지 않으며 유효 후보는 아직 없다."
+      "target_direction": "수정 요구사항: boss cross는 ordinary projectile family를 재사용하고 tier/4-way formation grouping으로 구분한다. 고유 heavy bullet을 만들지 않으며 유효 후보는 아직 없다.",
+      "asis_images": [],
+      "tobe": {
+        "action": "REVISION_REQUIRED",
+        "status_label": "TO-BE 재제작 필요",
+        "images": [],
+        "summary": "수정 요구사항: boss cross는 ordinary projectile family를 재사용하고 tier/4-way formation grouping으로 구분한다. 고유 heavy bullet을 만들지 않으며 유효 후보는 아직 없다."
+      }
     },
     {
       "id": "boss_charge_feedback",
@@ -8797,7 +9974,14 @@
       "representative_image": null,
       "decision_state": "mixed_decisions",
       "decision_label": "여러 v3 상태 · 항목별 확인",
-      "target_direction": "수정 요구사항: boss charge는 corresponding authored startup cap과 corridor edge/repeat image를 exact path 위에 조립하고 boss body/collision은 code truth를 유지한다. 유효 후보는 아직 없다."
+      "target_direction": "수정 요구사항: boss charge는 corresponding authored startup cap과 corridor edge/repeat image를 exact path 위에 조립하고 boss body/collision은 code truth를 유지한다. 유효 후보는 아직 없다.",
+      "asis_images": [],
+      "tobe": {
+        "action": "REVISION_REQUIRED",
+        "status_label": "TO-BE 재제작 필요",
+        "images": [],
+        "summary": "수정 요구사항: boss charge는 corresponding authored startup cap과 corridor edge/repeat image를 exact path 위에 조립하고 boss body/collision은 code truth를 유지한다. 유효 후보는 아직 없다."
+      }
     },
     {
       "id": "boss_beam_feedback",
@@ -8843,7 +10027,14 @@
       "representative_image": null,
       "decision_state": "mixed_decisions",
       "decision_label": "여러 v3 상태 · 항목별 확인",
-      "target_direction": "boss beam은 boss-tier emitter cap + repeat core/edges + endpoint를 exact length/width에 조립한다. 수정 요구사항이며 유효 후보는 아직 없다."
+      "target_direction": "boss beam은 boss-tier emitter cap + repeat core/edges + endpoint를 exact length/width에 조립한다. 수정 요구사항이며 유효 후보는 아직 없다.",
+      "asis_images": [],
+      "tobe": {
+        "action": "REVISION_REQUIRED",
+        "status_label": "TO-BE 재제작 필요",
+        "images": [],
+        "summary": "boss beam은 boss-tier emitter cap + repeat core/edges + endpoint를 exact length/width에 조립한다. 수정 요구사항이며 유효 후보는 아직 없다."
+      }
     },
     {
       "id": "boss_area_feedback",
@@ -8884,7 +10075,14 @@
       "representative_image": null,
       "decision_state": "mixed_decisions",
       "decision_label": "여러 v3 상태 · 항목별 확인",
-      "target_direction": "수정 요구사항: boss area는 boss-tier scalable boundary segment와 center hazard surface를 exact radius 위에 조립한다. actual damage radius는 code truth이며 유효 후보는 아직 없다."
+      "target_direction": "수정 요구사항: boss area는 boss-tier scalable boundary segment와 center hazard surface를 exact radius 위에 조립한다. actual damage radius는 code truth이며 유효 후보는 아직 없다.",
+      "asis_images": [],
+      "tobe": {
+        "action": "REVISION_REQUIRED",
+        "status_label": "TO-BE 재제작 필요",
+        "images": [],
+        "summary": "수정 요구사항: boss area는 boss-tier scalable boundary segment와 center hazard surface를 exact radius 위에 조립한다. actual damage radius는 code truth이며 유효 후보는 아직 없다."
+      }
     },
     {
       "id": "boss_summon_feedback",
@@ -8929,7 +10127,14 @@
       "representative_image": null,
       "decision_state": "mixed_decisions",
       "decision_label": "여러 v3 상태 · 항목별 확인",
-      "target_direction": "수정 요구사항: boss summon은 authored emitter pad/state surface와 arrival frames를 actual spawn/support footprint에 맞춘다. 유효 후보는 아직 없다."
+      "target_direction": "수정 요구사항: boss summon은 authored emitter pad/state surface와 arrival frames를 actual spawn/support footprint에 맞춘다. 유효 후보는 아직 없다.",
+      "asis_images": [],
+      "tobe": {
+        "action": "REVISION_REQUIRED",
+        "status_label": "TO-BE 재제작 필요",
+        "images": [],
+        "summary": "수정 요구사항: boss summon은 authored emitter pad/state surface와 arrival frames를 actual spawn/support footprint에 맞춘다. 유효 후보는 아직 없다."
+      }
     },
     {
       "id": "boss_modules_core_feedback",
@@ -8976,7 +10181,16 @@
       "representative_image": null,
       "decision_state": "revise",
       "decision_label": "수정 필요 · 이전/거절 근거",
-      "target_direction": "boss module은 역할별 active/disabled/resolved image와 exact objective cue를 사용한다. collision/objective order는 code truth이며 수정 요구사항에 대한 유효 후보는 아직 없다."
+      "target_direction": "boss module은 역할별 active/disabled/resolved image와 exact objective cue를 사용한다. collision/objective order는 code truth이며 수정 요구사항에 대한 유효 후보는 아직 없다.",
+      "asis_images": [],
+      "tobe": {
+        "action": "REPLACE_AND_RETIRE",
+        "status_label": "공통 TO-BE · 미승인",
+        "images": [
+          "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v6/boss-shield-node-states-candidates.png"
+        ],
+        "summary": "파괴 시 one-shot flower burst를 추가하지 않고 같은 노드 housing이 resolved 상태로 바뀌며 boss shield 감소를 HUD와 함께 표시한다."
+      }
     },
     {
       "id": "transient_visual_events",
@@ -9139,7 +10353,21 @@
       "representative_image": "art/gameplay/semantic-v2/effects/atlases/fx_barrier_contact.png",
       "decision_state": "baseline_undecided",
       "decision_label": "AS-IS 기준선 / TO-BE 미결정",
-      "target_direction": null
+      "target_direction": null,
+      "asis_images": [
+        "art/gameplay/semantic-v2/effects/atlases/fx_barrier_contact.png",
+        "art/gameplay/semantic-v2/effects/atlases/fx_boss_module_disabled.png",
+        "art/gameplay/semantic-v2/effects/atlases/fx_boss_reduced_hit.png",
+        "art/gameplay/semantic-v2/effects/atlases/fx_bulkhead_destroy.png",
+        "art/gameplay/semantic-v2/effects/atlases/fx_crate_destroy.png",
+        "art/gameplay/semantic-v2/effects/atlases/fx_dash_start.png"
+      ],
+      "tobe": {
+        "action": "REVIEW_AND_REPLACE",
+        "status_label": "무의미한 방사형 burst 삭제",
+        "images": [],
+        "summary": "generic impact_damage의 방사형 flower/starburst를 TO-BE에서 제거한다. 명확한 source 방향이나 상태 전이가 없는 effect는 새 후보로 승계하지 않는다."
+      }
     },
     {
       "id": "projectiles_secondaries_defense",
@@ -9185,7 +10413,14 @@
       "representative_image": null,
       "decision_state": "baseline_undecided",
       "decision_label": "AS-IS 기준선 / TO-BE 미결정",
-      "target_direction": null
+      "target_direction": null,
+      "asis_images": [],
+      "tobe": {
+        "action": "UNDECIDED",
+        "status_label": "TO-BE 미제작·미결정",
+        "images": [],
+        "summary": "유효한 TO-BE 이미지가 아직 없다. AS-IS를 자동 유지하거나 자동 교체하지 않는다."
+      }
     },
     {
       "id": "rewards_pickups",
@@ -9214,7 +10449,19 @@
       "representative_image": null,
       "decision_state": "unreviewed",
       "decision_label": "미검토 · TO-BE 미결정",
-      "target_direction": "현재 gameplay draw를 유지하면서 v3의 crate/repair/recall/XP 후보를 항목별로 검토한다. 명시 승인 전에는 교체하지 않는다."
+      "target_direction": "현재 gameplay draw를 유지하면서 v3의 crate/repair/recall/XP 후보를 항목별로 검토한다. 명시 승인 전에는 교체하지 않는다.",
+      "asis_images": [],
+      "tobe": {
+        "action": "CANDIDATE_AVAILABLE",
+        "status_label": "TO-BE 후보 · 미승인",
+        "images": [
+          "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v4/previews/collectible-crate.png",
+          "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v5/repair-pickup-candidate.png",
+          "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v4/previews/collectible-recall.png",
+          "docs/design/component-sheets/semantic-v3-approval/generated/semantic-v4/previews/collectible-xp.png"
+        ],
+        "summary": "현재 gameplay draw를 유지하면서 v3의 crate/repair/recall/XP 후보를 항목별로 검토한다. 명시 승인 전에는 교체하지 않는다."
+      }
     },
     {
       "id": "hud_minimap",
@@ -9245,7 +10492,14 @@
       "representative_image": null,
       "decision_state": "baseline_undecided",
       "decision_label": "AS-IS 기준선 / TO-BE 미결정",
-      "target_direction": null
+      "target_direction": null,
+      "asis_images": [],
+      "tobe": {
+        "action": "UNDECIDED",
+        "status_label": "TO-BE 미제작·미결정",
+        "images": [],
+        "summary": "유효한 TO-BE 이미지가 아직 없다. AS-IS를 자동 유지하거나 자동 교체하지 않는다."
+      }
     },
     {
       "id": "other_dynamic_ui",
@@ -9283,7 +10537,14 @@
       "representative_image": null,
       "decision_state": "baseline_undecided",
       "decision_label": "AS-IS 기준선 / TO-BE 미결정",
-      "target_direction": null
+      "target_direction": null,
+      "asis_images": [],
+      "tobe": {
+        "action": "UNDECIDED",
+        "status_label": "TO-BE 미제작·미결정",
+        "images": [],
+        "summary": "유효한 TO-BE 이미지가 아직 없다. AS-IS를 자동 유지하거나 자동 교체하지 않는다."
+      }
     }
   ],
   "staged_not_runtime": [

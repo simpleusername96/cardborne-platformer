@@ -47,8 +47,14 @@ rule과 collision truth는 각 기존 owner의 책임이며 이 문서는 표현
   frame, 미세 texture noise와 dither는 사용하지 않는다.
 - ordinary component는 dark perimeter/separation, semantic main mass,
   secondary mechanical plane, restrained hard highlight 또는 inset의 3–5
-  filled plane으로 구성한다. boss는 비대칭 body와 고유 objective module을
-  최대 5개까지 가진다.
+  filled plane으로 구성한다. boss body도 같은 문법을 확대해 4–6개의 큰
+  filled plane과 한 겹의 외곽선으로 제한한다. 미세 panel, 반복 lamp,
+  nested outline과 greeble로 boss 등급을 표현하지 않는다.
+- 모든 boss에서 방어막을 낮추는 외부 objective는 동일한 **보스 방어막
+  노드** family를 재사용한다. boss마다 forge plate, segment lock, relay,
+  route switch, lattice처럼 다른 장치 silhouette를 만들지 않는다. 노드는
+  동일한 housing에서 `active → damaged → resolved` 상태만 바뀌며, 색뿐
+  아니라 완전한 rail, 끊어진 rail, 열린 housing으로 상태를 구분한다.
 - 짧은 한 방향 shadow, hard edge highlight와 얕은 inset은 승인 시안의
   기계적 깊이를 설명할 때 사용한다. soft glow, photoreal material,
   uncontrolled glossy effect와 반복 nested outline은 사용하지 않는다.
@@ -172,6 +178,9 @@ provider는 floor/wall map surface를 현재 runtime에 연결하지 않는다.
   animation으로 바꾸지 않는다.
 - maximum pressure에서도 player, crosshair, committed threat, boss
   objective, pickup과 current target이 world decoration보다 먼저 읽혀야 한다.
+- boss body의 고유성은 전체 silhouette와 큰 mass 비율이 소유한다. 외부
+  방어막 노드는 boss별 장식이 아니라 공통 gameplay 언어이므로 body와
+  독립된 같은 크기·pivot·상태 family를 사용한다.
 
 ### Typography, spacing 및 control
 
@@ -295,6 +304,9 @@ pressure/accessibility를 포함한다.
   player, 8 role grammar와 boss proportion hierarchy가 같은 family로 판독
 - ko/en × 960/1280/1920의 overflow, overlap, clipping 0
 - 8개 upgrade family glyph의 card/sheet empty slot 0
+- 5개 boss body가 1× runtime scale에서 큰 silhouette와 4–6개 plane으로
+  판독되고, boss-specific 방어막 장치 asset이 0이며 공통 노드의
+  active/damaged/resolved 상태만 사용됨
 - deterministic tile hash equality와 walkable/void containment
 - grayscale role/affinity/state 구분
 - engine 360° rear-anchor drift 0
