@@ -33,7 +33,7 @@ related:
 - `build/performance/complete-visual-final/`의 Phase 8 final visual build
   smoke와 rejected correction payload
 - `build/performance/semantic-v2-final/`의 final performance JSON
-- `tools/validation/`의 52개 focused validator
+- `tools/validation/`의 53개 focused validator
 - `build/web/index.html`을 포함한 Godot production Web export
 
 `build/` 아래 파일은 local ignored evidence다. 아래 표에 payload 이름과
@@ -117,9 +117,10 @@ Phase 3–7 구현과 visual acceptance의 clean baseline은 commit
   계약에서 통과했다. source 수와 code path 존재를 확인한 결과이며 누락된
   producer event→catalog→asset→frame chain 또는 UI texture state coverage를
   증명하지 않는다.
-- Godot Web export가 성공했다. production build는 fastrun Codex lane에서
-  정상 제공했지만 이 session에는 연결된 browser surface가 없어 interactive
-  built-Web smoke는 수행하지 못했다.
+- Godot release Web export가 성공했다. commit `7f9c554`의 production build를
+  fastrun Codex lane `13029`에서 제공하고 실제 브라우저로 배치 화면, 전투
+  진입, primary 연속 사격, 이동·dash·EMP 입력, 실패 report와 garage 복귀를
+  확인했다. 브라우저 console warning/error는 0건이었다.
 
 ### 성능 구조
 
@@ -160,9 +161,9 @@ physics p95 `13.02 ms`, enemy p95 `6.08 ms`로 measured improvement를
 simulation behavior를 유지한다.
 
 capacity smoke가 실패했으므로 guard에 따라 authoritative native/Web
-matrix와 600초 lifecycle soak를 실행하지 않았다. production Web export는
-`WEB_EXPORT_OK`로 통과했지만 browser discovery 결과가 0이라
-interactive built-Web smoke/performance는 미실행이다.
+performance matrix와 600초 lifecycle soak를 실행하지 않았다. production
+Web export와 built-Web interaction smoke는 통과했지만 Web performance
+측정을 release 통과로 주장하지 않는다.
 
 ### 이전 semantic-v2 성능 결과
 
@@ -187,8 +188,7 @@ performance release로 판정할 수 없다.
 2. synthetic capacity에서 physics `6/8 ms`와 frame-tail을 동시에 줄일
    구조를 먼저 설계하고, native/dependency rewrite는 별도 권한 없이
    시작하지 않는다.
-3. 연결된 browser surface가 준비되면 built Web 1280×720 smoke와 Web
-   performance matrix를 실행한다.
+3. native capacity gate를 통과한 뒤 Web performance matrix를 실행한다.
 4. capacity gate를 통과한 뒤에만 `lifecycle_pressure`의 measured interval을
    600초로 실행한다.
 
@@ -203,4 +203,5 @@ performance release로 판정할 수 없다.
   및 이전 rendered matrix로 확인했다.
 - production replay와 boss pressure는 통과했지만 synthetic peak와
   capacity가 미통과이므로 release-wide performance 통과를 주장하지 않는다.
-- interactive built-Web smoke와 600초 lifecycle soak는 수행되지 않았다.
+- interactive built-Web smoke는 통과했지만 600초 lifecycle soak는 수행하지
+  않았다.
