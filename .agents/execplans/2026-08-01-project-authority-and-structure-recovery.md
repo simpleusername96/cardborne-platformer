@@ -682,6 +682,16 @@ fastrun manager의 `codex` lane에서 수행한다. 임의 port나 `user` lane�
   gate를 승인했다. pre-cleanup tip은
   `2bc102fff21dcaa81125d627269b9467498fae8f`이며 원격보다 89 commits 앞선
   local history임을 확인했다.
+- 2026-08-02: G1/G2 tracked cleanup과 canonical migration은 `e9efe70`에
+  완료했다. approval ledger에는 approved asset 0개가 있었으므로 verified
+  gaps만 visual spec에 남기고 후보·source·sheet를 Git history로 보냈다.
+- 2026-08-02: capture CLI parsing, output preparation와 PNG save ownership은
+  `4eac45a`에서 `VehicleRunCaptureDriver`로 분리했다. 전체 capture sequence와
+  fixture gateway/restore/manifest 분리는 아직 남아 있다.
+- 2026-08-02: G3 대상은 exact path와 총 약 3.85 GiB를 확인했지만 실행
+  environment가 recursive local deletion에 별도 approval을 요구하고 현재
+  approval policy가 `Never`여서 삭제가 차단됐다. source cleanup과 무관한
+  local-only 잔여로 기록한다.
 
 ## Progress
 
@@ -692,7 +702,13 @@ fastrun manager의 `codex` lane에서 수행한다. 임의 port나 `user` lane�
 - [x] canonical conflict, stale references와 runtime ownership 식별.
 - [x] cleanup 및 responsibility recovery batch 설계.
 - [x] 사용자 G1/G2/G3 결정: G1 approve, G2 defer, G3 approve.
-- [ ] Phase 0~6 실행.
+- [x] Phase 0 기준선과 승인 기록.
+- [x] Phase 1 canonical 계약과 authority validator.
+- [x] Phase 2 역사 문서 제거.
+- [x] Phase 3 semantic runtime truth와 visual approval lane defer.
+- [ ] Phase 4: tracked orphan 제거 완료; G3 local cache purge는 tool policy로 차단.
+- [ ] Phase 5: capture command/I/O 분리 완료; sequence gateway와 restore/manifest 남음.
+- [ ] Phase 6: full validators와 Web export 통과; built-Web interaction smoke 남음.
 
 ## Next Steps
 
