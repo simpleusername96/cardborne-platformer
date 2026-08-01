@@ -3,14 +3,11 @@ type: spec
 status: active
 owner: BK
 created: 2026-07-21
-last_reviewed: 2026-07-31
+last_reviewed: 2026-08-02
 canonical_for: Cardborne vehicle-game art direction and UI presentation
 scope: All player-facing world, combat, HUD, modal, preview, and effect surfaces
 related:
   - ../product/vehicle_game_spec.md
-  - ./GAMEPLAY_VISUAL_TAXONOMY.md
-  - ./component-sheets/README.md
-  - ../../.agents/execplans/2026-07-30-semantic-visual-world-boss-performance-rework.md
   - ../../.agents/semantic-v2-runtime-acceptance-evidence.md
 ---
 
@@ -24,10 +21,9 @@ contract다. 실제 runtime truth는
 Godot Theme가 소유한다. 실제 provider에서 생성한 system sheet는 이 runtime
 truth와 승인 시안의 충실도를 검증하는 publication artifact다.
 
-`00-general-sf-component-master-v1.png`는 runtime asset은 아니지만,
-silhouette, proportion, mechanical layering와 contrast hierarchy의
-binding visual reference다. runtime descriptor와 production sheet는 이 reference를
-느슨하게 재해석하지 않고 같은 visual family로 읽히도록 구현해야 한다.
+승인된 general-SF 방향에서 추출한 silhouette, proportion, mechanical
+layering와 contrast hierarchy는 아래 요구사항에 직접 포함되어 있다. 과거
+approval sheet는 runtime owner나 별도 binding contract가 아니다.
 
 ## Scope
 
@@ -115,6 +111,24 @@ runtime, guidebook, upgrade card와 system sheet는 같은 descriptor와
 projectile core boundary와 debug overlay로 그 차이를 검증한다. semantic-v2
 provider는 floor/wall map surface를 현재 runtime에 연결하지 않는다.
 
+### Semantic categories
+
+| 표시 역할 | 시각 계약 | gameplay/collision owner |
+| --- | --- | --- |
+| 바닥 타일 | 어두운 저대비 산업 panel, 기능 없는 강조 문양 없음 | field geometry와 deterministic tile compiler |
+| 구조벽 | 바닥보다 밝은 pale-metal continuous mass와 dark contour | field topology와 collision |
+| 엄폐물 | 구조벽보다 작은 독립 silhouette, 연속 wall처럼 배치하지 않음 | tactical layout, collision와 LOS |
+| 파괴 장벽 | 같은 footprint의 sealed/damaged/open surface | bulkhead health와 reward access |
+| 통과형 에너지 장벽 | 양끝 장치 사이 전체 판정 폭을 채우는 curtain/rung | Arc Surge schedule, slow와 damage |
+| 회복·공격 증폭 장판 | 실제 효과 범위 전체와 일치하는 밝은 고유 surface | repair/overdrive radius와 effect |
+| 순간이동 게이트 | 완전한 원형 floor portal과 active interior | paired transit dwell/cooldown |
+| 보상 상자 | amber body, lock seam과 파손 가능한 contour | crate health와 drop |
+| 픽업 | 작고 밝은 role-coded silhouette | pickup value와 collection |
+
+현재 product에 없는 poison/lava hazard floor와 wear/collapse tile은 visual
+category나 asset requirement가 아니다. 구조벽·엄폐물·파괴 장벽·에너지
+장벽·기능 장판·게이트를 서로 바꿔 부르거나 같은 silhouette로 합치지 않는다.
+
 ### World
 
 - field geometry, collision, navigation, cover selection, terrain schedule와
@@ -130,8 +144,7 @@ provider는 floor/wall map surface를 현재 runtime에 연결하지 않는다.
 - void는 near-black mass와 sparse system edge만 가진다.
 - 구조벽은 맵 가장자리와 중앙 구역 모두 바닥보다 명백히 밝은 pale-metal
   mass, dark contour와 짧은 outer shadow를 사용한다. 열린 공간의 독립
-  엄폐물은 구조벽처럼 일렬로 연결하지 않는다. 세부 역할과 상태 이름은
-  `GAMEPLAY_VISUAL_TAXONOMY.md`를 따른다.
+  엄폐물은 구조벽처럼 일렬로 연결하지 않는다.
 - presentation-only decoration은 retained descriptor instance로 그리며
   field당 최대 24개다.
 - facility는 장식보다 대비가 높고 shape가 고유하다.
@@ -167,6 +180,12 @@ provider는 floor/wall map surface를 현재 runtime에 연결하지 않는다.
   boss는 boss color만으로 ordinary enemy를 재도색하지 않는다.
 - projectile damaging core는 collision boundary와 일치한다. tail은 방향을
   설명하는 non-damaging cue다.
+- projectile presentation은 owner faction, bolt/missile/charge/beam/area
+  delivery, ordinary/elite/boss threat tier, light/standard/heavy power를
+  구분한다. affinity hue만 바꿔 서로 다른 delivery나 tier를 대신하지 않는다.
+- hostile thermal/toxin/cryo/arc hue는 direct-damage affinity이며 현재 존재하지
+  않는 persistent condition을 약속하지 않는다. player condition projectile만
+  실제 burn/poison/chill payload를 보조 표식으로 표시할 수 있다.
 - projectile startup은 muzzle/cadence cue와 최대 `0.4 s` short lead만
   표시한다. full committed path는 beam에만 사용하고 charge는 locked
   endpoint capsule을 사용한다.
@@ -290,12 +309,6 @@ provider는 floor/wall map surface를 현재 runtime에 연결하지 않는다.
 
 ## Acceptance Criteria
 
-`docs/design/component-sheets/system-v1/manifest.json`은 실제 provider
-fingerprint, source commit, viewport, locale와 각 sheet SHA-256을 기록한다.
-최종 12개 sheet는 foundation, world surface/facility, player, enemy, boss,
-projectile/effect, reward/glyph, HUD/minimap, UI control, modal flow,
-pressure/accessibility를 포함한다.
-
 각 publication batch는 다음을 통과해야 한다.
 
 - catalog ID coverage와 duplicate owner 0
@@ -318,6 +331,21 @@ pressure/accessibility를 포함한다.
 `.agents/semantic-v2-runtime-acceptance-evidence.md`에 기록한다. 성공한
 Web export만으로 interactive built-Web smoke나 release performance를
 통과한 것으로 간주하지 않는다.
+
+### Known implementation gaps
+
+- semantic-v2 floor/wall PNG는 존재하지만 현재 provider가 map surface에
+  연결하지 않는다. current procedural surface/wall이 runtime truth다.
+- 일부 기능 지형 body art는 실제 rect/radius보다 작아 live footprint와
+  시각 면적이 일치하지 않는다.
+- projectile/telegraph path는 모든 ordinary/elite/boss tier와 authored pattern
+  geometry를 presentation까지 완전히 전달하지 않는다.
+- upgrade card는 지원 viewport/locale의 overflow와 family art hierarchy를
+  아직 최종 acceptance하지 못했다.
+- XP shard 단순화, player replacement, 새 damage-feedback family와 visual
+  candidate는 승인되지 않았다. 현재 runtime 표현을 유지한다.
+- boss body와 공통 방어막 노드의 단순화 방향은 이 spec의 목표지만 생성된
+  semantic-v3/v4/v5/v6 후보 파일 자체는 승인된 runtime asset이 아니다.
 
 ## Non-Goals
 

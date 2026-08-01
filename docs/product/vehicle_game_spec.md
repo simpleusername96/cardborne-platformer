@@ -3,16 +3,11 @@ type: spec
 status: active
 owner: BK
 created: 2026-07-21
-last_reviewed: 2026-07-31
+last_reviewed: 2026-08-02
 canonical_for: Cardborne gameplay and product behavior
 scope: Current run-selected-field five-stage vehicle campaign
 related:
   - ../design/UI_VISUAL_SYSTEM.md
-  - ../../.agents/vehicle-performance-architecture-audit.md
-  - ../../.agents/vehicle-performance-stabilization-evidence.md
-  - ../../.agents/execplans/2026-07-29-horde-foundation-recovery-and-acceptance.md
-  - ../../.agents/continuous-horde-readability-evidence.md
-  - ../../.agents/continuous-horde-rollout-problem-analysis.md
   - ../../.agents/semantic-v2-runtime-acceptance-evidence.md
 ---
 
@@ -213,6 +208,16 @@ second time; no individual stat is described as exactly 15% lower.
 - Every field authors Arc Surge Strips, two paired Transit Gate routes, and
   persistent Breakable Bulkheads. Every stage schedules two repair fields and
   two overdrive fields from validated tactical sockets.
+- A structural wall is continuous, impassable topology at a field boundary or
+  internal partition. Cover is a smaller independent blocker on open floor and
+  must not be chained into a substitute wall. A Breakable Bulkhead is a
+  destructible reward barrier with sealed, damaged, and open gameplay states;
+  it is neither ordinary cover nor a reward crate.
+- Arc Surge is a traversable energy barrier with no solid collision. Repair and
+  overdrive are beneficial fixed-area fields whose visible footprint follows
+  their exact effect area. Transit Gates are paired circular floor portals.
+  The current product has no poison/lava hazard floor or wear/collapse tile
+  mechanic.
 - Arc Surge uses a continuous warning, hits
   each actor at most once per active window, can damage either team, and keeps
   stable damage attribution.
@@ -350,7 +355,7 @@ hint appears once and the same hint cannot repeat within two seconds.
 ### UI, guidebook, and persistence
 
 - Every player-facing world, actor, projectile, reward, effect, HUD, modal,
-  minimap, and preview uses the shared non-raster general-SF component system
+  minimap, and preview uses the shared image-backed general-SF component system
   defined by `UI_VISUAL_SYSTEM.md`. Role color is always paired with a
   silhouette, notch, rail, or glyph cue.
 - The ship engine remains a rigid rear child of the continuously rotated hull.
@@ -463,3 +468,13 @@ hint appears once and the same hint cannot repeat within two seconds.
 - More than three simultaneous secondary families.
 - Unconstrained procedural topology, per-stage layout rerolls, a chore-filled
   base, or exploration puzzles in this run.
+- Alternative growth systems beyond the current 41-card and five-secondary
+  contract are inactive and require an explicit product-spec revision.
+- The current Easy/Normal/Hard selector remains the complete difficulty model.
+  Meta-progression, adaptive difficulty, or another difficulty model is not
+  selected and requires an explicit product-spec revision.
+- Additional map-generation systems, coordinated-enemy tactics, or new boss
+  pattern families require both an explicit product-spec revision and a
+  separate ExecPlan before implementation.
+- A named cultural, marine, ritual, or material motif is not part of the current
+  product identity.

@@ -1,7 +1,6 @@
 {
   "schema_version": 1,
   "pack": "cardborne-ui-semantic-v2",
-  "generated_by": "tools/design/export_visual_replacement_assets.py",
   "components": {
     "modal_master": {
       "canvas": [

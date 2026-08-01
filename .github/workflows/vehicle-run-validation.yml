@@ -22,6 +22,10 @@ jobs:
       - name: Check out branch
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
+      - name: Validate document authority
+        shell: pwsh
+        run: ./tools/validation/validate_document_authority.ps1
+
       - name: Cache Godot editor and export templates
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:

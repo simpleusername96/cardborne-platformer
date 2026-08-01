@@ -2,11 +2,6 @@
   "schema_version": 1,
   "pack_id": "cardborne-semantic-v2",
   "visual_direction": "flat-color general-SF hard-surface",
-  "approved_references": [
-    "docs/design/component-sheets/semantic-rework-v2-proposal/13-visual-taxonomy-asis-tobe.png",
-    "docs/design/component-sheets/semantic-rework-v2-proposal/14-attack-telegraph-asis-tobe.png",
-    "docs/design/component-sheets/semantic-rework-v2-proposal/15-world-layering-asis-tobe.png"
-  ],
   "image_contract": {
     "format": "PNG",
     "color_space": "sRGB",
@@ -23,8 +18,8 @@
     "source_item_limit_note": "Animation frames count as one named effect, not separate asset identities."
   },
   "integration": {
-    "requires_texture_instancing_adapter": true,
-    "current_runtime_is_procedural_mesh_multimesh": true,
+    "requires_texture_instancing_adapter": false,
+    "current_runtime_is_procedural_mesh_multimesh": false,
     "high_count_rule": "Use a texture-capable MultiMesh/atlas shader or a capped event pool; do not create one AnimatedSprite2D per projectile, enemy, or effect.",
     "collision_rule": "Collision geometry and live telegraph footprints remain authoritative and independent from these textures."
   },
@@ -478,8 +473,8 @@
       "root": "world",
       "origin": "top_left",
       "floor_cell": [
-        192,
-        192
+        288,
+        288
       ],
       "files": [
         "world_shared_floor_00.png",
@@ -545,8 +540,7 @@
           "pivot": [
             48,
             48
-          ],
-          "source": "sources/combat-cues/01-target-priority-ranged.png"
+          ]
         },
         "priority_target": {
           "path": "combat-cues/cue_priority_target.png",
@@ -557,8 +551,7 @@
           "pivot": [
             48,
             48
-          ],
-          "source": "sources/combat-cues/01-target-priority-ranged.png"
+          ]
         },
         "ranged_startup": {
           "path": "combat-cues/cue_ranged_startup.png",
@@ -569,8 +562,7 @@
           "pivot": [
             48,
             48
-          ],
-          "source": "sources/combat-cues/01-target-priority-ranged.png"
+          ]
         },
         "collective_gather": {
           "path": "combat-cues/cue_collective_gather.png",
@@ -581,8 +573,7 @@
           "pivot": [
             48,
             48
-          ],
-          "source": "sources/combat-cues/02-collective-gather-lock-execute.png"
+          ]
         },
         "collective_lock": {
           "path": "combat-cues/cue_collective_lock.png",
@@ -593,8 +584,7 @@
           "pivot": [
             48,
             48
-          ],
-          "source": "sources/combat-cues/02-collective-gather-lock-execute.png"
+          ]
         },
         "collective_execute": {
           "path": "combat-cues/cue_collective_execute.png",
@@ -605,8 +595,7 @@
           "pivot": [
             48,
             48
-          ],
-          "source": "sources/combat-cues/02-collective-gather-lock-execute.png"
+          ]
         },
         "collective_break": {
           "path": "combat-cues/cue_collective_break.png",
@@ -617,8 +606,7 @@
           "pivot": [
             48,
             48
-          ],
-          "source": "sources/combat-cues/03-collective-break-elite-traits.png"
+          ]
         },
         "elite_armored": {
           "path": "combat-cues/cue_elite_armored.png",
@@ -629,8 +617,7 @@
           "pivot": [
             48,
             48
-          ],
-          "source": "sources/combat-cues/03-collective-break-elite-traits.png"
+          ]
         },
         "elite_overclocked": {
           "path": "combat-cues/cue_elite_overclocked.png",
@@ -641,8 +628,7 @@
           "pivot": [
             48,
             48
-          ],
-          "source": "sources/combat-cues/03-collective-break-elite-traits.png"
+          ]
         },
         "elite_heavy": {
           "path": "combat-cues/cue_elite_heavy.png",
@@ -653,8 +639,7 @@
           "pivot": [
             48,
             48
-          ],
-          "source": "sources/combat-cues/04-elite-heavy-boss-core.png"
+          ]
         },
         "boss_core_sealed": {
           "path": "combat-cues/cue_boss_core_sealed.png",
@@ -665,8 +650,7 @@
           "pivot": [
             48,
             48
-          ],
-          "source": "sources/combat-cues/04-elite-heavy-boss-core.png"
+          ]
         },
         "boss_core_open": {
           "path": "combat-cues/cue_boss_core_open.png",
@@ -677,8 +661,7 @@
           "pivot": [
             48,
             48
-          ],
-          "source": "sources/combat-cues/04-elite-heavy-boss-core.png"
+          ]
         },
         "boss_core_stable": {
           "path": "combat-cues/cue_boss_core_stable.png",
@@ -689,8 +672,7 @@
           "pivot": [
             48,
             48
-          ],
-          "source": "sources/combat-cues/05-boss-objective-states.png"
+          ]
         },
         "objective_active": {
           "path": "combat-cues/cue_objective_active.png",
@@ -701,8 +683,7 @@
           "pivot": [
             48,
             48
-          ],
-          "source": "sources/combat-cues/05-boss-objective-states.png"
+          ]
         },
         "objective_resolved": {
           "path": "combat-cues/cue_objective_resolved.png",
@@ -713,8 +694,7 @@
           "pivot": [
             48,
             48
-          ],
-          "source": "sources/combat-cues/05-boss-objective-states.png"
+          ]
         },
         "commit_locked": {
           "path": "combat-cues/cue_commit_locked.png",
@@ -725,8 +705,7 @@
           "pivot": [
             48,
             48
-          ],
-          "source": "sources/combat-cues/06-commit-guide-ship.png"
+          ]
         },
         "commit_autonomous": {
           "path": "combat-cues/cue_commit_autonomous.png",
@@ -737,8 +716,7 @@
           "pivot": [
             48,
             48
-          ],
-          "source": "sources/combat-cues/06-commit-guide-ship.png"
+          ]
         },
         "guide_ship": {
           "path": "combat-cues/cue_guide_ship.png",
@@ -749,8 +727,7 @@
           "pivot": [
             48,
             48
-          ],
-          "source": "sources/combat-cues/06-commit-guide-ship.png"
+          ]
         },
         "guide_mobile": {
           "path": "combat-cues/cue_guide_mobile.png",
@@ -761,8 +738,7 @@
           "pivot": [
             48,
             48
-          ],
-          "source": "sources/combat-cues/07-guide-role-categories.png"
+          ]
         },
         "guide_stationary": {
           "path": "combat-cues/cue_guide_stationary.png",
@@ -773,8 +749,7 @@
           "pivot": [
             48,
             48
-          ],
-          "source": "sources/combat-cues/07-guide-role-categories.png"
+          ]
         },
         "guide_bosses": {
           "path": "combat-cues/cue_guide_bosses.png",
@@ -785,8 +760,7 @@
           "pivot": [
             48,
             48
-          ],
-          "source": "sources/combat-cues/07-guide-role-categories.png"
+          ]
         },
         "guide_objects": {
           "path": "combat-cues/cue_guide_objects.png",
@@ -797,8 +771,7 @@
           "pivot": [
             48,
             48
-          ],
-          "source": "sources/combat-cues/08-guide-objects.png"
+          ]
         }
       }
     }
@@ -965,8 +938,7 @@
         48
       ],
       "fps": 20,
-      "loop": false,
-      "source": "sources/effect-expansion/01-reflect-deflection.png"
+      "loop": false
     },
     "barrier_contact": {
       "atlas": "effects/atlases/fx_barrier_contact.png",
@@ -986,8 +958,7 @@
         64
       ],
       "fps": 20,
-      "loop": false,
-      "source": "sources/effect-expansion/02-barrier-contact.png"
+      "loop": false
     },
     "hull_hit": {
       "atlas": "effects/atlases/fx_hull_hit.png",
@@ -1007,8 +978,7 @@
         48
       ],
       "fps": 20,
-      "loop": false,
-      "source": "sources/effect-expansion/03-hull-hit.png"
+      "loop": false
     },
     "seeker_impact": {
       "atlas": "effects/atlases/fx_seeker_impact.png",
@@ -1028,8 +998,7 @@
         48
       ],
       "fps": 20,
-      "loop": false,
-      "source": "sources/effect-expansion/04-seeker-impact.png"
+      "loop": false
     },
     "escort_drone_impact": {
       "atlas": "effects/atlases/fx_escort_drone_impact.png",
@@ -1049,8 +1018,7 @@
         48
       ],
       "fps": 20,
-      "loop": false,
-      "source": "sources/effect-expansion/05-escort-drone-impact.png"
+      "loop": false
     },
     "orbit_blade_impact": {
       "atlas": "effects/atlases/fx_orbit_blade_impact.png",
@@ -1070,8 +1038,7 @@
         48
       ],
       "fps": 20,
-      "loop": false,
-      "source": "sources/effect-expansion/06-orbit-blade-impact.png"
+      "loop": false
     },
     "enemy_destroy_light": {
       "atlas": "effects/atlases/fx_enemy_destroy_light.png",
@@ -1091,8 +1058,7 @@
         80
       ],
       "fps": 15,
-      "loop": false,
-      "source": "sources/effect-expansion/07-enemy-destroy-light.png"
+      "loop": false
     },
     "enemy_destroy_heavy": {
       "atlas": "effects/atlases/fx_enemy_destroy_heavy.png",
@@ -1112,8 +1078,7 @@
         96
       ],
       "fps": 15,
-      "loop": false,
-      "source": "sources/effect-expansion/08-enemy-destroy-heavy.png"
+      "loop": false
     },
     "crate_destroy": {
       "atlas": "effects/atlases/fx_crate_destroy.png",
@@ -1133,8 +1098,7 @@
         64
       ],
       "fps": 15,
-      "loop": false,
-      "source": "sources/effect-expansion/09-crate-destroy.png"
+      "loop": false
     },
     "pickup_intake": {
       "atlas": "effects/atlases/fx_pickup_intake.png",
@@ -1154,8 +1118,7 @@
         48
       ],
       "fps": 20,
-      "loop": false,
-      "source": "sources/effect-expansion/10-pickup-intake.png"
+      "loop": false
     },
     "support_heal": {
       "atlas": "effects/atlases/fx_support_heal.png",
@@ -1175,8 +1138,7 @@
         64
       ],
       "fps": 15,
-      "loop": false,
-      "source": "sources/effect-expansion/11-support-heal.png"
+      "loop": false
     },
     "lifesteal_pulse": {
       "atlas": "effects/atlases/fx_lifesteal_pulse.png",
@@ -1196,8 +1158,7 @@
         32
       ],
       "fps": 20,
-      "loop": false,
-      "source": "sources/effect-expansion/12-lifesteal-pulse.png"
+      "loop": false
     },
     "transit_shift": {
       "atlas": "effects/atlases/fx_transit_shift.png",
@@ -1217,8 +1178,7 @@
         48
       ],
       "fps": 15,
-      "loop": false,
-      "source": "sources/effect-expansion/13-transit-shift.png"
+      "loop": false
     },
     "boss_reduced_hit": {
       "atlas": "effects/atlases/fx_boss_reduced_hit.png",
@@ -1238,8 +1198,7 @@
         48
       ],
       "fps": 20,
-      "loop": false,
-      "source": "sources/effect-expansion/14-boss-reduced-hit.png"
+      "loop": false
     },
     "impact_damage": {
       "atlas": "effects/atlases/fx_impact_damage.png",
@@ -1259,19 +1218,7 @@
         32
       ],
       "fps": 20,
-      "loop": false,
-      "source": "sources/effects/02-impact-damage.png"
+      "loop": false
     }
-  },
-  "review_sheets": [
-    "sheets/01-player-weapons.png",
-    "sheets/02-enemies.png",
-    "sheets/03-bosses-modules.png",
-    "sheets/04-projectiles-status-pickups.png",
-    "sheets/05-world.png",
-    "sheets/06-hud-glyphs.png",
-    "sheets/07-effect-atlases.png",
-    "sheets/08-effect-semantic-expansion.png",
-    "sheets/09-combat-cue-glyphs.png"
-  ]
+  }
 }

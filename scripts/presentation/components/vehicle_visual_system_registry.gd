@@ -62,9 +62,6 @@ const VEHICLE_THEME_PATH := (
 const VEHICLE_FONT_PATH := (
 	"res://art/ui/production/fonts/NotoSansKR-Variable.ttf"
 )
-const SHEET_CANVAS_PATH := (
-	"res://tools/design/vehicle_visual_sheet_canvas.gd"
-)
 
 
 static func catalog_ids() -> Dictionary:
@@ -163,10 +160,6 @@ static func provider_fingerprint() -> String:
 	records.append(
 		"vehicle_font=%s"
 		% FileAccess.get_sha256(VEHICLE_FONT_PATH)
-	)
-	records.append(
-		"sheet_canvas=%s"
-		% FileAccess.get_sha256(SHEET_CANVAS_PATH)
 	)
 	records.sort()
 	return "|".join(records).sha256_text()

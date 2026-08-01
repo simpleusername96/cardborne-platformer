@@ -1,107 +1,37 @@
----
-type: spec
-status: active
-canonical_for: Cardborne Semantic V2 raster asset pack and effect animation handoff
-scope: art/gameplay/semantic-v2
-source: docs/design/component-sheets/semantic-rework-v2-proposal/README.md
-related:
-  - docs/design/component-sheets/semantic-rework-v2-proposal/13-visual-taxonomy-asis-tobe.png
-  - docs/design/component-sheets/semantic-rework-v2-proposal/14-attack-telegraph-asis-tobe.png
-  - docs/design/component-sheets/semantic-rework-v2-proposal/15-world-layering-asis-tobe.png
----
+# Semantic V2 runtime asset pack
 
-# Semantic V2 런타임 에셋 팩
+이 디렉터리는 Cardborne gameplay raster asset의 현재 runtime pack이다.
+`scripts/presentation/components/vehicle_semantic_asset_provider.gd`가
+[`asset-manifest.json`](./asset-manifest.json)을 읽어 texture, mesh, pivot과
+attachment metadata를 제공한다.
 
-## 목적
+## Ownership
 
-승인된 TO-BE 시안을 실제 교체용 이미지 규격으로 분해한 팩이다. 기체, 엔진과 조준 마운트, 보조무기, 모든 일반 적 역할, 보스와 보스 모듈, 투사체 속성, 상태이상, 아이템, 지형, 미니맵·액션·업그레이드 글리프, 단발성 전투 효과를 각각 독립 PNG로 제공한다.
+- `actors/`, `effects/`, `hud/`, `pickups/`, `states/`, `weapons/`, `world/`의
+  runtime PNG와 atlas가 이 pack의 배포 대상이다.
+- manifest와 provider는 asset identity와 presentation metadata만 소유한다.
+- collision, navigation, damage, targeting, encounter와 state transition은
+  기존 gameplay owner가 계속 소유한다.
+- floor와 wall PNG는 현재 provider에 연결되지 않는다. procedural field
+  surface와 wall renderer가 현재 runtime truth다.
 
-현재 게임은 이미지가 아니라 `ArrayMesh`/`MultiMesh` 기반 절차형 메시로 전투 요소를 그린다. 따라서 **파일만 덮어쓰는 교체는 현재 렌더러 구조상 불가능**하다. 다만 이 팩은 캔버스, 방향, 피벗, 부착 규칙, 프레임 속도까지 고정했기 때문에 텍스처 인스턴싱 어댑터를 붙인 뒤에는 재디자인이나 재수출 없이 바로 연결할 수 있다.
+과거 생성 source, review sheet와 prompt는 runtime contract가 아니다. 필요할
+때는 Git history에서 복구하며 shipping tree에 중복 보관하지 않는다.
 
-## 범위
+## Change contract
 
-- 48장의 고해상도 생성 원본: 일반 시트는 이미지당 최대 3개 역할, 보스는 이미지당 1개, 애니메이션은 이미지당 1개 효과만 포함한다.
-- 100개의 독립 정적 런타임 PNG.
-- 8개 효과의 38개 독립 프레임과 8개 패딩 아틀라스.
-- 7개의 검수용 패밀리 시트.
-- 전체 경로, 피벗, 부착 규칙, 아틀라스 규격은 [asset-manifest.json](./asset-manifest.json)에 있다.
+- 방향성 asset의 authored facing은 `+X/right`다.
+- runtime PNG는 pivot 안정성을 위해 자동 trim하지 않는다.
+- image geometry가 collision truth를 바꾸지 않는다.
+- projectile core와 live telegraph footprint는 gameplay geometry와 일치해야
+  하며 tail/effect는 non-damaging presentation이다.
+- asset ID나 path를 바꿀 때는 provider consumer와 manifest validator를 같은
+  change에서 갱신한다.
 
-런타임 코드 교체, 충돌체 변경, 공격 패턴 변경, UI 패널 레이아웃 변경은 이번 이미지 제작 범위에 포함하지 않는다.
+## Validation
 
-## 요구사항
-
-- 모든 방향성 에셋의 원본 방향은 오른쪽, 즉 `+X`다.
-- 일반 유닛은 112×112, 고정 설치물은 160×160, 보스는 352×352 캔버스를 사용한다.
-- 런타임 PNG는 자동 트리밍하지 않는다. 피벗과 충돌 원점이 캔버스 좌표에 고정되어 있기 때문이다.
-- 회전·연속 스케일링을 고려해 선형 필터를 사용하고, 밉맵과 반복 샘플링은 끈다.
-- 색만 바꿔 역할을 구분하지 않는다. 실루엣, 내부 무늬, 연결 구조를 함께 바꾼다.
-- 보호막은 민트색 **분절 방어판**, 이온 필드는 시안색 **각진 공격 영역·번개 구조**로 구분한다.
-- 엔진은 기체 후방 소켓에 고정하고 기체 회전만 따른다. 이동 속도나 조준 방향 때문에 엔진 자체가 꺾이거나 변형되어서는 안 된다.
-- 바닥은 192×192 셀을 알고리즘이 선택한다. 벽은 직선·볼록 모서리·오목 모서리·끝·T·십자 연결을 이웃 마스크와 충돌 구조에서 결정한다.
-- 아무 기능이 없는 장식 문양은 추가하지 않는다.
-
-## 움직임·공격 효과 제작 방식
-
-공격은 다음 세 층을 분리한다.
-
-1. **판정 영역**: 빔 폭, 돌진 경로, 원형 범위, 지뢰 반경처럼 생존 판단에 필요한 경계다. 게임 상태에서 절차형으로 그리고, 공격 시작부터 종료까지 정확한 크기로 유지한다.
-2. **이동 운반체**: 투사체 위치·회전, 보스 돌진 위치, 대시 잔상 위치다. 애니메이션 시간으로 이동을 추측하지 않고 실제 게임 좌표를 그대로 따른다.
-3. **단발 장식 효과**: 발사, 충돌, EMP 방출, 소환 완료, 모듈 파괴처럼 짧은 순간만 프레임 아틀라스를 재생한다. 장식 효과가 판정 영역을 대신하지 않는다.
-
-| 효과 | 이미지 사용 방식 | 재생 규격 |
-|---|---|---|
-| 일반 투사체 | 정적 실루엣을 속도 벡터로 이동·회전 | 플립북 없음 |
-| 주무기 발사 | `fx_muzzle_player_primary` 단발 | 4프레임, 20 FPS, 0.20초 |
-| 일반 피격 | `fx_impact_damage` 단발 | 5프레임, 20 FPS, 0.25초 |
-| 투사체 반사 | `fx_reflect_deflection` 방향성 단발 | 5프레임, 20 FPS, 0.25초 |
-| 보호막 접촉 | `fx_barrier_contact` 곡면 단발 | 5프레임, 20 FPS, 0.25초 |
-| 기체 피격 | `fx_hull_hit` 단발 | 4프레임, 20 FPS, 0.20초 |
-| 대시 | `fx_dash_start` 뒤에 절차형 기체 잔상 | 3프레임, 15 FPS, 0.20초 |
-| EMP | 실제 반경 링 위에 `fx_emp_release`를 스케일 | 6프레임, 12 FPS, 0.50초 |
-| 웨이크 지뢰 | 실제 경고 반경 위에 폭발 단발 효과 | 5프레임, 15 FPS, 약 0.33초 |
-| 보조 무기 충돌 | seeker·escort·orbit별 전용 단발 효과 | 각 4프레임, 20 FPS, 0.20초 |
-| 보스 모듈 파괴 | 모듈 상태 교체와 함께 파편 단발 효과 | 4프레임, 12 FPS, 약 0.33초 |
-| 적 소환 | 절차형 조립 브래킷 뒤에 도착 효과 | 6프레임, 12 FPS, 0.50초 |
-| 격벽 파괴 | 충돌 해제와 별개로 파괴 효과 재생 | 5프레임, 12 FPS, 약 0.42초 |
-| 적·상자 파괴 | 경량·중량 적과 상자별 파괴 단발 효과 | 5–6프레임, 15 FPS |
-| 획득·지원·흡혈·전송 | 원인별 intake/heal/transfer/shift 단발 효과 | 4–5프레임, 15–20 FPS |
-
-대시의 기존 붉은 원은 사용하지 않는다. 대시 시작의 짧은 방향성 셸과 기체 형태의 잔상만 사용한다. 엔진 불꽃 길이는 별도 플립북이 아니라 실제 속도와 대시 상태로 조절한다.
-
-빔, 돌진 경로, 원형 장판, 지속 영역, 보스 공격의 위험 범위는 프레임 이미지로 굽지 않는다. 프레임이 실제 판정과 어긋나면 화면이 예뻐도 플레이어에게 거짓 정보를 주기 때문이다. 이들은 절차형 경계와 진행률을 유지하고, 발동·충돌 순간에만 이 팩의 단발 효과를 겹친다.
-
-모션 감소 설정에서는 반복 펄스, 화면 흔들림, 스크롤 노이즈를 제거하고 첫 프레임 또는 가장 읽기 쉬운 최종 프레임을 짧게 페이드한다. 판정 경계, 빔 코어, 투사체 실루엣, 목표 브래킷은 그대로 유지한다.
-
-## 검수용 시트
-
-- [기체·보조무기](./sheets/01-player-weapons.png)
-- [일반 적 18종](./sheets/02-enemies.png)
-- [보스·목표 모듈](./sheets/03-bosses-modules.png)
-- [투사체·상태이상·아이템](./sheets/04-projectiles-status-pickups.png)
-- [바닥·벽·기능 지형](./sheets/05-world.png)
-- [미니맵·액션·업그레이드 글리프](./sheets/06-hud-glyphs.png)
-- [단발 효과 아틀라스](./sheets/07-effect-atlases.png)
-
-## 적용 순서
-
-1. `asset-manifest.json`의 경로와 피벗을 읽는 텍스처 인스턴싱 어댑터를 추가한다.
-2. 기체의 본체·엔진·조준 마운트를 각각 연결하고 엔진의 회전 소유자를 본체로 고정한다.
-3. 일반 적과 투사체를 역할 ID별 텍스처로 매핑한다. 고밀도 전투 요소는 개별 `Sprite2D` 대신 배치 렌더링을 유지한다.
-4. 절차형 보호막·이온 필드·공격 경계 위에 정적 소스와 단발 효과만 추가한다.
-5. 월드 생성기가 192 셀과 이웃 마스크로 바닥·벽 이미지를 선택하게 한다.
-6. 마지막으로 실제 다수 적 전투에서 프레임 시간과 드로 콜을 측정한다.
-
-## 승인 기준
-
-- 모든 런타임 PNG가 알파 채널을 가지며 크로마 배경 픽셀이 남지 않는다.
-- 캔버스 크기와 피벗이 `asset-manifest.json`과 일치한다.
-- 같은 패밀리 안에서도 역할별 실루엣이 중복되지 않는다.
-- 보호막·이온 필드, 여섯 속성 투사체, 상태이상 세 종류가 흑백에서도 형태로 구분된다.
-- 벽과 바닥이 명도·외곽선·높이감으로 분리된다.
-- 공격 판정은 이미지 프레임이 아니라 게임 상태를 계속 따른다.
-
-## 비목표
-
-- 이번 산출물만으로 기존 절차형 렌더러가 자동으로 이미지 렌더러로 바뀌지는 않는다.
-- 이미지가 충돌체, 보스 무적·피해 감소 규칙, AI 패턴을 소유하지 않는다.
-- 고해상도 생성 원본을 게임에서 직접 불러오지 않는다. `sources/`는 재수정용이며 런타임은 독립 PNG와 아틀라스를 사용한다.
+```powershell
+.\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_semantic_asset_provider.gd
+.\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_semantic_visual_separation.gd
+.\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_visual_asset_coverage.gd
+```

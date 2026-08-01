@@ -3,16 +3,13 @@ type: evidence
 status: active
 owner: BK
 created: 2026-07-31
-last_reviewed: 2026-07-31
+last_reviewed: 2026-08-02
 topic: Semantic-v2 runtime integration, UI acceptance, boss guidance, and final performance
 scope: Non-map semantic-v2 runtime switch and its post-acceptance validation
-source: ./execplans/2026-07-31-complete-visual-asset-ui-effect-replacement.md
 related:
   - ../docs/design/UI_VISUAL_SYSTEM.md
   - ../docs/product/vehicle_game_spec.md
   - ../art/gameplay/semantic-v2/README.md
-  - ./vehicle-performance-architecture-audit.md
-  - ./execplans/2026-07-30-semantic-visual-world-boss-performance-rework.md
 ---
 
 # Semantic-v2 Runtime Acceptance Evidence
