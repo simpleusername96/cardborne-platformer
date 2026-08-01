@@ -29,9 +29,6 @@ const AttackTelegraphs = preload("res://scripts/combat/vehicle_attack_telegraph_
 const SpatialGrid = preload("res://scripts/combat/vehicle_spatial_grid.gd")
 const AudioDirector = preload("res://scripts/presentation/vehicle_audio_director.gd")
 const CombatRenderer = preload("res://scripts/presentation/vehicle_combat_renderer.gd")
-const VisualEventCaptureFixture = preload(
-	"res://scripts/presentation/components/vehicle_visual_event_capture_fixture.gd"
-)
 const StageBackdrop = preload("res://scripts/vehicle/vehicle_stage_backdrop.gd")
 const BossPatterns = preload("res://scripts/bosses/vehicle_boss_patterns.gd")
 const BossExamCatalog = preload("res://scripts/bosses/vehicle_boss_exam_catalog.gd")
@@ -58,7 +55,6 @@ const ProjectileStore = preload("res://scripts/combat/vehicle_projectile_store.g
 const ProjectileState = preload("res://scripts/combat/vehicle_projectile_state.gd")
 const PerformanceRecorder = preload("res://scripts/performance/vehicle_performance_recorder.gd")
 const PerformanceScenario = preload("res://scripts/performance/vehicle_performance_scenario.gd")
-const PressureFixture = preload("res://scripts/performance/vehicle_pressure_fixture.gd")
 const FieldLayoutGenerator = preload("res://scripts/vehicle/vehicle_field_layout_generator.gd")
 const StageTacticalLayout = preload("res://scripts/vehicle/vehicle_stage_tactical_layout.gd")
 const TerrainRuntime = preload("res://scripts/vehicle/vehicle_terrain_runtime.gd")
@@ -67,6 +63,7 @@ const StageTelemetry = preload("res://scripts/combat/vehicle_stage_telemetry.gd"
 const BuildSnapshotBuilder = preload("res://scripts/cards/vehicle_build_snapshot_builder.gd")
 const StageReportBuilder = preload("res://scripts/combat/vehicle_stage_report_builder.gd")
 const CaptureDriver = preload("res://scripts/vehicle/vehicle_run_capture_driver.gd")
+const CaptureGateway = preload("res://scripts/vehicle/vehicle_run_capture_gateway.gd")
 
 enum RunMode {
 	DEPLOYMENT,
@@ -281,6 +278,7 @@ var _audio: VehicleAudioDirector
 
 var _capture_mode := false
 var _capture_driver: VehicleRunCaptureDriver
+var _capture_gateway: RefCounted
 var _debug_collision_overlay := false
 var _performance_request: Dictionary = {}
 var _performance_recorder: VehiclePerformanceRecorder
@@ -311,16 +309,16 @@ func _ready() -> void:
 	_rng.seed = 0xC4A2B0
 	_layout_session_rng.randomize()
 	_layout_session_seed = _layout_session_rng.seed
-	_capture_driver = CaptureDriver.from_command_line()
-	_capture_mode = _capture_driver.is_requested()
-	_capture_driver.apply_locale()
-	if _capture_driver.layout_seed_override != null:
-		_layout_seed_override = int(_capture_driver.layout_seed_override)
-		_has_layout_seed_override = true
-	if _capture_driver.field_id_override != &"":
-		_field_id_override = _capture_driver.field_id_override
+	_capture_mode = CaptureDriver.is_requested_from_command_line()
 	if _capture_mode:
-		call_deferred("_run_capture_sequence")
+		_capture_gateway = CaptureGateway.new(self)
+		_capture_driver = CaptureDriver.from_command_line()
+		_capture_driver.apply_locale()
+		if _capture_driver.layout_seed_override != null:
+			_layout_seed_override = int(_capture_driver.layout_seed_override)
+			_has_layout_seed_override = true
+		if _capture_driver.field_id_override != &"":
+			_field_id_override = _capture_driver.field_id_override
 	_performance_request = _parse_performance_request()
 	_practice_request = _parse_boss_practice_request()
 	if _practice_request_invalid and DisplayServer.get_name() == "headless":
@@ -349,18 +347,37 @@ func _ready() -> void:
 	)
 	_set_mouse_for_mode()
 	queue_redraw()
-	if not _practice_request.is_empty():
+	if _capture_mode:
+		call_deferred("_start_capture")
+	elif not _practice_request.is_empty():
 		call_deferred("_start_boss_practice")
 	elif not _performance_request.is_empty():
 		call_deferred("_start_performance_scenario")
 
 
 func _exit_tree() -> void:
+	if _capture_driver != null and _capture_gateway != null:
+		_capture_driver.restore_on_exit(_capture_gateway)
 	if is_instance_valid(_performance_scenario):
 		_performance_scenario.deactivate()
 	_release_tree_pause()
 	if is_instance_valid(_audio):
 		_audio.shutdown()
+
+
+func _start_capture() -> void:
+	await _capture_driver.run(_capture_gateway)
+
+
+func capture_set_mode(mode_name: StringName) -> void:
+	## Narrow gateway hook; capture tooling never imports or duplicates RunMode values.
+	match mode_name:
+		&"playing":
+			mode = RunMode.PLAYING
+		&"paused":
+			mode = RunMode.PAUSED
+		&"result":
+			mode = RunMode.RESULT
 
 
 func _physics_process(delta: float) -> void:
@@ -6096,663 +6113,8 @@ func _performance_counts() -> Dictionary:
 	}
 
 
-func _run_capture_sequence() -> void:
-	if not _capture_driver.prepare_output():
-		get_tree().quit(1)
-		return
-	get_viewport().transparent_bg = false
-	if _capture_driver.viewport_size.x > 0 and _capture_driver.viewport_size.y > 0:
-		get_window().size = _capture_driver.viewport_size
-	_camera.position_smoothing_enabled = false
-	_ui.debug_set_text_scale(_capture_driver.text_scale)
-	_ui.show_deployment(
-		selected_primary,
-		RunDifficulty.HARD,
-		String(field_layout.field_definition["name_key"])
-	)
-	await get_tree().process_frame
-	await get_tree().process_frame
-	_save_capture("01-deployment.png")
-	_ui.debug_modal_contract("settings")
-	await _settle_capture()
-	_save_capture("01b-shared-settings.png")
-	_ui.debug_gameplay_settings_contract()
-	await _settle_capture()
-	_save_capture("01d-gameplay-settings.png")
-	_ui.debug_modal_contract("guidebook")
-	await _settle_capture()
-	_save_capture("01c-guidebook.png")
-	var all_known := GuidebookCatalog.valid_ids()
-	_ui.debug_guide_entry(
-		GuidebookCatalog.snapshot(all_known, _build_snapshot()),
-		&"bosses",
-		&"boss_stage_2"
-	)
-	await _settle_capture()
-	_save_capture("01e-guidebook-boss-preview.png")
-	_ui.debug_guide_entry(
-		GuidebookCatalog.snapshot({}, _build_snapshot()),
-		&"mobile",
-		&"mobile_scrap_drone"
-	)
-	await _settle_capture()
-	_save_capture("01f-guidebook-locked.png")
-	_ui.debug_guide_entry(
-		GuidebookCatalog.snapshot(all_known, _build_snapshot()),
-		&"mobile",
-		&"mobile_chaser"
-	)
-	await _settle_capture()
-	_save_capture("01g-guidebook-enemy-counterplay.png")
-	_ui.debug_modal_contract("practice")
-	await _settle_capture()
-	_save_capture("01h-boss-practice.png")
-
-	_capture_prepare_stage(0)
-	await _settle_capture()
-	_save_capture("02-safe-arrival.png")
-	player_dash_cooldown = _dash_cooldown_max() * 0.75
-	player_passive_cooldown = PASSIVE_COOLDOWN * 0.5
-	player_emp_cooldown = _emp_cooldown_max()
-	_ui.update_hud(_build_hud_snapshot(false, false))
-	await _settle_capture()
-	_save_capture("02d-action-cooldowns.png")
-	player_dash_cooldown = 0.0
-	player_passive_cooldown = 0.0
-	player_emp_cooldown = 0.0
-	_ui.update_hud(_build_hud_snapshot(false, false))
-	var active_build := _build_snapshot()
-	_ui.update_hud({
-		"build_snapshot":active_build,
-		"guidebook":_guidebook_snapshot(active_build),
-	})
-	_ui.debug_active_settings_contract()
-	await _settle_capture()
-	_save_capture("02c-ship-status-active.png")
-	_ui.show_gameplay()
-	_update_encounter(5.1)
-	await _settle_capture()
-	_save_capture("02b-first-contact-cue.png")
-
-	await _capture_pressure_evidence()
-	await _capture_collective_tactic_evidence()
-	await _capture_cycle_evidence()
-	await _capture_field_item_evidence()
-	await _capture_level_up_evidence()
-	await _capture_boss_preview()
-	await _capture_stage_map_evidence()
-	if _capture_full_evidence():
-		await _capture_visual_event_evidence()
-		await _capture_damage_feedback_evidence()
-		await _capture_collision_overlay_evidence()
-		await _capture_all_boss_evidence()
-
-	_capture_prepare_stage(0, true)
-	mode = RunMode.PAUSED
-	_ui.show_pause()
-	await _settle_capture()
-	_save_capture("90-pause.png")
-
-	var report_fixture := StageTelemetry.new()
-	report_fixture.record_outgoing(&"primary", &"kinetic", 418.0)
-	report_fixture.record_outgoing(&"passive_seeker", &"kinetic", 126.0)
-	report_fixture.record_outgoing(&"elemental_status", &"thermal", 44.0)
-	report_fixture.record_status_application(&"burn")
-	report_fixture.record_status_application(&"chill")
-	report_fixture.record_incoming(&"projectile", 32.0)
-	report_fixture.record_incoming(&"contact", 18.0)
-	report_fixture.record_defeat(&"scrap_drone")
-	report_fixture.record_defeat(&"scrap_drone")
-	report_fixture.record_defeat(&"needle_drone", &"armored")
-	var first_stage_title_key := String(
-		StageCatalog.profile(StageCatalog.STAGE_IDS[0])["title_key"]
-	)
-	var second_stage_title_key := String(
-		StageCatalog.profile(StageCatalog.STAGE_IDS[1])["title_key"]
-	)
-	_ui.show_stage_report(StageReportBuilder.build(
-		report_fixture.freeze_stage(),
-		{
-			"number":1,
-			"title_key":first_stage_title_key,
-			"has_next_stage":true,
-			"clear_time":74.8,
-			"hull":88.0,
-			"max_hull":120.0,
-		}
-	))
-	await get_tree().create_timer(0.36).timeout
-	await _settle_capture()
-	_save_capture("91-stage-report.png")
-
-	_ui.show_stage_report(StageReportBuilder.build(
-		report_fixture.stage_snapshot(),
-		{
-			"number":1,
-			"title_key":first_stage_title_key,
-			"has_next_stage":false,
-			"clear_time":74.8,
-			"hull":0.0,
-			"max_hull":120.0,
-		},
-		true
-	))
-	await get_tree().create_timer(0.36).timeout
-	await _settle_capture()
-	_save_capture("92-failure-report.png")
-
-	mode = RunMode.RESULT
-	_ui.show_result({
-		"stage_number": 1, "stage_title_key": first_stage_title_key,
-		"has_next_stage": true, "next_stage_key": second_stage_title_key,
-		"time": "4:18", "health_ratio": 0.76, "upgrade": "UPGRADE_ION_WAKE_TITLE",
-		"primary_hits": 42, "dash_uses": 11, "installations": 5,
-	})
-	await _settle_capture()
-	_save_capture("93-final-result.png")
-
-	_ui.show_garage({
-		"selected_primary": selected_primary,
-		"clear_count": 1,
-		"relay_module_unlocked": true,
-		"field_module_unlocked": true,
-		"build_summary": _run_build_summary(),
-	})
-	await _settle_capture()
-	_save_capture("94-garage.png")
-	if _capture_driver.failed:
-		get_tree().quit(1)
-		return
-	print("VEHICLE_STAGE_CAPTURE_COMPLETE dir=%s" % _capture_driver.directory)
-	get_tree().quit(0)
 
 
-func _capture_prepare_stage(stage_index: int, preserve_upgrades: bool = false) -> void:
-	current_stage_index = clampi(stage_index, 0, StageCatalog.STAGE_IDS.size() - 1)
-	current_stage_id = StageCatalog.STAGE_IDS[current_stage_index]
-	_reset_run(false, true, preserve_upgrades)
-	mode = RunMode.PLAYING
-	player_position = Rules.player_start(current_stage_id)
-	player_invulnerable = 99.0
-	_camera.zoom = Vector2.ONE
-	_ui.show_gameplay()
-
-
-func _capture_pressure_evidence() -> void:
-	_capture_prepare_stage(StageCatalog.STAGE_IDS.size() - 1)
-	_clear_enemies()
-	var scenario := PerformanceScenario.new()
-	var production_roles: Array[StringName] = scenario._production_pressure_roles(
-		PressureFixture.CAPACITY_ORDINARY_COUNT
-	)
-	var fixture := PressureFixture.build(
-		&"peak",
-		current_stage_id,
-		player_position,
-		_visible_world_rect(0.0),
-		_active_tactical_layout.ordinary_spawn_anchors,
-		production_roles
-	)
-	for descriptor_variant in Array(fixture["descriptors"]):
-		var descriptor := Dictionary(descriptor_variant)
-		var enemy := _make_enemy(descriptor)
-		if enemy == null:
-			break
-		enemy.active = true
-		enemy.counts_active_cap = bool(descriptor["counts_active_cap"])
-		var enemy_index := enemies.size()
-		enemy.health_visible_timer = 99.0 if enemy_index < 12 else 0.0
-		enemy.committed_dir = (player_position - enemy.pos).normalized()
-		if enemy_index < 3:
-			enemy.phase = "startup"
-			enemy.committed_target = player_position
-			AttackTelegraphs.refresh_ordinary(
-				enemy,
-				_runtime_attack_path_callable,
-				_runtime_charge_path_callable
-			)
-		_append_enemy(enemy)
-	experience_runtime.clear_shards()
-	for index in ExperienceRuntime.MAX_SHARDS:
-		var angle := TAU * float(index % 24) / 24.0
-		var radius := 145.0 + float(index % 5) * 58.0
-		var shard_position := player_position + Vector2.RIGHT.rotated(angle) * radius
-		if index >= 72:
-			shard_position = Vector2(580.0 + float(index % 20) * 34.0, 520.0 + float((index - 72) / 20) * 36.0)
-		experience_runtime.spawn_shard(shard_position, 1 + int(index % 11 == 0) * 3)
-	_update_threat_contacts(0.2)
-	var qualification := PressureFixture.qualification(
-		Array(fixture["descriptors"]), player_position, _visible_world_rect(0.0)
-	)
-	print(JSON.stringify({
-		"capture":"03-peak-horde.png",
-		"fixture_fingerprint":fixture["fingerprint"],
-		"qualification":qualification,
-	}))
-	mode = RunMode.PAUSED
-	await _settle_capture()
-	_save_capture("03-peak-horde.png")
-
-
-func _capture_collective_tactic_evidence() -> void:
-	_capture_prepare_stage(0)
-	_clear_enemies()
-	var direction := Vector2.LEFT
-	for index in 6:
-		var row := floori((float(index) + 1.0) * 0.5)
-		var sign_value := -1.0 if index % 2 == 0 else 1.0
-		var position := (
-			player_position
-			+ Vector2(330.0 + float(row) * 48.0, sign_value * float(row) * 42.0)
-		)
-		var enemy := _make_enemy({
-			"id":"capture_tactic_%02d" % index,
-			"role":&"rammer" if index == 0 else &"chaser",
-			"pos":position,
-			"active":true,
-			"squad_id":"capture_tactic",
-			"group_id":"capture_tactic",
-			"squad_leader":index == 0,
-			"formation_slot":index,
-			"formation_size":6,
-			"collective_tactic_id":&"spearhead",
-			"collective_beat_kind":&"teach",
-		})
-		if enemy == null:
-			break
-		enemy.collective_phase = &"lock"
-		enemy.collective_mode = &"charge"
-		enemy.collective_direction = direction
-		enemy.collective_target = position
-		enemy.health_visible_timer = 99.0 if index == 0 else 0.0
-		_append_enemy(enemy)
-	mode = RunMode.PAUSED
-	await _settle_capture()
-	_save_capture("03b-collective-lock.png")
-	for enemy in enemies:
-		if enemy.squad_id != "capture_tactic":
-			continue
-		enemy.collective_phase = &"break"
-		enemy.vulnerable = 1.0
-	mode = RunMode.PAUSED
-	await _settle_capture()
-	_save_capture("03c-collective-break.png")
-
-
-func _capture_cycle_evidence() -> void:
-	_capture_prepare_stage(0)
-	_clear_enemies()
-	for index in 4:
-		var angle := -0.75 + float(index) * 0.5
-		var position := player_position + Vector2.RIGHT.rotated(angle) * (260.0 + float(index) * 35.0)
-		var role: StringName = &"controller" if index == 0 else &"chaser"
-		var enemy := _make_enemy({"id":"capture_cycle_%d" % index, "role":role, "pos":position, "active":true})
-		if enemy == null:
-			break
-		enemy.active = true
-		enemy.health_visible_timer = 99.0
-		_append_enemy(enemy)
-	_aim_target_id = "capture_cycle_0"
-	apply_upgrade(&"aegis_cycle")
-	apply_upgrade(&"overclock_cycle")
-	apply_upgrade(&"ion_field")
-	_threat_contact_cache = [
-		{"offset":Vector2(-760.0, -180.0), "priority":false, "targeted":false},
-		{"offset":Vector2(820.0, 120.0), "priority":true, "targeted":true},
-		{"offset":Vector2(120.0, -900.0), "priority":false, "targeted":false},
-	]
-	await _settle_capture()
-	_save_capture("04-three-cycles-threat-radar.png")
-
-
-func _capture_field_item_evidence() -> void:
-	_capture_prepare_stage(0)
-	_clear_enemies()
-	crates.clear()
-	pickups.clear()
-	player_health = 64.0
-	pickups.append({"id":"capture_repair", "kind":&"repair", "pos":player_position + Vector2(-150.0, 45.0), "active":true, "pulse":0.0, "heal_amount":35.0})
-	pickups.append({"id":"capture_recall", "kind":&"experience_recall", "pos":player_position + Vector2(150.0, 45.0), "active":true, "pulse":0.0, "heal_amount":0.0})
-	experience_runtime.clear_shards()
-	experience_runtime.spawn_shard(player_position + Vector2(245.0, -90.0), 1)
-	experience_runtime.spawn_shard(player_position + Vector2(300.0, 35.0), 4)
-	experience_runtime.spawn_shard(player_position + Vector2(245.0, 150.0), 18)
-	await _settle_capture()
-	_save_capture("05-two-field-items.png")
-
-
-func _capture_level_up_evidence() -> void:
-	_capture_prepare_stage(0)
-	experience_runtime.spawn_shard(player_position, experience_runtime.required_experience())
-	_update_experience(0.0)
-	await _settle_capture()
-	_save_capture("06-level-up-choice.png")
-	if current_card_offer.is_empty():
-		return
-	_ui.debug_select_upgrade(0)
-	await _settle_capture()
-	_save_capture("06b-level-up-selected.png")
-	_on_upgrade_selected(StringName(current_card_offer[0]["id"]))
-	await _settle_capture()
-	_save_capture("06c-level-up-confirmed.png")
-	var localization_fixture: Array[Dictionary] = []
-	for upgrade_record in [
-		[&"siphon_matrix", 1],
-		[&"aegis_cycle", 1],
-		[&"marked_salvo", 0],
-	]:
-		var upgrade_id := StringName(upgrade_record[0])
-		var definition := upgrade_catalog.get_definition(upgrade_id)
-		if definition != null:
-			localization_fixture.append(
-				UpgradeOfferPresenter.snapshot(
-					definition,
-					int(upgrade_record[1])
-				)
-			)
-	if localization_fixture.size() == 3:
-		_ui.show_upgrade(localization_fixture)
-		_ui.debug_select_upgrade(2)
-		await _settle_capture()
-		_save_capture("06d-localization-third-slot.png")
-
-
-func _capture_boss_preview() -> void:
-	var boss := _capture_prepare_boss(0)
-	if boss == null:
-		return
-	_boss_select_pattern(boss)
-	mode = RunMode.PAUSED
-	await _settle_capture()
-	_save_capture("07-stage-boss-startup.png")
-
-
-func _capture_stage_map_evidence() -> void:
-	var original_override := _field_id_override
-	for field_id in VehicleFieldRegistry.FIELD_IDS:
-		_field_id_override = field_id
-		field_layout = null
-		_reset_run(false, false, true)
-		current_stage_index = 0
-		current_stage_id = StageCatalog.STAGE_IDS[0]
-		if is_instance_valid(_backdrop):
-			_backdrop.configure(current_stage_id, _active_tactical_layout)
-		mode = RunMode.PAUSED
-		var bounds := Rules.world_rect(current_stage_id)
-		player_position = bounds.get_center()
-		_fit_camera_to_stage(bounds)
-		await _settle_capture()
-		_save_capture("10-field-%s.png" % String(field_id).replace("_", "-"))
-	_camera.zoom = Vector2.ONE
-	_field_id_override = original_override
-	field_layout = null
-	_reset_run(false, false, true)
-
-
-func _capture_damage_feedback_evidence() -> void:
-	var settings := get_node_or_null("/root/SettingsStore")
-	var original_reduced_motion := bool(settings.reduced_motion) if settings != null else false
-	for reduced_motion in [false, true]:
-		_capture_prepare_stage(0, true)
-		_clear_enemies()
-		if settings != null:
-			settings.reduced_motion = reduced_motion
-		player_health = _player_max_health()
-		player_invulnerable = 0.0
-		player_hit_flash = 0.0
-		player_barrier_strength = 0.0
-		player_barrier_timer = 0.0
-		mode = RunMode.PLAYING
-		_damage_player(34.0, "capture hull hit", false, false)
-		if reduced_motion:
-			player_hit_flash = 0.0
-			player_invulnerable = 0.72
-		mode = RunMode.PAUSED
-		await _settle_capture()
-		_save_capture(
-			"08-player-hit-reduced-motion.png"
-			if reduced_motion
-			else "08-player-hit-standard.png"
-		)
-
-	_capture_prepare_stage(0, true)
-	_clear_enemies()
-	if settings != null:
-		settings.reduced_motion = false
-	player_health = _player_max_health()
-	player_invulnerable = 0.0
-	player_hit_flash = 0.0
-	player_barrier_strength = 100.0
-	player_barrier_timer = 1.0
-	mode = RunMode.PLAYING
-	_damage_player(34.0, "capture barrier hit", true, false)
-	mode = RunMode.PAUSED
-	await _settle_capture()
-	_save_capture("08-player-barrier-only.png")
-	if settings != null:
-		settings.reduced_motion = original_reduced_motion
-
-
-func _capture_visual_event_evidence() -> void:
-	var colors := [Art.SYSTEM, Art.MUSTARD, Art.CORAL, Art.MINT]
-	for group_variant in VisualEventCaptureFixture.GROUPS:
-		var group := Dictionary(group_variant)
-		var event_ids := Array(group["events"])
-		_capture_prepare_stage(0, true)
-		_clear_enemies()
-		_clear_projectiles()
-		effects.clear()
-		for index in event_ids.size():
-			var column := index % 4
-			var row := index / 4
-			var position := player_position + Vector2(
-				-330.0 + float(column) * 220.0,
-				-180.0 + float(row) * 180.0
-			)
-			var direction := Vector2.RIGHT.rotated(
-				float(index) * TAU / maxf(1.0, float(event_ids.size()))
-			)
-			effects.append({
-				"kind":StringName(event_ids[index]),
-				"pos":position,
-				"color":colors[index % colors.size()],
-				"time":0.52,
-				"duration":1.0,
-				"radius":54.0,
-				"dir":direction,
-				"target":position + direction * 86.0,
-				"value":18.0,
-				"multiplier":0.20,
-			})
-		mode = RunMode.PAUSED
-		print(JSON.stringify({
-			"capture_group":String(group["id"]),
-			"events":event_ids,
-		}))
-		await _settle_capture()
-		_save_capture(
-			"09-effects-%s.png" % String(group["id"]).replace("_", "-")
-		)
-
-
-func _capture_collision_overlay_evidence() -> void:
-	for stage_index in StageCatalog.STAGE_IDS.size():
-		_capture_prepare_stage(stage_index, true)
-		mode = RunMode.PAUSED
-		var bounds := Rules.world_rect(current_stage_id)
-		player_position = bounds.get_center()
-		_fit_camera_to_stage(bounds)
-		_debug_collision_overlay = true
-		await _settle_capture()
-		var stage_slug := String(current_stage_id).replace("_", "-")
-		_save_capture("20-collision-%02d-%s-default.png" % [stage_index + 1, stage_slug])
-		_debug_collision_overlay = false
-	_camera.zoom = Vector2.ONE
-
-
-func _capture_all_boss_evidence() -> void:
-	for stage_index in StageCatalog.STAGE_IDS.size():
-		var boss := _capture_prepare_boss(stage_index)
-		if boss == null:
-			continue
-		var stage_slug := String(current_stage_id).replace("_", "-")
-		if stage_index == 0:
-			_damage_enemy(
-				boss,
-				100.0,
-				"validation",
-				&"kinetic",
-				true
-			)
-			mode = RunMode.PAUSED
-			await _settle_capture()
-			_save_capture("30-boss-01-stage-1-sealed-hit.png")
-			effects.clear()
-		_boss_select_pattern(boss)
-		mode = RunMode.PAUSED
-		await _settle_capture()
-		_save_capture("30-boss-%02d-%s-startup.png" % [stage_index + 1, stage_slug])
-
-		boss.phase_time = BossPatterns.startup_seconds(String(boss.pattern)) * 0.12
-		AttackTelegraphs.update_boss_readiness(boss, String(boss.pattern))
-		await _settle_capture()
-		_save_capture(
-			"30-boss-%02d-%s-startup-imminent.png"
-			% [stage_index + 1, stage_slug]
-		)
-
-		boss.phase_time = 0.0
-		AttackTelegraphs.update_boss_readiness(boss, String(boss.pattern))
-		_boss_begin_active(boss)
-		_boss_update_active(boss, 0.05)
-		await _settle_capture()
-		_save_capture("30-boss-%02d-%s-active.png" % [stage_index + 1, stage_slug])
-
-		_clear_projectiles()
-		denied_zones.clear()
-		_capture_resolve_boss_objective()
-		effects.clear()
-		boss.phase = "boss_recovery"
-		boss.phase_time = BossPatterns.recovery_seconds(String(boss.pattern))
-		boss.vulnerable = 1.55
-		boss.last_pattern = boss.pattern
-		boss.pattern = "recovery_window"
-		await _settle_capture()
-		_save_capture("30-boss-%02d-%s-recovery.png" % [stage_index + 1, stage_slug])
-		boss_exam_runtime.advance(BossExamCatalog.VULNERABILITY_SECONDS + 0.1)
-		boss.boss_module_state = boss_exam_runtime.core_state()
-		await _settle_capture()
-		_save_capture(
-			"30-boss-%02d-%s-stable.png" % [stage_index + 1, stage_slug]
-		)
-
-		boss.health = float(boss.max_health) * 0.48
-		_ui.clear_notifications()
-		_begin_boss_exam_phase(boss, 2)
-		_boss_select_pattern(boss)
-		await _settle_capture()
-		_save_capture("30-boss-%02d-%s-phase-two.png" % [stage_index + 1, stage_slug])
-		if stage_index == 0:
-			boss.pos = player_position + Vector2(920.0, 0.0)
-			boss.phase = &"boss_startup"
-			boss.phase_time = BossPatterns.startup_seconds("furnace_ring")
-			boss.pattern = "furnace_ring"
-			boss.committed_target = player_position
-			boss.committed_dir = (player_position - Vector2(boss.pos)).normalized()
-			AttackTelegraphs.refresh_boss(
-				boss,
-				"furnace_ring",
-				_runtime_attack_path_callable,
-				_runtime_charge_path_callable
-			)
-			_camera.position = player_position
-			await _settle_capture()
-			_save_capture("30-boss-01-stage-1-offscreen-furnace.png")
-			boss.phase_time = BossPatterns.startup_seconds("furnace_ring") * 0.12
-			AttackTelegraphs.update_boss_readiness(boss, "furnace_ring")
-			await _settle_capture()
-			_save_capture(
-				"30-boss-01-stage-1-offscreen-furnace-imminent.png"
-			)
-			boss.phase_time = 0.0
-			AttackTelegraphs.update_boss_readiness(boss, "furnace_ring")
-			_boss_begin_active(boss)
-			_boss_update_active(boss, 0.05)
-			await _settle_capture()
-			_save_capture(
-				"30-boss-01-stage-1-offscreen-furnace-active.png"
-			)
-
-
-func _capture_prepare_boss(stage_index: int) -> EnemyState:
-	_capture_prepare_stage(stage_index, true)
-	_clear_enemies()
-	_clear_projectiles()
-	denied_zones.clear()
-	player_position = Rules.player_start(current_stage_id)
-	boss_arrival_position = (
-		_active_tactical_layout.boss_arrival_anchors[0]
-		if field_layout != null
-		else StageCatalog.boss_arrival_anchors(current_stage_id)[0]
-	)
-	stage_flow.defeats = stage_flow.quota
-	stage_flow.state = StageFlow.State.BOSS_ACTIVE
-	_start_stage_boss()
-	var boss := _find_enemy_by_id("stage_boss")
-	if boss == null:
-		return null
-	var previous_position := boss.pos
-	boss.pos = player_position + Vector2(360.0, 0.0)
-	var module_shift := boss.pos - previous_position
-	for enemy in enemies:
-		if (
-			enemy.alive
-			and enemy.role == &"boss_pylon"
-			and not enemy.boss_objective_id.is_empty()
-		):
-			enemy.pos += module_shift
-	player_aim_direction = (Vector2(boss.pos) - player_position).normalized()
-	return boss
-
-
-func _capture_resolve_boss_objective() -> void:
-	var safety := 0
-	while boss_exam_runtime.objective_locked and safety < 4:
-		var active_ids := boss_exam_runtime.active_module_ids()
-		if active_ids.is_empty():
-			break
-		var module := _find_enemy_by_id(active_ids[0])
-		if module == null:
-			break
-		_damage_enemy(
-			module,
-			module.health,
-			"validation",
-			&"kinetic",
-			true
-		)
-		safety += 1
-
-
-func _fit_camera_to_stage(bounds: Rect2) -> void:
-	var viewport_size := get_viewport().get_visible_rect().size
-	var fit := minf(viewport_size.x / bounds.size.x, viewport_size.y / bounds.size.y) * 0.86
-	_camera.zoom = Vector2.ONE * fit
-	_camera.position = bounds.get_center()
-
-
-func _capture_full_evidence() -> bool:
-	return _capture_driver.is_full_evidence(get_viewport())
-
-
-func _settle_capture() -> void:
-	for frame in 4:
-		await get_tree().process_frame
-
-
-func _save_capture(file_name: String) -> void:
-	if not _capture_driver.save_viewport(get_viewport(), file_name):
-		get_tree().quit(1)
 
 
 # Pressure validation support --------------------------------------------------
