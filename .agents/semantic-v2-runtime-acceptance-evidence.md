@@ -33,8 +33,10 @@ related:
 - `build/performance/complete-visual-final/`의 Phase 8 final visual build
   smoke와 rejected correction payload
 - `build/performance/semantic-v2-final/`의 final performance JSON
-- `tools/validation/`의 53개 focused validator
+- `tools/validation/`의 56개 vehicle validator
 - `build/web/index.html`을 포함한 Godot production Web export
+- `build/performance/pre-asset/native/`의 pre-asset gameplay stabilization
+  baseline과 final capacity payload
 
 `build/` 아래 파일은 local ignored evidence다. 아래 표에 payload 이름과
 핵심 수치를 남겨 repository 문서만 읽어도 통과 여부를 알 수 있게 한다.
@@ -180,6 +182,45 @@ warmup이 5초라 authoritative claim에 사용하지 않는다. 긴 peak/capaci
 결과가 strict tail-latency 실패를 재현하므로 현재 build를 complete
 performance release로 판정할 수 없다.
 
+## Pre-asset gameplay stabilization checkpoint
+
+2026-08-02 plan의 gameplay 구현은 commits `6d9d6c2`, `5aceddf`, `0f5eb6e`에
+나뉘어 있다. asset/UI 외관은 바꾸지 않았다.
+
+- ordinary 이동 배율 `1.40`, unit별 sparse offscreen birth, 3 arrival windows,
+  exact first-unit cue/reservation, packet fence와 overlap-only nearest-8 steering을
+  구현했다. birth 뒤에는 squad cohesion이나 local density cap 없이 role behavior로
+  player에게 수렴한다.
+- field당 wear-collapse tile 4개, distinct crossing 3회 collapse, entry 즉시 및
+  0.75초마다 8 damage, run-scoped `state/wear` persistence를 구현했다.
+- spatial grid swap-remove와 local overlap center grid, projectile interceptor의
+  exact broadphase radius, wear traversal allocation 제거, body/telegraph culling
+  분리로 workload나 gameplay 수치를 낮추지 않고 hot path를 줄였다.
+- 56개 `validate_vehicle_*.gd`, document authority, Godot import와 production Web
+  export가 모두 exit code 0이었다.
+
+### Capacity before/after
+
+Native 1280×720, 10초 warmup + 60초, 320 enemies/360 projectiles/16 zones의
+같은 workload다. baseline은 `6d9d6c2`, final은 clean `0f5eb6e`다.
+
+| Payload 묶음 | 자격 | Frame p95/p99 | Physics p95/p99 | 판정 |
+| --- | --- | ---: | ---: | --- |
+| `capacity-baseline-1..3.json` | 3회 authoritative, workload valid | worst `141.46/146.92 ms` | worst `54.71/90.36 ms` | 미통과 |
+| `capacity-selection-final-1..3.json` | 3회 authoritative, focused, clean commit, workload valid | worst `138.16/144.44 ms` | worst `20.77/26.40 ms` | 미통과 |
+
+final 세 run의 physics p95/p99는 각각 `19.22/23.86`, `20.76/24.59`,
+`20.77/26.40 ms`다. 정해진 GDScript owner 최적화로 baseline보다 크게
+줄었지만 release limit `6/8 ms`에는 도달하지 못했다. frame p95/p99,
+1% low와 consecutive slow-frame gate도 함께 실패했다. actor/projectile 수,
+해상도, visual quality와 threshold는 변경하지 않았다.
+
+따라서 native capacity 이후 순서인 나머지 native/Web matrix, Web performance,
+600초 lifecycle과 새 built-Web interaction smoke는 실행하지 않았다. production
+Web export 자체는 성공했다. 남은 격차는 현재 plan의 허용된 GDScript 경계를
+넘어 native/dependency work 또는 workload/threshold 결정을 요구하므로 별도
+사용자 승인 전에는 `code_ready_for_asset_ui_switch`로 판정할 수 없다.
+
 ## Recommendations
 
 1. 다음 성능 작업은 이 evidence를 시작점으로 별도 승인한다. actor 수,
@@ -204,4 +245,7 @@ performance release로 판정할 수 없다.
 - production replay와 boss pressure는 통과했지만 synthetic peak와
   capacity가 미통과이므로 release-wide performance 통과를 주장하지 않는다.
 - interactive built-Web smoke는 통과했지만 600초 lifecycle soak는 수행하지
+  않았다.
+- 2026-08-02 gameplay stabilization build는 production Web export까지 통과했지만
+  native capacity gate가 먼저 실패해 새 built-Web smoke와 Web matrix를 실행하지
   않았다.

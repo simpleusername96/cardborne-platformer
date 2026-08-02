@@ -331,12 +331,12 @@ AS-IS는 현재 `1.20`, TO-BE는 ordinary 전용 `1.40`이다. stationary role�
 
 - [x] 모든 mobile ordinary archetype의 현재/목표 최종 속도를 difficulty와
   Stage 1/5 기준으로 산출했다.
-- [ ] `ORDINARY_MOVEMENT_SPEED_MULTIPLIER=1.40`을 적용하고 tuning snapshot,
+- [x] `ORDINARY_MOVEMENT_SPEED_MULTIPLIER=1.40`을 적용하고 tuning snapshot,
   제품 명세와 exact-value validator를 갱신한다.
-- [ ] open-field fixture에서 Easy/Normal/Hard Stage 1의 `scrap_drone`과 `chaser`가
+- [x] open-field fixture에서 Easy/Normal/Hard Stage 1의 `scrap_drone`과 `chaser`가
   1200px에서 출발해 stationary base player의 250px band 안으로 `<=4.2초`에
   들어오는지 검증한다. ranged/support role은 현재 distance band를 유지한다.
-- [ ] 같은 open-field에서 player가 initial pursuit line에 수직으로 base
+- [x] 같은 open-field에서 player가 initial pursuit line에 수직으로 base
   `280px/s`로 4.2초 이동할 때 `chaser`의 시작 대비 closing distance가 Easy
   `>=500px`, Normal `>=520px`, Hard `>=540px`인지 검증한다. directly retreating
   player를 항상 따라잡게 만들지는 않는다.
@@ -354,120 +354,120 @@ AS-IS는 현재 `1.20`, TO-BE는 ordinary 전용 `1.40`이다. stationary role�
 | main unit spacing | 0.10초 | 0.16초 |
 | window gap | 기본 beat≤1 0.90초 / beat≥2 0.65초; transition opening first packet 0초 | request와 실제 `cue_at` 모두 최소 1.20초 |
 
-- [ ] stage data는 12 logical squad의 role slots와 requested timing만 소유한다.
+- [x] stage data는 12 logical squad의 role slots와 requested timing만 소유한다.
   squad에는 spatial anchor, lane 또는 post-spawn movement 의미를 두지 않는다.
-- [ ] `VehicleFieldGeometrySnapshot`/tactical-layout owner가 immutable field geometry로
+- [x] `VehicleFieldGeometrySnapshot`/tactical-layout owner가 immutable field geometry로
   deterministic candidate pool과 pure `is_spawnable_disc(position, radius)` query를
   제공한다. field당 32 authored candidate와 generated tactical-layout의 current
   valid-subset minimum 20을 억지로 늘리거나 map topology를 바꾸지 않는다.
-- [ ] 각 arrival window가 cue admission을 받을 때 `VehicleSpawnAllocator`가 그
+- [x] 각 arrival window가 cue admission을 받을 때 `VehicleSpawnAllocator`가 그
   frame의 player position·visible rect·geometry snapshot으로 window의 모든 unit
   `birth_position`을 먼저 확정한다. 같은 packet의 확정·pending positions와 최근
   `2.0초` 실제 birth positions를 상대로 `T0→T3` minimum-distance tier를 적용하고,
   cue 뒤에는 위치를 바꾸지 않는다. window 단위 admission은 cue/timing의 원자성을
   위한 것이며 unit별 좌표의 독립성을 합치지 않는다.
-- [ ] canonical start는 8 sectors를 모두 사용하고 sector별 count의
+- [x] canonical start는 8 sectors를 모두 사용하고 sector별 count의
   `max-min <= 1`을 지킨다. 첫 네 position은 가능한 서로 가장 먼 sector에서
   고른다. field edge는 안전한 sector를 round-robin으로 모두 사용하되 최소 2개를
   요구한다. 전체 unit position이 offscreen `220px`, player 거리 `>=900px`,
   pairwise hard floor `>=320px`, walkable-disc를 만족하지 못하면 cue 없이
   `birth_capacity_blocked`를 기록하고 `0.25초` 뒤 window 전체를 재시도한다.
-- [ ] descriptor는 `arrival_window`, `window_slot`, `unit_index`, `birth_position`,
+- [x] descriptor는 `arrival_window`, `window_slot`, `unit_index`, `birth_position`,
   `birth_clearance`, `birth_sector`, `relaxation_tier`만 전달한다. `arrival_lane`,
   shared anchor/fan, `pack_index`, `group_index`, `pack_count`, `squads_per_pack`,
   `pack_gap`, `SQUADS_PER_PACK`, cue coalescing과 unused `target_sector` production
   경로를 제거한다. run-local 변경이므로 save migration은 만들지 않는다.
-- [ ] `VehicleEncounterRuntime`은 window request를
+- [x] `VehicleEncounterRuntime`은 window request를
   `(requested_cue_time, authored_packet_index, arrival_window, packet_id)` FIFO로
   관리한다. global cue budget이 비고 current active cap에 4 slot이 있으면 각
   logical squad의 unit index 0을 예약한 뒤 exact birth position의 cue 네 개를 함께
   방출한다. 예약은 summon 포함 global cap 계산에 들어가고 first round 출현 또는
   `stop_spawning()` 때 해제한다.
-- [ ] first round는 `cue_at + cue_lead`에 정확히 출현한다. tail round `j>0`은
+- [x] first round는 `cue_at + cue_lead`에 정확히 출현한다. tail round `j>0`은
   각 logical squad의 unit index `j` 중 존재하는 1~4기를 묶어 nominal
   `cue_at + cue_lead + j×0.16` 이후 global slot이 생긴 첫 tick에 부분 분할 없이
   출현시킨다. tail도 이미 확정한 독립 birth position을 사용하며 squad cue
   position이나 fan에서 나오지 않는다.
-- [ ] cue reservation과 tail round는 nominal time FIFO 하나를 사용하고 다음
+- [x] cue reservation과 tail round는 nominal time FIFO 하나를 사용하고 다음
   packet은 이전 packet의 final tail 뒤에만 시작한다. `capacity_blocked`와
   spacing/fence 대기를 구분하며 eligible item을 첫 tick에 처리하지 못한 경우만
   `scheduler_starvation`으로 기록한다.
-- [ ] beat-0 scout는 별도 one-unit request로 active slot 하나를 예약하고 0.90초
+- [x] beat-0 scout는 별도 one-unit request로 active slot 하나를 예약하고 0.90초
   cue 뒤 exact spawn한다. stage transition은 scout를 생략하고 opening main의
   cue lead/visual duration만 1.00초로 유지한다. standard main과 scout는 0.90초다.
   `VehicleRun`이 cue descriptor의 `visual_duration`을 effect lifetime으로 전달하고
   renderer는 그 effect를 그린다.
-- [ ] runtime snapshot은 `reserved_arrival_slots`, `capacity_blocked_seconds`,
+- [x] runtime snapshot은 `reserved_arrival_slots`, `capacity_blocked_seconds`,
   `packet_fence_blocked_seconds`, `birth_capacity_blocked`,
   `scheduler_starvation`과 window별 `requested_cue_at`, `cue_at`, `nominal_due`,
   `emitted_at`을 내보낸다. 이미 보인 cue를 global delay로 미는 기존 경로는 제거한다.
 
 #### 2C. role convergence, physical-overlap resolution과 collective 경계
 
-- [ ] `EncounterDirector.cohesion_velocity()`의 ordinary 호출과 ordinary
+- [x] `EncounterDirector.cohesion_velocity()`의 ordinary 호출과 ordinary
   `formation_offset` 의존을 제거한다. spawn descriptor는 birth 뒤 steering에
   관여하지 않고 기존 pursuit/range/support role velocity가 player에게 수렴한다.
-- [ ] 새 `VehicleEnemyLocalSteering`은 existing spatial grid로 120px 안의 가장
+- [x] 새 `VehicleEnemyLocalSteering`은 existing spatial grid로 120px 안의 가장
   가까운 active ordinary 8기를 `(distance_squared, id)` 순으로 조회하되,
   `distance < self.radius + neighbor.radius`인 실제 overlap만 계산한다.
-- [ ] overlap vector는 penetration depth를 가중해 합산한다. 합이 zero에 가까우면
+- [x] overlap vector는 penetration depth를 가중해 합산한다. 합이 zero에 가까우면
   가장 큰 침범량, `(distance_squared, id)` 순의 neighbor에서 멀어지고, exact
   zero-distance 방향만 두 actor ID hash로 결정해 replay를 안정화한다.
-- [ ] 한 cadence에는 가장 가까운 actual-overlap neighbor 최대 8기만 해소하고
+- [x] 한 cadence에는 가장 가까운 actual-overlap neighbor 최대 8기만 해소하고
   나머지는 다음 cadence에서 다시 평가한다. 8기 상한을 채우기 위해 non-overlap
   neighbor를 separation 대상으로 승격하지 않는다.
-- [ ] overlap이 없으면 role velocity를 bit-for-bit 그대로 반환한다. overlap이
+- [x] overlap이 없으면 role velocity를 bit-for-bit 그대로 반환한다. overlap이
   있을 때만 `role 0.55 + separation 0.45`로 합성해 원래 role speed로 제한한다.
   desired clearance, proximity spacing, squad cohesion과 player 주변 밀도 완화는
   추가하지 않는다.
-- [ ] obstacle/cover recovery, active charge, startup/lock과 explicit collective
+- [x] obstacle/cover recovery, active charge, startup/lock과 explicit collective
   `gather/lock/execute`가 항상 우선한다. collective formation geometry는
   `VehicleCollectiveTacticRuntime`만 소유하며 phase 종료 뒤 ordinary role
   steering으로 복귀한다.
 
 #### 2D. current global active admission과 관측 밀도
 
-- [ ] current Hard/base active caps `1/124/172/224/276`과 difficulty scaling을
+- [x] current Hard/base active caps `1/124/172/224/276`과 difficulty scaling을
   유지한다. derived Easy `1/110/152/198/244`, Normal
   `1/117/162/211/259`, Hard `1/124/172/224/276`을 exact-value validator로 잠그고
   arrival reservation도 같은 cap에서 센다.
-- [ ] 600/900px local cap, boundary crossing admission, per-sector queue,
+- [x] 600/900px local cap, boundary crossing admission, per-sector queue,
   `local_pressure_exempt`, hold band, inward-component 제거와 lateral steering은
   구현하지 않는다. 이미 계획만 존재하는 `VehicleLocalPressureAdmission` 파일과
   validator도 만들지 않는다.
-- [ ] current `near_600/900`과 sector histogram은 actual-position 기반 관측
+- [x] current `near_600/900`과 sector histogram은 actual-position 기반 관측
   telemetry로 유지한다. 값에 gameplay ceiling이나 pass/fail upper bound를 두지
   않고 actor를 deactivate, despawn, teleport 또는 밀어내는 데 사용하지 않는다.
-- [ ] fixed-player와 moving-player fixture에서 birth 시점과 `+2/+4초`의
+- [x] fixed-player와 moving-player fixture에서 birth 시점과 `+2/+4초`의
   player-distance 및 role target-band error를 기록한다. non-committed mobile
   ordinary는 role별 target band를 향해 진행해야 하며, 근접한 결과나 높은
   `near_600/900`은 실패로 판정하지 않는다.
-- [ ] authored population, quota와 peak 276/capacity·lifecycle 320 actor workload를
+- [x] authored population, quota와 peak 276/capacity·lifecycle 320 actor workload를
   그대로 두고 성능은 Phase 5의 별도 gate로 판정한다.
 
 #### 2E. focused·integration acceptance
 
-- [ ] `validate_vehicle_spawn_allocation.gd`와
+- [x] `validate_vehicle_spawn_allocation.gd`와
   `validate_vehicle_multi_sector_spawns.gd`에서 pack/shared-anchor 기대를 제거한다.
   `FIXED_SEED + 0..15`, all fields × all stages × every main packet에서 unit별
   final position, deterministic replay, role multiset, offscreen/player distance,
   320px hard floor와 canonical 8-sector balance를 검사한다. field-edge fixture는
   최소 2 safe sectors를 사용하거나 window 전체가 지연되며 unsafe fallback은 없다.
-- [ ] 새 `validate_vehicle_arrival_scheduler.gd`는 cue marker `<=4`, exact-position
+- [x] 새 `validate_vehicle_arrival_scheduler.gd`는 cue marker `<=4`, exact-position
   first arrival, standard/scout `0.90초`, transition exception `1.00초`, actual window
   gap `>=1.20초`, packet completion fence, atomic tail round, active+reserved cap,
   equal-time FIFO, capacity recovery, `scheduler_starvation=0`과 stop cleanup을 검사한다.
-- [ ] 새 `validate_vehicle_enemy_local_steering.gd`는 zero-distance, 8-neighbor bound,
+- [x] 새 `validate_vehicle_enemy_local_steering.gd`는 zero-distance, 8-neighbor bound,
   symmetric fallback, overlap 해소와 collective/cover priority를 검사한다.
   non-overlap fixture에서는 출력 velocity가 입력 role velocity와 정확히 같아야 한다.
-- [ ] `validate_vehicle_collective_tactics.gd`는 explicit gather/lock/execute
+- [x] `validate_vehicle_collective_tactics.gd`는 explicit gather/lock/execute
   formation과 break/cooldown만 검사하고 ordinary dormant cohesion이 없음을 추가한다.
-- [ ] Hard production replay의 pass/fail에는 birth clearance violation `0`,
+- [x] Hard production replay의 pass/fail에는 birth clearance violation `0`,
   `+2/+4초` role target-band progress와 `scheduler_starvation=0`만 사용한다.
-- [ ] 같은 replay의 10/30/60초 actual-position sector histogram,
+- [x] 같은 replay의 10/30/60초 actual-position sector histogram,
   `near_600/900`과 nearest-neighbor distance는 diagnostic evidence로만 기록한다.
   spawn 뒤 nearest-neighbor 감소와 근접 밀도 증가에는 상한을 두지 않는다.
-- [ ] scripted five-stage run은 각 difficulty에서 scaled quota만큼 ordinary를
+- [x] scripted five-stage run은 각 difficulty에서 scaled quota만큼 ordinary를
   공급해 boss warning/spawn까지 도달하고, `stop_spawning()` 뒤 cue, reservation과
   pending round가 모두 0이며 defeat/XP counting 계약이 같은지 검사한다.
 
@@ -498,32 +498,32 @@ Wear Collapse Tile은 아직 코드와 명세에 없으므로 AS-IS는 모두 `�
 - [x] `vehicle_game_spec.md`에 Breakable Bulkhead를 ordinary cover가 아닌 작은
   optional reward enclosure의 파괴 가능한 입구로 정의하고, 나머지 면의
   structural wall과 stage progression gate를 명확히 구분한다.
-- [ ] `vehicle_game_spec.md`의 현 제외 문구를 위의 고정 계약으로 교체한다.
-- [ ] TerrainRuntime이 `intact → cracked → collapsed` 상태와 wear/damage
+- [x] `vehicle_game_spec.md`의 현 제외 문구를 위의 고정 계약으로 교체한다.
+- [x] TerrainRuntime이 `intact → cracked → collapsed` 상태와 wear/damage
   판정을 소유하고, VehicleRun은 player와 enemy의 post-collision swept path를
   전달하고 실제 damage만 적용한다.
-- [ ] 이미 collapsed인 tile에 swept path가 처음 진입하거나 해당 crossing이 wear
+- [x] 이미 collapsed인 tile에 swept path가 처음 진입하거나 해당 crossing이 wear
   3을 만들어 tile을 collapsed로 바꾸는 순간 8 damage를 즉시 한 번 적용한다.
   overlap이 이어지면 actor×tile별 다음 deadline부터 0.75초마다 8 damage를 주고,
   한 physics tick에는 한 번만 적용한 뒤 그 적용 시점에서 다음 0.75초를 센다.
   완전 이탈하면 occupancy와 deadline을 제거하므로 재진입은 다시 즉시 피해다.
-- [ ] `VehicleFieldLayout.persistent_wear_tile_state`를 run-scoped owner로 추가하고
+- [x] `VehicleFieldLayout.persistent_wear_tile_state`를 run-scoped owner로 추가하고
   TerrainRuntime configure가 feature ID별 `state/wear`를 읽고 즉시 write-through
   한다. 기존 `persistent_bulkhead_health`는 이름과 계약을 유지하며 두 dictionary를
   합치거나 save schema를 만들지 않는다.
-- [ ] 정지 중에는 wear가 반복 증가하지 않고, 완전 이탈 뒤 재진입은 한 번
+- [x] 정지 중에는 wear가 반복 증가하지 않고, 완전 이탈 뒤 재진입은 한 번
   증가하며, 빠른 dash와 한 frame 고속 enemy 통과도 빠뜨리지 않도록 focused
   validator를 추가한다.
-- [ ] 새 `validate_vehicle_wear_collapse_tiles.gd`는 player, ordinary와 stage boss의
+- [x] 새 `validate_vehicle_wear_collapse_tiles.gd`는 player, ordinary와 stage boss의
   swept crossing, collapse-triggering crossing의 immediate hit, continuous
   `8 damage / 0.75초`, exit/re-entry immediate hit, stationary wear non-repeat와
   actor retire cleanup을 검사한다. stage 1에서 `cracked`/`collapsed`를 만든 뒤
   stage 2와 3의 새 TerrainRuntime에서도 `state/wear`가 같고 occupancy/cooldown만
   비어야 한다. configure 뒤 still-collapsed tile에 처음 감지된 overlap도 새 entry로
   보고 즉시 한 번 피해를 준다.
-- [ ] field당 4개의 authored `wear_collapse_tile` rect를 field definition에
+- [x] field당 4개의 authored `wear_collapse_tile` rect를 field definition에
   추가하고 wall, cover, spawn, pickup, gate와 겹치지 않게 검증한다.
-- [ ] snapshot에 wear tile의 최소 `rect`, `state`, `wear`, `threshold`와
+- [x] snapshot에 wear tile의 최소 `rect`, `state`, `wear`, `threshold`와
   enclosure structural wall의 exact rect를 내보내 후속 asset renderer가 같은
   gameplay truth를 소비하게 한다. 이 단계에서는 기존 wall fallback 기반의
   임시 geometry만 사용한다.
@@ -575,10 +575,10 @@ Guard: damage, condition, startup, boss pattern과 elite gameplay modifier는
 
 ### Phase 5 — 고밀도 성능과 release qualification
 
-- [ ] Phase 1~4 완료 HEAD에서 `capacity_pressure` 3회 기준선을 다시 만든다.
-- [ ] performance-active일 때만 grid write, enemy schedule, projectile/effect,
+- [x] Phase 1~4 완료 HEAD에서 `capacity_pressure` 3회 기준선을 다시 만든다.
+- [x] performance-active일 때만 grid write, enemy schedule, projectile/effect,
   presentation 비용을 분리 계측한다.
-- [ ] 가장 큰 measured owner에 아래의 정해진 경계만 적용한다.
+- [x] 가장 큰 measured owner에 아래의 정해진 경계만 적용한다.
 
 | Measured owner | 허용 변경 |
 | --- | --- |
@@ -587,7 +587,7 @@ Guard: damage, condition, startup, boss pattern과 elite gameplay modifier는
 | projectile/effects | 기존 reusable buffer와 earliest-hit를 유지하며 중복 query/temporary allocation 제거 |
 | presentation | actor body culling과 view-intersecting telegraph 검사를 분리 |
 
-- [ ] 변경마다 owner validator와 capacity 3회 before/after를 비교하고 개선이
+- [x] 변경마다 owner validator와 capacity 3회 before/after를 비교하고 개선이
   run variance 안이면 task-owned 실험을 보존하지 않는다.
 - [ ] native와 Web의 `production_replay`, `peak_horde`, `capacity_pressure`,
   `boss_pressure`를 각각 authoritative 3회 통과한 뒤 native 600초
@@ -651,11 +651,11 @@ Guard: workload, 품질, actor/projectile/effect 수와 threshold를 낮추지 �
 
 ### Phase 6 — Asset/UI switch gate 해제
 
-- [ ] 전체 `tools/validation/validate_vehicle_*.gd`를 통과한다.
-- [ ] document authority, Godot import, production Web export를 통과한다.
+- [x] 전체 `tools/validation/validate_vehicle_*.gd`를 통과한다.
+- [x] document authority, Godot import, production Web export를 통과한다.
 - [ ] `$npjt-port-guard`의 fastrun `codex` lane에서 built-Web 이동, primary,
   dash, EMP, terrain, secondary와 report 복귀 smoke를 수행한다.
-- [ ] `.agents/semantic-v2-runtime-acceptance-evidence.md`에 commit, dirty state,
+- [x] `.agents/semantic-v2-runtime-acceptance-evidence.md`에 commit, dirty state,
   환경, raw result와 최종 판정을 append한다.
 - [ ] 완료된 gameplay 계약을 `vehicle_game_spec.md`에 남기고 이 ExecPlan은
   완료 후 active tree에서 삭제한다.
@@ -753,36 +753,36 @@ Final gates:
 - [x] Phase 2 final consistency audit: unit-level birth, cue reservation, 320px hard
   floor, unrestricted role convergence와 observational density 계약 보정.
 - [x] Phase 1: engine cue와 secondary 방향.
-- [ ] Phase 2: ordinary enemy pace, sparse unit birth, role convergence, overlap-only steering.
-- [ ] Phase 3: destructible terrain.
+- [x] Phase 2: ordinary enemy pace, sparse unit birth, role convergence, overlap-only steering.
+- [x] Phase 3: destructible terrain.
 - [x] Phase 4: threat tier data.
 - [ ] Phase 5: performance/release.
 - [ ] Phase 6: asset/UI switch gate.
 
 ## Next Steps
 
-1. Phase 2A 속도와 2B unit-level sparse birth/scheduler를 한 batch로 구현·검증한다.
-2. Phase 2C overlap-only steering과 2D current global cap/관측 telemetry를 두 번째
-   batch로 구현하고 60초 production replay evidence를 남긴다.
-3. Phase 3 wear 계약을 코드·제품 명세·validator에 반영한다.
-4. 기능이 고정된 HEAD에서 Phase 5 성능을 측정·개선한다.
-5. Phase 6가 통과하면 그때 asset/UI switch를 시작한다.
+1. native code/dependency, workload 또는 threshold 변경 중 어떤 범위를 허용할지
+   사용자 결정을 받는다. 현재 GDScript owner 경계만으로는 capacity 6/8ms를
+   충족하지 못했다.
+2. 승인된 범위에서 native `capacity_pressure`부터 다시 통과시킨다.
+3. 그 뒤에만 나머지 native/Web matrix, 600초 lifecycle과 built-Web smoke를
+   실행하고 asset/UI switch gate를 연다.
 
 ## Completion Criteria
 
 - [x] dash 전용 thrust, secondary 방향·mine rear placement가 모든 fixture에서 정확하다.
-- [ ] ordinary `1.40`, 12 logical squads의 unit-level sparse birth, 3 timing
+- [x] ordinary `1.40`, 12 logical squads의 unit-level sparse birth, 3 timing
   windows의 max-four first-unit cue/atomic tail, role convergence와 overlap-only
   separation이 focused/production fixture에서 검증된다.
-- [ ] current global active caps는 유지되고 `near_600/900`은 상한 없는 관측값으로만
+- [x] current global active caps는 유지되고 `near_600/900`은 상한 없는 관측값으로만
   남으며 local admission/hold/lateral steering 경로가 없다.
-- [ ] boss/pattern/projectile 속도, authored count/quota/role multiset이 변하지 않는다.
-- [ ] bulkhead reward flow와 wear/collapse tile의 player/ordinary/boss damage 및
+- [x] boss/pattern/projectile 속도, authored count/quota/role multiset이 변하지 않는다.
+- [x] bulkhead reward flow와 wear/collapse tile의 player/ordinary/boss damage 및
   state/wear stage persistence 계약이 통과한다.
-- [ ] ordinary/elite/boss threat tier가 telegraph와 projectile에 보존된다.
+- [x] ordinary/elite/boss threat tier가 telegraph와 projectile에 보존된다.
 - [ ] native/Web/capacity/lifecycle 성능 gate가 모두 통과한다.
 - [ ] resolved issue regression, import, Web export와 built-Web smoke가 통과한다.
-- [ ] 새 asset/UI 외관 작업이 이 plan diff에 섞이지 않는다.
+- [x] 새 asset/UI 외관 작업이 이 plan diff에 섞이지 않는다.
 
 ## Open Questions
 
@@ -817,6 +817,14 @@ overlap resolution과 wear 수치는 모두 고정했다. 새 visual, map 생성
 - 2026-08-02: 사용자 최종 확인에 따라 600/900px local admission과 lateral hold,
   active-cap 축소안을 폐기했다. 외곽 unit-level sparse birth 뒤 role steering으로
   player에게 수렴하고 근접 고밀도를 허용하는 것을 Phase 2 acceptance로 고정했다.
+- 2026-08-02: commits `6d9d6c2`, `5aceddf`, `0f5eb6e`로 Phase 2~3과 정해진
+  GDScript 성능 owner 개선을 구현했다. 전체 56개 vehicle validator, document
+  authority, Godot import와 production Web export는 통과했다.
+- 2026-08-02: clean `0f5eb6e` capacity 3회는 모두 focused/valid였으나 physics
+  p95/p99 `19.22~20.77/23.86~26.40 ms`로 `6/8 ms` gate를 통과하지 못했다.
+  actor/projectile 수, 해상도와 threshold를 유지한 채 남은 격차를 닫으려면
+  이 계획 밖의 native/dependency work 또는 명시적 workload/threshold 결정이
+  필요하므로 Phase 5~6을 완료 처리하지 않는다.
 
 ## Stop Conditions
 
