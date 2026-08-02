@@ -178,7 +178,27 @@ player aim은 변하지 않는다.
 
 ### Phase 2 — 일반 적 이동 pace 교정
 
-- [ ] 모든 mobile ordinary archetype의 현재 최종 속도를 Hard/Normal/Easy와
+표의 각 셀은 `Stage 1 / Stage 5 px/s`이며 player base는 `280 px/s`다.
+AS-IS는 현재 `1.20`, 승인 요청 TO-BE는 ordinary 전용 `1.40`이다. stationary
+role은 두 경우 모두 `0`이고 boss/committed attack은 기존 `1.20`을 유지한다.
+
+| Role | Base | AS-IS Easy | AS-IS Normal | AS-IS Hard | TO-BE Easy | TO-BE Normal | TO-BE Hard |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| scrap_drone | 225 | 259.3/269.7 | 264.6/275.2 | 270.0/280.8 | 302.5/314.6 | 308.7/321.0 | 315.0/327.6 |
+| needle_drone | 170 | 195.9/203.8 | 199.9/207.9 | 204.0/212.2 | 228.6/237.7 | 233.2/242.6 | 238.0/247.5 |
+| spark_minelet | 90 | 103.7/107.9 | 105.8/110.1 | 108.0/112.3 | 121.0/125.9 | 123.5/128.4 | 126.0/131.0 |
+| chaser | 205 | 236.3/245.7 | 241.1/250.7 | 246.0/255.8 | 275.6/286.7 | 281.3/292.5 | 287.0/298.5 |
+| shooter | 155 | 178.6/185.8 | 182.3/189.6 | 186.0/193.4 | 208.4/216.7 | 212.7/221.2 | 217.0/225.7 |
+| controller | 135 | 155.6/161.8 | 158.8/165.1 | 162.0/168.5 | 181.5/188.8 | 185.2/192.6 | 189.0/196.6 |
+| shield_escort | 165 | 190.2/197.8 | 194.0/201.8 | 198.0/205.9 | 221.9/230.7 | 226.4/235.4 | 231.0/240.2 |
+| artillery_spotter | 115 | 132.5/137.8 | 135.2/140.6 | 138.0/143.5 | 154.6/160.8 | 157.8/164.1 | 161.0/167.4 |
+| rammer | 185 | 213.2/221.7 | 217.6/226.3 | 222.0/230.9 | 248.7/258.7 | 253.8/264.0 | 259.0/269.4 |
+| bulkhead_guard | 140 | 161.3/167.8 | 164.6/171.2 | 168.0/174.7 | 188.2/195.8 | 192.1/199.8 | 196.0/203.8 |
+| splitter_barge | 120 | 138.3/143.8 | 141.1/146.8 | 144.0/149.8 | 161.3/167.8 | 164.6/171.2 | 168.0/174.7 |
+| repair_tender | 145 | 167.1/173.8 | 170.5/177.3 | 174.0/181.0 | 195.0/202.8 | 198.9/206.9 | 203.0/211.1 |
+| drone_carrier | 105 | 121.0/125.9 | 123.5/128.4 | 126.0/131.0 | 141.2/146.8 | 144.1/149.8 | 147.0/152.9 |
+
+- [x] 모든 mobile ordinary archetype의 현재 최종 속도를 Hard/Normal/Easy와
   Stage 1/5 기준으로 표로 내고 base player `280 px/s`와 비교한다.
 - [ ] ordinary movement multiplier를 boss/committed attack multiplier와 분리한
   AS-IS/TO-BE pace 표를 사용자에게 승인받고, 승인된 한 값만 코드와 명세에
@@ -198,7 +218,18 @@ Guard: boss 이동, charge active speed, hostile projectile speed와 적 조합�
 
 ### Phase 3 — 파괴 지형 완성
 
-- [ ] `vehicle_game_spec.md`에 Breakable Bulkhead를 ordinary cover가 아닌 작은
+Wear Collapse Tile은 아직 코드와 명세에 없으므로 AS-IS는 모두 `없음`이다.
+구현 승인 요청 TO-BE는 아래 한 묶음이며, 승인 전에는 적용하지 않는다.
+
+| 결정 | 승인 요청 TO-BE | 이유 |
+| --- | --- | --- |
+| 배치 | field당 authored tile 4개 | 적은 수로도 반복 통과 경로를 만들고 topology를 과밀하게 하지 않음 |
+| wear threshold | distinct crossing 3회 (`1회 cracked`, `3회 collapsed`) | 상태 전이가 눈에 띄면서 우발적 1회 통과로 즉시 위험해지지 않음 |
+| collapsed damage | 8 damage / 0.75초 | 양 팀에 의미가 있지만 boss·player를 순간 삭제하지 않는 고정 cadence |
+| boss 포함 | 포함 | “player와 enemy 모두” 계약에서 예외를 만들지 않음 |
+| stage persistence | 같은 run 동안 유지 | 단일 연속 field와 bulkhead persistence 계약에 맞춤 |
+
+- [x] `vehicle_game_spec.md`에 Breakable Bulkhead를 ordinary cover가 아닌 작은
   optional reward enclosure의 파괴 가능한 입구로 정의하고, 나머지 면의
   structural wall과 stage progression gate를 명확히 구분한다.
 - [ ] 구현 전에 wear tile의 배치 수, wear threshold, damage amount/cadence,
@@ -216,15 +247,15 @@ Guard: boss 이동, charge active speed, hostile projectile speed와 적 조합�
   enclosure structural wall의 exact rect를 내보내 후속 asset renderer가 같은
   gameplay truth를 소비하게 한다. 이 단계에서는 기존 wall fallback 기반의
   임시 geometry만 사용한다.
-- [ ] 각 field의 두 Breakable Bulkhead를 입구로 삼는 작은 reward enclosure를
+- [x] 각 field의 두 Breakable Bulkhead를 입구로 삼는 작은 reward enclosure를
   author한다. 나머지 면은 별도 `structural_wall` rect로 두고 movement,
   projectile, LOS와 pursuit가 같은 blocker를 소비하게 한다. selected ordinary
   cover 8개를 이어 붙여 벽처럼 사용하지 않는다.
-- [ ] 각 enclosure에 guarded `reward_pos`를 두고 stage마다 생성되는 기존 crate
+- [x] 각 enclosure에 guarded `reward_pos`를 두고 stage마다 생성되는 기존 crate
   8개 중 두 개를 그 위치로 relocate한다. closed bulkhead 기준으로 일반 item
   socket과 달리 의도적으로 unreachable이어야 하고, open 기준으로 reachable
   이어야 한다.
-- [ ] 새 `tools/validation/validate_vehicle_destructible_terrain_flow.gd`로
+- [x] 새 `tools/validation/validate_vehicle_destructible_terrain_flow.gd`로
   sealed 상태에서는 다른 경로·LOS·projectile로
   reward crate에 접근할 수 없고, `primary 4발 → bulkhead open → player/enemy/
   projectile/LOS/pursuit blocker 갱신 → crate 접근·player shot 파괴`가 가능하며
@@ -241,17 +272,17 @@ ordinary cover 8개, spawn anchors, support field와 reward 총량은 변하지 
 
 ### Phase 4 — 공격 방향·위협 등급 데이터 완성
 
-- [ ] `VehicleAttackContract`에 세 `threat_tier`, normalize helper와
+- [x] `VehicleAttackContract`에 세 `threat_tier`, normalize helper와
   `stage_boss → boss`, nonempty `elite_trait → elite`, 그 외 `ordinary`
   source mapping을 둔다.
-- [ ] ordinary/elite/boss telegraph descriptor가 tier, affinity, delivery,
+- [x] ordinary/elite/boss telegraph descriptor가 tier, affinity, delivery,
   direction/footprint와 readiness를 함께 보존한다.
-- [ ] `VehicleProjectileState` pool configure/reset과 모든 hostile spawn call이
+- [x] `VehicleProjectileState` pool configure/reset과 모든 hostile spawn call이
   source에서 계산한 tier를 수명 끝까지 보존한다. boss runtime call은 `boss`,
   ordinary/elite enemy call은 해당 enemy state를 명시적으로 전달한다.
-- [ ] ordinary, elite, boss projectile과 telegraph fixture를 추가해 tier가 서로
+- [x] ordinary, elite, boss projectile과 telegraph fixture를 추가해 tier가 서로
   섞이지 않고 reflection/retire/reuse 뒤 stale 값이 남지 않음을 검증한다.
-- [ ] renderer는 현재 fallback에서도 tier를 읽을 수 있게 하되 새 texture,
+- [x] renderer는 현재 fallback에서도 tier를 읽을 수 있게 하되 새 texture,
   palette나 UI를 만들지 않는다.
 
 Accept: 세 공격 등급을 runtime snapshot에서 확정적으로 구별할 수 있고,
@@ -414,20 +445,20 @@ Final gates:
 - [x] Phase 1: engine cue와 secondary 방향.
 - [ ] Phase 2: ordinary enemy pace.
 - [ ] Phase 3: destructible terrain.
-- [ ] Phase 4: threat tier data.
+- [x] Phase 4: threat tier data.
 - [ ] Phase 5: performance/release.
 - [ ] Phase 6: asset/UI switch gate.
 
 ## Next Steps
 
-1. Phase 1 방향 contract와 validator부터 수정한다.
-2. Phase 2 속도, Phase 3 지형, Phase 4 공격 semantic을 순서대로 끝낸다.
+1. Phase 2 ordinary `1.40`과 Phase 3 wear-tile 승인 요청값을 확정한다.
+2. 승인된 speed와 wear 계약만 코드·제품 명세·validator에 반영한다.
 3. 기능이 고정된 HEAD에서만 Phase 5 성능을 측정·개선한다.
 4. Phase 6가 통과하면 그때 asset/UI switch를 시작한다.
 
 ## Completion Criteria
 
-- [ ] dash 전용 thrust, secondary 방향·mine rear placement가 모든 fixture에서 정확하다.
+- [x] dash 전용 thrust, secondary 방향·mine rear placement가 모든 fixture에서 정확하다.
 - [ ] 승인된 ordinary enemy pace와 boss/pattern 불변이 검증된다.
 - [ ] bulkhead reward flow와 승인된 wear/collapse tile 양 팀 damage 계약이 통과한다.
 - [ ] ordinary/elite/boss threat tier가 telegraph와 projectile에 보존된다.
@@ -458,6 +489,13 @@ workload 또는 threshold 변경은 별도 승인 범위다.
 - 2026-08-02: 성능은 모든 gameplay 수정 뒤 최종 release gate로 유지했다.
 - 2026-08-02: Phase 1 engine/secondary 방향 구현과 focused/run/performance
   scenario 회귀 검증을 완료했다.
+- 2026-08-02: ordinary movement를 boss/committed attack과 동작 보존 상태로
+  분리하고 전 role AS-IS와 `1.40` 승인 요청표를 고정했다.
+- 2026-08-02: 세 field의 두 bulkhead를 structural-wall reward enclosure의
+  유일한 입구로 바꾸고 기존 crate 두 개 relocation과 closed/open flow를
+  검증했다.
+- 2026-08-02: ordinary/elite/boss `threat_tier`를 telegraph와 pooled hostile
+  projectile 수명 전체에 보존하고 renderer fallback이 해당 값을 읽게 했다.
 
 ## Stop Conditions
 

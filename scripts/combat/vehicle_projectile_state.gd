@@ -23,6 +23,7 @@ var reflected := false
 var final_damage := false
 var wall_piercing := false
 var affinity: StringName = AttackContract.KINETIC
+var threat_tier: StringName = AttackContract.THREAT_ORDINARY
 var condition_mask := 0
 var status_profile: VehicleStatusProfile
 var team: StringName = &""
@@ -53,6 +54,9 @@ func configure(
 	final_damage = bool(spec.get("final_damage", false))
 	wall_piercing = bool(spec.get("wall_piercing", false))
 	affinity = AttackContract.normalize_affinity(StringName(spec.get("affinity", AttackContract.KINETIC)))
+	threat_tier = AttackContract.normalize_threat_tier(
+		StringName(spec.get("threat_tier", AttackContract.THREAT_ORDINARY))
+	)
 	condition_mask = int(spec.get("condition_mask", 0)) & AttackContract.CONDITION_MASK
 	status_profile = spec.get("status_profile") as VehicleStatusProfile
 	team = team_value

@@ -1,6 +1,7 @@
 extends SceneTree
 
 const ProjectileStore = preload("res://scripts/combat/vehicle_projectile_store.gd")
+const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd")
 
 var failures: Array[String] = []
 
@@ -36,6 +37,21 @@ func _initialize() -> void:
 		"ordinary quota remains available when boss shots are inserted first"
 	)
 	_expect(interleaved_store.validate_counts(), "mixed insertion order preserves hostile accounting")
+
+	var reuse_store := ProjectileStore.new()
+	var elite_projectile := _projectile(Vector2(10.0, 10.0))
+	elite_projectile["threat_tier"] = AttackContract.THREAT_ELITE
+	reuse_store.add_hostile(elite_projectile)
+	_expect(
+		reuse_store.hostile_live[0].threat_tier == AttackContract.THREAT_ELITE,
+		"hostile projectile retains its configured threat tier"
+	)
+	reuse_store.remove_hostile_at_swap(0)
+	reuse_store.add_hostile(_projectile(Vector2(20.0, 10.0)))
+	_expect(
+		reuse_store.hostile_live[0].threat_tier == AttackContract.THREAT_ORDINARY,
+		"pooled projectile reuse resets a stale threat tier"
+	)
 
 	var before_clear := store.hostile_count()
 	var cleared := store.clear_hostiles_in_radius(Vector2.ZERO, 25.0)

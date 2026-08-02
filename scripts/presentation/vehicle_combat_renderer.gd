@@ -970,6 +970,7 @@ func _sync_projectiles(
 	for projectile in projectiles:
 		var position := projectile.pos
 		var affinity := AttackContract.normalize_affinity(projectile.affinity)
+		var threat_tier := AttackContract.normalize_threat_tier(projectile.threat_tier)
 		if affinity == AttackContract.SUPPORT:
 			affinity = AttackContract.KINETIC
 		var render_affinity := AttackContract.KINETIC if team == &"player" else affinity
@@ -979,13 +980,18 @@ func _sync_projectiles(
 			direction = Vector2.RIGHT
 		var projectile_batches: Dictionary = _projectile_trail_batches[team]
 		if hostile:
+			# Tier-aware assets may be added later; current fallback remains affinity-owned.
+			var tier_key := StringName("%s_%s" % [threat_tier, render_affinity])
+			var projectile_key: StringName = (
+				tier_key if projectile_batches.has(tier_key) else render_affinity
+			)
 			var hostile_visual_radius := (
 				radius * Art.HOSTILE_PROJECTILE_ENVELOPE_SCALE
 			)
 			if not visible_world.grow(hostile_visual_radius).has_point(position):
 				continue
 			_write_instance_basis(
-				projectile_batches[render_affinity],
+				projectile_batches[projectile_key],
 				position,
 				direction,
 				Vector2.ONE * hostile_visual_radius,

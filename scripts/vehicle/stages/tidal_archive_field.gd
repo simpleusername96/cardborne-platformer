@@ -129,8 +129,14 @@ static func _void_rects() -> Array[Rect2]:
 static func _features() -> Array[Dictionary]:
 	return [
 		{"id":&"surge_1", "kind":&"arc_surge", "rect":Rect2(6000,1720,360,880)},
-		{"id":&"bulkhead_1", "kind":&"breakable_bulkhead", "rect":Rect2(2140,2040,180,240)},
-		{"id":&"bulkhead_2", "kind":&"breakable_bulkhead", "rect":Rect2(4880,2040,180,240)},
+		{"id":&"bulkhead_1", "kind":&"breakable_bulkhead", "rect":Rect2(2140,2040,180,240), "reward_pos":Vector2(2450,2160)},
+		{"id":&"bulkhead_1_top", "kind":&"structural_wall", "rect":Rect2(2140,1840,640,200)},
+		{"id":&"bulkhead_1_end", "kind":&"structural_wall", "rect":Rect2(2580,2040,200,240)},
+		{"id":&"bulkhead_1_bottom", "kind":&"structural_wall", "rect":Rect2(2140,2280,640,200)},
+		{"id":&"bulkhead_2", "kind":&"breakable_bulkhead", "rect":Rect2(4880,2040,180,240), "reward_pos":Vector2(4750,2160)},
+		{"id":&"bulkhead_2_top", "kind":&"structural_wall", "rect":Rect2(4420,1840,640,200)},
+		{"id":&"bulkhead_2_end", "kind":&"structural_wall", "rect":Rect2(4420,2040,200,240)},
+		{"id":&"bulkhead_2_bottom", "kind":&"structural_wall", "rect":Rect2(4420,2280,640,200)},
 		{"id":&"gate_a_1", "kind":&"transit_gate", "pair":&"a", "pos":Vector2(720,900)},
 		{"id":&"gate_a_2", "kind":&"transit_gate", "pair":&"a", "pos":Vector2(6480,3420)},
 		{"id":&"gate_b_1", "kind":&"transit_gate", "pair":&"b", "pos":Vector2(6480,900)},

@@ -152,6 +152,14 @@ func live_bulkhead_rects() -> Array[Rect2]:
 	return result
 
 
+func structural_wall_rects() -> Array[Rect2]:
+	var result: Array[Rect2] = []
+	for feature in features:
+		if feature.kind == &"structural_wall":
+			result.append(feature.rect)
+	return result
+
+
 func bulkhead_id_for_rect(rectangle: Rect2) -> StringName:
 	for feature in features:
 		if (

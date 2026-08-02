@@ -172,10 +172,11 @@ second time; no individual stat is described as exactly 15% lower.
   English rather than reusing another field's label.
 - Every registered field uses a `7200x4320` world rectangle and respawns the
   player at `(3600, 2160)`.
-- Functional-terrain footprints are mutually disjoint and remain outside the
+- Functional-terrain footprints have no positive-area overlap and remain outside the
   player-start clearance. The generator treats their exact rectangles or effect
   radii as reserved space for random cover, stationary threats, crates, field
-  items, ordinary spawn anchors, and boss arrival anchors.
+  items, ordinary spawn anchors, and boss arrival anchors. Structural-wall and
+  bulkhead edges may meet to form one continuous authored boundary.
 - The center has a 560-pixel safe clearance. The camera remains at zoom 1, so the
   field is larger than one screen and exploration state matters.
 - At least twenty broad walkable regions define each immutable floor. A run
@@ -189,7 +190,9 @@ second time; no individual stat is described as exactly 15% lower.
 - Thirty-two ordinary arrival candidates, twelve boss arrival anchors, six
   stationary candidate groups, and at least thirty-two item sockets are
   reusable authored positions. Each stage selects four stationary threats, six pickups, and
-  eight crates from valid sockets. No stage owns a separate map, boss room,
+  eight crates. Six crates use ordinary valid sockets; two are relocated to the
+  field's authored optional reward enclosures without changing their drops or
+  the stage total. No stage owns a separate map, boss room,
   closed progression gate, switch maze, or reflector puzzle.
 - Pickup contact uses the swept player path with the 24-pixel player radius and
   42-pixel pickup body. Endpoint contact, tangent contact, and a complete dash
@@ -213,6 +216,14 @@ second time; no individual stat is described as exactly 15% lower.
   must not be chained into a substitute wall. A Breakable Bulkhead is a
   destructible reward barrier with sealed, damaged, and open gameplay states;
   it is neither ordinary cover nor a reward crate.
+- Every field authors exactly two small optional reward enclosures. Each uses
+  three indestructible structural-wall rectangles and one Breakable Bulkhead as
+  its only entrance. One of the stage's existing eight crates occupies each
+  authored `reward_pos`: it is unreachable while the bulkhead is sealed and is
+  reachable after that entrance opens. Movement, projectile collision, line of
+  sight, and pursuit consume the same structural-wall and live-bulkhead blocker
+  set. Opening is optional and never gates stage or run progression; opened
+  bulkheads persist for the rest of the run.
 - Arc Surge is a traversable energy barrier with no solid collision. Repair and
   overdrive are beneficial fixed-area fields whose visible footprint follows
   their exact effect area. Transit Gates are paired circular floor portals.

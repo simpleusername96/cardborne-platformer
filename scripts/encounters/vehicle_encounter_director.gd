@@ -8,6 +8,8 @@ const THREAT_BUDGET := 7.5
 const MAX_RANGED_COMMITS := 3
 const MAX_DENIAL_COMMITS := 2
 const ENEMY_HEALTH_MULTIPLIER := 1.12
+# Ordinary navigation pace is tuned independently from committed attacks and bosses.
+const ORDINARY_MOVEMENT_SPEED_MULTIPLIER := 1.20
 const ENEMY_SPEED_MULTIPLIER := 1.20
 const HOSTILE_PROJECTILE_SPEED_MULTIPLIER := 0.82
 const ENEMY_DAMAGE_MULTIPLIER := 1.35
@@ -108,6 +110,7 @@ static func tuning_contract() -> Dictionary:
 		"max_ranged": MAX_RANGED_COMMITS,
 		"max_denial": MAX_DENIAL_COMMITS,
 		"enemy_health_multiplier": ENEMY_HEALTH_MULTIPLIER,
+		"ordinary_movement_speed_multiplier": ORDINARY_MOVEMENT_SPEED_MULTIPLIER,
 		"enemy_speed_multiplier": ENEMY_SPEED_MULTIPLIER,
 		"projectile_speed_multiplier": HOSTILE_PROJECTILE_SPEED_MULTIPLIER,
 		"boss_projectile_reserve": BOSS_PROJECTILE_RESERVE,

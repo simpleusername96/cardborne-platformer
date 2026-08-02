@@ -148,6 +148,7 @@ var boss_exam_runtime := BossExamRuntime.new()
 var boss_practice := BossPracticeSession.new()
 var _runtime_blockers: Array[Rect2] = []
 var _runtime_bulkheads: Array[Rect2] = []
+var _runtime_structural_walls: Array[Rect2] = []
 
 var player_position := Vector2.ZERO
 var player_velocity := Vector2.ZERO
@@ -775,6 +776,7 @@ func _populate_stage_items() -> void:
 			"pos": Vector2(spec["pos"]),
 			"drop": StringName(spec["drop"]),
 			"heal_amount": float(spec.get("heal_amount", 0.0)),
+			"guarded_by": StringName(spec.get("guarded_by", &"")),
 			"health": 24.0,
 			"max_health": 24.0,
 			"alive": true,
@@ -802,9 +804,14 @@ func _make_enemy(spec: Dictionary) -> EnemyState:
 	else:
 		health *= float(stage_curve["health"]) * float(difficulty_profile["health"])
 	var position: Vector2 = spec["pos"]
+	var movement_multiplier := (
+		EncounterDirector.ENEMY_SPEED_MULTIPLIER
+		if archetype == &"stage_boss"
+		else EncounterDirector.ORDINARY_MOVEMENT_SPEED_MULTIPLIER
+	)
 	var speed := (
 		float(definition["speed"])
-		* EncounterDirector.ENEMY_SPEED_MULTIPLIER
+		* movement_multiplier
 		* float(difficulty_profile["speed"])
 	)
 	if archetype not in [&"stage_boss"]:
@@ -1509,6 +1516,8 @@ func _runtime_projectile_cover_rects(from: Vector2, to: Vector2, radius: float) 
 		_active_tactical_layout.covers_near_motion_into(
 			from, to, radius, _projectile_cover_query
 		)
+	for wall in _runtime_structural_walls:
+		_projectile_cover_query.append(wall)
 	for bulkhead in _runtime_bulkheads:
 		_projectile_cover_query.append(bulkhead)
 	return _projectile_cover_query
@@ -1525,6 +1534,9 @@ func _runtime_motion_cover_rects(
 			from, to, radius, _motion_cover_query
 		)
 	var swept := Rect2(from, Vector2.ZERO).expand(to).grow(radius)
+	for wall in _runtime_structural_walls:
+		if swept.intersects(wall.grow(radius), true):
+			_motion_cover_query.append(wall)
 	for bulkhead in _runtime_bulkheads:
 		if swept.intersects(bulkhead.grow(radius), true):
 			_motion_cover_query.append(bulkhead)
@@ -1535,6 +1547,8 @@ func _rebuild_runtime_blockers() -> void:
 	_runtime_blockers.clear()
 	if field_layout != null:
 		_runtime_blockers.append_array(_active_tactical_layout.cover_rects)
+	_runtime_structural_walls = terrain_runtime.structural_wall_rects()
+	_runtime_blockers.append_array(_runtime_structural_walls)
 	_runtime_bulkheads = terrain_runtime.live_bulkhead_rects()
 	_runtime_blockers.append_array(_runtime_bulkheads)
 
@@ -2593,7 +2607,10 @@ func _begin_enemy_active(enemy: EnemyState) -> void:
 				float(shooter_attack["damage"]),
 				float(shooter_attack["speed"]),
 				"Mobile shooter bolt",
-				StringName(shooter_attack["affinity"])
+				StringName(shooter_attack["affinity"]),
+				false,
+				false,
+				AttackContract.threat_tier_for(enemy.role, enemy.elite_trait)
 			)
 			enemy.phase = &"recovery"
 			enemy.phase_time = 0.72
@@ -2653,7 +2670,10 @@ func _begin_enemy_active(enemy: EnemyState) -> void:
 				float(interceptor_attack["damage"]),
 				float(interceptor_attack["speed"]),
 				"Interceptor bolt",
-				StringName(interceptor_attack["affinity"])
+				StringName(interceptor_attack["affinity"]),
+				false,
+				false,
+				AttackContract.threat_tier_for(enemy.role, enemy.elite_trait)
 			)
 			enemy.phase = &"recovery"
 			enemy.phase_time = 0.9
@@ -2723,7 +2743,10 @@ func _update_enemy_active(enemy: EnemyState, delta: float) -> void:
 					float(turret_attack["damage"]),
 					float(turret_attack["speed"]),
 					"Foundry turret burst",
-					StringName(turret_attack["affinity"])
+					StringName(turret_attack["affinity"]),
+					false,
+					false,
+					AttackContract.threat_tier_for(enemy.role, enemy.elite_trait)
 				)
 			if enemy.burst_left <= 0:
 				enemy.phase = &"recovery"
@@ -3074,7 +3097,8 @@ func _spawn_hostile_projectile(
 	source: String,
 	affinity: StringName = AttackContract.KINETIC,
 	final_damage: bool = false,
-	wall_piercing: bool = false
+	wall_piercing: bool = false,
+	threat_tier: StringName = AttackContract.THREAT_ORDINARY
 ) -> void:
 	var normalized_affinity := AttackContract.normalize_affinity(affinity)
 	projectile_store.add_hostile({
@@ -3096,6 +3120,7 @@ func _spawn_hostile_projectile(
 		"reflector_lock_time": 0.0,
 		"wall_piercing": wall_piercing,
 		"affinity": normalized_affinity,
+		"threat_tier": AttackContract.normalize_threat_tier(threat_tier),
 		"condition_mask": 0,
 	}, final_damage)
 
@@ -4539,7 +4564,9 @@ func _boss_fire_aimed_burst(boss: EnemyState, pattern: String, damage: float) ->
 			BossPatterns.projectile_speed(pattern),
 			pattern,
 			BossPatterns.affinity(pattern),
-			true
+			true,
+			false,
+			AttackContract.THREAT_BOSS
 		)
 
 
@@ -5635,6 +5662,14 @@ func _draw_terrain() -> void:
 	for feature in Array(snapshot.get("features", [])):
 		var kind := StringName(feature["kind"])
 		match kind:
+			&"structural_wall":
+				var wall_rect := Rect2(feature["rect"])
+				draw_rect(
+					Rect2(wall_rect.position + Art.WALL_SHADOW_OFFSET, wall_rect.size),
+					Art.WALL_SHADOW
+				)
+				draw_rect(wall_rect, Art.RAISED)
+				draw_rect(wall_rect.grow(-10.0), Art.INK, false, 8.0)
 			&"arc_surge":
 				var rectangle := Rect2(feature["rect"])
 				var readiness := float(feature.get("readiness", 0.0))

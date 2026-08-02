@@ -3,6 +3,7 @@ extends SceneTree
 const RunDifficulty = preload("res://scripts/vehicle/vehicle_run_difficulty.gd")
 const StageCatalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
 const StageScene = preload("res://scenes/run/VehicleRun.tscn")
+const EncounterDirector = preload("res://scripts/encounters/vehicle_encounter_director.gd")
 
 var failures: Array[String] = []
 
@@ -53,6 +54,22 @@ func _run() -> void:
 	stage.selected_run_difficulty = RunDifficulty.HARD
 	var hard_enemy = stage.call("_make_enemy", {"id":"hard_probe", "role":&"chaser", "pos":Vector2.ZERO})
 	var hard_boss = stage.call("_make_enemy", {"id":"hard_boss_probe", "role":&"stage_boss", "pos":Vector2.ZERO})
+	_expect(
+		_near(
+			hard_enemy.speed,
+			205.0 * EncounterDirector.ORDINARY_MOVEMENT_SPEED_MULTIPLIER,
+			0.001
+		),
+		"ordinary movement uses its dedicated multiplier"
+	)
+	_expect(
+		_near(
+			hard_boss.speed,
+			150.0 * EncounterDirector.ENEMY_SPEED_MULTIPLIER,
+			0.001
+		),
+		"boss movement preserves the committed-attack multiplier"
+	)
 	var hard_damage := float(stage.call("_scaled_incoming_damage", 10.0, true))
 	var hard_final_damage := float(stage.call("_scaled_incoming_damage", 10.0, true, true))
 	stage.selected_run_difficulty = RunDifficulty.NORMAL

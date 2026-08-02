@@ -54,6 +54,10 @@ static func refresh_ordinary(
 			&"beam",
 			SpecialistRuntime.BEAM_WIDTH
 		))
+	_stamp_threat_tier(
+		enemy,
+		AttackContract.threat_tier_for(enemy.role, enemy.elite_trait)
+	)
 	update_ordinary_readiness(enemy)
 
 
@@ -171,6 +175,7 @@ static func refresh_boss(
 			"affinity":AttackContract.SUPPORT,
 			"damage":0.0,
 		})
+	_stamp_threat_tier(enemy, AttackContract.THREAT_BOSS)
 	_stamp_commit_mode(enemy, BossPatterns.commit_mode(pattern))
 	update_boss_readiness(enemy, pattern)
 
@@ -382,3 +387,9 @@ static func _stamp_readiness(enemy: EnemyState, readiness: float) -> void:
 static func _stamp_commit_mode(enemy: EnemyState, commit_mode: StringName) -> void:
 	for descriptor in enemy.attack_telegraphs:
 		descriptor["commit_mode"] = commit_mode
+
+
+static func _stamp_threat_tier(enemy: EnemyState, threat_tier: StringName) -> void:
+	var normalized := AttackContract.normalize_threat_tier(threat_tier)
+	for descriptor in enemy.attack_telegraphs:
+		descriptor["threat_tier"] = normalized

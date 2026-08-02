@@ -229,6 +229,21 @@ static func _compile_stage_layout(
 static func _build_stage_objects(layout_seed: int, stage_id: StringName, covers: Array[Rect2]) -> Dictionary:
 	var stationary_rng := _rng_for(layout_seed, "%s:stationary:v1" % String(stage_id))
 	var ordinary_reachable := _reachable_cells(Vector2(_field["player_start"]), ORDINARY_RADIUS, covers)
+	var open_reachable := _reachable_cells(
+		Vector2(_field["player_start"]), ORDINARY_RADIUS, covers, false
+	)
+	var guarded_rewards := _guarded_reward_specs()
+	if guarded_rewards.size() != 2:
+		push_warning("%s must author exactly two guarded rewards" % _field["id"])
+		return {}
+	for guarded in guarded_rewards:
+		var reward_position := Vector2(guarded["pos"])
+		if (
+			_reachable_has(ordinary_reachable, reward_position)
+			or not _reachable_has(open_reachable, reward_position)
+		):
+			push_warning("%s guarded reward is not sealed/open reachable" % guarded["guarded_by"])
+			return {}
 	var stationary_points: Array[Vector2] = []
 	var stationary_sectors: Array = Array(SECTORS).duplicate()
 	_shuffle(stationary_sectors, stationary_rng)
@@ -274,6 +289,8 @@ static func _build_stage_objects(layout_seed: int, stage_id: StringName, covers:
 	var occupied_item_sectors := {}
 	for value in item_candidates:
 		var candidate := Vector2(value)
+		if _near_guarded_reward(candidate, ITEM_PAIR_CLEARANCE):
+			continue
 		var sector := _item_sector(candidate)
 		if sockets.size() < 4 and occupied_item_sectors.has(sector):
 			continue
@@ -327,6 +344,12 @@ static func _build_stage_objects(layout_seed: int, stage_id: StringName, covers:
 				else (20.0 if index == crate_sockets.size() - 1 else 25.0)
 			),
 		})
+	for index in guarded_rewards.size():
+		var crate_index := crates.size() - guarded_rewards.size() + index
+		crates[crate_index]["pos"] = Vector2(guarded_rewards[index]["pos"])
+		crates[crate_index]["guarded_by"] = StringName(
+			guarded_rewards[index]["guarded_by"]
+		)
 	var boss_reachable := _reachable_cells(
 		Vector2(_field["player_start"]), BOSS_RADIUS, covers
 	)
@@ -556,13 +579,20 @@ static func _is_walkable(position: Vector2, radius: float, covers: Array[Rect2])
 	return true
 
 
-static func _reachable_cells(start: Vector2, radius: float, covers: Array[Rect2]) -> Dictionary:
+static func _reachable_cells(
+	start: Vector2,
+	radius: float,
+	covers: Array[Rect2],
+	include_bulkheads: bool = true
+) -> Dictionary:
 	var contract := _grid_contract(radius)
 	var width := int(contract["width"])
 	var height := int(contract["height"])
 	var allowed: PackedByteArray = PackedByteArray(contract["walkable"]).duplicate()
 	var blockers := covers.duplicate()
-	blockers.append_array(_intact_bulkhead_rects())
+	blockers.append_array(_structural_wall_rects())
+	if include_bulkheads:
+		blockers.append_array(_intact_bulkhead_rects())
 	for cover in blockers:
 		var min_cell := _world_to_cell(cover.position - Vector2.ONE * radius)
 		var max_cell := _world_to_cell(cover.end + Vector2.ONE * radius)
@@ -609,6 +639,41 @@ static func _intact_bulkhead_rects() -> Array[Rect2]:
 		if StringName(feature.get("kind", &"")) == &"breakable_bulkhead":
 			result.append(Rect2(feature["rect"]))
 	return result
+
+
+static func _structural_wall_rects() -> Array[Rect2]:
+	var result: Array[Rect2] = []
+	for value in Array(_field.get("features", [])):
+		var feature := Dictionary(value)
+		if StringName(feature.get("kind", &"")) == &"structural_wall":
+			result.append(Rect2(feature["rect"]))
+	return result
+
+
+static func _guarded_reward_specs() -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	for value in Array(_field.get("features", [])):
+		var feature := Dictionary(value)
+		if (
+			StringName(feature.get("kind", &"")) == &"breakable_bulkhead"
+			and feature.has("reward_pos")
+		):
+			result.append({
+				"guarded_by":StringName(feature["id"]),
+				"pos":Vector2(feature["reward_pos"]),
+			})
+	result.sort_custom(
+		func(a: Dictionary, b: Dictionary) -> bool:
+			return String(a["guarded_by"]) < String(b["guarded_by"])
+	)
+	return result
+
+
+static func _near_guarded_reward(position: Vector2, clearance: float) -> bool:
+	for reward in _guarded_reward_specs():
+		if position.distance_to(Vector2(reward["pos"])) < clearance:
+			return true
+	return false
 
 
 static func _reachable_has(reachable: Dictionary, position: Vector2) -> bool:
@@ -741,7 +806,7 @@ static func _validate_feature_contract() -> PackedStringArray:
 static func _features_overlap(first: Dictionary, second: Dictionary) -> bool:
 	if _feature_has_rect(first):
 		return (
-			Rect2(first["rect"]).intersects(Rect2(second["rect"]), true)
+			Rect2(first["rect"]).intersects(Rect2(second["rect"]), false)
 			if _feature_has_rect(second)
 			else _single_feature_overlaps_rect(second, Rect2(first["rect"]))
 		)

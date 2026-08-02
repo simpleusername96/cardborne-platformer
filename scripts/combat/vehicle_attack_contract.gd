@@ -14,6 +14,13 @@ const ARC: StringName = &"arc"
 const HYBRID: StringName = &"hybrid"
 const SUPPORT: StringName = &"support"
 
+const THREAT_ORDINARY: StringName = &"ordinary"
+const THREAT_ELITE: StringName = &"elite"
+const THREAT_BOSS: StringName = &"boss"
+const THREAT_TIERS: Array[StringName] = [
+	THREAT_ORDINARY, THREAT_ELITE, THREAT_BOSS,
+]
+
 const AFFINITIES: Array[StringName] = [
 	KINETIC, THERMAL, TOXIN, CRYO, ARC, HYBRID, SUPPORT,
 ]
@@ -69,6 +76,19 @@ const ORDINARY_ATTACKS := {
 
 static func normalize_affinity(value: StringName) -> StringName:
 	return value if value in AFFINITIES else KINETIC
+
+
+static func normalize_threat_tier(value: StringName) -> StringName:
+	return value if value in THREAT_TIERS else THREAT_ORDINARY
+
+
+static func threat_tier_for(
+	source_role: StringName,
+	elite_trait: StringName = &""
+) -> StringName:
+	if source_role == &"stage_boss":
+		return THREAT_BOSS
+	return THREAT_ELITE if not elite_trait.is_empty() else THREAT_ORDINARY
 
 
 static func power_tier(damage: float) -> StringName:
@@ -171,6 +191,8 @@ static func validate_contract() -> PackedStringArray:
 	var errors := PackedStringArray()
 	if AFFINITIES.duplicate().any(func(value): return AFFINITIES.count(value) != 1):
 		errors.append("attack affinities must be unique")
+	if THREAT_TIERS.duplicate().any(func(value): return THREAT_TIERS.count(value) != 1):
+		errors.append("attack threat tiers must be unique")
 	if not (
 		LIGHT_PROJECTILE_RADIUS
 		< STANDARD_PROJECTILE_RADIUS

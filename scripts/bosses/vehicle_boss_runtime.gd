@@ -87,7 +87,8 @@ func update_active(
 				services.call(
 					"_spawn_hostile_projectile", origin, aimed_direction, damage,
 					Patterns.projectile_speed(pattern), pattern,
-					Patterns.affinity(pattern), true
+					Patterns.affinity(pattern), true, false,
+					AttackContract.THREAT_BOSS
 				)
 		else:
 			var offsets := (
@@ -105,7 +106,9 @@ func update_active(
 					Patterns.projectile_speed(pattern),
 					pattern,
 					Patterns.affinity(pattern),
-					true
+					true,
+					false,
+					AttackContract.THREAT_BOSS
 				)
 	elif kind == &"charge":
 		if boss.pattern_volleys == 0:
