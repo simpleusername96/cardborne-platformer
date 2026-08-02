@@ -38,6 +38,7 @@ var committed_rammers := 0
 var _decision_due := PackedByteArray()
 var _critical_due := PackedByteArray()
 var _motion_delta := PackedFloat32Array()
+var _motion_starts := PackedVector2Array()
 var _due_stamps := PackedInt32Array()
 var _schedule_id := 0
 var _rammers_by_squad: Dictionary = {}
@@ -48,6 +49,7 @@ func _init() -> void:
 	_decision_due.resize(EnemyStore.MAX_LIVE_HOSTILES)
 	_critical_due.resize(EnemyStore.MAX_LIVE_HOSTILES)
 	_motion_delta.resize(EnemyStore.MAX_LIVE_HOSTILES)
+	_motion_starts.resize(EnemyStore.MAX_LIVE_HOSTILES)
 	_due_stamps.resize(EnemyStore.MAX_LIVE_HOSTILES)
 	_due_stamps.fill(0)
 
@@ -103,9 +105,11 @@ func rebuild(
 					committed_denial += 1
 			if enemy.role == &"rammer":
 				_note_rammer_commit(enemy)
+		var slot := enemy.runtime_slot
+		if slot >= 0 and slot < EnemyStore.MAX_LIVE_HOSTILES:
+			_motion_starts[slot] = enemy.pos
 		if enemy.role in SPECIAL_ROLES:
 			continue
-		var slot := enemy.runtime_slot
 		if slot < 0 or slot >= EnemyStore.MAX_LIVE_HOSTILES:
 			continue
 		if enemy.phase in CRITICAL_PHASES:
@@ -180,6 +184,15 @@ func motion_delta(enemy: EnemyState) -> float:
 			and _due_stamps[slot] == _schedule_id
 		)
 		else 0.0
+	)
+
+
+func motion_start(enemy: EnemyState) -> Vector2:
+	var slot := enemy.runtime_slot
+	return (
+		_motion_starts[slot]
+		if slot >= 0 and slot < _motion_starts.size()
+		else enemy.pos
 	)
 
 

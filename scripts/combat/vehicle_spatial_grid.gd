@@ -5,9 +5,12 @@ extends RefCounted
 ## pool slots plus a reuse generation; callers still perform exact geometry.
 
 const DEFAULT_CELL_SIZE := 160.0
+const LOCAL_QUERY_CELL_SIZE := 120.0
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 const EnemyStore = preload("res://scripts/enemies/vehicle_enemy_store.gd")
+const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd")
 const MAX_TRACKED_ACTORS := EnemyStore.MAX_LIVE_HOSTILES
+const MAX_MEMBER_CELLS := 9
 const FLAG_ALIVE := 1
 const FLAG_ACTIVE := 2
 
@@ -17,6 +20,9 @@ var columns := 0
 var rows := 0
 
 var _cells: Array[Array] = []
+var _local_cells: Array[Array] = []
+var _local_columns := 0
+var _local_rows := 0
 var _touched_cells := PackedInt32Array()
 var _touched_flags := PackedByteArray()
 var _actors: Array[EnemyState] = []
@@ -26,16 +32,20 @@ var _member_min_x := PackedInt32Array()
 var _member_min_y := PackedInt32Array()
 var _member_max_x := PackedInt32Array()
 var _member_max_y := PackedInt32Array()
+var _member_counts := PackedByteArray()
+var _member_cells := PackedInt32Array()
+var _member_positions := PackedInt32Array()
+var _local_member_active := PackedByteArray()
+var _local_member_cells := PackedInt32Array()
+var _local_member_positions := PackedInt32Array()
 var _seen_sync := PackedInt32Array()
 var _positions := PackedVector2Array()
-var _velocities := PackedVector2Array()
 var _radii := PackedFloat32Array()
-var _flags := PackedByteArray()
-var _phase_codes := PackedByteArray()
-var _phase_times := PackedFloat32Array()
 var _sync_id := 0
 var _query_stamps := PackedInt32Array()
 var _query_id := 0
+var _nearest_query_distances := PackedFloat32Array()
+var _maximum_local_body_radius := 0.0
 var _generation_rejects := 0
 
 
@@ -48,6 +58,12 @@ func configure(world_bounds: Rect2, requested_cell_size: float = DEFAULT_CELL_SI
 	_cells.resize(columns * rows)
 	for index in _cells.size():
 		_cells[index] = []
+	_local_columns = maxi(1, ceili(bounds.size.x / LOCAL_QUERY_CELL_SIZE))
+	_local_rows = maxi(1, ceili(bounds.size.y / LOCAL_QUERY_CELL_SIZE))
+	_local_cells.clear()
+	_local_cells.resize(_local_columns * _local_rows)
+	for index in _local_cells.size():
+		_local_cells[index] = []
 	_touched_cells.clear()
 	_touched_flags.resize(_cells.size())
 	_touched_flags.fill(0)
@@ -61,20 +77,23 @@ func configure(world_bounds: Rect2, requested_cell_size: float = DEFAULT_CELL_SI
 	_member_min_y.resize(MAX_TRACKED_ACTORS)
 	_member_max_x.resize(MAX_TRACKED_ACTORS)
 	_member_max_y.resize(MAX_TRACKED_ACTORS)
+	_member_counts.resize(MAX_TRACKED_ACTORS)
+	_member_counts.fill(0)
+	_member_cells.resize(MAX_TRACKED_ACTORS * MAX_MEMBER_CELLS)
+	_member_positions.resize(MAX_TRACKED_ACTORS * MAX_MEMBER_CELLS)
+	_local_member_active.resize(MAX_TRACKED_ACTORS)
+	_local_member_active.fill(0)
+	_local_member_cells.resize(MAX_TRACKED_ACTORS)
+	_local_member_positions.resize(MAX_TRACKED_ACTORS)
 	_seen_sync.resize(MAX_TRACKED_ACTORS)
 	_seen_sync.fill(0)
 	_positions.resize(MAX_TRACKED_ACTORS)
-	_velocities.resize(MAX_TRACKED_ACTORS)
 	_radii.resize(MAX_TRACKED_ACTORS)
-	_flags.resize(MAX_TRACKED_ACTORS)
-	_flags.fill(0)
-	_phase_codes.resize(MAX_TRACKED_ACTORS)
-	_phase_codes.fill(0)
-	_phase_times.resize(MAX_TRACKED_ACTORS)
-	_phase_times.fill(0.0)
 	_sync_id = 0
 	_query_stamps.resize(MAX_TRACKED_ACTORS)
 	_query_stamps.fill(0)
+	_nearest_query_distances.resize(MAX_TRACKED_ACTORS)
+	_maximum_local_body_radius = 0.0
 	_query_id = 0
 	_generation_rejects = 0
 
@@ -86,8 +105,12 @@ func rebuild(live: Array[EnemyState]) -> void:
 		_cells[cell_index].clear()
 		_touched_flags[cell_index] = 0
 	_touched_cells.clear()
+	for bucket in _local_cells:
+		bucket.clear()
 	_member_active.fill(0)
+	_local_member_active.fill(0)
 	_member_generations.fill(0)
+	_member_counts.fill(0)
 	for slot in MAX_TRACKED_ACTORS:
 		_actors[slot] = null
 	sync(live)
@@ -109,7 +132,6 @@ func sync(live: Array[EnemyState]) -> void:
 		_remove_membership(slot)
 		_actors[slot] = null
 		_member_generations[slot] = 0
-		_flags[slot] = 0
 
 
 func update_actor(enemy: EnemyState) -> void:
@@ -132,11 +154,15 @@ func update_actor(enemy: EnemyState) -> void:
 	if enemy.active:
 		flags |= FLAG_ACTIVE
 	_positions[slot] = enemy.pos
-	_velocities[slot] = enemy.velocity
 	_radii[slot] = maxf(enemy.radius, enemy.projectile_hit_radius)
-	_flags[slot] = flags
-	_phase_codes[slot] = _phase_code(enemy.phase)
-	_phase_times[slot] = enemy.phase_time
+	if enemy.role == &"interceptor_tower":
+		_radii[slot] = maxf(
+			_radii[slot], AttackContract.INTERCEPTOR_PROJECTILE_RADIUS
+		)
+	if enemy.role != &"stage_boss" and enemy.role != &"boss_pylon":
+		_maximum_local_body_radius = maxf(
+			_maximum_local_body_radius, enemy.radius
+		)
 	if flags != (FLAG_ALIVE | FLAG_ACTIVE):
 		_remove_membership(slot)
 		return
@@ -154,6 +180,7 @@ func update_actor(enemy: EnemyState) -> void:
 	):
 		_remove_membership(slot)
 		_add_membership(slot, min_cell, max_cell)
+	_update_local_membership(slot, enemy)
 
 
 func query_radius_into(center: Vector2, radius: float, live: Array[EnemyState], output: Array[EnemyState]) -> void:
@@ -163,6 +190,57 @@ func query_radius_into(center: Vector2, radius: float, live: Array[EnemyState], 
 	_begin_query()
 	var extent := Vector2(radius, radius)
 	_append_rect_candidates(Rect2(center - extent, extent * 2.0), live, output)
+
+
+func query_nearest_overlaps_into(
+	owner: EnemyState,
+	search_radius: float,
+	_live: Array[EnemyState],
+	maximum_results: int,
+	output: Array[EnemyState]
+) -> void:
+	## Bounded exact body-overlap query for local steering. Results are ordered
+	## by center distance then stable actor ID without materializing all candidates.
+	output.clear()
+	if _cells.is_empty() or owner == null or maximum_results <= 0:
+		return
+	var bounded_maximum := mini(maximum_results, MAX_TRACKED_ACTORS)
+	var exact_overlap_extent := minf(
+		maxf(0.0, search_radius),
+		maxf(0.0, owner.radius) + _maximum_local_body_radius
+	)
+	var extent := Vector2.ONE * exact_overlap_extent
+	var rectangle := Rect2(owner.pos - extent, extent * 2.0)
+	var min_cell := _local_cell_for(rectangle.position)
+	var max_cell := _local_cell_for(rectangle.end)
+	var search_distance_squared := search_radius * search_radius
+	for y in range(min_cell.y, max_cell.y + 1):
+		for x in range(min_cell.x, max_cell.x + 1):
+			for slot_value in _local_cells[y * _local_columns + x]:
+				var slot := int(slot_value)
+				if slot < 0 or slot >= MAX_TRACKED_ACTORS:
+					continue
+				var candidate: EnemyState = _actors[slot]
+				if (
+					candidate == null
+					or candidate == owner
+					or not candidate.alive
+					or not candidate.active
+					or candidate.role == &"stage_boss"
+					or candidate.role == &"boss_pylon"
+					or _member_generations[slot] != maxi(1, candidate.runtime_generation)
+				):
+					continue
+				var distance_squared := owner.pos.distance_squared_to(_positions[slot])
+				var combined_radius := owner.radius + candidate.radius
+				if (
+					distance_squared > search_distance_squared
+					or distance_squared >= combined_radius * combined_radius
+				):
+					continue
+				_insert_nearest_query_result(
+					candidate, distance_squared, bounded_maximum, output
+				)
 
 
 func query_segment_into(from: Vector2, to: Vector2, padding: float, live: Array[EnemyState], output: Array[EnemyState]) -> void:
@@ -301,6 +379,35 @@ func _append_cell_candidates(
 		output.append(enemy)
 
 
+func _insert_nearest_query_result(
+	candidate: EnemyState,
+	distance_squared: float,
+	maximum_results: int,
+	output: Array[EnemyState]
+) -> void:
+	var insert_at := output.size()
+	for index in output.size():
+		if (
+			distance_squared < _nearest_query_distances[index]
+			or (
+				is_equal_approx(distance_squared, _nearest_query_distances[index])
+				and candidate.id < output[index].id
+			)
+		):
+			insert_at = index
+			break
+	if insert_at >= maximum_results:
+		return
+	var next_size := mini(maximum_results, output.size() + 1)
+	if output.size() < maximum_results:
+		output.append(candidate)
+	for index in range(next_size - 1, insert_at, -1):
+		output[index] = output[index - 1]
+		_nearest_query_distances[index] = _nearest_query_distances[index - 1]
+	output[insert_at] = candidate
+	_nearest_query_distances[insert_at] = distance_squared
+
+
 func _add_membership(
 	slot: int,
 	min_cell: Vector2i,
@@ -311,22 +418,94 @@ func _add_membership(
 	_member_min_y[slot] = min_cell.y
 	_member_max_x[slot] = max_cell.x
 	_member_max_y[slot] = max_cell.y
+	var member_count := 0
+	var member_offset := slot * MAX_MEMBER_CELLS
 	for y in range(min_cell.y, max_cell.y + 1):
 		for x in range(min_cell.x, max_cell.x + 1):
+			assert(member_count < MAX_MEMBER_CELLS)
 			var cell_index := y * columns + x
 			if _touched_flags[cell_index] == 0:
 				_touched_flags[cell_index] = 1
 				_touched_cells.append(cell_index)
+			_member_cells[member_offset + member_count] = cell_index
+			_member_positions[member_offset + member_count] = _cells[cell_index].size()
 			_cells[cell_index].append(slot)
+			member_count += 1
+	_member_counts[slot] = member_count
 
 
 func _remove_membership(slot: int) -> void:
-	if slot < 0 or slot >= MAX_TRACKED_ACTORS or _member_active[slot] == 0:
+	if slot < 0 or slot >= MAX_TRACKED_ACTORS:
 		return
-	for y in range(_member_min_y[slot], _member_max_y[slot] + 1):
-		for x in range(_member_min_x[slot], _member_max_x[slot] + 1):
-			_cells[y * columns + x].erase(slot)
+	_remove_local_membership(slot)
+	if _member_active[slot] == 0:
+		return
+	var member_offset := slot * MAX_MEMBER_CELLS
+	for membership_index in _member_counts[slot]:
+		var cell_index := _member_cells[member_offset + membership_index]
+		var position := _member_positions[member_offset + membership_index]
+		var bucket: Array = _cells[cell_index]
+		var last_position := bucket.size() - 1
+		if position < 0 or position > last_position:
+			continue
+		var moved_slot := int(bucket[last_position])
+		if position != last_position:
+			bucket[position] = moved_slot
+			_replace_member_position(moved_slot, cell_index, last_position, position)
+		bucket.pop_back()
+	_member_counts[slot] = 0
 	_member_active[slot] = 0
+
+
+func _update_local_membership(slot: int, enemy: EnemyState) -> void:
+	if enemy.role == &"stage_boss" or enemy.role == &"boss_pylon":
+		_remove_local_membership(slot)
+		return
+	var next_cell := _local_cell_for(enemy.pos)
+	var next_cell_index := next_cell.y * _local_columns + next_cell.x
+	if (
+		_local_member_active[slot] != 0
+		and _local_member_cells[slot] == next_cell_index
+	):
+		return
+	_remove_local_membership(slot)
+	_local_member_active[slot] = 1
+	_local_member_cells[slot] = next_cell_index
+	_local_member_positions[slot] = _local_cells[next_cell_index].size()
+	_local_cells[next_cell_index].append(slot)
+
+
+func _remove_local_membership(slot: int) -> void:
+	if _local_member_active[slot] == 0:
+		return
+	var cell_index := _local_member_cells[slot]
+	var position := _local_member_positions[slot]
+	var bucket: Array = _local_cells[cell_index]
+	var last_position := bucket.size() - 1
+	if position >= 0 and position <= last_position:
+		var moved_slot := int(bucket[last_position])
+		if position != last_position:
+			bucket[position] = moved_slot
+			_local_member_positions[moved_slot] = position
+		bucket.pop_back()
+	_local_member_active[slot] = 0
+
+
+func _replace_member_position(
+	slot: int,
+	cell_index: int,
+	old_position: int,
+	new_position: int
+) -> void:
+	var member_offset := slot * MAX_MEMBER_CELLS
+	for membership_index in _member_counts[slot]:
+		var flat_index := member_offset + membership_index
+		if (
+			_member_cells[flat_index] == cell_index
+			and _member_positions[flat_index] == old_position
+		):
+			_member_positions[flat_index] = new_position
+			return
 
 
 func _stable_slot(enemy: EnemyState) -> int:
@@ -335,26 +514,17 @@ func _stable_slot(enemy: EnemyState) -> int:
 	return enemy.spatial_slot if enemy.spatial_slot >= 0 else enemy.runtime_slot
 
 
-func _phase_code(phase: StringName) -> int:
-	match phase:
-		&"move":
-			return 1
-		&"startup", &"boss_startup":
-			return 2
-		&"active", &"boss_active":
-			return 3
-		&"recovery", &"interrupted_recovery":
-			return 4
-		&"boss_read":
-			return 5
-		&"mine_armed":
-			return 6
-	return 0
-
-
 func _cell_for(position: Vector2) -> Vector2i:
 	var local := position - bounds.position
 	return Vector2i(
 		clampi(floori(local.x / cell_size), 0, columns - 1),
 		clampi(floori(local.y / cell_size), 0, rows - 1)
+	)
+
+
+func _local_cell_for(position: Vector2) -> Vector2i:
+	var local := position - bounds.position
+	return Vector2i(
+		clampi(floori(local.x / LOCAL_QUERY_CELL_SIZE), 0, _local_columns - 1),
+		clampi(floori(local.y / LOCAL_QUERY_CELL_SIZE), 0, _local_rows - 1)
 	)

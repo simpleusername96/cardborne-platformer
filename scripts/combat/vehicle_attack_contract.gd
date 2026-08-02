@@ -5,6 +5,7 @@ extends RefCounted
 ## colors and meshes never decide damage, collision, or persistent conditions.
 
 const Rules = preload("res://scripts/vehicle/vehicle_stage_rules.gd")
+const INTERCEPTOR_PROJECTILE_RADIUS := 112.0
 
 const KINETIC: StringName = &"kinetic"
 const THERMAL: StringName = &"thermal"

@@ -50,6 +50,26 @@ func _initialize() -> void:
 		capacity_target in candidates,
 		"segment queries retain enemies in the final live-capacity slot"
 	)
+	var interceptor := live[0]
+	interceptor.active = true
+	interceptor.role = &"interceptor_tower"
+	interceptor.pos = Vector2(2800.0, 1800.0)
+	interceptor.radius = 34.0
+	interceptor.projectile_hit_radius = 50.0
+	grid.rebuild(live)
+	grid.query_segment_cells_into(
+		Vector2(2500.0, 1700.0),
+		Vector2(3100.0, 1700.0),
+		7.0,
+		live,
+		candidates,
+		PackedInt32Array(),
+		PackedFloat32Array()
+	)
+	_expect(
+		interceptor in candidates,
+		"segment broadphase preserves the interceptor projectile radius"
+	)
 
 	for query_index in 120:
 		var center := Vector2(rng.randf_range(-80.0, 5680.0), rng.randf_range(-80.0, 3480.0))

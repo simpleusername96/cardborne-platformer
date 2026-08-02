@@ -575,9 +575,16 @@ func _sync_enemies(
 	for enemy in enemies:
 		if not enemy.alive or not enemy.active:
 			continue
-		_sync_enemy_attack_telegraphs(enemy, visible_world)
 		var position := enemy.pos
 		var radius := enemy.visual_radius
+		if (
+			not enemy.attack_telegraphs.is_empty()
+			and enemy.phase in [
+				&"startup", &"boss_startup", &"active", &"boss_active",
+			]
+		):
+			# A telegraph may cross the viewport while its source body is offscreen.
+			_sync_enemy_attack_telegraphs(enemy, visible_world)
 		if not visible_world.grow(radius).has_point(position):
 			continue
 		var role := enemy.role

@@ -60,6 +60,15 @@ func _validate_neighbor_bound() -> void:
 			Vector2.RIGHT.rotated(TAU * float(index) / 12.0) * 18.0
 		))
 	var grid: VehicleSpatialGrid = _grid(live)
+	var nearest: Array[EnemyState] = []
+	grid.query_nearest_overlaps_into(live[0], 120.0, live, 8, nearest)
+	_expect(nearest.size() == 8, "spatial broadphase returns at most eight exact overlaps")
+	for index in range(1, nearest.size()):
+		_expect(
+			live[0].pos.distance_squared_to(nearest[index - 1].pos)
+			<= live[0].pos.distance_squared_to(nearest[index].pos) + 0.001,
+			"bounded overlap results remain nearest-first"
+		)
 	var output := LocalSteering.new().adjusted_velocity(live[0], Vector2(150.0, 0.0), grid, live)
 	_expect(output.is_finite(), "dense overlap fixture remains finite with the eight-neighbor bound")
 	_expect(LocalSteering.MAX_OVERLAP_NEIGHBORS == 8, "local steering inspects at most eight overlaps per cadence")

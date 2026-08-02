@@ -42,6 +42,7 @@ var _support_sockets: Array[Vector2] = []
 var _layout_seed := 0
 var _stage_id: StringName = &""
 var _relocation_cooldown := 0.0
+var _wear_tiles: Array[VehicleTerrainDefinition] = []
 var _wear_occupancy: Dictionary = {}
 var _wear_damage_deadlines: Dictionary = {}
 
@@ -56,8 +57,12 @@ func configure(
 	persistent_wear_tile_state: Dictionary = {}
 ) -> void:
 	features.clear()
+	_wear_tiles.clear()
 	for value in feature_blueprint:
-		features.append(TerrainDefinition.from_blueprint(Dictionary(value)))
+		var feature := TerrainDefinition.from_blueprint(Dictionary(value))
+		features.append(feature)
+		if feature.kind == &"wear_collapse_tile":
+			_wear_tiles.append(feature)
 	bulkhead_health = persistent_bulkhead_health
 	if not preserve_persistent_state:
 		bulkhead_health.clear()
@@ -210,18 +215,42 @@ func wear_damage_for_actor(
 	delta: float
 ) -> float:
 	## Records one wear event per distinct entry and returns at most one damage tick.
+	if _wear_tiles.is_empty():
+		return 0.0
+	if not _wear_occupancy.has(actor_id):
+		var crossing_possible := false
+		for feature in _wear_tiles:
+			if _segment_intersects_rect(
+				previous_position,
+				current_position,
+				feature.rect.grow(maxf(0.0, actor_radius))
+			):
+				crossing_possible = true
+				break
+		if not crossing_possible:
+			return 0.0
 	var damage := 0.0
-	var actor_occupancy := Dictionary(_wear_occupancy.get(actor_id, {}))
-	var actor_deadlines := Dictionary(_wear_damage_deadlines.get(actor_id, {}))
-	for feature in features:
-		if feature.kind != &"wear_collapse_tile":
-			continue
+	var occupancy_variant: Variant = _wear_occupancy.get(actor_id, null)
+	var deadlines_variant: Variant = _wear_damage_deadlines.get(actor_id, null)
+	var actor_occupancy: Dictionary = (
+		Dictionary(occupancy_variant) if occupancy_variant != null else {}
+	)
+	var actor_deadlines: Dictionary = (
+		Dictionary(deadlines_variant) if deadlines_variant != null else {}
+	)
+	for feature in _wear_tiles:
 		var footprint := feature.rect.grow(maxf(0.0, actor_radius))
 		var tile_id := feature.id
 		var was_occupied := bool(actor_occupancy.get(tile_id, false))
 		var is_occupied := footprint.has_point(current_position)
 		var crossed := _segment_intersects_rect(previous_position, current_position, footprint)
 		var entered := not was_occupied and crossed
+		if not entered and not was_occupied:
+			continue
+		if was_occupied and not is_occupied:
+			actor_occupancy.erase(tile_id)
+			actor_deadlines.erase(tile_id)
+			continue
 		var state := Dictionary(wear_tile_state.get(tile_id, {}))
 		if entered and StringName(state.get("state", &"intact")) != &"collapsed":
 			var wear := mini(WEAR_THRESHOLD, int(state.get("wear", 0)) + 1)
@@ -241,9 +270,6 @@ func wear_damage_for_actor(
 				actor_deadlines[tile_id] = remaining
 		if is_occupied:
 			actor_occupancy[tile_id] = true
-		else:
-			actor_occupancy.erase(tile_id)
-			actor_deadlines.erase(tile_id)
 	if actor_occupancy.is_empty():
 		_wear_occupancy.erase(actor_id)
 	else:
@@ -253,6 +279,10 @@ func wear_damage_for_actor(
 	else:
 		_wear_damage_deadlines[actor_id] = actor_deadlines
 	return damage
+
+
+func is_wear_actor_tracked(actor_id: String) -> bool:
+	return _wear_occupancy.has(actor_id)
 
 
 func forget_wear_actor(actor_id: String) -> void:

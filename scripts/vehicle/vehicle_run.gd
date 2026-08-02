@@ -218,6 +218,7 @@ var _projectile_cover_query: Array[Rect2] = []
 var _motion_cover_query: Array[Rect2] = []
 var _cover_hit_receipt: Dictionary = {"hit":false, "t":2.0}
 var _cover_hit_candidate: Dictionary = {"hit":false, "t":2.0}
+var _crate_hit_receipt: Dictionary = {"crate":null, "t":INF}
 var _build_fast_hud_snapshot_callable: Callable
 var _minimap_snapshot_callable: Callable
 var _threat_radar_snapshot_callable: Callable
@@ -1611,15 +1612,10 @@ func _runtime_attack_path_end(
 		if bool(cover_hit.get("hit", false))
 		else desired
 	)
-	var crate_hit: Variant = _first_live_crate_hit(origin, result, padding)
-	if crate_hit == null:
+	var crate_hit := _first_live_crate_hit(origin, result, padding)
+	if crate_hit["crate"] == null:
 		return result
-	var hit_t := AttackContract.segment_circle_first_t(
-		origin,
-		result,
-		Vector2(crate_hit["pos"]),
-		CRATE_COLLISION_RADIUS + padding
-	)
+	var hit_t := float(crate_hit["t"])
 	return origin.lerp(result, hit_t) if hit_t != INF else result
 
 
@@ -2008,9 +2004,6 @@ func _update_enemies(delta: float) -> void:
 		enemies, delta, player_position, FAR_SIMULATION_DISTANCE_SQUARED,
 		decision_bucket, _simulation_lod_bucket, _far_enemy_simulation_bucket
 	)
-	var wear_motion_starts := {}
-	for enemy in _enemy_update_schedule.active:
-		wear_motion_starts[enemy.id] = enemy.pos
 	var active_capped := _enemy_update_schedule.active_cap_count
 	if _enforce_active_enemy_cap(active_capped):
 		_enemy_update_schedule.rebuild(
@@ -2125,16 +2118,28 @@ func _update_enemies(delta: float) -> void:
 			continue
 		if enemy.stun > 0.0:
 			enemy.velocity = Vector2.ZERO
+	if performance_active:
+		_performance_enemy_sections["active_states"] = _elapsed_ms(section_started)
+		section_started = Time.get_ticks_usec()
 	for enemy in _enemy_update_schedule.critical:
 		_update_scheduled_ordinary_enemy(enemy, delta)
 	for enemy in _enemy_update_schedule.ordinary_due:
 		_update_scheduled_ordinary_enemy(enemy)
+	if performance_active:
+		_performance_enemy_sections["scheduled_ordinary"] = _elapsed_ms(section_started)
+		section_started = Time.get_ticks_usec()
 	for enemy in _enemy_update_schedule.active:
 		if not enemy.alive:
 			continue
+		var previous_position := _enemy_update_schedule.motion_start(enemy)
+		if (
+			previous_position == enemy.pos
+			and not terrain_runtime.is_wear_actor_tracked(enemy.id)
+		):
+			continue
 		var wear_damage := terrain_runtime.wear_damage_for_actor(
 			enemy.id,
-			Vector2(wear_motion_starts.get(enemy.id, enemy.pos)),
+			previous_position,
 			enemy.pos,
 			enemy.radius,
 			delta
@@ -2142,7 +2147,7 @@ func _update_enemies(delta: float) -> void:
 		if wear_damage > 0.0:
 			_damage_enemy(enemy, wear_damage, "Wear Collapse", &"kinetic", false, true)
 	if performance_active:
-		_performance_enemy_sections["behavior_and_motion"] = _elapsed_ms(section_started)
+		_performance_enemy_sections["wear_terrain"] = _elapsed_ms(section_started)
 
 
 func _update_scheduled_ordinary_enemy(
@@ -2897,7 +2902,9 @@ func _desired_enemy_velocity(enemy: EnemyState, recovering: bool) -> Vector2:
 	if not route_direction.is_zero_approx() and (distance > 520.0 or not _runtime_has_line_of_sight(position, player_position, enemy.radius * 0.45)):
 		desired = (route_direction * 0.86 + desired * 0.14).normalized()
 	var role_velocity := desired.normalized() * enemy.speed * StatusRuntime.speed_multiplier(enemy)
-	return _enemy_local_steering.adjusted_velocity(enemy, role_velocity, enemy_grid, enemies)
+	return _enemy_local_steering.adjusted_velocity(
+		enemy, role_velocity, enemy_grid, enemies
+	)
 
 
 func _move_enemy_with_recovery(enemy: EnemyState, velocity: Vector2, delta: float) -> void:
@@ -3238,7 +3245,7 @@ func _update_projectile_buffer(
 			enemy_grid.query_segment_cells_into(
 				from,
 				to,
-				112.0 + projectile_radius,
+				projectile_radius,
 				enemies,
 				_enemy_query_buffer,
 				_enemy_query_group_ends,
@@ -3423,7 +3430,8 @@ func _player_projectile_contact(
 					from,
 					to,
 					enemy.pos,
-					112.0 + projectile.radius
+					AttackContract.INTERCEPTOR_PROJECTILE_RADIUS
+						+ projectile.radius
 				)
 				if intercept_t < best_hit_t:
 					best_hit_t = intercept_t
@@ -3505,14 +3513,14 @@ func _segment_hits_live_crate(from: Vector2, to: Vector2, padding: float) -> boo
 	return false
 
 
-func _first_live_crate_hit(from: Vector2, to: Vector2, padding: float) -> Variant:
+func _first_live_crate_hit(from: Vector2, to: Vector2, padding: float) -> Dictionary:
 	var clearance := CRATE_COLLISION_RADIUS + padding
 	var minimum := Vector2(minf(from.x, to.x), minf(from.y, to.y)) - Vector2.ONE * clearance
 	var maximum := Vector2(maxf(from.x, to.x), maxf(from.y, to.y)) + Vector2.ONE * clearance
 	var min_cell := Vector2i(floori(minimum.x / CRATE_COLLISION_CELL_SIZE), floori(minimum.y / CRATE_COLLISION_CELL_SIZE))
 	var max_cell := Vector2i(floori(maximum.x / CRATE_COLLISION_CELL_SIZE), floori(maximum.y / CRATE_COLLISION_CELL_SIZE))
-	var best_t := INF
-	var best_crate: Variant = null
+	_crate_hit_receipt["crate"] = null
+	_crate_hit_receipt["t"] = INF
 	for cell_y in range(min_cell.y, max_cell.y + 1):
 		for cell_x in range(min_cell.x, max_cell.x + 1):
 			var cell := Vector2i(cell_x, cell_y)
@@ -3529,10 +3537,10 @@ func _first_live_crate_hit(from: Vector2, to: Vector2, padding: float) -> Varian
 					crate_position,
 					clearance
 				)
-				if hit_t < best_t:
-					best_t = hit_t
-					best_crate = crate
-	return best_crate
+				if hit_t < float(_crate_hit_receipt["t"]):
+					_crate_hit_receipt["t"] = hit_t
+					_crate_hit_receipt["crate"] = crate
+	return _crate_hit_receipt
 
 
 func _projectile_hits_crate(
@@ -3541,17 +3549,13 @@ func _projectile_hits_crate(
 	to: Vector2,
 	damage_crate: bool
 ) -> bool:
-	var crate_hit: Variant = _first_live_crate_hit(from, to, projectile.radius)
+	var crate_receipt := _first_live_crate_hit(from, to, projectile.radius)
+	var crate_hit: Variant = crate_receipt["crate"]
 	if crate_hit == null:
 		return false
 	var crate_position := Vector2(crate_hit["pos"])
 	var motion := to - from
-	var hit_t := AttackContract.segment_circle_first_t(
-		from,
-		to,
-		crate_position,
-		CRATE_COLLISION_RADIUS + projectile.radius
-	)
+	var hit_t := float(crate_receipt["t"])
 	if damage_crate:
 		_damage_crate(crate_hit, projectile.structure_damage)
 	_add_effect(
