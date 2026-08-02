@@ -276,7 +276,7 @@ $data.title = "Cardborne 런타임 비주얼 AS-IS / TO-BE 매칭 리포트 · �
 $data | Add-Member -NotePropertyName "restoration" -NotePropertyValue ([pscustomobject]@{
     restored_on = "2026-08-02"
     source_commit = $SnapshotCommit
-    authority = "Evidence only. AGENTS.md, vehicle_game_spec.md, and UI_VISUAL_SYSTEM.md remain authoritative."
+    authority = "Evidence only. AGENTS.md, vehicle_game_spec.md, and VISUAL_SYSTEM.md remain authoritative."
     review_image_count = $reviewImageCount
     current_review_overlay = "$targetRelative/current-review-overrides.json"
     current_review_authority = "Art-style approval only. Every candidate asset remains unapproved and is not connected to runtime."

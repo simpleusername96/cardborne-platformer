@@ -3,11 +3,11 @@ type: spec
 status: active
 owner: BK
 created: 2026-07-21
-last_reviewed: 2026-08-02
+last_reviewed: 2026-08-03
 canonical_for: Cardborne gameplay and product behavior
 scope: Current run-selected-field five-stage vehicle campaign
 related:
-  - ../design/UI_VISUAL_SYSTEM.md
+  - ../design/VISUAL_SYSTEM.md
   - ../../.agents/semantic-v2-runtime-acceptance-evidence.md
 ---
 
@@ -391,11 +391,13 @@ hint appears once and the same hint cannot repeat within two seconds.
 
 - Every player-facing world, actor, projectile, reward, effect, HUD, modal,
   minimap, and preview uses the shared image-backed general-SF component system
-  defined by `UI_VISUAL_SYSTEM.md`. Role color is always paired with a
+  defined by `VISUAL_SYSTEM.md`. Role color is always paired with a
   silhouette, notch, rail, or glyph cue.
-- The ship engine remains a rigid rear child of the continuously rotated hull.
-  Dash feedback uses a directional afterimage and engine flare, never a danger
-  ring or radial burst.
+- The ship uses one authored craft body containing its fixed hull, engine
+  housing, and weapon housing. The body follows movement/hull rotation only;
+  manual aim remains independent through cursor, muzzle, projectile, and hit
+  cues. Dash feedback uses a directional afterimage and rear-anchor flare,
+  never a danger ring or radial burst.
 - The live HUD prioritizes hull/experience, stage quota, dash, EMP, active
   secondary families, minimap, boss health, and exceptional timed effects. Its
   154x34 icon-only action rail sits below hull/experience; no bottom-center dock

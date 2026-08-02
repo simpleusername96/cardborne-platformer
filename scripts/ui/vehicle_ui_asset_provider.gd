@@ -5,9 +5,9 @@ extends RefCounted
 ## Localized text, values, icons, and focus behavior remain Control-owned.
 
 const MANIFEST_PATH := (
-	"res://art/ui/production/semantic-v2/ui-asset-manifest.json"
+	"res://art/visuals/production/ui/ui-asset-manifest.json"
 )
-const PACK_ROOT := "res://art/ui/production/semantic-v2"
+const PACK_ROOT := "res://art/visuals/production/ui"
 
 static var _manifest: Dictionary = {}
 static var _textures: Dictionary = {}

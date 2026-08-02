@@ -5,15 +5,15 @@ extends SceneTree
 ## rather than treating source image counts as runtime acceptance.
 
 const GAMEPLAY_MANIFEST_PATH := (
-	"res://art/gameplay/semantic-v2/asset-manifest.json"
+	"res://art/visuals/production/gameplay/asset-manifest.json"
 )
 const UI_MANIFEST_PATH := (
-	"res://art/ui/production/semantic-v2/ui-asset-manifest.json"
+	"res://art/visuals/production/ui/ui-asset-manifest.json"
 )
 const EVENT_CATALOG_PATH := (
 	"res://scripts/presentation/components/vehicle_visual_event_catalog.gd"
 )
-const THEME_PATH := "res://art/ui/production/vehicle_stage_theme.tres"
+const THEME_PATH := "res://art/visuals/production/ui/vehicle_stage_theme.tres"
 const RUN_PATH := "res://scripts/vehicle/vehicle_run.gd"
 const SECONDARY_PATH := "res://scripts/player/vehicle_secondary_runtime.gd"
 const RENDERER_PATH := (
@@ -194,7 +194,7 @@ func _validate_animation(animation_id: String, animation: Dictionary) -> void:
 	for index in frame_count:
 		var path := frame_pattern.replace("{index:02}", "%02d" % index)
 		if not path.begins_with("res://"):
-			path = "res://art/gameplay/semantic-v2/%s" % path
+			path = "res://art/visuals/production/gameplay/%s" % path
 		_expect(
 			FileAccess.file_exists(path),
 			"missing %s frame: %s" % [animation_id, path]
@@ -228,7 +228,7 @@ func _validate_ui_manifest(manifest: Dictionary) -> void:
 				continue
 			var path := String(states[state_id])
 			if not path.begins_with("res://"):
-				path = "res://art/ui/production/semantic-v2/%s" % path
+				path = "res://art/visuals/production/ui/%s" % path
 			_expect(
 				FileAccess.file_exists(path),
 				"missing UI state image: %s/%s -> %s"

@@ -18,7 +18,7 @@ signal stage_report_continued
 
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const VEHICLE_THEME = preload(
-	"res://art/ui/production/vehicle_stage_theme.tres"
+	"res://art/visuals/production/ui/vehicle_stage_theme.tres"
 )
 const GameplayHud = preload("res://scripts/ui/vehicle_gameplay_hud.gd")
 const ModalHost = preload("res://scripts/ui/vehicle_modal_host.gd")
@@ -422,7 +422,7 @@ func debug_ui_contract(viewport_width: float = 1280.0) -> Dictionary:
 		),
 		"ui_foundation":{
 			"loaded":_root.theme != null,
-			"provider":"res://art/ui/production/vehicle_stage_theme.tres",
+			"provider":"res://art/visuals/production/ui/vehicle_stage_theme.tres",
 			"modal_surface_count":find_children(
 				"*",
 				"VehicleModalSurface",

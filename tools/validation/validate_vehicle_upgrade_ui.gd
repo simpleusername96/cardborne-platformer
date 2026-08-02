@@ -1,8 +1,8 @@
 extends SceneTree
 
-const THEME_PATH := "res://art/ui/production/vehicle_stage_theme.tres"
+const THEME_PATH := "res://art/visuals/production/ui/vehicle_stage_theme.tres"
 const FONT_PATH := (
-	"res://art/ui/production/fonts/NotoSansKR-Variable.ttf"
+	"res://art/visuals/production/ui/fonts/NotoSansKR-Variable.ttf"
 )
 const Catalog = preload("res://scripts/cards/vehicle_upgrade_catalog.gd")
 const OfferPresenter = preload(

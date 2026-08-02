@@ -24,7 +24,7 @@ window/stretch/mode="canvas_items"
 
 [gui]
 
-theme/custom="res://art/ui/production/vehicle_stage_theme.tres"
+theme/custom="res://art/visuals/production/ui/vehicle_stage_theme.tres"
 
 [internationalization]
 

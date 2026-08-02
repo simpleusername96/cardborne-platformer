@@ -3,13 +3,13 @@ type: evidence
 status: active
 owner: BK
 created: 2026-07-31
-last_reviewed: 2026-08-02
+last_reviewed: 2026-08-03
 topic: Semantic-v2 runtime integration, UI acceptance, boss guidance, and final performance
 scope: Non-map semantic-v2 runtime switch and its post-acceptance validation
 related:
-  - ../docs/design/UI_VISUAL_SYSTEM.md
+  - ../docs/design/VISUAL_SYSTEM.md
   - ../docs/product/vehicle_game_spec.md
-  - ../art/gameplay/semantic-v2/README.md
+  - ../art/visuals/production/README.md
 ---
 
 # Semantic-v2 Runtime Acceptance Evidence
@@ -249,3 +249,11 @@ Web export 자체는 성공했다. 남은 격차는 현재 plan의 허용된 GDS
 - 2026-08-02 gameplay stabilization build는 production Web export까지 통과했지만
   native capacity gate가 먼저 실패해 새 built-Web smoke와 Web matrix를 실행하지
   않았다.
+## 2026-08-03 Visual authority path normalization
+
+- The active visual specification moved from
+  `docs/design/UI_VISUAL_SYSTEM.md` to `docs/design/VISUAL_SYSTEM.md` during the
+  approved Phase 1 path normalization.
+- Earlier occurrences of the former path in this append-only evidence remain
+  historical. The move changes no recorded acceptance verdict or failed release
+  threshold.

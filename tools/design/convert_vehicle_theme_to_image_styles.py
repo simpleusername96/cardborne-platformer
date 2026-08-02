@@ -9,9 +9,9 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
-THEME_PATH = ROOT / "art/ui/production/vehicle_stage_theme.tres"
+THEME_PATH = ROOT / "art/visuals/production/ui/vehicle_stage_theme.tres"
 MANIFEST_PATH = (
-    ROOT / "art/ui/production/semantic-v2/ui-asset-manifest.json"
+    ROOT / "art/visuals/production/ui/ui-asset-manifest.json"
 )
 
 STYLE_MAP = {
@@ -117,14 +117,14 @@ def main() -> None:
     ext_lines = []
     for component_id, state_id in required_assets:
         relative = components[component_id]["states"][state_id]
-        path = f"res://art/ui/production/semantic-v2/{relative}"
+        path = f"res://art/visuals/production/ui/{relative}"
         ext_lines.append(
             '[ext_resource type="Texture2D" '
             f'path="{path}" id="{_resource_id(component_id, state_id)}"]'
         )
     font_line = (
         '[ext_resource type="FontFile" '
-        'path="res://art/ui/production/fonts/NotoSansKR-Variable.ttf" '
+        'path="res://art/visuals/production/ui/fonts/NotoSansKR-Variable.ttf" '
         'id="1_font"]'
     )
     source = re.sub(
@@ -135,7 +135,7 @@ def main() -> None:
     )
     for resource_id, (component_id, state_id) in EXTRA_TEXTURES.items():
         relative = components[component_id]["states"][state_id]
-        path = f"res://art/ui/production/semantic-v2/{relative}"
+        path = f"res://art/visuals/production/ui/{relative}"
         ext_lines.append(
             '[ext_resource type="Texture2D" '
             f'path="{path}" id="{resource_id}"]'

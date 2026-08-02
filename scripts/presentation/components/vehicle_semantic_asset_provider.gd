@@ -5,8 +5,8 @@ extends RefCounted
 ## resolves image presentation only; collision, radii, timing, and behavior
 ## remain in their gameplay owners.
 
-const MANIFEST_PATH := "res://art/gameplay/semantic-v2/asset-manifest.json"
-const PACK_ROOT := "res://art/gameplay/semantic-v2"
+const MANIFEST_PATH := "res://art/visuals/production/gameplay/asset-manifest.json"
+const PACK_ROOT := "res://art/visuals/production/gameplay"
 
 const MAP_SURFACE_PREFIXES: Array[String] = [
 	"world_shared_floor_",

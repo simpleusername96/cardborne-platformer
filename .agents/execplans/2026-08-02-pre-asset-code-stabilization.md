@@ -3,7 +3,7 @@ type: plan
 status: active
 owner: BK
 created: 2026-08-02
-last_reviewed: 2026-08-02
+last_reviewed: 2026-08-03
 topic: Asset/UI 교체 전 코드·게임플레이 안정화
 scope: 2026-07-31~2026-08-02 세션에서 확정된 비디자인 미해결 이슈, 일반 적 이동·unit birth 분산·player 수렴과 release gate
 related:
@@ -11,7 +11,7 @@ related:
   - ../AGENTS.md
   - ../PLANS.md
   - ../../docs/product/vehicle_game_spec.md
-  - ../../docs/design/UI_VISUAL_SYSTEM.md
+  - ../../docs/design/VISUAL_SYSTEM.md
   - ../semantic-v2-runtime-acceptance-evidence.md
   - ../2026-08-02-enemy-movement-spawn-research.md
 ---
@@ -58,7 +58,7 @@ roster와 role 비율·boss pattern·맵 생성은 이 계획에서 다루지 �
 | `.agents/2026-08-02-enemy-movement-spawn-research.md` | minimum-distance sampling, separation/cohesion 분리와 combat budget을 현재 코드와 대조 | sampling은 birth에만, separation은 overlap에만, budget은 global active admission에만 적용 |
 | 2026-08-02 user clarification | 외곽에서는 개별 적이 넓게 태어나고 이후 기체로 수렴해야 하며, 기체 근처의 고밀도 전투는 허용 | 600/900px local cap과 lateral hold를 폐기하고 role convergence를 acceptance로 고정 |
 | current `vehicle_terrain_runtime.gd`, three field definitions, `vehicle_game_spec.md` | Breakable Bulkhead 체력·파괴 core만 있고 현재 두 bulkhead는 enclosure 없는 독립 rect이며, wear/collapse tile은 명세가 금지하고 구현도 없음 | Phase 3에서 명세와 구현을 함께 교정 |
-| current `docs/design/UI_VISUAL_SYSTEM.md` lines 216-220, `vehicle_attack_telegraph_builder.gd`, `vehicle_projectile_state.gd` | 정본은 delivery·ordinary/elite/boss·power 구분을 요구하지만 현재는 방향·affinity·피해량만 전달되고 위협 등급은 투사체 수명 전체에 보존되지 않음 | Phase 4 |
+| current `docs/design/VISUAL_SYSTEM.md` lines 216-220, `vehicle_attack_telegraph_builder.gd`, `vehicle_projectile_state.gd` | 정본은 delivery·ordinary/elite/boss·power 구분을 요구하지만 현재는 방향·affinity·피해량만 전달되고 위협 등급은 투사체 수명 전체에 보존되지 않음 | Phase 4 |
 | `.agents/semantic-v2-runtime-acceptance-evidence.md` lines 141-180 | peak/capacity frame·physics gate 실패, 600초 lifecycle 미실행 | Phase 5 |
 
 2026-08-02에 pickup, stage UI layout, boss exam, terrain runtime, secondary,
@@ -655,6 +655,9 @@ Guard: workload, 품질, actor/projectile/effect 수와 threshold를 낮추지 �
 - [x] document authority, Godot import, production Web export를 통과한다.
 - [ ] `$npjt-port-guard`의 fastrun `codex` lane에서 built-Web 이동, primary,
   dash, EMP, terrain, secondary와 report 복귀 smoke를 수행한다.
+- [x] 2026-08-03 BK가 downstream visual-replacement plan의 Phase 0 interlock만
+  명시적으로 waiver했다. 이 waiver는 이 plan의 performance, built-Web,
+  lifecycle, durable handoff 또는 retirement gate를 완료 처리하지 않는다.
 - [x] `.agents/semantic-v2-runtime-acceptance-evidence.md`에 commit, dirty state,
   환경, raw result와 최종 판정을 append한다.
 - [ ] 완료된 gameplay 계약을 `vehicle_game_spec.md`에 남기고 이 ExecPlan은
@@ -761,12 +764,13 @@ Final gates:
 
 ## Next Steps
 
-1. native code/dependency, workload 또는 threshold 변경 중 어떤 범위를 허용할지
-   사용자 결정을 받는다. 현재 GDScript owner 경계만으로는 capacity 6/8ms를
-   충족하지 못했다.
-2. 승인된 범위에서 native `capacity_pressure`부터 다시 통과시킨다.
-3. 그 뒤에만 나머지 native/Web matrix, 600초 lifecycle과 built-Web smoke를
-   실행하고 asset/UI switch gate를 연다.
+1. 이 stabilization plan은 별도로 active 상태를 유지한다. native
+   code/dependency, workload 또는 threshold 변경은 여전히 별도 사용자 승인이
+   필요하다.
+2. visual-replacement plan은 2026-08-03 narrow waiver에 따라 Phase 1부터
+   진행할 수 있다.
+3. 이 plan을 완료하거나 release-ready로 표시하기 전에는 native/Web matrix,
+   600초 lifecycle, built-Web smoke와 durable handoff를 실제로 통과한다.
 
 ## Completion Criteria
 
@@ -825,6 +829,11 @@ overlap resolution과 wear 수치는 모두 고정했다. 새 visual, map 생성
   actor/projectile 수, 해상도와 threshold를 유지한 채 남은 격차를 닫으려면
   이 계획 밖의 native/dependency work 또는 명시적 workload/threshold 결정이
   필요하므로 Phase 5~6을 완료 처리하지 않는다.
+- 2026-08-03: BK가 "Waive the interlock: explicitly authorize starting
+  visual-replacement Phase 1 despite the failed release gate."라고 명시했다.
+  이 항목과 visual-replacement plan의 mirrored Decision Notes가 narrow amendment
+  record다. visual plan 실행만 허용하며 이 plan의 실패 gate, dependency/native,
+  workload, threshold 또는 destructive action 권한은 변경하지 않는다.
 
 ## Stop Conditions
 

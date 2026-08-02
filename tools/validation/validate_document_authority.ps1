@@ -52,12 +52,12 @@ function Expect-Contract(
 Push-Location -LiteralPath $repoRoot
 try {
   Expect-Contract 'docs/product/vehicle_game_spec.md' 'gameplay|product'
-  Expect-Contract 'docs/design/UI_VISUAL_SYSTEM.md' 'visual|UI|art'
+  Expect-Contract 'docs/design/VISUAL_SYSTEM.md' 'visual|UI|art'
 
   $rootInstructions = Get-Content -Raw -LiteralPath 'AGENTS.md'
   foreach ($required in @(
       'docs/product/vehicle_game_spec.md',
-      'docs/design/UI_VISUAL_SYSTEM.md',
+      'docs/design/VISUAL_SYSTEM.md',
       '.agents/PLANS.md'
     )) {
     if (-not $rootInstructions.Contains($required)) {
@@ -68,7 +68,7 @@ try {
   $docsIndex = Get-Content -Raw -LiteralPath 'docs/README.md'
   foreach ($required in @(
       'product/vehicle_game_spec.md',
-      'design/UI_VISUAL_SYSTEM.md'
+      'design/VISUAL_SYSTEM.md'
     )) {
     if (-not $docsIndex.Contains($required)) {
       Add-Failure "docs/README.md does not point to $required"
@@ -76,7 +76,7 @@ try {
   }
 
   $productSpec = Get-Content -Raw -LiteralPath 'docs/product/vehicle_game_spec.md'
-  $visualSpec = Get-Content -Raw -LiteralPath 'docs/design/UI_VISUAL_SYSTEM.md'
+  $visualSpec = Get-Content -Raw -LiteralPath 'docs/design/VISUAL_SYSTEM.md'
   if (-not $productSpec.Contains('### Functional terrain, facilities, and sustained fire')) {
     Add-Failure 'Product spec is missing the gameplay/collision terrain owner section'
   }
@@ -90,7 +90,7 @@ try {
   $allowedCanonical = @(
     '.agents/PLANS.md',
     'docs/product/vehicle_game_spec.md',
-    'docs/design/UI_VISUAL_SYSTEM.md'
+    'docs/design/VISUAL_SYSTEM.md'
   )
   $allowedTypes = @('policy', 'spec', 'plan', 'handoff', 'evidence', 'record')
   $allowedStatuses = @('draft', 'active', 'done', 'superseded', 'archived')

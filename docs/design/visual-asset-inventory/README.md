@@ -8,7 +8,7 @@ topic: Complete runtime visual asset inventory and AS-IS/TO-BE review
 scope: Current runtime visual ledger plus selectively restored historical review candidates
 source: Git snapshot 9b309ce
 related:
-  - ../UI_VISUAL_SYSTEM.md
+  - ../VISUAL_SYSTEM.md
   - ../../product/vehicle_game_spec.md
   - ../../../.agents/semantic-v2-runtime-acceptance-evidence.md
 ---
@@ -28,7 +28,7 @@ related:
 - 복원된 비교 데이터와 후보: Git commit `9b309ce`
 - 현재 미적용 후보 연결: `current-review-overrides.json`과
   `review-images/candidates/player-vehicle-v1/`의 기체 시트 3종
-- 현재 디자인 정본: [`UI_VISUAL_SYSTEM.md`](../UI_VISUAL_SYSTEM.md)
+- 현재 디자인 정본: [`VISUAL_SYSTEM.md`](../VISUAL_SYSTEM.md)
 - 현재 제품 정본: [`vehicle_game_spec.md`](../../product/vehicle_game_spec.md)
 
 ## Findings
@@ -50,7 +50,7 @@ related:
 이미지가 존재한다는 사실만으로 runtime 적용 승인을 뜻하지 않는다. player
 vehicle 시트도 art style만 승인된 상태이며 sheet 안의 개별 silhouette,
 module과 marker는 개별 asset 승인 전이다. 충돌 시 root `AGENTS.md`,
-`vehicle_game_spec.md`, `UI_VISUAL_SYSTEM.md` 순서가 우선한다.
+`vehicle_game_spec.md`, `VISUAL_SYSTEM.md` 순서가 우선한다.
 
 ## Refresh And Verification
 

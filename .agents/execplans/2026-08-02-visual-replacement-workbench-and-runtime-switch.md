@@ -3,7 +3,7 @@ type: plan
 status: active
 owner: BK
 created: 2026-08-02
-last_reviewed: 2026-08-02
+last_reviewed: 2026-08-03
 topic: Production-ready visual replacement workbench and runtime asset/UI switch
 scope: Current AS-IS visual roots, one TO-BE workbench, deployable replacement units, runtime promotion, validation, and retirement
 related:
@@ -11,9 +11,9 @@ related:
   - ../AGENTS.md
   - ../PLANS.md
   - ../../docs/product/vehicle_game_spec.md
-  - ../../docs/design/UI_VISUAL_SYSTEM.md
+  - ../../docs/design/VISUAL_SYSTEM.md
   - ../../docs/design/visual-asset-inventory/README.md
-  - ../../art/gameplay/semantic-v2/README.md
+  - ../../art/visuals/production/README.md
   - ../semantic-v2-runtime-acceptance-evidence.md
   - ./2026-08-02-pre-asset-code-stabilization.md
 ---
@@ -85,7 +85,7 @@ e5dfca3b904304613636b94bc007c4d9f0c741e1 on branch master on 2026-08-02.
 | --- | --- | --- |
 | Root AGENTS.md, .agents/AGENTS.md, and .agents/PLANS.md | Broad visual work requires an active ExecPlan, Godot 4.7, focused validators, Web export, durable-spec handoff, and plan deletion after completion | This document uses the required lifecycle and release gates |
 | docs/product/vehicle_game_spec.md | Manual aim, movement, held primary fire, dash, secondaries, EMP, encounters, pickups, upgrades, bosses, wear tiles, collision, and release thresholds are current product truth | Visual work cannot alter these owners or values |
-| docs/design/UI_VISUAL_SYSTEM.md | Flat-color, role-readable, familiar general-SF is fixed; floor/wall topology is procedural; common boss-node states are required; sheets do not authorize runtime assets | No new art-direction branch is permitted |
+| docs/design/VISUAL_SYSTEM.md | Flat-color, role-readable, familiar general-SF is fixed; floor/wall topology is procedural; common boss-node states are required; sheets do not authorize runtime assets | No new art-direction branch is permitted |
 | .agents/execplans/2026-08-02-pre-asset-code-stabilization.md | Runtime asset/UI switching is forbidden until that plan's Phases 1 through 6 and final regression are complete | Phase 0 is a hard execution interlock |
 | Active pre-asset performance evidence | Capacity physics p95/p99 is 19.22 to 20.77 / 23.86 to 26.40 ms against a 6/8 ms gate; built-Web smoke also remains open | This plan cannot claim that the switch gate is currently open |
 | git ls-files for PNG media | 350 tracked PNG files: 247 gameplay, 59 UI, and 44 inventory review images | The target organization must distinguish production from workbench media |
@@ -119,8 +119,8 @@ Authority order:
 
 1. Root AGENTS.md and the nearest local AGENTS.md govern execution.
 2. docs/product/vehicle_game_spec.md governs gameplay and product behavior.
-3. The current docs/design/UI_VISUAL_SYSTEM.md governs visual behavior until it
-   is renamed to docs/design/VISUAL_SYSTEM.md in Phase 1.
+3. docs/design/VISUAL_SYSTEM.md governs visual behavior. Phase 1 renamed the
+   former UI-only authority filename without changing its canonical scope.
 4. Production manifests, providers, Theme bindings, and current consumers
    describe current runtime connectivity.
 5. The replacement workbench records current replacement status; it never
@@ -931,20 +931,20 @@ completion criteria remain open.
 TO-BE: A durable authority record proves that the pre-asset plan completed or
 that BK explicitly amended its switch interlock.
 
-- [ ] Read root AGENTS.md, .agents/AGENTS.md, .agents/PLANS.md, the complete
+- [x] Read root AGENTS.md, .agents/AGENTS.md, .agents/PLANS.md, the complete
   pre-asset plan, the product spec, and the visual spec.
-- [ ] Run git status --short and stop if unrelated changes overlap any planned
+- [x] Run git status --short and stop if unrelated changes overlap any planned
   path.
-- [ ] Record the starting branch, full HEAD, timestamp, and clean/dirty state
+- [x] Record the starting branch, full HEAD, timestamp, and clean/dirty state
   in this plan's Progress section.
-- [ ] Check whether the pre-asset plan's performance matrix, 600-second
+- [x] Check whether the pre-asset plan's performance matrix, 600-second
   lifecycle, built-Web smoke, evidence append, durable-spec handoff, and plan
   retirement are complete.
-- [ ] If any item remains open and no explicit BK amendment exists, stop this
+- [x] If any item remains open and no explicit BK amendment exists, stop this
   plan without creating or moving assets.
-- [ ] If an amendment exists, quote its exact authority path and scope in this
+- [x] If an amendment exists, quote its exact authority path and scope in this
   plan's Decision Notes.
-- [ ] Confirm that no dependency, native extension, workload reduction, or
+- [x] Confirm that no dependency, native extension, workload reduction, or
   threshold relaxation is being inferred from the amendment.
 
 Accept: The interlock is durably cleared and the starting worktree is safe.
@@ -960,46 +960,46 @@ has a UI-only filename; improvement evidence uses a historical-inventory name.
 TO-BE: Current production, visual authority, and replacement workbench each
 have one purpose-revealing canonical location.
 
-- [ ] Use the doc-lifecycle workflow before changing agent-relevant Markdown.
-- [ ] Rename docs/design/UI_VISUAL_SYSTEM.md to
+- [x] Use the doc-lifecycle workflow before changing agent-relevant Markdown.
+- [x] Rename the former UI-only visual-authority filename to
   docs/design/VISUAL_SYSTEM.md.
-- [ ] Preserve its canonical visual decisions while replacing the stale
+- [x] Preserve its canonical visual decisions while replacing the stale
   Wear Collapse Tile exclusion with the current intact/cracked/collapsed
   visual contract.
-- [ ] Replace the separate player hull/engine/aim-mount visual contract with
+- [x] Replace the separate player hull/engine/aim-mount visual contract with
   one craft-body asset plus independent cursor/muzzle/projectile aim cues and
   separate transient dash feedback.
-- [ ] Keep the familiar general-SF, flat-color, role-readable contract
+- [x] Keep the familiar general-SF, flat-color, role-readable contract
   unchanged.
-- [ ] Update root AGENTS.md, product spec visual references, all docs, scripts,
-  validators, and evidence links from UI_VISUAL_SYSTEM.md to VISUAL_SYSTEM.md.
-- [ ] Create art/visuals/production with gameplay and UI subfolders.
-- [ ] Create docs/design/visual-replacement-workbench and the
+- [x] Update root AGENTS.md, the product spec, active docs, scripts, validators,
+  and append-only evidence with the canonical VISUAL_SYSTEM.md path.
+- [x] Create art/visuals/production with gameplay and UI subfolders.
+- [x] Create docs/design/visual-replacement-workbench and the
   previews/as-is/ui destination before moving either production review sheet.
-- [ ] Move art/gameplay/semantic-v2 contents to
+- [x] Move art/gameplay/semantic-v2 contents to
   art/visuals/production/gameplay with git-aware moves.
-- [ ] Move art/ui/production/semantic-v2 runtime contents to
+- [x] Move art/ui/production/semantic-v2 runtime contents to
   art/visuals/production/ui with git-aware moves, excluding the two sheets.
-- [ ] Move vehicle_stage_theme.tres and fonts under
+- [x] Move vehicle_stage_theme.tres and fonts under
   art/visuals/production/ui.
-- [ ] Move 01-ui-surface-components.png and 02-ui-control-states.png to
+- [x] Move 01-ui-surface-components.png and 02-ui-control-states.png to
   docs/design/visual-replacement-workbench/previews/as-is/ui.
-- [ ] Move or rewrite the gameplay pack README as
+- [x] Move or rewrite the gameplay pack README as
   art/visuals/production/README.md. Keep only production ownership, format,
   import, and source-of-authority guidance; do not duplicate art direction.
-- [ ] Move every tracked .png.import sidecar whose PNG moves, preserving the
+- [x] Move every tracked .png.import sidecar whose PNG moves, preserving the
   exact relative suffix beside its source image.
-- [ ] Do not mass-delete or regenerate unrelated tracked import sidecars.
-- [ ] Update project.godot, providers, registries, Theme external resources,
+- [x] Do not mass-delete or regenerate unrelated tracked import sidecars.
+- [x] Update project.godot, providers, registries, Theme external resources,
   scripts, validators, export references, docs, and generated tooling to the
   new root.
-- [ ] Scan runtime code, production manifests, Theme resources, project.godot,
+- [x] Scan runtime code, production manifests, Theme resources, project.godot,
   export inputs, validators, canonical specs, and new workbench tooling and
   require zero live references to art/gameplay/semantic-v2 or
   art/ui/production. Phase 1 explicitly excludes the legacy
   docs/design/visual-asset-inventory generated snapshot and append-only
   historical evidence because Phase 2 owns their approved cleanup.
-- [ ] Run Godot import and inspect only task-owned import changes.
+- [x] Run Godot import and inspect only task-owned import changes.
 
 Accept: Every production gameplay/UI image, UI Theme, font, manifest, and
 production visual README is under art/visuals/production; the sole visual
@@ -1847,8 +1847,9 @@ before execution continues.
   workbench pipeline; incorporated every material finding.
 - [x] Verified this document has no Korean characters, no deferred-decision
   markers, no missing named baseline validator, and valid lifecycle authority.
-- [ ] Phase 0: clear the pre-asset asset/UI interlock.
-- [ ] Phase 1: establish the three canonical locations.
+- [x] Phase 0: clear the pre-asset asset/UI interlock through the narrow
+  2026-08-03 BK amendment recorded below.
+- [x] Phase 1: establish the three canonical locations.
 - [ ] Phase 2: rebuild the current-only replacement workbench.
 - [ ] Phase 3: normalize the current production contract.
 - [ ] Phase 4: complete the player vertical slice.
@@ -1862,14 +1863,13 @@ before execution continues.
 
 ## Next Steps
 
-1. Keep this plan committed as the active visual replacement execution
-   contract.
-2. Complete or explicitly amend the active pre-asset stabilization plan.
-3. Start this plan at Phase 0 from a clean committed HEAD.
-4. Do not create TO-BE binaries or change runtime visual paths before Phase 0
-   passes.
-5. After clearance, execute phases in order and commit each accepted unit
-   independently.
+1. Commit the accepted Phase 1 canonical-location migration.
+2. Build and validate current-workbench parity without deleting legacy
+   evidence.
+3. Print the exact Phase 2 legacy deletion set and obtain BK's explicit
+   approval before removing any listed file.
+4. Continue later phases in order, preserving their independent destructive
+   and exact-hash approval gates.
 
 ## Completion Criteria
 
@@ -1961,6 +1961,27 @@ Do not mark a phase or this plan complete while a stop condition remains.
   and one font.
 - 2026-08-02: Preserved the active pre-asset plan as a hard interlock. This plan
   does not authorize runtime switching until that interlock is durably cleared.
+- 2026-08-03: BK explicitly instructed, "Waive the interlock: explicitly
+  authorize starting visual-replacement Phase 1 despite the failed release
+  gate." This entry and the mirrored entry in
+  .agents/execplans/2026-08-02-pre-asset-code-stabilization.md are the durable
+  amendment record required by Phase 0. Scope is limited to starting and
+  executing this visual-replacement plan. The amendment does not complete the
+  failed performance, built-Web, lifecycle, durable-spec, or retirement gates;
+  approve dependencies or native extensions; reduce workload; relax thresholds;
+  or pre-approve any Phase 2, Phase 3, or per-unit destructive action.
+- 2026-08-03: Phase 0 began from clean branch master at full HEAD
+  c4bae5ea91a26c98622a5e3373bde015cf3b7fc7 at 2026-08-03T00:09:55+09:00.
+- 2026-08-03: Phase 1 established docs/design/VISUAL_SYSTEM.md,
+  art/visuals/production/{gameplay,ui}, and
+  docs/design/visual-replacement-workbench/previews/as-is/ui. The migration
+  preserved 310 production/review asset blobs byte-for-byte, imported 305
+  Godot resources successfully, left zero old-root references in the live
+  Phase 1 scope, passed document authority plus eleven focused visual/UI
+  validators, and produced a successful Web export. The legacy
+  docs/design/visual-asset-inventory pipeline, its restore tool, and historical
+  append-only evidence remain intentionally present for Phase 2; no deletion
+  authority was inferred from the Phase 1 waiver.
 
 ## Execution Handoff
 

@@ -57,10 +57,10 @@ const RETAINED_MINIMAP_GEOMETRY_PATH := (
 	"res://scripts/ui/vehicle_retained_minimap_mesh.gd"
 )
 const VEHICLE_THEME_PATH := (
-	"res://art/ui/production/vehicle_stage_theme.tres"
+	"res://art/visuals/production/ui/vehicle_stage_theme.tres"
 )
 const VEHICLE_FONT_PATH := (
-	"res://art/ui/production/fonts/NotoSansKR-Variable.ttf"
+	"res://art/visuals/production/ui/fonts/NotoSansKR-Variable.ttf"
 )
 
 
