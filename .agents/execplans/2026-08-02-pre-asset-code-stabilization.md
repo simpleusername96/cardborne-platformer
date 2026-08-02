@@ -155,17 +155,17 @@ validator를 현재 HEAD에서 다시 실행했고 모두 exit code 0이었다. 
 
 ### Phase 1 — engine cue와 보조무기 방향을 simulation truth와 일치
 
-- [ ] 일반 이동·정지 중 항상 그려지는 engine thrust beam을 제거하고,
+- [x] 일반 이동·정지 중 항상 그려지는 engine thrust beam을 제거하고,
   `dash_active` 중에만 rear 방향 cue를 그린다. engine module 위치와 aim mount
   회전은 현재 계약을 유지한다.
-- [ ] player 이동·dash·collision 적용 직후 실제 frame 변위를 계산해 secondary
+- [x] player 이동·dash·collision 적용 직후 실제 frame 변위를 계산해 secondary
   runtime에 `movement_direction`과 `hull_direction`을 분리 전달한다.
-- [ ] Wake Mine은 실제 movement direction을 우선하고 정지 fallback만 hull을
+- [x] Wake Mine은 실제 movement direction을 우선하고 정지 fallback만 hull을
   사용한다.
-- [ ] Orbit Blade rotation에 blade index offset을 포함하고 Escort Drone body도
+- [x] Orbit Blade rotation에 blade index offset을 포함하고 Escort Drone body도
   player를 향하는 현재 inward vector를 반대로 바꿔 radial outward로 둔다.
-- [ ] Seeker/Drone 공격 event가 실제 target vector를 유지하는지 고정한다.
-- [ ] `validate_vehicle_secondary_weapons.gd`와
+- [x] Seeker/Drone 공격 event가 실제 target vector를 유지하는지 고정한다.
+- [x] `validate_vehicle_secondary_weapons.gd`와
   `validate_vehicle_combat_renderer.gd`에 정지, 이동 반전, collision 정지,
   dash와 8방향 fixture를 추가한다.
 
@@ -411,7 +411,7 @@ Final gates:
 - [x] 최근 3일 root/continuation 세션에서 비디자인 issue 전수 추출.
 - [x] current code, product spec, Git history와 focused validator로 상태 재판정.
 - [x] 해결·asset/UI·deferred·미해결 범위 분리.
-- [ ] Phase 1: engine cue와 secondary 방향.
+- [x] Phase 1: engine cue와 secondary 방향.
 - [ ] Phase 2: ordinary enemy pace.
 - [ ] Phase 3: destructible terrain.
 - [ ] Phase 4: threat tier data.
@@ -456,6 +456,8 @@ workload 또는 threshold 변경은 별도 승인 범위다.
   한다는 뜻으로 반영했다. 승인되지 않은 수치·지속성은 임의로 고정하지 않는다.
 - 2026-08-02: 공격 가독성은 code semantic과 후속 visual 소비로 분리했다.
 - 2026-08-02: 성능은 모든 gameplay 수정 뒤 최종 release gate로 유지했다.
+- 2026-08-02: Phase 1 engine/secondary 방향 구현과 focused/run/performance
+  scenario 회귀 검증을 완료했다.
 
 ## Stop Conditions
 

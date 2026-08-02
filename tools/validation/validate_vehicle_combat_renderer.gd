@@ -136,6 +136,8 @@ func _run() -> void:
 	}, &"enemy", 2)
 	var hostile_projectiles: Array[ProjectileState] = [hostile_projectile]
 	var no_projectiles: Array[ProjectileState] = []
+	var no_enemies: Array[EnemyState] = []
+	var no_shards: Array[ExperienceShard] = []
 	var shard := ExperienceShard.new()
 	shard.configure(1, Vector2(340.0, 320.0), 1, &"")
 	var shards: Array[ExperienceShard] = [shard]
@@ -299,6 +301,12 @@ func _run() -> void:
 			and hostile_trail.multimesh.mesh is QuadMesh,
 		"hostile affinity uses one texture-capable retained quad surface"
 	)
+	_validate_player_directional_cues(
+		renderer,
+		no_enemies,
+		no_projectiles,
+		no_shards
+	)
 	var crowd: Array[EnemyState] = []
 	for index in 110:
 		var crowd_enemy := EnemyState.new()
@@ -442,6 +450,102 @@ func _run() -> void:
 	renderer.queue_free()
 	await process_frame
 	_finish()
+
+
+func _validate_player_directional_cues(
+	renderer: Renderer,
+	no_enemies: Array[EnemyState],
+	no_projectiles: Array[ProjectileState],
+	no_shards: Array[ExperienceShard]
+) -> void:
+	var player_position := Vector2(640.0, 360.0)
+	var presentation := _player_presentation(player_position, false)
+	renderer.sync(
+		no_enemies,
+		no_projectiles,
+		no_projectiles,
+		no_shards,
+		[],
+		Rect2(0, 0, 1280, 720),
+		player_position,
+		0.0,
+		true,
+		"",
+		presentation
+	)
+	var beam_batch := renderer.get_node("Overlay_beam") as MultiMeshInstance2D
+	_expect(
+		beam_batch.multimesh.visible_instance_count == 0,
+		"idle and ordinary movement render no engine thrust cue"
+	)
+	presentation["dash_active"] = true
+	renderer.sync(
+		no_enemies,
+		no_projectiles,
+		no_projectiles,
+		no_shards,
+		[],
+		Rect2(0, 0, 1280, 720),
+		player_position,
+		0.0,
+		true,
+		"",
+		presentation
+	)
+	_expect(
+		beam_batch.multimesh.visible_instance_count == 1,
+		"dash renders exactly one rear engine thrust cue"
+	)
+	for asset_id in [&"secondary/orbit_blade", &"secondary/escort_drone"]:
+		var draws := renderer.debug_semantic_texture_draws(asset_id)
+		_expect(not draws.is_empty(), "%s owns a rendered directional fixture" % asset_id)
+		for draw in draws:
+			var radial := Vector2(draw["position"]) - player_position
+			var texture_forward := Vector2.RIGHT.rotated(float(draw["angle"]))
+			_expect(
+				not radial.is_zero_approx()
+					and radial.normalized().dot(texture_forward) >= 0.999,
+				"%s faces radially outward" % asset_id
+			)
+
+
+func _player_presentation(
+	player_position: Vector2,
+	dash_active: bool
+) -> Dictionary:
+	return {
+		"zones":[],
+		"trails":[],
+		"player_position":player_position,
+		"hull_direction":Vector2.RIGHT,
+		"aim_direction":Vector2.UP,
+		"player_speed":280.0,
+		"dash_active":dash_active,
+		"dash_progress":0.5 if dash_active else 0.0,
+		"dash_direction":Vector2.RIGHT,
+		"player_hit":false,
+		"player_hit_remaining":0.0,
+		"protection_sources":{},
+		"muzzle_flash":0.0,
+		"barrier_strength":0.0,
+		"reduced_motion":false,
+		"run_time":1.0,
+		"hull_visual_tier":0,
+		"engine_visual_count":0,
+		"primary_visual_tier":0,
+		"secondary_visual_tier":0,
+		"support_fields":[],
+		"resolved_boss_modules":[],
+		"ion_level":0,
+		"blade_level":1,
+		"escort_drone":true,
+		"secondary":{
+			"orbit_angle":0.37,
+			"mines":[],
+			"drone_position":player_position + Vector2.DOWN * 92.0,
+		},
+		"cursor_position":player_position + Vector2.UP * 230.0,
+	}
 
 
 func _expect(condition: bool, message: String) -> void:

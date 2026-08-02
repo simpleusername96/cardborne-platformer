@@ -42,7 +42,16 @@ func reset(player_position: Vector2) -> void:
 	drone_position = player_position
 
 
-func update(delta: float, player_position: Vector2, player_direction: Vector2, build: VehicleRunBuild, enemies: Array[EnemyState], line_of_sight: Callable, query_radius: Callable = Callable()) -> Dictionary:
+func update(
+	delta: float,
+	player_position: Vector2,
+	movement_direction: Vector2,
+	hull_direction: Vector2,
+	build: VehicleRunBuild,
+	enemies: Array[EnemyState],
+	line_of_sight: Callable,
+	query_radius: Callable = Callable()
+) -> Dictionary:
 	# The returned result and damage intents are borrowed scratch storage and
 	# remain valid only until the next update call.
 	_damage_output.clear()
@@ -69,9 +78,30 @@ func update(delta: float, player_position: Vector2, player_direction: Vector2, b
 		_damage_output,
 		_effects_output
 	)
-	_update_mines(delta, player_position, player_direction, build, enemies, line_of_sight, query_radius, _damage_output, _effects_output)
+	_update_mines(
+		delta,
+		player_position,
+		mine_placement_direction(movement_direction, hull_direction),
+		build,
+		enemies,
+		line_of_sight,
+		query_radius,
+		_damage_output,
+		_effects_output
+	)
 	_update_drone(delta, player_position, build, enemies, line_of_sight, query_radius, _damage_output, _effects_output)
 	return _result
+
+
+static func mine_placement_direction(
+	movement_direction: Vector2,
+	hull_direction: Vector2
+) -> Vector2:
+	if not movement_direction.is_zero_approx():
+		return movement_direction.normalized()
+	if not hull_direction.is_zero_approx():
+		return hull_direction.normalized()
+	return Vector2.RIGHT
 
 
 func snapshot(build: VehicleRunBuild) -> Dictionary:

@@ -33,9 +33,103 @@ func _initialize() -> void:
 	target.pos = Vector2(100.0, 0.0)
 	target.radius = 18.0
 	var enemies: Array[EnemyState] = [target]
-	var result := runtime.update(0.25, Vector2.ZERO, Vector2.RIGHT, build, enemies, Callable(self, "_los"))
+	var result := runtime.update(
+		0.25,
+		Vector2.ZERO,
+		Vector2.RIGHT,
+		Vector2.RIGHT,
+		build,
+		enemies,
+		Callable(self, "_los")
+	)
 	_expect(Array(result["damage"]).size() >= 1, "equipped passive simulation emits bounded damage intent")
+	_validate_mine_direction(catalog)
+	_validate_drone_target_direction(catalog)
 	_finish()
+
+
+func _validate_mine_direction(catalog: Catalog) -> void:
+	var build := RunBuild.new(catalog)
+	_expect(
+		bool(build.apply(&"wake_mines").get("applied", false)),
+		"wake mine fixture equips its secondary family"
+	)
+	var origin := Vector2(220.0, 180.0)
+	var runtime := Runtime.new()
+	runtime.reset(origin)
+	var no_enemies: Array[EnemyState] = []
+	runtime.update(
+		0.1,
+		origin,
+		Vector2.UP,
+		Vector2.RIGHT,
+		build,
+		no_enemies,
+		Callable(self, "_los")
+	)
+	var mines: Array = runtime.snapshot(build)["mines"]
+	_expect(
+		mines.size() == 1
+			and Vector2(mines[0]["pos"]).distance_to(origin - Vector2.UP * 48.0) <= 0.001,
+		"wake mine uses actual movement direction before hull direction"
+	)
+	runtime.reset(origin)
+	runtime.update(
+		0.1,
+		origin,
+		Vector2.ZERO,
+		Vector2.LEFT,
+		build,
+		no_enemies,
+		Callable(self, "_los")
+	)
+	mines = runtime.snapshot(build)["mines"]
+	_expect(
+		mines.size() == 1
+			and Vector2(mines[0]["pos"]).distance_to(origin - Vector2.LEFT * 48.0) <= 0.001,
+		"stationary wake mine falls back to hull direction"
+	)
+
+
+func _validate_drone_target_direction(catalog: Catalog) -> void:
+	var build := RunBuild.new(catalog)
+	_expect(
+		bool(build.apply(&"escort_drone").get("applied", false)),
+		"escort fixture equips its secondary family"
+	)
+	var origin := Vector2(400.0, 300.0)
+	var runtime := Runtime.new()
+	runtime.reset(origin)
+	var target := EnemyState.new()
+	target.id = "escort_target"
+	target.alive = true
+	target.active = true
+	target.pos = origin + Vector2.RIGHT * 240.0
+	target.radius = 18.0
+	var enemies: Array[EnemyState] = [target]
+	var result := runtime.update(
+		0.25,
+		origin,
+		Vector2.ZERO,
+		Vector2.UP,
+		build,
+		enemies,
+		Callable(self, "_los")
+	)
+	var effects: Array = result["effects"]
+	_expect(effects.size() == 1, "escort drone emits one targeted impact event")
+	if effects.size() != 1:
+		return
+	var effect := Dictionary(effects[0])
+	var event_direction := (
+		Vector2(effect["target"]) - Vector2(effect["pos"])
+	).normalized()
+	var drone_position := Vector2(runtime.snapshot(build)["drone_position"])
+	var expected_direction := (target.pos - drone_position).normalized()
+	_expect(
+		event_direction.dot(expected_direction) >= 0.999,
+		"escort impact event follows the actual target vector"
+	)
 
 
 func _los(_from: Vector2, _to: Vector2, _padding: float) -> bool:

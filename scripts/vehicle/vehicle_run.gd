@@ -1245,11 +1245,11 @@ func _update_player(delta: float) -> void:
 		if player_emp_startup <= 0.0:
 			_release_emp(false)
 
-	_update_passive_secondary(delta)
 	_update_aim_target()
 	_mark_visited()
 	_apply_dash_collision()
 	player_velocity = (player_position - previous_position) / maxf(delta, 0.0001)
+	_update_passive_secondary(delta, player_velocity)
 
 	if tutorial_move and tutorial_aim and tutorial_fire and tutorial_dash and not tutorial_announced:
 		tutorial_announced = true
@@ -1676,7 +1676,7 @@ func _spawn_player_projectile(
 	})
 
 
-func _update_passive_secondary(delta: float) -> void:
+func _update_passive_secondary(delta: float, movement: Vector2) -> void:
 	if player_passive_cooldown <= 0.0 and player_emp_startup <= 0.0:
 		var targets := _find_passive_targets(1 + run_build.level_of(&"twin_seekers"))
 		if not targets.is_empty():
@@ -1704,6 +1704,7 @@ func _update_passive_secondary(delta: float) -> void:
 	var secondary_result := secondary_runtime.update(
 		delta,
 		player_position,
+		movement,
 		player_hull_direction,
 		run_build,
 		enemies,

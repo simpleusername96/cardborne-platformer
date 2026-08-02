@@ -269,6 +269,14 @@ static func player_engine_sockets(
 	return result
 
 
+static func radial_outward_direction(
+	center: Vector2,
+	body_position: Vector2
+) -> Vector2:
+	var radial := body_position - center
+	return radial.normalized() if not radial.is_zero_approx() else Vector2.RIGHT
+
+
 func _player_engine_socket(
 	player_position: Vector2,
 	hull_direction: Vector2
@@ -317,6 +325,21 @@ func debug_snapshot() -> Dictionary:
 		"semantic_texture_draw_count":_semantic_texture_draw_count,
 		"semantic_texture_draw_capacity":SEMANTIC_TEXTURE_DRAW_CAPACITY,
 	}
+
+
+func debug_semantic_texture_draws(asset_id: StringName = &"") -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	for index in _semantic_texture_draw_count:
+		var texture_draw := _semantic_texture_draws[index]
+		if asset_id != &"" and texture_draw.asset_id != asset_id:
+			continue
+		result.append({
+			"asset_id":texture_draw.asset_id,
+			"position":texture_draw.position,
+			"angle":texture_draw.angle,
+			"radius":texture_draw.radius,
+		})
+	return result
 
 
 func _build_batches() -> void:
@@ -1422,15 +1445,13 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 		displayed_player_position,
 		hull_direction
 	)
-	var thrust_ratio := clampf(float(state.get("player_speed", 0.0)) / 560.0, 0.0, 1.0)
 	if bool(state.get("dash_active", false)):
-		thrust_ratio = 1.0
-	_write_beam(
-		engine_socket + rear * 8.0,
-		engine_socket + rear * (25.0 + thrust_ratio * 22.0),
-		7.0,
-		Color(Art.SYSTEM, 0.56 + thrust_ratio * 0.38)
-	)
+		_write_beam(
+			engine_socket + rear * 8.0,
+			engine_socket + rear * 47.0,
+			7.0,
+			Color(Art.SYSTEM, 0.94)
+		)
 	_write_instance(
 		_player_engine_batch,
 		engine_socket,
@@ -1511,10 +1532,14 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 			var blade_position := player_position + Vector2.RIGHT.rotated(
 				float(secondary.get("orbit_angle", 0.0)) + TAU * float(blade_index) / float(blade_count)
 			) * 78.0
+			var blade_direction := radial_outward_direction(
+				player_position,
+				blade_position
+			)
 			_queue_semantic_texture(
 				StringName(_secondary_asset_ids.get(&"orbit_blade", &"")),
 				blade_position,
-				float(secondary.get("orbit_angle", 0.0)),
+				blade_direction.angle(),
 				19.0,
 				Color.WHITE
 			)
@@ -1528,7 +1553,10 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 		)
 	if bool(state.get("escort_drone", false)):
 		var drone_position := Vector2(secondary.get("drone_position", player_position))
-		var drone_direction := (player_position - drone_position).normalized()
+		var drone_direction := radial_outward_direction(
+			player_position,
+			drone_position
+		)
 		_queue_semantic_texture(
 			StringName(_secondary_asset_ids.get(&"escort_drone", &"")),
 			drone_position,
