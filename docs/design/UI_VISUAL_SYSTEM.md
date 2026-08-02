@@ -59,6 +59,41 @@ rule과 collision truth는 각 기존 owner의 책임이며 이 문서는 표현
 - motion은 이동, state change, impact와 objective만 설명한다. ambient
   pulse, 반복 flashing과 의미 없는 orbit 장식은 금지한다.
 
+#### 승인된 아트 스타일 문법
+
+승인된 방향은 **전술적 가독성과 친근한 산업 SF 볼륨의 결합**이다.
+`Into the Breach`에서는 한눈에 읽히는 큰 실루엣, 제한된 색면과 역할 대비를,
+`Astroneer`에서는 둥글게 정돈된 공업 형상, 부드러운 bevel과 명확한 재질
+분리를 참조한다. 두 작품의 특정 기체, 부품, 아이콘이나 UI 모양을 복제하지
+않고 아래의 추상 문법만 Cardborne 고유 형상에 적용한다.
+
+모든 asset과 UI는 다음 순서로 단순화한다.
+
+1. gameplay 역할을 먼저 한 문장으로 고정한다.
+2. 역할을 1× scale에서도 설명하는 dominant silhouette 하나를 만든다.
+3. 기능을 실제로 구분하는 보조 module은 최대 두 개만 남긴다.
+4. matte main mass, light plane, shadow plane, dark perimeter의 큰 색면으로
+   깊이를 만들고 선으로 면을 쪼개지 않는다.
+5. semantic accent는 상태나 방향을 설명하는 한 곳에만 사용한다.
+6. 최종 크기와 grayscale에서 silhouette, facing과 state를 다시 검증한다.
+
+작은 원과 rivet, 기능 없는 panel seam, 반복 lamp, 동심원, nested frame,
+무작위 scratch와 설명할 수 없는 greeble은 넣지 않는다. 경계선은 서로 다른
+mass를 분리하거나 실제 상태를 표시할 때만 사용하며, 이미 색면으로 구분된
+영역을 다시 장식선으로 감싸지 않는다.
+
+style/reference sheet는 비례, 색면 수, edge 처리, detail 밀도와 대비 원칙을
+검토하는 증거다. sheet 안의 개별 silhouette, module, glyph, icon, 장식이나
+layout을 잘라 쓰거나 trace하거나 승인 asset으로 간주하지 않는다. **아트
+스타일 승인은 개별 asset 승인이 아니다.** runtime 교체는 asset별 AS-IS/TO-BE
+비교와 별도 승인을 받은 뒤에만 진행한다.
+
+플레이어 기체는 같은 문법 안에서도 별도 비례 규칙을 가진다. 폭보다 길고,
+전방으로 수렴하며, swept-back edge와 negative space로 낮고 민첩한 인상을
+만든다. 둔중한 capsule, tank 또는 toy-rover 실루엣은 사용하지 않는다.
+선체는 이동 방향, 독립 조준 마운트는 aim 방향을 설명하고, 엔진은 선체 뒤에
+고정된 rigid module로 남긴다.
+
 ### Semantic token
 
 `VehicleStageVisualProfile`이 아래 색과 scale의 유일한 runtime owner다.
@@ -343,7 +378,8 @@ Web export만으로 interactive built-Web smoke나 release performance를
 - upgrade card는 지원 viewport/locale의 overflow와 family art hierarchy를
   아직 최종 acceptance하지 못했다.
 - XP shard 단순화, player replacement, 새 damage-feedback family와 visual
-  candidate는 승인되지 않았다. 현재 runtime 표현을 유지한다.
+  candidate는 개별 asset으로 승인되지 않았다. inventory의 player vehicle
+  TO-BE guide도 비교용 미적용 후보이며 현재 runtime 표현을 유지한다.
 - boss body와 공통 방어막 노드의 단순화 방향은 이 spec의 목표지만 생성된
   semantic-v3/v4/v5/v6 후보 파일 자체는 승인된 runtime asset이 아니다.
 

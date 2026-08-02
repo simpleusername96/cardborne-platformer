@@ -13,6 +13,7 @@ $reportPath = Join-Path $inventoryRoot "index.html"
 $dataPath = Join-Path $inventoryRoot "inventory.json"
 $readmePath = Join-Path $inventoryRoot "README.md"
 $templatePath = Join-Path $inventoryRoot "report-template.html"
+$currentReviewOverlayPath = Join-Path $inventoryRoot "current-review-overrides.json"
 $failures = [System.Collections.Generic.List[string]]::new()
 
 function Expect {
@@ -36,6 +37,9 @@ Expect (Test-Path -LiteralPath $reportPath -PathType Leaf) "missing report: $rep
 Expect (Test-Path -LiteralPath $dataPath -PathType Leaf) "missing inventory data: $dataPath"
 Expect (Test-Path -LiteralPath $readmePath -PathType Leaf) "missing evidence README: $readmePath"
 Expect (Test-Path -LiteralPath $templatePath -PathType Leaf) "missing report template: $templatePath"
+Expect (Test-Path -LiteralPath $currentReviewOverlayPath -PathType Leaf) (
+    "missing current review overlay: $currentReviewOverlayPath"
+)
 if ($failures.Count -gt 0) {
     foreach ($failure in $failures) { Write-Error $failure }
     exit 1
@@ -65,8 +69,43 @@ Expect (-not $reportText.Contains('id="animation-grid"')) "duplicate animation c
 Expect (-not $reportText.Contains('id="ui-component-grid"')) "duplicate UI catalog must not return"
 Expect (-not $reportText.Contains('id="staged-grid"')) "duplicate staged catalog must not return"
 Expect ($data.restoration.source_commit -eq "9b309ce") "unexpected restoration source commit"
+Expect (
+    $data.restoration.current_review_overlay -eq
+        "docs/design/visual-asset-inventory/current-review-overrides.json"
+) "current review overlay provenance is missing"
 Expect ($data.file_ledger.Count -eq 305) "file ledger must contain 305 current/staged records"
 Expect ($data.summary.runtime_visual_files_including_font -eq 297) "runtime visual total must remain 297"
+
+$currentCandidateIds = @("player_hull_aim", "player_engine", "player_minimap_marker")
+foreach ($candidateId in $currentCandidateIds) {
+    $matches = @($data.visual_system_units | Where-Object { $_.id -ceq $candidateId })
+    Expect ($matches.Count -eq 1) "current candidate unit must exist exactly once: $candidateId"
+    if ($matches.Count -ne 1) {
+        continue
+    }
+    $candidate = $matches[0]
+    Expect ($candidate.tobe.action -ceq "CANDIDATE_AVAILABLE") (
+        "current candidate must be guide-only: $candidateId"
+    )
+    Expect ([string]$candidate.decision_label -like "*승인 전*") (
+        "current candidate must remain explicitly unapproved: $candidateId"
+    )
+    Expect ([string]$candidate.target_direction -like "AS-IS runtime*") (
+        "current candidate must explicitly retain AS-IS runtime: $candidateId"
+    )
+}
+$playerMarkerRecords = @($data.file_ledger | Where-Object { $_.id -ceq "raster-203" })
+Expect (
+    $playerMarkerRecords.Count -eq 1 -and
+        $playerMarkerRecords[0].system_unit_id -ceq "player_minimap_marker"
+) "player minimap marker must belong only to player_minimap_marker"
+$nonPlayerMarkerUnit = @(
+    $data.visual_system_units | Where-Object { $_.id -ceq "hud_and_minimap_dynamic" }
+)
+Expect (
+    $nonPlayerMarkerUnit.Count -eq 1 -and
+        "raster-203" -notin @($nonPlayerMarkerUnit[0].ledger_ids)
+) "player marker must not remain duplicated in the non-player minimap group"
 
 $taxonomy = $null
 $taxonomyMatch = [System.Text.RegularExpressions.Regex]::Match(
@@ -122,14 +161,21 @@ foreach ($unit in $assetUnits) {
         Expect (@($unit.tobe.images).Count -eq 0) "guide-missing unit unexpectedly exposes a TO-BE image: $($unit.id)"
     }
 }
-Expect ($assetUnits.Count -eq 25) "report must contain exactly 25 file-backed asset groups"
-Expect ($actionCounts.keep -eq 9) "keep count must remain 9"
-Expect ($actionCounts.guide -eq 8) "guide-ready count must remain 8"
+Expect ($assetUnits.Count -eq 26) "report must contain exactly 26 file-backed asset groups"
+Expect ($actionCounts.keep -eq 7) "keep count must remain 7"
+Expect ($actionCounts.guide -eq 11) "guide-ready count must remain 11"
 Expect ($actionCounts.missing -eq 8) "guide-missing count must remain 8"
 
 $templateText = Get-Content -Raw -LiteralPath $templatePath
 Expect (($templateText.Split("__INVENTORY_JSON__").Count - 1) -eq 1) (
     "report template must contain exactly one inventory placeholder"
+)
+$expectedEmbeddedJson = ($data | ConvertTo-Json -Depth 100 -Compress).
+    Replace('&', '\u0026').Replace('<', '\u003c').Replace('>', '\u003e')
+$expectedReportText = $templateText.Replace("__INVENTORY_JSON__", $expectedEmbeddedJson).
+    TrimEnd([char[]]"`r`n") + "`n"
+Expect ($reportText -ceq $expectedReportText) (
+    "generated report differs from report-template.html plus inventory.json"
 )
 
 $renderedPaths = Get-VisualAssetInventoryRenderedMediaPaths -Data $data

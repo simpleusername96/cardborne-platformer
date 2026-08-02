@@ -3,7 +3,7 @@
   "report_id": "cardborne-runtime-visual-asis-tobe-pairs-v2",
   "generated_at": "2026-08-01T03:38:30.543Z",
   "language": "ko",
-  "title": "Cardborne 런타임 비주얼 AS-IS / TO-BE 매칭 리포트 · 복원본",
+  "title": "Cardborne 런타임 비주얼 AS-IS / TO-BE 매칭 리포트 · 복원본 + 현재 후보",
   "scope": {
     "definition": "현재 provider가 색인하여 runtime에서 경로 해석 가능한 visual raster 296개와 Noto font 1개를 본 장부의 runtime 범위로 삼는다.",
     "provider_reachable_is_not_proven_draw": "provider-indexed/reachable은 현재 gameplay state에서 실제 draw되었다는 뜻이 아니다. 특히 effect atlas 22개는 색인되지만 current consumer가 없고, renderer는 101개 개별 frame path를 선택한다.",
@@ -256,8 +256,8 @@
     {
       "role": "repo_evidence",
       "path": "docs/design/UI_VISUAL_SYSTEM.md",
-      "bytes": 20466,
-      "sha256": "aee0fb823ea1ddf739bc7a16f09cade258992024101479c712a6899784ab76fb",
+      "bytes": 22863,
+      "sha256": "cb02fbd8f1dfca3eb9b00242d6e24317f5345237822f5172eca9a45940808dec",
       "availability": "available_after_restoration"
     },
     {
@@ -8299,7 +8299,6 @@
   "visual_system_units": [
     {
       "id": "player_hull_aim",
-      "title": "플레이어 hull·aim mount",
       "category": "player",
       "representation": "raster",
       "runtime_status": "runtime_raster",
@@ -8310,24 +8309,26 @@
       ],
       "representative_image": "art/gameplay/semantic-v2/actors/player/actor_player_aim_mount.png",
       "decision_ids": [],
-      "decision_state": "baseline_undecided",
-      "decision_label": "AS-IS 기준선 / TO-BE 미결정",
       "current_truth": "현재 provider/index에서 접근 가능한 AS-IS raster resource 단위다. 실제 draw 여부는 runtime state에 따라 달라진다.",
-      "target_direction": null,
       "asis_images": [
         "art/gameplay/semantic-v2/actors/player/actor_player_aim_mount.png",
         "art/gameplay/semantic-v2/actors/player/actor_player_hull_base.png"
       ],
+      "title": "플레이어 선체·독립 조준 마운트",
+      "decision_state": "unreviewed",
+      "decision_label": "TO-BE 후보 · 개별 승인 전",
+      "target_direction": "AS-IS runtime을 유지한다. 길고 전방으로 수렴하는 선체, swept-back edge와 negative space, 독립 조준 마운트를 같은 style 문법으로 검토하되 개별 asset 승인 뒤에만 교체한다.",
       "tobe": {
-        "action": "UNDECIDED",
-        "status_label": "TO-BE 미제작·미결정",
-        "images": [],
-        "summary": "유효한 TO-BE 이미지가 아직 없다. AS-IS를 자동 유지하거나 자동 교체하지 않는다."
+        "action": "CANDIDATE_AVAILABLE",
+        "status_label": "TO-BE 가이드 · 개별 승인 전 · 미적용",
+        "images": [
+          "docs/design/visual-asset-inventory/review-images/candidates/player-vehicle-v1/player-hull-aim-candidates.png"
+        ],
+        "summary": "승인된 art style을 날렵한 선체와 독립 조준 마운트에 적용한 비교 후보다. sheet의 silhouette와 module은 개별 승인 전이며 runtime asset이 아니다."
       }
     },
     {
       "id": "player_engine",
-      "title": "플레이어 engine body",
       "category": "player",
       "representation": "raster",
       "runtime_status": "runtime_raster",
@@ -8339,18 +8340,21 @@
       "decision_ids": [
         "engine-dash-only"
       ],
-      "decision_state": "hold",
-      "decision_label": "보류 · 승인 아님",
       "current_truth": "현재 provider/index에서 접근 가능한 AS-IS raster resource 단위다. 실제 draw 여부는 runtime state에 따라 달라진다.",
-      "target_direction": "HOLD: 현재 dash AS-IS를 유지한다. 새 exhaust/flare 후보나 동작 변경은 승인되지 않았다.",
       "asis_images": [
         "art/gameplay/semantic-v2/actors/player/actor_player_engine.png"
       ],
+      "title": "플레이어 후방 엔진",
+      "decision_state": "unreviewed",
+      "decision_label": "동작 유지 · 형상 후보 개별 승인 전",
+      "target_direction": "AS-IS runtime과 현재 dash 동작을 유지한다. 엔진은 선체 뒤에 고정된 rigid module이며 idle flame은 없고 dash 때만 후방 flare를 표시한다. 개별 asset 승인 뒤에만 교체한다.",
       "tobe": {
-        "action": "KEEP_CURRENT",
-        "status_label": "AS-IS 유지",
-        "images": [],
-        "summary": "현재 dash effect를 유지한다. danger 원은 현재 runtime에 없으며 다시 추가하지 않는다."
+        "action": "CANDIDATE_AVAILABLE",
+        "status_label": "TO-BE 가이드 · 개별 승인 전 · 미적용",
+        "images": [
+          "docs/design/visual-asset-inventory/review-images/candidates/player-vehicle-v1/player-engine-candidates.png"
+        ],
+        "summary": "선체와 같은 큰 색면·절제된 detail 문법을 rigid rear engine에 적용한 비교 후보다. 동작 변경이나 runtime 적용 승인이 아니다."
       }
     },
     {
@@ -8889,39 +8893,37 @@
     },
     {
       "id": "hud_and_minimap_dynamic",
-      "title": "minimap marker raster 6종",
       "category": "ui",
       "representation": "raster",
       "runtime_status": "runtime_raster",
-      "asset_count": 6,
-      "ledger_ids": [
-        "raster-198",
-        "raster-199",
-        "raster-200",
-        "raster-201",
-        "raster-202",
-        "raster-203"
-      ],
       "representative_image": "art/gameplay/semantic-v2/hud/minimap_marker_boss.png",
       "decision_ids": [],
       "decision_state": "baseline_undecided",
       "decision_label": "AS-IS 기준선 / TO-BE 미결정",
       "current_truth": "현재 provider/index에서 접근 가능한 AS-IS raster resource 단위다. 실제 draw 여부는 runtime state에 따라 달라진다.",
       "target_direction": null,
-      "asis_images": [
-        "art/gameplay/semantic-v2/hud/minimap_marker_boss.png",
-        "art/gameplay/semantic-v2/hud/minimap_marker_elite.png",
-        "art/gameplay/semantic-v2/hud/minimap_marker_hostile.png",
-        "art/gameplay/semantic-v2/hud/minimap_marker_objective_active.png",
-        "art/gameplay/semantic-v2/hud/minimap_marker_objective_locked.png",
-        "art/gameplay/semantic-v2/hud/minimap_marker_player.png"
-      ],
       "tobe": {
         "action": "UNDECIDED",
         "status_label": "TO-BE 미제작·미결정",
         "images": [],
         "summary": "유효한 TO-BE 이미지가 아직 없다. AS-IS를 자동 유지하거나 자동 교체하지 않는다."
-      }
+      },
+      "title": "비플레이어 미니맵 마커 5종",
+      "asset_count": 5,
+      "ledger_ids": [
+        "raster-198",
+        "raster-199",
+        "raster-200",
+        "raster-201",
+        "raster-202"
+      ],
+      "asis_images": [
+        "art/gameplay/semantic-v2/hud/minimap_marker_boss.png",
+        "art/gameplay/semantic-v2/hud/minimap_marker_elite.png",
+        "art/gameplay/semantic-v2/hud/minimap_marker_hostile.png",
+        "art/gameplay/semantic-v2/hud/minimap_marker_objective_active.png",
+        "art/gameplay/semantic-v2/hud/minimap_marker_objective_locked.png"
+      ]
     },
     {
       "id": "hud_action_glyphs",
@@ -10544,6 +10546,34 @@
         "status_label": "TO-BE 미제작·미결정",
         "images": [],
         "summary": "유효한 TO-BE 이미지가 아직 없다. AS-IS를 자동 유지하거나 자동 교체하지 않는다."
+      }
+    },
+    {
+      "id": "player_minimap_marker",
+      "title": "플레이어 미니맵 마커",
+      "category": "player",
+      "representation": "raster",
+      "runtime_status": "runtime_raster",
+      "asset_count": 1,
+      "ledger_ids": [
+        "raster-203"
+      ],
+      "representative_image": "art/gameplay/semantic-v2/hud/minimap_marker_player.png",
+      "decision_ids": [],
+      "decision_state": "unreviewed",
+      "decision_label": "TO-BE 후보 · 개별 승인 전",
+      "current_truth": "현재 provider/index에서 접근 가능한 플레이어 AS-IS minimap marker다. runtime에서는 14px 크기로 기체 facing을 표시한다.",
+      "target_direction": "AS-IS runtime을 유지한다. 선체의 전방 수렴 silhouette를 단순화한 방향성 marker를 48px source와 14px gameplay, 8방향과 grayscale에서 검토하며 개별 asset 승인 뒤에만 교체한다.",
+      "asis_images": [
+        "art/gameplay/semantic-v2/hud/minimap_marker_player.png"
+      ],
+      "tobe": {
+        "action": "CANDIDATE_AVAILABLE",
+        "status_label": "TO-BE 가이드 · 개별 승인 전 · 미적용",
+        "images": [
+          "docs/design/visual-asset-inventory/review-images/candidates/player-vehicle-v1/player-minimap-marker-candidates.png"
+        ],
+        "summary": "날렵한 기체의 facing을 작은 크기에서 전달하는 비교 후보다. marker silhouette, accent와 실제 raster는 개별 승인 전이며 runtime에 적용되지 않았다."
       }
     }
   ],
@@ -15370,10 +15400,10 @@
       "provider_reachable": true,
       "provider": "vehicle_semantic_asset_provider",
       "draw_status": "provider_indexed_reachable_runtime_state_dependent",
-      "system_unit_id": "hud_and_minimap_dynamic",
       "decision_ids": [],
-      "decision_state": "baseline_undecided",
-      "decision_label": "AS-IS 기준선 / TO-BE 미결정",
+      "system_unit_id": "player_minimap_marker",
+      "decision_state": "unreviewed",
+      "decision_label": "TO-BE 후보 · 개별 승인 전",
       "inventory_metadata_matches_disk": true,
       "bytes": 3268,
       "sha256": "dc0ea602136405ce29d4abac7c065200b2c9a16986eab4f9fdc46a7462199477"
@@ -18062,7 +18092,9 @@
     "restored_on": "2026-08-02",
     "source_commit": "9b309ce",
     "authority": "Evidence only. AGENTS.md, vehicle_game_spec.md, and UI_VISUAL_SYSTEM.md remain authoritative.",
-    "review_image_count": 41,
+    "review_image_count": 44,
+    "current_review_overlay": "docs/design/visual-asset-inventory/current-review-overrides.json",
+    "current_review_authority": "Art-style approval only. Every candidate asset remains unapproved and is not connected to runtime.",
     "current_gameplay_manifest": "art/gameplay/semantic-v2/asset-manifest.json",
     "current_ui_manifest": "art/ui/production/semantic-v2/ui-asset-manifest.json"
   }

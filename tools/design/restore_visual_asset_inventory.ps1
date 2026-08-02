@@ -13,6 +13,7 @@ $sourceData = "$sourceRoot/runtime-visual-inventory.json"
 $targetRelative = "docs/design/visual-asset-inventory"
 $targetRoot = Join-Path $repoRoot ($targetRelative.Replace('/', '\'))
 $templatePath = Join-Path $targetRoot "report-template.html"
+$currentReviewOverlayPath = Join-Path $targetRoot "current-review-overrides.json"
 
 function Get-GitText {
     param(
@@ -130,6 +131,55 @@ function Rewrite-Paths {
     }
 }
 
+function Apply-CurrentReviewOverlay {
+    param(
+        [Parameter(Mandatory)] [object]$Data,
+        [Parameter(Mandatory)] [object]$Overlay
+    )
+
+    if ([int]$Overlay.schema_version -ne 1) {
+        throw "Unsupported current review overlay schema: $($Overlay.schema_version)"
+    }
+
+    foreach ($patch in @($Overlay.collection_patches)) {
+        $collectionName = [string]$patch.collection
+        $collectionProperty = $Data.PSObject.Properties[$collectionName]
+        if ($null -eq $collectionProperty) {
+            throw "Overlay patch references missing collection: $collectionName"
+        }
+        $matches = @(
+            @($collectionProperty.Value) |
+                Where-Object { [string]$_.id -ceq [string]$patch.id }
+        )
+        if ($matches.Count -ne 1) {
+            throw "Overlay patch requires exactly one $collectionName id=$($patch.id); found $($matches.Count)."
+        }
+        foreach ($property in $patch.set.PSObject.Properties) {
+            $matches[0] | Add-Member `
+                -NotePropertyName $property.Name `
+                -NotePropertyValue $property.Value `
+                -Force
+        }
+    }
+
+    foreach ($addition in @($Overlay.collection_additions)) {
+        $collectionName = [string]$addition.collection
+        $collectionProperty = $Data.PSObject.Properties[$collectionName]
+        if ($null -eq $collectionProperty) {
+            throw "Overlay addition references missing collection: $collectionName"
+        }
+        $itemId = [string]$addition.item.id
+        $matches = @(
+            @($collectionProperty.Value) |
+                Where-Object { [string]$_.id -ceq $itemId }
+        )
+        if ($matches.Count -ne 0) {
+            throw "Overlay addition duplicates $collectionName id=$itemId."
+        }
+        $collectionProperty.Value = @($collectionProperty.Value) + @($addition.item)
+    }
+}
+
 function Update-CurrentFileEvidence {
     param([Parameter(Mandatory)] [object]$Data)
 
@@ -210,13 +260,26 @@ foreach ($path in $renderedPaths) {
 }
 
 Rewrite-Paths -Node $data -PathMap $pathMap
+if (-not (Test-Path -LiteralPath $currentReviewOverlayPath -PathType Leaf)) {
+    throw "Missing current review overlay: $currentReviewOverlayPath"
+}
+$currentReviewOverlay = Get-Content -Raw -LiteralPath $currentReviewOverlayPath |
+    ConvertFrom-Json -Depth 100
+Apply-CurrentReviewOverlay -Data $data -Overlay $currentReviewOverlay
 Update-CurrentFileEvidence -Data $data
-$data.title = "Cardborne 런타임 비주얼 AS-IS / TO-BE 매칭 리포트 · 복원본"
+$currentRenderedPaths = Get-VisualAssetInventoryRenderedMediaPaths -Data $data
+$reviewImageCount = @(
+    $currentRenderedPaths |
+        Where-Object { $_.StartsWith("$targetRelative/review-images/") }
+).Count
+$data.title = "Cardborne 런타임 비주얼 AS-IS / TO-BE 매칭 리포트 · 복원본 + 현재 후보"
 $data | Add-Member -NotePropertyName "restoration" -NotePropertyValue ([pscustomobject]@{
     restored_on = "2026-08-02"
     source_commit = $SnapshotCommit
     authority = "Evidence only. AGENTS.md, vehicle_game_spec.md, and UI_VISUAL_SYSTEM.md remain authoritative."
-    review_image_count = $pathMap.Count
+    review_image_count = $reviewImageCount
+    current_review_overlay = "$targetRelative/current-review-overrides.json"
+    current_review_authority = "Art-style approval only. Every candidate asset remains unapproved and is not connected to runtime."
     current_gameplay_manifest = "art/gameplay/semantic-v2/asset-manifest.json"
     current_ui_manifest = "art/ui/production/semantic-v2/ui-asset-manifest.json"
 }) -Force
@@ -248,5 +311,5 @@ Write-Host (
     "VISUAL_ASSET_INVENTORY_RESTORED report={0} ledger={1} review_images={2}" -f
         $reportPath,
         $data.file_ledger.Count,
-        $pathMap.Count
+        $reviewImageCount
 )
