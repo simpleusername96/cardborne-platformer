@@ -214,6 +214,7 @@ func query_nearest_overlaps_into(
 	var min_cell := _local_cell_for(rectangle.position)
 	var max_cell := _local_cell_for(rectangle.end)
 	var search_distance_squared := search_radius * search_radius
+	var worst_result_index := -1
 	for y in range(min_cell.y, max_cell.y + 1):
 		for x in range(min_cell.x, max_cell.x + 1):
 			for slot_value in _local_cells[y * _local_columns + x]:
@@ -238,9 +239,14 @@ func query_nearest_overlaps_into(
 					or distance_squared >= combined_radius * combined_radius
 				):
 					continue
-				_insert_nearest_query_result(
-					candidate, distance_squared, bounded_maximum, output
+				worst_result_index = _offer_nearest_query_result(
+					candidate,
+					distance_squared,
+					bounded_maximum,
+					output,
+					worst_result_index
 				)
+	_sort_nearest_query_results(output)
 
 
 func query_segment_into(from: Vector2, to: Vector2, padding: float, live: Array[EnemyState], output: Array[EnemyState]) -> void:
@@ -379,33 +385,81 @@ func _append_cell_candidates(
 		output.append(enemy)
 
 
-func _insert_nearest_query_result(
+func _offer_nearest_query_result(
 	candidate: EnemyState,
 	distance_squared: float,
 	maximum_results: int,
-	output: Array[EnemyState]
-) -> void:
-	var insert_at := output.size()
-	for index in output.size():
-		if (
-			distance_squared < _nearest_query_distances[index]
-			or (
-				is_equal_approx(distance_squared, _nearest_query_distances[index])
-				and candidate.id < output[index].id
-			)
-		):
-			insert_at = index
-			break
-	if insert_at >= maximum_results:
-		return
-	var next_size := mini(maximum_results, output.size() + 1)
+	output: Array[EnemyState],
+	worst_index: int
+) -> int:
 	if output.size() < maximum_results:
 		output.append(candidate)
-	for index in range(next_size - 1, insert_at, -1):
-		output[index] = output[index - 1]
-		_nearest_query_distances[index] = _nearest_query_distances[index - 1]
-	output[insert_at] = candidate
-	_nearest_query_distances[insert_at] = distance_squared
+		_nearest_query_distances[output.size() - 1] = distance_squared
+		return (
+			_worst_nearest_query_index(output)
+			if output.size() == maximum_results
+			else -1
+		)
+	if worst_index < 0:
+		worst_index = _worst_nearest_query_index(output)
+	if not _nearest_query_value_is_better(
+		candidate,
+		distance_squared,
+		output[worst_index],
+		_nearest_query_distances[worst_index]
+	):
+		return worst_index
+	output[worst_index] = candidate
+	_nearest_query_distances[worst_index] = distance_squared
+	return _worst_nearest_query_index(output)
+
+
+func _worst_nearest_query_index(output: Array[EnemyState]) -> int:
+	var worst_index := 0
+	for index in range(1, output.size()):
+		if _nearest_query_value_is_better(
+			output[worst_index],
+			_nearest_query_distances[worst_index],
+			output[index],
+			_nearest_query_distances[index]
+		):
+			worst_index = index
+	return worst_index
+
+
+func _nearest_query_value_is_better(
+	candidate: EnemyState,
+	distance_squared: float,
+	other: EnemyState,
+	other_distance_squared: float
+) -> bool:
+	return (
+		distance_squared < other_distance_squared
+		or (
+			is_equal_approx(distance_squared, other_distance_squared)
+			and candidate.id < other.id
+		)
+	)
+
+
+func _sort_nearest_query_results(output: Array[EnemyState]) -> void:
+	for index in range(1, output.size()):
+		var candidate := output[index]
+		var distance_squared := _nearest_query_distances[index]
+		var insert_at := index
+		while insert_at > 0 and _nearest_query_value_is_better(
+			candidate,
+			distance_squared,
+			output[insert_at - 1],
+			_nearest_query_distances[insert_at - 1]
+		):
+			output[insert_at] = output[insert_at - 1]
+			_nearest_query_distances[insert_at] = (
+				_nearest_query_distances[insert_at - 1]
+			)
+			insert_at -= 1
+		output[insert_at] = candidate
+		_nearest_query_distances[insert_at] = distance_squared
 
 
 func _add_membership(
