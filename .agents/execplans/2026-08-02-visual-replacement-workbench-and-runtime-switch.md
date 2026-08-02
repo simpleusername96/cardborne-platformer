@@ -12,7 +12,7 @@ related:
   - ../PLANS.md
   - ../../docs/product/vehicle_game_spec.md
   - ../../docs/design/VISUAL_SYSTEM.md
-  - ../../docs/design/visual-asset-inventory/README.md
+  - ../../docs/design/visual-replacement-workbench/README.md
   - ../../art/visuals/production/README.md
   - ../semantic-v2-runtime-acceptance-evidence.md
   - ./2026-08-02-pre-asset-code-stabilization.md
@@ -1033,18 +1033,18 @@ and contains only current AS-IS evidence plus active TO-BE work.
   safety contract.
 - [x] Create validate_visual_replacement_workbench.ps1.
 - [x] Generate inventory.json and index.html.
-- [ ] Confirm index.html works directly from the filesystem with networking
+- [x] Confirm index.html works directly from the filesystem with networking
   disabled.
 - [x] Confirm AS-IS references production bytes directly.
-- [ ] Confirm previews are visibly separate and never satisfy deliverable
+- [x] Confirm previews are visibly separate and never satisfy deliverable
   validation.
 - [x] Confirm each TO-BE deliverable displays its exact target path and hash.
 - [x] Confirm Korean and English labels are complete.
-- [ ] Confirm keyboard navigation, focus, dialog close, search, filters, and
+- [x] Confirm keyboard navigation, focus, dialog close, search, filters, and
   responsive layout at 960 by 540, 1280 by 720, and 1920 by 1080.
 - [x] Compare the new current ledger with both production manifests, Theme,
   providers, and concrete consumers.
-- [ ] Request one explicit deletion approval for these exact tracked legacy
+- [x] Request one explicit deletion approval for these exact tracked legacy
   artifacts:
   - docs/design/visual-asset-inventory/review-images, 44 PNG files;
   - docs/design/visual-asset-inventory/current-review-overrides.json;
@@ -1055,12 +1055,12 @@ and contains only current AS-IS evidence plus active TO-BE work.
   - tools/design/restore_visual_asset_inventory.ps1;
   - tools/design/visual_asset_inventory_model.psm1;
   - tools/validation/validate_visual_asset_inventory.ps1.
-- [ ] Stop before deletion if approval is absent.
-- [ ] After approval and new-workbench parity, remove the exact legacy
+- [x] Stop before deletion if approval is absent.
+- [x] After approval and new-workbench parity, remove the exact legacy
   artifacts and the now-empty old workbench folder.
-- [ ] After that removal, run the repository-wide old-root scan and require zero
+- [x] After that removal, run the repository-wide old-root scan and require zero
   references outside this active plan and append-only historical evidence.
-- [ ] Require zero live references in production, the new workbench, canonical
+- [x] Require zero live references in production, the new workbench, canonical
   docs, and workbench tooling to 9b309ce, semantic-v3-approval,
   current-review-overrides, review-images, or
   restore_visual_asset_inventory. This active plan and append-only historical
@@ -1850,7 +1850,7 @@ before execution continues.
 - [x] Phase 0: clear the pre-asset asset/UI interlock through the narrow
   2026-08-03 BK amendment recorded below.
 - [x] Phase 1: establish the three canonical locations.
-- [ ] Phase 2: rebuild the current-only replacement workbench.
+- [x] Phase 2: rebuild the current-only replacement workbench.
 - [ ] Phase 3: normalize the current production contract.
 - [ ] Phase 4: complete the player vertical slice.
 - [ ] Phase 5: replace the UI component system.
@@ -1863,25 +1863,26 @@ before execution continues.
 
 ## Next Steps
 
-1. Open the generated index.html directly from the filesystem and complete the
-   required rendered, keyboard, bilingual, dialog, filter, and responsive checks.
-2. After rendered parity passes, display the exact 52-file Phase 2 legacy
-   deletion set and obtain BK's explicit approval before removing any file.
-3. Complete Phase 2 cleanup and validation in one accepted commit.
-4. Continue later phases in order, preserving their independent destructive
-   and exact-hash approval gates.
+1. Prepare the Phase 3 runtime normalization diff without deleting any staged
+   or unused production media.
+2. Display the exact 33-PNG plus 33-sidecar Phase 3 retirement set and obtain
+   BK's separate explicit approval before removing any file or committing the
+   prepared runtime change.
+3. Complete Phase 3 validation and cleanup in one accepted commit.
+4. Continue later switch units in order, preserving their independent exact-hash
+   and exact-retirement-path approval gates.
 
 ## Completion Criteria
 
 - [ ] The pre-asset switch interlock was validly cleared before implementation.
-- [ ] art/visuals/production is the sole current gameplay/UI visual root.
-- [ ] docs/design/VISUAL_SYSTEM.md is the sole visual style/theme authority.
-- [ ] docs/design/visual-replacement-workbench is the sole active replacement
+- [x] art/visuals/production is the sole current gameplay/UI visual root.
+- [x] docs/design/VISUAL_SYSTEM.md is the sole visual style/theme authority.
+- [x] docs/design/visual-replacement-workbench is the sole active replacement
   direction/media/status folder.
-- [ ] The historical restore pipeline and review media are absent after
+- [x] The historical restore pipeline and review media are absent after
   explicit approval.
-- [ ] AS-IS references current production directly and is never duplicated.
-- [ ] Every TO-BE deliverable is an exact target file, never a sheet.
+- [x] AS-IS references current production directly and is never duplicated.
+- [x] Every TO-BE deliverable is an exact target file, never a sheet.
 - [ ] Every production media file has exactly one switch unit and at least one
   runtime consumer.
 - [ ] Player uses one craft body and no fixed engine/aim-mount asset.
@@ -1897,7 +1898,7 @@ before execution continues.
 - [ ] UI manifest declares exactly 54 connected PNG states.
 - [ ] All applied production hashes match exact BK-approved hashes.
 - [ ] All retired paths have zero references.
-- [ ] The generated index works from a file URL in Korean and English with
+- [x] The generated index works from a file URL in Korean and English with
   complete keyboard, focus, responsive, and reduced-motion behavior.
 - [ ] Full focused, full-suite, authority, workbench, import, export, native,
   built-Web, performance, and lifecycle gates pass.
@@ -1991,6 +1992,18 @@ Do not mark a phase or this plan complete while a stop condition remains.
   browser rejected the required local file URL under its security policy and
   prohibited an alternate browser workaround. No legacy file was deleted and
   no later phase was started.
+- 2026-08-03: BK manually inspected the generated index.html and accepted its
+  rendered Phase 2 parity. The connected browser could not capture automated
+  local-file evidence, so owner acceptance is the rendered-evidence record for
+  the direct-file, bilingual, preview separation, keyboard/dialog/filter, and
+  responsive checklist at this gate.
+- 2026-08-03: BK explicitly instructed, "Approve deletion of the exact 52-file
+  Phase 2 legacy set." The approved set resolved to 49 tracked files under
+  docs/design/visual-asset-inventory, including 44 PNGs, plus the three exact
+  restore/model/validator tools named in Phase 2. Git removed exactly those 52
+  files. The replacement builder, deterministic check, workbench validator,
+  document-authority validator, live historical-token scan, and repository
+  old-root scan all passed; Git history remains the recovery mechanism.
 
 ## Execution Handoff
 

@@ -15,8 +15,9 @@
 governance 또는 multi-file planning 작업은 root `AGENTS.md`의 지시에 따라
 `.agents/AGENTS.md`와 `.agents/PLANS.md`도 읽는다.
 
-## Review Evidence
+## Visual Replacement Workbench
 
-현재 asset 전수 장부와 복원된 AS-IS/TO-BE 후보 검토 화면은
-[`design/visual-asset-inventory/`](./design/visual-asset-inventory/README.md)에
-있다. 이 workspace는 evidence이며 위 정본 문서의 권위를 갖지 않는다.
+현재 runtime AS-IS와 바로 교체 가능한 TO-BE 대상의 장부 및 검토 화면은
+[`design/visual-replacement-workbench/`](./design/visual-replacement-workbench/README.md)에
+있다. 이 workspace는 교체 작업의 active spec이며, gameplay 또는 visual style
+정본의 권위를 대신하지 않는다.
