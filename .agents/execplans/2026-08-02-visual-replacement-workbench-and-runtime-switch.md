@@ -1017,32 +1017,32 @@ represent runtime draw truth.
 TO-BE: The active workbench is current-only, deterministic, self-contained,
 and contains only current AS-IS evidence plus active TO-BE work.
 
-- [ ] Complete the docs/design/visual-replacement-workbench shell created in
+- [x] Complete the docs/design/visual-replacement-workbench shell created in
   Phase 1 with the exact target structure in this plan.
-- [ ] Create replacement-workbench.json with every current media path assigned
+- [x] Create replacement-workbench.json with every current media path assigned
   exactly once and all initial statuses set to keep_current or target_required
   according to the switch matrix.
-- [ ] Create index-template.html by preserving the useful file-URL, filter,
+- [x] Create index-template.html by preserving the useful file-URL, filter,
   lazy-image, dialog, and keyboard behavior while replacing historical states
   with the locked state machine.
-- [ ] Create visual_replacement_workbench_model.psm1 for schema, path,
+- [x] Create visual_replacement_workbench_model.psm1 for schema, path,
   deterministic ordering, hash, and validation primitives only.
-- [ ] Create build_visual_replacement_workbench.ps1 for repository IO,
+- [x] Create build_visual_replacement_workbench.ps1 for repository IO,
   current-ledger assembly, canonical serialization, and generated output.
-- [ ] Create promote_visual_replacement_unit.ps1 with the narrow copy-only
+- [x] Create promote_visual_replacement_unit.ps1 with the narrow copy-only
   safety contract.
-- [ ] Create validate_visual_replacement_workbench.ps1.
-- [ ] Generate inventory.json and index.html.
+- [x] Create validate_visual_replacement_workbench.ps1.
+- [x] Generate inventory.json and index.html.
 - [ ] Confirm index.html works directly from the filesystem with networking
   disabled.
-- [ ] Confirm AS-IS references production bytes directly.
+- [x] Confirm AS-IS references production bytes directly.
 - [ ] Confirm previews are visibly separate and never satisfy deliverable
   validation.
-- [ ] Confirm each TO-BE deliverable displays its exact target path and hash.
-- [ ] Confirm Korean and English labels are complete.
+- [x] Confirm each TO-BE deliverable displays its exact target path and hash.
+- [x] Confirm Korean and English labels are complete.
 - [ ] Confirm keyboard navigation, focus, dialog close, search, filters, and
   responsive layout at 960 by 540, 1280 by 720, and 1920 by 1080.
-- [ ] Compare the new current ledger with both production manifests, Theme,
+- [x] Compare the new current ledger with both production manifests, Theme,
   providers, and concrete consumers.
 - [ ] Request one explicit deletion approval for these exact tracked legacy
   artifacts:
@@ -1863,11 +1863,11 @@ before execution continues.
 
 ## Next Steps
 
-1. Commit the accepted Phase 1 canonical-location migration.
-2. Build and validate current-workbench parity without deleting legacy
-   evidence.
-3. Print the exact Phase 2 legacy deletion set and obtain BK's explicit
-   approval before removing any listed file.
+1. Open the generated index.html directly from the filesystem and complete the
+   required rendered, keyboard, bilingual, dialog, filter, and responsive checks.
+2. After rendered parity passes, display the exact 52-file Phase 2 legacy
+   deletion set and obtain BK's explicit approval before removing any file.
+3. Complete Phase 2 cleanup and validation in one accepted commit.
 4. Continue later phases in order, preserving their independent destructive
    and exact-hash approval gates.
 
@@ -1982,6 +1982,15 @@ Do not mark a phase or this plan complete while a stop condition remains.
   docs/design/visual-asset-inventory pipeline, its restore tool, and historical
   append-only evidence remain intentionally present for Phase 2; no deletion
   authority was inferred from the Phase 1 waiver.
+- 2026-08-03: Phase 2 groundwork created a deterministic current-only source,
+  model, builder, validator, copy-only promotion helper, generated ledger, and
+  bilingual self-contained index. Static validation accounts for all 247
+  gameplay PNGs, 57 UI PNGs, one font, its license, 48 switch units, 265 exact
+  TO-BE targets, and three retire-only units; builder -Check and the workbench
+  validator pass. Automated rendered parity remains open because the connected
+  browser rejected the required local file URL under its security policy and
+  prohibited an alternate browser workaround. No legacy file was deleted and
+  no later phase was started.
 
 ## Execution Handoff
 
