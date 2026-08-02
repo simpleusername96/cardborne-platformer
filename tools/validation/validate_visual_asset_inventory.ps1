@@ -12,6 +12,7 @@ $inventoryRoot = Join-Path $repoRoot "docs\design\visual-asset-inventory"
 $reportPath = Join-Path $inventoryRoot "index.html"
 $dataPath = Join-Path $inventoryRoot "inventory.json"
 $readmePath = Join-Path $inventoryRoot "README.md"
+$templatePath = Join-Path $inventoryRoot "report-template.html"
 $failures = [System.Collections.Generic.List[string]]::new()
 
 function Expect {
@@ -34,6 +35,7 @@ function Resolve-RepositoryPath {
 Expect (Test-Path -LiteralPath $reportPath -PathType Leaf) "missing report: $reportPath"
 Expect (Test-Path -LiteralPath $dataPath -PathType Leaf) "missing inventory data: $dataPath"
 Expect (Test-Path -LiteralPath $readmePath -PathType Leaf) "missing evidence README: $readmePath"
+Expect (Test-Path -LiteralPath $templatePath -PathType Leaf) "missing report template: $templatePath"
 if ($failures.Count -gt 0) {
     foreach ($failure in $failures) { Write-Error $failure }
     exit 1
@@ -56,10 +58,79 @@ if ($match.Success) {
 
 Expect ($reportText.Contains("var reportPrefix = '../../../';")) "report root prefix is incorrect"
 Expect ($reportText.Contains("복원된 검토 스냅샷")) "report lacks restored-evidence warning"
-Expect ($reportText.Contains("min-width: 1540px;")) "ledger column-width contract is missing"
+Expect ($reportText.Contains("min-width: 1280px;")) "ledger column-width contract is missing"
+Expect ($reportText.Contains("Cardborne 비주얼 자산 검토표")) "report title is not simplified"
+Expect (-not $reportText.Contains('id="decision-selector"')) "standalone decision selector must not return"
+Expect (-not $reportText.Contains('id="animation-grid"')) "duplicate animation catalog must not return"
+Expect (-not $reportText.Contains('id="ui-component-grid"')) "duplicate UI catalog must not return"
+Expect (-not $reportText.Contains('id="staged-grid"')) "duplicate staged catalog must not return"
 Expect ($data.restoration.source_commit -eq "9b309ce") "unexpected restoration source commit"
 Expect ($data.file_ledger.Count -eq 305) "file ledger must contain 305 current/staged records"
 Expect ($data.summary.runtime_visual_files_including_font -eq 297) "runtime visual total must remain 297"
+
+$taxonomy = $null
+$taxonomyMatch = [System.Text.RegularExpressions.Regex]::Match(
+    $reportText,
+    '(?s)<script id="report-taxonomy" type="application/json">(.*?)</script>'
+)
+Expect $taxonomyMatch.Success "report does not contain the hierarchical taxonomy"
+if ($taxonomyMatch.Success) {
+    $taxonomy = $taxonomyMatch.Groups[1].Value | ConvertFrom-Json -Depth 20
+    $classifiedIds = @(
+        $taxonomy.categories | ForEach-Object {
+            $_.groups | ForEach-Object { @($_.unit_ids) }
+        }
+    )
+    $uniqueClassifiedIds = @($classifiedIds | Sort-Object -Unique)
+    $sourceUnitIds = @($data.visual_system_units.id | Sort-Object -Unique)
+    $taxonomyDifference = @(Compare-Object $sourceUnitIds $uniqueClassifiedIds)
+    Expect ($taxonomy.categories.Count -eq 5) "report taxonomy must contain five clear top-level categories"
+    Expect ($classifiedIds.Count -eq $data.visual_system_units.Count) (
+        "taxonomy item count differs: taxonomy=$($classifiedIds.Count) data=$($data.visual_system_units.Count)"
+    )
+    Expect ($uniqueClassifiedIds.Count -eq $classifiedIds.Count) "a visual unit appears more than once in taxonomy"
+    Expect ($taxonomyDifference.Count -eq 0) "taxonomy and visual system unit IDs differ"
+}
+
+$actionCounts = @{ keep = 0; guide = 0; missing = 0 }
+$actionBySource = @{}
+if ($null -ne $taxonomy) {
+    $actionIds = @($taxonomy.actions.id | Sort-Object)
+    Expect (($actionIds -join ',') -ceq 'guide,keep,missing') "report must define exactly three action states"
+    foreach ($definition in @($taxonomy.actions)) {
+        foreach ($sourceAction in @($definition.source_actions)) {
+            Expect (-not $actionBySource.ContainsKey([string]$sourceAction)) (
+                "source action appears in more than one report state: $sourceAction"
+            )
+            $actionBySource[[string]$sourceAction] = [string]$definition.id
+        }
+    }
+}
+$assetUnits = @($data.visual_system_units | Where-Object { @($_.ledger_ids).Count -gt 0 })
+foreach ($unit in $assetUnits) {
+    $action = [string]$unit.tobe.action
+    if (-not $actionBySource.ContainsKey($action)) {
+        $failures.Add("visual unit has an unclassified source action: $($unit.id) -> $action")
+        continue
+    }
+    $reportAction = [string]$actionBySource[$action]
+    $actionCounts[$reportAction] += 1
+    if ($reportAction -eq 'guide') {
+        Expect (@($unit.tobe.images).Count -gt 0) "guide-ready unit lacks a TO-BE image: $($unit.id)"
+    }
+    elseif ($reportAction -eq 'missing') {
+        Expect (@($unit.tobe.images).Count -eq 0) "guide-missing unit unexpectedly exposes a TO-BE image: $($unit.id)"
+    }
+}
+Expect ($assetUnits.Count -eq 25) "report must contain exactly 25 file-backed asset groups"
+Expect ($actionCounts.keep -eq 9) "keep count must remain 9"
+Expect ($actionCounts.guide -eq 8) "guide-ready count must remain 8"
+Expect ($actionCounts.missing -eq 8) "guide-missing count must remain 8"
+
+$templateText = Get-Content -Raw -LiteralPath $templatePath
+Expect (($templateText.Split("__INVENTORY_JSON__").Count - 1) -eq 1) (
+    "report template must contain exactly one inventory placeholder"
+)
 
 $renderedPaths = Get-VisualAssetInventoryRenderedMediaPaths -Data $data
 foreach ($path in $renderedPaths) {
@@ -98,8 +169,12 @@ if ($failures.Count -gt 0) {
 }
 
 Write-Host (
-    "VISUAL_ASSET_INVENTORY_VALIDATION_OK ledger={0} rendered_media={1} review_images={2}" -f
+    "VISUAL_ASSET_INVENTORY_VALIDATION_OK ledger={0} review_items={1} actions={2}/{3}/{4} evidence_media={5} review_images={6}" -f
         $data.file_ledger.Count,
+        $assetUnits.Count,
+        $actionCounts.keep,
+        $actionCounts.guide,
+        $actionCounts.missing,
         $renderedPaths.Count,
         $reviewImages.Count
 )

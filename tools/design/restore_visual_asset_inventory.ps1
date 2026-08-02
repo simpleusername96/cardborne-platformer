@@ -9,10 +9,10 @@ Import-Module (Join-Path $PSScriptRoot "visual_asset_inventory_model.psm1") -For
 
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
 $sourceRoot = "docs/design/component-sheets/semantic-v3-approval"
-$sourceReport = "$sourceRoot/runtime-visual-inventory-report.html"
 $sourceData = "$sourceRoot/runtime-visual-inventory.json"
 $targetRelative = "docs/design/visual-asset-inventory"
 $targetRoot = Join-Path $repoRoot ($targetRelative.Replace('/', '\'))
+$templatePath = Join-Path $targetRoot "report-template.html"
 
 function Get-GitText {
     param(
@@ -229,83 +229,18 @@ $jsonPath = Join-Path $targetRoot "inventory.json"
     [System.Text.UTF8Encoding]::new($false)
 )
 
-$report = Get-GitText -Commit $SnapshotCommit -Path $sourceReport
-foreach ($entry in $pathMap.GetEnumerator()) {
-    $report = $report.Replace($entry.Key, $entry.Value)
+$report = [System.IO.File]::ReadAllText($templatePath)
+$placeholder = "__INVENTORY_JSON__"
+if (($report.Split($placeholder).Count - 1) -ne 1) {
+    throw "Report template must contain exactly one $placeholder placeholder."
 }
-$report = $report.Replace(
-    "var reportPrefix = '../../../../';",
-    "var reportPrefix = '../../../';"
-)
-$report = $report.Replace(
-    "<title>Cardborne 런타임 비주얼 인벤토리</title>",
-    "<title>Cardborne 런타임 비주얼 인벤토리 · 복원본</title>"
-)
-$report = $report.Replace(
-    "<h1>Cardborne 런타임 비주얼 AS-IS / TO-BE 매칭</h1>",
-    "<h1>Cardborne 런타임 비주얼 AS-IS / TO-BE 매칭 · 복원본</h1>"
-)
-$banner = @'
-    <aside class="restoration-banner" role="note">
-      <strong>복원된 검토 스냅샷</strong>
-      <span>2026-08-01 inventory와 후보를 2026-08-02에 선별 복원했습니다. 후보는 승인안이 아니며 현재 정본은 AGENTS.md, vehicle_game_spec.md, UI_VISUAL_SYSTEM.md입니다.</span>
-    </aside>
-'@
-$report = $report.Replace("<body>", "<body>`n$banner")
-$report = $report.Replace(
-    "</style>",
-    @'
-    .restoration-banner {
-      margin: 0;
-      padding: 12px clamp(18px, 4vw, 52px);
-      display: flex;
-      gap: 10px;
-      align-items: baseline;
-      background: #3a2c12;
-      border-bottom: 1px solid #9e7728;
-      color: #f5e5b6;
-      font-size: 14px;
-      line-height: 1.5;
-    }
-    .restoration-banner strong { white-space: nowrap; }
-    .table-shell table {
-      min-width: 1540px;
-      table-layout: fixed;
-    }
-    .table-shell th:nth-child(1), .table-shell td:nth-child(1) { width: 88px; }
-    .table-shell th:nth-child(2), .table-shell td:nth-child(2) { width: 190px; }
-    .table-shell th:nth-child(3), .table-shell td:nth-child(3) { width: 140px; }
-    .table-shell th:nth-child(4), .table-shell td:nth-child(4) { width: 150px; }
-    .table-shell th:nth-child(5), .table-shell td:nth-child(5) { width: 260px; }
-    .table-shell th:nth-child(6), .table-shell td:nth-child(6) { width: 270px; }
-    .table-shell th:nth-child(7), .table-shell td:nth-child(7) { width: 100px; }
-    .table-shell th:nth-child(8), .table-shell td:nth-child(8) { width: 160px; }
-    .table-shell th:nth-child(9), .table-shell td:nth-child(9) { width: 180px; }
-    .table-shell .path-cell,
-    .table-shell .hash {
-      max-width: none;
-      overflow-wrap: anywhere;
-    }
-    @media (max-width: 640px) {
-      .restoration-banner { align-items: flex-start; flex-direction: column; gap: 2px; }
-      .restoration-banner strong { white-space: normal; }
-    }
-  </style>
-'@
-)
 $embeddedJson = ($data | ConvertTo-Json -Depth 100 -Compress).
     Replace('&', '\u0026').Replace('<', '\u003c').Replace('>', '\u003e')
-$inventoryPattern = '(?s)(<script id="inventory-data" type="application/json">).*?(</script>)'
-$report = [System.Text.RegularExpressions.Regex]::Replace(
-    $report,
-    $inventoryPattern,
-    { param($match) $match.Groups[1].Value + $embeddedJson + $match.Groups[2].Value },
-    1
-)
+$report = $report.Replace($placeholder, $embeddedJson)
 $reportPath = Join-Path $targetRoot "index.html"
 [System.IO.File]::WriteAllText(
     $reportPath,
-    $report + "`n",
+    $report.TrimEnd([char[]]"`r`n") + "`n",
     [System.Text.UTF8Encoding]::new($false)
 )
 
