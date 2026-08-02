@@ -1,7 +1,7 @@
 class_name VehicleEncounterDirector
 extends RefCounted
 
-## Shared squad steering and beat-aware combat-pressure limits.
+## Beat-aware combat-pressure limits and ordinary movement tuning.
 
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 const THREAT_BUDGET := 7.5
@@ -9,7 +9,7 @@ const MAX_RANGED_COMMITS := 3
 const MAX_DENIAL_COMMITS := 2
 const ENEMY_HEALTH_MULTIPLIER := 1.12
 # Ordinary navigation pace is tuned independently from committed attacks and bosses.
-const ORDINARY_MOVEMENT_SPEED_MULTIPLIER := 1.20
+const ORDINARY_MOVEMENT_SPEED_MULTIPLIER := 1.40
 const ENEMY_SPEED_MULTIPLIER := 1.20
 const HOSTILE_PROJECTILE_SPEED_MULTIPLIER := 0.82
 const ENEMY_DAMAGE_MULTIPLIER := 1.35
@@ -59,47 +59,6 @@ static func can_commit(current_points: float, ranged_count: int, denial_count: i
 	if kind == &"denial" and denial_count >= denial_cap:
 		return false
 	return true
-
-
-static func squad_motion_snapshot(active_enemies: Array[EnemyState]) -> Dictionary:
-	var snapshot := {}
-	for candidate in active_enemies:
-		if not candidate.alive or not candidate.active:
-			continue
-		var squad_id := candidate.squad_id
-		if squad_id.is_empty():
-			continue
-		var summary: Dictionary = snapshot.get(squad_id, {"position_sum":Vector2.ZERO, "members":0})
-		summary["position_sum"] = Vector2(summary["position_sum"]) + candidate.pos
-		summary["members"] = int(summary["members"]) + 1
-		snapshot[squad_id] = summary
-	for squad_id in snapshot:
-		var summary: Dictionary = snapshot[squad_id]
-		summary["centroid"] = Vector2(summary["position_sum"]) / float(maxi(1, int(summary["members"])))
-		summary.erase("position_sum")
-		snapshot[squad_id] = summary
-	return snapshot
-
-
-static func cohesion_velocity(enemy: EnemyState, squad_snapshot: Dictionary, role_velocity: Vector2) -> Vector2:
-	if enemy.phase in [&"startup", &"active"]:
-		return role_velocity
-	var squad_id := enemy.squad_id
-	if squad_id.is_empty() or role_velocity.length_squared() <= 0.001:
-		return role_velocity
-	var summary: Dictionary = squad_snapshot.get(squad_id, {})
-	var members := int(summary.get("members", 0))
-	if members <= 1:
-		return role_velocity
-	var centroid := Vector2(summary["centroid"])
-	var slot_target := centroid + enemy.formation_offset
-	var to_slot := slot_target - enemy.pos
-	if enemy.pos.distance_to(centroid) > 220.0:
-		to_slot = centroid - enemy.pos
-	if to_slot.length_squared() <= 1.0:
-		return role_velocity
-	var cohesion := to_slot.normalized() * role_velocity.length()
-	return (role_velocity * 0.70 + cohesion * 0.30).limit_length(role_velocity.length())
 
 
 static func tuning_contract() -> Dictionary:

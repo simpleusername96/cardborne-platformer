@@ -38,9 +38,13 @@ func _run() -> void:
 		scenario.activate(run)
 		print("Activated performance scenario: %s" % String(scenario_id))
 		if scenario_id == &"production_replay":
-			for _step in 3000:
-				scenario.before_physics(run, 1.0 / 60.0)
-				run.call("_update_encounter", 1.0 / 60.0)
+			# This is a scheduler contract replay, not a frame benchmark. Ten-Hz
+			# steps preserve the production decision cadence and enough simulated
+			# time to reach the fenced peak beat plus its ten-second rolling window
+			# without spending test time on redundant per-frame telemetry.
+			for _step in 740:
+				scenario.before_physics(run, 0.10)
+				run.call("_update_encounter", 0.10)
 				scenario.after_physics(run)
 		scenario.after_physics(run)
 		var snapshot := scenario.validation_snapshot(run)
@@ -69,8 +73,10 @@ func _run() -> void:
 				int(qualification["sample_count"]) == 10,
 				"production replay retains a rolling ten-second peak window"
 			)
+			var production_samples: Array = qualification["samples"]
 			_expect(
-				int(qualification["samples"][0]["authored_reserve"]) == 1260,
+				not production_samples.is_empty()
+				and int(Dictionary(production_samples[0]).get("authored_reserve", -1)) == 1260,
 				"production replay reports the Stage 5 ordinary authored reserve"
 			)
 			_expect(

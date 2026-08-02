@@ -12,9 +12,9 @@ const TacticCatalog = preload(
 const STAGE_IDS: Array[StringName] = [&"stage_1", &"stage_2", &"stage_3", &"stage_4", &"stage_5"]
 const QUOTAS := [125, 166, 208, 250, 291]
 const AUTHORED_COUNTS := [520, 660, 816, 1026, 1260]
-const SURGE_PACKS := 4
-const SQUADS_PER_PACK := 3
-const SURGE_SQUADS := SURGE_PACKS * SQUADS_PER_PACK
+const ARRIVAL_WINDOWS := 3
+const SQUADS_PER_WINDOW := 4
+const SURGE_SQUADS := ARRIVAL_WINDOWS * SQUADS_PER_WINDOW
 const MIN_SQUAD_SIZE := 4
 const MAX_SQUAD_SIZE := 8
 const MAX_SURGE_UNITS := SURGE_SQUADS * MAX_SQUAD_SIZE
@@ -155,10 +155,10 @@ static func _packets(stage_index: int, field_definition: Dictionary) -> Array[Di
 				surge_count,
 				squads.size()
 			),
-			"pack_count":SURGE_PACKS,
-			"squads_per_pack":SQUADS_PER_PACK,
-			"arrival_mode":&"multi_sector",
-			"unit_spacing":0.10,
+			"arrival_windows":ARRIVAL_WINDOWS,
+			"squads_per_window":SQUADS_PER_WINDOW,
+			"window_gap":1.20,
+			"unit_spacing":0.16,
 			"cue_lead":0.9,
 			"zone":"field",
 			"leash":Rect2(field_definition["world_rect"]),

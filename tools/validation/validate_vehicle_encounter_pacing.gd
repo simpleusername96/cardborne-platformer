@@ -1,6 +1,7 @@
 extends SceneTree
 
 const Catalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
+const Generator = preload("res://scripts/vehicle/vehicle_field_layout_generator.gd")
 const Runtime = preload("res://scripts/encounters/vehicle_encounter_runtime.gd")
 const Director = preload("res://scripts/encounters/vehicle_encounter_director.gd")
 const Allocator = preload("res://scripts/encounters/vehicle_spawn_allocator.gd")
@@ -17,8 +18,14 @@ var failures: Array[String] = []
 
 
 func _initialize() -> void:
+	var layout := Generator.generate(0xC4A2B0, Catalog.STAGE_IDS)
+	_expect(layout != null, "fixed layout exists for encounter pacing")
+	if layout == null:
+		_finish()
+		return
 	for stage_index in Catalog.STAGE_IDS.size():
 		var stage_id := Catalog.STAGE_IDS[stage_index]
+		var tactical = layout.tactical_layout(stage_id)
 		var packets := Catalog.packets(stage_id)
 		var blueprint := Catalog.packet_enemy_blueprint(stage_id)
 		_expect(
@@ -33,7 +40,7 @@ func _initialize() -> void:
 		for packet_index in range(1, packets.size()):
 			_validate_surge_packet(packets[packet_index], stage_id)
 		_validate_composition(blueprint, stage_id)
-		_validate_opening_runtime(stage_id, packets)
+		_validate_opening_runtime(stage_id, packets, tactical)
 	_validate_cap_curve(RunDifficulty.HARD, EXPECTED_HARD_CAPS)
 	_validate_cap_curve(RunDifficulty.NORMAL, EXPECTED_NORMAL_CAPS)
 	_validate_cap_curve(RunDifficulty.EASY, EXPECTED_EASY_CAPS)
@@ -44,12 +51,10 @@ func _initialize() -> void:
 
 func _validate_surge_packet(packet: Dictionary, stage_id: StringName) -> void:
 	var squads: Array = packet["squads"]
-	_expect(
-		StringName(packet.get("arrival_mode", &"")) == Allocator.ARRIVAL_MULTI_SECTOR,
-		"%s post-scout packet uses multi-sector allocation" % stage_id
-	)
-	_expect(int(packet.get("pack_count", 0)) == 4, "%s surge declares four packs" % stage_id)
-	_expect(int(packet.get("squads_per_pack", 0)) == 3, "%s surge declares three squads per pack" % stage_id)
+	_expect(int(packet.get("arrival_windows", 0)) == 3, "%s surge declares three timing windows" % stage_id)
+	_expect(int(packet.get("squads_per_window", 0)) == 4, "%s surge declares four logical squads per window" % stage_id)
+	_expect(float(packet.get("window_gap", 0.0)) == 1.20, "%s locks the 1.20-second window gap" % stage_id)
+	_expect(float(packet.get("unit_spacing", 0.0)) == 0.16, "%s locks 0.16-second unit rounds" % stage_id)
 	_expect(squads.size() == 12, "%s surge contains twelve squads" % stage_id)
 	_expect(float(packet.get("cue_lead", 0.0)) >= 0.9, "%s cue lead is at least 0.9 seconds" % stage_id)
 	for squad in squads:
@@ -80,9 +85,16 @@ func _validate_composition(blueprint: Array, stage_id: StringName) -> void:
 	_expect(float(support) / total <= 0.12, "%s caps support roles at 12%%" % stage_id)
 
 
-func _validate_opening_runtime(stage_id: StringName, packets: Array[Dictionary]) -> void:
+func _validate_opening_runtime(stage_id: StringName, packets: Array[Dictionary], tactical) -> void:
 	var runtime := Runtime.new()
-	runtime.configure(stage_id, packets, RunDifficulty.HARD)
+	runtime.configure(
+		stage_id,
+		packets,
+		RunDifficulty.HARD,
+		tactical.ordinary_spawn_anchors,
+		tactical.encounter_seed,
+		tactical.geometry_snapshot
+	)
 	var before := runtime.tick(5.0, 0)
 	_expect(before["cues"].is_empty() and before["spawns"].is_empty(), "%s keeps a five-second safe opening" % stage_id)
 	_expect(runtime.tick(0.1, 0)["cues"].size() == 1, "%s cues the scout at 5.1 seconds" % stage_id)
@@ -95,17 +107,19 @@ func _validate_opening_runtime(stage_id: StringName, packets: Array[Dictionary])
 	var cue_count := 0
 	var maximum_tick_spawns := 0
 	var first_surge_prefix := String(packets[1]["id"])
-	for _step in 50:
+	for _step in 100:
 		var result := runtime.tick(0.1, 0)
 		for cue in result["cues"]:
 			if String(cue.get("cue_id", "")).begins_with(first_surge_prefix):
 				cue_count += 1
 		maximum_tick_spawns = maxi(maximum_tick_spawns, Array(result["spawns"]).size())
-	_expect(cue_count == 4, "%s first surge emits one cue per pack" % stage_id)
+	_expect(cue_count == 12, "%s first surge emits four exact-position cues in each of three windows (actual %d)" % [stage_id, cue_count])
 	_expect(maximum_tick_spawns <= Runtime.MAX_SPAWNS_PER_TICK, "%s dequeues at most four enemies per tick" % stage_id)
 	runtime.stop_spawning()
 	_expect(
-		not runtime.spawning_enabled() and runtime.debug_snapshot()["queued_spawns"] == 0,
+		not runtime.spawning_enabled()
+			and runtime.debug_snapshot()["queued_spawns"] == 0
+			and runtime.debug_snapshot()["reserved_arrival_slots"] == 0,
 		"%s quota can stop future arrivals" % stage_id
 	)
 

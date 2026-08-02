@@ -1,22 +1,21 @@
 class_name VehicleEncounterRuntime
 extends RefCounted
 
-## Deterministic authored-packet scheduler. It owns grace, cue timing, queue
-## order, beat caps, and metrics, but never draws or mutates combat actors.
+## Deterministic authored-packet scheduler. Timing windows own cue/admission;
+## the allocator owns unit birth positions and combat actors remain external.
 
 const Director = preload("res://scripts/encounters/vehicle_encounter_director.gd")
 const RunDifficulty = preload("res://scripts/vehicle/vehicle_run_difficulty.gd")
 const SpawnAllocator = preload("res://scripts/encounters/vehicle_spawn_allocator.gd")
 const Field = preload("res://scripts/vehicle/stages/drowned_ruin_field.gd")
 
-const ARRIVAL_GRACE := 6.0
 const CUE_LEAD := 0.9
+const WINDOW_GAP := 1.20
+const RETRY_INTERVAL := 0.25
+const RECENT_BIRTH_SECONDS := 2.0
 const METRIC_SAMPLE_INTERVAL := 0.10
 const MAX_ACTIVE_COUNT_SAMPLES := 4096
 const MAX_SPAWNS_PER_TICK := 4
-const PACK_SPAWN_FAN_RADIUS := 38.0
-# Non-commensurate with squad rings, so pack members do not stack at one point.
-const PACK_SQUAD_PHASE_STEP := PI * 11.0 / 180.0
 
 var stage_id: StringName = &"stage_1"
 var difficulty: StringName = RunDifficulty.DEFAULT
@@ -26,10 +25,14 @@ var current_beat := 0
 var _packets: Array[Dictionary] = []
 var _activated_packets: Dictionary = {}
 var _events: Dictionary = {}
-var _cue_queue: Array[Dictionary] = []
+var _window_queue: Array[Dictionary] = []
 var _spawn_queue: Array[Dictionary] = []
 var _timeline: Array[Dictionary] = []
 var _spawned_by_squad: Dictionary = {}
+var _recent_births: Array[Dictionary] = []
+var _packet_inflight := false
+var _reserved_arrival_slots := 0
+var _last_cue_at := -INF
 var _first_cue_time := -1.0
 var _first_spawn_time := -1.0
 var _first_damage_time := -1.0
@@ -37,7 +40,10 @@ var _first_reward_time := -1.0
 var _active_count_samples: Array[int] = []
 var _max_attack_family_overlap := 0
 var _damage_source_families: Dictionary = {}
-var _schedule_delay_total := 0.0
+var _capacity_blocked_seconds := 0.0
+var _packet_fence_blocked_seconds := 0.0
+var _birth_capacity_blocked := 0
+var _scheduler_starvation := 0
 var _next_metric_sample := 0.0
 var _spawning_enabled := true
 var _spawn_allocator := SpawnAllocator.new()
@@ -50,21 +56,28 @@ func configure(
 	packets: Array[Dictionary],
 	run_difficulty: StringName,
 	spawn_anchors: Array[Vector2] = Field.ORDINARY_SPAWN_CANDIDATES,
-	encounter_seed: int = 0
+	encounter_seed: int = 0,
+	geometry_snapshot: Variant = null
 ) -> void:
 	stage_id = next_stage_id
 	difficulty = RunDifficulty.normalize(run_difficulty)
 	elapsed = 0.0
 	current_beat = 0
 	_packets.clear()
-	for packet in packets:
-		_packets.append(packet.duplicate(true))
+	for packet_index in packets.size():
+		var packet := packets[packet_index].duplicate(true)
+		packet["_packet_index"] = packet_index
+		_packets.append(packet)
 	_activated_packets.clear()
 	_events.clear()
-	_cue_queue.clear()
+	_window_queue.clear()
 	_spawn_queue.clear()
 	_timeline.clear()
 	_spawned_by_squad.clear()
+	_recent_births.clear()
+	_packet_inflight = false
+	_reserved_arrival_slots = 0
+	_last_cue_at = -INF
 	_first_cue_time = -1.0
 	_first_spawn_time = -1.0
 	_first_damage_time = -1.0
@@ -72,18 +85,23 @@ func configure(
 	_active_count_samples.clear()
 	_max_attack_family_overlap = 0
 	_damage_source_families.clear()
-	_schedule_delay_total = 0.0
+	_capacity_blocked_seconds = 0.0
+	_packet_fence_blocked_seconds = 0.0
+	_birth_capacity_blocked = 0
+	_scheduler_starvation = 0
 	_next_metric_sample = 0.0
 	_spawning_enabled = true
 	_allocation_debug.clear()
 	_pressure_snapshot = _empty_pressure_snapshot()
-	_spawn_allocator.configure(encounter_seed, spawn_anchors)
+	_spawn_allocator.configure(encounter_seed, spawn_anchors, geometry_snapshot)
 
 
 func stop_spawning() -> void:
 	_spawning_enabled = false
-	_cue_queue.clear()
+	_window_queue.clear()
 	_spawn_queue.clear()
+	_reserved_arrival_slots = 0
+	_packet_inflight = false
 
 
 func spawning_enabled() -> bool:
@@ -110,7 +128,9 @@ func tick(
 	active_enemies: Array = [],
 	hostile_projectile_count: int = 0
 ) -> Dictionary:
-	elapsed += maxf(0.0, delta)
+	var step := maxf(0.0, delta)
+	elapsed += step
+	_prune_recent_births()
 	_record_active_count_sample(active_mobile_count)
 	_pressure_snapshot = build_pressure_snapshot(
 		active_mobile_count,
@@ -120,50 +140,30 @@ func tick(
 		hostile_projectile_count
 	)
 	_max_attack_family_overlap = maxi(_max_attack_family_overlap, active_attack_families.size())
-	if _spawning_enabled:
-		_activate_ready_packets(player_position, visible_world)
 	var cues: Array[Dictionary] = []
-	while not _cue_queue.is_empty() and _effective_time(_cue_queue[0]) <= elapsed + 0.0001:
-		var cue: Dictionary = _cue_queue.pop_front()
-		cues.append(cue)
-		var cue_time := _effective_time(cue)
-		if _first_cue_time < 0.0:
-			_first_cue_time = cue_time
-		_timeline.append({
-			"kind":&"cue",
-			"id":cue.get("cue_id", cue["squad_id"]),
-			"time":cue_time,
-		})
-
 	var spawns: Array[Dictionary] = []
-	var spawn_budget := mini(MAX_SPAWNS_PER_TICK, maxi(0, active_cap() - active_mobile_count))
-	while (
-		_spawning_enabled
-		and spawn_budget > 0
-		and not _spawn_queue.is_empty()
-		and _effective_time(_spawn_queue[0]) <= elapsed + 0.0001
-	):
-			var request: Dictionary = _spawn_queue.pop_front()
-			spawns.append(request["spec"])
-			spawn_budget -= 1
-			var squad_id := String(request["spec"]["squad_id"])
-			_spawned_by_squad[squad_id] = int(_spawned_by_squad.get(squad_id, 0)) + 1
-			var spawn_time := _effective_time(request)
-			if _first_spawn_time < 0.0:
-				_first_spawn_time = spawn_time
-			_timeline.append({"kind":&"spawn", "id":request["spec"]["id"], "squad_id":squad_id, "time":spawn_time})
-	if (
-		_spawning_enabled
-		and spawn_budget == 0
-		and not _spawn_queue.is_empty()
-		and _effective_time(_spawn_queue[0]) <= elapsed + 0.0001
-	):
-		_schedule_delay_total += maxf(0.0, delta)
+	if _spawning_enabled:
+		_process_due_round(active_mobile_count, step, spawns)
+		_complete_inflight_packet_if_ready()
+		if _packet_inflight and _has_ready_unactivated_packet():
+			_packet_fence_blocked_seconds += step
+		if not _packet_inflight:
+			_activate_next_ready_packet()
+		_admit_due_window(active_mobile_count + spawns.size(), step, player_position, visible_world, cues)
+		_complete_inflight_packet_if_ready()
 	return {"cues":cues, "spawns":spawns}
 
 
 func active_cap() -> int:
 	return RunDifficulty.scaled_active_cap(Director.active_cap_for(current_beat), difficulty)
+
+
+func reserved_active_slots() -> int:
+	return _reserved_arrival_slots
+
+
+func available_active_slots(active_mobile_count: int) -> int:
+	return maxi(0, active_cap() - maxi(0, active_mobile_count) - _reserved_arrival_slots)
 
 
 func threat_budget() -> float:
@@ -197,7 +197,13 @@ func debug_snapshot() -> Dictionary:
 		"beat":current_beat,
 		"active_cap":active_cap(),
 		"threat_budget":threat_budget(),
-		"queued_spawns":_spawn_queue.size(),
+		"queued_spawns":_queued_spawn_count(),
+		"queued_windows":_window_queue.size(),
+		"reserved_arrival_slots":_reserved_arrival_slots,
+		"capacity_blocked_seconds":_capacity_blocked_seconds,
+		"packet_fence_blocked_seconds":_packet_fence_blocked_seconds,
+		"birth_capacity_blocked":_birth_capacity_blocked,
+		"scheduler_starvation":_scheduler_starvation,
 		"activated_packets":_activated_packets.keys(),
 		"events":_events.duplicate(true),
 		"first_cue_time":_first_cue_time,
@@ -209,7 +215,7 @@ func debug_snapshot() -> Dictionary:
 		"damage_source_families":_damage_source_families.duplicate(true),
 		"spawned_by_squad":_spawned_by_squad.duplicate(true),
 		"timeline":_timeline.duplicate(true),
-		"schedule_delay":_schedule_delay_total,
+		"schedule_delay":_capacity_blocked_seconds,
 		"active_count_samples":_active_count_samples.size(),
 		"spawning_enabled":_spawning_enabled,
 		"allocations":_allocation_debug.duplicate(true),
@@ -253,14 +259,14 @@ static func build_pressure_snapshot(
 				&"denial":
 					denial_commits += 1
 	return {
-		"active": active_mobile_count,
-		"visible": visible,
-		"near_600": near_600,
-		"near_900": near_900,
-		"sector_histogram": sectors,
-		"ranged_commits": ranged_commits,
-		"denial_commits": denial_commits,
-		"hostile_projectiles": maxi(0, hostile_projectile_count),
+		"active":active_mobile_count,
+		"visible":visible,
+		"near_600":near_600,
+		"near_900":near_900,
+		"sector_histogram":sectors,
+		"ranged_commits":ranged_commits,
+		"denial_commits":denial_commits,
+		"hostile_projectiles":maxi(0, hostile_projectile_count),
 	}
 
 
@@ -268,14 +274,14 @@ static func _empty_pressure_snapshot() -> Dictionary:
 	var sectors := PackedInt32Array()
 	sectors.resize(8)
 	return {
-		"active": 0,
-		"visible": 0,
-		"near_600": 0,
-		"near_900": 0,
-		"sector_histogram": sectors,
-		"ranged_commits": 0,
-		"denial_commits": 0,
-		"hostile_projectiles": 0,
+		"active":0,
+		"visible":0,
+		"near_600":0,
+		"near_900":0,
+		"sector_histogram":sectors,
+		"ranged_commits":0,
+		"denial_commits":0,
+		"hostile_projectiles":0,
 	}
 
 
@@ -304,22 +310,22 @@ func _record_active_count_sample(active_mobile_count: int) -> void:
 	_next_metric_sample = elapsed + METRIC_SAMPLE_INTERVAL
 
 
-func _effective_time(entry: Dictionary) -> float:
-	return float(entry["time"]) + _schedule_delay_total - float(entry.get("delay_base", 0.0))
-
-
-func _scheduled_key(entry: Dictionary) -> float:
-	return float(entry["time"]) - float(entry.get("delay_base", 0.0))
-
-
-func _activate_ready_packets(player_position: Vector2, visible_world: Rect2) -> void:
+func _activate_next_ready_packet() -> void:
 	for packet in _packets:
 		var packet_id := String(packet["id"])
 		if _activated_packets.has(packet_id) or not _trigger_ready(packet["trigger"]):
 			continue
 		_activated_packets[packet_id] = elapsed
 		current_beat = maxi(current_beat, int(packet["beat"]))
-		_schedule_packet(packet, player_position, visible_world)
+		_schedule_packet(packet)
+		return
+
+
+func _has_ready_unactivated_packet() -> bool:
+	for packet in _packets:
+		if not _activated_packets.has(String(packet["id"])) and _trigger_ready(packet["trigger"]):
+			return true
+	return false
 
 
 func _trigger_ready(trigger: Dictionary) -> bool:
@@ -331,106 +337,202 @@ func _trigger_ready(trigger: Dictionary) -> bool:
 	return false
 
 
-func _schedule_packet(packet: Dictionary, player_position: Vector2, visible_world: Rect2) -> void:
-	var packet_id := String(packet["id"])
-	var beat := int(packet["beat"])
+func _schedule_packet(packet: Dictionary) -> void:
 	var squads: Array = packet["squads"]
-	var allocations := _spawn_allocator.allocate(packet, player_position, visible_world)
-	var arrival_mode := StringName(packet.get("arrival_mode", SpawnAllocator.ARRIVAL_DISTRIBUTED))
-	var unit_spacing := float(packet.get("unit_spacing", 0.16))
-	var gap := float(packet.get(
-		"pack_gap",
-		0.90 if beat <= 1 else 0.65
-	))
-	var cue_lead := float(packet.get("cue_lead", CUE_LEAD))
-	var collective_tactic := Dictionary(packet.get("collective_tactic", {}))
-	var tactic_squad_index := int(
-		collective_tactic.get("squad_index", -1)
+	var window_count := 1 if squads.size() <= 1 else int(packet.get("arrival_windows", SpawnAllocator.ARRIVAL_WINDOWS))
+	var window_gap := float(packet.get("window_gap", WINDOW_GAP))
+	_packet_inflight = true
+	for arrival_window in window_count:
+		_window_queue.append({
+			"packet":packet,
+			"arrival_window":arrival_window,
+			"requested_cue_at":elapsed + float(arrival_window) * window_gap,
+			"retry_at":elapsed + float(arrival_window) * window_gap,
+		})
+
+
+func _admit_due_window(
+	active_mobile_count: int,
+	delta: float,
+	player_position: Vector2,
+	visible_world: Rect2,
+	cues: Array[Dictionary]
+) -> void:
+	if _window_queue.is_empty():
+		return
+	var request: Dictionary = _window_queue[0]
+	if elapsed + 0.0001 < float(request["retry_at"]):
+		return
+	if not _spawn_queue.is_empty() and float(_spawn_queue[0]["nominal_due"]) <= elapsed + 0.0001:
+		return
+	if elapsed + 0.0001 < _last_cue_at + WINDOW_GAP:
+		return
+	var packet: Dictionary = request["packet"]
+	var squads: Array = packet["squads"]
+	var squads_per_window := int(
+		packet.get("squads_per_window", SpawnAllocator.SQUADS_PER_WINDOW)
 	)
-	var queued_cue_groups := {}
-	for squad_index in squads.size():
-		var allocation: Dictionary = allocations[squad_index]
-		var squad: Array = allocation["roles"]
-		var anchor := Vector2(allocation["anchor"])
-		var squad_id := "%s_s%02d" % [packet_id, squad_index + 1]
-		var group_index := int(allocation["group_index"])
-		var cursor := elapsed + cue_lead + float(group_index) * gap
+	var first_squad := int(request["arrival_window"]) * squads_per_window
+	var first_round_size := mini(squads.size(), first_squad + squads_per_window) - first_squad
+	if available_active_slots(active_mobile_count) < first_round_size:
+		_capacity_blocked_seconds += delta
+		return
+	var recent_positions := _recent_birth_positions()
+	var allocations := _spawn_allocator.allocate_window(
+		packet,
+		int(request["arrival_window"]),
+		player_position,
+		visible_world,
+		[],
+		recent_positions
+	)
+	if allocations.is_empty():
+		_birth_capacity_blocked += 1
+		request["retry_at"] = elapsed + RETRY_INTERVAL
+		_window_queue[0] = request
+		return
+	first_round_size = allocations.size()
+	_window_queue.pop_front()
+	var cue_at := elapsed
+	var cue_lead := float(packet.get("cue_lead", CUE_LEAD))
+	var unit_spacing := float(packet.get("unit_spacing", 0.16))
+	_last_cue_at = cue_at
+	_reserved_arrival_slots += first_round_size
+	var maximum_size := 0
+	for allocation in allocations:
+		maximum_size = maxi(maximum_size, Array(allocation["roles"]).size())
+		var squad_index := int(request["arrival_window"]) * int(packet.get("squads_per_window", SpawnAllocator.SQUADS_PER_WINDOW)) + int(allocation["window_slot"])
+		var squad_id := "%s_s%02d" % [String(packet["id"]), squad_index + 1]
 		var cue := {
-			"time":cursor - cue_lead,
-			"delay_base":_schedule_delay_total,
-			"anchor":anchor,
+			"cue_id":"%s_w%02d_s%02d" % [String(packet["id"]), int(request["arrival_window"]) + 1, int(allocation["window_slot"]) + 1],
+			"anchor":Vector2(allocation["unit_positions"][0]),
+			"birth_position":Vector2(allocation["unit_positions"][0]),
 			"squad_id":squad_id,
-			"beat":beat,
-			"player_distance":allocation["player_distance"],
-			"outside_visible_margin":allocation["outside_visible_margin"],
-			"sector":allocation["sector"],
-			"group_index":group_index,
-			"arrival_mode":arrival_mode,
-			"roles":squad.duplicate(),
+			"beat":int(packet["beat"]),
+			"arrival_window":int(request["arrival_window"]),
+			"window_slot":int(allocation["window_slot"]),
+			"requested_cue_at":float(request["requested_cue_at"]),
+			"cue_at":cue_at,
+			"cue_lead":cue_lead,
+			"visual_duration":cue_lead,
+			"player_distance":float(allocation["player_distance"]),
+			"outside_visible_margin":bool(allocation["outside_visible_margin"]),
+			"birth_sector":int(allocation["birth_sector"]),
+			"relaxation_tier":StringName(allocation["relaxation_tier"]),
+			"roles":Array(allocation["roles"]).duplicate(),
 		}
+		cues.append(cue)
 		_allocation_debug.append(cue.duplicate(true))
-		if arrival_mode == SpawnAllocator.ARRIVAL_MULTI_SECTOR:
-			if not queued_cue_groups.has(group_index):
-				queued_cue_groups[group_index] = true
-				cue["cue_id"] = "%s_p%02d" % [packet_id, group_index + 1]
-				cue["pack_index"] = group_index
-				cue["roles"] = _roles_for_group(allocations, group_index)
-				_cue_queue.append(cue)
-		else:
-			_cue_queue.append(cue)
-		for unit_index in squad.size():
-			var role := StringName(squad[unit_index])
-			var formation_phase := 0.0
-			if arrival_mode == SpawnAllocator.ARRIVAL_MULTI_SECTOR:
-				var pack_squad_index := squad_index % SpawnAllocator.SQUADS_PER_PACK
-				formation_phase = float(pack_squad_index) * PACK_SQUAD_PHASE_STEP
-			var formation_angle := (
-				formation_phase
-				+ TAU * float(unit_index) / float(maxi(1, squad.size()))
-			)
-			var formation_offset := Vector2.RIGHT.rotated(formation_angle) * (58.0 if squad.size() > 1 else 0.0)
-			var spawn_offset := (
-				Vector2.RIGHT.rotated(formation_angle) * PACK_SPAWN_FAN_RADIUS
-				if arrival_mode == SpawnAllocator.ARRIVAL_MULTI_SECTOR
-				else Vector2.ZERO
-			)
-			var spec := {
+		if _first_cue_time < 0.0:
+			_first_cue_time = cue_at
+		_timeline.append({"kind":&"cue", "id":cue["cue_id"], "time":cue_at, "requested":request["requested_cue_at"]})
+	for unit_index in maximum_size:
+		var specs: Array[Dictionary] = []
+		for allocation in allocations:
+			var roles: Array = allocation["roles"]
+			if unit_index >= roles.size():
+				continue
+			var squad_index := int(request["arrival_window"]) * int(packet.get("squads_per_window", SpawnAllocator.SQUADS_PER_WINDOW)) + int(allocation["window_slot"])
+			var squad_id := "%s_s%02d" % [String(packet["id"]), squad_index + 1]
+			var collective_tactic := Dictionary(packet.get("collective_tactic", {}))
+			var tactic_squad_index := int(collective_tactic.get("squad_index", -1))
+			specs.append({
 				"id":"%s_u%02d" % [squad_id, unit_index + 1],
-				"role":role,
-				"pos":anchor + spawn_offset,
+				"role":StringName(roles[unit_index]),
+				"pos":Vector2(allocation["unit_positions"][unit_index]),
+				"birth_position":Vector2(allocation["unit_positions"][unit_index]),
+				"birth_clearance":float(allocation["unit_clearances"][unit_index]),
+				"birth_sector":int(allocation["unit_sectors"][unit_index]),
+				"arrival_window":int(request["arrival_window"]),
+				"window_slot":int(allocation["window_slot"]),
+				"unit_index":unit_index,
 				"zone":String(packet.get("zone", "")),
 				"group_id":squad_id,
 				"squad_id":squad_id,
 				"squad_leader":unit_index == 0,
 				"formation_slot":unit_index,
-				"formation_size":squad.size(),
-				"formation_anchor":anchor,
-				"formation_offset":formation_offset,
-				"target_sector":Vector2.RIGHT.rotated(float((packet_id + squad_id).hash() % 16) / 16.0 * TAU),
+				"formation_size":roles.size(),
 				"leash_rect":Rect2(packet["leash"]),
 				"active":true,
-				"packet_beat":beat,
-				"collective_tactic_id":(
-					StringName(collective_tactic.get("id", &""))
-					if squad_index == tactic_squad_index
-					else &""
-				),
-				"collective_beat_kind":(
-					StringName(collective_tactic.get("beat_kind", &""))
-					if squad_index == tactic_squad_index
-					else &""
-				),
-			}
-			_spawn_queue.append({"time":cursor + float(unit_index) * unit_spacing, "delay_base":_schedule_delay_total, "spec":spec})
-	_cue_queue.sort_custom(func(a:Dictionary,b:Dictionary)->bool: return _scheduled_key(a) < _scheduled_key(b))
-	_spawn_queue.sort_custom(func(a:Dictionary,b:Dictionary)->bool: return _scheduled_key(a) < _scheduled_key(b))
+				"packet_beat":int(packet["beat"]),
+				"collective_tactic_id":StringName(collective_tactic.get("id", &"")) if squad_index == tactic_squad_index else &"",
+				"collective_beat_kind":StringName(collective_tactic.get("beat_kind", &"")) if squad_index == tactic_squad_index else &"",
+			})
+		_spawn_queue.append({
+			"nominal_due":cue_at + cue_lead + float(unit_index) * unit_spacing,
+			"packet_index":int(packet["_packet_index"]),
+			"arrival_window":int(request["arrival_window"]),
+			"unit_index":unit_index,
+			"reserved":unit_index == 0,
+			"specs":specs,
+		})
+	_spawn_queue.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return _round_sort_key(a) < _round_sort_key(b)
+	)
 
 
-func _roles_for_group(allocations: Array[Dictionary], group_index: int) -> Array[StringName]:
-	var result: Array[StringName] = []
-	for allocation in allocations:
-		if int(allocation["group_index"]) != group_index:
-			continue
-		for role in allocation["roles"]:
-			result.append(StringName(role))
+func _process_due_round(active_mobile_count: int, delta: float, spawns: Array[Dictionary]) -> void:
+	if _spawn_queue.is_empty():
+		return
+	var round: Dictionary = _spawn_queue[0]
+	if float(round["nominal_due"]) > elapsed + 0.0001:
+		return
+	var specs: Array = round["specs"]
+	if specs.size() > MAX_SPAWNS_PER_TICK:
+		_scheduler_starvation += 1
+		return
+	if not bool(round["reserved"]) and available_active_slots(active_mobile_count) < specs.size():
+		_capacity_blocked_seconds += delta
+		return
+	_spawn_queue.pop_front()
+	if bool(round["reserved"]):
+		_reserved_arrival_slots = maxi(0, _reserved_arrival_slots - specs.size())
+	for spec_variant in specs:
+		var spec := Dictionary(spec_variant)
+		spawns.append(spec)
+		var squad_id := String(spec["squad_id"])
+		_spawned_by_squad[squad_id] = int(_spawned_by_squad.get(squad_id, 0)) + 1
+		_recent_births.append({"time":elapsed, "position":Vector2(spec["pos"])})
+		if _first_spawn_time < 0.0:
+			_first_spawn_time = elapsed
+		_timeline.append({
+			"kind":&"spawn",
+			"id":spec["id"],
+			"squad_id":squad_id,
+			"time":elapsed,
+			"nominal_due":round["nominal_due"],
+		})
+
+
+func _complete_inflight_packet_if_ready() -> void:
+	if not _packet_inflight or not _window_queue.is_empty() or not _spawn_queue.is_empty():
+		return
+	_packet_inflight = false
+
+
+func _prune_recent_births() -> void:
+	while not _recent_births.is_empty() and elapsed - float(_recent_births[0]["time"]) > RECENT_BIRTH_SECONDS:
+		_recent_births.pop_front()
+
+
+func _recent_birth_positions() -> Array[Vector2]:
+	var result: Array[Vector2] = []
+	for birth in _recent_births:
+		result.append(Vector2(birth["position"]))
 	return result
+
+
+func _queued_spawn_count() -> int:
+	var result := 0
+	for round in _spawn_queue:
+		result += Array(round["specs"]).size()
+	return result
+
+
+func _round_sort_key(round: Dictionary) -> String:
+	return "%020.6f:%06d:%03d:%03d" % [
+		float(round["nominal_due"]),
+		int(round["packet_index"]),
+		int(round["arrival_window"]),
+		int(round["unit_index"]),
+	]

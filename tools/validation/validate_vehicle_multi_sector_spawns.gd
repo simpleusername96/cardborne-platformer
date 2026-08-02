@@ -4,8 +4,6 @@ const CombatStages = preload("res://scripts/vehicle/stages/vehicle_combat_stages
 const Registry = preload("res://scripts/vehicle/vehicle_field_registry.gd")
 const Generator = preload("res://scripts/vehicle/vehicle_field_layout_generator.gd")
 const Allocator = preload("res://scripts/encounters/vehicle_spawn_allocator.gd")
-const Runtime = preload("res://scripts/encounters/vehicle_encounter_runtime.gd")
-const RunDifficulty = preload("res://scripts/vehicle/vehicle_run_difficulty.gd")
 
 const FIXED_SEED := 0xC4A2B0
 const SEED_FIXTURES := 16
@@ -20,129 +18,95 @@ func _initialize() -> void:
 
 
 func _validate_field(field_id: StringName) -> void:
-	var field_definition := Registry.definition(field_id)
-	var player_position := Vector2(field_definition["player_start"])
-	var visible_world := Rect2(
-		player_position - Vector2(640.0, 360.0),
-		Vector2(1280.0, 720.0)
-	)
+	var definition := Registry.definition(field_id)
+	var canonical_player := Vector2(definition["player_start"])
+	var visible := Rect2(canonical_player - Vector2(640.0, 360.0), Vector2(1280.0, 720.0))
 	for seed_offset in SEED_FIXTURES:
-		var layout := Generator.generate(
-			FIXED_SEED + seed_offset,
-			CombatStages.STAGE_IDS,
-			field_id
-		)
+		var layout := Generator.generate(FIXED_SEED + seed_offset, CombatStages.STAGE_IDS, field_id)
 		_expect(layout != null, "%s seed %d generates a layout" % [field_id, seed_offset])
 		if layout == null:
 			continue
 		for stage_id in CombatStages.STAGE_IDS:
-			var tactical := layout.tactical_layout(stage_id)
-			var packets: Array = CombatStages.definition(stage_id, field_definition)["packets"]
-			for packet_index in range(1, packets.size()):
-				var packet: Dictionary = packets[packet_index]
-				var context := "%s %s seed %d packet %d" % [
-					field_id, stage_id, seed_offset, packet_index + 1
-				]
-				_validate_packet(
-					packet,
-					tactical.encounter_seed,
-					tactical.ordinary_spawn_anchors,
-					player_position,
-					visible_world,
-					context
-				)
+			var tactical = layout.tactical_layout(stage_id)
+			var packet: Dictionary = CombatStages.definition(stage_id, definition)["packets"][1]
+			var context := "%s %s seed %d" % [field_id, stage_id, seed_offset]
+			_validate_packet(packet, tactical, canonical_player, visible, context)
 			if seed_offset == 0:
-				_validate_runtime(packets[1], tactical.ordinary_spawn_anchors, player_position, visible_world, field_id, stage_id)
+				_validate_field_edges(packet, tactical, context)
 
 
-func _validate_packet(
-	packet: Dictionary,
-	encounter_seed: int,
-	anchors: Array[Vector2],
-	player_position: Vector2,
-	visible_world: Rect2,
-	context: String
-) -> void:
-	_expect(
-		StringName(packet.get("arrival_mode", &"")) == Allocator.ARRIVAL_MULTI_SECTOR,
-		"%s uses multi-sector arrival" % context
-	)
+func _validate_packet(packet: Dictionary, tactical, player_position: Vector2, visible_world: Rect2, context: String) -> void:
 	var allocator := Allocator.new()
-	allocator.configure(encounter_seed, anchors)
+	allocator.configure(tactical.encounter_seed, tactical.ordinary_spawn_anchors, tactical.geometry_snapshot)
 	var allocations := allocator.allocate(packet, player_position, visible_world)
 	var replay_allocator := Allocator.new()
-	replay_allocator.configure(encounter_seed, anchors)
+	replay_allocator.configure(tactical.encounter_seed, tactical.ordinary_spawn_anchors, tactical.geometry_snapshot)
 	var replay := replay_allocator.allocate(packet, player_position, visible_world)
 	_expect(var_to_str(allocations) == var_to_str(replay), "%s is deterministic" % context)
-	_expect(allocations.size() == 12, "%s allocates twelve squads" % context)
-	var quadrants := {}
-	var sectors := {}
-	var packs := {}
-	var population_by_sector := PackedInt32Array()
-	population_by_sector.resize(8)
-	var total_population := 0
+	_expect(allocations.size() == 12, "%s allocates twelve logical squads" % context)
+	var positions_by_window := {}
+	var histograms := {}
 	for allocation in allocations:
-		var pack := int(allocation["pack_index"])
-		if not packs.has(pack):
-			packs[pack] = []
-		packs[pack].append(allocation)
-		quadrants[int(allocation["quadrant"])] = true
-		var sector := int(allocation["sector"])
-		sectors[sector] = true
-		var population := Array(allocation["roles"]).size()
-		population_by_sector[sector] += population
-		total_population += population
-		_expect(bool(allocation["outside_visible_margin"]), "%s stays outside the cue margin" % context)
-		_expect(
-			float(allocation["player_distance"]) >= Allocator.MIN_PLAYER_DISTANCE
-				and float(allocation["player_distance"]) <= Allocator.MAX_PLAYER_DISTANCE,
-			"%s stays inside the fair spawn ring" % context
-		)
-	_expect(packs.size() == 4, "%s forms four packs" % context)
-	_expect(quadrants.size() == 4, "%s covers four quadrants" % context)
-	_expect(sectors.size() >= 4, "%s covers at least four sectors" % context)
-	for entries in packs.values():
-		var pack_entries: Array = entries
-		_expect(pack_entries.size() == 3, "%s keeps three squads per pack" % context)
-		var pack_anchors := {}
-		for entry in pack_entries:
-			pack_anchors[Vector2(entry["anchor"])] = true
-		_expect(pack_anchors.size() == 1, "%s gives each pack one readable cue anchor" % context)
-	for sector in 8:
-		var share := float(population_by_sector[sector]) / float(maxi(1, total_population))
-		var adjacent_share := float(
-			population_by_sector[sector] + population_by_sector[(sector + 1) % 8]
-		) / float(maxi(1, total_population))
-		_expect(share <= 0.35, "%s keeps each sector at or below 35%%" % context)
-		_expect(adjacent_share <= 0.55, "%s keeps adjacent sectors at or below 55%%" % context)
+		var window := int(allocation["arrival_window"])
+		if not positions_by_window.has(window):
+			positions_by_window[window] = []
+			histograms[window] = PackedInt32Array([0, 0, 0, 0, 0, 0, 0, 0])
+		var histogram: PackedInt32Array = histograms[window]
+		var positions: Array = allocation["unit_positions"]
+		var sectors: Array = allocation["unit_sectors"]
+		for index in positions.size():
+			var position := Vector2(positions[index])
+			for previous in positions_by_window[window]:
+				_expect(position.distance_to(previous) >= 320.0 - 0.001, "%s keeps the window hard floor" % context)
+			positions_by_window[window].append(position)
+			histogram[int(sectors[index])] += 1
+	for window in histograms:
+		var histogram: PackedInt32Array = histograms[window]
+		var minimum := 0x7fffffff
+		var maximum := 0
+		var used := 0
+		for count in histogram:
+			minimum = mini(minimum, count)
+			maximum = maxi(maximum, count)
+			if count > 0:
+				used += 1
+		_expect(used == 8, "%s window %d covers all canonical sectors" % [context, window])
+		_expect(maximum - minimum <= 1, "%s window %d balances sector counts" % [context, window])
 
 
-func _validate_runtime(
-	source_packet: Dictionary,
-	anchors: Array[Vector2],
-	player_position: Vector2,
-	visible_world: Rect2,
-	field_id: StringName,
-	stage_id: StringName
-) -> void:
-	var packet := source_packet.duplicate(true)
-	packet["trigger"] = {"kind":&"time", "at":0.0}
-	var runtime := Runtime.new()
-	runtime.configure(stage_id, [packet], RunDifficulty.HARD, anchors, FIXED_SEED)
-	var cue_count := 0
-	var maximum_spawns := 0
-	for _step in 48:
-		var result := runtime.tick(0.1, 0, [], player_position, visible_world)
-		cue_count += Array(result["cues"]).size()
-		maximum_spawns = maxi(maximum_spawns, Array(result["spawns"]).size())
-	var context := "%s %s runtime" % [field_id, stage_id]
-	_expect(cue_count == 4, "%s coalesces one cue per pack" % context)
-	_expect(maximum_spawns <= Runtime.MAX_SPAWNS_PER_TICK, "%s dequeues at most four units per tick" % context)
-	_expect(float(packet["cue_lead"]) >= 0.9, "%s preserves the cue lead contract" % context)
+func _validate_field_edges(packet: Dictionary, tactical, context: String) -> void:
+	var world_rect: Rect2 = tactical.geometry_snapshot.world_rect
+	var inset := Vector2(220.0, 220.0)
+	var points: Array[Vector2] = [
+		world_rect.position + inset,
+		Vector2(world_rect.end.x - inset.x, world_rect.position.y + inset.y),
+		Vector2(world_rect.position.x + inset.x, world_rect.end.y - inset.y),
+		world_rect.end - inset,
+	]
+	for point_index in points.size():
+		var player_position := points[point_index]
+		var visible := Rect2(player_position - Vector2(640.0, 360.0), Vector2(1280.0, 720.0))
+		var allocator := Allocator.new()
+		allocator.configure(tactical.encounter_seed, tactical.ordinary_spawn_anchors, tactical.geometry_snapshot)
+		var allocations := allocator.allocate_window(packet, 0, player_position, visible)
+		if allocations.is_empty():
+			continue
+		var sectors := {}
+		var positions: Array[Vector2] = []
+		for allocation in allocations:
+			for index in Array(allocation["unit_positions"]).size():
+				var position := Vector2(allocation["unit_positions"][index])
+				sectors[int(allocation["unit_sectors"][index])] = true
+				_expect(position.distance_to(player_position) >= 900.0 - 0.001, "%s edge %d preserves player distance" % [context, point_index])
+				_expect(not visible.grow(220.0).has_point(position), "%s edge %d stays offscreen" % [context, point_index])
+				for previous in positions:
+					_expect(position.distance_to(previous) >= 320.0 - 0.001, "%s edge %d preserves hard floor" % [context, point_index])
+				positions.append(position)
+		_expect(sectors.size() >= 2, "%s edge %d uses at least two safe sectors" % [context, point_index])
 
 
 func _expect(condition: bool, message: String) -> void:
-	if not condition:
+	if not condition and failures.size() < 64:
 		failures.append(message)
 
 

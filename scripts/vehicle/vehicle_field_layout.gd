@@ -10,6 +10,7 @@ var fingerprint := 0
 var field_id: StringName = &""
 var field_definition: Dictionary = {}
 var persistent_bulkhead_health: Dictionary = {}
+var persistent_wear_tile_state: Dictionary = {}
 
 var _tactical_layouts: Dictionary = {}
 

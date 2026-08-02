@@ -51,6 +51,7 @@ const GuidebookCatalog = preload("res://scripts/progression/vehicle_guidebook_ca
 const EnemyStore = preload("res://scripts/enemies/vehicle_enemy_store.gd")
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 const EnemyUpdateSchedule = preload("res://scripts/enemies/vehicle_enemy_update_schedule.gd")
+const EnemyLocalSteering = preload("res://scripts/enemies/vehicle_enemy_local_steering.gd")
 const ProjectileStore = preload("res://scripts/combat/vehicle_projectile_store.gd")
 const ProjectileState = preload("res://scripts/combat/vehicle_projectile_state.gd")
 const PerformanceRecorder = preload("res://scripts/performance/vehicle_performance_recorder.gd")
@@ -250,7 +251,7 @@ var visited_cells: Dictionary = {}
 var discovered_markers: Dictionary = {}
 var _threat_contact_cache: Array[Dictionary] = []
 var _threat_sample_timer := 0.0
-var _squad_motion_snapshot: Dictionary = {}
+var _enemy_local_steering := EnemyLocalSteering.new()
 var _shielded_enemy_ids: Dictionary = {}
 var _pending_shielded_enemy_ids: Dictionary = {}
 var _shield_supports: Array[EnemyState] = []
@@ -404,7 +405,7 @@ func _physics_process(delta: float) -> void:
 		var section_started := Time.get_ticks_usec() if _performance_detail_sample_active else 0
 		_update_player(delta)
 		var pickup_motion_end := player_position
-		_update_terrain(delta)
+		_update_terrain(delta, pickup_motion_start)
 		_update_cycle_upgrades(delta)
 		_update_pickups(pickup_motion_start, pickup_motion_end)
 		if experience_recall_timer > 0.0:
@@ -678,7 +679,8 @@ func _reset_run(
 		StageCatalog.packets(current_stage_id),
 		selected_run_difficulty,
 		_active_tactical_layout.ordinary_spawn_anchors,
-		_active_tactical_layout.encounter_seed
+		_active_tactical_layout.encounter_seed,
+		_active_tactical_layout.geometry_snapshot
 	)
 	stage_flow.configure(
 		current_stage_index,
@@ -690,7 +692,8 @@ func _reset_run(
 		preserve_field_state,
 		_active_tactical_layout.support_sockets,
 		field_layout.seed,
-		current_stage_id
+		current_stage_id,
+		field_layout.persistent_wear_tile_state
 	)
 	_rebuild_runtime_blockers()
 	pursuit_field.reset(current_stage_id, _runtime_cover_rects())
@@ -717,7 +720,6 @@ func _reset_run(
 	discovered_markers.clear()
 	_threat_contact_cache.clear()
 	_threat_sample_timer = 0.0
-	_squad_motion_snapshot.clear()
 	_shielded_enemy_ids.clear()
 	_pending_shielded_enemy_ids.clear()
 	_shield_supports.clear()
@@ -862,7 +864,6 @@ func _make_enemy(spec: Dictionary) -> EnemyState:
 	enemy.squad_leader = bool(spec.get("squad_leader", false))
 	enemy.formation_slot = int(spec.get("formation_slot", 0))
 	enemy.formation_size = int(spec.get("formation_size", 1))
-	enemy.formation_offset = Vector2(spec.get("formation_offset", Vector2.ZERO))
 	enemy.collective_tactic_id = StringName(
 		spec.get("collective_tactic_id", &"")
 	)
@@ -875,7 +876,6 @@ func _make_enemy(spec: Dictionary) -> EnemyState:
 	enemy.collective_target = position
 	enemy.collective_slot = 0
 	enemy.collective_speed_multiplier = 1.0
-	enemy.target_sector = Vector2(spec.get("target_sector", Vector2.RIGHT))
 	enemy.packet_beat = int(spec.get("packet_beat", 0))
 	enemy.carrier_id = String(spec.get("carrier_id", ""))
 	enemy.summoned = bool(spec.get("summoned", false))
@@ -964,7 +964,7 @@ func _update_encounter(delta: float) -> void:
 			&"hostile_arrival",
 			Vector2(cue["anchor"]),
 			Art.MUSTARD,
-			0.9,
+			float(cue.get("visual_duration", 0.9)),
 			126.0
 		)
 		_play_sound(&"boss", 0.72)
@@ -1286,7 +1286,7 @@ func _advance_player_protection_sources(delta: float) -> void:
 			player_protection_sources[source] = remaining
 
 
-func _update_terrain(delta: float) -> void:
+func _update_terrain(delta: float, previous_player_position: Vector2) -> void:
 	var events := terrain_runtime.advance(
 		delta, player_position, player_health, _player_max_health()
 	)
@@ -1318,6 +1318,15 @@ func _update_terrain(delta: float) -> void:
 	)
 	if surge_damage > 0.0:
 		_damage_player(surge_damage, "Arc Surge", false, false, true)
+	var wear_damage := terrain_runtime.wear_damage_for_actor(
+		"player",
+		previous_player_position,
+		player_position,
+		Rules.PLAYER_RADIUS,
+		delta
+	)
+	if wear_damage > 0.0:
+		_damage_player(wear_damage, "Wear Collapse", false, false, true)
 
 
 func _update_player_aim() -> void:
@@ -1999,6 +2008,9 @@ func _update_enemies(delta: float) -> void:
 		enemies, delta, player_position, FAR_SIMULATION_DISTANCE_SQUARED,
 		decision_bucket, _simulation_lod_bucket, _far_enemy_simulation_bucket
 	)
+	var wear_motion_starts := {}
+	for enemy in _enemy_update_schedule.active:
+		wear_motion_starts[enemy.id] = enemy.pos
 	var active_capped := _enemy_update_schedule.active_cap_count
 	if _enforce_active_enemy_cap(active_capped):
 		_enemy_update_schedule.rebuild(
@@ -2033,7 +2045,10 @@ func _update_enemies(delta: float) -> void:
 		if health_visible_timer > 0.0:
 			enemy.health_visible_timer = maxf(0.0, health_visible_timer - delta)
 		if not enemy.active:
-			var activated := _update_enemy_activation(enemy, active_capped < encounter_runtime.active_cap())
+			var activated := _update_enemy_activation(
+				enemy,
+				encounter_runtime.available_active_slots(active_capped) > 0
+			)
 			if activated and enemy.counts_active_cap:
 				active_capped += 1
 			if activated:
@@ -2051,9 +2066,6 @@ func _update_enemies(delta: float) -> void:
 	_handle_collective_tactic_events(tactic_events)
 
 	if not _enemy_coordination_initialized:
-		_squad_motion_snapshot = EncounterDirector.squad_motion_snapshot(
-			_enemy_update_schedule.active
-		)
 		_shielded_enemy_ids = _build_enemy_shield_assignments()
 		for enemy in _enemy_update_schedule.active:
 			_apply_enemy_shield(enemy, _shielded_enemy_ids)
@@ -2065,9 +2077,6 @@ func _update_enemies(delta: float) -> void:
 		_enemy_coordination_initialized = true
 	else:
 		if decision_bucket == 0:
-			_squad_motion_snapshot = EncounterDirector.squad_motion_snapshot(
-				_enemy_update_schedule.active
-			)
 			_refresh_enemy_shield_supports()
 			_pending_shielded_enemy_ids.clear()
 		_append_enemy_shield_assignments(
@@ -2120,6 +2129,18 @@ func _update_enemies(delta: float) -> void:
 		_update_scheduled_ordinary_enemy(enemy, delta)
 	for enemy in _enemy_update_schedule.ordinary_due:
 		_update_scheduled_ordinary_enemy(enemy)
+	for enemy in _enemy_update_schedule.active:
+		if not enemy.alive:
+			continue
+		var wear_damage := terrain_runtime.wear_damage_for_actor(
+			enemy.id,
+			Vector2(wear_motion_starts.get(enemy.id, enemy.pos)),
+			enemy.pos,
+			enemy.radius,
+			delta
+		)
+		if wear_damage > 0.0:
+			_damage_enemy(enemy, wear_damage, "Wear Collapse", &"kinetic", false, true)
 	if performance_active:
 		_performance_enemy_sections["behavior_and_motion"] = _elapsed_ms(section_started)
 
@@ -2311,6 +2332,8 @@ func _update_repair_tender(enemy: EnemyState, delta: float, refresh_target: bool
 
 func _spawn_carrier_child(carrier: EnemyState) -> void:
 	if (
+		encounter_runtime.available_active_slots(_active_mobile_count()) <= 0
+		or
 		_enemy_update_schedule.carrier_child_count(carrier.id)
 		>= SpecialistRuntime.CARRIER_CHILD_CAP
 		or (
@@ -2874,7 +2897,7 @@ func _desired_enemy_velocity(enemy: EnemyState, recovering: bool) -> Vector2:
 	if not route_direction.is_zero_approx() and (distance > 520.0 or not _runtime_has_line_of_sight(position, player_position, enemy.radius * 0.45)):
 		desired = (route_direction * 0.86 + desired * 0.14).normalized()
 	var role_velocity := desired.normalized() * enemy.speed * StatusRuntime.speed_multiplier(enemy)
-	return EncounterDirector.cohesion_velocity(enemy, _squad_motion_snapshot, role_velocity)
+	return _enemy_local_steering.adjusted_velocity(enemy, role_velocity, enemy_grid, enemies)
 
 
 func _move_enemy_with_recovery(enemy: EnemyState, velocity: Vector2, delta: float) -> void:
@@ -3691,7 +3714,8 @@ func _damage_enemy(
 	amount: float,
 	source: String,
 	attribute: StringName,
-	player_owned: bool
+	player_owned: bool,
+	final_effective: bool = false
 ) -> float:
 	if not enemy.alive:
 		return 0.0
@@ -3711,27 +3735,29 @@ func _damage_enemy(
 		)
 		return 0.0
 	if (
-		terrain_runtime.overdrive_active
+		not final_effective
+		and terrain_runtime.overdrive_active
 		and player_owned
 		and not _is_structure_role(role)
 	):
 		amount *= 1.20
-	if player_owned and cycle_runtime.is_active(&"overclock_cycle"):
+	if not final_effective and player_owned and cycle_runtime.is_active(&"overclock_cycle"):
 		amount *= 1.35 if cycle_runtime.level(&"overclock_cycle") >= 2 else 1.25
 	var multiplier := 1.0
-	if enemy.shielded:
+	if not final_effective and enemy.shielded:
 		multiplier *= 0.45
-	if enemy.shear_time > 0.0:
+	if not final_effective and enemy.shear_time > 0.0:
 		multiplier *= 1.20
-	if role == &"rammer" and enemy.vulnerable > 0.0:
+	if not final_effective and role == &"rammer" and enemy.vulnerable > 0.0:
 		multiplier *= 1.50
 	var boss_damage_multiplier := 1.0
-	if role == &"stage_boss":
+	if role == &"stage_boss" and not final_effective:
 		boss_damage_multiplier = boss_exam_runtime.boss_damage_multiplier()
 		multiplier *= boss_damage_multiplier
 	var health_before := enemy.health
 	if (
-		role == &"mine"
+		not final_effective
+		and role == &"mine"
 		and source != "Arc Surge"
 		and amount * multiplier >= health_before
 	):
@@ -3886,6 +3912,7 @@ func _defeat_enemy(enemy: EnemyState, source: String) -> void:
 	if not enemy.alive:
 		return
 	collective_tactics.unregister_enemy(enemy.id, enemy.squad_id)
+	terrain_runtime.forget_wear_actor(enemy.id)
 	var role := enemy.role
 	var module_result := {}
 	if role == &"boss_pylon" and not enemy.boss_objective_id.is_empty():
@@ -3989,13 +4016,12 @@ func _spawn_splitter_children(parent: EnemyState) -> void:
 			and enemy.carrier_id.begins_with("splitter:")
 		):
 			existing += 1
-	var summon_cap := RunDifficulty.scaled_active_cap(
-		EncounterDirector.active_cap(current_stage_id),
-		selected_run_difficulty
-	)
 	var available := mini(
 		2,
-		mini(12 - existing, summon_cap - _active_mobile_count())
+		mini(
+			12 - existing,
+			encounter_runtime.available_active_slots(_active_mobile_count())
+		)
 	)
 	for child_index in maxi(0, available):
 		var direction := Vector2.RIGHT.rotated(
@@ -4993,7 +5019,8 @@ func _begin_stage_transition() -> void:
 		_transition_packets(current_stage_id),
 		selected_run_difficulty,
 		_active_tactical_layout.ordinary_spawn_anchors,
-		_active_tactical_layout.encounter_seed
+		_active_tactical_layout.encounter_seed,
+		_active_tactical_layout.geometry_snapshot
 	)
 	stage_flow.configure_transition(
 		current_stage_index,
@@ -5008,7 +5035,8 @@ func _begin_stage_transition() -> void:
 		true,
 		_active_tactical_layout.support_sockets,
 		field_layout.seed,
-		current_stage_id
+		current_stage_id,
+		field_layout.persistent_wear_tile_state
 	)
 	_rebuild_runtime_blockers()
 	pursuit_field.reset(current_stage_id, _runtime_cover_rects())
@@ -5026,7 +5054,6 @@ func _begin_stage_transition() -> void:
 	_elite_threshold_cursor = 0
 	_threat_contact_cache.clear()
 	_threat_sample_timer = 0.0
-	_squad_motion_snapshot.clear()
 	_shielded_enemy_ids.clear()
 	_pending_shielded_enemy_ids.clear()
 	_shield_supports.clear()
@@ -5077,7 +5104,6 @@ func _transition_packets(stage_id: StringName) -> Array[Dictionary]:
 				STAGE_TRANSITION_FIRST_SPAWN_AT
 				- STAGE_TRANSITION_CUE_AT
 			)
-			packet["pack_gap"] = 0.0
 		result.append(packet)
 	return result
 
@@ -5670,6 +5696,29 @@ func _draw_terrain() -> void:
 				)
 				draw_rect(wall_rect, Art.RAISED)
 				draw_rect(wall_rect.grow(-10.0), Art.INK, false, 8.0)
+			&"wear_collapse_tile":
+				var wear_rect := Rect2(feature["rect"])
+				var wear_state := StringName(feature.get("state", &"intact"))
+				var fill := Art.RAISED
+				if wear_state == &"cracked":
+					fill = Color(Art.MUSTARD, 0.32)
+				elif wear_state == &"collapsed":
+					fill = Color(Art.CORAL, 0.34)
+				draw_rect(wear_rect, fill)
+				draw_rect(
+					wear_rect.grow(-6.0),
+					Art.CORAL if wear_state == &"collapsed" else Art.TEXT_MUTED,
+					false,
+					6.0
+				)
+				if wear_state != &"intact":
+					draw_line(wear_rect.position, wear_rect.end, Art.INK, 5.0)
+					draw_line(
+						Vector2(wear_rect.end.x, wear_rect.position.y),
+						Vector2(wear_rect.position.x, wear_rect.end.y),
+						Art.INK,
+						5.0
+					)
 			&"arc_surge":
 				var rectangle := Rect2(feature["rect"])
 				var readiness := float(feature.get("readiness", 0.0))

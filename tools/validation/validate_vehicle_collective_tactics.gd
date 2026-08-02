@@ -60,16 +60,8 @@ func _validate_catalog_and_stage_rollout() -> void:
 			)
 			tactic_ids[tactic_id] = true
 			beat_kinds[StringName(tactic.get("beat_kind", &""))] = true
-			_expect(
-				StringName(packet.get("arrival_mode", &""))
-					== &"multi_sector",
-				"%s tactic packet preserves multi-sector arrival" % stage_id
-			)
-			_expect(
-				int(packet.get("pack_count", 0))
-					== CombatStages.SURGE_PACKS,
-				"%s tactic packet preserves four arrival packs" % stage_id
-			)
+			_expect(int(packet.get("arrival_windows", 0)) == 3, "%s tactic packet preserves three timing windows" % stage_id)
+			_expect(int(packet.get("squads_per_window", 0)) == 4, "%s tactic packet preserves four logical squads per window" % stage_id)
 		_expect(
 			unit_count == int(CombatStages.AUTHORED_COUNTS[stage_index]),
 			"%s authored unit count is unchanged" % stage_id
@@ -192,6 +184,14 @@ func _validate_source_boundaries() -> void:
 	_expect(
 		not runtime_source.contains("for enemy in enemies"),
 		"tactic runtime never scans the complete enemy array"
+	)
+	var director_source := FileAccess.get_file_as_string(
+		"res://scripts/encounters/vehicle_encounter_director.gd"
+	)
+	_expect(
+		not director_source.contains("cohesion_velocity")
+			and not director_source.contains("squad_motion_snapshot"),
+		"ordinary encounter movement has no dormant squad cohesion"
 	)
 	var guide_source := FileAccess.get_file_as_string(
 		"res://scripts/progression/vehicle_guidebook_catalog.gd"

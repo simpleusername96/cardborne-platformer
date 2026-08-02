@@ -1,21 +1,26 @@
 class_name VehicleSpawnAllocator
 extends RefCounted
 
-## Deterministically assigns validated arrival anchors while preserving authored
-## squads and role totals. Production surges use four quadrant-owned packs.
+## Deterministically assigns independent offscreen birth positions. Authored
+## squads keep role/tactic meaning but never own a shared spatial anchor.
 
 const EnemyArchetypes = preload("res://scripts/enemies/vehicle_enemy_archetypes.gd")
 
 const MIN_PLAYER_DISTANCE := 900.0
 const MAX_PLAYER_DISTANCE := 2400.0
+const RELAXED_MAX_PLAYER_DISTANCE := 2800.0
 const OFFSCREEN_MARGIN := 220.0
-const RECENT_ANCHOR_LIMIT := 16
-const RECENT_SECTOR_LIMIT := 8
 const TARGET_DISTANCES := [1200.0, 1650.0, 2100.0]
-const ARRIVAL_DISTRIBUTED := &"distributed"
-const ARRIVAL_MULTI_SECTOR := &"multi_sector"
-const PACK_COUNT := 4
-const SQUADS_PER_PACK := 3
+const ARRIVAL_WINDOWS := 3
+const SQUADS_PER_WINDOW := 4
+const SECTOR_COUNT := 8
+const MIN_SAFE_SECTORS := 2
+const RELAXATION_TIERS: Array[Dictionary] = [
+	{"id":&"T0", "maximum":MAX_PLAYER_DISTANCE, "clearance":480.0},
+	{"id":&"T1", "maximum":MAX_PLAYER_DISTANCE, "clearance":400.0},
+	{"id":&"T2", "maximum":MAX_PLAYER_DISTANCE, "clearance":320.0},
+	{"id":&"T3", "maximum":RELAXED_MAX_PLAYER_DISTANCE, "clearance":320.0},
+]
 const PURSUIT_ROLES: Array[StringName] = [
 	&"scrap_drone", &"chaser", &"rammer", &"spark_minelet",
 	&"controller", &"shield_escort", &"artillery_spotter",
@@ -24,251 +29,312 @@ const PURSUIT_ROLES: Array[StringName] = [
 const PROJECTILE_FIRING_ARCHETYPES: Array[StringName] = EnemyArchetypes.PROJECTILE_FIRING_ARCHETYPES
 
 var _seed := 0
-var _anchors: Array[Vector2] = []
-var _recent_anchors: Array[Vector2] = []
-var _recent_sectors := PackedInt32Array()
-var _last_largest_quadrant := -1
+var _candidate_points: Array[Vector2] = []
+var _geometry_snapshot: Variant
 
 
-func configure(seed: int, anchors: Array[Vector2]) -> void:
+func configure(seed: int, authored_anchors: Array[Vector2], geometry_snapshot: Variant = null) -> void:
 	_seed = seed
-	_anchors = anchors.duplicate()
-	_recent_anchors.clear()
-	_recent_sectors.clear()
-	_last_largest_quadrant = -1
+	_geometry_snapshot = geometry_snapshot
+	_candidate_points.clear()
+	var seen := {}
+	if _geometry_snapshot != null and _geometry_snapshot.has_method("spawn_candidate_points"):
+		for point in _geometry_snapshot.spawn_candidate_points():
+			_append_candidate(Vector2(point), seen)
+	for point in authored_anchors:
+		_append_candidate(point, seen)
 
 
-func allocate(packet: Dictionary, player_position: Vector2, visible_world: Rect2) -> Array[Dictionary]:
-	var squads: Array = packet["squads"]
-	var reordered := _reorder_roles(squads, String(packet["id"]))
-	var arrival_mode := StringName(packet.get("arrival_mode", ARRIVAL_DISTRIBUTED))
-	if arrival_mode == ARRIVAL_MULTI_SECTOR:
-		return _allocate_multi_sector(packet, squads, reordered, player_position, visible_world)
-	return _allocate_distributed(packet, squads, reordered, player_position, visible_world)
-
-
-func _allocate_distributed(
+func allocate(
 	packet: Dictionary,
-	squads: Array,
-	reordered: Array[Array],
 	player_position: Vector2,
-	visible_world: Rect2
+	visible_world: Rect2,
+	recent_birth_positions: Array[Vector2] = []
 ) -> Array[Dictionary]:
-	var beat := int(packet["beat"])
-	var group_size := 2 if beat <= 1 else 3
-	var maximum_arc := deg_to_rad(135.0 if beat <= 1 else 180.0)
-	var used: Array[Vector2] = []
 	var result: Array[Dictionary] = []
-	for squad_index in squads.size():
-		var group_index := floori(float(squad_index) / float(group_size))
-		var first_in_group := group_index * group_size
-		var group_direction := INF
-		if first_in_group < result.size():
-			group_direction = (
-				Vector2(result[first_in_group]["anchor"]) - player_position
-			).angle()
-		var anchor := _choose_anchor(
-			player_position, visible_world, used, group_direction, maximum_arc,
-			String(packet["id"]), squad_index
-		)
-		used.append(anchor)
-		_remember(anchor, player_position)
-		result.append({
-			"anchor":anchor,
-			"roles":reordered[squad_index],
-			"group_index":group_index,
-			"player_distance":anchor.distance_to(player_position),
-			"outside_visible_margin":not visible_world.grow(OFFSCREEN_MARGIN).has_point(anchor),
-			"sector":_sector_for(anchor - player_position),
-		})
-	return result
-
-
-func _allocate_multi_sector(
-	packet: Dictionary,
-	squads: Array,
-	reordered: Array[Array],
-	player_position: Vector2,
-	visible_world: Rect2
-) -> Array[Dictionary]:
-	var squads_per_pack := int(packet.get("squads_per_pack", SQUADS_PER_PACK))
-	var pack_count := int(packet.get("pack_count", PACK_COUNT))
-	assert(pack_count == PACK_COUNT)
-	assert(squads_per_pack >= 2 and squads_per_pack <= 3)
-	var quadrant_order := _quadrant_order(String(packet["id"]))
-	var pack_anchors: Array[Vector2] = []
-	var used: Array[Vector2] = []
-	for pack_index in pack_count:
-		var anchor := _choose_pack_anchor(
+	var window_count := _window_count(packet)
+	for arrival_window in window_count:
+		var allocations := allocate_window(
+			packet,
+			arrival_window,
 			player_position,
 			visible_world,
-			used,
-			int(quadrant_order[pack_index]),
+			[],
+			recent_birth_positions
+		)
+		if allocations.is_empty():
+			return []
+		for allocation in allocations:
+			result.append(allocation)
+	return result
+
+
+func allocate_window(
+	packet: Dictionary,
+	arrival_window: int,
+	player_position: Vector2,
+	visible_world: Rect2,
+	reserved_positions: Array[Vector2] = [],
+	recent_birth_positions: Array[Vector2] = []
+) -> Array[Dictionary]:
+	var squads: Array = packet["squads"]
+	var reordered := _reorder_roles(squads, String(packet["id"]))
+	var squads_per_window := int(packet.get("squads_per_window", SQUADS_PER_WINDOW))
+	var first_squad := arrival_window * squads_per_window
+	if first_squad >= squads.size():
+		return []
+	var last_squad := mini(squads.size(), first_squad + squads_per_window)
+	var requests: Array[Dictionary] = []
+	var maximum_size := 0
+	for squad_index in range(first_squad, last_squad):
+		maximum_size = maxi(maximum_size, reordered[squad_index].size())
+	for unit_index in maximum_size:
+		for squad_index in range(first_squad, last_squad):
+			if unit_index >= reordered[squad_index].size():
+				continue
+			requests.append({
+				"squad_index":squad_index,
+				"window_slot":squad_index - first_squad,
+				"unit_index":unit_index,
+				"role":StringName(reordered[squad_index][unit_index]),
+			})
+	var separation_truth := reserved_positions.duplicate()
+	for position in recent_birth_positions:
+		if position not in separation_truth:
+			separation_truth.append(position)
+	for tier_index in RELAXATION_TIERS.size():
+		var tier: Dictionary = RELAXATION_TIERS[tier_index]
+		var positions := _try_allocate_requests(
+			requests,
+			player_position,
+			visible_world,
+			separation_truth,
+			tier,
 			String(packet["id"]),
-			pack_index
+			arrival_window
 		)
-		pack_anchors.append(anchor)
-		used.append(anchor)
-		_remember(anchor, player_position)
+		if positions.is_empty():
+			continue
+		return _build_window_allocations(
+			reordered,
+			requests,
+			positions,
+			first_squad,
+			last_squad,
+			arrival_window,
+			player_position,
+			visible_world,
+			tier,
+			tier_index
+		)
+	return []
+
+
+func _try_allocate_requests(
+	requests: Array[Dictionary],
+	player_position: Vector2,
+	visible_world: Rect2,
+	existing_positions: Array[Vector2],
+	tier: Dictionary,
+	packet_id: String,
+	arrival_window: int
+) -> Array[Dictionary]:
+	var candidates_by_sector := _candidates_by_sector(player_position, visible_world, tier)
+	var available_sectors := _available_sectors(candidates_by_sector)
+	if available_sectors.size() < MIN_SAFE_SECTORS:
+		return []
+	var sector_order := _maximally_spaced_sector_order(available_sectors, packet_id, arrival_window)
+	var selected := existing_positions.duplicate()
 	var result: Array[Dictionary] = []
-	for squad_index in squads.size():
-		var pack_index := mini(
-			pack_count - 1,
-			floori(float(squad_index) / float(squads_per_pack))
-		)
-		var anchor := pack_anchors[pack_index]
+	for request_index in requests.size():
+		var request: Dictionary = requests[request_index]
+		var desired_sector := int(sector_order[request_index % sector_order.size()])
+		var role := StringName(request["role"])
+		var radius := float(EnemyArchetypes.definition(role)["radius"])
+		var best := Vector2.INF
+		var best_score := INF
+		var best_clearance := INF
+		for candidate in candidates_by_sector[desired_sector]:
+			if not _candidate_allowed(candidate, radius, player_position, visible_world, tier):
+				continue
+			var clearance := _minimum_clearance(candidate, selected)
+			if clearance + 0.001 < float(tier["clearance"]):
+				continue
+			var score := _candidate_score(candidate, player_position, packet_id, arrival_window, request)
+			if score < best_score:
+				best = candidate
+				best_score = score
+				best_clearance = clearance
+		if not best.is_finite():
+			return []
+		selected.append(best)
 		result.append({
-			"anchor":anchor,
-			"roles":reordered[squad_index],
-			"group_index":pack_index,
-			"pack_index":pack_index,
-			"quadrant":_quadrant_for(anchor - player_position),
-			"player_distance":anchor.distance_to(player_position),
-			"outside_visible_margin":not visible_world.grow(OFFSCREEN_MARGIN).has_point(anchor),
-			"sector":_sector_for(anchor - player_position),
+			"position":best,
+			"clearance":best_clearance,
+			"sector":desired_sector,
 		})
-	var largest_pack := 0
-	var largest_population := -1
-	for pack_index in pack_count:
-		var population := 0
-		for allocation in result:
-			if int(allocation["pack_index"]) == pack_index:
-				population += Array(allocation["roles"]).size()
-		if population > largest_population:
-			largest_population = population
-			largest_pack = pack_index
-	_last_largest_quadrant = int(result[largest_pack * squads_per_pack]["quadrant"])
 	return result
 
 
-func _choose_pack_anchor(
+func _build_window_allocations(
+	reordered: Array[Array],
+	requests: Array[Dictionary],
+	positions: Array[Dictionary],
+	first_squad: int,
+	last_squad: int,
+	arrival_window: int,
 	player_position: Vector2,
 	visible_world: Rect2,
-	used: Array[Vector2],
-	quadrant: int,
-	packet_id: String,
-	pack_index: int
-) -> Vector2:
-	var tiers: Array[Dictionary] = [
-		{"ring":true, "offscreen":true, "avoid_recent":true},
-		{"ring":true, "offscreen":true, "avoid_recent":false},
-		{"ring":false, "offscreen":true, "avoid_recent":false},
-		{"ring":false, "offscreen":false, "avoid_recent":false},
-	]
-	for tier in tiers:
-		var candidates: Array[Vector2] = []
-		for anchor in _anchors:
-			if anchor in used and used.size() < _anchors.size():
-				continue
-			var offset := anchor - player_position
-			if _quadrant_for(offset) != quadrant:
-				continue
-			var distance := offset.length()
-			if bool(tier["ring"]) and (distance < MIN_PLAYER_DISTANCE or distance > MAX_PLAYER_DISTANCE):
-				continue
-			if bool(tier["offscreen"]) and visible_world.grow(OFFSCREEN_MARGIN).has_point(anchor):
-				continue
-			if bool(tier["avoid_recent"]) and anchor in _recent_anchors:
-				continue
-			candidates.append(anchor)
-		if candidates.is_empty():
+	tier: Dictionary,
+	tier_index: int
+) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	for squad_index in range(first_squad, last_squad):
+		result.append({
+			"roles":reordered[squad_index].duplicate(),
+			"arrival_window":arrival_window,
+			"window_slot":squad_index - first_squad,
+			"unit_positions":[],
+			"unit_clearances":[],
+			"unit_sectors":[],
+			"relaxation_tier":StringName(tier["id"]),
+			"relaxation_tier_index":tier_index,
+		})
+	for request_index in requests.size():
+		var request: Dictionary = requests[request_index]
+		var target: Dictionary = result[int(request["squad_index"]) - first_squad]
+		var selected: Dictionary = positions[request_index]
+		target["unit_positions"].append(Vector2(selected["position"]))
+		target["unit_clearances"].append(float(selected["clearance"]))
+		target["unit_sectors"].append(int(selected["sector"]))
+	for allocation in result:
+		var birth_position := Vector2(allocation["unit_positions"][0])
+		allocation["anchor"] = birth_position
+		allocation["birth_position"] = birth_position
+		allocation["birth_clearance"] = _minimum_value(Array(allocation["unit_clearances"]))
+		allocation["birth_sector"] = int(allocation["unit_sectors"][0])
+		allocation["player_distance"] = birth_position.distance_to(player_position)
+		allocation["outside_visible_margin"] = not visible_world.grow(OFFSCREEN_MARGIN).has_point(birth_position)
+	return result
+
+
+func _candidates_by_sector(
+	player_position: Vector2,
+	visible_world: Rect2,
+	tier: Dictionary
+) -> Array[Array]:
+	var result: Array[Array] = []
+	for _sector in SECTOR_COUNT:
+		result.append([])
+	for candidate in _candidate_points:
+		if not _candidate_allowed(candidate, 32.0, player_position, visible_world, tier):
 			continue
-		candidates.sort_custom(
-			func(a: Vector2, b: Vector2) -> bool:
-				return _pack_anchor_score(a, player_position, packet_id, pack_index) < _pack_anchor_score(
-					b, player_position, packet_id, pack_index
-				)
-		)
-		return candidates[0]
-	return _anchors[0] if not _anchors.is_empty() else player_position
+		result[_sector_for(candidate - player_position)].append(candidate)
+	return result
 
 
-func _quadrant_order(packet_id: String) -> PackedInt32Array:
-	var start := wrapi(hash("%d:%s:quadrants" % [_seed, packet_id]), 0, PACK_COUNT)
-	if start == _last_largest_quadrant:
-		start = (start + 1) % PACK_COUNT
+func _available_sectors(candidates_by_sector: Array[Array]) -> PackedInt32Array:
 	var result := PackedInt32Array()
-	for offset in PACK_COUNT:
-		result.append((start + offset) % PACK_COUNT)
+	for sector in SECTOR_COUNT:
+		if not candidates_by_sector[sector].is_empty():
+			result.append(sector)
 	return result
 
 
-func _pack_anchor_score(
-	anchor: Vector2,
-	player_position: Vector2,
+func _maximally_spaced_sector_order(
+	available: PackedInt32Array,
 	packet_id: String,
-	pack_index: int
-) -> float:
-	var base := _anchor_score(anchor, player_position, packet_id, pack_index * SQUADS_PER_PACK)
-	var sector := _sector_for(anchor - player_position)
-	var recent_penalty := 400.0 if sector in _recent_sectors else 0.0
-	return base + recent_penalty
+	arrival_window: int
+) -> PackedInt32Array:
+	var remaining: Array[int] = []
+	for sector in available:
+		remaining.append(sector)
+	remaining.sort()
+	var result := PackedInt32Array()
+	var start_index := wrapi(hash("%d:%s:%d:sector" % [_seed, packet_id, arrival_window]), 0, remaining.size())
+	result.append(remaining.pop_at(start_index))
+	while not remaining.is_empty():
+		var best_index := 0
+		var best_distance := -1
+		var best_tie := 0x7fffffff
+		for index in remaining.size():
+			var sector := remaining[index]
+			var minimum_distance := SECTOR_COUNT
+			for selected in result:
+				var difference := absi(sector - selected)
+				minimum_distance = mini(minimum_distance, mini(difference, SECTOR_COUNT - difference))
+			var tie := absi(hash("%d:%s:%d:%d" % [_seed, packet_id, arrival_window, sector]))
+			if minimum_distance > best_distance or (minimum_distance == best_distance and tie < best_tie):
+				best_index = index
+				best_distance = minimum_distance
+				best_tie = tie
+		result.append(remaining.pop_at(best_index))
+	return result
 
 
-func _choose_anchor(
+func _candidate_allowed(
+	candidate: Vector2,
+	radius: float,
 	player_position: Vector2,
 	visible_world: Rect2,
-	used: Array[Vector2],
-	group_direction: float,
-	maximum_arc: float,
-	packet_id: String,
-	squad_index: int
-) -> Vector2:
-	var tiers: Array[Dictionary] = [
-		{"ring":true, "offscreen":true, "recent":true, "arc":true},
-		{"ring":false, "offscreen":true, "recent":true, "arc":true},
-		{"ring":true, "offscreen":true, "recent":false, "arc":true},
-		{"ring":false, "offscreen":true, "recent":false, "arc":true},
-		{"distance":false, "offscreen":false, "recent":false, "arc":false},
-	]
-	for tier in tiers:
-		var candidates: Array[Vector2] = []
-		for anchor in _anchors:
-			if anchor in used and used.size() < _anchors.size():
-				continue
-			if bool(tier.get("ring", false)):
-				var distance := anchor.distance_to(player_position)
-				if distance < MIN_PLAYER_DISTANCE or distance > MAX_PLAYER_DISTANCE:
-					continue
-			if bool(tier["offscreen"]) and visible_world.grow(OFFSCREEN_MARGIN).has_point(anchor):
-				continue
-			if bool(tier["recent"]) and anchor in _recent_anchors:
-				continue
-			if (
-				bool(tier["arc"])
-				and group_direction != INF
-				and absf(angle_difference((anchor - player_position).angle(), group_direction)) > maximum_arc * 0.5
-			):
-				continue
-			candidates.append(anchor)
-		if candidates.is_empty():
-			continue
-		candidates.sort_custom(
-			func(a: Vector2, b: Vector2) -> bool:
-				return _anchor_score(a, player_position, packet_id, squad_index) < _anchor_score(
-					b, player_position, packet_id, squad_index
-				)
-		)
-		return candidates[0]
-	return _anchors[0] if not _anchors.is_empty() else player_position
+	tier: Dictionary
+) -> bool:
+	var distance := candidate.distance_to(player_position)
+	if distance < MIN_PLAYER_DISTANCE or distance > float(tier["maximum"]):
+		return false
+	if visible_world.grow(OFFSCREEN_MARGIN).has_point(candidate):
+		return false
+	if _geometry_snapshot != null and _geometry_snapshot.has_method("is_spawnable_disc"):
+		return bool(_geometry_snapshot.is_spawnable_disc(candidate, radius))
+	return true
 
 
-func _anchor_score(
-	anchor: Vector2,
+func _candidate_score(
+	candidate: Vector2,
 	player_position: Vector2,
 	packet_id: String,
-	squad_index: int
+	arrival_window: int,
+	request: Dictionary
 ) -> float:
-	var tie_break := absf(float(hash(
-		"%d:%s:%d:%d:%d" % [_seed, packet_id, squad_index, roundi(anchor.x), roundi(anchor.y)]
-	) % 10000)) / 10000.0
-	var distance_lane := wrapi(
-		hash("%d:%s:%d:distance" % [_seed, packet_id, squad_index]),
-		0,
-		TARGET_DISTANCES.size()
-	)
-	var target_distance := float(TARGET_DISTANCES[distance_lane])
-	return absf(anchor.distance_to(player_position) - target_distance) + tie_break
+	var identity := "%d:%s:%d:%d:%d" % [
+		_seed,
+		packet_id,
+		arrival_window,
+		int(request["window_slot"]),
+		int(request["unit_index"]),
+	]
+	var distance_lane := wrapi(hash(identity + ":distance"), 0, TARGET_DISTANCES.size())
+	var tie_break := float(absi(hash(identity + ":%d:%d" % [roundi(candidate.x), roundi(candidate.y)])) % 10000) / 10000.0
+	return absf(candidate.distance_to(player_position) - TARGET_DISTANCES[distance_lane]) + tie_break
+
+
+func _minimum_clearance(candidate: Vector2, positions: Array[Vector2]) -> float:
+	var result := INF
+	for position in positions:
+		result = minf(result, candidate.distance_to(position))
+	return result
+
+
+func _minimum_value(values: Array) -> float:
+	var result := INF
+	for value in values:
+		result = minf(result, float(value))
+	return result
+
+
+func _window_count(packet: Dictionary) -> int:
+	var squads: Array = packet["squads"]
+	if squads.size() <= 1:
+		return 1
+	return ceili(float(squads.size()) / float(int(packet.get("squads_per_window", SQUADS_PER_WINDOW))))
+
+
+func _append_candidate(point: Vector2, seen: Dictionary) -> void:
+	var key := Vector2i(roundi(point.x), roundi(point.y))
+	if seen.has(key):
+		return
+	seen[key] = true
+	_candidate_points.append(point)
 
 
 func _reorder_roles(squads: Array, packet_id: String) -> Array[Array]:
@@ -341,21 +407,6 @@ func _seeded_sort_roles(roles: Array[StringName], packet_id: String) -> void:
 		roles[swap_index] = held
 
 
-func _remember(anchor: Vector2, player_position: Vector2) -> void:
-	_recent_anchors.append(anchor)
-	while _recent_anchors.size() > RECENT_ANCHOR_LIMIT:
-		_recent_anchors.pop_front()
-	_recent_sectors.append(_sector_for(anchor - player_position))
-	while _recent_sectors.size() > RECENT_SECTOR_LIMIT:
-		_recent_sectors.remove_at(0)
-
-
-func _quadrant_for(offset: Vector2) -> int:
-	if offset.x < 0.0:
-		return 0 if offset.y < 0.0 else 2
-	return 1 if offset.y < 0.0 else 3
-
-
 func _sector_for(offset: Vector2) -> int:
-	var raw := floori((offset.angle() + PI) / (TAU / 8.0))
-	return (raw % 8 + 8) % 8
+	var raw := floori((offset.angle() + PI) / (TAU / float(SECTOR_COUNT)))
+	return (raw % SECTOR_COUNT + SECTOR_COUNT) % SECTOR_COUNT

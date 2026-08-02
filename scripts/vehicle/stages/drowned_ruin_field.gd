@@ -138,6 +138,10 @@ static func _void_rects() -> Array[Rect2]:
 static func _features() -> Array[Dictionary]:
 	return [
 		{"id":&"surge_1", "kind":&"arc_surge", "rect":Rect2(3420,3120,360,760)},
+		{"id":&"wear_1", "kind":&"wear_collapse_tile", "rect":Rect2(3280,1400,240,160)},
+		{"id":&"wear_2", "kind":&"wear_collapse_tile", "rect":Rect2(3680,1400,240,160)},
+		{"id":&"wear_3", "kind":&"wear_collapse_tile", "rect":Rect2(3280,2760,240,160)},
+		{"id":&"wear_4", "kind":&"wear_collapse_tile", "rect":Rect2(3680,2760,240,160)},
 		{"id":&"bulkhead_1", "kind":&"breakable_bulkhead", "rect":Rect2(1580,2040,180,240), "reward_pos":Vector2(1890,2160)},
 		{"id":&"bulkhead_1_top", "kind":&"structural_wall", "rect":Rect2(1580,1840,640,200)},
 		{"id":&"bulkhead_1_end", "kind":&"structural_wall", "rect":Rect2(2020,2040,200,240)},

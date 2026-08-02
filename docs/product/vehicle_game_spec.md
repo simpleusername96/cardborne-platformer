@@ -227,8 +227,15 @@ second time; no individual stat is described as exactly 15% lower.
 - Arc Surge is a traversable energy barrier with no solid collision. Repair and
   overdrive are beneficial fixed-area fields whose visible footprint follows
   their exact effect area. Transit Gates are paired circular floor portals.
-  The current product has no poison/lava hazard floor or wear/collapse tile
-  mechanic.
+- Every field authors four traversable Wear Collapse Tiles. A distinct player
+  or enemy entry increments wear: the first entry changes `intact` to `cracked`,
+  and the third changes it to `collapsed`. Projectiles do not create wear.
+  Collapsed footprints deal exactly 8 damage to the player, ordinary enemies,
+  and stage bosses on entry and every 0.75 seconds while overlap continues.
+  Leaving fully clears occupancy, so re-entry deals immediate damage again.
+  Tile `state` and `wear` persist across stages in the same run; actor occupancy
+  and damage deadlines reset at each stage transition. Poison, lava, or another
+  material affinity is not implied by this mechanic.
 - Arc Surge uses a continuous warning, hits
   each actor at most once per active window, can damage either team, and keeps
   stable damage attribution.
@@ -254,23 +261,40 @@ second time; no individual stat is described as exactly 15% lower.
 2. Stage 1 keeps its initial arrival cadence. After a successful Stage 1–4 transition,
    the next arrival cue begins after 0.35 seconds and the first hostile arrival
    begins within 1.35 seconds.
-3. Main-combat packets use deterministic multi-sector allocation. Every surge
-   occupies at least four of eight sectors and all four player-relative
-   quadrants before a sector is reused. Local squads still form readable packs,
-   but no surge is supplied by one wall, wedge, or two fixed fronts. Due
-   enemies enter in bounded bursts of at most four per physics tick so a large
-   scheduled packet fills the battlefield instead of remaining mostly queued.
-   Recent-sector occupancy prevents repeated replenishment from the same side.
+3. Main-combat packets retain twelve logical role squads but schedule them as
+   three arrival windows of four squads. Every ordinary unit receives an
+   independent birth position: 900–2400 pixels from the cue-time player
+   position, at least 220 pixels outside the visible view, and at least 320
+   pixels from other positions in its window and births from the previous two
+   seconds. Allocation may extend to 2800 pixels but never falls back on-screen
+   or below the hard separation floor. Canonical windows use all eight sectors
+   with sector counts differing by at most one; runtime edge cases require at
+   least two safe sectors or retry the whole window after 0.25 seconds.
+   Each window exposes at most four exact-position cues and reserves those four
+   first arrivals against the global cap before showing them. Ordinary cues
+   lead the first atomic round by 0.90 seconds; windows begin at least 1.20
+   seconds apart and tail rounds preserve 0.16-second unit spacing. Due rounds
+   contain at most four enemies and later packets wait for the current packet's
+   final round.
    Projectile-firing mobile roles remain at or below 15% of authored mobile
    population; only three ranged attackers and two denial attackers may commit
    at once. Ordinary hostile fire cannot consume the 24-shot boss reserve.
    Hard active ordinary caps progress through `1/124/172/224/276`; Normal and
    Easy scale those caps through the existing difficulty profile. Excess
-   enemies remain in the deterministic scheduler queue and are replenished
-   toward the current beat target without increasing individual enemy speed,
-   health, damage, telegraph speed, or projectile speed.
-4. Every mobile enemy joins a shared low-frequency pursuit field and can route
-   around cover toward the player. Stationary roles hold authored anchors.
+   enemies remain in the deterministic scheduler queue. Player-centered 600
+   and 900 pixel occupancy are observation telemetry only and never impose a
+   local admission cap, hold band, lateral detour, or despawn rule.
+4. Ordinary mobile movement applies one 1.40 multiplier after role base speed
+   and before the existing difficulty, stage, and elite factors. Boss,
+   committed charge, and projectile speeds are unchanged. After birth, each
+   mobile follows its role pursuit/range/support behavior toward the player;
+   logical squad anchors and centroid cohesion do not steer ordinary movement.
+   Bounded local separation runs only during actual body overlap, checks at
+   most eight nearby actors within 120 pixels, blends role/separation velocity
+   at 0.55/0.45, and never exceeds the role's original speed. With no overlap,
+   role velocity remains bit-for-bit unchanged. Cover recovery and committed
+   attack paths take priority. High density near the player is an allowed
+   convergence result. Stationary roles hold authored anchors.
 5. Ordinary defeats advance the stage quota. Living enemies never block travel
    or stage completion and summons do not count toward the quota.
 6. On reaching the quota, ordinary spawning stops and a 1.5-second boss warning

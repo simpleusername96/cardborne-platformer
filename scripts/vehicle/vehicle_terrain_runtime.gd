@@ -18,6 +18,9 @@ const REPAIR_BUDGET := 24.0
 const REPAIR_HIT_PAUSE := 1.0
 const OVERDRIVE_RADIUS := 180.0
 const BULKHEAD_HEALTH := 72.0
+const WEAR_THRESHOLD := 3
+const WEAR_DAMAGE := 8.0
+const WEAR_DAMAGE_INTERVAL := 0.75
 const SUPPORT_RELOCATION_GAP := 3.0
 const SUPPORT_PLAYER_CLEARANCE := 420.0
 const SUPPORT_PAIR_CLEARANCE := 96.0
@@ -25,6 +28,7 @@ const SUPPORT_PAIR_CLEARANCE := 96.0
 var features: Array[VehicleTerrainDefinition] = []
 var support_fields: Array[Dictionary] = []
 var bulkhead_health: Dictionary = {}
+var wear_tile_state: Dictionary = {}
 var repair_budget := REPAIR_BUDGET
 var repair_pause := 0.0
 var repair_dwell := 0.0
@@ -38,27 +42,42 @@ var _support_sockets: Array[Vector2] = []
 var _layout_seed := 0
 var _stage_id: StringName = &""
 var _relocation_cooldown := 0.0
+var _wear_occupancy: Dictionary = {}
+var _wear_damage_deadlines: Dictionary = {}
 
 
 func configure(
 	feature_blueprint: Array,
 	persistent_bulkhead_health: Dictionary,
-	preserve_bulkheads: bool,
+	preserve_persistent_state: bool,
 	support_sockets: Array[Vector2] = [],
 	layout_seed: int = 0,
-	stage_id: StringName = &""
+	stage_id: StringName = &"",
+	persistent_wear_tile_state: Dictionary = {}
 ) -> void:
 	features.clear()
 	for value in feature_blueprint:
 		features.append(TerrainDefinition.from_blueprint(Dictionary(value)))
 	bulkhead_health = persistent_bulkhead_health
-	if not preserve_bulkheads:
+	if not preserve_persistent_state:
 		bulkhead_health.clear()
 	for feature in features:
 		if feature.kind == &"breakable_bulkhead":
 			var id := feature.id
 			if not bulkhead_health.has(id):
 				bulkhead_health[id] = BULKHEAD_HEALTH
+	wear_tile_state = persistent_wear_tile_state
+	if not preserve_persistent_state:
+		wear_tile_state.clear()
+	for feature in features:
+		if feature.kind != &"wear_collapse_tile":
+			continue
+		var existing := Dictionary(wear_tile_state.get(feature.id, {}))
+		var wear := clampi(int(existing.get("wear", 0)), 0, WEAR_THRESHOLD)
+		wear_tile_state[feature.id] = {
+			"state":_wear_state_for(wear),
+			"wear":wear,
+		}
 	_gate_cooldowns = {&"a":0.0, &"b":0.0}
 	_gate_progress = {&"a":0.0, &"b":0.0}
 	_arc_hits.clear()
@@ -71,6 +90,8 @@ func configure(
 	_layout_seed = layout_seed
 	_stage_id = stage_id
 	_relocation_cooldown = 0.0
+	_wear_occupancy.clear()
+	_wear_damage_deadlines.clear()
 	_configure_support_fields()
 
 
@@ -181,6 +202,71 @@ func damage_bulkhead(bulkhead_id: StringName, amount: float) -> bool:
 	return health > 0.0 and float(bulkhead_health[bulkhead_id]) <= 0.0
 
 
+func wear_damage_for_actor(
+	actor_id: String,
+	previous_position: Vector2,
+	current_position: Vector2,
+	actor_radius: float,
+	delta: float
+) -> float:
+	## Records one wear event per distinct entry and returns at most one damage tick.
+	var damage := 0.0
+	var actor_occupancy := Dictionary(_wear_occupancy.get(actor_id, {}))
+	var actor_deadlines := Dictionary(_wear_damage_deadlines.get(actor_id, {}))
+	for feature in features:
+		if feature.kind != &"wear_collapse_tile":
+			continue
+		var footprint := feature.rect.grow(maxf(0.0, actor_radius))
+		var tile_id := feature.id
+		var was_occupied := bool(actor_occupancy.get(tile_id, false))
+		var is_occupied := footprint.has_point(current_position)
+		var crossed := _segment_intersects_rect(previous_position, current_position, footprint)
+		var entered := not was_occupied and crossed
+		var state := Dictionary(wear_tile_state.get(tile_id, {}))
+		if entered and StringName(state.get("state", &"intact")) != &"collapsed":
+			var wear := mini(WEAR_THRESHOLD, int(state.get("wear", 0)) + 1)
+			state = {"state":_wear_state_for(wear), "wear":wear}
+			wear_tile_state[tile_id] = state
+		if StringName(state.get("state", &"intact")) == &"collapsed":
+			if entered:
+				damage = WEAR_DAMAGE
+				actor_deadlines[tile_id] = WEAR_DAMAGE_INTERVAL
+			elif is_occupied:
+				var remaining := float(
+					actor_deadlines.get(tile_id, WEAR_DAMAGE_INTERVAL)
+				) - maxf(0.0, delta)
+				if remaining <= 0.0001:
+					damage = WEAR_DAMAGE
+					remaining = WEAR_DAMAGE_INTERVAL
+				actor_deadlines[tile_id] = remaining
+		if is_occupied:
+			actor_occupancy[tile_id] = true
+		else:
+			actor_occupancy.erase(tile_id)
+			actor_deadlines.erase(tile_id)
+	if actor_occupancy.is_empty():
+		_wear_occupancy.erase(actor_id)
+	else:
+		_wear_occupancy[actor_id] = actor_occupancy
+	if actor_deadlines.is_empty():
+		_wear_damage_deadlines.erase(actor_id)
+	else:
+		_wear_damage_deadlines[actor_id] = actor_deadlines
+	return damage
+
+
+func forget_wear_actor(actor_id: String) -> void:
+	_wear_occupancy.erase(actor_id)
+	_wear_damage_deadlines.erase(actor_id)
+
+
+func wear_runtime_snapshot() -> Dictionary:
+	return {
+		"occupancy_count":_nested_entry_count(_wear_occupancy),
+		"damage_deadline_count":_nested_entry_count(_wear_damage_deadlines),
+	}
+
+
 func snapshot() -> Dictionary:
 	var feature_snapshots: Array[Dictionary] = []
 	for value in features:
@@ -191,6 +277,11 @@ func snapshot() -> Dictionary:
 			feature["active"] = _arc_is_active(value)
 		elif kind == &"breakable_bulkhead":
 			feature["health"] = float(bulkhead_health.get(value.id, 0.0))
+		elif kind == &"wear_collapse_tile":
+			var state := Dictionary(wear_tile_state.get(value.id, {}))
+			feature["state"] = StringName(state.get("state", &"intact"))
+			feature["wear"] = int(state.get("wear", 0))
+			feature["threshold"] = WEAR_THRESHOLD
 		elif kind == &"transit_gate":
 			var pair := value.pair
 			feature["progress"] = float(_gate_progress.get(pair, 0.0)) / GATE_DWELL
@@ -444,3 +535,48 @@ func _arc_readiness(feature: VehicleTerrainDefinition) -> float:
 	if time >= ARC_CYCLE - ARC_ACTIVE:
 		return 1.0
 	return inverse_lerp(warning_start, ARC_CYCLE - ARC_ACTIVE, time)
+
+
+func _wear_state_for(wear: int) -> StringName:
+	if wear >= WEAR_THRESHOLD:
+		return &"collapsed"
+	if wear >= 1:
+		return &"cracked"
+	return &"intact"
+
+
+func _nested_entry_count(values: Dictionary) -> int:
+	var count := 0
+	for nested in values.values():
+		count += Dictionary(nested).size()
+	return count
+
+
+func _segment_intersects_rect(from: Vector2, to: Vector2, rectangle: Rect2) -> bool:
+	if rectangle.has_point(from) or rectangle.has_point(to):
+		return true
+	var direction := to - from
+	if direction.is_zero_approx():
+		return false
+	var minimum := 0.0
+	var maximum := 1.0
+	for axis in 2:
+		var origin := from[axis]
+		var delta_axis := direction[axis]
+		var lower := rectangle.position[axis]
+		var upper := rectangle.end[axis]
+		if is_zero_approx(delta_axis):
+			if origin < lower or origin > upper:
+				return false
+			continue
+		var first := (lower - origin) / delta_axis
+		var second := (upper - origin) / delta_axis
+		if first > second:
+			var held := first
+			first = second
+			second = held
+		minimum = maxf(minimum, first)
+		maximum = minf(maximum, second)
+		if minimum > maximum:
+			return false
+	return maximum >= 0.0 and minimum <= 1.0

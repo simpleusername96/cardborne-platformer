@@ -409,6 +409,7 @@ func _check_enemy_expansion(run) -> void:
 		"id":"validation_splitter", "role":&"splitter_barge",
 		"pos":run.player_position + Vector2(-300.0, 0.0), "active":true,
 	})
+	run.encounter_runtime.current_beat = 4
 	run.call("_append_enemy", splitter)
 	run.call("_defeat_enemy", splitter, "player_primary")
 	var children := 0

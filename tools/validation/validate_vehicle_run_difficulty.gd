@@ -15,6 +15,7 @@ func _initialize() -> void:
 func _run() -> void:
 	_expect(RunDifficulty.IDS == [&"easy", &"normal", &"hard"], "difficulty exposes exactly Easy, Normal, and Hard")
 	_expect(RunDifficulty.normalize(&"unknown") == RunDifficulty.HARD, "invalid difficulty restores Hard")
+	_expect(is_equal_approx(EncounterDirector.ORDINARY_MOVEMENT_SPEED_MULTIPLIER, 1.40), "ordinary movement multiplier is locked to 1.40")
 	_expect(is_equal_approx(RunDifficulty.simultaneous_pressure(RunDifficulty.HARD), 1.0), "Hard preserves the current ordinary baseline")
 	_expect(_near(RunDifficulty.simultaneous_pressure(RunDifficulty.NORMAL), 0.85, 0.01), "Normal ordinary pressure is approximately fifteen percent lower")
 	_expect(_near(RunDifficulty.simultaneous_pressure(RunDifficulty.EASY), 0.72, 0.01), "Easy ordinary pressure applies the reduction a second time")
@@ -80,6 +81,29 @@ func _run() -> void:
 	_expect(_near(normal_boss.health / hard_boss.health, 0.90, 0.001), "Normal applies boss health once")
 	_expect(_near(float(stage.call("_scaled_incoming_damage", 10.0, true)) / hard_damage, 0.96, 0.001), "Normal applies ordinary damage once")
 	_expect(_near(float(stage.call("_scaled_incoming_damage", 10.0, true, true)) / hard_final_damage, 0.96, 0.001), "Normal applies authored boss damage once")
+	stage.selected_run_difficulty = RunDifficulty.EASY
+	var easy_chaser = stage.call("_make_enemy", {"id":"easy_chaser_probe", "role":&"chaser", "pos":Vector2.ZERO})
+	var easy_scrap = stage.call("_make_enemy", {"id":"easy_scrap_probe", "role":&"scrap_drone", "pos":Vector2.ZERO})
+	for fixture in [
+		[&"Easy scrap", easy_scrap.speed],
+		[&"Easy chaser", easy_chaser.speed],
+		[&"Normal chaser", normal_enemy.speed],
+		[&"Hard chaser", hard_enemy.speed],
+	]:
+		_expect(
+			(1200.0 - 250.0) / float(fixture[1]) <= 4.2,
+			"%s reaches the stationary 250px band within 4.2 seconds" % String(fixture[0])
+		)
+	for fixture in [
+		[&"Easy", easy_chaser.speed, 500.0],
+		[&"Normal", normal_enemy.speed, 520.0],
+		[&"Hard", hard_enemy.speed, 540.0],
+	]:
+		_expect(
+			_perpendicular_closing_distance(float(fixture[1]), 4.2) >= float(fixture[2]),
+			"%s chaser closes the required distance on a perpendicular base-speed player" % String(fixture[0])
+		)
+	stage.selected_run_difficulty = RunDifficulty.NORMAL
 	settings.set_run_difficulty(RunDifficulty.EASY)
 	_expect(stage.selected_run_difficulty == RunDifficulty.NORMAL, "changing the next-run preference cannot mutate the active run")
 	stage.call("_start_deployed_run", &"pulse_cannon", RunDifficulty.NORMAL)
@@ -94,6 +118,16 @@ func _run() -> void:
 
 func _near(value: float, target: float, tolerance: float) -> bool:
 	return absf(value - target) <= tolerance
+
+
+func _perpendicular_closing_distance(enemy_speed: float, duration: float) -> float:
+	var enemy_position := Vector2(-1200.0, 0.0)
+	var moving_player := Vector2.ZERO
+	var delta := 0.01
+	for _step in ceili(duration / delta):
+		moving_player.y += 280.0 * delta
+		enemy_position += (moving_player - enemy_position).normalized() * enemy_speed * delta
+	return 1200.0 - enemy_position.distance_to(moving_player)
 
 
 func _expect(condition: bool, message: String) -> void:

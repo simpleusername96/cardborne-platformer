@@ -130,6 +130,8 @@ func before_physics(run: Node, delta: float) -> void:
 
 func after_physics(run: Node) -> void:
 	if scenario_id == &"production_replay":
+		if elapsed + 0.0001 < _production_next_sample:
+			return
 		var scheduler_snapshot: Dictionary = run.encounter_runtime.debug_snapshot()
 		_scheduler_spawn_seen = _scheduler_spawn_seen or not Dictionary(
 			scheduler_snapshot.get("spawned_by_squad", {})
@@ -564,6 +566,13 @@ func _final_authored_beat_trigger_time(stage_id: StringName) -> float:
 
 
 func _drive_production_replay(run: Node) -> void:
+	# Production packets are fenced until their full authored population has
+	# entered. The replay must model ordinary defeats before the peak beat so
+	# earlier populations release global admission slots as they do in play.
+	if run.encounter_runtime.current_beat < 4:
+		var active_count := int(run.call("_active_mobile_count"))
+		if run.encounter_runtime.available_active_slots(active_count) < 4:
+			_retire_production_batch(run, 12)
 	if _dash_release_pending:
 		_set_action(&"dash", false)
 		_dash_release_pending = false
@@ -591,6 +600,25 @@ func _drive_production_replay(run: Node) -> void:
 		_set_action(&"move_down", true)
 	run.player_barrier_strength = maxf(run.player_barrier_strength, 1.0e8)
 	run.player_barrier_timer = 1.0e9
+
+
+func _retire_production_batch(run: Node, budget: int) -> void:
+	var retired := 0
+	for enemy in run.enemies:
+		if retired >= budget:
+			break
+		if not enemy.alive or not enemy.active or not enemy.counts_active_cap:
+			continue
+		run.collective_tactics.unregister_enemy(enemy.id, enemy.squad_id)
+		run.terrain_runtime.forget_wear_actor(enemy.id)
+		enemy.alive = false
+		enemy.active = false
+		run.enemy_grid.update_actor(enemy)
+		run.enemy_store.queue_defeat(enemy)
+		retired += 1
+	if retired > 0:
+		run.enemy_store.flush_defeated()
+		run.call("_rebuild_enemy_runtime_indexes")
 
 
 func _production_validation_snapshot(run: Node) -> Dictionary:
@@ -727,7 +755,7 @@ func _production_allocation_qualification(scheduler: Dictionary) -> Dictionary:
 	sectors.resize(8)
 	for allocation_variant in Array(scheduler.get("allocations", [])):
 		var allocation := Dictionary(allocation_variant)
-		var sector := int(allocation.get("sector", -1))
+		var sector := int(allocation.get("birth_sector", -1))
 		if sector >= 0 and sector < sectors.size():
 			sectors[sector] += 1
 	var occupied_sectors := 0

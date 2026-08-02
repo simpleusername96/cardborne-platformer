@@ -16,6 +16,7 @@ var void_rects: Array[Rect2] = []
 var terrain_zones: Array[Dictionary] = []
 var wall_segments := PackedVector2Array()
 var navigation_occupancy := PackedByteArray()
+var _spawn_candidate_points := PackedVector2Array()
 
 
 func configure(definition: Dictionary, cover_rects: Array[Rect2]) -> void:
@@ -34,6 +35,36 @@ func configure(definition: Dictionary, cover_rects: Array[Rect2]) -> void:
 		terrain_zones.append(Dictionary(value).duplicate(true))
 	wall_segments = _compile_union_boundary(walkable_rects)
 	navigation_occupancy = _compile_navigation_occupancy()
+	_spawn_candidate_points = _compile_spawn_candidate_points()
+
+
+func spawn_candidate_points() -> PackedVector2Array:
+	return _spawn_candidate_points.duplicate()
+
+
+func is_spawnable_disc(position: Vector2, radius: float) -> bool:
+	if radius < 0.0 or not world_rect.grow(-radius).has_point(position):
+		return false
+	var samples := PackedVector2Array([
+		Vector2.ZERO,
+		Vector2(radius, 0.0), Vector2(-radius, 0.0),
+		Vector2(0.0, radius), Vector2(0.0, -radius),
+	])
+	for sample in samples:
+		if not _point_in_rectangles(position + sample, walkable_rects):
+			return false
+	for rectangle in selected_cover_rects:
+		if rectangle.grow(radius).has_point(position):
+			return false
+	for rectangle in void_rects:
+		if rectangle.grow(radius).has_point(position):
+			return false
+	for feature in terrain_zones:
+		if StringName(feature.get("kind", &"")) not in [&"structural_wall", &"breakable_bulkhead"]:
+			continue
+		if Rect2(feature.get("rect", Rect2())).grow(radius).has_point(position):
+			return false
+	return true
 
 
 func _compile_union_boundary(rectangles: Array[Rect2]) -> PackedVector2Array:
@@ -99,6 +130,19 @@ func _compile_navigation_occupancy() -> PackedByteArray:
 					break
 			if not blocked:
 				result[y * GRID_WIDTH + x] = 1
+	return result
+
+
+func _compile_spawn_candidate_points() -> PackedVector2Array:
+	var result := PackedVector2Array()
+	for y in GRID_HEIGHT:
+		for x in GRID_WIDTH:
+			if x % 2 != 0 or y % 2 != 0:
+				continue
+			var index := y * GRID_WIDTH + x
+			if index >= navigation_occupancy.size() or navigation_occupancy[index] == 0:
+				continue
+			result.append((Vector2(x, y) + Vector2(0.5, 0.5)) * GRID_CELL_SIZE)
 	return result
 
 

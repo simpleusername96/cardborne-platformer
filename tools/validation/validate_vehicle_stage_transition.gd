@@ -66,6 +66,9 @@ func _check_stage_one_to_three(run) -> void:
 	run.run_build.apply(&"tuned_thrusters")
 	run.visited_cells[explored_cell] = true
 	run.field_layout.persistent_bulkhead_health["transition_fixture"] = 37.0
+	run.field_layout.persistent_wear_tile_state[&"wear_1"] = {
+		"state":&"cracked", "wear":2,
+	}
 	var field_fingerprint := int(run.field_layout.fingerprint)
 	var stage_1_covers: Array[StringName] = (
 		run.field_layout.tactical_layout(&"stage_1").cover_ids.duplicate()
@@ -104,6 +107,12 @@ func _check_stage_one_to_three(run) -> void:
 			37.0
 		),
 		"transition preserves persistent terrain state"
+	)
+	_expect(
+		int(Dictionary(run.field_layout.persistent_wear_tile_state[&"wear_1"])["wear"]) == 2
+		and StringName(Dictionary(run.field_layout.persistent_wear_tile_state[&"wear_1"])["state"]) == &"cracked"
+		and int(run.terrain_runtime.wear_runtime_snapshot()["occupancy_count"]) == 0,
+		"transition preserves wear/state but resets actor occupancy"
 	)
 	_expect(
 		run.field_layout.tactical_layout(&"stage_2").cover_ids == stage_1_covers,
@@ -204,6 +213,11 @@ func _check_stage_one_to_three(run) -> void:
 			and run.visited_cells.has(explored_cell)
 			and run.completed_stage_reports.size() == 2,
 		"Stage 2→3 preserves build, exploration, and both telemetry snapshots"
+	)
+	_expect(
+		int(Dictionary(run.field_layout.persistent_wear_tile_state[&"wear_1"])["wear"]) == 2
+		and int(run.terrain_runtime.wear_runtime_snapshot()["damage_deadline_count"]) == 0,
+		"Stage 2→3 keeps wear while resetting stage-local damage deadlines"
 	)
 
 
