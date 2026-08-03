@@ -1854,6 +1854,12 @@ before execution continues.
 - [x] Phase 3: normalize the current production contract.
 - [x] Phase 4: complete the player vertical slice.
 - [ ] Phase 5: replace the UI component system.
+  - [x] Prepare modal_master, content_plate, and hud_plate as ten exact,
+    independently deployable state PNGs with three family contact sheets and
+    one shared runtime-size matrix; all three units are switch_ready.
+  - [ ] Obtain exact hash-bound approval and apply the three foundational
+    surface families without extending that approval to another UI family.
+  - [ ] Complete the remaining Phase 5 component families in dependency order.
 - [ ] Phase 6: replace player-action, HUD, and secondary packages.
 - [ ] Phase 7: replace world, facility, and reward packages.
 - [ ] Phase 8: replace ordinary enemies, hostile attacks, and cues.
@@ -1863,11 +1869,11 @@ before execution continues.
 
 ## Next Steps
 
-1. Prepare the Phase 5 UI component families in the specified dependency order.
-2. Display each complete family's exact target/hash map and any retirement
-   paths before its independent approval gate.
-3. Continue later switch units in order without extending the completed
-   player_craft approval to another unit.
+1. Display the exact target/hash maps for modal_master, content_plate, and
+   hud_plate and obtain independent approval for those three complete families.
+2. Promote, validate, commit, and baseline-clean only the approved families.
+3. Continue with upgrade_card without extending the foundational-surface
+   approval to another UI family.
 
 ## Completion Criteria
 
@@ -2062,6 +2068,20 @@ Do not mark a phase or this plan complete while a stop condition remains.
   console warnings or errors. Baseline promotion makes the approved production
   bytes the current AS-IS, clears transitional ledger fields, and removes the
   two duplicate TO-BE files plus the completed comparison preview.
+- 2026-08-03: Phase 5 foundational UI preparation produced the complete
+  modal_master, content_plate, and hud_plate families as ten direct TO-BE PNGs
+  from one built-in image-generation source board followed by deterministic
+  chroma removal, exact-canvas derivation, and fixed-palette quantization. The
+  three exact-deliverable contact sheets and shared 960/1280/1920 plus compact
+  runtime matrix show longest Korean/English content within the locked safe
+  insets. A new Godot validator checks manifest geometry, transparent corners,
+  the exact visual-system palette, semantic rails outside content-safe areas,
+  and grayscale structural distinction. All eleven declared UI/provider,
+  layout, localization, focus-path, guidebook, deployment/reward, report, HUD,
+  and settings checks pass. The three non-interactive StyleBox families do not
+  own focus or activation behavior; their existing control consumers remain
+  unchanged. All three units are switch_ready with null approval/application,
+  no retire paths, and no production changes pending exact hash-bound approval.
 
 ## Execution Handoff
 
