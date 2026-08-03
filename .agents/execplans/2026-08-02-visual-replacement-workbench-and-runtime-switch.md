@@ -2204,6 +2204,13 @@ Do not mark a phase or this plan complete while a stop condition remains.
   StyleBox text-safe region. Both units are switch_ready with null approval and
   application plus empty retire_paths and runtime_change_paths; production is
   unchanged pending exact hash-bound approval.
+- 2026-08-03: BK explicitly approved the Phase 5 tab_option and toggle switch
+  at baseline 43dc23b1d68d7d42b477aaf4508ab63e218bb51c using the eight exact
+  target/hash mappings displayed from that clean commit. Both approval records
+  bind those bytes at 2026-08-03T15:10:08+09:00. retire_paths and
+  runtime_change_paths remain empty for both units. This approval grants no
+  deletion, runtime-code change, or authority for slider, meter, or any later
+  Phase 5 family.
 
 ## Execution Handoff
 

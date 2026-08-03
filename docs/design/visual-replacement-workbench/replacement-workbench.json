@@ -4383,7 +4383,7 @@
       "title_ko": "탭 옵션",
       "owner": "ui_manifest",
       "switch_kind": "replace",
-      "status": "switch_ready",
+      "status": "approved_for_switch",
       "current_paths": [
         "art/visuals/production/ui/controls/tab_option_normal.png",
         "art/visuals/production/ui/controls/tab_option_hover.png",
@@ -4486,7 +4486,19 @@
         ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_stage_report.gd",
         ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_hud_presenter.gd"
       ],
-      "approval": null,
+      "approval": {
+        "approved_by": "BK",
+        "approved_at": "2026-08-03T15:10:08+09:00",
+        "baseline_commit": "43dc23b1d68d7d42b477aaf4508ab63e218bb51c",
+        "deliverable_sha256": {
+          "art/visuals/production/ui/controls/tab_option_normal.png": "62b50b44c09ce19795812f593169266600678d208df9eed0806830f530f805aa",
+          "art/visuals/production/ui/controls/tab_option_hover.png": "8e5124e4a1dd4aa392f001cdc9040c640624c929ce5537c3c37b0ed59a7464d1",
+          "art/visuals/production/ui/controls/tab_option_selected.png": "0f9656988e53bb73ab8feb0a97dee29dbb0998d697f11267a6d909c5194505f2",
+          "art/visuals/production/ui/controls/tab_option_focus.png": "959c0bbb7849a4090c48867158165b9de6bfbbb076975df639250ebac4e8a851",
+          "art/visuals/production/ui/controls/tab_option_disabled.png": "9987ca6f41d68e37471acc0e0ee02dc858dc65f96f3142d735fc3d83baf81a63"
+        },
+        "retire_paths": []
+      },
       "application": null
     },
     {
@@ -4497,7 +4509,7 @@
       "title_ko": "토글",
       "owner": "ui_manifest",
       "switch_kind": "replace",
-      "status": "switch_ready",
+      "status": "approved_for_switch",
       "current_paths": [
         "art/visuals/production/ui/controls/toggle_off.png",
         "art/visuals/production/ui/controls/toggle_on.png",
@@ -4572,7 +4584,17 @@
         ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_stage_report.gd",
         ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_hud_presenter.gd"
       ],
-      "approval": null,
+      "approval": {
+        "approved_by": "BK",
+        "approved_at": "2026-08-03T15:10:08+09:00",
+        "baseline_commit": "43dc23b1d68d7d42b477aaf4508ab63e218bb51c",
+        "deliverable_sha256": {
+          "art/visuals/production/ui/controls/toggle_off.png": "0d425a6a96d19d32ccfd13b96b699dcc04ef1f75d83a415e879ff16e4703c839",
+          "art/visuals/production/ui/controls/toggle_on.png": "6745d0fbd81f728b5e71bf3952ee75d7cba9a13fb09d567e3602c7cf4283b15d",
+          "art/visuals/production/ui/controls/toggle_focus.png": "d1a73dc4c52acd81d791de230443094425e1733212f6ab54deb11ece2cbd85c2"
+        },
+        "retire_paths": []
+      },
       "application": null
     },
     {
