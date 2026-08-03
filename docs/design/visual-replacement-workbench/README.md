@@ -3,10 +3,11 @@ type: spec
 status: active
 owner: BK
 created: 2026-08-03
-last_reviewed: 2026-08-03
-scope: Current AS-IS references, exact TO-BE targets, previews, approval records, and generated review UI
+last_reviewed: 2026-08-04
+scope: Current AS-IS references, authored-raster and code-native targets, previews, approval records, and generated review UI
 related:
   - ../VISUAL_SYSTEM.md
+  - ./asset-rationalization.md
   - ../../product/vehicle_game_spec.md
   - ../../../art/visuals/production/README.md
 ---
@@ -17,7 +18,8 @@ related:
 
 This folder is the sole active workspace for reviewing and switching Cardborne
 production visuals. It shows current runtime files directly as AS-IS and maps
-each TO-BE deliverable to one exact production target.
+each authored TO-BE deliverable or code-native ownership switch to exact
+production, runtime-change, and retirement targets.
 
 ## Scope
 
@@ -27,6 +29,9 @@ each TO-BE deliverable to one exact production target.
 - `previews/` contains review-only comparisons and contact sheets.
 - `to-be/assets/` may contain only directly promotable production files whose
   suffix exactly mirrors their production target path.
+- [`asset-rationalization.md`](./asset-rationalization.md) records the audited
+  evidence behind the pre-Phase-6 media boundary. It is not a second unit,
+  approval, or application-state authority.
 
 The workbench never owns gameplay rules or art direction. Those remain in the
 product specification and [`VISUAL_SYSTEM.md`](../VISUAL_SYSTEM.md).
@@ -36,8 +41,13 @@ product specification and [`VISUAL_SYSTEM.md`](../VISUAL_SYSTEM.md).
 - AS-IS media is referenced from `art/visuals/production`; it is not copied
   into this folder.
 - A preview never satisfies a deliverable or approval requirement.
+- A code-native switch may have no TO-BE PNG. Its unit must instead enumerate
+  the exact runtime-change paths, semantic IDs, rendered comparison evidence,
+  and exact raster/sidecar retirement paths.
 - Approval is valid only for the exact SHA-256 map and exact retirement paths
   recorded for one switch unit.
+- Raster deletion must follow, never precede, the consumer, descriptor,
+  manifest, provider, and validator migration for that unit.
 - The browser UI is read-only and works without networking or a server.
 - Korean and English labels, keyboard operation, visible focus, responsive
   layout, image dialogs, and reduced-motion behavior remain complete.
@@ -63,5 +73,7 @@ Preview an already approved unit without writing production files:
 - Every current, preview, consumer, runtime-change, and retirement path is
   repository-contained and resolves.
 - Every TO-BE target is unique and under the production visual root.
+- Every live semantic visual has exactly one medium owner: authored raster or
+  code-native recipe, never both after a switch is complete.
 - No historical snapshot or review-pipeline dependency appears in active
   workbench inputs or generated output.

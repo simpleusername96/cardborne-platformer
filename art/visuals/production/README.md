@@ -8,12 +8,18 @@ README는 production 파일의 ownership과 integration 계약만 설명한다.
 
 ## Ownership
 
-- `gameplay/`은 gameplay PNG와 `asset-manifest.json`을 소유한다.
+- `gameplay/`은 현재 gameplay PNG와 `asset-manifest.json`을 소유한다. 진행
+  중인 rationalized Phase 6 migration이 끝나면 persistent authored raster만
+  남고, manifest는 실제 raster 파일만 색인하며 code-native semantic ID에
+  가짜 path를 만들지 않는다. 그 전에는 기존 manifest/provider가 current
+  runtime truth다.
 - `ui/`는 code-native Theme, font와 font license만 소유한다. UI chrome PNG,
   UI manifest와 UI asset provider는 사용하지 않는다.
-- gameplay manifest/provider는 gameplay asset identity와 presentation
-  metadata를 소유하고, UI Theme와 shared component factory는 UI chrome을
-  소유한다.
+- 최종 gameplay manifest/provider는 persistent authored raster identity와
+  presentation metadata만 소유한다. projectile, defense/status,
+  pickup/facility, transient effect와 UI/minimap/combat cue는 책임별 shared
+  code-native catalog가 소유하고, UI Theme와 shared component factory는 UI
+  chrome을 소유한다.
 - collision, navigation, damage, targeting, encounter와 state transition은
   기존 gameplay owner가 계속 소유한다.
 - gameplay floor와 wall PNG는 현재 provider에 연결되지 않는다. procedural field

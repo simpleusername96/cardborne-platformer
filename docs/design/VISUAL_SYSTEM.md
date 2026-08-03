@@ -3,11 +3,12 @@ type: spec
 status: active
 owner: BK
 created: 2026-07-21
-last_reviewed: 2026-08-03
+last_reviewed: 2026-08-04
 canonical_for: Cardborne vehicle-game art direction and UI presentation
 scope: All player-facing world, combat, HUD, modal, preview, and effect surfaces
 related:
   - ../product/vehicle_game_spec.md
+  - ./visual-replacement-workbench/asset-rationalization.md
   - ../../.agents/semantic-v2-runtime-acceptance-evidence.md
 ---
 
@@ -133,21 +134,46 @@ grayscale에서도 외곽선과 negative space만으로 주요 역할을 구분�
 | owner | 책임 | 금지 |
 | --- | --- | --- |
 | component mesh library | immutable cached flat primitive | gameplay rule, collision |
-| actor catalog | role, state, anchor, silhouette | health, AI, attack |
-| projectile catalog | collision-normalized core와 non-damaging tail | damage, range, hit rule |
-| reward catalog | pickup, shard, crate의 shape/glyph | spawn, value, collection |
-| effect catalog | transient semantic state | timer, damage, protection rule |
-| world catalog | field surface, facility, decoration | topology, collision, schedule |
-| secondary catalog | seeker, drone, blade, mine의 presentation identity | targeting, cadence, damage |
-| defense catalog | barrier, field, shield source/protection topology | protection, damage, timer |
-| UI glyph catalog | action, upgrade, minimap, preview glyph | layout, localization, focus |
-| semantic asset provider | approved non-map texture, pivot, attachment, animation frame | collision, behavior, map topology |
+| actor catalog | authored body role, state, anchor, silhouette | health, AI, attack |
+| projectile catalog | code-native collision-normalized core와 non-damaging tail | damage, range, hit rule |
+| reward catalog | code-native pickup, shard, crate shape/glyph | spawn, value, collection |
+| effect catalog | code-native transient semantic state 또는 deliberate suppression | timer, damage, protection rule |
+| world catalog | field surface, code-native facility, authored state tile | topology, collision, schedule |
+| secondary catalog | authored seeker, drone, blade, mine presentation identity | targeting, cadence, damage |
+| defense catalog | code-native barrier, field, shield source/protection topology | protection, damage, timer |
+| UI glyph catalog | code-native action, upgrade, minimap, preview, combat-cue glyph | layout, localization, focus |
+| semantic asset provider | approved persistent raster texture, pivot와 attachment | collision, behavior, map topology, code-native descriptor |
 
-runtime, guidebook, upgrade card와 system sheet는 같은 descriptor와
-`art/visuals/production/gameplay/asset-manifest.json`을 재사용한다. preview-only
+runtime, guidebook, upgrade card와 system sheet는 같은 semantic descriptor를
+재사용한다. authored raster identity만
+`art/visuals/production/gameplay/asset-manifest.json`과 semantic asset provider에
+등록하고, code-native identity는 책임 catalog의 recipe가 소유한다. preview-only
 대체 art를 만들지 않는다. visual geometry는 collision truth와 분리하되
 projectile core boundary와 debug overlay로 그 차이를 검증한다. semantic-v2
 provider는 floor/wall map surface를 현재 runtime에 연결하지 않는다.
+
+#### Media ownership boundary
+
+- authored raster는 지속적으로 화면에 남고 고유 silhouette가 핵심인 player,
+  ordinary enemy, boss, secondary body, 공통 boss node 상태, solid cover와 wear
+  tile에만 사용한다.
+- projectile, defense/status, pickup/reward, functional facility, action,
+  upgrade, minimap, combat cue와 transient effect는 normalized code-native
+  recipe와 cached mesh를 재사용한다. semantic identity는 유지하되 identity마다
+  PNG를 만들지 않는다.
+- 경험치 pickup의 small/medium/large는 하나의 shard recipe를 scale/value로
+  표현한다. repair pad의 core/inset은 pad recipe에 포함하고 별도 authored
+  texture로 분리하지 않는다.
+- boss별 objective module art는 금지한다. 공통 node의 `active`, `damaged`,
+  `resolved` authored 상태 세 개만 유지하고 module kind/index는 gameplay
+  owner가 계속 보존한다.
+- raster frame animation은 production visual owner가 아니다. 현재 가독성에
+  필수인 event만 effect catalog의 code-native geometry로 표시하고, cosmetic
+  event는 명시적으로 suppress한다. 미래 polish도 새 media-boundary 결정을
+  별도로 승인받지 않는 한 one-file-per-frame pack을 복원하지 않는다.
+- 실제 consumer가 없는 image는 미래 가능성만으로 production에 보관하지
+  않는다. 필요가 제품 요구사항으로 생기면 semantic contract부터 다시
+  정의한다.
 
 ### Semantic categories
 
