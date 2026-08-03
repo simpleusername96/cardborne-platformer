@@ -1873,6 +1873,9 @@ before execution continues.
     units are switch_ready.
   - [x] Obtain exact hash-bound approval and apply tab_option and toggle
     without extending that approval to slider, meter, or later families.
+  - [x] Prepare slider and meter as nine exact deployable state PNGs with
+    per-family contact sheets and one shared runtime-size matrix; both units
+    are switch_ready.
   - [ ] Complete the remaining Phase 5 component families in dependency order.
 - [ ] Phase 6: replace player-action, HUD, and secondary packages.
 - [ ] Phase 7: replace world, facility, and reward packages.
@@ -1883,10 +1886,11 @@ before execution continues.
 
 ## Next Steps
 
-1. Prepare slider and meter in Phase 5 dependency order as independently
-   deployable state families with exact runtime-size evidence.
-2. Display their exact target/hash map from a clean preparation commit.
-3. Request hash-bound approval only for those prepared units before promotion.
+1. Display slider and meter's exact nine-entry target/hash map from a clean
+   preparation commit.
+2. Request hash-bound approval only for those two independently promotable
+   units, with empty retire_paths and runtime_change_paths.
+3. Promote and baseline-clean only exact approved units.
 
 ## Completion Criteria
 
@@ -2227,6 +2231,15 @@ Do not mark a phase or this plan complete while a stop condition remains.
   confirmed clean. The eight promoted bytes are now current AS-IS; only their
   duplicate TO-BE bytes and three completed previews are removed during
   baseline cleanup, with no approved retire or runtime path changed.
+- 2026-08-03: Phase 5 slider and meter preparation used one built-in image
+  generation source board at C:/Users/BK/.codex/generated_images/019fc2a8-d5ad-7321-b0c6-961caed3c4ed/exec-2706758c-aee0-4f4e-b656-8109c20df4df.png
+  to lock the shared segmented-rail grammar. Deterministic fixed-palette
+  construction produced three direct 96 by 32 slider parts and six direct 64
+  by 24 role-readable meter states. Exact-deliverable contact sheets and one
+  shared 960/1280/1920 runtime matrix show geometry-based distinctions. The
+  surface validator now covers eleven families and 48 states. Both units are
+  switch_ready with null approval/application, empty retire and runtime paths,
+  and unchanged production pending exact hash-bound approval.
 
 ## Execution Handoff
 
