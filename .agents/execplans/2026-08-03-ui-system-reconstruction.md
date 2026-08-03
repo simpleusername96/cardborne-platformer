@@ -420,7 +420,7 @@ Source owners: `art/visuals/production/ui/vehicle_stage_theme.tres`,
 `scripts/ui/vehicle_modal_host.gd`, `scripts/ui/vehicle_stage_ui.gd`,
 `scripts/ui/vehicle_pause_panel.gd`, and the raster-sensitive UI validators.
 
-- [ ] **2.1 Rebuild the Theme as one code-native component asset**
+- [x] **2.1 Rebuild the Theme as one code-native component asset**
   - Change: replace the Theme's raster external resources and
     `StyleBoxTexture` resources with shared `StyleBoxFlat`, `StyleBoxLine`,
     `StyleBoxEmpty`, font, color, spacing, and focus resources implementing the
@@ -433,7 +433,7 @@ Source owners: `art/visuals/production/ui/vehicle_stage_theme.tres`,
     band, or tertiary danger shape; every temporary alias is resource-identical
     to a public semantic role; and every required state has non-color
     focus/selected/disabled distinction.
-- [ ] **2.2 Expand the factory and preserve modal ownership**
+- [x] **2.2 Expand the factory and preserve modal ownership**
   - Change: implement the locked factory API and role constants; update
     `VehicleModalSurface.debug_contract()` to describe a flat shared surface;
     keep `VehicleModalHost.configure()`, `_apply_viewport()`, focus counting,
@@ -445,7 +445,7 @@ Source owners: `art/visuals/production/ui/vehicle_stage_theme.tres`,
     modal compact switching still occurs at the existing breakpoint; no
     behavior or routing moves into the factory or host; unknown legacy aliases
     fail loudly in debug validation.
-- [ ] **2.3 Make Pause the reference implementation**
+- [x] **2.3 Make Pause the reference implementation**
   - Change: rebuild `VehiclePausePanel._build()` around one header and one
     centered VBox command stack in the exact order Resume, Restart, Settings,
     Garage. Use the common Command primitive for all four and retain the
@@ -455,7 +455,7 @@ Source owners: `art/visuals/production/ui/vehicle_stage_theme.tres`,
   - Accept: no horizontal action row, action lane, nested panel, or unique
     button variation remains; Resume receives initial focus; all signals and
     paused-tree return behavior remain unchanged.
-- [ ] **2.4 Add the shared-component validator and migrate foundation checks**
+- [x] **2.4 Add the shared-component validator and migrate foundation checks**
   - Change: add `tools/validation/validate_vehicle_ui_components.gd` and `.uid`
     to assert the six factory APIs, public Theme roles, compatibility-alias
     identity, zero raster Theme resources, one root Surface per modal, Pause
@@ -1244,22 +1244,21 @@ retirement, and validation decisions are locked above.
 ## Progress
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 2 — build the shared Theme foundation and prove it
-  through Pause.
-- Last completed gate: Phase 1 contract gate; document authority, deterministic
-  workbench check/validation, and `git diff --check` passed.
+- Current phase: Phase 3 — make Deployment and Garage the fixed-Hard entry flow.
+- Last completed gate: Phase 2 component gate; Godot import, shared-component,
+  Pause, stage-layout, Upgrade, replacement-coverage, and physical rollback-pack
+  validators passed.
 - Last green implementation commit:
-  `01dd966ab3ac63bcce11fa768834a4cd87b56c99`.
+  `52cdce9c38566793802a7faa8b0045667b653da6`.
 - Update rule: after a checkpoint passes, record concise evidence, check the
   task, update the last green commit, and advance this pointer in the same edit.
 
 ## Next Steps
 
-1. Start Task 2.1 and rebuild `vehicle_stage_theme.tres` around the locked
-   code-native roles plus exact compatibility aliases.
-2. Complete the shared factory/host work and use Pause as the first migrated
-   vertical slice.
-3. Pass the Phase 2 component gate before changing the fixed-Hard entry flow.
+1. Start Task 3.1 and collapse runtime/settings difficulty to the fixed Hard
+   compatibility profile.
+2. Recompose Deployment and Garage on the frozen shared component API.
+3. Pass the Phase 3 entry-flow gate before changing Upgrade transactions.
 
 ## Completion and Stop Conditions
 
@@ -1297,6 +1296,10 @@ Do not replan or stop for:
   `01dd966ab3ac63bcce11fa768834a4cd87b56c99`; product and visual specs now own
   fixed Hard, mandatory upgrade confirmation, shared code-native UI chrome, and
   the corrected gallery interpretation.
+- 2026-08-03: Phase 2 completed in
+  `52cdce9c38566793802a7faa8b0045667b653da6`; the Theme now contains zero raster
+  StyleBoxes, the factory owns the six shared primitives and compatibility map,
+  and Pause is the first vertical-stack reference screen.
 - 2026-08-03: BK accepted the simplified UI direction while explicitly
   preserving information rather than reducing it.
 - 2026-08-03: BK required deletion of the small top image on upgrade cards,
