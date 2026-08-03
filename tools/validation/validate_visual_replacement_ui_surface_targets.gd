@@ -13,6 +13,7 @@ const TO_BE_PREFIX := (
 const PRODUCTION_UI_PREFIX := "res://art/visuals/production/ui/"
 const SURFACE_UNIT_IDS := [
 	"modal_master", "content_plate", "hud_plate", "upgrade_card",
+	"button_primary", "button_secondary", "button_danger",
 ]
 const READY_STATES := ["switch_ready", "approved_for_switch"]
 const PRODUCTION_STATES := ["applied", "keep_current"]
@@ -208,7 +209,7 @@ func _validate_image(
 			first_palette_violation.y,
 		]
 	)
-	if unit_id != "upgrade_card" or state_id != "disabled":
+	if state_id != "disabled":
 		_expect(
 			accent_count > 0,
 			"%s/%s lacks a semantic accent rail" % [unit_id, state_id]

@@ -1863,6 +1863,11 @@ before execution continues.
     contact-sheet and runtime-size evidence; upgrade_card is switch_ready.
   - [x] Obtain exact hash-bound approval and apply upgrade_card without
     extending that approval to button families.
+  - [x] Prepare button_primary, button_secondary, and button_danger as fifteen
+    exact deployable state PNGs with per-family contact sheets and one shared
+    runtime nine-slice matrix; all three units are switch_ready.
+  - [ ] Obtain exact hash-bound approval and apply the three button families
+    without extending that approval to later Phase 5 component families.
   - [ ] Complete the remaining Phase 5 component families in dependency order.
 - [ ] Phase 6: replace player-action, HUD, and secondary packages.
 - [ ] Phase 7: replace world, facility, and reward packages.
@@ -1873,10 +1878,10 @@ before execution continues.
 
 ## Next Steps
 
-1. Prepare button_primary, button_secondary, and button_danger as independent
-   direct-deployable state families with exact rendered evidence.
-2. Display each button family's exact target/hash map and request independent
-   approval without extending upgrade_card's completed authority.
+1. Display the three button families' exact fifteen-entry target/hash map from
+   a clean preparation commit.
+2. Request hash-bound approval for only those three independently promotable
+   units, with empty retire_paths and runtime_change_paths.
 3. Promote, validate, commit, and baseline-clean only exact approved families.
 
 ## Completion Criteria
@@ -2142,6 +2147,22 @@ Do not mark a phase or this plan complete while a stop condition remains.
   production bytes are now current AS-IS; the duplicate TO-BE files and two
   completed previews are removed, and transitional approval/application fields
   are cleared without extending authority to any button family.
+- 2026-08-03: Phase 5 button preparation used one built-in image-generation
+  master at
+  C:/Users/BK/.codex/generated_images/019fc2a8-d5ad-7321-b0c6-961caed3c4ed/exec-a082ef0a-4ab8-44ef-83e0-3666b9bc0ab1.png.
+  Local chroma removal found source alpha bounds 103,137 through 1431,879.
+  Deterministic derivation then produced fifteen direct 96 by 64 PNGs for
+  button_primary, button_secondary, and button_danger, all with patch margin
+  16, safe inset 20,16,20,16, fixed-palette RGB, transparent exterior corners,
+  and no baked text or icons. State distinctions use different rail positions,
+  corner brackets, center values, and disabled edge segmentation rather than
+  color alone. Three exact-deliverable contact sheets and one shared runtime
+  matrix cover 220, 320, and 460 pixel nine-slice widths plus Korean and English
+  label samples. The seven-family surface validator covers 31 states, and all
+  twelve declared workbench, surface, coverage, layout, localization, upgrade,
+  pause, settings, guidebook, deployment/reward, report, and HUD checks pass.
+  All three button units are switch_ready with null approval/application,
+  empty retire_paths and runtime_change_paths, and unchanged production bytes.
 
 ## Execution Handoff
 
