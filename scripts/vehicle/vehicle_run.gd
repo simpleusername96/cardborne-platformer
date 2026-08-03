@@ -341,11 +341,10 @@ func _ready() -> void:
 	_build_audio()
 	if _practice_request.is_empty():
 		_load_persistence()
-	selected_run_difficulty = _preferred_run_difficulty()
+	selected_run_difficulty = RunDifficulty.HARD
 	_reset_run(false)
 	_ui.show_deployment(
 		selected_primary,
-		selected_run_difficulty,
 		String(field_layout.field_definition["name_key"])
 	)
 	_set_mouse_for_mode()
@@ -940,11 +939,6 @@ func _rebuild_enemy_runtime_indexes() -> void:
 	enemy_grid.rebuild(enemies)
 
 
-func _preferred_run_difficulty() -> StringName:
-	var settings := get_node_or_null("/root/SettingsStore")
-	return RunDifficulty.normalize(settings.run_difficulty) if settings != null else RunDifficulty.DEFAULT
-
-
 func _simulation_active() -> bool:
 	return mode in [RunMode.PLAYING, RunMode.STAGE_TRANSITION]
 
@@ -1060,11 +1054,8 @@ func _active_attack_families() -> Array[StringName]:
 	return families
 
 
-func _on_deployment_selected(primary_id: StringName, difficulty_id: StringName) -> void:
-	var settings := get_node_or_null("/root/SettingsStore")
-	if settings != null:
-		settings.set_run_difficulty(RunDifficulty.normalize(difficulty_id))
-	_start_deployed_run(primary_id, difficulty_id)
+func _on_deployment_selected(primary_id: StringName) -> void:
+	_start_deployed_run(primary_id)
 
 
 func _on_boss_practice_selected(request: Dictionary) -> void:
@@ -1074,9 +1065,9 @@ func _on_boss_practice_selected(request: Dictionary) -> void:
 	_start_boss_practice()
 
 
-func _start_deployed_run(primary_id: StringName, difficulty_id: StringName) -> void:
+func _start_deployed_run(primary_id: StringName) -> void:
 	selected_primary = primary_id
-	selected_run_difficulty = RunDifficulty.normalize(difficulty_id)
+	selected_run_difficulty = RunDifficulty.HARD
 	_save_persistence()
 	_reset_run(false)
 	selected_primary = primary_id
@@ -1156,7 +1147,6 @@ func _replay_stage() -> void:
 	mode = RunMode.DEPLOYMENT
 	_ui.show_deployment(
 		selected_primary,
-		selected_run_difficulty,
 		String(field_layout.field_definition["name_key"])
 	)
 	_set_mouse_for_mode()

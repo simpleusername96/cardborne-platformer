@@ -11,8 +11,6 @@ const RunDifficulty = preload("res://scripts/vehicle/vehicle_run_difficulty.gd")
 const EXPECTED_MOBILE_COUNTS := [520, 660, 816, 1026, 1260]
 const EXPECTED_QUOTAS := [125, 166, 208, 250, 291]
 const EXPECTED_HARD_CAPS := [1, 124, 172, 224, 276]
-const EXPECTED_NORMAL_CAPS := [1, 117, 162, 211, 259]
-const EXPECTED_EASY_CAPS := [1, 110, 152, 198, 244]
 
 var failures: Array[String] = []
 
@@ -42,8 +40,6 @@ func _initialize() -> void:
 		_validate_composition(blueprint, stage_id)
 		_validate_opening_runtime(stage_id, packets, tactical)
 	_validate_cap_curve(RunDifficulty.HARD, EXPECTED_HARD_CAPS)
-	_validate_cap_curve(RunDifficulty.NORMAL, EXPECTED_NORMAL_CAPS)
-	_validate_cap_curve(RunDifficulty.EASY, EXPECTED_EASY_CAPS)
 	_expect(Director.MAX_RANGED_COMMITS == 3, "ranged commit cap remains three")
 	_expect(Director.MAX_DENIAL_COMMITS == 2, "denial commit cap remains two")
 	_finish()

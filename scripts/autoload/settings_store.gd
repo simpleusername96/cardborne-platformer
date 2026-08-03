@@ -3,11 +3,9 @@ extends Node
 
 signal locale_changed(locale: String)
 signal controls_changed(action: StringName)
-signal run_difficulty_changed(difficulty: StringName)
 signal reduced_motion_changed(enabled: bool)
 
 const InputProfile = preload("res://scripts/input/vehicle_input_profile.gd")
-const RunDifficulty = preload("res://scripts/vehicle/vehicle_run_difficulty.gd")
 
 const SETTINGS_PATH := "user://cardborne-settings.cfg"
 const AUDIO_SECTION := "audio"
@@ -16,13 +14,11 @@ const CONTROLS_SECTION := "controls"
 const GAMEPLAY_SECTION := "gameplay"
 const DEFAULT_LOCALE := "ko"
 const SUPPORTED_LOCALES := ["ko", "en"]
-const DEFAULT_RUN_DIFFICULTY := RunDifficulty.DEFAULT
 
 var master_volume := 1.0
 var sfx_volume := 1.0
 var ui_locale := DEFAULT_LOCALE
 var control_bindings: Dictionary = InputProfile.default_descriptors()
-var run_difficulty: StringName = DEFAULT_RUN_DIFFICULTY
 var reduced_motion := false
 
 
@@ -35,7 +31,6 @@ func load_settings() -> void:
 	sfx_volume = 1.0
 	ui_locale = DEFAULT_LOCALE
 	control_bindings = InputProfile.default_descriptors()
-	run_difficulty = DEFAULT_RUN_DIFFICULTY
 	reduced_motion = false
 	var config := ConfigFile.new()
 	var result := config.load(SETTINGS_PATH)
@@ -54,14 +49,6 @@ func load_settings() -> void:
 					repaired = true
 				descriptor = InputProfile.default_descriptors()[action]
 			control_bindings[action] = descriptor
-		var stored_difficulty: Variant = config.get_value(GAMEPLAY_SECTION, "run_difficulty", DEFAULT_RUN_DIFFICULTY)
-		run_difficulty = _safe_run_difficulty(stored_difficulty)
-		if (
-			not config.has_section_key(GAMEPLAY_SECTION, "run_difficulty")
-			or not RunDifficulty.is_valid(stored_difficulty)
-			or config.has_section_key(GAMEPLAY_SECTION, "combat_preset")
-		):
-			repaired = true
 	elif result != ERR_FILE_NOT_FOUND:
 		push_warning("Settings file was malformed; restored defaults")
 	apply_audio()
@@ -69,7 +56,6 @@ func load_settings() -> void:
 	if repaired:
 		_save()
 	controls_changed.emit(&"")
-	run_difficulty_changed.emit(run_difficulty)
 
 
 func set_master_volume(value: float) -> void:
@@ -114,15 +100,6 @@ func reset_control_bindings() -> void:
 	controls_changed.emit(&"")
 
 
-func set_run_difficulty(value: StringName) -> void:
-	var next_difficulty := _safe_run_difficulty(value)
-	if run_difficulty == next_difficulty:
-		return
-	run_difficulty = next_difficulty
-	_save()
-	run_difficulty_changed.emit(run_difficulty)
-
-
 func set_reduced_motion(value: bool) -> void:
 	if reduced_motion == value:
 		return
@@ -163,23 +140,19 @@ func _safe_locale(value: Variant) -> String:
 	return DEFAULT_LOCALE
 
 
-func _safe_run_difficulty(value: Variant) -> StringName:
-	if RunDifficulty.is_valid(value):
-		return RunDifficulty.normalize(value)
-	if not String(value).is_empty():
-		push_warning("Unsupported run difficulty; restored Hard")
-	return DEFAULT_RUN_DIFFICULTY
-
-
 func _save() -> void:
 	var config := ConfigFile.new()
+	var load_result := config.load(SETTINGS_PATH)
+	if load_result != OK:
+		config = ConfigFile.new()
 	config.set_value(AUDIO_SECTION, "master", master_volume)
 	config.set_value(AUDIO_SECTION, "sfx", sfx_volume)
 	config.set_value(UI_SECTION, "locale", ui_locale)
 	config.set_value(UI_SECTION, "reduced_motion", reduced_motion)
 	for action in InputProfile.REMAPPABLE_ACTIONS:
 		config.set_value(CONTROLS_SECTION, String(action), control_bindings[action])
-	config.set_value(GAMEPLAY_SECTION, "run_difficulty", String(run_difficulty))
+	if config.has_section_key(GAMEPLAY_SECTION, "run_difficulty"):
+		config.erase_section_key(GAMEPLAY_SECTION, "run_difficulty")
 	var result := config.save(SETTINGS_PATH)
 	if result != OK:
 		push_warning("Could not save settings: %s" % error_string(result))

@@ -5,7 +5,6 @@ const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd"
 const AttackTelegraphs = preload("res://scripts/combat/vehicle_attack_telegraph_builder.gd")
 const BossPatterns = preload("res://scripts/bosses/vehicle_boss_patterns.gd")
 const SpecialistRuntime = preload("res://scripts/enemies/vehicle_enemy_specialist_runtime.gd")
-const RunDifficulty = preload("res://scripts/vehicle/vehicle_run_difficulty.gd")
 const EncounterDirector = preload("res://scripts/encounters/vehicle_encounter_director.gd")
 
 var failures: Array[String] = []
@@ -24,7 +23,7 @@ func _run() -> void:
 	var stage := StageScene.instantiate()
 	root.add_child(stage)
 	await process_frame
-	stage.call("_start_deployed_run", &"pulse_cannon", RunDifficulty.HARD)
+	stage.call("_start_deployed_run", &"pulse_cannon")
 	stage.set("player_health", 120.0)
 	stage.set("player_invulnerable", 0.0)
 	stage.set("player_hit_flash", 0.0)

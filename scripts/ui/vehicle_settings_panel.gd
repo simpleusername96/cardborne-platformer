@@ -29,7 +29,6 @@ var _binding_buttons: Dictionary = {}
 var _master_slider: HSlider
 var _sfx_slider: HSlider
 var _reduced_motion_toggle: CheckButton
-var _difficulty_lock_label: Label
 var _language_buttons: Dictionary = {}
 var _status_label: Label
 var _build_summary: VehicleBuildSummaryPanel
@@ -107,7 +106,7 @@ func debug_contract() -> Dictionary:
 		"capturing": is_capturing_binding(),
 		"reduced_motion_control": is_instance_valid(_reduced_motion_toggle) and _reduced_motion_toggle.custom_minimum_size.y >= 44.0,
 		"difficulty_controls": find_children("*", "OptionButton", true, false).size(),
-		"difficulty_lock_visible": is_instance_valid(_difficulty_lock_label) and not _difficulty_lock_label.text.is_empty(),
+		"difficulty_copy_visible":false,
 		"ship_status":_build_summary.debug_contract() if is_instance_valid(_build_summary) else {},
 	}
 
@@ -229,10 +228,6 @@ func _build_gameplay_page() -> void:
 	_reduced_motion_toggle.focus_mode = Control.FOCUS_ALL
 	_reduced_motion_toggle.toggled.connect(_on_reduced_motion_toggled)
 	box.add_child(_reduced_motion_toggle)
-	_difficulty_lock_label = _label("SETTINGS_DIFFICULTY_LOCKED", 14, Art.MINT_SOFT)
-	_difficulty_lock_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_difficulty_lock_label.custom_minimum_size.y = 72.0
-	box.add_child(_difficulty_lock_label)
 
 
 func _build_language_page() -> void:

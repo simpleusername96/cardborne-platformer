@@ -4,7 +4,7 @@ extends CanvasLayer
 ## Routes run snapshots and UI intents between responsibility-shaped HUD and
 ## modal components. Screen layout construction belongs to those components.
 
-signal deployment_selected(primary_id: StringName, difficulty_id: StringName)
+signal deployment_selected(primary_id: StringName)
 signal boss_practice_selected(request: Dictionary)
 signal upgrade_selected(upgrade_id: StringName)
 signal upgrade_declined
@@ -40,10 +40,6 @@ const StageReportPanel = preload(
 	"res://scripts/ui/vehicle_stage_report_panel.gd"
 )
 const InputProfile = preload("res://scripts/input/vehicle_input_profile.gd")
-const RunDifficulty = preload(
-	"res://scripts/vehicle/vehicle_run_difficulty.gd"
-)
-
 const MODAL_MINIMUMS := {
 	"deployment":Vector2(1176.0, 636.0),
 	"upgrade":Vector2(960.0, 626.0),
@@ -72,7 +68,6 @@ var _guide_panel: VehicleGuidebookPanel
 var _practice_panel: VehicleBossPracticePanel
 
 var _selected_primary := &"pulse_cannon"
-var _selected_run_difficulty: StringName = RunDifficulty.DEFAULT
 var _selected_field_name_key := "FIELD_DROWNED_RUIN"
 var _settings_return_surface := "deployment"
 var _guide_return_surface := "pause"
@@ -211,7 +206,6 @@ func _install_components() -> void:
 		)
 		_practice_panel.back_requested.connect(show_deployment.bind(
 			_selected_primary,
-			_selected_run_difficulty,
 			_selected_field_name_key
 		))
 
@@ -238,17 +232,12 @@ func update_hud(snapshot: Dictionary) -> void:
 
 func show_deployment(
 	selected: StringName = &"pulse_cannon",
-	difficulty_id: StringName = RunDifficulty.DEFAULT,
 	field_name_key: String = "FIELD_DROWNED_RUIN"
 ) -> void:
 	hide_all_modals()
 	_selected_primary = &"pulse_cannon" if selected.is_empty() else selected
-	_selected_run_difficulty = RunDifficulty.normalize(difficulty_id)
 	_selected_field_name_key = field_name_key
-	_deployment_panel.open(
-		_selected_run_difficulty,
-		_selected_field_name_key
-	)
+	_deployment_panel.open(_selected_field_name_key)
 	_show_modal("deployment")
 
 
@@ -318,8 +307,8 @@ func debug_health_animation_contract() -> Dictionary:
 	return _hud.debug_health_animation_contract()
 
 
-func debug_submit_deployment(difficulty_id: StringName) -> void:
-	_deployment_panel.debug_submit(difficulty_id)
+func debug_submit_deployment() -> void:
+	_deployment_panel.debug_submit()
 
 
 func show_stage_report(snapshot: Dictionary) -> void:
@@ -393,6 +382,10 @@ func debug_modal_geometry(surface: String) -> Dictionary:
 func debug_ui_contract(viewport_width: float = 1280.0) -> Dictionary:
 	var compact := viewport_width < 1100.0
 	var viewport_height := viewport_width * 9.0 / 16.0
+	# This debug contract is parameterized by width, so probe the deployment
+	# responsive state for the same width instead of whichever test viewport
+	# happened to settle first.
+	_deployment_panel.set_compact_mode(compact)
 	var deployment_surface_size := Vector2(
 		minf(
 			MODAL_MINIMUMS["deployment"].x,
@@ -472,13 +465,15 @@ func debug_ui_contract(viewport_width: float = 1280.0) -> Dictionary:
 		"command_min_height":pause_contract["command_min_height"],
 		"body_font_weight":body_font_weight,
 		"deployment_focusables":deployment_contract["focusables"],
-		"deployment_difficulty_choices":(
-			deployment_contract["difficulty_choices"]
-		),
-		"deployment_difficulty_min_height":(
-			deployment_contract["difficulty_min_height"]
-		),
-		"deployment_difficulty":deployment_contract["difficulty"],
+		"deployment_has_difficulty_ui":deployment_contract["has_difficulty_ui"],
+		"deployment_control_rows":deployment_contract["control_rows"],
+		"deployment_preview_asset_id":deployment_contract["preview_asset_id"],
+		"deployment_preview_rotation":deployment_contract["preview_rotation"],
+		"deployment_body_scroll":deployment_contract["body_scroll"],
+		"deployment_body_ratios":deployment_contract["body_ratios"],
+		"deployment_fixed_header":deployment_contract["fixed_header"],
+		"deployment_fixed_footer":deployment_contract["fixed_footer"],
+		"deployment_compact":deployment_contract["compact"],
 		"deployment_primary_size":deployment_contract["primary_size"],
 		"deployment_surface_size":deployment_surface_size,
 		"display_font_size":_root.theme.get_font_size(
@@ -513,6 +508,11 @@ func debug_ui_contract(viewport_width: float = 1280.0) -> Dictionary:
 		"pause_command_widths":pause_contract["command_widths"],
 		"result_focusables":result_contract["focusables"],
 		"garage_focusables":garage_contract["focusables"],
+		"garage_columns":garage_contract["columns"],
+		"garage_rows":garage_contract["rows"],
+		"garage_nested_summary_panel":garage_contract["nested_summary_panel"],
+		"garage_primary_action":garage_contract["primary_action"],
+		"garage_secondary_action":garage_contract["secondary_action"],
 		"locale":TranslationServer.get_locale().left(2),
 		"settings":_settings_panel.debug_contract(),
 		"component_owners":{
@@ -572,7 +572,6 @@ func debug_modal_contract(
 		"deployment":
 			show_deployment(
 				_selected_primary,
-				_selected_run_difficulty,
 				_selected_field_name_key
 			)
 		"upgrade":
@@ -668,10 +667,6 @@ func _show_modal(surface: String) -> void:
 
 
 func _show_settings(return_surface: String) -> void:
-	if return_surface == "deployment":
-		_selected_run_difficulty = (
-			_deployment_panel.selected_difficulty()
-		)
 	_settings_return_surface = return_surface
 	hide_all_modals()
 	_settings_panel.set_build_snapshot(
@@ -692,7 +687,6 @@ func _close_settings() -> void:
 		_:
 			show_deployment(
 				_selected_primary,
-				_selected_run_difficulty,
 				_selected_field_name_key
 			)
 
@@ -719,13 +713,9 @@ func _show_boss_practice() -> void:
 	_show_modal("practice")
 
 
-func _on_deployment_selected(
-	primary_id: StringName,
-	difficulty_id: StringName
-) -> void:
+func _on_deployment_selected(primary_id: StringName) -> void:
 	_selected_primary = primary_id
-	_selected_run_difficulty = difficulty_id
-	deployment_selected.emit(primary_id, difficulty_id)
+	deployment_selected.emit(primary_id)
 
 
 func _on_locale_changed(_locale: String) -> void:

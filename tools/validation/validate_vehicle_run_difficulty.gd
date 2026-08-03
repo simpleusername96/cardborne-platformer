@@ -13,46 +13,32 @@ func _initialize() -> void:
 
 
 func _run() -> void:
-	_expect(RunDifficulty.IDS == [&"easy", &"normal", &"hard"], "difficulty exposes exactly Easy, Normal, and Hard")
-	_expect(RunDifficulty.normalize(&"unknown") == RunDifficulty.HARD, "invalid difficulty restores Hard")
+	_expect(RunDifficulty.IDS == [&"hard"], "difficulty exposes exactly one fixed Hard identifier")
+	_expect(RunDifficulty.DEFAULT == RunDifficulty.HARD, "fixed difficulty defaults to Hard")
+	_expect(RunDifficulty.is_valid(&"hard"), "Hard is the only valid difficulty identifier")
+	_expect(not RunDifficulty.is_valid(&"normal") and not RunDifficulty.is_valid(&"easy"), "retired identifiers are not valid choices")
+	_expect(RunDifficulty.normalize(&"unknown") == RunDifficulty.HARD, "unknown identifiers collapse to Hard")
+	_expect(RunDifficulty.normalize(&"normal") == RunDifficulty.HARD, "retired Normal collapses to Hard")
+	_expect(RunDifficulty.normalize(&"easy") == RunDifficulty.HARD, "retired Easy collapses to Hard")
 	_expect(is_equal_approx(EncounterDirector.ORDINARY_MOVEMENT_SPEED_MULTIPLIER, 1.40), "ordinary movement multiplier is locked to 1.40")
-	_expect(is_equal_approx(RunDifficulty.simultaneous_pressure(RunDifficulty.HARD), 1.0), "Hard preserves the current ordinary baseline")
-	_expect(_near(RunDifficulty.simultaneous_pressure(RunDifficulty.NORMAL), 0.85, 0.01), "Normal ordinary pressure is approximately fifteen percent lower")
-	_expect(_near(RunDifficulty.simultaneous_pressure(RunDifficulty.EASY), 0.72, 0.01), "Easy ordinary pressure applies the reduction a second time")
-	_expect(_near(RunDifficulty.simultaneous_pressure(RunDifficulty.NORMAL, true), 0.85, 0.01), "Normal boss pressure is approximately fifteen percent lower")
-	_expect(_near(RunDifficulty.simultaneous_pressure(RunDifficulty.EASY, true), 0.72, 0.01), "Easy boss pressure applies the reduction a second time")
+	for axis in ["quota", "active_cap", "health", "boss_health", "damage", "speed"]:
+		_expect(is_equal_approx(RunDifficulty.factor(RunDifficulty.HARD, axis), 1.0), "Hard %s factor preserves the previous baseline" % axis)
+		_expect(is_equal_approx(RunDifficulty.factor(&"easy", axis), 1.0), "retired identifiers cannot alter the %s factor" % axis)
+	_expect(is_equal_approx(RunDifficulty.simultaneous_pressure(RunDifficulty.HARD), 1.0), "Hard preserves ordinary pressure")
+	_expect(is_equal_approx(RunDifficulty.simultaneous_pressure(RunDifficulty.HARD, true), 1.0), "Hard preserves boss pressure")
 	_expect(RunDifficulty.scaled_quota(125, RunDifficulty.HARD) == 125, "Hard preserves the enlarged stage-one quota")
-	_expect(RunDifficulty.scaled_quota(125, RunDifficulty.NORMAL) == 113, "Normal scales the enlarged stage-one quota")
-	_expect(RunDifficulty.scaled_quota(125, RunDifficulty.EASY) == 101, "Easy scales the enlarged stage-one quota")
-	var previous_locale := TranslationServer.get_locale()
-	for locale in ["ko", "en"]:
-		TranslationServer.set_locale(locale)
-		for key in [
-			"DEPLOY_DIFFICULTY_LABEL",
-			"DIFFICULTY_EASY",
-			"DIFFICULTY_NORMAL",
-			"DIFFICULTY_HARD",
-			"DEPLOY_DIFFICULTY_EASY_DETAIL",
-			"DEPLOY_DIFFICULTY_NORMAL_DETAIL",
-			"DEPLOY_DIFFICULTY_HARD_DETAIL",
-			"SETTINGS_DIFFICULTY_LOCKED",
-		]:
-			_expect(tr(key) != key, "%s translation exists for %s" % [locale, key])
-	TranslationServer.set_locale(previous_locale)
+	_expect(RunDifficulty.scaled_quota(125, &"normal") == 125, "retired identifiers cannot scale quota")
+	_expect(RunDifficulty.scaled_active_cap(9, &"easy") == 9, "retired identifiers cannot scale active cap")
 
-	var settings := get_root().get_node("SettingsStore") as SettingsStoreService
-	var previous_difficulty := settings.run_difficulty
-	settings.set_run_difficulty(RunDifficulty.HARD)
 	var stage := StageScene.instantiate()
 	root.add_child(stage)
 	await process_frame
 	var stage_ui = stage.get("_ui")
-	stage_ui.call("show_deployment", &"pulse_cannon", RunDifficulty.HARD)
-	stage_ui.call("debug_submit_deployment", RunDifficulty.NORMAL)
-	_expect(stage.selected_run_difficulty == RunDifficulty.NORMAL, "deployment snapshots Normal on the active run")
-	_expect(stage.encounter_runtime.difficulty == RunDifficulty.NORMAL, "encounter runtime receives the deployed difficulty")
-	_expect(stage.stage_flow.quota == RunDifficulty.scaled_quota(StageCatalog.quota(&"stage_1"), RunDifficulty.NORMAL), "active stage quota uses the deployed difficulty")
-	stage.selected_run_difficulty = RunDifficulty.HARD
+	stage_ui.call("show_deployment", &"pulse_cannon", "FIELD_DROWNED_RUIN")
+	stage_ui.call("debug_submit_deployment")
+	_expect(stage.selected_run_difficulty == RunDifficulty.HARD, "deployment starts the fixed Hard run")
+	_expect(stage.encounter_runtime.difficulty == RunDifficulty.HARD, "encounter runtime starts at fixed Hard")
+	_expect(stage.stage_flow.quota == StageCatalog.quota(&"stage_1"), "active stage quota preserves the previous Hard value")
 	var hard_enemy = stage.call("_make_enemy", {"id":"hard_probe", "role":&"chaser", "pos":Vector2.ZERO})
 	var hard_boss = stage.call("_make_enemy", {"id":"hard_boss_probe", "role":&"stage_boss", "pos":Vector2.ZERO})
 	_expect(
@@ -73,61 +59,29 @@ func _run() -> void:
 	)
 	var hard_damage := float(stage.call("_scaled_incoming_damage", 10.0, true))
 	var hard_final_damage := float(stage.call("_scaled_incoming_damage", 10.0, true, true))
-	stage.selected_run_difficulty = RunDifficulty.NORMAL
-	var normal_enemy = stage.call("_make_enemy", {"id":"normal_probe", "role":&"chaser", "pos":Vector2.ZERO})
-	var normal_boss = stage.call("_make_enemy", {"id":"normal_boss_probe", "role":&"stage_boss", "pos":Vector2.ZERO})
-	_expect(_near(normal_enemy.health / hard_enemy.health, 0.96, 0.001), "Normal applies ordinary health once")
-	_expect(_near(normal_enemy.speed / hard_enemy.speed, 0.98, 0.001), "Normal applies movement speed once")
-	_expect(_near(normal_boss.health / hard_boss.health, 0.90, 0.001), "Normal applies boss health once")
-	_expect(_near(float(stage.call("_scaled_incoming_damage", 10.0, true)) / hard_damage, 0.96, 0.001), "Normal applies ordinary damage once")
-	_expect(_near(float(stage.call("_scaled_incoming_damage", 10.0, true, true)) / hard_final_damage, 0.96, 0.001), "Normal applies authored boss damage once")
-	stage.selected_run_difficulty = RunDifficulty.EASY
-	var easy_chaser = stage.call("_make_enemy", {"id":"easy_chaser_probe", "role":&"chaser", "pos":Vector2.ZERO})
-	var easy_scrap = stage.call("_make_enemy", {"id":"easy_scrap_probe", "role":&"scrap_drone", "pos":Vector2.ZERO})
-	for fixture in [
-		[&"Easy scrap", easy_scrap.speed],
-		[&"Easy chaser", easy_chaser.speed],
-		[&"Normal chaser", normal_enemy.speed],
-		[&"Hard chaser", hard_enemy.speed],
-	]:
-		_expect(
-			(1200.0 - 250.0) / float(fixture[1]) <= 4.2,
-			"%s reaches the stationary 250px band within 4.2 seconds" % String(fixture[0])
-		)
-	for fixture in [
-		[&"Easy", easy_chaser.speed, 500.0],
-		[&"Normal", normal_enemy.speed, 520.0],
-		[&"Hard", hard_enemy.speed, 540.0],
-	]:
-		_expect(
-			_perpendicular_closing_distance(float(fixture[1]), 4.2) >= float(fixture[2]),
-			"%s chaser closes the required distance on a perpendicular base-speed player" % String(fixture[0])
-		)
-	stage.selected_run_difficulty = RunDifficulty.NORMAL
-	settings.set_run_difficulty(RunDifficulty.EASY)
-	_expect(stage.selected_run_difficulty == RunDifficulty.NORMAL, "changing the next-run preference cannot mutate the active run")
-	stage.call("_start_deployed_run", &"pulse_cannon", RunDifficulty.NORMAL)
-	_expect(settings.run_difficulty == RunDifficulty.EASY, "non-player performance setup cannot overwrite the next-run preference")
+	stage.selected_run_difficulty = &"easy"
+	var compatibility_enemy = stage.call("_make_enemy", {"id":"compatibility_probe", "role":&"chaser", "pos":Vector2.ZERO})
+	var compatibility_boss = stage.call("_make_enemy", {"id":"compatibility_boss_probe", "role":&"stage_boss", "pos":Vector2.ZERO})
+	_expect(_near(compatibility_enemy.health, hard_enemy.health, 0.001), "retired identifiers cannot alter ordinary health")
+	_expect(_near(compatibility_enemy.speed, hard_enemy.speed, 0.001), "retired identifiers cannot alter movement speed")
+	_expect(_near(compatibility_boss.health, hard_boss.health, 0.001), "retired identifiers cannot alter boss health")
+	_expect(_near(float(stage.call("_scaled_incoming_damage", 10.0, true)), hard_damage, 0.001), "retired identifiers cannot alter ordinary damage")
+	_expect(_near(float(stage.call("_scaled_incoming_damage", 10.0, true, true)), hard_final_damage, 0.001), "retired identifiers cannot alter authored boss damage")
 	stage.call("_reset_run", false, true, true)
-	_expect(stage.encounter_runtime.difficulty == RunDifficulty.NORMAL, "stage restart preserves the deployed difficulty")
+	_expect(stage.encounter_runtime.difficulty == RunDifficulty.HARD, "encounters ignore retired compatibility identifiers")
+	_expect(stage.stage_flow.quota == StageCatalog.quota(&"stage_1"), "retired identifiers cannot alter stage quota")
+	stage.call("_start_deployed_run", &"pulse_cannon")
+	_expect(stage.selected_run_difficulty == RunDifficulty.HARD, "new runs restore the fixed Hard telemetry field")
+	stage.call("_reset_run", false, true, true)
+	_expect(stage.encounter_runtime.difficulty == RunDifficulty.HARD, "stage restart preserves fixed Hard")
+	_expect(stage.stage_flow.quota == StageCatalog.quota(&"stage_1"), "stage restart preserves the previous Hard quota")
 	stage.queue_free()
 	await process_frame
-	settings.set_run_difficulty(previous_difficulty)
 	_finish()
 
 
 func _near(value: float, target: float, tolerance: float) -> bool:
 	return absf(value - target) <= tolerance
-
-
-func _perpendicular_closing_distance(enemy_speed: float, duration: float) -> float:
-	var enemy_position := Vector2(-1200.0, 0.0)
-	var moving_player := Vector2.ZERO
-	var delta := 0.01
-	for _step in ceili(duration / delta):
-		moving_player.y += 280.0 * delta
-		enemy_position += (moving_player - enemy_position).normalized() * enemy_speed * delta
-	return 1200.0 - enemy_position.distance_to(moving_player)
 
 
 func _expect(condition: bool, message: String) -> void:

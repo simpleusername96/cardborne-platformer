@@ -22,6 +22,23 @@ func _initialize() -> void:
 
 	for locale in ["ko", "en"]:
 		TranslationServer.set_locale(locale)
+		for entry_key in [
+			"DEPLOY_CONTROL_AIM_FIRE",
+			"DEPLOY_CONTROL_AIM_PRIMARY_BINDING",
+			"GARAGE_LAUNCH",
+			"GARAGE_SETTINGS",
+		]:
+			_expect_translated(entry_key, locale)
+		_expect(
+			TranslationServer.translate("GARAGE_LAUNCH")
+				== ("출격 설정" if locale == "ko" else "Deployment Setup"),
+			"%s garage primary action names the deployment setup flow" % locale
+		)
+		_expect(
+			TranslationServer.translate("GARAGE_SETTINGS")
+				== ("설정" if locale == "ko" else "Settings"),
+			"%s garage secondary action uses the general settings label" % locale
+		)
 		var field_stage_titles := {}
 		for field_id in FieldRegistry.FIELD_IDS:
 			for stage_id in CombatStages.STAGE_IDS:
@@ -101,6 +118,23 @@ func _initialize() -> void:
 		"second additive level keeps the same preview semantics"
 	)
 	card.queue_free()
+	var localization_source := FileAccess.get_file_as_string(
+		"res://localization/vehicle_stage.csv"
+	)
+	for removed_key in [
+		"SETTINGS_DIFFICULTY_LOCKED",
+		"DEPLOY_DIFFICULTY_LABEL",
+		"DIFFICULTY_EASY",
+		"DIFFICULTY_NORMAL",
+		"DIFFICULTY_HARD",
+		"DEPLOY_DIFFICULTY_EASY_DETAIL",
+		"DEPLOY_DIFFICULTY_NORMAL_DETAIL",
+		"DEPLOY_DIFFICULTY_HARD_DETAIL",
+	]:
+		_expect(
+			not localization_source.contains("\n%s," % removed_key),
+			"obsolete user-facing difficulty key is removed: %s" % removed_key
+		)
 	TranslationServer.set_locale(original_locale)
 	await process_frame
 	_finish()

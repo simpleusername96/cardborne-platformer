@@ -54,13 +54,15 @@ var _pressure_snapshot := {}
 func configure(
 	next_stage_id: StringName,
 	packets: Array[Dictionary],
-	run_difficulty: StringName,
+	_run_difficulty: StringName,
 	spawn_anchors: Array[Vector2] = Field.ORDINARY_SPAWN_CANDIDATES,
 	encounter_seed: int = 0,
 	geometry_snapshot: Variant = null
 ) -> void:
 	stage_id = next_stage_id
-	difficulty = RunDifficulty.normalize(run_difficulty)
+	# The argument is retained temporarily for fixture compatibility; encounters
+	# always use the single fixed Hard profile.
+	difficulty = RunDifficulty.HARD
 	elapsed = 0.0
 	current_beat = 0
 	_packets.clear()

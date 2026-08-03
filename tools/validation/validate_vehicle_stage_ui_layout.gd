@@ -166,7 +166,78 @@ func _initialize() -> void:
 			"shared UI body typography uses weight 650 at %d" % width
 		)
 		_expect(int(contract["display_font_size"]) >= 40, "display typography remains legible at %d" % width)
-		_expect(Vector2(contract["deployment_primary_size"]) == Vector2(300.0, 48.0), "deployment uses one compact primary action at %d" % width)
+		_expect(
+			Vector2(contract["deployment_primary_size"]) == (
+				Vector2(260.0, 44.0)
+				if width < 1100.0
+				else Vector2(300.0, 48.0)
+			),
+			"deployment uses one responsive primary action at %d; got %s compact=%s"
+			% [
+				width,
+				contract["deployment_primary_size"],
+				contract["deployment_compact"],
+			]
+		)
+		_expect(
+			not bool(contract["deployment_has_difficulty_ui"]),
+			"deployment exposes no difficulty UI at %d" % width
+		)
+		_expect(
+			int(contract["deployment_control_rows"]) == 4,
+			"deployment preserves four complete control rows at %d" % width
+		)
+		_expect(
+			StringName(contract["deployment_preview_asset_id"])
+				== &"attachment/player_craft_body"
+				and is_equal_approx(
+					float(contract["deployment_preview_rotation"]),
+					-PI / 2.0
+				),
+			"deployment reuses the craft body with presentation-only nose-up rotation at %d"
+			% width
+		)
+		_expect(
+			is_equal_approx(
+				float(Array(contract["deployment_body_ratios"])[0]),
+				0.4
+			)
+				and is_equal_approx(
+					float(Array(contract["deployment_body_ratios"])[1]),
+					0.6
+				),
+			"deployment body keeps the approved 40/60 columns at %d; got %s"
+			% [width, contract["deployment_body_ratios"]]
+		)
+		_expect(
+			bool(contract["deployment_fixed_header"])
+				and bool(contract["deployment_fixed_footer"])
+				and int(contract["deployment_body_scroll"]) == (
+					ScrollContainer.SCROLL_MODE_AUTO
+					if width < 1100.0
+					else ScrollContainer.SCROLL_MODE_DISABLED
+				),
+			"deployment keeps a fixed header/footer and body-only compact scrolling at %d; got %s/%s mode=%s compact=%s"
+			% [
+				width,
+				contract["deployment_fixed_header"],
+				contract["deployment_fixed_footer"],
+				contract["deployment_body_scroll"],
+				contract["deployment_compact"],
+			]
+		)
+		_expect(
+			int(contract["garage_columns"]) == 2
+				and int(contract["garage_rows"]) == 5
+				and not bool(contract["garage_nested_summary_panel"]),
+			"garage uses two unboxed shared-row columns at %d" % width
+		)
+		_expect(
+			String(contract["garage_primary_action"]) == "GARAGE_LAUNCH"
+				and String(contract["garage_secondary_action"])
+					== "GARAGE_SETTINGS",
+			"garage exposes only Deployment Setup and Settings at %d" % width
+		)
 		var deployment_surface := Vector2(contract["deployment_surface_size"])
 		_expect(
 			deployment_surface.x <= width - 48.0

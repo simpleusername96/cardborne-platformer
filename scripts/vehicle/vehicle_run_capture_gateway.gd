@@ -26,7 +26,6 @@ const StageFlow = preload("res://scripts/encounters/vehicle_stage_flow.gd")
 const UpgradeOfferPresenter = preload(
 	"res://scripts/cards/vehicle_upgrade_offer_presenter.gd"
 )
-const RunDifficulty = preload("res://scripts/vehicle/vehicle_run_difficulty.gd")
 const GuidebookCatalog = preload(
 	"res://scripts/progression/vehicle_guidebook_catalog.gd"
 )
@@ -109,7 +108,6 @@ func show_ui_fixture(fixture: Dictionary) -> void:
 		&"deployment":
 			_run._ui.show_deployment(
 				_run.selected_primary,
-				RunDifficulty.HARD,
 				String(_run.field_layout.field_definition["name_key"])
 			)
 		&"settings":
@@ -231,7 +229,6 @@ func restore_baseline() -> void:
 		_run._ui.debug_set_text_scale(1.0)
 		_run._ui.show_deployment(
 			_run.selected_primary,
-			_run.selected_run_difficulty,
 			String(_run.field_layout.field_definition["name_key"])
 		)
 	_run._release_tree_pause()
