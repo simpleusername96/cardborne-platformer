@@ -2082,6 +2082,12 @@ Do not mark a phase or this plan complete while a stop condition remains.
   own focus or activation behavior; their existing control consumers remain
   unchanged. All three units are switch_ready with null approval/application,
   no retire paths, and no production changes pending exact hash-bound approval.
+- 2026-08-03: BK explicitly approved the Phase 5 foundational UI switch at
+  baseline c596880961d066dbc1291dbf220f984095cf072c for modal_master,
+  content_plate, and hud_plate using the ten exact target/hash mappings
+  displayed from that clean commit. All three approval records bind those bytes
+  at 2026-08-03T13:15:48+09:00 with empty retire_paths. The approval grants no
+  runtime-change path, deletion, or authority for any later UI family.
 
 ## Execution Handoff
 
